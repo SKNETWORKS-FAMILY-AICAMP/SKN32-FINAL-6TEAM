@@ -15,9 +15,9 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.settings import get_settings
-from app.presentation.api.app import create_app
-from app.presentation.security import _development_key
+from acop_basement.core.settings import get_settings
+from acop_basement.presentation.api.app import create_app
+from acop_basement.presentation.security import _development_key
 
 
 @pytest.fixture()

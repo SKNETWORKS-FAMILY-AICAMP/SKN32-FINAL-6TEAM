@@ -1,6 +1,6 @@
 # Composer 쓰기 채널 계약 v2
 
-`app.application.composer_service`(`read_current` / `validate_candidate` /
+`app.composer_staging.composer_service`(`read_current` / `validate_candidate` /
 `apply_candidate`)가 `config/project.yaml`(또는 주입된 대체 경로)을 검증·저장하는
 **유일한** 통로다. `GET /composer/current`, `POST /composer/validate`,
 `POST /composer/apply`가 이 서비스를 HTTP로 노출한다.
@@ -170,4 +170,21 @@ append-only DB 테이블로 옮기되 동일한 이벤트 계약을 유지한다
 - 임의 `implementation_ref` import를 폐기하고 registry ID allowlist를 확정했다.
 - final_project_ui는 인증된 Composer API만 호출하고 대상 파일/DB/Python을 직접
   만지지 않는 예외 경계를 문서화할 수 있도록 했다.
+## 배포 경계와 운영상 제약
 
+- `_WRITE_LOCK`은 **프로세스 로컬**이다. 배포는 writer 프로세스가 정확히
+  하나여야 한다 — 워커나 인스턴스가 여러 개면 이 락을 공유하지 않는다.
+  수평 확장을 하려면 먼저 분산 락 또는 DB 조건부 쓰기 경계로 바꿔야 한다.
+- `/auth/token`은 공개 JWT 검증 API가 아니라 **운영자가 관리하는 JWT
+  발급 endpoint**다. Composer 호출자는 단명 Bearer JWT만 받는다 — 발급
+  자격증명과 서명 비밀키는 관리 경계 안에만 머문다.
+- 실제 `apply()` 순서는 다음과 같다: `apply_candidate()`가 검증 후
+  `_WRITE_LOCK` 아래서 `config/project.yaml`을 원자적으로 교체하고,
+  **그 다음** API 핸들러가 `var/audit/composer_events.jsonl`에 audit
+  이벤트를 append한다. **이 둘은 하나의 원자적 트랜잭션이 아니다** —
+  audit append가 실패해도 config는 이미 적용된 상태이고, API는 오류를
+  반환한다.
+- `config/project.yaml`을 적용해도 **이미 떠 있는 프로세스가 그 상태를
+  자동으로 재로드한다는 보장은 없다.** 재시작·reload endpoint·polling
+  중 무엇을 쓸지는 운영 판단이며, 이 계약은 그것을 의도적으로 정하지
+  않는다.

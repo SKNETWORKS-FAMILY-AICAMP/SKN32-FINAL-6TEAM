@@ -24,12 +24,13 @@ from pathlib import Path
 import pytest
 
 APP = Path("app")
+BASEMENT = Path("acop_basement")
 
 #: basement — 업무 도메인 어휘가 있으면 안 되는 곳
-BASEMENT_DIRS = ("core", "domain", "application", "infrastructure", "presentation", "tools", "introspection")
+BASEMENT_DIRS = (BASEMENT,)
 
 #: 도메인 자리 — 여기서는 도메인을 알아도 된다
-DOMAIN_DIRS = ("modules",)
+DOMAIN_DIRS = (APP / "modules",)
 
 #: 업무 도메인 어휘. ★"고객·케이스·팀" 처럼 CS 일반 개념은 넣지 않는다 —
 #:  그건 이 플랫폼이 다루는 대상 자체다.
@@ -46,17 +47,17 @@ PATTERN = re.compile("|".join(DOMAIN_WORDS), re.IGNORECASE)
 ALLOWED = {
     # PII 마스킹 패턴. 결제 식별자 모양을 알아야 가릴 수 있다 —
     # 도메인 로직이 아니라 **보안 규칙**이다.
-    "app/core/redaction.py",
+    "acop_basement/core/redaction.py",
     # 원격 Agent 데모. A-COP 본체가 아니라 **왕복 검증용 상대역**이며,
     # 복사본은 이 파일을 자기 도메인으로 갈아 끼운다.
-    "app/presentation/a2a/remote_agent.py",
+    "acop_basement/presentation/a2a/remote_agent.py",
 }
 
 
-def _python_files(*roots: str) -> list[Path]:
+def _python_files(*roots: Path) -> list[Path]:
     out: list[Path] = []
     for root in roots:
-        base = APP / root
+        base = root
         if base.exists():
             out.extend(p for p in base.rglob("*.py") if "__pycache__" not in p.parts)
     return out
@@ -111,8 +112,6 @@ def test_no_basement_file_imports_a_domain_module(path: str):
     조립은 composition root 가 **선언을 읽어** 한다. basement 가 특정 모듈을
     직접 부르면 그 모듈 없이는 못 뜬다.
     """
-    if path == "app/composition.py":
-        pytest.skip("composition root 는 선언대로 도메인 모듈을 조립하는 자리다")
     text = Path(path).read_text(encoding="utf-8")
     assert "from app.modules" not in text and "import app.modules" not in text, \
         f"{path} 가 도메인 모듈을 직접 import 한다"

@@ -1,8 +1,8 @@
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
-from app.application.feedback_job import run_daily_feedback
-from app.infrastructure.db.session import get_connection
+from acop_basement.application.feedback_job import run_daily_feedback
+from acop_basement.infrastructure.db.session import get_connection
 
 
 def test_real_cases_trigger_voc_surge_and_boundary_does_not():

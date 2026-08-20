@@ -10,26 +10,26 @@ import inspect
 from pathlib import Path
 from typing import Any
 
-from app.application.controller import Controller
-from app.core.context import ContextBroker
-from app.core.project_config import ProjectConfig, load_project_config
-from app.core.registry import TeamRegistry
-from app.core.remote_team.a2a_executor import A2ATeamExecutor
-from app.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
-from app.infrastructure.db import repository
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.llm.openai import OpenAITeamLLM
-from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
-from app.infrastructure.rag.retriever import search_policy
+from acop_basement.application.controller import Controller
+from acop_basement.core.context import ContextBroker
+from acop_basement.core.project_config import ProjectConfig, load_project_config
+from acop_basement.core.registry import TeamRegistry
+from acop_basement.core.remote_team.a2a_executor import A2ATeamExecutor
+from acop_basement.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
+from acop_basement.infrastructure.db import repository
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.llm.openai import OpenAITeamLLM
+from acop_basement.infrastructure.messaging.outbox import OutboxBrokerAdapter
+from acop_basement.infrastructure.rag.retriever import search_policy
 from app.modules.customer_ops import feedback
 from app.modules.customer_ops.read_tools import build_read_tool_functions
-from app.presentation.security import masked
-from app.tools.read_tools import ReadToolbox
+from acop_basement.presentation.security import masked
+from acop_basement.tools.read_tools import ReadToolbox
 
 
 def build_classifier():
     """Build the configured classifier, failing explicitly when unconfigured."""
-    from app.core.settings import get_settings
+    from acop_basement.core.settings import get_settings
 
     if not get_settings().openai_api_key:
         raise RuntimeError("OpenAI API key is missing")
@@ -157,7 +157,7 @@ def build_graph_store(*, connection: Any, tenant_id: str,
     config = config or load_project_config()
     _validate_modules(config)
     config.require_module("graph_store", "GraphStore adapter")
-    from app.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
+    from acop_basement.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
     return SqlGraphAdapter(connection, tenant_id=tenant_id)
 
 
@@ -206,7 +206,7 @@ def build_verification(*, config=None):
       "선언되지 않은 필드" 로 전부 거부된다. 도메인을 안 붙이면 아무 Action 도 못 한다.
       조용히 통과시키는 것보다 낫다.
     """
-    from app.core.verification import VerificationPolicy
+    from acop_basement.core.verification import VerificationPolicy
     try:
         from app.modules.customer_ops.verification_policy import (
             CUSTOMER_OPS_POLICY, FACT_QUERIES)

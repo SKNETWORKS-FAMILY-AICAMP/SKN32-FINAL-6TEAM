@@ -5,13 +5,13 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-import app.core.settings as settings_module
-from app.core.contracts import StateConflict
-from app.infrastructure.db.repository import get_case
-from app.infrastructure.db.session import get_connection
-from app.presentation import security
-from app.presentation.api.app import create_app
-from app.presentation.api.cases import _mcp_cases, _mcp_detail, _mcp_open
+import acop_basement.core.settings as settings_module
+from acop_basement.core.contracts import StateConflict
+from acop_basement.infrastructure.db.repository import get_case
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.presentation import security
+from acop_basement.presentation.api.app import create_app
+from acop_basement.presentation.api.cases import _mcp_cases, _mcp_detail, _mcp_open
 
 
 @pytest.fixture()
@@ -235,7 +235,7 @@ def test_create_does_not_relabel_a_transition_bug_as_classification_failure(api_
     충돌을 "분류 실패" 로 보고하면 원인을 못 찾는다(CLAUDE.md §3 "오류 메시지가
     사실을 잘못 전하지 않게 한다"). classifier 는 정상 값을 반환했는데도
     이렇게 된다는 게 핵심 — classifier 문제가 아니라 전이 자체의 버그다."""
-    import app.presentation.api.cases as cases_module
+    import acop_basement.presentation.api.cases as cases_module
     real_transition_case = cases_module.transition_case
     calls = {"n": 0}
 
@@ -273,9 +273,9 @@ def _put_case_in_waiting_input(api_fixture, case_id: UUID) -> str:
     직접 밀어준 뒤, 지금 프로덕션 Team(billing/technical) 은 WAIT_FOR_INPUT
     을 내지 않으므로 raw 로 같은 경로(Controller._event_for_result 의
     MISSING_INPUT 분기)를 재현한다."""
-    from app.application.case_service import CaseService
-    from app.core.transition import transition_case
-    from app.domain.events import EventType
+    from acop_basement.application.case_service import CaseService
+    from acop_basement.core.transition import transition_case
+    from acop_basement.domain.events import EventType
 
     service = CaseService()
     token = service.new_resume_token()
@@ -301,9 +301,9 @@ def _client_with_resume_capable_controller(api_fixture) -> TestClient:
     낸다. resume() 을 실제로 태우려면 controller 를 명시적으로 주입해야
     한다 — 프로덕션과 같은 실제 Controller 를 쓰되, registry 만 이 테스트의
     owner_team_id 와 맞는 최소 fake Team 하나로 채운다."""
-    from app.application.controller import Controller
-    from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult
-    from app.core.registry import TeamRegistry
+    from acop_basement.application.controller import Controller
+    from acop_basement.core.contracts import Evidence, NextAction, TeamManifest, TeamResult
+    from acop_basement.core.registry import TeamRegistry
     from datetime import UTC, datetime
 
     class ResumableTeam:

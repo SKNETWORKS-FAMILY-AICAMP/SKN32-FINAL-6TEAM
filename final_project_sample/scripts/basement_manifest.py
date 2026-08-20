@@ -8,22 +8,25 @@ from pathlib import Path
 # Keep this list explicit: changing the basement boundary is a deliberate
 # versioning decision, not an accidental consequence of directory crawling.
 BASEMENT_COMPONENTS: tuple[str, ...] = (
-    "app/core",
-    "app/domain",
-    "app/application",
-    "app/infrastructure",
-    "app/presentation",
+    "acop_basement/core",
+    "acop_basement/domain",
+    "acop_basement/application",
+    "acop_basement/infrastructure",
+    "acop_basement/presentation",
+    "acop_basement/tools",
+    "acop_basement/introspection",
 )
 EXCLUDED_PATTERNS: tuple[str, ...] = ("__pycache__", "*.pyc")
 
-# This migration belongs to the sample domain rather than the reusable
-# basement.  It is kept separate from the generic patterns so the boundary
-# remains easy to review when the sample gains more migrations.
-EXCLUDED_FILES: tuple[str, ...] = (
-    "app/infrastructure/db/migrations/002_domain_*.sql",
-)
+# ★버그사냥 2026-08-19 — 도메인 마이그레이션(002_domain_customer_ops.sql)이
+#   한때 acop_basement/infrastructure/db/migrations/ 안에 물리적으로 있었다
+#   (basement 순수성 위반 — domain 무관해야 할 패키지 안에 도메인 SQL이
+#   실렸다). config/migrations/(product 쪽)로 옮겨서 애초에 이 경로에
+#   존재하지 않게 됐다. 패턴 제외 목록으로 가리는 것보다 원천적으로 위치를
+#   옮기는 게 맞다 — export 뿐 아니라 실제 pip 배포물에도 안 실린다.
+EXCLUDED_FILES: tuple[str, ...] = ()
 
-BASEMENT_VERSION = "0.2.0"
+BASEMENT_VERSION = "0.3.0"
 CONTRACT_VERSION = "1.0"
 EXPORT_TOOL_VERSION = "1"
 

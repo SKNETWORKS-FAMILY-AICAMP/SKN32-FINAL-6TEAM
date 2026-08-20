@@ -8,21 +8,21 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-import app.core.settings as settings_module
-from app.application.case_service import CaseService, ResumeTokenError
-from app.application.controller import Controller, ControllerError
-from app.core.contracts import ActionProposal, ContextPack, Evidence, NextAction, StateConflict, TeamManifest, TeamResult
-from app.core.idempotency import idempotency_key
-from app.core.registry import RegistryError, TeamRegistry
-from app.core.transition import OutboxMessage, replay_case, transition_case
-from app.domain.events import EventType
-from app.infrastructure.db.repository import create_case, get_case, get_case_events
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
-from app.infrastructure.messaging.worker import OutboxWorker
-from app.presentation import security
-from app.presentation.api.app import app
-from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
+import acop_basement.core.settings as settings_module
+from acop_basement.application.case_service import CaseService, ResumeTokenError
+from acop_basement.application.controller import Controller, ControllerError
+from acop_basement.core.contracts import ActionProposal, ContextPack, Evidence, NextAction, StateConflict, TeamManifest, TeamResult
+from acop_basement.core.idempotency import idempotency_key
+from acop_basement.core.registry import RegistryError, TeamRegistry
+from acop_basement.core.transition import OutboxMessage, replay_case, transition_case
+from acop_basement.domain.events import EventType
+from acop_basement.infrastructure.db.repository import create_case, get_case, get_case_events
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.messaging.outbox import OutboxBrokerAdapter
+from acop_basement.infrastructure.messaging.worker import OutboxWorker
+from acop_basement.presentation import security
+from acop_basement.presentation.api.app import app
+from acop_basement.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
 
 class FakeTeam:

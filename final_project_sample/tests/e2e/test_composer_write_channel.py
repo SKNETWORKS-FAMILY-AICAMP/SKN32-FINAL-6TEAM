@@ -21,8 +21,10 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from app.core.settings import get_settings
-from app.presentation.api.app import create_app
+from acop_basement.core.settings import get_settings
+from acop_basement.presentation.api.app import create_app
+from acop_composer.api import router as composer_write_router
+from acop_composer.auth import router as composer_auth_router
 import jwt
 from datetime import datetime, timedelta, timezone
 
@@ -61,7 +63,9 @@ def config_dir():
 
 
 def _client(path: Path) -> TestClient:
-    app = create_app()
+    # ★acop_composer 는 acop_basement 와 별도 패키지다(2026-08-19 구조
+    #   확정) — "관리용 빌드"만 이렇게 명시적으로 라우터를 주입한다.
+    app = create_app(composer_write_router=composer_write_router, composer_auth_router=composer_auth_router)
     # ★HTML 라우터(`app/presentation/ui/composer.py`)와 같은 관례 —
     #   실제 config/project.yaml 을 건드리지 않고 임시 선언으로 검사한다.
     app.state.project_config_path = path

@@ -100,7 +100,7 @@ def sentences(text: str) -> list[str]:
 
 
 def main() -> int:
-    from app.core.settings import get_guardrails
+    from acop_basement.core.settings import get_guardrails
 
     guardrails = get_guardrails()
     want_docs = guardrails.get("rag.document_count")

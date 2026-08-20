@@ -4,11 +4,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.contracts import ContextPack, Evidence, NextAction, TeamResult, TeamTask
-from app.core.remote_team.a2a_executor import A2ATeamExecutor
-from app.core.remote_team.executor import LocalTeamExecutor, ToolScopeViolation
-from app.core.registry import TeamRegistry
-from app.presentation.a2a.agent_card import build_agent_card
+from acop_basement.core.contracts import ContextPack, Evidence, NextAction, TeamResult, TeamTask
+from acop_basement.core.remote_team.a2a_executor import A2ATeamExecutor
+from acop_basement.core.remote_team.executor import LocalTeamExecutor, ToolScopeViolation
+from acop_basement.core.registry import TeamRegistry
+from acop_basement.presentation.a2a.agent_card import build_agent_card
 
 
 def make_task(*, allowed_tools: list[str] | None = None) -> TeamTask:

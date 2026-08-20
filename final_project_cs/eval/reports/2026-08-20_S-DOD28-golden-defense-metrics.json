@@ -1,0 +1,31 @@
+{
+  "run_id": "2026-08-20_S-DOD28-DEFENSE-METRICS-GOLDEN-RUN",
+  "dataset": "eval/datasets/golden.jsonl",
+  "dataset_rows": 72,
+  "runner_output": "eval/reports/2026-08-20_S-DOD28-golden-proposed-live.jsonl",
+  "provider": "openai",
+  "api_key_present": true,
+  "attempted_rows": 72,
+  "llm_calls_started": 0,
+  "successful_proposal_outputs": 0,
+  "skipped_rows": 72,
+  "skip_reason": "ModuleNotFoundError: No module named 'app.modules.customer_ops.order_shipping'",
+  "golden_metrics_status": "not_measured",
+  "golden_metrics": {
+    "grounding_match": {"n": 0, "d": 0, "ratio": null},
+    "grounding_excess": {"n": 0, "d": 0, "ratio": null},
+    "proper_abstention": {"n": 0, "d": 0, "ratio": null},
+    "over_abstention": {"n": 0, "d": 0, "ratio": null},
+    "schema_compliance": {"n": 0, "d": 72, "ratio": 0.0}
+  },
+  "fixture_command": "python -m eval.defense_metrics --input eval/datasets/attack_fixtures.jsonl",
+  "fixture_rows": 17,
+  "fixture_metrics": {
+    "grounding_match": {"n": 31, "d": 43, "ratio": 0.7209},
+    "grounding_excess": {"n": 12, "d": 43, "ratio": 0.2791},
+    "proper_abstention": {"n": 12, "d": 12, "ratio": 1.0},
+    "over_abstention": {"n": 0, "d": 4, "ratio": 0.0},
+    "schema_compliance": {"n": 16, "d": 17, "ratio": 0.9412}
+  },
+  "fine_tuning": {"performed": false, "comparison_status": "not_started"}
+}

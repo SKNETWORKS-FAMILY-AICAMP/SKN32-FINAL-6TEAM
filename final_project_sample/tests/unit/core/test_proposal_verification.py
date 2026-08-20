@@ -9,7 +9,7 @@
 """
 from __future__ import annotations
 
-from app.core.verification import Facts, verify_proposal
+from acop_basement.core.verification import Facts, verify_proposal
 from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
 
 PAYMENT = "11111111-1111-4111-8111-111111111111"

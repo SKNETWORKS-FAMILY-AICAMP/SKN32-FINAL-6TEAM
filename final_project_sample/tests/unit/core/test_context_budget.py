@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.context import ContextBroker, ContextBudgetError, ContextInputs, PolicyChunk
+from acop_basement.core.context import ContextBroker, ContextBudgetError, ContextInputs, PolicyChunk
 
 
 def inputs(**overrides):

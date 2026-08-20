@@ -1,5 +1,5 @@
-from app.core.settings import get_guardrails
-from app.presentation.api.mcp import mcp
+from acop_basement.core.settings import get_guardrails
+from acop_basement.presentation.api.mcp import mcp
 
 
 def test_composer_scopes_are_guardrail_owned():

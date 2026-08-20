@@ -16,8 +16,8 @@ from __future__ import annotations
 import pytest
 from psycopg import errors as pg_errors
 
-from app.application.case_service import ActiveRunError, CaseService
-from app.infrastructure.db.session import get_connection
+from acop_basement.application.case_service import ActiveRunError, CaseService
+from acop_basement.infrastructure.db.session import get_connection
 
 from .test_controller_integration import db, seed_case  # noqa: F401
 

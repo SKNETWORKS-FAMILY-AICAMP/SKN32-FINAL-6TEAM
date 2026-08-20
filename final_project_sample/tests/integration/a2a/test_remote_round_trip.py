@@ -19,10 +19,10 @@ from uuid import uuid4
 import httpx
 import pytest
 
-from app.core.contracts import ContextPack, NextAction, TeamTask
-from app.core.remote_team.a2a_executor import A2ATeamExecutor
-from app.infrastructure.a2a.http_transport import A2AHttpTransport
-from app.presentation.a2a.remote_agent import REMOTE_TOKEN, create_remote_agent
+from acop_basement.core.contracts import ContextPack, NextAction, TeamTask
+from acop_basement.core.remote_team.a2a_executor import A2ATeamExecutor
+from acop_basement.infrastructure.a2a.http_transport import A2AHttpTransport
+from acop_basement.presentation.a2a.remote_agent import REMOTE_TOKEN, create_remote_agent
 
 BASE = "http://remote.test"
 

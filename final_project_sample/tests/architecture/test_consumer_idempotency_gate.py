@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 
-MESSAGING_DIR = Path("app/infrastructure/messaging")
+MESSAGING_DIR = Path("acop_basement/infrastructure/messaging")
 CONSUMER_CLASS = re.compile(r"^\s*class\s+([A-Za-z_]\w*(?:Worker|Consumer))\b")
 
 # Every name here must have a duplicate-delivery idempotency test.

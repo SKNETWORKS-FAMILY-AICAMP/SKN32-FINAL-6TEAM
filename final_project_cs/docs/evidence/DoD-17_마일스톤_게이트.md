@@ -14,8 +14,7 @@ v5 §17-3 은 **"목요일 기능 동결 / 금요일 통합·회귀"** 라는 �
 ## 재현 명령
 
 ```powershell
-git log --oneline
-python -m pytest tests -q
+python -m scripts.check_release_gate
 ```
 
 ## 실제 출력 (커밋 이력, 최신순 발췌)
@@ -57,7 +56,12 @@ docs             저장소 골격 - 룰파일, DOCS 구조, 실행계획서, han
 ★**M3 는 도달했으나 "RC(릴리스 후보)" 는 아직이다.** 남은 것을 정직하게 적는다:
 - ★**judge agreement (사람 라벨 20건) 미측정** — DoD-15. **이것이 유일한 차단 항목이다**
 - ~~릴리스 체크리스트 문서 미작성~~ → **작성함** (`docs/release_checklist.md`, 2026-08-16)
-- 커밋 ↔ Phase 자동 매핑 미수행 (차단 아님 — 사람이 읽어 대조)
+- ~~커밋 ↔ Phase 자동 매핑 미수행~~ → **부분 자동화**(2026-08-20) —
+  `scripts/check_release_gate.py` 가 pytest·`verify_dod`·기능동결(git diff)
+  3단계를 한 명령으로 실행해 pass/fail exit code 를 낸다("사람이 손으로
+  재현"에서 "한 명령"으로 바뀜). 다만 이건 게이트 자체의 자동화이지 커밋
+  메시지↔Phase 매핑 자동화는 아니다 — 그건 여전히 사람이 읽어 대조한다.
+  근거: `docs/reports/2026-08-20_S-DOD17-AUTOMATED-GATE_리포트.md`
 
 ## 통과한 것 — 통합 규칙
 

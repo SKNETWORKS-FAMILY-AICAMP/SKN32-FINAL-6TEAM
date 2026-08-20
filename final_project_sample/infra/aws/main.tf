@@ -105,6 +105,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_security_group" "alb" {
   name   = "${local.name}-alb"
   vpc_id = aws_vpc.main.id
+  # Draft is public; before production, restrict this to VPN/management IPs or the VPC CIDR.
   ingress { from_port = 80; to_port = 80; protocol = "tcp"; cidr_blocks = ["0.0.0.0/0"] }
   egress  { from_port = 0; to_port = 0; protocol = "-1"; cidr_blocks = ["0.0.0.0/0"] }
   tags = local.common_tags
@@ -249,6 +250,7 @@ resource "aws_ecs_service" "app" {
   name            = local.name
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
+  # _WRITE_LOCK is process-local; use a distributed lock/DB CAS before scaling above 1.
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration { subnets = aws_subnet.private[*].id; security_groups = [aws_security_group.app.id]; assign_public_ip = false }

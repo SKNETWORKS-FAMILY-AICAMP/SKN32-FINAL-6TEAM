@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from app.application.feedback_job import run_daily_feedback
-from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
-from app.tools.read_tools import ReadToolbox
+from acop_basement.application.feedback_job import run_daily_feedback
+from acop_basement.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
+from acop_basement.tools.read_tools import ReadToolbox
 
 
 class FeedbackAnalyticsTeam:

@@ -6,12 +6,12 @@ import pytest
 from fastapi.testclient import TestClient
 from psycopg.types.json import Json
 
-import app.core.settings as settings_module
-from app.infrastructure.db.session import get_connection
-from app.presentation import security
-from app.presentation.api.app import create_app
-from app.presentation.ui import mount_ui
-import app.presentation.ui.routes as ui
+import acop_basement.core.settings as settings_module
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.presentation import security
+from acop_basement.presentation.api.app import create_app
+from acop_basement.presentation.ui import mount_ui
+import acop_basement.presentation.ui.routes as ui
 
 
 ui_app = create_app()

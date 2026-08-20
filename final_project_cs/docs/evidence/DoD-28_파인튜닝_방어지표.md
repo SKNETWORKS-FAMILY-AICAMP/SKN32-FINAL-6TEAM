@@ -128,6 +128,29 @@ LLM 이 실제로 어떤 값을 지어내는지, 그것이 이 지표에서 어�
 
 이 문장을 지키려면 **재는 수단**이 있어야 하는데, 그게 없다.
 
+## ★2026-08-20 시도 — golden 72건 실측을 막는 새 결함 발견
+
+`eval/runners/proposed.py`(경유 `eval/runners/common.py`)로 golden.jsonl
+72건 전체를 실제 LLM 제안으로 돌려 다섯 지표를 재려고 시도했다. **72건
+전부 import 단계에서 막혔다** — `eval/runners/common.py:253-254` 가
+`app.modules.customer_ops.order_shipping`/`return_exchange` 를 직접
+import 하는데, 이 두 팀은 이번 세션 legacy 격리 작업으로
+`legacy/final_project_cs/team_modules_v1/` 로 이미 옮겨졌다(`config/project.yaml`
+에도 없음). 즉 **eval 러너 자체가 지금 활성 팀 구성(voc_store_manager,
+response_generation_review)과 맞지 않는 옛 2-팀(order_shipping/
+return_exchange) 체제로 짜여 있다.**
+
+fixture 17건 지표는 재확인해 위와 동일(변화 없음). golden 쪽은
+`ratio: null`/`0.0` 으로만 기록했다 — **가짜 숫자를 채우지 않았다.**
+근거: `docs/reports/2026-08-20_S-DOD28-DEFENSE-METRICS-GOLDEN-RUN_리포트.md`,
+`eval/reports/2026-08-20_S-DOD28-golden-defense-metrics.json`.
+
+★이건 **DoD-28 고유 결함이 아니라 legacy 격리 작업의 후속 정리 누락**이다
+— eval 러너를 지금 활성 팀 구성에 맞게 다시 짤지, golden/holdout 데이터셋
+자체를 재설계할지는 엔지니어링 결정이 필요해 이 세션에서 임의로 고치지
+않았다. 판정은 그대로 **부분 통과** 유지 — golden 레벨 실측은 여전히
+미착수다(이번엔 "왜 안 되는지"를 새로 알아낸 것뿐).
+
 ## 선행 관계
 
 | 순서 | 항목 | 이유 |

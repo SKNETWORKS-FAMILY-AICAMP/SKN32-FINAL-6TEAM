@@ -3,7 +3,10 @@
 > v5 §20 항목 17(M3 게이트)이 요구하는 문서다.
 > **"돌아간다" 와 "내보낼 수 있다" 는 다른 주장이다.** 이 문서는 뒤쪽을 확인한다.
 >
-> 마지막 갱신: 2026-08-16 · 커밋 66개 · **172 passed**
+> 마지막 갱신: 2026-08-20 · **338 passed, 0 failed**(`-m "not live"`)
+> ★이 문서의 "DoD 18/18" 표는 v5 원본 M3 게이트 범위다. v8 확장분(29항목
+> 전체)의 현재 판정은 `docs/evidence/DoD-*.md` 개별 파일이 정본이다 —
+> 이 문서와 숫자가 안 맞으면 개별 evidence 파일을 따른다.
 
 각 항목은 **재현 명령**과 **합격선**을 함께 적는다.
 "확인했다" 는 근거가 아니다 — 명령과 출력이 근거다(`RULE.md` §4.0).
@@ -46,8 +49,12 @@ python -m scripts.verify_dod
 - [x] 동일 요청 10회 → `action_requests` 1행 (DoD-11)
 - [x] provider timeout → `unknown`, **자동 재실행 없음** (DoD-11)
 - [x] 근거 없는 제안은 승인 버튼이 잠김 + 잠긴 이유 표시
-- [ ] ★**`unknown` 을 사람이 푸는 운영 절차(화면·런북)가 없다** — 자동 재실행을 막아 뒀으니
-      누군가 손으로 조회해 결론내야 하는데 그 경로가 비어 있다
+- [x] ★**`unknown` 을 사람이 푸는 운영 절차(화면·런북)** — 2026-08-20 작성 완료.
+      `docs/manuals/운영_unknown상태_대응절차.md`. `unknown` 은 `customer_cases`
+      상태가 아니라 `outbox.status` 라는 것부터 확인하고, 전용 조회 화면·API가
+      없다는 사실도 숨기지 않고 적었다 — SQL로 찾고, `transition_case()` 로
+      사람이 명시적으로 `VALID_CALLBACK`/`WAIT_EXPIRED` 를 트리거하는 절차.
+      근거: `docs/reports/2026-08-20_S-OPS-UNKNOWN-RUNBOOK_리포트.md`.
 
 ---
 
@@ -113,10 +120,20 @@ ablation 도 마찬가지다. `no_approval`·`no_feedback_inline`·`no_team_spli
 
 ### 5-3. 미해결 (차단은 아님)
 
-- [ ] 마우스 오버 하이라이트가 튀는 UI 버그 — 원인 미특정
-- [ ] 커밋 ↔ Phase 자동 매핑 없음 (사람이 읽어 대조)
+- [ ] 마우스 오버 하이라이트가 튀는 UI 버그 — 원인 미특정(2026-08-20 재조사
+      시도 — 이 환경엔 브라우저 제어가 없어 재현 자체를 못 함, 소스만으로는
+      레이아웃을 바꾸는 hover 규칙 안 보임. `docs/reports/2026-08-20_S-UI-HOVER-JITTER_리포트.md`.
+      브라우저 되는 환경에서 재시도 필요)
+- [ ] 커밋 ↔ Phase 자동 매핑 없음 (사람이 읽어 대조) — ★부분 진전:
+      `scripts/check_release_gate.py`(2026-08-20)가 게이트 통과 여부는
+      자동화했으나 커밋↔Phase 매핑 자체는 여전히 수동
 - [ ] 스크린샷 증거 `docs/screenshots/` 없음 (텍스트 실측으로 대체)
-- [ ] 실제 결제 provider 어댑터 없음 — 진짜 결제 timeout 은 겪어 보지 않았다
+- [x] ★**실제 결제 provider 어댑터(mock) + timeout→unknown end-to-end 통합테스트**
+      (2026-08-20) — `app/infrastructure/messaging/mock_payment_publisher.py`,
+      `tests/integration/messaging/test_payment_timeout_unknown.py` 5건 통과.
+      진짜 결제 게이트웨이는 아니지만 실제 코드 경로(outbox→worker→unknown→
+      운영 절차서의 `transition_case()` 수동 트리거)를 처음부터 끝까지
+      완주시켰다. 근거: `docs/reports/2026-08-20_S-PAYMENT-TIMEOUT-MOCK_리포트.md`
 
 ---
 

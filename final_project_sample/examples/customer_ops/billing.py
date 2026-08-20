@@ -4,9 +4,9 @@ from __future__ import annotations
 import json
 from typing import Any, Protocol
 
-from app.core.contracts import ActionProposal, Evidence, NextAction, TeamManifest, TeamModule, TeamResult, TeamTask
-from app.core.idempotency import idempotency_key
-from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
+from acop_basement.core.contracts import ActionProposal, Evidence, NextAction, TeamManifest, TeamModule, TeamResult, TeamTask
+from acop_basement.core.idempotency import idempotency_key
+from acop_basement.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
 
 class LLM(Protocol):

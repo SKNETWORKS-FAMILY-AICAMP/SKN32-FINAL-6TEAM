@@ -9,12 +9,12 @@ before the Case reaches ``registry.resolve()``.
 
 See ``docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md``.
 """
-from app.modules.customer_ops import OrderShippingTeam, ReturnExchangeTeam
+from app.modules.customer_ops import VocStoreManagerTeam
 from app.modules.customer_ops.feedback import INTENTS
 
 
 def test_every_routable_case_type_is_a_classifiable_intent():
-    routable = set(OrderShippingTeam.manifest.accepted_case_types) | set(ReturnExchangeTeam.manifest.accepted_case_types)
+    routable = set(VocStoreManagerTeam.manifest.accepted_case_types)
     missing = routable - INTENTS
     assert not missing, (
         f"Team(s) accept case_type(s) {missing} that feedback.INTENTS cannot produce -- "

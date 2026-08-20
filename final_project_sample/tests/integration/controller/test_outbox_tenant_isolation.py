@@ -22,10 +22,10 @@ from uuid import uuid4
 
 import pytest
 
-from app.infrastructure.db.repository import create_case
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
-from app.infrastructure.messaging.worker import OutboxWorker
+from acop_basement.infrastructure.db.repository import create_case
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.messaging.outbox import OutboxBrokerAdapter
+from acop_basement.infrastructure.messaging.worker import OutboxWorker
 
 from .test_controller_integration import db, seed_case  # noqa: F401
 

@@ -122,8 +122,7 @@ def test_voc_without_report_says_none(ui_fixture):
 def test_admin_shows_registered_teams_guardrails_and_masks_key(ui_fixture):
     response = ui_fixture["client"].get("/ui/admin")
     assert response.status_code == 200
-    assert "order_shipping" in response.text
-    assert "return_exchange" in response.text
+    assert "voc_store_manager" in response.text
     assert "12000" in response.text
     assert "sk-****" in response.text
     assert settings_module.get_settings().openai_api_key not in response.text
@@ -142,7 +141,7 @@ def test_admin_reflects_a_newly_registered_team(ui_fixture, monkeypatch):
 
     import app.composition as composition
     base_registry = composition.build_registry()
-    teams = [base_registry.get(team_id).module for team_id in ("order_shipping", "return_exchange")]
+    teams = [base_registry.get("voc_store_manager").module]
     monkeypatch.setattr(composition, "build_registry", lambda: TeamRegistry(teams + [FakeTeam()]))
     response = ui_fixture["client"].get("/ui/admin")
     assert response.status_code == 200

@@ -5,7 +5,7 @@ import re
 from decimal import Decimal
 from typing import Pattern
 
-from app.core.verification import QuantityRule, VerificationPolicy
+from acop_basement.core.verification import QuantityRule, VerificationPolicy
 
 
 # Business language, rather than the generic review engine, owns this vocabulary.

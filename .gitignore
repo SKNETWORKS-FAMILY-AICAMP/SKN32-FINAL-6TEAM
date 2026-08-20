@@ -23,6 +23,8 @@ venv/
 # 환경/비밀
 .env
 .env.local
+*.env
+credentials*
 *.key
 *.pem
 
@@ -50,3 +52,80 @@ dist/
 # 평가 산출물 (raw 는 크고 재생성 가능 — report md 만 커밋한다)
 eval/reports/raw*.jsonl
 eval/reports/pairs*.jsonl
+
+# ═══ datasets/ 전역 규칙 ═══════════════════════════════════
+# 원칙: raw 원본·전처리 결과·압축본은 커밋하지 않는다.
+#       코드(scripts)·문서(README/REPORT)·스키마만 올린다.
+
+# 모든 데이터셋의 원본과 산출물
+datasets/**/raw/**
+datasets/**/processed/**
+datasets/**/legacy/**
+datasets/**/_backup*/**
+datasets/**/_dist/**
+datasets/**/_inspect/**
+
+# 압축본 전체 (원본 데이터가 통째로 들어간다)
+datasets/**/*.zip
+datasets/**/*.7z
+datasets/**/*.tar
+datasets/**/*.tar.gz
+datasets/**/*.rar
+
+# 대용량 데이터 파일
+datasets/**/*.csv
+datasets/**/*.tsv
+datasets/**/*.jsonl
+datasets/**/*.parquet
+datasets/**/*.xlsx
+datasets/**/*.db
+datasets/**/*.sqlite*
+
+# 로그인 세션·브라우저 프로필 (유출 시 계정 접근 가능)
+datasets/**/*_state.json
+datasets/**/*_profile/**
+datasets/**/chrome_copy/**
+datasets/**/Cookies
+
+# 점검 산출물·임시 파일 (개인정보 포함 가능)
+datasets/**/_live.png
+datasets/**/_probe.*
+datasets/**/_status.txt
+datasets/**/_done
+datasets/**/_sample.json
+datasets/**/*.partial
+
+# 비밀
+datasets/**/.env
+!datasets/**/.env.example
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+
+# 커밋할 것은 명시적으로 되살린다
+!datasets/README.md
+!datasets/**/README.md
+!datasets/**/REPORT.md
+!datasets/**/*_schema.json
+!datasets/**/courier_codes.json
+!datasets/**/scripts/**/*.py
+!datasets/**/scripts/**/*.js
+!datasets/**/scripts/**/*.html
+!datasets/**/scripts/**/*.json
+!datasets/**/scripts/**/*.txt
+!datasets/**/.gitkeep
+
+# ═══ 최종 차단 (되살리기 규칙보다 뒤에 두어 항상 이긴다) ═════
+# 아래는 어떤 경우에도 커밋하지 않는다.
+datasets/**/naver_state.json
+datasets/**/coupang_state.json
+datasets/**/*_state.json
+datasets/**/_inspect/
+datasets/**/_inspect/**
+datasets/**/_status.txt
+datasets/**/_live.png
+datasets/**/_done
+datasets/**/*.partial
+datasets/**/naver_profile/
+datasets/**/coupang_profile/

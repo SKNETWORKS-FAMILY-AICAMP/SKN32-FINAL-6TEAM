@@ -7,7 +7,7 @@
       "runtimeArgs": [
         "-m",
         "uvicorn",
-        "app.presentation.api.app:app",
+        "app.entrypoint:app",
         "--port",
         "8071",
         "--reload"

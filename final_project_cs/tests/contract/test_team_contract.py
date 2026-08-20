@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from app.core.contracts import TeamModule, TeamManifest
-from app.modules.customer_ops.order_shipping import OrderShippingTeam
-from app.modules.customer_ops.return_exchange import ReturnExchangeTeam
+from app.modules.customer_ops import VocStoreManagerTeam
 
 
 def test_team_manifests_implement_protocol():
-    for team in (OrderShippingTeam, ReturnExchangeTeam):
+    for team in (VocStoreManagerTeam,):
         assert isinstance(team.__new__(team), TeamModule)
         manifest = team.manifest
         assert isinstance(manifest, TeamManifest)
@@ -17,5 +16,4 @@ def test_team_manifests_implement_protocol():
 
 
 def test_manifest_scopes_are_exact():
-    assert OrderShippingTeam.manifest.allowed_tools == ["read.order", "read.shipment", "read.policy"]
-    assert ReturnExchangeTeam.manifest.allowed_tools == ["read.order", "read.return", "read.policy"]
+    assert VocStoreManagerTeam.manifest.allowed_tools == ["read.policy"]

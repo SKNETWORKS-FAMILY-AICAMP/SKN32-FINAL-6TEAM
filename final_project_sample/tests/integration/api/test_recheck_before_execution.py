@@ -14,12 +14,12 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.idempotency import idempotency_key
-from app.infrastructure.db import repository
-from app.infrastructure.db.session import get_connection
-from app.presentation.api.app import create_app
-from app.presentation.security import _development_key
-from app.core.settings import get_settings
+from acop_basement.core.idempotency import idempotency_key
+from acop_basement.infrastructure.db import repository
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.presentation.api.app import create_app
+from acop_basement.presentation.security import _development_key
+from acop_basement.core.settings import get_settings
 
 
 @pytest.fixture()

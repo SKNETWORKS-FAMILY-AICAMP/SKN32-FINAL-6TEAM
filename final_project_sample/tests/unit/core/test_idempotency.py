@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 
-from app.core.idempotency import idempotency_key
+from acop_basement.core.idempotency import idempotency_key
 
 
 def test_field_boundary_shift_does_not_collide():

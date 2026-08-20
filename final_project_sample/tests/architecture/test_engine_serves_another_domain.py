@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from app.core.verification import (Facts, QuantityRule, VerificationPolicy,
+from acop_basement.core.verification import (Facts, QuantityRule, VerificationPolicy,
                                    verify_proposal)
 
 # ── 쇼핑몰 CS 도메인 선언 (basement 는 이걸 모른다) ───────────────────────────
@@ -109,7 +109,7 @@ def test_engine_source_has_no_domain_vocabulary():
     """★엔진 파일 자체를 읽어 확인한다. 두 도메인이 다 도는 것만으로는
     '두 도메인을 다 하드코딩했을' 가능성이 남는다."""
     from pathlib import Path
-    source = Path("app/core/verification.py").read_text(encoding="utf-8")
+    source = Path("acop_basement/core/verification.py").read_text(encoding="utf-8")
     for word in ("payment_id", "subscription_id", "order_id", "amount_cents", "total_cents"):
         # 주석·docstring 제외한 실행부에 없어야 한다
         code = "\n".join(line for line in source.splitlines()

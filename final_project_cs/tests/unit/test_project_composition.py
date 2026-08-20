@@ -25,12 +25,8 @@ def _config(*, teams=None, graph_enabled=True, graph_port="sql", broker="outbox"
     return ProjectConfig.model_validate({
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": broker, "graph_store": graph_port},
-        "teams": teams or [
-            {"team_id": "order_shipping", "active": True,
-             "implementation_ref": "app.modules.customer_ops:OrderShippingTeam"},
-            {"team_id": "return_exchange", "active": True,
-             "implementation_ref": "app.modules.customer_ops:ReturnExchangeTeam"},
-        ],
+        "teams": teams or [{"team_id": "voc_store_manager", "active": True,
+                             "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"}],
     })
 
 
@@ -39,18 +35,12 @@ def _tools():
 
 
 def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
-    config = _config(teams=[
-        {"team_id": "order_shipping", "active": True,
-         "implementation_ref": "app.modules.customer_ops:OrderShippingTeam"},
-        {"team_id": "return_exchange", "active": False,
-         "implementation_ref": "app.modules.customer_ops:ReturnExchangeTeam"},
-    ])
+    config = _config(teams=[{"team_id": "voc_store_manager", "active": True,
+                             "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"}])
     registry = build_registry(config=config, tools=_tools(), llm=object())
 
-    assert {manifest.team_id for manifest in registry.manifests()} == {
-        "order_shipping", "return_exchange"
-    }
-    assert registry.get("return_exchange").manifest.active is False
+    assert {manifest.team_id for manifest in registry.manifests()} == {"voc_store_manager"}
+    assert registry.get("voc_store_manager").manifest.active is True
     with pytest.raises(RegistryError, match="exactly one active team"):
         registry.resolve(case_type="technical")
 
@@ -91,9 +81,9 @@ def test_composer_ui_is_no_longer_a_registered_module():
 def test_duplicate_capability_is_rejected():
     config = _config(teams=[
         {"team_id": "one", "active": True,
-         "implementation_ref": "app.modules.customer_ops:OrderShippingTeam"},
+         "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"},
         {"team_id": "two", "active": True,
-         "implementation_ref": "app.modules.customer_ops:OrderShippingTeam"},
+         "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"},
     ])
     with pytest.raises(CompositionError, match="duplicate capability"):
         build_registry(config=config, tools=_tools(), llm=object())
@@ -160,5 +150,6 @@ def test_load_project_config_does_not_import_inactive_implementation():
 def test_load_project_config_accepts_normal_declaration():
     config = load_project_config(Path("config") / "project.yaml")
     assert {team.team_id for team in config.teams} == {
-        "order_shipping", "return_exchange"
+        "voc_store_manager", "response_generation_review",
+        "return_refund", "procurement_order_payment", "fulfillment_logistics",
     }

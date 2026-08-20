@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.application import composer_service
-from app.application.composer_service import apply_candidate
+from acop_composer import service as composer_service
+from acop_composer.service import apply_candidate
 
 
 @pytest.fixture()

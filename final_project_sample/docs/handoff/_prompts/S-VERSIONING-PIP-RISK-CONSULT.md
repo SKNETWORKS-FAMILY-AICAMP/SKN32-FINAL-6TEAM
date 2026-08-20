@@ -20,7 +20,7 @@ CHANGELOG + git tag + export artifact(pip 아님)" 로 수렴했다. 그런데
 을 해도, cs 자신의 저장소 루트가 보통 `sys.path` 에서 site-packages 보다
 먼저 잡히므로 **cs 자신의 `app/core/...` 가 설치된 패키지를 가려버려서
 의존성이 적용되지 않는다.** 그래서 basement 최상위 패키지 이름을
-`app` 아닌 걸로(예: `acop_basement`) 리네임해야 한다고 판단했다.
+`app` 아닌 걸로(예: `app`) 리네임해야 한다고 판단했다.
 
 ## 내가 이미 찾은 리스크 — 검증해 달라
 

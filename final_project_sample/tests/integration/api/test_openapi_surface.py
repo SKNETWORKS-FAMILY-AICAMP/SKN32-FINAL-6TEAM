@@ -22,7 +22,7 @@
   - 새 경로는 막지 않는다. 대신 **품질 조건**을 검사한다
 """
 
-from app.presentation.api.app import app
+from acop_basement.presentation.api.app import app
 
 # 설계 계약 문서 §1 의 표 — 이것은 **최소 집합**이지 상한이 아니다.
 CONTRACT_V1_PATHS = {
@@ -76,7 +76,7 @@ def test_write_endpoints_require_a_scope_dependency() -> None:
     OpenAPI 스키마가 아니라 **실제 라우트 의존성**을 본다 —
     스키마만 보면 "문서에는 있는데 코드에는 없는" 경우를 놓친다.
     """
-    from app.presentation.security import require_scope  # noqa: F401
+    from acop_basement.presentation.security import require_scope  # noqa: F401
 
     offenders = []
     for route in app.routes:

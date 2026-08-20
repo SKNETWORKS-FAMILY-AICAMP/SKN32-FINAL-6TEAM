@@ -115,10 +115,7 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-ALLOWED_PROMPT_KEYS = frozenset({
-    "order_shipping.answer", "order_shipping.answer.repair",
-    "return_exchange.answer", "return_exchange.answer.repair",
-})
+ALLOWED_PROMPT_KEYS = frozenset()
 
 
 def register_prompt_files(

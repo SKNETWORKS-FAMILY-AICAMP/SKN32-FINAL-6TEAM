@@ -1,15 +1,28 @@
 # 15 — basement 버전·배포 계약
 
-basement는 별도 pip 패키지나 자동 적용기가 아니라, 선언된 소스 파일과 그
-파일의 해시를 함께 전달하는 export artifact다. 현재 artifact의
-`basement_version`은 `0.2.0`이고 manifest 계약 버전은 `1.0`이다.
+★2026-08-19(v0.3.0) 갱신 — basement 는 이제 실제 **pip 설치 가능한 패키지**
+`acop_basement`다(2026-08-18 작성 당시엔 아직 export artifact 방식뿐이었다).
+Composer 쓰기 채널은 `acop_composer`라는 별도 선택 패키지로 분리됐다 —
+릴리스 대상(예: `final_project_cs`)은 `acop_basement`만 설치하고,
+"관리용 빌드"만 `acop_composer`를 추가로 설치한다. 아래 export/manifest
+절차는 **pip 설치가 아직 안 되는 소비자**(예: 수동 diff·검토가 필요한
+경우)를 위한 보조 수단으로 유지한다 — 정식 소비 경로는
+`pip install`이다. 현재 artifact의 `basement_version`은 `0.3.0`이고
+manifest 계약 버전은 `1.0`이다.
 
 ## 경계와 manifest
 
 경계는 `scripts/basement_manifest.py`의 `BASEMENT_COMPONENTS` 선언이 소유한다.
-현재 컴포넌트는 `app/core`, `app/domain`, `app/application`,
-`app/infrastructure`, `app/presentation`이다. `__pycache__`, `*.pyc`,
-`app/infrastructure/db/migrations/002_domain_*.sql`은 export하지 않는다.
+현재 컴포넌트는 `acop_basement/core`, `acop_basement/domain`,
+`acop_basement/application`, `acop_basement/infrastructure`,
+`acop_basement/presentation`, `acop_basement/tools`,
+`acop_basement/introspection` 7개다(`tools`·`introspection`은 2026-08-19에
+basement 경계로 확정됐다 — `docs/handoff/10` §0). `acop_composer/**`는
+별도 패키지라 이 manifest 대상이 아니다. `__pycache__`, `*.pyc`는
+export하지 않는다. 도메인 마이그레이션(`config/migrations/
+002_domain_*.sql`)은 애초에 `acop_basement/` 경로 밖에 있어 자동으로
+빠진다(예전엔 `acop_basement/infrastructure/db/migrations/` 안에 있어서
+패턴으로 제외해야 했다 — 지금은 물리적으로 그 경로에 없다).
 
 manifest에는 basement 버전, source commit/tag, UTC 생성 시각, 컴포넌트와
 제외 목록, 파일별 SHA-256, 계약 버전, export 도구 버전이 들어간다. 파일

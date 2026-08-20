@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from app.infrastructure.rag.retriever import search_policy
-from app.tools.read_tools import ToolContext
+from acop_basement.infrastructure.rag.retriever import search_policy
+from acop_basement.tools.read_tools import ToolContext
 
 
 def _one(connection_factory: Callable[[], Any], sql: str, params: tuple[Any, ...],

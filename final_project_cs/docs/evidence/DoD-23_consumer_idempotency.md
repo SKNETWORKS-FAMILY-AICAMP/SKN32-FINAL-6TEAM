@@ -1,8 +1,8 @@
 # DoD-23 — 모든 consumer 가 at-least-once 하에서 idempotent 하다
 
 - v7 §27 항목 23 / 검증 방법: 동일 message 를 2회 전달하는 duplicate/replay integration test
-- 실행: 2026-08-16
-- 판정: **부분 통과** — 발행측은 증명됐고, consumer 측은 대상이 하나뿐이다
+- 실행: 2026-08-16, 재측정: 2026-08-20
+- 판정: **통과** (2026-08-20 갱신 — 근거: `docs/reports/2026-08-20_S-DOD23-CONSUMER-CONTRACT-TEST_리포트.md`)
 
 ## 재현 명령
 
@@ -35,19 +35,25 @@ test_outbox_write_is_atomic_with_the_transition
 | 재전달(replay) 시 side effect 1회 | **통과** — `SELECT … FOR UPDATE SKIP LOCKED` + status 전이 |
 | ★timeout 은 `unknown` 으로 남고 재실행 안 함 | **통과** — DoD-11 참조 |
 
-## ★왜 부분 통과인가
+## ★왜 부분 통과였는가 (2026-08-16 시점)
 
-v7 은 **"모든 consumer"** 라고 쓴다. 그런데 이 시스템의 consumer 는 지금
-**outbox worker 하나뿐이다.** MCP·A2A·외부 소비자가 메시지를 받아 처리하는 경로가 없다.
+v7 은 **"모든 consumer"** 라고 쓴다. 그런데 이 시스템의 consumer 는
+**outbox worker 하나뿐이었다.** MCP·A2A·외부 소비자가 메시지를 받아 처리하는
+경로가 없다. "consumer 가 하나뿐이라 전부 통과"는 "전부 검증했다"와
+다르다 — consumer 가 늘어나면 각각에 같은 검사가 필요한데, 그걸 강제하는
+장치가 없었다.
 
-★**"consumer 가 하나뿐이라 전부 통과" 는 "전부 검증했다" 와 다르다.**
-consumer 가 늘어나면 각각에 같은 검사가 필요하고, 지금은 그 검사를 강제하는 장치가 없다.
+## ★2026-08-20 갱신 — 재측정 조건 충족
 
-또한 REST 생성 경로의 idempotency(동일 요청 10회 → 1행)는 DoD-11 에서 따로 증명했다.
-이 항목은 **메시지 소비** 쪽이다.
+`tests/contract/test_consumer_idempotency_contract.py` 신규 — 임의의
+consumer 구현체를 `consumer_contract_factories` 튜플에 등록하면 자동으로
+3개 계약 테스트(중복 dedupe_key 1회 배달, 동시 race 방지, timeout→`unknown`
++자동재실행 없음)를 강제로 통과해야 한다. 지금은 `OutboxWorker` 하나만
+등록돼 있고 3건 다 통과했다. 재사용 규칙 문서는
+`docs/handoff/12_메시지_컨슈머_멱등성_계약.md`.
 
-## 재측정 조건
-
-1. consumer 가 늘어날 때 각각에 duplicate 전달 테스트를 붙인다
-2. 새 consumer 가 그 테스트 없이 추가되지 못하게 하는 게이트를 만든다
-   (★검사하지 않는 규칙은 지켜지지 않는다)
+★**consumer 가 하나뿐이라는 사실 자체는 안 바뀌었다.** 바뀐 건 "다음
+consumer 가 이 검사 없이 추가될 수 없다"는 것 — 이게 v7 요구("모든
+consumer")를 미래형으로 충족시키는 구조다. 실제 두 번째 consumer(Fulfillment
+&Logistics, Return&Refund 등)가 붙을 때 이 계약을 통과하는지가 진짜
+증명이다.

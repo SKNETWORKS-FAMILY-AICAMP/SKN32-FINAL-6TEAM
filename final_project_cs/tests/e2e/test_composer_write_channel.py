@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
 import threading
 from types import SimpleNamespace
@@ -44,6 +45,79 @@ def _auth(scope: str | list[str]) -> dict[str, str]:
     return {"Authorization": f"Bearer {_token(scope)}"}
 
 
+def test_requires_authentication(tmp_path, monkeypatch, configured):
+    client, _ = _client(tmp_path, monkeypatch)
+    response = client.get("/composer/current")
+    assert response.status_code == 401
+
+
+def test_wrong_scope_is_rejected(tmp_path, monkeypatch, configured):
+    client, _ = _client(tmp_path, monkeypatch)
+    response = client.get("/composer/current", headers=_auth("ops:introspect"))
+    assert response.status_code == 403
+
+
+def test_write_channel_survives_ops_ui_being_disabled(tmp_path, monkeypatch, configured):
+    source = yaml.safe_load(Path("config/project.yaml").read_text(encoding="utf-8"))
+    source["modules"]["ops_ui"]["enabled"] = False
+    client, path = _client(tmp_path, monkeypatch)
+    path.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
+    # This repository has no composer_ui module; disabling ops_ui must not disable the API.
+    response = client.get("/composer/current", headers=_auth("composer:read"))
+    assert response.status_code == 200
+    assert response.json()["config"]["modules"]["ops_ui"]["enabled"] is False
+
+
+def test_validate_does_not_write_the_file(tmp_path, monkeypatch, configured):
+    client, path = _client(tmp_path, monkeypatch)
+    before = path.read_bytes()
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    current["config"]["teams"][0]["implementation_ref"] = "app.nonexistent:Missing"
+
+    response = client.post("/composer/validate", headers=_auth("composer:validate"),
+                           json={"config": current["config"]})
+
+    assert response.status_code == 200
+    assert response.json()["valid"] is False
+    assert path.read_bytes() == before
+    assert not path.with_suffix(".yaml.bak").exists()
+
+
+def test_apply_rejects_unimplementable_reference(tmp_path, monkeypatch, configured):
+    client, path = _client(tmp_path, monkeypatch)
+    before = path.read_bytes()
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    current["config"]["teams"][0]["implementation_ref"] = "app.nonexistent:Missing"
+
+    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+        "config": current["config"], "base_revision": current["revision"],
+        "reason": "test registry rejection"})
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_declaration"
+    assert path.read_bytes() == before
+
+
+def test_apply_writes_an_audit_event_with_actor_and_revision(tmp_path, monkeypatch, configured):
+    client, path = _client(tmp_path, monkeypatch)
+    audit_path = tmp_path / "composer_events.jsonl"
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    candidate = current["config"]
+    candidate["teams"][0]["active"] = not candidate["teams"][0]["active"]
+
+    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+        "config": candidate, "base_revision": current["revision"], "reason": "audit test"})
+
+    assert response.status_code == 200
+    lines = audit_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    event = json.loads(lines[0])
+    assert event["actor"] == "test-actor"
+    assert event["previous_revision"] == current["revision"]
+    assert event["revision"] == response.json()["revision"]
+    assert event["changed_fields"]
+
+
 def test_expired_token_is_rejected(tmp_path, monkeypatch, configured):
     client, _ = _client(tmp_path, monkeypatch)
     response = client.get("/composer/current", headers={"Authorization": f"Bearer {_token('composer:read', expired=True)}"})
@@ -69,12 +143,22 @@ def test_token_issue_and_current_endpoint(tmp_path, monkeypatch, configured):
 def test_concurrent_apply_one_wins_one_gets_409(tmp_path, monkeypatch, configured):
     client, _ = _client(tmp_path, monkeypatch)
     current = client.get("/composer/current", headers=_auth("composer:read")).json()
-    payloads = []
-    for index, team in enumerate(current["config"]["teams"]):
-        candidate = dict(current["config"])
-        candidate["teams"] = [dict(item) for item in current["config"]["teams"]]
-        candidate["teams"][index]["active"] = not team["active"]
-        payloads.append(candidate)
+    # ★두 팀이 있던 시절엔 팀마다 하나씩 토글해 서로 다른 두 변형을 만들었다.
+    #   지금은 팀이 1개라 그 방식으로는 변형을 2개 못 만든다 — 이 테스트가 실제로
+    #   재는 건 "같은 base_revision 으로 동시에 apply 하면 하나만 이긴다"는
+    #   낙관적 동시성이지 팀 개수가 아니므로, 서로 다른 필드를 하나씩 토글해
+    #   변형 2개를 만든다.
+    first_team = dict(current["config"]["teams"][0])
+    first_team["active"] = not first_team["active"]
+    variant_a = dict(current["config"])
+    variant_a["teams"] = [first_team] + [dict(item) for item in current["config"]["teams"][1:]]
+
+    variant_b = dict(current["config"])
+    variant_b["modules"] = dict(current["config"]["modules"])
+    variant_b["modules"]["ops_ui"] = dict(variant_b["modules"]["ops_ui"])
+    variant_b["modules"]["ops_ui"]["enabled"] = not variant_b["modules"]["ops_ui"]["enabled"]
+
+    payloads = [variant_a, variant_b]
     results = [None, None]
 
     def apply(index: int):

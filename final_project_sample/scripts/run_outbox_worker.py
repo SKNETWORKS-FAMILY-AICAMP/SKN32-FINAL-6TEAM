@@ -4,8 +4,8 @@ from __future__ import annotations
 import argparse
 import json
 
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.messaging.worker import OutboxWorker
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.messaging.worker import OutboxWorker
 
 
 def publish(message: dict) -> None:

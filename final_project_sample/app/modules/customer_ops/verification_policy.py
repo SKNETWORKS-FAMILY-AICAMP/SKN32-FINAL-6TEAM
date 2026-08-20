@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from app.core.verification import QuantityRule, VerificationPolicy
+from acop_basement.core.verification import QuantityRule, VerificationPolicy
 
 #: 이 도메인이 대조할 수 있는 것들.
 CUSTOMER_OPS_POLICY = VerificationPolicy(

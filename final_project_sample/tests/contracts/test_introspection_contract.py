@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.introspection import introspect
+from acop_basement.introspection import introspect
 
 
 def test_introspection_contract_has_versioned_redacted_shape(monkeypatch):
@@ -23,8 +23,8 @@ def test_introspection_contract_has_versioned_redacted_shape(monkeypatch):
     executor = type("LocalTeamExecutor", (), {})()
     monkeypatch.setattr("app.composition.build_registry", lambda **kwargs: registry)
     monkeypatch.setattr("app.composition.build_team_executor", lambda **kwargs: executor)
-    monkeypatch.setattr("app.core.settings.get_settings", lambda: Settings())
-    monkeypatch.setattr("app.core.settings.get_guardrails", lambda: Guardrails())
+    monkeypatch.setattr("acop_basement.core.settings.get_settings", lambda: Settings())
+    monkeypatch.setattr("acop_basement.core.settings.get_guardrails", lambda: Guardrails())
 
     data = introspect(config=Config())
     assert data["contract_version"] == "1.0"

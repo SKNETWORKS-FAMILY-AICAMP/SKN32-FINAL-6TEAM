@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.core.contracts import CaseStatus, InvalidTransition
-from app.domain.case import CaseProjection, apply_event, fold_events, validate_payload
-from app.domain.events import EventType
+from acop_basement.core.contracts import CaseStatus, InvalidTransition
+from acop_basement.domain.case import CaseProjection, apply_event, fold_events, validate_payload
+from acop_basement.domain.events import EventType
 
 CREATED_PAYLOAD = {"channel": "personal_ai", "message": "해지했는데 결제가 됐어요"}
 CLASSIFIED_PAYLOAD = {

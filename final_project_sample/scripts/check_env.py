@@ -34,7 +34,7 @@ def check_python() -> None:
 
 def check_settings() -> None:
     try:
-        from app.core.settings import get_settings
+        from acop_basement.core.settings import get_settings
 
         s = get_settings()
         record("settings(.env)", True, f"env={s.env} tenant={s.tenant_id} model={s.llm_model}")
@@ -50,7 +50,7 @@ def check_settings() -> None:
 
 def check_guardrails() -> None:
     try:
-        from app.core.settings import get_guardrails
+        from acop_basement.core.settings import get_guardrails
 
         g = get_guardrails()
         budget = g.get("context.token_budget")
@@ -76,7 +76,7 @@ def check_db() -> None:
     try:
         import psycopg
 
-        from app.core.settings import get_settings
+        from acop_basement.core.settings import get_settings
 
         dsn = get_settings().database_url.replace("postgresql+psycopg://", "postgresql://")
         with psycopg.connect(dsn, connect_timeout=5) as conn, conn.cursor() as cur:

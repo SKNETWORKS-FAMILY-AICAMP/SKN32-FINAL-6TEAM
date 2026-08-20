@@ -54,7 +54,12 @@
 
 | 절 | 제목 | 무엇이 있는가 |
 |---|---|---|
+| 0 | 문서 상태 | 문서의 기준선·상태·변경 규칙 |
+| 0-1 | 한 줄 요약 | 프로젝트 핵심 요약 |
+| 0-2 | 절 색인 | 계획서 하위 절 탐색용 색인 |
 | 1 | 프로젝트명 정리 | 팀명 A-COPilot 확정 배경 |
+| 1-1 | 포지셔닝 | 제품의 포지셔닝 |
+| 1-2 | 제품 구조 — 하나의 Runtime, 두 도메인 팩 | Runtime과 도메인 팩 구조 |
 | 2 | 문제 정의 | 풀려는 문제 한 문단 |
 | 3 | 프로젝트 목표 | 목표 3~4개 |
 | 3-A | 부트캠프 요구사항 대응표 | 주제 요구사항 ↔ 실제 구현 ↔ 산출물/검증 매핑 |
@@ -65,11 +70,22 @@
 | 7-A | Feedback Analytics 배치 파이프라인 | VOC 배치 집계 설계 |
 | 7-B | 전체 구성 | Core+Team 전체 그림 |
 | 8 | Basement(Core) 설계 | Case Runtime·Controller·Registry 등 Core 컴포넌트 |
+| 8-1 | Agent Gateway | Gateway 책임 |
+| 8-2 | Customer Case Layer | Customer Case 계층 |
+| 8-3 | Agent Team Registry / Team Contract | Team 등록과 계약 |
+| 8-4 | Context Broker | Context Broker 책임 |
+| 8-5 | Message Broker | Message Broker 책임 |
+| 8-6 | Shared State | 공유 상태 책임 |
+| 8-7 | Tool / Action Layer | Tool과 Action 계층 |
+| 8-8 | Agentic Controller / Orchestration | Controller와 오케스트레이션 |
 | 8-A | Message Broker와 Context Broker 분리 | 두 Broker가 다른 이유 |
+| 8-A-1 | 계층 경계 | 계층 경계 |
+| 8-A-2 | 전달 보장과 중복 처리 규칙 | 전달 보장과 중복 처리 |
 | 8-B | Agent Team 플러그인/모듈화 계획 | **Team 목록·착수 판정·검증 쇼핑몰 연계 구분** — 오늘 재구성한 핵심 절 |
 | 8-C | Agent/Team 경합과 동시성 처리 책임 | CAS·낙관적 동시성 담당 구분 |
 | 9 | 외부 소비자 AI 연동 구조 | Personal AI/A2A 진입 경로 |
 | 9-C | MCP / A2A / Message Broker 역할 분리 | 세 프로토콜이 겹치지 않는 이유 |
+| 9-C-1 | A2A Remote Team 후보 판정 | Remote Team 후보 판정 |
 | 9-D | Graph DB / GraphRAG 활용 계획 | GraphStorePort·SqlGraphAdapter |
 | 9-E | ActionProposal 할루시네이션 방어 | 실행 직전 DB 재대조 |
 | 10 | 핵심 사용자 시나리오 | 시나리오 예시. **[확인 필요] 미해결 표시 있음** |
@@ -78,9 +94,14 @@
 | 13 | 리포지터리 스캐폴딩 | 폴더 트리 |
 | 14 | 구현 단계 계획 | 1~6단계 개요 |
 | 15 | 평가 계획 | golden/holdout, 파인튜닝, §15-8-A 데이터 2트랙 |
+| 15-7 | (v5 흡수) harness 디렉터리 구조와 실행 명령 | 평가 harness 구조와 실행 |
+| 15-8 | 파인튜닝 경로와 증명 범위 | 파인튜닝 경로와 증명 |
+| 15-8-A | 데이터 2트랙과 모듈별 배분 [v7.1] | 데이터 2트랙과 배분 |
+| 15-9 | REST surface와 Team 수의 확장 규칙 | REST와 Team 확장 규칙 |
 | 16 | 팀 역할과 소유 경계 | **사람 6명 배치, 확정 축/연계 축 구분** |
 | 17 | 사용자 본인 역할 어필 문장 | 발표용 문구 |
 | 18 | 예상 리스크 | 리스크 목록 |
+| 18-A | 결정사항의 주의점 [A2A] | 결정사항의 주의점 |
 | 19 | 케이스 생명주기 구현 명세 | Case 상태 전이 |
 | 20 | 동시성·정합성·Action 구현 명세 | CAS 세부 규칙 |
 | 21 | 통합 계약 전문 | Pydantic 계약 전체 |
@@ -137,8 +158,6 @@ Team을 늘리는 일이 리팩토링이 되면 설계가 잘못된 것이다. [
 **감독이 성립하려면 "이상"이 정의돼 있어야 한다.** 이상은 수치의 절대값이 아니라
 **기준선 대비 정해진 변화가 생긴 상태**로 정의한다. 내부 단계에서 fixture 기준선을 만들고,
 알파부터 유형·시간대별 baseline을 저장한다. 정확한 임계값은 실제 분포 측정 후 확정한다.
-
-상세 설계는 `program/research/20260816_제품구조_런타임과_도메인팩.md` 참조.
 
 **말하지 않는 것.** "LLM으로 고객 문의를 자동응답한다"로 설명하면 시장의 기존 제품과 구분되지 않는다.
 A-COP이 주장하는 것은 새로운 모델이나 새로운 RAG가 아니라 **멀티에이전트 고객운영의 통제·검증층**이다.
@@ -406,7 +425,7 @@ Controller는 `redis.xadd(...)` 같은 구현 세부사항을 알지 않는다.
 
 ### Response Generation & Review 모듈 [v7.1]
 
-Response Generation & Review는 cy의 개정 설계(`REV, GEN 설계.html`, `REV,GEN 요약.html`, 2026-08-16)에 따른 하나의 Team Module이다. 새 컴포넌트를 추가하는 것이 아니며, GEN과 REV를 별도 Team으로 분리하지 않는다.
+Response Generation & Review는 v8에 반영된 개정 설계에 따른 하나의 Team Module이다. 새 컴포넌트를 추가하는 것이 아니며, GEN과 REV를 별도 Team으로 분리하지 않는다.
 
 - 슬롯 자격: 응답 생성·검증 capability와 톤 프로파일·금칙 표현·검증 규칙의 지식 범위가 독립된다. 입력은 `TeamTask`이고 side effect는 없다. 재시도 루프는 모듈 내부에서 수행한다.
 - 내부 흐름: 톤 결정(규칙) → GEN 초안 → REV 검증 → 완료. 최대 3회 재시도한다.

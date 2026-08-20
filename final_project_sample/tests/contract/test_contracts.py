@@ -12,7 +12,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from app.core.contracts import (
+from acop_basement.core.contracts import (
     ActionProposal,
     ContextPack,
     Evidence,

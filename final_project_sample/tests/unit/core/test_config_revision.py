@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 import yaml
 
-from app.core.project_config import load_project_config
+from acop_basement.core.project_config import load_project_config
 
 
 @pytest.fixture()

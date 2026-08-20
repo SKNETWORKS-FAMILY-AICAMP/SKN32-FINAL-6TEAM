@@ -95,6 +95,12 @@ def _instantiate_team(implementation: type, tools: ReadToolbox, llm: Any | None)
         if not positional:
             return implementation()
         if len(required) <= 1 and len(positional) <= 1:
+            # ★단일 인자 생성자는 이름으로 무엇을 받는지 구분한다 — 개수만 보면
+            #   `__init__(self, llm=None)` 형태(예: ResponseGenerationReviewTeam)에
+            #   ReadToolbox 가 llm 자리로 잘못 들어간다(2026-08-19 발견,
+            #   docs/reports/debugs/2026-08-19_composition_단일인자_Team_llm_오배선.md).
+            if positional[0].name == "llm":
+                return implementation(llm)
             return implementation(tools)
         return implementation(tools, llm)
     except (TypeError, ValueError) as exc:
@@ -185,6 +191,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
         # ★대조 어휘는 도메인 선언에서 온다. Controller 는 무엇을 대조하는지 모른다.
         verification_policy=verification_policy,
         fact_queries=fact_queries,
+        response_review=config.response_review,
     )
 
 

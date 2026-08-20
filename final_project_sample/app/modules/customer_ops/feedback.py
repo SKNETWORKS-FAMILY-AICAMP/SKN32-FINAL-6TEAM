@@ -12,8 +12,8 @@ import json
 from dataclasses import dataclass
 from typing import Any, Callable, Protocol
 
-from app.core.settings import get_settings
-from app.presentation.security import masked
+from acop_basement.core.settings import get_settings
+from acop_basement.presentation.security import masked
 
 
 class ClassificationFailed(RuntimeError):

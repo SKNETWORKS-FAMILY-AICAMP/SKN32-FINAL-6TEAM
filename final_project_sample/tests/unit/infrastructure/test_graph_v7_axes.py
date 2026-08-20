@@ -15,8 +15,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
 
 
 @pytest.fixture()

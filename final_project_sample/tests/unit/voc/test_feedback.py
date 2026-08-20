@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.application.feedback_job import is_surge, run_daily_feedback
-from app.infrastructure.db.session import get_connection
+from acop_basement.application.feedback_job import is_surge, run_daily_feedback
+from acop_basement.infrastructure.db.session import get_connection
 from app.modules.customer_ops.feedback import ClassificationFailed, classify
 
 

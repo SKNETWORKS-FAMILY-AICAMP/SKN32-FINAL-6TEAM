@@ -2,11 +2,11 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.contracts import CaseStatus, StateConflict
-from app.core.transition import OutboxMessage, transition_case
-from app.domain.events import EventType
-from app.infrastructure.db.repository import create_case
-from app.infrastructure.db.session import get_connection
+from acop_basement.core.contracts import CaseStatus, StateConflict
+from acop_basement.core.transition import OutboxMessage, transition_case
+from acop_basement.domain.events import EventType
+from acop_basement.infrastructure.db.repository import create_case
+from acop_basement.infrastructure.db.session import get_connection
 
 
 @pytest.fixture()

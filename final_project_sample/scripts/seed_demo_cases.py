@@ -30,10 +30,10 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 
 from psycopg.types.json import Json
 
-from app.core.settings import get_settings
-from app.core.transition import transition_case
-from app.domain.events import EventType
-from app.infrastructure.db.session import get_connection
+from acop_basement.core.settings import get_settings
+from acop_basement.core.transition import transition_case
+from acop_basement.domain.events import EventType
+from acop_basement.infrastructure.db.session import get_connection
 
 SEEDED_BY = "scripts.seed_demo_cases"
 MARKER = {"seeded_by": SEEDED_BY, "note": "발표 시연용. LLM 호출 없이 고정값으로 만든 Case"}

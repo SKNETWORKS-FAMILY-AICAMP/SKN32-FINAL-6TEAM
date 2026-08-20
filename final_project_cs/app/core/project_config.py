@@ -37,6 +37,12 @@ class TeamConfig(BaseModel):
     implementation_ref: str = Field(min_length=1)
 
 
+class ResponseReviewConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    enabled: bool = False
+    owner_team_id: str = Field(min_length=1)
+
+
 _IMPLEMENTATION_REF_PATTERN = re.compile(
     r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*:[A-Za-z_]\w*$",
     re.ASCII,
@@ -48,6 +54,9 @@ class ProjectConfig(BaseModel):
     modules: dict[str, ModuleConfig]
     ports: PortConfig
     teams: list[TeamConfig] = Field(min_length=1)
+    response_review: ResponseReviewConfig = ResponseReviewConfig(
+        enabled=False, owner_team_id="response_generation_review"
+    )
 
     @model_validator(mode="after")
     def validate_team_ids(self) -> "ProjectConfig":
@@ -152,5 +161,5 @@ def load_project_config(path: str | Path | None = None) -> ProjectConfig:
 
 __all__ = [
     "DEFAULT_PROJECT_CONFIG", "ModuleConfig", "PortConfig", "ProjectConfig",
-    "ProjectConfigError", "TeamConfig", "load_project_config",
+    "ProjectConfigError", "ResponseReviewConfig", "TeamConfig", "load_project_config",
 ]

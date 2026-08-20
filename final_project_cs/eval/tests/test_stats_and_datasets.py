@@ -40,7 +40,7 @@ def test_bootstrap_all_positive_difference_excludes_zero():
 def test_dataset_counts_and_allocation_and_disjointness():
     def rows(name): return [json.loads(x) for x in (ROOT / "eval/datasets" / name).read_text(encoding="utf-8").splitlines() if x]
     golden, holdout = rows("golden.jsonl"), rows("holdout.jsonl")
-    assert len(golden) == 60 and len(holdout) == 20
+    assert len(golden) == 72 and len(holdout) == 24
     assert {x["case_id"] for x in golden}.isdisjoint({x["case_id"] for x in holdout})
-    assert {k: sum(1 for x in golden if x["case_id"].startswith(k)) for k in ("g-order", "g-shipping", "g-return", "g-exchange")} == {"g-order":15,"g-shipping":15,"g-return":15,"g-exchange":15}
-    assert {k: sum(1 for x in holdout if x["case_id"].startswith(k)) for k in ("h-order", "h-shipping", "h-return", "h-exchange")} == {"h-order":5,"h-shipping":5,"h-return":5,"h-exchange":5}
+    assert {k: sum(1 for x in golden if x["case_id"].startswith(k)) for k in ("g-order", "g-shipping", "g-return", "g-exchange", "g-response-review")} == {"g-order":15,"g-shipping":15,"g-return":15,"g-exchange":15,"g-response-review":12}
+    assert {k: sum(1 for x in holdout if x["case_id"].startswith(k)) for k in ("h-order", "h-shipping", "h-return", "h-exchange", "h-response-review")} == {"h-order":5,"h-shipping":5,"h-return":5,"h-exchange":5,"h-response-review":4}

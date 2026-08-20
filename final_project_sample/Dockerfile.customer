@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ ./app/
+COPY acop_basement/ ./acop_basement/
+COPY config/ ./config/
+
+EXPOSE 8000
+
+# 고객용 이미지 — acop_composer 는 의도적으로 COPY하지 않는다.
+CMD ["uvicorn", "acop_basement.presentation.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

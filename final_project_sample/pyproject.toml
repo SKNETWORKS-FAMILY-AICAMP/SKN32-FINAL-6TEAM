@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "final-project-sample"
-version = "0.2.0"
-description = "A-COP S-API product with an optional development console"
+version = "0.3.0"
+description = "A-COP S-API product (acop_basement/acop_composer packages + local domain modules)"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi",
@@ -14,13 +14,9 @@ dependencies = [
   "PyYAML",
 ]
 
-[project.optional-dependencies]
-console = ["final-project-sample"]
-product = []
-
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["app*"]
-exclude = ["app.console*", "tests*", "docs*", "eval*", "knowledge*"]
+include = ["app*", "acop_basement*", "acop_composer*"]
+exclude = ["tests*", "docs*", "eval*", "knowledge*"]

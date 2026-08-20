@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from app.core.project_config import ProjectConfigError, load_project_config
+from acop_basement.core.project_config import ProjectConfigError, load_project_config
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -61,7 +61,7 @@ def test_eval_contract_reads_real_jsonl_and_rejects_renamed_fixture():
 
 
 def test_db_contract_reads_live_columns():
-    from app.infrastructure.db.session import get_connection
+    from acop_basement.infrastructure.db.session import get_connection
 
     expected = {
         "agent_runs": {"run_id", "case_id", "graph_revision", "status", "started_at", "finished_at"},

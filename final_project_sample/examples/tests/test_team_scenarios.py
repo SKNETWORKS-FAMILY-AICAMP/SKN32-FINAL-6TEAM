@@ -5,12 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.contracts import ContextPack, Evidence, NextAction, TeamTask, ToolNotAllowed
-from app.core.verification import Facts, verify_proposal
+from acop_basement.core.contracts import ContextPack, Evidence, NextAction, TeamTask, ToolNotAllowed
+from acop_basement.core.verification import Facts, verify_proposal
 from examples.customer_ops.billing import BillingSubscriptionTeam
 from examples.customer_ops.technical import TechnicalEntitlementTeam
 from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
-from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
+from acop_basement.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
 
 NOW = datetime.now(UTC)

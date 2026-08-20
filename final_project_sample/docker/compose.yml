@@ -1,15 +1,31 @@
 services:
-  app:
+  app-customer:
+    build:
+      context: ..
+      dockerfile: Dockerfile.customer
+    env_file:
+      - ../.env
+    environment:
+      ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/acop
+    command: ["uvicorn", "acop_basement.presentation.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    ports:
+      - "${ACOP_CUSTOMER_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app-admin:
     build:
       context: ..
       dockerfile: Dockerfile
     env_file:
       - ../.env
     environment:
-      # The application container reaches the database by service name.
       ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/acop
+    # Composer _WRITE_LOCK is process-local; keep one Uvicorn worker.
+    command: ["uvicorn", "app.entrypoint:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
     ports:
-      - "${ACOP_APP_PORT:-8000}:8000"
+      - "${ACOP_ADMIN_PORT:-8001}:8000"
     depends_on:
       db:
         condition: service_healthy

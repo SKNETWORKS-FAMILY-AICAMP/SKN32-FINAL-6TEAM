@@ -102,9 +102,11 @@
 
 ## 남은 것
 
-- `final_project_ui`가 `/auth/token`을 자동으로 호출해 JWT를 스스로 갱신하는
-  기능은 없다 — 지금은 운영자가 수동으로 발급받아 `CONSOLE_COMPOSER_TOKEN`에
-  넣는다. 필요하면 다음 작업으로.
+- ~~`final_project_ui`가 `/auth/token`을 자동으로 호출해 JWT를 스스로 갱신하는
+  기능은 없다~~ → **완료** — `console/composer.py`가 이제 동작별 최소 scope로
+  매번 단명 JWT를 자동 발급받는다(`CONSOLE_COMPOSER_ISSUER_SECRET`만 넣으면 됨).
+- ~~`final_project_cs`의 v2 JWT 인증 상태 확인 안 됨~~ → **완료** — cs에도 v2
+  Composer 쓰기 채널을 이식했다(`S-COMPOSER-WRITE-CHANNEL-PORT`, 2026-08-18).
 - `final_project_cs`·`final_project_sample`의 v2 JWT 인증 상태가 서로 다를 수
   있다(cs는 이번에 안 건드림, 확인 안 함) — 대상마다 토큰 발급 방식이 다를 수
   있음을 유의.

@@ -6,9 +6,9 @@ from pathlib import Path
 import tempfile
 
 from app.composition import CompositionError, build_graph_store, build_registry
-from app.core.project_config import ProjectConfig, ProjectConfigError, load_project_config
-from app.core.registry import RegistryError
-from app.tools.read_tools import ReadToolbox
+from acop_basement.core.project_config import ProjectConfig, ProjectConfigError, load_project_config
+from acop_basement.core.registry import RegistryError
+from acop_basement.tools.read_tools import ReadToolbox
 
 
 class IncompleteTeam:

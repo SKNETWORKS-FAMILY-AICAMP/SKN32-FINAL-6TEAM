@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.rag.retriever import search_policy
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.rag.retriever import search_policy
 
 
 @pytest.fixture(scope="module", autouse=True)

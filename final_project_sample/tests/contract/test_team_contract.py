@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.core.contracts import TeamModule, TeamManifest
+from acop_basement.core.contracts import TeamModule, TeamManifest
 from app.modules.customer_ops.feedback_team import FeedbackAnalyticsTeam
 
 

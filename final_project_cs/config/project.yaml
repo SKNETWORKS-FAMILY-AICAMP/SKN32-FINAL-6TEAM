@@ -15,10 +15,22 @@ ports:
   team_executor: local
   message_broker: outbox
   graph_store: sql
+response_review:
+  enabled: false
+  owner_team_id: response_generation_review
 teams:
-- team_id: order_shipping
+- team_id: voc_store_manager
   active: true
-  implementation_ref: app.modules.customer_ops:OrderShippingTeam
-- team_id: return_exchange
+  implementation_ref: app.modules.customer_ops:VocStoreManagerTeam
+- team_id: response_generation_review
   active: true
-  implementation_ref: app.modules.customer_ops:ReturnExchangeTeam
+  implementation_ref: app.modules.customer_ops.response_review:ResponseGenerationReviewTeam
+- team_id: return_refund
+  active: true
+  implementation_ref: app.modules.customer_ops.return_refund:ReturnRefundTeam
+- team_id: procurement_order_payment
+  active: true
+  implementation_ref: app.modules.customer_ops.procurement_order_payment:ProcurementOrderPaymentTeam
+- team_id: fulfillment_logistics
+  active: true
+  implementation_ref: app.modules.customer_ops.fulfillment_logistics:FulfillmentLogisticsTeam

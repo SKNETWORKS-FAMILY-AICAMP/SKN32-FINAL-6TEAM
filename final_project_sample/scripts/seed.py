@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 from uuid import UUID, uuid5
 
-from app.infrastructure.db.repository import create_case
-from app.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.db.repository import create_case
+from acop_basement.infrastructure.db.session import get_connection
 
 DEMO = "demo"
 NAMESPACE = UUID("00000000-0000-0000-0000-000000000001")

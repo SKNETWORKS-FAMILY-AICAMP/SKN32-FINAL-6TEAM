@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from app.presentation.api.app import app
+from acop_basement.presentation.api.app import app
 
 
 def test_failed_approval_shows_the_reason_instead_of_a_silent_redirect():

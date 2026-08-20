@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import json
 from typing import Any
-from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
-from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
+from acop_basement.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
+from acop_basement.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
 
 class TechnicalEntitlementTeam:

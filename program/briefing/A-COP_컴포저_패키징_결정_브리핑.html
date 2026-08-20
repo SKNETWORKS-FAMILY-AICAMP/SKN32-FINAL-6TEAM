@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A-COP 컴포저 패키징 결정 브리핑</title>
+  <style>
+    :root{--bg:#f7f8fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#d1d5db;--teal:#0f766e;--blue:#1d4ed8;--soft:#eff6ff;--green:#f0fdf4;--orange:#fff7ed}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Noto Sans KR",sans-serif;line-height:1.65}
+    header{padding:40px 32px 32px;color:#fff;background:linear-gradient(135deg,#0f766e,#1d4ed8)} header h1{margin:0 0 10px;font-size:34px} header p{margin:6px 0;opacity:.96}
+    .container{max-width:1100px;margin:0 auto;padding:24px}.section{margin:0 0 20px;padding:24px;background:var(--card);border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 25px rgba(15,23,42,.05)}
+    h2{margin:0 0 14px;font-size:24px;color:#111827} h3{margin:18px 0 10px;font-size:18px;color:#111827}.lead{font-size:16px;color:var(--muted)}
+    .acop-callout{margin:16px 0;padding:18px 20px;border:2px solid #2563eb;border-radius:16px;background:#eff6ff;color:#0f172a;font-size:17px;font-weight:700}
+    .acop-note{margin-top:16px;padding:12px 14px;border-left:4px solid #0f766e;background:#f0fdfa;color:#334155;border-radius:8px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{padding:16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
+    .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 12px;border:1px solid var(--line);vertical-align:top}th{background:#f3f4f6;text-align:left}code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.mono{padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;white-space:pre-wrap}.small{font-size:14px;color:var(--muted)}.footer{margin:28px 0 60px;text-align:center;font-size:13px;color:var(--muted)}
+    @media(max-width:800px){header h1{font-size:28px}.grid{grid-template-columns:1fr}.container{padding:16px}}
+  </style>
+</head>
+<body>
+  <header>
+    <p><strong>A-COP 브리핑</strong></p>
+    <h1>컴포저 패키징 결정</h1>
+    <p>배포 경계와 관리 기능 분리</p>
+  </header>
+  <main class="container">
+    <section class="section">
+      <div class="acop-callout"><strong>결론: 고객용 CS 배포물에서 컴포저 코드를 완전히 분리한다.</strong></div>
+      <p class="lead">이 결정은 컴포저를 어디에 넣을지보다, 고객에게 무엇을 배포하지 않을지를 먼저 정리한 결과다.</p>
+      <p>릴리즈 대상인 <code>final_project_cs</code>를 배포하면 컴포저 코드가 함께 딸려 나오는 구조였다.</p>
+      <p>컴포저는 운영 중인 설정을 켜고 끄는 관리 기능이다.</p>
+      <p>개발·운영자용 기능이 고객용 배포물에 포함되는 것은 배포 경계가 잘못된 상태였다.</p>
+    </section>
+
+    <section class="section"><h2>1. 첫 번째 질문: 컴포저 코드를 어디에 둘 것인가</h2>
+      <p><strong>acop_basement</strong> 안에 컴포저 코드를 함께 넣는 방법을 검토했다.</p>
+      <p>acop_basement는 Core/Team 런타임을 담을 예정인 패키지다.</p>
+      <p>Core/Team 런타임은 모든 릴리즈 대상이 설치해야 한다.</p>
+      <p>따라서 basement에 컴포저를 넣으면 basement 설치만으로 컴포저 코드가 따라 들어온다.</p>
+      <p>이 방법은 CS에서 컴포저 코드를 완전히 빼려는 목표를 달성하지 못하므로 기각했다.</p>
+    </section>
+
+    <section class="section"><h2>2. 두 번째 질문: CS를 컴포저 관련 파일 0개로 만들 수 있는가</h2>
+      <p><strong>가능해야 한다</strong>고 결론 내렸다.</p>
+      <p>컴포저가 CS가 의존하는 패키지 안에 있으면 파일 분리는 성립하지 않는다.</p>
+      <p>따라서 컴포저는 별도의 선택적 패키지여야 한다.</p>
+    </section>
+
+    <section class="section"><h2>3. 초기 설계가 만든 부담</h2>
+      <p>초기 설계인 v2에서 컴포저는 설정을 전체 선언하고 검증한 뒤 적용했다.</p>
+      <p>이 검증은 TeamManifest와 ProjectConfig 같은 Core 계약을 깊이 이해해야 했다.</p>
+      <p>당시에는 컴포저가 안전하려면 Core 계약 검증 로직을 통째로 가져야 한다고 판단했다.</p>
+      <p>그래서 Core 코드를 pip 패키지인 acop_basement로 분리하는 작업이 끝나야 컴포저를 안전하게 이관할 수 있다고 보였다.</p>
+      <p>이 판단은 컴포저 이관이 pip 패키징을 기다려야 하는 것처럼 보이게 했다.</p>
+    </section>
+
+    <section class="section"><h2>4. 방향을 바꾼 계기</h2>
+      <div class="acop-callout">컴포저의 일은 검증 전체가 아니라, 이미 등록된 항목을 정확하게 켜고 끄는 일로 좁혔다.</div>
+      <p>컴포저에서 정확하게 키고 끄고 제외하는 것만 하면 된다는 지적이 나왔다.</p>
+      <p>그 지적에 따라 컴포저의 책임을 토글과 감사 로그로 한정했다.</p>
+      <p>컴포저는 등록된 ID가 존재하는지만 확인한다.</p>
+      <p>컴포저는 플래그를 원자적으로 쓴다.</p>
+      <p>컴포저는 그 근거를 감사 로그로 남긴다.</p>
+      <p>이것이 v3 설계다.</p>
+    </section>
+
+    <section class="section"><h2>5. v3로 좁히면서 풀린 문제</h2>
+      <p>컴포저가 Core 계약을 깊이 검증하지 않게 되면서 책임이 가벼워졌다.</p>
+      <p>컴포저 이관은 pip 패키징이 끝나기를 기다릴 필요가 없는 독립 작업이 됐다.</p>
+      <p>acop_basement 분리와 컴포저의 final_project_ui 이관은 서로 막지 않는 병렬 트랙이 됐다.</p>
+    </section>
+
+    <section class="section"><h2>6. final_project_ui가 컴포저를 가져도 되는가</h2>
+      <p>final_project_ui는 읽기 전용이며 코드를 포크하지 않는 원칙을 갖고 있었다.</p>
+      <p>컴포저를 토글 전용으로 좁히면 final_project_ui는 Core 계약 모델을 import할 필요가 없다.</p>
+      <p>final_project_ui는 HTTP로 <code>POST /composer/toggle</code> 같은 API를 호출하면 된다.</p>
+      <p>따라서 final_project_ui는 이 원칙을 깨지 않고 컴포저의 판단·요청 로직을 가질 수 있다.</p>
+    </section>
+
+    <section class="section"><h2>7. 최종 확정 구조</h2>
+      <div class="table-wrap"><table><thead><tr><th>구성 요소</th><th>확정된 역할</th><th>배포 기준</th></tr></thead><tbody>
+        <tr><td><strong>acop_basement</strong></td><td>Core/Team/Registry/Controller 런타임</td><td>cs가 항상 설치한다. 컴포저 관련 코드는 한 줄도 포함하지 않는다.</td></tr>
+        <tr><td><strong>acop_composer</strong></td><td>토글 적용 endpoint glue(등록 ID 확인, 플래그 원자적 쓰기, 감사 로그)</td><td>별도 선택 패키지다. “관리용 빌드”에만 설치한다. 고객에게 나가는 릴리즈 빌드에는 이 패키지 자체를 설치하지 않는다.</td></tr>
+        <tr><td><strong>final_project_ui</strong></td><td>독립 실행 서비스</td><td>pip 패키지가 아니다. HTTP로만 대상 시스템에 접속한다.</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="section"><h2>8. “설치 안 하면 그만”으로 끝내지 않은 이유</h2>
+      <p>컴포저와 basement는 개발 과정에서 같은 저장소인 <code>final_project_sample</code> 안에서 진행된다.</p>
+      <p>컴포저를 import하지 않는다는 약속만으로는 실수로 섞여 들어갈 위험을 없앨 수 없다.</p>
+      <p>그래서 acop_basement를 실제로 wheel로 빌드한다.</p>
+      <p>wheel은 파이썬 배포 패키지 형식이다.</p>
+      <p>빌드 결과물 안에 컴포저 관련 파일이 정말 0개인지 자동으로 검사하는 테스트를 둔다.</p>
+      <p>저장소에 있는 <code>test_basement_is_domain_free.py</code> 계열 테스트와 짝을 이루는 경계 테스트다.</p>
+    </section>
+
+    <section class="section"><h2>9. 이 결정이 따르는 익숙한 패턴</h2>
+      <p>Django 같은 프레임워크도 코어 기능 위에 부가 기능을 별도 패키지로 얹어 배포한다.</p>
+      <p>개발은 한 곳에서 진행한다.</p>
+      <p>배포는 필요한 기능만 나눠서 내보낸다.</p>
+      <p>A-COP의 이번 결정도 같은 패턴으로 배포 경계를 분리한다.</p>
+    </section>
+
+    <section class="section"><h2>10. 경계가 지켜지는지 확인하는 방법</h2>
+      <p><strong>검증 기준은 설치 의도가 아니라 빌드 산출물의 실제 내용이다.</strong></p>
+      <div class="mono">acop_basement → wheel 빌드 → 컴포저 관련 파일 탐색 → 0개인지 자동 판정</div>
+      <p class="small">이 검사는 Core/Team 런타임 패키지에 컴포저가 섞이지 않았는지 배포 시점에 확인한다.</p>
+    </section>
+
+    <section class="section"><h2>남은 일</h2>
+      <p>현재 실제 코드가 만들어지기 시작한 acop_basement와 acop_composer를 이 설계와 대조하는 작업이 남아 있다.</p>
+    </section>
+    <div class="footer">A-COP 컴포저 패키징 결정 브리핑 · 단일 HTML 문서</div>
+  </main>
+</body>
+</html>

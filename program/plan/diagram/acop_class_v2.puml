@@ -1,0 +1,168 @@
+@startuml
+title A-COP 계획 기반 통합 계약 — 간결화 클래스 다이어그램
+skinparam backgroundColor #faf9ff
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #4b5563
+skinparam LineColor #4b5563
+skinparam class {
+  BackgroundColor #f5f3ff
+  BorderColor #7c3aed
+}
+
+package "Core Contracts (§21)" {
+  together {
+    class Evidence <<contract>> {
+      evidence_id: str
+      source_type: customer_message|db|policy|tool_result|case_event
+      source_id: str
+      claim: str
+      value: Any
+      confidence: float
+    }
+    class ContextPack <<contract>> {
+      pack_id: UUID
+      case_id: UUID
+      team_id: str
+      current_state: dict
+      evidence: list[Evidence]
+      token_budget: 12000
+      degraded: bool
+    }
+  }
+  together {
+    class TeamTask <<contract>> {
+      task_id: UUID
+      run_id: UUID
+      case_id: UUID
+      team_id: str
+      capability: str
+      context: ContextPack
+      deadline_at: datetime
+    }
+    class TeamResult <<contract>> {
+      task_id: UUID
+      run_id: UUID
+      team_id: str
+      outcome: completed|waiting|handoff|escalated|failed
+      evidence: list[Evidence]
+      action_proposals: list[ActionProposal]
+      next_action: NextAction
+    }
+    class ActionProposal <<contract>> {
+      action_type: str
+      arguments: dict
+      idempotency_key: str
+      approval_required: bool
+      risk_level: low|medium|high
+      rationale_evidence_ids: list[str]
+    }
+  }
+  class TeamManifest <<contract>> {
+    team_id: str
+    capabilities: list[str]
+    required_context: list[str]
+    allowed_tools: list[str]
+    knowledge_scope: list[str]
+    active: bool
+  }
+  interface TeamModule <<port>> {
+    manifest: TeamManifest
+    execute(task: TeamTask): TeamResult
+  }
+}
+
+package "Core Runtime & Coordination (§7-B, §8)" {
+  together {
+    class CustomerCase <<state>> {
+      case_id: UUID
+      status: CaseStatus
+      owner: str
+      version: int
+      approval_state: str
+    }
+    class SharedState <<state>> {
+      evidence: list
+      decisions: list
+      open_tasks: list
+      owner: str
+      status: CaseStatus
+      version: int
+    }
+  }
+  together {
+    class Controller <<orchestration>> {
+      route()
+      wait_resume()
+      replan()
+      apply_result()
+    }
+    class TeamRegistry <<core service>> {
+      register(manifest)
+      resolve(capability)
+      execution_type: LOCAL|A2A
+    }
+    class ContextBroker <<core service>> {
+      build_context(): ContextPack
+      RAG + DB + history + memory
+    }
+  }
+  class TeamExecutorPort <<port>> {
+    execute(task): TeamResult
+    cancel(task_id)
+    status(task_id)
+  }
+  class MessageBusPort <<port>> {
+    publish(task/event)
+  }
+}
+
+package "Access & Action Platform (§8, §9-E)" {
+  class AgentGateway {
+    REST / MCP / A2A
+    scope_check()
+    audit()
+  }
+  class ActionService {
+    verify_evidence()
+    verify_latest_state()
+    approve_and_execute()
+    idempotency_key: str
+  }
+}
+
+package "Registered Team Modules (§8-B)" {
+  together {
+    class "VOC & Store Manager" as VOC
+    class "Response Generation & Review" as Response
+    class "Procurement + Order & Payment" as Procurement
+  }
+  together {
+    class "Fulfillment & Logistics" as Fulfillment
+    class "Return & Refund (Mock)" as Return
+    class "Catalog & Verification (A2A Remote)" as Catalog
+  }
+}
+
+ContextPack *-- Evidence
+TeamTask *-- ContextPack
+TeamResult *-- ActionProposal
+TeamModule ..> TeamTask : accepts
+TeamModule ..> TeamResult : returns
+Controller --> TeamRegistry : resolve
+Controller --> ContextBroker : request pack
+Controller --> TeamExecutorPort : execute
+Controller --> ActionService : proposal gate
+TeamExecutorPort ..> MessageBusPort : delivery
+AgentGateway --> Controller : case/task entry
+AgentGateway --> ActionService : approved access
+TeamRegistry o-- TeamModule : registered
+
+note bottom
+관계는 계약과 실행 경계를 설명하는 최소 연결만 표시한다.
+세부 타입·소유 관계는 클래스 필드와 §21 계약에 남긴다.
+LOCAL/A2A 실행 결과는 동일한 TeamResult로 정규화된다.
+end note
+@enduml

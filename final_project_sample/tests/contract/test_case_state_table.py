@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.core.contracts import CaseStatus
-from app.domain.events import (
+from acop_basement.core.contracts import CaseStatus
+from acop_basement.domain.events import (
     REQUIRED_PAYLOAD_KEYS,
     TERMINAL_STATUSES,
     TRANSITIONS,

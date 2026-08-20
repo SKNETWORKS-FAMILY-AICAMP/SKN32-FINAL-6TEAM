@@ -15,10 +15,10 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.contracts import (ActionProposal, ContextPack, Evidence, NextAction,
+from acop_basement.core.contracts import (ActionProposal, ContextPack, Evidence, NextAction,
                                 TeamManifest, TeamResult)
-from app.application.controller import Controller
-from app.core.registry import TeamRegistry
+from acop_basement.application.controller import Controller
+from acop_basement.core.registry import TeamRegistry
 
 from .test_controller_integration import (db, seed_case, fake_policy,  # noqa: F401
                                           case_versions, FakeContextBroker)

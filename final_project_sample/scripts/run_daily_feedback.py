@@ -7,11 +7,11 @@ from datetime import UTC, date, datetime, timedelta
 from uuid import uuid4
 
 from app.composition import build_registry
-from app.core.contracts import ContextPack, TeamTask
-from app.core.settings import get_guardrails, get_settings
-from app.infrastructure.db.session import get_connection
+from acop_basement.core.contracts import ContextPack, TeamTask
+from acop_basement.core.settings import get_guardrails, get_settings
+from acop_basement.infrastructure.db.session import get_connection
 from app.modules.customer_ops.read_tools import build_read_tool_functions
-from app.tools.read_tools import ReadToolbox
+from acop_basement.tools.read_tools import ReadToolbox
 
 
 def main() -> None:

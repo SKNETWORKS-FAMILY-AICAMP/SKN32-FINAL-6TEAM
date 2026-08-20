@@ -5,11 +5,11 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-import app.core.settings as settings_module
-from app.presentation import security
-from app.presentation.api.app import create_app
-from app.infrastructure.db.session import get_connection
-from app.infrastructure.messaging.worker import OutboxWorker
+import acop_basement.core.settings as settings_module
+from acop_basement.presentation import security
+from acop_basement.presentation.api.app import create_app
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.infrastructure.messaging.worker import OutboxWorker
 
 from ..controller.test_controller_integration import db  # noqa: F401
 

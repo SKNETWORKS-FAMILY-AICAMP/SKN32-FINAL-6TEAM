@@ -248,15 +248,27 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     from app.core.contracts import TeamTask
     from app.core.registry import TeamRegistry
     from app.core.remote_team.executor import LocalTeamExecutor
+    from app.composition import build_registry
     from app.infrastructure.rag.retriever import search_policy
     from app.infrastructure.db.session import get_connection
-    from app.modules.customer_ops.order_shipping import OrderShippingTeam
-    from app.modules.customer_ops.return_exchange import ReturnExchangeTeam
     from app.tools.read_tools import ReadToolbox
     settings = _settings()
-    intent = case["expected_intent"]
-    team = OrderShippingTeam if (intent in ("order", "shipping") or "no_team_split" in ablations) else ReturnExchangeTeam
-    module = team(ReadToolbox(get_connection), llm=_OpenAITeamLLM())
+    intent = case.get("expected_intent")
+    case_type = case.get("expected_case_type", intent)
+    if not intent or not case_type:
+        raise ValueError("routing_failed: case requires expected_intent or expected_case_type")
+
+    # The composition root owns dynamic imports and _instantiate_team(), so the
+    # runner must not know Team class names or constructor shapes.  In the
+    # Registry architecture no_team_split cannot collapse configured Team
+    # boundaries; it is intentionally a compatibility no-op.
+    registry = build_registry(tools=ReadToolbox(get_connection), llm=_OpenAITeamLLM())
+    try:
+        registered = registry.resolve(case_type=case_type, intent=intent)
+    except Exception as exc:
+        raise RuntimeError(f"routing_failed: no registered Team for case_type={case_type!r}, intent={intent!r}") from exc
+    module = registered.module
+    capability = TeamRegistry.capability_for(registered, intent)
     policy_failed = False
     try:
         chunks = [] if "no_rag" in ablations else search_policy(settings.tenant_id, case["message"], module.manifest.knowledge_scope)
@@ -276,7 +288,7 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     else:
         pack = ContextBroker().build(pack_inputs)
     task = TeamTask(task_id=uuid5(NAMESPACE_URL, case["case_id"] + ":task"), run_id=uuid5(NAMESPACE_URL, case["case_id"] + ":run"),
-        case_id=pack.case_id, team_id=module.manifest.team_id, capability=module.manifest.capabilities[0], case_version=1,
+        case_id=pack.case_id, team_id=module.manifest.team_id, capability=capability, case_version=1,
         input_text=case["message"], context=pack, allowed_tools=module.manifest.allowed_tools,
         deadline_at=datetime.now(UTC) + timedelta(seconds=timeout))
     return module, task, LocalTeamExecutor(TeamRegistry([module]))

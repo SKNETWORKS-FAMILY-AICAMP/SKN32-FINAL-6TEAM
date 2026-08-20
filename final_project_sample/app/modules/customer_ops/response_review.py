@@ -5,8 +5,8 @@ import json
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from app.core.contracts import Evidence, NextAction, TeamManifest, TeamModule, TeamResult, TeamTask
-from app.core.verification import Facts, verify_proposal
+from acop_basement.core.contracts import Evidence, NextAction, TeamManifest, TeamModule, TeamResult, TeamTask
+from acop_basement.core.verification import Facts, verify_proposal
 from app.modules.customer_ops.response_review_policy import (
     FORBIDDEN_WORDS, PII_PATTERNS, RESPONSE_VERIFICATION_POLICY, decide_tone,
 )

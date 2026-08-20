@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.contracts import ContextPack, Evidence, TeamTask
-from app.core.contracts import TeamModule
+from acop_basement.core.contracts import ContextPack, Evidence, TeamTask
+from acop_basement.core.contracts import TeamModule
 from app.modules.customer_ops.response_review import ResponseGenerationReviewTeam
 
 

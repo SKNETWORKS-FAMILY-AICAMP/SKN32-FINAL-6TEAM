@@ -19,7 +19,7 @@ import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.presentation.ui import mount_ui
+from acop_basement.presentation.ui import mount_ui
 
 
 def _client(path: Path) -> TestClient:

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_template_without_predictions_leaves_candidate_answer_null():
     rows = build_template(predictions_path=None)
-    assert len(rows) == 20
+    assert len(rows) == 24
     assert all(row["candidate_answer"] is None for row in rows)
     assert all(set(row["human_label"]) == set(TEMPLATE_FIELDS) | {"total", "pass"} for row in rows)
     assert all(value is None for row in rows for value in row["human_label"].values())

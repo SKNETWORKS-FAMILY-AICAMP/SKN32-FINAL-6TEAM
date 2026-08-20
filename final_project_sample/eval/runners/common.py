@@ -61,7 +61,7 @@ def parser(description: str) -> argparse.ArgumentParser:
 
 def _settings() -> Any:
     # Settings is intentionally the sole source of the API key and model.
-    from app.core.settings import get_settings
+    from acop_basement.core.settings import get_settings
     return get_settings()
 
 
@@ -113,7 +113,7 @@ def mock_prediction(case: dict[str, Any], arm: str, ablations: list[str]) -> dic
 @lru_cache(maxsize=1)
 def _knowledge_chunk_ids() -> frozenset[tuple[str, int]]:
     """Load the complete citation key set once per evaluation process."""
-    from app.infrastructure.db.session import get_connection
+    from acop_basement.infrastructure.db.session import get_connection
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -243,13 +243,13 @@ def _call_openai(prompt: str, args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: list[str]) -> tuple[Any, Any, Any]:
-    from app.core.context import ContextBroker, ContextInputs, count_tokens
-    from app.core.contracts import ContextPack
-    from app.core.contracts import TeamTask
-    from app.core.registry import TeamRegistry
-    from app.core.remote_team.executor import LocalTeamExecutor
-    from app.infrastructure.rag.retriever import search_policy
-    from app.infrastructure.db.session import get_connection
+    from acop_basement.core.context import ContextBroker, ContextInputs, count_tokens
+    from acop_basement.core.contracts import ContextPack
+    from acop_basement.core.contracts import TeamTask
+    from acop_basement.core.registry import TeamRegistry
+    from acop_basement.core.remote_team.executor import LocalTeamExecutor
+    from acop_basement.infrastructure.rag.retriever import search_policy
+    from acop_basement.infrastructure.db.session import get_connection
     # ★버그사냥 2026-08-18 — Billing/Technical 은 examples/ 로 옮겨졌다(10주
     #   착수 목록 밖, CLAUDE.md "Agent Team" 행). 골든셋이 이 두 도메인
     #   시나리오로 구성돼 있어 평가 하네스는 여전히 이 Team 을 실행해야
@@ -257,7 +257,7 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     from examples.customer_ops.billing import BillingSubscriptionTeam
     from examples.customer_ops.technical import TechnicalEntitlementTeam
     from app.modules.customer_ops.read_tools import build_read_tool_functions
-    from app.tools.read_tools import ReadToolbox
+    from acop_basement.tools.read_tools import ReadToolbox
     settings = _settings()
     intent = case["expected_intent"]
     team = BillingSubscriptionTeam if (intent == "billing" or "no_team_split" in ablations) else TechnicalEntitlementTeam
@@ -318,7 +318,7 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
         if "no_feedback_inline" in args.ablation:
             record["inline_feedback"] = None
         if arm == "B":
-            from app.infrastructure.rag.retriever import search_policy
+            from acop_basement.infrastructure.rag.retriever import search_policy
             settings = _settings()
             try:
                 chunks = search_policy(settings.tenant_id, case["message"], [case["expected_intent"]])

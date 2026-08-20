@@ -27,7 +27,7 @@ import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.presentation.ui import mount_ui
+from acop_basement.presentation.ui import mount_ui
 
 TENANT_PATHS = ("/ops/cases", "/ops/approvals", "/ops/voc")
 
@@ -74,7 +74,7 @@ def test_tenant_screens_are_scoped_by_tenant(workdir):
 
     소스를 읽어 확인한다 — 조건 없는 조회는 그 자체가 보안 결함이다.
     """
-    source = Path("app/presentation/ui/routes.py").read_text(encoding="utf-8")
+    source = Path("acop_basement/presentation/ui/routes.py").read_text(encoding="utf-8")
     for line in source.splitlines():
         stripped = line.strip()
         if "FROM customer_cases" in stripped or "FROM action_requests" in stripped \

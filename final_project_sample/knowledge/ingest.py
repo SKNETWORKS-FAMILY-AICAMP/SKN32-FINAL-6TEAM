@@ -13,8 +13,8 @@ from openai import OpenAI
 from psycopg.types.json import Json
 from pgvector.psycopg import register_vector
 
-from app.core.settings import get_guardrails, get_settings
-from app.infrastructure.db.session import get_connection
+from acop_basement.core.settings import get_guardrails, get_settings
+from acop_basement.infrastructure.db.session import get_connection
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "knowledge" / "manifest.json"

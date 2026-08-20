@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from app.composition import build_registry
-from app.core.contracts import NextAction, TeamManifest, TeamResult
-from app.tools.read_tools import ReadToolbox
+from acop_basement.core.contracts import NextAction, TeamManifest, TeamResult
+from acop_basement.tools.read_tools import ReadToolbox
 
 
 class ExtraTeam:

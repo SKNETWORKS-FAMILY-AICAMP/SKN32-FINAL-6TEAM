@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.infrastructure.llm import OpenAITeamLLM
+from acop_basement.infrastructure.llm import OpenAITeamLLM
 
 
 @pytest.mark.live

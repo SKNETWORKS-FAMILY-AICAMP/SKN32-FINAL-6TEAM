@@ -4,15 +4,15 @@ import ast
 
 _FORBIDDEN_PREFIXES = (
     "app.modules",
-    "app.presentation",
-    "app.infrastructure",
-    "app.application",
+    "acop_basement.presentation",
+    "acop_basement.infrastructure",
+    "acop_basement.application",
     "app.composition",
 )
 
 
 def test_core_does_not_import_modules():
-    root = Path("app/core")
+    root = Path("acop_basement/core")
     for path in root.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

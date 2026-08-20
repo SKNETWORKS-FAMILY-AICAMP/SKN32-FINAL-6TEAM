@@ -29,7 +29,8 @@ class Controller:
                  connection_factory: Callable | None = None, repository: Any | None = None,
                  case_service: CaseService | None = None, graph_revision: str = "controller-v1",
                  team_executor: Any | None = None, broker: Any | None = None,
-                 verification_policy: Any | None = None, fact_queries: Any = ()) -> None:
+                 verification_policy: Any | None = None, fact_queries: Any = (),
+                 response_review: Any | None = None) -> None:
         # ★대조 어휘는 주입받는다. Controller 는 어떤 필드를 대조하는지 모른다 —
         #   알면 basement 가 특정 업무 도메인에 묶인다.
         from app.core.verification import VerificationPolicy
@@ -58,6 +59,7 @@ class Controller:
         self.case_service = case_service or CaseService(graph_revision=graph_revision)
         self.team_executor = team_executor
         self.broker = broker
+        self.response_review = response_review
 
     def _capability(self, case: dict[str, Any]) -> str:
         """Return the capability selected by the injected Team registry."""
@@ -158,6 +160,7 @@ class Controller:
                 # ★대조에는 **Controller 가 만든** task.context 를 넘긴다.
                 #   Team 이 돌려준 result.context 를 쓰면 근거와 제안을 같은 쪽이 지어낼 수 있어
                 #   대조가 순환한다. 위조할 수 없는 쪽으로 잰다.
+                result = await self._maybe_review(task, result)
                 transition = self._apply_result(conn, case, run_id, result, actor_id, context=task.context)
                 self.case_service.finish_run(conn, run_id, "succeeded")
                 return {"case_id": str(case_id), "run_id": str(run_id), "status": transition.status.value, "version": transition.version,
@@ -168,6 +171,31 @@ class Controller:
         event, payload, outbox = self._event_for_result(conn, case, result, context=context)
         return transition_case(conn, tenant_id=case["tenant_id"], case_id=case["case_id"], expected_version=case["version"],
                                event_type=event, payload=payload, actor_type="controller", actor_id=actor_id, outbox=outbox)
+
+    async def _maybe_review(self, task: TeamTask, result: TeamResult) -> TeamResult:
+        """Run the configured post-generation review pass, if enabled."""
+        config = self.response_review
+        if not config or not config.enabled or not result.answer:
+            return result
+        entry = self.registry.get(config.owner_team_id)
+        manifest = entry.manifest
+        context = task.context.model_copy(update={
+            "team_id": manifest.team_id,
+            "knowledge_scope": manifest.knowledge_scope,
+            "current_state": {**task.context.current_state, "answer": result.answer},
+        })
+        review_task = TeamTask(
+            task_id=uuid4(), run_id=task.run_id, case_id=task.case_id,
+            team_id=manifest.team_id,
+            capability=self.registry.capability_for(entry, "response.generate_review"),
+            case_version=task.case_version, input_text=result.answer,
+            context=context, allowed_tools=manifest.allowed_tools,
+            deadline_at=task.deadline_at,
+        )
+        return await asyncio.wait_for(
+            self.team_executor.execute(review_task),
+            timeout=get_guardrails().get("reliability.team_timeout_seconds"),
+        )
 
     def _reject_unverified(self, conn, case: dict[str, Any], result: TeamResult, context: Any = None):
         """제안이 사실과 어긋나면 폐기하고 escalated 로 보낸다 (v7 §9-E).

@@ -3,10 +3,10 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-import app.core.settings as settings_module
-from app.infrastructure.db.session import get_connection
-from app.presentation import security
-from app.presentation.api.app import create_app
+import acop_basement.core.settings as settings_module
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.presentation import security
+from acop_basement.presentation.api.app import create_app
 
 
 @pytest.fixture()

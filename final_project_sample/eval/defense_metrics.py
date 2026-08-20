@@ -25,7 +25,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Iterable
 
-from app.core.verification import Facts, verify_proposal
+from acop_basement.core.verification import Facts, verify_proposal
 
 
 @dataclass
