@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from console.readers import (judgement_counts, read_declaration, read_eval_runs,
-                             read_judgements)
+                             read_guardrails, read_judgements)
 
 DECLARATION = """modules:
   vector_rag:
@@ -180,3 +180,39 @@ def test_unreadable_report_is_listed_with_a_note(project):
     (project / "eval" / "reports" / "broken.jsonl").write_text("not json", encoding="utf-8")
     run = read_eval_runs(project).value["runs"][0]
     assert run.note and "형식 불명" in run.note
+def test_guardrails_is_read_normally(project):
+    (project / "config" / "guardrails.yaml").write_text("context:\n  token_budget: 12000\n", encoding="utf-8")
+    result = read_guardrails(project)
+    assert result.ok
+    assert result.value["context"]["token_budget"] == 12000
+
+
+def test_missing_guardrails_file_is_reported(tmp_path):
+    result = read_guardrails(tmp_path)
+    assert not result.ok
+    assert "guardrails.yaml" in result.error
+
+
+def test_broken_guardrails_yaml_is_reported(project):
+    (project / "config" / "guardrails.yaml").write_text("context: [", encoding="utf-8")
+    result = read_guardrails(project)
+    assert not result.ok
+    assert result.value is None
+    assert result.error
+
+
+def test_unreadable_evidence_location_is_reported(project):
+    (project / "docs").mkdir()
+    (project / "docs" / "evidence").write_text("not a directory", encoding="utf-8")
+    result = read_judgements(project)
+    assert result.value == []
+    assert result.error
+
+
+def test_malformed_eval_row_is_excluded_from_cost_but_counted_as_seen_row(project):
+    _report(project, "mixed.jsonl", [_row(cost_usd=0.125)])
+    path = project / "eval" / "reports" / "mixed.jsonl"
+    path.write_text(json.dumps(_row(cost_usd=0.125)) + "\nnot-json\n", encoding="utf-8")
+    run = read_eval_runs(project).value["runs"][0]
+    assert run.observed_cost_usd == 0.125
+    assert run.rows == 2

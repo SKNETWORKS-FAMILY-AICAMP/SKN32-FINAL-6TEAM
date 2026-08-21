@@ -15,10 +15,11 @@ from console.composer import apply_candidate, read_current, validate_candidate
 def composer_server():
     servers = []
 
-    def start(script: dict, *, token_status: int = 200, issuer_secret: str = "issuer-secret") -> str:
+    def start(script: dict, *, token_status: int = 200, issuer_secret: str = "issuer-secret",
+              token_payload: dict | None = None, token_raw: str | None = None) -> str:
         class Handler(BaseHTTPRequestHandler):
-            def _json(self, status: int, payload: dict):
-                data = json.dumps(payload).encode()
+            def _json(self, status: int, payload: dict | str):
+                data = payload.encode() if isinstance(payload, str) else json.dumps(payload).encode()
                 self.send_response(status)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(data)))
@@ -37,6 +38,10 @@ def composer_server():
                                           {"error": {"message": "issuer rejected"}})
                     if token_status != 200:
                         return self._json(token_status, {"error": {"message": "scope rejected"}})
+                    if token_raw is not None:
+                        return self._json(200, token_raw)
+                    if token_payload is not None:
+                        return self._json(200, token_payload)
                     scope = body["scope"][0]
                     return self._json(200, {"access_token": f"access-{scope}", "token_type": "bearer", "expires_in": 900})
                 self._handle_composer(body)
@@ -132,3 +137,29 @@ def test_composer_module_does_not_import_target_models():
     lines = Path("console/composer.py").read_text(encoding="utf-8").splitlines()
     imports = [x for x in lines if x.strip().startswith(("import ", "from "))]
     assert not any("project_config" in x.lower() or "app.core" in x or "app.application" in x for x in imports)
+
+
+def test_token_issuance_other_http_error_is_token_failure(composer_server):
+    result = read_current(composer_server({}, token_status=500), "issuer-secret")
+    assert result.status == "\ud1a0\ud070 \ubc1c\uae09 \uc2e4\ud328"
+    assert "HTTP 500" in result.detail
+
+
+def test_token_issuance_without_access_token_is_reported(composer_server):
+    result = read_current(composer_server({}, token_payload={"token_type": "bearer"}), "issuer-secret")
+    assert result.status == "\ud1a0\ud070 \ubc1c\uae09 \uc2e4\ud328"
+    assert result.detail
+
+
+def test_token_issuance_malformed_json_is_reported(composer_server):
+    result = read_current(composer_server({}, token_raw="not-json"), "issuer-secret")
+    assert result.status == "\ud1a0\ud070 \ubc1c\uae09 \uc2e4\ud328"
+    assert result.detail
+
+
+def test_other_composer_http_errors_are_unresponsive(composer_server):
+    for status in (500, 503):
+        url = composer_server({"/composer/current": (status, {"error": {"message": "server"}}, "access-composer:read")})
+        result = read_current(url, "issuer-secret")
+        assert result.status == "\ub300\uc0c1\uc774 \uc751\ub2f5\ud558\uc9c0 \uc54a\uc74c"
+        assert f"HTTP {status}" in result.detail

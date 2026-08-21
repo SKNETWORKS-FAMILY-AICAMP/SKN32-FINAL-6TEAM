@@ -23,6 +23,9 @@ python -m console.web
 - `CONSOLE_INTROSPECTION_URL`: 대상의 `GET /introspection` URL입니다.
 - `CONSOLE_INTROSPECTION_TOKEN`: introspection 엔드포인트가 scope 인증을 요구할 때 사용하는 토큰입니다. 토큰 없이 연결하면 인증 실패로 표시됩니다.
 - `CONSOLE_CONTRACT_VERSIONS`: 콘솔이 아는 introspection 계약 버전의 콤마 구분 목록입니다.
+- `CONSOLE_COMPOSER_URL`: 대상의 Composer 쓰기 채널(`/composer/*`) base URL입니다.
+- `CONSOLE_COMPOSER_ISSUER_SECRET`: Composer 요청마다 동작별 최소 scope로 단명 JWT를
+  발급받을 때 쓰는 issuer secret입니다(`/auth/token`).
 
 토큰과 DB 비밀번호 같은 비밀값은 파일에 저장하지 않으며, 매번 환경변수로 전달합니다.
 
@@ -31,3 +34,4 @@ python -m console.web
 ```powershell
 python -m pytest tests -q
 ```
+CI를 만들 경우에는 GitHub Actions repository secrets에 `CONSOLE_INTROSPECTION_TOKEN`과 `CONSOLE_COMPOSER_ISSUER_SECRET`을 secret으로 등록하고, workflow의 `env:`에서 `secrets.CONSOLE_INTROSPECTION_TOKEN`과 `secrets.CONSOLE_COMPOSER_ISSUER_SECRET`으로 주입합니다. 지금은 수동 실행으로 전달하고 CI 파일은 없으며, 나중에 CI를 붙일 때 이 방식을 사용합니다.

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from console.db import read_runs, read_trace
+from console.db import _state_counts, read_runs, read_trace
 from console.live import read_introspection
 from console.profiles import profile_for
 
@@ -176,6 +176,46 @@ def test_db_module_does_not_import_sqlite():
     lines = Path("console/db.py").read_text(encoding="utf-8").splitlines()
     imports = [x for x in lines if x.strip().startswith(("import ", "from "))]
     assert not any("sqlite" in x.lower() for x in imports), imports
+
+
+def test_trace_with_valid_unknown_run_id_reports_connection_failure_when_database_is_dead():
+    result = read_trace("postgresql://nobody@127.0.0.1:1/none", "00000000-0000-0000-0000-000000000001")
+    assert result.status == "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\ub2e4"
+    assert result.detail
+
+
+def test_runs_query_contains_tenant_filter_and_passes_limit():
+    source = Path("console/db.py").read_text(encoding="utf-8")
+    assert "WHERE tenant_id=%s" in source
+    assert "ORDER BY started_at DESC NULLS LAST LIMIT %s" in source
+    assert "(*params, limit)" in source
+
+
+def test_state_count_query_failure_is_retained_as_error():
+    class Connection:
+        def rollback(self):
+            self.rolled_back = True
+
+    class Cursor:
+        def __init__(self):
+            self.connection = Connection()
+            self.description = [type("Column", (), {"name": "status"})(),
+                                type("Column", (), {"name": "n"})()]
+            self.calls = []
+
+        def execute(self, sql, params):
+            self.calls.append((sql, params))
+            if "customer_cases" in sql:
+                raise RuntimeError("missing table")
+
+        def fetchall(self):
+            return [("ready", 2)]
+
+    cursor = Cursor()
+    counts = _state_counts(cursor, "WHERE tenant_id=%s", ("tenant-a",))
+    assert "__error__" in counts["customer_cases"]
+    assert counts["outbox"] == {"ready": 2}
+    assert cursor.connection.rolled_back
 
 
 # ── 서버 fixture ─────────────────────────────────────────────────────────────
