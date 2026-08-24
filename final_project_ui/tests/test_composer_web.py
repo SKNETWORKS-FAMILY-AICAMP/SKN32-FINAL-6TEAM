@@ -178,6 +178,55 @@ def test_apply_revision_conflict_shows_current_revision_not_a_crash(tmp_path, mo
 
 
 def test_project_screen_links_to_the_composer_screen(tmp_path):
+    """★한때 `... in body or "/composer?path=" in body` 였다 — **검사하는 척하는 검사**다.
+
+    P13 상단 내비게이션이 모든 화면에 `/composer?path=` 를 넣으므로 `or` 뒤쪽이
+    **항상 참**이었다. 본문의 Composer 링크가 통째로 사라져도 통과했다.
+    지금은 **정확한 경로**만 본다(`CLAUDE.md` §2 — 항상 참인 단언 금지).
+    """
+    from urllib.parse import quote
+
     project = make_project(tmp_path)
     body = TestClient(create_app()).get("/project", params={"path": str(project)}).text
-    assert f"/composer?path={project}" in body or "/composer?path=" in body
+    # ★링크의 경로는 **URL 인코딩**된다(`console.web.qs`) — 원문 그대로 찾으면 안 된다.
+    assert f"/composer?path={quote(str(project), safe='')}" in body
+
+
+# ── 인수인계 점검(2026-08-19)에서 실측한 결함 3건 회귀 방지 ──────────────────
+def test_a_malformed_target_config_does_not_crash_the_screen(tmp_path, monkeypatch):
+    """★대상이 이상한 것을 줘도 **콘솔은 떠야 한다**(`CLAUDE.md` §1).
+
+    실측: 대상이 `config: null`·배열·문자열을 주면 `.get()`/`.items()` 가 터져
+    화면 전체가 500 이었다 — 어느 대상이 뭘 잘못 줬는지도 안 보였다.
+    """
+    project = make_project(tmp_path)
+    for broken in (None, [], "oops", 42):
+        monkeypatch.setattr("console.composer.read_current",
+                            lambda url, issuer_secret=None, _c=broken:
+                            ComposerResult("읽음", value={"revision": "r", "config": _c}))
+        monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
+        monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
+        response = TestClient(create_app(), raise_server_exceptions=False).get(
+            "/composer", params={"path": str(project)})
+        assert response.status_code == 200, f"config={broken!r} 에서 죽었다"
+        assert "읽지 못했습니다" in response.text or "형태가 예상과 다릅니다" in response.text
+
+
+def test_a_non_numeric_remove_team_does_not_crash(tmp_path, monkeypatch):
+    """★실측: 조작된 POST(`remove_team=abc`)가 `int()` 에서 터져 500 이었다."""
+    monkeypatch.setattr("console.composer.read_current",
+                        lambda url, issuer_secret=None: ComposerResult(
+                            "읽음", value={"revision": "r1", "config": SAMPLE_CONFIG}))
+    monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
+    monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
+    project = make_project(tmp_path)
+    client = TestClient(create_app(), raise_server_exceptions=False)
+
+    for bad in ("abc", "", "1.5", "９９"):
+        response = client.post("/composer", data={
+            "path": str(project), "remove_team": bad,
+            "team_id_0": "billing", "implementation_ref_0": "app.x:Billing", "active_0": "on",
+        })
+        assert response.status_code == 200, f"remove_team={bad!r} 에서 죽었다"
+        # ★숫자가 아니면 아무 행도 지우지 않는다
+        assert "value='billing'" in response.text

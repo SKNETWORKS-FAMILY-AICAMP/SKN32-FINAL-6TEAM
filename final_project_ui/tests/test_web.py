@@ -120,12 +120,15 @@ def test_project_screen_is_rendered_as_html(tmp_path):
 
 
 def test_top_navigation_marks_project_screen_and_links_to_composer(tmp_path):
+    from urllib.parse import quote
+
     project = make_project(tmp_path)
     body = TestClient(create_app()).get("/project", params={"path": str(project)}).text
 
     assert "<a href='/project?path=" in body
-    assert "<a href='/project?path=" in body and "aria-current='page'" in body
-    assert f"/composer?path={project}" in body
+    assert "aria-current='page'" in body
+    # ★링크의 경로는 **URL 인코딩**된다(`console.web.qs`) — 원문 그대로 찾으면 안 된다.
+    assert f"/composer?path={quote(str(project), safe='')}" in body
 
 
 def test_top_navigation_marks_composer_screen(tmp_path):
@@ -146,3 +149,41 @@ def test_top_navigation_disables_project_links_without_a_path(tmp_path):
     assert "<span class='nav-disabled' aria-disabled='true'>Composer</span>" in nav
     assert "/project?path=" not in nav
     assert "/composer?path=" not in nav
+
+
+def test_project_screen_without_a_path_explains_instead_of_returning_422(tmp_path):
+    """★`/project` 만 `path` 가 필수라 FastAPI 가 raw JSON 422 를 냈다.
+
+    주소창에 `/project` 만 치거나 쿼리 없는 북마크로 들어오면 화면이 아니라
+    JSON 이 떴다 — 다른 라우트는 전부 안내 화면을 낸다. 여기만 다를 이유가 없다.
+    """
+    response = TestClient(create_app()).get("/project")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "프로젝트 경로가 없습니다" in response.text
+
+
+def test_a_path_with_query_special_characters_still_links_correctly(tmp_path):
+    """★`esc()` 만으로는 링크가 깨진다 — URL 인코딩이 따로 필요하다.
+
+    실측(2026-08-19): 폴더 이름에 `&`·`#` 가 있으면(둘 다 합법이다) 링크가
+    `path=...\a` 에서 잘리고 `#c` 는 서버에 오지도 않아, **엉뚱한 경로**를
+    가리켰다. 지금은 `%26`·`%23` 로 인코딩된다.
+    """
+    import re
+
+    project = tmp_path / "a&b#c"
+    (project / "config").mkdir(parents=True)
+    (project / "config" / "project.yaml").write_text(
+        "modules: {}\nports: {}\nteams: []\n", encoding="utf-8")
+
+    client = TestClient(create_app())
+    body = client.get("/", params={"root": str(tmp_path)}).text
+    links = re.findall(r"href='(/project\?path=[^']*)'", body)
+    assert links, "프로젝트 링크가 아예 없다"
+    assert "%26" in links[0] and "%23" in links[0], f"인코딩 안 됨: {links[0]}"
+
+    # ★링크를 실제로 따라가면 그 프로젝트가 열려야 한다
+    followed = client.get(links[0].replace("&amp;", "&"))
+    assert followed.status_code == 200
+    assert "프로젝트가 아닙니다" not in followed.text

@@ -1,0 +1,33 @@
+# ★이 파일이 없으면 안 된다.
+#   이 폴더는 상위 워크스페이스(A-COP)의 일부로도 추적되지만, 인수인계용
+#   `project-final_project_ui` 브랜치는 이 폴더만 떼어낸 것이라 **상위의
+#   .gitignore 가 따라오지 않는다.** 그 브랜치를 클론한 사람은 .gitignore 가
+#   하나도 없는 저장소를 받게 된다(2026-08-19 인수인계 점검에서 실측).
+
+# 파이썬
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# pytest 임시 산출물
+# ★한때 `--basetemp` 로 지정한 `.pytest-tmp2/` 가 통째로 커밋된 적이 있다(69개 파일).
+.pytest-tmp*/
+.pytest-basetemp*/
+
+# 환경/비밀
+# ★이 콘솔의 토큰·DB 접속정보는 **파일이 아니라 환경변수**로만 준다(README 참고).
+#   그래도 실수로 만든 .env 가 커밋되지 않게 막아 둔다.
+.env
+.env.local
+*.key
+*.pem
+
+# OS/에디터
+Thumbs.db
+.DS_Store
+*.swp

@@ -12,6 +12,7 @@ import html
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
@@ -118,6 +119,21 @@ def esc(value: Any) -> str:
     return html.escape("" if value is None else str(value))
 
 
+def qs(value: Any) -> str:
+    """쿼리스트링 **값**으로 들어갈 것. ★`esc()` 만으로는 부족하다.
+
+    `esc()` 는 HTML 이스케이프일 뿐 URL 인코딩이 아니다. 폴더 이름에 `&`·`#` 가
+    있으면(둘 다 파일명으로 합법이다) 브라우저가 각각 **쿼리 구분자**·**fragment**
+    로 해석해서, 링크가 원래와 다른 경로를 가리킨다 —
+    `a&b#c` → `path=...a` + 엉뚱한 파라미터 `b`, 그리고 `#c` 는 서버에 오지도 않는다.
+    2026-08-19 인수인계 점검에서 실측했다.
+
+    그래서 **URL 인코딩 먼저, HTML 이스케이프 나중**이다. 순서를 바꾸면
+    `&` 가 `&amp;` 가 된 뒤 `%26amp%3B` 로 인코딩돼 값 자체가 변한다.
+    """
+    return esc(quote("" if value is None else str(value), safe=""))
+
+
 def page(title: str, body: str, *, lede: str = "", path: str = "", current: str = "") -> HTMLResponse:
     lede_html = f"<p class='lede'>{esc(lede)}</p>" if lede else ""
     # Composer POST의 각 결과 분기도 동일한 화면 메뉴를 유지한다.
@@ -126,8 +142,8 @@ def page(title: str, body: str, *, lede: str = "", path: str = "", current: str 
         path = lede
     links = [("/", "프로젝트 목록")]
     if path:
-        links.extend([(f"/project?path={esc(path)}", "조립"),
-                      (f"/composer?path={esc(path)}", "Composer")])
+        links.extend([(f"/project?path={qs(path)}", "조립"),
+                      (f"/composer?path={qs(path)}", "Composer")])
     else:
         links.extend([(None, "조립"), (None, "Composer")])
     nav = "".join(
@@ -291,15 +307,26 @@ def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
     """
     import json as _json
 
-    back = f"<p><a href='/project?path={esc(str(target))}'>← 프로젝트로</a></p>"
+    back = f"<p><a href='/project?path={qs(str(target))}'>← 프로젝트로</a></p>"
     if not current.ok:
         return note(current.detail or current.status, "warn" if current.status == "연결 안 함" else "bad") + back
 
     revision = current.value.get("revision", "")
     cfg = config if config is not None else current.value.get("config", {})
-    modules = cfg.get("modules", {})
-    ports = cfg.get("ports", {})
-    teams = cfg.get("teams", [])
+    # ★대상이 이상한 것을 줘도 **콘솔은 떠야 한다**(`CLAUDE.md` §1).
+    #   한때 대상이 `config: null`·배열·문자열을 주면 여기서 `.get()`/`.items()` 가
+    #   터져 화면 전체가 500 이었다 — 어느 대상이 뭘 잘못 줬는지도 안 보였다.
+    #   못 읽었으면 **못 읽었다고 적는다**(2026-08-19 인수인계 점검에서 실측).
+    if not isinstance(cfg, dict):
+        return note(f"대상이 준 config 를 읽지 못했습니다 — 객체가 아니라 "
+                    f"{type(cfg).__name__} 입니다.", "bad") + back
+    modules = cfg.get("modules") or {}
+    ports = cfg.get("ports") or {}
+    teams = cfg.get("teams") or []
+    if not isinstance(modules, dict) or not isinstance(ports, dict) or not isinstance(teams, list):
+        return note("대상이 준 config 의 modules·ports·teams 형태가 예상과 다릅니다 "
+                    "— 편집 화면을 그리지 않습니다.", "bad") + back
+    teams = [t for t in teams if isinstance(t, dict)]
 
     intro = note(
         "이 폼은 대상의 인증된 Composer API(/composer/current, /validate, /apply)만 호출합니다 — "
@@ -377,7 +404,7 @@ def create_app() -> FastAPI:
         rows = []
         for item in found:
             if item.is_project:
-                link = f"<a class='mono' href='/project?path={esc(item.path)}'>{esc(item.name)}</a>"
+                link = f"<a class='mono' href='/project?path={qs(item.path)}'>{esc(item.name)}</a>"
                 mark = pill("프로젝트", "ok")
             else:
                 # ★조용히 빼지 않는다 — "왜 내 폴더가 안 보이나" 에 답해야 한다
@@ -396,7 +423,17 @@ def create_app() -> FastAPI:
                     lede="경로를 주지 않으면 이 콘솔의 상위 폴더를 훑습니다.", current="/")
 
     @app.get("/project", response_class=HTMLResponse)
-    def project(path: str) -> HTMLResponse:
+    def project(path: str = Query(default="")) -> HTMLResponse:
+        # ★`path` 를 필수로 두면 FastAPI 가 **raw JSON 422** 를 낸다 — 주소창에
+        #   `/project` 만 치거나 쿼리 없는 북마크로 들어오면 화면이 아니라 JSON 이
+        #   뜬다. 다른 라우트(`/`·`/run`·`/composer`)는 전부 안내 화면을 낸다.
+        #   여기만 다를 이유가 없다(2026-08-19 인수인계 점검에서 실측).
+        if not path:
+            return page("프로젝트", note(
+                "프로젝트 경로가 없습니다 — `/project?path=<프로젝트 경로>` 로 여세요.", "warn")
+                        + "<p><a href='/'>← 프로젝트 목록에서 고르기</a></p>",
+                        current="/project")
+
         found = inspect_path(path)
         if not found.is_project:
             return page("프로젝트", note(
@@ -516,7 +553,7 @@ def create_app() -> FastAPI:
         run_rows = []
         for run in runs.rows:
             run_id = run.get("run_id")
-            href = f"/run?path={esc(str(target))}&run_id={esc(run_id)}"
+            href = f"/run?path={qs(str(target))}&run_id={qs(run_id)}"
             run_rows.append(
                 f"<tr><td class='mono'><a href='{href}'>{esc(run_id)}</a></td>"
                 f"<td>{esc(run.get('status'))}</td>"
@@ -558,7 +595,7 @@ def create_app() -> FastAPI:
                 + state_card
                 + "<div class='card'><h2>실행 이력</h2>" + run_history + "</div>"
                 + f"<div class='card'><h2>연결</h2>{connections}</div>"
-                + f"<p><a href='/composer?path={esc(str(target))}'>구성 조립(Composer) →</a>"
+                + f"<p><a href='/composer?path={qs(str(target))}'>구성 조립(Composer) →</a>"
                 + f" &nbsp;·&nbsp; <a href='/'>← 프로젝트 목록</a></p>")
         return page(found.name, body, lede=str(target), path=str(target), current="/project")
 
@@ -592,7 +629,7 @@ def create_app() -> FastAPI:
                     content = table(headers, rendered)
             sections.append(f"<div class='card'><h2>{esc(stage)}</h2>{content}</div>")
 
-        back = f"<p><a href='/project?path={esc(str(target))}'>실행 이력으로 돌아가기</a></p>"
+        back = f"<p><a href='/project?path={qs(str(target))}'>실행 이력으로 돌아가기</a></p>"
         return page("실행 추적", "".join(sections) + back, lede=f"{target} · {run_id}", path=path)
 
     @app.get("/composer", response_class=HTMLResponse)
@@ -614,16 +651,24 @@ def create_app() -> FastAPI:
                         path=str(target), current="/composer")
 
         base_config = current.value.get("config", {})
-        module_names = list(base_config.get("modules", {}))
-        port_names = list(base_config.get("ports", {}))
+        # ★대상이 이상한 것을 줘도 콘솔은 떠야 한다 — `_composer_body` 와 같은 이유다.
+        if not isinstance(base_config, dict):
+            return page("구성 조립(Composer)", _composer_body(target, current), lede=str(target),
+                        path=str(target), current="/composer")
+        module_names = list(base_config.get("modules") or {})
+        port_names = list(base_config.get("ports") or {})
         indexes = [int(key.removeprefix("team_id_")) for key in form
                   if key.startswith("team_id_") and key.removeprefix("team_id_").isdigit()]
-        team_count = max(indexes, default=len(base_config.get("teams", [])) - 1) + 1
+        team_count = max(indexes, default=len(base_config.get("teams") or []) - 1) + 1
         candidate = _config_from_form(form, module_names, port_names, team_count)
 
         # ★행 추가/제거는 대상에 보내지 않는다 — 화면만 다시 그린다(원본 화면과 같은 패턴)
         if form.get("remove_team") is not None:
-            index = int(form["remove_team"])
+            # ★`int()` 를 그냥 부르면 조작된 POST(`remove_team=abc`)가 **500** 이 된다.
+            #   실측으로 확인했다(2026-08-19 인수인계 점검). 숫자가 아니면 아무 행도
+            #   지우지 않고 화면만 다시 그린다 — 범위 밖 인덱스와 같은 취급이다.
+            raw_index = str(form["remove_team"])
+            index = int(raw_index) if raw_index.lstrip("-").isdigit() else -1
             if 0 <= index < len(candidate["teams"]):
                 candidate["teams"].pop(index)
             return page("구성 조립(Composer)", _composer_body(target, current, config=candidate), lede=str(target),
