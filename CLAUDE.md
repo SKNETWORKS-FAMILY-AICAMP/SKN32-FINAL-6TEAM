@@ -18,3 +18,21 @@
 릴리스 대상은 [`final_project_cs/`](final_project_cs/)다. [`final_project_sample/`](final_project_sample/)은 Core/Team 계약과 Composer 쓰기채널 인프라를 먼저 검증하는 참고 구현체이며, sample에서 먼저 만든 Composer 쓰기채널을 cs로 이식하는 관계다. 따라서 sample의 예시 Team과 검증 상태를 cs의 릴리스 완료로 간주하지 않는다.
 
 문서 병합 때는 [`program/research/_prompts/문서병합_지침.md`](program/research/_prompts/문서병합_지침.md)의 보완·중복·모순 분류 절차를 따른다. `program/research/index.md`의 [`문서 정합성 점검 캘린더`](program/research/index.md#문서-정합성-점검-캘린더)에서는 `§숫자` 참조, Team 목록, DoD 항목 수를 기준선과 대조한다.
+
+## 데이터 폴더
+
+실제 데이터 파일은 [`datasets/`](datasets/)에 둔다. [`program/research/`](program/research/)는 조사 문서를 두는 곳이고, 데이터 파일 자체는 여기가 아니다.
+
+폴더 규칙과 각 데이터셋의 상태는 [`datasets/README.md`](datasets/README.md)가 정본이다. 새 데이터셋을 만들기 전에 먼저 읽는다.
+
+| 데이터셋 | 무엇인가 | A-COP에서 쓰는 곳 |
+|---|---|---|
+| [`commerce/coupang_order_history`](datasets/commerce/coupang_order_history/) | 쿠팡 주문·배송 기록 | Core 1 Context Broker의 주문 정보 |
+| [`commerce/naver_order_history`](datasets/commerce/naver_order_history/) | 네이버 주문 기록 | 동. 쇼핑몰 두 곳으로 구조 편향을 막는다 |
+| [`commerce/courier_tracking`](datasets/commerce/courier_tracking/) | 택배 배송 이력 조회 도구 | Core 2의 배송조회 Action 실행부 |
+| [`voc/*`](datasets/voc/) | 고객 문의·응대 공개 데이터 | Core 1의 RAG 지식 재료 |
+| [`mt/*`](datasets/mt/) | 번역 성능 비교 | 다국어 응대 검토용 |
+
+`raw/`와 `processed/`는 본인의 실제 구매 기록을 담고 있어 git에 올리지 않는다. 스크립트와 스키마와 `REPORT.md`만 올린다.
+
+각 데이터셋 폴더의 `REPORT.md`가 그 데이터가 무엇이고 어디에 쓰이는지 설명한다. 데이터 관련 작업 전에 해당 `REPORT.md`를 읽는다.
