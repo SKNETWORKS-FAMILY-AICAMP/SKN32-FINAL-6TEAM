@@ -9,6 +9,8 @@ program/briefing/archive/
 legacy/
 .tmp/
 .pytest-tmp/
+.pytest-tmp*/
+.pytest-basetemp*/
 
 # 파이썬
 __pycache__/

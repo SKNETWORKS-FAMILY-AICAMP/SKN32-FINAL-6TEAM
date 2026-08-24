@@ -1,9 +1,0 @@
-modules:
-  console:
-    enabled: true
-teams:
-  - team_id: team-alpha
-    active: true
-    implementation_ref: impl.alpha
-ports:
-  team_executor: 8123

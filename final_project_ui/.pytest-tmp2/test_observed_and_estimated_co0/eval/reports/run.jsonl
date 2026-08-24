@@ -1,2 +1,0 @@
-{"arm": "Proposed", "cost_usd": 0.001, "config": {"arm": "Proposed", "provider": "openai", "model": "gpt-4o-mini", "dataset": "eval/datasets/golden.jsonl", "dataset_sha256": "abc123", "prompt_snapshot": "proposed-v1", "ablations": ["no_rag"], "estimated_cost_usd": 0.0273}}
-{"arm": "Proposed", "cost_usd": 0.001, "config": {"arm": "Proposed", "provider": "openai", "model": "gpt-4o-mini", "dataset": "eval/datasets/golden.jsonl", "dataset_sha256": "abc123", "prompt_snapshot": "proposed-v1", "ablations": ["no_rag"], "estimated_cost_usd": 0.0273}}
