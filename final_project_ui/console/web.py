@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import html
 import os
+import secrets
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
+from starlette.concurrency import run_in_threadpool
 
 from console import composer as composer_client
 from console.db import read_agent_runs, read_trace
@@ -27,6 +29,22 @@ from console.readers import (judgement_counts, read_declaration, read_eval_runs,
 
 #: 기본으로 훑을 루트. 이 저장소의 부모 = 형제 프로젝트들이 있는 곳.
 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+
+#: ★CSRF 토큰 — 프로세스마다 새로 만든다. 디스크에 저장하지 않는다.
+#:
+#:   왜 필요한가: 이 콘솔이 켜져 있는 동안 운영자가 **악성 웹페이지를 열면**,
+#:   그 페이지가 `127.0.0.1:<port>/composer` 로 form POST 를 보낼 수 있다.
+#:   폼 POST 는 CORS preflight 대상이 아니라 브라우저가 막지 않는다. 응답은
+#:   못 읽어도 **부작용(대상 config `apply`)은 일어난다** — 그것도 이 프로세스가
+#:   환경변수로 들고 있는 issuer secret 으로. (2026-08-19 인수인계 점검)
+#:
+#:   토큰은 우리가 그린 폼에만 들어 있고, 공격자 페이지는 동일출처 정책 때문에
+#:   그 값을 **읽을 수 없다.** 그래서 위조할 수 없다.
+#:
+#:   ★이 때문에 `POST /composer` 는 **화면을 거쳐야만** 쓸 수 있다. 스크립트로
+#:   자동화하려면 이 콘솔이 아니라 **대상의 `/composer/*` API 를 직접** 부르는 게
+#:   맞다 — 그게 원래 계약이다(`CLAUDE.md` §0.3).
+_CSRF_TOKEN = secrets.token_urlsafe(32)
 
 CSS = """
 *,*::before,*::after{box-sizing:border-box}
@@ -290,6 +308,70 @@ def _config_from_form(form: dict, module_names: list[str], port_names: list[str]
     return {"modules": modules, "ports": ports, "teams": teams}
 
 
+def _csrf_refusal(request: Request, form: Any) -> HTMLResponse | None:
+    """CSRF 검사. 통과하면 `None`, 막아야 하면 거부 화면을 돌려준다.
+
+    ★막으려는 것: 콘솔이 켜져 있는 동안 운영자가 연 **악성 웹페이지**가
+      `127.0.0.1:<port>/composer` 로 form POST 를 보내는 것. 폼 POST 는 CORS
+      preflight 대상이 아니라 브라우저가 안 막는다. 응답은 못 읽어도 **부작용
+      (대상 config 변경)은 일어난다** — 이 프로세스의 issuer secret 으로.
+
+    ★두 겹이다:
+      1. **토큰**(주 방어) — 우리가 그린 폼에만 있고, 공격자는 동일출처 정책
+         때문에 그 값을 읽을 수 없다. 그래서 위조가 안 된다.
+      2. **Origin**(보조) — 브라우저는 cross-origin POST 에 항상 `Origin` 을
+         붙인다. 있으면 우리 것과 같아야 한다. 없으면(비-브라우저 클라이언트)
+         토큰만으로 판정한다 — 브라우저는 생략할 수 없으므로 안전하다.
+    """
+    token = str(form.get("csrf_token", ""))
+    if not secrets.compare_digest(token, _CSRF_TOKEN):
+        return _csrf_denied(
+            "이 요청에는 유효한 CSRF 토큰이 없습니다. 이 화면을 **다시 열어서** 제출하세요.")
+
+    origin = request.headers.get("origin")
+    if origin:
+        expected = f"{request.url.scheme}://{request.url.netloc}"
+        if origin.rstrip("/") != expected.rstrip("/"):
+            return _csrf_denied(f"다른 출처에서 온 요청입니다 — {esc(origin)}")
+    return None
+
+
+def _csrf_denied(reason: str) -> HTMLResponse:
+    return page("구성 조립(Composer)",
+                note(f"요청을 거부했습니다. {reason}", "bad")
+                + "<div class='card'><p class='dim'>이 화면의 폼으로만 제출할 수 있습니다. "
+                  "스크립트로 자동화하려면 이 콘솔이 아니라 <b>대상의 <code>/composer/*</code> API 를 "
+                  "직접</b> 호출하세요 — 그게 원래 계약입니다(<code>CLAUDE.md</code> §0.3).</p></div>"
+                + "<p><a href='/'>← 프로젝트 목록</a></p>",
+                current="/composer")
+
+
+def _composer_setup_help(target: Path, status: str) -> str:
+    """★못 붙었을 때 **다음에 할 일**을 적는다.
+
+    이 화면은 대상의 config 를 대상에게 물어봐서 그린다 — 이 콘솔이 대상의
+    파이썬을 import 하지 않기 때문이다(`CLAUDE.md` §0.3). 그래서 대상 서버가
+    떠 있어야 하고 연결 정보가 있어야 한다. 그 사실을 화면이 직접 말하지 않으면
+    "화면을 이식했는데 왜 비어 있나" 로 읽힌다(실제로 그렇게 읽혔다).
+    """
+    if status not in ("연결 안 함", "토큰 발급 실패", "대상이 응답하지 않음", "인증 실패"):
+        return ""
+    return (
+        "<div class='card'><h2>붙이려면</h2>"
+        "<p class='dim'>이 화면은 <b>대상에게 물어봐서</b> 그립니다 — 이 콘솔은 대상의 "
+        "파이썬을 import 하지 않고, 쓰기는 대상이 자기 계약으로 검증한 뒤 실행합니다"
+        "(<code>CLAUDE.md</code> §0.3). 그래서 아래 둘이 필요합니다.</p>"
+        "<ol>"
+        f"<li><b>대상 서버를 띄웁니다</b> — <span class='mono'>{esc(str(target))}</span> 에서 "
+        "그 프로젝트의 실행 방법대로 기동합니다.</li>"
+        "<li><b>이 콘솔에 연결 정보를 줍니다</b>(환경변수, 파일에 저장하지 않습니다):"
+        "<pre class='mono'>CONSOLE_COMPOSER_URL=http://127.0.0.1:&lt;대상포트&gt;/composer\n"
+        "CONSOLE_COMPOSER_ISSUER_SECRET=&lt;대상의 /auth/token 발급자 비밀키&gt;</pre>"
+        "그 다음 이 콘솔을 다시 시작합니다.</li>"
+        "</ol>"
+        "<p class='dim'>자세한 것은 <code>README.md</code> 의 “라이브 연결”.</p></div>")
+
+
 def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
                    config: dict[str, Any] | None = None) -> str:
     """★대상의 인증된 쓰기 채널만 부른다(`CLAUDE.md` §0.3 예외) — 여기서 직접 안 쓴다.
@@ -309,7 +391,14 @@ def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
 
     back = f"<p><a href='/project?path={qs(str(target))}'>← 프로젝트로</a></p>"
     if not current.ok:
-        return note(current.detail or current.status, "warn" if current.status == "연결 안 함" else "bad") + back
+        kind = "warn" if current.status == "연결 안 함" else "bad"
+        # ★"composer_url 이 프로필에 없음" 만 띄우면 **무엇을 해야 하는지**를 안 알려준다.
+        #   실제로 "Composer 를 이 콘솔로 이식한 것 아니었나?" 하는 오해를 불렀다
+        #   (2026-08-19). 이식한 것은 **화면**이고, 값은 대상에게 물어봐야 한다 —
+        #   대상 프로세스가 자기 Core 계약으로 검증한 뒤 쓰기 때문이다(`CLAUDE.md` §0.3).
+        #   그 사실과 **다음에 할 일**을 화면이 직접 말한다.
+        return (note(current.detail or current.status, kind)
+                + _composer_setup_help(target, current.status) + back)
 
     revision = current.value.get("revision", "")
     cfg = config if config is not None else current.value.get("config", {})
@@ -358,6 +447,7 @@ def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
 
     form = f"""
     <form method='post' action='/composer'>
+      <input type='hidden' name='csrf_token' value='{esc(_CSRF_TOKEN)}'>
       <input type='hidden' name='path' value='{esc(str(target))}'>
       <input type='hidden' name='base_revision' value='{esc(revision)}'>
       <div class='stat'><span>REVISION</span><b class='mono'>{esc(revision)}</b></div>
@@ -643,9 +733,20 @@ def create_app() -> FastAPI:
     @app.post("/composer", response_class=HTMLResponse)
     async def composer_submit(request: Request) -> HTMLResponse:
         form = await request.form()
+
+        # ★CSRF — 대상에 **아무것도 보내기 전에** 막는다.
+        #   토큰은 우리가 그린 폼에만 있고, 공격자 페이지는 동일출처 정책 때문에
+        #   못 읽는다. `Origin` 은 보조다(브라우저는 cross-origin POST 에 항상 보낸다).
+        refusal = _csrf_refusal(request, form)
+        if refusal is not None:
+            return refusal
+
         target = Path(str(form.get("path", "")))
         profile = profile_for(target)
-        current = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret)
+        # ★blocking `urlopen()` 을 이벤트 루프에서 직접 부르면, 대상이 느릴 때
+        #   이 프로세스의 **다른 화면까지** 멈춘다. worker thread 로 뺀다.
+        current = await run_in_threadpool(
+            composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
         if not current.ok:
             return page("구성 조립(Composer)", _composer_body(target, current), lede=str(target),
                         path=str(target), current="/composer")
@@ -683,7 +784,9 @@ def create_app() -> FastAPI:
         action = str(form.get("action", ""))
         reason = str(form.get("reason", ""))
         if action == "validate":
-            outcome = composer_client.validate_candidate(profile.composer_url, profile.composer_issuer_secret, candidate)
+            outcome = await run_in_threadpool(
+                composer_client.validate_candidate,
+                profile.composer_url, profile.composer_issuer_secret, candidate)
         elif action == "apply":
             if not reason.strip():
                 # ★reason 없이 적용하지 않는다 — 대상 계약(§ audit)이 요구하는 최소한의 근거다
@@ -691,8 +794,10 @@ def create_app() -> FastAPI:
                             note("적용하려면 사유(reason)를 적어야 합니다.", "bad")
                             + _composer_body(target, current, config=candidate), lede=str(target),
                             path=str(target), current="/composer")
-            outcome = composer_client.apply_candidate(profile.composer_url, profile.composer_issuer_secret, candidate,
-                                                       base_revision=str(form.get("base_revision", "")))
+            outcome = await run_in_threadpool(
+                composer_client.apply_candidate,
+                profile.composer_url, profile.composer_issuer_secret, candidate,
+                base_revision=str(form.get("base_revision", "")))
         else:
             return page("구성 조립(Composer)",
                         note(f"알 수 없는 동작: {action}", "bad") + _composer_body(target, current, config=candidate),
@@ -709,8 +814,10 @@ def create_app() -> FastAPI:
         result_note = note(detail, kind)
 
         # ★적용 성공 후에는 대상의 최신 상태(새 revision)를 다시 읽어 보여준다
-        refreshed = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret) \
-            if outcome.status == "적용됨" else current
+        refreshed = current
+        if outcome.status == "적용됨":
+            refreshed = await run_in_threadpool(
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
         return page("구성 조립(Composer)", result_note + _composer_body(target, refreshed, config=candidate),
                     lede=str(target), path=str(target), current="/composer")
 
