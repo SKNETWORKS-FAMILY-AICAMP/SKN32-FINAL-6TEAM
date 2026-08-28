@@ -26,6 +26,8 @@ venv/
 .env
 .env.local
 *.env
+# .env.teamflow 는 위 패턴에 걸리지 않는다(*.env 는 .env 로 끝나는 이름만 매치)
+.env.teamflow
 credentials*
 *.key
 *.pem
@@ -131,3 +133,6 @@ datasets/**/_done
 datasets/**/*.partial
 datasets/**/naver_profile/
 datasets/**/coupang_profile/
+
+# 산출물 문서 생성 중 임시 폴더
+program/산출물양식/_build/_tmp_*/
