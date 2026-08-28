@@ -129,7 +129,9 @@ button.ghost{background:transparent;color:var(--bad);border-color:var(--bad)}
  font-size:.82rem}
 .node--module{border-left:3px dashed var(--ok)}
 .node--component{border-left:3px solid var(--accent)}
+.node--instance{border-left:3px dashed var(--warn)}
 .node--off{opacity:.5;text-decoration:line-through}
+.flow-legend{color:var(--dim);font-size:.8rem;margin:0 0 .6rem}
 """
 
 
@@ -203,9 +205,21 @@ def collapsible_card(title: str, body: str, *, subtitle: str = "", open_: bool =
             f"<div class='body'>{body}</div></details>")
 
 
+_NODE_BADGE = {"module": "모듈", "component": "고정", "instance": "인스턴스"}
+
+#: ★대상의 원래 `/ui/composer` 화면에는 세 가지 노드 종류를 설명하는 범례가 있었다
+#:   (`docs/backup/composer_ui_원본_2026-08-18/composer_ui_final_project_cs.py`).
+#:   이 콘솔로 다시 쓸 때 그 설명이 빠져 있었다 — 노드 색만 보고는 "고정"·"모듈"·
+#:   "인스턴스"가 뭐가 다른지 알 수 없다. 문구는 그대로 옮기지 않고 이 화면 톤에 맞게
+#:   다시 썼다(§0.2 — 화면은 이 프로그램이 만든다).
+FLOW_LEGEND = ("<p class='flow-legend'><b>고정</b> = 컴포넌트, 끌 수 없다 · "
+              "<b>모듈</b> = 선택, 위 폼에서 켜고 끈다 · "
+              "<b>인스턴스</b> = 개수가 바뀐다(Team처럼 추가·제거된다)</p>")
+
+
 def _node(name: str, *, kind: str, enabled: bool | None, hint: str = "") -> str:
     off = " node--off" if enabled is False else ""
-    badge = {"module": "모듈", "component": "고정"}.get(kind, kind)
+    badge = _NODE_BADGE.get(kind, kind)
     state = "" if enabled is None else (" · 켜짐" if enabled else " · 꺼짐")
     hint_html = f" <span class='dim'>— {esc(hint)}</span>" if hint else ""
     return f"<li class='node node--{kind}{off}'>{esc(name)} <span class='dim'>({badge}{state})</span>{hint_html}</li>"
@@ -223,7 +237,7 @@ def flow(stages: list[dict[str, Any]]) -> str:
                     f"<details class='stage' open><summary><h3 class='stage__title'>{esc(stage['title'])}</h3>"
                     f"<span class='stage__tally'>{len(stage['nodes'])}개</span></summary>"
                     f"{note}<ul class='nodes'>{nodes}</ul></details></li>")
-    return f"<ul class='flow'>{''.join(rows)}</ul>"
+    return FLOW_LEGEND + f"<ul class='flow'>{''.join(rows)}</ul>"
 
 
 #: ★고정 인프라 — 모듈 토글 대상이 아니다. `docs/backup/composer_ui_원본_2026-08-18/`의
@@ -252,9 +266,12 @@ def _structure_stages(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     teams = cfg.get("teams", [])
     active = [t for t in teams if t.get("active")]
     executor = cfg.get("ports", {}).get("team_executor", "모름")
-    team_nodes = [{"name": t.get("team_id"), "kind": "module", "enabled": t.get("active"),
+    # ★Team 은 "모듈"(고정된 목록에서 켜고 끄기)이 아니라 "인스턴스"다 — 개수 자체가
+    #   Composer 화면에서 추가·제거로 바뀐다(`_config_from_form`). 원래 대상 화면도
+    #   같은 구분을 썼다(`docs/backup/composer_ui_원본_2026-08-18/...` 참고).
+    team_nodes = [{"name": t.get("team_id"), "kind": "instance", "enabled": t.get("active"),
                   "hint": "라우팅됨" if t.get("active") else "등록만 됨"} for t in teams] or \
-        [{"name": "Team 없음", "kind": "component", "enabled": False}]
+        [{"name": "Team 없음", "kind": "instance", "enabled": False}]
 
     return [
         {"n": "1", "title": "입력", "note": "요청이 들어온다",
@@ -370,6 +387,88 @@ def _composer_setup_help(target: Path, status: str) -> str:
         "그 다음 이 콘솔을 다시 시작합니다.</li>"
         "</ol>"
         "<p class='dim'>자세한 것은 <code>README.md</code> 의 “라이브 연결”.</p></div>")
+
+
+#: v3 제안(`program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md` §2.1)에서
+#: `modules`는 `enabled`, `teams`·`ports`는 `active`로 현재 상태를 담는다.
+_TOGGLE_STATE_KEY = {"modules": "enabled", "teams": "active", "ports": "active"}
+_TOGGLE_LABEL = {"modules": "모듈", "teams": "Team", "ports": "Port"}
+_TOGGLE_TARGET_TYPE = {"modules": "module", "teams": "team", "ports": "port"}
+
+
+def _registered_ids_from(value: Any) -> dict[str, list[str]] | None:
+    """introspection 응답에서 v3 제안의 `registered_ids`를 뽑는다.
+
+    ★모르는 계약 버전으로는 그리지 않는다(`CLAUDE.md` §1) — 호출부가
+    `live.status == "읽음"`(= `contract_version`이 `CONSOLE_CONTRACT_VERSIONS`에
+    있어 이미 알려진 버전으로 확인된 상태)일 때만 이 함수를 부른다. 그래도 형태가
+    다르면(리스트가 아니거나 문자열이 아닌 원소) 그 종류만 조용히 뺀다 —
+    지어내지 않는다(§0.4).
+    """
+    if not isinstance(value, dict):
+        return None
+    raw = value.get("registered_ids")
+    if not isinstance(raw, dict):
+        return None
+    result = {kind: ids for kind in ("modules", "teams", "ports")
+             if isinstance(ids := raw.get(kind), list) and all(isinstance(x, str) for x in ids)}
+    return result or None
+
+
+def _toggle_state(value: Any, kind: str, target_id: str) -> bool | None:
+    bucket = (value or {}).get(kind)
+    entry = bucket.get(target_id) if isinstance(bucket, dict) else None
+    state = entry.get(_TOGGLE_STATE_KEY[kind]) if isinstance(entry, dict) else None
+    return state if isinstance(state, bool) else None
+
+
+def _toggle_row(kind: str, target_id: str, state: bool | None, *, target: Path, revision: str) -> str:
+    state_label = "모름" if state is None else ("켜짐" if state else "꺼짐")
+    state_kind = "idle" if state is None else ("ok" if state else "warn")
+    action = ""
+    if state is not None:
+        # ★새 값은 현재 값의 반대다 — 화면이 이만큼만 "판단"한다. 등록 여부·형태
+        #   검증은 대상 몫이다(`CLAUDE.md` §0.2 — 유효성 판정은 대상이 한다).
+        action = f"""<form method='post' action='/composer/toggle'
+              style='display:inline-flex;gap:.4rem;align-items:center;flex-wrap:wrap'>
+          <input type='hidden' name='csrf_token' value='{esc(_CSRF_TOKEN)}'>
+          <input type='hidden' name='path' value='{esc(str(target))}'>
+          <input type='hidden' name='target_type' value='{esc(_TOGGLE_TARGET_TYPE[kind])}'>
+          <input type='hidden' name='target_id' value='{esc(target_id)}'>
+          <input type='hidden' name='active' value='{"false" if state else "true"}'>
+          <input type='hidden' name='base_revision' value='{esc(revision)}'>
+          <input name='reason' placeholder='사유' required style='width:9rem'>
+          <button type='submit'>{'끄기' if state else '켜기'}</button>
+        </form>"""
+    return (f"<tr><td>{esc(_TOGGLE_LABEL[kind])}</td><td class='mono'>{esc(target_id)}</td>"
+            f"<td>{pill(state_label, state_kind)}</td><td>{action}</td></tr>")
+
+
+def _toggle_card(live: Any, target: Path) -> str:
+    """v3 제안(`POST /composer/toggle`)이 대상에 있으면 등록 ID별 빠른 토글을 보여준다.
+
+    ★없으면 이 카드 자체가 안 뜬다 — 순수 추가 기능이다. 기존 v2 화면·기능
+    (`_composer_body`)은 이 카드의 유무와 무관하게 그대로 동작한다
+    (사용자 결정: 안 C — 병행. 2026-08-24).
+
+    이 카드는 v2 Composer 연결(`current.ok`)과 **별개로** introspection 연결
+    (`live`)만 본다 — v2가 아직 안 붙어 있어도(또는 그 반대여도) 각자 뜬다.
+    """
+    registered = _registered_ids_from(live.value) if getattr(live, "status", "") == "읽음" else None
+    if not registered:
+        return ""
+    revision = str((live.value or {}).get("config_revision", ""))
+    rows = [_toggle_row(kind, target_id, _toggle_state(live.value, kind, target_id),
+                        target=target, revision=revision)
+            for kind in ("modules", "teams", "ports") for target_id in registered.get(kind, [])]
+    return collapsible_card(
+        "빠른 토글 (v3 제안)",
+        note("대상이 등록해 둔 항목만 켜고 끕니다 — 새 선언을 만들거나 등록 목록 자체를 "
+             "바꾸지 않습니다. 계약은 아직 잠정입니다"
+             "(program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md §2).", "info")
+        + table(["종류", "ID", "상태", ""], rows),
+        subtitle=f"등록 {sum(len(v) for v in registered.values())}건 · revision {revision}" if revision
+                 else f"등록 {sum(len(v) for v in registered.values())}건")
 
 
 def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
@@ -722,13 +821,23 @@ def create_app() -> FastAPI:
         back = f"<p><a href='/project?path={qs(str(target))}'>실행 이력으로 돌아가기</a></p>"
         return page("실행 추적", "".join(sections) + back, lede=f"{target} · {run_id}", path=path)
 
+    def _composer_page(target: Path, current: "composer_client.ComposerResult", live: Any, *,
+                       config: dict[str, Any] | None = None, prefix: str = "") -> HTMLResponse:
+        """v3 토글 카드(있으면) + v2 편집 폼을 한 화면으로 합친다. 모든 `/composer*`
+        라우트가 이 한 곳을 거치게 해서, 화면을 새로 그릴 때마다 두 계약을 같이
+        빠뜨리지 않게 한다."""
+        return page("구성 조립(Composer)",
+                    prefix + _toggle_card(live, target) + _composer_body(target, current, config=config),
+                    lede=str(target), path=str(target), current="/composer")
+
     @app.get("/composer", response_class=HTMLResponse)
     def composer_form(path: str = Query(default="")) -> HTMLResponse:
         target = Path(path) if path else Path(DEFAULT_ROOT)
         profile = profile_for(target)
         current = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret)
-        return page("구성 조립(Composer)", _composer_body(target, current), lede=str(target),
-                    path=path, current="/composer")
+        live = read_introspection(profile.introspection_url, profile.contract_versions,
+                                  profile.introspection_token)
+        return _composer_page(target, current, live)
 
     @app.post("/composer", response_class=HTMLResponse)
     async def composer_submit(request: Request) -> HTMLResponse:
@@ -747,15 +856,15 @@ def create_app() -> FastAPI:
         #   이 프로세스의 **다른 화면까지** 멈춘다. worker thread 로 뺀다.
         current = await run_in_threadpool(
             composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+        live = await run_in_threadpool(read_introspection, profile.introspection_url,
+                                       profile.contract_versions, profile.introspection_token)
         if not current.ok:
-            return page("구성 조립(Composer)", _composer_body(target, current), lede=str(target),
-                        path=str(target), current="/composer")
+            return _composer_page(target, current, live)
 
         base_config = current.value.get("config", {})
         # ★대상이 이상한 것을 줘도 콘솔은 떠야 한다 — `_composer_body` 와 같은 이유다.
         if not isinstance(base_config, dict):
-            return page("구성 조립(Composer)", _composer_body(target, current), lede=str(target),
-                        path=str(target), current="/composer")
+            return _composer_page(target, current, live)
         module_names = list(base_config.get("modules") or {})
         port_names = list(base_config.get("ports") or {})
         indexes = [int(key.removeprefix("team_id_")) for key in form
@@ -772,14 +881,11 @@ def create_app() -> FastAPI:
             index = int(raw_index) if raw_index.lstrip("-").isdigit() else -1
             if 0 <= index < len(candidate["teams"]):
                 candidate["teams"].pop(index)
-            return page("구성 조립(Composer)", _composer_body(target, current, config=candidate), lede=str(target),
-                        path=str(target), current="/composer")
+            return _composer_page(target, current, live, config=candidate)
         if form.get("add_team") is not None:
             candidate["teams"].append({"team_id": "new_team", "active": False, "implementation_ref": ""})
-            return page("구성 조립(Composer)",
-                        note("새 Team을 추가했습니다. 검증 전에는 저장되지 않습니다.", "info")
-                        + _composer_body(target, current, config=candidate),
-                        lede=str(target), path=str(target), current="/composer")
+            return _composer_page(target, current, live, config=candidate,
+                                  prefix=note("새 Team을 추가했습니다. 검증 전에는 저장되지 않습니다.", "info"))
 
         action = str(form.get("action", ""))
         reason = str(form.get("reason", ""))
@@ -790,18 +896,15 @@ def create_app() -> FastAPI:
         elif action == "apply":
             if not reason.strip():
                 # ★reason 없이 적용하지 않는다 — 대상 계약(§ audit)이 요구하는 최소한의 근거다
-                return page("구성 조립(Composer)",
-                            note("적용하려면 사유(reason)를 적어야 합니다.", "bad")
-                            + _composer_body(target, current, config=candidate), lede=str(target),
-                            path=str(target), current="/composer")
+                return _composer_page(target, current, live, config=candidate,
+                                      prefix=note("적용하려면 사유(reason)를 적어야 합니다.", "bad"))
             outcome = await run_in_threadpool(
                 composer_client.apply_candidate,
                 profile.composer_url, profile.composer_issuer_secret, candidate,
                 base_revision=str(form.get("base_revision", "")))
         else:
-            return page("구성 조립(Composer)",
-                        note(f"알 수 없는 동작: {action}", "bad") + _composer_body(target, current, config=candidate),
-                        lede=str(target), path=str(target), current="/composer")
+            return _composer_page(target, current, live, config=candidate,
+                                  prefix=note(f"알 수 없는 동작: {action}", "bad"))
 
         kind = "ok" if outcome.ok else ("warn" if outcome.status in ("연결 안 함", "충돌") else "bad")
         detail = outcome.detail or outcome.status
@@ -818,8 +921,50 @@ def create_app() -> FastAPI:
         if outcome.status == "적용됨":
             refreshed = await run_in_threadpool(
                 composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
-        return page("구성 조립(Composer)", result_note + _composer_body(target, refreshed, config=candidate),
-                    lede=str(target), path=str(target), current="/composer")
+        return _composer_page(target, refreshed, live, config=candidate, prefix=result_note)
+
+    @app.post("/composer/toggle", response_class=HTMLResponse)
+    async def composer_toggle_submit(request: Request) -> HTMLResponse:
+        """v3 제안(`POST /composer/toggle`) — 등록된 항목 하나의 활성 상태만 바꾼다.
+
+        ★v2(`/composer`)와 같은 CSRF 방어를 그대로 쓴다 — 부작용을 내는 폼 POST 라는
+        점은 v2 apply 와 같다. `console/composer.py`의 `toggle_target()` docstring이
+        말하듯 계약은 아직 잠정이라, 대상이 없거나 필드가 안 맞으면 그저 "대상이
+        응답하지 않음"·"검증 실패"로 뜬다 — 화면이 깨지지는 않는다.
+        """
+        form = await request.form()
+        refusal = _csrf_refusal(request, form)
+        if refusal is not None:
+            return refusal
+
+        target = Path(str(form.get("path", "")))
+        profile = profile_for(target)
+        reason = str(form.get("reason", "")).strip()
+
+        async def _redraw(prefix: str = "") -> HTMLResponse:
+            current = await run_in_threadpool(
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+            live = await run_in_threadpool(read_introspection, profile.introspection_url,
+                                           profile.contract_versions, profile.introspection_token)
+            return _composer_page(target, current, live, prefix=prefix)
+
+        if not reason:
+            # ★v2 apply 와 같은 규칙 — 사유 없이 상태를 바꾸지 않는다
+            return await _redraw(note("토글하려면 사유(reason)를 적어야 합니다.", "bad"))
+
+        outcome = await run_in_threadpool(
+            composer_client.toggle_target, profile.composer_url, profile.composer_issuer_secret,
+            target_type=str(form.get("target_type", "")), target_id=str(form.get("target_id", "")),
+            active=str(form.get("active", "")) == "true",
+            base_revision=str(form.get("base_revision", "")), reason=reason)
+
+        kind = "ok" if outcome.ok else ("warn" if outcome.status in ("연결 안 함", "충돌") else "bad")
+        detail = outcome.detail or outcome.status
+        if outcome.status == "토글됨" and isinstance(outcome.value, dict):
+            new_state = "켜짐" if outcome.value.get("active") else "꺼짐"
+            detail = (f"토글됨 — {outcome.value.get('target_id')} → {new_state} "
+                     f"(revision {outcome.value.get('config_revision')})")
+        return await _redraw(note(detail, kind))
 
     return app
 

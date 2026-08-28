@@ -31,7 +31,7 @@ class ComposerResult:
 
     @property
     def ok(self) -> bool:
-        return self.status in ("읽음", "검증됨", "적용됨")
+        return self.status in ("읽음", "검증됨", "적용됨", "토글됨")
 
 
 def _payload_from_http_error(exc: HTTPError) -> dict[str, Any]:
@@ -135,3 +135,25 @@ def apply_candidate(url: str | None, issuer_secret: str | None, config: dict[str
     """검증된 후보를 base revision이 일치할 때 적용한다."""
     return _call(url, issuer_secret, path="/apply", method="POST", scope="composer:write",
                  body={"config": config, "base_revision": base_revision}, success_status="적용됨")
+
+
+def toggle_target(url: str | None, issuer_secret: str | None, *, target_type: str, target_id: str,
+                  active: bool, base_revision: str, reason: str) -> ComposerResult:
+    """등록된 모듈·Team·Port 하나의 활성 상태만 바꾼다 (v3 제안, `POST /composer/toggle`).
+
+    ★2026-08-24 시점 잠정: 계약 형태는
+    `program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md` §2.2 제안을 따른다.
+    이 설계는 아직 대상(final_project_cs)에서 확정·구현 중이라(다른 세션 작업),
+    필드명·경로가 최종 계약과 다를 수 있다 — 화면에는 아직 연결하지 않는다.
+    v2(`read_current`·`validate_candidate`·`apply_candidate`)는 이 함수와 무관하게
+    그대로 동작한다(사용자 결정: 안 C — 병행, v2 유지 + toggle 추가).
+    """
+    body = {
+        "target_type": target_type,
+        "target_id": target_id,
+        "active": active,
+        "base_revision": base_revision,
+        "reason": reason,
+    }
+    return _call(url, issuer_secret, path="/toggle", method="POST", scope="composer:write",
+                 body=body, success_status="토글됨")

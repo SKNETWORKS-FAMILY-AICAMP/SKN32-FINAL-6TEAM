@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from console.composer import apply_candidate, read_current, validate_candidate
+from console.composer import apply_candidate, read_current, toggle_target, validate_candidate
 
 
 @pytest.fixture()
@@ -155,6 +155,31 @@ def test_token_issuance_malformed_json_is_reported(composer_server):
     result = read_current(composer_server({}, token_raw="not-json"), "issuer-secret")
     assert result.status == "\ud1a0\ud070 \ubc1c\uae09 \uc2e4\ud328"
     assert result.detail
+
+
+def test_toggle_issues_write_scope(composer_server):
+    url = composer_server({"/composer/toggle": (200, {"target_type": "module", "target_id": "vector_rag",
+                                                       "active": False, "config_revision": "new"},
+                                                 "access-composer:write")})
+    result = toggle_target(url, "issuer-secret", target_type="module", target_id="vector_rag",
+                           active=False, base_revision="old", reason="운영 점검")
+    assert result.status == "토글됨" and result.value["config_revision"] == "new"
+
+
+def test_toggle_reports_revision_conflict(composer_server):
+    url = composer_server({"/composer/toggle": (409, {"error": {"message": "stale", "current_revision": "new"}},
+                                                 "access-composer:write")})
+    result = toggle_target(url, "issuer-secret", target_type="team", target_id="order_shipping",
+                           active=True, base_revision="old", reason="재활성화")
+    assert result.status == "충돌"
+
+
+def test_toggle_reports_unregistered_id_as_validation_failure(composer_server):
+    url = composer_server({"/composer/toggle": (422, {"error": {"message": "unknown target_id"}},
+                                                 "access-composer:write")})
+    result = toggle_target(url, "issuer-secret", target_type="module", target_id="no_such_module",
+                           active=False, base_revision="old", reason="오타")
+    assert result.status == "검증 실패"
 
 
 def test_other_composer_http_errors_are_unresponsive(composer_server):

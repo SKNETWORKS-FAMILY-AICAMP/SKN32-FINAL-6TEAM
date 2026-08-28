@@ -177,6 +177,29 @@ def test_apply_revision_conflict_shows_current_revision_not_a_crash(tmp_path, mo
     assert "다른 변경이 먼저 적용됐다" in response.text
 
 
+def test_structure_diagram_explains_component_module_instance_and_teams_are_instances(tmp_path, monkeypatch):
+    """★실측(2026-08-24): 대상의 원래 `/ui/composer` 화면에는 "고정"·"모듈"·"인스턴스"
+    세 노드 종류를 설명하는 범례가 있었다
+    (`docs/backup/composer_ui_원본_2026-08-18/composer_ui_final_project_cs.py:127-131`).
+    이 콘솔로 옮길 때 그 범례가 빠졌고, Team 노드도 "인스턴스"(개수가 바뀐다) 대신
+    "모듈"(고정 목록에서 켜고 끈다)로 잘못 표시되고 있었다 — 사용자가 실제 화면에서
+    발견했다.
+    """
+    monkeypatch.setattr("console.composer.read_current",
+                        lambda url, issuer_secret=None: ComposerResult(
+                            "읽음", value={"revision": "r1", "config": SAMPLE_CONFIG}))
+    monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
+    monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "고정</b> = 컴포넌트" in body and "모듈</b> = 선택" in body and "인스턴스</b> = 개수가 바뀐다" in body
+    # ★SAMPLE_CONFIG 의 team_id "billing" — 인스턴스 노드로 그려져야 한다
+    assert "node--instance" in body
+    assert "class='node node--module" in body  # vector_rag 같은 모듈도 여전히 그려진다
+    assert "class='node node--component" in body  # REST API 같은 고정 컴포넌트도 그려진다
+
+
 def test_project_screen_links_to_the_composer_screen(tmp_path):
     """★한때 `... in body or "/composer?path=" in body` 였다 — **검사하는 척하는 검사**다.
 
@@ -316,3 +339,131 @@ def test_the_form_carries_the_csrf_token_so_the_real_screen_works(tmp_path, monk
     body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
 
     assert f"name='csrf_token' value='{_CSRF_TOKEN}'" in body
+
+
+# ── v3 토글 카드 (2026-08-24 추가, 안 C — v2 와 병행) ──────────────────────────
+# ★계약은 아직 잠정이다(program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md §2).
+#   여기서는 그 제안 형태를 기준으로 화면 쪽 판단·렌더링만 검증한다.
+
+def _live(status: str, value: dict | None = None):
+    from console.live import LiveRead
+    return LiveRead(status, value=value)
+
+
+def test_toggle_card_is_absent_when_introspection_is_not_connected(tmp_path, monkeypatch):
+    """★introspection 이 안 붙어 있으면(기본 상태) 조용히 사라진다 — v2 화면은 그대로다."""
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+    assert "빠른 토글" not in body
+
+
+def test_toggle_card_is_absent_for_an_unknown_contract_version(tmp_path, monkeypatch):
+    """★`CLAUDE.md` §1 — 모르는 계약 버전으로는 그리지 않는다.
+
+    `registered_ids` 가 모양상 있어도, `contract_version` 이
+    `CONSOLE_CONTRACT_VERSIONS` 목록에 없으면(`live.status != "읽음"`) 추측해서
+    그리지 않는다.
+    """
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live(
+        "계약 버전 모름", value={"registered_ids": {"modules": ["vector_rag"]}, "modules": {"vector_rag": {"enabled": True}}}))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+    assert "빠른 토글" not in body
+
+
+def test_toggle_card_shows_registered_items_with_current_state(tmp_path, monkeypatch):
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "config_revision": "rev-i1",
+        "registered_ids": {"modules": ["vector_rag"], "teams": ["order_shipping"], "ports": ["team_executor"]},
+        "modules": {"vector_rag": {"enabled": True}},
+        "teams": {"order_shipping": {"active": False}},
+        "ports": {"team_executor": {"active": True}},
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "빠른 토글" in body and "rev-i1" in body
+    assert "vector_rag" in body and "order_shipping" in body and "team_executor" in body
+    # ★켜진 것(vector_rag)에는 "끄기" 버튼(새 값 false), 꺼진 것(order_shipping)에는 "켜기"(새 값 true)
+    assert "끄기" in body and "켜기" in body
+    assert "name='target_type' value='module'" in body
+    assert "name='target_id' value='vector_rag'" in body
+
+
+def test_toggle_card_shows_unknown_state_without_a_button(tmp_path, monkeypatch):
+    """★등록은 됐는데 현재 상태를 대상이 안 줬으면 "모름"이라 적는다 — 지어내지 않는다(§0.4).
+
+    버튼(반대값)을 만들려면 지금 값을 알아야 한다 — 모르면 액션도 안 준다.
+    """
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "config_revision": "rev-i1",
+        "registered_ids": {"modules": ["ghost_module"]},
+        "modules": {},
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "ghost_module" in body and "모름" in body
+    assert "name='target_id' value='ghost_module'" not in body
+
+
+def test_composer_toggle_post_calls_the_adapter_and_shows_new_state(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_toggle(url, issuer_secret, *, target_type, target_id, active, base_revision, reason):
+        calls.append((target_type, target_id, active, base_revision, reason))
+        return ComposerResult("토글됨", value={"target_type": target_type, "target_id": target_id,
+                                              "active": active, "config_revision": "rev-i2"})
+
+    monkeypatch.setattr("console.composer.toggle_target", fake_toggle)
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={}))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app()).post("/composer/toggle", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "target_type": "module",
+        "target_id": "vector_rag", "active": "false", "base_revision": "rev-i1", "reason": "점검",
+    })
+    assert response.status_code == 200
+    assert calls == [("module", "vector_rag", False, "rev-i1", "점검")]
+    assert "토글됨" in response.text and "rev-i2" in response.text
+
+
+def test_composer_toggle_without_a_reason_is_refused_before_calling_the_target(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr("console.composer.toggle_target", lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app()).post("/composer/toggle", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "target_type": "module",
+        "target_id": "vector_rag", "active": "false", "base_revision": "rev-i1", "reason": "   ",
+    })
+    assert response.status_code == 200
+    assert "사유" in response.text
+    assert calls == []
+
+
+def test_composer_toggle_without_a_csrf_token_is_refused_before_calling_the_target(tmp_path, monkeypatch):
+    """★v2 와 같은 방어 — 토글도 부작용을 내는 폼 POST 다."""
+    calls = []
+    monkeypatch.setattr("console.composer.toggle_target", lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app(), raise_server_exceptions=False).post("/composer/toggle", data={
+        "path": str(project), "target_type": "module", "target_id": "vector_rag",
+        "active": "false", "base_revision": "rev-i1", "reason": "공격",
+    })
+    assert "거부했습니다" in response.text
+    assert calls == []
+
+
+def test_composer_toggle_reports_revision_conflict_not_a_crash(tmp_path, monkeypatch):
+    monkeypatch.setattr("console.composer.toggle_target",
+                        lambda *a, **k: ComposerResult("충돌", detail="다른 변경이 먼저 적용됐다."))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app()).post("/composer/toggle", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "target_type": "module",
+        "target_id": "vector_rag", "active": "false", "base_revision": "stale", "reason": "점검",
+    })
+    assert response.status_code == 200
+    assert "다른 변경이 먼저 적용됐다" in response.text
