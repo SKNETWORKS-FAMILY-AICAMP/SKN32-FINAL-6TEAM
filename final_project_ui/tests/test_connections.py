@@ -47,6 +47,22 @@ def test_profile_reads_connections_from_the_environment(monkeypatch, tmp_path):
     assert profile.composer_issuer_secret == "issuer-secret"
 
 
+def test_default_contract_version_matches_what_targets_actually_emit(monkeypatch, tmp_path):
+    """★기본값만으로 대상의 introspection을 읽을 수 있어야 한다.
+
+    대상이 내는 `contract_version`은 `1.0`이다(2026-08-17 P8 실연결 검증).
+    한때 기본값이 `v1`이라 아무 대상과도 맞지 않았고, 환경변수를 손으로 맞추지
+    않으면 조립 실측과 빠른 토글 카드가 조용히 안 떴다(2026-08-28 결함 점검).
+    """
+    monkeypatch.delenv("CONSOLE_CONTRACT_VERSIONS", raising=False)
+    assert "1.0" in profile_for(tmp_path).contract_versions
+
+
+def test_contract_versions_can_be_widened_by_the_environment(monkeypatch, tmp_path):
+    monkeypatch.setenv("CONSOLE_CONTRACT_VERSIONS", "1.0, 1.1 ,")
+    assert profile_for(tmp_path).contract_versions == ("1.0", "1.1")
+
+
 def test_profile_without_a_token_has_none_not_empty_string(monkeypatch, tmp_path):
     monkeypatch.delenv("CONSOLE_INTROSPECTION_TOKEN", raising=False)
     assert profile_for(tmp_path).introspection_token is None

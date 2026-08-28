@@ -415,11 +415,45 @@ def _registered_ids_from(value: Any) -> dict[str, list[str]] | None:
     return result or None
 
 
+_TOGGLE_ID_KEY = {"modules": "name", "teams": "team_id", "ports": "name"}
+
+
 def _toggle_state(value: Any, kind: str, target_id: str) -> bool | None:
+    """introspection 응답에서 항목 하나의 현재 활성 상태를 읽는다.
+
+    ★대상이 실제로 내는 형태는 종류마다 다르다(contract_version 1.0 실측).
+    한때 여기서 `{id: {"enabled": bool}}` 한 가지만 기대해서 상태가 늘 `모름`이었고,
+    `_toggle_row()`가 상태를 모르면 버튼을 안 그리므로 **토글 카드에 버튼이 하나도
+    없었다** — 카드는 떠도 아무것도 못 바꿨다(2026-08-28 결함 점검에서 브라우저로 실측).
+
+    | 형태 | 예 | 어디서 |
+    |---|---|---|
+    | boolean map | `{"vector_rag": true}` | 대상의 `modules` |
+    | 객체 list | `[{"team_id": "voc", "active": true}]` | 대상의 `teams` |
+    | 객체 map | `{"voc": {"active": true}}` | v3 설계 §2.2 제안 |
+
+    셋 다 읽는다. 어느 것도 아니면 `None`을 돌려주고 화면은 `모름`이라고 적는다 —
+    지어내지 않는다(`CLAUDE.md` §0.4).
+    """
     bucket = (value or {}).get(kind)
-    entry = bucket.get(target_id) if isinstance(bucket, dict) else None
-    state = entry.get(_TOGGLE_STATE_KEY[kind]) if isinstance(entry, dict) else None
-    return state if isinstance(state, bool) else None
+    state_key = _TOGGLE_STATE_KEY[kind]
+
+    if isinstance(bucket, dict):
+        entry = bucket.get(target_id)
+        if isinstance(entry, bool):                       # boolean map
+            return entry
+        if isinstance(entry, dict):                       # 객체 map
+            state = entry.get(state_key)
+            return state if isinstance(state, bool) else None
+        return None
+
+    if isinstance(bucket, list):                          # 객체 list
+        id_key = _TOGGLE_ID_KEY[kind]
+        for entry in bucket:
+            if isinstance(entry, dict) and entry.get(id_key) == target_id:
+                state = entry.get(state_key)
+                return state if isinstance(state, bool) else None
+    return None
 
 
 def _toggle_row(kind: str, target_id: str, state: bool | None, *, target: Path, revision: str) -> str:
@@ -901,7 +935,7 @@ def create_app() -> FastAPI:
             outcome = await run_in_threadpool(
                 composer_client.apply_candidate,
                 profile.composer_url, profile.composer_issuer_secret, candidate,
-                base_revision=str(form.get("base_revision", "")))
+                base_revision=str(form.get("base_revision", "")), reason=reason.strip())
         else:
             return _composer_page(target, current, live, config=candidate,
                                   prefix=note(f"알 수 없는 동작: {action}", "bad"))

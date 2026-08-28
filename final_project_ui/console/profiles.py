@@ -21,7 +21,13 @@ class Profile:
 def profile_for(project: str | Path) -> Profile:
     """환경에서 선택적 연결 정보를 읽는다. 비밀값은 환경에만 둔다."""
     path = Path(project)
-    versions = tuple(v.strip() for v in os.environ.get("CONSOLE_CONTRACT_VERSIONS", "v1").split(",") if v.strip())
+    # ★기본값은 `1.0` 이다. 대상이 실제로 내는 `contract_version` 이 `1.0` 이기 때문이다
+    #   (2026-08-17 P8 실연결 검증에서 `CONSOLE_CONTRACT_VERSIONS=1.0` 으로 맞춰야
+    #   `조립 실측: 읽음` 이 됐다). 한때 기본값이 `v1` 이었는데 이 문자열을 내는 대상은
+    #   하나도 없었다 — 환경변수를 손으로 맞추지 않으면 조립 실측과 빠른 토글 카드가
+    #   조용히 안 떴다(2026-08-28 결함 점검에서 실측).
+    #   여러 버전을 알아야 하면 콤마로 나열한다(`CONSOLE_CONTRACT_VERSIONS=1.0,1.1`).
+    versions = tuple(v.strip() for v in os.environ.get("CONSOLE_CONTRACT_VERSIONS", "1.0").split(",") if v.strip())
     return Profile(
         name=path.name or str(path),
         path=path,

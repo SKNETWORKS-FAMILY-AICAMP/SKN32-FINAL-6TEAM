@@ -142,8 +142,12 @@ def test_apply_without_a_reason_is_refused_before_calling_the_target(tmp_path, m
 
 
 def test_apply_reports_the_new_revision(tmp_path, monkeypatch):
-    def fake_apply(url, issuer_secret, config, *, base_revision):
+    def fake_apply(url, issuer_secret, config, *, base_revision, reason):
         assert base_revision == "rev-1"
+        # ★사유는 대상이 필수로 요구한다. 한때 화면이 사유를 입력받고도 클라이언트에
+        #   넘기지 않아 적용이 늘 422로 거부됐다 — 그때 이 stub은 `reason` 을 아예
+        #   받지 않아서 결함을 못 잡았다(2026-08-28 결함 점검).
+        assert reason == "구조 설계 테스트"
         return ComposerResult("적용됨", value={"revision": "rev-2", "applied": True})
 
     reads = [ComposerResult("읽음", value={"revision": "rev-1", "config": {}}),
@@ -161,7 +165,7 @@ def test_apply_reports_the_new_revision(tmp_path, monkeypatch):
 
 
 def test_apply_revision_conflict_shows_current_revision_not_a_crash(tmp_path, monkeypatch):
-    def fake_apply(url, issuer_secret, config, *, base_revision):
+    def fake_apply(url, issuer_secret, config, *, base_revision, reason):
         return ComposerResult("충돌", value={"current_revision": "someone-else"}, detail="다른 변경이 먼저 적용됐다.")
 
     monkeypatch.setattr("console.composer.apply_candidate", fake_apply)
@@ -388,6 +392,32 @@ def test_toggle_card_shows_registered_items_with_current_state(tmp_path, monkeyp
     assert "끄기" in body and "켜기" in body
     assert "name='target_type' value='module'" in body
     assert "name='target_id' value='vector_rag'" in body
+
+
+def test_toggle_card_reads_the_shape_the_target_actually_emits(tmp_path, monkeypatch):
+    """★대상(contract_version 1.0)은 `modules`를 boolean map, `teams`를 객체 list로 낸다.
+
+    위 테스트는 v3 설계 §2.2의 제안 형태(객체 map)만 썼다. 그 형태를 내는 대상은
+    하나도 없어서, 실제로는 상태가 늘 `모름`이 되고 카드에 버튼이 하나도 안 그려졌다
+    — 그런데 위 테스트는 통과했다(2026-08-28 결함 점검, 브라우저로 실측).
+    이 테스트는 대상이 진짜 내는 형태를 넣는다.
+    """
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "config_revision": "rev-i1",
+        "registered_ids": {"modules": ["vector_rag", "a2a_executor"], "teams": ["voc_store_manager"]},
+        "modules": {"vector_rag": True, "a2a_executor": False},
+        "teams": [{"team_id": "voc_store_manager", "active": True}],
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "빠른 토글" in body
+    # 켜진 둘에는 끄기, 꺼진 하나에는 켜기 — 상태를 못 읽으면 이 버튼들이 아예 없다
+    assert body.count("끄기") == 2 and body.count("켜기") == 1
+    assert "name='target_id' value='vector_rag'" in body
+    assert "name='target_id' value='voc_store_manager'" in body
+    assert "name='target_type' value='team'" in body
+    assert "모름" not in body
 
 
 def test_toggle_card_shows_unknown_state_without_a_button(tmp_path, monkeypatch):

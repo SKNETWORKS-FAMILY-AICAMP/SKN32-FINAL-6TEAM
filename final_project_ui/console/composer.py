@@ -131,10 +131,18 @@ def validate_candidate(url: str | None, issuer_secret: str | None,
 
 
 def apply_candidate(url: str | None, issuer_secret: str | None, config: dict[str, Any],
-                    *, base_revision: str) -> ComposerResult:
-    """검증된 후보를 base revision이 일치할 때 적용한다."""
+                    *, base_revision: str, reason: str) -> ComposerResult:
+    """검증된 후보를 base revision이 일치할 때 적용한다.
+
+    ★`reason`은 선택이 아니다. 대상의 `ApplyPayload`가 `min_length=1`로 요구하고,
+    audit 기록의 근거가 된다. 한때 이 함수가 `config`와 `base_revision`만 보내서
+    화면의 [적용]이 항상 422로 거부됐다 — 화면은 사유를 입력받고 비었는지 검사까지
+    했는데 그 값이 요청에 실리지 않았다(2026-08-28 결함 점검에서 실측).
+    그래서 keyword-only 필수 인자로 두었다. 빠뜨리면 호출이 TypeError로 깨진다.
+    """
     return _call(url, issuer_secret, path="/apply", method="POST", scope="composer:write",
-                 body={"config": config, "base_revision": base_revision}, success_status="적용됨")
+                 body={"config": config, "base_revision": base_revision, "reason": reason},
+                 success_status="적용됨")
 
 
 def toggle_target(url: str | None, issuer_secret: str | None, *, target_type: str, target_id: str,

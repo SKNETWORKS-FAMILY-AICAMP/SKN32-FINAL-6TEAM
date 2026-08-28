@@ -14,6 +14,10 @@ from console.composer import apply_candidate, read_current, toggle_target, valid
 @pytest.fixture()
 def composer_server():
     servers = []
+    # ★대상이 실제로 받은 요청 본문을 기록한다. 이게 없어서 "적용에 사유가 안 실려
+    #   간다"는 결함을 테스트가 못 잡았다 — 가짜 서버가 본문을 안 보고 200만 냈다
+    #   (2026-08-28 결함 점검). `composer_server.received` 로 꺼내 쓴다.
+    received: list[tuple[str, dict | None]] = []
 
     def start(script: dict, *, token_status: int = 200, issuer_secret: str = "issuer-secret",
               token_payload: dict | None = None, token_raw: str | None = None) -> str:
@@ -50,6 +54,7 @@ def composer_server():
                 self._handle_composer(None)
 
             def _handle_composer(self, body):
+                received.append((self.path, body))
                 entry = script.get(self.path)
                 if entry is None:
                     return self._json(404, {})
@@ -66,6 +71,7 @@ def composer_server():
         threading.Thread(target=server.serve_forever, daemon=True).start()
         return f"http://127.0.0.1:{server.server_port}/composer"
 
+    start.received = received
     yield start
     for server in servers:
         server.shutdown()
@@ -91,8 +97,32 @@ def test_validate_issues_validate_scope_and_promotes_invalid_result(composer_ser
 
 def test_apply_issues_write_scope(composer_server):
     url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True}, "access-composer:write")})
-    result = apply_candidate(url, "issuer-secret", {}, base_revision="old")
+    result = apply_candidate(url, "issuer-secret", {}, base_revision="old", reason="구조 설계 테스트")
     assert result.status == "적용됨" and result.value["revision"] == "new"
+
+
+def test_apply_puts_the_reason_in_the_request_body(composer_server):
+    """★대상의 `ApplyPayload`는 `reason`을 `min_length=1`로 요구한다.
+
+    한때 어댑터가 `config`와 `base_revision`만 보내서 화면의 [적용]이 늘 422로
+    거부됐다. 가짜 서버가 본문을 안 보고 200만 내주는 바람에 기존 테스트는 이걸
+    통과시켰다(2026-08-28 결함 점검). 이제 본문을 실제로 확인한다.
+    """
+    url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True},
+                                                "access-composer:write")})
+    apply_candidate(url, "issuer-secret", {"modules": {}}, base_revision="old",
+                    reason="모듈 구조 설계 테스트")
+
+    sent = dict(composer_server.received)["/composer/apply"]
+    assert sent["reason"] == "모듈 구조 설계 테스트"
+    assert sent["base_revision"] == "old"
+    assert sent["config"] == {"modules": {}}
+
+
+def test_apply_requires_a_reason_argument():
+    """사유를 빠뜨린 호출은 조용히 나가지 않고 그 자리에서 깨져야 한다."""
+    with pytest.raises(TypeError):
+        apply_candidate("http://127.0.0.1:1/composer", "issuer", {}, base_revision="r")
 
 
 def test_token_issuance_401_is_distinct(composer_server):
@@ -106,7 +136,8 @@ def test_token_issuance_403_is_distinct(composer_server):
 
 
 def test_token_issuance_422_is_distinct(composer_server):
-    result = apply_candidate(composer_server({}, token_status=422), "issuer-secret", {}, base_revision="r")
+    result = apply_candidate(composer_server({}, token_status=422), "issuer-secret", {},
+                              base_revision="r", reason="구조 설계 테스트")
     assert result.status == "토큰 발급 실패" and "HTTP 422" in result.detail
 
 
@@ -123,13 +154,16 @@ def test_composer_401_and_403_remain_auth_failures(composer_server):
 
 def test_apply_conflict_and_validation_errors(composer_server):
     conflict = composer_server({"/composer/apply": (409, {"error": {"message": "stale", "current_revision": "new"}}, "access-composer:write")})
-    assert apply_candidate(conflict, "issuer-secret", {}, base_revision="old").status == "충돌"
+    assert apply_candidate(conflict, "issuer-secret", {}, base_revision="old",
+                           reason="구조 설계 테스트").status == "충돌"
     invalid = composer_server({"/composer/apply": (422, {"error": {"message": "invalid"}}, "access-composer:write")})
-    assert apply_candidate(invalid, "issuer-secret", {}, base_revision="old").status == "검증 실패"
+    assert apply_candidate(invalid, "issuer-secret", {}, base_revision="old",
+                           reason="구조 설계 테스트").status == "검증 실패"
 
 
 def test_refused_connection_during_token_issuance_is_distinct():
-    result = apply_candidate("http://127.0.0.1:1/composer", "issuer", {}, base_revision="r")
+    result = apply_candidate("http://127.0.0.1:1/composer", "issuer", {}, base_revision="r",
+                              reason="구조 설계 테스트")
     assert result.status == "토큰 발급 실패"
 
 
