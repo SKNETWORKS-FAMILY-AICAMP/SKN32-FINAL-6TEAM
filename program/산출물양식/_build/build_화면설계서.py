@@ -17,6 +17,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FORMS = os.path.dirname(HERE)
 REPO = os.path.dirname(os.path.dirname(FORMS))
 c = lambda n: os.path.join(REPO, "program", "plan", "diagram", "charts", n)
+# 실제 화면 캡처. program/plan/diagram/screens/capture.py 가 Playwright 로 찍는다.
+sh = lambda n: os.path.join(REPO, "program", "plan", "diagram", "screens", n)
 
 d = Doc(os.path.join(FORMS, "[기획] 프로젝트 기획서_양식.docx"),
         os.path.join(HERE, "_tmp_screen"))
@@ -60,16 +62,23 @@ d.after_heading("화면 목록과 사용자", [
     ("b", "전제"),
     "대상 시스템이 떠 있지 않아도 콘솔은 뜬다. 못 읽은 자료는 빈 화면이 아니라 "
     "무엇을 왜 못 읽었는지 적는다. 이것이 이 콘솔의 존재 이유다.",
+    ("b", "고객이 보는 쪽은 따로 있다"),
+    "위 세 화면은 운영자용이다. 고객은 검증 쇼핑몰의 주문 내역 화면에서 상담 위젯을 연다. "
+    "위젯이 보내는 문의가 A-COP의 Case가 되고 답변에는 근거가 함께 붙는다. "
+    "아래는 그 연동을 확인하려고 만든 목업이다. 실제 화면이 아니다.",
+    ("img", sh("shot_mockup_shop_cs.png"),
+     "그림 1. 검증 쇼핑몰과 A-COP 연동 목업. 왼쪽이 고객이 보는 주문 내역, "
+     "오른쪽이 그 자리에서 열리는 상담 위젯이다. 아래는 문의 한 건이 지나는 여섯 단계다.", 6.4),
 ])
 
 d.after_heading("화면 흐름", [
-    ("img", c("05_screen_flow.png"), "그림 1. 화면 세 개와 이동 경로.", 6.2),
+    ("img", c("05_screen_flow.png"), "그림 2. 운영자 화면 세 개와 이동 경로.", 6.2),
     ("b", "기본 흐름"),
     "SCR-01에서 프로젝트를 고르면 SCR-02로 간다. SCR-02에서 구성 조립 링크를 누르면 SCR-03으로 간다. "
     "상단 메뉴에는 프로젝트 목록, 조립, Composer 세 항목이 항상 있고 "
     "경로가 없으면 뒤의 둘은 비활성으로 표시된다.",
     ("b", "Composer 저장 흐름"),
-    ("img", c("06_composer_flow.png"), "그림 2. Composer 저장은 네 단계다. 2단계까지는 저장되지 않는다.", 6.4),
+    ("img", c("06_composer_flow.png"), "그림 3. Composer 저장은 네 단계다. 2단계까지는 저장되지 않는다.", 6.4),
     ("l", "1단계. 화면에서 모듈 체크, Port 값, Team 행을 고친다. 브라우저 안의 후보 값만 바뀐다."),
     ("l", "2단계. 검증을 누르면 후보 전체를 대상에 보내 검증한다. 저장은 아직 안 된다."),
     ("l", "3단계. 사유를 적고 적용을 누르면 저장한다. "
@@ -110,7 +119,9 @@ d.after_heading("SCR-01 프로젝트 목록", [
           "config/project.yaml 가 없다, config/project.yaml 있음 그리고 없는 자료는 introspection 이다."),
     ("b", "동작"),
     ("l", "폴더 이름을 누르면 SCR-02로 이동한다. 경로는 URL 인코딩된 파라미터로 전달한다."),
-    ("b", "실측 예 (2026-08-28)"),
+    ("b", "실제 화면"),
+    ("img", sh("shot_scr01_projects.png"),
+     "그림 4. SCR-01 실제 화면. 2026-08-29에 콘솔을 띄워 Playwright로 찍었다.", 6.3),
     "훑은 폴더 8개 중 final_project_cs와 final_project_sample 둘이 프로젝트로 판별됐다. "
     "final_project_ui는 config/project.yaml이 없으므로 아님이다. 콘솔 자신은 대상이 아니라는 뜻이다.",
 ])
@@ -140,6 +151,10 @@ d.after_heading("SCR-02 프로젝트 조립 현황", [
     ("b", "카드 5. 연결"),
     ("l", "표 3열. 출처, 상태, 세부. 선언, 판정, 평가, 조립 실측, 실행 이력 다섯 줄이다."),
     ("l", "읽은 것은 읽은 파일 경로를 그대로 적고 못 읽은 것은 이유를 적는다."),
+    ("b", "실제 화면"),
+    ("img", sh("shot_scr02_assembly.png"),
+     "그림 5. SCR-02 실제 화면 위쪽. 상단 요약과 조립 카드다. "
+     "지면 때문에 잘랐고 아래로 판정, 평가, 연결 카드가 이어진다.", 6.3),
 ])
 
 d.after_heading("SCR-03 Composer 구성 관리", [
@@ -179,6 +194,20 @@ d.after_heading("SCR-03 Composer 구성 관리", [
     ("l", "구조와 실행 순서. 지금 읽은 설정을 흐름도로 투영한다. 꺼진 모듈은 꺼진 채로 표시한다."),
     ("l", "컴포넌트. 여기서 끌 수 없는 고정 구성요소 목록이다."),
     ("l", "원본 JSON. 대조용으로 접어 둔다."),
+    ("b", "실제 화면. 상태 A, 대상에 연결되지 않았을 때"),
+    ("img", sh("shot_scr03_not_connected.png"),
+     "그림 6. 편집 폼을 그리지 않고 붙이는 방법만 안내한다. "
+     "모르는 상태로 폼을 그리면 사용자가 저장되는 줄 안다.", 6.3),
+    ("b", "실제 화면. 상태 B, 대상에 연결됐을 때"),
+    ("img", sh("shot_scr03_composer.png"),
+     "그림 7. 빠른 토글 카드와 편집 폼. revision rev-1을 읽어온 상태다. "
+     "지면 때문에 잘랐고 아래로 Team 표와 사유 입력, 검증과 적용 버튼이 이어진다.", 6.3),
+    ("img", sh("shot_scr03_toggle.png"),
+     "그림 8. 빠른 토글 카드만 확대한 것. 켜진 항목에는 끄기, 꺼진 항목에는 켜기 버튼이 붙는다. "
+     "사유는 필수다.", 6.0),
+    ("img", sh("shot_scr03_structure.png"),
+     "그림 9. 구조와 실행 순서 카드. 지금 읽은 설정을 아홉 단계 흐름으로 투영한다. "
+     "꺼진 모듈은 취소선으로 표시된다.", 6.3),
 ])
 
 d.after_heading("미구현과 제약", [
@@ -203,9 +232,15 @@ d.after_heading("미구현과 제약", [
     "원인은 시험용 가짜가 대상의 진짜 형태와 달랐던 것이다. "
     "자세한 내용은 final_project_ui/docs/reports/debugs/2026-08-28_Composer_결함_3건.md 에 있다.",
     ("b", "확인 방법"),
-    "본 문서의 화면 구성은 2026-08-28에 콘솔을 실제로 띄워 확인한 결과다. "
-    "SCR-03 상태 B는 대상의 Composer 계약만 흉내 낸 검증용 서버를 세워 브라우저로 왕복 확인했다. "
-    "최종 제출본에는 두 상태의 캡처 이미지를 각 절에 붙인다.",
+    "본 문서의 화면 그림은 실제로 찍은 것이다. 손으로 그린 그림이 아니다. "
+    "2026-08-29에 콘솔을 띄우고 Playwright로 캡처했다. "
+    "SCR-03 상태 B는 대상의 Composer 계약만 흉내 낸 검증용 서버를 세워 찍었다. "
+    "그 서버는 대상과 똑같이 사유 없는 적용 요청을 거부한다.",
+    ("l", "캡처 스크립트. program/plan/diagram/screens/capture.py"),
+    ("l", "검증용 대상. program/plan/diagram/screens/fake_target.py"),
+    ("l", "연동 목업 원본. program/plan/diagram/screens/mockup_shop_cs.html"),
+    "목업은 실제 화면이 아니라 연동 구조를 확인하려고 만든 것이다. "
+    "검증 쇼핑몰이 준비되면 그 화면으로 다시 찍는다.",
 ])
 
 out = d.save(os.path.join(FORMS, "[모델배포] 화면설계서_A-COPilot.docx"))
