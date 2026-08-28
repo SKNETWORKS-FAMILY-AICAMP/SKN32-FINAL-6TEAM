@@ -1,5 +1,10 @@
 # A-COP Composer v3 설계 — 토글 전용 UI 이관
 
+> **정정 2026-08-28.** 이 문서의 두 가지가 뒤에 바로잡혔다.
+> 첫째, 토글 전용 범위는 사용자 요구를 충족하지 못한다. `A-COP_Composer_범위재검토.md`가 정본이다.
+> 둘째, Composer 소유권은 sample이 만들고 UI가 가져다 쓰는 것이다. `A-COP_Composer_소유권_정정.md`가 정본이다.
+> 충돌하면 그 두 문서를 따른다.
+
 ## 목차
 
 1. [배경과 결론](#1-배경과-결론)
@@ -110,7 +115,7 @@ v2의 `config` 전체 대신 대상 종류·등록 ID·활성 상태만 보낸�
 |---|---|---|
 | `final_project_ui` | introspection에서 등록 ID·현재 상태를 읽고, 화면에서 활성 상태를 판단하며, 최소 토글 요청을 인증해 전송 | Core 계약 모델 import·복제, 대상 파일 직접 쓰기, 대상 Python import |
 | `final_project_cs` | 릴리즈 대상. 등록 ID 확인 → flag 원자적 변경 → 감사 로그를 수행하는 최소 endpoint만 보유하거나 향후 제거 | Composer 화면·판단 로직·전체 선언 검증·Composer 관련 공용 파일 보유 |
-| `final_project_sample` | pip 배포용 basement 소스와 Team 모듈 예제 라이브러리(`examples/`) 제공 | 이번 v3 UI 이관 설계의 구현 대상이 아님 |
+| `final_project_sample` | pip 배포용 basement 소스, Team 모듈 예제 라이브러리(`examples/`), **그리고 UI가 가져다 쓸 Composer 판단·요청 로직**을 만든다 | 대상 제품의 Team 도메인 구현 |
 
 ### 3.1 `final_project_ui`와 기존 §0.2·§0.3 원칙의 양립
 
@@ -175,7 +180,7 @@ v2의 `config` 전체 대신 대상 종류·등록 ID·활성 상태만 보낸�
 
 - `acop_basement` — Core/Team/Registry/Controller 런타임을 담는다. 릴리즈 대상인 cs가 항상 설치하는 패키지이며, 컴포저 관련 코드는 포함하지 않는다.
 - `acop_composer` — 대상 제품이 선택적으로 설치하는 토글 적용 endpoint glue다. 등록 ID 확인, flag 원자적 쓰기, 감사 로그를 담당한다. 고객용 릴리즈 빌드에는 이 패키지 자체를 설치하지 않는다. `.dockerignore` 같은 빌드 제외 임시방편이 아니라, 애초에 이 패키지가 설치되지 않은 빌드는 컴포저 파일이 존재할 수조차 없게 하는 것이 핵심이다.
-- `final_project_ui` — pip 패키지가 아니다. 독립 실행 서비스이며 HTTP로만 대상에 접속한다. 아무것도 pip install하지 않아도 동작해야 하며, 이는 §3의 “대상 프로젝트의 Python을 import하지 않는다” 및 HTTP/raw data 경계 원칙과 일치한다.
+- `final_project_ui` — pip 패키지로 배포하지 않는 독립 실행 서비스다. 대상에는 HTTP로만 접속한다. **Composer 판단·요청 로직은 sample이 만든 패키지를 pip install해서 쓴다.** §0.3이 금지하는 것은 **대상**(`final_project_cs`)의 Python을 import하는 것이지, sample 산출물을 쓰는 것이 아니다. sample은 대상이 아니라 공용 구현체다. 이 구분은 `A-COP_Composer_소유권_정정.md`가 정본이다.
 
 개발은 전부 `final_project_sample` 한 저장소에서 진행하되, 배포만 `acop_basement`와 `acop_composer`라는 두 개의 별도 패키지로 나눈다. 이는 Django 같은 프레임워크가 코어 위에 부가 기능을 별도 패키지로 배포하는 것과 같은 패턴이다. 같은 저장소에서 함께 개발하는 편의와, cs에는 basement만 주고 관리 가능한 빌드에는 composer를 선택적으로 추가하는 배포 경계를 동시에 유지한다.
 

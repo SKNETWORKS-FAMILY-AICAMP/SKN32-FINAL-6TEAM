@@ -19,6 +19,11 @@
 | 데이터셋 문서 연결 | 루트 `CLAUDE.md`에 `datasets/` 절 추가 | `5601c7d` |
 | 택배조회 REPORT | `datasets/commerce/courier_tracking/REPORT.md` | `5601c7d` |
 | 네이버 주문 REPORT | `datasets/commerce/naver_order_history/REPORT.md` | `5601c7d` |
+| Composer 범위 재검토 | 토글 전용으로는 요구 미충족. 카탈로그 기반 CRUD와 선언형 Team 권고 | `f2b2049` |
+| Composer 소유권 정정 | sample이 만들고 UI가 가져다 쓴다 | `f2b2049` |
+| 비전 항목 3건 등록 | VISION-10 3층, VISION-11, VISION-12 | `f250d07` |
+| 확장 추천 등록 | VISION-13. 자기 관측 기반은 이미 신호가 있다 | `fe7fdad` |
+| v3 문서·UI 원칙 정정 | 정정 안내 삽입, "대상"의 뜻 명시 | (이번 커밋) |
 
 ## 남은 작업
 
@@ -81,7 +86,17 @@ Core 1의 Context Broker가 쓸 RAG 지식 재료다. RAG는 질문에 답하기
 현재 `final_project_cs`에는 `/current`, `/validate`, `/apply`, `/toggle` 이 모두 있다.
 v2(전체 선언 적용)와 v3(토글)가 공존하는 상태다.
 
-재검토 결과는 `A-COP_Composer_범위재검토.md`에 정리한다.
+재검토를 마쳤다. 결과는 `A-COP_Composer_범위재검토.md`에 있다.
+
+남은 것은 구현이다. 순서는 다음과 같다.
+
+1. 선언형 Team 실행기(`DeclarativeTeamRuntime`) 배포
+2. Composer 인스턴스 CRUD 계약 확정
+3. 카탈로그 HTTP 조회
+4. UI 선택 생성 화면
+
+앞의 것이 없으면 뒤의 것을 만들어도 동작하지 않는다. 근거는
+`final_project_sample/docs/vision/VISION-10_예제_카탈로그_스캐폴딩_CLI.md` 3층이다.
 
 ## 확인하지 못한 것
 
@@ -90,8 +105,20 @@ v2(전체 선언 적용)와 v3(토글)가 공존하는 상태다.
 | 항목 | 상태 |
 |---|---|
 | 쿠팡 배송이력 5건 중 4건만 수집 | 5.4.6에서 해결됐는지 미확인. `normalize.py` 실행 결과는 배송 4행 |
-| `implementation_ref` 의 allowlist 제한 | v3 문서의 전제. 코드에 실제로 구현돼 있는지 미확인 |
+| `implementation_ref` 의 allowlist 제한 | **확인됨.** `KNOWN_IMPLEMENTATION_REFS`로 코드에 있고 Composer HTTP 경로에만 적용된다 |
 | v2 계약 문서 | 다른 세션에서 작업 중이라 열지 않았다. endpoint 이름·`config_revision`·인증 scope·감사 필드를 최종 계약에서 하나로 맞춰야 한다 |
+
+### 5. UI가 import할 패키지 이름 확정 (설계 세션)
+
+`A-COP_Composer_소유권_정정.md`의 후속 조치 세 가지 중 둘은 끝냈다. v3 문서 정정과
+UI 원칙 명시다.
+
+남은 하나는 **UI가 import할 패키지의 이름과 경계 확정**이다. 정정 문서에서는
+`acop_composer_ui`를 예시로 썼으나 실제 이름은 정해지지 않았다.
+
+이것은 `A-COP_Composer_v3_설계_토글전용_UI이관.md` §8.1의 명명 확정 때 함께 정한다.
+endpoint 이름, `config_revision`, 인증 scope, 감사 로그 필드도 같은 자리에서 하나로
+맞춘다.
 
 ## 참고 문서
 
