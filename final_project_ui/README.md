@@ -60,6 +60,25 @@ python -m console.web
 스크립트로 자동화하려면 이 콘솔이 아니라 **대상의 `/composer/*` API를 직접**
 호출하세요 — 그게 원래 계약입니다.
 
+### 빠른 토글 카드 (v3 제안, 있으면)
+
+Composer 화면 위쪽에 "빠른 토글" 카드가 뜰 때가 있습니다. 아래 두 조건을 **모두**
+만족해야 뜹니다 — 하나라도 아니면 이 카드는 조용히 사라지고, 그 아래 v2
+전체 편집 화면은 그대로 동작합니다.
+
+1. `CONSOLE_INTROSPECTION_URL`이 설정돼 있고 대상이 응답한다.
+2. 그 응답의 `contract_version`이 `CONSOLE_CONTRACT_VERSIONS` 목록에 있다
+   (`CLAUDE.md` §1 — **모르는 계약 버전으로는 그리지 않습니다**, 값만 있어도
+   버전을 모르면 안 그립니다).
+
+등록된 모듈·Team·Port를 각각 켜고 끕니다(`POST /composer/toggle`, `CONSOLE_COMPOSER_URL`
+과 같은 대상으로 갑니다). v2 폼과 같은 CSRF 방어를 씁니다.
+
+★이 계약은 **아직 잠정**입니다
+(`program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md` §2, 대상이 아직 확정 전).
+필드명·경로가 최종 계약과 다를 수 있습니다 — 대상이 실제로 이 계약을 내놓으면
+`CONSOLE_CONTRACT_VERSIONS`에 그 버전 문자열을 추가해야 카드가 뜹니다.
+
 ## 테스트
 
 ```powershell
