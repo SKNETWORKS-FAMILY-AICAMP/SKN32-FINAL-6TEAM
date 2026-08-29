@@ -58,3 +58,18 @@ teardown 후 `tenants=1` (seed 오염 없음).
 - 경합 테스트는 **같은 프로세스 내 순차 호출**로 version 충돌을 만든다.
   실제 다중 프로세스 동시성 부하 시험은 하지 않았다.
 - replay 는 **테스트가 만든 이벤트 열**에 대한 것이다. 운영 규모 이벤트 재생은 검증 범위 밖이다.
+
+## ★2026-08-24 갱신 — `agent_runs` 진짜 동시 시작 경합 결함 발견·수정
+
+sample(`final_project_sample/acop_basement/`) 대조에서, `start_run()`이
+앱 레벨 `SELECT ... FOR UPDATE`로만 활성 run 존재를 확인했는데 이 락은
+**이미 존재하는 행만** 잠근다는 걸 발견했다 — 같은 Case에 활성 run이
+**0개**인 상태에서 동시에 두 번 `start_run()`이 호출되면 둘 다 insert에
+성공할 수 있는 레이스였다(위 §한계의 "실제 다중 프로세스 동시성 부하
+시험은 하지 않았다"가 바로 이 종류의 결함을 놓치는 지점이었다).
+
+`ThreadPoolExecutor`로 **진짜 동시** 두 스레드가 같은 Case에 `start_run()`을
+호출하는 재현 테스트를 먼저 추가해 레이스를 확인한 뒤, DB 레벨 partial
+unique index(`agent_runs_one_active_per_case`, migration
+`004_agent_runs_active_uniqueness.sql`)를 추가하고 `UniqueViolation`을
+`ActiveRunError`로 잡았다. 상세: `docs/reports/2026-08-24_S-BASEMENT-04-CONCURRENCY_리포트.md`.

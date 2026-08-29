@@ -21,6 +21,7 @@ from app.presentation.security import _development_key, masked
 from app.presentation.ui import theme
 
 router = APIRouter(prefix="/ui", tags=["operations-ui"])
+ops_router = APIRouter(tags=["operations-ui"])
 
 
 def _safe(value: Any) -> str:
@@ -84,6 +85,17 @@ def _voc() -> dict[str, Any] | None:
     if row is None:
         return None
     return dict(zip(("period_start", "period_end", "metrics", "alerts", "created_at"), row))
+
+
+def _unknown_outbox() -> list[dict[str, Any]]:
+    """Return unresolved unknown messages for the current tenant."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT message_id, topic, payload_json, attempts, last_error, available_at, locked_at "
+            "FROM outbox WHERE tenant_id=%s AND status='unknown' AND resolved_at IS NULL "
+            "ORDER BY available_at, message_id", (_tenant(),))
+        keys = ("message_id", "topic", "payload", "attempts", "last_error", "available_at", "locked_at")
+        return [dict(zip(keys, row)) for row in cur.fetchall()]
 
 
 def _admin_snapshot() -> dict[str, Any]:
@@ -375,6 +387,61 @@ async def approve(request: Request, case_id: UUID, action_id: UUID) -> RedirectR
             f"HTTP {response.status_code}</p><pre class='card'>{detail}</pre>"
             "<p><a href='/ui/approvals'>승인 목록으로</a></p>"))
     return RedirectResponse("/ui/approvals", status_code=303)
+
+
+@router.get("/ops/outbox", response_class=HTMLResponse)
+def outbox() -> HTMLResponse:
+    rows = _unknown_outbox()
+    if not rows:
+        return _page("Outbox · unknown", theme.empty_state(
+            "미해결 unknown 메시지가 없습니다.",
+            hint="unknown은 자동 재실행되지 않으며, 사람이 확인한 근거만 기록할 수 있습니다."),
+            current="/ops/outbox")
+    cards = []
+    for row in rows:
+        message_id = row["message_id"]
+        facts = theme.kv_table((
+            ("message_id", masked(message_id)), ("topic", row["topic"]),
+            ("attempts", row["attempts"]), ("last_error", row["last_error"] or "—"),
+            ("available_at", row["available_at"]), ("locked_at", row["locked_at"] or "—"),
+        ))
+        form = (f"<form method='post' action='/ops/outbox/{message_id}'>"
+                "<label class='field'>확인 근거 (필수)"
+                "<input name='note' required minlength='1' placeholder='하류 시스템 조회 결과와 확인 근거를 적으세요'></label>"
+                "<div class='actions'>"
+                "<button name='resolution' value='confirmed_delivered'>배달 완료 확인</button>"
+                "<button class='ghost' name='resolution' value='confirmed_not_delivered'>미배달 확인</button>"
+                "</div></form>")
+        cards.append(theme.card("unknown 메시지", facts + theme.details(
+            "payload_json", f"<pre>{_json(row['payload'])}</pre>") + form,
+            subtitle="자동 재실행 없음 · 확인 기록만 저장", tone="critical"))
+    return _page("Outbox · unknown", "".join(cards), current="/ops/outbox",
+                 lede="하류 시스템을 직접 확인한 뒤, 근거와 결론을 기록하십시오. 이 화면은 메시지를 재발행하지 않습니다.")
+
+
+@router.post("/ops/outbox/{message_id}")
+async def resolve_outbox(request: Request, message_id: UUID):
+    form = await request.form()
+    token = _development_key("action:approve", settings_module.get_settings().secret_key)
+    transport = httpx.ASGITransport(app=request.app)
+    async with httpx.AsyncClient(transport=transport, base_url=str(request.base_url).rstrip("/")) as client:
+        response = await client.post(
+            f"/v1/outbox/{message_id}/resolve",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"resolution": str(form.get("resolution", "")), "note": str(form.get("note", "")),
+                  "resolved_by": "ui-operator"},
+        )
+    if response.is_error:
+        return _page("Outbox 처리 실패", theme.card(
+            "처리되지 않았습니다", f"<p>HTTP {response.status_code}</p><pre>{_safe(response.text[:400])}</pre>"),
+            current="/ops/outbox")
+    return RedirectResponse("/ops/outbox", status_code=303)
+
+
+# The customer-facing operations navigation uses /ui; keep the historical
+# operator URL as a first-class alias without duplicating its implementation.
+ops_router.add_api_route("/ops/outbox", outbox, methods=["GET"], response_class=HTMLResponse)
+ops_router.add_api_route("/ops/outbox/{message_id}", resolve_outbox, methods=["POST"])
 
 
 @router.get("/voc", response_class=HTMLResponse)

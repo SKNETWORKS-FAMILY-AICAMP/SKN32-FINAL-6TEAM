@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Callable
 
+from app.core.settings import get_guardrails
+
 
 class OutboxWorker:
     def __init__(self, connection_factory, publisher: Callable[[dict[str, Any]], Any], *,
@@ -15,8 +17,24 @@ class OutboxWorker:
         self.connection_factory, self.publisher, self.max_attempts = connection_factory, publisher, max_attempts
         self.tenant_id = tenant_id
 
+    def _reclaim_stale_processing(self, conn: Any) -> None:
+        """Expose crashed workers' abandoned claims as human-reviewable unknowns."""
+        stale_seconds = get_guardrails().get("reliability.outbox_stale_processing_seconds")
+        with conn.transaction():
+            with conn.cursor() as cur:
+                scope = "AND tenant_id=%s " if self.tenant_id else ""
+                params = (self.tenant_id,) if self.tenant_id else ()
+                cur.execute(
+                    "UPDATE outbox SET status='unknown', "
+                    "last_error='worker crashed or died while processing (stale lock reclaimed)', "
+                    "locked_at=NULL "
+                    f"WHERE status='processing' AND locked_at < now() - make_interval(secs => %s) {scope}",
+                    (stale_seconds, *params),
+                )
+
     def process_once(self) -> bool:
         with self.connection_factory() as conn:
+            self._reclaim_stale_processing(conn)
             with conn.transaction():
                 with conn.cursor() as cur:
                     scope = "AND tenant_id=%s " if self.tenant_id else ""
@@ -46,4 +64,3 @@ class OutboxWorker:
                 with conn.cursor() as cur:
                     cur.execute("UPDATE outbox SET status='delivered',locked_at=NULL,last_error=NULL WHERE message_id=%s", (message_id,))
         return True
-

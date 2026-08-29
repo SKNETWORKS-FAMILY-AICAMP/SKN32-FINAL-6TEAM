@@ -123,3 +123,16 @@ Team 이 근거와 제안을 **둘 다** 지어낼 수 있다.
 - `action_type` ↔ Registry scope·approval matrix 대조는 기존 Registry 검사에 의존한다.
   이 모듈이 따로 재확인하지는 않는다
 - 실제 LLM 이 만든 제안으로 재지 않았다. **fixture 로만 확인했다** — 방어 지표(§9-E)는 P4
+
+## ★2026-08-24 갱신 — 비정상 금액 값이 "거부"가 아니라 "500 크래시"였던 결함 수정
+
+sample 대조에서, `verification.py`의 `_to_decimal()`(정확히는 동등 함수)가
+`Decimal("NaN")`/`Decimal("Infinity")`/`Decimal("-Infinity")`를
+`.is_finite()`로 걸러내지 않아, 비정상 금액 값이 파싱 단계는 통과했다가
+이후 비교 연산(`>`, `int()` 등)에서 `InvalidOperation`/`OverflowError`로
+**500 에러**를 내던 결함을 발견·수정했다. 이 파일은 위 표의 근거 그대로
+할루시네이션 방어의 핵심이다 — "거부해야 할 제안"이 "서버 에러"가 되면
+`escalated`로도 못 가고 감사 로그도 안 남는다, `CLAUDE.md` §0.1 위반이다.
+NaN/Infinity/-Infinity 세 값 모두 크래시 대신 안전한 검증 실패로
+처리되는지 재현 테스트로 확인했고, 기존 정상 금액 비교 테스트는
+회귀 없이 통과했다. 상세: `docs/reports/2026-08-24_S-BASEMENT-02-VERIFICATION-CRASH_리포트.md`

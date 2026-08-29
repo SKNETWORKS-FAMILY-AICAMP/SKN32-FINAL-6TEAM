@@ -11,6 +11,10 @@
 """
 from __future__ import annotations
 
+from decimal import Decimal
+
+import pytest
+
 from app.core.verification import Facts, verify_proposal
 from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
 
@@ -112,6 +116,15 @@ def test_zero_or_negative_refund_is_rejected():
     problems = verify(
         arguments={"order_id": ORDER, "refund_amount": 0},
         rationale_evidence_ids=["ev-1"], facts=facts())
+    assert "refund_amount" in fields(problems)
+
+
+@pytest.mark.parametrize("amount", [Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity")])
+def test_non_finite_refund_amount_is_rejected_without_crashing(amount):
+    problems = verify(
+        arguments={"order_id": ORDER, "refund_amount": amount},
+        rationale_evidence_ids=["ev-1"], facts=facts())
+
     assert "refund_amount" in fields(problems)
 
 

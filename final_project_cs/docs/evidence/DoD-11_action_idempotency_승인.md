@@ -106,5 +106,26 @@ idempotency_key = sha256(tenant_id + request_id + action_type + business_subject
 ## 남은 한계
 
 - 실제 결제 provider 어댑터가 없으므로 **진짜 결제 timeout 은 겪어 보지 않았다**
-- `unknown` 행을 사람이 조회·결론내는 **운영 절차(화면·런북)가 없다.**
-  자동 재실행을 막아 두었으니 누군가 손으로 풀어야 하는데, 그 경로가 비어 있다
+- ~~`unknown` 행을 사람이 조회·결론내는 운영 절차(화면·런북)가 없다~~ →
+  ★2026-08-24 메움, 아래 참조
+
+## ★2026-08-24 갱신 — idempotency 필드 경계 충돌 수정 + MCP 멱등성 + unknown 해결 화면
+
+1. **idempotency 필드 경계 충돌**. `app/core/idempotency.py`가 여러
+   필드를 단순히 이어붙여(`f"{a}{b}{c}{d}"`) 해시했다 — `("ab","c")`와
+   `("a","bc")`가 같은 해시가 될 수 있는 결함이었다(이 문서 §"idempotency_key
+   산식"이 지적한 v5 §10-1 산식 자체의 취약점). 각 필드를 먼저 개별
+   해시한 뒤 결합하도록 고쳤다.
+   `test_idempotency_key_preserves_field_boundaries`로 재현·확인.
+   상세: `docs/reports/2026-08-24_S-BASEMENT-03-TENANT-DEDUPE_리포트.md`
+2. **MCP `open_support_case` 멱등성**. MCP 요청 ID 기반으로 REST와 동일한
+   원리의 dedupe key를 계산해 `action_requests`를 먼저 조회, 기존 행이
+   있으면 기존 Case를 반환한다. 동일 요청 10회 → Case 1개·action_requests
+   1행을 `test_same_mcp_open_request_ten_times_has_one_case_and_action_request`로
+   확인. 상세: `docs/reports/2026-08-24_S-BASEMENT-01-AUTH-CONTRACT_리포트.md`
+3. **`unknown` 사람 해결 화면·런북이 없던 갭을 메웠다.** `POST
+   /v1/outbox/{id}/resolve`(기록만, 자동 재처리 안 함)와 `/ops/outbox`
+   UI가 새로 생겼고, `worker.py`가 stale `processing` 행을 `unknown`으로
+   회수한다(여전히 자동 재실행은 안 한다). 상세:
+   `docs/reports/2026-08-24_S-BASEMENT-05-OUTBOX-RESOLUTION_리포트.md`,
+   `docs/manuals/운영_unknown상태_대응절차.md`

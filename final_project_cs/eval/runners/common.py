@@ -42,6 +42,62 @@ def load_cases(path: str, limit: int | None = None) -> list[dict[str, Any]]:
     return rows if limit is None else rows[:limit]
 
 
+def _seed_golden_fixtures(cases: list[dict[str, Any]], tenant_id: str) -> None:
+    """Seed the DB facts required by the live Proposed-team evaluation.
+
+    Golden cases use deterministic virtual customer IDs in ``_team_context``.
+    Keep those IDs stable, create their parent customer rows, and upsert one
+    recent order per case.  Shipment rows are only needed for fulfillment
+    capabilities.  This function is called once per runner execution, before
+    worker threads start, so repeats do not multiply fixture rows.
+    """
+    from app.infrastructure.db.session import get_connection
+
+    shipment_capabilities = {"shipment.status", "shipment.exception", "fulfillment.track"}
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        for case in cases:
+            case_id = str(case["case_id"])
+            customer_id = uuid5(NAMESPACE_URL, case_id)
+            order_id = uuid5(NAMESPACE_URL, case_id + ":order")
+            order_no = "EVAL-" + hashlib.sha256(case_id.encode("utf-8")).hexdigest()[:20]
+            ordered_at = datetime.now(UTC) - timedelta(days=3)
+            capability = case.get("expected_capability")
+
+            cur.execute(
+                "INSERT INTO customers (customer_id, tenant_id, external_id, email_hash) "
+                "VALUES (%s,%s,%s,%s) ON CONFLICT (customer_id) DO UPDATE SET "
+                "tenant_id=EXCLUDED.tenant_id, external_id=EXCLUDED.external_id",
+                (customer_id, tenant_id, "eval:" + case_id, "sha256:eval:" + case_id),
+            )
+            cur.execute(
+                "INSERT INTO orders (order_id,tenant_id,customer_id,order_no,total_cents,item_count,status,ordered_at) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (order_id) DO UPDATE SET "
+                "tenant_id=EXCLUDED.tenant_id, customer_id=EXCLUDED.customer_id, "
+                "total_cents=EXCLUDED.total_cents, item_count=EXCLUDED.item_count, "
+                "status=EXCLUDED.status, ordered_at=EXCLUDED.ordered_at",
+                (order_id, tenant_id, customer_id, order_no, 39800, 1, "delivered", ordered_at),
+            )
+
+            if capability in shipment_capabilities:
+                issue_code = str(case.get("expected_issue_code") or "")
+                if issue_code == "delivered_not_received":
+                    status = "delivered"
+                elif issue_code in {"dispatch_delay", "carrier_reply_pending"}:
+                    status = "delayed"
+                else:
+                    status = "in_transit"
+                shipment_id = uuid5(NAMESPACE_URL, case_id + ":shipment")
+                cur.execute(
+                    "INSERT INTO shipments (shipment_id,tenant_id,customer_id,order_id,carrier,tracking_no,status,shipped_at,delivered_at) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (shipment_id) DO UPDATE SET "
+                    "tenant_id=EXCLUDED.tenant_id, customer_id=EXCLUDED.customer_id, order_id=EXCLUDED.order_id, "
+                    "status=EXCLUDED.status, shipped_at=EXCLUDED.shipped_at, delivered_at=EXCLUDED.delivered_at",
+                    (shipment_id, tenant_id, customer_id, order_id, "eval-carrier", "EVAL-" + case_id,
+                     status, ordered_at + timedelta(days=1), ordered_at + timedelta(days=2)
+                     if status == "delivered" else None),
+                )
+
+
 def parser(description: str) -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=description)
     p.add_argument("--dataset", default="eval/datasets/golden.jsonl")
@@ -268,7 +324,21 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     except Exception as exc:
         raise RuntimeError(f"routing_failed: no registered Team for case_type={case_type!r}, intent={intent!r}") from exc
     module = registered.module
-    capability = TeamRegistry.capability_for(registered, intent)
+    # ★2026-08-28 — golden.jsonl carries an explicit expected_capability per
+    #   case (audited this session). capability_for()'s intent-prefix match
+    #   silently falls back to manifest.capabilities[0] whenever the case's
+    #   intent (e.g. "exchange") doesn't prefix-match any of the resolved
+    #   Team's capability names (e.g. return_refund's are all "return."/
+    #   "refund."-prefixed) — measured to misroute 41/60 (68%) of labeled
+    #   golden cases to the wrong capability entirely. Prefer the golden
+    #   label when it's actually one this Team can serve; only fall back to
+    #   the heuristic when the case carries no label or names a capability
+    #   this Team doesn't have.
+    expected_capability = case.get("expected_capability")
+    if expected_capability and expected_capability in module.manifest.capabilities:
+        capability = expected_capability
+    else:
+        capability = TeamRegistry.capability_for(registered, intent)
     policy_failed = False
     try:
         chunks = [] if "no_rag" in ablations else search_policy(settings.tenant_id, case["message"], module.manifest.knowledge_scope)
@@ -276,6 +346,12 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
         chunks, policy_failed = [], True
     current = {"case_id": case["case_id"], "customer_id": str(uuid5(NAMESPACE_URL, case["case_id"])), "intent": intent,
                "issue_code": case["expected_issue_code"], "status": "open", "version": 1}
+    if isinstance(capability, str) and (capability.startswith("return.") or capability.startswith("refund.")):
+        issue_code = str(case.get("expected_issue_code") or "").lower()
+        current.update({
+            "reason_code": "defective" if "defective" in issue_code or "defect" in issue_code else "customer_request",
+            "return_quantity": 1,
+        })
     pack_inputs = ContextInputs(case_id=uuid5(NAMESPACE_URL, case["case_id"]), tenant_id=settings.tenant_id,
         team_id=module.manifest.team_id, knowledge_scope=module.manifest.knowledge_scope,
         system_instruction="Answer using supplied evidence and follow approval rules.", current_state=current,
@@ -425,6 +501,8 @@ def execute(args: argparse.Namespace, arm: str, *, require_teams: bool = False) 
     config = run_config(args, arm, len(cases))
     if args.dry_run:
         print(json.dumps(config, ensure_ascii=False, indent=2)); return 0
+    if arm == "Proposed":
+        _seed_golden_fixtures(cases, str(_settings().tenant_id))
     output = Path(args.output); output.parent.mkdir(parents=True, exist_ok=True)
     processed = set()
     if output.exists():

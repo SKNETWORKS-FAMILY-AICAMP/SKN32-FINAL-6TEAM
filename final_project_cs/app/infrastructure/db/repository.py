@@ -27,7 +27,7 @@ def list_cases(conn: Connection, *, tenant_id: str, customer_id: UUID | None = N
     query = "SELECT case_id, customer_id, status, subject, version, created_at, updated_at FROM customer_cases WHERE tenant_id=%s"
     params: list[Any] = [tenant_id]
     if customer_id is not None: query += " AND customer_id=%s"; params.append(customer_id)
-    query += " ORDER BY created_at DESC LIMIT %s"; params.append(limit)
+    query += " ORDER BY created_at DESC, case_id DESC LIMIT %s"; params.append(limit)
     with conn.cursor() as cur:
         cur.execute(query, params)
         return [dict(zip(("case_id","customer_id","status","subject","version","created_at","updated_at"), r)) for r in cur.fetchall()]

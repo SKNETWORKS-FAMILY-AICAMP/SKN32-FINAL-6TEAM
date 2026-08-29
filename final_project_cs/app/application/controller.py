@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
 from app.core.context import ContextBroker, ContextInputs
-from app.core.contracts import CaseStatus, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
+from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
 from app.core.idempotency import idempotency_key, request_id_for_case
 from app.core.registry import TeamRegistry, RegistryError
 from app.core.settings import get_guardrails
@@ -21,6 +22,9 @@ from app.application.proposal_guard import audit_payload, check_proposal, descri
 
 class ControllerError(RuntimeError):
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 class Controller:
@@ -293,16 +297,36 @@ class Controller:
                 if self.case_service.validate_resume(case, token, event_id=event_id) == "idempotent":
                     return {"case_id": str(case_id), "status": case["status"], "version": case["version"], "idempotent": True}
             except ResumeTokenError as exc:
-                with conn.transaction():
-                    transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.WAIT_EXPIRED,
-                                    payload={"wait_reason": (case.get("state_json") or {}).get("wait_reason", "customer_input")}, actor_type="controller", actor_id=actor_id)
+                try:
+                    with conn.transaction():
+                        transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.WAIT_EXPIRED,
+                                        payload={"wait_reason": (case.get("state_json") or {}).get("wait_reason", "customer_input")}, actor_type="controller", actor_id=actor_id)
+                    # The connection context may roll back when the original
+                    # token error is re-raised. Make the escalation durable.
+                    conn.commit()
+                except InvalidTransition:
+                    logger.warning(
+                        "stale resume token ignored for terminal/non-waiting case",
+                        extra={"tenant_id": tenant_id, "case_id": str(case_id), "event_type": EventType.WAIT_EXPIRED.value},
+                    )
                 raise ControllerError(str(exc)) from exc
-            with conn.transaction():
-                wait_reason = (case.get("state_json") or {}).get("wait_reason", "customer_input")
-                node = RESUME_NODE_FOR_WAIT[wait_reason]
-                self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.VALID_INPUT,
-                                            payload={"resume_token_hash": self.case_service.token_hash(token), "state_patch": {"resume_token_used": True, "last_resume_event_id": event_id}}, actor_id=actor_id)
-                latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
-                transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=latest["version"], event_type=EventType.RESUMED,
-                                payload={"resume_node": node}, actor_type="controller", actor_id=actor_id)
+            try:
+                with conn.transaction():
+                    wait_reason = (case.get("state_json") or {}).get("wait_reason", "customer_input")
+                    node = RESUME_NODE_FOR_WAIT[wait_reason]
+                    self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.VALID_INPUT,
+                                                payload={"resume_token_hash": self.case_service.token_hash(token), "state_patch": {"resume_token_used": True, "last_resume_event_id": event_id}}, actor_id=actor_id)
+                    latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
+                    transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=latest["version"], event_type=EventType.RESUMED,
+                                    payload={"resume_node": node}, actor_type="controller", actor_id=actor_id)
+            except InvalidTransition:
+                # A valid token can still race with another transition after
+                # validation. The savepoint rolls back any partial resume;
+                # record the stale attempt and leave the winning state intact.
+                logger.warning(
+                    "stale resume transition ignored",
+                    extra={"tenant_id": tenant_id, "case_id": str(case_id), "event_type": EventType.RESUMED.value},
+                )
+                latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
+                return {"case_id": str(case_id), "status": latest["status"], "version": latest["version"], "stale": True}
         return await self.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)

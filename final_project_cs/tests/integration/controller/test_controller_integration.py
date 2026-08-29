@@ -10,8 +10,8 @@ from fastapi.testclient import TestClient
 
 import app.core.settings as settings_module
 from app.application.case_service import CaseService, ResumeTokenError
-from app.application.controller import Controller
-from app.core.contracts import ActionProposal, ContextPack, Evidence, NextAction, StateConflict, TeamManifest, TeamResult
+from app.application.controller import Controller, ControllerError
+from app.core.contracts import ActionProposal, ContextPack, Evidence, InvalidTransition, NextAction, StateConflict, TeamManifest, TeamResult
 from app.core.idempotency import idempotency_key
 from app.core.registry import RegistryError, TeamRegistry
 from app.core.transition import OutboxMessage, replay_case, transition_case
@@ -223,6 +223,13 @@ def test_idempotency_key_separates_business_subject_and_action_type():
     assert refund != other_case
 
 
+def test_idempotency_key_preserves_field_boundaries():
+    common = {"action_type": "action", "business_subject": "subject"}
+    left = idempotency_key(tenant_id="ab", request_id="c", **common)
+    right = idempotency_key(tenant_id="a", request_id="bc", **common)
+    assert left != right
+
+
 def test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state(db):
     conn, tenant = db
     case_id, _ = seed_case(conn, tenant)
@@ -346,6 +353,73 @@ def test_resume_token_is_single_use_expiring_and_hashed(db):
                                "resume_token_expires_at": (datetime.now(UTC) - timedelta(seconds=1)).isoformat()}}
     with pytest.raises(ResumeTokenError, match="expired"):
         service.validate_resume(expired, token)
+
+
+def test_expired_resume_escalation_survives_outer_rollback(db):
+    conn, tenant = db
+    case_id, _ = seed_case(conn, tenant)
+    service = CaseService()
+    with conn.transaction():
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
+                        event_type=EventType.ROUTED,
+                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=3,
+                        event_type=EventType.MISSING_INPUT,
+                        payload={"required_input_schema": {}, "state_patch": service.resume_metadata("valid", "customer_input")},
+                        actor_type="test")
+    conn.commit()
+
+    controller = Controller(TeamRegistry([FakeTeam()]), policy_search=fake_policy,
+                            context_broker=FakeContextBroker())
+    with pytest.raises(ControllerError, match="resume token"):
+        asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token="expired"))
+
+    with get_connection() as check:
+        assert case_versions(check, tenant, case_id) == ("escalated", 5)
+
+
+def test_stale_resume_on_resolved_case_is_handled_without_invalid_transition(db, caplog):
+    conn, tenant = db
+    case_id, _ = seed_case(conn, tenant)
+    controller = Controller(TeamRegistry([FakeTeam()]), policy_search=fake_policy,
+                            context_broker=FakeContextBroker())
+    assert asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))["status"] == "resolved"
+
+    with pytest.raises(ControllerError, match="resume token"):
+        asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token="stale"))
+
+    assert "stale resume token ignored" in caplog.text
+    with get_connection() as check:
+        assert case_versions(check, tenant, case_id)[0] == "resolved"
+
+
+def test_valid_resume_race_invalid_transition_is_logged_and_ignored(db, monkeypatch, caplog):
+    conn, tenant = db
+    case_id, _ = seed_case(conn, tenant)
+    service = CaseService()
+    token = service.new_resume_token()
+    with conn.transaction():
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
+                        event_type=EventType.ROUTED,
+                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"}, actor_type="test")
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=3,
+                        event_type=EventType.MISSING_INPUT,
+                        payload={"required_input_schema": {}, "state_patch": service.resume_metadata(token, "customer_input")},
+                        actor_type="test")
+    conn.commit()
+
+    controller = Controller(TeamRegistry([FakeTeam()]), policy_search=fake_policy,
+                            context_broker=FakeContextBroker())
+
+    def raise_invalid_transition(*args, **kwargs):
+        raise InvalidTransition("case already transitioned")
+
+    monkeypatch.setattr(controller, "_transition_with_retry", raise_invalid_transition)
+    outcome = asyncio.run(controller.resume(tenant_id=tenant, case_id=case_id, token=token))
+
+    assert outcome["stale"] is True
+    assert outcome["status"] == "waiting_input"
+    assert "stale resume transition ignored" in caplog.text
 
 
 def test_loop_guard_rejects_same_tool_and_arguments(db):

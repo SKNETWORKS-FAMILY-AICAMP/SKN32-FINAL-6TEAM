@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.contracts import InvalidTransition, StateConflict
+from app.application.controller import ControllerError
 from app.core.idempotency import idempotency_key
 from app.core.transition import transition_case
 from app.domain.events import EventType
@@ -35,6 +36,7 @@ class MessageRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
     message: str = Field(min_length=1)
+    token: str = Field(min_length=1)
     expected_version: int | None = None
 
 
@@ -122,14 +124,22 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
 
     @router.post("/v1/cases/{case_id}/messages")
     def message(case_id: UUID, request: MessageRequest, principal: Principal = Depends(require_scope("case:write"))):
+        if controller is None:
+            raise _error(500, "misconfigured", "controller not configured for resume")
         with get_connection() as conn:
             case = _case_or_404(conn, principal, case_id)
-            try:
-                with conn.transaction():
-                    transition_case(conn, tenant_id=principal.tenant_id, case_id=case_id, expected_version=request.expected_version if request.expected_version is not None else case["version"], event_type=EventType.VALID_INPUT,
-                                    payload={"resume_token_hash": hashlib.sha256(request.message.encode()).hexdigest()}, actor_type="api", actor_id=principal.key_id)
-            except StateConflict as exc: raise _error(409, "state_conflict", "state conflict") from exc
-            except InvalidTransition as exc: raise _error(422, "invalid_transition", "invalid state transition") from exc
+        try:
+            outcome = controller.resume(tenant_id=principal.tenant_id, case_id=case_id, token=request.token,
+                                        actor_id=principal.key_id, event_id=request.request_id)
+            if inspect.isawaitable(outcome):
+                outcome = asyncio.run(outcome)
+        except ControllerError as exc:
+            raise _error(401, "invalid_resume_token", str(exc)) from exc
+        except StateConflict as exc:
+            raise _error(409, "state_conflict", "state conflict") from exc
+        except InvalidTransition as exc:
+            raise _error(422, "invalid_transition", "invalid state transition") from exc
+        with get_connection() as conn:
             return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
 
     @router.post("/v1/cases/{case_id}/actions/{action_id}/approve")
@@ -226,11 +236,20 @@ def _mcp_detail(customer_id: str, case_id: str) -> dict:
 def _mcp_open(customer_id: str, message: str, channel: str) -> dict:
     principal = _mcp_principal()
     request = CreateCase(request_id=hashlib.sha256(f"mcp:{customer_id}:{message}".encode()).hexdigest(), customer_id=UUID(customer_id), message=message, channel=channel)
+    tenant = principal.tenant_id
+    idem = idempotency_key(tenant_id=tenant, request_id=request.request_id, action_type="mcp.open_support_case", business_subject=f"{request.customer_id}:{request.message}")
     # Reuse the REST creation path's state machine without exposing write actions.
     with get_connection() as conn:
         with conn.transaction():
+            with conn.cursor() as cur:
+                cur.execute("SELECT case_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
+                existing = cur.fetchone()
+            if existing:
+                return _view(repository.get_case(conn, tenant_id=tenant, case_id=existing[0]))
             safe_message = masked(message)
-            case_id = repository.create_case(conn, tenant_id=principal.tenant_id, customer_id=request.customer_id, subject=safe_message)
-            transition_case(conn, tenant_id=principal.tenant_id, case_id=case_id, expected_version=0, event_type=EventType.CREATED, payload={"channel": channel, "message": safe_message}, actor_type="mcp", actor_id=principal.key_id)
-            transition_case(conn, tenant_id=principal.tenant_id, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFICATION_FAILED, payload={"failure_code": "classification_unavailable"}, actor_type="mcp", actor_id=principal.key_id)
-        return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
+            case_id = repository.create_case(conn, tenant_id=tenant, customer_id=request.customer_id, subject=safe_message)
+            transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED, payload={"channel": channel, "message": safe_message}, actor_type="mcp", actor_id=principal.key_id)
+            transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFICATION_FAILED, payload={"failure_code": "classification_unavailable"}, actor_type="mcp", actor_id=principal.key_id)
+            repository.create_action_request(conn, tenant_id=tenant, case_id=case_id, action_type="mcp.open_support_case",
+                                            arguments={"request_id": request.request_id}, idempotency_key=idem)
+        return _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))

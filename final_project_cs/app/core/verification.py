@@ -105,7 +105,8 @@ class Facts:
 
 def _to_decimal(value: Any) -> Decimal | None:
     try:
-        return Decimal(str(value))
+        decimal = Decimal(str(value))
+        return decimal if decimal.is_finite() else None
     except (InvalidOperation, TypeError, ValueError):
         return None
 

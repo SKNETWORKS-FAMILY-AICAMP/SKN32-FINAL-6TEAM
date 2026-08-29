@@ -82,7 +82,7 @@ _INSERT_EVENT = """
 _INSERT_OUTBOX = """
     INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json)
     VALUES (%(tenant_id)s, %(topic)s, %(dedupe_key)s, %(payload_json)s)
-    ON CONFLICT (topic, dedupe_key) DO NOTHING
+    ON CONFLICT (tenant_id, topic, dedupe_key) DO NOTHING
     RETURNING message_id
 """
 

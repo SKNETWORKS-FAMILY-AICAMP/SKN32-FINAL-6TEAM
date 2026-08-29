@@ -146,3 +146,23 @@ def test_admin_reflects_a_newly_registered_team(ui_fixture, monkeypatch):
     response = ui_fixture["client"].get("/ui/admin")
     assert response.status_code == 200
     assert "fake_admin_team" in response.text
+
+
+def test_outbox_unknown_screen_renders_resolution_form(ui_fixture):
+    message_id = uuid4()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO outbox (message_id, tenant_id, topic, dedupe_key, payload_json, status, last_error) "
+            "VALUES (%s,%s,'ui.provider',%s,%s,'unknown','provider timed out')",
+            (message_id, ui_fixture["tenant"], "ui-stale-" + uuid4().hex, Json({"provider_ref": "masked-ref"})),
+        )
+    try:
+        response = ui_fixture["client"].get("/ops/outbox")
+        assert response.status_code == 200
+        assert str(message_id) in response.text
+        assert "provider timed out" in response.text
+        assert "confirmed_delivered" in response.text
+        assert "자동 재실행 없음" in response.text
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM outbox WHERE message_id=%s", (message_id,))

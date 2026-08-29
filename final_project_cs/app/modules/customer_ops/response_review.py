@@ -8,7 +8,7 @@ from typing import Any, Protocol
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamModule, TeamResult, TeamTask
 from app.core.verification import Facts, verify_proposal
 from app.modules.customer_ops.response_review_policy import (
-    CUSTOMER_OPS_POLICY, FORBIDDEN_WORDS, PII_PATTERNS, decide_tone,
+    CUSTOMER_OPS_POLICY, FORBIDDEN_WORDS, PII_PATTERNS, decide_tone, detect_person_name_pii,
 )
 
 
@@ -83,7 +83,7 @@ class ResponseGenerationReviewTeam:
     @staticmethod
     def _deterministic(text: str, claims: dict[str, Any], facts: Facts) -> list[str]:
         problems = [f"forbidden_word:{word}" for word in FORBIDDEN_WORDS if word.lower() in text.lower()]
-        if any(pattern.search(text) for pattern in PII_PATTERNS):
+        if any(pattern.search(text) for pattern in PII_PATTERNS) or detect_person_name_pii(text):
             problems.append("pii_detected")
         if claims:
             mismatches = verify_proposal(

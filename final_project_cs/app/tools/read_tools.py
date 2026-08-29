@@ -73,6 +73,53 @@ class ReadToolbox:
         return [dict(zip(("shipment_id", "order_id", "carrier", "status", "shipped_at", "delivered_at"), row))
                 for row in rows]
 
+    def catalog(self, scope: ToolContext, *, sku: str | None = None, **_: Any) -> dict[str, Any] | list[dict[str, Any]] | None:
+        columns = ("product_id", "sku", "name", "unit_cents", "status", "updated_at")
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                if sku is not None:
+                    cur.execute(
+                        "SELECT product_id, sku, name, unit_cents, status, updated_at FROM products "
+                        "WHERE tenant_id=%s AND sku=%s",
+                        (scope.tenant_id, sku),
+                    )
+                    row = cur.fetchone()
+                    return None if row is None else dict(zip(columns, row))
+                cur.execute(
+                    "SELECT product_id, sku, name, unit_cents, status, updated_at FROM products "
+                    "WHERE tenant_id=%s ORDER BY sku",
+                    (scope.tenant_id,),
+                )
+                return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    def order_items(self, scope: ToolContext, *, order_id: str | None = None, **_: Any) -> list[dict[str, Any]]:
+        """Return line items for an owned order, or the customer's latest order."""
+        columns = ("order_item_id", "order_id", "sku", "name", "quantity", "unit_cents")
+        with self.connection_factory() as conn:
+            with conn.cursor() as cur:
+                if order_id is not None:
+                    cur.execute(
+                        "SELECT oi.order_item_id, oi.order_id, oi.sku, oi.name, oi.quantity, oi.unit_cents "
+                        "FROM order_items oi JOIN orders o ON o.order_id = oi.order_id "
+                        "WHERE oi.tenant_id=%s AND o.tenant_id=%s AND o.customer_id=%s AND oi.order_id=%s "
+                        "ORDER BY oi.order_item_id",
+                        (scope.tenant_id, scope.tenant_id, scope.customer_id, order_id),
+                    )
+                else:
+                    cur.execute(
+                        "SELECT oi.order_item_id, oi.order_id, oi.sku, oi.name, oi.quantity, oi.unit_cents "
+                        "FROM order_items oi JOIN orders o ON o.order_id = oi.order_id "
+                        "WHERE oi.tenant_id=%s AND o.tenant_id=%s AND o.customer_id=%s "
+                        "AND o.order_id = (SELECT latest.order_id FROM orders latest "
+                        "WHERE latest.tenant_id=%s AND latest.customer_id=%s "
+                        "ORDER BY latest.ordered_at DESC LIMIT 1) "
+                        "ORDER BY oi.order_item_id",
+                        (scope.tenant_id, scope.tenant_id, scope.customer_id,
+                         scope.tenant_id, scope.customer_id),
+                    )
+                rows = cur.fetchall()
+        return [dict(zip(columns, row)) for row in rows]
+
     def policy(self, scope: ToolContext, *, query: str, **_: Any) -> list[Any]:
         return self.policy_search(scope.tenant_id, query, scope.knowledge_scope)
 
@@ -102,6 +149,8 @@ class ReadToolbox:
         functions = {
             "read.order": self.order,
             "read.shipment": self.shipment,
+            "read.catalog": self.catalog,
+            "read.order_items": self.order_items,
             "read.policy": self.policy,
             "read.return": self.return_request,
             "read.account": self.account,

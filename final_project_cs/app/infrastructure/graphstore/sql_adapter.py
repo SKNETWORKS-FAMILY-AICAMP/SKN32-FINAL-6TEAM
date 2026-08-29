@@ -115,5 +115,5 @@ class SqlGraphAdapter:
         )
 
     async def subgraph(self, root_id: str, depth: int = 2) -> dict:
-        rows = await self.neighbors(root_id, ["owns", "has_event", "proposed", "approved", "contains", "in_document"], depth)
+        rows = await self.neighbors(root_id, ["owns", "has_event", "proposed", "approved", "contains", "in_document", "has_issue", "governed_by", "handled_by"], depth)
         return {"root_id": root_id, "tenant_id": self.tenant_id, "nodes": [root_id] + [r["node_id"] for r in rows], "edges": rows}

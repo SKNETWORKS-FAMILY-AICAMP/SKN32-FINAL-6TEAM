@@ -13,6 +13,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROJECT_CONFIG = REPO_ROOT / "config" / "project.yaml"
 
+KNOWN_IMPLEMENTATION_REFS = frozenset({
+    "app.modules.customer_ops:VocStoreManagerTeam",
+    "app.modules.customer_ops.response_review:ResponseGenerationReviewTeam",
+    "app.modules.customer_ops.return_refund:ReturnRefundTeam",
+    "app.modules.customer_ops.procurement_order_payment:ProcurementOrderPaymentTeam",
+    "app.modules.customer_ops.fulfillment_logistics:FulfillmentLogisticsTeam",
+    "app.modules.customer_ops.catalog_verification:CatalogVerificationTeam",
+})
+
 
 class ProjectConfigError(RuntimeError):
     """The project declaration is missing or does not satisfy its schema."""
@@ -161,5 +170,6 @@ def load_project_config(path: str | Path | None = None) -> ProjectConfig:
 
 __all__ = [
     "DEFAULT_PROJECT_CONFIG", "ModuleConfig", "PortConfig", "ProjectConfig",
-    "ProjectConfigError", "ResponseReviewConfig", "TeamConfig", "load_project_config",
+    "KNOWN_IMPLEMENTATION_REFS", "ProjectConfigError", "ResponseReviewConfig", "TeamConfig",
+    "load_project_config",
 ]

@@ -10,6 +10,7 @@ from app.infrastructure.db.session import get_connection
 from app.presentation import security
 from app.presentation.api.app import create_app
 from app.presentation.api.cases import _mcp_cases, _mcp_detail, _mcp_open
+from app.application.controller import ControllerError
 
 
 @pytest.fixture()
@@ -124,6 +125,17 @@ def test_same_create_request_ten_times_has_one_action_request(api_fixture):
         assert cur.fetchone()[0] == 1
 
 
+def test_same_mcp_open_request_ten_times_has_one_case_and_action_request(api_fixture):
+    results = [_mcp_open(str(api_fixture["customer"]), "repeat from mcp", "test") for _ in range(10)]
+    assert len({result["case_id"] for result in results}) == 1
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s AND action_type=%s",
+                    (api_fixture["tenant"], "mcp.open_support_case"))
+        assert cur.fetchone()[0] == 1
+
+
 def test_case_from_other_customer_is_not_found(api_fixture):
     case_id = create_case(api_fixture)
     response = api_fixture["client"].get(
@@ -132,6 +144,33 @@ def test_case_from_other_customer_is_not_found(api_fixture):
     )
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "not_found"
+
+
+def test_message_route_passes_issued_resume_token_to_controller(api_fixture):
+    case_id = create_case(api_fixture, "resume-route")
+    calls = []
+
+    class ResumeController:
+        async def resume(self, **kwargs):
+            calls.append(kwargs)
+            if kwargs["token"] != "issued-token":
+                raise ControllerError("invalid resume token")
+            return {"case_id": str(case_id), "status": "routing", "version": 2}
+
+    client = TestClient(create_app(
+        controller=ResumeController(),
+        classifier=lambda _message: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"},
+    ))
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    valid = client.post(f"/v1/cases/{case_id}/messages", headers=headers,
+                        json={"request_id": "resume-valid", "message": "attacker supplied text", "token": "issued-token"})
+    assert valid.status_code == 200
+    assert calls[0]["token"] == "issued-token"
+
+    invalid = client.post(f"/v1/cases/{case_id}/messages", headers=headers,
+                          json={"request_id": "resume-invalid", "message": "issued-token", "token": "not-issued"})
+    assert invalid.status_code == 401
+    assert invalid.json()["error"]["code"] == "invalid_resume_token"
 
 
 def test_mcp_open_support_case_changes_only_case_state(api_fixture):
@@ -148,7 +187,8 @@ def test_mcp_open_support_case_changes_only_case_state(api_fixture):
     with get_connection() as conn, conn.cursor() as cur:
         for table, count in before.items():
             cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
-            assert cur.fetchone()[0] == count
+            actual = cur.fetchone()[0]
+            assert actual == (count + 1 if table == "action_requests" else count)
 
 
 def test_normal_create_and_detail_flow(api_fixture):
@@ -207,8 +247,8 @@ def test_state_conflict_is_rendered_as_409(api_fixture):
         headers={"Authorization": api_fixture["token"]("case:write")},
         json={"request_id": "conflict-message", "message": "follow up", "expected_version": 0},
     )
-    assert response.status_code == 409
-    assert response.json()["error"]["code"] == "state_conflict"
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
 
 
 @pytest.mark.parametrize("tool", [_mcp_cases, _mcp_detail, _mcp_open])

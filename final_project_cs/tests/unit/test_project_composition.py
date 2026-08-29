@@ -152,4 +152,5 @@ def test_load_project_config_accepts_normal_declaration():
     assert {team.team_id for team in config.teams} == {
         "voc_store_manager", "response_generation_review",
         "return_refund", "procurement_order_payment", "fulfillment_logistics",
+        "catalog_verification",
     }

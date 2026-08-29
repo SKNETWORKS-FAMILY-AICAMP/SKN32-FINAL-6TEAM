@@ -27,6 +27,7 @@ def test_composition_registers_the_builtin_team_and_allows_extension():
     assert {manifest.team_id for manifest in registry.manifests()} == {
         "voc_store_manager", "response_generation_review",
         "return_refund", "procurement_order_payment", "fulfillment_logistics",
+        "catalog_verification",
     }
 
     registry.register(ExtraTeam())

@@ -74,3 +74,15 @@ v7 이 요구한 **원격 Task 취소**와는 다른 사건이다.
 - 취소가 **원격의 실제 작업을 멈추는지**는 모른다. 상태가 `cancelled` 로 바뀌는 것만 봤다.
   실제 원격이라면 진행 중 작업의 롤백 여부가 별도 문제다
 - 인증은 bearer 토큰 한 종류다. 만료·회전·mTLS 는 다루지 않았다
+
+## ★2026-08-24 갱신 — "타임아웃 통과" 가 루프 사이 체크뿐이었던 갭 메움
+
+위 §48 "우리 쪽 `deadline_at` 이 동작" 은 실제로는 **루프 반복 사이에서만**
+확인하고 있었다 — 원격 `submit()`/`poll()` 호출 **한 번**이 응답 없이
+오래 걸리면(hung) 그 호출 자체는 안 끊겨서 선언된 데드라인을 훨씬 넘길 수
+있는 갭이 sample 대조로 발견됐다. `a2a_executor.py`가 각 원격 호출을
+`asyncio.wait_for(call, timeout=deadline_at - now())`로 감싸도록 고쳤고,
+포기할 때 원격에 best-effort 취소도 시도한다. `submit()`이 10초 hang 하는
+mock 에 30ms 데드라인을 줘도 0.5초 안에 `remote_deadline_exceeded`로
+끝나는지, `poll()`이 hang할 때도 같은지 + 실제로 `cancel()`이 호출되는지
+재현 테스트로 확인했다. 상세: `docs/reports/2026-08-24_S-BASEMENT-06-CONTROLLER-RELIABILITY_리포트.md`

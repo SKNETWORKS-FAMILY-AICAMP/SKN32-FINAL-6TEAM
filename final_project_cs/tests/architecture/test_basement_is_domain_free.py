@@ -50,6 +50,13 @@ ALLOWED = {
     # 원격 Agent 데모. A-COP 본체가 아니라 **왕복 검증용 상대역**이며,
     # 복사본은 이 파일을 자기 도메인으로 갈아 끼운다.
     "app/presentation/a2a/remote_agent.py",
+    # Composer 쓰기채널의 KNOWN_IMPLEMENTATION_REFS allowlist(2026-08-24,
+    # S-BASEMENT-08). 인증된 사용자가 임의 모듈을 import 시키는 걸 막으려면
+    # 이 제품이 실제로 등록한 구현체 이름을 알아야 화이트리스트가 동작한다 —
+    # 도메인 로직이 아니라 **보안 규칙**이다(redaction.py와 같은 성격).
+    # ★한때 문자열을 쪼개("return_re"+"fund") 이 검사를 우회한 적이 있다 —
+    #   재발 금지: 도메인 어휘가 필요하면 숨기지 말고 여기 예외로 적는다.
+    "app/core/project_config.py",
 }
 
 

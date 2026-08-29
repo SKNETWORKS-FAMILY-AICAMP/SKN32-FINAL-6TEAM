@@ -53,19 +53,20 @@ WHERE o.tenant_id = '<TENANT_ID>'
 
 ### 2.2 제공되는 화면과 API
 
-- `/ui/admin`: tenant 범위의 outbox 상태별 **건수**를 보여준다. `unknown` 행의
-  message_id, topic, payload, last_error를 보여주는 화면은 아니다.
+- `/ui/admin`: tenant 범위의 outbox 상태별 **건수**를 보여준다. 상세 확인과 해결 기록은
+  `/ops/outbox` 화면에서 한다.
 - `/ui/cases`: Case 목록 화면이다. `customer_cases.status`를 표시하지만
   `unknown` 필터는 없다.
 - `/ui/cases/{case_id}`: Case 상세와 현재 `state_json`을 본다.
 - `/ui/cases/{case_id}/trace`: 해당 Case의 append-only `case_events` 타임라인을
   본다.
-- `/v1/cases`, `/v1/cases/{case_id}`: Case 조회 API는 있으나 outbox 조회 API는
-  없다. `unknown` outbox를 조회하거나 재판정하는 전용 API도 없다.
+- `/v1/cases`, `/v1/cases/{case_id}`: Case 조회 API다. `unknown` outbox는
+  `/ops/outbox` 화면에서 조회하고, `/v1/outbox/{message_id}/resolve` API로
+  사람이 확인한 `resolution`/`resolved_by`/`resolution_note`를 기록한다.
 
-따라서 운영자는 SQL로 `outbox` 행을 찾고, Case ID가 있을 때만 위 Case 화면/API와
-trace를 보조 자료로 사용한다. 애플리케이션 로그의 별도 검색 API나 전용 trace
-화면은 현재 없다. timeout 예외의 문자열은 `outbox.last_error`에 저장된다.
+따라서 운영자는 `/ops/outbox`에서 대상 행과 payload를 확인하고, Case ID가 있을 때만
+위 Case 화면/API와 trace를 보조 자료로 사용한다. timeout 예외의 문자열은
+`outbox.last_error`에 저장된다.
 
 ## 3. 사람이 확인할 항목
 
@@ -94,9 +95,10 @@ trace를 보조 자료로 사용한다. 애플리케이션 로그의 별도 검�
 `waiting_external -> resuming` 전이를 만든다. 이후 정상적인 resume 흐름에서
 `EventType.RESUMED`가 `resuming -> running`으로 이어진다.
 
-저장소에는 이 작업을 수행하는 운영자용 HTTP API나 CLI가 없으므로, 아래는 실제
-코드의 함수·이벤트·payload 계약을 사용한 수동 실행 예시다. 실행 전 Case의 최신
-version을 읽고, 실제 provider 조회 근거를 `state_patch`에 남긴다.
+저장소에는 Case 전이를 수행하는 운영자용 HTTP API나 CLI가 없으므로, 아래는 실제
+코드의 함수·이벤트·payload 계약을 사용한 수동 실행 예시다. unknown outbox의
+확인 결과는 `/ops/outbox` 화면·`/v1/outbox/{message_id}/resolve` API로 기록한다.
+실행 전 Case의 최신 version을 읽고, 실제 provider 조회 근거를 `state_patch`에 남긴다.
 
 ```python
 from uuid import UUID
@@ -138,10 +140,9 @@ with get_connection() as conn:
         )
 ```
 
-이 호출은 Case 이벤트를 기록할 뿐이며, `outbox.status`를 `delivered`로 바꾸거나
-provider 작업을 재실행하지 않는다. 현재 코드에는 unknown outbox를 사람이
-확정된 결과와 연결해 outbox 자체를 종결하는 지원 절차가 없다. 그 사실을 리포트에
-남기고, 직접 DB UPDATE로 보정하지 않는다.
+이 호출은 Case 이벤트를 기록할 뿐이며, `/v1/outbox/{message_id}/resolve`도
+`outbox.status`를 바꾸거나 provider 작업을 재실행하지 않는다. 직접 DB UPDATE로
+보정하지 않는다.
 
 ### 4.2 provider가 미완료 또는 실패라고 확인한 경우
 

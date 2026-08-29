@@ -19,11 +19,17 @@ class OutboxBrokerAdapter:
                 with conn.cursor() as cur:
                     cur.execute("SELECT tenant_id FROM customer_cases WHERE case_id=%s LIMIT 1", (payload.get("case_id"),))
                     row = cur.fetchone()
-                    tenant_id = payload.get("tenant_id") or (row[0] if row else None)
+                    case_tenant_id = row[0] if row else None
+                    tenant_id = payload.get("tenant_id") or case_tenant_id
                     if tenant_id is None:
                         raise ValueError("tenant_id is required for outbox publish")
+                    if case_tenant_id is not None and payload.get("tenant_id") not in (None, case_tenant_id):
+                        raise ValueError(
+                            f"tenant_id mismatch: payload claims {payload.get('tenant_id')!r} "
+                            f"but case belongs to {case_tenant_id!r}"
+                        )
                     cur.execute("INSERT INTO outbox(tenant_id,topic,dedupe_key,payload_json) VALUES(%s,%s,%s,%s) "
-                                "ON CONFLICT(topic,dedupe_key) DO NOTHING RETURNING message_id", (tenant_id, topic, dedupe_key, Json(payload)))
+                                "ON CONFLICT(tenant_id,topic,dedupe_key) DO NOTHING RETURNING message_id", (tenant_id, topic, dedupe_key, Json(payload)))
                     inserted = cur.fetchone()
         return str(inserted[0]) if inserted else dedupe_key
 

@@ -47,6 +47,7 @@ reliability:
   # 동일 tool + 정규화 arguments signature 가 이 횟수만큼 반복되면 escalated (v5 §10-4)
   repeated_tool_signature_limit: 2
   daily_cost_limit_usd_per_tenant: 50
+  outbox_stale_processing_seconds: 300
 
 # ── 동시성 (v5 §6-1) ────────────────────────────────────────────────
 concurrency:
@@ -98,6 +99,7 @@ security:
     - composer:read
     - composer:validate
     - composer:write
+    - ops:introspect
   composer_jwt_ttl_minutes: 30
   # ★MCP 에는 mcp:read 외 어떤 scope 도 부여하지 않는다
   mcp_allowed_scopes:

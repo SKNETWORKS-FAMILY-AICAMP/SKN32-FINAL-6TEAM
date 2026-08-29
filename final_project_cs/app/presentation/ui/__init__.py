@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from app.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfig, load_project_config
-from app.presentation.ui.routes import router
+from app.presentation.ui.routes import ops_router, router
 
 
 def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
@@ -29,6 +29,7 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
     landing: str | None = None
     if config.module_enabled("ops_ui"):
         app.include_router(router)
+        app.include_router(ops_router)
         landing = "/ui/cases"
 
     # ★루트가 404 였다. 개발 서버를 띄우면 브라우저가 `/` 로 열리는데

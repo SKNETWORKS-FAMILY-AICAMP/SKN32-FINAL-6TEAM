@@ -48,8 +48,8 @@ class Settings(BaseSettings):
     env: str = "dev"
     tenant_id: str
     secret_key: str
-    composer_jwt_secret: str = ""
-    composer_issuer_secret: str = ""
+    composer_jwt_secret: str
+    composer_issuer_secret: str
 
     # 경로
     guardrails_path: str = "config/guardrails.yaml"

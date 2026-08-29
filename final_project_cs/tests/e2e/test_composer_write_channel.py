@@ -98,6 +98,51 @@ def test_apply_rejects_unimplementable_reference(tmp_path, monkeypatch, configur
     assert path.read_bytes() == before
 
 
+def test_http_validate_rejects_unknown_active_implementation_reference(tmp_path, monkeypatch, configured):
+    client, _ = _client(tmp_path, monkeypatch)
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    current["config"]["teams"][0]["implementation_ref"] = "os:system"
+
+    response = client.post("/composer/validate", headers=_auth("composer:validate"),
+                           json={"config": current["config"]})
+
+    assert response.status_code == 200
+    assert response.json()["valid"] is False
+    assert "not allowed" in response.json()["errors"][0]
+
+
+def test_http_apply_rejects_unknown_active_implementation_reference_before_revision_check(
+    tmp_path, monkeypatch, configured
+):
+    client, path = _client(tmp_path, monkeypatch)
+    before = path.read_bytes()
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    current["config"]["teams"][0]["implementation_ref"] = "not.a.real.module:NotAClass"
+
+    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+        "config": current["config"], "base_revision": "stale-revision",
+        "reason": "test HTTP registry rejection"})
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_declaration"
+    assert path.read_bytes() == before
+
+
+def test_http_registry_ignores_unknown_inactive_implementation_reference(
+    tmp_path, monkeypatch, configured
+):
+    client, _ = _client(tmp_path, monkeypatch)
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    current["config"]["teams"][0]["active"] = False
+    current["config"]["teams"][0]["implementation_ref"] = "not.a.real.module:NotAClass"
+
+    response = client.post("/composer/validate", headers=_auth("composer:validate"),
+                           json={"config": current["config"]})
+
+    assert response.status_code == 200
+    assert response.json()["valid"] is True
+
+
 def test_apply_writes_an_audit_event_with_actor_and_revision(tmp_path, monkeypatch, configured):
     client, path = _client(tmp_path, monkeypatch)
     audit_path = tmp_path / "composer_events.jsonl"
@@ -169,3 +214,81 @@ def test_concurrent_apply_one_wins_one_gets_409(tmp_path, monkeypatch, configure
     for thread in threads: thread.start()
     for thread in threads: thread.join()
     assert sorted(response.status_code for response in results) == [200, 409]
+
+
+@pytest.mark.parametrize("target_type,target_id,field", [
+    ("module", "vector_rag", "enabled"),
+    ("team", "voc_store_manager", "active"),
+])
+def test_toggle_changes_only_one_registered_flag_and_audits(
+    tmp_path, monkeypatch, configured, target_type, target_id, field
+):
+    client, path = _client(tmp_path, monkeypatch)
+    before = yaml.safe_load(path.read_text(encoding="utf-8"))
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    old_value = before["modules"][target_id][field] if target_type == "module" else next(
+        team[field] for team in before["teams"] if team["team_id"] == target_id
+    )
+
+    response = client.post("/composer/toggle", headers=_auth("composer:write"), json={
+        "target_type": target_type, "target_id": target_id, "active": not old_value,
+        "base_revision": current["revision"], "reason": "toggle test"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["active"] is (not old_value)
+    assert body["config_revision"] != current["revision"]
+    after = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if target_type == "module":
+        after["modules"][target_id][field] = before["modules"][target_id][field]
+    else:
+        for team in after["teams"]:
+            if team["team_id"] == target_id:
+                team[field] = before["teams"][[item["team_id"] for item in before["teams"]].index(target_id)][field]
+    assert after == before
+    lines = (tmp_path / "composer_events.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    event = json.loads(lines[0])
+    assert event["event"] == "composer.toggle"
+    assert event["target_type"] == target_type
+    assert event["target_id"] == target_id
+    assert event["previous_active"] is old_value
+    assert event["active"] is (not old_value)
+    assert event["config_revision"] == body["config_revision"]
+    assert event["correlation_id"] == body["audit_id"]
+
+
+@pytest.mark.parametrize("payload,expected_status", [
+    ({"target_type": "module", "target_id": "missing", "active": False}, 422),
+    ({"target_type": "port", "target_id": "team_executor", "active": False}, 422),
+])
+def test_toggle_rejects_unregistered_targets_without_writing(
+    tmp_path, monkeypatch, configured, payload, expected_status
+):
+    client, path = _client(tmp_path, monkeypatch)
+    before = path.read_bytes()
+    current = client.get("/composer/current", headers=_auth("composer:read")).json()
+    payload.update(base_revision=current["revision"], reason="invalid target")
+    response = client.post("/composer/toggle", headers=_auth("composer:write"), json=payload)
+    assert response.status_code == expected_status
+    assert response.json()["error"]["code"] == "invalid_declaration"
+    assert path.read_bytes() == before
+
+
+def test_toggle_rejects_stale_revision_without_writing(tmp_path, monkeypatch, configured):
+    client, path = _client(tmp_path, monkeypatch)
+    before = path.read_bytes()
+    response = client.post("/composer/toggle", headers=_auth("composer:write"), json={
+        "target_type": "module", "target_id": "vector_rag", "active": False,
+        "base_revision": "stale", "reason": "stale test"})
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "revision_conflict"
+    assert path.read_bytes() == before
+
+
+def test_toggle_requires_composer_write_scope(tmp_path, monkeypatch, configured):
+    client, _ = _client(tmp_path, monkeypatch)
+    response = client.post("/composer/toggle", headers=_auth("composer:read"), json={
+        "target_type": "module", "target_id": "vector_rag", "active": False,
+        "base_revision": "irrelevant", "reason": "scope test"})
+    assert response.status_code == 403

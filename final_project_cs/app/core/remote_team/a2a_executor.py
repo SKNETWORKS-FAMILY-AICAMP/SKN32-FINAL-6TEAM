@@ -18,12 +18,41 @@ class A2ATeamExecutor:
         endpoint = self.capability_resolver(task.capability)
         if hasattr(endpoint, "__await__"):
             endpoint = await endpoint
-        remote = await self._submit(endpoint, task)
+        remote = await self._call_within_deadline(lambda: self._submit(endpoint, task), task)
+        if remote is None:
+            return self._failed(task, "remote_deadline_exceeded")
         while self._status(remote) in {"running", "submitted", "working", "in_progress"}:
             if datetime.now(UTC) >= task.deadline_at:
+                await self._cancel_best_effort(remote)
                 return self._failed(task, "remote_deadline_exceeded")
-            remote = await self._poll(remote, task)
+            next_remote = await self._call_within_deadline(lambda: self._poll(remote, task), task)
+            if next_remote is None:
+                await self._cancel_best_effort(remote)
+                return self._failed(task, "remote_deadline_exceeded")
+            remote = next_remote
         return self._map(task, remote)
+
+    @staticmethod
+    async def _call_within_deadline(make_awaitable, task: TeamTask):
+        remaining = (task.deadline_at - datetime.now(UTC)).total_seconds()
+        if remaining <= 0:
+            return None
+        try:
+            return await asyncio.wait_for(make_awaitable(), timeout=remaining)
+        except asyncio.TimeoutError:
+            return None
+
+    async def _cancel_best_effort(self, remote) -> bool:
+        cancel = getattr(self.transport, "cancel", None)
+        if cancel is None:
+            return False
+        try:
+            value = cancel(remote)
+            if hasattr(value, "__await__"):
+                await value
+            return True
+        except Exception:
+            return False
 
     async def _submit(self, endpoint, task):
         method = getattr(self.transport, "submit", None) or getattr(self.transport, "send")

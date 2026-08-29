@@ -72,7 +72,7 @@ def run_daily_feedback(conn: Connection, *, report_date: date, tenant_id: str) -
         for alert in alerts:
             cur.execute(
                 """INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json)
-                   VALUES (%s,%s,%s,%s) ON CONFLICT (topic,dedupe_key) DO NOTHING""",
+                   VALUES (%s,%s,%s,%s) ON CONFLICT (tenant_id,topic,dedupe_key) DO NOTHING""",
                 (tenant_id, "feedback.alert", f"{tenant_id}:{start}:{report_date}:{alert['intent']}:{alert['issue_code']}", Json(report | {"alert": alert})),
             )
     return report

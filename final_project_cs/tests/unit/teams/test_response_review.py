@@ -67,6 +67,22 @@ async def test_pii_escalates_without_retry():
 
 
 @pytest.mark.asyncio
+async def test_verified_name_with_honorific_escalates_without_retry():
+    llm = FakeLLM([{"final_response_text": "김민수님께 안내드립니다."}])
+    result = await ResponseGenerationReviewTeam(llm).execute(make_task())
+    assert result.outcome == "escalated"
+    assert result.failure_code == "pii_detected"
+    assert len(llm.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_surname_without_name_context_does_not_escalate():
+    llm = FakeLLM([{"final_response_text": "김치 배송 상태를 확인했습니다.", "tone_ok": True}])
+    result = await ResponseGenerationReviewTeam(llm).execute(make_task())
+    assert result.outcome == "completed"
+
+
+@pytest.mark.asyncio
 async def test_refund_amount_above_order_total_is_fact_mismatch():
     state = {"db_facts": {"orders": {"o-1": {"order_id": "o-1", "total_cents": 10000, "item_count": 2}}}}
     llm = FakeLLM([{"final_response_text": "환불을 처리합니다.", "claims": {"order_id": "o-1", "refund_amount": 101}}] * 4)

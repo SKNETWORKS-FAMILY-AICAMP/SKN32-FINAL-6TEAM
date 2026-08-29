@@ -34,3 +34,6 @@ teams:
 - team_id: fulfillment_logistics
   active: true
   implementation_ref: app.modules.customer_ops.fulfillment_logistics:FulfillmentLogisticsTeam
+- team_id: catalog_verification
+  active: true
+  implementation_ref: app.modules.customer_ops.catalog_verification:CatalogVerificationTeam

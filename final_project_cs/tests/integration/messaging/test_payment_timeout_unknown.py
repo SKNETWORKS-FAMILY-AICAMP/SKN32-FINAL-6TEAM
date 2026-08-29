@@ -5,6 +5,7 @@ import asyncio
 from uuid import uuid4
 
 import pytest
+from psycopg.types.json import Json
 
 from app.core.transition import OutboxMessage, transition_case
 from app.domain.events import EventType
@@ -154,3 +155,21 @@ def test_mock_payment_publisher_success_is_delivered(db):  # noqa: F811
         cur.execute("SELECT status FROM outbox WHERE message_id=%s", (row[0],))
         assert cur.fetchone()[0] == "delivered"
     assert len(publisher.published) == 1
+
+
+def test_stale_processing_lock_is_reclaimed_as_unknown(db):  # noqa: F811
+    conn, tenant = db
+    message_id = uuid4()
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO outbox (message_id, tenant_id, topic, dedupe_key, payload_json, status, locked_at) "
+            "VALUES (%s,%s,'test.stale',%s,%s,'processing',now() - interval '1 hour')",
+            (message_id, tenant, "stale-" + uuid4().hex, Json({"test": "stale"})),
+        )
+    worker = OutboxWorker(get_connection, lambda _message: None, tenant_id=tenant)
+    assert worker.process_once() is False
+    with conn.cursor() as cur:
+        cur.execute("SELECT status, locked_at, last_error FROM outbox WHERE message_id=%s", (message_id,))
+        status, locked_at, last_error = cur.fetchone()
+    assert status == "unknown" and locked_at is None
+    assert "stale lock reclaimed" in last_error

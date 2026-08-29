@@ -30,6 +30,7 @@ CONTRACT_V1_PATHS = {
     "/v1/cases/{case_id}",
     "/v1/cases/{case_id}/messages",
     "/v1/cases/{case_id}/actions/{action_id}/approve",
+    "/v1/outbox/{message_id}/resolve",
 }
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}

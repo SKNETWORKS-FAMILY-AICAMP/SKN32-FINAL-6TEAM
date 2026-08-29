@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
+import psycopg
 from psycopg import Connection
 from psycopg.types.json import Json
 
@@ -36,11 +37,17 @@ class CaseService:
             )
             if cur.fetchone() is not None:
                 raise ActiveRunError(f"active run already exists for case {case_id}")
-            cur.execute(
-                "INSERT INTO agent_runs(run_id,tenant_id,case_id,graph_revision,status,started_at) "
-                "VALUES(%s,%s,%s,%s,'active',now()) RETURNING run_id",
-                (run_id, tenant_id, case_id, self.graph_revision),
-            )
+            try:
+                cur.execute(
+                    "INSERT INTO agent_runs(run_id,tenant_id,case_id,graph_revision,status,started_at) "
+                    "VALUES(%s,%s,%s,%s,'active',now()) RETURNING run_id",
+                    (run_id, tenant_id, case_id, self.graph_revision),
+                )
+            except psycopg.errors.UniqueViolation as exc:
+                # The SELECT above only locks an already-existing row. The
+                # partial unique index is the race-safe guard for two empty
+                # active-run sets, and exposes the same application failure.
+                raise ActiveRunError(f"active run already exists for case {case_id}") from exc
         return run_id
 
     def finish_run(self, conn: Connection, run_id: UUID, status: str = "succeeded") -> None:

@@ -45,3 +45,14 @@ import 를 안 해도 **문자열로 tool 이름을 만들어 registry 에 넘�
 - AST 검사는 **정적 import** 만 본다. `importlib` 로 동적 로드하면 못 잡는다
 - runtime 차단은 registry 를 거치는 호출만 본다. Team 이 직접 psycopg 를 잡으면
   AST 가 잡아야 하는데, 그건 위 한계와 맞물린다 — **두 검사가 서로의 구멍을 완전히 덮지는 않는다**
+
+## ★2026-08-24 갱신 — 이 문서와 다른 경계: dispatch 시점 scope 검사도 이제 있다
+
+위 검사는 "Team 이 실행 **중** 자기 manifest 밖 tool 을 부르면 막히는가"다.
+sample 대조로 발견된 것은 그와 다른 경계 — `LocalTeamExecutor.execute()`가
+**Controller 가 넘긴 `TeamTask.allowed_tools`가 애초에 Team 의
+`manifest.allowed_tools` 부분집합인지**를 Team module 호출 **전에**
+검사하지 않았다. 이제 부분집합이 아니면 `ToolScopeViolation`을 던지고
+Team 을 아예 호출하지 않는다(`test_local_executor_rejects_task_tools_outside_manifest`).
+기존 direct-call 동등성 테스트로 정상 흐름도 유지되는지 확인했다.
+상세: `docs/reports/2026-08-24_S-BASEMENT-01-AUTH-CONTRACT_리포트.md`
