@@ -3,3 +3,16 @@ uvicorn==0.35.0
 psycopg==3.3.4
 PyYAML==6.0.2
 python-multipart==0.0.20
+
+# ★Composer 클라이언트. final_project_sample 이 만들어 배포하는 패키지다
+#   (program/plan/A-COP_Composer_소유권_정정.md). 같은 계약을 이 저장소에서
+#   다시 구현하지 않기 위해 가져다 쓴다 — console/composer.py 는 이 위의
+#   얇은 어댑터이고, 한글 상태 라벨 같은 화면 표현만 갖는다.
+#
+#   아직 사설 index 에 올리지 않았으므로 지금은 경로로 설치한다:
+#       pip install -e ../final_project_sample/packages/acop_composer_ui
+#
+#   ★이 패키지는 대상의 Core 모델(ProjectConfig 등)을 담지 않는다. sample 의
+#   tests/architecture/test_composer_ui_package_boundary.py 가 강제한다 —
+#   그래서 CLAUDE.md §0.2·§0.3 의 "대상 검증 모델 포크 금지" 를 깨지 않는다.
+acop-composer-ui==0.1.0

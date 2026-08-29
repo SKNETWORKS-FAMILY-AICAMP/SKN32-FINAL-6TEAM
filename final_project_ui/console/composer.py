@@ -1,23 +1,34 @@
 """대상의 인증된 Composer 쓰기 채널 어댑터.
 
-대상 프로세스가 제공하는 `/auth/token`에서 동작별 단명 JWT를 발급받은 뒤
-`/composer/current`·`/composer/validate`·`/composer/apply`를 호출한다.
-실제 대상 모델은 import하지 않고 raw dict만 주고받는다.
+★2026-08-29 — **전송·토큰 발급을 직접 구현하지 않는다.** `acop_composer_ui`
+  패키지(`final_project_sample` 이 만들어 배포한다)를 pip 로 설치해 쓴다.
+  같은 계약을 두 곳에서 구현하면 한쪽만 고쳐지는 날이 온다
+  (`program/plan/A-COP_Composer_소유권_정정.md`,
+  `program/research/_컴포저_UI배포구조_점검_2026-08-29.md`).
 
-★계약 v2 전환 완료(2026-08-18): issuer secret은 토큰 발급에만 사용하고,
-실제 Composer 요청에는 동작별 scope가 담긴 access token을 사용한다.
+  이 모듈에 남는 것은 **화면이 쓰는 표현**뿐이다 — 한글 상태 라벨과
+  `ComposerResult`. 어떤 요청을 어떻게 보낼지는 패키지가, 그 결과를 화면에서
+  어떻게 부를지는 여기가 정한다.
+
+★§0.3 위반이 아니다. 여기서 import 하는 것은 **대상(final_project_cs)의
+  Python 이 아니라** sample 이 배포한 라이브러리다. 그 패키지는 대상의 Core
+  모델(`ProjectConfig` 등)을 담지 않는다 — sample 쪽 아키텍처 테스트가
+  강제한다(`tests/architecture/test_composer_ui_package_boundary.py`).
+
+설치:
+    pip install -e ../final_project_sample/packages/acop_composer_ui
 """
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit, urlunsplit
-from urllib.request import Request, urlopen
 
+from acop_composer_ui import ComposerClient, ComposerResponse
 
 TOKEN_SUBJECT = "final_project_ui.console"
+
+#: 성공으로 취급하는 상태 라벨.
+_SUCCESS = ("읽음", "검증됨", "적용됨", "토글됨", "조회됨", "변경됨")
 
 
 @dataclass(frozen=True)
@@ -31,99 +42,76 @@ class ComposerResult:
 
     @property
     def ok(self) -> bool:
-        return self.status in ("읽음", "검증됨", "적용됨", "토글됨")
+        return self.status in _SUCCESS
 
 
-def _payload_from_http_error(exc: HTTPError) -> dict[str, Any]:
-    try:
-        payload = json.loads(exc.read().decode("utf-8"))
-    except Exception:
-        return {}
-    return payload if isinstance(payload, dict) else {}
+def _root_of(url: str | None) -> str | None:
+    """프로필의 `composer_url` 을 대상 **루트** 주소로 정규화한다.
 
-
-def _error_detail(payload: dict[str, Any], fallback: str) -> str:
-    error = payload.get("error", {})
-    return error.get("message", fallback) if isinstance(error, dict) else fallback
-
-
-def _issue_access_token(url: str, issuer_secret: str | None, scope: str) -> str | ComposerResult:
-    if not issuer_secret:
-        return ComposerResult("토큰 발급 실패", detail="composer_issuer_secret 이 프로필에 없음")
-    parsed = urlsplit(url)
-    auth_url = urlunsplit((parsed.scheme, parsed.netloc, "/auth/token", "", ""))
-    request = Request(
-        auth_url,
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {issuer_secret}",
-            "Content-Type": "application/json",
-        },
-        data=json.dumps({"sub": TOKEN_SUBJECT, "scope": [scope]}).encode("utf-8"),
-    )
-    try:
-        with urlopen(request, timeout=5) as response:
-            raw = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        payload = _payload_from_http_error(exc)
-        return ComposerResult("토큰 발급 실패", detail=f"HTTP {exc.code}: {_error_detail(payload, 'token issuance failed')}")
-    except (URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
-        return ComposerResult("토큰 발급 실패", detail=str(exc))
-    if not isinstance(raw, dict) or not isinstance(raw.get("access_token"), str) or not raw["access_token"]:
-        return ComposerResult("토큰 발급 실패", detail="access_token 이 응답에 없음")
-    return raw["access_token"]
-
-
-def _request(url: str, *, method: str, access_token: str, body: dict[str, Any] | None,
-             success_status: str) -> ComposerResult:
-    headers = {"Authorization": f"Bearer {access_token}"}
-    data = None
-    if body is not None:
-        headers["Content-Type"] = "application/json"
-        data = json.dumps(body).encode("utf-8")
-    try:
-        request = Request(url, method=method, headers=headers, data=data)
-        with urlopen(request, timeout=5) as response:
-            raw = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        payload = _payload_from_http_error(exc)
-        error = payload.get("error", {}) if isinstance(payload, dict) else {}
-        if exc.code in (401, 403):
-            return ComposerResult("인증 실패", detail=f"HTTP {exc.code}: {_error_detail(payload, 'authentication failed')}")
-        if exc.code == 409:
-            return ComposerResult("충돌", value=error, detail=_error_detail(payload, "revision_conflict"))
-        if exc.code == 422:
-            return ComposerResult("검증 실패", value=error, detail=_error_detail(payload, "invalid_declaration"))
-        return ComposerResult("대상이 응답하지 않음", detail=f"HTTP {exc.code}")
-    except (URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
-        return ComposerResult("대상이 응답하지 않음", detail=str(exc))
-    if not isinstance(raw, dict):
-        return ComposerResult("대상이 응답하지 않음", detail="응답이 객체가 아님")
-    return ComposerResult(success_status, value=raw)
-
-
-def _call(url: str | None, issuer_secret: str | None, *, path: str, method: str,
-          scope: str, body: dict[str, Any] | None, success_status: str) -> ComposerResult:
+    ★프로필에는 `http://host:port/composer` 처럼 `/composer` 접두사까지 넣는
+      관례가 있다(테스트 픽스처도 그 형태다). 반면 `acop_composer_ui` 는 루트를
+      받아 경로를 스스로 붙인다 — `/auth/token` 은 `/composer` 아래가 아니라
+      루트에 있기 때문이다. 그대로 넘기면 토큰 발급이
+      `/composer/auth/token` 으로 나가 전부 실패한다(2026-08-29 실측).
+    """
     if not url:
+        return url
+    trimmed = url.rstrip("/")
+    if trimmed.endswith("/composer"):
+        return trimmed[: -len("/composer")]
+    return trimmed
+
+
+def _client(url: str | None, issuer_secret: str | None) -> ComposerClient:
+    return ComposerClient(_root_of(url), issuer_secret, subject=TOKEN_SUBJECT)
+
+
+def _to_result(response: ComposerResponse, success_status: str) -> ComposerResult:
+    """패키지의 결과를 화면이 쓰는 한글 상태로 옮긴다.
+
+    ★단계(`phase`)를 먼저 본다. 토큰 발급 실패와 호출 인증 실패는 둘 다
+      401 이지만 운영자가 봐야 할 것이 다르다 — 전자는 발급자 비밀키 설정,
+      후자는 scope 다.
+    """
+    if response.ok:
+        return ComposerResult(success_status, value=response.payload)
+
+    detail = response.error or ""
+    # ★안내 문구는 여기(UI)가 소유한다. 패키지의 일반 메시지("대상 주소가
+    #   설정되지 않았다")를 그대로 쓰면 운영자가 **어느 프로필 필드**를 채워야
+    #   하는지 알 수 없다 — 화면은 그걸 짚어줘야 한다.
+    if response.phase == "config":
         return ComposerResult("연결 안 함", detail="composer_url 이 프로필에 없음")
-    token = _issue_access_token(url, issuer_secret, scope)
-    if isinstance(token, ComposerResult):
-        return token
-    return _request(f"{url.rstrip('/')}{path}", method=method, access_token=token, body=body,
-                    success_status=success_status)
+    if response.phase == "token":
+        if not response.status:
+            return ComposerResult("토큰 발급 실패",
+                                  detail="composer_issuer_secret 이 프로필에 없음"
+                                  if "비밀키" in detail else detail)
+        return ComposerResult("토큰 발급 실패", detail=f"HTTP {response.status}: {detail}")
+
+    error = response.payload.get("error")
+    error = error if isinstance(error, dict) else {}
+    if response.status in (401, 403):
+        return ComposerResult("인증 실패", detail=f"HTTP {response.status}: {detail}")
+    if response.status == 409:
+        return ComposerResult("충돌", value=error, detail=detail)
+    if response.status == 422:
+        return ComposerResult("검증 실패", value=error, detail=detail)
+    if response.status:
+        return ComposerResult("대상이 응답하지 않음", detail=f"HTTP {response.status}")
+    return ComposerResult("대상이 응답하지 않음", detail=detail)
 
 
+# ── v2 (호환·bulk 경로) ──────────────────────────────────────────────
 def read_current(url: str | None, issuer_secret: str | None = None) -> ComposerResult:
     """현재 revision과 config를 읽는다."""
-    return _call(url, issuer_secret, path="/current", method="GET", scope="composer:read",
-                 body=None, success_status="읽음")
+    return _to_result(_client(url, issuer_secret).read_current(), "읽음")
 
 
 def validate_candidate(url: str | None, issuer_secret: str | None,
                        config: dict[str, Any]) -> ComposerResult:
     """후보 config를 검증한다."""
-    result = _call(url, issuer_secret, path="/validate", method="POST", scope="composer:validate",
-                   body={"config": config}, success_status="검증됨")
+    result = _to_result(_client(url, issuer_secret).validate(config), "검증됨")
     if result.status == "검증됨" and result.value is not None and result.value.get("valid") is False:
         return ComposerResult("검증 실패", value=result.value,
                               errors=tuple(result.value.get("errors", ())))
@@ -140,28 +128,52 @@ def apply_candidate(url: str | None, issuer_secret: str | None, config: dict[str
     했는데 그 값이 요청에 실리지 않았다(2026-08-28 결함 점검에서 실측).
     그래서 keyword-only 필수 인자로 두었다. 빠뜨리면 호출이 TypeError로 깨진다.
     """
-    return _call(url, issuer_secret, path="/apply", method="POST", scope="composer:write",
-                 body={"config": config, "base_revision": base_revision, "reason": reason},
-                 success_status="적용됨")
+    return _to_result(
+        _client(url, issuer_secret).apply(config, base_revision=base_revision, reason=reason),
+        "적용됨")
 
 
+# ── v3 토글 ─────────────────────────────────────────────────────────
 def toggle_target(url: str | None, issuer_secret: str | None, *, target_type: str, target_id: str,
                   active: bool, base_revision: str, reason: str) -> ComposerResult:
-    """등록된 모듈·Team·Port 하나의 활성 상태만 바꾼다 (v3 제안, `POST /composer/toggle`).
+    """등록된 모듈·Team 하나의 활성 상태만 바꾼다 (`POST /composer/toggle`).
 
-    ★2026-08-24 시점 잠정: 계약 형태는
-    `program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md` §2.2 제안을 따른다.
-    이 설계는 아직 대상(final_project_cs)에서 확정·구현 중이라(다른 세션 작업),
-    필드명·경로가 최종 계약과 다를 수 있다 — 화면에는 아직 연결하지 않는다.
-    v2(`read_current`·`validate_candidate`·`apply_candidate`)는 이 함수와 무관하게
-    그대로 동작한다(사용자 결정: 안 C — 병행, v2 유지 + toggle 추가).
+    ★응답의 `activation_state` 는 보통 `pending_restart` 다 — 저장된 것이지
+      이미 떠 있는 런타임에 반영된 것이 아니다. 화면은 이 값을 감추지 말고
+      그대로 보여줘야 한다.
     """
-    body = {
-        "target_type": target_type,
-        "target_id": target_id,
-        "active": active,
-        "base_revision": base_revision,
-        "reason": reason,
-    }
-    return _call(url, issuer_secret, path="/toggle", method="POST", scope="composer:write",
-                 body=body, success_status="토글됨")
+    return _to_result(
+        _client(url, issuer_secret).toggle(target_type=target_type, target_id=target_id,
+                                           active=active, base_revision=base_revision,
+                                           reason=reason),
+        "토글됨")
+
+
+# ── 카탈로그 기반 인스턴스 CRUD (정본 관리 계약) ─────────────────────
+def read_catalog(url: str | None, issuer_secret: str | None = None) -> ComposerResult:
+    """고를 수 있는 구현 종류와 입력 스키마를 읽는다 (`GET /composer/catalog`).
+
+    ★화면의 생성 폼은 여기서 받은 `parameters_schema` 로 만든다. UI 가 대상의
+      스키마를 자기 코드에 복제하지 않기 위해서다.
+    """
+    return _to_result(_client(url, issuer_secret).catalog(), "조회됨")
+
+
+def submit_change(url: str | None, issuer_secret: str | None, *, operation: str,
+                  resource_type: str, instance_id: str, base_revision: str, reason: str,
+                  implementation_id: str | None = None,
+                  parameters: dict[str, Any] | None = None,
+                  active: bool | None = None, dry_run: bool = False,
+                  idempotency_key: str | None = None) -> ComposerResult:
+    """인스턴스 하나를 만들거나 고치거나 지운다 (`POST /composer/changes`).
+
+    `operation` 은 `create`·`update`·`delete`·`enable`·`disable`.
+    ★유효성은 대상이 판정한다 — 여기서 미리 검사하지 않는다(§0.2).
+    """
+    return _to_result(
+        _client(url, issuer_secret).change(
+            operation=operation, resource_type=resource_type, instance_id=instance_id,
+            base_revision=base_revision, reason=reason,
+            implementation_id=implementation_id, parameters=parameters,
+            active=active, dry_run=dry_run, idempotency_key=idempotency_key),
+        "변경됨")
