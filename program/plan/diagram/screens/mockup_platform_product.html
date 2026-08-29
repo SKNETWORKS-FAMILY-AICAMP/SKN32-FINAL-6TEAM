@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>우리가 파는 것은 CS 구축 플랫폼이다</title>
+<title>제품 구조와 구성 화면</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; background: #eef1f6;
@@ -64,11 +64,11 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="title">우리가 파는 것은 고객 응대를 만드는 플랫폼이다</div>
+  <div class="title">제품 구조와 구성 화면</div>
   <div class="lead">
-    <b>대신 만들어 주는 구축 서비스가 아니다.</b>
-    기업이 자기 업무 Team을 꽂아 쓰는 도구다.
-    Team은 Registry에 등록하는 방식이라 도입 기업이 Team을 추가해도 Core 코드는 바뀌지 않는다.
+    <b>우리가 만드는 것은 고객 응대를 구성하는 플랫폼이다.</b>
+    고정된 실행기 하나 위에 업무 팩을 갈아 끼우는 구조이며,
+    그 갈아 끼우는 일을 화면에서 한다. 그 화면이 Composer다.
   </div>
 
   <div class="panel">
@@ -112,93 +112,35 @@
     </div>
   </div>
 
-  <div class="cols">
-    <div class="panel">
-      <div class="h">구축 대행과 무엇이 다른가</div>
-      <div class="hsub">같은 일을 맡겨도 남는 것이 다르다.</div>
-      <table>
-        <tr>
-          <th style="width:150px">항목</th>
-          <th style="width:44%">구축 대행에 맡기면</th>
-          <th>A-COP를 도입하면</th>
-        </tr>
-        <tr>
-          <td>업무가 바뀔 때</td>
-          <td class="them">개발사에 다시 요청한다</td>
-          <td class="us">직접 Team을 고치거나 추가한다</td>
-        </tr>
-        <tr>
-          <td>새 업무를 넣을 때</td>
-          <td class="them">추가 계약과 일정이 필요하다</td>
-          <td class="us">Registry에 등록하면 Core는 그대로다</td>
-        </tr>
-        <tr>
-          <td>데이터 위치</td>
-          <td class="them">대개 외부 서비스에 남는다</td>
-          <td class="us">자체 호스팅을 목표로 설계했다</td>
-        </tr>
-        <tr>
-          <td>과금 구조</td>
-          <td class="them">건별 또는 인건비로 늘어난다</td>
-          <td class="us">해결당 과금에 묶이지 않는다</td>
-        </tr>
-        <tr>
-          <td>품질 확인</td>
-          <td class="them">보고서로 받는다</td>
-          <td class="us">골든셋과 통계로 직접 측정한다</td>
-        </tr>
-        <tr>
-          <td>남는 자산</td>
-          <td class="them">결과물만 남는다</td>
-          <td class="us">업무 규칙과 근거와 이력이 사내에 쌓인다</td>
-        </tr>
-      </table>
-    </div>
-
-    <div class="panel">
-      <div class="h">누가 무엇을 하나</div>
-      <div class="hsub">경계가 분명해야 팔 수 있다.</div>
-      <table>
-        <tr><th style="width:96px">우리</th>
-            <td>Runtime, 승인과 감사, 평가 도구, CS Pack, 계약 문서</td></tr>
-        <tr><th>도입 기업</th>
-            <td>자사 정책과 지식 문서, 자사 업무 Team, 승인 규칙, 운영 인력</td></tr>
-        <tr><th>공동</th>
-            <td>골든셋 작성, 도입 초기 기준선 측정</td></tr>
-      </table>
-      <div class="note">
-        해결당 과금은 잘될수록 비싸져 이탈 사유 1위로 지목된다는 조사가 있다.
-        자체 호스팅과 좌석 기반 과금이 그 대안이 된다.
-      </div>
-    </div>
-  </div>
-
   <div class="panel" style="margin-top:16px">
-    <div class="h">도입은 세 단계다</div>
+    <div class="h">화면이 맡는 자리</div>
     <div class="steps">
       <div class="step">
         <div class="step__n">1</div>
         <div class="step__t">설치</div>
-        <div class="step__d">자사 환경에 Runtime을 올린다. 데이터가 밖으로 나가지 않는다.</div>
+        <div class="step__d">자사 환경에 Runtime을 올린다. 화면 밖의 일이다.</div>
       </div>
       <div class="step">
         <div class="step__n">2</div>
         <div class="step__t">구성</div>
-        <div class="step__d">카탈로그에서 Team을 고르거나 자사 Team을 추가한다. 화면에서 켜고 끈다.</div>
+        <div class="step__d">Composer 화면에서 모듈과 Team을 켜고 끄고 값을 고친다. 설계 대상이 이 화면이다.</div>
       </div>
       <div class="step">
         <div class="step__n">3</div>
         <div class="step__t">운영</div>
-        <div class="step__d">승인 규칙을 정하고 이상 신호만 감독한다. 지표는 스스로 측정한다.</div>
+        <div class="step__d">조립 현황 화면에서 판정과 평가를 보고 이상 신호만 감독한다.</div>
       </div>
     </div>
     <div class="note">
-      2단계의 화면이 Composer다. 지금은 등록된 모듈과 Team을 켜고 끄며 전체 설정을 바꿀 수 있고,
+      <b>Composer 화면이 이 제품의 핵심 화면이다.</b>
+      여기서 무엇을 켜고 끄고 무엇을 추가할 수 있는지가 곧 제품이 어디까지 구성 가능한지를 말한다.
+      지금은 등록된 모듈과 Team을 켜고 끄며 전체 설정을 바꿀 수 있고,
       카탈로그에서 골라 인스턴스를 만드는 방식은 계약 확정 단계에 있다.
     </div>
     <div class="note">
-      근거는 제출표 team_branch/output/A-COPilot_제출표.xlsx 의 근거출처 41건을 따른다.
-      과금 관련 서술은 E3와 E5, 자체 호스팅 수요는 F1에서 F3까지가 근거다.
+      누가 이 화면을 조작하는지는 이 문서의 범위가 아니다.
+      도입 기업의 담당자가 직접 할 수도 있고 우리가 대신 할 수도 있다.
+      어느 쪽이든 결과물은 같은 화면에 같은 형태로 남는다.
     </div>
   </div>
 </div>
