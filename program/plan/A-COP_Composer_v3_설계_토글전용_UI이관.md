@@ -101,8 +101,18 @@ v2의 `config` 전체 대신 대상 종류·등록 ID·활성 상태만 보낸�
 
 ### 2.4 명시적으로 안 되는 것
 
+> ★**2026-08-29 정정** — 아래 두 번째 항목("등록 목록 자체를 추가·삭제")은
+> **철회됐다.** 사용자 요구가 켜고 끄기보다 넓다는 것이 확인돼, 카탈로그에
+> 등록된 구현의 **인스턴스 생성·삭제**가 정본 관리 계약이 됐다
+> (`GET /composer/catalog`·`POST /composer/changes` — 구현·검증 완료).
+> 첫 번째 항목(**임의 Python 경로 제출 금지**)은 그대로 유효하다 — 고를 수
+> 있는 것은 카탈로그에 등록된 구현뿐이다.
+> 근거: `A-COP_Composer_범위재검토.md`,
+> `A-COP_Composer_중앙설정저장소_결정.md`,
+> `final_project_sample/docs/handoff/13_Composer_쓰기채널_계약.md`.
+
 - 새 `implementation_ref`를 임의 값으로 제출해 registry에 등록하는 것
-- 등록 목록 자체를 Composer 요청으로 추가·삭제하는 것
+- ~~등록 목록 자체를 Composer 요청으로 추가·삭제하는 것~~ (2026-08-29 철회)
 - `ProjectConfig`, `TeamManifest`, `ContextPack` 등 Core 계약 구조를 바꾸는 것
 - 여러 선언을 통째로 덮어쓰거나, UI가 대상의 검증 모델을 복제해 사전 검증하는 것
 - 토글을 코드 배포·새 Team 구현·Port 구조 변경의 대체 수단으로 사용하는 것
