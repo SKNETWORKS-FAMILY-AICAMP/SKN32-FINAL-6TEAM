@@ -18,12 +18,13 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from acop_composer import catalog as catalog_mod
 from acop_composer.service import RevisionConflict, apply_candidate, read_current, validate_candidate
 from acop_basement.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfigError
 from acop_composer.auth import require_composer_scope
@@ -62,8 +63,236 @@ class ApplyPayload(CandidatePayload):
     reason: str = Field(min_length=1)
 
 
+class ChangePayload(BaseModel):
+    """인스턴스 하나에 대한 명령.
+
+    ★v2 의 `/apply` 는 전체 선언을 통째로 받는다. 그러면 UI 가 대상의 선언
+      구조 전체를 알아야 하고, 그게 곧 스키마 복제로 이어진다. 이 명령은
+      "무엇을 어떻게" 만 보낸다 — 나머지는 서버가 현재 선언에서 읽는다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    operation: Literal["create", "update", "delete", "enable", "disable"]
+    resource_type: Literal["team", "module"]
+    instance_id: str = Field(min_length=1)
+    implementation_id: str | None = None
+    parameters: dict[str, Any] | None = None
+    active: bool | None = None
+    base_revision: str
+    reason: str = Field(min_length=1)
+    dry_run: bool = False
+    idempotency_key: str | None = None
+
+
+class TogglePayload(BaseModel):
+    """v3 계약(`program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md` §2.2).
+
+    ★`/changes` 의 `enable`/`disable` 로도 같은 일을 할 수 있다. 그런데도 이
+      엔드포인트를 따로 두는 이유는 **UI 가 부르는 이름이 계약으로 정해져
+      있기** 때문이다(v3 §2.2, `final_project_cs` 도 같은 이름으로 구현). 다만
+      **저장·revision·감사 경로는 `/changes` 와 공유한다** — 같은 일을 하는
+      코드를 두 벌 만들면 한쪽만 고쳐지는 날이 온다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    target_type: Literal["module", "team"]
+    target_id: str = Field(min_length=1)
+    active: bool
+    base_revision: str
+    reason: str = Field(min_length=1)
+
+
 def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
     return HTTPException(status_code=status, detail={"error": {"code": code, "message": message, **extra}})
+
+
+@router.post("/toggle")
+def toggle(payload: TogglePayload, request: Request,
+           _principal=Depends(require_composer_scope("composer:write"))) -> dict[str, Any]:
+    """등록된 module/team 의 활성 상태만 바꾼다 — v3 토글 계약."""
+    outcome = _perform_change(
+        request, _principal,
+        ChangePayload(
+            operation="enable" if payload.active else "disable",
+            resource_type=payload.target_type,
+            instance_id=payload.target_id,
+            base_revision=payload.base_revision,
+            reason=payload.reason,
+        ),
+        event_name="composer.toggle")
+    return {
+        "target_type": payload.target_type,
+        "target_id": payload.target_id,
+        "active": payload.active,
+        "config_revision": outcome["desired_revision"],
+        "audit_id": outcome["change_id"],
+        # ★v3 계약에는 없지만 함께 낸다 — 저장됐다고 이미 떠 있는 런타임이 그
+        #   설정으로 도는 것이 아니다. 이 사실을 응답에서 감추지 않는다.
+        "activation_state": outcome["activation_state"],
+    }
+
+
+@router.get("/catalog")
+def catalog(request: Request,
+            _principal=Depends(require_composer_scope("composer:read"))) -> dict[str, Any]:
+    """UI 가 고를 수 있는 구현 종류. ★Python 경로는 내보내지 않는다."""
+    current_config = read_current(_path(request))
+    try:
+        entries = catalog_mod.team_entries() + catalog_mod.module_entries(current_config.modules)
+    except catalog_mod.CatalogError as exc:
+        # ★조용히 빈 목록을 주지 않는다 — 카탈로그가 깨졌으면 그렇다고 말한다.
+        raise _error(500, "catalog_incomplete", str(exc)) from exc
+    return {"config_revision": current_config.revision, "implementations": entries}
+
+
+def _find_idempotent(key: str | None, audit_path: Path) -> dict[str, Any] | None:
+    """같은 idempotency_key 로 이미 처리한 결과가 있으면 그것을 돌려준다.
+
+    ★새 저장소를 만들지 않고 **감사 로그를 근거로 삼는다.** 감사는 이미
+      append-only 로 영속되고, 프로세스가 죽어도 남는다. 메모리 dict 로 하면
+      재시작하면 사라져서 "재시도했더니 두 번 적용" 이 그대로 살아난다.
+    """
+    if not key or not audit_path.exists():
+        return None
+    with audit_path.open(encoding="utf-8") as stream:
+        for line in stream:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue  # 손상된 줄이 재시도를 막아서는 안 된다
+            if event.get("idempotency_key") == key and event.get("result"):
+                return dict(event["result"])
+    return None
+
+
+def _apply_change(declaration: dict[str, Any], payload: ChangePayload) -> dict[str, Any]:
+    """현재 선언에서 **해당 인스턴스 하나만** 바꾼 새 선언을 만든다."""
+    result = json.loads(json.dumps(declaration))  # 깊은 복사 — 원본을 안 건드린다
+    op, target = payload.operation, payload.instance_id
+
+    if payload.resource_type == "module":
+        modules = result.setdefault("modules", {})
+        if op == "delete":
+            if target not in modules:
+                raise KeyError(f"module '{target}' 이 선언에 없다")
+            modules.pop(target)
+        elif op in ("create", "update"):
+            enabled = True if payload.active is None else payload.active
+            modules[target] = {"enabled": enabled}
+        else:  # enable / disable
+            if target not in modules:
+                raise KeyError(f"module '{target}' 이 선언에 없다")
+            modules[target] = {"enabled": op == "enable"}
+        return result
+
+    teams = result.setdefault("teams", [])
+    index = next((i for i, t in enumerate(teams) if t.get("team_id") == target), None)
+
+    if op == "create":
+        if index is not None:
+            raise KeyError(f"team '{target}' 이 이미 있다")
+        if payload.implementation_id is None:
+            raise ValueError("create 에는 implementation_id 가 필요하다")
+        teams.append({
+            "team_id": target,
+            "active": True if payload.active is None else payload.active,
+            "implementation_ref": catalog_mod.ref_for(payload.implementation_id),
+            "parameters": payload.parameters,
+        })
+        return result
+
+    if index is None:
+        raise KeyError(f"team '{target}' 이 선언에 없다")
+
+    if op == "delete":
+        teams.pop(index)
+    elif op == "update":
+        entry = teams[index]
+        if payload.implementation_id is not None:
+            entry["implementation_ref"] = catalog_mod.ref_for(payload.implementation_id)
+        if payload.parameters is not None:
+            entry["parameters"] = payload.parameters
+        if payload.active is not None:
+            entry["active"] = payload.active
+    else:  # enable / disable
+        teams[index]["active"] = op == "enable"
+    return result
+
+
+@router.post("/changes")
+def changes(payload: ChangePayload, request: Request,
+            _principal=Depends(require_composer_scope("composer:write"))) -> dict[str, Any]:
+    """카탈로그 기반 인스턴스 CRUD.
+
+    ★성공해도 `activation_state` 는 `pending_restart` 다. 조립은 프로세스
+      기동 때 한 번만 일어나므로(`app/composition.py`), 저장됐다고 해서 이미
+      떠 있는 런타임이 그 설정으로 도는 것이 아니다. "적용 완료" 처럼
+      응답하면 그건 조용한 성공 위장이다(`CLAUDE.md` §0.1).
+    """
+    return _perform_change(request, _principal, payload)
+
+
+def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
+                    event_name: str = "composer.change") -> dict[str, Any]:
+    """`/changes` 와 `/toggle` 이 공유하는 단일 저장 경로."""
+    target = _path(request)
+    audit_path = _audit_path(request)
+
+    cached = _find_idempotent(payload.idempotency_key, audit_path)
+    if cached is not None:
+        return cached
+
+    previous = read_current(target)
+    declaration = previous.model_dump(mode="json", exclude={"revision"})
+
+    try:
+        candidate = _apply_change(declaration, payload)
+    except catalog_mod.CatalogError as exc:
+        raise _error(422, "unknown_implementation", str(exc)) from exc
+    except (KeyError, ValueError) as exc:
+        raise _error(422, "invalid_change", str(exc).strip("'")) from exc
+
+    if payload.dry_run:
+        # ★대상 파일을 건드리지 않는다. 검증만 한다.
+        #   `validate_candidate` 는 예외가 아니라 결과 객체를 돌려준다.
+        outcome = validate_candidate(candidate, path=target, enforce_registry=True)
+        if not outcome.valid:
+            raise _error(422, "invalid_declaration", "; ".join(outcome.errors),
+                         errors=outcome.errors)
+        return {"change_id": str(uuid4()), "desired_revision": previous.revision,
+                "activation_state": "pending_restart", "dry_run": True, "errors": []}
+
+    try:
+        applied = apply_candidate(candidate, base_revision=payload.base_revision,
+                                  path=target, enforce_registry=True)
+    except RevisionConflict as exc:
+        raise _error(409, "revision_conflict",
+                     "다른 변경이 먼저 적용됐다. 최신 구성을 다시 읽고 다시 시도하라.",
+                     current_revision=exc.current_revision) from exc
+    except ProjectConfigError as exc:
+        raise _error(422, "invalid_declaration", str(exc)) from exc
+
+    result = {"change_id": str(uuid4()), "desired_revision": applied.revision,
+              "activation_state": "pending_restart", "dry_run": False, "errors": []}
+    event = {
+        "event": event_name, "actor": _principal["sub"], "subject": str(target),
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "operation": payload.operation, "resource_type": payload.resource_type,
+        "instance_id": payload.instance_id, "implementation_id": payload.implementation_id,
+        "previous_revision": previous.revision, "revision": applied.revision,
+        "changed_fields": _changed_fields(declaration,
+                                          applied.model_dump(mode="json", exclude={"revision"})),
+        "reason": payload.reason, "idempotency_key": payload.idempotency_key,
+        "correlation_id": result["change_id"], "result": result,
+    }
+    try:
+        _append_audit(event, audit_path)
+    except OSError as exc:
+        raise _error(500, "audit_failure", "change was applied but audit recording failed") from exc
+    return result
 
 
 @router.get("/current", tags=["composer-write"])

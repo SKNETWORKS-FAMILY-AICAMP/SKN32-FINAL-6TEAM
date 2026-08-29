@@ -19,4 +19,7 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["app*", "acop_basement*", "acop_composer*"]
-exclude = ["tests*", "docs*", "eval*", "knowledge*"]
+# ★packages/ 는 별도 배포 단위다(예: packages/acop_composer_ui — UI 가 pip 로
+#   설치하는 클라이언트). 여기 include 되면 UI 용 패키지가 제품 배포판에
+#   딸려 들어가고, "따로 설치한다" 는 전제가 깨진다.
+exclude = ["tests*", "docs*", "eval*", "knowledge*", "packages*"]

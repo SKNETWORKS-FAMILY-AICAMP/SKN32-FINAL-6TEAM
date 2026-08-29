@@ -8,7 +8,7 @@ import importlib
 import json
 from pathlib import Path
 import re
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -32,9 +32,16 @@ DEFAULT_PROJECT_CONFIG = Path(
 #   아님) `app/modules/customer_ops`에서 import 자체가 안 되므로, 이 참조는
 #   지금 시점엔 죽은 항목이기도 하다 — 삭제로 두 문제(우회·죽은 참조)를
 #   한 번에 없앤다.
+#: 선언형 Team 실행기의 registry 경로. 이 값을 `implementation_ref` 로 쓰는
+#: 선언만 `parameters` 를 가질 수 있다.
+DECLARATIVE_TEAM_REF = "acop_basement.teams.declarative:DeclarativeTeamRuntime"
+
 KNOWN_IMPLEMENTATION_REFS = frozenset({
     "app.modules.customer_ops.feedback_team:FeedbackAnalyticsTeam",
     "app.modules.placeholder:PlaceholderTeam",
+    # ★선언형 실행기는 basement 소속이라 도메인 교체와 무관하게 항상 등록돼
+    #   있다. 이 하나만 배포해 두면 이후 새 Team 은 코드 없이 선언으로 만든다.
+    DECLARATIVE_TEAM_REF,
 })
 
 
@@ -54,11 +61,80 @@ class PortConfig(BaseModel):
     graph_store: Literal["sql", "age", "neo4j"]
 
 
+#: ★grant ceiling — 선언형 Team 이 부를 수 있는 tool 이름의 접두사.
+#:
+#:   왜 이름 목록이 아니라 접두사인가: tool 이름 목록을 여기 하드코딩하면
+#:   ("read.subscription" 같은) 도메인 어휘가 basement 로 새어 들어온다
+#:   (`tests/architecture/test_basement_is_domain_free.py` 가 잡는다).
+#:   접두사 규칙은 도메인을 모르면서 "읽기 전용" 이라는 성질만 강제한다.
+#:
+#:   ★왜 필요한가: `composer:write` 를 가진 사람이 `allowed_tools` 를 마음대로
+#:   넓힐 수 있으면 그것이 곧 **도구 권한을 스스로 부여하는 권한 상승**이다.
+#:   선언(프롬프트)은 신뢰 경계 밖의 입력으로 취급해야 한다.
+DECLARATIVE_TOOL_PREFIX = "read."
+
+
+class DeclarativeTeamParameters(BaseModel):
+    """선언형 Team 하나를 정의하는 값. 여기 있는 것은 전부 **데이터**다.
+
+    ★도메인 어휘를 이 모델이 알 필요가 없다 — capability·case type·tool 이름은
+      전부 product 가 선언에 적어 넣는 문자열이다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    display_name: str = Field(min_length=1)
+    capabilities: list[str] = Field(min_length=1)
+    accepted_case_types: list[str] = Field(default_factory=list)
+    required_context: list[Literal["case_state", "policy", "db_facts", "history"]] = Field(
+        default_factory=lambda: ["case_state", "policy"])
+    allowed_tools: list[str] = Field(default_factory=list)
+    knowledge_scope: list[str] = Field(default_factory=list)
+    max_steps: int = Field(default=4, ge=1, le=12)
+    prompt_key: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _enforce_grant_ceiling(self) -> "DeclarativeTeamParameters":
+        # ★런타임이 아니라 **로드 시점**에 거부한다. 런타임 검사로 미루면
+        #   "저장은 됐는데 언젠가 터지는" 상태가 남는다.
+        outside = sorted(t for t in self.allowed_tools
+                         if not t.startswith(DECLARATIVE_TOOL_PREFIX))
+        if outside:
+            raise ValueError(
+                "선언형 Team 은 읽기 전용 tool 만 쓸 수 있다 "
+                f"(접두사 '{DECLARATIVE_TOOL_PREFIX}'): {', '.join(outside)}")
+        return self
+
+
 class TeamConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     team_id: str = Field(min_length=1)
     active: bool
     implementation_ref: str = Field(min_length=1)
+    #: 선언형 Team 전용. 코드형 Team 은 `None` 이어야 한다.
+    parameters: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _parameters_only_for_declarative(self) -> "TeamConfig":
+        declarative = self.implementation_ref == DECLARATIVE_TEAM_REF
+        if declarative:
+            if self.parameters is None:
+                raise ValueError(
+                    f"team '{self.team_id}': 선언형 Team 은 parameters 가 있어야 한다")
+            # 여기서 검증해 둬야 조립 시점이 아니라 로드 시점에 실패한다.
+            DeclarativeTeamParameters.model_validate(self.parameters)
+        elif self.parameters is not None:
+            # ★조용히 무시하지 않는다 — 무시하면 사용자는 설정이 먹은 줄 안다.
+            raise ValueError(
+                f"team '{self.team_id}': parameters 는 선언형 Team 에만 쓴다 "
+                f"(implementation_ref 가 '{DECLARATIVE_TEAM_REF}' 일 때)")
+        return self
+
+    def declarative_parameters(self) -> "DeclarativeTeamParameters | None":
+        """선언형이면 검증된 파라미터를, 아니면 None 을 돌려준다."""
+        if self.implementation_ref != DECLARATIVE_TEAM_REF or self.parameters is None:
+            return None
+        return DeclarativeTeamParameters.model_validate(self.parameters)
 
 
 _IMPLEMENTATION_REF_PATTERN = re.compile(
@@ -170,7 +246,13 @@ def _validate_active_team_implementations(config: ProjectConfig) -> None:
                 "target is not a class"
             )
 
-        missing = [name for name in ("manifest", "execute") if not hasattr(implementation, name)]
+        # ★코드형 Team 은 `manifest` 를 클래스 속성으로 갖는다. 선언형 실행기는
+        #   인스턴스마다 선언에서 manifest 를 만들기 때문에 클래스에는 없다 —
+        #   대신 그 선언(`parameters`)을 `TeamConfig` 가 이미 검증했다. 그래서
+        #   선언형에는 `execute` 만 요구한다. `manifest` 까지 요구하면 "클래스에
+        #   빈 manifest 를 달아 검사만 통과시키는" 무의미한 회피를 부른다.
+        required = ("execute",) if ref == DECLARATIVE_TEAM_REF else ("manifest", "execute")
+        missing = [name for name in required if not hasattr(implementation, name)]
         if missing:
             raise ProjectConfigError(
                 f"team '{team.team_id}' implementation_ref '{ref}' does not satisfy "
@@ -197,4 +279,5 @@ def load_project_config(path: str | Path | None = None) -> ProjectConfig:
 __all__ = [
     "DEFAULT_PROJECT_CONFIG", "ModuleConfig", "PortConfig", "ProjectConfig",
     "ProjectConfigError", "TeamConfig", "KNOWN_IMPLEMENTATION_REFS", "load_project_config",
+    "DECLARATIVE_TEAM_REF", "DECLARATIVE_TOOL_PREFIX", "DeclarativeTeamParameters",
 ]

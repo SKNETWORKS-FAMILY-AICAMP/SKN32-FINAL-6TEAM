@@ -92,8 +92,24 @@ def _import_ref(ref: str, team_id: str) -> type:
         ) from exc
 
 
-def _instantiate_team(implementation: type, tools: ReadToolbox, llm: Any | None) -> Any:
-    """Support both built-in (tools, llm) teams and small test implementations."""
+def _instantiate_team(implementation: type, tools: ReadToolbox, llm: Any | None,
+                      declaration: Any | None = None) -> Any:
+    """Support both built-in (tools, llm) teams and small test implementations.
+
+    ★선언형 Team(2026-08-28)은 생성자 인자 개수만으로는 조립할 수 없다 —
+      `parameters` 를 넘겨야 manifest 를 만들 수 있기 때문이다. 그래서
+      **선언에 parameters 가 있을 때만** 별도 경로를 탄다. 기존 세 경로
+      (인자 없음 / tools / tools+llm)는 그대로 둔다 — 기존 Team 과 테스트용
+      소형 구현이 계속 같은 방식으로 조립돼야 한다.
+    """
+    declarative = declaration.declarative_parameters() if declaration is not None else None
+    if declarative is not None:
+        try:
+            return implementation(tools, llm, parameters=declarative,
+                                  team_id=declaration.team_id)
+        except (TypeError, ValueError) as exc:
+            raise CompositionError(
+                f"cannot instantiate declarative Team '{declaration.team_id}': {exc}") from exc
     try:
         parameters = list(inspect.signature(implementation).parameters.values())
         positional = [parameter for parameter in parameters
@@ -122,7 +138,7 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
         implementation = _import_ref(declaration.implementation_ref, declaration.team_id)
-        team = _instantiate_team(implementation, tools, llm)
+        team = _instantiate_team(implementation, tools, llm, declaration)
         if not hasattr(team, "manifest") or not hasattr(team, "execute"):
             raise CompositionError(
                 f"team '{declaration.team_id}' implementation must provide manifest and execute"

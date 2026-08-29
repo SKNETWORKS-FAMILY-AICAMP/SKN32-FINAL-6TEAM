@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acop-composer-ui"
+version = "0.1.0"
+description = "Composer HTTP client for final_project_ui (transport only, no target Core models)"
+requires-python = ">=3.11"
+# ★의존성이 비어 있는 것이 이 패키지의 계약이다. fastapi·pydantic·
+#   acop_basement 를 끌어오면 UI 프로세스에 대상의 검증 모델이 들어온다.
+dependencies = []
+
+[tool.setuptools.packages.find]
+# ★이 배포판은 자기 폴더 안만 본다. 저장소 루트의 app/·acop_basement/·
+#   acop_composer/ 는 여기서 보이지 않는다 — 별도 배포 단위이기 때문이다.
+where = ["."]
+include = ["acop_composer_ui*"]
