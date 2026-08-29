@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>우리가 파는 것은 CS 구축 플랫폼이다</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; background: #eef1f6;
+         color: #131a26; font-size: 14px; line-height: 1.55; }
+  .wrap { width: 1240px; padding: 22px; }
+  .title { font-size: 19px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 4px; }
+  .lead { font-size: 13px; color: #5d6b7f; margin-bottom: 16px; }
+  .lead b { color: #131a26; }
+
+  .panel { background: #fff; border: 1px solid #dde3ec; border-radius: 12px; padding: 16px 18px; }
+  .h { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .hsub { font-size: 12.5px; color: #5d6b7f; margin-bottom: 12px; }
+
+  /* 제품 구조 */
+  .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .slot { border: 2px dashed #b9c6dd; border-radius: 10px; padding: 11px 12px; background: #fbfcfe; }
+  .slot--on { border-style: solid; border-color: #0d7a4d; background: #f4fbf7; }
+  .slot--later { border-color: #d9b45e; background: #fffaf0; }
+  .slot--own { border-color: #2f5bd8; background: #f5f8ff; }
+  .slot__tag { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 5px;
+               padding: 1px 7px; margin-bottom: 6px; }
+  .t-on { background: #e6f6ee; color: #0d7a4d; }
+  .t-later { background: #fff4e0; color: #9a6200; }
+  .t-own { background: #e6f0ff; color: #2f5bd8; }
+  .slot__t { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .slot__d { font-size: 12px; color: #5d6b7f; }
+  .plug { text-align: center; color: #98a2b3; font-size: 11.5px; margin: 9px 0 8px; }
+
+  .core { border: 2px solid #2f5bd8; border-radius: 12px; background: #f5f8ff;
+          padding: 13px 15px; }
+  .core__t { font-weight: 800; font-size: 14.5px; color: #2f5bd8; margin-bottom: 3px; }
+  .core__s { font-size: 12px; color: #5d6b7f; margin-bottom: 9px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: #fff; border: 1px solid #c9d6ee; border-radius: 7px;
+          padding: 4px 9px; font-size: 12px; }
+  .core__note { margin-top: 9px; font-size: 12px; color: #2f5bd8; font-weight: 600; }
+
+  /* 비교 */
+  .cols { display: grid; grid-template-columns: 1fr 400px; gap: 16px; align-items: start;
+          margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 8px 9px; border-bottom: 1px solid #eef1f6;
+           vertical-align: top; }
+  th { font-size: 11.5px; color: #5d6b7f; text-transform: none; white-space: nowrap; }
+  td.us { color: #0d7a4d; font-weight: 600; }
+  td.them { color: #8a94a6; }
+
+  /* 도입 3단계 */
+  .steps { display: flex; gap: 10px; margin-top: 12px; }
+  .step { flex: 1; border: 1px solid #dde3ec; border-radius: 10px; padding: 11px 13px; }
+  .step__n { display: inline-grid; place-items: center; width: 20px; height: 20px;
+             border-radius: 50%; background: #2f5bd8; color: #fff; font-size: 11px;
+             font-weight: 700; margin-bottom: 6px; }
+  .step__t { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .step__d { font-size: 12px; color: #5d6b7f; }
+  .note { margin-top: 12px; font-size: 12.5px; color: #5d6b7f; }
+  .note b { color: #131a26; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">우리가 파는 것은 고객 응대를 만드는 플랫폼이다</div>
+  <div class="lead">
+    <b>대신 만들어 주는 구축 서비스가 아니다.</b>
+    기업이 자기 업무 Team을 꽂아 쓰는 도구다.
+    Team은 Registry에 등록하는 방식이라 도입 기업이 Team을 추가해도 Core 코드는 바뀌지 않는다.
+  </div>
+
+  <div class="panel">
+    <div class="h">제품 구조</div>
+    <div class="hsub">아래 고정된 실행기 하나 위에 업무 팩을 갈아 끼운다.</div>
+
+    <div class="slots">
+      <div class="slot slot--on">
+        <div class="slot__tag t-on">기본 제공, 이번 기간</div>
+        <div class="slot__t">CS Pack</div>
+        <div class="slot__d">VOC and Store Manager, Response Generation and Review</div>
+      </div>
+      <div class="slot slot--later">
+        <div class="slot__tag t-later">확장 범위</div>
+        <div class="slot__t">Commerce Ops Pack</div>
+        <div class="slot__d">주문과 결제, 배송, 반품, 카탈로그 검증</div>
+      </div>
+      <div class="slot slot--own">
+        <div class="slot__tag t-own">도입 기업이 직접 추가</div>
+        <div class="slot__t">자사 업무 Team</div>
+        <div class="slot__d">그 회사만의 규정과 절차를 담은 Team을 스스로 만들어 꽂는다</div>
+      </div>
+    </div>
+
+    <div class="plug">위 세 칸은 Registry에 등록되는 슬롯이다. 빼고 넣어도 아래는 그대로다.</div>
+
+    <div class="core">
+      <div class="core__t">A-COP Runtime</div>
+      <div class="core__s">우리가 만들어 파는 부분이다. 업무 도메인을 모른다.</div>
+      <div class="chips">
+        <span class="chip">Case 생명주기 12개 상태</span>
+        <span class="chip">Team 라우팅</span>
+        <span class="chip">근거 조합</span>
+        <span class="chip">승인 경계</span>
+        <span class="chip">멱등성</span>
+        <span class="chip">감사 로그</span>
+        <span class="chip">평가와 통계</span>
+        <span class="chip">REST, MCP, A2A 진입</span>
+      </div>
+      <div class="core__note">Team을 하나 늘리는 일이 전면 수정 작업이 된다면 설계가 잘못된 것이다.</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <div class="h">구축 대행과 무엇이 다른가</div>
+      <div class="hsub">같은 일을 맡겨도 남는 것이 다르다.</div>
+      <table>
+        <tr>
+          <th style="width:150px">항목</th>
+          <th style="width:44%">구축 대행에 맡기면</th>
+          <th>A-COP를 도입하면</th>
+        </tr>
+        <tr>
+          <td>업무가 바뀔 때</td>
+          <td class="them">개발사에 다시 요청한다</td>
+          <td class="us">직접 Team을 고치거나 추가한다</td>
+        </tr>
+        <tr>
+          <td>새 업무를 넣을 때</td>
+          <td class="them">추가 계약과 일정이 필요하다</td>
+          <td class="us">Registry에 등록하면 Core는 그대로다</td>
+        </tr>
+        <tr>
+          <td>데이터 위치</td>
+          <td class="them">대개 외부 서비스에 남는다</td>
+          <td class="us">자체 호스팅을 목표로 설계했다</td>
+        </tr>
+        <tr>
+          <td>과금 구조</td>
+          <td class="them">건별 또는 인건비로 늘어난다</td>
+          <td class="us">해결당 과금에 묶이지 않는다</td>
+        </tr>
+        <tr>
+          <td>품질 확인</td>
+          <td class="them">보고서로 받는다</td>
+          <td class="us">골든셋과 통계로 직접 측정한다</td>
+        </tr>
+        <tr>
+          <td>남는 자산</td>
+          <td class="them">결과물만 남는다</td>
+          <td class="us">업무 규칙과 근거와 이력이 사내에 쌓인다</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="h">누가 무엇을 하나</div>
+      <div class="hsub">경계가 분명해야 팔 수 있다.</div>
+      <table>
+        <tr><th style="width:96px">우리</th>
+            <td>Runtime, 승인과 감사, 평가 도구, CS Pack, 계약 문서</td></tr>
+        <tr><th>도입 기업</th>
+            <td>자사 정책과 지식 문서, 자사 업무 Team, 승인 규칙, 운영 인력</td></tr>
+        <tr><th>공동</th>
+            <td>골든셋 작성, 도입 초기 기준선 측정</td></tr>
+      </table>
+      <div class="note">
+        해결당 과금은 잘될수록 비싸져 이탈 사유 1위로 지목된다는 조사가 있다.
+        자체 호스팅과 좌석 기반 과금이 그 대안이 된다.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:16px">
+    <div class="h">도입은 세 단계다</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step__n">1</div>
+        <div class="step__t">설치</div>
+        <div class="step__d">자사 환경에 Runtime을 올린다. 데이터가 밖으로 나가지 않는다.</div>
+      </div>
+      <div class="step">
+        <div class="step__n">2</div>
+        <div class="step__t">구성</div>
+        <div class="step__d">카탈로그에서 Team을 고르거나 자사 Team을 추가한다. 화면에서 켜고 끈다.</div>
+      </div>
+      <div class="step">
+        <div class="step__n">3</div>
+        <div class="step__t">운영</div>
+        <div class="step__d">승인 규칙을 정하고 이상 신호만 감독한다. 지표는 스스로 측정한다.</div>
+      </div>
+    </div>
+    <div class="note">
+      2단계의 화면이 Composer다. 지금은 등록된 모듈과 Team을 켜고 끄며 전체 설정을 바꿀 수 있고,
+      카탈로그에서 골라 인스턴스를 만드는 방식은 계약 확정 단계에 있다.
+    </div>
+    <div class="note">
+      근거는 제출표 team_branch/output/A-COPilot_제출표.xlsx 의 근거출처 41건을 따른다.
+      과금 관련 서술은 E3와 E5, 자체 호스팅 수요는 F1에서 F3까지가 근거다.
+    </div>
+  </div>
+</div>
+</body>
+</html>

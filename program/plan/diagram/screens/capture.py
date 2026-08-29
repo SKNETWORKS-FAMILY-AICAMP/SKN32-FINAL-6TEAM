@@ -88,11 +88,14 @@ with sync_playwright() as p:
         print("   shot_scr03_toggle.png")
 
     print("목업:")
-    pg.set_viewport_size({"width": 1290, "height": 1000})
-    pg.goto("file:///" + os.path.join(HERE, "mockup_shop_cs.html").replace("\\", "/"))
-    pg.wait_for_timeout(400)
-    pg.locator(".wrap").screenshot(path=os.path.join(HERE, "shot_mockup_shop_cs.png"))
-    print("   shot_mockup_shop_cs.png")
+    for html, out in [("mockup_shop_cs.html", "shot_mockup_shop_cs.png"),
+                      ("mockup_personal_agent_mcp.html", "shot_mockup_personal_agent.png"),
+                      ("mockup_platform_product.html", "shot_mockup_platform.png")]:
+        pg.set_viewport_size({"width": 1290, "height": 1000})
+        pg.goto("file:///" + os.path.join(HERE, html).replace("\\", "/"))
+        pg.wait_for_timeout(400)
+        pg.locator(".wrap").screenshot(path=os.path.join(HERE, out))
+        print("  ", out)
 
     br.close()
 
