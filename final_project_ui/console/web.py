@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import html
+import json
 import os
 import secrets
 from pathlib import Path
@@ -505,6 +506,124 @@ def _toggle_card(live: Any, target: Path) -> str:
                  else f"등록 {sum(len(v) for v in registered.values())}건")
 
 
+def _activation_hint(payload: dict[str, Any]) -> str:
+    """`activation_state` 를 운영자에게 **감추지 않고** 덧붙인다.
+
+    ★대상은 저장에 성공해도 `pending_restart` 를 돌려준다 — 조립은 프로세스가
+      뜰 때 한 번만 일어나기 때문이다. 화면이 "적용됨" 만 보여주면 운영자는
+      이미 반영된 줄 안다. 그게 이 프로젝트가 금지하는 조용한 성공 위장이다.
+    """
+    state = payload.get("activation_state")
+    if state == "pending_restart":
+        return " · ★아직 반영 전입니다 — 대상을 재시작해야 실제로 적용됩니다."
+    if state:
+        return f" · 반영 상태: {state}"
+    return ""
+
+
+def _instance_rows(config: dict[str, Any] | None, revision: str, target: Path) -> list[str]:
+    """선언에 있는 Team 인스턴스와 삭제 버튼.
+
+    ★켜기/끄기는 위의 빠른 토글 카드가 한다 — 여기서는 **지우기**만 준다.
+      같은 일을 두 곳에 두면 운영자가 어느 쪽이 맞는지 헷갈린다.
+    """
+    teams = (config or {}).get("teams") or []
+    rows: list[str] = []
+    for team in teams:
+        if not isinstance(team, dict):
+            continue
+        team_id = str(team.get("team_id", ""))
+        state = pill("켜짐", "ok") if team.get("active") else pill("꺼짐", "warn")
+        kind = "선언형" if team.get("parameters") else "코드형"
+        form = f"""<form method='post' action='/composer/instance'
+              style='display:inline-flex;gap:.4rem;align-items:center;flex-wrap:wrap'>
+          <input type='hidden' name='csrf_token' value='{esc(_CSRF_TOKEN)}'>
+          <input type='hidden' name='path' value='{esc(str(target))}'>
+          <input type='hidden' name='operation' value='delete'>
+          <input type='hidden' name='resource_type' value='team'>
+          <input type='hidden' name='instance_id' value='{esc(team_id)}'>
+          <input type='hidden' name='base_revision' value='{esc(revision)}'>
+          <input name='reason' placeholder='사유' required style='width:9rem'>
+          <button type='submit'>지우기</button>
+        </form>"""
+        rows.append(f"<tr><td class='mono'>{esc(team_id)}</td><td>{esc(kind)}</td>"
+                    f"<td>{state}</td><td>{form}</td></tr>")
+    return rows
+
+
+def _catalog_card(catalog: "composer_client.ComposerResult",
+                  current: "composer_client.ComposerResult", target: Path) -> str:
+    """카탈로그에서 구현을 골라 **새 인스턴스를 만든다** (`POST /composer/changes`).
+
+    ★이 카드가 "이름과 설정만 입력해 만든다" 를 실제로 하는 곳이다. 선택지도
+      입력 항목도 **대상이 준다** — 화면은 그걸 그릴 뿐이고 어떤 값이 유효한지
+      판정하지 않는다(`CLAUDE.md` §0.2 — 유효성 판정은 대상 몫).
+
+    ★대상에 `/composer/catalog` 가 없으면 이 카드 자체가 안 뜬다. 기존 화면은
+      그대로 동작한다 — 순수 추가 기능이다.
+    """
+    if not catalog.ok or not isinstance(catalog.value, dict):
+        return ""
+    implementations = catalog.value.get("implementations") or []
+    teams = [i for i in implementations if isinstance(i, dict) and i.get("kind") == "team"]
+    if not teams:
+        return ""
+
+    config = current.value.get("config") if isinstance(current.value, dict) else None
+    revision = str((current.value or {}).get("revision", "")) if isinstance(current.value, dict) else ""
+
+    options = "".join(
+        f"<option value='{esc(str(i.get('implementation_id', '')))}'>"
+        f"{esc(str(i.get('display_name') or i.get('implementation_id')))}"
+        f"{' — 설정 입력 필요' if i.get('parameters_schema') else ''}</option>"
+        for i in teams)
+
+    catalog_rows = [
+        f"<tr><td class='mono'>{esc(str(i.get('implementation_id', '')))}</td>"
+        f"<td>{esc(str(i.get('display_name', '')))}</td>"
+        f"<td>{esc(str(i.get('description', '')))}</td>"
+        f"<td>{pill('필요', 'warn') if i.get('parameters_schema') else pill('없음', 'idle')}</td></tr>"
+        for i in teams]
+
+    create_form = f"""<form method='post' action='/composer/instance'>
+      <input type='hidden' name='csrf_token' value='{esc(_CSRF_TOKEN)}'>
+      <input type='hidden' name='path' value='{esc(str(target))}'>
+      <input type='hidden' name='operation' value='create'>
+      <input type='hidden' name='resource_type' value='team'>
+      <input type='hidden' name='base_revision' value='{esc(revision)}'>
+      <p><label>구현 종류 <select name='implementation_id'>{options}</select></label></p>
+      <p><label>인스턴스 이름 <input name='instance_id' required
+            placeholder='vip_return_review'></label></p>
+      <p><label>설정(JSON)<br>
+        <textarea name='parameters' rows='8' spellcheck='false' style='width:100%'
+                  placeholder='선언형이면 필수입니다. 아래 표에서 "설정" 이 필요인 구현은 이 칸을 채웁니다.'></textarea>
+      </label></p>
+      <p><label>사유 <input name='reason' required placeholder='왜 만드는지'></label></p>
+      <p><label><input type='checkbox' name='dry_run' value='true'> 검증만(저장 안 함)</label></p>
+      <button type='submit'>만들기</button>
+    </form>"""
+
+    schema_note = ""
+    declarative = next((i for i in teams if i.get("parameters_schema")), None)
+    if declarative is not None:
+        fields = sorted((declarative.get("parameters_schema") or {}).get("properties", {}))
+        if fields:
+            schema_note = note("설정 JSON 에 넣는 항목(대상이 준 스키마): " + ", ".join(fields),
+                               "info")
+
+    return collapsible_card(
+        "인스턴스 만들기 (카탈로그)",
+        note("코드 배포 없이 새 Team 을 만듭니다. 고를 수 있는 구현과 입력 항목은 "
+             "대상이 알려줍니다 — 이 화면은 유효성을 판정하지 않고 그대로 보냅니다.", "info")
+        + create_form + schema_note
+        + "<h3>고를 수 있는 구현</h3>"
+        + table(["implementation_id", "이름", "설명", "설정"], catalog_rows)
+        + "<h3>지금 선언된 Team</h3>"
+        + table(["team_id", "종류", "상태", ""], _instance_rows(config, revision, target),
+                empty="선언된 Team 이 없습니다"),
+        subtitle=f"revision {revision}" if revision else "")
+
+
 def _composer_body(target: Path, current: "composer_client.ComposerResult", *,
                    config: dict[str, Any] | None = None) -> str:
     """★대상의 인증된 쓰기 채널만 부른다(`CLAUDE.md` §0.3 예외) — 여기서 직접 안 쓴다.
@@ -856,13 +975,22 @@ def create_app() -> FastAPI:
         return page("실행 추적", "".join(sections) + back, lede=f"{target} · {run_id}", path=path)
 
     def _composer_page(target: Path, current: "composer_client.ComposerResult", live: Any, *,
-                       config: dict[str, Any] | None = None, prefix: str = "") -> HTMLResponse:
-        """v3 토글 카드(있으면) + v2 편집 폼을 한 화면으로 합친다. 모든 `/composer*`
-        라우트가 이 한 곳을 거치게 해서, 화면을 새로 그릴 때마다 두 계약을 같이
-        빠뜨리지 않게 한다."""
+                       config: dict[str, Any] | None = None, prefix: str = "",
+                       catalog: "composer_client.ComposerResult | None" = None) -> HTMLResponse:
+        """토글 카드 + 인스턴스 CRUD 카드 + v2 편집 폼을 한 화면으로 합친다.
+
+        모든 `/composer*` 라우트가 이 한 곳을 거치게 해서, 화면을 새로 그릴
+        때마다 세 계약을 같이 빠뜨리지 않게 한다. ★각 카드는 대상이 그 기능을
+        갖고 있을 때만 뜬다 — 없으면 조용히 빠지고 나머지는 그대로 동작한다.
+        """
+        catalog_card = _catalog_card(catalog, current, target) if catalog is not None else ""
         return page("구성 조립(Composer)",
-                    prefix + _toggle_card(live, target) + _composer_body(target, current, config=config),
+                    prefix + _toggle_card(live, target) + catalog_card
+                    + _composer_body(target, current, config=config),
                     lede=str(target), path=str(target), current="/composer")
+
+    def _read_catalog(profile: Any) -> "composer_client.ComposerResult":
+        return composer_client.read_catalog(profile.composer_url, profile.composer_issuer_secret)
 
     @app.get("/composer", response_class=HTMLResponse)
     def composer_form(path: str = Query(default="")) -> HTMLResponse:
@@ -871,7 +999,7 @@ def create_app() -> FastAPI:
         current = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret)
         live = read_introspection(profile.introspection_url, profile.contract_versions,
                                   profile.introspection_token)
-        return _composer_page(target, current, live)
+        return _composer_page(target, current, live, catalog=_read_catalog(profile))
 
     @app.post("/composer", response_class=HTMLResponse)
     async def composer_submit(request: Request) -> HTMLResponse:
@@ -998,6 +1126,71 @@ def create_app() -> FastAPI:
             new_state = "켜짐" if outcome.value.get("active") else "꺼짐"
             detail = (f"토글됨 — {outcome.value.get('target_id')} → {new_state} "
                      f"(revision {outcome.value.get('config_revision')})")
+            detail += _activation_hint(outcome.value)
+        return await _redraw(note(detail, kind))
+
+    @app.post("/composer/instance", response_class=HTMLResponse)
+    async def composer_instance_submit(request: Request) -> HTMLResponse:
+        """카탈로그 기반 인스턴스 생성·삭제 (`POST /composer/changes`).
+
+        ★이 화면은 **판정하지 않는다.** 설정 JSON 이 대상의 스키마에 맞는지,
+        구현이 등록돼 있는지, 권한이 되는지는 전부 대상이 본다. 여기서 미리
+        검사하면 그 순간 대상의 검증 모델을 복제하는 것이다(`CLAUDE.md` §0.2).
+        다만 **JSON 문법**은 여기서 본다 — 그건 대상 스키마가 아니라 이 폼의
+        입력 형식이고, 깨진 문자열을 그대로 보내면 오류 메시지가 엉뚱해진다.
+        """
+        form = await request.form()
+        refusal = _csrf_refusal(request, form)
+        if refusal is not None:
+            return refusal
+
+        target = Path(str(form.get("path", "")))
+        profile = profile_for(target)
+        reason = str(form.get("reason", "")).strip()
+
+        async def _redraw(prefix: str = "") -> HTMLResponse:
+            current = await run_in_threadpool(
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+            live = await run_in_threadpool(read_introspection, profile.introspection_url,
+                                           profile.contract_versions, profile.introspection_token)
+            catalog = await run_in_threadpool(_read_catalog, profile)
+            return _composer_page(target, current, live, prefix=prefix, catalog=catalog)
+
+        if not reason:
+            # ★v2 apply·토글과 같은 규칙 — 사유 없이 구성을 바꾸지 않는다.
+            return await _redraw(note("변경하려면 사유(reason)를 적어야 합니다.", "bad"))
+
+        raw_parameters = str(form.get("parameters", "")).strip()
+        parameters: dict[str, Any] | None = None
+        if raw_parameters:
+            try:
+                decoded = json.loads(raw_parameters)
+            except json.JSONDecodeError as exc:
+                return await _redraw(note(f"설정 JSON 을 읽지 못했습니다 — {exc}", "bad"))
+            if not isinstance(decoded, dict):
+                return await _redraw(note("설정 JSON 은 객체여야 합니다.", "bad"))
+            parameters = decoded
+
+        outcome = await run_in_threadpool(
+            composer_client.submit_change, profile.composer_url, profile.composer_issuer_secret,
+            operation=str(form.get("operation", "")),
+            resource_type=str(form.get("resource_type", "team")),
+            instance_id=str(form.get("instance_id", "")).strip(),
+            base_revision=str(form.get("base_revision", "")),
+            reason=reason,
+            implementation_id=str(form.get("implementation_id", "")) or None,
+            parameters=parameters,
+            dry_run=str(form.get("dry_run", "")) == "true")
+
+        kind = "ok" if outcome.ok else ("warn" if outcome.status in ("연결 안 함", "충돌") else "bad")
+        detail = outcome.detail or outcome.status
+        if outcome.ok and isinstance(outcome.value, dict):
+            if outcome.value.get("dry_run"):
+                detail = "검증만 했습니다 — 저장하지 않았습니다."
+            else:
+                detail = (f"{form.get('operation')} 적용됨 — {form.get('instance_id')} "
+                          f"(revision {outcome.value.get('desired_revision')})")
+                detail += _activation_hint(outcome.value)
         return await _redraw(note(detail, kind))
 
     return app

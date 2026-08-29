@@ -497,3 +497,164 @@ def test_composer_toggle_reports_revision_conflict_not_a_crash(tmp_path, monkeyp
     })
     assert response.status_code == 200
     assert "다른 변경이 먼저 적용됐다" in response.text
+
+
+# ── 카탈로그 기반 인스턴스 CRUD 화면 (2026-08-29) ────────────────────
+CATALOG_VALUE = {
+    "config_revision": "rev-1",
+    "implementations": [
+        {"implementation_id": "team.declarative.v1", "kind": "team",
+         "display_name": "선언형 Team", "description": "코드 없이 만든다",
+         "parameters_schema": {"properties": {"display_name": {}, "capabilities": {},
+                                              "prompt_key": {}}},
+         "requires_restart": True},
+        {"implementation_id": "team.placeholder", "kind": "team",
+         "display_name": "자리표시 Team", "description": "", "parameters_schema": None,
+         "requires_restart": True},
+        {"implementation_id": "module.vector_rag", "kind": "module",
+         "display_name": "vector_rag", "description": "", "parameters_schema": None,
+         "requires_restart": True},
+    ],
+}
+
+
+def _wire(monkeypatch, *, catalog=None, current=None):
+    monkeypatch.setattr("console.composer.read_current",
+                        lambda url, issuer_secret=None: current or ComposerResult(
+                            "읽음", value={"revision": "rev-1", "config": SAMPLE_CONFIG}))
+    monkeypatch.setattr("console.composer.read_catalog",
+                        lambda url, issuer_secret=None: catalog if catalog is not None
+                        else ComposerResult("조회됨", value=CATALOG_VALUE))
+    monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
+    monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "issuer-secret")
+
+
+def test_catalog_card_lists_implementations_and_offers_a_create_form(tmp_path, monkeypatch):
+    _wire(monkeypatch)
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "인스턴스 만들기" in body
+    assert "team.declarative.v1" in body and "team.placeholder" in body
+    assert "action='/composer/instance'" in body
+    # 대상이 준 스키마 항목을 그대로 안내한다 — UI 가 스키마를 복제하지 않는다
+    assert "prompt_key" in body
+    # 모듈 종류는 이 카드에 섞이지 않는다(Team 인스턴스 생성 화면이다)
+    assert "module.vector_rag" not in body
+
+
+def test_catalog_card_is_absent_when_the_target_has_no_catalog(tmp_path, monkeypatch):
+    """순수 추가 기능 — 대상에 없으면 카드만 빠지고 나머지 화면은 그대로다."""
+    _wire(monkeypatch, catalog=ComposerResult("대상이 응답하지 않음", detail="HTTP 404"))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "인스턴스 만들기" not in body
+    assert "rev-1" in body  # v2 편집 폼은 그대로 뜬다
+
+
+def test_create_sends_the_declared_parameters_to_the_target(tmp_path, monkeypatch):
+    sent = {}
+
+    def fake_change(url, issuer_secret, **kwargs):
+        sent.update(kwargs)
+        return ComposerResult("변경됨", value={"desired_revision": "rev-2",
+                                            "activation_state": "pending_restart",
+                                            "dry_run": False})
+
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change", fake_change)
+    project = make_project(tmp_path)
+    response = TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "create",
+        "resource_type": "team", "instance_id": "vip_review",
+        "implementation_id": "team.declarative.v1",
+        "parameters": '{"display_name": "VIP", "capabilities": ["demo.vip"]}',
+        "base_revision": "rev-1", "reason": "새 팀"})
+
+    assert response.status_code == 200
+    assert sent["operation"] == "create"
+    assert sent["instance_id"] == "vip_review"
+    assert sent["parameters"] == {"display_name": "VIP", "capabilities": ["demo.vip"]}
+    assert sent["dry_run"] is False
+
+
+def test_pending_restart_is_shown_not_hidden(tmp_path, monkeypatch):
+    """★저장과 반영은 다르다 — 화면이 '적용됨' 만 보여주면 안 된다."""
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change",
+                        lambda url, issuer_secret, **k: ComposerResult(
+                            "변경됨", value={"desired_revision": "rev-2",
+                                          "activation_state": "pending_restart",
+                                          "dry_run": False}))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "create",
+        "resource_type": "team", "instance_id": "x",
+        "implementation_id": "team.placeholder", "base_revision": "rev-1",
+        "reason": "확인"}).text
+
+    assert "재시작" in body
+
+
+def test_dry_run_says_it_did_not_save(tmp_path, monkeypatch):
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change",
+                        lambda url, issuer_secret, **k: ComposerResult(
+                            "변경됨", value={"desired_revision": "rev-1", "dry_run": True,
+                                          "activation_state": "pending_restart"}))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "create",
+        "resource_type": "team", "instance_id": "x",
+        "implementation_id": "team.placeholder", "base_revision": "rev-1",
+        "reason": "검증만", "dry_run": "true"}).text
+
+    assert "저장하지 않았습니다" in body
+
+
+def test_broken_parameters_json_is_reported_without_calling_the_target(tmp_path, monkeypatch):
+    """JSON 문법은 이 폼의 입력 형식이라 여기서 본다 — 대상 스키마 판정은 아니다."""
+    calls = []
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change",
+                        lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "create",
+        "resource_type": "team", "instance_id": "x",
+        "implementation_id": "team.declarative.v1", "parameters": "{not json",
+        "base_revision": "rev-1", "reason": "확인"}).text
+
+    assert "설정 JSON 을 읽지 못했습니다" in body
+    assert calls == []
+
+
+def test_change_without_a_reason_is_refused(tmp_path, monkeypatch):
+    calls = []
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change", lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "delete",
+        "resource_type": "team", "instance_id": "billing", "base_revision": "rev-1",
+        "reason": "  "}).text
+
+    assert "사유" in body
+    assert calls == []
+
+
+def test_instance_route_requires_the_csrf_token(tmp_path, monkeypatch):
+    calls = []
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change", lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+    response = TestClient(create_app()).post("/composer/instance", data={
+        "path": str(project), "operation": "delete", "resource_type": "team",
+        "instance_id": "billing", "base_revision": "rev-1", "reason": "확인"})
+
+    # ★거부는 4xx 가 아니라 **안내 페이지**다(`_csrf_denied`) — 이 저장소의
+    #   기존 관례를 그대로 따른다. 중요한 것은 대상을 부르지 않았다는 사실이다.
+    assert calls == []
+    assert response.status_code == 200
+    assert "요청을 거부했습니다" in response.text
