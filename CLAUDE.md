@@ -36,3 +36,12 @@
 `raw/`와 `processed/`는 본인의 실제 구매 기록을 담고 있어 git에 올리지 않는다. 스크립트와 스키마와 `REPORT.md`만 올린다.
 
 각 데이터셋 폴더의 `REPORT.md`가 그 데이터가 무엇이고 어디에 쓰이는지 설명한다. 데이터 관련 작업 전에 해당 `REPORT.md`를 읽는다.
+
+## TeamFlow (이슈 트래커)
+
+스프린트와 에픽은 TeamFlow(https://jira-for-me.vercel.app)의 `SKN32_FINAL_TEAM4` 프로젝트에서 관리한다.
+API 주소와 토큰과 사용법은 [`.env.teamflow`](.env.teamflow)에 있다. 이 파일은 커밋하지 않으므로
+형식은 [`.env.teamflow.example`](.env.teamflow.example)을 본다.
+
+토큰으로는 이슈 생성만 된다. 조회와 수정과 스프린트 생성은 화면에서 사람이 한다.
+등록할 스프린트와 에픽의 정본은 [`program/plan/A-COP_스프린트_에픽_설계.md`](program/plan/A-COP_스프린트_에픽_설계.md)다.
