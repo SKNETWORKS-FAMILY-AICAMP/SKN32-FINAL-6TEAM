@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from acop_basement.core import config_store
 from acop_composer import service as composer_service
 from acop_composer.service import apply_candidate
 
@@ -30,7 +31,10 @@ def test_staged_file_is_removed_when_os_replace_fails(declaration, monkeypatch):
     def _boom(*_args, **_kwargs):
         raise OSError("simulated disk failure")
 
-    monkeypatch.setattr(composer_service.os, "replace", _boom)
+    # ★2026-08-29 — 원자적 교체가 `acop_basement.core.config_store.FileConfigStore`
+    #   로 옮겨갔다(중앙 설정 저장소 도입). 검사하는 **성질**은 그대로다:
+    #   교체가 실패해도 임시 파일이 안 남고 원본이 안 바뀐다.
+    monkeypatch.setattr(config_store.os, "replace", _boom)
 
     with pytest.raises(OSError, match="simulated disk failure"):
         apply_candidate(raw, base_revision=current.revision, path=declaration)

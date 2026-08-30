@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import Field, ValidationError
@@ -53,6 +53,18 @@ class Settings(BaseSettings):
 
     # 경로
     guardrails_path: str = "config/guardrails.yaml"
+
+    # 구성 선언을 어디서 읽는가
+    #   file    — 로컬 `config/project.yaml`(기본). 개발·단일 배포용
+    #   central — 중앙 설정 저장소. 대상이 수천 개일 때의 운영 형태
+    #             (`program/plan/A-COP_Composer_중앙설정저장소_결정.md`)
+    #: ★기본이 file 인 이유는 하위호환이다. 중앙 저장소를 켜는 것은 **명시적
+    #:  선택**이어야 한다 — 설정을 어디서 읽는지가 조용히 바뀌면 안 된다.
+    config_source: Literal["file", "central"] = "file"
+    #: 중앙 저장소에서 자기 선언을 찾는 키. `config_source="central"` 일 때 필수다.
+    #: ★업무 개념인 `tenant_id` 와 일부러 분리한다 — 한 테넌트가 여러 배포를
+    #:  가질 수 있고, 그 둘은 서로 다른 선언을 가질 수 있다.
+    deployment_id: str = ""
 
 
 class Guardrails:

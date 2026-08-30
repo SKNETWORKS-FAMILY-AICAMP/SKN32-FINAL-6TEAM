@@ -12,7 +12,8 @@ from typing import Any
 
 from acop_basement.application.controller import Controller
 from acop_basement.core.context import ContextBroker
-from acop_basement.core.project_config import ProjectConfig, load_project_config
+from acop_basement.application.config_source import load_active_config
+from acop_basement.core.project_config import ProjectConfig
 from acop_basement.core.registry import TeamRegistry
 from acop_basement.core.remote_team.a2a_executor import A2ATeamExecutor
 from acop_basement.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
@@ -128,7 +129,7 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
     """Read the declaration, dynamically load every Team, and register it."""
-    config = config or load_project_config(config_path)
+    config = config or load_active_config(config_path)
     _validate_modules(config)
     if tools is None:
         config.require_module("vector_rag", "default ReadToolbox")
@@ -158,7 +159,7 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
 
 def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None = None,
                         transport: Any | None = None, capability_resolver: Any | None = None) -> TeamExecutorPort:
-    config = config or load_project_config()
+    config = config or load_active_config()
     _validate_modules(config)
     if config.ports.team_executor == "local":
         return LocalTeamExecutor(registry)
@@ -170,7 +171,7 @@ def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None 
 def build_graph_store(*, connection: Any, tenant_id: str,
                       config: ProjectConfig | None = None) -> Any:
     """Build the selected graph adapter, or fail if the optional module is off."""
-    config = config or load_project_config()
+    config = config or load_active_config()
     _validate_modules(config)
     config.require_module("graph_store", "GraphStore adapter")
     from acop_basement.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
@@ -179,7 +180,7 @@ def build_graph_store(*, connection: Any, tenant_id: str,
 
 def build_broker(*, connection_factory=get_connection,
                  config: ProjectConfig | None = None) -> Any:
-    config = config or load_project_config()
+    config = config or load_active_config()
     _validate_modules(config)
     if config.ports.message_broker != "outbox":
         raise CompositionError(f"unsupported message broker port: {config.ports.message_broker}")
@@ -192,7 +193,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
                      config_path: str | Path | None = None) -> Controller:
     """Assemble the application Controller and inject every concrete adapter."""
-    config = load_project_config(config_path)
+    config = load_active_config(config_path)
     _validate_modules(config)
     llm = llm if llm is not None else OpenAITeamLLM()
     registry = registry or build_registry(tools=tools, llm=llm, config=config)

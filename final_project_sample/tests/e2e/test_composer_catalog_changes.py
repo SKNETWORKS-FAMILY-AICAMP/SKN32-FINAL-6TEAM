@@ -318,3 +318,82 @@ def test_declarative_team_with_write_tool_is_rejected_by_the_api(config_dir):
         base_revision=_revision(client)))
     assert response.status_code == 422
     assert "읽기 전용" in response.text
+
+
+# ── 감사 저장소 배선 (중앙 모드) ─────────────────────────────────────
+def test_audit_goes_to_the_injected_store_not_a_file(config_dir):
+    """★설정이 중앙을 가리키면 감사도 중앙에 남는다.
+
+    선언만 중앙으로 옮기고 감사를 대상마다의 파일에 두면, 누가 무엇을 바꿨는지가
+    수천 군데로 흩어져 감사로서 쓸모가 없다.
+    """
+    from uuid import uuid4 as _uuid4
+
+    from acop_basement.core.audit_store import PostgresAuditStore
+    from acop_basement.infrastructure.db.session import get_connection
+
+    deployment_id = "test-audit-" + _uuid4().hex
+    store = PostgresAuditStore(get_connection, deployment_id)
+
+    path = _declaration(config_dir)
+    app = create_app(composer_write_router=composer_write_router,
+                     composer_auth_router=composer_auth_router)
+    app.state.project_config_path = path
+    app.state.composer_audit_store = store          # ★파일이 아니라 저장소를 주입
+    app.state.composer_audit_path = path.with_name("should_not_be_used.jsonl")
+    http = TestClient(app)
+
+    revision = http.get("/composer/current", headers=_auth("composer:read")).json()["revision"]
+    try:
+        response = http.post("/composer/changes", headers=_auth(), json=_change(
+            operation="disable", resource_type="team", instance_id="feedback_analytics",
+            base_revision=revision, reason="중앙 감사 확인"))
+        assert response.status_code == 200, response.text
+
+        events = store.recent(10)
+        assert events and events[0]["event"] == "composer.change"
+        assert events[0]["instance_id"] == "feedback_analytics"
+        # 파일로는 안 갔다
+        assert not path.with_name("should_not_be_used.jsonl").exists()
+    finally:
+        with get_connection() as conn:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("DELETE FROM composer_audit_events WHERE deployment_id = %s",
+                            (deployment_id,))
+
+
+def test_idempotency_is_resolved_through_the_store(config_dir):
+    """★재시도 판정도 저장소가 한다 — 파일 전체 스캔이 아니라 인덱스 조회."""
+    from uuid import uuid4 as _uuid4
+
+    from acop_basement.core.audit_store import PostgresAuditStore
+    from acop_basement.infrastructure.db.session import get_connection
+
+    deployment_id = "test-audit-" + _uuid4().hex
+    store = PostgresAuditStore(get_connection, deployment_id)
+
+    path = _declaration(config_dir)
+    app = create_app(composer_write_router=composer_write_router,
+                     composer_auth_router=composer_auth_router)
+    app.state.project_config_path = path
+    app.state.composer_audit_store = store
+    http = TestClient(app)
+
+    revision = http.get("/composer/current", headers=_auth("composer:read")).json()["revision"]
+    key = str(uuid4())
+    body = _change(operation="disable", resource_type="team",
+                   instance_id="feedback_analytics", base_revision=revision,
+                   idempotency_key=key)
+    try:
+        first = http.post("/composer/changes", headers=_auth(), json=body)
+        after_first = path.read_text(encoding="utf-8")
+        second = http.post("/composer/changes", headers=_auth(), json=body)
+
+        assert first.status_code == 200 and second.status_code == 200
+        assert second.json() == first.json()
+        assert path.read_text(encoding="utf-8") == after_first, "두 번 쓰면 안 된다"
+    finally:
+        with get_connection() as conn:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("DELETE FROM composer_audit_events WHERE deployment_id = %s",
+                            (deployment_id,))

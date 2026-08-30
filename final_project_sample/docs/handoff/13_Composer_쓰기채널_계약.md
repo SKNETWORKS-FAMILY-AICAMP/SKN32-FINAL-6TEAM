@@ -16,8 +16,90 @@
 | v2 전체 선언 적용 | 호환·bulk migration 경로. 제거하지 않는다 | `GET /composer/current`, `POST /composer/validate`, `POST /composer/apply` |
 
 셋 다 **같은** 저장·revision·감사 경로를 쓴다(`acop_composer.service` 의
-`_WRITE_LOCK` → 임시파일 → `os.replace()`). 같은 일을 하는 코드를 두 벌
-만들지 않는다.
+`apply_candidate`). 같은 일을 하는 코드를 두 벌 만들지 않는다.
+
+---
+
+## §00. 2026-08-30 — 두 운영 방식과 선언 저장 위치
+
+정본: `program/plan/A-COP_Composer_중앙설정저장소_결정.md`.
+
+**대상마다의 로컬 파일에서 중앙 저장소로 옮길 수 있게 됐다.** 배포 대상이
+수천 개면 파일 모델이 성립하지 않는다 — 파일을 고치는 코드(Composer)가 대상
+안에 있어야 하는데, 고객 릴리즈에 쓰기 코드를 넣을 수 없기 때문이다.
+
+### 두 방식 — 계약은 하나, 고르는 것은 콘솔
+
+| 방식 | Composer 가 어디 사나 | UI 가 부르는 곳 | 대상 지정 |
+|---|---|---|---|
+| **direct** | 대상 제품에 pip 로 함께 설치 | 그 대상의 `/composer/*` | 필요 없음(대상이 자기 하나) |
+| **central** | **중앙 설정 서비스 한 곳** | `acop_composer.service_app` | `X-Deployment-Id` 헤더 |
+
+★**요청·응답 모양이 같다.** 주소와 헤더 하나만 다르다. 그래서 엔드포인트
+계약(`/catalog`·`/changes`·`/toggle`·v2 3종)은 방식과 무관하게 동일하고,
+전환에 대상 코드도 화면 코드도 바뀌지 않는다.
+
+고르는 주체는 `final_project_ui` 다 — `CONSOLE_COMPOSER_MODE=direct|central`,
+`central` 이면 `CONSOLE_COMPOSER_DEPLOYMENT_ID` 가 필수다. 클라이언트
+(`acop_composer_ui.ComposerClient`)는 `deployment_id` 를 받으면 헤더를 붙이고,
+없으면 붙이지 않는다(`ComposerClient.mode` 로 확인할 수 있다).
+
+★**direct 를 고르면 §2 의 충돌이 그대로 살아난다** — 대상에 쓰기 코드가
+들어간다. 수천 규모에서는 여전히 central 이 답이다. direct 는 대상이 적을
+때(개발·단일 배포·소규모)의 선택지다.
+
+### 두 가지 저장 모드
+
+| 설정 | 선언 | 쓰기 동시성 | 감사 |
+|---|---|---|---|
+| `ACOP_CONFIG_SOURCE=file`(기본) | 로컬 `config/project.yaml` | 프로세스 락 + 원자적 교체 + `.bak` | `var/audit/composer_events.jsonl` |
+| `ACOP_CONFIG_SOURCE=central` | 중앙 DB `project_configs` | **조건부 UPDATE(CAS)** | 중앙 DB `composer_audit_events` |
+
+`central` 이면 `ACOP_DEPLOYMENT_ID` 가 **필수**다. 어느 대상의 선언인지 모르는
+채로 기동하면 안 된다.
+
+★기본이 `file` 인 이유는 하위호환이다. 설정을 어디서 읽는지가 조용히 바뀌면
+안 되므로 중앙 저장소는 **명시적 선택**으로만 켜진다. 지금 실제 서버 운영은
+시작하지 않았다 — 코드 경로만 준비해 두면 첫 릴리즈 때 마이그레이션 없이
+중앙으로 시작할 수 있고, 그때까지 운영 부담이 0이다.
+
+### 동시성 — 이 문서가 적어둔 한계가 해소됐다
+
+아래 "배포 경계와 운영상 제약" 절은 `_WRITE_LOCK` 이 프로세스 로컬이라 여러
+워커·인스턴스를 못 막는다고 적었다. **중앙 모드에서는 해소된다** — 조건을 DB
+가 판정한다(`WHERE revision = base_revision`, 한 건도 못 바꾸면 그 사이 남이
+쓴 것이다). 파일 모드에서는 그 한계가 그대로다.
+
+★revision 은 **어느 저장소에서든 선언 내용에서 계산한다**
+(`ProjectConfig.compute_revision`). DB 의 `revision` 컬럼은 CAS 용으로 같이
+저장하는 것이지 별도의 진실이 아니다. 둘이 어긋나면 `read` 와 `write` 가 서로
+다른 값을 보게 되어 **이후 모든 쓰기가 영구히 409 로 막힌다** — 2026-08-30 에
+실제로 겪었다. 그래서 `create()` 는 revision 을 받지 않고 내용에서 계산한다.
+
+### 대상이 선언을 읽는 쪽 — fail-fast
+
+대상은 기동 시 `acop_basement.application.config_source.load_active_config()`
+로 자기 선언을 읽는다. 중앙에 못 붙거나 이 대상의 선언이 없으면 **기동을
+거부한다.** 마지막 설정으로 계속 도는 캐시는 두지 않았다 — 무엇이 켜져
+있는지 모르는 채로 고객 트래픽을 받는 것이 더 위험하다.
+
+★대가: 중앙 저장소가 죽으면 대상이 기동하지 못한다. 이 가용성 결합은 결정
+문서 §8 에 미해결로 남아 있다. 캐시를 넣는다면 `degraded` 를 반드시 함께
+신호해야 한다 — 신호 없는 축소는 폴백이다(`RULE.md` §3.2).
+
+### 설정 서비스 — Composer 가 사는 단 한 곳
+
+`acop_composer.service_app:app` 이 중앙에서 도는 앱이다. Composer 와 토큰
+발급만 있고 **고객 API(`/v1/cases`)·Team 조립·LLM 이 없다.**
+
+★**대상을 요청이 지정한다** — `X-Deployment-Id` 헤더. 이 앱은 자기 설정의
+대상 하나가 아니라 수천 개를 다루므로, 설정에서 읽으면 프로세스 하나가 대상
+하나만 관리하게 되어 중앙화의 의미가 없다. 헤더가 없으면 `400
+deployment_required` 로 거부한다 — 기본 대상으로 떨어지면 **남의 설정을
+건드리는 사고**가 조용히 일어난다.
+
+등록 안 된 대상은 `404 deployment_not_registered` 다. 500 이 아니다 —
+"서버가 터졌다" 와 "그 대상은 등록돼 있지 않다" 는 운영자가 할 일이 다르다.
 
 아래 §0(v3 원문)은 **UI·cs 가 부를 엔드포인트 이름과 payload 를 맞추기 위한
 계약 사본**으로 계속 유효하다. 다만 "이것이 Composer 전체를 대체한다"는 지위만

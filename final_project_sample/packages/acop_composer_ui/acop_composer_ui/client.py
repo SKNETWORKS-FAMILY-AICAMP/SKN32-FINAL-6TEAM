@@ -28,6 +28,9 @@ Transport = Callable[[str, str, dict[str, str], bytes | None], tuple[int, bytes]
 
 #: 토큰의 `sub` — 누가 부르는지 감사 로그에 남는 값이다.
 DEFAULT_SUBJECT = "final_project_ui"
+#: 중앙 설정 서비스가 "이 요청은 어느 대상의 것인가" 를 받는 헤더.
+#: ★서버(`acop_composer.api.DEPLOYMENT_HEADER`)와 같은 값이어야 한다.
+DEPLOYMENT_HEADER = "X-Deployment-Id"
 DEFAULT_TIMEOUT = 10.0
 
 
@@ -91,11 +94,31 @@ class ComposerClient:
 
     def __init__(self, base_url: str | None, issuer_secret: str | None = None, *,
                  subject: str = DEFAULT_SUBJECT,
+                 deployment_id: str | None = None,
                  transport: Transport | None = None) -> None:
+        """
+        `deployment_id` 가 **두 운영 방식을 가른다.**
+
+        - `None`(직접 방식) — 대상 제품에 Composer 가 함께 설치돼 있고, 그
+          대상의 `/composer/*` 를 직접 부른다. 대상이 자기 하나만 관리하므로
+          어느 대상인지 말할 필요가 없다.
+        - 값이 있으면(중앙 방식) — 중앙 **설정 서비스** 한 곳을 부르고,
+          `X-Deployment-Id` 로 어느 대상의 구성인지 지정한다. 설정 서비스는
+          수천 대상을 다루므로 이 값이 없으면 요청을 거부한다.
+
+        두 방식의 요청·응답 모양은 같다 — 헤더 하나와 주소만 다르다.
+        어느 쪽을 쓸지는 이 클라이언트를 만드는 쪽(콘솔)이 정한다.
+        """
         self.base_url = (base_url or "").rstrip("/")
         self.issuer_secret = issuer_secret
         self.subject = subject
+        self.deployment_id = deployment_id or None
         self._transport = transport or _urllib_transport
+
+    @property
+    def mode(self) -> str:
+        """`central` 이면 설정 서비스, `direct` 면 대상 직접 호출."""
+        return "central" if self.deployment_id else "direct"
 
     # ── 내부 ────────────────────────────────────────────────────────
     def _url(self, path: str) -> str:
@@ -135,6 +158,10 @@ class ComposerClient:
         if isinstance(token, ComposerResponse):
             return token
         headers = {"Authorization": f"Bearer {token}"}
+        if self.deployment_id:
+            # ★중앙 방식에서만 붙는다. 직접 방식의 대상은 이 헤더를 무시하지만,
+            #   보내지 않는 편이 "이 요청은 누구에게 가는가" 를 흐리지 않는다.
+            headers[DEPLOYMENT_HEADER] = self.deployment_id
         encoded = None
         if body is not None:
             headers["Content-Type"] = "application/json"
@@ -204,4 +231,5 @@ class ComposerClient:
                                 "reason": reason})
 
 
-__all__ = ["ComposerClient", "ComposerResponse", "Transport", "DEFAULT_SUBJECT"]
+__all__ = ["ComposerClient", "ComposerResponse", "Transport", "DEFAULT_SUBJECT",
+           "DEPLOYMENT_HEADER"]

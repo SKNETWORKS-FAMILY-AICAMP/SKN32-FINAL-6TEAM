@@ -24,6 +24,14 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from acop_basement.core.audit_store import (
+    AuditStore, AuditStoreError, FileAuditStore, PostgresAuditStore,
+)
+from acop_basement.core.settings import get_settings
+from acop_basement.infrastructure.db.session import get_connection
+from acop_basement.core.config_store import (
+    ConfigStore, ConfigStoreError, FileConfigStore, PostgresConfigStore,
+)
 from acop_composer import catalog as catalog_mod
 from acop_composer.service import RevisionConflict, apply_candidate, read_current, validate_candidate
 from acop_basement.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfigError
@@ -49,6 +57,75 @@ def _audit_path(request: Request) -> Path:
     default = Path(__file__).resolve().parents[3] / "var" / "audit" / "composer_events.jsonl"
     selected = getattr(request.app.state, "composer_audit_path", default)
     return Path(selected)
+
+
+#: 설정 서비스가 "이 요청은 어느 대상의 것인가" 를 받는 헤더.
+DEPLOYMENT_HEADER = "X-Deployment-Id"
+
+
+def _deployment_id(request: Request) -> str:
+    """이 요청이 다루는 대상.
+
+    ★단일 대상 빌드(대상 안에서 도는 Composer)는 자기 자신뿐이라 설정에서
+      온다. **설정 서비스**(중앙 1곳에서 수천 대상을 다루는 형태)는 자기
+      설정이 아니라 **요청**이 대상을 지정해야 한다 — 그렇지 않으면 프로세스
+      하나가 대상 하나만 관리할 수 있어 중앙화의 의미가 없다.
+
+    ★설정 서비스 모드에서 헤더가 없으면 거부한다. 기본 대상으로 떨어지면
+      **남의 설정을 건드리는 사고**가 조용히 일어난다.
+    """
+    if getattr(request.app.state, "multi_deployment", False):
+        value = (request.headers.get(DEPLOYMENT_HEADER) or "").strip()
+        if not value:
+            raise _error(400, "deployment_required",
+                         f"설정 서비스는 {DEPLOYMENT_HEADER} 헤더로 대상을 지정해야 한다")
+        return value
+    return get_settings().deployment_id
+
+
+def _config_store(request: Request) -> ConfigStore:
+    """이 요청이 읽고 쓸 선언 저장소.
+
+    ★`app.state.project_config_path` 주입은 파일 모드에서만 뜻이 있다 —
+      테스트가 실제 `config/project.yaml` 을 안 건드리게 하는 장치다.
+    """
+    if getattr(request.app.state, "multi_deployment", False):
+        return PostgresConfigStore(get_connection, _deployment_id(request))
+    if get_settings().config_source == "central":
+        return PostgresConfigStore(get_connection, _deployment_id(request))
+    return FileConfigStore(_path(request))
+
+
+def _read_current(request: Request):
+    """현재 선언. ★등록 안 된 대상은 500 이 아니라 404 로 답한다.
+
+    "서버가 터졌다" 와 "그 대상은 등록돼 있지 않다" 는 운영자가 해야 할 일이
+    전혀 다르다. 오류 메시지가 사실을 잘못 전하면 한참 헤맨다(`CLAUDE.md` §3).
+    """
+    try:
+        return read_current(store=_config_store(request))
+    except ConfigStoreError as exc:
+        raise _error(404, "deployment_not_registered", str(exc)) from exc
+
+
+def _audit_store(request: Request) -> AuditStore:
+    """감사 이벤트를 어디에 남기는가 — 주입된 저장소, 설정, 그다음 파일.
+
+    ★설정이 중앙 저장소를 가리키면 감사도 중앙에 남는다. 선언만 중앙으로
+      옮기고 감사를 대상마다의 파일에 두면, 누가 무엇을 바꿨는지가 수천
+      군데로 흩어져 감사로서 쓸모가 없다
+      (`program/plan/A-COP_Composer_중앙설정저장소_결정.md`).
+
+    ★`app.state.composer_audit_store` 주입을 맨 앞에 두는 이유는 테스트다 —
+      경로 주입(`composer_audit_path`)만으로는 중앙 모드를 검사할 수 없다.
+    """
+    injected = getattr(request.app.state, "composer_audit_store", None)
+    if injected is not None:
+        return injected
+    if (getattr(request.app.state, "multi_deployment", False)
+            or get_settings().config_source == "central"):
+        return PostgresAuditStore(get_connection, _deployment_id(request))
+    return FileAuditStore(_audit_path(request))
 
 
 class CandidatePayload(BaseModel):
@@ -136,7 +213,7 @@ def toggle(payload: TogglePayload, request: Request,
 def catalog(request: Request,
             _principal=Depends(require_composer_scope("composer:read"))) -> dict[str, Any]:
     """UI 가 고를 수 있는 구현 종류. ★Python 경로는 내보내지 않는다."""
-    current_config = read_current(_path(request))
+    current_config = _read_current(request)
     try:
         entries = catalog_mod.team_entries() + catalog_mod.module_entries(current_config.modules)
     except catalog_mod.CatalogError as exc:
@@ -145,26 +222,21 @@ def catalog(request: Request,
     return {"config_revision": current_config.revision, "implementations": entries}
 
 
-def _find_idempotent(key: str | None, audit_path: Path) -> dict[str, Any] | None:
+def _find_idempotent(key: str | None, store: AuditStore) -> dict[str, Any] | None:
     """같은 idempotency_key 로 이미 처리한 결과가 있으면 그것을 돌려준다.
 
     ★새 저장소를 만들지 않고 **감사 로그를 근거로 삼는다.** 감사는 이미
       append-only 로 영속되고, 프로세스가 죽어도 남는다. 메모리 dict 로 하면
       재시작하면 사라져서 "재시도했더니 두 번 적용" 이 그대로 살아난다.
+
+    ★조회를 저장소에 위임한다(2026-08-30). 파일이면 전체 스캔, 중앙 DB 면
+      인덱스 조회다 — 대상이 수천 개면 스캔은 감당이 안 된다.
     """
-    if not key or not audit_path.exists():
+    if not key:
         return None
-    with audit_path.open(encoding="utf-8") as stream:
-        for line in stream:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue  # 손상된 줄이 재시도를 막아서는 안 된다
-            if event.get("idempotency_key") == key and event.get("result"):
-                return dict(event["result"])
+    event = store.find_by_idempotency_key(key)
+    if event and event.get("result"):
+        return dict(event["result"])
     return None
 
 
@@ -238,14 +310,16 @@ def changes(payload: ChangePayload, request: Request,
 def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
                     event_name: str = "composer.change") -> dict[str, Any]:
     """`/changes` 와 `/toggle` 이 공유하는 단일 저장 경로."""
-    target = _path(request)
-    audit_path = _audit_path(request)
+    config_store = _config_store(request)
+    audit_store = _audit_store(request)
+    # 감사의 `subject` — 파일 모드면 경로, 중앙 모드면 대상 ID 다.
+    subject = getattr(config_store, "path", None) or getattr(config_store, "deployment_id", "?")
 
-    cached = _find_idempotent(payload.idempotency_key, audit_path)
+    cached = _find_idempotent(payload.idempotency_key, audit_store)
     if cached is not None:
         return cached
 
-    previous = read_current(target)
+    previous = _read_current(request)
     declaration = previous.model_dump(mode="json", exclude={"revision"})
 
     try:
@@ -258,7 +332,7 @@ def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
     if payload.dry_run:
         # ★대상 파일을 건드리지 않는다. 검증만 한다.
         #   `validate_candidate` 는 예외가 아니라 결과 객체를 돌려준다.
-        outcome = validate_candidate(candidate, path=target, enforce_registry=True)
+        outcome = validate_candidate(candidate, enforce_registry=True)
         if not outcome.valid:
             raise _error(422, "invalid_declaration", "; ".join(outcome.errors),
                          errors=outcome.errors)
@@ -267,7 +341,7 @@ def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
 
     try:
         applied = apply_candidate(candidate, base_revision=payload.base_revision,
-                                  path=target, enforce_registry=True)
+                                  store=config_store, enforce_registry=True)
     except RevisionConflict as exc:
         raise _error(409, "revision_conflict",
                      "다른 변경이 먼저 적용됐다. 최신 구성을 다시 읽고 다시 시도하라.",
@@ -278,7 +352,7 @@ def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
     result = {"change_id": str(uuid4()), "desired_revision": applied.revision,
               "activation_state": "pending_restart", "dry_run": False, "errors": []}
     event = {
-        "event": event_name, "actor": _principal["sub"], "subject": str(target),
+        "event": event_name, "actor": _principal["sub"], "subject": str(subject),
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "operation": payload.operation, "resource_type": payload.resource_type,
         "instance_id": payload.instance_id, "implementation_id": payload.implementation_id,
@@ -289,8 +363,8 @@ def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
         "correlation_id": result["change_id"], "result": result,
     }
     try:
-        _append_audit(event, audit_path)
-    except OSError as exc:
+        _append_audit(event, audit_store)
+    except AuditStoreError as exc:
         raise _error(500, "audit_failure", "change was applied but audit recording failed") from exc
     return result
 
@@ -298,7 +372,7 @@ def _perform_change(request: Request, _principal: Any, payload: ChangePayload,
 @router.get("/current", tags=["composer-write"])
 def current(request: Request, _principal=Depends(require_composer_scope("composer:read"))) -> dict[str, Any]:
     """지금 파일의 revision·내용. apply 를 보내기 전 base_revision 을 여기서 얻는다."""
-    config = read_current(_path(request))
+    config = _read_current(request)
     return {"revision": config.revision, "config": config.model_dump(mode="json", exclude={"revision"})}
 
 
@@ -312,7 +386,7 @@ def validate(payload: CandidatePayload, request: Request,
       모듈만 로드할 수 있다 — 원격에서 새 코드를 주입하는 경로가 아니다.
       임의 문자열을 보내도 `importlib.import_module` 이 없는 모듈이면 그냥 실패한다.
     """
-    result = validate_candidate(payload.config, path=_path(request), enforce_registry=True)
+    result = validate_candidate(payload.config, enforce_registry=True)
     if not result.valid:
         return {"valid": False, "errors": result.errors}
     return {"valid": True, "errors": [], "revision": result.config.revision}
@@ -323,9 +397,11 @@ def apply(payload: ApplyPayload, request: Request,
          _principal=Depends(require_composer_scope("composer:write"))) -> dict[str, Any]:
     """검증 통과 + revision 일치 시에만 **원자적으로** 쓴다."""
     try:
-        target = _path(request)
-        previous = read_current(target)
-        applied = apply_candidate(payload.config, base_revision=payload.base_revision, path=target, enforce_registry=True)
+        config_store = _config_store(request)
+        subject = getattr(config_store, "path", None) or getattr(config_store, "deployment_id", "?")
+        previous = _read_current(request)
+        applied = apply_candidate(payload.config, base_revision=payload.base_revision,
+                                  store=config_store, enforce_registry=True)
     except RevisionConflict as exc:
         # ★409 다. 400 이 아니다 — 요청 자체는 유효했고, 그 사이 상태가 바뀐 것이다.
         raise _error(409, "revision_conflict",
@@ -334,15 +410,15 @@ def apply(payload: ApplyPayload, request: Request,
     except ProjectConfigError as exc:
         raise _error(422, "invalid_declaration", str(exc)) from exc
     event = {
-        "event": "composer.apply", "actor": _principal["sub"], "subject": str(target),
+        "event": "composer.apply", "actor": _principal["sub"], "subject": str(subject),
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "previous_revision": previous.revision, "revision": applied.revision,
         "changed_fields": _changed_fields(previous.model_dump(mode="json", exclude={"revision"}), applied.model_dump(mode="json", exclude={"revision"})),
         "reason": payload.reason, "correlation_id": str(uuid4()),
     }
     try:
-        _append_audit(event, _audit_path(request))
-    except OSError as exc:
+        _append_audit(event, _audit_store(request))
+    except AuditStoreError as exc:
         raise _error(500, "audit_failure", "config was applied but audit recording failed") from exc
     return {"revision": applied.revision, "applied": True}
 
@@ -369,8 +445,10 @@ def _changed_fields(previous: Any, current: Any, prefix: str = "") -> list[str]:
     return [prefix] if previous != current else []
 
 
-def _append_audit(event: dict[str, Any], audit_path: Path) -> None:
-    audit_path.parent.mkdir(parents=True, exist_ok=True)
-    with audit_path.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n")
-        stream.flush()
+def _append_audit(event: dict[str, Any], store: AuditStore) -> None:
+    """감사 기록. ★실패를 삼키지 않는다 — 호출부가 500 으로 올린다.
+
+    ★2026-08-30 — 파일 append 를 여기서 직접 하던 것을 `AuditStore` 로
+      넘겼다. 설정이 중앙 저장소를 가리키면 감사도 중앙에 쌓인다.
+    """
+    store.append(event)

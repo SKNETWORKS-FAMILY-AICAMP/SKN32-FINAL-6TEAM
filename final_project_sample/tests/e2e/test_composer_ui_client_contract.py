@@ -162,3 +162,75 @@ def test_missing_issuer_secret_fails_loudly(config_dir):
     response = composer.catalog()
     assert not response.ok
     assert "비밀키" in (response.error or "")
+
+
+# ── 두 운영 방식 (2026-08-30) ────────────────────────────────────────
+def test_direct_mode_sends_no_deployment_header(client):
+    """대상에 Composer 가 함께 설치된 방식 — 대상이 자기 하나만 관리한다."""
+    composer, _declaration = client
+    assert composer.mode == "direct"
+    assert composer.catalog().ok
+
+
+def test_central_mode_targets_a_deployment_through_the_config_service(config_dir):
+    """★설정 서비스 한 곳이 여러 대상을 다룬다 — 헤더로 대상을 지정한다."""
+    from uuid import uuid4 as _uuid4
+
+    from acop_basement.core.config_store import PostgresConfigStore
+    from acop_basement.infrastructure.db.session import get_connection
+    from acop_composer.service_app import create_config_service_app
+
+    deployment_id = "test-uiclient-" + _uuid4().hex
+    declaration = yaml.safe_load(Path("config/project.yaml").read_text(encoding="utf-8"))
+    PostgresConfigStore(get_connection, deployment_id).create(declaration)
+
+    service = TestClient(create_config_service_app())
+
+    def transport(method, url, headers, body):
+        response = service.request(method, url, headers=headers, content=body)
+        return response.status_code, response.content
+
+    composer = ComposerClient("http://config-service.invalid",
+                              issuer_secret=get_settings().composer_issuer_secret,
+                              deployment_id=deployment_id, transport=transport)
+    try:
+        assert composer.mode == "central"
+        catalog = composer.catalog()
+        assert catalog.ok, catalog.error
+
+        current = composer.read_current()
+        assert current.ok and current.payload["config"]["teams"]
+
+        changed = composer.change(
+            operation="disable", resource_type="team", instance_id="feedback_analytics",
+            base_revision=current.payload["revision"], reason="중앙 방식 확인")
+        assert changed.ok, changed.error
+        assert changed.payload["activation_state"] == "pending_restart"
+    finally:
+        with get_connection() as conn:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("DELETE FROM project_configs WHERE deployment_id = %s",
+                            (deployment_id,))
+                cur.execute("DELETE FROM composer_audit_events WHERE deployment_id = %s",
+                            (deployment_id,))
+
+
+def test_central_mode_without_a_deployment_id_is_refused_by_the_service(config_dir):
+    """★대상을 안 밝히면 설정 서비스가 거부한다 — 남의 설정을 건드리지 않는다."""
+    from acop_composer.service_app import create_config_service_app
+
+    service = TestClient(create_config_service_app())
+
+    def transport(method, url, headers, body):
+        response = service.request(method, url, headers=headers, content=body)
+        return response.status_code, response.content
+
+    # deployment_id 없이 설정 서비스를 부른다 = direct 모드로 중앙에 붙는 실수
+    composer = ComposerClient("http://config-service.invalid",
+                              issuer_secret=get_settings().composer_issuer_secret,
+                              transport=transport)
+    response = composer.catalog()
+
+    assert not response.ok
+    assert response.status == 400
+    assert response.payload["error"]["code"] == "deployment_required"

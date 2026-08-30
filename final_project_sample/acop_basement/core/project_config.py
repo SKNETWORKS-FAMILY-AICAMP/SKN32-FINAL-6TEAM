@@ -192,8 +192,23 @@ def _load(path: Path) -> ProjectConfig:
         raise ProjectConfigError(f"project declaration file does not exist: {path}")
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise ProjectConfigError(f"invalid project declaration {path}: {exc}") from exc
+    return config_from_declaration(raw, source=str(path))
+
+
+def config_from_declaration(raw: Any, *, source: str = "<declaration>") -> ProjectConfig:
+    """선언 dict 를 **파일 없이** 검증한다.
+
+    ★중앙 설정 저장소(`config_store.py`)로 옮기면서 필요해졌다. 선언이 파일이
+      아니라 DB 행으로 올 수 있으므로, 검증이 파일 경로에 묶여 있으면 안 된다.
+
+    ★검증 규칙은 파일 경로와 **완전히 같다** — 같은 함수를 쓴다. 저장소마다
+      다른 검증기를 두면 "한쪽은 통과하고 한쪽은 죽는" 상태가 생긴다.
+    """
+    try:
         if not isinstance(raw, dict):
-            raise ProjectConfigError(f"project declaration must be a mapping: {path}")
+            raise ProjectConfigError(f"project declaration must be a mapping: {source}")
         config = ProjectConfig.model_validate(raw)
         # ★revision 은 선언에 적는 값이 아니라 **계산되는 값**이다.
         #   사람이 손으로 적게 두면 내용과 어긋나도 아무도 모른다.
@@ -202,8 +217,8 @@ def _load(path: Path) -> ProjectConfig:
         return config
     except ProjectConfigError:
         raise
-    except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError) as exc:
-        raise ProjectConfigError(f"invalid project declaration {path}: {exc}") from exc
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise ProjectConfigError(f"invalid project declaration {source}: {exc}") from exc
 
 
 def _validate_active_team_implementations(config: ProjectConfig) -> None:
@@ -266,7 +281,15 @@ def _cached_load(path: str, mtime_ns: int) -> ProjectConfig:
 
 
 def load_project_config(path: str | Path | None = None) -> ProjectConfig:
-    """Load a declaration; absence and schema errors are never silently defaulted."""
+    """Load a declaration from a **file**; absence and schema errors are never
+    silently defaulted.
+
+    ★중앙 저장소를 포함한 "설정이 정한 출처" 로 읽으려면
+      `acop_basement.application.config_source.load_active_config()` 를 쓴다.
+      그 해석기가 core 가 아니라 application 층에 있는 이유는, core 가
+      `infrastructure`(DB 드라이버)를 import 할 수 없기 때문이다 —
+      `tests/contract/test_core_isolation.py` 가 강제한다.
+    """
     selected = Path(path) if path is not None else DEFAULT_PROJECT_CONFIG
     selected = selected if selected.is_absolute() else (REPO_ROOT / selected)
     try:
@@ -280,4 +303,5 @@ __all__ = [
     "DEFAULT_PROJECT_CONFIG", "ModuleConfig", "PortConfig", "ProjectConfig",
     "ProjectConfigError", "TeamConfig", "KNOWN_IMPLEMENTATION_REFS", "load_project_config",
     "DECLARATIVE_TEAM_REF", "DECLARATIVE_TOOL_PREFIX", "DeclarativeTeamParameters",
+    "config_from_declaration", "configured_store",
 ]

@@ -13,6 +13,18 @@
         "--reload"
       ],
       "port": 8071
+    },
+    {
+      "name": "acop-config-service",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "acop_composer.service_app:app",
+        "--port",
+        "8072"
+      ],
+      "port": 8072
     }
   ]
 }

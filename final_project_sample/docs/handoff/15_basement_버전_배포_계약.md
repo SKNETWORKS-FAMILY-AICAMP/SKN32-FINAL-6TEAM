@@ -16,7 +16,11 @@ manifest 계약 버전은 `1.0`이다.
 현재 컴포넌트는 `acop_basement/core`, `acop_basement/domain`,
 `acop_basement/application`, `acop_basement/infrastructure`,
 `acop_basement/presentation`, `acop_basement/tools`,
-`acop_basement/introspection` 7개다(`tools`·`introspection`은 2026-08-19에
+`acop_basement/introspection`, `acop_basement/teams` 8개다(`teams` 는
+2026-08-30 에 선언형 Team 실행기와 함께 추가됐다 — 빠뜨리면 export 를 받은
+소비자가 `DECLARATIVE_TEAM_REF` 를 못 쓴다.
+`tests/architecture/test_basement_manifest_covers_every_package.py` 가
+이제 누락을 잡는다)(`tools`·`introspection`은 2026-08-19에
 basement 경계로 확정됐다 — `docs/handoff/10` §0). `acop_composer/**`는
 별도 패키지라 이 manifest 대상이 아니다. `__pycache__`, `*.pyc`는
 export하지 않는다. 도메인 마이그레이션(`config/migrations/

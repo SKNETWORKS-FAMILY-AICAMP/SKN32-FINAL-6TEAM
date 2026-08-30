@@ -6,10 +6,12 @@ import 하는 것이 아니라, **sample 이 만들어 배포한 라이브러리
 """
 from acop_composer_ui.client import (
     DEFAULT_SUBJECT,
+    DEPLOYMENT_HEADER,
     ComposerClient,
     ComposerResponse,
     Transport,
 )
 
-__all__ = ["ComposerClient", "ComposerResponse", "Transport", "DEFAULT_SUBJECT"]
+__all__ = ["ComposerClient", "ComposerResponse", "Transport", "DEFAULT_SUBJECT",
+           "DEPLOYMENT_HEADER"]
 __version__ = "0.1.0"

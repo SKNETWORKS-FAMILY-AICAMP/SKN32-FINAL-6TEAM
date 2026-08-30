@@ -45,7 +45,7 @@ def snapshot(*, config: Any | None = None, registry: Any | None = None,
     from acop_basement.core import settings as settings_module
 
     requested_config = config
-    config = config or composition.load_project_config()
+    config = config or composition.load_active_config()
     if registry is None:
         registry = (composition.build_registry()
                     if requested_config is None

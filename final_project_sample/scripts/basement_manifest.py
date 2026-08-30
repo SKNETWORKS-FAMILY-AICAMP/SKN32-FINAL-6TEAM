@@ -15,6 +15,11 @@ BASEMENT_COMPONENTS: tuple[str, ...] = (
     "acop_basement/presentation",
     "acop_basement/tools",
     "acop_basement/introspection",
+    # ★2026-08-30 추가 — 선언형 Team 범용 실행기. 빠져 있으면 export 를 받은
+    #   소비자가 `DECLARATIVE_TEAM_REF` 를 선언에 쓸 수 없다(로드 시점에
+    #   import 실패). 경계는 명시 선언이라 새 디렉터리가 자동으로 들어오지
+    #   않는다 — 이 목록을 갱신하지 않으면 조용히 누락된다.
+    "acop_basement/teams",
 )
 EXCLUDED_PATTERNS: tuple[str, ...] = ("__pycache__", "*.pyc")
 
