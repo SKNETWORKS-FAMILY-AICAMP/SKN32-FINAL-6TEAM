@@ -378,7 +378,11 @@ def _composer_mode_badge(profile: Any) -> str:
             # ★중앙인데 대상이 비었으면 요청이 400 으로 거부된다. 미리 말한다.
             return note("중앙 설정 서비스 방식인데 CONSOLE_COMPOSER_DEPLOYMENT_ID 가 "
                         "비어 있습니다 — 대상을 지정하지 않으면 요청이 거부됩니다.", "bad")
-        return note(f"중앙 설정 서비스 방식 · 대상 <code>{esc(deployment_id)}</code> "
+        # ★`note()` 는 본문 전체를 이스케이프한다(그게 안전한 기본값이다).
+        #   여기에 태그를 넣었더니 화면에 `<code>` 가 **글자로** 나왔다
+        #   (2026-08-30 캡처 검수에서 발견). 문구 검사는 통과했었다 —
+        #   대상 이름이 문자열로는 들어 있었기 때문이다. 눈으로 봐야 잡힌다.
+        return note(f"중앙 설정 서비스 방식 · 대상 {deployment_id} "
                     "— 이 화면의 변경은 중앙 저장소에 기록됩니다.", "info")
     return note("직접 방식 — 대상 제품에 설치된 Composer 를 직접 호출합니다.", "info")
 

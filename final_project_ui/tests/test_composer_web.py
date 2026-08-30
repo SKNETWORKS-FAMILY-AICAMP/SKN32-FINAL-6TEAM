@@ -683,6 +683,24 @@ def test_central_mode_shows_which_deployment_is_being_changed(tmp_path, monkeypa
     assert "중앙 설정 서비스" in body and "customer-42" in body
 
 
+def test_the_mode_badge_does_not_leak_escaped_markup(tmp_path, monkeypatch):
+    """★위 테스트는 **통과하면서도** 화면이 깨져 있었다(2026-08-30).
+
+    `note()` 는 본문 전체를 이스케이프한다. 배지 문구에 `<code>` 를 넣었더니
+    화면에 `&lt;code&gt;` 로 나가 운영자에게는 태그가 **글자로** 보였다 —
+    대상 이름은 문자열로 들어 있었으니 위 단언은 그대로 통과했다.
+    문구가 있는지만 보는 검사로는 못 잡는다.
+    """
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_COMPOSER_MODE", "central")
+    monkeypatch.setenv("CONSOLE_COMPOSER_DEPLOYMENT_ID", "customer-42")
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    badge = body[body.index("중앙 설정 서비스"):][:200]
+    assert "&lt;" not in badge, f"배지에 이스케이프된 태그가 보인다: {badge!r}"
+
+
 def test_central_mode_without_a_deployment_id_warns_before_the_request_fails(tmp_path, monkeypatch):
     _wire(monkeypatch)
     monkeypatch.setenv("CONSOLE_COMPOSER_MODE", "central")
