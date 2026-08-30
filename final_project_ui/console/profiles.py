@@ -16,6 +16,18 @@ class Profile:
     contract_versions: tuple[str, ...] = field(default_factory=tuple)
     composer_url: str | None = None
     composer_issuer_secret: str | None = None
+    #: 어느 방식으로 구성을 관리하나 (2026-08-30).
+    #:
+    #:   direct  — 대상 제품에 Composer 가 함께 설치돼 있고, 그 대상의
+    #:             `/composer/*` 를 직접 부른다. 대상 하나를 붙일 때 쓴다.
+    #:   central — 중앙 **설정 서비스** 한 곳을 부르고 `deployment_id` 로 어느
+    #:             대상의 구성인지 지정한다. 대상이 많을 때 쓴다.
+    #:
+    #: ★두 방식의 요청·응답 모양은 같다 — 주소와 헤더 하나만 다르다. 그래서
+    #:  화면·클라이언트 코드는 그대로 두고 프로필로 고를 수 있다.
+    composer_mode: str = "direct"
+    #: `composer_mode="central"` 일 때 필수. 어느 대상의 구성을 다루는가.
+    composer_deployment_id: str | None = None
 
 
 def profile_for(project: str | Path) -> Profile:
@@ -41,4 +53,23 @@ def profile_for(project: str | Path) -> Profile:
         #   대상이 인증해 검증·저장하는 유일한 경로를 호출할 뿐, 파일을 직접 안 쓴다.
         composer_url=os.environ.get("CONSOLE_COMPOSER_URL") or None,
         composer_issuer_secret=os.environ.get("CONSOLE_COMPOSER_ISSUER_SECRET") or None,
+        # ★기본은 `direct` 다 — 지금까지의 동작이고, 대상 하나에 붙는 가장
+        #   단순한 형태다. 중앙 방식은 명시적으로 켠다.
+        #   `deployment_id` 를 줬는데 mode 를 안 바꾼 경우도 central 로 본다 —
+        #   그 값은 중앙 방식에서만 쓰이므로, 줬다는 것 자체가 의도 표현이다.
+        composer_mode=_composer_mode(),
+        composer_deployment_id=os.environ.get("CONSOLE_COMPOSER_DEPLOYMENT_ID") or None,
     )
+
+
+def _composer_mode() -> str:
+    """`CONSOLE_COMPOSER_MODE` 를 읽되 알 수 없는 값은 조용히 넘기지 않는다."""
+    raw = (os.environ.get("CONSOLE_COMPOSER_MODE") or "").strip().lower()
+    if raw in ("direct", "central"):
+        return raw
+    if raw:
+        # ★오타를 기본값으로 삼키면 "중앙으로 켠 줄 알았는데 대상을 직접
+        #   건드리고 있었다" 가 된다. 그건 남의 설정을 바꾸는 사고다.
+        raise ValueError(
+            f"CONSOLE_COMPOSER_MODE 는 direct 또는 central 이어야 한다: {raw!r}")
+    return "central" if os.environ.get("CONSOLE_COMPOSER_DEPLOYMENT_ID") else "direct"

@@ -364,6 +364,25 @@ def _csrf_denied(reason: str) -> HTMLResponse:
                 current="/composer")
 
 
+def _composer_mode_badge(profile: Any) -> str:
+    """지금 어느 방식으로 붙어 있는지 화면에 밝힌다 (2026-08-30).
+
+    ★같은 화면이 **대상을 직접** 고치기도 하고 **중앙 설정 서비스**를 통해
+      고치기도 한다. 어느 쪽인지 안 보이면 운영자가 "이 [적용] 버튼이 누구
+      설정을 바꾸는가" 를 알 수 없다 — 그건 남의 설정을 건드리는 사고로 이어진다.
+    """
+    mode = getattr(profile, "composer_mode", "direct")
+    deployment_id = getattr(profile, "composer_deployment_id", None)
+    if mode == "central":
+        if not deployment_id:
+            # ★중앙인데 대상이 비었으면 요청이 400 으로 거부된다. 미리 말한다.
+            return note("중앙 설정 서비스 방식인데 CONSOLE_COMPOSER_DEPLOYMENT_ID 가 "
+                        "비어 있습니다 — 대상을 지정하지 않으면 요청이 거부됩니다.", "bad")
+        return note(f"중앙 설정 서비스 방식 · 대상 <code>{esc(deployment_id)}</code> "
+                    "— 이 화면의 변경은 중앙 저장소에 기록됩니다.", "info")
+    return note("직접 방식 — 대상 제품에 설치된 Composer 를 직접 호출합니다.", "info")
+
+
 def _composer_setup_help(target: Path, status: str) -> str:
     """★못 붙었을 때 **다음에 할 일**을 적는다.
 
@@ -984,19 +1003,24 @@ def create_app() -> FastAPI:
         갖고 있을 때만 뜬다 — 없으면 조용히 빠지고 나머지는 그대로 동작한다.
         """
         catalog_card = _catalog_card(catalog, current, target) if catalog is not None else ""
+        # ★어느 방식으로 붙어 있는지 맨 위에 밝힌다 — 이 화면의 [적용] 이
+        #   누구 설정을 바꾸는지가 보여야 한다.
+        badge = _composer_mode_badge(profile_for(target))
         return page("구성 조립(Composer)",
-                    prefix + _toggle_card(live, target) + catalog_card
+                    prefix + badge + _toggle_card(live, target) + catalog_card
                     + _composer_body(target, current, config=config),
                     lede=str(target), path=str(target), current="/composer")
 
     def _read_catalog(profile: Any) -> "composer_client.ComposerResult":
-        return composer_client.read_catalog(profile.composer_url, profile.composer_issuer_secret)
+        return composer_client.read_catalog(profile.composer_url, profile.composer_issuer_secret,
+                                           deployment_id=profile.composer_deployment_id)
 
     @app.get("/composer", response_class=HTMLResponse)
     def composer_form(path: str = Query(default="")) -> HTMLResponse:
         target = Path(path) if path else Path(DEFAULT_ROOT)
         profile = profile_for(target)
-        current = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret)
+        current = composer_client.read_current(profile.composer_url, profile.composer_issuer_secret,
+                                            deployment_id=profile.composer_deployment_id)
         live = read_introspection(profile.introspection_url, profile.contract_versions,
                                   profile.introspection_token)
         return _composer_page(target, current, live, catalog=_read_catalog(profile))
@@ -1017,7 +1041,8 @@ def create_app() -> FastAPI:
         # ★blocking `urlopen()` 을 이벤트 루프에서 직접 부르면, 대상이 느릴 때
         #   이 프로세스의 **다른 화면까지** 멈춘다. worker thread 로 뺀다.
         current = await run_in_threadpool(
-            composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+            composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
+                deployment_id=profile.composer_deployment_id)
         live = await run_in_threadpool(read_introspection, profile.introspection_url,
                                        profile.contract_versions, profile.introspection_token)
         if not current.ok:
@@ -1054,7 +1079,8 @@ def create_app() -> FastAPI:
         if action == "validate":
             outcome = await run_in_threadpool(
                 composer_client.validate_candidate,
-                profile.composer_url, profile.composer_issuer_secret, candidate)
+                profile.composer_url, profile.composer_issuer_secret, candidate,
+                deployment_id=profile.composer_deployment_id)
         elif action == "apply":
             if not reason.strip():
                 # ★reason 없이 적용하지 않는다 — 대상 계약(§ audit)이 요구하는 최소한의 근거다
@@ -1063,7 +1089,8 @@ def create_app() -> FastAPI:
             outcome = await run_in_threadpool(
                 composer_client.apply_candidate,
                 profile.composer_url, profile.composer_issuer_secret, candidate,
-                base_revision=str(form.get("base_revision", "")), reason=reason.strip())
+                base_revision=str(form.get("base_revision", "")), reason=reason.strip(),
+                deployment_id=profile.composer_deployment_id)
         else:
             return _composer_page(target, current, live, config=candidate,
                                   prefix=note(f"알 수 없는 동작: {action}", "bad"))
@@ -1082,7 +1109,8 @@ def create_app() -> FastAPI:
         refreshed = current
         if outcome.status == "적용됨":
             refreshed = await run_in_threadpool(
-                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
+                deployment_id=profile.composer_deployment_id)
         return _composer_page(target, refreshed, live, config=candidate, prefix=result_note)
 
     @app.post("/composer/toggle", response_class=HTMLResponse)
@@ -1105,7 +1133,8 @@ def create_app() -> FastAPI:
 
         async def _redraw(prefix: str = "") -> HTMLResponse:
             current = await run_in_threadpool(
-                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
+                deployment_id=profile.composer_deployment_id)
             live = await run_in_threadpool(read_introspection, profile.introspection_url,
                                            profile.contract_versions, profile.introspection_token)
             return _composer_page(target, current, live, prefix=prefix)
@@ -1116,6 +1145,7 @@ def create_app() -> FastAPI:
 
         outcome = await run_in_threadpool(
             composer_client.toggle_target, profile.composer_url, profile.composer_issuer_secret,
+            deployment_id=profile.composer_deployment_id,
             target_type=str(form.get("target_type", "")), target_id=str(form.get("target_id", "")),
             active=str(form.get("active", "")) == "true",
             base_revision=str(form.get("base_revision", "")), reason=reason)
@@ -1150,7 +1180,8 @@ def create_app() -> FastAPI:
 
         async def _redraw(prefix: str = "") -> HTMLResponse:
             current = await run_in_threadpool(
-                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret)
+                composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
+                deployment_id=profile.composer_deployment_id)
             live = await run_in_threadpool(read_introspection, profile.introspection_url,
                                            profile.contract_versions, profile.introspection_token)
             catalog = await run_in_threadpool(_read_catalog, profile)
@@ -1173,6 +1204,7 @@ def create_app() -> FastAPI:
 
         outcome = await run_in_threadpool(
             composer_client.submit_change, profile.composer_url, profile.composer_issuer_secret,
+            deployment_id=profile.composer_deployment_id,
             operation=str(form.get("operation", "")),
             resource_type=str(form.get("resource_type", "team")),
             instance_id=str(form.get("instance_id", "")).strip(),

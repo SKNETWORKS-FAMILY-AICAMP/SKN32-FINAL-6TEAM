@@ -62,8 +62,16 @@ def _root_of(url: str | None) -> str | None:
     return trimmed
 
 
-def _client(url: str | None, issuer_secret: str | None) -> ComposerClient:
-    return ComposerClient(_root_of(url), issuer_secret, subject=TOKEN_SUBJECT)
+def _client(url: str | None, issuer_secret: str | None, *,
+            deployment_id: str | None = None) -> ComposerClient:
+    """★`deployment_id` 가 두 운영 방식을 가른다(2026-08-30).
+
+    없으면 **직접 방식** — 대상에 Composer 가 함께 설치돼 있고 그 대상을
+    직접 부른다. 있으면 **중앙 방식** — 설정 서비스 한 곳을 부르고 헤더로
+    대상을 지정한다. 어느 쪽인지는 프로필이 정한다(`Profile.composer_mode`).
+    """
+    return ComposerClient(_root_of(url), issuer_secret, subject=TOKEN_SUBJECT,
+                          deployment_id=deployment_id)
 
 
 def _to_result(response: ComposerResponse, success_status: str) -> ComposerResult:
@@ -103,15 +111,17 @@ def _to_result(response: ComposerResponse, success_status: str) -> ComposerResul
 
 
 # ── v2 (호환·bulk 경로) ──────────────────────────────────────────────
-def read_current(url: str | None, issuer_secret: str | None = None) -> ComposerResult:
+def read_current(url: str | None, issuer_secret: str | None = None, *,
+                 deployment_id: str | None = None) -> ComposerResult:
     """현재 revision과 config를 읽는다."""
-    return _to_result(_client(url, issuer_secret).read_current(), "읽음")
+    return _to_result(_client(url, issuer_secret, deployment_id=deployment_id).read_current(), "읽음")
 
 
 def validate_candidate(url: str | None, issuer_secret: str | None,
-                       config: dict[str, Any]) -> ComposerResult:
+                       config: dict[str, Any], *,
+                       deployment_id: str | None = None) -> ComposerResult:
     """후보 config를 검증한다."""
-    result = _to_result(_client(url, issuer_secret).validate(config), "검증됨")
+    result = _to_result(_client(url, issuer_secret, deployment_id=deployment_id).validate(config), "검증됨")
     if result.status == "검증됨" and result.value is not None and result.value.get("valid") is False:
         return ComposerResult("검증 실패", value=result.value,
                               errors=tuple(result.value.get("errors", ())))
@@ -119,7 +129,8 @@ def validate_candidate(url: str | None, issuer_secret: str | None,
 
 
 def apply_candidate(url: str | None, issuer_secret: str | None, config: dict[str, Any],
-                    *, base_revision: str, reason: str) -> ComposerResult:
+                    *, base_revision: str, reason: str,
+                    deployment_id: str | None = None) -> ComposerResult:
     """검증된 후보를 base revision이 일치할 때 적용한다.
 
     ★`reason`은 선택이 아니다. 대상의 `ApplyPayload`가 `min_length=1`로 요구하고,
@@ -129,13 +140,14 @@ def apply_candidate(url: str | None, issuer_secret: str | None, config: dict[str
     그래서 keyword-only 필수 인자로 두었다. 빠뜨리면 호출이 TypeError로 깨진다.
     """
     return _to_result(
-        _client(url, issuer_secret).apply(config, base_revision=base_revision, reason=reason),
+        _client(url, issuer_secret, deployment_id=deployment_id).apply(config, base_revision=base_revision, reason=reason),
         "적용됨")
 
 
 # ── v3 토글 ─────────────────────────────────────────────────────────
 def toggle_target(url: str | None, issuer_secret: str | None, *, target_type: str, target_id: str,
-                  active: bool, base_revision: str, reason: str) -> ComposerResult:
+                  active: bool, base_revision: str, reason: str,
+                  deployment_id: str | None = None) -> ComposerResult:
     """등록된 모듈·Team 하나의 활성 상태만 바꾼다 (`POST /composer/toggle`).
 
     ★응답의 `activation_state` 는 보통 `pending_restart` 다 — 저장된 것이지
@@ -143,20 +155,21 @@ def toggle_target(url: str | None, issuer_secret: str | None, *, target_type: st
       그대로 보여줘야 한다.
     """
     return _to_result(
-        _client(url, issuer_secret).toggle(target_type=target_type, target_id=target_id,
+        _client(url, issuer_secret, deployment_id=deployment_id).toggle(target_type=target_type, target_id=target_id,
                                            active=active, base_revision=base_revision,
                                            reason=reason),
         "토글됨")
 
 
 # ── 카탈로그 기반 인스턴스 CRUD (정본 관리 계약) ─────────────────────
-def read_catalog(url: str | None, issuer_secret: str | None = None) -> ComposerResult:
+def read_catalog(url: str | None, issuer_secret: str | None = None, *,
+                 deployment_id: str | None = None) -> ComposerResult:
     """고를 수 있는 구현 종류와 입력 스키마를 읽는다 (`GET /composer/catalog`).
 
     ★화면의 생성 폼은 여기서 받은 `parameters_schema` 로 만든다. UI 가 대상의
       스키마를 자기 코드에 복제하지 않기 위해서다.
     """
-    return _to_result(_client(url, issuer_secret).catalog(), "조회됨")
+    return _to_result(_client(url, issuer_secret, deployment_id=deployment_id).catalog(), "조회됨")
 
 
 def submit_change(url: str | None, issuer_secret: str | None, *, operation: str,
@@ -164,14 +177,15 @@ def submit_change(url: str | None, issuer_secret: str | None, *, operation: str,
                   implementation_id: str | None = None,
                   parameters: dict[str, Any] | None = None,
                   active: bool | None = None, dry_run: bool = False,
-                  idempotency_key: str | None = None) -> ComposerResult:
+                  idempotency_key: str | None = None,
+                  deployment_id: str | None = None) -> ComposerResult:
     """인스턴스 하나를 만들거나 고치거나 지운다 (`POST /composer/changes`).
 
     `operation` 은 `create`·`update`·`delete`·`enable`·`disable`.
     ★유효성은 대상이 판정한다 — 여기서 미리 검사하지 않는다(§0.2).
     """
     return _to_result(
-        _client(url, issuer_secret).change(
+        _client(url, issuer_secret, deployment_id=deployment_id).change(
             operation=operation, resource_type=resource_type, instance_id=instance_id,
             base_revision=base_revision, reason=reason,
             implementation_id=implementation_id, parameters=parameters,

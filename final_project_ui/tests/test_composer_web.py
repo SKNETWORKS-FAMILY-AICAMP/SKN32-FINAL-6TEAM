@@ -44,7 +44,7 @@ def test_composer_screen_without_url_says_so_not_a_500(tmp_path, monkeypatch):
 
 def test_composer_screen_shows_modules_ports_teams_and_revision(tmp_path, monkeypatch):
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "rev-1",
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "rev-1",
                                                                               "config": SAMPLE_CONFIG}))
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
     monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "issuer-secret")
@@ -63,12 +63,12 @@ def test_validate_builds_the_config_from_checked_modules_not_from_raw_json(tmp_p
     """★체크박스 상태에서 config를 재구성한다 — 원래 화면과 같은 편집 방식."""
     calls = []
 
-    def fake_validate(url, issuer_secret, config):
+    def fake_validate(url, issuer_secret, config, **_k):
         calls.append(config)
         return ComposerResult("검증됨", value={"valid": True, "revision": "rev-1"})
 
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "rev-1",
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "rev-1",
                                                                               "config": SAMPLE_CONFIG}))
     monkeypatch.setattr("console.composer.validate_candidate", fake_validate)
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
@@ -96,7 +96,7 @@ def test_add_team_appends_a_blank_row_without_calling_the_target(tmp_path, monke
     monkeypatch.setattr("console.composer.validate_candidate", lambda *a, **k: calls.append(1))
     monkeypatch.setattr("console.composer.apply_candidate", lambda *a, **k: calls.append(1))
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "rev-1",
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "rev-1",
                                                                               "config": SAMPLE_CONFIG}))
     project = make_project(tmp_path)
 
@@ -113,7 +113,7 @@ def test_remove_team_drops_the_row_without_calling_the_target(tmp_path, monkeypa
     calls = []
     monkeypatch.setattr("console.composer.validate_candidate", lambda *a, **k: calls.append(1))
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "rev-1",
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "rev-1",
                                                                               "config": SAMPLE_CONFIG}))
     project = make_project(tmp_path)
 
@@ -130,7 +130,7 @@ def test_apply_without_a_reason_is_refused_before_calling_the_target(tmp_path, m
     calls = []
     monkeypatch.setattr("console.composer.apply_candidate", lambda *a, **k: calls.append(1))
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "r", "config": {}}))
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "r", "config": {}}))
     project = make_project(tmp_path)
 
     response = TestClient(create_app()).post("/composer", data={
@@ -142,7 +142,7 @@ def test_apply_without_a_reason_is_refused_before_calling_the_target(tmp_path, m
 
 
 def test_apply_reports_the_new_revision(tmp_path, monkeypatch):
-    def fake_apply(url, issuer_secret, config, *, base_revision, reason):
+    def fake_apply(url, issuer_secret, config, *, base_revision, reason, **_k):
         assert base_revision == "rev-1"
         # ★사유는 대상이 필수로 요구한다. 한때 화면이 사유를 입력받고도 클라이언트에
         #   넘기지 않아 적용이 늘 422로 거부됐다 — 그때 이 stub은 `reason` 을 아예
@@ -153,7 +153,7 @@ def test_apply_reports_the_new_revision(tmp_path, monkeypatch):
     reads = [ComposerResult("읽음", value={"revision": "rev-1", "config": {}}),
              ComposerResult("읽음", value={"revision": "rev-2", "config": {}})]
     monkeypatch.setattr("console.composer.apply_candidate", fake_apply)
-    monkeypatch.setattr("console.composer.read_current", lambda url, issuer_secret=None: reads.pop(0))
+    monkeypatch.setattr("console.composer.read_current", lambda url, issuer_secret=None, **_k: reads.pop(0))
     project = make_project(tmp_path)
 
     response = TestClient(create_app()).post("/composer", data={
@@ -165,12 +165,12 @@ def test_apply_reports_the_new_revision(tmp_path, monkeypatch):
 
 
 def test_apply_revision_conflict_shows_current_revision_not_a_crash(tmp_path, monkeypatch):
-    def fake_apply(url, issuer_secret, config, *, base_revision, reason):
+    def fake_apply(url, issuer_secret, config, *, base_revision, reason, **_k):
         return ComposerResult("충돌", value={"current_revision": "someone-else"}, detail="다른 변경이 먼저 적용됐다.")
 
     monkeypatch.setattr("console.composer.apply_candidate", fake_apply)
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult("읽음", value={"revision": "someone-else",
+                        lambda url, issuer_secret=None, **_k: ComposerResult("읽음", value={"revision": "someone-else",
                                                                               "config": {}}))
     project = make_project(tmp_path)
 
@@ -190,7 +190,7 @@ def test_structure_diagram_explains_component_module_instance_and_teams_are_inst
     발견했다.
     """
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult(
+                        lambda url, issuer_secret=None, **_k: ComposerResult(
                             "읽음", value={"revision": "r1", "config": SAMPLE_CONFIG}))
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
     monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
@@ -229,7 +229,7 @@ def test_a_malformed_target_config_does_not_crash_the_screen(tmp_path, monkeypat
     project = make_project(tmp_path)
     for broken in (None, [], "oops", 42):
         monkeypatch.setattr("console.composer.read_current",
-                            lambda url, issuer_secret=None, _c=broken:
+                            lambda url, issuer_secret=None, _c=broken, **_k:
                             ComposerResult("읽음", value={"revision": "r", "config": _c}))
         monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
         monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
@@ -242,7 +242,7 @@ def test_a_malformed_target_config_does_not_crash_the_screen(tmp_path, monkeypat
 def test_a_non_numeric_remove_team_does_not_crash(tmp_path, monkeypatch):
     """★실측: 조작된 POST(`remove_team=abc`)가 `int()` 에서 터져 500 이었다."""
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult(
+                        lambda url, issuer_secret=None, **_k: ComposerResult(
                             "읽음", value={"revision": "r1", "config": SAMPLE_CONFIG}))
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
     monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
@@ -335,7 +335,7 @@ def test_a_cross_origin_post_is_refused_even_with_a_leaked_token(tmp_path, monke
 def test_the_form_carries_the_csrf_token_so_the_real_screen_works(tmp_path, monkeypatch):
     """★방어가 정상 사용을 막으면 안 된다 — 화면이 준 폼에는 토큰이 들어 있어야 한다."""
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: ComposerResult(
+                        lambda url, issuer_secret=None, **_k: ComposerResult(
                             "읽음", value={"revision": "r1", "config": SAMPLE_CONFIG}))
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
     monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "s")
@@ -440,7 +440,8 @@ def test_toggle_card_shows_unknown_state_without_a_button(tmp_path, monkeypatch)
 def test_composer_toggle_post_calls_the_adapter_and_shows_new_state(tmp_path, monkeypatch):
     calls = []
 
-    def fake_toggle(url, issuer_secret, *, target_type, target_id, active, base_revision, reason):
+    def fake_toggle(url, issuer_secret, *, target_type, target_id, active, base_revision,
+                    reason, **_k):
         calls.append((target_type, target_id, active, base_revision, reason))
         return ComposerResult("토글됨", value={"target_type": target_type, "target_id": target_id,
                                               "active": active, "config_revision": "rev-i2"})
@@ -520,10 +521,10 @@ CATALOG_VALUE = {
 
 def _wire(monkeypatch, *, catalog=None, current=None):
     monkeypatch.setattr("console.composer.read_current",
-                        lambda url, issuer_secret=None: current or ComposerResult(
+                        lambda url, issuer_secret=None, **_k: current or ComposerResult(
                             "읽음", value={"revision": "rev-1", "config": SAMPLE_CONFIG}))
     monkeypatch.setattr("console.composer.read_catalog",
-                        lambda url, issuer_secret=None: catalog if catalog is not None
+                        lambda url, issuer_secret=None, **_k: catalog if catalog is not None
                         else ComposerResult("조회됨", value=CATALOG_VALUE))
     monkeypatch.setenv("CONSOLE_COMPOSER_URL", "http://x/composer")
     monkeypatch.setenv("CONSOLE_COMPOSER_ISSUER_SECRET", "issuer-secret")
@@ -583,7 +584,7 @@ def test_pending_restart_is_shown_not_hidden(tmp_path, monkeypatch):
     """★저장과 반영은 다르다 — 화면이 '적용됨' 만 보여주면 안 된다."""
     _wire(monkeypatch)
     monkeypatch.setattr("console.composer.submit_change",
-                        lambda url, issuer_secret, **k: ComposerResult(
+                        lambda url, issuer_secret, **_k: ComposerResult(
                             "변경됨", value={"desired_revision": "rev-2",
                                           "activation_state": "pending_restart",
                                           "dry_run": False}))
@@ -600,7 +601,7 @@ def test_pending_restart_is_shown_not_hidden(tmp_path, monkeypatch):
 def test_dry_run_says_it_did_not_save(tmp_path, monkeypatch):
     _wire(monkeypatch)
     monkeypatch.setattr("console.composer.submit_change",
-                        lambda url, issuer_secret, **k: ComposerResult(
+                        lambda url, issuer_secret, **_k: ComposerResult(
                             "변경됨", value={"desired_revision": "rev-1", "dry_run": True,
                                           "activation_state": "pending_restart"}))
     project = make_project(tmp_path)
@@ -658,3 +659,59 @@ def test_instance_route_requires_the_csrf_token(tmp_path, monkeypatch):
     assert calls == []
     assert response.status_code == 200
     assert "요청을 거부했습니다" in response.text
+
+
+# ── 두 운영 방식 선택 (2026-08-30) ───────────────────────────────────
+def test_direct_mode_is_the_default_and_says_so(tmp_path, monkeypatch):
+    _wire(monkeypatch)
+    for key in ("CONSOLE_COMPOSER_MODE", "CONSOLE_COMPOSER_DEPLOYMENT_ID"):
+        monkeypatch.delenv(key, raising=False)
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "직접 방식" in body
+
+
+def test_central_mode_shows_which_deployment_is_being_changed(tmp_path, monkeypatch):
+    """★어느 대상을 바꾸는지 안 보이면 남의 설정을 건드리는 사고가 난다."""
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_COMPOSER_MODE", "central")
+    monkeypatch.setenv("CONSOLE_COMPOSER_DEPLOYMENT_ID", "customer-42")
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "중앙 설정 서비스" in body and "customer-42" in body
+
+
+def test_central_mode_without_a_deployment_id_warns_before_the_request_fails(tmp_path, monkeypatch):
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_COMPOSER_MODE", "central")
+    monkeypatch.delenv("CONSOLE_COMPOSER_DEPLOYMENT_ID", raising=False)
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "CONSOLE_COMPOSER_DEPLOYMENT_ID" in body
+
+
+def test_the_selected_mode_reaches_the_client(tmp_path, monkeypatch):
+    """★프로필의 선택이 실제 호출까지 전달돼야 의미가 있다."""
+    seen = {}
+
+    def fake_change(url, issuer_secret, **kwargs):
+        seen.update(kwargs)
+        return ComposerResult("변경됨", value={"desired_revision": "rev-2",
+                                            "activation_state": "pending_restart",
+                                            "dry_run": False})
+
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.composer.submit_change", fake_change)
+    monkeypatch.setenv("CONSOLE_COMPOSER_MODE", "central")
+    monkeypatch.setenv("CONSOLE_COMPOSER_DEPLOYMENT_ID", "customer-42")
+    project = make_project(tmp_path)
+
+    TestClient(create_app()).post("/composer/instance", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "operation": "delete",
+        "resource_type": "team", "instance_id": "billing", "base_revision": "rev-1",
+        "reason": "방식 전달 확인"})
+
+    assert seen["deployment_id"] == "customer-42"
