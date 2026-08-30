@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 import app.core.settings as settings_module
 from app import composition
-from app.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
+from app.core.project_config import ProjectConfigError, load_project_config
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.db.session import get_connection
@@ -22,6 +22,16 @@ from app.presentation.ui import theme
 
 router = APIRouter(prefix="/ui", tags=["operations-ui"])
 ops_router = APIRouter(tags=["operations-ui"])
+# ★VOC 화면만 따로 뗀다. `voc` 모듈을 끄면 이 라우터를 등록하지 않아 /ui/voc 가
+#   404 가 된다(`docs/handoff/08` §2). 한 라우터에 섞어 두면 끌 방법이 없다.
+voc_router = APIRouter(prefix="/ui", tags=["operations-ui"])
+
+
+def _nav() -> tuple[tuple[str, str], ...]:
+    """꺼진 모듈의 메뉴를 뺀 상단 메뉴."""
+    config = load_project_config()
+    return tuple((href, label) for href, label in theme.NAV
+                 if href != "/ui/voc" or config.module_enabled("voc"))
 
 
 def _safe(value: Any) -> str:
@@ -33,7 +43,7 @@ def _json(value: Any) -> str:
 
 
 def _page(title: str, body: str, *, current: str = "", lede: str = "") -> HTMLResponse:
-    return HTMLResponse(theme.page(title, body, current=current, lede=lede))
+    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_nav()))
 
 
 def _legacy_page(title: str, body: str) -> HTMLResponse:
@@ -98,6 +108,20 @@ def _unknown_outbox() -> list[dict[str, Any]]:
         return [dict(zip(keys, row)) for row in cur.fetchall()]
 
 
+def _graph_port_name(tenant: str) -> str:
+    """관리자 화면에 적을 GraphStorePort 구현 이름. 꺼져 있으면 껐다고 적는다.
+
+    ★어댑터를 직접 만들지 않는다. 2026-08-30 이전에는 이 화면이 SqlGraphAdapter 를
+      바로 생성해서, graph_store 모듈을 꺼도 Graph 줄이 그대로 떴다 —
+      `docs/handoff/08` §6 검증기 4번이 잡아야 할 "꺼진 모듈을 부르는 경로"였다.
+    ★빈칸으로 두지 않는다. 빈칸은 "껐다"와 "고장났다"를 구별해 주지 못한다.
+    """
+    try:
+        return type(composition.build_graph_store(connection=None, tenant_id=tenant)).__name__
+    except ProjectConfigError:
+        return "모듈 꺼짐 (graph_store)"
+
+
 def _admin_snapshot() -> dict[str, Any]:
     """Read-only projection of the composition and tenant-scoped operations state."""
     tenant = _tenant()
@@ -105,11 +129,11 @@ def _admin_snapshot() -> dict[str, Any]:
     settings = settings_module.get_settings()
     guardrails = settings_module.get_guardrails().as_dict()
     # These are the concrete objects assembled by the composition boundary.
-    # SqlGraphAdapter only needs a connection when a graph operation is called;
-    # the admin page intentionally does not execute graph queries.
+    # The graph adapter only needs a connection when a query runs; this page
+    # intentionally executes none, so it passes None.
     executor = LocalTeamExecutor(registry)
     broker = OutboxBrokerAdapter(get_connection)
-    graph = SqlGraphAdapter(None, tenant_id=tenant)
+    graph_name = _graph_port_name(tenant)
     llm = OpenAITeamLLM()
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM knowledge_documents WHERE tenant_id=%s", (tenant,))
@@ -127,7 +151,7 @@ def _admin_snapshot() -> dict[str, Any]:
         "ports": [
             ("TeamExecutorPort", type(executor).__name__),
             ("MessageBrokerPort", type(broker).__name__),
-            ("GraphStorePort", type(graph).__name__),
+            ("GraphStorePort", graph_name),
             ("Vector 검색", f"{rag_retriever.__name__}.{rag_retriever.search_policy.__name__}"),
             ("LLM", type(llm).__name__),
         ],
@@ -444,7 +468,7 @@ ops_router.add_api_route("/ops/outbox", outbox, methods=["GET"], response_class=
 ops_router.add_api_route("/ops/outbox/{message_id}", resolve_outbox, methods=["POST"])
 
 
-@router.get("/voc", response_class=HTMLResponse)
+@voc_router.get("/voc", response_class=HTMLResponse)
 def voc() -> HTMLResponse:
     report = _voc()
     if report is None:

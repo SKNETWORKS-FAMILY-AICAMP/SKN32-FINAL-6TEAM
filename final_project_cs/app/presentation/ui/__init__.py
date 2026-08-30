@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from app.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfig, load_project_config
-from app.presentation.ui.routes import ops_router, router
+from app.presentation.ui.routes import ops_router, router, voc_router
 
 
 def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
@@ -31,6 +31,11 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
         app.include_router(router)
         app.include_router(ops_router)
         landing = "/ui/cases"
+        # ★VOC 화면은 `voc` 모듈에 딸려 있다. 모듈을 끄면 등록하지 않아 /ui/voc 가
+        #   404 가 된다. 2026-08-30 이전에는 토글과 무관하게 늘 떠 있었다
+        #   (`docs/handoff/08` §2 가 끄면 사라진다고 지정한 표면이다).
+        if config.module_enabled("voc"):
+            app.include_router(voc_router)
 
     # ★루트가 404 였다. 개발 서버를 띄우면 브라우저가 `/` 로 열리는데
     #   빈 404 페이지가 떠서 "서버가 안 떴나" 로 읽힌다.

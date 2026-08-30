@@ -403,10 +403,17 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 """
 
 
-def page(title: str, body: str, *, current: str = "", lede: str = "") -> str:
+def page(title: str, body: str, *, current: str = "", lede: str = "",
+         nav: tuple[tuple[str, str], ...] | None = None) -> str:
+    """Render one operator page.
+
+    ★`nav` 를 받는 이유는 꺼진 모듈의 메뉴를 지우기 위해서다. 없는 화면으로
+      가는 링크를 남겨 두면 눌렀을 때 404 가 뜨고, 운영자는 서버가 죽은 줄 안다
+      (`docs/handoff/08` §2 — 모듈을 빼면 그 표면도 함께 빠져야 한다).
+    """
     links = "".join(
         f"<a href='{href}'{' aria-current=page' if href == current else ''}>{esc(label)}</a>"
-        for href, label in NAV)
+        for href, label in (NAV if nav is None else nav))
     lede_html = f"<p class='lede'>{esc(lede)}</p>" if lede else ""
     return (
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"

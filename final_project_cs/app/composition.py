@@ -28,10 +28,20 @@ from app.presentation.security import masked
 from app.tools.read_tools import ReadToolbox
 
 
-def build_classifier():
-    """Build the configured classifier, failing explicitly when unconfigured."""
+def build_classifier(*, config: ProjectConfig | None = None):
+    """Build the configured classifier, failing explicitly when unconfigured.
+
+    ★`voc` 모듈이 꺼져 있으면 여기서 실패한다. 인라인 분류가 Case 생성 경로에
+      붙어 있어서, 모듈만 끄고 조용히 넘어가면 `intent`·`sentiment` 가 빈 채로
+      Case 가 만들어지고 그 빈 값이 근거 조합을 거쳐 고객 답변까지 간다
+      (`CLAUDE.md` §1 — 인라인 분류는 선택 기능이 아니다).
+      결과적으로 `voc: false` 로는 이 제품이 기동하지 않는다. 끌 수 있는 척하던
+      2026-08-30 이전 상태가 결함이었다(`docs/handoff/08` §6 검증기 4번).
+    """
     from app.core.settings import get_settings
 
+    config = config or load_project_config()
+    config.require_module("voc", "inline classifier")
     if not get_settings().openai_api_key:
         raise RuntimeError("OpenAI API key is missing")
 
