@@ -165,6 +165,21 @@ def chart_cost():
            "근거 E1·E2·E3(2차). 참고: 해결당 과금은 잘될수록 비싸져 이탈 사유 1위로 지목된다(E5, 2차)")
 
 
+def lay_out(count, left=0.02, right=0.02, gap=0.045):
+    """상자 count 개를 가로로 늘어놓을 때의 (폭, 간격, 시작 x) 를 돌려준다.
+
+    ★폭과 간격을 손으로 적으면 마지막 상자가 축(0~1) 밖으로 나가 잘린다.
+      실제로 Composer 저장 흐름과 데이터 처리 흐름 두 그림에서 마지막 칸이
+      잘려 나갔다(2026-08-29 지적). 그래서 폭을 계산하고 넘치면 막는다.
+    """
+    w = (1.0 - left - right - gap * (count - 1)) / count
+    if w <= 0:
+        raise ValueError("칸이 너무 많다: %d" % count)
+    last_right = left + (count - 1) * (w + gap) + w
+    assert last_right <= 1.0 + 1e-9, "마지막 상자가 축을 넘는다: %.4f" % last_right
+    return w, gap, left
+
+
 # 공통 상자 그리기 -------------------------------------------------------------
 def box(ax, x, y, w, h, text, fc="white", ec=BLUE, fs=9.2, bold=False, tc=INK):
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.012,rounding_size=0.02",
@@ -217,9 +232,9 @@ def chart_composer_flow():
         ("3단계\n사유 적고 적용", "POST /composer/apply\nrevision 일치할 때만", "#e9f6ef", GREEN),
         ("4단계\n다시 읽기", "새 revision을\n화면에 보여준다", PALE, BLUE),
     ]
-    w, gap = 0.215, 0.048
+    w, gap, left = lay_out(len(steps))
     for i, (title, sub, fc, ec) in enumerate(steps):
-        x = 0.02 + i * (w + gap)
+        x = left + i * (w + gap)
         box(ax, x, 0.42, w, 0.30, title, fc=fc, ec=ec, bold=True, fs=9.8)
         ax.text(x + w / 2, 0.34, sub, ha="center", va="top", fontsize=8.6,
                 color=DIM, linespacing=1.5)
@@ -259,25 +274,26 @@ def chart_storage():
 
 # 8. 데이터 파이프라인 ---------------------------------------------------------
 def chart_pipeline():
-    fig, ax = canvas((9.8, 3.9))
+    # ★설명이 세 줄이라 아래 안내 상자와 겹쳤다. 상자를 올리고 안내를 내려 간격을 벌린다.
+    fig, ax = canvas((9.8, 4.5))
     rows = [
         ("수집", "브라우저 확장,\n공개 데이터셋,\n택배 조회 API", BLUE),
         ("정규화", "스키마 통일,\n개인정보 제거,\n중복 제거", AMBER),
         ("색인", "문서 분할,\n임베딩 생성,\npgvector 적재", GREEN),
         ("사용", "Context Broker가\nContextPack으로\n조합", BLUE),
     ]
-    w, gap = 0.215, 0.047
+    w, gap, left = lay_out(len(rows))
     for i, (title, sub, c) in enumerate(rows):
-        x = 0.025 + i * (w + gap)
-        box(ax, x, 0.40, w, 0.32, title, fc="white", ec=c, bold=True, fs=11)
-        ax.text(x + w / 2, 0.34, sub, ha="center", va="top", fontsize=8.8,
-                color=DIM, linespacing=1.6)
+        x = left + i * (w + gap)
+        box(ax, x, 0.52, w, 0.28, title, fc="white", ec=c, bold=True, fs=11)
+        ax.text(x + w / 2, 0.47, sub, ha="center", va="top", fontsize=8.8,
+                color=DIM, linespacing=1.7)
         if i < 3:
-            arrow(ax, (x + w, 0.56), (x + w + gap, 0.56))
-    box(ax, 0.025, 0.05, 0.95, 0.16,
+            arrow(ax, (x + w, 0.66), (x + w + gap, 0.66))
+    box(ax, 0.025, 0.04, 0.95, 0.14,
         "raw 와 processed 는 본인의 실제 구매 기록을 담고 있어 git에 올리지 않는다. "
         "스크립트, 스키마, REPORT.md 만 올린다.", fc="#fff8e6", ec=AMBER, fs=9.2)
-    ax.text(0.5, 0.92, "데이터 처리 흐름", ha="center", fontsize=12.5, color=INK, fontweight="bold")
+    ax.text(0.5, 0.93, "데이터 처리 흐름", ha="center", fontsize=12.5, color=INK, fontweight="bold")
     finish(fig, "08_pipeline.png", "출처: datasets/README.md, 각 데이터셋 폴더의 REPORT.md")
 
 
