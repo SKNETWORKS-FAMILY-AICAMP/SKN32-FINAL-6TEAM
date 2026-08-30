@@ -41,7 +41,7 @@ OPEN_ONLY = """
 """
 
 
-def snap(page, url, name, open_names, width=1160, max_h=None):
+def snap(page, url, name, open_names, width=1160, max_h=None, start_y=0):
     """main 영역을 찍는다. max_h 를 주면 위에서 그만큼만 잘라 찍는다.
 
     ★세로가 2000 CSS px 를 넘으면 문서에 6인치로 넣었을 때 글씨를 읽을 수 없다.
@@ -55,11 +55,20 @@ def snap(page, url, name, open_names, width=1160, max_h=None):
     box = page.locator("main.shell").first.bounding_box()
     if box is None:
         page.screenshot(path=out)
-    elif max_h and box["height"] > max_h:
-        page.screenshot(path=out, clip={"x": box["x"], "y": box["y"],
-                                        "width": box["width"], "height": max_h})
-    else:
+        print("  ", name)
+        return
+    # ★clip 은 full_page 없이는 뷰포트 안만 잡는다. 뷰포트 아래를 자르려면 full_page 가 필요하다.
+    #   start_y 를 주면 그만큼 내려간 지점부터 자른다. 한 화면을 위아래로 나눠 찍을 때 쓴다.
+    remain = box["height"] - start_y
+    if remain <= 0:
+        raise ValueError("start_y 가 화면보다 길다: %s (%s > %s)" % (name, start_y, box["height"]))
+    height = min(max_h, remain) if max_h else remain
+    if start_y == 0 and (max_h is None or box["height"] <= max_h):
         page.locator("main.shell").first.screenshot(path=out)
+    else:
+        page.screenshot(path=out, full_page=True,
+                        clip={"x": box["x"], "y": box["y"] + start_y,
+                              "width": box["width"], "height": height})
     print("  ", name)
 
 
@@ -76,6 +85,19 @@ with sync_playwright() as p:
          ["빠른 토글", "모듈", "Port", "Team"], max_h=1250)
     snap(pg, CONNECTED + "/composer?path=" + Q, "shot_scr03_structure.png",
          ["구조", "컴포넌트"], max_h=1500)
+    # ★SCR-02 는 한 장에 안 들어간다. 위아래로 자르면 카드 하나가 경계에 걸려 잘리므로
+    #   설명이 있는 카드는 카드 단위로 찍는다. 문서에 카드 2, 3 설명만 있고 그림이 없다는
+    #   지적을 받아 고쳤다(2026-08-29).
+    pg.set_viewport_size({"width": 1160, "height": 900})
+    pg.goto(CONNECTED + "/project?path=" + Q, wait_until="networkidle")
+    pg.wait_for_timeout(400)
+    for idx, out in [(2, "shot_scr02_card2_dod.png"), (3, "shot_scr02_card3_eval.png"),
+                     (6, "shot_scr02_card5_connections.png")]:
+        pg.locator(".card").nth(idx).screenshot(path=os.path.join(HERE, out))
+        print("  ", out)
+    # SCR-03 편집 폼의 아래쪽(Team 표와 사유와 버튼)도 따로 찍는다.
+    snap(pg, CONNECTED + "/composer?path=" + Q, "shot_scr03_composer_lower.png",
+         ["빠른 토글", "모듈", "Port", "Team"], max_h=900, start_y=1250)
     snap(pg, BARE + "/composer?path=" + Q, "shot_scr03_not_connected.png", [])
 
     # 빠른 토글 카드만 따로
