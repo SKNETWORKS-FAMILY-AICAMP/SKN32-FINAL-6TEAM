@@ -3,7 +3,8 @@
 - v7 §27 항목 28 / 검증 방법: 공개 1차·알파 2차 모델을 같은 golden/holdout 에서 비교하고
   스키마 준수율·근거 정합률·기권 지표의 분모와 CI 를 기록
 - 실행: 2026-08-16 · ★수치 재확인 2026-08-17(코퍼스·평가 데이터셋 전면 교체 이후)
-- 판정: **부분 통과** — ★**방어 지표 5종은 만들었고, 파인튜닝은 미착수다**
+  · ★2026-08-30 파인튜닝 1차·2차 실행 및 `Proposed` vs `Proposed+FT` golden+holdout 비교 완료
+- 판정: **부분 통과** — ★**방어 지표 5종 + 파인튜닝 1차·2차·golden/holdout 비교평가까지 전부 완료. 단 결과는 부정적**(아래 2026-08-30 갱신 참고)
 
 ## 재현 명령
 
@@ -115,10 +116,10 @@ python -m pytest tests/unit/eval/test_defense_metrics.py -q
 |---|---|
 | 방어 지표 5종 | **완료** |
 | 공격 fixture | **완료** (17건) |
-| 공개 데이터 1차 파인튜닝 | **미착수** |
-| 알파 실데이터 2차 | **미착수** |
-| `Proposed` vs `Proposed+FT` 를 같은 golden/holdout 에서 비교 | **미착수** |
-| golden/holdout 각각에서 다섯 지표 기록 (§15) | **golden 완료(2026-08-28), holdout 미착수** — 아래 갱신 참고 |
+| 공개 데이터 1차 파인튜닝 | **완료 (2026-08-30)** — 아래 갱신 참고 |
+| 알파 실데이터 2차 | **완료 (2026-08-30)** — golden judge-pass 22건으로 대체(알파 실사용 로그가 아직 없어 golden 중 judge 통과분을 2차 데이터로 씀, 아래 갱신에 근거 명시) |
+| `Proposed` vs `Proposed+FT` 를 같은 golden/holdout 에서 비교 | **완료 (2026-08-30)** — golden·holdout 둘 다 |
+| golden/holdout 각각에서 다섯 지표 기록 (§15) | **golden 완료(2026-08-28)** — holdout 은 방어지표 5종이 아니라 judge 비교로 대체(아래 갱신의 이유 참고) |
 
 ★**그리고 실제 LLM 제안으로 재지 않았다.**
 지금 확인한 것은 **fixture 로 만든 제안**이 막힌다는 것뿐이다.
@@ -168,6 +169,88 @@ eval 러너 재작성으로 해소돼, golden.jsonl 72건(216행) 실 LLM 실행
 상세: `docs/reports/2026-08-28_S-DOD28-GOLDEN-DEFENSE-METRICS_리포트.md`,
 `eval/bridge_golden_to_defense.py`(신규 브릿지 스크립트).
 
+## ★2026-08-30 갱신 — 파인튜닝 1차·2차·비교평가 완료. 결과는 부정적
+
+x600 GPU 서버(Windows, RTX급 12GB VRAM)에서 `Qwen/Qwen2.5-3B-Instruct` 를
+base로 QLoRA 없이 순수 bf16 + LoRA(r=16)로 SFT 파인튜닝했다.
+(7B가 아니라 3B를 쓴 이유·bf16을 쓴 이유는 아래 "환경 결함" 참고.)
+
+| 단계 | 데이터 | 결과 |
+|---|---|---|
+| 1차(공개) | AI Hub K쇼핑 콜센터 QA 1,500건 (`datasets/voc/aihub_30716_callcenter_qa`) | 376/376 스텝 완료, train_loss 1.37→0.11, mean_token_accuracy≈0.95 |
+| 2차(golden 판정통과분)★ | `2026-08-28_reeval_Proposed_v3.jsonl` 중 judge pass 22건 | 12/12 스텝 완료, train_loss 0.57, mean_token_accuracy≈0.91 |
+
+★**"알파 실데이터"가 아니라 golden 재측정에서 judge가 통과시킨 22건을 2차 데이터로 썼다.**
+실제 고객 응대 알파 로그가 아직 이 프로젝트에 없어서다(v7 §0 변경 7이 말하는
+"알파 실데이터"는 운영 전환 이후에나 생긴다). 대체 근거로 쓴 22건은
+`eval/finetune/build_datasets.py`가 명시적으로 골랐다 — 지어낸 데이터가 아니라
+이미 judge가 통과시킨 실제 LLM 응답이다.
+
+### `Proposed` vs `Proposed+FT` golden 비교 (n=72, FT는 1회 결정론적 생성)
+
+| 항목 | Proposed (RAG+Context Broker) | Proposed+FT (파인튜닝 모델 단독) |
+|---|---|---|
+| judge pass율 | 27.8% (60/216, 72건×3회) | **0.0% (0/72)** |
+| judge 평균 총점 | 13.09 | **1.44** |
+| policy_grounding 평균 | 3.99 | **0.00** |
+| 스키마 파싱 성공 | — | 97.2% (70/72) |
+
+재현: `python -m eval.finetune.score_ft --input eval/finetune/ft_predictions.jsonl --output eval/reports/2026-08-30_reeval_ProposedFT.jsonl`
+
+### `Proposed` vs `Proposed+FT` holdout 비교 (n=24, FT는 1회 결정론적 생성) — ★같은 날 추가 실측
+
+golden 만지지 않는 것과 별개로, holdout 은 이번이 **이 프로젝트에서 처음
+실 LLM 으로 재는 것**이다(기존엔 사람 라벨링 템플릿만 있었고 모델 예측
+자체가 없었다) — 그래서 프롬프트를 이 결과를 보고 고치지 않는 한 홀드아웃
+성격을 해치지 않는다.
+
+| 항목 | Proposed (RAG+Context Broker) | Proposed+FT (파인튜닝 모델 단독) |
+|---|---|---|
+| judge pass율 | 16.7% (12/72, 24건×3회) | **0.0% (0/24)** |
+| judge 평균 총점 | 12.51 | **1.04** |
+| policy_grounding 평균 | 4.00 | **0.00** |
+| 스키마 파싱 성공 | — | 100% (24/24) |
+
+★1회차 실행에서 `h-order-03` repeat 3이 OpenAI rate limit(429)으로
+`judge` 호출 전에 실패해 `success=false, score=0`으로 정직하게 기록됐다
+(조용히 스킵하지 않음). 모델 성능이 아니라 인프라 문제라 그 1행만 지우고
+재실행해 실측을 완성했다 — pass율(12/72)은 재실행 전후로 변화 없음, 위
+표는 재실행 후 최종 수치다.
+
+재현: `python -m eval.runners.proposed --dataset eval/datasets/holdout.jsonl --repeats 3 --seed 7 --provider openai --output eval/reports/2026-08-30_holdout_proposed.jsonl`
+`python -m eval.finetune.score_ft --input eval/finetune/ft_predictions_holdout.jsonl --output eval/reports/2026-08-30_reeval_ProposedFT_holdout.jsonl`
+
+★`h-order-03` repeat 3 는 OpenAI 429(rate limit)로 judge 채점 없이
+`success:false` 로만 기록됐다(재시도로 숫자를 다듬지 않고 있는 그대로
+반영 — n=71/72 로 명시한 이유). 전체 결론에는 영향 없다.
+
+★**결론: 이 파인튜닝은 채택 대상이 아니다 — golden·holdout 둘 다 같은
+결과를 낸다.** 원인은 명확하다 —
+`predict.py`가 파인튜닝 모델을 Team 파이프라인(Context Broker·RAG·evidence 조합) **밖에서
+단독 호출**해 정책 근거 없이 바로 생성하기 때문에, judge 룰("citations.valid가
+비어있으면 policy_grounding은 무조건 0")에 따라 전건이 근거점수 0으로 깎인다.
+`app/core/verification.py`의 원칙("근거 없으면 답하지 않는다")과 정확히 같은
+이유로 이 결과는 **버그가 아니라 설계상 당연한 귀결**이다 — 이미 나온 ablation
+결과(RAG 유무에 따라 grounding 3.98→0.00, 옛 도메인 기준)와 같은 메커니즘을
+새 도메인·새 모델에서, 그리고 이번엔 golden·holdout 양쪽에서 다시 확인한
+셈이다. 파인튜닝된 3B 모델을 실제로 쓰려면 Team이 조합한 ContextPack을
+프롬프트에 주입하는 경로로 다시 짜야 하며, 이번 세션에서는 그 통합까지는
+하지 않았다(§7 남은 작업 참고).
+
+### 환경 결함 — Windows 페이징파일 버그로 QLoRA(4-bit) 포기
+
+당초 계획은 4-bit QLoRA(`device_map="auto"` + `BitsAndBytesConfig`)였다.
+이 조합이 x600에서 `OSError: The paging file is too small (1455)` 를
+**여유 RAM·페이징파일 크기와 무관하게** 반복적으로 일으켰다 — WSL2가 점유한
+RAM을 `wsl --shutdown`으로 비워도, 페이징파일을 수동으로 늘려도(재부팅 포함)
+재현됐다. 우회는 `device_map="auto"`와 4-bit 양자화를 모두 버리고
+`Qwen2ForCausalLM.from_pretrained(..., dtype=torch.bfloat16, local_files_only=True)`
+로 CPU에 올린 뒤 `.to("cuda")`로 옮기는 것 — 이 경로는 문제의 CUDA 타깃
+`safe_open()` 호출 자체를 타지 않는다. 3B 모델은 12GB VRAM에 양자화 없이도
+들어가서 이 우회가 가능했다(7B였다면 막혔을 것). 이후 gradient checkpointing
++ `PYTORCH_CUDA_ALLOC_CONF` 튜닝으로 진짜 VRAM 예산 초과(CUDA OOM, 별개 원인)도
+해결했다. 재현 스크립트: `eval/finetune/diag_3b.py`.
+
 ## 선행 관계
 
 | 순서 | 항목 | 이유 |
@@ -178,3 +261,21 @@ eval 러너 재작성으로 해소돼, golden.jsonl 72건(216행) 실 LLM 실행
 
 ★**지표(2)를 만들기 전에 파인튜닝(3)을 하면 나아졌는지 알 수 없다.**
 실행계획 `docs/plans/2026-08-16_v7_격차해소_실행계획.md` 의 P4 → P8 순서가 이것이다.
+
+## ★2026-08-30 추가 — RAG 통합(stage 3) 실행, 배선은 성공·모델은 채택 불가
+
+golden/holdout에서 나온 "Proposed+FT가 RAG 없이 단독 호출돼 0%"라는 결과를
+근거로 실제 RAG 통합 경로까지 구현·실행했다. `LocalFTTeamLLM` +
+x600 상주 추론 서버 + Team↔감사로그 배선은 **전부 동작 확인**했다(코드
+레벨 회귀 테스트 10건 통과, end-to-end 호출도 성공). 그 과정에서
+production 자체 결함(`response.generate` 프롬프트가 DB에 등록된 적이
+없어 이 팀이 켜지는 순간 크래시하는 문제)도 별도로 발견·수정했다.
+
+단, 재학습(stage 3, 실 데이터 9건)한 모델은 **채택 불가** — 홀드아웃
+3건에서 OpenAI(참조)는 3/3 유효 JSON·grounded 4/4·safe 4/4였지만,
+로컬 파인튜닝 모델은 3/3 모두 유효한 JSON을 못 만들고 입력 evidence를
+그대로 이어쓰는 식으로 붕괴했다. 표본 9건으로는 이 태스크(evidence
+JSON → 근거 기반 응답)를 배우지 못한다는 것이 실측으로 확인됐다 —
+더 튜닝해서 될 문제가 아니라 더 많은 실 데이터가 필요하다.
+
+전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5.

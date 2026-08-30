@@ -18,6 +18,8 @@ from app.core.remote_team.a2a_executor import A2ATeamExecutor
 from app.core.remote_team.executor import LocalTeamExecutor, TeamExecutorPort
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
+from app.core.settings import get_settings
+from app.infrastructure.llm.local_ft import LocalFTTeamLLM
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.rag.retriever import search_policy
@@ -176,7 +178,14 @@ def build_controller(*, registry: TeamRegistry | None = None,
     """Assemble the application Controller and inject every concrete adapter."""
     config = load_project_config(config_path)
     _validate_modules(config)
-    llm = llm if llm is not None else OpenAITeamLLM(connection_factory=get_connection)
+    if llm is None:
+        settings = get_settings()
+        if settings.llm_provider == "local_ft":
+            if not settings.local_ft_base_url:
+                raise CompositionError("ACOP_LOCAL_FT_BASE_URL is required when ACOP_LLM_PROVIDER=local_ft")
+            llm = LocalFTTeamLLM(base_url=settings.local_ft_base_url, connection_factory=get_connection)
+        else:
+            llm = OpenAITeamLLM(connection_factory=get_connection)
     registry = registry or build_registry(tools=tools, llm=llm, config=config)
     team_executor = team_executor or build_team_executor(registry, config=config)
     verification_policy, fact_queries = build_verification(config=config)

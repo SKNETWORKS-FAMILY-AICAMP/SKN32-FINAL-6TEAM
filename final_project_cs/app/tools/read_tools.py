@@ -164,7 +164,7 @@ class ReadToolbox:
         return functions[name](ToolContext.from_pack(context), **arguments)
 
 
-ALLOWED_PROMPT_KEYS = frozenset()
+ALLOWED_PROMPT_KEYS = frozenset({"response.generate", "response.review_tone"})
 
 
 def register_prompt_files(

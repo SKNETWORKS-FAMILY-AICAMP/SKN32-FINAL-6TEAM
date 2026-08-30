@@ -106,7 +106,7 @@ def parser(description: str) -> argparse.ArgumentParser:
     p.add_argument("--limit", type=int)
     p.add_argument("--timeout", type=float, default=TIMEOUT_SECONDS)
     p.add_argument("--model", default=None)
-    p.add_argument("--provider", default="mock", choices=["mock", "openai"])
+    p.add_argument("--provider", default="mock", choices=["mock", "openai", "local_ft"])
     p.add_argument("--temperature", type=float, default=TEMPERATURE)
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--dry-run", action="store_true")

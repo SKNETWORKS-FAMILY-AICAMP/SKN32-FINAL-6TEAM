@@ -9,7 +9,7 @@ flush("loading in fp16 with device_map=auto, low_cpu_mem_usage=True, no quantiza
 model = Qwen2ForCausalLM.from_pretrained(
     local_dir, dtype=torch.float16, device_map="auto",
     low_cpu_mem_usage=True, local_files_only=True,
-    max_memory={0: "11GiB", "cpu": "6GiB"},
+    max_memory={0: "9GiB", "cpu": "10GiB"},
 )
 flush("model loaded ok")
 flush(f"hf_device_map: {model.hf_device_map}")

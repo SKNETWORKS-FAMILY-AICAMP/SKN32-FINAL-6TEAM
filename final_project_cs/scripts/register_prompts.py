@@ -35,7 +35,7 @@ def main() -> int:
     if skipped:
         print("허용 목록 밖 파일이 있어 실패 처리합니다.", file=sys.stderr)
         return 2
-    print(f"활성 프롬프트 4개 검증 완료 (등록/재사용 {len(ids)}개)")
+    print(f"활성 프롬프트 {len(ALLOWED_PROMPT_KEYS)}개 검증 완료 (등록/재사용 {len(ids)}개)")
     return 0
 
 

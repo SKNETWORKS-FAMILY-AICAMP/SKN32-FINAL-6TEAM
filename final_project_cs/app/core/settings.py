@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     embedding_model: str
     llm_temperature: float = 0.0
     llm_seed: int = 7
+    local_ft_base_url: str = ""
 
     # 앱
     env: str = "dev"

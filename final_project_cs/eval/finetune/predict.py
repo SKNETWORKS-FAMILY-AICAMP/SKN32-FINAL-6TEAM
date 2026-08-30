@@ -5,15 +5,26 @@ Usage:
 """
 from __future__ import annotations
 
+import sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+
 import argparse
 import json
 import re
 
 import torch
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import Qwen2ForCausalLM
+from huggingface_hub import snapshot_download
+from pathlib import Path
 
 from load_tok import load_tokenizer
+
+
+def resolve_local(model_id: str) -> str:
+    if Path(model_id).is_dir():
+        return model_id
+    return snapshot_download(model_id)
 
 SYSTEM_PROMPT = (
     "당신은 쇼핑몰 고객센터 상담 시스템입니다. 고객 문의를 읽고 "
@@ -39,16 +50,14 @@ def main() -> None:
     p.add_argument("--adapter", required=True)
     p.add_argument("--golden", required=True)
     p.add_argument("--out", required=True)
-    p.add_argument("--base", default="Qwen/Qwen2.5-7B-Instruct")
+    p.add_argument("--base", default="Qwen/Qwen2.5-3B-Instruct")
     args = p.parse_args()
 
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True, bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True,
-    )
     tokenizer = load_tokenizer(args.base)
-    model = AutoModelForCausalLM.from_pretrained(
-        args.base, quantization_config=bnb_config, device_map="auto", torch_dtype=torch.bfloat16)
+    local_base = resolve_local(args.base)
+    model = Qwen2ForCausalLM.from_pretrained(
+        local_base, dtype=torch.bfloat16, local_files_only=True)
+    model = model.to("cuda")
     model = PeftModel.from_pretrained(model, args.adapter)
     model.eval()
 
