@@ -38,12 +38,13 @@ from app.modules.customer_ops.response_review_policy import decide_tone
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def _load_golden() -> dict[str, dict]:
+def _load_cases(*paths: str) -> dict[str, dict]:
     result = {}
-    for line in (ROOT / "eval/datasets/golden.jsonl").read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            row = json.loads(line)
-            result[row["case_id"]] = row
+    for path in paths:
+        for line in (ROOT / path).read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                result[row["case_id"]] = row
     return result
 
 
@@ -86,8 +87,8 @@ async def _one(llm: OpenAITeamLLM, row: dict, case: dict) -> dict:
     }
 
 
-async def build(input_path: Path, out_path: Path, *, limit: int | None) -> dict:
-    golden = _load_golden()
+async def build(input_path: Path, out_path: Path, *, limit: int | None, cases_paths: tuple[str, ...]) -> dict:
+    golden = _load_cases(*cases_paths)
     rows = [json.loads(line) for line in input_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     passed = [r for r in rows if r.get("success")]
     # de-dup by case_id (golden Proposed has repeats=3, keep the first pass per case)
@@ -147,8 +148,11 @@ def main() -> None:
     parser.add_argument("--input", default="eval/reports/2026-08-28_reeval_Proposed_v3.jsonl")
     parser.add_argument("--out", default="eval/finetune/sft_stage3.jsonl")
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--cases", action="append", default=None,
+                         help="case dataset(s) input's case_ids resolve against; repeatable. Defaults to golden.jsonl.")
     args = parser.parse_args()
-    summary = asyncio.run(build(Path(args.input), Path(args.out), limit=args.limit))
+    cases_paths = tuple(args.cases) if args.cases else ("eval/datasets/golden.jsonl",)
+    summary = asyncio.run(build(Path(args.input), Path(args.out), limit=args.limit, cases_paths=cases_paths))
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
 
