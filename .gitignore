@@ -148,3 +148,6 @@ program/산출물양식/_build/_tmp_*/
 # 이 폴더 안의 작업은 그 폴더에서, 그 저장소에 커밋한다.
 # 해제 직전 추적 목록: program/research/_sample_루트추적_해제전_목록_2026-08-31.txt
 final_project_sample/
+
+# 학습용 추적 영상. 5MB 넘고 스크립트로 다시 만든다
+program/onboarding/trace/*.mp4
