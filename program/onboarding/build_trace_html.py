@@ -30,6 +30,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+from line_notes import NOTES  # noqa: E402
 from sheet_data import BAR, SHEETS  # noqa: E402
 from trace_data import FILES_NOTE, STEPS  # noqa: E402
 
@@ -82,6 +83,20 @@ def dump(value):
     for cp in (0x3c, 0x3e, 0x2028, 0x2029):
         out = out.replace(chr(cp), "%su%04x" % (chr(92), cp))
     return out
+
+
+def notes_for(key, lines):
+    """줄 주석을 줄 수에 맞춰 돌려준다. 없으면 None.
+
+    ★줄 수가 안 맞으면 조용히 밀린다. 3번 줄 설명이 4번 줄에 붙는 것은
+      설명이 아예 없는 것보다 나쁘다. 어긋나면 여기서 멈춘다.
+    """
+    got = NOTES.get(key)
+    if got is None:
+        return None
+    if len(got) != len(lines):
+        raise SystemExit("%s 의 주석이 %d개인데 줄은 %d개다" % (key, len(got), len(lines)))
+    return got if any(n.strip() for n in got) else None
 
 
 def check(pack):
@@ -158,9 +173,12 @@ def main():
 
     pack = [{"n": s["n"], "title": s["title"], "owner": s["owner"],
              "color": s["color"],
-             "add": [[k, nm, lines] for k, nm, lines in s["add"]],
+             "add": [[k, nm, lines, notes_for("pack-%d-%d" % (s["n"], i), lines)]
+                     for i, (k, nm, lines) in enumerate(s["add"])],
              "state": list(s["state"]) if s.get("state") else None,
-             "code": s["code"]}
+             "code": [dict(c, notes=notes_for("code-%d-%d" % (s["n"], i),
+                                              c["code"].split(chr(10))))
+                      for i, c in enumerate(s["code"])]}
             for s in STEPS]
 
     check(pack)

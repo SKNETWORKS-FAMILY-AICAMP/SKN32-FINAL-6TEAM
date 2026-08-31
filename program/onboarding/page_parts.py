@@ -89,7 +89,16 @@ gap:0 12px;align-items:stretch}
 .coord .v{font-size:13px;line-height:1.45}
 .doc{border:1px solid var(--line);border-radius:11px;background:var(--soft);
 padding:11px 13px 13px;min-width:0}
-.doc h4{margin:0 0 8px;font-size:13px;color:var(--dim)}
+.doc h4{margin:0 0 8px;font-size:13px;color:var(--dim);display:flex;
+align-items:center;gap:7px}
+.doc h4 .q{border:1px solid currentColor;border-radius:50%;width:17px;height:17px;
+font-size:11px;line-height:15px;text-align:center;cursor:help;opacity:.65;
+flex:none;background:none;padding:0;color:inherit}
+.doc h4 .q:hover{opacity:1;background:currentColor;color:var(--card)}
+.doc .say{display:none;margin:0 0 10px;padding:9px 11px;border-radius:8px;
+background:rgba(47,91,216,.08);border-left:3px solid currentColor;
+font-size:13px;line-height:1.68;color:var(--ink)}
+.doc.open .say{display:block;animation:sheetin .24s ease both}
 .doc.out{border-color:currentColor}
 .doc.out h4{color:currentColor}
 .doc pre{margin:0;font-size:12.8px;line-height:1.72;white-space:pre-wrap;word-break:break-word;
@@ -146,6 +155,25 @@ background:var(--bg);border:1px solid var(--line);color:var(--dim);white-space:n
 .chunk .fr{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
 .chunk pre{margin:0;padding:8px 11px;font-size:12.2px;line-height:1.6;white-space:pre-wrap;
 word-break:break-word;color:var(--ink)}
+
+/* 줄마다 주석. 마우스를 올린 줄에만 뜬다. */
+.ln{display:block;position:relative;border-radius:4px;padding:0 3px;margin:0 -3px}
+.ln.has{cursor:help}
+.ln.has:hover{background:rgba(47,91,216,.12)}
+.ln.has:hover::after{content:attr(data-note);position:absolute;left:0;bottom:calc(100% + 5px);
+z-index:70;white-space:normal;width:max-content;max-width:min(430px,88vw);
+background:var(--ink);color:#fff;font-family:"Malgun Gothic",system-ui,sans-serif;
+font-size:12.5px;line-height:1.5;padding:6px 10px;border-radius:7px;
+box-shadow:0 8px 22px rgba(8,12,22,.34);pointer-events:none}
+.ln.has:hover::before{content:"";position:absolute;left:14px;bottom:calc(100% + 1px);
+z-index:70;border:5px solid transparent;border-top-color:var(--ink);pointer-events:none}
+/* 위쪽 줄은 말풍선이 잘리므로 아래로 편다. */
+.ln.has.down:hover::after{bottom:auto;top:calc(100% + 5px)}
+.ln.has.down:hover::before{bottom:auto;top:calc(100% + 1px);
+border-top-color:transparent;border-bottom-color:var(--ink)}
+.src pre .ln.has:hover{background:rgba(255,255,255,.14)}
+.notehint{font-size:11.5px;color:var(--faint);padding:0 11px 7px}
+.src .notehint{padding:7px 18px 0}
 .badge{display:flex;gap:9px;align-items:center;margin-top:12px;font-size:13px;color:var(--dim)}
 .badge b{font-family:Consolas,monospace;font-size:15px;padding:4px 12px;border-radius:8px;
 border:2px solid var(--blue);color:var(--blue)}
@@ -247,6 +275,28 @@ function drawBar(){
     + '</button>').join('');
 }
 
+// ★pre 안의 글을 줄 단위 span 으로 쪼갠다. 주석이 있는 줄만 has 를 붙인다.
+//   위에서 두 줄 안쪽은 말풍선이 잘리므로 아래로 펴게 down 을 준다.
+function lined(lines, notes){
+  return lines.map((l,i) => {
+    const t = esc(l) || ' ';
+    const n = notes && notes[i];
+    if(!n) return '<span class="ln">'+t+'</span>';
+    return '<span class="ln has'+(i<2?' down':'')+'" data-note="'+esc(n)+'">'+t+'</span>';
+  }).join('');
+}
+
+// 문서 칸 하나. 제목 옆 물음표를 누르면 이 칸이 무엇인지 펼쳐진다.
+function oneDoc(cls, label, lines, mark, say){
+  return '<div class="doc'+cls+(say?' open':'')+'">'
+    + '<h4>'+esc(label)
+    + (say?'<button class="q" onclick="tellDoc(this)" title="이 칸이 무엇인지">?</button>':'')
+    + '</h4>'
+    + (say?'<div class="say">'+esc(say)+'</div>':'')
+    + '<pre>'+docLines(lines, mark)+'</pre></div>';
+}
+function tellDoc(el){ el.closest('.doc').classList.toggle('open'); }
+
 function docLines(lines, mark){
   return lines.map((l,i) => {
     const t = esc(l) || ' ';
@@ -270,11 +320,9 @@ function drawSheet(){
     + '<div class="body">'
     +   '<div class="coord" style="border-color:'+s.color+'">'
     +     '<h4 style="color:'+s.color+'">구조 좌표</h4>'+coord+'</div>'
-    +   '<div class="doc"><h4>'+esc(s.in_label)+'</h4><pre>'
-    +     docLines(s.in_lines, [])+'</pre></div>'
+    +   oneDoc('', s.in_label, s.in_lines, [], s.in_say)
     +   '<div class="arrow">&#10142;</div>'
-    +   '<div class="doc out"><h4>'+esc(s.out_label)+'</h4><pre>'
-    +     docLines(s.out_lines, s.mark)+'</pre></div>'
+    +   oneDoc(' out', s.out_label, s.out_lines, s.mark, s.out_say)
     + '</div>'
     + '<div class="states">'+s.states.map(c =>
         '<span class="chip" style="color:'+c[1]+'">'+esc(c[0])+'</span>').join('')+'</div>'
@@ -300,7 +348,9 @@ function drawPack(){
           +  '<span class="nm">'+esc(part[1])+'</span>'
           +  (now?'<span class="tag">이번에 생김</span>':'')
           +  '<span class="fr">'+PACK[i].n+'번</span></div><pre>'
-          +  esc(part[2].join('\n'))+'</pre></div>';
+          +  lined(part[2], part[3])+'</pre>'
+          +  (part[3] ? '<div class="notehint">줄에 마우스를 올리면 그 줄 설명이 뜹니다</div>' : '')
+          +  '</div>';
     }
   }
   $('fresh').textContent = fresh
@@ -365,7 +415,8 @@ function showCode(){
   $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
   $('ovbody').innerHTML = s.code.map(c =>
     '<div class="src"><div class="path">'+esc(c.path)+'</div>'
-    +'<pre>'+esc(c.code)+'</pre>'
+    +(c.notes ? '<div class="notehint">줄에 마우스를 올리면 그 줄 설명이 뜹니다</div>' : '')
+    +'<pre>'+lined(c.code.split('\n'), c.notes)+'</pre>'
     +'<div class="plain"><span class="lbl">쉬운 풀이</span>'
     + c.plain.split('\n\n').map(p=>'<p>'+p+'</p>').join('')
     +'</div></div>').join('');
