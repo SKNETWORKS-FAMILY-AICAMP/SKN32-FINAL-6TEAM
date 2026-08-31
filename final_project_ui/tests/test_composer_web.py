@@ -780,3 +780,86 @@ def test_a_1_0_target_gets_no_invented_reload_state(tmp_path, monkeypatch):
 
     assert "실행 중인 조립" not in body
     assert "반영에 실패" not in body
+
+
+def _stale_live(**extra):
+    payload = {"contract_version": "1.1", "active_revision": "rev-옛것",
+               "desired_revision": "rev-새것", "reload_state": "stale"}
+    payload.update(extra)
+    return _live("읽음", value=payload)
+
+
+def test_reload_button_appears_only_when_the_runtime_is_behind(tmp_path, monkeypatch):
+    """★어긋났을 때만 낸다 — 이미 같은데 버튼이 있으면 이유 없이 조립을 다시 만든다."""
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_INTROSPECTION_URL", "http://x/introspection")
+    monkeypatch.setenv("CONSOLE_RELOAD_TOKEN", "reload-token")
+    project = make_project(tmp_path)
+
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _stale_live())
+    stale = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+    assert "action='/composer/reload'" in stale
+
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "contract_version": "1.1", "active_revision": "r", "desired_revision": "r",
+        "reload_state": "active"}))
+    synced = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+    assert "action='/composer/reload'" not in synced
+
+
+def test_without_a_reload_token_the_screen_says_why_instead_of_hiding(tmp_path, monkeypatch):
+    """★버튼만 지우면 운영자는 "이 대상은 반영 기능이 없나 보다" 로 잘못 읽는다."""
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_INTROSPECTION_URL", "http://x/introspection")
+    monkeypatch.delenv("CONSOLE_RELOAD_TOKEN", raising=False)
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _stale_live())
+    project = make_project(tmp_path)
+
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+    assert "action='/composer/reload'" not in body
+    assert "CONSOLE_RELOAD_TOKEN" in body
+
+
+def test_reload_reports_the_new_active_revision(tmp_path, monkeypatch):
+    from console.live import LiveRead
+
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_INTROSPECTION_URL", "http://x/introspection")
+    monkeypatch.setenv("CONSOLE_RELOAD_TOKEN", "reload-token")
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _stale_live())
+    monkeypatch.setattr("console.web.trigger_reload", lambda url, token: LiveRead(
+        "반영됨", value={"active_revision": "rev-새것", "reload_state": "active"}))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app()).post("/composer/reload", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project)})
+    assert response.status_code == 200
+    assert "반영됨" in response.text and "rev-새것" in response.text
+
+
+def test_a_failed_reload_is_not_dressed_up_as_success(tmp_path, monkeypatch):
+    """★대상이 조립에 실패하면 옛 조립이 계속 돈다. 그걸 그대로 적는다."""
+    from console.live import LiveRead
+
+    _wire(monkeypatch)
+    monkeypatch.setenv("CONSOLE_INTROSPECTION_URL", "http://x/introspection")
+    monkeypatch.setenv("CONSOLE_RELOAD_TOKEN", "reload-token")
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _stale_live())
+    monkeypatch.setattr("console.web.trigger_reload", lambda url, token: LiveRead(
+        "반영 실패", value={}, detail="새 선언으로 조립하지 못했다"))
+    project = make_project(tmp_path)
+
+    response = TestClient(create_app()).post("/composer/reload", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project)})
+    assert "반영 실패" in response.text
+    assert "옛 조립이 그대로 돌고 있습니다" in response.text
+
+
+def test_reload_requires_the_csrf_token(tmp_path, monkeypatch):
+    calls = []
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.web.trigger_reload", lambda *a, **k: calls.append(1))
+    project = make_project(tmp_path)
+
+    TestClient(create_app()).post("/composer/reload", data={"path": str(project)})
+    assert calls == []  # ★대상에 요청조차 나가면 안 된다

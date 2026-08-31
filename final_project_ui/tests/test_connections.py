@@ -304,3 +304,64 @@ def auth_http_server():
     for server in servers:
         server.shutdown()
         server.server_close()
+
+
+def test_reload_url_is_derived_from_the_introspection_url(tmp_path):
+    """★주소를 따로 받게 하면 서로 다른 대상을 가리켜 놓고 **남의 프로세스를
+    반영시키는** 사고가 난다. 두 표면은 같은 프로세스의 것이다."""
+    from console.live import reload_url_for
+
+    assert reload_url_for("http://t:8071/introspection") == "http://t:8071/admin/reload"
+    assert reload_url_for("http://t:8071/introspection/") == "http://t:8071/admin/reload"
+    assert reload_url_for("http://t:8071") == "http://t:8071/admin/reload"
+    assert reload_url_for(None) is None
+
+
+def test_reload_without_a_token_refuses_before_calling_the_target(monkeypatch):
+    """★토큰 없이 보내면 401 이 난다. 왜 안 되는지 먼저 말한다."""
+    from console import live
+
+    called = []
+    monkeypatch.setattr(live, "urlopen", lambda *a, **k: called.append(1))
+    outcome = live.trigger_reload("http://t/introspection", None)
+
+    assert called == []
+    assert outcome.status == "연결 안 함"
+    assert "CONSOLE_RELOAD_TOKEN" in outcome.detail
+
+
+def test_a_409_from_the_target_is_reported_as_a_failed_reload(monkeypatch):
+    """★대상이 조립에 실패한 것과 대상이 죽은 것은 운영자가 할 일이 다르다."""
+    import io
+    import json
+    from urllib.error import HTTPError
+
+    from console import live
+
+    body = json.dumps({"error": {"code": "reload_failed",
+                                 "message": "새 선언으로 조립하지 못했다"}}).encode()
+
+    def raise_409(*_a, **_k):
+        raise HTTPError("http://t/admin/reload", 409, "Conflict", {}, io.BytesIO(body))
+
+    monkeypatch.setattr(live, "urlopen", raise_409)
+    outcome = live.trigger_reload("http://t/introspection", "tok")
+
+    assert outcome.status == "반영 실패"
+    assert "조립하지 못했다" in outcome.detail
+
+
+def test_a_404_says_the_target_does_not_support_reload_yet(monkeypatch):
+    import io
+    from urllib.error import HTTPError
+
+    from console import live
+
+    def raise_404(*_a, **_k):
+        raise HTTPError("http://t/admin/reload", 404, "Not Found", {}, io.BytesIO(b"{}"))
+
+    monkeypatch.setattr(live, "urlopen", raise_404)
+    outcome = live.trigger_reload("http://t/introspection", "tok")
+
+    assert outcome.status == "그 경로가 없음"
+    assert "계약 1.0" in outcome.detail

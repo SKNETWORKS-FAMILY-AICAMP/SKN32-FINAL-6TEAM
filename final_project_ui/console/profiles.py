@@ -28,6 +28,12 @@ class Profile:
     composer_mode: str = "direct"
     #: `composer_mode="central"` 일 때 필수. 어느 대상의 구성을 다루는가.
     composer_deployment_id: str | None = None
+    #: 대상의 `POST /admin/reload`(scope `ops:reload`) 토큰. 2026-08-31.
+    #:
+    #: ★`introspection_token`(조회)과 **다른 토큰**이다. 대상이 scope 를 나눠
+    #:  뒀기 때문이다 — 조회 권한만으로 살아 있는 트래픽의 조립을 갈아 끼울 수
+    #:  있으면 안 된다. 없으면 [반영] 버튼을 내지 않고, **왜 없는지 화면에 적는다.**
+    reload_token: str | None = None
 
 
 def profile_for(project: str | Path) -> Profile:
@@ -63,6 +69,7 @@ def profile_for(project: str | Path) -> Profile:
         #   그 값은 중앙 방식에서만 쓰이므로, 줬다는 것 자체가 의도 표현이다.
         composer_mode=_composer_mode(),
         composer_deployment_id=os.environ.get("CONSOLE_COMPOSER_DEPLOYMENT_ID") or None,
+        reload_token=os.environ.get("CONSOLE_RELOAD_TOKEN") or None,
     )
 
 

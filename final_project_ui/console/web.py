@@ -23,7 +23,7 @@ from starlette.concurrency import run_in_threadpool
 from console import composer as composer_client
 from console.db import read_agent_runs, read_trace
 from console.discovery import discover, inspect_path
-from console.live import read_introspection
+from console.live import read_introspection, trigger_reload
 from console.profiles import profile_for
 from console.readers import (judgement_counts, read_declaration, read_eval_runs,
                              read_guardrails, read_judgements)
@@ -581,6 +581,35 @@ def _reload_state_note(payload: dict[str, Any] | None) -> str:
     return note(detail, kind)
 
 
+def _reload_button(payload: dict[str, Any] | None, profile: Any, target: Path) -> str:
+    """[반영] — 대상에게 지금 갈아 끼우라고 요청한다.
+
+    ★어긋났을 때만 낸다. 이미 같은데 버튼이 있으면 "눌러도 되나" 를 매번
+      고민하게 되고, 누르면 살아 있는 트래픽의 조립을 이유 없이 다시 만든다.
+
+    ★토큰이 없으면 **버튼 대신 왜 없는지**를 적는다. 버튼만 지우면 운영자는
+      "이 대상은 반영 기능이 없나 보다" 로 잘못 읽는다.
+    """
+    state = (payload or {}).get("reload_state")
+    if state not in ("stale", "reload_failed"):
+        return ""
+    if not getattr(profile, "introspection_url", None):
+        return ""
+    if not getattr(profile, "reload_token", None):
+        return note("[반영] 을 내지 못합니다 — CONSOLE_RELOAD_TOKEN 이 프로필에 "
+                    "없습니다. 대상의 `ops:reload` scope 토큰이 필요합니다"
+                    "(조회용 introspection 토큰과 다른 토큰입니다).", "warn")
+    return f"""
+    <form method='post' action='/composer/reload' class='card'>
+      <input type='hidden' name='csrf_token' value='{esc(_CSRF_TOKEN)}'>
+      <input type='hidden' name='path' value='{esc(str(target))}'>
+      <p class='dim'>저장된 선언으로 대상의 조립을 지금 갈아 끼웁니다.
+        대상은 <b>새 조립이 전부 성공한 뒤에만</b> 교체하고, 실패하면 옛 조립을
+        그대로 씁니다.</p>
+      <p><button type='submit'>반영</button></p>
+    </form>"""
+
+
 def _instance_rows(config: dict[str, Any] | None, revision: str, target: Path) -> list[str]:
     """선언에 있는 Team 인스턴스와 삭제 버튼.
 
@@ -1050,7 +1079,9 @@ def create_app() -> FastAPI:
         # ★저장된 선언과 **실행 중인 조립**이 어긋났으면 맨 위에서 말한다.
         #   이 화면에서 [적용] 을 눌러도 대상이 반영하기 전까지는 옛 조립이
         #   돌고 있다 — 그걸 안 보여주면 운영자는 이미 바뀐 줄 안다.
-        reload_note = _reload_state_note(live.value if getattr(live, "value", None) else None)
+        live_value = live.value if getattr(live, "value", None) else None
+        reload_note = (_reload_state_note(live_value)
+                       + _reload_button(live_value, profile_for(target), target))
         return page("구성 조립(Composer)",
                     prefix + badge + reload_note + _toggle_card(live, target) + catalog_card
                     + _composer_body(target, current, config=config),
@@ -1203,6 +1234,45 @@ def create_app() -> FastAPI:
                      f"(revision {outcome.value.get('config_revision')})")
             detail += _activation_hint(outcome.value)
         return await _redraw(note(detail, kind))
+
+    @app.post("/composer/reload", response_class=HTMLResponse)
+    async def composer_reload(request: Request) -> HTMLResponse:
+        """[반영] — 대상에게 저장된 선언으로 지금 갈아 끼우라고 요청한다.
+
+        ★이 콘솔이 하는 "read-only 가 아닌" 호출이 하나 더 늘었다.
+          `CLAUDE.md` §0.3 예외와 같은 성격이다 — 대상이 인증해서(scope
+          `ops:reload`) 자기 프로세스 안에서 수행하는 일을 부를 뿐이고,
+          여기서 대상의 파일·DB·파이썬을 건드리지 않는다.
+
+        ★실패를 성공 뒤에 숨기지 않는다. 대상이 새 선언으로 조립하지 못하면
+          409 로 답하고 옛 조립을 계속 쓰는데, 그걸 그대로 화면에 적는다.
+        """
+        form = await request.form()
+        refusal = _csrf_refusal(request, form)
+        if refusal is not None:
+            return refusal
+
+        target = Path(str(form.get("path", "")))
+        profile = profile_for(target)
+        outcome = await run_in_threadpool(trigger_reload, profile.introspection_url,
+                                          profile.reload_token)
+
+        kind = {"반영됨": "ok", "연결 안 함": "warn"}.get(outcome.status, "bad")
+        detail = outcome.detail or outcome.status
+        if outcome.status == "반영됨" and isinstance(outcome.value, dict):
+            detail = (f"반영됨 — 실행 중인 조립이 "
+                      f"{outcome.value.get('active_revision')} 로 바뀌었습니다.")
+        elif outcome.status == "반영 실패":
+            detail = (f"★반영 실패 — {detail}. 옛 조립이 그대로 돌고 있습니다"
+                      "(대상은 새 조립이 전부 성공한 뒤에만 갈아 낍니다).")
+
+        current = await run_in_threadpool(
+            composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
+            deployment_id=profile.composer_deployment_id)
+        live = await run_in_threadpool(read_introspection, profile.introspection_url,
+                                       profile.contract_versions, profile.introspection_token)
+        return _composer_page(target, current, live, prefix=note(detail, kind),
+                              catalog=_read_catalog(profile))
 
     @app.post("/composer/instance", response_class=HTMLResponse)
     async def composer_instance_submit(request: Request) -> HTMLResponse:
