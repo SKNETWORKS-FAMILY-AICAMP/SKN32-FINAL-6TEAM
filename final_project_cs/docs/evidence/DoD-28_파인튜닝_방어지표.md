@@ -278,4 +278,13 @@ production 자체 결함(`response.generate` 프롬프트가 DB에 등록된 적
 JSON → 근거 기반 응답)를 배우지 못한다는 것이 실측으로 확인됐다 —
 더 튜닝해서 될 문제가 아니라 더 많은 실 데이터가 필요하다.
 
+★같은 세션에서 golden+holdout Proposed 실측 결과를 더 긁어모아 데이터를
+16건(train 12/test 4)으로 늘려 재학습(v2)했다 — `train_loss` 1.65→1.48,
+`mean_token_accuracy` 0.67→0.71로 개선됐지만, **holdout 4건 재비교에서도
+0/4 유효 JSON — 여전히 채택 불가**. loss/accuracy 개선이 실사용 가능한
+출력으로 이어지지 않는다는 걸 두 번째 실측으로 확인했다. golden+holdout을
+다 긁어도 16건이 이 Team의 진짜 review-task 데이터 상한이라, 더 늘리려면
+`response_review.enabled: true`로 켜서 실 운영 transcript가 쌓이길
+기다리는 것 외엔 방법이 없다.
+
 전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5.
