@@ -350,6 +350,6 @@ FILES_NOTE = [
      "config/project.yaml · config/guardrails.yaml · prompts/response/generate.v2.md · "
      "prompts/response/review_tone.v1.md"),
     ("파일이 생기는 다른 경로",
-     "Composer 가 설정을 바꿀 때 config/project.yaml 과 .project.write.&lt;uuid&gt;.yaml 과 "
-     "composer_events.jsonl · 평가를 돌릴 때 eval/reports/&lt;날짜&gt;_&lt;조건&gt;.jsonl"),
+     "Composer 가 설정을 바꿀 때 config/project.yaml 과 .project.write.<uuid>.yaml 과 "
+     "composer_events.jsonl · 평가를 돌릴 때 eval/reports/<날짜>_<조건>.jsonl"),
 ]
