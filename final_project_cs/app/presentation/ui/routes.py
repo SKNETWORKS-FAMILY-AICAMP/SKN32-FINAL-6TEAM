@@ -27,11 +27,25 @@ ops_router = APIRouter(tags=["operations-ui"])
 voc_router = APIRouter(prefix="/ui", tags=["operations-ui"])
 
 
-def _nav() -> tuple[tuple[str, str], ...]:
-    """꺼진 모듈의 메뉴를 뺀 상단 메뉴."""
-    config = load_project_config()
-    return tuple((href, label) for href, label in theme.NAV
+#: 지금 화면에 낼 상단 메뉴. `mount_ui()` 가 기동할 때 한 번 정한다.
+_NAV: tuple[tuple[str, str], ...] = theme.NAV
+
+
+def configure_nav(config) -> tuple[tuple[str, str], ...]:
+    """꺼진 모듈의 메뉴를 뺀다. 조립 때 한 번만 부른다.
+
+    ★없는 화면으로 가는 링크를 남기면 눌렀을 때 404 가 뜨고, 운영자는 서버가
+      죽은 줄 안다. 모듈을 빼면 그 표면도 함께 빠져야 한다.
+
+    ★매 요청마다 선언을 다시 읽지 않는다. 2026-08-30 첫 판이 그렇게 돼 있었다 —
+      라우터 등록은 기동 시점에 끝나는데 메뉴만 나중 선언을 보면 둘이 어긋난다.
+      메뉴엔 VOC 가 있는데 누르면 404 인 상태가 만들어진다.
+      `final_project_sample` 이식(2026-08-31) 중에 발견해 양쪽을 같은 방식으로 맞췄다.
+    """
+    global _NAV
+    _NAV = tuple((href, label) for href, label in theme.NAV
                  if href != "/ui/voc" or config.module_enabled("voc"))
+    return _NAV
 
 
 def _safe(value: Any) -> str:
@@ -43,7 +57,7 @@ def _json(value: Any) -> str:
 
 
 def _page(title: str, body: str, *, current: str = "", lede: str = "") -> HTMLResponse:
-    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_nav()))
+    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_NAV))
 
 
 def _legacy_page(title: str, body: str) -> HTMLResponse:

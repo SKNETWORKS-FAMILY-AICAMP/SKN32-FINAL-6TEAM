@@ -63,23 +63,27 @@ def test_disabled_voc_refuses_the_daily_batch(monkeypatch):
         run_daily_feedback(None, report_date=None, tenant_id="demo")
 
 
-def test_disabled_voc_removes_the_voc_screen_and_its_menu(monkeypatch):
+def test_disabled_voc_removes_the_voc_screen_and_its_menu():
     import app.presentation.ui.routes as routes
     from app.presentation.ui import mount_ui
 
-    monkeypatch.setattr(routes, "load_project_config", lambda *a, **k: _config(voc=False))
     client = TestClient(mount_ui(FastAPI(), config=_config(voc=False)))
+    try:
+        assert client.get("/ui/voc").status_code == 404
+        # 없는 화면으로 가는 링크를 남기면 눌렀을 때 404 가 뜨고 서버가 죽은 줄 안다.
+        assert all(href != "/ui/voc" for href, _ in routes._NAV)
+    finally:
+        # ★메뉴는 모듈 전역이다. 되돌리지 않으면 다음 테스트가 잘린 메뉴를 본다.
+        mount_ui(FastAPI(), config=_config())
 
-    assert client.get("/ui/voc").status_code == 404
-    # 없는 화면으로 가는 링크를 남기면 눌렀을 때 404 가 뜨고 서버가 죽은 줄 안다.
-    assert "/ui/voc" not in routes.theme.page("t", "", nav=routes._nav())
 
-
-def test_enabled_voc_keeps_the_menu(monkeypatch):
+def test_enabled_voc_keeps_the_screen_and_menu():
     import app.presentation.ui.routes as routes
+    from app.presentation.ui import mount_ui
 
-    monkeypatch.setattr(routes, "load_project_config", lambda *a, **k: _config())
-    assert "/ui/voc" in routes.theme.page("t", "", nav=routes._nav())
+    client = TestClient(mount_ui(FastAPI(), config=_config()))
+    assert client.get("/ui/voc").status_code != 404
+    assert any(href == "/ui/voc" for href, _ in routes._NAV)
 
 
 # ── mcp ─────────────────────────────────────────────────────────────────────
