@@ -30,6 +30,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+from doc_says import SAYS  # noqa: E402
 from line_notes import NOTES  # noqa: E402
 from sheet_data import BAR, SHEETS  # noqa: E402
 from trace_data import FILES_NOTE, STEPS  # noqa: E402
@@ -183,9 +184,13 @@ def main():
 
     check(pack)
 
+    # 낱장 칸마다 '이 칸이 무엇인가' 설명을 얹는다. 없으면 물음표가 안 뜬다.
+    sheets = [dict(sh, in_say=SAYS.get("in-%d" % sh["n"]),
+                   out_say=SAYS.get("out-%d" % sh["n"])) for sh in SHEETS]
+
     js = (JS
           .replace("__BAR__", dump(BAR))
-          .replace("__SHEETS__", dump(SHEETS))
+          .replace("__SHEETS__", dump(sheets))
           .replace("__PACK__", dump(pack))
           .replace("__NOTE__", dump(FILES_NOTE)))
 

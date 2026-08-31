@@ -95,10 +95,13 @@ align-items:center;gap:7px}
 font-size:11px;line-height:15px;text-align:center;cursor:help;opacity:.65;
 flex:none;background:none;padding:0;color:inherit}
 .doc h4 .q:hover{opacity:1;background:currentColor;color:var(--card)}
+/* ★기본은 접어 둔다. 스물넷을 다 펴 두면 정작 문서가 밀린다.
+   물음표에 마우스를 올리면 뜨고, 누르면 고정된다. */
 .doc .say{display:none;margin:0 0 10px;padding:9px 11px;border-radius:8px;
 background:rgba(47,91,216,.08);border-left:3px solid currentColor;
 font-size:13px;line-height:1.68;color:var(--ink)}
-.doc.open .say{display:block;animation:sheetin .24s ease both}
+.doc:has(.q:hover) .say,.doc.open .say{display:block;animation:sheetin .2s ease both}
+.doc.open .q{opacity:1;background:currentColor;color:var(--card)}
 .doc.out{border-color:currentColor}
 .doc.out h4{color:currentColor}
 .doc pre{margin:0;font-size:12.8px;line-height:1.72;white-space:pre-wrap;word-break:break-word;
@@ -288,9 +291,10 @@ function lined(lines, notes){
 
 // 문서 칸 하나. 제목 옆 물음표를 누르면 이 칸이 무엇인지 펼쳐진다.
 function oneDoc(cls, label, lines, mark, say){
-  return '<div class="doc'+cls+(say?' open':'')+'">'
+  return '<div class="doc'+cls+'">'
     + '<h4>'+esc(label)
-    + (say?'<button class="q" onclick="tellDoc(this)" title="이 칸이 무엇인지">?</button>':'')
+    + (say?'<button class="q" onclick="tellDoc(this)"'
+        + ' title="이 칸이 무엇인지. 눌러 두면 고정됩니다">?</button>':'')
     + '</h4>'
     + (say?'<div class="say">'+esc(say)+'</div>':'')
     + '<pre>'+docLines(lines, mark)+'</pre></div>';
