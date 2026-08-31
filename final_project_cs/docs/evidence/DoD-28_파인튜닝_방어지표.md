@@ -302,8 +302,31 @@ JSON → 근거 기반 응답)를 배우지 못한다는 것이 실측으로 확
 local_ft는 14/14 전부 draft를 그대로 반환했고(학습셋 84건 전체를 봐도
 고유 draft가 2종류뿐이라 이 지름길이 통할 만큼 좁은 분포), OpenAI는
 10/14를 근거를 넣어 재작성했다. "다양한 상황에서 언제 재작성할지"를
-배웠다는 증거는 아직 없다 — 다음 단계는 재학습이 아니라 **입력 시나리오
-다양화**(다른 capability, 또는 `datasets/voc/data_go_kr_consumer_complaints/`의
-실제 민원 원문 93+53건 활용).
+배웠다는 증거는 아직 없다.
 
-전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5~§6.
+★★2026-08-31 갱신 2 — 가설이 실측으로 증명돼 **최종 결론이 확정됐다.**
+`data_go_kr_consumer_complaints`(실 민원 원문)로 157건까지 늘렸지만
+고유 draft는 여전히 2종 — `response_generation_review`가 검토하는
+`input_text`가 고객 메시지가 아니라 1차 팀의 결정론적 초안 답변이라,
+메시지를 아무리 다양화해도 이 지점에서 수렴하기 때문이다.
+`fulfillment_logistics.py`의 `shipment.status`(상태값을 f-string에
+직접 넣어 case마다 draft가 실제로 갈리는 유일한 capability)로 30건을
+추가해 고유 draft 4종·172건(v7)으로 재학습 — `train_loss=0.57`,
+`mean_token_accuracy=0.90`(v6보다도 개선)까지 갔지만, **holdout 28건
+전부(100%) draft를 그대로 echo했다.** 무작위 분리로 홀드아웃에
+shipment 케이스가 1건만 남는 불운이 오히려 결정적 증거가 됐다 — "배송
+완료로 뜨는데 못 받았다"는 불만에 evidence는 "택배사 인계 전"이었는데,
+OpenAI는 모순을 짚어 답을 새로 썼고(`grounded=4`) local_ft는 evidence를
+무시하고 draft를 그대로 반환했다(`grounded=0`, judge: "evidence가
+뒷받침 안 하는 주장"). 나머지 27건이 만점이었던 건 애초에 그 draft들이
+"echo해도 항상 맞는" 결정론적 정답이었을 뿐이다.
+
+**stage3(v1~v7 전부) 채택하지 않는다.** loss·accuracy·유효 JSON 비율이
+전부 개선됐지만, 모델이 실제로 배운 건 "evidence를 보고 판단"이 아니라
+"대체로 draft를 그대로 돌려주면 맞더라"라는 지름길이었다는 게 실 사례로
+증명됐다. 다음에 필요한 건 데이터 양이 아니라 **draft와 evidence가
+의도적으로 어긋나는 케이스**(재작성이 실제로 필요한 케이스)를 학습셋에
+충분히 넣는 것 — 이번 세션에서 만든 데이터는 전부 "잘 맞는" 시나리오뿐이라
+아직 없다.
+
+전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5~§7.
