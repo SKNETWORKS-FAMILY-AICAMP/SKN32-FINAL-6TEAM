@@ -92,8 +92,9 @@ background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding
 반품 이력은 없습니다.</p>
 </div>
 
-<h2>열두 단계</h2>
-<p class="lede">각 단계마다 어느 담당의 코드인지, Case 상태가 어떻게 바뀌는지 함께 적었습니다.</p>
+<h2>코드가 지나는 열두 단계</h2>
+<p class="lede">각 단계마다 어느 담당의 코드인지, Case 상태가 어떻게 바뀌는지 함께 적었습니다.
+★상태 12개와는 다른 축입니다 — 상태 쪽에서 본 그림은 <a href="#lifecycle">아래에 따로</a> 있습니다.</p>
 
 <ol class="flow">
 
@@ -120,8 +121,11 @@ Case가 두 개 생기지 않습니다.</p>
 <h3>Case를 만들고 첫 이벤트를 남긴다<span class="owner">코어 1 · 최연우</span></h3>
 <p><code>customer_cases</code>에 행을 만들고 <code>transition_case()</code>로 <code>created</code> 이벤트를 남깁니다.
 여기서부터 이 Case에 일어나는 모든 일이 <code>case_events</code>에 쌓입니다. 이 표는 고치지 않고 추가만 합니다.</p>
-<span class="state">status: new</span><span class="state">version: 1</span>
-<span class="where">app/core/transition.py:116 <b>transition_case()</b></span>
+<p><b>이 이벤트가 들어가는 순간 상태는 <code>new</code>가 아니라 <code>classifying</code>입니다.</b>
+전이표가 <code>(new, created) → classifying</code>으로 정해 두었습니다. <code>new</code>는
+행을 만든 찰나에만 존재합니다.</p>
+<span class="state">status: classifying</span><span class="state">version: 1</span>
+<span class="where">app/core/transition.py:116 <b>transition_case()</b> · app/domain/events.py:52 <b>TRANSITIONS</b></span>
 </li>
 
 <li>
@@ -246,6 +250,44 @@ read.policy  → 반품 정책 문서</pre>
 </li>
 
 </ol>
+
+<h2 id="lifecycle">생명주기 12개 상태에서 어디를 지나나</h2>
+<p class="lede">위 열두 단계는 <b>코드가 지나는 순서</b>지 상태 12개가 아닙니다. 둘은 다릅니다.</p>
+
+<div class="note">
+<b>혼동하기 쉬운 지점</b>
+<p style="margin:6px 0 0">단계도 열둘이고 상태도 열둘이라 같은 것처럼 보이지만 <b>겹치지 않습니다.</b>
+권한 확인과 중복 거르기는 Case가 생기기 전이라 상태가 없고, 반대로 <code>waiting_external</code>이나
+<code>cancelled</code>는 위 흐름에 안 나옵니다. 아래가 상태 쪽에서 본 같은 그림입니다.</p>
+</div>
+
+<div class="tblwrap"><table><thead><tr><th>상태</th><th>이 환불 건에서</th><th>나가는 길</th></tr></thead><tbody>
+<tr><td><code>new</code></td><td>행을 만든 찰나. 바로 <code>created</code>로 빠져나간다</td><td>2개</td></tr>
+<tr><td><code>classifying</code></td><td>분류하는 동안. 같은 트랜잭션이라 머무는 시간이 거의 없다</td><td>2개</td></tr>
+<tr><td><code>routing</code></td><td>Registry가 팀을 찾는 동안</td><td>2개</td></tr>
+<tr><td><code>running</code></td><td><b>팀이 판단하는 동안.</b> 나가는 길이 6개로 제일 많다</td><td>6개</td></tr>
+<tr><td><code>waiting_input</code></td><td>반품 사유나 수량을 모를 때 여기 멈춘다</td><td>2개</td></tr>
+<tr><td><code>waiting_approval</code></td><td>환불 금액 제안이 있을 때 여기 멈춘다</td><td>4개</td></tr>
+<tr><td><code>waiting_external</code></td><td>결제사 콜백을 기다리는 자리. <b>이 팀은 쓰지 않는다</b>(Mock이라 외부 호출이 없다)</td><td>2개</td></tr>
+<tr><td><code>resuming</code></td><td>승인이나 고객 답을 받고 다시 도는 짧은 구간</td><td>2개</td></tr>
+<tr><td><code>resolved</code></td><td>답변하고 종결. 이 케이스의 도착점</td><td>1개</td></tr>
+<tr><td><code>escalated</code></td><td><b>들어오는 길이 10개로 제일 많다.</b> 막히면 대부분 여기로 온다</td><td>1개</td></tr>
+<tr><td><code>failed</code></td><td>재시도를 다 쓴 자리. 이 경로에서는 거의 오지 않는다</td><td>1개</td></tr>
+<tr><td><code>cancelled</code></td><td>고객이 취소. <b>유일하게 나가는 길이 없는 최종 상태다</b></td><td>0개</td></tr>
+</tbody></table></div>
+
+<p>실제로 커밋되어 화면에 보이는 상태는 <code>routing → running → resolved</code> 셋입니다.
+<code>new</code>와 <code>classifying</code>은 Case 생성 트랜잭션 안에서 지나가므로
+운영자가 목록에서 그 상태를 볼 일은 거의 없습니다.</p>
+
+<div class="good">
+<b>이 표에서 읽을 것 두 가지</b>
+<p style="margin:6px 0 0"><b>running에서 나가는 길이 6개입니다.</b> 팀이 판단을 끝냈을 때
+답할 수도, 물을 수도, 승인을 받을 수도, 외부를 기다릴 수도, 실패할 수도, 넘길 수도 있습니다.
+"한 줄 파이프라인으로는 안 된다"는 말이 이 숫자입니다.</p>
+<p style="margin:8px 0 0"><b>escalated로 들어오는 길이 10개입니다.</b> 어디서 막히든 사람에게
+갑니다. 조용히 넘어가는 길은 만들지 않았습니다.</p>
+</div>
 
 <h2>다른 길로 빠지는 경우</h2>
 <p class="lede">위는 전부 통과한 경우입니다. 실제로는 아래 셋 중 하나로 빠지는 일이 더 잦습니다.</p>
