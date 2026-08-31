@@ -45,8 +45,10 @@
   },
   "R-CLASS-02": {
    "defects": [
-    "INV-CLASS-002"
+    "INV-CLASS-002",
+    "INV-CLASS-003"
    ],
+   "note": "값 검증 쪽(빈 문자열 라벨)은 앱 결함이라 결함으로 만들 수 없다. tests/integration/api/test_api_runtime.py 의 xfail(strict) 과 docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md 가 추적한다.",
    "rule": "분류 실패는 classification_failed 를 남기고 escalated 로 전환한다",
    "source": "CLAUDE.md §1",
    "status": "active"

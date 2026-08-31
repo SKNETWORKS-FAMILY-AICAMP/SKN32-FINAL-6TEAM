@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "470 passed, 4 deselected, 36 warnings in 41.32s"
+  "summary": "485 passed, 4 deselected, 1 xfailed, 36 warnings in 27.93s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -115,8 +115,28 @@
    },
    "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
    "path": "app/presentation/api/cases.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 33.89s",
+   "summary": "482 passed, 4 deselected, 1 xfailed, 36 warnings in 32.33s",
    "title": "일부만 분류돼도 성공으로 친다"
+  },
+  "INV-CLASS-003": {
+   "failed": [
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_injected_classifier_fails"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
+   "path": "app/presentation/api/cases.py",
+   "summary": "1 failed, 484 passed, 4 deselected, 1 xfailed, 36 warnings in 25.99s",
+   "title": "분류 실패의 사유를 잃는다",
+   "unique_failures": [
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_injected_classifier_fails"
+   ]
   },
   "INV-CLASSIFY-001": {
    "failed": [
@@ -805,32 +825,48 @@
    ]
   },
   "INV-STATE-006": {
-   "failed": [],
+   "failed": [
+    "tests/unit/core/test_checkpoint_boundary.py::test_checkpoint_carries_no_business_state",
+    "tests/unit/core/test_checkpoint_boundary.py::test_checkpoint_has_only_execution_keys"
+   ],
    "gates": {
     "applied": true,
     "applies": true,
-    "kills_tests": false,
+    "distinguishable": true,
+    "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "checkpoint 는 실행 snapshot 이다 — 권위 있는 projection 은 customer_cases 다",
    "path": "app/application/case_service.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 27.93s",
-   "title": "checkpoint 가 업무 상태를 들고 다닌다"
+   "summary": "2 failed, 483 passed, 4 deselected, 1 xfailed, 36 warnings in 27.20s",
+   "title": "checkpoint 가 업무 상태를 들고 다닌다",
+   "unique_failures": [
+    "tests/unit/core/test_checkpoint_boundary.py::test_checkpoint_carries_no_business_state",
+    "tests/unit/core/test_checkpoint_boundary.py::test_checkpoint_has_only_execution_keys"
+   ]
   },
   "INV-STATE-007": {
-   "failed": [],
+   "failed": [
+    "tests/contract/test_contracts.py::test_projection_update_keeps_the_version_condition",
+    "tests/integration/db/test_stale_write_conflict.py::test_two_writers_that_read_the_same_version_produce_exactly_one_conflict"
+   ],
    "gates": {
     "applied": true,
     "applies": true,
-    "kills_tests": false,
+    "distinguishable": true,
+    "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다 (SQL 쪽 방어)",
    "path": "app/core/transition.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 37.04s",
-   "title": "SQL 쪽 버전 조건이 사라졌다"
+   "summary": "2 failed, 483 passed, 4 deselected, 1 xfailed, 36 warnings in 25.91s",
+   "title": "SQL 쪽 버전 조건이 사라졌다",
+   "unique_failures": [
+    "tests/contract/test_contracts.py::test_projection_update_keeps_the_version_condition",
+    "tests/integration/db/test_stale_write_conflict.py::test_two_writers_that_read_the_same_version_produce_exactly_one_conflict"
+   ]
   },
   "INV-TEAM-001": {
    "failed": [
@@ -873,18 +909,24 @@
    "unique_failures": []
   },
   "INV-TEAM-004": {
-   "failed": [],
+   "failed": [
+    "tests/contract/test_contracts.py::test_approval_required_proposal_anywhere_in_the_list_forces_wait"
+   ],
    "gates": {
     "applied": true,
     "applies": true,
-    "kills_tests": false,
+    "distinguishable": true,
+    "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "Team 은 승인 없이 실행하지 않는다 — 승인 필요 제안이 있으면 wait_for_approval 이어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 37.80s",
-   "title": "승인 필요 제안을 첫 건만 보고 넘긴다"
+   "summary": "1 failed, 484 passed, 4 deselected, 1 xfailed, 36 warnings in 28.52s",
+   "title": "승인 필요 제안을 첫 건만 보고 넘긴다",
+   "unique_failures": [
+    "tests/contract/test_contracts.py::test_approval_required_proposal_anywhere_in_the_list_forces_wait"
+   ]
   },
   "INV-UI-001": {
    "failed": [

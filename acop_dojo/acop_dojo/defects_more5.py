@@ -81,10 +81,11 @@ MORE5: list[Defect] = [
         invariant="checkpoint 는 실행 snapshot 이다 — 권위 있는 projection 은 customer_cases 다",
         path="app/application/case_service.py",
         old='"node_name": node_name, "runtime_state": dict(runtime_state or {})}',
-        new='"node_name": node_name, "runtime_state": dict(runtime_state or {}, status="running")}',
+        new='"node_name": node_name, "status": "running", "runtime_state": dict(runtime_state or {})}',
         lesson=(
-            "checkpoint 에 업무 상태를 넣기 시작하면 어느 쪽이 진짜인지 모르게 된다. "
-            "checkpoint 는 버려도 되는 실행 스냅샷이어야 한다."
+            "checkpoint 최상위는 실행에 관한 다섯 키뿐이다(DoD-04). 거기에 업무 상태를 "
+            "올리기 시작하면 어느 쪽이 진짜인지 모르게 된다. runtime_state 안에 관찰값을 "
+            "담는 것은 규칙 위반이 아니다 — 최상위로 올리는 것이 위반이다."
         ),
         counterfactuals=["상태를 같이 들고 다니면 편하다", "재개할 때 필요하다"],
         difficulty=3,
@@ -101,6 +102,14 @@ MORE5: list[Defect] = [
             "저장되고 그 라벨로 라우팅까지 간다. 분류 실패는 escalated 로 가야 할 일이다."
         ),
         counterfactuals=["일부라도 있으면 쓸 만하다", "나중에 다시 분류하면 된다"],
+        excluded=(
+            "잡을 수 없다. API 쪽 검사를 지워도 domain/case.py 의 validate_payload 가 "
+            "CLASSIFIED 이벤트의 세 필드를 다시 검사해 InvalidTransition 을 던지고, "
+            "cases.py 의 except 가 그것을 받아 classification_failed 로 전환한다. "
+            "즉 관찰 가능한 동작이 바뀌지 않는 중복 방어 제거다(subsumed mutant). "
+            "실제 결함은 값 검증 쪽이다 — "
+            "final_project_cs/docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md"
+        ),
         difficulty=2,
     ),
     Defect(
@@ -129,5 +138,18 @@ MORE5: list[Defect] = [
         ),
         counterfactuals=["파이썬에서 이미 봤다", "트랜잭션이 알아서 막는다"],
         difficulty=3,
+    ),
+    Defect(
+        defect_id="INV-CLASS-003",
+        title="분류 실패의 사유를 잃는다",
+        invariant="분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
+        path="app/presentation/api/cases.py",
+        old='payload={"failure_code": "classification_failed"}',
+        new='payload={"failure_code": "unknown"}',
+        lesson=(
+            "escalated 로 가긴 하는데 왜 넘어왔는지가 사라진다. 받은 사람은 분류가 실패한 "
+            "것인지 다른 이유인지 모른 채 처음부터 다시 조사해야 한다."
+        ),
+        counterfactuals=["escalated 라는 사실만으로 충분하다", "로그를 보면 된다"],
     ),
 ]

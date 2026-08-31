@@ -278,3 +278,73 @@ def test_wait_for_input_rejects_other_wait_reason() -> None:
             evidence=[], wait_reason="human_approval",
             required_input_schema={"type": "object"},
         )
+
+
+# ── 2026-09-01: 제안이 여러 건일 때의 승인 우회 ──────────────────────
+#
+# `any(...)` 를 `self.action_proposals[0].approval_required` 로 바꿔도 470개가
+# 전부 통과했다. 위 테스트가 제안 **한 건**만 넣기 때문이다.
+# 앞에 승인 불필요 제안을 두고 뒤에 환불을 붙이면 respond 로 나간다.
+
+
+def test_approval_required_proposal_anywhere_in_the_list_forces_wait() -> None:
+    """목록 어디에 있어도 승인 필요 제안 하나면 wait_for_approval 이어야 한다."""
+    with pytest.raises(ValidationError, match="wait_for_approval"):
+        make_result(action_proposals=[_refund_proposal(False), _refund_proposal(True)])
+
+
+def test_approval_required_proposal_first_also_forces_wait() -> None:
+    """순서를 뒤집어도 같다. 첫 건만 보는 구현을 막는다."""
+    with pytest.raises(ValidationError, match="wait_for_approval"):
+        make_result(action_proposals=[_refund_proposal(True), _refund_proposal(False)])
+
+
+def test_all_non_approval_proposals_may_respond() -> None:
+    """반대로 승인 필요 제안이 하나도 없으면 respond 해도 된다.
+
+    위 두 테스트가 '무조건 막는' 구현으로 통과하지 않게 하는 대조군이다.
+    """
+    result = make_result(action_proposals=[_refund_proposal(False), _refund_proposal(False)])
+    assert result.next_action is NextAction.RESPOND
+
+
+def test_mixed_proposals_with_wait_for_approval_are_allowed() -> None:
+    """혼합 목록이라도 wait_for_approval 이면 통과해야 한다.
+
+    위 두 테스트가 `all(...)` 처럼 과잉 제한된 구현으로도 통과하지 않게 하는 대조군이다.
+    """
+    result = make_result(
+        next_action=NextAction.WAIT_FOR_APPROVAL, outcome="waiting", answer=None,
+        evidence=[make_evidence()], wait_reason="human_approval",
+        action_proposals=[_refund_proposal(False), _refund_proposal(True)],
+    )
+    assert result.next_action is NextAction.WAIT_FOR_APPROVAL
+
+
+# ── 2026-09-01: SQL 쪽 버전 조건 (구조적 단언) ───────────────────────
+#
+# ★이것은 행동 테스트가 아니라 **구현을 고정하는 테스트**다.
+#
+# 낙관적 동시성은 파이썬(transition_case)과 SQL(UPDATE) 두 겹으로 지킨다.
+# SQL 쪽 조건을 지워도 파이썬 검사가 먼저 걸러서 단일 스레드에서는 아무 차이가
+# 없고, 동시성 테스트는 타이밍에 따라 결과가 갈린다(단독 5회 중 1회 실패 실측).
+# 그래서 행동으로는 잡을 방법이 없어 문장 자체를 본다.
+#
+# 근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md
+
+
+def test_projection_update_keeps_the_version_condition() -> None:
+    from app.core.transition import _UPDATE_PROJECTION
+
+    normalized = " ".join(_UPDATE_PROJECTION.split())
+    assert "AND version = %(expected_version)s" in normalized, (
+        "UPDATE 문에서 version 조건이 사라졌다. 파이썬 검사만 남으면 경합에서 "
+        "진 쪽이 덮어쓸 수 있다 — 두 겹 중 하나다"
+    )
+
+
+def test_projection_update_bumps_the_version() -> None:
+    from app.core.transition import _UPDATE_PROJECTION
+
+    normalized = " ".join(_UPDATE_PROJECTION.split())
+    assert "version = version + 1" in normalized

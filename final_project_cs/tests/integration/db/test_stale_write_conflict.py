@@ -79,3 +79,62 @@ def test_writing_with_a_version_ahead_of_current_is_rejected(db):  # noqa: F811
                             event_type=EventType.CLASSIFIED,
                             payload={"intent": "x", "issue_code": "x", "sentiment": "neutral"},
                             actor_type="test")
+
+
+# ── 2026-09-01: SQL 쪽 조건을 결정적으로 재는 법 ─────────────────────
+#
+# 낙관적 동시성은 두 겹이다. 파이썬(transition_case)은 친절한 조기 실패이고,
+# SQL 의 `AND version = %(expected_version)s` 는 원자적 compare-and-swap 이다.
+# 조회와 UPDATE 사이에 다른 트랜잭션이 커밋할 수 있으므로 둘은 중복이 아니다.
+#
+# 기존 동시성 테스트는 두 조회가 **모두 끝났음을 보장하지 않는다.** 한쪽이 커밋한
+# 뒤에 다른 쪽이 조회하면 파이썬 검사만으로 충돌해서, SQL 조건을 지운 변이를
+# 구분하지 못한다(실측: 단독 5회 중 4회 통과).
+#
+# 그래서 두 스레드가 **같은 version 을 읽은 것이 확정된 뒤에** 진행하도록 barrier 로
+# 맞춘다. 그러면 둘 다 파이썬 검사를 지나 UPDATE 로 가고, SQL 조건이 살아 있어야만
+# 한쪽이 진다.
+
+
+def test_two_writers_that_read_the_same_version_produce_exactly_one_conflict(
+    db, monkeypatch  # noqa: F811
+):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    from app.core import transition as transition_module
+    from app.infrastructure.db.session import get_connection
+
+    conn, tenant = db
+    case_id = _fresh_case(conn, tenant)
+
+    barrier = threading.Barrier(2, timeout=15)
+    original = transition_module._load_projection
+
+    def synchronized(connection, tenant_id, target_case_id):
+        projection = original(connection, tenant_id, target_case_id)
+        barrier.wait()  # 둘 다 같은 version 을 읽은 것이 여기서 확정된다
+        return projection
+
+    monkeypatch.setattr(transition_module, "_load_projection", synchronized)
+
+    def attempt() -> str:
+        with get_connection() as worker:
+            try:
+                with worker.transaction():
+                    transition_case(
+                        worker, tenant_id=tenant, case_id=case_id, expected_version=1,
+                        event_type=EventType.CLASSIFIED,
+                        payload={"intent": "x", "issue_code": "x", "sentiment": "neutral"},
+                        actor_type="test")
+                return "success"
+            except StateConflict:
+                return "conflict"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes = sorted(pool.map(lambda _: attempt(), range(2)))
+    assert outcomes == ["conflict", "success"], (
+        "같은 version 을 읽은 두 실행이 모두 성공했다 — SQL 의 version 조건이 없으면 "
+        "나중 것이 먼저 것을 덮어쓴다"
+    )
+    assert get_case(conn, tenant_id=tenant, case_id=case_id)["version"] == 2

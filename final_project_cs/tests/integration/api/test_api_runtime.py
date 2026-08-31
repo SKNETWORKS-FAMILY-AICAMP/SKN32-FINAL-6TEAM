@@ -263,3 +263,66 @@ def test_mcp_read_scope_tools_execute_only_with_mcp_principal(api_fixture, tool)
     else:
         result = tool(str(api_fixture["customer"]), "mcp tool", "test")
         assert result["status"] in {"classifying", "escalated"}
+
+
+# ── 2026-09-01: 분류기가 "일부만" 돌려준 경우 ────────────────────────
+#
+# 위 테스트는 분류기가 **예외를 던지는** 경우만 본다. 그래서 필수 키 검사를
+# `if not result:` 로 좁혀도 470개가 전부 통과했다. intent 만 오고 issue_code 가
+# 빠진 응답이 성공으로 처리돼 빈 라벨이 저장되고 그 라벨로 라우팅까지 간다.
+# CLAUDE.md §1 — "분류 실패는 조용히 넘기지 않는다".
+
+
+@pytest.mark.parametrize("missing", ["intent", "issue_code", "sentiment"])
+def test_create_escalates_when_the_classifier_omits_a_required_label(api_fixture, missing):
+    labels = {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"}
+    labels.pop(missing)
+    client = TestClient(create_app(classifier=lambda _message: dict(labels)))
+    response = client.post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": f"partial-{missing}", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["status"] == "escalated", (
+        f"{missing} 가 빠졌는데 분류가 성공으로 처리됐다"
+    )
+    case_id = UUID(response.json()["case_id"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT status, intent, issue_code, sentiment FROM customer_cases "
+            "WHERE tenant_id=%s AND case_id=%s",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchone() == ("escalated", None, None, None), (
+            "부분 분류 결과가 Case 에 저장됐다 — 값을 모르면 비워 둔다"
+        )
+        cur.execute(
+            "SELECT event_type FROM case_events WHERE tenant_id=%s AND case_id=%s "
+            "ORDER BY aggregate_version",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchall() == [("created",), ("classification_failed",)]
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=("앱 결함 — API 경로의 분류 검사가 키 존재만 보고 값은 안 본다. "
+            "docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md"),
+)
+def test_create_escalates_when_a_label_is_blank(api_fixture):
+    """빈 문자열도 라벨이 아니다. 키는 있는데 값이 없는 응답을 본다.
+
+    ★지금은 실패한다. 고치면 이 xfail 이 strict 라서 알려준다.
+    """
+    client = TestClient(create_app(classifier=lambda _message: {
+        "intent": "billing", "issue_code": "  ", "sentiment": "negative"}))
+    response = client.post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "blank-label", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["status"] == "escalated"

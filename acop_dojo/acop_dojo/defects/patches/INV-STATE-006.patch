@@ -5,7 +5,7 @@
          # Deliberately not a business-state snapshot. A graph checkpoint is disposable.
          return {"case_id": str(case_id), "run_id": str(run_id), "graph_revision": self.graph_revision,
 -                "node_name": node_name, "runtime_state": dict(runtime_state or {})}
-+                "node_name": node_name, "runtime_state": dict(runtime_state or {}, status="running")}
++                "node_name": node_name, "status": "running", "runtime_state": dict(runtime_state or {})}
  
      @staticmethod
      def new_resume_token() -> str:
