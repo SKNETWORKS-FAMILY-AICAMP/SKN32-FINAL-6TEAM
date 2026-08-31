@@ -1,0 +1,11 @@
+--- a/app/application/case_service.py
++++ b/app/application/case_service.py
+@@ -56,7 +56,7 @@
+ 
+     def checkpoint(self, *, case_id: UUID, run_id: UUID, node_name: str, runtime_state: dict[str, Any] | None = None) -> dict[str, Any]:
+         # Deliberately not a business-state snapshot. A graph checkpoint is disposable.
+-        return {"case_id": str(case_id), "run_id": str(run_id), "graph_revision": self.graph_revision,
++        return {"case_id": str(case_id), "run_id": str(run_id), "graph_revision": "controller-v1",
+                 "node_name": node_name, "runtime_state": dict(runtime_state or {})}
+ 
+     @staticmethod

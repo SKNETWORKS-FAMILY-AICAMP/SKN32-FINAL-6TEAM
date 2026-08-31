@@ -1,0 +1,11 @@
+--- a/app/presentation/api/cases.py
++++ b/app/presentation/api/cases.py
+@@ -83,7 +83,7 @@
+                                 payload={"channel": request.channel, "message": request.message}, actor_type="api", actor_id=principal.key_id)
+                 try:
+                     result = classifier(masked(request.message)) if classifier else None
+-                    if not result or not all(k in result for k in ("intent", "issue_code", "sentiment")):
++                    if not result:
+                         raise ValueError("classifier unavailable")
+                     transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFIED,
+                                     payload=result, actor_type="api", actor_id=principal.key_id)

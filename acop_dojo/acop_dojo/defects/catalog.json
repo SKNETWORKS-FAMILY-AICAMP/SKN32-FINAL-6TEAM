@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "470 passed, 4 deselected, 36 warnings in 36.24s"
+  "summary": "470 passed, 4 deselected, 36 warnings in 41.32s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -44,6 +44,46 @@
     "tests/security/test_auth_and_scope_guards.py::test_any_seven_character_prefix_must_not_authenticate"
    ]
   },
+  "INV-AUTH-002": {
+   "failed": [
+    "tests/e2e/test_operations_ui.py::test_approval_uses_rest_endpoint",
+    "tests/integration/api/test_api_runtime.py::test_unauthorized_matrix_for_each_scope_and_rest_endpoint[action:approve]",
+    "tests/integration/api/test_api_runtime.py::test_unauthorized_matrix_for_each_scope_and_rest_endpoint[case:read]",
+    "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+    "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+    "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_order_total_shrank_after_the_proposal",
+    "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+    "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+    "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+    "tests/integration/api/test_ui_approval_failure_is_visible.py::test_failed_approval_shows_the_reason_instead_of_a_silent_redirect",
+    "tests/integration/controller/test_controller_integration.py::test_e2e_cancelled_customer_post_charge_approval_flow"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "승인자는 action:approve scope 가 있어야 한다",
+   "path": "app/presentation/api/cases.py",
+   "summary": "11 failed, 459 passed, 4 deselected, 36 warnings in 38.35s",
+   "title": "승인 엔드포인트가 읽기 권한으로 열린다",
+   "unique_failures": [
+    "tests/e2e/test_operations_ui.py::test_approval_uses_rest_endpoint",
+    "tests/integration/api/test_api_runtime.py::test_unauthorized_matrix_for_each_scope_and_rest_endpoint[action:approve]",
+    "tests/integration/api/test_api_runtime.py::test_unauthorized_matrix_for_each_scope_and_rest_endpoint[case:read]",
+    "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_approval_audit_row_does_not_appear_as_a_new_pending_item",
+    "tests/integration/api/test_approval_audit_row_excluded_from_queue.py::test_rejection_audit_row_does_not_appear_as_a_new_pending_item",
+    "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_order_total_shrank_after_the_proposal",
+    "tests/integration/api/test_recheck_before_execution.py::test_approval_succeeds_when_facts_still_match",
+    "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
+    "tests/integration/api/test_recheck_before_execution.py::test_rejection_does_not_run_the_recheck",
+    "tests/integration/api/test_ui_approval_failure_is_visible.py::test_failed_approval_shows_the_reason_instead_of_a_silent_redirect",
+    "tests/integration/controller/test_controller_integration.py::test_e2e_cancelled_customer_post_charge_approval_flow"
+   ]
+  },
   "INV-BUDGET-001": {
    "failed": [
     "tests/contract/test_contracts.py::test_context_pack_rejects_over_budget"
@@ -63,6 +103,20 @@
    "unique_failures": [
     "tests/contract/test_contracts.py::test_context_pack_rejects_over_budget"
    ]
+  },
+  "INV-CLASS-002": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
+   "path": "app/presentation/api/cases.py",
+   "summary": "470 passed, 4 deselected, 36 warnings in 33.89s",
+   "title": "일부만 분류돼도 성공으로 친다"
   },
   "INV-CLASSIFY-001": {
    "failed": [
@@ -350,6 +404,26 @@
    "unique_failures": [
     "tests/unit/core/test_idempotency_request_id.py::test_request_id_is_preferred_over_case_id",
     "tests/unit/core/test_idempotency_request_id.py::test_two_requests_on_one_case_get_different_keys"
+   ]
+  },
+  "INV-MCP-001": {
+   "failed": [
+    "tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "MCP 는 read-only 다 — 결제·환불·구독 변경을 하지 않는다",
+   "path": "app/presentation/api/mcp.py",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 34.73s",
+   "title": "MCP 도구 하나가 쓰기 scope 를 요구한다",
+   "unique_failures": [
+    "tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools"
    ]
   },
   "INV-MERGE-001": {
@@ -710,6 +784,54 @@
     "tests/unit/core/test_payload_schema_guard.py::test_unregistered_event_is_rejected"
    ]
   },
+  "INV-STATE-005": {
+   "failed": [
+    "tests/integration/controller/test_controller_integration.py::test_replay_case_is_projection_equivalent"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "case_events 는 append-only 이고 순서가 곧 상태다",
+   "path": "app/core/transition.py",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 36.15s",
+   "title": "이벤트를 역순으로 재생한다",
+   "unique_failures": [
+    "tests/integration/controller/test_controller_integration.py::test_replay_case_is_projection_equivalent"
+   ]
+  },
+  "INV-STATE-006": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "checkpoint 는 실행 snapshot 이다 — 권위 있는 projection 은 customer_cases 다",
+   "path": "app/application/case_service.py",
+   "summary": "470 passed, 4 deselected, 36 warnings in 27.93s",
+   "title": "checkpoint 가 업무 상태를 들고 다닌다"
+  },
+  "INV-STATE-007": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다 (SQL 쪽 방어)",
+   "path": "app/core/transition.py",
+   "summary": "470 passed, 4 deselected, 36 warnings in 37.04s",
+   "title": "SQL 쪽 버전 조건이 사라졌다"
+  },
   "INV-TEAM-001": {
    "failed": [
     "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
@@ -750,6 +872,20 @@
    "title": "답변 검토에서 사실 대조 결과를 버린다",
    "unique_failures": []
   },
+  "INV-TEAM-004": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "Team 은 승인 없이 실행하지 않는다 — 승인 필요 제안이 있으면 wait_for_approval 이어야 한다",
+   "path": "app/core/contracts.py",
+   "summary": "470 passed, 4 deselected, 36 warnings in 37.80s",
+   "title": "승인 필요 제안을 첫 건만 보고 넘긴다"
+  },
   "INV-UI-001": {
    "failed": [
     "tests/e2e/test_operations_ui.py::test_evidence_free_proposal_has_disabled_decision",
@@ -772,6 +908,38 @@
     "tests/e2e/test_operations_ui.py::test_waiting_approval_scenario_is_visible_end_to_end"
    ]
   },
+  "INV-UNKNOWN-001": {
+   "failed": [
+    "tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried[outbox_worker_contract]",
+    "tests/integration/controller/test_provider_timeout_unknown.py::test_provider_timeout_stays_unknown_and_is_not_retried",
+    "tests/integration/controller/test_provider_timeout_unknown.py::test_unknown_row_is_never_reclaimed_even_by_a_healthy_worker",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_payment_provider_transport_error_becomes_unknown_in_db[connection_error-connection failed]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_payment_provider_transport_error_becomes_unknown_in_db[timeout-timed out]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_runbook_case_join_and_human_transition_are_executable[valid_callback-resuming-payload0]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_runbook_case_join_and_human_transition_are_executable[wait_expired-escalated-payload1]"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "provider timeout 을 성공으로 추정하지 않는다 — unknown 으로 남긴다",
+   "path": "app/infrastructure/messaging/worker.py",
+   "summary": "7 failed, 463 passed, 4 deselected, 36 warnings in 33.00s",
+   "title": "provider 실패를 성공으로 기록한다",
+   "unique_failures": [
+    "tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried[outbox_worker_contract]",
+    "tests/integration/controller/test_provider_timeout_unknown.py::test_provider_timeout_stays_unknown_and_is_not_retried",
+    "tests/integration/controller/test_provider_timeout_unknown.py::test_unknown_row_is_never_reclaimed_even_by_a_healthy_worker",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_payment_provider_transport_error_becomes_unknown_in_db[connection_error-connection failed]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_payment_provider_transport_error_becomes_unknown_in_db[timeout-timed out]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_runbook_case_join_and_human_transition_are_executable[valid_callback-resuming-payload0]",
+    "tests/integration/messaging/test_payment_timeout_unknown.py::test_runbook_case_join_and_human_transition_are_executable[wait_expired-escalated-payload1]"
+   ]
+  },
   "INV-VERIFY-001": {
    "failed": [
     "tests/unit/core/test_proposal_verification.py::test_failed_fact_lookup_rejects_everything"
@@ -790,6 +958,26 @@
    "title": "사실 조회에 실패해도 제안을 통과시킨다",
    "unique_failures": [
     "tests/unit/core/test_proposal_verification.py::test_failed_fact_lookup_rejects_everything"
+   ]
+  },
+  "INV-VERSION-001": {
+   "failed": [
+    "tests/integration/controller/test_controller_integration.py::test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "산출물에 버전을 박는다 — 같은 입력이라도 버전이 다르면 결과가 다르다",
+   "path": "app/application/case_service.py",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.50s",
+   "title": "checkpoint 의 graph_revision 이 하드코딩됐다",
+   "unique_failures": [
+    "tests/integration/controller/test_controller_integration.py::test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state"
    ]
   },
   "INV-VOC-001": {
