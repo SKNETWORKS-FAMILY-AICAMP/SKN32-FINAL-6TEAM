@@ -1,29 +1,189 @@
 # -*- coding: utf-8 -*-
-"""한 파일짜리 화면의 CSS 와 JS 와 뼈대. 내용은 trace_data.py 에 있다."""
+"""한 파일짜리 화면의 CSS 와 JS 와 뼈대.
+
+★낱장을 PNG 로 붙이지 않는다. 같은 내용을 HTML 로 다시 그린다.
+  글자를 긁을 수 있어야 하고, 검색이 되어야 하고, 화면 크기에 맞아야 한다.
+
+★낱장 오른쪽에 누적 패킷 칸을 붙인다. 낱장 하나만 보면 그 단계에서 무엇이
+  나왔는지는 알아도 지금까지 쌓인 것이 무엇인지는 모른다.
+
+★열두 칸 지도는 늘 펴 두지 않는다. 위쪽 진행바를 누를 때만 덮어서 띄운다.
+  자리를 계속 차지하면 정작 봐야 할 낱장이 밀린다.
+"""
 
 CSS = """
-:root{--bg:#f5f6fa;--card:#fff;--line:#dde2ec;--ink:#151b27;--dim:#5f6a80;--faint:#98a2b6;
---red:#b8442f;--blue:#2f5bd8;--green:#0d7a4d;--purple:#6b3fa0;--grey:#5f6a80;
---code-bg:#0f141f;--code-ink:#dbe3f0}
+:root{--bg:#f5f6fa;--card:#fff;--soft:#fbfcfe;--line:#dbe0ea;--ink:#161c28;--dim:#6b7488;
+--faint:#98a1b4;--warm:#fffdf6;
+--red:#b8442f;--blue:#2f5bd8;--green:#0d7a4d;--purple:#6b3fa0;--grey:#6b7488;
+--code-bg:#0f141f;--code-ink:#dbe3f0;--done:#e2e6ee;--todo:#f2f4f8}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
---bg:#11141b;--card:#181c25;--line:#2a303d;--ink:#e7eaf2;--dim:#98a2b8;--faint:#6d778c;
---red:#e08063;--blue:#7fa1f7;--green:#4bb489;--purple:#a888e0;--grey:#98a2b8}}
+--bg:#11141b;--card:#181c25;--soft:#1d222c;--line:#2a303d;--ink:#e7eaf2;--dim:#98a2b8;
+--faint:#6d778c;--warm:#211d14;
+--red:#e08063;--blue:#7fa1f7;--green:#4bb489;--purple:#a888e0;--grey:#98a2b8;
+--done:#2b3140;--todo:#20252f}}
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);line-height:1.65;
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
 font-family:"Malgun Gothic",system-ui,sans-serif}
-code,pre{font-family:Consolas,"D2Coding",monospace}
-.wrap{max-width:1560px;margin:0 auto;padding:26px 22px 80px}
-h1{font-size:29px;margin:0 0 6px;letter-spacing:-.02em}
-.sub{color:var(--dim);font-size:15px;margin:0 0 20px;max-width:88ch}
-h2.sec{font-size:20px;margin:52px 0 4px;padding-left:13px;border-left:5px solid var(--blue)}
-h2.sec + p{color:var(--dim);font-size:14.5px;margin:0 0 16px;padding-left:18px}
+code,pre,.mono{font-family:Consolas,"D2Coding",monospace}
+.wrap{max-width:1720px;margin:0 auto;padding:24px 20px 90px}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:15px;margin:0 0 20px;max-width:90ch}
+h2.sec{font-size:20px;margin:46px 0 4px;padding-left:13px;border-left:5px solid var(--blue)}
+h2.sec + p{color:var(--dim);font-size:14.5px;margin:0 0 14px;padding-left:18px}
+
 button{font:inherit;font-size:14px;padding:8px 15px;border-radius:9px;cursor:pointer;
 border:1px solid var(--line);background:var(--card);color:var(--ink)}
 button:hover{border-color:var(--blue);color:var(--blue)}
 button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 button.primary:hover{opacity:.9;color:#fff}
 button:disabled{opacity:.4;cursor:not-allowed}
-.dock{position:fixed;right:22px;bottom:22px;z-index:40;display:flex;flex-direction:column;
+
+/* 진행바. 그림 위쪽에 있던 것과 같은 열두 칸이다. */
+.barwrap{background:var(--card);border:1px solid var(--line);border-radius:13px;
+padding:12px 15px 9px;position:sticky;top:0;z-index:25}
+.barwrap .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.barwrap .top .t{font-size:12.5px;color:var(--faint)}
+.barwrap .top .r{margin-left:auto;display:flex;gap:8px}
+.barwrap .top button{font-size:12.5px;padding:5px 11px;border-radius:7px}
+.bar{display:flex;gap:5px;align-items:flex-end}
+.bar .cell{flex:1;border:none;padding:0;background:none;cursor:pointer;text-align:center}
+.bar .cell .box{height:19px;border-radius:5px;background:var(--todo);display:flex;
+align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#bcc3d0;
+transition:.24s}
+.bar .cell .nm{font-size:11.5px;color:#aab2c1;margin-top:3px;transition:.2s}
+.bar .cell.done .box{background:var(--done);color:#8f97a8}
+.bar .cell.now .box{color:#fff}
+.bar .cell.now .nm{font-weight:700}
+.bar .cell:hover .nm{color:var(--ink)}
+
+/* 낱장 + 누적 패킷 */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;margin-top:14px;
+align-items:start}
+@media(max-width:1240px){.stage{grid-template-columns:minmax(0,1fr)}}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:14px;
+padding:18px 20px 20px}
+.sheet.anim{animation:sheetin .32s ease both}
+@keyframes sheetin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.sheet .head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.sheet .no{font-size:34px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.sheet .ttl{font-size:21px;font-weight:700;padding-top:5px;letter-spacing:-.02em}
+.sheet .act{margin-left:auto;text-align:right;padding-top:3px;max-width:44ch}
+.sheet .act div{font-size:13.5px;color:var(--dim)}
+.sheet .act div:first-child{font-size:14px;color:var(--ink);font-weight:700}
+
+.body{display:grid;grid-template-columns:214px minmax(0,1fr) 26px minmax(0,1fr);
+gap:0 12px;align-items:stretch}
+@media(max-width:900px){.body{grid-template-columns:minmax(0,1fr)}
+.body .arrow{transform:rotate(90deg);height:26px}}
+.coord{border:1px solid;border-radius:11px;background:var(--soft);padding:12px 13px}
+.coord h4{margin:0 0 10px;font-size:13px}
+.coord .row{margin-bottom:13px}
+.coord .row:last-child{margin-bottom:0}
+.coord .k{font-size:11.5px;color:var(--faint);margin-bottom:1px}
+.coord .v{font-size:13px;line-height:1.45}
+.doc{border:1px solid var(--line);border-radius:11px;background:var(--soft);
+padding:11px 13px 13px;min-width:0}
+.doc h4{margin:0 0 8px;font-size:13px;color:var(--dim)}
+.doc.out{border-color:currentColor}
+.doc.out h4{color:currentColor}
+.doc pre{margin:0;font-size:12.8px;line-height:1.72;white-space:pre-wrap;word-break:break-word;
+color:var(--ink)}
+.doc pre b{font-weight:700;color:currentColor;display:inline-block;
+animation:mark .5s ease both;animation-delay:var(--d,0s)}
+@keyframes mark{from{opacity:.25;transform:translateX(-5px)}to{opacity:1;transform:none}}
+.arrow{display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;
+color:currentColor;animation:push 1.5s ease-in-out infinite}
+@keyframes push{0%,100%{transform:translateX(-3px)}50%{transform:translateX(3px)}}
+
+.states{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.states .chip{border:2px solid;border-radius:9px;padding:6px 15px;font-size:13.5px;
+font-weight:700;font-family:Consolas,monospace}
+.codeline{margin-top:14px;font-size:12.8px;color:var(--dim);display:flex;gap:9px;
+align-items:baseline;flex-wrap:wrap}
+.codeline .k{font-size:11.5px;color:var(--faint);font-weight:700}
+.codeline .p{font-family:Consolas,monospace}
+.why{margin-top:12px;border:1px solid;border-radius:11px;background:var(--warm);
+padding:12px 15px;font-size:14.5px}
+.files{margin-top:12px;border:1px solid var(--line);border-radius:11px;padding:12px 15px;
+font-size:13px}
+.files > div{margin:5px 0;color:var(--dim)}
+.files b{color:var(--ink)}
+
+/* 누적 패킷 */
+.pack{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 17px;
+position:sticky;top:98px}
+.pack h3{font-size:15px;margin:0 0 3px}
+.pack .note{color:var(--dim);font-size:12.5px;margin:0 0 13px}
+.stream{max-height:calc(100vh - 250px);overflow-y:auto}
+@media(max-width:1240px){.pack{position:static}.stream{max-height:520px}}
+.chunk{border:1px solid var(--line);border-radius:10px;margin:0 0 9px;overflow:hidden;
+animation:slide .34s ease both}
+@keyframes slide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.chunk .h{display:flex;gap:8px;align-items:baseline;padding:6px 11px;
+background:rgba(127,140,170,.09);border-bottom:1px solid var(--line)}
+.chunk .kind{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:5px;
+background:var(--bg);border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.chunk .nm{font-size:12.8px;font-weight:700;font-family:Consolas,monospace}
+.chunk .fr{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
+.chunk pre{margin:0;padding:8px 11px;font-size:12.2px;line-height:1.6;white-space:pre-wrap;
+word-break:break-word;color:var(--ink)}
+.badge{display:flex;gap:9px;align-items:center;margin-top:12px;font-size:13px;color:var(--dim)}
+.badge b{font-family:Consolas,monospace;font-size:15px;padding:4px 12px;border-radius:8px;
+border:2px solid var(--blue);color:var(--blue)}
+.badge b.done{border-color:var(--green);color:var(--green)}
+
+/* 덮어 띄우는 것들 */
+.ov{position:fixed;inset:0;background:rgba(8,11,18,.76);display:none;z-index:60;
+padding:30px 20px;overflow-y:auto}
+.ov.on{display:block}
+.ovbox{max-width:1180px;margin:0 auto;background:var(--card);border:1px solid var(--line);
+border-radius:14px;overflow:hidden}
+.ovhead{display:flex;align-items:center;gap:12px;padding:13px 18px;
+border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:2}
+.ovhead h3{margin:0;font-size:17px}
+.ovhead .x{margin-left:auto}
+.src{border-top:1px solid var(--line)}
+.src .path{padding:8px 18px;font-family:Consolas,monospace;font-size:12.5px;color:var(--dim);
+background:rgba(127,140,170,.09)}
+.src pre{margin:0;padding:14px 18px;background:var(--code-bg);color:var(--code-ink);
+font-size:13px;line-height:1.66;overflow-x:auto;white-space:pre}
+.plain{padding:14px 20px 18px;font-size:14.3px;line-height:1.82;
+border-top:3px solid var(--blue);background:rgba(47,91,216,.055)}
+.plain .lbl{display:inline-block;font-size:11.5px;font-weight:700;color:var(--blue);
+border:1px solid var(--blue);border-radius:5px;padding:1px 8px;margin-bottom:9px}
+.plain p{margin:0 0 11px}
+.plain p:last-child{margin-bottom:0}
+.plain code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+font-size:12.8px}
+
+/* 열두 칸 지도. 진행바를 눌러야 뜬다. */
+.map{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px}
+@media(max-width:820px){.map{grid-template-columns:repeat(2,1fr)}}
+.st{border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:transparent;
+text-align:left;transition:.2s;opacity:.55;cursor:pointer}
+.st .n{font-size:12px;color:var(--faint);font-weight:700}
+.st .t{font-size:14.5px;font-weight:700;margin:1px 0 2px;color:var(--ink)}
+.st .o{font-size:11.5px;color:var(--faint)}
+.st.done{opacity:1;border-color:currentColor}
+.st.now{opacity:1;background:currentColor;border-color:currentColor}
+.st.now .n,.st.now .o{color:rgba(255,255,255,.82)}
+.st.now .t{color:#fff}
+
+/* 그림 열아홉 장 */
+figure{margin:18px 0 0;background:var(--card);border:1px solid var(--line);border-radius:14px;
+overflow:hidden}
+figure img{display:block;width:100%;height:auto}
+figcaption{padding:14px 20px 17px;border-top:1px solid var(--line)}
+figcaption b{display:block;font-size:16px;margin-bottom:4px}
+figcaption span{color:var(--dim);font-size:14px}
+nav.jump{background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;
+overflow-x:auto;white-space:nowrap}
+nav.jump a{display:inline-block;padding:5px 11px;margin-right:3px;font-size:12.5px;
+color:var(--dim);text-decoration:none;border:1px solid var(--line);border-radius:99px}
+nav.jump a:hover{color:var(--blue);border-color:var(--blue)}
+
+/* 떠 있는 조작 단추 */
+.dock{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;flex-direction:column;
 align-items:flex-end;gap:11px}
 .dock .menu{display:none;flex-direction:column;gap:7px;background:var(--card);
 border:1px solid var(--line);border-radius:15px;padding:12px;min-width:216px;
@@ -41,154 +201,117 @@ align-items:center;justify-content:center;line-height:1.12;transition:.2s}
 .fab .small{font-size:10.5px;opacity:.86}
 .dock.on .fab{background:var(--ink);box-shadow:0 9px 26px rgba(8,12,22,.4)}
 .dock.on .fab .big{font-size:15px}
-.cols{display:grid;grid-template-columns:1fr 620px;gap:18px;margin-top:16px;align-items:start}
-@media(max-width:1180px){.cols{grid-template-columns:1fr}}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.panel h3{font-size:15px;margin:0 0 3px}
-.panel .note{color:var(--dim);font-size:13px;margin:0 0 14px}
-.map{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.st{border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:transparent;
-text-align:left;transition:.22s;opacity:.5;cursor:pointer}
-.st .n{font-size:12px;color:var(--faint);font-weight:700}
-.st .t{font-size:14.5px;font-weight:700;margin:1px 0 2px;color:var(--ink)}
-.st .o{font-size:11.5px;color:var(--faint)}
-.st.done{opacity:1;border-color:currentColor}
-.st.now{opacity:1;transform:scale(1.045)}
-.st.red{color:var(--red)}.st.blue{color:var(--blue)}.st.green{color:var(--green)}
-.st.purple{color:var(--purple)}.st.grey{color:var(--grey)}
-.st.red.now{background:var(--red);border-color:var(--red)}
-.st.blue.now{background:var(--blue);border-color:var(--blue)}
-.st.green.now{background:var(--green);border-color:var(--green)}
-.st.purple.now{background:var(--purple);border-color:var(--purple)}
-.st.grey.now{background:var(--grey);border-color:var(--grey)}
-.st.now .n,.st.now .o{color:rgba(255,255,255,.82)}
-.st.now .t{color:#fff}
-.why{margin-top:16px;border-left:4px solid var(--line);padding:2px 0 2px 14px;min-height:66px}
-.why .h{font-size:14px;font-weight:700;margin-bottom:3px}
-.why .b{font-size:14px;color:var(--dim)}
-.stream{max-height:600px;overflow-y:auto}
-.chunk{border:1px solid var(--line);border-radius:10px;margin:0 0 9px;overflow:hidden;
-animation:slide .34s ease both}
-@keyframes slide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.chunk .head{display:flex;gap:8px;align-items:baseline;padding:7px 12px;
-background:rgba(127,140,170,.09);border-bottom:1px solid var(--line)}
-.chunk .kind{font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--bg);
-border:1px solid var(--line);color:var(--dim);white-space:nowrap}
-.chunk .name{font-size:13.5px;font-weight:700;font-family:Consolas,monospace}
-.chunk .from{margin-left:auto;font-size:11.5px;color:var(--faint)}
-.chunk pre{margin:0;padding:9px 12px;font-size:12.9px;line-height:1.62;white-space:pre;
-overflow-x:auto;color:var(--ink)}
-.badge{display:flex;gap:9px;align-items:center;margin-top:13px;font-size:13px;color:var(--dim)}
-.badge b{font-family:Consolas,monospace;font-size:15.5px;padding:5px 13px;border-radius:8px;
-border:2px solid var(--blue);color:var(--blue)}
-.badge b.done{border-color:var(--green);color:var(--green)}
-.files{margin-top:16px;font-size:13px}
-.files div{margin:6px 0;color:var(--dim)}
-.files b{color:var(--ink)}
-figure{margin:20px 0 0;background:var(--card);border:1px solid var(--line);border-radius:14px;
-overflow:hidden}
-figure img{display:block;width:100%;height:auto}
-figcaption{padding:15px 20px 18px;border-top:1px solid var(--line)}
-figcaption b{display:block;font-size:16px;margin-bottom:4px}
-figcaption span{color:var(--dim);font-size:14px}
-nav.jump{background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;margin:16px 0 0;
-overflow-x:auto;white-space:nowrap}
-nav.jump a{display:inline-block;padding:5px 11px;margin-right:3px;font-size:12.5px;
-color:var(--dim);text-decoration:none;border:1px solid var(--line);border-radius:99px}
-nav.jump a:hover{color:var(--blue);border-color:var(--blue)}
-.ov{position:fixed;inset:0;background:rgba(8,11,18,.74);display:none;z-index:60;padding:34px 22px;
-overflow-y:auto}
-.ov.on{display:block}
-.ovbox{max-width:1080px;margin:0 auto;background:var(--card);border:1px solid var(--line);
-border-radius:14px;overflow:hidden}
-.ovhead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);
-position:sticky;top:0;background:var(--card);z-index:2}
-.ovhead h3{margin:0;font-size:17px}
-.ovhead .x{margin-left:auto}
-.src{border-top:1px solid var(--line)}
-.src .path{padding:9px 18px;font-family:Consolas,monospace;font-size:12.5px;color:var(--dim);
-background:rgba(127,140,170,.09)}
-.src pre{margin:0;padding:15px 18px;background:var(--code-bg);color:var(--code-ink);font-size:13px;
-line-height:1.66;overflow-x:auto;white-space:pre}
-.plain{padding:15px 20px 19px;font-size:14.3px;line-height:1.82;
-border-top:3px solid var(--blue);background:rgba(47,91,216,.055)}
-.plain .lbl{display:inline-block;font-size:11.5px;font-weight:700;color:var(--blue);
-border:1px solid var(--blue);border-radius:5px;padding:1px 8px;margin-bottom:9px}
-.plain p{margin:0 0 11px}
-.plain p:last-child{margin-bottom:0}
-.plain code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
-font-size:12.8px}
-.foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);
+
+.foot{margin-top:38px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);
 font-size:13px}
 """
 
 JS = r"""
-const STEPS = __DATA__;
-let cur = -1, timer = null;
+const BAR = __BAR__, SHEETS = __SHEETS__, PACK = __PACK__, NOTE = __NOTE__;
+let cur = 0, timer = null;
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-function render(){
-  document.querySelectorAll('.st').forEach((el,i)=>{
-    el.classList.toggle('now', i===cur);
-    el.classList.toggle('done', i<cur);
-  });
-  const s = cur>=0 ? STEPS[cur] : null;
-  $('why').innerHTML = s
-    ? '<div class="h">'+s.n+'. '+esc(s.title)
-      +' <span style="color:var(--faint);font-weight:400">'+esc(s.owner)+'</span></div>'
-      +'<div class="b">'+esc(s.why)+'</div>'
-    : '<div class="b">오른쪽 아래 동그란 단추를 눌러 조작판을 펼치고 <b>다음 단계</b>나'
-      +' <b>자동 재생</b>을 누르면 1번부터 시작합니다.'
-      +' 아래 칸을 직접 눌러 그 지점으로 갈 수도 있습니다.</div>';
+function drawBar(){
+  $('bar').innerHTML = BAR.map((b,i) =>
+    '<button class="cell '+(i===cur?'now':(i<cur?'done':''))+'" onclick="go('+i+')"'
+    + ' title="'+esc(SHEETS[i].head)+'">'
+    + '<div class="box"'+(i===cur?' style="background:'+b.color+'"':'')+'>'+(i+1)+'</div>'
+    + '<div class="nm"'+(i===cur?' style="color:'+b.color+'"':'')+'>'+esc(b.name)+'</div>'
+    + '</button>').join('');
+}
 
+function docLines(lines, mark){
+  return lines.map((l,i) => {
+    const t = esc(l) || ' ';
+    if(!mark.includes(i)) return t;
+    const d = (mark.indexOf(i) * 0.09 + 0.16).toFixed(2);
+    return '<b style="--d:'+d+'s">'+t+'</b>';
+  }).join('\n');
+}
+
+function drawSheet(){
+  const s = SHEETS[cur];
+  const coord = s.coord.map(r =>
+    '<div class="row"><div class="k">'+esc(r[0])+'</div>'
+    + r[1].map(v=>'<div class="v">'+esc(v)+'</div>').join('') + '</div>').join('');
+  const el = $('sheet');
+  el.style.color = s.color;
+  el.innerHTML =
+    '<div class="head"><div class="no" style="color:'+s.color+'">'
+    + String(s.n).padStart(2,'0')+'</div><div class="ttl">'+esc(s.head)+'</div>'
+    + '<div class="act">'+s.action.map(a=>'<div>'+esc(a)+'</div>').join('')+'</div></div>'
+    + '<div class="body">'
+    +   '<div class="coord" style="border-color:'+s.color+'">'
+    +     '<h4 style="color:'+s.color+'">구조 좌표</h4>'+coord+'</div>'
+    +   '<div class="doc"><h4>'+esc(s.in_label)+'</h4><pre>'
+    +     docLines(s.in_lines, [])+'</pre></div>'
+    +   '<div class="arrow">&#10142;</div>'
+    +   '<div class="doc out"><h4>'+esc(s.out_label)+'</h4><pre>'
+    +     docLines(s.out_lines, s.mark)+'</pre></div>'
+    + '</div>'
+    + '<div class="states">'+s.states.map(c =>
+        '<span class="chip" style="color:'+c[1]+'">'+esc(c[0])+'</span>').join('')+'</div>'
+    + '<div class="codeline"><span class="k">코드</span>'
+    +   '<span class="p">'+esc(s.code)+'</span></div>'
+    + '<div class="why" style="border-color:'+s.color+'">'+esc(s.why)+'</div>'
+    + '<div class="files">'+NOTE.map(x =>
+        '<div><b>'+esc(x[0])+'</b> '+esc(x[1])+'</div>').join('')+'</div>';
+  el.classList.remove('anim');
+  void el.offsetWidth;
+  el.classList.add('anim');
+}
+
+function drawPack(){
   let out = '';
   for(let i=0;i<=cur;i++){
-    for(const part of STEPS[i].add){
-      out += '<div class="chunk"><div class="head"><span class="kind">'+esc(part[0])+'</span>'
-          +  '<span class="name">'+esc(part[1])+'</span>'
-          +  '<span class="from">'+STEPS[i].n+'번 단계</span></div><pre>'
+    for(const part of PACK[i].add){
+      out += '<div class="chunk"><div class="h"><span class="kind">'+esc(part[0])+'</span>'
+          +  '<span class="nm">'+esc(part[1])+'</span>'
+          +  '<span class="fr">'+PACK[i].n+'번</span></div><pre>'
           +  esc(part[2].join('\n'))+'</pre></div>';
     }
   }
   $('stream').innerHTML = out
-    || '<div style="color:var(--faint);font-size:13.5px">아직 아무것도 안 만들어졌습니다.</div>';
-  $('stream').scrollTop = $('stream').scrollHeight;
-
+    || '<div style="color:var(--faint);font-size:13px">아직 아무것도 안 만들어졌습니다.</div>';
   let st = null;
-  for(let i=0;i<=cur;i++) if(STEPS[i].state) st = STEPS[i].state;
+  for(let i=0;i<=cur;i++) if(PACK[i].state) st = PACK[i].state;
   $('badge').innerHTML = st
     ? 'Case 상태 <b class="'+(st[0]==='resolved'?'done':'')+'">'+st[0]+'  v'+st[1]+'</b>'
     : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없습니다</span>';
-
-  $('tick').textContent = cur<0 ? '아직 시작 안 함' : (cur+1)+' / '+STEPS.length+' 단계';
-  $('fabn').textContent = cur<0 ? '시작' : String(cur+1);
-  $('fabs').textContent = cur<0 ? '1~'+STEPS.length : '/ '+STEPS.length;
-  $('prev').disabled = cur<0;
-  $('next').disabled = cur>=STEPS.length-1;
-  $('code').disabled = cur<0;
 }
 
-function go(i){ cur = Math.max(-1, Math.min(STEPS.length-1, i)); render(); }
+function render(){
+  drawBar(); drawSheet(); drawPack();
+  $('tick').textContent = (cur+1)+' / '+SHEETS.length+' 단계';
+  $('fabn').textContent = String(cur+1);
+  $('fabs').textContent = '/ '+SHEETS.length;
+  $('prev').disabled = cur<=0;
+  $('next').disabled = cur>=SHEETS.length-1;
+  if($('mapov').classList.contains('on')) drawMap();
+}
+
+function go(i){ cur = Math.max(0, Math.min(SHEETS.length-1, i)); render(); }
 function play(){
   if(timer){ clearInterval(timer); timer=null; $('play').textContent='자동 재생'; return; }
-  if(cur>=STEPS.length-1) cur=-1;
+  if(cur>=SHEETS.length-1) cur=0;
   $('play').textContent='멈춤';
-  timer = setInterval(()=>{ if(cur>=STEPS.length-1){ play(); return; } go(cur+1); }, 2600);
+  timer = setInterval(()=>{ if(cur>=SHEETS.length-1){ play(); return; } go(cur+1); }, 3200);
 }
-function dock(e){
-  if(e) e.stopPropagation();
-  $('dock').classList.toggle('on');
+
+function drawMap(){
+  $('mapbody').innerHTML = SHEETS.map((s,i) =>
+    '<button class="st '+(i===cur?'now':(i<cur?'done':''))+'" style="color:'+s.color+'"'
+    + ' onclick="go('+i+');hideMap()"><div class="n">'+s.n+'</div>'
+    + '<div class="t">'+esc(s.head)+'</div>'
+    + '<div class="o">'+esc(PACK[i].owner)+'</div></button>').join('');
 }
-document.addEventListener('click', e=>{
-  const d = $('dock');
-  if(d.classList.contains('on') && !d.contains(e.target)) d.classList.remove('on');
-});
+function showMap(){ drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
+function hideMap(){ $('mapov').classList.remove('on'); }
 
 function showCode(){
-  if(cur<0) return;
   $('dock').classList.remove('on');
-  const s = STEPS[cur];
+  const s = PACK[cur];
   $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
   $('ovbody').innerHTML = s.code.map(c =>
     '<div class="src"><div class="path">'+esc(c.path)+'</div>'
@@ -200,10 +323,16 @@ function showCode(){
   $('ov').scrollTop = 0;
 }
 function hideCode(){ $('ov').classList.remove('on'); }
+
+function dock(e){ if(e) e.stopPropagation(); $('dock').classList.toggle('on'); }
+document.addEventListener('click', e=>{
+  const d = $('dock');
+  if(d.classList.contains('on') && !d.contains(e.target)) d.classList.remove('on');
+});
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape') hideCode();
-  else if($('ov').classList.contains('on')) return;
-  else if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
+  if(e.key==='Escape'){ hideCode(); hideMap(); return; }
+  if($('ov').classList.contains('on') || $('mapov').classList.contains('on')) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
   else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
 });
 render();
@@ -217,41 +346,52 @@ PAGE = """<!doctype html>
 <h1>취소·환불 한 건이 지나는 길</h1>
 <p class="sub">고객이 "어제 주문한 거 취소하고 환불받고 싶어요. 아직 안 왔어요." 를 보낸 순간부터
 답이 돌아갈 때까지, 어떤 코드를 지나 무엇이 어디에 기록되는지 한 건으로 따라갑니다.
-위쪽은 직접 돌려 보는 시뮬레이터이고, 아래쪽은 같은 내용을 그림 열아홉 장으로 편 것입니다.</p>
+낱장의 글자는 그림이 아니라 글자입니다. 긁어서 복사할 수 있습니다.</p>
 
-<h2 class="sec">직접 돌려 보기</h2>
-<p>1번부터 12번까지 진행하면 오른쪽에 값이 한 덩어리씩 쌓입니다.
-각 덩어리 왼쪽 꼬리표가 <b>무슨 형식인지</b>를 말합니다.
-오른쪽 아래 동그란 단추를 누르면 조작판이 펼쳐집니다. 거기 있는
-<b>이 단계 코드 보기</b>가 실제 코드와 그 코드의 쉬운 풀이를 띄웁니다.</p>
+<h2 class="sec">한 단계씩 따라가기</h2>
+<p>왼쪽이 그 단계의 구조 좌표, 가운데가 들어온 문서와 나간 문서, 오른쪽이 지금까지 쌓인 것입니다.
+바뀐 줄에만 색이 붙습니다. 위쪽 진행바의 칸을 누르면 그 단계로 갑니다. 좌우 화살표 키도 됩니다.</p>
 
-<div class="cols">
-  <div class="panel">
-    <h3>열두 단계</h3>
-    <p class="note">칸을 직접 눌러 그 지점으로 갈 수 있습니다. 좌우 화살표 키도 됩니다.</p>
-    <div class="map">%(stations)s</div>
-    <div class="why" id="why"></div>
-    <div class="files">%(files)s</div>
+<div class="barwrap">
+  <div class="top">
+    <span class="t">열두 단계 진행바</span>
+    <span class="r">
+      <button onclick="showMap()">열두 칸 지도 펼치기</button>
+      <button onclick="showCode()">이 단계 코드 보기</button>
+    </span>
   </div>
-  <div class="panel">
+  <div class="bar" id="bar"></div>
+</div>
+
+<div class="stage">
+  <div class="sheet" id="sheet"></div>
+  <div class="pack">
     <h3>지금까지 만들어진 것</h3>
-    <p class="note">단계를 지날 때마다 아래로 쌓입니다.</p>
+    <p class="note">단계를 지날 때마다 아래로 쌓입니다. 왼쪽 꼬리표가 무슨 형식인지 말합니다.</p>
     <div class="stream" id="stream"></div>
     <div class="badge" id="badge"></div>
   </div>
 </div>
 
 <h2 class="sec">그림으로 펴 보기</h2>
-<p>같은 내용을 한 장씩 펼친 것입니다. 각 장 위쪽 진행바가 지금 어디인지 알려 줍니다.</p>
+<p>같은 내용을 한 장씩 그림으로 편 것입니다.
+위 열두 장에 더해 구조와 갈림길과 파일 이야기가 들어 있습니다.</p>
 <nav class="jump">%(links)s</nav>
 %(figures)s
 
 <div class="foot">코드는 <code>final_project_cs</code> 에서 줄 번호로 잘라 온 실제 코드입니다.
-손으로 옮겨 적지 않았습니다. 흐름은 <code>program/onboarding/trace_refund_case.html</code>,
-구조 분류는 <code>final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md</code>,
-담당은 <code>program/plan/A-COP_스프린트_에픽_설계.md</code> 를 따랐습니다.<br>
-이 파일은 <code>program/onboarding/build_trace_html.py</code> 가 만듭니다.
-내용은 <code>program/onboarding/trace_data.py</code> 에 있습니다. 손으로 고치지 마세요.</div>
+손으로 옮겨 적지 않았습니다. 낱장의 내용도 그림을 그리는
+<code>program/onboarding/trace/steps.py</code> 에서 그대로 가져옵니다.
+그림과 화면이 어긋날 수 없습니다.<br>
+이 파일은 <code>program/onboarding/build_trace_html.py</code> 가 만듭니다. 손으로 고치지 마세요.</div>
+</div>
+
+<div class="ov" id="mapov" onclick="if(event.target===this)hideMap()">
+  <div class="ovbox">
+    <div class="ovhead"><h3>열두 단계 지도</h3>
+      <button class="x" onclick="hideMap()">닫기 (Esc)</button></div>
+    <div class="map" id="mapbody"></div>
+  </div>
 </div>
 
 <div class="ov" id="ov" onclick="if(event.target===this)hideCode()">
@@ -267,12 +407,13 @@ PAGE = """<!doctype html>
     <button id="prev" onclick="go(cur-1)">이전 단계</button>
     <button id="next" class="primary" onclick="go(cur+1)">다음 단계</button>
     <button id="play" onclick="play()">자동 재생</button>
-    <button onclick="go(-1)">처음으로</button>
-    <button id="code" onclick="showCode()">이 단계 코드 보기</button>
-    <div class="tick" id="tick">시작 전</div>
+    <button onclick="go(0)">처음으로</button>
+    <button onclick="showMap()">열두 칸 지도</button>
+    <button onclick="showCode()">이 단계 코드 보기</button>
+    <div class="tick" id="tick"></div>
   </div>
-  <button class="fab" onclick="dock(event)" title="시뮬레이터 조작">
-    <span class="big" id="fabn">시작</span><span class="small" id="fabs">1~12</span>
+  <button class="fab" onclick="dock(event)" title="조작판">
+    <span class="big" id="fabn">1</span><span class="small" id="fabs">/ 12</span>
   </button>
 </div>
 
