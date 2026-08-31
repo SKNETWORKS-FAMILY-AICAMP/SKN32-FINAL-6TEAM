@@ -10,7 +10,6 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 import acop_basement.core.settings as settings_module
-from acop_basement.infrastructure.graphstore.sql_adapter import SqlGraphAdapter
 from acop_basement.infrastructure.llm.openai import OpenAITeamLLM
 from acop_basement.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from acop_basement.infrastructure.db.session import get_connection
@@ -24,6 +23,30 @@ from acop_basement.presentation.ui import theme
 #   (docs/handoff/11·12). Composer(/ui/composer)는 이 파일이 아니라
 #   app/presentation/ui/composer.py 소유다.
 tenant_router = APIRouter(prefix="/ops", tags=["tenant-ui"])
+# ★VOC 화면만 따로 뗀다. `voc` 모듈을 끄면 이 라우터를 등록하지 않아 /ops/voc 가
+#   404 가 된다. 한 라우터에 섞어 두면 끌 방법이 없다.
+voc_router = APIRouter(prefix="/ops", tags=["tenant-ui"])
+
+
+#: 지금 화면에 낼 상단 메뉴. `mount_ui()` 가 기동할 때 한 번 정한다.
+_NAV: tuple[tuple[str, str], ...] = theme.TENANT_NAV
+
+
+def configure_nav(config) -> tuple[tuple[str, str], ...]:
+    """꺼진 모듈의 메뉴를 뺀다. 조립 때 한 번만 부른다.
+
+    ★없는 화면으로 가는 링크를 남기면 눌렀을 때 404 가 뜨고, 운영자는 서버가
+      죽은 줄 안다. 모듈을 빼면 그 표면도 함께 빠져야 한다.
+
+    ★매 요청마다 선언을 다시 읽지 않는다. 라우터 등록은 기동 시점에 끝나는데
+      메뉴만 나중 선언을 보면 둘이 어긋난다 — 메뉴에는 VOC 가 있는데 누르면
+      404 인 상태가 만들어진다. 중앙 설정 저장소 모드에서는 매 요청 DB 읽기가
+      되기도 한다. 그래서 조립과 같은 시점, 같은 선언으로 정한다.
+    """
+    global _NAV
+    _NAV = tuple((href, label) for href, label in theme.TENANT_NAV
+                 if href != "/ops/voc" or config.module_enabled("voc"))
+    return _NAV
 
 
 def _safe(value: Any) -> str:
@@ -39,7 +62,7 @@ def _page(title: str, body: str, *, current: str = "", lede: str = "",
     """★기본 brand 는 '고객 지원' 이다 — 이 파일의 화면 전부가 고객사 것이기 때문이다.
     개발 콘솔 화면(Composer 포함)은 이 저장소에 없다 — final_project_ui가 맡는다."""
     return HTMLResponse(theme.page(title, body, current=current, lede=lede,
-                                   nav=nav, brand=brand))
+                                   nav=nav if nav is not None else _NAV, brand=brand))
 
 
 def _tenant() -> str:
@@ -314,7 +337,7 @@ async def resolve_outbox(request: Request, message_id: UUID):
     return RedirectResponse("/ops/outbox", status_code=303)
 
 
-@tenant_router.get("/voc", response_class=HTMLResponse)
+@voc_router.get("/voc", response_class=HTMLResponse)
 def voc() -> HTMLResponse:
     report = _voc()
     if report is None:

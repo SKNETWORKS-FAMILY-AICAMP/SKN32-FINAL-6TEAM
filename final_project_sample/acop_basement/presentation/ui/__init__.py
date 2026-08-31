@@ -21,7 +21,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from acop_basement.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfig, load_project_config
-from acop_basement.presentation.ui.routes import tenant_router
+from acop_basement.presentation.ui.routes import configure_nav, tenant_router, voc_router
 
 
 def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
@@ -34,6 +34,13 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
     if config.module_enabled("ops_ui"):
         app.include_router(tenant_router)
         landing = "/ops/cases"
+        # ★VOC 화면은 `voc` 모듈에 딸려 있다. 모듈을 끄면 등록하지 않아
+        #   /ops/voc 가 404 가 된다. 2026-08-31 이전에는 토글과 무관하게 늘 떠 있었다.
+        if config.module_enabled("voc"):
+            app.include_router(voc_router)
+    # ★메뉴를 라우터와 **같은 선언으로 같은 시점에** 정한다. 둘이 어긋나면
+    #   메뉴엔 있는데 누르면 404 인 링크가 생긴다.
+    configure_nav(config)
 
     # ★루트가 404 였다. 개발 서버를 띄우면 브라우저가 `/` 로 열리는데
     #   빈 404 페이지가 떠서 "서버가 안 떴나" 로 읽힌다.

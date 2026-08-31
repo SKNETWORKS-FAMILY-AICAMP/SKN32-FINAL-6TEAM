@@ -237,8 +237,18 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
 
 
 def _mcp_principal() -> Principal:
+    """MCP 호출자를 만든다. 모듈이 꺼져 있으면 거부한다.
+
+    ★tool 세 개가 전부 이 함수를 지난다. 그래서 `mcp` 모듈의 게이트를 여기 둔다.
+      2026-08-31 이전에는 게이트가 아예 없어서, 선언에서 모듈을 꺼도 개인 AI 의
+      read-only 접근이 그대로 살아 있었다.
+    ★`app.composition` 이 아니라 basement 자신의 로더로 묻는다. basement 는
+      product 를 import 할 수 없다(단독 설치 계약, `presentation/api/app.py` 주석).
+    """
+    from acop_basement.application.config_source import load_active_config
     from acop_basement.core.settings import get_settings
     from acop_basement.core.settings import get_guardrails
+    load_active_config().require_module("mcp", "MCP tool surface")
     if "mcp:read" not in set(get_guardrails().get("security.mcp_allowed_scopes")):
         raise RuntimeError("mcp:read is not configured")
     return Principal(get_settings().tenant_id, frozenset({"mcp:read"}), "mcp")

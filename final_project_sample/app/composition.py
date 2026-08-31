@@ -28,10 +28,23 @@ from acop_basement.presentation.security import masked
 from acop_basement.tools.read_tools import ReadToolbox
 
 
-def build_classifier():
-    """Build the configured classifier, failing explicitly when unconfigured."""
+def build_classifier(*, config: ProjectConfig | None = None):
+    """Build the configured classifier, failing explicitly when unconfigured.
+
+    ★`voc` 모듈이 꺼져 있으면 여기서 실패한다. 인라인 분류가 Case 생성 경로에
+      붙어 있어서, 모듈만 끄고 조용히 넘어가면 `intent`·`sentiment` 가 빈 채로
+      Case 가 만들어지고 그 빈 값이 근거 조합을 거쳐 고객 답변까지 간다
+      (`CLAUDE.md` §1 — 인라인 분류는 선택 기능이 아니다).
+
+    ★단 이 저장소는 `create_app(classifier=...)` 로 분류기를 주입할 수 있다.
+      도메인을 갈아 끼우는 저장소라 그 구멍은 의도적으로 열려 있다. 그래서
+      정확히는 "기본 조립으로는 `voc` 를 못 끈다" 이고, 자기 분류기를 주입하는
+      product 는 여전히 끌 수 있다.
+    """
     from acop_basement.core.settings import get_settings
 
+    config = config or load_active_config()
+    config.require_module("voc", "inline classifier")
     if not get_settings().openai_api_key:
         raise RuntimeError("OpenAI API key is missing")
 
@@ -191,9 +204,16 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      team_executor: TeamExecutorPort | None = None,
                      broker: Any | None = None, tools: ReadToolbox | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
-                     config_path: str | Path | None = None) -> Controller:
-    """Assemble the application Controller and inject every concrete adapter."""
-    config = load_active_config(config_path)
+                     config_path: str | Path | None = None,
+                     config: ProjectConfig | None = None) -> Controller:
+    """Assemble the application Controller and inject every concrete adapter.
+
+    ★`config` 를 받는 이유: 부르는 쪽이 **어떤 revision 으로 조립됐는지** 를
+      알아야 한다. 여기서 다시 읽으면 읽는 사이에 선언이 바뀔 수 있고, 그러면
+      `active_revision` 이 실제 조립과 어긋난다(중앙 저장소 모드에서 실제로
+      가능하다). 안 주면 종전대로 여기서 읽는다.
+    """
+    config = config if config is not None else load_active_config(config_path)
     _validate_modules(config)
     llm = llm if llm is not None else OpenAITeamLLM()
     registry = registry or build_registry(tools=tools, llm=llm, config=config)

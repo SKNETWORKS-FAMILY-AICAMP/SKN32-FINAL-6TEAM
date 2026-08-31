@@ -28,7 +28,15 @@ def is_surge(today: int, avg7: float) -> bool:
 
 
 def run_daily_feedback(conn: Connection, *, report_date: date, tenant_id: str) -> dict[str, Any]:
-    """Upsert one report for one tenant and publish alerts transactionally."""
+    """Upsert one report for one tenant and publish alerts transactionally.
+
+    ★`voc` 모듈이 꺼져 있으면 리포트를 쓰지 않고 실패한다. 배치가 조용히 돌면
+      꺼 놓은 화면에 데이터만 쌓인다. 모듈을 빼면 그것을 부르는 경로도 함께
+      빠져야 한다(`RULE.md` §3.2 — 신호 없는 축소는 폴백이다).
+    """
+    from acop_basement.application.config_source import load_active_config
+
+    load_active_config().require_module("voc", "daily feedback analytics job")
     start = report_date - timedelta(days=7)
     with conn.cursor() as cur:
         cur.execute(
