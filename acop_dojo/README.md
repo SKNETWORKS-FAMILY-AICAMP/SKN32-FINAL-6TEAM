@@ -50,7 +50,35 @@ python dojo.py doctor
 | `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 본다 |
 | `report` | 검증 결과로 사각지대 보고서를 다시 쓴다 |
 | `map` | 웹 지도를 그린다 |
+| `tracks` | 학습 트랙 7개를 본다 |
+| `review` | 예약된 복습을 꺼낸다 — 같은 규칙을 다른 코드에서 묻는다 |
 | `status` | 진행 상황 |
+
+## 트랙 7개
+
+전체 1개와 파트 6개다. 경계는 사람이 아니라 디렉터리로 긋는다 —
+`docs/handoff/05_분업_규칙.md` 가 같은 이유로 그렇게 한다.
+
+| 트랙 | 담당 | 이 파트에서 반드시 설명할 수 있어야 하는 것 |
+|---|---|---|
+| `all` | 전원 | Case 가 만들어지고 라우팅되고 처리된 뒤 닫히는 전 구간 |
+| `core1` | 코어 1 | 상태는 이벤트를 접은 결과다. `transition_case` 만이 상태를 바꾼다 |
+| `core2` | 코어 2 | 같은 요청을 열 번 보내도 side effect 는 한 번. scope 없는 호출은 거부 |
+| `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
+| `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII 는 재시도하지 않고 넘긴다 |
+| `team-commerce` | 팀 모듈 3 | Team 은 side effect 를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
+| `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
+
+트랙마다 자기 시나리오, 자기 결함, 자기 지도가 붙는다.
+
+```bash
+python dojo.py learn 0 --track core2
+python dojo.py defect --track front
+python dojo.py map --track team-review
+```
+
+★팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 **모듈 성격으로 나눈 추정**이다.
+담당이 다르면 `acop_dojo/tracks.py` 의 `owns` 만 고치면 결함·지도·시나리오가 따라온다.
 
 ## 안전
 

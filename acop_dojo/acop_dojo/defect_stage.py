@@ -14,6 +14,8 @@ from pathlib import Path
 
 from . import defects as defects_mod
 from . import progress
+from . import review
+from . import tracks as tracks_mod
 from .sandbox import Sandbox
 
 SEPARATOR = "─" * 62
@@ -40,11 +42,16 @@ def distinct(catalog: dict, candidates: list[str]) -> list[str]:
     return sorted(seen.values())
 
 
-def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None) -> int:
+def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
+         track: str = "all") -> int:
     catalog = defects_mod.load_catalog()
-    options = playable(catalog)
+    track_def = tracks_mod.get(track)
+    # 자기 파트의 코드에서만 문제를 낸다. 남의 디렉터리는 배울 대상이 아니다.
+    options = [d for d in playable(catalog)
+               if tracks_mod.owns(track_def, defects_mod.by_id(d).path)]
     if not options:
-        print("낼 수 있는 결함이 없다. 먼저 `acop-dojo defects --rebuild` 로 카탈로그를 만든다.")
+        print(f"{track_def.title} 에서 낼 수 있는 결함이 없다.")
+        print("카탈로그가 비었으면 `python dojo.py defects --rebuild` 를 먼저 돌린다.")
         return 1
     chosen = defect_id or random.choice(distinct(catalog, options))
     if chosen not in options:
@@ -87,6 +94,8 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None)
                                           "remaining": result.failed})
             if passed:
                 progress.claim_ability("불변식 복구", evidence=f"defect:{chosen}", confirmed=True)
+                # 같은 규칙을 나중에 다른 코드에서 다시 묻는다.
+                review.schedule(defect.invariant, source=chosen)
             return 0 if passed else 1
 
     print(f"\n{SEPARATOR}")
@@ -114,4 +123,5 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None)
                           detail={"defect": chosen, "file_guess_ok": hit,
                                   "explanation": explanation, "grading": "self"})
     progress.claim_ability("불변식 설명", evidence=f"defect:{chosen}", confirmed=False)
+    review.schedule(defect.invariant, source=chosen)
     return 0

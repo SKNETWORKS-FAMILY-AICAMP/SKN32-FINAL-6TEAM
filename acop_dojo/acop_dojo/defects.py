@@ -218,7 +218,9 @@ def save_catalog(data: dict[str, Any]) -> Path:
 from .defects_more import MORE  # noqa: E402
 from .defects_more2 import MORE2  # noqa: E402
 from .defects_more3 import MORE3  # noqa: E402
+from .defects_more4 import MORE4  # noqa: E402
 
 DEFECTS.extend(MORE)
 DEFECTS.extend(MORE2)
 DEFECTS.extend(MORE3)
+DEFECTS.extend(MORE4)

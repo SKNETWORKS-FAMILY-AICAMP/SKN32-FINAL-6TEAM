@@ -15,6 +15,7 @@ from typing import Any
 from . import defect_stage
 from . import defects as defects_mod
 from . import progress
+from . import review
 from .sandbox import Sandbox
 
 SEPARATOR = "─" * 62
@@ -185,4 +186,5 @@ def _repair(target: Path, correct: int, total: int, fix: Path | None,
                                   "defect": chosen, "oracle": "pytest"})
     progress.claim_ability("안 배운 모듈로 전이", evidence=f"boss:{chosen}:{correct}/{total}",
                            confirmed=passed and correct == total)
+    review.schedule(defect.invariant, source=chosen)
     return 0 if passed else 1

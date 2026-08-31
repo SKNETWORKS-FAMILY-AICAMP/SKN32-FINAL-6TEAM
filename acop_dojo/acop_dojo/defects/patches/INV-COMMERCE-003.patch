@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/fulfillment_logistics.py
++++ b/app/modules/customer_ops/fulfillment_logistics.py
+@@ -73,7 +73,7 @@
+                 return self._escalate(task, evidence, "shipment_status_unknown")
+             shipment = shipments[0]
+             status = shipment.get("status") if isinstance(shipment, dict) else None
+-            if not status or str(status).lower() in {"unknown", "unavailable"}:
++            if status is None:
+                 return self._escalate(task, evidence, "shipment_status_unknown")
+ 
+             if task.capability == "shipment.status":

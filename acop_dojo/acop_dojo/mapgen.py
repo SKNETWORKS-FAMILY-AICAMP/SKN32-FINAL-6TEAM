@@ -111,7 +111,8 @@ def _edge(positions, a: str, b: str, klass: str, weight: int = 1) -> str:
             f'{mid:.0f} {y2:.0f} {x2:.0f} {y2:.0f}" stroke-width="{stroke:.1f}"/>')
 
 
-def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any]) -> str:
+def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
+          track: Any = None) -> str:
     imports = static_imports(target)
     modules = set(imports) | {m for targets in imports.values() for m in targets}
     indegree: Counter = Counter()
@@ -135,6 +136,12 @@ def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any]) 
     for module in sorted(modules):
         x, y = positions[module]
         klass = "seen" if module in visited else "unseen"
+        # 트랙이 있으면 내 담당이 아닌 것은 흐리게 둔다. 남의 디렉터리는 배울 대상이 아니다.
+        if track is not None and track.owns:
+            from . import tracks as tracks_mod
+            if not tracks_mod.owns(track, module.replace(".", "/") + ".py") and \
+                    not tracks_mod.owns(track, module.replace(".", "/") + "/"):
+                klass += " other"
         label = module.replace("app.", "")
         count = indegree[module]
         badge = (f'<text class="deg" x="{x + NODE_W - 8:.0f}" y="{y + 17:.0f}">{count}</text>'
@@ -154,7 +161,7 @@ def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any]) 
     return TEMPLATE.format(
         width=WIDTH, height=f"{height:.0f}", body="".join(parts), modules=len(modules),
         imports=import_count, calls=len(calls), visited=len(visited), done=html.escape(done),
-        rows=rows)
+        rows=rows, track_title=track.title if track is not None else "전체")
 
 
 TEMPLATE = """<!doctype html>
@@ -176,6 +183,7 @@ svg{{display:block}}
 .n text{{fill:var(--mut);font-size:11px;font-family:ui-monospace,Consolas,monospace}}
 .n.seen rect{{fill:var(--seen);stroke:var(--seenb)}}
 .n.seen text{{fill:var(--fg)}}
+.n.other{{opacity:.28}}
 .deg{{text-anchor:end;font-size:10px}}
 path{{fill:none}}
 path.imp{{stroke:var(--line)}}
@@ -187,7 +195,7 @@ ul{{margin:6px 0 0;padding-left:20px}}
 footer{{margin-top:24px;color:var(--mut);font-size:13px}}
 code{{font-family:ui-monospace,Consolas,monospace}}
 </style></head><body>
-<h1>A-COP 지식 지도</h1>
+<h1>A-COP 지식 지도 — {track_title}</h1>
 <p class="sub">모듈 {modules}개 · 정적 import 간선 {imports}개 · 실측 호출 간선 {calls}개 ·
 지나간 모듈 {visited}개</p>
 <div class="wrap"><svg viewBox="0 0 {width} {height}" width="{width}" height="{height}">
@@ -197,6 +205,7 @@ code{{font-family:ui-monospace,Consolas,monospace}}
 <span><span class="sw" style="border-color:var(--line)"></span>정적 import</span>
 <span><span class="sw" style="border-color:var(--run)"></span>실측 호출</span>
 <span>칠해진 칸 = 트레이스가 실제로 지나간 모듈</span>
+<span>흐린 칸 = 이 트랙의 담당이 아닌 모듈</span>
 <span>오른쪽 숫자 = 이 모듈을 import 하는 곳의 수</span>
 </div>
 <footer>

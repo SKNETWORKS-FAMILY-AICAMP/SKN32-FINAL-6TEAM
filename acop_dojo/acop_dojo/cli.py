@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import boss, defect_stage, defects, mapgen, progress, report, scenarios, stability, stages, tracer, validate
+from . import boss, defect_stage, defects, mapgen, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -85,7 +85,11 @@ def cmd_trace(args: argparse.Namespace) -> int:
 
 
 def cmd_learn(args: argparse.Namespace) -> int:
-    trace = load_or_capture(args.scenario)
+    track = tracks.get(args.track)
+    scenario_id = args.scenario or track.scenario
+    if args.track != "all":
+        print(f"[{track.title}]  핵심: {track.focus}")
+    trace = load_or_capture(scenario_id)
     handler = {"0": stages.stage0_worked_example,
                "1": stages.stage1_reconstruct,
                "2": stages.stage2_contrast}[args.stage]
@@ -132,15 +136,17 @@ def cmd_status(_: argparse.Namespace) -> int:
 
 
 def cmd_map(args: argparse.Namespace) -> int:
+    track = tracks.get(args.track)
     trace = None
-    path = trace_path(args.scenario)
+    path = trace_path(args.scenario or track.scenario)
     if path.exists():
         trace = json.loads(path.read_text(encoding="utf-8"))
     else:
         print("트레이스가 없다. 실측 호출 간선 없이 import 만 그린다. (acop-dojo trace 를 먼저 돌린다)")
     out = Path(args.out) if args.out else WORKSPACE_ROOT / ".acop_dojo" / "map.html"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(mapgen.build(target_root(), trace, progress.load()), encoding="utf-8")
+    out.write_text(mapgen.build(target_root(), trace, progress.load(), track),
+                   encoding="utf-8")
     print(f"지도를 그렸다: {out}")
     return 0
 
@@ -166,7 +172,7 @@ def cmd_defects(args: argparse.Namespace) -> int:
 
 def cmd_defect(args: argparse.Namespace) -> int:
     return defect_stage.play(target_root(), defect_id=args.defect_id,
-                             fix=Path(args.fix) if args.fix else None)
+                             fix=Path(args.fix) if args.fix else None, track=args.track)
 
 
 def cmd_boss(args: argparse.Namespace) -> int:
@@ -198,6 +204,75 @@ def cmd_stability(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_review(args: argparse.Namespace) -> int:
+    items = review.due()
+    numbers = review.stats()
+    if not items:
+        print("지금 복습할 것이 없다.")
+        print(f"  예약 {numbers['scheduled']}건 · 다시 온 것 {numbers['visited']}건 · "
+              f"아직 안 온 것 {numbers['unobserved']}건")
+        print("  안 온 것은 실패가 아니라 미관찰이다. 사람이 안 온 것과 틀린 것은 다르다.")
+        return 0
+
+    print(f"복습할 것 {len(items)}건")
+    print(SEPARATOR)
+    for concept, entry in items:
+        other = review.other_defect_for(concept, entry.get("source"))
+        print("")
+        print(f"  규칙: {concept}")
+        if other:
+            catalog = defects.load_catalog()
+            print(f"  같은 규칙이 다른 코드에서도 깨진다. 깨진 테스트만 보여준다.")
+            for nodeid in catalog["entries"][other]["failed"][:4]:
+                print(f"    FAILED  {nodeid}")
+            print("  어느 파일인가?")
+            guess = input("  > ").strip()
+            actual = defects.by_id(other).path
+            ok = bool(guess) and guess.lower() in actual.lower()
+            print(f"  {'맞다.' if ok else '아니다.'}  {actual}")
+        else:
+            print("  이 규칙을 한 줄로 쓰고, 어느 파일이 지키는지 대라.")
+            input("  > ")
+            source = defects.by_id(entry["source"]) if entry.get("source") else None
+            if source:
+                print(f"  모범답안: {source.lesson}")
+                print(f"  지키는 곳: {source.path}")
+            print("  스스로 대조한다. 맞았나? (y/n)")
+            ok = input("  > ").strip().lower().startswith("y")
+        review.record(concept, recalled=ok)
+    print("")
+    print(SEPARATOR)
+    numbers = review.stats()
+    print(f"  예약 {numbers['scheduled']}건 · 회상 시도 {numbers['attempts']}건 중 "
+          f"{numbers['recalled']}건 성공")
+    print("  1·3·7·21일은 기본값일 뿐이다. 실제 재방문이 쌓이면 그때 조정한다.")
+    return 0
+
+
+def cmd_tracks(_: argparse.Namespace) -> int:
+    catalog = defects.load_catalog()
+    playable = defect_stage.playable(catalog)
+    print("")
+    print("학습 트랙 — 전체 1개 + 파트 6개")
+    print(SEPARATOR)
+    for track in tracks.TRACKS.values():
+        mine = [d for d in playable
+                if tracks.owns(track, defects.by_id(d).path)]
+        print("")
+        print(f"  {track.track_id:<14} {track.title}")
+        print(f"  {'':<14} 담당 {track.owner_hint} · 결함 {len(mine)}개 · 시나리오 {track.scenario}")
+        print(f"  {'':<14} 핵심: {track.focus}")
+    print("")
+    print(SEPARATOR)
+    print("  쓰는 법:  python dojo.py learn 0 --track core1")
+    print("            python dojo.py defect --track front")
+    print("            python dojo.py map --track team-review")
+    print("")
+    print("  ★팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 모듈 성격으로 나눈 추정이다.")
+    print("   담당이 다르면 acop_dojo/acop_dojo/tracks.py 의 owns 만 고치면 된다.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 도장")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -211,7 +286,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     learn_cmd = sub.add_parser("learn", help="단계를 진행한다")
     learn_cmd.add_argument("stage", choices=["0", "1", "2"])
-    learn_cmd.add_argument("--scenario", default="shipping-status-resolved-v1")
+    learn_cmd.add_argument("--scenario", default=None)
+    learn_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
     learn_cmd.set_defaults(func=cmd_learn)
 
     boss_cmd = sub.add_parser("boss", help="보스전 — 안 배운 모듈로 전이")
@@ -221,19 +297,25 @@ def build_parser() -> argparse.ArgumentParser:
     boss_cmd.set_defaults(func=cmd_boss)
 
     map_cmd = sub.add_parser("map", help="웹 지도를 그린다")
-    map_cmd.add_argument("--scenario", default="shipping-status-resolved-v1")
+    map_cmd.add_argument("--scenario", default=None)
+    map_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
     map_cmd.add_argument("--out", default=None)
     map_cmd.set_defaults(func=cmd_map)
 
     defect_cmd = sub.add_parser("defect", help="결함 문제를 푼다")
     defect_cmd.add_argument("defect_id", nargs="?", default=None)
     defect_cmd.add_argument("--fix", default=None, help="직접 만든 패치 파일")
+    defect_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
     defect_cmd.set_defaults(func=cmd_defect)
 
     defects_cmd = sub.add_parser("defects", help="결함 카탈로그를 검증한다")
     defects_cmd.add_argument("--rebuild", action="store_true", help="패치를 다시 만든다")
     defects_cmd.add_argument("--only", default=None, help="쉼표로 구분한 결함 id 만 검증한다")
     defects_cmd.set_defaults(func=cmd_defects)
+
+    sub.add_parser("tracks", help="학습 트랙 7개를 본다").set_defaults(func=cmd_tracks)
+
+    sub.add_parser("review", help="예약된 복습을 꺼낸다").set_defaults(func=cmd_review)
 
     stability_cmd = sub.add_parser("stability", help="결함이 매번 같은 신호를 내는지 본다")
     stability_cmd.add_argument("--repeats", type=int, default=3)

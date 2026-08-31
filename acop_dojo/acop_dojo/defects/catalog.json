@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "424 passed, 4 deselected, 36 warnings in 34.38s"
+  "summary": "424 passed, 4 deselected, 36 warnings in 33.43s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -71,6 +71,34 @@
    "path": "app/modules/customer_ops/feedback.py",
    "summary": "424 passed, 4 deselected, 36 warnings in 28.63s",
    "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다"
+  },
+  "INV-COMMERCE-002": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "제안에는 근거 id 가 붙어야 한다 — ContextPack 에 실재하는 것으로",
+   "path": "app/modules/customer_ops/procurement_order_payment.py",
+   "summary": "424 passed, 4 deselected, 36 warnings in 35.38s",
+   "title": "제안이 근거 id 를 달지 않는다"
+  },
+  "INV-COMMERCE-003": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "값을 모르면 비워 둔다 — 모르는 상태를 확정 답변으로 만들지 않는다",
+   "path": "app/modules/customer_ops/fulfillment_logistics.py",
+   "summary": "424 passed, 4 deselected, 36 warnings in 26.60s",
+   "title": "배송 상태를 모르는데 아는 척 답한다"
   },
   "INV-CONFIG-001": {
    "failed": [],
@@ -406,6 +434,32 @@
    "summary": "424 passed, 4 deselected, 36 warnings in 27.25s",
    "title": "빈 답변으로 응답이 완료된다"
   },
+  "INV-REVIEW-002": {
+   "failed": [
+    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
+    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
+    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
+    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "생성된 답변은 금지어와 PII 를 검사한 뒤 내보낸다",
+   "path": "app/modules/customer_ops/response_review.py",
+   "summary": "4 failed, 420 passed, 4 deselected, 36 warnings in 32.38s",
+   "title": "금지어 검사가 사라졌다",
+   "unique_failures": [
+    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
+    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
+    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
+    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
+   ]
+  },
   "INV-SCOPE-001": {
    "failed": [],
    "gates": {
@@ -552,6 +606,28 @@
     "tests/unit/teams/test_response_review_team.py::test_return_quantity_over_item_count_is_fact_mismatch"
    ]
   },
+  "INV-UI-001": {
+   "failed": [
+    "tests/e2e/test_operations_ui.py::test_evidence_free_proposal_has_disabled_decision",
+    "tests/e2e/test_operations_ui.py::test_waiting_approval_scenario_is_visible_end_to_end"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "근거 없는 제안은 화면에서 결정할 수 없어야 한다",
+   "path": "app/presentation/ui/routes.py",
+   "summary": "2 failed, 422 passed, 4 deselected, 36 warnings in 30.64s",
+   "title": "근거 없는 제안인데 결정 버튼이 살아 있다",
+   "unique_failures": [
+    "tests/e2e/test_operations_ui.py::test_evidence_free_proposal_has_disabled_decision",
+    "tests/e2e/test_operations_ui.py::test_waiting_approval_scenario_is_visible_end_to_end"
+   ]
+  },
   "INV-VERIFY-001": {
    "failed": [
     "tests/unit/core/test_proposal_verification.py::test_failed_fact_lookup_rejects_everything"
@@ -570,6 +646,32 @@
    "title": "사실 조회에 실패해도 제안을 통과시킨다",
    "unique_failures": [
     "tests/unit/core/test_proposal_verification.py::test_failed_fact_lookup_rejects_everything"
+   ]
+  },
+  "INV-VOC-001": {
+   "failed": [
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[intent]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[issue_code]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[sentiment]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[severity]"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
+   "path": "app/modules/customer_ops/feedback.py",
+   "summary": "4 failed, 420 passed, 4 deselected, 36 warnings in 27.87s",
+   "title": "분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
+   "unique_failures": [
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[intent]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[issue_code]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[sentiment]",
+    "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[severity]"
    ]
   },
   "INV-WAITINPUT-001": {
