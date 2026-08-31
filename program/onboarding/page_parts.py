@@ -118,7 +118,10 @@ font-size:13px}
 position:sticky;top:98px}
 .pack h3{font-size:15px;margin:0 0 3px}
 .pack .note{color:var(--dim);font-size:12.5px;margin:0 0 13px}
-.stream{max-height:calc(100vh - 250px);overflow-y:auto}
+/* ★scroll-behavior:smooth 를 주면 안 된다. 내용을 갈아 끼운 직후에 scrollTop 을
+   넣으면 브라우저가 그 부드러운 스크롤을 취소해 버려서 0 에 그대로 머문다.
+   부드러움보다 실제로 내려가는 것이 먼저다. */
+.stream{max-height:calc(100vh - 250px);overflow-y:auto;position:relative}
 @media(max-width:1240px){.pack{position:static}.stream{max-height:520px}}
 .chunk{border:1px solid var(--line);border-radius:10px;margin:0 0 9px;overflow:hidden;
 transition:opacity .3s}
@@ -301,8 +304,19 @@ function drawPack(){
   $('badge').innerHTML = st
     ? 'Case 상태 <b class="'+(st[0]==='resolved'?'done':'')+'">'+st[0]+'  v'+st[1]+'</b>'
     : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없습니다</span>';
-  const mark = $('stream').querySelector('.chunk.new');
-  if(mark) mark.scrollIntoView({block:'nearest'});
+  // ★scrollIntoView 를 쓰지 않는다. 그것은 페이지까지 같이 움직여서
+  //   위에 붙어 있는 진행바가 새 덩어리를 덮는다. 이 칸만 내린다.
+  // ★offsetTop 을 쓰지 않는다. .pack 이 sticky 라 그것이 offsetParent 가 되고,
+  //   머리 높이만큼 어긋난다. 화면 좌표로 재는 것이 어느 배치에서나 맞다.
+  // ★scrollTo({behavior:'smooth'}) 도 쓰지 않는다. 방금 innerHTML 을 갈아 끼운
+  //   직후라 애니메이션이 취소되고 0 에 머문다. scrollTop 에 바로 넣고,
+  //   부드러움은 CSS scroll-behavior 가 맡는다.
+  const news = $('stream').querySelectorAll('.chunk.new');
+  if(news.length){
+    const box = $('stream'), last = news[news.length-1];
+    const bt = box.getBoundingClientRect(), lt = last.getBoundingClientRect();
+    box.scrollTop = Math.max(0, box.scrollTop + (lt.bottom - bt.bottom) + 12);
+  }
 }
 
 function render(){
