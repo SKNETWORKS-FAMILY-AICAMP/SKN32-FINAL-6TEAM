@@ -333,7 +333,7 @@ def cmd_answers(args: argparse.Namespace) -> int:
 def cmd_patches(_: argparse.Namespace) -> int:
     outcome = validate.check_patches(target_root())
     broken = (len(outcome["anchor_broken"]) + len(outcome["apply_broken"])
-              + len(outcome["missing"]))
+              + len(outcome["drift"]) + len(outcome["missing"]))
     print(SEPARATOR)
     if broken:
         print(f"{broken}개가 낡았다. `python dojo.py defects --rebuild` 로 다시 만든다.")

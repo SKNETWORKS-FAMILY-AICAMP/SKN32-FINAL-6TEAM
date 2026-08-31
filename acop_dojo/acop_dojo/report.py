@@ -16,10 +16,15 @@ def gap_report(target_revision: str) -> str:
         raise SystemExit("카탈로그가 비었다. 먼저 `acop-dojo defects --rebuild` 를 돌린다.")
 
     by_id = {d.defect_id: d for d in defects_mod.DEFECTS}
-    killed, survived, broken = [], [], []
+    # 분모에서 뺀 것은 잡혔든 아니든 따로 센다. 섞으면 숫자가 모순된다 —
+    # 제외한 결함이 "잡히지 않은 것" 과 "잡히지만 안 쓰는 것" 에 동시에 나온다.
+    killed, survived, broken, excluded = [], [], [], []
     for defect_id, entry in sorted(entries.items()):
         gates = entry.get("gates", {})
-        if not gates.get("applies") or entry.get("error"):
+        reason = getattr(by_id.get(defect_id), "excluded", "")
+        if reason:
+            excluded.append((defect_id, reason))
+        elif not gates.get("applies") or entry.get("error"):
             broken.append(defect_id)
         elif not gates.get("kills_tests"):
             survived.append(defect_id)
@@ -27,9 +32,10 @@ def gap_report(target_revision: str) -> str:
             broken.append(defect_id)
         else:
             killed.append(defect_id)
+    counted = len(entries) - len(excluded)
 
     lines = [
-        "# final_project_cs 테스트 사각지대 (실측 자동 생성)",
+        "# final_project_cs — 등록된 결함의 검출 상태 (실측 자동 생성)",
         "",
         f"- 대상 revision: `{target_revision}`",
         f"- 기준선: {catalog.get('baseline', {}).get('summary', '?')}",
@@ -39,8 +45,13 @@ def gap_report(target_revision: str) -> str:
         "",
         "## 결론",
         "",
-        f"불변식을 어기는 변경 {len(entries)}건을 넣어 봤다. "
+        f"불변식을 어기는 변경 {len(entries)}건 중 {counted}건을 셌다"
+        f"({len(excluded)}건은 분모에서 뺐다 — 아래 참고). "
         f"{len(killed)}건은 테스트가 잡았고 **{len(survived)}건은 전체 테스트가 전부 통과했다.**",
+        "",
+        "★**이 숫자는 저장소의 테스트 커버리지가 아니다.** 사람이 고른 "
+        f"{counted}개 가설에 대한 검출률이다. 카탈로그에 없는 규칙은 여전히 보이지 않는다.",
+        "무엇을 말할 수 있고 무엇은 못 하는지는 문서 끝에 적었다.",
     ]
     if survived:
         lines += [
@@ -58,17 +69,16 @@ def gap_report(target_revision: str) -> str:
             lines.append(f"| {defect.invariant} | `{defect.path}` | {defect.title} |")
     else:
         lines += [
-            "**지금은 사각지대가 없다.** 넣어 본 변경이 전부 어딘가에서 잡힌다.",
+            "**등록된 활성 결함 중 생존한 것이 없다.** 넣어 본 변경이 전부 어딘가에서 잡힌다.",
             "",
             "이 상태를 유지하려면 새 규칙을 만들 때 그 규칙을 어기는 변경도 함께 만들어",
             "게이트에 걸어 본다. 규칙만 늘리고 세는 곳을 안 만들면 다시 벌어진다.",
         ]
 
-    excluded = [(d, by_id[d].excluded) for d in killed
-                if d in by_id and getattr(by_id[d], "excluded", "")]
     if excluded:
-        lines += ["", "## 잡히지만 학습 문제로는 쓰지 않는 것", "",
-                  "게이트는 통과하는데 신호가 안정적이지 않은 것들이다.", ""]
+        lines += ["", "## 분모에서 뺀 것", "",
+                  "신호가 안정적이지 않아 세지 않는다. **뺀 것을 밝히지 않으면 0 이라는 수치가",
+                  "무엇에 대한 0 인지 알 수 없다.**", ""]
         for defect_id, reason in excluded:
             lines.append(f"- **{defect_id}** — {reason}")
 
@@ -88,6 +98,23 @@ def gap_report(target_revision: str) -> str:
             lines.append(f"- {defect_id}")
 
     lines += [
+        "",
+        "## 이 숫자로 말할 수 있는 것",
+        "",
+        "- 등록된 결함이 현재 환경의 전체 테스트에서 적어도 하나의 실패 신호를 낸다.",
+        "- 과거에 메운 사례가 다시 무방비로 돌아가는지 감시한다.",
+        "- 문서에 적힌 일부 불변식과 테스트 사이에 실행 가능한 추적 관계가 있다.",
+        "",
+        "## 말할 수 없는 것",
+        "",
+        "- 등록하지 않은 불변식이 테스트된다는 보장은 없다. **분모는 우리가 고른 것이다.**",
+        "- 모든 입력·상태 조합·실행 경로가 검증됐다는 뜻이 아니다.",
+        "- 결함을 잡은 테스트가 **올바른 이유로** 실패했다는 보장은 없다.",
+        "  무관한 예외나 fixture 실패도 잡은 것으로 집계된다.",
+        "- 카탈로그를 사람이 고르는 이상 선택 편향이 남는다. 경계 조건·동시성·상태 조합처럼",
+        "  patch 하나로 표현하기 어려운 위험은 분모에 잘 들어오지 않는다.",
+        "",
+        "그래서 지표를 \"사각지대 0\" 이 아니라 **\"등록된 활성 결함 생존 0건\"** 으로 읽는다.",
         "",
         "## 재현",
         "",

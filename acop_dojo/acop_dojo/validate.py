@@ -100,6 +100,14 @@ def validate_all(target: Path, *, verbose: bool = True,
     return report
 
 
+def _normalize(patch_text: str) -> str:
+    """hunk 헤더의 줄 번호처럼 의미 없는 차이는 무시한다."""
+    lines = []
+    for line in patch_text.replace(chr(13) + chr(10), chr(10)).splitlines():
+        lines.append("@@" if line.startswith("@@") else line)
+    return chr(10).join(lines)
+
+
 def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
     """결함 patch 가 아직 유효한지만 본다. 테스트는 돌리지 않는다.
 
@@ -113,7 +121,8 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
     - apply: 지금 patch 파일이 그대로 적용되는가. context 3줄이 밀리면 여기서 걸린다.
       이미 만들어 둔 patch 가 **아직 쓸 수 있는가**의 문제다.
     """
-    report: dict[str, Any] = {"ok": [], "anchor_broken": [], "apply_broken": [], "missing": []}
+    report: dict[str, Any] = {"ok": [], "anchor_broken": [], "apply_broken": [],
+                              "drift": [], "missing": []}
     with Sandbox(target) as sandbox:
         assert sandbox.root is not None
         for defect in defects_mod.DEFECTS:
@@ -132,7 +141,22 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
                 report["anchor_broken"].append((defect.defect_id, defect.path, count))
                 continue
             ok, _ = sandbox.check(patch)
-            (report["ok"] if ok else report["apply_broken"]).append(defect.defect_id)
+            if not ok:
+                report["apply_broken"].append(defect.defect_id)
+                continue
+            # 적용은 되는데 생성기 관점에서는 이미 달라진 경우가 있다.
+            # "저장된 patch 는 아직 붙지만 지금 만들면 다른 것이 나온다" 는 drift 다.
+            try:
+                regenerated = defects_mod.build_patch(defect, sandbox.root)
+            except SystemExit:
+                report["anchor_broken"].append((defect.defect_id, defect.path, -1))
+                continue
+            with patch.open(encoding="utf-8", newline="") as handle:
+                stored = handle.read()
+            if _normalize(regenerated) != _normalize(stored):
+                report["drift"].append(defect.defect_id)
+            else:
+                report["ok"].append(defect.defect_id)
 
     if verbose:
         total = len(defects_mod.DEFECTS)
@@ -143,6 +167,8 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
             print(f"  ✗ 기준 코드가 바뀌었다   {defect_id}  ({path} 에서 {found})")
         for defect_id in report["apply_broken"]:
             print(f"  ✗ patch 가 낡았다        {defect_id}  (context 가 밀렸다 — 재생성하면 된다)")
+        for defect_id in report["drift"]:
+            print(f"  ~ 생성 결과와 다르다     {defect_id}  (붙기는 하지만 재생성하면 달라진다)")
         for defect_id in report["missing"]:
             print(f"  ✗ patch 파일이 없다      {defect_id}")
     return report
