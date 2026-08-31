@@ -77,6 +77,30 @@ SCENARIOS: dict[str, Scenario] = {
         objective="프론트 — Core 의 근거 규칙이 화면까지 내려오는 지점을 본다.",
         needs_db=True,
     ),
+    "voc-degraded-escalates-v1": Scenario(
+        scenario_id="voc-degraded-escalates-v1",
+        title="근거가 부족하면 정책을 찾지 않고 사람에게 넘긴다",
+        nodeid=("tests/unit/teams/test_voc_store_manager.py"
+                "::test_degraded_context_escalates_without_policy_lookup"),
+        objective="VOC Team — ContextPack 이 축소됐을 때 무엇을 하지 않는지 본다.",
+        needs_db=False,
+    ),
+    "fulfillment-lost-shipment-approval-v1": Scenario(
+        scenario_id="fulfillment-lost-shipment-approval-v1",
+        title="분실 배송은 재발송을 제안하고 승인을 기다린다",
+        nodeid=("tests/unit/teams/test_fulfillment_logistics.py"
+                "::test_lost_shipment_proposes_replacement_with_approval"),
+        objective="배송 Team — 실행하지 않고 제안까지만 가는 경계를 본다.",
+        needs_db=False,
+    ),
+    "catalog-compliance-escalates-v1": Scenario(
+        scenario_id="catalog-compliance-escalates-v1",
+        title="규정 적합성은 결과를 주장하지 않고 넘긴다",
+        nodeid=("tests/unit/teams/test_catalog_verification.py"
+                "::test_compliance_check_always_escalates_without_claiming_a_result"),
+        objective="카탈로그·검증 Team(A2A Remote 대상) — 모르는 것을 지어내지 않는 규칙을 본다.",
+        needs_db=False,
+    ),
     "return-refund-no-side-effect-v1": Scenario(
         scenario_id="return-refund-no-side-effect-v1",
         title="반품 Team 은 환불을 실행하지 않고 제안만 낸다",

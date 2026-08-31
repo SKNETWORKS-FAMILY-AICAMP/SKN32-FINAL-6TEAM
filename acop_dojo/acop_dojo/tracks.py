@@ -19,10 +19,14 @@ class Track:
     owner_hint: str
     #: 이 트랙이 책임지는 경로 접두사. 빈 튜플이면 전체다.
     owns: tuple[str, ...]
-    #: 이 파트를 대표하는 시나리오
-    scenario: str
+    #: 이 파트가 다루는 시나리오들. 첫 번째가 기본값이다.
+    scenarios: tuple[str, ...]
     #: 이 파트에서 반드시 설명할 수 있어야 하는 것
     focus: str
+
+    @property
+    def scenario(self) -> str:
+        return self.scenarios[0]
 
 
 TRACKS: dict[str, Track] = {
@@ -31,7 +35,7 @@ TRACKS: dict[str, Track] = {
         title="전체 — 요청 하나가 끝까지 가는 길",
         owner_hint="전원",
         owns=(),
-        scenario="shipping-status-resolved-v1",
+        scenarios=("shipping-status-resolved-v1",),
         focus="Case 가 만들어지고 라우팅되고 Team 이 처리한 뒤 상태가 닫히는 전 구간",
     ),
     "core1": Track(
@@ -42,7 +46,7 @@ TRACKS: dict[str, Track] = {
               "app/core/context.py", "app/core/idempotency.py", "app/core/remote_team/",
               "app/domain/", "app/application/controller.py", "app/application/case_service.py",
               "app/infrastructure/messaging/"),
-        scenario="shipping-status-resolved-v1",
+        scenarios=("shipping-status-resolved-v1", "case-reducer-versions-v1"),
         focus="상태는 이벤트를 접은 결과다. transition_case 만이 상태를 바꾼다",
     ),
     "core2": Track(
@@ -52,7 +56,7 @@ TRACKS: dict[str, Track] = {
         owns=("app/presentation/api/", "app/presentation/security.py", "app/presentation/a2a/",
               "app/core/verification.py", "app/application/proposal_guard.py", "app/tools/",
               "app/infrastructure/a2a/"),
-        scenario="api-idempotent-create-v1",
+        scenarios=("api-idempotent-create-v1",),
         focus="같은 요청을 열 번 보내도 side effect 는 한 번. scope 없는 호출은 거부",
     ),
     "team-voc": Track(
@@ -61,7 +65,7 @@ TRACKS: dict[str, Track] = {
         owner_hint="팀 모듈 담당 1",
         owns=("app/modules/customer_ops/voc_store_manager.py",
               "app/modules/customer_ops/feedback.py", "app/application/feedback_job.py"),
-        scenario="voc-batch-tenant-scoped-v1",
+        scenarios=("voc-batch-tenant-scoped-v1", "voc-degraded-escalates-v1"),
         focus="분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등이다",
     ),
     "team-review": Track(
@@ -70,7 +74,7 @@ TRACKS: dict[str, Track] = {
         owner_hint="팀 모듈 담당 2",
         owns=("app/modules/customer_ops/response_review.py",
               "app/modules/customer_ops/response_review_policy.py"),
-        scenario="review-pii-escalates-v1",
+        scenarios=("review-pii-escalates-v1",),
         focus="근거 없는 답변을 만들지 않는다. PII 가 보이면 재시도하지 않고 넘긴다",
     ),
     "team-commerce": Track(
@@ -82,7 +86,8 @@ TRACKS: dict[str, Track] = {
               "app/modules/customer_ops/return_refund.py",
               "app/modules/customer_ops/catalog_verification.py",
               "app/modules/customer_ops/verification_policy.py"),
-        scenario="procurement-policy-evidence-v1",
+        scenarios=("procurement-policy-evidence-v1", "return-refund-no-side-effect-v1",
+                   "fulfillment-lost-shipment-approval-v1", "catalog-compliance-escalates-v1"),
         focus="Team 은 side effect 를 실행하지 않는다. 정책 값을 자기 판단으로 바꾸지 않는다",
     ),
     "front": Track(
@@ -90,7 +95,7 @@ TRACKS: dict[str, Track] = {
         title="프론트 — 운영 화면",
         owner_hint="프론트",
         owns=("app/presentation/ui/",),
-        scenario="ui-evidence-free-proposal-v1",
+        scenarios=("ui-evidence-free-proposal-v1",),
         focus="근거 없는 제안은 화면에서 결정할 수 없어야 한다 — 규칙이 UI 까지 내려온다",
     ),
 }

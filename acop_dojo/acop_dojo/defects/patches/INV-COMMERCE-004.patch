@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/fulfillment_logistics.py
++++ b/app/modules/customer_ops/fulfillment_logistics.py
+@@ -61,7 +61,7 @@
+                 phase = order.get("fulfillment_status") or order.get("status")
+                 if not phase:
+                     return self._escalate(task, evidence, "fulfillment_status_unknown")
+-                count = len(shipments) if isinstance(shipments, list) else 0
++                count = 0
+                 return self._result(task, evidence, outcome="completed", confidence=0.9,
+                                     answer=f"주문 이행 상태는 {phase}입니다. 조회된 배송 건은 {count}건입니다.",
+                                     decisions=[{"classification": "fulfillment_status", "status": phase,

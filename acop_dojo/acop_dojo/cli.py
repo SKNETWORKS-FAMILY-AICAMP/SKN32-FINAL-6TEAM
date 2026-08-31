@@ -267,7 +267,9 @@ def cmd_tracks(_: argparse.Namespace) -> int:
                 if tracks.owns(track, defects.by_id(d).path)]
         print("")
         print(f"  {track.track_id:<14} {track.title}")
-        print(f"  {'':<14} 담당 {track.owner_hint} · 결함 {len(mine)}개 · 시나리오 {track.scenario}")
+        print(f"  {'':<14} 담당 {track.owner_hint} · 결함 {len(mine)}개 · 시나리오 {len(track.scenarios)}개")
+        for scenario_id in track.scenarios:
+            print(f"  {'':<16} {scenario_id}  {scenarios.get(scenario_id).title}")
         print(f"  {'':<14} 핵심: {track.focus}")
     print("")
     print(SEPARATOR)

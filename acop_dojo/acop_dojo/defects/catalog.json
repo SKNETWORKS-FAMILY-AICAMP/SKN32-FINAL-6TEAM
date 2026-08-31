@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "424 passed, 4 deselected, 36 warnings in 33.43s"
+  "summary": "424 passed, 4 deselected, 36 warnings in 38.93s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -99,6 +99,48 @@
    "path": "app/modules/customer_ops/fulfillment_logistics.py",
    "summary": "424 passed, 4 deselected, 36 warnings in 26.60s",
    "title": "배송 상태를 모르는데 아는 척 답한다"
+  },
+  "INV-COMMERCE-004": {
+   "failed": [],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "kills_tests": false,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "답변은 근거와 일치해야 한다",
+   "path": "app/modules/customer_ops/fulfillment_logistics.py",
+   "summary": "424 passed, 4 deselected, 36 warnings in 37.85s",
+   "title": "조회된 배송 건수를 세지 않고 0으로 답한다"
+  },
+  "INV-COMMERCE-005": {
+   "failed": [
+    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
+   "path": "app/modules/customer_ops/catalog_verification.py",
+   "summary": "5 failed, 419 passed, 4 deselected, 36 warnings in 38.44s",
+   "title": "계약에 없는 능력을 받아도 처리한다",
+   "unique_failures": [
+    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
+   ]
   },
   "INV-CONFIG-001": {
    "failed": [],
@@ -672,6 +714,34 @@
     "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[issue_code]",
     "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[sentiment]",
     "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[severity]"
+   ]
+  },
+  "INV-VOC-002": {
+   "failed": [
+    "tests/unit/teams/test_voc_store_manager.py::test_degraded_context_escalates_without_policy_lookup",
+    "tests/unit/teams/test_voc_store_manager.py::test_missing_policy_escalates",
+    "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[0]",
+    "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[1]",
+    "tests/unit/teams/test_voc_store_manager.py::test_repeated_complaint_proposes_voc_escalation"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
+   "path": "app/modules/customer_ops/voc_store_manager.py",
+   "summary": "5 failed, 419 passed, 4 deselected, 36 warnings in 59.86s",
+   "title": "degraded 검사가 뒤집혔다",
+   "unique_failures": [
+    "tests/unit/teams/test_voc_store_manager.py::test_degraded_context_escalates_without_policy_lookup",
+    "tests/unit/teams/test_voc_store_manager.py::test_missing_policy_escalates",
+    "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[0]",
+    "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[1]",
+    "tests/unit/teams/test_voc_store_manager.py::test_repeated_complaint_proposes_voc_escalation"
    ]
   },
   "INV-WAITINPUT-001": {

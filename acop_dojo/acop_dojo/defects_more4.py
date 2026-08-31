@@ -73,4 +73,47 @@ MORE4: list[Defect] = [
         counterfactuals=["값이 있으면 답할 수 있다", "unknown 도 상태의 하나다"],
         difficulty=2,
     ),
+    Defect(
+        defect_id="INV-VOC-002",
+        title="degraded 검사가 뒤집혔다",
+        invariant="ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
+        path="app/modules/customer_ops/voc_store_manager.py",
+        old="        if task.context.degraded:",
+        new="        if not task.context.degraded:",
+        lesson=(
+            "조건이 뒤집히면 정상 맥락을 넘기고 축소된 맥락으로 답을 만든다. 정확히 "
+            "반대로 동작한다 — degraded 일 때야말로 확정 답변을 만들면 안 되는 때다."
+        ),
+        counterfactuals=["근거가 하나라도 있으면 답할 수 있다", "degraded 는 참고용 표시다"],
+        difficulty=2,
+    ),
+    Defect(
+        defect_id="INV-COMMERCE-004",
+        title="조회된 배송 건수를 세지 않고 0으로 답한다",
+        invariant="답변은 근거와 일치해야 한다",
+        path="app/modules/customer_ops/fulfillment_logistics.py",
+        old="                count = len(shipments) if isinstance(shipments, list) else 0",
+        new="                count = 0",
+        lesson=(
+            "읽어 온 배송 목록을 세지 않고 0 이라고 답한다. 근거는 있는데 답변이 근거와 "
+            "어긋나는 상태다 — 고객은 배송이 없다고 듣는다."
+        ),
+        counterfactuals=["건수는 부가 정보다", "목록은 화면에서 다시 조회한다"],
+        difficulty=2,
+    ),
+    Defect(
+        defect_id="INV-COMMERCE-005",
+        title="계약에 없는 능력을 받아도 처리한다",
+        invariant="Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
+        path="app/modules/customer_ops/catalog_verification.py",
+        old="        if task.capability not in self.manifest.capabilities:",
+        new="        if task.capability in self.manifest.capabilities:",
+        lesson=(
+            "조건이 뒤집히면 자기가 할 수 있다고 선언한 일은 거부하고, 선언하지 않은 일을 "
+            "받아 처리한다. Registry 가 계약을 보고 라우팅하는 의미가 사라진다. "
+            "이 Team 은 A2A 로 원격에 뺄 수 있게 설계돼 있어서 계약이 더 중요하다."
+        ),
+        counterfactuals=["어차피 Registry 가 맞는 Team 만 부른다", "능력 이름은 문서용이다"],
+        difficulty=2,
+    ),
 ]

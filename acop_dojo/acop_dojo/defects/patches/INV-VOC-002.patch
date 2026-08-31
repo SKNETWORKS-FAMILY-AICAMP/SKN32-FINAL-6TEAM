@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/voc_store_manager.py
++++ b/app/modules/customer_ops/voc_store_manager.py
+@@ -37,7 +37,7 @@
+         return evidence
+ 
+     async def execute(self, task: TeamTask) -> TeamResult:
+-        if task.context.degraded:
++        if not task.context.degraded:
+             return TeamResult(
+                 task_id=task.task_id, run_id=task.run_id, team_id=self.manifest.team_id,
+                 outcome="escalated", confidence=0.0, next_action=NextAction.ESCALATE,
