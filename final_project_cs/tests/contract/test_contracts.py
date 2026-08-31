@@ -246,3 +246,35 @@ def test_context_pack_case_id_must_match_task() -> None:
 def test_task_input_text_cannot_be_empty() -> None:
     with pytest.raises(ValidationError):
         _task(input_text="")
+
+
+# ── 2026-08-31: 빈 값과 None 을 구분하지 않아 생긴 사각지대 ────────────
+#
+# 위 세 테스트는 값을 **None 으로** 넣어 거부되는 것만 확인했다. 그래서
+# `not x` 를 `x is None` 으로 바꾸는 변경을 전체 424개가 잡지 못했다.
+# 빈 문자열은 None 이 아니다 — 빈 답변, 넘길 곳 없는 인계가 통과한다.
+
+
+def test_respond_rejects_empty_answer() -> None:
+    """빈 문자열도 답변이 아니다. 고객에게 아무것도 가지 않는다."""
+    with pytest.raises(ValidationError):
+        make_result(next_action=NextAction.RESPOND, answer="")
+
+
+def test_handoff_rejects_empty_capability() -> None:
+    """빈 capability 로는 Registry 가 담당 Team 을 찾지 못한다."""
+    with pytest.raises(ValidationError):
+        make_result(
+            next_action=NextAction.HANDOFF, outcome="handoff", answer=None, evidence=[],
+            handoff_capability="",
+        )
+
+
+def test_wait_for_input_rejects_other_wait_reason() -> None:
+    """대기 사유는 재개 경로를 고르는 값이다. 아무 문자열이나 통과하면 안 된다."""
+    with pytest.raises(ValidationError):
+        make_result(
+            next_action=NextAction.WAIT_FOR_INPUT, outcome="waiting", answer=None,
+            evidence=[], wait_reason="human_approval",
+            required_input_schema={"type": "object"},
+        )

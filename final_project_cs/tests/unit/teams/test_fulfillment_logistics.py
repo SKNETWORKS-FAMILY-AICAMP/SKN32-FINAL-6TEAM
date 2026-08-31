@@ -74,3 +74,40 @@ async def test_missing_provider_status_escalates_without_action_proposal():
     assert result.next_action is NextAction.ESCALATE
     assert result.failure_code == "shipment_status_unknown"
     assert result.action_proposals == []
+
+
+# ── 2026-08-31: 모르는 상태와 근거-답변 일치를 안 세던 사각지대 ────────
+#
+# 두 변경이 전체 424개를 전부 통과했다.
+#   1. 배송 상태의 unknown/unavailable 검사를 None 검사로 좁히기
+#   2. 조회된 배송 건수를 세지 않고 0 으로 답하기
+# 첫째는 "배송 상태는 unknown입니다" 가 고객에게 가는 것이고,
+# 둘째는 근거에는 배송이 있는데 답변은 없다고 말하는 것이다.
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", ["unknown", "UNAVAILABLE", "", None])
+async def test_unknown_shipment_status_escalates_instead_of_answering(status):
+    _, request = make_task("shipment.status")
+    result = await FulfillmentLogisticsTeam(FakeTools({
+        "read.shipment": [{"shipment_id": "s1", "status": status}],
+    })).execute(request)
+    assert result.outcome == "escalated"
+    assert result.next_action is NextAction.ESCALATE
+    assert result.failure_code == "shipment_status_unknown"
+    assert not result.answer, "모르는 상태를 답변 문장으로 만들었다"
+
+
+@pytest.mark.asyncio
+async def test_tracking_answer_counts_the_shipments_it_read():
+    """답변의 건수가 읽어 온 근거와 어긋나면 안 된다."""
+    _, request = make_task("fulfillment.track")
+    shipments = [{"shipment_id": "s1", "status": "in_transit"},
+                 {"shipment_id": "s2", "status": "in_transit"}]
+    result = await FulfillmentLogisticsTeam(FakeTools({
+        "read.order": {"order_id": "o1", "fulfillment_status": "partially_shipped"},
+        "read.shipment": shipments,
+    })).execute(request)
+    assert result.outcome == "completed"
+    assert f"{len(shipments)}건" in result.answer
+    assert result.decisions[0]["shipment_count"] == len(shipments)

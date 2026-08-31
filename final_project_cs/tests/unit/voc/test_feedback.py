@@ -73,3 +73,34 @@ def test_batch_is_tenant_scoped_and_idempotent():
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
                     cur.execute("DELETE FROM customers WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
                     cur.execute("DELETE FROM tenants WHERE tenant_id IN (%s,%s)", (tenant, other_tenant))
+
+
+# ── 2026-08-31: 라벨이 "빠진 것"만 보고 "틀린 것"은 안 보던 사각지대 ──
+#
+# 위 parametrize 는 필드를 **빼서** 거부되는 것만 확인한다. 그래서 유효성 검사의
+# `or` 를 `and` 로 바꾸는 변경을 전체 424개가 잡지 못했다. 둘 다 틀렸을 때만
+# 막게 되면 하나만 틀린 출력이 통과해 Case 에 저장되고 그 라벨로 라우팅까지 간다.
+
+
+@pytest.mark.parametrize(
+    ("field", "bad_value"),
+    [
+        ("intent", "not_a_registered_intent"),
+        ("sentiment", "furious"),
+        ("issue_code", "not_a_registered_issue"),
+        ("severity", "catastrophic"),
+    ],
+)
+def test_classifier_rejects_one_invalid_label_at_a_time(field, bad_value):
+    """하나만 틀려도 거부한다. 나머지가 맞았다고 통과시키지 않는다."""
+    value = {"sentiment": "neutral", "intent": "other", "issue_code": "other", "severity": "low"}
+    value[field] = bad_value
+    with pytest.raises(ClassificationFailed):
+        classify("문의", lambda _: value)
+
+
+def test_classifier_rejects_blank_labels():
+    """공백만 든 라벨도 라벨이 아니다."""
+    value = {"sentiment": "neutral", "intent": "   ", "issue_code": "other", "severity": "low"}
+    with pytest.raises(ClassificationFailed):
+        classify("문의", lambda _: value)

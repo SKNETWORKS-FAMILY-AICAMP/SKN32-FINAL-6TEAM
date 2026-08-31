@@ -26,7 +26,16 @@ def playable(catalog: dict) -> list[str]:
     return sorted(
         did for did, entry in catalog.get("entries", {}).items()
         if entry.get("gates", {}).get("kills_tests") and entry.get("failed")
+        and not _excluded(did)
     )
+
+
+def _excluded(defect_id: str) -> str:
+    """게이트를 통과해도 문제로 내지 않는 것이 있다. 이유가 있으면 그 문자열이다."""
+    try:
+        return defects_mod.by_id(defect_id).excluded
+    except SystemExit:
+        return ""
 
 
 def distinct(catalog: dict, candidates: list[str]) -> list[str]:

@@ -36,6 +36,8 @@ class Defect:
     #: 흔한 오개념. 학습자의 설명이 이쪽이면 아직 이해한 게 아니다.
     counterfactuals: list[str] = field(default_factory=list)
     difficulty: int = 1
+    #: 게이트를 통과해도 문제로 내지 않는 이유. 비어 있으면 낸다.
+    excluded: str = ""
 
 
 DEFECTS: list[Defect] = [
@@ -49,6 +51,12 @@ DEFECTS: list[Defect] = [
         lesson=(
             "!= 를 < 로 바꾸면 내가 읽은 뒤 남이 먼저 바꾼 경우(현재 version 이 더 큼)를 "
             "충돌로 보지 않는다. 두 실행이 같은 Case 를 각자 계산한 결과로 덮어쓴다."
+        ),
+        excluded=(
+            "잡히는지가 실행마다 갈린다. 단독 5회 중 1회만 실패했다 — 같은 문제를 "
+            "두 번 풀면 다른 답이 나온다. 낙관적 동시성 가드가 파이썬과 SQL 양쪽에 "
+            "있어 파이썬 쪽을 풀어도 동작이 보존되기 때문이다. "
+            "final_project_cs/docs/reports/debugs/2026-08-31_버전대조_가드_중복.md"
         ),
         counterfactuals=[
             "트랜잭션이 있으니 버전 대조는 없어도 된다",

@@ -40,19 +40,37 @@ def gap_report(target_revision: str) -> str:
         "## 결론",
         "",
         f"불변식을 어기는 변경 {len(entries)}건을 넣어 봤다. "
-        f"{len(killed)}건은 테스트가 잡았고 **{len(survived)}건은 424개가 전부 통과했다.**",
-        "잡히지 않은 것은 학습 문제로 쓸 수 없어 발견했고, 그 자체가 검증 공백이다.",
-        "",
-        "## 잡히지 않은 것 — 테스트가 울지 않는다",
-        "",
-        "| 불변식 | 바꾼 곳 | 무엇을 바꿨나 |",
-        "|---|---|---|",
+        f"{len(killed)}건은 테스트가 잡았고 **{len(survived)}건은 전체 테스트가 전부 통과했다.**",
     ]
-    for defect_id in survived:
-        defect = by_id.get(defect_id)
-        if defect is None:
-            continue
-        lines.append(f"| {defect.invariant} | `{defect.path}` | {defect.title} |")
+    if survived:
+        lines += [
+            "잡히지 않은 것은 학습 문제로 쓸 수 없어 발견했고, 그 자체가 검증 공백이다.",
+            "",
+            "## 잡히지 않은 것 — 테스트가 울지 않는다",
+            "",
+            "| 불변식 | 바꾼 곳 | 무엇을 바꿨나 |",
+            "|---|---|---|",
+        ]
+        for defect_id in survived:
+            defect = by_id.get(defect_id)
+            if defect is None:
+                continue
+            lines.append(f"| {defect.invariant} | `{defect.path}` | {defect.title} |")
+    else:
+        lines += [
+            "**지금은 사각지대가 없다.** 넣어 본 변경이 전부 어딘가에서 잡힌다.",
+            "",
+            "이 상태를 유지하려면 새 규칙을 만들 때 그 규칙을 어기는 변경도 함께 만들어",
+            "게이트에 걸어 본다. 규칙만 늘리고 세는 곳을 안 만들면 다시 벌어진다.",
+        ]
+
+    excluded = [(d, by_id[d].excluded) for d in killed
+                if d in by_id and getattr(by_id[d], "excluded", "")]
+    if excluded:
+        lines += ["", "## 잡히지만 학습 문제로는 쓰지 않는 것", "",
+                  "게이트는 통과하는데 신호가 안정적이지 않은 것들이다.", ""]
+        for defect_id, reason in excluded:
+            lines.append(f"- **{defect_id}** — {reason}")
 
     lines += ["", "## 잡힌 것 — 대조군", "",
               "| 바꾼 곳 | 깨지는 테스트 |", "|---|---|"]

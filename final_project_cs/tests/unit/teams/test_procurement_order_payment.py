@@ -160,3 +160,23 @@ async def test_missing_evidence_escalates():
     assert result.outcome == "escalated"
     assert result.next_action.value == "escalate"
     assert result.failure_code == "order_create_evidence_missing"
+
+
+# ── 2026-08-31: 제안에 근거 id 가 붙는지 아무도 안 세던 사각지대 ──────
+#
+# `rationale_evidence_ids` 를 빈 리스트로 만들어도 전체 424개가 전부 통과했다.
+# 근거를 모아 놓고 제안에 달지 않으면 승인자는 무엇을 보고 판단할지 모르고,
+# 검증기도 대조할 것이 없다.
+
+
+@pytest.mark.asyncio
+async def test_proposal_carries_the_evidence_it_was_built_from():
+    result = await ProcurementOrderPaymentTeam(FakeTools()).execute(
+        make_task("order.create", order_draft={"sku": "sku-1", "quantity": 1})
+    )
+    proposal = result.action_proposals[0]
+    assert proposal.rationale_evidence_ids, "제안에 근거 id 가 하나도 붙지 않았다"
+    known = {item.evidence_id for item in result.evidence}
+    assert set(proposal.rationale_evidence_ids) <= known, (
+        "제안이 결과에 없는 근거 id 를 든다 — 지어낸 근거다"
+    )
