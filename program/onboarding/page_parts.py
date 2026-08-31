@@ -17,15 +17,30 @@ h1{font-size:29px;margin:0 0 6px;letter-spacing:-.02em}
 .sub{color:var(--dim);font-size:15px;margin:0 0 20px;max-width:88ch}
 h2.sec{font-size:20px;margin:52px 0 4px;padding-left:13px;border-left:5px solid var(--blue)}
 h2.sec + p{color:var(--dim);font-size:14.5px;margin:0 0 16px;padding-left:18px}
-.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);
-border:1px solid var(--line);border-radius:12px;padding:11px 14px;position:sticky;top:0;z-index:20}
 button{font:inherit;font-size:14px;padding:8px 15px;border-radius:9px;cursor:pointer;
 border:1px solid var(--line);background:var(--card);color:var(--ink)}
 button:hover{border-color:var(--blue);color:var(--blue)}
 button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 button.primary:hover{opacity:.9;color:#fff}
 button:disabled{opacity:.4;cursor:not-allowed}
-.tick{margin-left:auto;color:var(--dim);font-size:13.5px}
+.dock{position:fixed;right:22px;bottom:22px;z-index:40;display:flex;flex-direction:column;
+align-items:flex-end;gap:11px}
+.dock .menu{display:none;flex-direction:column;gap:7px;background:var(--card);
+border:1px solid var(--line);border-radius:15px;padding:12px;min-width:216px;
+box-shadow:0 16px 44px rgba(8,12,22,.26);animation:pop .18s ease both}
+.dock.on .menu{display:flex}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+.dock .menu button{width:100%;text-align:left}
+.dock .tick{font-size:12.5px;color:var(--dim);text-align:center;padding-top:8px;margin-top:2px;
+border-top:1px solid var(--line)}
+.fab{width:66px;height:66px;border-radius:50%;padding:0;background:var(--blue);border:none;
+color:#fff;box-shadow:0 9px 26px rgba(47,91,216,.44);display:flex;flex-direction:column;
+align-items:center;justify-content:center;line-height:1.12;transition:.2s}
+.fab:hover{color:#fff;border:none;transform:scale(1.07)}
+.fab .big{font-size:19px;font-weight:700}
+.fab .small{font-size:10.5px;opacity:.86}
+.dock.on .fab{background:var(--ink);box-shadow:0 9px 26px rgba(8,12,22,.4)}
+.dock.on .fab .big{font-size:15px}
 .cols{display:grid;grid-template-columns:1fr 620px;gap:18px;margin-top:16px;align-items:start}
 @media(max-width:1180px){.cols{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
@@ -123,8 +138,9 @@ function render(){
     ? '<div class="h">'+s.n+'. '+esc(s.title)
       +' <span style="color:var(--faint);font-weight:400">'+esc(s.owner)+'</span></div>'
       +'<div class="b">'+esc(s.why)+'</div>'
-    : '<div class="b">아래 <b>다음</b>이나 <b>자동 재생</b>을 누르면 1번부터 시작합니다.'
-      +' 칸을 직접 눌러 그 지점으로 갈 수도 있습니다.</div>';
+    : '<div class="b">오른쪽 아래 동그란 단추를 눌러 조작판을 펼치고 <b>다음 단계</b>나'
+      +' <b>자동 재생</b>을 누르면 1번부터 시작합니다.'
+      +' 아래 칸을 직접 눌러 그 지점으로 갈 수도 있습니다.</div>';
 
   let out = '';
   for(let i=0;i<=cur;i++){
@@ -145,7 +161,9 @@ function render(){
     ? 'Case 상태 <b class="'+(st[0]==='resolved'?'done':'')+'">'+st[0]+'  v'+st[1]+'</b>'
     : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없습니다</span>';
 
-  $('tick').textContent = cur<0 ? '시작 전' : (cur+1)+' / '+STEPS.length;
+  $('tick').textContent = cur<0 ? '아직 시작 안 함' : (cur+1)+' / '+STEPS.length+' 단계';
+  $('fabn').textContent = cur<0 ? '시작' : String(cur+1);
+  $('fabs').textContent = cur<0 ? '1~'+STEPS.length : '/ '+STEPS.length;
   $('prev').disabled = cur<0;
   $('next').disabled = cur>=STEPS.length-1;
   $('code').disabled = cur<0;
@@ -158,8 +176,18 @@ function play(){
   $('play').textContent='멈춤';
   timer = setInterval(()=>{ if(cur>=STEPS.length-1){ play(); return; } go(cur+1); }, 2600);
 }
+function dock(e){
+  if(e) e.stopPropagation();
+  $('dock').classList.toggle('on');
+}
+document.addEventListener('click', e=>{
+  const d = $('dock');
+  if(d.classList.contains('on') && !d.contains(e.target)) d.classList.remove('on');
+});
+
 function showCode(){
   if(cur<0) return;
+  $('dock').classList.remove('on');
   const s = STEPS[cur];
   $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
   $('ovbody').innerHTML = s.code.map(c =>
@@ -194,16 +222,8 @@ PAGE = """<!doctype html>
 <h2 class="sec">직접 돌려 보기</h2>
 <p>1번부터 12번까지 진행하면 오른쪽에 값이 한 덩어리씩 쌓입니다.
 각 덩어리 왼쪽 꼬리표가 <b>무슨 형식인지</b>를 말합니다.
-<b>이 단계 코드 보기</b>를 누르면 실제 코드와 그 코드의 쉬운 풀이가 뜹니다.</p>
-
-<div class="bar">
-  <button id="prev" onclick="go(cur-1)">이전</button>
-  <button id="next" class="primary" onclick="go(cur+1)">다음</button>
-  <button id="play" onclick="play()">자동 재생</button>
-  <button onclick="go(-1)">처음으로</button>
-  <button id="code" onclick="showCode()">이 단계 코드 보기</button>
-  <span class="tick" id="tick">시작 전</span>
-</div>
+오른쪽 아래 동그란 단추를 누르면 조작판이 펼쳐집니다. 거기 있는
+<b>이 단계 코드 보기</b>가 실제 코드와 그 코드의 쉬운 풀이를 띄웁니다.</p>
 
 <div class="cols">
   <div class="panel">
@@ -240,6 +260,20 @@ PAGE = """<!doctype html>
       <button class="x" onclick="hideCode()">닫기 (Esc)</button></div>
     <div id="ovbody"></div>
   </div>
+</div>
+
+<div class="dock" id="dock">
+  <div class="menu">
+    <button id="prev" onclick="go(cur-1)">이전 단계</button>
+    <button id="next" class="primary" onclick="go(cur+1)">다음 단계</button>
+    <button id="play" onclick="play()">자동 재생</button>
+    <button onclick="go(-1)">처음으로</button>
+    <button id="code" onclick="showCode()">이 단계 코드 보기</button>
+    <div class="tick" id="tick">시작 전</div>
+  </div>
+  <button class="fab" onclick="dock(event)" title="시뮬레이터 조작">
+    <span class="big" id="fabn">시작</span><span class="small" id="fabs">1~12</span>
+  </button>
 </div>
 
 <script>%(js)s</script></body></html>
