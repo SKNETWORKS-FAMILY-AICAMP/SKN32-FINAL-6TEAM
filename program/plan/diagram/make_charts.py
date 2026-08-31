@@ -299,42 +299,64 @@ def chart_pipeline():
 
 # 9. 데이터셋 수집 현황 ---------------------------------------------------------
 def chart_dataset_status():
-    """★2026-08-31 갱신. 이전 값(네이버 68, 택배 13)은 첫 수집분 한 사람 기준이었다.
+    """★2026-08-31 재작성. 계획서 본문이 네 분류인데 그림은 세 분류였다.
 
-    팀원 제출본이 2026-08-29 에 들어와 네이버 주문은 270건, 택배 조회는 238건이 됐다.
-    수치는 파일을 실제로 읽어 센 값이다. 파일명을 믿으면 안 된다 — kjh 제출본은
-    이름이 102건인데 실제로는 101건이었다.
+    이전 그림은 배송을 한 칸에 합치고 쿠팡 주문에 정규화 완료분 9건만 그렸다.
+    본문과 그림이 다르면 읽는 사람이 어느 쪽을 믿을지 모른다.
+
+    주문과 배송을 좌우로 나눈다. 3,483 과 238 을 한 축에 놓으면 작은 쪽이
+    선으로만 보인다. 나눠야 둘 다 읽힌다.
+
+    ★"이력 없음" 의 뜻이 두 쪽에서 다르다. 네이버는 택배사가 기록을 지워
+      조회가 안 되는 것(not_found 183, no_history 4, error 1)이고, 쿠팡은
+      events 가 빈 채 상태 문구만 남은 것이다. 같은 색으로 칠하되 설명에서 가른다.
     """
-    fig, ax = plt.subplots(figsize=(9.0, 3.7))
-    # ★두 줄 라벨은 아래 출처 문구와 겹친다. 단위는 제목으로 올린다.
-    labels = ["네이버 주문", "택배 조회", "쿠팡 주문"]
-    got = [270, 50, 9]
-    miss = [0, 188, 0]
-    ax.bar(labels, got, color=GREEN, width=0.45, label="확보")
-    ax.bar(labels, miss, bottom=got, color="#e6b8b4", width=0.45, label="이력 없음")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.2, 4.4),
+                                 gridspec_kw={"width_ratios": [1, 1.15]})
+    # ★축 라벨이 두 줄이라 아래 출처 문구와 겹쳤다. 축을 위로 올려 자리를 만든다.
+    fig.subplots_adjust(bottom=0.28, top=0.84)
+
+    # 주문
+    orders = [("네이버 주문", 270), ("쿠팡 주문", 3483)]
+    bars = a1.bar([n for n, _ in orders], [v for _, v in orders],
+                  color=[GREEN, "#2e8b62"], width=0.5)
+    for b, (_, v) in zip(bars, orders):
+        a1.text(b.get_x() + b.get_width() / 2, v + 90, "{:,}".format(v),
+                ha="center", fontsize=11.5, fontweight="bold", color=INK)
+    a1.set_ylim(0, 4100)
+    a1.set_yticks([0, 1000, 2000, 3000, 4000])
+    a1.set_yticklabels(["0", "1,000", "2,000", "3,000", "4,000"])
+    a1.set_title("주문 (팀원 4명 취합)", fontsize=11, color=INK, pad=14)
+    bare(a1)
+
+    # 택배 배송
+    track = [("네이버 배송", 50, 188), ("쿠팡 배송", 67, 1715)]
+    # ★세부 숫자를 막대 안에 넣지 않고 축 라벨로 내린다. 네이버 막대(238)가
+    #   얇아서 "이력 있음 50" 과 "없음 188" 이 서로 겹쳤다. 막대 밖으로 빼도
+    #   어느 막대 것인지 모르게 된다. 라벨이 제일 확실하다.
+    names = ["%s\n이력 %d · 없음 %s" % (n, g, "{:,}".format(m)) for n, g, m in track]
+    got = [g for _, g, _ in track]
+    miss = [m for _, _, m in track]
+    a2.bar(names, got, color=GREEN, width=0.5, label="이력 있음")
+    a2.bar(names, miss, bottom=got, color="#e6b8b4", width=0.5, label="이력 없음")
     for i, (g, m) in enumerate(zip(got, miss)):
-        # ★막대가 짧으면 안에 숫자를 넣을 자리가 없다. 쿠팡 9건이 그래서 잘렸다.
-        if g >= 30:
-            ax.text(i, g / 2, str(g), ha="center", va="center", color="white",
-                    fontsize=11, fontweight="bold")
-        elif g:
-            ax.text(i, g + 8, str(g), ha="center", va="bottom", color=GREEN,
-                    fontsize=11, fontweight="bold")
-        if m:
-            ax.text(i, g + m / 2, str(m), ha="center", va="center", color=INK, fontsize=10)
-    ax.text(0, 282, "4명 취합", ha="center", fontsize=9, color=DIM)
-    ax.text(1, 250, "5명 취합, 합치는 중", ha="center", fontsize=9, color=DIM)
-    ax.text(2, 42, "정규화 완료분", ha="center", fontsize=9, color=DIM)
-    ax.set_ylim(0, 310)
-    ax.legend(frameon=False, fontsize=9, loc="upper right")
-    ax.set_title("데이터 수집 현황, 단위 건 (2026-08-31 실측)", fontsize=11.5, color=INK, pad=14)
-    bare(ax)
+        a2.text(i, g + m + 55, "{:,}".format(g + m), ha="center", fontsize=11.5,
+                fontweight="bold", color=INK)
+    a2.set_ylim(0, 2050)
+    a2.set_yticks([0, 500, 1000, 1500, 2000])
+    a2.set_yticklabels(["0", "500", "1,000", "1,500", "2,000"])
+    a2.legend(frameon=False, fontsize=9, loc="upper left")
+    a2.set_title("택배 배송 (팀원 5명 취합)", fontsize=11, color=INK, pad=14)
+    bare(a2)
+
+    fig.suptitle("데이터 수집 현황, 단위 건 (2026-08-31 실측)", fontsize=12,
+                 color=INK, y=1.02)
     finish(fig, "09_dataset_status.png",
-           "출처: datasets/commerce/*/REPORT.md 와 raw 파일 직접 계수. "
-           "택배는 오래된 송장번호가 6~12개월 뒤 조회가 막혀 이력이 없다")
+           "출처: datasets/commerce/_dist 의 합본 네 파일을 직접 계수. "
+           "이력 없음의 뜻은 두 쪽이 다르다. 네이버는 오래된 송장이라 택배사 조회가 막힌 것이고"
+           "(not_found 183), 쿠팡은 단계별 이력이 비어 상태 문구만 남은 것이다")
 
 
-# 10. Case 상태 전이 -----------------------------------------------------------
 def chart_case_states():
     fig, ax = canvas((10.2, 4.8))
     w, h = 0.145, 0.10
