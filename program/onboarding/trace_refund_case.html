@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>취소·환불 한 건이 지나는 길 · A-COP</title>
+<style>
+:root{--accent:#b8442f;--bg:#f6f7fa;--surface:#fff;--line:#dfe3ec;--text:#161c28;--dim:#5c667a;
+--code-bg:#eef1f6;--warn-bg:#fff8e8;--warn-line:#e3c26a;--ok-bg:#eefbf4;--ok-line:#7fcaa6;
+--stop-bg:#fdf0ee;--stop-line:#e0a397}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;--code-bg:#0f1219;
+--warn-bg:#2a2415;--warn-line:#7a6420;--ok-bg:#13251d;--ok-line:#2f6b50;
+--stop-bg:#2a1a17;--stop-line:#7a3f34}}
+:root[data-theme=dark]{--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;
+--code-bg:#0f1219;--warn-bg:#2a2415;--warn-line:#7a6420;--ok-bg:#13251d;--ok-line:#2f6b50;
+--stop-bg:#2a1a17;--stop-line:#7a3f34}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:"Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+font-size:16px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px 90px}
+code,pre{font-family:"D2Coding",Consolas,"Courier New",monospace}
+.top{background:var(--accent);color:#fff;padding:34px 0 28px}
+.top .wrap{padding-bottom:0}
+.kicker{font-size:13px;letter-spacing:.06em;opacity:.85;margin:0 0 6px}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px;font-weight:800;letter-spacing:-.02em}
+.top p.sub{margin:0;font-size:15.5px;opacity:.94;max-width:66ch}
+h2{font-size:21px;margin:48px 0 4px;padding-left:13px;border-left:4px solid var(--accent)}
+h2+.lede{color:var(--dim);margin:0 0 16px;padding-left:17px;font-size:14.5px}
+h3{font-size:16.5px;margin:26px 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin:5px 0}
+a{color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:15px 18px;margin:14px 0}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:11px;padding:14px 18px;margin:16px 0}
+.note b{display:block;margin-bottom:4px}
+.good{background:var(--ok-bg);border:1px solid var(--ok-line);border-radius:11px;padding:14px 18px;margin:16px 0}
+.stop{background:var(--stop-bg);border:1px solid var(--stop-line);border-radius:11px;padding:14px 18px;margin:16px 0}
+.stop b{display:block;margin-bottom:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;padding:13px 15px;
+overflow-x:auto;font-size:13.5px;line-height:1.6;margin:12px 0}
+:not(pre)>code{background:var(--code-bg);border-radius:4px;padding:1px 5px;font-size:14px}
+.tblwrap{overflow-x:auto;margin:14px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface)}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;color:var(--dim);font-weight:700;white-space:nowrap}
+td code{font-size:13px}
+
+/* 단계 타임라인 */
+.flow{list-style:none;padding:0;margin:22px 0;counter-reset:f}
+.flow>li{counter-increment:f;position:relative;padding:0 0 30px 50px;border-left:2px solid var(--line);margin:0}
+.flow>li:last-child{border-left-color:transparent;padding-bottom:0}
+.flow>li::before{content:counter(f);position:absolute;left:-16px;top:0;width:30px;height:30px;
+border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;
+font-size:14px;font-weight:700}
+.flow h3{margin:2px 0 6px;font-size:17.5px}
+.flow .owner{display:inline-block;font-size:11.5px;font-weight:700;border-radius:5px;
+padding:1px 8px;margin-left:8px;background:var(--code-bg);color:var(--dim);vertical-align:2px}
+.where{font-family:"D2Coding",Consolas,monospace;font-size:12.8px;color:var(--dim);
+display:block;margin:8px 0 0;word-break:break-all}
+.state{display:inline-block;font-family:"D2Coding",Consolas,monospace;font-size:12.5px;
+background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:2px 9px;margin:8px 6px 0 0}
+.foot{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
+@media(max-width:640px){h1{font-size:23px}body{font-size:15px}.flow>li{padding-left:36px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<p class="kicker">A-COP 케이스 추적</p>
+<h1>취소·환불 한 건이 지나는 길</h1>
+<p class="sub">고객이 "주문 취소하고 환불받고 싶어요"를 보낸 순간부터 답이 돌아갈 때까지,
+어떤 코드를 지나 무엇이 어디에 기록되는지 한 건으로 따라갑니다.</p>
+</div></header>
+
+<main class="wrap">
+
+<h2>따라갈 케이스</h2>
+<p class="lede">가상의 문의 한 건이지만, 지나는 코드와 판정 규칙은 전부 실제 구현입니다.</p>
+
+<div class="card">
+<p style="margin:0 0 8px"><b>고객 메시지</b></p>
+<pre>POST /v1/cases
+{
+  "request_id": "req-20260831-0001",
+  "customer_id": "1f2e...c04a",
+  "message": "어제 주문한 거 취소하고 환불받고 싶어요. 아직 안 왔어요.",
+  "channel": "web"
+}</pre>
+<p style="margin:8px 0 0">이 고객에게는 주문 한 건(<code>ORD-0201</code>, 30,000원, 2개 품목)이 있고
+반품 이력은 없습니다.</p>
+</div>
+
+<h2>열두 단계</h2>
+<p class="lede">각 단계마다 어느 담당의 코드인지, Case 상태가 어떻게 바뀌는지 함께 적었습니다.</p>
+
+<ol class="flow">
+
+<li>
+<h3>문 앞에서 신원 확인<span class="owner">코어 2 · 정세환</span></h3>
+<p>API 키를 확인하고 <code>case:write</code> 권한이 있는지 봅니다. 통과해야
+<code>Principal</code>이 만들어지고, 그 안의 <code>tenant_id</code>가 이후 <b>모든 조회 조건</b>에 붙습니다.
+남의 테넌트 주문이 섞이는 것을 여기서부터 막습니다.</p>
+<span class="where">app/presentation/api/cases.py:69 <b>create()</b> · security.py:47 <b>require_scope("case:write")</b></span>
+</li>
+
+<li>
+<h3>같은 요청이 아까 왔었나<span class="owner">코어 2 · 정세환</span></h3>
+<p>요청 ID와 고객과 메시지를 재료로 멱등성 키를 만들고, 그 키로 이미 처리한 적이 있는지 먼저 찾습니다.
+있으면 <b>새로 만들지 않고 그때 만든 Case를 그대로 돌려줍니다.</b> 고객이 취소 버튼을 두 번 눌러도
+Case가 두 개 생기지 않습니다.</p>
+<pre>idempotency_key(tenant_id, request_id="req-20260831-0001",
+                action_type="case.create",
+                business_subject="1f2e...c04a:어제 주문한 거 취소하고...")</pre>
+<span class="where">app/core/idempotency.py:8 · cases.py:71~79</span>
+</li>
+
+<li>
+<h3>Case를 만들고 첫 이벤트를 남긴다<span class="owner">코어 1 · 최연우</span></h3>
+<p><code>customer_cases</code>에 행을 만들고 <code>transition_case()</code>로 <code>created</code> 이벤트를 남깁니다.
+여기서부터 이 Case에 일어나는 모든 일이 <code>case_events</code>에 쌓입니다. 이 표는 고치지 않고 추가만 합니다.</p>
+<span class="state">status: new</span><span class="state">version: 1</span>
+<span class="where">app/core/transition.py:116 <b>transition_case()</b></span>
+</li>
+
+<li>
+<h3>의도·이슈·감성을 한 번에 분류<span class="owner">모델 · 송채영</span></h3>
+<p>개인정보를 지운 뒤 분류기에 넘깁니다. 라벨 네 개가 전부 정해진 목록 안에 있어야 통과합니다.
+하나라도 벗어나면 실패로 칩니다.</p>
+<pre>intent      = "return"                  ← order·shipping·return·exchange·other 중
+issue_code  = "return_fee_or_period"    ← 13개 코드 중
+sentiment   = "negative"
+severity    = "medium"</pre>
+<p>"취소"라고 썼지만 <b>환불을 원하는 문의라 <code>return</code>으로 갑니다.</b>
+이 한 글자가 어느 팀이 받을지를 정합니다.</p>
+<span class="state">status: routing</span><span class="state">version: 2</span>
+<span class="where">app/modules/customer_ops/feedback.py:33 <b>INTENTS</b> · :86 <b>classify()</b> · cases.py:84~92</span>
+</li>
+
+<li>
+<h3>어느 팀 일인지 찾는다<span class="owner">코어 1 · 최연우</span></h3>
+<p>Registry가 <code>accepted_case_types</code>에 <code>return</code>이 있는 활성 팀을 찾습니다.
+지금 등록된 여섯 팀 중 하나뿐입니다.</p>
+<div class="tblwrap"><table><thead><tr><th>팀</th><th>받는 유형</th><th>이 문의</th></tr></thead><tbody>
+<tr><td><code>return_refund</code></td><td>return, refund, exchange</td><td><b>받는다</b></td></tr>
+<tr><td><code>procurement_order_payment</code></td><td>procurement, order, payment</td><td>안 받음</td></tr>
+<tr><td><code>fulfillment_logistics</code></td><td>fulfillment, shipping, shipment</td><td>안 받음</td></tr>
+<tr><td><code>voc_store_manager</code></td><td>other</td><td>안 받음</td></tr>
+<tr><td><code>catalog_verification</code></td><td>catalog</td><td>안 받음</td></tr>
+<tr><td><code>response_generation_review</code></td><td>(없음)</td><td>라우팅 대상 아님</td></tr>
+</tbody></table></div>
+<p><b>정확히 하나가 아니면 실패합니다.</b> 둘이 잡히거나 하나도 없으면 <code>routing_failed</code>를 남기고
+사람에게 넘깁니다. 조용히 아무 팀이나 고르지 않습니다.</p>
+<span class="state">status: running</span><span class="state">version: 3</span>
+<span class="where">app/core/registry.py:54 <b>resolve()</b> · controller.py:124</span>
+</li>
+
+<li>
+<h3>그 팀의 무슨 기능을 쓸지 고른다<span class="owner">코어 1 · 최연우</span></h3>
+<p>팀이 정해졌으니 그 팀의 어느 capability를 부를지 고릅니다. 규칙은 <b>intent와 같거나
+intent로 시작하는 첫 capability</b>입니다.</p>
+<pre>intent = "return"
+capabilities = ["return.check_eligibility",   ← "return." 로 시작. 여기서 멈춘다
+                "return.request",
+                "refund.calculate"]
+→ capability = "return.check_eligibility"</pre>
+<span class="where">app/core/registry.py:82 <b>capability_for()</b> · controller.py:68 <b>_capability()</b></span>
+</li>
+
+<li>
+<h3>근거를 모아 예산 안으로 자른다<span class="owner">근거 조합</span></h3>
+<p>팀의 지식 범위(<code>order, return, refund, exchange, policy</code>)로 정책 문서를 검색하고,
+Case 상태와 함께 <code>ContextPack</code>으로 묶습니다. 12,000 토큰을 넘으면 정해진 순서로 뺍니다.</p>
+<p><b>검색이 실패하면 빈 결과를 조용히 쓰지 않습니다.</b> <code>retrieval_failed</code> 신호가
+Context Broker로 넘어가고 <code>degraded=true</code>가 붙습니다.</p>
+<span class="where">controller.py:74 <b>_policy()</b> · :89 <b>context_broker.build()</b> · app/core/context.py:90</span>
+</li>
+
+<li>
+<h3>Team이 판단한다<span class="owner">모델 · 서유현</span></h3>
+<p>Return &amp; Refund 팀이 도구 셋으로 사실을 읽고 순서대로 검사합니다.
+<b>어느 한 검사에서 걸리면 거기서 멈춥니다.</b></p>
+<pre>read.order   → 주문 1건 (ORD-0201, 30,000원, 2개, 어제 주문)
+read.return  → 반품 이력 없음
+read.policy  → 반품 정책 문서</pre>
+<div class="tblwrap"><table><thead><tr><th>검사</th><th>걸리면</th></tr></thead><tbody>
+<tr><td>근거가 잘렸나 (<code>degraded</code>)</td><td>사람에게 넘김 · <code>degraded_context</code></td></tr>
+<tr><td>주문이나 정책을 못 읽었나</td><td>사람에게 넘김 · <code>required_evidence_missing</code></td></tr>
+<tr><td>반품 사유나 수량을 모르나</td><td><b>고객에게 물음</b> · <code>waiting_input</code></td></tr>
+<tr><td>이미 진행 중인 반품이 있나</td><td>사람에게 넘김 · <code>return_already_in_history</code></td></tr>
+<tr><td>반품 기간이 지났나 (기본 7일, 불량 90일)</td><td>사람에게 넘김 · <code>return_period_expired</code></td></tr>
+</tbody></table></div>
+<p>이 케이스는 어제 주문이라 기간 안입니다. 전부 통과합니다.</p>
+<span class="where">app/modules/customer_ops/return_refund.py:79 <b>execute()</b> · :54 <b>_policy_days()</b> · :68 <b>_date()</b></span>
+</li>
+
+<li>
+<h3>답변 문장을 만들고 톤을 검토한다<span class="owner">모델 · 송채영</span></h3>
+<p>Response Generation &amp; Review 팀이 초안을 만들고, <b>코드가 직접</b> 사실 대조를 한 뒤 톤을 검토하는 단계입니다.</p>
+<div class="note">
+<b>★지금은 이 단계가 꺼져 있습니다</b>
+<p style="margin:6px 0 0"><code>config/project.yaml</code>의 <code>response_review.enabled</code>가
+<code>false</code>입니다. 그래서 지금 고객이 받는 문장은 <b>Team이 코드에 적어 둔 고정 문구 그대로</b>입니다.
+검토를 켜려면 그 값을 <code>true</code>로 바꾸고 재기동해야 합니다.</p>
+</div>
+<span class="where">config/project.yaml:18~20 · controller.py:179 <b>_maybe_review()</b></span>
+</li>
+
+<li>
+<h3>결과를 상태로 반영한다<span class="owner">코어 1 · 최연우</span></h3>
+<p>팀이 <code>respond</code>를 돌려줬으므로 <code>completed</code> 이벤트를 남기고 종결합니다.
+답변 문장과 근거 목록이 Case 상태에 함께 저장됩니다.</p>
+<span class="state">status: resolved</span><span class="state">version: 4</span>
+<span class="where">controller.py:172 <b>_apply_result()</b> · :258 <b>_event_for_result()</b></span>
+</li>
+
+<li>
+<h3>고객이 답을 받는다<span class="owner">코어 2 · 정세환</span></h3>
+<p>고객(또는 고객의 개인 AI)이 Case를 조회하면 답변과 근거가 함께 옵니다.</p>
+<pre>GET /v1/cases/{case_id}
+
+{
+  "case_id": "...", "status": "resolved", "version": 4,
+  "intent": "return", "issue_code": "return_fee_or_period",
+  "answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.",
+  "evidence": [ { "source_type": "case_event", "source_id": "...",
+                  "claim": "created" }, ... ]
+}</pre>
+<p><b>답변에 근거가 같이 나갑니다.</b> "왜 그렇게 판단했는지"를 되짚을 수 있어야 하기 때문입니다.</p>
+<span class="where">cases.py:118 <b>detail()</b></span>
+</li>
+
+<li>
+<h3>기록이 남는다<span class="owner">전 담당</span></h3>
+<p>이 한 건이 지나가며 아래 표들에 흔적을 남깁니다. 나중에 이벤트만 재생하면
+그때 무슨 일이 있었는지 그대로 되짚을 수 있습니다.</p>
+<div class="tblwrap"><table><thead><tr><th>표</th><th>이 케이스가 남긴 것</th></tr></thead><tbody>
+<tr><td><code>customer_cases</code></td><td>1행. 상태 <code>resolved</code>, 버전 4</td></tr>
+<tr><td><code>case_events</code></td><td>4행. created → classified → routed → completed</td></tr>
+<tr><td><code>action_requests</code></td><td>1행. Case 생성의 멱등성 기록(<code>succeeded</code>)</td></tr>
+<tr><td><code>agent_runs</code></td><td>1행. 실행 시작과 종료</td></tr>
+<tr><td><code>llm_calls</code></td><td>분류에 쓴 프롬프트와 모델</td></tr>
+</tbody></table></div>
+<span class="where">app/infrastructure/db/migrations/001_schema.sql</span>
+</li>
+
+</ol>
+
+<h2>다른 길로 빠지는 경우</h2>
+<p class="lede">위는 전부 통과한 경우입니다. 실제로는 아래 셋 중 하나로 빠지는 일이 더 잦습니다.</p>
+
+<div class="stop">
+<b>고객에게 되묻는다 — waiting_input</b>
+<p style="margin:6px 0 0">반품 사유나 수량을 알 수 없으면 팀이 <code>wait_for_input</code>을 돌려줍니다.
+Case는 <code>waiting_input</code>으로 멈추고 <b>재개 토큰</b>이 발급됩니다. 고객이 답을 보내면
+그 토큰으로 멈춘 자리에서 이어서 실행합니다. 며칠이 걸려도 상관없습니다.</p>
+</div>
+
+<div class="stop">
+<b>사람에게 넘긴다 — escalated</b>
+<p style="margin:6px 0 0">반품 기간이 지났거나, 이미 진행 중인 반품이 있거나, 근거가 잘렸으면
+<code>escalate</code>입니다. <b>"아마 될 겁니다" 같은 답을 만들지 않습니다.</b>
+근거를 못 대면 확답하지 않는 것이 이 시스템의 첫 번째 규칙입니다.</p>
+</div>
+
+<div class="stop">
+<b>사람 승인을 기다린다 — waiting_approval</b>
+<p style="margin:6px 0 0">실제 환불 금액을 계산하는 경로(<code>refund.calculate</code>)로 가면
+팀이 제안을 만들고 멈춥니다. 이 경로는 아래에서 따로 봅니다.</p>
+</div>
+
+<h2>환불 금액이 실제로 계산되는 경로</h2>
+<p class="lede">돈이 나가는 쪽입니다. 검사가 두 겹으로 붙습니다.</p>
+
+<p>capability가 <code>refund.calculate</code>이면 팀은 답을 하는 대신 <b>제안</b>을 만듭니다.</p>
+
+<pre>amount = order.total_cents × 반품수량 ÷ order.item_count
+       = 30,000원 × 1 ÷ 2 = 15,000원
+
+ActionProposal(
+  action_type = "refund.calculate",
+  arguments   = { order_id, refund_amount_cents: 1500000,
+                  return_quantity: 1,
+                  calculation_basis: { order_total_cents, order_item_count } },
+  approval_required = True,
+  risk_level = "medium",
+)</pre>
+
+<p><b>계산 근거를 제안 안에 같이 넣습니다.</b> 총액과 품목 수를 함께 적어 두어야
+나중에 그 금액이 어디서 나왔는지 대조할 수 있습니다.</p>
+
+<h3>검사는 두 번입니다</h3>
+<div class="tblwrap"><table><thead><tr><th>언제</th><th>무엇을</th><th>어디서</th></tr></thead><tbody>
+<tr><td>제안이 들어올 때</td><td>주문번호·금액·수량이 DB 사실과 맞는지</td>
+<td><code>verification.py:114</code> <b>verify_proposal()</b></td></tr>
+<tr><td>사람이 승인 버튼을 누른 직후</td><td>그 사이에 사실이 바뀌지 않았는지 <b>다시 조회</b></td>
+<td><code>proposal_guard.py:70</code> <b>recheck_before_execution()</b></td></tr>
+</tbody></table></div>
+
+<div class="note">
+<b>왜 두 번인가</b>
+<p style="margin:6px 0 0">제안이 만들어진 시점과 사람이 승인하는 시점 사이에 시간이 있습니다.
+그 사이 재고가 바뀌거나 다른 반품이 접수될 수 있습니다. 코드 주석에 실제 사례가 적혀 있습니다 —
+<b>"실제 결제액이 30,000원인데 50,000원 환불을 제안해도 통과했다. 프롬프트가 아니라 코드가 방어선이다."</b></p>
+<p style="margin:8px 0 0">재검증에서 어긋나면 승인이 <code>409</code>로 거부되고 Case는
+<code>escalated</code>로 갑니다. 그 거부 기록도 남습니다 — 승인 트랜잭션 <b>밖에서</b> 검사하는 이유가
+이것입니다. 안에서 하면 방금 쓴 거부 기록이 예외와 함께 롤백돼 사라집니다.</p>
+</div>
+
+<p>통과하면 <code>action_requests</code>에 <code>pending_approval</code>로 한 행이 쌓이고
+Case는 <code>waiting_approval</code>이 됩니다. 운영자가 <code>/ui/approvals</code>에서 승인하면
+<code>approved</code> → <code>resuming</code>으로 이어집니다.</p>
+
+<div class="good">
+<b>Mock 단계라는 것을 답변에 적습니다</b>
+<p style="margin:6px 0 0">Return &amp; Refund 팀은 지금 실제 환불을 실행하지 않습니다.
+결과에 경고가 붙어 나갑니다 — "Mock 단계에서는 승인 제안만 생성하며 실제 처리는 수행하지 않습니다."
+발표에서 "환불까지 자동으로 됩니다"라고 말하면 안 됩니다.</p>
+</div>
+
+<h2>★확인하고 넘어가야 할 것</h2>
+<p class="lede">이 문서를 만들려고 경로를 따라가다 발견한 것입니다. 결론을 내지 않고 사실만 적습니다.</p>
+
+<p><b>지금 라우팅 규칙으로는 <code>refund.calculate</code>가 선택되지 않습니다.</b></p>
+
+<p>이유는 두 규칙이 맞물리기 때문입니다.</p>
+<ol>
+<li>분류기가 낼 수 있는 intent는 <code>order · shipping · return · exchange · other</code> 다섯입니다.
+<b><code>refund</code>는 목록에 없습니다.</b></li>
+<li>capability는 "intent로 시작하는 <b>첫</b> capability"로 고릅니다.
+<code>return</code>이면 언제나 <code>return.check_eligibility</code>에서 멈춥니다.</li>
+</ol>
+
+<p><code>exchange</code>로 분류돼도 같습니다. 이 팀에 <code>exchange.*</code> capability가 없어서
+목록의 첫 항목인 <code>return.check_eligibility</code>로 떨어집니다.</p>
+
+<p>그래서 <b>일반 문의로 들어온 환불 건은 "검토할 수 있습니다"라는 답변까지</b> 가고,
+금액 계산과 승인 경로는 이 길로는 닿지 않습니다.</p>
+
+<div class="note">
+<b>이게 결함인지는 담당이 판단할 일입니다</b>
+<p style="margin:6px 0 0">두 가지로 볼 수 있습니다. 첫 문의에는 자격 확인만 답하고 실제 반품 접수는
+별도 요청으로 받는 <b>의도된 2단계 설계</b>일 수 있습니다. 반대로 <code>refund</code> intent가
+빠졌거나 capability 선택 규칙이 이 팀에 안 맞는 <b>연결 누락</b>일 수도 있습니다.</p>
+<p style="margin:8px 0 0">확인해야 할 사람은 서유현(Return &amp; Refund 소유)과
+송채영(Agent Team Module 총괄), 그리고 라우팅 규칙을 가진 최연우입니다.
+바꾼다면 손댈 곳은 <code>feedback.py:33 INTENTS</code>와
+<code>registry.py:82 capability_for()</code> 둘 중 하나입니다.</p>
+</div>
+
+<h2>한 줄로 줄이면</h2>
+<div class="card">
+<p style="margin:0">문의가 들어오면 <b>권한을 확인하고 → 중복을 거르고 → Case로 만들고 →
+분류하고 → 팀을 찾고 → 근거를 모아 → 팀이 판단하고 → 결과를 상태로 남기고 → 근거와 함께 답을 돌려줍니다.</b>
+돈이 나가는 일이면 그 앞에 <b>사실 대조 두 번과 사람 승인</b>이 더 붙습니다.</p>
+</div>
+
+<div class="foot">
+A-COP 케이스 추적 · 기준 저장소 <code>final_project_cs</code> · 확인일 2026-08-31<br>
+경로와 줄번호는 실제 코드에서 확인한 값입니다. 코드가 바뀌면 줄이 밀리니 함께 적힌 이름으로 찾으세요.<br>
+담당별 학습 가이드는 같은 폴더의 <a href="01_core1_case_runtime.html">01~06 파일</a>에 있습니다.
+</div>
+
+</main>
+</body>
+</html>
