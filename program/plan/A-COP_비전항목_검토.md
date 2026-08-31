@@ -108,4 +108,4 @@ Team Contract와 Registry
 - 자체 호스팅 배포에서 OCR, embedding, LLM이 모두 로컬로 실행되는지 확인하지 못했다.
 - 고객사 데이터의 보존 기간, 삭제 요구, 국외 이전 금지 조건을 확인하지 못했다.
 - golden과 holdout의 최종 소유자, 접근 권한, 봉인 절차를 확인하지 못했다.
-- 전처리 전 VOC 5종의 정확한 선정 범위와 약 681MB 산정 기준을 확인하지 못했다. `datasets/README.md`에는 그 밖의 VOC 원본도 함께 등록되어 있다.
+- ~~전처리 전 VOC 5종의 정확한 선정 범위와 약 681MB 산정 기준을 확인하지 못했다.~~ **2026-08-31 해소.** 디스크를 세어 확인했다. 미착수는 5종이 아니라 **4종 924MB**다(`aihub_102_smb_order_qa` 189MB, `aihub_71603_aspect_sentiment` 63MB, `aihub_71844_llm_instruction_tuning` 209MB, `kaggle_customer_support` 463MB). 681MB의 근거는 끝내 찾지 못했다. `kaggle_customer_support` 하나가 안에 5종을 담고 있어 "5종"이 여기서 나온 것으로 보인다. 정본은 `datasets/README.md`의 VOC 전처리 현황 표다.

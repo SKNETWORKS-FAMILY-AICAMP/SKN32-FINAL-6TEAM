@@ -299,25 +299,39 @@ def chart_pipeline():
 
 # 9. 데이터셋 수집 현황 ---------------------------------------------------------
 def chart_dataset_status():
-    fig, ax = plt.subplots(figsize=(8.4, 3.5))
-    labels = ["네이버 주문\n(건)", "택배 조회\n(건)", "쿠팡 주문\n(건)"]
-    got = [68, 13, 0]
-    miss = [4, 45, 0]
+    """★2026-08-31 갱신. 이전 값(네이버 68, 택배 13)은 첫 수집분 한 사람 기준이었다.
+
+    팀원 제출본이 2026-08-29 에 들어와 네이버 주문은 270건, 택배 조회는 238건이 됐다.
+    수치는 파일을 실제로 읽어 센 값이다. 파일명을 믿으면 안 된다 — kjh 제출본은
+    이름이 102건인데 실제로는 101건이었다.
+    """
+    fig, ax = plt.subplots(figsize=(9.0, 3.7))
+    # ★두 줄 라벨은 아래 출처 문구와 겹친다. 단위는 제목으로 올린다.
+    labels = ["네이버 주문", "택배 조회", "쿠팡 주문"]
+    got = [270, 50, 9]
+    miss = [0, 188, 0]
     ax.bar(labels, got, color=GREEN, width=0.45, label="확보")
-    ax.bar(labels, miss, bottom=got, color="#e6b8b4", width=0.45, label="못 가져옴")
+    ax.bar(labels, miss, bottom=got, color="#e6b8b4", width=0.45, label="이력 없음")
     for i, (g, m) in enumerate(zip(got, miss)):
-        if g:
+        # ★막대가 짧으면 안에 숫자를 넣을 자리가 없다. 쿠팡 9건이 그래서 잘렸다.
+        if g >= 30:
             ax.text(i, g / 2, str(g), ha="center", va="center", color="white",
+                    fontsize=11, fontweight="bold")
+        elif g:
+            ax.text(i, g + 8, str(g), ha="center", va="bottom", color=GREEN,
                     fontsize=11, fontweight="bold")
         if m:
             ax.text(i, g + m / 2, str(m), ha="center", va="center", color=INK, fontsize=10)
-    ax.text(2, 3, "수치 확정 전", ha="center", fontsize=9.5, color=DIM)
-    ax.set_ylim(0, 78)
+    ax.text(0, 282, "4명 취합", ha="center", fontsize=9, color=DIM)
+    ax.text(1, 250, "5명 취합, 합치는 중", ha="center", fontsize=9, color=DIM)
+    ax.text(2, 42, "정규화 완료분", ha="center", fontsize=9, color=DIM)
+    ax.set_ylim(0, 310)
     ax.legend(frameon=False, fontsize=9, loc="upper right")
-    ax.set_title("데이터 수집 현황 (2026-08-28)", fontsize=11.5, color=INK, pad=14)
+    ax.set_title("데이터 수집 현황, 단위 건 (2026-08-31 실측)", fontsize=11.5, color=INK, pad=14)
     bare(ax)
     finish(fig, "09_dataset_status.png",
-           "출처: datasets/commerce/*/REPORT.md. 택배는 오래된 송장번호가 6~12개월 뒤 조회가 막혀 이력이 없다")
+           "출처: datasets/commerce/*/REPORT.md 와 raw 파일 직접 계수. "
+           "택배는 오래된 송장번호가 6~12개월 뒤 조회가 막혀 이력이 없다")
 
 
 # 10. Case 상태 전이 -----------------------------------------------------------
