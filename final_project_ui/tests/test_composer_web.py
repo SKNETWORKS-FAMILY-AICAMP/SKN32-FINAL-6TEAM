@@ -733,3 +733,50 @@ def test_the_selected_mode_reaches_the_client(tmp_path, monkeypatch):
         "reason": "방식 전달 확인"})
 
     assert seen["deployment_id"] == "customer-42"
+
+
+def test_a_stale_runtime_is_announced_on_the_screen(tmp_path, monkeypatch):
+    """★저장은 됐는데 대상이 아직 옛 조립으로 돌고 있으면 화면이 말해야 한다.
+
+    대상 계약 1.1 부터 `active_revision`·`desired_revision`·`reload_state` 가
+    온다. 이걸 안 보여주면 운영자는 [적용] 을 누른 순간 반영된 줄 안다.
+    """
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "contract_version": "1.1",
+        "active_revision": "rev-옛것", "desired_revision": "rev-새것",
+        "reload_state": "stale",
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "아직 옛 선언" in body
+    assert "rev-옛것" in body and "rev-새것" in body
+
+
+def test_a_failed_reload_is_announced_with_its_error(tmp_path, monkeypatch):
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "contract_version": "1.1",
+        "active_revision": "rev-1", "desired_revision": "rev-2",
+        "reload_state": "reload_failed", "reload_error": "team 'x' 를 만들지 못했다",
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "반영에 실패" in body
+    assert "team &#x27;x&#x27; 를 만들지 못했다" in body or "team 'x' 를 만들지 못했다" in body
+
+
+def test_a_1_0_target_gets_no_invented_reload_state(tmp_path, monkeypatch):
+    """★옛 대상은 이 필드가 없다. 없으면 **아무 말도 하지 않는다** —
+    모르는 것을 "정상" 으로 적지 않기 위해서다."""
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.web.read_introspection", lambda *a, **k: _live("읽음", value={
+        "contract_version": "1.0", "config_revision": "rev-1",
+    }))
+    project = make_project(tmp_path)
+    body = TestClient(create_app()).get("/composer", params={"path": str(project)}).text
+
+    assert "실행 중인 조립" not in body
+    assert "반영에 실패" not in body

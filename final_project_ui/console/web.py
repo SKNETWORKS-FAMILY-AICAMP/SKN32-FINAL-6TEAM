@@ -538,10 +538,47 @@ def _activation_hint(payload: dict[str, Any]) -> str:
     """
     state = payload.get("activation_state")
     if state == "pending_restart":
-        return " · ★아직 반영 전입니다 — 대상을 재시작해야 실제로 적용됩니다."
+        # ★2026-08-31 — 대상이 `POST /admin/reload`(scope `ops:reload`)를 갖게 돼
+        #   재기동 말고 반영시키는 길이 생겼다. 이 콘솔은 그 호출을 하지 않으므로
+        #   "재시작" 만 말하면 사실이 아니게 된다 — 두 길을 다 적는다.
+        # ★태그를 넣지 않는다 — 이 문자열은 `note()` 로 들어가고 거기서 전부
+        #   이스케이프된다(2026-08-30 에 같은 자리에서 `<code>` 가 글자로
+        #   새어나갔다). 평문으로 쓴다.
+        return (" · ★아직 반영 전입니다 — 대상을 재시작하거나 "
+                "POST /admin/reload 를 불러야 실제로 적용됩니다.")
     if state:
         return f" · 반영 상태: {state}"
     return ""
+
+
+#: 대상이 내는 `reload_state` 를 운영자 말로 옮긴다. ★이 문구는 이 콘솔이
+#:  소유한다 — 대상의 상태 이름을 그대로 화면에 던지지 않는다.
+_RELOAD_LABELS = {
+    "active": "실행 중인 조립 = 저장된 선언",
+    "stale": "★실행 중인 조립이 아직 옛 선언입니다 — 반영되지 않았습니다",
+    "reload_failed": "★반영에 실패했습니다 — 옛 조립이 계속 돌고 있습니다",
+    "unknown": "실행 중인 revision 을 대상이 알려주지 않습니다(모름)",
+}
+
+
+def _reload_state_note(payload: dict[str, Any] | None) -> str:
+    """실행 중인 조립과 저장된 선언이 어긋났으면 **화면에서 말한다.**
+
+    ★계약 1.0 대상은 이 필드가 없다. 없으면 아무 말도 하지 않는다 —
+      모르는 것을 "정상" 으로 적지 않기 위해서다.
+    """
+    state = (payload or {}).get("reload_state")
+    if not state:
+        return ""
+    label = _RELOAD_LABELS.get(state, f"반영 상태: {state}")
+    kind = "bad" if state in ("stale", "reload_failed") else "info"
+    active = (payload or {}).get("active_revision") or "모름"
+    desired = (payload or {}).get("desired_revision") or "모름"
+    detail = f"{label} · 실행 중 {active} / 저장됨 {desired}"
+    error = (payload or {}).get("reload_error")
+    if error:
+        detail += f" · 마지막 실패: {error}"
+    return note(detail, kind)
 
 
 def _instance_rows(config: dict[str, Any] | None, revision: str, target: Path) -> list[str]:
@@ -1010,8 +1047,12 @@ def create_app() -> FastAPI:
         # ★어느 방식으로 붙어 있는지 맨 위에 밝힌다 — 이 화면의 [적용] 이
         #   누구 설정을 바꾸는지가 보여야 한다.
         badge = _composer_mode_badge(profile_for(target))
+        # ★저장된 선언과 **실행 중인 조립**이 어긋났으면 맨 위에서 말한다.
+        #   이 화면에서 [적용] 을 눌러도 대상이 반영하기 전까지는 옛 조립이
+        #   돌고 있다 — 그걸 안 보여주면 운영자는 이미 바뀐 줄 안다.
+        reload_note = _reload_state_note(live.value if getattr(live, "value", None) else None)
         return page("구성 조립(Composer)",
-                    prefix + badge + _toggle_card(live, target) + catalog_card
+                    prefix + badge + reload_note + _toggle_card(live, target) + catalog_card
                     + _composer_body(target, current, config=config),
                     lede=str(target), path=str(target), current="/composer")
 

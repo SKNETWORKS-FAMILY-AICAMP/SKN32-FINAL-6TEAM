@@ -39,7 +39,11 @@ def profile_for(project: str | Path) -> Profile:
     #   하나도 없었다 — 환경변수를 손으로 맞추지 않으면 조립 실측과 빠른 토글 카드가
     #   조용히 안 떴다(2026-08-28 결함 점검에서 실측).
     #   여러 버전을 알아야 하면 콤마로 나열한다(`CONSOLE_CONTRACT_VERSIONS=1.0,1.1`).
-    versions = tuple(v.strip() for v in os.environ.get("CONSOLE_CONTRACT_VERSIONS", "1.0").split(",") if v.strip())
+    #   ★기본값에 `1.1` 을 더했다(2026-08-31) — 대상이 실행 중인 조립과 저장된
+    #   선언을 구분해 내기 시작하면서 버전이 올랐다(`active_revision`·
+    #   `desired_revision`·`reload_state`). 옛 대상(1.0)도 그대로 붙어야 하므로
+    #   둘 다 안다. 모르는 버전을 만나면 여전히 "계약 버전 모름" 이다.
+    versions = tuple(v.strip() for v in os.environ.get("CONSOLE_CONTRACT_VERSIONS", "1.0,1.1").split(",") if v.strip())
     return Profile(
         name=path.name or str(path),
         path=path,
