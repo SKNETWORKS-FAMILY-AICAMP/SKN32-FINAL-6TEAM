@@ -1,0 +1,11 @@
+--- a/app/core/project_config.py
++++ b/app/core/project_config.py
+@@ -79,7 +79,7 @@
+         try:
+             return self.modules[module_id].enabled
+         except KeyError as exc:
+-            raise ProjectConfigError(f"project.yaml module is not declared: {module_id}") from exc
++            return True
+ 
+     def require_module(self, module_id: str, operation: str) -> None:
+         if not self.module_enabled(module_id):

@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/return_refund.py
++++ b/app/modules/customer_ops/return_refund.py
+@@ -59,7 +59,7 @@
+             if isinstance(value, dict):
+                 key = "defective_return_period_days" if reason == "defective" else "return_period_days"
+                 if isinstance(value.get(key), int):
+-                    return value[key]
++                    return value[key] + 30
+                 if isinstance(value.get("return_period_days"), int):
+                     return value["return_period_days"]
+         return 90 if reason == "defective" else 7

@@ -1,0 +1,11 @@
+--- a/app/core/verification.py
++++ b/app/core/verification.py
+@@ -175,7 +175,7 @@
+     """
+     problems: list[Mismatch] = []
+     for rule in policy.quantities:
+-        if rule.field not in arguments or arguments[rule.field] is None:
++        if rule.field not in arguments or arguments[rule.field] is not None:
+             continue
+ 
+         reference_value = arguments.get(rule.reference)

@@ -1,0 +1,11 @@
+--- a/app/core/transition.py
++++ b/app/core/transition.py
+@@ -139,7 +139,7 @@
+     """
+     current = _load_projection(conn, tenant_id, case_id)
+ 
+-    if current.version != expected_version:
++    if current.version < expected_version:
+         raise StateConflict(
+             f"version 충돌: expected={expected_version} actual={current.version} "
+             f"(case={case_id}). 최신 Case 를 다시 읽어 재계산한다."

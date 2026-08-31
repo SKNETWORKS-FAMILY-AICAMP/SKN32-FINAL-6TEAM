@@ -19,6 +19,17 @@
 
 문서 병합 때는 [`program/research/_prompts/문서병합_지침.md`](program/research/_prompts/문서병합_지침.md)의 보완·중복·모순 분류 절차를 따른다. `program/research/index.md`의 [`문서 정합성 점검 캘린더`](program/research/index.md#문서-정합성-점검-캘린더)에서는 `§숫자` 참조, Team 목록, DoD 항목 수를 기준선과 대조한다.
 
+## 학습 도장 (acop_dojo)
+
+[`acop_dojo/`](acop_dojo/)는 `final_project_cs` 의 구조와 동작을 실행 증거로 배우는
+학습 프로그램이다. 정답은 pytest 와 실측 실행 트레이스가 판정한다.
+원본 저장소는 건드리지 않고 임시 사본에서만 결함을 적용한다.
+
+결함 카탈로그의 등록 게이트가 부산물로 **테스트 사각지대**를 찾아낸다.
+불변식을 어겼는데 테스트가 울지 않는 지점의 목록은
+[`program/research/테스트_사각지대_실측.md`](program/research/테스트_사각지대_실측.md)에 있고,
+루트에서 `python dojo.py report` 로 다시 생성한다. 손으로 고치지 않는다.
+
 ## 데이터 폴더
 
 실제 데이터 파일은 [`datasets/`](datasets/)에 둔다. [`program/research/`](program/research/)는 조사 문서를 두는 곳이고, 데이터 파일 자체는 여기가 아니다.

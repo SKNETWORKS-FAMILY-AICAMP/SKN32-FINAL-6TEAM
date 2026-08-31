@@ -1,0 +1,11 @@
+--- a/app/presentation/security.py
++++ b/app/presentation/security.py
+@@ -34,7 +34,7 @@
+ 
+ 
+ def authenticate(authorization: str | None) -> Principal:
+-    if not authorization or not authorization.startswith("Bearer "):
++    if not authorization:
+         raise HTTPException(401, {"error": {"code": "unauthenticated", "message": "authentication required"}})
+     presented = authorization[7:].encode()
+     digest = hashlib.sha256(presented).hexdigest()

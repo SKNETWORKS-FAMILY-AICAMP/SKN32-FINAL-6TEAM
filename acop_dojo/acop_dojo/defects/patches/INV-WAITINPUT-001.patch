@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -246,7 +246,7 @@
+         na = self.next_action
+ 
+         if na is NextAction.WAIT_FOR_INPUT:
+-            if self.wait_reason != "customer_input":
++            if self.wait_reason is None:
+                 raise ValueError("wait_for_input 은 wait_reason='customer_input' 이어야 한다.")
+             if self.required_input_schema is None:
+                 raise ValueError("wait_for_input 은 required_input_schema 가 있어야 한다.")

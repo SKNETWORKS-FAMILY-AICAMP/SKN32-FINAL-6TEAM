@@ -1,0 +1,11 @@
+--- a/app/domain/events.py
++++ b/app/domain/events.py
+@@ -118,7 +118,7 @@
+ 
+ def next_status(current: CaseStatus, event: EventType) -> CaseStatus | None:
+     """허용된 전이면 다음 상태를, 아니면 None 을 돌려준다."""
+-    return TRANSITIONS.get((current, event))
++    return TRANSITIONS.get((current, event), CaseStatus.RESOLVED)
+ 
+ 
+ def allowed_events(current: CaseStatus) -> tuple[EventType, ...]:
