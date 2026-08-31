@@ -43,7 +43,11 @@ button:disabled{opacity:.4;cursor:not-allowed}
 padding:12px 15px 9px;position:sticky;top:0;z-index:25}
 .barwrap .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .barwrap .top .t{font-size:12.5px;color:var(--faint)}
-.barwrap .top .r{margin-left:auto;display:flex;gap:8px}
+.barwrap .top .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.keys{font-size:11.5px;color:var(--faint);display:flex;gap:5px;align-items:center;
+margin-right:4px}
+.keys kbd{font-family:Consolas,monospace;font-size:11px;border:1px solid var(--line);
+border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg);color:var(--dim)}
 .barwrap .top button{font-size:12.5px;padding:5px 11px;border-radius:7px}
 .bar{display:flex;gap:5px;align-items:flex-end}
 .bar .cell{flex:1;border:none;padding:0;background:none;cursor:pointer;text-align:center}
@@ -117,8 +121,18 @@ position:sticky;top:98px}
 .stream{max-height:calc(100vh - 250px);overflow-y:auto}
 @media(max-width:1240px){.pack{position:static}.stream{max-height:520px}}
 .chunk{border:1px solid var(--line);border-radius:10px;margin:0 0 9px;overflow:hidden;
-animation:slide .34s ease both}
-@keyframes slide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+transition:opacity .3s}
+.chunk.old{opacity:.62}
+.chunk.old:hover{opacity:1}
+/* ★이번 단계에서 생긴 것만 도드라지게. 무엇이 새로 붙었는지가 이 칸의 요점이다. */
+.chunk.new{border:2px solid currentColor;animation:pop2 .42s ease both}
+.chunk.new .h{background:currentColor}
+.chunk.new .kind{background:rgba(255,255,255,.9);border-color:transparent;color:#1a2030}
+.chunk.new .nm,.chunk.new .fr{color:#fff}
+.chunk.new .tag{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:5px;
+background:rgba(255,255,255,.9);color:#1a2030;white-space:nowrap}
+@keyframes pop2{0%{opacity:0;transform:translateY(16px) scale(.98)}
+60%{transform:translateY(0) scale(1.015)}100%{opacity:1;transform:none}}
 .chunk .h{display:flex;gap:8px;align-items:baseline;padding:6px 11px;
 background:rgba(127,140,170,.09);border-bottom:1px solid var(--line)}
 .chunk .kind{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:5px;
@@ -263,15 +277,23 @@ function drawSheet(){
 }
 
 function drawPack(){
-  let out = '';
+  let out = '', fresh = 0;
   for(let i=0;i<=cur;i++){
+    const now = i===cur;
     for(const part of PACK[i].add){
-      out += '<div class="chunk"><div class="h"><span class="kind">'+esc(part[0])+'</span>'
+      if(now) fresh++;
+      out += '<div class="chunk '+(now?'new':'old')+'"'
+          +  (now?' style="color:'+SHEETS[cur].color+'"':'')+'>'
+          +  '<div class="h"><span class="kind">'+esc(part[0])+'</span>'
           +  '<span class="nm">'+esc(part[1])+'</span>'
+          +  (now?'<span class="tag">이번에 생김</span>':'')
           +  '<span class="fr">'+PACK[i].n+'번</span></div><pre>'
           +  esc(part[2].join('\n'))+'</pre></div>';
     }
   }
+  $('fresh').textContent = fresh
+    ? (cur+1)+'번 단계에서 '+fresh+'개가 새로 붙었습니다. 색이 들어온 것이 그것입니다.'
+    : (cur+1)+'번 단계는 새로 만드는 것 없이 지나갑니다.';
   $('stream').innerHTML = out
     || '<div style="color:var(--faint);font-size:13px">아직 아무것도 안 만들어졌습니다.</div>';
   let st = null;
@@ -279,6 +301,8 @@ function drawPack(){
   $('badge').innerHTML = st
     ? 'Case 상태 <b class="'+(st[0]==='resolved'?'done':'')+'">'+st[0]+'  v'+st[1]+'</b>'
     : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없습니다</span>';
+  const mark = $('stream').querySelector('.chunk.new');
+  if(mark) mark.scrollIntoView({block:'nearest'});
 }
 
 function render(){
@@ -332,8 +356,11 @@ document.addEventListener('click', e=>{
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ hideCode(); hideMap(); return; }
   if($('ov').classList.contains('on') || $('mapov').classList.contains('on')) return;
-  if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
-  else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+  if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); go(cur+1); }
+  else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); go(cur-1); }
+  else if(e.key===' '){ e.preventDefault(); play(); }
+  else if(e.key==='Home'){ e.preventDefault(); go(0); }
+  else if(e.key==='End'){ e.preventDefault(); go(SHEETS.length-1); }
 });
 render();
 """
@@ -356,6 +383,8 @@ PAGE = """<!doctype html>
   <div class="top">
     <span class="t">열두 단계 진행바</span>
     <span class="r">
+      <span class="keys"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 앞뒤로
+        <kbd>Space</kbd> 자동 재생 <kbd>Esc</kbd> 닫기</span>
       <button onclick="showMap()">열두 칸 지도 펼치기</button>
       <button onclick="showCode()">이 단계 코드 보기</button>
     </span>
@@ -367,7 +396,7 @@ PAGE = """<!doctype html>
   <div class="sheet" id="sheet"></div>
   <div class="pack">
     <h3>지금까지 만들어진 것</h3>
-    <p class="note">단계를 지날 때마다 아래로 쌓입니다. 왼쪽 꼬리표가 무슨 형식인지 말합니다.</p>
+    <p class="note" id="fresh"></p>
     <div class="stream" id="stream"></div>
     <div class="badge" id="badge"></div>
   </div>
