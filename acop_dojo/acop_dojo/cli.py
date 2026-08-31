@@ -330,6 +330,19 @@ def cmd_answers(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_patches(_: argparse.Namespace) -> int:
+    outcome = validate.check_patches(target_root())
+    broken = (len(outcome["anchor_broken"]) + len(outcome["apply_broken"])
+              + len(outcome["missing"]))
+    print(SEPARATOR)
+    if broken:
+        print(f"{broken}개가 낡았다. `python dojo.py defects --rebuild` 로 다시 만든다.")
+        print("기준 코드가 바뀐 것은 재생성으로 안 된다 — 카탈로그의 old/new 를 손봐야 한다.")
+    else:
+        print("전부 유효하다.")
+    return 1 if broken else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 도장")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -369,6 +382,8 @@ def build_parser() -> argparse.ArgumentParser:
     defects_cmd.add_argument("--rebuild", action="store_true", help="패치를 다시 만든다")
     defects_cmd.add_argument("--only", default=None, help="쉼표로 구분한 결함 id 만 검증한다")
     defects_cmd.set_defaults(func=cmd_defects)
+
+    sub.add_parser("patches", help="결함 patch 가 아직 유효한지 본다 (빠름)").set_defaults(func=cmd_patches)
 
     sub.add_parser("tracks", help="학습 트랙 7개를 본다").set_defaults(func=cmd_tracks)
 

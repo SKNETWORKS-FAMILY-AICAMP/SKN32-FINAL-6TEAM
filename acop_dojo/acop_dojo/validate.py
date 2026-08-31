@@ -98,3 +98,51 @@ def validate_all(target: Path, *, verbose: bool = True,
         report["entries"][entry_id]["unique_failures"] = sorted(unique)
         report["entries"][entry_id]["gates"]["distinguishable"] = bool(unique)
     return report
+
+
+def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
+    """결함 patch 가 아직 유효한지만 본다. 테스트는 돌리지 않는다.
+
+    patch 는 `app/` 이 바뀌면 **조용히** 낡는다. 실제로 `routes.py` 가 다른 작업으로
+    14줄 늘면서 INV-UI-001 의 hunk 위치가 밀려 있었는데 아무도 몰랐다.
+    전체 게이트는 20분이라 매번 돌릴 수 없어, 싼 검사를 따로 둔다.
+
+    두 가지를 각각 본다. 실패 모드가 다르다.
+    - anchor: `old` 문자열이 원본에 정확히 1회 나오는가. 0회면 코드가 바뀐 것이고,
+      2회 이상이면 어디를 고칠지 정해지지 않는다. patch 를 **다시 만들 수 있는가**의 문제다.
+    - apply: 지금 patch 파일이 그대로 적용되는가. context 3줄이 밀리면 여기서 걸린다.
+      이미 만들어 둔 patch 가 **아직 쓸 수 있는가**의 문제다.
+    """
+    report: dict[str, Any] = {"ok": [], "anchor_broken": [], "apply_broken": [], "missing": []}
+    with Sandbox(target) as sandbox:
+        assert sandbox.root is not None
+        for defect in defects_mod.DEFECTS:
+            patch = defects_mod.PATCH_DIR / f"{defect.defect_id}.patch"
+            source = sandbox.root / defect.path
+            if not patch.exists():
+                report["missing"].append(defect.defect_id)
+                continue
+            with source.open(encoding="utf-8", newline="") as handle:
+                original = handle.read()
+            anchor = defect.old
+            if anchor not in original:
+                anchor = anchor.replace(chr(10), chr(13) + chr(10))
+            count = original.count(anchor) if anchor else 0
+            if count != 1:
+                report["anchor_broken"].append((defect.defect_id, defect.path, count))
+                continue
+            ok, _ = sandbox.check(patch)
+            (report["ok"] if ok else report["apply_broken"]).append(defect.defect_id)
+
+    if verbose:
+        total = len(defects_mod.DEFECTS)
+        print(f"결함 patch {total}개 검사 — 테스트는 돌리지 않는다")
+        print(f"  ✓ 그대로 쓸 수 있다      {len(report['ok'])}")
+        for defect_id, path, count in report["anchor_broken"]:
+            found = "찾을 수 없다" if count == 0 else f"{count}번 나온다"
+            print(f"  ✗ 기준 코드가 바뀌었다   {defect_id}  ({path} 에서 {found})")
+        for defect_id in report["apply_broken"]:
+            print(f"  ✗ patch 가 낡았다        {defect_id}  (context 가 밀렸다 — 재생성하면 된다)")
+        for defect_id in report["missing"]:
+            print(f"  ✗ patch 파일이 없다      {defect_id}")
+    return report

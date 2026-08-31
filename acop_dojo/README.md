@@ -46,7 +46,8 @@ python dojo.py doctor
 | `learn 2` | 대조 — 예상 순서를 세우고 실측과 겹친다 |
 | `defect [ID] [--fix 패치]` | 결함 문제. `--fix` 를 주면 pytest 가 판정한다 |
 | `boss [--fix 패치] [--defect ID] [--force]` | 보스전 — 안 배운 모듈에서 같은 규칙을 찾고 고친다 |
-| `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트를 돌린다 |
+| `patches` | 결함 patch 가 아직 유효한지 본다 (4초, 테스트 안 돌림) |
+| `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트를 돌린다 (20분) |
 | `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 본다 |
 | `report` | 검증 결과로 사각지대 보고서를 다시 쓴다 |
 | `map` | 웹 지도를 그린다 |
@@ -97,6 +98,20 @@ python dojo.py map --track team-review
 서술 답안은 LLM 이 채점하지 않는다. LLM 판정을 단독 합격 기준으로 쓰면 학습자가
 모델을 설득해 통과하는 길이 열린다. 대신 `answers` 로 답안과 루브릭을 한 파일에
 모아 사람이 본다. 능력 표시도 실행 증거가 있으면 확정, 서술만 있으면 잠정이다.
+
+## patch 는 조용히 낡는다
+
+결함은 unified diff 로 갖고 있어서 `app/` 이 바뀌면 hunk 위치가 밀린다.
+실제로 `routes.py` 가 다른 작업으로 14줄 늘면서 `INV-UI-001` 의 patch 가 낡아 있었는데
+아무도 몰랐다. 전체 게이트는 20분이라 매번 돌릴 수 없다.
+
+```bash
+python dojo.py patches      # 4초
+```
+
+두 가지를 나눠 본다. **기준 코드가 바뀐 것**(anchor 를 못 찾거나 여러 번 나온다)은
+재생성으로 안 되고 카탈로그의 `old`/`new` 를 손봐야 한다. **patch 만 낡은 것**은
+`defects --rebuild` 로 다시 만들면 된다.
 
 ## 안전
 
