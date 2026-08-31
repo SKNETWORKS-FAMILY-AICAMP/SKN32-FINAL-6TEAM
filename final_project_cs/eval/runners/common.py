@@ -68,7 +68,17 @@ def _seed_golden_fixtures(cases: list[dict[str, Any]], tenant_id: str) -> None:
             #   hardcoded default unchanged.
             seed_order = case.get("_seed_order")
             if seed_order:
-                order_no = "EVAL-" + str(seed_order.get("order_no_source", case_id))[:20]
+                # ★order_no has its own UNIQUE(tenant_id, order_no) constraint,
+                #   separate from the order_id primary key this function already
+                #   ON CONFLICTs on. Deriving it from the real order alone broke
+                #   the moment two different case_ids (e.g. a synth-order-* case
+                #   and a synth-complaint-* case) happened to sample the same
+                #   real order (2026-08-31: psycopg.errors.UniqueViolation on
+                #   orders_tenant_id_order_no_key). Fold case_id in so it's
+                #   unique per case even when the underlying real order repeats.
+                order_no = "EVAL-" + hashlib.sha256(
+                    (case_id + ":" + str(seed_order.get("order_no_source", case_id))).encode("utf-8")
+                ).hexdigest()[:20]
                 total_cents = int(seed_order.get("total_cents") or 39800)
                 item_count = int(seed_order.get("item_count") or 1)
                 status = str(seed_order.get("status") or "delivered")
@@ -129,6 +139,7 @@ def parser(description: str) -> argparse.ArgumentParser:
     p.add_argument("--timeout", type=float, default=TIMEOUT_SECONDS)
     p.add_argument("--model", default=None)
     p.add_argument("--provider", default="mock", choices=["mock", "openai", "local_ft"])
+    p.add_argument("--local-ft-url", default=None, help="base_url for --provider local_ft, e.g. http://127.0.0.1:8100")
     p.add_argument("--temperature", type=float, default=TEMPERATURE)
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--dry-run", action="store_true")
@@ -320,7 +331,8 @@ def _call_openai(prompt: str, args: argparse.Namespace) -> dict[str, Any]:
             retries += 1
 
 
-def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: list[str]) -> tuple[Any, Any, Any]:
+def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: list[str],
+                   provider: str = "openai", local_ft_url: str | None = None) -> tuple[Any, Any, Any]:
     from app.core.context import ContextBroker, ContextInputs, count_tokens
     from app.core.contracts import ContextPack
     from app.core.contracts import TeamTask
@@ -340,7 +352,14 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     # runner must not know Team class names or constructor shapes.  In the
     # Registry architecture no_team_split cannot collapse configured Team
     # boundaries; it is intentionally a compatibility no-op.
-    registry = build_registry(tools=ReadToolbox(get_connection), llm=_OpenAITeamLLM())
+    if provider == "local_ft":
+        if not local_ft_url:
+            raise ValueError("--provider local_ft requires --local-ft-url")
+        from app.infrastructure.llm.local_ft import LocalFTTeamLLM
+        llm = LocalFTTeamLLM(base_url=local_ft_url)
+    else:
+        llm = _OpenAITeamLLM()
+    registry = build_registry(tools=ReadToolbox(get_connection), llm=llm)
     try:
         registered = registry.resolve(case_type=case_type, intent=intent)
     except Exception as exc:
@@ -408,7 +427,8 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
                     "prediction": prediction, "citations": citations, "judge": judge, "config": config}
         team_result = None
         if arm == "Proposed":
-            module, task, team_executor = _team_context(case, arm, args.timeout, args.ablation)
+            module, task, team_executor = _team_context(case, arm, args.timeout, args.ablation,
+                                                         provider=args.provider, local_ft_url=args.local_ft_url)
             team_result = asyncio.run(team_executor.execute(task)).model_dump(mode="json")
             if "no_approval" in args.ablation and team_result.get("next_action") == "wait_for_approval":
                 team_result.update({"outcome": "completed", "next_action": "respond", "wait_reason": None,
