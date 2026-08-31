@@ -153,9 +153,28 @@ FIELDS = [
 replace_table_rows("chat_logs.csv", "2025-05-10 15:01:22", FIELDS)
 
 # ---------------------------------------------------------------- 3.2 데이터 양
-d.replace_para("00000073", ["쿠팡 주문 9행, 배송 이력 4행. 네이버 주문 270건(팀원 4명 취합). "
-                            "택배 조회 238건 질의(팀원 5명 취합, 네이버 조회분). "
-                            "VOC 공개 데이터 9종 중 5종 전처리 완료, 4종 924MB 남음."])
+d.replace_para("00000073", [
+    "팀원 제출본을 쇼핑몰별로 합쳐 네 파일로 둔다. 합계 5,773행이다. "
+    "VOC 공개 데이터는 9종 중 5종 전처리를 마쳤고 4종 924MB 가 남았다.",
+])
+# ★합본 네 개. 주문과 배송을 나누고, 그 안에서 다시 쇼핑몰로 나눈다.
+#   두 쇼핑몰의 배송 레코드 모양이 달라서 한 파일에 담으면 읽는 쪽이 매번 갈라야 한다.
+MERGED = [
+    ("team_naver_orders", "네이버 주문", "270", "cyw 68 · kjh 101 · syh 44 · csw 57"),
+    ("team_coupang_orders", "쿠팡 주문", "3,483", "cyw 9 · syh 2,651 · csw 366 · scy 457"),
+    ("team_naver_tracking", "네이버 택배 배송", "238", "cyw 58 · kjh 88 · csw 49 · syh 43"),
+    ("team_coupang_tracking", "쿠팡 택배 배송", "1,782", "cyw 4 · syh 1,212 · csw 283 · scy 283"),
+]
+d.insert_after_para("00000073", d.build(
+    [("b", "팀 합본 네 파일 (datasets/commerce/_dist/)")]
+    + [("l", "%s.jsonl, %s %s행. 제출자별 %s" % (f, label, n, by)) for f, label, n, by in MERGED]
+    + ["행마다 _submitter 와 _platform 과 _source_file 을 박아 출처를 남긴다. "
+       "합치고 나면 어느 파일에서 온 행인지 알 방법이 없기 때문이다.",
+       "쿠팡 주문의 DeliveryRequest 안 자유입력은 가려서 낸다. 공동현관 비밀번호는 "
+       "쿠팡이 가려 보내지만 이 자유입력은 가려지지 않아 집 열쇠 위치가 51행 들어 있었다. "
+       "가린 행은 _masked 필드에 무엇을 가렸는지 이름으로 남긴다.",
+       "원본 그대로가 필요하면 같은 폴더의 team_submissions_*.zip 을 본다. "
+       "그쪽은 바이트도 파일명도 바꾸지 않은 제출본이다."]))
 d.replace_para("00000075", ["쿠팡 고유 주문 8건. 취소된 배송 상자 3건과 송장번호 없는 상자 1건은 제외했다. "
                             "택배 이력이 실제로 나온 것은 238건 중 50건이다. "
                             "나머지는 송장번호가 오래돼 택배사가 기록을 지운 것이며 실패로 세지 않는다."])
@@ -164,7 +183,10 @@ d.insert_after_para("00000075", d.image_xml(c("09_dataset_status.png"), 5.6)
 
 # ---------------------------------------------------------------- 3.3 저장 위치
 d.replace_para("00000078", ["datasets/<도메인>/<이름>/ 아래에 raw, processed, scripts, REPORT.md 를 둔다. "
-                            "예를 들어 datasets/commerce/coupang_order_history/processed 다."])
+                            "예를 들어 datasets/commerce/coupang_order_history/processed 다.",
+                            "여러 사람의 제출본을 합친 것은 datasets/commerce/_dist/ 에 둔다. "
+                            "raw 와 processed 는 한 사람 것이고 _dist 는 팀 전체를 합친 것이라 자리를 나눈다. "
+                            "_dist 는 git 에 올라가지 않는다."])
 d.replace_para("0000007A", ["JSON Lines 를 쓴다. 한 줄에 한 건이라 큰 파일도 줄 단위로 처리할 수 있다."])
 d.replace_para("0000007C", ["UTF-8 을 쓴다."])
 
@@ -197,6 +219,7 @@ CHANGES = [
     ("2026-08-24", "A-COPilot", "정규화 결과 기록. 주문 9행, 배송 4행", "통계 파일에 해시 포함"),
     ("2026-08-28", "A-COPilot", "네이버 4건 누락과 택배 이력 부족을 그대로 기록", "숨기지 않는다"),
     ("2026-08-31", "A-COPilot", "팀원 제출본 반영. 네이버 270건, 택배 질의 238건", "파일명이 아니라 실제로 세어 확인"),
+    ("2026-08-31", "A-COPilot", "합본 4파일 5,773행을 _dist 에 생성", "주문과 배송을 쇼핑몰별로 나눔"),
 ]
 replace_table_rows("2025-05-09", "개인정보 보호 강화 조치", CHANGES)
 
