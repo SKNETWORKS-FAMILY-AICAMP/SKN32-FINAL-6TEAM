@@ -1,6 +1,6 @@
 --- a/app/presentation/ui/routes.py
 +++ b/app/presentation/ui/routes.py
-@@ -364,7 +364,7 @@
+@@ -378,7 +378,7 @@
          args = r["arguments"] or {}
          # ★근거가 없으면 버튼을 잠근다. 그리고 **왜 잠겼는지 적는다** —
          #   이유를 안 적으면 운영자가 UI 결함으로 오해한다 (2026-08-14 에 실제로 그랬다).

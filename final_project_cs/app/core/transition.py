@@ -139,6 +139,11 @@ def transition_case(
     """
     current = _load_projection(conn, tenant_id, case_id)
 
+    # ★SQL 의 UPDATE 에도 같은 version 조건이 있다(_UPDATE_PROJECTION). 중복이 아니다 —
+    #   이 검사가 없으면 경합에서 진 쪽이 읽는 시점에 따라 StateConflict 가 되기도
+    #   InvalidTransition 이 되기도 한다(이긴 쪽이 이미 상태를 바꿔 놨으므로).
+    #   여기서 먼저 걸러야 진 쪽이 항상 StateConflict 를 받는다.
+    #   근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md
     if current.version != expected_version:
         raise StateConflict(
             f"version 충돌: expected={expected_version} actual={current.version} "

@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "470 passed, 4 deselected, 36 warnings in 41.69s"
+  "summary": "470 passed, 4 deselected, 36 warnings in 36.24s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -639,7 +639,7 @@
    },
    "invariant": "낙관적 동시성 — 상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다",
    "path": "app/core/transition.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 28.37s",
+   "summary": "470 passed, 4 deselected, 36 warnings in 34.86s",
    "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다"
   },
   "INV-STATE-002": {

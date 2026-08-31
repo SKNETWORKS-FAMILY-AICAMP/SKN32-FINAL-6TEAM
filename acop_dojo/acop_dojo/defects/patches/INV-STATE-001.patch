@@ -1,9 +1,9 @@
 --- a/app/core/transition.py
 +++ b/app/core/transition.py
-@@ -139,7 +139,7 @@
-     """
-     current = _load_projection(conn, tenant_id, case_id)
- 
+@@ -144,7 +144,7 @@
+     #   InvalidTransition 이 되기도 한다(이긴 쪽이 이미 상태를 바꿔 놨으므로).
+     #   여기서 먼저 걸러야 진 쪽이 항상 StateConflict 를 받는다.
+     #   근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md
 -    if current.version != expected_version:
 +    if current.version < expected_version:
          raise StateConflict(
