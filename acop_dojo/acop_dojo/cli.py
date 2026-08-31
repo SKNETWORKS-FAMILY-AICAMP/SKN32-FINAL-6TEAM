@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import answers, boss, defect_stage, defects, mapgen, placement, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, defect_stage, defects, invariants, mapgen, placement, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -343,6 +343,10 @@ def cmd_patches(_: argparse.Namespace) -> int:
     return 1 if broken else 0
 
 
+def cmd_invariants(_: argparse.Namespace) -> int:
+    return invariants.report(invariants.check(), separator=SEPARATOR)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 도장")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -382,6 +386,8 @@ def build_parser() -> argparse.ArgumentParser:
     defects_cmd.add_argument("--rebuild", action="store_true", help="패치를 다시 만든다")
     defects_cmd.add_argument("--only", default=None, help="쉼표로 구분한 결함 id 만 검증한다")
     defects_cmd.set_defaults(func=cmd_defects)
+
+    sub.add_parser("invariants", help="규칙 원장과 결함 카탈로그가 맞는지 본다").set_defaults(func=cmd_invariants)
 
     sub.add_parser("patches", help="결함 patch 가 아직 유효한지 본다 (빠름)").set_defaults(func=cmd_patches)
 

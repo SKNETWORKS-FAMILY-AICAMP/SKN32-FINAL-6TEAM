@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import defects as defects_mod
+from . import invariants as invariants_mod
 
 
 def gap_report(target_revision: str) -> str:
@@ -97,8 +98,27 @@ def gap_report(target_revision: str) -> str:
         for defect_id in broken:
             lines.append(f"- {defect_id}")
 
+    outcome = invariants_mod.check()
+    no_defect = outcome["problems"]["no_defect"]
+    active_rules = outcome["active"]
+    covered_rules = outcome["covered"]
     lines += [
         "",
+        "## 원장 기준 — 세는 곳이 아예 없는 규칙",
+        "",
+        f"불변식 원장에 활성 규칙이 {active_rules}개 있고 "
+        f"그중 {covered_rules}개에만 결함이 붙어 있다.",
+        "위의 생존 0건은 **결함이 붙은 규칙에 한한 이야기다.** 아래는 결함조차 없어",
+        "깨져도 아무도 모르는 규칙이다.",
+        "",
+    ]
+    if no_defect:
+        lines += ["| 규칙 | 출처 |", "|---|---|"]
+        for rule_id, rule, source in no_defect:
+            lines.append(f"| **{rule_id}** {rule} | {source} |")
+    else:
+        lines.append("활성 규칙 전부에 결함이 하나 이상 붙어 있다.")
+    lines += [
         "## 이 숫자로 말할 수 있는 것",
         "",
         "- 등록된 결함이 현재 환경의 전체 테스트에서 적어도 하나의 실패 신호를 낸다.",

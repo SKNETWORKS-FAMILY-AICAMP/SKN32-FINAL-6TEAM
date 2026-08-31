@@ -1,0 +1,268 @@
+{
+ "_about": "불변식 원장. 결함 카탈로그가 아니라 **규칙** 이 여기 산다. 새 규칙을 만들면 여기에 먼저 적고, 그 규칙을 어기는 결함을 카탈로그에 넣는다. defects 가 빈 항목은 '문서에는 있는데 세는 곳이 없다' 는 뜻이다.",
+ "_check": "python dojo.py invariants",
+ "entries": {
+  "R-ANSWER-01": {
+   "defects": [
+    "INV-COMMERCE-004"
+   ],
+   "rule": "답변은 근거와 일치해야 한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-AUTH-01": {
+   "defects": [
+    "INV-AUTH-001"
+   ],
+   "rule": "인증 헤더는 형식부터 검사한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-AUTH-02": {
+   "defects": [
+    "INV-SCOPE-002"
+   ],
+   "rule": "scope 없는 호출은 거부한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-AUTH-03": {
+   "defects": [],
+   "rule": "승인자는 action:approve scope 가 있어야 한다",
+   "source": "CLAUDE.md §0.2",
+   "status": "active"
+  },
+  "R-CLASS-01": {
+   "defects": [
+    "INV-CLASSIFY-001",
+    "INV-VOC-001"
+   ],
+   "rule": "분류가 실패하면 조용히 넘기지 않는다 — 빠진 필드도 틀린 라벨도 거부",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-CLASS-02": {
+   "defects": [],
+   "rule": "분류 실패는 classification_failed 를 남기고 escalated 로 전환한다",
+   "source": "CLAUDE.md §1",
+   "status": "active"
+  },
+  "R-CONFIG-01": {
+   "defects": [
+    "INV-CONFIG-001"
+   ],
+   "rule": "project.yaml 에 선언되지 않은 모듈을 물으면 오류다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-CTX-01": {
+   "defects": [
+    "INV-BUDGET-001"
+   ],
+   "rule": "ContextPack 은 12,000 토큰 예산을 넘겨서 만들어질 수 없다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-CTX-02": {
+   "defects": [
+    "INV-DEGRADED-001",
+    "INV-VOC-002"
+   ],
+   "rule": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 남기고 확정 답변을 만들지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-EVID-01": {
+   "defects": [
+    "INV-EVIDENCE-001"
+   ],
+   "rule": "근거 없는 확정 답변을 만들지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-EVID-02": {
+   "defects": [
+    "INV-EVIDENCE-002",
+    "INV-COMMERCE-002"
+   ],
+   "rule": "든 근거는 ContextPack 에 실재해야 하고 제안에도 붙어야 한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-EVID-03": {
+   "defects": [
+    "INV-UI-001"
+   ],
+   "rule": "근거 없는 제안은 화면에서 결정할 수 없어야 한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-IDEM-01": {
+   "defects": [
+    "INV-IDEM-001",
+    "INV-IDEM-002"
+   ],
+   "rule": "같은 요청을 두 번 실행해도 side effect 는 한 번만 난다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-MCP-01": {
+   "defects": [],
+   "rule": "MCP 는 read-only 다 — 결제·환불·구독 변경을 하지 않는다",
+   "source": "CLAUDE.md §0.2",
+   "status": "active"
+  },
+  "R-OUTBOX-01": {
+   "defects": [
+    "INV-OUTBOX-001"
+   ],
+   "rule": "다른 tenant 의 Case 로 메시지를 발행할 수 없다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-PII-01": {
+   "defects": [
+    "INV-PII-001",
+    "INV-PII-002",
+    "INV-PII-003",
+    "INV-PII-004"
+   ],
+   "rule": "PII 는 저장 시 마스킹한다 — 규칙별로, 구조 전체를 훑어서",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-RESULT-01": {
+   "defects": [
+    "INV-APPROVAL-001",
+    "INV-RESPOND-001",
+    "INV-ESCALATE-001",
+    "INV-HANDOFF-001",
+    "INV-WAITINPUT-001"
+   ],
+   "rule": "TeamResult 는 next_action 과 모순되지 않아야 한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-REVIEW-01": {
+   "defects": [
+    "INV-TEAM-002",
+    "INV-REVIEW-002"
+   ],
+   "rule": "생성된 답변은 금지어·PII·사실을 검사한 뒤 내보낸다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-SCOPE-01": {
+   "defects": [
+    "INV-SCOPE-001"
+   ],
+   "rule": "모든 조회에 tenant_id 와 customer_id(또는 case_id) 조건을 적용한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-STATE-01": {
+   "defects": [
+    "INV-STATE-001"
+   ],
+   "rule": "상태 변경은 transition_case 만 거치고 읽은 시점의 version 과 정확히 맞아야 한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-STATE-02": {
+   "defects": [
+    "INV-STATE-002"
+   ],
+   "rule": "상태표에 없는 전이는 거부한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-STATE-03": {
+   "defects": [
+    "INV-STATE-003",
+    "INV-STATE-004"
+   ],
+   "rule": "이벤트 payload 는 규격을 검사한다 — 필수 키가 없거나 규격 미등록이면 거부",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-STATE-04": {
+   "defects": [
+    "INV-MERGE-001"
+   ],
+   "rule": "state_json 은 병합이다 — 이전 근거를 지우지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-STATE-05": {
+   "defects": [],
+   "rule": "case_events 는 append-only 다 — UPDATE/DELETE 하지 않는다",
+   "source": "CLAUDE.md §0.3",
+   "status": "active"
+  },
+  "R-STATE-06": {
+   "defects": [],
+   "rule": "checkpoint 로 업무 상태를 되돌리지 않는다 — 권위 있는 projection 은 customer_cases 다",
+   "source": "CLAUDE.md §0.3",
+   "status": "active"
+  },
+  "R-TEAM-01": {
+   "defects": [
+    "INV-TEAM-001"
+   ],
+   "rule": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 바꾸지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-TEAM-02": {
+   "defects": [
+    "INV-COMMERCE-005"
+   ],
+   "rule": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-TEAM-03": {
+   "defects": [],
+   "rule": "Team 은 side effect 를 실행하지 않는다 — ActionProposal 만 반환한다",
+   "source": "CLAUDE.md §0.2",
+   "status": "active"
+  },
+  "R-UNKNOWN-01": {
+   "defects": [
+    "INV-OUTBOX-002",
+    "INV-COMMERCE-003"
+   ],
+   "rule": "값을 모르면 비워 둔다 — 추정으로 채우거나 확정 답변으로 만들지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-UNKNOWN-02": {
+   "defects": [],
+   "rule": "provider timeout 을 성공으로 추정하지 않는다 — unknown 으로 남기고 자동 재실행하지 않는다",
+   "source": "CLAUDE.md §0.2",
+   "status": "active"
+  },
+  "R-VERIFY-01": {
+   "defects": [
+    "INV-VERIFY-001"
+   ],
+   "rule": "조회 자체가 실패했으면 통과시키지 않는다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-VERIFY-02": {
+   "defects": [
+    "INV-QUANTITY-001"
+   ],
+   "rule": "수량이 참조 대상의 상한을 넘지 않는지 본다",
+   "source": "acop_dojo 카탈로그에서 도출",
+   "status": "active"
+  },
+  "R-VERSION-01": {
+   "defects": [],
+   "rule": "산출물에 버전을 박는다 — 프롬프트·모델이 바뀌면 덮어쓰지 않고 공존시킨다",
+   "source": "CLAUDE.md §1",
+   "status": "active"
+  }
+ }
+}
