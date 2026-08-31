@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import boss, defect_stage, defects, mapgen, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, defect_stage, defects, mapgen, placement, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -69,6 +69,13 @@ def cmd_trace(args: argparse.Namespace) -> int:
     first = load_or_capture(scenario.scenario_id, refresh=True)
     print(f"  결과 {first['outcome']['status']} · 단계 {first['summary']['steps']} · "
           f"고유 함수 {first['summary']['unique_symbols']} · revision {first['code_revision']}")
+    problems = tracer.audit(first)
+    if problems:
+        print("  ✗ 트레이스에 넣으면 안 되는 값이 있다")
+        for problem in problems[:5]:
+            print(f"      {problem}")
+        return 1
+    print("  ✓ 금지 필드·긴 문자열 없음")
     if args.verify:
         print("  결정성 검사 — 한 번 더 돌려 비교한다")
         second_path = trace_path(scenario.scenario_id).with_suffix(".verify.json")
@@ -273,6 +280,54 @@ def cmd_tracks(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_scenarios(args: argparse.Namespace) -> int:
+    print("")
+    print(f"시나리오 {len(scenarios.SCENARIOS)}개")
+    print(SEPARATOR)
+    for scenario in scenarios.SCENARIOS.values():
+        mark = "DB" if scenario.needs_db else "  "
+        print(f"  [{mark}] {scenario.scenario_id:34} {scenario.title}")
+    if not args.verify_all:
+        print("")
+        print("  --verify-all 을 주면 전부 두 번씩 떠서 같은지, 금지 필드가 없는지 본다.")
+        return 0
+
+    print("")
+    print(SEPARATOR)
+    print("전부 두 번씩 뜬다. 채점 오라클로 쓰려면 같아야 한다.")
+    failed = []
+    for scenario in scenarios.SCENARIOS.values():
+        first = tracer.capture(scenario.nodeid, target=target_root(),
+                               out_path=trace_path(scenario.scenario_id))
+        problems = tracer.audit(first)
+        second_path = trace_path(scenario.scenario_id).with_suffix(".verify.json")
+        second = tracer.capture(scenario.nodeid, target=target_root(), out_path=second_path)
+        second_path.unlink(missing_ok=True)
+        left = tracer.digest({k: v for k, v in first.items() if k != "code_revision"})
+        right = tracer.digest({k: v for k, v in second.items() if k != "code_revision"})
+        ok = left == right and not problems
+        if not ok:
+            failed.append(scenario.scenario_id)
+        mark = "✓" if ok else "✗"
+        note = "" if not problems else f"  금지 필드 {len(problems)}건"
+        print(f"  {mark} {scenario.scenario_id:34} {first['summary']['steps']:4d}단계{note}")
+    print(SEPARATOR)
+    print("전부 결정적이다." if not failed else f"문제 있는 시나리오: {failed}")
+    return 0 if not failed else 1
+
+
+def cmd_placement(args: argparse.Namespace) -> int:
+    track = tracks.get(args.track)
+    return placement.run(args.track, load_or_capture(track.scenario))
+
+
+def cmd_answers(args: argparse.Namespace) -> int:
+    out = Path(args.out) if args.out else WORKSPACE_ROOT / ".acop_dojo" / "answers.md"
+    print(f"답안을 모았다: {answers.write(out)}")
+    print("  자동 채점하지 않는다. 동료나 멘토가 루브릭으로 본다.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 도장")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -315,7 +370,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("tracks", help="학습 트랙 7개를 본다").set_defaults(func=cmd_tracks)
 
+    placement_cmd = sub.add_parser("placement", help="어디부터 시작할지 재 본다")
+    placement_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
+    placement_cmd.set_defaults(func=cmd_placement)
+
+    scenarios_cmd = sub.add_parser("scenarios", help="시나리오 목록과 결정성 검사")
+    scenarios_cmd.add_argument("--verify-all", action="store_true")
+    scenarios_cmd.set_defaults(func=cmd_scenarios)
+
     sub.add_parser("review", help="예약된 복습을 꺼낸다").set_defaults(func=cmd_review)
+
+    answers_cmd = sub.add_parser("answers", help="서술 답안을 동료 검토용으로 내보낸다")
+    answers_cmd.add_argument("--out", default=None)
+    answers_cmd.set_defaults(func=cmd_answers)
 
     stability_cmd = sub.add_parser("stability", help="결함이 매번 같은 신호를 내는지 본다")
     stability_cmd.add_argument("--repeats", type=int, default=3)

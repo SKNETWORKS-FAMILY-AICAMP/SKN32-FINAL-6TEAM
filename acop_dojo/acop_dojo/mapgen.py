@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 import html
+import json
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -111,6 +112,16 @@ def _edge(positions, a: str, b: str, klass: str, weight: int = 1) -> str:
             f'{mid:.0f} {y2:.0f} {x2:.0f} {y2:.0f}" stroke-width="{stroke:.1f}"/>')
 
 
+def measured_order(trace: dict[str, Any] | None) -> list[str]:
+    """실측 트레이스가 지나간 모듈 순서(중복 제거). 예상과 대조할 정답이다."""
+    order: list[str] = []
+    for step in (trace or {}).get('steps', []):
+        module = step['path'][:-3].replace('/', '.')
+        if not order or order[-1] != module:
+            order.append(module)
+    return order
+
+
 def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
           track: Any = None) -> str:
     imports = static_imports(target)
@@ -129,7 +140,7 @@ def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
         for destination in targets:
             parts.append(_edge(positions, source, destination, "imp"))
     for (source, destination), weight in calls.items():
-        parts.append(_edge(positions, source, destination, "run", weight))
+        parts.append(_edge(positions, source, destination, "run hide", weight))
     for layer in order:
         x, _ = positions[columns[layer][0]]
         parts.append(f'<text class="lyr" x="{x:.0f}" y="{TOP - 18:.0f}">{html.escape(layer)}</text>')
@@ -147,7 +158,7 @@ def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
         badge = (f'<text class="deg" x="{x + NODE_W - 8:.0f}" y="{y + 17:.0f}">{count}</text>'
                  if count else "")
         parts.append(
-            f'<g class="n {klass}"><rect x="{x:.0f}" y="{y:.0f}" width="{NODE_W}" '
+            f'<g class="n {klass}" data-m="{module}"><rect x="{x:.0f}" y="{y:.0f}" width="{NODE_W}" '
             f'height="{NODE_H}" rx="5"/>'
             f'<text x="{x + 8:.0f}" y="{y + 17:.0f}">{html.escape(label[:26])}</text>{badge}</g>')
 
@@ -161,7 +172,8 @@ def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
     return TEMPLATE.format(
         width=WIDTH, height=f"{height:.0f}", body="".join(parts), modules=len(modules),
         imports=import_count, calls=len(calls), visited=len(visited), done=html.escape(done),
-        rows=rows, track_title=track.title if track is not None else "전체")
+        rows=rows, track_title=track.title if track is not None else "전체",
+        measured=json.dumps(measured_order(trace), ensure_ascii=False))
 
 
 TEMPLATE = """<!doctype html>
@@ -184,6 +196,15 @@ svg{{display:block}}
 .n.seen rect{{fill:var(--seen);stroke:var(--seenb)}}
 .n.seen text{{fill:var(--fg)}}
 .n.other{{opacity:.28}}
+.hide{{display:none}}
+.n{{cursor:pointer}}
+.n.pick rect{{fill:var(--run);stroke:var(--run)}}
+.n.pick text{{fill:#fff}}
+.bar{{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}}
+.bar button{{font:inherit;padding:.4rem .8rem;border:1px solid var(--line);border-radius:8px;
+background:var(--bg);color:var(--fg);cursor:pointer}}
+.pane{{margin:12px 0 0;font-size:14px;line-height:1.8}}
+.ok{{color:#0a7d3f}}.no{{color:#b42318}}
 .deg{{text-anchor:end;font-size:10px}}
 path{{fill:none}}
 path.imp{{stroke:var(--line)}}
@@ -198,6 +219,13 @@ code{{font-family:ui-monospace,Consolas,monospace}}
 <h1>A-COP 지식 지도 — {track_title}</h1>
 <p class="sub">모듈 {modules}개 · 정적 import 간선 {imports}개 · 실측 호출 간선 {calls}개 ·
 지나간 모듈 {visited}개</p>
+<div class="bar">
+<span>먼저 예상한다 — 요청이 지나갈 모듈을 순서대로 누른다.</span>
+<button id="undo">되돌리기</button>
+<button id="clear">비우기</button>
+<button id="reveal">실측과 대조</button>
+</div>
+<div class="pane" id="pane">아직 아무것도 안 눌렀다.</div>
 <div class="wrap"><svg viewBox="0 0 {width} {height}" width="{width}" height="{height}">
 {body}
 </svg></div>
@@ -214,5 +242,53 @@ code{{font-family:ui-monospace,Consolas,monospace}}
 <div style="margin-top:10px">이 문서는 CLI 가 남긴 진행 파일과 실측 트레이스만 읽어 그린다.
 정적 import 는 <code>composition.py</code> 가 importlib 로 만드는 결합을 보여주지 못한다.</div>
 </footer>
+<script>
+const measured = {measured};
+const picked = [];
+const pane = document.getElementById("pane");
+const nodes = Array.from(document.querySelectorAll("g.n"));
+function label(name) {{ return name.replace("app.", ""); }}
+function draw() {{
+  if (!picked.length) {{ pane.textContent = "아직 아무것도 안 눌렀다."; return; }}
+  pane.textContent = "내 예상: " + picked.map(label).join("  ->  ");
+}}
+nodes.forEach(function (node) {{
+  node.addEventListener("click", function () {{
+    picked.push(node.getAttribute("data-m"));
+    node.classList.add("pick");
+    draw();
+  }});
+}});
+document.getElementById("undo").addEventListener("click", function () {{
+  const name = picked.pop();
+  if (name && !picked.includes(name)) {{
+    const node = nodes.find(function (n) {{ return n.getAttribute("data-m") === name; }});
+    if (node) node.classList.remove("pick");
+  }}
+  draw();
+}});
+document.getElementById("clear").addEventListener("click", function () {{
+  picked.length = 0;
+  nodes.forEach(function (n) {{ n.classList.remove("pick"); }});
+  draw();
+}});
+document.getElementById("reveal").addEventListener("click", function () {{
+  document.querySelectorAll("path.run").forEach(function (edge) {{ edge.classList.remove("hide"); }});
+  const mine = picked.map(label);
+  const seen = [];
+  measured.map(label).forEach(function (m) {{ if (!seen.includes(m)) seen.push(m); }});
+  const real = seen;
+  const hit = mine.filter(function (m) {{ return real.includes(m); }});
+  const missed = real.filter(function (m) {{ return !mine.includes(m); }});
+  const extra = mine.filter(function (m) {{ return !real.includes(m); }});
+  let out = "<b>실측(처음 지나간 순서):</b> " + real.join("  -&gt;  ");
+  out += "<br><span class='muted'>실제로는 " + measured.length + "번 오간다. 같은 모듈을 여러 번 지난다.</span>";
+  out += "<br><b>맞은 것</b> <span class='ok'>" + hit.length + "/" + real.length + "</span>";
+  if (missed.length) out += "<br><b>빠뜨린 것</b> <span class='no'>" + missed.join(", ") + "</span>";
+  if (extra.length) out += "<br><b>없는데 넣은 것</b> <span class='no'>" + extra.join(", ") + "</span>";
+  out += "<br>맞은 개수보다 <b>왜 틀렸는지</b>가 중요하다. 빠뜨린 모듈이 무슨 일을 하는지 코드에서 확인한다.";
+  pane.innerHTML = out;
+}});
+</script>
 </body></html>
 """

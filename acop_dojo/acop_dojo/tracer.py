@@ -119,6 +119,35 @@ class Collector:
         return None
 
 
+#: 트레이스에 들어가면 안 되는 값의 이름. 시나리오마다 달라지는 것들이다.
+#: 지금은 프레임 로컬을 allowlist 로만 읽으므로 이 목록에 걸릴 일이 없지만,
+#: DOMAIN_FIELDS 에 새 항목을 넣을 때 실수로 흘리는 것을 막는 이중 잠금이다.
+FORBIDDEN_KEYS = frozenset({
+    "payload", "state_json", "arguments", "text", "input_text", "answer",
+    "message", "prompt", "token", "authorization", "secret", "api_key",
+    "customer_id", "tenant_id", "email", "phone",
+})
+
+
+def audit(trace: dict[str, Any]) -> list[str]:
+    """채점 파일에 들어가면 안 되는 것이 섞였는지 본다.
+
+    tracer 는 앱이 마스킹하기 **전에** 인자를 본다. 무엇을 꺼낼지 못 박아 두지 않으면
+    원문 PII 가 학습자 화면까지 간다. 그래서 뜬 뒤에도 한 번 더 검사한다.
+    """
+    problems: list[str] = []
+    for step in trace.get("steps", []):
+        for key, value in (step.get("domain") or {}).items():
+            if key in FORBIDDEN_KEYS:
+                problems.append(f"{step['symbol']}: 금지된 필드 {key}")
+            if isinstance(value, str) and len(value) > 40:
+                problems.append(f"{step['symbol']}: 긴 문자열 {key} ({len(value)}자)")
+    for key in ("generated_at", "hostname", "pid", "duration"):
+        if key in trace:
+            problems.append(f"실행마다 달라지는 값이 들어 있다: {key}")
+    return problems
+
+
 def collapse(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """연속으로 같은 함수가 반복되면 하나로 접는다.
 
