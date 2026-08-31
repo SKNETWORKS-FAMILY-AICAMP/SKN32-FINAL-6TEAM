@@ -2,11 +2,13 @@
 team_branch/
 program/personal/
 
-# 백업/레거시/아카이브 — 과거 버전 보존용, 현재 산출물 아님
+# 백업/아카이브 — 과거 버전 보존용, 현재 산출물 아님
 program/research/_backup/
 program/plan/archive/
 program/briefing/archive/
-legacy/
+# ★`legacy/` 는 2026-08-31 에 뺐다. 각 프로젝트 저장소는 자기 legacy 를 추적하는데
+#   루트만 빼고 있어서 같은 파일이 저장소마다 있고 없고가 갈렸다. 내용은 전부
+#   코드·문서다(개인 구매기록은 `raw/`·`processed/` 규칙이 따로 막는다).
 .tmp/
 .pytest-tmp/
 .pytest-tmp*/
