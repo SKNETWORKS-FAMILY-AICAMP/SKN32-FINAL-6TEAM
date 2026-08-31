@@ -48,6 +48,12 @@ def main() -> None:
     p.add_argument("--out", required=True)
     p.add_argument("--epochs", type=float, default=None)
     p.add_argument("--resume", default=None, help="checkpoint dir to resume trainer state from")
+    p.add_argument("--max_length", type=int, default=512,
+                    help="stage1/2's short classification examples fit 512; stage3's full "
+                         "ContextPack review-task examples ran 6k-11k tokens (2026-08-31 finding "
+                         "-- default 512 silently truncated away the instructions and/or target, "
+                         "producing an unusably-trained adapter). Pass a value covering your data's "
+                         "actual token length (see eval/finetune/check_lens.py).")
     args = p.parse_args()
 
     base_model_id = "Qwen/Qwen2.5-3B-Instruct"
@@ -79,7 +85,7 @@ def main() -> None:
         output_dir=args.out, num_train_epochs=epochs, per_device_train_batch_size=1,
         gradient_accumulation_steps=8, learning_rate=2e-4 if args.stage == 1 else 1e-4,
         logging_steps=10, save_strategy="steps", save_steps=40, save_total_limit=5,
-        bf16=True, max_length=512,
+        bf16=True, max_length=args.max_length,
         report_to=[], packing=False,
         gradient_checkpointing=True, gradient_checkpointing_kwargs={"use_reentrant": False},
     )

@@ -282,9 +282,28 @@ JSON → 근거 기반 응답)를 배우지 못한다는 것이 실측으로 확
 16건(train 12/test 4)으로 늘려 재학습(v2)했다 — `train_loss` 1.65→1.48,
 `mean_token_accuracy` 0.67→0.71로 개선됐지만, **holdout 4건 재비교에서도
 0/4 유효 JSON — 여전히 채택 불가**. loss/accuracy 개선이 실사용 가능한
-출력으로 이어지지 않는다는 걸 두 번째 실측으로 확인했다. golden+holdout을
-다 긁어도 16건이 이 Team의 진짜 review-task 데이터 상한이라, 더 늘리려면
-`response_review.enabled: true`로 켜서 실 운영 transcript가 쌓이길
-기다리는 것 외엔 방법이 없다.
+출력으로 이어지지 않는다는 걸 두 번째 실측으로 확인했다.
 
-전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5.
+★★2026-08-31 갱신 — "16건이 상한"은 성급한 판단이었다. `datasets/commerce/`
+실주문(쿠팡·네이버 340여 건)을 golden.jsonl 프레임 밖에서 끌어와 84건
+(golden 12 + holdout 4 + 실주문 68)까지 늘렸다. 그런데도 holdout 0/14가
+계속됐다 — 원인은 데이터量이 아니라 **버그 2건**이었다: (1) `serve.py`가
+입력을 3000토큰에서 잘라 프롬프트 뒤쪽의 지시문 자체를 모델이 못 봤고,
+(2) `train.py`의 `max_length=512`가 실제 학습 데이터(중앙값 10,670토큰)의
+95%를 잘라 학습 자체를 무효화했다. 또한 evidence에 정책 청크가 중복
+포함돼 있었던 것도 발견·수정(`build_stage3_dataset.py::_shrink_evidence()`).
+세 가지를 다 고친 v6(evidence 예산 400자, `max_length=1024`)에서
+**holdout 14/14 유효 JSON, grounded 14/14 만점, safe 14/14 만점**
+(OpenAI 참조는 grounded 12/14 만점) — 이 세션 최초로 채택 가능해
+보이는 결과가 나왔다.
+
+**단, 그대로 채택 신호로 읽지 않는다.** holdout 14건의 draft 텍스트가
+**전부 동일한 문장**이었다(`return_refund` 팀의 고정 결정론적 출력) —
+local_ft는 14/14 전부 draft를 그대로 반환했고(학습셋 84건 전체를 봐도
+고유 draft가 2종류뿐이라 이 지름길이 통할 만큼 좁은 분포), OpenAI는
+10/14를 근거를 넣어 재작성했다. "다양한 상황에서 언제 재작성할지"를
+배웠다는 증거는 아직 없다 — 다음 단계는 재학습이 아니라 **입력 시나리오
+다양화**(다른 capability, 또는 `datasets/voc/data_go_kr_consumer_complaints/`의
+실제 민원 원문 93+53건 활용).
+
+전체 경위: [`2026-08-30_DoD28-FT-RAG통합_설계.md`](../plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §5~§6.

@@ -48,6 +48,46 @@ def _load_cases(*paths: str) -> dict[str, dict]:
     return result
 
 
+EVIDENCE_CHAR_BUDGET = 400  # this list is embedded twice (top-level "evidence" +
+# duplicated inside "context.evidence", matching OpenAITeamLLM's real wire
+# format) -- budget for the list once, expect ~2x in the final prompt.
+# ★1200 still produced a median-2109-token example that OOM'd training on a
+# 12GB card (25min slow-fail via Windows WDDM shared-memory fallback, not a
+# fast error) even at max_length=2560 -- cut harder.
+
+
+def _shrink_evidence(evidence: list[Evidence]) -> list[Evidence]:
+    """★2026-08-31 finding: some Teams (return_refund.py::_evidence()) fold
+    the SAME policy chunks already present as separate Evidence items into
+    one more "tool:*" evidence's value.policy list too -- pure duplication
+    that tripled real evidence token cost and, combined with no cap at all,
+    produced training examples up to 11k tokens. train.py's max_length=512
+    silently truncated all of it away (useless training); raising
+    max_length to cover the real length OOM'd a 12GB card outright. Fix the
+    actual bloat instead of just changing the truncation point: drop the
+    duplicated nested policy list, then cap total evidence to a character
+    budget the way ContextBroker.build() already budgets production
+    ContextPacks (this script bypasses that broker, since it fabricates a
+    ContextPack directly from team_result.evidence)."""
+    trimmed = []
+    for e in evidence:
+        value = e.value
+        if isinstance(value, dict) and "policy" in value and e.evidence_id.startswith("tool:"):
+            value = {k: v for k, v in value.items() if k != "policy"}
+            e = e.model_copy(update={"value": value})
+        trimmed.append(e)
+
+    kept = []
+    budget = EVIDENCE_CHAR_BUDGET
+    for e in trimmed:
+        size = len(e.model_dump_json())
+        if kept and size > budget:
+            continue
+        kept.append(e)
+        budget -= size
+    return kept
+
+
 async def _one(llm: OpenAITeamLLM, row: dict, case: dict) -> dict:
     team_result = row["team_result"]
     answer = team_result.get("answer")
@@ -60,6 +100,7 @@ async def _one(llm: OpenAITeamLLM, row: dict, case: dict) -> dict:
         evidence = [Evidence(**e) for e in evidence_dicts]
     except Exception as exc:
         return {"case_id": row["case_id"], "skip": f"evidence_invalid: {type(exc).__name__}"}
+    evidence = _shrink_evidence(evidence)
     tone_profile = decide_tone(case.get("expected_sentiment"))
     context = ContextPack(
         pack_id=uuid4(), case_id=UUID(int=0), team_id="response_generation_review",

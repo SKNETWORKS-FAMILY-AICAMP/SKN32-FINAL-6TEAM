@@ -59,9 +59,31 @@ def _seed_golden_fixtures(cases: list[dict[str, Any]], tenant_id: str) -> None:
             case_id = str(case["case_id"])
             customer_id = uuid5(NAMESPACE_URL, case_id)
             order_id = uuid5(NAMESPACE_URL, case_id + ":order")
-            order_no = "EVAL-" + hashlib.sha256(case_id.encode("utf-8")).hexdigest()[:20]
-            ordered_at = datetime.now(UTC) - timedelta(days=3)
             capability = case.get("expected_capability")
+
+            # ★2026-08-31 — real-order harvesting (build_synth_cases_from_orders.py)
+            #   carries actual Coupang/Naver facts here so the seeded evidence has
+            #   real variety instead of every case getting the same 39,800-won
+            #   fixture. Cases without _seed_order (golden.jsonl) keep the old
+            #   hardcoded default unchanged.
+            seed_order = case.get("_seed_order")
+            if seed_order:
+                order_no = "EVAL-" + str(seed_order.get("order_no_source", case_id))[:20]
+                total_cents = int(seed_order.get("total_cents") or 39800)
+                item_count = int(seed_order.get("item_count") or 1)
+                status = str(seed_order.get("status") or "delivered")
+                parsed_ordered_at = None
+                raw_ordered_at = seed_order.get("ordered_at")
+                if raw_ordered_at:
+                    try:
+                        parsed_ordered_at = datetime.fromisoformat(str(raw_ordered_at).replace("Z", "+00:00"))
+                    except ValueError:
+                        parsed_ordered_at = None
+                ordered_at = parsed_ordered_at or (datetime.now(UTC) - timedelta(days=3))
+            else:
+                order_no = "EVAL-" + hashlib.sha256(case_id.encode("utf-8")).hexdigest()[:20]
+                total_cents, item_count, status = 39800, 1, "delivered"
+                ordered_at = datetime.now(UTC) - timedelta(days=3)
 
             cur.execute(
                 "INSERT INTO customers (customer_id, tenant_id, external_id, email_hash) "
@@ -75,7 +97,7 @@ def _seed_golden_fixtures(cases: list[dict[str, Any]], tenant_id: str) -> None:
                 "tenant_id=EXCLUDED.tenant_id, customer_id=EXCLUDED.customer_id, "
                 "total_cents=EXCLUDED.total_cents, item_count=EXCLUDED.item_count, "
                 "status=EXCLUDED.status, ordered_at=EXCLUDED.ordered_at",
-                (order_id, tenant_id, customer_id, order_no, 39800, 1, "delivered", ordered_at),
+                (order_id, tenant_id, customer_id, order_no, total_cents, item_count, status, ordered_at),
             )
 
             if capability in shipment_capabilities:

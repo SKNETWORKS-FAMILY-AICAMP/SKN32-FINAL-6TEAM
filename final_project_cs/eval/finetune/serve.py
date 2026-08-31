@@ -80,7 +80,14 @@ def complete(req: CompleteRequest) -> dict:
     torch.cuda.empty_cache()
     messages = [{"role": "user", "content": req.prompt}]
     prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=3000).to(model.device)
+    # ★2026-08-31 bug: 3000 silently truncated real ContextPack prompts from
+    #   the RIGHT, cutting off "instructions" (which sits at the end of the
+    #   JSON blob) -- the model then had no task instruction to follow and
+    #   just continued the truncated evidence text. Raised well above any
+    #   observed real prompt length (16.6k chars ~= a few thousand tokens);
+    #   single-request inference has no OOM pressure the way batched
+    #   training does, so this is safe.
+    inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
     with torch.no_grad():
         generated = model.generate(**inputs, max_new_tokens=400, do_sample=False)
     text = tokenizer.decode(generated[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
