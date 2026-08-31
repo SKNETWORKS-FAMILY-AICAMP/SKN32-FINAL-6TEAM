@@ -56,11 +56,29 @@ Core 1의 Context Broker가 쓸 RAG 지식 재료다. RAG는 질문에 답하기
 **주의**: `commerce/courier_tracking`은 전처리 대상이 아니다. 학습 데이터가 아니라
 실행 시점에 호출하는 도구다. `processed/`가 비어 있는 것이 정상이다.
 
-★**2026-08-31 갱신.** 다만 팀원 다섯 명분 조회 결과가 2026-08-29에
-`courier_tracking/raw/_incoming_20260829/`로 들어왔고 **아직 합치지 않았다.**
-네이버 조회분만 세면 질의 238건에 이력이 나온 것 50건이다(cyw 58/13 · kjh 88/15 ·
-csw 49/15 · syh 43/7). 쿠팡 배송 제출본 넉 장도 같은 폴더에 있는데 형식이 달라
-따로 다뤄야 한다. `processed/tracking.jsonl`은 아직 첫 수집분 57건 그대로다.
+★**2026-09-01 갱신 — 택배 제출본은 합쳤다.**
+`courier_tracking/scripts/merge_incoming.py` 로 `raw/_incoming_20260829/` 를
+`processed/` 로 합쳤다.
+
+| 파일 | 건수 | 비고 |
+|---|---:|---|
+| `processed/tracking.jsonl` | **236** | 네이버 API 조회분. 이력 있는 건 49 |
+| `processed/tracking_coupang.jsonl` | **1,782** | 쿠팡 화면 수집분. 이력 있는 건 67 |
+
+★**두 형식을 한 파일에 섞지 않았다.** 쿠팡 쪽 `status` 는 네이버 스키마의 enum 이
+아니라 "8/2(금) 도착" 같은 화면 문구이고 `level`·`complete`·`courier_code` 가
+없다. 섞으면 "배송 상태" 의 뜻이 두 가지가 되므로 파일과 스키마를 나눴다
+(`tracking_coupang_schema.json`). 둘 다 스키마 검증 **위반 0건**.
+
+앞서 적었던 "질의 238건 · 이력 50건" 은 **질의 수**이고, 합친 뒤 236·49 는
+**송장 수**다(송장번호 중복 59건을 합쳤다 — 대부분 기존 57건과 cyw 제출분이 같은
+조회다). 쿠팡 넉 장은 서로 겹치는 건이 하나도 없었다.
+
+★쿠팡 1,782건 중 이력이 남은 건 67건뿐이다 — 화면이 배송 완료 후 이력을 감춘다.
+**없는 것을 "조회 실패" 로 읽으면 안 된다.**
+
+남은 것은 파일명 규칙뿐이다 — `naver_tracking_2026-08-21_kjh` 만 확장자가 없다
+(스크립트는 확장자가 아니라 내용으로 형식을 판별하므로 지금도 합쳐진다).
 
 ### 3. 네이버 주문 4건 누락 수정 (코드 세션)
 
@@ -111,6 +129,25 @@ v2(전체 선언 적용)와 v3(토글)가 공존하는 상태다.
 
 앞의 것이 없으면 뒤의 것을 만들어도 동작하지 않는다. 근거는
 `final_project_sample/docs/vision/VISION-10_예제_카탈로그_스캐폴딩_CLI.md` 3층이다.
+
+> ★**2026-09-01 갱신 — 네 단계 모두 끝났고, 그 위에 두 가지가 더 붙었다.**
+>
+> | 단계 | 어디 |
+> |---|---|
+> | 1 선언형 Team 실행기 | `acop_basement/teams/declarative.py` (읽기 전용 tool 만 허용하는 grant ceiling 포함) |
+> | 2 인스턴스 CRUD 계약 | `POST /composer/changes` (`acop_composer/api.py`), 계약 `docs/handoff/13` |
+> | 3 카탈로그 HTTP 조회 | `GET /composer/catalog` |
+> | 4 UI 선택 생성 화면 | `final_project_ui` `/composer` 의 "인스턴스 만들기(카탈로그)" |
+>
+> 그 뒤에 더해진 것:
+>
+> - **중앙 설정 저장소**(2026-08-30) — 대상마다 Composer 를 심지 않고 한 곳에서
+>   수천 대상의 선언을 다룬다. 결정 `A-COP_Composer_중앙설정저장소_결정.md`.
+>   UI 는 `direct`/`central` 두 방식을 프로필로 고른다
+> - **재기동 없는 반영**(2026-08-31) — `POST /admin/reload`(scope `ops:reload`)와
+>   `active_revision`/`desired_revision`/`reload_state`(introspection 계약 1.1).
+>   그 전에는 저장 직후 반영도 안 됐는데 새 revision 을 보고하고 있었다.
+>   구현·실측 `final_project_sample/docs/reports/2026-08-31_reload_계약_구현.md`
 
 ## 확인하지 못한 것
 
