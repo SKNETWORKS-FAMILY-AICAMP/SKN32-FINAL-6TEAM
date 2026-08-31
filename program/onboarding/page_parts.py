@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-"""시뮬레이터 화면. 내용은 build_trace_sim.py 에 있고 여기는 껍데기다."""
-import html
-import json
-import os
+"""한 파일짜리 화면의 CSS 와 JS 와 뼈대. 내용은 trace_data.py 에 있다."""
 
 CSS = """
-:root{--bg:#f5f6fa;--card:#fff;--line:#dde2ec;--ink:#151b27;--dim:#606b80;--faint:#98a2b6;
---red:#b8442f;--blue:#2f5bd8;--green:#0d7a4d;--purple:#6b3fa0;--grey:#606b80;
+:root{--bg:#f5f6fa;--card:#fff;--line:#dde2ec;--ink:#151b27;--dim:#5f6a80;--faint:#98a2b6;
+--red:#b8442f;--blue:#2f5bd8;--green:#0d7a4d;--purple:#6b3fa0;--grey:#5f6a80;
 --code-bg:#0f141f;--code-ink:#dbe3f0}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
 --bg:#11141b;--card:#181c25;--line:#2a303d;--ink:#e7eaf2;--dim:#98a2b8;--faint:#6d778c;
@@ -15,9 +12,11 @@ CSS = """
 body{margin:0;background:var(--bg);color:var(--ink);line-height:1.65;
 font-family:"Malgun Gothic",system-ui,sans-serif}
 code,pre{font-family:Consolas,"D2Coding",monospace}
-.wrap{max-width:1560px;margin:0 auto;padding:26px 22px 70px}
-h1{font-size:27px;margin:0 0 6px;letter-spacing:-.02em}
-.sub{color:var(--dim);font-size:15px;margin:0 0 18px}
+.wrap{max-width:1560px;margin:0 auto;padding:26px 22px 80px}
+h1{font-size:29px;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:15px;margin:0 0 20px;max-width:88ch}
+h2.sec{font-size:20px;margin:52px 0 4px;padding-left:13px;border-left:5px solid var(--blue)}
+h2.sec + p{color:var(--dim);font-size:14.5px;margin:0 0 16px;padding-left:18px}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);
 border:1px solid var(--line);border-radius:12px;padding:11px 14px;position:sticky;top:0;z-index:20}
 button{font:inherit;font-size:14px;padding:8px 15px;border-radius:9px;cursor:pointer;
@@ -27,10 +26,10 @@ button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 button.primary:hover{opacity:.9;color:#fff}
 button:disabled{opacity:.4;cursor:not-allowed}
 .tick{margin-left:auto;color:var(--dim);font-size:13.5px}
-.cols{display:grid;grid-template-columns:1fr 640px;gap:18px;margin-top:18px;align-items:start}
+.cols{display:grid;grid-template-columns:1fr 620px;gap:18px;margin-top:16px;align-items:start}
 @media(max-width:1180px){.cols{grid-template-columns:1fr}}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.panel h2{font-size:15px;margin:0 0 3px}
+.panel h3{font-size:15px;margin:0 0 3px}
 .panel .note{color:var(--dim);font-size:13px;margin:0 0 14px}
 .map{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .st{border:2px solid var(--line);border-radius:12px;padding:11px 12px;background:transparent;
@@ -49,10 +48,10 @@ text-align:left;transition:.22s;opacity:.5;cursor:pointer}
 .st.grey.now{background:var(--grey);border-color:var(--grey)}
 .st.now .n,.st.now .o{color:rgba(255,255,255,.82)}
 .st.now .t{color:#fff}
-.why{margin-top:16px;border-left:4px solid var(--line);padding:2px 0 2px 14px;min-height:64px}
+.why{margin-top:16px;border-left:4px solid var(--line);padding:2px 0 2px 14px;min-height:66px}
 .why .h{font-size:14px;font-weight:700;margin-bottom:3px}
 .why .b{font-size:14px;color:var(--dim)}
-.stream{max-height:620px;overflow-y:auto}
+.stream{max-height:600px;overflow-y:auto}
 .chunk{border:1px solid var(--line);border-radius:10px;margin:0 0 9px;overflow:hidden;
 animation:slide .34s ease both}
 @keyframes slide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -71,12 +70,24 @@ border:2px solid var(--blue);color:var(--blue)}
 .files{margin-top:16px;font-size:13px}
 .files div{margin:6px 0;color:var(--dim)}
 .files b{color:var(--ink)}
-.ov{position:fixed;inset:0;background:rgba(8,11,18,.72);display:none;z-index:60;padding:36px 24px;
+figure{margin:20px 0 0;background:var(--card);border:1px solid var(--line);border-radius:14px;
+overflow:hidden}
+figure img{display:block;width:100%;height:auto}
+figcaption{padding:15px 20px 18px;border-top:1px solid var(--line)}
+figcaption b{display:block;font-size:16px;margin-bottom:4px}
+figcaption span{color:var(--dim);font-size:14px}
+nav.jump{background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;margin:16px 0 0;
+overflow-x:auto;white-space:nowrap}
+nav.jump a{display:inline-block;padding:5px 11px;margin-right:3px;font-size:12.5px;
+color:var(--dim);text-decoration:none;border:1px solid var(--line);border-radius:99px}
+nav.jump a:hover{color:var(--blue);border-color:var(--blue)}
+.ov{position:fixed;inset:0;background:rgba(8,11,18,.74);display:none;z-index:60;padding:34px 22px;
 overflow-y:auto}
 .ov.on{display:block}
 .ovbox{max-width:1080px;margin:0 auto;background:var(--card);border:1px solid var(--line);
 border-radius:14px;overflow:hidden}
-.ovhead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.ovhead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);
+position:sticky;top:0;background:var(--card);z-index:2}
 .ovhead h3{margin:0;font-size:17px}
 .ovhead .x{margin-left:auto}
 .src{border-top:1px solid var(--line)}
@@ -84,7 +95,16 @@ border-radius:14px;overflow:hidden}
 background:rgba(127,140,170,.09)}
 .src pre{margin:0;padding:15px 18px;background:var(--code-bg);color:var(--code-ink);font-size:13px;
 line-height:1.66;overflow-x:auto;white-space:pre}
-.foot{margin-top:26px;color:var(--dim);font-size:13px}
+.plain{padding:15px 20px 19px;font-size:14.3px;line-height:1.82;
+border-top:3px solid var(--blue);background:rgba(47,91,216,.055)}
+.plain .lbl{display:inline-block;font-size:11.5px;font-weight:700;color:var(--blue);
+border:1px solid var(--blue);border-radius:5px;padding:1px 8px;margin-bottom:9px}
+.plain p{margin:0 0 11px}
+.plain p:last-child{margin-bottom:0}
+.plain code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;
+font-size:12.8px}
+.foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);
+font-size:13px}
 """
 
 JS = r"""
@@ -123,7 +143,7 @@ function render(){
   for(let i=0;i<=cur;i++) if(STEPS[i].state) st = STEPS[i].state;
   $('badge').innerHTML = st
     ? 'Case 상태 <b class="'+(st[0]==='resolved'?'done':'')+'">'+st[0]+'  v'+st[1]+'</b>'
-    : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없다</span>';
+    : 'Case 상태 <span style="color:var(--faint)">아직 Case 가 없습니다</span>';
 
   $('tick').textContent = cur<0 ? '시작 전' : (cur+1)+' / '+STEPS.length;
   $('prev').disabled = cur<0;
@@ -141,14 +161,20 @@ function play(){
 function showCode(){
   if(cur<0) return;
   const s = STEPS[cur];
-  $('ovtitle').textContent = s.n+'. '+s.title+' 을 실제로 하는 코드';
+  $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
   $('ovbody').innerHTML = s.code.map(c =>
-    '<div class="src"><div class="path">'+esc(c[0])+'</div><pre>'+esc(c[2])+'</pre></div>').join('');
+    '<div class="src"><div class="path">'+esc(c.path)+'</div>'
+    +'<pre>'+esc(c.code)+'</pre>'
+    +'<div class="plain"><span class="lbl">쉬운 풀이</span>'
+    + c.plain.split('\n\n').map(p=>'<p>'+p+'</p>').join('')
+    +'</div></div>').join('');
   $('ov').classList.add('on');
+  $('ov').scrollTop = 0;
 }
 function hideCode(){ $('ov').classList.remove('on'); }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape') hideCode();
+  else if($('ov').classList.contains('on')) return;
   else if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
   else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
 });
@@ -158,12 +184,17 @@ render();
 PAGE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>취소·환불 케이스 시뮬레이터</title><style>%(css)s</style></head><body>
+<title>취소·환불 한 건이 지나는 길</title><style>%(css)s</style></head><body>
 <div class="wrap">
 <h1>취소·환불 한 건이 지나는 길</h1>
-<p class="sub">고객이 "어제 주문한 거 취소하고 환불받고 싶어요. 아직 안 왔어요." 를 보냈습니다.
-1번부터 12번까지 진행하면 오른쪽에 값이 한 덩어리씩 쌓입니다.
-각 덩어리 왼쪽에 <b>무슨 형식인지</b>가 적혀 있습니다.</p>
+<p class="sub">고객이 "어제 주문한 거 취소하고 환불받고 싶어요. 아직 안 왔어요." 를 보낸 순간부터
+답이 돌아갈 때까지, 어떤 코드를 지나 무엇이 어디에 기록되는지 한 건으로 따라갑니다.
+위쪽은 직접 돌려 보는 시뮬레이터이고, 아래쪽은 같은 내용을 그림 열아홉 장으로 편 것입니다.</p>
+
+<h2 class="sec">직접 돌려 보기</h2>
+<p>1번부터 12번까지 진행하면 오른쪽에 값이 한 덩어리씩 쌓입니다.
+각 덩어리 왼쪽 꼬리표가 <b>무슨 형식인지</b>를 말합니다.
+<b>이 단계 코드 보기</b>를 누르면 실제 코드와 그 코드의 쉬운 풀이가 뜹니다.</p>
 
 <div class="bar">
   <button id="prev" onclick="go(cur-1)">이전</button>
@@ -176,23 +207,31 @@ PAGE = """<!doctype html>
 
 <div class="cols">
   <div class="panel">
-    <h2>열두 단계</h2>
+    <h3>열두 단계</h3>
     <p class="note">칸을 직접 눌러 그 지점으로 갈 수 있습니다. 좌우 화살표 키도 됩니다.</p>
     <div class="map">%(stations)s</div>
     <div class="why" id="why"></div>
     <div class="files">%(files)s</div>
   </div>
   <div class="panel">
-    <h2>지금까지 만들어진 것</h2>
-    <p class="note">단계를 지날 때마다 아래로 쌓입니다. 왼쪽 꼬리표가 형식입니다.</p>
+    <h3>지금까지 만들어진 것</h3>
+    <p class="note">단계를 지날 때마다 아래로 쌓입니다.</p>
     <div class="stream" id="stream"></div>
     <div class="badge" id="badge"></div>
   </div>
 </div>
 
+<h2 class="sec">그림으로 펴 보기</h2>
+<p>같은 내용을 한 장씩 펼친 것입니다. 각 장 위쪽 진행바가 지금 어디인지 알려 줍니다.</p>
+<nav class="jump">%(links)s</nav>
+%(figures)s
+
 <div class="foot">코드는 <code>final_project_cs</code> 에서 줄 번호로 잘라 온 실제 코드입니다.
-손으로 옮겨 적지 않았습니다. 이 파일은
-<code>program/onboarding/build_trace_sim.py</code> 가 만듭니다.</div>
+손으로 옮겨 적지 않았습니다. 흐름은 <code>program/onboarding/trace_refund_case.html</code>,
+구조 분류는 <code>final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md</code>,
+담당은 <code>program/plan/A-COP_스프린트_에픽_설계.md</code> 를 따랐습니다.<br>
+이 파일은 <code>program/onboarding/build_trace_html.py</code> 가 만듭니다.
+내용은 <code>program/onboarding/trace_data.py</code> 에 있습니다. 손으로 고치지 마세요.</div>
 </div>
 
 <div class="ov" id="ov" onclick="if(event.target===this)hideCode()">
@@ -205,30 +244,3 @@ PAGE = """<!doctype html>
 
 <script>%(js)s</script></body></html>
 """
-
-
-def build(steps, files_note, out):
-    data = [{"n": s["n"], "title": s["title"], "owner": s["owner"], "why": s["why"],
-             "add": [[k, n, lines] for k, n, lines in s["add"]],
-             "state": list(s["state"]) if s.get("state") else None,
-             "code": [[w, lang, c] for w, lang, c in s["code"]]}
-            for s in steps]
-
-    stations = "".join(
-        '<button class="st %s" onclick="go(%d)"><div class="n">%d</div>'
-        '<div class="t">%s</div><div class="o">%s</div></button>'
-        % (s["color"], i, s["n"], html.escape(s["title"]),
-           html.escape(s["owner"].split(" · ")[0]))
-        for i, s in enumerate(steps))
-
-    files = "".join("<div><b>%s</b> %s</div>" % (h, b) for h, b in files_note)
-
-    page = PAGE % {
-        "css": CSS, "stations": stations, "files": files,
-        "js": JS.replace("__DATA__", json.dumps(data, ensure_ascii=False)),
-    }
-    with open(out, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(page)
-    print("만듦: %s  (%.0f KB, 단계 %d개, 코드 %d조각)"
-          % (out, os.path.getsize(out) / 1024, len(steps),
-             sum(len(s["code"]) for s in steps)))
