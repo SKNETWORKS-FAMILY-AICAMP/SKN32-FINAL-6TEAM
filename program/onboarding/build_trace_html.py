@@ -59,6 +59,42 @@ SKIP = ("01_문", "02_", "03_", "04_", "05_", "06_", "07_", "08_", "09_",
         "10_", "11_", "12_")
 
 
+#: trace_data 는 색을 이름으로, steps.py 는 16진수로 쓴다. 짝을 여기서 못 박는다.
+HUE = {"red": "#b8442f", "blue": "#2f5bd8", "green": "#0d7a4d",
+       "purple": "#6b3fa0", "grey": "#6b7488"}
+
+
+def check(pack):
+    """두 출처가 같은 12단계를 말하는지 대조한다.
+
+    ★개수만 세면 안 된다. 실제로 4번 단계 제목이 한쪽은 "의도·이슈·감성",
+      다른 쪽은 "의도와 이슈와 감성" 으로 갈라져 있었는데 개수 검사는
+      그것을 그대로 통과시켰다. 번호와 제목과 색을 전부 맞춰 본다.
+    """
+    if len(pack) != len(SHEETS):
+        raise SystemExit("낱장 %d 개인데 누적 패킷은 %d 개다" % (len(SHEETS), len(pack)))
+    bad = []
+    for a, b in zip(SHEETS, pack):
+        if a["n"] != b["n"]:
+            bad.append("번호가 다르다: 낱장 %s, 누적 %s" % (a["n"], b["n"]))
+        if a["head"] != b["title"]:
+            bad.append("%d번 제목이 다르다\n    낱장  %s\n    누적  %s"
+                       % (a["n"], a["head"], b["title"]))
+        want = HUE.get(b["color"])
+        if want is None:
+            bad.append("%d번 색 이름을 모른다: %s" % (a["n"], b["color"]))
+        elif want != a["color"]:
+            bad.append("%d번 색이 다르다: 낱장 %s, 누적 %s(%s)"
+                       % (a["n"], a["color"], b["color"], want))
+    for i, (a, b) in enumerate(zip(SHEETS, BAR)):
+        if a["color"] != b["color"]:
+            bad.append("%d번 진행바 색이 낱장과 다르다: %s vs %s"
+                       % (a["n"], b["color"], a["color"]))
+    if bad:
+        raise SystemExit("두 출처가 어긋났다. trace/steps.py 가 원본이다.\n  "
+                         + "\n  ".join(bad))
+
+
 def main():
     from page_parts import CSS, JS, PAGE
 
@@ -88,13 +124,13 @@ def main():
         raise SystemExit("표에 없는 그림이 있다: %s" % ", ".join(left))
 
     pack = [{"n": s["n"], "title": s["title"], "owner": s["owner"],
+             "color": s["color"],
              "add": [[k, nm, lines] for k, nm, lines in s["add"]],
              "state": list(s["state"]) if s.get("state") else None,
              "code": s["code"]}
             for s in STEPS]
 
-    if len(pack) != len(SHEETS):
-        raise SystemExit("낱장 %d 개인데 누적 패킷은 %d 개다" % (len(SHEETS), len(pack)))
+    check(pack)
 
     js = (JS
           .replace("__BAR__", json.dumps(BAR, ensure_ascii=False))
