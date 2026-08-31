@@ -64,6 +64,26 @@ HUE = {"red": "#b8442f", "blue": "#2f5bd8", "green": "#0d7a4d",
        "purple": "#6b3fa0", "grey": "#6b7488"}
 
 
+def png_size(raw):
+    """PNG 머리에서 가로세로를 읽는다. IHDR 은 늘 8바이트 뒤에 온다."""
+    if raw[:8] != b"\x89PNG\r\n\x1a\n" or raw[12:16] != b"IHDR":
+        raise SystemExit("PNG 가 아니다")
+    return (int.from_bytes(raw[16:20], "big"), int.from_bytes(raw[20:24], "big"))
+
+
+def dump(value):
+    """<script> 안에 넣어도 안전한 JSON.
+
+    ★json.dumps 는 `<` 를 그대로 둔다. 실제 코드 조각이나 설명에 `</script>` 가
+      한 번이라도 들어오면 브라우저가 거기서 스크립트를 끊어 파일이 통째로
+      깨진다. 지금은 그런 글자가 없지만, 없다는 사실에 기대면 안 된다.
+    """
+    out = json.dumps(value, ensure_ascii=False)
+    for cp in (0x3c, 0x3e, 0x2028, 0x2029):
+        out = out.replace(chr(cp), "%su%04x" % (chr(92), cp))
+    return out
+
+
 def check(pack):
     """두 출처가 같은 12단계를 말하는지 대조한다.
 
@@ -73,7 +93,12 @@ def check(pack):
     """
     if len(pack) != len(SHEETS):
         raise SystemExit("낱장 %d 개인데 누적 패킷은 %d 개다" % (len(SHEETS), len(pack)))
+    if len(BAR) != len(SHEETS):
+        raise SystemExit("진행바 %d 칸인데 낱장은 %d 장이다" % (len(BAR), len(SHEETS)))
     bad = []
+    if [s["n"] for s in SHEETS] != list(range(1, len(SHEETS) + 1)):
+        bad.append("낱장 번호가 1..%d 가 아니다: %s"
+                   % (len(SHEETS), [s["n"] for s in SHEETS]))
     for a, b in zip(SHEETS, pack):
         if a["n"] != b["n"]:
             bad.append("번호가 다르다: 낱장 %s, 누적 %s" % (a["n"], b["n"]))
@@ -109,12 +134,20 @@ def main():
             raise SystemExit("그림을 못 찾았다: %s" % prefix)
         name = match[0]
         used.add(name)
-        with open(os.path.join(SRC, name), "rb") as fh:
-            b64 = base64.b64encode(fh.read()).decode("ascii")
+        path = os.path.join(SRC, name)
+        with open(path, "rb") as fh:
+            raw = fh.read()
+        b64 = base64.b64encode(raw).decode("ascii")
+        w, h = png_size(raw)
+        # ★width/height 를 적어야 그림이 뜨기 전에도 자리를 잡는다. 없으면
+        #   아래 내용이 그림 개수만큼 덜컥거리며 밀린다. 일곱 장을 한꺼번에
+        #   디코딩하면 메모리가 80MB 쯤 되므로 보일 때 읽게 미룬다.
         figures.append(
-            '<figure id="s%d"><img alt="%s" src="data:image/png;base64,%s">'
+            '<figure id="s%d"><img alt="%s" width="%d" height="%d"'
+            ' loading="lazy" decoding="async" src="data:image/png;base64,%s">'
             '<figcaption><b>%s</b><span>%s</span></figcaption></figure>'
-            % (i, html.escape(head), b64, html.escape(head), html.escape(desc)))
+            % (i, html.escape("%s. %s" % (head, desc)), w, h, b64,
+               html.escape(head), html.escape(desc)))
         links.append('<a href="#s%d">%s</a>' % (i, html.escape(head[:18])))
 
     used |= {f for f in files if f.startswith(SKIP)}
@@ -133,17 +166,21 @@ def main():
     check(pack)
 
     js = (JS
-          .replace("__BAR__", json.dumps(BAR, ensure_ascii=False))
-          .replace("__SHEETS__", json.dumps(SHEETS, ensure_ascii=False))
-          .replace("__PACK__", json.dumps(pack, ensure_ascii=False))
-          .replace("__NOTE__", json.dumps(FILES_NOTE, ensure_ascii=False)))
+          .replace("__BAR__", dump(BAR))
+          .replace("__SHEETS__", dump(SHEETS))
+          .replace("__PACK__", dump(pack))
+          .replace("__NOTE__", dump(FILES_NOTE)))
 
     page = PAGE % {
         "css": CSS, "links": "".join(links),
         "figures": "\n".join(figures), "js": js,
     }
-    with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
+    # ★최종 경로에 바로 쓰지 않는다. 쓰다가 죽으면 반쪽짜리 HTML 이 남고,
+    #   그것이 멀쩡한 파일인 줄 알고 전달된다.
+    tmp = OUT + ".part"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(page)
+    os.replace(tmp, OUT)
     print("만듦: %s" % OUT)
     print("  %.1f MB · 낱장 %d장(HTML) · 그림 %d장(PNG) · 코드 %d조각"
           % (os.path.getsize(OUT) / 1048576, len(SHEETS), len(FIGURES),

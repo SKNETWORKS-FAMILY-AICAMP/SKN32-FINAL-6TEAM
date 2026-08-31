@@ -77,8 +77,10 @@ padding:18px 20px 20px}
 
 .body{display:grid;grid-template-columns:214px minmax(0,1fr) 26px minmax(0,1fr);
 gap:0 12px;align-items:stretch}
+/* ★rotate 를 그냥 주면 push 애니메이션의 transform 이 덮어 버려 안 돈다.
+   좁은 화면에서는 애니메이션을 끄고 방향만 바꾼다. */
 @media(max-width:900px){.body{grid-template-columns:minmax(0,1fr)}
-.body .arrow{transform:rotate(90deg);height:26px}}
+.body .arrow{animation:none;transform:rotate(90deg);height:30px}}
 .coord{border:1px solid;border-radius:11px;background:var(--soft);padding:12px 13px}
 .coord h4{margin:0 0 10px;font-size:13px}
 .coord .row{margin-bottom:13px}
@@ -219,6 +221,11 @@ align-items:center;justify-content:center;line-height:1.12;transition:.2s}
 .dock.on .fab{background:var(--ink);box-shadow:0 9px 26px rgba(8,12,22,.4)}
 .dock.on .fab .big{font-size:15px}
 
+figure{scroll-margin-top:120px}   /* ★위에 붙은 진행바가 제목을 덮지 않게 */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
 .foot{margin-top:38px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);
 font-size:13px}
 """
@@ -227,7 +234,9 @@ JS = r"""
 const BAR = __BAR__, SHEETS = __SHEETS__, PACK = __PACK__, NOTE = __NOTE__;
 let cur = 0, timer = null;
 const $ = id => document.getElementById(id);
-const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ★title="..." 안에도 들어간다. 따옴표를 안 막으면 제목에 " 하나로 속성이 깨진다.
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 function drawBar(){
   $('bar').innerHTML = BAR.map((b,i) =>
@@ -332,7 +341,7 @@ function render(){
 function go(i){ cur = Math.max(0, Math.min(SHEETS.length-1, i)); render(); }
 function play(){
   if(timer){ clearInterval(timer); timer=null; $('play').textContent='자동 재생'; return; }
-  if(cur>=SHEETS.length-1) cur=0;
+  if(cur>=SHEETS.length-1) go(0);   // ★cur=0 만 하면 화면이 안 바뀌어 1번을 건너뛴다
   $('play').textContent='멈춤';
   timer = setInterval(()=>{ if(cur>=SHEETS.length-1){ play(); return; } go(cur+1); }, 3200);
 }
@@ -344,10 +353,13 @@ function drawMap(){
     + '<div class="t">'+esc(s.head)+'</div>'
     + '<div class="o">'+esc(PACK[i].owner)+'</div></button>').join('');
 }
-function showMap(){ drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
+function showMap(){ stop(); drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
 function hideMap(){ $('mapov').classList.remove('on'); }
 
+function stop(){ if(timer){ clearInterval(timer); timer=null; $('play').textContent='자동 재생'; } }
+
 function showCode(){
+  stop();                          // ★열어 둔 코드와 뒤에서 도는 단계가 어긋난다
   $('dock').classList.remove('on');
   const s = PACK[cur];
   $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
@@ -367,14 +379,24 @@ document.addEventListener('click', e=>{
   const d = $('dock');
   if(d.classList.contains('on') && !d.contains(e.target)) d.classList.remove('on');
 });
+// ★키를 문서 전체에서 뺏지 않는다. 위아래 화살표와 Space 와 Home/End 를 다 막으면
+//   페이지를 키보드로 굴릴 수 없고, 단추에 초점이 있어도 단계가 넘어간다.
+//   좌우 화살표만 어디서나 받고, 나머지는 글자를 입력하는 곳이 아닐 때만 받는다.
+function typing(el){
+  return el && (el.isContentEditable ||
+    /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(el.tagName));
+}
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ hideCode(); hideMap(); return; }
   if($('ov').classList.contains('on') || $('mapov').classList.contains('on')) return;
-  if(e.key==='ArrowRight' || e.key==='ArrowDown'){ e.preventDefault(); go(cur+1); }
-  else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){ e.preventDefault(); go(cur-1); }
-  else if(e.key===' '){ e.preventDefault(); play(); }
-  else if(e.key==='Home'){ e.preventDefault(); go(0); }
-  else if(e.key==='End'){ e.preventDefault(); go(SHEETS.length-1); }
+  if(e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+  else if(!typing(e.target)){
+    if(e.key===' '){ e.preventDefault(); play(); }
+    else if(e.key==='Home'){ e.preventDefault(); go(0); }
+    else if(e.key==='End'){ e.preventDefault(); go(SHEETS.length-1); }
+  }
 });
 render();
 """

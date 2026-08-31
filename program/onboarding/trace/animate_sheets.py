@@ -55,7 +55,16 @@ def font(size, bold=False, mono=False):
             name = "consolab.ttf" if bold else "consola.ttf"
         else:
             name = "malgunbd.ttf" if bold else "malgun.ttf"
-        _cache[key] = ImageFont.truetype(str(FONTS / name), size)
+        path = FONTS / name
+        # ★윈도우 글꼴 자리를 못 박고 쓴다. 다른 운영체제나 글꼴이 빠진
+        #   윈도우에서는 여기서 무슨 파일이 없는지 알려 주고 멈춘다.
+        #   PIL 이 내는 OSError 만 보면 무엇을 깔아야 하는지 알 수 없다.
+        if not path.exists():
+            raise SystemExit(
+                "글꼴이 없다: %s\n"
+                "  이 영상은 윈도우의 맑은 고딕(malgun)과 Consolas 를 쓴다.\n"
+                "  다른 환경에서 돌리려면 FONTS 를 그 환경의 글꼴 폴더로 바꾼다." % path)
+        _cache[key] = ImageFont.truetype(str(path), size)
     return _cache[key]
 
 
