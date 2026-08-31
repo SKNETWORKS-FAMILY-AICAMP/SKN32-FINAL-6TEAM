@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "470 passed, 4 deselected, 36 warnings in 34.22s"
+  "summary": "470 passed, 4 deselected, 36 warnings in 41.69s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -18,7 +18,7 @@
    },
    "invariant": "wait_for_approval 은 action_proposals 가 최소 1건 있어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 28.24s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.70s",
    "title": "승인 대기인데 제안이 하나도 없어도 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_wait_for_approval_needs_at_least_one_proposal"
@@ -38,7 +38,7 @@
    },
    "invariant": "인증 헤더는 형식부터 검사한다",
    "path": "app/presentation/security.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 26.07s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.49s",
    "title": "Bearer 형식 검사가 사라졌다",
    "unique_failures": [
     "tests/security/test_auth_and_scope_guards.py::test_any_seven_character_prefix_must_not_authenticate"
@@ -58,7 +58,7 @@
    },
    "invariant": "ContextPack 은 12,000 토큰 예산을 넘겨서 만들어질 수 없다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 33.64s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 29.12s",
    "title": "ContextPack 토큰 예산 상한이 두 배로 늘어났다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_context_pack_rejects_over_budget"
@@ -79,7 +79,7 @@
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
    "path": "app/modules/customer_ops/feedback.py",
-   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 28.72s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 26.72s",
    "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다",
    "unique_failures": [
     "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[intent-not_a_registered_intent]",
@@ -100,7 +100,7 @@
    },
    "invariant": "제안에는 근거 id 가 붙어야 한다 — ContextPack 에 실재하는 것으로",
    "path": "app/modules/customer_ops/procurement_order_payment.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.94s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 29.81s",
    "title": "제안이 근거 id 를 달지 않는다",
    "unique_failures": [
     "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
@@ -122,7 +122,7 @@
    },
    "invariant": "값을 모르면 비워 둔다 — 모르는 상태를 확정 답변으로 만들지 않는다",
    "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.32s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.24s",
    "title": "배송 상태를 모르는데 아는 척 답한다",
    "unique_failures": [
     "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
@@ -144,7 +144,7 @@
    },
    "invariant": "답변은 근거와 일치해야 한다",
    "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.27s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.91s",
    "title": "조회된 배송 건수를 세지 않고 0으로 답한다",
    "unique_failures": [
     "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
@@ -168,7 +168,7 @@
    },
    "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "path": "app/modules/customer_ops/catalog_verification.py",
-   "summary": "5 failed, 419 passed, 4 deselected, 36 warnings in 38.44s",
+   "summary": "5 failed, 465 passed, 4 deselected, 36 warnings in 27.44s",
    "title": "계약에 없는 능력을 받아도 처리한다",
    "unique_failures": [
     "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
@@ -193,7 +193,7 @@
    },
    "invariant": "project.yaml 에 선언되지 않은 모듈을 물으면 오류다",
    "path": "app/core/project_config.py",
-   "summary": "2 failed, 448 passed, 4 deselected, 36 warnings in 28.43s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 30.05s",
    "title": "선언되지 않은 모듈이 켜진 것으로 취급된다",
    "unique_failures": [
     "tests/unit/core/test_project_config_declaration.py::test_require_module_on_undeclared_module_also_raises",
@@ -214,7 +214,7 @@
    },
    "invariant": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 반드시 남긴다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 37.38s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.23s",
    "title": "축소했는데 무엇을 뺐는지 남기지 않아도 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_degraded_without_omissions_is_rejected"
@@ -234,7 +234,7 @@
    },
    "invariant": "escalate 는 failure_code 또는 warnings 가 있어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 25.34s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 24.78s",
    "title": "사유 없는 에스컬레이션이 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_escalate_requires_failure_code_or_warnings"
@@ -254,7 +254,7 @@
    },
    "invariant": "answer 가 있으면 evidence 가 있어야 한다 — 근거 없는 확정 답변은 만들지 않는다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 25.15s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.51s",
    "title": "근거 없는 확정 답변이 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_answer_without_evidence_is_rejected"
@@ -280,16 +280,14 @@
    },
    "invariant": "든 근거는 ContextPack 에 실재하는 것이어야 한다",
    "path": "app/core/verification.py",
-   "summary": "7 failed, 417 passed, 4 deselected, 36 warnings in 24.27s",
+   "summary": "7 failed, 463 passed, 4 deselected, 36 warnings in 25.64s",
    "title": "근거 id 대조 방향이 뒤집혔다",
    "unique_failures": [
     "tests/integration/controller/test_proposal_guard_blocks.py::test_evidence_outside_the_result_is_blocked",
-    "tests/unit/core/test_proposal_verification.py::test_cents_and_won_are_not_confused",
     "tests/unit/core/test_proposal_verification.py::test_partial_refund_passes",
     "tests/unit/core/test_proposal_verification.py::test_proposal_without_identifiers_or_amounts_passes",
     "tests/unit/core/test_proposal_verification.py::test_return_within_the_ordered_quantity_passes",
-    "tests/unit/eval/test_defense_metrics.py::test_legitimate_proposals_are_not_blocked",
-    "tests/unit/teams/test_response_review_team.py::test_fact_mismatch_retries_and_later_pass_is_recorded"
+    "tests/unit/eval/test_defense_metrics.py::test_legitimate_proposals_are_not_blocked"
    ]
   },
   "INV-HANDOFF-001": {
@@ -306,7 +304,7 @@
    },
    "invariant": "handoff 는 handoff_capability 가 있어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 27.32s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 25.95s",
    "title": "넘길 곳 없는 인계가 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_handoff_rejects_empty_capability"
@@ -326,7 +324,7 @@
    },
    "invariant": "같은 요청을 두 번 실행해도 side effect 는 한 번만 난다",
    "path": "app/core/idempotency.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 29.49s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.65s",
    "title": "멱등키에서 대상 필드가 빠졌다",
    "unique_failures": [
     "tests/integration/controller/test_controller_integration.py::test_idempotency_key_separates_business_subject_and_action_type"
@@ -347,7 +345,7 @@
    },
    "invariant": "같은 요청을 두 번 실행해도 side effect 는 한 번만 난다",
    "path": "app/core/idempotency.py",
-   "summary": "2 failed, 448 passed, 4 deselected, 36 warnings in 34.42s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 30.06s",
    "title": "멱등키의 요청 식별자가 Case 로 고정됐다",
    "unique_failures": [
     "tests/unit/core/test_idempotency_request_id.py::test_request_id_is_preferred_over_case_id",
@@ -368,7 +366,7 @@
    },
    "invariant": "state_json 은 덮어쓰기가 아니라 병합이다 — 이전 근거를 지우지 않는다",
    "path": "app/domain/case.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 24.20s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.10s",
    "title": "상태 병합이 덮어쓰기가 됐다",
    "unique_failures": [
     "tests/unit/core/test_case_reducer.py::test_state_patch_merges_and_does_not_wipe"
@@ -389,7 +387,7 @@
    },
    "invariant": "다른 tenant 의 Case 로 메시지를 발행할 수 없다",
    "path": "app/infrastructure/messaging/outbox.py",
-   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 27.29s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 27.73s",
    "title": "outbox 발행에서 tenant 불일치 검사가 꺼졌다",
    "unique_failures": [
     "tests/integration/messaging/test_outbox_tenant_guard.py::test_no_row_is_written_when_the_guard_rejects",
@@ -410,7 +408,7 @@
    },
    "invariant": "값을 모르면 비워 둔다 — 추정으로 채우지 않는다",
    "path": "app/infrastructure/messaging/outbox.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.31s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.92s",
    "title": "tenant 를 모를 때 임시값으로 채운다",
    "unique_failures": [
     "tests/integration/messaging/test_outbox_tenant_guard.py::test_publishing_without_any_tenant_is_rejected"
@@ -431,7 +429,7 @@
    },
    "invariant": "PII 는 저장 시 마스킹하고 LLM 에는 masked 만 넘긴다",
    "path": "app/core/redaction.py",
-   "summary": "2 failed, 448 passed, 4 deselected, 36 warnings in 31.54s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 28.44s",
    "title": "저장 전 마스킹에서 이메일 규칙이 빠졌다",
    "unique_failures": [
     "tests/unit/core/test_redaction_rules.py::test_email_keeps_only_the_first_letter"
@@ -439,7 +437,9 @@
   },
   "INV-PII-002": {
    "failed": [
-    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit"
+    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit",
+    "tests/unit/core/test_redaction_rules.py::test_api_key_is_replaced",
+    "tests/unit/core/test_redaction_rules.py::test_mask_json_descends_into_lists"
    ],
    "gates": {
     "applied": true,
@@ -451,10 +451,10 @@
    },
    "invariant": "감사 로그에 API key 원문을 기록하지 않는다",
    "path": "app/core/redaction.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 33.85s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 34.45s",
    "title": "API 키 마스킹 규칙이 사라졌다",
    "unique_failures": [
-    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit"
+    "tests/unit/core/test_redaction_rules.py::test_api_key_is_replaced"
    ]
   },
   "INV-PII-003": {
@@ -465,38 +465,36 @@
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": true,
+    "distinguishable": false,
     "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "PII 는 저장 시 마스킹한다 — 구조 전체를 훑는다",
    "path": "app/core/redaction.py",
-   "summary": "2 failed, 448 passed, 4 deselected, 36 warnings in 27.68s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 33.79s",
    "title": "마스킹이 리스트 안으로 내려가지 않는다",
-   "unique_failures": [
-    "tests/unit/core/test_redaction_rules.py::test_mask_json_descends_into_lists"
-   ]
+   "unique_failures": []
   },
   "INV-PII-004": {
    "failed": [
-    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit"
+    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit",
+    "tests/unit/core/test_redaction_rules.py::test_mask_json_descends_into_lists",
+    "tests/unit/core/test_redaction_rules.py::test_mask_json_descends_into_nested_lists_of_dicts"
    ],
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": true,
+    "distinguishable": false,
     "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "PII 는 저장 시 마스킹한다",
    "path": "app/core/redaction.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 25.17s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 26.59s",
    "title": "마스킹이 잎 노드에서 아무 일도 하지 않는다",
-   "unique_failures": [
-    "tests/security/test_pii_redaction_runtime.py::test_case_message_is_redacted_in_db_api_and_audit"
-   ]
+   "unique_failures": []
   },
   "INV-QUANTITY-001": {
    "failed": [
@@ -527,14 +525,13 @@
    },
    "invariant": "수량이 참조 대상의 상한을 넘지 않는지 본다",
    "path": "app/core/verification.py",
-   "summary": "16 failed, 408 passed, 4 deselected, 36 warnings in 30.22s",
+   "summary": "16 failed, 454 passed, 4 deselected, 36 warnings in 25.72s",
    "title": "수량 대조가 값이 있을 때 건너뛴다",
    "unique_failures": [
     "tests/architecture/test_engine_serves_another_domain.py::test_refund_over_the_order_total_is_rejected",
     "tests/architecture/test_engine_serves_another_domain.py::test_return_quantity_over_the_item_count_is_rejected",
     "tests/integration/api/test_recheck_before_execution.py::test_approval_is_blocked_when_the_order_total_shrank_after_the_proposal",
     "tests/integration/api/test_recheck_before_execution.py::test_blocked_approval_records_the_reason_without_raw_values",
-    "tests/unit/core/test_proposal_verification.py::test_cents_and_won_are_not_confused",
     "tests/unit/core/test_proposal_verification.py::test_non_finite_refund_amount_is_rejected_without_crashing[amount0]",
     "tests/unit/core/test_proposal_verification.py::test_non_finite_refund_amount_is_rejected_without_crashing[amount1]",
     "tests/unit/core/test_proposal_verification.py::test_non_finite_refund_amount_is_rejected_without_crashing[amount2]",
@@ -542,10 +539,7 @@
     "tests/unit/core/test_proposal_verification.py::test_refund_without_a_target_order_is_rejected",
     "tests/unit/core/test_proposal_verification.py::test_return_quantity_over_the_order_is_rejected",
     "tests/unit/core/test_proposal_verification.py::test_zero_or_negative_refund_is_rejected",
-    "tests/unit/eval/test_defense_metrics.py::test_attack_fixtures_are_all_blocked",
-    "tests/unit/teams/test_response_review.py::test_refund_amount_above_order_total_is_fact_mismatch",
-    "tests/unit/teams/test_response_review_team.py::test_fact_mismatch_retries_and_later_pass_is_recorded",
-    "tests/unit/teams/test_response_review_team.py::test_return_quantity_over_item_count_is_fact_mismatch"
+    "tests/unit/eval/test_defense_metrics.py::test_attack_fixtures_are_all_blocked"
    ]
   },
   "INV-RESPOND-001": {
@@ -562,7 +556,7 @@
    },
    "invariant": "respond 는 answer 가 있어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 26.82s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.14s",
    "title": "빈 답변으로 응답이 완료된다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_respond_rejects_empty_answer"
@@ -585,7 +579,7 @@
    },
    "invariant": "생성된 답변은 금지어와 PII 를 검사한 뒤 내보낸다",
    "path": "app/modules/customer_ops/response_review.py",
-   "summary": "4 failed, 420 passed, 4 deselected, 36 warnings in 32.38s",
+   "summary": "4 failed, 466 passed, 4 deselected, 36 warnings in 30.30s",
    "title": "금지어 검사가 사라졌다",
    "unique_failures": [
     "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
@@ -608,7 +602,7 @@
    },
    "invariant": "모든 조회에 tenant_id 와 customer_id(또는 case_id) 조건을 적용한다",
    "path": "app/infrastructure/db/repository.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.45s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.79s",
    "title": "Case 목록이 customer 경계를 무시한다",
    "unique_failures": [
     "tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant"
@@ -628,31 +622,25 @@
    },
    "invariant": "scope 없는 호출은 거부한다",
    "path": "app/presentation/security.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 27.38s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 29.80s",
    "title": "scope 가 하나도 없는 주체는 검사를 통과한다",
    "unique_failures": [
     "tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_with_no_scopes"
    ]
   },
   "INV-STATE-001": {
-   "failed": [
-    "tests/integration/controller/test_controller_integration.py::test_same_expected_version_has_one_success_and_one_state_conflict"
-   ],
+   "failed": [],
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
+    "kills_tests": false,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "낙관적 동시성 — 상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다",
    "path": "app/core/transition.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 27.94s",
-   "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다",
-   "unique_failures": [
-    "tests/integration/controller/test_controller_integration.py::test_same_expected_version_has_one_success_and_one_state_conflict"
-   ]
+   "summary": "470 passed, 4 deselected, 36 warnings in 28.37s",
+   "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다"
   },
   "INV-STATE-002": {
    "failed": [
@@ -670,7 +658,7 @@
    },
    "invariant": "상태표에 없는 전이는 거부한다",
    "path": "app/domain/events.py",
-   "summary": "3 failed, 421 passed, 4 deselected, 36 warnings in 32.42s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 37.42s",
    "title": "전이표에 없는 전이가 기본값으로 통과한다",
    "unique_failures": [
     "tests/integration/controller/test_controller_integration.py::test_stale_resume_on_resolved_case_is_handled_without_invalid_transition",
@@ -681,7 +669,8 @@
   "INV-STATE-003": {
    "failed": [
     "tests/unit/core/test_case_reducer.py::test_classified_requires_all_three_labels",
-    "tests/unit/core/test_case_reducer.py::test_missing_payload_key_is_rejected"
+    "tests/unit/core/test_case_reducer.py::test_missing_payload_key_is_rejected",
+    "tests/unit/core/test_payload_schema_guard.py::test_registered_event_still_checks_required_keys"
    ],
    "gates": {
     "applied": true,
@@ -693,11 +682,12 @@
    },
    "invariant": "이벤트별 필수 키를 검사한다 — 없는 키를 조용히 넘기지 않는다",
    "path": "app/domain/case.py",
-   "summary": "2 failed, 422 passed, 4 deselected, 36 warnings in 31.59s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 40.29s",
    "title": "이벤트 payload 의 필수 키 검사가 사라졌다",
    "unique_failures": [
     "tests/unit/core/test_case_reducer.py::test_classified_requires_all_three_labels",
-    "tests/unit/core/test_case_reducer.py::test_missing_payload_key_is_rejected"
+    "tests/unit/core/test_case_reducer.py::test_missing_payload_key_is_rejected",
+    "tests/unit/core/test_payload_schema_guard.py::test_registered_event_still_checks_required_keys"
    ]
   },
   "INV-STATE-004": {
@@ -714,7 +704,7 @@
    },
    "invariant": "payload schema 가 등록되지 않은 이벤트는 거부한다",
    "path": "app/domain/case.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 34.66s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 29.90s",
    "title": "등록되지 않은 이벤트가 조용히 통과한다",
    "unique_failures": [
     "tests/unit/core/test_payload_schema_guard.py::test_unregistered_event_is_rejected"
@@ -730,11 +720,11 @@
     "distinguishable": true,
     "kills_tests": true,
     "not_collection_error": true,
-    "reverts": false
+    "reverts": true
    },
    "invariant": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 늘리지 않는다",
    "path": "app/modules/customer_ops/return_refund.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 32.95s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.75s",
    "title": "반품 가능 기간이 정책보다 길어졌다",
    "unique_failures": [
     "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
@@ -749,20 +739,16 @@
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": true,
+    "distinguishable": false,
     "kills_tests": true,
     "not_collection_error": true,
-    "reverts": false
+    "reverts": true
    },
    "invariant": "생성된 답변은 사실과 대조한 뒤 내보낸다",
    "path": "app/modules/customer_ops/response_review.py",
-   "summary": "3 failed, 421 passed, 4 deselected, 36 warnings in 28.85s",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.25s",
    "title": "답변 검토에서 사실 대조 결과를 버린다",
-   "unique_failures": [
-    "tests/unit/teams/test_response_review.py::test_refund_amount_above_order_total_is_fact_mismatch",
-    "tests/unit/teams/test_response_review_team.py::test_fact_mismatch_retries_and_later_pass_is_recorded",
-    "tests/unit/teams/test_response_review_team.py::test_return_quantity_over_item_count_is_fact_mismatch"
-   ]
+   "unique_failures": []
   },
   "INV-UI-001": {
    "failed": [
@@ -779,7 +765,7 @@
    },
    "invariant": "근거 없는 제안은 화면에서 결정할 수 없어야 한다",
    "path": "app/presentation/ui/routes.py",
-   "summary": "2 failed, 422 passed, 4 deselected, 36 warnings in 30.64s",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 27.51s",
    "title": "근거 없는 제안인데 결정 버튼이 살아 있다",
    "unique_failures": [
     "tests/e2e/test_operations_ui.py::test_evidence_free_proposal_has_disabled_decision",
@@ -796,11 +782,11 @@
     "distinguishable": true,
     "kills_tests": true,
     "not_collection_error": true,
-    "reverts": false
+    "reverts": true
    },
    "invariant": "조회 자체가 실패했으면 통과시키지 않는다 — 사실을 모르는 상태다",
    "path": "app/core/verification.py",
-   "summary": "1 failed, 423 passed, 4 deselected, 36 warnings in 32.88s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.63s",
    "title": "사실 조회에 실패해도 제안을 통과시킨다",
    "unique_failures": [
     "tests/unit/core/test_proposal_verification.py::test_failed_fact_lookup_rejects_everything"
@@ -823,7 +809,7 @@
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
    "path": "app/modules/customer_ops/feedback.py",
-   "summary": "4 failed, 420 passed, 4 deselected, 36 warnings in 27.87s",
+   "summary": "4 failed, 466 passed, 4 deselected, 36 warnings in 26.76s",
    "title": "분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
    "unique_failures": [
     "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[intent]",
@@ -850,7 +836,7 @@
    },
    "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
    "path": "app/modules/customer_ops/voc_store_manager.py",
-   "summary": "5 failed, 419 passed, 4 deselected, 36 warnings in 59.86s",
+   "summary": "5 failed, 465 passed, 4 deselected, 36 warnings in 29.81s",
    "title": "degraded 검사가 뒤집혔다",
    "unique_failures": [
     "tests/unit/teams/test_voc_store_manager.py::test_degraded_context_escalates_without_policy_lookup",
@@ -874,7 +860,7 @@
    },
    "invariant": "wait_for_input 은 wait_reason 이 customer_input 이어야 한다",
    "path": "app/core/contracts.py",
-   "summary": "1 failed, 449 passed, 4 deselected, 36 warnings in 24.77s",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.40s",
    "title": "입력 대기의 사유가 아무 값이나 통과한다",
    "unique_failures": [
     "tests/contract/test_contracts.py::test_wait_for_input_rejects_other_wait_reason"
