@@ -148,6 +148,7 @@ def sheet_structure():
 
 
 if __name__ == "__main__":
+    from artifacts import sheet_artifacts, sheet_filenames
     from finale import sheet_branches, sheet_contracts, sheet_lifecycle
     from steps import build_steps
 
@@ -158,6 +159,8 @@ if __name__ == "__main__":
     sheet_lifecycle()
     sheet_contracts()
     sheet_branches()
+    sheet_artifacts()
+    sheet_filenames()
     import os
     n = len([f for f in os.listdir(OUT) if f.endswith(".png")]) if "OUT" in dir() else 0
     print("완료:", os.path.abspath("images"))
