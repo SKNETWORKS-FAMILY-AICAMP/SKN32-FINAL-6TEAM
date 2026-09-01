@@ -50,6 +50,21 @@ str | None`을 추가했다. `Registry.capability_for()`는 팀이 이걸
 (registry 훅 메커니즘 5건 + 팀별 select_capability 각 4건 + 기존
 default_capability 3건). 517 → 529 passed, 회귀 0.
 
+### 이어서 — procurement_order_payment 도 같은 간극이었다 (2026-09-01)
+
+`task.capability`로 분기하는 나머지 팀 중 `procurement_order_payment`도
+같은 모양이었다 — "order" intent가 늘 `order.verify`(정보성 조회)로만
+가서, 실제 취소/변경 제안이 나오는 `order.cancel`/`order.modify`에
+도달 못 했다("주문 취소해주세요" 같은 메시지가 조회 응답만 받았다).
+같은 방식(명확한 요청 문구가 있을 때만 override, 없으면 기존 기본값
+유지)으로 `select_capability`를 구현했다. `catalog_verification`은
+손대지 않았다 — `accepted_case_types=["catalog"]`가 분류기
+`INTENTS`(order/shipping/return/exchange/other)에 없어 이 라우팅
+경로로 애초에 도달하지 않는다(A2A 원격 경로로 보인다, 별도 확인 필요).
+
+검증: `order.cancel`/`order.modify`/`order.verify` 셋 다 실측 확인.
+테스트 4건 추가. 529 → 533 passed, 회귀 0.
+
 ## 해결됨 (2026-09-01, 두 번째 시도)
 
 raise 기반 수정을 되돌린 뒤, 다른 방향으로 다시 고쳤다 — **동작은 그대로

@@ -180,3 +180,24 @@ async def test_proposal_carries_the_evidence_it_was_built_from():
     assert set(proposal.rationale_evidence_ids) <= known, (
         "제안이 결과에 없는 근거 id 를 든다 — 지어낸 근거다"
     )
+
+
+# ★2026-09-01 — "order" intent 는 늘 order.verify(정보성 조회)로만 갔다.
+#   select_capability 가 취소/변경 요청 문구를 잡아 order.cancel/order.modify
+#   경로로 보낼 수 있는지 확인한다
+#   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+def test_select_capability_routes_explicit_cancel_request_to_order_cancel():
+    assert ProcurementOrderPaymentTeam.select_capability("order", "주문 취소해주세요") == "order.cancel"
+
+
+def test_select_capability_routes_explicit_change_request_to_order_modify():
+    assert ProcurementOrderPaymentTeam.select_capability("order", "배송지를 변경하고 싶어요") == "order.modify"
+
+
+def test_select_capability_returns_none_for_plain_status_inquiry():
+    assert ProcurementOrderPaymentTeam.select_capability("order", "제 주문이 잘 들어갔는지 확인하고 싶어요") is None
+
+
+def test_select_capability_ignores_unrelated_intents():
+    assert ProcurementOrderPaymentTeam.select_capability("shipping", "주문 취소해주세요") is None
+    assert ProcurementOrderPaymentTeam.select_capability(None, "주문 취소해주세요") is None

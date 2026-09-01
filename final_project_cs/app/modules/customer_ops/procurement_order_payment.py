@@ -42,6 +42,33 @@ class ProcurementOrderPaymentTeam:
     def __init__(self, tools: ReadToolbox) -> None:
         self.tools = tools
 
+    # ★취소·변경을 분명히 밝히는 문구만 잡는다. 신호가 없으면 지금 기본
+    #   동작(order.verify, 정보성 조회)을 그대로 둔다 — 뒤 단계(변경/취소
+    #   근거인 order_change·cancellation_scope 등)가 없으면 execute() 가
+    #   스스로 escalate 하므로, 문구가 틀리게 잡혀도 근거 없는 제안은 안 나간다.
+    _CANCEL_MARKERS = ("취소해", "취소하고 싶", "취소 원해", "주문 취소")
+    _MODIFY_MARKERS = ("변경해", "변경하고 싶", "수정해", "정정하고 싶")
+
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str) -> str | None:
+        """"order" intent가 조회인지 취소/변경 요청인지 가른다.
+
+        ★2026-09-01 — intent 문자열만으로는 이 팀의 capability 6종 중
+          어느 것도 제대로 못 고른다. "order" intent는 늘
+          order.verify(정보성 조회)로만 갔다 — 실제 주문 취소/변경
+          제안(order.cancel/order.modify)이 나오는 경로에 영원히 도달
+          못 함(docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          신호가 없으면 `None`을 돌려줘 기존 규칙(default order.verify)에
+          그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
+        """
+        if intent != "order":
+            return None
+        if any(marker in input_text for marker in ProcurementOrderPaymentTeam._CANCEL_MARKERS):
+            return "order.cancel"
+        if any(marker in input_text for marker in ProcurementOrderPaymentTeam._MODIFY_MARKERS):
+            return "order.modify"
+        return None
+
     @staticmethod
     def _result(task: TeamTask, **kwargs: Any) -> TeamResult:
         return TeamResult(
