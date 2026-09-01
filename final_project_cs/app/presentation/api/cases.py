@@ -16,6 +16,7 @@ from app.core.transition import transition_case
 from app.domain.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
+from app.application.classification import classify_case
 from app.application.proposal_guard import audit_payload, describe, recheck_before_execution
 from app.presentation.security import Principal, masked, require_scope
 
@@ -68,36 +69,6 @@ def _view(case: dict[str, Any]) -> dict[str, Any]:
     return {"case_id": str(case["case_id"]), "status": str(case["status"]), "version": case["version"],
             "intent": case.get("intent"), "issue_code": case.get("issue_code"), "sentiment": case.get("sentiment"),
             "links": {"self": f"/v1/cases/{case['case_id']}"}}
-
-
-def _classify(conn, *, tenant: str, case_id: UUID, message: str,
-              classifier: "Classifier | None", actor_id: str) -> None:
-    """분류를 **생성 트랜잭션 밖에서** 수행하고 그 결과만 한 문으로 기록한다.
-
-    ★왜 밖인가: 전에는 생성 트랜잭션 안에서 LLM 을 불렀다. 그러면
-      `pg_advisory_xact_lock` 과 커넥션을 잡은 채 외부 provider 를 기다리게 되고,
-      느린 응답 하나가 같은 키의 접수를 막는다. 더 나쁜 것은 **타임아웃이면 Case
-      생성까지 롤백**된다는 점이다 — 고객 문의가 통째로 사라진다
-      (v8 §3-A [2026-09-01 교정] 결함 2, §7-A "Case 생성 transaction 밖에서").
-
-    ★대가: 생성과 분류 사이에 프로세스가 죽으면 Case 가 `classifying` 에 남는다.
-      전에는 원자적이었다. 그 대신 "문의가 사라지는" 실패가 없어졌다 —
-      `classifying` 에 남은 Case 는 되살릴 수 있지만 롤백된 Case 는 없던 일이
-      된다. ★남은 Case 를 되잡는 sweeper 는 아직 없다(후속 과제).
-
-    ★실패를 조용히 넘기지 않는다. 분류가 안 되면 `classification_failed` 를 남기고
-      상태기계가 `escalated` 로 보낸다(`CLAUDE.md` §1).
-    """
-    try:
-        result = classifier(masked(message)) if classifier else None
-        if not result or not all(key in result for key in ("intent", "issue_code", "sentiment")):
-            raise ValueError("classifier unavailable")
-        event, payload = EventType.CLASSIFIED, result
-    except Exception:
-        event, payload = EventType.CLASSIFICATION_FAILED, {"failure_code": "classification_failed"}
-    with conn.transaction():
-        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1,
-                        event_type=event, payload=payload, actor_type="api", actor_id=actor_id)
 
 
 def build_router(classifier: Classifier | None = None, controller: Any | None = None) -> APIRouter:
@@ -153,8 +124,11 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                                                 arguments={"request_id": request.request_id, "body_sha256": body_fingerprint},
                                                 idempotency_key=idem, status="succeeded")
             # ── 여기서 생성 트랜잭션이 끝난다. 아래는 잠금을 놓은 뒤다 ──
-            _classify(conn, tenant=tenant, case_id=case_id, message=request.message,
-                      classifier=classifier, actor_id=principal.key_id)
+            # ★분류의 **실행 절차는 코어 1 이 갖는다**(app/application/classification.py).
+            #   이 라우트는 "언제" 만 정한다 — 절차가 여기 박혀 있으면 Controller 도
+            #   재시도 작업도 같은 분류를 부를 수 없다(v8 §3-A 결함 1).
+            classify_case(conn, tenant_id=tenant, case_id=case_id, text=request.message,
+                          classifier=classifier, actor_id=principal.key_id)
             view = _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
         if controller is not None and view["status"] == "routing":
             outcome = controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=principal.key_id)
