@@ -234,19 +234,25 @@ padding:20px 22px;margin:18px 0 0}
 .plate .warn{margin:0 0 14px;padding:11px 14px;border-radius:10px;background:var(--warm);
 border:1px solid var(--amber);font-size:14px}
 
-/* 전체 지도 */
-.lanes{display:grid;grid-template-columns:180px repeat(12,minmax(0,1fr));gap:7px 5px;
-align-items:stretch}
+/* 전체 지도. 이어진 단계는 붙고, 안 지나는 자리는 가는 선이다. */
+.lanes{display:grid;grid-template-columns:172px repeat(12,minmax(0,1fr));
+gap:9px 0;align-items:stretch}
 .lanes .name{border:2px solid;border-radius:11px;display:flex;align-items:center;
-justify-content:center;font-size:13px;font-weight:700;padding:12px 8px;text-align:center}
-.lanes .cell{border-radius:9px;background:var(--todo);min-height:56px}
-.lanes .cell.on{color:#fff;display:flex;flex-direction:column;align-items:center;
-justify-content:center;gap:2px;padding:6px 2px}
-.lanes .cell.on b{font-size:14px}
-.lanes .cell.on span{font-size:11.5px;opacity:.9}
-@media(max-width:1100px){.lanes{grid-template-columns:120px repeat(12,minmax(0,1fr));
-gap:5px 3px}.lanes .name{font-size:11.5px;padding:8px 4px}
-.lanes .cell.on b{font-size:12px}.lanes .cell.on span{font-size:10px}}
+justify-content:center;font-size:12.5px;font-weight:700;padding:10px 6px;
+text-align:center;margin-right:11px}
+.lanes .cell{min-height:60px;display:flex;align-items:center;justify-content:center}
+.lanes .cell > i{display:block;height:8px;width:100%;background:var(--todo);
+border-radius:4px}
+.lanes .cell.on{color:#fff;flex-direction:column;gap:1px;padding:7px 3px;
+text-align:center;justify-content:center}
+.lanes .cell.on.l{border-top-left-radius:11px;border-bottom-left-radius:11px}
+.lanes .cell.on.r{border-top-right-radius:11px;border-bottom-right-radius:11px}
+.lanes .cell.on b{font-size:15px;line-height:1.1}
+.lanes .cell.on span{font-size:10.5px;line-height:1.25;opacity:.92;
+word-break:keep-all;overflow-wrap:anywhere}
+@media(max-width:1200px){.lanes{grid-template-columns:112px repeat(12,minmax(0,1fr))}
+.lanes .name{font-size:11px;padding:7px 3px;margin-right:7px}
+.lanes .cell.on b{font-size:12.5px}.lanes .cell.on span{font-size:9px}}
 
 /* 큰 구조 / 파일 이름 / 남는 표 */
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -263,16 +269,29 @@ gap:5px 3px}.lanes .name{font-size:11.5px;padding:8px 4px}
 .card pre{margin:0;font-size:12.5px;line-height:1.62;white-space:pre-wrap;
 word-break:break-word}
 
-/* 상태 12개 */
-.states3{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+/* 상태 12개. 화살표가 "이어진다" 를, 되돌아감이 "멈춘 것이지 끝난 게 아니다" 를 말한다. */
+.states3{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px;align-items:stretch}
+.states3.flow{align-items:center}
 .states3 .s3{border:2px solid;border-radius:11px;padding:9px 14px;min-width:132px}
 .states3 .s3 b{display:block;font-family:Consolas,monospace;font-size:14px}
 .states3 .s3 span{font-size:12px;color:var(--dim)}
 .rowhead{font-size:13px;font-weight:700;margin:14px 0 6px}
+.ar{font-size:19px;color:var(--faint);flex:none;line-height:1}
+.ar.up{transform:rotate(-90deg);display:inline-block;color:var(--amber)}
+.ar.down{transform:rotate(90deg);display:inline-block;color:var(--blue)}
+.ar.mid{align-self:center;color:var(--dim)}
+.loop{border-left:3px solid var(--amber);padding-left:13px}
+.loop .back{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--dim);
+margin-top:4px}
+.loop .back b{font-family:Consolas,monospace;color:var(--amber)}
+.downto{display:flex;gap:9px;align-items:center;font-size:13.5px;font-weight:700;
+color:var(--blue);margin:14px 0 8px}
 
 /* 전달 문서 다섯 */
-.docs5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-@media(max-width:1000px){.docs5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.docs5{display:flex;gap:6px;align-items:stretch}
+.docs5 .d5{flex:1;min-width:0}
+@media(max-width:1000px){.docs5{flex-wrap:wrap}.docs5 .d5{flex:1 1 44%}
+.docs5 .ar.mid{display:none}}
 .docs5 .d5{border:2px solid;border-radius:12px;padding:11px 12px}
 .docs5 .d5 b{font-size:14px}
 .docs5 .d5 .at{font-size:11.5px;color:var(--faint);display:block;margin-bottom:7px}
@@ -280,7 +299,9 @@ word-break:break-word}
 .docs5 .d5 div.note2{font-size:12px;color:var(--dim);margin-top:7px}
 
 /* 갈림길 표 */
-table.br{width:100%;border-collapse:collapse;font-size:13.5px}
+/* ★좁은 화면에서 네 열이 안 들어간다. 판을 넘치게 두지 않고 표만 굴린다. */
+.plate .scroll{overflow-x:auto}
+table.br{width:100%;min-width:560px;border-collapse:collapse;font-size:13.5px}
 table.br th{text-align:left;font-size:12px;color:var(--faint);font-weight:700;
 padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
 table.br td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line);

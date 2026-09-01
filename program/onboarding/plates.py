@@ -34,22 +34,33 @@ def _plate(anchor, head, sub, body, foot=""):
 
 
 def lane_map():
-    """전체 지도. 어느 단계가 어느 갈래인지는 단계 색에서 뽑는다."""
-    cells = []
+    """전체 지도. 어느 단계가 어느 갈래인지는 단계 색에서 뽑는다.
+
+    ★이어진 단계는 붙여 그린다. 1-2 처럼 같은 갈래가 연달아 오면 원래 그림에서
+      한 덩어리로 보였다. 칸마다 따로 떼면 그 정보가 사라진다.
+
+    ★빈 칸은 상자가 아니라 가는 선이다. 상자로 그리면 안 지나는 자리가
+      지나는 자리만큼 눈에 띈다.
+    """
+    rows = []
     for label, color in F.LANES:
-        cells.append('<div class="name" style="color:%s;border-color:%s">%s</div>'
-                     % (HUE[color], HUE[color], e(label)))
-        for s in SHEETS:
-            if s["color"] == RAW[color]:
-                cells.append('<div class="cell on" style="background:%s">'
-                             '<b>%d</b><span>%s</span></div>'
-                             % (HUE[color], s["n"], e(s["head"][:10])))
-            else:
-                cells.append('<div class="cell"></div>')
+        mine = [s["color"] == RAW[color] for s in SHEETS]
+        cells = ['<div class="name" style="color:%s;border-color:%s">%s</div>'
+                 % (HUE[color], HUE[color], e(label))]
+        for i, s in enumerate(SHEETS):
+            if not mine[i]:
+                cells.append('<div class="cell"><i></i></div>')
+                continue
+            # 앞뒤가 같은 갈래면 그쪽 모서리를 펴서 한 덩어리로 보이게 한다.
+            edge = ("" if i > 0 and mine[i - 1] else " l")                  + ("" if i + 1 < len(mine) and mine[i + 1] else " r")
+            cells.append('<div class="cell on%s" style="background:%s">'
+                         '<b>%d</b><span>%s</span></div>'
+                         % (edge, HUE[color], s["n"], e(s["head"])))
+        rows.append("".join(cells))
     return _plate("p-map", "전체 지도",
                   '고객이 "어제 주문한 거 취소하고 환불받고 싶어요" 를 보낸 순간부터 '
                   "답이 돌아갈 때까지의 열두 단계",
-                  '<div class="lanes">%s</div>' % "".join(cells), F.LANES_FOOT)
+                  '<div class="lanes">%s</div>' % "".join(rows), F.LANES_FOOT)
 
 
 def structure():
@@ -71,19 +82,34 @@ def structure():
 
 
 def lifecycle():
-    def chips(items, color_of):
-        return '<div class="states3">%s</div>' % "".join(
-            '<div class="s3" style="color:%s;border-color:%s"><b>%s</b><span>%s</span></div>'
-            % (color_of(x), color_of(x), e(x[0]), e(x[1])) for x in items)
+    """상태 열두 개.
+
+    ★원본 그림에는 화살표가 있었다. 주 흐름은 왼쪽에서 오른쪽으로 이어졌고,
+      대기 세 상태에서 running 으로 되돌아가는 곡선이 있었다. 칩만 늘어놓으면
+      "이어진다" 와 "되돌아온다" 가 사라진다. 그게 이 장의 요점이다.
+    """
+    def chip(x, color):
+        return ('<div class="s3" style="color:%s;border-color:%s">'
+                '<b>%s</b><span>%s</span></div>' % (color, color, e(x[0]), e(x[1])))
+
+    chain = []
+    for i, x in enumerate(F.LIFECYCLE_MAIN):
+        if i:
+            chain.append('<span class="ar">&#10142;</span>')
+        chain.append(chip(x, HUE["green"] if x[0] == "resolved" else HUE["blue"]))
 
     body = (
         '<div class="rowhead">이 환불 건이 실제로 지난 길</div>'
-        + chips(F.LIFECYCLE_MAIN,
-                lambda x: HUE["green"] if x[0] == "resolved" else HUE["blue"])
-        + '<div class="rowhead">멈췄다가 조건이 갖춰지면 다시 이어서 도는 상태</div>'
-        + chips(F.LIFECYCLE_WAIT, lambda _x: HUE["amber"])
-        + '<div class="rowhead">끝나는 다른 방법</div>'
-        + chips(F.LIFECYCLE_END, lambda x: HUE[x[2]])
+        '<div class="states3 flow">%s</div>' % "".join(chain)
+        + '<div class="rowhead">멈췄다가 조건이 갖춰지면 다시 이어서 돈다</div>'
+        + '<div class="loop"><div class="states3">%s</div>'
+          '<div class="back"><span class="ar up">&#10142;</span>'
+          '<span>넷 다 <b>running</b> 으로 되돌아간다. 끝난 것이 아니라 멈춘 것이다</span>'
+          '</div></div>'
+          % "".join(chip(x, HUE["amber"]) for x in F.LIFECYCLE_WAIT)
+        + '<div class="rowhead">끝나는 다른 방법 (이 건에서는 안 나왔다)</div>'
+        + '<div class="states3">%s</div>'
+          % "".join(chip(x, HUE[x[2]]) for x in F.LIFECYCLE_END)
         + '<div class="card" style="border-color:var(--line);margin-top:14px">'
           '<h4>%s</h4><p class="cs">%s</p></div>'
           % (e(F.LIFECYCLE_WHY[0]), e(F.LIFECYCLE_WHY[1])))
@@ -91,8 +117,15 @@ def lifecycle():
 
 
 def contracts():
+    """전달 문서 다섯.
+
+    ★원본은 화살표로 이어져 "같은 것이 모습을 바꾼다" 를 보여 줬다. 나란히
+      늘어놓기만 하면 다섯 개의 서로 다른 문서로 읽힌다. 뜻이 반대가 된다.
+    """
     cols = []
-    for name, color, at, fields, note in F.CONTRACTS:
+    for i, (name, color, at, fields, note) in enumerate(F.CONTRACTS):
+        if i:
+            cols.append('<span class="ar mid">&#10142;</span>')
         cols.append('<div class="d5" style="border-color:%s"><b style="color:%s">%s</b>'
                     '<span class="at">%d번 단계</span>%s%s</div>'
                     % (HUE[color], HUE[color], e(name), at,
@@ -103,8 +136,9 @@ def contracts():
         '<span class="no2" style="color:var(--dim)">%s</span></div>' % (e(t), e(w))
         for t, w in F.CONTRACTS_TABLES)
     body = ('<div class="docs5">%s</div>'
-            '<div class="card" style="border-color:var(--blue);margin-top:14px">'
-            '<h4 style="color:var(--blue)">그리고 이것들이 표로 내려앉는다</h4>%s</div>'
+            '<div class="downto"><span class="ar down">&#10142;</span>'
+            '<span>그리고 이것들이 표로 내려앉는다</span></div>'
+            '<div class="card" style="border-color:var(--blue)">%s</div>'
             % ("".join(cols), tables))
     return _plate("p-contract", F.CONTRACTS_HEAD[0], F.CONTRACTS_HEAD[1], body)
 
@@ -116,7 +150,8 @@ def branches():
                     '<td class="then" style="color:%s">%s</td><td class="why2">%s</td></tr>'
                     % (HUE[color], ("%d번" % at) if at else "언제든",
                        e(when), HUE[color], e(then), e(why)))
-    body = ('<table class="br"><thead><tr>%s</tr></thead><tbody>%s</tbody></table>'
+    body = ('<div class="scroll"><table class="br"><thead><tr>%s</tr></thead>'
+            '<tbody>%s</tbody></table></div>'
             % ("".join("<th>%s</th>" % e(c) for c in F.BRANCHES_COLS), "".join(rows)))
     return _plate("p-branch", F.BRANCHES_HEAD[0], F.BRANCHES_HEAD[1], body)
 
@@ -162,7 +197,7 @@ def traceback_ways():
         cards.append('<div class="card" style="border-color:%s;grid-column:1/-1">'
                      '<h4 style="color:%s">%d. %s</h4><p class="cs">%s</p>%s</div>'
                      % (HUE[color], HUE[color], n, e(head),
-                        "지금 됩니다" if works else "지금은 안 됩니다", items))
+                        "지금 됩니다" if works else "아직 안 됩니다. 제작 중입니다", items))
     return _plate("p-trace", F.TRACEBACK_HEAD[0], F.TRACEBACK_HEAD[1],
                   '<div class="cards">%s</div>' % "".join(cards), F.TRACEBACK_FOOT)
 
