@@ -5,12 +5,27 @@ or refund side effect.  Approval is the boundary for every such proposal.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
 from app.core.contracts import ActionProposal, Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 from app.core.idempotency import idempotency_key
 from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
+
+
+@dataclass(frozen=True)
+class RefundOutcome:
+    """환불 금액을 구했거나, 왜 못 구했는지.
+
+    ★"못 구했다" 를 0 이나 None 으로 돌려주지 않는다. 부르는 쪽이 그걸 금액으로
+      쓰면 고객에게 잘못된 액수가 나간다. 실패는 이유와 함께 돌려준다.
+    """
+
+    amount: int = 0
+    basis: dict[str, Any] = field(default_factory=dict)
+    failure_code: str | None = None
+    reason: str = ""
 
 
 class ReturnRefundTeam:
@@ -22,11 +37,14 @@ class ReturnRefundTeam:
         capabilities=["return.check_eligibility", "return.request", "refund.calculate"],
         accepted_case_types=["return", "refund", "exchange"],
         required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=["read.order", "read.return", "read.policy"],
+        # ★`read.order_items` 는 2026-09-01 에 더했다. 환불 금액을 주문 총액의
+        #   균등 분할로 추정하던 것을 품목 단가로 정확히 구하기 위해서다(D-001 1-A).
+        #   툴은 이미 있었지만 이 Team 의 allowed_tools 에 없어 Registry 가 막고 있었다.
+        allowed_tools=["read.order", "read.order_items", "read.return", "read.policy"],
         knowledge_scope=["order", "return", "refund", "exchange", "policy"],
         max_steps=6,
         active=True,
-        implementation_revision="2026-08-20",
+        implementation_revision="2026-09-01",
     )
 
     def __init__(self, tools: ReadToolbox) -> None:
@@ -63,6 +81,63 @@ class ReturnRefundTeam:
                 if isinstance(value.get("return_period_days"), int):
                     return value["return_period_days"]
         return 90 if reason == "defective" else 7
+
+    @staticmethod
+    def _refund_amount(items: Any, order_total_cents: int, quantity: int) -> "RefundOutcome":
+        """반품 수량에 해당하는 환불 금액을 **구할 수 있을 때만** 구한다.
+
+        ★이전 구현은 `total_cents * quantity // item_count` 였다. 이 한 줄에
+          말하지 않은 가정이 둘 들어 있었다(D-001):
+
+            (1) 주문의 모든 품목 값이 같다
+            (2) 주문에 할인이 없다
+
+          둘 다 틀리면 고객이 받을 금액이 달라진다. 여기서는 두 가정을 **검사
+          가능한 조건**으로 바꾼다 — 성립하면 정확히 계산하고, 안 하면 계산하지
+          않는다.
+
+        ★(2)를 어떻게 아는가: 품목 단가 합이 주문 총액과 다르면 그 차액이
+          할인·쿠폰·배송비 같은 조정이다. 그게 있으면 "이 품목의 실결제액" 을
+          이 데이터만으로는 모른다 — 쇼핑몰이 실결제액을 줘야 한다(D-001 1-B).
+
+        ★(1)을 어떻게 아는가: 품목이 하나면 가정이 필요 없다. 여럿이면 **어느
+          품목을 반품하는지** 를 알아야 하는데, `returns` 테이블에는 품목 참조가
+          없다(`order_id`·`reason_code`·`quantity` 뿐). 그래서 여럿일 때는
+          금액을 만들지 않는다.
+        """
+        if not isinstance(items, list) or not items:
+            return RefundOutcome(failure_code="refund_calculation_evidence_missing",
+                                 reason="주문 품목을 읽지 못해 환불 금액을 계산할 수 없습니다.")
+        try:
+            lines = [(str(item["sku"]), int(item["quantity"]), int(item["unit_cents"]))
+                     for item in items]
+        except (KeyError, TypeError, ValueError):
+            return RefundOutcome(failure_code="refund_calculation_evidence_missing",
+                                 reason="주문 품목에 수량·단가가 없어 환불 금액을 계산할 수 없습니다.")
+
+        subtotal = sum(unit * count for _, count, unit in lines)
+        if subtotal != order_total_cents:
+            # 차액이 곧 할인·쿠폰·배송비다. 어느 품목에 얼마가 붙었는지 모른다.
+            return RefundOutcome(
+                failure_code="refund_amount_not_derivable",
+                reason=(f"품목 단가 합({subtotal})과 주문 총액({order_total_cents})이 달라 "
+                        "실제 결제액을 알 수 없습니다. 쇼핑몰의 실결제 내역이 필요합니다."))
+        if len(lines) > 1:
+            return RefundOutcome(
+                failure_code="refund_item_unattributable",
+                reason=("주문에 품목이 여러 개인데 반품 요청에 어느 품목인지가 없어 "
+                        "환불 금액을 정할 수 없습니다."))
+
+        sku, ordered_quantity, unit_cents = lines[0]
+        if quantity <= 0 or quantity > ordered_quantity:
+            return RefundOutcome(
+                failure_code="refund_quantity_exceeds_order",
+                reason=f"반품 수량({quantity})이 주문 수량({ordered_quantity})을 벗어납니다.")
+        return RefundOutcome(amount=unit_cents * quantity,
+                             basis={"basis": "order_item_unit_price", "sku": sku,
+                                    "unit_cents": unit_cents, "return_quantity": quantity,
+                                    "order_total_cents": order_total_cents,
+                                    "order_item_lines": len(lines)})
 
     @staticmethod
     def _date(value: Any) -> datetime | None:
@@ -137,14 +212,27 @@ class ReturnRefundTeam:
             decision = {"classification": "return_request_proposed", "mock_side_effect": False}
         else:
             total = order.get("total_cents")
-            item_count = order.get("item_count")
-            if not isinstance(total, int) or not isinstance(item_count, int) or item_count <= 0:
+            if not isinstance(total, int):
                 return self._result(task, outcome="escalated", confidence=0.0, evidence=evidence,
                                     next_action=NextAction.ESCALATE, failure_code="refund_calculation_evidence_missing")
-            amount = total * int(quantity) // item_count
+            try:
+                items = self.tools.call("read.order_items", task.context, {"order_id": order_id},
+                                        task.allowed_tools, seen)
+            except ToolLoopExceeded:
+                return self._result(task, outcome="escalated", confidence=0.0, evidence=evidence,
+                                    next_action=NextAction.ESCALATE, failure_code="tool_loop_guard")
+
+            outcome = self._refund_amount(items, total, int(quantity))
+            if outcome.failure_code is not None:
+                # ★근거 없이 금액을 만들지 않는다. "환불됩니다" 를 잘못 말하면
+                #   고객이 손해를 본다(`CLAUDE.md` §0). 못 구하면 사람에게 넘긴다.
+                return self._result(task, outcome="escalated", confidence=0.0, evidence=evidence,
+                                    next_action=NextAction.ESCALATE, failure_code=outcome.failure_code,
+                                    warnings=[outcome.reason])
+            amount = outcome.amount
             action_type = "refund.calculate"
             arguments = {"order_id": order_id, "refund_amount_cents": amount, "return_quantity": quantity,
-                         "calculation_basis": {"order_total_cents": total, "order_item_count": item_count}}
+                         "calculation_basis": outcome.basis}
             decision = {"classification": "refund_calculation_proposed", "calculated_amount_cents": amount,
                         "mock_side_effect": False}
         proposal = ActionProposal(action_type=action_type, arguments=arguments,

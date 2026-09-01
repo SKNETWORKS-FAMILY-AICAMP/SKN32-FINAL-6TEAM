@@ -17,7 +17,14 @@ class FakeTools:
         return self.values.get(name)
 
 
-def make_task(capability: str, *, ordered_at=None, returns=None, order=None, policy=None):
+#: ★기본 픽스처를 **품목 하나짜리 주문**으로 바꿨다(2026-09-01, D-001 1-A).
+#:  단가 10,000 × 1개 = 총액 10,000 으로 맞춰 둔다 — 합이 총액과 다르면 할인이
+#:  있다는 뜻이고, 그때는 금액을 만들지 않는 것이 새 계약이다.
+DEFAULT_ITEMS = [{"sku": "SKU-1", "name": "위젯", "quantity": 1, "unit_cents": 10000}]
+
+
+def make_task(capability: str, *, ordered_at=None, returns=None, order=None, policy=None,
+              items=None):
     case_id = uuid4()
     context = ContextPack(
         pack_id=uuid4(), case_id=case_id, team_id="return_refund", tenant_id="tenant",
@@ -31,11 +38,13 @@ def make_task(capability: str, *, ordered_at=None, returns=None, order=None, pol
         allowed_tools=ReturnRefundTeam.manifest.allowed_tools,
         deadline_at=datetime.now(UTC) + timedelta(minutes=1),
     )
-    order = order or {"order_id": "o1", "total_cents": 10000, "item_count": 2,
+    order = order or {"order_id": "o1", "total_cents": 10000, "item_count": 1,
                       "ordered_at": ordered_at or datetime.now(UTC) - timedelta(days=2)}
     returns = returns if returns is not None else []
     policy = policy if policy is not None else [{"return_period_days": 7}]
-    return task, FakeTools({"read.order": order, "read.return": returns, "read.policy": policy})
+    items = DEFAULT_ITEMS if items is None else items
+    return task, FakeTools({"read.order": order, "read.return": returns, "read.policy": policy,
+                            "read.order_items": items})
 
 
 @pytest.mark.asyncio
@@ -74,4 +83,85 @@ async def test_refund_calculation_is_not_completed_side_effect():
     assert result.outcome != "completed"
     assert result.next_action is NextAction.WAIT_FOR_APPROVAL
     assert result.action_proposals[0].action_type == "refund.calculate"
-    assert result.action_proposals[0].arguments["refund_amount_cents"] == 5000
+    # ★품목 단가 그대로다. 옛 구현은 `total * qty // item_count` 라 2품목 주문이면
+    #   5,000 을 냈다 — 품목 값이 서로 다르면 그 액수는 근거가 없다(D-001).
+    assert result.action_proposals[0].arguments["refund_amount_cents"] == 10000
+    assert result.action_proposals[0].arguments["calculation_basis"]["basis"] == "order_item_unit_price"
+
+
+@pytest.mark.asyncio
+async def test_multi_item_order_does_not_get_a_made_up_amount():
+    """★어느 품목을 반품하는지 모르면 금액을 만들지 않는다.
+
+    `returns` 테이블에는 품목 참조가 없다(order_id·reason_code·quantity 뿐).
+    옛 구현은 총액을 품목 수로 나눠 5,000 을 냈는데, 품목 값이 다르면 고객이
+    받을 금액이 달라진다.
+    """
+    task, tools = make_task("refund.calculate",
+                            order={"order_id": "o1", "total_cents": 30000, "item_count": 2,
+                                   "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+                            items=[{"sku": "A", "name": "비싼 것", "quantity": 1, "unit_cents": 25000},
+                                   {"sku": "B", "name": "싼 것", "quantity": 1, "unit_cents": 5000}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_item_unattributable"
+    assert not result.action_proposals
+
+
+@pytest.mark.asyncio
+async def test_a_discounted_order_is_not_computed_from_list_prices():
+    """★품목 단가 합이 총액과 다르면 할인·쿠폰·배송비가 끼어 있다는 뜻이다.
+
+    정가로 계산하면 실제 결제액보다 많이 환불된다. 쇼핑몰의 실결제 내역이
+    필요하다(D-001 1-B) — 그 전까지는 사람에게 넘긴다.
+    """
+    task, tools = make_task("refund.calculate",
+                            order={"order_id": "o1", "total_cents": 8000, "item_count": 1,
+                                   "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+                            items=[{"sku": "A", "name": "할인된 것", "quantity": 1, "unit_cents": 10000}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_amount_not_derivable"
+    assert "실제 결제액" in result.warnings[0]
+
+
+@pytest.mark.asyncio
+async def test_multiple_units_of_one_item_are_multiplied_not_split():
+    task, tools = make_task("refund.calculate",
+                            order={"order_id": "o1", "total_cents": 30000, "item_count": 3,
+                                   "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+                            items=[{"sku": "A", "name": "위젯", "quantity": 3, "unit_cents": 10000}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    # 반품 수량 1개 → 10,000. 옛 구현도 우연히 같은 값을 냈지만 근거가 달랐다
+    # (총액 ÷ 품목 수). 이제는 단가 × 수량이다.
+    assert result.action_proposals[0].arguments["refund_amount_cents"] == 10000
+
+
+@pytest.mark.asyncio
+async def test_returning_more_than_ordered_is_refused():
+    task, tools = make_task("refund.calculate",
+                            order={"order_id": "o1", "total_cents": 10000, "item_count": 1,
+                                   "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+                            items=[{"sku": "A", "name": "위젯", "quantity": 1, "unit_cents": 10000}])
+    task.context.current_state["return_quantity"] = 5
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_quantity_exceeds_order"
+
+
+@pytest.mark.asyncio
+async def test_missing_order_items_escalates_instead_of_guessing():
+    task, tools = make_task("refund.calculate", items=[])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_calculation_evidence_missing"
+
+
+def test_the_team_is_allowed_to_read_order_items():
+    """★툴은 전부터 있었지만 allowed_tools 에 없어 Registry 가 막고 있었다."""
+    assert "read.order_items" in ReturnRefundTeam.manifest.allowed_tools
