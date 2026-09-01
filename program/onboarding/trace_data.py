@@ -20,24 +20,54 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 CS = os.path.join(REPO, "final_project_cs")
 
 
-def cut(rel, start, end, expect):
-    """rel 파일의 start~end 줄을 그대로 가져온다. 첫 줄에 expect 가 있어야 한다."""
+def cut(rel, head, tail=None, span=None):
+    """rel 파일에서 head 로 시작하는 조각을 가져온다.
+
+    ★줄 번호로 자르지 않는다. 처음엔 그렇게 했는데 `final_project_cs` 가
+      한 줄만 늘어도 인용이 통째로 밀렸다. 실제로 하루에 세 번 밀렸다.
+      글자로 찾으면 코드가 위아래로 움직여도 따라간다.
+
+    ★head 와 tail 은 파일 안에서 유일해야 한다. 여러 군데 걸리면 어느 것을
+      집었는지 알 수 없으므로 그 자리에서 멈춘다. 조용히 엉뚱한 코드를
+      넣느니 실패하는 것이 낫다.
+
+    tail 을 주면 그 줄까지, 안 주면 span 줄만큼 가져온다.
+    """
     path = os.path.join(CS, rel)
     if not os.path.isfile(path):
         raise SystemExit("파일이 없다: %s" % rel)
     lines = io.open(path, encoding="utf-8").read().split("\n")
-    chunk = lines[start - 1:end]
-    if not chunk or expect not in chunk[0]:
-        raise SystemExit("줄이 밀렸다: %s:%d 가 %r 를 담아야 하는데 %r 이다"
-                         % (rel, start, expect, (chunk[0] if chunk else "")))
+
+    hits = [i for i, l in enumerate(lines) if head in l]
+    if len(hits) != 1:
+        raise SystemExit("%s 에서 %r 가 %d 군데다. 하나여야 한다"
+                         % (rel, head, len(hits)))
+    start = hits[0]
+
+    if tail is not None:
+        ends = [i for i, l in enumerate(lines) if tail in l and i >= start]
+        if not ends:
+            raise SystemExit("%s 에서 %r 뒤에 %r 가 없다" % (rel, head, tail))
+        end = ends[0] + 1
+    else:
+        end = start + (span or 1)
+
+    chunk = lines[start:end]
     body = [l for l in chunk if l.strip()]
     pad = min((len(l) - len(l.lstrip()) for l in body), default=0)
-    return "\n".join(l[pad:] if len(l) >= pad else l for l in chunk).rstrip()
+    return start + 1, "\n".join(l[pad:] if len(l) >= pad else l
+                                for l in chunk).rstrip()
 
 
-def code(rel, start, end, expect, plain):
-    return {"path": "%s:%d" % (rel, start), "code": cut(rel, start, end, expect),
-            "plain": plain}
+def code(rel, head, plain, tail=None, span=None):
+    """조각 하나. path 는 보여 주는 용도, key 는 줄 주석을 붙이는 이름표다.
+
+    ★key 에 줄 번호를 넣지 않는다. 줄 번호는 저장소가 바뀔 때마다 움직인다.
+      움직이면 줄 주석이 통째로 떨어져 나간다. 찾는 글자(head)로 이름을 짓는다.
+    """
+    line, text = cut(rel, head, tail, span)
+    return {"path": "%s:%d" % (rel, line), "key": "%s#%s" % (rel, head),
+            "code": text, "plain": plain}
 
 
 STEPS = [
@@ -49,7 +79,23 @@ STEPS = [
             'tenant_id = "demo"',
             'scopes    = {"case:write"}',
             'key_id    = "key-01"'])],
-        code=[code("app/presentation/security.py", 47, 58, "def require_scope",
+        code=[code("app/presentation/security.py", "def authenticate", span=9,
+                   plain=
+                   "오른쪽 칸의 <b>Principal 을 실제로 찍어 내는 곳</b>입니다. "
+                   "다음 조각(require_scope)이 문지기라면, 여기는 신분증 발급 창구입니다.\n\n"
+                   "먼저 헤더가 <code>Bearer </code> 로 시작하는지 봅니다. 아니면 그 자리에서 "
+                   "401 로 끊습니다. 맞으면 앞 일곱 글자를 떼어 낸 나머지가 제시된 열쇠입니다.\n\n"
+                   "그 열쇠를 sha256 지문으로 바꿔서, 등록된 열쇠들의 지문과 하나씩 맞춰 봅니다. "
+                   "원본 열쇠끼리 비교하지 않고 지문끼리 비교합니다. 서버가 진짜 열쇠를 "
+                   "들고 있지 않아도 되기 때문입니다.\n\n"
+                   "<code>hmac.compare_digest</code> 는 그냥 <code>==</code> 대신 쓰는 비교입니다. "
+                   "<code>==</code> 는 글자가 다른 순간 바로 멈춰서, 걸리는 시간을 재면 "
+                   "몇 글자까지 맞았는지가 새어 나갑니다. 이 함수는 맞든 틀리든 같은 시간을 씁니다.\n\n"
+                   "맞는 것이 있으면 그때 <code>Principal(tenant, scopes, key_id)</code> 를 "
+                   "만들어 돌려줍니다. 오른쪽 칸에 뜬 세 줄이 바로 이 세 값입니다. "
+                   "여기서 붙은 tenant 가 이후 모든 조회 조건에 붙습니다. 끝까지 못 찾으면 401 입니다."),
+              code("app/presentation/security.py", "def require_scope", span=12,
+                   plain=
                    "문지기를 만들어 주는 함수입니다. 건물 입구마다 다른 출입증을 요구하듯, "
                    "경로마다 다른 권한을 요구할 수 있게 문지기를 찍어 냅니다.\n\n"
                    "첫 세 줄이 중요합니다. 서버가 켜질 때 <b>그런 권한이 설정에 등록돼 있는지부터</b> "
@@ -72,7 +118,29 @@ STEPS = [
                  "SELECT case_id FROM action_requests",
                  " WHERE tenant_id=%s AND idempotency_key=%s",
                  "결과 없음. 새로 만든다"])],
-        code=[code("app/core/idempotency.py", 8, 15, "def idempotency_key",
+        code=[code("app/presentation/api/cases.py", "idem = request.idempotency_key",
+                   tail="return _view(case)", plain=
+                   "오른쪽 칸의 <b>조회 결과를 실제로 만들어 내는 곳</b>입니다. "
+                   "다음 조각이 지문을 계산하는 함수라면, 여기는 그 지문을 들고 "
+                   "장부를 뒤져 보는 자리입니다.\n\n"
+                   "첫 줄부터 보세요. 손님이 열쇠를 들고 왔으면 그것을 쓰고, 안 가져왔을 때만 "
+                   "서버가 만듭니다. 그다음 줄에서 요청 몸통 자체의 지문도 따로 뜹니다. "
+                   "나중에 \"같은 열쇠인데 내용이 다르다\" 를 잡기 위한 것입니다.\n\n"
+                   "<code>transaction()</code> 은 여러 작업을 한 덩어리로 묶어 다 되거나 "
+                   "다 안 되게 하는 장치입니다.\n\n"
+                   "<code>pg_advisory_xact_lock</code> 이 이 코드의 핵심입니다. 이 열쇠로 "
+                   "들어오는 요청은 한 번에 하나만 지나가게 문을 잠급니다. 이 잠금이 없으면 "
+                   "동시에 온 두 요청이 둘 다 \"장부에 없다\" 를 보고 둘 다 Case 를 만듭니다. "
+                   "실제로 그런 결함이 있었고 2026-09-01 에 이 줄로 고쳤습니다.\n\n"
+                   "<code>SELECT ... WHERE tenant_id=%s AND idempotency_key=%s</code> 가 "
+                   "장부를 뒤지는 줄입니다. 조건이 둘인 것이 중요합니다. 지문만이 아니라 "
+                   "어느 회사 것인지도 같이 봅니다.\n\n"
+                   "찾은 것이 있으면 몸통 지문부터 맞춰 봅니다. 다르면 409 로 거절합니다. "
+                   "같은 열쇠에 다른 내용을 보내는 것은 사고이기 때문입니다. 같으면 새로 "
+                   "만들지 않고 그때 만든 Case 를 그대로 돌려줍니다. 이것이 같은 요청을 "
+                   "열 번 받아도 한 번만 처리되는 이유입니다."),
+              code("app/core/idempotency.py", "def idempotency_key", span=8,
+                   plain=
                    "같은 요청인지 알아보는 <b>지문</b>을 만듭니다.\n\n"
                    "sha256 은 어떤 글이든 넣으면 64자짜리 고정 길이 문자열을 내주는 계산입니다. "
                    "같은 글을 넣으면 언제나 같은 값이 나오고, 한 글자만 달라도 완전히 다른 값이 "
@@ -97,7 +165,25 @@ STEPS = [
                  "event_type        = created",
                  "actor_type        = api"])],
         state=("classifying", 1),
-        code=[code("app/core/transition.py", 116, 136, "def transition_case",
+        code=[code("app/infrastructure/db/repository.py", "def create_case", span=4,
+                   plain=
+                   "오른쪽 칸의 <b>customer_cases 한 행을 실제로 찍어 내는 곳</b>입니다. "
+                   "다음 조각(transition_case)이 상태를 바꾸는 문이라면, 여기는 "
+                   "바꿀 대상 자체를 만드는 곳입니다.\n\n"
+                   "<code>INSERT INTO customer_cases ... VALUES (%s, %s, 'new', %s, %s)</code> "
+                   "에서 세 번째 자리에 <code>'new'</code> 가 글자 그대로 박혀 있습니다. "
+                   "그래서 Case 는 언제나 new 로 태어납니다. 낱장에 적힌 "
+                   "\"new 는 행을 만든 찰나에만 있다\" 가 이 줄에서 나온 말입니다.\n\n"
+                   "<code>masked(subject)</code> 와 <code>mask_json(...)</code> 를 눈여겨보세요. "
+                   "고객이 보낸 문장을 <b>그대로 저장하지 않습니다.</b> 전화번호나 주소 같은 "
+                   "개인정보를 지우고 넣습니다. 지우는 일이 저장 직전에 있어야 "
+                   "빠뜨릴 수 없습니다.\n\n"
+                   "<code>%s</code> 는 값을 나중에 따로 넘긴다는 표시입니다. 문장에 값을 "
+                   "이어 붙이지 않기 때문에, 고객이 문의에 SQL 문을 적어 보내도 "
+                   "명령이 아니라 그냥 글자로 들어갑니다.\n\n"
+                   "<code>RETURNING case_id</code> 로 방금 만든 행의 번호를 바로 받아 옵니다."),
+              code("app/core/transition.py", "def transition_case", span=21,
+                   plain=
                    "Case 의 상태를 바꾸는 <b>유일한 문</b>입니다. 이 프로젝트에서 상태를 "
                    "직접 고치는 코드는 없습니다. 전부 이 함수를 지납니다.\n\n"
                    "설명글에 적힌 세 가지가 핵심입니다.\n\n"
@@ -121,7 +207,8 @@ STEPS = [
             "status     = routing",
             "version    = 2"])],
         state=("routing", 2),
-        code=[code("app/modules/customer_ops/feedback.py", 86, 105, "def classify",
+        code=[code("app/modules/customer_ops/feedback.py", "def classify", span=20,
+                   plain=
                    "문의 한 줄을 읽고 라벨 네 개를 붙입니다. 무슨 의도인지, 무슨 이슈인지, "
                    "감정이 어떤지, 얼마나 급한지입니다.\n\n"
                    "이 함수는 거의 전부가 <b>검사</b>입니다. 실제로 분류하는 줄은 "
@@ -144,7 +231,8 @@ STEPS = [
             "status        = running",
             "version       = 3"])],
         state=("running", 3),
-        code=[code("app/core/registry.py", 54, 79, "def resolve",
+        code=[code("app/core/registry.py", "def resolve", span=26,
+                   plain=
                    "여섯 팀 중 이 문의를 받을 팀 하나를 고릅니다.\n\n"
                    "고르는 방법이 중요합니다. 이 코드에는 <b>팀 이름이 하나도 안 적혀 있습니다.</b> "
                    "각 팀이 \"나는 이런 유형을 받는다\" 고 적어 둔 자기소개(manifest)만 보고 "
@@ -164,7 +252,8 @@ STEPS = [
             '                "return.request",',
             '                "refund.calculate"]',
             '고른 것 = "return.check_eligibility"'])],
-        code=[code("app/core/registry.py", 82, 89, "def capability_for",
+        code=[code("app/core/registry.py", "def capability_for", span=8,
+                   plain=
                    "팀은 정해졌고, 이제 그 팀의 어느 기능을 부를지 고릅니다.\n\n"
                    "규칙이 아주 단순합니다. 팀이 할 수 있는 일 목록을 <b>위에서부터 훑다가</b> "
                    "intent 와 같거나 intent 로 시작하는 것을 만나면 거기서 멈춥니다.\n\n"
@@ -184,7 +273,8 @@ STEPS = [
             "evidence   [출처가 붙은 근거]",
             "degraded   false",
             "omissions  []"])],
-        code=[code("app/core/context.py", 195, 211, "def build",
+        code=[code("app/core/context.py", "def build", span=17,
+                   plain=
                    "AI 에게 넘길 근거를 모아 정해진 크기 안으로 줄입니다.\n\n"
                    "먼저 <b>토큰</b>이 무엇인지 알아야 합니다. AI 가 글을 세는 단위입니다. "
                    "한글은 대충 한 글자가 1~2 토큰입니다. 한 번에 넣을 수 있는 양에 한계가 있어서, "
@@ -197,7 +287,8 @@ STEPS = [
                    "차라리 그 자리에서 멈추고 \"프롬프트를 줄여야 한다\" 고 말하는 편이 낫습니다.\n\n"
                    "잘라도 되는 것은 그다음입니다. 뺀 것은 <code>omissions</code> 에 이름으로 "
                    "남겨서, 답변을 만들 때 \"근거가 모자란 상태였다\" 는 것을 알 수 있게 합니다."),
-              code("config/guardrails.yaml", 13, 22, "context:",
+              code("config/guardrails.yaml", "context:", span=10,
+                   plain=
                    "위 함수가 쓰는 <b>숫자가 적혀 있는 설정 파일</b>입니다.\n\n"
                    "숫자를 코드가 아니라 설정에 두는 이유가 있습니다. 같은 숫자가 코드 두 곳에 "
                    "있으면 한쪽만 고쳐집니다. 그러면 어느 쪽이 진짜인지 알 수 없게 됩니다. "
@@ -214,7 +305,8 @@ STEPS = [
             'next_action = "respond"',
             "evidence    = [주문 · 반품이력 · 정책]",
             "proposals   = []   실행 제안 없음"])],
-        code=[code("app/modules/customer_ops/return_refund.py", 79, 100, "async def execute",
+        code=[code("app/modules/customer_ops/return_refund.py", "async def execute", span=22,
+                   plain=
                    "반품 담당 팀이 실제로 판단하는 부분입니다.\n\n"
                    "코드 모양을 먼저 보세요. <b>검사하고 문제가 있으면 곧바로 돌려보내는</b> "
                    "형태가 반복됩니다. 아래로 갈수록 조건이 다 통과한 상태가 됩니다.\n\n"
@@ -238,7 +330,23 @@ STEPS = [
             "  enabled: false",
             "  owner_team_id: response_generation_review",
             "검토를 건너뛴다"])],
-        code=[code("app/application/controller.py", 179, 190, "async def _maybe_review",
+        code=[code("app/modules/customer_ops/return_refund.py",
+                   'if task.capability == "return.check_eligibility"', span=5,
+                   plain=
+                   "고객이 <b>실제로 받는 문장이 나오는 곳</b>입니다. 낱장 오른쪽에 뜬 "
+                   "\"제공된 주문·반품 이력·정책 근거상...\" 이 이 줄에서 나옵니다.\n\n"
+                   "중요한 것은 이 문장이 <b>코드에 글자 그대로 박혀 있다</b>는 점입니다. "
+                   "모델이 그때그때 지어낸 문장이 아닙니다. 팀이 미리 정해 둔 문구입니다.\n\n"
+                   "이 단계의 검토가 꺼져 있기 때문에 이렇게 됩니다. 검토를 켜면 "
+                   "다음 조각(_maybe_review)이 이 문장을 받아 다른 팀에게 넘기고, "
+                   "그 팀이 문장을 다듬어 돌려줍니다. 지금은 그 과정 없이 이 문구가 "
+                   "그대로 고객에게 나갑니다.\n\n"
+                   "<code>next_action=NextAction.RESPOND</code> 가 \"이제 고객에게 답해도 "
+                   "된다\" 는 신호입니다. 이 값이 ESCALATE 였다면 사람에게 넘어갑니다.\n\n"
+                   "<code>decisions</code> 에 판단 근거를 함께 담습니다. 나중에 "
+                   "\"왜 된다고 했나\" 를 되짚을 수 있어야 하기 때문입니다."),
+              code("app/application/controller.py", "async def _maybe_review", span=12,
+                   plain=
                    "만든 답변을 다른 팀이 한 번 더 검토하는 단계입니다. 함수 이름의 "
                    "<code>maybe</code> 가 \"할 수도 있고 안 할 수도 있다\" 는 뜻입니다.\n\n"
                    "<b>지금은 안 합니다.</b> 네 번째 줄의 조건에서 걸립니다. "
@@ -263,7 +371,8 @@ STEPS = [
                  "aggregate_version = 4",
                  "event_type        = completed"])],
         state=("resolved", 4),
-        code=[code("app/application/controller.py", 173, 178, "def _apply_result",
+        code=[code("app/application/controller.py", "def _apply_result", span=6,
+                   plain=
                    "팀이 돌려준 결과를 Case 상태에 반영합니다. 짧지만 이 프로젝트의 규칙이 "
                    "다 들어 있습니다.\n\n"
                    "첫 줄에서 <code>_event_for_result</code> 를 부릅니다. 팀이 "
@@ -292,7 +401,8 @@ STEPS = [
             '  "evidence": [ { "source_type": "case_event",',
             '      "source_id": "...", "claim": "created",',
             '      "value": {}, "observed_at": "..." } ] }'])],
-        code=[code("app/presentation/api/cases.py", 117, 123, "@router.get",
+        code=[code("app/presentation/api/cases.py", '@router.get("/v1/cases/{case_id}")', span=7,
+                   plain=
                    "고객이 자기 Case 를 조회하는 경로입니다. 여기서 나가는 것이 "
                    "<b>고객이 실제로 받는 JSON</b> 입니다. 파일이 아니라 통신 내용입니다.\n\n"
                    "<code>_case_or_404</code> 가 본인 Case 인지 확인합니다. 남의 것이면 "
@@ -304,7 +414,8 @@ STEPS = [
                    "무엇인지(source_id), 언제 본 것인지(observed_at)가 함께 갑니다.\n\n"
                    "왜 그렇게 하냐면, 나중에 \"왜 이렇게 답했냐\" 는 질문에 답할 수 있어야 "
                    "하기 때문입니다."),
-              code("app/presentation/api/cases.py", 61, 64, "def _view",
+              code("app/presentation/api/cases.py", "def _view", span=4,
+                   plain=
                    "Case 한 건을 밖에 내보낼 모양으로 바꾸는 함수입니다.\n\n"
                    "<b>데이터베이스에 있는 것을 전부 내보내지 않습니다.</b> 여기 적힌 필드만 "
                    "나갑니다. 내부에서만 쓰는 값이 실수로 새어 나가는 것을 막습니다.\n\n"
@@ -324,8 +435,9 @@ STEPS = [
             "action_requests  1행  succeeded",
             "agent_runs       1행  시작과 종료",
             "llm_calls        분류에 쓴 프롬프트와 모델"])],
-        code=[code("app/infrastructure/db/migrations/001_schema.sql", 13, 14,
-                   "CREATE TABLE IF NOT EXISTS customer_cases",
+        code=[code("app/infrastructure/db/migrations/001_schema.sql",
+                   "CREATE TABLE IF NOT EXISTS customer_cases", span=2,
+                   plain=
                    "데이터가 실제로 저장되는 <b>표의 설계도</b>입니다. 두 줄이지만 이 흐름의 "
                    "결론이 여기 있습니다.\n\n"
                    "첫 줄 <code>customer_cases</code> 가 <b>지금 상태</b>입니다. status, "

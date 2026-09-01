@@ -31,17 +31,30 @@ from app.tools.read_tools import ReadToolbox
 def build_classifier(*, config: ProjectConfig | None = None):
     """Build the configured classifier, failing explicitly when unconfigured.
 
-    ★`voc` 모듈이 꺼져 있으면 여기서 실패한다. 인라인 분류가 Case 생성 경로에
-      붙어 있어서, 모듈만 끄고 조용히 넘어가면 `intent`·`sentiment` 가 빈 채로
-      Case 가 만들어지고 그 빈 값이 근거 조합을 거쳐 고객 답변까지 간다
-      (`CLAUDE.md` §1 — 인라인 분류는 선택 기능이 아니다).
-      결과적으로 `voc: false` 로는 이 제품이 기동하지 않는다. 끌 수 있는 척하던
-      2026-08-30 이전 상태가 결함이었다(`docs/handoff/08` §6 검증기 4번).
+    ★**인라인 분류는 `voc` 모듈 소관이 아니다** — 진입·분류 층의 공통 처리다.
+      계획서 v7.1 이 §7 과 §7-A 의 모순을 해소하며 그렇게 정했고, v8 §0 변경
+      요약표와 §7-B 본문에 그대로 있다:
+
+        "[v7.1] 이 인라인 분류는 VOC Team 의 업무가 아니라 진입·분류 층의
+         공통 처리다. VOC 는 이미 분류된 Case events 를 입력받는다."
+
+      ★2026-08-30 `9c11327`(모듈 게이트 실효화)이 여기에 `require_module("voc")`
+      를 걸었다. 게이트를 만든 작업 자체는 정당했지만, 인라인 분류가
+      `app/modules/customer_ops/feedback.py` 에 있고 테스트도 `tests/unit/voc/`
+      에 있어서 **파일 위치를 소관으로 착각**한 것이다. 근거로 삼은
+      `CLAUDE.md` §1 문장의 출처는 v8 §3-A 인데, §3-A 는 v7.1 개정이 반영되지
+      않은 낡은 절이었다(v8 199·204행 대 24·252행).
+
+      그래서 게이트를 뺀다. "인라인 분류는 선택 기능이 아니다" 는 여전히 맞다 —
+      다만 그건 **끌 수 없다는 뜻이지 voc 소관이라는 뜻이 아니다.** 분류 실패는
+      아래 `ClassificationFailed` 로 드러나고 Case 는 `escalated` 로 간다.
+
+      일일 배치(`app/application/feedback_job.py`)는 그대로 `voc` 게이트 아래
+      있다 — 그건 실제로 VOC Team 의 업무다.
     """
     from app.core.settings import get_settings
 
     config = config or load_project_config()
-    config.require_module("voc", "inline classifier")
     if not get_settings().openai_api_key:
         raise RuntimeError("OpenAI API key is missing")
 

@@ -107,10 +107,11 @@ def main() -> None:
                         "sku=EXCLUDED.sku,name=EXCLUDED.name,quantity=EXCLUDED.quantity,unit_cents=EXCLUDED.unit_cents",
                         (stable(f"item:cust_{n:02d}:{seq}"), DEMO, order_id, sku, name, quantity, unit),
                     )
-                    orders.append((order_id, customer_id, unit * quantity, quantity))
+                    orders.append((order_id, customer_id, unit * quantity, quantity,
+                                   stable(f"item:cust_{n:02d}:{seq}")))
 
         with conn.cursor() as cur:
-            for idx, (order_id, customer_id, _total, _quantity) in enumerate(orders, 1):
+            for idx, (order_id, customer_id, _total, _quantity, _item_id) in enumerate(orders, 1):
                 cur.execute("SELECT status, ordered_at FROM orders WHERE order_id=%s", (order_id,))
                 status, ordered_at = cur.fetchone()
                 if status == "paid":
@@ -127,17 +128,22 @@ def main() -> None:
                 )
 
         with conn.cursor() as cur:
-            normal_order, normal_customer, _total, normal_quantity = orders[6]
+            # ★반품이 어느 품목인지 밝힌다(마이그레이션 007). 이게 없으면 다품목
+            #   주문에서 환불 금액을 정할 수 없다.
+            normal_order, normal_customer, _total, normal_quantity, normal_item = orders[6]
             cur.execute(
-                "INSERT INTO returns (return_id,tenant_id,customer_id,order_id,reason_code,quantity,status) "
-                "VALUES (%s,%s,%s,%s,'size_mismatch',%s,'requested') ON CONFLICT (return_id) DO UPDATE SET quantity=EXCLUDED.quantity",
-                (stable("return:normal"), DEMO, normal_customer, normal_order, max(1, normal_quantity - 1)),
+                "INSERT INTO returns (return_id,tenant_id,customer_id,order_id,order_item_id,reason_code,quantity,status) "
+                "VALUES (%s,%s,%s,%s,%s,'size_mismatch',%s,'requested') ON CONFLICT (return_id) DO UPDATE SET "
+                "quantity=EXCLUDED.quantity, order_item_id=EXCLUDED.order_item_id",
+                (stable("return:normal"), DEMO, normal_customer, normal_order, normal_item,
+                 max(1, normal_quantity - 1)),
             )
-            over_order, over_customer, _total, over_quantity = orders[9]
+            over_order, over_customer, _total, over_quantity, over_item = orders[9]
             cur.execute(
-                "INSERT INTO returns (return_id,tenant_id,customer_id,order_id,reason_code,quantity,status) "
-                "VALUES (%s,%s,%s,%s,'defective',%s,'requested') ON CONFLICT (return_id) DO UPDATE SET quantity=EXCLUDED.quantity",
-                (stable("return:over"), DEMO, over_customer, over_order, over_quantity + 2),
+                "INSERT INTO returns (return_id,tenant_id,customer_id,order_id,order_item_id,reason_code,quantity,status) "
+                "VALUES (%s,%s,%s,%s,%s,'defective',%s,'requested') ON CONFLICT (return_id) DO UPDATE SET "
+                "quantity=EXCLUDED.quantity, order_item_id=EXCLUDED.order_item_id",
+                (stable("return:over"), DEMO, over_customer, over_order, over_item, over_quantity + 2),
             )
 
     with get_connection() as conn, conn.cursor() as cur:

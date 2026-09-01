@@ -127,12 +127,17 @@ class ReadToolbox:
         with self.connection_factory() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT return_id, order_id, reason_code, quantity, status, requested_at FROM returns "
+                    "SELECT return_id, order_id, order_item_id, reason_code, quantity, status, "
+                    "requested_at FROM returns "
                     "WHERE tenant_id=%s AND customer_id=%s ORDER BY requested_at DESC",
                     (scope.tenant_id, scope.customer_id),
                 )
                 rows = cur.fetchall()
-        return [dict(zip(("return_id", "order_id", "reason_code", "quantity", "status", "requested_at"), row))
+        # ★`order_item_id` 는 NULL 일 수 있다 — 2026-09-01 이전에 쌓인 반품에는
+        #   품목 정보가 없다. NULL 은 "모른다" 이고, 그때는 다품목 주문에서
+        #   환불 금액을 만들지 않는다(지어내지 않는다).
+        return [dict(zip(("return_id", "order_id", "order_item_id", "reason_code", "quantity",
+                          "status", "requested_at"), row))
                 for row in rows]
 
     def account(self, scope: ToolContext, **_: Any) -> dict[str, Any] | None:

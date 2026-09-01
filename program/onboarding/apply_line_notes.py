@@ -58,8 +58,11 @@ def sources():
     for s in STEPS:
         for i, (_k, _nm, lines) in enumerate(s["add"]):
             out["pack-%d-%d" % (s["n"], i)] = list(lines)
-        for i, c in enumerate(s["code"]):
-            out["code-%d-%d" % (s["n"], i)] = c["code"].split("\n")
+        for c in s["code"]:
+            # ★번호가 아니라 경로로 못 박는다. 조각을 사이에 끼워 넣으면 번호가
+            #   밀려서 3번 조각 설명이 4번 조각에 붙는다. 줄 수가 우연히 같으면
+            #   줄 수 검사도 그걸 못 잡는다.
+            out["code-%d-%s" % (s["n"], c["key"])] = c["code"].split("\n")
     for s in SHEETS:
         out["sin-%d" % s["n"]] = list(s["in_lines"])
         out["sout-%d" % s["n"]] = list(s["out_lines"])
@@ -132,7 +135,9 @@ def main(paths):
     for key in src:                              # 원본 순서를 지킨다
         if key not in keep:
             continue
-        body.append('    "%s": [' % key)
+        # ★키에 따옴표가 들어 있다(@router.get("/v1/...") 같은 앵커).
+        #   그냥 감싸면 파이썬 문법이 깨진다. json 으로 내보낸다.
+        body.append('    %s: [' % json.dumps(key, ensure_ascii=False))
         for note in keep[key]:
             body.append('        %s,' % json.dumps(note, ensure_ascii=False))
         body.append('    ],')

@@ -42,14 +42,30 @@ def _config(**overrides) -> ProjectConfig:
 
 
 # ── voc ─────────────────────────────────────────────────────────────────────
-def test_disabled_voc_refuses_the_inline_classifier():
-    """★분류를 건너뛰지 않고 실패한다.
+def test_inline_classification_is_not_gated_by_voc(monkeypatch):
+    """★인라인 분류는 `voc` 소관이 아니다 — 진입·분류 층의 공통 처리다.
 
-    조용히 넘어가면 `intent`·`sentiment` 가 빈 채로 Case 가 만들어지고
-    그 빈 값이 근거 조합을 거쳐 고객 답변까지 간다(`CLAUDE.md` §1).
+    계획서 v7.1 이 §7 과 §7-A 의 모순을 해소하며 그렇게 정했고, v8 §0 변경
+    요약표(24행)와 §7-B 본문(252행)에 그대로 있다:
+
+      "[v7.1] 이 인라인 분류는 VOC Team 의 업무가 아니라 진입·분류 층의 공통
+       처리다. VOC 는 이미 분류된 Case events 를 입력받는다."
+
+    ★2026-08-30 `9c11327` 이 여기에 게이트를 걸었던 것은, 인라인 분류가
+      `app/modules/customer_ops/feedback.py` 에 있고 테스트가 `tests/unit/voc/`
+      에 있어서 **파일 위치를 소관으로 착각**한 결과다. 근거로 삼은 v8 §3-A
+      (199·204행)는 v7.1 개정이 반영되지 않은 낡은 절이었다.
+
+    ★"인라인 분류는 선택 기능이 아니다" 는 여전히 맞다 — 그건 **끌 수 없다**는
+      뜻이지 **voc 소관**이라는 뜻이 아니다. 분류 실패는 `ClassificationFailed`
+      로 드러나고 Case 는 `escalated` 로 간다.
     """
-    with pytest.raises(ProjectConfigError, match="voc.*disabled"):
-        build_classifier(config=_config(voc=False))
+    from app.core import settings as settings_module
+
+    monkeypatch.setattr(settings_module, "get_settings",
+                        lambda: type("S", (), {"openai_api_key": "sk-test"})())
+    classifier = build_classifier(config=_config(voc=False))
+    assert callable(classifier)
 
 
 def test_disabled_voc_refuses_the_daily_batch(monkeypatch):

@@ -110,6 +110,64 @@ async def test_multi_item_order_does_not_get_a_made_up_amount():
 
 
 @pytest.mark.asyncio
+async def test_multi_item_order_is_exact_when_the_return_names_the_item():
+    """★마이그레이션 007 이후 — 반품이 품목을 밝히면 다품목도 정확히 계산된다.
+
+    비싼 품목(25,000)을 반품했는데 옛 구현은 총액 30,000 ÷ 2 = 15,000 을 냈다.
+    """
+    task, tools = make_task(
+        "refund.calculate",
+        order={"order_id": "o1", "total_cents": 30000, "item_count": 2,
+               "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+        items=[{"order_item_id": "item-A", "sku": "A", "name": "비싼 것",
+                "quantity": 1, "unit_cents": 25000},
+               {"order_item_id": "item-B", "sku": "B", "name": "싼 것",
+                "quantity": 1, "unit_cents": 5000}],
+        returns=[{"return_id": "r1", "order_id": "o1", "order_item_id": "item-A",
+                  "reason_code": "defective", "quantity": 1, "status": "requested"}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    proposal = result.action_proposals[0]
+    assert proposal.arguments["refund_amount_cents"] == 25000
+    assert proposal.arguments["calculation_basis"]["order_item_id"] == "item-A"
+    assert proposal.arguments["calculation_basis"]["sku"] == "A"
+
+
+@pytest.mark.asyncio
+async def test_a_return_pointing_at_another_order_is_refused():
+    """★반품이 가리키는 품목이 이 주문에 없으면 데이터가 어긋난 것이다."""
+    task, tools = make_task(
+        "refund.calculate",
+        order={"order_id": "o1", "total_cents": 30000, "item_count": 2,
+               "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+        items=[{"order_item_id": "item-A", "sku": "A", "name": "가", "quantity": 1, "unit_cents": 25000},
+               {"order_item_id": "item-B", "sku": "B", "name": "나", "quantity": 1, "unit_cents": 5000}],
+        returns=[{"return_id": "r1", "order_id": "o1", "order_item_id": "item-Z",
+                  "reason_code": "defective", "quantity": 1, "status": "requested"}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_item_not_in_order"
+
+
+@pytest.mark.asyncio
+async def test_an_old_return_without_attribution_still_escalates():
+    """★007 이전에 쌓인 반품에는 품목 정보가 없다. 지금 와서 찍지 않는다."""
+    task, tools = make_task(
+        "refund.calculate",
+        order={"order_id": "o1", "total_cents": 30000, "item_count": 2,
+               "ordered_at": datetime.now(UTC) - timedelta(days=2)},
+        items=[{"order_item_id": "item-A", "sku": "A", "name": "가", "quantity": 1, "unit_cents": 25000},
+               {"order_item_id": "item-B", "sku": "B", "name": "나", "quantity": 1, "unit_cents": 5000}],
+        returns=[{"return_id": "r1", "order_id": "o1", "order_item_id": None,
+                  "reason_code": "defective", "quantity": 1, "status": "requested"}])
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "refund_item_unattributable"
+
+
+@pytest.mark.asyncio
 async def test_a_discounted_order_is_not_computed_from_list_prices():
     """★품목 단가 합이 총액과 다르면 할인·쿠폰·배송비가 끼어 있다는 뜻이다.
 

@@ -83,7 +83,8 @@ class ReturnRefundTeam:
         return 90 if reason == "defective" else 7
 
     @staticmethod
-    def _refund_amount(items: Any, order_total_cents: int, quantity: int) -> "RefundOutcome":
+    def _refund_amount(items: Any, order_total_cents: int, quantity: int,
+                       order_item_id: str | None = None) -> "RefundOutcome":
         """반품 수량에 해당하는 환불 금액을 **구할 수 있을 때만** 구한다.
 
         ★이전 구현은 `total_cents * quantity // item_count` 였다. 이 한 줄에
@@ -101,40 +102,53 @@ class ReturnRefundTeam:
           이 데이터만으로는 모른다 — 쇼핑몰이 실결제액을 줘야 한다(D-001 1-B).
 
         ★(1)을 어떻게 아는가: 품목이 하나면 가정이 필요 없다. 여럿이면 **어느
-          품목을 반품하는지** 를 알아야 하는데, `returns` 테이블에는 품목 참조가
-          없다(`order_id`·`reason_code`·`quantity` 뿐). 그래서 여럿일 때는
-          금액을 만들지 않는다.
+          품목을 반품하는지** 를 알아야 한다. 2026-09-01 마이그레이션 007 로
+          `returns.order_item_id` 가 생겨서, 그 값이 있으면 다품목 주문도 정확히
+          계산한다. **없으면(NULL) 여전히 만들지 않는다** — 그 이전에 쌓인
+          반품에는 품목 정보가 없고, 지금 와서 찍으면 지어낸 값이다.
         """
         if not isinstance(items, list) or not items:
             return RefundOutcome(failure_code="refund_calculation_evidence_missing",
                                  reason="주문 품목을 읽지 못해 환불 금액을 계산할 수 없습니다.")
         try:
-            lines = [(str(item["sku"]), int(item["quantity"]), int(item["unit_cents"]))
+            lines = [(str(item.get("order_item_id") or ""), str(item["sku"]),
+                      int(item["quantity"]), int(item["unit_cents"]))
                      for item in items]
-        except (KeyError, TypeError, ValueError):
+        except (KeyError, TypeError, ValueError, AttributeError):
             return RefundOutcome(failure_code="refund_calculation_evidence_missing",
                                  reason="주문 품목에 수량·단가가 없어 환불 금액을 계산할 수 없습니다.")
 
-        subtotal = sum(unit * count for _, count, unit in lines)
+        subtotal = sum(unit * count for _, _, count, unit in lines)
         if subtotal != order_total_cents:
             # 차액이 곧 할인·쿠폰·배송비다. 어느 품목에 얼마가 붙었는지 모른다.
             return RefundOutcome(
                 failure_code="refund_amount_not_derivable",
                 reason=(f"품목 단가 합({subtotal})과 주문 총액({order_total_cents})이 달라 "
                         "실제 결제액을 알 수 없습니다. 쇼핑몰의 실결제 내역이 필요합니다."))
-        if len(lines) > 1:
+        if len(lines) == 1:
+            selected = lines[0]
+        elif order_item_id:
+            # 반품이 어느 품목인지 밝혔다(마이그레이션 007).
+            selected = next((line for line in lines if line[0] == str(order_item_id)), None)
+            if selected is None:
+                return RefundOutcome(
+                    failure_code="refund_item_not_in_order",
+                    reason=("반품이 가리키는 품목이 이 주문에 없습니다. "
+                            "주문과 반품이 어긋나 있습니다."))
+        else:
             return RefundOutcome(
                 failure_code="refund_item_unattributable",
                 reason=("주문에 품목이 여러 개인데 반품 요청에 어느 품목인지가 없어 "
                         "환불 금액을 정할 수 없습니다."))
 
-        sku, ordered_quantity, unit_cents = lines[0]
+        item_id, sku, ordered_quantity, unit_cents = selected
         if quantity <= 0 or quantity > ordered_quantity:
             return RefundOutcome(
                 failure_code="refund_quantity_exceeds_order",
                 reason=f"반품 수량({quantity})이 주문 수량({ordered_quantity})을 벗어납니다.")
         return RefundOutcome(amount=unit_cents * quantity,
                              basis={"basis": "order_item_unit_price", "sku": sku,
+                                    "order_item_id": item_id or None,
                                     "unit_cents": unit_cents, "return_quantity": quantity,
                                     "order_total_cents": order_total_cents,
                                     "order_item_lines": len(lines)})
@@ -222,7 +236,11 @@ class ReturnRefundTeam:
                 return self._result(task, outcome="escalated", confidence=0.0, evidence=evidence,
                                     next_action=NextAction.ESCALATE, failure_code="tool_loop_guard")
 
-            outcome = self._refund_amount(items, total, int(quantity))
+            # ★어느 품목을 반품하는가 — 반품 레코드가 밝혔으면 그것을 쓴다.
+            #   없으면(옛 데이터) 다품목 주문에서는 금액을 만들지 않는다.
+            returned_item = (request or {}).get("order_item_id") or current.get("order_item_id")
+            outcome = self._refund_amount(items, total, int(quantity),
+                                          str(returned_item) if returned_item else None)
             if outcome.failure_code is not None:
                 # ★근거 없이 금액을 만들지 않는다. "환불됩니다" 를 잘못 말하면
                 #   고객이 손해를 본다(`CLAUDE.md` §0). 못 구하면 사람에게 넘긴다.

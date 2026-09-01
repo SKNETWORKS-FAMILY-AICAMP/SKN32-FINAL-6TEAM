@@ -177,9 +177,9 @@ def main():
              "add": [[k, nm, lines, notes_for("pack-%d-%d" % (s["n"], i), lines)]
                      for i, (k, nm, lines) in enumerate(s["add"])],
              "state": list(s["state"]) if s.get("state") else None,
-             "code": [dict(c, notes=notes_for("code-%d-%d" % (s["n"], i),
+             "code": [dict(c, notes=notes_for("code-%d-%s" % (s["n"], c["key"]),
                                               c["code"].split(chr(10))))
-                      for i, c in enumerate(s["code"])]}
+                      for c in s["code"]]}
             for s in STEPS]
 
     check(pack)

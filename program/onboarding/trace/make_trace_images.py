@@ -163,4 +163,6 @@ if __name__ == "__main__":
     sheet_filenames()
     import os
     n = len([f for f in os.listdir(OUT) if f.endswith(".png")]) if "OUT" in dir() else 0
-    print("완료:", os.path.abspath("images"))
+    # ★abspath("images") 는 지금 있는 폴더 기준이라 어디서 돌리느냐에 따라
+    #   엉뚱한 경로를 찍는다. 실제로 쓴 자리를 그대로 보여 준다.
+    print("완료:", OUT)

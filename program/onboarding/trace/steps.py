@@ -5,7 +5,8 @@ from draw import BLUE, GREEN, GREY, PURPLE, RED, step
 
 def build_steps():
     step(1, "문 앞에서 신원 확인", RED,
-         [("분류", ["컴포넌트 아님. 진입 표면"]),
+         [("층", ["8-1 Agent Gateway", "Trust Boundary"]),
+          ("분류", ["컴포넌트 아님. 진입 표면"]),
           ("런타임", ["코어 2", "Access and Action"]),
           ("담당", ["정세환"]),
           ("계약", ["Principal", "scope 10종은", "guardrails.yaml 이 정본"])],
@@ -34,7 +35,8 @@ def build_steps():
          mark=(1, 5, 6))
 
     step(2, "같은 요청이 아까 왔었나", RED,
-         [("분류", ["컴포넌트. 뺄 수 없다"]),
+         [("층", ["8-7 Tool·Action Layer", "의 멱등성 장치를", "Gateway 자리에서 쓴다"]),
+          ("분류", ["컴포넌트. 뺄 수 없다"]),
           ("런타임", ["코어 2", "Access and Action"]),
           ("담당", ["정세환"]),
           ("계약", ["idempotency_key", "action_requests 의", "UNIQUE 제약이 강제"])],
@@ -75,7 +77,8 @@ def build_steps():
          mark=(0, 1, 4, 5))
 
     step(3, "Case 를 만들고 첫 이벤트를 남긴다", BLUE,
-         [("분류", ["컴포넌트", "Case lifecycle"]),
+         [("층", ["8-2 Customer Case Layer"]),
+          ("분류", ["컴포넌트", "Case lifecycle"]),
           ("런타임", ["코어 1", "Case Runtime"]),
           ("담당", ["최연우"]),
           ("계약", ["transition_case()", "상태를 바꾸는", "유일한 문"])],
@@ -103,7 +106,8 @@ def build_steps():
          mark=(1, 2, 5, 7))
 
     step(4, "의도·이슈·감성을 한 번에 분류", GREEN,
-         [("분류", ["모듈  voc", "끄면 이 단계가 없다"]),
+         [("층", ["층 밖", "§8 어느 층도 아니다", "접수 경로에 인라인"]),
+          ("분류", ["모듈  voc", "끄면 이 단계가 없다"]),
           ("런타임", ["모델", "Agent Team 밖의", "분류기"]),
           ("담당", ["송채영"]),
           ("계약", ["Classification", "라벨 4개가 전부", "정해진 목록 안"])],
@@ -132,7 +136,8 @@ def build_steps():
          mark=(0, 5, 6, 7))
 
     step(5, "어느 팀 일인지 찾는다", BLUE,
-         [("분류", ["컴포넌트", "Team Registry"]),
+         [("층", ["8-3 Team Registry"]),
+          ("분류", ["컴포넌트", "Team Registry"]),
           ("런타임", ["코어 1", "Coordination"]),
           ("담당", ["최연우"]),
           ("계약", ["TeamManifest", "accepted_case_types", "만 본다"])],
@@ -162,7 +167,8 @@ def build_steps():
          mark=(0, 6, 7))
 
     step(6, "그 팀의 무슨 기능을 쓸지 고른다", BLUE,
-         [("분류", ["컴포넌트", "Team Registry"]),
+         [("층", ["8-3 Team Contract"]),
+          ("분류", ["컴포넌트", "Team Registry"]),
           ("런타임", ["코어 1", "Coordination"]),
           ("담당", ["최연우"]),
           ("계약", ["TeamManifest", ".capabilities", "목록 순서가", "곧 우선순위"])],
@@ -190,7 +196,8 @@ def build_steps():
          mark=(0, 1))
 
     step(7, "근거를 모아 예산 안으로 자른다", PURPLE,
-         [("분류", ["컴포넌트", "Context Broker", "+ 모듈 vector_rag"]),
+         [("층", ["8-4 Context Broker"]),
+          ("분류", ["컴포넌트", "Context Broker", "+ 모듈 vector_rag"]),
           ("런타임", ["근거 조합", "코어 1 이 부른다"]),
           ("담당", ["최연우 · 모델 공통"]),
           ("계약", ["ContextPack", "Evidence", "예산은", "guardrails.yaml"])],
@@ -220,7 +227,8 @@ def build_steps():
          mark=(2, 3, 6, 7))
 
     step(8, "Team 이 판단한다", GREEN,
-         [("분류", ["인스턴스", "Agent Team 6 중 1", "return_refund"]),
+         [("층", ["실행 대상 (Agent Team)"]),
+          ("분류", ["인스턴스", "Agent Team 6 중 1", "return_refund"]),
           ("런타임", ["모델", "TeamExecutorPort", "경유"]),
           ("담당", ["서유현"]),
           ("계약", ["TeamTask 들어감", "TeamResult 나옴", "allowed_tools 밖은", "도구함이 거부"])],
@@ -249,7 +257,8 @@ def build_steps():
          mark=(0, 3, 5, 7))
 
     step(9, "답변 문장을 만들고 톤을 검토한다", GREEN,
-         [("분류", ["인스턴스", "response_generation", "_review"]),
+         [("층", ["8-8 Agentic Controller", "가 부르는 검토 팀"]),
+          ("분류", ["인스턴스", "response_generation", "_review"]),
           ("런타임", ["모델"]),
           ("담당", ["송채영"]),
           ("계약", ["TeamResult", "★지금 꺼져 있다", "response_review", ".enabled = false"])],
@@ -277,7 +286,8 @@ def build_steps():
          mark=(0, 1, 4, 5))
 
     step(10, "결과를 상태로 반영한다", BLUE,
-         [("분류", ["컴포넌트", "Controller", "+ Case lifecycle"]),
+         [("층", ["8-6 Shared State", "+ 8-2 Case Layer"]),
+          ("분류", ["컴포넌트", "Controller", "+ Case lifecycle"]),
           ("런타임", ["코어 1", "Case Runtime"]),
           ("담당", ["최연우"]),
           ("계약", ["transition_case()", "다시 이 문을", "지난다"])],
@@ -305,7 +315,8 @@ def build_steps():
          mark=(0, 1, 7))
 
     step(11, "고객이 답을 받는다", RED,
-         [("분류", ["진입 표면", "REST · MCP 공용"]),
+         [("층", ["8-1 Agent Gateway", "나가는 쪽"]),
+          ("분류", ["진입 표면", "REST · MCP 공용"]),
           ("런타임", ["코어 2", "Access and Action"]),
           ("담당", ["정세환"]),
           ("계약", ["CaseView", "근거를 빼고", "답만 주지 않는다"])],
@@ -333,7 +344,8 @@ def build_steps():
          mark=(6, 7))
 
     step(12, "기록이 남는다", GREY,
-         [("분류", ["컴포넌트", "DB repository", "append-only"]),
+         [("층", ["8-2 Customer Case Layer", "의 event store"]),
+          ("분류", ["컴포넌트", "DB repository", "append-only"]),
           ("런타임", ["전 담당이", "지나간 자리"]),
           ("담당", ["공통"]),
           ("계약", ["case_events 는", "UPDATE·DELETE", "하지 않는다"])],
