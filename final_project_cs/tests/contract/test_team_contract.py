@@ -4,6 +4,7 @@ from app.core.contracts import TeamModule, TeamManifest
 from app.modules.customer_ops import VocStoreManagerTeam
 
 
+# invariant: INV-CS-TEAM-001
 def test_team_manifests_implement_protocol():
     for team in (VocStoreManagerTeam,):
         assert isinstance(team.__new__(team), TeamModule)
@@ -15,5 +16,6 @@ def test_team_manifests_implement_protocol():
         assert manifest.active
 
 
+# invariant: INV-CS-TEAM-002
 def test_manifest_scopes_are_exact():
     assert VocStoreManagerTeam.manifest.allowed_tools == ["read.policy"]

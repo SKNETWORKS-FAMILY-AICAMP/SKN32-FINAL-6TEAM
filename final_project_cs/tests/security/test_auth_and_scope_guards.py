@@ -29,6 +29,7 @@ def test_valid_bearer_token_authenticates() -> None:
     assert VALID_SCOPE in principal.scopes
 
 
+# invariant: INV-CS-SEC-001
 def test_any_seven_character_prefix_must_not_authenticate() -> None:
     """형식 검사를 빼면 앞 7글자가 무엇이든 통과한다.
 
@@ -49,6 +50,7 @@ def test_missing_and_malformed_headers_are_unauthenticated() -> None:
         assert caught.value.status_code == 401
 
 
+# invariant: INV-CS-SEC-002
 def test_scope_guard_denies_a_principal_with_no_scopes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -65,6 +67,7 @@ def test_scope_guard_denies_a_principal_with_no_scopes(
     assert caught.value.status_code == 403
 
 
+# invariant: INV-CS-SEC-003
 def test_scope_guard_denies_a_principal_holding_another_scope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

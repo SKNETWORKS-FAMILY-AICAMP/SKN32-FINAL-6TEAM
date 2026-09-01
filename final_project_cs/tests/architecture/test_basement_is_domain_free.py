@@ -81,6 +81,7 @@ def _offending_lines(path: Path) -> list[tuple[int, str]]:
     return hits
 
 
+# invariant: INV-CS-ARCH-001
 def test_basement_layers_do_not_know_the_business_domain():
     """★basement 가 특정 업무 도메인을 알면 복사본이 그것을 물려받는다."""
     problems: dict[str, list[tuple[int, str]]] = {}
@@ -97,6 +98,7 @@ def test_basement_layers_do_not_know_the_business_domain():
         + "\n".join(f"  {f}:{n}  {t}" for f, hits in problems.items() for n, t in hits))
 
 
+# invariant: INV-CS-ARCH-006
 def test_domain_modules_are_allowed_to_know_their_domain():
     """★반대 방향도 확인한다. 도메인 자리가 비어 있으면 이 게이트는 무의미하다.
 
@@ -106,11 +108,13 @@ def test_domain_modules_are_allowed_to_know_their_domain():
     assert hits, "app/modules/ 에 도메인 구현이 없다 — 게이트가 헛돌고 있다"
 
 
+# invariant: INV-CS-ARCH-004
 def test_allow_list_stays_small():
     """★예외 목록이 늘어나면 경계가 무너지는 중이라는 뜻이다."""
     assert len(ALLOWED) <= 3, f"예외가 {len(ALLOWED)}개다. 늘리기 전에 설계를 의심하라: {sorted(ALLOWED)}"
 
 
+# invariant: INV-CS-ARCH-002
 @pytest.mark.parametrize("path", sorted(p.as_posix() for p in _python_files(*BASEMENT_DIRS)))
 def test_no_basement_file_imports_a_domain_module(path: str):
     """★basement 는 `app.modules` 를 import 하지 않는다.

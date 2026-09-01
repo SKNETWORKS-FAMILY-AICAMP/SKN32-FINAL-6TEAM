@@ -89,6 +89,7 @@ def _enqueue(consumer: ConsumerContract, tenant: str, key: str) -> None:
     consumer.publish("contract.consumer", {"tenant_id": tenant, "contract": True}, key)
 
 
+# invariant: INV-CS-ACT-001
 def test_duplicate_dedupe_key_has_one_side_effect(consumer_contract: ConsumerContract, consumer_db: str):
     key = "duplicate-" + uuid4().hex
     _enqueue(consumer_contract, consumer_db, key)
@@ -101,6 +102,7 @@ def test_duplicate_dedupe_key_has_one_side_effect(consumer_contract: ConsumerCon
     assert consumer_contract.status(key)[:2] == ("delivered", 1)
 
 
+# invariant: INV-CS-ACT-002
 def test_concurrent_claims_have_one_side_effect(consumer_contract: ConsumerContract, consumer_db: str):
     key = "race-" + uuid4().hex
     _enqueue(consumer_contract, consumer_db, key)
@@ -118,6 +120,7 @@ def test_concurrent_claims_have_one_side_effect(consumer_contract: ConsumerContr
     assert consumer_contract.status(key)[:2] == ("delivered", 1)
 
 
+# invariant: INV-CS-ACT-003
 def test_timeout_is_unknown_and_not_automatically_retried(consumer_contract: ConsumerContract, consumer_db: str):
     key = "timeout-" + uuid4().hex
     _enqueue(consumer_contract, consumer_db, key)

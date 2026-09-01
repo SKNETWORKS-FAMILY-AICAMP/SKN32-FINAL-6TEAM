@@ -29,6 +29,7 @@ def new_case() -> CaseProjection:
 # ── 기본 전이 ─────────────────────────────────────────────────────────
 
 
+# invariant: INV-CS-RT-003
 def test_created_moves_to_classifying_and_bumps_version() -> None:
     case = apply_event(new_case(), EventType.CREATED, CREATED_PAYLOAD)
     assert case.status is CaseStatus.CLASSIFYING
@@ -48,6 +49,7 @@ def test_happy_path_to_running() -> None:
     assert case.owner_team_id == "order_shipping"
 
 
+# invariant: INV-CS-RT-015
 def test_illegal_transition_is_rejected() -> None:
     """new 에서 곧장 resolved 로 갈 수 없다."""
     with pytest.raises(InvalidTransition, match="허용되지 않은 전이"):
@@ -83,6 +85,7 @@ def test_classified_requires_all_three_labels() -> None:
 # ── 분류 실패 시 라벨을 채우지 않는다 (CLAUDE.md §1) ──────────────────
 
 
+# invariant: INV-CS-RT-020
 def test_classification_failure_leaves_labels_empty() -> None:
     case = apply_event(new_case(), EventType.CREATED, CREATED_PAYLOAD)
     case = apply_event(
@@ -97,6 +100,7 @@ def test_classification_failure_leaves_labels_empty() -> None:
 # ── state_json 병합 ───────────────────────────────────────────────────
 
 
+# invariant: INV-CS-RT-005
 def test_state_patch_merges_and_does_not_wipe() -> None:
     case = apply_event(
         new_case(), EventType.CREATED, {**CREATED_PAYLOAD, "state_patch": {"a": 1}}
@@ -123,6 +127,7 @@ WAIT_APPROVAL_SEQUENCE = [
 ]
 
 
+# invariant: INV-CS-RT-004
 def test_fold_reproduces_step_by_step_result() -> None:
     """이벤트를 하나씩 적용한 결과와 통째로 접은 결과가 같다."""
     stepwise = new_case()
@@ -135,10 +140,12 @@ def test_fold_reproduces_step_by_step_result() -> None:
     assert replayed.version == len(WAIT_APPROVAL_SEQUENCE)
 
 
+# invariant: INV-CS-RT-001
 def test_replay_is_deterministic() -> None:
     assert fold_events(WAIT_APPROVAL_SEQUENCE) == fold_events(WAIT_APPROVAL_SEQUENCE)
 
 
+# invariant: INV-CS-RT-002
 def test_version_always_equals_event_count() -> None:
     """version 은 이벤트 수와 같다 — case_events.aggregate_version 과 맞물린다."""
     for i in range(1, len(WAIT_APPROVAL_SEQUENCE) + 1):

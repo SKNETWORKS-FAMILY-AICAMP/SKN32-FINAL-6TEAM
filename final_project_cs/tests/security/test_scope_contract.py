@@ -2,6 +2,7 @@ from app.core.settings import get_guardrails
 from app.presentation.api.mcp import mcp
 
 
+# invariant: INV-CS-SEC-007
 def test_ten_scopes_are_guardrail_owned():
     """★2026-08-18: Composer 쓰기 채널 이식(S-COMPOSER-WRITE-CHANNEL-PORT)이
     guardrails.yaml에 composer:read/validate/write 3개를 추가했다. 이 계약
@@ -12,6 +13,7 @@ def test_ten_scopes_are_guardrail_owned():
     }
 
 
+# invariant: INV-CS-SEC-008
 def test_mcp_has_exactly_three_read_scoped_tools():
     tools = mcp._tool_manager._tools
     assert set(tools) == {"get_my_cases", "get_case_detail", "open_support_case"}

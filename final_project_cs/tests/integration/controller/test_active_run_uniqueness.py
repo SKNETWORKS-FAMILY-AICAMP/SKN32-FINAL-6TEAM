@@ -20,6 +20,7 @@ def _start_run(tenant: str, case_id):
         return "rejected", str(exc)
 
 
+# invariant: INV-CS-RT-011
 def test_two_simultaneous_first_start_runs_leave_exactly_one_active_run(db):  # noqa: F811
     conn, tenant = db
     case_id, _ = seed_case(conn, tenant)

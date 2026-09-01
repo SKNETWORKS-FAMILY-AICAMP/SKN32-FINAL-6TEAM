@@ -36,6 +36,7 @@ def _fresh_case(conn, tenant: str):
     return case_id
 
 
+# invariant: INV-CS-RT-006
 def test_writing_with_a_version_older_than_current_is_rejected(db):  # noqa: F811
     """읽은 시점보다 현재 version 이 **크면** 충돌이다."""
     conn, tenant = db
@@ -51,6 +52,7 @@ def test_writing_with_a_version_older_than_current_is_rejected(db):  # noqa: F81
                             actor_type="test")
 
 
+# invariant: INV-CS-RT-008
 def test_a_rejected_stale_write_does_not_change_the_case(db):  # noqa: F811
     """거부됐으면 상태가 그대로여야 한다. 이게 덮어쓰기 방지의 실체다."""
     conn, tenant = db
@@ -69,6 +71,7 @@ def test_a_rejected_stale_write_does_not_change_the_case(db):  # noqa: F811
     assert after["status"] == before["status"]
 
 
+# invariant: INV-CS-RT-007
 def test_writing_with_a_version_ahead_of_current_is_rejected(db):  # noqa: F811
     """있지도 않은 미래 version 으로 쓰는 것도 충돌이다. 대조는 양방향이다."""
     conn, tenant = db
@@ -96,6 +99,7 @@ def test_writing_with_a_version_ahead_of_current_is_rejected(db):  # noqa: F811
 # 한쪽이 진다.
 
 
+# invariant: INV-CS-RT-009
 def test_two_writers_that_read_the_same_version_produce_exactly_one_conflict(
     db, monkeypatch  # noqa: F811
 ):
@@ -168,6 +172,7 @@ def _advance_to_running(conn, tenant: str, case_id) -> None:
     conn.commit()
 
 
+# invariant: INV-CS-RT-010
 def test_stale_write_on_an_advanced_case_is_a_conflict_not_a_transition_error(db):  # noqa: F811
     """낡은 version 으로 쓰면 **version 충돌**로 걸려야 한다.
 

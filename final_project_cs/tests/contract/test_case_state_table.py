@@ -45,6 +45,7 @@ V5_ALLOWED_NEXT: dict[CaseStatus, set[CaseStatus]] = {
 }
 
 
+# invariant: INV-CS-RT-014
 @pytest.mark.parametrize("status", list(CaseStatus))
 def test_allowed_next_statuses_match_v5(status: CaseStatus) -> None:
     assert set(allowed_next_statuses(status)) == V5_ALLOWED_NEXT[status], (
@@ -52,11 +53,13 @@ def test_allowed_next_statuses_match_v5(status: CaseStatus) -> None:
     )
 
 
+# invariant: INV-CS-RT-012
 def test_all_twelve_statuses_exist() -> None:
     """v5 §5-1 은 정확히 12개 상태를 정의한다."""
     assert len(CaseStatus) == 12
 
 
+# invariant: INV-CS-RT-013
 def test_cancelled_is_terminal() -> None:
     assert CaseStatus.CANCELLED in TERMINAL_STATUSES
     assert allowed_next_statuses(CaseStatus.CANCELLED) == ()
@@ -68,6 +71,7 @@ def test_every_event_has_payload_schema() -> None:
     assert not missing, f"payload schema 미등록 이벤트: {missing}"
 
 
+# invariant: INV-CS-RT-016
 def test_every_event_is_used_in_transition_table() -> None:
     """쓰이지 않는 이벤트는 죽은 코드다(RULE.md §3.3)."""
     used = {event for _status, event in TRANSITIONS}
@@ -75,6 +79,7 @@ def test_every_event_is_used_in_transition_table() -> None:
     assert not unused, f"전이표에 없는 이벤트: {unused}"
 
 
+# invariant: INV-CS-RT-017
 def test_classification_failure_escalates_not_silently_continues() -> None:
     """★v5 §2 — 분류 실패는 조용히 넘어가지 않는다."""
     assert TRANSITIONS[(CaseStatus.CLASSIFYING, EventType.CLASSIFICATION_FAILED)] is (
@@ -82,6 +87,7 @@ def test_classification_failure_escalates_not_silently_continues() -> None:
     )
 
 
+# invariant: INV-CS-RT-018
 def test_wait_expiry_escalates_not_auto_resolves() -> None:
     """★v5 §5-4 — TTL 만료는 자동 종료가 아니라 escalated 다."""
     for waiting in (
@@ -92,6 +98,7 @@ def test_wait_expiry_escalates_not_auto_resolves() -> None:
         assert TRANSITIONS[(waiting, EventType.WAIT_EXPIRED)] is CaseStatus.ESCALATED
 
 
+# invariant: INV-CS-RT-019
 def test_rejection_does_not_resume() -> None:
     """승인 거절이 실행 경로로 돌아가면 안 된다."""
     assert TRANSITIONS[(CaseStatus.WAITING_APPROVAL, EventType.REJECTED)] is CaseStatus.ESCALATED

@@ -18,6 +18,7 @@ def inputs(**overrides):
     return ContextInputs(**values)
 
 
+# invariant: INV-CS-CTX-001
 def test_context_broker_eviction_is_budgeted_and_ordered():
     broker = ContextBroker()
     pack = broker.build(inputs(
@@ -40,6 +41,7 @@ def test_context_broker_eviction_is_budgeted_and_ordered():
     ("system_instruction", "system " * 3000),
     ("current_state", {"state": "case " * 5000}),
 ])
+# invariant: INV-CS-CTX-002
 def test_context_broker_rejects_untruncatable_sections(field, value):
     with pytest.raises(ContextBudgetError):
         ContextBroker().build(inputs(**{field: value}))

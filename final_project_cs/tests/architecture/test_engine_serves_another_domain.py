@@ -61,35 +61,42 @@ def test_order_id_is_verifiable_here_not_auto_rejected():
     assert check(arguments={"order_id": ORDER}) == []
 
 
+# invariant: INV-CS-VER-001
 def test_unknown_order_is_rejected():
     assert "order_id" in fields(check(arguments={"order_id": "ord-does-not-exist"}))
 
 
+# invariant: INV-CS-VER-002
 def test_refund_over_the_order_total_is_rejected():
     """5만원 주문에 7만원 환불 — 도메인만 바뀌고 규칙은 같다."""
     problems = check(arguments={"order_id": ORDER, "refund_amount": 70_000})
     assert "refund_amount" in fields(problems)
 
 
+# invariant: INV-CS-VER-003
 def test_partial_refund_passes():
     assert check(arguments={"order_id": ORDER, "refund_amount": 20_000}) == []
 
 
+# invariant: INV-CS-VER-004
 def test_return_quantity_over_the_item_count_is_rejected():
     """★수량 규칙이 금액 전용이 아니다 — 같은 엔진이 개수도 잰다."""
     assert "return_quantity" in fields(
         check(arguments={"order_id": ORDER, "return_quantity": 5}))
 
 
+# invariant: INV-CS-VER-005
 def test_return_quantity_within_the_order_passes():
     assert check(arguments={"order_id": ORDER, "return_quantity": 2}) == []
 
 
+# invariant: INV-CS-VER-006
 def test_shipment_ownership_is_checked():
     assert check(arguments={"shipment_id": SHIPMENT}) == []
     assert "shipment_id" in fields(check(arguments={"shipment_id": "shp-other"}))
 
 
+# invariant: INV-CS-VER-007
 def test_this_domains_opaque_field_is_rejected():
     """쇼핑몰에서는 `coupon_id` 가 대조 불가다 — 도메인마다 다르다."""
     assert "coupon_id" in fields(check(arguments={"coupon_id": "CPN-1"}))
@@ -105,6 +112,7 @@ def test_subscription_vocabulary_is_meaningless_here():
     assert any("선언되지 않은" in p.reason for p in problems)
 
 
+# invariant: INV-CS-ARCH-005
 def test_engine_source_has_no_domain_vocabulary():
     """★엔진 파일 자체를 읽어 확인한다. 두 도메인이 다 도는 것만으로는
     '두 도메인을 다 하드코딩했을' 가능성이 남는다."""

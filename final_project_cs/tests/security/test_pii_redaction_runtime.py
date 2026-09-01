@@ -40,6 +40,7 @@ def pii_case(monkeypatch):
                     cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
 
 
+# invariant: INV-CS-SEC-004
 def test_case_message_is_redacted_in_db_api_and_audit(pii_case):
     phone = "010-1234-5678"
     card = "4111 1111 1111 1111"

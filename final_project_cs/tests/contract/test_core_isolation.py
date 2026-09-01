@@ -11,6 +11,7 @@ _FORBIDDEN_PREFIXES = (
 )
 
 
+# invariant: INV-CS-ARCH-003
 def test_core_does_not_import_modules():
     root = Path("app/core")
     for path in root.rglob("*.py"):

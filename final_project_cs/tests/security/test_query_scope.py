@@ -26,6 +26,7 @@ def _customer_with_case(conn, tenant: str, subject: str):
     return customer, case_id
 
 
+# invariant: INV-CS-SEC-005
 def test_case_list_does_not_leak_across_customers_in_one_tenant(db):  # noqa: F811
     """같은 tenant 안에서도 고객끼리 섞이면 안 된다."""
     conn, tenant = db
@@ -39,6 +40,7 @@ def test_case_list_does_not_leak_across_customers_in_one_tenant(db):  # noqa: F8
     assert all(row["customer_id"] == first for row in rows)
 
 
+# invariant: INV-CS-SEC-006
 def test_case_list_without_customer_stays_inside_the_tenant(db):  # noqa: F811
     """customer 를 안 주면 tenant 전체다 — 그래도 tenant 밖으로는 안 나간다."""
     conn, tenant = db
