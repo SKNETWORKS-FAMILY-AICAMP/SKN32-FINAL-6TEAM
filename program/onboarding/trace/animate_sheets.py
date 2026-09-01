@@ -204,14 +204,21 @@ def draw_sheet(d, s, t, color):
     cx0, cx1 = x0 + 26, x0 + 330
     rounded(d, (cx0, top, cx1, bot), 13, fill=SOFT, outline=color, width=2)
     fade_text(d, (cx0 + 16, top + 13), "구조 좌표", font(20, True), color, a)
+    # ★줄 수에 맞춰 간격과 글자를 줄인다. 고정이면 항목을 더할 때 상자 밖으로
+    #   흘러 아래 상태 칩과 겹친다. 좌표는 앞으로도 늘어난다.
+    lab_h, val_h, pad = 23, 26, 12
+    need = sum(lab_h + val_h * len(v) + pad for _, v in s["coord"])
+    room = bot - (top + 48) - 6
+    k = min(1.0, room / need) if need else 1.0
+    fl, fv = font(int(17 * min(1, k * 1.12))), font(int(20 * min(1, k * 1.12)))
     cy = top + 48
     for label, values in s["coord"]:
-        fade_text(d, (cx0 + 16, cy), label, font(17), FAINT, a)
-        cy += 23
+        fade_text(d, (cx0 + 16, cy), label, fl, FAINT, a)
+        cy += lab_h * k
         for v in values:
-            fade_text(d, (cx0 + 16, cy), v, font(20), INK, a)
-            cy += 26
-        cy += 12
+            fade_text(d, (cx0 + 16, cy), v, fv, INK, a)
+            cy += val_h * k
+        cy += pad * k
 
     # 가운데 두 문서
     gap = 26

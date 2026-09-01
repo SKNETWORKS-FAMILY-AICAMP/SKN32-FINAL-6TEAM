@@ -15,12 +15,12 @@ CSS = """
 :root{--bg:#f5f6fa;--card:#fff;--soft:#fbfcfe;--line:#dbe0ea;--ink:#161c28;--dim:#6b7488;
 --faint:#98a1b4;--warm:#fffdf6;
 --red:#b8442f;--blue:#2f5bd8;--green:#0d7a4d;--purple:#6b3fa0;--grey:#6b7488;
---code-bg:#0f141f;--code-ink:#dbe3f0;--done:#e2e6ee;--todo:#f2f4f8}
+--code-bg:#0f141f;--code-ink:#dbe3f0;--done:#e2e6ee;--todo:#f2f4f8;--amber:#a8720c}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){
 --bg:#11141b;--card:#181c25;--soft:#1d222c;--line:#2a303d;--ink:#e7eaf2;--dim:#98a2b8;
 --faint:#6d778c;--warm:#211d14;
 --red:#e08063;--blue:#7fa1f7;--green:#4bb489;--purple:#a888e0;--grey:#98a2b8;
---done:#2b3140;--todo:#20252f}}
+--done:#2b3140;--todo:#20252f;--amber:#d8a445}}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;
 font-family:"Malgun Gothic",system-ui,sans-serif}
@@ -225,18 +225,70 @@ padding-top:5px;border-top:1px dashed var(--line);color:currentColor}
 .st.now .n,.st.now .o{color:rgba(255,255,255,.82)}
 .st.now .t{color:#fff}
 
-/* 그림 열아홉 장 */
-figure{margin:18px 0 0;background:var(--card);border:1px solid var(--line);border-radius:14px;
-overflow:hidden}
-figure img{display:block;width:100%;height:auto}
-figcaption{padding:14px 20px 17px;border-top:1px solid var(--line)}
-figcaption b{display:block;font-size:16px;margin-bottom:4px}
-figcaption span{color:var(--dim);font-size:14px}
-nav.jump{background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;
-overflow-x:auto;white-space:nowrap}
-nav.jump a{display:inline-block;padding:5px 11px;margin-right:3px;font-size:12.5px;
-color:var(--dim);text-decoration:none;border:1px solid var(--line);border-radius:99px}
-nav.jump a:hover{color:var(--blue);border-color:var(--blue)}
+/* 그림 대신 HTML 로 그리는 판들 */
+.plate{background:var(--card);border:1px solid var(--line);border-radius:14px;
+padding:20px 22px;margin:18px 0 0}
+.plate > h3{font-size:19px;margin:0 0 4px}
+.plate > p.sub2{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:96ch}
+.plate .foot2{margin-top:14px;font-size:13px;color:var(--dim)}
+.plate .warn{margin:0 0 14px;padding:11px 14px;border-radius:10px;background:var(--warm);
+border:1px solid var(--amber);font-size:14px}
+
+/* 전체 지도 */
+.lanes{display:grid;grid-template-columns:180px repeat(12,minmax(0,1fr));gap:7px 5px;
+align-items:stretch}
+.lanes .name{border:2px solid;border-radius:11px;display:flex;align-items:center;
+justify-content:center;font-size:13px;font-weight:700;padding:12px 8px;text-align:center}
+.lanes .cell{border-radius:9px;background:var(--todo);min-height:56px}
+.lanes .cell.on{color:#fff;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:2px;padding:6px 2px}
+.lanes .cell.on b{font-size:14px}
+.lanes .cell.on span{font-size:11.5px;opacity:.9}
+@media(max-width:1100px){.lanes{grid-template-columns:120px repeat(12,minmax(0,1fr));
+gap:5px 3px}.lanes .name{font-size:11.5px;padding:8px 4px}
+.lanes .cell.on b{font-size:12px}.lanes .cell.on span{font-size:10px}}
+
+/* 큰 구조 / 파일 이름 / 남는 표 */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:900px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{border:2px solid;border-radius:12px;padding:13px 15px}
+.card h4{margin:0 0 2px;font-size:14.5px}
+.card .cs{font-size:12.5px;color:var(--dim);margin:0 0 10px}
+.card .it{display:flex;gap:9px;align-items:baseline;font-size:13.5px;padding:2px 0}
+.card .it .dot{flex:none;font-size:11px;line-height:1.6}
+.card .it .nm2{flex:1;min-width:0}
+.card .it .no2{font-size:12.5px;text-align:right;white-space:nowrap}
+.card .it.off{color:var(--faint)}
+.card .it.off .nm2{color:var(--faint)}
+.card pre{margin:0;font-size:12.5px;line-height:1.62;white-space:pre-wrap;
+word-break:break-word}
+
+/* 상태 12개 */
+.states3{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+.states3 .s3{border:2px solid;border-radius:11px;padding:9px 14px;min-width:132px}
+.states3 .s3 b{display:block;font-family:Consolas,monospace;font-size:14px}
+.states3 .s3 span{font-size:12px;color:var(--dim)}
+.rowhead{font-size:13px;font-weight:700;margin:14px 0 6px}
+
+/* 전달 문서 다섯 */
+.docs5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media(max-width:1000px){.docs5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.docs5 .d5{border:2px solid;border-radius:12px;padding:11px 12px}
+.docs5 .d5 b{font-size:14px}
+.docs5 .d5 .at{font-size:11.5px;color:var(--faint);display:block;margin-bottom:7px}
+.docs5 .d5 div.f{font-family:Consolas,monospace;font-size:12.5px;padding:1px 0}
+.docs5 .d5 div.note2{font-size:12px;color:var(--dim);margin-top:7px}
+
+/* 갈림길 표 */
+table.br{width:100%;border-collapse:collapse;font-size:13.5px}
+table.br th{text-align:left;font-size:12px;color:var(--faint);font-weight:700;
+padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
+table.br td{padding:9px 10px 9px 0;border-bottom:1px solid var(--line);
+vertical-align:top}
+table.br td.at2{white-space:nowrap;font-weight:700;font-size:12.5px}
+table.br td.then{font-family:Consolas,monospace;font-size:12.5px}
+table.br td.why2{color:var(--dim)}
+
 
 /* 떠 있는 조작 단추 */
 .dock{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;flex-direction:column;
@@ -258,7 +310,7 @@ align-items:center;justify-content:center;line-height:1.12;transition:.2s}
 .dock.on .fab{background:var(--ink);box-shadow:0 9px 26px rgba(8,12,22,.4)}
 .dock.on .fab .big{font-size:15px}
 
-figure{scroll-margin-top:120px}   /* ★위에 붙은 진행바가 제목을 덮지 않게 */
+.plate{scroll-margin-top:120px}   /* ★위에 붙은 진행바가 제목을 덮지 않게 */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms !important;
     animation-iteration-count:1 !important;transition-duration:.01ms !important}
@@ -511,11 +563,10 @@ PAGE = """<!doctype html>
   </div>
 </div>
 
-<h2 class="sec">그림으로 펴 보기</h2>
-<p>같은 내용을 한 장씩 그림으로 편 것입니다.
-위 열두 장에 더해 구조와 갈림길과 파일 이야기가 들어 있습니다.</p>
-<nav class="jump">%(links)s</nav>
-%(figures)s
+<h2 class="sec">낱장 말고 나머지</h2>
+<p>전체 지도, 큰 구조, 상태 열두 개, 전달 문서, 갈림길, 남는 표, 파일 이름.
+그림이 아니라 글자라 긁어서 복사할 수 있습니다.</p>
+%(plates)s
 
 <div class="foot">코드는 <code>final_project_cs</code> 에서 줄 번호로 잘라 온 실제 코드입니다.
 손으로 옮겨 적지 않았습니다. 낱장의 내용도 그림을 그리는

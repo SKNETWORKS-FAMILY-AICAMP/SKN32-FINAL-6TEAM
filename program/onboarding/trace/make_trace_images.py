@@ -14,10 +14,18 @@
   컴포넌트인지 모듈인지, 어느 런타임인지, 누가 맡는지, 무슨 계약인지)이고,
   가운데가 작은 구조(들어온 문서와 나간 문서의 실제 모양)다.
 """
+import os
 import sys
 
 from draw import (AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, LINE, OUT, PURPLE,
                   RED, STEPS, arrow, box, canvas, save)
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import figures as F  # noqa: E402
+
+#: figures.py 는 색을 이름으로 둔다. 여기서 matplotlib 값으로 옮긴다.
+HUE = {"red": RED, "blue": BLUE, "green": GREEN, "purple": PURPLE,
+       "grey": GREY, "amber": AMBER}
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -30,11 +38,14 @@ def sheet_map():
     ax.text(0.03, 0.900, '고객이 "어제 주문한 거 취소하고 환불받고 싶어요" 를 보낸 순간부터 '
             "답이 돌아갈 때까지의 열두 단계", fontsize=11, color=DIM, va="center")
 
-    lanes = [("코어 2   진입과 실행", RED, [1, 2, 11], 0.740),
-             ("코어 1   Case 조정", BLUE, [3, 5, 6, 10], 0.590),
-             ("모델     Agent Team", GREEN, [4, 8, 9], 0.440),
-             ("근거 조합", PURPLE, [7], 0.290),
-             ("기록", GREY, [12], 0.140)]
+    # ★어느 단계가 어느 갈래인지 손으로 적지 않는다. 단계 색이 곧 갈래다.
+    #   손으로 적으면 단계 소유가 바뀔 때 지도만 옛말을 한다. 실제로
+    #   2026-09-01 에 4번이 코어 1 로 갔는데 지도는 모델에 그대로 있었다.
+    ys = [0.740, 0.590, 0.440, 0.290, 0.140]
+    lanes = [(label, HUE[name], y)
+             for (label, name), y in zip(F.LANES, ys)]
+    lanes = [(label, color, [i + 1 for i, (_n, c) in enumerate(STEPS) if c == color], y)
+             for label, color, y in lanes]
     n = len(STEPS)
     left, gap = 0.215, 0.005
     w = (1 - left - 0.03 - gap * (n - 1)) / n
@@ -52,8 +63,7 @@ def sheet_map():
                         fontsize=8.2, color="white")
             else:
                 box(ax, x, y + 0.046, w, 0.008, fc="#eef0f5", ec="none", r=0.004)
-    ax.text(0.5, 0.060, "가로가 시간이다. 왼쪽 이름표가 그 단계를 누가 맡는지다. "
-            "같은 담당이 흐름 중간에 다시 나온다.",
+    ax.text(0.5, 0.060, F.LANES_FOOT,
             ha="center", va="center", fontsize=10.2, color=DIM)
     save(fig, "00_전체지도.png")
 

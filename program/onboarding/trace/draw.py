@@ -47,7 +47,7 @@ AMBER = "#a8720c"
 GREY = "#6b7488"
 
 STEPS = [
-    ("신원", RED), ("중복", RED), ("생성", BLUE), ("분류", GREEN),
+    ("신원", RED), ("중복", RED), ("생성", BLUE), ("분류", BLUE),
     ("라우팅", BLUE), ("기능", BLUE), ("근거", PURPLE), ("판단", GREEN),
     ("검토", GREEN), ("반영", BLUE), ("응답", RED), ("기록", GREY),
 ]
@@ -101,17 +101,29 @@ def title(ax, n, text, color):
 
 
 def coords(ax, rows, color):
-    """왼쪽 세로 구조 좌표. rows = [(항목, 값), ...]"""
+    """왼쪽 세로 구조 좌표. rows = [(항목, 값), ...]
+
+    ★줄 수에 맞춰 간격을 줄인다. 예전엔 간격이 고정이라 항목을 하나 더하면
+      글자가 상자 밖으로 흘러 아래 상태 칩과 겹쳤다. 좌표는 앞으로도 늘어난다.
+    """
     box(ax, 0.03, 0.20, 0.205, 0.60, fc="#fbfcfe", ec=color)
     ax.text(0.0425, 0.768, "구조 좌표", ha="left", va="center", fontsize=9.6,
             color=color, fontweight="bold")
-    y = 0.712
+
+    gap, step, top, bottom = 0.030, 0.028, 0.712, 0.215
+    need = sum(gap * 2 + step * len(v) for _, v in rows)
+    room = top - bottom
+    k = min(1.0, room / need) if need else 1.0      # 넘치면 그만큼 좁힌다
+    fs_label, fs_value = 8.2 * min(1.0, k * 1.15), 9.1 * min(1.0, k * 1.15)
+
+    y = top
     for label, value in rows:
-        ax.text(0.0425, y, label, ha="left", va="center", fontsize=8.2, color=FAINT)
+        ax.text(0.0425, y, label, ha="left", va="center",
+                fontsize=fs_label, color=FAINT)
         for j, line in enumerate(value):
-            ax.text(0.0425, y - 0.030 - j * 0.028, line, ha="left", va="center",
-                    fontsize=9.1, color=INK)
-        y -= 0.030 + 0.028 * len(value) + 0.030
+            ax.text(0.0425, y - gap * k - j * step * k, line, ha="left",
+                    va="center", fontsize=fs_value, color=INK)
+        y -= (gap * 2 + step * len(value)) * k
 
 
 def doc(ax, x, y, w, h, label, lines, ec=LINE, mark=()):
