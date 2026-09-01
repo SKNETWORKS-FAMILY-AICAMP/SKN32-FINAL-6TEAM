@@ -5,7 +5,8 @@
 | 사실 | 현재 값 | 정본 | 확인일 |
 |---|---|---|---|
 | 문서 기준선 | v8 (v7·v7.1은 보존본, `program/plan/archive/`) | `program/plan/A-COP_구현계획서_v8.md` §0 | 2026-08-17 |
-| Team 목록 — CS Pack 확정(10주 착수) | VOC & Store Manager, Response Generation & Review | `program/plan/A-COP_구현계획서_v8.md` §8-B, §16 | 2026-08-17 |
+| Team 목록 — CS Pack 확정(10주 착수) | Response Generation & Review. VOC & Store Manager는 Registry 등록·계약만 유지하는 껍데기로 조정(집계·급증 탐지는 코어 1 소유) | `program/plan/A-COP_구현계획서_v8.md` §0 v8 재판정, §7, §8-B | 2026-09-01 |
+| 인라인 분류 소유 | 코어 1 (진입·분류 층). 라벨 어휘·프롬프트 구현은 모델 담당 | 동 §3-A, §16 | 2026-09-01 |
 | Team 목록 — 검증 쇼핑몰 연계(일정 따라 조정) | Procurement + Order & Payment, Fulfillment & Logistics, Return & Refund(Mock), Catalog & Verification(A2A Remote) | 동 | 2026-08-17 |
 | DoD 항목 수 | 1~29 (1~28은 v5/v7 번호 보존, 29는 Response Generation & Review 검증 신규) | `program/plan/A-COP_구현계획서_v8.md` §27 | 2026-08-17 |
 | Docker·AWS | Phase 2 (로컬 개발 환경엔 Docker 없음, 실제 배포 단계에서 컨테이너화) | `program/plan/A-COP_구현계획서_v8.md` §12, §28 | 2026-08-17 |

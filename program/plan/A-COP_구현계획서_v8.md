@@ -42,11 +42,20 @@
 | 인라인 분류 소유 | §3-A는 VOC와 한 행에 묶고, §7-A는 "공통 진입·분류 층"이라 함 | **코어 1 소유**로 통일 | v7.1 결정이 §3-A에 반영되지 않아 두 절이 다른 말을 했고, 코드가 옛 쪽을 따랐다 |
 | Feedback Analytics 배치 | VOC Team의 실행 형태 | **코어 1 소유 독립 배치** | 집계·임계값 판정은 전역 관측이지 업무 판단이 아니다. v6 판단으로 되돌린다 |
 | VOC & Store Manager | CS Pack 10주 착수 확정 Team | Registry 등록·계약만 유지하는 **껍데기**. LLM 위임 판단을 넣는 시점에 착수로 되돌림 | Team 자격의 근거(위임 판단)가 아직 구현되지 않았다. §10의 Billing/Technical 처리와 같게 다룬다 |
-| 분류기의 계층 | 도메인 모듈(뺄 수 있는 자리) | 필수층. `voc` 모듈 플래그에서 분리 | 필수 기능이 선택 계층에 놓인 범주 오류였고, 그래서 `voc: false`로 제품이 기동하지 않았다 |
+| 분류기의 모듈 플래그 | 선택 모듈 `voc` 아래 | **플래그에서 분리.** 파일은 `app/modules/`에 그대로 둔다 | 필수 기능이 선택 플래그에 묶여 `voc: false`로 제품이 기동하지 않았다. 파일 위치는 정상이며, 소유는 composition root의 배선으로 표현한다(§3-A) |
+| 집계 배치의 모듈 플래그 | 선택 모듈 `voc` 아래 | 플래그에서 분리 | 인라인 분류와 같은 범주 오류였다. 관측을 멈추면 급증 판정의 기준인 과거 7일 시계열에 되돌릴 수 없는 공백이 생긴다 |
 
 고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
-**이 사고가 남긴 점검 항목.** v7.1 개정 7건 중 하나(VOC 소관)가 일부 절에만 반영되어 문서 안에서 서로 다른 말을 했고, 나중에 온 작업이 낡은 쪽을 읽었다. 나머지 6건도 같은 상태일 수 있으므로 `program/research/index.md`의 문서 정합성 점검 캘린더에 **"v7.1 개정 항목이 전 절에 반영됐는지"**를 추가한다. 현재 점검 항목(`§숫자` 참조·Team 목록·DoD 항목 수)으로는 이번 건이 걸리지 않았다.
+**이 사고가 남긴 점검 항목.** v7.1 개정 7건 중 하나(VOC 소관)가 일부 절에만 반영되어 문서 안에서 서로 다른 말을 했고, 나중에 온 작업이 낡은 쪽을 읽었다. 기존 점검 항목(`§숫자` 참조·Team 목록·DoD 항목 수)으로는 이번 건이 걸리지 않는다 — 세 항목 모두 "있는가"를 묻지 "반대 진술이 있는가"를 묻지 않기 때문이다. `program/research/index.md`의 문서 정합성 점검 캘린더에 **항목 4 "개정 항목의 절 간 모순"**을 신설했고, v7.1 7건 전수 점검을 2026-09-01에 수행했다.
+
+**경위 전체는 `program/research/2026-09-01_VOC가_팀모듈로_흘러간_경위.md`에 있다.** 이 사고는 아무도 틀린 판단을 하지 않았는데 틀린 결과가 나온 종류이므로, 재발 방지를 위해 낡은 진술이 권위를 얻은 경로(§3-A → `final_project_cs/CLAUDE.md` → handoff 문서 → 코드)를 그 문서에 기록했다.
+
+**남은 것 둘.**
+
+(가) **결함 2가 절반만 고쳐졌다.** 접수 라우트에서는 분류 호출을 트랜잭션 밖으로 뺐으나, `Controller.run_case()`가 같은 병을 그대로 갖고 있다 — `app/application/controller.py:119`에서 트랜잭션을 열고 `:155`에서 Team 실행(LLM 네트워크 호출)을 `await`한다. "트랜잭션 안 LLM은 고쳤다"고 말하면 절반만 맞다.
+
+(나) **결함 3(접수 응답의 동기 실행).** `run_case` 호출처가 접수 라우트 하나뿐이라 접수가 에이전트 실행 전체를 기다린다(실측 p50 20~34초). §21 API 계약 변경과 outbox 트리거 신설이 함께 필요하므로 중간발표(9/15) 이후로 미룬다. 배치는 §25 4W다.
 
 ---
 
@@ -225,7 +234,9 @@ A-COP이 주장하는 것은 새로운 모델이나 새로운 RAG가 아니라 *
 
 이것은 보장에 관한 요구이지 실행 위치에 관한 요구가 아니다. 접수 API 핸들러 안에서 동기로 실행할 것을 요구하지 않는다. DoD-9는 "모든 Case 생성 fixture에서 분류 event 확인"으로 이 보장만 검증한다. 접수 응답이 분류 결과를 몸통에 싣는지는 §21의 API 계약에서 따로 정한다.
 
-[2026-09-01 교정] **v7.1이 이미 "인라인 분류는 공통 진입·분류 층"이라고 정했으나(§0 v7.1 변경 요약, §7-A) 이 절에 반영되지 않았다.** 한 문서 안에서 §7-A는 새 결정을, §3-A는 옛 서술을 담고 있었고, 2026-08-30 모듈 토글 실효화 작업이 §3-A를 근거로 삼아 인라인 분류를 `voc` 모듈 아래 묶었다. 그 결과 결함 셋이 생겼다. (1) 분류기가 `app/modules/customer_ops/`(뺄 수 있는 Team 자리)에 놓여, Core가 도메인 모듈을 import할 수 없으므로 호출 자리가 접수 라우트밖에 남지 않았다. (2) 그래서 LLM 호출이 접수 트랜잭션 안에서 커넥션과 advisory lock을 잡은 채 수행되고, 타임아웃 시 Case 생성까지 롤백된다. (3) `require_module("voc", "inline classifier")` 때문에 `voc: false`로는 제품이 기동하지 않는다 — 필수 기능이 선택 계층에 놓인 범주 오류다. 아울러 `run_case` 호출처가 접수 라우트 하나뿐이라 접수 응답이 에이전트 실행 전체를 기다린다(실측 p50 20~34초, p95 32~51초).
+[2026-09-01 교정] **v7.1이 이미 "인라인 분류는 공통 진입·분류 층"이라고 정했으나(§0 v7.1 변경 요약, §7-A) 이 절에 반영되지 않았다.** 한 문서 안에서 §7-A는 새 결정을, §3-A는 옛 서술을 담고 있었고, 2026-08-30 모듈 토글 실효화 작업이 §3-A를 근거로 삼아 인라인 분류를 `voc` 모듈 아래 묶었다. 그 결과 결함 셋이 생겼다. (1) **분류기의 호출이 접수 라우트에 배선되어** 코어 1의 상태 전이 밖에서 실행된다. (2) 그래서 LLM 호출이 접수 트랜잭션 안에서 커넥션과 advisory lock을 잡은 채 수행되고, 타임아웃 시 Case 생성까지 롤백된다. (3) 필수 기능인 분류가 선택 모듈 플래그 `voc` 아래 묶여, `require_module("voc", "inline classifier")` 때문에 `voc: false`로는 제품이 기동하지 않았다. 아울러 `run_case` 호출처가 접수 라우트 하나뿐이라 접수 응답이 에이전트 실행 전체를 기다린다(실측 p50 20~34초, p95 32~51초).
+
+**결함 1은 파일 위치 문제가 아니다.** 분류 라벨 어휘는 도메인 어휘이므로 `app/modules/` 밖에 둘 수 없다 — 아키텍처 가드(`tests/architecture/test_basement_is_domain_free.py`)가 `core·domain·application·infrastructure·presentation` 전부에서 도메인 어휘를 막는다. 2026-09-01에 분류기를 `app/application/`으로 실제로 옮겨 보았고 가드가 막아 되돌렸다. **이 저장소는 소유를 파일 위치가 아니라 배선으로 표현한다.** composition root(`app/composition.py`)만 가드에서 면제되며, 그 자리가 도메인 모듈을 basement 컴포넌트에 주입한다. Team이 `TeamExecutorPort`로 주입되는 것과 같이, 분류기도 `build_controller(..., classifier=...)`로 코어 1 Controller에 주입하면 된다. 고칠 것은 **호출 시점·실패 처리·상태 전이의 소유**이지 파일이 놓인 폴더가 아니다.
 
 이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
@@ -288,6 +299,8 @@ v8 재판정의 근거는 셋이다. (1) v7이 v6의 "전역 관측 축" 판단�
 Case 생성 transaction **밖에서** `classifying` 단계에 sentiment, intent, issue_code를 항상 생성한다. [v7.1] 이 인라인 분류는 VOC Team의 업무가 아니라 진입·분류 층의 공통 처리다. [v8] **소유는 코어 1이다**(§3-A). VOC는 이미 분류된 Case events를 입력받는다.
 
 매일 00:10 UTC worker가 전일/직전 7일의 intent·issue count, negative ratio, unresolved ratio를 집계한다. 급증은 `오늘 count >= max(5, 1.5 * 최근7일 평균)`이고 `오늘 count - 최근7일 평균 >= 3`인 경우로 정의한다. z-score, embedding clustering, topic modeling은 사용하지 않는다. 결과는 `feedback_analytics_reports`에 저장하고 alert event를 발행한다. **[v8] 이 배치는 코어 1이 소유한다.** 집계와 임계값 판정은 도메인 판단이 아니라 전역 관측이며, 산출물은 사실이지 제안이 아니다.
+
+**[v8] `voc: false`의 의미.** 이 토글은 **판단층과 화면만** 끈다. 인라인 분류와 집계 배치는 계속 돈다. 관측을 멈추면 급증 판정의 기준인 과거 7일 시계열에 공백이 생기고, **그 공백은 나중에 판단층을 켜도 되돌릴 수 없기 때문**이다. 대가는 꺼 놓은 화면 뒤로 `feedback_analytics_reports`가 계속 쌓이는 것이며, 이는 의도된 동작이다. 토글 이름이 이 범위보다 넓게 읽히므로 선언 문서에 범위를 함께 적는다.
 
 [v8 재판정] 이 절은 삭제하지 않는다. 다만 v7의 "위 파이프라인은 VOC Team을 주기적으로 실행하는 배치 adapter/worker다"라는 서술을 고친다. **배치는 VOC Team의 실행 형태가 아니라 코어 1의 독립 파이프라인이고, VOC Team은 그 배치가 만든 리포트를 Context Broker로 받아 판단하는 소비자다.** 배치가 리포트를 만들면 Controller가 알림을 보내거나, 위임 판단이 필요한 경우 VOC Team에 Task를 넘겨 `delegation_proposal`을 받아 해당 업무 Team에 위임한다. VOC Team은 알맹이를 갖기 전까지 Team Contract와 감사 경계만 유지하는 껍데기로 남는다(§7).
 
@@ -1358,7 +1371,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 | 1W | 8/28~9/3 | 1. WBS<br>2. 프로젝트 기획서<br>3. 요구사항 정의서 | 선행 초안을 공식 양식에 맞춰 동결하고 CAS·transition 경계를 정리한다. | Contract Freeze, REST/MCP·scope skeleton | 검증 쇼핑몰의 Procurement+Order, Fulfillment, VOC & Store Manager, Response Generation & Review, Catalog & Verification의 계약을 정리한다. | harness skeleton·요구사항 기준 UI fixture |
 | 2W | 9/4~9/10 | 4. 수집 데이터 보고서<br>5. 데이터베이스/저장소 설계 문서 | Case·Action 상태와 Registry 구조를 seed 데이터에 맞춰 정리한다. | REST/MCP skeleton과 저장소 경계를 문서화한다. | demo seed·knowledge documents와 RAG 적재 범위를 정리한다. | 평가 harness 입력과 데이터 fixture를 고정한다. |
 | 3W | 9/11~9/17, 중간발표 9/15 포함 | 6. 데이터 전처리 결과서<br>7. 머신러닝/딥러닝 학습결과서<br>8. 학습한 ML/DL 모델<br>18. 중간 발표 PT 자료 | Controller·MessageBus와 Case 생성 흐름을 중간발표 경로에 연결한다. | Action/approval 경계를 연결한다. | PII masking·Case fixture·RAG corpus의 chunk·metadata·embedding을 정리하고 Team 단독 테스트를 수행한다. | Case UI와 중간발표 demo를 구성한다. |
-| 4W | 9/18~9/28, 11일 | 공식 신규 산출물 없음 | Context Broker·projection을 안정화한다. | Tool adapter·audit을 보완한다. | RAG 25/300~400과 Team 통합을 보완한다. | trace 화면과 발표 피드백을 반영한다. |
+| 4W | 9/18~9/28, 11일 | 공식 신규 산출물 없음 | Context Broker·projection을 안정화한다. **[v8 추가] Controller 실행 경로를 함께 푼다. (가) `run_case()`가 트랜잭션 안에서 Team 실행(LLM)을 `await`하는 것을 뗀다(`controller.py:119` 열고 `:155` await — 접수 라우트와 같은 병이 여기 남아 있다). (나) 결함 3 — outbox에 `case.created`를 넣고 worker가 Controller를 깨워 접수 응답의 동기 실행을 푼다. §21 API 계약 변경(접수 응답에서 `intent`·`answer` 제거)을 코어 2와 합의한다. 둘은 같은 함수를 건드리므로 함께 한다.** | Tool adapter·audit을 보완한다. | RAG 25/300~400과 Team 통합을 보완한다. | trace 화면과 발표 피드백을 반영한다. |
 | 5W | 9/29~10/6 | 9. 벡터DB/GraphDB 구축 결과서<br>10. AI 시스템 아키텍처 (멀티 에이전트 아키텍처)<br>11. 멀티 에이전트 테스트 계획 및 결과 보고서<br>12. 자체 sLLM 인공지능 (3, 4번 팀)<br>13. 요구사항 정의서 (업데이트 ver)<br>14. 화면설계서 | Outbox·retry·WAIT/RESUME와 GraphStorePort·SQL adapter를 정리한다. | idempotency·unknown과 MCP/A2A 보안 경계를 정리한다. | 검증 쇼핑몰 Team 통합과 Catalog & Verification A2A 경계를 테스트한다. | API/UI contract와 Graph gate 측정을 정리한다. |
 | 6W | 10/7~10/14 | 공식 신규 산출물 없음 | Shared State merge와 재처리 경로를 보완한다. | A2A 실패·타임아웃·취소·인증 및 승인·감사 회귀를 점검한다. | VOC 위임 제안·Response GEN/REV·`ActionProposal` 흐름을 보완한다. | end-to-end demo를 회귀 점검한다. |
 | 7W | 10/15~10/21 | 15. 개발된 LLM 연동 웹 애플리케이션<br>16. 시스템 구성도<br>17. 서비스 테스트 계획 및 결과 보고서 | GraphStorePort·SQL adapter와 시스템 구성도를 고정한다. | MCP/A2A 보안과 서비스 경계를 점검한다. | 관계 질의용 fixture와 Team 성능을 점검한다. | 운영 UI·LLM 연동, 서비스 테스트 결과와 화면을 정리한다. |
