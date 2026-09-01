@@ -28,6 +28,34 @@ class FulfillmentLogisticsTeam:
     def __init__(self, tools: ReadToolbox) -> None:
         self.tools = tools
 
+    # ★분실·파손·지연을 분명히 밝히는 문구만 잡는다. 여기서 신호를 놓쳐도
+    #   손해가 크지 않다 — execute()의 shipment.exception 경로가 실제 DB
+    #   배송 상태(lost/damaged/delayed)와 다시 대조하므로, 문구가 틀리게
+    #   잡혀도 근거 없는 제안은 안 나간다(그때는 shipment_exception_unconfirmed
+    #   로 escalate).
+    _EXCEPTION_MARKERS = (
+        "파손", "손상", "훼손", "부서", "분실", "잃어버", "없어졌",
+        "안 왔", "안왔", "못 받", "못받", "지연", "늦어",
+    )
+
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str) -> str | None:
+        """"shipping" intent가 일반 조회인지 배송 이상(분실·파손·지연) 신고인지 가른다.
+
+        ★2026-09-01 — "shipping" intent는 이름으로 매칭되는 capability가
+          하나도 없어 늘 fulfillment.track(주문 단위 정보성 응답)으로만
+          갔다 — 실제 교체/재배송 제안이 나오는 shipment.exception 경로에
+          영원히 도달 못 함
+          (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          신호가 없으면 `None`을 돌려줘 기존 규칙(default_capability=
+          fulfillment.track)에 그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
+        """
+        if intent != "shipping":
+            return None
+        if any(marker in input_text for marker in FulfillmentLogisticsTeam._EXCEPTION_MARKERS):
+            return "shipment.exception"
+        return None
+
     @staticmethod
     def _evidence(name: str, value: Any) -> Evidence:
         return Evidence(evidence_id=f"tool:fulfillment_logistics:{name}", source_type="tool_result",

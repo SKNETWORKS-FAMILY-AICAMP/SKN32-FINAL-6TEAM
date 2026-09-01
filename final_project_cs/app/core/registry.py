@@ -86,22 +86,32 @@ class TeamRegistry:
         return matches[0]
 
     @staticmethod
-    def capability_for(entry: RegisteredTeam, intent: str | None = None) -> str:
-        """Return the registered capability selected for a resolved Team.
-
-        ★intent(5종, 거친 라벨)로 팀의 capability(팀마다 2~6종, 세분화된
-          동작)를 고르는 지금 방식은 태생적으로 다 못 맞는다 — 실측으로
-          intent 5개 중 3개(shipping·exchange·other)가 이름으로 매칭되는
-          capability가 하나도 없다(register()에서 라우팅 자체는 되므로
-          이건 resolve()가 아니라 여기, capability 선택만의 문제다).
-          그때는 팀이 `manifest.default_capability`로 선언한 값을 쓴다.
-          선언이 없으면 `capabilities[0]`을 쓰는데, 이건 "이 팀이 이
-          intent 를 위해 이걸 골랐다"는 근거가 아니라 그냥 목록 첫 자리라는
-          점을 호출하는 쪽이 알아야 한다
-          (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md
-          — RegistryError로 막는 시도는 정상 라우팅 다수를 깨서 되돌렸다).
-        """
-        intent = (intent or "").lower()
+    def capability_for(entry: RegisteredTeam, intent: str | None = None, *, input_text: str | None = None) -> str:
+        """Return the registered capability selected for a resolved Team."""
+        # ★intent(5종, 거친 라벨)만으로는 팀의 capability(팀마다 2~6종,
+        #   세분화된 동작) 중 어느 것이 맞는지 못 가른다 — 실측으로 확인된
+        #   구체 사례는 docs/reports/debugs/
+        #   2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md 를 본다
+        #   (basement 는 그 사례의 업무 어휘를 여기 적지 않는다 — 도메인은
+        #   app/modules/ 에 남긴다).
+        #
+        #   Registry가 문자열 네임스페이스로 대신 추측하지 않는다 — 팀이
+        #   자기 capability의 의미를 안다. entry.module이 선택적으로
+        #   select_capability(intent, input_text) -> str | None 을 구현하면
+        #   그 판단을 먼저 묻는다. None을 돌려주면(또는 아예 구현하지 않으면)
+        #   아래 기존 규칙(네임스페이스 매칭 → default_capability →
+        #   capabilities[0])으로 그대로 떨어진다 — 하위호환.
+        intent = (intent or "").lower() or None
+        select = getattr(entry.module, "select_capability", None)
+        if callable(select):
+            chosen = select(intent, input_text or "")
+            if chosen is not None:
+                if chosen not in entry.manifest.capabilities:
+                    raise RegistryError(
+                        f"team '{entry.manifest.team_id}'.select_capability returned "
+                        f"an undeclared capability: {chosen}"
+                    )
+                return chosen
         if intent:
             for capability in entry.manifest.capabilities:
                 if capability.lower() == intent or capability.lower().startswith(intent + "."):

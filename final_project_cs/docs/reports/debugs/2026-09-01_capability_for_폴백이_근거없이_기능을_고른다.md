@@ -1,5 +1,55 @@
 # capability_for()가 매칭 실패 시 근거 없이 capabilities[0]을 고른다
 
+## 세 번째 시도 — 실제 기능 간극이었다 (2026-09-01)
+
+두 번째 시도(`default_capability`)로 "근거 없이 고른다"는 정직하게
+만들었지만, 그걸로 끝이 아니었다. `task.capability`를 확인해 보니
+**메타데이터가 아니라 실제 분기 조건**이었다 — `return_refund`·
+`fulfillment_logistics`·`catalog_verification`·`procurement_order_payment`
+넷 다 `execute()` 안에서 `task.capability`로 실제 실행 경로를 가른다.
+
+구체적으로: "exchange" intent는 `default_capability`가
+`return.check_eligibility`(정보성 응답, ActionProposal 없음)로 고정돼
+있어서, **교환을 원하는 고객이 실제 교환 신청(`return.request`,
+ActionProposal 생성)에 영원히 도달할 수 없었다.** "shipping" intent도
+`fulfillment.track`(주문 단위 정보성 응답)에 고정돼, 배송 분실·파손·지연
+신고가 실제 교체/재배송 제안이 나오는 `shipment.exception` 경로에 못
+갔다. `default_capability`는 이 간극을 고치지 않고 "그 값으로 고정된다"는
+사실만 명시했을 뿐이다.
+
+### 수정 — `select_capability` 훅
+
+`TeamModule`에 선택적 훅 `select_capability(intent, input_text) ->
+str | None`을 추가했다. `Registry.capability_for()`는 팀이 이걸
+구현했으면 네임스페이스 매칭보다 먼저 묻는다 — `None`이면(또는 구현
+안 하면) 기존 규칙(네임스페이스 매칭 → `default_capability` →
+`capabilities[0]`) 그대로다. `entry.module`에 duck-typing(`getattr`)으로
+감지해서 필수 Protocol 멤버로 만들지 않았다 — 대부분의 팀(order·return의
+기본 케이스)은 이 계약을 몰라도 된다.
+
+`return_refund`·`fulfillment_logistics`에 구현했다:
+- `return_refund`: "return"/"exchange" intent에서 명확한 실행 요청
+  문구("교환해주세요"/"반품 신청" 등)가 있으면 `return.request`로,
+  신호가 없으면 `None`을 돌려줘 기존 기본값(check_eligibility)을 그대로
+  둔다 — **신호가 없을 때의 동작은 바뀌지 않는다.**
+- `fulfillment_logistics`: "shipping" intent에서 분실·파손·지연 신고
+  문구가 있으면 `shipment.exception`으로, 없으면 `None` — 기존 기본값
+  (fulfillment.track) 유지. 문구가 틀리게 잡혀도 `shipment.exception`
+  경로 자체가 실제 DB 배송 상태와 다시 대조하므로(lost/damaged/delayed
+  아니면 `shipment_exception_unconfirmed`로 escalate) 근거 없는 제안은
+  안 나간다 — 이중 방어.
+- `voc_store_manager`("other" intent)는 그대로 뒀다 — `task.capability`를
+  아예 안 읽는 팀이라 구현할 이유가 없다.
+
+### 검증
+
+5개 intent 전부 수정 전후 결과를 직접 대조: order/return/other는
+그대로(`order.verify`/`return.check_eligibility` 또는
+`return.request`(신호 있을 때)/`voc.aggregate`), "exchange"·"shipping"은
+문구에 따라 새 경로에 도달함을 실측으로 확인. 회귀 테스트 16건 추가
+(registry 훅 메커니즘 5건 + 팀별 select_capability 각 4건 + 기존
+default_capability 3건). 517 → 529 passed, 회귀 0.
+
 ## 해결됨 (2026-09-01, 두 번째 시도)
 
 raise 기반 수정을 되돌린 뒤, 다른 방향으로 다시 고쳤다 — **동작은 그대로

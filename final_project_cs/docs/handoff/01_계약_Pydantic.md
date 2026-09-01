@@ -186,6 +186,16 @@ exchange·other, `docs/reports/debugs/2026-09-01_capability_for_폴백이_근거
 그때 registry가 쓸 capability를 팀이 직접 선언한다. 안 적으면
 `capabilities[0]`을 쓴다(기존 동작과 동일, 하위호환).
 
+★`TeamModule.select_capability` (2026-09-01 추가, 선택 구현) —
+`default_capability`로도 못 채우는 간극이 있었다: intent 하나가 팀의
+capability 여러 개 중 어느 것도 제대로 못 골라, 그 팀의 일부 capability(예:
+실제 실행이 일어나는 쪽)에 **영원히 도달 못 하는** 경우다. `TeamModule`이
+`select_capability(intent: str | None, input_text: str) -> str | None`을
+구현하면 `Registry.capability_for()`가 네임스페이스 매칭보다 먼저 이 값을
+묻는다. `None`이면(또는 아예 구현 안 하면) 기존 규칙 그대로다 — 필수
+Protocol 멤버가 아니라 duck-typing으로 감지한다(`getattr`), 그래서 대부분의
+팀은 이 계약을 몰라도 된다.
+
 ## 8. TeamModule Protocol — Core 가 Team 을 보는 유일한 창
 
 ```python

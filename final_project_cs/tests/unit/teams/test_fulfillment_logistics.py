@@ -111,3 +111,25 @@ async def test_tracking_answer_counts_the_shipments_it_read():
     assert result.outcome == "completed"
     assert f"{len(shipments)}건" in result.answer
     assert result.decisions[0]["shipment_count"] == len(shipments)
+
+
+# ★2026-09-01 — "shipping" intent 는 이름으로 매칭되는 capability 가 없어
+#   늘 fulfillment.track(주문 단위 정보성 응답)으로만 갔다. select_capability
+#   가 분실·파손·지연 신고 문구를 잡아 shipment.exception 경로로 보낼 수
+#   있는지 확인한다
+#   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+def test_select_capability_routes_damage_report_to_shipment_exception():
+    assert FulfillmentLogisticsTeam.select_capability("shipping", "받은 상품이 파손되어 왔어요") == "shipment.exception"
+
+
+def test_select_capability_routes_missing_delivery_to_shipment_exception():
+    assert FulfillmentLogisticsTeam.select_capability("shipping", "배송이 계속 지연되고 있어요") == "shipment.exception"
+
+
+def test_select_capability_returns_none_for_plain_status_inquiry():
+    assert FulfillmentLogisticsTeam.select_capability("shipping", "제 주문 배송 상태가 궁금해요") is None
+
+
+def test_select_capability_ignores_unrelated_intents():
+    assert FulfillmentLogisticsTeam.select_capability("order", "파손됐어요") is None
+    assert FulfillmentLogisticsTeam.select_capability(None, "파손됐어요") is None

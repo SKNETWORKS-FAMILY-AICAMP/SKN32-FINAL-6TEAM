@@ -223,3 +223,25 @@ async def test_missing_order_items_escalates_instead_of_guessing():
 def test_the_team_is_allowed_to_read_order_items():
     """★툴은 전부터 있었지만 allowed_tools 에 없어 Registry 가 막고 있었다."""
     assert "read.order_items" in ReturnRefundTeam.manifest.allowed_tools
+
+
+# ★2026-09-01 — "exchange" intent 는 이름으로 매칭되는 capability 가 없어
+#   늘 check_eligibility(정보성 응답)로만 갔다. select_capability 가 실행
+#   요청 문구를 잡아 return.request 경로로 보낼 수 있는지 확인한다
+#   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+def test_select_capability_routes_explicit_exchange_request_to_return_request():
+    assert ReturnRefundTeam.select_capability("exchange", "사이즈가 안 맞아서 교환하고 싶어요") == "return.request"
+
+
+def test_select_capability_routes_explicit_return_request_to_return_request():
+    assert ReturnRefundTeam.select_capability("return", "반품 신청 부탁드려요") == "return.request"
+
+
+def test_select_capability_returns_none_for_plain_eligibility_inquiry():
+    # 신호가 없으면 기존 규칙(default_capability=check_eligibility)에 맡긴다.
+    assert ReturnRefundTeam.select_capability("exchange", "교환 가능한 기간이 얼마나 되나요?") is None
+
+
+def test_select_capability_ignores_unrelated_intents():
+    assert ReturnRefundTeam.select_capability("order", "교환하고 싶어요") is None
+    assert ReturnRefundTeam.select_capability(None, "교환하고 싶어요") is None

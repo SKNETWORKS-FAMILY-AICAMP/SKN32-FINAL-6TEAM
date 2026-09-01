@@ -69,7 +69,7 @@ class Controller:
         """Return the capability selected by the injected Team registry."""
         intent = case.get("intent")
         entry = self.registry.resolve(case_type=intent or "", intent=intent)
-        return self.registry.capability_for(entry, intent)
+        return self.registry.capability_for(entry, intent, input_text=case.get("subject"))
 
     def _policy(self, tenant_id: str, query: str, scopes: list[str]) -> tuple[list[Any], bool]:
         try:

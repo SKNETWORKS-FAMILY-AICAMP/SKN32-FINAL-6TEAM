@@ -54,6 +54,32 @@ class ReturnRefundTeam:
     def __init__(self, tools: ReadToolbox) -> None:
         self.tools = tools
 
+    # ★실행 요청임을 분명히 밝히는 문구만 잡는다. 안전 쪽으로 좁게 — 애매하면
+    #   지금 기본 동작(check_eligibility, 정보성 응답)을 그대로 둔다.
+    _ACTION_REQUEST_MARKERS = (
+        "교환해", "교환 신청", "교환하고 싶", "교환 원해",
+        "반품해", "반품 신청", "반품하고 싶", "반품 원해",
+        "바꿔주세요", "바꾸고 싶",
+    )
+
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str) -> str | None:
+        """"return"/"exchange" intent가 자격 문의인지 실행 요청인지 가른다.
+
+        ★2026-09-01 — intent 문자열만으로는 팀의 capability 3종 중 어느 것도
+          제대로 못 고른다(특히 "exchange"는 이름으로 매칭되는 capability가
+          하나도 없어 늘 check_eligibility 로만 갔다 — 실제 교환/반품 신청
+          경로(return.request)에 영원히 도달 못 함,
+          docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          여기서 신호가 없으면 `None`을 돌려줘 기존 규칙(네임스페이스 매칭 →
+          default_capability)에 그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
+        """
+        if intent not in {"return", "exchange"}:
+            return None
+        if any(marker in input_text for marker in ReturnRefundTeam._ACTION_REQUEST_MARKERS):
+            return "return.request"
+        return None
+
     @staticmethod
     def _result(task: TeamTask, **kwargs: Any) -> TeamResult:
         return TeamResult(task_id=task.task_id, run_id=task.run_id, team_id=task.team_id, **kwargs)
