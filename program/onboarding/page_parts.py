@@ -233,6 +233,19 @@ padding:20px 22px;margin:18px 0 0}
 .plate .foot2{margin-top:14px;font-size:13px;color:var(--dim)}
 .plate .warn{margin:0 0 14px;padding:11px 14px;border-radius:10px;background:var(--warm);
 border:1px solid var(--amber);font-size:14px}
+/* 배너로 쓸 때는 굵게. 원본 그림에서 이 한 줄만 굵은 글씨였다. */
+.plate .warn > b{font-weight:700;display:block}
+/* 여러 줄짜리 상자. 제목 한 줄 아래 근거가 붙는다. */
+.plate .warn.soft{margin:14px 0 0}
+.plate .warn.soft > b{margin-bottom:7px}
+.plate .warn.soft > span{display:block;font-size:13px;color:var(--dim);
+margin-top:5px;line-height:1.66}
+
+/* 두 기둥. 왼쪽 위아래가 한 짝, 오른쪽 위아래가 다른 한 짝이다.
+   격자에 그냥 흘리면 순서가 가로로 꺾여 그 짝이 깨진다. */
+.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.col2{display:flex;flex-direction:column;gap:14px}
+@media(max-width:900px){.twocol{grid-template-columns:minmax(0,1fr)}}
 
 /* 전체 지도. 이어진 단계는 붙고, 안 지나는 자리는 가는 선이다. */
 .lanes{display:grid;grid-template-columns:172px repeat(12,minmax(0,1fr));
@@ -264,6 +277,13 @@ word-break:keep-all;overflow-wrap:anywhere}
 .card .it .dot{flex:none;font-size:11px;line-height:1.6}
 .card .it .nm2{flex:1;min-width:0}
 .card .it .no2{font-size:12.5px;text-align:right;white-space:nowrap}
+/* 줄바꿈을 허용한 메모는 왼쪽에 맞춘다. 오른쪽 정렬이면 줄마다 시작점이 달라진다. */
+.card .it .no2.wrap{text-align:left;white-space:normal;color:var(--dim);flex:1.2}
+.card .it .nm2.mono{font-family:Consolas,monospace}
+.card .it .nm2.narrow{flex:0 0 42%}
+.card .it .nm2{overflow-wrap:anywhere}
+/* "왜 헷갈리나" 는 원본에서 회색 바탕 상자였다. 본문과 구별되는 자리다. */
+.card.why2b{border-color:var(--line);margin-top:14px;background:var(--soft)}
 .card .it.off{color:var(--faint)}
 .card .it.off .nm2{color:var(--faint)}
 .card pre{margin:0;font-size:12.5px;line-height:1.62;white-space:pre-wrap;
@@ -271,8 +291,14 @@ word-break:break-word}
 
 /* 상태 12개. 화살표가 "이어진다" 를, 되돌아감이 "멈춘 것이지 끝난 게 아니다" 를 말한다. */
 .states3{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px;align-items:stretch}
-.states3.flow{align-items:center}
-.states3 .s3{border:2px solid;border-radius:11px;padding:9px 14px;min-width:132px}
+/* 주 흐름은 안 꺾는다. 꺾이면 화살표가 줄 끝에 홀로 남아 뜻이 사라진다. */
+.states3.flow{align-items:center;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.states3 .s3{border:2px solid;border-radius:11px;padding:9px 14px;min-width:132px;
+flex:none}
+/* 원본에서 대기 넷만 노란 바탕이었다. 색 테두리만으로는 "멈춤" 이 안 보인다. */
+.states3 .s3.wait{background:var(--warm)}
+/* 끝나는 자리만 상자가 넓었다. */
+.states3 .s3.wide{min-width:150px}
 .states3 .s3 b{display:block;font-family:Consolas,monospace;font-size:14px}
 .states3 .s3 span{font-size:12px;color:var(--dim)}
 .rowhead{font-size:13px;font-weight:700;margin:14px 0 6px}

@@ -27,6 +27,18 @@ RAW = {"red": "#b8442f", "blue": "#2f5bd8", "green": "#0d7a4d",
 e = html.escape
 
 
+def _cols(cards, split):
+    """카드를 두 기둥으로 세운다.
+
+    ★그냥 2열 격자에 흘리면 순서가 가로로 꺾인다. 원본 그림에서 왼쪽 기둥은
+      위아래가 짝이었다. 컴포넌트 아래 모듈, 인스턴스 아래 Port 다. 가로로
+      꺾이면 컴포넌트 옆에 모듈이 서고 그 짝이 사라진다.
+    """
+    return ('<div class="twocol"><div class="col2">%s</div>'
+            '<div class="col2">%s</div></div>'
+            % ("".join(cards[:split]), "".join(cards[split:])))
+
+
 def _plate(anchor, head, sub, body, foot=""):
     return ('<section class="plate" id="%s"><h3>%s</h3><p class="sub2">%s</p>%s%s</section>'
             % (anchor, e(head), e(sub), body,
@@ -78,7 +90,9 @@ def structure():
                      '<p class="cs">%s</p>%s</div>'
                      % (HUE[color], HUE[color], e(head), e(sub), "".join(rows)))
     return _plate("p-struct", F.STRUCTURE_HEAD[0], F.STRUCTURE_HEAD[1],
-                  '<div class="cards">%s</div>' % "".join(cards))
+                  _cols(cards, F.STRUCTURE_SPLIT)
+                  + '<div class="warn" style="margin:14px 0 0">%s</div>'
+                    % e(F.STRUCTURE_FOOT))
 
 
 def lifecycle():
@@ -88,15 +102,19 @@ def lifecycle():
       대기 세 상태에서 running 으로 되돌아가는 곡선이 있었다. 칩만 늘어놓으면
       "이어진다" 와 "되돌아온다" 가 사라진다. 그게 이 장의 요점이다.
     """
-    def chip(x, color):
-        return ('<div class="s3" style="color:%s;border-color:%s">'
-                '<b>%s</b><span>%s</span></div>' % (color, color, e(x[0]), e(x[1])))
+    def chip(x, color, cls=""):
+        return ('<div class="s3%s" style="color:%s;border-color:%s">'
+                '<b>%s</b><span>%s</span></div>'
+                % (cls, color, color, e(x[0]), e(x[1])))
 
     chain = []
     for i, x in enumerate(F.LIFECYCLE_MAIN):
         if i:
             chain.append('<span class="ar">&#10142;</span>')
-        chain.append(chip(x, HUE["green"] if x[0] == "resolved" else HUE["blue"]))
+        done = x[0] == "resolved"
+        # ★원본에서 resolved 만 상자가 넓었다. 끝나는 자리라는 표시다.
+        chain.append(chip(x, HUE["green"] if done else HUE["blue"],
+                          " wide" if done else ""))
 
     body = (
         '<div class="rowhead">이 환불 건이 실제로 지난 길</div>'
@@ -106,11 +124,11 @@ def lifecycle():
           '<div class="back"><span class="ar up">&#10142;</span>'
           '<span>넷 다 <b>running</b> 으로 되돌아간다. 끝난 것이 아니라 멈춘 것이다</span>'
           '</div></div>'
-          % "".join(chip(x, HUE["amber"]) for x in F.LIFECYCLE_WAIT)
+          % "".join(chip(x, HUE["amber"], " wait") for x in F.LIFECYCLE_WAIT)
         + '<div class="rowhead">끝나는 다른 방법 (이 건에서는 안 나왔다)</div>'
         + '<div class="states3">%s</div>'
           % "".join(chip(x, HUE[x[2]]) for x in F.LIFECYCLE_END)
-        + '<div class="card" style="border-color:var(--line);margin-top:14px">'
+        + '<div class="card why2b">'
           '<h4>%s</h4><p class="cs">%s</p></div>'
           % (e(F.LIFECYCLE_WHY[0]), e(F.LIFECYCLE_WHY[1])))
     return _plate("p-life", F.LIFECYCLE_HEAD[0], F.LIFECYCLE_HEAD[1], body)
@@ -138,8 +156,12 @@ def contracts():
     body = ('<div class="docs5">%s</div>'
             '<div class="downto"><span class="ar down">&#10142;</span>'
             '<span>그리고 이것들이 표로 내려앉는다</span></div>'
-            '<div class="card" style="border-color:var(--blue)">%s</div>'
-            % ("".join(cols), tables))
+            '<div class="card" style="border-color:var(--blue)">%s'
+            '<p class="cs" style="margin:10px 0 0">%s</p></div>'
+            '<div class="warn soft"><b>%s</b>%s</div>'
+            % ("".join(cols), tables, e(F.CONTRACTS_TABLES_NOTE),
+               e(F.CONTRACTS_WHY[0]),
+               "".join('<span>%s</span>' % e(x) for x in F.CONTRACTS_WHY[1])))
     return _plate("p-contract", F.CONTRACTS_HEAD[0], F.CONTRACTS_HEAD[1], body)
 
 
@@ -153,6 +175,7 @@ def branches():
     body = ('<div class="scroll"><table class="br"><thead><tr>%s</tr></thead>'
             '<tbody>%s</tbody></table></div>'
             % ("".join("<th>%s</th>" % e(c) for c in F.BRANCHES_COLS), "".join(rows)))
+    body += '<div class="warn" style="margin:14px 0 0">%s</div>' % e(F.BRANCHES_FOOT)
     return _plate("p-branch", F.BRANCHES_HEAD[0], F.BRANCHES_HEAD[1], body)
 
 
@@ -164,8 +187,8 @@ def artifacts():
                      % (HUE[color], HUE[color], e(name), e(sub), e("\n".join(cols)),
                         '<p class="cs" style="margin:9px 0 0">%s</p>' % e(note)
                         if note else ""))
-    body = ('<div class="warn">%s</div><div class="cards">%s</div>'
-            % (e(F.ARTIFACTS_BANNER), "".join(cards)))
+    body = ('<div class="warn"><b>%s</b></div>%s'
+            % (e(F.ARTIFACTS_BANNER), _cols(cards, F.ARTIFACTS_SPLIT)))
     return _plate("p-rows", F.ARTIFACTS_HEAD[0], F.ARTIFACTS_HEAD[1], body,
                   F.ARTIFACTS_FOOT)
 
@@ -174,9 +197,8 @@ def filenames():
     cards = []
     for head, color, rows in F.FILENAMES:
         items = "".join(
-            '<div class="it"><span class="nm2" style="font-family:Consolas,monospace">'
-            '%s</span><span class="no2" style="color:var(--dim);white-space:normal;'
-            'flex:1.2">%s</span></div>' % (e(n), e(w)) for n, w in rows)
+            '<div class="it"><span class="nm2 mono">%s</span>'
+            '<span class="no2 wrap">%s</span></div>' % (e(n), e(w)) for n, w in rows)
         cards.append('<div class="card" style="border-color:%s;grid-column:1/-1">'
                      '<h4 style="color:%s">%s</h4>%s</div>'
                      % (HUE[color], HUE[color], e(head), items))
@@ -190,10 +212,8 @@ def traceback_ways():
     cards = []
     for n, head, color, works, rows in F.TRACEBACK:
         items = "".join(
-            '<div class="it"><span class="nm2" style="font-family:Consolas,monospace;'
-            'flex:0 0 42%%">%s</span>'
-            '<span class="no2" style="color:var(--dim);white-space:normal;text-align:left;'
-            'flex:1">%s</span></div>' % (e(a), e(b)) for a, b in rows)
+            '<div class="it"><span class="nm2 mono narrow">%s</span>'
+            '<span class="no2 wrap">%s</span></div>' % (e(a), e(b)) for a, b in rows)
         cards.append('<div class="card" style="border-color:%s;grid-column:1/-1">'
                      '<h4 style="color:%s">%d. %s</h4><p class="cs">%s</p>%s</div>'
                      % (HUE[color], HUE[color], n, e(head),
