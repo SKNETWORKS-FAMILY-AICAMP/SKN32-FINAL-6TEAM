@@ -52,12 +52,6 @@ DEFECTS: list[Defect] = [
             "!= 를 < 로 바꾸면 내가 읽은 뒤 남이 먼저 바꾼 경우(현재 version 이 더 큼)를 "
             "충돌로 보지 않는다. 두 실행이 같은 Case 를 각자 계산한 결과로 덮어쓴다."
         ),
-        excluded=(
-            "잡히는지가 실행마다 갈린다. 같은 문제를 두 번 풀면 다른 답이 나온다. "
-            "낙관적 동시성 가드가 파이썬과 SQL 양쪽에 있어 상태는 보존되고, 진 쪽이 "
-            "언제 읽느냐에 따라 StateConflict 가 나기도 InvalidTransition 이 나기도 한다. "
-            "final_project_cs/docs/reports/debugs/2026-08-31_버전대조_가드_중복.md"
-        ),
         counterfactuals=[
             "트랜잭션이 있으니 버전 대조는 없어도 된다",
             "버전이 작아지는 경우만 막으면 충분하다",

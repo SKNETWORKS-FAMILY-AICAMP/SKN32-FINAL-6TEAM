@@ -138,3 +138,52 @@ def test_two_writers_that_read_the_same_version_produce_exactly_one_conflict(
         "나중 것이 먼저 것을 덮어쓴다"
     )
     assert get_case(conn, tenant_id=tenant, case_id=case_id)["version"] == 2
+
+
+# ── 2026-09-01: 파이썬 가드를 결정적으로 재는 법 ─────────────────────
+#
+# 파이썬 쪽 `!=` 를 `<` 로 바꾸는 변이는 오래 잡히지 않았다. SQL 가드가 상태를
+# 지켜 주기 때문에 대부분의 경우 결과가 같았고, 동시성 테스트는 타이밍에 따라
+# 갈렸다(단독 5회 중 1회 실패).
+#
+# 열쇠는 **예외의 종류**다. 상태가 이미 지나간 Case 에 낡은 version 으로 쓰면
+#   가드가 있으면  → version 을 먼저 대조해 StateConflict
+#   가드가 없으면  → 그대로 진행해 전이표에서 걸려 InvalidTransition
+# 둘 다 쓰기를 막지만 호출자에게는 뜻이 다르다. StateConflict 는 "다시 읽고
+# 재계산해라" 이고 InvalidTransition 은 "이 상태에서 할 수 없는 일" 이다.
+#
+# 근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md §5
+
+
+def _advance_to_running(conn, tenant: str, case_id) -> None:
+    with conn.transaction():
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1,
+                        event_type=EventType.CLASSIFIED,
+                        payload={"intent": "billing", "issue_code": "invoice",
+                                 "sentiment": "neutral"}, actor_type="test")
+        transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
+                        event_type=EventType.ROUTED,
+                        payload={"owner_team_id": "fake_order", "capability": "order.investigate"},
+                        actor_type="test")
+    conn.commit()
+
+
+def test_stale_write_on_an_advanced_case_is_a_conflict_not_a_transition_error(db):  # noqa: F811
+    """낡은 version 으로 쓰면 **version 충돌**로 걸려야 한다.
+
+    전이표에서 걸리는 것도 쓰기를 막긴 하지만 뜻이 다르다. version 을 먼저
+    대조하지 않으면 호출자가 받는 오류가 상황에 따라 달라진다.
+    """
+    conn, tenant = db
+    case_id = _fresh_case(conn, tenant)
+    _advance_to_running(conn, tenant, case_id)
+    assert get_case(conn, tenant_id=tenant, case_id=case_id)["version"] == 3
+
+    with pytest.raises(StateConflict):
+        with conn.transaction():
+            transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=2,
+                            event_type=EventType.CLASSIFIED,
+                            payload={"intent": "x", "issue_code": "x", "sentiment": "neutral"},
+                            actor_type="test")
+    conn.rollback()
+    assert get_case(conn, tenant_id=tenant, case_id=case_id)["version"] == 3

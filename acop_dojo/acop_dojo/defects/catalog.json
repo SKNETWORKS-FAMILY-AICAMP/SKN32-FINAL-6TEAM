@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "485 passed, 4 deselected, 1 xfailed, 36 warnings in 27.93s"
+  "summary": "486 passed, 4 deselected, 1 xfailed, 36 warnings in 63.16s (0:01:03)"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -723,18 +723,24 @@
    ]
   },
   "INV-STATE-001": {
-   "failed": [],
+   "failed": [
+    "tests/integration/db/test_stale_write_conflict.py::test_stale_write_on_an_advanced_case_is_a_conflict_not_a_transition_error"
+   ],
    "gates": {
     "applied": true,
     "applies": true,
-    "kills_tests": false,
+    "distinguishable": true,
+    "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "낙관적 동시성 — 상태 변경은 읽은 시점의 version 과 정확히 맞아야 한다",
    "path": "app/core/transition.py",
-   "summary": "470 passed, 4 deselected, 36 warnings in 34.86s",
-   "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다"
+   "summary": "1 failed, 485 passed, 4 deselected, 1 xfailed, 36 warnings in 64.13s (0:01:04)",
+   "title": "버전 대조가 헐거워져 지난 상태로 덮어쓴다",
+   "unique_failures": [
+    "tests/integration/db/test_stale_write_conflict.py::test_stale_write_on_an_advanced_case_is_a_conflict_not_a_transition_error"
+   ]
   },
   "INV-STATE-002": {
    "failed": [
