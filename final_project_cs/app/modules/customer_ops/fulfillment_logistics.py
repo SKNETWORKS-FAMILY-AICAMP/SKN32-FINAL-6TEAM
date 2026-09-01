@@ -19,6 +19,10 @@ class FulfillmentLogisticsTeam:
         allowed_tools=["read.order", "read.shipment", "read.policy"],
         knowledge_scope=["order", "shipping", "warehouse", "delivery_exception"],
         max_steps=6, active=True, implementation_revision="2026-08-20",
+        # ★"shipping" intent 는 이름으로 매칭되는 capability 가 없다 — 셋 다
+        #   "shipping." 로 시작하지 않는다(fulfillment./shipment.). 지금 실제
+        #   동작(capabilities[0])과 같은 값을 명시적으로 선언한다.
+        default_capability="fulfillment.track",
     )
 
     def __init__(self, tools: ReadToolbox) -> None:

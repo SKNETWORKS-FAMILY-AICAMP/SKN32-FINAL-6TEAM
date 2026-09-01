@@ -315,6 +315,12 @@ class TeamManifest(BaseModel):
     max_steps: int = Field(default=6, ge=1, le=12)
     active: bool = True
     implementation_revision: str
+    # ★intent(5종, 거친 라벨)가 이 팀의 capability(팀마다 2~6종, 세분화된
+    #   동작) 중 아무 것도 이름으로 매칭하지 못할 때 쓸 capability를 팀이
+    #   직접 선언한다. 안 적으면 registry가 capabilities[0]을 쓴다 — 전에는
+    #   이 선택이 "왜 그건지" 아무 데도 안 적힌 채 일어났다
+    #   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+    default_capability: str | None = None
 
 
 @runtime_checkable

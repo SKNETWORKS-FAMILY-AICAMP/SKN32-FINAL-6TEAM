@@ -1,6 +1,26 @@
 # capability_for()가 매칭 실패 시 근거 없이 capabilities[0]을 고른다
 
-## 시도했다가 되돌림 (2026-09-01)
+## 해결됨 (2026-09-01, 두 번째 시도)
+
+raise 기반 수정을 되돌린 뒤, 다른 방향으로 다시 고쳤다 — **동작은 그대로
+두고 근거만 명시적으로 만든다.** `TeamManifest`에 `default_capability:
+str | None = None`을 추가했다(`app/core/contracts.py`,
+`docs/handoff/01_계약_Pydantic.md`). `capability_for()`는 매칭 실패 시
+`entry.manifest.default_capability or entry.manifest.capabilities[0]`을
+쓴다 — 선언이 없으면 전과 완전히 같은 값을 반환한다(하위호환, 동작 변경 0).
+
+실측으로 확인된 3개 팀(voc_store_manager·fulfillment_logistics·
+return_refund)에 지금 실제로 나가는 값과 **똑같은** `default_capability`를
+명시적으로 선언했다 — `voc.aggregate`·`fulfillment.track`·
+`return.check_eligibility`. 값은 안 바뀌었지만 이제 "왜 이 값인지"가
+매니페스트에 적혀 있다.
+
+검증: 5개 intent 전부 `resolve()`→`capability_for()` 결과가 수정 전과
+바이트 단위로 동일함을 확인. 회귀 테스트 3건 추가
+(`tests/unit/core/test_registry_capability_default.py`). 517 passed,
+회귀 0건.
+
+## 시도했다가 되돌림 (2026-09-01, 첫 번째 시도)
 
 `capability_for()`가 매칭 실패 시 `RegistryError`를 던지도록 고치고
 `controller.py`에 그 예외를 escalated로 받는 처리까지 같이 넣었다.

@@ -177,7 +177,14 @@ class TeamManifest(BaseModel):
     max_steps: int = Field(default=6, ge=1, le=12)
     active: bool = True
     implementation_revision: str
+    default_capability: str | None = None
 ```
+
+★`default_capability` (2026-09-01 추가) — intent(5종, 거친 라벨)로는
+이름이 매칭되는 capability가 없는 팀이 실측으로 확인됐다(shipping·
+exchange·other, `docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md`).
+그때 registry가 쓸 capability를 팀이 직접 선언한다. 안 적으면
+`capabilities[0]`을 쓴다(기존 동작과 동일, 하위호환).
 
 ## 8. TeamModule Protocol — Core 가 Team 을 보는 유일한 창
 

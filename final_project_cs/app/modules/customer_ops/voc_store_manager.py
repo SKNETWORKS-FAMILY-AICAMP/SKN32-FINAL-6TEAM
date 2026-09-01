@@ -19,6 +19,10 @@ class VocStoreManagerTeam:
         allowed_tools=["read.policy"],
         knowledge_scope=["order", "shipping", "return", "exchange"],
         max_steps=6, active=True, implementation_revision="2026-08-19",
+        # ★"other" intent 는 이름으로 매칭되는 capability 가 없다 —
+        #   voc.aggregate/voc.escalate 어느 쪽도 "other." 로 시작하지 않는다.
+        #   지금 실제 동작(capabilities[0])과 같은 값을 명시적으로 선언한다.
+        default_capability="voc.aggregate",
     )
 
     def __init__(self, tools: ReadToolbox, llm: Any | None = None) -> None:
