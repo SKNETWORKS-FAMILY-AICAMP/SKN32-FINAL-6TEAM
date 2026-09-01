@@ -96,41 +96,104 @@ def structure():
 
 
 def lifecycle():
-    """상태 열두 개.
+    """상태 열두 개를 상태 기계 그림으로 그린다.
 
-    ★원본 그림에는 화살표가 있었다. 주 흐름은 왼쪽에서 오른쪽으로 이어졌고,
-      대기 세 상태에서 running 으로 되돌아가는 곡선이 있었다. 칩만 늘어놓으면
-      "이어진다" 와 "되돌아온다" 가 사라진다. 그게 이 장의 요점이다.
+    ★칩만 늘어놓으면 "이어진다" 와 "되돌아온다" 가 사라진다. 그게 이 장의
+      요점이다. 계획서 19절에 mermaid 원본이 있어서 그 모양을 따라 그린다.
+
+    ★그림 파일이 아니라 SVG 다. 글자를 긁을 수 있고 검색도 되고 화면 크기에
+      맞는다. 낱장과 다른 판에 한 것과 같은 이유다.
+
+    ★자리(좌표)는 여기 있고 내용은 figures.py 에 있다. 전이 이름은 계획서에서
+      온 것이라 여기서 지어내면 안 된다.
     """
-    def chip(x, color, cls=""):
-        return ('<div class="s3%s" style="color:%s;border-color:%s">'
-                '<b>%s</b><span>%s</span></div>'
-                % (cls, color, color, e(x[0]), e(x[1])))
+    W, H = 1000, 596
+    o = []
 
-    chain = []
-    for i, x in enumerate(F.LIFECYCLE_MAIN):
-        if i:
-            chain.append('<span class="ar">&#10142;</span>')
-        done = x[0] == "resolved"
-        # ★원본에서 resolved 만 상자가 넓었다. 끝나는 자리라는 표시다.
-        chain.append(chip(x, HUE["green"] if done else HUE["blue"],
-                          " wide" if done else ""))
+    def box(x, y, w, h, cls, name, sub):
+        o.append('<rect class="bx %s" x="%d" y="%d" width="%d" height="%d" rx="10"/>'
+                 % (cls, x, y, w, h))
+        o.append('<text class="nm %s" x="%d" y="%d">%s</text>'
+                 % (cls, x + w // 2, y + (23 if sub else 34), e(name)))
+        if sub:
+            o.append('<text class="sb" x="%d" y="%d">%s</text>'
+                     % (x + w // 2, y + 41, e(sub)))
 
-    body = (
-        '<div class="rowhead">이 환불 건이 실제로 지난 길</div>'
-        '<div class="states3 flow">%s</div>' % "".join(chain)
-        + '<div class="rowhead">멈췄다가 조건이 갖춰지면 다시 이어서 돈다</div>'
-        + '<div class="loop"><div class="states3">%s</div>'
-          '<div class="back"><span class="ar up">&#10142;</span>'
-          '<span>넷 다 <b>running</b> 으로 되돌아간다. 끝난 것이 아니라 멈춘 것이다</span>'
-          '</div></div>'
-          % "".join(chip(x, HUE["amber"], " wait") for x in F.LIFECYCLE_WAIT)
-        + '<div class="rowhead">끝나는 다른 방법 (이 건에서는 안 나왔다)</div>'
-        + '<div class="states3">%s</div>'
-          % "".join(chip(x, HUE[x[2]]) for x in F.LIFECYCLE_END)
-        + '<div class="card why2b">'
-          '<h4>%s</h4><p class="cs">%s</p></div>'
-          % (e(F.LIFECYCLE_WHY[0]), e(F.LIFECYCLE_WHY[1])))
+    def line(cls, pts, arrow=True):
+        d = " ".join(("M" if i == 0 else "L") + "%d %d" % p for i, p in enumerate(pts))
+        o.append('<path class="ln %s" d="%s"%s/>'
+                 % (cls, d, ' marker-end="url(#h-%s)"' % cls if arrow else ""))
+
+    def tag(x, y, text, cls="ed", anchor="middle"):
+        o.append('<text class="%s" x="%d" y="%d" text-anchor="%s">%s</text>'
+                 % (cls, x, y, anchor, e(text)))
+
+    # ── 주 흐름. 이 환불 건이 실제로 지난 길이다.
+    BW, BH, BY = 128, 56, 76
+    xs = [36, 220, 404, 588, 808]
+    for i, (name, sub) in enumerate(F.LIFECYCLE_MAIN):
+        box(xs[i], BY, BW, BH, "gr" if name == "resolved" else "bl", name, sub)
+    for i, ed in enumerate(F.LIFECYCLE_MAIN_EDGE):
+        x0, x1 = xs[i] + BW, xs[i + 1]
+        line("bl", [(x0, BY + BH // 2), (x1 - 7, BY + BH // 2)])
+        tag((x0 + x1) // 2, BY + BH // 2 - 9, ed)
+    tag(xs[4] + BW // 2, BY + BH + 22, "이 환불 건은 이 길로만 갔다", "ok")
+
+    # ── 대기 셋과 resuming. 원본에서 이 넷만 노란 바탕이었다.
+    waits = F.LIFECYCLE_WAIT[:F.LIFECYCLE_WAIT_SPLIT]
+    WX, WW, WH2 = 560, 196, 54
+    wys = [228, 302, 376]
+    for i, (name, sub) in enumerate(waits):
+        box(WX, wys[i], WW, WH2, "am", name, sub)
+    RX2, RY, RW2, RH = 280, 302, 180, 58
+    rname, rsub = F.LIFECYCLE_WAIT[F.LIFECYCLE_WAIT_SPLIT]
+    box(RX2, RY, RW2, RH, "am", rname, rsub)
+
+    # ── running 에서 대기로 나가는 길. 오른쪽 세로줄 하나로 모은다.
+    BUS, RUN = 904, xs[3]
+    line("am", [(RUN + 112, BY + BH), (RUN + 112, 164), (BUS, 164),
+                (BUS, wys[0] + 27), (WX + WW + 7, wys[0] + 27)])
+    for i in (1, 2):
+        line("am", [(BUS, 164), (BUS, wys[i] + 27), (WX + WW + 7, wys[i] + 27)])
+    for i, ed in enumerate(F.LIFECYCLE_HOLD_EDGE):
+        tag(BUS - 8, wys[i] + 20, ed, "ed", "end")
+
+    # ── 대기에서 resuming 으로 돌아오는 길.
+    back = F.LIFECYCLE_BACK_EDGE
+    line("am", [(WX, wys[0] + 27), (500, wys[0] + 27), (500, 290),
+                (RX2 + RW2 // 2, 290), (RX2 + RW2 // 2, RY - 7)])
+    tag(WX - 8, wys[0] + 20, back[0], "ed", "end")
+    line("am", [(WX, wys[1] + 27), (RX2 + RW2 + 7, wys[1] + 27)])
+    tag(510, wys[1] - 6, back[1])
+    line("am", [(WX, wys[2] + 27), (500, wys[2] + 27), (500, 372),
+                (RX2 + RW2 // 2, 372), (RX2 + RW2 // 2, RY + RH + 7)])
+    tag(WX - 8, wys[2] + 20, back[2], "ed", "end")
+
+    # ── resuming 에서 running 으로. 멈춘 것이지 끝난 것이 아니다.
+    line("am", [(RX2, RY + RH // 2), (236, RY + RH // 2), (236, 150),
+                (RUN + 16, 150), (RUN + 16, BY + BH + 7)])
+    for i, ln in enumerate(F.LIFECYCLE_RESUME_NOTE):
+        tag(250, 214 + i * 17, ln, "no", "start")
+
+    # ── 끝나는 다른 방법. 원본에서 회색 바탕 상자였다.
+    o.append('<rect class="note" x="36" y="452" width="900" height="82" rx="11"/>')
+    for i, ln in enumerate(F.LIFECYCLE_END_NOTE):
+        tag(486, 484 + i * 23, ln, "nt")
+    tag(36, 574, F.LIFECYCLE_SRC, "src", "start")
+
+    heads = "".join(
+        '<marker id="h-%s" class="%s" viewBox="0 0 10 10" refX="9" refY="5" '
+        'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+        '<path d="M0 0 L10 5 L0 10 z"/></marker>' % (c, c)
+        for c in ("bl", "am"))
+
+    svg = ('<svg class="sd" viewBox="0 0 %d %d" role="img" '
+           'aria-label="%s"><defs>%s</defs>%s</svg>'
+           % (W, H, e("Case 상태 전이 그림. " + F.LIFECYCLE_HEAD[1]),
+              heads, "".join(o)))
+    body = ('<div class="scroll">%s</div>'
+            '<div class="card why2b"><h4>%s</h4><p class="cs">%s</p></div>'
+            % (svg, e(F.LIFECYCLE_WHY[0]), e(F.LIFECYCLE_WHY[1])))
     return _plate("p-life", F.LIFECYCLE_HEAD[0], F.LIFECYCLE_HEAD[1], body)
 
 

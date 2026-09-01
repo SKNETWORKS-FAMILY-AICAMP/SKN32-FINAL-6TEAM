@@ -41,16 +41,19 @@ button:disabled{opacity:.4;cursor:not-allowed}
 /* 진행바. 그림 위쪽에 있던 것과 같은 열두 칸이다. */
 .barwrap{background:var(--card);border:1px solid var(--line);border-radius:13px;
 padding:12px 15px 9px;position:sticky;top:0;z-index:25}
-.barwrap .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.barwrap .top .t{font-size:12.5px;color:var(--faint)}
-.barstate{font-size:12.5px;color:var(--dim)}
-.barstate b{font-family:Consolas,monospace;font-size:13px;color:var(--ink)}
-.barwrap .top .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+/* 진행바 위에 있던 줄은 없앴다. 버튼 둘이 플로팅 독에 그대로 있어 중복이었고,
+   좁은 화면에서 글자가 세로로 서서 읽히지도 않았다. 지금 상태와 단축키
+   안내만 독 안으로 옮겼다. */
+.dock .barstate{font-size:12px;color:var(--dim);line-height:1.5;
+padding:0 2px 8px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.dock .barstate b{font-family:Consolas,monospace;font-size:12.5px;color:var(--ink);
+display:block;margin-top:2px}
+.dock .keys{border-top:1px solid var(--line);margin-top:2px;padding-top:8px;
+flex-wrap:wrap;justify-content:center}
 .keys{font-size:11.5px;color:var(--faint);display:flex;gap:5px;align-items:center;
 margin-right:4px}
 .keys kbd{font-family:Consolas,monospace;font-size:11px;border:1px solid var(--line);
 border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--bg);color:var(--dim)}
-.barwrap .top button{font-size:12.5px;padding:5px 11px;border-radius:7px}
 .bar{display:flex;gap:5px;align-items:flex-end}
 .bar .cell{flex:1;border:none;padding:0;background:none;cursor:pointer;text-align:center}
 .bar .cell .box{height:19px;border-radius:5px;background:var(--todo);display:flex;
@@ -289,27 +292,35 @@ word-break:keep-all;overflow-wrap:anywhere}
 .card pre{margin:0;font-size:12.5px;line-height:1.62;white-space:pre-wrap;
 word-break:break-word}
 
-/* 상태 12개. 화살표가 "이어진다" 를, 되돌아감이 "멈춘 것이지 끝난 게 아니다" 를 말한다. */
-.states3{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px;align-items:stretch}
-/* 주 흐름은 안 꺾는다. 꺾이면 화살표가 줄 끝에 홀로 남아 뜻이 사라진다. */
-.states3.flow{align-items:center;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
-.states3 .s3{border:2px solid;border-radius:11px;padding:9px 14px;min-width:132px;
-flex:none}
-/* 원본에서 대기 넷만 노란 바탕이었다. 색 테두리만으로는 "멈춤" 이 안 보인다. */
-.states3 .s3.wait{background:var(--warm)}
-/* 끝나는 자리만 상자가 넓었다. */
-.states3 .s3.wide{min-width:150px}
-.states3 .s3 b{display:block;font-family:Consolas,monospace;font-size:14px}
-.states3 .s3 span{font-size:12px;color:var(--dim)}
-.rowhead{font-size:13px;font-weight:700;margin:14px 0 6px}
+/* 상태 12개를 상태 기계 그림으로 그린다. 그림 파일이 아니라 SVG 라
+   글자를 긁을 수 있다. 색은 테마를 따라간다. */
+.sd{display:block;min-width:920px;width:100%;height:auto}
+.sd .bx{fill:var(--card);stroke-width:2}
+.sd .bx.bl{stroke:var(--blue)}
+.sd .bx.gr{stroke:var(--green);stroke-width:2.4}
+.sd .bx.am{stroke:var(--amber);fill:var(--warm)}
+.sd .nm{font-family:Consolas,monospace;font-size:14px;font-weight:700;
+text-anchor:middle}
+.sd .nm.bl{fill:var(--blue)}
+.sd .nm.gr{fill:var(--green)}
+.sd .nm.am{fill:var(--amber)}
+.sd .sb{font-size:10.5px;fill:var(--dim);text-anchor:middle}
+.sd .ln{fill:none;stroke-width:1.7}
+.sd .ln.bl{stroke:var(--dim)}
+.sd .ln.am{stroke:var(--amber)}
+.sd marker.bl path{fill:var(--dim)}
+.sd marker.am path{fill:var(--amber)}
+.sd .ed{font-family:Consolas,monospace;font-size:10.5px;fill:var(--faint)}
+.sd .no{font-size:11px;fill:var(--dim)}
+.sd .ok{font-size:11px;fill:var(--green)}
+.sd .note{fill:var(--soft);stroke:var(--line)}
+.sd .nt{font-size:12.5px;fill:var(--ink)}
+.sd .src{font-size:11px;fill:var(--faint)}
+
 .ar{font-size:19px;color:var(--faint);flex:none;line-height:1}
 .ar.up{transform:rotate(-90deg);display:inline-block;color:var(--amber)}
 .ar.down{transform:rotate(90deg);display:inline-block;color:var(--blue)}
 .ar.mid{align-self:center;color:var(--dim)}
-.loop{border-left:3px solid var(--amber);padding-left:13px}
-.loop .back{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--dim);
-margin-top:4px}
-.loop .back b{font-family:Consolas,monospace;color:var(--amber)}
 .downto{display:flex;gap:9px;align-items:center;font-size:13.5px;font-weight:700;
 color:var(--blue);margin:14px 0 8px}
 
@@ -587,16 +598,6 @@ PAGE = """<!doctype html>
 바뀐 줄에만 색이 붙습니다. 위쪽 진행바의 칸을 누르면 그 단계로 갑니다. 좌우 화살표 키도 됩니다.</p>
 
 <div class="barwrap">
-  <div class="top">
-    <span class="t">열두 단계 진행바</span>
-    <span class="barstate" id="barstate"></span>
-    <span class="r">
-      <span class="keys"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 앞뒤로
-        <kbd>Space</kbd> 자동 재생 <kbd>Esc</kbd> 닫기</span>
-      <button onclick="showMap()">열두 칸 지도 펼치기</button>
-      <button onclick="showCode()">이 단계 코드 보기</button>
-    </span>
-  </div>
   <div class="bar" id="bar"></div>
 </div>
 
@@ -640,6 +641,7 @@ PAGE = """<!doctype html>
 
 <div class="dock" id="dock">
   <div class="menu">
+    <span class="barstate" id="barstate"></span>
     <button id="prev" onclick="go(cur-1)">이전 단계</button>
     <button id="next" class="primary" onclick="go(cur+1)">다음 단계</button>
     <button id="play" onclick="play()">자동 재생</button>
@@ -647,6 +649,8 @@ PAGE = """<!doctype html>
     <button onclick="showMap()">열두 칸 지도</button>
     <button onclick="showCode()">이 단계 코드 보기</button>
     <div class="tick" id="tick"></div>
+    <div class="keys"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 앞뒤로
+      <kbd>Space</kbd> 자동 재생 <kbd>Esc</kbd> 닫기</div>
   </div>
   <button class="fab" onclick="dock(event)" title="조작판">
     <span class="big" id="fabn">1</span><span class="small" id="fabs">/ 12</span>

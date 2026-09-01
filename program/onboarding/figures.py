@@ -80,6 +80,25 @@ LIFECYCLE_WAIT = [("waiting_input", "고객 답을 기다림"),
                   ("waiting_approval", "사람 결재를 기다림"),
                   ("waiting_external", "외부 콜백을 기다림"),
                   ("resuming", "다시 이어서 실행")]
+#: 전이 이름은 계획서 19절의 mermaid 원본에서 그대로 가져왔다. 지어내지 않는다.
+#: 주 흐름 다섯 상태 사이의 네 전이.
+LIFECYCLE_MAIN_EDGE = ["created", "classified", "team_task", "completed"]
+#: LIFECYCLE_WAIT 의 앞 셋이 대기 상태이고 넷째 resuming 은 돌아가는 자리다.
+LIFECYCLE_WAIT_SPLIT = 3
+#: running 에서 대기 셋으로 나가는 전이.
+LIFECYCLE_HOLD_EDGE = ["missing_input", "approval_required", "async_provider"]
+#: 대기 셋에서 resuming 으로 돌아오는 전이.
+LIFECYCLE_BACK_EDGE = ["valid_input", "approved", "callback"]
+LIFECYCLE_RESUME_NOTE = ["resuming 은 resume_token 을 검증한 뒤에야",
+                         "running 으로 돌아간다. 토큰은 한 번만 쓰고",
+                         "24시간이 지나면 만료된다"]
+LIFECYCLE_END_NOTE = ["자동 처리 한계에 걸리면 escalated 로 보내 사람이 받는다. "
+                      "복구 불가는 failed, 취소는 cancelled 다.",
+                      "셋 다 이 환불 건에서는 안 나왔다. "
+                      "허용된 다음 상태 표에 없는 전이는 transition_case() 가 거부한다."]
+LIFECYCLE_SRC = ("출처: program/plan/A-COP_구현계획서_v8.md 19절. "
+                 "모든 전이는 case_events 에 추가만 되므로 나중에 그대로 재생할 수 있다")
+
 LIFECYCLE_END = [("escalated", "사람에게 넘김", "red"),
                  ("failed", "실패로 끝남", "red"),
                  ("cancelled", "취소됨", "grey")]
