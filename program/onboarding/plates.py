@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import figures as F  # noqa: E402
-from sheet_data import SHEETS  # noqa: E402
+from sheet_data import BAR, SHEETS  # noqa: E402
 
 #: figures.py 는 색을 이름으로 둔다. 브라우저 쪽 값으로 옮긴다.
 HUE = {"red": "var(--red)", "blue": "var(--blue)", "green": "var(--green)",
@@ -48,31 +48,35 @@ def _plate(anchor, head, sub, body, foot=""):
 def lane_map():
     """전체 지도. 어느 단계가 어느 갈래인지는 단계 색에서 뽑는다.
 
-    ★이어진 단계는 붙여 그린다. 1-2 처럼 같은 갈래가 연달아 오면 원래 그림에서
-      한 덩어리로 보였다. 칸마다 따로 떼면 그 정보가 사라진다.
+    ★칸을 붙이지 않는다. 원본 그림(`trace/make_trace_images.py::sheet_map`)은
+      칸마다 따로 떼고 사이를 벌렸다. 한때 같은 갈래가 연달아 오면 한 덩어리로
+      붙여 봤는데, 3·4·5·6 이 한 칸처럼 읽혀 몇 번 단계가 어디까지인지
+      알 수 없었다. 갈래가 같다는 것은 색이 말해 주면 된다.
+
+    ★칸 안에는 짧은 이름을 쓴다. 원본도 진행바와 같은 `신원` `중복` `분류` 였다.
+      긴 제목을 넣었더니 좁은 화면에서 글자가 한 자씩 세로로 섰다.
+      긴 제목은 덮어쓰기 설명으로만 남긴다.
 
     ★빈 칸은 상자가 아니라 가는 선이다. 상자로 그리면 안 지나는 자리가
       지나는 자리만큼 눈에 띈다.
     """
     rows = []
     for label, color in F.LANES:
-        mine = [s["color"] == RAW[color] for s in SHEETS]
         cells = ['<div class="name" style="color:%s;border-color:%s">%s</div>'
                  % (HUE[color], HUE[color], e(label))]
         for i, s in enumerate(SHEETS):
-            if not mine[i]:
+            if s["color"] != RAW[color]:
                 cells.append('<div class="cell"><i></i></div>')
                 continue
-            # 앞뒤가 같은 갈래면 그쪽 모서리를 펴서 한 덩어리로 보이게 한다.
-            edge = ("" if i > 0 and mine[i - 1] else " l")                  + ("" if i + 1 < len(mine) and mine[i + 1] else " r")
-            cells.append('<div class="cell on%s" style="background:%s">'
+            cells.append('<div class="cell on" style="background:%s" title="%s">'
                          '<b>%d</b><span>%s</span></div>'
-                         % (edge, HUE[color], s["n"], e(s["head"])))
+                         % (HUE[color], e(s["head"]), s["n"], e(BAR[i]["name"])))
         rows.append("".join(cells))
     return _plate("p-map", "전체 지도",
                   '고객이 "어제 주문한 거 취소하고 환불받고 싶어요" 를 보낸 순간부터 '
                   "답이 돌아갈 때까지의 열두 단계",
-                  '<div class="lanes">%s</div>' % "".join(rows), F.LANES_FOOT)
+                  '<div class="scroll"><div class="lanes">%s</div></div>'
+                  % "".join(rows), F.LANES_FOOT)
 
 
 def structure():
@@ -260,8 +264,8 @@ def filenames():
     cards = []
     for head, color, rows in F.FILENAMES:
         items = "".join(
-            '<div class="it"><span class="nm2 mono">%s</span>'
-            '<span class="no2 wrap">%s</span></div>' % (e(n), e(w)) for n, w in rows)
+            '<div class="it line"><span class="nm2 mono">%s</span>'
+            '<span class="no2 free">%s</span></div>' % (e(n), e(w)) for n, w in rows)
         cards.append('<div class="card" style="border-color:%s;grid-column:1/-1">'
                      '<h4 style="color:%s">%s</h4>%s</div>'
                      % (HUE[color], HUE[color], e(head), items))
@@ -275,8 +279,8 @@ def traceback_ways():
     cards = []
     for n, head, color, works, rows in F.TRACEBACK:
         items = "".join(
-            '<div class="it"><span class="nm2 mono narrow">%s</span>'
-            '<span class="no2 wrap">%s</span></div>' % (e(a), e(b)) for a, b in rows)
+            '<div class="it line"><span class="nm2 mono narrow">%s</span>'
+            '<span class="no2 free">%s</span></div>' % (e(a), e(b)) for a, b in rows)
         cards.append('<div class="card" style="border-color:%s;grid-column:1/-1">'
                      '<h4 style="color:%s">%d. %s</h4><p class="cs">%s</p>%s</div>'
                      % (HUE[color], HUE[color], n, e(head),

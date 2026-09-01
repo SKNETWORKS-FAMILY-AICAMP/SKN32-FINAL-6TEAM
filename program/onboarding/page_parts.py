@@ -250,25 +250,24 @@ margin-top:5px;line-height:1.66}
 .col2{display:flex;flex-direction:column;gap:14px}
 @media(max-width:900px){.twocol{grid-template-columns:minmax(0,1fr)}}
 
-/* 전체 지도. 이어진 단계는 붙고, 안 지나는 자리는 가는 선이다. */
-.lanes{display:grid;grid-template-columns:172px repeat(12,minmax(0,1fr));
-gap:9px 0;align-items:stretch}
+/* 전체 지도. 칸마다 따로 떼고 사이를 벌린다. 원본 그림이 그랬고,
+   붙여 놨더니 연달아 오는 단계가 한 칸처럼 읽혔다. */
+.lanes{display:grid;grid-template-columns:150px repeat(12,minmax(0,1fr));
+gap:8px 5px;align-items:stretch}
 .lanes .name{border:2px solid;border-radius:11px;display:flex;align-items:center;
-justify-content:center;font-size:12.5px;font-weight:700;padding:10px 6px;
-text-align:center;margin-right:11px}
-.lanes .cell{min-height:60px;display:flex;align-items:center;justify-content:center}
+justify-content:center;font-size:12px;font-weight:700;padding:10px 6px;
+text-align:center;margin-right:9px;word-break:keep-all}
+.lanes .cell{min-height:56px;display:flex;align-items:center;justify-content:center}
 .lanes .cell > i{display:block;height:8px;width:100%;background:var(--todo);
 border-radius:4px}
-.lanes .cell.on{color:#fff;flex-direction:column;gap:1px;padding:7px 3px;
-text-align:center;justify-content:center}
-.lanes .cell.on.l{border-top-left-radius:11px;border-bottom-left-radius:11px}
-.lanes .cell.on.r{border-top-right-radius:11px;border-bottom-right-radius:11px}
+.lanes .cell.on{color:#fff;flex-direction:column;gap:2px;padding:8px 2px;
+text-align:center;justify-content:center;border-radius:10px}
 .lanes .cell.on b{font-size:15px;line-height:1.1}
-.lanes .cell.on span{font-size:10.5px;line-height:1.25;opacity:.92;
-word-break:keep-all;overflow-wrap:anywhere}
-@media(max-width:1200px){.lanes{grid-template-columns:112px repeat(12,minmax(0,1fr))}
-.lanes .name{font-size:11px;padding:7px 3px;margin-right:7px}
-.lanes .cell.on b{font-size:12.5px}.lanes .cell.on span{font-size:9px}}
+.lanes .cell.on span{font-size:11px;line-height:1.2;opacity:.94;word-break:keep-all}
+/* 좁아지면 글자가 한 자씩 세로로 선다. 그 전에 옆으로 밀리게 한다. */
+@media(max-width:1000px){.lanes{min-width:840px}
+.lanes .name{font-size:11px}.lanes .cell.on b{font-size:13.5px}
+.lanes .cell.on span{font-size:10px}}
 
 /* 큰 구조 / 파일 이름 / 남는 표 */
 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -281,9 +280,28 @@ word-break:keep-all;overflow-wrap:anywhere}
 .card .it .nm2{flex:1;min-width:0}
 .card .it .no2{font-size:12.5px;text-align:right;white-space:nowrap}
 /* 줄바꿈을 허용한 메모는 왼쪽에 맞춘다. 오른쪽 정렬이면 줄마다 시작점이 달라진다. */
-.card .it .no2.wrap{text-align:left;white-space:normal;color:var(--dim);flex:1.2}
-.card .it .nm2.mono{font-family:Consolas,monospace}
-.card .it .nm2.narrow{flex:0 0 42%}
+.card .it .no2.free{text-align:left;white-space:normal;color:var(--dim);flex:1.2}
+/* ★이름 칸은 글자만큼만 잡는다. flex 로 반씩 나누면 짧은 이름 뒤에
+   200px 짜리 빈 자리가 남아 두 칸이 따로 노는 표처럼 보인다.
+   실측한 가장 긴 이름에 맞춘 폭이다. */
+.card .it .nm2.mono{font-family:Consolas,monospace;flex:0 1 auto;
+width:452px;max-width:52%}
+.card .it .nm2.mono.narrow{width:200px;max-width:40%}
+/* ★이름 칸을 줄마다 같은 폭으로 맞추면 짧은 이름 뒤에 빈 자리가 남는다.
+   그 자리를 없앨 수는 없다. 대신 줄을 그어 한 줄이 한 짝이라고 보이게 한다.
+   선이 없으면 왼쪽 목록과 오른쪽 목록이 따로 노는 것처럼 읽힌다. */
+.card .it.line{border-bottom:1px solid var(--line);padding:8px 2px}
+.card .it.line:last-child{border-bottom:none}
+/* 좁아지면 두 칸을 위아래로 쌓는다. 옆으로 붙이면 이름이 한 자씩 접힌다. */
+@media(max-width:760px){
+.card .it{flex-direction:column;align-items:stretch;gap:2px;padding:7px 0;
+border-bottom:1px solid var(--line)}
+.card .it:last-child{border-bottom:none}
+/* ★위아래로 쌓을 때는 flex 를 꺼야 한다. flex-grow 가 남아 있으면 두 줄짜리
+   설명이 세로로 늘어나 칸 하나가 190px 를 먹는다. */
+.card .it .nm2,.card .it .nm2.mono,.card .it .nm2.mono.narrow,
+.card .it .no2,.card .it .no2.free{flex:none;width:auto;
+text-align:left;white-space:normal}}
 .card .it .nm2{overflow-wrap:anywhere}
 /* "왜 헷갈리나" 는 원본에서 회색 바탕 상자였다. 본문과 구별되는 자리다. */
 .card.why2b{border-color:var(--line);margin-top:14px;background:var(--soft)}
