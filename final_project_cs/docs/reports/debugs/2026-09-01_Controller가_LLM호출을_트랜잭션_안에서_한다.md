@@ -1,5 +1,22 @@
 # Controller가 LLM 호출을 트랜잭션 안에서 한다
 
+## 해결됨 (2026-09-01)
+
+수정 리포트: [`docs/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md`](../2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md)
+
+아래 "권고 방향" 1~4를 그대로 따랐다. `run_case()`를 A(시작·커밋) /
+B(Team 실행, 트랜잭션 밖) / C(결과 반영, 새 트랜잭션)로 쪼갰고,
+`_apply_result`의 `StateConflict`는 **재시도하지 않고** 이긴 쪽 상태를 둔 채
+실행만 `failed`로 닫기로 결정했다(이유는 리포트 §"StateConflict를 어떻게
+다루기로 했나"). `test_active_run_uniqueness.py`는 그대로 통과하며 여전히
+같은 불변식을 잡는다.
+
+★"왜 문제인가" 세 항목 중 커넥션 풀 이야기는 **부정확**했다 —
+`get_connection()`은 풀이 아니라 호출마다 새 커넥션을 연다. 나머지 둘은
+실측으로 확인됐고 전후 수치가 리포트에 있다. 아래 서술은 당시 기록 그대로 둔다.
+
+---
+
 - 발견 경위: 계획서 §3-A 개정 근거(다른 세션이 v8 baseline 문서 작업 중 실측)로
   relay된 주장 두 건 중 하나. "voc: false로 기동 불가"는 확인하는 사이 다른
   세션이 `app/application/feedback_job.py`의 `require_module("voc")`를 이미

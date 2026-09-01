@@ -110,12 +110,55 @@ class Controller:
                     raise
                 version = latest["version"]
 
+    def _abandon_run(self, conn, run_id: UUID) -> None:
+        """실행을 실패로 닫는다. ★예외가 나도 이 기록은 반드시 남긴다.
+
+        Team 호출 **전에** A 단계를 커밋하므로, 그 뒤 단계에서 예외가 나도
+        `agent_runs` 행은 살아남는다 — 시도했다는 감사 기록이 남는 것이 이
+        변경의 목적이다. 그러나 그 행을 `active` 로 둔 채 나가면 활성 실행
+        유일성(INV-CS-RT-011)이 이 Case 를 **영원히** 막는다.
+        전에는 트랜잭션이 통째로 롤백돼 행 자체가 사라졌기 때문에 이 문제가
+        없었다 — 트랜잭션을 좁히면서 새로 생기는 책임이다.
+        """
+        try:
+            with conn.transaction():
+                self.case_service.finish_run(conn, run_id, "failed")
+            conn.commit()
+        except Exception:
+            # ★조용히 넘기지 않는다. 커넥션 자체가 죽었으면 여기도 실패하는데,
+            #   그때 원래 예외를 가려 버리면 진짜 원인을 못 찾는다.
+            logger.exception("failed to close agent run after error", extra={"run_id": str(run_id)})
+
     async def run_case(self, *, tenant_id: str, case_id: UUID, actor_id: str = "controller") -> dict[str, Any]:
+        """Case 하나를 실행한다.
+
+        ★트랜잭션을 **세 토막**으로 나눈다 (2026-09-01,
+          `docs/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md`).
+
+              A. 시작 기록 · 라우팅 · 재개 전이   ← 짧은 트랜잭션. Team 을 부르기 전에 커밋
+              B. Team 실행 · 리뷰 패스            ← **트랜잭션 밖.** 외부 네트워크가 여기 있다
+              C. 결과 반영 · 실행 종료 기록       ← 다시 짧은 트랜잭션
+
+          전에는 A~C 가 하나의 열린 트랜잭션이었고 그 안에서 OpenAI 응답을
+          `await` 했다. 그동안 `customer_cases` 행이 UPDATE 잠금에 걸려 있어
+          같은 Case 에 대한 다른 쓰기가 전부 막혔고, LLM 이 타임아웃하면
+          `start_run()` 이 남긴 **실행 시작 기록까지 함께 롤백**됐다 —
+          시도했다는 사실 자체가 사라졌다.
+          `app/application/classification.py` 가 Case 생성 경로에서 이미 같은
+          모양으로 고쳐져 있다(같은 결함 종류, v8 §3-A 결함 2).
+
+        ★각 단계는 **자기 트랜잭션을 커밋하고 나간다.** 커밋하지 않으면 psycopg3
+          가 다음 `conn.transaction()` 을 새 트랜잭션이 아니라 SAVEPOINT 로 열어
+          (앞선 읽기가 이미 암묵 트랜잭션을 열어 놓기 때문이다) 경계를 좁힌
+          효과가 통째로 사라진다. `resume()` 도 같은 이유로 명시적 commit 을 쓴다.
+        """
         started = time.monotonic()
         with self.connection_factory() as conn:
             case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
             if case is None:
                 raise ControllerError("case not found")
+
+            # ── A. 시작·라우팅·재개 ────────────────────────────────────────────
             with conn.transaction():
                 run_id = self.case_service.start_run(conn, tenant_id=tenant_id, case_id=case_id)
                 if case["status"] == CaseStatus.ROUTING:
@@ -150,28 +193,68 @@ class Controller:
                                     actor_type="controller", actor_id=actor_id)
                     self.case_service.finish_run(conn, run_id, "failed")
                     return {"case_id": str(case_id), "run_id": str(run_id), "status": "escalated"}
+            conn.commit()
+
+            try:
+                # ── B. Team 실행 — 여기서는 트랜잭션이 열려 있지 않다 ───────────
+                #   `_task()` 의 RAG 검색도, `checkpoint()` 도 이 커넥션을 쓰지 않는다
+                #   (checkpoint 는 순수 함수다 — DB 를 건드리지 않는다).
                 task = self._task(case, entry, run_id, resume=resume, resume_node=resume_node)
                 self.case_service.checkpoint(case_id=case_id, run_id=run_id, node_name="team.execute", runtime_state={"case_version": case["version"]})
                 try:
                     result: TeamResult = await asyncio.wait_for(self.team_executor.execute(task), timeout=get_guardrails().get("reliability.team_timeout_seconds"))
                 except asyncio.TimeoutError:
-                    transition = transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
-                                                 event_type=EventType.GUARDRAIL_ESCALATED,
-                                                 payload={"guardrail": "team_timeout_seconds", "observed": get_guardrails().get("reliability.team_timeout_seconds")},
-                                                 actor_type="controller", actor_id=actor_id)
-                    self.case_service.finish_run(conn, run_id, "failed")
+                    with conn.transaction():
+                        transition = transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
+                                                     event_type=EventType.GUARDRAIL_ESCALATED,
+                                                     payload={"guardrail": "team_timeout_seconds", "observed": get_guardrails().get("reliability.team_timeout_seconds")},
+                                                     actor_type="controller", actor_id=actor_id)
+                        self.case_service.finish_run(conn, run_id, "failed")
+                    conn.commit()
                     return {"case_id": str(case_id), "run_id": str(run_id), "status": transition.status.value, "version": transition.version}
                 # ★대조에는 **Controller 가 만든** task.context 를 넘긴다.
                 #   Team 이 돌려준 result.context 를 쓰면 근거와 제안을 같은 쪽이 지어낼 수 있어
                 #   대조가 순환한다. 위조할 수 없는 쪽으로 잰다.
                 result = await self._maybe_review(task, result)
-                transition = self._apply_result(conn, case, run_id, result, actor_id, context=task.context)
-                self.case_service.finish_run(conn, run_id, "succeeded")
-                return {"case_id": str(case_id), "run_id": str(run_id), "status": transition.status.value, "version": transition.version,
-                        "next_action": result.next_action.value, "resume_token": getattr(self, "_last_token", None)}
+
+                # ── C. 결과 반영 ───────────────────────────────────────────────
+                with conn.transaction():
+                    transition = self._apply_result(conn, case, run_id, result, actor_id, context=task.context)
+                    self.case_service.finish_run(conn, run_id, "succeeded")
+                conn.commit()
+            except StateConflict:
+                # ★Team 을 부르는 동안 다른 쓰기가 이 Case 를 바꿨다.
+                #   **재계산 없이 재시도하지 않는다.** `_transition_with_retry` 는
+                #   ROUTED·VALID_INPUT 처럼 payload 가 Case 내용에 의존하지 않는
+                #   장부성 전이에만 쓴다. 결과 반영은 종류가 다르다 — 답변 문장과
+                #   ActionProposal 은 우리가 읽은 스냅샷을 근거로 만들어졌고,
+                #   version 이 밀렸다는 것은 그 근거가 더 이상 사실이 아닐 수
+                #   있다는 **증거**다. 최신 version 만 갈아 끼워 같은 payload 를
+                #   밀어 넣으면 확인하지 않은 상태 위에 답을 얹게 된다
+                #   (CLAUDE.md §0.1 — 근거 없이 확정하지 않는다).
+                #   이긴 쪽 상태를 그대로 두고 이 실행만 실패로 닫는다.
+                #   `resume()` 이 같은 종류의 경합(InvalidTransition)을 다루는
+                #   방식과 같다 — 지면 조용히 물러나고 기록을 남긴다.
+                self._abandon_run(conn, run_id)
+                logger.warning(
+                    "concurrent write won during team execution; result not applied",
+                    extra={"tenant_id": tenant_id, "case_id": str(case_id), "run_id": str(run_id)},
+                )
+                latest = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id) or case
+                return {"case_id": str(case_id), "run_id": str(run_id), "status": latest["status"],
+                        "version": latest["version"], "stale": True}
+            except BaseException:
+                # ★A 를 커밋했으므로 실행 시작 기록은 살아남는다. 그 대가로 실행을
+                #   닫는 책임이 생긴다. CancelledError 도 포함해야 해서 BaseException 이다.
+                self._abandon_run(conn, run_id)
+                raise
+            return {"case_id": str(case_id), "run_id": str(run_id), "status": transition.status.value, "version": transition.version,
+                    "next_action": result.next_action.value, "resume_token": getattr(self, "_last_token", None)}
 
     def _apply_result(self, conn, case: dict[str, Any], run_id: UUID, result: TeamResult, actor_id: str,
                       *, context: Any = None):
+        # ★여기서는 `_transition_with_retry` 를 쓰지 않는다. 의도적이다 —
+        #   `run_case()` 의 `except StateConflict` 주석에 이유를 적었다.
         event, payload, outbox = self._event_for_result(conn, case, result, context=context)
         return transition_case(conn, tenant_id=case["tenant_id"], case_id=case["case_id"], expected_version=case["version"],
                                event_type=event, payload=payload, actor_type="controller", actor_id=actor_id, outbox=outbox)
