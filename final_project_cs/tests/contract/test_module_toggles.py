@@ -68,14 +68,29 @@ def test_inline_classification_is_not_gated_by_voc(monkeypatch):
     assert callable(classifier)
 
 
-def test_disabled_voc_refuses_the_daily_batch(monkeypatch):
+def test_the_aggregation_batch_is_not_gated_by_voc(monkeypatch):
+    """★집계·급증 탐지는 코어 1 소유다 — `voc` 소관이 아니다.
+
+    v8 §7 재판정이 VOC 를 **관측층(코어 1)과 판단층(Team 껍데기)** 으로 나눴고,
+    §16 이 "Feedback Analytics 집계 배치" 를 코어 1 책임으로 적었다.
+
+    ★인라인 분류와 **똑같은 범주 오류**였다 — 상시 관측을 선택 계층에 매달아
+      뒀다. `voc: false` 는 판단층과 화면을 끄는 뜻이지 관측을 멈추라는 뜻이
+      아니다. 관측을 멈추면 나중에 판단층을 켰을 때 급증 판정의 기준이 되는
+      과거 7일 시계열이 비어 있고, 그 공백은 되돌릴 수 없다.
+
+    여기서는 **게이트가 없다**는 것만 본다 — `voc=False` 로도 `ProjectConfigError`
+    가 나지 않고 DB 접근 단계까지 간다.
+    """
     import app.core.project_config as project_config
     from app.application.feedback_job import run_daily_feedback
 
     monkeypatch.setattr(project_config, "load_project_config",
                         lambda *a, **k: _config(voc=False))
-    with pytest.raises(ProjectConfigError, match="voc.*disabled"):
-        # 연결은 쓰이지 않는다 — 게이트가 DB 를 건드리기 전에 막는다.
+    with pytest.raises(TypeError):
+        # 게이트가 없으므로 여기까지 온다. `report_date=None` 이라 날짜 연산에서
+        # TypeError 가 나는 것이 지금의 정상 경로다 — ProjectConfigError 가
+        # 아니어야 한다.
         run_daily_feedback(None, report_date=None, tenant_id="demo")
 
 

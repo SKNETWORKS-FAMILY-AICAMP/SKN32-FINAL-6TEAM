@@ -40,17 +40,31 @@ def build_classifier(*, config: ProjectConfig | None = None):
 
       ★2026-08-30 `9c11327`(모듈 게이트 실효화)이 여기에 `require_module("voc")`
       를 걸었다. 게이트를 만든 작업 자체는 정당했지만, 인라인 분류가
-      `app/modules/customer_ops/feedback.py` 에 있고 테스트도 `tests/unit/voc/`
-      에 있어서 **파일 위치를 소관으로 착각**한 것이다. 근거로 삼은
-      `CLAUDE.md` §1 문장의 출처는 v8 §3-A 인데, §3-A 는 v7.1 개정이 반영되지
-      않은 낡은 절이었다(v8 199·204행 대 24·252행).
+      **뺄 수 있는 Team 자리**(`app/modules/customer_ops/feedback.py`)에 있고
+      테스트도 `tests/unit/voc/` 에 있어서 **파일 위치를 소관으로 착각**한
+      것이다. 근거로 삼은 `CLAUDE.md` §1 문장의 출처인 v8 §3-A 는 v7.1 개정이
+      반영되지 않은 낡은 절이었다.
 
-      그래서 게이트를 뺀다. "인라인 분류는 선택 기능이 아니다" 는 여전히 맞다 —
-      다만 그건 **끌 수 없다는 뜻이지 voc 소관이라는 뜻이 아니다.** 분류 실패는
-      아래 `ClassificationFailed` 로 드러나고 Case 는 `escalated` 로 간다.
+      그래서 게이트를 뺐다. "인라인 분류는 선택 기능이 아니다" 는 여전히 맞다 —
+      다만 그건 **끌 수 없다는 뜻이지 voc 소관이라는 뜻이 아니다.**
 
-      일일 배치(`app/application/feedback_job.py`)는 그대로 `voc` 게이트 아래
-      있다 — 그건 실제로 VOC Team 의 업무다.
+      ★**파일은 `app/modules/customer_ops/` 에 그대로 둔다.** v8 §3-A 교정이
+      "분류기가 뺄 수 있는 Team 자리에 놓인 것" 을 결함 1 로 적었지만, 코어 층
+      (`app/application/` 포함)으로 옮기면 `tests/architecture/
+      test_basement_is_domain_free.py` 가 막는다 — `BASEMENT_DIRS` 에
+      `application` 이 들어 있고, `order_payment_failed` 같은 **도메인 어휘는
+      basement 에 있을 수 없다.** 실제로 옮겼다가 이 가드에 걸렸다(2026-09-01).
+
+      두 규칙이 충돌하는 게 아니라 소유를 **파일 위치가 아니라 배선으로**
+      표현하는 것이 이 저장소의 방식이다: 어휘·프롬프트는 모델 담당이
+      `app/modules/` 에 만들고(§3-A 도 그렇게 적는다), **언제 부르고 실패를 어떻게
+      처리하며 어느 상태로 보내는지는 코어 1 이 정한다** — 그게 이 함수와
+      `cases.py` 의 호출 지점이다.
+
+      ★일일 집계 배치(`feedback_job.py`)도 마찬가지다. v8 §7 재판정이 VOC 를
+      **관측층(코어 1)과 판단층(Team 껍데기)** 으로 나눴고, §16 이 "Feedback
+      Analytics 집계 배치" 를 코어 1 책임으로 적었다. 그래서 배치의 voc 게이트도
+      뺐다 — `voc: false` 는 **판단·화면**을 끄는 것이지 관측을 끄는 게 아니다.
     """
     from app.core.settings import get_settings
 

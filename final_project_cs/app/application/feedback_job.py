@@ -30,13 +30,23 @@ def is_surge(today: int, avg7: float) -> bool:
 def run_daily_feedback(conn: Connection, *, report_date: date, tenant_id: str) -> dict[str, Any]:
     """Upsert one report for one tenant and publish alerts transactionally.
 
-    ★`voc` 모듈이 꺼져 있으면 리포트를 쓰지 않고 실패한다. 급증 alert 는
-      `docs/handoff/08` §2 가 이 모듈을 끄면 사라진다고 지정한 것이다.
-      배치가 조용히 돌면 꺼 놓은 화면에 데이터만 쌓인다.
-    """
-    from app.core.project_config import load_project_config
+    ★**집계·급증 탐지는 코어 1 소유다** — `voc` 모듈 소관이 아니다.
 
-    load_project_config().require_module("voc", "daily feedback analytics job")
+      v8 §7 재판정이 VOC 를 **관측층과 판단층**으로 나눴다. 집계와 급증 탐지는
+      코어 1 이 갖고, VOC Team 은 그 결과를 받아 "왜 늘었고, 누가 받아야 하고,
+      진짜 알릴 일인가" 를 판단하는 껍데기로 남는다. §16 도 "Feedback Analytics
+      집계 배치" 를 코어 1 책임으로 적는다.
+
+      ★그래서 2026-09-01 에 `require_module("voc", ...)` 를 뺐다. 인라인 분류와
+      **똑같은 범주 오류**였다 — 상시 관측 기능을 선택 계층에 매달아 둔 것이다.
+      `voc: false` 는 판단층(Team)과 화면을 끈다는 뜻이지 관측을 멈추라는 뜻이
+      아니다.
+
+      ★대가는 정직하게 적는다: `voc` 를 꺼도 `feedback_analytics_reports` 는
+      계속 쌓인다. "꺼 놓은 화면에 데이터가 쌓인다" 는 말은 맞다. 다만 관측을
+      멈추면 나중에 판단층을 켰을 때 **그동안의 시계열이 비어 있다.** 급증은
+      과거 7일 평균과 견주는 것이라 공백은 되돌릴 수 없다. 둘 중 후자가 더 나쁘다.
+    """
     start = report_date - timedelta(days=7)
     with conn.cursor() as cur:
         cur.execute(
