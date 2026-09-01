@@ -63,8 +63,13 @@ degraded      ContextPack 이 축소됐으면 true (숨기지 않는다)
 omissions     무엇을 뺐는지 이름으로 남긴다
 ```
 
-★**분류 실패는 조용히 넘기지 않는다.** v6 §3-A — Case 생성 경로에서 감성·의도·이슈 분류가 실패하면
-`classification_failed` 를 남기고 `escalated` 로 전환한다. 인라인 분류는 선택 기능이 아니다.
+★**분류 실패는 조용히 넘기지 않는다.** v8 §3-A — 모든 Case 는 `classifying` 단계를 거치며, 감성·의도·이슈
+분류가 실패하면 `classification_failed` 를 남기고 `escalated` 로 전환한다. 인라인 분류는 선택 기능이 아니다.
+
+★**이것은 보장이지 실행 위치가 아니다.** 인라인 분류의 실행·실패 처리·상태 전이는 **코어 1** 소유이고
+(`app/application/classification.py`), 라벨 어휘와 프롬프트는 모델 담당이다(`app/modules/customer_ops/feedback.py`).
+접수 API 핸들러 안에서 동기로 부를 것을 요구하지 않는다. `voc` 모듈 플래그에도 묶이지 않는다 — 필수 기능을
+선택 플래그에 매달았다가 `voc: false` 로 제품이 기동하지 않았다(2026-09-01 정정, v8 §0 「v8 재판정」).
 
 ### tenant / customer 격리
 모든 query 에 `tenant_id` 와 `customer_id`(또는 `case_id`) 조건을 적용한다.
@@ -153,7 +158,7 @@ eval/reports/  run_id + seed + model + prompt snapshot 을 파일명·메타에 
 | 릴리스 체크리스트 | **완료** — `docs/release_checklist.md`. ★판정은 **RC 아님** |
 | ★**할루시네이션 방어** (v7 §9-E) | **완료** — 제안의 식별자·금액을 **DB 와 대조**해 실행 전 차단. 검증 2회(제안 시점 + 승인 직전). 거부 시 `escalated` + 실패필드·**hash** 감사. `app/core/verification.py`(순수) + `proposal_guard.py`(재조회) |
 | **테스트 총계** | **406 passed(`-m "not live"`) · skipped 0 · failed 0** (2026-08-30 실측. `-m live` 로 live 마크 테스트 별도 실행해 통과 확인. 304(2026-08-18) → 406 은 이후 세션들의 누적 추가분 + 2026-08-30 프롬프트 키 등록 결함 수정의 신규 테스트 2건) |
-| **DoD (v8 §27, 1~28항목 평가됨)** | **evidence 28/28 · 통과 24 · 부분통과 4 · 미착수 0.** ★#6(정책 25건·300~400 chunk)이 미착수→통과로 이동. 남은 부분통과 = 15(judge agreement) · 17(파일시스템 gate 재현) · 23(consumer 1종뿐) · 28(파인튜닝·방어지표). **29번(Response Generation & Review 검증)은 v8에서 신설된 항목으로 이 구현에서는 아직 평가되지 않았다.** |
+| **DoD (v8 §27, 1~29항목 전부 평가됨)** | **evidence 29/29 · 통과 26 · 부분통과 3 · 미착수 0** (`python -m scripts.verify_dod` 실측, 2026-09-01). ★#6(정책 25건·300~400 chunk)이 미착수→통과로 이동. 남은 부분통과 = 15(judge agreement, 사람 라벨 20건 미측정 — RC 선언의 유일한 차단 항목) · 17(RC 선언, 15에 종속) · 28(파인튜닝, 채택 보류로 결론 확정 — x600에서 v9(mismatch 표본 확대)는 계속 가능). **29번(Response Generation & Review GEN→REV·재시도·PII 검증)은 v8 신설 항목이었으나 2026-09-01 완료**(`docs/evidence/DoD-29_ResponseGenerationReview.md`) — `response_review.enabled`는 여전히 기본 `false`(운영 비활성, 구현·검증은 완료). #23(consumer idempotency)은 "모든 consumer"라는 문구와 달리 이 시스템에 실제 consumer가 outbox worker 1종뿐이라 통과로 본다(message_broker 포트가 `outbox`만 구현돼 있어 다른 consumer 자체가 없음, `composition.py`가 `redis_streams`는 명시적으로 미지원). |
 | **M1·M2·M3 게이트** | **전부 도달**. ★단 **RC 는 아니다** — judge 가 사람과 얼마나 맞는지 모르는 상태로 내보낼 수 없다 |
 
 > ★**Codex 산출물은 두 번 다 검수에서 걸렸다**(범위 삭감 2건). 인수 전 `RULE.md` §3.6-3 4종 검사를 거른 적이 없어야 한다.
