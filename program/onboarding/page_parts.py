@@ -43,6 +43,8 @@ button:disabled{opacity:.4;cursor:not-allowed}
 padding:12px 15px 9px;position:sticky;top:0;z-index:25}
 .barwrap .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .barwrap .top .t{font-size:12.5px;color:var(--faint)}
+.barstate{font-size:12.5px;color:var(--dim)}
+.barstate b{font-family:Consolas,monospace;font-size:13px;color:var(--ink)}
 .barwrap .top .r{margin-left:auto;display:flex;gap:8px;align-items:center}
 .keys{font-size:11.5px;color:var(--faint);display:flex;gap:5px;align-items:center;
 margin-right:4px}
@@ -214,6 +216,10 @@ text-align:left;transition:.2s;opacity:.55;cursor:pointer}
 .st .n{font-size:12px;color:var(--faint);font-weight:700}
 .st .t{font-size:14.5px;font-weight:700;margin:1px 0 2px;color:var(--ink)}
 .st .o{font-size:11.5px;color:var(--faint)}
+/* 생명주기 상태. 영어 그대로 적는다. 코드와 DB 에 그 글자로 들어 있다. */
+.st .stt{font-family:Consolas,monospace;font-size:12px;font-weight:700;margin-top:5px;
+padding-top:5px;border-top:1px dashed var(--line);color:currentColor}
+.st.now .stt{color:#fff;border-top-color:rgba(255,255,255,.45)}
 .st.done{opacity:1;border-color:currentColor}
 .st.now{opacity:1;background:currentColor;border-color:currentColor}
 .st.now .n,.st.now .o{color:rgba(255,255,255,.82)}
@@ -276,13 +282,22 @@ function drawBar(){
     + '<div class="box"'+(i===cur?' style="background:'+b.color+'"':'')+'>'+(i+1)+'</div>'
     + '<div class="nm"'+(i===cur?' style="color:'+b.color+'"':'')+'>'+esc(b.name)+'</div>'
     + '</button>').join('');
+  const st = stateAt(cur);
+  $('barstate').innerHTML = st
+    ? '이 단계를 지나면 Case 는 <b>'+st[0]+'  v'+st[1]+'</b>'
+    : '아직 Case 가 없습니다';
 }
 
 // ★pre 안의 글을 줄 단위 span 으로 쪼갠다. 주석이 있는 줄만 has 를 붙인다.
 //   위에서 두 줄 안쪽은 말풍선이 잘리므로 아래로 펴게 down 을 준다.
-function lined(lines, notes){
+function lined(lines, notes, mark){
+  mark = mark || [];
   return lines.map((l,i) => {
-    const t = esc(l) || ' ';
+    let t = esc(l) || ' ';
+    if(mark.includes(i)){
+      const d = (mark.indexOf(i) * 0.09 + 0.16).toFixed(2);
+      t = '<b style="--d:'+d+'s">'+t+'</b>';
+    }
     const n = notes && notes[i];
     if(!n) return '<span class="ln">'+t+'</span>';
     return '<span class="ln has'+(i<2?' down':'')+'" data-note="'+esc(n)+'">'+t+'</span>';
@@ -290,25 +305,18 @@ function lined(lines, notes){
 }
 
 // 문서 칸 하나. 제목 옆 물음표를 누르면 이 칸이 무엇인지 펼쳐진다.
-function oneDoc(cls, label, lines, mark, say){
+function oneDoc(cls, label, lines, mark, say, notes){
   return '<div class="doc'+cls+'">'
     + '<h4>'+esc(label)
     + (say?'<button class="q" onclick="tellDoc(this)"'
         + ' title="이 칸이 무엇인지. 눌러 두면 고정됩니다">?</button>':'')
     + '</h4>'
     + (say?'<div class="say">'+esc(say)+'</div>':'')
-    + '<pre>'+docLines(lines, mark)+'</pre></div>';
+    + (notes ? '<div class="notehint">줄에 마우스를 올리면 그 줄 설명이 뜹니다</div>' : '')
+    + '<pre>'+lined(lines, notes, mark)+'</pre></div>';
 }
 function tellDoc(el){ el.closest('.doc').classList.toggle('open'); }
 
-function docLines(lines, mark){
-  return lines.map((l,i) => {
-    const t = esc(l) || ' ';
-    if(!mark.includes(i)) return t;
-    const d = (mark.indexOf(i) * 0.09 + 0.16).toFixed(2);
-    return '<b style="--d:'+d+'s">'+t+'</b>';
-  }).join('\n');
-}
 
 function drawSheet(){
   const s = SHEETS[cur];
@@ -324,9 +332,9 @@ function drawSheet(){
     + '<div class="body">'
     +   '<div class="coord" style="border-color:'+s.color+'">'
     +     '<h4 style="color:'+s.color+'">구조 좌표</h4>'+coord+'</div>'
-    +   oneDoc('', s.in_label, s.in_lines, [], s.in_say)
+    +   oneDoc('', s.in_label, s.in_lines, [], s.in_say, s.in_notes)
     +   '<div class="arrow">&#10142;</div>'
-    +   oneDoc(' out', s.out_label, s.out_lines, s.mark, s.out_say)
+    +   oneDoc(' out', s.out_label, s.out_lines, s.mark, s.out_say, s.out_notes)
     + '</div>'
     + '<div class="states">'+s.states.map(c =>
         '<span class="chip" style="color:'+c[1]+'">'+esc(c[0])+'</span>').join('')+'</div>'
@@ -400,12 +408,21 @@ function play(){
   timer = setInterval(()=>{ if(cur>=SHEETS.length-1){ play(); return; } go(cur+1); }, 3200);
 }
 
+// 그 단계를 지난 뒤의 Case 상태. 상태를 안 바꾸는 단계는 앞의 것을 그대로 쓴다.
+function stateAt(i){
+  let st = null;
+  for(let k=0;k<=i;k++) if(PACK[k].state) st = PACK[k].state;
+  return st;
+}
 function drawMap(){
-  $('mapbody').innerHTML = SHEETS.map((s,i) =>
-    '<button class="st '+(i===cur?'now':(i<cur?'done':''))+'" style="color:'+s.color+'"'
+  $('mapbody').innerHTML = SHEETS.map((s,i) => {
+    const st = stateAt(i);
+    return '<button class="st '+(i===cur?'now':(i<cur?'done':''))+'" style="color:'+s.color+'"'
     + ' onclick="go('+i+');hideMap()"><div class="n">'+s.n+'</div>'
     + '<div class="t">'+esc(s.head)+'</div>'
-    + '<div class="o">'+esc(PACK[i].owner)+'</div></button>').join('');
+    + '<div class="o">'+esc(PACK[i].owner)+'</div>'
+    + '<div class="stt">'+(st ? st[0]+'  v'+st[1] : 'Case 없음')+'</div></button>';
+  }).join('');
 }
 function showMap(){ stop(); drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
 function hideMap(){ $('mapov').classList.remove('on'); }
@@ -473,6 +490,7 @@ PAGE = """<!doctype html>
 <div class="barwrap">
   <div class="top">
     <span class="t">열두 단계 진행바</span>
+    <span class="barstate" id="barstate"></span>
     <span class="r">
       <span class="keys"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 앞뒤로
         <kbd>Space</kbd> 자동 재생 <kbd>Esc</kbd> 닫기</span>

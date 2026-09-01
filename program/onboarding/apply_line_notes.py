@@ -24,6 +24,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+from sheet_data import SHEETS  # noqa: E402
 from trace_data import STEPS  # noqa: E402
 
 OUT = os.path.join(HERE, "line_notes.py")
@@ -48,13 +49,20 @@ NOTES = {
 
 
 def sources():
-    """원본 줄. {id: [줄, ...]}"""
+    """원본 줄. {id: [줄, ...]}
+
+    pack-N-i   누적 칸의 덩어리        code-N-i   코드 덮개의 조각
+    sin-N      낱장에 들어온 문서      sout-N     낱장이 내놓은 문서
+    """
     out = {}
     for s in STEPS:
         for i, (_k, _nm, lines) in enumerate(s["add"]):
             out["pack-%d-%d" % (s["n"], i)] = list(lines)
         for i, c in enumerate(s["code"]):
             out["code-%d-%d" % (s["n"], i)] = c["code"].split("\n")
+    for s in SHEETS:
+        out["sin-%d" % s["n"]] = list(s["in_lines"])
+        out["sout-%d" % s["n"]] = list(s["out_lines"])
     return out
 
 
@@ -107,9 +115,11 @@ def judge(src, items):
     return keep, drop
 
 
-def main(path):
-    got = json.loads(io.open(path, encoding="utf-8").read())
-    items = got["items"] if isinstance(got, dict) else got
+def main(paths):
+    items = []
+    for path in paths:
+        got = json.loads(io.open(path, encoding="utf-8").read())
+        items += got["items"] if isinstance(got, dict) else got
     src = sources()
     keep, drop = judge(src, items)
 
@@ -139,6 +149,6 @@ def main(path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("쓰기: python apply_line_notes.py <받은.json>")
-    raise SystemExit(main(sys.argv[1]))
+    if len(sys.argv) < 2:
+        raise SystemExit("쓰기: python apply_line_notes.py <받은.json> [더.json ...]")
+    raise SystemExit(main(sys.argv[1:]))

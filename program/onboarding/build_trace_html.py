@@ -186,7 +186,10 @@ def main():
 
     # 낱장 칸마다 '이 칸이 무엇인가' 설명을 얹는다. 없으면 물음표가 안 뜬다.
     sheets = [dict(sh, in_say=SAYS.get("in-%d" % sh["n"]),
-                   out_say=SAYS.get("out-%d" % sh["n"])) for sh in SHEETS]
+                   out_say=SAYS.get("out-%d" % sh["n"]),
+                   in_notes=notes_for("sin-%d" % sh["n"], sh["in_lines"]),
+                   out_notes=notes_for("sout-%d" % sh["n"], sh["out_lines"]))
+              for sh in SHEETS]
 
     js = (JS
           .replace("__BAR__", dump(BAR))
