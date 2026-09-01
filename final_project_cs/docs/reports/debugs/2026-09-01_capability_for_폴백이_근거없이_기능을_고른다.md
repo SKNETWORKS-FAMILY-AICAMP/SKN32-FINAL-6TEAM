@@ -1,5 +1,39 @@
 # capability_for()가 매칭 실패 시 근거 없이 capabilities[0]을 고른다
 
+## 시도했다가 되돌림 (2026-09-01)
+
+`capability_for()`가 매칭 실패 시 `RegistryError`를 던지도록 고치고
+`controller.py`에 그 예외를 escalated로 받는 처리까지 같이 넣었다.
+**전체 테스트로 돌리자마자 8건이 실패했다** — `git checkout`으로 즉시
+되돌렸다(커밋한 적 없음).
+
+원인은 이 문서가 처음에 놓친 것이다: intent="other" 뿐 아니라, **실제
+운영 중인 intent 5개 중 3개(shipping·exchange·other)가 전부 이
+폴백에 의존하고 있었다.**
+
+```
+order    -> procurement_order_payment | 매칭: order.verify 등 있음
+shipping -> fulfillment_logistics     | 매칭 없음 (폴백 의존)
+return   -> return_refund             | 매칭: return.check_eligibility 있음
+exchange -> return_refund             | 매칭 없음 (폴백 의존)
+other    -> voc_store_manager         | 매칭 없음 (폴백 의존)
+```
+
+`fulfillment_logistics`·`return_refund`는 capability 가 여러 개라
+"팀에 capability 가 하나뿐이면 고를 것도 없다"는 식의 우회도 못 쓴다 —
+정말로 5개 중 3개가 이 폴백이 있어야 라우팅이 된다. VOC 하나만의
+문제가 아니라 **intent(5종, 거친 라벨)로 capability(팀마다 2~6종,
+세분화된 동작)를 고르는 지금 방식 자체가 원래 안 맞는 매핑**이었다.
+raise 로 막으면 정상 라우팅의 절반 이상이 죽는다.
+
+그래서 이 결함은 "폴백을 없애면 된다"가 아니라 "intent→capability
+매핑을 다시 설계해야 한다"(더 세분화된 분류, 또는 매니페스트에 명시적
+`default_capability` 필드 추가 등)로 바뀐다 — registry.py 한 곳
+패치로 끝날 일이 아니라 별도로 설계할 일이다. 아래는 최초 판정
+그대로 남긴다.
+
+---
+
 - 발견 경위: 다른 세션이 라우팅 규칙(`resolve()` → `capability_for()`)을
   설명하다가 "아무것도 안 맞으면 첫 번째 것을 쓴다"는 폴백을 스스로 의심하고
   재현 여부를 확인해 보내왔다. 코드로 직접 재현해 사실임을 확인했다.
