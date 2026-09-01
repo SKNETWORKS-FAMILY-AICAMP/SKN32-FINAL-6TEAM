@@ -139,3 +139,34 @@ async def test_status_escalated_is_mapped_to_escalation_contract() -> None:
     result = await ResponseGenerationReviewTeam(llm).execute(make_task())
     assert result.outcome == "escalated"
     assert result.next_action.value == "escalate"
+
+
+@pytest.mark.asyncio
+async def test_gen_then_rev_two_call_flow_actually_executes() -> None:
+    """DoD-29(a): GEN 이 tone_ok 를 미리 정해주지 않으면 REV(response.review_tone) 를
+    실제로 두 번째 LLM 호출로 실행해야 한다. 기존 테스트들은 전부 GEN 응답에
+    tone_ok 를 인라인해 REV 호출을 건너뛰었다 — 이 테스트는 그 지름길을 막는다."""
+    llm = FakeLLM([
+        {"final_response_text": "주문 상태를 확인해 안내드립니다."},  # tone_ok 없음 → REV 호출 강제
+        {"tone_ok": True},
+    ])
+    result = await ResponseGenerationReviewTeam(llm).execute(make_task())
+    assert llm.calls == ["response.generate", "response.review_tone"]
+    assert result.outcome == "completed"
+    assert result.answer == "주문 상태를 확인해 안내드립니다."
+    assert result.warnings == []
+
+
+@pytest.mark.asyncio
+async def test_gen_then_rev_two_call_flow_records_rejection_as_warning() -> None:
+    """DoD-29(a) 연장: REV 호출이 실제로 일어나고 그 결과(tone_ok=False)가
+    반영되는지까지 확인한다 — 호출만 되고 결과가 무시되면 검증이 아니다."""
+    llm = FakeLLM([
+        {"final_response_text": "주문 상태를 확인해 안내드립니다."},
+        {"tone_ok": False},
+    ])
+    result = await ResponseGenerationReviewTeam(llm).execute(make_task())
+    assert llm.calls == ["response.generate", "response.review_tone"]
+    assert result.outcome == "completed"
+    assert result.warnings == ["tone_review_failed"]
+    assert result.decisions[0]["tone"] == "warning"
