@@ -374,7 +374,13 @@ border:1px solid var(--line);border-radius:15px;padding:12px;min-width:216px;
 box-shadow:0 16px 44px rgba(8,12,22,.26);animation:pop .18s ease both}
 .dock.on .menu{display:flex}
 @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
-.dock .menu button{width:100%;text-align:left}
+.dock .menu button{width:100%;text-align:left;display:flex;align-items:center;gap:8px}
+/* 단추 안 오른쪽 끝의 단축키 표시 */
+.dock .menu button .sk{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;
+border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--faint);
+background:var(--soft)}
+.dock .menu button.primary .sk{border-color:rgba(255,255,255,.45);color:#fff;
+background:rgba(255,255,255,.16)}
 .dock .tick{font-size:12.5px;color:var(--dim);text-align:center;padding-top:8px;margin-top:2px;
 border-top:1px solid var(--line)}
 .fab{width:66px;height:66px;border-radius:50%;padding:0;background:var(--blue);border:none;
@@ -530,9 +536,9 @@ function render(){
 
 function go(i){ cur = Math.max(0, Math.min(SHEETS.length-1, i)); render(); }
 function play(){
-  if(timer){ clearInterval(timer); timer=null; $('play').textContent='자동 재생'; return; }
+  if(timer){ clearInterval(timer); timer=null; setPlayLabel('자동 재생'); return; }
   if(cur>=SHEETS.length-1) go(0);   // ★cur=0 만 하면 화면이 안 바뀌어 1번을 건너뛴다
-  $('play').textContent='멈춤';
+  setPlayLabel('멈춤');
   timer = setInterval(()=>{ if(cur>=SHEETS.length-1){ play(); return; } go(cur+1); }, 3200);
 }
 
@@ -552,13 +558,18 @@ function drawMap(){
     + '<div class="stt">'+(st ? st[0]+'  v'+st[1] : 'Case 없음')+'</div></button>';
   }).join('');
 }
-function showMap(){ stop(); drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
+function showMap(){ stop(); hideCode(); drawMap(); $('mapov').classList.add('on'); $('mapov').scrollTop=0; }
 function hideMap(){ $('mapov').classList.remove('on'); }
 
-function stop(){ if(timer){ clearInterval(timer); timer=null; $('play').textContent='자동 재생'; } }
+function stop(){ if(timer){ clearInterval(timer); timer=null; setPlayLabel('자동 재생'); } }
+// ★textContent 로 통째로 바꾸면 단추 안의 단축키 표시가 지워진다.
+function setPlayLabel(text){
+  $('play').innerHTML = esc(text)+' <span class="sk">Space</span>';
+}
 
 function showCode(){
   stop();                          // ★열어 둔 코드와 뒤에서 도는 단계가 어긋난다
+  hideMap();
   $('dock').classList.remove('on');
   const s = PACK[cur];
   $('ovtitle').textContent = s.n+'번 단계 · '+s.title+' · 이 일을 실제로 하는 코드';
@@ -580,20 +591,39 @@ document.addEventListener('click', e=>{
   if(d.classList.contains('on') && !d.contains(e.target)) d.classList.remove('on');
 });
 // ★키를 문서 전체에서 뺏지 않는다. 위아래 화살표와 Space 와 Home/End 를 다 막으면
-//   페이지를 키보드로 굴릴 수 없고, 단추에 초점이 있어도 단계가 넘어간다.
-//   좌우 화살표만 어디서나 받고, 나머지는 글자를 입력하는 곳이 아닐 때만 받는다.
-function typing(el){
-  return el && (el.isContentEditable ||
-    /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(el.tagName));
+//   페이지를 키보드로 굴릴 수 없다. 좌우 화살표만 어디서나 받고, 나머지는
+//   글자를 넣는 곳이 아닐 때만 받는다.
+function editing(el){
+  return !!el && (el.isContentEditable ||
+    /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
+// ★전에는 여기에 BUTTON 과 A 도 넣어 두었다. 그래서 진행바 칸이나 독 단추를
+//   마우스로 한 번이라도 누르면 그 단추에 초점이 남아 Space 가 자동 재생까지
+//   가지 못했다. 브라우저가 그 단추를 다시 누를 뿐이라 아무 일도 안 일어난 것처럼
+//   보였다. 초점을 키보드로 옮긴 경우에만 단추에 Space 를 양보한다.
+function keyFocused(el){
+  try { return !!el && el.matches(':focus-visible'); } catch(_) { return false; }
+}
+function toggleCode(){ $('ov').classList.contains('on') ? hideCode() : showCode(); }
+function toggleMap(){ $('mapov').classList.contains('on') ? hideMap() : showMap(); }
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ hideCode(); hideMap(); return; }
-  if($('ov').classList.contains('on') || $('mapov').classList.contains('on')) return;
   if(e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = e.key.length===1 ? e.key.toLowerCase() : e.key;
+  // ★c 와 m 은 덮개가 열려 있어도 받는다. 같은 키로 열고 닫는다.
+  if((k==='c' || k==='m') && !editing(e.target)){
+    e.preventDefault();
+    if(k==='c') toggleCode(); else toggleMap();
+    return;
+  }
+  if($('ov').classList.contains('on') || $('mapov').classList.contains('on')) return;
   if(e.key==='ArrowRight'){ e.preventDefault(); go(cur+1); }
   else if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
-  else if(!typing(e.target)){
-    if(e.key===' '){ e.preventDefault(); play(); }
+  else if(!editing(e.target)){
+    if(e.key===' '){
+      if(keyFocused(e.target)) return;   // 탭으로 간 단추는 Space 로 눌리게 둔다
+      e.preventDefault(); play();
+    }
     else if(e.key==='Home'){ e.preventDefault(); go(0); }
     else if(e.key==='End'){ e.preventDefault(); go(SHEETS.length-1); }
   }
@@ -662,13 +692,14 @@ PAGE = """<!doctype html>
     <span class="barstate" id="barstate"></span>
     <button id="prev" onclick="go(cur-1)">이전 단계</button>
     <button id="next" class="primary" onclick="go(cur+1)">다음 단계</button>
-    <button id="play" onclick="play()">자동 재생</button>
+    <button id="play" onclick="play()">자동 재생 <span class="sk">Space</span></button>
     <button onclick="go(0)">처음으로</button>
-    <button onclick="showMap()">열두 칸 지도</button>
-    <button onclick="showCode()">이 단계 코드 보기</button>
+    <button onclick="showMap()">열두 칸 지도 <span class="sk">M</span></button>
+    <button onclick="showCode()">이 단계 코드 보기 <span class="sk">C</span></button>
     <div class="tick" id="tick"></div>
     <div class="keys"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> 앞뒤로
-      <kbd>Space</kbd> 자동 재생 <kbd>Esc</kbd> 닫기</div>
+      <kbd>Space</kbd> 자동 재생 <kbd>M</kbd> 지도 <kbd>C</kbd> 코드
+      <kbd>Esc</kbd> 닫기</div>
   </div>
   <button class="fab" onclick="dock(event)" title="조작판">
     <span class="big" id="fabn">1</span><span class="small" id="fabs">/ 12</span>
