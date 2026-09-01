@@ -259,6 +259,19 @@ def test_normal_create_and_detail_flow(api_fixture):
     assert response.json()["status"] in {"classifying", "routing"}
 
 
+def test_detail_evidence_carries_the_actual_event_payload(api_fixture):
+    # ★2026-09-01 발견 — value 가 {} 로 하드코딩돼 있어 API 로는 "무슨 단계를
+    #   지났다"만 보이고 "무엇을 근거로" 는 안 보였다. created 이벤트는 항상
+    #   channel/message 를 payload 로 남기므로 그 필드가 실제로 나오는지 잰다.
+    case_id = create_case(api_fixture, "evidence-payload")
+    response = api_fixture["client"].get(f"/v1/cases/{case_id}", headers={"Authorization": api_fixture["token"]("case:read")})
+    assert response.status_code == 200
+    evidence = response.json()["evidence"]
+    created = next(item for item in evidence if item["claim"] == "created")
+    assert created["value"].get("channel") is not None
+    assert not all(item["value"] == {} for item in evidence)
+
+
 def test_create_classifies_case_and_records_classified_event(api_fixture):
     case_id = create_case(api_fixture, "classification-success")
     with get_connection() as conn, conn.cursor() as cur:

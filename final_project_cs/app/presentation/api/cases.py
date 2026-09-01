@@ -150,7 +150,11 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
             case = _case_or_404(conn, principal, case_id, customer_id)
             events = repository.get_case_events(conn, tenant_id=principal.tenant_id, case_id=case_id)
         return {**_view(case), "answer": case["state_json"].get("answer"), "pending_actions": [],
-                "evidence": [{"source_type": "case_event", "source_id": str(e["event_id"]), "claim": e["event_type"], "value": {}, "observed_at": e["created_at"]} for e in events]}
+                # ★2026-09-01 발견 — value 가 항상 {} 로 하드코딩돼 있었다.
+                #   get_case_events() 는 payload_json 을 이미 가져오는데 여기서 버렸다.
+                #   그러면 API 는 "무슨 단계를 지났다"만 말하고 "무엇을 근거로 그렇게
+                #   판단했나"는 말하지 않는다 — 되짚기가 화면에서만 되고 API 로는 안 됐다.
+                "evidence": [{"source_type": "case_event", "source_id": str(e["event_id"]), "claim": e["event_type"], "value": e["payload_json"] or {}, "observed_at": e["created_at"]} for e in events]}
 
     @router.post("/v1/cases/{case_id}/messages")
     def message(case_id: UUID, request: MessageRequest, principal: Principal = Depends(require_scope("case:write"))):
