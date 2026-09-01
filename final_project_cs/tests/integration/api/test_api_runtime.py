@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID, uuid4
 
 import pytest
@@ -133,6 +134,66 @@ def test_same_mcp_open_request_ten_times_has_one_case_and_action_request(api_fix
         assert cur.fetchone()[0] == 1
         cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s AND action_type=%s",
                     (api_fixture["tenant"], "mcp.open_support_case"))
+        assert cur.fetchone()[0] == 1
+
+
+def test_concurrent_identical_create_requests_produce_one_case(api_fixture):
+    """★2026-09-01 finding (docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+    구멍 1): the sequential 10x test above never exercised this -- ten
+    *sequential* posts always see the previous one's committed row. Two
+    *concurrent* posts could both pass the "not found" check before either
+    committed, each creating a genuinely separate Case (empirically
+    confirmed: [201, 201] with two different case_ids, 2 rows in
+    customer_cases, only 1 in action_requests -- the second INSERT's
+    ON CONFLICT DO UPDATE swallowed the collision instead of raising, so
+    there was no error surfaced anywhere)."""
+    payload = {"request_id": "concurrent-request", "customer_id": str(api_fixture["customer"]), "message": "race me", "channel": "test"}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(pool.map(
+            lambda _: api_fixture["client"].post("/v1/cases", headers={"Authorization": api_fixture["token"]("case:write")}, json=payload),
+            range(2)))
+    assert [response.status_code for response in responses] == [201, 201]
+    case_ids = {response.json()["case_id"] for response in responses}
+    assert len(case_ids) == 1, f"concurrent identical requests produced {len(case_ids)} distinct cases: {case_ids}"
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+
+
+def test_client_supplied_idempotency_key_is_respected(api_fixture):
+    """★2026-09-01 finding, 구멍 2: CreateCase.idempotency_key was declared
+    (extra="forbid" would reject a typo of it) but never read anywhere --
+    a client sending it would reasonably believe it was honored. Two
+    different request_ids with the same client-chosen idempotency_key and
+    the same body must collapse to one case."""
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    base = {"idempotency_key": "client-chosen-key-1", "customer_id": str(api_fixture["customer"]), "message": "help me", "channel": "test"}
+    r1 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-a"})
+    r2 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-b"})
+    assert r1.status_code == 201 and r2.status_code == 201
+    assert r1.json()["case_id"] == r2.json()["case_id"]
+
+
+def test_reusing_idempotency_key_with_a_different_body_is_409(api_fixture):
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    base = {"idempotency_key": "client-chosen-key-2", "customer_id": str(api_fixture["customer"]), "channel": "test"}
+    r1 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-a", "message": "first message"})
+    r2 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-b", "message": "a completely different message"})
+    assert r1.status_code == 201
+    assert r2.status_code == 409
+    assert r2.json()["error"]["code"] == "idempotency_key_reused"
+
+
+def test_concurrent_identical_mcp_open_requests_produce_one_case(api_fixture):
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(
+            lambda _: _mcp_open(str(api_fixture["customer"]), "race me from mcp", "test"), range(2)))
+    case_ids = {result["case_id"] for result in results}
+    assert len(case_ids) == 1, f"concurrent identical MCP opens produced {len(case_ids)} distinct cases: {case_ids}"
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
         assert cur.fetchone()[0] == 1
 
 

@@ -25,8 +25,14 @@ Classifier = Callable[[str], dict[str, str]]
 class CreateCase(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
+    # ★2026-09-01 발견(docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+    #   구멍 2) — 둘 다 선언만 되고 어디서도 안 읽혔다. 클라이언트가
+    #   idempotency_key 를 보내면 존중될 거라 믿을 텐데 조용히 무시됐다.
+    #   지금은 존중한다(오면 그것을 쓰고, 없으면 request_id 로 서버가 계산).
     idempotency_key: str | None = None
-    tenant_id: str | None = None
+    # ★tenant_id 는 지웠다(살려두지 않는다) — 인증(principal.tenant_id)이
+    #   테넌트의 유일한 출처다. 이 필드를 살려서 쓰게 만들면 요청 몸통이
+    #   인증으로 정해진 테넌트를 덮어쓰는 길이 열린다.
     customer_id: UUID
     message: str = Field(min_length=1)
     channel: str
@@ -69,14 +75,34 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
     @router.post("/v1/cases", status_code=201)
     def create(request: CreateCase, principal: Principal = Depends(require_scope("case:write"))):
         tenant = principal.tenant_id
-        idem = idempotency_key(tenant_id=tenant, request_id=request.request_id, action_type="case.create", business_subject=f"{request.customer_id}:{request.message}")
+        # ★client-supplied key wins when present (HTTP idempotency convention is
+        #   the client provides the key); server falls back to computing one
+        #   from request_id only when the client didn't send one.
+        idem = request.idempotency_key or idempotency_key(
+            tenant_id=tenant, request_id=request.request_id, action_type="case.create",
+            business_subject=f"{request.customer_id}:{request.message}")
+        body_fingerprint = hashlib.sha256(
+            f"{request.customer_id}:{request.message}:{request.channel}".encode("utf-8")).hexdigest()
         with get_connection() as conn:
             with conn.transaction():
                 with conn.cursor() as cur:
-                    cur.execute("SELECT case_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
+                    # ★2026-09-01 발견(docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+                    #   구멍 1) — 이 advisory lock 없이는 SELECT 로 "없다"를 본 두
+                    #   동시 요청이 둘 다 통과해 Case 를 두 개 만들었다. 뒤엣것의
+                    #   INSERT 는 ON CONFLICT DO UPDATE 로 충돌을 조용히 삼켜서
+                    #   500 도 안 났다 — 두 요청 모두 201 로 성공하고 서로 다른
+                    #   case_id 를 받았다(실측 확인). register_prompt_files()·
+                    #   case_service.start_run() 과 같은 패턴으로 잠근다.
+                    cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{tenant}:{idem}",))
+                    cur.execute("SELECT case_id, arguments_json FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
                     existing = cur.fetchone()
                 if existing:
-                    case = repository.get_case(conn, tenant_id=tenant, case_id=existing[0])
+                    existing_case_id, existing_args = existing
+                    stored_fingerprint = existing_args.get("body_sha256") if isinstance(existing_args, dict) else None
+                    if stored_fingerprint is not None and stored_fingerprint != body_fingerprint:
+                        raise _error(409, "idempotency_key_reused",
+                                     "same idempotency_key was used for a request with a different body")
+                    case = repository.get_case(conn, tenant_id=tenant, case_id=existing_case_id)
                     return _view(case)
                 case_id = repository.create_case(conn, tenant_id=tenant, customer_id=request.customer_id, subject=request.message, state_json={"request_id": request.request_id})
                 transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED,
@@ -97,8 +123,8 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                 #   2026-08-17_2250_UI승인큐_유령항목.md). Case 생성 자체는 승인 대상이
                 #   아니라 이미 끝난 일이므로 종결 상태로 남긴다.
                 repository.create_action_request(conn, tenant_id=tenant, case_id=case_id, action_type="case.create",
-                                                arguments={"request_id": request.request_id}, idempotency_key=idem,
-                                                status="succeeded")
+                                                arguments={"request_id": request.request_id, "body_sha256": body_fingerprint},
+                                                idempotency_key=idem, status="succeeded")
             view = _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
         if controller is not None and view["status"] == "routing":
             outcome = controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=principal.key_id)
@@ -193,6 +219,9 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                 with conn.cursor() as cur:
                     cur.execute("SELECT action_id FROM action_requests WHERE action_id=%s AND tenant_id=%s AND case_id=%s", (action_id, principal.tenant_id, case_id))
                     if cur.fetchone() is None: raise _error(404, "not_found", "resource not found")
+                    # ★same check-then-insert race as create() (2026-09-01 finding,
+                    #   docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md).
+                    cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{principal.tenant_id}:{idem}",))
                     cur.execute("SELECT action_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (principal.tenant_id, idem))
                     if cur.fetchone() is not None:
                         return _view(case)
@@ -251,6 +280,13 @@ def _mcp_open(customer_id: str, message: str, channel: str) -> dict:
     with get_connection() as conn:
         with conn.transaction():
             with conn.cursor() as cur:
+                # ★same check-then-insert race as create() (2026-09-01 finding,
+                #   docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md) --
+                #   this path is actually exactly-once already in practice
+                #   (idem is a deterministic hash of customer_id+message, no
+                #   client-controlled request_id), but two genuinely-simultaneous
+                #   identical MCP calls would hit the same race without this lock.
+                cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{tenant}:{idem}",))
                 cur.execute("SELECT case_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
                 existing = cur.fetchone()
             if existing:
