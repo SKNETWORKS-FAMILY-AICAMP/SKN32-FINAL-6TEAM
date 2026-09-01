@@ -114,7 +114,7 @@ def sheet_structure():
     ])
     group(LX, LW, y - GAP, "모듈  6", "켜고 끌 수 있다. 끄면 그 표면도 사라진다", GREEN, [
         ("vector_rag", True, "7"),
-        ("voc  (분류 · 일일 배치)", True, "4"),
+        ("voc  (분류 · 일일 배치)", True, "4 · 소유는 코어 1"),
         ("mcp", False, "이 건은 REST 로 들어왔다"),
         ("ops_ui", False, "운영자 화면"),
         ("graph_store", False, "관리자 화면 전용"),
@@ -125,7 +125,7 @@ def sheet_structure():
               GREEN, [
         ("return_refund", True, "8 · 이 건을 맡는다"),
         ("response_generation_review", False, "9 · 지금 꺼짐"),
-        ("voc_store_manager", False, ""),
+        ("voc_store_manager", False, "껍데기. 계약만 유지"),
         ("procurement_order_payment", False, ""),
         ("fulfillment_logistics", False, ""),
         ("catalog_verification", False, ""),

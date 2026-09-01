@@ -33,6 +33,23 @@
 | 팀 구성 | 일반적인 Agent Team 착수 목록 | 검증 쇼핑몰 연계 중심의 팀 모듈 구성 | 쇼핑몰 검증에 필요한 발주·주문·물류·VOC·응답 검증과 Catalog A2A의 책임 경계를 일정과 연결한다 |
 | §25 일정 | 1~10주차 역할별 계획 | 선행 및 공식 1W~9W 일정 | 실제 부트캠프 공식 일정의 날짜·주차·산출물에 맞춰 구현 계획을 재배치한다 |
 
+### v8 재판정 [2026-09-01] — VOC 소관 정리
+
+버전을 올리지 않고 v8 안에서 고친다. 절 번호와 DoD 번호는 그대로 둔다.
+
+| 항목 | 고치기 전 | 고친 뒤 | 이유 |
+|---|---|---|---|
+| 인라인 분류 소유 | §3-A는 VOC와 한 행에 묶고, §7-A는 "공통 진입·분류 층"이라 함 | **코어 1 소유**로 통일 | v7.1 결정이 §3-A에 반영되지 않아 두 절이 다른 말을 했고, 코드가 옛 쪽을 따랐다 |
+| Feedback Analytics 배치 | VOC Team의 실행 형태 | **코어 1 소유 독립 배치** | 집계·임계값 판정은 전역 관측이지 업무 판단이 아니다. v6 판단으로 되돌린다 |
+| VOC & Store Manager | CS Pack 10주 착수 확정 Team | Registry 등록·계약만 유지하는 **껍데기**. LLM 위임 판단을 넣는 시점에 착수로 되돌림 | Team 자격의 근거(위임 판단)가 아직 구현되지 않았다. §10의 Billing/Technical 처리와 같게 다룬다 |
+| 분류기의 계층 | 도메인 모듈(뺄 수 있는 자리) | 필수층. `voc` 모듈 플래그에서 분리 | 필수 기능이 선택 계층에 놓인 범주 오류였고, 그래서 `voc: false`로 제품이 기동하지 않았다 |
+
+고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+
+**이 사고가 남긴 점검 항목.** v7.1 개정 7건 중 하나(VOC 소관)가 일부 절에만 반영되어 문서 안에서 서로 다른 말을 했고, 나중에 온 작업이 낡은 쪽을 읽었다. 나머지 6건도 같은 상태일 수 있으므로 `program/research/index.md`의 문서 정합성 점검 캘린더에 **"v7.1 개정 항목이 전 절에 반영됐는지"**를 추가한다. 현재 점검 항목(`§숫자` 참조·Team 목록·DoD 항목 수)으로는 이번 건이 걸리지 않았다.
+
+---
+
 이 문서(v8.md)는 v7 전체를 계승한 새 기준선이며, 이후 구현·평가·심사의 기준선이다. v7 이하는 보존본이며 수정하지 않는다.
 
 | 항목 | v6 기준선 |
@@ -196,12 +213,23 @@ A-COP이 주장하는 것은 새로운 모델이나 새로운 RAG가 아니라 *
 | 이슈 분류 | issue code와 severity를 함께 저장 | golden label agreement |
 | 맞춤형 응대 | Context Broker가 고객·Case·정책·이력을 tenant/customer 범위로 조합 | source/evidence 검증 |
 | 다중 에이전트 서빙 | Procurement + Order & Payment 통합, Fulfillment & Logistics, Return & Refund & Evidence(Registry 계약 + Mock), Response Generation & Review의 TeamModule과 Catalog & Verification(A2A Remote)을 착수 목록으로 구성하고 VOC & Store Manager는 아래 고객 피드백 분석 행의 Team 계약으로 반영 | Team contract test |
-| 고객 피드백 분석 | 인라인 분류 + 일 1회 Feedback Analytics 배치 | 일일 report와 급증 alert |
+| 고객 피드백 분석 — 분류 | 진입·분류 층의 인라인 분류. **코어 1 소유**이며 Case 생성마다 실행된다 | 모든 Case 생성 fixture에서 분류 event 확인(DoD-9) |
+| 고객 피드백 분석 — 집계 | 일 1회 Feedback Analytics 배치. **코어 1 소유** | 일일 report와 급증 alert |
 | 자동화와 안전성 | Action proposal, 승인, idempotency, audit | 동일 요청 10회 1 side effect |
 | 개인 AI 연동 | MVP REST 5개 endpoint와 MCP 3개 tool. REST 5는 상한이 아님 | scope·MCP integration test와 endpoint 추가 fixture |
 | 성과 비교 | A/B/Proposed, 60+20 golden/holdout, 통계 처리 | 재현 가능한 harness |
 
-인라인 분류는 선택 기능이 아니다. Case 생성 경로에서 감성·의도·이슈 분류가 실패하면 `classification_failed`를 남기고 `escalated`로 전환한다. 배치는 임베딩 클러스터링과 토픽 모델링을 사용하지 않고 규칙 기반 집계·급증 탐지만 수행한다.
+인라인 분류는 선택 기능이 아니다. 모든 Case는 `classifying` 단계를 거치며, 감성·의도·이슈 분류가 실패하면 `classification_failed`를 남기고 `escalated`로 전환한다.
+
+**인라인 분류는 코어 1이 소유한다.** `classifying`은 §19 생명주기의 정식 상태이고, 상태 전이는 §16이 코어 1에 준 책임이다. 분류기의 라벨 어휘와 프롬프트 품질은 모델 담당이 만들지만, **언제 부르고 실패를 어떻게 처리하며 어느 상태로 보내는지는 코어 1이 정한다.** Team을 모델이 만들고 Controller가 부르는 것과 같은 관계다.
+
+이것은 보장에 관한 요구이지 실행 위치에 관한 요구가 아니다. 접수 API 핸들러 안에서 동기로 실행할 것을 요구하지 않는다. DoD-9는 "모든 Case 생성 fixture에서 분류 event 확인"으로 이 보장만 검증한다. 접수 응답이 분류 결과를 몸통에 싣는지는 §21의 API 계약에서 따로 정한다.
+
+[2026-09-01 교정] **v7.1이 이미 "인라인 분류는 공통 진입·분류 층"이라고 정했으나(§0 v7.1 변경 요약, §7-A) 이 절에 반영되지 않았다.** 한 문서 안에서 §7-A는 새 결정을, §3-A는 옛 서술을 담고 있었고, 2026-08-30 모듈 토글 실효화 작업이 §3-A를 근거로 삼아 인라인 분류를 `voc` 모듈 아래 묶었다. 그 결과 결함 셋이 생겼다. (1) 분류기가 `app/modules/customer_ops/`(뺄 수 있는 Team 자리)에 놓여, Core가 도메인 모듈을 import할 수 없으므로 호출 자리가 접수 라우트밖에 남지 않았다. (2) 그래서 LLM 호출이 접수 트랜잭션 안에서 커넥션과 advisory lock을 잡은 채 수행되고, 타임아웃 시 Case 생성까지 롤백된다. (3) `require_module("voc", "inline classifier")` 때문에 `voc: false`로는 제품이 기동하지 않는다 — 필수 기능이 선택 계층에 놓인 범주 오류다. 아울러 `run_case` 호출처가 접수 라우트 하나뿐이라 접수 응답이 에이전트 실행 전체를 기다린다(실측 p50 20~34초, p95 32~51초).
+
+이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+
+배치는 임베딩 클러스터링과 토픽 모델링을 사용하지 않고 규칙 기반 집계·급증 탐지만 수행한다.
 
 ---
 
@@ -229,23 +257,39 @@ Team은 Capability·책임·권한·지식·Tool 경계가 독립될 때 만든�
 
 Team은 read Tool을 직접 호출하지 않는다. Context Broker가 `required_context`에 따라 읽은 자료를 `ContextPack`에 넣는다. 부족한 정보는 `need_more_context` 신호로 Controller에 요청한다. Team은 side effect를 실행하지 않고 `ActionProposal`만 반환한다.
 
-VOC/Feedback Analytics도 Agent Team으로 등록한다. VOC는 이상징후 탐지, 반복 불만 식별, 공급처·처리 성능 감시라는 고유 책임을 갖고, 다른 Team에 Task를 위임하거나 알림을 보낼 수 있는 고유 권한을 갖는다. 집계·시계열·임계값 정책이라는 고유 지식과 집계·관측·알림 Tool이라는 고유 경계도 있다. [v7.1] Team 자격의 핵심은 고정 공식으로 급증 여부를 계산하는 데 있지 않다. 급증 이후 고객 문장·리뷰·Case history에서 원인 축을 판별하고, 위임 대상과 필요한 증거를 결정하는 업무 판단에 있다. 급증 공식은 착수 시점의 내부 구현 선택이며 슬롯 자격과 무관하다. LLM 판단을 넣는 시점에 필요한 것은 위임 판단 골든셋이다. Agentic Controller가 전역 조정 책임을 갖는 것과 달리 VOC는 업무 판단을 수행하는 Team이다.
+**[v8 재판정] VOC를 관측층과 판단층으로 나눈다.** 집계·급증 탐지는 **코어 1**이 소유하고, VOC Team은 그 결과를 받아 판단하는 껍데기로 남긴다. v6의 "전역 관측 축이라 Team이 아니다"라는 판단으로 되돌아가되, Team 등록 자체는 유지한다.
 
-VOC는 `Case events·분류 결과·Action 결과`를 Context Broker를 통해 입력받고, `리포트·알림·다른 Team으로의 위임 제안`을 TeamResult로 반환한다. 다른 Team 호출은 VOC가 직접 하지 않고 Controller가 Task로 변환해 수행한다.
+| 조각 | 소유 | 근거 |
+|---|---|---|
+| 집계·시계열·임계값·급증 탐지 | **코어 1** | 전역 관측이며 §16이 코어 1에 준 Controller 조정 책임과 성격이 같다. 산출물은 `feedback_analytics_reports`에 쓰는 사실이다 |
+| 원인 축 판별·위임 대상 결정 | VOC Team | 실제 업무 판단. **다만 현재 구현이 없다** |
+
+**v7이 VOC를 Team으로 올린 근거는 §7-A 개정 기록에 기록되지 않았다.** v7.1이 방어한 Team 자격의 핵심은 "급증 이후 원인 축을 판별하고 위임 대상과 필요 증거를 결정하는 업무 판단"인데, §7-A의 착수 명세는 SQL 집계와 고정 임계값이다. LLM 판단은 "넣는 시점에"라는 미래형으로만 적혀 있다. **아직 없는 기능을 근거로 Team 슬롯을 유지하는 것은 v7.1이 세운 "슬롯을 맞추지 않고 모듈 가치로 판단한다"에 어긋난다.**
+
+Team 등록을 지우지는 않는다. §10이 Billing/Technical 2종을 "Team-플러그인 아키텍처가 동작한다는 증거로만 남긴다"고 처리한 것과 같게 다룬다. 나중에 LLM 위임 판단을 실제로 넣으면 껍데기가 알맹이를 갖고, 그때 구조를 다시 건드리지 않는다. Registry 등록형이라 Team 추가가 리팩토링이 아니라는 §8-B 원칙이 이 미룸을 정당화한다.
+
+VOC Team은 `Case events·분류 결과·Action 결과`와 **코어 1이 만든 일일 리포트**를 Context Broker를 통해 입력받고, `알림·다른 Team으로의 위임 제안`을 TeamResult로 반환한다. 다른 Team 호출은 VOC가 직접 하지 않고 Controller가 Task로 변환해 수행한다.
+
+**코어가 사실을 만들고 Team이 그 사실을 판단한다.** 인라인 분류(코어 1) → VOC 판단의 관계와 같은 모양이며, 이 문서가 §3-A에서 정한 원칙과 일관된다.
 
 ### v6 대비 개정 기록
 
-| 항목 | v6 | v7 |
-|---|---|---|
-| VOC 분류 | 전역 관측 축이라 Team이 아닌 Feedback Analytics 운영 모듈 | VOC/Feedback Analytics Agent Team으로 등록 |
-| 배치 | 독립 배치 파이프라인 | VOC Team의 실행 형태 중 하나로 유지 |
-| 위임 | 배치 alert 발행 | Controller를 통한 다른 Team 위임 제안 추가. Team 간 직접 호출은 금지 |
+| 항목 | v6 | v7 | v8 재판정 [2026-09-01] |
+|---|---|---|---|
+| VOC 분류 | 전역 관측 축이라 Team이 아닌 Feedback Analytics 운영 모듈 | VOC/Feedback Analytics Agent Team으로 등록 | **v6으로 되돌린다.** 집계·급증 탐지는 코어 1 소유. Team 등록은 플러그인 증거로만 유지 |
+| 배치 | 독립 배치 파이프라인 | VOC Team의 실행 형태 중 하나로 유지 | **코어 1이 소유하는 독립 배치.** VOC Team은 그 결과를 입력으로 받는다 |
+| 위임 | 배치 alert 발행 | Controller를 통한 다른 Team 위임 제안 추가. Team 간 직접 호출은 금지 | 유지. 위임 판단에 LLM이 들어가는 시점에 VOC Team이 알맹이를 갖는다 |
+| 인라인 분류 | (구분 없음) | [v7.1] VOC 업무가 아닌 공통 진입·분류 층 | **코어 1 소유로 명시.** v7.1 결정이 §3-A에 반영되지 않아 코드가 어겼다 |
+
+v8 재판정의 근거는 셋이다. (1) v7이 v6의 "전역 관측 축" 판단을 뒤집은 이유가 이 표에 기록되지 않았다. (2) v7.1이 방어한 Team 자격(LLM 위임 판단)이 아직 구현되지 않았고, 착수 명세는 SQL 집계와 고정 임계값이다. (3) §8-B가 Registry 등록형이라 Team 추가는 리팩토링이 아니므로, 미리 슬롯을 잡을 이유가 없다. 이 판정으로 CS Pack 고정 축이 실질 1개(Response Generation & Review)가 되지만, §3-A의 "다중 에이전트 서빙" 대응은 Procurement+Order·Fulfillment·Return&Refund·Response Review·Catalog A2A 다섯이 맡으므로 흔들리지 않는다.
 
 ## 7-A. Feedback Analytics 배치 파이프라인 [v5 흡수]
 
-Case 생성 transaction 뒤 `classifying` 단계에서 sentiment, intent, issue_code를 항상 생성한다. [v7.1] 이 인라인 분류는 VOC Team의 업무가 아니라 진입·분류 층의 공통 처리다. VOC는 이미 분류된 Case events를 입력받는다. 매일 00:10 UTC worker가 전일/직전 7일의 intent·issue count, negative ratio, unresolved ratio를 집계한다. 급증은 `오늘 count >= max(5, 1.5 * 최근7일 평균)`이고 `오늘 count - 최근7일 평균 >= 3`인 경우로 정의한다. z-score, embedding clustering, topic modeling은 사용하지 않는다. 결과는 `feedback_analytics_reports`에 저장하고 alert event를 발행한다.
+Case 생성 transaction **밖에서** `classifying` 단계에 sentiment, intent, issue_code를 항상 생성한다. [v7.1] 이 인라인 분류는 VOC Team의 업무가 아니라 진입·분류 층의 공통 처리다. [v8] **소유는 코어 1이다**(§3-A). VOC는 이미 분류된 Case events를 입력받는다.
 
-v7에서 이 절은 삭제하지 않는다. 위 파이프라인은 VOC Team을 주기적으로 실행하는 배치 adapter/worker다. 배치가 리포트를 만들고 alert 또는 `delegation_proposal`을 반환하면 Controller가 알림을 보내거나 해당 업무 Team에 Task를 위임한다. VOC Team은 배치 여부와 무관하게 동일한 Team Contract와 감사 경계를 따른다.
+매일 00:10 UTC worker가 전일/직전 7일의 intent·issue count, negative ratio, unresolved ratio를 집계한다. 급증은 `오늘 count >= max(5, 1.5 * 최근7일 평균)`이고 `오늘 count - 최근7일 평균 >= 3`인 경우로 정의한다. z-score, embedding clustering, topic modeling은 사용하지 않는다. 결과는 `feedback_analytics_reports`에 저장하고 alert event를 발행한다. **[v8] 이 배치는 코어 1이 소유한다.** 집계와 임계값 판정은 도메인 판단이 아니라 전역 관측이며, 산출물은 사실이지 제안이 아니다.
+
+[v8 재판정] 이 절은 삭제하지 않는다. 다만 v7의 "위 파이프라인은 VOC Team을 주기적으로 실행하는 배치 adapter/worker다"라는 서술을 고친다. **배치는 VOC Team의 실행 형태가 아니라 코어 1의 독립 파이프라인이고, VOC Team은 그 배치가 만든 리포트를 Context Broker로 받아 판단하는 소비자다.** 배치가 리포트를 만들면 Controller가 알림을 보내거나, 위임 판단이 필요한 경우 VOC Team에 Task를 넘겨 `delegation_proposal`을 받아 해당 업무 Team에 위임한다. VOC Team은 알맹이를 갖기 전까지 Team Contract와 감사 경계만 유지하는 껍데기로 남는다(§7).
 
 ## 7-B. 전체 구성
 
@@ -425,7 +469,7 @@ Controller는 `redis.xadd(...)` 같은 구현 세부사항을 알지 않는다.
 
 **Team 개수는 고정 상한이 아니다.** MVP 착수 구성은 기준선일 뿐이며, 업무 capability가 추가되면 Registry에 Team을 등록하는 것만으로 확장된다. 확장 시 바뀌는 것은 Registry 레코드와 config이고, Controller·`TeamExecutorPort`·`ActionProposal` 계약·평가 하네스는 변경하지 않는다. 이 불변성이 곧 모듈화의 증명이므로, Team을 늘리는 일이 리팩토링이 되면 설계가 잘못된 것이다. 같은 원칙이 `execution_type: A2A`로 등록되는 Remote Agent에도 적용된다 — 원격 위임 대상의 개수 역시 상한이 아니라 등록 대상이다. [v7.1] 착수 목록은 “몇 개까지”를 맞추는 방식으로 정하지 않는다. 각 모듈이 Registry에 올라갈 값어치가 있는지, 독립 capability·지식·권한·평가 가능성이 있는지를 계획 입력으로 판정한다. 평가 여력은 상한이 아니며, 필요하면 Team과 Remote 수를 늘리고 그만큼 golden set과 평가 축도 함께 늘린다. 슬롯을 맞추기 위해 필요한 모듈을 내리지 않는다.
 
-필요 Team과 착수 Team을 구분한다. 기능상 필요 Team은 Catalog & Verification, Procurement, Order & Payment, Fulfillment & Logistics, Return & Refund, VOC/Feedback Analytics다. [v7.1] VOC & Store Manager와 Response Generation & Review는 이번 프로젝트 주제 자체에 속하는 CS Pack Team으로 10주 착수를 확정한다. Procurement + Order & Payment 통합과 Fulfillment & Logistics는 검증 쇼핑몰 프로젝트를 실제로 운영하기 위해 필요한 연계 범위이며, 그 프로젝트의 진행 범위와 일정에 따라 배치·착수 범위가 달라질 수 있다. 6명 팀 전체가 이 구성으로 고정된다는 뜻은 아니다. A2A Remote는 Catalog & Verification으로 두고 별도 프로세스 fixture로 실제 왕복을 구현한다. Return & Refund는 Registry 계약 + Mock으로 유지한다. 단, 실제 스마트스토어 반품·교환 데이터에서 반품 사유 코드 체계와 상태 전이가 확인되고, 그 데이터로 골든셋 정답을 구성할 수 있음이 검증되면 LOCAL 착수로 승격한다. 데이터 확인 전에는 승격하지 않는다. **Registry 등록은 실제 구현을 의미하지 않는다.** 등록된 capability가 있어도 실행 가능한 module·fixture·contract test가 없으면 구현 완료로 세지 않는다.
+필요 Team과 착수 Team을 구분한다. 기능상 필요 Team은 Catalog & Verification, Procurement, Order & Payment, Fulfillment & Logistics, Return & Refund, VOC/Feedback Analytics다. [v7.1] VOC & Store Manager와 Response Generation & Review는 이번 프로젝트 주제 자체에 속하는 CS Pack Team으로 10주 착수를 확정한다. **[v8 재판정 2026-09-01] Response Generation & Review는 그대로 유지하되, VOC & Store Manager는 착수 범위를 조정한다** — 집계·급증 탐지는 코어 1의 배치로 옮기고, Team은 Registry 등록과 계약만 유지하는 껍데기로 둔다(§7). LLM 위임 판단을 넣는 시점에 착수 Team으로 되돌린다. 따라서 CS Pack의 실질 착수 축은 Response Generation & Review 하나다. Procurement + Order & Payment 통합과 Fulfillment & Logistics는 검증 쇼핑몰 프로젝트를 실제로 운영하기 위해 필요한 연계 범위이며, 그 프로젝트의 진행 범위와 일정에 따라 배치·착수 범위가 달라질 수 있다. 6명 팀 전체가 이 구성으로 고정된다는 뜻은 아니다. A2A Remote는 Catalog & Verification으로 두고 별도 프로세스 fixture로 실제 왕복을 구현한다. Return & Refund는 Registry 계약 + Mock으로 유지한다. 단, 실제 스마트스토어 반품·교환 데이터에서 반품 사유 코드 체계와 상태 전이가 확인되고, 그 데이터로 골든셋 정답을 구성할 수 있음이 검증되면 LOCAL 착수로 승격한다. 데이터 확인 전에는 승격하지 않는다. **Registry 등록은 실제 구현을 의미하지 않는다.** 등록된 capability가 있어도 실행 가능한 module·fixture·contract test가 없으면 구현 완료로 세지 않는다.
 
 실제로 몇 개를 만들 것인가는 아키텍처 제약이 아니라 일정과 평가 여력의 문제다. Team이 늘면 golden set과 라우팅 평가 축이 함께 늘어나므로, 확장 판단은 "만들 수 있는가"가 아니라 "채점할 수 있는가"로 한다.
 
@@ -1070,9 +1114,9 @@ v6의 REST 5개는 당시 MVP의 평가 범위 숫자다. 아키텍처 상한이
 
 | 담당 | 인원 | 역할 | 담당하지 않는 것 |
 |---|---:|---|---|
-| **코어 1** — Case Runtime & Coordination | 1 | Case, lifecycle, Shared State, CAS, Controller, Top-Level LangGraph, Registry, `TeamExecutorPort`, Message Broker 정책 | 외부 인증, Tool 실행, Team 내부 로직 |
-| **코어 2** — Access & Action Platform | 1 | Gateway, API/MCP, A2A Adapter, Tool/Action, approval, idempotency, audit | Case routing 판단, Team 내부 로직 |
-| **모델** — Agent Team Module | 3 | Team 내부 graph/agent, 프롬프트, retrieval·rerank, memory 정책, 모델 선택과 라우팅, `TeamResult` 생성 규칙 | Core 계약 변경, side effect 실행 |
+| **코어 1** — Case Runtime & Coordination | 1 | Case, lifecycle, Shared State, CAS, Controller, Top-Level LangGraph, Registry, `TeamExecutorPort`, Message Broker 정책. **[v8] 인라인 분류의 실행·실패 처리·상태 전이와 Feedback Analytics 집계 배치** | 외부 인증, Tool 실행, Team 내부 로직, **분류 라벨 어휘와 프롬프트 품질** |
+| **코어 2** — Access & Action Platform | 1 | Gateway, API/MCP, A2A Adapter, Tool/Action, approval, idempotency, audit | Case routing 판단, Team 내부 로직, **분류 실행** |
+| **모델** — Agent Team Module | 3 | Team 내부 graph/agent, 프롬프트, retrieval·rerank, memory 정책, 모델 선택과 라우팅, `TeamResult` 생성 규칙. **[v8] 분류 라벨 어휘와 분류 프롬프트의 구현·품질** | Core 계약 변경, side effect 실행, **분류의 호출 시점과 실패 처리** |
 | **검증 & 프론트** | 1 | **평가 harness, golden/holdout 관리, 지표·통계, 회귀·contract test 실행**, 운영 UI, observability, 통합 데모 | 업무 로직 구현 |
 
 **검증이 앞이고 프론트가 뒤다.** 이 1명의 1순위는 화면이 아니라 **"좋아졌다"를 숫자로 증명하는 것**이다.

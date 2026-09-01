@@ -79,7 +79,8 @@ S3이 5W 시작일에 정확히 시작한다. S1만 중간발표(9/15)에 맞추
 | E04 | Shared State·CAS와 Outbox 전달 보장 | 코어 1 | S1 | DB·저장소 설계 문서 | DoD-12 outbox 원자성 replay |
 | E05 | Gateway와 REST·MCP·A2A 진입 | 코어 2 | S1~S2 | 요구사항 정의서 | DoD-14 API키 scope 구분 |
 | E06 | Action 승인·멱등성·감사 | 코어 2 | S1~S2 | 서비스 테스트 보고서 | DoD-11 동일 요청 10회 부수효과 1회 |
-| E07 | VOC & Store Manager 팀 | 모델 | S2 | 멀티 에이전트 테스트 보고서 | 급증 탐지와 위임 판단 골든셋 |
+| E07 | VOC & Store Manager 팀 | 모델 | 보류 | 멀티 에이전트 테스트 보고서 | [2026-09-01] Registry 등록·계약만 유지하는 껍데기. 집계·급증 탐지는 E14 로 옮김. LLM 위임 판단을 넣는 시점에 착수로 되돌린다 |
+| E14 | 인라인 분류와 Feedback Analytics 배치 | 코어 1 | S2 | 서비스 테스트 보고서 | [2026-09-01 신설] 집계·임계값 판정은 전역 관측이지 업무 판단이 아니다. 인라인 분류도 공통 진입·분류 층이라 함께 코어 1 소유 |
 | E08 | Response Generation & Review 팀 | 모델 | S2 | 멀티 에이전트 테스트 보고서 | DoD-29 응답 검증 |
 | E09 | Commerce Ops 팩 4종 | 모델 | S2~S3 | 멀티 에이전트 테스트 보고서 | Return&Refund는 Mock, Catalog는 A2A Remote |
 | E10 | 데이터 수집·전처리와 RAG 색인 | 모델·공통 | S1~S2 | 수집 데이터 보고서, 전처리 결과서 | VOC 5종 전처리 완료, pgvector 색인 |
@@ -264,7 +265,9 @@ Agent Team Module 안에서는 모듈별로 나눈다. 총괄 대표는 송채�
 |---|---|
 | Order & Payment, Procurement | 김지혜 |
 | Fulfillment & Logistics, Return·Refund & Evidence | 서유현 |
-| VOC & Store Manager, Response Generation & Review | 송채영 |
+| Response Generation & Review | 송채영 |
+| VOC & Store Manager (껍데기) | 송채영 |
+| 인라인 분류 · Feedback Analytics 배치 | 최연우 (코어 1) |
 | Catalog & Verification (A2A) | 셋이 함께 구현, 총괄 송채영 |
 
 Core와 UX 쪽에서 Agent Team Module에 연락할 일이 있으면 송채영에게 한다.
