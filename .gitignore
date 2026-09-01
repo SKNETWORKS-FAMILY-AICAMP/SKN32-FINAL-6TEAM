@@ -151,3 +151,4 @@ final_project_sample/
 
 # 학습용 추적 영상. 5MB 넘고 스크립트로 다시 만든다
 program/onboarding/trace/*.mp4
+program/onboarding/trace/.trace_build_*/

@@ -1,0 +1,1542 @@
+news - OpenWiki 문서 작성법
+콘텐츠로 건너뛰기
+새 채팅
+검색
+고정됨
+최근 채팅
+채팅 기록
+ChatGPT
+새 채팅
+Ctrl Shift O
+라이브러리
+예약
+플러그인
+더 보기
+고정됨
+bootcamp
+article
+Hackerthon
+study
+news
+FreeToken 논문 요약
+논문 요약 평가
+OpenWiki 문서 작성법
+평가 작성
+Scrapling 평가 정리
+더 보기
+Lapstar
+my_idea
+job
+-i+
+A-COP
+클릭 도메인 구매처 비교
+6. 프로젝트 구조 분석
+IPv6 주소 얻기
+SFTP 대화 찾기
+5. 최종프로젝트 질문사항 정리
+더 보기
+프로젝트
+PhantomHundo
+C++
+test
+채팅
+RTX Spark 한국 구매처
+이혼숙려캠프 페미 논란
+부산 여행계획 찾기
+프랑스어 발음 추정
+버추얼박스 탈출 방법
+RTX Spark 구매 오픈
+에이전틱 AI 정의
+일본어 번역 요청
+단어 시각화 도구
+카오스 이론 설명
+FDE 약자 의미
+아이스레이크 파이스파크 버전
+메시지 브로커 설명
+오토파지 분석 요청
+안녕 인사 및 도움 요청
+텐서토렌트 AI 가속기 평가
+RustDesk 평가 및 안전성
+350Z Slantnose 키트 구입 방법
+천재적 사고 공식화
+정부와 개인 자유 균형
+yoenwoo choi
+Pro
+news
+공유하기
+8월 17일 (월) 오후 9:42
+나의 말:
+Open wiki - 에이아이를 위한 문서 작성법 이거 자세히 알려줘
+ChatGPT의 말:
+Worked for 13s
+맞아. 최근 나온 LangChain의 OpenWiki 얘기라면, 핵심은 단순한 “AI 자동 문서 생성기”가 아니다.
+OpenWiki가 던지는 핵심 아이디어는 이거야.
+AI에게 거대한 README 하나를 먹이지 말고 작은 지식 단위로 문서를 쪼갠다.
+각 문서에 title / description / tags / type 같은 기계가 읽기 좋은 메타데이터 를 붙인다.
+index.md 를 이용해서 AI가 어떤 문서를 읽을지 먼저 탐색 하게 한다.
+문서끼리 링크를 걸어 지식 그래프처럼 이동 하게 한다.
+실제 코드/데이터가 바뀌면 문서도 자동으로 갱신한다.
+AGENTS.md 에는 지식을 몽땅 넣지 않고 “어디를 찾아봐야 하는가”만 알려준다.
+결국 문서를 인간용 설명서 + AI Agent용 장기 기억(memory layer) 으로 만든다. GitHub +1
+그리고 2026년 7월 OpenWiki 0.2부터 Google Cloud 쪽에서 제안한 OKF(Open Knowledge Format) 를 채택하면서 이 아이디어가 꽤 명확한 규칙으로 정리됐다. GitHub +1
+1. 기존 문서 작성법과 뭐가 다른가
+보통 개발 문서는 이런 식이잖아.
+README.md
+# 프로젝트 설명
+우리 시스템은 고객 문의를 처리한다.
+## Architecture
+Agent Gateway가 있고
+Controller가 있고
+Context Broker가 있고...
+## Database
+...
+## API
+...
+## Agent Teams
+...
+인간이 처음부터 끝까지 읽는 데는 괜찮다.
+그런데 AI 입장에서는 문제가 있다.
+사용자 질문
+↓
+"환불 요청 처리 구조 수정해줘"
+↓
+README 15,000줄
+Architecture 8,000줄
+API docs 20,000줄
+DB schema
+소스코드
+...
+전부 context window에 넣으면 낭비가 심하다.
+그래서 OpenWiki는 이렇게 바꾼다.
+openwiki/
+index.md
+architecture/
+index.md
+agent-gateway.md
+controller.md
+context-broker.md
+shared-state.md
+teams/
+index.md
+refund-team.md
+billing-team.md
+voc-team.md
+data/
+index.md
+case-schema.md
+customer-schema.md
+workflows/
+refund-case.md
+order-cancel.md
+AI는 처음부터 전부 읽지 않는다.
+질문
+"환불 Agent Team 수정해"
+↓
+openwiki/index.md
+↓
+teams/index.md
+"Refund Team 관련 정보가 있군"
+↓
+teams/refund-team.md
+↓
+연결된 문서
+/shared-state.md
+/refund-case.md
+↓
+필요한 코드 탐색
+즉,
+Context Loading → Context Navigation
+으로 바뀐다.
+LangChain도 OpenWiki를 소개하면서, 모든 wiki 내용을 AGENTS.md 나 CLAUDE.md 에 넣으면 너무 큰 context가 되기 때문에 짧은 참조만 넣고 agent가 필요한 문서를 찾아가도록 설계했다 고 설명한다. LangChain
+2. 그래서 “AI를 위한 문서”의 핵심은 Progressive Disclosure다
+이 개념이 굉장히 중요하다.
+한국어로 하면 점진적 정보 공개 정도다.
+AI에게 처음부터 이것을 주는 게 아니라,
+Architecture
+Database
+API
+Agents
+Workflow
+Testing
+Deployment
+Security
+...
+먼저:
+이 프로젝트에는 이런 영역이 있다.
+Architecture
+Agents
+Data
+Workflow
+Security
+만 보여준다.
+그러면 Agent가 판단한다.
+현재 작업 = Refund Team 수정
+필요:
+Agents
+Workflow
+Shared State
+불필요:
+Deployment
+Frontend
+Analytics
+그리고 필요한 것만 읽는다.
+즉 문서 계층이:
+Level 0
+AGENTS.md
+↓
+Level 1
+/index.md
+↓
+Level 2
+/architecture/index.md
+↓
+Level 3
+/controller.md
+/shared-state.md
+↓
+Level 4
+실제 source code
+처럼 된다.
+이게 AI 시대 문서 구조의 상당히 중요한 포인트다.
+3. OKF가 여기에 메타데이터를 붙인다
+OpenWiki 0.2의 중요한 변화다.
+Markdown 위에 YAML Front Matter를 붙인다.
+예:
+Markdown
+---
+type: architecture-component
+title: Agentic Controller
+description: Case lifecycle과 Agent Team routing을 제어하는 상위 orchestration component
+tags:
+- agent
+- orchestration
+- case
+- langgraph
+---
+# Agentic Controller
+Agentic Controller는...
+OpenWiki 0.2는 OKF를 채택해 문서에 type , title , description , tags 등 구조화된 정보를 넣고, 이를 검색과 탐색에 활용할 수 있는 기반으로 삼고 있다. GitHub +1
+이게 왜 중요하냐면 Agent가 파일 내용을 읽기 전에
+YAML
+title: Agentic Controller
+description: ...
+tags:
+- orchestration
+만 보고도
+아, 이 파일 필요하겠다.
+라고 판단할 수 있기 때문이다.
+4. 결국 AI 문서는 Description 이 엄청 중요하다
+사람용 문서에서는 제목이 중요했다면,
+AI 문서에서는
+Title + Description + Tags
+가 매우 중요해진다.
+안 좋은 예:
+YAML
+title: Controller
+description: Controller 설명
+거의 정보가 없다.
+좋은 예:
+YAML
+title: Agentic Controller
+description: Routes customer cases to Agent Teams, controls retry/replan and WAIT/RESUME, and coordinates Shared State updates.
+tags:
+- orchestration
+- routing
+- langgraph
+- case-runtime
+Agent가 검색할 때:
+"I need to change retry behavior after state conflict"
+라고 하면
+retry , routing , case-runtime , Shared State
+같은 의미적 연결이 생긴다.
+5. 문서 하나에는 “하나의 개념”을 넣는 게 좋다
+이것도 기존 개발문서하고 꽤 다르다.
+이렇게 만들면 별로다.
+architecture.md
+Agent Gateway
+Controller
+Context Broker
+Shared State
+Message Broker
+Tool Layer
+Registry
+Database
+Deployment
+Security
+너무 많은 개념이 하나의 파일에 들어 있다.
+AI용으로는:
+architecture/
+agent-gateway.md
+agentic-controller.md
+context-broker.md
+message-broker.md
+shared-state.md
+team-registry.md
+tool-layer.md
+처럼 나누는 게 훨씬 좋다.
+Google의 OKF도 Markdown 파일을 지식 단위로 구성하고, 사람이 읽을 수 있으면서 agent가 파싱하고 탐색할 수 있도록 최소한의 구조화 규칙을 부여하는 것 을 기본 철학으로 둔다. GitHub
+여기서 중요한 건:
+파일 기준으로 자르는 게 아니라 Concept 기준으로 자른다.
+예를 들어:
+❌ user_service.py 설명
+❌ controller.py 설명
+보다는
+⭕ Authentication Flow
+⭕ Case Ownership
+⭕ Conflict Resolution
+⭕ Refund Approval Policy
+이런 문서가 Agent에게 더 가치 있다.
+왜냐하면 개발 작업은 보통 파일 이 아니라 개념/책임 을 기준으로 이루어지기 때문이다.
+6. Source Code를 다시 적는 문서는 가치가 낮다
+예를 들어 코드가:
+Python
+실행됨
+class TeamRegistry :
+def register ( self , team ):
+...
+인데 문서에:
+Markdown
+# TeamRegistry
+TeamRegistry 클래스는 register 메서드를 가지고 있습니다.
+register 메서드는 team을 등록합니다.
+이건 AI한테 거의 쓸모 없다.
+Agent가 코드 읽으면 바로 알 수 있으니까.
+좋은 문서는:
+Markdown
+# Agent Team Registry
+## Responsibility
+Maps capabilities to Agent Team implementations.
+## Architectural rule
+The Controller must never instantiate a Team directly.
+All Team resolution must pass through TeamRegistry.
+## Why
+This allows Agent Teams to be added or replaced
+without modifying the Core Runtime.
+## Invariants
+- Team IDs must be unique.
+- Team versions must be explicit.
+- Disabled Teams must never receive new Cases.
+- Registry lookup must not mutate Case State.
+## Related
+- /architecture/agentic-controller.md
+- /architecture/team-contract.md
+이런 것이다.
+즉 AI 문서는:
+What the code does
+보다
+Why it is designed this way / What must remain true
+가 훨씬 중요하다.
+7. 특히 Invariant 가 AI Coding Agent에게 엄청 중요하다
+이건 실무적으로 상당히 가치가 있다.
+예를 들어:
+Markdown
+## Invariants
+1. Shared State is the source of truth for a Case.
+2. Agent Teams may propose state changes but may not bypass CAS.
+3. External actions must be idempotent.
+4. Human-required actions must enter WAIT before execution.
+5. Team modules must not directly depend on other Teams.
+이런 규칙을 적는다.
+그러면 Claude Code / Codex / Gemini CLI 등이 코드를 수정할 때:
+refund-team에서 DB 직접 update 해버림
+같은 실수를 할 가능성을 줄일 수 있다.
+AI한테 필요한 것은 단순 구조 설명보다:
+절대 깨면 안 되는 것
+이다.
+8. Decision도 기록해야 한다
+예:
+Markdown
+# Message Broker
+## Decision
+MVP uses an in-process queue.
+Production deployments may use Redis Streams.
+## Why
+The Case Runtime must not depend directly on a specific broker.
+Therefore MessageBusPort is used.
+## Rejected
+RabbitMQ was not selected for the MVP because
+operational complexity is unnecessary at the current scale.
+이게 매우 중요하다.
+Agent가 문서 없이 코드만 보면:
+왜 Redis 안 쓰고 in-memory로 만들었지?
+개선해야겠다.
+하면서 마음대로 Redis를 붙일 수 있다.
+하지만 문서가 있으면:
+아, 이건 의도적인 MVP 결정이구나.
+를 이해한다.
+9. 그래서 AI 문서에서 특히 가치 있는 6가지 정보
+내가 실무 관점에서 압축하면 다음이다.
+정보 Agent가 얻는 것
+Responsibility 이 컴포넌트가 뭘 책임지는지
+Boundary 무엇을 하면 안 되는지
+Invariant 절대 깨면 안 되는 규칙
+Relationship 다른 컴포넌트와 관계
+Decision / Why 왜 이렇게 설계됐는지
+Source location 실제 구현이 어디 있는지
+예:
+Markdown
+## Responsibility
+Case orchestration
+## Boundary
+Does not execute business actions directly
+## Invariants
+All state mutations must use CAS
+## Relationships
+Controller → Registry → Team
+## Decision
+Team modules are dynamically resolved
+## Source
+src/runtime/controller/
+이 정도면 Agent 입장에서 상당히 훌륭한 문서가 된다.
+10. index.md 가 단순 목차가 아니다
+OpenWiki/OKF에서 index.md 는 꽤 중요한 역할을 한다.
+예:
+Markdown
+# Architecture
+This directory describes the runtime architecture.
+## Core Runtime
+- [Agentic Controller](agentic-controller.md)
+Controls Case routing, retry, replan and lifecycle.
+- [Shared State](shared-state.md)
+Canonical state representation for Customer Cases.
+- [Context Broker](context-broker.md)
+Builds normalized context from RAG, memory and databases.
+## Extension System
+- [Agent Team Registry](team-registry.md)
+Resolves capabilities to versioned Team modules.
+- [Team Contract](team-contract.md)
+Defines the interface required by Agent Teams.
+Agent는 이 파일 하나만 보고:
+내 질문에 필요한 문서:
+shared-state.md
+agentic-controller.md
+를 결정한다.
+OpenWiki 0.2가 OKF를 도입하면서 각 디렉터리의 index.md 를 해당 영역의 문서/하위 디렉터리를 요약하는 탐색 계층으로 활용하는 것도 이런 이유다. LangChain
+11. 문서끼리 링크를 많이 걸어야 한다
+예:
+Markdown
+# Shared State
+...
+## Related
+- [Agentic Controller](./agentic-controller.md)
+- [Case Lifecycle](../concepts/case-lifecycle.md)
+- [Concurrency Control](../runtime/concurrency.md)
+그러면 구조가:
+Case
+│
+┌───────┴───────┐
+↓ ↓
+Controller Shared State
+│ │
+↓ ↓
+Team Registry Concurrency
+│
+↓
+Agent Team
+가 된다.
+그래서 Wiki 자체가 일종의 lightweight knowledge graph 역할을 한다.
+OpenWiki 최신 버전은 이 wiki를 사람이 탐색할 수 있도록 node graph visualizer 도 제공한다. GitHub
+12. 여기서 RAG하고 차이가 생긴다
+이 부분이 특히 중요하다.
+일반 RAG:
+원본 문서
+↓ chunk
+Vector DB
+↓ similarity search
+관련 chunk
+↓ LLM
+OpenWiki:
+원본 코드 / 자료
+↓ Agent 이해
+지식 구조 생성
+↓
+Wiki
+Concept
+Relationship
+Decision
+Invariant
+Summary
+↓
+Agent navigation
+즉 RAG는 대체로:
+관련 원문 찾기
+이고,
+OpenWiki는:
+미리 이해·정리된 지식 공간 탐색
+에 가깝다.
+물론 둘은 경쟁 관계가 아니다.
+가장 좋은 구조는 오히려:
+Agent
+│
+┌───────────┴──────────┐
+↓ ↓
+OpenWiki RAG
+│ │
+curated knowledge raw evidence
+│ │
+Architecture PDF / logs / DB
+Decisions
+Invariants
+Concepts
+가 될 수 있다.
+13. AGENTS.md 에는 뭘 써야 하나
+여기서 아주 중요한 철학이 나온다.
+나쁜 구조:
+AGENTS.md
+5000줄짜리 architecture 설명
+coding rule
+database
+workflow
+API
+...
+좋은 구조:
+Markdown
+# Agent Instructions
+Repository documentation is available under `/openwiki`.
+Before modifying architecture, inspect:
+/openwiki/architecture/index.md
+Before modifying Agent Teams:
+/openwiki/teams/index.md
+Before modifying Case State:
+/openwiki/runtime/shared-state.md
+즉:
+AGENTS.md = Knowledge 자체가 아니라 Knowledge Router
+로 만드는 것이다.
+OpenWiki 공식 설명도 wiki 전체를 instruction file에 집어넣는 대신, AGENTS.md / CLAUDE.md 가 wiki를 가리키도록 하는 방식을 의도적으로 선택했다고 밝힌다. LangChain
+14. 코드가 바뀌면 Wiki도 업데이트된다
+OpenWiki의 핵심 중 하나다.
+처음:
+Bash
+openwiki --init
+하면 repository를 분석해서:
+openwiki/
+를 만든다.
+그 뒤:
+Bash
+openwiki --update
+하면 최근 변경사항을 확인한다.
+개념적으로:
+git diff
+↓
+변경된 코드
+↓
+영향받는 concept 확인
+↓
+관련 wiki 업데이트
+↓
+logs.md 기록
+이런 구조다.
+공식 OpenWiki는 Git 변경사항을 기준으로 관련 문서를 갱신할 수 있고, GitHub Actions/GitLab CI/Bitbucket Pipelines 등을 통해 자동 업데이트하는 흐름도 제공한다. GitHub +1
+15. logs.md 가 있는 이유
+예:
+Markdown
+# Documentation Change Log
+## 2026-08-17
+### Updated
+- Agentic Controller
+- Added conflict retry behavior.
+- Shared State
+- Added state version field.
+### Added
+- Team Conflict Resolution
+Agent가:
+최근 architecture 변경 뭐야?
+라고 하면 전체 wiki를 뒤질 필요가 없다.
+logs.md
+부터 보면 된다.
+OpenWiki의 OKF 지원에서도 변경 이력을 기록하는 로그가 중요한 요소로 소개된다. LangChain
+16. 최신 OKF는 여기서 한 단계 더 간다
+이건 2026년 8월 기준 알아둘 만하다.
+현재 Google Cloud의 OKF spec은 이미 v0.2 까지 나와 있고 단순 title/tag 수준을 넘어서 다음 같은 개념을 중요하게 본다.
+Provenance
+이 지식은 어디서 왔나?
+Trust
+얼마나 믿을 수 있나?
+Freshness
+아직 최신인가?
+Lifecycle
+현재 사용되는 지식인가?
+Attestation
+정해진 방식으로 검증됐는가?
+왜냐하면 AI가 AI용 문서를 계속 작성하기 시작하면:
+“이 Markdown이 사실이라는 보장이 뭐지?”
+라는 문제가 생기기 때문이다. OKF v0.2는 바로 이 provenance, trust, freshness, lifecycle, attestation 을 보다 명시적인 지식 속성으로 다루고 있다. GitHub
+이게 꽤 중요한 방향이다.
+17. 그래서 미래의 AI 문서는 이렇게 변할 가능성이 크다
+과거:
+Human
+↓
+Documentation
+↓
+Human
+현재:
+Human
+↓
+Documentation
+↓
+AI
+OpenWiki/OKF가 지향하는 형태:
+Code / DB / Slack / Notion / Email
+↓
+AI
+↓
+Knowledge Wiki
+↓
+┌──────┴──────┐
+↓ ↓
+Human Agent
+↓
+Action
+↓
+Wiki Update
+실제로 OpenWiki는 이제 code wiki뿐 아니라 Personal Brain 모드도 제공해서 Gmail, Notion, git repository, X, Hacker News, web search 등의 정보를 구조화된 local wiki로 축적하는 방향으로 확장됐다. LangChain
+18. 네가 직접 AI용 문서를 쓴다면 이 템플릿이 꽤 좋다
+예를 들어 shared-state.md 를 만든다면:
+Markdown
+---
+type: architecture-component
+title: Shared State
+description: Canonical versioned state for a Customer Case shared across Agent Teams.
+tags:
+- case-runtime
+- state
+- concurrency
+- agent
+---
+# Shared State
+## Purpose
+Customer Case의 공식 상태를 저장한다.
+## Responsibility
+- Case status
+- owner
+- evidence
+- decisions
+- open tasks
+- approval state
+- version
+## Architectural Boundary
+Agent Team은 Shared State를 직접 우회하여
+별도의 공식 Case 상태를 만들 수 없다.
+## Invariants
+- Shared State is the Case source of truth.
+- Every mutation increments `version`.
+- Concurrent updates must use CAS.
+- Conflict must return `CONFLICT`.
+- Failed updates must never partially mutate state.
+## Lifecycle
+CREATED
+→ RUNNING
+→ WAITING
+→ RUNNING
+→ COMPLETED
+## Relationships
+- [Agentic Controller](agentic-controller.md)
+- [Agent Team Contract](team-contract.md)
+- [Case Lifecycle](../concepts/case-lifecycle.md)
+## Implementation
+- `src/runtime/state/`
+- `src/runtime/repository/`
+## Decision
+Optimistic concurrency is used instead of global locking
+because independent Agent Teams may operate concurrently.
+## Failure Cases
+### Version Conflict
+Team A: version=12
+Team B: version=12
+Team A commit → version=13
+Team B commit → CONFLICT
+Controller reloads version=13 and performs retry/replan.
+이걸 보면 인간도 이해하고, AI도 굉장히 잘 이해한다.
+19. 결국 좋은 AI 문서 작성법을 한 문장으로 정리하면
+기존 문서는:
+“사람에게 시스템을 설명한다.”
+였다면 AI용 문서는:
+“Agent가 필요한 지식을 스스로 발견하고, 관계를 따라가고, 설계 의도를 보존하면서 행동할 수 있도록 지식 구조를 만든다.”
+라고 보는 게 더 정확하다.
+그래서 좋은 AI 문서는 단순히 글을 잘 쓰는 게 아니라:
+Atomic Knowledge
++
+Metadata
++
+Hierarchy
++
+Links
++
+Invariants
++
+Decisions
++
+Provenance
++
+Freshness
+를 설계하는 작업이 된다.
+그리고 나는 이 흐름이 RAG 다음 단계에서 꽤 중요한 Context Engineering 패턴 이라고 본다. RAG가 “필요한 원문을 어떻게 찾느냐”를 해결했다면 OpenWiki/OKF 계열은 “Agent가 지속적으로 사용할 지식을 어떤 형태로 보존할 것이냐” 를 다루기 시작한 셈이다. GitHub +1
+특히 너처럼 여러 컴포넌트·Agent Team·Runtime 규칙이 얽힌 프로젝트 에서는 그냥 README를 잘 쓰는 것보다, AGENTS.md → index.md → concept 문서 → source code 식으로 계층을 만드는 방식이 훨씬 효과적이다.
+출처
+나의 말:
+https://youtu.be/S_PeI8JUqMg?si=PQlBNVXC19UA4Soe ㅡㅡ 이거 말하는 건데 맞아??
+ChatGPT의 말:
+맞아. 네가 말한 영상은 정확히 이거야. 제목도 **「사람이 아닌 에이전트를 위한 문서 작성법: OpenWiki 내부 공개」**로 확인된다. YouTube
+그리고 내가 아까 설명한 방향이 큰 틀에서는 맞긴 했는데 , 네가 물은 건 일반적인 OpenWiki/OKF 철학보다 이 영상에서 말하는 “에이전트를 위한 문서를 어떻게 써야 하느냐”의 구체적인 방법론 쪽이 더 중심이야. 그러니까 아까 답변은 범위를 좀 넓게 잡았다.
+영상의 핵심을 네 질문에 맞춰 더 정확히 잡으면 이렇다.
+사람용 문서는 “읽기 편한 설명”이 중요하지만, Agent용 문서는 탐색성·구조·경계·연결성 이 더 중요하다.
+문서를 하나의 긴 README로 쓰지 않고, 작은 주제 단위 + 명확한 index + 링크 구조 로 만든다.
+Agent가 모든 문서를 처음부터 읽는 게 아니라 상위 index → 필요한 하위 문서 → 관련 코드 순으로 스스로 파고들게 한다.
+코드에 이미 드러난 내용을 다시 설명하기보다는 설계 의도, 제약, 컴포넌트 간 관계, 무엇을 건드려야 하는지 를 적는 게 중요하다.
+결국 OpenWiki는 그냥 “문서를 생성”하는 게 아니라 코드베이스 위에 Agent가 탐색할 수 있는 지식 지도(knowledge map)를 만드는 것 에 가깝다.
+그래서 네가 영상 제목 보고 생각한 “AI가 잘 이해하도록 문서를 쓰는 새로운 작성법” 이라는 이해가 맞아. OpenWiki 자체가 그 방법을 실제 repo 문서화 시스템으로 구현한 사례고.
+원하면 내가 이 영상 내용 자체를 처음부터 끝까지 기준으로
+① 영상 핵심 주장 → ② 기존 README/CLAUDE.md와 차이 → ③ OpenWiki 실제 구조 → ④ AI 문서를 잘 쓰는 규칙 10개 → ⑤ A-COP에 그대로 적용하면 어떤 폴더/문서 구조가 되는지
+순서로 다시 제대로 분석해줄게.
+나의 말:
+[00:00:00] thank you everybody for coming Um like Sean said I'm going to be talking about uh our project OpenWiki Uh
+[00:00:06] how we built it kind of the ideas behind it how it works uh and where we're going next with
+[00:00:11] it So what is OpenWiki OpenWiki is a CLI that you can use to generate and maintain your uh repo
+[00:00:18] documentation uh built specifically for agents to consume Um and that that's a key theme of open wiki Uh and
+[00:00:25] I'll talk about this a little bit more later Um but to start talk like why we built it So
+[00:00:30] Harris a couple weeks ago our CEO uh he asked you know what is the next big thing in the
+[00:00:35] AI space right last year it was openclaw I'm not trying to claim a wiki is open claw obviously it's
+[00:00:40] a little bit of a different audience but he was saying you know if if openclaw or or or personal
+[00:00:44] agents was the big theme uh uh last year what's the big theme for this year or or or right
+[00:00:50] now Uh and my answer to that was general purpose memory I I think memory has been you know kind
+[00:00:54] of a frontier research area of agents for the last four years three and a half years Um but I
+[00:01:02] don't think anybody's really done them very well in a general purpose way yet Uh so I think you know
+[00:01:06] general purpose memory is the next big thing that will actually work Uh we decided to start with codebased docs
+[00:01:13] because that's a well- definfined area where you can still build or where we believe we can build a general
+[00:01:17] purpose you know for any type of codebase uh memory solution for that uh and then eventually expand that into
+[00:01:22] more memory areas So why why we build this We think it's finally possible uh now with you know modern
+[00:01:28] LLMs and uh agent architectures So what is our thesis right The first is it's built for agents So a
+[00:01:35] lot of these uh uh memory or documentation uh um agents or sites for repos are built for both agents
+[00:01:43] and humans Uh but that changes a lot of the structure in and how you need to present the content
+[00:01:47] how you generate and maintain the content Uh and our thesis is that you know people use agents for everything
+[00:01:52] nowadays You're probably not writing a ton of code manually anymore Your agents probably doing a lot of that which
+[00:01:57] means these docs should be built specifically for agents to consume and that changes how you know these docs should
+[00:02:02] be generated and structured Uh the second right this is a developer tool so it needs to be trivial to
+[00:02:06] set up Uh we decided to go with a CLI for this because that's really easy for people to install
+[00:02:10] Uh and then a very easy onboarding right These developers if you want them to try your stuff they need
+[00:02:14] to be really easy to set up Uh so we thought a CLI with an easy onboarding is the best
+[00:02:18] way to do that and then updating itself So you can generate you know wiki or documentation for a codebase
+[00:02:24] repo by telling cloud code to do it and it'll do a pretty good job at that but keeping your
+[00:02:28] docs up to date automatically and maintaining those docs is a much trickier problem Uh so this needed to be
+[00:02:34] able to handle the memory or wiki updates automatically without you needing to do any extra work So our three
+[00:02:40] things here were build the docs specifically for agents to consume make it incredibly easy to get set up and
+[00:02:45] running Uh and then make sure they can update themselves automatically without you needing to do anything after that So
+[00:02:53] the first part right building docs for agents not humans Uh what does this actually change Well if you're building
+[00:02:58] docs for humans you're probably going to have to tell a story right You're going to have an a quick
+[00:03:03] start with you know background on the repo Um your all your doc pages will need to flow right You
+[00:03:09] can't just have uh you know isolated snippets here and there You're probably going to have screenshots maybe videos Um
+[00:03:16] and and all of this is great for humans to consume but not very optimized for agents to consume So
+[00:03:22] if you build it for agents right your agents are going to retrieve fragments probably not the entire docs uh
+[00:03:27] uh page itself or definitely not entire you know directories or or folders within your docs page Uh you know
+[00:03:33] every concept needs to be self-contained because they're going to be pulling snippets uh you need to have predictable precise
+[00:03:39] uh and accurate headings for for filtering and for searching Um and then you need to make sure everything's optimized
+[00:03:44] to fit in the context window So you don't want to have you know some random B 64 string which
+[00:03:48] gets included in the agents uh tool call that adds 50,000 tokens So uh thinking about how to generate these
+[00:03:54] docs how to structure them is very different depending on who your audience is Uh and because we think agents
+[00:03:59] are mean the ones writing or not because because agents are writing all the code for us nowadays Uh the
+[00:04:05] doc should be tailored specifically for agents Uh getting it set up right this needs to be really easy So
+[00:04:10] like I said before we went the CLI The CLI is is very easy to set up right I'm sure
+[00:04:14] everyone here has used CLI or uses them every day You know it's one command to install just through npm
+[00:04:19] and then one command to initialize your your your wiki Uh you run open wiki init It steps you through
+[00:04:24] setting your API keys uh you know configuring your model your your your wiki brief which is like a prompt
+[00:04:29] about you know how to how it should navigate your repo uh and then it automatically starts generating the wiki
+[00:04:35] and it writes a bunch of files for you like your agents.mmd or it'll modify that if you already have
+[00:04:39] one and that's what tells the agent to consult the wiki uh it'll write a github actions file which will
+[00:04:45] automatically update your wiki going forward um so all of this needs to be really easy or else a lot
+[00:04:50] of developers will churn uh so yeah like I said before we thought a CLI with a very concise onboarding
+[00:04:55] that automatically writes docs and writes all the other files you need to use this wiki was the easiest way
+[00:05:00] to do that Okay so what does it actually write Uh if anybody has seen Carpathy's LLM wiki it'll look
+[00:05:07] very similar to that It's just a bunch of markdown files that have a specific structure uh and then links
+[00:05:12] between them So open wiki will always have a quick start.mmd which is what we prompt the agent to look
+[00:05:17] at to get a highle uh idea of the repo and the other docs content in the wiki uh and
+[00:05:24] then it just breaks up docs into uh you know different directories which it sees uh or which it deems
+[00:05:29] necessary So we don't provide tons of guidance on like what directories to write what types of of topics or
+[00:05:35] concepts concepts to document We want to leave that all up to the agent Instead you know we give it
+[00:05:39] some guidance on you know roughly how many files to write the size of each file uh like we want
+[00:05:44] you know every uh uh you know file to have a very specific topic it's focused on And that way
+[00:05:49] agents don't need to get you know uh uh context from multiple different areas when they're reading individual files Um
+[00:05:55] and then OKF which is Google's open knowledge format Uh we we we adopted that and that adds a uh
+[00:06:01] deterministic front matter a YAML front matter to every uh markdown file which has you know type title description and
+[00:06:07] I'll get into this a little bit later Uh an index file which gives you an index of all the
+[00:06:10] files in that directory So your agent can very quickly you know get a high level look at what is
+[00:06:14] in a given directory um and a log file which is like a change log This I actually think is
+[00:06:20] very important for agents so it can look at the history of the wiki but also for humans right like
+[00:06:24] we don't need humans to read the wiki but these wikies are getting checked into your codebase and you probably
+[00:06:30] want to read what is changing every time your wiki updates so the log MD you can think of as
+[00:06:35] like a change log and for this you know we tell people look at your your change log that's way
+[00:06:40] how you can see what changed in your wiki and then if you want to dive deeper and look at
+[00:06:43] individual files that are changed go from there but but you shouldn't really need to unless you want to read
+[00:06:48] you know individual ual uh uh piece of context from the wiki The change log should give you everything you
+[00:06:52] need to understand what changed in the most recent wiki update Great So before I mentioned OKF this is Google's
+[00:06:59] open knowledge format It says 0.1 here but they just released O.2 which we're going to uh you know add
+[00:07:05] support for in the next day or so Uh but what is OKF Uh OKF is a very simple spec
+[00:07:10] Essentially all it is is a specific front matter which you add to the top of all of your markdown
+[00:07:15] files You can see what it looks like here We have type title description resource tags and timestamp Uh and
+[00:07:22] then there's also a uh uh you can add arbitrary fields as well for specific concepts or tags you might
+[00:07:28] want to add Uh but these are the main ones which are defined by the OKF spec Um and this
+[00:07:33] will allow us to do a lot of interesting things around you retrieval and filtering and searching in the repo
+[00:07:39] because we have types we can filter on right So you can say give me you know every archite every
+[00:07:44] architecture doc or there's the tags field So you can filter on tags Um so adding this very small section
+[00:07:50] to the top of every wiki doc actually compounds a lot uh when it comes to retrieval which is arguably
+[00:07:57] a bigger challenge than wiki or doc generation Right So like generating docs is fairly easy with agents Uh retrieving
+[00:08:03] from these docs is a lot more difficult Uh and OKF allows us to to do that easier because it
+[00:08:08] gives us all these deterministic fields we can very quickly pull from uh to use in filtering or searching Uh
+[00:08:14] and then links between docs is a big thing So OKF uh you know you can have the these uh
+[00:08:18] resource tags which can link to like individual files in your codebase but then also markdown links between docs So
+[00:08:23] your agent can pull a snippet from doc A see it's linked you know it references something in doc B
+[00:08:29] and very quickly visit that other doc it references uh through these markdown links Now the markdown links obviously are
+[00:08:34] not specific to OKF but OKF provides a big or uh uh you know has a big emphasis on these
+[00:08:39] docs to cross-link pages and that way your agent can very quickly discover context which is related to the context
+[00:08:44] that it's reading Great So I've talked about what open wiki is Now does it actually do anything Um so
+[00:08:52] we're still very early in our like eval process for this Uh right now we're just pulling from deep suite
+[00:08:57] which is a uh you know coding agent uh benchmark um and running a subset of those tasks on uh
+[00:09:03] or the subset of tasks without open wiki So just plain deep deep suite tasks and then generating a wiki
+[00:09:09] for those tasks and rerunning it Uh and what do we see so far Um there's a few stats So
+[00:09:14] it's essentially all around uh more concise agent usage right So fewer tool calls fewer searches uh fewer outputs uh
+[00:09:22] while still yielding the same or better results So I don't have it here but uh in in these 20
+[00:09:27] tasks we would we were usually seeing about seven or eight success uh successful tasks without open wiki and then
+[00:09:34] nine or 10 with open wiki So it's very slightly better but as you can see there's a significant uh
+[00:09:39] uh drop in token consumption which is the big thing here right These docs should provide better context for your
+[00:09:44] agent so that your agent can more efficiently navigate your codebase and uh implement changes So this is still very
+[00:09:51] early We're going to be publishing a lot more on benchmarks soon But you know initially from this these deep
+[00:09:55] suite tasks it is looking somewhat promising All right So that's what we've done so far What do we get
+[00:10:00] wrong The first is that only agents would read it Um I went into this thinking you know I only
+[00:10:06] use agents to write code So I'm going to build this for agents to consume very quickly we got a
+[00:10:11] lot of feedback from people saying I want to read these docs as well which in hindsight makes sense you
+[00:10:16] know like like humans are still in the picture for engineering so these humans want to read the code as
+[00:10:20] well um so before it was you designed purely for agents we ended up having to make a few modifications
+[00:10:25] so that it could be a little bit more friendly for humans um and what does this mean right it
+[00:10:31] essentially means diagrams this is a big thing for humans to consume it so like before it was already all
+[00:10:37] marked down which is natural language which you can very easily read Uh but a big change this is adding
+[00:10:41] diagrams which we didn't add initially because it's you know seems less important for agents right they can just read
+[00:10:47] the text and consume that after adding the diagrams I I I don't have like eval proving that they're better
+[00:10:52] or worse for the agent but I think it kind of makes sense these diagrams could also help the agent
+[00:10:55] uh but more importantly they help the user a lot by uh you know showing sequences or or state diagrams
+[00:11:00] or flowcharts Um it's not very hard for the agents to generate these You could argue maybe it helps the
+[00:11:05] agent as well because they can generate them which means they can also consume them Uh but the main thing
+[00:11:09] here is is it helps humans consume these docs uh a lot easier than when it's just plain text Um
+[00:11:15] so that's one thing where you we went in thinking only agents are going to read these Very quickly we
+[00:11:20] found out people want to read these as well All right So now I'm going to talk a little bit
+[00:11:25] about how the open wiki CLI actually works It's very simple We have two commands So open wiki init and
+[00:11:31] update which we'll talk about later Ait is the first one you'll run when you're setting up your repo So
+[00:11:35] this initializes your repo We have a setup wizard right So you'll set your uh you know API keys you'll
+[00:11:40] pick your model um you'll set your instructions which is essentially a high level prompt you know telling the uh
+[00:11:46] CLI agent you some more specifics about your repo It's not the only prompt for generating uh the wiki but
+[00:11:52] it's some extra context uh that you can provide to your agent So setup wizard very simple you know LLM
+[00:11:57] keys model uh uh uh agent config Um we will then automatically write these files for you like I said
+[00:12:04] before So there's a git of actions workflow This is what's going to automatically keep your wiki up to date
+[00:12:08] by running a cron daily and then you know updating your wiki based on any changes to your codebase Uh
+[00:12:12] it'll modify your agents.mmd or claw.md or both if they're there Uh this essentially just injects a little piece of
+[00:12:18] context uh telling the agent about open wiki You know what it is how it can access it and when
+[00:12:23] it should should reference it Um right now this is this is the only way agents are made aware of
+[00:12:28] of open wiki Uh I'll talk about some changes we're going to add later but you know automatically updates or
+[00:12:33] writes to your agent agents MD uh and then it sets a chron right so in this git action to
+[00:12:38] run daily uh to automatically keep your wiki up to date uh and then as soon as you accept these
+[00:12:42] files and merge them right there's a cron in a github action uh and then you can kind of forget
+[00:12:46] about wiki and it just continuously updates the wiki uh every day based on new changes your agent is already
+[00:12:51] made aware of it and then you don't really need to think about it and you just get these efficiency
+[00:12:54] gains without having to do anything else So after you configure your agent uh set the repo scaffolding it runs
+[00:13:01] the actual agent right So this looks at the repo it it writes a plan it looks at the git
+[00:13:05] history This is a pretty big thing right We don't want it to just read the code that's in the
+[00:13:10] repo right now but also the git history So we can see how things have changed and progressed throughout the
+[00:13:14] repo Uh you can look at you know get comments get titles as well Um so yeah this is a
+[00:13:19] big thing where we don't want it to just read the current snapshot of the repo but also go deeper
+[00:13:24] into the history of changes made to that repo Uh and then it writes the actual docs And at the
+[00:13:29] end we have a deterministic pass which runs over all your docs make sure they're all OKF compliant It automatically
+[00:13:34] writes your index.mmd uh and your change log and then we have the agent you know add the specifics about
+[00:13:41] what it changed later on Um and then it updates a few other metadata files uh at the end of
+[00:13:46] the agent run So that's the init run This is what what you run when you first onboard into open
+[00:13:51] wiki in your repo The next is update This is very similar So you have the scheduled run right that
+[00:13:56] that we run in the github action uh which open wiki and it will write for you Uh this will
+[00:14:01] run open wiki update The first thing it does is it looks at the git history So if there hasn't
+[00:14:06] been any changes since it last ran and we track these changes uh in this last update.json file uh then
+[00:14:12] we don't run open wiki Right If you haven't made any changes we don't need to update the repo If
+[00:14:16] there are changes then we run the agent and we look at the git log We fetch every commit uh
+[00:14:21] that has been merged since your agent last ran So by default we we run this once a day If
+[00:14:27] you're checking in 2,000 commits to your repo every day you might want to update that uh you know recurring
+[00:14:32] action to run every 4 hours or 6 hours or 8 hours Um so it looks at the git history
+[00:14:37] uh updates your repo based on what has changed and then opens a PR for you and you just get
+[00:14:42] to merge that and then you have your wiki uh up to date So where does it stand today Uh
+[00:14:50] you know it's an open source repo So a bunch of stars on GitHub Uh a lot of forks where
+[00:14:54] people are taking this forking it and modifying it for their own use or you're just using it on npm
+[00:14:59] Uh and it's MIT license right So you can use this you can install it on npm Uh you can
+[00:15:03] use any provider that that that you want We support like 10 or 15 different providers Um or you can
+[00:15:10] fork it modify it for your specific use case and use it in your repo Um we thought you know
+[00:15:15] this should be an open source project uh um because that's you know one way to get great adoption because
+[00:15:20] developers love open source but then it also means you can customize this for your own usage and that that's
+[00:15:24] a big thing in agent docs right where we build in a very general way but if you have specific
+[00:15:29] workflows or uh reasons to use your agent or or sorry open wiki uh you probably want to fork it
+[00:15:34] and make those modifications directly So what's next Uh obviously better prompting right So we've started to invest more in
+[00:15:41] eval those deep suite evals Uh better prompting uh for it to analyze larger repos um uh and update itself
+[00:15:48] as well And then search and retrieval tools So like I said before right now we write in agents.mmd andor
+[00:15:53] cloud.mmd telling the agent about open wiki Um but this is obviously not the end state right Like like that's
+[00:16:01] great and you know agents will ingest this but giving it dedicated tools for searching and filtering and you know
+[00:16:07] querying the wiki uh is a clear next step and and we've already seen gains from that in some of
+[00:16:11] the emails we've been running that are not merged So better prompting of course and uh more specific retrieval tools
+[00:16:17] uh for your wiki is is what we're we're going to come out with soon Um and yeah that's it
+[00:16:22] So try it out on your worst documentary repo Uh the QR code just brings you to the the GitHub
+[00:16:27] repo Um and you can also install it with npm install open wiki
+ㅡㅡ 이게 내용이야
+ChatGPT의 말:
+응. 이제 정확히 알겠어. 네가 물은 “OpenWiki의 AI를 위한 문서 작성법”은 이 발표 내용 기준으로 봐야 해.
+그리고 내가 앞에서 설명한 것 중 일부는 방향은 맞았지만, 발표자가 실제로 강조한 포인트보다 내가 Invariant / Decision / Architecture 문서법 쪽으로 확장해서 설명한 부분이 많았어.
+이 발표의 핵심은 훨씬 명확해.
+핵심부터
+OpenWiki가 말하는 Agent용 문서 작성법 은 크게 7가지야.
+문서는 처음부터 사람이 아니라 Agent의 retrieval을 기준으로 작성한다.
+각 문서/개념은 다른 문맥 없이도 이해되는 self-contained 형태여야 한다.
+heading은 예측 가능하고 정확해야 한다.
+한 파일은 하나의 명확한 topic만 다룬다.
+긴 문서를 읽게 하지 말고 quickstart → index → 개별 문서 로 탐색하게 한다.
+YAML metadata + 문서 간 link를 이용해 retrieval 비용을 낮춘다.
+Git history를 보고 문서를 자동으로 계속 최신화한다.
+즉 이 발표에서 가장 중요한 문장은 사실 이거야.
+“Agents are going to retrieve fragments, probably not the entire docs page.”
+Agent는 문서를 처음부터 끝까지 읽는 독자 가 아니라
+필요한 순간에 조각을 검색해서 가져가는 retrieval system의 사용자 라는 거야.
+1. 인간용 문서와 Agent용 문서의 차이
+발표자가 2:53부터 아주 명확하게 나눠.
+인간용
+사람에게 문서를 쓴다면 보통:
+배경 설명
+↓
+왜 이 프로젝트가 만들어졌는지
+↓
+Quick Start
+↓
+Architecture 설명
+↓
+예제
+↓
+스크린샷 / 영상
+처럼 스토리 가 필요해.
+각 문단이 앞 문단을 전제로 해도 상관없어.
+예를 들어:
+Markdown
+앞서 살펴본 Controller는 이러한 문제를 해결한다.
+이 과정에서 앞서 설명한 State Layer를 이용하며...
+사람은 앞에서부터 읽었으니까 이해돼.
+Agent용
+Agent는 그렇게 안 읽을 가능성이 높다는 거지.
+예를 들어 질문이:
+Case retry 처리가 어디 있어?
+라면 Agent가 retrieval로:
+wiki/controller/retry.md
+의 30~80줄
+만 가져갈 수 있어.
+그러면 문서가:
+Markdown
+앞에서 설명했듯이 이 경우에는 동일한 방법을 사용한다.
+라고 되어 있으면 끝이야.
+“앞에서”가 context 안에 없으니까.
+그래서 OpenWiki가 강조하는 게:
+Every concept needs to be self-contained.
+이거야.
+2. Self-contained가 제일 중요한 작성 규칙
+예를 들어 나쁜 문서가:
+Markdown
+## Retry
+앞서 설명한 상태 관리 방식에 따라
+충돌이 발생하면 다시 실행한다.
+Agent가 이 부분만 retrieval하면:
+어떤 상태 관리 방식?
+무슨 충돌?
+무엇을 다시 실행?
+이 돼버림.
+Agent용으로 쓰면 차라리:
+Markdown
+## Case Retry After State Conflict
+When an Agent Team fails to update a Case because
+the Shared State version has changed,
+the Agentic Controller reloads the latest Case State
+and retries or replans the Team execution.
+처럼 이 조각 하나만 가져가도 의미가 완성돼야 해.
+중요한 차이지.
+즉 Agent 문서는:
+문서 전체 coherence
+보다
+fragment-level coherence
+가 더 중요해.
+3. Heading도 그냥 예쁘게 쓰면 안 된다
+발표에서:
+predictable, precise and accurate headings for filtering and searching
+이라고 말해.
+사람용 문서에서는:
+Markdown
+## What's going on under the hood?
+이런 제목도 괜찮아.
+사람이 읽으면 자연스럽지.
+그런데 retrieval 입장에서는 별로야.
+검색어가:
+state conflict retry
+라면 제목이:
+What's going on under the hood?
+이니 검색성이 떨어지잖아.
+Agent용이면:
+Markdown
+## Shared State Conflict Retry
+또는
+Markdown
+## Retry Behavior After Optimistic Concurrency Conflict
+처럼 쓰는 게 낫다는 거야.
+정리하면
+사람용 heading
+"Under the Hood"
+Agent용 heading
+"Agent Team Routing Logic"
+Agent 문서는 문학적인 제목보다 lexical predictability 가 중요하다.
+4. 한 파일 = 하나의 구체적인 Topic
+여기가 내가 이전 답변에서 설명했던 것과 실제 발표가 정확히 맞닿는 부분이야.
+발표자가 OpenWiki에 직접 주는 guidance가:
+roughly how many files to write
+size of each file
+every file to have a very specific topic
+정도라고 해.
+즉 OpenWiki가:
+architecture/
+controller/
+database/
+같은 디렉터리 구조를 강제로 지정하는 것도 아니야.
+Agent가 repository를 분석해서 알아서 결정하게 한다.
+대신 제약을 준다.
+파일 너무 크게 만들지 마라.
+한 파일에는 하나의 명확한 topic을 넣어라.
+예를 들면:
+별로인 방식
+architecture.md
+- Authentication
+- Message Broker
+- Controller
+- Database
+- Deployment
+- Retry
+- Logging
+더 좋은 방식
+architecture/
+├ controller-routing.md
+├ shared-state.md
+├ conflict-retry.md
+├ message-delivery.md
+└ human-approval.md
+이렇게 되는 이유가 중요한데,
+Agent가:
+conflict retry
+를 알고 싶을 때
+100KB짜리 architecture.md 를 가져올 필요 없이:
+conflict-retry.md
+하나를 가져오면 되니까.
+5. Context Window 최적화도 문서 설계의 일부다
+발표자가 재밌는 예를 하나 들어.
+random B64 string이 tool call에 들어가서 50,000 token을 차지하면 안 된다.
+즉 Agent용 documentation에서는:
+정보량 = 많을수록 좋음
+이 아니라:
+필요한 정보 / token
+효율이 중요해.
+예를 들어 이런 걸 문서에 넣는 건 좋지 않은 거지.
+Markdown
+## Example Image
+data:image/png;base64,iVBORw0KGgoAAAAAA...
+Agent가 검색 결과로 이 부분을 먹으면 token 낭비가 엄청 커진다.
+그래서 OpenWiki의 목적 중 하나가:
+같은 작업 성공률
+또는 더 높은 성공률
++
+더 적은
+tool calls
+searches
+outputs
+tokens
+이거야.
+6. 그래서 OpenWiki의 목표는 “더 똑똑하게 만들기”만은 아니다
+이 발표에서 benchmark 결과가 꽤 흥미로워.
+20개 정도의 SWE 계열 작업에서 대략:
+OpenWiki 없음
+7~8개 성공
+OpenWiki 있음
+9~10개 성공
+정도로 조금 좋아졌다고 해.
+발표자도 이걸 엄청난 성능 향상이라고 주장하지 않아.
+오히려 강조하는 건:
+significant drop in token consumption
+이야.
+즉 OpenWiki의 진짜 목적은:
+Agent가 코드를 더 잘 짠다
+라기보다:
+Agent가 코드베이스를 이해하기 위해
+쓸데없이 grep하고,
+파일 열고,
+검색하고,
+다시 읽는 과정을 줄인다.
+에 더 가까워.
+예를 들어 기존 Coding Agent:
+Task
+↓
+grep
+↓
+file open
+↓
+grep
+↓
+another file
+↓
+git search
+↓
+directory listing
+↓
+source read
+↓
+source read
+↓
+implementation
+OpenWiki가 있으면:
+Task
+↓
+Quick Start
+↓
+Index
+↓
+Relevant Wiki
+↓
+Relevant source
+↓
+implementation
+이걸 목표로 한다는 거야.
+7. quickstart.md 의 역할
+이것도 발표에 정확히 나온다.
+OpenWiki에는 항상:
+quickstart.md
+가 있다.
+이걸 Agent에게 가장 먼저 읽게 한다.
+역할은:
+이 repo는 무엇인가
++
+wiki에 어떤 종류의 정보가 있는가
++
+어디로 들어가면 되는가
+정도의 최상위 지도 야.
+예를 들면 네 A-COP을 OpenWiki 스타일로 만들었다고 치면:
+Markdown
+# A-COP Quick Start
+A-COP is an Agentic AI customer operations platform.
+Core areas:
+- Case Runtime
+- Agentic Controller
+- Agent Team Modules
+- Shared State
+- Context Broker
+- Action Platform
+For Case lifecycle:
+→ runtime/
+For Agent Team interfaces:
+→ teams/
+For external business actions:
+→ tools/
+Agent가 먼저 이것만 읽어도:
+아 이 repo가 어떤 식으로 생겼구나.
+를 알게 되는 거지.
+8. 그 다음이 index.md
+각 directory마다:
+index.md
+가 있어.
+예:
+wiki/
+├ quickstart.md
+├ runtime/
+│ ├ index.md
+│ ├ controller.md
+│ ├ shared-state.md
+│ └ retry.md
+runtime/index.md :
+Markdown
+# Runtime
+This directory documents the Case execution runtime.
+- controller.md
+Case routing and execution lifecycle
+- shared-state.md
+Canonical Case state
+- retry.md
+Conflict detection and retry behavior
+Agent는 runtime/ 전체를 읽을 필요가 없어.
+index.md
+하나 보고:
+retry가 필요하네.
+해서 바로:
+retry.md
+로 간다.
+9. 이게 일종의 Hierarchical Retrieval이다
+영상에서는 이 단어를 직접 강조하진 않지만 구조적으로는 거의 이거야.
+AGENTS.md
+↓
+quickstart.md
+↓
+directory/index.md
+↓
+specific-topic.md
+↓
+linked-topic.md
+↓
+source code
+검색 범위를 점점 좁혀나감.
+굉장히 중요한 이유가 있어.
+일반적인 Vector RAG라면:
+query
+↓
+embedding
+↓
+top-k chunks
+인데,
+OpenWiki는:
+task
+↓
+knowledge hierarchy navigation
+↓
+metadata filtering
+↓
+links
+↓
+relevant fragment
+라는 경로도 사용할 수 있는 거야.
+10. OKF는 여기서 “검색하기 좋은 Markdown”을 만든다
+발표에 나온 YAML이 이거지.
+대략:
+YAML
+---
+type: architecture
+title: Agentic Controller
+description: Controls Case routing and execution lifecycle
+resource:
+tags:
+- runtime
+- orchestration
+timestamp:
+---
+중요한 건 LLM이 Markdown을 더 잘 읽으라고 넣은 게 아니야.
+Retrieval system이 deterministic하게 쓸 수 있기 때문이야.
+예를 들어:
+type = architecture
+만 조회하거나,
+tags includes "routing"
+을 찾거나,
+description contains "case lifecycle"
+로 좁힐 수 있어.
+발표자가 아주 중요한 얘기를 하지.
+generating docs is fairly easy with agents
+retrieving from these docs is a lot more difficult
+즉:
+어려운 문제
+문서 생성
+⭐⭐
+보다
+올바른 문서를
+올바른 순간에
+적은 token으로 가져오는 것
+⭐⭐⭐⭐⭐
+이라고 보는 거야.
+이게 이 발표에서 상당히 중요한 관찰이야.
+11. 문서 간 Link도 Retrieval 장치다
+예:
+Markdown
+The Case version is managed by
+[Shared State](../state/shared-state.md).
+Agent가 Controller 문서 조각을 가져왔는데:
+Shared State
+가 링크돼 있다.
+그러면 Agent가:
+아 이 부분도 필요한데?
+하고 바로 follow할 수 있다.
+그래서 구조가:
+Controller
+│
+├── Shared State
+│ │
+│ └── Conflict Handling
+│
+└── Team Registry
+처럼 문서가 graph 형태 가 된다.
+그래서 아까 내가 말했던 Knowledge Graph적인 특성은 틀린 이야기는 아니지만,
+이 발표에서 핵심은 별도 Graph DB를 만든다는 뜻이 아니라:
+Markdown links 자체를 Agent의 context discovery 수단으로 사용한다.
+라는 쪽이 정확해.
+12. resource 는 실제 코드와 연결한다
+영상에서 OKF field 중:
+resource
+도 언급하지.
+이걸 이용하면 Wiki가 단순한 설명 문서로 끝나는 게 아니라:
+Wiki concept
+↓
+실제 repo resource
+로 연결될 수 있어.
+개념적으로:
+YAML
+resource:
+- src/runtime/controller.py
+- src/runtime/state.py
+같은 식.
+그러면 Agent 입장에서:
+설명
+↓
+실제 구현
+을 따라가기 쉬워져.
+13. AGENTS.md / CLAUDE.md 의 역할도 정확하게 보면 이거다
+OpenWiki init가:
+AGENTS.md
+CLAUDE.md
+를 수정한다.
+하지만 Wiki 내용을 때려 넣는 게 아니다.
+Agent에게:
+OpenWiki가 존재한다.
+어디에 있다.
+언제 참고해야 한다.
+만 알려준다.
+즉:
+AGENTS.md
+=
+OpenWiki advertisement / routing instruction
+정도로 보면 돼.
+예:
+Markdown
+Repository knowledge is maintained in `.openwiki/`.
+Before performing significant repository changes,
+consult `.openwiki/quickstart.md` and relevant wiki pages.
+그리고 Coding Agent가 알아서 Wiki를 찾아간다.
+14. OpenWiki의 정말 중요한 부분은 자동 업데이트다
+발표자가 말했듯이:
+Claude Code에게 문서 만들어달라고 하면 이미 잘 만든다.
+그러니까 문서 생성 자체가 OpenWiki의 기술적 핵심은 아니다.
+진짜 골치 아픈 게:
+오늘 코드 바꿈
+↓
+문서는 옛날 내용
+↓
+AI가 오래된 문서를 믿음
+↓
+오히려 coding agent 성능 악화
+이 문제야.
+그래서 OpenWiki는 Git history를 이용해 업데이트한다.
+15. Init 과정
+발표 내용을 그대로 구조화하면:
+openwiki init
+↓
+Setup Wizard
+- API Key
+- Model
+- Wiki brief / instructions
+↓
+Repository analysis
+↓
+Git history analysis
+↓
+Documentation plan
+↓
+Wiki generation
+↓
+Deterministic validation
+- OKF frontmatter
+- index.md
+- log.md
+↓
+AGENTS.md / CLAUDE.md 수정
+↓
+GitHub Action 생성
+특히:
+현재 코드만 보는 게 아니라 Git history를 본다.
+라는 게 중요해.
+16. 왜 Git History까지 보느냐
+예를 들어 현재 코드는:
+Python
+실행됨
+broker = InMemoryBroker ()
+만 보여.
+Agent가 보면:
+그냥 대충 만든 건가?
+라고 생각할 수도 있어.
+그런데 Git history에:
+commit:
+"Replace Redis with in-process broker for MVP"
+commit:
+"Introduce MessageBusPort for future broker migration"
+이 있으면:
+아.
+현재 InMemory인 건 우연이 아니라
+의도적인 architecture transition이구나.
+를 파악할 수 있어.
+즉 Git history는 일종의:
+implicit design history
+인 셈이야.
+17. Update 과정은 더 재밌다
+openwiki update
+↓
+last_update.json 확인
+↓
+새 commit 있나?
+├─ NO → 종료
+│
+└─ YES
+↓
+지난 update 이후 Git commits 수집
+↓
+변경된 코드 / 의미 파악
+↓
+관련 wiki 문서 수정
+↓
+log.md 갱신
+↓
+PR 생성
+즉 Wiki를 매번 다시 생성하는 게 아니라:
+delta
+를 기반으로 업데이트하는 방식이야.
+18. 그래서 log.md 가 필요하다
+발표자가 이건 Agent에게도, 사람에게도 꽤 중요하다 고 직접 말해.
+사람이 OpenWiki 전체를 읽을 필요가 없고:
+log.md
+만 보면:
+이번 Wiki update에서 뭐가 바뀌었지?
+를 알 수 있게 한다.
+예:
+Markdown
+# Wiki Change Log
+## 2026-08-17
+Updated:
+- Agentic Controller routing
+- Shared State version handling
+Added:
+- Conflict Retry behavior
+Removed:
+- Legacy direct Team invocation
+사람은 여기 보고:
+오, 이 문서 변화는 적절하네.
+하면 되고,
+필요하면 그때 개별 Wiki를 보는 거야.
+19. 의외로 발표자가 틀렸다고 인정한 것
+이 부분도 중요해.
+처음 thesis:
+Only agents will read it.
+그런데 사용자들이:
+나도 그 문서 보고 싶은데?
+라고 한 거지.
+그래서 OpenWiki에서 인간용 요소도 추가한다.
+대표적인 게:
+Diagram
+이야.
+Agent에게
+Markdown text만 있어도 충분할 가능성이 큼.
+사람에게
+Sequence Diagram
+State Diagram
+Flowchart
+가 있으면 압도적으로 이해가 쉬움.
+그래서 최종 방향은 사실:
+Agent-first, not Agent-only
+라고 보는 게 정확해.
+20. 이 발표를 제대로 한 문장으로 요약하면
+“AI에게 좋은 문서”란 AI가 잘 읽을 수 있는 글이 아니라, AI가 필요한 지식 조각을 빠르고 싸게 발견할 수 있도록 구조화된 지식 저장소다.
+이 차이가 핵심이야.
+21. 그래서 일반적인 “AI가 이해하기 쉽게 써주세요”와도 다르다
+많이들 이렇게 생각하잖아.
+AI용 문서
+= 자세하게 작성
+= 구조화해서 작성
+= 표 많이 사용
+= 설명 많이 작성
+OpenWiki는 오히려 조금 다르게 말해.
+AI용 문서
+= 검색될 수 있게 작성
++ fragment 단독으로 이해 가능
++ predictable heading
++ atomic topic
++ deterministic metadata
++ cross links
++ context-efficient
++ automatically fresh
+이게 더 정확해.
+22. 네가 AI 프로젝트 문서를 쓸 때 바로 적용한다면
+예를 들어 이런 문서는 별로야.
+Markdown
+# A-COP Architecture
+A-COP 설명...
+## Runtime
+...
+## Controller
+...
+## Shared State
+...
+## Broker
+...
+## Agent Teams
+...
+## Retry
+...
+사람에게는 훌륭한 보고서일 수 있어.
+하지만 Coding Agent용 repository knowledge라면:
+wiki/
+quickstart.md
+runtime/
+├ index.md
+├ case-lifecycle.md
+├ agentic-controller.md
+├ shared-state.md
+└ conflict-retry.md
+teams/
+├ index.md
+├ team-contract.md
+├ team-registry.md
+└ remote-team-execution.md
+context/
+├ index.md
+├ context-broker.md
+└ rag-orchestration.md
+actions/
+├ index.md
+├ tool-gateway.md
+├ authorization.md
+└ idempotency.md
+가 더 맞아.
+그리고 각 문서는 10페이지짜리 설명서가 아니라:
+하나의 topic
++
+명확한 heading
++
+독립적으로 이해 가능한 설명
++
+관련 source
++
+관련 wiki link
+를 가져야 하는 거지.
+23. 네가 이해해야 할 가장 중요한 3개
+이 발표 전체에서 내가 딱 세 개만 가져가라고 한다면:
+① Self-contained fragments
+Agent가 문서 전체를 읽는다고 가정하지 마라.
+retrieved chunk 하나만 봐도 이해돼야 한다.
+② Retrieval > Generation
+LLM으로 Wiki 생성하는 건 이제 어렵지 않다.
+진짜 문제는:
+10,000개의 문서 중
+지금 필요한 2개를
+어떻게 싸고 정확하게 가져오느냐
+다.
+그래서:
+metadata
+index
+heading
+link
+directory
+가 중요하다.
+③ Documentation = Memory
+OpenWiki 팀은 애초에 documentation 자체를 최종 목표로 보는 게 아니야.
+발표 시작에 말했듯이 그들의 더 큰 thesis는:
+General-purpose memory가 Agent의 다음 중요한 영역이다.
+이고,
+Codebase Wiki는 그걸 실험하기 좋은 첫 번째 domain이라는 거야.
+즉 개념적으로:
+Codebase
+↓
+OpenWiki
+↓
+persistent structured memory
+↓
+Coding Agent
+다.
+그리고 이 관점에서 보면 OpenWiki는 “자동 문서화 CLI”라기보다 Coding Agent용 외부 장기기억 계층의 초기 형태 라고 보는 게 훨씬 정확해.
+ChatGPT는 실수를 할 수 있습니다. 중요한 정보는 재차 확인하세요.
+중간

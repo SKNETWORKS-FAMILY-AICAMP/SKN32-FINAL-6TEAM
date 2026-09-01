@@ -1,8 +1,9 @@
 /* TeamFlow 스프린트 4개 생성 + 에픽 13개 배정
  *
- * 왜 스크립트인가: 개인 API 토큰으로는 스프린트를 만들 수 없다.
- *   POST /api/sprints?projectId=84 → 401 "로그인이 필요합니다" (정상 payload로도 같음).
- *   토큰이 통하는 것은 GET /api/projects 와 /api/issues 의 생성·삭제뿐이다.
+ * 왜 스크립트인가: 관리자가 토큰의 스프린트 관리 권한을 꺼두면 API 로 스프린트를 만들 수 없다.
+ *   꺼진 상태의 POST /api/sprints?projectId=84 는 403 이다(2026-08-28 에는 401 이었다).
+ *   권한을 켜면 토큰으로도 되므로, 이 스크립트는 켤 수 없을 때의 대안이다.
+ *   이슈 쪽은 토큰으로 CRUD 가 모두 된다(2026-08-30 확인). PUT 은 id 를 쿼리스트링에 넣는다.
  *   그래서 로그인한 브라우저 세션에서 실행한다. 이 페이지가 쓰는 API를 그대로 부른다.
  *
  * 쓰는 법
@@ -81,7 +82,8 @@
     const payload = {
       title: iss.title, type: iss.type, priority: iss.priority, status: iss.status,
       assignee: iss.assignee || '', sprint: target, version: iss.version || '',
-      component: iss.component || '', parent: iss.parent || '', due: iss.due || '',
+      component: iss.component || '', parent: iss.parent || '',
+      start: iss.start || '', due: iss.due || '',
       labels: iss.labels || [], points: iss.points || 0, desc: iss.desc || '',
     };
     await api(`/api/issues?id=${encodeURIComponent(iss.id)}&projectId=${PROJECT_ID}`,

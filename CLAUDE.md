@@ -51,6 +51,9 @@
 ## TeamFlow (이슈 트래커)
 
 스프린트와 에픽은 TeamFlow(https://jira-for-me.vercel.app)의 `SKN32_FINAL_TEAM4` 프로젝트에서 관리한다.
+프로젝트 이름은 TEAM4지만 **우리 팀은 6팀이다.** 부트캠프 조직 저장소가
+[`SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM`](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM)인 것으로
+2026-08-31에 확인했다. TeamFlow 쪽 이름이 잘못 붙은 것이며 프로젝트 id 84는 그대로 쓴다.
 API 주소와 토큰과 사용법은 [`.env.teamflow`](.env.teamflow)에 있다. 이 파일은 커밋하지 않으므로
 형식은 [`.env.teamflow.example`](.env.teamflow.example)을 본다.
 

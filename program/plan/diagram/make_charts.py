@@ -205,6 +205,17 @@ def canvas(figsize):
     return fig, ax
 
 
+def elbow(ax, pts, color=DIM, lw=1.3):
+    """직교 꺾은선 화살표. pts 는 꺾이는 지점을 순서대로 담은 (x, y) 목록이고
+    마지막 구간에만 화살촉을 붙인다. 대각선을 쓰지 않아 선끼리 겹쳐 보이지 않는다."""
+    for a, b in zip(pts[:-2], pts[1:-1]):
+        ax.add_patch(FancyArrowPatch(a, b, arrowstyle="-", color=color,
+                                     linewidth=lw, shrinkA=0, shrinkB=0))
+    ax.add_patch(FancyArrowPatch(pts[-2], pts[-1], arrowstyle="-|>",
+                                 mutation_scale=13, color=color, linewidth=lw,
+                                 shrinkA=0, shrinkB=2))
+
+
 # 5. 화면 흐름도 --------------------------------------------------------------
 def chart_screen_flow():
     fig, ax = canvas((9.6, 3.4))
@@ -358,40 +369,69 @@ def chart_dataset_status():
 
 
 def chart_case_states():
-    fig, ax = canvas((10.2, 4.8))
+    # 배치 규칙: 보류 3종을 세로로 쌓고 그 왼쪽에 resuming 을 둔다.
+    # 나가는 선은 스택의 오른쪽, 돌아오는 선은 왼쪽으로만 흐르게 해서 선이 서로 넘지 않는다.
+    fig, ax = canvas((10.2, 6.0))
     w, h = 0.145, 0.10
+    SW = 0.20                      # 보류 상자 너비
+    SX = 0.50                      # 보류 스택 왼쪽 변
+    BUS = 0.77                     # 나가는 선이 내려가는 세로 통로
+    RET = 0.17                     # 돌아오는 선이 올라가는 세로 통로
 
-    main = [("new", 0.02), ("classifying", 0.20), ("routing", 0.38), ("running", 0.56)]
+    # 주 흐름 (가로 한 줄)
+    main = [("new", 0.03), ("classifying", 0.205), ("routing", 0.38), ("running", 0.555)]
     for name, x in main:
-        box(ax, x, 0.47, w, h, name, fc="white", ec=BLUE, fs=9, tc=BLUE, bold=True)
-    for (a, xa), (b, xb) in zip(main, main[1:]):
-        arrow(ax, (xa + w, 0.52), (xb, 0.52))
-    box(ax, 0.80, 0.47, w, h, "resolved", fc="white", ec=GREEN, fs=9, tc=GREEN, bold=True)
-    arrow(ax, (0.56 + w, 0.52), (0.80, 0.52), "처리 완료", off=(0, 0.022))
+        box(ax, x, 0.76, w, h, name, fc="white", ec=BLUE, fs=9, tc=BLUE, bold=True)
+    for (_, xa), (_, xb) in zip(main, main[1:]):
+        arrow(ax, (xa + w, 0.81), (xb, 0.81))
+    box(ax, 0.815, 0.76, w, h, "resolved", fc="white", ec=GREEN, fs=9, tc=GREEN, bold=True)
+    arrow(ax, (0.555 + w, 0.81), (0.815, 0.81), "처리 완료", off=(0, 0.022))
 
-    waits = [("waiting_input", 0.30), ("waiting_approval", 0.50), ("waiting_external", 0.70)]
-    for name, x in waits:
-        box(ax, x, 0.80, 0.19, h, name, fc="#fff8e6", ec=AMBER, fs=8.6, tc=AMBER, bold=True)
-        arrow(ax, (0.632, 0.57), (x + 0.095, 0.80), color=AMBER)
+    # 보류 3종 — 세로로 쌓는다
+    waits = [("waiting_input", 0.48), ("waiting_approval", 0.33), ("waiting_external", 0.18)]
+    for name, y in waits:
+        box(ax, SX, y, SW, h, name, fc="#fff8e6", ec=AMBER, fs=8.6, tc=AMBER, bold=True)
 
-    box(ax, 0.50, 0.19, 0.19, h, "resuming", fc="#fff8e6", ec=AMBER, fs=9, tc=AMBER, bold=True)
-    for name, x in waits:
-        arrow(ax, (x + 0.095, 0.80), (0.595, 0.29), color=AMBER)
-    arrow(ax, (0.50, 0.24), (0.585, 0.47), color=AMBER)
+    # resuming — 스택 왼쪽, 가운데 상자와 같은 높이
+    box(ax, 0.25, 0.33, 0.17, h, "resuming", fc="#fff8e6", ec=AMBER, fs=9, tc=AMBER, bold=True)
 
-    ax.text(0.945, 0.855, "보류 상태", fontsize=9.5, color=AMBER, ha="center", fontweight="bold")
-    ax.text(0.945, 0.815, "고객 정보 대기,\n승인 대기,\n외부 콜백 대기", fontsize=8.4,
-            color=DIM, ha="center", va="top", linespacing=1.6)
-    ax.text(0.30, 0.24, "재개는 resume_token\n검증을 통과해야 한다", fontsize=8.6,
+    # running → 보류 3종. 오른쪽 통로로 내려가 각 상자의 오른쪽 변으로 들어간다.
+    ax.add_patch(FancyArrowPatch((0.66, 0.76), (0.66, 0.72), arrowstyle="-",
+                                 color=AMBER, linewidth=1.3, shrinkA=0, shrinkB=0))
+    ax.add_patch(FancyArrowPatch((0.66, 0.72), (BUS, 0.72), arrowstyle="-",
+                                 color=AMBER, linewidth=1.3, shrinkA=0, shrinkB=0))
+    ax.add_patch(FancyArrowPatch((BUS, 0.72), (BUS, 0.23), arrowstyle="-",
+                                 color=AMBER, linewidth=1.3, shrinkA=0, shrinkB=0))
+    for _, y in waits:
+        elbow(ax, [(BUS, y + h / 2), (SX + SW, y + h / 2)], color=AMBER)
+
+    # 보류 3종 → resuming. 위·오른쪽·아래 세 변으로 나눠 들어가 선이 한곳에 몰리지 않는다.
+    elbow(ax, [(SX, 0.53), (0.46, 0.53), (0.46, 0.47), (0.335, 0.47), (0.335, 0.43)],
+          color=AMBER)
+    elbow(ax, [(SX, 0.38), (0.42, 0.38)], color=AMBER)
+    elbow(ax, [(SX, 0.23), (0.46, 0.23), (0.335, 0.23), (0.335, 0.33)], color=AMBER)
+
+    # resuming → running. 왼쪽 통로로 올라가 running 아래로 들어간다.
+    elbow(ax, [(0.25, 0.38), (RET, 0.38), (RET, 0.66), (0.60, 0.66), (0.60, 0.76)],
+          color=AMBER)
+
+    ax.text(BUS + 0.015, 0.60, "보류", fontsize=8.6, color=AMBER, ha="left", va="center")
+    ax.text(RET + 0.015, 0.50, "재개", fontsize=8.6, color=AMBER, ha="left", va="center")
+
+    ax.text(0.905, 0.53, "보류 상태", fontsize=9.5, color=AMBER, ha="left", fontweight="bold")
+    ax.text(0.905, 0.495, "고객 정보 대기,\n승인 대기,\n외부 콜백 대기", fontsize=8.4,
+            color=DIM, ha="left", va="top", linespacing=1.6)
+    ax.text(0.335, 0.585, "재개는 resume_token\n검증을 통과해야 한다", fontsize=8.6,
             color=DIM, ha="center", va="center", linespacing=1.6)
 
-    box(ax, 0.02, 0.02, 0.96, 0.115,
-        "자동 처리 한계에 걸리면 escalated 로 보내 사람이 받는다.  "
+    # 한 줄로 두면 상자 밖으로 삐져나온다. 두 줄로 끊고 상자를 키운다.
+    box(ax, 0.06, 0.015, 0.88, 0.125,
+        "자동 처리 한계에 걸리면 escalated 로 보내 사람이 받는다.\n"
         "복구 불가는 failed,  취소는 cancelled 다.  "
         "허용된 다음 상태 표를 벗어나는 전이는 거부한다.",
         fc="#f7f9fc", ec=LINE, fs=9.2, tc=INK)
 
-    ax.text(0.5, 0.965, "Case 상태 전이 (12개 상태)", ha="center", fontsize=12.5,
+    ax.text(0.5, 0.955, "Case 상태 전이 (12개 상태)", ha="center", fontsize=12.5,
             color=INK, fontweight="bold")
     finish(fig, "10_case_states.png",
            "출처: A-COP_구현계획서_v8.md 19절. 모든 전이는 case_events 에 추가만 되므로 나중에 그대로 재생할 수 있다")
