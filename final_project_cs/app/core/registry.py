@@ -24,6 +24,9 @@ def _compatible(requested: str, supported: list[str]) -> bool:
 class RegisteredTeam:
     manifest: TeamManifest
     module: TeamModule
+    # ★register() 에서 한 번만 계산한다. resolve() 는 Case 마다(팀 6개 기준
+    #   매 호출) 다시 계산하지 않는다 — 매니페스트는 등록 뒤 안 바뀐다.
+    normalized_case_types: frozenset[str]
 
 
 class TeamRegistry:
@@ -41,7 +44,8 @@ class TeamRegistry:
             raise RegistryError(f"{manifest.team_id} does not support contract {self.contract_version}")
         if manifest.team_id in self._teams:
             raise RegistryError(f"duplicate team_id: {manifest.team_id}")
-        entry = RegisteredTeam(manifest, team)
+        normalized_case_types = frozenset(value.lower() for value in manifest.accepted_case_types)
+        entry = RegisteredTeam(manifest, team, normalized_case_types)
         self._teams[manifest.team_id] = entry
         return manifest
 
@@ -60,11 +64,14 @@ class TeamRegistry:
         is preferred.  The registry owns this vocabulary; callers do not need
         to know any Team IDs or capabilities.
         """
-        case_type = (case_type or "").lower()
-        intent = (intent or "").lower() or None
+        # ★case_type/intent 는 이미 검증된 값이다(classifier 가 INTENTS 밖이면
+        #   막는다, feedback.py). 여기서 다시 .lower() 하면 "이 값을 못 믿는다"는
+        #   신호를 준다 — 검증된 값을 또 방어하지 않는다.
+        case_type = case_type or ""
+        intent = intent or None
         matches = [
             entry for entry in self._teams.values()
-            if entry.manifest.active and case_type in {value.lower() for value in entry.manifest.accepted_case_types}
+            if entry.manifest.active and case_type in entry.normalized_case_types
         ]
         if intent:
             intent_matches = [
