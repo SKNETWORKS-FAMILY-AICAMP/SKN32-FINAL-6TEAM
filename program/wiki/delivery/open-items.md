@@ -51,7 +51,7 @@ owners: [human:미배정]
 
 | 순위 | 무엇 | 무엇이 흔들리나 | 시간 |
 |---|---|---|---|
-| 1 | 3B 모델 처리량·지연·정확도 | 자체호스팅 논거 전체 | 하루 |
+| 1 | 3B 모델 처리량·지연·정확도 | 자체호스팅 논거 전체. **x600 접속 확인. 환경 구축 필요** → [../business/infrastructure-cost.md](../business/infrastructure-cost.md) | 하루 |
 | **2** | **검토·승인 1건 소요시간** | **72% 절감이 여기 달려 있다.** 도구 설치 완료 → [../business/measure-review-time.md](../business/measure-review-time.md) | **30분** |
 | ~~2~~ | **오류 1건당 손실** — **일부 측정** | 분쟁 8건 실측. 중앙값 5만 · 최대 152.6만 → [../business/error-cost.md](../business/error-cost.md) | 완료 |
 | 3 | Baseline A·B 재측정 | **"단순 LLM보다 낫다"를 못 말한다** | **D-010 대기** |
