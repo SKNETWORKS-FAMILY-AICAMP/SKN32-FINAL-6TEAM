@@ -46,8 +46,17 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
     #   승인 버튼 활성화를 결정한다. 이 키는 대조 대상 필드가 아니라 표시용 데이터이므로
     #   선언해 두지 않으면 재검증(`proposal_guard.recheck_before_execution`)이
     #   "선언되지 않은 필드"로 승인 자체를 막는다.
+    # ★"calculation_basis" — 2026-09-03 발견. `refund.calculate` 제안이 이 키를
+    #   실어 보내는데 어디에도 선언돼 있지 않아, **모든 환불 제안이 승인 직전
+    #   재검증에서 "선언되지 않은 필드"로 막히고 있었다.** 옛 구현부터 있던 키인데
+    #   아무도 못 잡았다 — 제안 생성과 승인 재검증을 **이어서** 보는 검사가
+    #   없었기 때문이다(`evidence` 를 놓쳤던 2026-08-17 과 같은 구멍).
+    #   금액 자체는 `refund_amount_cents` 가 `total_cents` 상한 검사를 받는다.
+    #   이 키는 그 금액을 **어떻게 구했는지**를 사람에게 보여주는 설명이라 대조
+    #   대상이 아니다.
     ignored=frozenset({"reason", "reason_code", "template", "currency",
-                       "rationale", "memo", "seeded_by", "note", "evidence"}),
+                       "rationale", "memo", "seeded_by", "note", "evidence",
+                       "calculation_basis"}),
 )
 
 #: 사실을 재조회하는 SQL. ★모든 query 에 tenant_id·customer_id 를 건다(설계 원칙 §1).
