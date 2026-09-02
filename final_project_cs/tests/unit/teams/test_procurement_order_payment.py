@@ -214,3 +214,61 @@ def test_deliberating_about_cancelling_is_not_a_cancel_request():
 def test_an_explicit_cancel_request_still_routes_to_cancel():
     assert ProcurementOrderPaymentTeam.select_capability("order", "주문 취소해 주세요") == "order.cancel"
     assert ProcurementOrderPaymentTeam.select_capability("order", "주문 취소 부탁드립니다") == "order.cancel"
+
+
+@pytest.mark.asyncio
+async def test_order_modify_carries_field_names_not_raw_values():
+    """★값은 실행 인자에 넣지 않는다 (2026-09-03).
+
+    전에는 고객이 준 dict 를 `changes` 로 통째로 실었다. 대조할 규칙이 없어
+    검증 정책이 막았고 **주문 변경은 승인 자체가 안 됐다.** 지금은 이름만 싣고
+    값은 근거로 보낸다 — 승인자는 보되, 대조되지 않은 값이 실행 인자로는
+    들어가지 않는다.
+    """
+    tools = FakeTools(order={"order_id": "order-1", "fulfillment_status": "paid"})
+    result = await ProcurementOrderPaymentTeam(tools).execute(
+        make_task("order.modify", order_change={"shipping_address": "new-address",
+                                                "delivery_message": "문 앞에"})
+    )
+
+    arguments = result.action_proposals[0].arguments
+    assert "changes" not in arguments
+    assert arguments["change_fields"] == ["delivery_message", "shipping_address"]
+    assert "new-address" not in str(arguments)
+    # 값은 근거에 있다 — 승인자가 무엇을 승인하는지 볼 수 있어야 한다
+    assert any("new-address" in str(item.value) for item in result.evidence)
+
+
+@pytest.mark.asyncio
+async def test_a_quantity_change_is_flattened_so_it_can_be_checked():
+    """★수량만은 최상위로 편다 — `orders.item_count` 상한 검사를 받게."""
+    tools = FakeTools(order={"order_id": "order-1", "fulfillment_status": "paid"})
+    result = await ProcurementOrderPaymentTeam(tools).execute(
+        make_task("order.modify", order_change={"quantity": 3})
+    )
+
+    assert result.action_proposals[0].arguments["change_quantity"] == 3
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_change_kind_is_refused_not_proposed():
+    """★모르는 변경은 제안하지 않는다. 무엇을 바꾸는지 모르면 승인자도 판단 못 한다."""
+    tools = FakeTools(order={"order_id": "order-1", "fulfillment_status": "paid"})
+    result = await ProcurementOrderPaymentTeam(tools).execute(
+        make_task("order.modify", order_change={"total_price": 1})
+    )
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "order_modify_unsupported_change"
+    assert result.action_proposals == []
+
+
+@pytest.mark.asyncio
+async def test_an_unreadable_quantity_is_refused():
+    tools = FakeTools(order={"order_id": "order-1", "fulfillment_status": "paid"})
+    result = await ProcurementOrderPaymentTeam(tools).execute(
+        make_task("order.modify", order_change={"quantity": "세 개"})
+    )
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "order_modify_quantity_unreadable"

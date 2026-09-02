@@ -90,7 +90,10 @@ EMITTED_ARGUMENT_KEYS = {
     "return.request": {"order_id", "reason_code", "return_quantity"},
     # Procurement + Order & Payment
     "order.create(fallback)": {"request"},
-    "order.modify": {"order_id", "changes", "fulfillment_status"},
+    # ★2026-09-03 — `changes` blob 을 없애고 검사 가능한 모양으로 폈다.
+    #   수량은 `change_quantity` 로 대조되고, 나머지는 이름만 싣는다.
+    "order.modify": {"order_id", "change_fields", "change_quantity",
+                     "fulfillment_status"},
     "order.cancel": {"order_id", "scope", "reason", "seller_fault",
                      "warehouse_handoff", "fulfillment_status"},
     # Fulfillment & Logistics
@@ -98,7 +101,10 @@ EMITTED_ARGUMENT_KEYS = {
 }
 
 #: ★의도적으로 막히는 것. `opaque` 는 "확인 못 하니 거부한다" 는 선언이다.
-DELIBERATELY_REFUSED = {"order.modify": {"changes"}}
+#:  2026-09-03 현재 제안이 싣는 필드 중에는 없다 — `order.modify` 의 `changes`
+#:  가 여기 있었으나, blob 을 펴서 `change_quantity`(대조됨)와
+#:  `change_fields`(이름만)로 나누면서 없어졌다. 비어 있는 것이 정상이다.
+DELIBERATELY_REFUSED: dict[str, set[str]] = {}
 
 
 @pytest.mark.parametrize("action_type", sorted(EMITTED_ARGUMENT_KEYS))
@@ -119,11 +125,18 @@ def test_no_proposal_type_is_blocked_by_an_undeclared_field(action_type):
         "확인할 수단이 없으면 opaque 에 **이유와 함께** 넣어라.")
 
 
-@pytest.mark.parametrize("action_type", sorted(DELIBERATELY_REFUSED))
-def test_unverifiable_fields_are_refused_not_waved_through(action_type):
-    """★`changes` 는 고객이 준 변경 요청 그대로다 — 금액·수량이 들어올 수 있는데
-    대조할 규칙이 없다. `ignored` 로 빼면 검사 없이 실행된다. 막히는 것이 맞다.
-    """
+def test_deliberate_refusals_are_actually_declared_opaque():
+    """의도적으로 막는 필드는 `opaque` 에 있어야 한다 — 사고로 막히는 것과
+    알고 막는 것을 구분한다. 지금은 비어 있다(전부 검사 가능한 모양으로 폈다)."""
     from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
 
-    assert DELIBERATELY_REFUSED[action_type] <= CUSTOMER_OPS_POLICY.opaque
+    for action_type, fields in DELIBERATELY_REFUSED.items():
+        assert fields <= CUSTOMER_OPS_POLICY.opaque, action_type
+
+
+def test_the_change_quantity_is_checked_against_the_order():
+    """★`order.modify` 의 수량은 **대조된다.** 이름만 싣는 나머지와 다르다."""
+    from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
+
+    rule = next(r for r in CUSTOMER_OPS_POLICY.quantities if r.field == "change_quantity")
+    assert rule.reference == "order_id" and rule.limit_key == "item_count"

@@ -36,16 +36,19 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
         # ★반품 수량은 주문 수량을 넘을 수 없다. 금액 전용 규칙이 아니다.
         QuantityRule(field="return_quantity", reference="order_id",
                      limit_key="item_count", scale=Decimal(1)),
+        # ★주문 변경 수량도 주문 수량을 넘을 수 없다 (2026-09-03).
+        #   전에는 `order.modify` 가 고객이 준 변경 요청을 `changes` dict 로
+        #   통째로 실었다. 그 안에 수량이 있어도 대조할 규칙이 없어 `opaque` 로
+        #   막을 수밖에 없었고, 그래서 **주문 변경은 승인 자체가 안 됐다.**
+        #   지금은 Team 이 수량을 `change_quantity` 로 펴서 싣고 여기서 대조한다.
+        #   나머지 변경 필드는 이름만(`change_fields`) 싣고 값은 근거로 간다 —
+        #   대조되지 않은 값이 실행 인자에 들어가지 않게.
+        QuantityRule(field="change_quantity", reference="order_id",
+                     limit_key="item_count", scale=Decimal(1)),
     ),
     # ★아직 대조 수단이 없는 식별자. 제안에 나오면 거부한다.
     #   쿠폰·적립금 테이블이 생기면 references 로 옮긴다.
-    #   ★"changes"(2026-09-03) — `order.modify` 제안이 싣는 **고객이 준 변경 요청
-    #     그대로**다(`current_state.order_change` 등). 무엇이 들었는지 정해져 있지
-    #     않고 금액·수량이 들어올 수 있는데 대조할 규칙이 없다. `ignored` 로
-    #     빼면 검사 없이 실행되므로 여기 둔다 — **막히는 것이 맞다.**
-    #     푸는 방법: 변경 내용을 구조화하고(예: {"quantity": n}) 주문 사실과
-    #     대조하는 규칙을 만든 뒤 `quantities`/`references` 로 옮긴다.
-    opaque=frozenset({"coupon_id", "point_txn_id", "invoice_id", "changes"}),
+    opaque=frozenset({"coupon_id", "point_txn_id", "invoice_id"}),
     # 대조 대상이 아닌 자유 필드
     # ★"evidence" — 2026-08-17 실 브라우저 승인 클릭으로 발견: 운영 UI(`app/presentation
     #   /ui/routes.py::_actions()`)가 `arguments_json.evidence` 를 읽어 근거를 표시하고
@@ -73,7 +76,7 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
     ignored=frozenset({"reason", "reason_code", "template", "currency",
                        "rationale", "memo", "seeded_by", "note", "evidence",
                        "calculation_basis",
-                       "request", "fulfillment_status", "scope",
+                       "request", "fulfillment_status", "scope", "change_fields",
                        "seller_fault", "warehouse_handoff"}),
 )
 

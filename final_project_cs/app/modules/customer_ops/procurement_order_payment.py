@@ -32,6 +32,17 @@ from app.core.contracts import (
 from app.core.idempotency import idempotency_key
 from app.tools.read_tools import ReadToolbox, ToolLoopExceeded
 
+#: ★주문 변경으로 받아들이는 필드. 여기 없는 것은 제안하지 않고 escalate 한다
+#:  (2026-09-03). 모르는 변경을 통째로 실어 보내면 승인자도 무엇을 승인하는지
+#:  모르고, 검증 정책도 대조할 규칙이 없다.
+SUPPORTED_CHANGE_FIELDS = frozenset({
+    "shipping_address", "recipient_name", "recipient_phone",
+    "option", "color", "size", "delivery_message",
+})
+#: 수량 변경은 **대조된다** — `orders.item_count` 상한 검사를 받는다
+#:  (`verification_policy.py` 의 `change_quantity` 규칙).
+QUANTITY_CHANGE_FIELDS = frozenset({"quantity", "item_count"})
+
 
 class ProcurementOrderPaymentTeam:
     manifest = TeamManifest(
@@ -263,8 +274,42 @@ class ProcurementOrderPaymentTeam:
                                or current.get("change_request"))
                     if not changes:
                         return self._escalate(task, "order_modify_request_missing", evidence)
-                    arguments = {"order_id": str(order_id), "changes": changes,
-                                 "fulfillment_status": status}
+                    if not isinstance(changes, dict):
+                        return self._escalate(task, "order_modify_request_unstructured", evidence)
+
+                    # ★변경 요청을 **검사 가능한 모양으로 편다**(2026-09-03).
+                    #   전에는 고객이 준 dict 를 `changes` 로 통째로 실었다. 그러면
+                    #   금액·수량이 섞여 있어도 대조할 규칙이 없어, 검증 정책이
+                    #   `opaque` 로 막아 **승인 자체가 되지 않았다.**
+                    unsupported = sorted(set(changes) - SUPPORTED_CHANGE_FIELDS - QUANTITY_CHANGE_FIELDS)
+                    if unsupported:
+                        # ★모르는 변경은 제안하지 않는다. 무엇을 바꾸는지 모르면
+                        #   승인자도 판단할 수 없다.
+                        return self._escalate(task, "order_modify_unsupported_change", evidence)
+
+                    arguments: dict[str, Any] = {"order_id": str(order_id),
+                                                 "fulfillment_status": status,
+                                                 # 이름만 싣는다. 값은 아래 근거로 간다.
+                                                 "change_fields": sorted(changes)}
+                    quantity_key = next((key for key in QUANTITY_CHANGE_FIELDS if key in changes), None)
+                    if quantity_key is not None:
+                        try:
+                            arguments["change_quantity"] = int(changes[quantity_key])
+                        except (TypeError, ValueError):
+                            return self._escalate(task, "order_modify_quantity_unreadable", evidence)
+                    # ★값은 **근거**로 보낸다 — 승인자는 보지만, 대조되지 않은 값이
+                    #   실행 인자로 들어가지는 않는다. 값까지 실으려면 그 필드마다
+                    #   대조 규칙을 먼저 만들어야 한다(`verification_policy.py`).
+                    #   ★기존 근거를 덮지 않도록 목록에 **덧붙인다**.
+                    evidence = evidence + [Evidence(
+                        evidence_id="context:procurement_order_payment:order_change",
+                        source_type="customer_message",
+                        source_id="context.order_change",
+                        claim="고객이 요청한 주문 변경 내용(검토용). 실행 인자에는 이름만 싣는다.",
+                        value=dict(changes),
+                        confidence=1.0,
+                        observed_at=datetime.now(UTC),
+                    )]
                     proposal = self._proposal(task, "order.modify", arguments, evidence, risk="medium")
                     return self._result(task, outcome="waiting", confidence=0.9, evidence=evidence,
                                         next_action=NextAction.WAIT_FOR_APPROVAL,
