@@ -49,3 +49,5 @@ status: draft
 - [../business/index.md](../business/index.md) — 이 제품이 얼마짜리인가
 - [../architecture/index.md](../architecture/index.md) — 어떻게 나눠 만드는가
 - [../decisions/index.md](../decisions/index.md) — 제품 결정의 이유
+- [pitch-questions.md](pitch-questions.md) — 심사에서 물어볼 다섯 가지와 답
+

@@ -58,6 +58,45 @@ owners: [human:미배정]
 
 → [../business/index.md](../business/index.md)
 
+## ★ [2026-09-03] 미측정을 없애는 절차
+
+`[실측]` `A-COP_페인포인트_페르소나_설계.md` §8 에서 이관. **이 절이 빠져 있었다.**
+
+**`[추정]`·`[미확보]` 를 없애는 방법이 이미 정해져 있었다.** 지금 있는 데이터로 대부분 채울 수 있다.
+
+### 1단계 — 있는 데이터로 채운다
+
+| 채울 것 | 쓸 데이터 |
+|---|---|
+| 골든셋 페르소나 배분 | `eval/datasets/golden.jsonl` 72건 본문 |
+| 실제 문의 유형 분포 | `datasets/voc/aihub_30716_callcenter_qa` |
+| 커머스 문의 유형 | `datasets/voc/aihub_102_smb_order_qa` |
+| **오류 비용의 실제 사례** | **`datasets/voc/ecmc_dispute_casebook_2024`** |
+| 감정 축 검증 | `datasets/voc/aihub_71603_aspect_sentiment` |
+| `cost/case` 실측 | eval harness 실행 |
+
+**네 번째가 특히 중요하다.** **분쟁 조정까지 간 사례집**이므로 "오류 1건이 얼마나 커지는지"의 실제 근거가 된다.
+
+> **지어낸 숫자를 안 써도 된다.**
+
+`[실측]` 그 데이터는 이미 있다. → [../../datasets/wiki/source-selection.md](../../datasets/wiki/source-selection.md)
+
+### 감정 축 검증이 뭘 가리나
+
+**worried/confused 50% 가 골든셋 특성인지 일반 특성인지**를 판별한다.
+
+**골든셋만의 성질이면 그 50% 로 제품을 설명하면 안 된다.**
+
+## 아직 안 정한 것 셋
+
+`[실측]` 같은 문서 §9.
+
+| 항목 | 판단 |
+|---|---|
+| v8 병합 시점 | 중간발표(2026-09-15) 전 / 후 |
+| 골든셋 `persona` 필드 추가 담당 | `final_project_cs` 소유자와 협의 |
+| 축 1 공개 통계 확보 여부 | 확보 시도 / 미확보 유지 |
+
 ## 관계
 
 - [timeline.md](timeline.md) — 일정
