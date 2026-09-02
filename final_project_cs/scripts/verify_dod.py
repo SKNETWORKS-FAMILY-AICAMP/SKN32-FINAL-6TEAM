@@ -98,7 +98,14 @@ def _evidence(prefix: str) -> EvidenceResult:
 
 
 def _run_tests() -> tuple[str, int, int, int, int, int]:
-    command = [sys.executable, "-m", "pytest", "tests", "-q"]
+    # ★경로를 주지 않는다. `pytest tests` 로 부르면 **`eval/tests/` 14건이
+    #   조용히 빠진다**(2026-09-02 실측: 542 vs 556). 빠지던 것 중에
+    #   `eval/tests/test_holdout_labeling.py` — DoD-15, 즉 RC 를 막고 있는 바로
+    #   그 항목의 라벨링 도구 테스트가 있었다. **DoD 를 검증하는 스크립트가
+    #   차단 항목의 테스트를 한 번도 안 돌리고 "통과"를 세고 있었다.**
+    #   같은 결함이 `check_release_gate.py` 에도 있었고 같은 날 함께 고쳤다.
+    #   `CLAUDE.md` §6 이 정한 정본 전체 실행 명령도 경로 없는 `python -m pytest -q` 다.
+    command = [sys.executable, "-m", "pytest", "-q"]
     completed = subprocess.run(
         command,
         cwd=ROOT,
