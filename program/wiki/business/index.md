@@ -95,3 +95,5 @@ status: draft
 - [../product/personas.md](../product/personas.md) — 정미라 조직이 모델 조직이다
 - [../product/positioning.md](../product/positioning.md) — 무엇으로 파는가
 - [../decisions/D-004-self-hosting-rationale.md](../decisions/D-004-self-hosting-rationale.md) — 자체호스팅 논거
+- [error-cost.md](error-cost.md) — 오류가 분쟁까지 가면 얼마인가 (실측 8건)
+
