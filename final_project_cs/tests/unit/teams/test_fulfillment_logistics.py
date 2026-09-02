@@ -159,3 +159,15 @@ def test_a_request_to_review_a_drafted_reply_is_not_an_exception_report():
     """
     assert FulfillmentLogisticsTeam.select_capability(
         "shipping", "배송 지연 사유를 안내한 답변에 고객의 전화번호가 포함되지 않았는지 확인해 주세요") is None
+
+
+def test_a_hypothetical_policy_question_is_not_an_exception_report():
+    """★golden g-shipping-04 — "~지나면 …보는 건가요?" 는 가정형 질문이다."""
+    assert FulfillmentLogisticsTeam.select_capability(
+        "shipping", "아직 출고되지 않은 주문인데 출고 마감 시간이 지나면 배송 지연으로 보는 건가요?") is None
+
+
+def test_a_request_to_check_is_not_a_request_to_act():
+    """★golden g-shipping-05 — "확인해 주세요" 는 조회 요청이지 이상 신고가 아니다."""
+    assert FulfillmentLogisticsTeam.select_capability(
+        "shipping", "주문한 지 오래됐는데 출고 자체가 안 됐습니다. 지연 여부를 확인해 주세요.") is None

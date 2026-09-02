@@ -50,8 +50,12 @@ class FulfillmentLogisticsTeam:
     #     "배송 **지연** 사유를 안내한 **답변**에 전화번호가 포함되지 않았는지
     #     확인해 주세요" 인데, 이건 배송 이상 신고가 아니라 **작성된 답변을
     #     검토해 달라는 요청**이다. 고객 자신의 배송을 말하는 것이 아니다.
+    #   ★"확인해 주세요"(확인 요청)와 "~면 …건가요?"(가정형 질문)도 넣는다.
+    #     golden g-shipping-04 "출고 마감 시간이 지나면 배송 지연으로 보는
+    #     건가요?" 와 g-shipping-05 "지연 여부를 확인해 주세요" 가 그렇다 —
+    #     둘 다 라벨이 fulfillment.track 이다(2026-09-03 실측).
     _INQUIRY_MARKERS = ("기준", "알려 주", "알려주", "궁금", "미리 알", "안내해",
-                        "답변", "응답")
+                        "답변", "응답", "확인해 주", "확인해주", "건가요")
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:

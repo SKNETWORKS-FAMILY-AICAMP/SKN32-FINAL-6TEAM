@@ -66,6 +66,16 @@ class ReturnRefundTeam:
         "바꿔주세요", "바꿔 주세요", "바꾸고 싶",
     )
 
+    # ★"교환하고 싶습니다. **신청 기한을 알려 주세요**" 처럼 의사와 문의가
+    #   한 문장에 같이 오면 **문의 쪽으로 둔다.** 자격부터 확인해 주는 것이
+    #   맞고, 이 저장소의 안전 방향과도 같다 — 정보성 응답은 되돌릴 수 있지만
+    #   잘못 만든 신청은 승인 큐를 오염시킨다.
+    #   golden 라벨도 이런 혼합 문장을 `return.check_eligibility` 로 매긴다
+    #   (g-exchange-01/02, 2026-09-03 실측). `fulfillment_logistics` 에 넣은
+    #   같은 성격의 억제를 여기에도 맞춘다.
+    _INQUIRY_MARKERS = ("기준", "알려 주", "알려주", "궁금", "해당하나요",
+                        "가능한가요", "되나요", "얼마나")
+
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:
         """"return"/"exchange" intent가 자격 문의인지 실행 요청인지 가른다.
@@ -80,6 +90,8 @@ class ReturnRefundTeam:
         """
         if intent not in {"return", "exchange"}:
             return None
+        if any(marker in input_text for marker in ReturnRefundTeam._INQUIRY_MARKERS):
+            return None  # 의사와 문의가 섞여 있으면 자격 확인 쪽으로 둔다
         if any(marker in input_text for marker in ReturnRefundTeam._ACTION_REQUEST_MARKERS):
             return "return.request"
         return None

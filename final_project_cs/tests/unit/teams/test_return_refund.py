@@ -255,3 +255,12 @@ def test_deliberating_about_exchanging_is_not_an_exchange_request():
 
 def test_an_explicit_exchange_request_still_routes_to_request():
     assert ReturnRefundTeam.select_capability("exchange", "사이즈가 안 맞아서 교환해 주세요") == "return.request"
+
+
+def test_intent_mixed_with_an_inquiry_defers_to_eligibility_check():
+    """★golden g-exchange-01/02 — 의사와 문의가 섞이면 자격 확인 쪽으로 둔다.
+
+    정보성 응답은 되돌릴 수 있지만 잘못 만든 신청은 승인 큐를 오염시킨다.
+    """
+    assert ReturnRefundTeam.select_capability("exchange", "교환하고 싶습니다. 신청 기한을 알려 주세요") is None
+    assert ReturnRefundTeam.select_capability("exchange", "다른 상품으로 바꾸고 싶은데 교환 대상에 해당하나요?") is None
