@@ -97,6 +97,29 @@ owners: [human:미배정]
 | 골든셋 `persona` 필드 추가 담당 | `final_project_cs` 소유자와 협의 |
 | 축 1 공개 통계 확보 여부 | 확보 시도 / 미확보 유지 |
 
+## [2026-09-03] 인수인계에서 남은 것
+
+`[실측]` `A-COP_남은작업_인수인계.md` 에서 이관. **대부분 완료됐고 셋이 남았다.**
+
+| 항목 | 상태 |
+|---|---|
+| VOC 데이터 전처리 | **완료** (2026-09-01) |
+| `implementation_ref` allowlist 제한 | **확인됨** — `KNOWN_IMPLEMENTATION_REFS`. Composer HTTP 경로에만 적용 |
+| 네이버 주문 4건 누락 | → [../../datasets/wiki/scraper-notes.md](../../datasets/wiki/scraper-notes.md) |
+| **쿠팡 배송이력 5건 중 4건만 수집** | `[미확보]` 해결됐는지 확인 안 함 |
+| **v2 계약 문서 정합** | `[미확보]` endpoint 이름·`config_revision`·인증 scope·감사 필드를 **하나로 맞춰야 한다** → [D-011](../decisions/D-011-composer-v3-gap.md) |
+| **UI 가 import 할 패키지 이름** | `[미확보]` 아직 확정 안 됨 |
+
+**두 번째가 D-011 과 같은 문제다.** 계약이 둘로 갈려 있어서 이름부터 안 맞는다.
+
+## 원격 추적은 사람이 한다
+
+`[실측]` 원본이 명시해 뒀다.
+
+> **AI 세션은 푸시를 실행하지 않는다.** 사용자가 직접 실행한다.
+
+**이 wiki 작업도 같다.** 커밋은 하되 푸시하지 않는다.
+
 ## 관계
 
 - [timeline.md](timeline.md) — 일정

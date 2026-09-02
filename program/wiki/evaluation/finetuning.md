@@ -3,6 +3,7 @@ type: plan
 title: 파인튜닝 경로와 증명 범위
 description: 무엇을 튜닝하고 무엇은 계속 DB에서 읽는가. 증명 대상은 모델 성능이 아니라 오케스트레이션이다
 status: draft
+impl_scope: cs — 파인튜닝은 cs 도메인 골든셋으로 학습·평가한다. sample 에는 그 데이터가 없다
 tags: [evaluation, data]
 owners: [human:미배정]
 ---
@@ -117,6 +118,75 @@ prompt version · dataset hash · bootstrap 95% CI
 `[실측]` 학습이 세 번 막혔다. 프로덕션 입력 중앙값 10,670토큰인데 12GB에서 1,024토큰으로 깎아야 돌았다.
 
 → [../business/infrastructure-cost.md](../business/infrastructure-cost.md) §3
+
+## ★ [2026-09-03] 실행 결과 — 배선은 됐고 모델은 못 쓴다
+
+`[실측]` `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` 에서 이관.
+
+**배경:** `Proposed+FT`(파인튜닝 모델 단독 호출)가 golden/holdout **양쪽에서 0% pass** 였다. 원인은 Team 파이프라인 **밖에서** 호출돼 **RAG evidence 를 아예 못 받았기** 때문.
+
+**파이프라인 안으로 넣는 배선을 만들고 실행했다.** 배선은 전부 동작한다. **모델 품질은 채택 불가.** → [D-CS-002](../../final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md)
+
+### ★ 그 과정에서 터질 지뢰를 찾았다
+
+`[실측]` `response.generate`·`response.review_tone` 프롬프트가 **한 번도 등록된 적이 없었다.** 파일 자체가 저장소에 없었다.
+
+```
+RuntimeError: no active prompt registered for response.generate
+```
+
+**production 배선으로 재현하면 매번 났다.**
+
+`[실측]` **지금 실 트래픽을 죽이고 있지는 않다** — `config/project.yaml` 의 `response_review.enabled: false` 때문이다.
+
+> **켜는 순간 터질 지뢰였다.**
+
+**끄고 있어서 안 드러난 결함이다.** 프롬프트 파일 신규 작성 · allowlist 갱신 · DB 재등록 · 회귀 테스트 3건으로 고쳤다.
+
+### 데이터가 없다는 것을 발견했다
+
+`[실측]` `_maybe_review()` 를 읽어 확인했다.
+
+> 이 Team 은 primary Team 이 만든 **`result.answer` 를 검토·재작성하는 사후 처리**이지 고객 메시지를 직접 받는 게 아니다.
+
+golden 72건은 전부 결정론적 Team(`return_refund`·`procurement_order_payment`·`fulfillment_logistics`)으로만 라우팅된다.
+
+> **이 Team 을 훈련할 실제 데이터가 golden/holdout 에 전혀 없었다.**
+
+**지어내지 않고 우회했다** — golden 의 judge-pass 행에서 evidence·answer 를 가져와 `_maybe_review()` 와 같은 입력 모양을 만들고, **고친 실제 프롬프트를 진짜로 호출**해 grounded completion 을 수집했다.
+
+### ★ 데이터를 10배로 늘려도 draft 가 2개뿐이었다
+
+`[실측]` 2026-08-31. 실 민원 93건을 더해 **157건**(최초 16건의 9.8배)을 만들었다.
+
+**그런데 고유 draft 문자열이 여전히 2개였다.**
+
+```
+151건  반품 고정문구
+  6건  "Order verified..." 고정문구
+```
+
+**원인을 특정했다.**
+
+> 이 review-task 의 `input_text` 는 **고객 메시지가 아니라 1차 팀의 초안 답변**이고, 결정론적 Team 은 case_type 만 맞으면 **고객 메시지와 무관하게 항상 같은 고정 문자열**을 낸다.
+
+**고객 메시지를 아무리 다양화해도 그 지점에서 전부 같은 초안으로 수렴한다.** golden·holdout·실주문·민원 **네 소스가 전부 같은 함정에 빠졌다.**
+
+`[실측]` **탈출 경로도 찾았다.** `fulfillment_logistics.py` 는 상태값을 f-string 에 박는다.
+
+```python
+f"배송 상태는 {status}입니다."
+```
+
+**capability 를 `shipment.status` 로 바꾸면 case 마다 진짜 다른 draft 가 나온다.** 최소 3종은 확보 가능하다.
+
+`[미확보]` **아직 실행 안 했다.**
+
+### 여기서 배울 것
+
+> **데이터를 늘리기 전에 그 데이터가 실제로 다양한지 세어야 한다.**
+
+**157건을 만들고 나서야 2개인 걸 알았다.** 건수는 다양성이 아니다.
 
 ## 관계
 

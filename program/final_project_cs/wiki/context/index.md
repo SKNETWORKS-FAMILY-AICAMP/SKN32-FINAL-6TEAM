@@ -83,3 +83,5 @@ evidence 예산 400자로 낮춰서야 완주 (중앙값 ≈1,600 토큰)
 - [../runtime/agentic-controller.md](../runtime/agentic-controller.md) — `need_more_context`를 처리하는 쪽
 - [../actions/tool-gateway.md](../actions/tool-gateway.md) — read 도구 실행
 - [../data/index.md](../data/index.md) — 원본 데이터
+- [corpus-authoring.md](corpus-authoring.md) — **코퍼스를 쓸 때 지키는 것.** 게이트 우회 4수법은 이미 거부됐다
+
