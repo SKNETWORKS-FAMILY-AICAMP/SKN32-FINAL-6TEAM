@@ -153,4 +153,4 @@ omissions 에 무엇이 빠졌는지 기록
 - [context-budget.md](context-budget.md) — `policy_rag` 예산
 - [memory.md](memory.md) — 다른 입력원
 - [../data/tenancy.md](../data/tenancy.md) — 격리
-- [../teams/team-contract.md](../teams/team-contract.md) — `knowledge_scope`
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — `knowledge_scope`

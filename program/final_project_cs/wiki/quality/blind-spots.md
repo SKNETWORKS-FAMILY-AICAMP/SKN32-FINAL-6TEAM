@@ -107,6 +107,36 @@ acop-dojo report
 
 **불변식을 추가할 때 결함도 같이 추가한다.** 이게 카탈로그가 낡지 않게 하는 방법이다.
 
+## ★ [2026-09-03] 테스트가 동시 실행에 약하다
+
+`[실측]` 같은 코드로 두 번 돌렸는데 결과가 달랐다.
+
+| 언제 | 결과 |
+|---|---|
+| 다른 작업 3개가 동시에 돌 때 | **29 failed, 560 passed** |
+| 단독 | **591 passed** (두 번 확인) |
+
+실패한 것이 전부 DB 를 만지는 쪽이었다.
+
+```
+integration/api/test_openapi_surface.py       5
+integration/api/test_api_runtime.py           4
+security/test_pii_redaction_runtime.py        1
+integration/api/test_case_create_audit_row…   1
+```
+
+`[미확보]` **원인을 확정하지 못했다.** 재현이 안 된다. 후보는 셋이다.
+
+```
+같은 Postgres 를 여러 프로세스가 만진다
+tenant 이름이 겹친다
+앞선 테스트의 teardown 이 안 끝난 채 다음이 시작된다
+```
+
+**이게 위험한 이유는 실패가 아니라 "가끔 통과"다.** CI 가 초록인데 실제로는 불안정할 수 있다.
+
+`[미확보]` **CI 가 이 상황을 재현하는지 확인 안 했다.** 병렬 실행(`-n auto`)을 쓰면 상시로 겪는다.
+
 ## 관계
 
 - [invariants.md](invariants.md) — 불변식 카탈로그

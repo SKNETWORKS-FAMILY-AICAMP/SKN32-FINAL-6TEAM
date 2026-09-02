@@ -208,7 +208,7 @@ Case를 만들고, 업무별 Agent Team이 협업하고, 위험한 동작은 사
 |---|---|
 | 제품이 뭔지 알고 싶다 | [product/positioning.md](product/positioning.md) |
 | 코드를 고치려 한다 | [../../final_project_cs/wiki/quickstart.md](../final_project_cs/wiki/quickstart.md) |
-| Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) → cs의 `teams/team-contract.md` |
+| Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) → cs의 `teams/team-contract/index.md` |
 | 평가를 돌리려 한다 | [evaluation/protocol.md](evaluation/protocol.md) |
 | 왜 이렇게 설계했는지 궁금하다 | [decisions/index.md](decisions/index.md) |
 | 사업성 숫자가 필요하다 | [business/unit-economics.md](business/unit-economics.md) |
@@ -275,12 +275,12 @@ Agentic Controller ──── Team Registry ──── Agent Team
 
 | 하려는 일 | 여기부터 | 반드시 같이 읽을 것 |
 |---|---|---|
-| Team 추가 | [teams/team-contract.md](teams/team-contract.md) | [teams/team-boundary.md](teams/team-boundary.md) |
+| Team 추가 | [teams/team-contract/index.md](teams/team-contract/index.md) | [teams/team-boundary.md](teams/team-boundary.md) |
 | Team 로직 수정 | 해당 `teams/<team>.md` | [actions/action-proposal.md](actions/action-proposal.md) |
 | 읽기 자료 바꾸기 | [context/context-broker.md](context/context-broker.md) | [context/context-budget.md](context/context-budget.md) |
 | 쓰기 동작 추가 | [actions/tool-gateway.md](actions/tool-gateway.md) | [actions/idempotency.md](actions/idempotency.md), [actions/approval.md](actions/approval.md) |
 | Case 상태 건드리기 | [runtime/shared-state.md](runtime/shared-state.md) | [runtime/conflict-retry.md](runtime/conflict-retry.md) |
-| 스키마 변경 | [data/schema.md](data/schema.md) | [data/migrations.md](data/migrations.md) |
+| 스키마 변경 | [data/schema/index.md](data/schema/index.md) | [data/migrations.md](data/migrations.md) |
 | API 추가 | [external/rest-api.md](external/rest-api.md) | [external/auth-boundary.md](external/auth-boundary.md) |
 | 평가 돌리기 | [quality/eval-harness.md](quality/eval-harness.md) | |
 

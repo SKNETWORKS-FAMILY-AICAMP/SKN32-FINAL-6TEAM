@@ -142,6 +142,37 @@ idem = idempotency_key(
 | `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
 | `INV-CS-SEC-007` | scope 10개는 guardrail이 소유한다 | automated | `tests/security/test_scope_contract.py::test_ten_scopes_are_guardrail_owned` |
 
+---
+
+# 계약 원문에서 보강 (2026-09-03)
+
+`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
+
+## 비동기 도구 시그니처
+
+`[실측]` 세 도구의 계약 시그니처는 `async def`다.
+
+```python
+async def get_my_cases(customer_id: str, limit: int = 20) -> list[dict]: ...
+async def get_case_detail(customer_id: str, case_id: str) -> dict: ...
+async def open_support_case(customer_id: str, message: str, channel: str = 'mcp') -> dict: ...
+```
+
+근거: `docs/handoff/03_REST_MCP_인터페이스.md:123-136`
+
+## MCP ownership·응답 제약
+
+`[실측]`
+
+| 항목 | 제약 |
+|---|---|
+| ownership | 세 도구 모두 `customer_id` 소유 검사를 매 호출 수행 |
+| 응답 | REST와 동일하게 masked |
+| evidence | 내부 evidence 원문과 PII 노출 금지 |
+| `open_support_case` | Case 생성과 분류 시작까지만 수행 |
+
+근거: `docs/handoff/03_REST_MCP_인터페이스.md:138-148`
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 쓰기 경로

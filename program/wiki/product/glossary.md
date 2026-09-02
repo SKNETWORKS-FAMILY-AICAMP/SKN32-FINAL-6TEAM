@@ -38,7 +38,7 @@ Case의 **공식 상태**. 버전을 가지며 모든 갱신은 CAS를 거친다
 - read Tool을 직접 호출하지 않는다 (Context Broker가 넣어준다)
 - 다른 Team을 직접 호출하지 않는다 (Controller가 Task로 변환)
 
-→ [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract.md)
+→ [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract/index.md)
 
 ### Capability
 Team이 처리할 수 있는 **업무 종류**. `refund.calculate`, `payment.status` 같은 식별자.

@@ -105,7 +105,7 @@ risk_level    : low | medium | high
 rationale_evidence_ids : list[str]   ← 근거 대조용
 ```
 
-**`rationale_evidence_ids`가 근거 대조의 입력이다.** 여기 적힌 evidence가 Context/DB에 실재하는지 Core가 확인한다. → [../actions/evidence-check.md](../actions/evidence-check.md)
+**`rationale_evidence_ids`가 근거 대조의 입력이다.** 여기 적힌 evidence가 Context/DB에 실재하는지 Core가 확인한다. → [../actions/evidence-check.md](../../actions/evidence-check.md)
 
 ## 계약이 스스로 검사하는 것
 
@@ -129,7 +129,7 @@ waiting_input · waiting_approval · waiting_external · resuming
 resolved · escalated · failed · cancelled
 ```
 
-`TeamResult`의 `outcome`·`next_action`이 Case 상태 전이를 만든다. → [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md)
+`TeamResult`의 `outcome`·`next_action`이 Case 상태 전이를 만든다. → [../runtime/case-lifecycle.md](../../runtime/case-lifecycle.md)
 
 ## 계약을 바꾸려면
 
@@ -157,10 +157,13 @@ resolved · escalated · failed · cancelled
 | `INV-CS-TEAM-001` | manifest는 프로토콜을 구현한다 | automated | `tests/contract/test_team_contract.py::test_team_manifests_implement_protocol` |
 | `INV-CS-TEAM-002` | manifest scope는 정확히 선언된다 | automated | `tests/contract/test_team_contract.py::test_manifest_scopes_are_exact` |
 
-## 관계
+---
 
-- [team-boundary.md](team-boundary.md) — 계약 밖의 규칙
-- [team-registry.md](team-registry.md) — 등록
-- [../context/context-broker.md](../context/context-broker.md) — `ContextPack`을 만드는 쪽
-- [../actions/action-proposal.md](../actions/action-proposal.md) — `ActionProposal`을 받는 쪽
-- [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md) — 상태 전이
+## 필드 전체 명세
+
+`[실측]` 2026-09-03. 계약 원문의 필드·타입·제약을 전부 옮겼다.
+
+→ **[fields.md](fields.md)**
+
+**여기는 개념이고 거기는 명세다.** 구현할 때는 그쪽을 본다.
+

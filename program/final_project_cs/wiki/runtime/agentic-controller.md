@@ -123,4 +123,4 @@ tests/integration/controller/
 - [conflict-retry.md](conflict-retry.md) — 충돌 처리
 - [message-broker.md](message-broker.md) — Task 배달
 - [../teams/team-registry.md](../teams/team-registry.md) — Team 해석
-- [../teams/team-contract.md](../teams/team-contract.md) — Task/Result 계약
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — Task/Result 계약

@@ -93,4 +93,4 @@ MVP는 in-process queue다. → [../../../wiki/decisions/D-003-message-broker.md
 - [idempotency.md](idempotency.md) — 중복 방지 계약
 - [tool-gateway.md](tool-gateway.md) — 실행 지점
 - [../runtime/message-broker.md](../runtime/message-broker.md) — 내부 배달
-- [../data/schema.md](../data/schema.md) — 테이블 정의
+- [../data/schema/index.md](../data/schema/index.md) — 테이블 정의

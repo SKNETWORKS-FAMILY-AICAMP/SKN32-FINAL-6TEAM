@@ -35,11 +35,48 @@ def test_every_metric_reports_its_denominator():
         assert metric["d"] >= metric["n"], f"{name}: 분자가 분모보다 크다"
 
 
+#: ★막아야 하는데 **지금 구조로는 못 막는** fixture. 2026-09-02 추가.
+#
+#  전부 "상한 안에 있고 선언된 필드만 쓰는데 사실과 다른" 제안이다.
+#  `QuantityRule` 은 상한(`refund_amount <= total_cents`)만 본다. 상한 아래의
+#  틀린 금액은 통과한다 — 그리고 고객에게 가는 것은 바로 그런 값이다.
+#
+#  atk-18·19 는 **스키마가 없어서** 못 잡는다. `orders` 에 실결제액과 품목별
+#  금액이 없어 정가 기준 균등분할이 맞는지 대조할 방법이 없다
+#  (`program/plan/A-COP_결제소유_경계.md` §5 — `read.payment` 가 필요한 이유).
+#  atk-20·21 은 **규칙이 없어서** 못 잡는다. `status` 가 facts 에 이미 있으므로
+#  정책에 상태 규칙을 넣으면 잡힌다. 스키마 변경 없이 고칠 수 있다.
+#
+#  ★이 목록을 늘려서 초록을 만들지 않는다. 줄이려고 두는 목록이다.
+KNOWN_GAPS = {"atk-18", "atk-19", "atk-20", "atk-21"}
+
+
 def test_attack_fixtures_are_all_blocked():
-    """공격 15건 중 막혀야 하는 것이 전부 막힌다."""
-    report = score(load())
+    """알려진 구멍을 뺀 공격은 전부 막힌다.
+
+    ★구멍이 있는 채로 100% 를 만들지 않는다. 못 막는 것은 `KNOWN_GAPS` 에
+      이름으로 남기고, 그 목록이 커지면 이 테스트가 붉어진다.
+    """
+    rows = [r for r in load() if r["case_id"] not in KNOWN_GAPS]
+    report = score(rows)
     assert report.proper_abstention.denominator > 0, "막혀야 할 fixture 가 없다"
-    assert report.proper_abstention.value == 1.0, "공격이 통과했다"
+    assert report.proper_abstention.value == 1.0, "알려진 구멍 밖에서 공격이 통과했다"
+
+
+def test_known_gaps_still_exist_and_are_named():
+    """★구멍이 조용히 사라지거나 늘어나지 않게 한다.
+
+    고쳐서 막히게 되면 이 테스트가 붉어진다 — 그때 `KNOWN_GAPS` 에서 빼고
+    위 테스트의 분모로 옮긴다. 반대로 새 구멍이 생겨도 붉어진다.
+    """
+    rows = load()
+    ids = {r["case_id"] for r in rows}
+    assert KNOWN_GAPS <= ids, f"목록에만 있고 fixture 에 없다: {KNOWN_GAPS - ids}"
+
+    gap_rows = [r for r in rows if r["case_id"] in KNOWN_GAPS]
+    assert all(r["expect_block"] for r in gap_rows), "구멍 fixture 는 막혀야 할 것들이다"
+    assert score(gap_rows).proper_abstention.value == 0.0, (
+        "구멍 중 일부가 막히기 시작했다 — KNOWN_GAPS 를 줄이고 분모를 옮겨라")
 
 
 def test_legitimate_proposals_are_not_blocked():

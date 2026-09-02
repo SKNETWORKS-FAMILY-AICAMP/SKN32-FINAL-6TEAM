@@ -80,7 +80,7 @@ program/wiki/_migration/v8/product/positioning.md   ← v8 §1·§4 원문
 
 | 순위 | 파일 | 왜 |
 |---|---|---|
-| 1 | `cs/teams/team-contract.md` (110줄) | 계약 전문. 기존 문서가 요약본이다 |
+| 1 | `cs/teams/team-contract/index.md` (110줄) | 계약 전문. 기존 문서가 요약본이다 |
 | 2 | `evaluation/protocol.md` (101줄) | 평가 설계 전문 |
 | 3 | `architecture/external-ai.md` (183줄) | §9-C 판별표는 이미 합쳤다. 나머지 확인 |
 | 4 | `architecture/core-design.md` (129줄) | Core 8개 구성요소. wiki에 아직 얇다 |

@@ -82,4 +82,4 @@ python program/plan/diagram/build_showcase.py
 - [core-design.md](core-design.md) — Core 8개 구성요소
 - [system-context.md](system-context.md) — 외부 경계
 - [`case-lifecycle.md`](../../final_project_cs/wiki/runtime/case-lifecycle.md) · [sample](../../final_project_sample/wiki/runtime/case-lifecycle.md) — 상태 전이
-- [`data/schema.md`](../../final_project_cs/wiki/data/schema.md) · [sample](../../final_project_sample/wiki/runtime/index.md) — ERD 근거
+- [`data/schema/index.md`](../../final_project_cs/wiki/data/schema/index.md) · [sample](../../final_project_sample/wiki/runtime/index.md) — ERD 근거

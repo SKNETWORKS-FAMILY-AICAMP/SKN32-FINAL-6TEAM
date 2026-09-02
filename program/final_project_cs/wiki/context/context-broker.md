@@ -135,5 +135,5 @@ evidence 예산 400자로 낮춰서야 완주
 - [context-budget.md](context-budget.md) — 예산 상세
 - [rag-retrieval.md](rag-retrieval.md) — 지식 검색
 - [memory.md](memory.md) — 이력
-- [../teams/team-contract.md](../teams/team-contract.md) — `ContextPack` 계약
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — `ContextPack` 계약
 - [../teams/team-boundary.md](../teams/team-boundary.md) — 왜 Team이 직접 안 읽는가

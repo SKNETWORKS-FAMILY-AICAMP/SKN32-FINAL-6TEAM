@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import sys
 from pathlib import Path
@@ -65,8 +66,12 @@ def bootstrap_ci(rows: list[dict], *, iterations: int, seed: int,
             out[name] = {"point": point[name], "ci95": None,
                          "note": "분모 0 — 이 데이터셋으로는 측정할 수 없다"}
             continue
-        lower = values[max(0, int(lower_q * len(values)) - 1)]
-        upper = values[min(len(values) - 1, int(upper_q * len(values)))]
+        # ★nearest-rank 백분위는 0-based 로 `ceil(q*n) - 1` 이다. 처음엔 상한을
+        #   `int(q*n)` 으로 써서 한 칸 위 값을 집었다(2026-09-02 Codex 교차검증에서
+        #   지적, 계산으로 확인: n=10000·q=0.975 면 정답 9749 인데 9750 을 집었다).
+        #   n 이 크면 차이가 작지만 틀린 건 틀린 것이고, 표본이 작을수록 커진다.
+        lower = values[max(0, math.ceil(lower_q * len(values)) - 1)]
+        upper = values[min(len(values) - 1, max(0, math.ceil(upper_q * len(values)) - 1))]
         out[name] = {
             "point": round(point[name], 4),
             "ci95": [round(lower, 4), round(upper, 4)],

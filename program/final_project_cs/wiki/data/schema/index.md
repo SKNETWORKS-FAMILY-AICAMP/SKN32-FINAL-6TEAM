@@ -63,7 +63,7 @@ returns     (return_id, tenant_id, customer_id, order_id,
 
 ## ★ 결제 테이블이 없다
 
-`[실측]` 마이그레이션 6개 전체에 `payments`가 없다. 의도된 것이다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md)
+`[실측]` 마이그레이션 6개 전체에 `payments`가 없다. 의도된 것이다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../../wiki/decisions/D-001-payment-ownership.md)
 
 결제 상태는 `orders.status`에 섞여 있다.
 
@@ -125,12 +125,15 @@ CREATE INDEX returns_tenant_customer_idx   ON returns (tenant_id, customer_id);
 
 `case_events`는 append-only다. `UPDATE`·`DELETE`하지 않는다.
 
-→ [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md)
+→ [../runtime/case-lifecycle.md](../../runtime/case-lifecycle.md)
 
-## 관계
+---
 
-- [migrations.md](migrations.md) — 마이그레이션 순서
-- [tenancy.md](tenancy.md) — 격리 상세
-- [../runtime/shared-state.md](../runtime/shared-state.md) — 버전과 CAS
-- [../actions/idempotency.md](../actions/idempotency.md) — UNIQUE 제약의 역할
-- [../teams/return-refund.md](../teams/return-refund.md) — 금액 계산
+## 필드 전체 명세
+
+`[실측]` 2026-09-03. 계약 원문의 필드·타입·제약을 전부 옮겼다.
+
+→ **[fields.md](fields.md)**
+
+**여기는 개념이고 거기는 명세다.** 구현할 때는 그쪽을 본다.
+

@@ -126,4 +126,4 @@ pytest tests/contract/test_consumer_idempotency_contract.py -v
 - [outbox.md](outbox.md) — 발행 쪽 중복 방지
 - [tool-gateway.md](tool-gateway.md) — 실행 지점
 - [../runtime/conflict-retry.md](../runtime/conflict-retry.md) — 재시도해도 되는 것과 아닌 것
-- [../data/schema.md](../data/schema.md) — UNIQUE 제약
+- [../data/schema/index.md](../data/schema/index.md) — UNIQUE 제약

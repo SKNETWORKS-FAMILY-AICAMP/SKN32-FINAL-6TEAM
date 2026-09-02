@@ -227,7 +227,7 @@ size_exempt 있는데 이유 없음    → 실패
 저장소를 넘을 때도 상대경로를 쓴다. 워크스페이스 안에 나란히 있기 때문이다.
 
 ```markdown
-[cs의 계약](../final_project_cs/wiki/teams/team-contract.md)
+[cs의 계약](../final_project_cs/wiki/teams/team-contract/index.md)
 ```
 
 **예외는 `gPUteer` 하나다.** 별도 워크스페이스에 있어서 상대경로가 안정적이지 않다. GitHub 절대 URL을 쓴다.

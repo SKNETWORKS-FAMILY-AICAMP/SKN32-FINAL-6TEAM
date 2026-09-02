@@ -79,7 +79,7 @@ customer_cases → case_events   (aggregate_version으로 순서 보장)
 
 `case_events`에 `UNIQUE(case_id, aggregate_version)` 제약이 있어 **같은 버전의 이벤트가 두 번 들어갈 수 없다.**
 
-→ [../data/schema.md](../data/schema.md)
+→ [../data/schema/index.md](../data/schema/index.md)
 
 ## 구현
 
@@ -94,5 +94,5 @@ app/core/transition.py       상태 전이 규칙 (232줄)
 - [case-lifecycle.md](case-lifecycle.md) — 어떤 상태를 지나는가
 - [conflict-retry.md](conflict-retry.md) — 충돌 처리
 - [agentic-controller.md](agentic-controller.md) — 갱신을 지시하는 쪽
-- [../data/schema.md](../data/schema.md) — 저장 구조
+- [../data/schema/index.md](../data/schema/index.md) — 저장 구조
 - [../quality/invariants.md](../quality/invariants.md) — 불변식 전체

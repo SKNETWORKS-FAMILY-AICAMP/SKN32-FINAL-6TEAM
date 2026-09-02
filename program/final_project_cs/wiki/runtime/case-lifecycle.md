@@ -129,12 +129,12 @@ Team의 `next_action`이 상태 전이를 만든다.
 | `escalate` | `escalated` |
 | `continue` | `running` 유지 |
 
-계약이 조합을 강제한다. → [../teams/team-contract.md](../teams/team-contract.md)
+계약이 조합을 강제한다. → [../teams/team-contract/index.md](../teams/team-contract/index.md)
 
 ## 관계
 
 - [shared-state.md](shared-state.md) — 상태 저장과 버전
 - [conflict-retry.md](conflict-retry.md) — 동시 전이 충돌
 - [agentic-controller.md](agentic-controller.md) — 전이를 지시하는 쪽
-- [../teams/team-contract.md](../teams/team-contract.md) — `next_action`
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — `next_action`
 - [../quality/invariants.md](../quality/invariants.md) — 불변식 전체

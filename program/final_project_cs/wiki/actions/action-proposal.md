@@ -99,7 +99,7 @@ Team이 refund_amount_cents = 15000 을 제안하고 그 evidence를 가리킨�
 
 ## 관계
 
-- [../teams/team-contract.md](../teams/team-contract.md) — 전체 계약
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — 전체 계약
 - [../teams/team-boundary.md](../teams/team-boundary.md) — 왜 제안만 하는가
 - [evidence-check.md](evidence-check.md) — 근거 대조
 - [approval.md](approval.md) — 승인 판정

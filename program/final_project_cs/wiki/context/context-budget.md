@@ -119,5 +119,5 @@ class ContextBudgetError(RuntimeError): ...
 ## 관계
 
 - [context-broker.md](context-broker.md) — 조립 로직
-- [../teams/team-contract.md](../teams/team-contract.md) — `ContextPack`의 `degraded`·`omissions`
+- [../teams/team-contract/index.md](../teams/team-contract/index.md) — `ContextPack`의 `degraded`·`omissions`
 - [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md) — 토큰이 비용이 되는 경로

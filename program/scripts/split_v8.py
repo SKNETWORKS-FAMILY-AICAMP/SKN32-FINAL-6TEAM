@@ -59,7 +59,7 @@ MAP: dict[str, tuple[str, str, str, str]] = {
 
     "19":   ("cs/runtime/case-lifecycle.md",  "contract", "", ""),
     "20":   ("cs/runtime/conflict-retry.md",  "contract", "", ""),
-    "21":   ("cs/teams/team-contract.md",     "contract", "", ""),
+    "21":   ("cs/teams/team-contract/index.md",     "contract", "", ""),
     "23":   ("cs/context/context-budget.md",  "contract", "", ""),
     "24":   ("cs/external/auth-boundary.md",  "contract", "", ""),
 

@@ -138,5 +138,5 @@ amount = total * int(quantity) // item_count
 - [team-boundary.md](team-boundary.md) — 경계
 - [../actions/action-proposal.md](../actions/action-proposal.md) — 제안 구조
 - [../actions/evidence-check.md](../actions/evidence-check.md) — 대조가 못 잡는 것
-- [../data/schema.md](../data/schema.md) — `order_items.unit_cents`
+- [../data/schema/index.md](../data/schema/index.md) — `order_items.unit_cents`
 - [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md) — 조치안

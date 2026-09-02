@@ -111,7 +111,7 @@
 
 | 절 | 판정 | 어디에 / 무엇이 빠졌나 |
 |---|---|---|
-| 계약·기준선 | 일부 | `final_project_cs/wiki/teams/team-contract.md`에 `outcome`, `decisions[]`, `handoff_capability` 계약이 있고 `return-refund.md`·`program/wiki/evaluation/finetuning.md`에 Return Mock·평가 배분 0이 있다. `verdict` 매핑 규칙과 LOCAL 승격 조건은 없다 |
+| 계약·기준선 | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`에 `outcome`, `decisions[]`, `handoff_capability` 계약이 있고 `return-refund.md`·`program/wiki/evaluation/finetuning.md`에 Return Mock·평가 배분 0이 있다. `verdict` 매핑 규칙과 LOCAL 승격 조건은 없다 |
 | 숫자 | 누락 | 해외 39건의 세 분모별 비율, 10,527/57,860=18.19%, F 8/322=2.48%, D5 1/1,704=0.0587%가 없다 |
 | 안건별 판정 | 일부 | `final_project_cs/wiki/teams/fulfillment-logistics.md`에 국외 배송·해외구매대행은 Mock이라는 결론은 있다. 판매자취소 이관, warranty gate, D5 fixture, ETA 3층, 기록 재생 시연 등 나머지 구체 판정은 없다 |
 | 확인이 더 필요한 것 | 일부 | `final_project_cs/wiki/external/auth-boundary.md`에 마스킹·join key 분리·최소 증거·비식별 fixture와 hash가 있다. 품질보증 관련 공식 법령과 39건의 in-scope 분모 미확인은 없다 |

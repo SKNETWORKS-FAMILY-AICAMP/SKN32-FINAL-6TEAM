@@ -2,15 +2,15 @@
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
-| 0. 전 모델 공통 규칙 | 일부 | `final_project_cs/wiki/teams/team-contract.md`, `teams/team-registry.md` — `extra='forbid'`와 major 호환은 있으나 Enum 외 문자열 거부와 “optional field 추가만 호환” 조건이 불완전하다. |
-| 1. Enum | 반영 | `final_project_cs/wiki/teams/team-contract.md`, `runtime/case-lifecycle.md` |
-| 2. Evidence — 모든 주장에 출처를 붙인다 | 일부 | `final_project_cs/wiki/actions/evidence-check.md`, `teams/team-contract.md` — 근거 대조 원칙은 있으나 `Evidence`의 7개 필드·confidence 범위·5종 `source_type`과 `policy` source ID 형식이 없다. |
-| 3. ContextPack | 반영 | `final_project_cs/wiki/teams/team-contract.md`, `context/context-broker.md`, `context/context-budget.md` |
-| 4. TeamTask | 일부 | `final_project_cs/wiki/teams/team-contract.md`, `runtime/conflict-retry.md`, `teams/team-registry.md` — 필드와 `case_version` 의미는 있으나 `resume_node` 허용값 3종이 없다. |
+| 0. 전 모델 공통 규칙 | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`, `teams/team-registry.md` — `extra='forbid'`와 major 호환은 있으나 Enum 외 문자열 거부와 “optional field 추가만 호환” 조건이 불완전하다. |
+| 1. Enum | 반영 | `final_project_cs/wiki/teams/team-contract/index.md`, `runtime/case-lifecycle.md` |
+| 2. Evidence — 모든 주장에 출처를 붙인다 | 일부 | `final_project_cs/wiki/actions/evidence-check.md`, `teams/team-contract/index.md` — 근거 대조 원칙은 있으나 `Evidence`의 7개 필드·confidence 범위·5종 `source_type`과 `policy` source ID 형식이 없다. |
+| 3. ContextPack | 반영 | `final_project_cs/wiki/teams/team-contract/index.md`, `context/context-broker.md`, `context/context-budget.md` |
+| 4. TeamTask | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`, `runtime/conflict-retry.md`, `teams/team-registry.md` — 필드와 `case_version` 의미는 있으나 `resume_node` 허용값 3종이 없다. |
 | 5. ActionProposal — Team 은 제안까지만 한다 | 일부 | `final_project_cs/wiki/actions/action-proposal.md`, `actions/idempotency.md`, `teams/team-boundary.md` — 필드·제안 전용 경계·키 산식은 있으나 “서버 재계산값이 최종”이 명확하지 않고 wiki는 Team이 생성하고 Core가 검사한다고 적는다. |
-| 6. TeamResult | 일부 | `final_project_cs/wiki/teams/team-contract.md`, `runtime/case-lifecycle.md` — 필드는 있으나 일관성 표 5행 중 `respond→answer`, `escalate→failure_code 또는 warnings`가 빠졌다. `answer`가 있는데 evidence가 비면 거부한다는 규칙도 없다. |
-| 7. TeamManifest | 일부 | `final_project_cs/wiki/teams/team-contract.md`, `teams/team-registry.md`, 개별 `teams/*.md` — 일부 manifest 필드와 major 호환은 있으나 전체 스키마, `implementation_revision`, `default_capability`, `select_capability()` 우선 선택 규칙이 없다. |
-| 8. TeamModule Protocol — Core 가 Team 을 보는 유일한 창 | 반영 | `final_project_cs/wiki/teams/team-contract.md`, `teams/team-boundary.md`, `teams/team-registry.md` |
+| 6. TeamResult | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`, `runtime/case-lifecycle.md` — 필드는 있으나 일관성 표 5행 중 `respond→answer`, `escalate→failure_code 또는 warnings`가 빠졌다. `answer`가 있는데 evidence가 비면 거부한다는 규칙도 없다. |
+| 7. TeamManifest | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`, `teams/team-registry.md`, 개별 `teams/*.md` — 일부 manifest 필드와 major 호환은 있으나 전체 스키마, `implementation_revision`, `default_capability`, `select_capability()` 우선 선택 규칙이 없다. |
+| 8. TeamModule Protocol — Core 가 Team 을 보는 유일한 창 | 반영 | `final_project_cs/wiki/teams/team-contract/index.md`, `teams/team-boundary.md`, `teams/team-registry.md` |
 | 9. Port (Phase 2 교체 지점) | 일부 | `final_project_cs/wiki/runtime/message-broker.md`, `actions/idempotency.md`, `program/wiki/architecture/pack-model.md` — 교체 개념과 outbox/Redis 후보는 있으나 `MessageBrokerPort.publish/ack` 시그니처가 없고 wiki는 `MessageBusPort`로 기술한다. |
 | 10. 예외 | 일부 | `final_project_cs/wiki/actions/tool-gateway.md`, `runtime/conflict-retry.md`, `external/auth-boundary.md` — `StateConflict`, `ToolNotAllowed`, `GuardrailExceeded`, `ScopeDenied`는 있으나 `ContractViolation`과 5종 전체 목록이 없다. |
 
@@ -21,9 +21,9 @@
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
 | 0. 실행 환경 (실측 2026-08-12) | 일부 | `final_project_cs/wiki/operations/local-setup.md`, `data/migrations.md` — PostgreSQL 16.14·포트·conda·Docker 없음은 있으나 extension 세부 버전, 기존 DB 보호 경고, 최초 DB 생성 명령이 없다. |
-| 1. DDL 전문 (v5 §8) | 일부 | `final_project_cs/wiki/data/schema.md`, `data/migrations.md` — 14개 Core 테이블과 핵심 관계·제약은 있으나 DDL 전문의 컬럼·타입·default·FK·인덱스 정의는 옮기지 않았다. |
-| 2. ★빠뜨리면 시스템이 무너지는 제약 3개 | 반영 | `final_project_cs/wiki/data/schema.md`, `data/migrations.md`, `actions/idempotency.md` |
-| 3. 쓰기 규칙 (전 스트림 필수) | 반영 | `final_project_cs/wiki/data/schema.md`, `data/tenancy.md`, `runtime/case-lifecycle.md` |
+| 1. DDL 전문 (v5 §8) | 일부 | `final_project_cs/wiki/data/schema/index.md`, `data/migrations.md` — 14개 Core 테이블과 핵심 관계·제약은 있으나 DDL 전문의 컬럼·타입·default·FK·인덱스 정의는 옮기지 않았다. |
+| 2. ★빠뜨리면 시스템이 무너지는 제약 3개 | 반영 | `final_project_cs/wiki/data/schema/index.md`, `data/migrations.md`, `actions/idempotency.md` |
+| 3. 쓰기 규칙 (전 스트림 필수) | 반영 | `final_project_cs/wiki/data/schema/index.md`, `data/tenancy.md`, `runtime/case-lifecycle.md` |
 | optimistic concurrency (v5 §6-1) — 이 문 그대로 | 일부 | `final_project_cs/wiki/runtime/conflict-retry.md` — CAS SQL은 있으나 `owner_team_id` 갱신과 충돌 후 최대 2회 재계산 규칙이 없다. |
 | outbox worker claim (v5 §6-4) | 일부 | `final_project_cs/wiki/runtime/conflict-retry.md`, `actions/outbox.md` — `FOR UPDATE SKIP LOCKED`와 timeout 원칙은 있으나 pending/available 조건, 정렬, `LIMIT :batch`가 포함된 전체 SQL이 없다. |
 | RAG 검색 (v5 §9-2) | 일부 | `final_project_cs/wiki/context/rag-retrieval.md`, `data/tenancy.md` — tenant·scope·top-k 8은 있으나 cosine score 계산, JOIN, 정렬을 포함한 SQL이 없다. |
@@ -42,7 +42,7 @@
 | 1-0. ★"5개"가 세는 것은 `/v1/*` 뿐이다 (2026-08-12 명확화) | 일부 | `final_project_cs/wiki/external/rest-api.md`, `program/wiki/delivery/dod.md` — `/health` 제외는 있으나 `/ui/*`·FastAPI 기본 경로 구분과 “6번째 `/v1` 경로는 위반”이 없고, 오히려 추가 endpoint를 허용한다. |
 | 1-1. `POST /v1/cases` | 일부 | `final_project_cs/wiki/external/rest-api.md`, `actions/idempotency.md` — 인라인 분류와 중복 방지는 있으나 요청·201 응답 스키마, channel 4종, 재요청 시 기존 결과 반환 규칙이 없다. |
 | 1-2. `GET /v1/cases` | 일부 | `final_project_cs/wiki/external/rest-api.md`, `data/tenancy.md` — 소유권 격리는 있으나 필수 `customer_id`, `status`, 기본 20·최대 100, `cursor`가 없다. |
-| 1-3. `GET /v1/cases/{case_id}` | 일부 | `final_project_cs/wiki/external/rest-api.md`, `external/auth-boundary.md`, `teams/team-contract.md` — masked·evidence 원칙은 있으나 상세 응답의 `pending_actions`·`evidence` 구조와 예시가 없다. |
+| 1-3. `GET /v1/cases/{case_id}` | 일부 | `final_project_cs/wiki/external/rest-api.md`, `external/auth-boundary.md`, `teams/team-contract/index.md` — masked·evidence 원칙은 있으나 상세 응답의 `pending_actions`·`evidence` 구조와 예시가 없다. |
 | 1-4. `POST /v1/cases/{case_id}/messages` | 일부 | `final_project_cs/wiki/runtime/case-lifecycle.md`, `external/rest-api.md` — 추가 메시지와 resume 흐름은 있으나 resume token hash 저장, 24시간 TTL, 일회성, event idempotency 규칙이 없다. |
 | 1-5. `POST /v1/cases/{case_id}/actions/{action_id}/approve` | 일부 | `final_project_cs/wiki/actions/approval.md`, `external/auth-boundary.md`, `actions/idempotency.md` — scope·감사 hash·10회 중복 방지는 있으나 요청 필드와 `approved\|rejected` 계약이 없다. |
 | 2. 오류 응답 규약 | 일부 | `final_project_cs/wiki/data/tenancy.md`, `runtime/conflict-retry.md`, `operations/troubleshooting.md` — 남의 Case 404와 충돌 의미는 있으나 HTTP 400·401·403·404·409·422·429 전체 표와 error code, 내부 정보 비노출 규칙이 없다. |
@@ -79,13 +79,13 @@
 | 0. 가장 중요한 규칙 — 근거 없이 확정하지 않고, 승인 없이 실행하지 않는다 | 반영 | `final_project_cs/wiki/actions/index.md`, `actions/evidence-check.md`, `actions/approval.md`, `teams/team-boundary.md` |
 | 0.1 근거(Evidence) 없으면 답하지 않는다 | 일부 | `final_project_cs/wiki/actions/evidence-check.md`, `context/context-broker.md`, `context/rag-retrieval.md` — 근거 부족 시 중단·degraded 표시는 있으나 Evidence 필수 필드 3종을 포함한 응답 계약이 없다. |
 | 0.2 side effect 는 제안(proposal)까지만이다 | 반영 | `final_project_cs/wiki/teams/team-boundary.md`, `actions/action-proposal.md`, `external/mcp-tools.md`, `actions/idempotency.md` |
-| 0.3 상태는 한 문으로만 바뀐다 | 반영 | `final_project_cs/wiki/runtime/case-lifecycle.md`, `data/schema.md`, `runtime/shared-state.md` |
+| 0.3 상태는 한 문으로만 바뀐다 | 반영 | `final_project_cs/wiki/runtime/case-lifecycle.md`, `data/schema/index.md`, `runtime/shared-state.md` |
 | 1. 데이터 원칙 | 반영 | `final_project_cs/wiki/data/`, `context/`, `external/auth-boundary.md`, `quality/eval-harness.md` |
 | 지어내지 않는다 | 반영 | `final_project_cs/wiki/actions/evidence-check.md`, `runtime/case-lifecycle.md`, `external/rest-api.md`, `program/wiki/product/scope.md` |
 | tenant / customer 격리 | 반영 | `final_project_cs/wiki/data/tenancy.md`, `external/auth-boundary.md` |
 | PII 는 저장 시 masking, LLM 에는 masked 만 | 반영 | `final_project_cs/wiki/external/auth-boundary.md`, `quality/invariants.md` |
-| 산출물에 버전을 박는다 | 반영 | `final_project_cs/wiki/data/schema.md`, `quality/eval-harness.md`, `program/wiki/evaluation/protocol.md` |
-| 2. 계약 원칙 | 반영 | `final_project_cs/wiki/teams/team-contract.md`, `teams/team-registry.md`, `teams/team-boundary.md` |
+| 산출물에 버전을 박는다 | 반영 | `final_project_cs/wiki/data/schema/index.md`, `quality/eval-harness.md`, `program/wiki/evaluation/protocol.md` |
+| 2. 계약 원칙 | 반영 | `final_project_cs/wiki/teams/team-contract/index.md`, `teams/team-registry.md`, `teams/team-boundary.md` |
 | 3. 코드 원칙 | 일부 | `final_project_cs/wiki/operations/troubleshooting.md`, `context/context-budget.md` — 오진·회귀·주석·오류 메시지·가드레일 단일 출처는 있으나 조용한 skip을 세어 분모에 포함시키는 규칙이 없다. |
 | 4. 검증 원칙 | 반영 | `final_project_cs/wiki/operations/run.md`, `quality/eval-harness.md`, `actions/idempotency.md`, `program/wiki/evaluation/protocol.md` |
 | 5. 지금 상태 (2026-08-17) | 일부 | `final_project_cs/wiki/quality/evidence.md`, `quality/eval-harness.md`, `operations/run.md`, `program/wiki/delivery/release-gate.md` 등 — 상태가 여러 문서에 분산됐고 seed 구도메인 수치·프롬프트 배선 이력 등 일부가 없다. 테스트·DoD·미해결 수치는 wiki 문서끼리도 서로 다르다. |
@@ -115,7 +115,7 @@
 | 3.2 폴백(fallback) 금지 | 반영 | `final_project_cs/wiki/context/context-budget.md`, `context/rag-retrieval.md`, `runtime/conflict-retry.md` |
 | 3.3 꼭 필요한 부분만 구현 (YAGNI) | 일부 | `program/wiki/product/scope.md`, `architecture/pack-model.md` — In/Out과 Port까지만 구현한다는 취지는 있으나 중복 구현 통합·legacy 보존과 참조 프로젝트 이관 규칙이 없다. |
 | 3.4 리포트 제출 의무 | 누락 | 모든 세션의 리포트 제출 의무와 목표·변경 파일·검증·미해결 4항목 형식이 없다. |
-| 3.5 ★계약을 코드보다 먼저 고친다 (Contract-first) | 일부 | `final_project_cs/wiki/teams/team-contract.md`, `data/migrations.md` — 계약 변경 시 버전·테스트는 있으나 handoff 문서를 코드보다 먼저 고치는 순서가 없다. |
+| 3.5 ★계약을 코드보다 먼저 고친다 (Contract-first) | 일부 | `final_project_cs/wiki/teams/team-contract/index.md`, `data/migrations.md` — 계약 변경 시 버전·테스트는 있으나 handoff 문서를 코드보다 먼저 고치는 순서가 없다. |
 | 3.6 ★Codex 에 넘기기 전에 계약을 먼저 준다 (분업 규칙) | 일부 | `program/wiki/delivery/roles.md`, `governance/migration.md` — 소유 디렉터리 분리와 교차검증 취지는 있으나 계약 선확정·4종 산출물 검사·별도 테스트·검수 기록의 5단계 절차가 없다. |
 | 4. 폴더별 문서 규칙 | 일부 | `program/wiki/governance/migration-scope/index.md`, `final_project_cs/wiki/log.md` — 일부 기존 폴더의 처리 방식은 있으나 11개 폴더의 용도·갱신 시점 표가 없다. |
 | 4.0 ★DoD 를 통과시켰다고 말하려면 evidence 가 있어야 한다 | 반영 | `final_project_cs/wiki/quality/evidence.md`, `program/wiki/delivery/dod.md` |

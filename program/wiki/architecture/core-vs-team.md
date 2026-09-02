@@ -118,6 +118,6 @@ Controller가 전역 조정 책임을 갖는 것과 달리 **VOC는 업무 판�
 ## 관계
 
 - [pack-model.md](pack-model.md) — Pack 단위 교체
-- [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract.md) · [sample](../../final_project_sample/wiki/teams/team-contract.md) — 계약 상세
+- [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract/index.md) · [sample](../../final_project_sample/wiki/teams/team-contract.md) — 계약 상세
 - [`team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) · [sample](../../final_project_sample/wiki/teams/team-boundary.md) — 구현 관점 경계
 - [../product/glossary.md](../product/glossary.md) — 용어

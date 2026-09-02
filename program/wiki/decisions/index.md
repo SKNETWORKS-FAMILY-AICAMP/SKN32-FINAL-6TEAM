@@ -68,3 +68,9 @@ status: draft
 - [../research/index.md](../research/index.md) — 결정의 재료가 된 조사
 - [../product/index.md](../product/index.md) — 제품 결정이 여기서 나온다
 - [../log.md](../log.md) — 결정이 추가된 시점
+## [2026-09-03 추가]
+
+| ID | 무엇 | 상태 |
+|---|---|---|
+| [D-010](D-010-deferral-scoring.md) | **승인 대기를 실패로 셀 것인가** | **미결.** 코드에 규칙만 넣고 껐다 |
+
