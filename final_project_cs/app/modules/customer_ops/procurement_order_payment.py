@@ -2,6 +2,18 @@
 
 This module deliberately stops at verifiable facts and ``ActionProposal``
 objects.  It does not create orders or call a payment provider.
+
+★``TeamResult.answer`` 는 **고객에게 그대로 나가는 문장**이다(Controller 가
+  ``state_json.answer`` 로 넣고 ``GET /v1/cases/{id}`` 가 그대로 돌려준다).
+  이 제품의 고객은 한국어를 쓰므로 답변도 한국어여야 한다.
+
+  2026-09-02 까지 이 모듈만 답변 세 개를 영어로 하드코딩하고 있었고
+  (``order.verify``·``procurement.quote``·``payment.status``), 나머지 팀
+  넷은 전부 한국어였다. ``response_review`` 가 켜져 있으면 한국어로 재작성
+  되지만 기본값이 ``false`` 라 **영어 초안이 교정 없이 고객에게 나갔다.**
+  DoD-15 사람 라벨링 템플릿을 만들다 발견했다 —
+  ``docs/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md``.
+  재발 방지는 ``tests/unit/teams/test_answers_are_korean.py`` 가 맡는다.
 """
 from __future__ import annotations
 
@@ -188,7 +200,7 @@ class ProcurementOrderPaymentTeam:
                 if not evidence:
                     return self._escalate(task, "quote_evidence_missing")
                 quote = pricing if pricing is not None else policy
-                return self._result(task, outcome="completed", answer=f"Quote basis: {quote}",
+                return self._result(task, outcome="completed", answer=f"견적 산출 근거는 다음과 같습니다: {quote}",
                                     confidence=0.8, evidence=evidence,
                                     next_action=NextAction.RESPOND,
                                     decisions=[{"classification": "procurement_quote", "quote": quote}])
@@ -205,7 +217,8 @@ class ProcurementOrderPaymentTeam:
                     str(order.get("order_id")), str(order.get("order_no"))
                 })
                 return self._result(task, outcome="completed",
-                                    answer="Order verified against the local order record." if matches else "No matching local order record was found.",
+                                    answer="주문 기록에서 해당 주문을 확인했습니다."
+                                           if matches else "조회하신 조건과 일치하는 주문 기록을 찾지 못했습니다.",
                                     confidence=0.9 if matches else 0.7, evidence=evidence,
                                     next_action=NextAction.RESPOND,
                                     decisions=[{"classification": "order_verification", "matched": matches,
@@ -289,8 +302,12 @@ class ProcurementOrderPaymentTeam:
                                        value=payment)
             if not evidence:
                 return self._escalate(task, "payment_status_evidence_missing")
+            # ★`payment` 는 `paid`·`pending` 같은 영문 상태값일 수 있다. 상태값
+            #   자체를 한국어로 옮길지는 도메인 판단이라 여기서 정하지 않았다 —
+            #   `fulfillment_logistics` 의 `f"배송 상태는 {status}입니다."` 와 같은
+            #   방식이다. 문장은 한국어로, 값은 기록된 그대로 보인다.
             return self._result(task, outcome="completed",
-                                answer=f"Current payment status: {payment}", confidence=0.9,
+                                answer=f"현재 결제 상태는 {payment}입니다.", confidence=0.9,
                                 evidence=evidence, next_action=NextAction.RESPOND,
                                 decisions=[{"classification": "payment_status", "status": payment}])
         except ToolLoopExceeded:
