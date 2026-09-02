@@ -1,0 +1,35 @@
+# 미판정 23건 — 마지막 판정 (2026-09-03)
+# 형식: 경로 / type / 판정 / 목표영역 / 근거
+경로	type	판정	목표영역	근거
+program/plan/A-COP_구현계획서_v8.md	plan	분할	program/wiki/_migration/v8/	28절 기준선. 이미 _migration/v8/ 에 분할본이 있다
+program/research/_주말작업_요약_2026-08-29~30.md	report	제외	—	작업 일지. 결과는 각 문서에 반영됨
+program/plan/A-COP_DoD_잔여작업_계획.md	plan	대조필요	hub/delivery	dod.md 실측 현황과 겹칠 가능성
+program/plan/A-COP_Composer_중앙설정저장소_결정.md	decision	이관완료	—	D-007 에 반영 확인. 자체호스팅 충돌까지 옮겼다
+final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인
+program/plan/A-COP_티켓구조_재편_계획.md	plan	이관완료	—	ticket-structure.md 에 반영 확인
+program/plan/A-COP_중간발표_현황정리.md	report	제외	—	시점 기록. 중간발표 2026-09-15 지나면 무효
+program/research/_잔여작업_점검_2026-08-20.md	report	제외	—	기판정. 문서 모순 해소됨
+final_project_cs/docs/handoff/07_모듈화_구조.md	contract	이관완료	—	기판정. 신설 대상 5개가 전부 존재함을 확인했다
+final_project_cs/docs/vision/VISION-08_Commerce_Ops_Pack.md	decision	제자리	—	VISION-NN 은 번호로 읽는다. RULE.md 4.2 예외
+final_project_cs/docs/vision/VISION-09_사이트_생성_판매.md	decision	제자리	—	동
+program/research/_시장·출처근거.md	reference	이관완료	—	positioning.md·market.md 에 반영 확인 (누락 5번째로 찾음)
+scripts/README.md	guide	제자리	—	폴더 설명. 그 자리에 있어야 한다
+final_project_cs/docs/evidence/DoD-01_v4원본_hash_불변.md	evidence	제자리	—	evidence 원본이 정본
+README.md	guide	제자리	—	저장소 루트 소개. 옮기면 안 된다
+datasets/commerce/naver_order_history/scripts/crawler/legacy/README.md	report	제외	—	기판정. "일회성" 임시 스크립트 폐기 기록
+final_project_cs/docs/handoff/README.md	guide	제자리	—	handoff 폴더 설명. 계약 문서의 입구
+final_project_cs/docs/handoff/12_메시지_컨슈머_멱등성_계약.md	contract	이관	cs/runtime	새 consumer 추가 절차. INV-SAMPLE-RUN-001 과 짝
+datasets/commerce/coupang_order_history/scripts/legacy/README.md	report	제외	—	폐기 기록
+datasets/mt/olist_reviews_mt_bench/legacy/README.md	report	제외	—	폐기 기록
+datasets/commerce/coupang_order_history/docs/README.md	guide	제자리	—	폴더 설명
+final_project_cs/docs/handoff/11_basement_version_reference.md	reference	제자리	—	sample basement 참조 버전 기록. 갱신되는 값
+final_project_cs/docs/handoff/13_introspection_계약.md	contract	이관	cs/external	GET /introspection 계약. ops:introspect scope
+
+# 집계
+# 이관 2 · 이관완료 4 · 제자리 9 · 제외 7 · 분할 1
+#
+# ★제자리가 9건으로 가장 많다. 짧은 문서일수록 "그 자리에 있어야 하는" 것이 많다.
+#   README 는 폴더 설명이고, evidence 원본은 정본이고, VISION-NN 은 번호로 읽는다.
+#
+# ★이관완료 4건은 전부 대조해서 확인했다. 그중 _시장·출처근거 는
+#   대조 과정에서 누락 5번째(경쟁 격차 전체)를 찾아 채운 것이다.

@@ -84,3 +84,5 @@ app/presentation/
 - [../actions/index.md](../actions/index.md) — 나가는 경로
 - [../runtime/index.md](../runtime/index.md) — 들어온 요청이 Case가 되는 곳
 - [../../../program/wiki/architecture/system-context.md](../../../wiki/architecture/system-context.md) — 시스템 경계
+- [introspection.md](introspection.md) — 조립 상태를 보여주는 read-only API
+

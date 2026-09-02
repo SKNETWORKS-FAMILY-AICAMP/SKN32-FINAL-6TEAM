@@ -1,0 +1,91 @@
+# 남은 84건 — 규칙 기반 일괄 판정 (2026-09-03)
+# ★개별로 읽지 않았다. 앞선 검증에서 세운 규칙을 적용한 것이다.
+#   evidence 는 8차에서 표본 10/10 이 맞았고, _raw 는 인용 검사가 자동으로 가른다.
+#
+경로	type	판정	목표영역	근거
+datasets/commerce/coupang_order_history/docs/재작성_계획.md	plan	대조필요	?	개별 판정 필요
+datasets/commerce/coupang_order_history/docs/클릭_구현_계획.md	plan	대조필요	?	개별 판정 필요
+final_project_cs/docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-02_상태전이_규약_준수.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-03_동시성_appendonly_replay.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-04_checkpoint_projection_분리.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-05_ContextPack_토큰예산.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-06_정책FAQ_25건_300청크.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-07_tenant격리_PII.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-08_TeamModule_manifest_호환.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-09_인라인분류_전건실행.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-10_일일배치_급증report.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-12_outbox_원자성_replay.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-14_API키_scope_구분.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-17_마일스톤_게이트.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-18_UI_시나리오_종단표시.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-19_LOCAL_A2A_정규화.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-20_Port교체_Controller불변.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-21_Graph_관계질의.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-22_Team_직접Tool호출_금지.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-24_ActionProposal_근거대조.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-26_A2A_Catalog_왕복.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/DoD-EVAL-DATASETS_검증.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/EVAL-RUNNER-IMPORT-FIX.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/LIVE-CLASSIFIER-E2E_검증.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/MODULE-TOGGLES_실효화_검증.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md	evidence	제자리	—	evidence 원본이 정본. quality/evidence.md 가 색인한다
+final_project_cs/docs/evidence/_raw/DoD-04_v3.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-05_v4.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-07_v2.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-08.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-09_v2.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-11_v3.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-13.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-14.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-17.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/evidence/_raw/DoD-18.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_cs/docs/handoff/01_계약_Pydantic.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/02_DB_스키마.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/04_Team_모듈_계약.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/05_분업_규칙.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/06_가드레일_수치.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/handoff/10_도메인_교체_가이드.md	contract	대조필요	cs/*	계약 문서. 반영률 2차에서 31%였다
+final_project_cs/docs/manuals/2026-08-12_1520_환경_기동절차.md	runbook	대조필요	?	개별 판정 필요
+final_project_cs/docs/plans/2026-08-16_v7_격차해소_실행계획.md	plan	대조필요	?	개별 판정 필요
+final_project_cs/docs/plans/2026-08-30_2100_모듈토글_실효화_설계.md	plan	대조필요	?	개별 판정 필요
+final_project_cs/docs/plans/2026-08-31_1154_테스트_사각지대_회귀테스트_설계.md	plan	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/ESTIMATION_BASELINE.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-01_추론_기법_확장.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-02_전용_Graph_Store_도입.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-03_멀티_LLM_프로바이더_모델_라우팅.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-04_A2A_생태계_확장.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-05_메시징_내구_실행_확장.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-06_지식_메모리_확장.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/docs/vision/VISION-07_정책_엔진_Decagon_AOP_방식.md	decision	대조필요	?	개별 판정 필요
+final_project_cs/eval/reports/2026-08-12_평가결과_리포트.md	?	대조필요	?	개별 판정 필요
+final_project_sample/docs/evidence/_raw/DoD-04_v3.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-05_v4.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-07_v2.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-08.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-09_v2.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-11_v3.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-13.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-14.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-17.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+final_project_sample/docs/evidence/_raw/DoD-18.md	evidence	유지	제자리	판정본이 인용하는 실측 원문
+program/briefing/S-BRIEFING-POLISH.md	?	대조필요	?	개별 판정 필요
+program/onboarding/trace/S-TRACE-VIDEO_리포트.md	?	대조필요	?	개별 판정 필요
+program/plan/diagram/_다이어그램_근거.md	?	대조필요	?	개별 판정 필요
+program/research/_WBS원본_2026-08-17.md	reference	대조필요	?	개별 판정 필요
+program/research/_밤샘작업_요약_2026-08-20.md	report	대조필요	?	개별 판정 필요
+program/research/_법령사실_2026-08-15.md	reference	대조필요	?	개별 판정 필요
+program/research/_시장·출처근거.md	?	대조필요	?	개별 판정 필요
+program/research/_일일작업_2026-08-26.md	report	대조필요	?	개별 판정 필요
+program/research/_일일작업_2026-08-27.md	report	대조필요	?	개별 판정 필요
+program/research/_일일작업_2026-08-28.md	report	대조필요	?	개별 판정 필요
+program/research/_정합성점검_2026-08-19.md	report	대조필요	?	개별 판정 필요
+program/research/_주말작업_요약_2026-08-29~30.md	report	대조필요	?	개별 판정 필요
+program/research/테스트_사각지대_실측.md	evidence	대조필요	?	개별 판정 필요
+program/scripts/_gap_audit.md	?	대조필요	?	개별 판정 필요
+program/scripts/_gap_audit2.md	?	대조필요	?	개별 판정 필요
+
+# 집계: {'대조필요': 38, '제자리': 26, '유지': 20}

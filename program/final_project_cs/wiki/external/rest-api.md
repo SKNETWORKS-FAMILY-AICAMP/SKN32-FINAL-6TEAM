@@ -271,6 +271,12 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 근거: `docs/handoff/03_REST_MCP_인터페이스.md:150-153`
 
+## `GET /introspection`
+
+`ops:introspect` scope 로 보호되는 read-only API 다. **무엇이 조립돼 있나를 보여주고 얼마나 돌고 있나는 안 보여준다.**
+
+→ [introspection.md](introspection.md)
+
 ## 관계
 
 - [mcp-tools.md](mcp-tools.md) — 읽기 전용 경로

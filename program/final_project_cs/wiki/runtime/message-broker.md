@@ -104,6 +104,45 @@ app/infrastructure/messaging/
 └─ mock_payment_publisher.py           테스트 더블 (파일명 정리 대상)
 ```
 
+## ★ [2026-09-03] 새 consumer 를 추가할 때 지킬 것
+
+`[실측]` `docs/handoff/12_메시지_컨슈머_멱등성_계약.md` 에서 이관.
+
+> **구현을 완료하기 전에** `tests/contract/test_consumer_idempotency_contract.py` 의 계약 테스트를 **통과시켜야 한다.**
+
+**순서가 규칙이다.** 만들고 나서 테스트를 맞추는 게 아니다.
+
+### 계약이 강제하는 셋
+
+`MessageBrokerPort` 의 `topic`·`dedupe_key` 경계 기준.
+
+| # | 강제 |
+|---|---|
+| 1 | 같은 `dedupe_key` 를 **두 번 발행·처리해도 side effect 는 한 번만** |
+| 2 | 같은 메시지를 **동시에 claim 해도 한 번만** |
+| 3 | **timeout·connection 불확실성은 `unknown` 으로 남고 worker 가 자동 재실행하지 않는다** |
+
+**3번이 1·2번과 다른 종류다.** 1·2는 "두 번 하지 마라"이고 3은 **"모르면 결정하지 마라"**다.
+
+### 등록 방식
+
+```
+tests 의 consumer_contract_factories 에 자기 adapter 를 등록한다
+adapter 는 publish · process_once · status 를 제공한다
+```
+
+`[실측]` **금지 사항이 명확하다.**
+
+> 실제 consumer 구현이나 **업무 DB 를 계약 테스트 안에 복제해서는 안 된다.**
+
+**복제하면 테스트가 구현을 따라가서 아무것도 안 막는다.**
+
+### 빠뜨리면 잡히나
+
+`[실측]` sample 쪽에는 **증거 없는 consumer 를 세는 게이트**가 있다. → [`INV-SAMPLE-RUN-001`](../../../final_project_sample/wiki/quality/invariants.md)
+
+`[미확보]` **cs 에도 같은 게이트가 있는지 확인 안 했다.** 없으면 새 consumer 를 등록 안 하고 넘어갈 수 있다.
+
 ## 관계
 
 - [agentic-controller.md](agentic-controller.md) — 흐름을 결정하는 쪽

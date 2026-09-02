@@ -73,7 +73,7 @@ final_project_cs/docs/evidence/DoD-24_ActionProposal_근거대조.md	evidence	cs
 final_project_cs/docs/evidence/DoD-25_degraded_자동실행_금지.md	evidence	cs/quality	유지		68	
 final_project_cs/docs/evidence/DoD-26_A2A_Catalog_왕복.md	evidence	cs/quality	유지		79	
 final_project_cs/docs/evidence/DoD-27_A2A_실패_취소_인증.md	evidence	cs/quality	유지		89	
-final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md	evidence	cs/quality	판정필요	decision+report+research	410	신호 3종·410줄
+final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md	evidence	cs/quality	판정필요	decision+report+research+concept	453	신호 4종·453줄
 final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md	evidence	cs/quality	판정필요	decision+plan+policy	162	신호 3종·162줄
 final_project_cs/docs/evidence/DoD-EVAL-DATASETS_검증.md	evidence	cs/quality	유지		95	
 final_project_cs/docs/evidence/EVAL-RUNNER-IMPORT-FIX.md	evidence	cs/quality	유지		70	
@@ -106,7 +106,7 @@ final_project_cs/docs/evidence/_raw/DoD-18.md	evidence	cs/quality	유지		28	판
 final_project_cs/docs/evidence/_raw/DoD-18_v3.md	evidence	cs/quality	제외		42	인용되지 않은 중간판
 final_project_cs/docs/handoff/01_계약_Pydantic.md	contract	cs/teams·external·data	유지	research+policy	232	
 final_project_cs/docs/handoff/02_DB_스키마.md	contract	cs/teams·external·data	유지	report+policy	245	
-final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md	contract	cs/teams·external·data	유지		162	
+final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md	contract	cs/teams·external·data	유지		176	
 final_project_cs/docs/handoff/04_Team_모듈_계약.md	contract	cs/teams·external·data	유지		111	
 final_project_cs/docs/handoff/05_분업_규칙.md	contract	cs/teams·external·data	유지	plan+report+research+concept+policy	93	
 final_project_cs/docs/handoff/06_가드레일_수치.md	contract	cs/teams·external·data	유지		121	
@@ -332,6 +332,7 @@ final_project_cs/docs/reports/debugs/2026-09-01_capability_for_폴백이_근거�
 final_project_cs/docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md	?	?	제외		68	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-01_환불금액_균등분할_가정.md	?	?	제외		101	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md	?	?	제외		121	그 시점 기록. 결정·증거만 추출
+final_project_cs/docs/reports/debugs/2026-09-03_접수응답이_에이전트_실행을_기다렸다.md	?	?	제외		74	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/submission/00_제출산출물_인덱스.md	?	?	제외		17	제출 산출물. 별도 관리
 final_project_cs/docs/submission/01_수집데이터_및_전처리.md	?	?	제외		32	제출 산출물. 별도 관리
 final_project_cs/docs/submission/02_시스템_아키텍처.md	?	?	제외		48	제출 산출물. 별도 관리
