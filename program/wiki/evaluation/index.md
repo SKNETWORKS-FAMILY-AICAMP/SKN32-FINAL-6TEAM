@@ -78,3 +78,5 @@ status: draft
 - [../business/unit-economics.md](../business/unit-economics.md) — 오류율이 돈으로 환산된다
 - [`cs/quality/eval-harness.md`](../../final_project_cs/wiki/quality/eval-harness.md) — 실행 방법
 - [`sample/wiki/quality/`](../../final_project_sample/wiki/quality/index.md) — sample 에도 `eval/` 이 있다. 계약 테스트가 주력이다
+- [dod28-rerun.md](dod28-rerun.md) — **DoD-28 을 다시 재야 하는 이유.** 0% 는 근거를 안 준 결과다
+

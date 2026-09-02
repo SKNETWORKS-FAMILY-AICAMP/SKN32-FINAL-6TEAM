@@ -43,7 +43,21 @@ tags: [testing, evaluation]
 |---|---|
 | **[DoD-15](../../../../final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md)** | **A/B 60×3 실행. 그런데 이 숫자는 지금 무효다** — 아래 |
 | [DoD-17](../../../../final_project_cs/docs/evidence/DoD-17_마일스톤_게이트.md) | 마일스톤 게이트 |
-| [DoD-28](../../../../final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md) | 376줄. **분할 대상** — [9차](../../../wiki/governance/type-verification/round-9.md) |
+| [DoD-28](../../../../final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md) | **비교가 성립하지 않았다** — 아래 |
+
+## ★ DoD-28 도 다시 재야 한다
+
+`[실측]` 기록된 결과는 `Proposed+FT` **judge pass 0.0% · policy_grounding 0.00** 이다.
+
+> **0% 는 모델 성능이 아니다.** 파이프라인 밖에서 호출돼 **RAG evidence 를 아예 못 받았다.**
+
+**근거를 안 주고 근거 점수를 매긴 것이다.** 스키마 파싱은 97.2% 성공했다 — 형식은 지켰다.
+
+`[실측]` **배선은 그 뒤 고쳤는데 재측정을 안 했다.** 계획했던 세 arm 중 `Proposed+FT-RAG통합` 결과 파일이 없다.
+
+**학습 데이터도 무효였다** — 2차 22건이 나중에 **고유 draft 2개**로 밝혀진 그 집합의 부분집합이다.
+
+→ [../../../wiki/evaluation/dod28-rerun.md](../../../wiki/evaluation/dod28-rerun.md)
 
 ## ★ DoD-15 의 숫자를 쓰면 안 된다
 
