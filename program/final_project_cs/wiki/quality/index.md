@@ -11,10 +11,11 @@ status: draft
 
 ## 읽기 순서
 
-1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 33개
+1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 **51개**
 2. [test-map.md](test-map.md) — 무엇을 어디서 검사하는가
 3. [blind-spots.md](blind-spots.md) — 검사가 없는 지점
 4. [eval-harness.md](eval-harness.md) — 평가 실행
+5. [evidence.md](evidence.md) — **DoD 29항목의 실측 증거가 어디 있나**
 
 ## 각 문서
 
@@ -24,6 +25,7 @@ status: draft
 | [test-map.md](test-map.md) | 이 규칙은 어느 테스트가 지키는가 |
 | [blind-spots.md](blind-spots.md) | 어긴 걸 못 잡는 곳이 어딘가 |
 | [eval-harness.md](eval-harness.md) | 평가를 어떻게 돌리는가 |
+| **[evidence.md](evidence.md)** | **어느 DoD 가 무엇으로 증명됐고 어디가 낡았나** |
 
 ## 테스트 현황
 

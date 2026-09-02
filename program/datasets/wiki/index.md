@@ -41,6 +41,22 @@ REPORT는 데이터와 함께 살아야 하고, 상당수가 스크립트로 재
 
 → [중앙 허브 이관 계획](../../wiki/governance/migration.md)
 
+### 다만 REPORT 가 아닌 것은 옮긴다
+
+`[실측]` 2026-09-02. **9차 판정에서 "이관 13건"으로 셌는데 그중 REPORT 는 이 규칙에 걸린다.** 판정을 정정했다.
+
+| 성격 | 조치 |
+|---|---|
+| `REPORT.md` (데이터가 무엇인가) | **제자리.** 데이터와 함께 산다 |
+| **규칙·판단·선정 근거** | **옮긴다** |
+
+옮긴 것.
+
+| 원본 | → |
+|---|---|
+| `commerce/DISTRIBUTION.md` | [distribution.md](distribution.md) — **개인정보 규칙이라 반드시 wiki 에 있어야 한다** |
+| `voc/sources_catalog/` 조사 3건 | [source-selection.md](source-selection.md) — 왜 이 소스를 골랐나 |
+
 ## 사업성에 쓰인 것
 
 | 데이터셋 | 어디에 |

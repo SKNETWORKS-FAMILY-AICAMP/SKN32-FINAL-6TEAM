@@ -73,3 +73,5 @@ status: draft
 
 - [`final_project_cs/wiki/index.md`](../../final_project_cs/wiki/index.md) · [sample](../../final_project_sample/wiki/index.md) — 구현
 - [../product/scope.md](../product/scope.md) — 범위가 아키텍처를 제약한다
+- [stack-sources.md](stack-sources.md) — 기술 스택 공식 문서 URL. `curl` 로 HTTP 200 확인
+

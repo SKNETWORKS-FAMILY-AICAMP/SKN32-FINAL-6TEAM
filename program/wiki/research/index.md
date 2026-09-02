@@ -49,3 +49,15 @@ status: draft
 - [../decisions/index.md](../decisions/index.md) — 조사가 결정이 되는 곳
 - [../business/market.md](../business/market.md) — 시장 조사는 business에 있다
 - [../governance/evidence-grades.md](../governance/evidence-grades.md) — `[외부]` 표기 규칙
+## [2026-09-02 추가] 외부 근거 3건
+
+`[실측]` `program/research/` 에서 이관. **URL 116개가 전부 원본에 있던 것이다** — 지어낸 링크가 없다.
+
+| 문서 | 무엇 |
+|---|---|
+| [legal-basis.md](legal-basis.md) | **전자상거래법 제17조 · 개인정보보호법 제2·15·17조 원문.** 국가법령정보센터 Open API 로 조회 |
+| [dispute-cases.md](dispute-cases.md) | **분쟁조정 4건.** 그 조문이 실제 분쟁에 어떻게 적용됐나 |
+| [mt-methodology.md](mt-methodology.md) | 번역 모델 비교가 성립하는 조건 5가지 |
+
+**앞의 둘이 짝이다.** 조문만으로는 Team 로직을 못 짜고, 적용례가 있어야 한다.
+

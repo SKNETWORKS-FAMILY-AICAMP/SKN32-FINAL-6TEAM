@@ -40,6 +40,7 @@ SKIP_DIRS = (
     #     "이관 안 함"이라는 결론은 같으므로 여기서 함께 건너뛴다.
     #     근거: governance/type-verification/round-7.md
     "_prompts/",
+    "scripts/_codex_out/",          # 우리 작업 산출물. 이관 대상이 아니다
     "final_project_cs/legacy/",     # 옛 sample 코드 사본 42건
     "final_project_cs/knowledge/",  # RAG 코퍼스 25건. 문서가 아니라 데이터
     "final_project_cs/prompts/",    # 프롬프트 파일

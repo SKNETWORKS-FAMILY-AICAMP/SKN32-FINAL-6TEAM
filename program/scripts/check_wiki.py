@@ -81,6 +81,9 @@ IMPL_BIAS_OK = {
     # 이관 작업 자체의 기록. 대상이 cs 라서 한쪽만 나온다
     "governance/migration", "governance/type-verification/",
     "log.md",
+    # ★_migration/ 은 이관 전 스테이징이다. 원문을 형식만 바꿔 담아 둔 곳이라
+    #   hub 의 계약 문서가 아니다. 적용할 때 이 규칙을 다시 건다.
+    "_migration/",
 }
 
 FENCE = re.compile(r"(?ms)^```.*?^```+\s*$")

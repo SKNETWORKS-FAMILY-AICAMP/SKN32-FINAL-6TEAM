@@ -63,6 +63,14 @@ cs의 [불변식 카탈로그](../../final_project_cs/wiki/quality/invariants.md
 | Runtime | 4개 |
 | Team 계약 | 3개 |
 
+## [2026-09-02 추가] 설계 근거
+
+| 문서 | 무엇 |
+|---|---|
+| [learning-methodology.md](learning-methodology.md) | 교수법 10가지와 각각의 출처 |
+| [design-review.md](design-review.md) | **치명적 약점 7가지.** 그대로 구현할 단계가 아니라는 판정 |
+| [trace-review.md](trace-review.md) | 추적 화면 교차검증. 지적 6개 중 4개는 이미 고쳐졌다 |
+
 ## 관계
 
 - [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md) — 검증 대상 불변식

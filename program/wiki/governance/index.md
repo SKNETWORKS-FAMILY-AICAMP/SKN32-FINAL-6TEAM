@@ -56,3 +56,11 @@ status: draft
 
 - [../index.md](../index.md) — 허브 전체 지도
 - [../decisions/index.md](../decisions/index.md) — 결정 문서는 별도 골격을 쓴다
+## [2026-09-02 추가]
+
+| 문서 | 무엇 |
+|---|---|
+| [work-loop.md](work-loop.md) | **세션마다 무엇을 읽고 무엇을 남기나.** 파일명 체계가 이 wiki 와 다르다 |
+| [drift-case-voc.md](drift-case-voc.md) | 낡은 문장이 규칙으로 승격된 사고 |
+| [migration-scope/coverage.md](migration-scope/coverage.md) | 반영률 실측 |
+

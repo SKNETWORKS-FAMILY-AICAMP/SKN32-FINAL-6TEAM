@@ -42,7 +42,7 @@ datasets/voc/sources_catalog/REPORT.md	dataset	data/catalog	유지		78
 datasets/voc/sources_catalog/_codex_independent_research_2026-08-20.md	dataset	data/catalog	판정필요	decision+research	264	REPORT 분할 신호 (report-split.md)
 datasets/voc/sources_catalog/_review_spam_detection_codex_논의_2026-08-20.md	dataset	data/catalog	판정필요	decision+plan+research+policy	197	신호 4종·197줄
 datasets/voc/sources_catalog/_완결성점검_codex_2026-08-20.md	dataset	data/catalog	유지	decision+research	131	
-final_project_cs/CLAUDE.md	policy	루트 유지	유지		220	
+final_project_cs/CLAUDE.md	policy	루트 유지	유지		226	
 final_project_cs/RULE.md	?	?	유지	research+policy	280	
 final_project_cs/docs/TODO/보류_실비용_사람작업.md	?	?	제외		46	완료된 TODO
 final_project_cs/docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md	evidence	cs/quality	유지		87	
@@ -73,7 +73,7 @@ final_project_cs/docs/evidence/DoD-24_ActionProposal_근거대조.md	evidence	cs
 final_project_cs/docs/evidence/DoD-25_degraded_자동실행_금지.md	evidence	cs/quality	유지		68	
 final_project_cs/docs/evidence/DoD-26_A2A_Catalog_왕복.md	evidence	cs/quality	유지		79	
 final_project_cs/docs/evidence/DoD-27_A2A_실패_취소_인증.md	evidence	cs/quality	유지		89	
-final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md	evidence	cs/quality	판정필요	decision+report+research	342	신호 3종·342줄
+final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md	evidence	cs/quality	판정필요	decision+report+research	410	신호 3종·410줄
 final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md	evidence	cs/quality	판정필요	decision+plan+policy	162	신호 3종·162줄
 final_project_cs/docs/evidence/DoD-EVAL-DATASETS_검증.md	evidence	cs/quality	유지		95	
 final_project_cs/docs/evidence/EVAL-RUNNER-IMPORT-FIX.md	evidence	cs/quality	유지		70	
@@ -104,7 +104,7 @@ final_project_cs/docs/evidence/_raw/DoD-16.md	evidence	cs/quality	제외		25	인
 final_project_cs/docs/evidence/_raw/DoD-17.md	evidence	cs/quality	유지		35	판정본이 인용하는 실측 원문. 끊으면 근거 사슬이 끊긴다
 final_project_cs/docs/evidence/_raw/DoD-18.md	evidence	cs/quality	유지		28	판정본이 인용하는 실측 원문. 끊으면 근거 사슬이 끊긴다
 final_project_cs/docs/evidence/_raw/DoD-18_v3.md	evidence	cs/quality	제외		42	인용되지 않은 중간판
-final_project_cs/docs/handoff/01_계약_Pydantic.md	contract	cs/teams·external·data	유지	research+policy	222	
+final_project_cs/docs/handoff/01_계약_Pydantic.md	contract	cs/teams·external·data	유지	research+policy	232	
 final_project_cs/docs/handoff/02_DB_스키마.md	contract	cs/teams·external·data	유지	report+policy	245	
 final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md	contract	cs/teams·external·data	유지		162	
 final_project_cs/docs/handoff/04_Team_모듈_계약.md	contract	cs/teams·external·data	유지		111	
@@ -168,9 +168,9 @@ final_project_cs/docs/plans/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md	plan	h
 final_project_cs/docs/plans/2026-08-16_v7_격차해소_실행계획.md	plan	hub/delivery	유지	plan+policy	150	
 final_project_cs/docs/plans/2026-08-17_코퍼스_25문서_배분안.md	plan	hub/delivery	판정필요	plan+report+policy	214	신호 3종·214줄
 final_project_cs/docs/plans/2026-08-30_2100_모듈토글_실효화_설계.md	plan	hub/delivery 또는 cs/decisions	유지	plan+report+policy	88	
-final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md	plan	hub/delivery 또는 cs/decisions	판정필요	decision+plan+report+research+policy	579	신호 5종·579줄
+final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md	plan	hub/delivery 또는 cs/decisions	판정필요	decision+plan+report+research+policy	657	신호 5종·657줄
 final_project_cs/docs/plans/2026-08-31_1154_테스트_사각지대_회귀테스트_설계.md	plan	hub/delivery 또는 cs/decisions	유지	plan+policy	99	
-final_project_cs/docs/release_checklist.md	?	?	유지	decision+report	159	
+final_project_cs/docs/release_checklist.md	?	?	유지	decision+report	182	
 final_project_cs/docs/reports/2026-08-12_1630_P0-P1_및_Codex1차_검수_리포트.md	?	?	제외	plan+report	147	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/2026-08-12_2045_RAG검색_수정_리포트.md	?	?	제외	decision+plan+report	91	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/2026-08-12_S-API_REST_MCP_리포트.md	?	?	제외		100	그 시점 기록. 결정·증거만 추출
@@ -307,6 +307,7 @@ final_project_cs/docs/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트
 final_project_cs/docs/reports/2026-08-31_1211_테스트_사각지대_회귀테스트_리포트.md	?	?	제외	decision+plan	175	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/2026-09-01_S-CASE-IDEMPOTENCY-FIX_리포트.md	?	?	제외		81	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md	?	?	제외	report+concept	130	그 시점 기록. 결정·증거만 추출
+final_project_cs/docs/reports/2026-09-02_S-UI-HOVER-JITTER_브라우저재현_리포트.md	?	?	제외	decision+plan+report+research+policy	97	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-08-12_1600_RAG코퍼스_섹션이_보일러플레이트로_채워짐.md	?	?	제외	plan+report	100	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-08-12_1720_RAG코퍼스_v2_문장템플릿과_게이트_구멍.md	?	?	제외		76	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-08-12_1830_S-API가_실행되지_않는다.md	?	?	제외	decision+report	79	그 시점 기록. 결정·증거만 추출
@@ -327,9 +328,10 @@ final_project_cs/docs/reports/debugs/2026-08-31_버전대조_가드_중복.md	?	
 final_project_cs/docs/reports/debugs/2026-09-01_Case상세_API_evidence_value가_항상_빈값이다.md	evidence	?	제외		40	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md	?	?	제외	decision+report	163	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-01_Controller가_LLM호출을_트랜잭션_안에서_한다.md	evidence	?	제외		97	그 시점 기록. 결정·증거만 추출
-final_project_cs/docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md	evidence	?	제외		126	그 시점 기록. 결정·증거만 추출
+final_project_cs/docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md	evidence	?	제외		191	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md	?	?	제외		68	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/reports/debugs/2026-09-01_환불금액_균등분할_가정.md	?	?	제외		101	그 시점 기록. 결정·증거만 추출
+final_project_cs/docs/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md	?	?	제외		121	그 시점 기록. 결정·증거만 추출
 final_project_cs/docs/submission/00_제출산출물_인덱스.md	?	?	제외		17	제출 산출물. 별도 관리
 final_project_cs/docs/submission/01_수집데이터_및_전처리.md	?	?	제외		32	제출 산출물. 별도 관리
 final_project_cs/docs/submission/02_시스템_아키텍처.md	?	?	제외		48	제출 산출물. 별도 관리
@@ -739,10 +741,6 @@ program/research/테스트_사각지대_2026-08-30.md	?	hub/research — 전건 
 program/research/테스트_사각지대_실측.md	evidence	hub/research — 전건 판정 완료. _verify_research.tsv	유지	decision+policy	117	
 program/research/학습게임_방법론_조사.md	?	hub/research — 전건 판정 완료. _verify_research.tsv	판정필요	decision+concept+policy	208	신호 3종·208줄
 program/research/학습게임_설계검수_2026-08-30.md	?	hub/research — 전건 판정 완료. _verify_research.tsv	유지	concept+policy	159	
-program/scripts/_codex_out/PROMPT_composer.md	?	?	유지		83	
-program/scripts/_codex_out/PROMPT_quality.md	?	?	유지		89	
-program/scripts/_codex_out/PROMPT_runtime.md	?	?	유지		90	
-program/scripts/_codex_out/PROMPT_teams.md	?	?	유지		86	
-program/scripts/_codex_out/runtime_raw.md	?	?	유지	plan+policy	420	
+program/scripts/_gap_audit.md	?	?	유지		164	
 program/산출물양식/README.md	guide	각 폴더 유지	유지	report+concept	94	
 scripts/README.md	guide	각 폴더 유지	판정필요	report+concept+policy	33	33줄 — 작업 로그·폐기 기록 후보

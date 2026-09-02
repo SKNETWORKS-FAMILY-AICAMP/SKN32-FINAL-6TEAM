@@ -43,3 +43,26 @@
 #   제목에 날짜가 붙은 절이 그 신호다.
 #
 # ★ H1 이 3개인 파일 2건은 규칙 이전의 문제다. 한 파일에 두 문서가 들어 있다.
+
+# ── 이관 실행 기록 (2026-09-02) ──
+#
+# ★9차 판정 "이관 13건" 을 정정한다.
+#   datasets/wiki/index.md 에 이미 "REPORT 는 이관하지 않는다" 는 결정이 있었다.
+#   REPORT 는 데이터와 함께 살아야 하고 상당수가 스크립트로 재생성된다.
+#   판정할 때 이 결정을 안 봤다.
+#
+# 정정된 판정
+#   REPORT.md 계열 6건        →  제자리
+#   규칙·판단·선정 근거 4건    →  이관 (완료)
+#   작업기록·coupang REPORT   →  제자리 (시점 기록)
+#   실제HTML_주문카드          →  scraper-notes.md 에 흡수 (완료)
+#
+# 이관한 것
+#   commerce/DISTRIBUTION.md        → datasets/wiki/distribution.md
+#   sources_catalog 조사 3건         → datasets/wiki/source-selection.md
+#   docs/실제HTML_주문카드.md          → scraper-notes.md 의 선택자 절
+#
+# ★이관하며 확인한 것
+#   - 배포 합본에 집 열쇠 위치가 51건 들어 있었다. 개인정보 규칙이라 wiki 필수
+#   - 완결성 점검의 ECMC 권고가 실제 데이터셋 폴더가 됐다. 점검이 빈 자리를 짚었다
+#   - KR3 라이선스 기재가 카탈로그에서 틀렸었다
