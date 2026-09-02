@@ -1,5 +1,27 @@
 # 결함 — 단일 인자 생성자 Team 에 `tools` 가 `llm` 자리로 잘못 들어간다
 
+## 해결됨 (수정은 그 무렵, 상태 표기는 2026-09-03 에 붙임)
+
+`app/composition.py::_instantiate_team()` 이 **인자 개수 대신 이름**을 본다.
+
+```python
+if len(required) <= 1 and len(positional) <= 1:
+    if positional[0].name == "llm":
+        return implementation(llm)
+    return implementation(tools)
+```
+
+회귀 테스트도 있다 — `tests/unit/test_composition_root.py` 가
+`__init__(self, llm=None)` 형태와 `__init__(self, tools, llm=None)` 형태를
+둘 다 세워 놓고 각각 올바른 것이 들어가는지 본다.
+
+★**이 문서만 갱신이 안 돼 미해결 목록에 남아 있었다.** 2026-09-03 에
+미해결 결함을 훑다가 코드와 테스트를 직접 확인하고 표기를 붙였다 —
+"고쳤는지와 무관하게 먼저 기록한다"(`RULE.md` §4.1)는 규칙이 리포트를
+남기게 했지만, 고친 뒤 되돌아와 닫는 절차는 없었던 셈이다.
+
+---
+
 DoD-29 사실수집(`docs/reports/2026-08-19_DoD29-사실수집.md` §4)에서 발견했다.
 **고쳤는지와 무관하게 먼저 기록한다**(`RULE.md` §4.1).
 
