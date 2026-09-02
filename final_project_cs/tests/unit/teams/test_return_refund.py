@@ -264,3 +264,60 @@ def test_intent_mixed_with_an_inquiry_defers_to_eligibility_check():
     """
     assert ReturnRefundTeam.select_capability("exchange", "교환하고 싶습니다. 신청 기한을 알려 주세요") is None
     assert ReturnRefundTeam.select_capability("exchange", "다른 상품으로 바꾸고 싶은데 교환 대상에 해당하나요?") is None
+
+
+# ★2026-09-03 — 상품 반품 제한을 실제로 보는지 (마이그레이션 008).
+#   전에는 이 검사가 아예 없으면서 답변만 "정책 근거상" 이라고 말했다
+#   (docs/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
+def _with_catalog(capability: str, restriction):
+    """`read.catalog` 가 주어진 제한값을 돌려주는 픽스처."""
+    task, tools = make_task(capability)
+    tools.values["read.catalog"] = {
+        "product_id": "p1", "sku": "SKU-1", "name": "위젯", "unit_cents": 10000,
+        "status": "active", "updated_at": None, "return_restriction": restriction,
+    }
+    return task, tools
+
+
+@pytest.mark.asyncio
+async def test_a_restricted_product_is_escalated_with_the_reason():
+    """주문제작 상품이면 "검토할 수 있습니다" 대신 사유를 들어 사람에게 넘긴다."""
+    task, tools = _with_catalog("return.check_eligibility", "made_to_order")
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "escalated"
+    assert result.failure_code == "return_restricted_product"
+    assert any("주문제작" in w for w in result.warnings)
+
+
+@pytest.mark.asyncio
+async def test_a_product_confirmed_unrestricted_still_answers_eligible():
+    """제한 없음이 **확인되면** 기존대로 자격을 말한다 — 과잉 차단하지 않는다."""
+    task, tools = _with_catalog("return.check_eligibility", "none")
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "completed"
+    assert "검토할 수 있습니다" in result.answer
+    assert result.decisions[0]["eligible"] is True
+
+
+@pytest.mark.asyncio
+async def test_unknown_restriction_does_not_claim_policy_grounds():
+    """★NULL 은 "제한 없음" 이 아니라 "모름" 이다.
+
+    모르면 "정책 근거상 가능" 이라고 말하지 않는다 — 실제로 확인한 것
+    (기간·이력)만 말하고 나머지는 열어 둔다(CLAUDE.md §0.1).
+    """
+    task, tools = _with_catalog("return.check_eligibility", None)
+    result = await ReturnRefundTeam(tools).execute(task)
+
+    assert result.outcome == "completed"
+    assert "정책 근거상" not in result.answer
+    assert "확인되지 않아" in result.answer
+    assert result.decisions[0]["restriction"] == "unknown"
+    assert result.warnings
+
+
+def test_the_team_is_allowed_to_read_the_catalog():
+    """★툴이 있어도 allowlist 에 없으면 Registry 가 막는다(read.order_items 전례)."""
+    assert "read.catalog" in ReturnRefundTeam.manifest.allowed_tools

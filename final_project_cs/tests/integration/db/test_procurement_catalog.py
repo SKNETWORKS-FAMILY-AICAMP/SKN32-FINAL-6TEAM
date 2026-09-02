@@ -15,7 +15,11 @@ from tests.integration.db.test_db_integration import db  # noqa: F401
 async def test_procurement_quote_reads_seeded_product_without_injected_pricing(db):
     conn, tenant = db
     customer_id = uuid4()
-    sku, name, unit_cents, _status = next(item for item in load_catalog() if item[0].startswith("SKU-CPG-"))
+    # ★2026-09-03 부터 카탈로그 행은 5-튜플이다 — 다섯 번째가
+    #   `products.return_restriction`(마이그레이션 008). 실주문에서 온
+    #   SKU-CPG-* 는 판매자 반품 정책을 모르므로 None 이다.
+    sku, name, unit_cents, _status, _restriction = next(
+        item for item in load_catalog() if item[0].startswith("SKU-CPG-"))
     with conn.cursor() as cur:
         cur.execute(
             "INSERT INTO customers (customer_id, tenant_id, external_id) VALUES (%s,%s,%s)",

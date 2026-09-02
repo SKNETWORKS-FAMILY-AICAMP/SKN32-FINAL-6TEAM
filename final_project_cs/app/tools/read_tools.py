@@ -74,20 +74,23 @@ class ReadToolbox:
                 for row in rows]
 
     def catalog(self, scope: ToolContext, *, sku: str | None = None, **_: Any) -> dict[str, Any] | list[dict[str, Any]] | None:
-        columns = ("product_id", "sku", "name", "unit_cents", "status", "updated_at")
+        # ★`return_restriction` 은 마이그레이션 008 에서 생겼다. NULL 은 "모름" 이다
+        #   — 이 값을 받는 쪽이 NULL 을 "제한 없음" 으로 읽으면 안 된다.
+        columns = ("product_id", "sku", "name", "unit_cents", "status", "updated_at",
+                   "return_restriction")
         with self.connection_factory() as conn:
             with conn.cursor() as cur:
                 if sku is not None:
                     cur.execute(
-                        "SELECT product_id, sku, name, unit_cents, status, updated_at FROM products "
-                        "WHERE tenant_id=%s AND sku=%s",
+                        "SELECT product_id, sku, name, unit_cents, status, updated_at, return_restriction "
+                        "FROM products WHERE tenant_id=%s AND sku=%s",
                         (scope.tenant_id, sku),
                     )
                     row = cur.fetchone()
                     return None if row is None else dict(zip(columns, row))
                 cur.execute(
-                    "SELECT product_id, sku, name, unit_cents, status, updated_at FROM products "
-                    "WHERE tenant_id=%s ORDER BY sku",
+                    "SELECT product_id, sku, name, unit_cents, status, updated_at, return_restriction "
+                    "FROM products WHERE tenant_id=%s ORDER BY sku",
                     (scope.tenant_id,),
                 )
                 return [dict(zip(columns, row)) for row in cur.fetchall()]

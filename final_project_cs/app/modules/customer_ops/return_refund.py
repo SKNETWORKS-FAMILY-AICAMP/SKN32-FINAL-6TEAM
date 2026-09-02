@@ -40,7 +40,12 @@ class ReturnRefundTeam:
         # ★`read.order_items` 는 2026-09-01 에 더했다. 환불 금액을 주문 총액의
         #   균등 분할로 추정하던 것을 품목 단가로 정확히 구하기 위해서다(D-001 1-A).
         #   툴은 이미 있었지만 이 Team 의 allowed_tools 에 없어 Registry 가 막고 있었다.
-        allowed_tools=["read.order", "read.order_items", "read.return", "read.policy"],
+        # ★`read.catalog` 는 2026-09-03 에 더했다. 반품 제한(주문제작 등)을
+        #   보려면 상품을 조회할 수단이 있어야 하는데 없었다 — `read.order_items`
+        #   를 더할 때와 같은 상황이다(툴은 있는데 allowlist 에 없어 Registry 가
+        #   막고 있었다).
+        allowed_tools=["read.order", "read.order_items", "read.return", "read.policy",
+                       "read.catalog"],
         knowledge_scope=["order", "return", "refund", "exchange", "policy"],
         max_steps=6,
         active=True,
@@ -211,6 +216,56 @@ class ReturnRefundTeam:
                 return None
         return None
 
+    #: 상품 속성으로 판정할 수 있는 반품 제한 코드 → 고객에게 말할 사유.
+    #  ★여기 없는 코드가 오면 **모르는 제한**이다 — 통과시키지 않고 사람에게 넘긴다.
+    RETURN_RESTRICTIONS = {
+        "made_to_order": "주문제작·맞춤 상품이라 일반 반품 절차로 처리되지 않을 수 있습니다.",
+    }
+
+    def _restriction(self, task: TeamTask, order: Any, seen: set[str]) -> tuple[str | None, Any]:
+        """반품 대상 품목의 상품 제한을 조회한다. (제한코드|None, 조회한 상품들)
+
+        ★**모름과 제한없음을 구분한다.** `products.return_restriction` 이 NULL 이면
+          "모름" 이고(마이그레이션 008), 그때는 제한이 없다고 단정하지 않는다.
+          반환값 첫 자리:
+              None        판정할 수 없음(모름) 또는 조회 실패
+              "none"      제한 없음이 확인됨
+              그 밖        제한 코드
+        """
+        order_id = str(order.get("order_id")) if isinstance(order, dict) else None
+        if not order_id:
+            return None, None
+        try:
+            items = self.tools.call("read.order_items", task.context, {"order_id": order_id},
+                                    task.allowed_tools, seen)
+        except (ToolLoopExceeded, Exception):
+            return None, None
+        if not isinstance(items, list) or not items:
+            return None, None
+
+        found: list[dict[str, Any]] = []
+        for item in items:
+            sku = item.get("sku") if isinstance(item, dict) else None
+            if not sku:
+                continue
+            try:
+                product = self.tools.call("read.catalog", task.context, {"sku": str(sku)},
+                                          task.allowed_tools, seen)
+            except (ToolLoopExceeded, Exception):
+                continue
+            if isinstance(product, dict):
+                found.append(product)
+
+        if not found:
+            return None, None
+        restrictions = [str(p.get("return_restriction")) for p in found
+                        if p.get("return_restriction") is not None]
+        if len(restrictions) != len(found):
+            # 하나라도 모르면 전체를 "모름" 으로 둔다 — 아는 것만 보고 단정하지 않는다.
+            return None, found
+        blocking = [r for r in restrictions if r != "none"]
+        return (blocking[0] if blocking else "none"), found
+
     async def execute(self, task: TeamTask) -> TeamResult:
         evidence = list(task.context.evidence)
         if task.context.degraded:
@@ -258,7 +313,35 @@ class ReturnRefundTeam:
                                 next_action=NextAction.ESCALATE, failure_code="return_period_expired",
                                 warnings=[f"반품 가능 기간 {period_days}일이 경과했습니다."])
 
+        # ★상품 자체의 반품 제한을 본다 (2026-09-03,
+        #   docs/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
+        #   전에는 이 검사가 아예 없으면서 답변만 "정책 근거상" 이라고 말했다.
+        restriction, catalog_rows = self._restriction(task, order, seen)
+        if catalog_rows:
+            evidence.append(Evidence(
+                evidence_id="tool:return_refund:read.catalog", source_type="tool_result",
+                source_id="read.catalog", claim="반품 대상 품목의 상품 반품 제한을 조회했다.",
+                value={"products": catalog_rows}, confidence=1.0, observed_at=datetime.now(UTC)))
+        if restriction is not None and restriction != "none":
+            reason_text = self.RETURN_RESTRICTIONS.get(
+                restriction, "이 상품에는 일반 반품 절차로 처리되지 않을 수 있는 제한이 있습니다.")
+            return self._result(task, outcome="escalated", confidence=0.9, evidence=evidence,
+                                next_action=NextAction.ESCALATE,
+                                failure_code="return_restricted_product",
+                                warnings=[reason_text])
+
         if task.capability == "return.check_eligibility":
+            if restriction is None:
+                # ★제한 여부를 **모른다.** 그러면 "정책 근거상 가능" 이라고 말하지
+                #   않는다 — 실제로 확인한 것(기간·이력)만 말하고 나머지는 열어 둔다.
+                return self._result(task, outcome="completed", confidence=0.7, evidence=evidence,
+                                    answer=("반품 가능 기간과 기존 반품 이력에는 걸리는 점이 없습니다. "
+                                            "다만 이 상품의 반품 제한 여부는 확인되지 않아, "
+                                            "상담원이 상품 정책을 함께 확인한 뒤 안내드립니다."),
+                                    next_action=NextAction.RESPOND,
+                                    decisions=[{"eligible": None, "period_days": period_days,
+                                                "restriction": "unknown"}],
+                                    warnings=["상품 반품 제한 정보가 없어 자격을 단정하지 않았습니다."])
             return self._result(task, outcome="completed", confidence=0.9, evidence=evidence,
                                 answer="제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.",
                                 next_action=NextAction.RESPOND,

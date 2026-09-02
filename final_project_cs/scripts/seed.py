@@ -12,12 +12,19 @@ DEMO = "demo"
 NAMESPACE = UUID("00000000-0000-0000-0000-000000000001")
 
 # Demo products cover the legacy catalog and pricing/status edge cases.
+# ★다섯 번째 값은 `products.return_restriction` 이다 (마이그레이션 008).
+#   데모 상품은 **우리가 정의하는 것**이므로 제한 여부를 단정해도 된다.
+#   반대로 실주문 이력에서 가져온 상품은 판매자의 반품 정책을 우리가 모르므로
+#   `None`(NULL, "모름") 으로 둔다 — 아래 `load_catalog()` 참고.
 CATALOG = [
-    ("SKU-TEE-01", "Basic cotton T-shirt", 19_900, "active"),
-    ("SKU-CUP-02", "Insulated tumbler", 24_500, "active"),
-    ("SKU-BAG-03", "Canvas bag", 32_000, "active"),
-    ("SKU-SHO-04", "Leather shoes", 89_000, "active"),
-    ("SKU-CAP-05", "Seasonal cap", 100, "discontinued"),
+    ("SKU-TEE-01", "Basic cotton T-shirt", 19_900, "active", "none"),
+    ("SKU-CUP-02", "Insulated tumbler", 24_500, "active", "none"),
+    ("SKU-BAG-03", "Canvas bag", 32_000, "active", "none"),
+    ("SKU-SHO-04", "Leather shoes", 89_000, "active", "none"),
+    ("SKU-CAP-05", "Seasonal cap", 100, "discontinued", "none"),
+    # ★반품 제한이 실제로 걸리는 상품을 하나 둔다. 이게 없으면 제한 경로가
+    #   데이터로 한 번도 안 밟혀서, 코드가 있어도 도는지 알 수 없다.
+    ("SKU-CST-06", "Custom engraved tumbler", 38_000, "active", "made_to_order"),
 ]
 CARRIERS = ["CJ Logistics", "Lotte Global", "Hanjin"]
 
@@ -30,11 +37,11 @@ def at(day: date, hour: int = 12) -> datetime:
     return datetime.combine(day, time(hour), tzinfo=timezone.utc)
 
 
-def load_catalog() -> list[tuple[str, str, int, str]]:
+def load_catalog() -> list[tuple[str, str, int, str, str | None]]:
     """Read the canonical 9-row history and add the five demo products."""
     data_path = (Path(__file__).resolve().parents[2] / "datasets" / "commerce"
                  / "coupang_order_history" / "processed" / "orders.jsonl")
-    products: list[tuple[str, str, int, str]] = []
+    products: list[tuple[str, str, int, str, str | None]] = []
     seen_names: set[str] = set()
     for line in data_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -44,8 +51,12 @@ def load_catalog() -> list[tuple[str, str, int, str]]:
         if name in seen_names:
             continue
         seen_names.add(name)
+        # ★실주문에서 가져온 상품은 반품 정책을 **모른다** — 판매자가 정하는
+        #   것이고 주문 이력에는 없다. NULL 로 둔다(007 의 order_item_id 와 같은
+        #   규약: 모르면 지어내지 않는다). 그래서 이 상품들은 제한 없음이라고
+        #   단정되지 않는다.
         products.append((f"SKU-CPG-{len(products) + 1:02d}", name,
-                         int(round(float(product["unit_price"]))), "active"))
+                         int(round(float(product["unit_price"]))), "active", None))
     return products + CATALOG
 
 
@@ -70,12 +81,14 @@ def main() -> None:
                 "ON CONFLICT (tenant_id) DO UPDATE SET name=EXCLUDED.name",
                 (DEMO, "Nimbus Mall"),
             )
-            for sku, name, unit, status in catalog:
+            for sku, name, unit, status, restriction in catalog:
                 cur.execute(
-                    "INSERT INTO products (tenant_id,sku,name,unit_cents,status) VALUES (%s,%s,%s,%s,%s) "
+                    "INSERT INTO products (tenant_id,sku,name,unit_cents,status,return_restriction) "
+                    "VALUES (%s,%s,%s,%s,%s,%s) "
                     "ON CONFLICT (tenant_id,sku) DO UPDATE SET name=EXCLUDED.name, "
-                    "unit_cents=EXCLUDED.unit_cents, status=EXCLUDED.status, updated_at=now()",
-                    (DEMO, sku, name, unit, status),
+                    "unit_cents=EXCLUDED.unit_cents, status=EXCLUDED.status, "
+                    "return_restriction=EXCLUDED.return_restriction, updated_at=now()",
+                    (DEMO, sku, name, unit, status, restriction),
                 )
             cur.execute(
                 "SELECT sku, name, unit_cents FROM products WHERE tenant_id=%s AND status='active' ORDER BY sku",
