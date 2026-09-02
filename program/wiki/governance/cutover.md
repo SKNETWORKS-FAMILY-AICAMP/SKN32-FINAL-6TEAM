@@ -17,6 +17,7 @@ program/wiki/ 외 wiki 문서   220건
 루트 CLAUDE.md 의 "wiki" 언급   0회
 cs  CLAUDE.md 의 "wiki" 언급    0회
 final_project_cs/wiki/          없음
+final_project_sample/wiki/      없음
 ```
 
 **만든 220건에 진입 경로가 없다.** 실제 규칙 문서는 여전히 `CLAUDE.md` 와 `docs/` 다.
@@ -72,7 +73,8 @@ python program/scripts/cutover_rewrite.py
 |---|---|
 | `program/wiki` | 138 |
 | `program/final_project_cs/wiki` | 110 |
-| `datasets`·`acop_dojo`·`sample` | 57 |
+| `program/final_project_sample/wiki` | 15 |
+| `datasets`·`acop_dojo` | 42 |
 
 ```
 program/wiki/architecture/core-design.md
