@@ -49,6 +49,59 @@ owners: [human:미배정]
 
 **넷 중 하나라도 깨지면 Pack 교체가 불가능해진다.**
 
+## ★ 확장 판단은 "만들 수 있는가"가 아니다
+
+`[실측]` v8 §8-B
+
+> Team이 늘면 golden set과 라우팅 평가 축이 함께 늘어난다. 확장 판단은 **"만들 수 있는가"가 아니라 "채점할 수 있는가"**로 한다.
+
+**Team 하나를 더 만드는 비용보다 그 Team을 평가하는 비용이 크다.**
+
+**Team 개수는 고정 상한이 아니다.** 확장 시 바뀌는 것은 Registry 레코드와 설정뿐이고 Core 코드는 안 바뀐다.
+
+### 필요 Team과 착수 Team을 구분한다
+
+| | |
+|---|---|
+| **기능상 필요** | Catalog & Verification · Procurement · Order & Payment · Fulfillment & Logistics · Return & Refund … |
+| **착수** | 일정과 평가 여력이 허락하는 만큼 |
+
+**몇 개를 만들 것인가는 아키텍처 제약이 아니라 일정 문제다.**
+
+## Port 3종을 같은 원칙으로 둔다
+
+`[실측]` 모듈형 Basement의 실행 경계. **2026-09-01 기준 셋 다 구현돼 있다.**
+
+| Port | 무엇을 가른다 | 구현 위치 |
+|---|---|---|
+| `TeamExecutorPort` | **Team을 어디서 실행하는지**와 Controller 판단 | `app/core/remote_team/executor.py` · `a2a_executor.py` |
+| `MessageBusPort` | 배달 계약과 구현 | `app/infrastructure/messaging/ports.py` |
+| `GraphStorePort` | 관계 조회와 저장소 | `app/core/graph_retrieval/` · `app/infrastructure/graphstore/` |
+
+`+ app/presentation/a2a/agent_card.py` — 우리가 A2A **서버**로서 발행하는 capability 문서
+
+### MVP가 여기까지인 이유
+
+**Port와 어댑터까지만 만들고 본체는 안 만든다.**
+
+| 안 만드는 것 | 왜 |
+|---|---|
+| Graph 저장소 본체 | **"현재 규모에서는 JOIN이 맞다"** → [D-002](../decisions/D-002-graph-store-gate.md) |
+| 완전한 A2A 서버 | **MVP는 경로 분리와 Port 확보다.** 개인 AI는 MCP(완료), 기업 Agent는 A2A(골격) |
+
+**교체 지점만 확보하고 구현은 필요할 때 채운다.**
+
+### `TeamExecutorPort`
+
+```
+LocalTeamExecutor   MessageBusPort 로 Task 발행 → 내부 Team Slot 이 처리
+A2ATeamExecutor     A2A Adapter 로 Remote Agent System 에 위임
+```
+
+**Controller는 두 구현을 구분하지 않는다.** Registry의 `execution_type`을 보고 Executor를 고르는 일은 **Registry/Factory의 책임**이다.
+
+**두 경로의 결과는 모두 `TeamResult`로 정규화되어 Shared State에 반영된다.**
+
 ## 성공 판정
 
 > **Team을 늘리는 일이 리팩토링이 되면 설계가 잘못된 것이다.**
@@ -90,4 +143,5 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 - [core-vs-team.md](core-vs-team.md) — 판정 기준 상세
 - [../product/scope.md](../product/scope.md) — Pack별 착수 범위
 - [../product/positioning.md](../product/positioning.md) — 상업적 근거
-- [`teams/index.md`](../../final_project_cs/wiki/teams/index.md) — 구현
+- [`cs/teams/index.md`](../../final_project_cs/wiki/teams/index.md) — 도메인 Team
+- [`sample/wiki/teams/`](../../final_project_sample/wiki/teams/index.md) — **계약이 성립한다는 증거.** 예시 Team 이 여기 있다

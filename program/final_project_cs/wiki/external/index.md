@@ -7,6 +7,10 @@ status: draft
 
 # External
 
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
 `app/presentation/`
 
 **Agent Gateway가 유일한 진입점이다.** 여기가 Trust Boundary다.
@@ -28,7 +32,7 @@ status: draft
 | [rest-api.md](rest-api.md) | 엔드포인트와 스키마 | `app/presentation/api/` |
 | [mcp-tools.md](mcp-tools.md) | 개인 AI가 쓰는 도구 3종 | `app/presentation/mcp/` |
 | [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
-| [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/core/access_action/auth/` |
+| [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |
 
 ## 코드 구조
 

@@ -33,6 +33,21 @@ resume_node  : ResumeNode | None
 
 **`context`가 핵심이다.** Team은 여기 담긴 것만 쓴다. 직접 읽지 않는다. → [team-boundary.md](team-boundary.md)
 
+### ★ `allowed_tools`는 과도기 호환 필드다
+
+`[실측]` v8 §21이 명시한다.
+
+> `allowed_tools`는 **현재 코드와의 과도기 호환 필드**다. 실행 규칙상 Team이 이 목록을 사용해 직접 호출하지 않는다.
+
+**계약에 남아 있지만 Team이 쓰라고 있는 게 아니다.** 실제 용도는 둘이다.
+
+| 쓰는 곳 | 무엇에 |
+|---|---|
+| Context Broker | **read 계획**을 세울 때의 상한 |
+| Action Layer | **write 권한 검증**의 입력 |
+
+**필드가 있다고 Team이 호출해도 된다는 뜻이 아니다.** 이게 `INV-CS-TEAM-004`가 아직 `review`인 이유이기도 하다 — 계약이 필드를 허용하는 형태라 정적 검사로 잡기 애매하다.
+
 ### `ContextPack`
 
 ```python

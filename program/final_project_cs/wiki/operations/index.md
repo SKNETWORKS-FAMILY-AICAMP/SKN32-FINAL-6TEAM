@@ -14,6 +14,7 @@ status: draft
 | [local-setup.md](local-setup.md) | 처음 어떻게 셋업하는가 |
 | [run.md](run.md) | 무엇을 어떻게 실행하는가 |
 | [troubleshooting.md](troubleshooting.md) | 막히면 어디를 보는가 |
+| [unknown-state.md](unknown-state.md) | **돈이 나갔는지 모를 때** |
 
 ## 자주 쓰는 명령
 

@@ -76,3 +76,4 @@ owners: [human:미배정]
 - [../architecture/system-context.md](../architecture/system-context.md) — 진입 경로 3종
 - [`external/mcp-tools.md`](../../final_project_cs/wiki/external/mcp-tools.md) — MCP 구현
 - [`external/a2a-protocol.md`](../../final_project_cs/wiki/external/a2a-protocol.md) — A2A 구현
+- [`sample/wiki/runtime/`](../../final_project_sample/wiki/runtime/index.md) — sample 에도 `core/remote_team/a2a_executor.py` 가 있다

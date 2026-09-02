@@ -77,5 +77,5 @@ owners: [human:미배정]
 
 - [core-vs-team.md](core-vs-team.md) — 안쪽 구조
 - [repository-map.md](repository-map.md) — 저장소 간 경계
-- [`external/index.md`](../../final_project_cs/wiki/external/index.md) — 구현
+- [`external/index.md`](../../final_project_cs/wiki/external/index.md) · [sample](../../final_project_sample/wiki/composer/index.md) — 구현
 - [../product/scope.md](../product/scope.md) — 범위

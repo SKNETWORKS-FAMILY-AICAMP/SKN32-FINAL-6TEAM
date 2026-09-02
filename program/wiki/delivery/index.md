@@ -24,6 +24,9 @@ status: draft
 2. [milestones/index.md](milestones/index.md) — 두 발표
 3. [dod.md](dod.md) — 완료 기준 29항목
 4. [roles.md](roles.md) — 6명의 소유 경계
+5. [open-items.md](open-items.md) — **아직 안 끝난 일**
+6. [release-gate.md](release-gate.md) — **RC 를 막는 것**
+7. [ticket-structure.md](ticket-structure.md) — 티켓 세 층
 
 ## 각 문서
 
@@ -33,6 +36,8 @@ status: draft
 | [milestones/index.md](milestones/index.md) | 발표에 무엇을 보여주는가 |
 | [dod.md](dod.md) | 무엇이 끝나야 끝난 것인가 |
 | [roles.md](roles.md) | 누가 무엇을 소유하는가 |
+| [open-items.md](open-items.md) | **무엇이 남았는가** |
+| [release-gate.md](release-gate.md) | **내보내도 되는가** |
 
 ## 지금 걸린 것
 

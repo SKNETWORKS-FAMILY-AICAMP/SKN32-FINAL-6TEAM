@@ -1,0 +1,80 @@
+{
+  "_meta": {
+    "작성": "2026-09-01",
+    "목적": "제출표 41건이 못 받치는 12개 질문(세그먼트 검증)을 채운다",
+    "정본": "team_branch/output/A-COPilot_제출표.xlsx 의 41건은 그대로 두고, 여기에 보강분만 둔다",
+    "주의": "2차 인용이 많다. 원출처를 확인한 것만 1차로 적었다"
+  },
+
+  "groups": {
+    "J": ["운영화 실패의 정체", "Gartner 40%가 실제로 무엇을 뜻하는가 — 질문 1·2·3"],
+    "K": ["실패한 기업들", "무엇을 시도했다가 어디서 무너졌는가 — 질문 3·4"],
+    "L": ["성공한 기업과 그 수치", "숫자가 서로 비교 가능한가 — 질문 5·6·10·11"],
+    "M": ["수요가 실제로 어디 있는가", "누가 필요한데 못 쓰고 있는가 — 질문 7·8"],
+    "N": ["버티컬 전략", "좁히는 것이 왜 유리한가 — 질문 7·12"],
+    "O": ["국내 시장", "한국 셀러와 이미 있는 플레이어 — 질문 8·11"],
+    "P": ["검증 자료 확보 방법", "트래픽 없이 골든셋을 어떻게 만드는가 — 질문 9"]
+  },
+
+  "sources": {
+    "J1": {"내용": "Gartner — 2027년 말까지 agentic AI 프로젝트 40% 이상이 취소된다. 원인으로 비용 상승·거버넌스 난제·불명확한 ROI를 든다", "기관": "Gartner 보도자료 2025-06-25", "등급": "1차", "링크": "https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027"},
+    "J2": {"내용": "실패 원인은 기술이 아니라 운영이다 — 모호한 목표, 부풀린 기대, 약한 위험 관리, 확장성 부족. 'agent washing'(챗봇을 에이전트로 잘못 라벨링)이 문제를 가린다", "기관": "Gartner 해설 (RCR Wireless)", "등급": "2차 인용", "링크": "https://www.rcrwireless.com/20250627/business/agentic-ai-gartner"},
+    "J3": {"내용": "2026년 기업의 51%가 에이전트를 프로덕션에 올렸으나, 46%가 '레거시 시스템 연동'을 ROI 최대 장애로 꼽는다", "기관": "Syntes 엔터프라이즈 아키텍처 가이드", "등급": "2차", "링크": "https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/"},
+    "J4": {"내용": "레거시 API는 예측 가능한 사람 입력을 전제로 만들어져 자율 에이전트의 호출 양상과 맞지 않는다. 안전망 없이 분산된 사일로에 LLM을 붙이면 할루시네이션이나 감사 불가능한 시스템 변경이 난다", "기관": "동", "등급": "2차", "링크": "https://syntes.ai/integrating-ai-agents-with-legacy-systems-the-2026-enterprise-architecture-guide/"},
+    "J5": {"내용": "챗봇과 에이전트의 차이는 계산기와 회계사의 차이다. 하나는 지시에 응답하고 다른 하나는 프로세스를 관리한다", "기관": "Generative Inc.", "등급": "2차", "링크": "https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing"},
+    "J6": {"내용": "추적한 847건의 에이전트 도입 중 76%가 첫 90일 안에 치명적 실패를 겪었다. 표본 출처와 선정 기준이 공개되지 않아 자료 신뢰도는 낮다", "기관": "개인 분석 게시물", "등급": "2차·표본 불명", "링크": "https://medium.com/@snehal_singh/i-analyzed-847-ai-agent-deployments-in-2026-76-failed-heres-why-0b69d962ec8b"},
+
+    "K1": {"내용": "Klarna — 2024-02 AI 에이전트가 첫 달에 230만 건을 처리하고 상담원 700명분 일을 했다고 발표. 해결 시간 11분 → 2분 미만", "기관": "Klarna·OpenAI 발표", "등급": "2차 인용", "링크": "https://getperspective.ai/blog/klarna-ai-customer-service-replacing-700-agents-conversational-ai-case-study"},
+    "K2": {"내용": "Klarna — 2025년 상담원 재고용으로 선회. CEO: '효율과 비용에 너무 집중했고 그 결과는 낮은 품질이었다. 지속 가능하지 않다'", "기관": "Forbes / Entrepreneur", "등급": "2차 인용", "링크": "https://www.forbes.com/sites/quickerbettertech/2025/05/18/business-tech-news-klarna-reverses-on-ai-says-customers-like-talking-to-people/"},
+    "K3": {"내용": "★Klarna는 전면 철회가 아니라 하이브리드로 갔다. AI가 여전히 문의의 약 3분의 2를 처리하고, 판단이 필요한 복잡·민감 건에 사람을 되돌렸다", "기관": "Entrepreneur", "등급": "2차 인용", "링크": "https://www.entrepreneur.com/business-news/klarna-ceo-reverses-course-by-hiring-more-humans-not-ai/491396"},
+    "K4": {"내용": "Air Canada — 챗봇이 사별 할인을 사후 소급 신청할 수 있다고 안내했으나 실제 정책이 아니었다. 승객이 소송해 법원이 항공사 책임을 인정", "기관": "Cloudeagle 사례 모음", "등급": "2차", "링크": "https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed"},
+    "K5": {"내용": "Chevrolet 대리점 — 프롬프트 인젝션으로 챗봇이 신차 Tahoe를 1달러에 팔겠다고 동의", "기관": "동", "등급": "2차", "링크": "https://www.cloudeagle.ai/blogs/agentic-ai-examples-that-failed"},
+    "K6": {"내용": "실패 최다 원인은 모델이 아니라 지식베이스다. 문서가 낡거나 불일치하면 AI가 그 결함을 규모만 키워 드러낸다. 지식 관리는 출시 단계 작업이 아니라 상시 운영 기능이어야 한다", "기관": "Atlan", "등급": "2차", "링크": "https://atlan.com/know/ai-agents-for-customer-support/"},
+    "K7": {"내용": "많은 도입이 인계(handoff)에서 무너진다. 티켓 기반 시스템 위에 얹은 AI가 사람에게 넘길 때 맥락이 사라진다", "기관": "동", "등급": "2차", "링크": "https://atlan.com/know/ai-agents-for-customer-support/"},
+
+    "L1": {"내용": "Sierra — Airtable 80%, Chime 70%+ 해결률 사례 공개", "기관": "Sierra 사례집 (Drag 비교글 인용)", "등급": "2차 인용", "링크": "https://www.dragapp.com/blog/decagon-vs-sierra/"},
+    "L2": {"내용": "Decagon — Substack 90%+, Curology 5%→80% 티켓 해결률 사례 공개. 고객사에 Away·Hertz·Noom·Chime·Valon", "기관": "Decagon 사례집", "등급": "2차 인용", "링크": "https://decagon.ai/case-studies"},
+    "L3": {"내용": "★두 회사가 모두 '80%'를 광고하지만 뜻이 다르다. Decagon은 사람 개입 없이 처리한 비율(deflection)이고, Sierra의 '해결(resolved)' 정의는 공개돼 있지 않다", "기관": "Drag 비교 분석", "등급": "2차", "링크": "https://www.dragapp.com/blog/decagon-vs-sierra/"},
+    "L4": {"내용": "★사례집 수치는 상단값으로 봐야 한다. 카테고리 전반의 프로덕션 실적은 40~70% 구간에 몰린다", "기관": "동", "등급": "2차", "링크": "https://www.dragapp.com/blog/decagon-vs-sierra/"},
+    "L5": {"내용": "Intercom Fin — 단일 에이전트는 능력 부족이 아니라 의도적 설계다. 부서별로 쪼개진 CX 스택을 하나로 잇는 층을 지향하며, 맥락을 넘기지 않고 하나의 에이전트가 대화 이력을 이어 간다", "기관": "CX Today", "등급": "2차", "링크": "https://www.cxtoday.com/customer-engagement-platforms/intercom-fin-ai-agent-sales-expansion/"},
+    "L6": {"내용": "Fin은 역할(role)을 문맥에 따라 전환하는 단일 에이전트다. 멀티에이전트 오케스트레이션·에이전트 간 통신·전문가 라우팅·위임 패턴은 현재 아키텍처에 없다", "기관": "Inkeep 비교", "등급": "2차", "링크": "https://inkeep.com/blog/inkeep-vs-intercom-fin-ai"},
+    "L7": {"내용": "Fin이 CS를 넘어 세일즈로 확장하며 ARR 1억 달러를 넘겼다", "기관": "Compare the Cloud", "등급": "2차 인용", "링크": "https://www.comparethecloud.net/news/intercom-builds-fin-beyond-customer-service-ai-agent-launches-into-sales-crosses-100m-arr"},
+    "L8": {"내용": "성공 사례의 공통 실무 — AI가 인계할 때 사람에게 대화 이력·추정 의도·수집한 데이터·시도한 조치를 함께 넘긴다. 고객에게 다시 설명시키지 않는다", "기관": "Fin.ai 실무 가이드", "등급": "2차", "링크": "https://fin.ai/learn/ai-customer-service-best-practices"},
+    "L9": {"내용": "정책·에스컬레이션 규칙·확신도 임계값을 배포 전에 학습·시험·검증하고 프로덕션에서 계속 관측한다. 성숙한 거버넌스를 갖춘 조직이 더 빨리 배포하고 사고가 적다", "기관": "OneReach / Sigmoid", "등급": "2차", "링크": "https://onereach.ai/blog/best-practices-for-ai-agent-implementations/"},
+
+    "M1": {"내용": "SMB의 62%가 고객서비스에 AI를 일부라도 도입했다", "기관": "Upwork / Business.com SMB 조사", "등급": "2차 인용", "링크": "https://www.upwork.com/resources/state-of-ai-in-smbs"},
+    "M2": {"내용": "★도입률이 규모로 갈린다. 10인 미만 기업은 약 5분의 1만 AI를 쓰는 반면 50~249인 중견 SMB는 60%를 넘는다", "기관": "Business.com 2026 SMB AI Outlook", "등급": "2차 인용", "링크": "https://www.business.com/articles/ai-usage-smb-workplace-study/"},
+    "M3": {"내용": "★'어색한 중간(awkward middle)' — 50~200인 회사는 창업자가 티켓을 다 답하는 단계는 지났지만 CX 부서를 둘 단계는 아니다", "기관": "MyAskAI", "등급": "2차", "링크": "https://myaskai.com/blog/best-ai-customer-service-smb-2026"},
+    "M4": {"내용": "엔터프라이즈 도입은 멀티에이전트·맞춤 연동·수개월 구축을 전제한다. 직원 12명에 IT 부서가 없는 사업자에게 필요한 것은 6개월 컨설팅이 아니라 로그인하면 바로 되는 것이다", "기관": "Baytech Consulting", "등급": "2차", "링크": "https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap"},
+    "M5": {"내용": "agentic AI를 CS 워크플로에 넣은 곳에서 기본 티켓 30~50% deflection, CSAT 5~10점 개선이 관찰된다", "기관": "동", "등급": "2차", "링크": "https://www.baytechconsulting.com/blog/smb-ai-adoption-guide-use-cases-costs-roadmap"},
+
+    "N1": {"내용": "Gartner — 2026년까지 기업의 80%가 버티컬 AI 에이전트를 도입할 것으로 본다", "기관": "8seneca 인용", "등급": "2차 인용", "링크": "https://www.8seneca.com/en/blog/technology/vertical-ai-agents-enterprise-2026"},
+    "N2": {"내용": "★산업 특화 에이전트가 수평형 대비 프리미엄 가격을 받고 경쟁이 덜하며 리텐션이 3~5배 높다", "기관": "Presta", "등급": "2차", "링크": "https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/"},
+    "N3": {"내용": "★AI에서 해자는 모델이 아니라 그 위에 얹는 독점 데이터·워크플로 깊이·도메인 지식이다. 방어 가능한 틈새의 세 조건은 데이터·워크플로 해자, 결과에 돈을 내는 구매자, 대형 플랫폼이 신경 쓰기엔 너무 좁은 문제다", "기관": "동", "등급": "2차", "링크": "https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/"},
+    "N4": {"내용": "구매자가 정액 구독보다 성과 기반 과금을 선호한다. 접근권이 아니라 결과에 돈을 낸다", "기관": "동", "등급": "2차", "링크": "https://wearepresta.com/vertical-ai-startup-ideas-2026-dominating-industry-specific-niches/"},
+
+    "O1": {"내용": "★이커머스 CS에서 취소·교환·반품·배송 문의가 전체의 절반 이상을 차지하는 경우가 많다", "기관": "채널톡", "등급": "2차", "링크": "https://channel.io/kr/blog/articles/how-to-automate-cs-ef6db536"},
+    "O2": {"내용": "네이버 스마트스토어가 '굿서비스 점수'를 2026-01-01부터 정규 전환한다. 배송 시간·발송 처리 속도·고객 문의 대응률·리뷰를 정량화해 매월 2일 산정하고 판매자 등급에 반영한다", "기관": "전자신문 2025-12-01", "등급": "1차 보도", "링크": "https://www.etnews.com/20251201000211"},
+    "O3": {"내용": "리터놀 — 이커머스 반품 솔루션으로 10억 원 시드 유치. 사람 경험에 의존하던 반품 검품을 표준화·데이터화해 반품 폐기율을 25%에서 6.4%로 낮췄다. 다만 물류·검품 영역이며 CS 판정은 아니다", "기관": "플래텀 / 벤처스퀘어", "등급": "1차 보도", "링크": "https://platum.kr/archives/235767"},
+    "O4": {"내용": "헥토데이터 '셀픽' — 상품·주문·배송 통합관리와 풀필먼트 자동화에 CS 관리 기능을 함께 제공한다", "기관": "메가경제", "등급": "2차", "링크": "https://megaeconomy.co.kr/news/newsview.php?ncode=1065575427608537"},
+
+    "P1": {"내용": "골든셋 자료원의 우선순위 — 사람이 검토한 큐레이션 데이터가 먼저, 다음이 프로덕션 트래픽 표본, 합성 데이터는 앞의 둘이 부족할 때다", "기관": "Langfuse", "등급": "2차", "링크": "https://langfuse.com/resources/engineering/golden-dataset-evaluation"},
+    "P2": {"내용": "★합성으로 시작하되 'silver'로 표시하고, 도메인 전문가 검토·평가자 일치도 확인·편향 점검을 거쳐 'gold'로 승격한다", "기관": "동", "등급": "2차", "링크": "https://langfuse.com/resources/engineering/golden-dataset-evaluation"},
+    "P3": {"내용": "합성 데이터는 콜드 스타트에 특히 유효하다. 프로덕션이 아직 겪지 않은 커버리지 공백을 어려운 입력의 패러프레이즈, 신규 기능의 엣지 케이스, 적대적 표현으로 메운다", "기관": "Evidently AI", "등급": "2차", "링크": "https://www.evidentlyai.com/llm-guide/llm-test-dataset-synthetic-data"}
+  },
+
+  "questions": {
+    "1": {"질문": "왜 도입만 하고 에이전틱까지 못 갔나", "근거": ["J3", "J4", "J5", "K6", "K7"], "답": "레거시 연동이 최대 장애다(46%). 레거시 API가 사람 입력을 전제로 만들어져 자율 호출과 안 맞고, 안전망 없이 붙이면 감사 불가능한 변경이 난다. 그리고 실패 최다 원인은 모델이 아니라 낡은 지식베이스다."},
+    "2": {"질문": "운영화 성공은 어떻게", "근거": ["L8", "L9", "K3", "M5"], "답": "네 가지다. 인계 시 맥락을 통째로 넘긴다. 정책·에스컬레이션 규칙·확신도 임계값을 배포 전에 검증하고 프로덕션에서 계속 관측한다. 전면 자동화가 아니라 하이브리드로 간다. 지식베이스를 상시 운영 기능으로 둔다."},
+    "3": {"질문": "운영화 실패란 · 실패 기업", "근거": ["J1", "J2", "K1", "K2", "K4", "K5"], "답": "Gartner가 든 원인은 비용 상승·거버넌스·불명확한 ROI다. 실제 사례는 Klarna(품질 붕괴 후 선회), Air Canada(정책 오답으로 패소), Chevrolet(프롬프트 인젝션)."},
+    "4": {"질문": "실패 기업들이 뭘 했길래", "근거": ["K1", "K2", "K3", "K4", "K6", "K7"], "답": "Klarna는 비용 절감을 목표로 삼아 700명분을 걷어냈고 품질이 무너졌다. Air Canada는 정책 근거 대조 없이 답변을 자동 생성했다. 공통은 지식베이스 관리 부재와 인계 시 맥락 소실이다."},
+    "5": {"질문": "성공 업체는 누구", "근거": ["L1", "L2", "L7"], "답": "Sierra(Airtable 80%, Chime 70%+), Decagon(Substack 90%+, Curology 5%→80%), Intercom Fin(ARR 1억 달러 돌파)."},
+    "6": {"질문": "성공 요인", "근거": ["L3", "L4", "L8", "L9"], "답": "공개 수치는 정의가 제각각이라 그대로 못 믿는다. 실제 공통점은 인계 품질과 배포 전 검증·상시 관측이다."},
+    "7": {"질문": "누구에게 팔 것인가 / 방향성", "근거": ["M2", "M3", "M4", "N2", "N3"], "답": "전 범위 CS 플랫폼은 틀린 방향이다. 버티컬이 리텐션 3~5배이고 해자는 도메인 데이터·워크플로에 있다. 대상은 10인 미만이 아니라 '어색한 중간'이다."},
+    "8": {"질문": "수요가 가장 큰 고객층", "근거": ["M1", "M2", "M3", "O1", "O2"], "답": "10인 미만은 도입률 20%, 50~249인은 60%+. 그 사이가 비어 있다. 국내에서는 취·교·반·배가 CS의 절반 이상이고, 네이버가 문의 대응률을 판매자 등급에 반영하기 시작해 강제 수요가 생긴다."},
+    "9": {"질문": "검증 자료 확보법", "근거": ["P1", "P2", "P3"], "답": "큐레이션 > 프로덕션 트래픽 > 합성 순이다. 우리는 트래픽이 없으므로 소비자24 322건을 gold로 두고, 합성분은 silver로 표시해 사람 검토로 승격한다. 검증 쇼핑몰은 데이터원이 아니라 계약 검증용으로 쓴다."},
+    "10": {"질문": "Fin은 왜 단일 에이전트인가", "근거": ["L5", "L6"], "답": "의도적 설계다. 부서별로 쪼개진 스택을 하나로 잇고 맥락을 넘기지 않는 것이 목적이다. 대화 연속성에는 그게 맞다. 다만 승인 대기·외부 콜백처럼 며칠 걸리는 프로세스 오케스트레이션은 다른 문제다."},
+    "11": {"질문": "국내 셀러 대상 의의", "근거": ["O1", "O2", "O3", "O4", "L4"], "답": "국내에 채널톡·헥토데이터가 이미 있고 리터놀은 반품 물류를 한다. 비어 있는 자리는 반품·환불의 정책 판정이다. 굿서비스 정규 전환이 응답 압력을 만든다."},
+    "12": {"질문": "새 주제를 잡는다면", "근거": ["N1", "N2", "N3", "N4", "O1", "O3"], "답": "해자 세 조건은 독점 데이터·워크플로 깊이·대형 플랫폼이 신경 안 쓰는 좁은 문제다. 우리가 이미 가진 것은 법령 앵커 28개와 판정 매트릭스 17행과 소비자24 322건이다. 그 셋이 겹치는 자리가 반품·환불 분쟁 판정이다."}
+  }
+}

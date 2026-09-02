@@ -14,15 +14,21 @@ status: draft
 ## 읽기 순서
 
 1. [system-context.md](system-context.md) — 시스템 경계와 외부 행위자
-2. [core-vs-team.md](core-vs-team.md) — 무엇이 Core에 남고 무엇이 Team으로 가는가
-3. [pack-model.md](pack-model.md) — Runtime + CS Pack + Commerce Ops Pack
-4. [repository-map.md](repository-map.md) — 저장소 6개의 역할과 관계
+2. [core-design.md](core-design.md) — **Core 8개 구성요소**
+3. [core-vs-team.md](core-vs-team.md) — 무엇이 Core에 남고 무엇이 Team으로 가는가
+4. [pack-model.md](pack-model.md) — Runtime + CS Pack + Commerce Ops Pack
+5. [concurrency.md](concurrency.md) — **경합 8종을 누가 처리하는가**
+6. [repository-map.md](repository-map.md) — 저장소 6개의 역할과 관계
+7. [tech-stack.md](tech-stack.md) — 쓰는 것과 미룬 것
+8. [diagrams.md](diagrams.md) — 다이어그램 8종과 근거
 
 ## 각 문서
 
 | 문서 | 답하는 질문 | 건드리면 위험한 것 |
 |---|---|---|
 | [system-context.md](system-context.md) | 누가 우리 시스템과 대화하는가 | 외부 경계를 늘리면 인증·감사 전부 영향 |
+| [core-design.md](core-design.md) | **Core가 무엇으로 이루어져 있나** | 두 Broker 를 헷갈리면 Team이 브로커를 직접 잡는다 |
+| [concurrency.md](concurrency.md) | **어떤 경합을 누가 처리하나** | 담당이 겹치면 아무도 안 한다 |
 | [core-vs-team.md](core-vs-team.md) | 새 기능이 Core인가 Team인가 | 잘못 판정하면 Team 추가가 리팩토링이 된다 |
 | [pack-model.md](pack-model.md) | Pack을 어떻게 교체하는가 | Core가 Pack을 import하면 교체 불가 |
 | [repository-map.md](repository-map.md) | 어느 저장소가 무엇을 소유하는가 | 소유가 겹치면 이중 장부 |
@@ -49,7 +55,7 @@ status: draft
 
 ## 이 영역의 불변식
 
-코드 저장소에서 강제되는 것들. 전체 목록은 [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md).
+코드 저장소에서 강제되는 것들. 전체 목록은 [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) · [sample](../../final_project_sample/wiki/quality/index.md).
 
 | ID | 불변식 | 판정 |
 |---|---|---|
@@ -65,5 +71,5 @@ status: draft
 
 ## 인접 영역
 
-- [`final_project_cs/wiki/index.md`](../../final_project_cs/wiki/index.md) — 구현
+- [`final_project_cs/wiki/index.md`](../../final_project_cs/wiki/index.md) · [sample](../../final_project_sample/wiki/index.md) — 구현
 - [../product/scope.md](../product/scope.md) — 범위가 아키텍처를 제약한다

@@ -25,6 +25,7 @@ status: draft
 | [team-boundary.md](team-boundary.md) | Team이 하면 안 되는 것 셋 | — |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |
+| [response-review-design.md](response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
 
 ## 구현된 Team
 

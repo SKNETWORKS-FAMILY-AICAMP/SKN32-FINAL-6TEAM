@@ -3,6 +3,7 @@ type: decision
 title: 자체호스팅은 규제 논거다
 description: 자체호스팅을 원가 절감으로 팔지 않는다. 데이터 반출 금지가 1차 논거이고 원가는 상담원 32명 이상에서만 보조
 status: draft
+impl_scope: cs — 자체호스팅 논거는 제품·사업 판단이다. 참조 구현에는 해당 없음
 tags: [cost, gpu, security]
 owners: [human:미배정]
 sources:

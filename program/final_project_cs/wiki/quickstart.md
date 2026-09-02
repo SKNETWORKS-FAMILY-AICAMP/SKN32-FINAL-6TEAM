@@ -7,6 +7,10 @@ status: draft
 
 # final_project_cs 시작하기
 
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
 **A-COP의 릴리스 대상이다.** Core(실행 기반)와 Team(업무 모듈)이 Registry로 분리돼 있다.
 
 제품이 무엇인지는 [중앙 허브](../../wiki/quickstart.md)에 있다. 여기는 **코드를 고칠 때** 보는 곳이다.
@@ -34,10 +38,10 @@ Agentic Controller ──── Team Registry ──── Agent Team
 
 | 문서 | 코드 |
 |---|---|
-| [runtime/](runtime/index.md) | `app/core/case_runtime/` |
-| [actions/](actions/index.md) | `app/core/access_action/` |
+| [runtime/](runtime/index.md) | `app/core/` (평면) |
+| [actions/](actions/index.md) | `app/core/` (평면) |
 | [teams/](teams/index.md) | `app/modules/customer_ops/` |
-| [context/](context/index.md) | `app/core/case_runtime/context/`, `app/infrastructure/rag/` |
+| [context/](context/index.md) | `app/core/context.py`, `app/infrastructure/rag/` |
 | [external/](external/index.md) | `app/presentation/` |
 | [data/](data/index.md) | `app/infrastructure/db/` |
 | [quality/](quality/index.md) | `tests/` |

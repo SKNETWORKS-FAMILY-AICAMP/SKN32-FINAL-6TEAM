@@ -7,7 +7,11 @@ status: draft
 
 # Context
 
-`app/core/case_runtime/context/`, `app/infrastructure/rag/`
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
+`app/core/context.py`, `app/infrastructure/rag/`
 
 **Team은 read 도구를 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`으로 만들어 준다.
 

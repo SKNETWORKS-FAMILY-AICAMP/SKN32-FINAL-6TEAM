@@ -33,12 +33,14 @@ Level 5   소스 코드              구현
 에이전트가 "환불 계산을 고쳐줘"를 받으면 이렇게 움직인다.
 
 ```text
-CLAUDE.md          → "코드 수정은 final_project_cs/wiki"
+CLAUDE.md          → "코드 수정은 <그 저장소>/wiki"
 quickstart.md      → "쓰기 동작 추가 → actions/"
 actions/index.md   → "action-proposal.md와 evidence-check.md"
 개념 문서 2개       → 규칙과 불변식 파악
 코드                → 수정
 ```
+
+**저장소 이름을 여기 박지 않는다.** `final_project_cs`가 나가도 `final_project_sample`이 같은 길로 돌아야 한다. → [../architecture/repository-map.md](../architecture/repository-map.md)
 
 **전체를 읽지 않는다.** 이게 목적이다.
 
@@ -64,11 +66,37 @@ actions/index.md   → "action-proposal.md와 evidence-check.md"
 
 | 문서 | 배치 | 왜 |
 |---|---|---|
-| TeamResult 계약 | `final_project_cs/wiki/teams/` | 코드가 바뀌면 계약도 바뀐다 |
+| TeamResult 계약 | `<저장소>/wiki/teams/` | 코드가 바뀌면 계약도 바뀐다. **두 저장소에 각각 있다** |
 | 결제 소유 경계 | `program/wiki/decisions/` | cs와 검증 쇼핑몰 둘 다 당사자 |
 | 건당 원가 | `program/wiki/business/` | 특정 커밋에 안 묶인다 |
-| Shared State 불변식 | `final_project_cs/wiki/runtime/` | 테스트가 강제한다 |
+| Shared State 불변식 | `<저장소>/wiki/runtime/` | 테스트가 강제한다 |
+| **Core/Team 경계 자체** | `program/wiki/architecture/` | **어느 구현에도 안 묶인다** |
 | DoD 29항목 | `program/wiki/delivery/` | 여러 저장소에 걸친다 |
+
+### ★ hub 은 한 구현에 매이면 안 된다
+
+`[실측]` 2026-09-01. hub 이 구현을 가리키는 횟수를 세었더니 **cs 94회 · sample 6회**였다.
+
+**요구가 이렇다.**
+
+> **cs 가 릴리스로 나가더라도 sample 은 혼자 정확히 굴러가야 한다.**
+
+hub 의 계약 문서가 cs 상세로만 내려가면 **cs 가 나가는 순간 계약을 읽을 길이 끊긴다.**
+
+`check_wiki.py` 가 잡는다.
+
+```
+[N] hub 가 한 구현만 가리킨다
+    architecture/core-design.md  (final_project_cs 9회 · final_project_sample 0회)
+```
+
+한쪽만 다루는 게 맞으면 front matter 에 이유를 적는다.
+
+```yaml
+impl_scope: cs — 결제 경계는 쇼핑몰 도메인 결정이다. basement 는 결제를 모른다
+```
+
+**이유 없는 `impl_scope` 도 위반이다.** "cs"만 적어 두면 다음 사람이 왜인지 모른다.
 
 ## 3. 영역을 새로 만들 때
 

@@ -1,0 +1,45 @@
+# dataset 28건 전건 판정 — report-split.md 의 한 줄 기준을 적용
+#   "날짜를 적어야 말이 되면 report 다"
+# 형식: 줄수 / 휴리스틱 / 사람type / 판정 / 근거
+줄수	휴리스틱	사람type	판정	근거	경로
+278	dataset	research	분할	기판정. 교차검증(research)+최종 후보(dataset)	voc/sources_catalog/PLAN.md
+263	dataset	research	이관	독립 조사. AI Hub 6종 후보 비교. dataset 아님	voc/sources_catalog/_codex_independent_research_2026-08-20.md
+258	dataset	dataset	분할	기판정. 출처·방법론(dataset)+결과 1~5(report)	mt/olist_reviews_mt_bench/REPORT.md
+211	dataset	report	이관	날짜 헤딩 작업 일지. ★커밋 안 된 파일 유실 사고 기록	commerce/coupang_order_history/docs/작업기록.md
+209	dataset	reference	분할	★H1 이 3개. 페이지네이션 원인 + 배송조회 두 형태	commerce/coupang_order_history/docs/실제HTML_페이지네이션.md
+196	dataset	research	이관	리뷰 스팸 탐지 논의. D-008 의 근거	voc/sources_catalog/_review_spam_detection_codex_논의_2026-08-20.md
+174	dataset	dataset	분할	왜·무엇(dataset)+"지금 몇 건인가"·누락 4건(report)	commerce/naver_order_history/REPORT.md
+158	dataset	dataset	분할	동. "팀원 제출본을 합쳤다 (2026-09-01)"	commerce/courier_tracking/REPORT.md
+153	dataset	plan	제외	★작업 지시 티켓. 7차 _prompts 규칙 적용	voc/aihub_30716_callcenter_qa/_prompts/S-AIHUB-KSHOPPING-MAPPING.md
+139	dataset	reference	분할	★H1 이 3개. 주문상세 + 배송조회. PII 금지 절 포함	commerce/coupang_order_history/docs/실제HTML_주문상세_배송조회.md
+130	dataset	research	이관	완결성 점검. ECMC 사례집 권고 → 실제 폴더가 생겼다	voc/sources_catalog/_완결성점검_codex_2026-08-20.md
+108	dataset	report	이관	제목이 "작업 리포트". 전체가 시점 기록	commerce/coupang_order_history/REPORT.md
+104	dataset	dataset	분할	기판정. 출처·선택이유 + "전처리 결과 (2026-09-01)"	voc/aihub_102_smb_order_qa/REPORT.md
+91	dataset	dataset	분할	출처·받은것·선택이유 + "★2026-08-28 갱신"	voc/aihub_30716_callcenter_qa/REPORT.md
+90	dataset	report	이관	제목이 "전처리 리포트 (x600, 2026-08-20)". 전체가 report	voc/naver_shopping_sentiment/REPORT.md
+87	dataset	dataset	분할	출처·선택이유 + "전처리 결과 (2026-09-01)"	voc/aihub_71603_aspect_sentiment/REPORT.md
+87	dataset	dataset	분할	동	voc/aihub_71844_llm_instruction_tuning/REPORT.md
+77	dataset	dataset	이관	후보 카탈로그. "다음 단계(미실행)" 한 절뿐	voc/sources_catalog/REPORT.md
+64	dataset	policy	이관	배포본 규칙. "★합본에서 가리는 것"·"저장소 밖으로 내보낼 때"	commerce/DISTRIBUTION.md
+54	dataset	dataset	이관	★6차 분할 판정을 뒤집는다. "자유서술 본문이 1종뿐"은 날짜가 필요 없다	voc/data_go_kr_consumer_complaints/REPORT.md
+54	dataset	dataset	이관	방침·받은 5종·KR3 라이선스 주의. 날짜 붙은 절 없음	voc/kaggle_customer_support/REPORT.md
+40	dataset	reference	이관	주문 카드 선택자 구조 실측	commerce/coupang_order_history/docs/실제HTML_주문카드.md
+38	dataset	dataset	이관	출처·받은것·선택이유. "아직 안 한 것" 한 절. 38줄에 분할은 과하다	voc/nikl_ne_2022/REPORT.md
+36	dataset	dataset	이관	출처·추출방법·결과건수·검증. 순수 dataset	voc/ecmc_dispute_casebook_2024/REPORT.md
+27	dataset	report	제외	영문 코드 리뷰. 내용이 REPORT.md 결과 5 에 있다	mt/olist_reviews_mt_bench/scripts/mt_bench_runner_extra_review.md
+23	dataset	report	제외	동. 위 문서의 요약	mt/olist_reviews_mt_bench/scripts/codex_review_extra_runner.md
+18	dataset	report	제외	6차 표본에서 판정함. 영문 작업 로그	mt/olist_reviews_mt_bench/scripts/codex_cautious_runner.md
+10	dataset	report	제외	영문 변경 기록. MADLAD 메모리 한도만 고유	mt/olist_reviews_mt_bench/scripts/mt_bench_runner_single_report.md
+
+# 집계
+# type 일치       12/28 = 42.9%
+# 판정 분포: 이관 13 · 분할 10 · 제외 5
+#
+# ★ 실제 type: dataset 12 · report 7 · research 4 · reference 3 · plan 1 · policy 1
+#   datasets/ 아래 있다고 dataset 이 아니다. 절반이 다른 것이었다.
+#
+# ★ 분할 10건 중 8건이 report-split.md 의 한 줄 기준에 그대로 걸렸다.
+#   "전처리 결과 (2026-09-01)" · "★2026-08-28 갱신" · "지금 몇 건인가"
+#   제목에 날짜가 붙은 절이 그 신호다.
+#
+# ★ H1 이 3개인 파일 2건은 규칙 이전의 문제다. 한 파일에 두 문서가 들어 있다.

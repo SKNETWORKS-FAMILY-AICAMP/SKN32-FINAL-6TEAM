@@ -1,0 +1,145 @@
+ 1. [program/plan] program/plan\A-COP_남은작업_인수인계.md
+    제목: A-COP 남은 작업 인수인계
+    첫줄: 작성 2026-08-24. 데이터셋과 문서 정리를 마친 시점의 기록이다.
+    소제목: 이 문서를 왜 쓰나 / 완료된 것 / 남은 작업 / 확인하지 못한 것 / 참고 문서
+    212줄
+ 2. [program/plan] program/plan\A-COP_페인포인트_페르소나_설계.md
+    제목: A-COP 페인포인트·비용·페르소나 설계 (초안)
+    첫줄: 작성 2026-08-31. 상태 **초안 — 데이터 교정 전**.
+    소제목: 0. 이 문서의 위치 / 1. 왜 이 문서가 필요한가 / 2. 페인포인트 [v8 §2-A 초안] / 3. 비용 [v8 §2-B 초안] / 4. 페르소나 [v8 §6-A 초안]
+    357줄
+ 3. [program/plan] program/plan\A-COP_문서표준_설계_codex초안.md
+    제목: A-COP 공유 문서 관리 표준
+    첫줄: 문서 상태: 초안 0.1
+    소제목: 0. 결정 요약 / 1. 저장 위치와 경계 / 2. 디렉터리 구조 / 3. front matter 스펙 / 4. index.md 규약
+    1281줄
+ 4. [program/plan] program/plan\A-COP_Composer_v3_설계_토글전용_UI이관.md
+    제목: A-COP Composer v3 설계 — 토글 전용 UI 이관
+    첫줄: 1. [배경과 결론](#1-배경과-결론)
+    소제목: 목차 / 1. 배경과 결론 / 2. v3 계약 — 토글 전용 / 3. 프로젝트별 책임 재배정 / 4. pip화와의 관계
+    207줄
+ 5. [program/plan] program/plan\A-COP_확장추천_검토.md
+    제목: A-COP 확장 추천 검토
+    첫줄: 작성 2026-08-28. Codex는 파일 쓰기에 실패해 산출물을 내지 못했다. 코드 확인과 판단은
+    소제목: 1. 결론 / 2. 추천 근거 두 종류 / 3. 자기 관측 기반은 지금 구조에서 성립한다 / 4. 위험과 관리 방법 / 5. 등록 형태 제안
+    144줄
+ 6. [program/research] program/research\_WBS원본_2026-08-17.md
+    제목: 부트캠프 WBS 원본 (확인 2026-08-17)
+    첫줄: 출처: 구글 시트 `★ 32기 최종 프로젝트 산출물 관리 (훈련생 공유) ★`
+    소제목: 1. 확정 날짜 / 1-2. 우리 팀 실제 착수 (시트에 없는 사실) / 2. 주차 구간 (대시보드 WBS 헤더 원문) / 3. 6팀 시트 산출물 21건 — 단계·마감주차 원문 / 4. 팀
+    84줄
+ 7. [program/research] program/research\학습게임_방법론_조사.md
+    제목: 대규모 코드베이스 학습 게임 방법론 조사
+    첫줄: 조사 기준일은 2026년 8월 30일이다.
+    소제목: 결론 / 1. LLM·AI 교육 선구자들의 교수법 / 2. 코드베이스 온보딩과 코드 이해 교수법 / 3. 학습에 직접 연결되는 게임 설계 / 4. 실제 개발자용 게임·학습 도구
+    207줄
+ 8. [program/research] program/research\_정합성점검_2026-08-19.md
+    제목: 문서 정합성 점검 2026-08-19
+    첫줄: 점검 결과 **문제 8건**을 확인했다. 계획서의 `§숫자` 참조와 §27 DoD 번호는 무결하다.
+    소제목: 1. 점검 결과 요약 / 2. 점검 1 — `§숫자` 상호참조 무결성 / 3. 점검 2 — Team 목록 일치 / 4. 점검 3 — DoD 항목 수 / 5. 점검 4 — 파일 경로 참조 무
+    95줄
+ 9. [program/research] program/research\_분쟁조정사례_2026-08-20.md
+    제목: 소비자24 분쟁조정 사례 — 전자상거래 (2026-08-20 수집)
+    첫줄: 한국소비자원·전자거래분쟁조정위원회가 실제로 조정한 사건 원문이다.
+    소제목: 수집 방법 / 사례 1. 물품 하자로 인한 환불 청구 (trublMdatCaseSn=13117) / 사례 2. 구두 및 레깅스 배송 지연으로 인한 구입가 환급 요구 (trublMdatCas
+    98줄
+10. [program/research] program/research\_3차_인용검증_설계.md
+    제목: 판정 정직성 — 프롬프트를 방어선으로 삼지 않는다
+    첫줄: 작성 2026-08-01 · 대상 `app/application/answer_question.py` · 모델팀 공유용
+    소제목: 0. 왜 이 문서가 필요한가 / 1. 팀 안에서 제기된 문제 인식 — 맞다 / 2. 다만 "프롬프트가 유일한 방어선"이라는 결론에는 동의하지 않는다 / 3. 방어를 층으로 겹친다 / 4. 
+    171줄
+11. [cs/docs/plans] final_project_cs/docs/plans\2026-08-30_DoD28-FT-RAG통합_설계.md
+    제목: DoD-28 후속 — 파인튜닝 모델 RAG 통합 경로 설계
+    첫줄: `Proposed+FT`(파인튜닝 모델 단독 호출)가 golden/holdout 양쪽에서 0% pass. 원인은
+    소제목: 0. 결론 먼저 — 단순 배선이 아니라 재학습이 필요하다 / 1. 현재 아키텍처 (조사 결과, 파일:줄 기준) / 2. 설계 / 3. 미확인/리스크 (구현 착수 전 확인 필요) / 4. 이
+    578줄
+12. [cs/docs/plans] final_project_cs/docs/plans\2026-08-12_1507_A-COP_실행계획서_v1.md
+    제목: A-COP 실행계획서 v1 — v5 기준선의 구현 분해
+    첫줄: v5 는 **무엇을 만들고 무엇으로 통과를 판정하는가**(범위·계약·DoD)를 정한다. 그것은 바뀌지 않는다.
+    소제목: 0. v5 와 이 문서의 관계 / 1. 최종 산출물 정의 (완성 = 이것) / 2. 스트림과 소유 디렉터리 (충돌 방지의 핵심) / 3. Phase 계획 / 4. 의존 순서와 병렬 실행
+    308줄
+13. [cs/docs/evidence] final_project_cs/docs/evidence\DoD-16_bootstrap_McNemar_한계.md
+    제목: DoD-16 — bootstrap 95% CI · McNemar · 한계가 report 에 포함된다
+    첫줄: python -m eval.stats.make_pairs --input eval/reports/rescored_proposed.jsonl eval/reports/rescored_baseli
+    소제목: 재현 명령 / 실제 출력 / 판정 근거 / ★이 항목은 잘못된 수치를 낼 뻔했다 / ★한계 (v5 §15-8) — 이 수치가 증명하지 않는 것
+    75줄
+14. [cs/docs/evidence] final_project_cs/docs/evidence\DoD-25_degraded_자동실행_금지.md
+    제목: DoD-25 — `ContextPack.degraded=true` 면 자동 실행하지 않는다
+    첫줄: python -m pytest tests/integration/controller/test_proposal_guard_blocks.py -q
+    소제목: 재현 명령 / 실제 출력 / 무엇이 바뀌었나 / 판정 근거 / ★대조는 위조할 수 없는 쪽으로 한다
+    67줄
+15. [cs/docs/evidence] final_project_cs/docs/evidence\MODULE-TOGGLES_실효화_검증.md
+    제목: 모듈 토글 실효화 — 검증 로그
+    첫줄: python -m scripts.verify_module_toggles
+    소제목: 1. 선언을 실제로 바꿔 가며 확인 / 2. 계약 테스트 / 3. 전체 테스트 (회귀 확인) / 4. 실제 브라우저 확인 / 판정
+    111줄
+16. [cs/docs/handoff] final_project_cs/docs/handoff\11_basement_version_reference.md
+    제목: Basement version reference
+    첫줄: This CS project records the basement reference from the sample project; it does not copy or apply basemen
+    소제목: 
+    13줄
+17. [cs/docs/handoff] final_project_cs/docs/handoff\07_모듈화_구조.md
+    제목: 07 — 모듈화 구조 (A2A / Graph 반영)
+    첫줄: (HTML 2026-08-12 20:46 · md 17:52 — **HTML 이 더 상세하다**)
+    소제목: 0. 왜 HTML 을 쓰나 / 1. 모듈형 Basement — 4개 축 (§6) / 2. 목표 디렉터리 구조 (§5 그대로) / 3. 현재 구조 → 목표 구조 대응 / 4. ★신설해야 할 
+    141줄
+18. [cs/docs/handoff] final_project_cs/docs/handoff\README.md
+    제목: docs/handoff — 계약 문서
+    첫줄: 여기 있는 것은 *"무슨 일이 있었나"*(reports)도 *"무엇을 할 것인가"*(plans)도 아니다.
+    소제목: 
+    20줄
+19. [cs/docs/reports] final_project_cs/docs/reports\2026-08-14_S-ADMINUI_리포트.md
+    제목: Basement 관리자 화면 구현 리포트
+    첫줄: `/ui/admin`에 읽기 전용 관리자 화면을 추가했다. 기존 서버 사이드 렌더링 방식을 유지했고, Team 활성/비활성이나 기타 쓰기 동작은 추가하지 않았다. 기존 `/ui/*` 네비게
+    소제목: 1. 범위 / 2. 화면 구성 / 3. 정보 출처 / 4. 테스트 / 5. 출력 원문
+    99줄
+20. [cs/docs/reports] final_project_cs/docs/reports\2026-08-24_S-PII-NAME-GAP-MEASURE_리포트.md
+    제목: S-PII-NAME-GAP-MEASURE 리포트
+    첫줄: 현재 REV `PII_PATTERNS`에는 사람 이름 정규식이 없으며, NIKL NE 2022의 실제 `PS_NAME` 표본 1,500건을 실행한 결과 M(메신저)·S(SNS)·N(뉴스) 
+    소제목: 결론 / 측정 근거 / 결과표 / 변경 범위와 재현성
+    41줄
+21. [cs/docs/reports] final_project_cs/docs/reports\2026-08-13_S-REMEASURE_리포트.md
+    제목: 2026-08-13 DoD 재측정 수집 리포트
+    첫줄: 각 파일에 실행 명령, 실제 출력, 숫자·행·키·파일경로 등의 관측 사실을 기록했다. 판정 문서는 생성하거나 수정하지 않았다.
+    소제목: 수집 파일 / 완료 조건 명령 출력 / 돌리지 못한 명령과 이유
+    61줄
+22. [cs/docs/reports] final_project_cs/docs/reports\2026-08-13_1300_비전_비용_재산정_리포트.md
+    제목: 비전 문서 비용 재산정 리포트
+    첫줄: `docs/vision/VISION-01`~`VISION-07`의 §4 도입 비용과 `TODO_VISION.md`의 예상 비용을 실소요 일수 기준으로 갱신했다. 트리거·선행 조건·폐기 조건
+    소제목: 범위 / 산정 근거 / 결과 요약
+    25줄
+23. [cs/docs/vision] final_project_cs/docs/vision\TODO_VISION.md
+    제목: TODO_VISION — 규모 확장 시 도입 검토 항목
+    첫줄: 최종 갱신: 2026-08-16
+    소제목: 아직 문서화하지 않은 후보 / 폐기된 항목 / 개정 이력
+    39줄
+24. [cs/docs/vision] final_project_cs/docs/vision\ESTIMATION_BASELINE.md
+    제목: ESTIMATION_BASELINE — 견적 산정 기준 (실측)
+    첫줄: 최종 갱신: 2026-08-13
+    소제목: 1. 왜 인·일을 쓰지 않는가 / 2. 실측 데이터 / 3. 속도를 가르는 것은 코드량이 아니라 판단량 / 4. AI가 줄여주는 것과 줄여주지 못하는 것 / 5. 견적 낼 때 쓰는 형식
+    132줄
+25. [datasets REPORT] datasets\mt\olist_reviews_mt_bench\REPORT.md
+    제목: 번역 모델 15종 벤치마크 — Olist 리뷰 PT→EN / PT→KO
+    첫줄: 2026-08-20. x600 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
+    소제목: 출처·라이선스 / 방법론 / 결과 1 — PT → EN (완료) / 결과 2 — PT → KO (완료, 2026-08-20) / 결과 3 — EN → KO (신규 축, 2026-08-21 
+    257줄
+26. [datasets REPORT] datasets\voc\ecmc_dispute_casebook_2024\REPORT.md
+    제목: 2024 전자거래분쟁조정사례집 추출 데이터
+    첫줄: PyMuPDF(`fitz`)로 67개 PDF 페이지를 페이지 단위 추출했다. `pypdf`와 비교 확인한 결과 이 PDF에서는 `fitz`가 한글 텍스트와 줄바꿈을 더 안정적으로 보존했다.
+    소제목: 출처와 이용조건 / 추출 방법 / 결과 건수 / 검증
+    36줄
+27. [datasets REPORT] datasets\voc\data_go_kr_consumer_complaints\REPORT.md
+    제목: 공공데이터포털 — 소비자 민원·피해구제 데이터 7종
+    첫줄: 전부 `data.go.kr`, 승인·로그인 불필요. 페이지의 "다운로드" 버튼이 JS로
+    소제목: 출처 및 다운로드 방법 / ★인코딩 주의 — EUC-KR(CP949)다, UTF-8 아니다 / 받은 파일 7종 / ★가장 중요한 발견 — 자유서술 본문+답변이 있는 건 15098320 하나
+    54줄
+28. [README/CLAUDE] scripts\README.md
+    제목: scripts/
+    첫줄: 팀원 개인 폴더(`team_branch/<이니셜>/`)에 흩어지기 쉬운 **재사용 가능한
+    소제목: 구조 규칙 / 등록된 스크립트 / 이력
+    32줄
+29. [README/CLAUDE] datasets\README.md
+    제목: datasets/
+    첫줄: 외부에서 가져온 실 데이터 산출물을 두는 곳이다. `program/research/`는 **조사
+    소제목: 구조 규칙 / 등록된 데이터셋 / VOC 전처리 현황 (2026-08-31 실측) / 등록된 조사 카탈로그 (raw/processed 없음 — 아직 안 받은 후보 소스 목록)
+    63줄

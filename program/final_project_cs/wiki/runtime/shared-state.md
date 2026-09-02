@@ -9,7 +9,11 @@ owners: [human:미배정]
 
 # Shared State
 
-`app/core/case_runtime/case/`, `app/core/case_runtime/concurrency/`
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
+`app/core/transition.py`, `app/core/transition.py`
 
 ## 책임
 
@@ -80,8 +84,8 @@ customer_cases → case_events   (aggregate_version으로 순서 보장)
 ## 구현
 
 ```text
-app/core/case_runtime/case/
-app/core/case_runtime/concurrency/
+app/core/transition.py
+app/core/transition.py
 app/core/transition.py       상태 전이 규칙 (232줄)
 ```
 

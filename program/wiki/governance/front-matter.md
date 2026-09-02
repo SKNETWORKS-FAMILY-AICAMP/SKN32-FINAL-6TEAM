@@ -42,32 +42,16 @@ owners: [human:서유현]
 
 ## `type` 목록
 
-8개로 시작한다. 늘리기는 쉽고 줄이기는 어려워서 작게 잡았다.
+**11개다.** 목록과 판정 규칙은 분량이 커서 따로 뒀다.
 
-| type | 용도 | 예 |
-|---|---|---|
-| `concept` | 개념·책임·구조 | Shared State, Context Broker |
-| `decision` | 선택과 이유 | 결제 소유 경계 |
-| `plan` | 일정·작업·DoD | 중간발표 계획, DoD 29항목 |
-| `contract` | API·스키마·저장소 간 약속 | TeamResult 계약 |
-| `guide` | 사용법·온보딩·진입점 | quickstart, 모든 index |
-| `report` | 특정 시점의 결과 | 평가 리포트, 사업성 분석 |
-| `research` | 조사와 비교 | GraphRAG 검토 |
-| `policy` | 규칙 | 이 문서 |
-| `dataset` | 데이터 의미와 제약 | 쿠팡 주문 기록 |
+→ **[type-guide.md](type-guide.md)**
+
+```text
+concept  decision  plan     contract  guide      report
+research policy    dataset  evidence  runbook    reference
+```
 
 `index.md`와 `log.md`는 `type: guide`를 쓴다.
-
-**애매하면 이렇게 판단한다.**
-
-| 헷갈리는 쌍 | 가르는 기준 |
-|---|---|
-| `concept` vs `policy` | 사람이 지켜야 할 규칙이면 policy. 시스템 구조 설명이면 concept |
-| `report` vs `research` | 우리가 측정한 결과면 report. 남이 만든 자료 조사면 research |
-| `decision` vs `concept` | 되돌리려면 근거가 필요하면 decision |
-| `plan` vs `decision` | 앞으로 할 일이면 plan. 이미 정한 선택이면 decision |
-
-여기서 계속 헷갈리는 사례가 나오면 [document-standard.md](document-standard.md)에 기록하고 목록을 고친다.
 
 ## 필드 규칙
 

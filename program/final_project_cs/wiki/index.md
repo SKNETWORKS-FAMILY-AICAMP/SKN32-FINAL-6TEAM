@@ -7,6 +7,10 @@ status: draft
 
 # final_project_cs 지식 지도
 
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
 처음이면 [quickstart.md](quickstart.md)부터 본다.
 
 여기는 **코드와 같은 커밋에서 바뀌어야 하는 지식**만 둔다. 제품·일정·사업성은 [중앙 허브](../../wiki/index.md)에 있다.
@@ -14,7 +18,7 @@ status: draft
 ## 영역
 
 ### [runtime/](runtime/index.md) — Case가 흘러가는 곳
-`app/core/case_runtime/`
+`app/core/` (평면)
 Case 생명주기, Shared State, Controller, 충돌 처리, 메시지 배달.
 **이 영역은 도메인을 모른다.** 환불이든 배송이든 다 같은 Case다.
 
@@ -23,11 +27,11 @@ Case 생명주기, Shared State, Controller, 충돌 처리, 메시지 배달.
 Team 계약, Registry, 경계, 개별 Team 7종.
 
 ### [context/](context/index.md) — 읽기 경로
-`app/core/case_runtime/context/`, `app/infrastructure/rag/`
+`app/core/context.py`, `app/infrastructure/rag/`
 Team이 필요한 자료를 모아 주는 계층. **Team은 직접 읽지 않는다.**
 
 ### [actions/](actions/index.md) — 쓰기 경로
-`app/core/access_action/`
+`app/core/` (평면)
 **side effect가 일어나는 유일한 곳.** 제안·근거대조·승인·실행·발행.
 
 ### [external/](external/index.md) — 바깥과 만나는 면

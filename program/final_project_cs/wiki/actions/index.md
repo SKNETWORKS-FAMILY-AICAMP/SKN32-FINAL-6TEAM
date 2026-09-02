@@ -7,7 +7,11 @@ status: draft
 
 # Actions
 
-`app/core/access_action/`
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
+`app/core/` (평면)
 
 **A-COP에서 side effect가 일어나는 유일한 곳이다.** Team은 여기에 제안만 하고 실행은 Core가 한다.
 
@@ -42,15 +46,15 @@ Team
 |---|---|---|
 | [action-proposal.md](action-proposal.md) | Team이 무엇을 어떤 모양으로 반환하는가 | `app/core/contracts.py` |
 | [evidence-check.md](evidence-check.md) | 근거 없는 주장을 어떻게 걸러내는가 | `app/core/verification.py` |
-| [approval.md](approval.md) | 무엇이 사람 승인 대상인가 | `access_action/approval/` |
-| [tool-gateway.md](tool-gateway.md) | 어떤 도구를 누가 쓸 수 있는가 | `access_action/tools/`, `access_action/gateway/` |
+| [approval.md](approval.md) | 무엇이 사람 승인 대상인가 | `app/core/` |
+| [tool-gateway.md](tool-gateway.md) | 어떤 도구를 누가 쓸 수 있는가 | `app/tools/`, `app/core/registry.py` |
 | [idempotency.md](idempotency.md) | 같은 요청이 여러 번 와도 한 번만 | `app/core/idempotency.py` |
 | [outbox.md](outbox.md) | 외부 발행을 어떻게 보장하는가 | `app/infrastructure/messaging/` |
 
 ## 코드 구조
 
 ```text
-app/core/access_action/
+app/core/app/core/  (평면 구조)
 ├─ approval/      승인 경계
 ├─ audit/         감사 기록
 ├─ auth/          인증

@@ -17,6 +17,7 @@ status: draft
 2. [golden-set.md](golden-set.md) — 무엇으로 재는가
 3. [protocol.md](protocol.md) — 어떻게 재는가
 4. [judge.md](judge.md) — 사람 없이 어떻게 판정하는가
+5. [finetuning.md](finetuning.md) — **파인튜닝 경로와 증명 범위**
 
 ## 각 문서
 
@@ -26,6 +27,7 @@ status: draft
 | [golden-set.md](golden-set.md) | 72건이 어떻게 구성돼 있는가 |
 | [protocol.md](protocol.md) | A/B/Proposed, 60+20, 통계 처리 |
 | [judge.md](judge.md) | LLM-as-Judge 루브릭과 사람 라벨 일치도 |
+| [finetuning.md](finetuning.md) | **무엇을 튜닝하고 무엇은 DB에서 읽는가** |
 
 ## 핵심 지표 넷
 
@@ -74,4 +76,5 @@ status: draft
 
 - [../product/personas.md](../product/personas.md) — 지표가 누구의 개선을 증명하는가
 - [../business/unit-economics.md](../business/unit-economics.md) — 오류율이 돈으로 환산된다
-- [`quality/eval-harness.md`](../../final_project_cs/wiki/quality/eval-harness.md) — 실행 방법
+- [`cs/quality/eval-harness.md`](../../final_project_cs/wiki/quality/eval-harness.md) — 실행 방법
+- [`sample/wiki/quality/`](../../final_project_sample/wiki/quality/index.md) — sample 에도 `eval/` 이 있다. 계약 테스트가 주력이다

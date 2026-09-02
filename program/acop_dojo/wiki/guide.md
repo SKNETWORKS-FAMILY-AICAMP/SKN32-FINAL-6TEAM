@@ -1,0 +1,92 @@
+---
+type: guide
+title: 도장 사용법
+description: 트랙 7개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
+status: draft
+tags: [testing, documentation]
+owners: [human:미배정]
+---
+
+# 도장 사용법
+
+`acop_dojo/`
+
+`final_project_cs`의 구조와 동작을 **실행 증거로** 배우는 학습 프로그램이다.
+
+## 명령
+
+`[실측]`
+
+| 명령 | 하는 일 |
+|---|---|
+| `doctor` | 대상 저장소·파이썬·테스트 수집 점검 |
+| `trace [--verify]` | 시나리오 트레이스를 뜬다. `--verify`는 두 번 돌려 같은지 본다 |
+| `learn 0` | 해설된 완주. 채점 없음 |
+| `learn 1` | 복원 — 빈칸에 들어갈 함수를 고른다 |
+| `learn 2` | 대조 — 예상 순서를 세우고 실측과 겹친다 |
+| `defect [ID] [--fix 패치]` | 결함 문제. `--fix`를 주면 pytest가 판정한다 |
+| `boss [--fix 패치]` | 보스전 — **안 배운 모듈에서 같은 규칙**을 찾고 고친다 |
+| `tracks` | 학습 트랙 7개 |
+| `placement --track X` | 어디부터 시작할지 실측 문제로 잰다 |
+| `scenarios [--verify-all]` | 시나리오 목록. 전부 두 번 떠서 같은지 검사 |
+| `answers` | 서술 답안을 동료 검토용 루브릭과 함께 내보낸다 |
+| `review` | 예약된 복습 — **같은 규칙을 다른 코드에서 묻는다** |
+| `status` | 진행 상황 |
+| `report` | [테스트 사각지대 실측](../../final_project_cs/wiki/quality/blind-spots.md) 생성 |
+
+## ★ `--verify`가 두 번 돌린다
+
+`trace --verify`와 `scenarios --verify-all`이 **같은 것을 두 번 떠서 비교한다.**
+
+**트레이스가 재현되지 않으면 학습 자료로 쓸 수 없다.** 매번 다른 걸 보여주면 무엇이 규칙이고 무엇이 우연인지 구분이 안 된다.
+
+## 트랙 7개
+
+`[실측]` 전체 1개와 파트 6개.
+
+**경계를 사람이 아니라 디렉터리로 긋는다.** `docs/handoff/05_분업_규칙.md`가 같은 이유로 그렇게 한다.
+
+| 트랙 | 담당 | 반드시 설명할 수 있어야 하는 것 |
+|---|---|---|
+| `all` | 전원 | Case가 만들어지고 라우팅되고 처리된 뒤 닫히는 전 구간 |
+| `core1` | 코어 1 | **상태는 이벤트를 접은 결과다.** `transition_case`만이 상태를 바꾼다 |
+| `core2` | 코어 2 | 같은 요청을 열 번 보내도 side effect는 한 번. scope 없는 호출은 거부 |
+| `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
+| `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII는 재시도하지 않고 넘긴다 |
+| `team-commerce` | 팀 모듈 3 | Team은 side effect를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
+
+**각 트랙의 "설명할 수 있어야 하는 것"이 그대로 불변식이다.** → [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md)
+
+## 보스전이 핵심이다
+
+`boss`는 **안 배운 모듈에서 같은 규칙을 찾아 고치게 한다.**
+
+`learn`과 `defect`가 "이 코드에서 이 규칙"이라면, `boss`는 **"규칙을 이해했는가"**를 묻는다.
+
+같은 규칙을 다른 자리에서 못 찾으면 외운 것이지 안 게 아니다.
+
+`review`도 같은 원리다 — **예약된 복습에서 같은 규칙을 다른 코드로 묻는다.**
+
+## 정답은 사람이 안 정한다
+
+```
+pytest 통과 여부
+실측 실행 트레이스
+```
+
+**둘이 판정한다.** 그래서 `defect --fix`에 패치를 주면 채점이 자동이다.
+
+## 원본을 안 건드린다
+
+**임시 사본에서만 결함을 적용하고 되돌린다.**
+
+`[실측]` 사각지대 리포트가 그 사실을 명시한다.
+
+> 원본 저장소는 건드리지 않았다. 사본에서만 적용하고 되돌렸다.
+
+## 관계
+
+- [index.md](index.md) — 도장이 무엇인가
+- [generation.md](generation.md) — 자동 생성물
+- [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) — 부산물
+- [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md) — 트랙이 겨냥하는 규칙

@@ -1,0 +1,41 @@
+# 표본 C 분류 — Claude (봉인 2026-09-01, codex 결과 보기 전)
+# 고친 규칙 적용: type 11개 + "한 가지만 하는가" 를 먼저 묻는다
+
+ 1  decision   애매  항목 A/B 채택 검토 + 의존 순서. decision + plan 혼재
+ 2  plan       애매  1510줄. 계획서 전체라 거의 모든 type 이 섞임. 최상위 분할 대상
+ 3  decision   확실  결제 소유 경계를 정하고 기각안을 적었다
+ 4  report     애매  원가 실측 + 시장 조사 + 가격안. report + research + decision
+ 5  reference  확실  법령 원문 확인 결과를 그대로 보관. 우리가 분석 안 함
+ 6  report     확실  다른 문서를 검토한 결과. 특정 시점 판정
+ 7  report     확실  하루 작업 기록
+ 8  report     확실  이틀 작업 기록
+ 9  report     확실  하루 작업 기록 (채우지 않은 이유 포함)
+10  evidence   확실  재현 명령 + 출력 + 판정 근거
+11  evidence   확실  동
+12  evidence   확실  동 (341줄이지만 evidence 로 일관)
+13  evidence   확실  결함 수정의 재현·검증 기록
+14  contract   확실  REST/MCP 인터페이스 약속
+15  contract   애매  Team 계약이나 실제 코드 예시가 옛 Team(order_shipping). 낡음
+16  contract   확실  구성기 입력이 되는 모듈·컴포넌트 정의
+17  report     확실  레거시 격리 작업 결과
+18  report     확실  idempotency 키 구현 결과
+19  report     확실  API 수정 결과
+20  report     확실  Return/Refund Team 구현 결과
+21  report     확실  격리 구현 결과
+22  decision   확실  지금 안 하는 이유 + 도입 트리거
+23  decision   확실  동
+24  decision   확실  동
+25  report     애매  7줄. 내용이 거의 없다. 이관 제외 후보
+26  report     애매  6줄. 동
+27  dataset    애매  아직 안 받은 후보 목록. dataset 인가 research 인가
+28  dataset    애매  데이터 설명 + "지금 몇 건인가 (2026-09-01)". dataset + report
+29  dataset    확실  출처·받은 것·선택 이유
+
+확실 20건 / 애매 9건 = 31.0%
+
+# 고친 규칙이 실제로 도움이 됐나 (codex 결과 보기 전 기록)
+# - reference 가 5번에서 바로 쓰였다. 이전 같으면 research 로 뭉갰을 것.
+# - "한 가지만 하는가" 를 먼저 물으니 1·2·4 를 빨리 애매로 뺐다. 판정이 빨라짐.
+# - vision 3건(22·23·24)이 전부 확실로 갈렸다. "지금 안 한다도 결정" 규칙이 먹혔다.
+# - 여전히 애매: dataset+report 혼재(27·28), 계획서 전체(2), 빈 문서(25·26)
+# - 25·26 은 분류 문제가 아니라 이관 제외 대상이다.

@@ -1,0 +1,242 @@
+층                       모집단   표본
+------------------------------------
+program/plan             19    8
+program/research         34    6
+cs/docs/plans             7    5
+cs/docs/evidence         35    4
+cs/docs/handoff          14    5
+cs/docs/reports         135    5
+cs/docs/manuals           2    2
+cs/docs/vision           11    2
+datasets REPORT          14    4
+README/CLAUDE             8    4
+------------------------------------
+합계                            45
+
+→ program/scripts/_sample.txt
+
+ 1. [program/plan] A-COP_예제Team모듈_확충설계.md
+    제목: A-COP 예제 Team 모듈 확충 설계
+    첫줄: 계획서 §8-B의 6개 Team을 기준으로 설계한다. 현재 구현·등록 상태는 `voc_store_manager` 하나다. `response_generation_review`는 구현
+    소제목: 1. 결론 / 2. 공통 계약과 Registry 해석 / 3. Team별 확충 설계 / 4. 구현 순서 / 5. 공통 뼈대
+    176줄
+ 2. [program/plan] A-COP_Composer_v3_불일치_해소안.md
+    제목: A-COP Composer v3 불일치 해소안
+    첫줄: 현재 상태는 v3 설계와 sample 구현이 서로 다른 계약을 가리키는 불일치다. v3는 `POST /composer/toggle`만으로 등록 ID 확인, flag 변경, revi
+    소제목: 결론 요약 / 공통 사실 / 안 A. 구현을 설계에 맞춘다 / 안 B. 설계를 구현에 맞춘다 / 안 C. 병행한다
+    173줄
+ 3. [program/plan] A-COP_티켓구조_재편_계획.md
+    제목: A-COP 티켓 구조 재편 계획
+    첫줄: 작성 2026-08-31. TeamFlow(`SKN32_FINAL_TEAM4`)의 티켓을 표준 구조로 다시 세우는 작업의 정본이다.
+    소제목: 한 줄 요약 / 왜 바꾸나 / 목표 구조 / 크기 기준 / 스프린트 (이번 작업에서 바꾸지 않는다)
+    161줄
+ 4. [program/plan] A-COP_문서구조_v1.md
+    제목: A-COP 문서 구조 v1
+    첫줄: 코드 커밋과 무관하게 움직이는 지식. 제품·일정·평가·사업·결정.
+    소제목: 1. 전체 트리 / 2. `quickstart.md` / 30초 요약 / 지금 무엇을 하려는가 / 저장소 지도
+    729줄
+ 5. [program/plan] A-COP_Composer_중앙설정저장소_결정.md
+    제목: A-COP Composer — 중앙 설정 저장소 결정 (2026-08-29)
+    첫줄: 이 문서는 Composer 의 **설정 저장 위치**에 대한 결정 기록이다. 이 주제에서
+    소제목: 1. 결정 / 2. 왜 — 두 요구가 지금 구조에서 충돌했다 / 3. 어떻게 바뀌나 / 4. 용어 (이 문서에서 쓰는 뜻) / 5. ★UI 에서 모듈·인스턴스 CRUD 가 되는가 
+    187줄
+ 6. [program/plan] A-COP_중간발표_현황정리.md
+    제목: A-COP 중간발표 현황 정리
+    첫줄: 기준일은 2026-08-20이다. 중간발표는 2026-09-15이고 최종발표는 2026-10-26이다. 아래 판단은 정적 코드·테스트 파일을 읽은 조사 결과에 따른다. 이번 조사에
+    소제목: 결론 / 1. 지금 시연 가능한 단위 / 2. 지금은 못 보여주거나 아쉬운 것 / 3. 4주 안에 우선 채울 것 / 4. 발표 자료로 쓸 수 있는 산출물
+    157줄
+ 7. [program/plan] A-COP_DoD_잔여작업_계획.md
+    제목: A-COP DoD 잔여작업 계획
+    첫줄: 이 문서는 `program/research/_DoD_구현갭_분석.md`의 재계산 판정을 출발점으로 삼는다. 대상은 부분 구현 9개와 미구현 1개다. 구현됨으로 판정된 18개는 다루
+    소제목: 1. 범위와 판단 기준 / 2. 처리 순서 요약 / 3. 항목별 실행 계획 / 4. 판정 불가 항목 / 5. 규모 분포
+    197줄
+ 8. [program/plan] A-COP_Composer_범위재검토.md
+    제목: A-COP Composer 범위 재검토
+    첫줄: 요구사항 1과 2를 만족하려면 토글 전용 v3를 전체 Composer의 대체 계약으로 쓰면 안 된다. 대상이 제공하는 등록 카탈로그에서 구현 종류를 고르고, UI에서 인스턴스 이름
+    소제목: 1. 결론 / 2. 지금 실제로 가능한 것 / 3. 세 층 구분표 / 4. 계약 제안 / 5. 선언형 Team 검토
+    216줄
+ 9. [program/research] _컴포저_UI배포구조_점검_2026-08-29.md
+    제목: Composer — UI 배포 구조 점검 (2026-08-29)
+    첫줄: 점검 요청: "컴포저를 sample 에서 만들어 ui 프로젝트로 pip 제공하고 거기서
+    소제목: 0. 결론 먼저 / 1. 먼저 — UI 작업을 이 세션에서 하는 게 맞나 / 2. 무엇이 빠져 있나 — UI 가 import 할 패키지 / 3. 그 결과 — UI 는 클라이언트를 
+    370줄
+10. [program/research] _정합성_수정제안.md
+    제목: 정합성 수정 제안
+    첫줄: 기준 보고서: `_정합성점검_2026-08-19.md`
+    소제목: 분류 / A. 바로 적용해도 안전한 것 6건 / B. 판단이 필요한 것 1건 / C. 다른 결정에 딸린 것 1건 / 적용 순서
+    110줄
+11. [program/research] _일일작업_2026-08-27.md
+    제목: 일일 작업 2026-08-27 (목)
+    첫줄: 전부 문서다. 코드 변경은 없다.
+    소제목: 한눈에 / 무엇을 했나 / 이날 무엇을 하지 않았나 / 근거 / 앞뒤 날
+    67줄
+12. [program/research] _codex_TRACE-VIDEO_최종메시지.md
+    제목: (제목없음)
+    첫줄: 작업을 진행할 수 없는 환경 권한 문제가 발생했다.
+    소제목: 
+    7줄
+13. [program/research] _번역모델_조사.md
+    제목: 번역 모델 비교 검증 방법론
+    첫줄: 정리 기준일: 2026-08-19
+    소제목: 문서의 결론 / 검증 절차 / 검증에 사용한 원문 / 비교가 성립하는 조건 / 동일 조건에서 비교할 수 있는 영→한 표
+    203줄
+14. [program/research] _버전이력.md
+    제목: A-COP 계획·브리핑 버전 이력
+    첫줄: 이 문서는 `_v7_병합_이력요약.md`, `_v8_작성_이력요약.md`, `_v8_쉬운설명_작성리포트.md`를 통합한 변경 이력 정본이다. 원문은 archive에 보존한다.
+    소제목: v7 병합·점검 / v8 작성 / 병합 판정 기록
+    25줄
+15. [cs/docs/plans] 2026-08-31_1154_테스트_사각지대_회귀테스트_설계.md
+    제목: 테스트 사각지대 회귀 테스트 — 실행계획
+    첫줄: 불변식을 어기는 최소 변경 39가지를 임시 사본에 적용해 전체 424개를 돌렸다.
+    소제목: 0. 왜 하나 / 1. 범위 / 2. 대상 18건과 배치 / 3. 완료 기준 / 4. 이 계획에서 하지 않는 것
+    98줄
+16. [cs/docs/plans] 2026-08-16_v7_격차해소_실행계획.md
+    제목: v7 격차 해소 실행계획
+    첫줄: v7 §9-E 의 제목이 **"쓰기 권한을 여는 전제 조건"** 이다.
+    소제목: 0. 순서를 이렇게 잡는 이유 / P1. ActionProposal 근거 대조 (DoD-24) ★최우선 / P2. degraded 를 Core 강제로 (DoD-25) / P3. R
+    149줄
+17. [cs/docs/plans] 2026-08-30_2100_모듈토글_실효화_설계.md
+    제목: 2026-08-30 21:00 — 모듈 토글 실효화 설계
+    첫줄: `config/project.yaml` 의 모듈 여섯 개 중 **셋만 실제로 코드를 가른다.** 나머지 셋은
+    소제목: 왜 하나 / 실측 — 지금 상태 / 범위 / 설계 판단 — `voc` 를 끄면 앱이 기동하지 않는다 / 완료 기준
+    87줄
+18. [cs/docs/plans] 2026-08-17_코퍼스_25문서_배분안.md
+    제목: 코퍼스 25문서 배분안 (쇼핑몰 CS)
+    첫줄: ★**어려운 것은 길이가 아니라 중복이다.** 정책 문서는 "~하지 않는다 / ~확인한다" 가
+    소제목: 0. 게이트가 요구하는 것 / 1. ★법정 기준 (웹 확인, 2026-08-17) / 2. 25문서 배분 / 3. 시나리오 근거 배치 / 4. ★중복 게이트를 넘기는 전략
+    213줄
+19. [cs/docs/plans] 2026-08-14_1546_A-COP_init_plan_6인팀_v1.md
+    제목: A-COP init plan — 6인 팀 v1
+    첫줄: 작성 시각: 2026-08-14 15:46
+    소제목: 1. 이 문서의 지위 / 2. 팀 배치와 운영 원칙 / 3. 코드 현황 실측 / 4. 착수 전 선행 조건 / 5. 의존 그래프와 인터페이스
+    219줄
+20. [cs/docs/evidence] DoD-24_ActionProposal_근거대조.md
+    제목: DoD-24 — ActionProposal 근거 대조·실행 차단
+    첫줄: python -m pytest tests/unit/core/test_proposal_verification.py -q          # 13 passed
+    소제목: 재현 명령 / 실제 출력 / 무엇이 없었나 / 만든 것 / 판정 근거
+    138줄
+21. [cs/docs/evidence] DoD-12_outbox_원자성_replay.md
+    제목: DoD-12 — outbox insert 가 projection transaction 과 원자적이고 worker replay 
+    첫줄: python -m pytest tests/integration/controller -v
+    소제목: 재현 / 근거 1 — ★원자성 (failure injection) / 근거 2 — 중복 전달 차단 / 근거 3 — worker claim 과 dead-letter / 실제 출력
+    86줄
+22. [cs/docs/evidence] DoD-06_정책FAQ_25건_300청크.md
+    제목: DoD-06 — 정책/FAQ 25건과 300~400 chunk
+    첫줄: cd final_project_sample
+    소제목: 재현 명령 / 실제 출력 (2026-08-12 19:40, v5) / 5회에 걸친 판정 이력 — 건수만 세면 통과하는 것이 계속 나왔다 / ★잔여 결함 (인수하되 기록한다) / p
+    112줄
+23. [cs/docs/evidence] DoD-EVAL-DATASETS_검증.md
+    제목: evidence — golden/holdout 재작성 검증 (S-EVAL-DATASETS)
+    첫줄: 이 항목 자체를 통과시키지는 않는다(§5 참조). judge agreement 사람 라벨링이 남아 있다.
+    소제목: 재현 명령 / 실제 출력 / 이 검사가 실제로 대조하는 것 / ★Codex 산출물을 그대로 신뢰하지 않았다(RULE.md §3.6-3) / 회귀 — 낡은 테스트 단언 발견·수정
+    94줄
+24. [cs/docs/handoff] 01_계약_Pydantic.md
+    제목: 01 — 계약: Pydantic 모델
+    첫줄: 조용한 필드 유입을 막는다. 우회(`extra='allow'`, `**kwargs` 통과)는 계약 위반이다.
+    소제목: 0. 전 모델 공통 규칙 / 1. Enum / 2. Evidence — 모든 주장에 출처를 붙인다 / 3. ContextPack / 4. TeamTask
+    214줄
+25. [cs/docs/handoff] 13_introspection_계약.md
+    제목: Introspection contract v1
+    첫줄: `GET /introspection`은 `ops:introspect` scope로 보호되는 read-only JSON API다.
+    소제목: 
+    9줄
+26. [cs/docs/handoff] 12_메시지_컨슈머_멱등성_계약.md
+    제목: 12 메시지 consumer 멱등성 계약
+    첫줄: 새 message consumer를 추가할 때는 구현을 완료하기 전에
+    소제목: 
+    19줄
+27. [cs/docs/handoff] 02_DB_스키마.md
+    제목: 02 — DB 스키마 (DDL)
+    첫줄: & "$env:USERPROFILE\anaconda3\envs\pgv\Library\bin\psql.exe" -h 127.0.0.1 -p 5433 -U postgres -c "CR
+    소제목: 0. 실행 환경 (실측 2026-08-12) / 1. DDL 전문 (v5 §8) / 2. ★빠뜨리면 시스템이 무너지는 제약 3개 / 3. 쓰기 규칙 (전 스트림 필수) / 4. s
+    244줄
+28. [cs/docs/handoff] 09_Composer_GUI_계약.md
+    제목: 09 — Composer GUI 계약 (제작 단계 구성기)
+    첫줄: 지금은 **켜져 있다.** 이 저장소는 제작 중이고, 구성기는 제작 단계의 도구다.
+    소제목: 1. 켜고 끄기 / 2. 무엇을 바꿀 수 있고 무엇을 못 바꾸나 / 2-5. 구조도 — 실행 순서대로 / 3. 저장 절차 — 검증이 먼저다 / 4. 실측 (브라우저 왕복)
+    202줄
+29. [cs/docs/reports] 2026-08-20_golden데이터셋_재작업_codex논의.md
+    제목: Golden/Holdout 데이터셋 재작업 논의
+    첫줄: 작성일: 2026-08-20
+    소제목: 결론 / 1. 그대로 사용해도 되는가 / 2. 재작업 방법 비교 / 3. 6번째 Catalog&Verification/A2A 팀의 범위 / 4. Golden과 holdout을 다르
+    154줄
+30. [cs/docs/reports] 2026-08-20_S-DOD29-COMPLETE_리포트.md
+    제목: S-DOD29-COMPLETE — Response Generation & Review 배선·데이터 리포트
+    첫줄: `ResponseGenerationReviewTeam`을 `config/project.yaml`의 `teams`에 등록했고, `Controller`의 기존 Team 실행 직후 선택
+    소제목: 결론 / 설계 결정 / 변경 파일 / 데이터 검증 / 테스트
+    152줄
+31. [cs/docs/reports] 2026-08-12_2045_RAG검색_수정_리포트.md
+    제목: RAG 검색 수정 — Claude 직접 수정 (소유권 예외)
+    첫줄: `app/infrastructure/rag/retriever.py` 는 **S-RAG 스트림 소유**다.
+    소제목: 1. ★소유권 예외 기록 (RULE.md §3.6-2) / 2. 변경 내용 / 3. 검증 (실제 출력) / 4. 이 결과가 부수적으로 증명하는 것 / 5. 남은 것
+    90줄
+32. [cs/docs/reports] 2026-08-12_S-RAG_코퍼스_v3_리포트.md
+    제목: S-RAG v3 코퍼스 재작성 리포트
+    첫줄: v2의 300개 섹션에 공통으로 붙어 있던 다음 꼬리를 삭제했다.
+    소제목: 1. v2 거부 사유 대응 / 2. `python -m scripts.check_corpus` 전체 출력 원문 / 3. 삭제·대체 내용 / 4. 미해결 이슈
+    50줄
+33. [cs/docs/reports] 2026-08-24_S-BASEMENT-05-OUTBOX-RESOLUTION_리포트.md
+    제목: S-BASEMENT-05-OUTBOX-RESOLUTION 구현 리포트
+    첫줄: 추가한 전용 검증:
+    소제목: 구현 내용 / 검증
+    30줄
+34. [cs/docs/manuals] 2026-08-12_1520_환경_기동절차.md
+    제목: 환경 기동 절차 (실측 2026-08-12)
+    첫줄: ★**이 기계에는 Docker 가 없다.** v5 §16 의 `docker/compose.yml` 전제는 성립하지 않는다.
+    소제목: 1. PostgreSQL 확인 / 2. psql — PATH 에 없다 / 3. A-COP DB (최초 1회 — 2026-08-12 완료) / 4. 파이썬 의존성 / 5. `.env
+    97줄
+35. [cs/docs/manuals] 운영_unknown상태_대응절차.md
+    제목: provider timeout `unknown` 상태 대응 절차
+    첫줄: 이 저장소에서 `unknown`은 Case 상태가 아니다. `customer_cases.status`의 enum에는
+    소제목: 1. 적용 범위와 결론 / 2. 발견 절차 / 3. 사람이 확인할 항목 / 4. 확인 결과별 조치 / 5. 금지 사항과 주의점
+    203줄
+36. [cs/docs/vision] VISION-07_정책_엔진_Decagon_AOP_방식.md
+    제목: VISION-07. 정책 엔진 (Decagon AOP 방식)
+    첫줄: 정책을 프롬프트 문장에만 두지 않고 설정·룰 테이블로 분리해 결정적으로 실행한다. Agent Operating Procedures와 결정적 실행 계층으로 정책을 다루는 Decago
+    소제목: 1. 무엇인가 / 2. 지금 하지 않는 이유 / 3. 도입 트리거 (이 조건이 만족되면 재검토한다) / 4. 도입 시 예상 비용 / 5. 선행 조건 (이게 먼저 있어야 도입 가능)
+    62줄
+37. [cs/docs/vision] VISION-05_메시징_내구_실행_확장.md
+    제목: VISION-05. 메시징과 내구 실행 확장
+    첫줄: Redis Streams/RabbitMQ 어댑터를 실증하고, 필요하면 Kafka와 Temporal 식 외부 durable execution으로 확장한다. 현재는 `MessageBu
+    소제목: 1. 무엇인가 / 2. 지금 하지 않는 이유 / 3. 도입 트리거 (이 조건이 만족되면 재검토한다) / 4. 도입 시 예상 비용 / 5. 선행 조건 (이게 먼저 있어야 도입 가능)
+    73줄
+38. [datasets REPORT] REPORT.md
+    제목: AI Hub 71844 — 민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터
+    첫줄: 음성 용량 문제가 없다.
+    소제목: 출처 / 받은 것 / 선택 이유 / 아직 안 한 것 / 전처리 결과 (2026-09-01)
+    87줄
+39. [datasets REPORT] REPORT.md
+    제목: AI Hub 30716 — 민원(콜센터) 질의-응답 데이터
+    첫줄: 아래 `라벨링데이터_220121_add`, `라벨링데이터_220125_add`, `라벨링데이터_231222_add`
+    소제목: 출처 / 받은 것 / 선택 이유 / ★2026-08-28 갱신 — K쇼핑 subset 추출·매핑 완료
+    91줄
+40. [datasets REPORT] REPORT.md
+    제목: Kaggle — 고객지원/이커머스 리뷰 5종 (스키마·번역 재료용, 학습 본체 아님)
+    첫줄: 화요일 브리핑의 데이터 소싱 방침: 해외 Kaggle 데이터는 **스키마·분류체계
+    소제목: 방침 / 원래 6개 중 1개는 죽은 링크였다 / 받은 5종 / ★KR3 라이선스 주의 — 이전 카탈로그 기재("확인 안 됨")보다 제약이 크다 / 한국어 여부
+    54줄
+41. [datasets REPORT] REPORT.md
+    제목: AI Hub 102 — 소상공인 고객 주문 질의-응답 텍스트
+    첫줄: `raw/Validation/라벨링데이터_validation.zip`
+    소제목: 출처 / 받은 것 / 원 데이터셋 규모(AI Hub 페이지 기준, 아직 이 폴더 안에서 직접 세어본 값 아님) / 선택 이유 / 아직 안 한 것
+    104줄
+42. [README/CLAUDE] CLAUDE.md
+    제목: A-COP — 작업 규칙 (도메인)
+    첫줄: 현재 상태·정책·이력·피드백 분류를 **Context Pack** 으로 조합하여
+    소제목: 응답 언어 / 작업 시작 진입 규칙 / 0. 가장 중요한 규칙 — 근거 없이 확정하지 않고, 승인 없이 실행하지 않는다 / 1. 데이터 원칙 / 2. 계약 원칙
+    220줄
+43. [README/CLAUDE] CLAUDE.md
+    제목: final_project_ui — 작업 규칙
+    첫줄: CS 제작 플랫폼의 **개발 콘솔**을 제품에서 떼어낸 별도 프로그램이다.
+    소제목: 0. 가장 중요한 규칙 / 1. 계약 원칙 / 2. 코드 원칙 / 3. 검증 원칙 / 4. 문서
+    146줄
+44. [README/CLAUDE] CLAUDE.md
+    제목: A-COP — 작업 규칙 (도메인)
+    첫줄: 현재 상태·정책·이력·피드백 분류를 **Context Pack** 으로 조합하여
+    소제목: 응답 언어 / 작업 시작 진입 규칙 / 0. 가장 중요한 규칙 — 근거 없이 확정하지 않고, 승인 없이 실행하지 않는다 / 1. 데이터 원칙 / 2. 계약 원칙
+    214줄
+45. [README/CLAUDE] README.md
+    제목: A-COP 도장
+    첫줄: `final_project_cs` 의 구조와 동작을 **실행 증거로** 배우는 학습 프로그램이다.
+    소제목: 왜 이 형태인가 / 명령 / 트랙 7개 / 지도는 먼저 그려 보고 대조한다 / 채점하지 않는 것
+    154줄

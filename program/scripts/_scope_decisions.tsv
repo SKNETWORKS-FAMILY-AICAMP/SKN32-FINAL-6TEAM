@@ -1,0 +1,49 @@
+# 2026-09-01 — 휴리스틱이 type 을 못 정한 20건의 사람 판정
+# ★"이관완료" 로 적은 것은 실제로 내용 대조를 했다. 안 하고 제외하면 내용을 잃는다.
+원본경로	확정type	목표영역	판정	근거
+final_project_cs/RULE.md	policy	루트 유지	제자리	프로세스 규칙. CLAUDE.md 와 짝이라 루트에 있어야 한다
+final_project_cs/docs/release_checklist.md	plan	hub/delivery	이관	완료 기준과 합격선. dod.md 와 합친다
+final_project_cs/eval/reports/2026-08-12_평가결과_리포트.md	report	—	제외	옛 구독 도메인. 2026-08-17 무효 선언됨
+program/briefing/S-BRIEFING-POLISH.md	plan	—	제외	완료된 작업 지시 티켓
+program/onboarding/trace/S-TRACE-VIDEO_리포트.md	report	—	제외	완료된 작업 결과. 산출물은 별도 보관
+program/plan/A-COP_Composer_v3_불일치_해소안.md	decision	hub/decisions	이관	안 A/B/C 비교 후 결론. 4·5차 blind 양쪽 decision
+program/plan/A-COP_Composer_v3_설계_토글전용_UI이관.md	decision	hub/decisions	이관	토글 전용 이관 선택과 책임 재배정
+program/plan/A-COP_Composer_범위재검토.md	decision	cs/decisions	분할완료	결론(decision) + 계약 제안(contract). 2개로
+program/plan/A-COP_Composer_소유권_정정.md	decision	hub/decisions	이관	소유권 정정 결정. 위 3건과 D-CS 계열로 묶는다
+program/plan/A-COP_구현계획서_v8.md	—	hub/*	분할완료	1516줄 28절. 최상위 분할. 절별로 영역에 배분
+program/plan/A-COP_남은작업_인수인계.md	report	hub/delivery	분할완료	완료된 것(report) + 남은 작업(plan). 2개로
+program/plan/A-COP_문서구조_v1.md	policy	—	제외	이 wiki 표준의 원본. governance/ 에 반영 확인함
+program/plan/A-COP_문서표준_설계_codex초안.md	policy	—	제외	codex 초안. governance/ 에 검토 후 반영 확인함
+program/plan/A-COP_비전항목_검토.md	decision	hub/decisions	이관	항목 A/B 채택 판단
+program/plan/A-COP_사업성_단위경제.md	report	hub/business	이관완료	★대조함. §6 리스크·§7 우선순위가 빠져 있어 business/index.md 에 추가함
+program/plan/A-COP_스프린트_에픽_설계.md	plan	hub/delivery	이관	TeamFlow 에픽 13개 정본
+program/plan/A-COP_예제Team모듈_확충설계.md	decision	cs/teams	분할완료	Team별 설계(decision) + 구현 순서(plan). 2개로
+program/plan/A-COP_페인포인트_페르소나_설계.md	concept	hub/product	이관완료	★대조함. §6 도메인 모순 수정이 빠져 있어 product/scope.md 에 추가함
+program/plan/A-COP_확장추천_검토.md	decision	hub/decisions	이관	추천 기능 채택 판단과 등록 형태
+program/plan/diagram/_다이어그램_근거.md	reference	hub/architecture	이관	다이어그램 8종의 근거 매핑. 재생성 절차 포함
+final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md	decision	cs/decisions	분할완료	결론(재학습 필요)+설계+리스크+후속. decision/plan 2개로. 579줄
+program/research/_컴포저_UI배포구조_점검_2026-08-29.md	report	hub/research	이관	배포 구조 점검 결과. 결론이 있지만 조사 성격
+final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md	evidence	cs/quality	이관	재현 명령+출력이 중심. 342줄이나 evidence 로 일관
+final_project_cs/docs/plans/2026-08-12_1507_A-COP_실행계획서_v1.md	plan	—	제외	v5 기준. v8 §25 일정으로 대체됨. 스트림 소유는 roles.md 에 반영 확인 필요
+program/research/_주말작업_요약_2026-08-29~30.md	report	—	제외	작업 일지. 결함 기록만 추출
+program/plan/A-COP_결제소유_경계.md	decision	hub/decisions	이관완료	★대조함. D-001 이 원본 10절을 전부 담고 있다
+datasets/voc/sources_catalog/PLAN.md	research	data/catalog	규칙수립	교차검증 리서치(research)+최종 후보(dataset). 2개로
+datasets/mt/olist_reviews_mt_bench/REPORT.md	report	data/catalog	규칙수립	벤치마크 결과가 본문(report)+데이터 설명(dataset). 2개로
+final_project_cs/docs/plans/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md	plan	—	제외	v5 기준 초기 계획. roles.md·timeline.md 로 대체됨
+final_project_cs/docs/plans/2026-08-17_코퍼스_25문서_배분안.md	plan	cs/context	이관	코퍼스 게이트 전략. rag-retrieval.md 보강 재료
+datasets/commerce/coupang_order_history/docs/실제HTML_페이지네이션.md	reference	data/catalog	이관	HTML 구조 관측 기록. 스크래퍼 유지보수에 필요
+program/research/학습게임_방법론_조사.md	research	hub/research	이관	외부 교수법 조사. acop_dojo 설계 근거
+final_project_cs/docs/manuals/운영_unknown상태_대응절차.md	runbook	cs/operations	이관	사고 대응 절차. troubleshooting.md 와 별도 유지
+program/research/_번역모델_조사.md	research	hub/research	이관	번역 모델 비교 방법론. mt-benchmark.md 보강 재료
+final_project_cs/docs/handoff/09_Composer_GUI_계약.md	contract	cs/decisions	이관	Composer 계약. D-CS-001 폐기 결정과 함께 본다
+program/plan/A-COP_DoD_잔여작업_계획.md	plan	hub/delivery	이관	DoD 부분통과 4건의 처리 계획. dod.md 보강 재료
+datasets/voc/sources_catalog/_review_spam_detection_codex_논의_2026-08-20.md	research	data/catalog	이관	리뷰 스팸 탐지 조사. 범위 밖 판단 포함
+program/plan/A-COP_Composer_중앙설정저장소_결정.md	decision	hub/decisions	이관	설정 저장 위치 결정. Composer 계열
+program/plan/A-COP_티켓구조_재편_계획.md	plan	hub/delivery	이관	TeamFlow 티켓 구조. 스프린트 설계와 짝
+program/plan/A-COP_중간발표_현황정리.md	report	hub/delivery	이관	2026-08-20 기준 시연 가능 범위. midterm 문서 보강 재료
+program/research/_잔여작업_점검_2026-08-20.md	report	—	제외	그 시점 점검. 문서 모순은 이미 해소됨
+final_project_cs/docs/handoff/07_모듈화_구조.md	plan	—	제외	★실측: §4 '신설해야 할 것' 5개가 전부 구현 완료. 계약이 아니라 완료된 계획이다
+datasets/commerce/coupang_order_history/docs/실제HTML_주문상세_배송조회.md	reference	data/catalog	이관	HTML 필드·PII 금지 목록. 스크래퍼 유지보수에 필요
+program/research/_DoD_구현갭_분석.md	report	—	제외	DoD 판정 재계산. dod.md 실측 현황으로 대체됨
+program/research/_정합성_수정제안.md	plan	—	제외	수정 제안 8건. 적용 완료
+datasets/voc/aihub_102_smb_order_qa/REPORT.md	dataset	data/catalog	규칙수립	데이터 의미(dataset)+전처리 현황(report). 2개로

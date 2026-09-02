@@ -14,9 +14,11 @@ status: draft
 1. [structure-guide.md](structure-guide.md) — 폴더와 파일을 어떻게 배치하는가
 2. [document-standard.md](document-standard.md) — 문서 하나를 어떻게 쓰는가
 3. [front-matter.md](front-matter.md) — 문서 머리에 붙이는 메타데이터 규격
-4. [evidence-grades.md](evidence-grades.md) — 주장에 근거 등급 붙이는 법
-5. [review-policy.md](review-policy.md) — 누가 무엇을 검토하는가
-6. [migration.md](migration.md) — 기존 문서를 언제 어떻게 옮기는가
+4. [type-guide.md](type-guide.md) — **type 11개 고르는 법**
+5. [evidence-grades.md](evidence-grades.md) — 주장에 근거 등급 붙이는 법
+6. [review-policy.md](review-policy.md) — 누가 무엇을 검토하는가
+7. [migration.md](migration.md) — 기존 문서를 언제 어떻게 옮기는가
+8. [migration-scope/index.md](migration-scope/index.md) — **무엇을 옮기고 무엇을 두는가 (745건 목록)**
 
 **1번과 2번이 짝이다.** structure-guide는 문서들을 어떻게 **배치**하는가, document-standard는 문서 하나를 어떻게 **쓰는가**를 다룬다.
 
@@ -26,10 +28,13 @@ status: draft
 |---|---|
 | [structure-guide.md](structure-guide.md) | 새 문서를 어디에 두고, 커지면 어떻게 쪼개는가 |
 | [document-standard.md](document-standard.md) | 문서를 어떻게 쓰는가 |
-| [front-matter.md](front-matter.md) | `type`은 무엇을 쓰고 언제 무엇이 필수인가 |
+| [front-matter.md](front-matter.md) | 어떤 필드를 언제 채우는가 |
+| [type-guide.md](type-guide.md) | **type 11개 중 무엇을 고르는가** |
 | [evidence-grades.md](evidence-grades.md) | 이 숫자가 실측인가 추정인가를 어떻게 표시하는가 |
 | [review-policy.md](review-policy.md) | draft를 stable로 올리려면 무엇이 필요한가 |
-| [migration.md](migration.md) | 기존 1,285개 문서를 어떻게 처리하는가 |
+| [migration.md](migration.md) | 이관 계획과 기준 |
+| [migration-scope/index.md](migration-scope/index.md) | **파일별 판정 목록.** 이관 대상 199건 · 사람 판정 60건 |
+| [type-verification/](type-verification/index.md) | 분류 체계가 실제로 판별 가능한가 (검증 4회) |
 
 ## 이 표준의 세 원칙
 

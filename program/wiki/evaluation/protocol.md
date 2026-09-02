@@ -11,11 +11,24 @@ owners: [human:미배정]
 
 ## 비교군
 
-| 군 | 무엇 | 건당 비용 | p50 지연 | 새 도메인 측정 |
+| 군 | 구현 | 건당 비용 | p50 | 새 도메인 측정 |
 |---|---|---|---|---|
-| Baseline A | 단순 LLM 호출 | `[미확보]` | `[미확보]` | **없음** |
-| Baseline B | RAG 추가 | `[미확보]` | `[미확보]` | **없음** |
-| **Proposed** | A-COP 전체 | 3.03원 `[실측]` | 20.0초 | golden 216건 |
+| **A** | 단일 LLM + 원문 prompt + **최소 DB 조회** | `[미확보]` | `[미확보]` | **없음** |
+| **B** | 고정 workflow/rule + policy retrieval. **Team 없음** | `[미확보]` | `[미확보]` | **없음** |
+| **Proposed** | Case lifecycle + Context Broker + Team + approval + REST/MCP/A2A 경계 | 3.03원 `[실측]` | 20.0초 | golden 216건 |
+
+**B가 "RAG 추가"가 아니라 "고정 workflow + Team 없음"이다.** 이게 정확한 정의다. A→B는 검색의 기여가 아니라 **구조화된 흐름의 기여**를 본다.
+
+## 통제 변수
+
+`[실측]` v8 §15. **이걸 고정하지 않으면 비교가 무의미하다.**
+
+```
+model / provider · temperature · seed · dataset
+timeout · tool fixture · prompt registry snapshot
+```
+
+**`prompt registry snapshot`이 특히 중요하다.** 프롬프트가 바뀌면 같은 모델도 다른 답을 낸다. `prompts` 테이블의 `(prompt_key, version)`과 sha256이 이걸 고정한다.
 
 **세 군을 두는 이유**는 "A-COP이 좋다"가 아니라 **"무엇이 개선을 만들었나"**를 보기 위해서다.
 
@@ -58,13 +71,29 @@ holdout  20건   최종 1회만
 
 ## 통계 처리
 
-| 항목 | 방법 | 왜 |
-|---|---|---|
-| 신뢰구간 | paired bootstrap CI | 표본이 작아 정규성 가정이 위험 |
-| 유의성 | McNemar | 같은 케이스를 두 군으로 본 쌍 데이터 |
-| 한계 | **함께 보고** | 72건은 적다 |
+`[실측]` v8 §15
+
+| 항목 | 방법 |
+|---|---|
+| 신뢰구간 | **10,000회 paired bootstrap**으로 Proposed−A/B 차이의 95% percentile CI |
+| 유의성 | McNemar. **discordant cell이 25 미만이면 exact McNemar** |
+| 다중 지표 p-value | **보조 결과로만 표시.** 효과크기와 CI를 우선한다 |
+| 한계 | **함께 보고** |
+
+**마지막 두 줄이 이 프로젝트의 태도다.** p-value를 앞세우지 않는다. 표본 60건에서 p<0.05를 여러 지표에 걸쳐 찾으면 우연히 나온다.
 
 **한계를 같이 적는다.** 60건에서 나온 3%p 차이를 유의하다고 주장하지 않는다.
+
+### 밝혀야 할 한계 5가지
+
+`[실측]` v8 §15가 명시한 것.
+
+```
+표본 60건 · 고정 도메인 · LLM judge 편향
+mock provider 의존성 · 운영 규모 미검증
+```
+
+**일반화 주장을 하지 않는다.**
 
 ## Ablation
 
@@ -112,4 +141,5 @@ python -m eval.run --arm Proposed
 - [metrics.md](metrics.md) — 무엇을 재는가
 - [golden-set.md](golden-set.md) — 무엇으로 재는가
 - [judge.md](judge.md) — 사람 없이 판정하는 방법
-- [`quality/eval-harness.md`](../../final_project_cs/wiki/quality/eval-harness.md) — 구현
+- [`cs/quality/eval-harness.md`](../../final_project_cs/wiki/quality/eval-harness.md) — 구현
+- [`sample/wiki/quality/`](../../final_project_sample/wiki/quality/index.md) — 같은 프로토콜을 계약 테스트로 건다

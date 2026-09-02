@@ -9,6 +9,10 @@ owners: [human:미배정]
 
 # Team 경계
 
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
 **Team이 무엇을 하는가보다 무엇을 하지 않는가가 중요하다.**
 
 셋이다. 셋 다 어기면 시스템의 보증이 무너진다.
@@ -33,7 +37,7 @@ Team은 `ActionProposal`만 반환한다. 실행은 [../actions/index.md](../act
 
 `INV-CS-TEAM-003` — **`review`.** 자동 판정이 없다.
 
-`[미확보]` 자동화 방법을 찾아야 한다. Team 모듈이 `app/core/access_action/` 아래를 import하는지 검사하는 테스트가 가능해 보인다.
+`[미확보]` 자동화 방법을 찾아야 한다. Team 모듈이 `app/core/` (평면) 아래를 import하는지 검사하는 테스트가 가능해 보인다.
 
 ---
 

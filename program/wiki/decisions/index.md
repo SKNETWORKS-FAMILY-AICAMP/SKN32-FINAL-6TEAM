@@ -30,6 +30,11 @@ status: draft
 | [D-002](D-002-graph-store-gate.md) | Graph Store는 채택 게이트 통과 시에만 | draft | cs |
 | [D-003](D-003-message-broker.md) | Message Broker는 in-process queue | draft | cs |
 | [D-004](D-004-self-hosting-rationale.md) | 자체호스팅은 원가가 아니라 규제 논거 | draft | 사업·제품 |
+| [D-005](D-005-write-gate.md) | **쓰기 권한을 여는 전제 조건 — 방어 7층** | draft | cs 전체 |
+| [D-006](D-006-composer-ownership.md) | Composer 는 sample 이 만들고 UI 가 가져다 쓴다 | draft | sample·UI |
+| [D-007](D-007-central-config-store.md) | 중앙 설정 저장소 (direct/central 2모드) | draft | Composer·배포 |
+| [D-008](D-008-review-spam-out-of-scope.md) | 가짜 리뷰 분류는 제품 기능으로 안 낸다 | draft | VOC·데이터 |
+| [D-009](D-009-recommendation-scope.md) | 추천 기능은 vision 으로 미룬다 | draft | 제품 범위 |
 
 ## 결정 문서 골격
 

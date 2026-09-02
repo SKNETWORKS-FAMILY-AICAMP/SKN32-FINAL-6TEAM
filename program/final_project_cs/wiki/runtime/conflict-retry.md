@@ -9,7 +9,11 @@ owners: [human:미배정]
 
 # 충돌과 재시도
 
-`app/core/case_runtime/concurrency/` · `app/core/transition.py`
+> `[실측 2026-09-01]` **`app/core/case_runtime/`·`access_action/` 은 `__init__.py` 만 남은 빈 패키지다.**
+> 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
+> 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
+
+`app/core/transition.py` · `app/core/contracts.py`
 
 ## 왜 낙관적 동시성인가
 
@@ -102,6 +106,51 @@ tests/integration/controller/test_active_run_uniqueness.py
 | `INV-CS-RT-009` | 같은 version을 읽은 두 writer는 정확히 1건만 충돌한다 | automated | `tests/integration/db/test_stale_write_conflict.py::test_two_writers_that_read_the_same_version_produce_exactly_one_conflict` |
 | `INV-CS-RT-010` | 진행된 Case의 stale 쓰기는 전이 오류가 아니라 충돌이다 | automated | `tests/integration/db/test_stale_write_conflict.py::test_stale_write_on_an_advanced_case_is_a_conflict_not_a_transition_error` |
 | `INV-CS-RT-011` | 동시 최초 실행은 active run을 정확히 1개 남긴다 | automated | `tests/integration/controller/test_active_run_uniqueness.py::test_two_simultaneous_first_start_runs_leave_exactly_one_active_run` |
+
+## CAS 구현
+
+`[실측]` v8 §20. **한 문장으로 끝난다.**
+
+```sql
+UPDATE customer_cases
+SET status=:status, state_json=:state_json, version=version+1, updated_at=now()
+WHERE tenant_id=:tenant_id AND case_id=:case_id AND version=:expected_version
+RETURNING version;
+```
+
+**`RETURNING`이 없으면 충돌이다.** 별도 조회가 필요 없다.
+
+`transition_case(case_id, expected_version, event_type, payload, actor)`가 유일한 진입점이고, **transaction 안에서** 이벤트 추가와 projection 갱신을 함께 한다.
+
+## worker claim은 `FOR UPDATE SKIP LOCKED`
+
+`[실측]` outbox worker가 여러 개일 때.
+
+**잠긴 행을 기다리지 않고 건너뛴다.** 기다리면 worker 하나가 느릴 때 전체가 막힌다.
+
+## ★ Loop guard 4종
+
+`[실측]` v8 §20. **Case당 상한이다.**
+
+| 대상 | 상한 |
+|---|---|
+| graph step | **12** |
+| Team task | **6** |
+| tool call | **12** |
+| 동일 signature 반복 | **2회** |
+
+**마지막 줄이 특이하다.** 횟수가 아니라 **같은 호출을 반복하는 것**을 잡는다. 무한 루프는 보통 같은 걸 계속 부르는 모양으로 나타난다.
+
+Team의 `max_steps`(4~6)는 이것과 별개로 Team 안의 상한이다.
+
+## Action 상태 기계
+
+```
+proposed → pending_approval → approved → executing → succeeded
+                                                   ↘ failed | unknown | cancelled
+```
+
+**`unknown`이 종단에 있다.** 실패가 아니라 **모르는 상태**다.
 
 ## 재시도가 아닌 것
 

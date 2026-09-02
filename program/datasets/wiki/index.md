@@ -52,6 +52,9 @@ REPORT는 데이터와 함께 살아야 하고, 상당수가 스크립트로 재
 
 ## 관계
 
+- [report-split.md](report-split.md) — REPORT 분할 규칙
+
 - [../../program/wiki/business/index.md](../../wiki/business/index.md) — 데이터가 사업 논거가 되는 곳
 - [../../program/wiki/evaluation/golden-set.md](../../wiki/evaluation/golden-set.md) — 평가 데이터
 - [../../program/wiki/research/mt-benchmark.md](../../wiki/research/mt-benchmark.md) — 번역 조사
+- [scraper-notes.md](scraper-notes.md)

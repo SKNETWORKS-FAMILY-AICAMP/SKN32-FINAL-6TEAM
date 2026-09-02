@@ -1,0 +1,23 @@
+# 표본 E 검증 — evidence 60건 중 10건. seed 20260905, 줄수 층화
+# 형식: 번호 / 휴리스틱판정 / 사람type / 사람판정 / 근거
+번호	휴리스틱	사람type	사람판정	근거	파일
+1	판정필요	evidence	이관	★DoD-10 판정본이 이 판을 인용한다. 끊으면 근거 사슬이 끊긴다	_raw/DoD-10_v4.md
+2	판정필요	evidence	제외	고아 중간판. 판정본은 v4 를 인용한다	_raw/DoD-05_v2.md
+3	유지	evidence	이관	재현·출력·판정근거·한계. 정형	DoD-13_REST5_MCP3_계약일치.md
+4	판정필요	evidence	제외	고아. 독립 측정이나 판정본이 사실(60/20)을 다 담았다	_raw/DoD-15.md
+5	유지	evidence	이관	취소를 실패와 분리. 2026-08-24 갱신 이력 포함	DoD-27_A2A_실패_취소_인증.md
+6	유지	evidence	이관	"대조는 위조할 수 없는 쪽으로" 원칙 포함	DoD-25_degraded_자동실행_금지.md
+7	유지	evidence	이관	"잘못된 수치를 낼 뻔했다" 자기 정정 포함	DoD-16_bootstrap_McNemar_한계.md
+8	유지	evidence	이관	부분통과→통과 갱신 경로가 근거와 함께 남아 있다	DoD-23_consumer_idempotency.md
+9	유지	evidence	이관	계약 이탈 발견 + "action 실행 경로 없음" 범위 정정	DoD-11_action_idempotency_승인.md
+10	판정필요	evidence	분할	기판정. decision+report+research 3종	DoD-28_파인튜닝_방어지표.md
+
+# 집계
+# type 일치        10/10 = 100%
+# "유지" 6건 유효    6/6  = 100%
+# "판정필요" 4건이 진짜 판정 필요  4/4 = 100%  (이관1·제외2·분할1)
+#
+# ★ 종합 10/10. research 7.7% 와 정반대다.
+#   차이는 폴더가 아니라 문서 형식이다. docs/evidence/ 는
+#   재현 명령 / 실제 출력 / 판정 근거 / 한계 형식이 강제돼 있다.
+#   형식이 강제된 곳에서는 휴리스틱이 맞는다.

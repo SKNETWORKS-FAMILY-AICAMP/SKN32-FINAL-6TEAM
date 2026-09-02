@@ -29,10 +29,13 @@ ROOTS = [
     "program/acop_dojo/wiki",
 ]
 
-#: governance/front-matter.md §3.2
+#: governance/front-matter.md — type 11개.
+#: evidence·runbook 은 표본 A 검증에서, reference 는 표본 B blind 대조에서 추가됐다.
+#: 셋 다 두 판정자가 같은 자리에서 막혀 드러난 빈 자리다. (type-verification.md)
 TYPES = {
-    "concept", "decision", "plan", "contract",
-    "guide", "report", "research", "policy", "dataset",
+    "concept", "decision", "plan", "contract", "guide",
+    "report", "research", "policy", "dataset",
+    "evidence", "runbook", "reference",
 }
 
 #: governance/front-matter.md — tags 통제 목록
@@ -57,6 +60,27 @@ INV_REPO = {
     "DOJO": "acop_dojo",
     "DATA": "datasets",
     "GPU": None,          # 별도 워크스페이스. 검사 대상 아님
+}
+
+#: ★구현 편향 검사.
+#:
+#:   요구: cs 가 릴리스로 나간 뒤에도 sample 은 혼자 정확히 돌아야 한다.
+#:   따라서 hub(program/wiki)는 **어느 한 구현에만 매여선 안 된다.**
+#:   hub 의 계약 문서가 cs 상세로만 내려가면, cs 가 나가는 순간
+#:   계약을 읽으러 온 사람이 전부 남의 저장소로 떨어진다.
+#:
+#:   규칙: hub 문서가 한 구현을 가리키면 다른 구현도 가리키거나,
+#:         왜 한쪽만 있는지를 front matter 에 적는다.
+IMPL_REPOS = ("final_project_cs", "final_project_sample")
+IMPL_REF = re.compile(r"(final_project_cs|final_project_sample)/")
+
+#: 편향이 정당한 문서. 이유를 함께 적는다.
+IMPL_BIAS_OK = {
+    # cs 만 다루는 게 맞는 것 — 도메인·릴리스 고유
+    "product/", "business/", "delivery/",
+    # 이관 작업 자체의 기록. 대상이 cs 라서 한쪽만 나온다
+    "governance/migration", "governance/type-verification/",
+    "log.md",
 }
 
 FENCE = re.compile(r"(?ms)^```.*?^```+\s*$")
@@ -149,10 +173,15 @@ def main() -> int:
             inv_tests.append((rel, m.group(1), m.group(2).strip()))
 
     # --- 폴더마다 index.md
+    #   ★ `_` 로 시작하는 폴더는 스테이징이다. 탐색 계층이 아니므로 면제한다.
+    #     루트에는 index.md 를 둬서 무엇을 하는 곳인지 밝힌다.
     for r in ROOTS:
         for dirpath, _, files in os.walk(r):
+            d = dirpath.replace("\\", "/")
+            if any(part.startswith("_") for part in d.split("/")[2:]):
+                continue
             if any(f.endswith(".md") for f in files) and "index.md" not in files:
-                problems["index.md 없는 폴더"].append(dirpath.replace("\\", "/"))
+                problems["index.md 없는 폴더"].append(d)
 
     # --- 불변식 테스트 경로 실재 여부
     #   ★ 저장소는 문서 위치가 아니라 불변식 ID 접두사로 정한다.
@@ -191,6 +220,32 @@ def main() -> int:
     doc_ids = set(inv_in_docs)
     for cid in sorted(code_ids - doc_ids):
         problems["코드에만 있는 불변식 ID"].append(cid)
+
+    # --- 구현 편향: hub 가 한쪽 구현만 가리키는가
+    for f in docs:
+        rel = f.replace("\\", "/")
+        if not rel.startswith("program/wiki/"):
+            continue
+        sub = rel[len("program/wiki/"):]
+        if any(sub.startswith(k) or k in sub for k in IMPL_BIAS_OK):
+            continue
+        raw_h = open(f, encoding="utf-8").read()
+        fm_h = front_matter(raw_h) or {}
+        # 한쪽만 다루는 게 맞는 문서는 이유와 함께 선언한다.
+        #   impl_scope: cs — 왜 sample 에는 해당하지 않는지
+        scope = fm_h.get("impl_scope", "")
+        if scope:
+            if len(scope.split("—")) < 2 and len(scope.split("-")) < 2:
+                problems["impl_scope 인데 이유 없음"].append(rel)
+            continue
+        body = FENCE.sub("", raw_h)
+        hit = {m.group(1) for m in IMPL_REF.finditer(body)}
+        if len(hit) == 1:
+            only = hit.pop()
+            other = [r for r in IMPL_REPOS if r != only][0]
+            n = len(IMPL_REF.findall(body))
+            problems["hub 가 한 구현만 가리킨다"].append(
+                f"{sub}  ({only} {n}회 · {other} 0회)")
 
     # --- 출력
     print(f"문서 {len(docs)}개 검사")

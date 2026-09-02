@@ -65,4 +65,4 @@ Team 간 Task 전달과 Action 결과 전파에 메시지 전달이 필요하다
 
 - [`message-broker.md`](../../final_project_cs/wiki/runtime/message-broker.md) — 구현
 - [`outbox.md`](../../final_project_cs/wiki/actions/outbox.md) — 발행 보장
-- [`idempotency.md`](../../final_project_cs/wiki/actions/idempotency.md) — 중복 실행 방지
+- [`idempotency.md`](../../final_project_cs/wiki/actions/idempotency.md) · [sample](../../final_project_sample/wiki/runtime/idempotency.md) — 중복 실행 방지

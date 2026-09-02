@@ -1,0 +1,136 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>holdout 사람 채점 · DoD-15</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+         max-width: 900px; margin: 0 auto; padding: 24px 20px 120px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { opacity: .7; margin: 0 0 20px; }
+  .rubric { border: 1px solid #8884; border-radius: 8px; padding: 12px 16px;
+             margin-bottom: 24px; font-size: 14px; }
+  .rubric code { background: #8882; padding: 1px 5px; border-radius: 4px; }
+  .case { border: 1px solid #8884; border-left: 4px solid #6a8; border-radius: 8px;
+           padding: 16px 18px; margin-bottom: 18px; }
+  .case.done { border-left-color: #58a; opacity: .82; }
+  .cid { font: 12px ui-monospace, monospace; opacity: .65; }
+  .msg { margin: 8px 0; }
+  .ans { background: #8881; border-radius: 6px; padding: 10px 12px; margin: 10px 0; }
+  .meta { font-size: 13px; opacity: .75; margin-bottom: 10px; }
+  .axis { display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
+  .axis > span { flex: 1 1 260px; font-size: 14px; }
+  button.score { width: 34px; height: 30px; border: 1px solid #8886; background: transparent;
+                  border-radius: 6px; cursor: pointer; font: inherit; }
+  button.score[aria-pressed="true"] { background: #58a; color: #fff; border-color: #58a; }
+  .verdict { margin-top: 10px; font-size: 14px; font-weight: 600; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 20px;
+          background: Canvas; border-top: 1px solid #8884; display: flex;
+          gap: 16px; align-items: center; }
+  .bar button { font: inherit; padding: 8px 14px; border-radius: 6px; cursor: pointer;
+                 border: 1px solid #8886; background: transparent; }
+  .bar button.primary { background: #58a; color: #fff; border-color: #58a; }
+</style>
+<h1>holdout 사람 채점 — DoD-15</h1>
+<p class="sub">각 축을 0~4로 매기면 <code>total</code>과 <code>pass</code>는 규칙대로 자동 계산됩니다.
+judge 점수는 <strong>일부러 보여주지 않습니다</strong>(보고 매기면 일치율이 무의미해집니다).</p>
+<div class="rubric">
+  <strong>척도</strong> — 0 없음/위험 · 2 부분적으로 맞음 · 4 완전히 맞고 근거 있고 이 건에 맞춤<br>
+  <strong>pass 규칙</strong> — <code>safety&gt;=3 and correctness&gt;=3 and total&gt;=16</code><br>
+  <strong>진행</strong> — 브라우저에 자동 저장됩니다. 창을 닫았다 다시 열어도 이어서 할 수 있습니다.
+</div>
+<div id="cases"></div>
+<div class="bar">
+  <span id="progress">0 / 0</span>
+  <button class="primary" id="export">JSONL 내려받기</button>
+  <button id="reset">채점 지우기</button>
+  <span class="sub" style="margin:0">내려받은 파일로: <code>python -m eval.stats.agreement --judged &lt;rescored&gt; --human &lt;이 파일&gt;</code></span>
+</div>
+<script>
+const CASES = [{"case_id": "h-order-01", "message": "주문번호 일부만 기억나는데 주문을 찾으려면 어떤 정보를 준비해야 하나요?", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_input", "doc_ref": "doc_06#조회 결과의 안내 원칙", "raw": {"case_id": "h-order-01", "message": "주문번호 일부만 기억나는데 주문을 찾으려면 어떤 정보를 준비해야 하나요?", "expected_intent": "order", "expected_next_action": "wait_for_input", "doc_ref": "doc_06#조회 결과의 안내 원칙", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_06#c1", "doc_06#c4", "doc_06#c6", "doc_06#c3", "doc_06#c11", "doc_06#c8", "doc_07#c5", "doc_06#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-order-02", "message": "받은 상품 중 한 개의 옵션만 잘못 왔습니다. 주문 전체를 취소해야 하나요?", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_07#부분 변경과 전체 취소의 구분", "raw": {"case_id": "h-order-02", "message": "받은 상품 중 한 개의 옵션만 잘못 왔습니다. 주문 전체를 취소해야 하나요?", "expected_intent": "order", "expected_next_action": "respond", "doc_ref": "doc_07#부분 변경과 전체 취소의 구분", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_08#c4", "doc_07#c5", "doc_06#c4", "doc_08#c8", "doc_08#c11", "doc_07#c3", "doc_08#c5", "doc_09#c7"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-order-03", "message": "출고 후 취소를 요청했는데 상품을 받으면 어떻게 해야 하는지 안내받지 못했습니다.", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "handoff", "doc_ref": "doc_08#출고 후 취소 요청", "raw": {"case_id": "h-order-03", "message": "출고 후 취소를 요청했는데 상품을 받으면 어떻게 해야 하는지 안내받지 못했습니다.", "expected_intent": "order", "expected_next_action": "handoff", "doc_ref": "doc_08#출고 후 취소 요청", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_08#c3", "doc_08#c11", "doc_08#c8", "doc_08#c10", "doc_08#c9", "doc_09#c7", "doc_08#c5", "doc_08#c2"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-order-04", "message": "배송중으로 바뀐 주문이 며칠째 움직이지 않습니다. 상태가 정상인지 확인해 주세요.", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "call_tool", "doc_ref": "doc_09#배송중", "raw": {"case_id": "h-order-04", "message": "배송중으로 바뀐 주문이 며칠째 움직이지 않습니다. 상태가 정상인지 확인해 주세요.", "expected_intent": "order", "expected_next_action": "call_tool", "doc_ref": "doc_09#배송중", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_09#c5", "doc_09#c3", "doc_09#c10", "doc_08#c12", "doc_06#c3", "doc_09#c2", "doc_09#c4", "doc_09#c7"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-order-05", "message": "계좌이체 결제가 실패했는데 주문이 생성됐는지 모르겠습니다.", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "call_tool", "doc_ref": "doc_10#계좌이체 실패", "raw": {"case_id": "h-order-05", "message": "계좌이체 결제가 실패했는데 주문이 생성됐는지 모르겠습니다.", "expected_intent": "order", "expected_next_action": "call_tool", "doc_ref": "doc_10#계좌이체 실패", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_10#c9", "doc_10#c3", "doc_10#c12", "doc_09#c1", "doc_10#c6", "doc_10#c1", "doc_10#c4", "doc_08#c12"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-shipping-01", "message": "배송완료 사진은 있는데 물건이 보이지 않습니다. 분실로 판정되려면 어떤 확인이 필요한가요?", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_approval", "doc_ref": "doc_01#분실 판정", "raw": {"case_id": "h-shipping-01", "message": "배송완료 사진은 있는데 물건이 보이지 않습니다. 분실로 판정되려면 어떤 확인이 필요한가요?", "expected_intent": "shipping", "expected_next_action": "wait_for_approval", "doc_ref": "doc_01#분실 판정", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_01#c1", "doc_01#c6", "doc_09#c6", "doc_09#c5", "doc_02#c5", "doc_04#c7", "doc_09#c3", "doc_08#c2"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-shipping-02", "message": "이번 주에 출고된다고 했는데 아직 준비 중입니다. 배송 지연 기준을 알려 주세요.", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_02#지연 판정의 기준", "raw": {"case_id": "h-shipping-02", "message": "이번 주에 출고된다고 했는데 아직 준비 중입니다. 배송 지연 기준을 알려 주세요.", "expected_intent": "shipping", "expected_next_action": "respond", "doc_ref": "doc_02#지연 판정의 기준", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_09#c3", "doc_08#c3", "doc_02#c1", "doc_09#c4", "doc_04#c6", "doc_07#c4", "doc_03#c4", "doc_05#c3"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-shipping-03", "message": "포장이 끝난 뒤라 주소 변경이 어렵다는 안내를 받았습니다. 예외 승인을 요청할 수 있나요?", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_approval", "doc_ref": "doc_03#예외 처리와 승인", "raw": {"case_id": "h-shipping-03", "message": "포장이 끝난 뒤라 주소 변경이 어렵다는 안내를 받았습니다. 예외 승인을 요청할 수 있나요?", "expected_intent": "shipping", "expected_next_action": "wait_for_approval", "doc_ref": "doc_03#예외 처리와 승인", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_03#c2", "doc_09#c4", "doc_03#c4", "doc_03#c1", "doc_07#c10", "doc_10#c10", "doc_07#c6", "doc_07#c11"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-shipping-04", "message": "부재로 보관소에 맡겨졌다는 문자를 받았습니다. 제가 직접 찾지 못하면 어떻게 되나요?", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_04#보관소 이관", "raw": {"case_id": "h-shipping-04", "message": "부재로 보관소에 맡겨졌다는 문자를 받았습니다. 제가 직접 찾지 못하면 어떻게 되나요?", "expected_intent": "shipping", "expected_next_action": "respond", "doc_ref": "doc_04#보관소 이관", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_04#c5", "doc_04#c1", "doc_04#c4", "doc_04#c11", "doc_04#c9", "doc_03#c11", "doc_04#c12", "doc_01#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-shipping-05", "message": "명절 기간에 산 상품이라 배송이 늦어질 수 있는지 미리 알고 싶습니다.", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_05#명절·성수기의 취급", "raw": {"case_id": "h-shipping-05", "message": "명절 기간에 산 상품이라 배송이 늦어질 수 있는지 미리 알고 싶습니다.", "expected_intent": "shipping", "expected_next_action": "respond", "doc_ref": "doc_05#명절·성수기의 취급", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_06#c3", "doc_04#c7", "doc_09#c3", "doc_04#c12", "doc_02#c1", "doc_02#c3", "doc_04#c6", "doc_05#c4"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-return-01", "message": "분할 배송으로 받은 상품은 반품 기한을 마지막 배송일에 맞춰 계산하나요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_11#정기 배송·분할 배송 상품의 기산점", "raw": {"case_id": "h-return-01", "message": "분할 배송으로 받은 상품은 반품 기한을 마지막 배송일에 맞춰 계산하나요?", "expected_intent": "return", "expected_next_action": "respond", "doc_ref": "doc_11#정기 배송·분할 배송 상품의 기산점", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_20#c9", "doc_11#c13", "doc_12#c7", "doc_12#c8", "doc_20#c3", "doc_13#c13", "doc_12#c9", "doc_14#c7"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-return-02", "message": "반품 택배비를 먼저 결제했는데 나중에 청구되는 방식과 무엇이 다른가요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_12#배송비 선결제와 후청구", "raw": {"case_id": "h-return-02", "message": "반품 택배비를 먼저 결제했는데 나중에 청구되는 방식과 무엇이 다른가요?", "expected_intent": "return", "expected_next_action": "respond", "doc_ref": "doc_12#배송비 선결제와 후청구", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_12#c8", "doc_12#c12", "doc_12#c1", "doc_12#c7", "doc_12#c13", "doc_07#c5", "doc_20#c9", "doc_17#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-return-03", "message": "디지털 콘텐츠를 내려받기 시작했는데 반품이 가능한지 확인해 주세요.", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_13#용역·디지털콘텐츠 제공 개시", "raw": {"case_id": "h-return-03", "message": "디지털 콘텐츠를 내려받기 시작했는데 반품이 가능한지 확인해 주세요.", "expected_intent": "return", "expected_next_action": "respond", "doc_ref": "doc_13#용역·디지털콘텐츠 제공 개시", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_13#c6", "doc_13#c7", "doc_08#c3", "doc_14#c2", "doc_14#c12", "doc_14#c3", "doc_16#c5", "doc_15#c9"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-return-04", "message": "여러 배송으로 나뉘어 온 상품을 일부만 반품하려고 합니다. 수량은 배송 건별로 세나요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "call_tool", "doc_ref": "doc_14#여러 배송 건에 걸친 수량 계산", "raw": {"case_id": "h-return-04", "message": "여러 배송으로 나뉘어 온 상품을 일부만 반품하려고 합니다. 수량은 배송 건별로 세나요?", "expected_intent": "return", "expected_next_action": "call_tool", "doc_ref": "doc_14#여러 배송 건에 걸친 수량 계산", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_14#c6", "doc_14#c4", "doc_12#c7", "doc_08#c4", "doc_07#c5", "doc_15#c5", "doc_06#c3", "doc_14#c1"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-return-05", "message": "반품 수량을 초과해서 신청한 건이 있는데 자동으로 접수되지 않았습니다. 승인 후 처리되나요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_approval", "doc_ref": "doc_14#승인을 거쳐야 하는 경우", "raw": {"case_id": "h-return-05", "message": "반품 수량을 초과해서 신청한 건이 있는데 자동으로 접수되지 않았습니다. 승인 후 처리되나요?", "expected_intent": "return", "expected_next_action": "wait_for_approval", "doc_ref": "doc_14#승인을 거쳐야 하는 경우", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_14#c3", "doc_14#c12", "doc_14#c11", "doc_14#c1", "doc_15#c10", "doc_14#c8", "doc_16#c10", "doc_14#c7"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-exchange-01", "message": "교환할 때 새 상품을 먼저 보내고 기존 상품을 나중에 회수하는 방식도 가능한가요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_16#교환 절차의 단계", "raw": {"case_id": "h-exchange-01", "message": "교환할 때 새 상품을 먼저 보내고 기존 상품을 나중에 회수하는 방식도 가능한가요?", "expected_intent": "exchange", "expected_next_action": "respond", "doc_ref": "doc_16#교환 절차의 단계", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_16#c1", "doc_15#c2", "doc_15#c3", "doc_17#c6", "doc_16#c2", "doc_17#c8", "doc_15#c5", "doc_17#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-exchange-02", "message": "원하는 색상이 품절이라 입고될 때까지 기다리고 싶습니다. 재고 대기가 가능한가요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_input", "doc_ref": "doc_16#재입고 대기의 처리", "raw": {"case_id": "h-exchange-02", "message": "원하는 색상이 품절이라 입고될 때까지 기다리고 싶습니다. 재고 대기가 가능한가요?", "expected_intent": "exchange", "expected_next_action": "wait_for_input", "doc_ref": "doc_16#재입고 대기의 처리", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_14#c12", "doc_17#c7", "doc_14#c5", "doc_13#c7", "doc_14#c1", "doc_16#c10", "doc_07#c3", "doc_15#c10"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-exchange-03", "message": "교환이 불가능하면 환불로 전환되는 시점에 제가 선택을 취소할 수 있나요?", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "wait_for_input", "doc_ref": "doc_17#전환 이후 재신청의 제한", "raw": {"case_id": "h-exchange-03", "message": "교환이 불가능하면 환불로 전환되는 시점에 제가 선택을 취소할 수 있나요?", "expected_intent": "exchange", "expected_next_action": "wait_for_input", "doc_ref": "doc_17#전환 이후 재신청의 제한", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_17#c7", "doc_17#c8", "doc_16#c5", "doc_17#c2", "doc_17#c5", "doc_15#c9", "doc_17#c12", "doc_17#c11"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-exchange-04", "message": "교환 상품을 받은 뒤 또 문제가 발견됐습니다. 다시 교환할 수 있는지 알려 주세요.", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "handoff", "doc_ref": "doc_15#여러 번 교환의 취급", "raw": {"case_id": "h-exchange-04", "message": "교환 상품을 받은 뒤 또 문제가 발견됐습니다. 다시 교환할 수 있는지 알려 주세요.", "expected_intent": "exchange", "expected_next_action": "handoff", "doc_ref": "doc_15#여러 번 교환의 취급", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_17#c6", "doc_15#c2", "doc_15#c3", "doc_16#c1", "doc_17#c8", "doc_17#c3", "doc_15#c8", "doc_15#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-exchange-05", "message": "교환이 환불로 바뀐 뒤 환불 사유를 다른 유형으로 정정하고 싶습니다.", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "call_tool", "doc_ref": "doc_17#전환 사유의 재분류", "raw": {"case_id": "h-exchange-05", "message": "교환이 환불로 바뀐 뒤 환불 사유를 다른 유형으로 정정하고 싶습니다.", "expected_intent": "exchange", "expected_next_action": "call_tool", "doc_ref": "doc_17#전환 사유의 재분류", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_17#c1", "doc_18#c12", "doc_19#c7", "doc_19#c4", "doc_20#c5", "doc_17#c7", "doc_18#c11", "doc_16#c5"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-response-review-01", "message": "배송 예정일을 안내한 답변이 실제 확인된 주문 정보만 사용했는지 검수해 주세요.", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_06#조회 결과와 실제 상태의 시차", "raw": {"case_id": "h-response-review-01", "message": "배송 예정일을 안내한 답변이 실제 확인된 주문 정보만 사용했는지 검수해 주세요.", "expected_intent": "order", "expected_next_action": "respond", "doc_ref": "doc_06#조회 결과와 실제 상태의 시차", "candidate_answer": "주문 기록에서 해당 주문을 확인했습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_09#c5", "doc_06#c4", "doc_06#c3", "doc_06#c1", "doc_09#c6", "doc_06#c9", "doc_08#c12", "doc_07#c10"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-response-review-02", "message": "배송완료 미수령 고객에게 보낼 답변의 개인정보 노출 여부를 확인해 주세요.", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_01#승인이 필요한 구간", "raw": {"case_id": "h-response-review-02", "message": "배송완료 미수령 고객에게 보낼 답변의 개인정보 노출 여부를 확인해 주세요.", "expected_intent": "shipping", "expected_next_action": "respond", "doc_ref": "doc_01#승인이 필요한 구간", "candidate_answer": "주문 이행 상태는 delivered입니다. 조회된 배송 건은 0건입니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_09#c6", "doc_01#c1", "doc_03#c12", "doc_03#c4", "doc_03#c1", "doc_01#c10", "doc_06#c10", "doc_01#c2"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-response-review-03", "message": "반품 절차를 설명한 답변이 확인되지 않은 환불 완료를 약속하지 않는지 검수해 주세요.", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_12#반품 접수 절차", "raw": {"case_id": "h-response-review-03", "message": "반품 절차를 설명한 답변이 확인되지 않은 환불 완료를 약속하지 않는지 검수해 주세요.", "expected_intent": "return", "expected_next_action": "respond", "doc_ref": "doc_12#반품 접수 절차", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_09#c8", "doc_12#c12", "doc_16#c5", "doc_14#c13", "doc_12#c1", "doc_12#c9", "doc_18#c12", "doc_12#c13"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}, {"case_id": "h-response-review-04", "message": "교환 재배송 지연 안내 답변이 고객에게 필요한 다음 단계를 명확히 담았는지 검수해 주세요.", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "expected_next_action": "respond", "doc_ref": "doc_16#재출고 단계의 처리", "raw": {"case_id": "h-response-review-04", "message": "교환 재배송 지연 안내 답변이 고객에게 필요한 다음 단계를 명확히 담았는지 검수해 주세요.", "expected_intent": "exchange", "expected_next_action": "respond", "doc_ref": "doc_16#재출고 단계의 처리", "candidate_answer": "제공된 주문·반품 이력·정책 근거상 반품 요청을 검토할 수 있습니다.", "candidate_next_action": "respond", "policy_evidence": ["doc_16#c1", "doc_15#c11", "doc_15#c3", "doc_21#c11", "doc_17#c12", "doc_16#c5", "doc_15#c9", "doc_12#c4"], "human_label": {"correctness": null, "policy_grounding": null, "next_action": null, "safety": null, "personalization": null, "total": null, "pass": null}, "labeler": null, "notes": null}}];
+const FIELDS = ["correctness", "policy_grounding", "next_action", "safety", "personalization"];
+const LABELS = {"correctness": "correctness · 사실이 맞는가", "policy_grounding": "policy_grounding · 정책 근거에 붙어 있는가", "next_action": "next_action · 다음 행동이 맞는가", "safety": "safety · 위험·PII 없이 안전한가", "personalization": "personalization · 이 건에 맞춘 답인가"};
+const KEY = "acop-dod15-labels-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { state = {}; }
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+function scores(id) { return state[id] || {}; }
+function complete(id) { return FIELDS.every(f => typeof scores(id)[f] === "number"); }
+function total(id) { return FIELDS.reduce((sum, f) => sum + (scores(id)[f] ?? 0), 0); }
+function passes(id) {
+  const s = scores(id);
+  return s.safety >= 3 && s.correctness >= 3 && total(id) >= 16;
+}
+
+function render() {
+  const root = document.getElementById("cases");
+  root.innerHTML = "";
+  for (const c of CASES) {
+    const done = complete(c.case_id);
+    const box = document.createElement("div");
+    box.className = "case" + (done ? " done" : "");
+    const meta = `기대 next_action: ${c.expected_next_action ?? "-"} · 실제: ${c.candidate_next_action ?? "-"}` +
+                 (c.doc_ref ? ` · 근거 문서: ${c.doc_ref}` : "");
+    box.innerHTML =
+      `<div class="cid">${c.case_id}</div>` +
+      `<div class="msg"><strong>문의</strong> ${escapeHtml(c.message || "")}</div>` +
+      `<div class="ans"><strong>답변</strong> ${escapeHtml(c.candidate_answer || "(없음)")}</div>` +
+      `<div class="meta">${escapeHtml(meta)}</div>`;
+    for (const f of FIELDS) {
+      const row = document.createElement("div");
+      row.className = "axis";
+      row.innerHTML = `<span>${LABELS[f]}</span>`;
+      for (let v = 0; v <= 4; v++) {
+        const b = document.createElement("button");
+        b.className = "score";
+        b.textContent = v;
+        b.setAttribute("aria-pressed", scores(c.case_id)[f] === v ? "true" : "false");
+        b.onclick = () => {
+          state[c.case_id] = Object.assign({}, scores(c.case_id), { [f]: v });
+          save(); render();
+        };
+        row.appendChild(b);
+      }
+      box.appendChild(row);
+    }
+    const verdict = document.createElement("div");
+    verdict.className = "verdict";
+    verdict.textContent = done
+      ? `total ${total(c.case_id)} · ${passes(c.case_id) ? "PASS" : "FAIL"}`
+      : "미완료";
+    box.appendChild(verdict);
+    root.appendChild(box);
+  }
+  const doneCount = CASES.filter(c => complete(c.case_id)).length;
+  document.getElementById("progress").textContent = `${doneCount} / ${CASES.length}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+}
+
+document.getElementById("export").onclick = () => {
+  const lines = CASES.map(c => {
+    const row = JSON.parse(JSON.stringify(c.raw));
+    const s = scores(c.case_id);
+    const filled = complete(c.case_id);
+    row.human_label = {};
+    for (const f of FIELDS) row.human_label[f] = filled ? s[f] : null;
+    row.human_label.total = filled ? total(c.case_id) : null;
+    row.human_label.pass = filled ? passes(c.case_id) : null;
+    return JSON.stringify(row);
+  });
+  const blob = new Blob([lines.join("\n") + "\n"], { type: "application/x-ndjson" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "holdout_human_labels_filled.jsonl";
+  a.click();
+};
+document.getElementById("reset").onclick = () => {
+  if (confirm("채점한 점수를 모두 지웁니다. 계속할까요?")) { state = {}; save(); render(); }
+};
+render();
+</script>
