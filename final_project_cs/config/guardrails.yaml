@@ -53,6 +53,11 @@ reliability:
   #   처리와 같은 성격이라 같은 자리에 둔다.
   classification_stuck_after_seconds: 300
   classification_sweep_limit: 100
+  # ★접수 뒤 실행이 시작조차 못 한 Case 를 되잡는 기준 (2026-09-03).
+  #   `run_case` 를 응답 뒤로 뺀 뒤 생긴 틈이다. 분류 쪽보다 길게 잡는다 —
+  #   에이전트 실행은 원래 수십 초 걸리므로 짧으면 정상 실행을 되잡는다.
+  routing_stuck_after_seconds: 600
+  routing_sweep_limit: 50
 
 # ── 동시성 (v5 §6-1) ────────────────────────────────────────────────
 concurrency:
