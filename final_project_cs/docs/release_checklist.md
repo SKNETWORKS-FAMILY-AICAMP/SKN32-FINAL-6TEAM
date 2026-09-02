@@ -138,10 +138,15 @@ ablation 도 마찬가지다. `no_approval`·`no_feedback_inline`·`no_team_spli
       보고**하며 `--strict` 에서 실패시킨다. `check_release_gate.py` 의 4번째
       검사로 배선했다. 규칙 회귀 테스트 14건
       (`tests/unit/core/test_commit_phase_mapping.py`).
-- [ ] 스크린샷 증거 `docs/screenshots/` 없음 (텍스트 실측으로 대체) —
-      ★2026-09-02 재시도했으나 이 세션의 브라우저 pane 이 화면에 표시되지 않아
-      (`Screenshot timed out: the Browser pane is not displayed`) 캡처 불가.
-      pane 이 열린 상태의 세션에서 다시 시도하면 바로 채울 수 있다.
+- [x] ★**스크린샷 증거 `docs/screenshots/` — 채움**(2026-09-02, Playwright).
+      6화면(cases · approvals · voc · admin · case 상세 · trace) ×
+      2뷰포트(1280 / 375) × 2테마(light / dark) = **24장**.
+      `python -m scripts.capture_ui_screenshots [--theme dark]` 로 재현한다.
+      ★**그림만 찍지 않는다.** 캡처하면서 기계가 판정할 수 있는 것을 같이 잰다 —
+      전 화면 200 · 본문 있음 · **375px 가로밀림 0**(`CLAUDE.md` 상태표의 주장) ·
+      콘솔 오류 0. 하나라도 어긋나면 `exit 1` 이다.
+      실행 결과: **전 항목 통과**. `/ui/voc` 만 데이터가 없어 "리포트 없음"을
+      표시하며, 그 사실을 결과에 적는다(결함이 아니라 설계된 정직한 빈 상태).
 - [x] ★**실제 결제 provider 어댑터(mock) + timeout→unknown end-to-end 통합테스트**
       (2026-08-20) — `app/infrastructure/messaging/mock_payment_publisher.py`,
       `tests/integration/messaging/test_payment_timeout_unknown.py` 5건 통과.
