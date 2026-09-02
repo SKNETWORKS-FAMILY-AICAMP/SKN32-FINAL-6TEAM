@@ -133,3 +133,18 @@ def test_select_capability_returns_none_for_plain_status_inquiry():
 def test_select_capability_ignores_unrelated_intents():
     assert FulfillmentLogisticsTeam.select_capability("order", "파손됐어요") is None
     assert FulfillmentLogisticsTeam.select_capability(None, "파손됐어요") is None
+
+
+# ★2026-09-02 holdout 실측으로 좁힌 경계 — "내 배송이 잘못됐다"와 "그럴 때
+#   규칙이 뭐냐"는 다르다. 같은 낱말("지연")이 둘 다에 나오므로 규칙 문의는
+#   이상 신고로 보지 않는다. 실제로 오탐 2건이 이렇게 잡혔다.
+def test_policy_inquiry_containing_a_problem_word_is_not_an_exception_report():
+    assert FulfillmentLogisticsTeam.select_capability("shipping", "배송 지연 기준을 알려 주세요") is None
+    assert FulfillmentLogisticsTeam.select_capability("shipping", "명절 기간에 배송이 늦어질 수 있는지 미리 알고 싶습니다") is None
+
+
+def test_an_actual_problem_report_still_routes_to_exception():
+    """★규칙 문의를 걸러내면서 진짜 신고까지 놓치면 안 된다 — 양쪽을 같이 잰다."""
+    assert FulfillmentLogisticsTeam.select_capability(
+        "shipping", "배송완료 사진은 있는데 물건이 보이지 않습니다. 분실로 판정되려면 어떤 확인이 필요한가요?"
+    ) == "shipment.exception"

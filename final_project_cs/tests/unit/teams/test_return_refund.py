@@ -245,3 +245,13 @@ def test_select_capability_returns_none_for_plain_eligibility_inquiry():
 def test_select_capability_ignores_unrelated_intents():
     assert ReturnRefundTeam.select_capability("order", "교환하고 싶어요") is None
     assert ReturnRefundTeam.select_capability(None, "교환하고 싶어요") is None
+
+
+# ★procurement 의 "취소해" 와 같은 부류 — "교환해야 하나요?"(고민)를
+#   요청으로 보지 않는다(2026-09-02 함께 좁힘).
+def test_deliberating_about_exchanging_is_not_an_exchange_request():
+    assert ReturnRefundTeam.select_capability("exchange", "이 경우 교환해야 하나요?") is None
+
+
+def test_an_explicit_exchange_request_still_routes_to_request():
+    assert ReturnRefundTeam.select_capability("exchange", "사이즈가 안 맞아서 교환해 주세요") == "return.request"

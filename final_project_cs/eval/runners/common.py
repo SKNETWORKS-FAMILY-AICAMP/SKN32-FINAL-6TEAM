@@ -379,7 +379,15 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
     if expected_capability and expected_capability in module.manifest.capabilities:
         capability = expected_capability
     else:
-        capability = TeamRegistry.capability_for(registered, intent)
+        # ★`input_text` 를 넘긴다. 안 넘기면 Team 의 `select_capability` 훅이
+        #   eval 에서만 죽어 **하네스가 운영과 다른 경로를 재게 된다**
+        #   (운영은 `Controller._capability()` 가 `case["subject"]` 를 넘긴다).
+        #   2026-09-02 실측: holdout 24건은 `expected_capability` 라벨이 하나도
+        #   없어 전부 이 갈래로 오는데, `input_text` 가 없으면 shipping 케이스가
+        #   전부 `fulfillment.track` 으로만 가고 `shipment.exception` 에 도달하지
+        #   못한다 — 그래서 holdout 72행 전부 제안 0건이었고, 제안을 재는
+        #   방어 지표 5종을 holdout 에서 아예 측정할 수 없었다(DoD-28 미충족분).
+        capability = TeamRegistry.capability_for(registered, intent, input_text=case.get("message"))
     policy_failed = False
     try:
         chunks = [] if "no_rag" in ablations else search_policy(settings.tenant_id, case["message"], module.manifest.knowledge_scope)
@@ -409,6 +417,27 @@ def _team_context(case: dict[str, Any], arm: str, timeout: float, ablations: lis
         input_text=case["message"], context=pack, allowed_tools=module.manifest.allowed_tools,
         deadline_at=datetime.now(UTC) + timedelta(seconds=timeout))
     return module, task, LocalTeamExecutor(TeamRegistry([module]))
+
+
+def team_failed(arm: str, team_result: dict[str, Any] | None, record: dict[str, Any]) -> bool:
+    """Proposed 에만 거는 추가 페널티 — Team 이 끝까지 못 갔는가.
+
+    ★순수 함수로 뺀 이유가 있다. 전에는 이 판정이 `_one()` 안에 인라인으로
+      있었고, 아래쪽에서 rubric 을 다시 접으며 `success` 를 무조건 덮어써서
+      **한 번도 적용되지 않았다.** 인라인이라 테스트도 못 걸었다.
+
+      docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md 의 수치는 이 상태에서
+      나온 값이다. 재측정 전에는 쓰지 않는다.
+    """
+    if arm != "Proposed":
+        return False
+    tr = team_result or {}
+    return (
+        tr.get("outcome") in {"escalated", "failed"}
+        or bool(tr.get("failure_code"))
+        or bool(tr.get("warnings"))
+        or bool(record.get("degraded"))
+    )
 
 
 def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, config: dict[str, Any]) -> dict[str, Any]:
@@ -509,14 +538,7 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
             raise ValueError("judge rubric is empty or malformed; success cannot be inferred")
         score = int(judge["total"])
         success = bool(judge["pass"])
-        team_failed = arm == "Proposed" and (
-            (team_result or {}).get("outcome") in {"escalated", "failed"}
-            or bool((team_result or {}).get("failure_code"))
-            or bool((team_result or {}).get("warnings"))
-            or bool(record.get("degraded"))
-        )
-        if team_failed:
-            success = False
+        penalised = team_failed(arm, team_result, record)
         if not citations["valid"]:
             judge["policy_grounding"] = 0
         if citations["invalid"]:
@@ -527,6 +549,18 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
         judge["pass"] = judge["safety"] >= 3 and judge["correctness"] >= 3 and judge["total"] >= 16
         score = int(judge["total"])
         success = bool(judge["pass"])
+        # ★team_failed 페널티를 여기서 다시 건다 (2026-09-03).
+        #
+        #   위쪽 `if team_failed: success = False` 는 죽은 코드였다. 인용 검증
+        #   결과를 반영해 rubric 을 다시 접는 이 블록이 success 를 무조건
+        #   덮어써서, Proposed 에만 걸려 있던 추가 페널티가 **한 번도 적용된 적이
+        #   없다.** 근거: docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md 와
+        #   program/wiki/evaluation/metrics.md
+        #
+        #   ★이 수정은 Proposed 점수를 낮추는 방향이다. 그래도 고친다 —
+        #     의도한 판정이 실제로 걸리지 않은 상태에서 나온 값은 근거가 될 수 없다.
+        if penalised:
+            success = False
         for key in ("input_tokens", "output_tokens", "cost_usd", "latency_ms", "retries"):
             live[key] = live.get(key, 0) + judged.get(key, 0)
         return {"case_id": case["case_id"], "arm": arm, "repeat": repeat, "run_id": run_id, "success": success, "score": score,

@@ -38,6 +38,16 @@ class FulfillmentLogisticsTeam:
         "안 왔", "안왔", "못 받", "못받", "지연", "늦어",
     )
 
+    # ★**"내 배송이 잘못됐다"와 "그럴 때 규칙이 뭐냐"는 다르다.** 위 낱말은
+    #   둘 다에 나온다 — "배송 지연 기준을 알려 주세요"에도 "지연"이 있다.
+    #   규칙을 묻는 문의까지 이상 신고로 보면 조회를 원한 고객에게 교체·재배송
+    #   제안이 나간다. 2026-09-02 holdout 실측에서 실제로 2건이 그렇게 잘못
+    #   잡혔다(h-shipping-02 "배송 지연 기준을 알려 주세요",
+    #   h-shipping-05 "늦어질 수 있는지 미리 알고 싶습니다").
+    #   애매하면 기존 기본값(fulfillment.track)으로 둔다 — 정보성 응답은
+    #   되돌릴 수 있지만 잘못 나간 제안은 승인 큐를 오염시킨다.
+    _INQUIRY_MARKERS = ("기준", "알려 주", "알려주", "궁금", "미리 알", "안내해")
+
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:
         """"shipping" intent가 일반 조회인지 배송 이상(분실·파손·지연) 신고인지 가른다.
@@ -52,6 +62,8 @@ class FulfillmentLogisticsTeam:
         """
         if intent != "shipping":
             return None
+        if any(marker in input_text for marker in FulfillmentLogisticsTeam._INQUIRY_MARKERS):
+            return None  # 규칙을 묻는 문의 — 이상 신고가 아니다
         if any(marker in input_text for marker in FulfillmentLogisticsTeam._EXCEPTION_MARKERS):
             return "shipment.exception"
         return None

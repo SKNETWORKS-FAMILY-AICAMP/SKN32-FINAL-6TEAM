@@ -201,3 +201,16 @@ def test_select_capability_returns_none_for_plain_status_inquiry():
 def test_select_capability_ignores_unrelated_intents():
     assert ProcurementOrderPaymentTeam.select_capability("shipping", "주문 취소해주세요") is None
     assert ProcurementOrderPaymentTeam.select_capability(None, "주문 취소해주세요") is None
+
+
+# ★2026-09-02 holdout 실측(h-order-02) — "취소해야 하나요?"(고민)를
+#   "취소해 주세요"(요청)로 잘못 잡던 것을 좁혔다. 물어본 것을 실행 제안으로
+#   바꾸면 승인 큐에 없던 일이 생긴다.
+def test_deliberating_about_cancelling_is_not_a_cancel_request():
+    assert ProcurementOrderPaymentTeam.select_capability(
+        "order", "받은 상품 중 한 개의 옵션만 잘못 왔습니다. 주문 전체를 취소해야 하나요?") is None
+
+
+def test_an_explicit_cancel_request_still_routes_to_cancel():
+    assert ProcurementOrderPaymentTeam.select_capability("order", "주문 취소해 주세요") == "order.cancel"
+    assert ProcurementOrderPaymentTeam.select_capability("order", "주문 취소 부탁드립니다") == "order.cancel"

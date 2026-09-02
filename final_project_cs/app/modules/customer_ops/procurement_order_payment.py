@@ -58,8 +58,12 @@ class ProcurementOrderPaymentTeam:
     #   동작(order.verify, 정보성 조회)을 그대로 둔다 — 뒤 단계(변경/취소
     #   근거인 order_change·cancellation_scope 등)가 없으면 execute() 가
     #   스스로 escalate 하므로, 문구가 틀리게 잡혀도 근거 없는 제안은 안 나간다.
-    _CANCEL_MARKERS = ("취소해", "취소하고 싶", "취소 원해", "주문 취소")
-    _MODIFY_MARKERS = ("변경해", "변경하고 싶", "수정해", "정정하고 싶")
+    # ★"취소해 주세요"(요청)와 "취소해야 하나요?"(고민)를 가른다. 전에는
+    #   `"취소해"` 하나로 잡아서 **"주문 전체를 취소해야 하나요?"** 까지
+    #   취소 요청으로 봤다(2026-09-02 holdout h-order-02 실측). 고객이
+    #   물어본 것을 실행 제안으로 바꾸면 승인 큐에 없던 일이 생긴다.
+    _CANCEL_MARKERS = ("취소해 주", "취소해주", "취소하고 싶", "취소 원해", "취소 부탁")
+    _MODIFY_MARKERS = ("변경해 주", "변경해주", "변경하고 싶", "수정해 주", "수정해주", "정정하고 싶")
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:
