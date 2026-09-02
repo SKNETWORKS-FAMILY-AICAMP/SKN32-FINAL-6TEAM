@@ -61,3 +61,18 @@ status: draft
 
 **앞의 둘이 짝이다.** 조문만으로는 Team 로직을 못 짜고, 적용례가 있어야 한다.
 
+## [2026-09-03] 공개 고객지원 데이터셋
+
+`[외부]` `_법령사실_2026-08-15.md` §4. **실재를 확인한 것만 적는다.**
+
+| 데이터셋 | 규모·특징 |
+|---|---|
+| Kaggle "Customer Service Conversations" | **1,002,235행.** 주문조회·환불요청·주문취소·상품불만 |
+| **Bitext customer-support-llm** | **27 intent / 11 카테고리.** `cancel_order`·`get_refund`·`track_refund` 가 우리 시나리오와 직접 겹친다 |
+| strova-ai/customer_support_conversations | 100% 합성. 멀티턴 |
+| rjac/e-commerce-customer-support-qa · NebulaByte | HuggingFace |
+
+`[미확보]` **대부분 영어다.** 한국어 적용은 번역·재작성이 필요하고 **라이선스를 각각 확인해야 한다.**
+
+**두 번째가 가장 가깝다** — intent 이름이 우리 것과 겹친다. → [../../datasets/wiki/source-selection.md](../../datasets/wiki/source-selection.md)
+
