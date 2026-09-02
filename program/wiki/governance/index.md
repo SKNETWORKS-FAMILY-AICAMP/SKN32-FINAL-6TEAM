@@ -60,6 +60,7 @@ status: draft
 
 | 문서 | 무엇 |
 |---|---|
+| **[cutover.md](cutover.md)** | **★이걸 실제로 쓰기 시작하는 조건.** 지금은 아무도 안 읽는다 |
 | [work-loop.md](work-loop.md) | **세션마다 무엇을 읽고 무엇을 남기나.** 파일명 체계가 이 wiki 와 다르다 |
 | [drift-case-voc.md](drift-case-voc.md) | 낡은 문장이 규칙으로 승격된 사고 |
 | [migration-scope/coverage.md](migration-scope/coverage.md) | 반영률 실측 |
