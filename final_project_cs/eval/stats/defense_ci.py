@@ -46,6 +46,16 @@ def _ratios(rows: list[dict]) -> dict[str, float | None]:
 
 def bootstrap_ci(rows: list[dict], *, iterations: int, seed: int,
                  alpha: float = 0.05) -> dict[str, dict]:
+    # ★빈 입력이면 `randrange(0)` 으로 죽는다(2026-09-03 Codex 지적).
+    #   실제로 `2026-09-02_holdout_defense_input.jsonl` 이 0바이트였다 —
+    #   holdout 에 제안이 하나도 없어 bridge 가 아무 행도 못 썼기 때문이다.
+    #   스택트레이스 대신 "왜 비었는지" 를 말한다.
+    if not rows:
+        raise SystemExit(
+            "입력에 행이 하나도 없다. 방어 지표는 **제안(ActionProposal)** 을 재는 것이라,\n"
+            "  제안이 없는 실행분을 bridge 하면 빈 파일이 나온다.\n"
+            "  `eval.bridge_golden_to_defense` 출력의 rows_with_proposal 을 먼저 확인한다.")
+
     rng = random.Random(seed)
     point = _ratios(rows)
     samples: dict[str, list[float]] = {name: [] for name in METRICS}
@@ -72,11 +82,21 @@ def bootstrap_ci(rows: list[dict], *, iterations: int, seed: int,
         #   n 이 크면 차이가 작지만 틀린 건 틀린 것이고, 표본이 작을수록 커진다.
         lower = values[max(0, math.ceil(lower_q * len(values)) - 1)]
         upper = values[min(len(values) - 1, max(0, math.ceil(upper_q * len(values)) - 1))]
-        out[name] = {
+        entry = {
             "point": round(point[name], 4),
             "ci95": [round(lower, 4), round(upper, 4)],
             "resamples_used": len(values),
         }
+        # ★버린 재표집이 많으면 이 구간은 "분모가 우연히 생긴 표본만의 조건부
+        #   분포" 다 — 전체 분포의 구간이 아니다(2026-09-03 Codex 지적).
+        #   조용히 넘기지 않고 그 사실을 결과에 적는다.
+        dropped = iterations - len(values)
+        if dropped:
+            entry["dropped_resamples"] = dropped
+            entry["note"] = (
+                f"재표집 {iterations}회 중 {dropped}회는 분모가 0이라 버렸다. "
+                "이 구간은 분모가 생긴 표본만의 조건부 분포이므로 희소한 지표에서는 편향될 수 있다.")
+        out[name] = entry
     return out
 
 
