@@ -120,14 +120,28 @@ ablation 도 마찬가지다. `no_approval`·`no_feedback_inline`·`no_team_spli
 
 ### 5-3. 미해결 (차단은 아님)
 
-- [ ] 마우스 오버 하이라이트가 튀는 UI 버그 — 원인 미특정(2026-08-20 재조사
-      시도 — 이 환경엔 브라우저 제어가 없어 재현 자체를 못 함, 소스만으로는
-      레이아웃을 바꾸는 hover 규칙 안 보임. `docs/reports/2026-08-20_S-UI-HOVER-JITTER_리포트.md`.
-      브라우저 되는 환경에서 재시도 필요)
-- [ ] 커밋 ↔ Phase 자동 매핑 없음 (사람이 읽어 대조) — ★부분 진전:
-      `scripts/check_release_gate.py`(2026-08-20)가 게이트 통과 여부는
-      자동화했으나 커밋↔Phase 매핑 자체는 여전히 수동
-- [ ] 스크린샷 증거 `docs/screenshots/` 없음 (텍스트 실측으로 대체)
+- [x] ★**마우스 오버 하이라이트가 튀는 UI 버그 — 해소**(2026-09-02). 브라우저
+      제어가 되는 환경에서 실제로 재현을 시도했고 **레이아웃 이동이 0**임을
+      두 방향으로 확인했다: (1) 페이지 CSS 전수 조사 — `:hover` 규칙은 정확히
+      6개이고 전부 `background`/`color` 만 바꾼다(레이아웃 영향 불가),
+      (2) 실제 마우스 hover 후 `getBoundingClientRect()` 비교 — `/ui/cases`
+      표 행과 `/ui/approvals` nav 링크에서 추적 요소 전부 좌표 변화 0건
+      (`matches(':hover')` 로 hover 가 실제로 걸린 것도 함께 확인).
+      원인으로 지목될 `filter` 기반 hover 는 **이미 색 변경으로 대체돼 있었고**
+      체크리스트만 갱신이 안 된 상태였다.
+      근거: `docs/reports/2026-09-02_S-UI-HOVER-JITTER_브라우저재현_리포트.md`
+- [x] ★**커밋 ↔ Phase 자동 매핑 — 구현**(2026-09-02).
+      `scripts/map_commits_to_phase.py` 가 커밋이 **실제로 건드린 경로**로
+      P0~P10 을 판정한다(커밋 메시지는 사람이 쓴 주장이라 근거로 쓰지 않는다).
+      경로→스트림→Phase 표의 출처는 `docs/handoff/05_분업_규칙.md` 소유 표와
+      실행계획서 §P 절 제목이다. 매핑 안 되는 경로는 **조용히 넘기지 않고 세어
+      보고**하며 `--strict` 에서 실패시킨다. `check_release_gate.py` 의 4번째
+      검사로 배선했다. 규칙 회귀 테스트 14건
+      (`tests/unit/core/test_commit_phase_mapping.py`).
+- [ ] 스크린샷 증거 `docs/screenshots/` 없음 (텍스트 실측으로 대체) —
+      ★2026-09-02 재시도했으나 이 세션의 브라우저 pane 이 화면에 표시되지 않아
+      (`Screenshot timed out: the Browser pane is not displayed`) 캡처 불가.
+      pane 이 열린 상태의 세션에서 다시 시도하면 바로 채울 수 있다.
 - [x] ★**실제 결제 provider 어댑터(mock) + timeout→unknown end-to-end 통합테스트**
       (2026-08-20) — `app/infrastructure/messaging/mock_payment_publisher.py`,
       `tests/integration/messaging/test_payment_timeout_unknown.py` 5건 통과.

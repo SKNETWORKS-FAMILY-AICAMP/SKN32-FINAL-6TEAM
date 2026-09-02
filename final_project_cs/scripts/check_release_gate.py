@@ -75,8 +75,14 @@ def main() -> int:
     print("S-DOD17 automated release gate")
     results: list[tuple[str, bool, str]] = []
 
-    code, output = _run([sys.executable, "-m", "pytest", "tests", "-q", "-m", "not live"])
-    results.append(("pytest tests -q -m 'not live'", code == 0, _pytest_summary(output)))
+    # ★경로를 주지 않는다. `pytest tests` 로 부르면 **`eval/tests/` 14건이
+    #   조용히 빠진다**(2026-09-02 실측: `pytest tests` 534 수집 vs `pytest` 548).
+    #   빠지던 것 중에 `eval/tests/test_holdout_labeling.py` — DoD-15(RC 를 막고
+    #   있는 바로 그 항목)의 라벨링 도구 테스트가 있었다. 게이트가 "통과"라고
+    #   말하면서 정작 차단 항목의 테스트는 한 번도 안 돌린 셈이다.
+    #   `CLAUDE.md` §6 이 정한 정본 전체 실행 명령도 경로 없는 `python -m pytest -q` 다.
+    code, output = _run([sys.executable, "-m", "pytest", "-q", "-m", "not live"])
+    results.append(("pytest -q -m 'not live' (저장소 전체)", code == 0, _pytest_summary(output)))
 
     code, output = _run([sys.executable, "-m", "scripts.verify_dod"])
     summary = next(
@@ -91,6 +97,18 @@ def main() -> int:
     else:
         detail = "최근 커밋(HEAD) 이후 동결 대상 변경 없음"
     results.append(("기능 동결 검사", not changed, detail))
+
+    # ★커밋 ↔ Phase 매핑 (release_checklist §5-3 의 세 번째 미체크 항목).
+    #   경로로 판정하므로 커밋 메시지를 사람이 읽어 대조하지 않아도 된다.
+    #   `--strict` 는 Phase 를 못 정한 커밋이나 미매핑 경로가 있으면 실패한다 —
+    #   새 디렉터리가 생겼는데 소유가 안 정해진 것을 조용히 넘기지 않기 위해서다.
+    code, output = _run([sys.executable, "-m", "scripts.map_commits_to_phase",
+                         "--count", "20", "--strict"])
+    summary = next(
+        (line.strip() for line in output.splitlines() if line.startswith("Phase 별 커밋 수")),
+        f"map_commits_to_phase exit {code}",
+    )
+    results.append(("커밋↔Phase 자동 매핑 (최근 20개)", code == 0, summary))
 
     passed = sum(ok for _, ok, _ in results)
     failed = len(results) - passed
