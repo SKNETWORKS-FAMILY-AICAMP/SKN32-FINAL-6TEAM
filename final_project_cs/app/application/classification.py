@@ -61,7 +61,15 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
     """
     try:
         result = classifier(masked(text)) if classifier else None
-        if not result or not all(label in result for label in REQUIRED_LABELS):
+        # ★**키가 있는지가 아니라 값이 있는지를 본다.** 전에는
+        #   `label in result` 로 키 존재만 봐서 `""`·`"  "`·`None` 이 전부
+        #   통과했다(2026-09-01 발견,
+        #   docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md).
+        #   빈 라벨을 통과시키면 Case 가 `classified` 로 넘어가 **분류가 된 것처럼
+        #   보이는데 실제로는 아무 라벨이 없다** — `CLAUDE.md` §1 이 막으려는
+        #   "조용한 분류 성공 위장" 그 자체다. 라우팅도 빈 intent 로 가서
+        #   엉뚱한 곳에서 실패한다.
+        if not result or not all(str(result.get(label) or "").strip() for label in REQUIRED_LABELS):
             raise ValueError("classifier returned no usable labels")
         event: EventType = EventType.CLASSIFIED
         payload: dict[str, Any] = dict(result)

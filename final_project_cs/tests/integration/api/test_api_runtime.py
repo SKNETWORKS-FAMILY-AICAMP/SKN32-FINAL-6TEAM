@@ -380,15 +380,13 @@ def test_create_escalates_when_the_classifier_omits_a_required_label(api_fixture
         assert cur.fetchall() == [("created",), ("classification_failed",)]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=("앱 결함 — API 경로의 분류 검사가 키 존재만 보고 값은 안 본다. "
-            "docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md"),
-)
 def test_create_escalates_when_a_label_is_blank(api_fixture):
     """빈 문자열도 라벨이 아니다. 키는 있는데 값이 없는 응답을 본다.
 
-    ★지금은 실패한다. 고치면 이 xfail 이 strict 라서 알려준다.
+    ★2026-09-01 에 이 테스트를 쓸 때는 앱이 통과시켜서 `xfail(strict=True)`
+      로 두었다. 2026-09-03 에 `app/application/classification.py` 가 키 존재
+      대신 **값**을 보도록 고쳐져 실제로 통과한다 — strict 였기 때문에 고친
+      순간 XPASS 로 알려줬고, 그래서 표식을 뗀다.
     """
     client = TestClient(create_app(classifier=lambda _message: {
         "intent": "billing", "issue_code": "  ", "sentiment": "negative"}))
