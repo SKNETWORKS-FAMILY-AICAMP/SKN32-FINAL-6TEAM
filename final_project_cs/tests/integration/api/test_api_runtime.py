@@ -400,3 +400,70 @@ def test_create_escalates_when_a_label_is_blank(api_fixture):
     )
     assert response.status_code == 201, response.text
     assert response.json()["status"] == "escalated"
+
+
+def test_create_does_not_wait_for_the_agent_run(api_fixture):
+    """★접수 응답은 에이전트 실행을 기다리지 않는다 (v8 §3-A [2026-09-01 교정]).
+
+    전에는 라우트가 `run_case()` 를 그 자리에서 기다렸다 — 실측 p50 20~34초 ·
+    p95 32~51초. 고객이 문의를 넣고 그만큼 붙잡혀 있었다.
+
+    ★응답에 run 관련 필드를 **넣지 않는다.** 있다가 없다가 하는 필드를 두면
+      클라이언트가 "없으면 실패" 로 잘못 읽는다. 진행은 `GET /v1/cases/{id}` 로
+      확인한다.
+    """
+    started = []
+
+    class SlowController:
+        async def run_case(self, **kwargs):
+            started.append(kwargs)
+            return {"case_id": str(kwargs["case_id"]), "status": "waiting_approval",
+                    "version": 3, "run_id": str(uuid4()), "next_action": "WAIT_FOR_APPROVAL",
+                    "resume_token": "tok"}
+
+    app = create_app(
+        controller=SlowController(),
+        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+                               "sentiment": "negative"},
+    )
+    response = TestClient(app).post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "detached-run", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    # ★run 결과는 접수 응답에 없다 — GET 으로 본다
+    assert not {"run_id", "next_action", "resume_token"} & set(body)
+    assert set(body) == {"case_id", "status", "version", "intent", "issue_code",
+                         "sentiment", "links"}
+    # 분류는 접수 안에서 끝난다(LLM 한 번) — 그래서 여기서 바로 보인다
+    assert body["intent"] == "billing"
+    # TestClient 는 응답을 보낸 **뒤** background task 를 돌린다. 즉 실행은
+    # 일어나되 응답을 붙잡지 않았다.
+    assert len(started) == 1
+
+
+def test_a_failing_detached_run_does_not_break_the_intake(api_fixture, caplog):
+    """★떼어낸 실행이 터져도 접수는 성공한다. 다만 조용히 죽지 않는다."""
+    class ExplodingController:
+        async def run_case(self, **kwargs):
+            raise RuntimeError("agent exploded")
+
+    app = create_app(
+        controller=ExplodingController(),
+        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+                               "sentiment": "negative"},
+    )
+    with caplog.at_level("ERROR"):
+        response = TestClient(app).post(
+            "/v1/cases",
+            headers={"Authorization": api_fixture["token"]("case:write")},
+            json={"request_id": "detached-boom", "customer_id": str(api_fixture["customer"]),
+                  "message": "please help", "channel": "test"},
+        )
+
+    assert response.status_code == 201
+    assert any("detached run_case failed" in record.message for record in caplog.records)

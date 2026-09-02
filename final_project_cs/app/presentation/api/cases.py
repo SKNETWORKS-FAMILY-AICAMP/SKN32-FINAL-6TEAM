@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import inspect
 from typing import Any, Callable
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.contracts import InvalidTransition, StateConflict
@@ -19,6 +20,8 @@ from app.infrastructure.db.session import get_connection
 from app.application.classification import classify_case
 from app.application.proposal_guard import audit_payload, describe, recheck_before_execution
 from app.presentation.security import Principal, masked, require_scope
+
+logger = logging.getLogger(__name__)
 
 Classifier = Callable[[str], dict[str, str]]
 
@@ -71,10 +74,34 @@ def _view(case: dict[str, Any]) -> dict[str, Any]:
             "links": {"self": f"/v1/cases/{case['case_id']}"}}
 
 
+def _run_case_detached(controller: Any, *, tenant_id: str, case_id: UUID, actor_id: str) -> None:
+    """접수 응답을 보낸 **뒤에** 에이전트를 돌린다.
+
+    ★왜 뗐나: 전에는 접수 라우트가 `run_case()` 를 그 자리에서 기다렸다. 실측
+      p50 20~34초 · p95 32~51초 — 고객이 문의를 넣고 그만큼 붙잡혀 있었다
+      (v8 §3-A [2026-09-01 교정]). 접수는 "받았다" 를 빨리 답하는 일이고,
+      처리는 그 뒤의 일이다.
+
+    ★실패를 삼키지 않는다. 떼어낸 실행은 아무도 안 보므로 조용히 죽기 쉽다 —
+      그래서 `exception()` 으로 스택까지 남긴다. Case 는 `routing` 에 남아
+      운영 화면에서 보인다.
+
+    ★남은 구멍(정직하게 적는다): `routing` 에 남은 Case 를 되잡는 sweeper 는
+      아직 없다. `classifying` 쪽과 같은 성격의 후속 과제다.
+    """
+    try:
+        outcome = controller.run_case(tenant_id=tenant_id, case_id=case_id, actor_id=actor_id)
+        if inspect.isawaitable(outcome):
+            asyncio.run(outcome)
+    except Exception:
+        logger.exception("detached run_case failed: tenant=%s case=%s", tenant_id, case_id)
+
+
 def build_router(classifier: Classifier | None = None, controller: Any | None = None) -> APIRouter:
     router = APIRouter()
     @router.post("/v1/cases", status_code=201)
-    def create(request: CreateCase, principal: Principal = Depends(require_scope("case:write"))):
+    def create(request: CreateCase, background: BackgroundTasks,
+               principal: Principal = Depends(require_scope("case:write"))):
         tenant = principal.tenant_id
         # ★client-supplied key wins when present (HTTP idempotency convention is
         #   the client provides the key); server falls back to computing one
@@ -131,11 +158,13 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                           classifier=classifier, actor_id=principal.key_id)
             view = _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
         if controller is not None and view["status"] == "routing":
-            outcome = controller.run_case(tenant_id=tenant, case_id=case_id, actor_id=principal.key_id)
-            if inspect.isawaitable(outcome):
-                outcome = asyncio.run(outcome)
-            if isinstance(outcome, dict):
-                view.update({key: value for key, value in outcome.items() if key in {"status", "version", "run_id", "next_action", "resume_token"}})
+            # ★응답을 보낸 **뒤에** 돌린다. 접수는 "받았다" 를 빨리 답하는 일이다.
+            #   진행 결과는 `GET /v1/cases/{case_id}` 로 확인한다 — 그래서 아래
+            #   응답에는 run 관련 필드(`run_id`·`next_action`·`resume_token`)가
+            #   들어가지 않는다. 있다가 없다가 하는 필드를 두면 클라이언트가
+            #   "없으면 실패" 로 잘못 읽는다.
+            background.add_task(_run_case_detached, controller, tenant_id=tenant,
+                                case_id=case_id, actor_id=principal.key_id)
         return view
 
     @router.get("/v1/cases")
