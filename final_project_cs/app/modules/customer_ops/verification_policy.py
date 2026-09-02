@@ -39,7 +39,13 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
     ),
     # ★아직 대조 수단이 없는 식별자. 제안에 나오면 거부한다.
     #   쿠폰·적립금 테이블이 생기면 references 로 옮긴다.
-    opaque=frozenset({"coupon_id", "point_txn_id", "invoice_id"}),
+    #   ★"changes"(2026-09-03) — `order.modify` 제안이 싣는 **고객이 준 변경 요청
+    #     그대로**다(`current_state.order_change` 등). 무엇이 들었는지 정해져 있지
+    #     않고 금액·수량이 들어올 수 있는데 대조할 규칙이 없다. `ignored` 로
+    #     빼면 검사 없이 실행되므로 여기 둔다 — **막히는 것이 맞다.**
+    #     푸는 방법: 변경 내용을 구조화하고(예: {"quantity": n}) 주문 사실과
+    #     대조하는 규칙을 만든 뒤 `quantities`/`references` 로 옮긴다.
+    opaque=frozenset({"coupon_id", "point_txn_id", "invoice_id", "changes"}),
     # 대조 대상이 아닌 자유 필드
     # ★"evidence" — 2026-08-17 실 브라우저 승인 클릭으로 발견: 운영 UI(`app/presentation
     #   /ui/routes.py::_actions()`)가 `arguments_json.evidence` 를 읽어 근거를 표시하고
@@ -54,9 +60,21 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
     #   금액 자체는 `refund_amount_cents` 가 `total_cents` 상한 검사를 받는다.
     #   이 키는 그 금액을 **어떻게 구했는지**를 사람에게 보여주는 설명이라 대조
     #   대상이 아니다.
+    #   ★아래 다섯(2026-09-03) — Procurement Team 의 `order.create`/`order.modify`/
+    #     `order.cancel` 제안이 싣는데 선언이 없어 **셋 다 승인이 막혀 있었다.**
+    #     전부 대조 대상이 아니라 승인자에게 상황을 보여주는 값이다:
+    #       request            고객 문장 그대로(자유 텍스트, `reason` 과 같은 성격)
+    #       fulfillment_status 주문 상태를 읽어 그대로 실은 것(지시가 아니라 맥락)
+    #       scope              취소 범위 표시
+    #       seller_fault       귀책 표시(bool)
+    #       warehouse_handoff  창고 인계 여부(bool)
+    #     ★값을 **바꾸는** 것이 아니라 **설명하는** 것만 여기 넣는다. 실제 변경
+    #     내용인 `changes` 는 위 `opaque` 로 보냈다.
     ignored=frozenset({"reason", "reason_code", "template", "currency",
                        "rationale", "memo", "seeded_by", "note", "evidence",
-                       "calculation_basis"}),
+                       "calculation_basis",
+                       "request", "fulfillment_status", "scope",
+                       "seller_fault", "warehouse_handoff"}),
 )
 
 #: 사실을 재조회하는 SQL. ★모든 query 에 tenant_id·customer_id 를 건다(설계 원칙 §1).

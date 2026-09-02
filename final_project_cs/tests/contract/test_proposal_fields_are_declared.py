@@ -79,3 +79,51 @@ async def test_every_proposal_field_is_declared_in_the_policy(capability):
             "이대로면 승인 직전 재검증(proposal_guard.recheck_before_execution)이 "
             "막아 승인 자체가 되지 않는다. 대조 대상이면 references/quantities 에, "
             "설명용이면 ignored 에 **이유와 함께** 넣어라.")
+
+
+#: 각 Team 이 실제로 내는 제안의 최상위 키. ★코드를 읽어 옮긴 것이다 —
+#:  코드에서 가져오면 "코드가 코드와 같다" 는 항상 참인 검사가 된다
+#:  (`tests/contract/test_case_state_table.py` 와 같은 이유).
+EMITTED_ARGUMENT_KEYS = {
+    "refund.calculate": {"order_id", "refund_amount_cents", "return_quantity",
+                         "calculation_basis"},
+    "return.request": {"order_id", "reason_code", "return_quantity"},
+    # Procurement + Order & Payment
+    "order.create(fallback)": {"request"},
+    "order.modify": {"order_id", "changes", "fulfillment_status"},
+    "order.cancel": {"order_id", "scope", "reason", "seller_fault",
+                     "warehouse_handoff", "fulfillment_status"},
+    # Fulfillment & Logistics
+    "shipment.reship": {"shipment_id", "reason"},
+}
+
+#: ★의도적으로 막히는 것. `opaque` 는 "확인 못 하니 거부한다" 는 선언이다.
+DELIBERATELY_REFUSED = {"order.modify": {"changes"}}
+
+
+@pytest.mark.parametrize("action_type", sorted(EMITTED_ARGUMENT_KEYS))
+def test_no_proposal_type_is_blocked_by_an_undeclared_field(action_type):
+    """★2026-09-03 실측: 이 검사가 없어 **다섯 종류가 막혀 있었다.**
+
+    `refund.calculate`(calculation_basis) 와 Procurement 의 세 종류
+    (request·changes·fulfillment_status·scope·seller_fault·warehouse_handoff).
+    선언되지 않은 필드는 승인 직전 재검증이 막으므로, 그 제안은 **승인 자체가
+    되지 않는다.** 각 Team 의 단위 테스트는 전부 초록이었다 — 제안이 나오는지만
+    봤기 때문이다.
+    """
+    keys = EMITTED_ARGUMENT_KEYS[action_type]
+    undeclared = sorted(keys - DECLARED)
+    assert not undeclared, (
+        f"{action_type} 제안의 필드가 정책에 없다: {undeclared}. "
+        "대조할 수 있으면 references/quantities, 설명용이면 ignored, "
+        "확인할 수단이 없으면 opaque 에 **이유와 함께** 넣어라.")
+
+
+@pytest.mark.parametrize("action_type", sorted(DELIBERATELY_REFUSED))
+def test_unverifiable_fields_are_refused_not_waved_through(action_type):
+    """★`changes` 는 고객이 준 변경 요청 그대로다 — 금액·수량이 들어올 수 있는데
+    대조할 규칙이 없다. `ignored` 로 빼면 검사 없이 실행된다. 막히는 것이 맞다.
+    """
+    from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
+
+    assert DELIBERATELY_REFUSED[action_type] <= CUSTOMER_OPS_POLICY.opaque
