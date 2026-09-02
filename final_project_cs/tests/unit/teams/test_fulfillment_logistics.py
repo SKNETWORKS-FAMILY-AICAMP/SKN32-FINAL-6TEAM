@@ -148,3 +148,14 @@ def test_an_actual_problem_report_still_routes_to_exception():
     assert FulfillmentLogisticsTeam.select_capability(
         "shipping", "배송완료 사진은 있는데 물건이 보이지 않습니다. 분실로 판정되려면 어떤 확인이 필요한가요?"
     ) == "shipment.exception"
+
+
+def test_a_request_to_review_a_drafted_reply_is_not_an_exception_report():
+    """★golden g-response-review-10 실측 — 배송 낱말이 있어도 대상이 다르다.
+
+    "배송 지연 사유를 안내한 답변에 전화번호가 포함되지 않았는지 확인해 주세요"
+    는 고객 자신의 배송을 신고하는 것이 아니라 **작성된 답변을 검토해 달라는**
+    요청이다. 이걸 이상 신고로 보면 골든셋 결과가 통째로 흔들린다.
+    """
+    assert FulfillmentLogisticsTeam.select_capability(
+        "shipping", "배송 지연 사유를 안내한 답변에 고객의 전화번호가 포함되지 않았는지 확인해 주세요") is None

@@ -46,7 +46,12 @@ class FulfillmentLogisticsTeam:
     #   h-shipping-05 "늦어질 수 있는지 미리 알고 싶습니다").
     #   애매하면 기존 기본값(fulfillment.track)으로 둔다 — 정보성 응답은
     #   되돌릴 수 있지만 잘못 나간 제안은 승인 큐를 오염시킨다.
-    _INQUIRY_MARKERS = ("기준", "알려 주", "알려주", "궁금", "미리 알", "안내해")
+    #   ★"답변"·"응답" 도 넣는다. golden `g-response-review-10` 이
+    #     "배송 **지연** 사유를 안내한 **답변**에 전화번호가 포함되지 않았는지
+    #     확인해 주세요" 인데, 이건 배송 이상 신고가 아니라 **작성된 답변을
+    #     검토해 달라는 요청**이다. 고객 자신의 배송을 말하는 것이 아니다.
+    _INQUIRY_MARKERS = ("기준", "알려 주", "알려주", "궁금", "미리 알", "안내해",
+                        "답변", "응답")
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:
