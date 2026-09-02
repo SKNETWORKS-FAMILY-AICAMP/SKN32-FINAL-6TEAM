@@ -80,3 +80,5 @@ status: draft
 - [`sample/wiki/quality/`](../../final_project_sample/wiki/quality/index.md) — sample 에도 `eval/` 이 있다. 계약 테스트가 주력이다
 - [dod28-rerun.md](dod28-rerun.md) — **DoD-28 을 다시 재야 하는 이유.** 0% 는 근거를 안 준 결과다
 
+- [model-selection.md](model-selection.md) — **응답 모델 후보를 고르는 기준.** 지금까지 이게 없었다
+

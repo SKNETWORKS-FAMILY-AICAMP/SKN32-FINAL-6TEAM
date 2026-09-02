@@ -89,6 +89,8 @@ eval/reports/  2026-08-30_reeval_ProposedFT.jsonl
 | 4 | `Proposed+FT-RAG통합` 을 측정한다 | 배선은 돼 있다 |
 | 5 | 세 arm 비교 | |
 
+`[실측]` **4번에서 모델을 하나로 고정하지 않는다.** 지금까지 `Qwen2.5-3B` 가 **비교 없이** 정해져 있었다. → [model-selection.md](model-selection.md)
+
 **1번이 나머지를 막는다.**
 
 `[실측]` 2번의 방법은 이미 찾아 뒀다.
