@@ -89,3 +89,23 @@ program/scripts/_gap_audit.md	?	대조필요	?	개별 판정 필요
 program/scripts/_gap_audit2.md	?	대조필요	?	개별 판정 필요
 
 # 집계: {'대조필요': 38, '제자리': 26, '유지': 20}
+
+# ── 대조 실행 기록 (2026-09-03) ──
+# handoff 계약 8건 중 5건 대조 완료
+#
+#   06_가드레일_수치.md   → cs/quality/guardrails.md (단일 출처로 통째 이관)
+#                            loop guard "동일 signature 2회 반복 → escalated" 가 없었다
+#   10_도메인_교체_가이드   → sample/quality/domain-swap.md
+#                            sample 이 혼자 서는 실무 절차. 여기 있어야 한다
+#   04_Team_모듈_계약      → cs/teams/team-boundary.md
+#                            "Team 이 지켜야 할 3가지" 가 없었다
+#   01·02·03·08           → 2026-09-03 fill 작업으로 795줄 보강 완료
+#
+# ★04 에서 낡은 진술을 잡았다.
+#   원본이 "prompt 감사 추적 호출부 0건" 이라 적고 있었는데 지금은 배선돼 있다
+#   (openai.py:88 · local_ft.py:87 · register_prompts.py:14).
+#   그대로 옮겼으면 없는 결함을 적을 뻔했다.
+#
+#   → 낡은 문서를 옮길 때는 코드를 먼저 본다. coverage.md 의 교훈과 같다.
+#
+# 남은 대조: 05_분업_규칙 · 07_모듈화_구조(기판정) · sample docs 10건 · 기타 20건

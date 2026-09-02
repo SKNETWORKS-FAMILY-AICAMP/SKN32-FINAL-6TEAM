@@ -26,6 +26,7 @@ status: draft
 | [blind-spots.md](blind-spots.md) | 어긴 걸 못 잡는 곳이 어딘가 |
 | [eval-harness.md](eval-harness.md) | 평가를 어떻게 돌리는가 |
 | **[evidence.md](evidence.md)** | **어느 DoD 가 무엇으로 증명됐고 어디가 낡았나** |
+| **[guardrails.md](guardrails.md)** | **가드레일 수치 단일 출처.** 코드 두 곳에 나타나면 결함이다 |
 
 ## 테스트 현황
 
