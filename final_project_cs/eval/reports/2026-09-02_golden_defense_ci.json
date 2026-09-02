@@ -1,0 +1,46 @@
+{
+  "input": "eval/reports/2026-08-28_golden_defense_input.jsonl",
+  "cases": 60,
+  "iterations": 10000,
+  "seed": 7,
+  "resample_unit": "case",
+  "metrics": {
+    "grounding_match": {
+      "point": 0.9701,
+      "ci95": [
+        0.9609,
+        0.9797
+      ],
+      "resamples_used": 10000
+    },
+    "grounding_excess": {
+      "point": 0.0299,
+      "ci95": [
+        0.0203,
+        0.0391
+      ],
+      "resamples_used": 10000
+    },
+    "proper_abstention": {
+      "point": null,
+      "ci95": null,
+      "note": "분모 0 — 이 데이터셋으로는 측정할 수 없다"
+    },
+    "over_abstention": {
+      "point": 0.35,
+      "ci95": [
+        0.2333,
+        0.4667
+      ],
+      "resamples_used": 10000
+    },
+    "schema_compliance": {
+      "point": 1.0,
+      "ci95": [
+        1.0,
+        1.0
+      ],
+      "resamples_used": 10000
+    }
+  }
+}
