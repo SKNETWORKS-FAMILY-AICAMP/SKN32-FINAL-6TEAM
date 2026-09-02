@@ -145,8 +145,12 @@ ablation 도 마찬가지다. `no_approval`·`no_feedback_inline`·`no_team_spli
       ★**그림만 찍지 않는다.** 캡처하면서 기계가 판정할 수 있는 것을 같이 잰다 —
       전 화면 200 · 본문 있음 · **375px 가로밀림 0**(`CLAUDE.md` 상태표의 주장) ·
       콘솔 오류 0. 하나라도 어긋나면 `exit 1` 이다.
-      실행 결과: **전 항목 통과**. `/ui/voc` 만 데이터가 없어 "리포트 없음"을
-      표시하며, 그 사실을 결과에 적는다(결함이 아니라 설계된 정직한 빈 상태).
+      실행 결과: **전 항목 통과, 빈 화면 0개.**
+      ★빈 화면을 찍으면 증거로 약해서 캡처 전에 데이터를 채웠다 —
+      `scripts.seed_demo_cases`(승인 대기 1건 + resolved 1건) 와
+      `scripts.run_daily_feedback --date <오늘>`(VOC 일일 리포트).
+      그 결과 승인 화면은 근거(정책·주문·배송)가 붙은 실제 대기 건을,
+      VOC 화면은 실제 집계(오늘 2건 · 부정 50% · 급증 alert 없음)를 보여준다.
 - [x] ★**실제 결제 provider 어댑터(mock) + timeout→unknown end-to-end 통합테스트**
       (2026-08-20) — `app/infrastructure/messaging/mock_payment_publisher.py`,
       `tests/integration/messaging/test_payment_timeout_unknown.py` 5건 통과.
