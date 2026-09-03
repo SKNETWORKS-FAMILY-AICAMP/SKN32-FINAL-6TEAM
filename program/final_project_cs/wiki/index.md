@@ -106,3 +106,5 @@ REST, MCP, A2A, Trust Boundary.
 ## 최근 변경
 
 [log.md](log.md)
+- [domain-swap.md](domain-swap.md) — **도메인을 갈아 끼울 때 무엇을 바꾸고 무엇을 두나.** 11행이 Core 의 정본
+
