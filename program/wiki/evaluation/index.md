@@ -82,3 +82,5 @@ status: draft
 
 - [model-selection.md](model-selection.md) — **응답 모델 후보를 고르는 기준.** 지금까지 이게 없었다
 
+- [classification-accuracy.md](classification-accuracy.md) — **분류 정확도.** intent 100%인데 next_action 52.8%
+
