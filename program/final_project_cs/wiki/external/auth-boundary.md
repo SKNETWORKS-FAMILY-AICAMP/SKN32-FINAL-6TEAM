@@ -148,6 +148,32 @@ Action approval · provider result · before/after hash · actor
 
 **둘 다 "설정을 어떻게 읽는가"와 "무엇이 어디 물려 있는가"의 문제였다.** 인증 로직 자체의 버그가 아니었다.
 
+## ★ [2026-09-03] 계약 문서가 scope 를 6종으로 적고 있다
+
+`[실측]` `config/guardrails.yaml` 을 직접 세었다.
+
+```yaml
+security:
+  scopes:
+    - case:read        - case:write      - order:read
+    - return:read      - action:approve  - mcp:read
+    - composer:read    - composer:validate
+    - composer:write   - ops:introspect
+```
+
+**정확히 10종이다.**
+
+| 어디 | 적힌 수 |
+|---|---|
+| **이 wiki** | **10** |
+| `config/guardrails.yaml` | **10** |
+| 테스트 `test_ten_scopes_are_guardrail_owned` | **10** |
+| `docs/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
+
+**계약 문서만 낡았다.** 그리고 거기 적힌 `subscription:read`·`technical:read` 는 **지금 존재하지 않는다** — 옛 구독·청구 도메인의 잔재다.
+
+`[실측]` **테스트 함수 이름도 `six` → `ten` 으로 바뀌었다.** DoD-14 evidence 가 아직 `six` 로 적고 있다. → [../quality/blind-spots.md](../quality/blind-spots.md)
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 쓰기 경로

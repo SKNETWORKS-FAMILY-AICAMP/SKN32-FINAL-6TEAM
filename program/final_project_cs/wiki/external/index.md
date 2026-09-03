@@ -86,3 +86,5 @@ app/presentation/
 - [../../../program/wiki/architecture/system-context.md](../../../wiki/architecture/system-context.md) — 시스템 경계
 - [introspection.md](introspection.md) — 조립 상태를 보여주는 read-only API
 
+- [rest-endpoints.md](rest-endpoints.md) — 엔드포인트별 요청·응답 필드 계약
+
