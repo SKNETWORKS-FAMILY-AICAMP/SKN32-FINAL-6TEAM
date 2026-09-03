@@ -67,6 +67,32 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
 | A2A (Card · input-required · 취소 · 인증) | |
 | 방어 지표 5종 (`eval/defense_metrics.py`) | **분모 규칙은 도메인 무관** |
 
+### 같은 목록이 Composer 에도 있다
+
+`[실측]` `docs/handoff/09_Composer_GUI_계약.md` §2-4 — **끌 수 없는 컴포넌트 9종.**
+
+| 컴포넌트 | 왜 선택지가 아닌가 |
+|---|---|
+| Case lifecycle · `transition_case()` | 상태 변경의 단일 진입점 |
+| Contract models | **Team 계약 그 자체** |
+| Team Registry | capability 해석과 라우팅 |
+| Context Broker | 예산과 `degraded` 신호 |
+| DB repository / session | **Source of Truth** |
+| Outbox publisher | 트랜잭션과 이벤트 발행의 원자성 |
+| Case service | run/resume 중복 실행 방지 |
+| Controller | 실행 루프 |
+| Settings / guardrails | 설정의 단일 출처 |
+
+> **이것들을 끄면 A-COP 이 아니게 된다.**
+
+**두 목록이 거의 같다.** 위 11행은 "도메인을 바꿔도 안 바뀌는 것"이고 이 9종은 "사용자가 끌 수 없는 것"이다.
+
+`[실측]` **UI 처리 규칙도 정해져 있다.**
+
+> 화면에 **읽기 전용으로 띄우되 "구성기에서 제거할 수 없습니다"를 함께 적어** 토글로 오해하지 않게 한다.
+
+**숨기지 않는다.** 안 보이면 "왜 없지"가 되고, 토글로 보이면 "왜 안 눌리지"가 된다.
+
 ### 이 목록이 sample 이 혼자 서는 근거다
 
 `[실측]` **11행 중 도메인 어휘가 필요한 것이 하나도 없다.**
