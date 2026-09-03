@@ -224,6 +224,69 @@ __pycache__/return_exchange.cpython-312.pyc    ← 없음
 
 `[미확보]` **잔존물을 세는 검사가 없다.** 지금은 사람이 `_cs_구현현황.md` 같은 스냅샷을 다시 찍어야 안다.
 
+## ★ [2026-09-03] DoD-22 의 근거가 사라졌다
+
+`[실측]` evidence 6건이 지금도 유효한지 확인하다 나왔다. **DoD-22 만 "낡음" 판정이다.**
+
+### 주장한 두 축이 둘 다 재현 안 된다
+
+`DoD-22 — Team 의 직접 Tool 호출 금지`는 **정적 + 런타임 두 축**으로 통과를 주장한다.
+
+| 축 | 인용한 근거 | 지금 |
+|---|---|---|
+| **정적 (AST)** | `app/modules/**` 의 import 를 파싱해 금지 대상 0건 | **`test_core_isolation.py` 는 `app/core` 만 훑는다** (`root = Path("app/core")`) |
+| **런타임 (spy)** | `pytest.raises(ToolNotAllowed)` 로 실제 차단 관측 | **소스가 없다** |
+
+### `ToolNotAllowed` 를 검사하는 테스트가 `.pyc` 에만 있다
+
+```
+tests/unit/teams/__pycache__/test_team_scenarios.cpython-312.pyc   ← 있음
+tests/unit/teams/test_team_scenarios.py                            ← 없음
+```
+
+**소스가 삭제됐는데 캐시만 남았다.** → 위 "잔존물" 절의 고아 `.pyc` 와 같은 현상이다.
+
+`[실측]` **구현은 살아 있다.**
+
+```python
+# app/tools/read_tools.py:156
+raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
+```
+
+**막는 코드는 있는데 막히는지 확인하는 테스트가 없다.**
+
+### 이게 가장 나쁜 종류다
+
+| | |
+|---|---|
+| 테스트가 없다 | 알기 쉽다 |
+| 테스트가 틀린 걸 검사한다 | 위 "테스트가 제품을 잘못 끌고 간 사례" |
+| **evidence 가 없는 테스트를 인용한다** | **문서는 통과라고 적혀 있고 근거는 사라졌다** |
+
+**세 번째는 evidence 를 열어 봐야만 드러난다.** 그리고 evidence 는 "한 번 통과하면 다시 안 보는" 문서다.
+
+`[미확보]` **DoD-22 를 다시 통과시키려면 테스트를 새로 써야 한다.** 삭제된 이유를 못 찾았다.
+
+## 다른 5건은 대체로 유효했다
+
+`[실측]` 같이 확인한 결과.
+
+| DoD | 판정 | 낡은 것 |
+|---|---|---|
+| 12 | **유효** | — |
+| 02 | 일부 낡음 | `transition_case()` 호출 **7회 → 14회** |
+| 14 | 일부 낡음 | scope `subscription:read`·`technical:read` **소멸** · 함수명 `six` → `ten` · allowlist 5 → **6** |
+| 20 | 일부 낡음 | 테스트 경로 2건 이동 · `3 passed` → **6개** |
+| 24 | 일부 낡음 | **대조 대상이 billing → commerce 로 통째로 바뀜** |
+
+### DoD-24 가 특히 낡았다
+
+`[실측]` 문서가 **"이 MVP 에 `orders` 테이블이 없다 → quantity 확인 불가 → 거부"**라고 적고 있다.
+
+**지금은 `orders`·`order_items`·`shipments`·`returns` 가 다 있다.** quantity 도 실제로 대조된다.
+
+**한계 절이 사실과 반대가 됐다.** → [../domain-swap.md](../domain-swap.md)
+
 ## 관계
 
 - [invariants.md](invariants.md) — 불변식 카탈로그

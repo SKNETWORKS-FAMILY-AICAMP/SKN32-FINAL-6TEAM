@@ -94,6 +94,38 @@ REST, MCP, A2A, Trust Boundary.
 
 **sample의 예시 Team과 검증 상태를 여기의 릴리스 완료로 간주하지 않는다.**
 
+### ★ [2026-09-03] 계약은 이식하고 파일은 복사하지 않는다
+
+`[실측]` `docs/handoff/11_basement_version_reference.md` 에서 이관. **전량 미이관이었다.**
+
+> **CS 는 sample 의 basement 참조를 기록만 하고, basement 파일을 복사·적용하지 않는다.**
+
+**위 서술이 "이식한다"라고만 적고 있었다.** 이 부정 진술이 없으면 **파일을 복사해도 되는 것처럼 읽힌다.**
+
+```
+basement_version   0.2.0
+source_commit      92b4c438a8f3bce1a5c65a54b38285d150020225
+source_branch      project-final_project_sample
+applied_at         2026-08-18T13:13:26Z
+```
+
+기록은 `docs/manuals/basement_version.json` 에 있다.
+
+#### 이 참조는 낡았다
+
+`[실측]` 2026-09-03 확인.
+
+| | 커밋 |
+|---|---|
+| 기록된 참조 | `92b4c43…` (2026-08-18) |
+| **sample 의 현재 HEAD** | **`8a1ac56`** — "cs 가 먼저 고친 결함 넷을 sample 에도 이식한다" |
+
+**16일 벌어져 있다.** 그리고 그 사이 변경이 **cs → sample** 방향이었다.
+
+> **향후 basement 갱신은 명시적으로 기록하고 sample manifest 와 재대조해야 한다.**
+
+`[미확보]` **재대조 시점이 정해져 있지 않다.** [drift-case-voc](../../wiki/governance/drift-case-voc.md) 와 같은 종류다 — 참조가 낡았는데 아무도 안 센다.
+
 ## 중앙 허브
 
 | 알고 싶은 것 | 어디 |

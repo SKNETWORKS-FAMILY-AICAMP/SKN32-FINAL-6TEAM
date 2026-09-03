@@ -85,12 +85,21 @@ POST /composer/apply    GET  /composer/current
 
 `[실측]` `A-COP_Composer_v3_설계_토글전용_UI이관.md` §2 를 오늘 구현과 대조했다.
 
-| | 값 |
+| 어디 | 값 |
 |---|---|
 | **설계가 요구한 것** | `contract_version: "introspection.v3"` |
-| **실제 구현** | `CONTRACT_VERSION = "1.1"` (`introspection/contract.py:27`) |
+| **`final_project_sample`** | `CONTRACT_VERSION = "1.1"` |
+| **`final_project_cs`** | `CONTRACT_VERSION = "1.0"` |
 
 **이름 체계 자체가 다르다.** `introspection.vN` 이 아니라 `N.N` 이다.
+
+### ★ 그리고 두 저장소가 갈려 있다
+
+`[실측]` 2026-09-03 확인. **sample 이 `1.1`, cs 가 `1.0` 이다.**
+
+**sample 이 앞서 있다** — [D-006](D-006-composer-ownership.md) 대로 Composer 는 sample 에서 먼저 만들고 cs 로 옮긴다. **아직 안 옮겨진 상태다.**
+
+`[실측]` cs 쪽 계약 문서(`13_introspection_계약.md`)와 [cs wiki](../../final_project_cs/wiki/external/introspection.md) 는 **둘 다 `1.0` 으로 일치한다.** cs 안에서는 어긋난 데가 없다.
 
 ### 설계에만 있는 필드
 
