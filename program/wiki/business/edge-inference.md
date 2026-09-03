@@ -12,9 +12,7 @@ tags: [gpu, cost, evaluation]
 
 ## 왜 폰인가
 
-`[실측]` **x600 의 4070 SUPER 를 SSH 로 못 잰다.** Windows 세션 0 이라 GPU 메모리가 2.25GB 로 막힌다. → [gpu-limits.md](gpu-limits.md)
-
-**그래서 잴 수 있는 데서 먼저 쟀다.**
+`[실측]` **x600 의 4070 SUPER 를 SSH(세션 0)로는 못 잰다.** 2.25GB 로 막힌다. **세션 1 로는 12GB 전부 확인했다** — [gpu-limits.md](gpu-limits.md). 이 문서는 그 사이에 잴 수 있는 데서 먼저 잰 기록이다.
 
 ## 결과
 
@@ -90,7 +88,7 @@ ggml-hex: HTP0 failed to open session : error 0x80000406
 | **GPU 가 prefill 에서 1.9배** | 우리 워크로드가 prefill 이 무겁다 |
 | **폰으로는 실사용 불가** | 4분 40초 vs API 20초 |
 
-`[미확보]` **4070 SUPER 실측은 여전히 없다.** 사람이 x600 화면 앞에서 돌려야 한다.
+`[실측]` **4070 SUPER 는 세션 1 에서 12GB(11.75 GiB) 확보를 확인했다.** → [gpu-limits.md](gpu-limits.md). **처리량(tok/s) 실측은 아직 없다** — 이 문서의 폰 실측이 방향을 보여줄 뿐이다.
 
 ## 관계
 
