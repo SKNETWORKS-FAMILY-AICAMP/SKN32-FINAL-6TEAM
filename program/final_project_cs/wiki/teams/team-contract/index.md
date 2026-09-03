@@ -31,7 +31,7 @@ resume       : bool
 resume_node  : ResumeNode | None
 ```
 
-**`context`가 핵심이다.** Team은 여기 담긴 것만 쓴다. 직접 읽지 않는다. → [team-boundary.md](team-boundary.md)
+**`context`가 핵심이다.** Team은 여기 담긴 것만 쓴다. 직접 읽지 않는다. → [team-boundary.md](../team-boundary.md)
 
 ### ★ `allowed_tools`는 과도기 호환 필드다
 

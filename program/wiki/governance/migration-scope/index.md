@@ -190,4 +190,4 @@ if "/evidence/_raw/" in n:
 - [migration.md](../migration.md) — 이관 계획과 기준
 - [type-guide.md](../type-guide.md) — type 고르는 법
 - [type-verification/index.md](../type-verification/index.md) — 분류 체계 검증
-- [document-standard.md](document-standard.md) — 분할 트리거
+- [document-standard.md](../document-standard.md) — 분할 트리거

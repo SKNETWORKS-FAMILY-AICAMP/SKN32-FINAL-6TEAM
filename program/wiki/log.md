@@ -68,7 +68,7 @@ program/
 
 ## 2026-09-01 (4) — type 재검증. 기준 통과
 
-같은 표본 45건을 고친 정의로 다시 분류했다. → [governance/type-verification.md](governance/type-verification.md)
+같은 표본 45건을 고친 정의로 다시 분류했다. → [governance/type-verification.md](governance/type-verification/index.md)
 
 | 지표 | 1차 | 2차 |
 |---|---|---|
@@ -88,7 +88,7 @@ program/
 
 ## 2026-09-01 (3) — ★ type 분류 검증. 기준 미달로 목록 수정
 
-실제 문서 45건을 `type`에 대입했다. → [governance/type-verification.md](governance/type-verification.md)
+실제 문서 45건을 `type`에 대입했다. → [governance/type-verification.md](governance/type-verification/index.md)
 
 | 지표 | 기준 | 실측 | 판정 |
 |---|---|---|---|

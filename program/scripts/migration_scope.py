@@ -41,6 +41,7 @@ SKIP_DIRS = (
     #     근거: governance/type-verification/round-7.md
     "_prompts/",
     "scripts/_codex_out/",          # 우리 작업 산출물. 이관 대상이 아니다
+    "scripts/_gap_audit",           # 동. 대조 결과 사본
     "final_project_cs/legacy/",     # 옛 sample 코드 사본 42건
     "final_project_cs/knowledge/",  # RAG 코퍼스 25건. 문서가 아니라 데이터
     "final_project_cs/prompts/",    # 프롬프트 파일

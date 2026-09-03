@@ -8,7 +8,7 @@ tags: [contract, architecture]
 
 # Team 계약 필드 명세
 
-`[실측]` `docs/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](index.md) 에 있다.**
+`[실측]` `docs/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](../index.md) 에 있다.**
 
 `[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../../wiki/governance/migration-scope/coverage.md).
 
@@ -228,5 +228,5 @@ class MessageBrokerPort(Protocol):
 
 ## 관계
 
-- [index.md](index.md) — 개념
+- [index.md](../index.md) — 개념
 - [../../../wiki/governance/migration-scope/coverage.md](../../../../wiki/governance/migration-scope/coverage.md) — 반영률
