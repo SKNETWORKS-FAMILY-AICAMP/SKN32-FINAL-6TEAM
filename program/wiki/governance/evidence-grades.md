@@ -160,6 +160,42 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 모든 문장에 붙이려 하면 지친다. **사실 주장에만 붙인다.**
 
+## ★ [2026-09-04] 표집 방법을 안 보고 "실제 분포"라 단정한 사례
+
+`[실측]` **하루 만에 내 손으로 쓰고 내 손으로 뒤집었다.**
+
+### 무슨 일이 있었나
+
+`aihub_30716_callcenter_qa` 의 `mapped_intent` 를 세었더니 `order 600 · shipping 300 · return 300 · exchange 300` 이 나왔다.
+
+**이걸 "실제 문의는 order 가 40% 다"로 [golden-set.md](../evaluation/golden-set.md) 에 적었다.**
+
+**틀렸다.** `source_category` 를 보니 **다섯 카테고리가 각 300건씩 층화표집**된 것이었다. `주문`과 `결제` 두 카테고리가 **둘 다 `order` 로 매핑**돼서 600이 됐을 뿐, **`order` 문의가 실제로 2배 많은 게 아니었다.**
+
+### 왜 못 잡았나
+
+**집계 결과(`mapped_intent` 합)만 보고 판단했다.** 표집 방법(`source_category` 별 건수, `REPORT.md` 의 "300건씩 무작위 샘플링")을 안 봤다.
+
+> **집계된 숫자는 표집 설계를 감춘다.** 층화표집이면 그룹 크기가 자연 빈도가 아니라 **표집자가 정한 값**이다.
+
+### 규칙
+
+> **"실제 데이터의 분포"라고 쓰기 전에 그 데이터가 어떻게 뽑혔는지 확인한다.**
+
+**확인할 것 하나.**
+
+```
+REPORT.md 의 "추출 방법" 절을 먼저 읽는다.
+"N건씩", "sample_per_group", "seed=" 가 보이면 → 층화·정량 표집이다.
+→ 그룹 간 비율을 자연 빈도로 쓰면 안 된다.
+```
+
+`[실측]` **`stats.json` 에 `sample_per_group` 필드가 있으면 그게 신호다.** `aihub_102` 도 같은 필드로 같은 함정이 확인됐다.
+
+### 이게 [drift-case-voc](drift-case-voc.md)·[known-weaknesses](known-weaknesses.md) 와 같은 자리에 있다
+
+**"세어 보면 맞다"는 이 wiki 전체의 방법론이었다.** 그런데 **무엇을 세는지가 틀리면 셈 자체가 틀린다.** 세는 행위가 정확성을 보장하지 않는다 — **무엇을 세는지 먼저 확인해야 한다.**
+
 ## 관계
 
 - [front-matter.md](front-matter.md) — `sources` 필드 규격

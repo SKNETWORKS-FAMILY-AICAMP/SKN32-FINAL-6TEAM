@@ -71,8 +71,8 @@ owners: [human:미배정]
 | 채울 것 | 쓸 데이터 |
 |---|---|
 | ~~골든셋 페르소나 배분~~ **완료** | [personas.md](../product/personas.md) 재검증. 정미라 행 18→**28건(38.9%)** 정정 |
-| ~~실제 문의 유형 분포~~ **완료** | [golden-set.md](../evaluation/golden-set.md). 실제 order 40% vs 골든셋 25% |
-| 커머스 문의 유형 | `datasets/voc/aihub_102_smb_order_qa` |
+| ~~실제 문의 유형 분포~~ **확인 결과: 못 구한다** | [golden-set.md](../evaluation/golden-set.md). **자체 정정** — 처음엔 aihub_30716 이 order 40% 라고 적었는데 틀렸다. `sample_per_group` 층화표집이라 표본 자체가 균등하다 |
+| ~~커머스 문의 유형~~ **동일 사유로 못 구한다** | `aihub_102_smb_order_qa` 도 `sample_per_group: 400` 층화표집 (stats.json 확인). 둘 다 자연 빈도가 아니다 |
 | ~~오류 비용의 실제 사례~~ **완료** | [error-cost.md](../business/error-cost.md) |
 | 감정 축 검증 | `datasets/voc/aihub_71603_aspect_sentiment` |
 | `cost/case` 실측 | eval harness 실행 |
