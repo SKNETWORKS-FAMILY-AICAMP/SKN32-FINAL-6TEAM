@@ -58,6 +58,8 @@ PAGE = """<!doctype html>
   button.opt {{ font: 13px ui-monospace, monospace; padding: 6px 10px; cursor: pointer;
                 border: 1px solid #8886; background: transparent; border-radius: 6px; }}
   button.opt[aria-pressed="true"] {{ background: #58a; color: #fff; border-color: #58a; }}
+  button.opt.undecidable {{ font-family: inherit; font-style: italic; }}
+  button.opt.undecidable[aria-pressed="true"] {{ background: #c85; border-color: #c85; }}
   .verdict {{ margin-top: 9px; font-size: 13px; font-weight: 600; }}
   .bar {{ position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 20px;
           background: Canvas; border-top: 1px solid #8884; display: flex;
@@ -76,7 +78,11 @@ PAGE = """<!doctype html>
   코드로는 가를 수 없어 사람 판정이 필요합니다.<br>
   아래 두 값은 참고로 나란히 보여주지만 <strong>어느 쪽이 정답인지 표시하지 않습니다</strong> —
   보고 끌리면 감사가 무의미해집니다.<br>
-  <strong>진행</strong> — 브라우저에 자동 저장됩니다.
+  <strong>진행</strong> — 브라우저에 자동 저장됩니다.<br>
+  ★<strong>정할 수 없으면 「이 문장만으로는 정할 수 없다」를 고르십시오.</strong>
+  억지로 하나를 고르면 <em>애매함이 불일치로 둔갑</em>합니다. LLM 실험에서
+  같은 두 기능 사이를 <strong>양방향으로</strong> 틀리는 것이 관측됐는데, 그건
+  경계가 한 문장에 없다는 뜻일 수 있습니다 — 그 사실 자체가 이 감사의 결과입니다.
 </div>
 <div id="cases"></div>
 <details>
@@ -91,6 +97,7 @@ PAGE = """<!doctype html>
 </div>
 <script>
 const CASES = {cases_json};
+const UNDECIDABLE = "__undecidable__";
 const KEY = "acop-capability-audit-v1";
 let state = {{}};
 try {{ state = JSON.parse(localStorage.getItem(KEY) || "{{}}"); }} catch (e) {{ state = {{}}; }}
@@ -114,9 +121,10 @@ function card(c) {{
     `</div>`;
   const opts = document.createElement("div");
   opts.className = "opts";
-  for (const cap of c.capabilities) {{
+  for (const cap of c.capabilities.concat([UNDECIDABLE])) {{
     const b = document.createElement("button");
-    b.className = "opt"; b.textContent = cap;
+    b.className = "opt" + (cap === UNDECIDABLE ? " undecidable" : "");
+    b.textContent = cap === UNDECIDABLE ? "이 문장만으로는 정할 수 없다" : cap;
     b.setAttribute("aria-pressed", chosen === cap ? "true" : "false");
     b.onclick = () => {{ state[c.case_id] = cap; save(); render(); }};
     opts.appendChild(b);
@@ -125,6 +133,7 @@ function card(c) {{
   const v = document.createElement("div");
   v.className = "verdict";
   if (!chosen) {{ v.textContent = "미판정"; }}
+  else if (chosen === UNDECIDABLE) {{ v.textContent = "한 문장으로는 정할 수 없음 — 경계 문제로 기록됩니다"; }}
   else {{
     const marks = [];
     if (chosen === c.label) marks.push("라벨과 같음");
@@ -154,9 +163,10 @@ document.getElementById("export").onclick = () => {{
   const lines = CASES.map(c => JSON.stringify({{
     case_id: c.case_id, message: c.message, intent: c.intent, team_id: c.team_id,
     dataset_label: c.label, heuristic: c.heuristic,
-    human_capability: state[c.case_id] || null,
-    label_is_right: state[c.case_id] ? state[c.case_id] === c.label : null,
-    heuristic_is_right: state[c.case_id] ? state[c.case_id] === c.heuristic : null,
+    human_capability: (state[c.case_id] && state[c.case_id] !== UNDECIDABLE) ? state[c.case_id] : null,
+    undecidable_from_message_alone: state[c.case_id] === UNDECIDABLE,
+    label_is_right: (state[c.case_id] && state[c.case_id] !== UNDECIDABLE) ? state[c.case_id] === c.label : null,
+    heuristic_is_right: (state[c.case_id] && state[c.case_id] !== UNDECIDABLE) ? state[c.case_id] === c.heuristic : null,
   }}));
   const blob = new Blob([lines.join("\\n") + "\\n"], {{ type: "application/x-ndjson" }});
   const a = document.createElement("a");
