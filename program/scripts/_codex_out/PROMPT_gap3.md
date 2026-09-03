@@ -34,26 +34,23 @@
 
 ★**애매하면 "일부"로 판정하고 이유를 적어라.** 반영됐다고 낙관하지 마라.
 
-## 대상 10건
+## 대상 8건
 
 ```
-final_project_cs/docs/handoff/04_상태기계_전이표.md
-final_project_cs/docs/handoff/05_이벤트_Outbox.md
 final_project_cs/docs/handoff/06_가드레일_수치.md
-final_project_cs/docs/handoff/07_모듈화_구조.md
+final_project_cs/docs/handoff/10_도메인_교체_가이드.md
+final_project_cs/docs/handoff/04_Team_모듈_계약.md
+final_project_cs/docs/handoff/07_평가_하네스.md
 final_project_cs/docs/handoff/09_Composer_GUI_계약.md
-final_project_cs/docs/manuals/운영_unknown상태_대응절차.md
 final_project_cs/docs/vision/TODO_VISION.md
-program/plan/A-COP_결제소유_경계.md
+final_project_cs/docs/manuals/2026-08-12_1520_환경_기동절차.md
 program/plan/A-COP_스프린트_에픽_설계.md
-program/plan/A-COP_예제Team모듈_확충설계.md
 ```
 
-★계약·운영 문서다. **숫자와 상태값과 절차 단계가 그대로 있는지**를 본다.
-  "비슷한 설명이 있다" 를 반영으로 세면 안 된다.
+★이번에도 계약·규칙 문서다. "비슷한 설명이 있다" 를 반영으로 세면 안 된다.
+  **숫자·필드 이름·임계값이 그대로 있는지**를 본다.
 
-★`06_가드레일_수치.md` 는 특히 중요하다. **가드레일 수치의 단일 출처**이므로
-  숫자가 하나라도 빠지면 누락이다.
+★없는 파일이 있으면 그 줄에 "파일 없음" 이라고 적고 넘어가라. 지어내지 마라.
 
 ## 읽어도 되는 곳
 

@@ -97,3 +97,5 @@ status: draft
 - [../decisions/D-004-self-hosting-rationale.md](../decisions/D-004-self-hosting-rationale.md) — 자체호스팅 논거
 - [error-cost.md](error-cost.md) — 오류가 분쟁까지 가면 얼마인가 (실측 8건)
 
+- [gpu-limits.md](gpu-limits.md) — **우리 GPU 로 무엇이 되고 무엇이 안 되나.** 카탈로그 12GB ≠ 쓸 수 있는 양
+- [measure-review-time.md](measure-review-time.md) — 검토·승인 시간 재는 법
