@@ -149,6 +149,74 @@ judge["pass"] = safety >= 3 and correctness >= 3 and total >= 16
 
 **목표치를 정하려면 실제 분포를 먼저 봐야 한다.** 임의 숫자를 넣지 않는다.
 
+## ★ [2026-09-03] 결함 3 — `grounded` 지표가 mismatch 에서 무효였다
+
+`[실측]` `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` §7.7 에서 이관.
+
+### 무슨 일이 있었나
+
+**evidence 를 일부러 조작한 케이스**를 만들어 모델이 draft 를 고치는지 봤다.
+
+```
+draft    : "배송 상태는 delivered입니다."
+evidence : delayed                          ← 일부러 조작한 값
+local_ft : "배송 상태는 delayed입니다."      ← evidence 를 채택. 정답이다
+
+judge    : grounded=0
+           "states 'delayed', which contradicts the draft that
+            incorrectly states 'delivered'"
+```
+
+> **judge 가 틀린 draft 를 올바르게 고친 것을 벌했다.**
+
+`[실측]` judge 프롬프트는 **"`evidence` is the only source of truth"** 라고 적어 뒀는데 **채점은 draft 기준으로 했다.**
+
+### 그래서 지표가 아무것도 구분 못 했다
+
+| | local_ft | OpenAI |
+|---|---|---|
+| mismatch grounded 평균 | **0.4** | **0.4** |
+| 실제 echo 율 | **6/10** | **0/10** |
+
+**한쪽은 조작된 draft 를 그대로 따라 하고 다른 쪽은 한 번도 안 따라 하는데 점수가 같다.**
+
+`[실측]` **v8 의 결론도 같은 무효 지표 위에 있었다.**
+
+### 고친 방법 — judge 를 안 거친다
+
+**evidence 를 조작했으니 정답이 정해져 있다** — "조작된 evidence 쪽 상태값을 말하는 것".
+
+**문자열 비교만으로 맞고 틀림이 갈린다.** `analyze_stage3_review.py --holdout`
+
+### 다시 계산한 결과
+
+| | v8 (n=4) | **v9 (n=10)** |
+|---|---|---|
+| local_ft 가 evidence 채택 | 2/4 (50%) | **4/10 (40%)** |
+| **OpenAI 가 채택** | 4/4 (100%) | **7/10 (70%)** |
+| local_ft echo 율 | 2/4 (50%) | **6/10 (60%)** |
+
+**처방은 확대되지 않았다.** 표본을 늘리니 오히려 내려갔다.
+
+## 결함 세 개를 한자리에
+
+`[실측]` **평가 지표에서 나온 결함이 셋이다.**
+
+| # | 무엇 | 상태 |
+|---|---|---|
+| 1 | Proposed 페널티가 죽은 코드 | **수정** (2026-09-03) |
+| 2 | 채점식이 승인 대기를 벌점 처리 | **미결** → [D-010](../decisions/D-010-deferral-scoring.md) |
+| **3** | **`grounded` 가 mismatch 에서 무효** | **우회함** — judge 없는 직접 대조 |
+
+> **셋 다 "지표가 틀린 것을 재고 있었다"이다.**
+
+**이게 "테스트가 제품을 잘못 끌고 간다"와 같은 종류다.** 지표도 똑같이 끌고 간다.
+
+| 어디 | 같은 패턴 |
+|---|---|
+| [cs/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) | 테스트가 기본값을 검사해 기능을 막았다 |
+| [sample/quality/architecture-tests.md](../../final_project_sample/wiki/quality/architecture-tests.md) | 무엇을 강제하는지 세어 둔 곳 |
+
 ## 관계
 
 - [golden-set.md](golden-set.md) — 이 지표를 재는 데이터
