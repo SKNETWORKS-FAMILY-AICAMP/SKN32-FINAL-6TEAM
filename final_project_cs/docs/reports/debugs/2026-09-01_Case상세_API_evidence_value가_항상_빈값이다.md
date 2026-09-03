@@ -1,4 +1,6 @@
-# Case 상세 API의 evidence.value가 항상 {}였다 — 수정 완료
+# Case 상세 API의 evidence.value가 항상 {}였다
+
+## 해결됨 (2026-09-01)
 
 - 발견 경위: 다른 세션이 근거 되짚기(traceability) 장치를 셋으로 나눠
   확인하다("운영 화면 / 표 사이 연결 / API 응답") API 응답만 비어 있음을
