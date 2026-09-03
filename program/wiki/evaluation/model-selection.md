@@ -153,5 +153,6 @@ python -m eval.finetune.score_ft --input eval/finetune/ft_predictions.jsonl \
 
 - [dod28-rerun.md](dod28-rerun.md) — 왜 다시 재나
 - [finetuning.md](finetuning.md) — 파인튜닝이 고치는 것
-- [../business/infrastructure-cost.md](../business/infrastructure-cost.md) — 6.4GB 실측
+- [../business/gpu-limits.md](../business/gpu-limits.md) — **메모리 기준의 근거.** 선이 6.4GB 인지 12GB 인지
+- [../business/infrastructure-cost.md](../business/infrastructure-cost.md) — 원가 전체
 - [../decisions/D-010-deferral-scoring.md](../decisions/D-010-deferral-scoring.md) — 채점식
