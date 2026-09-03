@@ -105,6 +105,51 @@ grant ceiling        권한 상한
 
 `[실측]` 마이그레이션·store·config source·service app 커밋 완료. **438개 테스트 통과.**
 
+## ★ [2026-09-03] 중앙에 못 붙으면 기동을 거부한다
+
+`[실측]` 원본 §8 에서 이관. **wiki 전체에 `fail-fast`·`기동 거부` 가 0건이었다.**
+
+> **기동 거부(fail-fast). 캐시는 두지 않았다** — 무엇이 켜져 있는지 모르는 채로 트래픽을 받는 것이 더 위험하다.
+
+### ★ 대가는 가용성 결합이다
+
+> **중앙이 죽으면 대상이 못 뜬다.**
+
+**이게 위 "자체호스팅 충돌" 절의 세 번째 항목과 같은 말이다.** 그런데 그 절은 위험으로만 적었고 **이 결정이 실제로 그 대가를 택했다는 사실**이 빠져 있었다.
+
+`[실측]` **캐시를 넣는다면 `degraded` 를 반드시 함께 신호해야 한다.** → [../../final_project_cs/wiki/context/context-broker.md](../../final_project_cs/wiki/context/context-broker.md)
+
+### 두 모드가 있고 기본은 `direct` 다
+
+```
+CONSOLE_COMPOSER_MODE = direct | central
+```
+
+| 모드 | 언제 |
+|---|---|
+| **`direct`** (기본) | 대상이 적을 때. **지금까지의 동작** |
+| `central` | 대상이 많을 때 |
+
+`[실측]` **전환에 코드 변경이 없다.** 그리고 **Composer 는 1곳에만 설치한다** — 수천 개 cs 에 설치하지 않는다.
+
+**그래서 마이그레이션 경로가 필요 없다.** 파일 모드가 기본으로 남아 있고 중앙은 **설정으로 켜는 옵션**이다.
+
+### 재기동 없이 갈아 끼운다
+
+`[실측]` 2026-08-31 확정. `POST /admin/reload` (scope `ops:reload`)
+
+**설계검토는 원래 "재기동"을 골랐는데** 재검토 트리거로 **"대상과 Composer 가 같은 durable config store 를 쓰기로 정해진 때"**를 남겼고, **이 결정이 그 조건을 충족시켰다.**
+
+함께 `/introspection` 이 셋을 구분해 낸다.
+
+```
+active_revision    실행 중
+desired_revision   저장됨
+reload_state
+```
+
+`[실측]` **그 전에는 저장 직후 반영도 안 됐는데 새 revision 을 보고했다.** → [D-011](D-011-composer-v3-gap.md)
+
 ## 아직 안 정한 것
 
 `[미확보]`

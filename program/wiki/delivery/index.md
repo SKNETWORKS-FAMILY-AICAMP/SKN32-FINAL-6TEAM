@@ -67,3 +67,5 @@ status: draft
 - [../product/scope.md](../product/scope.md) — 무엇을 안 하는가
 - [../evaluation/index.md](../evaluation/index.md) — DoD의 증명 방법
 - [../log.md](../log.md) — 문서 변경 이력
+- [estimation-baseline.md](estimation-baseline.md) — **일수를 어떻게 산정하나.** 4개 저장소 실측
+
