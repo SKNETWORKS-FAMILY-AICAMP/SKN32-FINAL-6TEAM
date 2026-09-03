@@ -89,7 +89,7 @@ Team을 너무 잘게 쪼개면 Controller 라우팅이 복잡해지고 평가 �
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [return-refund.md](return-refund.md) — 환불 쪽
 - [fulfillment-logistics.md](fulfillment-logistics.md) — 배송 쪽
 - [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md) — 결제 경계

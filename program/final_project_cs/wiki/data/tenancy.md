@@ -91,7 +91,7 @@ tests/integration/rag/
 
 ## 관계
 
-- [schema.md](schema.md) — 테이블별 `tenant_id`
+- [schema.md](schema/index.md) — 테이블별 `tenant_id`
 - [migrations.md](migrations.md) — 인덱스
 - [../external/auth-boundary.md](../external/auth-boundary.md) — 인증·scope
 - [../context/rag-retrieval.md](../context/rag-retrieval.md) — 지식 검색 격리

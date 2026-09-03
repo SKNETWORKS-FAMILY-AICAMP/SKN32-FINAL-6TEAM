@@ -13,7 +13,7 @@ status: draft
 
 ## 읽기 순서
 
-1. [team-contract.md](team-contract.md) — 무엇을 구현해야 하는가
+1. [team-contract.md](team-contract/index.md) — 무엇을 구현해야 하는가
 2. [team-boundary.md](team-boundary.md) — **무엇을 하면 안 되는가**
 3. [team-registry.md](team-registry.md) — 어떻게 등록되는가
 
@@ -21,7 +21,7 @@ status: draft
 
 | 문서 | 답하는 질문 | 코드 |
 |---|---|---|
-| [team-contract.md](team-contract.md) | `TeamTask` / `TeamResult` 모양 | `app/core/contracts.py` |
+| [team-contract.md](team-contract/index.md) | `TeamTask` / `TeamResult` 모양 | `app/core/contracts.py` |
 | [team-boundary.md](team-boundary.md) | Team이 하면 안 되는 것 셋 | — |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |

@@ -13,7 +13,7 @@ tags: [data]
 사용자 요청으로 "Kaggle이나 다른 곳에 더 좋은 자료가 있는지" 오늘자 기준으로
 Claude와 Codex(gpt-5.6-luna)가 **서로 독립적으로**(서로의 결과를 안 보고)
 같은 범위를 다시 조사했다. Codex의 원본 조사 결과는
-[`_codex_independent_research_2026-08-20.md`](_codex_independent_research_2026-08-20.md)에
+`_codex_independent_research_2026-08-20.md`에
 그대로 남겨뒀다(가공하지 않음). 아래는 둘을 대조해 합의한 결론이다.
 
 ### 합의(둘 다 독립적으로 같은 결론에 도달)
@@ -79,7 +79,7 @@ Codex가 조사 중 스스로 낸 결론에 동의한다 — **"무료 다운로
 해결할지"를 물었다. 사실 조사가 아니라 설계 판단이 필요한 문제라, Claude가
 먼저 판단을 세운 뒤 Codex(gpt-5.6-luna)에게 같은 문제를 독립적으로 맡겨
 대조했다. Codex 원본:
-[`_review_spam_detection_codex_논의_2026-08-20.md`](_review_spam_detection_codex_논의_2026-08-20.md).
+`_review_spam_detection_codex_논의_2026-08-20.md`.
 
 ### 결론 — 이번엔 반박이 아니라 수렴, Codex가 더 정교했다
 
@@ -133,7 +133,7 @@ Codex 쪽이 Claude의 초안보다 명백히 더 구체적이고 실행 가능�
 없는지"를 물었다. 이번엔 독립조사가 아니라 **완결성 감사(audit)**다 —
 Codex에게 지금까지 확보한 목록 전체를 그대로 보여주고, 그 위에서 빠진
 게 있는지 찾게 했다. Codex 원본:
-[`_완결성점검_codex_2026-08-20.md`](_완결성점검_codex_2026-08-20.md).
+`_완결성점검_codex_2026-08-20.md`.
 
 ### 답: 대량 수집 관점에서는 충분하다. 남은 건 "더 받기"가 아니라 "가공"이다.
 

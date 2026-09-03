@@ -116,6 +116,64 @@ Qwen2.5-3B-Instruct   bf16   양자화 없음
 
 **같은 카드에서 두 배 차이다.** → [../decisions/D-004-self-hosting-rationale.md](../decisions/D-004-self-hosting-rationale.md)
 
+## ★ [2026-09-03] 실제로 할당해 봤다 — SSH 로는 2.25GB 가 상한이다
+
+`[실측]` x600 에 `torch 2.11.0+cu128` 을 깔고 직접 잡아 봤다.
+
+### 세 숫자가 다 다르다
+
+| 무엇 | 값 |
+|---|---|
+| `nvidia-smi` free | **6,169 MiB** |
+| `torch.cuda.mem_get_info` free | **10.81 GiB** |
+| **실제로 할당된 양** | **2.25 GiB** |
+
+```
+2 GiB 단일 할당      OK
+3 GiB 단일 할당      실패
+2 GiB × 2            실패 — 총 2 GiB 가 상한
+```
+
+**`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` 가 이미 켜져 있는데도 그렇다.**
+
+### 원인 — SSH 는 세션 0 이다
+
+`[실측]`
+
+```powershell
+(Get-Process -Id $PID).SessionId        →  0     # SSH
+(Get-Process explorer).SessionId        →  1     # 데스크톱
+```
+
+**Windows WDDM 은 비대화형 세션(세션 0)의 GPU 메모리를 제한한다.**
+
+> **SSH 로 붙어서는 GPU 작업을 못 잰다.**
+
+### 그래서 DoD-28 학습이 어떻게 됐나
+
+`[실측]` 3B bf16(6.2GB) 학습이 **376/376 완료**됐다. **세션 0 상한 2.25GB 로는 불가능하다.**
+
+**대화형 세션(로컬 또는 RDP)에서 돌렸다는 뜻이다.**
+
+`[실측]` 같은 문서가 `CUDA OOM` 을 gradient checkpointing 으로 풀었다고 적은 것도 이와 맞는다 — **세션 1 에서 12GB 를 놓고 씨름한 것이다.**
+
+## ★ 그래서 탈락 기준은 아직 못 정한다
+
+| 세션 | 상한 |
+|---|---|
+| 세션 0 (SSH) | **2.25GB** — 측정 불가 |
+| 세션 1 (데스크톱/RDP) | `[미확보]` — 6.17GB 인지 12GB 인지 |
+
+`[미확보]` **`nvidia-smi` 의 5,831 MiB 가 축출되는지는 여전히 모른다.** 세션 1 에서 같은 검사를 돌려야 안다.
+
+**측정 방법은 하나뿐이다** — **x600 에 사람이 직접 로그인해서** 아래를 돌린다.
+
+```powershell
+python vram_probe.py
+```
+
+**원격으로는 안 된다.** → [../evaluation/model-selection.md](../evaluation/model-selection.md) 의 메모리 기준
+
 ## 관계
 
 - [infrastructure-cost.md](infrastructure-cost.md) — 원가 전체

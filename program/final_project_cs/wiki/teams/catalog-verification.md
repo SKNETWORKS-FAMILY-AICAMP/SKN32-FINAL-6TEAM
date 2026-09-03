@@ -95,7 +95,7 @@ tests/integration/a2a/test_remote_round_trip.py
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [remote-team-a2a.md](remote-team-a2a.md) — 원격 실행
 - [../external/a2a-protocol.md](../external/a2a-protocol.md) — 프로토콜
 - [../actions/evidence-check.md](../actions/evidence-check.md) — Artifact 대조

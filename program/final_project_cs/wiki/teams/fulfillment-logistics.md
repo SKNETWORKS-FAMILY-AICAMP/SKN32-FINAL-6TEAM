@@ -78,7 +78,7 @@ cust_01 / ORD-0101 배송완료 미수령 → fulfillment_logistics
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [procurement-order.md](procurement-order.md) — 주문 쪽
 - [return-refund.md](return-refund.md) — 반품 쪽
 - [../actions/evidence-check.md](../actions/evidence-check.md) — 소유권 확인

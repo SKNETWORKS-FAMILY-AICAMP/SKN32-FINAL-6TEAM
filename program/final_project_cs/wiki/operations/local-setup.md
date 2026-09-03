@@ -68,6 +68,50 @@ final_workspace/.tmp/     ← 워크스페이스 임시물은 전부 여기
 
 저장소 안 스크래치는 저장소 밖 세션 임시 폴더를 쓰고 **커밋되지 않게** 한다. 남길 산출물이면 `docs/` 제자리에 둔다.
 
+## ★ [2026-09-03] 원본에만 있던 함정 셋
+
+`[실측]` `docs/manuals/2026-08-12_1520_환경_기동절차.md` 에서 이관.
+
+### 1. `.env` 를 BOM 없이 저장한다
+
+**PowerShell 의 `Set-Content -Encoding UTF8` 은 BOM 을 붙인다.**
+
+```
+첫 줄 키가 ﻿ACOP_DATABASE_URL 이 되어 인식되지 않는다
+```
+
+`[실측]` **2026-08-12 에 실제로 겪었다.**
+
+```powershell
+[System.IO.File]::WriteAllText("$PWD\.env", $text, (New-Object System.Text.UTF8Encoding($false)))
+```
+
+**눈에 안 보이는 세 글자 때문에 DB 연결이 안 된다.** 오류 메시지도 "키가 없다"고만 나온다.
+
+### 2. anaconda base 를 옆 프로젝트와 공유한다
+
+> **버전을 강제로 올리면 옆 프로젝트가 깨진다.**
+
+**설치 전에 이미 있는 버전을 확인하고, 충돌하면 리포트에 적는다.**
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+`[실측]` 2026-08-12 확인 — `pydantic 2.13.4` · `psycopg 3.3.4` · `tiktoken`.
+
+**`faster-whisper` 가 `onnxruntime` 미설치를 경고하는데 이 프로젝트와 무관한 옆 프로젝트 의존성이다.** 무시한다.
+
+### 3. 점검은 스크립트가 한다
+
+```powershell
+python -m scripts.check_env
+```
+
+**전 항목 OK 여야 다음으로 간다.**
+
+`[실측]` **단 extension 2건 FAIL 은 마이그레이션 전에는 정상이다.** 이걸 모르면 멀쩡한 상태를 고장으로 오해한다.
+
 ## 관계
 
 - [run.md](run.md) — 실행 명령

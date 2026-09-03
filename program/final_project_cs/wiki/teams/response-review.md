@@ -112,7 +112,7 @@ prompts/response/review_tone.v1.md
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [voc-store-manager.md](voc-store-manager.md) — 같은 CS Pack
 - [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD-29
 - [../../../wiki/evaluation/judge.md](../../../wiki/evaluation/judge.md) — 검토 품질 평가

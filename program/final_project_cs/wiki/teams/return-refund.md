@@ -134,7 +134,7 @@ amount = total * int(quantity) // item_count
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [team-boundary.md](team-boundary.md) — 경계
 - [../actions/action-proposal.md](../actions/action-proposal.md) — 제안 구조
 - [../actions/evidence-check.md](../actions/evidence-check.md) — 대조가 못 잡는 것

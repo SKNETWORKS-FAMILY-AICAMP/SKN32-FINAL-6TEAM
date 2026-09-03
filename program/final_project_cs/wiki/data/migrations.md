@@ -153,7 +153,7 @@ knowledge_chunks.embedding vector(1536)   -- text-embedding-3-small
 
 ## 관계
 
-- [schema.md](schema.md) — 테이블 의미
+- [schema.md](schema/index.md) — 테이블 의미
 - [tenancy.md](tenancy.md) — 격리
 - [../operations/local-setup.md](../operations/local-setup.md) — DB 기동
 - [../actions/idempotency.md](../actions/idempotency.md) — UNIQUE 제약의 역할

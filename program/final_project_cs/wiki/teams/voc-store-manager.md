@@ -115,7 +115,7 @@ INTENTS ⊇ 모든 Team.accepted_case_types
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 계약
+- [team-contract.md](team-contract/index.md) — 계약
 - [team-boundary.md](team-boundary.md) — 위임 규칙
 - [response-review.md](response-review.md) — 같은 CS Pack
 - [../../../wiki/product/personas.md](../../../wiki/product/personas.md) — 정미라가 이 alert를 본다

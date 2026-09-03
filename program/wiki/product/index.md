@@ -51,3 +51,5 @@ status: draft
 - [../decisions/index.md](../decisions/index.md) — 제품 결정의 이유
 - [pitch-questions.md](pitch-questions.md) — 심사에서 물어볼 다섯 가지와 답
 
+- [vision-backlog.md](vision-backlog.md) — **지금은 안 하는 것들.** 항목마다 관측 가능한 도입 트리거가 붙어 있다
+

@@ -15,7 +15,7 @@ status: draft
 
 | 문서 | 답하는 질문 |
 |---|---|
-| [schema.md](schema.md) | 테이블 관계와 의미 |
+| [schema.md](schema/index.md) | 테이블 관계와 의미 |
 | [migrations.md](migrations.md) | 마이그레이션 6개와 순서 |
 | [tenancy.md](tenancy.md) | tenant 격리를 어떻게 보장하는가 |
 

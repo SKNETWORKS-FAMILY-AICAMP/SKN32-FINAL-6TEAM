@@ -216,7 +216,7 @@ UNIQUE(prompt_key, version) · UNIQUE(prompt_key, sha256)
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — 무엇을 구현해야 하는가
+- [team-contract.md](team-contract/index.md) — 무엇을 구현해야 하는가
 - [team-registry.md](team-registry.md) — 어떻게 등록되는가
 - [../actions/action-proposal.md](../actions/action-proposal.md) — Team의 출력
 - [../context/context-broker.md](../context/context-broker.md) — Team의 입력

@@ -139,7 +139,7 @@ feedback                                     인라인 분류
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — `TeamManifest` 모양
+- [team-contract.md](team-contract/index.md) — `TeamManifest` 모양
 - [team-boundary.md](team-boundary.md) — 등록 이후의 규칙
 - [../runtime/agentic-controller.md](../runtime/agentic-controller.md) — Registry를 쓰는 쪽
 - [../../../wiki/architecture/pack-model.md](../../../wiki/architecture/pack-model.md) — Pack 교체 가능성

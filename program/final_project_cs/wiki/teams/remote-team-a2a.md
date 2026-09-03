@@ -110,7 +110,7 @@ MVP 범위는 **Remote A2A PoC 1개**다. 더미는 A-COP 본체가 아니라 �
 
 ## 관계
 
-- [team-contract.md](team-contract.md) — `TeamTask` / `TeamResult`
+- [team-contract.md](team-contract/index.md) — `TeamTask` / `TeamResult`
 - [catalog-verification.md](catalog-verification.md) — 후보 Team
 - [../external/a2a-protocol.md](../external/a2a-protocol.md) — 프로토콜
 - [../runtime/agentic-controller.md](../runtime/agentic-controller.md) — Port를 쓰는 쪽
