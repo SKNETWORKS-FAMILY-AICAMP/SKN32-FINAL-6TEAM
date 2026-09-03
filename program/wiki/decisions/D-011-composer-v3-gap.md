@@ -81,6 +81,61 @@ POST /composer/apply    GET  /composer/current
 
 > **종료일 없는 병행은 안 C 가 아니라 그냥 미결이다.**
 
+## ★ [2026-09-03] introspection 계약도 갈라져 있다
+
+`[실측]` `A-COP_Composer_v3_설계_토글전용_UI이관.md` §2 를 오늘 구현과 대조했다.
+
+| | 값 |
+|---|---|
+| **설계가 요구한 것** | `contract_version: "introspection.v3"` |
+| **실제 구현** | `CONTRACT_VERSION = "1.1"` (`introspection/contract.py:27`) |
+
+**이름 체계 자체가 다르다.** `introspection.vN` 이 아니라 `N.N` 이다.
+
+### 설계에만 있는 필드
+
+`[실측]` 설계는 **`registered_ids`** 를 요구한다 — "제품이 등록해 둔 항목의 ID 목록".
+
+```json
+"registered_ids": {
+  "modules": ["vector_rag", "graph_store", …],
+  "teams": ["order_shipping", "return_exchange"],
+  "ports": ["team_executor", "message_broker", "graph_store"]
+}
+```
+
+**구현에 이 필드가 없다.** 대신 `modules`·`teams`·`ports` 를 직접 낸다.
+
+### 구현에만 있는 필드
+
+`[실측]` **구현이 설계보다 더 낸다.**
+
+```python
+"active_revision":  active_revision,      # 실행 중인 것
+"desired_revision": desired_revision,     # 선언된 것
+"reload_state":     reload_state,
+"reload_error":     …,
+"team_manifests":   manifests,
+"port_implementations": …,
+```
+
+**주석이 이유를 적어 뒀다.**
+
+> ★**선언과 조립을 함께 낸다.** 선언만 보면 **"켰다고 적혀 있는데 실제로는 안 올라간" 경우를 못 본다.**
+
+> ★옛 소비자를 위해 `config_revision` 을 남긴다. 이제 **실행 중인** revision 을 가리킨다.
+
+**구현이 설계보다 낫다.** 설계는 "무엇이 등록됐나"만 물었는데 구현은 **"등록된 것이 실제로 올라왔나"**까지 답한다.
+
+### 그래서 D-011 의 질문이 하나 늘어난다
+
+| 질문 | |
+|---|---|
+| **`registered_ids` 를 추가할 것인가** | 설계에만 있다. **UI 가 그걸 필요로 하는지 확인 안 됨** |
+| **버전 이름을 맞출 것인가** | `1.1` vs `introspection.v3` |
+
+`[미확보]` **UI 가 실제로 무엇을 읽는지 확인하지 않았다.** `packages/acop_composer_ui/` 를 봐야 안다.
+
 ## 관계
 
 - [D-006](D-006-composer-ownership.md) — Composer 소유는 sample
