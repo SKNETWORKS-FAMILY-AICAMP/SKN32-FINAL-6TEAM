@@ -61,6 +61,7 @@ status: draft
 | 문서 | 무엇 |
 |---|---|
 | **[cutover.md](cutover.md)** | **★이걸 실제로 쓰기 시작하는 조건.** 지금은 아무도 안 읽는다 |
+| [known-weaknesses.md](known-weaknesses.md) | **이 표준이 무너지는 지점.** 예측한 약점 9종 중 다섯이 실제로 일어났다 |
 | [parallel-work.md](parallel-work.md) | **두 스트림이 같은 파일을 쓰지 않는다.** 받은 산출물 검사 4종 |
 | [work-loop.md](work-loop.md) | **세션마다 무엇을 읽고 무엇을 남기나.** 파일명 체계가 이 wiki 와 다르다 |
 | [drift-case-voc.md](drift-case-voc.md) | 낡은 문장이 규칙으로 승격된 사고 |
