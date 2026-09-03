@@ -174,6 +174,56 @@ tenant 이름이 겹친다
 
 `[실측]` **이건 [test-map.md](test-map.md) 가 못 잡는 종류다.** 불변식과 테스트가 연결돼 있어도, **그 테스트가 다른 것을 재고 있으면** 연결은 초록이다.
 
+## ★ [2026-09-03] 잔존물 — 검사기가 안 보는 것
+
+`[실측]` `program/research/_cs_구현현황.md` §9 의 지적을 오늘 다시 확인했다. **2026-08-19 기록인데 아직 그대로다.**
+
+### 빈 패키지 넷
+
+```
+app/presentation/schemas/            .py 없음
+app/core/case_runtime/               .py 없음
+app/modules/customer_ops/team_modules/   .py 없음 (local_team_a·b·remote_team_demo)
+```
+
+`[실측]` **이 함정으로 wiki 문서 17건이 틀렸다.** "여기에 무엇이 있다"고 썼는데 빈 폴더였다. → [../../../wiki/governance/type-verification/round-9.md](../../../wiki/governance/type-verification/round-9.md)
+
+**codex 프롬프트에도 "빈 패키지를 문서화하지 마라"를 명시해야 했다.**
+
+### 고아 `.pyc` 둘
+
+```
+__pycache__/order_shipping.cpython-312.pyc     ← 대응하는 .py 없음
+__pycache__/return_exchange.cpython-312.pyc    ← 없음
+```
+
+**옛 Team 두 개의 잔해다.** `legacy/` 로 옮겨졌는데 캐시만 남았다.
+
+`[실측]` **위험하지는 않다.** Python 은 소스 없는 `.pyc` 를 기본으로 import 하지 않는다.
+
+**다만 파일 목록만 보면 그 Team 이 아직 있는 것처럼 보인다.**
+
+### 선언은 있는데 등록이 없는 것
+
+| 파일 | 상태 |
+|---|---|
+| `response_review_policy.py` | 소스는 있고 **현행 Team 선언에 없다** |
+
+`[미확보]` **의도적으로 남긴 것인지 잊힌 것인지 모른다.**
+
+## 이건 검사기가 못 잡는다
+
+`[실측]` [check_wiki.py](../../../wiki/governance/review-policy.md) 는 **문서가 가리키는 테스트 파일과 함수가 실재하는지** 본다.
+
+**그런데 "코드에 있는데 아무도 안 쓰는 것"은 안 본다.**
+
+```
+불변식 → 테스트     검사한다
+코드   → 사용처     안 한다
+```
+
+`[미확보]` **잔존물을 세는 검사가 없다.** 지금은 사람이 `_cs_구현현황.md` 같은 스냅샷을 다시 찍어야 안다.
+
 ## 관계
 
 - [invariants.md](invariants.md) — 불변식 카탈로그
