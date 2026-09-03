@@ -114,8 +114,8 @@ tags: [evaluation, cost]
 
 | 후보 | 메모리 | 한국어 | 비고 |
 |---|---|---|---|
-| **Gemma 4 E4B** | **~3~4GB** | `[미확보]` | Edge 용. PLE 로 실제 점유가 파라미터 수보다 작다 |
-| Gemma 4 E2B | ~3GB | `[미확보]` | 더 작다 |
+| **Gemma 4 E4B** | **4.79 GiB** `[실측]` Q4_0 | `[미확보]` | **폰 Adreno 825 에서 8.98 t/s 로 돌았다** → [edge-inference](../business/edge-inference.md) |
+| Gemma 4 E2B | **2.63 GiB** `[실측]` Q4_0 | `[미확보]` | 폰에서 15.18 t/s |
 | **Qwen2.5-3B** (현행) | ~6GB bf16 | **CJK 특화 학습** | 지금 쓰는 것 |
 | Gemma 4 26B MoE | 16GB Q4 | | **6.4GB 에 안 들어간다 — 탈락** |
 
@@ -155,6 +155,7 @@ python -m eval.finetune.score_ft --input eval/finetune/ft_predictions.jsonl \
 
 - [dod28-rerun.md](dod28-rerun.md) — 왜 다시 재나
 - [finetuning.md](finetuning.md) — 파인튜닝이 고치는 것
+- [../business/edge-inference.md](../business/edge-inference.md) — **Gemma 4 E4B·E2B 실측** (폰)
 - [../business/gpu-limits.md](../business/gpu-limits.md) — **메모리 기준의 근거.** 선이 6.4GB 인지 12GB 인지
 - [../business/infrastructure-cost.md](../business/infrastructure-cost.md) — 원가 전체
 - [../decisions/D-010-deferral-scoring.md](../decisions/D-010-deferral-scoring.md) — 채점식

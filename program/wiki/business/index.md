@@ -99,3 +99,4 @@ status: draft
 
 - [gpu-limits.md](gpu-limits.md) — **우리 GPU 로 무엇이 되고 무엇이 안 되나.** 카탈로그 12GB ≠ 쓸 수 있는 양
 - [measure-review-time.md](measure-review-time.md) — 검토·승인 시간 재는 법
+- [edge-inference.md](edge-inference.md) — **폰에서 Gemma 4 를 돌려 봤다.** E4B 8.98 tok/s

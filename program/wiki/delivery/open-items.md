@@ -18,6 +18,7 @@ owners: [human:미배정]
 | 항목 | 왜 AI가 안 하나 |
 |---|---|
 | `git push -u origin workspace` | **AI 세션은 푸시를 실행하지 않는다** |
+| **★ wiki 저장소 전환** | **준비 완료.** 사용자가 부르면 실행 — 놓을 자리만 정하면 된다 → [D-012](../decisions/D-012-cutover-timing.md) |
 
 ## 미확인
 
