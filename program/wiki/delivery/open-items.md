@@ -70,10 +70,10 @@ owners: [human:미배정]
 
 | 채울 것 | 쓸 데이터 |
 |---|---|
-| 골든셋 페르소나 배분 | `eval/datasets/golden.jsonl` 72건 본문 |
-| 실제 문의 유형 분포 | `datasets/voc/aihub_30716_callcenter_qa` |
+| ~~골든셋 페르소나 배분~~ **완료** | [personas.md](../product/personas.md) 재검증. 정미라 행 18→**28건(38.9%)** 정정 |
+| ~~실제 문의 유형 분포~~ **완료** | [golden-set.md](../evaluation/golden-set.md). 실제 order 40% vs 골든셋 25% |
 | 커머스 문의 유형 | `datasets/voc/aihub_102_smb_order_qa` |
-| **오류 비용의 실제 사례** | **`datasets/voc/ecmc_dispute_casebook_2024`** |
+| ~~오류 비용의 실제 사례~~ **완료** | [error-cost.md](../business/error-cost.md) |
 | 감정 축 검증 | `datasets/voc/aihub_71603_aspect_sentiment` |
 | `cost/case` 실측 | eval harness 실행 |
 
