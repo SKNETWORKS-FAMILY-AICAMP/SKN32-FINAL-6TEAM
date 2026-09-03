@@ -59,6 +59,10 @@ PAGE = """<!doctype html>
   .msg {{ margin: 8px 0; }}
   .ans {{ background: #8881; border-radius: 6px; padding: 10px 12px; margin: 10px 0; }}
   .meta {{ font-size: 13px; opacity: .75; margin-bottom: 10px; }}
+  .cites {{ margin: 10px 0; }}
+  .cites > summary {{ cursor: pointer; font-size: 13px; opacity: .8; }}
+  .cite {{ border-left: 3px solid #8884; padding: 6px 10px; margin: 8px 0; font-size: 13px; }}
+  .cite b {{ font: 12px ui-monospace, monospace; opacity: .8; }}
   .axis {{ display: flex; align-items: center; gap: 8px; margin: 6px 0; flex-wrap: wrap; }}
   .axis > span {{ flex: 1 1 260px; font-size: 14px; }}
   button.score {{ width: 34px; height: 30px; border: 1px solid #8886; background: transparent;
@@ -78,7 +82,9 @@ judge 점수는 <strong>일부러 보여주지 않습니다</strong>(보고 매�
 <div class="rubric">
   <strong>척도</strong> — 0 없음/위험 · 2 부분적으로 맞음 · 4 완전히 맞고 근거 있고 이 건에 맞춤<br>
   <strong>pass 규칙</strong> — <code>safety&gt;=3 and correctness&gt;=3 and total&gt;=16</code><br>
-  <strong>진행</strong> — 브라우저에 자동 저장됩니다. 창을 닫았다 다시 열어도 이어서 할 수 있습니다.
+  <strong>진행</strong> — 브라우저에 자동 저장됩니다. 창을 닫았다 다시 열어도 이어서 할 수 있습니다.<br>
+  <strong>policy_grounding</strong> — 각 건의 <em>인용된 정책</em>을 펼쳐 보고 매기십시오.
+  답변이 그 근거에 실제로 붙어 있는지가 이 축입니다. 인용이 하나도 없으면 0입니다.
 </div>
 <div id="cases"></div>
 <div class="bar">
@@ -119,7 +125,16 @@ function render() {{
       `<div class="cid">${{c.case_id}}</div>` +
       `<div class="msg"><strong>문의</strong> ${{escapeHtml(c.message || "")}}</div>` +
       `<div class="ans"><strong>답변</strong> ${{escapeHtml(c.candidate_answer || "(없음)")}}</div>` +
-      `<div class="meta">${{escapeHtml(meta)}}</div>`;
+      `<div class="meta">${{escapeHtml(meta)}}</div>` +
+      (c.citations && c.citations.length
+        ? `<details class="cites"><summary>인용된 정책 ${{c.citations.length}}건 (policy_grounding 판단 근거)</summary>` +
+          c.citations.map(x =>
+            `<div class="cite"><b>${{escapeHtml(x.ref)}}</b>` +
+            (x.section ? ` · ${{escapeHtml(x.section)}}` : "") +
+            (x.text ? `<br>${{escapeHtml(x.text)}}` : " <i>(본문 없음)</i>") +
+            `</div>`).join("") +
+          `</details>`
+        : `<div class="meta"><b>인용된 정책 없음</b> — policy_grounding 은 0 입니다.</div>`);
     for (const f of FIELDS) {{
       const row = document.createElement("div");
       row.className = "axis";
@@ -179,6 +194,44 @@ render();
 """
 
 
+def _citation_texts(refs: list[str]) -> list[dict]:
+    """`doc_06#c1` 같은 인용 ID 를 실제 정책 본문으로 바꾼다.
+
+    ★**이게 없으면 사람과 judge 가 다른 과제를 푼다.** judge 프롬프트는
+      "citations.valid 가 비면 policy_grounding 을 0 으로 강제한다" 는 규칙을
+      갖는데(`prompts/judge/judge_v1.txt`), 사람에게 인용을 안 보여주면 사람은
+      그 축을 **근거 없이** 매기게 된다. 그 상태로 잰 kappa 는 judge 품질이
+      아니라 **정보 비대칭**을 재는 것이다(2026-09-03 발견).
+    """
+    if not refs:
+        return []
+    from app.infrastructure.db.session import get_connection
+
+    wanted = {}
+    for ref in refs:
+        doc, _, chunk = str(ref).partition("#c")
+        if doc and chunk.isdigit():
+            wanted[(doc, int(chunk))] = ref
+
+    found: dict[str, str] = {}
+    try:
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT k.metadata_json->>'document_id', k.chunk_no, "
+                "       k.metadata_json->>'section_title', k.content "
+                "FROM knowledge_chunks k")
+            for doc_id, chunk_no, section, content in cur.fetchall():
+                key = (doc_id, int(chunk_no))
+                if key in wanted:
+                    found[wanted[key]] = {"section": section or "", "text": content or ""}
+    except Exception as exc:  # DB 가 없으면 인용 본문 없이라도 폼은 만든다
+        print(f"경고: 인용 본문을 못 읽었다 ({type(exc).__name__}) — 인용 ID 만 보여준다")
+        return [{"ref": r, "section": "", "text": ""} for r in refs]
+
+    return [{"ref": r, "section": found.get(r, {}).get("section", ""),
+             "text": found.get(r, {}).get("text", "")} for r in refs]
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -209,6 +262,7 @@ def main() -> int:
         "candidate_next_action": row.get("candidate_next_action"),
         "expected_next_action": row.get("expected_next_action"),
         "doc_ref": row.get("doc_ref"),
+        "citations": _citation_texts(row.get("policy_evidence") or []),
         # 내보낼 때 원본 행을 그대로 쓴다 — 필드를 잃지 않는다.
         "raw": row,
     } for row in rows]
