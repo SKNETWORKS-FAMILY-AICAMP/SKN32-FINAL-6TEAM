@@ -26,7 +26,6 @@ owners: [human:미배정]
 
 | 항목 | 상태 |
 |---|---|
-| 쿠팡 배송이력 5건 중 4건만 수집 | `normalize.py` 실행 결과가 배송 4행. 해결됐는지 **미확인** |
 | v2 계약 문서 | 다른 세션 작업 중. **endpoint 이름·`config_revision`·인증 scope·감사 필드를 하나로 맞춰야 한다** |
 | UI가 import할 패키지 이름 | 확정 안 됨 |
 
@@ -37,6 +36,7 @@ owners: [human:미배정]
 | VOC 데이터 전처리 8종 | **2026-09-01 전부 완료** |
 | `implementation_ref` allowlist 제한 | **확인됨.** `KNOWN_IMPLEMENTATION_REFS`로 코드에 있고 Composer HTTP 경로에만 적용 |
 | Composer 범위 재검토 | → [D-CS-001](../../final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md) 외 Composer 계열 결정 |
+| **쿠팡 배송이력 5건 중 4건만 수집** | **★ [2026-09-04] 확인됨 — 정상 동작.** `preprocess_stats.json`을 열어 보니 8건 중 취소 3건(배송 자체 없음) 제외 5건 중 1건이 송장번호 미기재. 데이터 결손 아님 → [`../../datasets/wiki/scraper-notes.md`](../../datasets/wiki/scraper-notes.md) |
 
 ## 문서 쪽 열린 항목
 
@@ -101,18 +101,17 @@ owners: [human:미배정]
 
 ## [2026-09-03] 인수인계에서 남은 것
 
-`[실측]` `A-COP_남은작업_인수인계.md` 에서 이관. **대부분 완료됐고 셋이 남았다.**
+`[실측]` `A-COP_남은작업_인수인계.md` 에서 이관. **대부분 완료됐고 둘이 남았다.** (쿠팡 배송이력 항목은 2026-09-04 확인 완료로 닫혔다 — 위 표 참고)
 
 | 항목 | 상태 |
 |---|---|
 | VOC 데이터 전처리 | **완료** (2026-09-01) |
 | `implementation_ref` allowlist 제한 | **확인됨** — `KNOWN_IMPLEMENTATION_REFS`. Composer HTTP 경로에만 적용 |
-| 네이버 주문 4건 누락 | → [../../datasets/wiki/scraper-notes.md](../../datasets/wiki/scraper-notes.md) |
-| **쿠팡 배송이력 5건 중 4건만 수집** | `[미확보]` 해결됐는지 확인 안 함 |
+| **네이버 주문 4건 누락** | `[미확보]` **아직 안 고쳐졌다.** 로그인 상태 실제 DOM 필요 — 코드만으로 진행 불가 → [../../datasets/wiki/scraper-notes.md](../../datasets/wiki/scraper-notes.md) |
 | **v2 계약 문서 정합** | `[미확보]` endpoint 이름·`config_revision`·인증 scope·감사 필드를 **하나로 맞춰야 한다** → [D-011](../decisions/D-011-composer-v3-gap.md) |
 | **UI 가 import 할 패키지 이름** | `[미확보]` 아직 확정 안 됨 |
 
-**두 번째가 D-011 과 같은 문제다.** 계약이 둘로 갈려 있어서 이름부터 안 맞는다.
+**세 번째가 D-011 과 같은 문제다.** 계약이 둘로 갈려 있어서 이름부터 안 맞는다.
 
 ## 원격 추적은 사람이 한다
 
