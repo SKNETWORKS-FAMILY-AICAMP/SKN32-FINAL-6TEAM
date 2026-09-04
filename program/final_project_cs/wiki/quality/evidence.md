@@ -153,7 +153,7 @@ tags: [testing, evaluation]
 | 02 · 14 · 20 · 24 | 일부 낡음 — 개수·경로·이름 |
 | **22** | **낡음 — 근거가 사라졌다** |
 
-**DoD-22 는 인용한 테스트 소스가 삭제됐고 `.pyc` 만 남았다.** → [blind-spots.md](blind-spots.md)
+**DoD-22 는 인용한 테스트 소스가 삭제됐고 `.pyc` 만 남았다.** → [dod-evidence-drift.md](dod-evidence-drift.md)
 
 `[미확보]` **나머지 29건은 아직 안 봤다.**
 

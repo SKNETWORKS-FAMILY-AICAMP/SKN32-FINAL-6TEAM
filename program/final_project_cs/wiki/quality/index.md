@@ -14,8 +14,9 @@ status: draft
 1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 **51개**
 2. [test-map.md](test-map.md) — 무엇을 어디서 검사하는가
 3. [blind-spots.md](blind-spots.md) — 검사가 없는 지점
-4. [eval-harness.md](eval-harness.md) — 평가 실행
-5. [evidence.md](evidence.md) — **DoD 29항목의 실측 증거가 어디 있나**
+4. [dod-evidence-drift.md](dod-evidence-drift.md) — DoD evidence 가 지금도 유효한지 재검증
+5. [eval-harness.md](eval-harness.md) — 평가 실행
+6. [evidence.md](evidence.md) — **DoD 29항목의 실측 증거가 어디 있나**
 
 ## 각 문서
 
@@ -24,6 +25,7 @@ status: draft
 | [invariants.md](invariants.md) | 무엇을 깨면 안 되는가 |
 | [test-map.md](test-map.md) | 이 규칙은 어느 테스트가 지키는가 |
 | [blind-spots.md](blind-spots.md) | 어긴 걸 못 잡는 곳이 어딘가 |
+| [dod-evidence-drift.md](dod-evidence-drift.md) | 통과 판정 뒤에 근거가 삭제되거나 낡지 않았는가 |
 | [eval-harness.md](eval-harness.md) | 평가를 어떻게 돌리는가 |
 | **[evidence.md](evidence.md)** | **어느 DoD 가 무엇으로 증명됐고 어디가 낡았나** |
 | **[guardrails.md](guardrails.md)** | **가드레일 수치 단일 출처.** 코드 두 곳에 나타나면 결함이다 |
