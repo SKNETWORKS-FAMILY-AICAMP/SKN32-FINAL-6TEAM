@@ -158,13 +158,25 @@ CLAUDE.md 와의 우선순위
 
 `[미확보]` **다른 리뷰 문서 몇 건이 같은 상태인지 안 세었다.** 판정형 문서를 대조할 때는 wiki 뿐 아니라 **코드도 봐야 한다.**
 
+## 6차 — DoD evidence 28건
+
+`[실측]` 2026-09-04. `_gap_audit.md` 류 수기 대조 대신 `audit_coverage.py`로 `final_project_cs/docs/evidence/DoD-02`~`29`·`DoD-EVAL-DATASETS` **28건 전체**를 기계로 훑고, 반영률이 낮은 것부터 직접 대조했다.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| DoD-29 (2/9 절만 신호 적중) | Team 조립기가 생성자 **인자 개수만** 보고 배선하다 `ReadToolbox`를 `llm` 자리에 잘못 넣을 뻔한 결함 — 등록 전에 잡음. → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
+| DoD-24 (4/11) | 근거 대조 코드 자체가 세 번 뚫릴 뻔한 경위(순환 폴백·트랜잭션 격리·상태기계가 먼저 잡은 구멍 셋) + NaN/Infinity 500 크래시. → [evidence-check.md](../../../final_project_cs/wiki/actions/evidence-check.md) |
+
+**나머지 26건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-10 2/5, DoD-29 완료, DoD-18 9/15, DoD-28 10/19 등)로 계속하면 된다.
+
 ## 다음
 
 | # | 할 일 |
 |---|---|
 | 1 | **`_codex_추적화면_교차검증` 14/14 누락** — 통째로 안 됐다 |
 | 2 | "일부" 35건의 빠진 부분 채우기 |
-| 3 | 나머지 186건도 같은 방식으로 대조 |
+| 3 | DoD evidence 나머지 26건 직접 대조 |
+| 4 | 나머지 186건도 같은 방식으로 대조 |
 
 ## 관계
 
