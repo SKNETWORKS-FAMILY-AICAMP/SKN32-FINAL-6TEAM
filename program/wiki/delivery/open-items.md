@@ -74,7 +74,7 @@ owners: [human:미배정]
 | ~~실제 문의 유형 분포~~ **확인 결과: 못 구한다** | [golden-set.md](../evaluation/golden-set.md). **자체 정정** — 처음엔 aihub_30716 이 order 40% 라고 적었는데 틀렸다. `sample_per_group` 층화표집이라 표본 자체가 균등하다 |
 | ~~커머스 문의 유형~~ **동일 사유로 못 구한다** | `aihub_102_smb_order_qa` 도 `sample_per_group: 400` 층화표집 (stats.json 확인). 둘 다 자연 빈도가 아니다 |
 | ~~오류 비용의 실제 사례~~ **완료** | [error-cost.md](../business/error-cost.md) |
-| 감정 축 검증 | `datasets/voc/aihub_71603_aspect_sentiment` |
+| ~~감정 축 검증~~ **확인 결과: 못 한다** | [golden-set.md](../evaluation/golden-set.md). `aihub_71603` 은 제품 만족도(긍정/부정)를 재고 골든셋은 상담 중 감정·불확실성을 잰다 — **다른 축이라 대조 불가** |
 | `cost/case` 실측 | eval harness 실행 |
 
 **네 번째가 특히 중요하다.** **분쟁 조정까지 간 사례집**이므로 "오류 1건이 얼마나 커지는지"의 실제 근거가 된다.
