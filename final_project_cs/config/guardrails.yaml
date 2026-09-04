@@ -45,10 +45,18 @@ reliability:
   malformed_json_repair_attempts: 1
   team_timeout_seconds: 90
   case_wall_clock_seconds: 180
+  # ★아래 셋은 **아직 강제되지 않는다**(2026-09-03 실측). Controller 는 Case 당
+  #   Team 을 한 번 실행하고(+리뷰 1회) 끝나므로 셀 반복 자체가 없다. 다단계
+  #   그래프 런타임이 생기면 그때 여기를 읽어 강제한다.
+  #   ★적어 두는 이유: 설정에 값이 있으면 그게 지켜지는 줄 알게 된다. 안 지켜지면
+  #   안 지켜진다고 적는 것이 이 파일의 일이다.
   graph_max_steps: 12
   max_team_tasks_per_case: 6
   max_tool_calls_per_case: 12
   # 동일 tool + 정규화 arguments signature 가 이 횟수만큼 반복되면 escalated (v5 §10-4)
+  # ★이 값 자체는 코드가 읽지 않는다. `ReadToolbox` 가 같은 tool+arguments 를
+  #   두 번째로 부르면 `ToolLoopExceeded` 를 던지는 방식으로 **2 를 구현**한다.
+  #   숫자를 바꿔도 동작은 안 바뀐다 — 바꾸려면 코드를 고쳐야 한다.
   repeated_tool_signature_limit: 2
   daily_cost_limit_usd_per_tenant: 50
   outbox_stale_processing_seconds: 300

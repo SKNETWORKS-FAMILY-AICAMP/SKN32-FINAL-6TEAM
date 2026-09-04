@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+
+from app.core.settings import get_guardrails
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
@@ -69,7 +71,13 @@ class CaseService:
 
     def resume_metadata(self, token: str, wait_reason: str) -> dict[str, Any]:
         return {"resume_token_hash": self.token_hash(token),
-                "resume_token_expires_at": (datetime.now(UTC) + timedelta(hours=24)).isoformat(),
+                "resume_token_expires_at": (
+                    # ★가드레일에서 읽는다. 24 가 박혀 있어
+                    #   `resume.token_ttl_hours` 를 낮춰도 아무 일이 없었다 —
+                    #   보안 한도를 조인 줄 알게 되는 종류다(2026-09-03).
+                    datetime.now(UTC)
+                    + timedelta(hours=float(get_guardrails().get("resume.token_ttl_hours")))
+                ).isoformat(),
                 "resume_token_used": False, "wait_reason": wait_reason}
 
     def validate_resume(self, case: dict[str, Any], token: str, *, event_id: str | None = None) -> str | None:

@@ -23,8 +23,19 @@ def _ratio(numerator: int, denominator: int) -> float:
 
 
 def is_surge(today: int, avg7: float) -> bool:
-    """§4 verbatim: both the ratio and absolute-difference conditions apply."""
-    return today >= max(5, 1.5 * avg7) and today - avg7 >= 3
+    """§4 verbatim: both the ratio and absolute-difference conditions apply.
+
+    ★수치는 가드레일에서 읽는다. 전에는 5·1.5·3 이 여기 박혀 있어
+      `feedback_analytics.surge_*` 를 고쳐도 판정이 안 바뀌었다 —
+      급증 기준을 조정한 줄 알게 되는 종류다(2026-09-03).
+    """
+    from app.core.settings import get_guardrails
+
+    g = get_guardrails()
+    min_count = float(g.get("feedback_analytics.surge_min_count"))
+    ratio = float(g.get("feedback_analytics.surge_ratio"))
+    min_delta = float(g.get("feedback_analytics.surge_min_delta"))
+    return today >= max(min_count, ratio * avg7) and today - avg7 >= min_delta
 
 
 def run_daily_feedback(conn: Connection, *, report_date: date, tenant_id: str) -> dict[str, Any]:

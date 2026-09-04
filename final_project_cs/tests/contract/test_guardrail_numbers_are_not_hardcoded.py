@@ -33,3 +33,40 @@ def test_the_two_timeouts_are_separate_keys():
     remote = float(get_guardrails().get("reliability.llm_call_timeout_seconds"))
     local = float(get_guardrails().get("reliability.local_ft_call_timeout_seconds"))
     assert local > remote
+
+
+def test_resume_ttl_comes_from_guardrails():
+    """★값은 24 로 같았지만 코드에 박혀 있어 `resume.token_ttl_hours` 를 낮춰도
+    아무 일이 없었다. 보안 한도를 조인 줄 알게 되는 종류다(2026-09-03)."""
+    from datetime import UTC, datetime
+
+    from app.application.case_service import CaseService
+
+    meta = CaseService.resume_metadata(CaseService(), "t", "customer_input")
+    expires = datetime.fromisoformat(meta["resume_token_expires_at"])
+    hours = (expires - datetime.now(UTC)).total_seconds() / 3600
+    assert abs(hours - float(get_guardrails().get("resume.token_ttl_hours"))) < 0.1
+
+
+def test_the_surge_formula_reads_its_constants():
+    """★5·1.5·3 이 `is_surge` 에 박혀 있어 `feedback_analytics.surge_*` 를 고쳐도
+    급증 판정이 안 바뀌었다. 기준을 조정한 줄 알게 되는 종류다."""
+    import app.core.settings as settings_module
+    from app.application.feedback_job import is_surge
+
+    real = get_guardrails()
+
+    class Raised:
+        """min_count 만 크게 올린 가짜 가드레일."""
+
+        def get(self, key):
+            return 1000 if key == "feedback_analytics.surge_min_count" else real.get(key)
+
+    assert is_surge(15, 4.2) is True
+    original = settings_module.get_guardrails
+    settings_module.get_guardrails = lambda: Raised()
+    try:
+        # 기준을 올렸으므로 같은 입력이 더 이상 급증이 아니어야 한다
+        assert is_surge(15, 4.2) is False
+    finally:
+        settings_module.get_guardrails = original
