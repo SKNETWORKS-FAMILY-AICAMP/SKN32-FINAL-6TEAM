@@ -23,10 +23,18 @@ class LocalFTTeamLLM:
     """Injectable Team LLM adapter backed by a locally-hosted fine-tuned model."""
 
     def __init__(self, *, base_url: str, model_name: str = "local-ft",
-                 connection_factory=None, timeout: float = 120.0) -> None:
+                 connection_factory=None, timeout: float | None = None) -> None:
         self.base_url = base_url.rstrip("/")
         self.model_name = model_name
         self.connection_factory = connection_factory
+        # ★가드레일에서 읽는다. 전에는 여기 120.0 이 박혀 있어
+        #   `config/guardrails.yaml` 의 `llm_call_timeout_seconds: 20` 이
+        #   **아무것도 통제하지 못했다** — 설정에 값이 있으면 그게 지켜지는
+        #   줄 알게 된다(2026-09-03 발견). `CLAUDE.md` §3: 가드레일 수치는
+        #   한 곳에만 둔다.
+        if timeout is None:
+            from app.core.settings import get_guardrails
+            timeout = float(get_guardrails().get('reliability.local_ft_call_timeout_seconds'))
         self.timeout = timeout
 
     async def complete(self, prompt_key: str, input_text: str, context: dict[str, Any], *, run_id: UUID | None = None) -> dict[str, Any]:
