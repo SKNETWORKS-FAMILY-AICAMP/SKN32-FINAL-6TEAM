@@ -43,6 +43,16 @@ def idempotency_key(*, tenant_id, request_id, action_type, business_subject) -> 
 
 `request_id`가 없는 옛 Case는 `case_id`로 대체한다.
 
+`[실측]` **이 경계 분리는 원래 없었다.** 2026-08-14 시점 코드는 `f"{a}{b}{c}{d}"`로 단순히 이어붙여 해시했다 — 위 충돌이 이론상 가능한 상태였다. 2026-08-24에 발견·수정하고 `test_idempotency_key_preserves_field_boundaries`로 고정했다. → [DoD-11](../../../../final_project_cs/docs/evidence/DoD-11_action_idempotency_승인.md)
+
+### ★ 처음엔 이 산식조차 아니었다
+
+`[실측]` 2026-08-14 재측정 당시 `billing.py`의 실제 코드는 `uuid5(NAMESPACE_URL, task_id + ":refund")` — **`task_id` 기준**이었다. 계획(v5 §10-1)이 정한 `tenant_id·request_id·action_type·business_subject` 기준이 아니었다.
+
+**차이가 실제 사고로 드러났다.** 승인 후 Controller를 재실행하자 run마다 `task_id`가 달라져 **같은 환불 제안에 새 행이 하나 더 생겼다** — `UNIQUE(tenant_id, idempotency_key)`가 못 막았다. v5 산식이었다면 네 값이 그대로라 같은 키가 되어 막혔을 것이다. 커밋 `7a6cf18`에서 지금의 산식으로 교체됐다.
+
+**즉 생성 경로의 중복은 처음부터 막았지만, run을 가로지르는 중복은 산식을 통째로 바꾸고 나서야 막혔다.**
+
 ## ★ 재사용 가능한 계약이다
 
 `[실측]` 테스트 파일 주석이 밝힌다.
@@ -110,6 +120,10 @@ idempotency_key: str = Field(min_length=8, max_length=128)
 
 **Team이 생성하고 Core가 검사한다.** Team이 키를 잘못 만들면 중복 실행이 아니라 **중복 차단 실패**가 된다.
 
+## MCP 경로도 같은 원리를 쓴다
+
+`[실측]` `open_support_case`(MCP)도 REST와 같은 원리의 dedupe key로 `action_requests`를 먼저 조회하고, 기존 행이 있으면 새로 만들지 않고 기존 Case를 반환한다. 동일 요청 10회 → Case 1개·`action_requests` 1행(`test_same_mcp_open_request_ten_times_has_one_case_and_action_request`). → [../external/mcp-tools.md](../external/mcp-tools.md)
+
 ## 검증 방법
 
 **말이 아니라 테스트로 증명한다.**
@@ -119,6 +133,8 @@ pytest tests/contract/test_consumer_idempotency_contract.py -v
 ```
 
 동일 요청 10회 → `action_requests` 1행. DoD 항목이기도 하다.
+
+`[실측]` **이게 증명하는 건 발행까지다.** provider 실행 경로 자체가 이 시스템에 없다 — 자세한 경계는 [outbox.md](outbox.md)를 본다.
 
 ## 관계
 

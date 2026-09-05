@@ -62,6 +62,26 @@ tests/integration/messaging/test_outbox_tenant_guard.py
 tests/integration/api/test_outbox_resolution.py
 ```
 
+`[실측]` **`unknown` 행을 사람이 정리하는 화면·API가 있다** ([DoD-11](../../../../final_project_cs/docs/evidence/DoD-11_action_idempotency_승인.md) 2026-08-24 추가).
+
+```
+POST /v1/outbox/{id}/resolve     기록만 한다. 자동 재처리 안 함
+/ops/outbox                      운영 UI
+worker.py                        stale `processing` 행을 unknown 으로 회수
+```
+
+**여기서도 자동 재실행은 하지 않는다.** `unknown`을 해소한다는 건 "사람이 봤고 판단했다"는 기록이지, 시스템이 대신 재시도하는 게 아니다. → `docs/manuals/운영_unknown상태_대응절차.md`
+
+## ★ 여기서 증명한 것은 outbox 발행까지다 — provider 실행 경로는 없다
+
+`[실측]` [DoD-11](../../../../final_project_cs/docs/evidence/DoD-11_action_idempotency_승인.md)이 스스로 밝힌 경계.
+
+**`app/` 전체에서 `action_requests.status`를 `executing`/`succeeded`/`failed`/`unknown`으로 바꾸는 코드가 한 곳도 없다.** enum에 값만 있다.
+
+> **이것은 결함이 아니라 설계다.** Team은 side effect를 실행하지 않는다([CLAUDE.md §0.2](../../../../final_project_cs/CLAUDE.md)). 승인 이후 실제 결제사 호출은 MVP 범위 밖이다.
+
+**그래서 이 문서·[idempotency.md](idempotency.md)가 증명하는 "timeout → unknown, 자동 재시도 안 함"은 outbox/메시지 발행 경로에 대한 증명이다.** 실제 결제 provider 호출은 아직 겪어 본 적이 없다 — 그 경로가 붙는 시점에 같은 검사를 다시 해야 한다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md)
+
 ## MockProviderPublisher
 
 `app/infrastructure/messaging/mock_payment_publisher.py`

@@ -172,8 +172,9 @@ CLAUDE.md 와의 우선순위
 | DoD-02·DoD-09 (읽음, 추가 안 함) | 이미 `case-lifecycle.md`가 충분히 반영 중. DoD-09의 "S-API·S-VOC 계약 사이 통합 지점을 아무에게도 안 맡긴" 배선 누락 일화는 2026-08-12 당일 재측정 완료된 사소한 사례라 추가 보류 |
 | DoD-10 (2/5) | 급증 공식 "통과" 판정이 실은 코드에 5·1.5·3이 직접 박혀 있어 `guardrails.yaml`을 안 읽던 것과 우연히 같은 값이었을 뿐 — 같은 날(2026-09-05) 다른 세션이 65개 잎 전수 대조로 고친 것과 정확히 맞아떨어져 확인. → [guardrails.md](../../../final_project_cs/wiki/quality/guardrails.md) |
 | DoD-18 (9/15) | 브라우저 재검증에서 나온 결함 셋 중 하나(화면표시용 `evidence` 필드가 재검증 화이트리스트에 없어 막힘)가 `calculation_basis`(DoD-28)와 **완전히 같은 형태의 반복 결함**임을 확인. "UI 버그인 줄 알았는데 가드레일이 옳았다"는 사례와 승인 실패가 조용히 삼켜지던 결함도 추가. → [approval.md](../../../final_project_cs/wiki/actions/approval.md) |
+| DoD-11 (5/9) | idempotency_key가 원래 v5 산식이 아니라 `task_id` 기준이었다가 승인 후 재실행에서 실제로 중복 행을 만들어야 산식이 교체된 경위, 필드 경계 충돌 결함 이력, MCP 멱등성, unknown 해소 화면. **가장 중요한 건 "이 증명은 outbox 발행까지다 — provider 실행 경로 자체가 시스템에 없다"는 경계**를 outbox.md에 명시한 것. → [idempotency.md](../../../final_project_cs/wiki/actions/idempotency.md), [outbox.md](../../../final_project_cs/wiki/actions/outbox.md) |
 
-**나머지 19건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-11 5/9, DoD-15 7/12 등)로 계속하면 된다.
+**나머지 18건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-15 7/12 등)로 계속하면 된다.
 
 ## 다음
 
