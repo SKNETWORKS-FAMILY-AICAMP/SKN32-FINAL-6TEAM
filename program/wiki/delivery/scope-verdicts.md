@@ -100,6 +100,14 @@ withdrawal / warranty_repair / mixed / unknown
 
 **공개 데이터라도 그대로 넣지 않는다.** → [../../final_project_cs/wiki/data/tenancy.md](../../final_project_cs/wiki/data/tenancy.md)
 
+## Return & Refund 승격 조건 — 그 뒤 어떻게 됐나
+
+`[실측]` 원본 §"계약·기준선". v8 §422는 Return & Refund를 **Registry 계약 + Mock**으로 두고, 실데이터의 **사유 코드 체계와 상태 전이가 확인돼 골든셋 정답 구성이 가능하면 LOCAL 승격**한다고 정했다. 개발자2 브리핑이 그 확인 작업으로 보였으므로 승격 판단이 필요했고, 승격하면 §15-8-A의 golden 60/holdout 20 배분·§1-2·§8-B·§16·§25·DoD를 함께 고친다. **그때 Return의 golden 배분은 0이었다.**
+
+`[미확보]` 승격을 판단한 기록이 없다. 2026-09-06 `config/project.yaml`엔 `return_refund`가 다른 넷과 같은 모양으로 `active: true`·`ReturnRefundTeam`으로 등록돼 있는데, 루트 `CLAUDE.md`는 여전히 "Return & Refund(Mock)"이다. Mock 그대로인지 LOCAL로 올라간 건지 등록 형식만으론 안 보인다 → [team-registry.md](../../final_project_cs/wiki/teams/team-registry.md).
+
+`verdict`(승인/거부/검토필요)는 `TeamResult.decisions[]`에 넣고, `outcome`은 실행 상태(`completed/waiting/handoff/escalated/failed`)라 승인·거부를 넣지 않는다 — 검토필요일 때만 `escalated`나 `waiting`을 병행한다. Team 체이닝은 `next_action=HANDOFF`+`handoff_capability`로, Team 간 직접 호출은 금지. → [team-contract](../../final_project_cs/wiki/teams/team-contract/index.md)
+
 ## 관계
 
 - [open-items.md](open-items.md) — 열린 항목

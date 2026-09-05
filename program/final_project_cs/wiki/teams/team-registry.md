@@ -137,6 +137,18 @@ feedback                                     인라인 분류
 
 `final_project_sample`의 Billing/Technical 2종은 **아키텍처 증거로만 남기고 착수 목록에 없다.**
 
+## 등록된 Team 수의 변화
+
+`[실측]` `program/research/_cs_구현현황.md`(2026-08-19 스냅샷) · 루트 `CLAUDE.md`(09-01 v8 재판정) · `config/project.yaml`(2026-09-06 디스크).
+
+| 시점 | `project.yaml` Team | 그 밖에 |
+|---|---|---|
+| 08-19 | **1개** — `voc_store_manager`만 | `ResponseGenerationReviewTeam`은 소스·manifest만 있고 미등록. `order_shipping`·`return_exchange`는 legacy로 밀려났고 `__pycache__`만 남아 있었다. `case_runtime/`·`team_modules/`는 빈 디렉터리 |
+| 09-01 v8 재판정 | — | Response Generation & Review **확정**, VOC & Store Manager는 **등록·계약만 유지하는 껍데기**로. 08-19의 "하나뿐이던 등록 Team"이 껍데기가 되고 "미등록이던 Team"이 주인공이 됐다 |
+| 09-06 | **6개 전부 `active: true`** — voc · response_generation_review · return_refund · procurement_order_payment · fulfillment_logistics · catalog_verification | 6개가 다 `implementation_ref`로 실제 클래스를 가리킨다 |
+
+`[미확보]` 루트 `CLAUDE.md`는 Return & Refund를 **(Mock)**, Catalog & Verification을 **(A2A Remote)**라 적는데 `project.yaml`엔 둘 다 다른 넷과 같은 모양으로 등록돼 있다. 등록 형식만으로는 Mock인지 실구현인지 안 보인다 → [return-refund.md](return-refund.md).
+
 ## 관계
 
 - [team-contract.md](team-contract/index.md) — `TeamManifest` 모양

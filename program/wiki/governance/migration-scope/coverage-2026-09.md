@@ -181,6 +181,17 @@ tags: [governance, documentation]
 | 밤샘작업 요약 08-20 | 보고서 9건의 색인이고 각각은 design-gap·D-011·dod.md·정합성점검(13차)으로 이미 대조됐다. "결정이 필요한 것" 9건 중 Composer v3 넷은 D-011, DoD 순서는 dod.md, 정합성 A묶음은 완료. **DoD-01 원본 v4 hash 판정 불가·예제 Team 2개 활성 등록**은 그 뒤 어떻게 됐는지 기록이 없다 `[미확보]` |
 | 테스트_사각지대 08-30 (대체됨) | 초판이 "원인 모름, 격리 문제일 가능성"으로 남긴 INV-STATE-001 흔들림은 conflict-retry.md가 답했다. **둘째 흔들림**(`test_approval_rerun…` 전체 실행 1회 실패)과 `dojo.py stability --repeats 5`가 없어 blind-spots.md에 → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
 
+## 17차 — cs 구현현황 스냅샷·VOC 완결성 점검·dev2 교차검증 (2026-09-06)
+
+`[실측]` `_cs_구현현황`(08-19) · `sources_catalog/_완결성점검_codex_2026-08-20` · `dev2_브리핑_교차검증_2026-08-28`. 남은 `유지` 문서 6 → 3건 — 남은 셋은 1~5차 표에서 "누락 1·2·3"으로 센 `_법령원문`·`_분쟁조정사례`·`_중앙설정저장소_검토`의 잔여분이라 스캔으로 자리를 찾아 마무리한다.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| _cs_구현현황 (08-19) | 빈 패키지·`ALLOWED_PROMPT_KEYS` 빈 집합·테이블 18 vs 14는 이미 wiki에 있었다. 없던 건 **등록 Team 수의 궤적** — 08-19엔 `voc_store_manager` 하나였고 RGR은 미등록, 09-01 v8이 그 둘의 지위를 맞바꿨고, 09-06엔 여섯이 전부 active. 그리고 **teams/index.md의 VOC 행이 "10주 착수 확정"으로 낡아 있었다**(v8 09-01은 껍데기) — 고침. `return_refund`가 Mock인지 실구현인지 등록만으론 안 보임 `[미확보]` → [team-registry.md](../../../final_project_cs/wiki/teams/team-registry.md) |
+| _완결성점검_codex | source-selection.md가 후보 A~E·잔여 갭 결론을 갖고 있었다. 없던 건 §2.1의 **5단계 절차와 "매핑표 전엔 확정 데이터셋으로 세지 않는다"**, 그리고 08-28 REPORT가 그중 무엇을 했는지 — 파일명 파티션으로 도메인 분리는 됐고 intent 매핑은 300건 샘플·90% `*_other`·검수 미완. catalog의 "완료"가 뜻하는 범위를 좁힘. §2.2 3단계 필터도 미착수 → [source-selection.md](../../../datasets/wiki/source-selection.md) |
+| dev2_브리핑_교차검증 | scope-verdicts.md가 안건 7건·분모 질문을 담고 있었다. 없던 건 **Return & Refund LOCAL 승격 조건**(사유 코드·상태 전이 확인 → golden 배분, 당시 0)과 그 뒤 판단 기록이 없다는 것, `verdict`≠`outcome` 매핑 규칙 → [scope-verdicts.md](../../delivery/scope-verdicts.md) |
+| (부산물) | **`program/final_project_sample/wiki/`가 통째로 git 무시 대상**이다 — 16차의 ui-boundary.md 편집이 커밋되지 않아 알았다. 루트 `.gitignore`의 `final_project_sample/`이 `program/` 아래 사본에도 걸린다. open-items에 올림 |
+
 ## 관계
 
 - [coverage.md](coverage.md) — 1~5차와 대조 방법

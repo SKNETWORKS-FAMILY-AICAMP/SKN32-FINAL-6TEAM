@@ -35,7 +35,7 @@ status: draft
 
 | Team | 파일 | Pack | 상태 |
 |---|---|---|---|
-| [voc-store-manager.md](voc-store-manager.md) | `voc_store_manager.py` | CS | **10주 착수 확정** |
+| [voc-store-manager.md](voc-store-manager.md) | `voc_store_manager.py` | CS | **껍데기** — 등록·계약만 유지(v8 재판정 09-01, 집계·급증 탐지는 코어 1). 09-06 전까지 이 칸은 "10주 착수 확정"이었다 |
 | [response-review.md](response-review.md) | `response_review.py` | CS | **10주 착수 확정** |
 | [procurement-order.md](procurement-order.md) | `procurement_order_payment.py` | Commerce | 일정 따라 조정 |
 | [fulfillment-logistics.md](fulfillment-logistics.md) | `fulfillment_logistics.py` | Commerce | 동 |
