@@ -47,7 +47,7 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 
 `[실측]` **DoD-22 는 통과로 적혀 있지만 근거가 사라졌다.** 인용한 테스트 소스가 없고 `.pyc` 만 남았다. → [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md)
 
-**통과 26 중 근거를 확인한 것은 8건뿐이다.**
+**통과 26 중 근거를 확인한 것은 9건뿐이다.**
 
 ## 1~10 — 기반
 
@@ -85,7 +85,7 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 | 20 | `TeamExecutorPort` 교체 시 Controller 불변 | adapter 교체 test와 Controller import boundary 정적 검사 |
 | 21 | `SqlGraphAdapter` 관계 질의 3종 | Case→Issue→Policy, Issue→Team, Case→Action fixture |
 | 22 | **Team의 직접 Tool 호출 금지** | Team module **AST/import 정적 검사**와 runtime spy |
-| **23** | 모든 consumer at-least-once idempotency | 동일 message 2회 전달 replay test — **부분통과 (consumer 1종뿐)** |
+| 23 | 모든 consumer at-least-once idempotency | 동일 message 2회 전달 replay test — **통과** (2026-08-20). consumer는 여전히 outbox worker 1종뿐이지만, `consumer_contract_factories`에 등록된 모든 consumer가 계약 테스트 3종을 강제로 통과해야 하는 구조라 **다음 consumer가 검사 없이 추가될 수 없다** → [`actions/idempotency.md`](../../final_project_cs/wiki/actions/idempotency.md) |
 
 **22번이 중요하다.** AST·import 정적 검사를 하라고 v8이 이미 지시하고 있다. → `INV-CS-TEAM-004`가 아직 `review`인 것이 이 항목의 미완성이다.
 
@@ -133,14 +133,15 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 
 **계획에 적힌 테스트가 아직 없다는 뜻이다.**
 
-## 부분통과 4개가 남은 이유
+## 부분통과 3개가 남은 이유
 
 | # | 무엇이 부족한가 | 필요한 것 |
 |---|---|---|
 | 15 | judge agreement | **사람 라벨 20건** |
 | 17 | RC 선언 — **15 에 종속** | 15 와 동일 (아래) |
-| 23 | consumer가 1종뿐 | 두 번째 consumer |
 | 28 | 파인튜닝 방어지표 | 3B 모델 재평가 |
+
+`[실측]` **이 표는 2026-09-06 전까지 "4개"였고 23번(두 번째 consumer 필요)이 들어 있었다.** 위 달성 현황이 이미 "23은 2026-08-20 통과"라고 적고 있었는데 이 표가 안 따라와 한 문서 안에서 모순이었다. 23은 두 번째 consumer가 생겨서가 아니라 **"모든 consumer"를 미래형으로 강제하는 계약 테스트**가 생겨서 통과다 — 실제 두 번째 consumer가 붙을 때 그 계약을 통과하는지가 진짜 증명이라고 evidence가 스스로 적어 뒀다.
 
 **15번이 가장 중요하다.** judge가 사람과 얼마나 맞는지 모르는 상태로는 RC가 아니다.
 
@@ -192,7 +193,7 @@ DoD-04 · 10 · 12 · 16 · 18 · 23    갭 분석: 부분    →    evidence: �
 
 > **evidence 가 정본이되, "통과"라고 적힌 것도 근거가 살아 있는지 봐야 한다.**
 
-`[미확보]` **29건 중 8건만 확인했다.** 나머지 21건은 아직 안 봤다. DoD-06은 근거가 낡은 게 아니라 **처음부터 sample 을 잰 것**이었고, DoD-21은 fixture 라벨만 옛 식별자다 → [dod-evidence-drift.md](../../final_project_cs/wiki/quality/dod-evidence-drift.md)
+`[미확보]` **29건 중 9건만 확인했다.** 나머지 20건은 아직 안 봤다. DoD-06은 근거가 낡은 게 아니라 **처음부터 sample 을 잰 것**이었고, DoD-21은 fixture 라벨만 옛 식별자, DoD-13은 "6번째 경로는 위반"이라는 규칙 자체가 바뀐 뒤다 → [dod-evidence-drift.md](../../final_project_cs/wiki/quality/dod-evidence-drift.md)
 
 ## 발표에서 어느 숫자를 쓰나
 

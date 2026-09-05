@@ -110,6 +110,24 @@ tags: [api, contract]
 
 근거: `docs/handoff/03_REST_MCP_인터페이스.md:92-99`
 
+## `POST /v1/outbox/{message_id}/resolve` 계약
+
+`[실측]` `app/presentation/api/outbox.py`. 2026-08-24 추가 — 이 문서가 "다섯 경로"라고 적혀 있던 동안 빠져 있었다.
+
+**`unknown`으로 남은 발행 건을 사람이 봤고 판단했다는 기록이다.** 재처리하지 않는다.
+
+| 항목 | 계약 |
+|---|---|
+| scope | `action:approve` |
+| 요청 body | `resolution`: `confirmed_delivered` \| `confirmed_not_delivered` · `note`(1자 이상) · `resolved_by`(1자 이상). `extra="forbid"` |
+| 대상 행 | `status='unknown'` **이고** `resolved_at IS NULL` 인 행만. tenant 조건 포함 |
+| 바뀌는 것 | `resolved_at`·`resolved_by`·`resolution_note`·`resolution` **만**. `status`는 `unknown` 그대로, provider 발행 없음 |
+| `422` | `note_required` · `resolved_by_required` (공백만 있어도) |
+| `409 invalid_status` | 행은 있는데 `unknown`이 아니거나 이미 해소됨 |
+| `404` | 행이 없거나 다른 tenant |
+
+**"기록만"이 설계다.** 해소했다고 시스템이 대신 재시도하면 `unknown`을 만든 이유(돈이 나갔는지 모름)가 무너진다. → [../actions/outbox.md](../actions/outbox.md)
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 경계와 원칙

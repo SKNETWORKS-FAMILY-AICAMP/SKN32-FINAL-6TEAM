@@ -191,7 +191,12 @@ CLAUDE.md 와의 우선순위
 | DoD-05 (3/5) | `context-budget.md`가 잘 덮고 있어 한계만 보탬 — 축출 4단계 중 `history_detail`·`duplicate_tool_facts`는 한 번도 관측된 적 없고(코드에만 있음), "거부한다 ≠ 올바른 순서로 자른다"로 첫 판정이 부분이었던 경위. → [context-budget.md](../../../final_project_cs/wiki/context/context-budget.md) |
 | DoD-14 (4/7) | scope 6→10 낡음은 이미 반영돼 있었고, 빠진 건 2026-08-24 **Composer JWT 시크릿 fail-open(빈 문자열 서명 위조 통과) + 구현체 allowlist 부재(임의 모듈 import) 체인** — 보안 결함이고 sample 대조 발견 4·5번째. review-policy.md 표를 3→5건으로. DoD 1~29 어디에도 안 걸리는 수정(`list_cases` 정렬 비결정성)이 있다는 점도 dod.md에. → [auth-boundary.md](../../../final_project_cs/wiki/external/auth-boundary.md), [dod.md](../../delivery/dod.md) |
 
-**나머지 8건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-13 (3/5) | **wiki가 코드보다 낡았다** — `CONTRACT_V1_PATHS`는 2026-08-24부터 `/v1/outbox/{id}/resolve`를 포함한 경로 5개(operation 6)이고 규칙은 "누락은 실패·추가는 계약 목록 갱신 필수"인데, rest-api.md 세 곳이 "정확히 5개·6번째는 위반"을 `[실측]`으로 적고 있었고 rest-endpoints.md엔 resolve 계약이 없었다. 테스트를 읽다 `test_new_paths_are_allowed_but_must_be_scoped`가 **항상 통과하는 빈 테스트**인 것도 발견 → blind-spots에 새 종류로 기록. → [rest-api.md](../../../final_project_cs/wiki/external/rest-api.md), [rest-endpoints.md](../../../final_project_cs/wiki/external/rest-endpoints.md) |
+| DoD-16 (3/5) | McNemar가 카이제곱 통계량(38.025)을 p값으로 찍고 bootstrap은 KeyError로 죽어 있던 통계 모듈 결함 — DoD-15의 runner·judge 결함 5건에 이은 여섯 번째. "RAG 없는 군은 루브릭상 구조적으로 통과 불가"를 metrics.md 결함 4와 합치면 A군은 최대 15점이라 **A 0/180은 모델 성능이 아니라 루브릭이 정한 결과**. → [protocol.md](../../evaluation/protocol.md), [metrics.md](../../evaluation/metrics.md) |
+| DoD-23 (3/5) | 계약 테스트 구조는 idempotency.md에 이미 있었다. 빠진 건 dod.md 자체 모순 — 위쪽은 "23은 2026-08-20 통과", 아래 표 두 곳은 "부분통과(consumer 1종뿐)·두 번째 consumer 필요"로 남아 있던 것을 정정. → [dod.md](../../delivery/dod.md) |
+| DoD-26 (3/6) | `Evidence.source_type="remote_agent"`를 계약에 추가한 이유(우리가 확인한 사실 vs 남이 말한 것의 구분, 테스트가 먼저 잡음), Transport 교체 때 Executor 무변경(Port의 값 증명), **Controller 종단(`waiting_external`→resume)은 아직 미관측**이라 remote-team-a2a.md의 매핑이 설계임을 명시. → [a2a-protocol.md](../../../final_project_cs/wiki/external/a2a-protocol.md) |
+
+**나머지 4건은 스캔만 하고 아직 직접 대조 안 함** — DoD-08 · 19 · 20 · EVAL-DATASETS.
 
 ## 다음
 

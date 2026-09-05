@@ -24,8 +24,11 @@ owners: [human:미배정]
 | `GET` | `/v1/cases/{case_id}` | Case 상세 |
 | `POST` | `/v1/cases/{case_id}/messages` | 추가 메시지 |
 | `POST` | `/v1/cases/{case_id}/actions/{action_id}/approve` | **승인** |
+| `POST` | `/v1/outbox/{message_id}/resolve` | `unknown` 발행 건을 사람이 정리했다고 **기록만** 한다 (2026-08-24 추가) |
 
 `+ /health`
+
+`[실측]` 경로 5개 · operation 6개다. 마지막 줄이 2026-08-24에 늘어난 것이고, 그때 테스트의 계약 목록(`CONTRACT_V1_PATHS`)도 함께 갱신됐다. → [rest-endpoints.md](rest-endpoints.md)
 
 **MVP 5개가 상한이 아니다.** 필요하면 늘리되 scope와 테스트를 함께 만든다.
 
@@ -51,7 +54,11 @@ def test_v1_surface_is_documented_when_it_grows()
 
 **셋 중 하나만 낡았다.** → 계약 문서를 고쳐야 한다.
 
-`[실측]` 지금 `/v1/*` 은 **정확히 5개**다. 그래서 아직 아무도 안 걸렸다.
+`[실측]` **이미 한 번 늘었다.** 2026-08-24 `/v1/outbox/{message_id}/resolve`가 추가돼 지금 `/v1/*`은 경로 5개·operation 6개다. "아직 아무도 안 걸렸다"가 아니라 **계약 목록을 같이 갱신했기 때문에** 안 걸린 것이다 — 테스트 파일 머리에 규칙이 적혀 있다.
+
+> 계약에 적힌 경로는 **전부 있어야 한다**(누락은 여전히 결함). 새 경로는 막지 않는다. 대신 **품질 조건**을 검사한다.
+
+`[실측]` 2026-09-06 테스트를 읽다 둘을 봤다. `test_v1_surface_is_documented_when_it_grows`는 docstring이 "실패시키지 않는다"인데 코드는 `assert extra == []`다 — **실제 동작은 "계약 목록 갱신 없이 늘리면 실패"**이고, 그게 맞는 쪽이다. 그리고 `test_new_paths_are_allowed_but_must_be_scoped`는 루프 안에서 `unscoped`에 아무것도 넣지 않아 **항상 통과한다** — scope 강제는 그 아래 `test_write_endpoints_require_a_scope_dependency`가 라우트 의존성으로 실제 검사한다. → [../quality/blind-spots.md](../quality/blind-spots.md)
 
 ## 승인은 REST 전용
 
@@ -136,7 +143,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 ## `/v1/*` 표면 상한과 scope
 
-`[실측]` 외부 AI용 `/v1/*` endpoint는 정확히 5개다. `/v1/` 아래에 여섯 번째 경로가 생기면 계약 위반이다.
+`[실측]` 계약 문서(`docs/handoff/03` §1-0)는 "외부 AI용 `/v1/*` endpoint는 정확히 5개, 여섯 번째 경로가 생기면 계약 위반"이라고 적는다. **이 문장은 낡았다** — 위 [2026-09-03 절](#-2026-09-03-계약-문서가-반대로-적고-있다)이 밝힌 대로 v7에서 "5는 상한이 아니다"로 바뀌었고, 실제로 2026-08-24에 여섯 번째 operation이 추가됐다. 아래 표가 지금 코드의 계약 집합이다.
 
 | 메서드 | 경로 | 필수 scope |
 |---|---|---|
@@ -145,6 +152,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 | `GET` | `/v1/cases/{case_id}` | `case:read` |
 | `POST` | `/v1/cases/{case_id}/messages` | `case:write` |
 | `POST` | `/v1/cases/{case_id}/actions/{action_id}/approve` | `action:approve` |
+| `POST` | `/v1/outbox/{message_id}/resolve` | `action:approve` |
 
 다음 경로는 5개를 셀 때 제외한다.
 
@@ -160,7 +168,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 ## 엔드포인트별 상세 계약
 
-**필드·제약·상태 전이는 [rest-endpoints.md](rest-endpoints.md) 에 있다.** 다섯 경로를 각각 다룬다.
+**필드·제약·상태 전이는 [rest-endpoints.md](rest-endpoints.md) 에 있다.** operation 여섯(경로 다섯)을 각각 다룬다.
 
 ## 오류 응답 계약
 
@@ -195,7 +203,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 ## OpenAPI 일치 조건
 
-`[실측]` `/openapi.json`은 계약된 `/v1/*` endpoint 5개와 일치해야 한다.
+`[실측]` `/openapi.json`의 `/v1/*` 경로 집합은 테스트의 `CONTRACT_V1_PATHS`(경로 5개, outbox resolve 포함)와 **정확히 일치해야 한다** — 계약에 있는데 없으면 실패, 계약 목록에 없는 게 있어도 실패. 늘릴 땐 계약 문서·이 목록·scope 의존성을 같이 만든다.
 
 근거: `docs/handoff/03_REST_MCP_인터페이스.md:150-153`
 

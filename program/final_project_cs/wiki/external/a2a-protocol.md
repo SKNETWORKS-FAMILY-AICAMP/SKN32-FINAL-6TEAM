@@ -84,6 +84,8 @@ TeamExecutorPort
 
 **이게 A2A 경계를 지금 세운 이유다.** 나중에 넣으면 Controller·Registry·계약·상태 매핑을 전부 다시 건드려야 한다. 실행 경로가 코드 전반에 퍼지기 때문이다.
 
+`[실측]` **Port를 둔 값이 한 번 증명됐다.** [DoD-26](../../../../final_project_cs/docs/evidence/DoD-26_A2A_Catalog_왕복.md) — 처음엔 고정 dict를 돌려주는 더미 Transport였고, 실제 원격 앱에 HTTP로 말하는 `http_transport.py`로 갈아 끼울 때 **`A2ATeamExecutor`는 한 줄도 안 바꿨다.**
+
 `GraphStorePort`와 대비된다 — 그건 저장소 교체 문제라 구현을 미룰 수 있다. → [../../../wiki/decisions/D-002-graph-store-gate.md](../../../wiki/decisions/D-002-graph-store-gate.md)
 
 ## 실행 흐름
@@ -163,6 +165,12 @@ deadline_s 기준
 
 → [../actions/evidence-check.md](../actions/evidence-check.md)
 
+### ★ `Evidence.source_type = "remote_agent"` — 계약을 하나 늘렸다
+
+`[실측]` [DoD-26](../../../../final_project_cs/docs/evidence/DoD-26_A2A_Catalog_왕복.md). 원격이 돌려준 근거를 `tool_result`로 뭉개면 **우리 시스템이 확인한 사실**과 **남의 시스템이 그렇다고 말한 것**이 구분되지 않는다. 신뢰도가 다르고 근거 대조에서도 다르게 다뤄야 한다.
+
+**테스트가 이 구멍을 먼저 잡았다** — `remote_agent`가 Literal에 없어 validation이 거부했다. 계약을 늘리는 쪽으로 고쳤다. `outcome`에 `cancelled`를 안 넣은 것([위](#-2026-09-05-취소는-새-상태가-아니라-실패의-한-종류로-기록된다))과 반대 결정인데, 기준은 같다 — **구분이 사라지면 안전에 영향이 있는가.** 취소는 `failure_code`로 구분되지만, 원격 근거는 `source_type`이 아니면 구분할 곳이 없다.
+
 ## Agent Card
 
 `app/presentation/a2a/agent_card.py`
@@ -187,7 +195,9 @@ MVP 범위는 **Remote A2A PoC 1개**다.
 |---|---|
 | Port 경계 | **완료** — Local↔A2A 교체점 |
 | Agent Card | 완료 |
-| 왕복 검증 | 더미 1개 |
+| 왕복 검증 | 더미 1개 — Agent Card 발견 → `working` → `input-required` → `POST /input` 재개 → Artifact. **in-process**(`httpx.ASGITransport`)라 상태코드·헤더·직렬화는 실제로 타지만 네트워크 단절·부분 응답·TLS는 재현 안 됨 |
+| **Controller 종단** (`waiting_external` → resume) | `[미확보]` **아직.** 관측된 건 Executor·Transport 층의 왕복이다. 위 매핑 표의 `waiting_external` 행은 설계이지 실측이 아니다 |
+| capability로 여러 원격 중 고르기 | 없음. 원격이 하나뿐이다 |
 | 실제 외부 Agent 연동 | `[미확보]` |
 
 Catalog & Verification Team이 A2A Remote 후보다. → [../teams/remote-team-a2a.md](../teams/remote-team-a2a.md)
