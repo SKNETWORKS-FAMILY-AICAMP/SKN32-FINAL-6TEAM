@@ -105,7 +105,7 @@ grant ceiling        권한 상한
 
 `[실측]` 마이그레이션·store·config source·service app 커밋 완료. **438개 테스트 통과.**
 
-`[실측 2026-09-06]` **그 코드는 전부 `final_project_sample`에 있다.** `acop_basement/core/config_store.py` · `application/config_source.py` · `migrations/006_project_configs.sql` · `acop_composer/api.py`·`service.py`, 테스트 5벌(store·central source·config service·composer service·UI 계약). **`final_project_cs`에는 `ConfigStore`·`project_configs`가 한 줄도 없다.** 그러니 "이번 기간에 하나"는 새로 만드느냐가 아니라 **sample에 만들어 둔 것을 cs로 이식해 쓰느냐**다. 이식 전까지 cs 쪽 산출물 문서엔 "결정·참고 구현 있음, cs 미연결"로 적는다.
+`[실측 2026-09-06]` **그 코드는 전부 `final_project_sample`에 있다.** `acop_basement/core/config_store.py` · `application/config_source.py` · `migrations/006_project_configs.sql` · `acop_composer/api.py`·`service.py`, 테스트 5벌(store·central source·config service·composer service·UI 계약). **`final_project_cs`에는 `ConfigStore`·`project_configs`가 한 줄도 없다.** **★ 2026-09-06 결정 (사용자) — cs로 가져가지 않는다.** 중앙 설정 저장소는 **별도로 분리되어야 할 프로젝트**다. 굳이 어딘가에 붙인다면 그 자리는 **UI 프로젝트**(운영 콘솔 쪽)이지 cs가 아니다. cs는 대상(읽기 전용 부트스트랩)일 뿐이라 저장소를 품을 이유가 없고, D-006이 정한 "Composer는 cs 밖"과도 같은 방향이다. 따라서 cs 산출물 문서엔 "결정 있음 · 참고 구현은 sample · cs 범위 밖"으로 적고, 위 "이번 기간에 하나" 물음은 닫는다 — 이번 기간 cs 범위에는 없다.
 
 ## ★ [2026-09-03] 중앙에 못 붙으면 기동을 거부한다
 
@@ -169,7 +169,7 @@ HA · 백업 · 인증 · 방화벽 승인
 | **감사 로그가 중앙에 있나 대상에 있나** | append-only 테이블로 옮긴다고만 적혔다. 승인 기록은 업무 데이터라 대상에, 설정 변경 기록은 중앙이 맞아 보인다 — 나눌지 합칠지 |
 | **`deployment_id`는 누가 발급하나** | 대상이 자기를 증명하는 방법(위 "인증")과 함께 정해야 한다 |
 | **설정 유출** | 중앙 한 곳이 뚫리면 **고객사 3,000곳의 구성이 한 번에** 드러난다. 파일 기반엔 없던 위험인데 결정 문서에 항목이 없다 |
-| **이번 기간에 하나** | 안 하면 산출물 문서에 "결정만 있고 착수 안 함"으로 적어야 하고, 하면 에픽이 하나 더 필요하다. 08-29 시점 스프린트 설계에 없었고, **09-06 `A-COP_스프린트_에픽_설계.md`·ticket-structure.md에도 "중앙 설정" 에픽이 없다** — 결정만 있고 착수 안 한 상태로 봐야 한다 |
+| ~~**이번 기간에 하나**~~ | **닫힘 (09-06)** — cs 범위 밖. 별도 프로젝트로 분리하며, 붙인다면 UI 프로젝트. 에픽 없는 게 맞다 |
 
 같은 검토 §1 — 이 결정은 산출물 세 문서(DB·Vector DB 설계서 `project_configs`, 시스템 구성도 2.1, 화면설계서 SCR-03)에 반영됐고 **셋 다 "아직 연결되지 않았다"고 적었다.** 저장 계층은 있지만 부르는 곳이 없어서다 — 위 "구현 상태"의 438 테스트 통과가 "연결됐다"는 뜻은 아니다.
 
