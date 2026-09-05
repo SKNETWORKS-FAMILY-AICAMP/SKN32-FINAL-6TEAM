@@ -25,6 +25,29 @@ size_exempt_reason: 데이터셋 카탈로그. 찾을 때 한 파일에서 검�
 
 `raw/`와 `processed/`는 **본인의 실제 구매 기록**이라 git에 올리지 않는다. 스크립트와 스키마와 `REPORT.md`만 올린다.
 
+### 팀 제출본 합본 — 5,773줄, 그리고 열쇠 위치 51건
+
+`[실측]` `datasets/commerce/DISTRIBUTION.md`(2026-08-31)·`datasets/README.md`. 팀원 제출본을 합친 파생본이 `_dist/`에 있다. **셋을 섞어 쓰면 안 된다.**
+
+| 파일 | 무엇 | 만드는 명령 |
+|---|---|---|
+| `commerce_datasets_*.zip` | 재현 코드·스키마·문서 + 쿠팡 산출물 배포본 | `build_distribution.py` |
+| `team_submissions_*.zip` | **팀원 제출본 원본.** 바이트 그대로, **가리지 않았다** | `build_team_submissions.py` |
+| `team_{naver,coupang}_{orders,tracking}_*.jsonl` | 제출본 합본 넷 — 레코드마다 `_submitter`·`_platform`·`_source_file` | `build_team_merged.py` |
+
+| 합본 | 줄 |
+|---|---:|
+| 네이버 주문 (4명) | 270 |
+| 쿠팡 주문 | 3,483 |
+| 네이버 택배 배송 | 238 (이력 있음 50) |
+| 쿠팡 택배 배송 | 1,782 |
+
+택배 배송을 쇼핑몰별로 나눈 이유 — **레코드 모양이 다르다.** 네이버는 조회 API 응답(`courier_code`·`level`·`estimate`·`error`), 쿠팡은 자사 배송 데이터(`shipment_box_id`·`order_id`). 한 파일에 섞으면 없는 필드를 있는 줄 알고 쓴다.
+
+**★ 합본에서 가린 것** — 쿠팡 `DeliveryRequest`의 `기타사항 (…)` 자유입력. 공동현관 비밀번호는 쿠팡이 `#****`로 가려 내보내지만 **이 자유입력은 안 가려진다.** 실측으로 `집앞우편함에열쇠로대문안에` 같은 **집 열쇠 위치가 51건** 들어 있었고, 같은 레코드에 구 단위 `DeliveryRegion`이 있어 그대로 쓸 수 있는 정보였다. 가린 자리는 `_masked`에 이름으로 남긴다 — 조용히 지우지 않는다. 저장소 밖으로 내보낼 땐 `DeliveryRegion`·`DeliveryRequest` 둘 다 지운다(가려도 `문 앞`·`새벽 배송` 같은 생활 패턴이 남는다).
+
+`[실측]` `courier_tracking/processed/tracking.jsonl`은 여전히 첫 수집분 57건이다. 제출본 5명분은 `raw/_incoming_20260829/`에 있고 `processed/`로는 안 합쳤다 — 합본은 `_dist/`의 파생본이다. → [scraper-notes.md](scraper-notes.md)
+
 ### 정규화 결과를 읽을 때
 
 `[실측]` 두 쇼핑몰의 `normalize.py`가 같은 `order_schema.json`(JSON Schema draft-07) 중첩 구조로 낸다 — `payment` · `product` · `shipping` · `cs` · `_source`. 값이 추정된 자리는 **`_source.normalization_warnings`에 이름으로 남는다.**
@@ -53,11 +76,13 @@ PII는 둘이 다르게 다룬다 — 네이버는 수령인·전화·상세주�
 | **완료** | `data_go_kr_consumer_complaints` | |
 | **완료** | `ecmc_dispute_casebook_2024` | |
 | **완료** | `nikl_ne_2022` | |
-| 미착수 | `aihub_102_smb_order_qa` | 189MB |
-| 미착수 | `aihub_71603_aspect_sentiment` | 63MB |
-| 미착수 | `aihub_71844_llm_instruction_tuning` | 209MB |
+| **완료** (2026-09-01) | `aihub_102_smb_order_qa` | 189MB |
+| **완료** (2026-09-01) | `aihub_71603_aspect_sentiment` | 63MB |
+| **완료** (2026-09-01) | `aihub_71844_llm_instruction_tuning` | 209MB |
 | 미착수 | `kaggle_customer_support` (5종 포함) | 463MB |
-| | **미착수 합계** | **924MB** |
+| | **미착수 합계** | **463MB** |
+
+`[실측]` **이 표는 2026-09-06 전까지 "완료 5 · 미착수 4 · 924MB"였다.** `datasets/README.md`(루트 `CLAUDE.md`가 정본으로 지정, 2026-09-01 디스크 실측)가 aihub 3종 완료를 적고 있었는데 하루 뒤처진 채 남아 있었다 — 정본을 두고 사본이 낡은 전형이다. 지금 미착수는 `kaggle_customer_support` 하나뿐이다.
 
 `sources_catalog`는 후보 소스의 **조사 기록**이다 — 목록의 대부분(AI Hub 3종·모두의말뭉치·AI Hub 102·공공데이터 7종·Kaggle 5종)은 이미 받아 각자 폴더로 독립했고, 이 폴더 자체에는 `raw/`·`processed/`가 없다. HuggingFace 감정분류 모델 후보 4종(kcbert·KoELECTRA 계열, 5~6종 감정)과 KOTE(댓글 43감정)는 **받지 않은 채 목록에만 있다** — REV 톤 사전 필터의 기준선 후보로 적혀 있고 통합은 안 됐다.
 
@@ -69,7 +94,7 @@ PII는 둘이 다르게 다룬다 — 네이버는 수령인·전화·상세주�
 |---|---|
 | **인코딩** | 7종 전부 **EUC-KR/CP949**다. UTF-8로 열면 헤더부터 깨진다 — `encoding='cp949'` |
 | 자유서술 원문 | 7종 중 **15098320(위해위험) 하나뿐**이다. 최대 규모인 15098340(온라인상거래 73만)엔 본문 필드가 없다 → [report-split.md](report-split.md) |
-| 위 표의 "완료" | `processed/`에 있는 건 **15090382(품목별 피해구제 사례 XML 678건)에서 뽑은 근거 사례 2종** — `fulfillment_logistics_relevant_cases.jsonl`·`return_refund_evidence_relevant_cases.jsonl`. 7종 중 하나를 Team 근거용으로 추출한 것이지 7종 전처리가 아니다 |
+| 위 표의 "완료" | `processed/`에 있는 건 **15090382(품목별 피해구제 사례 XML 678건)에서 뽑은 근거 사례 2종** — `fulfillment_logistics_relevant_cases.jsonl`·`return_refund_evidence_relevant_cases.jsonl`. 7종 중 하나를 Team 근거용으로 추출한 것이지 7종 전처리가 아니다. 건수는 배송/이행 **53** · 반품/환불/교환 **89**(중복 49, 합집합 93), processed 2026-08-21 — `datasets/README.md` 기준 |
 | **폴더 규칙 위반** | 추출·검증 스크립트 둘(`extract_item_relief_cases.py`·`verify_item_relief_extraction.py`)이 **`scripts/`가 아니라 `processed/` 안에** 있다. `scripts/` 폴더 자체가 없다 → [index.md](index.md) 폴더 규칙 |
 | REPORT.md | "아직 안 한 것 — `processed/`·`scripts/` 없음"이라 적혀 있다. **낡았다** — 위 추출이 그 뒤에 생겼다 |
 
@@ -79,7 +104,7 @@ PII는 둘이 다르게 다룬다 — 네이버는 수령인·전화·상세주�
 
 `[실측]` 계획서에 오래 적혀 있던 **"VOC 5종 약 681MB"는 근거를 찾지 못했다.**
 
-실제로는 **미착수 4종 924MB**다. `kaggle_customer_support` 하나가 안에 5종을 담고 있어서 "5종"이 거기서 왔을 가능성이 있다.
+08-31엔 **미착수 4종 924MB**였고 09-01에 aihub 3종(461MB)이 끝나 **미착수 1종 463MB**가 됐다. `kaggle_customer_support` 하나가 안에 5종을 담고 있어서 "5종"이 거기서 왔을 가능성이 있다.
 
 **문서에 적힌 숫자가 아니라 디스크를 센다.** 이게 이 프로젝트의 규칙이다.
 

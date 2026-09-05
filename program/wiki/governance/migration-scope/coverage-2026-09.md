@@ -144,6 +144,18 @@ tags: [governance, documentation]
 | handoff/05 분업 규칙 (0/7) | `parallel-work.md`가 Codex 샌드박스 외부망 차단(540건 APIConnectionError)·받은 뒤 검사 4종·소유 디렉터리(roles.md)까지 담고 있다. **추가 없음** — 스캔 0/7이 맞았다 |
 | 산출물양식/README | 양식 18개 → 근거 문서 대응표가 wiki에 없었다. 중간발표(9/15) 직전이라 timeline.md에 wiki 페이지 기준으로 옮겼다. README의 "VOC 5종 전처리 전"은 낡았고(08-31 기준 완료 5·미착수 4), "GGUF 결과는 양자화 문제로 못 쓴다, 08-24 GPU 재검증이 정본"은 mt-benchmark.md에 없어 보완 대상. → [timeline.md](../../delivery/timeline.md) |
 
+## 14차 — 루트 CLAUDE.md·datasets README·DISTRIBUTION·판 이력·브리핑 지시 5건 (2026-09-06)
+
+`[실측]` 루트 `CLAUDE.md`(0/6) · `datasets/README.md`(3/9) · `datasets/commerce/DISTRIBUTION.md`(4/7) · `onboarding/versions/README.md`(5/5) · `briefing/S-BRIEFING-POLISH.md`(0/4). 남은 `유지` 문서 24 → 19건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| 루트 CLAUDE.md | 기준 사실 표(v8·Team 목록·DoD 29·Phase 2·일정)·TeamFlow 6팀·데이터 폴더·도장 사각지대 전부 wiki에 있다. **추가 없음.** 13차에서 적은 "이 표의 정본은 `research/index.md`"라는 포인터가 빈 칸인 문제만 남아 있다(open-items) |
+| datasets/README | **catalog.md의 VOC 현황이 하루 낡아 있었다** — "완료 5·미착수 4·924MB"(08-31)인데 정본 README는 09-01 실측으로 aihub 3종 완료, 미착수는 `kaggle_customer_support` 463MB뿐. 13차 timeline.md 주석도 같은 낡은 값을 옮겨 적었기에 둘 다 고침. data_go_kr 근거 사례 건수(53·89, 합집합 93)와 courier_tracking 제출본 5명분이 `processed/`에 안 합쳐진 것(57건 그대로)도 없었다 → [catalog.md](../../../datasets/wiki/catalog.md) |
+| DISTRIBUTION (4/7) | `_dist/` 세 종류(배포 zip·제출본 원본 zip·합본 jsonl 넷)와 합본 줄 수 5,773, 택배 배송을 쇼핑몰별로 나눈 이유(레코드 모양이 다르다)가 wiki에 없었다. **가장 중요한 건 PII** — 쿠팡 `DeliveryRequest` 자유입력에서 **집 열쇠 위치 51건**이 발견돼 합본이 가린다는 사실. scraper-notes.md의 PII 절은 받는사람 표만 다루고 있어 이 자리를 보탬 → [catalog.md](../../../datasets/wiki/catalog.md) · [scraper-notes.md](../../../datasets/wiki/scraper-notes.md) |
+| onboarding/versions/README (5/5) | 스캔이 맞았다. trace-review.md가 codex 지적 6개 중 5·6번을 `[미확보]`로 남겼는데 **이 README가 "확인되어 고친 것 11건 / 받아들이지 않은 것 4건"을 이미 표로 갖고 있었다** — 09-02 코드 확인과 어긋남 없음. 5·6번을 채우고 "맞다, 그런데 안 한다" 4건(`cut()` AST는 다음 판, 신선도 검사는 미착수)을 옮김. v2→v8 판 이력의 "왜 바꿨나"는 generation.md에 → [trace-review.md](../../../acop_dojo/wiki/trace-review.md) · [generation.md](../../../acop_dojo/wiki/generation.md) |
+| S-BRIEFING-POLISH | 완료된 작업 지시 티켓(judgments.md가 이미 그렇게 판정). 문체·UI 기준은 그 HTML 한 파일에 대한 지시라 wiki에 옮길 규칙이 없다. **이관 없음** — TSV의 `유지`는 judgments와 어긋나므로 다음 재생성 때 `제외`로 |
+
 ## 관계
 
 - [coverage.md](coverage.md) — 1~5차와 대조 방법

@@ -103,7 +103,7 @@ owners: [human:미배정]
 | 서비스 테스트 계획·결과 | [cs quality/evidence.md](../../final_project_cs/wiki/quality/evidence.md) |
 | 중간·최종 발표 PT | [milestones/index.md](milestones/index.md) |
 
-`[실측]` 원본 README의 두 주의는 지금 이렇게 읽는다 — **"VOC 5종은 전처리 전"은 낡았다**(2026-08-31 기준 완료 5·미착수 4, [catalog.md](../../datasets/wiki/catalog.md)). **번역 성능 수치는 2026-08-24 GPU 서버 재검증 값이 정본이고 그 이전 GGUF 결과는 양자화 문제로 못 쓴다** → [mt-benchmark](../research/mt-benchmark.md).
+`[실측]` 원본 README의 두 주의는 지금 이렇게 읽는다 — **"VOC 5종은 전처리 전"은 낡았다**(2026-09-01 디스크 실측 기준 완료 8·미착수 1 — `kaggle_customer_support`뿐, [catalog.md](../../datasets/wiki/catalog.md)). **번역 성능 수치는 2026-08-24 GPU 서버 재검증 값이 정본이고 그 이전 GGUF 결과는 양자화 문제로 못 쓴다** → [mt-benchmark](../research/mt-benchmark.md).
 
 ### ★ 시트 원문이 말하는 것 — "10주"의 뜻과 미결 둘
 

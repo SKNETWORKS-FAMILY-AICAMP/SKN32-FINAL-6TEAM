@@ -33,6 +33,8 @@ owners: [human:미배정]
 
 **우편번호·번지·동호수는 저장하지 않는다.**
 
+`[실측]` **그런데 자유입력이 새는 자리가 하나 더 있었다.** 쿠팡 `DeliveryRequest`의 `기타사항 (…)` — 공동현관 비밀번호는 쿠팡이 가려 주지만 이 칸은 안 가린다. 팀 제출본 합본에서 **집 열쇠 위치가 51건** 발견돼 `build_team_merged.py`가 가린다(`_masked`에 이름을 남긴다). → [catalog.md](catalog.md)의 "팀 제출본 합본"
+
 `[실측]` **마스킹된 값도 안 받는 게 규칙이다.** `010****0000`도 다른 데이터와 붙이면 좁혀진다. → [`auth-boundary.md`](../../final_project_cs/wiki/external/auth-boundary.md)의 join key 분리
 
 ## 수집이 새던 원인 2가지
