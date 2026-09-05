@@ -244,6 +244,8 @@ teams:
 
 `app/composition.py`는 `load_project_config()`와 `importlib`로 `teams[].implementation_ref`를 동적으로 읽는다.
 
+`[실측]` **이 파일이 생긴 이유가 있다.** 2026-08-12 [DoD-04](../../../../final_project_cs/docs/evidence/DoD-04_checkpoint_projection_분리.md) 첫 측정에서 `agent_runs`가 비어 있었다 — `create_app()`이 Controller·Registry·Executor를 조립하지 않아 REST 요청이 Controller를 타지 않았다. 조립 지점을 한 곳에 모으려고 만든 게 `composition.py`이고, 그 조립기가 뒤에 인자 개수만 보고 배선하는 결함을 한 번 더 냈다. → [../quality/blind-spots.md](../quality/blind-spots.md)
+
 근거: `docs/handoff/08_모듈_컴포넌트_목록.md:181-210`
 
 ## 구성 검증 실패 조건

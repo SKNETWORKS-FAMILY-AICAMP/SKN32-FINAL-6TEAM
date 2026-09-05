@@ -184,7 +184,10 @@ CLAUDE.md 와의 우선순위
 
 | DoD-06 (5/7) | evidence의 재현 명령이 `cd final_project_sample`로 시작하고 실측도 옛 구독 도메인(300청크·billing scope)이다 — cs 현재 코퍼스(306청크·쇼핑몰 scope, 직접 재실행해 전 항목 통과 확인)와 다르다. **cs의 "통과"가 sample 측정에 기대고 있는, 루트 CLAUDE.md 규칙 위반 사례**. RAG 검색이 100% 실패하던 기간에 테스트가 `4 skipped`로 초록이었던 사고("skip은 통과가 아니다")와 게이트 5회차 진화 순서도 채움. → [dod-evidence-drift.md](../../../final_project_cs/wiki/quality/dod-evidence-drift.md), [rag-retrieval.md](../../../final_project_cs/wiki/context/rag-retrieval.md), [corpus-authoring.md](../../../final_project_cs/wiki/context/corpus-authoring.md) |
 
-**나머지 13건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-04 (4/5) | checkpoint 최소 키 5개·`graph_revision` run 내 고정·"되돌릴 경로 자체가 없다"는 정적 사실이라는 한계. 첫 측정에서 `agent_runs`가 비어 있던 원인이 **composition root 부재**(REST가 Controller를 안 탐)였고 그래서 `app/composition.py`가 생겼다는 기원. 대조 중 **`shared-state.md`가 `INV-CS-RT-001~004`에 정본과 다른 문장을 붙이고 "넷 다 강제 안 됨"이라 적은 오류**를 발견·정정(검사기가 못 잡는 종류). → [case-lifecycle.md](../../../final_project_cs/wiki/runtime/case-lifecycle.md), [shared-state.md](../../../final_project_cs/wiki/runtime/shared-state.md) |
+| DoD-21 (4/5) | `SqlGraphAdapter`의 전용 페이지가 cs wiki에 아예 없었다 — 새로 썼다. 세 축 중 둘이 투영 edge가 없어 "일반 질의가 되니 특정 질의도 된다"가 추정이었던 경위, Issue→Policy는 scope 문자열 일치·Issue→Team은 실적 기준이라는 한계. fixture 라벨은 퇴역 식별자(일부 낡음). → [graph-retrieval.md](../../../final_project_cs/wiki/context/graph-retrieval.md) |
+
+**나머지 11건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

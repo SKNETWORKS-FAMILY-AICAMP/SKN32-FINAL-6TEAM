@@ -13,7 +13,7 @@ owners: [human:미배정]
 > 2026-08-13 에 중첩 구조로 갔다가 **평면 구조로 되돌아왔다.** 정본은 `app/core/*.py` 다.
 > 구조가 또 바뀔 수 있으므로 **작업 전에 실제 경로를 확인한다.**
 
-`app/core/transition.py`, `app/core/transition.py`
+`app/core/transition.py` · `app/domain/case.py`
 
 ## 책임
 
@@ -34,16 +34,20 @@ Team이 자기 상태를 들고 있으면 이중 장부가 된다. 어느 쪽이
 
 ## 불변식
 
-| ID | 불변식 | 판정 | 상태 |
+이 문서가 말하는 네 성질은 **전부 자동 판정된다.** 어느 불변식이 어느 성질을 받치는지는 이렇다.
+
+| 성질 | 받치는 불변식 | 판정 | 어디 |
 |---|---|---|---|
-| `INV-CS-RT-001` | Shared State가 Case의 단일 원천이다 | review | **자동화 필요** |
-| `INV-CS-RT-002` | 모든 상태 변경은 version을 증가시킨다 | review | **자동화 필요** |
-| `INV-CS-RT-003` | 동시 갱신은 CAS를 거친다 | review | **자동화 필요** |
-| `INV-CS-RT-004` | 실패한 갱신은 부분 변경을 남기지 않는다 | review | **자동화 필요** |
+| Shared State가 Case의 단일 원천이다 | `INV-CS-RT-001` 이벤트 재생은 결정적 · `INV-CS-RT-002` version은 이벤트 수와 같다 — projection이 이벤트에서 다시 나오므로 두 원천이 생길 수 없다 | automated | [../quality/invariants.md](../quality/invariants.md) |
+| 모든 상태 변경은 version을 증가시킨다 | `INV-CS-RT-003` | automated | 동 |
+| 동시 갱신은 CAS를 거친다 | `INV-CS-RT-009` 같은 version을 읽은 두 writer는 정확히 1건만 충돌 · `INV-CS-RT-011` 동시 최초 실행은 active run 1개 | automated | [conflict-retry.md](conflict-retry.md) |
+| 실패한 갱신은 부분 변경을 남기지 않는다 | `INV-CS-RT-008` 거부된 쓰기는 Case를 바꾸지 않는다 · 예외 주입 시 `case_events`·`outbox` 둘 다 롤백(DoD-12 `test_transition_exception_rolls_back_event_and_outbox`) | automated | [conflict-retry.md](conflict-retry.md) · [../actions/outbox.md](../actions/outbox.md) |
 
-`[미확보]` **넷 다 테스트로 강제되지 않는다.** 이 저장소 불변식 카탈로그의 가장 큰 구멍이다.
+### ★ [2026-09-06] 이 절이 틀려 있었다
 
-`tests/integration`에 관련 테스트가 있을 수 있으나 불변식 ID로 연결되지 않았다. → [../quality/test-map.md](../quality/test-map.md)
+`[실측]` 이 절은 위 네 성질에 **`INV-CS-RT-001`~`004`라는 ID를 붙이고 "넷 다 테스트로 강제되지 않는다 — 카탈로그의 가장 큰 구멍"**이라고 적고 있었다. 정본 [invariants.md](../quality/invariants.md)와 대조하니 **둘 다 틀렸다** — `RT-001`~`004`는 리듀서 결정성·version 규칙이고 넷 다 automated다. 같은 ID가 두 문서에서 다른 문장을 달고 있었다.
+
+**[check_wiki.py](../../../wiki/governance/review-policy.md)가 못 잡는 종류다.** 검사기는 불변식 ID와 테스트의 연결만 보지, 같은 ID에 붙은 **문장이 문서마다 같은지**는 안 본다. ID를 인용할 땐 정본에서 복사해야 한다.
 
 ## 결정 — 낙관적 동시성
 
@@ -84,10 +88,12 @@ customer_cases → case_events   (aggregate_version으로 순서 보장)
 ## 구현
 
 ```text
-app/core/transition.py
-app/core/transition.py
-app/core/transition.py       상태 전이 규칙 (232줄)
+app/core/transition.py       transition_case() — projection UPDATE(version 가드) · case_events append
+                             · outbox insert 를 한 함수에서, commit 은 호출자가 (232줄)
+app/domain/case.py           apply_event — 순수 리듀서. transition_case() 와 replay_case() 가 같은 것을 쓴다
 ```
+
+`[실측]` 두 경로가 **같은 리듀서**를 쓰는 게 단일 원천의 실체다. 각자 계산하면 조용히 어긋난다. → [DoD-03](../../../../final_project_cs/docs/evidence/DoD-03_동시성_appendonly_replay.md)
 
 ## 관계
 

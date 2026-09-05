@@ -9,7 +9,7 @@ owners: [human:미배정]
 
 # DoD evidence 재검증 — 낡은 근거와 새 결함
 
-`[실측]` [blind-spots.md](blind-spots.md)에서 분리. evidence 7건이 지금도 유효한지 확인하다 나온 것들이다.
+`[실측]` [blind-spots.md](blind-spots.md)에서 분리. evidence 8건이 지금도 유효한지 확인하다 나온 것들이다.
 
 ## ★ [2026-09-03] DoD-22 의 근거가 사라졌다
 
@@ -54,7 +54,7 @@ raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
 
 `[미확보]` **DoD-22 를 다시 통과시키려면 테스트를 새로 써야 한다.** 삭제된 이유를 못 찾았다.
 
-## 다른 6건은 대체로 유효했다
+## 다른 7건은 대체로 유효했다
 
 `[실측]` 같이 확인한 결과.
 
@@ -66,6 +66,7 @@ raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
 | 20 | 일부 낡음 | 테스트 경로 2건 이동 · `3 passed` → **6개** |
 | 24 | 일부 낡음 | **대조 대상이 billing → commerce 로 통째로 바뀜** |
 | **06** | **낡음 — 그리고 잰 곳이 cs가 아니다** | 300청크 · `billing`/`entitlement` scope → 지금 cs는 **306청크 · 쇼핑몰 scope**. 아래 |
+| 21 | 일부 낡음 | evidence 출력은 `team:billing_subscription`, 지금 테스트 fixture는 `team:order_shipping`·`issue:post_cancel_charge` — 셋 다 퇴역 식별자. 어댑터가 도메인 무관이라 판정은 유효 → [../context/graph-retrieval.md](../context/graph-retrieval.md) |
 
 ### DoD-06 은 cs 가 아니라 sample 을 잰 것이다
 

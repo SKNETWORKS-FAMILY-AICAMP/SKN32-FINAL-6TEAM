@@ -116,6 +116,26 @@ transition_case()  →  case_events 추가  →  customer_cases projection 갱�
 
 둘을 섞으면 어느 쪽이 진짜인지 알 수 없어진다.
 
+### ★ [2026-09-06] 분리가 실제로 어떻게 지켜지는가
+
+`[실측]` [DoD-04](../../../../final_project_cs/docs/evidence/DoD-04_checkpoint_projection_분리.md).
+
+| 요구 | 실측 |
+|---|---|
+| checkpoint는 최소 집합만 담는다 | 키가 `case_id · run_id · graph_revision · node_name · runtime_state` 다섯뿐. **status·version·intent 같은 업무 상태는 없다** |
+| `graph_revision`이 run 내내 고정 | `agent_runs` 한 run에서 distinct = 1 |
+| checkpoint로 업무 상태를 되돌리지 않는다 | **되돌릴 경로 자체가 없다** — 상태 변경 경로가 `transition_case()` 하나이고 `customer_cases` 직접 UPDATE가 0건 |
+
+**세 번째는 테스트가 아니라 정적 사실이다.** 실제로 checkpoint를 되돌려 projection이 안 변하는지 확인한 적은 없다 — 원문이 한계로 적어 뒀다. 여러 run이 동시에 돌 때 revision 고정도 검증 밖이다.
+
+### 처음엔 `agent_runs`가 비어 있었다
+
+`[실측]` 2026-08-12 첫 측정에서 `graph_revision` 컬럼은 있는데 **값이 한 줄도 없었다.**
+
+> **컬럼이 있다는 것과 값이 채워진다는 것은 다르다.**
+
+원인은 **composition root 부재**였다 — `create_app()`이 Controller·Registry·Executor를 조립하지 않아 REST 요청이 Controller를 아예 타지 않았다. 그래서 run이 기록될 리 없었다. 이걸 고치려고 만든 파일이 `app/composition.py`다. → [../teams/index.md](../teams/index.md)
+
 ## `TeamResult`와의 대응
 
 Team의 `next_action`이 상태 전이를 만든다.
