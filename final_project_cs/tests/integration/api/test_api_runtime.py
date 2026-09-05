@@ -242,7 +242,12 @@ def test_mcp_open_support_case_changes_only_case_state(api_fixture):
             cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
             before[table] = cur.fetchone()[0]
     result = _mcp_open(str(api_fixture["customer"]), "open from mcp", "test")
-    assert result["status"] in {"classifying", "escalated"}
+    # ★`routing` 이 들어왔다(2026-09-06). 전에는 MCP 경로가 분류를 **시도조차
+    #   하지 않고** `classification_unavailable` 을 적어 늘 escalated 였다 —
+    #   계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)이 "Case 생성과 분류 시작까지"
+    #   라고 정한 것과 어긋나 있었다. 이제 분류에 성공하면 routing 으로 간다.
+    #   ★이 테스트가 보는 것은 상태가 아니라 **돈·주문을 안 건드린다** 는 것이다.
+    assert result["status"] in {"classifying", "routing", "escalated"}
     assert _mcp_cases(str(api_fixture["customer"]), 20)
     assert _mcp_detail(str(api_fixture["customer"]), result["case_id"])["case_id"] == result["case_id"]
     with get_connection() as conn, conn.cursor() as cur:
@@ -336,7 +341,10 @@ def test_mcp_read_scope_tools_execute_only_with_mcp_principal(api_fixture, tool)
         assert tool(str(api_fixture["customer"]), str(case_id))["case_id"] == str(case_id)
     else:
         result = tool(str(api_fixture["customer"]), "mcp tool", "test")
-        assert result["status"] in {"classifying", "escalated"}
+        # ★`routing` 추가(2026-09-06) — MCP 경로가 분류를 하게 되면서 성공 시
+        #   routing 으로 간다. 이 테스트가 보는 것은 상태가 아니라 **mcp 원칙이
+        #   있어야만 tool 이 돈다** 는 것이다.
+        assert result["status"] in {"classifying", "routing", "escalated"}
 
 
 # ── 2026-09-01: 분류기가 "일부만" 돌려준 경우 ────────────────────────

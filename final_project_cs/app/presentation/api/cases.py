@@ -294,6 +294,24 @@ def _mcp_principal() -> Principal:
     return Principal(get_settings().tenant_id, frozenset({"mcp:read"}), "mcp")
 
 
+def _mcp_classifier():
+    """MCP 경로가 쓸 분류기. 못 만들면 `None` 이다.
+
+    ★`None` 을 주면 `classify_case()` 가 `classification_failed` 를 남긴다 —
+      전과 같은 결과지만 **시도한 뒤의 실패**다. 전에는 시도조차 없었다.
+      조립 실패를 여기서 삼키지 않고 그대로 드러내려면 예외를 올려야 하지만,
+      그러면 이미 만들어진 Case 가 응답 없이 사라진 것처럼 보인다 — 접수는
+      성공했고 분류만 실패한 것이므로 상태기계에 맡긴다.
+    """
+    try:
+        from app import composition
+
+        return composition.build_classifier()
+    except Exception:
+        logger.exception("MCP 분류기를 만들지 못했다")
+        return None
+
+
 def _mcp_cases(customer_id: str, limit: int) -> list[dict]:
     principal = _mcp_principal()
     with get_connection() as conn:
@@ -331,7 +349,18 @@ def _mcp_open(customer_id: str, message: str, channel: str) -> dict:
             safe_message = masked(message)
             case_id = repository.create_case(conn, tenant_id=tenant, customer_id=request.customer_id, subject=safe_message)
             transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED, payload={"channel": channel, "message": safe_message}, actor_type="mcp", actor_id=principal.key_id)
-            transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFICATION_FAILED, payload={"failure_code": "classification_unavailable"}, actor_type="mcp", actor_id=principal.key_id)
+            # ★분류는 이 트랜잭션 **밖**에서 한다 — REST 접수 경로와 같은 이유다
+            #   (LLM 을 기다리는 동안 잠금을 쥐고 있으면 안 된다).
             repository.create_action_request(conn, tenant_id=tenant, case_id=case_id, action_type="mcp.open_support_case",
                                             arguments={"request_id": request.request_id}, idempotency_key=idem)
+        # ── 생성 트랜잭션이 끝났다 ──────────────────────────────────────────
+        # ★계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)은 이 tool 을 "Case 생성과
+        #   **분류 시작**까지" 로 정한다. 그런데 2026-09-06 이전에는 분류를 아예
+        #   시도하지 않고 `classification_unavailable` 을 적어, MCP 로 연 Case 가
+        #   **전부 라벨 없이 escalated** 로 갔다(실측 확인). 라우팅도 못 받는다.
+        #   당시엔 이 경로에서 분류기를 구할 방법이 없어 정직하게 "못 한다" 고
+        #   적은 것인데, 분류 절차가 코어 1(`app/application/classification.py`)로
+        #   올라오면서 그 이유가 없어졌다.
+        classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
+                      classifier=_mcp_classifier(), actor_id=principal.key_id)
         return _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
