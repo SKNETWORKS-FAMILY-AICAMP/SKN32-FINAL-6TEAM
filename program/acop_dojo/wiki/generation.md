@@ -120,6 +120,24 @@ python dojo.py patches      # 4초. 테스트를 안 돌리고 patch만 본다
 
 **상태를 영어 그대로 적는 이유** — `classifying v1`·`resolved v4`는 코드와 DB에 그 글자로 있다. 한국어로 옮기면 오히려 못 찾는다.
 
+### 영상 판 — 251초, 원본 PNG는 안 건드렸다
+
+`[실측]` `program/onboarding/trace/S-TRACE-VIDEO_리포트.md`. 명령 하나가 영상용 스틸을 임시로 그리고 영상·자막(SRT)·대본·챕터·썸네일·리포트를 다시 만든다.
+
+```
+python program/onboarding/trace/make_trace_video_youtube.py
+```
+
+| 무엇 | 어떻게 |
+|---|---|
+| 장면 체류 시간 | 고정 초가 아니라 **자막 글자 수 ÷ 7.2자/초**와 장면 최소 시간 중 큰 값. 경계는 30fps 프레임에 맞춤 |
+| 기존 PNG 17장 | 영상에 굽지 않고 원본 Python 데이터에서 스틸을 다시 그림 — **생성 전후 SHA-256 일치** |
+| 내용 | 단계 12와 상태 12를 별도 축으로. 1·2번엔 Case 상태 없음, Team은 판단·제안만, 9번은 `response_review.enabled = false`, "취소"라 말했지만 intent는 return인 장면을 독립 자막으로 |
+| 음향 | 음성 합성·외부 음원 없음. 생성기 안에서 사인파만으로 합성한 패드 |
+| 규격 | 1920x1080 · 30fps · H.264 yuv420p · faststart · 251.1초 · 59.6MiB. `ffprobe` + 전체 재디코딩으로 확인 |
+
+`[미확보]` `trace/`에 mp4가 넷(`낱장`·`움직임`·`추적`·`추적_유튜브`) 있는데 리포트는 유튜브판만 말한다. 나머지 셋이 이전 판인지 다른 용도인지 기록이 없다.
+
 v4 본문은 코덱스가 쓰고 `apply_line_notes.py`·`apply_doc_says.py`가 검사한다. 검사기가 실제로 물린 것 — 줄 수가 하나 어긋난 조각, **sha256을 "암호화"라고 쓴 여섯 군데**(해시는 암호화가 아니다), 문서 칸 24개 중 23개가 같은 어미로 끝난 첫 판(틀을 베낀 것이라 통째로). 같은 날 codex 교차검증은 [trace-review.md](trace-review.md).
 
 ## 사본 범위

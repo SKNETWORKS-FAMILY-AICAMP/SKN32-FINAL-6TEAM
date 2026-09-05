@@ -152,9 +152,19 @@ tags: [governance, documentation]
 |---|---|
 | 루트 CLAUDE.md | 기준 사실 표(v8·Team 목록·DoD 29·Phase 2·일정)·TeamFlow 6팀·데이터 폴더·도장 사각지대 전부 wiki에 있다. **추가 없음.** 13차에서 적은 "이 표의 정본은 `research/index.md`"라는 포인터가 빈 칸인 문제만 남아 있다(open-items) |
 | datasets/README | **catalog.md의 VOC 현황이 하루 낡아 있었다** — "완료 5·미착수 4·924MB"(08-31)인데 정본 README는 09-01 실측으로 aihub 3종 완료, 미착수는 `kaggle_customer_support` 463MB뿐. 13차 timeline.md 주석도 같은 낡은 값을 옮겨 적었기에 둘 다 고침. data_go_kr 근거 사례 건수(53·89, 합집합 93)와 courier_tracking 제출본 5명분이 `processed/`에 안 합쳐진 것(57건 그대로)도 없었다 → [catalog.md](../../../datasets/wiki/catalog.md) |
-| DISTRIBUTION (4/7) | `_dist/` 세 종류(배포 zip·제출본 원본 zip·합본 jsonl 넷)와 합본 줄 수 5,773, 택배 배송을 쇼핑몰별로 나눈 이유(레코드 모양이 다르다)가 wiki에 없었다. **가장 중요한 건 PII** — 쿠팡 `DeliveryRequest` 자유입력에서 **집 열쇠 위치 51건**이 발견돼 합본이 가린다는 사실. scraper-notes.md의 PII 절은 받는사람 표만 다루고 있어 이 자리를 보탬 → [catalog.md](../../../datasets/wiki/catalog.md) · [scraper-notes.md](../../../datasets/wiki/scraper-notes.md) |
+| DISTRIBUTION (4/7) | **거짓 신호였고, 나도 속았다.** [distribution.md](../../../datasets/wiki/distribution.md)가 세 종류·5,773줄·열쇠 위치 51건·내보낼 때 지울 둘까지 이미 다 갖고 있었다. 14차에서 catalog.md에 같은 내용을 한 번 더 적었다가 15차에서 포인터로 줄였다. 진짜로 없던 건 둘 — **catalog.md와 scraper-notes.md가 distribution.md를 가리키지 않아** 데이터셋 목록에서 출발하면 PII 규칙에 못 닿았다는 것, 그리고 courier_tracking `processed/`가 제출본과 안 합쳐진 57건 그대로라는 것 |
 | onboarding/versions/README (5/5) | 스캔이 맞았다. trace-review.md가 codex 지적 6개 중 5·6번을 `[미확보]`로 남겼는데 **이 README가 "확인되어 고친 것 11건 / 받아들이지 않은 것 4건"을 이미 표로 갖고 있었다** — 09-02 코드 확인과 어긋남 없음. 5·6번을 채우고 "맞다, 그런데 안 한다" 4건(`cut()` AST는 다음 판, 신선도 검사는 미착수)을 옮김. v2→v8 판 이력의 "왜 바꿨나"는 generation.md에 → [trace-review.md](../../../acop_dojo/wiki/trace-review.md) · [generation.md](../../../acop_dojo/wiki/generation.md) |
 | S-BRIEFING-POLISH | 완료된 작업 지시 티켓(judgments.md가 이미 그렇게 판정). 문체·UI 기준은 그 HTML 한 파일에 대한 지시라 wiki에 옮길 규칙이 없다. **이관 없음** — TSV의 `유지`는 judgments와 어긋나므로 다음 재생성 때 `제외`로 |
+
+## 15차 — 쿠팡 확장 README 2건·폐기 계획 2건·추적 영상 리포트 (2026-09-06)
+
+`[실측]` `scripts/extension/README.md`(6/9) · `extension_nextdata_ref/README.md`(5/8) · `docs/재작성_계획`(4/5) · `docs/클릭_구현_계획`(3/4) · `onboarding/trace/S-TRACE-VIDEO_리포트`(9/9). 남은 `유지` 문서 19 → 14건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| extension README 둘 | **scraper-notes.md의 "선택자는 해시 클래스를 안 쓴다"(09-02 추가) 절이 폐기된 방식을 현행처럼 적고 있었다.** 5.4.1(08-21)부터 목록은 `__NEXT_DATA__` JSON이고 DOM 카드 수집기·클릭기·연도 탭은 삭제됐다 — REPORT가 "과거 `docs/`의 클릭 관련 문서는 폐기된 방식의 원인 분석 기록"이라 명시. 확장이 폴더 넷(현행·nextdata_ref·백업·legacy)이고 README 둘 제목이 같다는 것, `fetch`가 406으로 막혀 문서 이동으로 간 이유, 서비스 워커가 keepalive 없이 재개되는 방식, 정확성 장치 표는 wiki에 없었다. 새 페이지 → [coupang-extension.md](../../../datasets/wiki/coupang-extension.md). scraper-notes의 DOM 절은 "JSON 경로가 막혔을 때 되살릴 관측"으로 표 하나에 접음 |
+| 재작성_계획 · 클릭_구현_계획 | 스캔이 "폐기 기록"이라 이관 없음으로 보려 했는데 **`docs/작업기록.md`의 근본 원인 8개가 학습 가치가 있었다** — 진짜 원인(`args: [method, undefined]`)은 5번째에 나왔고 앞 넷은 그 그림자였다. 테스트가 못 잡은 이유 셋이 전부 "대역이 실물보다 관대했다"로 모인다. Codex가 `forceWrongReturnOnce`를 끈 사고는 parallel-work.md의 "받은 뒤 검사"와 같은 종류. 같은 페이지에 |
+| S-TRACE-VIDEO 리포트 (9/9) | 스캔이 맞았다. 영상 재생성 명령, 체류 시간 산식(글자 수 ÷ 7.2), PNG 17장 SHA 불변, 내용 정확성 항목, 규격이 dojo wiki에 없었다. generation.md "판 이력" 아래에. **mp4가 넷인데 리포트는 하나만 말한다** `[미확보]` → [generation.md](../../../acop_dojo/wiki/generation.md) |
 
 ## 관계
 

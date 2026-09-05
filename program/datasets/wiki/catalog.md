@@ -25,28 +25,11 @@ size_exempt_reason: 데이터셋 카탈로그. 찾을 때 한 파일에서 검�
 
 `raw/`와 `processed/`는 **본인의 실제 구매 기록**이라 git에 올리지 않는다. 스크립트와 스키마와 `REPORT.md`만 올린다.
 
-### 팀 제출본 합본 — 5,773줄, 그리고 열쇠 위치 51건
+### 팀 제출본 합본은 `_dist/`에 있다
 
-`[실측]` `datasets/commerce/DISTRIBUTION.md`(2026-08-31)·`datasets/README.md`. 팀원 제출본을 합친 파생본이 `_dist/`에 있다. **셋을 섞어 쓰면 안 된다.**
+`[실측]` 세 종류(배포 zip · 제출본 원본 zip · 합본 jsonl 넷)와 가리는 규칙, 2026-08-31 건수 5,773줄은 [distribution.md](distribution.md)에 있다. **집 열쇠 위치 51건**이 왜 거기 적혀 있는지부터 읽는다.
 
-| 파일 | 무엇 | 만드는 명령 |
-|---|---|---|
-| `commerce_datasets_*.zip` | 재현 코드·스키마·문서 + 쿠팡 산출물 배포본 | `build_distribution.py` |
-| `team_submissions_*.zip` | **팀원 제출본 원본.** 바이트 그대로, **가리지 않았다** | `build_team_submissions.py` |
-| `team_{naver,coupang}_{orders,tracking}_*.jsonl` | 제출본 합본 넷 — 레코드마다 `_submitter`·`_platform`·`_source_file` | `build_team_merged.py` |
-
-| 합본 | 줄 |
-|---|---:|
-| 네이버 주문 (4명) | 270 |
-| 쿠팡 주문 | 3,483 |
-| 네이버 택배 배송 | 238 (이력 있음 50) |
-| 쿠팡 택배 배송 | 1,782 |
-
-택배 배송을 쇼핑몰별로 나눈 이유 — **레코드 모양이 다르다.** 네이버는 조회 API 응답(`courier_code`·`level`·`estimate`·`error`), 쿠팡은 자사 배송 데이터(`shipment_box_id`·`order_id`). 한 파일에 섞으면 없는 필드를 있는 줄 알고 쓴다.
-
-**★ 합본에서 가린 것** — 쿠팡 `DeliveryRequest`의 `기타사항 (…)` 자유입력. 공동현관 비밀번호는 쿠팡이 `#****`로 가려 내보내지만 **이 자유입력은 안 가려진다.** 실측으로 `집앞우편함에열쇠로대문안에` 같은 **집 열쇠 위치가 51건** 들어 있었고, 같은 레코드에 구 단위 `DeliveryRegion`이 있어 그대로 쓸 수 있는 정보였다. 가린 자리는 `_masked`에 이름으로 남긴다 — 조용히 지우지 않는다. 저장소 밖으로 내보낼 땐 `DeliveryRegion`·`DeliveryRequest` 둘 다 지운다(가려도 `문 앞`·`새벽 배송` 같은 생활 패턴이 남는다).
-
-`[실측]` `courier_tracking/processed/tracking.jsonl`은 여전히 첫 수집분 57건이다. 제출본 5명분은 `raw/_incoming_20260829/`에 있고 `processed/`로는 안 합쳤다 — 합본은 `_dist/`의 파생본이다. → [scraper-notes.md](scraper-notes.md)
+`[실측]` `courier_tracking/processed/tracking.jsonl`은 여전히 첫 수집분 57건이다. 제출본 5명분은 `raw/_incoming_20260829/`에 있고 `processed/`로는 안 합쳤다 — 합본은 `_dist/`의 파생본이다.
 
 ### 정규화 결과를 읽을 때
 
