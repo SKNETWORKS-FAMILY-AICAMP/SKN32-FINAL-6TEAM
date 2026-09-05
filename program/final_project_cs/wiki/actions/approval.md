@@ -88,6 +88,28 @@ tests/integration/api/test_approval_audit_row_excluded_from_queue.py
 
 **테스트만으로는 안 잡혔다.** UI를 실제로 열어 봐야 나온 결함이다.
 
+### ★ [2026-09-05] 같은 브라우저 재검증에서 결함이 하나 더 나왔다 — 화면표시용 필드가 재검증에 막혔다
+
+`[실측]` [DoD-18 evidence](../../../../final_project_cs/docs/evidence/DoD-18_UI_시나리오_종단표시.md). 승인 버튼을 실제로 눌렀더니 `HTTP 409 verification_failed` — 사유가 `"evidence: 선언되지 않은 필드다"`였다.
+
+seed 스크립트가 화면 표시·버튼 활성화용으로 `arguments_json.evidence`를 채워 뒀는데, [승인 전 재검증](#승인-전-재검증)이 `verification_policy.py::CUSTOMER_OPS_POLICY.ignored`에 없는 최상위 키를 전부 거부하는 방식이라 이 표시용 필드까지 막았다. `ignored`에 `"evidence"`를 등록해 고쳤다.
+
+**이 재검증 게이트가 같은 이유로 막힌 게 이번이 처음이 아니다.** [evidence-check.md](evidence-check.md)의 `calculation_basis` 결함(2026-09-03, 정상 환불 제안을 전부 막음)과 **완전히 같은 형태다** — 필드를 새로 추가할 때 `ignored`(또는 대조 어휘)에 등록하는 걸 놓치면 화이트리스트가 정상 동작을 막는다. **필드 하나를 늘릴 때마다 반복될 수 있는 종류의 결함이라는 뜻이다.**
+
+### ★ 같은 검증에서 "UI 버그인 줄 알았던" 것이 실은 옳은 동작이었다
+
+같은 세션에서 승인 버튼이 `disabled`인 걸 보고 처음엔 UI 결함으로 의심했다. 원인은 `app/presentation/ui/routes.py:191`의 `disabled = " disabled" if not evidence else ""` — **근거 없는 제안은 승인할 수 없다는 가드레일이 옳게 동작한 것**이었고, seed 스크립트가 evidence를 안 채운 게 잘못이었다.
+
+**고치기 전에 어느 쪽이 잘못인지부터 확인해야 한다.** 가드레일을 의심 없이 풀었다면 근거 없는 승인을 열어 주는 방향으로 결함을 만들 뻔했다.
+
+### ★ 승인 실패가 조용히 삼켜지고 있었다
+
+같은 재검증에서 `approve()`의 두 분기가 성공·실패 모두 똑같이 `303 → /ui/approvals`를 반환하고 있었다.
+
+**승인은 되돌릴 수 없는 행위인데, 실패해도 운영자는 "눌렀으니 됐겠지"로 넘어갈 뻔했다** — [CLAUDE.md §3](../../../../final_project_cs/CLAUDE.md) "조용한 스킵을 만들지 않는다"를 UI 레이어에서 어긴 사례. 실패 사유를 화면에 띄우도록 고치고 `tests/integration/api/test_ui_approval_failure_is_visible.py`로 고정했다.
+
+**HTTP 200(또는 303)만 봤다면 셋 다 못 찾았을 결함이다.** 최초 판정에서 화면 4개가 200을 내는 것만 확인하고도 화면이 실제로는 비어 있었던 것과 같은 종류의 누락이다.
+
 ## 사업적 의미
 
 승인 21%는 비용이지만 **축 2(오류 비용)를 사는 대가**다.
