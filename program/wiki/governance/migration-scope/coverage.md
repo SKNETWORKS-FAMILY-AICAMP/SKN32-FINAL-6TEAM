@@ -182,7 +182,9 @@ CLAUDE.md 와의 우선순위
 
 | DoD-27 (5/7) | a2a-protocol.md의 자체 표가 **틀려 있었다** — 취소를 Case 상태 `cancelled`로 기록한다고 적었지만 실제로는 `outcome=escalated`+`failure_code=cancelled_by_caller`(계약 Literal을 안 늘리려는 설계). `_call_within_deadline`이 루프 사이에서만 확인해 원격 호출 하나가 hang하면 deadline을 넘길 수 있던 갭도 확인 — DoD-03·DoD-12에 이은 **세 번째 sample 대조 발견**이라 review-policy.md에 이 방법 자체를 새 절로 기록. → [a2a-protocol.md](../../../final_project_cs/wiki/external/a2a-protocol.md), [review-policy.md](../review-policy.md) |
 
-**나머지 14건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-06 (5/7) | evidence의 재현 명령이 `cd final_project_sample`로 시작하고 실측도 옛 구독 도메인(300청크·billing scope)이다 — cs 현재 코퍼스(306청크·쇼핑몰 scope, 직접 재실행해 전 항목 통과 확인)와 다르다. **cs의 "통과"가 sample 측정에 기대고 있는, 루트 CLAUDE.md 규칙 위반 사례**. RAG 검색이 100% 실패하던 기간에 테스트가 `4 skipped`로 초록이었던 사고("skip은 통과가 아니다")와 게이트 5회차 진화 순서도 채움. → [dod-evidence-drift.md](../../../final_project_cs/wiki/quality/dod-evidence-drift.md), [rag-retrieval.md](../../../final_project_cs/wiki/context/rag-retrieval.md), [corpus-authoring.md](../../../final_project_cs/wiki/context/corpus-authoring.md) |
+
+**나머지 13건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

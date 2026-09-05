@@ -9,7 +9,7 @@ owners: [human:미배정]
 
 # DoD evidence 재검증 — 낡은 근거와 새 결함
 
-`[실측]` [blind-spots.md](blind-spots.md)에서 분리. evidence 6건이 지금도 유효한지 확인하다 나온 것들이다.
+`[실측]` [blind-spots.md](blind-spots.md)에서 분리. evidence 7건이 지금도 유효한지 확인하다 나온 것들이다.
 
 ## ★ [2026-09-03] DoD-22 의 근거가 사라졌다
 
@@ -54,7 +54,7 @@ raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
 
 `[미확보]` **DoD-22 를 다시 통과시키려면 테스트를 새로 써야 한다.** 삭제된 이유를 못 찾았다.
 
-## 다른 5건은 대체로 유효했다
+## 다른 6건은 대체로 유효했다
 
 `[실측]` 같이 확인한 결과.
 
@@ -65,6 +65,25 @@ raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
 | 14 | 일부 낡음 | scope `subscription:read`·`technical:read` **소멸** · 함수명 `six` → `ten` · allowlist 5 → **6** |
 | 20 | 일부 낡음 | 테스트 경로 2건 이동 · `3 passed` → **6개** |
 | 24 | 일부 낡음 | **대조 대상이 billing → commerce 로 통째로 바뀜** |
+| **06** | **낡음 — 그리고 잰 곳이 cs가 아니다** | 300청크 · `billing`/`entitlement` scope → 지금 cs는 **306청크 · 쇼핑몰 scope**. 아래 |
+
+### DoD-06 은 cs 가 아니라 sample 을 잰 것이다
+
+`[실측]` 2026-09-06. [DoD-06 evidence](../../../../final_project_cs/docs/evidence/DoD-06_정책FAQ_25건_300청크.md)의 재현 명령이 **`cd final_project_sample`** 로 시작한다. 실측 출력도 옛 구독 도메인이다 — scope 배분 `billing 5 · entitlement 5 · incident 3 …`, 질의 "해지했는데 결제가 됐어요" → `doc_06 [refund]`.
+
+**cs 의 지금 코퍼스는 다르다.** `final_project_cs` 에서 `python -m scripts.check_corpus` 를 직접 돌렸다.
+
+```
+문서 25 / 총 섹션 306
+scope: order 5 · shipping 5 · return 4 · exchange 3 · refund 4 · support 2 · incident 2
+전 항목 통과 — 인수 가능
+```
+
+**cs 의 DoD-06 "통과" 판정이 sample 의 옛 코퍼스 측정에 기대고 있다.** 루트 `CLAUDE.md` 가 명시한 규칙 — **sample 의 검증 상태를 cs 의 완료로 간주하지 않는다** — 를 evidence 문서가 어기고 있는 사례다. cs 자체 측정은 있다(2026-08-17 `RAG적재_평가데이터셋_재작성_리포트.md`, cs `CLAUDE.md` §5 "RAG corpus" 행) — evidence 가 그쪽을 가리키지 않을 뿐이다.
+
+`[미확보]` **evidence 문서의 재현 명령과 실측 출력을 cs 기준으로 바꾸는 것은 `final_project_cs/docs/` 수정이라 이 wiki 작업 범위 밖이다.** 해당 저장소 작업자에게 넘길 항목이다.
+
+**이건 이 문서의 "가장 나쁜 종류" 셋과도 다른 네 번째다** — 근거가 사라진 것(22)도, 낡은 것(02·14·20·24)도 아니고, **처음부터 다른 프로젝트를 잰 근거**다.
 
 ### DoD-24 가 특히 낡았다
 
