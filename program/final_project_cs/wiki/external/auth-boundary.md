@@ -218,6 +218,7 @@ security:
 | `config/guardrails.yaml` | **10** |
 | 테스트 `test_ten_scopes_are_guardrail_owned` | **10** |
 | `docs/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
+| `docs/handoff/06_가드레일_수치.md` §5 | **6** — 같은 옛 목록. 2026-09-06 확인 |
 
 **계약 문서만 낡았다.** 그리고 거기 적힌 `subscription:read`·`technical:read` 는 **지금 존재하지 않는다** — 옛 구독·청구 도메인의 잔재다.
 

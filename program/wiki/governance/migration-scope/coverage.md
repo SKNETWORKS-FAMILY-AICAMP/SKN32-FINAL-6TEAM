@@ -238,6 +238,18 @@ CLAUDE.md 와의 우선순위
 | naver README (4/6) | 두 쇼핑몰이 같은 `order_schema.json`으로 낸다는 점, `_source.normalization_warnings` 4종(연도 추정·수량 기본값·배송 JSON 누락)의 뜻, PII 처리가 둘이 다르다는 점(네이버 해시·쿠팡 미수집). → [catalog.md](../../../datasets/wiki/catalog.md) |
 | courier_tracking README (4/7) | 네이버 내부 API(`passportKey` JSONP 주입, `fetch` 금지)라 바깥 관측이라는 점, 오류 6종 중 `no_history`는 보관기간 만료일 수 있어 실패로 세면 안 된다는 점, 저장 제외 PII 목록. → [scraper-notes.md](../../../datasets/wiki/scraper-notes.md) |
 
+## 9차 — cs 계약·매뉴얼 4건 + WBS 원본 (2026-09-06)
+
+`[실측]` handoff 04·06·10(2차에서 01·02·03·08만 봤다), 환경 기동절차 매뉴얼, 루트 `CLAUDE.md`가 일정 정본으로 지정한 `_WBS원본`. 남은 `유지` 문서 49 → 44건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| handoff/04 Team 모듈 계약 (2/7) | 규칙은 team-contract에 다 있었다. 낡은 건 **예시 Team 둘이 퇴역**했고 §3 "프롬프트 등록 미구현"이 세 번 뒤집혔다는 것 — team-contract/index.md에 "원본에서 낡은 것" 표로. → [team-contract/index.md](../../../final_project_cs/wiki/teams/team-contract/index.md) |
+| handoff/06 가드레일 수치 (3/11) | **§4-A sweeper(2026-09-03 추가)가 wiki에 전혀 없었다** — 멈춘 Case 되잡기, 임계값(안전) vs 주기(복구 지연) 구분, `errored`≠`failed`. 스크립트·마이그레이션 009·yaml 키 실재 확인 후 guardrails.md·run.md에. §5 scope 6종도 handoff/03과 같이 낡아 auth-boundary 표에 행 추가. → [guardrails.md](../../../final_project_cs/wiki/quality/guardrails.md) |
+| handoff/10 도메인 교체 가이드 (4/11) | domain-swap.md에 "이 문서가 생긴 이유"(08-16 Core에 구독 어휘, 계획서 예시를 스펙으로 읽음)가 없었다. 구체 값 4개(도메인 테이블·Team 파일·청크 수·fixture 수)가 옛 도메인인 것도 표로. → [domain-swap.md](../../../final_project_cs/wiki/domain-swap.md) |
+| manuals/환경 기동절차 (4/8) | 3차에서 함정 셋을 옮겼는데 **정작 PG를 어떻게 띄우는지가 없었다** — `pg_ctl` + `-o "-p 5433"`(빠뜨리면 5432), 데이터 디렉터리가 저장소 밖이고 옆 프로젝트 DB와 같은 서버, 복구 40초, extension은 마이그레이션만. → [local-setup.md](../../../final_project_cs/wiki/operations/local-setup.md) |
+| _WBS원본 (4/6) | 날짜·주차·산출물 21건은 timeline.md에 있었다. 빠진 건 wiki 곳곳의 "10주"가 선행 포함 총 기간이라는 뜻풀이(공식은 8.5주), 그리고 원문이 "판단 필요"로 남긴 미결 둘 — **sLLM 파인튜닝이 6팀 필수인가**(시트 문구 "3, 4번 팀"), **3W 산출물 "학습한 모델"에 무엇을 내나**(파인튜닝 미채택). open-items "아직 안 정한 것"에도 올림. → [timeline.md](../../delivery/timeline.md) |
+
 ## 다음
 
 | # | 할 일 |

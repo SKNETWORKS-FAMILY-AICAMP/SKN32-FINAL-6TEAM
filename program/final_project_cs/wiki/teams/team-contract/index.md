@@ -135,6 +135,18 @@ resolved · escalated · failed · cancelled
 
 **`ConfigDict(extra='forbid')`다.** 필드를 임의로 추가할 수 없다.
 
+## 원본 계약 문서(`handoff/04`)에서 낡은 것
+
+`[실측]` 2026-09-06 대조. 규칙 부분(Team이 지킬 셋 · tool 규칙 · `outcome`/`next_action` 조합표)은 지금도 맞고 이 문서가 그걸 담고 있다. **예시와 상태 서술은 낡았다.**
+
+| 원본이 적은 것 | 지금 |
+|---|---|
+| §1·§2 예시 Team = `OrderShippingTeam`·`ReturnExchangeTeam` | **둘 다 2026-08-18~19에 퇴역**해 `legacy/`로 갔다. 현행 여섯 Team은 [../index.md](../index.md) |
+| §3 "prompt 등록 규칙은 설계됐으나 실 런타임에 배선되지 않았다(2026-08-17)" | 2026-08-18 배선됐고, 08-19 레거시 격리로 다시 깨졌다가 08-30 재수정 — `openai.py`가 `record_llm_call`을 부른다. → [../../../../wiki/governance/migration-scope/status.md](../../../../wiki/governance/migration-scope/status.md) |
+| §3 "`prompts/billing/`·`prompts/technical/` 12개가 미배선 상태로 남아 있다" | 옛 도메인 프롬프트 12개는 `legacy/final_project_sample/prompts/`로 이동됐다 |
+
+**계약 문서의 규칙은 오래가고 예시는 빨리 낡는다.** 원본을 읽을 땐 §0·§4·§5만 믿는다.
+
 바꿀 때 필요한 것.
 
 1. `contract_version` 상향

@@ -111,6 +111,28 @@ python -m pytest -q
 
 `[실측]` **아키텍처 테스트가 실패하면 그 파일을 `app/modules/` 로 옮기거나 선언으로 뺀다.** basement 에 도메인 어휘가 샌 것이다.
 
+## 이 문서가 생긴 이유
+
+`[실측]` 원본 §4. 2026-08-16에 `app/core/verification.py`가 **구독·결제 어휘를 Core에 박고 있었다.** 그 상태로 쇼핑몰에 복사했다면 `order_id`가 "확인 불가 → 자동 거부"에 걸렸을 것이다 — 그 도메인의 가장 중요한 식별자가 basement의 거부 목록에 있는 정반대 상황이다.
+
+원인은 계획서 v7 §9-E 표가 `payment_id`·`amount`를 **예시로** 든 것을 스펙으로 읽은 것이었다.
+
+> 계획서의 예시는 그 계획서의 도메인일 뿐이다. **basement에는 메커니즘만 올라가고, 어휘는 선언으로 내려간다.**
+
+## 원본 가이드(`handoff/10`)에서 낡은 것
+
+`[실측]` 2026-09-06 대조. 원칙과 11행 표는 맞고, **구체 값이 옛 도메인이다.**
+
+| 원본 | 지금 |
+|---|---|
+| §1-1 "현재 도메인 테이블 4개 = `subscriptions`·`payments`·`entitlements`·`incidents`" | 옛 도메인. 지금은 `orders`·`order_items`·`shipments`·`returns` — 원본이 "쇼핑몰이면 이게 온다"고 적은 그것이 현재다 |
+| §1-3 Team 파일 `{billing,technical,feedback}.py` | 퇴역. 현행 여섯 Team은 [teams/index.md](teams/index.md) |
+| §1-4 "25문서 / 300청크" | **306청크** ([context/rag-retrieval.md](context/rag-retrieval.md)) |
+| §1-5 `attack_fixtures.jsonl` 15건 | **17건** (atk-16·17 추가) |
+| §0 "예외 목록은 3개를 넘을 수 없다" | 지금도 맞다 — `INV-CS-ARCH-004`가 크기를 검사한다 |
+
+**"무엇을 갈아 끼우나"의 목록은 살아 있고 "지금 뭐가 들어 있나"는 낡았다.** 이 문서는 후자를 옮기지 않는다 — 현재 값은 각 영역 문서가 정본이다.
+
 ## 관계
 
 - [../../final_project_sample/wiki/quality/domain-swap.md](../../final_project_sample/wiki/quality/domain-swap.md) — sample 쪽 같은 문서

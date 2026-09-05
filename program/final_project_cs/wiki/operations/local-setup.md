@@ -26,6 +26,26 @@ owners: [human:미배정]
 | DB | `acop` |
 | Python | 3.12.7 |
 
+## ★ PostgreSQL이 안 떠 있을 때 — 기동 절차
+
+`[실측]` `docs/manuals/2026-08-12_1520_환경_기동절차.md`(2026-08-13 실측)에서. 위에 "재부팅 후 안 떠 있을 수 있다"고만 있고 **어떻게 띄우는지가 이 wiki에 없었다.**
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 5433          # 떠 있나
+$bin  = "$env:USERPROFILE\anaconda3\envs\pgv\Library\bin"
+$data = "C:\Users\playdata2\Documents\llm_workspace\_unified_mall_3\data\pgdata"
+& "$bin\pg_ctl.exe" -D $data -o "-p 5433" -l "$data\server_5433.log" start
+```
+
+**`-o "-p 5433"`를 빠뜨리면 5432로 뜬다.** `postgresql.conf`에 `port`가 없어서다. 2026-08-13에 이걸 몰라 5432로 띄우고 "connection refused"를 계속 봤다.
+
+| 알아야 할 것 | |
+|---|---|
+| **데이터 디렉터리가 저장소 밖이다** | `_unified_mall_3/data/pgdata`. `acop`은 그 클러스터 안에 있고 **`insurance_*`·`mall_vec` 등 옆 프로젝트 DB와 같은 서버**다. 이 서버를 내리면 옆 프로젝트도 멈춘다. A-COP은 `acop`만 쓴다 |
+| 비정상 종료 후 | 기동 때 자동 복구가 돈다(`automatic recovery in progress … redo done`). fsync에 **40초 이상** 걸릴 수 있으니 `pg_ctl start`가 느려도 기다린다 |
+| 기동 후 | **건수를 대조하고 작업을 재개한다.** `knowledge_documents=25 · knowledge_chunks=306`(cs `CLAUDE.md` §5). 원본 매뉴얼의 `payments=30·knowledge_chunks=300`은 옛 도메인 값이라 지금과 다르다 |
+| extension | `vector`·`pgcrypto`는 **마이그레이션이 만든다.** `CREATE EXTENSION`을 손으로 치지 않는다 — 마이그레이션이 유일한 경로여야 재현된다 |
+
 ## psql이 PATH에 없다
 
 `[실측]` conda env 안에 있다.

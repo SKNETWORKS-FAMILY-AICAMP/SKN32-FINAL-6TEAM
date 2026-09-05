@@ -101,6 +101,31 @@ tags: [contract, architecture, security]
 
 가드레일 잎 65개 전수 대조(2026-09-05)에서 발견해 `app.core.settings.get_guardrails()`로 읽도록 고쳤다 — `resume.token_ttl_hours`(코드에 `timedelta(hours=24)`로 박혀 있던 것)도 같은 종류라 함께 고쳤다. 회귀 테스트 5건 추가.
 
+## ★ [2026-09-03] 멈춘 Case 되잡기 — sweeper
+
+`[실측]` `docs/handoff/06_가드레일_수치.md` §4-A(2026-09-03 추가)에서. 이 wiki에 없었다. `config/guardrails.yaml` 66~72행 · `scripts/run_sweepers.py` · 마이그레이션 `009_stuck_case_sweep_index.sql` 전부 실재 확인(2026-09-06).
+
+접수·분류·실행을 나누면서 **그 사이에 프로세스가 죽으면 Case가 중간 상태에 남는다.** 그걸 주기적으로 훑어 다시 처리한다.
+
+| 잔류 상태 | 임계값 | 한 번에 |
+|---|---|---|
+| `classifying` | `classification_stuck_after_seconds: 300` | `classification_sweep_limit: 100` |
+| `routing` | `routing_stuck_after_seconds: 600` | `routing_sweep_limit: 50` |
+
+```bash
+python -m scripts.run_sweepers --interval 60
+```
+
+**임계값과 주기는 다른 것이다.** 임계값은 "얼마나 오래 멈춰 있어야 멈춘 것으로 보는가"이고 이게 **안전**을 정한다 — 짧으면 정상 처리 중인 Case를 되잡는다. 주기는 "얼마나 자주 확인하는가"이고 이게 **복구 지연**을 정한다. 그래서 주기를 짧게 잡아도 안전이 나빠지지 않는다.
+
+`routing` 임계값이 두 배 긴 이유 — 에이전트 실행은 원래 수십 초 걸린다(실측 p50 20~34초 · p95 32~51초). 짧게 잡으면 **정상 실행을 되잡아 같은 Case를 둘이 돌린다.**
+
+| | |
+|---|---|
+| 둘 이상 띄워도 되나 | 된다. 같은 Case를 집으면 `expected_version` CAS가 하나만 통과시키고 나머지는 `conflicted`로 센다. 굳이 여럿 띄울 이유는 없다 |
+| 인덱스 | 부분 인덱스 `cases_stuck_sweep_idx`(009)를 탄다. 없으면 테넌트의 Case를 **매분 전부** 읽는다 — EXPLAIN으로 확인하고 넣었다 |
+| **출력의 `errored`** | **아무것도 기록하지 못한 수.** `failed`(분류 실패를 기록함)와 다르고 다음 회차에 또 걸린다. **0이 아니면 사람이 본다** |
+
 ## Resume token
 
 | 항목 | 값 |

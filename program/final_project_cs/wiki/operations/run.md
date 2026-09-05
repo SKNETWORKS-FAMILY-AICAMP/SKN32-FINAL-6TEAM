@@ -92,6 +92,14 @@ python -m scripts.seed_demo_cases
 
 `[실측]` **모듈 선언(`config/project.yaml`)을 바꿨을 땐 `--reload`를 믿지 말고 프로세스를 다시 띄운다.** 모듈 조립은 기동 때 한 번만 일어나고, reload 자식 프로세스가 남아 **옛 코드를 서빙한 적이 있다.** 토글 검증 때는 그래서 `--reload` 없이 8042로 따로 띄웠다. → [MODULE-TOGGLES 검증 로그](../../../../final_project_cs/docs/evidence/MODULE-TOGGLES_실효화_검증.md) §4
 
+## 멈춘 Case 되잡기
+
+```bash
+python -m scripts.run_sweepers --interval 60
+```
+
+`classifying`·`routing`에 임계값(300초·600초) 넘게 남은 Case를 다시 처리한다. 출력의 `errored`가 0이 아니면 사람이 본다. 임계값·주기의 뜻은 [../quality/guardrails.md](../quality/guardrails.md).
+
 화면 4개.
 
 ```
