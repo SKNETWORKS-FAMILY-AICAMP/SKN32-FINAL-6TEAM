@@ -29,7 +29,7 @@ size_exempt_reason: 데이터셋 카탈로그. 찾을 때 한 파일에서 검�
 
 `[실측]` 세 종류(배포 zip · 제출본 원본 zip · 합본 jsonl 넷)와 가리는 규칙, 2026-08-31 건수 5,773줄은 [distribution.md](distribution.md)에 있다. **집 열쇠 위치 51건**이 왜 거기 적혀 있는지부터 읽는다.
 
-`[실측]` `courier_tracking/processed/tracking.jsonl`은 여전히 첫 수집분 57건이다. 제출본 5명분은 `raw/_incoming_20260829/`에 있고 `processed/`로는 안 합쳤다 — 합본은 `_dist/`의 파생본이다.
+`[실측]` `courier_tracking/processed/tracking.jsonl`은 여전히 첫 수집분 57건이다(원본이 날짜별 두 파일 58줄인데 **같은 송장 1건이 08-21 재조회로 양쪽에 있어** 최신 조회분만 남겼다 — `_일일작업_2026-08-28.md` §6. 58과 57 중 어느 쪽이 맞는지 적어 두지 않으면 세는 사람마다 다른 답을 낸다). 제출본 5명분은 `raw/_incoming_20260829/`에 있고 `processed/`로는 안 합쳤다 — 합본은 `_dist/`의 파생본이다.
 
 ### 정규화 결과를 읽을 때
 

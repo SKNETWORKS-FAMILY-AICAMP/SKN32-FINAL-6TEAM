@@ -66,6 +66,8 @@ abl_no_*.jsonl         2026-08-14   ← ablation 5종도 전부 무효
 
 **3번과 5번이 가장 위험했다.** 그대로 실었다면 "RAG가 오히려 해롭다"(3번), "Context Broker+Team이 baseline보다 나쁘다"(5번)는 **정반대 결론**이 나왔을 것이다. 이미 잘 동작하는 시스템이 채점 결함 때문에 나쁘게 보이는 쪽이, 안 되는 시스템이 좋게 보이는 쪽보다 알아채기 어렵다 — 결과가 "그럴듯하게" 나쁘기 때문이다.
 
+`[실측]` 1번의 산출물이 **`final_project_cs/eval/reports/2026-08-12_평가결과_리포트.md`로 아직 남아 있다.** 세 군 전부 task success·intent·groundedness 1.00, p95 지연 0.004ms, bootstrap CI `[0, 0]`, McNemar discordant 0 — mock fixture가 낸 값이라 **어디에도 인용하지 않는다.** 리포트 본문은 "실제 과금 $0.000, 로컬 mock fixture 결과"라 스스로 밝히고 있지만 제목만 보면 실측처럼 읽힌다.
+
 ### ablation flag 4종이 실행 전엔 아무것도 안 끄고 있었다
 
 `abl_no_approval`·`abl_no_context_broker`·`abl_no_team_split`·`abl_no_feedback_inline` 네 flag가 결과의 `config.ablations`에는 기록되면서 **실제 실행 경로에는 반영되지 않고 있었다** — `no_rag`만 실제로 껐다. 그 상태로 돌렸다면 다섯 구성이 전부 같은 결과를 내 **"각 기능이 기여하지 않는다"는 정반대 결론**이 나왔을 것이다. 실행 전에 발견해 고쳤다.

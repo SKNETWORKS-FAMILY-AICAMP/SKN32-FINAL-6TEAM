@@ -166,6 +166,21 @@ tags: [governance, documentation]
 | 재작성_계획 · 클릭_구현_계획 | 스캔이 "폐기 기록"이라 이관 없음으로 보려 했는데 **`docs/작업기록.md`의 근본 원인 8개가 학습 가치가 있었다** — 진짜 원인(`args: [method, undefined]`)은 5번째에 나왔고 앞 넷은 그 그림자였다. 테스트가 못 잡은 이유 셋이 전부 "대역이 실물보다 관대했다"로 모인다. Codex가 `forceWrongReturnOnce`를 끈 사고는 parallel-work.md의 "받은 뒤 검사"와 같은 종류. 같은 페이지에 |
 | S-TRACE-VIDEO 리포트 (9/9) | 스캔이 맞았다. 영상 재생성 명령, 체류 시간 산식(글자 수 ÷ 7.2), PNG 17장 SHA 불변, 내용 정확성 항목, 규격이 dojo wiki에 없었다. generation.md "판 이력" 아래에. **mp4가 넷인데 리포트는 하나만 말한다** `[미확보]` → [generation.md](../../../acop_dojo/wiki/generation.md) |
 
+## 16차 — 일일작업 3건·08-12 평가 리포트·법령사실·검수결과·밤샘요약·사각지대 초판 (2026-09-06)
+
+`[실측]` `_일일작업_2026-08-26/27/28` · cs `eval/reports/2026-08-12_평가결과_리포트` · `_법령사실_2026-08-15` · `_검수결과_2026-08-17` · `_밤샘작업_요약_2026-08-20` · `테스트_사각지대_2026-08-30`. 남은 `유지` 문서 14 → 6건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| 일일작업 08-26 | 본문이 비어 있는 게 내용이다 — "없는 것을 추측으로 채우면 지어낸 것". review-policy에 규칙으로 → [review-policy.md](../review-policy.md) |
+| 일일작업 08-27 | sample `docs/vision/` VISION-10~12가 wiki 어디에도 없었다. vision-backlog는 cs 01~09만 다룬다(impl_scope cs). 목록만 올리고 트리거는 `[미확보]` → [vision-backlog.md](../../product/vision-backlog.md) |
+| 일일작업 08-28 | 선언형 Team(D-013)·스프린트 4/에픽 13(ticket-structure)·주말 요약(midterm)은 있었다. 없던 셋 — **Composer 화면 결함 3건**(사유 누락으로 적용이 항상 422 · 계약 버전 `v1`≠`1.0` · 토글 상태 세 모양)은 sample ui-boundary.md에, **송장 58→57의 이유**(08-21 재조회 중복 1건)는 catalog.md에, 기획서를 제출표 기준으로 다시 쓴 사건과 "산출물은 생성기로" 방식이 자리 잡은 날이라는 건 midterm에 이미 같은 취지가 있어 생략 |
+| eval/reports 08-12 | protocol.md 측정 결함 1번(provider=mock)이 이 파일이다. **파일이 지표 전부 1.00인 채로 `eval/reports/`에 남아 있다**는 것만 없었다 — 인용 금지 한 줄 → [protocol.md](../../evaluation/protocol.md) |
+| 법령사실 08-15 | legal-basis.md가 "웹 검색 요약이라 원문을 우선"으로 이미 자리매김했고 청약철회·국외이전·통신판매업 50회 면제·Bitext·LoRA 500건 미만이 다 있다. **추가 없음** |
+| 검수결과 08-17 | 제출 엑셀 10지적(과장 2·근거 없음 2·틀림 3·불일치 3). Fin 근거를 Sierra·Decagon으로 확장 금지, 자체호스팅은 방향이지 구현 완료 아님, 9W 기간 표기 없음은 positioning·timeline에 있다. ERD `prompts` UNIQUE 둘·`sha256` 불변이 DDL 제약이 아니라는 지적은 sample 스키마 이야기라 sample wiki에 없지만 **그 엑셀 산출물 자체가 낡아** 옮길 값이 없다. 그 시점 기록 |
+| 밤샘작업 요약 08-20 | 보고서 9건의 색인이고 각각은 design-gap·D-011·dod.md·정합성점검(13차)으로 이미 대조됐다. "결정이 필요한 것" 9건 중 Composer v3 넷은 D-011, DoD 순서는 dod.md, 정합성 A묶음은 완료. **DoD-01 원본 v4 hash 판정 불가·예제 Team 2개 활성 등록**은 그 뒤 어떻게 됐는지 기록이 없다 `[미확보]` |
+| 테스트_사각지대 08-30 (대체됨) | 초판이 "원인 모름, 격리 문제일 가능성"으로 남긴 INV-STATE-001 흔들림은 conflict-retry.md가 답했다. **둘째 흔들림**(`test_approval_rerun…` 전체 실행 1회 실패)과 `dojo.py stability --repeats 5`가 없어 blind-spots.md에 → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
+
 ## 관계
 
 - [coverage.md](coverage.md) — 1~5차와 대조 방법
