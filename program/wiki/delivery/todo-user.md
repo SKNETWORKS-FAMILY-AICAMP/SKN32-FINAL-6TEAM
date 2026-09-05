@@ -95,9 +95,9 @@ python program/scripts/cutover_rewrite.py --layout wiki
 - [ ] 위 dry-run 출력을 봤다
 - [ ] 채팅에 **"전환해"** — 그러면 AI가 가드를 풀고 `--apply`, 경로 320곳 재작성, `CLAUDE.md` 진입점 한 줄, 검사 4(v8 ↔ wiki)까지 한 번에 한다. 그 전엔 절대 안 한다 → [cutover.md](../governance/cutover.md)
 
-## 5. 네이버 주문 4건 누락 — 화면 하나만 떠 주면 된다
+## 5. 네이버 주문 4건 누락 — 사용자 지시로 넘어간다 (2026-09-06)
 
-코드만으로는 못 고친다. **로그인 상태의 실제 DOM**이 필요하다.
+사용자가 "저번에 수정한 걸로 기억한다"고 해서 이 항목은 닫는다. `[미확보]` 저장소의 `naver_order_history/REPORT.md` "알려진 문제"는 아직 68/72로 적혀 있어, 수정본이 다른 곳에 있거나 REPORT가 낡은 것이다 — 다음에 그 REPORT를 재생성할 때 같이 본다. 아래 절차는 다시 필요해질 때를 위해 남긴다.
 
 - [ ] 네이버페이 주문 목록에서 **링크 없는 주문(취소·종료 등)이 보이는 페이지**를 연다
 - [ ] 개발자 도구 → Elements → `<html>` 우클릭 → Copy → **Copy outerHTML**
