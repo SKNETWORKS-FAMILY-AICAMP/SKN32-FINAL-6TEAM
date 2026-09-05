@@ -147,6 +147,14 @@ fixture 시각을 고정해 해소했다. **위 29건과 다른 점은 원인이
 
 `[미확보]` 위 29건 중 몇이 같은 종류(비결정 필드)인지는 안 셌다. DB를 만지는 쪽에 몰려 있어 원인이 다를 가능성이 높지만, 확인은 안 됐다.
 
+### 흔들림이 게이트 자체를 무디게 만든 경우
+
+`[실측]` [회귀테스트 검증 로그](../../../../final_project_cs/docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md). 2026-08-31 배치는 결함 18건을 심어 **18건 전부 잡았다**(424 → 470 테스트). 그런데 그중 `INV-STATE-001`(동시 갱신 정확히 1건 충돌)은 **결함을 심은 채 단독 5회 돌리면 4회 통과**한다 — 잡은 테스트가 원래 비결정적이라서다. 원인은 [conflict-retry.md](../runtime/conflict-retry.md)에 있다(진 쪽이 읽는 시점에 따라 `StateConflict` 대신 `InvalidTransition`).
+
+**"잡았다"가 5회 중 1회면 게이트로는 못 쓴다.** 위 "현재 결과" 표의 48/48은 이 종류를 구분하지 않고 센 값이다 — 한 번이라도 실패하면 잡은 것으로 들어간다.
+
+`[미확보]` 48건 중 같은 이유로 흔들리는 게 더 있는지는 여러 번 돌려 보지 않으면 모른다. 카탈로그에 "잡은 횟수/시도 횟수"가 없다.
+
 ## ★ [2026-09-03] 테스트가 제품을 잘못 끌고 간 사례
 
 `[실측]` `docs/handoff/09_Composer_GUI_계약.md` 에서 이관.
@@ -245,6 +253,16 @@ __pycache__/return_exchange.cpython-312.pyc    ← 없음
 **위 "테스트가 제품을 잘못 끌고 간 사례"와 종류가 다르다.** 그건 틀린 걸 검사했고, 이건 **아무것도 검사하지 않는다.** dojo의 결함 심기로는 못 잡는다 — 어떤 결함을 심어도 이 테스트는 원래 초록이라 "잡았다/못 잡았다"를 구분할 수 없다.
 
 `[미확보]` 같은 종류가 더 있는지 세지 않았다. "assert 대상이 빈 채로 시작해서 채워지는 경로가 없는 테스트"를 정적으로 찾는 검사가 없다.
+
+## ★ [2026-09-06] pytest가 한 번도 import하지 않던 모듈 — 같은 결함이 두 번 났다
+
+`[실측]` [EVAL-RUNNER-IMPORT-FIX](../../../../final_project_cs/docs/evidence/EVAL-RUNNER-IMPORT-FIX.md). 2026-08-17에 `eval/runners/common.py`가 이미 삭제된 `billing.py`·`technical.py`를 import하고 있었다. **`grep -rln "eval.runners" tests/` 결과 0건** — 이 모듈을 import하는 테스트가 없어서 `pytest -m "not live"`로는 절대 안 잡혔고, `--provider openai` 라이브 경로를 사람이 CLI로 돌릴 때만 터졌다.
+
+원문이 "import만 하는 smoke test 하나면 다음엔 pytest로 잡는다"고 제안하고 **범위 밖이라 만들지 않았다.** 그리고 **이틀 뒤 같은 파일에서 같은 종류가 다시 났다** — 2026-08-19 레거시 격리가 `order_shipping`·`return_exchange`를 옮겼는데 `common.py:253-254`의 import는 안 따라와서, 2026-08-20 DoD-28 golden 실측 72건이 전부 import 단계에서 막혔다([../../../wiki/evaluation/dod28-rerun.md](../../../wiki/evaluation/dod28-rerun.md)).
+
+`[실측]` **지금은 닫혔다 — 의도한 게 아니라 부산물로.** 2026-09-03 `tests/unit/eval/test_team_failed_penalty.py`가 `from eval.runners.common import team_failed`를 하면서 `common.py`의 import 결함은 pytest 수집 단계에서 걸리게 됐다. `tests/unit/core/test_commit_phase_mapping.py`도 `eval.runners`를 참조한다.
+
+**규칙 — "이 모듈을 import하는 테스트가 있는가"는 커버리지 숫자에 안 잡힌다.** 리네임·이동이 잦은 시기엔 패키지별로 import smoke를 한 줄이라도 두는 게 싸다.
 
 ## ★ [2026-09-03] DoD evidence 재검증 — 낡은 근거와 새 결함
 

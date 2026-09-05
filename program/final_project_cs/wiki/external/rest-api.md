@@ -81,6 +81,38 @@ def test_v1_surface_is_documented_when_it_grows()
 
 `[실측]` 이 경로에서 실제 결함이 있었다. `feedback.py::INTENTS`가 옛 구독 어휘(`billing`/`technical`)로 남아 있어 **쇼핑몰 Case가 전부 분류 실패로 떨어졌을 것**이다. 재발 방지로 `INTENTS ⊇ 모든 Team.accepted_case_types` 불변조건 테스트가 추가됐다.
 
+### ★ [2026-09-06] 이 결함이 왜 운영 경로였는가, 그리고 어떻게 다시 안 나게 했는가
+
+`[실측]` [PROD-CLASSIFIER-DOMAIN-MISMATCH](../../../../final_project_cs/docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md). `INTENTS`는 VOC 분석 전용 상수가 아니다.
+
+```
+create_app()  →  composition.build_classifier()  →  feedback.classify(masked(message))
+                 (classifier 인자가 없으면 기본값)      ↑ 여기서 INTENTS 로 검증
+```
+
+**이게 `/v1/cases`로 들어오는 모든 신규 Case의 실제 분류 경로다.** LLM이 정직하게 `shipping`을 돌려주면 옛 집합 밖이라 `ClassificationFailed` — 안전하게 `escalated`로 가긴 하지만 정상 라우팅은 하나도 안 됐을 것이다.
+
+`[미확보]` **얼마나 오래 있었는지는 모른다.** 이 파일을 건드린 커밋이 최초 도메인 전환 하나뿐이라 커밋 이력으로 특정이 안 된다.
+
+`[미확보]` 재발 방지 테스트(`tests/unit/voc/test_feedback_intent_alignment.py`)는 있지만 **[invariants.md](../quality/invariants.md) 카탈로그에 ID가 없다.** "INTENTS ⊇ 모든 Team의 `accepted_case_types`"는 라우팅이 성립하는 조건이라 불변식으로 올릴 만하다.
+
+### 실제 API 경로를 진짜로 도는 e2e 테스트
+
+`[실측]` [LIVE-CLASSIFIER-E2E](../../../../final_project_cs/docs/evidence/LIVE-CLASSIFIER-E2E_검증.md). 위 수정 직후엔 Claude가 터미널에서 한 번 수동 확인한 것뿐이었다. 그걸 재실행 가능한 테스트로 바꿨다 — `tests/live/test_feedback_classifier_live_e2e.py`(`-m live`, 실 OpenAI 호출).
+
+**증명하는 것** — 운영 `POST /v1/cases`에 실 한국어 쇼핑몰 메시지를 보내면, 실제로 주입되는 그 classifier가 `intent="shipping"`을 돌려주고 `INTENTS` 검증을 통과해 `CLASSIFIED` 이벤트가 기록된다.
+
+**만들다 계약의 오해가 둘 드러났다.**
+
+| 오해 | 실제 |
+|---|---|
+| `create_app(controller=None)`이면 Controller가 안 돈다 | **항상 진짜 Controller가 만들어진다.** classifier를 밖에서 주입하지 않으면 기본 classifier의 `__module__`이 `app.composition`이라 `runtime_controller`가 진짜로 잡힌다 — 이 테스트는 분류뿐 아니라 **Team 실행까지 전부 탄다** |
+| 최종 상태가 `escalated`가 아니어야 통과 | 합성 고객이라 주문 데이터가 없으니 Team이 정상적으로 escalate할 수 있다. **분류 성공 여부만** 보도록 좁혔다 — `case_events`의 `CLASSIFIED`를 직접 조회 |
+
+첫 실행이 "실패"했는데 **분류 자체는 완벽했다** — 틀린 건 테스트의 단언 범위였다.
+
+`[실측]` **teardown이 `agent_runs`·`team_tasks`·`llm_calls`를 안 지워 FK 위반으로 정리 자체가 실패했고, 첫 실행분 tenant 하나가 DB에 영구히 남았다.** Controller가 실제로 도니 그 행들이 생기는데 계약에 없었다. 손으로 같은 FK 순서로 지웠고, 정리 순서를 고쳤다. **"실행되지 않는다"는 가정이 틀리면 정리 계획도 같이 틀린다.**
+
 ## Composer API는 별개다
 
 ```

@@ -85,6 +85,20 @@ tests/integration/db/test_stale_write_conflict.py
 
 DB 수준에서 `case_events`의 `UNIQUE(case_id, aggregate_version)`가 이를 보장한다.
 
+### ★ [2026-09-06] 진 쪽이 무엇으로 지는지는 타이밍에 달렸다
+
+`[실측]` [회귀테스트 검증 로그](../../../../final_project_cs/docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md) §4. Controller 통합 테스트 `test_same_expected_version_has_one_success_and_one_state_conflict`에 이 성질을 깨는 결함을 심고 **단독으로 5회** 돌렸다.
+
+```
+결함 적용 + 단독 5회: passed · passed · passed · passed · FAILED
+```
+
+**결함이 있는데 4회는 통과했다.** 원인은 잡혔다 — 진 쪽이 이긴 쪽의 커밋 **뒤에** projection을 읽으면 상태가 이미 `running`이라 `running --routed-->`가 전이표에 없어 `StateConflict`가 아니라 **`InvalidTransition`**이 난다. 테스트의 `except StateConflict`에 안 걸려 스레드 밖으로 나간다.
+
+**"정확히 한 번만 충돌한다"는 지켜진다. 다만 그 충돌이 어떤 예외로 보이는지는 읽는 시점에 따라 다르다.** 재시도 로직이 `StateConflict`만 잡으면 이 경우를 놓친다.
+
+`[미확보]` 근본 원인은 `docs/reports/debugs/2026-08-31_버전대조_가드_중복.md` §5에 있다. **고쳐졌는지는 이 wiki에서 확인하지 않았다.**
+
 ## 실행 유일성
 
 `INV-CS-RT-011`. **동시에 최초 실행을 시도해도 active run은 정확히 1개다.**

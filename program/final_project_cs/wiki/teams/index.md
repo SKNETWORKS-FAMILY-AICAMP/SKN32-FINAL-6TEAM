@@ -186,6 +186,10 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 선언된 모듈에 실제 검사 지점이 있는지는 `tests/contract/test_module_toggles.py`가 검사한다.
 
+`[실측]` [MODULE-TOGGLES 검증 로그](../../../../final_project_cs/docs/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)가 선언을 **실제로 바꿔 가며** 확인했다 — `python -m scripts.verify_module_toggles`. `graph_store: false`면 관리자 화면 Ports 표의 `GraphStorePort` 줄이 **`모듈 꺼짐 (graph_store)`**로 뜬다. 빈칸으로 두지 않는다 — **빈칸은 "껐다"와 "고장났다"를 구별해 주지 못한다.** `mcp: false`면 tool 호출이 `ProjectConfigError`다.
+
+**같은 로그의 `voc: false` → 기동 거부는 그때는 "통과"였고 이틀 뒤 결함으로 재판정됐다.** → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
+
 근거: `docs/handoff/08_모듈_컴포넌트_목록.md:57-68`
 
 ## 교체 가능한 Port

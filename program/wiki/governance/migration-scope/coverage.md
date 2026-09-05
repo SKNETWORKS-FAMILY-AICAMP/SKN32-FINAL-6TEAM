@@ -214,6 +214,18 @@ CLAUDE.md 와의 우선순위
 
 **스캔 도구가 가장 값진 데 두 번 맞았고 두 번 틀렸다.** DoD-07·17은 신호 적중 0건이 맞게 "통째로 없다"였고, DoD-29·24는 "2/9·4/11 적중"이 결함 발견으로 이어졌다. 반면 DoD-02·09는 적중이 낮아도 이미 충분히 반영돼 있었고, DoD-13은 적중 3/5인데 wiki가 코드보다 낡아 있었다 — **적중률은 읽을 순서를 정해 줄 뿐 판정을 대신하지 못한다.** 이 도구가 스스로 적어 둔 그대로다.
 
+## 7차 — evidence 검증 로그 5건 (2026-09-06)
+
+`[실측]` DoD 28건에 이어 같은 폴더의 검증 로그 5건. 이걸로 `final_project_cs/docs/evidence/` 35건 전부를 직접 대조했다. 남은 `유지` 문서는 59 → 54건이고, `audit_coverage.py`로 스캔한 순위는 이 세션 로그에 있다(데이터셋 REPORT 7건·VISION 7건·handoff 04/10이 다음 후보. 일일 작업 로그·폐기된 방식의 원인 분석 기록은 "그 시점 기록"이라 이관 대상이 아닐 가능성이 커 뒤로).
+
+| 대조함 | 찾은 것 |
+|---|---|
+| LIVE-CLASSIFIER-E2E (7/7) | 실 API 경로 e2e 테스트가 wiki에 없었다. 만들며 드러난 계약 오해 둘 — `create_app(controller=None)`이 Controller를 막지 않는다(기본 classifier의 `__module__`이 `app.composition`이면 항상 진짜 Controller), 합성 고객이라 escalate가 정상이므로 단언을 "분류 성공"으로 좁힘. teardown이 `agent_runs` 계열을 안 지워 tenant 하나가 DB에 영구히 남았던 것도. → [rest-api.md](../../../final_project_cs/wiki/external/rest-api.md) |
+| PROD-CLASSIFIER-DOMAIN-MISMATCH (4/7) | 결함 자체는 이미 있었다. 빠진 건 `INTENTS`가 왜 운영 경로인지(`create_app → build_classifier → feedback.classify`), "얼마나 오래 있었는지 모른다", 재발 방지 테스트가 **invariants 카탈로그에 ID가 없다**는 점. → [rest-api.md](../../../final_project_cs/wiki/external/rest-api.md) |
+| EVAL-RUNNER-IMPORT-FIX (4/6) | pytest가 `eval/runners`를 한 번도 import하지 않아 리네임 결함이 안 잡혔고, 제안된 smoke test를 안 만들어 **이틀 뒤 같은 파일에서 같은 결함이 재발**(DoD-28 08-20). 지금은 `test_team_failed_penalty.py`가 `eval.runners.common`을 import해 부산물로 닫힘. → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
+| 2026-08-31 회귀테스트_검증 (5/6) | 결함 18건 전부 잡힘(424→470)은 좋은데, `INV-STATE-001`은 **결함을 심어도 단독 5회 중 4회 통과** — 진 쪽이 읽는 시점에 따라 `StateConflict` 대신 `InvalidTransition`. 게이트 48/48이 이 종류를 구분 안 하고 센 값이라는 점을 blind-spots에, 예외 종류가 타이밍에 달렸다는 성질을 conflict-retry에. 고쳐졌는지는 `[미확보]`. → [conflict-retry.md](../../../final_project_cs/wiki/runtime/conflict-retry.md) |
+| MODULE-TOGGLES (3/8) | **evidence가 결함을 정상으로 승인한 다섯 번째 종류** — `voc: false` → 기동 거부를 "통과"로 판정했는데 이틀 뒤 v8 재판정이 그 결합을 결함 1번으로 뒤집었다. 로그가 틀린 건 아니다("선언대로 동작하는가"엔 맞았다) — 선언이 틀렸다는 건 로그가 물을 수 없는 질문이었다. "모듈 꺼짐" 표기(빈칸은 껐다/고장을 구별 못 함)와 `--reload` 함정(조립은 기동 때 한 번, reload 자식이 옛 코드를 서빙)도 채움. → [dod-evidence-drift.md](../../../final_project_cs/wiki/quality/dod-evidence-drift.md), [run.md](../../../final_project_cs/wiki/operations/run.md) |
+
 ## 다음
 
 | # | 할 일 |
