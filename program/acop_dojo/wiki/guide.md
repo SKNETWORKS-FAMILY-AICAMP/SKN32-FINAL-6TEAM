@@ -33,6 +33,15 @@ owners: [human:미배정]
 | `review` | 예약된 복습 — **같은 규칙을 다른 코드에서 묻는다** |
 | `status` | 진행 상황 |
 | `report` | [테스트 사각지대 실측](../../final_project_cs/wiki/quality/blind-spots.md) 생성 |
+| `invariants` | 규칙 원장과 결함 카탈로그가 맞는지 본다 — **0.3초** |
+| `patches` | 결함 patch가 아직 유효한지 본다 — **4초, 테스트 안 돌림** |
+| `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트 — **20분** |
+| `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 |
+| `map` | 웹 지도. 간선이 숨겨져 있다 — 아래 |
+
+`[실측]` 2026-09-06 [README](../../../acop_dojo/README.md)와 대조해 위 다섯을 채웠다. `boss`에는 `--defect ID`·`--force`도 있다. 파이썬 3.12 이상(`sys.monitoring`)과 대상 저장소의 PostgreSQL이 필요하다 — 470개 테스트 중 상당수가 DB를 쓴다.
+
+**세 명령의 시간 차이가 쓰는 순서를 정한다.** `invariants`(0.3초) → `patches`(4초) → `defects`(20분). 전체 게이트는 매번 돌릴 수 없어서 앞 둘이 있다.
 
 ## ★ `--verify`가 두 번 돌린다
 
@@ -54,8 +63,19 @@ owners: [human:미배정]
 | `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
 | `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII는 재시도하지 않고 넘긴다 |
 | `team-commerce` | 팀 모듈 3 | Team은 side effect를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
+| `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
+
+`[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다 — `--track core2`처럼 준다.
+
+`[추정]` **팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 모듈 성격으로 나눈 것이다.** 담당이 다르면 `acop_dojo/tracks.py`의 `owns`만 고치면 결함·지도·시나리오가 따라온다.
 
 **각 트랙의 "설명할 수 있어야 하는 것"이 그대로 불변식이다.** → [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md)
+
+## 지도는 먼저 그려 보고 대조한다
+
+`map`을 열면 실측 호출 간선이 **숨겨져 있다.** 요청이 지나갈 모듈을 순서대로 눌러 예상을 만든 다음 "실측과 대조"를 누른다. 그때 간선이 열리고 **빠뜨린 것과 없는데 넣은 것**이 나온다.
+
+**보기만 하는 시각화는 효과가 약하고, 조작하거나 답할 때 효과가 난다** — [design-review.md](design-review.md) 권고 4(읽기 전용 그래프 → 가설 검증 지도)가 이렇게 반영됐다.
 
 ## 보스전이 핵심이다
 

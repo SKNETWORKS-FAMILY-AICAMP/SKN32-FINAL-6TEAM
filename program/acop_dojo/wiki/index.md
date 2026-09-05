@@ -52,16 +52,20 @@ automation:
 
 → [중앙 허브 문서 표준](../../wiki/governance/document-standard.md)
 
-## 불변식과의 관계
+## 불변식과의 관계 — 원장이 둘이다
 
-cs의 [불변식 카탈로그](../../final_project_cs/wiki/quality/invariants.md)에 33개가 있고 그중 26개가 automated다.
+`[실측]` 2026-09-06 정정. **이 절이 "cs 카탈로그에 33개, 26 automated, 사람 판정 7(Runtime 4·Team 3)"이라고 적고 있었다. 둘 다 틀렸다.**
 
-**나머지 7개가 dojo가 겨냥할 대상이다.** 사람 판정에 의존하는 규칙은 결함을 넣어도 테스트가 안 운다.
+| | 어디 | 몇 개 |
+|---|---|---|
+| **dojo 원장** | `acop_dojo/data/invariants.json` | 활성 규칙 **33개** — 전부 결함이 하나 이상 붙어 있다 |
+| **cs wiki 카탈로그** | [invariants.md](../../final_project_cs/wiki/quality/invariants.md) | 60개 넘는 ID. **review는 셋뿐** — `INV-CS-TEAM-003`·`004`·`005` |
 
-| 영역 | 사람 판정 |
-|---|---|
-| Runtime | 4개 |
-| Team 계약 | 3개 |
+33은 cs 카탈로그가 아니라 **dojo 자기 원장의 수**였고, "Runtime 4개 사람 판정"은 [shared-state.md](../../final_project_cs/wiki/runtime/shared-state.md)가 `INV-CS-RT-001~004`에 잘못 붙였던 문장에서 온 것이다 — 정본은 넷 다 automated다. **dojo가 겨냥할 사람 판정 규칙은 Team 계약 셋이다.** → [generation.md](generation.md)
+
+`[실측]` [README](../../../acop_dojo/README.md). 처음 원장을 만들었을 땐 9개 규칙이 비어 있었다. 그 9개에 결함을 만들어 걸어 보니 **5개는 이미 테스트가 잡고 있었고 4개는 안 잡혔다** — 비어 있던 규칙이 잡히는 결함으로 바뀌는 것이 진전이다. 생존한 결함은 무엇을 테스트해야 하는지 알려주지만, 결함이 없는 규칙은 아무것도 알려주지 않는다.
+
+> **"생존 0건"은 결함이 붙은 규칙에 한한 이야기다.** 원장이 그 분모를 드러낸다.
 
 ## [2026-09-02 추가] 설계 근거
 

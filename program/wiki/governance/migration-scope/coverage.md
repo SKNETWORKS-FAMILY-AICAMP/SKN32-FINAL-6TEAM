@@ -250,6 +250,15 @@ CLAUDE.md 와의 우선순위
 | manuals/환경 기동절차 (4/8) | 3차에서 함정 셋을 옮겼는데 **정작 PG를 어떻게 띄우는지가 없었다** — `pg_ctl` + `-o "-p 5433"`(빠뜨리면 5432), 데이터 디렉터리가 저장소 밖이고 옆 프로젝트 DB와 같은 서버, 복구 40초, extension은 마이그레이션만. → [local-setup.md](../../../final_project_cs/wiki/operations/local-setup.md) |
 | _WBS원본 (4/6) | 날짜·주차·산출물 21건은 timeline.md에 있었다. 빠진 건 wiki 곳곳의 "10주"가 선행 포함 총 기간이라는 뜻풀이(공식은 8.5주), 그리고 원문이 "판단 필요"로 남긴 미결 둘 — **sLLM 파인튜닝이 6팀 필수인가**(시트 문구 "3, 4번 팀"), **3W 산출물 "학습한 모델"에 무엇을 내나**(파인튜닝 미채택). open-items "아직 안 정한 것"에도 올림. → [timeline.md](../../delivery/timeline.md) |
 
+## 10차 — acop_dojo 2건 (2026-09-06)
+
+`[실측]` `acop_dojo/README.md`(4/9)와 `학습게임_설계검수`(8/15). `테스트_사각지대_실측.md`는 자동 생성물이라 blind-spots.md가 요약이라고 스스로 밝혀 대조 대상에서 뺐다. 남은 `유지` 문서 44 → 42건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| acop_dojo/README (4/9) | **`acop_dojo/wiki/index.md`가 틀려 있었다** — "cs 카탈로그 33개·26 automated·사람 판정 7(Runtime 4)"인데 33은 dojo 원장 수이고 cs 카탈로그의 review는 TEAM-003·004·005 셋뿐. "Runtime 4"는 shared-state 오기재의 전파. `guide.md`는 "트랙 7개"라며 6개만 적었고(`front` 누락) 명령 5개(`invariants`·`patches`·`defects`·`stability`·`map`)가 빠짐. patch가 조용히 낡는다는 것(routes.py 14줄에 INV-UI-001 patch가 낡았는데 아무도 몰랐다 → `patches` 4초), 규칙은 grep으로 발견하지 않고 원장에 선언한다는 것, 사본은 `eval/reports`만 빼고 `legacy/` 포함이라는 것을 generation.md에. → [index.md](../../../acop_dojo/wiki/index.md), [guide.md](../../../acop_dojo/wiki/guide.md), [generation.md](../../../acop_dojo/wiki/generation.md) |
+| 학습게임_설계검수 (8/15) | design-review.md가 7약점·5권고를 충실히 옮겼는데 **그 권고가 같은 날 완성된 도장에 이미 반영됐다는 게 없어** 검수가 설계를 멈춘 것처럼 읽혔다. 권고별 반영 표(1·3·4 반영, 2 일부, 5 [미확보] — design-principles 원칙 8은 아직 "1·3·7일")를 추가. → [design-review.md](../../../acop_dojo/wiki/design-review.md) |
+
 ## 다음
 
 | # | 할 일 |
