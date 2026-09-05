@@ -202,6 +202,15 @@ def empty_state(text: str, *, hint: str = "") -> str:
 NAV = (
     ("/ui/cases", "Cases"),
     ("/ui/approvals", "Approvals"),
+    # ★2026-09-05 추가. 화면은 있는데 **메뉴에 없어 클릭으로 갈 수 없었다** —
+    #   운영자가 주소를 직접 쳐야 했다. `unknown` 은 "돈이 나갔는지 모르는" 상태라
+    #   이 제품에서 가장 센 위험이고, 대응 절차서까지 있다
+    #   (`docs/manuals/운영_unknown상태_대응절차.md`). 갈 수 없는 화면으로는 그
+    #   절차를 밟을 수 없다.
+    #   ★코드가 이미 `current="/ops/outbox"` 로 메뉴 강조를 넘기고 있었다 —
+    #   메뉴에 있어야 한다고 전제하고 쓴 것이다. `final_project_sample` 에는
+    #   처음부터 있었다(`TENANT_NAV`). 이식하며 빠진 것으로 보인다.
+    ("/ops/outbox", "Outbox unknown"),
     ("/ui/voc", "VOC"),
     ("/ui/admin", "Admin"),
 )
