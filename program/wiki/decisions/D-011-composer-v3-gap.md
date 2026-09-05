@@ -161,7 +161,9 @@ POST /composer/apply    GET  /composer/current
 
 **배포 형태별로 봐도 같다.** `direct`(파일 하나)에선 통째 교체가 겨우 괜찮고, `central`(DB, 수천 대상)에선 두 운영자가 동시에 작업하면 항상 한쪽이 409로 튕기는 해로운 방식이다 → [D-007](D-007-central-config-store.md). 중앙 저장소는 별도 프로젝트로 가기로 했으니(D-007) 그쪽에 통째 교체 API가 딸려가지 않게 지금 정리하는 게 맞다.
 
-`[미확보]` **코드는 아직 안 바꿨다.** 대상은 `final_project_sample/acop_composer/`(api.py·service.py)와 `acop_basement`의 마이그레이션이다. 할 일 넷 — ① `/apply`에 관리자 scope ② 이력 표 마이그레이션 + `apply_candidate()`에서 기록 ③ `/composer/restore` (관리자 scope, 이력 revision 지정) ④ 동시 `/apply`·복원의 409 E2E. 사용자가 구현을 지시하면 sample에서 진행한다.
+`[실측]` **2026-09-06 sample에 구현했다.** ① `/apply` scope `composer:admin`(guardrails·scope 계약 테스트) ② `acop_basement/core/revision_store.py` + 마이그레이션 `009_project_config_revisions.sql`, `apply_candidate()`가 쓴 직후 같은 잠금 아래에서 기록(첫 기록은 `baseline` 먼저) ③ `GET /composer/revisions`(read) · `POST /composer/restore`(admin) ④ 404/409/422 와 중앙 모드 대상 격리 e2e. 관련 스위트 73개 통과. → [sample/composer/write-channel.md](../../final_project_sample/wiki/composer/write-channel.md) · [auth-scope.md](../../final_project_sample/wiki/composer/auth-scope.md)
+
+`[미확보]` **cs 에는 아직 옛 모양이 남아 있다** — `final_project_cs/app/presentation/api/composer.py`의 `/apply`가 `composer:write`다. Composer 는 cs 밖이라는 D-006·D-CS-001 방향대로면 이 경로는 cs 에서 빠져야 하고, 남긴다면 같은 scope 분리와 이력이 따라가야 한다. cs 작업자 몫으로 open-items에.
 
 위 질문 여섯 중 2번(외부 소비자)은 "없다"로 확인됐고, 1번(고객 빌드 배제)은 D-006·D-007 방향상 "예"로 본다. 3·4·5·6은 이 결정으로 답이 정해진다 — 전체 교체는 관리자 도구로, UI는 schema 복제 없이 항목 단위로, 병행은 없고, 제거 대신 격리.
 
