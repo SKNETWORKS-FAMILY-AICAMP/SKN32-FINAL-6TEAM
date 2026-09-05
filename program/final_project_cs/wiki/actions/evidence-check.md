@@ -190,6 +190,27 @@ escalated 로 전환
 
 **이게 근거 대조 코드에서 특히 나쁜 이유** — "거부해야 할 제안"이 서버 에러가 되면 `escalated`로도 못 가고 감사 로그도 안 남는다. [CLAUDE.md §0.1](../../../../final_project_cs/CLAUDE.md)이 요구하는 "근거 없으면 답하지 않는다"가 **에러로 조용히 새는 경로**였다. 세 비정상 값 모두 크래시 대신 안전한 검증 실패로 처리되도록 고쳤다.
 
+## ★ [2026-09-06] degraded 면 자동 실행하지 않는다 — 강제 지점을 Team에서 Controller로 옮겼다
+
+`[실측]` [DoD-25](../../../../final_project_cs/docs/evidence/DoD-25_degraded_자동실행_금지.md). `ContextPack.degraded=true`인 상태에서 나온 제안은 실행 경로에 못 들어간다 — `action_requests` 0행, `guardrail_escalated` / `degraded_context_blocks_action`.
+
+**전에는 Team이 각자 스스로 검사했다.** `if task.context.degraded: return escalated` 한 줄이 두 Team에 있었을 뿐이다.
+
+> **이건 Team의 선의다.** 새 Team이 그 줄을 빠뜨리면 아무도 막지 않았다. 검사하지 않는 규칙은 지켜지지 않는다.
+
+지금은 `Controller._reject_unverified()`가 Team 결과를 받은 직후 막는다. **검증은 degraded를 일부러 안 보는 Team으로 했다** — Team이 협조하지 않아도 막히는지가 요점이라서다. Team의 자율 검사는 남겨 뒀다(빠른 실패는 여전히 좋다).
+
+**여기서도 대조 대상은 위조할 수 없는 쪽이다.** Controller는 자기가 만든 `task.context`를 본다. Team이 돌려준 `result.context`를 쓰면 Team이 degraded 여부를 스스로 정할 수 있어 검사가 무의미해진다 — 위 ①과 같은 원칙이다.
+
+### 이 규칙이 안 미치는 곳
+
+`[실측]` 원문이 한계로 적어 둔 둘.
+
+| | |
+|---|---|
+| degraded가 켜지는 축 | 지금은 **RAG 실패와 예산 절삭**뿐이다. DB 조회가 일부 실패해도 degraded로 이어지지 않는다 |
+| 사람이 승인하면 | **진행된다.** 금지되는 것은 "자동" 실행이다. 승인 화면에 degraded 배너가 뜨지만 **승인자가 그걸 읽었는지는 시스템이 모른다** → [approval.md](approval.md) |
+
 ## 평가 지표와의 연결
 
 | 지표 | 무엇을 |

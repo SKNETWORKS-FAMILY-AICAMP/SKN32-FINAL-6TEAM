@@ -80,6 +80,8 @@ A2A 활성화 · Port 교체 · Team 추가·제거
 
 **마지막이 중요하다.** `KNOWN_IMPLEMENTATION_REFS` allowlist 로 막는다. 임의 Python 경로를 못 넣는다.
 
+`[실측]` **이 allowlist는 처음부터 있던 게 아니다.** cs에는 없었고, `composer:write`만 있으면 임의 모듈을 import시킬 수 있었다 — JWT 시크릿 fail-open과 결합하면 인증 없이 도달 가능한 체인이었다(2026-08-24 sample 대조로 발견, allowlist를 sample에서 이식). → [../external/auth-boundary.md](../external/auth-boundary.md)
+
 ## 한계
 
 `[실측]` 아직 안 되는 것.

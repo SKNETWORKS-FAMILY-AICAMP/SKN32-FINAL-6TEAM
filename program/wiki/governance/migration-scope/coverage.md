@@ -187,7 +187,11 @@ CLAUDE.md 와의 우선순위
 | DoD-04 (4/5) | checkpoint 최소 키 5개·`graph_revision` run 내 고정·"되돌릴 경로 자체가 없다"는 정적 사실이라는 한계. 첫 측정에서 `agent_runs`가 비어 있던 원인이 **composition root 부재**(REST가 Controller를 안 탐)였고 그래서 `app/composition.py`가 생겼다는 기원. 대조 중 **`shared-state.md`가 `INV-CS-RT-001~004`에 정본과 다른 문장을 붙이고 "넷 다 강제 안 됨"이라 적은 오류**를 발견·정정(검사기가 못 잡는 종류). → [case-lifecycle.md](../../../final_project_cs/wiki/runtime/case-lifecycle.md), [shared-state.md](../../../final_project_cs/wiki/runtime/shared-state.md) |
 | DoD-21 (4/5) | `SqlGraphAdapter`의 전용 페이지가 cs wiki에 아예 없었다 — 새로 썼다. 세 축 중 둘이 투영 edge가 없어 "일반 질의가 되니 특정 질의도 된다"가 추정이었던 경위, Issue→Policy는 scope 문자열 일치·Issue→Team은 실적 기준이라는 한계. fixture 라벨은 퇴역 식별자(일부 낡음). → [graph-retrieval.md](../../../final_project_cs/wiki/context/graph-retrieval.md) |
 
-**나머지 11건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-25 (4/6) | degraded 차단의 강제 지점이 **Team의 선의**(각 Team의 `if degraded` 한 줄)에서 `Controller._reject_unverified()`로 옮겨진 경위가 wiki에 없었다. degraded를 일부러 안 보는 Team으로 검증한 점, 사람이 승인하면 진행된다(금지는 "자동"뿐)·승인자가 배너를 읽었는지 모른다는 한계. → [evidence-check.md](../../../final_project_cs/wiki/actions/evidence-check.md) |
+| DoD-05 (3/5) | `context-budget.md`가 잘 덮고 있어 한계만 보탬 — 축출 4단계 중 `history_detail`·`duplicate_tool_facts`는 한 번도 관측된 적 없고(코드에만 있음), "거부한다 ≠ 올바른 순서로 자른다"로 첫 판정이 부분이었던 경위. → [context-budget.md](../../../final_project_cs/wiki/context/context-budget.md) |
+| DoD-14 (4/7) | scope 6→10 낡음은 이미 반영돼 있었고, 빠진 건 2026-08-24 **Composer JWT 시크릿 fail-open(빈 문자열 서명 위조 통과) + 구현체 allowlist 부재(임의 모듈 import) 체인** — 보안 결함이고 sample 대조 발견 4·5번째. review-policy.md 표를 3→5건으로. DoD 1~29 어디에도 안 걸리는 수정(`list_cases` 정렬 비결정성)이 있다는 점도 dod.md에. → [auth-boundary.md](../../../final_project_cs/wiki/external/auth-boundary.md), [dod.md](../../delivery/dod.md) |
+
+**나머지 8건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

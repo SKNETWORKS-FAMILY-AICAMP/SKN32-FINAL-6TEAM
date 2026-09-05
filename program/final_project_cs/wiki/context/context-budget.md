@@ -106,6 +106,27 @@ class ContextBudgetError(RuntimeError): ...
 | `INV-CS-CTX-001` | 예산 초과 시 정해진 순서로 축출한다 | automated | `tests/unit/core/test_context_budget.py::test_context_broker_eviction_is_budgeted_and_ordered` |
 | `INV-CS-CTX-002` | 자를 수 없는 구간은 거부한다 | automated | `tests/unit/core/test_context_budget.py::test_context_broker_rejects_untruncatable_sections` |
 
+## ★ 네 단계 중 둘만 실제로 관측됐다
+
+`[실측]` [DoD-05](../../../../final_project_cs/docs/evidence/DoD-05_ContextPack_토큰예산.md). 예산 초과 입력을 넣었을 때 실제로 잘린 것.
+
+```
+omissions = ['similar_cases:budget:<id>', 'policy_rag:low_score:low#c1']
+estimated_input_tokens = 2517
+```
+
+`similar_cases`가 먼저, 낮은 점수 RAG가 나중 — 순서는 계약대로다. `case_state`는 omissions에 없다.
+
+`[미확보]` **`history_detail`과 `duplicate_tool_facts` 제거는 한 번도 출력에 나타난 적이 없다.** 그 섹션이 예산을 안 넘는 fixture였기 때문이다. 위 `eviction_order` 네 단계 중 **앞 둘만 관측됐고 뒤 둘은 코드에만 있다.** 운영 규모의 Case state·history·RAG 조합에서의 절삭도 관측 밖이다.
+
+### 첫 판정이 부분이었던 이유
+
+처음엔 "계약이 초과 팩을 **거부한다**"만 확인됐다.
+
+> 계약이 예산을 넘은 팩을 거부한다는 것과, **Broker가 넘칠 입력을 올바른 순서로 잘라 넘지 않는 팩을 만든다**는 것은 다른 주장이다.
+
+거부는 지켜졌지만 절삭은 증명이 안 된 상태였다. 전역 제거 순서를 구현하고 `test_context_budget.py`를 붙인 뒤에야 두 번째 주장이 관측됐다. **`degraded=True`인데 `omissions`가 비면 계약이 거부한다** — 신호 자체도 강제된다.
+
 ## 바꾸려면
 
 | 바꾸는 것 | 함께 해야 할 것 |

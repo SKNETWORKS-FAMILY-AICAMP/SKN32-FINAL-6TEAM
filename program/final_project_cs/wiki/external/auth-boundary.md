@@ -182,6 +182,21 @@ Action approval · provider result · before/after hash · actor
 
 **둘 다 "설정을 어떻게 읽는가"와 "무엇이 어디 물려 있는가"의 문제였다.** 인증 로직 자체의 버그가 아니었다.
 
+### ★ [2026-09-06] 셋 — Composer 쓰기채널 인증이 사실상 무력화돼 있었다
+
+`[실측]` [DoD-14](../../../../final_project_cs/docs/evidence/DoD-14_API키_scope_구분.md) 2026-08-24 갱신. `final_project_sample`과 대조하다 **cs가 직접 만든** 우회 체인 둘이 나왔다.
+
+| # | 결함 | 왜 뚫리나 |
+|---|---|---|
+| 1 | `composer_jwt_secret`·`composer_issuer_secret`에 `= ""` 기본값 — **fail-open** | 환경변수가 없어도 앱이 기동됐고 실제 `.env`에 값이 없었다. **빈 문자열을 HMAC 키로 서명한 JWT가 서명 검증을 그대로 통과**한다(알려진 JWT 위조 기법). `composer:validate`·`composer:write` scope 검사가 무의미해진다 |
+| 2 | 쓰기채널에 구현체 allowlist 없음 | `composer:write`만 있으면 `implementation_ref`에 임의 문자열을 넣어 `importlib.import_module()`이 **공격자가 지정한 모듈을 그대로 import**한다 |
+
+**둘을 이으면 인증 우회 → 임의 모듈 import 체인이다.** 이 DoD가 검증하는 "scope가 실제로 강제되는가"를 정면으로 어긴 상태였다.
+
+고친 것 — 두 시크릿을 필수로 되돌려 값이 없으면 **기동을 거부**하고(sample과 같게), sample의 `KNOWN_IMPLEMENTATION_REFS` allowlist를 이식해 `/composer/validate`·`/composer/apply`가 항상 검사한다. → [../decisions/D-CS-004-composer-boundary.md](../decisions/D-CS-004-composer-boundary.md)
+
+**위 둘과 종류가 다르다.** 앞 둘은 설정 읽기·배선 문제였고, **이건 기본값이 안전하지 않은 쪽으로 열려 있던 것**이다. 설정이 비어 있을 때 "돌아가는 것"과 "안전한 것" 중 전자를 고른 기본값은 그 자체가 결함이다.
+
 ## ★ [2026-09-03] 계약 문서가 scope 를 6종으로 적고 있다
 
 `[실측]` `config/guardrails.yaml` 을 직접 세었다.
