@@ -132,6 +132,18 @@ tags: [governance, documentation]
 | v7 격차해소 실행계획 (11/18) | P1~P4의 내용은 DoD-24·25·13·28로 전부 wiki에 있었다. 빠진 건 **순서 논리** — v7 §9-E 제목이 "쓰기 권한을 여는 전제 조건"이라 방어(P1·P2)가 먼저고 MCP 쓰기 확장(P7)은 그 뒤에만, 그리고 "막는 코드 → 재는 수단(P4)" 순서. mcp-tools.md 쓰기 3단계에 붙였다. 실행계획의 진행 기록이 "P1 착수"에서 멈춘 낡음도. → [mcp-tools.md](../../../final_project_cs/wiki/external/mcp-tools.md) |
 | 모듈토글 실효화 설계 (2/7) | 승격 사슬의 마지막 고리(`composition.py:44`)가 **의식적 설계였고 그 자리에서 "껄끄럽다"고 적혀 있었다**는 게 drift-case-voc.md에 없었다. 같은 문장(CLAUDE.md §1 "인라인 분류는 선택 기능이 아니다")이 이틀 사이 정반대 결론의 근거가 됐다 — 모순이 문서 사이가 아니라 한 문장의 두 해석 사이에 있어 점검 항목 4로도 못 잡는 종류. 작업 전 "여섯 중 셋만 코드를 갈랐다"는 이전 상태를 teams/index.md에. → [drift-case-voc.md](../drift-case-voc.md) |
 
+## 13차 — research 색인·점검 기록·분업 규칙·산출물 양식 5건 (2026-09-06)
+
+`[실측]` `research/index.md`(4/12) · `_정본대조_2026-08-18`(3/4) · `_정합성점검_2026-08-19`(3/8) · `handoff/05_분업_규칙`(0/7) · `산출물양식/README`(2/9). 남은 `유지` 문서 29 → 24건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| research/index.md | **루트 `CLAUDE.md`가 "정본"이라 가리키는 "현재 기준 사실" 표가 index.md에 없다** — 08-18 정본대조 땐 있었고 08-19 정리에서 사라졌다. index.md는 v8을 정본으로 가리킬 뿐이라 포인터 사슬이 한 칸 비었다. 점검 캘린더의 `migration-scope.md` 링크는 폴더 승격으로 죽은 링크. 원본 수정은 범위 밖이라 review-policy에 기록하고 open-items에 올림. → [review-policy.md](../review-policy.md) |
+| _정본대조 08-18 | cs·sample `CLAUDE.md`의 §0(v8)과 §7 문서 목록(`v6` 죽은 링크)이 한 파일 안에서 다른 기준선을 말했던 사고 — drift-case-voc와 같은 종류. review-policy "같은 종류의 사고" 표에 |
+| _정합성점검 08-19 | 문제 8건·권고 5건 중 **5번(B-1·C-1)만 wiki가 추적**하고 1~4(브리핑 Team 분리 카드, index.md 원본 파일명 참조, v8:407 없는 HTML, §0-2 색인 누락)의 처리 여부는 기록이 없다 `[미확보]` |
+| handoff/05 분업 규칙 (0/7) | `parallel-work.md`가 Codex 샌드박스 외부망 차단(540건 APIConnectionError)·받은 뒤 검사 4종·소유 디렉터리(roles.md)까지 담고 있다. **추가 없음** — 스캔 0/7이 맞았다 |
+| 산출물양식/README | 양식 18개 → 근거 문서 대응표가 wiki에 없었다. 중간발표(9/15) 직전이라 timeline.md에 wiki 페이지 기준으로 옮겼다. README의 "VOC 5종 전처리 전"은 낡았고(08-31 기준 완료 5·미착수 4), "GGUF 결과는 양자화 문제로 못 쓴다, 08-24 GPU 재검증이 정본"은 mt-benchmark.md에 없어 보완 대상. → [timeline.md](../../delivery/timeline.md) |
+
 ## 관계
 
 - [coverage.md](coverage.md) — 1~5차와 대조 방법

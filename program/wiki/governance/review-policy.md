@@ -128,6 +128,30 @@ owners: [human:서유현]
 
 `[실측]` 넷째는 지금도 유효하다 — 루트 `CLAUDE.md`가 **DoD 1~29**를 기준선으로 못박고 있다.
 
+### ★ [2026-09-06] 정본 포인터가 한 칸 비어 있다
+
+`[실측]` 루트 `CLAUDE.md`는 기준 사실 표 아래에 **"이 표가 오래됐으면 `program/research/index.md`가 정본이다"**라고 적는다. 그런데 지금 `index.md`(정리 기준일 2026-08-19)에는 **그 "현재 기준 사실" 표가 없다.** `_정본대조_2026-08-18.md`가 "index.md의 '현재 기준 사실' 표 ↔ v8 대조, 전부 일치"라고 적어 둔 걸 보면 08-18엔 있었고 08-19 정리에서 사라진 것이다. index.md의 "현재 근거" 표는 v8을 정본으로 가리킬 뿐 Team 목록·DoD 수·날짜를 다시 적지 않는다.
+
+```
+루트 CLAUDE.md  →  research/index.md  →  v8 본문
+      "index가 정본"        "v8이 정본"      ← 실제 대조 대상
+```
+
+**index.md를 거치는 한 칸이 비어 있다.** 실무상 대조 대상은 v8 본문이고, 이 wiki의 [dod.md](../delivery/dod.md)·[timeline.md](../delivery/timeline.md)가 그 값을 든다. `[미확보]` 루트 `CLAUDE.md` 문장을 "v8 §0·§27이 정본"으로 고칠지, index.md에 표를 되살릴지는 정해지지 않았다 — 원본 수정은 이 wiki 범위 밖이라 [open-items](../delivery/open-items.md)에 올렸다.
+
+`[실측]` 같은 index.md의 점검 캘린더가 `../wiki/governance/migration-scope.md`를 가리키는데 **그 파일은 폴더로 승격돼 없다**(→ [known-weaknesses.md](known-weaknesses.md)의 승격 사고). 죽은 링크다.
+
+### 같은 종류의 사고가 이미 두 번 더 있었다
+
+`[실측]` 원본 두 건에서.
+
+| 언제 | 무엇 | 종류 |
+|---|---|---|
+| 2026-08-18 `_정본대조` | cs·sample `CLAUDE.md`의 §0은 v8을 가리키는데 **§7 문서 목록은 `../A-COP_구현계획서_v6.md`(죽은 링크)**를 가리켰다. 같은 파일 안 두 절이 다른 기준선 | [drift-case-voc.md](drift-case-voc.md)와 같은 "한 문서 안 두 절의 모순" |
+| 2026-08-19 `_정합성점검` | 문제 8건 — 브리핑 HTML의 Team 분리 카드, index.md의 병합된 원본 파일명 참조, v8:407의 없는 HTML 참조, v8 §0-2 절 색인 누락, Composer v3 문서군 미등재 | 권고 5건 중 **5번만 이 wiki가 추적한다**([open-items](../delivery/open-items.md) B-1·C-1). **1~4의 처리 여부는 기록이 없다** `[미확보]` |
+
+**셋 다 "있는가"가 아니라 "서로 맞는가"에서 났다.** 위 검사 셋과 `check_wiki.py`가 못 잡는 이유와 같다.
+
 ## 병합 규칙 다섯
 
 `[실측]` 같은 문서에서 이관. **[migration.md](migration.md)의 절차와 짝이다.**

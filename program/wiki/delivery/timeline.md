@@ -81,6 +81,30 @@ owners: [human:미배정]
 | 8W | 10/21~10/24 (4일) | 최종발표 PT · 개발 소스코드 · 시연영상 |
 | 9W | — | 8W 보완, **최종발표 10/26** |
 
+### ★ 양식별 근거 문서 — 어디를 보고 채우나
+
+`[실측]` `program/산출물양식/README.md`(2026-08-28 배포 양식)에서 옮기고 wiki 페이지로 바꿨다. **빈칸부터 채우지 말고 여기 적힌 문서를 먼저 읽는다.** 문서에 없는 것을 지어내지 않고, 미완성은 미완성이라고 적는다.
+
+| 양식 | 근거 |
+|---|---|
+| 프로젝트 기획서 | `program/plan/A-COP_구현계획서_v8.md` · [../product/index.md](../product/index.md) |
+| WBS | 이 문서 · `program/research/_WBS원본_2026-08-17.md` |
+| 요구사항 정의서 (+ 5W 업데이트) | [dod.md](dod.md) — 29항목 |
+| 수집 데이터 보고서 | [datasets/catalog.md](../../datasets/wiki/catalog.md) + 각 데이터셋 `REPORT.md`. 순서: 상용 주문(쿠팡·네이버) → 배송 조회 도구 → 공개 VOC → 번역 비교 |
+| DB/저장소 설계 문서 | [cs data/schema](../../final_project_cs/wiki/data/schema/index.md) · [migrations](../../final_project_cs/wiki/data/migrations.md) |
+| 데이터 전처리 결과서 | 각 데이터셋의 `scripts/normalize.py`·`processed/` — 현황은 [catalog.md](../../datasets/wiki/catalog.md) |
+| **ML/DL 학습 결과서 · 학습한 모델** | [mt-benchmark](../research/mt-benchmark.md) · [dod28-rerun](../evaluation/dod28-rerun.md)(파인튜닝 — **채택 안 함**). **무엇을 "학습한 모델"로 낼지 미결** — 아래 |
+| AI 시스템 아키텍처 | [architecture/index.md](../architecture/index.md) · [diagrams.md](../architecture/diagrams.md) |
+| 멀티 에이전트 테스트 계획·결과 | [cs quality/evidence.md](../../final_project_cs/wiki/quality/evidence.md) · [evaluation/index.md](../evaluation/index.md) |
+| 벡터DB/GraphDB 구축 결과서 | [rag-retrieval](../../final_project_cs/wiki/context/rag-retrieval.md) · [graph-retrieval](../../final_project_cs/wiki/context/graph-retrieval.md) |
+| 자체 sLLM 인공지능 | **주제 3·4 팀만 해당.** 우리가 해당하는지 미결 — 아래 |
+| 시스템 구성도 | [diagrams.md](../architecture/diagrams.md) 배포 다이어그램 |
+| LLM 연동 웹 애플리케이션 | `final_project_ui/` · [cs operations/run.md](../../final_project_cs/wiki/operations/run.md) |
+| 서비스 테스트 계획·결과 | [cs quality/evidence.md](../../final_project_cs/wiki/quality/evidence.md) |
+| 중간·최종 발표 PT | [milestones/index.md](milestones/index.md) |
+
+`[실측]` 원본 README의 두 주의는 지금 이렇게 읽는다 — **"VOC 5종은 전처리 전"은 낡았다**(2026-08-31 기준 완료 5·미착수 4, [catalog.md](../../datasets/wiki/catalog.md)). **번역 성능 수치는 2026-08-24 GPU 서버 재검증 값이 정본이고 그 이전 GGUF 결과는 양자화 문제로 못 쓴다** → [mt-benchmark](../research/mt-benchmark.md).
+
 ### ★ 시트 원문이 말하는 것 — "10주"의 뜻과 미결 둘
 
 `[실측]` `program/research/_WBS원본_2026-08-17.md`(부트캠프 구글 시트 `32기_대시보드`·`6팀` 원문 그대로). 루트 `CLAUDE.md`가 일정 정본으로 지정한 문서다.

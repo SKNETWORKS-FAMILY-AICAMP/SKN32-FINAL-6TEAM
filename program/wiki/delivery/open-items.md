@@ -46,6 +46,7 @@ owners: [human:미배정]
 | 골든셋 라벨링 절차 확인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) |
 | Team 경계 불변식 3개 자동화 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
 | **DoD evidence 9건이 낡았다 — `final_project_cs/docs/evidence/` 수정 필요** (2026-09-06 대조로 확인) | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
+| **`program/research/index.md` 둘** — 루트 `CLAUDE.md`가 "정본"이라 가리키는 "현재 기준 사실" 표가 없고(08-19 정리에서 사라짐), 점검 캘린더의 `migration-scope.md` 링크가 폴더 승격으로 죽었다 | [../governance/review-policy.md](../governance/review-policy.md) "정본 포인터가 한 칸 비어 있다". **원본 수정은 wiki 범위 밖** — 루트 `CLAUDE.md` 문장을 v8 직접 참조로 바꿀지, 표를 되살릴지 사람이 정한다 |
 
 ## 측정 대기
 
