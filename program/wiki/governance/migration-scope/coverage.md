@@ -259,6 +259,16 @@ CLAUDE.md 와의 우선순위
 | acop_dojo/README (4/9) | **`acop_dojo/wiki/index.md`가 틀려 있었다** — "cs 카탈로그 33개·26 automated·사람 판정 7(Runtime 4)"인데 33은 dojo 원장 수이고 cs 카탈로그의 review는 TEAM-003·004·005 셋뿐. "Runtime 4"는 shared-state 오기재의 전파. `guide.md`는 "트랙 7개"라며 6개만 적었고(`front` 누락) 명령 5개(`invariants`·`patches`·`defects`·`stability`·`map`)가 빠짐. patch가 조용히 낡는다는 것(routes.py 14줄에 INV-UI-001 patch가 낡았는데 아무도 몰랐다 → `patches` 4초), 규칙은 grep으로 발견하지 않고 원장에 선언한다는 것, 사본은 `eval/reports`만 빼고 `legacy/` 포함이라는 것을 generation.md에. → [index.md](../../../acop_dojo/wiki/index.md), [guide.md](../../../acop_dojo/wiki/guide.md), [generation.md](../../../acop_dojo/wiki/generation.md) |
 | 학습게임_설계검수 (8/15) | design-review.md가 7약점·5권고를 충실히 옮겼는데 **그 권고가 같은 날 완성된 도장에 이미 반영됐다는 게 없어** 검수가 설계를 멈춘 것처럼 읽혔다. 권고별 반영 표(1·3·4 반영, 2 일부, 5 [미확보] — design-principles 원칙 8은 아직 "1·3·7일")를 추가. → [design-review.md](../../../acop_dojo/wiki/design-review.md) |
 
+## 11차 — VISION 문서군 9건 (2026-09-06)
+
+`[실측]` VISION-01~07 · TODO_VISION · ESTIMATION_BASELINE. 대조 대상은 `product/vision-backlog.md`와 `delivery/estimation-baseline.md`. 남은 `유지` 문서 42 → 33건. VISION-08·09는 34줄이라 이관 판정이 `판정필요`로 남아 있으나 트리거·비용은 backlog에 이미 있다.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| VISION-01~07 | backlog에 트리거·비용·폐기 조건은 있었지만 **"지금 안 하는 이유"(§2)와 "선행 조건"(§5)이 통째로 없었다.** 둘 다 표로 채웠다 — 선행 조건은 이 세션에서 확인한 현재 상태와 바로 대조된다(consumer 계약 테스트 있음 / 프로세스 kill 주입·키 회전·Graph 성능 계측·검색 실패 유형 없음). **VISION-01 §1의 "현재 self-consistency N=2·규칙 기반 replan"은 `app/`에 없다**(grep 0건, v5 시절 서술). **VISION-07(검토중, 환불 룰 테이블)은 D-001(환불 계산을 쇼핑몰에)과 전제가 부딪히는데 정한 기록이 없다** `[미확보]`. D-013(선언형 Team)과의 연결도 추가. → [vision-backlog.md](../../product/vision-backlog.md) |
+| TODO_VISION | backlog가 이미 정본 수준. 개정 이력의 "2026-08-13 실소요 재산정" 근거는 estimation-baseline이 담고 있어 추가 없음 |
+| ESTIMATION_BASELINE (5/11) | estimation-baseline.md가 충실. 빠진 건 "검증이 병목" 증거 셋 중 둘(RAG `::vector` 100% 실패, `resuming→completed`)과 **18,390줄의 구성 — 절반이 문서(8,718줄)**라는 점. 코드 생산성으로만 읽으면 안 된다는 주의를 보탬. → [estimation-baseline.md](../../delivery/estimation-baseline.md) |
+
 ## 다음
 
 | # | 할 일 |

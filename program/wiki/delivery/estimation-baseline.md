@@ -79,6 +79,14 @@ v5                      통과
 
 **생성은 다섯 번 다 빨랐고 검증이 네 번 막았다.**
 
+`[실측]` 원본이 든 증거는 셋이다. 나머지 둘 — **RAG 검색이 `::vector` 캐스트 누락으로 100% 실패하고 있었는데 한동안 발견되지 않았다**([rag-retrieval.md](../../final_project_cs/wiki/context/rag-retrieval.md) 실패 사례 셋), **Controller의 `resuming→completed` 결함이 뒤늦게 드러났다**([case-lifecycle.md](../../final_project_cs/wiki/runtime/case-lifecycle.md)). 셋 다 "만드는 건 빨랐고 걸러내는 데 시간이 들었다".
+
+### 2시간 21분에 무엇이 만들어졌나
+
+`[실측]` 2026-08-12 15:14~17:35, 커밋 18개. 저장소 골격 + handoff 계약 6종 → Core 계약·전이표·리듀서(테스트 53건) → DB 18테이블·마이그레이션·seed → RAG 코퍼스 25문서 → Context Broker → REST 5 + MCP 3(테스트 74건) → Agent Team 2종 + VOC 배치 → 운영 UI 4화면 → 평가 하네스 → Controller·WAIT/RESUME·Outbox(테스트 107건).
+
+**18,390줄의 구성** — Python 5,918줄/90파일 · 테스트 1,652줄/28파일 · **문서 8,718줄/132파일.** 절반이 문서다. 이 기준선을 코드 생산성으로만 읽으면 안 된다.
+
 ## 6명이라고 6배가 아니다
 
 > **생성량이 늘어난 만큼 검수 부하도 늘어난다.**

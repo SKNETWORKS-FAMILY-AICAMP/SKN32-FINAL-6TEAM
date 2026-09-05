@@ -57,6 +57,46 @@ tags: [architecture, governance]
 
 `[실측]` **세 번째가 [tenancy](../../final_project_cs/wiki/data/tenancy.md)의 현재 상태를 그대로 말한다** — 컬럼은 있고 값은 하나다.
 
+## ★ [2026-09-06] 왜 지금 안 하나 — 한 줄씩
+
+`[실측]` VISION-01~07 원문 §2에서. **위 표엔 트리거만 있고 판정의 이유가 없었다.** 보류 판정은 이유가 곧 내용이다.
+
+| # | 지금 안 하는 이유 |
+|---|---|
+| 01 추론 기법 | Team이 적고 라우팅 깊이가 1~2라 후보를 늘려도 탐색공간보다 **추가 호출·판정·추적 복잡도가 더 커진다** |
+| 02 Graph Store | 관계 깊이 1~2는 SQL 재귀 CTE로 된다. 별도 Store는 **Projection 동기화·장애 복구가 비용의 대부분**이다. SQL 경로의 근거 포함률·지연부터 재야 한다 |
+| 03 멀티 LLM | **model/provider를 고정해야 Baseline↔Proposed 비교가 성립한다.** 섞으면 품질 차이와 프롬프트 차이를 분리 못 한다 — [평가 프로토콜](../evaluation/protocol.md)의 통제 변수 그대로 |
+| 04 A2A 생태계 | Remote Agent 1개, 외부 조직 요구 미확인. 서명·키 회전·issuer·동의/철회까지 넣으면 **인증 운영이 별도 시스템**이 된다 |
+| 05 메시징 | 한 프로세스의 outbox+worker로 재시도가 관측된다. 동시성·장기 실행 수치 없이 broker를 바꾸면 **장애 원인과 성능 기준선이 섞인다** |
+| 06 지식·메모리 | 코퍼스가 작고 **검색 실패 유형을 먼저 분류해야** 추가 계층의 효과를 판단한다. Episodic Memory는 잘못된 과거 Case 재사용과 tenant 격리 위험을 더한다 |
+| 07 정책 엔진 | 전체 DSL은 문법·우선순위·충돌·버전·승인·시뮬레이션을 함께 정하는 별도 프로젝트다. **프롬프트와 룰 테이블이 같은 결정을 동시에 맡으면 판정 출처가 모호해진다** |
+
+08·09는 원문이 34줄이라 이관 판정이 `판정필요`로 남아 있다 — 위 표의 트리거·비용은 이미 옮겼고 이유는 안 옮겼다.
+
+## ★ 선행 조건 — 트리거가 와도 이게 없으면 못 한다
+
+`[실측]` 원문 §5에서 각 항목의 핵심 둘만. **트리거보다 이 표가 더 실용적이다** — 몇은 이미 있고 몇은 지금 없다.
+
+| # | 먼저 있어야 하는 것 | 지금 |
+|---|---|---|
+| 01 | 후보별 prompt·model·seed·cost·latency 분리 기록 · 자동 완료율/escalation율 기준선 | 하네스 행마다 cost·토큰·latency는 있다. **기준선은 D-010 뒤에** |
+| 02 | `GraphStorePort`↔SQL 기준선 동일 결과 테스트 · 100건 관계 질의의 깊이·지연·근거 포함률 계측 | **성능을 잰 적이 없다** → [graph-retrieval.md](../../final_project_cs/wiki/context/graph-retrieval.md) |
+| 03 | 모델별 분리 집계 하네스 · prompt snapshot·model·seed·dataset hash 기록 | 통제 변수 기록은 있다. 모델별 분리 집계는 `[미확보]` |
+| 04 | 조직·issuer·audience·**키 회전·폐기** 저장/감사 모델 · 외부 조직 포함 unauthorized 테스트 | **API key 회전·만료는 범위 밖**(DoD-14) → [auth-boundary.md](../../final_project_cs/wiki/external/auth-boundary.md) |
+| 05 | outbox dedupe·재전달·dead-letter **계약 테스트** · 프로세스 중단·broker 장애 **failure injection 절차** | 계약 테스트는 있다(consumer 계약, DoD-23). **실제 프로세스 kill 시나리오는 안 돌렸다**(DoD-12) → [idempotency.md](../../final_project_cs/wiki/actions/idempotency.md) |
+| 06 | 100건 이상 질의의 **검색 성공·실패 유형과 분모** · 재색인 절차 · 새 경로와의 holdout 비교 | **검색 실패 유형 분류가 없다** `[미확보]` |
+| 07 | 정책 문서↔결정의 version·evidence 연결 · 환불 룰 테이블 최소 버전의 회귀·shadow 자료 · 프롬프트 경로/결정적 경로 분리 집계 | 아래 충돌 참고 |
+
+## 원본에서 낡은 것과 충돌
+
+`[실측]` 2026-09-06 대조.
+
+| 어디 | 무엇 |
+|---|---|
+| **VISION-01 §1 "현재"** | "Billing/Subscription·Technical Entitlement 2개 Team, 규칙 기반 replan, 고위험 환불·권한변경의 **self-consistency N=2**만 사용한다" — 퇴역 도메인이고, **`app/`에 `self_consistency`·`replan`이라는 이름의 코드가 없다**(grep 0건). v5 시절 설계를 현재형으로 적은 것이다. 트리거·폐기 조건은 그 서술과 무관하게 유효하다 |
+| VISION-06 §1 | "청크 300개" → 306 |
+| **VISION-07 ↔ [D-001](../decisions/D-001-payment-ownership.md)** | 07의 "검토중"은 **환불 판정만 룰 테이블로 분리하는 최소 버전**이고 폐기 조건도 "환불 룰 테이블 100건 회귀"를 전제한다. 그런데 D-001은 **환불 계산을 A-COP이 하지 않고 쇼핑몰이 계산한 값을 받아 대조**하기로 했다. 룰 테이블이 금액 계산이면 전제가 사라지고, 가능 여부 판정이면 살아 있다 — **어느 쪽인지 정한 기록이 없다** `[미확보]`. [D-013](../decisions/D-013-declarative-team.md)(선언형 Team)이 "범용 실행기와 정책 엔진을 한 번 배포"를 권고해 07과 닿는다 |
+
 ## 폐기된 항목
 
 **없다.** 트리거가 영영 오지 않는다고 판단해 버린 항목은 아직 없다.
