@@ -73,7 +73,7 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 | 1 | ~~wiki를 어디에 놓나~~ | **A로 정함 (09-06)** | [D-012](../decisions/D-012-cutover-timing.md) |
 | 2 | ~~Return & Refund~~ | **A Mock 유지 (09-06)** — 코드가 `Mock-only`라 cs에 만들어진 게 없었다 | [scope-verdicts.md](scope-verdicts.md) |
 | 3 | ~~중앙 설정 저장소~~ | **정함 (09-06)** — cs로 안 가져간다. 별도 프로젝트로 분리, 붙인다면 UI 프로젝트 | [D-007](../decisions/D-007-central-config-store.md) |
-| 4 | **Composer — 스위치 API만 남기나, 통째 교체 API를 정식으로 하나** | A 스위치(`/toggle`)만 남기고 통째 교체(`validate`·`apply`) 제거 · B 통째 교체를 정본으로 · C 둘 다 두고 종료일. 외부에서 통째 교체를 부르는 곳은 없음(09-06 확인) → A 가능. **팀 주제 재조사 끝난 뒤 정해도 된다** | [D-011](../decisions/D-011-composer-v3-gap.md) |
+| 4 | ~~Composer~~ | **정함 (09-06)** — 운영자 API는 스위치·생성·삭제만. 통째 교체는 관리자 scope로 내려 설치·복원용. **이력 표 + 이전 revision 복원을 같이 만든다.** 구현은 지시 대기 | [D-011](../decisions/D-011-composer-v3-gap.md) |
 | 5 | ~~v8 병합 시점~~ | **폐기 (09-06)** — v9로 판올림해 진행 | [open-items.md](open-items.md) |
 | 6 | ~~`research/index.md` 범위 (B-1)~~ | **B 제외로 정함 (09-06)** | 동 |
 | 7 | ~~골든셋 `persona` 필드 담당~~ | **역할로 정함 (09-06)** — 검증 & 프론트 담당. 이름은 팀 재편 뒤 | [golden-set.md](../evaluation/golden-set.md) |
