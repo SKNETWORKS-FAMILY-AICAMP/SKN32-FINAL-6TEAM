@@ -176,7 +176,9 @@ CLAUDE.md 와의 우선순위
 
 | DoD-15 (7/12) | 지금 무효 처리된 옛 A/B/Proposed 수치조차, 처음엔 그것도 아니었다 — mock provider·외부망 차단·judge 환각인용 채점·Team의 LLM 결과 폐기(하드코딩 대체)·next_action 어휘일치 채점(계약 준수가 벌점)까지 **결함 5건**을 순서대로 고쳐야 나온 값이었다. 그중 둘은 고쳐지지 않았다면 정반대 결론(RAG가 해롭다 등)을 냈을 것. ablation flag 4종이 실행 전엔 아무것도 안 끄고 있었다는 것도 함께. → [protocol.md](../../evaluation/protocol.md), [judge.md](../../evaluation/judge.md) |
 
-**나머지 17건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-12 (5/7) | outbox 중복방지 제약이 원래 `UNIQUE(topic, dedupe_key)`뿐이라 **tenant_id가 없었다** — 다른 테넌트끼리 서로 충돌할 수 있던 보안급 결함. `final_project_sample`과 대조하다 발견됐다는 게 특히 값지다(단일 저장소 리뷰가 아니라 다른 구현체 비교로 잡음). wiki의 스키마 스니펫 자체가 옛 제약을 그대로 싣고 있던 것도 정정. → [outbox.md](../../../final_project_cs/wiki/actions/outbox.md) |
+
+**나머지 16건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

@@ -31,7 +31,7 @@ outbox (
   message_id, tenant_id, topic, dedupe_key, payload_json,
   status DEFAULT 'pending', attempts DEFAULT 0,
   available_at, locked_at, last_error,
-  UNIQUE (topic, dedupe_key)
+  UNIQUE (tenant_id, topic, dedupe_key)
 )
 ```
 
@@ -53,6 +53,10 @@ outbox (
 ```
 tests/integration/messaging/test_outbox_tenant_guard.py
 ```
+
+`[실측]` **이 제약, 원래는 `tenant_id`가 없었다.** [DoD-12](../../../../final_project_cs/docs/evidence/DoD-12_outbox_원자성_replay.md). `UNIQUE(topic, dedupe_key)`뿐이었던 시절엔 **다른 tenant가 같은 topic+dedupe_key로 발행하면 서로의 outbox 행에 충돌할 수 있었다** — [CLAUDE.md](../../../../final_project_cs/CLAUDE.md) "모든 query에 tenant_id 조건을 적용한다" 원칙 위반이다. `final_project_sample`과 대조하다가(2026-08-24) 발견해 지금의 세 컬럼 제약으로 옮겼다.
+
+**단일 저장소 안 대조가 아니라 다른 구현체(`final_project_sample`)와 비교해서 찾은 결함이다.** 같은 계약을 두 번 구현하면 한쪽만 가진 결함이 드러난다.
 
 ## 해소
 
