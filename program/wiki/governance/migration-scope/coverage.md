@@ -166,8 +166,12 @@ CLAUDE.md 와의 우선순위
 |---|---|
 | DoD-29 (2/9 절만 신호 적중) | Team 조립기가 생성자 **인자 개수만** 보고 배선하다 `ReadToolbox`를 `llm` 자리에 잘못 넣을 뻔한 결함 — 등록 전에 잡음. → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
 | DoD-24 (4/11) | 근거 대조 코드 자체가 세 번 뚫릴 뻔한 경위(순환 폴백·트랜잭션 격리·상태기계가 먼저 잡은 구멍 셋) + NaN/Infinity 500 크래시. → [evidence-check.md](../../../final_project_cs/wiki/actions/evidence-check.md) |
+| DoD-07 (5/5, 신호 0건 적중) | 마스킹(전화·카드) vs 제거(API key·결제 식별자) 구분, LLM 입력 경로·demo tenant PII 잔존이 지금도 미검증. → [auth-boundary.md](../../../final_project_cs/wiki/external/auth-boundary.md) |
+| DoD-17 (7/7, 신호 0건 적중) | dod.md가 "17번 부족 이유"로 적어 둔 **"파일시스템 gate 재현"이 원문에 없는 말**이었다 — 실제로는 15번과 동일 이유. → [dod.md](../../delivery/dod.md) |
+| DoD-28 (10/19) | "과잉 기권율 35%"가 모델 행동이 아니라 `calculation_basis` 미선언으로 정상 제안이 기계적으로 막힌 **결함**이었음을 확인. → [dod28-rerun.md](../../evaluation/dod28-rerun.md) |
+| DoD-02·DoD-09 (읽음, 추가 안 함) | 이미 `case-lifecycle.md`가 충분히 반영 중. DoD-09의 "S-API·S-VOC 계약 사이 통합 지점을 아무에게도 안 맡긴" 배선 누락 일화는 2026-08-12 당일 재측정 완료된 사소한 사례라 추가 보류 |
 
-**나머지 26건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-10 2/5, DoD-29 완료, DoD-18 9/15, DoD-28 10/19 등)로 계속하면 된다.
+**나머지 21건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-10 2/5, DoD-18 9/15, DoD-11 5/9 등)로 계속하면 된다.
 
 ## 다음
 

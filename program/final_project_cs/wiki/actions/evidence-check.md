@@ -180,6 +180,10 @@ escalated 로 전환
 
 **셋 다 사람이 리뷰로 못 잡고 실행 중에 기계가 잡았다.** 상태 전이표와 append-only 이벤트 원칙([CLAUDE.md §0.3](../../../../final_project_cs/CLAUDE.md))이 없었으면 조용히 넘어갔을 결함들이다.
 
+### ④ 이 재검증 게이트가 반대 방향으로도 뚫렸다 — 정상 제안을 잘못 막았다
+
+`[실측]` 2026-09-03. `calculation_basis` 필드를 선언 없이 `ignored`로 처리해 **모든 환불 제안이 이 재검증에서 "선언되지 않은 필드"로 기계적으로 막혔다.** DoD-28 방어지표의 과잉 기권율이 35%로 튄 원인이 여기 있었다 — 모델이 과하게 기권한 게 아니라 게이트가 정상 제안을 오탐했다. → [dod28-rerun.md](../../../../program/wiki/evaluation/dod28-rerun.md)
+
 ## ★ [2026-09-04] 비정상 금액이 거부가 아니라 500 크래시였다
 
 `[실측]` 2026-08-24 갱신분. `_to_decimal()`이 `Decimal("NaN")`/`Decimal("Infinity")`/`Decimal("-Infinity")`를 `.is_finite()`로 걸러내지 않아, 파싱은 통과했다가 이후 비교 연산(`>`, `int()`)에서 `InvalidOperation`/`OverflowError`로 **500 에러**를 냈다.
