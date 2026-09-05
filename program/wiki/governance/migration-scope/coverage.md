@@ -174,7 +174,9 @@ CLAUDE.md 와의 우선순위
 | DoD-18 (9/15) | 브라우저 재검증에서 나온 결함 셋 중 하나(화면표시용 `evidence` 필드가 재검증 화이트리스트에 없어 막힘)가 `calculation_basis`(DoD-28)와 **완전히 같은 형태의 반복 결함**임을 확인. "UI 버그인 줄 알았는데 가드레일이 옳았다"는 사례와 승인 실패가 조용히 삼켜지던 결함도 추가. → [approval.md](../../../final_project_cs/wiki/actions/approval.md) |
 | DoD-11 (5/9) | idempotency_key가 원래 v5 산식이 아니라 `task_id` 기준이었다가 승인 후 재실행에서 실제로 중복 행을 만들어야 산식이 교체된 경위, 필드 경계 충돌 결함 이력, MCP 멱등성, unknown 해소 화면. **가장 중요한 건 "이 증명은 outbox 발행까지다 — provider 실행 경로 자체가 시스템에 없다"는 경계**를 outbox.md에 명시한 것. → [idempotency.md](../../../final_project_cs/wiki/actions/idempotency.md), [outbox.md](../../../final_project_cs/wiki/actions/outbox.md) |
 
-**나머지 18건은 스캔만 하고 아직 직접 대조 안 함.** 반영률이 낮은 순서(DoD-15 7/12 등)로 계속하면 된다.
+| DoD-15 (7/12) | 지금 무효 처리된 옛 A/B/Proposed 수치조차, 처음엔 그것도 아니었다 — mock provider·외부망 차단·judge 환각인용 채점·Team의 LLM 결과 폐기(하드코딩 대체)·next_action 어휘일치 채점(계약 준수가 벌점)까지 **결함 5건**을 순서대로 고쳐야 나온 값이었다. 그중 둘은 고쳐지지 않았다면 정반대 결론(RAG가 해롭다 등)을 냈을 것. ablation flag 4종이 실행 전엔 아무것도 안 끄고 있었다는 것도 함께. → [protocol.md](../../evaluation/protocol.md), [judge.md](../../evaluation/judge.md) |
+
+**나머지 17건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

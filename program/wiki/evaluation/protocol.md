@@ -52,6 +52,28 @@ abl_no_*.jsonl         2026-08-14   ← ablation 5종도 전부 무효
 
 재측정 명령은 `final_project_cs/docs/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
 
+## ★ [2026-09-05] 이 숫자에 이르기까지 측정 결함 5건을 고쳤다
+
+`[실측]` [DoD-15](../../../final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md)에서. **위 무효가 된 옛 도메인 수치조차, 처음 나온 값이 아니었다.** 순서대로 잡아야 했던 것들이다.
+
+| # | 증상 | 실제 원인 |
+|---|---|---|
+| 1 | 540행 생성, 전부 성공 | **provider=mock**(fixture)으로 돌렸다 — 진짜 LLM을 안 부른 것 |
+| 2 | provider=openai, 540행인데 전부 실패 | 구현 담당 샌드박스가 외부망을 막고 있었다 |
+| 3 | A 35/180 · B 0/180 | **judge가 환각 인용에 점수를 줬다** — A가 `doc_06 §1`을 지어냈는데 실재 확인이 없었다 |
+| 4 | Proposed 0/180 | 실제 시스템이 안 돌아서 LLM 어댑터가 안 움직였고, `json_object` 400 에러가 나자 **Team이 LLM 결과를 버리고 하드코딩 문구로 대체**하고 있었다 |
+| 5 | B 115/180 · Proposed 0/180 | **`next_action` 채점이 어휘 일치를 쟀다** — golden은 자유형 라벨인데 Proposed는 계약 Enum이라 **계약을 지킨 쪽이 벌점**을 받았다 |
+
+**3번과 5번이 가장 위험했다.** 그대로 실었다면 "RAG가 오히려 해롭다"(3번), "Context Broker+Team이 baseline보다 나쁘다"(5번)는 **정반대 결론**이 나왔을 것이다. 이미 잘 동작하는 시스템이 채점 결함 때문에 나쁘게 보이는 쪽이, 안 되는 시스템이 좋게 보이는 쪽보다 알아채기 어렵다 — 결과가 "그럴듯하게" 나쁘기 때문이다.
+
+### ablation flag 4종이 실행 전엔 아무것도 안 끄고 있었다
+
+`abl_no_approval`·`abl_no_context_broker`·`abl_no_team_split`·`abl_no_feedback_inline` 네 flag가 결과의 `config.ablations`에는 기록되면서 **실제 실행 경로에는 반영되지 않고 있었다** — `no_rag`만 실제로 껐다. 그 상태로 돌렸다면 다섯 구성이 전부 같은 결과를 내 **"각 기능이 기여하지 않는다"는 정반대 결론**이 나왔을 것이다. 실행 전에 발견해 고쳤다.
+
+### `policy_evidence` 필드와 본문 인용은 다른 것을 잰다
+
+baseline_b 20행이 `policy_evidence`에 유효 인용 8건을 담고도 `policy_grounding` 0점을 받은 게 한동안 judge 결함으로 의심됐다. 실제로는 **답변 본문에 인용이 0개**였다 — 필드에는 doc id를 채워 뒀지만 주장에 근거를 붙이지 않은 것이다. `CLAUDE.md §0.1`("모든 핵심 주장에는 Evidence가 붙어야 한다")에 비춰 **judge 쪽이 계약에 더 가까웠다** — 이건 오류가 아니라 `field_only_evidence` 경고로만 남겼다.
+
 ## 표본
 
 ```

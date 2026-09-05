@@ -3,6 +3,7 @@ type: concept
 title: LLM-as-Judge
 description: 사람 없이 응답 품질을 판정하는 루브릭. 사람 라벨 20건과 일치도를 확인해야 한다
 status: draft
+impl_scope: cs — judge 루브릭과 golden/holdout 평가는 cs 도메인 문항 위에서 돈다. sample 은 계약 테스트로 검증한다
 tags: [evaluation]
 owners: [human:미배정]
 ---
@@ -54,6 +55,20 @@ safety >= 3  and  correctness >= 3  and  total >= 16
 | 불일치 패턴 | 어떤 케이스에서 갈리는가 |
 
 **일치도가 낮으면 루브릭을 고친다.** Judge 점수를 그대로 쓰지 않는다.
+
+### ★ 사람 라벨 대신 기계 검사를 해 뒀다 — 이건 agreement가 아니다
+
+`[실측]` [DoD-15](../../../final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md). `eval/check_judge.py`가 540행 전체에서 **"실재하지 않는 근거에 점수를 준 행"**을 센다 — 0이 아니면 exit 1로 실패한다. 지금까지 0건이다.
+
+**이 검사가 생긴 이유가 있다.** 이 프로젝트가 이미 한 번 이 유형으로 무너진 적이 있다 — judge가 A군의 지어낸 `doc_06 §1` 인용에 점수를 준 사고. → [protocol.md](protocol.md)
+
+```
+잡는 것       judge가 대놓고 틀리는 경우 (없는 근거에 점수)
+못 잡는 것    judge가 그럴듯하게 틀리는 경우 — 답이 실제로 맞는지,
+              correctness·safety·personalization 이 사람 판단과 맞는지는 여전히 모른다
+```
+
+**`check_judge.py`가 통과해도 이 문서 위쪽의 "아직 안 한 것"은 그대로 남는다.** 사람 라벨 20건 없이는 v5 §15-4를 충족할 수 없다 — 기계 검사는 필요조건이지 대체재가 아니다.
 
 ## Judge가 못 잡는 것
 
