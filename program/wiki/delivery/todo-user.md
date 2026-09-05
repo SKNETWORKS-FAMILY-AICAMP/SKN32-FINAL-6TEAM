@@ -9,7 +9,7 @@ owners: [human:미배정]
 
 # 사용자 실행 시트
 
-`[실측]` 2026-09-06. **AI가 할 수 있는 건 다 해 뒀다.** 아래는 사람이 실행하거나 결정해야만 넘어가는 것들이다. 위에서부터 순서대로 한다. 끝난 줄은 `[x]`로 바꾼다.
+`[실측]` 2026-09-06. **AI가 할 수 있는 건 다 해 뒀다.** 명령은 **PowerShell 기준**이다(`&&`와 `*.patch` 확장이 안 되는 Windows PowerShell 5.1에서 그대로 붙여 넣어도 된다). Git Bash를 쓰면 아래 `bash` 블록을 쓴다. 아래는 사람이 실행하거나 결정해야만 넘어가는 것들이다. 위에서부터 순서대로 한다. 끝난 줄은 `[x]`로 바꾼다.
 
 ## 1. 푸시 — 로컬 커밋 146건
 
@@ -23,13 +23,19 @@ git push origin role-core1
 
 거부되면(non-fast-forward) 억지로 밀지 말고 이렇게 한다.
 
-```bash
-git pull --rebase origin role-core1 && python program/scripts/check_wiki.py && git push origin role-core1
+```powershell
+git pull --rebase origin role-core1; if ($?) { python program/scripts/check_wiki.py }; if ($?) { git push origin role-core1 }
 ```
 
 ## 2. 원본 저장소 수정 — 패치 6장
 
-원본 문서는 AI가 직접 안 고친다는 기준이라 **`program/patches/2026-09-06/`에 패치로 만들어 뒀다.** 여섯 장 전부 `git apply --check`를 통과했다. 한 줄로 적용한다.
+원본 문서는 AI가 직접 안 고친다는 기준이라 **`program/patches/2026-09-06/`에 패치로 만들어 뒀다.** 여섯 장 전부 `git apply --check`를 통과했다. 저장소 루트에서 실행한다.
+
+```powershell
+Get-ChildItem program/patches/2026-09-06/*.patch | ForEach-Object { git apply $_.FullName }; git status --short
+```
+
+Git Bash라면 이렇게.
 
 ```bash
 git apply program/patches/2026-09-06/*.patch && git status --short
@@ -46,11 +52,17 @@ git apply program/patches/2026-09-06/*.patch && git status --short
 
 - [ ] 적용했으면 검증하고 커밋한다
 
-```bash
-python program/scripts/check_wiki.py && git add program/research/index.md datasets/commerce/coupang_order_history/docs/README.md datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md datasets/voc/data_go_kr_consumer_complaints/REPORT.md final_project_cs/docs/evidence/DoD-*.md .gitignore program/final_project_sample/wiki && git commit -m "docs: 2026-09-06 wiki 대조로 찾은 원본 낡음 6건 반영 + sample wiki 추적 시작"
+```powershell
+python program/scripts/check_wiki.py
+git add program/research/index.md datasets/commerce/coupang_order_history/docs/README.md datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md datasets/voc/data_go_kr_consumer_complaints/REPORT.md final_project_cs/docs/evidence .gitignore program/final_project_sample/wiki
+git commit -m "docs: 2026-09-06 wiki 대조로 찾은 원본 낡음 6건 반영 + sample wiki 추적 시작"
 ```
 
-`06`이 싫으면(sample wiki를 `final_project_sample` 저장소로 옮기는 쪽을 택하면) 그 패치만 빼고 `git apply` 한다. 그 경우 `program/final_project_sample/wiki/`를 그 저장소 안으로 옮기는 건 별도 작업이다.
+`06`이 싫으면(sample wiki를 `final_project_sample` 저장소로 옮기는 쪽을 택하면) 그 패치만 빼고 적용하고, `git add`에서 `.gitignore`와 `program/final_project_sample/wiki`를 뺀다.
+
+```powershell
+Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notlike "06_*" } | ForEach-Object { git apply $_.FullName }
+```
 
 ## 3. 결정 — 고르기만 하면 AI가 문서에 반영한다
 
