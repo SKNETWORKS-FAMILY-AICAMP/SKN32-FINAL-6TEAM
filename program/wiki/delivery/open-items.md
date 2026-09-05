@@ -15,6 +15,8 @@ owners: [human:미배정]
 
 ## 사람이 해야 하는 것
 
+실행 순서와 명령은 [todo-user.md](todo-user.md)에 있다. 여기는 목록이다.
+
 | 항목 | 왜 AI가 안 하나 |
 |---|---|
 | `git push -u origin workspace` | **AI 세션은 푸시를 실행하지 않는다** |

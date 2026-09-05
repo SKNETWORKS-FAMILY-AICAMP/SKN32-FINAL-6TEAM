@@ -37,6 +37,7 @@ status: draft
 | [dod.md](dod.md) | 무엇이 끝나야 끝난 것인가 |
 | [roles.md](roles.md) | 누가 무엇을 소유하는가 |
 | [open-items.md](open-items.md) | **무엇이 남았는가** |
+| [todo-user.md](todo-user.md) | **사람이 실행·결정할 것만** — 푸시, 패치 6장, 결정 7개, 전환 호출 |
 | [release-gate.md](release-gate.md) | **내보내도 되는가** |
 
 ## 지금 걸린 것
