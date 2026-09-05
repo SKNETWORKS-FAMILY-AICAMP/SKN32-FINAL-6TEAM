@@ -70,20 +70,20 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 
 | # | 물음 | 선택지 | 정하면 바뀌는 곳 |
 |---|---|---|---|
-| 1 | **wiki를 어디에 놓나** | A `<저장소>/wiki/` (권고) · B `docs/wiki/` | [D-012](../decisions/D-012-cutover-timing.md) — 전환의 마지막 전제 |
-| 2 | **Return & Refund** | A Mock 유지 · B LOCAL 승격(사유 코드·상태 전이 확인됐다는 뜻) | `CLAUDE.md` 표, golden 배분, [scope-verdicts.md](scope-verdicts.md) |
-| 3 | **중앙 설정 저장소를 이번 기간에 하나** | A 안 한다 → 산출물에 "결정만, 착수 안 함" · B 한다 → 에픽 추가 | [D-007](../decisions/D-007-central-config-store.md), 스프린트 설계 |
-| 4 | **Composer v3 채택** | A 구현을 v3에 맞춤 · B 설계를 현재 구현에 맞춤 · C 한시 병행 | [D-011](../decisions/D-011-composer-v3-gap.md) → 계약 문서 정합·패키지 이름·C-1 기준선이 줄줄이 풀린다 |
-| 5 | **v8 병합 시점** | A 중간발표(09-15) 전 · B 후 | [open-items.md](open-items.md) |
-| 6 | **`research/index.md`가 계획서·브리핑을 관리하나 (B-1)** | A 포함 · B 제외(지금처럼 `CLAUDE.md`에만) | 동 |
-| 7 | **골든셋 `persona` 필드 담당** | 이름 하나 | [golden-set.md](../evaluation/golden-set.md) |
+| 1 | ~~wiki를 어디에 놓나~~ | **A로 정함 (09-06)** | [D-012](../decisions/D-012-cutover-timing.md) |
+| 2 | ~~Return & Refund~~ | **A Mock 유지 (09-06)** — 코드가 `Mock-only`라 cs에 만들어진 게 없었다 | [scope-verdicts.md](scope-verdicts.md) |
+| 3 | **sample에 만든 중앙 설정 저장소를 cs로 가져와 쓰나** | A 이번엔 안 쓴다(sample에 둔다) · B cs로 이식한다(에픽 추가) — 코드는 sample에 완성돼 있고 cs엔 없다 | [D-007](../decisions/D-007-central-config-store.md) |
+| 4 | **Composer — 스위치 API만 남기나, 통째 교체 API를 정식으로 하나** | A 스위치(`/toggle`)만 남기고 통째 교체(`validate`·`apply`) 제거 · B 통째 교체를 정본으로 · C 둘 다 두고 종료일. 외부에서 통째 교체를 부르는 곳은 없음(09-06 확인) → A 가능. **팀 주제 재조사 끝난 뒤 정해도 된다** | [D-011](../decisions/D-011-composer-v3-gap.md) |
+| 5 | ~~v8 병합 시점~~ | **폐기 (09-06)** — v9로 판올림해 진행 | [open-items.md](open-items.md) |
+| 6 | ~~`research/index.md` 범위 (B-1)~~ | **B 제외로 정함 (09-06)** | 동 |
+| 7 | ~~골든셋 `persona` 필드 담당~~ | **역할로 정함 (09-06)** — 검증 & 프론트 담당. 이름은 팀 재편 뒤 | [golden-set.md](../evaluation/golden-set.md) |
 
 강사에게 물어야 하는 것 둘은 따로 있다.
 
 - [ ] **sLLM 파인튜닝이 6팀 필수인가** — 시트 문구가 "3, 4번 팀"이라 불명 → [timeline.md](timeline.md)
 - [ ] **3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나** — 파인튜닝 미채택이면 LLM API만으론 안 채워진다
 
-## 4. wiki 저장소 전환 — 3-1을 정한 뒤 부르면 한다
+## 4. wiki 저장소 전환 — 사용자가 부를 때만. AI는 먼저 말하지 않는다
 
 준비는 끝났다(문서 대조 22/22 · 검사 통과 · 미작성 링크 0). 스크립트는 지금 **dry-run만** 된다. 무엇이 바뀌는지 먼저 본다.
 
@@ -91,7 +91,7 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 python program/scripts/cutover_rewrite.py --layout wiki
 ```
 
-- [ ] 3-1을 정했다
+- [x] 3-1을 정했다 — `<저장소>/wiki/`
 - [ ] 위 dry-run 출력을 봤다
 - [ ] 채팅에 **"전환해"** — 그러면 AI가 가드를 풀고 `--apply`, 경로 320곳 재작성, `CLAUDE.md` 진입점 한 줄, 검사 4(v8 ↔ wiki)까지 한 번에 한다. 그 전엔 절대 안 한다 → [cutover.md](../governance/cutover.md)
 

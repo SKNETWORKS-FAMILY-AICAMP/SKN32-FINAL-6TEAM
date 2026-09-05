@@ -105,6 +105,8 @@ grant ceiling        권한 상한
 
 `[실측]` 마이그레이션·store·config source·service app 커밋 완료. **438개 테스트 통과.**
 
+`[실측 2026-09-06]` **그 코드는 전부 `final_project_sample`에 있다.** `acop_basement/core/config_store.py` · `application/config_source.py` · `migrations/006_project_configs.sql` · `acop_composer/api.py`·`service.py`, 테스트 5벌(store·central source·config service·composer service·UI 계약). **`final_project_cs`에는 `ConfigStore`·`project_configs`가 한 줄도 없다.** 그러니 "이번 기간에 하나"는 새로 만드느냐가 아니라 **sample에 만들어 둔 것을 cs로 이식해 쓰느냐**다. 이식 전까지 cs 쪽 산출물 문서엔 "결정·참고 구현 있음, cs 미연결"로 적는다.
+
 ## ★ [2026-09-03] 중앙에 못 붙으면 기동을 거부한다
 
 `[실측]` 원본 §8 에서 이관. **wiki 전체에 `fail-fast`·`기동 거부` 가 0건이었다.**

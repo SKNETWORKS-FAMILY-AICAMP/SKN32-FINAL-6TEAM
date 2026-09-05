@@ -104,7 +104,7 @@ withdrawal / warranty_repair / mixed / unknown
 
 `[실측]` 원본 §"계약·기준선". v8 §422는 Return & Refund를 **Registry 계약 + Mock**으로 두고, 실데이터의 **사유 코드 체계와 상태 전이가 확인돼 골든셋 정답 구성이 가능하면 LOCAL 승격**한다고 정했다. 개발자2 브리핑이 그 확인 작업으로 보였으므로 승격 판단이 필요했고, 승격하면 §15-8-A의 golden 60/holdout 20 배분·§1-2·§8-B·§16·§25·DoD를 함께 고친다. **그때 Return의 golden 배분은 0이었다.**
 
-`[미확보]` 승격을 판단한 기록이 없다. 2026-09-06 `config/project.yaml`엔 `return_refund`가 다른 넷과 같은 모양으로 `active: true`·`ReturnRefundTeam`으로 등록돼 있는데, 루트 `CLAUDE.md`는 여전히 "Return & Refund(Mock)"이다. Mock 그대로인지 LOCAL로 올라간 건지 등록 형식만으론 안 보인다 → [team-registry.md](../../final_project_cs/wiki/teams/team-registry.md).
+`[실측]` **2026-09-06 결정 — Mock 유지.** `app/modules/customer_ops/return_refund.py` 첫 줄이 `"""Mock-only Return & Refund Team."""`이고, 결과에 `mock_side_effect: False`와 경고 "Mock 단계에서는 승인 제안만 생성하며 실제 처리는 수행하지 않습니다"를 실어 보낸다. `project.yaml`에 `active: true`로 등록된 건 Mock을 켜 둔 것이지 승격이 아니다. 사용자 기준 — "팀이 주제를 다시 조사 중이라 갈릴 수 있으니 cs에 만들어진 게 없으면 Mock" — 그대로다. 승격 조건(사유 코드·상태 전이 확인 → golden 배분)은 주제가 확정된 뒤 다시 본다.
 
 `verdict`(승인/거부/검토필요)는 `TeamResult.decisions[]`에 넣고, `outcome`은 실행 상태(`completed/waiting/handoff/escalated/failed`)라 승인·거부를 넣지 않는다 — 검토필요일 때만 `escalated`나 `waiting`을 병행한다. Team 체이닝은 `next_action=HANDOFF`+`handoff_capability`로, Team 간 직접 호출은 금지. → [team-contract](../../final_project_cs/wiki/teams/team-contract/index.md)
 
