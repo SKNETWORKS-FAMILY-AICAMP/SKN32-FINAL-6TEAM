@@ -62,6 +62,18 @@ def open_support_case(customer_id: str, message: str, channel: str = "mcp") -> d
 
 **Team의 reversible operational write도 이 경계를 우회하지 않는다.** `ActionProposal`로 Controller와 Action Layer에 보낸다.
 
+### ★ 이 확장에는 순서가 있었다 — 방어가 먼저다
+
+`[실측]` `docs/plans/2026-08-16_v7_격차해소_실행계획.md`. v7 §9-E의 제목이 **"쓰기 권한을 여는 전제 조건"**이다. 그래서 실행계획은 MCP 쓰기 확장(P7)을 **근거 대조(P1 = DoD-24)와 degraded 차단(P2 = DoD-25)이 끝난 뒤에만** 하기로 못 박았다 — 순서를 바꾸면 계획서의 전제를 거스른다.
+
+또 하나 — **막는 코드를 먼저 만들고, 그것이 실제로 막는지 재는 수단(P4 = 방어 지표 5종)을 그다음에** 만들었다. 지표를 먼저 만들면 잴 대상이 없다.
+
+```
+P1 근거 대조 → P2 degraded 차단 → P3 REST 상한 교정 → P4 방어 지표 → … → P7 MCP 쓰기
+```
+
+P1·P2·P3·P4는 통과했다(DoD-24·25·13·28). **그래서 위 3단계가 열릴 수 있는 상태다.** `[미확보]` 실제로 `open_support_case` 외에 reversible write tool이 MCP에 붙었는지는 확인하지 않았다 — 지금 tool 3종은 전부 `mcp:read`다. 실행계획의 "진행 기록" 표는 "P1 착수"에서 멈춰 있어 낡았다.
+
 ## 보안 원칙 5가지
 
 `[실측]` v8 §9

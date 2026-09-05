@@ -190,6 +190,8 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 **같은 로그의 `voc: false` → 기동 거부는 그때는 "통과"였고 이틀 뒤 결함으로 재판정됐다.** → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
 
+`[실측]` 그 작업 전(2026-08-30)엔 **여섯 모듈 중 셋만 실제로 코드를 갈랐다** — `mcp`·`voc`는 `require_module` 호출처가 0건, `graph_store`는 게이트가 있어도 관리자 화면이 `SqlGraphAdapter`를 직접 만들어 우회했다. 위 표는 그걸 고친 뒤의 상태다. 설계 판단의 경위는 [../../../wiki/governance/drift-case-voc.md](../../../wiki/governance/drift-case-voc.md).
+
 근거: `docs/handoff/08_모듈_컴포넌트_목록.md:57-68`
 
 ## 교체 가능한 Port
