@@ -59,6 +59,10 @@ tags: [contract, architecture, security]
 
 **횟수 제한과 별개다.** 12번을 안 채워도 **같은 걸 두 번 하면 멈춘다.**
 
+`[실측]` **이 `2`는 예외다 — 코드가 `repeated_tool_signature_limit`을 읽지 않는다.** `ReadToolbox`가 "같은 tool+arguments 두 번째"를 거부하는 방식으로 2를 직접 구현했다. `guardrails.yaml`의 숫자를 바꿔도 동작은 안 바뀐다. **위 "규칙이 먼저다"가 요구하는 단일 출처가 아직 안 된 항목이다.**
+
+`graph_max_steps`·`max_team_tasks_per_case`·`max_tool_calls_per_case` 셋도 **아직 강제되지 않는다** — Controller가 Case당 Team을 한 번(+리뷰 1회)만 실행해 셀 반복 자체가 없다. 다단계 그래프 런타임이 생기면 그때 읽는다.
+
 ## RAG
 
 | 항목 | 값 |
@@ -88,6 +92,14 @@ tags: [contract, architecture, security]
 ```
 
 **단순한 규칙을 고른 게 의도다.** 왜 급증이라 판정했는지 사람이 설명할 수 있어야 한다.
+
+### ★ [2026-09-05] 이 공식이 실제로는 단일 출처가 아니었다
+
+`[실측]` [DoD-10](../../../../final_project_cs/docs/evidence/DoD-10_일일배치_급증report.md)이 이 공식을 "통과, 수치는 `guardrails.yaml`의 5/1.5/3"이라고 적었는데, **그 시점(2026-08-14)에도 `is_surge()`는 `5`·`1.5`·`3`을 코드에 직접 박아 두고 있었다.** `guardrails.yaml`의 값과 우연히 같아서 대조가 통과한 것이지, 실제로 그 파일을 읽은 게 아니었다.
+
+**위 "규칙이 먼저다"가 스스로 정한 원칙을 이 공식 자체가 어기고 있었다는 뜻이다.** `feedback_analytics.surge_*`를 고쳐도 급증 판정은 안 바뀌었다.
+
+가드레일 잎 65개 전수 대조(2026-09-05)에서 발견해 `app.core.settings.get_guardrails()`로 읽도록 고쳤다 — `resume.token_ttl_hours`(코드에 `timedelta(hours=24)`로 박혀 있던 것)도 같은 종류라 함께 고쳤다. 회귀 테스트 5건 추가.
 
 ## Resume token
 
