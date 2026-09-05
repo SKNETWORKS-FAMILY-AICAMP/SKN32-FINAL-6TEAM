@@ -96,6 +96,18 @@ tests/integration/controller/test_active_run_uniqueness.py
 
 마이그레이션 `004_agent_runs_active_uniqueness.sql`이 DB 제약으로 받친다.
 
+### ★ [2026-09-05] 이 제약이 왜 필요했는가 — `SELECT FOR UPDATE`만으로는 안 됐다
+
+`[실측]` [DoD-03](../../../../final_project_cs/docs/evidence/DoD-03_동시성_appendonly_replay.md). **애초 구현은 앱 레벨 `SELECT ... FOR UPDATE`로 활성 run 존재를 확인하는 방식이었다.**
+
+**이 락은 이미 존재하는 행만 잠근다.** 같은 Case에 활성 run이 **0개**인 상태에서 두 요청이 동시에 `start_run()`을 호출하면, 잠글 행 자체가 없으니 **둘 다 insert에 성공할 수 있었다** — 전형적인 확인-후-삽입(TOCTOU) 레이스다.
+
+**원래 이 문서의 "한계" 절이 정확히 이 결함을 놓치는 지점이라고 스스로 적어 뒀다** — "실제 다중 프로세스 동시성 부하 시험은 하지 않았다." 실제로는 부하가 아니라 **순수하게 동시에 두 번 부르기만 해도** 재현됐다.
+
+`final_project_sample`과 대조하다 이 가능성을 발견했고, `ThreadPoolExecutor`로 진짜 동시 두 스레드가 같은 Case에서 `start_run()`을 부르는 재현 테스트를 **먼저** 추가해 레이스를 확인한 뒤, 앱 레벨 락 대신 DB 레벨 partial unique index로 옮겼다 — `UniqueViolation`을 `ActiveRunError`로 잡는다.
+
+**교훈 — 앱 레벨 락은 "이미 있는 것"만 지킨다. "아직 없는 것"의 유일성은 DB 제약이 있어야 한다.**
+
 ## 불변식 전체
 
 | ID | 불변식 | 판정 | 실행 위치 |

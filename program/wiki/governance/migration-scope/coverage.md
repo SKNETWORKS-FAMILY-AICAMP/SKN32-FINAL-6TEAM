@@ -178,7 +178,9 @@ CLAUDE.md 와의 우선순위
 
 | DoD-12 (5/7) | outbox 중복방지 제약이 원래 `UNIQUE(topic, dedupe_key)`뿐이라 **tenant_id가 없었다** — 다른 테넌트끼리 서로 충돌할 수 있던 보안급 결함. `final_project_sample`과 대조하다 발견됐다는 게 특히 값지다(단일 저장소 리뷰가 아니라 다른 구현체 비교로 잡음). wiki의 스키마 스니펫 자체가 옛 제약을 그대로 싣고 있던 것도 정정. → [outbox.md](../../../final_project_cs/wiki/actions/outbox.md) |
 
-**나머지 16건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-03 (6/8) | `agent_runs` 동시 시작 유일성 제약이 왜 필요했는지의 메커니즘 — 앱 레벨 `SELECT FOR UPDATE`는 **이미 있는 행만** 잠가서, 활성 run이 0개일 때 두 요청이 동시에 insert에 성공할 수 있던 TOCTOU 레이스. 이것도 `final_project_sample`과 대조하다 발견됨(DoD-12와 같은 발견 경로). → [conflict-retry.md](../../../final_project_cs/wiki/runtime/conflict-retry.md) |
+
+**나머지 15건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 
