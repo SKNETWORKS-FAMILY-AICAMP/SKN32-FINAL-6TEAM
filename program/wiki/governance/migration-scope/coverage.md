@@ -180,7 +180,9 @@ CLAUDE.md 와의 우선순위
 
 | DoD-03 (6/8) | `agent_runs` 동시 시작 유일성 제약이 왜 필요했는지의 메커니즘 — 앱 레벨 `SELECT FOR UPDATE`는 **이미 있는 행만** 잠가서, 활성 run이 0개일 때 두 요청이 동시에 insert에 성공할 수 있던 TOCTOU 레이스. 이것도 `final_project_sample`과 대조하다 발견됨(DoD-12와 같은 발견 경로). → [conflict-retry.md](../../../final_project_cs/wiki/runtime/conflict-retry.md) |
 
-**나머지 15건은 스캔만 하고 아직 직접 대조 안 함.**
+| DoD-27 (5/7) | a2a-protocol.md의 자체 표가 **틀려 있었다** — 취소를 Case 상태 `cancelled`로 기록한다고 적었지만 실제로는 `outcome=escalated`+`failure_code=cancelled_by_caller`(계약 Literal을 안 늘리려는 설계). `_call_within_deadline`이 루프 사이에서만 확인해 원격 호출 하나가 hang하면 deadline을 넘길 수 있던 갭도 확인 — DoD-03·DoD-12에 이은 **세 번째 sample 대조 발견**이라 review-policy.md에 이 방법 자체를 새 절로 기록. → [a2a-protocol.md](../../../final_project_cs/wiki/external/a2a-protocol.md), [review-policy.md](../review-policy.md) |
+
+**나머지 14건은 스캔만 하고 아직 직접 대조 안 함.**
 
 ## 다음
 

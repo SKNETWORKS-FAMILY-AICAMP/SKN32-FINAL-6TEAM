@@ -110,6 +110,10 @@ _map             TeamResult 로 정규화
 
 **best effort라고 이름에 적혀 있다.** 취소가 보장되지 않는다는 뜻이고, 그래서 원격 결과를 나중에 받아도 안전해야 한다.
 
+`[실측]` **`_call_within_deadline`이 처음엔 반쪽짜리였다** ([DoD-27](../../../../final_project_cs/docs/evidence/DoD-27_A2A_실패_취소_인증.md) 2026-08-24 갱신). deadline은 **루프 반복 사이에서만** 확인되고 있었다 — `submit()`이나 `poll()` 호출 자체가 응답 없이 오래 걸리면(hung) 그 한 번의 호출은 안 끊겨서 선언된 deadline을 훨씬 넘길 수 있었다. `final_project_sample` 대조로 발견해, 각 원격 호출을 `asyncio.wait_for(call, timeout=deadline_at - now())`로 감싸도록 고쳤다 — 10초 hang하는 mock에 30ms deadline을 줘도 0.5초 안에 `remote_deadline_exceeded`로 끝나고 `_cancel_best_effort`가 실제로 호출되는지까지 재현 테스트로 확인했다.
+
+**이걸로 `final_project_sample`과의 대조가 잡은 결함이 세 번째다** — DoD-03의 `agent_runs` 동시성, DoD-12의 outbox tenant dedupe에 이어 같은 방법이 또 통했다.
+
 ## 결과를 정규화한다
 
 원격이 무엇을 주든 `TeamResult`로 바꾼다. **Controller는 A2A인지 로컬인지 모른 채 같은 상태 기계를 돈다.**
@@ -125,11 +129,19 @@ A2A Task는 자체 생명주기를 갖는다. **매핑은 Adapter가 하고 Cont
 | 진행 중 | `running` | deadline까지 상태를 조회 |
 | 추가 입력 필요 | `waiting_input` | 질문을 `need_more_context`로 정규화 |
 | 완료 | `resolved` 또는 후속 판단 | Artifact를 `TeamResult`로 정규화 |
-| 실패 | `escalated` | 재시도 한도 초과 시 근거와 함께 넘김 |
-| 취소 | `cancelled` | 취소 사유와 `task_id` 기록 |
+| 실패 | `escalated` (`failure_code=remote_task_failed`) | 재시도 한도 초과 시 근거와 함께 넘김 |
+| 취소 | `escalated` (`failure_code=cancelled_by_caller`) | 취소 사유와 `task_id` 기록 |
 | **알 수 없음** | **`escalated` + 결과 `unknown`** | **임의로 완료 처리하지 않는다** |
 
 **마지막 줄이 핵심이다.** deadline 초과나 조회 실패를 완료로 추정하지 않는다. [`idempotency.md`](../actions/idempotency.md)의 `INV-CS-ACT-003`과 같은 원칙이다.
+
+### ★ [2026-09-05] 취소는 새 상태가 아니라 실패의 한 종류로 기록된다
+
+`[실측]` [DoD-27](../../../../final_project_cs/docs/evidence/DoD-27_A2A_실패_취소_인증.md). `outcome`에 `"cancelled"`라는 값을 **추가하지 않았다** — 계약 Literal을 늘리면 전이표·리듀서·저장까지 파급되기 때문이다. 대신 `outcome="escalated"` + `failure_code="cancelled_by_caller"` + 경고 문구("원격 Task가 취소됐다 — 실패와 구분해서 읽어야 한다")로 남긴다.
+
+**이전엔 실패와 취소를 아예 구분하지 않았다.** executor가 `{"failed","error","cancelled"}`를 전부 `remote_task_failed`로 뭉갰다 — **누가 멈췄는지**(원격이 못 함 vs. 우리가 그만둠)가 사라졌었다. 지금은 `failure_code`로 구분된다.
+
+`[실측]` **한 번 잘못 셀 뻔했다.** 최초 검토에서 "cancel" 검색이 38건 나왔는데, 그건 대부분 `resolved --cancelled_by_user--> cancelled`(고객이 Case를 취소하는 것)였다 — v7이 요구한 **원격 Task 취소**와는 다른 사건이었다. **코드에 낱말이 있는 것과 그 경로가 실제로 밟히는 것은 다르다.**
 
 ### 재시도 범위
 
