@@ -157,6 +157,37 @@ excluded.tracking_number_missing_boxes:   1   (송장번호 미기재)
 
 **원인 후보 — 링크 없는 주문을 화면에서 식별하는 방법이 안 정해졌다.** 로그인 상태의 실제 DOM이 있어야 진행 가능 — 코드만으로는 못 고친다.
 
+## ★ [2026-09-06] 택배 조회 도구 — 이것도 바깥 화면 관측이다
+
+`[실측]` [courier_tracking/README.md](../../../datasets/commerce/courier_tracking/README.md)에서. 쿠팡 확장과 같은 성격이다 — **네이버 택배조회 내부 API를 쓰므로 상대가 바꾸면 낡는다.**
+
+| 무엇 | 어떻게 |
+|---|---|
+| 인증 | 로그인 없음. 네이버 검색 페이지 HTML에서 `passportKey`를 얻어 재사용 |
+| 호출 | **`fetch`를 쓰지 않는다.** 같은 페이지에 JSONP `<script>` 태그를 주입한다 |
+| 키 갱신 | `timeout`·`script_error`·`key_expired`가 **연속 3회**면 다음 조회 전에 키를 다시 받는다 |
+| 간격 | 조회마다 2.0~5.0초 사이에서 새로 뽑는다(옵션, 최소 1.0초) |
+| 택배사 | `courier_codes.json`. 이름은 공백·문장부호·대소문자를 지운 뒤 비교 |
+
+### 오류 여섯 가지 — `no_history`는 오류가 아닐 수 있다
+
+| 값 | 뜻 |
+|---|---|
+| `no_history` | 응답은 `Y`인데 이력이 없음 — **보관기간 만료 가능성.** 위 "이력표 부재는 오류가 아니다"와 같은 축 |
+| `not_found` | 응답이 `N` |
+| `unsupported_courier` | 코드 목록에 택배사가 없음 |
+| `timeout` | JSONP 응답이 12초 안에 안 옴 |
+| `script_error` | 스크립트 로드 또는 응답 파싱 실패 |
+| `key_expired` | `passportKey` 만료·무효 |
+
+**뒤 셋은 재시도 대상이고 앞 셋은 아니다.** 통계에서 "이력 없음"을 실패로 세면 보관기간이 지난 옛 주문이 전부 실패로 잡힌다.
+
+### 저장하지 않는 것
+
+배송 이벤트는 `kind`·`where`·`timeString`·`time`·`level`만 남긴다. **전화번호·기사 이름·사진, 발송인·수취인 이름·주소는 저장하지 않는다.** 상품명(`itemName`)은 `item_name`으로 남긴다.
+
+결과는 `raw/tracking_YYYY-MM-DD.jsonl`에 한 줄씩 즉시 붙이고, `--resume`이 당일 파일의 송장번호를 건너뛴다. 테스트는 네트워크·Playwright 없이 돈다.
+
 ## 개선 대기
 
 `[미확보]`

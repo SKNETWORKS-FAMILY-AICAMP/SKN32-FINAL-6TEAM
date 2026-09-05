@@ -226,6 +226,18 @@ CLAUDE.md 와의 우선순위
 | 2026-08-31 회귀테스트_검증 (5/6) | 결함 18건 전부 잡힘(424→470)은 좋은데, `INV-STATE-001`은 **결함을 심어도 단독 5회 중 4회 통과** — 진 쪽이 읽는 시점에 따라 `StateConflict` 대신 `InvalidTransition`. 게이트 48/48이 이 종류를 구분 안 하고 센 값이라는 점을 blind-spots에, 예외 종류가 타이밍에 달렸다는 성질을 conflict-retry에. 고쳐졌는지는 `[미확보]`. → [conflict-retry.md](../../../final_project_cs/wiki/runtime/conflict-retry.md) |
 | MODULE-TOGGLES (3/8) | **evidence가 결함을 정상으로 승인한 다섯 번째 종류** — `voc: false` → 기동 거부를 "통과"로 판정했는데 이틀 뒤 v8 재판정이 그 결합을 결함 1번으로 뒤집었다. 로그가 틀린 건 아니다("선언대로 동작하는가"엔 맞았다) — 선언이 틀렸다는 건 로그가 물을 수 없는 질문이었다. "모듈 꺼짐" 표기(빈칸은 껐다/고장을 구별 못 함)와 `--reload` 함정(조립은 기동 때 한 번, reload 자식이 옛 코드를 서빙)도 채움. → [dod-evidence-drift.md](../../../final_project_cs/wiki/quality/dod-evidence-drift.md), [run.md](../../../final_project_cs/wiki/operations/run.md) |
 
+## 8차 — 데이터셋 문서 5건 (2026-09-06)
+
+`[실측]` 루트 `CLAUDE.md`가 "각 데이터셋의 정본"으로 지정한 REPORT/README 중 5건. `catalog.md`는 일부러 얇은 지도라 본문이 안 옮겨진 건 설계이고, **함정·결론·규칙 위반**만 골라 채웠다. 남은 `유지` 문서 54 → 49건.
+
+| 대조함 | 찾은 것 |
+|---|---|
+| data_go_kr REPORT (4/5) | EUC-KR 인코딩 함정이 wiki에 없었다. 디스크를 보니 REPORT의 "processed/·scripts/ 없음"이 **낡았고**(15090382 XML에서 Team 근거 사례 2종을 뽑아 둠), 그 추출 스크립트 둘이 **`scripts/`가 아니라 `processed/` 안에** 있어 폴더 규칙 위반. "원문은 15098320뿐"은 report-split.md에 이미 있었음. → [catalog.md](../../../datasets/wiki/catalog.md) |
+| kaggle REPORT (4/6) | KR3 라이선스·"학습 본체 아님" 방침은 이미 반영. 죽은 링크 1건·두 CSV 동일 여부 미확인은 REPORT에 두는 게 맞아 안 옮김 |
+| sources_catalog REPORT (2/6) | catalog.md의 "아직 안 받은 후보 목록"이 낡았다(대부분 받아 독립함). HuggingFace 감정분류 모델 4종·KOTE가 wiki에 없었고, **"감정 축 검증 못 한다"로 닫은 항목의 후보**라 golden-set.md에 [미확보] 단서로 연결 — 댓글 감정이지 상담 감정은 아니라 축 판단은 사람 몫. → [golden-set.md](../../evaluation/golden-set.md) |
+| naver README (4/6) | 두 쇼핑몰이 같은 `order_schema.json`으로 낸다는 점, `_source.normalization_warnings` 4종(연도 추정·수량 기본값·배송 JSON 누락)의 뜻, PII 처리가 둘이 다르다는 점(네이버 해시·쿠팡 미수집). → [catalog.md](../../../datasets/wiki/catalog.md) |
+| courier_tracking README (4/7) | 네이버 내부 API(`passportKey` JSONP 주입, `fetch` 금지)라 바깥 관측이라는 점, 오류 6종 중 `no_history`는 보관기간 만료일 수 있어 실패로 세면 안 된다는 점, 저장 제외 PII 목록. → [scraper-notes.md](../../../datasets/wiki/scraper-notes.md) |
+
 ## 다음
 
 | # | 할 일 |
