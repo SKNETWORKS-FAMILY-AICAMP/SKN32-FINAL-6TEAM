@@ -196,7 +196,23 @@ CLAUDE.md 와의 우선순위
 | DoD-23 (3/5) | 계약 테스트 구조는 idempotency.md에 이미 있었다. 빠진 건 dod.md 자체 모순 — 위쪽은 "23은 2026-08-20 통과", 아래 표 두 곳은 "부분통과(consumer 1종뿐)·두 번째 consumer 필요"로 남아 있던 것을 정정. → [dod.md](../../delivery/dod.md) |
 | DoD-26 (3/6) | `Evidence.source_type="remote_agent"`를 계약에 추가한 이유(우리가 확인한 사실 vs 남이 말한 것의 구분, 테스트가 먼저 잡음), Transport 교체 때 Executor 무변경(Port의 값 증명), **Controller 종단(`waiting_external`→resume)은 아직 미관측**이라 remote-team-a2a.md의 매핑이 설계임을 명시. → [a2a-protocol.md](../../../final_project_cs/wiki/external/a2a-protocol.md) |
 
-**나머지 4건은 스캔만 하고 아직 직접 대조 안 함** — DoD-08 · 19 · 20 · EVAL-DATASETS.
+| DoD-08 (3/6) | evidence의 **증명 대상 자체가 없다** — 제목·판정 근거가 `BillingSubscriptionTeam`·`TechnicalEntitlementTeam`인데 둘 다 2026-08-18 퇴역. 21·13의 "라벨만 옛것"과 다른 종류로 drift 표에. 기제(계약 validator 3보장)는 `team-contract/index.md`의 `model_validator` 절에 이미 있어 추가 안 함. → [dod-evidence-drift.md](../../../final_project_cs/wiki/quality/dod-evidence-drift.md) |
+| DoD-19 (3/5) | 원격 상태 어휘가 `TeamResult` 밖으로 안 샌다(`input_required`→`wait_for_input`)는 점을 a2a-protocol에. `observed_at` 클럭 틱으로 `model_dump()` 비교가 흔들린 **원인 확정 flake**를 blind-spots의 원인 미확정 동시실행 건과 대비해 추가. → [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
+| DoD-20 (3/5) | drift 표엔 이미 "테스트 경로 이동"으로 있었음. 빠진 건 조립 실패 조건 둘 — 미구현 port(`redis_streams`·`age`·`neo4j`) 선택은 조립 실패, `a2a`는 모듈 off면 선택 불가. "선언 교체 ≠ 원격 실행 확인" 한계는 DoD-26 종단 미완과 같은 것. → [teams/index.md](../../../final_project_cs/wiki/teams/index.md) |
+| EVAL-DATASETS (3/7) | golden/holdout 인수 검사 9종(핵심은 `doc_ref`가 실제 25문서 색인과 **문자열 완전일치**해야 한다는 것 — judge 환각 인용 사고와 같은 뿌리)과 Codex 산출물을 받을 때 한 검수 4단계(독립 재실행·표본 12건 사람 확인·단위 붙은 숫자 주장 전수 추출 → 1건뿐, 코퍼스와 일치). 재작성이 낡은 테스트 단언(옛 `g-billing` 배분)을 드러낸 것도. → [golden-set.md](../../evaluation/golden-set.md) |
+
+### 6차 결과 — 28건 전부 직접 대조 완료 (2026-09-06)
+
+| | 건수 |
+|---|---:|
+| wiki에 채우거나 고친 것이 있었던 evidence | **26** |
+| 읽었지만 이미 충분해 손대지 않은 것 | 2 (02·09) |
+| **wiki 자체가 틀려 있던 곳** | **8** — dod.md "통과 29"·17번 "파일시스템 gate"·23번 표, shared-state의 `INV-CS-RT-001~004`, a2a-protocol 취소 상태, outbox 스키마 `UNIQUE`, rest-api "정확히 5개"×3, remote-team-a2a `waiting_external` |
+| 새로 만든 페이지 | 2 — `context/graph-retrieval.md`, `quality/dod-evidence-drift.md` |
+| 테스트를 읽다 찾은 것 | 빈 테스트 1(`must_be_scoped`), docstring↔코드 반대 1 |
+| **evidence 쪽이 낡아 cs 저장소 작업자에게 넘길 것** | DoD-06(sample을 잰 것) · 08(대상 Team 퇴역) · 13·21(옛 라벨) · 14·22·02·20·24(일부 낡음) |
+
+**스캔 도구가 가장 값진 데 두 번 맞았고 두 번 틀렸다.** DoD-07·17은 신호 적중 0건이 맞게 "통째로 없다"였고, DoD-29·24는 "2/9·4/11 적중"이 결함 발견으로 이어졌다. 반면 DoD-02·09는 적중이 낮아도 이미 충분히 반영돼 있었고, DoD-13은 적중 3/5인데 wiki가 코드보다 낡아 있었다 — **적중률은 읽을 순서를 정해 줄 뿐 판정을 대신하지 못한다.** 이 도구가 스스로 적어 둔 그대로다.
 
 ## 다음
 
@@ -204,7 +220,7 @@ CLAUDE.md 와의 우선순위
 |---|---|
 | 1 | **`_codex_추적화면_교차검증` 14/14 누락** — 통째로 안 됐다 |
 | 2 | "일부" 35건의 빠진 부분 채우기 |
-| 3 | DoD evidence 나머지 26건 직접 대조 |
+| 3 | ~~DoD evidence 28건 직접 대조~~ **완료 (6차, 2026-09-06)** |
 | 4 | 나머지 186건도 같은 방식으로 대조 |
 
 ## 관계

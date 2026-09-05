@@ -120,6 +120,8 @@ _map             TeamResult 로 정규화
 
 원격이 무엇을 주든 `TeamResult`로 바꾼다. **Controller는 A2A인지 로컬인지 모른 채 같은 상태 기계를 돈다.**
 
+`[실측]` [DoD-19](../../../../final_project_cs/docs/evidence/DoD-19_LOCAL_A2A_정규화.md). 두 가지가 테스트로 잡혀 있다 — `LocalTeamExecutor`의 결과가 Team 직접 호출과 `model_dump()`까지 완전히 같고, **원격 상태 어휘가 밖으로 새지 않는다**(`input_required`가 아니라 `wait_for_input`으로 나온다). 어휘가 새면 Controller가 두 경로를 구분하기 시작한다.
+
 ### 이중 상태 머신을 Adapter가 흡수한다
 
 A2A Task는 자체 생명주기를 갖는다. **매핑은 Adapter가 하고 Controller는 Case 상태만 본다.**

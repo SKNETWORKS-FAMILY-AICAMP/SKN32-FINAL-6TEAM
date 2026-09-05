@@ -47,7 +47,7 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 
 `[실측]` **DoD-22 는 통과로 적혀 있지만 근거가 사라졌다.** 인용한 테스트 소스가 없고 `.pyc` 만 남았다. → [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md)
 
-**통과 26 중 근거를 확인한 것은 9건뿐이다.**
+**통과 26 중 근거를 확인한 것은 10건뿐이다.**
 
 ## 1~10 — 기반
 
@@ -193,7 +193,7 @@ DoD-04 · 10 · 12 · 16 · 18 · 23    갭 분석: 부분    →    evidence: �
 
 > **evidence 가 정본이되, "통과"라고 적힌 것도 근거가 살아 있는지 봐야 한다.**
 
-`[미확보]` **29건 중 9건만 확인했다.** 나머지 20건은 아직 안 봤다. DoD-06은 근거가 낡은 게 아니라 **처음부터 sample 을 잰 것**이었고, DoD-21은 fixture 라벨만 옛 식별자, DoD-13은 "6번째 경로는 위반"이라는 규칙 자체가 바뀐 뒤다 → [dod-evidence-drift.md](../../final_project_cs/wiki/quality/dod-evidence-drift.md)
+`[미확보]` **29건 중 10건만 확인했다.** 나머지 19건은 아직 안 봤다. DoD-06은 근거가 낡은 게 아니라 **처음부터 sample 을 잰 것**이었고, DoD-21은 fixture 라벨만 옛 식별자, DoD-13은 "6번째 경로는 위반"이라는 규칙 자체가 바뀐 뒤, **DoD-08은 증명한 대상 Team 둘이 퇴역해 없다** → [dod-evidence-drift.md](../../final_project_cs/wiki/quality/dod-evidence-drift.md)
 
 ## 발표에서 어느 숫자를 쓰나
 

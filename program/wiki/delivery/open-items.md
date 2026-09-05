@@ -45,6 +45,7 @@ owners: [human:미배정]
 | 이관 199건 (사람 판정 60) | [../governance/migration-scope/index.md](../governance/migration-scope/index.md) |
 | 골든셋 라벨링 절차 확인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) |
 | Team 경계 불변식 3개 자동화 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
+| **DoD evidence 9건이 낡았다 — `final_project_cs/docs/evidence/` 수정 필요** (2026-09-06 대조로 확인) | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
 
 ## 측정 대기
 

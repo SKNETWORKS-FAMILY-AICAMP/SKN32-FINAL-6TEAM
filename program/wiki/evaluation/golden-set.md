@@ -164,6 +164,30 @@ sources:
 
 **어제 이 문단을 쓸 때 `source_category` 를 안 보고 `mapped_intent` 합계만 봐서 틀렸다.** REPORT.md 를 먼저 읽었어야 했다.
 
+## 인수 검사 — 기계가 보는 아홉 가지
+
+`[실측]` [EVAL-DATASETS 검증](../../../final_project_cs/docs/evidence/DoD-EVAL-DATASETS_검증.md). 2026-08-17 쇼핑몰 도메인으로 다시 쓴 golden/holdout을 `scripts/verify_eval_datasets.py`가 받았다. 그때 기준 golden 60 · holdout 20이다(DoD-29 추가분 전).
+
+| # | 검사 | 실패 조건 |
+|---|---|---|
+| 1 | 건수 | golden 60 / holdout 20 아님 |
+| 2 | 스키마 | 8필드 정확히, 타입 |
+| 3 | `expected_intent` | `order`·`shipping`·`return`·`exchange` 밖의 값 — **라우팅 가능한 값만** |
+| 4 | `case_id` | `g-<intent>-NN`/`h-<intent>-NN` 형식, 80건 유일 |
+| 5 | **`doc_ref`** | 25문서 실제 색인(`_doc_index.json`)과 문서 ID·섹션 제목 **문자열 완전일치.** 없는 문서·섹션을 인용하면 실패 |
+| 6 | 한국어 | 글자 중 한글 50% 미만 |
+| 7 | 커버리지 | 그 intent scope의 모든 문서가 golden에서 2회 이상 인용돼야 |
+| 8 | 다양성 하한 | `wait_for_approval` ≥3 · degraded/unavailable ≥3 · negative/frustrated ≥5 |
+| 9 | 중복 | golden/holdout 간 `case_id`·`message` 완전 중복 |
+
+**5번이 이 검사의 핵심이다.** 골든셋이 코퍼스에 없는 근거를 정답으로 들면 judge가 그걸 기준으로 채점한다 — [protocol.md](protocol.md)의 "judge가 환각 인용에 점수" 사고와 같은 뿌리다.
+
+### Codex가 쓴 데이터를 그대로 받지 않았다
+
+`[실측]` 골든셋은 Codex 산출물이다. 받을 때 넷을 했다 — `git status`로 소유 범위 밖 파일 변경이 없는지, 검증 스크립트를 **Codex 실행과 별개로 직접 재실행**해 다양성 수치가 정확히 일치하는지, 무작위 12건을 사람이 읽어 `message`↔`doc_ref`↔`expected_next_action`이 의미적으로 맞는지, 그리고 **단위 붙은 숫자 주장을 정규식으로 전수 추출** — 80건 중 1건(`g-return-01`의 "7일")뿐이었고 코퍼스 `doc_11`의 청약철회 기한과 일치했다. 나머지는 숫자를 지어내지 않고 시나리오만 서술한다.
+
+`[실측]` 이 재작성이 **낡은 테스트 단언 하나**를 드러냈다 — `test_dataset_counts_and_allocation_and_disjointness`가 옛 도메인 배분(`g-billing`/`g-technical`/`g-feedback` 20건씩)을 단언하고 있었다. 데이터셋 결함이 아니라 테스트가 낡은 것이었다.
+
 ## 한계
 
 `[미확보]` 넷을 인정한다.
