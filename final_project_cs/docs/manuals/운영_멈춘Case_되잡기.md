@@ -74,7 +74,50 @@ JSON 을 사람이 읽어야만 알 수 있던 상태였다. 이제 **밖으로 
 ★사유는 **stderr** 로만 간다. stdout 은 JSON 한 줄이라는 계약을 지켜야
 파이프로 받아 쓰는 쪽이 안 깨진다.
 
-cron 예시 — 실패하면 cron 이 알아서 시끄러워진다:
+## 주기 실행에 거는 법 (2026-09-07)
+
+★**이 기계에 있는 스케줄러는 `schtasks` 하나뿐이다**(실측). `docker`·`systemctl`·
+`cron`·`crontab` 은 전부 없다 — 위 「환경 기동 절차」가 적어 둔 그대로다.
+
+```powershell
+python -m scripts.install_sweeper_task            # 무엇을 걸지 보여만 준다(기본)
+python -m scripts.install_sweeper_task --apply    # 실제로 등록 (1분마다)
+python -m scripts.install_sweeper_task --status   # 지금 걸려 있나
+python -m scripts.install_sweeper_task --remove   # 뗀다
+```
+
+### 왜 `--once` 를 반복해서 거는가 (상주 `--interval` 이 아니라)
+
+| 이유 | |
+|---|---|
+| 죽어도 다음 회차가 돈다 | 상주 루프는 프로세스가 죽으면 그냥 멈춘다 |
+| **실패가 밖으로 나간다** | `--once` 는 `errored` 면 exit 1 → 스케줄러가 실패로 기록. 상주 모드에는 볼 exit code 가 없다 |
+| 주기가 코드 밖에 있다 | "언제 도는지" 가 스케줄러에 적힌다 |
+
+### 실측 (2026-09-07) — 신호가 끝까지 닿는가
+
+임시 작업으로 등록해 실제로 돌리고 뗐다.
+
+```
+스케줄러가 sweeper 를 실행       → 마지막 결과 0
+exit 1 을 내는 작업              → 마지막 결과 1     ← 실패로 기록된다
+exit 0 을 내는 작업              → 마지막 결과 0
+```
+
+즉 `errored` → **exit 1** → **스케줄러 실패 기록** 까지 고리가 이어진다.
+
+★한 번은 이 측정을 잘못 읽을 뻔했다. `schtasks` 는 **CP949** 로 출력하는데
+UTF-8 로 읽어 한글 키(`마지막 결과`)를 못 찾고 `None` 이 나왔다. **"못 읽었다" 와
+"값이 0 이다" 는 다르다** — 인코딩을 맞춰 다시 쟀다.
+
+### 컨테이너·systemd 배선은 아직 안 한다
+
+없는 것에 대고 설정 파일을 미리 써 두지 않는다. 이 저장소는 Docker·Terraform 에서
+이미 그렇게 했다가 "build/run/validate/apply 전부 미검증" 을 문서에 적어야 했다
+(`CLAUDE.md` §5). 배포 형태가 정해지고 **실제로 돌려 볼 수 있을 때** 붙인다
+(v9 §12·§28, Phase 2).
+
+리눅스로 갈 때의 형태만 적어 둔다 — 검증된 것이 아니다:
 
 ```cron
 */1 * * * * cd /path/to/final_project_cs && python -m scripts.run_sweepers --once
@@ -101,9 +144,8 @@ cron 예시 — 실패하면 cron 이 알아서 시끄러워진다:
 
 ## 아직 없는 것
 
-- **스케줄러 배선.** 이 저장소에는 cron·systemd·compose 설정이 없다. 실제 배포
-  형태가 정해지면 그때 붙인다 — 지금은 위 명령을 사람이 띄운다.
-  ★다만 `--once` 가 이제 exit code 로 신호하므로, cron 에 걸기만 하면 알림은
-  cron 이 해 준다(위 예시)
+- ~~**스케줄러 배선.**~~ → **2026-09-07 해결(이 기계 한정).**
+  `scripts/install_sweeper_task.py` 가 Windows 작업 스케줄러에 건다.
+  **컨테이너·systemd 배선은 여전히 없다** — 배포 형태가 정해지면 붙인다(Phase 2)
 - ~~**`errored` 알림.** 로그에만 남는다~~ → **2026-09-07 해결.** exit code +
   stderr. 전용 알림 시스템(Slack·PagerDuty 등)에 붙이는 것은 그 경로가 생길 때다
