@@ -517,7 +517,7 @@ def main() -> int:
     print("─" * 62)
     if total:
         print(f"사람이 볼 것 {total}건. 위 ★표시를 확인한다.")
-        print("판정 절차는 program/research/index.md 문서 정합성 점검 캘린더 항목 4.")
+        print("판정 절차는 program/research/index.md 문서 정합성 점검 캘린더 항목 4·5.")
     else:
         print("확인할 것 없음.")
     return 1 if total else 0
