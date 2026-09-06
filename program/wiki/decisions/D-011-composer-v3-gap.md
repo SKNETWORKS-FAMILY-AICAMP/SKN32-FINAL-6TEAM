@@ -181,7 +181,7 @@ POST /composer/apply    GET  /composer/current
 
 `[실측]` **UI 쪽 옵션은 이미 있다.** `final_project_ui/console/profiles.py` 의 `CONSOLE_COMPOSER_MODE = direct | central`(기본 direct) 와 `CONSOLE_COMPOSER_DEPLOYMENT_ID`. 중앙으로 갈 때 UI 는 환경변수만 바꾼다. cs 가 중앙에서 읽는 쪽(`config_source: central`)은 sample 의 `acop_basement/application/config_source.py` 에만 있고 cs 엔 없다 — 그것도 위 주입의 일부로 같이 온다.
 
-`[미확보]` 사용자 지시 대기 — 패키지 주입형 전환 + cs 복사본 제거를 할지.
+**★ 인계 (2026-09-06).** 패키지 주입형 전환 + cs 복사본 제거는 **코드 담당 세션 몫**으로 넘어갔다. 이 문서 세션은 코드를 더 건드리지 않는다. 담당 세션이 볼 것 — 위 표의 셋과 고치는 방법, 그리고 sample에 이미 들어간 구현(커밋 `d05aced`: `composer:admin`·`revision_store.py`·마이그레이션 009·`/revisions`·`/restore`, 전체 494 통과). 끝나면 이 절과 [open-items](../delivery/open-items.md)의 cs 복사본 행을 닫는다.
 
 ## 관계
 
