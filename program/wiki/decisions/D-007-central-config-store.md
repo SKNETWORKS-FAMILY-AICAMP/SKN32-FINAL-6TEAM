@@ -132,6 +132,8 @@ CONSOLE_COMPOSER_MODE = direct | central
 | **`direct`** (기본) | 대상이 적을 때. **지금까지의 동작** |
 | `central` | 대상이 많을 때 |
 
+`[실측 2026-09-06]` 사용자 방향 — **지금은 pip(direct) 방식으로 가고, 중앙은 UI 프로젝트의 옵션으로 열어 둔다.** 그 옵션은 이미 있다(`final_project_ui/console/profiles.py` `CONSOLE_COMPOSER_MODE`). 두 방식은 배타적이 아니라 같은 패키지의 두 모드다 → [D-011](D-011-composer-v3-gap.md) 2026-09-06 절.
+
 `[실측]` **전환에 코드 변경이 없다.** 그리고 **Composer 는 1곳에만 설치한다** — 수천 개 cs 에 설치하지 않는다.
 
 **그래서 마이그레이션 경로가 필요 없다.** 파일 모드가 기본으로 남아 있고 중앙은 **설정으로 켜는 옵션**이다.

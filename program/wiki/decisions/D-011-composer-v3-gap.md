@@ -167,6 +167,22 @@ POST /composer/apply    GET  /composer/current
 
 위 질문 여섯 중 2번(외부 소비자)은 "없다"로 확인됐고, 1번(고객 빌드 배제)은 D-006·D-007 방향상 "예"로 본다. 3·4·5·6은 이 결정으로 답이 정해진다 — 전체 교체는 관리자 도구로, UI는 schema 복제 없이 항목 단위로, 병행은 없고, 제거 대신 격리.
 
+## ★ [2026-09-06] cs 복사본을 지우고 패키지를 꽂으면 되나 — 지금은 안 된다, 셋 때문에
+
+`[실측]` 사용자 방향(지금은 pip 방식, 나중에 중앙은 UI 옵션으로)에 맞춰 "cs 의 자체 복사본을 지우고 `acop_composer` 를 설치해 라우터만 주입" 이 되는지 봤다. **그대로는 cs 설정을 전부 거부한다.**
+
+| # | 막는 것 | 근거 |
+|---|---|---|
+| 1 | 패키지가 **sample 의 등록표**를 본다 — `acop_basement.core.project_config.KNOWN_IMPLEMENTATION_REFS` 는 `FeedbackAnalyticsTeam`·`PlaceholderTeam`·선언형 셋뿐. cs 의 여섯 Team(`app.modules.customer_ops…`)은 전부 "미등록" 으로 422 | `acop_composer/service.py::_validate_http_registry`, `catalog.py::IMPLEMENTATION_IDS` |
+| 2 | 패키지가 **sample 의 스키마**로 검증한다 — `extra="forbid"` 인 `ProjectConfig` 에 `response_review` 키가 없어 cs 의 `project.yaml` 은 스키마부터 실패. `ports.graph_store` 의 `age`·`neo4j` 도 sample 엔 없다 | `acop_basement/core/project_config.py:53-147`, cs `config/project.yaml` |
+| 3 | 패키지가 **`acop_basement` 통째**에 묶여 있다 — settings·DB 세션·config/audit/revision store·project_config 를 `acop_basement` 에서 import 한다(11곳). cs 에 설치하면 런타임 코어가 두 벌(`app.core` + `acop_basement.core`) 들어간다 | `acop_composer/*.py` import 목록 |
+
+**고치는 방법 — 패키지를 호스트 주입형으로.** 라우터를 만들 때 호스트(cs)가 자기 `project_config`(스키마·등록표·기본 경로)와 저장소 팩토리(설정·감사·이력·DB 세션)를 넘긴다. `acop_composer` 안의 `acop_basement` import 를 그 주입 객체로 바꾸면 된다. 대상은 `api.py`·`service.py`·`catalog.py`·`auth.py` 와 테스트. 그 뒤 cs 는 복사본 셋(400줄)을 지우고 `create_app()` 에서 주입만 한다 — 그러면 D-011 의 `composer:admin`·이력·복원이 cs 에도 그대로 생긴다. cs 의 Composer 테스트(e2e 17건·scope 계약·openapi 표면)는 패키지 쪽으로 옮기거나 주입 기준으로 다시 쓴다.
+
+`[실측]` **UI 쪽 옵션은 이미 있다.** `final_project_ui/console/profiles.py` 의 `CONSOLE_COMPOSER_MODE = direct | central`(기본 direct) 와 `CONSOLE_COMPOSER_DEPLOYMENT_ID`. 중앙으로 갈 때 UI 는 환경변수만 바꾼다. cs 가 중앙에서 읽는 쪽(`config_source: central`)은 sample 의 `acop_basement/application/config_source.py` 에만 있고 cs 엔 없다 — 그것도 위 주입의 일부로 같이 온다.
+
+`[미확보]` 사용자 지시 대기 — 패키지 주입형 전환 + cs 복사본 제거를 할지.
+
 ## 관계
 
 - [D-006](D-006-composer-ownership.md) — Composer 소유는 sample
