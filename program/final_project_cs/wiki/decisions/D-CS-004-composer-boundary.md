@@ -94,6 +94,24 @@ A2A 활성화 · Port 교체 · Team 추가·제거
 | 자기 비활성화 복구 | 파일을 손으로 고쳐야 함 |
 | manifest 편집 | 불가 |
 
+## ★ [2026-09-06] 구현이 이 저장소에서 나갔다 — v9 §8-D
+
+`[실측]` 코드 세션 커밋 `f2319aa`. 이 페이지가 설명하던 `app/presentation/api/composer.py`(157줄)·`app/application/composer_service.py`(167줄)·`app/presentation/composer_auth.py`(76줄)는 **sample 것을 손으로 베낀 사본이었고 지워졌다.** 구현은 `acop_composer` 패키지에 하나만 있다.
+
+**사본이 실제로 망가뜨리고 있던 것.** sample이 `/catalog`·`/changes`·`/revisions`·`/restore`를 갖는 동안 cs는 `/current`·`/validate`·`/apply`·`/toggle` 넷에 머물렀다. `final_project_ui`는 `/composer/catalog`·`/composer/changes`를 부르므로 **콘솔의 카탈로그·변경 카드가 cs 대상에서는 404**였다. 그리고 `create_app()`이 Composer 라우터를 무조건 붙여 **쓰기 채널이 고객 릴리즈에 그대로 실려** 있었다 — 방어는 scope 하나뿐.
+
+| 이제 | 어디 |
+|---|---|
+| 이 제품이 패키지에 넘기는 것 — 스키마·등록표(`KNOWN_IMPLEMENTATION_REFS`)·저장소·인증 정책·경로 | `app/composer_host.py` (호스트 어댑터). JWT `aud`는 sample과 **다른 값** — 남의 발급자 토큰이 통하면 안 된다 |
+| 파일 저장소 3종 — 선언·이력·감사 | `app/core/composer_stores.py`. **파일만 있다** — cs는 direct(pip) 방식이라 선언이 로컬 파일이다. 중앙을 쓰게 되면 그때 Postgres 구현을 더한다 |
+| 선언을 파일 없이 검증 | `app/core/project_config.py` `config_from_declaration()` |
+| 관리용 빌드 진입점 | `app/entrypoint.py` — `create_composer_router(host)`·`create_auth_router(host)`를 `create_app()`에 주입. uvicorn 대상 `app.entrypoint:app`. **이때만 `acop_composer`가 설치돼 있으면 된다** |
+| 고객 릴리즈 | `app.presentation.api.app:app` 그대로. 라우터를 안 주면 `/composer/*`가 **존재하지 않는다** |
+| scope | `composer:admin` 추가(전체 교체 `/apply`·복원 `/restore`). 지금 12종 |
+| 게이트 | `tests/architecture/test_composer_stays_out_of_this_repo.py` — `acop_composer`를 알아도 되는 곳은 `app/composer_host.py`·`app/entrypoint.py` 둘뿐이고, 지운 사본 셋이 다시 생기면 실패한다. "사람 눈으로는 막을 수 없다 — 파일 하나 더 만드는 것이 문법적으로 아무 때나 가능하기 때문" |
+
+위 "모듈 7종·Port 3종·끌 수 없는 Core 9종·저장은 원자적이다"는 **계약으로는 그대로다** — 이제 그 계약을 패키지가 이 어댑터를 통해 지킨다. 실제 저장 경로·revision 충돌·이력·복원의 동작은 [sample/composer/write-channel.md](../../../final_project_sample/wiki/composer/write-channel.md)가 정본이다.
+
 ## 관계
 
 - [D-CS-001](D-CS-001-composer-ui-removal.md) — `/ui/composer` 폐기

@@ -47,7 +47,7 @@ owners: [human:미배정]
 |---|---|---|
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_with_no_scopes` |
 | `INV-CS-SEC-003` | 다른 scope를 가진 principal도 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_holding_another_scope` |
-| `INV-CS-SEC-007` | scope 11개는 guardrail이 소유한다(09-06 `composer:admin` 추가 전 10개) | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
+| `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 
 **003이 중요하다.** "scope가 있기만 하면 통과"가 아니라 **"맞는 scope여야 통과"**다.
 
@@ -193,7 +193,7 @@ Action approval · provider result · before/after hash · actor
 
 **둘을 이으면 인증 우회 → 임의 모듈 import 체인이다.** 이 DoD가 검증하는 "scope가 실제로 강제되는가"를 정면으로 어긴 상태였다.
 
-고친 것 — 두 시크릿을 필수로 되돌려 값이 없으면 **기동을 거부**하고(sample과 같게), sample의 `KNOWN_IMPLEMENTATION_REFS` allowlist를 이식해 `/composer/validate`·`/composer/apply`가 항상 검사한다. → [../decisions/D-CS-004-composer-boundary.md](../decisions/D-CS-004-composer-boundary.md)
+고친 것 — 두 시크릿을 필수로 되돌려 값이 없으면 **기동을 거부**하고(sample과 같게), sample의 `KNOWN_IMPLEMENTATION_REFS` allowlist를 이식해 `/composer/validate`·`/composer/apply`가 항상 검사한다. **그리고 같은 날 저녁 그 사본 자체가 사라졌다**(`f2319aa`, v9 §8-D) — 이제 검증은 `acop_composer` 패키지가 하고 cs는 `app/composer_host.py`로 등록표와 인증 정책(JWT `aud`는 sample과 다른 값)만 넘긴다. 전체 교체 `/apply`는 `composer:admin`이 됐다 → [../decisions/D-CS-004-composer-boundary.md](../decisions/D-CS-004-composer-boundary.md). → [../decisions/D-CS-004-composer-boundary.md](../decisions/D-CS-004-composer-boundary.md)
 
 **위 둘과 종류가 다르다.** 앞 둘은 설정 읽기·배선 문제였고, **이건 기본값이 안전하지 않은 쪽으로 열려 있던 것**이다. 설정이 비어 있을 때 "돌아가는 것"과 "안전한 것" 중 전자를 고른 기본값은 그 자체가 결함이다.
 
@@ -210,13 +210,13 @@ security:
     - composer:write   - ops:introspect
 ```
 
-**정확히 10종이다.**
+**그때는 정확히 10종이었다.** `[실측 2026-09-06]` 지금은 **12종** — `composer:admin`(전체 교체·복원, `f2319aa`)과 `ops:reload`(재기동 없는 반영)가 더해졌다.
 
 | 어디 | 적힌 수 |
 |---|---|
-| **이 wiki** | **10** |
-| `config/guardrails.yaml` | **10** |
-| 테스트 `test_scopes_are_guardrail_owned`(옛 이름 `test_ten_scopes_…`, 09-06 `composer:admin` 추가로 11개가 되며 개명) | **10** |
+| **이 wiki** | 10 → **12** (09-06) |
+| `config/guardrails.yaml` | 10 → **12** (09-06) |
+| 테스트 `test_scopes_are_guardrail_owned`(옛 이름 `test_ten_scopes_…`, 09-06 `composer:admin`·`ops:reload`가 더해져 12개가 되며 개명) | **10** |
 | `docs/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
 | `docs/handoff/06_가드레일_수치.md` §5 | **6** — 같은 옛 목록. 2026-09-06 확인 |
 

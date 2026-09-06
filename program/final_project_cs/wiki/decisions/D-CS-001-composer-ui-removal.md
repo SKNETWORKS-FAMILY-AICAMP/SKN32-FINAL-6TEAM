@@ -47,7 +47,7 @@ Composer는 **제작 단계의 구성기**다. 모듈 토글, Port 교체, Team 
 | 바뀐 것 | |
 |---|---|
 | `app/presentation/ui/` | composer 화면 제거 |
-| `app/presentation/api/composer.py` | **남는다.** `prefix="/composer"`, 인증 필요 |
+| `app/presentation/api/composer.py` | ~~남는다~~ **2026-09-06 삭제됐다** (v9 §8-D, 커밋 `f2319aa`). 같은 API는 `acop_composer` 패키지의 라우터를 **관리용 빌드(`app/entrypoint.py`)에서만** 주입한다. 고객 릴리즈 앱(`app.presentation.api.app:app`)엔 `/composer/*`가 아예 없다 → [D-CS-004](D-CS-004-composer-boundary.md) |
 | `final_project_ui` | 별도 프로그램이 이 API를 쓴다 |
 
 `docs/handoff/09_Composer_GUI_계약.md` 상단에 이 사실이 적혀 있다.
