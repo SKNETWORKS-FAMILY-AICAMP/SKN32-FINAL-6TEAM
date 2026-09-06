@@ -690,7 +690,9 @@ Composer는 운영자가 조립 선언(`config/project.yaml` — 어떤 Team·�
 
 전환은 UI의 `CONSOLE_COMPOSER_MODE = direct | central`과 cs의 `config_source`로 한다. 코드 변경은 없다. 중앙 저장소 자체는 **cs 범위 밖의 별도 프로젝트**다 — 붙인다면 UI 프로젝트다. 중앙은 대상이 많고 우리가 운영을 맡는 관리형에서 필요하고, 자체호스팅 고객에겐 고객 망 안에 설정 서비스를 세우는 형태가 된다(D-007 제안).
 
-**두 형태 모두에서 지키는 규칙 — cs 소스 안에 Composer 구현이 있으면 안 된다.** 패키지가 밖에서 붙는 것은 결합이 아니고, 소스에 복사해 넣는 것이 결합이다. 2026-09-06 기준 cs에는 옛 v2를 복사한 자체 구현이 남아 있어 제거 대상이다(코드 담당 몫).
+**두 형태 모두에서 지키는 규칙 — cs 소스 안에 Composer 구현이 있으면 안 된다.** 패키지가 밖에서 붙는 것은 결합이 아니고, 소스에 복사해 넣는 것이 결합이다.
+
+[2026-09-07 정정] 이전 판은 "2026-09-06 기준 cs에는 옛 v2를 복사한 자체 구현이 남아 있어 제거 대상이다"라고 적었으나 **같은 날 제거됐다**(커밋 `f2319aa`). 사본 400줄을 지우고 관리용 빌드(`app/entrypoint.py`)만 패키지를 주입한다. 릴리즈 빌드에서 `/composer/*`는 **404**다 — 403이 아니라 라우트 자체가 없다. 되돌아가지 않게 게이트가 걸려 있다(`tests/architecture/test_composer_stays_out_of_this_repo.py`). 실측은 `final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md` — `sys.meta_path`로 `acop_composer` import를 막고 릴리즈 앱을 띄워 경로 18개·Composer 표면 0·`/composer/current` 404를 확인했다.
 
 ### 쓰기 계약
 
@@ -700,7 +702,7 @@ Composer는 운영자가 조립 선언(`config/project.yaml` — 어떤 Team·�
 | 전체 교체 `/composer/apply` | **`composer:admin`.** 처음 설치·복원·환경 간 이관용. 운영 UI에 버튼을 두지 않는다 — 두 운영자가 전체본을 동시에 보내면 한쪽이 남의 변경을 덮거나 항상 409로 튕긴다 |
 | 이력 | 적용될 때마다 선언 전문을 한 줄 남긴다(파일 모드 JSONL / 중앙 `project_config_revisions`). 첫 기록 직전 상태는 `baseline` |
 | 복원 `/composer/restore` | 이력의 revision으로 되돌린다 — 이력을 되감지 않고 앞으로 한 줄 더 간다. `composer:admin` |
-| revision | 내용 해시. 저장(desired)과 실행 중(active)을 구분하고, 바뀐 선언은 `/admin/reload`로 재기동 없이 반영한다 |
+| revision | 내용 해시. 저장(desired)과 실행 중(active)을 구분하고, 바뀐 선언은 `/admin/reload`로 재기동 없이 반영한다. **[2026-09-07 확인] 이 줄은 쓸 당시엔 앞서 있었다** — cs에 그 경로가 없어 404였다. 2026-09-06에 sample에서 이식해 지금은 맞는다(계약 **1.1**, scope `ops:reload`). 살아 있는 프로세스로 토글 → `state=stale` → reload → `state=active` 왕복을 확인했다 |
 
 세부는 `program/wiki/decisions/D-006-composer-ownership.md`·`D-007-central-config-store.md`·`D-011-composer-v3-gap.md`와 `program/final_project_sample/wiki/composer/`에 있다.
 
