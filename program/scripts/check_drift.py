@@ -51,15 +51,16 @@ CODE_CLAIMS = [
         "call": "require_module",
         "arg0": "voc",
         "expect": 0,
-        "why": "인라인 분류와 집계 배치는 코어 1 소유이며 voc 플래그에 묶이지 않는다 (v8 §3-A·§7-A)",
+        "why": "인라인 분류와 집계 배치는 코어 1 소유이며 voc 플래그에 묶이지 않는다 (v9 §3-A·§7-A)",
     },
     {
         "root": "final_project_cs/app",
         "call": "run_case",
         "arg0": None,
         "expect": None,
-        "why": "controller.py 내부(resume 경로)를 뺀 바깥 호출처가 접수 라우트뿐이면 "
-               "접수 응답이 에이전트 실행 전체를 기다린다 (v8 §0 남은 것 나)",
+        "why": "2026-09-03 에 접수 응답 뒤로 분리됐다(v9 §3-A). 지금 기대되는 호출처는 셋 — "
+               "controller 내부 resume, 접수 라우트(응답 뒤 detached), routing_sweeper(되잡기). "
+               "sweeper 가 사라지면 routing 잔류 Case 를 아무도 안 집는다",
     },
 ]
 
@@ -154,10 +155,53 @@ def key_terms(cell: str) -> list[str]:
     return [t for t in flat if not TOO_COMMON.match(t)][:3]
 
 
+#: 도표 선. ASCII 상자 안의 글자는 주장이 아니다.
+BOXCHARS = set("│┌└├─┐┘┬┴┼╭╮╰╯▲▼◄►")
+
+
+def noise_lines(lines: list[str]) -> set[int]:
+    """검사에서 뺄 줄. ★2026-09-06 실측 — 이걸 안 빼면 오탐이 5건 나온다.
+
+    셋 다 "주장" 이 아니라서 대조 대상이 아니다.
+      1. 코드 펜스 안        — 예시·출력이지 서술이 아니다
+      2. ASCII 도표 선       — `│ Agent Card → Task │` 가 §7-B 에서 잡혔다
+      3. 개정 기록 표의 행    — 표가 자기 자신을 모순으로 잡는다(§7 309행)
+    """
+    skip: set[int] = set()
+    in_fence = False
+    header_is_revision = False
+    for i, line in enumerate(lines, 1):
+        s = line.strip()
+        if s.startswith("```"):
+            in_fence = not in_fence
+            skip.add(i)
+            continue
+        if in_fence:
+            skip.add(i)
+            continue
+        if any(ch in BOXCHARS for ch in line):
+            skip.add(i)
+            continue
+        if s.startswith("|"):
+            # ★머리글 첫 칸이 '항목'이면 개정 기록 표다 — `parse_revision_items` 가
+            #   항목을 뽑는 바로 그 표이므로, 그 표의 행을 다시 모순으로 세면 안 된다.
+            #   머리글에 판올림 표기(v8 등)가 없는 표도 있어서 그것만으로는 못 거른다.
+            if "---" not in s:
+                cells = [c.strip() for c in s.strip("|").split("|")]
+                if cells and cells[0] == REVISION_HEADER:
+                    header_is_revision = True
+            if header_is_revision:
+                skip.add(i)
+        else:
+            header_is_revision = False
+    return skip
+
+
 def check_revisions(text: str) -> int:
     secs = sections(text)
     items = parse_revision_items(text)
     lines = text.splitlines()
+    noise = noise_lines(lines)
     print(f"[1] 개정 표 반대진술 스윕 — 항목 {len(items)}건")
     if not items:
         print("    표를 못 찾았다. 기준선의 §0 표 모양이 바뀌었는지 확인한다.")
@@ -177,6 +221,8 @@ def check_revisions(text: str) -> int:
 
         marked, unmarked = [], []
         for i, line in enumerate(lines, 1):
+            if i in noise:
+                continue
             if line.startswith("|") and it["name"] in line:
                 continue  # 개정 표 자기 자신
             if not any(t in line for t in usable):
