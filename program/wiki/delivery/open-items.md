@@ -53,6 +53,8 @@ owners: [human:미배정]
 | **DoD evidence 9건이 낡았다** — 낡음 주석은 09-06 패치로 붙었다. **다시 잴 것은 둘뿐**: DoD-22(인용한 테스트가 없어 근거 소실)·DoD-06(cs가 아니라 sample 옛 코퍼스에서 잰 값). 나머지 일곱(02·14·20·24·21·13·08)은 판정이 유효하고 evidence 본문의 옛 이름·수치·경로만 현행으로 고치면 된다 | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
 | **`program/research/index.md` 둘** — 루트 `CLAUDE.md`가 "정본"이라 가리키는 "현재 기준 사실" 표가 없고(08-19 정리에서 사라짐), 점검 캘린더의 `migration-scope.md` 링크가 폴더 승격으로 죽었다 | [../governance/review-policy.md](../governance/review-policy.md) "정본 포인터가 한 칸 비어 있다". **원본 수정은 wiki 범위 밖** — 루트 `CLAUDE.md` 문장을 v8 직접 참조로 바꿀지, 표를 되살릴지 사람이 정한다 |
 
+| **`cases.py`의 주석이 낡았다** — 접수 라우트(`app/presentation/api/cases.py` 88~91행)가 "★남은 구멍(정직하게 적는다): `routing`에 남은 Case를 되잡는 sweeper는 아직 없다"라고 적어 두었는데, `app/application/routing_sweeper.py`가 이미 있다. 코드는 맞고 주석만 낡았다. **코드 담당 세션 몫** — 이 문서 세션은 코드를 건드리지 않는다. 실물은 [`quality/guardrails.md`](../../final_project_cs/wiki/quality/guardrails.md) §2026-09-03 sweeper에 기록돼 있다 | `[실측 2026-09-06]` 드리프트 검사에서 `run_case()` 호출처가 2 → 3곳으로 는 것을 보고 확인 |
+
 ## 측정 대기
 
 `[미확보]` 반나절~하루면 되는데 결론을 크게 바꾸는 것들.
