@@ -20,11 +20,11 @@
 ## 이미 쓴 문서 (중복 피하려고 본다)
 
 ```
-program/final_project_sample/wiki/runtime/     case-lifecycle · shared-state
+final_project_sample/wiki/runtime/     case-lifecycle · shared-state
                                                conflict-retry · idempotency · context-pack
-program/final_project_sample/wiki/teams/       team-contract · team-boundary · team-registry
-program/final_project_sample/wiki/composer/    write-channel · auth-scope · ui-boundary · design-gap
-program/final_project_sample/wiki/quality/     architecture-tests · domain-free
+final_project_sample/wiki/teams/       team-contract · team-boundary · team-registry
+final_project_sample/wiki/composer/    write-channel · auth-scope · ui-boundary · design-gap
+final_project_sample/wiki/quality/     architecture-tests · domain-free
                                                another-domain · verification
 ```
 

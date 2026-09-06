@@ -555,7 +555,7 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
         #   결과를 반영해 rubric 을 다시 접는 이 블록이 success 를 무조건
         #   덮어써서, Proposed 에만 걸려 있던 추가 페널티가 **한 번도 적용된 적이
         #   없다.** 근거: docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md 와
-        #   program/wiki/evaluation/metrics.md
+        #   wiki/evaluation/metrics.md
         #
         #   ★이 수정은 Proposed 점수를 낮추는 방향이다. 그래도 고친다 —
         #     의도한 판정이 실제로 걸리지 않은 상태에서 나온 값은 근거가 될 수 없다.

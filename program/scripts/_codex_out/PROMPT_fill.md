@@ -14,10 +14,10 @@
 
 | 원본 | wiki 대응 |
 |---|---|
-| `final_project_cs/docs/handoff/01_계약_Pydantic.md` | `program/final_project_cs/wiki/teams/team-contract/index.md` |
-| `final_project_cs/docs/handoff/02_DB_스키마.md` | `program/final_project_cs/wiki/data/schema/index.md` |
-| `final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md` | `program/final_project_cs/wiki/external/rest-api.md` · `mcp-tools.md` |
-| `final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md` | `program/final_project_cs/wiki/teams/index.md` |
+| `final_project_cs/docs/handoff/01_계약_Pydantic.md` | `final_project_cs/wiki/teams/team-contract/index.md` |
+| `final_project_cs/docs/handoff/02_DB_스키마.md` | `final_project_cs/wiki/data/schema/index.md` |
+| `final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md` | `final_project_cs/wiki/external/rest-api.md` · `mcp-tools.md` |
+| `final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md` | `final_project_cs/wiki/teams/index.md` |
 
 ## ★ 절대 하지 말 것
 

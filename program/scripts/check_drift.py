@@ -26,8 +26,8 @@
   검사 5 는 그 문장들을 모아 보여 준다. **낡았다고 판정하지 않는다** — 코드에
   대고 확인하는 것은 사람 몫이다. 검사 1 과 같은 성격이다.
 
-★아직 안 보는 것: `v8 ↔ program/wiki/` 대조. wiki 이관이 진행 중이라
-  (`program/wiki/governance/migration-scope.md`, 747건 중 202건 이관 대상)
+★아직 안 보는 것: `v8 ↔ wiki/` 대조. wiki 이관이 진행 중이라
+  (`wiki/governance/migration-scope.md`, 747건 중 202건 이관 대상)
   대상이 확정된 뒤에 검사 4로 붙인다. 이관이 끝나면 v8 과 wiki 페이지가 같은
   내용을 두 벌 갖게 되므로, 이번과 똑같은 드리프트 면이 새로 생긴다.
 """
@@ -359,7 +359,7 @@ def find_calls(root: str, name: str, arg0: str | None) -> list[tuple[str, int]]:
 FACT_TABLES = ("CLAUDE.md", "program/research/index.md")
 
 #: 같은 파일을 다른 깊이에서 가리키는 것은 차이가 아니다.
-PATH_ALIASES = ((r"\.\./plan/", "program/plan/"), (r"\.\./wiki/", "program/wiki/"))
+PATH_ALIASES = ((r"\.\./plan/", "program/plan/"), (r"\.\./wiki/", "wiki/"))
 
 
 def _fact_rows(path: str) -> dict[str, str]:

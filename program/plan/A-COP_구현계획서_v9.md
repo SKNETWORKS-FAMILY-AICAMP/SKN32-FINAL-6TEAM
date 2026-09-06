@@ -65,17 +65,17 @@
 
 | 항목 | v8 | v9 | 근거 |
 |---|---|---|---|
-| **정본 구조** | 계획서가 유일 정본 | **계획서 = 범위·결정·일정 / wiki = 세부 설계·운영 사실.** wiki는 지금 `program/wiki/`(허브)·`program/<저장소>/wiki/`에 있고 전환 뒤 `<저장소>/wiki/`로 간다. `program/research/index.md`는 research 폴더만 관리한다(계획서·브리핑 제외) | `program/wiki/decisions/D-012-cutover-timing.md` |
+| **정본 구조** | 계획서가 유일 정본 | **계획서 = 범위·결정·일정 / wiki = 세부 설계·운영 사실.** wiki는 지금 `wiki/`(허브)·`program/<저장소>/wiki/`에 있고 전환 뒤 `<저장소>/wiki/`로 간다. `program/research/index.md`는 research 폴더만 관리한다(계획서·브리핑 제외) | `wiki/decisions/D-012-cutover-timing.md` |
 | **Composer 소재** | 계획서에 없음(별도 결정 문서들) | **§8-D 신설.** 중앙 저장 방식이면 UI 프로젝트(설정 서비스)로, pip 방식이면 관리용 빌드의 cs가 `acop_composer`를 설치·주입하고 릴리즈 때 뺀다. **두 형태 모두 cs 소스 안에 Composer 구현은 없다** | D-006 |
 | **Composer 쓰기 계약** | v2 전체 교체와 v3 토글이 병존 | 운영자 API는 항목 단위(`/toggle`·`/changes`)만. 전체 교체(`/apply`)는 `composer:admin`(설치·복원·이관). **revision 이력 + 이전 revision 복원** | D-011 |
 | **중앙 설정 저장소** | 결정만 있고 cs 범위 불명 | **cs 범위 밖.** 별도 프로젝트로 분리. 기본은 direct(pip), central은 UI 옵션(`CONSOLE_COMPOSER_MODE`) | D-007 |
-| Return & Refund | Registry 계약 + Mock, 조건부 LOCAL 승격 | **Mock 유지 재확인**(코드가 `Mock-only`). 팀 주제 재조사 뒤 다시 본다 | `program/wiki/delivery/scope-verdicts.md` |
-| DoD evidence | 통과 기록 그대로 | **9건 낡음 표시**(02·14·20·24·06·21·13·08·22). 판정 번호는 유지, 재측정은 cs 몫 | `program/final_project_cs/wiki/quality/dod-evidence-drift.md` |
-| 골든셋 `persona` 필드 담당 | 미정 | 검증 & 프론트 역할 | `program/wiki/delivery/roles.md` |
+| Return & Refund | Registry 계약 + Mock, 조건부 LOCAL 승격 | **Mock 유지 재확인**(코드가 `Mock-only`). 팀 주제 재조사 뒤 다시 본다 | `wiki/delivery/scope-verdicts.md` |
+| DoD evidence | 통과 기록 그대로 | **9건 낡음 표시**(02·14·20·24·06·21·13·08·22). 판정 번호는 유지, 재측정은 cs 몫 | `final_project_cs/wiki/quality/dod-evidence-drift.md` |
+| 골든셋 `persona` 필드 담당 | 미정 | 검증 & 프론트 역할 | `wiki/delivery/roles.md` |
 
-**v9에서 안 바꾼 것.** Team 목록(v8 재판정 그대로), DoD 1~29, §25 일정, Docker·AWS Phase 2. 강사 확인이 필요한 둘 — sLLM 파인튜닝이 6팀 필수인가, 3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나 — 는 미결로 남아 `program/wiki/delivery/open-items.md`에 있다.
+**v9에서 안 바꾼 것.** Team 목록(v8 재판정 그대로), DoD 1~29, §25 일정, Docker·AWS Phase 2. 강사 확인이 필요한 둘 — sLLM 파인튜닝이 6팀 필수인가, 3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나 — 는 미결로 남아 `wiki/delivery/open-items.md`에 있다.
 
-**파인튜닝의 지위 (2026-09-06 사용자).** 파인튜닝은 **제외한 것이 아니라 계속 시도하는 트랙**이다. 지금까지의 시도(stage3 v1~v9, 2026-09-02까지)는 채택 기준 미달이라 채택하지 않았을 뿐이고, 진척이 있으면 적용한다. 임베딩·리랭커 파인튜닝도 후보다. 결과가 나쁘면 나쁘다고 그대로 보고한다. 지금까지의 실측은 `program/wiki/evaluation/dod28-rerun.md`·`finetuning.md`와 `final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md`에 있다.
+**파인튜닝의 지위 (2026-09-06 사용자).** 파인튜닝은 **제외한 것이 아니라 계속 시도하는 트랙**이다. 지금까지의 시도(stage3 v1~v9, 2026-09-02까지)는 채택 기준 미달이라 채택하지 않았을 뿐이고, 진척이 있으면 적용한다. 임베딩·리랭커 파인튜닝도 후보다. 결과가 나쁘면 나쁘다고 그대로 보고한다. 지금까지의 실측은 `wiki/evaluation/dod28-rerun.md`·`finetuning.md`와 `final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md`에 있다.
 
 ---
 
@@ -706,7 +706,7 @@ Composer는 운영자가 조립 선언(`config/project.yaml` — 어떤 Team·�
 | 복원 `/composer/restore` | 이력의 revision으로 되돌린다 — 이력을 되감지 않고 앞으로 한 줄 더 간다. `composer:admin` |
 | revision | 내용 해시. 저장(desired)과 실행 중(active)을 구분하고, 바뀐 선언은 `/admin/reload`로 재기동 없이 반영한다. **[2026-09-07 확인] 이 줄은 쓸 당시엔 앞서 있었다** — cs에 그 경로가 없어 404였다. 2026-09-06에 sample에서 이식해 지금은 맞는다(계약 **1.1**, scope `ops:reload`). 살아 있는 프로세스로 토글 → `state=stale` → reload → `state=active` 왕복을 확인했다 |
 
-세부는 `program/wiki/decisions/D-006-composer-ownership.md`·`D-007-central-config-store.md`·`D-011-composer-v3-gap.md`와 `program/final_project_sample/wiki/composer/`에 있다.
+세부는 `wiki/decisions/D-006-composer-ownership.md`·`D-007-central-config-store.md`·`D-011-composer-v3-gap.md`와 `final_project_sample/wiki/composer/`에 있다.
 
 ## 9. 외부 소비자 AI 연동 구조 [A2A]
 
@@ -1444,7 +1444,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 
 ## 27. 완료 기준 체크리스트(DoD) [v5 번호 보존 + 신규]
 
-**[v9] evidence 낡음.** `final_project_cs/docs/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이었고 **2026-09-07에 끝났다** — 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 근거가 소실됐던 22는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 복구했으며, 06은 cs 코퍼스로 다시 재 문서 25·청크 306을 확인했다. 목록은 `program/final_project_cs/wiki/quality/dod-evidence-drift.md`.
+**[v9] evidence 낡음.** `final_project_cs/docs/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이었고 **2026-09-07에 끝났다** — 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 근거가 소실됐던 22는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 복구했으며, 06은 cs 코퍼스로 다시 재 문서 25·청크 306을 확인했다. 목록은 `final_project_cs/wiki/quality/dod-evidence-drift.md`.
 
 각 항목은 evidence 문서와 자동/수동 검증 방법을 함께 남긴다. v5의 1~18은 의미와 순서를 보존한다.
 

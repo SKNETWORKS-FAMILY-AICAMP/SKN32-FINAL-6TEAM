@@ -1,6 +1,6 @@
 """wiki 표준 검사기.
 
-program/wiki/governance/ 의 규칙을 실제로 검사한다.
+wiki/governance/ 의 규칙을 실제로 검사한다.
 문서에만 적힌 규칙은 지켜지지 않으므로 실행으로 판정한다.
 
     python program/scripts/check_wiki.py
@@ -19,14 +19,14 @@ from collections import Counter, defaultdict
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-#: 시험 구축 중이라 저장소별 wiki 도 전부 program/ 아래에 둔다.
-#: 실제 저장소에는 아직 wiki 를 넣지 않는다.
+#: 2026-09-07 전환 완료 — 각 저장소의 `wiki/` 가 정본이다 (D-012).
+#: 전환 전에는 다섯 트리가 전부 `program/` 아래에 있었다.
 ROOTS = [
-    "program/wiki",
-    "program/final_project_cs/wiki",
-    "program/final_project_sample/wiki",
-    "program/datasets/wiki",
-    "program/acop_dojo/wiki",
+    "wiki",
+    "final_project_cs/wiki",
+    "final_project_sample/wiki",
+    "datasets/wiki",
+    "acop_dojo/wiki",
 ]
 
 #: governance/front-matter.md — type 11개.
@@ -65,7 +65,7 @@ INV_REPO = {
 #: ★구현 편향 검사.
 #:
 #:   요구: cs 가 릴리스로 나간 뒤에도 sample 은 혼자 정확히 돌아야 한다.
-#:   따라서 hub(program/wiki)는 **어느 한 구현에만 매여선 안 된다.**
+#:   따라서 hub(wiki)는 **어느 한 구현에만 매여선 안 된다.**
 #:   hub 의 계약 문서가 cs 상세로만 내려가면, cs 가 나가는 순간
 #:   계약을 읽으러 온 사람이 전부 남의 저장소로 떨어진다.
 #:
@@ -181,7 +181,8 @@ def main() -> int:
     for r in ROOTS:
         for dirpath, _, files in os.walk(r):
             d = dirpath.replace("\\", "/")
-            if any(part.startswith("_") for part in d.split("/")[2:]):
+            inner = d[len(r):].strip("/")
+            if any(part.startswith("_") for part in inner.split("/") if part):
                 continue
             if any(f.endswith(".md") for f in files) and "index.md" not in files:
                 problems["index.md 없는 폴더"].append(d)
@@ -227,9 +228,9 @@ def main() -> int:
     # --- 구현 편향: hub 가 한쪽 구현만 가리키는가
     for f in docs:
         rel = f.replace("\\", "/")
-        if not rel.startswith("program/wiki/"):
+        if not rel.startswith("wiki/"):
             continue
-        sub = rel[len("program/wiki/"):]
+        sub = rel[len("wiki/"):]
         if any(sub.startswith(k) or k in sub for k in IMPL_BIAS_OK):
             continue
         raw_h = open(f, encoding="utf-8").read()

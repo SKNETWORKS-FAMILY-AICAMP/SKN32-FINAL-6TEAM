@@ -5,7 +5,7 @@
 ★스테이징을 서둘러 적용하지 않는 대신 이 검사를 둔다.
   원본이 바뀌면 분할을 다시 돌리면 된다 — 낡았는지만 알면 된다.
 
-  program/wiki/_migration/datasets/index.md 참조.
+  wiki/_migration/datasets/index.md 참조.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-STAGE = "program/wiki/_migration/datasets"
+STAGE = "wiki/_migration/datasets"
 
 #: 분할본 → 원본. codex 가 낸 파일명이 원본과 달라 손으로 맺는다.
 PAIRS = {
@@ -60,7 +60,7 @@ def main() -> int:
     if stale:
         print()
         print("  → 분할을 다시 돌린다. 서둘러 적용하지 않는다.")
-        print("    program/wiki/_migration/datasets/index.md")
+        print("    wiki/_migration/datasets/index.md")
     return 1 if (stale or missing) else 0
 
 

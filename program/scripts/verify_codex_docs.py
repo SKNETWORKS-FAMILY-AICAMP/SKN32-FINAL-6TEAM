@@ -4,7 +4,7 @@
 
 무엇을 보나:
   1. `파일:줄` 인용이 실재하고 범위 안인가
-  2. 금지 대상(final_project_cs·program/wiki)을 읽었나
+  2. 금지 대상(final_project_cs·wiki)을 읽었나
      ★"cs 에는 없다" 류 부정 서술은 위반으로 세지 않는다
   3. 빈 패키지를 문서화했나
   4. 근거 등급이 붙어 있나
@@ -31,7 +31,7 @@ PREFIX = {
 }
 CITE = re.compile(
     r"`((?:core|application|teams|acop_composer|tests)/[A-Za-z0-9_/.]+\.py):(\d+)(?:-(\d+))?`")
-BANNED = ("final_project_cs", "program/wiki")
+BANNED = ("final_project_cs", "wiki")
 
 
 def resolve(rel: str) -> str | None:

@@ -52,8 +52,8 @@ Composer의 HTTP 명령은 `/composer/apply`, `/composer/changes`, `/composer/to
 
 ## 관계
 
-- 인증 주체와 scope 판정은 [auth-scope.md](./auth-scope.md)를 참조한다.
-- UI가 이 쓰기 경로 밖으로 나가지 못하게 하는 경계는 [ui-boundary.md](./ui-boundary.md)를 참조한다.
+- 인증 주체와 scope 판정은 [auth-scope.md](auth-scope.md)를 참조한다.
+- UI가 이 쓰기 경로 밖으로 나가지 못하게 하는 경계는 [ui-boundary.md](ui-boundary.md)를 참조한다.
 
 ===== FILE: auth-scope.md =====
 ---
@@ -130,8 +130,8 @@ Composer 권한은 JWT의 `scope` 목록에 필요한 문자열이 정확히 들
 
 ## 관계
 
-- 권한 검사를 통과한 변경이 저장되는 과정은 [write-channel.md](./write-channel.md)를 참조한다.
-- UI가 인증 뒤에도 서버 검증 책임을 침범하지 않게 하는 경계는 [ui-boundary.md](./ui-boundary.md)를 참조한다.
+- 권한 검사를 통과한 변경이 저장되는 과정은 [write-channel.md](write-channel.md)를 참조한다.
+- UI가 인증 뒤에도 서버 검증 책임을 침범하지 않게 하는 경계는 [ui-boundary.md](ui-boundary.md)를 참조한다.
 
 ===== FILE: ui-boundary.md =====
 ---
@@ -201,5 +201,5 @@ UI는 대상의 검증 모델, 서버 구현, Python 구현 경로를 소유하�
 
 ## 관계
 
-- UI 요청이 공유하는 실제 저장 경로는 [write-channel.md](./write-channel.md)를 참조한다.
-- UI 요청을 읽기·검증·쓰기로 나누는 권한 판정은 [auth-scope.md](./auth-scope.md)를 참조한다.
+- UI 요청이 공유하는 실제 저장 경로는 [write-channel.md](write-channel.md)를 참조한다.
+- UI 요청을 읽기·검증·쓰기로 나누는 권한 판정은 [auth-scope.md](auth-scope.md)를 참조한다.

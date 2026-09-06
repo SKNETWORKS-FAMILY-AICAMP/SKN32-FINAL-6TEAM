@@ -5,7 +5,7 @@
 ★결정 근거를 만들려는 것이지 결정을 대신하려는 게 아니다.
   숫자를 보고 사람이 고른다.
 
-program/wiki/decisions/D-010-deferral-scoring.md
+wiki/decisions/D-010-deferral-scoring.md
 """
 from __future__ import annotations
 

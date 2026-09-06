@@ -1,7 +1,7 @@
 """v8 계획서를 wiki 구조로 쪼갠다.
 
 ★원본(`program/plan/A-COP_구현계획서_v8.md`)은 **읽기만 한다.**
-  결과는 `program/wiki/_migration/v8/` 에만 쓴다.
+  결과는 `wiki/_migration/v8/` 에만 쓴다.
 
     python program/scripts/split_v8.py            # 매핑 확인
     python program/scripts/split_v8.py --write    # 실제로 쓴다
@@ -17,7 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 SRC = "program/plan/A-COP_구현계획서_v8.md"
-DST = "program/wiki/_migration/v8"
+DST = "wiki/_migration/v8"
 
 #: 절 번호 → (목표 파일, type, 제목, 한 줄 설명)
 #:   "—" 는 옮기지 않는다. 이유를 SKIP 에 적는다.

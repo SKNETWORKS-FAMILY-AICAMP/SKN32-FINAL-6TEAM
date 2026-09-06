@@ -122,7 +122,7 @@ INSERT 경합을 중재하는지를 검사한다(무의미해지지 않았다).
 ## 남긴 것
 
 - 새 테스트에 `# invariant:` 표식을 달지 않았다. 불변식 대장은
-  `program/final_project_cs/wiki/quality/invariants.md` 에 있고 지금 다른 세션이
+  `final_project_cs/wiki/quality/invariants.md` 에 있고 지금 다른 세션이
   편집 중이다. 새 id 를 여기서 임의로 발급하면 대장과 어긋난다 — 대장 쪽에서
   발급하고 표식을 다는 것이 맞다.
 - 결함 리포트 §권고 4(`response_review.enabled` 를 켜기 전 처리)는 이것으로

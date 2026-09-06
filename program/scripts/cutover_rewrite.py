@@ -1,4 +1,4 @@
-"""전환 시 경로를 다시 쓴다 — 지금은 계획만 낸다.
+"""(2026-09-07 전환 완료 — 이 파일은 계획만 냈다. 실행부는 cutover_apply.py) 전환 시 경로를 다시 쓴다 — 지금은 계획만 낸다.
 
     python program/scripts/cutover_rewrite.py              # 무엇이 바뀌는지만 본다
     python program/scripts/cutover_rewrite.py --layout docs-wiki
@@ -7,7 +7,7 @@
   D-012 (중간발표 2026-09-15 이후) 전에는 쓰지 않는다.
 
 무엇을 하나:
-  program/wiki/                     → <저장소>/wiki/ 또는 <저장소>/docs/wiki/
+  wiki/                     → <저장소>/wiki/ 또는 <저장소>/docs/wiki/
   program/<저장소>/wiki/             → 그 저장소 안으로
   그러면서 상대경로 깊이가 바뀐다. 그걸 다시 계산한다.
 """
@@ -25,11 +25,11 @@ if hasattr(sys.stdout, "reconfigure"):
 
 #: 지금 위치 → 전환 후 위치. layout 에 따라 뒤가 바뀐다.
 SOURCES = {
-    "program/wiki": ("", "hub"),
-    "program/final_project_cs/wiki": ("final_project_cs", "cs"),
-    "program/final_project_sample/wiki": ("final_project_sample", "sample"),
-    "program/datasets/wiki": ("datasets", "data"),
-    "program/acop_dojo/wiki": ("acop_dojo", "dojo"),
+    "wiki": ("", "hub"),
+    "final_project_cs/wiki": ("final_project_cs", "cs"),
+    "final_project_sample/wiki": ("final_project_sample", "sample"),
+    "datasets/wiki": ("datasets", "data"),
+    "acop_dojo/wiki": ("acop_dojo", "dojo"),
 }
 
 LINK = re.compile(r"\]\((\.\./[^)]*?)\)")
@@ -93,7 +93,7 @@ def main() -> int:
     print(f"  {code}곳 — 전환 후 같은 저장소 안이 되면 경로가 짧아진다")
 
     print("\n★dry-run 이다. 아무것도 안 바꿨다.")
-    print("  전환 시점: 중간발표(2026-09-15) 이후 — program/wiki/decisions/D-012-cutover-timing.md")
+    print("  전환 시점: 중간발표(2026-09-15) 이후 — wiki/decisions/D-012-cutover-timing.md")
     return 0
 
 

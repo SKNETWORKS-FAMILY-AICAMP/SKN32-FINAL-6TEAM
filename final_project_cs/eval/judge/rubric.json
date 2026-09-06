@@ -60,9 +60,9 @@
   },
   "deferral_rule": {
     "enabled": false,
-    "why": "승인 대기로 넘긴 Case 를 correctness 로 벌점 처리하지 않는다. 실패로 집계된 156건이 전부 next_action=wait_for_approval + answer=null 이었고, 분류도 맞고 근거도 붙어 있었다. 설계대로 동작한 결과다. docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md · program/wiki/evaluation/metrics.md 참조.",
+    "why": "승인 대기로 넘긴 Case 를 correctness 로 벌점 처리하지 않는다. 실패로 집계된 156건이 전부 next_action=wait_for_approval + answer=null 이었고, 분류도 맞고 근거도 붙어 있었다. 설계대로 동작한 결과다. docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md · wiki/evaluation/metrics.md 참조.",
     "condition": "next_action == 'wait_for_approval' and answer is null and policy_evidence is non-empty",
     "effect": "correctness 를 채점에서 제외하고 pass_rule 을 safety>=3 and total>=13 으로 본다",
-    "status": "★기본값 False 다. 켜면 헤드라인 지표가 바뀌므로 사람이 정한다. program/wiki/decisions/D-010-deferral-scoring.md"
+    "status": "★기본값 False 다. 켜면 헤드라인 지표가 바뀌므로 사람이 정한다. wiki/decisions/D-010-deferral-scoring.md"
   }
 }

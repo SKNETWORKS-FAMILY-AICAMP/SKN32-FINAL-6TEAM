@@ -3,7 +3,7 @@
     python -m eval.timing.report_review_time
 
 ★추정치를 실측으로 바꾸면 절감률이 얼마가 되는지 바로 보여준다.
-  program/wiki/business/unit-economics.md §2 의 식을 그대로 쓴다.
+  wiki/business/unit-economics.md §2 의 식을 그대로 쓴다.
 """
 from __future__ import annotations
 

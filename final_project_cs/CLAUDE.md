@@ -1,5 +1,7 @@
 # A-COP — 작업 규칙 (도메인)
 
+이 저장소의 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)가 정본이다(2026-09-07 전환, 허브는 워크스페이스 루트 `wiki/`). 계획서(v9)는 범위·결정·일정만 맡는다.
+
 **A-COP**(AI Customer Operations Platform)는 고객 메시지를 업무 **Case** 로 바꾸고,
 현재 상태·정책·이력·피드백 분류를 **Context Pack** 으로 조합하여
 **커머스 고객운영**(주문·결제·배송·반품·응답 검토) 업무를 **Agent Team** 이 처리하는

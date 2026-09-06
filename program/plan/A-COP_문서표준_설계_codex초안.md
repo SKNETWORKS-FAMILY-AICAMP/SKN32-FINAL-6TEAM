@@ -10,7 +10,7 @@
 | 항목 | 결정 |
 |---|---|
 | 저장 모델 | 중앙 허브와 저장소별 로컬 wiki를 함께 쓰는 혼합형 |
-| 중앙 허브 | `program/wiki/` |
+| 중앙 허브 | `wiki/` |
 | 로컬 wiki | 각 저장소 루트의 `wiki/` |
 | 문서 단위 | 한 파일이 아니라 한 개념 |
 | 저장소 내부 링크 | OKF 번들 절대경로 또는 상대경로 |
@@ -34,12 +34,12 @@
 
 혼합형으로 결정한다.
 
-- 프로젝트 전체의 계획·결정·조사·평가 기준은 `program/wiki/`에 둔다.
+- 프로젝트 전체의 계획·결정·조사·평가 기준은 `wiki/`에 둔다.
 - 코드·스키마·데이터·배포 설정과 같은 커밋에서 바뀌어야 하는 문서는 해당 저장소의 `wiki/`에 둔다.
 - 각 저장소의 `wiki/`는 독립적인 OKF 번들이다.
-- `program/wiki/`는 여섯 번들의 탐색 허브이지만 로컬 문서를 복제하지 않는다.
+- `wiki/`는 여섯 번들의 탐색 허브이지만 로컬 문서를 복제하지 않는다.
 
-`program`의 기존 폴더 이름은 새 분류의 근거로 사용하지 않는다. `program/plan`, `research`, `briefing`을 정리해서 재사용하는 것이 아니라 새 경계인 `program/wiki/`를 만든다.
+`program`의 기존 폴더 이름은 새 분류의 근거로 사용하지 않는다. `program/plan`, `research`, `briefing`을 정리해서 재사용하는 것이 아니라 새 경계인 `wiki/`를 만든다.
 
 ### 1.2 중앙과 로컬을 가르는 기준
 
@@ -68,7 +68,7 @@
 1. 실행 가능한 계약과 테스트 결과
 2. 해당 사실을 소유한 저장소의 `CLAUDE.md` 사실 표
 3. 해당 저장소의 사람 검증된 `status: stable` 문서
-4. 중앙 `program/wiki/`의 통합 문서
+4. 중앙 `wiki/`의 통합 문서
 5. `status: draft` 문서
 6. 보존된 과거 문서
 
@@ -406,7 +406,7 @@ claim_policy:
   default: 미확보
 sources:
   - id: S1
-    resource: acop://hub/governance/document-inventory-2026-08-31
+    resource: acop:/hub/governance/document-inventory-2026-08-31
     title: 2026-08-31 문서 실측
     author: process:document-inventory
     last_modified: 2026-08-31T00:00:00+09:00
@@ -461,7 +461,7 @@ verified:
 stale_after: 2026-10-27T00:00:00+09:00
 sources:
   - id: S1
-    resource: acop://sample/contracts/index
+    resource: acop:/sample/contracts/index
     title: sample 검증 계약 색인
     author: team:sample
     last_modified: 2026-08-31T17:00:00+09:00
@@ -590,11 +590,11 @@ status: draft
 generated: { by: human:delivery-owner, at: 2026-09-10T21:00:00+09:00 }
 sources:
   - id: S1
-    resource: acop://hub/delivery/milestones/midterm-2026-09-15
+    resource: acop:/hub/delivery/milestones/midterm-2026-09-15
     title: 중간발표 마일스톤
     author: team:delivery
   - id: S2
-    resource: acop://hub/evaluation/evidence/index
+    resource: acop:/hub/evaluation/evidence/index
     title: 평가 증거 색인
     author: team:evaluation
 claim_policy:

@@ -2,7 +2,7 @@ import sys,glob,re,collections,os
 sys.stdout.reconfigure(encoding="utf-8",errors="replace")
 DOMAIN=re.compile("환불|반품|주문|배송|상담원|쇼핑몰|VOC|고객 문의|취소|택배|커머스")
 b=collections.defaultdict(list)
-for f in glob.glob("program/wiki/**/*.md",recursive=True):
+for f in glob.glob("wiki/**/*.md",recursive=True):
     n=f.replace(os.sep,"/")
     t=open(f,encoding="utf-8",errors="replace").read()
     parts=n.split("/")
@@ -18,7 +18,7 @@ for a in sorted(b,key=lambda k:-sum(b[k])/len(b[k])):
 print()
 print("── final_project_cs/wiki ──")
 b2=collections.defaultdict(list)
-for f in glob.glob("program/final_project_cs/wiki/**/*.md",recursive=True):
+for f in glob.glob("final_project_cs/wiki/**/*.md",recursive=True):
     n=f.replace(os.sep,"/"); t=open(f,encoding="utf-8",errors="replace").read()
     parts=n.split("/"); area=parts[3] if len(parts)>4 else "(루트)"
     b2[area].append(len(DOMAIN.findall(t))/max(t.count(chr(10))+1,1)*100)

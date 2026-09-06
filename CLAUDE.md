@@ -13,7 +13,7 @@
 | Composer 소재·쓰기 계약 | 지금은 pip(direct) 방식, 중앙은 UI 옵션. 운영자 API는 항목 단위, 전체 교체·복원은 `composer:admin`. cs 소스 안에 Composer 구현 금지 | `program/plan/A-COP_구현계획서_v9.md` §8-D | 2026-09-06 |
 | 프로젝트 일정 구조 | 선행 2026-08-17~08-27(11일) + 공식 1W~9W, 중간발표 09-15, 최종발표 10-26 | `program/research/_WBS원본_2026-08-17.md` | 2026-08-17 |
 
-이 표가 오래됐으면 [`program/research/index.md`](program/research/index.md)의 「현재 기준 사실」 표가 정본이다. 둘은 같이 갱신한다. 세부 설계·운영 사실은 [`program/wiki/index.md`](program/wiki/index.md)(전환 뒤 `<저장소>/wiki/`)가 정본이다.
+이 표가 오래됐으면 [`program/research/index.md`](program/research/index.md)의 「현재 기준 사실」 표가 정본이다. 둘은 같이 갱신한다. 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)(전환 뒤 `<저장소>/wiki/`)가 정본이다.
 
 세 코드 프로젝트 중 실제 작업 중인 폴더가 있으면 그 폴더의 `CLAUDE.md`가 이 파일보다 우선한다. 도메인 규칙과 프로젝트별 작업 경계는 각 폴더에 있다.
 

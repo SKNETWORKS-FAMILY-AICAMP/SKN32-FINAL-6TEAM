@@ -2,7 +2,7 @@
 
 ## 왜 이 일을 하나
 
-`program/wiki/` 와 `program/final_project_cs/wiki/` 는 기존 문서들의 내용을
+`wiki/` 와 `final_project_cs/wiki/` 는 기존 문서들의 내용을
 옮겨 담아 만들었다. 그런데 **"이미 반영됨"이라고 생각한 문서를 실제로 대조했더니
 7번 중 7번 빠진 절이 나왔다.**
 
@@ -19,7 +19,7 @@
 아래 원본 10건 각각에 대해:
 
 1. 원본의 **모든 `##`·`###` 절 제목**을 나열한다.
-2. 각 절의 내용이 `program/wiki/` 또는 `program/final_project_cs/wiki/` 의
+2. 각 절의 내용이 `wiki/` 또는 `final_project_cs/wiki/` 의
    어느 문서에 반영돼 있는지 찾는다.
 3. **반영 안 된 것을 표시한다.**
 
@@ -58,8 +58,8 @@ program/plan/A-COP_남은작업_인수인계.md
 
 ```
 program/research/          원본
-program/wiki/              허브 wiki
-program/final_project_cs/wiki/   cs wiki
+wiki/              허브 wiki
+final_project_cs/wiki/   cs wiki
 ```
 
 ## 출력 형식

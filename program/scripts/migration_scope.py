@@ -105,7 +105,7 @@ EVIDENCE_MARK = re.compile(r"^##+ *재현 명령|^##+ *재현$", re.M)
 
 #: ★9차. datasets/ 의 REPORT 는 "데이터가 무엇인가"(안 변함)와
 #: "지금 어디까지 됐나"(계속 변함)를 한 파일에 담는 일이 잦다.
-#: → program/datasets/wiki/report-split.md
+#: → datasets/wiki/report-split.md
 #:
 #: 28건 전건 판정에 맞춰 조정했다. 줄수 하한 80 에서 놓침 0 · 오탐 3.
 #: 하한을 100 으로 올리면 놓침이 3 생긴다. 놓치는 것보다 오탐이 낫다.

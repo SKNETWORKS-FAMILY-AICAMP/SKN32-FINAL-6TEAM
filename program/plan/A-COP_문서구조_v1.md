@@ -2,12 +2,12 @@
 
 ## 1. 전체 트리
 
-### 1-1. 중앙 허브 — `program/wiki/`
+### 1-1. 중앙 허브 — `wiki/`
 
 코드 커밋과 무관하게 움직이는 지식. 제품·일정·평가·사업·결정.
 
 ```text
-program/wiki/
+wiki/
 ├─ quickstart.md              # 진입점. 30초 안에 전체를 파악
 ├─ index.md                   # 영역 지도
 ├─ log.md                     # 문서 변경 이력
@@ -207,7 +207,7 @@ Case를 만들고, 업무별 Agent Team이 협업하고, 위험한 동작은 사
 | 하려는 일 | 여기부터 |
 |---|---|
 | 제품이 뭔지 알고 싶다 | [product/positioning.md](product/positioning.md) |
-| 코드를 고치려 한다 | [../../final_project_cs/wiki/quickstart.md](../final_project_cs/wiki/quickstart.md) |
+| 코드를 고치려 한다 | [../../final_project_cs/wiki/quickstart.md](../../final_project_cs/wiki/quickstart.md) |
 | Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) → cs의 `teams/team-contract/index.md` |
 | 평가를 돌리려 한다 | [evaluation/protocol.md](evaluation/protocol.md) |
 | 왜 이렇게 설계했는지 궁금하다 | [decisions/index.md](decisions/index.md) |
@@ -219,10 +219,10 @@ Case를 만들고, 업무별 Agent Team이 협업하고, 위험한 동작은 사
 | 저장소 | 역할 | wiki |
 |---|---|---|
 | `program` | 계획·결정·평가 기준 | 여기 |
-| `final_project_cs` | 릴리스 대상 | [wiki](../final_project_cs/wiki/index.md) |
-| `final_project_sample` | 계약 선검증 | [wiki](../final_project_sample/wiki/index.md) |
-| `acop_dojo` | 학습 도장 | [wiki](../acop_dojo/wiki/index.md) |
-| `datasets` | 데이터 | [wiki](../datasets/wiki/index.md) |
+| `final_project_cs` | 릴리스 대상 | [wiki](../../final_project_cs/wiki/index.md) |
+| `final_project_sample` | 계약 선검증 | [wiki](../../final_project_sample/wiki/index.md) |
+| `acop_dojo` | 학습 도장 | [wiki](../../acop_dojo/wiki/index.md) |
+| `datasets` | 데이터 | [wiki](../../datasets/wiki/index.md) |
 
 자세한 관계는 [architecture/repository-map.md](architecture/repository-map.md).
 
@@ -357,10 +357,10 @@ description: 중앙 허브의 6개 영역과 각 영역이 답하는 질문
 
 | 저장소 | 무엇이 있나 |
 |---|---|
-| [final_project_cs](../final_project_cs/wiki/index.md) | Core·Team 구현, 계약, 불변식, 평가 하네스 |
-| [final_project_sample](../final_project_sample/wiki/index.md) | cs로 이식 확정된 계약만 |
-| [datasets](../datasets/wiki/index.md) | 데이터셋 의미와 재생성 방법 |
-| [acop_dojo](../acop_dojo/wiki/index.md) | 학습 도장 사용법 |
+| [final_project_cs](../../final_project_cs/wiki/index.md) | Core·Team 구현, 계약, 불변식, 평가 하네스 |
+| [final_project_sample](../../final_project_sample/wiki/index.md) | cs로 이식 확정된 계약만 |
+| [datasets](../../datasets/wiki/index.md) | 데이터셋 의미와 재생성 방법 |
+| [acop_dojo](../../acop_dojo/wiki/index.md) | 학습 도장 사용법 |
 
 ## 미결정
 
@@ -591,16 +591,16 @@ owners: [human:최연우]
 ```markdown
 # A-COP
 
-문서는 `program/wiki/`와 각 저장소 `wiki/`에 있다.
+문서는 `wiki/`와 각 저장소 `wiki/`에 있다.
 **작업 전에 해당 wiki의 `quickstart.md`를 먼저 읽는다.**
 
 ## 어디를 볼 것인가
 
 | 하려는 일 | 먼저 읽을 것 |
 |---|---|
-| 제품·범위·용어 | `program/wiki/product/index.md` |
-| 일정·DoD | `program/wiki/delivery/index.md` |
-| 왜 그렇게 했는지 | `program/wiki/decisions/index.md` |
+| 제품·범위·용어 | `wiki/product/index.md` |
+| 일정·DoD | `wiki/delivery/index.md` |
+| 왜 그렇게 했는지 | `wiki/decisions/index.md` |
 | 코드 수정 | `final_project_cs/wiki/quickstart.md` |
 | Team 추가·수정 | `final_project_cs/wiki/teams/index.md` |
 | 쓰기 동작 | `final_project_cs/wiki/actions/index.md` |
@@ -617,13 +617,13 @@ owners: [human:최연우]
 
 | 사실 | 현재 값 | 정본 | 확인일 |
 |---|---|---|---|
-| 문서 기준선 | v8 | `program/wiki/index.md` | 2026-09-01 |
-| CS Pack Team | VOC & Store Manager, Response Generation & Review | `program/wiki/architecture/pack-model.md` | 2026-09-01 |
-| DoD 항목 수 | 29 | `program/wiki/delivery/dod.md` | 2026-09-01 |
+| 문서 기준선 | v8 | `wiki/index.md` | 2026-09-01 |
+| CS Pack Team | VOC & Store Manager, Response Generation & Review | `wiki/architecture/pack-model.md` | 2026-09-01 |
+| DoD 항목 수 | 29 | `wiki/delivery/dod.md` | 2026-09-01 |
 
 ## 문서를 쓸 때
 
-`program/wiki/governance/document-standard.md`를 따른다.
+`wiki/governance/document-standard.md`를 따른다.
 ```
 
 ### 5-2. front matter 규격

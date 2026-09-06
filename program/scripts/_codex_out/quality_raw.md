@@ -41,9 +41,9 @@ tags: [testing, architecture]
 
 ## 관계
 
-- [도메인 독립성 게이트](./domain-free.md)
-- [다른 도메인 실행 증거](./another-domain.md)
-- [제안 대조 규칙](./verification.md)
+- [도메인 독립성 게이트](domain-free.md)
+- [다른 도메인 실행 증거](another-domain.md)
+- [제안 대조 규칙](verification.md)
 
 ===== FILE: domain-free.md =====
 ---
@@ -93,9 +93,9 @@ tags: [testing, architecture]
 
 ## 관계
 
-- [아키텍처 테스트 다섯 경계](./architecture-tests.md)
-- [다른 도메인 실행 증거](./another-domain.md)
-- [제안 대조 규칙](./verification.md)
+- [아키텍처 테스트 다섯 경계](architecture-tests.md)
+- [다른 도메인 실행 증거](another-domain.md)
+- [제안 대조 규칙](verification.md)
 
 ===== FILE: another-domain.md =====
 ---
@@ -154,9 +154,9 @@ tags: [testing, architecture, contract]
 
 ## 관계
 
-- [아키텍처 테스트 다섯 경계](./architecture-tests.md)
-- [도메인 독립성 게이트](./domain-free.md)
-- [제안 대조 규칙](./verification.md)
+- [아키텍처 테스트 다섯 경계](architecture-tests.md)
+- [도메인 독립성 게이트](domain-free.md)
+- [제안 대조 규칙](verification.md)
 
 ===== FILE: verification.md =====
 ---
@@ -228,6 +228,6 @@ tags: [testing, contract, data]
 
 ## 관계
 
-- [아키텍처 테스트 다섯 경계](./architecture-tests.md)
-- [도메인 독립성 게이트](./domain-free.md)
-- [다른 도메인 실행 증거](./another-domain.md)
+- [아키텍처 테스트 다섯 경계](architecture-tests.md)
+- [도메인 독립성 게이트](domain-free.md)
+- [다른 도메인 실행 증거](another-domain.md)

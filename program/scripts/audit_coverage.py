@@ -18,9 +18,9 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-WIKI_GLOBS = ["program/wiki/**/*.md", "program/final_project_cs/wiki/**/*.md",
-              "program/final_project_sample/wiki/**/*.md",
-              "program/datasets/wiki/**/*.md", "program/acop_dojo/wiki/**/*.md"]
+WIKI_GLOBS = ["wiki/**/*.md", "final_project_cs/wiki/**/*.md",
+              "final_project_sample/wiki/**/*.md",
+              "datasets/wiki/**/*.md", "acop_dojo/wiki/**/*.md"]
 
 #: 절 안에서 "이게 있으면 옮겨진 것" 을 판별할 만한 특징 문자열
 SIGNALS = [

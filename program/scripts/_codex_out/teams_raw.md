@@ -92,8 +92,8 @@ class TeamModule(Protocol):
 
 ## 관계
 
-- [Team 경계](./team-boundary.md)
-- [Team 레지스트리](./team-registry.md)
+- [Team 경계](team-boundary.md)
+- [Team 레지스트리](team-registry.md)
 
 ===== FILE: team-boundary.md =====
 ---
@@ -192,8 +192,8 @@ for path in root.rglob("*.py"):
 
 ## 관계
 
-- [Team 입출력 계약](./team-contract.md)
-- [Team 레지스트리](./team-registry.md)
+- [Team 입출력 계약](team-contract.md)
+- [Team 레지스트리](team-registry.md)
 
 ===== FILE: team-registry.md =====
 ---
@@ -274,5 +274,5 @@ unknown team: <team_id>
 
 ## 관계
 
-- [Team 입출력 계약](./team-contract.md)
-- [Team 경계](./team-boundary.md)
+- [Team 입출력 계약](team-contract.md)
+- [Team 경계](team-boundary.md)

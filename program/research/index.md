@@ -253,8 +253,8 @@ python program/scripts/check_drift.py
 개정 기록을 읽고 "v7 이 뒤집은 근거가 없다" 를 찾는 일은 사람 몫이다. 종료 코드
 0 은 확인할 것 없음, 1 은 사람이 볼 것 있음이다.
 
-아직 안 보는 것은 `v8 ↔ program/wiki/` 대조다. wiki 이관이 진행 중이라
-([이관 범위 목록](../wiki/governance/migration-scope/index.md)) 대상이 확정된 뒤에 붙인다.
+아직 안 보는 것은 `v8 ↔ wiki/` 대조다. wiki 이관이 진행 중이라
+([이관 범위 목록](../../wiki/governance/migration-scope/index.md)) 대상이 확정된 뒤에 붙인다.
 이관이 끝나면 같은 내용이 두 벌이 되므로 이번과 똑같은 드리프트 면이 새로 생긴다.
 
 ### 언제 도는가

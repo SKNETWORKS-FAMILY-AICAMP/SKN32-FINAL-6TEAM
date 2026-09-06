@@ -4,7 +4,7 @@
     python -m eval.timing.measure_review_time --n 20 --action wait_for_approval
 
 ★왜 이걸 재나
-  `program/wiki/business/unit-economics.md` 의 72% 절감이 이 숫자에 통째로 달려 있다.
+  `wiki/business/unit-economics.md` 의 72% 절감이 이 숫자에 통째로 달려 있다.
   지금은 검토 2분·승인 3분이 전부 [추정] 이고 아무도 안 쟀다.
   검토가 4분이면 절감이 72% → 50% 로 떨어진다.
 
