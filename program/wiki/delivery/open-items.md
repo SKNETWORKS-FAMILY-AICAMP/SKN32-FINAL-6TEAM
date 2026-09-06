@@ -71,10 +71,9 @@ owners: [human:미배정]
 | ~~Team 경계 불변식 3개 자동화~~ **닫힘 — `INV-CS-ARCH-001·002·003` 셋 다 `automated` 이고 테스트가 실재한다.** `[실측 2026-09-07]` `tests/architecture/test_basement_is_domain_free.py` · `tests/contract/test_core_isolation.py` 65건 통과 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
 | ~~`final_project_cs/CLAUDE.md`가 v8을 가리킨다~~ **닫힘 — 담당 세션이 v9로 고침(`6bec5d9`).** `final_project_sample/CLAUDE.md`는 그 저장소 쪽 미커밋 수정 중이라 `[미확보]` — 2026-09-06 v9 판올림(루트 `CLAUDE.md`·`research/index.md`·드리프트 검사기는 갱신됨). 두 파일은 다른 세션이 수정 중이라 이 세션이 안 건드렸다. `v8` → `v9`, 경로 `plan/A-COP_구현계획서_v9.md` | [timeline.md](timeline.md) |
 | ~~cs 안의 Composer 자체 복사본 셋~~ **닫힘 — 코드 세션이 들어냈고(`f2319aa`, 400줄 삭제, `app/composer_host.py`로 패키지에 주입, `composer:admin` 추가), wiki 갱신도 끝났다.** `[실측 2026-09-07]` 옛 파일 셋 전부 없음, `composer_host.py`·`entrypoint.py` 실재. `f2319aa`를 아는 페이지 6개 + `external/rest-api.md`에 "고객 릴리즈 앱엔 `/composer/*`가 아예 없다"를 추가했다 | [D-006](../decisions/D-006-composer-ownership.md) · [D-011](../decisions/D-011-composer-v3-gap.md) |
-| **DoD evidence 9건이 낡았다** — 낡음 주석은 09-06 패치로 붙었다. **다시 잴 것은 둘뿐**: DoD-22(인용한 테스트가 없어 근거 소실)·DoD-06(cs가 아니라 sample 옛 코퍼스에서 잰 값). 나머지 일곱(02·14·20·24·21·13·08)은 판정이 유효하고 evidence 본문의 옛 이름·수치·경로만 현행으로 고치면 된다 | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
+| ~~DoD evidence 9건이 낡았다~~ **닫힘 (2026-09-07).** 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 다시 재야 했던 둘도 cs 에서 재측정했다 — **DoD-22**는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 사라진 근거를 복구했고, **DoD-06**은 cs 코퍼스로 다시 재 문서 25 / 청크 306 을 확인했다 | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md) |
 | ~~`program/research/index.md` 둘~~ **닫힘 (2026-09-07).** 표는 09-06 에 되살아났고 `migration-scope` 링크도 폴더형(`migration-scope/index.md`)으로 고쳐져 있었다. 남아 있던 진짜 문제는 **표 내용이 루트 `CLAUDE.md` 와 어긋난 것** — Composer 행 하나가 루트에만, DoD 행의 "evidence 9건 낡음" 이 research 에만 빠져 있었다. 맞추고 `check_drift.py` 검사 4 로 두 표를 행·값 대조하게 했다(`1a4fc82`) | [../governance/review-policy.md](../governance/review-policy.md) |
-
-| **`cases.py`의 주석이 낡았다** — 접수 라우트(`app/presentation/api/cases.py` 88~91행)가 "★남은 구멍(정직하게 적는다): `routing`에 남은 Case를 되잡는 sweeper는 아직 없다"라고 적어 두었는데, `app/application/routing_sweeper.py`가 이미 있다. 코드는 맞고 주석만 낡았다. **코드 담당 세션 몫** — 이 문서 세션은 코드를 건드리지 않는다. 실물은 [`quality/guardrails.md`](../../final_project_cs/wiki/quality/guardrails.md) §2026-09-03 sweeper에 기록돼 있다 | `[실측 2026-09-06]` 드리프트 검사에서 `run_case()` 호출처가 2 → 3곳으로 는 것을 보고 확인 |
+| ~~`cases.py`의 주석이 낡았다~~ **닫힘 (2026-09-07).** `[실측]` "sweeper 는 아직 없다" 문구가 소스에서 사라졌다. 코드 세션이 sweeper 쪽을 손보면서(`7192fee` — `errored` 를 세기만 하고 아무에게도 안 알리던 결함) 같이 정리한 것으로 보인다 | [`quality/guardrails.md`](../../final_project_cs/wiki/quality/guardrails.md) §2026-09-03 sweeper |
 
 ## 측정 대기
 
@@ -165,7 +164,6 @@ owners: [human:미배정]
 |---|---|
 | `index.md` 5행 | **"계획서·briefing·final_project 폴더는 이 정리의 대상이 아니다"** |
 | 점검 권고 | **최신 문서군을 기준선에 기록하라** |
-
 | 고르면 | 대가 |
 |---|---|
 | 포함 | **색인의 책임 범위가 넓어진다** |
