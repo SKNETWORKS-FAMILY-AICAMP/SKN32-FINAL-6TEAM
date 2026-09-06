@@ -19,11 +19,23 @@
 ★출력은 JSON 한 줄이다. `run_daily_feedback` 과 같은 관례이며, 세는 칸을 그대로
   낸다 — 특히 `errored` 는 **아무것도 기록하지 못한** 수라서 다음 회차에 또
   걸린다. 0 이 아니면 사람이 봐야 한다.
+
+★**그 "사람이 봐야 한다" 를 실제로 전달한다**(2026-09-07). 전에는 세어서 찍기만
+  하고 **exit 0** 이었다 — cron 에 걸어 두면 실패가 로그 속에만 남아 아무도 안
+  본다. 세는 것과 알리는 것은 다르다(`CLAUDE.md` §3).
+
+    --once      `errored` 가 있으면 **exit 1**. cron 이 실패로 본다
+    --interval  **죽지 않는다.** 상주 sweeper 가 첫 실패에 멈추면 되잡기 자체가
+                멈춘다 — 대신 stderr 로 알리고 계속 돈다
+
+  어느 쪽이든 사유는 **stderr** 로 나간다. stdout 은 JSON 한 줄이라는 계약을
+  지켜야 파이프로 받아 쓰는 쪽이 안 깨진다.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 
 from app.application.classification_sweeper import sweep_stuck_classifying
@@ -58,6 +70,25 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     return result
 
 
+def _report_errors(result: dict[str, dict[str, int]]) -> int:
+    """`errored` 를 stderr 로 알리고 총합을 돌려준다.
+
+    ★`errored` 와 `failed` 는 다르다. `failed` 는 실패를 **기록까지 한** 것이라
+      Case 가 escalated 로 넘어가 사람 손에 들어간다. `errored` 는 아무것도
+      기록하지 못한 것이라 Case 가 그 상태에 그대로 남고 **다음 회차에 또 걸린다** —
+      아무도 안 보면 영원히 돈다.
+    """
+    total = 0
+    for name, counts in sorted(result.items()):
+        errored = int(counts.get("errored", 0))
+        if errored:
+            total += errored
+            print(f"★{name} sweeper: errored={errored} · scanned={counts.get('scanned')} "
+                  f"— 아무것도 기록하지 못했다. 다음 회차에 또 걸린다",
+                  file=sys.stderr, flush=True)
+    return total
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true", default=True)
@@ -68,14 +99,19 @@ def main() -> int:
 
     tenant_id = get_settings().tenant_id
     if args.interval is None:
-        print(json.dumps(_run_once(tenant_id, args.only), ensure_ascii=False, sort_keys=True))
-        return 0
+        result = _run_once(tenant_id, args.only)
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        # ★한 번 돌고 끝나는 모드는 exit code 가 유일한 신호다. cron 이 이걸 본다.
+        return 1 if _report_errors(result) else 0
 
     # ★상주 모드에서도 한 회차의 결과를 그때그때 낸다. 다 끝나고 모아 내면
     #   중간에 죽었을 때 아무 기록도 안 남는다.
     while True:
-        print(json.dumps(_run_once(tenant_id, args.only), ensure_ascii=False, sort_keys=True),
-              flush=True)
+        result = _run_once(tenant_id, args.only)
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)
+        # ★여기서는 **끝내지 않는다.** 상주 sweeper 가 첫 실패에 멈추면 되잡기
+        #   자체가 멈춘다 — 멈춘 Case 를 되잡는 장치가 멈추는 것이 더 나쁘다.
+        _report_errors(result)
         time.sleep(args.interval)
 
 

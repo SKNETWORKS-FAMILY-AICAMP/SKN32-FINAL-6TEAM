@@ -55,6 +55,31 @@ python -m scripts.run_sweepers --interval 60
 뒤는 "아무 일도 못 했다" 이고 **할 일이 다르다.** `errored` 는 로그에
 스택까지 남는다(`logger.exception`).
 
+## `errored` 가 나오면 어떻게 알게 되나 (2026-09-07)
+
+JSON 을 사람이 읽어야만 알 수 있던 상태였다. 이제 **밖으로 나간다.**
+
+| 모드 | 신호 |
+|---|---|
+| `--once` | **exit 1.** cron 이 실패로 보고 메일·알림을 낸다 |
+| `--interval` | **stderr** 한 줄. ★**죽지 않는다** |
+
+```
+★classifying sweeper: errored=2 · scanned=5 — 아무것도 기록하지 못했다. 다음 회차에 또 걸린다
+```
+
+★상주 모드가 첫 실패에 멈추면 **되잡기 자체가 멈춘다.** 멈춘 Case 를 되잡는
+장치가 멈추는 것이 더 나쁘므로, 알리고 계속 돈다.
+
+★사유는 **stderr** 로만 간다. stdout 은 JSON 한 줄이라는 계약을 지켜야
+파이프로 받아 쓰는 쪽이 안 깨진다.
+
+cron 예시 — 실패하면 cron 이 알아서 시끄러워진다:
+
+```cron
+*/1 * * * * cd /path/to/final_project_cs && python -m scripts.run_sweepers --once
+```
+
 ## 자주 묻는 것
 
 **Q. 정상 처리 중인 Case 를 되잡지 않나?**
@@ -77,5 +102,8 @@ python -m scripts.run_sweepers --interval 60
 ## 아직 없는 것
 
 - **스케줄러 배선.** 이 저장소에는 cron·systemd·compose 설정이 없다. 실제 배포
-  형태가 정해지면 그때 붙인다 — 지금은 위 명령을 사람이 띄운다
-- **`errored` 알림.** 로그에만 남는다. 알림 경로가 생기면 여기 연결한다
+  형태가 정해지면 그때 붙인다 — 지금은 위 명령을 사람이 띄운다.
+  ★다만 `--once` 가 이제 exit code 로 신호하므로, cron 에 걸기만 하면 알림은
+  cron 이 해 준다(위 예시)
+- ~~**`errored` 알림.** 로그에만 남는다~~ → **2026-09-07 해결.** exit code +
+  stderr. 전용 알림 시스템(Slack·PagerDuty 등)에 붙이는 것은 그 경로가 생길 때다
