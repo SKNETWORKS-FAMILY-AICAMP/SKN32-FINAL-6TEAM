@@ -8,7 +8,11 @@ from __future__ import annotations
 
 from typing import Any
 
-CONTRACT_VERSION = "1.0"
+#: ★1.0 → 1.1 (2026-09-06). 실행 중인 조립과 저장된 선언을 **구분해서** 낸다.
+#:  이 전까지는 요청마다 선언을 다시 읽어 `config_revision` 을 계산했다 — 그래서
+#:  Composer 로 선언을 바꾸면 대상은 아직 옛 조립으로 요청을 처리하는데 화면에는
+#:  **새 revision 이 이미 반영된 것처럼** 보였다. 조용한 성공 위장이다.
+CONTRACT_VERSION = "1.1"
 
 
 def _manifest(manifest: Any) -> dict[str, Any]:
@@ -25,9 +29,16 @@ def _manifest(manifest: Any) -> dict[str, Any]:
 
 
 def snapshot(*, config: Any | None = None, registry: Any | None = None,
-             executor: Any | None = None) -> dict[str, Any]:
-    """Return JSON-safe composition metadata without customer data or secrets."""
+             executor: Any | None = None, runtime: Any | None = None) -> dict[str, Any]:
+    """Return JSON-safe composition metadata without customer data or secrets.
+
+    ★`runtime` 을 주면 **실행 중인 조립**의 revision 을 함께 낸다. 안 주면
+      `active_revision` 은 `None`(모름)이다 — 저장소에서 읽은 값을 실행 중인
+      것으로 적지 않는다. `config` 인자로 들어오는 선언은 저장소에서 읽어 계산한
+      것이라 **desired 쪽**을 설명한다.
+    """
     from app import composition
+    from app.application import runtime as runtime_module
     from app.core.project_config import config_revision as revision
     from app.core import settings as settings_module
     from app.infrastructure.db.session import get_connection
@@ -42,9 +53,19 @@ def snapshot(*, config: Any | None = None, registry: Any | None = None,
 
     settings = settings_module.get_settings()
     manifests = [_manifest(item) for item in registry.manifests()]
+    desired_revision = revision(config)
+    active_revision = getattr(runtime, "active_revision", None) if runtime is not None else None
+    reload_state = (runtime.state(desired_revision) if runtime is not None
+                    else runtime_module.STATE_UNKNOWN)
     return {
         "contract_version": CONTRACT_VERSION,
-        "config_revision": revision(config),
+        # ★하위호환 필드. 옛 콘솔은 이것만 읽으므로 **실행 중인 것**을 우선 낸다 —
+        #   모르면 desired 로 떨어지므로, 정확히 보려면 아래 두 필드를 읽는다.
+        "config_revision": active_revision or desired_revision,
+        "active_revision": active_revision,
+        "desired_revision": desired_revision,
+        "reload_state": reload_state,
+        "reload_error": getattr(runtime, "last_error", None) if runtime is not None else None,
         "modules": {name: bool(value.enabled) for name, value in config.modules.items()},
         "ports": {
             "team_executor": config.ports.team_executor,

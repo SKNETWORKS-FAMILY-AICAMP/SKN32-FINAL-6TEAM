@@ -53,11 +53,20 @@ def test_snapshot_has_composition_only_shape_and_redacts_key(monkeypatch):
     monkeypatch.setattr("app.composition.build_graph_store", lambda **kwargs: object())
 
     data = snapshot(config=Config(), registry=registry, executor=executor)
+    # ★계약 1.0 → 1.1 (2026-09-06). 실행 중인 조립과 저장된 선언을 **구분해서** 낸다.
+    #   이 고정 테스트가 그 변경에서 의도대로 걸렸다 — 근거를 적고 갱신한다.
     assert set(data) == {
         "contract_version", "config_revision", "modules", "ports", "team_manifests",
         "teams", "registered_ids", "port_implementations", "guardrails", "llm",
+        "active_revision", "desired_revision", "reload_state", "reload_error",
     }
-    assert data["contract_version"] == "1.0"
+    assert data["contract_version"] == "1.1"
+    assert data["desired_revision"] == revision(Config())
+    # ★`runtime` 을 안 줬으므로 실행 중인 것은 **모른다.** 저장소에서 읽은 값을
+    #   실행 중인 것으로 적으면 그게 조용한 성공 위장이다.
+    assert data["active_revision"] is None
+    assert data["reload_state"] == "unknown"
+    # 하위호환 필드는 실행 중인 것을 우선하되, 모르면 desired 로 떨어진다.
     assert data["config_revision"] == revision(Config())
     assert data["registered_ids"] == {
         "modules": ["vector_rag", "graph_store"], "teams": ["team-a"], "ports": []

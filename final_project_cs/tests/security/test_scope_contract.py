@@ -12,11 +12,15 @@ def test_scopes_are_guardrail_owned():
       것(`/toggle`·`/changes`, `composer:write`)과 선언 **전체**를 갈아끼우거나
       되돌리는 것(`/apply`·`/restore`)은 다른 행위다.
 
+    ★2026-09-06: `ops:reload` 추가(sample 에서 reload 계약 이식). `composer:write`
+      (저장)와 분리한다 — 저장은 되돌릴 수 있지만 반영은 그 순간 트래픽이 받는
+      것을 바꾼다.
+
     ★이름에서 개수를 뺐다 — scope 가 늘 때마다 함수 이름이 낡는다."""
     assert set(get_guardrails().get("security.scopes")) == {
         "case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read",
         "composer:read", "composer:validate", "composer:write", "composer:admin",
-        "ops:introspect",
+        "ops:introspect", "ops:reload",
     }
 
 

@@ -212,9 +212,16 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      team_executor: TeamExecutorPort | None = None,
                      broker: Any | None = None, tools: ReadToolbox | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
-                     config_path: str | Path | None = None) -> Controller:
-    """Assemble the application Controller and inject every concrete adapter."""
-    config = load_project_config(config_path)
+                     config_path: str | Path | None = None,
+                     config: ProjectConfig | None = None) -> Controller:
+    """Assemble the application Controller and inject every concrete adapter.
+
+    ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
+      reload 는 "읽은 선언으로 조립하고, 그 선언의 revision 을 active 로 적는다"
+      가 성립해야 한다. 여기서 다시 읽으면 그 사이 바뀐 선언으로 조립해 놓고
+      **읽었던 revision 을 실행 중인 것으로 잘못 적게** 된다.
+    """
+    config = config if config is not None else load_project_config(config_path)
     _validate_modules(config)
     if llm is None:
         settings = get_settings()

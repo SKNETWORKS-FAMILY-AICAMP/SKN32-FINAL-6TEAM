@@ -129,6 +129,11 @@ security:
     #   (v9 §8-D · D-011, 2026-09-06).
     - composer:admin
     - ops:introspect
+    # ★바뀐 선언을 **실행 중인 프로세스**에 반영시키는 scope
+    #   (`POST /admin/reload`). composer:write(저장)와 분리한다 — 저장은 되돌릴
+    #   수 있지만 반영은 그 순간 트래픽이 받는 것을 바꾼다. 저장하는 사람과
+    #   반영 시점을 정하는 사람이 같아야 할 이유도 없다 (2026-09-06, sample 이식).
+    - ops:reload
   composer_jwt_ttl_minutes: 30
   # ★MCP 에는 mcp:read 외 어떤 scope 도 부여하지 않는다
   mcp_allowed_scopes:
