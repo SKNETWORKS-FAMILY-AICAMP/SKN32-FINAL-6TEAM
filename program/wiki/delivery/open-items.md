@@ -44,14 +44,14 @@ owners: [human:미배정]
 
 | 항목 | 어디 |
 |---|---|
-| 이관 199건 (사람 판정 60) | [../governance/migration-scope/index.md](../governance/migration-scope/index.md) |
+| **이관 203건 (유지 124 · 사람 판정 79)** — `[실측 2026-09-07]` 199/60 은 길이 하한 40줄을 넣기 전 숫자였다. 하한 아래를 `판정필요`로 넘기면서 36 → 79 로 늘었다 | [../governance/migration-scope/index.md](../governance/migration-scope/index.md) |
 | 골든셋 라벨링 절차 확인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) |
-| **`program/final_project_sample/wiki/`가 git에 없다** — 루트 `.gitignore:150`의 `final_project_sample/`이 `program/` 아래 사본까지 잡는다. 페이지 수십 개가 디스크에만 있고 커밋 이력이 0이다(2026-09-06 확인). 사용자 판단 필요: 규칙에 예외를 두거나 폴더를 옮긴다 | [../governance/migration-scope/coverage-2026-09.md](../governance/migration-scope/coverage-2026-09.md) 17차 |
-| Team 경계 불변식 3개 자동화 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
+| ~~`program/final_project_sample/wiki/`가 git에 없다~~ **닫힘 — `.gitignore` 에 `!program/final_project_sample/` 부정 규칙이 들어갔다(2026-09-06). `[실측 2026-09-07]` 33개 전부 추적 중이고 미추적 0.** | 루트 `.gitignore:150~153` |
+| ~~Team 경계 불변식 3개 자동화~~ **닫힘 — `INV-CS-ARCH-001·002·003` 셋 다 `automated` 이고 테스트가 실재한다.** `[실측 2026-09-07]` `tests/architecture/test_basement_is_domain_free.py` · `tests/contract/test_core_isolation.py` 65건 통과 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
 | ~~`final_project_cs/CLAUDE.md`가 v8을 가리킨다~~ **닫힘 — 담당 세션이 v9로 고침(`6bec5d9`).** `final_project_sample/CLAUDE.md`는 그 저장소 쪽 미커밋 수정 중이라 `[미확보]` — 2026-09-06 v9 판올림(루트 `CLAUDE.md`·`research/index.md`·드리프트 검사기는 갱신됨). 두 파일은 다른 세션이 수정 중이라 이 세션이 안 건드렸다. `v8` → `v9`, 경로 `plan/A-COP_구현계획서_v9.md` | [timeline.md](timeline.md) |
 | ~~cs 안의 Composer 자체 복사본 셋~~ **닫힘 — 코드 세션이 들어냈다(`f2319aa`, 400줄 삭제, `app/composer_host.py`로 패키지에 주입, `composer:admin` 추가).** 남은 건 **wiki 쪽 갱신** — cs wiki의 Composer 서술이 옛 복사본 기준이다 |(`composer_service.py`·`api/composer.py`·`composer_auth.py`, `api/app.py`가 무조건 include)** — 배포 형태가 중앙이든 pip든 cs 소스에 Composer 구현이 있으면 안 된다(2026-09-06 사용자 정리). pip 방식이면 복사본을 지우고 `acop_composer` 패키지 주입으로 바꾼다. 그러면 D-011 의 `composer:admin`·이력·복원이 따라온다 | [D-006](../decisions/D-006-composer-ownership.md) · [D-011](../decisions/D-011-composer-v3-gap.md) |
 | **DoD evidence 9건이 낡았다** — 낡음 주석은 09-06 패치로 붙었다. **다시 잴 것은 둘뿐**: DoD-22(인용한 테스트가 없어 근거 소실)·DoD-06(cs가 아니라 sample 옛 코퍼스에서 잰 값). 나머지 일곱(02·14·20·24·21·13·08)은 판정이 유효하고 evidence 본문의 옛 이름·수치·경로만 현행으로 고치면 된다 | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
-| **`program/research/index.md` 둘** — 루트 `CLAUDE.md`가 "정본"이라 가리키는 "현재 기준 사실" 표가 없고(08-19 정리에서 사라짐), 점검 캘린더의 `migration-scope.md` 링크가 폴더 승격으로 죽었다 | [../governance/review-policy.md](../governance/review-policy.md) "정본 포인터가 한 칸 비어 있다". **원본 수정은 wiki 범위 밖** — 루트 `CLAUDE.md` 문장을 v8 직접 참조로 바꿀지, 표를 되살릴지 사람이 정한다 |
+| ~~`program/research/index.md` 둘~~ **닫힘 (2026-09-07).** 표는 09-06 에 되살아났고 `migration-scope` 링크도 폴더형(`migration-scope/index.md`)으로 고쳐져 있었다. 남아 있던 진짜 문제는 **표 내용이 루트 `CLAUDE.md` 와 어긋난 것** — Composer 행 하나가 루트에만, DoD 행의 "evidence 9건 낡음" 이 research 에만 빠져 있었다. 맞추고 `check_drift.py` 검사 4 로 두 표를 행·값 대조하게 했다(`1a4fc82`) | [../governance/review-policy.md](../governance/review-policy.md) |
 
 | **`cases.py`의 주석이 낡았다** — 접수 라우트(`app/presentation/api/cases.py` 88~91행)가 "★남은 구멍(정직하게 적는다): `routing`에 남은 Case를 되잡는 sweeper는 아직 없다"라고 적어 두었는데, `app/application/routing_sweeper.py`가 이미 있다. 코드는 맞고 주석만 낡았다. **코드 담당 세션 몫** — 이 문서 세션은 코드를 건드리지 않는다. 실물은 [`quality/guardrails.md`](../../final_project_cs/wiki/quality/guardrails.md) §2026-09-03 sweeper에 기록돼 있다 | `[실측 2026-09-06]` 드리프트 검사에서 `run_case()` 호출처가 2 → 3곳으로 는 것을 보고 확인 |
 
