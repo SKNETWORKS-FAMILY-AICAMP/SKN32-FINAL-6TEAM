@@ -85,6 +85,17 @@ UI 가 자체 구현하면 같은 로직이 두 곳에 생기고, 한쪽이 바�
 | 2 | UI 규칙 정정 | `[미확보]` |
 | 3 | 패키지 이름·경계 확정 | `[미확보]` → [../delivery/open-items.md](../delivery/open-items.md) |
 
+## ★ [2026-09-06] Composer가 어디에 사는가 — 배포 형태 둘로 정리 (사용자)
+
+| 배포 형태 | Composer 위치 | cs 와의 관계 | 릴리즈 때 |
+|---|---|---|---|
+| **중앙 저장 방식** | **UI 프로젝트**(설정 서비스)로 빠진다 → [D-007](D-007-central-config-store.md) | cs 는 자기 선언을 **읽기만** 한다 | cs 에 Composer 코드가 애초에 없다 |
+| **pip 방식** | `acop_composer` 패키지 | **관리용 빌드의 cs 가 pip 로 설치해 라우터를 주입**하고, UI 는 그 cs 의 `/composer/*` 를 바라본다 | **패키지를 빼서 cs 에서 제거된다** |
+
+두 형태 모두에서 성립하는 규칙 하나 — **cs 소스 안에 Composer 구현이 있으면 안 된다.** 위 "import 금지"는 이 뜻이다. 패키지가 밖에서 붙는 것(관리용 빌드)은 결합이 아니고, 소스에 복사해 넣는 것이 결합이다.
+
+`[실측]` 지금 cs 는 후자다 — `app/application/composer_service.py`(167줄)·`app/presentation/api/composer.py`(157줄)·`composer_auth.py`(76줄)가 옛 v2 를 복사한 자체 구현이고, `app/presentation/api/app.py:8-27` 이 무조건 include 한다. 릴리즈 빌드에서 빠질 방법이 없다. **pip 방식으로 가면 이 셋을 지우고 패키지 주입으로 바꿔야 한다** — D-011 의 scope 분리·이력·복원도 그때 패키지째 따라온다. cs 작업자 몫 → [open-items](../delivery/open-items.md).
+
 ## 관계
 
 - [`sample/wiki/composer/`](../../final_project_sample/wiki/composer/index.md) — **원본 구현.** Composer 는 여기서 만들어 cs 로 간다

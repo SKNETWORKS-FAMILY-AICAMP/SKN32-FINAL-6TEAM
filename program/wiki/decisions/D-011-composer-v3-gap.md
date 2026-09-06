@@ -163,7 +163,7 @@ POST /composer/apply    GET  /composer/current
 
 `[실측]` **2026-09-06 sample에 구현했다.** ① `/apply` scope `composer:admin`(guardrails·scope 계약 테스트) ② `acop_basement/core/revision_store.py` + 마이그레이션 `009_project_config_revisions.sql`, `apply_candidate()`가 쓴 직후 같은 잠금 아래에서 기록(첫 기록은 `baseline` 먼저) ③ `GET /composer/revisions`(read) · `POST /composer/restore`(admin) ④ 404/409/422 와 중앙 모드 대상 격리 e2e. 관련 스위트 73개 통과. → [sample/composer/write-channel.md](../../final_project_sample/wiki/composer/write-channel.md) · [auth-scope.md](../../final_project_sample/wiki/composer/auth-scope.md)
 
-`[미확보]` **cs 에는 아직 옛 모양이 남아 있다** — `final_project_cs/app/presentation/api/composer.py`의 `/apply`가 `composer:write`다. Composer 는 cs 밖이라는 D-006·D-CS-001 방향대로면 이 경로는 cs 에서 빠져야 하고, 남긴다면 같은 scope 분리와 이력이 따라가야 한다. cs 작업자 몫으로 open-items에.
+`[실측]` **cs 에는 옛 v2 의 자체 복사본이 남아 있다** — `app/application/composer_service.py`·`api/composer.py`(`/apply`가 `composer:write`)·`composer_auth.py`, 그리고 `api/app.py` 가 무조건 include. 사용자가 정한 배포 형태 둘(중앙 → UI 프로젝트 / pip → cs 가 패키지를 설치·주입, 릴리즈 때 제거) 어느 쪽에서도 **cs 소스 안의 복사본은 자리가 없다** → [D-006](D-006-composer-ownership.md) 2026-09-06 절. 복사본을 지우고 `acop_composer` 패키지 주입으로 바꾸면 이 결정의 scope 분리·이력·복원이 패키지째 따라온다. cs 작업자 몫으로 open-items에.
 
 위 질문 여섯 중 2번(외부 소비자)은 "없다"로 확인됐고, 1번(고객 빌드 배제)은 D-006·D-007 방향상 "예"로 본다. 3·4·5·6은 이 결정으로 답이 정해진다 — 전체 교체는 관리자 도구로, UI는 schema 복제 없이 항목 단위로, 병행은 없고, 제거 대신 격리.
 
