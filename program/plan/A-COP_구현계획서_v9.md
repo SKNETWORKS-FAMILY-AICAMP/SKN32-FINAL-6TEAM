@@ -865,7 +865,9 @@ Catalog & Verification을 고른다. SKU·Variant·규격·공급처 증거를 �
 
 서비스 간 인증은 mTLS 또는 service bearer token을 사용하고, audience·scope·만료·발급자를 검증한다. token 원문은 로그에 남기지 않는다. deadline 초과, 상태 조회 실패, 인증 실패, 5xx는 임의 성공으로 바꾸지 않고 `unknown`으로 기록해 Case를 `escalated`로 보낸다. 네트워크 일시 오류만 제한적으로 재시도하고, 취소는 `TeamExecutorPort.cancel(task_id)`에서 원격 cancel을 호출한 뒤 `cancelled`를 기록한다. 취소 확인이 안 되면 `unknown`으로 남긴다.
 
-더미 Remote Agent는 같은 저장소의 `services/catalog_verification_remote/` 별도 프로세스로 구현한다. HTTP A2A adapter와 in-memory task store를 사용하고, fixture에 따라 working→input-required→working→completed, timeout, cancel, auth failure를 재현한다. Core 1은 이를 LOCAL Team과 동일한 `TeamExecutorPort` 뒤에서 호출하며, 두 경로의 canonical `TeamResult`와 Artifact digest가 같다는 테스트로 LOCAL/A2A 동일 결과 시연을 연결한다.
+더미 Remote Agent는 같은 저장소 안에 A-COP 본체와 분리된 앱으로 구현한다. HTTP A2A adapter와 in-memory task store를 사용하고,
+
+[2026-09-07 정정] 이전 판은 자리를 `services/catalog_verification_remote/` **별도 프로세스**라고 적었으나, 실물은 `final_project_cs/app/presentation/a2a/remote_agent.py`다. `services/` 폴더는 없다. **분리의 뜻이 다르다** — 프로세스가 아니라 **의존이 분리돼 있다.** 그 앱은 DB도 Core도 모르고, 테스트에서는 `httpx.ASGITransport`로 같은 프로세스 안에서 붙인다(`app/infrastructure/a2a/http_transport.py`). 별도 프로세스로 띄우는 것은 배포 단계의 선택이지 왕복 검증의 조건이 아니다. DoD-26이 요구하는 것은 Card 발견 → working → input-required → 추가 입력 → Artifact 완료의 **왕복**이고, 그것은 지금 형태로 성립한다. fixture에 따라 working→input-required→working→completed, timeout, cancel, auth failure를 재현한다. Core 1은 이를 LOCAL Team과 동일한 `TeamExecutorPort` 뒤에서 호출하며, 두 경로의 canonical `TeamResult`와 Artifact digest가 같다는 테스트로 LOCAL/A2A 동일 결과 시연을 연결한다.
 
 ### Agent Team Registry 확장
 
