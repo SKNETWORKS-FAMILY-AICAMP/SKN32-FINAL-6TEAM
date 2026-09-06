@@ -35,9 +35,22 @@ def api_fixture(monkeypatch):
         return "Bearer " + security._development_key(scope, original.secret_key)
 
     def cleanup() -> None:
+        """★FK 순서대로 지운다. **하나라도 막히면 트랜잭션이 통째로 롤백되어
+        아무것도 안 지워지고, 테넌트 행까지 남는다** — 조용히.
+
+        ★2026-09-07 — `agent_runs`·`team_tasks`·`llm_calls` 셋이 빠져 있었다.
+          이 픽스처는 REST 를 태우므로 Controller 가 실제로 돌면 그 표들이 생기고,
+          그 순간 `DELETE FROM customer_cases` 가 FK 로 막힌다. 지금은 대부분의
+          테스트가 분류기를 주입해 거기까지 안 가지만, **배선이 조금만 바뀌면
+          터지는 자리**다. 같은 저장소의 `tests/live/` 픽스처는 이미 셋을 지우고
+          이유까지 적어 뒀는데 이쪽만 안 따라왔다.
+        """
         with get_connection() as conn:
             with conn.transaction():
                 with conn.cursor() as cur:
+                    cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+                    cur.execute("DELETE FROM team_tasks WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+                    cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
