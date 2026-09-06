@@ -110,3 +110,7 @@ RAG 통합 = 배선 + 재학습    둘 다 필요하다
 - [../teams/response-review.md](../teams/response-review.md) — 발견된 결함
 - [../quality/eval-harness.md](../quality/eval-harness.md) — 평가 데이터 유효성
 - [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD-28
+
+## ★ [2026-09-06] 이 결정의 범위
+
+**"채택하지 않는다"는 stage3 v1~v9 모델에 대한 판정이다.** 파인튜닝 트랙 자체는 계속이며(사용자 정리), 임베딩·리랭커 파인튜닝도 후보다. 새 시도가 채택 기준([../../../wiki/evaluation/dod28-rerun.md](../../../wiki/evaluation/dod28-rerun.md) "Proposed 27.8%")을 넘으면 이 결정을 갱신한다. 결과가 나쁘면 나쁘다고 그대로 적는다.

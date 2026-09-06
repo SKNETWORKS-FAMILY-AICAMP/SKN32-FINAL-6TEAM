@@ -73,6 +73,8 @@
 
 **v9에서 안 바꾼 것.** Team 목록(v8 재판정 그대로), DoD 1~29, §25 일정, Docker·AWS Phase 2. 강사 확인이 필요한 둘 — sLLM 파인튜닝이 6팀 필수인가, 3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나 — 는 미결로 남아 `program/wiki/delivery/open-items.md`에 있다.
 
+**파인튜닝의 지위 (2026-09-06 사용자).** 파인튜닝은 **제외한 것이 아니라 계속 시도하는 트랙**이다. 지금까지의 시도(stage3 v1~v9, 2026-09-02까지)는 채택 기준 미달이라 채택하지 않았을 뿐이고, 진척이 있으면 적용한다. 임베딩·리랭커 파인튜닝도 후보다. 결과가 나쁘면 나쁘다고 그대로 보고한다. 지금까지의 실측은 `program/wiki/evaluation/dod28-rerun.md`·`finetuning.md`와 `final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md`에 있다.
+
 ---
 
 이 문서(v9.md)는 v8 전체를 계승한 새 기준선이며, 이후 구현·평가·심사의 기준선이다. v8 이하는 보존본(`program/plan/archive/`)이며 수정하지 않는다.

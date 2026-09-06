@@ -30,7 +30,7 @@ owners: [human:미배정]
 | sample에서 Composer 쓰기채널 검증 | 완료 |
 | 골든셋 72건 구성 | 완료 |
 | 평가 하네스 (A/B/Proposed) | 완료 |
-| 파인튜닝 파이프라인 | 완료 (결과는 부정적) |
+| 파인튜닝 파이프라인 | 배선 완료. 모델은 stage3 v1~v9까지 채택 기준 미달(09-02) — **트랙은 계속**, 임베딩·리랭커 후보 |
 
 ## 중간발표까지 (D-14)
 
@@ -93,7 +93,7 @@ owners: [human:미배정]
 | 수집 데이터 보고서 | [datasets/catalog.md](../../datasets/wiki/catalog.md) + 각 데이터셋 `REPORT.md`. 순서: 상용 주문(쿠팡·네이버) → 배송 조회 도구 → 공개 VOC → 번역 비교 |
 | DB/저장소 설계 문서 | [cs data/schema](../../final_project_cs/wiki/data/schema/index.md) · [migrations](../../final_project_cs/wiki/data/migrations.md) |
 | 데이터 전처리 결과서 | 각 데이터셋의 `scripts/normalize.py`·`processed/` — 현황은 [catalog.md](../../datasets/wiki/catalog.md) |
-| **ML/DL 학습 결과서 · 학습한 모델** | [mt-benchmark](../research/mt-benchmark.md) · [dod28-rerun](../evaluation/dod28-rerun.md)(파인튜닝 — **채택 안 함**). **무엇을 "학습한 모델"로 낼지 미결** — 아래 |
+| **ML/DL 학습 결과서 · 학습한 모델** | [mt-benchmark](../research/mt-benchmark.md) · [dod28-rerun](../evaluation/dod28-rerun.md)(stage3 v1~v9 — 지금까지는 채택 기준 미달, **계속 시도 중**). 결과가 나쁘면 나쁜 대로 결과서에 적는다. **무엇을 "학습한 모델"로 낼지 미결** — 아래 |
 | AI 시스템 아키텍처 | [architecture/index.md](../architecture/index.md) · [diagrams.md](../architecture/diagrams.md) |
 | 멀티 에이전트 테스트 계획·결과 | [cs quality/evidence.md](../../final_project_cs/wiki/quality/evidence.md) · [evaluation/index.md](../evaluation/index.md) |
 | 벡터DB/GraphDB 구축 결과서 | [rag-retrieval](../../final_project_cs/wiki/context/rag-retrieval.md) · [graph-retrieval](../../final_project_cs/wiki/context/graph-retrieval.md) |
@@ -122,7 +122,7 @@ owners: [human:미배정]
 | 미결 | 왜 |
 |---|---|
 | **sLLM 파인튜닝이 6팀 필수인가** | 시트 문구는 "3, 4번 주제"·"3, 4번 팀"인데 6팀 시트에도 그 행이 그대로 있다. **강사 확인 전엔 필수로 단정하지 않는다** — DoD-28이 있으니 선택 항목으로는 살아 있다 |
-| **3W 산출물 "데이터 전처리 결과서 · ML/DL 학습결과서 · 학습한 ML/DL 모델"을 무엇으로 채우나** | LLM API 호출만으로는 안 채워진다. 파인튜닝은 채택하지 않기로 했으니([../evaluation/dod28-rerun.md](../evaluation/dod28-rerun.md)) "학습한 모델"에 무엇을 낼지 정해야 한다 |
+| **3W 산출물 "데이터 전처리 결과서 · ML/DL 학습결과서 · 학습한 ML/DL 모델"을 무엇으로 채우나** | LLM API 호출만으로는 안 채워진다. 파인튜닝 시도(stage3 v1~v9, [../evaluation/dod28-rerun.md](../evaluation/dod28-rerun.md))는 지금까지 채택 기준 미달이지만 **트랙은 계속**이라, 그 학습 결과서와 체크포인트(`ckpt_stage3_v9` 보존)를 그대로 내는 것이 한 답이다. 임베딩·리랭커 파인튜닝도 후보. 확정은 아니다 |
 
 `[미확보]` 시트의 팀명·깃허브·협업툴·멘토 칸이 2026-08-17엔 전부 비어 있었다. 지금 채워졌는지 확인하지 않았다.
 

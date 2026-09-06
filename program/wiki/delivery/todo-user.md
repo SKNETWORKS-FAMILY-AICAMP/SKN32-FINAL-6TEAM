@@ -81,7 +81,7 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 강사에게 물어야 하는 것 둘은 따로 있다.
 
 - [ ] **sLLM 파인튜닝이 6팀 필수인가** — 시트 문구가 "3, 4번 팀"이라 불명 → [timeline.md](timeline.md)
-- [ ] **3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나** — 파인튜닝 미채택이면 LLM API만으론 안 채워진다
+- [ ] **3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나** — LLM API만으론 안 채워진다. 파인튜닝은 계속 시도하는 트랙이라(stage3 v9 체크포인트·학습 결과서 있음) 그걸 내는 게 한 답. 확정 아님
 
 ## 4. wiki 저장소 전환 — 사용자가 부를 때만. AI는 먼저 말하지 않는다
 
