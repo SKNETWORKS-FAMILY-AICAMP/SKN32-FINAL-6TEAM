@@ -53,6 +53,10 @@
 (코어)에 있다 — 예전에는 `composer_service` 에 있어서 **선택 기능에 필수 경로가
 의존**하고 있었다.
 
+★`POST /admin/reload` 도 **릴리즈 빌드에 있다**(scope `ops:reload`). Composer 가
+없어도 선언 파일을 사람이 바꿔 놓고 반영시킬 수 있어야 하고, 반영은 쓰기 채널이
+아니라 이 프로세스의 조립을 갈아 끼우는 일이다.
+
 ---
 
 ## 2. 이 저장소가 넘기는 것 — `app/composer_host.py`
@@ -198,9 +202,14 @@ UI 를 고쳐야 한다. HTTP 로 들어온 `implementation_ref` 는 등록표 a
 
 - **중앙 설정 저장소** — 이 제품은 direct(pip)다(D-007). 중앙은 별도 프로젝트로
   분리됐고 cs 범위 밖이다. 요청이 오면 거부한다(§2).
-- **`POST /admin/reload`** — sample 에는 있다(계약 1.1). 이 저장소는 아직 계약
-  1.0 이라 저장 뒤 **재기동**이 필요하다. 응답의 `pending_restart` 가 그 사실을
-  숨기지 않고 말한다.
+- ~~**`POST /admin/reload`**~~ — **2026-09-06 같은 날 이식했다.** 이 문단을 쓸
+  때는 없었다. 지금은 계약 **1.1** 이고 `ops:reload` scope 로 열려 있다
+  ([`13_introspection_계약.md`](13_introspection_계약.md)).
+
+  ★그래도 `/toggle`·`/changes` 응답의 `activation_state` 는 여전히
+  `pending_restart` 다. **저장과 반영은 여전히 다른 행위**이기 때문이다 —
+  이 API 는 저장까지만 하고, 반영은 `ops:reload` 를 가진 사람이 따로 부른다.
+  콘솔은 어긋났을 때만 [반영] 버튼을 낸다.
 - **여러 인스턴스에 걸친 잠금** — 파일 모드는 단일 writer 전제다. 여러 프로세스가
   같은 선언 파일을 쓰는 형태가 되면 파일 락이나 중앙 저장소의 조건부 쓰기가
   필요하다.
