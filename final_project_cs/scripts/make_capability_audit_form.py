@@ -182,12 +182,33 @@ render();
 """
 
 
+CODEX_PROMPT = """너는 커머스 고객응대 시스템의 라우팅을 감사한다.
+
+아래 JSONL 각 줄은 고객 문의 하나다. `capabilities` 는 그 문의를 맡은 팀이 실제로
+가진 기능 목록이다. **그중 어느 기능으로 처리하는 것이 맞는지** 판정해라.
+
+판정 규칙:
+- 고객이 무엇을 해 달라고 하는지를 본다. 규칙·조건을 묻는 것과 실행을 요청하는 것은 다르다.
+- ★**한 문장만으로 정할 수 없으면 "UNDECIDABLE" 을 골라라.** 억지로 하나를 고르면
+  애매함이 불일치로 둔갑한다. 실제로 이 데이터에서 같은 두 기능 사이를 양방향으로
+  틀리는 현상이 관측됐다 — 경계가 문장에 없을 수 있다.
+- `capabilities` 밖의 이름을 만들어내지 마라.
+
+각 줄마다 JSON 한 줄씩 출력한다. 다른 말은 쓰지 마라:
+{"case_id":"...","capability":"고른 기능 또는 UNDECIDABLE","confidence":"high|medium|low","why":"한 문장"}
+
+--- 입력 ---
+"""
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="capability 선택 감사용 로컬 HTML 폼")
     parser.add_argument("--dataset", default="eval/datasets/golden.jsonl")
     parser.add_argument("--out", default="docs/labeling/capability_audit.html")
+    parser.add_argument("--codex-input", default=None,
+                        help="독립 모델(Codex 등)에 같은 감사를 맡길 프롬프트 파일을 함께 쓴다")
     args = parser.parse_args()
 
     from app.composition import build_registry
@@ -225,6 +246,28 @@ def main() -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(PAGE.format(cases_json=json.dumps(cases, ensure_ascii=False)),
                         encoding="utf-8")
+
+    if args.codex_input:
+        # ★독립 모델에 **같은 판단**을 시켜 사람 감사의 앞자리를 좁힌다.
+        #   Codex 는 벤더·모델 계열이 달라 이 저장소의 LLM 실험
+        #   (`eval/capability_selection_experiment.py`)과 **오류가 덜 겹친다** —
+        #   같은 모델을 두 번 부르면 같은 방식으로 틀린 것을 확인할 뿐이다.
+        #
+        # ★라벨과 자동 선택을 **주지 않는다.** 주면 그쪽으로 끌린다 — 사람 폼이
+        #   정답을 안 보여주는 것과 같은 이유다.
+        # ★"UNDECIDABLE" 을 고를 수 있게 한다. 억지로 하나를 고르게 하면
+        #   애매함이 불일치로 둔갑한다(폼에 같은 선택지를 둔 이유와 같다).
+        mism_only = [c for c in cases if not c["agree"]]
+        payload = "\n".join(json.dumps(
+            {"case_id": c["case_id"], "intent": c["intent"], "team_id": c["team_id"],
+             "message": c["message"], "capabilities": c["capabilities"]},
+            ensure_ascii=False) for c in mism_only)
+        codex_path = ROOT / args.codex_input
+        codex_path.parent.mkdir(parents=True, exist_ok=True)
+        codex_path.write_text(CODEX_PROMPT + payload + "\n", encoding="utf-8")
+        print(f"독립 모델 감사 입력: {args.codex_input}  ({len(mism_only)}건)")
+        print("  실행: codex exec -m gpt-5.6-luna -s read-only "
+              f'-C "<repo>" - < {args.codex_input}')
 
     mismatch = sum(1 for c in cases if not c["agree"])
     print(json.dumps({"out": args.out, "cases": len(cases), "mismatch": mismatch,
