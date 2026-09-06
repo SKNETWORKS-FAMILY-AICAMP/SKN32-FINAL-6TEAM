@@ -84,10 +84,40 @@ except Exception as exc:
     print('기동 ->', type(exc).__name__, '|', exc)
 """
 
+#: ★`voc: false` 는 **기동을 막지 않는다.** 2026-08-30 판 이 스크립트는
+#:  "VOC 끔 — 기동 자체가 거부된다" 라는 라벨을 달고 `ProjectConfigError` 가
+#:  나는 것을 **통과로 적었다.** 그런데 인라인 분류는 v9 §3-A 가 요구하는
+#:  **필수 기능**이라 선택 플래그에 매달면 안 된다 — 2026-09-01 v8 재판정이
+#:  바로 그 동작을 결함(높음)으로 뒤집었고 `require_module("voc")` 가 빠졌다.
+#:
+#:  ★그 뒤로 이 스크립트는 **라벨과 관측이 정반대인 채로** 돌고 있었다
+#:  ("기동 자체가 거부된다" 라고 적고 "기동 -> 성공" 을 출력했다).
+#:  라벨만 읽고 넘기면 아직 막히는 줄 안다 — 오류 메시지가 사실을 잘못
+#:  전하지 않게 한다(`CLAUDE.md` §3). 2026-09-06 에 바로잡았다.
+#:
+#:  지금 계약은 이것이다: **끄면 화면과 메뉴만 사라지고, 분류는 계속 돈다.**
+PROBE_VOC_OFF = """
+import sys; sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+from fastapi.testclient import TestClient
+try:
+    from app.presentation.api.app import create_app
+    client = TestClient(create_app())
+    print('기동 -> 성공 (인라인 분류는 필수라 voc 플래그에 안 매달린다)')
+    print('GET /ui/voc ->', client.get('/ui/voc').status_code, '(404 면 화면이 사라진 것)')
+    print('상단 메뉴에 VOC 링크 ->', '/ui/voc' in client.get('/ui/cases').text)
+except Exception as exc:
+    print('기동 ->', type(exc).__name__, '|', exc, '  ← ★회귀다. 분류가 다시 플래그에 매달렸다')
+from app.composition import build_classifier
+try:
+    build_classifier(); print('인라인 분류 조립 -> 성공')
+except Exception as exc:
+    print('인라인 분류 조립 ->', type(exc).__name__, '|', exc, '  ← ★회귀다')
+"""
+
 
 def main() -> int:
     run("VOC 켬 — 화면과 메뉴가 있다", "voc", True, PROBE_UI)
-    run("VOC 끔 — 기동 자체가 거부된다", "voc", False, PROBE_BOOT)
+    run("VOC 끔 — 화면만 사라지고 분류는 계속 돈다", "voc", False, PROBE_VOC_OFF)
     run("graph_store 켬 — 어댑터 이름이 뜬다", "graph_store", True, PROBE_GRAPH)
     run("graph_store 끔 — 껐다고 적는다", "graph_store", False, PROBE_GRAPH)
     run("mcp 켬 — tool 이 동작 경로로 간다", "mcp", True, PROBE_MCP)
