@@ -85,7 +85,7 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 
 ## 4. wiki 저장소 전환 — 사용자가 부를 때만. AI는 먼저 말하지 않는다
 
-준비는 끝났다(문서 대조 22/22 · 검사 통과 · 미작성 링크 0). 스크립트는 지금 **dry-run만** 된다. 무엇이 바뀌는지 먼저 본다.
+문서 쪽 준비는 끝났다(대조 완료 · 검사 통과 · 결정 완료). **도구 쪽은 아니다** — `[실측 2026-09-07]` `cutover_rewrite.py`는 계획만 내고 실제 이동·링크 재계산이 없다. `check_wiki.py`도 `program/` 경로 고정. 전환 전에 이 둘을 구현해야 한다(문서 세션 몫, 반나절). 무엇이 바뀌는지는 지금도 볼 수 있다.
 
 ```bash
 python program/scripts/cutover_rewrite.py --layout wiki
