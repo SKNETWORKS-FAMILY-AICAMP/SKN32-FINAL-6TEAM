@@ -50,7 +50,7 @@ owners: [human:미배정]
 | Team 경계 불변식 3개 자동화 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
 | **[담당 세션 인계] `final_project_cs/CLAUDE.md`·`final_project_sample/CLAUDE.md`가 아직 "v8 §0"을 기준선으로 가리킨다** — 2026-09-06 v9 판올림(루트 `CLAUDE.md`·`research/index.md`·드리프트 검사기는 갱신됨). 두 파일은 다른 세션이 수정 중이라 이 세션이 안 건드렸다. `v8` → `v9`, 경로 `plan/A-COP_구현계획서_v9.md` | [timeline.md](timeline.md) |
 | **[코드 담당 세션 인계]** cs 안의 Composer 자체 복사본 셋(`composer_service.py`·`api/composer.py`·`composer_auth.py`, `api/app.py`가 무조건 include)** — 배포 형태가 중앙이든 pip든 cs 소스에 Composer 구현이 있으면 안 된다(2026-09-06 사용자 정리). pip 방식이면 복사본을 지우고 `acop_composer` 패키지 주입으로 바꾼다. 그러면 D-011 의 `composer:admin`·이력·복원이 따라온다 | [D-006](../decisions/D-006-composer-ownership.md) · [D-011](../decisions/D-011-composer-v3-gap.md) |
-| **DoD evidence 9건이 낡았다 — `final_project_cs/docs/evidence/` 수정 필요** (2026-09-06 대조로 확인) | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
+| **DoD evidence 9건이 낡았다** — 낡음 주석은 09-06 패치로 붙었다. **다시 잴 것은 둘뿐**: DoD-22(인용한 테스트가 없어 근거 소실)·DoD-06(cs가 아니라 sample 옛 코퍼스에서 잰 값). 나머지 일곱(02·14·20·24·21·13·08)은 판정이 유효하고 evidence 본문의 옛 이름·수치·경로만 현행으로 고치면 된다 | [`quality/dod-evidence-drift.md`](../../final_project_cs/wiki/quality/dod-evidence-drift.md). 06은 sample을 잰 것, 08은 대상 Team이 퇴역, 13·21은 옛 라벨, 14·22·02·20·24는 일부 낡음. **wiki가 아니라 evidence 원본을 고쳐야 하는 일이라 cs 저장소 작업자 몫** |
 | **`program/research/index.md` 둘** — 루트 `CLAUDE.md`가 "정본"이라 가리키는 "현재 기준 사실" 표가 없고(08-19 정리에서 사라짐), 점검 캘린더의 `migration-scope.md` 링크가 폴더 승격으로 죽었다 | [../governance/review-policy.md](../governance/review-policy.md) "정본 포인터가 한 칸 비어 있다". **원본 수정은 wiki 범위 밖** — 루트 `CLAUDE.md` 문장을 v8 직접 참조로 바꿀지, 표를 되살릴지 사람이 정한다 |
 
 ## 측정 대기
@@ -105,8 +105,8 @@ owners: [human:미배정]
 | ~~v8 병합 시점~~ | **폐기 (2026-09-06)** — 병합 대신 **v9로 판올림**해서 진행한다. 판올림 이후의 정본은 wiki다 |
 | 골든셋 `persona` 필드 추가 담당 | **역할로 정함 (2026-09-06)** — [roles.md](roles.md)의 검증 & 프론트가 golden/holdout을 관리하므로 그 담당. 이름은 팀 재편 뒤에 |
 | 축 1 공개 통계 확보 여부 | 확보 시도 / 미확보 유지 |
-| **sLLM 파인튜닝이 6팀 필수인가** | 시트 문구가 "3, 4번 팀"이라 불명. **강사 확인** 필요 → [timeline.md](timeline.md) |
-| **3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나** | LLM API만으론 안 채워진다. 파인튜닝은 **계속 시도하는 트랙**(지금까지 stage3 v1~v9 채택 기준 미달) — 그 결과서·체크포인트를 내는 게 한 답, 임베딩·리랭커도 후보 → [timeline.md](timeline.md) |
+| ~~sLLM 파인튜닝이 6팀 필수인가~~ | **닫힘 (09-06, 사용자)** — 필수 여부와 무관하게 파인튜닝은 계속 시도하는 트랙 → [timeline.md](timeline.md) |
+| ~~3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나~~ | **닫힘 (09-06, 사용자)** — 지금까지의 학습 결과서·체크포인트(stage3 v9)를 있는 그대로 낸다. 임베딩·리랭커는 이후 후보 → [timeline.md](timeline.md) |
 
 ## [2026-09-03] 인수인계에서 남은 것
 
@@ -116,7 +116,7 @@ owners: [human:미배정]
 |---|---|
 | VOC 데이터 전처리 | **완료** (2026-09-01) |
 | `implementation_ref` allowlist 제한 | **확인됨** — `KNOWN_IMPLEMENTATION_REFS`. Composer HTTP 경로에만 적용 |
-| **네이버 주문 4건 누락** | `[미확보]` **아직 안 고쳐졌다.** 로그인 상태 실제 DOM 필요 — 코드만으로 진행 불가 → [../../datasets/wiki/scraper-notes.md](../../datasets/wiki/scraper-notes.md) |
+| ~~네이버 주문 4건 누락~~ | **닫힘 (09-06, 사용자)** — 이미 수정했다고 정리. `naver_order_history/REPORT.md`의 68/72 문구만 낡았다 → [../../datasets/wiki/scraper-notes.md](../../datasets/wiki/scraper-notes.md) |
 | **v2 계약 문서 정합** | `[미확보]` endpoint 이름·`config_revision`·인증 scope·감사 필드를 **하나로 맞춰야 한다** → [D-011](../decisions/D-011-composer-v3-gap.md) |
 | **UI 가 import 할 패키지 이름** | `[미확보]` 아직 확정 안 됨 |
 
