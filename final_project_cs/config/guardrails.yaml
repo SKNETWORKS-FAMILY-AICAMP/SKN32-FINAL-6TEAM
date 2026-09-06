@@ -121,6 +121,13 @@ security:
     - composer:read
     - composer:validate
     - composer:write
+    # ★선언 **전체**를 갈아끼우거나 이력의 revision 으로 되돌리는 scope
+    #   (`POST /composer/apply`·`/composer/restore`). composer:write(항목 하나
+    #   단위 `/toggle`·`/changes`)와 분리한다 — 통째 교체는 설치·복원·이관용
+    #   관리자 도구이지 운영자 화면의 버튼이 아니다. 두 운영자가 전체본을
+    #   동시에 보내면 한쪽이 남의 변경을 덮거나 항상 409 로 튕긴다
+    #   (v9 §8-D · D-011, 2026-09-06).
+    - composer:admin
     - ops:introspect
   composer_jwt_ttl_minutes: 30
   # ★MCP 에는 mcp:read 외 어떤 scope 도 부여하지 않는다

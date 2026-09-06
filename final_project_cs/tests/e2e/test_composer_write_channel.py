@@ -12,14 +12,22 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-import app.presentation.composer_auth as composer_auth
+from acop_composer.api import create_composer_router
+from acop_composer.auth import create_auth_router
+
+from app.composer_host import composer_host
+from app.core import settings as settings_module
 from app.presentation.api.app import create_app
 
 
 @pytest.fixture()
 def configured(monkeypatch):
-    settings = SimpleNamespace(composer_jwt_secret="test-jwt-secret", composer_issuer_secret="test-issuer-secret")
-    monkeypatch.setattr(composer_auth, "get_settings", lambda: settings)
+    """★비밀은 이제 호스트 어댑터(`app/composer_host.py`)가 설정 모듈에서 읽는다.
+    Composer 구현이 이 저장소를 떠났으므로(v9 §8-D) 여기서 갈아끼울 곳도 설정
+    모듈 하나다 — 예전에는 `app.presentation.composer_auth` 의 이름을 바꿔치기했다."""
+    settings = SimpleNamespace(composer_jwt_secret="test-jwt-secret",
+                               composer_issuer_secret="test-issuer-secret")
+    monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
 
 
 def _token(scope: str | list[str], *, expired: bool = False, secret: str = "test-jwt-secret") -> str:
@@ -35,9 +43,16 @@ def _client(tmp_path: Path, monkeypatch) -> tuple[TestClient, Path]:
     source = yaml.safe_load(Path("config/project.yaml").read_text(encoding="utf-8"))
     path = tmp_path / "project.yaml"
     path.write_text(yaml.safe_dump(source, sort_keys=False), encoding="utf-8")
-    app = create_app(classifier=lambda _: {"intent": "billing", "issue_code": "x", "sentiment": "neutral"})
+    host = composer_host()
+    app = create_app(
+        classifier=lambda _: {"intent": "billing", "issue_code": "x", "sentiment": "neutral"},
+        composer_write_router=create_composer_router(host),
+        composer_auth_router=create_auth_router(host))
     app.state.project_config_path = path
     app.state.composer_audit_path = tmp_path / "composer_events.jsonl"
+    # ★이력도 tmp 로 돌린다. 안 그러면 pytest 를 돌릴 때마다 실제
+    #   `var/audit/composer_revisions.jsonl` 에 테스트 기록이 쌓인다.
+    app.state.composer_revisions_path = tmp_path / "composer_revisions.jsonl"
     return TestClient(app), path
 
 
@@ -89,7 +104,7 @@ def test_apply_rejects_unimplementable_reference(tmp_path, monkeypatch, configur
     current = client.get("/composer/current", headers=_auth("composer:read")).json()
     current["config"]["teams"][0]["implementation_ref"] = "app.nonexistent:Missing"
 
-    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+    response = client.post("/composer/apply", headers=_auth("composer:admin"), json={
         "config": current["config"], "base_revision": current["revision"],
         "reason": "test registry rejection"})
 
@@ -108,7 +123,7 @@ def test_http_validate_rejects_unknown_active_implementation_reference(tmp_path,
 
     assert response.status_code == 200
     assert response.json()["valid"] is False
-    assert "not allowed" in response.json()["errors"][0]
+    assert "not registered" in response.json()["errors"][0]
 
 
 def test_http_apply_rejects_unknown_active_implementation_reference_before_revision_check(
@@ -119,7 +134,7 @@ def test_http_apply_rejects_unknown_active_implementation_reference_before_revis
     current = client.get("/composer/current", headers=_auth("composer:read")).json()
     current["config"]["teams"][0]["implementation_ref"] = "not.a.real.module:NotAClass"
 
-    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+    response = client.post("/composer/apply", headers=_auth("composer:admin"), json={
         "config": current["config"], "base_revision": "stale-revision",
         "reason": "test HTTP registry rejection"})
 
@@ -150,7 +165,7 @@ def test_apply_writes_an_audit_event_with_actor_and_revision(tmp_path, monkeypat
     candidate = current["config"]
     candidate["teams"][0]["active"] = not candidate["teams"][0]["active"]
 
-    response = client.post("/composer/apply", headers=_auth("composer:write"), json={
+    response = client.post("/composer/apply", headers=_auth("composer:admin"), json={
         "config": candidate, "base_revision": current["revision"], "reason": "audit test"})
 
     assert response.status_code == 200
@@ -207,7 +222,7 @@ def test_concurrent_apply_one_wins_one_gets_409(tmp_path, monkeypatch, configure
     results = [None, None]
 
     def apply(index: int):
-        results[index] = client.post("/composer/apply", headers=_auth("composer:write"), json={
+        results[index] = client.post("/composer/apply", headers=_auth("composer:admin"), json={
             "config": payloads[index], "base_revision": current["revision"], "reason": "concurrent test"})
 
     threads = [threading.Thread(target=apply, args=(index,)) for index in range(2)]
@@ -249,29 +264,48 @@ def test_toggle_changes_only_one_registered_flag_and_audits(
     lines = (tmp_path / "composer_events.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     event = json.loads(lines[0])
+    # ★감사 이벤트의 모양이 바뀌었다(2026-09-06). 예전 cs 구현은
+    #   `target_type`/`target_id`/`previous_active`/`active` 를 적었고, 패키지는
+    #   `resource_type`/`instance_id`/`operation` 과 **`changed_fields`** 를
+    #   적는다. `changed_fields` 가 "무엇이 바뀌었는지"를 값이 아니라 경로로
+    #   말해 주므로 더 정확하다. 옛 기록은 옛 모양 그대로 남는다 — 덮어쓰지
+    #   않고 공존시킨다(`CLAUDE.md` §1).
     assert event["event"] == "composer.toggle"
-    assert event["target_type"] == target_type
-    assert event["target_id"] == target_id
-    assert event["previous_active"] is old_value
-    assert event["active"] is (not old_value)
-    assert event["config_revision"] == body["config_revision"]
+    assert event["resource_type"] == target_type
+    assert event["instance_id"] == target_id
+    assert event["operation"] == ("enable" if not old_value else "disable")
+    assert event["previous_revision"] == current["revision"]
+    assert event["revision"] == body["config_revision"]
     assert event["correlation_id"] == body["audit_id"]
+    # 바뀐 곳이 **그 한 군데**로 적혀 있어야 한다
+    assert event["changed_fields"] == [
+        f"modules.{target_id}.{field}" if target_type == "module"
+        else f"teams[{[item['team_id'] for item in before['teams']].index(target_id)}].{field}"
+    ]
 
 
-@pytest.mark.parametrize("payload,expected_status", [
-    ({"target_type": "module", "target_id": "missing", "active": False}, 422),
-    ({"target_type": "port", "target_id": "team_executor", "active": False}, 422),
+@pytest.mark.parametrize("payload,expected_code", [
+    # 선언에 없는 module — 스키마는 맞고 **대상이 없다**
+    ({"target_type": "module", "target_id": "missing", "active": False}, "invalid_change"),
+    # `port` 는 토글 대상 종류가 아니다 — 스키마에서 걸린다
+    ({"target_type": "port", "target_id": "team_executor", "active": False}, "validation_error"),
 ])
 def test_toggle_rejects_unregistered_targets_without_writing(
-    tmp_path, monkeypatch, configured, payload, expected_status
+    tmp_path, monkeypatch, configured, payload, expected_code
 ):
+    """★둘 다 422 지만 **코드가 다르다**(2026-09-06, Composer 를 패키지로 옮기며).
+
+    예전 cs 구현은 둘 다 `invalid_declaration` 하나로 뭉갰다. 나뉘는 편이 맞다 —
+    "그런 대상이 없다"와 "그건 토글할 수 있는 종류가 아니다"는 운영자가 할 일이
+    다르다. 오류 메시지가 사실을 잘못 전하면 한참 헤맨다(`CLAUDE.md` §3).
+    """
     client, path = _client(tmp_path, monkeypatch)
     before = path.read_bytes()
     current = client.get("/composer/current", headers=_auth("composer:read")).json()
     payload.update(base_revision=current["revision"], reason="invalid target")
     response = client.post("/composer/toggle", headers=_auth("composer:write"), json=payload)
-    assert response.status_code == expected_status
-    assert response.json()["error"]["code"] == "invalid_declaration"
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == expected_code
     assert path.read_bytes() == before
 
 

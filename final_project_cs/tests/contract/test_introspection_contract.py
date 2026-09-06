@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.introspection.contract import snapshot
 from app import composition
 from app.core.project_config import load_project_config
-from app.application.composer_service import revision
+from app.core.project_config import config_revision as revision
 
 
 def test_snapshot_has_composition_only_shape_and_redacts_key(monkeypatch):

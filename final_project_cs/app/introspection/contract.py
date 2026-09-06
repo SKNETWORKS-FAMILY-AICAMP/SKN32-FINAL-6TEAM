@@ -28,7 +28,7 @@ def snapshot(*, config: Any | None = None, registry: Any | None = None,
              executor: Any | None = None) -> dict[str, Any]:
     """Return JSON-safe composition metadata without customer data or secrets."""
     from app import composition
-    from app.application.composer_service import revision
+    from app.core.project_config import config_revision as revision
     from app.core import settings as settings_module
     from app.infrastructure.db.session import get_connection
 

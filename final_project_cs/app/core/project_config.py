@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import hashlib
 import importlib
+import json
 from pathlib import Path
 import re
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -88,20 +90,50 @@ class ProjectConfig(BaseModel):
             )
 
 
-def _load(path: Path) -> ProjectConfig:
-    if not path.is_file():
-        raise ProjectConfigError(f"project declaration file does not exist: {path}")
+def config_revision(config: ProjectConfig) -> str:
+    """선언 **내용**에서 나오는 revision. 파일 mtime 이나 커밋이 아니다.
+
+    ★여기 있는 이유(2026-09-06). 전에는 `app/application/composer_service.py`
+      에 있었고 `/introspection` 이 그걸 import 했다. 그런데 introspection 은
+      **Composer 를 안 깐 릴리즈 빌드에서도 떠야 하는** 코드다 — 선택 기능의
+      모듈에 필수 경로가 의존하고 있었다. 계산은 코어의 일이다.
+    """
+    payload = config.model_dump(mode="json")
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def config_from_declaration(raw: Any, *, source: str) -> ProjectConfig:
+    """이미 읽어 온 선언(dict)을 **파일 없이** 검증한다.
+
+    ★왜 필요한가. Composer 의 `/validate` 는 예전에 후보를 임시 파일로 쓴 뒤
+      그 파일을 로더에 먹였다. 그러면 "검증만 했는데 디스크에 임시 파일이
+      생기고", 검증이 대상 디렉터리에 쓰기 권한을 요구한다.
+
+    ★검증기를 둘로 만들지 않는다 — `_load()` 가 이 함수를 부른다. 검증기가
+      실제 로더와 다르면 "검증은 통과했는데 기동은 실패" 가 생긴다.
+    """
     try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
-            raise ProjectConfigError(f"project declaration must be a mapping: {path}")
+            raise ProjectConfigError(f"project declaration must be a mapping: {source}")
         config = ProjectConfig.model_validate(raw)
         _validate_active_team_implementations(config)
         return config
     except ProjectConfigError:
         raise
-    except (OSError, yaml.YAMLError, ValidationError, TypeError, ValueError) as exc:
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise ProjectConfigError(f"invalid project declaration {source}: {exc}") from exc
+
+
+def _load(path: Path) -> ProjectConfig:
+    if not path.is_file():
+        raise ProjectConfigError(f"project declaration file does not exist: {path}")
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
         raise ProjectConfigError(f"invalid project declaration {path}: {exc}") from exc
+    return config_from_declaration(raw, source=str(path))
 
 
 def _validate_active_team_implementations(config: ProjectConfig) -> None:
