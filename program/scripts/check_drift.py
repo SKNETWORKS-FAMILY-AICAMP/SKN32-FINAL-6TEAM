@@ -30,7 +30,7 @@ from collections import defaultdict
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-BASELINE = "program/plan/A-COP_구현계획서_v8.md"
+BASELINE = "program/plan/A-COP_구현계획서_v9.md"
 
 #: 기준선을 인용하는 규칙 문서. ★여기 실린 문장은 매 세션 컨텍스트에 자동으로
 #:  실리므로 기준선 본문보다 강하게 작용한다. 기준선을 고칠 때 이 파일들이 그

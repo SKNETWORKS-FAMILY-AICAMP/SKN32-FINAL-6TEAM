@@ -15,7 +15,7 @@ owners: [human:미배정]
 python program/scripts/split_v8.py --write
 ```
 
-원본 `program/plan/A-COP_구현계획서_v8.md`는 **읽기만 했다.** `md5 = 20159eb2…` 그대로다.
+원본 `program/plan/archive/A-COP_구현계획서_v8.md`는 **읽기만 했다.** `md5 = 20159eb2…` 그대로다.
 
 ## 왜 따로 두나
 

@@ -87,7 +87,7 @@ owners: [human:미배정]
 
 | 양식 | 근거 |
 |---|---|
-| 프로젝트 기획서 | `program/plan/A-COP_구현계획서_v8.md` · [../product/index.md](../product/index.md) |
+| 프로젝트 기획서 | `program/plan/A-COP_구현계획서_v9.md`(2026-09-06 판올림. v8은 `archive/`) · [../product/index.md](../product/index.md) |
 | WBS | 이 문서 · `program/research/_WBS원본_2026-08-17.md` |
 | 요구사항 정의서 (+ 5W 업데이트) | [dod.md](dod.md) — 29항목 |
 | 수집 데이터 보고서 | [datasets/catalog.md](../../datasets/wiki/catalog.md) + 각 데이터셋 `REPORT.md`. 순서: 상용 주문(쿠팡·네이버) → 배송 조회 도구 → 공개 VOC → 번역 비교 |
