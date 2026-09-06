@@ -14,8 +14,9 @@
 | Team 목록 — CS Pack 확정(10주 착수) | Response Generation & Review. VOC & Store Manager는 Registry 등록·계약만 유지하는 껍데기로 조정(집계·급증 탐지는 코어 1 소유) | 동 §0 v8 재판정, §7, §8-B | 2026-09-01 |
 | 인라인 분류 소유 | 코어 1 (진입·분류 층). 라벨 어휘·프롬프트 구현은 모델 담당 | 동 §3-A, §16 | 2026-09-01 |
 | Team 목록 — 검증 쇼핑몰 연계(일정 따라 조정) | Procurement + Order & Payment, Fulfillment & Logistics, Return & Refund(Mock), Catalog & Verification(A2A Remote) | 동 | 2026-08-17 |
-| DoD 항목 수 | 1~29 (1~28은 v5/v7 번호 보존, 29는 Response Generation & Review 검증 신규) | 동 §27 | 2026-08-17 |
+| DoD 항목 수 | 1~29 (1~28은 v5/v7 번호 보존, 29는 Response Generation & Review 검증 신규). evidence 9건 낡음 표시(v9 §27) | 동 §27 | 2026-09-06 |
 | Docker·AWS | Phase 2 (로컬 개발 환경엔 Docker 없음, 실제 배포 단계에서 컨테이너화) | 동 §12, §28 | 2026-08-17 |
+| Composer 소재·쓰기 계약 | 지금은 pip(direct) 방식, 중앙은 UI 옵션. 운영자 API는 항목 단위, 전체 교체·복원은 `composer:admin`. cs 소스 안에 Composer 구현 금지 | 동 §8-D | 2026-09-06 |
 | 프로젝트 일정 구조 | 선행 2026-08-17~08-27(11일) + 공식 1W~9W, 중간발표 09-15, 최종발표 10-26 | `_WBS원본_2026-08-17.md` | 2026-08-17 |
 
 ## 현재 근거

@@ -315,6 +315,69 @@ def find_calls(root: str, name: str, arg0: str | None) -> list[tuple[str, int]]:
     return sorted(found)
 
 
+#: 「현재 기준 사실」 표를 두는 두 곳. 루트 `CLAUDE.md` 가 "이 표가 오래됐으면
+#:  research/index.md 가 정본" 이라 가리키므로 **둘은 같이 갱신해야 한다.**
+#:  ★2026-09-06 실측 — 실제로 어긋나 있었다. Composer 행 하나가 루트에만 있었고
+#:    DoD 행의 "evidence 9건 낡음" 이 research 에만 빠져 있었다. 규칙을 글로만
+#:    적어 두면 이렇게 된다.
+FACT_TABLES = ("CLAUDE.md", "program/research/index.md")
+
+#: 같은 파일을 다른 깊이에서 가리키는 것은 차이가 아니다.
+PATH_ALIASES = ((r"\.\./plan/", "program/plan/"), (r"\.\./wiki/", "program/wiki/"))
+
+
+def _fact_rows(path: str) -> dict[str, str]:
+    lines = read(path).splitlines()
+    start = next((i for i, l in enumerate(lines) if l.strip().startswith("| 사실")), None)
+    if start is None:
+        return {}
+    out: dict[str, str] = {}
+    for line in lines[start:]:
+        if not line.startswith("|"):
+            if out:
+                break
+            continue
+        if "---" in line:
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2 or cells[0] == "사실":
+            continue
+        key = re.sub(r"[*`]", "", cells[0])
+        val = re.sub(r"[*`]", "", cells[1])
+        for pat, rep in PATH_ALIASES:
+            val = re.sub(pat, rep, val)
+        out[key] = val
+    return out
+
+
+def check_fact_tables(_text: str) -> int:
+    print("[4] 「현재 기준 사실」 표 대조 — 루트 CLAUDE.md ↔ research/index.md")
+    tables = {p: _fact_rows(p) for p in FACT_TABLES}
+    for p, rows in tables.items():
+        if not rows:
+            print(f"    {p} 에서 표를 못 찾았다 (머리글 '| 사실' 확인)")
+            return 1
+    a, b = (tables[p] for p in FACT_TABLES)
+    print(f"    {FACT_TABLES[0]} {len(a)}행 · {FACT_TABLES[1]} {len(b)}행")
+
+    bad = 0
+    for key in a.keys() - b.keys():
+        print(f"    ★{FACT_TABLES[1]} 에 없다: {key}")
+        bad += 1
+    for key in b.keys() - a.keys():
+        print(f"    ★{FACT_TABLES[0]} 에 없다: {key}")
+        bad += 1
+    for key in sorted(a.keys() & b.keys()):
+        if a[key] != b[key]:
+            print(f"    ★값이 다르다: {key}")
+            print(f"        루트     {a[key][:96]}")
+            print(f"        research {b[key][:96]}")
+            bad += 1
+    if not bad:
+        print("    일치. 행·값 모두 같다")
+    return bad
+
+
 def check_code(_text: str) -> int:
     print("[3] 코드 대조 (AST — 주석·docstring 은 세지 않는다)")
     bad = 0
@@ -342,7 +405,7 @@ def check_code(_text: str) -> int:
 # ── 실행 ──────────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", type=int, choices=[1, 2, 3], help="한 검사만 돌린다")
+    ap.add_argument("--only", type=int, choices=[1, 2, 3, 4], help="한 검사만 돌린다")
     args = ap.parse_args()
 
     if not os.path.exists(BASELINE):
@@ -354,8 +417,8 @@ def main() -> int:
     print(f"기준선: {BASELINE}")
     print()
 
-    checks = {1: check_revisions, 2: check_claude_quotes, 3: check_code}
-    todo = [args.only] if args.only else [1, 2, 3]
+    checks = {1: check_revisions, 2: check_claude_quotes, 3: check_code, 4: check_fact_tables}
+    todo = [args.only] if args.only else [1, 2, 3, 4]
     total = 0
     for n in todo:
         total += checks[n](text)
