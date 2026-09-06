@@ -13,6 +13,19 @@
 ★이 도구는 **모순 후보를 찾아 줄 뿐 어느 쪽이 맞는지 판정하지 않는다.**
   v6/v7/v7.1 개정 기록을 읽고 "v7 이 뒤집은 근거가 없다" 를 찾는 일은 사람 몫이다.
 
+★검사 5 를 왜 넣었나 (2026-09-07). 검사 1~4 는 **개정이 안 퍼진 자리**를 찾는다.
+  그런데 2026-09-07 에 실제로 낡아 있던 둘은 그 종류가 아니었다:
+
+      §8-D "cs에는 옛 v2를 복사한 자체 구현이 남아 있어 제거 대상이다"
+      §0   "결함 2가 절반만 고쳐졌다" · "중간발표(9/15) 이후로 미룬다"
+
+  **일이 끝나면 저절로 낡는 서술**이고, 검사 1~4 는 하나도 못 잡았다. 개정 표에
+  대응 항목이 없고 CLAUDE.md 가 인용하지도 않기 때문이다. 계획서는 범위·결정·
+  일정을 적는 문서라 이런 문장이 구조적으로 많이 생긴다.
+
+  검사 5 는 그 문장들을 모아 보여 준다. **낡았다고 판정하지 않는다** — 코드에
+  대고 확인하는 것은 사람 몫이다. 검사 1 과 같은 성격이다.
+
 ★아직 안 보는 것: `v8 ↔ program/wiki/` 대조. wiki 이관이 진행 중이라
   (`program/wiki/governance/migration-scope.md`, 747건 중 202건 이관 대상)
   대상이 확정된 뒤에 검사 4로 붙인다. 이관이 끝나면 v8 과 wiki 페이지가 같은
@@ -45,6 +58,15 @@ CLAUDE_MDS = [
 #: 코드로 확인해야 하는 주장. ★문자열 검색은 주석과 docstring 에 낚인다 —
 #:  2026-09-01 에 `require_module("voc")` 가 남아 있는 줄 알았으나 주석이었다.
 #:  그래서 AST 로 실제 호출만 센다.
+#:
+#: ★★AST 로도 못 잡는 것이 있다 (2026-09-07 실측). "LLM 호출이 트랜잭션 안에
+#:  있나" 는 정적으로 판정할 수 없다 — `await` 가 `with connection_factory()`
+#:  안에 있어도 그 순간 트랜잭션이 열려 있다는 뜻은 아니다. **커넥션을 쥔 것과
+#:  트랜잭션을 쥔 것은 다르다.** 실제로 `Controller.run_case()` 는 단계마다
+#:  명시적으로 커밋해 Team 실행을 트랜잭션 밖에 둔다. 실행 중에 프로브로
+#:  `conn.info.transaction_status`(IDLE) 와 `pg_locks`(0) 를 읽어야 판정된다.
+#:  **이 검사기는 호출처를 세어 줄 뿐 실행 시점의 상태를 재지 않는다.**
+#:  그런 주장은 여기 넣지 말고 런타임 프로브로 재고 리포트에 남긴다.
 CODE_CLAIMS = [
     {
         "root": "final_project_cs/app",
@@ -162,12 +184,26 @@ BOXCHARS = set("│┌└├─┐┘┬┴┼╭╮╰╯▲▼◄►")
 def noise_lines(lines: list[str]) -> set[int]:
     """검사에서 뺄 줄. ★2026-09-06 실측 — 이걸 안 빼면 오탐이 5건 나온다.
 
-    셋 다 "주장" 이 아니라서 대조 대상이 아니다.
+    넷 다 "주장" 이 아니라서 대조 대상이 아니다.
       1. 코드 펜스 안        — 예시·출력이지 서술이 아니다
       2. ASCII 도표 선       — `│ Agent Card → Task │` 가 §7-B 에서 잡혔다
       3. 개정 기록 표의 행    — 표가 자기 자신을 모순으로 잡는다(§7 309행)
+      4. §0 전체            — 아래
+
+    ★**§0 은 통째로 뺀다** (2026-09-07 추가). `parse_revision_items` 가 항목을
+      뽑는 곳이 바로 §0 이라, 거기 적힌 글은 **개정 기록 자신**이지 본문의
+      반대 진술이 아니다. 표만 빼는 것으로는 모자랐다 — 2026-09-07 에 §0 의
+      「남은 것 둘」 문단을 「해소됨」 으로 고쳐 쓰자 확인 대상이 7 → 15건으로
+      뛰었다. 정정문을 길게 쓸수록 자기 항목에 더 걸리는 구조였다.
+      찾으려는 것은 **본문이 옛말을 유지하는 자리**다.
     """
     skip: set[int] = set()
+
+    # §0 = 문서 처음부터 `## 0-1` 또는 `## 1.` 직전까지
+    for i, line in enumerate(lines, 1):
+        if re.match(r"^##\s*(0-1|1)\.", line):
+            skip.update(range(1, i))
+            break
     in_fence = False
     header_is_revision = False
     for i, line in enumerate(lines, 1):
@@ -402,10 +438,63 @@ def check_code(_text: str) -> int:
     return bad
 
 
+# ── 검사 5. 진행상태 서술 ─────────────────────────────────────────────
+
+#: "이 일은 아직 안 끝났다" 고 말하는 표현. ★일이 끝나면 이 문장이 낡는다.
+#:  넓게 잡지 않는다 — 후보가 수십 건이면 아무도 안 읽는다.
+PROGRESS_CLAIMS = (
+    "제거 대상", "남아 있어", "남아 있다", "미룬다", "미뤘다",
+    "아직 없다", "아직 안", "미착수", "절반만", "몫이다", "몫으로",
+    "예정이다", "착수 전", "하지 않았다", "구현이 없다",
+)
+
+
+def check_progress_claims(text: str) -> int:
+    """기준선이 "아직 안 끝났다" 고 말하는 자리를 모은다.
+
+    ★판정하지 않는다. 코드에 대고 확인하는 것은 사람 몫이다 — 이 도구는
+      **어디를 볼지**를 좁혀 줄 뿐이다(검사 1 과 같다).
+    """
+    print("[5] 진행상태 서술 스윕 — 일이 끝나면 낡는 문장")
+    lines = text.splitlines()
+    secs = sections(text)
+    noise = noise_lines(lines)
+
+    hits: list[tuple[int, str, str]] = []
+    for i, line in enumerate(lines, start=1):
+        if i in noise or not line.strip():
+            continue
+        for claim in PROGRESS_CLAIMS:
+            if claim in line:
+                # 문장 하나만 보여 준다 — 표 한 줄이 통째로 나오면 못 읽는다
+                frag = next((s for s in re.split(r"(?<=[.다])\s+", line) if claim in s), line)
+                hits.append((i, section_of(secs, i), frag.strip()[:120]))
+                break
+
+    if not hits:
+        print("    없음.")
+        return 0
+
+    by_section: dict[str, list[tuple[int, str]]] = defaultdict(list)
+    for lineno, sec, frag in hits:
+        by_section[sec].append((lineno, frag))
+    for sec in sorted(by_section, key=lambda s: by_section[s][0][0]):
+        print(f"    ★{sec}")
+        for lineno, frag in by_section[sec][:3]:
+            print(f"        {lineno:>5}행  {frag}")
+        if len(by_section[sec]) > 3:
+            print(f"              … 외 {len(by_section[sec]) - 3}줄")
+    print()
+    print(f"    ★{len(hits)}줄. **낡았다는 뜻이 아니다** — 아직 그런지 코드에 대고 확인한다.")
+    print("      2026-09-07 에 이 방식으로 §8-D·§0 의 낡은 서술 셋을 찾았다")
+    print("      (final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md).")
+    return len(hits)
+
+
 # ── 실행 ──────────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", type=int, choices=[1, 2, 3, 4], help="한 검사만 돌린다")
+    ap.add_argument("--only", type=int, choices=[1, 2, 3, 4, 5], help="한 검사만 돌린다")
     args = ap.parse_args()
 
     if not os.path.exists(BASELINE):
@@ -417,8 +506,9 @@ def main() -> int:
     print(f"기준선: {BASELINE}")
     print()
 
-    checks = {1: check_revisions, 2: check_claude_quotes, 3: check_code, 4: check_fact_tables}
-    todo = [args.only] if args.only else [1, 2, 3, 4]
+    checks = {1: check_revisions, 2: check_claude_quotes, 3: check_code,
+              4: check_fact_tables, 5: check_progress_claims}
+    todo = [args.only] if args.only else [1, 2, 3, 4, 5]
     total = 0
     for n in todo:
         total += checks[n](text)
