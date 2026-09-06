@@ -159,3 +159,9 @@ program/onboarding/trace/.trace_build_*/
 # diagram-design 스킬의 프로필 마커. 값은 개인 설치(~/.diagram-design/profiles/)를
 # 가리키므로 저장소에 올리지 않는다. 형식은 한 줄 — profile: <slug>
 .diagram-design
+
+# 설정 백업. 손으로 고치기 전에 떠 두는 사본이라 저장소에 올릴 물건이 아니다
+*.bak
+
+# 발표 자료 작업 중 백업본. 최종본만 산출물양식/ 에 둔다
+program/산출물양식/_backup/
