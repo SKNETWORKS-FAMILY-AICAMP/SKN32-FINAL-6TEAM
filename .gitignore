@@ -155,3 +155,7 @@ final_project_sample/
 # 학습용 추적 영상. 5MB 넘고 스크립트로 다시 만든다
 program/onboarding/trace/*.mp4
 program/onboarding/trace/.trace_build_*/
+
+# diagram-design 스킬의 프로필 마커. 값은 개인 설치(~/.diagram-design/profiles/)를
+# 가리키므로 저장소에 올리지 않는다. 형식은 한 줄 — profile: <slug>
+.diagram-design
