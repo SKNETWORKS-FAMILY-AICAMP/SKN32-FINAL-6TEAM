@@ -7,6 +7,13 @@
 > `final_project_ui`가 대상의 **인증된** `/composer/current`·`/validate`·`/apply`
 > API(`composer:write` scope 필요, 계약: `13_Composer_쓰기채널_계약.md`)로만
 > 제공한다. 이 문서의 나머지는 옛 설계 기록으로 남긴다 — 되살리지 않는다.
+>
+> ★**2026-09-06 정정.** 위에서 가리킨 `13_Composer_쓰기채널_계약.md` 는 이 저장소에
+> 만들어진 적이 없다(13번은 introspection 계약이다). 실제 계약은
+> [`14_Composer_쓰기채널_계약.md`](14_Composer_쓰기채널_계약.md) 다.
+> 그리고 이제 **쓰기 채널 구현도 이 저장소에 없다** — 별도 패키지 `acop_composer`
+> 하나뿐이고, 관리용 빌드만 그것을 설치한다(v9 §8-D). 릴리즈 빌드에서
+> `/composer/*` 는 403 이 아니라 **404** 다.
 
 ---
 

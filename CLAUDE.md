@@ -21,6 +21,17 @@
 
 문서 병합 때는 [`program/research/_prompts/문서병합_지침.md`](program/research/_prompts/문서병합_지침.md)의 보완·중복·모순 분류 절차를 따른다. `program/research/index.md`의 [`문서 정합성 점검 캘린더`](program/research/index.md#문서-정합성-점검-캘린더)에서는 `§숫자` 참조, Team 목록, DoD 항목 수를 기준선과 대조한다.
 
+## 작업 지시 약어
+
+★**이 표는 폴더별 `CLAUDE.md`·`RULE.md`보다 앞선다.** 세 코드 프로젝트 어디서
+작업하든 같은 뜻으로 읽는다.
+
+| 사용자가 친 것 | 뜻 |
+|---|---|
+| `ㄱㄱ` · `ㄱ` · `rr` | **계속 진행해.** 직전에 정리한 남은 작업을 이어서 한다. 무엇을 할지 되묻지 않는다 |
+
+`rr` 은 `ㄱㄱ`을 영문 자판에서 친 것이다(ㄱ = r). 같은 기능이다.
+
 ## 학습 도장 (acop_dojo)
 
 [`acop_dojo/`](acop_dojo/)는 `final_project_cs` 의 구조와 동작을 실행 증거로 배우는
