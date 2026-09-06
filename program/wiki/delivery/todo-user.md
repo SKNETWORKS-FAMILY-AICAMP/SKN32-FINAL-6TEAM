@@ -73,8 +73,8 @@ Get-ChildItem program/patches/2026-09-06/*.patch | Where-Object { $_.Name -notli
 | 1 | ~~wiki를 어디에 놓나~~ | **A로 정함 (09-06)** | [D-012](../decisions/D-012-cutover-timing.md) |
 | 2 | ~~Return & Refund~~ | **A Mock 유지 (09-06)** — 코드가 `Mock-only`라 cs에 만들어진 게 없었다 | [scope-verdicts.md](scope-verdicts.md) |
 | 3 | ~~중앙 설정 저장소~~ | **정함 (09-06)** — cs로 안 가져간다. 별도 프로젝트로 분리, 붙인다면 UI 프로젝트 | [D-007](../decisions/D-007-central-config-store.md) |
-| 4 | ~~Composer~~ | **정함 (09-06)** — 운영자 API는 스위치·생성·삭제만. 통째 교체는 관리자 scope로 내려 설치·복원용. **이력 표 + 이전 revision 복원을 같이 만든다.** → sample에 구현 완료(09-06, 테스트 73 통과). cs 쪽 `/apply`는 open-items | [D-011](../decisions/D-011-composer-v3-gap.md) |
-| 5 | ~~v8 병합 시점~~ | **폐기 (09-06)** — **v9 판올림 완료** (`program/plan/A-COP_구현계획서_v9.md`, v8은 archive). cs·sample `CLAUDE.md`의 v8 표기는 담당 세션 몫 | [open-items.md](open-items.md) |
+| 4 | ~~Composer~~ | **정함 (09-06)** — 운영자 API는 스위치·생성·삭제만. 통째 교체는 관리자 scope로 내려 설치·복원용. **이력 표 + 이전 revision 복원을 같이 만든다.** → sample 구현(09-06) + **cs 복사본 제거·패키지 주입 완료(코드 세션 `f2319aa`)** | [D-011](../decisions/D-011-composer-v3-gap.md) |
+| 5 | ~~v8 병합 시점~~ | **폐기 (09-06)** — **v9 판올림 완료** (`program/plan/A-COP_구현계획서_v9.md`, v8은 archive). cs `CLAUDE.md`는 담당 세션이 v9로 고침(`6bec5d9`) | [open-items.md](open-items.md) |
 | 6 | ~~`research/index.md` 범위 (B-1)~~ | **B 제외로 정함 (09-06)** | 동 |
 | 7 | ~~골든셋 `persona` 필드 담당~~ | **역할로 정함 (09-06)** — 검증 & 프론트 담당. 이름은 팀 재편 뒤 | [golden-set.md](../evaluation/golden-set.md) |
 

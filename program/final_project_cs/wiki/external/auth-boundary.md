@@ -47,7 +47,7 @@ owners: [human:미배정]
 |---|---|---|
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_with_no_scopes` |
 | `INV-CS-SEC-003` | 다른 scope를 가진 principal도 거부된다 | `tests/security/test_auth_and_scope_guards.py::test_scope_guard_denies_a_principal_holding_another_scope` |
-| `INV-CS-SEC-007` | scope 10개는 guardrail이 소유한다 | `tests/security/test_scope_contract.py::test_ten_scopes_are_guardrail_owned` |
+| `INV-CS-SEC-007` | scope 11개는 guardrail이 소유한다(09-06 `composer:admin` 추가 전 10개) | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 
 **003이 중요하다.** "scope가 있기만 하면 통과"가 아니라 **"맞는 scope여야 통과"**다.
 
@@ -216,7 +216,7 @@ security:
 |---|---|
 | **이 wiki** | **10** |
 | `config/guardrails.yaml` | **10** |
-| 테스트 `test_ten_scopes_are_guardrail_owned` | **10** |
+| 테스트 `test_scopes_are_guardrail_owned`(옛 이름 `test_ten_scopes_…`, 09-06 `composer:admin` 추가로 11개가 되며 개명) | **10** |
 | `docs/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
 | `docs/handoff/06_가드레일_수치.md` §5 | **6** — 같은 옛 목록. 2026-09-06 확인 |
 

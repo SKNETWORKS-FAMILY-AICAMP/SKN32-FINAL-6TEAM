@@ -107,7 +107,7 @@ tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_to
 
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-SEC-007` | scope 10개는 guardrail이 소유한다 | automated | `tests/security/test_scope_contract.py::test_ten_scopes_are_guardrail_owned` |
+| `INV-CS-SEC-007` | scope 11개는 guardrail이 소유한다(09-06 `composer:admin` 추가 전 10개) | automated | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
 | `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
 | `INV-CS-TEAM-002` | manifest scope는 정확히 선언된다 | automated | `tests/contract/test_team_contract.py::test_manifest_scopes_are_exact` |
 
