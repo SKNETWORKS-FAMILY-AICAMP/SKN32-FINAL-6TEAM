@@ -127,7 +127,29 @@ sources:
 
 **같은 원칙이 골든셋에도 적용된다.**
 
-`[미확보]` **지금 골든셋이 이 절차로 만들어졌는지 확인 안 됐다.** 일치율 기록이 없다.
+### ★ [실측 2026-09-07] 안 됐다 — 2인은커녕 1인 라벨링도 없다
+
+`[미확보]`였던 것을 실제로 확인했다. **사람 라벨이 하나도 없다.**
+
+| 확인한 것 | 결과 |
+|---|---|
+| `golden.jsonl` 필드 | `expected_*` 뿐. `labeler`·`human_label` 자체가 없다 |
+| `eval/reports/holdout_human_labels_template.jsonl` | 24행 있는데 `labeler`가 **전부 `None`**, `human_label`의 다섯 축이 **전부 `null`** |
+| `prompts/judge/judge_v1.txt` | 프롬프트가 대놓고 적어 두었다 — *"The 2-person independent labeling was unavailable"* |
+
+**템플릿만 만들어 두고 채우지 않은 상태다.** 골든셋 라벨은 작성자 한 명이 정한 값이고,
+독립 검증을 거치지 않았다.
+
+**이게 막고 있는 것.** `eval/stats/agreement.py`가 자기 docstring에서 *"DoD-15/17의
+유일한 차단 항목을 잰다"*고 한다 — judge 점수와 사람 라벨의 일치율(Cohen's kappa)이다.
+사람 라벨이 없으면 **그 게이트를 아예 평가할 수 없다.** 스크립트는 있는데 입력이 없다.
+
+**그리고 이 프로젝트가 이미 같은 일을 겪었다.** [type 분류 검증](../governance/type-verification/index.md)에서
+혼자 판정한 4.5%가 독립 판정에서 **28.9%**로 드러났다. 여섯 배 넘게 틀렸다. 골든셋도
+같은 위험에 그대로 노출돼 있다.
+
+**남은 일은 24건을 두 사람이 독립으로 채우는 것이다.** 템플릿과 집계 스크립트는 이미 있다.
+누가 하는지는 [roles.md](../delivery/roles.md)의 검증 & 프론트 담당이다(2026-09-06 결정).
 
 ### holdout은 만지지 않는다
 

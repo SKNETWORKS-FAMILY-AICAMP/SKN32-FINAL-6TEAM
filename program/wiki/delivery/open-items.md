@@ -45,7 +45,7 @@ owners: [human:미배정]
 | 항목 | 어디 |
 |---|---|
 | **이관 203건 (유지 124 · 사람 판정 79)** — `[실측 2026-09-07]` 199/60 은 길이 하한 40줄을 넣기 전 숫자였다. 하한 아래를 `판정필요`로 넘기면서 36 → 79 로 늘었다 | [../governance/migration-scope/index.md](../governance/migration-scope/index.md) |
-| 골든셋 라벨링 절차 확인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) |
+| **골든셋 사람 라벨 24건 — 두 사람이 독립으로 채워야 한다** `[실측 2026-09-07]` 확인 결과 **2인은커녕 1인 라벨링도 안 됐다.** `holdout_human_labels_template.jsonl` 24행의 `labeler`가 전부 `None`, `human_label` 다섯 축이 전부 `null`. judge 프롬프트도 "2-person independent labeling was unavailable"라 적어 두었다. **이것 때문에 `eval/stats/agreement.py`가 재는 DoD-15/17 차단 항목(judge↔사람 일치율)을 평가할 수 없다** — 스크립트는 있는데 입력이 없다. 템플릿·집계 도구는 준비돼 있고 채우기만 하면 된다. 담당은 검증 & 프론트 | [../evaluation/golden-set.md](../evaluation/golden-set.md) |
 | ~~`program/final_project_sample/wiki/`가 git에 없다~~ **닫힘 — `.gitignore` 에 `!program/final_project_sample/` 부정 규칙이 들어갔다(2026-09-06). `[실측 2026-09-07]` 33개 전부 추적 중이고 미추적 0.** | 루트 `.gitignore:150~153` |
 | ~~Team 경계 불변식 3개 자동화~~ **닫힘 — `INV-CS-ARCH-001·002·003` 셋 다 `automated` 이고 테스트가 실재한다.** `[실측 2026-09-07]` `tests/architecture/test_basement_is_domain_free.py` · `tests/contract/test_core_isolation.py` 65건 통과 | [`quality/invariants.md`](../../final_project_cs/wiki/quality/invariants.md) |
 | ~~`final_project_cs/CLAUDE.md`가 v8을 가리킨다~~ **닫힘 — 담당 세션이 v9로 고침(`6bec5d9`).** `final_project_sample/CLAUDE.md`는 그 저장소 쪽 미커밋 수정 중이라 `[미확보]` — 2026-09-06 v9 판올림(루트 `CLAUDE.md`·`research/index.md`·드리프트 검사기는 갱신됨). 두 파일은 다른 세션이 수정 중이라 이 세션이 안 건드렸다. `v8` → `v9`, 경로 `plan/A-COP_구현계획서_v9.md` | [timeline.md](timeline.md) |
