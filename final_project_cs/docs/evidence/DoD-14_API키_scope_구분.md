@@ -4,7 +4,28 @@
 - 실행: 2026-08-12 23:20 · 실측 원문 `docs/evidence/_raw/DoD-14.md`
 - 판정: 통과
 
-> ★2026-09-06 낡음 확인 — scope `subscription:read`·`technical:read`는 소멸했고 함수명 `six` → `ten`, allowlist 5 → 6. 재현 명령의 이름을 현행으로 바꿔야 한다. Composer 경로의 JWT fail-open은 별도 결함(wiki `external/auth-boundary.md`). 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
+
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| scope 6종에 `subscription:read`·`technical:read` | **둘 다 소멸.** 옛 구독 도메인 퇴역(2026-08-18)과 함께 사라졌다 |
+| `test_six_scopes_are_guardrail_owned` | 이름의 `six` 가 더는 맞지 않는다 — 지금 **12종** |
+| 재현 출력 | `tests/integration/api/test_api_runtime.py` **30 passed** |
+
+지금 `config/guardrails.yaml` 의 `security.scopes` **12종**:
+
+```
+case:read · case:write · order:read · return:read · action:approve · mcp:read
+composer:read · composer:validate · composer:write · composer:admin
+ops:introspect · ops:reload
+```
+
+★**판정 근거는 개수가 아니라 「가드레일이 소유한다」는 것이다.** 코드가
+scope 목록을 하드코딩하지 않고 `get_guardrails().get("security.scopes")` 로
+읽는 구조가 그대로다(`app/presentation/security.py`). 그래서 도메인이
+바뀌며 6 → 12 가 돼도 판정은 유효하다.
+
 
 ## 재현 명령
 

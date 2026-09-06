@@ -4,14 +4,46 @@
 - 실행: 2026-08-16
 - 판정: 통과
 
-> ★2026-09-06 낡음 확인 — evidence 출력의 `team:billing_subscription` 등은 퇴역 식별자다(지금 fixture는 `team:order_shipping`·`issue:post_cancel_charge`). 어댑터가 도메인 무관이라 판정은 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
 
-## 재현 명령
+
+★**재현 명령이 테스트를 하나도 안 돌리고 있었다.** 대조 기록은 이 건을
+「식별자만 낡음」으로 봤는데, 실제로 돌려 보니 그보다 나빴다.
+
+```
+python -m pytest tests/unit/infrastructure/test_sql_graph_adapter.py -q
+→ no tests ran in 0.00s        ← 그 경로에 파일이 없다
+```
+
+**0건이 도는 명령은 통과처럼 보이지만 아무것도 증명하지 않는다** —
+DoD-22 에서 겪은 것과 같은 종류다(거기는 인용한 파일 자체가 없었다).
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| `tests/unit/infrastructure/test_sql_graph_adapter.py` | **`tests/integration/graph/test_sql_graph_adapter.py`** 로 이동 |
+| 출력의 `team:billing_subscription`·`issue:post_cancel_charge` | 퇴역 식별자. 지금 fixture 는 **생성한 id** 를 쓰고 도메인 라벨을 안 박는다 |
 
 ```powershell
-python -m pytest tests/unit/infrastructure/test_sql_graph_adapter.py -q
+python -m pytest tests/integration/graph/test_sql_graph_adapter.py tests/unit/infrastructure -q
+→ 9 passed
+```
+
+요구한 관계 질의 3종은 이름 그대로 살아 있다 —
+`test_case_to_issue_to_policy` · `test_issue_to_team` · `test_case_to_action`,
+여기에 tenant 격리·깊이 제한·간선 종류 검사가 붙어 있다. **어댑터가 도메인
+무관이라 판정은 유효하다.**
+
+
+## 재현 명령 (2026-09-06 현행)
+
+```powershell
+python -m pytest tests/integration/graph/test_sql_graph_adapter.py -q
 python -m pytest tests/unit/infrastructure/test_graph_v7_axes.py -q
 ```
+
+★아래 「실제 출력」 첫 줄의 `tests/unit/infrastructure/test_sql_graph_adapter.py`
+는 **옛 경로**다(2026-08-16 기록). 지금 그 경로로 돌리면 **테스트가 0건 돈다**
+— 위 「갱신」 절 참고. 당시 기록은 그대로 둔다.
 
 ## 실제 출력
 

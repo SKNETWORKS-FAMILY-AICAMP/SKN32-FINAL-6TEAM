@@ -4,7 +4,29 @@
 - 실행: 2026-08-12 22:50 · 커밋 `cbb75e6`
 - 판정: **통과**
 
-> ★2026-09-06 낡음 확인 — 판정은 유효하나 수치가 낡았다 — `transition_case()` 호출이 7회 → 14회. 재현 시 숫자를 다시 센다. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
+
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| `transition_case()` 사용 **7회** | **12회** — `controller.py` 7 · `api/cases.py` 4 · `classification.py` 1 |
+| 재현 출력 `107 passed` | 아래 「실제 출력」 참조. 명령이 둘인데 출력이 하나뿐이라 어느 것인지 모호했다 |
+
+★**대조 기록은 이 수치를 「14회」라 했는데 12회다.** `grep` 줄 수(15)에는
+정의부·주석이 섞이고, 14 는 그중 일부만 뺀 값이다. AST 로 **호출 노드만**
+세어 12 를 얻었다. 남이 센 숫자를 그대로 옮기지 않는다.
+
+★**호출이 는 것은 규약이 느슨해진 것이 아니다.** 이 DoD 가 요구하는 것은
+"호출이 적은 것"이 아니라 **"상태를 바꾸는 문이 이것 하나인 것"**이다.
+우회 경로를 다시 검사했고 여전히 **0건**이다.
+
+```
+UPDATE customer_cases | DELETE FROM case_events | UPDATE case_events
+  → app/ 전체에서 transition.py 밖 0건
+상태 12개 (tests/contract/test_case_state_table.py 가 v5 §5-1 과 1:1 대조)
+전이표 25 전이 / 이벤트 20종
+```
+
 
 ## 재현
 

@@ -4,14 +4,40 @@
 - 실행: 2026-08-16
 - 판정: 통과
 
-> ★2026-09-06 낡음 확인 — 테스트 경로 2건이 이동했고 `3 passed` → 6개. 판정 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
 
-## 재현 명령
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| `tests/unit/core/test_core_isolation.py` | **`tests/contract/test_core_isolation.py`** 로 이동 |
+| `3 passed` | **7 passed** (ports 6 + 격리 1) |
 
 ```powershell
-python -m pytest tests/unit/ports/test_team_ports.py tests/unit/core/test_core_isolation.py -q
-python -m pytest tests/e2e/test_project_composition.py -q
+python -m pytest tests/unit/ports/test_team_ports.py tests/contract/test_core_isolation.py -q
+→ 7 passed
 ```
+
+늘어난 넷은 이후 세션들이 이 경계에 붙인 것이다 — 그중 하나가
+`test_local_executor_rejects_task_tools_outside_manifest`(2026-08-24)로,
+Controller 가 넘긴 `allowed_tools` 가 manifest 부분집합이 아니면 Team 을
+아예 호출하지 않는다. **Port 교체 불변성은 그대로**이고 덮는 범위가 늘었다.
+
+
+## 재현 명령 (2026-09-06 현행)
+
+```powershell
+python -m pytest tests/unit/ports/test_team_ports.py tests/contract/test_core_isolation.py -q
+python -m pytest tests/integration/a2a/test_remote_round_trip.py -q
+```
+
+★**둘째 줄도 낡아 있었다.** 옛 명령 `tests/e2e/test_project_composition.py` 는
+지금 **테스트가 0건 돈다**(그 파일이 없다). LOCAL↔A2A 교체를 실제로 밟는 것은
+`tests/unit/ports/test_team_ports.py`(직접 호출 동등성·manifest 밖 tool 거부·
+원격 상태 매핑·타임아웃 경계)와 `tests/integration/a2a/test_remote_round_trip.py`
+다 — 합쳐 **16 passed**.
+
+★아래 「실제 출력」의 `tests/unit/core/...` 는 **옛 경로**다(2026-08-16
+기록). 지금은 `tests/contract/` 이고 합계도 3 → 7 이다. 당시 기록은 그대로 둔다.
 
 ## 실제 출력
 

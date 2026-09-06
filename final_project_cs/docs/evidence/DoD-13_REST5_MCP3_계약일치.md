@@ -4,7 +4,29 @@
 - 실행: 2026-08-12 23:20 · 실측 원문 `docs/evidence/_raw/DoD-13.md`
 - 판정: 통과
 
-> ★2026-09-06 낡음 확인 — "경로 4개 위 operation 5개, `/v1/` 아래 6번째면 위반"은 낡았다 — 지금 `CONTRACT_V1_PATHS`는 outbox resolve 포함 경로 5개이고 v7에서 "5는 상한이 아니다"로 바뀌었다. 판정(계약 집합 일치)은 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
+
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| "경로 4개 위 operation 5개, `/v1/` 아래 6번째가 생기면 위반" | 규칙이 v7 에서 바뀌었다 — **5는 상한이 아니다** |
+| — | `CONTRACT_V1_PATHS` 는 **경로 5개**(outbox resolve 포함) |
+| 재현 출력 | **17 passed** |
+
+```
+/v1/cases
+/v1/cases/{case_id}
+/v1/cases/{case_id}/messages
+/v1/cases/{case_id}/actions/{action_id}/approve
+/v1/outbox/{message_id}/resolve
+```
+
+★**판정이 재는 것은 개수가 아니라 「선언한 집합과 실제 표면이 같은가」다.**
+`test_openapi_surface.py` 가 양방향으로 본다 — 선언했는데 없으면 실패
+(`missing`), 선언 안 했는데 있으면 실패(`extra`). 그래서 경로가 늘어도
+**계약에 적기만 하면** 통과하고, 몰래 늘면 잡힌다. 개수를 상한으로 읽던
+옛 서술이 틀렸던 것이다.
+
 
 ## 재현 명령
 

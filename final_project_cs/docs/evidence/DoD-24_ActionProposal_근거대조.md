@@ -4,7 +4,25 @@
 - 실행: 2026-08-16
 - 판정: 통과 (★한계는 §한계 참조)
 
-> ★2026-09-06 낡음 확인 — 대조 대상 도메인이 billing → commerce로 통째로 바뀌었다. fixture 이름·필드가 현행과 다르다. 기제(근거 대조·차단·escalated)는 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+## ★2026-09-06 갱신 — 판정은 유효하고, 낡은 이름·수치·경로만 현행으로 고쳤다
+
+
+| 낡았던 것 | 지금 (실측 2026-09-06) |
+|---|---|
+| 대조 대상이 `payment_id`·`subscription_id`·`entitlement_id` | **커머스로 통째로 바뀌었다** — 주문·품목·금액 |
+| `13 passed` | **19 passed** |
+
+```powershell
+python -m pytest tests/unit/core/test_proposal_verification.py -q
+→ 19 passed
+```
+
+★**기제는 그대로다.** 요구는 "제안이 든 식별자·금액이 DB 사실과 어긋나면
+실행 전에 막고 `escalated` 로 보내며 감사에 남긴다" 이고, 그 기제
+(`app/core/verification.py` 순수 대조 + `proposal_guard.py` 승인 직전 재조회)
+는 도메인과 무관하다. 옛 필드 이름이 나오는 아래 서술은 **당시 기록**으로
+남겨 둔다 — 지우면 도메인이 바뀌었다는 사실 자체가 안 보인다.
+
 
 ## 재현 명령
 
