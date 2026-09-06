@@ -4,6 +4,8 @@
 - 실행: 2026-08-16
 - 판정: 통과 (★한계는 §한계 참조)
 
+> ★2026-09-06 낡음 확인 — 대조 대상 도메인이 billing → commerce로 통째로 바뀌었다. fixture 이름·필드가 현행과 다르다. 기제(근거 대조·차단·escalated)는 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

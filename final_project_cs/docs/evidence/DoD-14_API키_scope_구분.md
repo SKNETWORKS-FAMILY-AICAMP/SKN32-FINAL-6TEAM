@@ -4,6 +4,8 @@
 - 실행: 2026-08-12 23:20 · 실측 원문 `docs/evidence/_raw/DoD-14.md`
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — scope `subscription:read`·`technical:read`는 소멸했고 함수명 `six` → `ten`, allowlist 5 → 6. 재현 명령의 이름을 현행으로 바꿔야 한다. Composer 경로의 JWT fail-open은 별도 결함(wiki `external/auth-boundary.md`). 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

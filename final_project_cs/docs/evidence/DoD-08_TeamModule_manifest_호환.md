@@ -4,6 +4,8 @@
 - 실행: 2026-08-12 23:20 · 실측 원문 `docs/evidence/_raw/DoD-08.md`
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — 제목의 Billing/Technical Team은 2026-08-18에 퇴역했다. `BillingSubscriptionTeam`·`TechnicalEntitlementTeam` manifest는 없다. 남는 건 기제(manifest 계약 테스트·Core 격리 AST)뿐이라 현행 Team으로 다시 써야 한다. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

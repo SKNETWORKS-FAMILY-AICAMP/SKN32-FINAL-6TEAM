@@ -4,6 +4,8 @@
 - 실행: 2026-08-16
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — 근거가 소실됐다 — 정적 검사로 인용한 `test_core_isolation.py`는 `app/core`만 훑고(`app/modules/**` 아님), runtime spy(`pytest.raises(ToolNotAllowed)`) 소스가 없다. 현재 '통과'를 뒷받침하는 테스트가 없다. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

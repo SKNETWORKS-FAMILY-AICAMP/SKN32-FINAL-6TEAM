@@ -4,6 +4,8 @@
 - 실행: 2026-08-16
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — 테스트 경로 2건이 이동했고 `3 passed` → 6개. 판정 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

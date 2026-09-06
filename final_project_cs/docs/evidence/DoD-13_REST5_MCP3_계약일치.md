@@ -4,6 +4,8 @@
 - 실행: 2026-08-12 23:20 · 실측 원문 `docs/evidence/_raw/DoD-13.md`
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — "경로 4개 위 operation 5개, `/v1/` 아래 6번째면 위반"은 낡았다 — 지금 `CONTRACT_V1_PATHS`는 outbox resolve 포함 경로 5개이고 v7에서 "5는 상한이 아니다"로 바뀌었다. 판정(계약 집합 일치)은 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell

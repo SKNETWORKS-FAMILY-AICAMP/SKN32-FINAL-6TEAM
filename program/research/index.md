@@ -4,6 +4,20 @@
 
 이 폴더는 현재 유효한 근거·정본과 과거 작업 기록을 분리한다. 같은 주제의 분석 보고서는 날짜 없는 정본으로 통합하고, 원본은 `archive/`에 날짜별로 보존한다. 계획서·briefing·final_project 폴더는 이 정리의 대상이 아니다.
 
+## 현재 기준 사실
+
+루트 `CLAUDE.md`가 "이 표가 오래됐으면 `program/research/index.md`가 정본"이라 가리키는 표다. 2026-08-19 정리에서 빠졌던 것을 2026-09-06에 되살렸다. 갱신하면 루트 `CLAUDE.md`의 표도 함께 고친다.
+
+| 사실 | 현재 값 | 정본 | 확인일 |
+|---|---|---|---|
+| 문서 기준선 | v8 (v7·v7.1은 보존본, `program/plan/archive/`) | `../plan/A-COP_구현계획서_v8.md` §0 | 2026-08-17 |
+| Team 목록 — CS Pack 확정(10주 착수) | Response Generation & Review. VOC & Store Manager는 Registry 등록·계약만 유지하는 껍데기로 조정(집계·급증 탐지는 코어 1 소유) | 동 §0 v8 재판정, §7, §8-B | 2026-09-01 |
+| 인라인 분류 소유 | 코어 1 (진입·분류 층). 라벨 어휘·프롬프트 구현은 모델 담당 | 동 §3-A, §16 | 2026-09-01 |
+| Team 목록 — 검증 쇼핑몰 연계(일정 따라 조정) | Procurement + Order & Payment, Fulfillment & Logistics, Return & Refund(Mock), Catalog & Verification(A2A Remote) | 동 | 2026-08-17 |
+| DoD 항목 수 | 1~29 (1~28은 v5/v7 번호 보존, 29는 Response Generation & Review 검증 신규) | 동 §27 | 2026-08-17 |
+| Docker·AWS | Phase 2 (로컬 개발 환경엔 Docker 없음, 실제 배포 단계에서 컨테이너화) | 동 §12, §28 | 2026-08-17 |
+| 프로젝트 일정 구조 | 선행 2026-08-17~08-27(11일) + 공식 1W~9W, 중간발표 09-15, 최종발표 10-26 | `_WBS원본_2026-08-17.md` | 2026-08-17 |
+
 ## 현재 근거
 
 | 분야 | 현재 정본 | 상태와 적용 기준 |
@@ -168,7 +182,7 @@ python program/scripts/check_drift.py
 0 은 확인할 것 없음, 1 은 사람이 볼 것 있음이다.
 
 아직 안 보는 것은 `v8 ↔ program/wiki/` 대조다. wiki 이관이 진행 중이라
-([이관 범위 목록](../wiki/governance/migration-scope.md)) 대상이 확정된 뒤에 붙인다.
+([이관 범위 목록](../wiki/governance/migration-scope/index.md)) 대상이 확정된 뒤에 붙인다.
 이관이 끝나면 같은 내용이 두 벌이 되므로 이번과 똑같은 드리프트 면이 새로 생긴다.
 
 ### 언제 도는가

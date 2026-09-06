@@ -4,6 +4,8 @@
 - 실행: 2026-08-12 22:50 · 커밋 `cbb75e6`
 - 판정: **통과**
 
+> ★2026-09-06 낡음 확인 — 판정은 유효하나 수치가 낡았다 — `transition_case()` 호출이 7회 → 14회. 재현 시 숫자를 다시 센다. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현
 
 ```powershell

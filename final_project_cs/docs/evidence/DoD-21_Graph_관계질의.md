@@ -4,6 +4,8 @@
 - 실행: 2026-08-16
 - 판정: 통과
 
+> ★2026-09-06 낡음 확인 — evidence 출력의 `team:billing_subscription` 등은 퇴역 식별자다(지금 fixture는 `team:order_shipping`·`issue:post_cancel_charge`). 어댑터가 도메인 무관이라 판정은 유효. 대조 기록: `program/final_project_cs/wiki/quality/dod-evidence-drift.md`
+
 ## 재현 명령
 
 ```powershell
