@@ -94,7 +94,23 @@ UI 가 자체 구현하면 같은 로직이 두 곳에 생기고, 한쪽이 바�
 
 두 형태 모두에서 성립하는 규칙 하나 — **cs 소스 안에 Composer 구현이 있으면 안 된다.** 위 "import 금지"는 이 뜻이다. 패키지가 밖에서 붙는 것(관리용 빌드)은 결합이 아니고, 소스에 복사해 넣는 것이 결합이다.
 
+`[실측 2026-09-06]` **해결됐다.** 아래 「그때의 실측」은 작성 시점의 사실이고 지금은 사실이 아니다.
+
+세 파일 **400줄을 지웠고**, 관리용 빌드(`app/entrypoint.py`)만 `acop_composer` 를 설치해 라우터를 주입한다. 이 제품이 넘기는 것은 `app/composer_host.py` 하나다(스키마·등록표·저장소·인증·경로).
+
+★**릴리즈 빌드에서 `/composer/*` 는 403 이 아니라 404 다.** `sys.meta_path` 로 패키지 import 를 막고 띄워 확인했다 — 경로 18개로 기동, Composer 표면 없음, `/health` 200, `/introspection` 401(살아 있음). "권한이 없다" 보다 "그런 표면이 없다" 가 훨씬 강한 보장이다.
+
+★사본이 이미 갈라져 있었다 — sample 이 `/catalog`·`/changes`·`/revisions`·`/restore` 를 갖는 동안 cs 는 넷에 머물러 **콘솔의 카탈로그·변경 카드가 cs 대상에서 404** 였다. "언젠가 어긋난다" 가 아니라 이미 어긋나 있었다.
+
+되돌아가지 않게 게이트를 걸었다(`tests/architecture/test_composer_stays_out_of_this_repo.py`) — 지운 사본 3종의 부활, 조립부 밖 사용, 릴리즈 진입점 오염, 카탈로그↔등록표 불일치. 일부러 어겨서 실제로 실패하는 것을 확인했다.
+
+커밋 `f2319aa`. 근거: `final_project_cs/docs/reports/2026-09-06_Composer를_패키지로_들어냈다.md`, 계약 `final_project_cs/docs/handoff/14`.
+
+<details><summary>그때의 실측 (2026-09-06 이전)</summary>
+
 `[실측]` 지금 cs 는 후자다 — `app/application/composer_service.py`(167줄)·`app/presentation/api/composer.py`(157줄)·`composer_auth.py`(76줄)가 옛 v2 를 복사한 자체 구현이고, `app/presentation/api/app.py:8-27` 이 무조건 include 한다. 릴리즈 빌드에서 빠질 방법이 없다. **pip 방식으로 가면 이 셋을 지우고 패키지 주입으로 바꿔야 한다** — D-011 의 scope 분리·이력·복원도 그때 패키지째 따라온다. cs 작업자 몫 → [open-items](../delivery/open-items.md).
+
+</details>
 
 ## 관계
 
