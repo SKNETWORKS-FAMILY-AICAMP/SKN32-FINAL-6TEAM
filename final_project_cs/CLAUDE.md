@@ -2,11 +2,17 @@
 
 **A-COP**(AI Customer Operations Platform)는 고객 메시지를 업무 **Case** 로 바꾸고,
 현재 상태·정책·이력·피드백 분류를 **Context Pack** 으로 조합하여
-**Billing/Subscription** 과 **Technical Entitlement** 업무를 **Agent Team** 이 처리하는
+**커머스 고객운영**(주문·결제·배송·반품·응답 검토) 업무를 **Agent Team** 이 처리하는
 AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가 REST/MCP 로 접속한다.
 
-기준선 문서: `../program/plan/A-COP_구현계획서_v8.md` (**읽기 전용 · 수정 금지**)
-v5~v7 등 이전 버전은 `../program/plan/archive/`에 보존본으로 있으며 수정하지 않는다. ★**DoD 는 18 → 29 항목이다**(v8 §27).
+★**옛 Billing/Subscription·Technical Entitlement 도메인은 이 프로젝트에 없다.**
+2026-08-18 결정으로 착수 목록에서 빠졌다(v8 §10). 지금 `config/project.yaml` 에 등록된
+Team 은 여섯이다 — `response_generation_review`, `return_refund`, `procurement_order_payment`,
+`fulfillment_logistics`, `catalog_verification`, `voc_store_manager`(집계·급증 탐지는 코어 1 로
+옮겨 계약만 유지하는 껍데기, v9 §0 「v8 재판정」). 옛 도메인 이름이 남은 문서를 보면 낡은 것이다.
+
+기준선 문서: `../program/plan/A-COP_구현계획서_v9.md` (**읽기 전용 · 수정 금지**)
+v5~v8 등 이전 버전은 `../program/plan/archive/`에 보존본으로 있으며 수정하지 않는다. ★**DoD 는 18 → 29 항목이다**(v9 §27).
 
 ## 응답 언어
 
@@ -63,13 +69,13 @@ degraded      ContextPack 이 축소됐으면 true (숨기지 않는다)
 omissions     무엇을 뺐는지 이름으로 남긴다
 ```
 
-★**분류 실패는 조용히 넘기지 않는다.** v8 §3-A — 모든 Case 는 `classifying` 단계를 거치며, 감성·의도·이슈
+★**분류 실패는 조용히 넘기지 않는다.** v9 §3-A — 모든 Case 는 `classifying` 단계를 거치며, 감성·의도·이슈
 분류가 실패하면 `classification_failed` 를 남기고 `escalated` 로 전환한다. 인라인 분류는 선택 기능이 아니다.
 
 ★**이것은 보장이지 실행 위치가 아니다.** 인라인 분류의 실행·실패 처리·상태 전이는 **코어 1** 소유이고
 (`app/application/classification.py`), 라벨 어휘와 프롬프트는 모델 담당이다(`app/modules/customer_ops/feedback.py`).
 접수 API 핸들러 안에서 동기로 부를 것을 요구하지 않는다. `voc` 모듈 플래그에도 묶이지 않는다 — 필수 기능을
-선택 플래그에 매달았다가 `voc: false` 로 제품이 기동하지 않았다(2026-09-01 정정, v8 §0 「v8 재판정」).
+선택 플래그에 매달았다가 `voc: false` 로 제품이 기동하지 않았다(2026-09-01 정정, v9 §0 「v8 재판정」).
 
 ### tenant / customer 격리
 모든 query 에 `tenant_id` 와 `customer_id`(또는 `case_id`) 조건을 적용한다.
@@ -211,7 +217,7 @@ python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ## 7. 문서
 
 - 프로세스 규칙: `RULE.md` (**작업 전 필독**)
-- 기준선 계획: `../program/plan/A-COP_구현계획서_v8.md` (읽기 전용, v6은 `../program/plan/archive/`의 보존본)
+- 기준선 계획: `../program/plan/A-COP_구현계획서_v9.md` (읽기 전용, v8 이하는 `../program/plan/archive/`의 보존본)
 - 실행계획: `docs/plans/`
 - 계약: `docs/handoff/`
 - 리포트: `docs/reports/` · 결함: `docs/reports/debugs/`
