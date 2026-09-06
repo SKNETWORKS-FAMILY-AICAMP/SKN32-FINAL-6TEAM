@@ -15,9 +15,6 @@ ports:
   team_executor: local
   message_broker: outbox
   graph_store: sql
-response_review:
-  enabled: false
-  owner_team_id: response_generation_review
 teams:
 - team_id: voc_store_manager
   active: true
@@ -37,3 +34,6 @@ teams:
 - team_id: catalog_verification
   active: true
   implementation_ref: app.modules.customer_ops.catalog_verification:CatalogVerificationTeam
+response_review:
+  enabled: false
+  owner_team_id: response_generation_review

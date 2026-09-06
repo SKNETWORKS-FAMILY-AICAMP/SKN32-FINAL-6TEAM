@@ -529,23 +529,46 @@ def _toggle_card(live: Any, target: Path) -> str:
                  else f"등록 {sum(len(v) for v in registered.values())}건")
 
 
-def _activation_hint(payload: dict[str, Any]) -> str:
+def _reload_capable(live: Any) -> bool | None:
+    """이 대상이 **반영 요청을 지원하는가.** 모르면 `None` 이다.
+
+    ★계약 1.1 부터 `/introspection` 이 `reload_state` 를 낸다. 그 필드가 있으면
+      `POST /admin/reload` 가 있다는 뜻이고, 없으면 계약 1.0 이라 없다.
+      조립 실측 자체를 못 읽었으면 **모른다** — 있다고도 없다고도 안 한다.
+    """
+    payload = getattr(live, "value", None)
+    if not isinstance(payload, dict):
+        return None
+    return "reload_state" in payload
+
+
+def _activation_hint(payload: dict[str, Any], live: Any = None) -> str:
     """`activation_state` 를 운영자에게 **감추지 않고** 덧붙인다.
 
     ★대상은 저장에 성공해도 `pending_restart` 를 돌려준다 — 조립은 프로세스가
       뜰 때 한 번만 일어나기 때문이다. 화면이 "적용됨" 만 보여주면 운영자는
       이미 반영된 줄 안다. 그게 이 프로젝트가 금지하는 조용한 성공 위장이다.
+
+    ★2026-09-06 정정 — 이 문구가 **없는 엔드포인트를 부르라고 말하고 있었다.**
+      2026-08-31 에 `POST /admin/reload` 를 안내하는 문장을 넣었는데, 그건 계약
+      1.1 대상에만 있다. `final_project_cs`(계약 1.0)에 붙여 실제로 토글해 보니
+      "POST /admin/reload 를 불러야 적용됩니다" 라고 안내하면서 그 경로는 404 였다.
+      운영자는 되지도 않을 일을 시도하게 된다(`CLAUDE.md` §3 — 안내 메시지가
+      사실을 잘못 전하지 않게 한다). 이제 **대상이 지원할 때만** 그 길을 말한다.
+
+    ★태그를 넣지 않는다 — 이 문자열은 `note()` 로 들어가고 거기서 전부
+      이스케이프된다(2026-08-30 에 같은 자리에서 `<code>` 가 글자로 새어나갔다).
     """
     state = payload.get("activation_state")
     if state == "pending_restart":
-        # ★2026-08-31 — 대상이 `POST /admin/reload`(scope `ops:reload`)를 갖게 돼
-        #   재기동 말고 반영시키는 길이 생겼다. 이 콘솔은 그 호출을 하지 않으므로
-        #   "재시작" 만 말하면 사실이 아니게 된다 — 두 길을 다 적는다.
-        # ★태그를 넣지 않는다 — 이 문자열은 `note()` 로 들어가고 거기서 전부
-        #   이스케이프된다(2026-08-30 에 같은 자리에서 `<code>` 가 글자로
-        #   새어나갔다). 평문으로 쓴다.
-        return (" · ★아직 반영 전입니다 — 대상을 재시작하거나 "
-                "POST /admin/reload 를 불러야 실제로 적용됩니다.")
+        head = " · ★아직 반영 전입니다 — 저장만 됐고 실행 중인 조립은 그대로입니다."
+        capable = _reload_capable(live)
+        if capable is True:
+            return head + " 아래 [반영] 을 누르거나 대상을 재시작하면 적용됩니다."
+        if capable is False:
+            return head + " 이 대상은 반영 요청을 지원하지 않습니다(계약 1.0) — 재시작해야 합니다."
+        # 모름 — 조립 실측을 못 읽었다. 있다고도 없다고도 하지 않는다.
+        return head + " 대상을 재시작하면 적용됩니다(이 대상이 반영 요청을 지원하는지는 확인하지 못했습니다)."
     if state:
         return f" · 반영 상태: {state}"
     return ""
@@ -1207,12 +1230,19 @@ def create_app() -> FastAPI:
         profile = profile_for(target)
         reason = str(form.get("reason", "")).strip()
 
-        async def _redraw(prefix: str = "") -> HTMLResponse:
+        async def _redraw(prefix: str = "", *, detail: str | None = None,
+                          kind: str = "ok", activation_of: dict[str, Any] | None = None
+                          ) -> HTMLResponse:
+            """★`activation_of` 를 주면 여기서 반영 안내를 붙인다 — 이미 읽은 `live` 로 대상이 반영을 지원하는지 판단해 안내를 붙인다.
+            introspection 을 두 번 읽지 않는다."""
             current = await run_in_threadpool(
                 composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
                 deployment_id=profile.composer_deployment_id)
             live = await run_in_threadpool(read_introspection, profile.introspection_url,
                                            profile.contract_versions, profile.introspection_token)
+            if detail is not None:
+                prefix = note(detail + (_activation_hint(activation_of, live)
+                                        if activation_of is not None else ""), kind)
             return _composer_page(target, current, live, prefix=prefix)
 
         if not reason:
@@ -1228,12 +1258,13 @@ def create_app() -> FastAPI:
 
         kind = "ok" if outcome.ok else ("warn" if outcome.status in ("연결 안 함", "충돌") else "bad")
         detail = outcome.detail or outcome.status
+        activation_of = None
         if outcome.status == "토글됨" and isinstance(outcome.value, dict):
             new_state = "켜짐" if outcome.value.get("active") else "꺼짐"
             detail = (f"토글됨 — {outcome.value.get('target_id')} → {new_state} "
                      f"(revision {outcome.value.get('config_revision')})")
-            detail += _activation_hint(outcome.value)
-        return await _redraw(note(detail, kind))
+            activation_of = outcome.value
+        return await _redraw(detail=detail, kind=kind, activation_of=activation_of)
 
     @app.post("/composer/reload", response_class=HTMLResponse)
     async def composer_reload(request: Request) -> HTMLResponse:
@@ -1293,13 +1324,19 @@ def create_app() -> FastAPI:
         profile = profile_for(target)
         reason = str(form.get("reason", "")).strip()
 
-        async def _redraw(prefix: str = "") -> HTMLResponse:
+        async def _redraw(prefix: str = "", *, detail: str | None = None,
+                          kind: str = "ok", activation_of: dict[str, Any] | None = None
+                          ) -> HTMLResponse:
+            """★`activation_of` 를 주면 여기서 반영 안내를 붙인다 — 위 토글 핸들러와 같은 규칙이다."""
             current = await run_in_threadpool(
                 composer_client.read_current, profile.composer_url, profile.composer_issuer_secret,
                 deployment_id=profile.composer_deployment_id)
             live = await run_in_threadpool(read_introspection, profile.introspection_url,
                                            profile.contract_versions, profile.introspection_token)
             catalog = await run_in_threadpool(_read_catalog, profile)
+            if detail is not None:
+                prefix = note(detail + (_activation_hint(activation_of, live)
+                                        if activation_of is not None else ""), kind)
             return _composer_page(target, current, live, prefix=prefix, catalog=catalog)
 
         if not reason:
@@ -1331,14 +1368,15 @@ def create_app() -> FastAPI:
 
         kind = "ok" if outcome.ok else ("warn" if outcome.status in ("연결 안 함", "충돌") else "bad")
         detail = outcome.detail or outcome.status
+        activation_of = None
         if outcome.ok and isinstance(outcome.value, dict):
             if outcome.value.get("dry_run"):
                 detail = "검증만 했습니다 — 저장하지 않았습니다."
             else:
                 detail = (f"{form.get('operation')} 적용됨 — {form.get('instance_id')} "
                           f"(revision {outcome.value.get('desired_revision')})")
-                detail += _activation_hint(outcome.value)
-        return await _redraw(note(detail, kind))
+                activation_of = outcome.value
+        return await _redraw(detail=detail, kind=kind, activation_of=activation_of)
 
     return app
 

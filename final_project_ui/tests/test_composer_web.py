@@ -863,3 +863,58 @@ def test_reload_requires_the_csrf_token(tmp_path, monkeypatch):
 
     TestClient(create_app()).post("/composer/reload", data={"path": str(project)})
     assert calls == []  # ★대상에 요청조차 나가면 안 된다
+
+
+def _toggle_against(monkeypatch, tmp_path, live_value):
+    """토글 한 번을 돌리고 화면 본문을 돌려준다. `live_value` 가 대상의 계약이다."""
+    _wire(monkeypatch)
+    monkeypatch.setattr("console.web.read_introspection",
+                        lambda *a, **k: _live("읽음", value=live_value))
+    monkeypatch.setattr("console.composer.toggle_target",
+                        lambda url, issuer_secret, **_k: ComposerResult(
+                            "토글됨", value={"target_id": "a2a_executor", "active": True,
+                                          "config_revision": "rev-2",
+                                          "activation_state": "pending_restart"}))
+    project = make_project(tmp_path)
+    return TestClient(create_app()).post("/composer/toggle", data={
+        "csrf_token": _CSRF_TOKEN, "path": str(project), "target_type": "module",
+        "target_id": "a2a_executor", "active": "true", "base_revision": "rev-1",
+        "reason": "확인"}).text
+
+
+def test_reload_path_is_not_named_to_a_target_that_does_not_have_it(tmp_path, monkeypatch):
+    """★없는 엔드포인트를 부르라고 말하지 않는다 (2026-09-06 실측으로 잡은 결함).
+
+    `final_project_ui` 를 `final_project_cs`(계약 1.0)에 붙여 실제로 토글해 봤더니
+    "POST /admin/reload 를 불러야 적용됩니다" 라고 안내했다 — 그 경로는 그 대상에서
+    **404** 다. 운영자는 되지도 않을 일을 시도하게 된다(`CLAUDE.md` §3).
+    """
+    body = _toggle_against(monkeypatch, tmp_path,
+                           {"contract_version": "1.0", "config_revision": "rev-1"})
+
+    assert "아직 반영 전입니다" in body
+    assert "재시작" in body
+    assert "admin/reload" not in body
+    assert "지원하지 않습니다" in body
+
+
+def test_reload_path_is_offered_when_the_target_supports_it(tmp_path, monkeypatch):
+    """계약 1.1 대상에는 [반영] 길을 안내한다 — 있는 길을 감추지도 않는다."""
+    body = _toggle_against(monkeypatch, tmp_path,
+                           {"contract_version": "1.1", "active_revision": "rev-1",
+                            "desired_revision": "rev-2", "reload_state": "stale"})
+
+    assert "아직 반영 전입니다" in body
+    assert "[반영]" in body
+
+
+def test_unknown_reload_support_is_not_guessed(tmp_path, monkeypatch):
+    """★조립 실측을 못 읽었으면 **있다고도 없다고도 하지 않는다.**
+
+    모르는 것을 "지원한다" 로 적으면 §3 이 막으려는 거짓 안내가 되고,
+    "지원 안 한다" 로 적으면 있는 길을 감춘다.
+    """
+    body = _toggle_against(monkeypatch, tmp_path, None)
+
+    assert "확인하지 못했습니다" in body
+    assert "admin/reload" not in body

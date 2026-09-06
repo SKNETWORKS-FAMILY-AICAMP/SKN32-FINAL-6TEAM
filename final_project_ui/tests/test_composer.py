@@ -95,8 +95,18 @@ def test_validate_issues_validate_scope_and_promotes_invalid_result(composer_ser
     assert result.status == "검증 실패" and result.errors == ("bad",)
 
 
-def test_apply_issues_write_scope(composer_server):
-    url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True}, "access-composer:write")})
+def test_apply_issues_admin_scope(composer_server):
+    """★`/apply` 는 `composer:admin` 이다 (D-011, 2026-09-06).
+
+    한때 `composer:write` 였다. 항목 하나를 켜고 끄는 것(`/toggle`·`/changes`)과
+    선언 **전체**를 갈아끼우는 것은 다른 행위라서 나눴다 — 통째 교체는 설치·복원·
+    이관용 관리자 도구이지 운영자 화면의 버튼이 아니다.
+
+    ★이 테스트는 클라이언트(`acop_composer_ui`)가 scope 를 바꿨을 때 **같이 안
+      바뀌어 실패한 채로 남아 있었다.** 가짜 서버가 `composer:write` 토큰만
+      받아 주고 있었다(2026-09-06 발견).
+    """
+    url = composer_server({"/composer/apply": (200, {"revision": "new", "applied": True}, "access-composer:admin")})
     result = apply_candidate(url, "issuer-secret", {}, base_revision="old", reason="구조 설계 테스트")
     assert result.status == "적용됨" and result.value["revision"] == "new"
 
@@ -153,10 +163,10 @@ def test_composer_401_and_403_remain_auth_failures(composer_server):
 
 
 def test_apply_conflict_and_validation_errors(composer_server):
-    conflict = composer_server({"/composer/apply": (409, {"error": {"message": "stale", "current_revision": "new"}}, "access-composer:write")})
+    conflict = composer_server({"/composer/apply": (409, {"error": {"message": "stale", "current_revision": "new"}}, "access-composer:admin")})
     assert apply_candidate(conflict, "issuer-secret", {}, base_revision="old",
                            reason="구조 설계 테스트").status == "충돌"
-    invalid = composer_server({"/composer/apply": (422, {"error": {"message": "invalid"}}, "access-composer:write")})
+    invalid = composer_server({"/composer/apply": (422, {"error": {"message": "invalid"}}, "access-composer:admin")})
     assert apply_candidate(invalid, "issuer-secret", {}, base_revision="old",
                            reason="구조 설계 테스트").status == "검증 실패"
 
