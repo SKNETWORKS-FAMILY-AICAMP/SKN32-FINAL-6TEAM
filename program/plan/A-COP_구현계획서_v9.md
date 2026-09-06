@@ -51,11 +51,13 @@
 
 **경위 전체는 `program/research/2026-09-01_VOC가_팀모듈로_흘러간_경위.md`에 있다.** 이 사고는 아무도 틀린 판단을 하지 않았는데 틀린 결과가 나온 종류이므로, 재발 방지를 위해 낡은 진술이 권위를 얻은 경로(§3-A → `final_project_cs/CLAUDE.md` → handoff 문서 → 코드)를 그 문서에 기록했다.
 
-**남은 것 둘.**
+**남은 것 둘 — [2026-09-07 정정] 둘 다 해소됐다.** 아래는 무엇이 남았었고 어떻게 닫혔는지의 기록이다. 근거는 `final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md`.
 
-(가) **결함 2가 절반만 고쳐졌다.** 접수 라우트에서는 분류 호출을 트랜잭션 밖으로 뺐으나, `Controller.run_case()`가 같은 병을 그대로 갖고 있다 — `app/application/controller.py:119`에서 트랜잭션을 열고 `:155`에서 Team 실행(LLM 네트워크 호출)을 `await`한다. "트랜잭션 안 LLM은 고쳤다"고 말하면 절반만 맞다.
+(가) **결함 2가 절반만 고쳐졌다** → **닫힘.** 이전 판은 `Controller.run_case()`가 트랜잭션 안에서 Team 실행을 `await`한다고 적었다. 지금은 세 단계로 갈라져 있다 — 시작·라우팅·재개는 트랜잭션 안에서 하고 명시적으로 커밋한 뒤, **Team 실행은 트랜잭션 밖**에서 하고, 결과 반영에서 다시 연다.
 
-(나) **결함 3(접수 응답의 동기 실행).** `run_case` 호출처가 접수 라우트 하나뿐이라 접수가 에이전트 실행 전체를 기다린다(실측 p50 20~34초). §21 API 계약 변경과 outbox 트리거 신설이 함께 필요하므로 중간발표(9/15) 이후로 미룬다. 배치는 §25 4W다.
+★**이건 AST로는 못 잡는다.** `await`가 `with self.connection_factory()` 안에 있는 것은 맞아서 정적 검사에는 여전히 "트랜잭션 안"으로 보인다. **커넥션을 쥔 것과 트랜잭션을 쥔 것은 다르다.** 실행 중에 재야 한다 — `team_executor` 자리에 프로브를 앉혀 `execute()`가 불린 순간의 `conn.info.transaction_status`와 `pg_locks`를 읽으니 **트랜잭션 IDLE · advisory lock 0개**였다. 각 단계가 명시적으로 커밋하는 이유도 코드에 있다. 안 하면 psycopg3가 다음 `conn.transaction()`을 새 트랜잭션이 아니라 SAVEPOINT로 열어(앞선 읽기가 이미 암묵 트랜잭션을 열어 두므로) 경계를 좁힌 효과가 통째로 사라진다.
+
+(나) **결함 3(접수 응답의 동기 실행)** → **닫힘.** "중간발표(9/15) 이후로 미룬다"고 적었으나 이미 했다. `cases.py`의 `_run_case_detached()`를 `background.add_task`로 걸어 접수가 기다리지 않는다. 실패해도 접수는 살아남는 것과 기다리지 않는 것 둘 다 테스트가 있다. 호출처도 하나가 아니라 셋이다 — 내부 resume · 접수(떼어냄) · `routing_sweeper`(되잡기). 접수와 실행 사이의 틈은 sweeper가 메운다.
 
 ### v8 → v9 변경 요약 [v9]
 
@@ -1421,7 +1423,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 | 1W | 8/28~9/3 | 1. WBS<br>2. 프로젝트 기획서<br>3. 요구사항 정의서 | 선행 초안을 공식 양식에 맞춰 동결하고 CAS·transition 경계를 정리한다. | Contract Freeze, REST/MCP·scope skeleton | 검증 쇼핑몰의 Procurement+Order, Fulfillment, VOC & Store Manager, Response Generation & Review, Catalog & Verification의 계약을 정리한다. | harness skeleton·요구사항 기준 UI fixture |
 | 2W | 9/4~9/10 | 4. 수집 데이터 보고서<br>5. 데이터베이스/저장소 설계 문서 | Case·Action 상태와 Registry 구조를 seed 데이터에 맞춰 정리한다. | REST/MCP skeleton과 저장소 경계를 문서화한다. | demo seed·knowledge documents와 RAG 적재 범위를 정리한다. | 평가 harness 입력과 데이터 fixture를 고정한다. |
 | 3W | 9/11~9/17, 중간발표 9/15 포함 | 6. 데이터 전처리 결과서<br>7. 머신러닝/딥러닝 학습결과서<br>8. 학습한 ML/DL 모델<br>18. 중간 발표 PT 자료 | Controller·MessageBus와 Case 생성 흐름을 중간발표 경로에 연결한다. | Action/approval 경계를 연결한다. | PII masking·Case fixture·RAG corpus의 chunk·metadata·embedding을 정리하고 Team 단독 테스트를 수행한다. | Case UI와 중간발표 demo를 구성한다. |
-| 4W | 9/18~9/28, 11일 | 공식 신규 산출물 없음 | Context Broker·projection을 안정화한다. **[v8 추가] Controller 실행 경로를 함께 푼다. (가) `run_case()`가 트랜잭션 안에서 Team 실행(LLM)을 `await`하는 것을 뗀다(`controller.py:119` 열고 `:155` await — 접수 라우트와 같은 병이 여기 남아 있다). (나) 결함 3 — outbox에 `case.created`를 넣고 worker가 Controller를 깨워 접수 응답의 동기 실행을 푼다. §21 API 계약 변경(접수 응답에서 `intent`·`answer` 제거)을 코어 2와 합의한다. 둘은 같은 함수를 건드리므로 함께 한다.** | Tool adapter·audit을 보완한다. | RAG 25/300~400과 Team 통합을 보완한다. | trace 화면과 발표 피드백을 반영한다. |
+| 4W | 9/18~9/28, 11일 | 공식 신규 산출물 없음 | Context Broker·projection을 안정화한다. **[2026-09-07 정정] 여기 적었던 Controller 실행 경로 둘은 4W 전에 끝났다** — (가) Team 실행을 트랜잭션 밖으로(실행 중 프로브로 IDLE·lock 0 확인), (나) 접수의 동기 실행 해소(`_run_case_detached` + `background.add_task`, 틈은 `routing_sweeper`가 메움). 근거는 §0 「남은 것 둘」. **4W는 Context Broker·projection 안정화만 남는다.** | Tool adapter·audit을 보완한다. | RAG 25/300~400과 Team 통합을 보완한다. | trace 화면과 발표 피드백을 반영한다. |
 | 5W | 9/29~10/6 | 9. 벡터DB/GraphDB 구축 결과서<br>10. AI 시스템 아키텍처 (멀티 에이전트 아키텍처)<br>11. 멀티 에이전트 테스트 계획 및 결과 보고서<br>12. 자체 sLLM 인공지능 (3, 4번 팀)<br>13. 요구사항 정의서 (업데이트 ver)<br>14. 화면설계서 | Outbox·retry·WAIT/RESUME와 GraphStorePort·SQL adapter를 정리한다. | idempotency·unknown과 MCP/A2A 보안 경계를 정리한다. | 검증 쇼핑몰 Team 통합과 Catalog & Verification A2A 경계를 테스트한다. | API/UI contract와 Graph gate 측정을 정리한다. |
 | 6W | 10/7~10/14 | 공식 신규 산출물 없음 | Shared State merge와 재처리 경로를 보완한다. | A2A 실패·타임아웃·취소·인증 및 승인·감사 회귀를 점검한다. | VOC 위임 제안·Response GEN/REV·`ActionProposal` 흐름을 보완한다. | end-to-end demo를 회귀 점검한다. |
 | 7W | 10/15~10/21 | 15. 개발된 LLM 연동 웹 애플리케이션<br>16. 시스템 구성도<br>17. 서비스 테스트 계획 및 결과 보고서 | GraphStorePort·SQL adapter와 시스템 구성도를 고정한다. | MCP/A2A 보안과 서비스 경계를 점검한다. | 관계 질의용 fixture와 Team 성능을 점검한다. | 운영 UI·LLM 연동, 서비스 테스트 결과와 화면을 정리한다. |
@@ -1442,7 +1444,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 
 ## 27. 완료 기준 체크리스트(DoD) [v5 번호 보존 + 신규]
 
-**[v9] evidence 낡음.** `final_project_cs/docs/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이다. 목록은 `program/final_project_cs/wiki/quality/dod-evidence-drift.md`.
+**[v9] evidence 낡음.** `final_project_cs/docs/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이었고 **2026-09-07에 끝났다** — 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 근거가 소실됐던 22는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 복구했으며, 06은 cs 코퍼스로 다시 재 문서 25·청크 306을 확인했다. 목록은 `program/final_project_cs/wiki/quality/dod-evidence-drift.md`.
 
 각 항목은 evidence 문서와 자동/수동 검증 방법을 함께 남긴다. v5의 1~18은 의미와 순서를 보존한다.
 
