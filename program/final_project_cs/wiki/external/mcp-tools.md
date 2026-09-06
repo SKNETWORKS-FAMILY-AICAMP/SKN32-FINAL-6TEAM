@@ -185,6 +185,21 @@ async def open_support_case(customer_id: str, message: str, channel: str = 'mcp'
 
 근거: `docs/handoff/03_REST_MCP_인터페이스.md:138-148`
 
+## ★ [2026-09-06] `open_support_case`가 분류를 시도조차 안 했다 — 고쳐졌다
+
+`[실측]` 커밋 `7d45434`(코드 담당 세션). 계약은 두 곳(`CLAUDE.md` §0.2 · `docs/handoff/03`)에서 똑같이 "Case 생성과 **분류 시작**까지"라 했는데, 코드는 분류를 부르지 않고 `classification_unavailable`을 적었다. 실측 결과 **MCP로 연 Case는 전부** `status=escalated · intent=None · issue_code=None`, 이벤트 `['created', 'classification_failed']`였다. 라벨이 없으니 라우팅도 못 받는다 — **개인 AI로 들어온 문의는 전부 사람에게 갔다.**
+
+왜 그랬나 — 처음엔 이 경로(모듈 수준 함수)에서 분류기를 구할 방법이 없어 정직하게 "못 한다"고 적은 것이었다. 분류 절차가 코어 1(`app/application/classification.py`)로 올라오면서 그 이유가 사라졌는데 이 자리는 안 따라갔다.
+
+| 고친 것 | 어떻게 |
+|---|---|
+| 분류 호출 | 생성 트랜잭션 **밖**에서 `classify_case()` — REST 접수 경로와 같은 이유(LLM을 기다리며 잠금을 쥐지 않는다) |
+| 분류기를 못 만들면 | `None`을 넘겨 `classify_case()`가 `classification_failed`를 남긴다. **전과 같은 결과지만 시도한 뒤의 실패**다 |
+| 실측 | `status=routing · intent=shipping · issue_code=shipping_delayed`, 이벤트 `['created', 'classified']`. 멱등성 그대로(같은 요청 4회 → Case 1개) |
+| 회귀 | `tests/contract/test_mcp_opens_a_classified_case.py` |
+
+**계약 문서 두 곳이 같은 말을 해도 코드가 안 지키면 소용없다는 사례다.** 위 "가운데 단계" 설명은 그대로 유효하다 — 접수까지만 한다는 경계는 안 바뀌었고, 접수 안에 분류 시작이 포함된다는 걸 코드가 이제야 지킨다.
+
 ## 관계
 
 - [rest-api.md](rest-api.md) — 쓰기 경로

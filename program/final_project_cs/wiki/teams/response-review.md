@@ -90,6 +90,8 @@ RuntimeError: no active prompt registered
 
 2026-08-30에 DB 직접 조회로 발견해 고쳤다. 프롬프트 2종을 새로 쓰고 allowlist를 갱신하고 회귀 테스트 3건을 추가했다.
 
+`[실측 2026-09-06]` **같은 자리에 반대 방향의 구멍이 하나 더 있었다** — 커밋 `1dcfdae`(코드 담당 세션). `register_prompts.py`가 허용 목록 **안쪽만** 봤다("`response.generate`가 active 1개인가"). 목록 **밖**에 active가 남아 있는지는 아무도 안 봤고, 08-19에 `legacy/`로 옮겨진 `order_shipping`·`return_exchange`의 프롬프트 행 넷이 DB에 그대로 남아 **셋이 `active=true`**였다. 동작에 해는 없었지만(코드가 그 키를 요청하지 않고 `llm_calls` 참조 0건) "배포 중인 프롬프트가 몇 개인가"를 세면 2가 아니라 5로 보였다. 검사를 목록 밖까지 넓히자마자 셋을 잡았고(exit 3), **지우지 않고 `active=false`로 내렸다** — `prompts`는 "덮어쓰지 않고 공존시킨다"는 버전 기록이라 지우면 그때 무엇을 썼는지가 사라진다. active 5 → 2(`response.generate` v2 · `response.review_tone` v1). 회귀 `tests/contract/test_active_prompts_are_the_deployed_set.py`.
+
 **교훈 — 테스트가 실제 경로를 안 타면 통과해도 의미가 없다.**
 
 ```
