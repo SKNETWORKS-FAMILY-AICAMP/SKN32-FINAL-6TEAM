@@ -15,6 +15,9 @@ from pathlib import Path
 from eval.next_action_mapping import ACTION_MAP, NEXT_ACTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
+#: 기본은 judge-v1 — **바꾸지 않는다.** 지금까지의 모든 수치가 v1 로 매겨져 있고,
+#: 채점자를 바꾸면 비교가 끊긴다. `--judge-prompt` 는 **비교 측정용**이다.
+#: 근거: docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md
 PROMPT = ROOT / "prompts/judge/judge_v1.txt"
 RUBRIC = ROOT / "eval/judge/rubric.json"
 
@@ -42,9 +45,26 @@ def _judge(prompt: str, api_key: str, model: str, timeout: float) -> dict:
     return json.loads(response.choices[0].message.content or "{}")
 
 
-def rescore(input_path: Path, output_path: Path, *, model: str, timeout: float) -> int:
+def rescore(input_path: Path, output_path: Path, *, model: str, timeout: float,
+            judge_prompt: Path | None = None, repeat: int | None = None) -> int:
     cases = _cases()
+    prompt_path = judge_prompt or PROMPT
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+    # ★버전 문자열을 프롬프트 **파일에서 읽는다.** 손으로 적으면 파일과 어긋나고,
+    #   그러면 산출물이 어느 채점자로 매겨졌는지 알 수 없게 된다.
+    version = "unknown"
+    for header in prompt_text.splitlines():
+        if header.startswith("JUDGE_PROMPT_VERSION:"):
+            version = header.split(":", 1)[1].strip()
+            break
     lines = [json.loads(line) for line in input_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if repeat is not None:
+        # ★반복 회차 하나만 골라 비교한다. 채점자를 비교할 때 3회를 다 돌릴
+        #   필요는 없다 — 회차가 다르면 **후보 답변 자체가 다르므로** 채점자
+        #   차이와 답변 차이가 섞인다. 한 회차로 고정해야 채점자만 남는다.
+        lines = [row for row in lines if row.get("repeat") == repeat]
+        if not lines:
+            raise ValueError(f"repeat={repeat} 인 행이 없다")
     from eval.runners.common import _settings
     settings = _settings()
     model = model or str(settings.llm_model)
@@ -65,7 +85,7 @@ def rescore(input_path: Path, output_path: Path, *, model: str, timeout: float) 
                     evidence.append(item)
             record = {"case": case, "candidate_output": candidate,
                       "policy_evidence": evidence, "citations": raw.get("citations", {})}
-            prompt = (PROMPT.read_text(encoding="utf-8") + "\nRUBRIC:\n"
+            prompt = (prompt_text + "\nRUBRIC:\n"
                       + RUBRIC.read_text(encoding="utf-8") + "\nINPUT_RECORD:\n"
                       + json.dumps(record, ensure_ascii=False, default=str))
             started = time.perf_counter()
@@ -78,7 +98,7 @@ def rescore(input_path: Path, output_path: Path, *, model: str, timeout: float) 
             row["judge"] = judge
             row["score"] = int(judge["total"])
             row["success"] = bool(judge["pass"])
-            row["rescore"] = {"dataset_contract": "NextAction-v5", "judge_prompt_version": "judge-v1",
+            row["rescore"] = {"dataset_contract": "NextAction-v5", "judge_prompt_version": version,
                               "source_raw": str(input_path), "latency_ms": round((time.perf_counter()-started)*1000, 3)}
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
     return len(lines)
@@ -90,8 +110,14 @@ def main() -> None:
     parser.add_argument("--output", required=True, help="new rescored_*.jsonl")
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout", type=float, default=60.0)
+    parser.add_argument("--judge-prompt", default=None,
+                        help="채점자 프롬프트 파일. 기본은 judge_v1 — 비교 측정할 때만 바꾼다")
+    parser.add_argument("--repeat", type=int, default=None,
+                        help="이 반복 회차만 채점한다. 채점자끼리 비교할 때 답변을 고정하려고")
     args = parser.parse_args()
-    count = rescore(Path(args.input), Path(args.output), model=args.model, timeout=args.timeout)
+    count = rescore(Path(args.input), Path(args.output), model=args.model, timeout=args.timeout,
+                    judge_prompt=Path(args.judge_prompt) if args.judge_prompt else None,
+                    repeat=args.repeat)
     print(json.dumps({"input": args.input, "output": args.output, "rows": count}, ensure_ascii=False))
 
 
