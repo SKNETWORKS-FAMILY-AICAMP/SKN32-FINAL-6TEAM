@@ -28,8 +28,7 @@ owners: [human:미배정]
 
 | 항목 | 상태 |
 |---|---|
-| v2 계약 문서 | 다른 세션 작업 중. **endpoint 이름·`config_revision`·인증 scope·감사 필드를 하나로 맞춰야 한다** |
-| UI가 import할 패키지 이름 | 확정 안 됨 |
+| (지금 미확인 항목 없음) | 아래 「확인 완료로 닫은 것」 참고 |
 
 ## 확인 완료로 닫은 것
 
@@ -38,6 +37,28 @@ owners: [human:미배정]
 | VOC 데이터 전처리 8종 | **2026-09-01 전부 완료** |
 | `implementation_ref` allowlist 제한 | **확인됨.** `KNOWN_IMPLEMENTATION_REFS`로 코드에 있고 Composer HTTP 경로에만 적용 |
 | Composer 범위 재검토 | → [D-CS-001](../../final_project_cs/wiki/decisions/D-CS-001-composer-ui-removal.md) 외 Composer 계열 결정 |
+| **v2 계약 문서 — 네 가지를 하나로 맞추기** | **2026-09-06 닫음.** 맞춘 게 아니라 **구현을 하나로 만들어** 맞출 것이 없게 했다 — Composer 구현이 패키지 `acop_composer` 하나뿐이고 cs·sample 이 각자 호스트 어댑터로 자기 것만 넘긴다(v9 §8-D). 실측 대조 ↓ |
+| **UI가 import할 패키지 이름** | **2026-09-06 확정 확인: `acop_composer_ui`.** 콘솔 `console/composer.py:26` 이 실제로 이것을 import 하고 설치돼 있다(`final_project_sample/packages/acop_composer_ui/`). 대상 코드·스키마를 안 끌어오는 것은 게이트가 지킨다(`tests/architecture/test_composer_ui_package_boundary.py`) |
+
+### v2 계약 네 항목 실측 대조 (2026-09-06)
+
+| 맞춰야 했던 것 | cs | sample |
+|---|---|---|
+| endpoint 이름 | **같은 패키지가 정의한다** — `/apply` `/catalog` `/changes` `/current` `/restore` `/revisions` `/toggle` `/validate` | 동일(같은 코드) |
+| `config_revision` | 계약 **1.1** · `config_revision`·`active_revision`·`desired_revision`·`reload_state`·`reload_error` | 동일 |
+| 인증 scope | `composer:{read,validate,write,admin}` · `ops:{introspect,reload}` | 동일 |
+| 감사 필드 | **같은 패키지가 쓴다** — `actor`·`changed_fields`·`correlation_id`·`event`·`operation`·`resource_type`·`instance_id`·`previous_revision`·`revision`·`reason`·`subject`·`timestamp`·`idempotency_key`·`implementation_id`·`result` | 동일(같은 코드) |
+
+★`revision` **형식**만 일부러 다르다 — cs 는 sha256 64자, sample 은 12자. 맞추면
+기존에 발급된 `base_revision` 이 전부 어긋나 저장이 409 로 튕긴다. revision 은 그
+대상 안에서만 비교되므로 형식이 달라도 되고, "통일" 은 그 자체로 가치가 아니다.
+
+★`cs 안에 자기 composer 라우터가 있나: False` — 사본이 없으므로 **갈라질 자리가
+없다.** "두 사본을 계속 같게 유지한다" 는 지킬 수 없는 약속이었고, 실제로
+2026-09-06 이전에 이미 갈라져 있었다(cs 4개 / sample 8개).
+
+근거: `final_project_cs/docs/reports/2026-09-06_Composer를_패키지로_들어냈다.md`,
+계약 `final_project_cs/docs/handoff/13`·`14`.
 | **쿠팡 배송이력 5건 중 4건만 수집** | **★ [2026-09-04] 확인됨 — 정상 동작.** `preprocess_stats.json`을 열어 보니 8건 중 취소 3건(배송 자체 없음) 제외 5건 중 1건이 송장번호 미기재. 데이터 결손 아님 → [`../../datasets/wiki/scraper-notes.md`](../../datasets/wiki/scraper-notes.md) |
 
 ## 문서 쪽 열린 항목
