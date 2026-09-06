@@ -121,6 +121,15 @@ create_app()  →  composition.build_classifier()  →  feedback.classify(masked
 
 **제작 단계 도구다.** 인증된 경로로만 제공한다.
 
+★**[실측 2026-09-07] 고객 릴리즈 앱에는 이 경로가 아예 없다.** 커밋 `f2319aa`(v9 §8-D) 뒤로
+`create_app()`은 라우터를 **주입받을 때만** 붙인다(`composer_write_router` · `composer_auth_router`,
+기본값 `None`). 고객이 받는 `app.presentation.api.app:app`은 아무것도 주지 않으므로 `/composer/*`가
+**존재하지 않는다** — 인증으로 막는 게 아니라 라우트 자체가 없다.
+
+붙는 것은 관리용 빌드(`app/entrypoint.py`)뿐이고, 그때만 `acop_composer` 패키지의 라우터를
+주입한다. 구현은 이 저장소에 없다(`app/composer_host.py`가 어댑터만 갖는다).
+경계는 `tests/architecture/test_composer_stays_out_of_this_repo.py`가 지킨다.
+
 `[실측]` `/ui/composer`는 2026-08-18에 **폐기**됐다. 인증 없이 고객 접근이 가능한 앱에 물려 있던 것을 실측으로 확인하고 삭제했다.
 
 ## 인증
