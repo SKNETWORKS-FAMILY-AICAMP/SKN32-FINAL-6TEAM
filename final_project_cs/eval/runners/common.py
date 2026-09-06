@@ -21,9 +21,22 @@ from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 
 ROOT = Path(__file__).resolve().parents[2]
-JUDGE_PROMPT_PATH = ROOT / "prompts/judge/judge_v1.txt"
+#: ★2026-09-06 judge-v1 → **judge-v3** 로 교체했다(재기준선, D-014).
+#:  v1 의 `policy_grounding` 은 **분산 0 인 상수**였다 — 인용이 붙었는지만 보고
+#:  답변이 그 근거를 쓰는지 묻지 않았다. v3 는 같은 자리 문장에 0~4 눈금을 준다.
+#:  ★채점자를 바꾸면 모든 점수가 같이 움직이므로 **v1 점수와 직접 비교하지 않는다.**
+#:  갈아탈 수 있다고 판단한 근거는 **같은 채점자 안에서 군 순위가 보존됐기** 때문이다
+#:  (B > Proposed > A, 양쪽 동일 — `eval/compare_baselines.py`).
+#:  근거: docs/reports/2026-09-06_S-JUDGE-GROUNDING-축_측정_리포트.md
+JUDGE_PROMPT_PATH = ROOT / "prompts/judge/judge_v3.txt"
 RUBRIC_PATH = ROOT / "eval/judge/rubric.json"
-JUDGE_PROMPT_VERSION = "judge-v1"
+#: ★손으로 적지 않는다. 프롬프트 파일과 어긋나면 산출물이 어느 채점자로
+#:  매겨졌는지 알 수 없게 된다 — 2026-09-06 재기준선에서 실제로 v1 로
+#:  하드코딩된 채 v3 파일을 읽고 있었다.
+JUDGE_PROMPT_VERSION = next(
+    (line.split(":", 1)[1].strip()
+     for line in JUDGE_PROMPT_PATH.read_text(encoding="utf-8").splitlines()
+     if line.startswith("JUDGE_PROMPT_VERSION:")), "unknown")
 ARM_PROMPTS = {
     "A": (ROOT / "prompts/judge/arms/baseline_a_v1.txt", "baseline-a-v1"),
     "B": (ROOT / "prompts/judge/arms/baseline_b_v1.txt", "baseline-b-v1"),

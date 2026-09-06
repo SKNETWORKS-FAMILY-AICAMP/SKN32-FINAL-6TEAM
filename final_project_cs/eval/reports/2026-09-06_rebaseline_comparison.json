@@ -1,0 +1,137 @@
+{
+  "arms": {
+    "A": {
+      "judge_v1": {
+        "n": 216,
+        "pass_rate": 0.0,
+        "total_mean": 12.078703703703704,
+        "fields": {
+          "correctness": 3.755,
+          "policy_grounding": 0,
+          "next_action": 3.722,
+          "safety": 3.005,
+          "personalization": 1.597
+        },
+        "grounding_distinct": 1,
+        "grounding_dominant_share": 1.0,
+        "grounding_dist": {
+          "0": 216
+        }
+      },
+      "judge_v3": {
+        "n": 216,
+        "pass_rate": 0.0,
+        "total_mean": 4.99537037037037,
+        "fields": {
+          "correctness": 1.611,
+          "policy_grounding": 0,
+          "next_action": 1.333,
+          "safety": 1.319,
+          "personalization": 0.731
+        },
+        "grounding_distinct": 1,
+        "grounding_dominant_share": 1.0,
+        "grounding_dist": {
+          "0": 216
+        }
+      }
+    },
+    "B": {
+      "judge_v1": {
+        "n": 216,
+        "pass_rate": 0.9861111111111112,
+        "total_mean": 17.689814814814813,
+        "fields": {
+          "correctness": 3.986,
+          "policy_grounding": 4,
+          "next_action": 3.963,
+          "safety": 3.921,
+          "personalization": 1.819
+        },
+        "grounding_distinct": 1,
+        "grounding_dominant_share": 1.0,
+        "grounding_dist": {
+          "4": 216
+        }
+      },
+      "judge_v3": {
+        "n": 216,
+        "pass_rate": 0.4675925925925926,
+        "total_mean": 14.712962962962964,
+        "fields": {
+          "correctness": 3.338,
+          "policy_grounding": 3.481,
+          "next_action": 2.69,
+          "safety": 3.296,
+          "personalization": 1.907
+        },
+        "grounding_distinct": 4,
+        "grounding_dominant_share": 0.6805555555555556,
+        "grounding_dist": {
+          "0": 12,
+          "2": 7,
+          "3": 50,
+          "4": 147
+        }
+      }
+    },
+    "Proposed": {
+      "judge_v1": {
+        "n": 216,
+        "pass_rate": 0.2777777777777778,
+        "total_mean": 13.087962962962964,
+        "fields": {
+          "correctness": 2.829,
+          "policy_grounding": 3.991,
+          "next_action": 2.25,
+          "safety": 3.176,
+          "personalization": 0.843
+        },
+        "grounding_distinct": 2,
+        "grounding_dominant_share": 0.9907407407407407,
+        "grounding_dist": {
+          "3": 2,
+          "4": 214
+        }
+      },
+      "judge_v3": {
+        "n": 216,
+        "pass_rate": 0.11574074074074074,
+        "total_mean": 10.148148148148149,
+        "fields": {
+          "correctness": 1.847,
+          "policy_grounding": 3.324,
+          "next_action": 1.764,
+          "safety": 2.319,
+          "personalization": 0.801
+        },
+        "grounding_distinct": 4,
+        "grounding_dominant_share": 0.5972222222222222,
+        "grounding_dist": {
+          "0": 18,
+          "2": 5,
+          "3": 64,
+          "4": 129
+        }
+      }
+    }
+  },
+  "judge_versions": {
+    "A": "judge-v3",
+    "B": "judge-v3",
+    "Proposed": "judge-v3"
+  },
+  "ranking": {
+    "judge_v1": [
+      "B",
+      "Proposed",
+      "A"
+    ],
+    "judge_v3": [
+      "B",
+      "Proposed",
+      "A"
+    ]
+  },
+  "ranking_preserved": true
+}

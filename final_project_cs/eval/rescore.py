@@ -18,7 +18,14 @@ ROOT = Path(__file__).resolve().parents[1]
 #: 기본은 judge-v1 — **바꾸지 않는다.** 지금까지의 모든 수치가 v1 로 매겨져 있고,
 #: 채점자를 바꾸면 비교가 끊긴다. `--judge-prompt` 는 **비교 측정용**이다.
 #: 근거: docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md
-PROMPT = ROOT / "prompts/judge/judge_v1.txt"
+#: ★2026-09-06 judge-v1 → **judge-v3** 로 교체했다(재기준선, D-014).
+#:  v1 의 `policy_grounding` 은 **분산 0 인 상수**였다 — 인용이 붙었는지만 보고
+#:  답변이 그 근거를 쓰는지 묻지 않았다. v3 는 같은 자리 문장에 0~4 눈금을 준다.
+#:  ★채점자를 바꾸면 모든 점수가 같이 움직이므로 **v1 점수와 직접 비교하지 않는다.**
+#:  갈아탈 수 있다고 판단한 근거는 **같은 채점자 안에서 군 순위가 보존됐기** 때문이다
+#:  (B > Proposed > A, 양쪽 동일 — `eval/compare_baselines.py`).
+#:  근거: docs/reports/2026-09-06_S-JUDGE-GROUNDING-축_측정_리포트.md
+PROMPT = ROOT / "prompts/judge/judge_v3.txt"
 RUBRIC = ROOT / "eval/judge/rubric.json"
 
 
