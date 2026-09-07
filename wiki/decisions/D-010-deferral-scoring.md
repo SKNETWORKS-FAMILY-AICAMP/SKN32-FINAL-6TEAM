@@ -109,6 +109,52 @@ python -m eval.timing.score_d010_options
 
 `[미확보]` **`respond` 84건이 왜 실패했는지 안 봤다.** D-010 과 별개로 봐야 한다.
 
+## ★ [2026-09-07] judge v3 로 다시 세었다 — 결론은 같고 한쪽이 훨씬 심해졌다
+
+`[실측]` 위 표들은 **judge v1** 시절(`2026-08-28_reeval_Proposed_v3.jsonl`)이다.
+2026-09-06 재기준선(`2026-09-06_rebaseline_Proposed_judgev3.jsonl`, 같은 216건)으로
+다시 세었다.
+
+| | judge v1 | **judge v3** |
+|---|---:|---:|
+| 전체 통과 | 27.8% | **11.6%** |
+| 실패 중 `respond` | 54% | **58.6%** |
+| 실패 중 `wait_for_approval` | 21% | **19.4%** |
+| `respond` 통과율 | 26.3% | **1.8%** (2/114) |
+| `wait_for_approval` 통과율 | 45.0% | **38.3%** (23/60) |
+| `escalate` 통과율 | 7.1% | **0.0%** (0/42) |
+
+**두 결론이 그대로 선다.**
+① "채점식이 승인 대기를 벌점 처리한다"는 진단은 v3 에서도 성립하지 않는다 —
+승인 대기가 `respond` 보다 **21배** 잘 통과한다.
+② 승인 대기 60건은 v3 에서도 **전부 근거 8건**이고 근거 0건이 하나도 없다.
+`answer` 도 60건 다 `null` 이다. 안전 기권률 100% 는 유지된다.
+
+★**「진짜 문제는 `respond` 다」가 훨씬 커졌다.** 26.3% → **1.8%** 다. 답을 낸 114건
+중 두 건만 통과한다. 걸리는 곳은 `total >= 16` 이고 **112건 전부가 여기서 걸린다**
+(`correctness < 3` 은 81건, `safety < 3` 은 34건). 축별 평균을 보면 끌어내리는 것은
+`personalization` 1.28 과 `next_action` 2.29 다.
+
+`[미확보]` 이 붕괴가 **답변이 나빠진 것인지 채점자가 엄해진 것인지** 아직 못 가른다.
+같은 산출물을 v1 과 v3 로 매긴 차이이므로 **답변은 그대로다** — 즉 채점자 쪽이다.
+그런데 v3 의 `policy_grounding` 은 독립 읽기 둘과 3점 넘게 어긋나 있다
+→ [../evaluation/judge-second-opinion.md](../evaluation/judge-second-opinion.md).
+**채점자를 먼저 믿을 수 있게 만들고 나서 이 숫자를 쓴다.**
+
+### ③의 분모는 이미 있다
+
+`[실측 2026-09-07]` 이 문서는 "③의 분모를 어떻게 잡을지 안 정했다 — '미뤄야 할 때'를
+골든셋에 라벨로 넣어야 한다"고 적어 뒀다. **넣을 필요가 없다. 이미 있다.**
+
+```
+golden.jsonl  72건  expected_next_action:
+  respond 40 · wait_for_approval 15 · wait_for_input 13 · escalate 3 · handoff 1
+```
+
+`expected_next_action` 이 곧 "미뤄야 할 때"의 라벨이다. 3회 반복이므로 분모는 45다.
+이 라벨로 세 군을 잰 결과는 [../evaluation/metrics.md](../evaluation/metrics.md) 와
+[../evaluation/index.md](../evaluation/index.md) 에 있다.
+
 ## 선택지
 
 | # | 안 | 대가 |
