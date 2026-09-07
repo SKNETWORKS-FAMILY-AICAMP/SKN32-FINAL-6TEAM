@@ -82,8 +82,13 @@ products                                     (006)
 ```sql
 case_events     UNIQUE (case_id, aggregate_version)
 action_requests UNIQUE (tenant_id, idempotency_key)
-outbox          UNIQUE (topic, dedupe_key)
+outbox          UNIQUE (tenant_id, topic, dedupe_key)
 ```
+
+★`[정정 2026-09-07]` `outbox` 는 오래 `UNIQUE (topic, dedupe_key)` 로 적혀 있었다.
+`003_outbox_tenant_scoped_dedupe.sql` 이 `tenant_id` 를 넣은 뒤에도 여러 문서가 옛
+제약을 실었다. 살아 있는 DB 에서 `pg_constraint` 를 읽어 확인한 값이 위의 것이다
+(`outbox_tenant_topic_dedupe_key_key`). 경위는 [outbox.md](../actions/outbox.md).
 
 | 제약 | 없으면 |
 |---|---|

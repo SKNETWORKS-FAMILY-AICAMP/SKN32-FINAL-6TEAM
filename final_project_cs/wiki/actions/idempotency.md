@@ -105,8 +105,15 @@ provider 호출 → timeout
 -- 001_schema.sql
 action_requests ... UNIQUE (tenant_id, idempotency_key)
 -- 003_outbox_tenant_scoped_dedupe.sql
-outbox ... UNIQUE (topic, dedupe_key)
+outbox ... UNIQUE (tenant_id, topic, dedupe_key)
 ```
+
+★`[정정 2026-09-07]` 이 스니펫은 `003_outbox_tenant_scoped_dedupe.sql` 을 가리키면서
+**그 마이그레이션 전의 제약**을 싣고 있었다(`UNIQUE (topic, dedupe_key)`). 파일 이름만
+새것으로 바꾸고 내용은 안 바꾼 것이다. `tenant_id` 가 빠지면 **다른 테넌트끼리 dedupe
+키가 충돌한다** — 한 테넌트의 메시지가 다른 테넌트의 것 때문에 안 나간다. 보안급이라
+[review-policy.md](../../../wiki/governance/review-policy.md) 의 DoD-12 항목에 결함으로
+남아 있다. 살아 있는 DB 에서 확인한 값이 위의 것이다.
 
 **애플리케이션 로직만으로는 동시성을 못 막는다.** DB 제약이 최종 방어선이다.
 

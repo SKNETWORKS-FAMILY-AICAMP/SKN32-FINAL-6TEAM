@@ -33,7 +33,7 @@ outbox · prompts · llm_calls · feedback_analytics_reports
 | `customer_cases` | Case 상태. `version` 보유 | 낙관적 동시성 기준 |
 | `case_events` | append-only 이벤트 | `UNIQUE(case_id, aggregate_version)` |
 | `action_requests` | 실행 요청 | `UNIQUE(tenant_id, idempotency_key)` |
-| `outbox` | 발행 대기 | `UNIQUE(topic, dedupe_key)` |
+| `outbox` | 발행 대기 | `UNIQUE(tenant_id, topic, dedupe_key)` — `tenant_id` 가 빠지면 테넌트끼리 충돌한다 |
 | `prompts` | 프롬프트 버전 | `(prompt_key, version)` UNIQUE + sha256 immutable |
 | `llm_calls` | 호출 감사 | `prompt_id` FK로 어떤 프롬프트가 만든 답인지 추적 |
 
