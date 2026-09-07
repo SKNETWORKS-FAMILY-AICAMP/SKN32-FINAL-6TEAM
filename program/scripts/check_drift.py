@@ -35,15 +35,73 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
+import json
 import os
 import re
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 BASELINE = "program/plan/A-COP_구현계획서_v9.md"
+
+#: 판정 원장. 검사 1·5 는 **후보**를 모을 뿐이라 매번 같은 줄이 다시 올라온다.
+#:  2026-09-07 에 13건을 코드에 대고 판정했는데, 그 13건이 다음 세션에 그대로
+#:  또 올라오면 사람은 두 번째부터 안 읽는다 — 경보가 많으면 경보가 아니다.
+#:  판정한 것은 여기 적어 두고 요약만 보여 준다.
+#:
+#:  ★지문에 **줄 번호를 넣지 않는다.** 위에 문단이 하나 끼면 줄이 다 밀리는데
+#:    그때마다 전부 다시 판정하게 된다. 대신 절 제목과 문장 자체로 만든다 —
+#:    **문장이 바뀌면 지문도 바뀌어 다시 올라온다.** 그게 맞는 동작이다.
+#:    낡은 문장을 살짝 고쳐 놓고 "판정했다" 로 덮는 것을 막는다.
+LEDGER = "program/research/_드리프트_판정.jsonl"
+
+
+def _today() -> str:
+    import datetime
+    return datetime.date.today().isoformat()
+
+
+def fingerprint(check: int, section: str, fragment: str) -> str:
+    """검사 번호 · 절 제목 · 문장으로 만든 지문. 줄 번호는 일부러 뺀다."""
+    norm = re.sub(r"\s+", " ", fragment).strip()
+    return hashlib.sha1(f"{check} | {section.strip()} | {norm}".encode("utf-8")).hexdigest()[:12]
+
+
+def load_ledger() -> dict[str, dict]:
+    if not os.path.exists(LEDGER):
+        return {}
+    rows = {}
+    for line in Path(LEDGER).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            rows[row["지문"]] = row
+    return rows
+
+
+def append_ledger(rows: list[dict]) -> None:
+    with open(LEDGER, "a", encoding="utf-8") as fh:
+        for row in rows:
+            fh.write(json.dumps(row, ensure_ascii=False) + NEWLINE)
+
+
+NEWLINE = chr(10)
+
+#: 검사 1·5 가 이번 실행에서 모은 후보. main 이 원장과 대조해 요약한다.
+CANDIDATES: list[dict] = []
+
+
+def note(check: int, section: str, lineno: int, fragment: str) -> bool:
+    """후보를 기록하고 **아직 판정 안 된 것인지** 돌려준다."""
+    fp = fingerprint(check, section, fragment)
+    CANDIDATES.append({"지문": fp, "검사": check, "절": section, "행": lineno, "본문": fragment})
+    return fp not in LEDGER_ROWS
+
+
+LEDGER_ROWS: dict[str, dict] = {}
 
 #: 기준선을 인용하는 규칙 문서. ★여기 실린 문장은 매 세션 컨텍스트에 자동으로
 #:  실리므로 기준선 본문보다 강하게 작용한다. 기준선을 고칠 때 이 파일들이 그
@@ -264,16 +322,23 @@ def check_revisions(text: str) -> int:
             if not any(t in line for t in usable):
                 continue
             (marked if MARK_RE.search(line) else unmarked).append(i)
+        # ★원장에 판정이 있는 줄은 세지 않는다. 같은 줄이 매번 다시 올라오면
+        #   사람은 두 번째부터 안 읽는다.
+        fresh = [ln for ln in unmarked
+                 if note(1, section_of(secs, ln), ln, lines[ln - 1].strip()[:120])]
+        settled = len(unmarked) - len(fresh)
         status = "OK"
-        if unmarked:
+        if fresh:
             status = "★확인"
-            flagged += 1
+            flagged += len(fresh)
+        elif settled:
+            status = f"판정됨 {settled}"
         name = it["name"][:22]
         print(f"    {name:<24} 표시있음 {len(marked):>2}곳   표시없음 {len(unmarked):>2}곳   {status}")
-        for ln in unmarked[:3]:
+        for ln in fresh[:3]:
             print(f"        {ln:>5}행  {section_of(secs, ln)[:44]}")
-        if len(unmarked) > 3:
-            print(f"        … 외 {len(unmarked) - 3}곳")
+        if len(fresh) > 3:
+            print(f"        … 외 {len(fresh) - 3}곳")
     print()
     print("    ★'표시없음'은 곧 모순이 아니다. 개정 표시가 안 붙은 채 같은 말을")
     print("      하는 자리이며, 그중 옛말을 유지한 절이 있는지는 사람이 읽어 판정한다.")
@@ -471,8 +536,11 @@ def check_progress_claims(text: str) -> int:
                 hits.append((i, section_of(secs, i), frag.strip()[:120]))
                 break
 
+    settled = sum(1 for lineno, sec, frag in hits if not note(5, sec, lineno, frag))
+    hits = [h for h in hits if fingerprint(5, h[1], h[2]) not in LEDGER_ROWS]
+
     if not hits:
-        print("    없음.")
+        print(f"    새로 볼 것 없음." + (f" (판정됨 {settled}줄)" if settled else ""))
         return 0
 
     by_section: dict[str, list[tuple[int, str]]] = defaultdict(list)
@@ -485,7 +553,8 @@ def check_progress_claims(text: str) -> int:
         if len(by_section[sec]) > 3:
             print(f"              … 외 {len(by_section[sec]) - 3}줄")
     print()
-    print(f"    ★{len(hits)}줄. **낡았다는 뜻이 아니다** — 아직 그런지 코드에 대고 확인한다.")
+    print(f"    ★{len(hits)}줄" + (f" (판정됨 {settled}줄은 감췄다)" if settled else "")
+          + ". **낡았다는 뜻이 아니다** — 아직 그런지 코드에 대고 확인한다.")
     print("      2026-09-07 에 이 방식으로 §8-D·§0 의 낡은 서술 셋을 찾았다")
     print("      (final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md).")
     return len(hits)
@@ -495,7 +564,14 @@ def check_progress_claims(text: str) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", type=int, choices=[1, 2, 3, 4, 5], help="한 검사만 돌린다")
+    ap.add_argument("--판정", nargs="+", metavar="지문=정상|정정함",
+                    help="후보를 판정해 원장에 적는다. 지문은 --지문 으로 본다")
+    ap.add_argument("--메모", default="", help="--판정 과 같이 쓴다. 왜 그렇게 봤는지")
+    ap.add_argument("--지문", action="store_true", help="후보를 지문과 함께 나열한다")
     args = ap.parse_args()
+
+    global LEDGER_ROWS
+    LEDGER_ROWS = load_ledger()
 
     if not os.path.exists(BASELINE):
         print(f"기준선이 없다: {BASELINE}")
@@ -514,12 +590,44 @@ def main() -> int:
         total += checks[n](text)
         print()
 
+    if args.지문:
+        print("─" * 62)
+        print("후보 지문 — --판정 <지문>=정상 으로 원장에 적는다")
+        for c in CANDIDATES:
+            mark = "  " if c["지문"] in LEDGER_ROWS else "★"
+            print(f"  {mark}{c['지문']}  검사{c['검사']}  {c['행']:>5}행  {c['본문'][:64]}")
+        print()
+
+    if args.판정:
+        index = {c["지문"]: c for c in CANDIDATES}
+        rows, unknown = [], []
+        for item in args.판정:
+            fp, _, verdict = item.partition("=")
+            if fp not in index:
+                unknown.append(fp)
+                continue
+            if verdict not in ("정상", "정정함"):
+                print(f"판정은 정상 또는 정정함 이어야 한다: {item}")
+                return 1
+            c = index[fp]
+            rows.append({**c, "판정": verdict, "날짜": _today(), "메모": args.메모})
+        if unknown:
+            # ★없는 지문을 조용히 넘기면 원장이 실제와 어긋난 채 커진다.
+            print(f"이번 실행의 후보에 없는 지문이다: {', '.join(unknown)}")
+            return 1
+        append_ledger(rows)
+        print("─" * 62)
+        print(f"원장에 {len(rows)}건 적었다 → {LEDGER}")
+        return 0
+
     print("─" * 62)
+    settled_total = sum(1 for c in CANDIDATES if c["지문"] in LEDGER_ROWS)
     if total:
-        print(f"사람이 볼 것 {total}건. 위 ★표시를 확인한다.")
+        print(f"사람이 볼 것 {total}건" + (f" (판정됨 {settled_total}건은 감췄다)" if settled_total else "") + ". 위 ★표시를 확인한다.")
         print("판정 절차는 program/research/index.md 문서 정합성 점검 캘린더 항목 4·5.")
+        print("판정을 남기려면 --지문 으로 지문을 보고 --판정 <지문>=정상 --메모 \"...\" 를 쓴다.")
     else:
-        print("확인할 것 없음.")
+        print("확인할 것 없음." + (f" 판정된 후보 {settled_total}건은 원장에 있다." if settled_total else ""))
     return 1 if total else 0
 
 
