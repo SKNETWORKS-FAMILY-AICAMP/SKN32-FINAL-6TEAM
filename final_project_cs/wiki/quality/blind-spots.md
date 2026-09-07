@@ -137,6 +137,40 @@ SQL 쪽뿐이다.** 파이썬 검사는 자기가 읽은 값과만 비교하므�
 
 **불변식을 추가할 때 결함도 같이 추가한다.** 이게 카탈로그가 낡지 않게 하는 방법이다.
 
+## ★ [2026-09-07] `degraded` 가 세 가지를 한 칸에 뭉친다
+
+`[실측]` 평가 산출물의 `degraded` 는 이렇게 만들어진다(`eval/runners/common.py`).
+
+```python
+"degraded": bool(record.get("degraded"))
+            or bool(team_result.get("failure_code"))
+            or bool(team_result.get("warnings"))
+```
+
+**경고가 하나라도 있으면 degraded 다.** 그런데 Mock Team 은 부를 때마다 경고를 낸다.
+
+| golden 216행의 `degraded` 102행 (47%) | |
+|---|---|
+| **Mock 경고만** — `"Mock 단계에서는 승인 제안만 생성하며 실제 처리는 수행하지 않습니다."` | **60행 (58.8%)** |
+| 진짜 `failure_code` | 42행 (41.2%) |
+
+★**degraded 로 표시된 것의 절반 넘게가 degraded 가 아니다.** Mock 이 "나는 Mock 이다"
+라고 말한 것뿐이다. 골든셋의 `notes` 도 그 건들을 `normal` 이라고 적어 뒀다.
+
+**무엇이 오염되나.**
+
+- `degraded` 로 나눠 보는 모든 분석. 분모의 절반이 가짜다
+- 기권 지표 — 과잉 기권으로 잡힌 12건이 전부 이 칸에 걸려 있었다
+  → [../../../wiki/evaluation/metrics.md](../../../wiki/evaluation/metrics.md)
+- DoD-25(degraded 차단)의 근거로 이 필드를 쓴다면 그것도
+
+**고치는 방향은 칸을 나누는 것이다** — `context_degraded` · `team_failed` ·
+`has_warnings` 를 따로 싣고, 합친 값이 필요하면 읽는 쪽에서 합친다. 지금은
+합쳐 놓아서 **되돌릴 수가 없다.**
+
+`[미확보]` Mock 을 진짜 Return & Refund Team 으로 바꾸면 이 60행이 어떻게 되는지는
+바꿔 봐야 안다.
+
 ## ★ [2026-09-07] rescore 는 judge 의 `total` 이 축의 합과 같은지 안 본다
 
 `[실측]` 러너는 본다. `eval/runners/common.py:547~551` 이 다섯 축의 합과 `total` 이
