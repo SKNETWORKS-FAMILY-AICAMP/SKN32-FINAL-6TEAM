@@ -560,10 +560,98 @@ def check_progress_claims(text: str) -> int:
     return len(hits)
 
 
+
+# ── 검사 6. DB 제약 대조 ───────────────────────────────────────────────
+
+#: wiki 가 DDL 을 스니펫으로 베껴 싣는다. 스키마가 바뀌면 그 스니펫이 낡는데
+#:  링크도 tag 도 안 깨져서 **아무 검사도 안 운다.**
+#:
+#:  2026-09-07 에 실제로 걸렸다 — `003_outbox_tenant_scoped_dedupe.sql` 이
+#:  `outbox` 제약에 `tenant_id` 를 넣은 뒤에도 wiki 세 곳이 옛 제약을 실었고,
+#:  그중 하나는 **스니펫 주석이 003 을 가리키면서 003 이전 값**을 싣고 있었다.
+#:  `tenant_id` 누락은 테넌트끼리 dedupe 충돌을 내는 보안급이다.
+WIKI_ROOTS = ("wiki", "final_project_cs/wiki", "final_project_sample/wiki",
+              "datasets/wiki", "acop_dojo/wiki")
+UNIQUE_RE = re.compile(r"UNIQUE\s*\(([^)]*)\)", re.I)
+MIGRATIONS = "final_project_cs/app/infrastructure/db/migrations"
+
+
+def _real_constraints() -> tuple[set[frozenset], str]:
+    """살아 있는 DB 를 먼저 본다. 못 붙으면 마이그레이션 SQL 로 떨어진다.
+
+    ★DB 가 정본이다. 마이그레이션은 "돌렸다면 이렇게 됐을 것" 이라서
+      실제로 안 돌린 환경에서는 거짓 안심을 준다. 어느 쪽을 봤는지 찍는다.
+    """
+    try:
+        sys.path.insert(0, "final_project_cs")
+        from app.infrastructure.db.session import get_connection  # type: ignore
+        out = set()
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE contype = 'u'")
+            for (definition,) in cur.fetchall():
+                m = UNIQUE_RE.search(definition or "")
+                if m:
+                    out.add(frozenset(c.strip().strip('"') for c in m.group(1).split(",")))
+        if out:
+            return out, "살아 있는 DB (pg_constraint)"
+    except Exception:
+        pass
+    out = set()
+    if os.path.isdir(MIGRATIONS):
+        for name in sorted(os.listdir(MIGRATIONS)):
+            if not name.endswith(".sql"):
+                continue
+            sql = Path(MIGRATIONS, name).read_text(encoding="utf-8", errors="replace")
+            for m in UNIQUE_RE.finditer(sql):
+                out.add(frozenset(c.strip().strip('"') for c in m.group(1).split(",")))
+    return out, f"마이그레이션 SQL ({MIGRATIONS}) — ★DB 에 못 붙었다"
+
+
+def check_db_constraints(_text: str) -> int:
+    print("[6] DB 제약 대조 — wiki 의 UNIQUE 스니펫이 실제와 맞나")
+    real, source = _real_constraints()
+    if not real:
+        print("    제약을 한 건도 못 읽었다. DB 도 마이그레이션도 안 보인다 — 건너뛴다.")
+        return 0
+    print(f"    기준: {source} · 유니크 제약 {len(real)}종")
+
+    flagged = 0
+    for root in WIKI_ROOTS:
+        if not os.path.isdir(root):
+            continue
+        for dirpath, _, names in os.walk(root):
+            for name in sorted(names):
+                if not name.endswith(".md"):
+                    continue
+                path = os.path.join(dirpath, name).replace("\\", "/")
+                lines = read(path).splitlines()
+                for i, line in enumerate(lines, 1):
+                    for m in UNIQUE_RE.finditer(line):
+                        cols = frozenset(c.strip().strip("`\"' ")
+                                         for c in m.group(1).split(","))
+                        if not cols or "..." in cols or "" in cols:
+                            continue
+                        if cols in real:
+                            continue
+                        frag = line.strip()[:110]
+                        if note(6, path, i, frag):
+                            flagged += 1
+                            print(f"    ★{path}:{i}")
+                            print(f"        {frag}")
+    if not flagged:
+        print("    새로 볼 것 없음.")
+        return 0
+    print()
+    print(f"    ★{flagged}곳. **틀렸다는 뜻이 아니다** — 옛 제약을 **역사로** 적은 자리도")
+    print("      이렇게 걸린다(\"원래는 tenant_id 가 없었다\"). 지금 값으로 적은 것인지")
+    print("      그때는 그랬다고 적은 것인지는 사람이 읽어 가른다. 판정하면 원장에 남는다.")
+    return flagged
+
 # ── 실행 ──────────────────────────────────────────────────────────────
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", type=int, choices=[1, 2, 3, 4, 5], help="한 검사만 돌린다")
+    ap.add_argument("--only", type=int, choices=[1, 2, 3, 4, 5, 6], help="한 검사만 돌린다")
     ap.add_argument("--판정", nargs="+", metavar="지문=정상|정정함",
                     help="후보를 판정해 원장에 적는다. 지문은 --지문 으로 본다")
     ap.add_argument("--메모", default="", help="--판정 과 같이 쓴다. 왜 그렇게 봤는지")
@@ -583,8 +671,9 @@ def main() -> int:
     print()
 
     checks = {1: check_revisions, 2: check_claude_quotes, 3: check_code,
-              4: check_fact_tables, 5: check_progress_claims}
-    todo = [args.only] if args.only else [1, 2, 3, 4, 5]
+              4: check_fact_tables, 5: check_progress_claims,
+              6: check_db_constraints}
+    todo = [args.only] if args.only else [1, 2, 3, 4, 5, 6]
     total = 0
     for n in todo:
         total += checks[n](text)
