@@ -89,7 +89,7 @@ owners: [human:미배정]
 | **2** | **검토·승인 1건 소요시간** | **72% 절감이 여기 달려 있다.** 도구 설치 완료 → [../business/measure-review-time.md](../business/measure-review-time.md) | **30분** |
 | ~~2~~ | **오류 1건당 손실** — **일부 측정** | 분쟁 8건 실측. 중앙값 5만 · 최대 152.6만 → [../business/error-cost.md](../business/error-cost.md) | 완료 |
 | ~~3~~ | ~~Baseline A·B 재측정~~ **측정은 끝났다 (2026-09-06)** | `[실측 2026-09-07]` 2026-09-06 judge v3 재기준선이 A·B·Proposed 를 216건씩 같은 실행으로 돌려 놨다. 비용·지연·judge 점수 전부 있다 → [../evaluation/index.md](../evaluation/index.md). ★**그런데 결과가 기대와 반대다** — B 가 pass 46.8% 로 Proposed(11.6%)를 이긴다. 그래서 "단순 LLM보다 낫다"는 **여전히 못 말한다.** 막는 것이 측정 부재에서 **방어 지표 비교 부재**로 바뀌었다 | 완료 |
-| 4 | **DoD-28 재측정** | **0% 가 모델 성능이 아니었다** → [../evaluation/dod28-rerun.md](../evaluation/dod28-rerun.md) | D-010 대기 |
+| ~~4~~ | **DoD-28 재측정** — `[2026-09-07]` **차단 항목이 아니다** | "D-010 대기"는 틀렸다. 막던 것은 D-010 이 아니라 **결정이 이미 났다는 것**이다 — [D-CS-002](../../final_project_cs/wiki/decisions/D-CS-002-finetuned-model-not-adopted.md)가 파인튜닝 모델을 채택하지 않기로 정했다. 세 번째 arm(FT-RAG통합)은 **그 결정을 되돌리려는 사람이 근거로 쓸 때** 필요하다 → [../evaluation/dod28-rerun.md](../evaluation/dod28-rerun.md) | — |
 
 → [../business/index.md](../business/index.md)
 
