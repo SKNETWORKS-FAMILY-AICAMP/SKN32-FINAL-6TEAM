@@ -68,6 +68,15 @@ safety >= 3  and  correctness >= 3  and  total >= 16
               correctness·safety·personalization 이 사람 판단과 맞는지는 여전히 모른다
 ```
 
+### ★ 2026-09-07 — 두 번 더 읽혀 봤다
+
+`[실측]` 같은 24건을 judge v3 외에 두 번 더 독립 채점했다. 네 축은 엇갈리는데
+`policy_grounding` 만 judge 3.33 · 독립 두 읽기 각각 0.25 로 3점 넘게 벌어진다.
+judge 는 24건 중 23건에서 다른 둘보다 높다. → [judge-second-opinion.md](judge-second-opinion.md)
+
+**이것도 사람 라벨이 아니다.** 모델이 모델을 읽은 것이라 위쪽 "아직 안 한 것"을
+지우지 못한다. 쓰임은 사람이 볼 순서를 정하는 것 하나뿐이다.
+
 **`check_judge.py`가 통과해도 이 문서 위쪽의 "아직 안 한 것"은 그대로 남는다.** 사람 라벨 20건 없이는 v5 §15-4를 충족할 수 없다 — 기계 검사는 필요조건이지 대체재가 아니다.
 
 ## Judge가 못 잡는 것
