@@ -79,4 +79,4 @@ automation:
 
 - [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md) — 검증 대상 불변식
 - [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) — 사각지대 목록
-- [../../program/wiki/architecture/repository-map.md](../../wiki/architecture/repository-map.md) — 저장소 관계
+- [../../wiki/architecture/repository-map.md](../../wiki/architecture/repository-map.md) — 저장소 관계

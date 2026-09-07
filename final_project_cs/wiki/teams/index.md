@@ -99,7 +99,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 - [../runtime/agentic-controller.md](../runtime/agentic-controller.md) — Team을 호출하는 쪽
 - [../context/index.md](../context/index.md) — Team의 입력을 만드는 곳
 - [../actions/action-proposal.md](../actions/action-proposal.md) — Team의 출력이 가는 곳
-- [../../../program/wiki/architecture/core-vs-team.md](../../../wiki/architecture/core-vs-team.md) — Team 자격 판정
+- [../../../wiki/architecture/core-vs-team.md](../../../wiki/architecture/core-vs-team.md) — Team 자격 판정
 ---
 
 # 계약 원문에서 보강 (2026-09-03)

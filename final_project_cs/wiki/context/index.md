@@ -26,7 +26,7 @@ Team이 직접 읽으면 컨텍스트가 무한정 커진다. 그러면 두 가�
 | 비용 | `[실측]` 건당 입력 8,968 토큰. 늘면 그대로 비용 |
 | 메모리 | `[실측]` 12GB VRAM에서 10,670 토큰 학습이 OOM |
 
-두 번째가 실제로 프로젝트를 막았다. → [../../../program/wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md)
+두 번째가 실제로 프로젝트를 막았다. → [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md)
 
 ## 읽기 순서
 

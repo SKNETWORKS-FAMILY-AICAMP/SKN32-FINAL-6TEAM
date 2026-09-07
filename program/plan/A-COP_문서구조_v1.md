@@ -456,7 +456,7 @@ Team은 여기에 제안만 하고, 실행은 Core가 한다.
 Team이 직접 실행하면 세 가지가 무너진다.
 승인 경계를 우회할 수 있고, 같은 요청이 두 번 실행될 수 있고, 감사 기록이 남지 않는다.
 
-결정 근거는 [../../../program/wiki/decisions/index.md](../../../wiki/decisions/index.md).
+결정 근거는 [../../../wiki/decisions/index.md](../../../wiki/decisions/index.md).
 
 ## 흐름
 

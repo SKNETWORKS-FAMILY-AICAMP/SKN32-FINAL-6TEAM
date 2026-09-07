@@ -58,5 +58,5 @@ status: draft
 
 ## 관계
 
-- [../../../program/wiki/decisions/index.md](../../../wiki/decisions/index.md) — 중앙 허브 결정
+- [../../../wiki/decisions/index.md](../../../wiki/decisions/index.md) — 중앙 허브 결정
 - [../log.md](../log.md) — 변경 이력

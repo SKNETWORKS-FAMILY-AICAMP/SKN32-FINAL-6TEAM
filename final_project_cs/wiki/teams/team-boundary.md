@@ -221,4 +221,4 @@ UNIQUE(prompt_key, version) · UNIQUE(prompt_key, sha256)
 - [../actions/action-proposal.md](../actions/action-proposal.md) — Team의 출력
 - [../context/context-broker.md](../context/context-broker.md) — Team의 입력
 - [../quality/invariants.md](../quality/invariants.md) — 불변식 전체
-- [../../../program/wiki/architecture/core-vs-team.md](../../../wiki/architecture/core-vs-team.md) — 경계 판정 기준
+- [../../../wiki/architecture/core-vs-team.md](../../../wiki/architecture/core-vs-team.md) — 경계 판정 기준

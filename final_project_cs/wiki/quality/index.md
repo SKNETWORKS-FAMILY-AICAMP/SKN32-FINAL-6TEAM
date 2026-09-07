@@ -93,6 +93,6 @@ python -m eval.run --arm Proposed
 
 ## 인접 영역
 
-- [../../../program/wiki/evaluation/index.md](../../../wiki/evaluation/index.md) — 평가 지표와 프로토콜
-- [../../../program/wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD
+- [../../../wiki/evaluation/index.md](../../../wiki/evaluation/index.md) — 평가 지표와 프로토콜
+- [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD
 - [../teams/team-boundary.md](../teams/team-boundary.md) — Team 불변식의 설명

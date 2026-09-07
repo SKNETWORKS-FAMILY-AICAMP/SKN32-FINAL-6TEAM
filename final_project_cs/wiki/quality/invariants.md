@@ -319,4 +319,4 @@ python program/scripts/check_wiki.py
 - [test-map.md](test-map.md) — 무엇을 어디서 검사하는가
 - [blind-spots.md](blind-spots.md) — 불변식을 어겼는데 테스트가 안 우는 지점
 - [../teams/team-boundary.md](../teams/team-boundary.md) — TEAM 불변식의 설명
-- [../../../program/wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD와의 연결
+- [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD와의 연결

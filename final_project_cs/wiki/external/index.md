@@ -56,7 +56,7 @@ app/presentation/
 
 **단순 데이터 조회는 A2A가 아니다.** REST다.
 
-근거는 [../../../program/wiki/research/a2a-adoption.md](../../../wiki/research/a2a-adoption.md).
+근거는 [../../../wiki/research/a2a-adoption.md](../../../wiki/research/a2a-adoption.md).
 
 ## 이 영역의 불변식
 
@@ -83,7 +83,7 @@ app/presentation/
 
 - [../actions/index.md](../actions/index.md) — 나가는 경로
 - [../runtime/index.md](../runtime/index.md) — 들어온 요청이 Case가 되는 곳
-- [../../../program/wiki/architecture/system-context.md](../../../wiki/architecture/system-context.md) — 시스템 경계
+- [../../../wiki/architecture/system-context.md](../../../wiki/architecture/system-context.md) — 시스템 경계
 - [introspection.md](introspection.md) — 조립 상태를 보여주는 read-only API
 
 - [rest-endpoints.md](rest-endpoints.md) — 엔드포인트별 요청·응답 필드 계약
