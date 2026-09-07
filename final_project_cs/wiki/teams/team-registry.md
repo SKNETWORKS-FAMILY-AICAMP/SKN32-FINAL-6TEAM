@@ -60,6 +60,28 @@ if manifest.team_id in self._teams:
 
 **조용히 덮어쓰지 않고 예외를 던진다.**
 
+## 선언이 틀렸을 때 어디서 걸리나
+
+`[실측 2026-09-07]` handoff 계약(`docs/handoff/08`)이 「빌드 시 실패시켜야 할 것」
+넷을 적어 뒀다. **넷 다 걸리기는 하는데 걸리는 시점이 다르다.** 기동 때 걸리는
+것과 요청이 와야 걸리는 것을 섞으면 안 된다 — 뒤엣것은 **운영 중에 터진다.**
+
+| 규칙 | 어디서 | 언제 |
+|---|---|---|
+| `active: true` 인데 `implementation_ref` 를 import 못 한다 | `project_config.py:157` `importlib.import_module` | **기동 때** |
+| `implementation_ref` 가 클래스가 아니거나 `manifest`·`execute` 가 없다 | 동 `:173~179` | **기동 때** |
+| 중복 `team_id` | `registry.py:46` `duplicate team_id` | **기동 때**(등록 순간) |
+| 선언된 모듈에 게이트가 없다 | `tests/contract/test_module_toggles.py::test_every_declared_module_has_a_gate` | **테스트** |
+| 같은 case 를 두 Team 이 주장한다 | `registry.py:85` `case must resolve to exactly one active team` | ★**요청이 올 때** |
+
+★**마지막 줄이 다르다.** capability 가 겹치는 것은 등록 때 안 잡고 **해결 때** 잡는다.
+선언만 보고는 알 수 없고 실제로 그 case 가 들어와야 두 Team 이 다 잡히기 때문이다.
+겹치게 선언해 두면 **기동은 멀쩡히 되고 그 종류의 문의가 처음 올 때 터진다.**
+
+★`active: false` 는 자리를 비워 두는 방법이다. Registry 에 이름은 있지만 라우팅되지
+않아 Case 가 죽지 않는다 — "자리만 만들고 세부는 나중에" 를 안전하게 하는 관용이다.
+비활성 선언은 스키마의 빈 문자열 검사 말고는 들여다보지 않는다(`project_config.py:143`).
+
 ## 계약 호환은 major 버전만 본다
 
 ```python
