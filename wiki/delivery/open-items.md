@@ -65,6 +65,7 @@ owners: [human:미배정]
 
 | 항목 | 어디 |
 |---|---|
+| **Baseline B 가 Proposed 를 이긴다 — 방어 지표 비교가 없다** `[실측 2026-09-07]` 같은 실행에서 judge pass 가 B 46.8% · Proposed 11.6% 이고, B 는 2.5배 싸고 4.8배 빠르다. **"단순 RAG 보다 낫다"를 지금 산출물로는 말할 수 없다.** Proposed 의 값어치(승인 경계·기권·Action 제안)는 judge 총점이 아니라 방어 지표가 재는데, **세 군을 같은 실행에서 방어 지표로 비교한 산출물이 없다.** 그 측정이 먼저다 | [../evaluation/index.md](../evaluation/index.md) · [../evaluation/metrics.md](../evaluation/metrics.md) |
 | **cs 소유 문서 둘이 outbox 옛 제약을 싣고 있다 — 코드 세션 몫** `[실측 2026-09-07]` 살아 있는 DB 는 `UNIQUE (tenant_id, topic, dedupe_key)` 인데(`outbox_tenant_topic_dedupe_key_key`), `docs/evidence/DoD-23_consumer_idempotency.md:33` 은 옛 제약을 **통과 근거로** 들고 있고 `docs/handoff/02_DB_스키마.md:119` 는 001 DDL 만 싣고 003 개정을 안 싣는다. `tenant_id` 누락은 테넌트끼리 dedupe 충돌을 내는 **보안급**이라 DoD-12 결함으로 기록돼 있다. wiki 쪽 세 곳(`idempotency.md`·`data/migrations.md`·`data/schema/index.md`)은 정정했다 | [../../final_project_cs/wiki/actions/outbox.md](../../final_project_cs/wiki/actions/outbox.md) |
 | **wiki 스키마 스니펫이 실제 DB 와 어긋나도 아무도 안 잡는다** `[실측 2026-09-07]` outbox 제약이 문서 다섯 곳에 퍼져 있었고 003 마이그레이션 뒤에도 세 곳이 옛 값을 유지했다. **파일 이름만 새것으로 바꾸고 내용은 안 바꾼 자리도 있었다.** `check_wiki.py` 는 링크와 tag 를 보지 DDL 을 안 본다. `pg_constraint` 를 읽어 wiki 의 `UNIQUE(...)` 스니펫과 대조하는 검사가 필요하다 | [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) |
 | ~~**이관 — 남은 것은 대조 38건**~~ **닫힘 (2026-09-07).** 39건을 절 단위로 훑어 격차 넷을 찾아 반영했다(→ [coverage-2026-09.md](../governance/migration-scope/coverage-2026-09.md) 19차). 경위: `[실측 2026-09-07]` 이 줄은 "사람 판정 79" 로 적혀 있었으나 **두 숫자를 섞은 것이었다.** 사람 판정은 2026-09-03 에 198/198 로 끝났다. 「판정필요 79」는 스크립트의 **초안** 판정이고 그마저 지금 다시 돌리면 68 이다(분모가 747→760 으로 늘었다). 실제로 남은 일은 **대조필요 38건** — "옮기기로 정했다"와 "옮겼다"는 다르고, 대조해 본 9번 중 9번에서 빠진 내용이 나왔다 | [../governance/migration-scope/status.md](../governance/migration-scope/status.md) · [../governance/migration-scope/index.md](../governance/migration-scope/index.md) |
@@ -106,7 +107,7 @@ owners: [human:미배정]
 | ~~커머스 문의 유형~~ **동일 사유로 못 구한다** | `aihub_102_smb_order_qa` 도 `sample_per_group: 400` 층화표집 (stats.json 확인). 둘 다 자연 빈도가 아니다 |
 | ~~오류 비용의 실제 사례~~ **완료** | [error-cost.md](../business/error-cost.md) |
 | ~~감정 축 검증~~ **확인 결과: 못 한다** | [golden-set.md](../evaluation/golden-set.md). `aihub_71603` 은 제품 만족도(긍정/부정)를 재고 골든셋은 상담 중 감정·불확실성을 잰다 — **다른 축이라 대조 불가** |
-| `cost/case` 실측 | eval harness 실행 |
+| ~~`cost/case` 실측~~ **완료 (2026-09-07)** | 새로 돌리지 않았다 — 2026-09-06 judge v3 재기준선 산출물에 행마다 `cost_usd`·`latency_ms`·토큰이 이미 있었다. 세 군 같은 실행: A 0.33원 · B 1.20원 · Proposed 3.03원 (환율 1,400원 고정) → [../evaluation/index.md](../evaluation/index.md) |
 
 **네 번째가 특히 중요하다.** **분쟁 조정까지 간 사례집**이므로 "오류 1건이 얼마나 커지는지"의 실제 근거가 된다.
 
