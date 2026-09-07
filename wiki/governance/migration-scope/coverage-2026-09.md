@@ -1,7 +1,7 @@
 ---
 type: report
 title: 반영률 실측 — 6차 이후
-description: 2026-09-04~06 대조 6~11차. DoD evidence 28·검증 로그 5·데이터셋 5·계약·매뉴얼 5·acop_dojo 2·VISION 9
+description: 2026-09-04~07 대조 6~19차. 19차에서 대조필요 39건을 다 훑고 격차 넷을 건졌다
 status: draft
 tags: [governance, documentation]
 ---
@@ -207,6 +207,42 @@ tags: [governance, documentation]
 `[실측]` 스캔 판정후보의 적중률 — "신호 없음·누락 후보"가 실제 누락이었던 건 대략 절반이다(14차 DISTRIBUTION·12차 Composer 정정·18차 둘은 거짓 신호, 15차 확장 README·11차 VISION·17차 완결성 점검은 진짜). **거짓 신호의 원인은 둘** — 코드 블록·표·목록은 지문이 안 잡히고, 같은 내용이 다른 wiki 페이지에 있으면 스캔이 못 찾는다(14차에 나도 같은 이유로 중복을 적었다). 스캔은 읽는 순서를 정하는 도구지 판정 도구가 아니라는 [coverage.md](coverage.md)의 결론이 그대로다.
 
 남은 것은 이관이 아니라 **판정**이다 — open-items의 `[미확보]`(Return & Refund 승격, DoD-01 v4 hash, mp4 넷, sample wiki git 무시 등)와 cs 저장소 쪽 수정(DoD evidence 9건, `research/index.md` 둘)은 사람 몫이다.
+
+## 19차 — 대조필요 39건 일괄 (2026-09-07)
+
+`[실측]` `_verify*.tsv` 에서 `대조필요` 로 남아 있던 **39건 전부**를 절 단위로 훑었다.
+`audit_coverage.py` 는 파일 하나마다 wiki 를 다시 읽어서, wiki 를 한 번만 적재하고
+39건을 도는 방식으로 바꿔 돌렸다.
+
+```
+절 334개  ·  누락후보 29  ·  일부후보 34  ·  반영후보 181  ·  신호없음 90
+```
+
+**63개 후보를 읽어 진짜 격차 넷을 건졌다.** 적중률은 6~18차와 비슷하게 낮다.
+
+| 찾은 것 | 어디로 |
+|---|---|
+| **outbox 제약에 `tenant_id` 가 빠진 채였다** — 살아 있는 DB 는 `UNIQUE (tenant_id, topic, dedupe_key)` 인데 wiki 세 곳이 옛 제약을 실었다. `idempotency.md` 는 스니펫 주석이 `003_outbox_tenant_scoped_dedupe.sql` 을 가리키면서 **그 마이그레이션 전 값**을 싣고 있었다 | [idempotency.md](../../../final_project_cs/wiki/actions/idempotency.md) |
+| **말 네 개 구분(컴포넌트·모듈·Port·인스턴스)이 wiki 에 없었다** — handoff/08 §0 에만 있었다. 소유 판단의 기준이고, 실제로 인라인 분류를 `voc` 모듈 아래 묶은 사고의 원인이다 | [cs wiki 첫 화면](../../../final_project_cs/wiki/index.md) |
+| **Team 선언 검증 규칙 넷**이 없었다. 옮기면서 코드로 확인하니 **걸리는 시점이 다르다** — 셋은 기동 때, capability 겹침은 **요청이 올 때** | [team-registry.md](../../../final_project_cs/wiki/teams/team-registry.md) |
+| **SQL 쪽 낙관적 동시성을 지키는 테스트가 없다** — 파이썬 검사가 먼저 걸려서 `AND version = ...` 을 지워도 테스트가 다 통과한다 | [blind-spots.md](../../../final_project_cs/wiki/quality/blind-spots.md) |
+
+### 거짓 신호의 새 원인 — 도메인 교체
+
+`[실측]` `handoff/04` 가 `return.accept`·`return_exchange.py` 를 적어 뒀는데 wiki 에
+없다고 떴다. **옮겨야 할 것이 아니라 없어진 이름이다** — 지금은 `return_refund.py` 이고
+capability 는 `return.check_eligibility`·`return.request`·`refund.calculate` 다.
+2026-08-17 도메인 교체 전 문서를 대조하면 이런 신호가 계속 나온다.
+
+`handoff/06` §5 의 "MCP 에 `mcp:read` 외 어떤 scope 도 부여하지 않는다" 도 같다 —
+v7·v8 이 **쓰기 3단계**로 바꾼 것을 wiki 가 이미 담고 있다. 옛 규칙이 더 엄한 경우라
+"없다" 가 아니라 "바뀌었다" 로 읽어야 한다.
+
+### 분류가 틀린 것도 있었다
+
+일일·주말·밤샘 작업 로그(`_일일작업_*` 등)가 `대조필요` 로 잡혀 있는데, 빠진 것으로
+뜬 신호가 **토큰 수와 서술문**이다. 이건 옮길 지식이 아니라 그날의 기록이라
+`제외` 가 맞다. 다음에 판정표를 손볼 때 함께 고친다.
 
 ## 관계
 
