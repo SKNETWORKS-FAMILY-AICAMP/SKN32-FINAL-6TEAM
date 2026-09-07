@@ -87,7 +87,7 @@ owners: [human:미배정]
 | ~~1~~ | **3B 모델 VRAM 상한** — **해결** | 12GB 확정(세션 1 실측) → [../business/gpu-limits.md](../business/gpu-limits.md). **처리량(tok/s)은 아직** | 반나절 |
 | **2** | **검토·승인 1건 소요시간** | **72% 절감이 여기 달려 있다.** 도구 설치 완료 → [../business/measure-review-time.md](../business/measure-review-time.md) | **30분** |
 | ~~2~~ | **오류 1건당 손실** — **일부 측정** | 분쟁 8건 실측. 중앙값 5만 · 최대 152.6만 → [../business/error-cost.md](../business/error-cost.md) | 완료 |
-| 3 | Baseline A·B 재측정 | **"단순 LLM보다 낫다"를 못 말한다** | **D-010 대기** |
+| ~~3~~ | ~~Baseline A·B 재측정~~ **측정은 끝났다 (2026-09-06)** | `[실측 2026-09-07]` 2026-09-06 judge v3 재기준선이 A·B·Proposed 를 216건씩 같은 실행으로 돌려 놨다. 비용·지연·judge 점수 전부 있다 → [../evaluation/index.md](../evaluation/index.md). ★**그런데 결과가 기대와 반대다** — B 가 pass 46.8% 로 Proposed(11.6%)를 이긴다. 그래서 "단순 LLM보다 낫다"는 **여전히 못 말한다.** 막는 것이 측정 부재에서 **방어 지표 비교 부재**로 바뀌었다 | 완료 |
 | 4 | **DoD-28 재측정** | **0% 가 모델 성능이 아니었다** → [../evaluation/dod28-rerun.md](../evaluation/dod28-rerun.md) | D-010 대기 |
 
 → [../business/index.md](../business/index.md)
