@@ -87,7 +87,7 @@ DB 수준에서 `case_events`의 `UNIQUE(case_id, aggregate_version)`가 이를 
 
 ### ★ [2026-09-06] 진 쪽이 무엇으로 지는지는 타이밍에 달렸다
 
-`[실측]` [회귀테스트 검증 로그](../../docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md) §4. Controller 통합 테스트 `test_same_expected_version_has_one_success_and_one_state_conflict`에 이 성질을 깨는 결함을 심고 **단독으로 5회** 돌렸다.
+`[실측]` [회귀테스트 검증 로그](../records/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md) §4. Controller 통합 테스트 `test_same_expected_version_has_one_success_and_one_state_conflict`에 이 성질을 깨는 결함을 심고 **단독으로 5회** 돌렸다.
 
 ```
 결함 적용 + 단독 5회: passed · passed · passed · passed · FAILED
@@ -97,7 +97,7 @@ DB 수준에서 `case_events`의 `UNIQUE(case_id, aggregate_version)`가 이를 
 
 **"정확히 한 번만 충돌한다"는 지켜진다. 다만 그 충돌이 어떤 예외로 보이는지는 읽는 시점에 따라 다르다.** 재시도 로직이 `StateConflict`만 잡으면 이 경우를 놓친다.
 
-`[미확보]` 근본 원인은 `docs/reports/debugs/2026-08-31_버전대조_가드_중복.md` §5에 있다. **고쳐졌는지는 이 wiki에서 확인하지 않았다.**
+`[미확보]` 근본 원인은 `wiki/records/reports/debugs/2026-08-31_버전대조_가드_중복.md` §5에 있다. **고쳐졌는지는 이 wiki에서 확인하지 않았다.**
 
 ## 실행 유일성
 
@@ -112,7 +112,7 @@ tests/integration/controller/test_active_run_uniqueness.py
 
 ### ★ [2026-09-05] 이 제약이 왜 필요했는가 — `SELECT FOR UPDATE`만으로는 안 됐다
 
-`[실측]` [DoD-03](../../docs/evidence/DoD-03_동시성_appendonly_replay.md). **애초 구현은 앱 레벨 `SELECT ... FOR UPDATE`로 활성 run 존재를 확인하는 방식이었다.**
+`[실측]` [DoD-03](../records/evidence/DoD-03_동시성_appendonly_replay.md). **애초 구현은 앱 레벨 `SELECT ... FOR UPDATE`로 활성 run 존재를 확인하는 방식이었다.**
 
 **이 락은 이미 존재하는 행만 잠근다.** 같은 Case에 활성 run이 **0개**인 상태에서 두 요청이 동시에 `start_run()`을 호출하면, 잠글 행 자체가 없으니 **둘 다 insert에 성공할 수 있었다** — 전형적인 확인-후-삽입(TOCTOU) 레이스다.
 

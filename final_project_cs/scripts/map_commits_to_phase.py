@@ -1,6 +1,6 @@
 """커밋을 실행계획서의 Phase(P0~P10)에 자동으로 대응시킨다.
 
-★이 스크립트가 채우는 구멍: `docs/release_checklist.md` §5-3 의
+★이 스크립트가 채우는 구멍: `wiki/records/release_checklist.md` §5-3 의
   "커밋 ↔ Phase 자동 매핑 없음 (사람이 읽어 대조)". DoD-17 이 요구하는
   "각 커밋이 어느 Phase 의 일인지"를 사람이 커밋 메시지를 읽어 판단하던 것을,
   **커밋이 실제로 건드린 경로**로 판정한다. 메시지는 사람이 쓴 주장이고
@@ -8,8 +8,8 @@
 
 근거 문서 둘:
 
-    docs/handoff/05_분업_규칙.md         스트림별 소유 디렉터리 (경로 → 스트림)
-    docs/plans/2026-08-12_1507_...md    P0~P10 절 제목 (스트림 → Phase)
+    wiki/records/handoff/05_분업_규칙.md         스트림별 소유 디렉터리 (경로 → 스트림)
+    wiki/records/plans/2026-08-12_1507_...md    P0~P10 절 제목 (스트림 → Phase)
 
 ★**소유 표를 파싱하지 않고 여기에 적는다.** 05 번 문서의 S-TEAM 행은
   `order_shipping.py`·`return_exchange.py` 를 가리키는데 두 파일은 이 저장소에
@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 #: 경로 접두어 → (스트림, Phase). **더 긴 접두어가 이긴다** — `app/modules/`
 #: 전체는 S-TEAM(P4)이지만 그 안의 `feedback.py` 하나는 S-VOC(P7)다.
-#: 출처: `docs/handoff/05_분업_규칙.md` 소유 표 + 실행계획서 §P0~P10 절 제목.
+#: 출처: `wiki/records/handoff/05_분업_규칙.md` 소유 표 + 실행계획서 §P0~P10 절 제목.
 PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     # 가장 구체적인 것부터 적을 필요는 없다 — 아래에서 길이순으로 정렬한다.
     ("app/core/", "Claude-Core", "P1"),
@@ -57,7 +57,7 @@ PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     ("eval/", "S-EVAL", "P9"),
     ("prompts/judge/", "S-EVAL", "P9"),
     ("scripts/", "Claude-Core", "P10"),
-    ("docs/", "Claude-Core", "P10"),
+    ("wiki/records/", "Claude-Core", "P10"),
     ("config/", "Claude-Core", "P10"),
     ("prompts/", "Claude-Core", "P10"),
     # ★조립 지점과 루트 문서. 05 번 문서 소유 표에 `app/composition.py` 가 없다 —

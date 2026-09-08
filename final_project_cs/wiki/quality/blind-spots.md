@@ -119,7 +119,7 @@ SQL 쪽뿐이다.** 파이썬 검사는 자기가 읽은 값과만 비교하므�
 `[미확보]` 결함을 심어 실제로 통과하는지는 확인하지 않았다 — 코드 세션 몫이다.
 위 판정은 **호출 순서를 읽어서** 낸 것이다.
 
-**고치는 법은 설계 문서에 이미 있다.** `docs/plans/2026-08-31_1154_테스트_사각지대_회귀테스트_설계.md`
+**고치는 법은 설계 문서에 이미 있다.** `wiki/records/plans/2026-08-31_1154_테스트_사각지대_회귀테스트_설계.md`
 §6-1 이 이 사각지대를 지목하고 **구조적 단언**(UPDATE 문에 version 조건이 있는지를
 문자열로 본다)을 처방했다. 동시성 테스트는 타이밍에 따라 갈리기 때문이다
 (그 문서 실측 — 단독 5회 중 1회 실패). **처방은 아직 구현되지 않았다.**
@@ -269,7 +269,7 @@ __pycache__/return_exchange.cpython-312.pyc    ← 없음
 
 ## ★ [2026-09-06] pytest가 한 번도 import하지 않던 모듈 — 같은 결함이 두 번 났다
 
-`[실측]` [EVAL-RUNNER-IMPORT-FIX](../../docs/evidence/EVAL-RUNNER-IMPORT-FIX.md). 2026-08-17에 `eval/runners/common.py`가 이미 삭제된 `billing.py`·`technical.py`를 import하고 있었다. **`grep -rln "eval.runners" tests/` 결과 0건** — 이 모듈을 import하는 테스트가 없어서 `pytest -m "not live"`로는 절대 안 잡혔고, `--provider openai` 라이브 경로를 사람이 CLI로 돌릴 때만 터졌다.
+`[실측]` [EVAL-RUNNER-IMPORT-FIX](../records/evidence/EVAL-RUNNER-IMPORT-FIX.md). 2026-08-17에 `eval/runners/common.py`가 이미 삭제된 `billing.py`·`technical.py`를 import하고 있었다. **`grep -rln "eval.runners" tests/` 결과 0건** — 이 모듈을 import하는 테스트가 없어서 `pytest -m "not live"`로는 절대 안 잡혔고, `--provider openai` 라이브 경로를 사람이 CLI로 돌릴 때만 터졌다.
 
 원문이 "import만 하는 smoke test 하나면 다음엔 pytest로 잡는다"고 제안하고 **범위 밖이라 만들지 않았다.** 그리고 **이틀 뒤 같은 파일에서 같은 종류가 다시 났다** — 2026-08-19 레거시 격리가 `order_shipping`·`return_exchange`를 옮겼는데 `common.py:253-254`의 import는 안 따라와서, 2026-08-20 DoD-28 golden 실측 72건이 전부 import 단계에서 막혔다([../../../wiki/evaluation/dod28-rerun.md](../../../wiki/evaluation/dod28-rerun.md)).
 

@@ -104,7 +104,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 # 계약 원문에서 보강 (2026-09-03)
 
-`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
+`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
 
 ## 구성 단위 구분
 
@@ -117,7 +117,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 | Port | 구현을 교체하는 지점 | 구현체 선택 |
 | 인스턴스 | 같은 계약을 만족하며 여러 개 둘 수 있는 항목 | 개수 추가·제거 |
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:7-18`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:7-18`
 
 ## 필수 컴포넌트
 
@@ -135,7 +135,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 | Controller | `app/application/controller.py` | 필수 컴포넌트를 연결하는 실행 루프 |
 | 설정·가드레일 | `app/core/settings.py`, `config/guardrails.yaml` | 수치의 단일 출처 |
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:22-35`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:22-35`
 
 ## 토글 가능한 모듈
 
@@ -152,7 +152,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 모듈을 끄면 그것을 호출하는 경로도 함께 제거한다. 호출 경로가 남으면 조용히 넘어가지 않고 명시적으로 실패한다.
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:38-55`, `docs/handoff/08_모듈_컴포넌트_목록.md:112-128`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:38-55`, `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-128`
 
 ## `voc` 경계
 
@@ -172,7 +172,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 | 호출 시점·실패 처리·상태 전이 | `app/application/classification.py` | 코어 1 |
 | 라벨 어휘·프롬프트·provider 호출 | `app/modules/customer_ops/feedback.py` | 모델 |
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:112-152`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-152`
 
 ## 모듈 게이트 강제점
 
@@ -186,13 +186,13 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 선언된 모듈에 실제 검사 지점이 있는지는 `tests/contract/test_module_toggles.py`가 검사한다.
 
-`[실측]` [MODULE-TOGGLES 검증 로그](../../docs/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)가 선언을 **실제로 바꿔 가며** 확인했다 — `python -m scripts.verify_module_toggles`. `graph_store: false`면 관리자 화면 Ports 표의 `GraphStorePort` 줄이 **`모듈 꺼짐 (graph_store)`**로 뜬다. 빈칸으로 두지 않는다 — **빈칸은 "껐다"와 "고장났다"를 구별해 주지 못한다.** `mcp: false`면 tool 호출이 `ProjectConfigError`다.
+`[실측]` [MODULE-TOGGLES 검증 로그](../records/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)가 선언을 **실제로 바꿔 가며** 확인했다 — `python -m scripts.verify_module_toggles`. `graph_store: false`면 관리자 화면 Ports 표의 `GraphStorePort` 줄이 **`모듈 꺼짐 (graph_store)`**로 뜬다. 빈칸으로 두지 않는다 — **빈칸은 "껐다"와 "고장났다"를 구별해 주지 못한다.** `mcp: false`면 tool 호출이 `ProjectConfigError`다.
 
 **같은 로그의 `voc: false` → 기동 거부는 그때는 "통과"였고 이틀 뒤 결함으로 재판정됐다.** → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
 
 `[실측]` 그 작업 전(2026-08-30)엔 **여섯 모듈 중 셋만 실제로 코드를 갈랐다** — `mcp`·`voc`는 `require_module` 호출처가 0건, `graph_store`는 게이트가 있어도 관리자 화면이 `SqlGraphAdapter`를 직접 만들어 우회했다. 위 표는 그걸 고친 뒤의 상태다. 설계 판단의 경위는 [../../../wiki/governance/drift-case-voc.md](../../../wiki/governance/drift-case-voc.md).
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:57-68`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:57-68`
 
 ## 교체 가능한 Port
 
@@ -207,7 +207,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 | LLM | `app/infrastructure/llm/openai.py` | `OpenAITeamLLM` | provider 교체 |
 | 분류기 | `build_classifier()` | `feedback.classify` | 주입으로 교체 |
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:156-165`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:156-165`
 
 ## 가변 인스턴스 계약
 
@@ -219,7 +219,7 @@ Team-플러그인 아키텍처가 실제로 동작한다는 증거(Core 격리 �
 
 Agent Team만 개수가 2개에서 3개·4개 등으로 변할 수 있다. Team은 `manifest`와 `execute()`를 만족해야 하며 Core는 `_capability()`의 Registry 조회로 Team을 찾는다.
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:169-177`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:169-177`
 
 ## 구성 선언 필드
 
@@ -250,9 +250,9 @@ teams:
 
 `app/composition.py`는 `load_project_config()`와 `importlib`로 `teams[].implementation_ref`를 동적으로 읽는다.
 
-`[실측]` **이 파일이 생긴 이유가 있다.** 2026-08-12 [DoD-04](../../docs/evidence/DoD-04_checkpoint_projection_분리.md) 첫 측정에서 `agent_runs`가 비어 있었다 — `create_app()`이 Controller·Registry·Executor를 조립하지 않아 REST 요청이 Controller를 타지 않았다. 조립 지점을 한 곳에 모으려고 만든 게 `composition.py`이고, 그 조립기가 뒤에 인자 개수만 보고 배선하는 결함을 한 번 더 냈다. → [../quality/blind-spots.md](../quality/blind-spots.md)
+`[실측]` **이 파일이 생긴 이유가 있다.** 2026-08-12 [DoD-04](../records/evidence/DoD-04_checkpoint_projection_분리.md) 첫 측정에서 `agent_runs`가 비어 있었다 — `create_app()`이 Controller·Registry·Executor를 조립하지 않아 REST 요청이 Controller를 타지 않았다. 조립 지점을 한 곳에 모으려고 만든 게 `composition.py`이고, 그 조립기가 뒤에 인자 개수만 보고 배선하는 결함을 한 번 더 냈다. → [../quality/blind-spots.md](../quality/blind-spots.md)
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:181-210`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:181-210`
 
 ## 구성 검증 실패 조건
 
@@ -268,11 +268,11 @@ teams:
 | 미구현 port 선택 — `redis_streams`·`age`·`neo4j` | **조립 실패** (`tests/e2e/test_project_composition.py`) |
 | `team_executor: a2a`인데 `a2a_executor` 모듈이 꺼져 있음 | **선택 불가** — 순서가 강제된다 |
 
-`[실측]` 아래 두 줄은 [DoD-20](../../docs/evidence/DoD-20_Port교체_Controller불변.md)이 확인한 것이다. `local → a2a` 교체는 `project.yaml` 선언으로 되고 Controller 코드 변경은 0이다 — 다만 **"불변"은 코드가 안 바뀐다는 뜻이지 성능·타임아웃 특성이 같다는 뜻이 아니고**, 교체 후 실제 원격 실행까지 돌린 건 아니다(선언이 바뀌고 조립이 통과하는 것까지). 그 다음 단계는 [../external/a2a-protocol.md](../external/a2a-protocol.md)의 Controller 종단 미확보 항목이다.
+`[실측]` 아래 두 줄은 [DoD-20](../records/evidence/DoD-20_Port교체_Controller불변.md)이 확인한 것이다. `local → a2a` 교체는 `project.yaml` 선언으로 되고 Controller 코드 변경은 0이다 — 다만 **"불변"은 코드가 안 바뀐다는 뜻이지 성능·타임아웃 특성이 같다는 뜻이 아니고**, 교체 후 실제 원격 실행까지 돌린 건 아니다(선언이 바뀌고 조립이 통과하는 것까지). 그 다음 단계는 [../external/a2a-protocol.md](../external/a2a-protocol.md)의 Controller 종단 미확보 항목이다.
 
 미구현 Team은 `active: false`로 둔다. Registry에는 이름이 남지만 라우팅 대상에서는 제외된다.
 
-근거: `docs/handoff/08_모듈_컴포넌트_목록.md:213-221`
+근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:213-221`
 
 ## 만드는 순서
 

@@ -9,7 +9,7 @@ owners: [human:미배정]
 
 # unknown 상태 대응 절차
 
-`[실측]` `docs/manuals/운영_unknown상태_대응절차.md`에서 이관.
+`[실측]` `wiki/records/manuals/운영_unknown상태_대응절차.md`에서 이관.
 
 **사고가 났을 때 따라가는 문서다.** 처음 읽는 문서가 아니다.
 

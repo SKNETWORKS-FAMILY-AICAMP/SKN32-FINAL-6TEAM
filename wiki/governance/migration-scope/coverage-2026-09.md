@@ -12,7 +12,7 @@ tags: [governance, documentation]
 
 ## 6차 — DoD evidence 28건
 
-`[실측]` 2026-09-04. `_gap_audit.md` 류 수기 대조 대신 `audit_coverage.py`로 `final_project_cs/docs/evidence/DoD-02`~`29`·`DoD-EVAL-DATASETS` **28건 전체**를 기계로 훑고, 반영률이 낮은 것부터 직접 대조했다.
+`[실측]` 2026-09-04. `_gap_audit.md` 류 수기 대조 대신 `audit_coverage.py`로 `final_project_cs/wiki/records/evidence/DoD-02`~`29`·`DoD-EVAL-DATASETS` **28건 전체**를 기계로 훑고, 반영률이 낮은 것부터 직접 대조했다.
 
 | 대조함 | 찾은 것 |
 |---|---|
@@ -68,7 +68,7 @@ tags: [governance, documentation]
 
 ## 7차 — evidence 검증 로그 5건 (2026-09-06)
 
-`[실측]` DoD 28건에 이어 같은 폴더의 검증 로그 5건. 이걸로 `final_project_cs/docs/evidence/` 35건 전부를 직접 대조했다. 남은 `유지` 문서는 59 → 54건이고, `audit_coverage.py`로 스캔한 순위는 이 세션 로그에 있다(데이터셋 REPORT 7건·VISION 7건·handoff 04/10이 다음 후보. 일일 작업 로그·폐기된 방식의 원인 분석 기록은 "그 시점 기록"이라 이관 대상이 아닐 가능성이 커 뒤로).
+`[실측]` DoD 28건에 이어 같은 폴더의 검증 로그 5건. 이걸로 `final_project_cs/wiki/records/evidence/` 35건 전부를 직접 대조했다. 남은 `유지` 문서는 59 → 54건이고, `audit_coverage.py`로 스캔한 순위는 이 세션 로그에 있다(데이터셋 REPORT 7건·VISION 7건·handoff 04/10이 다음 후보. 일일 작업 로그·폐기된 방식의 원인 분석 기록은 "그 시점 기록"이라 이관 대상이 아닐 가능성이 커 뒤로).
 
 | 대조함 | 찾은 것 |
 |---|---|

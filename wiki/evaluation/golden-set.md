@@ -190,7 +190,7 @@ sources:
 
 ## 인수 검사 — 기계가 보는 아홉 가지
 
-`[실측]` [EVAL-DATASETS 검증](../../final_project_cs/docs/evidence/DoD-EVAL-DATASETS_검증.md). 2026-08-17 쇼핑몰 도메인으로 다시 쓴 golden/holdout을 `scripts/verify_eval_datasets.py`가 받았다. 그때 기준 golden 60 · holdout 20이다(DoD-29 추가분 전).
+`[실측]` [EVAL-DATASETS 검증](../../final_project_cs/wiki/records/evidence/DoD-EVAL-DATASETS_검증.md). 2026-08-17 쇼핑몰 도메인으로 다시 쓴 golden/holdout을 `scripts/verify_eval_datasets.py`가 받았다. 그때 기준 golden 60 · holdout 20이다(DoD-29 추가분 전).
 
 | # | 검사 | 실패 조건 |
 |---|---|---|

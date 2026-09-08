@@ -75,7 +75,7 @@ DB 직접 조회로 확인한 값이다. **문서에 적힌 수가 아니라 DB�
 
 ## ★ 코퍼스에 법령이 들어간다 — 지어내면 틀린 답을 가르친다
 
-`[실측]` `docs/plans/2026-08-17_코퍼스_25문서_배분안.md`
+`[실측]` `wiki/records/plans/2026-08-17_코퍼스_25문서_배분안.md`
 
 > **지어낸 숫자를 쓰면 코퍼스 자체가 틀린 답을 가르친다.**
 
@@ -147,7 +147,7 @@ omissions 에 무엇이 빠졌는지 기록
 
 **둘 — 코퍼스를 코덱스가 재작성했더니 조사 오손 3,401건이 났다.** 재발주 대신 직접 작성으로 전환했다.
 
-**셋 — 검색이 한 번도 동작하지 않았던 기간이 있었는데 테스트는 초록이었다.** [DoD-06](../../docs/evidence/DoD-06_정책FAQ_25건_300청크.md). 적재 직후 `search_policy()`는 **100% 실패**하고 있었다 — 질의 벡터가 tuple → `(...)`, list → `double precision[]`로 렌더링돼 `operator does not exist: vector <=> double precision[]`로 죽었다(`%s::vector` 캐스트로 해결).
+**셋 — 검색이 한 번도 동작하지 않았던 기간이 있었는데 테스트는 초록이었다.** [DoD-06](../records/evidence/DoD-06_정책FAQ_25건_300청크.md). 적재 직후 `search_policy()`는 **100% 실패**하고 있었다 — 질의 벡터가 tuple → `(...)`, list → `double precision[]`로 렌더링돼 `operator does not exist: vector <=> double precision[]`로 죽었다(`%s::vector` 캐스트로 해결).
 
 그동안 RAG 테스트는 데이터 부재를 `skip`으로 넘겨 **`74 passed, 4 skipped`**로 초록이었다. 검색이 전혀 안 되는데 테스트 결과만 보면 정상이었다.
 

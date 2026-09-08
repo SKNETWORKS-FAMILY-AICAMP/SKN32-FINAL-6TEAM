@@ -57,14 +57,15 @@ owners: [human:미배정]
 없다.** "두 사본을 계속 같게 유지한다" 는 지킬 수 없는 약속이었고, 실제로
 2026-09-06 이전에 이미 갈라져 있었다(cs 4개 / sample 8개).
 
-근거: `final_project_cs/docs/reports/2026-09-06_Composer를_패키지로_들어냈다.md`,
-계약 `final_project_cs/docs/handoff/13`·`14`.
+근거: `final_project_cs/wiki/records/reports/2026-09-06_Composer를_패키지로_들어냈다.md`,
+계약 `final_project_cs/wiki/records/handoff/13`·`14`.
 | **쿠팡 배송이력 5건 중 4건만 수집** | **★ [2026-09-04] 확인됨 — 정상 동작.** `preprocess_stats.json`을 열어 보니 8건 중 취소 3건(배송 자체 없음) 제외 5건 중 1건이 송장번호 미기재. 데이터 결손 아님 → [`../../datasets/wiki/scraper-notes.md`](../../datasets/wiki/scraper-notes.md) |
 
 ## 문서 쪽 열린 항목
 
 | 항목 | 어디 |
 |---|---|
+| **[담당 세션 인계] `program/research/index.md`의 `final_project_cs/docs/…` 경로가 옛 경로로 남았다** — 2026-09-08 docs 통합 때 그 파일을 다른 세션이 수정 중이라 건너뛰었다. `final_project_cs/docs/` → `final_project_cs/wiki/records/`, `final_project_sample/docs/` → `final_project_sample/wiki/records/` 치환 | [../governance/work-loop.md](../governance/work-loop.md) 2026-09-08 절 |
 | **judge 루브릭이 "답이 없을 때"를 안 정한다** `[실측 2026-09-07]` `judge_v3.txt` 의 `correctness` 는 "답변 내용이 사실로 맞는가" 만 적고 **`answer` 가 `null` 일 때의 규칙이 없다.** 그 자리를 채점자가 메우고 있고, 실제로 **답이 없는 승인 대기 건에 `correctness` 4점을 준다.** 그 결과 **Proposed 통과 25건 중 23건(92%)이 답을 안 낸 건**이고, 실제로 답한 156행만 보면 Proposed 1.3% · B 46.8% 다. D-010 의 전제("본문이 없으니 낮게 준다")와 정반대이며, **D-010 을 정하기 전에 이 구멍을 먼저 막아야 한다** | [../evaluation/index.md](../evaluation/index.md) · [../decisions/D-010-deferral-scoring.md](../decisions/D-010-deferral-scoring.md) |
 | **`degraded` 가 세 가지를 한 칸에 뭉친다 — 코드 세션 몫** `[실측 2026-09-07]` `context_degraded or failure_code or warnings` 로 계산해서, **Mock Team 의 정례 경고까지 degraded 로 찍힌다.** golden 216행 중 degraded 102행(47%)의 **58.8%(60행)가 Mock 경고만**이다. 기권 지표에서 과잉 기권으로 잡힌 12건이 전부 여기 걸려 있었다. 합쳐 놔서 되돌릴 수가 없다 — 세 칸으로 나눠 싣고 합치는 것은 읽는 쪽에서 한다 | [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) |
 | **`rescore.py` 가 judge 의 `total` 을 검증 안 한다 — 코드 세션 몫** `[실측 2026-09-07]` 러너(`eval/runners/common.py:547`)는 다섯 축의 합과 `total` 이 다르면 `ValueError` 를 던지는데 `eval/rescore.py:100` 은 **키가 있는지만 본다.** 그래서 채점자의 산수 오류가 그대로 들어간다 — Proposed 11/216 · golden_proposed 6/72 · holdout 1/72 (A·B 는 0). ★오늘 결론은 안 바뀐다(평균 −0.09, pass 25 그대로). **다만 `score` 가 그 값에서 오므로 `score` 로 집계하는 모든 것이 노출돼 있다.** 같은 규칙이 두 자리에 갈라져 있는 게 원인이다 | [../../final_project_cs/wiki/quality/blind-spots.md](../../final_project_cs/wiki/quality/blind-spots.md) |

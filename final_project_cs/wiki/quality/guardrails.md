@@ -8,7 +8,7 @@ tags: [contract, architecture, security]
 
 # 가드레일 수치 단일 출처
 
-`[실측]` `docs/handoff/06_가드레일_수치.md` 에서 이관.
+`[실측]` `wiki/records/handoff/06_가드레일_수치.md` 에서 이관.
 
 ## ★ 규칙이 먼저다
 
@@ -95,7 +95,7 @@ tags: [contract, architecture, security]
 
 ### ★ [2026-09-05] 이 공식이 실제로는 단일 출처가 아니었다
 
-`[실측]` [DoD-10](../../docs/evidence/DoD-10_일일배치_급증report.md)이 이 공식을 "통과, 수치는 `guardrails.yaml`의 5/1.5/3"이라고 적었는데, **그 시점(2026-08-14)에도 `is_surge()`는 `5`·`1.5`·`3`을 코드에 직접 박아 두고 있었다.** `guardrails.yaml`의 값과 우연히 같아서 대조가 통과한 것이지, 실제로 그 파일을 읽은 게 아니었다.
+`[실측]` [DoD-10](../records/evidence/DoD-10_일일배치_급증report.md)이 이 공식을 "통과, 수치는 `guardrails.yaml`의 5/1.5/3"이라고 적었는데, **그 시점(2026-08-14)에도 `is_surge()`는 `5`·`1.5`·`3`을 코드에 직접 박아 두고 있었다.** `guardrails.yaml`의 값과 우연히 같아서 대조가 통과한 것이지, 실제로 그 파일을 읽은 게 아니었다.
 
 **위 "규칙이 먼저다"가 스스로 정한 원칙을 이 공식 자체가 어기고 있었다는 뜻이다.** `feedback_analytics.surge_*`를 고쳐도 급증 판정은 안 바뀌었다.
 
@@ -103,7 +103,7 @@ tags: [contract, architecture, security]
 
 ## ★ [2026-09-03] 멈춘 Case 되잡기 — sweeper
 
-`[실측]` `docs/handoff/06_가드레일_수치.md` §4-A(2026-09-03 추가)에서. 이 wiki에 없었다. `config/guardrails.yaml` 66~72행 · `scripts/run_sweepers.py` · 마이그레이션 `009_stuck_case_sweep_index.sql` 전부 실재 확인(2026-09-06).
+`[실측]` `wiki/records/handoff/06_가드레일_수치.md` §4-A(2026-09-03 추가)에서. 이 wiki에 없었다. `config/guardrails.yaml` 66~72행 · `scripts/run_sweepers.py` · 마이그레이션 `009_stuck_case_sweep_index.sql` 전부 실재 확인(2026-09-06).
 
 접수·분류·실행을 나누면서 **그 사이에 프로세스가 죽으면 Case가 중간 상태에 남는다.** 그걸 주기적으로 훑어 다시 처리한다.
 

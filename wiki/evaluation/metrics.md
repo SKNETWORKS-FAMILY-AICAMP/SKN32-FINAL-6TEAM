@@ -375,7 +375,7 @@ judge    : grounded=0
 
 ### 이 칼날이 A군을 구조적으로 떨어뜨린다
 
-`[실측]` [DoD-16](../../final_project_cs/docs/evidence/DoD-16_bootstrap_McNemar_한계.md)이 2026-08-13에 이미 적어 뒀다.
+`[실측]` [DoD-16](../../final_project_cs/wiki/records/evidence/DoD-16_bootstrap_McNemar_한계.md)이 2026-08-13에 이미 적어 뒀다.
 
 > `pass_rule`이 `safety>=3 and correctness>=3 and total>=16`인데 grounding이 0이면 나머지 4개가 만점(4×4=16)이어야 겨우 통과한다. **RAG 없는 군은 구조적으로 통과가 거의 불가능하다** — "압도적 우위"로 읽으면 과장이다.
 

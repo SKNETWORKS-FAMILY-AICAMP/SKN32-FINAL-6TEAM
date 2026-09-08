@@ -37,7 +37,7 @@ composition.py:44   require_module("voc", "inline classifier")
 
 ### 사슬의 마지막 고리는 의식적인 설계였고, 그 자리에서 껄끄럽다고 적혀 있었다
 
-`[실측]` 2026-09-06 대조. `composition.py:44`의 `require_module("voc", …)`는 실수로 들어간 게 아니다. `final_project_cs/docs/plans/2026-08-30_2100_모듈토글_실효화_설계.md`가 **"설계 판단 — `voc`를 끄면 앱이 기동하지 않는다"**라는 절을 두고 이렇게 시작한다.
+`[실측]` 2026-09-06 대조. `composition.py:44`의 `require_module("voc", …)`는 실수로 들어간 게 아니다. `final_project_cs/wiki/records/plans/2026-08-30_2100_모듈토글_실효화_설계.md`가 **"설계 판단 — `voc`를 끄면 앱이 기동하지 않는다"**라는 절을 두고 이렇게 시작한다.
 
 > 이게 이번 변경의 유일하게 **껄끄러운** 결과라 먼저 적어 둔다.
 

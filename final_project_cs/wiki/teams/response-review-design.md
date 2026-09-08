@@ -105,7 +105,7 @@ owners: [human:미배정]
 ## 불변식
 
 `[실측]` **DoD-29가 2026-09-01 평가 완료됐다**
-(`final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md`).
+(`final_project_cs/wiki/records/evidence/DoD-29_ResponseGenerationReview.md`).
 
 검증한 것 셋.
 

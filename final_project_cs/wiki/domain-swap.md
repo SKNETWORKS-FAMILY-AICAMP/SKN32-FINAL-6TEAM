@@ -8,7 +8,7 @@ tags: [architecture, contract]
 
 # 도메인을 갈아 끼울 때
 
-`[실측]` 원본은 `final_project_cs/docs/handoff/10_도메인_교체_가이드.md`.
+`[실측]` 원본은 `final_project_cs/wiki/records/handoff/10_도메인_교체_가이드.md`.
 
 **이 문서가 cs 쪽에 없었다.** sample 에는 [domain-swap.md](../../final_project_sample/wiki/quality/domain-swap.md) 가 있는데 cs 에는 대응이 없었다.
 
@@ -69,7 +69,7 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
 
 ### 같은 목록이 Composer 에도 있다
 
-`[실측]` `docs/handoff/09_Composer_GUI_계약.md` §2-4 — **끌 수 없는 컴포넌트 9종.**
+`[실측]` `wiki/records/handoff/09_Composer_GUI_계약.md` §2-4 — **끌 수 없는 컴포넌트 9종.**
 
 | 컴포넌트 | 왜 선택지가 아닌가 |
 |---|---|

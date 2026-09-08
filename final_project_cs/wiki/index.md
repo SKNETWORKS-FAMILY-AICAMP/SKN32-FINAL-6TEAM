@@ -119,7 +119,7 @@ REST, MCP, A2A, Trust Boundary.
 
 ### ★ [2026-09-03] 계약은 이식하고 파일은 복사하지 않는다
 
-`[실측]` `docs/handoff/11_basement_version_reference.md` 에서 이관. **전량 미이관이었다.**
+`[실측]` `wiki/records/handoff/11_basement_version_reference.md` 에서 이관. **전량 미이관이었다.**
 
 > **CS 는 sample 의 basement 참조를 기록만 하고, basement 파일을 복사·적용하지 않는다.**
 
@@ -132,7 +132,7 @@ source_branch      project-final_project_sample
 applied_at         2026-08-18T13:13:26Z
 ```
 
-기록은 `docs/manuals/basement_version.json` 에 있다.
+기록은 `wiki/records/manuals/basement_version.json` 에 있다.
 
 #### 이 참조는 낡았다
 

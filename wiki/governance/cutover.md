@@ -155,6 +155,10 @@ wiki/architecture/core-design.md
 
 **전환 전 경로를 읽는 법.** 2026-09-07 이전 기록(커밋 메시지·리포트·이 wiki의 옛 절)에 적힌 `program/wiki/…`·`program/<저장소>/wiki/…`는 지금의 `wiki/…`·`<저장소>/wiki/…`다. 본문의 경로 문자열은 치환했지만 "당시 program/ 아래에 뒀다"는 서술까지 바꾸지는 않았다.
 
+## ★ [2026-09-08] 그다음 — `docs/` 도 합쳤다
+
+위 §4 "둘 다 남는 게 맞다"는 하루 만에 뒤집혔다. 사용자 판단 — 나눌 이유가 없고 이중 작업만 생긴다. `docs/` 전체를 `wiki/records/` 로 옮겼고 규칙은 [work-loop.md](work-loop.md) 2026-09-08 절에 있다. cs 437 · sample 362 문서. 코드 의존은 경로 상수 다섯 줄뿐이었다(`verify_dod.py` ×2 · `check_release_gate.py` · `map_commits_to_phase.py` · `test_debug_report_status.py`).
+
 ## 관계
 
 - [structure-guide.md](structure-guide.md) — 배치 규칙

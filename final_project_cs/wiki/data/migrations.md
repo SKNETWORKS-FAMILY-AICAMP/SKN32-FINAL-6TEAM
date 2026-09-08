@@ -154,7 +154,7 @@ knowledge_chunks.embedding vector(1536)   -- text-embedding-3-small
 | 회귀 테스트 |
 | handoff 문서 갱신 |
 
-`[실측]` `app/core/contracts.py`는 `docs/handoff/01_계약_Pydantic.md`의 **구현체다. 둘이 어긋나면 결함이다.**
+`[실측]` `app/core/contracts.py`는 `wiki/records/handoff/01_계약_Pydantic.md`의 **구현체다. 둘이 어긋나면 결함이다.**
 
 ## 관계
 

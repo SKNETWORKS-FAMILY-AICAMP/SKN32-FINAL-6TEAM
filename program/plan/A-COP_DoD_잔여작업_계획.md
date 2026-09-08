@@ -117,7 +117,7 @@ DoD 15에서 `eval/contracts/evaluation_report.schema.json`을 만들고 case �
 
 **무엇이 빠졌는가.** `final_project_cs/app/infrastructure/db/migrations/001_schema.sql`, `002_domain_commerce.sql`과 contract test는 있다. 그러나 CI에서 migration upgrade/downgrade, Contract Freeze 기록, 핵심 contract·기능 테스트를 한 번에 막는 gate가 없고 Alembic lifecycle도 확인되지 않았다.
 
-**어디를 손대는가.** migration 관례는 `final_project_cs/app/infrastructure/db/migrations/`를 따른다. 현재 도구가 Alembic이 아니면 억지로 전환하지 않고, `final_project_cs/scripts/verify_migrations.py`를 새로 둬 빈 DB upgrade·downgrade와 schema 재적용을 검증한다. CI 설정은 `final_project_cs/.github/workflows/dod-gates.yml`에 둔다. Contract Freeze 원본은 `final_project_cs/docs/evidence/DoD-17_contract_freeze.json`에 둔다. JSON에는 대상 계약 파일과 SHA-256, schema revision, 검증 명령, git revision을 기록하고 CI artifact로도 업로드한다. Core 1 담당자가 1W 수요일까지 경로와 형식을 만들고 프로젝트 리드가 Contract Freeze Day인 1W 금요일에 확인한다.
+**어디를 손대는가.** migration 관례는 `final_project_cs/app/infrastructure/db/migrations/`를 따른다. 현재 도구가 Alembic이 아니면 억지로 전환하지 않고, `final_project_cs/scripts/verify_migrations.py`를 새로 둬 빈 DB upgrade·downgrade와 schema 재적용을 검증한다. CI 설정은 `final_project_cs/.github/workflows/dod-gates.yml`에 둔다. Contract Freeze 원본은 `final_project_cs/wiki/records/evidence/DoD-17_contract_freeze.json`에 둔다. JSON에는 대상 계약 파일과 SHA-256, schema revision, 검증 명령, git revision을 기록하고 CI artifact로도 업로드한다. Core 1 담당자가 1W 수요일까지 경로와 형식을 만들고 프로젝트 리드가 Contract Freeze Day인 1W 금요일에 확인한다.
 
 **선행 조건.** 없음. 10개 중 가장 먼저 처리한다.
 

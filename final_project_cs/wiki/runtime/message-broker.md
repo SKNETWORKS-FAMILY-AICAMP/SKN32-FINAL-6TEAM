@@ -106,7 +106,7 @@ app/infrastructure/messaging/
 
 ## ★ [2026-09-03] 새 consumer 를 추가할 때 지킬 것
 
-`[실측]` `docs/handoff/12_메시지_컨슈머_멱등성_계약.md` 에서 이관.
+`[실측]` `wiki/records/handoff/12_메시지_컨슈머_멱등성_계약.md` 에서 이관.
 
 > **구현을 완료하기 전에** `tests/contract/test_consumer_idempotency_contract.py` 의 계약 테스트를 **통과시켜야 한다.**
 

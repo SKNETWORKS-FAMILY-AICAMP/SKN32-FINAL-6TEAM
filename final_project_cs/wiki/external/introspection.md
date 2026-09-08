@@ -8,7 +8,7 @@ tags: [api, contract, security]
 
 # `GET /introspection` 계약 v1
 
-`[실측]` `docs/handoff/13_introspection_계약.md` 에서 이관.
+`[실측]` `wiki/records/handoff/13_introspection_계약.md` 에서 이관.
 
 **`ops:introspect` scope 로 보호되는 read-only JSON API 다.** `contract_version` 은 `1.0`.
 

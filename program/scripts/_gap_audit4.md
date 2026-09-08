@@ -230,7 +230,7 @@
 | 고객사 평가셋 작성 | 반영 | `D-009`, `evaluation/protocol.md`, `evaluation/golden-set.md` — 후보 생성까지만 자동화, 독립 라벨, 제3자 조정, holdout 봉인 |
 | 4. 위험과 관리 방법 | 일부 | 위험 4종은 `D-009`에 있으나 staging·변환 이력·접근 로그·노출 시 holdout 폐기 등 구체 통제표가 축약됐다 |
 | 5. 의존 관계와 순서 | 반영 | `D-009`의 Team→예제→CRUD, 문서→승인→RAG, Case→라벨→holdout 순서 |
-| 6. 비전 TODO 문서 형태 제안 | 누락 | `final_project_sample/docs/vision/`을 정본으로 유지하고 VISION-10 갱신·항목 B 2문서 분리·상태값을 제한하자는 구조 제안이 없다 |
+| 6. 비전 TODO 문서 형태 제안 | 누락 | `final_project_sample/wiki/records/vision/`을 정본으로 유지하고 VISION-10 갱신·항목 B 2문서 분리·상태값을 제한하자는 구조 제안이 없다 |
 | 7. 확인하지 못한 것 | 일부 | `D-009`에 CRUD·고객 문서·배포·holdout 미확인은 있으나 카탈로그/6개 Team 불일치와 VOC 4종·924MB 정정이 없다 |
 
 **빠진 것 요약:** 항목 B의 분리 결정은 반영됐지만 항목 A의 구체 사용자 흐름과 비전 TODO 정본·문서 구조 제안이 빠졌다.

@@ -118,7 +118,7 @@ transition_case()  →  case_events 추가  →  customer_cases projection 갱�
 
 ### ★ [2026-09-06] 분리가 실제로 어떻게 지켜지는가
 
-`[실측]` [DoD-04](../../docs/evidence/DoD-04_checkpoint_projection_분리.md).
+`[실측]` [DoD-04](../records/evidence/DoD-04_checkpoint_projection_분리.md).
 
 | 요구 | 실측 |
 |---|---|

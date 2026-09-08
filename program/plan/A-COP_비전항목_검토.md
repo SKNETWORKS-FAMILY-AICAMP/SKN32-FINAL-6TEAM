@@ -91,7 +91,7 @@ Team Contract와 Registry
 
 ## 6. 비전 TODO 문서 형태 제안
 
-현재 작업 트리에는 이미 `final_project_sample/docs/vision/TODO_VISION.md`와 개별 `VISION-01`부터 `VISION-10` 문서가 있다. 따라서 `program/plan/`에 두 번째 비전 TODO를 만들면 정본이 둘이 된다. `program/plan/`은 구체적 설계와 이번 검토 문서를 유지해야 한다. 비전 정본은 기존 `final_project_sample/docs/vision/`을 계속 쓰는 편이 충돌이 적다.
+현재 작업 트리에는 이미 `final_project_sample/wiki/records/vision/TODO_VISION.md`와 개별 `VISION-01`부터 `VISION-10` 문서가 있다. 따라서 `program/plan/`에 두 번째 비전 TODO를 만들면 정본이 둘이 된다. `program/plan/`은 구체적 설계와 이번 검토 문서를 유지해야 한다. 비전 정본은 기존 `final_project_sample/wiki/records/vision/`을 계속 쓰는 편이 충돌이 적다.
 
 기존 `TODO_VISION.md`는 한 줄짜리 인덱스로 유지한다. 각 항목은 상태, MVP 포함 여부, 제품 사용자, 도입 트리거, 선행조건, 검증 기준, 폐기 조건, 관련 설계 문서를 가져야 한다. 구현계획서 §12와 맞추려면 상태를 `MVP`, `Phase 2`, `Phase 2 이후`, `보류`, `폐기`로 제한하는 편이 좋다.
 

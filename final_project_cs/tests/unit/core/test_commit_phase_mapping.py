@@ -23,7 +23,7 @@ from scripts.map_commits_to_phase import IGNORED_PREFIXES, PATH_OWNERS, phase_fo
         ("app/presentation/api/cases.py", "P6"),
         ("app/presentation/ui/theme.py", "P8"),
         ("eval/runners/proposed.py", "P9"),
-        ("docs/release_checklist.md", "P10"),
+        ("wiki/records/release_checklist.md", "P10"),
         ("app/composition.py", "P10"),
     ],
 )

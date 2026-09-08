@@ -35,7 +35,7 @@ golden  216행   policy_grounding = 4     (214/216, 99%)
 DoD-15 에 당장 걸렸다 — 상수 축의 kappa 는 1.0 아니면 0.0 두 값만 나온다.
 사람이 24건 중 하나라도 4 가 아닌 점수를 주면 즉시 0.0 이 된다.
 
-근거: `final_project_cs/docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md`
+근거: `final_project_cs/wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md`
 
 ## 무엇을 재고 결정했나
 
@@ -92,7 +92,7 @@ golden  grounding   2종( 99%)  →  4종(최빈 60%)
 Proposed 를 이긴다.** 두 채점자 모두에서, 그리고 grounding 을 뺀 **모든 축에서**
 그렇다. 이건 채점자 교체와 무관하게 존재하던 사실이고, 이 결정으로 판정하지
 않는다. 별도 리포트로 남겼다 —
-`final_project_cs/docs/reports/debugs/2026-09-06_B가_Proposed를_이긴다.md`
+`final_project_cs/wiki/records/reports/debugs/2026-09-06_B가_Proposed를_이긴다.md`
 
 ## 되돌리려면
 

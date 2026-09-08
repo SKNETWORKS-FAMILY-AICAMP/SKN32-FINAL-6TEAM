@@ -1,4 +1,4 @@
-## `final_project_cs/docs/handoff/01_계약_Pydantic.md`
+## `final_project_cs/wiki/records/handoff/01_계약_Pydantic.md`
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
@@ -16,7 +16,7 @@
 
 **빠진 것 요약:** Evidence 전체 계약, TeamResult 검증 2행, `default_capability`·`select_capability`, Port 시그니처와 `ContractViolation`이 불완전하다.
 
-## `final_project_cs/docs/handoff/02_DB_스키마.md`
+## `final_project_cs/wiki/records/handoff/02_DB_스키마.md`
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
@@ -33,7 +33,7 @@
 
 **빠진 것 요약:** seed 6행 표와 DB 검증 명령이 통째로 없고, DDL·CAS·outbox·RAG SQL은 요약만 남았다.
 
-## `final_project_cs/docs/handoff/03_REST_MCP_인터페이스.md`
+## `final_project_cs/wiki/records/handoff/03_REST_MCP_인터페이스.md`
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
@@ -53,7 +53,7 @@
 
 **빠진 것 요약:** 경로 이름은 남았지만 REST 요청·응답·오류 계약 대부분이 빠졌고, `/v1` 5개 상한은 wiki에서 정반대로 바뀌었다.
 
-## `final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md`
+## `final_project_cs/wiki/records/handoff/08_모듈_컴포넌트_목록.md`
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|
@@ -128,7 +128,7 @@
 
 **빠진 것 요약:** 작업 루프, 리포트·버그·history·파일명·vision 규칙과 `CLAUDE.md` 우선순위가 대부분 이관되지 않았다.
 
-## `final_project_cs/docs/release_checklist.md`
+## `final_project_cs/wiki/records/release_checklist.md`
 
 | 절 제목 | 판정 | wiki 반영 위치·누락 내용 |
 |---|---|---|

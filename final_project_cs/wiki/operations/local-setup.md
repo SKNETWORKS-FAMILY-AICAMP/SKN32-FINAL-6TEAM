@@ -28,7 +28,7 @@ owners: [human:미배정]
 
 ## ★ PostgreSQL이 안 떠 있을 때 — 기동 절차
 
-`[실측]` `docs/manuals/2026-08-12_1520_환경_기동절차.md`(2026-08-13 실측)에서. 위에 "재부팅 후 안 떠 있을 수 있다"고만 있고 **어떻게 띄우는지가 이 wiki에 없었다.**
+`[실측]` `wiki/records/manuals/2026-08-12_1520_환경_기동절차.md`(2026-08-13 실측)에서. 위에 "재부팅 후 안 떠 있을 수 있다"고만 있고 **어떻게 띄우는지가 이 wiki에 없었다.**
 
 ```powershell
 Get-NetTCPConnection -State Listen -LocalPort 5433          # 떠 있나
@@ -90,7 +90,7 @@ final_workspace/.tmp/     ← 워크스페이스 임시물은 전부 여기
 
 ## ★ [2026-09-03] 원본에만 있던 함정 셋
 
-`[실측]` `docs/manuals/2026-08-12_1520_환경_기동절차.md` 에서 이관.
+`[실측]` `wiki/records/manuals/2026-08-12_1520_환경_기동절차.md` 에서 이관.
 
 ### 1. `.env` 를 BOM 없이 저장한다
 

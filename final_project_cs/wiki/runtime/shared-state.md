@@ -93,7 +93,7 @@ app/core/transition.py       transition_case() — projection UPDATE(version 가
 app/domain/case.py           apply_event — 순수 리듀서. transition_case() 와 replay_case() 가 같은 것을 쓴다
 ```
 
-`[실측]` 두 경로가 **같은 리듀서**를 쓰는 게 단일 원천의 실체다. 각자 계산하면 조용히 어긋난다. → [DoD-03](../../docs/evidence/DoD-03_동시성_appendonly_replay.md)
+`[실측]` 두 경로가 **같은 리듀서**를 쓰는 게 단일 원천의 실체다. 각자 계산하면 조용히 어긋난다. → [DoD-03](../records/evidence/DoD-03_동시성_appendonly_replay.md)
 
 ## 관계
 

@@ -1,6 +1,6 @@
 """Verify the v5 Definition of Done against evidence and the test suite.
 
-This checker is intentionally read-only with respect to ``docs/evidence``.
+This checker is intentionally read-only with respect to ``wiki/records/evidence``.
 It reports the state of every DoD item and returns non-zero until all items
 have an explicit passing judgement and the test suite has no failures.
 """
@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE_DIR = ROOT / "docs" / "evidence"
+EVIDENCE_DIR = ROOT / "wiki" / "records" / "evidence"
 
 ITEMS = (
     ("원본 v4 hash 불변", "DoD-01"),

@@ -154,7 +154,7 @@ escalated 로 전환
 
 ## ★ [2026-09-04] 대조 자체가 세 번 뚫릴 뻔했다
 
-`[실측]` [DoD-24](../../docs/evidence/DoD-24_ActionProposal_근거대조.md)에서 이관. **대조 코드를 만드는 과정에서 대조 코드 자체가 뚫릴 뻔한 경우가 셋 있었다.**
+`[실측]` [DoD-24](../records/evidence/DoD-24_ActionProposal_근거대조.md)에서 이관. **대조 코드를 만드는 과정에서 대조 코드 자체가 뚫릴 뻔한 경우가 셋 있었다.**
 
 ### ① 근거 대조가 순환할 뻔했다
 
@@ -192,7 +192,7 @@ escalated 로 전환
 
 ## ★ [2026-09-06] degraded 면 자동 실행하지 않는다 — 강제 지점을 Team에서 Controller로 옮겼다
 
-`[실측]` [DoD-25](../../docs/evidence/DoD-25_degraded_자동실행_금지.md). `ContextPack.degraded=true`인 상태에서 나온 제안은 실행 경로에 못 들어간다 — `action_requests` 0행, `guardrail_escalated` / `degraded_context_blocks_action`.
+`[실측]` [DoD-25](../records/evidence/DoD-25_degraded_자동실행_금지.md). `ContextPack.degraded=true`인 상태에서 나온 제안은 실행 경로에 못 들어간다 — `action_requests` 0행, `guardrail_escalated` / `degraded_context_blocks_action`.
 
 **전에는 Team이 각자 스스로 검사했다.** `if task.context.degraded: return escalated` 한 줄이 두 Team에 있었을 뿐이다.
 

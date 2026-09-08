@@ -179,7 +179,7 @@
 - `A-COP_Composer_v3_설계_토글전용_UI이관.md` §2.4 는 "등록 목록 자체를
   Composer 요청으로 추가·삭제하는 것" 을 금지한다. **그 금지는 철회됐다** —
   인스턴스 CRUD 가 정본 관리 계약이다(`A-COP_Composer_범위재검토.md`,
-  `final_project_sample/docs/handoff/13`). 다만 **임의 Python 경로를 제출해
+  `final_project_sample/wiki/records/handoff/13`). 다만 **임의 Python 경로를 제출해
   registry 에 등록하는 것** 은 여전히 금지다 — 카탈로그에 등록된 구현만
   고를 수 있다.
 - `A-COP_Composer_소유권_정정.md` 의 3-패키지 구조는 유지된다. 바뀌는 것은

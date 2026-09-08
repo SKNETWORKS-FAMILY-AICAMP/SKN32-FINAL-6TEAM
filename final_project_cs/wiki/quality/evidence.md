@@ -8,7 +8,7 @@ tags: [testing, evaluation]
 
 # DoD 증거 색인
 
-`[실측]` 2026-09-02 기준. 원본 35건은 `final_project_cs/docs/evidence/` 에 있다.
+`[실측]` 2026-09-02 기준. 원본 35건은 `final_project_cs/wiki/records/evidence/` 에 있다.
 
 ## ★ 원본이 정본이다
 
@@ -16,7 +16,7 @@ tags: [testing, evaluation]
 
 복사하면 정본이 둘이 된다. 재측정했을 때 어느 쪽을 고칠지 모르게 되고, 그게 지금 743건을 정리하는 이유다.
 
-`[실측]` **이관 전에는 wiki 의 `quality/` 문서 다섯 개가 `docs/evidence/` 를 한 번도 참조하지 않았다.** DoD 29항목의 증거에 wiki 에서 닿을 길이 없었다.
+`[실측]` **이관 전에는 wiki 의 `quality/` 문서 다섯 개가 `wiki/records/evidence/` 를 한 번도 참조하지 않았다.** DoD 29항목의 증거에 wiki 에서 닿을 길이 없었다.
 
 ## 형식이 균일하다
 
@@ -42,9 +42,9 @@ tags: [testing, evaluation]
 
 | 문서 | 왜 부분인가 |
 |---|---|
-| **[DoD-15](../../docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md)** | **A/B 60×3 실행. 그런데 이 숫자는 지금 무효다** — 아래 |
-| [DoD-17](../../docs/evidence/DoD-17_마일스톤_게이트.md) | 마일스톤 게이트 |
-| [DoD-28](../../docs/evidence/DoD-28_파인튜닝_방어지표.md) | **비교가 성립하지 않았다** — 아래 |
+| **[DoD-15](../records/evidence/DoD-15_AB_Proposed_60x3_holdout.md)** | **A/B 60×3 실행. 그런데 이 숫자는 지금 무효다** — 아래 |
+| [DoD-17](../records/evidence/DoD-17_마일스톤_게이트.md) | 마일스톤 게이트 |
+| [DoD-28](../records/evidence/DoD-28_파인튜닝_방어지표.md) | **비교가 성립하지 않았다** — 아래 |
 
 ## ★ DoD-28 도 다시 재야 한다
 
@@ -159,7 +159,7 @@ tags: [testing, evaluation]
 
 ## 실측 원문 `_raw/`
 
-`[실측]` `docs/evidence/_raw/` 에 24건이 있고 **판정본이 인용하는 것은 11건**이다.
+`[실측]` `wiki/records/evidence/_raw/` 에 24건이 있고 **판정본이 인용하는 것은 11건**이다.
 
 ```
 DoD-04_v3 · 05_v4 · 07_v2 · 08 · 09_v2 · 10_v4

@@ -54,7 +54,7 @@ outbox (
 tests/integration/messaging/test_outbox_tenant_guard.py
 ```
 
-`[실측]` **이 제약, 원래는 `tenant_id`가 없었다.** [DoD-12](../../docs/evidence/DoD-12_outbox_원자성_replay.md). `UNIQUE(topic, dedupe_key)`뿐이었던 시절엔 **다른 tenant가 같은 topic+dedupe_key로 발행하면 서로의 outbox 행에 충돌할 수 있었다** — [CLAUDE.md](../../CLAUDE.md) "모든 query에 tenant_id 조건을 적용한다" 원칙 위반이다. `final_project_sample`과 대조하다가(2026-08-24) 발견해 지금의 세 컬럼 제약으로 옮겼다.
+`[실측]` **이 제약, 원래는 `tenant_id`가 없었다.** [DoD-12](../records/evidence/DoD-12_outbox_원자성_replay.md). `UNIQUE(topic, dedupe_key)`뿐이었던 시절엔 **다른 tenant가 같은 topic+dedupe_key로 발행하면 서로의 outbox 행에 충돌할 수 있었다** — [CLAUDE.md](../../CLAUDE.md) "모든 query에 tenant_id 조건을 적용한다" 원칙 위반이다. `final_project_sample`과 대조하다가(2026-08-24) 발견해 지금의 세 컬럼 제약으로 옮겼다.
 
 **단일 저장소 안 대조가 아니라 다른 구현체(`final_project_sample`)와 비교해서 찾은 결함이다.** 같은 계약을 두 번 구현하면 한쪽만 가진 결함이 드러난다.
 
@@ -66,7 +66,7 @@ tests/integration/messaging/test_outbox_tenant_guard.py
 tests/integration/api/test_outbox_resolution.py
 ```
 
-`[실측]` **`unknown` 행을 사람이 정리하는 화면·API가 있다** ([DoD-11](../../docs/evidence/DoD-11_action_idempotency_승인.md) 2026-08-24 추가).
+`[실측]` **`unknown` 행을 사람이 정리하는 화면·API가 있다** ([DoD-11](../records/evidence/DoD-11_action_idempotency_승인.md) 2026-08-24 추가).
 
 ```
 POST /v1/outbox/{id}/resolve     기록만 한다. 자동 재처리 안 함
@@ -74,11 +74,11 @@ POST /v1/outbox/{id}/resolve     기록만 한다. 자동 재처리 안 함
 worker.py                        stale `processing` 행을 unknown 으로 회수
 ```
 
-**여기서도 자동 재실행은 하지 않는다.** `unknown`을 해소한다는 건 "사람이 봤고 판단했다"는 기록이지, 시스템이 대신 재시도하는 게 아니다. → `docs/manuals/운영_unknown상태_대응절차.md`
+**여기서도 자동 재실행은 하지 않는다.** `unknown`을 해소한다는 건 "사람이 봤고 판단했다"는 기록이지, 시스템이 대신 재시도하는 게 아니다. → `wiki/records/manuals/운영_unknown상태_대응절차.md`
 
 ## ★ 여기서 증명한 것은 outbox 발행까지다 — provider 실행 경로는 없다
 
-`[실측]` [DoD-11](../../docs/evidence/DoD-11_action_idempotency_승인.md)이 스스로 밝힌 경계.
+`[실측]` [DoD-11](../records/evidence/DoD-11_action_idempotency_승인.md)이 스스로 밝힌 경계.
 
 **`app/` 전체에서 `action_requests.status`를 `executing`/`succeeded`/`failed`/`unknown`으로 바꾸는 코드가 한 곳도 없다.** enum에 값만 있다.
 

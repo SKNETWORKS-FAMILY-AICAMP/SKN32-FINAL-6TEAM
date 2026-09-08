@@ -23,7 +23,7 @@
 ### 상위 계획서와의 관계
 
 `../A-COP_구현계획서_v6.md` 는 **구현·평가 기준선**이다. **읽기 전용이며 이 저장소에서 수정하지 않는다.**
-v6 와 실제 구현이 어긋나면 `docs/plans/` 에 사유를 적고, v6 자체는 건드리지 않는다.
+v6 와 실제 구현이 어긋나면 `wiki/records/plans/` 에 사유를 적고, v6 자체는 건드리지 않는다.
 `../A-COP_구현계획서(4).md` 는 원본 보존본이다 — v6 §27 DoD 첫 항목이 hash 불변을 요구한다.
 
 ---
@@ -61,20 +61,24 @@ v6 와 실제 구현이 어긋나면 `docs/plans/` 에 사유를 적고, v6 자�
 
 모든 작업 세션은 아래 루프를 따른다.
 
+★2026-09-08 — `docs/` 를 `wiki/records/` 로 합쳤다(사용자 결정). 기록(evidence·reports)은 `wiki/records/` 아래에 그대로 쓰고, history·plans·vision·handoff 는 **동결된 기록**이다. 현재 지식은 wiki 본문, 근거는 records — 한 트리다. 옛 문서의 `docs/…` 는 `wiki/records/…` 로 읽는다.
+
 ```
 [작업 시작]
- 0. 루트 `RULE.md` 와 `CLAUDE.md`, 작업 대상과 직접 관련된 `docs/handoff/` 계약을 먼저 읽는다
+ 0. 루트 `RULE.md` 와 `CLAUDE.md`, 이 저장소의 `wiki/index.md` 를 먼저 읽는다. 작업 대상의 wiki 페이지를 읽고,
+    `wiki/records/` (기록)는 wiki 가 인용한 근거를 확인할 때만 연다
     (읽지 못했거나 어떤 문서가 적용되는지 확인하지 못하면 파일 변경을 시작하지 않는다)
- 1. docs/plans/ 에서 현재 유효한 실행계획서를 읽는다
- 2. docs/history/ 최신 이력을 읽고 직전 작업 상태를 파악한다
+ 1. 할 일과 현재 상태는 허브 `wiki/delivery/open-items.md` 와 `wiki/decisions/` 에서 읽는다
+ 2. (2026-09-08 삭제) `records/history/`·`records/plans/` 는 동결된 기록이다 — 읽지 않아도 되고, 쓰지 않는다
 [작업 수행]
- 3. 계획서의 해당 단계만 수행한다 (계획에 없는 작업은 계획서 갱신 먼저)
+ 3. 계획서(v9)와 wiki 결정의 해당 단계만 수행한다 (범위 밖이면 open-items 에 올리고 결정 먼저)
  4. 변경 전 코드를 대체/삭제하는 경우 legacy/ 에 보존한다
- 5. 변경 후 실행/테스트로 검증하고, 재현 명령과 출력을 docs/evidence/ 에 남긴다
+ 5. 변경 후 실행/테스트로 검증하고, 재현 명령과 출력을 wiki/records/evidence/ 에 남긴다
 [작업 종료]
- 6. docs/reports/ 에 작업 리포트를 제출한다 (필수, 생략 불가)
- 7. docs/history/ 에 작업 이력을 추가한다
- 8. 계획 진행 상태가 바뀌면 docs/plans/ 문서를 갱신한다
+ 6. wiki/records/reports/ 에 작업 리포트를 제출한다 (필수, 생략 불가). 파일명은 §4.2 의 날짜 접두 그대로
+ 7. wiki 에 **결론 한 줄 + 리포트 링크**를 적는다 — 해당 페이지가 있으면 그 페이지에, 없으면 허브 `wiki/log.md` 에.
+    리포트가 wiki 페이지의 주장을 바꾸면 그 페이지를 고친다. **같은 내용을 두 곳에 쓰지 않는다** — 리포트는 기록, wiki 는 현재 지식
+ 8. (2026-09-08 삭제) history·plans 갱신은 하지 않는다 — 진행 상태는 7 에서 open-items 를 고친다
 ```
 
 - 한 세션에서 **계획서에 정의된 범위를 초과하는 작업을 하지 않는다.** 범위 변경이 필요하면 먼저 계획서를 수정하고 사유를 기록한다.
@@ -106,19 +110,19 @@ v6 와 실제 구현이 어긋나면 `docs/plans/` 에 사유를 적고, v6 자�
 - 같은 기능의 두 구현이 생기면 즉시 하나로 통합하고 나머지는 `legacy/` 로 보낸다.
 
 ### 3.4 리포트 제출 의무
-- **모든 작업 세션은 `docs/reports/` 에 리포트 파일 제출로 종료된다.** 리포트 없는 작업은 완료로 인정하지 않는다.
+- **모든 작업 세션은 `wiki/records/reports/` 에 리포트 파일 제출로 종료된다.** 리포트 없는 작업은 완료로 인정하지 않는다.
 - 리포트에는 최소한 다음을 포함한다:
   1. 작업 목표 (어느 계획서의 어느 단계인지)
   2. 실제 수행 내용 (변경 파일 목록 포함)
-  3. 검증 방법과 결과 (실행/테스트 로그 원문 요약 + `docs/evidence/` 링크)
+  3. 검증 방법과 결과 (실행/테스트 로그 원문 요약 + `wiki/records/evidence/` 링크)
   4. 미해결 이슈·다음 작업 제안
 
 ### 3.5 ★계약을 코드보다 먼저 고친다 (Contract-first)
 
 A-COP 의 핵심은 `TeamTask`/`TeamResult`/`ContextPack` 계약이다.
-**계약을 바꾸는 변경은 `docs/handoff/` 문서를 먼저 고치고 그 다음 코드를 고친다.** 순서를 뒤집지 않는다.
+**계약을 바꾸는 변경은 `wiki/records/handoff/` 문서를 먼저 고치고 그 다음 코드를 고친다.** 순서를 뒤집지 않는다.
 
-- `app/core/contracts.py` 는 `docs/handoff/01_계약_Pydantic.md` 의 구현체다. 둘이 어긋나면 **결함**이다.
+- `app/core/contracts.py` 는 `wiki/records/handoff/01_계약_Pydantic.md` 의 구현체다. 둘이 어긋나면 **결함**이다.
 - 계약 변경 시 `contract_version` 을 올린다. 같은 major 의 optional field 추가만 호환이다(v6 §21).
 - Core 는 Team 내부(graph·prompt·retrieval)를 `import` 하지 않는다. `manifest` 와 `execute()` 만 쓴다.
   이 경계는 `tests/contract/` 가 import 검사로 강제한다.
@@ -134,11 +138,11 @@ Get-Content docs\handoff\_prompts\<스트림>.md | codex exec -s workspace-write
 
 **넘기기 전에 순서대로 한다.**
 
-1. **계약을 먼저 확정한다.** `docs/handoff/` 에 인터페이스가 없는 상태로 Codex 를 돌리지 않는다.
+1. **계약을 먼저 확정한다.** `wiki/records/handoff/` 에 인터페이스가 없는 상태로 Codex 를 돌리지 않는다.
    계약 없이 돌리면 Codex 가 **범위를 임의로 줄인다** — 실제로 상위 계획 작업에서
    MCP·pgvector 를 통째로 삭감한 산출물이 나왔다.
 2. **스트림을 겹치지 않게 쪼갠다.** 두 Codex 세션이 같은 파일을 쓰면 마지막 쪽이 이긴다.
-   스트림별 **소유 디렉터리**를 `docs/handoff/05_분업_규칙.md` 에 못박고 그 밖을 건드리지 않게 한다.
+   스트림별 **소유 디렉터리**를 `wiki/records/handoff/05_분업_규칙.md` 에 못박고 그 밖을 건드리지 않게 한다.
 3. **산출물을 그대로 신뢰하지 않는다.** Claude 가 받는 즉시 검사할 것:
    - 계약 위반 (필드 누락·타입 불일치·`extra='forbid'` 우회)
    - **범위 임의 삭감** (v6 In 항목이 빠졌는지)
@@ -146,7 +150,7 @@ Get-Content docs\handoff\_prompts\<스트림>.md | codex exec -s workspace-write
    - 문서 간 수치 불일치, Mermaid/JSON 문법 오류
 4. **검수 결과를 기록한다.** 무엇을 되돌렸는지 리포트에 남긴다. 조용히 고치면 다음에 또 나온다.
 5. **테스트는 Codex 가 쓴 코드로 Codex 가 통과시키지 않는다.** 계약 테스트는 Claude 가 쓰거나,
-   최소한 **Claude 가 별도로 실행해서 로그를 `docs/evidence/` 에 남긴다.**
+   최소한 **Claude 가 별도로 실행해서 로그를 `wiki/records/evidence/` 에 남긴다.**
 
 ---
 
@@ -157,25 +161,25 @@ Get-Content docs\handoff\_prompts\<스트림>.md | codex exec -s workspace-write
 
 | 폴더 | 용도 | 갱신 시점 |
 |---|---|---|
-| `docs/plans/` | 실행계획서. 단계별 목표·범위·완료 기준 | 새 작업 착수 전 / 범위 변경 시 / 단계 완료 체크 시 |
-| `docs/history/` | 시간순 작업 이력 (무엇을, 왜, 어떤 결과로) | 매 작업 세션 종료 시 추가 (**수정 금지, 추가만**) |
-| `docs/reports/` | 작업 결과 리포트 (검증 로그 포함) | 매 작업 세션 종료 시 (필수) |
-| `docs/reports/debugs/` | **버그·결함 리포트** — 원인·재현·위험도·정정 | 결함을 **발견한 즉시** (고치기 전에도) |
-| ★`docs/handoff/` | **계약** — 지켜야 할 인터페이스·구조. Codex 프롬프트의 입력 | 합의가 바뀔 때. **바꾸면 코드보다 먼저** |
-| ★`docs/evidence/` | **DoD 검증 로그 원문** — 재현 명령 + 실제 출력 | DoD 항목을 통과시켰다고 주장할 때 (필수) |
-| `docs/manuals/` | 환경·DB·LLM 접속 절차 | 절차가 바뀔 때 |
-| `docs/TODO/` | 영역별 잔여 작업 대장 | 스트림 종료 시 |
-| ★`docs/vision/` | **규모 확장 시 도입 검토 항목** — MVP 에서 미룬 것과 그 트리거 | "지금은 안 한다"로 판정한 **그 자리에서** |
-| `docs/submission/` | 제출용 산출물 | 발표 준비 단계 |
+| `wiki/records/plans/` | 실행계획서. 단계별 목표·범위·완료 기준 | 새 작업 착수 전 / 범위 변경 시 / 단계 완료 체크 시 |
+| `wiki/records/history/` | 시간순 작업 이력 (무엇을, 왜, 어떤 결과로) | 매 작업 세션 종료 시 추가 (**수정 금지, 추가만**) |
+| `wiki/records/reports/` | 작업 결과 리포트 (검증 로그 포함) | 매 작업 세션 종료 시 (필수) |
+| `wiki/records/reports/debugs/` | **버그·결함 리포트** — 원인·재현·위험도·정정 | 결함을 **발견한 즉시** (고치기 전에도) |
+| ★`wiki/records/handoff/` | **계약** — 지켜야 할 인터페이스·구조. Codex 프롬프트의 입력 | 합의가 바뀔 때. **바꾸면 코드보다 먼저** |
+| ★`wiki/records/evidence/` | **DoD 검증 로그 원문** — 재현 명령 + 실제 출력 | DoD 항목을 통과시켰다고 주장할 때 (필수) |
+| `wiki/records/manuals/` | 환경·DB·LLM 접속 절차 | 절차가 바뀔 때 |
+| `wiki/records/TODO/` | 영역별 잔여 작업 대장 | 스트림 종료 시 |
+| ★`wiki/records/vision/` | **규모 확장 시 도입 검토 항목** — MVP 에서 미룬 것과 그 트리거 | "지금은 안 한다"로 판정한 **그 자리에서** |
+| `wiki/records/submission/` | 제출용 산출물 | 발표 준비 단계 |
 | `legacy/` | 대체·폐기된 코드의 보존소 | 기존 코드를 대체/삭제하기 **직전** |
 
-> ★`docs/handoff/` 는 *"무슨 일이 있었나"*(reports)도 *"무엇을 할 것인가"*(plans)도 아니다.
+> ★`wiki/records/handoff/` 는 *"무슨 일이 있었나"*(reports)도 *"무엇을 할 것인가"*(plans)도 아니다.
 > **"무엇을 지킬 것인가"** 다. 여기 있는 것을 어기면 다른 스트림의 작업이 깨진다.
 
 ### 4.0 ★DoD 를 통과시켰다고 말하려면 evidence 가 있어야 한다
 
 v6 §27 은 23개 DoD 항목마다(v5 의 1~18 보존 + A2A/Port 19~23) **검증 방법**을 지정한다. 각 항목을 통과했다고 주장할 때는
-`docs/evidence/DoD-<번호>_<항목>.md` 에 다음을 남긴다.
+`wiki/records/evidence/DoD-<번호>_<항목>.md` 에 다음을 남긴다.
 
 1. **재현 명령** — 그대로 붙여 넣어 돌릴 수 있는 것
 2. **실제 출력** — 요약이 아니라 원문 (길면 앞뒤 잘라내되 자른 사실을 적는다)
@@ -199,11 +203,11 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 
 ### 4.1-1 ★고친 뒤에는 되돌아와 닫는다
 
-**여는 규칙만 있고 닫는 규칙이 없어서** 2026-09-03 에 `docs/reports/debugs/`
+**여는 규칙만 있고 닫는 규칙이 없어서** 2026-09-03 에 `wiki/records/reports/debugs/`
 26건 중 상태를 셀 수 있는 것이 하나도 없었다. 각 문서의 `- 상태:` 줄이 작성
 시점("미수정 → 수정 발주함")에 멈춰 있었고, `CLAUDE.md` 상태표가 **해결로
 인용하는 문서 3건**까지 미해결로 보였다
-(`docs/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md`).
+(`wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md`).
 
 - **결함을 고치는 커밋이 그 리포트의 상태도 함께 바꾼다.** 나중에 몰아서 하지
   않는다 — 몰아서 하면 "고쳐진 것 같다" 로 닫게 된다.
@@ -220,30 +224,30 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 ### 4.2 파일명 규칙
 - 모든 문서 파일명 앞에 작성 시각을 붙인다: `YYYY-MM-DD_HHmm_<제목>.md`
   - 예: `2026-08-12_1430_Phase1_Core런타임_리포트.md`
-- ★**예외 — `docs/handoff/` 는 연번**을 쓴다: `NN_<제목>.md` (예: `01_계약_Pydantic.md`)
+- ★**예외 — `wiki/records/handoff/` 는 연번**을 쓴다: `NN_<제목>.md` (예: `01_계약_Pydantic.md`)
   계약 문서는 **시점이 아니라 순서**로 읽는다. 갱신하면 파일을 새로 만들지 않고
   **같은 번호를 고치고** 문서 안에 개정 이력을 남긴다.
-- ★**예외 — `docs/evidence/` 는 DoD 번호**를 쓴다: `DoD-NN_<항목>.md`
-- ★**예외 — `docs/vision/` 은 연번**을 쓴다: `VISION-NN_<제목>.md`
+- ★**예외 — `wiki/records/evidence/` 는 DoD 번호**를 쓴다: `DoD-NN_<항목>.md`
+- ★**예외 — `wiki/records/vision/` 은 연번**을 쓴다: `VISION-NN_<제목>.md`
   비전 문서는 **시점이 아니라 주제**로 읽는다. 갱신하면 파일을 새로 만들지 않고
-  **같은 번호를 고치고** 문서 안에 개정 이력을 남긴다. (`docs/handoff/` 와 같은 이유)
-  단 `docs/vision/TODO_VISION.md` 는 인덱스이므로 번호를 붙이지 않는다.
+  **같은 번호를 고치고** 문서 안에 개정 이력을 남긴다. (`wiki/records/handoff/` 와 같은 이유)
+  단 `wiki/records/vision/TODO_VISION.md` 는 인덱스이므로 번호를 붙이지 않는다.
 - `legacy/` 보존 시 원본 위치를 알 수 있게 한다: `legacy/<원본프로젝트명>/<원본경로>` 구조 유지.
 
 ### 4.3 history 기록 형식
 ```markdown
 ## YYYY-MM-DD HH:mm — <작업 제목>
-- 계획: <docs/plans/ 문서명> 의 <단계>
+- 계획: <wiki/records/plans/ 문서명> 의 <단계>
 - 담당: Claude | Codex(<스트림>)
 - 수행: <핵심 변경 요약>
 - 검증: <성공/실패 + 방법>
-- 리포트: <docs/reports/ 파일명>
+- 리포트: <wiki/records/reports/ 파일명>
 ```
 
-### 4.4 ★"지금은 안 한다"로 끝내지 않는다 — `docs/vision/`
+### 4.4 ★"지금은 안 한다"로 끝내지 않는다 — `wiki/records/vision/`
 
 논의에서 어떤 항목을 **MVP 에서 하지 않기로** 판정했다면, 그 자리에서
-`docs/vision/TODO_VISION.md` 에 등록한다. **등록 없이 폐기하지 않는다.**
+`wiki/records/vision/TODO_VISION.md` 에 등록한다. **등록 없이 폐기하지 않는다.**
 
 이유는 두 가지다.
 
@@ -257,7 +261,7 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 |---|---|
 | **도입 트리거** | **관측 가능한 수치**로. "규모가 커지면"은 트리거가 아니다. "Remote A2A Agent 2개 이상", "multi-hop 질의 비중 15% 초과" 처럼 센다 |
 | 지금 하지 않는 이유 | 측정 가능한 근거로. "복잡해서"는 이유가 아니다 |
-| 예상 비용 | **인·일이 아니라 실소요 일수.** 생성 / 검증·통합 / 대기로 나누고 병목을 한 줄로 쓴다. 산정 기준은 `docs/vision/ESTIMATION_BASELINE.md` |
+| 예상 비용 | **인·일이 아니라 실소요 일수.** 생성 / 검증·통합 / 대기로 나누고 병목을 한 줄로 쓴다. 산정 기준은 `wiki/records/vision/ESTIMATION_BASELINE.md` |
 | 폐기 조건 | 트리거가 영영 오지 않을 조건. 이게 없으면 목록이 계속 늘기만 한다 |
 
 내용이 한 줄 이상으로 커지면 `VISION-NN_<제목>.md` 로 분리하고 `TODO_VISION.md` 에서 링크한다.
@@ -289,12 +293,12 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 - ❌ 계획서 밖의 임의 작업 / v6 의 `Out`·`Phase 2` 항목 구현
 - ❌ 리포트 없이 작업 종료
 - ❌ 사용하지 않는 코드·기능 선제 구현
-- ❌ `docs/history/` 기존 기록 수정 (추가만 허용)
-- ❌ **`docs/handoff/` 계약 없이 Codex 실행** (§3.6)
+- ❌ `wiki/records/history/` 기존 기록 수정 (추가만 허용)
+- ❌ **`wiki/records/handoff/` 계약 없이 Codex 실행** (§3.6)
 - ❌ **두 Codex 스트림이 같은 디렉터리를 소유** (§3.6-2)
 - ❌ **Codex 산출물을 검수 없이 커밋** (§3.6-3)
 - ❌ **상위 계획서 수정** — `A-COP_구현계획서(4).md` · `_v5.md` · `_A2A_Graph반영.md` 는 보존본, `_v6.md` 는 기준선. 전부 이 저장소에서 수정하지 않는다
 - ❌ `transition_case()` 를 거치지 않은 `customer_cases` 직접 UPDATE
 - ❌ `case_events` 의 UPDATE / DELETE
-- ❌ **"지금은 안 한다"로 판정하고 `docs/vision/` 에 등록하지 않기** (§4.4)
+- ❌ **"지금은 안 한다"로 판정하고 `wiki/records/vision/` 에 등록하지 않기** (§4.4)
 - ❌ **트리거 없는 비전 항목 등록** — 관측 가능한 수치가 없으면 위시리스트다 (§4.4)

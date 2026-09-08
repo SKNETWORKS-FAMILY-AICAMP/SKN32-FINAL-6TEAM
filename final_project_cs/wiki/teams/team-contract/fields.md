@@ -8,15 +8,15 @@ tags: [contract, architecture]
 
 # Team 계약 필드 명세
 
-`[실측]` `docs/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](../index.md) 에 있다.**
+`[실측]` `wiki/records/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](../index.md) 에 있다.**
 
-`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../../wiki/governance/migration-scope/coverage.md).
+`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../../wiki/governance/migration-scope/coverage.md).
 
 ## 계약 호환 규칙
 
 `[실측]` Enum 밖의 문자열은 validator가 거부한다. `contract_version`은 `"MAJOR.MINOR"` 형식이며, 같은 major에서 optional field를 추가하는 변경만 호환된다. major 변경본은 adapter 또는 migration 없이 Registry에 등록하지 않는다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:7-13`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:7-13`
 
 ## `Evidence` 필드 계약
 
@@ -34,7 +34,7 @@ tags: [contract, architecture]
 
 `source_type`·`source_id`·`observed_at`은 의무다. 근거 없는 문장을 답변에 넣지 않는다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:43-58`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:43-58`
 
 ## `ContextPack` 필수 여부·기본값
 
@@ -57,7 +57,7 @@ tags: [contract, architecture]
 
 예산 초과로 자료를 제거하면 `omissions`에 제거한 항목의 이름을 남긴다. `degraded=true`는 RAG 장애 등으로 근거가 부족한 상태이며 평가에서 별도로 집계한다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:60-83`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:60-83`
 
 ## `TeamTask` 누락 제약
 
@@ -82,7 +82,7 @@ tags: [contract, architecture]
 
 `resume_node`가 문자열이면 `validate_input`, `execute_approved_action`, `verify_external_result` 중 하나다. `allowed_tools` 밖의 tool 호출은 거부한다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:85-108`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:85-108`
 
 ## `ActionProposal` 필수 여부·idempotency
 
@@ -105,7 +105,7 @@ sha256(tenant_id + request_id + action_type + business_subject)
 
 Controller가 allowlist·scope·승인·idempotency를 검증한다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:110-125`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:110-125`
 
 ## `TeamResult` 누락 필드·기본값
 
@@ -131,7 +131,7 @@ Controller가 allowlist·scope·승인·idempotency를 검증한다.
 | `failure_code` | `str \| None` | 아니오 | 기본값 `None` |
 | `warnings` | `list[str]` | 아니오 | `default_factory=list` |
 
-근거: `docs/handoff/01_계약_Pydantic.md:127-149`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:127-149`
 
 ## `TeamResult` 추가 일관성 규칙
 
@@ -143,7 +143,7 @@ Controller가 allowlist·scope·승인·idempotency를 검증한다.
 | `next_action='escalate'` | `failure_code` 또는 `warnings` 필수 |
 | `answer is not None` | `evidence`가 비어 있으면 거부 |
 
-근거: `docs/handoff/01_계약_Pydantic.md:151-161`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:151-161`
 
 ## `TeamManifest` 필드 계약
 
@@ -165,7 +165,7 @@ Controller가 allowlist·scope·승인·idempotency를 검증한다.
 | `implementation_revision` | `str` | 예 | — |
 | `default_capability` | `str \| None` | 아니오 | 기본값 `None`; 없으면 `capabilities[0]` 사용 |
 
-근거: `docs/handoff/01_계약_Pydantic.md:163-187`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:163-187`
 
 ## 선택적 capability 선택 계약
 
@@ -177,7 +177,7 @@ def select_capability(intent: str | None, input_text: str) -> str | None: ...
 
 Registry는 namespace 매칭보다 먼저 이 값을 묻는다. 반환값이 `None`이거나 메서드가 없으면 기존 규칙을 적용한다. 필수 Protocol 멤버가 아니며 `getattr` 기반 duck-typing으로 감지한다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:189-197`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:189-197`
 
 ## `TeamModule` Protocol
 
@@ -191,7 +191,7 @@ class TeamModule(Protocol):
 
 Core가 사용하는 Team 표면은 `manifest`와 `execute()`뿐이다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:199-208`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:199-208`
 
 ## `MessageBrokerPort`
 
@@ -208,7 +208,7 @@ class MessageBrokerPort(Protocol):
 | `OutboxBrokerAdapter` | MVP 구현체. outbox 테이블과 background worker 사용 |
 | `RedisStreamsAdapter` | Phase 2 대상. 같은 Port를 구현하며 현재 본체는 만들지 않음 |
 
-근거: `docs/handoff/01_계약_Pydantic.md:210-219`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:210-219`
 
 ## 계약 예외
 
@@ -224,7 +224,7 @@ class MessageBrokerPort(Protocol):
 
 예외를 삼키지 않는다.
 
-근거: `docs/handoff/01_계약_Pydantic.md:221-231`
+근거: `wiki/records/handoff/01_계약_Pydantic.md:221-231`
 
 ## 관계
 

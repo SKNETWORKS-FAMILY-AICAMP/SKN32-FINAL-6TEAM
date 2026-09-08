@@ -39,7 +39,7 @@ tags: [api, contract]
 
 `idempotency_key`는 서버가 재계산하며 클라이언트 값은 `request_id` 재료일 뿐이다. 같은 키로 재요청하면 새 Case를 만들지 않고 기존 결과를 그대로 반환한다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:47-67`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:47-67`
 
 ## `GET /v1/cases` 쿼리 계약
 
@@ -54,7 +54,7 @@ tags: [api, contract]
 
 호출자의 tenant·customer 범위 밖 Case를 반환하지 않는다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:68-71`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:68-71`
 
 ## `GET /v1/cases/{case_id}` 응답 계약
 
@@ -71,7 +71,7 @@ tags: [api, contract]
 
 `evidence`는 masked 상태로 반환한다. 원문 PII를 응답에 싣지 않으며, `answer`가 있는데 `evidence`가 비어 있으면 계약 위반이다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:73-84`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:73-84`
 
 ## 추가 메시지 resume 제약
 
@@ -88,7 +88,7 @@ tags: [api, contract]
 
 `[미확보]` 원본은 이 endpoint의 요청 body 필드 이름을 밝히지 않는다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:86-90`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:86-90`
 
 ## 승인 요청·감사 계약
 
@@ -108,7 +108,7 @@ tags: [api, contract]
 
 승인 event와 before/after hash를 audit에 기록한다. audit에는 API key 원문이나 결제 식별자 원문을 기록하지 않는다. 승인 후 실행은 idempotent해야 하며 동일 요청 10회에 side effect는 1회다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:92-99`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:92-99`
 
 ## `POST /v1/outbox/{message_id}/resolve` 계약
 

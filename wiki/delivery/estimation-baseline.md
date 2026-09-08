@@ -8,7 +8,7 @@ tags: [governance, cost]
 
 # 일수를 어떻게 산정하나
 
-`[실측]` 원본은 `final_project_cs/docs/vision/ESTIMATION_BASELINE.md`. **[vision-backlog](../product/vision-backlog.md)의 일수가 여기서 나온다.**
+`[실측]` 원본은 `final_project_cs/wiki/records/vision/ESTIMATION_BASELINE.md`. **[vision-backlog](../product/vision-backlog.md)의 일수가 여기서 나온다.**
 
 ## 왜 인·일을 쓰지 않나
 

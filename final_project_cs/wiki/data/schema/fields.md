@@ -8,9 +8,9 @@ tags: [data, contract]
 
 # 스키마 필드 명세
 
-`[실측]` `docs/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](index.md) 에 있다.**
+`[실측]` `wiki/records/handoff/` 계약 원문에서 절 단위로 옮겼다. **개념 설명은 [index.md](index.md) 에 있다.**
 
-`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../../wiki/governance/migration-scope/coverage.md).
+`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../../wiki/governance/migration-scope/coverage.md).
 
 ## DB 실행 계약
 
@@ -30,7 +30,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-근거: `docs/handoff/02_DB_스키마.md:7-27`
+근거: `wiki/records/handoff/02_DB_스키마.md:7-27`
 
 ## DB Enum
 
@@ -41,7 +41,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `case_status` | `new`, `classifying`, `routing`, `running`, `waiting_input`, `waiting_approval`, `waiting_external`, `resuming`, `resolved`, `escalated`, `failed`, `cancelled` |
 | `action_status` | `proposed`, `pending_approval`, `approved`, `rejected`, `executing`, `succeeded`, `failed`, `unknown`, `cancelled` |
 
-근거: `docs/handoff/02_DB_스키마.md:29-35`
+근거: `wiki/records/handoff/02_DB_스키마.md:29-35`
 
 ## Core 테이블 컬럼 계약
 
@@ -160,7 +160,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 `[미확보]` 원본 DDL은 FK의 `ON DELETE`·`ON UPDATE` 동작을 지정하지 않는다.
 
-근거: `docs/handoff/02_DB_스키마.md:37-155`
+근거: `wiki/records/handoff/02_DB_스키마.md:37-155`
 
 ## 추가 UNIQUE 제약
 
@@ -173,7 +173,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `knowledge_chunks` | `UNIQUE(document_id, chunk_no)` |
 | `feedback_analytics_reports` | `UNIQUE(tenant_id, period_start, period_end)` |
 
-근거: `docs/handoff/02_DB_스키마.md:41-47`, `docs/handoff/02_DB_스키마.md:121-155`
+근거: `wiki/records/handoff/02_DB_스키마.md:41-47`, `wiki/records/handoff/02_DB_스키마.md:121-155`
 
 ## Core 인덱스
 
@@ -185,7 +185,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `cases_tenant_customer_idx` | `customer_cases(tenant_id, customer_id)` |
 | `events_case_version_idx` | `case_events(case_id, aggregate_version)` |
 
-근거: `docs/handoff/02_DB_스키마.md:157-160`
+근거: `wiki/records/handoff/02_DB_스키마.md:157-160`
 
 ## 낙관적 동시성 충돌 처리
 
@@ -201,7 +201,7 @@ RETURNING version;
 
 affected row가 0이면 `StateConflict`다. 최신 Case를 다시 읽고 최대 2회 재계산한다.
 
-근거: `docs/handoff/02_DB_스키마.md:179-189`
+근거: `wiki/records/handoff/02_DB_스키마.md:179-189`
 
 ## Outbox worker claim 계약
 
@@ -217,7 +217,7 @@ LIMIT :batch;
 
 provider timeout을 성공으로 추정하지 않는다. `unknown` 또는 재시도 대상으로 남긴다.
 
-근거: `docs/handoff/02_DB_스키마.md:191-201`
+근거: `wiki/records/handoff/02_DB_스키마.md:191-201`
 
 ## RAG 검색 계약
 
@@ -231,7 +231,7 @@ WHERE kd.tenant_id = :tenant_id AND kd.scope = ANY(:allowed_scopes)
 ORDER BY embedding <=> :query_embedding LIMIT 8;
 ```
 
-근거: `docs/handoff/02_DB_스키마.md:203-211`
+근거: `wiki/records/handoff/02_DB_스키마.md:203-211`
 
 ## Seed 데이터 수량 계약
 
@@ -248,13 +248,13 @@ ORDER BY embedding <=> :query_embedding LIMIT 8;
 
 mock provider 데이터는 실결제와 무관하다. 위 건수는 축소할 수 없으며 적재 후 실제 행 수를 세어 리포트에 기록한다.
 
-근거: `docs/handoff/02_DB_스키마.md:213-228`
+근거: `wiki/records/handoff/02_DB_스키마.md:213-228`
 
 ## 테스트 데이터 정리 계약
 
 `[실측]` 통합 테스트는 `acop` DB를 사용하되 테스트 전용 tenant를 사용하고 fixture teardown에서 자신이 만든 행을 삭제한다. seed 데이터를 오염시켜서는 안 된다.
 
-근거: `docs/handoff/02_DB_스키마.md:230-235`
+근거: `wiki/records/handoff/02_DB_스키마.md:230-235`
 
 ## 관계
 

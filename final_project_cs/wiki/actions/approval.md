@@ -90,7 +90,7 @@ tests/integration/api/test_approval_audit_row_excluded_from_queue.py
 
 ### ★ [2026-09-05] 같은 브라우저 재검증에서 결함이 하나 더 나왔다 — 화면표시용 필드가 재검증에 막혔다
 
-`[실측]` [DoD-18 evidence](../../docs/evidence/DoD-18_UI_시나리오_종단표시.md). 승인 버튼을 실제로 눌렀더니 `HTTP 409 verification_failed` — 사유가 `"evidence: 선언되지 않은 필드다"`였다.
+`[실측]` [DoD-18 evidence](../records/evidence/DoD-18_UI_시나리오_종단표시.md). 승인 버튼을 실제로 눌렀더니 `HTTP 409 verification_failed` — 사유가 `"evidence: 선언되지 않은 필드다"`였다.
 
 seed 스크립트가 화면 표시·버튼 활성화용으로 `arguments_json.evidence`를 채워 뒀는데, [승인 전 재검증](#승인-전-재검증)이 `verification_policy.py::CUSTOMER_OPS_POLICY.ignored`에 없는 최상위 키를 전부 거부하는 방식이라 이 표시용 필드까지 막았다. `ignored`에 `"evidence"`를 등록해 고쳤다.
 

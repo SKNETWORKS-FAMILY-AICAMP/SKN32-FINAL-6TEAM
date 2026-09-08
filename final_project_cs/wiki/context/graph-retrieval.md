@@ -28,7 +28,7 @@ GraphStorePort            app/core/graph_retrieval/port.py     Protocol
 
 ## 세 축
 
-`[실측]` [DoD-21](../../docs/evidence/DoD-21_Graph_관계질의.md)이 요구하는 관계 질의 세 종류와, 그걸 위해 투영한 edge.
+`[실측]` [DoD-21](../records/evidence/DoD-21_Graph_관계질의.md)이 요구하는 관계 질의 세 종류와, 그걸 위해 투영한 edge.
 
 | 축 | edge | 어디서 오나 |
 |---|---|---|

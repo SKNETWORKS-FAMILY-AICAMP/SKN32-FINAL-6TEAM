@@ -58,7 +58,7 @@ safety >= 3  and  correctness >= 3  and  total >= 16
 
 ### ★ 사람 라벨 대신 기계 검사를 해 뒀다 — 이건 agreement가 아니다
 
-`[실측]` [DoD-15](../../final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md). `eval/check_judge.py`가 540행 전체에서 **"실재하지 않는 근거에 점수를 준 행"**을 센다 — 0이 아니면 exit 1로 실패한다. 지금까지 0건이다.
+`[실측]` [DoD-15](../../final_project_cs/wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md). `eval/check_judge.py`가 540행 전체에서 **"실재하지 않는 근거에 점수를 준 행"**을 센다 — 0이 아니면 exit 1로 실패한다. 지금까지 0건이다.
 
 **이 검사가 생긴 이유가 있다.** 이 프로젝트가 이미 한 번 이 유형으로 무너진 적이 있다 — judge가 A군의 지어낸 `doc_06 §1` 인용에 점수를 준 사고. → [protocol.md](protocol.md)
 

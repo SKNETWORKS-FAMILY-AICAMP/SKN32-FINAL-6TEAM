@@ -9,20 +9,20 @@ program/research	program/research\학습게임_방법론_조사.md
 program/research	program/research\_정합성점검_2026-08-19.md
 program/research	program/research\_분쟁조정사례_2026-08-20.md
 program/research	program/research\_3차_인용검증_설계.md
-cs/docs/plans	final_project_cs/docs/plans\2026-08-30_DoD28-FT-RAG통합_설계.md
-cs/docs/plans	final_project_cs/docs/plans\2026-08-12_1507_A-COP_실행계획서_v1.md
-cs/docs/evidence	final_project_cs/docs/evidence\DoD-16_bootstrap_McNemar_한계.md
-cs/docs/evidence	final_project_cs/docs/evidence\DoD-25_degraded_자동실행_금지.md
-cs/docs/evidence	final_project_cs/docs/evidence\MODULE-TOGGLES_실효화_검증.md
-cs/docs/handoff	final_project_cs/docs/handoff\11_basement_version_reference.md
-cs/docs/handoff	final_project_cs/docs/handoff\07_모듈화_구조.md
-cs/docs/handoff	final_project_cs/docs/handoff\README.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-14_S-ADMINUI_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-24_S-PII-NAME-GAP-MEASURE_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-13_S-REMEASURE_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-13_1300_비전_비용_재산정_리포트.md
-cs/docs/vision	final_project_cs/docs/vision\TODO_VISION.md
-cs/docs/vision	final_project_cs/docs/vision\ESTIMATION_BASELINE.md
+cs/docs/plans	final_project_cs/wiki/records/plans\2026-08-30_DoD28-FT-RAG통합_설계.md
+cs/docs/plans	final_project_cs/wiki/records/plans\2026-08-12_1507_A-COP_실행계획서_v1.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\DoD-16_bootstrap_McNemar_한계.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\DoD-25_degraded_자동실행_금지.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\MODULE-TOGGLES_실효화_검증.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\11_basement_version_reference.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\07_모듈화_구조.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\README.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-14_S-ADMINUI_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-24_S-PII-NAME-GAP-MEASURE_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-13_S-REMEASURE_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-13_1300_비전_비용_재산정_리포트.md
+cs/docs/vision	final_project_cs/wiki/records/vision\TODO_VISION.md
+cs/docs/vision	final_project_cs/wiki/records/vision\ESTIMATION_BASELINE.md
 datasets REPORT	datasets\mt\olist_reviews_mt_bench\REPORT.md
 datasets REPORT	datasets\voc\ecmc_dispute_casebook_2024\REPORT.md
 datasets REPORT	datasets\voc\data_go_kr_consumer_complaints\REPORT.md

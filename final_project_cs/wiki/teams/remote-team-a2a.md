@@ -67,7 +67,7 @@ Case → waiting_external
 
 **A2A Task 생명주기와 Case 상태를 매핑한다.**
 
-`[미확보]` **위 `Case → waiting_external`은 설계다.** Controller가 실제로 Case를 `waiting_external`에 두고 원격 완료로 resume하는 종단은 아직 관측된 적이 없다 — [DoD-26](../../docs/evidence/DoD-26_A2A_Catalog_왕복.md)이 확인한 왕복은 Executor·Transport 층까지다. → [../external/a2a-protocol.md](../external/a2a-protocol.md)
+`[미확보]` **위 `Case → waiting_external`은 설계다.** Controller가 실제로 Case를 `waiting_external`에 두고 원격 완료로 resume하는 종단은 아직 관측된 적이 없다 — [DoD-26](../records/evidence/DoD-26_A2A_Catalog_왕복.md)이 확인한 왕복은 Executor·Transport 층까지다. → [../external/a2a-protocol.md](../external/a2a-protocol.md)
 
 구조만 보면 우리 Case가 A2A Task에 대응한다. `waiting_approval`·`waiting_input` 같은 장기 상태를 갖기 때문이다.
 

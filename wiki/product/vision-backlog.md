@@ -9,7 +9,7 @@ tags: [architecture, governance]
 
 # 지금은 안 하는 것들
 
-`[실측]` 원본은 `final_project_cs/docs/vision/TODO_VISION.md`. 최종 갱신 2026-08-16.
+`[실측]` 원본은 `final_project_cs/wiki/records/vision/TODO_VISION.md`. 최종 갱신 2026-08-16.
 
 ## 왜 등록하나
 
@@ -148,7 +148,7 @@ tags: [architecture, governance]
 
 ## sample 쪽에도 VISION-10~12가 따로 있다
 
-`[실측]` `program/research/_일일작업_2026-08-27.md`. 이 페이지는 cs의 `docs/vision/` 01~09를 다루는데, **`final_project_sample/docs/vision/`에 10~12가 별도로 쌓여 있다**(2026-08-27 밤 3분짜리 커밋 `f250d07` 하나로 둘이 늘었다).
+`[실측]` `program/research/_일일작업_2026-08-27.md`. 이 페이지는 cs의 `docs/vision/` 01~09를 다루는데, **`final_project_sample/wiki/records/vision/`에 10~12가 별도로 쌓여 있다**(2026-08-27 밤 3분짜리 커밋 `f250d07` 하나로 둘이 늘었다).
 
 | 번호 | 무엇을 미뤘나 |
 |---|---|

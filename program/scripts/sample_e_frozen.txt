@@ -1,12 +1,12 @@
 # 표본 E — evidence 60건 중 10건. seed 20260905, 줄수 층화
 # 모집단이 바뀌어도 이 목록이 정본이다 (seed 만으로는 재현 안 된다)
-1	27	final_project_cs/docs/evidence/_raw/DoD-10_v4.md
-2	32	final_project_cs/docs/evidence/_raw/DoD-05_v2.md
-3	48	final_project_cs/docs/evidence/DoD-13_REST5_MCP3_계약일치.md
-4	31	final_project_cs/docs/evidence/_raw/DoD-15.md
-5	89	final_project_cs/docs/evidence/DoD-27_A2A_실패_취소_인증.md
-6	68	final_project_cs/docs/evidence/DoD-25_degraded_자동실행_금지.md
-7	76	final_project_cs/docs/evidence/DoD-16_bootstrap_McNemar_한계.md
-8	60	final_project_cs/docs/evidence/DoD-23_consumer_idempotency.md
-9	132	final_project_cs/docs/evidence/DoD-11_action_idempotency_승인.md
-10	342	final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md
+1	27	final_project_cs/wiki/records/evidence/_raw/DoD-10_v4.md
+2	32	final_project_cs/wiki/records/evidence/_raw/DoD-05_v2.md
+3	48	final_project_cs/wiki/records/evidence/DoD-13_REST5_MCP3_계약일치.md
+4	31	final_project_cs/wiki/records/evidence/_raw/DoD-15.md
+5	89	final_project_cs/wiki/records/evidence/DoD-27_A2A_실패_취소_인증.md
+6	68	final_project_cs/wiki/records/evidence/DoD-25_degraded_자동실행_금지.md
+7	76	final_project_cs/wiki/records/evidence/DoD-16_bootstrap_McNemar_한계.md
+8	60	final_project_cs/wiki/records/evidence/DoD-23_consumer_idempotency.md
+9	132	final_project_cs/wiki/records/evidence/DoD-11_action_idempotency_승인.md
+10	342	final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md

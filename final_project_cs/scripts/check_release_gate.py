@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FROZEN_FILES = (
     ROOT / "app" / "core" / "contracts.py",
-    ROOT / "docs" / "handoff" / "01_계약_Pydantic.md",
+    ROOT / "wiki" / "records" / "handoff" / "01_계약_Pydantic.md",
 )
 
 

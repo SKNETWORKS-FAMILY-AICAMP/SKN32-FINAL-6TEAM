@@ -44,7 +44,7 @@ tenant 이름이 겹친다
 
 ### 원인이 확정된 흔들림은 따로 있다 — 시각 필드
 
-`[실측]` [DoD-19](../../docs/evidence/DoD-19_LOCAL_A2A_정규화.md). `test_local_executor_is_identical_to_direct_team_call`이 두 실행 결과를 `model_dump()` 통째로 비교하는데, `observed_at=datetime.now(UTC)`가 두 호출에서 다르게 찍혀 **클럭 틱에 걸렸다.** 전체 실행 중 1회, 단독 실행은 통과 — 위 동시 실행 건과 겉모습이 같다.
+`[실측]` [DoD-19](../records/evidence/DoD-19_LOCAL_A2A_정규화.md). `test_local_executor_is_identical_to_direct_team_call`이 두 실행 결과를 `model_dump()` 통째로 비교하는데, `observed_at=datetime.now(UTC)`가 두 호출에서 다르게 찍혀 **클럭 틱에 걸렸다.** 전체 실행 중 1회, 단독 실행은 통과 — 위 동시 실행 건과 겉모습이 같다.
 
 fixture 시각을 고정해 해소했다. **위 29건과 다른 점은 원인이 잡혔다는 것이다.**
 
@@ -54,7 +54,7 @@ fixture 시각을 고정해 해소했다. **위 29건과 다른 점은 원인이
 
 ### 흔들림이 게이트 자체를 무디게 만든 경우
 
-`[실측]` [회귀테스트 검증 로그](../../docs/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md). 2026-08-31 배치는 결함 18건을 심어 **18건 전부 잡았다**(424 → 470 테스트). 그런데 그중 `INV-STATE-001`(동시 갱신 정확히 1건 충돌)은 **결함을 심은 채 단독 5회 돌리면 4회 통과**한다 — 잡은 테스트가 원래 비결정적이라서다. 원인은 [conflict-retry.md](../runtime/conflict-retry.md)에 있다(진 쪽이 읽는 시점에 따라 `StateConflict` 대신 `InvalidTransition`).
+`[실측]` [회귀테스트 검증 로그](../records/evidence/2026-08-31_테스트_사각지대_회귀테스트_검증.md). 2026-08-31 배치는 결함 18건을 심어 **18건 전부 잡았다**(424 → 470 테스트). 그런데 그중 `INV-STATE-001`(동시 갱신 정확히 1건 충돌)은 **결함을 심은 채 단독 5회 돌리면 4회 통과**한다 — 잡은 테스트가 원래 비결정적이라서다. 원인은 [conflict-retry.md](../runtime/conflict-retry.md)에 있다(진 쪽이 읽는 시점에 따라 `StateConflict` 대신 `InvalidTransition`).
 
 `[실측]` `program/research/테스트_사각지대_2026-08-30.md`(대체된 초판)가 그때는 원인을 몰라 "테스트 격리 문제일 가능성"으로 남겼던 자리다 — 위 conflict-retry 설명이 그 답이다. 같은 문서가 **흔들린 테스트를 하나 더** 적어 뒀다: `test_approval_rerun_does_not_create_action_request_again`이 결함을 고친 뒤 전체 실행에서 한 번 실패하고 재실행 2회는 통과. 이쪽은 원인 기록이 없다 `[미확보]`. 확인 수단은 도장의 안정성 검사다 — 결함마다 지정 테스트를 반복해 같은 실패 집합이 나오는지 본다.
 
@@ -70,7 +70,7 @@ python dojo.py stability --repeats 5
 
 ## ★ [2026-09-03] 테스트가 제품을 잘못 끌고 간 사례
 
-`[실측]` `docs/handoff/09_Composer_GUI_계약.md` 에서 이관.
+`[실측]` `wiki/records/handoff/09_Composer_GUI_계약.md` 에서 이관.
 
 **테스트가 없어서 못 잡는 것만 사각지대가 아니다. 있는 테스트가 틀린 것을 검사하면 더 나쁘다.**
 

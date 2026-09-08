@@ -85,7 +85,7 @@ abl_no_*.jsonl   ← ablation 5종 전부
 
 그래서 "A-COP이 단순 LLM보다 낫다"를 수치로 말할 수 없다. **ablation 5종도 같이 무효다.**
 
-재측정 명령은 `docs/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5.
+재측정 명령은 `wiki/records/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5.
 
 ## 재현성
 

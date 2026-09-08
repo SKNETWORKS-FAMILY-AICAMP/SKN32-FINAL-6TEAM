@@ -64,7 +64,7 @@ def open_support_case(customer_id: str, message: str, channel: str = "mcp") -> d
 
 ### ★ 이 확장에는 순서가 있었다 — 방어가 먼저다
 
-`[실측]` `docs/plans/2026-08-16_v7_격차해소_실행계획.md`. v7 §9-E의 제목이 **"쓰기 권한을 여는 전제 조건"**이다. 그래서 실행계획은 MCP 쓰기 확장(P7)을 **근거 대조(P1 = DoD-24)와 degraded 차단(P2 = DoD-25)이 끝난 뒤에만** 하기로 못 박았다 — 순서를 바꾸면 계획서의 전제를 거스른다.
+`[실측]` `wiki/records/plans/2026-08-16_v7_격차해소_실행계획.md`. v7 §9-E의 제목이 **"쓰기 권한을 여는 전제 조건"**이다. 그래서 실행계획은 MCP 쓰기 확장(P7)을 **근거 대조(P1 = DoD-24)와 degraded 차단(P2 = DoD-25)이 끝난 뒤에만** 하기로 못 박았다 — 순서를 바꾸면 계획서의 전제를 거스른다.
 
 또 하나 — **막는 코드를 먼저 만들고, 그것이 실제로 막는지 재는 수단(P4 = 방어 지표 5종)을 그다음에** 만들었다. 지표를 먼저 만들면 잴 대상이 없다.
 
@@ -158,7 +158,7 @@ idem = idempotency_key(
 
 # 계약 원문에서 보강 (2026-09-03)
 
-`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
+`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
 
 ## 비동기 도구 시그니처
 
@@ -170,7 +170,7 @@ async def get_case_detail(customer_id: str, case_id: str) -> dict: ...
 async def open_support_case(customer_id: str, message: str, channel: str = 'mcp') -> dict: ...
 ```
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:123-136`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:123-136`
 
 ## MCP ownership·응답 제약
 
@@ -183,11 +183,11 @@ async def open_support_case(customer_id: str, message: str, channel: str = 'mcp'
 | evidence | 내부 evidence 원문과 PII 노출 금지 |
 | `open_support_case` | Case 생성과 분류 시작까지만 수행 |
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:138-148`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:138-148`
 
 ## ★ [2026-09-06] `open_support_case`가 분류를 시도조차 안 했다 — 고쳐졌다
 
-`[실측]` 커밋 `7d45434`(코드 담당 세션). 계약은 두 곳(`CLAUDE.md` §0.2 · `docs/handoff/03`)에서 똑같이 "Case 생성과 **분류 시작**까지"라 했는데, 코드는 분류를 부르지 않고 `classification_unavailable`을 적었다. 실측 결과 **MCP로 연 Case는 전부** `status=escalated · intent=None · issue_code=None`, 이벤트 `['created', 'classification_failed']`였다. 라벨이 없으니 라우팅도 못 받는다 — **개인 AI로 들어온 문의는 전부 사람에게 갔다.**
+`[실측]` 커밋 `7d45434`(코드 담당 세션). 계약은 두 곳(`CLAUDE.md` §0.2 · `wiki/records/handoff/03`)에서 똑같이 "Case 생성과 **분류 시작**까지"라 했는데, 코드는 분류를 부르지 않고 `classification_unavailable`을 적었다. 실측 결과 **MCP로 연 Case는 전부** `status=escalated · intent=None · issue_code=None`, 이벤트 `['created', 'classification_failed']`였다. 라벨이 없으니 라우팅도 못 받는다 — **개인 AI로 들어온 문의는 전부 사람에게 갔다.**
 
 왜 그랬나 — 처음엔 이 경로(모듈 수준 함수)에서 분류기를 구할 방법이 없어 정직하게 "못 한다"고 적은 것이었다. 분류 절차가 코어 1(`app/application/classification.py`)로 올라오면서 그 이유가 사라졌는데 이 자리는 안 따라갔다.
 

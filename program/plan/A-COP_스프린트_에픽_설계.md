@@ -52,11 +52,11 @@ S3이 5W 시작일에 정확히 시작한다. S1만 중간발표(9/15)에 맞추
 
 | 확인 대상 | 결과 | 확인 방법 |
 |---|---|---|
-| DoD 29건 판정 | 통과 26 · 부분통과 3 · 판정 없음 1 | 2026-08-28 개발 콘솔로 `final_project_cs/docs/evidence/` 읽음 |
+| DoD 29건 판정 | 통과 26 · 부분통과 3 · 판정 없음 1 | 2026-08-28 개발 콘솔로 `final_project_cs/wiki/records/evidence/` 읽음 |
 | 부분통과 3건 | DoD-15(AB Proposed 60x3 holdout), DoD-17(마일스톤 게이트), DoD-28(파인튜닝 방어지표) | 동 |
 | 판정 없음 1건 | DoD-EVAL-DATASETS | 동 |
-| 선언형 Team 실행기 | **구현됨** (`acop_basement/teams/`) | `final_project_sample/docs/reports/2026-08-28_S-DECLARATIVE-TEAM-RUNTIME_리포트.md` |
-| Composer 카탈로그·CRUD | **구현됨** (`GET /composer/catalog`, `POST /composer/changes`) | `final_project_sample/docs/reports/2026-08-28_S-COMPOSER-CATALOG-CHANGES_리포트.md` |
+| 선언형 Team 실행기 | **구현됨** (`acop_basement/teams/`) | `final_project_sample/wiki/records/reports/2026-08-28_S-DECLARATIVE-TEAM-RUNTIME_리포트.md` |
+| Composer 카탈로그·CRUD | **구현됨** (`GET /composer/catalog`, `POST /composer/changes`) | `final_project_sample/wiki/records/reports/2026-08-28_S-COMPOSER-CATALOG-CHANGES_리포트.md` |
 
 ★뒤의 두 건은 오늘 다른 세션이 `final_project_sample`에 넣었고 **아직 커밋되지 않았다.**
 `final_project_cs`에는 아직 없다. sample에서 만들어 cs와 UI가 가져다 쓰는 관계이므로

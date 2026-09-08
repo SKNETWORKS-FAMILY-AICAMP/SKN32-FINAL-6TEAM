@@ -179,7 +179,7 @@ print(st.mean(r['cost_usd'] for r in rows), st.mean(r['input_tokens'] for r in r
 | v5 | `max_length=2560` (중앙값 2,109토큰) | **여전히 OOM.** 그것도 25분 걸려 실패 — Windows WDDM이 초과분을 shared GPU memory(시스템 RAM, PCIe 경유)로 넘겨 느리게 끌다 죽는 패턴 |
 | v6 | `max_length=1024` + evidence 예산 400자 | 겨우 완주 (스텝당 7초, 4epoch 4분 19초) |
 
-출처: [`docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`](../../final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §6.2~6.3
+출처: [`docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`](../../final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §6.2~6.3
 
 **여기서 나오는 사실이 사업 계산의 전제를 바꾼다.**
 
@@ -589,8 +589,8 @@ v8 §1-1은 "제공 방식과 가격 정책은 아직 정하지 않았다"이다
 
 ### 내부 실측 (장비 제약)
 
-- [`final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`](../../final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §6.2~6.3 — 12GB OOM 3회 기록, WDDM 느린 실패
-- [`final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md`](../../final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md) — x600 RTX 4070 SUPER 12GB, Qwen2.5-3B bf16 + LoRA
+- [`final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`](../../final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §6.2~6.3 — 12GB OOM 3회 기록, WDDM 느린 실패
+- [`final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md`](../../final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md) — x600 RTX 4070 SUPER 12GB, Qwen2.5-3B bf16 + LoRA
 - [`final_project_cs/eval/finetune/train.py`](../../final_project_cs/eval/finetune/train.py) — batch=1, grad_accum=8, max_length 기본 512
 - [`datasets/mt/olist_reviews_mt_bench/REPORT.md`](../../datasets/mt/olist_reviews_mt_bench/REPORT.md) — RunPod A4500 20GB로 12GB 한계 우회한 기록
 - [`test_workspace/gPUteer/gputeer_master_plan_FINAL.md`](../../../test_workspace/gPUteer/gputeer_master_plan_FINAL.md) — 사설 GPU 풀 정의, §3.2 "메모리를 합치는 기술이 아님"

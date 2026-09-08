@@ -47,20 +47,20 @@ diff final_project_cs/RULE.md final_project_sample/RULE.md
 
 ```text
 [시작]
- 0. RULE.md · CLAUDE.md · 관련 docs/handoff/ 계약을 먼저 읽는다
+ 0. RULE.md · CLAUDE.md · 이 저장소 wiki/index.md 를 먼저 읽는다. 대상 wiki 페이지를 읽고, wiki/records/ 는 근거 확인할 때만
     ★읽지 못했거나 어떤 문서가 적용되는지 모르면 파일 변경을 시작하지 않는다
- 1. docs/plans/ 의 현재 유효한 실행계획서
- 2. docs/history/ 최신 이력 — 직전 작업 상태
+ 1. 할 일·현재 상태 — 허브 wiki/delivery/open-items.md · wiki/decisions/
+ 2. (삭제, 2026-09-08) records/history · records/plans 는 동결
 
 [수행]
- 3. 계획서의 해당 단계만 한다. 계획에 없으면 계획서 갱신 먼저
+ 3. 계획서(v9)·wiki 결정의 해당 단계만 한다. 범위 밖이면 open-items 에 올리고 결정 먼저
  4. 코드를 대체·삭제하면 legacy/ 에 보존한다
- 5. 실행·테스트로 검증하고 재현 명령과 출력을 docs/evidence/ 에 남긴다
+ 5. 실행·테스트로 검증하고 재현 명령과 출력을 wiki/records/evidence/ 에 남긴다
 
 [종료]
- 6. docs/reports/ 에 작업 리포트 (필수, 생략 불가)
- 7. docs/history/ 에 이력 추가
- 8. 진행 상태가 바뀌면 docs/plans/ 갱신
+ 6. wiki/records/reports/ 에 작업 리포트 (필수, 생략 불가). 파일명은 날짜 접두 그대로
+ 7. wiki 에 결론 한 줄 + 리포트 링크. 주장이 바뀌면 그 페이지를 고친다. 같은 내용을 두 곳에 쓰지 않는다
+ 8. (삭제, 2026-09-08) history·plans 갱신 없음 — 7 에서 open-items 를 고친다
 ```
 
 **0번이 강제다.** 무엇이 적용되는지 모르면 손대지 않는다.
@@ -159,6 +159,20 @@ from app.core.case_runtime.contracts import *
 `[미확보]` **그 방식을 쓸지 안 정했다.** 파일이 두 배로 늘어나는 대가가 있다.
 
 **다만 4번은 이미 지키고 있다** — [check_wiki.py](review-policy.md) 의 불변식 검사가 구조와 무관하게 돈다.
+
+## ★ [2026-09-08] `docs/` 를 `wiki/records/` 로 합쳤다
+
+`[실측]` 사용자 결정. 진입점 하나·검사기 하나로 가고, 기록은 압축·삭제할 수 있게 한다. 도구는 `program/scripts/merge_docs_apply.py`(zip 백업 → 링크 재계산 → `git mv`). 백업은 `program/research/_backup/2026-09-08_docs_통합전.zip` 과 태그 `docs-pre-merge-2026-09-08`.
+
+| 기록 구역 `wiki/records/` | 무엇 | 지위 |
+|---|---|---|
+| `evidence/` · `reports/` | 재현 출력 · 작업 리포트(디버그 리포트 포함) | **계속 쓴다.** 날짜 파일명 그대로, 고치지 않는다 |
+| `handoff/` | 계약·지시서 129건 | **동결.** 계약의 현재 정본은 wiki 본문(contracts·teams·external). 인용 63곳이 있어 2단계에서 정리 |
+| `history/` · `plans/` · `vision/` · `manuals/` · `submission/` · `TODO/` · `labeling/` · `screenshots/` | 옛 작업 기록 | **동결.** 읽기 전용. wiki 가 필요한 것만 인용 |
+
+**검사기 규칙.** `records/` 는 front matter·크기·index 규칙을 적용하지 않고, 깨진 링크는 위반이 아니라 집계로만 낸다 — 옛 기록의 링크가 낡는 건 정상이고, 그걸 고치면 기록이 아니게 된다. 파일명도 kebab-case 규칙의 예외다(§4.2 날짜 접두 유지).
+
+**이중 작업이 어디서 없어졌나.** 전에는 세션마다 evidence·reports·history·plans 넷을 쓰고 wiki 도 따로 갱신했다. 지금은 evidence(있을 때)·리포트·wiki 한 줄이고, 같은 문장을 두 곳에 쓰지 않는다. history 44건 중 wiki 가 인용한 건 1건, reports 173건 중 6건이었다 — 아무도 안 읽던 기록을 계속 쓰고 있었다.
 
 ## 관계
 

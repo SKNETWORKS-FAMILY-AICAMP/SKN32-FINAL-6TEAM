@@ -11,14 +11,14 @@ program/plan/A-COP_예제Team모듈_확충설계.md	decision	분할	cs/teams · 
 program/plan/A-COP_남은작업_인수인계.md	report	분할	hub/delivery	완료·확인 상태의 시점 기록(report)과 후속 작업의 순서·담당(plan)로 나뉜다.
 program/research/_주말작업_요약_2026-08-29~30.md	report	제외	—	특정 주말의 커밋·수정·미완료 사항을 정리한 완료 작업 로그다.
 program/research/_컴포저_UI배포구조_점검_2026-08-29.md	report	분할	hub/decisions · hub/delivery	배포 구조 판단(decision), 조치 전후 실측(report), 권고 실행 순서(plan)로 나뉜다.
-final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md	decision	분할	cs/decisions · cs/quality · cs/delivery	모델 채택 판단(decision), 통합·재학습 단계(plan), 날짜별 실험 결과(report), 비교 분석(research), 검증 규칙(policy)으로 나뉜다.
-final_project_cs/docs/plans/2026-08-12_1507_A-COP_실행계획서_v1.md	plan	제외	—	v5 기준의 완료된 초기 실행계획이며 누락됐던 스트림 소유 규칙까지 roles.md에 반영돼 v8 일정으로 대체됐다.
-final_project_cs/docs/plans/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md	plan	제외	—	v5 기준의 초기 6인 계획으로 현재 역할과 일정은 roles.md·timeline.md가 대체한다.
-final_project_cs/docs/plans/2026-08-17_코퍼스_25문서_배분안.md	plan	분할	cs/context · cs/quality	25문서 배분과 작성 순서(plan), 법정 기준 조사(research), 중복 게이트 준수 규칙(policy), 첫 문서 시험 결과(report)로 나뉜다.
-final_project_cs/docs/release_checklist.md	plan	제자리	제자리	RC 완료 기준과 재판정 조건을 관리하는 현행 문서이며 final_project_cs/CLAUDE.md가 이 경로를 직접 참조한다.
-final_project_cs/docs/handoff/09_Composer_GUI_계약.md	contract	분할	cs/runtime · cs/decisions	여전히 유효한 모듈·Port·Core 및 저장 계약(contract)과 폐기된 무인증 GUI의 시점 기록(report·decision)으로 나뉜다.
-final_project_cs/docs/manuals/운영_unknown상태_대응절차.md	runbook	제자리	제자리	사고 시 SQL 조회부터 사람 확인·상태 전이까지 따르는 현행 운영 절차이며 release_checklist와 DoD 문서가 이 경로를 직접 참조한다.
-final_project_cs/docs/vision/TODO_VISION.md	decision	분할	제자리 · cs/decisions	항목별 도입 보류·폐기 판단(decision)과 도입 트리거(plan)를 분리하되 RULE.md가 참조하는 인덱스는 현 경로에 유지해야 한다.
+final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md	decision	분할	cs/decisions · cs/quality · cs/delivery	모델 채택 판단(decision), 통합·재학습 단계(plan), 날짜별 실험 결과(report), 비교 분석(research), 검증 규칙(policy)으로 나뉜다.
+final_project_cs/wiki/records/plans/2026-08-12_1507_A-COP_실행계획서_v1.md	plan	제외	—	v5 기준의 완료된 초기 실행계획이며 누락됐던 스트림 소유 규칙까지 roles.md에 반영돼 v8 일정으로 대체됐다.
+final_project_cs/wiki/records/plans/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md	plan	제외	—	v5 기준의 초기 6인 계획으로 현재 역할과 일정은 roles.md·timeline.md가 대체한다.
+final_project_cs/wiki/records/plans/2026-08-17_코퍼스_25문서_배분안.md	plan	분할	cs/context · cs/quality	25문서 배분과 작성 순서(plan), 법정 기준 조사(research), 중복 게이트 준수 규칙(policy), 첫 문서 시험 결과(report)로 나뉜다.
+final_project_cs/wiki/records/release_checklist.md	plan	제자리	제자리	RC 완료 기준과 재판정 조건을 관리하는 현행 문서이며 final_project_cs/CLAUDE.md가 이 경로를 직접 참조한다.
+final_project_cs/wiki/records/handoff/09_Composer_GUI_계약.md	contract	분할	cs/runtime · cs/decisions	여전히 유효한 모듈·Port·Core 및 저장 계약(contract)과 폐기된 무인증 GUI의 시점 기록(report·decision)으로 나뉜다.
+final_project_cs/wiki/records/manuals/운영_unknown상태_대응절차.md	runbook	제자리	제자리	사고 시 SQL 조회부터 사람 확인·상태 전이까지 따르는 현행 운영 절차이며 release_checklist와 DoD 문서가 이 경로를 직접 참조한다.
+final_project_cs/wiki/records/vision/TODO_VISION.md	decision	분할	제자리 · cs/decisions	항목별 도입 보류·폐기 판단(decision)과 도입 트리거(plan)를 분리하되 RULE.md가 참조하는 인덱스는 현 경로에 유지해야 한다.
 program/plan/A-COP_문서구조_v1.md	policy	제외	—	대절 6개를 대조한 결과 전체 트리·quickstart·index·본문 골격·하네스·제외 원칙이 모두 현행 wiki와 governance 문서에 반영됐다.
 program/plan/A-COP_문서표준_설계_codex초안.md	policy	제외	—	대절 14개를 대조해 저장 경계·구조·메타데이터·이관·운영·자동화 규칙이 governance 문서군에 모두 반영된 중간 초안임을 확인했다.
 program/plan/A-COP_사업성_단위경제.md	report	제외	—	대절 10개 중 지식 9개는 business의 market·unit-economics·infrastructure-cost·pricing·index에 반영됐고 나머지 §8은 옛 v8 병합 위치 메모다.

@@ -104,7 +104,7 @@ UI 가 자체 구현하면 같은 로직이 두 곳에 생기고, 한쪽이 바�
 
 되돌아가지 않게 게이트를 걸었다(`tests/architecture/test_composer_stays_out_of_this_repo.py`) — 지운 사본 3종의 부활, 조립부 밖 사용, 릴리즈 진입점 오염, 카탈로그↔등록표 불일치. 일부러 어겨서 실제로 실패하는 것을 확인했다.
 
-커밋 `f2319aa`. 근거: `final_project_cs/docs/reports/2026-09-06_Composer를_패키지로_들어냈다.md`, 계약 `final_project_cs/docs/handoff/14`.
+커밋 `f2319aa`. 근거: `final_project_cs/wiki/records/reports/2026-09-06_Composer를_패키지로_들어냈다.md`, 계약 `final_project_cs/wiki/records/handoff/14`.
 
 <details><summary>그때의 실측 (2026-09-06 이전)</summary>
 

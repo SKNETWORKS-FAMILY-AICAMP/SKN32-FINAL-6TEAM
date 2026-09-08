@@ -11,7 +11,7 @@ sources:
     resource: ../../final_project_cs/eval/reports/2026-08-28_reeval_Proposed_v3.jsonl
   - id: S2
     title: 12GB VRAM OOM 3회 기록
-    resource: ../../final_project_cs/docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md
+    resource: ../../final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md
   - id: S3
     title: RunPod GPU 요금
     resource: https://www.runpod.io/product/cloud-gpus

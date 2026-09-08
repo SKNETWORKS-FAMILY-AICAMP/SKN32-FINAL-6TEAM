@@ -1,11 +1,11 @@
 """결함 리포트가 열렸는지 닫혔는지를 **읽어서 알 수 있게** 유지한다.
 
-★2026-09-03 실측: `docs/reports/debugs/` 26건 중 상태를 기계로 셀 수 있는
+★2026-09-03 실측: `wiki/records/reports/debugs/` 26건 중 상태를 기계로 셀 수 있는
   것이 없었다. `RULE.md` §4.1 이 "고쳤는지와 무관하게 먼저 기록한다" 고 해서
   발견 기록은 잘 남는데, **고친 뒤 되돌아와 닫는 단계가 없었다.** 그래서 각
   문서의 `- 상태:` 줄이 작성 시점("미수정 → 수정 발주함")에 멈춰 있었고,
   `CLAUDE.md` 상태표가 **해결로 인용하는 문서 3건**까지 "미해결" 로 보였다.
-  경위: `docs/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md`
+  경위: `wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md`
 
   17건을 하나씩 코드로 확인해 닫고 표기를 통일했다. 이 검사는 **다시
   흐트러지지 않게** 한다 — 표기가 없으면 여기서 실패한다.
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-DEBUG_DIR = Path(__file__).resolve().parents[3] / "docs" / "reports" / "debugs"
+DEBUG_DIR = Path(__file__).resolve().parents[3] / "wiki" / "records" / "reports" / "debugs"
 
 #: 문서 어디든 이 형태가 한 번 나오면 상태가 표기된 것으로 본다.
 #:  "## 해결됨", "## 해결됨 (2026-09-03)", "## 해결됨 (2026-09-01, 부분) — …" 등.
@@ -46,7 +46,7 @@ def test_every_debug_report_declares_whether_it_is_open_or_closed(path: Path):
         f"{path.name} 에 상태 표기가 없다.\n"
         "  문서 첫 줄 다음에 `## 해결됨 (YYYY-MM-DD)` 또는 `## 미해결` 을 둔다.\n"
         "  ★옛 `- 상태:` 줄은 지우지 않는다 — 발견 시점의 기록이다. 위에 얹기만 한다.\n"
-        "  근거: docs/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
+        "  근거: wiki/records/reports/2026-09-03_결함리포트_상태를_읽을_수_없다.md")
 
     assert not (resolved and still_open), (
         f"{path.name} 에 '해결됨' 과 '미해결' 이 둘 다 있다. 지금 상태 하나만 남긴다.\n"

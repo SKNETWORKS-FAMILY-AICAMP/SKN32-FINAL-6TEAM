@@ -159,7 +159,7 @@ v2(전체 선언 적용)와 v3(토글)가 공존하는 상태다.
 4. UI 선택 생성 화면
 
 앞의 것이 없으면 뒤의 것을 만들어도 동작하지 않는다. 근거는
-`final_project_sample/docs/vision/VISION-10_예제_카탈로그_스캐폴딩_CLI.md` 3층이다.
+`final_project_sample/wiki/records/vision/VISION-10_예제_카탈로그_스캐폴딩_CLI.md` 3층이다.
 
 > ★**2026-09-01 갱신 — 네 단계 모두 끝났고, 그 위에 두 가지가 더 붙었다.**
 >
@@ -178,7 +178,7 @@ v2(전체 선언 적용)와 v3(토글)가 공존하는 상태다.
 > - **재기동 없는 반영**(2026-08-31) — `POST /admin/reload`(scope `ops:reload`)와
 >   `active_revision`/`desired_revision`/`reload_state`(introspection 계약 1.1).
 >   그 전에는 저장 직후 반영도 안 됐는데 새 revision 을 보고하고 있었다.
->   구현·실측 `final_project_sample/docs/reports/2026-08-31_reload_계약_구현.md`
+>   구현·실측 `final_project_sample/wiki/records/reports/2026-08-31_reload_계약_구현.md`
 
 ## 확인하지 못한 것
 

@@ -128,7 +128,7 @@ raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
 
 ### DoD-06 은 cs 가 아니라 sample 을 잰 것이다
 
-`[실측]` 2026-09-06. [DoD-06 evidence](../../docs/evidence/DoD-06_정책FAQ_25건_300청크.md)의 재현 명령이 **`cd final_project_sample`** 로 시작한다. 실측 출력도 옛 구독 도메인이다 — scope 배분 `billing 5 · entitlement 5 · incident 3 …`, 질의 "해지했는데 결제가 됐어요" → `doc_06 [refund]`.
+`[실측]` 2026-09-06. [DoD-06 evidence](../records/evidence/DoD-06_정책FAQ_25건_300청크.md)의 재현 명령이 **`cd final_project_sample`** 로 시작한다. 실측 출력도 옛 구독 도메인이다 — scope 배분 `billing 5 · entitlement 5 · incident 3 …`, 질의 "해지했는데 결제가 됐어요" → `doc_06 [refund]`.
 
 **cs 의 지금 코퍼스는 다르다.** `final_project_cs` 에서 `python -m scripts.check_corpus` 를 직접 돌렸다.
 
@@ -140,13 +140,13 @@ scope: order 5 · shipping 5 · return 4 · exchange 3 · refund 4 · support 2 
 
 **cs 의 DoD-06 "통과" 판정이 sample 의 옛 코퍼스 측정에 기대고 있다.** 루트 `CLAUDE.md` 가 명시한 규칙 — **sample 의 검증 상태를 cs 의 완료로 간주하지 않는다** — 를 evidence 문서가 어기고 있는 사례다. cs 자체 측정은 있다(2026-08-17 `RAG적재_평가데이터셋_재작성_리포트.md`, cs `CLAUDE.md` §5 "RAG corpus" 행) — evidence 가 그쪽을 가리키지 않을 뿐이다.
 
-`[미확보]` **evidence 문서의 재현 명령과 실측 출력을 cs 기준으로 바꾸는 것은 `final_project_cs/docs/` 수정이라 이 wiki 작업 범위 밖이다.** 해당 저장소 작업자에게 넘길 항목이다.
+`[미확보]` **evidence 문서의 재현 명령과 실측 출력을 cs 기준으로 바꾸는 것은 `final_project_cs/wiki/records/` 수정이라 이 wiki 작업 범위 밖이다.** 해당 저장소 작업자에게 넘길 항목이다.
 
 **이건 이 문서의 "가장 나쁜 종류" 셋과도 다른 네 번째다** — 근거가 사라진 것(22)도, 낡은 것(02·14·20·24)도 아니고, **처음부터 다른 프로젝트를 잰 근거**다.
 
 ### 검증 로그 MODULE-TOGGLES — "통과"라고 판정한 동작이 다음 날 결함이 됐다
 
-`[실측]` 2026-09-06. [MODULE-TOGGLES 검증 로그](../../docs/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)의 실측 출력 둘째 줄.
+`[실측]` 2026-09-06. [MODULE-TOGGLES 검증 로그](../records/evidence/MODULE-TOGGLES_실효화_검증.md)(2026-08-30)의 실측 출력 둘째 줄.
 
 ```
 ===== VOC 끔 — 기동 자체가 거부된다   (voc: false)
@@ -169,7 +169,7 @@ scope: order 5 · shipping 5 · return 4 · exchange 3 · refund 4 · support 2 
 
 ## ★ [2026-09-04] Team 조립이 인자 개수만 보고 배선할 뻔했다
 
-`[실측]` [DoD-29](../../docs/evidence/DoD-29_ResponseGenerationReview.md)에서 발견. `composition.py::_instantiate_team()`이 생성자의 **위치 인자 개수**만 보고 `(tools, llm)`을 채워 넣는 방식이었다.
+`[실측]` [DoD-29](../records/evidence/DoD-29_ResponseGenerationReview.md)에서 발견. `composition.py::_instantiate_team()`이 생성자의 **위치 인자 개수**만 보고 `(tools, llm)`을 채워 넣는 방식이었다.
 
 `ResponseGenerationReviewTeam(llm=None)`처럼 단일 인자 생성자라면 이름을 안 보고는 그 인자가 `tools`인지 `llm`인지 알 수 없다 — 개수만 보면 `ReadToolbox`가 `llm` 자리로 잘못 들어간다. **DoD-29 등록 전에 발견해 실제로 터지기 전에 막았다.**
 
@@ -192,4 +192,4 @@ if len(required) <= 1 and len(positional) <= 1:
 
 - [blind-spots.md](blind-spots.md) — 테스트 사각지대 본문
 - [invariants.md](invariants.md) — 불변식 카탈로그
-- [../../../../final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md](../../docs/evidence/DoD-29_ResponseGenerationReview.md) — 원본 evidence
+- [../../../../final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md](../records/evidence/DoD-29_ResponseGenerationReview.md) — 원본 evidence

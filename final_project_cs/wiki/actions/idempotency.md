@@ -43,7 +43,7 @@ def idempotency_key(*, tenant_id, request_id, action_type, business_subject) -> 
 
 `request_id`가 없는 옛 Case는 `case_id`로 대체한다.
 
-`[실측]` **이 경계 분리는 원래 없었다.** 2026-08-14 시점 코드는 `f"{a}{b}{c}{d}"`로 단순히 이어붙여 해시했다 — 위 충돌이 이론상 가능한 상태였다. 2026-08-24에 발견·수정하고 `test_idempotency_key_preserves_field_boundaries`로 고정했다. → [DoD-11](../../docs/evidence/DoD-11_action_idempotency_승인.md)
+`[실측]` **이 경계 분리는 원래 없었다.** 2026-08-14 시점 코드는 `f"{a}{b}{c}{d}"`로 단순히 이어붙여 해시했다 — 위 충돌이 이론상 가능한 상태였다. 2026-08-24에 발견·수정하고 `test_idempotency_key_preserves_field_boundaries`로 고정했다. → [DoD-11](../records/evidence/DoD-11_action_idempotency_승인.md)
 
 ### ★ 처음엔 이 산식조차 아니었다
 

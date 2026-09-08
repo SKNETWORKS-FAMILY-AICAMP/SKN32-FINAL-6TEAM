@@ -109,7 +109,7 @@ v2의 `config` 전체 대신 대상 종류·등록 ID·활성 상태만 보낸�
 > 있는 것은 카탈로그에 등록된 구현뿐이다.
 > 근거: `A-COP_Composer_범위재검토.md`,
 > `A-COP_Composer_중앙설정저장소_결정.md`,
-> `final_project_sample/docs/handoff/13_Composer_쓰기채널_계약.md`.
+> `final_project_sample/wiki/records/handoff/13_Composer_쓰기채널_계약.md`.
 
 - 새 `implementation_ref`를 임의 값으로 제출해 registry에 등록하는 것
 - ~~등록 목록 자체를 Composer 요청으로 추가·삭제하는 것~~ (2026-08-29 철회)
@@ -161,7 +161,7 @@ v2의 `config` 전체 대신 대상 종류·등록 ID·활성 상태만 보낸�
 
 ## 5. 기존 v2 계약과의 관계
 
-이 문서는 `final_project_sample/docs/handoff/13_Composer_쓰기채널_계약.md`의 v2를 대체하는 v3 제안이다. v2의 인증, scope 분리, revision 충돌 방지, 원자적 쓰기, 감사라는 안전장치는 유지하되, 전체 선언 제출·Core 깊은 검증·전체 apply라는 범위는 제거한다.
+이 문서는 `final_project_sample/wiki/records/handoff/13_Composer_쓰기채널_계약.md`의 v2를 대체하는 v3 제안이다. v2의 인증, scope 분리, revision 충돌 방지, 원자적 쓰기, 감사라는 안전장치는 유지하되, 전체 선언 제출·Core 깊은 검증·전체 apply라는 범위는 제거한다.
 
 해당 v2 파일은 현재 다른 세션에서 실시간으로 작업 중이므로 이번 작업에서 열거나 직접 병합하지 않았다. v2 작업이 끝난 뒤 담당 세션에서 이 v3 제안과 계약 내용을 대조해 반영해야 한다. 특히 endpoint 이름, 응답의 `config_revision`, 인증 scope, 감사 로그 필드는 최종 계약에서 하나의 명명으로 확정한다.
 

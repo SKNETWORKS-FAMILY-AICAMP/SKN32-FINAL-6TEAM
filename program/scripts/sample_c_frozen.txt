@@ -8,23 +8,23 @@ program/research	program/research\_중앙설정저장소_검토_2026-08-29.md
 program/research	program/research\_일일작업_2026-08-28.md
 program/research	program/research\_주말작업_요약_2026-08-29~30.md
 program/research	program/research\_일일작업_2026-08-26.md
-cs/docs/evidence	final_project_cs/docs/evidence\DoD-04_checkpoint_projection_분리.md
-cs/docs/evidence	final_project_cs/docs/evidence\DoD-19_LOCAL_A2A_정규화.md
-cs/docs/evidence	final_project_cs/docs/evidence\DoD-28_파인튜닝_방어지표.md
-cs/docs/evidence	final_project_cs/docs/evidence\PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md
-cs/docs/handoff	final_project_cs/docs/handoff\03_REST_MCP_인터페이스.md
-cs/docs/handoff	final_project_cs/docs/handoff\04_Team_모듈_계약.md
-cs/docs/handoff	final_project_cs/docs/handoff\08_모듈_컴포넌트_목록.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-19_S-LEGACY-ISOLATE-ORDER-RETURN-TEAMS_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-14_S-IDEMKEY_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-12_S-API_수정_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-20_S-TEAM-RETURN-REFUND_리포트.md
-cs/docs/reports	final_project_cs/docs/reports\2026-08-13_S-ISOLATION_리포트.md
-cs/docs/vision	final_project_cs/docs/vision\VISION-04_A2A_생태계_확장.md
-cs/docs/vision	final_project_cs/docs/vision\VISION-03_멀티_LLM_프로바이더_모델_라우팅.md
-cs/docs/vision	final_project_cs/docs/vision\VISION-01_추론_기법_확장.md
-cs/docs/history	final_project_cs/docs/history\2026-08-12_S-DB_fix.md
-cs/docs/history	final_project_cs/docs/history\2026-08-12_S-RAG_v2.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\DoD-04_checkpoint_projection_분리.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\DoD-19_LOCAL_A2A_정규화.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\DoD-28_파인튜닝_방어지표.md
+cs/docs/evidence	final_project_cs/wiki/records/evidence\PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\03_REST_MCP_인터페이스.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\04_Team_모듈_계약.md
+cs/docs/handoff	final_project_cs/wiki/records/handoff\08_모듈_컴포넌트_목록.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-19_S-LEGACY-ISOLATE-ORDER-RETURN-TEAMS_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-14_S-IDEMKEY_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-12_S-API_수정_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-20_S-TEAM-RETURN-REFUND_리포트.md
+cs/docs/reports	final_project_cs/wiki/records/reports\2026-08-13_S-ISOLATION_리포트.md
+cs/docs/vision	final_project_cs/wiki/records/vision\VISION-04_A2A_생태계_확장.md
+cs/docs/vision	final_project_cs/wiki/records/vision\VISION-03_멀티_LLM_프로바이더_모델_라우팅.md
+cs/docs/vision	final_project_cs/wiki/records/vision\VISION-01_추론_기법_확장.md
+cs/docs/history	final_project_cs/wiki/records/history\2026-08-12_S-DB_fix.md
+cs/docs/history	final_project_cs/wiki/records/history\2026-08-12_S-RAG_v2.md
 datasets REPORT	datasets\voc\sources_catalog\REPORT.md
 datasets REPORT	datasets\commerce\courier_tracking\REPORT.md
 datasets REPORT	datasets\voc\nikl_ne_2022\REPORT.md

@@ -108,7 +108,7 @@ class ContextBudgetError(RuntimeError): ...
 
 ## ★ 네 단계 중 둘만 실제로 관측됐다
 
-`[실측]` [DoD-05](../../docs/evidence/DoD-05_ContextPack_토큰예산.md). 예산 초과 입력을 넣었을 때 실제로 잘린 것.
+`[실측]` [DoD-05](../records/evidence/DoD-05_ContextPack_토큰예산.md). 예산 초과 입력을 넣었을 때 실제로 잘린 것.
 
 ```
 omissions = ['similar_cases:budget:<id>', 'policy_rag:low_score:low#c1']

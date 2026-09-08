@@ -34,7 +34,7 @@ owners: [human:미배정]
 
 ### ★ [2026-09-03] 계약 문서가 반대로 적고 있다
 
-`[실측]` `docs/handoff/03_REST_MCP_인터페이스.md` §1-0 은 이렇게 적었다.
+`[실측]` `wiki/records/handoff/03_REST_MCP_인터페이스.md` §1-0 은 이렇게 적었다.
 
 > `/v1/` 아래에 **6번째 경로가 생기면 그것은 위반이다** — `tests/integration/api/test_openapi_surface.py` 가 검사한다.
 
@@ -83,7 +83,7 @@ def test_v1_surface_is_documented_when_it_grows()
 
 ### ★ [2026-09-06] 이 결함이 왜 운영 경로였는가, 그리고 어떻게 다시 안 나게 했는가
 
-`[실측]` [PROD-CLASSIFIER-DOMAIN-MISMATCH](../../docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md). `INTENTS`는 VOC 분석 전용 상수가 아니다.
+`[실측]` [PROD-CLASSIFIER-DOMAIN-MISMATCH](../records/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md). `INTENTS`는 VOC 분석 전용 상수가 아니다.
 
 ```
 create_app()  →  composition.build_classifier()  →  feedback.classify(masked(message))
@@ -98,7 +98,7 @@ create_app()  →  composition.build_classifier()  →  feedback.classify(masked
 
 ### 실제 API 경로를 진짜로 도는 e2e 테스트
 
-`[실측]` [LIVE-CLASSIFIER-E2E](../../docs/evidence/LIVE-CLASSIFIER-E2E_검증.md). 위 수정 직후엔 Claude가 터미널에서 한 번 수동 확인한 것뿐이었다. 그걸 재실행 가능한 테스트로 바꿨다 — `tests/live/test_feedback_classifier_live_e2e.py`(`-m live`, 실 OpenAI 호출).
+`[실측]` [LIVE-CLASSIFIER-E2E](../records/evidence/LIVE-CLASSIFIER-E2E_검증.md). 위 수정 직후엔 Claude가 터미널에서 한 번 수동 확인한 것뿐이었다. 그걸 재실행 가능한 테스트로 바꿨다 — `tests/live/test_feedback_classifier_live_e2e.py`(`-m live`, 실 OpenAI 호출).
 
 **증명하는 것** — 운영 `POST /v1/cases`에 실 한국어 쇼핑몰 메시지를 보내면, 실제로 주입되는 그 classifier가 `intent="shipping"`을 돌려주고 `INTENTS` 검증을 통과해 `CLASSIFIED` 이벤트가 기록된다.
 
@@ -180,11 +180,11 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 # 계약 원문에서 보강 (2026-09-03)
 
-`[실측]` `docs/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
+`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
 
 ## `/v1/*` 표면 상한과 scope
 
-`[실측]` 계약 문서(`docs/handoff/03` §1-0)는 "외부 AI용 `/v1/*` endpoint는 정확히 5개, 여섯 번째 경로가 생기면 계약 위반"이라고 적는다. **이 문장은 낡았다** — 위 [2026-09-03 절](#-2026-09-03-계약-문서가-반대로-적고-있다)이 밝힌 대로 v7에서 "5는 상한이 아니다"로 바뀌었고, 실제로 2026-08-24에 여섯 번째 operation이 추가됐다. 아래 표가 지금 코드의 계약 집합이다.
+`[실측]` 계약 문서(`wiki/records/handoff/03` §1-0)는 "외부 AI용 `/v1/*` endpoint는 정확히 5개, 여섯 번째 경로가 생기면 계약 위반"이라고 적는다. **이 문장은 낡았다** — 위 [2026-09-03 절](#-2026-09-03-계약-문서가-반대로-적고-있다)이 밝힌 대로 v7에서 "5는 상한이 아니다"로 바뀌었고, 실제로 2026-08-24에 여섯 번째 operation이 추가됐다. 아래 표가 지금 코드의 계약 집합이다.
 
 | 메서드 | 경로 | 필수 scope |
 |---|---|---|
@@ -205,7 +205,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 `/ui/*`는 쓰기를 직접 수행하지 않는다. 승인은 `/v1/cases/{case_id}/actions/{action_id}/approve`를 호출한다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:18-45`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:18-45`
 
 ## 엔드포인트별 상세 계약
 
@@ -227,7 +227,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 오류 body에 stack trace·SQL·내부 경로를 넣지 않는다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:101-114`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:101-114`
 
 ## 인증 형식
 
@@ -240,13 +240,13 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 | OAuth2/OIDC | Phase 2; MVP에서 구현하지 않음 |
 | scope 검증 | scope × endpoint 전체 unauthorized matrix 테스트 |
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:116-121`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:116-121`
 
 ## OpenAPI 일치 조건
 
 `[실측]` `/openapi.json`의 `/v1/*` 경로 집합은 테스트의 `CONTRACT_V1_PATHS`(경로 5개, outbox resolve 포함)와 **정확히 일치해야 한다** — 계약에 있는데 없으면 실패, 계약 목록에 없는 게 있어도 실패. 늘릴 땐 계약 문서·이 목록·scope 의존성을 같이 만든다.
 
-근거: `docs/handoff/03_REST_MCP_인터페이스.md:150-153`
+근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:150-153`
 
 ## `GET /introspection`
 

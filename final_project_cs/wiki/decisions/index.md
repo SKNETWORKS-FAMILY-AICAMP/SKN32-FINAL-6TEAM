@@ -28,7 +28,7 @@ status: draft
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
 | [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 7종·Port 3종·Core 9종 경계 | draft | Composer |
 
-`[미확보]` `docs/plans/`·`docs/reports/`에서 이관 대상을 더 골라야 한다.
+`[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 
 **후보** — 코드만 보면 되돌릴 위험이 있는 것들.
 

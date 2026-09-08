@@ -63,7 +63,7 @@ response_review_policy.py   판정 기준
 ## DoD-29
 
 `[실측]` **DoD 29번이 이 Team의 검증이다.** v8에서 신설됐고 **2026-09-01 완료됐다**
-(`final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md`) — GEN→REV
+(`final_project_cs/wiki/records/evidence/DoD-29_ResponseGenerationReview.md`) — GEN→REV
 두 호출 흐름이 실제로 실행되는지 증명하는 테스트가 빠져 있던 것을 발견해
 채웠다(기존 테스트는 전부 `tone_ok`를 미리 박아 두 번째 호출을 건너뛰고 있었다).
 재시도 상한·PII 차단은 그전부터 실제 테스트로 덮여 있었다.

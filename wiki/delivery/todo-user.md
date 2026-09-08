@@ -54,7 +54,7 @@ git apply program/patches/2026-09-06/*.patch && git status --short
 
 ```powershell
 python program/scripts/check_wiki.py
-git add program/research/index.md datasets/commerce/coupang_order_history/docs/README.md datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md datasets/voc/data_go_kr_consumer_complaints/REPORT.md final_project_cs/docs/evidence .gitignore final_project_sample/wiki
+git add program/research/index.md datasets/commerce/coupang_order_history/docs/README.md datasets/commerce/coupang_order_history/scripts/extension_nextdata_ref/README.md datasets/voc/data_go_kr_consumer_complaints/REPORT.md final_project_cs/wiki/records/evidence .gitignore final_project_sample/wiki
 git commit -m "docs: 2026-09-06 wiki 대조로 찾은 원본 낡음 6건 반영 + sample wiki 추적 시작"
 ```
 

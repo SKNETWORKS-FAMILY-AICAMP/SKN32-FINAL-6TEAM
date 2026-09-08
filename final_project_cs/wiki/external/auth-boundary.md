@@ -142,7 +142,7 @@ Action approval · provider result · before/after hash · actor
 
 ## ★ [2026-09-04] 마스킹과 제거는 다르게 처리된다
 
-`[실측]` [DoD-07 evidence](../../docs/evidence/DoD-07_tenant격리_PII.md) 실제 출력에서.
+`[실측]` [DoD-07 evidence](../records/evidence/DoD-07_tenant격리_PII.md) 실제 출력에서.
 
 | 값 종류 | 처리 | 실측 결과 |
 |---|---|---|
@@ -184,7 +184,7 @@ Action approval · provider result · before/after hash · actor
 
 ### ★ [2026-09-06] 셋 — Composer 쓰기채널 인증이 사실상 무력화돼 있었다
 
-`[실측]` [DoD-14](../../docs/evidence/DoD-14_API키_scope_구분.md) 2026-08-24 갱신. `final_project_sample`과 대조하다 **cs가 직접 만든** 우회 체인 둘이 나왔다.
+`[실측]` [DoD-14](../records/evidence/DoD-14_API키_scope_구분.md) 2026-08-24 갱신. `final_project_sample`과 대조하다 **cs가 직접 만든** 우회 체인 둘이 나왔다.
 
 | # | 결함 | 왜 뚫리나 |
 |---|---|---|
@@ -217,8 +217,8 @@ security:
 | **이 wiki** | 10 → **12** (09-06) |
 | `config/guardrails.yaml` | 10 → **12** (09-06) |
 | 테스트 `test_scopes_are_guardrail_owned`(옛 이름 `test_ten_scopes_…`, 09-06 `composer:admin`·`ops:reload`가 더해져 12개가 되며 개명) | **10** |
-| `docs/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
-| `docs/handoff/06_가드레일_수치.md` §5 | **6** — 같은 옛 목록. 2026-09-06 확인 |
+| `wiki/records/handoff/03_REST_MCP_인터페이스.md` §3 | **6** |
+| `wiki/records/handoff/06_가드레일_수치.md` §5 | **6** — 같은 옛 목록. 2026-09-06 확인 |
 
 **계약 문서만 낡았다.** 그리고 거기 적힌 `subscription:read`·`technical:read` 는 **지금 존재하지 않는다** — 옛 구독·청구 도메인의 잔재다.
 

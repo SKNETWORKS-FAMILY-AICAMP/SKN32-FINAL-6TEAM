@@ -45,13 +45,13 @@
 | 분류기의 모듈 플래그 | 선택 모듈 `voc` 아래 | **플래그에서 분리.** 파일은 `app/modules/`에 그대로 둔다 | 필수 기능이 선택 플래그에 묶여 `voc: false`로 제품이 기동하지 않았다. 파일 위치는 정상이며, 소유는 composition root의 배선으로 표현한다(§3-A) |
 | 집계 배치의 모듈 플래그 | 선택 모듈 `voc` 아래 | 플래그에서 분리 | 인라인 분류와 같은 범주 오류였다. 관측을 멈추면 급증 판정의 기준인 과거 7일 시계열에 되돌릴 수 없는 공백이 생긴다 |
 
-고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/wiki/records/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
 **이 사고가 남긴 점검 항목.** v7.1 개정 7건 중 하나(VOC 소관)가 일부 절에만 반영되어 문서 안에서 서로 다른 말을 했고, 나중에 온 작업이 낡은 쪽을 읽었다. 기존 점검 항목(`§숫자` 참조·Team 목록·DoD 항목 수)으로는 이번 건이 걸리지 않는다 — 세 항목 모두 "있는가"를 묻지 "반대 진술이 있는가"를 묻지 않기 때문이다. `program/research/index.md`의 문서 정합성 점검 캘린더에 **항목 4 "개정 항목의 절 간 모순"**을 신설했고, v7.1 7건 전수 점검을 2026-09-01에 수행했다.
 
 **경위 전체는 `program/research/2026-09-01_VOC가_팀모듈로_흘러간_경위.md`에 있다.** 이 사고는 아무도 틀린 판단을 하지 않았는데 틀린 결과가 나온 종류이므로, 재발 방지를 위해 낡은 진술이 권위를 얻은 경로(§3-A → `final_project_cs/CLAUDE.md` → handoff 문서 → 코드)를 그 문서에 기록했다.
 
-**남은 것 둘 — [2026-09-07 정정] 둘 다 해소됐다.** 아래는 무엇이 남았었고 어떻게 닫혔는지의 기록이다. 근거는 `final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md`.
+**남은 것 둘 — [2026-09-07 정정] 둘 다 해소됐다.** 아래는 무엇이 남았었고 어떻게 닫혔는지의 기록이다. 근거는 `final_project_cs/wiki/records/reports/2026-09-07_v9_8D_문구_정정_제안.md`.
 
 (가) **결함 2가 절반만 고쳐졌다** → **닫힘.** 이전 판은 `Controller.run_case()`가 트랜잭션 안에서 Team 실행을 `await`한다고 적었다. 지금은 세 단계로 갈라져 있다 — 시작·라우팅·재개는 트랜잭션 안에서 하고 명시적으로 커밋한 뒤, **Team 실행은 트랜잭션 밖**에서 하고, 결과 반영에서 다시 연다.
 
@@ -75,7 +75,7 @@
 
 **v9에서 안 바꾼 것.** Team 목록(v8 재판정 그대로), DoD 1~29, §25 일정, Docker·AWS Phase 2. 강사 확인이 필요한 둘 — sLLM 파인튜닝이 6팀 필수인가, 3W 산출물 "학습한 ML/DL 모델"에 무엇을 내나 — 는 미결로 남아 `wiki/delivery/open-items.md`에 있다.
 
-**파인튜닝의 지위 (2026-09-06 사용자).** 파인튜닝은 **제외한 것이 아니라 계속 시도하는 트랙**이다. 지금까지의 시도(stage3 v1~v9, 2026-09-02까지)는 채택 기준 미달이라 채택하지 않았을 뿐이고, 진척이 있으면 적용한다. 임베딩·리랭커 파인튜닝도 후보다. 결과가 나쁘면 나쁘다고 그대로 보고한다. 지금까지의 실측은 `wiki/evaluation/dod28-rerun.md`·`finetuning.md`와 `final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md`에 있다.
+**파인튜닝의 지위 (2026-09-06 사용자).** 파인튜닝은 **제외한 것이 아니라 계속 시도하는 트랙**이다. 지금까지의 시도(stage3 v1~v9, 2026-09-02까지)는 채택 기준 미달이라 채택하지 않았을 뿐이고, 진척이 있으면 적용한다. 임베딩·리랭커 파인튜닝도 후보다. 결과가 나쁘면 나쁘다고 그대로 보고한다. 지금까지의 실측은 `wiki/evaluation/dod28-rerun.md`·`finetuning.md`와 `final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md`에 있다.
 
 ---
 
@@ -263,7 +263,7 @@ A-COP이 주장하는 것은 새로운 모델이나 새로운 RAG가 아니라 *
 
 **결함 1은 파일 위치 문제가 아니다.** 분류 라벨 어휘는 도메인 어휘이므로 `app/modules/` 밖에 둘 수 없다 — 아키텍처 가드(`tests/architecture/test_basement_is_domain_free.py`)가 `core·domain·application·infrastructure·presentation` 전부에서 도메인 어휘를 막는다. 2026-09-01에 분류기를 `app/application/`으로 실제로 옮겨 보았고 가드가 막아 되돌렸다. **이 저장소는 소유를 파일 위치가 아니라 배선으로 표현한다.** composition root(`app/composition.py`)만 가드에서 면제되며, 그 자리가 도메인 모듈을 basement 컴포넌트에 주입한다. Team이 `TeamExecutorPort`로 주입되는 것과 같이, 분류기도 `build_controller(..., classifier=...)`로 코어 1 Controller에 주입하면 된다. 고칠 것은 **호출 시점·실패 처리·상태 전이의 소유**이지 파일이 놓인 폴더가 아니다.
 
-이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/wiki/records/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
 배치는 임베딩 클러스터링과 토픽 모델링을 사용하지 않고 규칙 기반 집계·급증 탐지만 수행한다.
 
@@ -698,7 +698,7 @@ Composer는 운영자가 조립 선언(`config/project.yaml` — 어떤 Team·�
 
 **두 형태 모두에서 지키는 규칙 — cs 소스 안에 Composer 구현이 있으면 안 된다.** 패키지가 밖에서 붙는 것은 결합이 아니고, 소스에 복사해 넣는 것이 결합이다.
 
-[2026-09-07 정정] 이전 판은 "2026-09-06 기준 cs에는 옛 v2를 복사한 자체 구현이 남아 있어 제거 대상이다"라고 적었으나 **같은 날 제거됐다**(커밋 `f2319aa`). 사본 400줄을 지우고 관리용 빌드(`app/entrypoint.py`)만 패키지를 주입한다. 릴리즈 빌드에서 `/composer/*`는 **404**다 — 403이 아니라 라우트 자체가 없다. 되돌아가지 않게 게이트가 걸려 있다(`tests/architecture/test_composer_stays_out_of_this_repo.py`). 실측은 `final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md` — `sys.meta_path`로 `acop_composer` import를 막고 릴리즈 앱을 띄워 경로 18개·Composer 표면 0·`/composer/current` 404를 확인했다.
+[2026-09-07 정정] 이전 판은 "2026-09-06 기준 cs에는 옛 v2를 복사한 자체 구현이 남아 있어 제거 대상이다"라고 적었으나 **같은 날 제거됐다**(커밋 `f2319aa`). 사본 400줄을 지우고 관리용 빌드(`app/entrypoint.py`)만 패키지를 주입한다. 릴리즈 빌드에서 `/composer/*`는 **404**다 — 403이 아니라 라우트 자체가 없다. 되돌아가지 않게 게이트가 걸려 있다(`tests/architecture/test_composer_stays_out_of_this_repo.py`). 실측은 `final_project_cs/wiki/records/reports/2026-09-07_v9_8D_문구_정정_제안.md` — `sys.meta_path`로 `acop_composer` import를 막고 릴리즈 앱을 띄워 경로 18개·Composer 표면 0·`/composer/current` 404를 확인했다.
 
 ### 쓰기 계약
 
@@ -1448,7 +1448,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 
 ## 27. 완료 기준 체크리스트(DoD) [v5 번호 보존 + 신규]
 
-**[v9] evidence 낡음.** `final_project_cs/docs/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이었고 **2026-09-07에 끝났다** — 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 근거가 소실됐던 22는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 복구했으며, 06은 cs 코퍼스로 다시 재 문서 25·청크 306을 확인했다. 목록은 `final_project_cs/wiki/quality/dod-evidence-drift.md`.
+**[v9] evidence 낡음.** `final_project_cs/wiki/records/evidence/`의 DoD 02·14·20·24·06·21·13·08·22는 2026-09-06 대조에서 낡았거나(도메인·경로·수치가 바뀜) 근거가 소실됐다(22). 판정 번호와 "통과" 표기는 유지하되 각 evidence 머리에 낡음 주석이 있고, 재측정은 cs 몫이었고 **2026-09-07에 끝났다** — 낡은 일곱(02·14·20·24·21·13·08)은 이름·수치·경로를 현행으로 고쳤고(`7373b67`), 근거가 소실됐던 22는 `tests/contract/test_team_tool_discipline.py` 10건을 새로 써서 복구했으며, 06은 cs 코퍼스로 다시 재 문서 25·청크 306을 확인했다. 목록은 `final_project_cs/wiki/quality/dod-evidence-drift.md`.
 
 각 항목은 evidence 문서와 자동/수동 검증 방법을 함께 남긴다. v5의 1~18은 의미와 순서를 보존한다.
 
@@ -1507,7 +1507,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 
 엑셀·발표 어디서든 **구현한 것과 vision을 섞어 쓰지 않는다.** 10주 산출물은 A-COP Runtime, CS Pack,
 제한된 검증 쇼핑몰까지다. Commerce Ops Pack과 사이트 생성·판매는 vision이며
-`final_project_sample/docs/vision/VISION-08`, `VISION-09`에 트리거와 함께 등록돼 있다.
+`final_project_sample/wiki/records/vision/VISION-08`, `VISION-09`에 트리거와 함께 등록돼 있다.
 
 ### v6 이전 표기에서 바로잡은 것
 

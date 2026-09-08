@@ -147,7 +147,7 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 
 ### ★ [2026-09-04] 17번 — "파일시스템 gate 재현"은 틀린 요약이었다
 
-`[실측]` [DoD-17 evidence](../../final_project_cs/docs/evidence/DoD-17_마일스톤_게이트.md)를 직접 대조했다. **원문 어디에도 "파일시스템 gate 재현"이라는 말이 없다.**
+`[실측]` [DoD-17 evidence](../../final_project_cs/wiki/records/evidence/DoD-17_마일스톤_게이트.md)를 직접 대조했다. **원문 어디에도 "파일시스템 gate 재현"이라는 말이 없다.**
 
 원문이 실제로 적은 것은 셋이다.
 
@@ -208,7 +208,7 @@ DoD-04 · 10 · 12 · 16 · 18 · 23    갭 분석: 부분    →    evidence: �
 
 ## ★ [2026-09-06] DoD 29항목이 못 담는 수정이 있다
 
-`[실측]` [DoD-14 evidence](../../final_project_cs/docs/evidence/DoD-14_API키_scope_구분.md)가 스스로 적어 뒀다. 2026-08-24 같은 조사에서 고친 것 중 둘이 **1~29 어디에도 안 걸린다.**
+`[실측]` [DoD-14 evidence](../../final_project_cs/wiki/records/evidence/DoD-14_API키_scope_구분.md)가 스스로 적어 뒀다. 2026-08-24 같은 조사에서 고친 것 중 둘이 **1~29 어디에도 안 걸린다.**
 
 | 수정 | 왜 안 걸리나 |
 |---|---|

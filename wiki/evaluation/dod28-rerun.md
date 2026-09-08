@@ -172,7 +172,7 @@ eval/reports/  2026-08-30_reeval_ProposedFT.jsonl
 
 ## ★ [2026-09-04] "과잉 기권율 35%"는 모델이 아니라 결함이었다
 
-`[실측]` [DoD-28 evidence](../../final_project_cs/docs/evidence/DoD-28_파인튜닝_방어지표.md) 2026-09-02·09-03 갱신분에서. golden 방어지표 5종에 **신뢰구간(cluster bootstrap 10,000회)**을 뒤늦게 채우다가 나온 발견이다.
+`[실측]` [DoD-28 evidence](../../final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md) 2026-09-02·09-03 갱신분에서. golden 방어지표 5종에 **신뢰구간(cluster bootstrap 10,000회)**을 뒤늦게 채우다가 나온 발견이다.
 
 CI를 처음 채웠을 때(2026-09-02) 과잉 기권율이 **35% (21/60), 구간 [23%, 47%]**로 넓게 나와 "후속 조사 필요"로 남겼다. 그런데 조사해 보니 원인이 모델 행동이 아니었다.
 

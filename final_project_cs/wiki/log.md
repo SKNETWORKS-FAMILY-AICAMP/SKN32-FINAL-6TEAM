@@ -109,8 +109,8 @@ INV-CS-TEAM-005  다른 Team 을 직접 호출하지 않는다
 
 | 원본 | 판정 |
 |---|---|
-| `docs/reports/` 151개 | 시점 기록. **제외** |
-| `docs/handoff/` 128개 | 완료분 제외, 진행 중만 |
-| `docs/history/` 43개 | git으로 복원 가능. 결정만 추출 |
-| `docs/plans/` | 선별 이관 |
-| `docs/evidence/` | 선별 이관 |
+| `wiki/records/reports/` 151개 | 시점 기록. **제외** |
+| `wiki/records/handoff/` 128개 | 완료분 제외, 진행 중만 |
+| `wiki/records/history/` 43개 | git으로 복원 가능. 결정만 추출 |
+| `wiki/records/plans/` | 선별 이관 |
+| `wiki/records/evidence/` | 선별 이관 |

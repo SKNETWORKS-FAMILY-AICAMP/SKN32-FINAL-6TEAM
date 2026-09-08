@@ -84,7 +84,7 @@ TeamExecutorPort
 
 **이게 A2A 경계를 지금 세운 이유다.** 나중에 넣으면 Controller·Registry·계약·상태 매핑을 전부 다시 건드려야 한다. 실행 경로가 코드 전반에 퍼지기 때문이다.
 
-`[실측]` **Port를 둔 값이 한 번 증명됐다.** [DoD-26](../../docs/evidence/DoD-26_A2A_Catalog_왕복.md) — 처음엔 고정 dict를 돌려주는 더미 Transport였고, 실제 원격 앱에 HTTP로 말하는 `http_transport.py`로 갈아 끼울 때 **`A2ATeamExecutor`는 한 줄도 안 바꿨다.**
+`[실측]` **Port를 둔 값이 한 번 증명됐다.** [DoD-26](../records/evidence/DoD-26_A2A_Catalog_왕복.md) — 처음엔 고정 dict를 돌려주는 더미 Transport였고, 실제 원격 앱에 HTTP로 말하는 `http_transport.py`로 갈아 끼울 때 **`A2ATeamExecutor`는 한 줄도 안 바꿨다.**
 
 `GraphStorePort`와 대비된다 — 그건 저장소 교체 문제라 구현을 미룰 수 있다. → [../../../wiki/decisions/D-002-graph-store-gate.md](../../../wiki/decisions/D-002-graph-store-gate.md)
 
@@ -112,7 +112,7 @@ _map             TeamResult 로 정규화
 
 **best effort라고 이름에 적혀 있다.** 취소가 보장되지 않는다는 뜻이고, 그래서 원격 결과를 나중에 받아도 안전해야 한다.
 
-`[실측]` **`_call_within_deadline`이 처음엔 반쪽짜리였다** ([DoD-27](../../docs/evidence/DoD-27_A2A_실패_취소_인증.md) 2026-08-24 갱신). deadline은 **루프 반복 사이에서만** 확인되고 있었다 — `submit()`이나 `poll()` 호출 자체가 응답 없이 오래 걸리면(hung) 그 한 번의 호출은 안 끊겨서 선언된 deadline을 훨씬 넘길 수 있었다. `final_project_sample` 대조로 발견해, 각 원격 호출을 `asyncio.wait_for(call, timeout=deadline_at - now())`로 감싸도록 고쳤다 — 10초 hang하는 mock에 30ms deadline을 줘도 0.5초 안에 `remote_deadline_exceeded`로 끝나고 `_cancel_best_effort`가 실제로 호출되는지까지 재현 테스트로 확인했다.
+`[실측]` **`_call_within_deadline`이 처음엔 반쪽짜리였다** ([DoD-27](../records/evidence/DoD-27_A2A_실패_취소_인증.md) 2026-08-24 갱신). deadline은 **루프 반복 사이에서만** 확인되고 있었다 — `submit()`이나 `poll()` 호출 자체가 응답 없이 오래 걸리면(hung) 그 한 번의 호출은 안 끊겨서 선언된 deadline을 훨씬 넘길 수 있었다. `final_project_sample` 대조로 발견해, 각 원격 호출을 `asyncio.wait_for(call, timeout=deadline_at - now())`로 감싸도록 고쳤다 — 10초 hang하는 mock에 30ms deadline을 줘도 0.5초 안에 `remote_deadline_exceeded`로 끝나고 `_cancel_best_effort`가 실제로 호출되는지까지 재현 테스트로 확인했다.
 
 **이걸로 `final_project_sample`과의 대조가 잡은 결함이 세 번째다** — DoD-03의 `agent_runs` 동시성, DoD-12의 outbox tenant dedupe에 이어 같은 방법이 또 통했다.
 
@@ -120,7 +120,7 @@ _map             TeamResult 로 정규화
 
 원격이 무엇을 주든 `TeamResult`로 바꾼다. **Controller는 A2A인지 로컬인지 모른 채 같은 상태 기계를 돈다.**
 
-`[실측]` [DoD-19](../../docs/evidence/DoD-19_LOCAL_A2A_정규화.md). 두 가지가 테스트로 잡혀 있다 — `LocalTeamExecutor`의 결과가 Team 직접 호출과 `model_dump()`까지 완전히 같고, **원격 상태 어휘가 밖으로 새지 않는다**(`input_required`가 아니라 `wait_for_input`으로 나온다). 어휘가 새면 Controller가 두 경로를 구분하기 시작한다.
+`[실측]` [DoD-19](../records/evidence/DoD-19_LOCAL_A2A_정규화.md). 두 가지가 테스트로 잡혀 있다 — `LocalTeamExecutor`의 결과가 Team 직접 호출과 `model_dump()`까지 완전히 같고, **원격 상태 어휘가 밖으로 새지 않는다**(`input_required`가 아니라 `wait_for_input`으로 나온다). 어휘가 새면 Controller가 두 경로를 구분하기 시작한다.
 
 ### 이중 상태 머신을 Adapter가 흡수한다
 
@@ -141,7 +141,7 @@ A2A Task는 자체 생명주기를 갖는다. **매핑은 Adapter가 하고 Cont
 
 ### ★ [2026-09-05] 취소는 새 상태가 아니라 실패의 한 종류로 기록된다
 
-`[실측]` [DoD-27](../../docs/evidence/DoD-27_A2A_실패_취소_인증.md). `outcome`에 `"cancelled"`라는 값을 **추가하지 않았다** — 계약 Literal을 늘리면 전이표·리듀서·저장까지 파급되기 때문이다. 대신 `outcome="escalated"` + `failure_code="cancelled_by_caller"` + 경고 문구("원격 Task가 취소됐다 — 실패와 구분해서 읽어야 한다")로 남긴다.
+`[실측]` [DoD-27](../records/evidence/DoD-27_A2A_실패_취소_인증.md). `outcome`에 `"cancelled"`라는 값을 **추가하지 않았다** — 계약 Literal을 늘리면 전이표·리듀서·저장까지 파급되기 때문이다. 대신 `outcome="escalated"` + `failure_code="cancelled_by_caller"` + 경고 문구("원격 Task가 취소됐다 — 실패와 구분해서 읽어야 한다")로 남긴다.
 
 **이전엔 실패와 취소를 아예 구분하지 않았다.** executor가 `{"failed","error","cancelled"}`를 전부 `remote_task_failed`로 뭉갰다 — **누가 멈췄는지**(원격이 못 함 vs. 우리가 그만둠)가 사라졌었다. 지금은 `failure_code`로 구분된다.
 
@@ -169,7 +169,7 @@ deadline_s 기준
 
 ### ★ `Evidence.source_type = "remote_agent"` — 계약을 하나 늘렸다
 
-`[실측]` [DoD-26](../../docs/evidence/DoD-26_A2A_Catalog_왕복.md). 원격이 돌려준 근거를 `tool_result`로 뭉개면 **우리 시스템이 확인한 사실**과 **남의 시스템이 그렇다고 말한 것**이 구분되지 않는다. 신뢰도가 다르고 근거 대조에서도 다르게 다뤄야 한다.
+`[실측]` [DoD-26](../records/evidence/DoD-26_A2A_Catalog_왕복.md). 원격이 돌려준 근거를 `tool_result`로 뭉개면 **우리 시스템이 확인한 사실**과 **남의 시스템이 그렇다고 말한 것**이 구분되지 않는다. 신뢰도가 다르고 근거 대조에서도 다르게 다뤄야 한다.
 
 **테스트가 이 구멍을 먼저 잡았다** — `remote_agent`가 Literal에 없어 validation이 거부했다. 계약을 늘리는 쪽으로 고쳤다. `outcome`에 `cancelled`를 안 넣은 것([위](#-2026-09-05-취소는-새-상태가-아니라-실패의-한-종류로-기록된다))과 반대 결정인데, 기준은 같다 — **구분이 사라지면 안전에 영향이 있는가.** 취소는 `failure_code`로 구분되지만, 원격 근거는 `source_type`이 아니면 구분할 곳이 없다.
 

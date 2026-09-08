@@ -45,7 +45,7 @@
 | 분류기의 모듈 플래그 | 선택 모듈 `voc` 아래 | **플래그에서 분리.** 파일은 `app/modules/`에 그대로 둔다 | 필수 기능이 선택 플래그에 묶여 `voc: false`로 제품이 기동하지 않았다. 파일 위치는 정상이며, 소유는 composition root의 배선으로 표현한다(§3-A) |
 | 집계 배치의 모듈 플래그 | 선택 모듈 `voc` 아래 | 플래그에서 분리 | 인라인 분류와 같은 범주 오류였다. 관측을 멈추면 급증 판정의 기준인 과거 7일 시계열에 되돌릴 수 없는 공백이 생긴다 |
 
-고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+고친 절은 §3-A, §7, §7-A, §8-B, §16이다. 구현 쪽 결함과 재배치안은 `final_project_cs/wiki/records/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
 **이 사고가 남긴 점검 항목.** v7.1 개정 7건 중 하나(VOC 소관)가 일부 절에만 반영되어 문서 안에서 서로 다른 말을 했고, 나중에 온 작업이 낡은 쪽을 읽었다. 기존 점검 항목(`§숫자` 참조·Team 목록·DoD 항목 수)으로는 이번 건이 걸리지 않는다 — 세 항목 모두 "있는가"를 묻지 "반대 진술이 있는가"를 묻지 않기 때문이다. `program/research/index.md`의 문서 정합성 점검 캘린더에 **항목 4 "개정 항목의 절 간 모순"**을 신설했고, v7.1 7건 전수 점검을 2026-09-01에 수행했다.
 
@@ -238,7 +238,7 @@ A-COP이 주장하는 것은 새로운 모델이나 새로운 RAG가 아니라 *
 
 **결함 1은 파일 위치 문제가 아니다.** 분류 라벨 어휘는 도메인 어휘이므로 `app/modules/` 밖에 둘 수 없다 — 아키텍처 가드(`tests/architecture/test_basement_is_domain_free.py`)가 `core·domain·application·infrastructure·presentation` 전부에서 도메인 어휘를 막는다. 2026-09-01에 분류기를 `app/application/`으로 실제로 옮겨 보았고 가드가 막아 되돌렸다. **이 저장소는 소유를 파일 위치가 아니라 배선으로 표현한다.** composition root(`app/composition.py`)만 가드에서 면제되며, 그 자리가 도메인 모듈을 basement 컴포넌트에 주입한다. Team이 `TeamExecutorPort`로 주입되는 것과 같이, 분류기도 `build_controller(..., classifier=...)`로 코어 1 Controller에 주입하면 된다. 고칠 것은 **호출 시점·실패 처리·상태 전이의 소유**이지 파일이 놓인 폴더가 아니다.
 
-이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/docs/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
+이 절은 v7.1 결정을 복원하는 것이지 새로 판단하는 것이 아니다. 상세와 재배치안은 `final_project_cs/wiki/records/reports/debugs/`의 코어 경계 재배치 리포트에 둔다.
 
 배치는 임베딩 클러스터링과 토픽 모델링을 사용하지 않고 규칙 기반 집계·급증 탐지만 수행한다.
 
@@ -1449,7 +1449,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 
 엑셀·발표 어디서든 **구현한 것과 vision을 섞어 쓰지 않는다.** 10주 산출물은 A-COP Runtime, CS Pack,
 제한된 검증 쇼핑몰까지다. Commerce Ops Pack과 사이트 생성·판매는 vision이며
-`final_project_sample/docs/vision/VISION-08`, `VISION-09`에 트리거와 함께 등록돼 있다.
+`final_project_sample/wiki/records/vision/VISION-08`, `VISION-09`에 트리거와 함께 등록돼 있다.
 
 ### v6 이전 표기에서 바로잡은 것
 

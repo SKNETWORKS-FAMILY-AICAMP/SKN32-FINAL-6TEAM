@@ -9,7 +9,7 @@ owners: [human:미배정]
 
 # Composer 가 바꿀 수 있는 것
 
-`[실측]` `docs/handoff/09_Composer_GUI_계약.md`에서 이관. **원본은 그대로 있다.**
+`[실측]` `wiki/records/handoff/09_Composer_GUI_계약.md`에서 이관. **원본은 그대로 있다.**
 
 ## 모듈 7종 — 켜고 끈다
 

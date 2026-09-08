@@ -50,11 +50,11 @@ abl_no_*.jsonl         2026-08-14   ← ablation 5종도 전부 무효
 
 **ablation 5종도 같이 무효다.** "RAG를 빼면 grounding이 3.98→0.00"이라는 방향성은 메커니즘이 안 바뀌었으니 참고할 수 있지만, **수치를 근거로 쓰면 안 된다.**
 
-재측정 명령은 `final_project_cs/docs/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
+재측정 명령은 `final_project_cs/wiki/records/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
 
 ## ★ [2026-09-05] 이 숫자에 이르기까지 측정 결함 5건을 고쳤다
 
-`[실측]` [DoD-15](../../final_project_cs/docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md)에서. **위 무효가 된 옛 도메인 수치조차, 처음 나온 값이 아니었다.** 순서대로 잡아야 했던 것들이다.
+`[실측]` [DoD-15](../../final_project_cs/wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md)에서. **위 무효가 된 옛 도메인 수치조차, 처음 나온 값이 아니었다.** 순서대로 잡아야 했던 것들이다.
 
 | # | 증상 | 실제 원인 |
 |---|---|---|
@@ -110,7 +110,7 @@ holdout  20건   최종 1회만
 
 ### ★ 통계 모듈이 카이제곱 통계량을 p값이라고 찍고 있었다
 
-`[실측]` [DoD-16](../../final_project_cs/docs/evidence/DoD-16_bootstrap_McNemar_한계.md). 수정 전 McNemar 출력이 `p_value=38.025000`이었다 — p는 0~1인데 38이다. `(|0−40|−1)²/40 = 38.025`, **통계량이다.** 실제 p는 `6.98e-10`. bootstrap은 `KeyError: 'score'`로 아예 죽어 있었다.
+`[실측]` [DoD-16](../../final_project_cs/wiki/records/evidence/DoD-16_bootstrap_McNemar_한계.md). 수정 전 McNemar 출력이 `p_value=38.025000`이었다 — p는 0~1인데 38이다. `(|0−40|−1)²/40 = 38.025`, **통계량이다.** 실제 p는 `6.98e-10`. bootstrap은 `KeyError: 'score'`로 아예 죽어 있었다.
 
 **심사 리포트에 실렸다면 즉시 걸렸을 값이다.** 지금은 알려진 값 검증(b=0·c=40 → p<1e-8 / 합 8 → exact 분기 / 차이 0 → CI가 0 포함)이 `eval/tests/`에 있고 **p가 1을 넘지 않는지 단언**한다. 위 "측정 결함 5건"이 runner·judge 쪽이었다면 이건 **통계 계산 쪽**의 여섯 번째다.
 
