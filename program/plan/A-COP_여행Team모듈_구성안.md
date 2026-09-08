@@ -8,6 +8,54 @@
 
 ---
 
+## ★ [2026-09-08 17:30 정정] 계획서 v10 이 나왔다 — 두 곳을 계획서에 맞춘다
+
+이 문서를 쓴 뒤 같은 날 `program/plan/A-COP_구현계획서_v10.md` 가 작성됐다.
+**계획서가 기준선이므로 어긋나는 곳은 이 문서를 고친다.**
+
+| 항목 | 이 문서 초안 | **v10 (기준)** | 판정 |
+|---|---|---|---|
+| **Booking Execution** | 제외 · 4단계 | **MVP 필수** | **v10 이 맞다.** 아래 참조 |
+| **Itinerary Review** | 별도 Team · MVP 필수 | Team 내부 규칙으로 흡수 | **v10 이 맞다.** 팀마다 판정·생성을 나누면 별도 Team 이 불필요하다 |
+| Place Verification | 3순위 Team (A2A Remote) | 없음 | **미해결** — 아래 A2A 항목 |
+| Trip Feedback | 등록만 | 없음 | 실질 영향 없음. 껍데기를 안 만들면 그만이다 |
+
+**Booking Execution 을 내가 틀리게 봤다.** 나는 "공급자 계약이 없으니 4단계"로
+봤는데, v10 §4-C 가 **실행 경계를 세 층으로 나누고 2층(협약사 위임 실행)을
+제품의 핵심 가치로 세웠다.** 2층이 없으면 "고객이 인터럽트 없이 보고만 받는다"를
+보여줄 수 없다. 계약이 없다는 문제는 **협약사 커넥터를 Mock 으로** 풀었다 —
+증명 대상이 업체 연동이 아니라 **경계와 루프**라는 것을 명시하면 성립한다.
+
+즉 **"계약이 없다"는 Team 을 미룰 이유가 아니라 증명 범위를 좁힐 이유였다.**
+
+### ★ v10 에 없는 것 — 부트캠프 요구사항 대응표
+
+`[실측 2026-09-08]` v10 에는 **`A2A`·`MCP` 라는 문자열이 한 번도 없다.**
+v9 §3-A 의 「부트캠프 주제 요구사항 ↔ 구현 대응표」(11행)도 통째로 없다.
+
+그 표에서 여행으로 옮길 자리가 **바로 보이지 않는 것이 셋**이다.
+
+| v9 요구사항 | v9 구현 | v10 에서 | 위험 |
+|---|---|---|---|
+| **피드백 감성 분석** | `classifying` 때 인라인 sentiment 분류 | 코어 1 라벨이 **의도**만 남았다 (일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외) | 감성 축이 사라졌다 |
+| **다중 에이전트 서빙** | Team 6종 + **Catalog & Verification(A2A Remote)** | Team 은 있으나 **A2A Remote 가 없다** | A2A 시연 대상이 없다 |
+| **개인 AI 연동** | REST 5 + **MCP 3 tool** | "개인 에이전트 API + 여행별 토큰" 으로만 서술 | MCP 라는 말이 없다 |
+
+★**이건 기능 판단이 아니라 채점 항목이다.** 셋 다 v9 에서 산출물·검증까지
+정해 뒀던 것이라, 여행으로 옮기면서 자리를 안 만들면 **구현 여부와 무관하게
+대응표가 비게 된다.**
+
+**제안 — Place Verification 을 A2A Remote 자리로 쓴다.** `catalog_verification`
+이 지금 그 자리이고(외부 원장 조회 → 표시 내용 대조), 여행에서 **장소·운영
+정보 검증**이 같은 모양이다. Team 을 하나 더 만드는 부담 없이 A2A 시연 대상이
+생긴다. 감성 분석과 MCP 는 코어 몫이라 계획서에서 정할 일이다.
+
+★**계획서 수정은 이 문서에서 하지 않는다.** v10 은 다른 세션이 쓰는 중이고
+(17:25 에도 갱신됐다), 기준선 문서를 두 세션이 동시에 고치면 어느 쪽이 정본인지
+알 수 없게 된다. **이 절을 인계로 남긴다.**
+
+---
+
 ## 0. 결론 먼저
 
 | | 개수 | 무엇 |
@@ -17,7 +65,7 @@
 | Team — **새로 만듦** | **1** | Dining |
 | Team — **등록만** | **2** | Lodging, Flight |
 | Team — **폐기** | **0** | 없다. 여섯 팀 모두 대응 자리가 있다 |
-| **MVP 필수** | **2** | Activity, Itinerary Review |
+| **MVP 필수** | **2** | **Activity, Booking Execution** (v10 §5 기준) |
 
 **여섯 팀 중 폐기가 하나도 없다는 것이 이 구성안의 핵심이다.** 처음에는
 쇼핑몰 팀 셋(Procurement·Fulfillment·Catalog)을 버리는 것으로 봤는데, 코드를
@@ -59,8 +107,8 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 | `return_refund` | 396 | `return.check_eligibility` · `return.request` · `refund.calculate` | **Activity** | **취소 가능 판정 → 접수 → 환급액 계산**의 3단 구조가 같다. 반품 기한↔취소 기한, 반품 사유별 배송비 부담↔우천 취소 위약금율, 수량 초과 검증↔인원 초과 검증 |
 | `fulfillment_logistics` | 163 | `fulfillment.track` · `shipment.status` · `shipment.exception` | **Mobility** | **움직이는 것을 추적하고 예외를 잡는** 구조가 같다. 배송 지연 판정↔환승·막차 지연 판정, 미수령 조사↔경로 이탈 |
 | `catalog_verification` | 121 | `catalog.lookup_sku` · `catalog.verify_listing` · `catalog.compliance_check` | **Place Verification** | **외부 원장을 조회해 표시 내용이 맞는지 대조**하는 구조가 같다. A2A Remote 자리도 그대로 — 장소·운영 정보를 원격 검증으로 뺀다 |
-| `response_generation_review` | 154 | `response.generate_review` | **Itinerary Review** | 생성과 검수를 다른 주체가 하는 원칙이 그대로다. 금지어·PII 검사가 **통지 문구 검사**로 바뀐다 |
-| `procurement_order_payment` | 366 | `order.create` · `order.modify` · `order.cancel` · `payment.status` | **Booking Execution** | 예약 생성·변경·취소·결제 상태의 자리가 같다. **4단계로 미룬다** — 계약·권한이 있어야 열린다 |
+| `response_generation_review` | 154 | `response.generate_review` | **(각 Team 내부 규칙으로 흡수)** | 생성과 검수를 다른 주체가 하는 원칙은 살리되 **별도 Team 으로 두지 않는다**(v10 §5). 금지어·PII 검사는 통지 문구 검사로 이어진다 |
+| `procurement_order_payment` | 366 | `order.create` · `order.modify` · `order.cancel` · `payment.status` | **Booking Execution** | 예약 생성·변경·취소·결제 상태의 자리가 같다. **v10 에서 MVP 필수** — 협약사 커넥터를 Mock 으로 세운다 |
 | `voc_store_manager` | 101 | `voc.aggregate` · `voc.escalate` | **Trip Feedback** | 지금도 껍데기다(집계는 코어 1 소유). 여행에서도 껍데기로 유지 |
 
 ★**"이어받는다"는 코드를 복사한다는 뜻이 아니다.** 판정 3단 구조·감시 소스
@@ -86,16 +134,16 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 | # | Team | 하는 일 | 출처 |
 |---|---|---|---|
 | 6 | **Place Verification** | 장소 존재·운영 정보·표시 조건을 외부 원장과 대조. **A2A Remote** 로 뺀다 | `catalog_verification` 뼈대 |
-| 7 | **Itinerary Review** | 통지 문구 생성과 검수를 분리. 금지 표현·확정 단정·확인 시각 누락을 잡는다 | `response_generation_review` 뼈대 |
+| ~~7~~ | ~~**Itinerary Review**~~ | **Team 아님.** 통지 문구 생성·검수 분리는 **각 Team 안의 규칙**으로 흡수됐다(v10 §5) | `response_generation_review` 원칙만 승계 |
 | 8 | **Trip Feedback** | 여행 피드백 집계·급증 탐지. **껍데기** — 집계는 코어 1 소유 | `voc_store_manager` 뼈대 |
 
 ### C. 실행 Team
 
 | # | Team | 하는 일 | 언제 |
 |---|---|---|---|
-| 9 | **Booking Execution** | 예약 생성·변경·취소·결제 상태 | **4단계.** 공급자 계약·권한 확보 후 |
+| 9 | **Booking Execution** | 위임 범위 대조(금액·종류·되돌림 조건·횟수), 위약금 계산, 예약 변경·취소 판정 | **MVP 필수** (v10 §5). 협약사 커넥터는 **Mock** |
 
-**합계 9개.** 이 중 MVP 는 2개다(5절).
+**합계 8개** (Itinerary Review 제외). 이 중 MVP 는 2개다(5절).
 
 ---
 
@@ -162,18 +210,19 @@ Case 를 **우리가 연다.** `routing_sweeper` 가 이미 주기 작업으로 
 | Team | MVP | 이유 |
 |---|:---:|---|
 | **Activity** | **필수** | 취소·환급 규정이 **문서로 존재**해 판정 규칙을 바로 쓸 수 있다. 예약금이 걸려 실패 비용이 크고, 시연에서 사건이 한눈에 보인다 |
-| **Itinerary Review** | **필수** | 통지 문구가 확정 단정을 하면 제품 목표(할루시네이션 축소)가 무너진다. **선제 통지는 고객이 묻지 않았는데 우리가 보내는 것**이라 검수가 더 중요하다 |
+| **Booking Execution** | **필수** | v10 §4-C 의 **2층(협약사 위임 실행)이 제품이 팔려는 것**이다. 이것 없이는 "고객이 인터럽트 없이 보고만 받는다"를 보여줄 수 없다. 계약이 없는 문제는 **커넥터를 Mock 으로** 풀어, 증명 대상을 업체 연동이 아니라 **경계와 루프**로 좁힌다 |
 | Dining | 2순위 | 변화가 잦고 대체가 쉬워 시연 가치는 높다. 다만 Activity 로 루프가 증명되면 같은 틀의 반복이다 |
 | Mobility | 3순위 | 앞의 둘이 바뀌면 항상 영향을 받지만, **늦게 붙여도 코어 검증이 시간 충돌은 잡는다** |
 | Place Verification | 3순위 | A2A Remote 시연이 부트캠프 요구사항이라 **발표 전에는 필요**하다. 기능 가치보다 요구사항 충족이 이유다 |
 | Lodging · Flight | 등록만 | 잠긴 예약으로만 취급 |
-| Trip Feedback | 등록만 | 껍데기 유지 |
-| Booking Execution | 제외 | 계약·권한 의존. 4단계 |
+| Trip Feedback | 만들지 않음 | v10 에 자리가 없다. 껍데기를 안 만들면 그만이다 |
+| 통지 문구 검수 | Team 아님 | 각 Team 안의 규칙. **없애는 게 아니라 자리를 옮긴 것**이다 — 선제 통지는 고객이 묻지 않았는데 보내는 것이라 검수 자체는 여전히 필수다 |
 
 ### MVP 2개로 무엇을 보이나
 
 ```
 액티비티 취소 감지 → 재계획안 생성 → 잠긴 예약·필수 조건 재검증
+   → 위임 범위 대조 → 범위 안이면 협약사(Mock) 예약 변경 실행
    → 통지 문구 검수 → 고객 에이전트에 선제 통지 → 거부 시 되돌림
 ```
 
