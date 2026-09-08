@@ -123,7 +123,7 @@ tags: [governance, documentation]
 
 ## 12차 — 계획 문서 4건 (2026-09-06)
 
-`[실측]` `program/plan/A-COP_Composer_소유권_정정`(3/8) · `plan/diagram/_다이어그램_근거`(4/10) · cs `docs/plans/2026-08-16_v7_격차해소_실행계획`(11/18) · `2026-08-30_2100_모듈토글_실효화_설계`(2/7). 남은 `유지` 문서 33 → 29건.
+`[실측]` `program/plan/A-COP_Composer_소유권_정정`(3/8) · `plan/diagram/_다이어그램_근거`(4/10) · cs `final_project_cs/wiki/records/plans/2026-08-16_v7_격차해소_실행계획.md`(11/18) · `2026-08-30_2100_모듈토글_실효화_설계`(2/7). 남은 `유지` 문서 33 → 29건.
 
 | 대조함 | 찾은 것 |
 |---|---|

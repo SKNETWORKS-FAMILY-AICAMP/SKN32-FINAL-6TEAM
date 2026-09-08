@@ -4,6 +4,7 @@ title: A-COP 법적 근거 원문
 description: 청약철회와 개인정보 처리에 적용되는 법조문 원문과 재현 가능한 조회 방법을 정리한다.
 status: draft
 tags: [contract, security, governance, documentation]
+impl_scope: cs — 이관 출처인 코퍼스 배분 기록이 cs 저장소에만 있다. 법령 사실 자체는 두 구현 모두에 해당한다
 ---
 
 ## 결론
@@ -153,7 +154,7 @@ GET http://www.law.go.kr/DRF/lawService.do?OC={OC}&target=law&MST={MST}&type=XML
 
 ## ★ [2026-09-03] 실무 기준표 — 코퍼스에 쓸 값
 
-`[실측]` `docs/plans/2026-08-17_코퍼스_25문서_배분안.md` §1 에서 이관.
+`[실측]` `final_project_cs/wiki/records/plans/2026-08-17_코퍼스_25문서_배분안.md` §1 에서 이관.
 
 **지어낸 숫자를 쓰면 코퍼스 자체가 틀린 답을 가르친다.**
 

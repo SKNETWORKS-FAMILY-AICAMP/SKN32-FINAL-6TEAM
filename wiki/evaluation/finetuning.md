@@ -111,7 +111,7 @@ prompt version · dataset hash · bootstrap 95% CI
 
 **2차가 계획대로 안 됐다.** v8이 말한 "알파 실데이터"는 운영 전환 이후에나 생긴다.
 
-**그리고 결과가 부정적이다.** 원인 분석은 `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`.
+**그리고 결과가 부정적이다.** 원인 분석은 `final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`.
 
 ## 12GB 제약
 
@@ -121,7 +121,7 @@ prompt version · dataset hash · bootstrap 95% CI
 
 ## ★ [2026-09-03] 실행 결과 — 배선은 됐고 모델은 못 쓴다
 
-`[실측]` `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` 에서 이관.
+`[실측]` `final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` 에서 이관.
 
 **배경:** `Proposed+FT`(파인튜닝 모델 단독 호출)가 golden/holdout **양쪽에서 0% pass** 였다. 원인은 Team 파이프라인 **밖에서** 호출돼 **RAG evidence 를 아예 못 받았기** 때문.
 

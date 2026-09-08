@@ -59,7 +59,7 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 그래서 **"A-COP이 단순 LLM보다 몇 배 비싸다"를 지금은 말할 수 없다.** 심사에서 "그냥 GPT 부르면 되는데 왜"가 나오면 답할 근거가 없다.
 
-**재측정이 필요하다.** 명령은 `docs/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
+**재측정이 필요하다.** 명령은 `final_project_cs/wiki/records/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
 
 ### 지연이 제품 형태를 정한다
 

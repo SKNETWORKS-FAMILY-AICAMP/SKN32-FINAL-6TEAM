@@ -56,7 +56,7 @@ owners: [human:미배정]
 
 ```
 DoD-05_ContextPack_토큰예산.md:5
-  재측정: 2026-08-14 · 실측 원문 `docs/evidence/_raw/DoD-05_v4.md`
+  재측정: 2026-08-14 · 실측 원문 `final_project_cs/wiki/records/evidence/_raw/DoD-05_v4.md`
 ```
 
 **끊으면 근거 사슬이 끊긴다.** 판정본에 남는 건 "통과"라는 결론뿐이고, 그 아래 실제 명령과 출력이 사라진다.

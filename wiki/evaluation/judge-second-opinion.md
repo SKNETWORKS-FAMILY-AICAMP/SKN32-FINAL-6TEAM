@@ -4,6 +4,7 @@ title: Judge 2차·3차 의견 — 사람 라벨이 아니다
 description: 같은 24건을 judge v3 외에 두 번 더 독립으로 채점했다. policy_grounding 만 어긋나고, v1 상수는 깼으나 아직 천장에 붙어 있다. DoD-15 는 열려 있다
 status: draft
 tags: [evaluation, testing]
+impl_scope: cs — 평가 하네스와 골든셋은 cs 소유다. sample 은 계약 테스트로 검증한다
 ---
 
 # Judge 2차·3차 의견
@@ -102,7 +103,7 @@ DoD-15 가 재려는 것은 *judge 가 사람과 얼마나 맞는가* 다. 모�
 
 **v3 가 상수를 깼다.** v1 은 인용이 붙었는지만 보고 답변이 그 근거를 쓰는지는
 묻지 않아 전 건 4점이 나왔다(`eval/rescore.py:21` 주석과
-`docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md`).
+`final_project_cs/wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md`).
 재기준선은 그걸 고치려고 한 것이고, 실제로 값이 움직였다.
 
 **다만 아직 위쪽에 몰려 있다.** 24건 중 23건이 3점 아니면 4점이다. 위에 옮긴

@@ -76,7 +76,7 @@ codex도 둘 다 애매로 봤다. **type 목록에 빈 자리가 있다는 신�
 
 ### 둘 — 18번이 유일하게 "둘 다 확실인데 갈렸다"
 
-`docs/handoff/README.md` — Claude `guide`, codex `contract`.
+`final_project_cs/wiki/records/handoff/README.md` — Claude `guide`, codex `contract`.
 
 그 문서 첫 줄이 이렇다.
 

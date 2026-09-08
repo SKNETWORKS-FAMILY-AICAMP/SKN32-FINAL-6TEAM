@@ -124,7 +124,7 @@ if "/evidence/_raw/" in n:
 
 | 대상 | 건수 | 이유 |
 |---|---|---|
-| `docs/handoff/_prompts/` | 114 | **작업 지시 티켓이지 계약이 아니다** |
+| `final_project_cs/wiki/records/handoff/_prompts/` | 114 | **작업 지시 티켓이지 계약이 아니다** |
 | `final_project_cs/legacy/` | 42 | 옛 sample 코드 사본 |
 | `final_project_cs/knowledge/` | 25 | RAG 코퍼스. 문서가 아니라 데이터 |
 | `team_branch/` | 5 | 팀원 개인 폴더 |

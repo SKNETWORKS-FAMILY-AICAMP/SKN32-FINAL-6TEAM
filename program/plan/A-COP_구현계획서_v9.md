@@ -1550,7 +1550,7 @@ API key는 tenant·client·scope와 함께 저장하며 원문을 로그에 남�
 | 관계 조회 | vector/SQL 조회만 가정 | `GraphStorePort`와 `SqlGraphAdapter` | `app/infrastructure/graphstore/`·`graph_projection/`(**둘 다 빈 패키지**), `app/core/case_runtime/context/broker/context.py` | 관계 질의 3종 fixture |
 | 공유 상태 갱신 | Team 결과를 직접 merge할 위험 | `SharedStateUpdate`/`UpdateResult`와 CAS | `app/core/case_runtime/case/transition.py`, `app/core/case_runtime/concurrency/` | conflict/replan test |
 | Broker 호출 | 구현체 직접 호출 위험 | `MessageBusPort.publish`와 at-least-once | `app/infrastructure/messaging/ports.py:6`, `app/core/case_runtime/contracts/contracts.py:334` | duplicate delivery/replay |
-| DoD checker | v5 18개만 열거 | 1~18 유지, 19~23 추가 checker/test로 확장 | `scripts/verify_dod.py`, `docs/evidence/DoD-19~23` | checker mapping test |
+| DoD checker | v5 18개만 열거 | 1~18 유지, 19~23 추가 checker/test로 확장 | `scripts/verify_dod.py`, `final_project_cs/wiki/records/evidence/DoD-19~23` | checker mapping test |
 
 ### 실측에서 드러난 선행 정리 항목
 

@@ -109,7 +109,7 @@ elif lines >= 80 and (DS_DATE.search(text) or DS_STATUS.search(text)):
 
 | 회차 | 어디 |
 |---|---|
-| 범위 목록 | `docs/handoff/_prompts/` 114건 |
+| 범위 목록 | `final_project_cs/wiki/records/handoff/_prompts/` 114건 |
 | [7차](round-7.md) | `program/research/_prompts/` 2건 |
 | **9차** | **`datasets/voc/aihub_30716_callcenter_qa/_prompts/`** 1건 |
 

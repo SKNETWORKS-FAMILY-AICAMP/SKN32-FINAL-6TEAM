@@ -49,7 +49,7 @@ program/research/ 아래 = research   ← 24/26 에서 틀렸다
   ("program/research/", "?",        "hub/research")   ← type 을 찍지 않는다
 ```
 
-`research/_prompts/` 도 `SKIP_DIRS` 에 넣었다. **`docs/handoff/_prompts/` 114건과 같은 작업 지시 티켓이다.**
+`research/_prompts/` 도 `SKIP_DIRS` 에 넣었다. **`final_project_cs/wiki/records/handoff/_prompts/` 114건과 같은 작업 지시 티켓이다.**
 
 ## 판정 26건
 

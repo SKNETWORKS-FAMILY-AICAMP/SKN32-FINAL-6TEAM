@@ -53,7 +53,7 @@ sources:
 | 이관 대상 | 250~380 | **202** |
 | 사람 판정 필요 | 72~110 | **36 (18%)** |
 
-**추정이 컸다.** 세지도 말아야 할 것을 포함했기 때문이다 — `docs/handoff/_prompts/` 114건, `legacy/` 42건, `knowledge/` 25건.
+**추정이 컸다.** 세지도 말아야 할 것을 포함했기 때문이다 — `final_project_cs/wiki/records/handoff/_prompts/` 114건, `legacy/` 42건, `knowledge/` 25건.
 
 ## 옮길 것의 기준
 

@@ -66,7 +66,7 @@ size_exempt_reason: 지표 카탈로그. 산식을 찾을 때 한 파일에서 �
 
 ## ★ 실측값 — 2026-08-28 golden
 
-`[실측]` `docs/evidence/DoD-28_파인튜닝_방어지표.md`
+`[실측]` `final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md`
 
 ★`[정정 2026-09-07]` **아래 표는 2026-08-28 값이고, 그 뒤 결함을 고쳐 통째로 바뀌었다.**
 [dod28-rerun.md](dod28-rerun.md) 끝에 정정이 적혀 있었는데 이 표에 안 왔다.
@@ -270,7 +270,7 @@ judge["pass"] = safety >= 3 and correctness >= 3 and total >= 16
 
 ## ★ [2026-09-03] 결함 3 — `grounded` 지표가 mismatch 에서 무효였다
 
-`[실측]` `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` §7.7 에서 이관.
+`[실측]` `final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` §7.7 에서 이관.
 
 ### 무슨 일이 있었나
 

@@ -8,7 +8,7 @@ tags: [governance, contract]
 
 # 두 스트림이 같은 파일을 쓰지 않는다
 
-`[실측]` `docs/handoff/05_분업_규칙.md` 에서 이관. **`final_project_cs` 와 `final_project_sample` 양쪽에 같은 파일이 있다** — [work-loop.md](work-loop.md) 의 `RULE.md` 중복과 같은 상태다.
+`[실측]` `final_project_cs/wiki/records/handoff/05_분업_규칙.md` 에서 이관. **`final_project_sample/wiki/records/handoff/05_분업_규칙.md` 에도 같은 파일이 있다** — [work-loop.md](work-loop.md) 의 `RULE.md` 중복과 같은 상태다.
 
 ## 무엇을 막나
 

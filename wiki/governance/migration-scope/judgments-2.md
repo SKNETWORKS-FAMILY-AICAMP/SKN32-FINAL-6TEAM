@@ -75,8 +75,8 @@ D-001 에 `## ★ 결과 — 환불 계산식을 고쳐야 한다` 로 들어가
 | 문서 | 누가 참조하나 |
 |---|---|
 | `docs/release_checklist.md` | `final_project_cs/CLAUDE.md` |
-| `docs/manuals/운영_unknown상태_대응절차.md` | `release_checklist` · DoD 문서 |
-| `docs/vision/TODO_VISION.md` | `RULE.md` |
+| `final_project_cs/wiki/records/manuals/운영_unknown상태_대응절차.md` | `release_checklist` · DoD 문서 |
+| `final_project_cs/wiki/records/vision/TODO_VISION.md` | `RULE.md` |
 
 **[7차](../type-verification/round-7.md)에서 세운 규칙이 또 걸렸다** — 옮기기 전에 "누가 이 경로를 가리키는가"를 센다.
 

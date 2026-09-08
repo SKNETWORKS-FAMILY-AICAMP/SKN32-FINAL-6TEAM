@@ -54,7 +54,7 @@ codex도 둘 다 애매로 봤다. **두 판정자가 같은 자리에서 막혔
 
 `[실측]` blind 대조에서 **둘 다 `확실`인데 갈린 유일한 건**이 이것이다.
 
-`docs/handoff/README.md` — Claude `guide`, codex `contract`.
+`final_project_cs/wiki/records/handoff/README.md`(`final_project_sample/wiki/records/handoff/README.md` 도 같다) — Claude `guide`, codex `contract`.
 
 그 문서가 폴더를 안내하면서 **동시에 그 폴더의 성격을 정의**한다.
 

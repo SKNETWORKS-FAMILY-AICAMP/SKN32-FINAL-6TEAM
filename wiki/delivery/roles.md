@@ -72,7 +72,7 @@ Team은 Registry 등록형이라 개수가 늘 수 있다.
 
 | 스트림 | 소유 디렉터리 — 여기만 쓴다 |
 |---|---|
-| **Core** | `app/core/**` `app/domain/**` `app/application/{case_service,controller}.py` `app/infrastructure/messaging/**` `tests/contract/**` `docs/handoff/**` `config/guardrails.yaml` |
+| **Core** | `app/core/**` `app/domain/**` `app/application/{case_service,controller}.py` `app/infrastructure/messaging/**` `tests/contract/**` `final_project_cs/wiki/records/handoff/**` `config/guardrails.yaml` |
 | **DB** | `app/infrastructure/db/**` `scripts/seed.py` |
 | **API** | `app/presentation/api/**` `app/presentation/security.py` `tests/security/**` |
 | **Team** | `app/modules/customer_ops/**` `app/tools/**` `prompts/**` |

@@ -48,7 +48,7 @@ tags: [evaluation, governance]
 
 ## 배선은 고쳤는데 재측정을 안 했다
 
-`[실측]` `docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` 가 파이프라인 안으로 넣는 배선을 만들고 **"배선은 전부 동작한다"**고 적었다.
+`[실측]` `final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md` 가 파이프라인 안으로 넣는 배선을 만들고 **"배선은 전부 동작한다"**고 적었다.
 
 그리고 **세 arm 비교를 계획했다.**
 
