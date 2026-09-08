@@ -4,14 +4,20 @@
 
 | 사실 | 현재 값 | 정본 | 확인일 |
 |---|---|---|---|
-| 문서 기준선 | **v9** (v8 이하는 보존본, `program/plan/archive/`). 계획서 = 범위·결정·일정, 세부 설계·운영 사실 = wiki | `program/plan/A-COP_구현계획서_v9.md` §0 | 2026-09-06 |
-| Team 목록 — CS Pack 확정(10주 착수) | Response Generation & Review. VOC & Store Manager는 Registry 등록·계약만 유지하는 껍데기로 조정(집계·급증 탐지는 코어 1 소유) | `program/plan/A-COP_구현계획서_v9.md` §0 v8 재판정, §7, §8-B | 2026-09-01 |
-| 인라인 분류 소유 | 코어 1 (진입·분류 층). 라벨 어휘·프롬프트 구현은 모델 담당 | 동 §3-A, §16 | 2026-09-01 |
-| Team 목록 — 검증 쇼핑몰 연계(일정 따라 조정) | Procurement + Order & Payment, Fulfillment & Logistics, Return & Refund(Mock), Catalog & Verification(A2A Remote) | 동 | 2026-08-17 |
-| DoD 항목 수 | 1~29 (1~28은 v5/v7 번호 보존, 29는 Response Generation & Review 검증 신규). evidence 9건 낡음 표시(v9 §27) | `program/plan/A-COP_구현계획서_v9.md` §27 | 2026-09-06 |
-| Docker·AWS | Phase 2 (로컬 개발 환경엔 Docker 없음, 실제 배포 단계에서 컨테이너화) | `program/plan/A-COP_구현계획서_v9.md` §12, §28 | 2026-08-17 |
-| Composer 소재·쓰기 계약 | 지금은 pip(direct) 방식, 중앙은 UI 옵션. 운영자 API는 항목 단위, 전체 교체·복원은 `composer:admin`. cs 소스 안에 Composer 구현 금지 | `program/plan/A-COP_구현계획서_v9.md` §8-D | 2026-09-06 |
-| 프로젝트 일정 구조 | 선행 2026-08-17~08-27(11일) + 공식 1W~9W, 중간발표 09-15, 최종발표 10-26 | `program/research/_WBS원본_2026-08-17.md` | 2026-08-17 |
+| 문서 기준선 | **v10** (v8 이하는 보존본 `program/plan/archive/`. **v9 는 아직 `program/plan/` 에 그대로 있다** — 옮길지 안 정해졌다). 계획서 = 범위·결정·일정, 세부 설계·운영 사실 = wiki | `program/plan/A-COP_구현계획서_v10.md` §0 | 2026-09-08 |
+| **도메인** | **여행 CS** — 2026-09-08 팀 결정으로 커머스 CS 에서 교체. 코어 계약·생명주기·동시성·감사·평가 도구는 승계, Team 모듈과 도메인 데이터는 전량 신규 | `program/plan/A-COP_구현계획서_v10.md` §0 | 2026-09-08 |
+| Team 목록 — v10 §5 | Activity · Dining · Mobility · **Booking Handoff** · Lodging/Flight(등록만). MVP 필수는 **Activity·Booking Handoff** 둘 | `program/plan/A-COP_구현계획서_v10.md` §5 | 2026-09-08 |
+| 계획 생성 소유 | **우리 일이 아니다.** 외부 에이전트·LLM 이 만든 일정을 받아 검증하고 여행 종료까지 지켜본다 | 동 §4-A | 2026-09-08 |
+| 인라인 분류 소유 | 코어 1 (진입·분류 층). **라벨이 교체됐다** — 일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외 | 동 §5-A | 2026-09-08 |
+| DoD 항목 수 | **22** (v10 §12, 자동 17 · 아키텍처 테스트 3 · 측정 2). v9 의 29항목은 **쇼핑몰 대상**이라 그대로 쓰지 않는다 | 동 §12 | 2026-09-08 |
+| 승계하는 코어 규칙 | 낙관적 동시성 · Idempotency · 이벤트 순서 · **`outbox UNIQUE(tenant_id, topic, dedupe_key)`** · Team 은 side effect 를 실행하지 않는다 · Core 는 도메인 어휘를 모른다 · 근거 없는 문장 금지 | 동 §6 | 2026-09-08 |
+| Composer 소재 | **승계.** 소재를 영어 통지 문구 + 운영자용 한국어로 교체 | 동 §0-2, §5-A | 2026-09-08 |
+| 프로젝트 일정 | 최종발표 **2026-10-26** 까지 **7주**(09-08 기준). MVP 는 구현 단계 1(계획과 검증)까지 | 동 §0, §9 | 2026-09-08 |
+| `[미확보]` v10 이 말하지 않는 것 | **`A2A`·`MCP`·`Docker`·`AWS` 문자열이 v10 에 0회다.** v9 §3-A 의 부트캠프 요구사항 대응표도 없다. 빠진 것인지 뺀 것인지 안 정해졌다 | `program/plan/A-COP_여행Team모듈_구성안.md` §0 | 2026-09-08 |
+
+★`[2026-09-08 판올림]` 이 표는 09-07 까지 **v9 쇼핑몰** 기준이었다. 도메인이 여행으로
+바뀌었는데 **매 세션 자동으로 실리는 이 표만 안 바뀌어**, 모든 세션이 틀린 사실로 시작하고
+있었다. v9 기준 표가 필요하면 `program/plan/archive/` 의 v9 §0 을 본다.
 
 이 표가 오래됐으면 [`program/research/index.md`](program/research/index.md)의 「현재 기준 사실」 표가 정본이다. 둘은 같이 갱신한다. 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)와 각 저장소의 `wiki/`가 정본이다(2026-09-07 전환 완료). **읽는 순서는 wiki 먼저다.** 작업 기록(evidence·리포트)은 각 저장소의 `wiki/records/`에 있다(2026-09-08 `docs/`를 통합) — wiki가 인용한 근거를 확인할 때 연다. 두 곳이 다르면 wiki를 고치거나, 기록이 낡았다는 주석을 붙인다 — 기록 자체는 고치지 않는다.
 

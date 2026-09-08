@@ -46,7 +46,10 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-BASELINE = "program/plan/A-COP_구현계획서_v9.md"
+#: ★2026-09-08 도메인 교체로 **v10 이 기준선이다.** 검사기가 v9 를 읽고 있으면
+#:  낡은 문서를 지키게 된다 — 있는 것보다 나쁘다.
+#:  v9 는 아직 `program/plan/` 에 남아 있지만 기준선이 아니다.
+BASELINE = "program/plan/A-COP_구현계획서_v10.md"
 
 #: 판정 원장. 검사 1·5 는 **후보**를 모을 뿐이라 매번 같은 줄이 다시 올라온다.
 #:  2026-09-07 에 13건을 코드에 대고 판정했는데, 그 13건이 다음 세션에 그대로
@@ -576,27 +579,55 @@ UNIQUE_RE = re.compile(r"UNIQUE\s*\(([^)]*)\)", re.I)
 MIGRATIONS = "final_project_cs/app/infrastructure/db/migrations"
 
 
+#: cs 의 `.env` 에서 접속 문자열만 꺼낸다. ★앱을 import 하지 않는다 —
+#:  `app.infrastructure.db.session` 을 부르면 cs 패키지 전체가 딸려 와서
+#:  그것만으로 느리고, 접속 시간 제한도 우리가 못 건다.
+CS_ENV = "final_project_cs/.env"
+DB_TIMEOUT_SECONDS = 5
+
+
+def _dsn() -> str | None:
+    if not os.path.exists(CS_ENV):
+        return None
+    for line in Path(CS_ENV).read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.startswith("ACOP_DATABASE_URL="):
+            url = line.split("=", 1)[1].strip().strip('"').strip("'")
+            # SQLAlchemy 표기(`postgresql+psycopg://`)를 libpq 가 아는 형태로
+            return url.replace("postgresql+psycopg://", "postgresql://", 1)
+    return None
+
+
 def _real_constraints() -> tuple[set[frozenset], str]:
     """살아 있는 DB 를 먼저 본다. 못 붙으면 마이그레이션 SQL 로 떨어진다.
 
     ★DB 가 정본이다. 마이그레이션은 "돌렸다면 이렇게 됐을 것" 이라서
       실제로 안 돌린 환경에서는 거짓 안심을 준다. 어느 쪽을 봤는지 찍는다.
+
+    ★**시간 제한을 건다.** DB 가 응답을 안 하면 예외가 아니라 멈춤이라
+      `except` 로는 안 잡힌다. 2026-09-09 에 실제로 이것 때문에 검사기가
+      90초를 넘겨 죽었다. 붙는 데 몇 초 넘게 걸리면 없는 것으로 본다.
     """
-    try:
-        sys.path.insert(0, "final_project_cs")
-        from app.infrastructure.db.session import get_connection  # type: ignore
-        out = set()
-        with get_connection() as conn, conn.cursor() as cur:
-            cur.execute(
-                "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE contype = 'u'")
-            for (definition,) in cur.fetchall():
-                m = UNIQUE_RE.search(definition or "")
-                if m:
-                    out.add(frozenset(c.strip().strip('"') for c in m.group(1).split(",")))
-        if out:
-            return out, "살아 있는 DB (pg_constraint)"
-    except Exception:
-        pass
+    dsn = _dsn()
+    if dsn:
+        try:
+            import psycopg
+            out = set()
+            with psycopg.connect(dsn, connect_timeout=DB_TIMEOUT_SECONDS) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SET LOCAL statement_timeout = %s",
+                                (DB_TIMEOUT_SECONDS * 1000,))
+                    cur.execute("SELECT pg_get_constraintdef(oid) "
+                                "FROM pg_constraint WHERE contype = 'u'")
+                    for (definition,) in cur.fetchall():
+                        m = UNIQUE_RE.search(definition or "")
+                        if m:
+                            out.add(frozenset(c.strip().strip('"')
+                                              for c in m.group(1).split(",")))
+            if out:
+                return out, "살아 있는 DB (pg_constraint)"
+        except Exception as exc:
+            print(f"    DB 에 못 붙었다({type(exc).__name__}) — 마이그레이션으로 떨어진다")
+
     out = set()
     if os.path.isdir(MIGRATIONS):
         for name in sorted(os.listdir(MIGRATIONS)):
@@ -605,7 +636,7 @@ def _real_constraints() -> tuple[set[frozenset], str]:
             sql = Path(MIGRATIONS, name).read_text(encoding="utf-8", errors="replace")
             for m in UNIQUE_RE.finditer(sql):
                 out.add(frozenset(c.strip().strip('"') for c in m.group(1).split(",")))
-    return out, f"마이그레이션 SQL ({MIGRATIONS}) — ★DB 에 못 붙었다"
+    return out, f"마이그레이션 SQL ({MIGRATIONS}) — ★DB 를 못 봤다"
 
 
 def check_db_constraints(_text: str) -> int:
@@ -625,14 +656,17 @@ def check_db_constraints(_text: str) -> int:
                 if not name.endswith(".md"):
                     continue
                 path = os.path.join(dirpath, name).replace("\\", "/")
-                lines = read(path).splitlines()
                 # ★`wiki/records/` 는 건너뛴다 (2026-09-08 `docs/` 통합).
                 #   날짜가 박힌 작업 기록이라 **고치지 않는 것이 성질**이다
                 #   (루트 `CLAUDE.md`, `check_wiki.py` 도 같은 이유로 면제한다).
                 #   통합 직후 여기서 27곳이 올라왔는데 전부 옛 기록의 옛 제약이었다 —
                 #   고칠 수 없는 것을 매번 보여 주면 경보가 경보가 아니게 된다.
+                # ★읽기 **전에** 거른다. 읽고 나서 걸렀더니 799개를 다 열어
+                #   검사 6 하나가 90초를 넘겼다(2026-09-09 실측). 못 돌리는
+                #   검사기는 아무도 안 돌린다.
                 if "/records/" in path:
                     continue
+                lines = read(path).splitlines()
                 for i, line in enumerate(lines, 1):
                     for m in UNIQUE_RE.finditer(line):
                         cols = frozenset(c.strip().strip("`\"' ")
