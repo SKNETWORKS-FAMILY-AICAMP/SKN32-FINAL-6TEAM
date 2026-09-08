@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>A-COP 여행 Team 모듈 브리핑 — 쉬운 설명</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --line: #d1d5db;
+    --accent: #0f766e;
+    --accent2: #1d4ed8;
+    --soft: #ecfeff;
+    --soft2: #eef2ff;
+    --easy-bg: #fffbeb;
+    --easy-line: #f59e0b;
+    --easy-text: #92400e;
+    --crit: #b91c1c;
+    --crit-bg: #fef2f2;
+    --keep: #047857;
+    --keep-bg: #ecfdf5;
+    --stub: #6b7280;
+    --stub-bg: #f3f4f6;
+    --codebg: #f3f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1020;
+      --card: #131a2e;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #334155;
+      --accent: #2dd4bf;
+      --accent2: #60a5fa;
+      --soft: #0f2b2b;
+      --soft2: #16203c;
+      --easy-bg: #2a2008;
+      --easy-line: #fbbf24;
+      --easy-text: #fcd34d;
+      --crit: #fca5a5;
+      --crit-bg: #2b1113;
+      --keep: #34d399;
+      --keep-bg: #06281f;
+      --stub: #9ca3af;
+      --stub-bg: #1b2236;
+      --codebg: #1b2236;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #0f766e, #1d4ed8);
+    color: #fff;
+    padding: 40px 24px 32px;
+  }
+  header h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.35; }
+  header p { margin: 6px 0; opacity: .96; }
+  header .meta { font-size: 14px; opacity: .88; }
+  .container { max-width: 980px; margin: 0 auto; padding: 24px; }
+  .section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px;
+    margin: 0 0 20px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, .05);
+    min-width: 0;
+  }
+  h2 { margin: 0 0 12px; font-size: 23px; line-height: 1.4; }
+  h2 .num { display: inline-block; min-width: 30px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  h3 { margin: 22px 0 8px; font-size: 17px; }
+  p { margin: 12px 0; }
+  ul, ol { margin: 12px 0; padding-left: 22px; }
+  li { margin: 7px 0; }
+
+  code.inl {
+    background: var(--codebg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 5px;
+    font-family: Consolas, "D2Coding", monospace; font-size: 13px;
+    overflow-wrap: anywhere; word-break: break-word;
+  }
+
+  .easy {
+    background: var(--easy-bg);
+    border-left: 4px solid var(--easy-line);
+    border-radius: 0 12px 12px 0;
+    padding: 13px 16px;
+    margin: 14px 0;
+    color: var(--easy-text);
+    min-width: 0;
+  }
+  .easy b { color: var(--easy-text); }
+  .easy p { margin: 6px 0; }
+  .easy p:first-child { margin-top: 0; }
+  .easy p:last-child { margin-bottom: 0; }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--soft);
+    border-radius: 0 12px 12px 0;
+    padding: 14px 16px; margin: 16px 0; min-width: 0;
+  }
+  .callout.warn { border-left-color: var(--crit); background: var(--crit-bg); }
+  .callout.warn b { color: var(--crit); }
+  .callout p:first-child { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .tablewrap { overflow-x: auto; margin: 14px 0; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 9px 11px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+  th { background: var(--soft2); font-weight: 700; }
+
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1px solid transparent; }
+  .pill--keep { background: var(--keep-bg); color: var(--keep); border-color: var(--keep); }
+  .pill--mvp  { background: var(--crit-bg); color: var(--crit); border-color: var(--crit); }
+  .pill--stub { background: var(--stub-bg); color: var(--stub); border-color: var(--line); }
+
+  .steps { background: var(--soft2); border: 1px solid var(--line); border-radius: 14px; padding: 16px 16px 16px 6px; margin: 16px 0; min-width: 0; }
+  .steps ol { margin: 0; }
+  .steps li { margin: 9px 0; overflow-wrap: anywhere; }
+  .steps li b { color: var(--accent2); }
+
+  footer { color: var(--muted); font-size: 13px; padding: 8px 24px 40px; max-width: 980px; margin: 0 auto; }
+
+  @media (max-width: 560px) {
+    header { padding: 28px 18px 24px; }
+    header h1 { font-size: 24px; }
+    .container { padding: 16px; }
+    .section { padding: 18px 16px; border-radius: 14px; }
+    h2 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>A-COP 여행 Team 모듈 구성 — 쉬운 설명</h1>
+  <p>쇼핑몰 고객응대에서 여행 관리로 주제를 바꿀 때, 만들어 둔 것을 얼마나 다시 쓸 수 있나</p>
+  <p class="meta">2026-09-08 · 기술 배경 없이 읽을 수 있게 쓴 판입니다</p>
+</header>
+
+<div class="container">
+
+  <div class="section">
+    <h2><span class="num">0</span> 한 줄로</h2>
+    <p><b>주제를 바꿔도 만들어 둔 여섯 팀 중 버릴 것이 하나도 없다.</b>
+    다섯은 뼈대를 그대로 쓰고, 하나만 새로 만들면 된다.</p>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 중국집을 하다가 분식집으로 바꾸는 상황입니다.
+      메뉴는 전부 바뀌지만 <b>주방·불·칼·주문 받는 순서·계산 방법은 그대로</b>입니다.
+      바꾸는 건 레시피지 주방이 아닙니다.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>구분</th><th>개수</th><th>뜻</th></tr></thead>
+        <tbody>
+          <tr><td>버림</td><td><b>0개</b></td><td>없다</td></tr>
+          <tr><td>뼈대 그대로</td><td><b>5개</b></td><td>하는 일의 순서가 같아서 틀을 물려받는다</td></tr>
+          <tr><td>새로 만듦</td><td><b>1개</b></td><td>식당 담당. 쇼핑몰엔 “영업시간”이란 게 없었다</td></tr>
+          <tr><td>이름만 등록</td><td><b>2개</b></td><td>숙소·항공. 손대지 않고 “고정”으로만 취급</td></tr>
+          <tr><td><b>먼저 만들 것</b></td><td><b>2개</b></td><td>액티비티 · 예약 실행</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> 팀을 무엇을 기준으로 나눴나</h2>
+    <p><b>여행을 이루는 “물건 종류”로 나눈다.</b> 액티비티, 식사, 이동처럼요.
+    지역이나 고객 종류로는 나누지 않습니다.</p>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 병원을 <b>내과·외과·정형외과</b>로 나누지
+      <b>서울점·부산점</b>으로 나누지 않는 것과 같습니다.</p>
+      <p>진료과로 나누면 부산에 지점을 내도 <b>진료과를 새로 만들 필요가 없습니다.</b>
+      지점으로 나눴다면 부산점을 통째로 하나 더 만들어야 합니다.</p>
+      <p>그래서 서울에서 부산으로 넓힐 때 <b>프로그램은 안 고치고 자료만 추가</b>하면 됩니다.</p>
+    </div>
+
+    <h3>팀 하나가 하는 일 세 가지</h3>
+    <ol>
+      <li><b>맞는지 따진다</b> — 이 액티비티, 지금 취소해도 되는 날짜인가</li>
+      <li><b>바뀌었는지 지켜본다</b> — 비 온다는 예보가 떴나</li>
+      <li><b>대신할 것을 찾는다</b> — 취소되면 무엇으로 바꿀까</li>
+    </ol>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 세 번째만 AI가 하고, <b>첫 번째는 사람이 만든 규칙(계산)이 합니다.</b>
+      AI가 “이걸로 바꾸면 어때요” 하고 내놓으면 <b>규칙이 한 번 더 검사해서</b>
+      통과한 것만 손님에게 갑니다.</p>
+      <p>글을 쓰는 사람과 검토하는 사람을 따로 두는 것과 같습니다.
+      혼자 쓰고 혼자 검토하면 자기 실수를 못 봅니다.</p>
+    </div>
+
+    <p>일정 전체가 맞는지(시간이 겹치나, 예산을 넘었나, 이동 시간이 되나)는
+    <b>각 팀이 보지 않고 중앙에서 봅니다.</b> 팀은 자기 물건만 보면 됩니다.</p>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> 기존 팀이 어디로 가나</h2>
+    <p>처음엔 쇼핑몰용 팀 셋을 버려야 한다고 봤습니다.
+    <b>그런데 코드를 열어 보니 셋 다 여행에 똑같은 모양의 자리가 있었습니다.</b></p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>지금 하던 일</th><th>여행에서</th><th>왜 같나</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>반품·환불 담당</td>
+            <td><b>액티비티 담당</b> <span class="pill pill--mvp">먼저</span></td>
+            <td>“지금 취소돼요? → 접수 → 얼마 돌려드려요”
+            <b>순서가 똑같습니다.</b> 반품 기한이 취소 기한으로, 배송비 부담이 위약금으로 바뀔 뿐입니다</td>
+          </tr>
+          <tr>
+            <td>주문·결제 담당</td>
+            <td><b>예약 실행 담당</b> <span class="pill pill--mvp">먼저</span></td>
+            <td>만들고 · 바꾸고 · 취소하고 · 결제 상태를 보는 자리가 그대로입니다</td>
+          </tr>
+          <tr>
+            <td>배송 추적 담당</td>
+            <td><b>이동 담당</b></td>
+            <td><b>움직이는 걸 따라가며 문제를 잡는</b> 일이 같습니다.
+            택배가 안 움직이는 것 ↔ 지하철을 놓친 것</td>
+          </tr>
+          <tr>
+            <td>상품정보 검증 담당</td>
+            <td><b>장소정보 검증 담당</b></td>
+            <td>바깥 자료를 조회해서 <b>표시된 내용이 맞는지 대조</b>하는 일이 같습니다</td>
+          </tr>
+          <tr>
+            <td>—</td>
+            <td><b>식당 담당</b> <span class="pill pill--keep">새로</span></td>
+            <td>영업시간·휴무·아이 동반 같은 조건. <b>쇼핑몰엔 없던 개념</b>이라 새로 씁니다</td>
+          </tr>
+          <tr>
+            <td>—</td>
+            <td>숙소 · 항공 <span class="pill pill--stub">이름만</span></td>
+            <td>바꾸지 않고 “이건 고정”으로만 씁니다</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 왜 자리가 남아 있을까요?</p>
+      <p>우리가 만든 게 <b>“쇼핑몰 기능”이 아니라 “일 처리하는 방식”</b>이기 때문입니다 —
+      규칙에 맞는지 따지고, 왜 그렇게 판단했는지 근거를 남기고,
+      애매하면 사람에게 넘기고, 한 일을 기록하는 틀이요.</p>
+      <p>반품 기한을 따지던 계산기가 <b>액티비티 취소 기한을 따지는 데 그대로 쓰입니다.</b>
+      계산기는 그대로고 넣는 숫자만 바뀝니다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> 이런 일을 이미 한 번 해 봤습니다</h2>
+    <p>주제를 바꾸는 건 처음이 아닙니다. 예전에 <b>구독·결제 서비스 → 쇼핑몰</b>로
+    한 번 바꿔 봤고, 그때 무엇이 안 바뀌었는지 기록이 남아 있습니다.</p>
+
+    <div class="callout">
+      <p><b>그때 핵심 검사 장치는 한 줄도 안 바뀌었습니다.</b>
+      바뀐 건 <b>단어를 적어 둔 파일 하나</b>였습니다 —
+      “결제번호”를 “주문번호”로 바꾸는 식의 대응표요.</p>
+      <p>이번에도 같습니다. “주문번호” → “예약번호”로 바꾸면 됩니다.</p>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 자판기를 생각하면 쉽습니다.
+      음료수를 팔다가 과자를 팔기로 해도 <b>동전 넣는 곳·거스름돈 계산·재고 세는 방식</b>은
+      그대로입니다. 바꾸는 건 <b>상품 이름표</b>뿐이죠.</p>
+      <p>이게 두 번째 교체라서 <b>“무엇을 안 바꿔도 되는지”를 이미 알고 있다</b>는 게 큽니다.</p>
+    </div>
+
+    <h3>그래도 새로 만들어야 하는 게 하나 있습니다</h3>
+    <div class="callout warn">
+      <p><b>지금은 손님이 물어봐야 일이 시작됩니다.</b>
+      여행은 반대로 <b>우리가 지켜보다가 먼저 알아채야</b> 합니다.</p>
+      <p>이건 단어를 바꾸는 게 아니라 <b>없던 걸 만드는 일</b>입니다.
+      다행히 “정해진 시간마다 도는 장치”가 이미 있어서 거기에 붙일 수 있습니다.</p>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 지금까지는 <b>민원 창구</b>였습니다. 손님이 와서 말해야 일이 생기죠.</p>
+      <p>여행은 <b>경비실</b>이 되어야 합니다. 아무도 안 불러도 순찰을 돌고,
+      이상하면 먼저 연락합니다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> 먼저 만들 두 개</h2>
+    <p>발표까지 7주입니다. <b>액티비티 담당</b>과 <b>예약 실행 담당</b> 둘만 먼저 만듭니다.</p>
+
+    <h3>왜 이 둘인가</h3>
+    <ul>
+      <li><b>액티비티</b> — 취소·환불 규정이 <b>글로 적혀 있어서</b> 규칙을 바로 만들 수 있습니다.
+      예약금이 걸려 있어 실패하면 손해가 크고, 보여줄 때 무슨 일이 일어났는지 한눈에 보입니다.</li>
+      <li><b>예약 실행</b> — <b>이게 우리가 팔려는 것 자체</b>입니다. 아래에서 설명합니다.</li>
+    </ul>
+
+    <h3>예약 실행이 왜 중요한가</h3>
+    <p>실행을 세 단계로 나눴습니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>단계</th><th>무엇</th><th>어떻게</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>우리 일정표</td><td>먼저 고치고 알려 드립니다. 싫다시면 되돌립니다</td></tr>
+          <tr><td><b>2</b></td><td><b>제휴 업체 예약</b></td><td><b>미리 허락받은 범위 안이면 묻지 않고 바꾸고, 바꿨다고 알려 드립니다</b></td></tr>
+          <tr><td>3</td><td>제휴 안 된 업체</td><td>대신 바꾸지 않고, <b>바로 누를 수 있는 링크</b>로 드립니다</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> <b>2단계가 이 서비스의 값어치입니다.</b></p>
+      <p>여행 시작할 때 딱 한 번 “5만 원까지는 알아서 바꿔 주세요” 하고 맡겨 두면,
+      그다음부터는 <b>물어보지 않고 처리하고 결과만 알려 줍니다.</b>
+      손님은 마음에 안 들 때만 말하면 됩니다.</p>
+      <p>여행 중에 “이거 바꿀까요?” 하고 열 번 물어보는 서비스는 오히려 짐입니다.</p>
+    </div>
+
+    <div class="callout">
+      <p><b>제휴 계약이 없는데 어떻게 만드나.</b>
+      업체 역할을 하는 <b>가짜 상대(시뮬레이터)</b>를 만들어 붙입니다.</p>
+      <p>처음엔 “계약이 없으니 나중에 하자”고 봤는데 <b>그 판단이 틀렸습니다.</b>
+      계약이 없다는 건 <b>미룰 이유가 아니라, 무엇을 증명할지 좁힐 이유</b>였습니다 —
+      가짜 상대로 증명하는 건 <b>업체 연동 실력이 아니라 절차가 제대로 도는가</b>입니다.
+      그 사실은 산출물에 그대로 적습니다.</p>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 소방 훈련과 같습니다. 진짜 불을 내지 않아도
+      <b>대피 순서가 맞는지</b>는 확인할 수 있습니다.
+      다만 “훈련이었다”고 분명히 적어야 하죠.</p>
+    </div>
+
+    <h3>둘로 보여주는 장면</h3>
+    <div class="steps">
+      <ol>
+        <li>액티비티가 취소된 걸 <b>우리가 먼저 압니다</b> (손님은 아직 모릅니다)</li>
+        <li>대신할 일정을 만듭니다</li>
+        <li>이미 잡아 둔 예약과 꼭 지켜야 할 조건을 <b>깨지 않았는지 다시 봅니다</b></li>
+        <li>손님이 미리 맡긴 범위 안인지 <b>확인합니다</b></li>
+        <li>범위 안이면 업체 예약을 <b>바꿉니다</b></li>
+        <li>보낼 문장에 <b>단정하는 표현이 없는지 검사합니다</b></li>
+        <li>손님에게 <b>“이렇게 바꿔 뒀습니다”라고 먼저 알립니다</b></li>
+        <li>싫다고 하면 <b>되돌립니다</b></li>
+      </ol>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> <b>이 여덟 단계가 우리가 파는 것 전부입니다.</b></p>
+      <p>팀을 더 만드는 건 같은 순서에 <b>다루는 물건만 늘리는 일</b>이지
+      새로 증명하는 게 아닙니다.</p>
+      <p>그래서 <b>팀을 늘리는 것보다 이 여덟 단계를 한 번 끝까지 돌리는 게 먼저</b>입니다.
+      식당 담당을 먼저 붙이면 팀은 둘인데 <b>순서는 반쪽</b>인 상태가 됩니다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> 확인이 필요한 것</h2>
+
+    <div class="callout warn">
+      <p><b>새 계획서에 “부트캠프 요구사항 대응표”가 빠졌습니다.</b>
+      예전 계획서에는 “요구사항 ↔ 우리가 만든 것”을 짝지은 표가 있었는데
+      새 것에는 통째로 없습니다.</p>
+    </div>
+
+    <p>그중 셋은 여행에서 갈 자리가 바로 안 보입니다.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>요구사항</th><th>지금 상태</th></tr></thead>
+        <tbody>
+          <tr><td><b>감정 분석</b></td><td>새 분류에는 “무엇을 원하는가”만 남고 <b>감정을 보는 축이 사라졌습니다</b></td></tr>
+          <tr><td><b>여러 AI가 함께 일하기</b></td><td>팀은 있는데 <b>보여줄 대상이 없어졌습니다</b></td></tr>
+          <tr><td><b>개인 AI 연결</b></td><td>“연결한다”고만 적혀 있고 <b>정해진 규격 이름이 안 나옵니다</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="easy">
+      <p><b>💬 쉬운 설명:</b> 이건 <b>기능을 뺄까 말까의 문제가 아니라 점수 항목</b>입니다.</p>
+      <p>시험 문제에 “다음 세 가지를 포함할 것”이라고 적혀 있는데
+      답안에 그 항목이 안 보이는 상황입니다.
+      <b>실제로 만들었는지와 별개로, 어디에 있는지 짚어 주지 않으면 점수가 안 나옵니다.</b></p>
+    </div>
+
+    <div class="callout">
+      <p><b>해결안이 하나 있습니다.</b> 위에서 말한 <b>장소정보 검증 담당</b>을
+      “여러 AI가 함께 일하기”의 시연 대상으로 쓰면 됩니다.
+      <b>팀을 더 만들지 않고도 보여줄 게 생깁니다.</b>
+      감정 분석과 개인 AI 연결은 중앙 쪽 일이라 계획서에서 정해야 합니다.</p>
+    </div>
+
+    <h3>팀이 정할 것</h3>
+    <ul>
+      <li>장소정보 검증을 <b>바깥에 따로 둘지, 안에 둘지</b></li>
+      <li>새 분류 이름 다섯 개의 최종 문구</li>
+      <li>“먼저 알아채는 장치”를 기존 것에 붙일지 새로 만들지</li>
+      <li>액티비티 취소 소식을 <b>어디서 받아 올지</b> — 날씨는 공개돼 있지만 <b>업체 공지는 아직 못 구했습니다</b></li>
+      <li>액티비티 취소 규정을 <b>어디까지 모을지</b></li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  자세한 판은 <code class="inl">A-COP_여행Team모듈_브리핑.html</code>에 있습니다.
+  근거 문서와 실측 출처도 그쪽에 적어 두었습니다.
+</footer>
+
+</body>
+</html>

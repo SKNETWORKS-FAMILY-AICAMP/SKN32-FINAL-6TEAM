@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>A-COP 여행 Team 모듈 브리핑</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --line: #d1d5db;
+    --accent: #0f766e;
+    --accent2: #1d4ed8;
+    --accent3: #7c3aed;
+    --soft: #ecfeff;
+    --soft2: #eef2ff;
+    --soft3: #f5f3ff;
+    --keep: #047857;
+    --keep-bg: #ecfdf5;
+    --new: #b45309;
+    --new-bg: #fffbeb;
+    --stub: #6b7280;
+    --stub-bg: #f3f4f6;
+    --crit: #b91c1c;
+    --crit-bg: #fef2f2;
+    --codebg: #f3f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1020;
+      --card: #131a2e;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #334155;
+      --accent: #2dd4bf;
+      --accent2: #60a5fa;
+      --accent3: #c4b5fd;
+      --soft: #0f2b2b;
+      --soft2: #16203c;
+      --soft3: #201a37;
+      --keep: #34d399;
+      --keep-bg: #06281f;
+      --new: #fbbf24;
+      --new-bg: #2a2008;
+      --stub: #9ca3af;
+      --stub-bg: #1b2236;
+      --crit: #fca5a5;
+      --crit-bg: #2b1113;
+      --codebg: #1b2236;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #0f766e, #1d4ed8);
+    color: #fff;
+    padding: 40px 24px 32px;
+  }
+  header h1 { margin: 0 0 10px; font-size: 32px; line-height: 1.3; }
+  header p { margin: 6px 0; opacity: .96; }
+  header .meta { font-size: 14px; opacity: .88; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+  .section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px;
+    margin: 0 0 20px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, .05);
+    min-width: 0;
+  }
+  h2 { margin: 0 0 6px; font-size: 24px; line-height: 1.35; }
+  h2 .num {
+    display: inline-block; min-width: 32px;
+    color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  h3 { margin: 22px 0 10px; font-size: 18px; }
+  .lead { font-size: 15px; color: var(--muted); margin: 0 0 18px; }
+  p { margin: 12px 0; }
+  ul, ol { margin: 12px 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  strong { color: var(--text); }
+
+  code.inl {
+    background: var(--codebg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 5px;
+    font-family: Consolas, "D2Coding", monospace;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .tablewrap { overflow-x: auto; margin: 14px 0; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 11px;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  th { background: var(--soft2); font-weight: 700; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .pill {
+    display: inline-block; border-radius: 999px;
+    padding: 2px 10px; font-size: 12px; font-weight: 700;
+    white-space: nowrap; border: 1px solid transparent;
+  }
+  .pill--keep { background: var(--keep-bg); color: var(--keep); border-color: var(--keep); }
+  .pill--new  { background: var(--new-bg);  color: var(--new);  border-color: var(--new); }
+  .pill--stub { background: var(--stub-bg); color: var(--stub); border-color: var(--line); }
+  .pill--mvp  { background: var(--crit-bg); color: var(--crit); border-color: var(--crit); }
+
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 6px 0 4px; }
+  .stat {
+    background: var(--soft2); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 12px; text-align: center; min-width: 0;
+  }
+  .stat b { display: block; font-size: 30px; line-height: 1.2; color: var(--accent2); font-variant-numeric: tabular-nums; }
+  .stat span { display: block; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--soft);
+    border-radius: 0 12px 12px 0;
+    padding: 14px 16px;
+    margin: 16px 0;
+    min-width: 0;
+  }
+  .callout.warn { border-left-color: var(--crit); background: var(--crit-bg); }
+  .callout.warn strong { color: var(--crit); }
+  .callout p:first-child { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .flow {
+    background: var(--soft3); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px; margin: 16px 0;
+    font-size: 14px; min-width: 0;
+  }
+  .flow ol { margin: 0; padding-left: 20px; counter-reset: none; }
+  .flow li { margin: 8px 0; overflow-wrap: anywhere; }
+  .flow li b { color: var(--accent2); }
+
+  .map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; background: var(--card); min-width: 0;
+  }
+  .card h4 { margin: 0 0 6px; font-size: 16px; }
+  .card .from { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .card .why { font-size: 14px; margin: 8px 0 0; }
+
+  footer {
+    color: var(--muted); font-size: 13px;
+    padding: 8px 24px 40px; max-width: 1280px; margin: 0 auto;
+  }
+  footer code.inl { font-size: 12px; }
+
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .map { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    header { padding: 28px 18px 24px; }
+    header h1 { font-size: 25px; }
+    .container { padding: 16px; }
+    .section { padding: 18px 16px; border-radius: 14px; }
+    h2 { font-size: 21px; }
+    .stats { grid-template-columns: 1fr; }
+    .stat b { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>A-COP 여행 Team 모듈 구성</h1>
+  <p>쇼핑몰 CS → 여행 지속관리 CS로 도메인을 바꿀 때, Team을 어떻게 다시 나눌 것인가</p>
+  <p class="meta">2026-09-08 · 근거: 구현계획서 v10 §5, 최종주제 후보비교 v4 §3-7, 현행 코드 실측</p>
+</header>
+
+<div class="container">
+
+  <div class="section">
+    <h2><span class="num">0</span> 결론 먼저</h2>
+    <p class="lead">여섯 팀 중 버릴 것이 하나도 없다. 그게 이 구성안의 핵심이다.</p>
+
+    <div class="stats">
+      <div class="stat"><b>0</b><span>폐기</span></div>
+      <div class="stat"><b>5</b><span>뼈대 승계</span></div>
+      <div class="stat"><b>1</b><span>신규 (Dining)</span></div>
+      <div class="stat"><b>2</b><span>등록만</span></div>
+      <div class="stat"><b>2</b><span>MVP 필수</span></div>
+    </div>
+
+    <p>처음에는 쇼핑몰 팀 셋(Procurement · Fulfillment · Catalog)을 버리는 것으로 봤다.
+    주제 비교 문서도 “안 쓰게 되는 것”으로 적어 뒀다.
+    <strong>그런데 코드를 열어 보니 셋 다 여행에 같은 모양의 자리가 있었다.</strong></p>
+
+    <div class="callout">
+      <p><strong>왜 자리가 남아 있나.</strong> 우리가 만든 것은 “쇼핑몰 기능”이 아니라
+      <strong>판정하고 · 근거를 붙이고 · 사람에게 넘기고 · 기록을 남기는 틀</strong>이기 때문이다.
+      반품 기한을 판정하던 코드가 액티비티 취소 기한을 판정하는 데 그대로 쓰인다.
+      바뀌는 것은 규칙의 내용이지 규칙을 다루는 방식이 아니다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">1</span> Team을 무엇으로 나누나</h2>
+    <p class="lead">여행을 구성하는 <strong>객체 종류별</strong>로 나눈다. 지역·상품·고객군으로 나누지 않는다.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>나누는 기준</th><th>도시를 늘리면</th><th>언어를 늘리면</th><th>도메인을 넓히면</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>객체 종류별</strong> <span class="pill pill--keep">채택</span></td>
+            <td>데이터만 추가</td><td>응답 문구만 추가</td><td>Team 추가</td>
+          </tr>
+          <tr>
+            <td>지역별 <span class="pill pill--stub">기각</span></td>
+            <td>Team 추가</td><td>Team 추가</td><td>Team 추가</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>객체 종류로 나누면 <strong>서울에서 부산으로 늘릴 때 코드를 안 건드린다.</strong>
+    지역으로 나눴다면 도시마다 Team이 하나씩 생긴다.</p>
+
+    <h3>Team 하나가 갖는 세 가지</h3>
+    <div class="flow">
+      <ol>
+        <li><b>검증 규칙</b> — 코드. 이 객체가 성립하는 조건(예: 액티비티 취소 기한이 지났나)</li>
+        <li><b>감시 소스</b> — 이 객체가 바뀌었는지 어디서 아나(예: 기상청 초단기예보)</li>
+        <li><b>재계획 후보</b> — LLM. 바뀌었을 때 무엇으로 대체하나</li>
+      </ol>
+    </div>
+
+    <p><strong>전체 일정이 맞는지(시간 충돌·예산·이동 여유)는 Team이 보지 않는다.</strong>
+    그건 코어 검증 층의 일이다. Team은 자기 객체만 보면 된다.</p>
+
+    <div class="callout">
+      <p><strong>각 Team 안에서 판정(코드)과 대안 생성(LLM)을 분리한다.</strong>
+      LLM이 만든 대안은 판정을 <strong>다시 통과해야</strong> 고객에게 나간다.
+      지금 Response Generation &amp; Review 팀이 “쓰는 쪽과 검수하는 쪽을 다르게 둔” 원칙과 같고,
+      계획서 v10은 이 원칙을 별도 팀 대신 <strong>모든 Team의 내부 규칙</strong>으로 넣었다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> 기존 여섯 팀이 어디로 가나</h2>
+    <p class="lead">현행 등록 팀 여섯 개(<code class="inl">KNOWN_IMPLEMENTATION_REFS</code> 실측)와 여행 Team의 대응이다.</p>
+
+    <div class="map">
+      <div class="card">
+        <h4>Activity <span class="pill pill--mvp">MVP</span></h4>
+        <p class="from">← <code class="inl">return_refund</code> (396줄)</p>
+        <p class="why"><strong>취소 가능 판정 → 접수 → 환급액 계산</strong>의 3단 구조가 같다.
+        반품 기한↔취소 기한, 반품 사유별 배송비 부담↔우천 취소 위약금율, 수량 초과↔인원 초과.</p>
+      </div>
+      <div class="card">
+        <h4>Booking Execution <span class="pill pill--mvp">MVP</span></h4>
+        <p class="from">← <code class="inl">procurement_order_payment</code> (366줄)</p>
+        <p class="why">예약 생성·변경·취소·결제 상태의 자리가 같다.
+        협약사 커넥터는 <strong>Mock</strong>으로 만든다.</p>
+      </div>
+      <div class="card">
+        <h4>Mobility</h4>
+        <p class="from">← <code class="inl">fulfillment_logistics</code> (163줄)</p>
+        <p class="why"><strong>움직이는 것을 추적하고 예외를 잡는</strong> 구조가 같다.
+        배송 지연 판정↔환승·막차 지연 판정, 미수령 조사↔경로 이탈.</p>
+      </div>
+      <div class="card">
+        <h4>Place Verification</h4>
+        <p class="from">← <code class="inl">catalog_verification</code> (121줄)</p>
+        <p class="why"><strong>외부 원장을 조회해 표시 내용이 맞는지 대조</strong>하는 구조가 같다.
+        A2A 원격 검증 자리도 그대로 쓸 수 있다.</p>
+      </div>
+      <div class="card">
+        <h4>Dining <span class="pill pill--new">신규</span></h4>
+        <p class="from">대응하는 기존 팀 없음</p>
+        <p class="why">영업시간·휴무·동행 조건(아이·할랄·채식)을 본다.
+        쇼핑몰에 “영업시간”이라는 개념이 없어 새로 쓴다.</p>
+      </div>
+      <div class="card">
+        <h4>Lodging · Flight <span class="pill pill--stub">등록만</span></h4>
+        <p class="from">계약만 등록, 구현하지 않음</p>
+        <p class="why"><strong>잠긴 예약</strong>으로만 취급한다.
+        바꾸지 않고, 다른 일정을 짤 때 “이건 고정”으로 쓴다.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><strong>“이어받는다”는 코드를 복사한다는 뜻이 아니다.</strong>
+      판정 3단 구조 · 감시 소스 연결부 · 결과를 코어에 돌려주는 모양을 뼈대로 쓰고,
+      <strong>판정 규칙과 어휘는 전부 새로 쓴다.</strong></p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> 그대로 · 갈아 끼우기 · 새로 쓰기</h2>
+    <p class="lead">도메인 교체는 이 저장소가 <strong>이미 한 번 해 본 일</strong>이다 —
+    구독·결제 → 커머스. 이번이 두 번째다.</p>
+
+    <div class="callout">
+      <p><strong>지난 교체가 남긴 증거.</strong> 그때 <strong>대조 규칙 엔진은 한 줄도 안 바뀌었다.</strong>
+      바뀐 것은 <code class="inl">verification_policy.py</code>라는 <strong>어휘 파일 하나</strong>였다
+      (<code class="inl">payment_id</code> → <code class="inl">order_id</code> 같은 이름 대응).
+      이번에는 <code class="inl">order_id</code> → <code class="inl">booking_id</code>로 간다.</p>
+    </div>
+
+    <h3>그대로 쓴다 — 한 줄도 안 고친다</h3>
+    <p>Case 생명주기 · 계약 모델 · Team 등록기 · Context Broker ·
+    <strong>대조 규칙 엔진</strong> · Controller와 승인 흐름 · 발행 중복 방지 ·
+    조립 규칙 · 운영 화면 4종 · A2A 기반 · 방어 지표 5종. <strong>12개 영역이다.</strong></p>
+
+    <h3>갈아 끼운다 — 뼈대는 두고 어휘만</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>무엇</th><th>지금 (쇼핑몰)</th><th>여행</th></tr></thead>
+        <tbody>
+          <tr><td>대조 선언</td><td>커머스 어휘</td><td>여행 어휘로 교체</td></tr>
+          <tr><td>코어 1 분류 라벨</td><td>주문·배송·반품·교환·기타</td><td>일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외</td></tr>
+          <tr><td>Context Broker가 싣는 것</td><td>주문 정보</td><td>여행 상태(최신 일정·잠긴 예약·필수 조건·다음 확인 시점)</td></tr>
+          <tr><td>코어 2 실행 도구</td><td>주문 조회·배송 조회·환불</td><td>장소·운영 조회 / 이동 시간 / 기상 조회</td></tr>
+          <tr><td>응답 문구 소재</td><td>한국어 CS 문구</td><td>영어 통지 문구 + 운영자용 한국어</td></tr>
+          <tr><td>평가 정답 시나리오</td><td>쇼핑몰 골든셋</td><td>합성 여행 + 사건 시나리오</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>새로 쓴다</h3>
+    <p>Team의 판정 규칙(취소 기한·위약금율·기상 판단 시점·영업시간·막차),
+    감시 소스 연결(기상청·운영 공지·지도 API), 여행 데이터.
+    그리고 하나 더 —</p>
+
+    <div class="callout warn">
+      <p><strong>선제 조정 루프가 진짜 신규다.</strong> 나머지는 어휘 교체에 가깝지만
+      이것만은 지금 구조가 없다.</p>
+      <p>지금 Case는 <strong>고객이 문의해야 시작</strong>한다.
+      여행은 <strong>우리가 감시하다가 시작</strong>해야 한다.
+      여행별로 다음 확인 시점을 저장해 두고, 주기 작업이 감시 소스를 다시 조회해
+      변화가 잡히면 <strong>Case를 우리가 연다.</strong></p>
+      <p>다행히 <code class="inl">routing_sweeper</code>가 이미 주기 작업으로 돌고 있어
+      그 자리에 붙일 수 있다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> MVP는 둘</h2>
+    <p class="lead">최종발표까지 7주. Activity와 Booking Execution 둘만 필수다.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Team</th><th style="white-space:nowrap">순위</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Activity</strong></td>
+            <td><span class="pill pill--mvp">MVP</span></td>
+            <td>취소·환급 규정이 <strong>문서로 존재</strong>해 판정 규칙을 바로 쓸 수 있다.
+            예약금이 걸려 실패 비용이 크고, 시연에서 사건이 한눈에 보인다.</td>
+          </tr>
+          <tr>
+            <td><strong>Booking Execution</strong></td>
+            <td><span class="pill pill--mvp">MVP</span></td>
+            <td>계획서 v10의 <strong>“협약사 위임 실행”이 제품이 팔려는 것</strong>이다.
+            이게 없으면 “고객이 방해받지 않고 보고만 받는다”를 보여줄 수 없다.</td>
+          </tr>
+          <tr><td>Dining</td><td>2순위</td><td>변화가 잦아 시연 가치는 높지만, Activity로 루프가 증명되면 같은 틀의 반복이다.</td></tr>
+          <tr><td>Mobility</td><td>3순위</td><td>앞의 둘이 바뀌면 늘 영향을 받지만, <strong>늦게 붙여도 코어 검증이 시간 충돌은 잡는다.</strong></td></tr>
+          <tr><td>Place Verification</td><td>3순위</td><td>A2A 시연이 부트캠프 요구사항이라 <strong>발표 전에는 필요</strong>하다. 기능 가치보다 요구사항 충족이 이유다.</td></tr>
+          <tr><td>Lodging · Flight</td><td><span class="pill pill--stub">등록만</span></td><td>잠긴 예약으로만 취급.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Booking Execution이 MVP로 올라온 이유</h3>
+    <p>처음 초안에서는 “공급자 계약이 없으니 나중에”로 미뤘다.
+    <strong>그 판단은 틀렸다.</strong></p>
+    <div class="callout">
+      <p>계획서 v10은 실행을 세 층으로 나눈다.
+      <strong>1층</strong> 우리 일정(먼저 바꾸고 알린다) ·
+      <strong>2층</strong> 협약사 예약(미리 받은 위임 범위 안이면 묻지 않고 실행하고 알린다) ·
+      <strong>3층</strong> 비협약사(실행하지 않고 바로 누를 수 있는 링크로 넘긴다).</p>
+      <p><strong>2층이 제품이다.</strong> 고객은 일정만 짜고, 문제가 생기면 알아서 고쳐지고,
+      바꾸고 싶을 때만 말한다. 계약이 없다는 문제는 <strong>커넥터를 Mock으로</strong> 풀었다.</p>
+      <p><strong>계약이 없다는 건 Team을 미룰 이유가 아니라 증명 범위를 좁힐 이유였다</strong> —
+      Mock으로 증명하는 것은 업체 연동이 아니라 <strong>경계와 루프가 설계대로 도는가</strong>다.
+      그 사실은 산출물에 표시한다.</p>
+    </div>
+
+    <h3>MVP 둘로 보여주는 것</h3>
+    <div class="flow">
+      <ol>
+        <li>액티비티 취소를 <b>우리가 먼저 감지</b>한다 (고객은 아직 모른다)</li>
+        <li>재계획안을 만든다</li>
+        <li>잠긴 예약과 필수 조건을 지켰는지 <b>다시 검증</b>한다</li>
+        <li>고객이 미리 위임한 범위 안인지 <b>대조</b>한다</li>
+        <li>범위 안이면 협약사(Mock) 예약을 <b>실행</b>한다</li>
+        <li>통지 문구를 <b>검수</b>한다 (확정 단정·확인 시각 누락)</li>
+        <li>고객 에이전트에 <b>선제 통지</b>한다</li>
+        <li>고객이 거부하면 <b>되돌린다</b></li>
+      </ol>
+    </div>
+
+    <p><strong>이 여덟 단계가 제품의 주장 전부다.</strong>
+    Team을 더 붙이는 것은 같은 루프에 객체를 추가하는 일이지 새로운 증명이 아니다.</p>
+
+    <div class="callout">
+      <p><strong>Team을 늘리는 것보다 루프를 한 번 끝까지 도는 것이 먼저다.</strong>
+      Activity 하나만 있어도 위 여덟 단계가 전부 돈다.
+      Dining을 먼저 붙이면 <strong>Team은 둘인데 루프는 반쪽</strong>인 상태가 된다.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> 확인이 필요한 것</h2>
+
+    <div class="callout warn">
+      <p><strong>계획서 v10에 부트캠프 요구사항 대응표가 없다.</strong>
+      v9에는 「주제 요구사항 ↔ 구현」 11행 표가 있었는데 v10에는 통째로 빠졌고,
+      <code class="inl">A2A</code>·<code class="inl">MCP</code>라는 말도 한 번도 나오지 않는다.</p>
+      <p>그중 셋은 여행에서 갈 자리가 바로 보이지 않는다.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>요구사항</th><th>v9에서는</th><th>v10에서는</th></tr></thead>
+        <tbody>
+          <tr><td><strong>감성 분석</strong></td><td>Case 분류할 때 같이 판정</td><td>코어 1 라벨이 <strong>의도만</strong> 남았다</td></tr>
+          <tr><td><strong>다중 에이전트 서빙</strong></td><td>Team 6종 + A2A 원격 팀 1종</td><td>Team은 있으나 <strong>A2A 시연 대상이 없다</strong></td></tr>
+          <tr><td><strong>개인 AI 연동</strong></td><td>REST 5개 + MCP 도구 3개</td><td>“에이전트 API + 토큰”으로만 서술</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>이건 기능 판단이 아니라 채점 항목이다.</strong>
+    셋 다 v9에서 산출물과 검증 방법까지 정해 뒀던 것이라,
+    여행으로 옮기면서 자리를 안 만들면 구현 여부와 상관없이 대응표가 빈다.</p>
+
+    <div class="callout">
+      <p><strong>제안 — Place Verification을 A2A 자리로 쓴다.</strong>
+      <code class="inl">catalog_verification</code>이 지금 그 자리이고,
+      여행의 장소·운영 정보 검증이 같은 모양이다.
+      <strong>Team을 더 만들지 않고 A2A 시연 대상이 생긴다.</strong>
+      감성 분석과 MCP는 코어 몫이라 계획서에서 정할 일이다.</p>
+    </div>
+
+    <h3>팀이 정해야 할 것</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>항목</th><th>누가</th></tr></thead>
+        <tbody>
+          <tr><td>Place Verification을 A2A 원격으로 뺄지, 로컬 Team으로 둘지</td><td>팀 — 요구사항 확인 후</td></tr>
+          <tr><td>코어 1 분류 라벨 5종의 최종 문구</td><td>코어 1</td></tr>
+          <tr><td>선제 조정 루프를 <code class="inl">routing_sweeper</code>에 붙일지 따로 뺄지</td><td>코어 1</td></tr>
+          <tr><td>감시 소스 실제 연결 대상 — 기상청은 공개, 액티비티 운영 공지는 <strong>미확보</strong></td><td>도시 정한 뒤 표본 조사</td></tr>
+          <tr><td>Activity 판정 규칙의 원본 규정 범위</td><td>후보 B 조사 재사용 + 액티비티 약관 추가 수집</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  근거 문서 —
+  <code class="inl">program/plan/A-COP_구현계획서_v10.md</code> §5 ·
+  <code class="inl">program/plan/A-COP_여행Team모듈_구성안.md</code> ·
+  <code class="inl">team_branch/me/여행/_최종주제_후보비교_v4_2026-09-08.md</code> §3-7 ·
+  <code class="inl">wiki/records/handoff/10_도메인_교체_가이드.md</code><br/>
+  줄수·capability는 <code class="inl">app/modules/customer_ops/</code> 실측(2026-09-08).
+</footer>
+
+</body>
+</html>
