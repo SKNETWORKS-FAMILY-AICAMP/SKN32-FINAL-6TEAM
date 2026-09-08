@@ -108,6 +108,13 @@ action_requests ... UNIQUE (tenant_id, idempotency_key)
 outbox ... UNIQUE (tenant_id, topic, dedupe_key)
 ```
 
+★`[2026-09-08]` **근거 기록 둘이 아직 옛 제약을 싣고 있다. 그건 고치지 않는다.**
+`wiki/records/evidence/DoD-23_consumer_idempotency.md:33` 은 `UNIQUE(topic, dedupe_key)`
+를 **통과 근거로** 들고 있고 `wiki/records/handoff/02_DB_스키마.md:119` 는 001 DDL 만
+싣는다. 둘 다 `records/` 라 **고치지 않는 것이 기록의 성질**이다(루트 `CLAUDE.md`).
+대신 여기에 적는다 — **그 기록을 근거로 인용할 때는 제약이 그 뒤 바뀌었다는 것을
+같이 읽는다.** 지금 값은 바로 위 스니펫이고 살아 있는 DB 로 확인한 것이다.
+
 ★`[정정 2026-09-07]` 이 스니펫은 `003_outbox_tenant_scoped_dedupe.sql` 을 가리키면서
 **그 마이그레이션 전의 제약**을 싣고 있었다(`UNIQUE (topic, dedupe_key)`). 파일 이름만
 새것으로 바꾸고 내용은 안 바꾼 것이다. `tenant_id` 가 빠지면 **다른 테넌트끼리 dedupe

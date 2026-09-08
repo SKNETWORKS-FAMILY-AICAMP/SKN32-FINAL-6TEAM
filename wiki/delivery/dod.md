@@ -85,7 +85,7 @@ size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
 | 20 | `TeamExecutorPort` 교체 시 Controller 불변 | adapter 교체 test와 Controller import boundary 정적 검사 |
 | 21 | `SqlGraphAdapter` 관계 질의 3종 | Case→Issue→Policy, Issue→Team, Case→Action fixture |
 | 22 | **Team의 직접 Tool 호출 금지** | Team module **AST/import 정적 검사**와 runtime spy |
-| 23 | 모든 consumer at-least-once idempotency | 동일 message 2회 전달 replay test — **통과** (2026-08-20). consumer는 여전히 outbox worker 1종뿐이지만, `consumer_contract_factories`에 등록된 모든 consumer가 계약 테스트 3종을 강제로 통과해야 하는 구조라 **다음 consumer가 검사 없이 추가될 수 없다** → [`actions/idempotency.md`](../../final_project_cs/wiki/actions/idempotency.md) |
+| 23 | 모든 consumer at-least-once idempotency | 동일 message 2회 전달 replay test — **통과** (2026-08-20). consumer는 여전히 outbox worker 1종뿐이지만, `consumer_contract_factories`에 등록된 모든 consumer가 계약 테스트 3종을 강제로 통과해야 하는 구조라 **다음 consumer가 검사 없이 추가될 수 없다** → [`actions/idempotency.md`](../../final_project_cs/wiki/actions/idempotency.md). ★`[2026-09-08]` **근거 기록이 든 제약은 낡았다** — `records/evidence/DoD-23…:33` 이 `UNIQUE(topic, dedupe_key)` 를 통과 근거로 적었으나 지금은 `UNIQUE(tenant_id, topic, dedupe_key)` 다. 통과 판정 자체는 계약 테스트가 받치므로 유지한다 |
 
 **22번이 중요하다.** AST·import 정적 검사를 하라고 v8이 이미 지시하고 있다. → `INV-CS-TEAM-004`가 아직 `review`인 것이 이 항목의 미완성이다.
 
