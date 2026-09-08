@@ -62,7 +62,7 @@ def build_steps():
           "이 건은 처음이라 계속 간다"],
          [("Case 없음", GREY)],
          "app/core/idempotency.py:8   ·   cases.py:76~107",
-         # ★2026-09-01 실측 정정(final_project_cs/docs/reports/debugs/
+         # ★2026-09-01 실측 정정(final_project_cs/wiki/records/reports/debugs/
          #   2026-09-01_Case생성_멱등성_세_구멍.md) — 원래 문구("고객이 취소
          #   버튼을 두 번 눌러도 Case 가 두 개 생기지 않는다")는 조건부였다.
          #   순차 재시도에서만 참이었고, 동시에 두 번 오면(고객이 더블클릭)

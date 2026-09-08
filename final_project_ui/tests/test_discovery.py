@@ -27,7 +27,7 @@ def make_project(root: Path, name: str, *, evidence=False, reports=False) -> Pat
     (path / "config").mkdir(parents=True)
     (path / "config" / "project.yaml").write_text("modules: {}\n", encoding="utf-8")
     if evidence:
-        (path / "docs" / "evidence").mkdir(parents=True)
+        (path / "wiki" / "records" / "evidence").mkdir(parents=True)
     if reports:
         (path / "eval" / "reports").mkdir(parents=True)
     return path

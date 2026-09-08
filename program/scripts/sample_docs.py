@@ -32,12 +32,12 @@ FROZEN = "program/scripts/sample_frozen.txt"
 STRATA: list[tuple[str, list[str], int]] = [
     ("program/plan",     ["program/plan/*.md"], 8),
     ("program/research", ["program/research/*.md"], 6),
-    ("cs/docs/plans",    ["final_project_cs/docs/plans/*.md"], 5),
-    ("cs/docs/evidence", ["final_project_cs/docs/evidence/*.md"], 4),
-    ("cs/docs/handoff",  ["final_project_cs/docs/handoff/*.md"], 5),
-    ("cs/docs/reports",  ["final_project_cs/docs/reports/*.md"], 5),
-    ("cs/docs/manuals",  ["final_project_cs/docs/manuals/*.md"], 2),
-    ("cs/docs/vision",   ["final_project_cs/docs/vision/*.md"], 2),
+    ("cs/docs/plans",    ["final_project_cs/wiki/records/plans/*.md"], 5),
+    ("cs/docs/evidence", ["final_project_cs/wiki/records/evidence/*.md"], 4),
+    ("cs/docs/handoff",  ["final_project_cs/wiki/records/handoff/*.md"], 5),
+    ("cs/docs/reports",  ["final_project_cs/wiki/records/reports/*.md"], 5),
+    ("cs/docs/manuals",  ["final_project_cs/wiki/records/manuals/*.md"], 2),
+    ("cs/docs/vision",   ["final_project_cs/wiki/records/vision/*.md"], 2),
     ("datasets REPORT",  ["datasets/**/REPORT.md"], 4),
     ("README/CLAUDE",    ["*/CLAUDE.md", "*/README.md", "CLAUDE.md"], 4),
 ]

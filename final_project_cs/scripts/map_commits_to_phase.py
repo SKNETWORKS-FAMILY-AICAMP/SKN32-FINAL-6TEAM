@@ -58,6 +58,8 @@ PATH_OWNERS: tuple[tuple[str, str, str], ...] = (
     ("prompts/judge/", "S-EVAL", "P9"),
     ("scripts/", "Claude-Core", "P10"),
     ("wiki/records/", "Claude-Core", "P10"),
+    ("wiki/", "Claude-Core", "P10"),   # 2026-09-07 전환 — 이 저장소의 wiki 본문
+    ("docs/", "Claude-Core", "P10"),   # 2026-09-08 이전 커밋의 옛 경로. git 이력은 안 바뀐다
     ("config/", "Claude-Core", "P10"),
     ("prompts/", "Claude-Core", "P10"),
     # ★조립 지점과 루트 문서. 05 번 문서 소유 표에 `app/composition.py` 가 없다 —

@@ -21,7 +21,7 @@ MARKER = Path("config") / "project.yaml"
 
 #: 있으면 더 볼 수 있는 것들. 없다고 프로젝트가 아닌 것은 아니다.
 OPTIONAL_SOURCES = {
-    "evidence": Path("docs") / "evidence",
+    "evidence": Path("wiki") / "records" / "evidence",   # 2026-09-08: docs/ 가 wiki/records/ 로 합쳐졌다
     "eval_reports": Path("eval") / "reports",
     "introspection": Path("app") / "introspection",
 }

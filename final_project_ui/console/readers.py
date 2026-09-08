@@ -113,14 +113,14 @@ _OUTPUT_HINT = re.compile(r"실제\s*출력|실측\s*(?:결과|출력)|실제\s*
 
 
 def read_judgements(project: Path) -> Read:
-    """`docs/evidence/DoD-*.md` 의 판정을 모은다.
+    """`wiki/records/evidence/DoD-*.md` 의 판정을 모은다 (2026-09-08 전엔 `docs/evidence/`).
 
     ★재현 블록·실제 출력 유무를 함께 낸다. 판정만 보면
       "통과라고 적혀 있는데 근거가 없는" 문서를 구분할 수 없다.
     """
-    folder = Path(project) / "docs" / "evidence"
+    folder = Path(project) / "wiki" / "records" / "evidence"
     if not folder.is_dir():
-        return Read(value=[], error="docs/evidence 가 없다", source=str(folder))
+        return Read(value=[], error="wiki/records/evidence 가 없다", source=str(folder))
 
     items: list[Judgement] = []
     failures: list[str] = []

@@ -108,7 +108,7 @@ MORE5: list[Defect] = [
             "cases.py 의 except 가 그것을 받아 classification_failed 로 전환한다. "
             "즉 관찰 가능한 동작이 바뀌지 않는 중복 방어 제거다(subsumed mutant). "
             "실제 결함은 값 검증 쪽이다 — "
-            "final_project_cs/docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md"
+            "final_project_cs/wiki/records/reports/debugs/2026-09-01_분류_빈라벨_통과.md"
         ),
         difficulty=2,
     ),

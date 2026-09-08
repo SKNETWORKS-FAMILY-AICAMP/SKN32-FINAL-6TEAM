@@ -55,14 +55,14 @@ Composer 판단·요청 로직은 sample에서 만들고 이 프로그램이 가
 | 출처 | 무엇 |
 |---|---|
 | `config/project.yaml` | 모듈·Port·Team 선언 |
-| `docs/evidence/DoD-*.md` | 판정·근거 |
+| `wiki/records/evidence/DoD-*.md` | 판정·근거 (2026-09-08 전엔 `docs/evidence/`) |
 | `eval/reports/*.jsonl` | 평가 run |
 | DB (접속 정보를 줄 때) | 실행 이력 |
 | introspection 응답 (대상이 떠 있을 때) | 조립 실측 |
 
 ★**예외 — 대상이 내놓는 인증된 Composer 쓰기 API는 호출할 수 있다.**
 `/composer/current`·`/composer/validate`·`/composer/apply`(계약: 대상 저장소
-`docs/handoff/13_Composer_쓰기채널_계약.md` v2)는 모듈·Team·Port 구성을 바꾸는
+`wiki/records/handoff/13_Composer_쓰기채널_계약.md` v2)는 모듈·Team·Port 구성을 바꾸는
 유일한 경로이고, 릴리스 후에도 항상 살아있다. 이 예외는 "대상 파일을 직접 쓰지
 않는다"는 원칙을 깨지 않는다 — 쓰기 자체는 대상 프로세스 안에서, 대상의 Core
 계약으로 검증한 뒤 실행되고, 여기서는 그 API를 호출할 뿐이다. 이 예외로도 대상
@@ -75,7 +75,7 @@ Composer 판단·요청 로직은 sample에서 만들고 이 프로그램이 가
 `var/audit/composer_events.jsonl` append-only audit.
 ★**실측(2026-08-18): `final_project_sample`은 이제 v2다** — 다른 세션이 그 사이
 `app/presentation/composer_auth.py`(`POST /auth/token`, HMAC JWT, TTL 15~60분)를
-구현했다(`docs/reports/2026-08-18_P11_Composer_쓰기채널.md` 후반부 실측 기록).
+구현했다(`wiki/records/reports/2026-08-18_P11_Composer_쓰기채널.md` 후반부 실측 기록).
 `CONSOLE_COMPOSER_ISSUER_SECRET`에는 `/auth/token` 발급자 전용 비밀키를 넣는다.
 `console/composer.py`가 동작별 최소 scope로 매번 단명 JWT를 발급받아 실제 요청에 사용한다.
 대상이 아직 v1(고정 토큰)뿐인 다른 프로젝트는 이 v2 어댑터의 지원 범위가 아니다.
@@ -141,6 +141,6 @@ Composer 판단·요청 로직은 sample에서 만들고 이 프로그램이 가
 
 ## 4. 문서
 
-- 계획: `docs/plans/`
-- 계약: `docs/handoff/`
-- 리포트: `docs/reports/` · 결함: `docs/reports/debugs/`
+- 현재 지식: 대상 저장소 `wiki/` (계약은 wiki 본문, 2026-09-08부터)
+- 기록: `wiki/records/reports/` · 결함: `wiki/records/reports/debugs/` · 증적: `wiki/records/evidence/`
+- 동결된 옛 기록: `wiki/records/handoff/`·`plans/`

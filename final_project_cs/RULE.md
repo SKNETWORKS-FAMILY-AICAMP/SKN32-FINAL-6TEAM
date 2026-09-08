@@ -120,7 +120,7 @@ v6 와 실제 구현이 어긋나면 `wiki/records/plans/` 에 사유를 적고,
 ### 3.5 ★계약을 코드보다 먼저 고친다 (Contract-first)
 
 A-COP 의 핵심은 `TeamTask`/`TeamResult`/`ContextPack` 계약이다.
-**계약을 바꾸는 변경은 `wiki/records/handoff/` 문서를 먼저 고치고 그 다음 코드를 고친다.** 순서를 뒤집지 않는다.
+**계약을 바꾸는 변경은 wiki 본문의 계약 페이지(`wiki/teams/team-contract/`·`wiki/external/`·허브 `wiki/contracts/`)를 먼저 고치고 그 다음 코드를 고친다.** 순서를 뒤집지 않는다. `wiki/records/handoff/`는 2026-09-08부터 동결된 기록이라 고치지 않는다 — 옛 계약 문구가 필요하면 거기서 읽되, 현재 계약은 wiki 본문이다.
 
 - `app/core/contracts.py` 는 `wiki/records/handoff/01_계약_Pydantic.md` 의 구현체다. 둘이 어긋나면 **결함**이다.
 - 계약 변경 시 `contract_version` 을 올린다. 같은 major 의 optional field 추가만 호환이다(v6 §21).

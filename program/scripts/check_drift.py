@@ -556,7 +556,7 @@ def check_progress_claims(text: str) -> int:
     print(f"    ★{len(hits)}줄" + (f" (판정됨 {settled}줄은 감췄다)" if settled else "")
           + ". **낡았다는 뜻이 아니다** — 아직 그런지 코드에 대고 확인한다.")
     print("      2026-09-07 에 이 방식으로 §8-D·§0 의 낡은 서술 셋을 찾았다")
-    print("      (final_project_cs/docs/reports/2026-09-07_v9_8D_문구_정정_제안.md).")
+    print("      (final_project_cs/wiki/records/reports/2026-09-07_v9_8D_문구_정정_제안.md).")
     return len(hits)
 
 

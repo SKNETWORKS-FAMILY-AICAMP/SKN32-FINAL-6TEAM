@@ -64,3 +64,7 @@ status: draft
 ## 최근 변경
 
 [log.md](log.md)
+
+## 작업 기록은 각 저장소의 `wiki/records/`에 있다 (2026-09-08)
+
+옛 `docs/`(evidence·리포트·handoff 등)는 `final_project_cs/wiki/records/`·`final_project_sample/wiki/records/`로 합쳐졌다. 허브 wiki는 현재 지식만 담고 기록은 인용한다. 규칙은 [governance/work-loop.md](governance/work-loop.md) 2026-09-08 절.

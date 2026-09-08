@@ -192,4 +192,4 @@ if len(required) <= 1 and len(positional) <= 1:
 
 - [blind-spots.md](blind-spots.md) — 테스트 사각지대 본문
 - [invariants.md](invariants.md) — 불변식 카탈로그
-- [../../../../final_project_cs/docs/evidence/DoD-29_ResponseGenerationReview.md](../records/evidence/DoD-29_ResponseGenerationReview.md) — 원본 evidence
+- [../records/evidence/DoD-29_ResponseGenerationReview.md](../records/evidence/DoD-29_ResponseGenerationReview.md) — 원본 evidence

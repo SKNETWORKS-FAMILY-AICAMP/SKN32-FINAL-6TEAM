@@ -207,7 +207,7 @@ ws.cell(note_row + 1, 2).value = (
 )
 ws.cell(note_row + 1, 2).font = FONT
 ws.cell(note_row + 2, 2).value = (
-    "증적 DoD 번호는 final_project_cs/docs/evidence/ 아래 같은 번호의 문서를 가리킨다."
+    "증적 DoD 번호는 final_project_cs/wiki/records/evidence/ 아래 같은 번호의 문서를 가리킨다."
 )
 ws.cell(note_row + 2, 2).font = FONT
 

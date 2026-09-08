@@ -75,7 +75,7 @@ def test_unexpected_module_shape_becomes_none_not_false(project):
 
 # ── DoD 판정 ─────────────────────────────────────────────────────────────────
 def _evidence(project: Path, name: str, body: str) -> None:
-    folder = project / "docs" / "evidence"
+    folder = project / "wiki" / "records" / "evidence"
     folder.mkdir(parents=True, exist_ok=True)
     (folder / name).write_text(body, encoding="utf-8")
 
@@ -202,8 +202,8 @@ def test_broken_guardrails_yaml_is_reported(project):
 
 
 def test_unreadable_evidence_location_is_reported(project):
-    (project / "docs").mkdir()
-    (project / "docs" / "evidence").write_text("not a directory", encoding="utf-8")
+    (project / "wiki" / "records").mkdir(parents=True)
+    (project / "wiki" / "records" / "evidence").write_text("not a directory", encoding="utf-8")
     result = read_judgements(project)
     assert result.value == []
     assert result.error
