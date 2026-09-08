@@ -15,18 +15,25 @@
 
 | 항목 | 이 문서 초안 | **v10 (기준)** | 판정 |
 |---|---|---|---|
-| **Booking Execution** | 제외 · 4단계 | **MVP 필수** | **v10 이 맞다.** 아래 참조 |
+| **Booking Handoff** | 제외 · 4단계 | **MVP 필수** | **v10 이 맞다.** 아래 참조 |
 | **Itinerary Review** | 별도 Team · MVP 필수 | Team 내부 규칙으로 흡수 | **v10 이 맞다.** 팀마다 판정·생성을 나누면 별도 Team 이 불필요하다 |
 | Place Verification | 3순위 Team (A2A Remote) | 없음 | **미해결** — 아래 A2A 항목 |
 | Trip Feedback | 등록만 | 없음 | 실질 영향 없음. 껍데기를 안 만들면 그만이다 |
 
-**Booking Execution 을 내가 틀리게 봤다.** 나는 "공급자 계약이 없으니 4단계"로
+**Booking(초안 이름 `Booking Handoff`)을 내가 틀리게 봤다.** 나는 "공급자 계약이 없으니 4단계"로
 봤는데, v10 §4-C 가 **실행 경계를 세 층으로 나누고 2층(협약사 위임 실행)을
 제품의 핵심 가치로 세웠다.** 2층이 없으면 "고객이 인터럽트 없이 보고만 받는다"를
 보여줄 수 없다. 계약이 없다는 문제는 **협약사 커넥터를 Mock 으로** 풀었다 —
 증명 대상이 업체 연동이 아니라 **경계와 루프**라는 것을 명시하면 성립한다.
 
 즉 **"계약이 없다"는 Team 을 미룰 이유가 아니라 증명 범위를 좁힐 이유였다.**
+
+★**이름도 v10 을 따른다 — `Booking Execution` → `Booking Handoff`.**
+`[실측 2026-09-08]` 이 문서는 초안 이름을 본문 6곳에 쓰고 있었다. v10 §5 는
+**기본 동작이 인계이기 때문에** Execution 이 아니라 Handoff 로 골랐다고 명시한다
+(`v10:201`). `Execution` 으로 읽으면 실행이 기본이 되어 **「Team 은 side effect 를
+실행하지 않는다」**(v10 §6)와 충돌하는 설계를 그리게 된다. 뜻이 다른 이름이라
+그냥 두면 세부 설계에서 갈린다.
 
 ### ★ v10 에 없는 것 — 부트캠프 요구사항 대응표
 
@@ -61,11 +68,18 @@ v9 §3-A 의 「부트캠프 주제 요구사항 ↔ 구현 대응표」(11행)�
 | | 개수 | 무엇 |
 |---|---:|---|
 | 코어(basement) — **손대지 않음** | 12영역 | 생명주기·계약·Registry·Context Broker·대조 규칙 엔진·Controller·Outbox·Ports·운영 UI·A2A·방어 지표 |
-| Team — **구조를 그대로 이어받음** | **5** | 기존 팀의 뼈대를 여행 객체로 갈아 끼운다 |
+| Team — **뼈대를 이어받음** | **3** | Activity(`return_refund`) · Mobility(`fulfillment_logistics`) · Booking Handoff(`procurement_order_payment`) |
 | Team — **새로 만듦** | **1** | Dining |
 | Team — **등록만** | **2** | Lodging, Flight |
-| Team — **폐기** | **0** | 없다. 여섯 팀 모두 대응 자리가 있다 |
-| **MVP 필수** | **2** | **Activity, Booking Execution** (v10 §5 기준) |
+| **v10 §5 소계** | **6** | 위 셋 |
+| 이 문서가 더 제안 | 1 | **Place Verification**(`catalog_verification`) — v10 에 없다. **미해결** |
+| Team 으로 안 만듦 | 2 | Itinerary Review(각 Team 내부 규칙으로 흡수) · Trip Feedback(자리 없음) |
+| Team — **폐기** | **0** | 없다. v9 여섯 팀 모두 자리가 있거나 원칙이 흡수됐다 |
+| **MVP 필수** | **2** | **Activity, Booking Handoff** (v10 §5 기준) |
+
+★`[2026-09-08 정정]` **이 표가 8을 세고 있었다** — v10 §5 는 6개인데 Place Verification 과
+Trip Feedback 을 같이 세어서다. §5 가 Trip Feedback 을 "만들지 않음" 으로 이미 정했는데
+그 결정이 이 표에 안 왔다. v10 소계와 이 문서의 추가 제안을 나눠 적는다.
 
 **여섯 팀 중 폐기가 하나도 없다는 것이 이 구성안의 핵심이다.** 처음에는
 쇼핑몰 팀 셋(Procurement·Fulfillment·Catalog)을 버리는 것으로 봤는데, 코드를
@@ -108,7 +122,7 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 | `fulfillment_logistics` | 163 | `fulfillment.track` · `shipment.status` · `shipment.exception` | **Mobility** | **움직이는 것을 추적하고 예외를 잡는** 구조가 같다. 배송 지연 판정↔환승·막차 지연 판정, 미수령 조사↔경로 이탈 |
 | `catalog_verification` | 121 | `catalog.lookup_sku` · `catalog.verify_listing` · `catalog.compliance_check` | **Place Verification** | **외부 원장을 조회해 표시 내용이 맞는지 대조**하는 구조가 같다. A2A Remote 자리도 그대로 — 장소·운영 정보를 원격 검증으로 뺀다 |
 | `response_generation_review` | 154 | `response.generate_review` | **(각 Team 내부 규칙으로 흡수)** | 생성과 검수를 다른 주체가 하는 원칙은 살리되 **별도 Team 으로 두지 않는다**(v10 §5). 금지어·PII 검사는 통지 문구 검사로 이어진다 |
-| `procurement_order_payment` | 366 | `order.create` · `order.modify` · `order.cancel` · `payment.status` | **Booking Execution** | 예약 생성·변경·취소·결제 상태의 자리가 같다. **v10 에서 MVP 필수** — 협약사 커넥터를 Mock 으로 세운다 |
+| `procurement_order_payment` | 366 | `order.create` · `order.modify` · `order.cancel` · `payment.status` | **Booking Handoff** | 예약 생성·변경·취소·결제 상태의 자리가 같다. **v10 에서 MVP 필수** — 협약사 커넥터를 Mock 으로 세운다 |
 | `voc_store_manager` | 101 | `voc.aggregate` · `voc.escalate` | **Trip Feedback** | 지금도 껍데기다(집계는 코어 1 소유). 여행에서도 껍데기로 유지 |
 
 ★**"이어받는다"는 코드를 복사한다는 뜻이 아니다.** 판정 3단 구조·감시 소스
@@ -129,21 +143,54 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 | 4 | **Lodging** | — | — | — | **등록만** |
 | 5 | **Flight** | — | — | — | **등록만** |
 
+★**[2026-09-08 미해결] Activity 의 범위가 정의와 예시에서 어긋난다.**
+
+v10 이 Activity 에 준 판정 규칙은 **날씨 조건**이고 감시 소스는 **기상청 초단기예보**다
+(`v10:191`). 그런데 같은 문서의 예시 목록(`v10:205`)은 실내 상품을 섞고 있다.
+
+| v10 예시 | 기상 감시가 의미 있나 | 예약 시각이 고정인가 |
+|---|---|---|
+| 한강 수상 액티비티 · 겨울 스키·눈썰매 | 예 | 예 |
+| **골프** — v10 목록에 없다 | **예** (우천 위약금 규정이 문서로 존재) | **예** (티타임) |
+| 공연·뮤지컬 · 쿠킹 클래스 | **아니오** (실내) | 예 |
+| 테마파크 | 약함 | **아니오** (날짜권) |
+| 템플스테이 | 약함 | 숙박에 가깝다 — Lodging 과 겹친다 |
+
+★**이건 예시 고르기 문제가 아니라 Team 경계 문제다.** v10 §5 는 "Team 을 여행을
+구성하는 **객체 종류별**로 나눈다"고 했는데, 실내 티켓류를 Activity 에 넣으면
+**감시 소스가 둘로 갈린다**(기상청 vs 공연 취소 공지). 한 Team 이 성격이 다른 판정을
+두 벌 갖게 되어 그 분할 원칙과 충돌한다.
+
+갈래 셋 — ① 정의를 넓혀 감시 소스를 둘로 둔다 ② Activity 를 **레저**로 좁히고
+티켓류를 별도 Team 또는 등록만으로 뺀다 ③ 예시만 고치고 정의는 그대로 둔다.
+**③이 지금 상태이고, 그러면 세부 설계에서 다시 걸린다.**
+
+`[미확보]` 인바운드에서 골프·스키가 티켓류보다 큰지는 안 봤다. ①·② 판단에는
+그 수요 비교가 필요하다.
+
 ### B. 횡단 Team
 
 | # | Team | 하는 일 | 출처 |
 |---|---|---|---|
 | 6 | **Place Verification** | 장소 존재·운영 정보·표시 조건을 외부 원장과 대조. **A2A Remote** 로 뺀다 | `catalog_verification` 뼈대 |
 | ~~7~~ | ~~**Itinerary Review**~~ | **Team 아님.** 통지 문구 생성·검수 분리는 **각 Team 안의 규칙**으로 흡수됐다(v10 §5) | `response_generation_review` 원칙만 승계 |
-| 8 | **Trip Feedback** | 여행 피드백 집계·급증 탐지. **껍데기** — 집계는 코어 1 소유 | `voc_store_manager` 뼈대 |
+| ~~8~~ | ~~**Trip Feedback**~~ | **만들지 않는다**(§5). v10 에 자리가 없고, v9 에서 껍데기 팀(`voc_store_manager` 101줄)이 실제로 만든 것은 "이 팀 뭐 하는 거지"를 매번 다시 확인하는 비용이었다 | `voc_store_manager` 뼈대 |
 
 ### C. 실행 Team
 
 | # | Team | 하는 일 | 언제 |
 |---|---|---|---|
-| 9 | **Booking Execution** | 위임 범위 대조(금액·종류·되돌림 조건·횟수), 위약금 계산, 예약 변경·취소 판정 | **MVP 필수** (v10 §5). 협약사 커넥터는 **Mock** |
+| 9 | **Booking Handoff** | 위임 범위 대조(금액·종류·되돌림 조건·횟수), 위약금 계산, 예약 변경·취소 판정 | **MVP 필수** (v10 §5). 협약사 커넥터는 **Mock** |
 
-**합계 8개** (Itinerary Review 제외). 이 중 MVP 는 2개다(5절).
+**합계 — v10 기준 6개 + 이 문서가 추가로 제안하는 1개.**
+
+| | 개수 | Team |
+|---|---:|---|
+| **v10 §5 에 있는 것** | **6** | Activity · Dining · Mobility · Booking Handoff · Lodging · Flight |
+| 이 문서가 더 제안 | 1 | **Place Verification** — v10 에 없다. A2A Remote 시연 자리가 이것뿐이라 **미해결** |
+| Team 으로 안 만듦 | 2 | Itinerary Review(각 Team 내부 규칙으로 흡수) · Trip Feedback(자리 없음) |
+
+이 중 MVP 는 2개다(5절).
 
 ---
 
@@ -210,7 +257,7 @@ Case 를 **우리가 연다.** `routing_sweeper` 가 이미 주기 작업으로 
 | Team | MVP | 이유 |
 |---|:---:|---|
 | **Activity** | **필수** | 취소·환급 규정이 **문서로 존재**해 판정 규칙을 바로 쓸 수 있다. 예약금이 걸려 실패 비용이 크고, 시연에서 사건이 한눈에 보인다 |
-| **Booking Execution** | **필수** | v10 §4-C 의 **2층(협약사 위임 실행)이 제품이 팔려는 것**이다. 이것 없이는 "고객이 인터럽트 없이 보고만 받는다"를 보여줄 수 없다. 계약이 없는 문제는 **커넥터를 Mock 으로** 풀어, 증명 대상을 업체 연동이 아니라 **경계와 루프**로 좁힌다 |
+| **Booking Handoff** | **필수** | v10 §4-C 의 **2층(협약사 위임 실행)이 제품이 팔려는 것**이다. 이것 없이는 "고객이 인터럽트 없이 보고만 받는다"를 보여줄 수 없다. 계약이 없는 문제는 **커넥터를 Mock 으로** 풀어, 증명 대상을 업체 연동이 아니라 **경계와 루프**로 좁힌다 |
 | Dining | 2순위 | 변화가 잦고 대체가 쉬워 시연 가치는 높다. 다만 Activity 로 루프가 증명되면 같은 틀의 반복이다 |
 | Mobility | 3순위 | 앞의 둘이 바뀌면 항상 영향을 받지만, **늦게 붙여도 코어 검증이 시간 충돌은 잡는다** |
 | Place Verification | 3순위 | A2A Remote 시연이 부트캠프 요구사항이라 **발표 전에는 필요**하다. 기능 가치보다 요구사항 충족이 이유다 |
