@@ -113,6 +113,7 @@ def main() -> int:
 
     problems: dict[str, list[str]] = defaultdict(list)
     pending: list[str] = []               # 아직 안 쓴 문서로 가는 링크. 위반 아님
+    record_broken: list[str] = []         # records/ 안의 깨진 링크. 집계만 한다
     inv_in_docs: Counter[str] = Counter()
     inv_tests: list[tuple[str, str, str]] = []   # (doc, id, test path)
 
@@ -121,6 +122,18 @@ def main() -> int:
         body = FENCE.sub("", raw)
         rel = f.replace("\\", "/")
         n_lines = raw.count("\n") + 1
+
+        # --- 기록 구역 (2026-09-08 docs/ 통합)
+        #   `wiki/records/` 는 날짜가 박힌 작업 기록(evidence·리포트·옛 handoff 등)이다.
+        #   고치지 않는 것이 기록의 성질이므로 front matter·크기·index 규칙을 적용하지
+        #   않고, 깨진 링크는 위반이 아니라 집계로만 낸다 — 옛 기록의 링크가 낡는 건
+        #   정상이고, 그걸 고치면 기록이 아니게 된다.
+        if "/records/" in rel:
+            d = os.path.dirname(f)
+            for p in LINK.findall(FENCE.sub("", raw)):
+                if not os.path.exists(os.path.normpath(os.path.join(d, p))):
+                    record_broken.append(f"{rel} -> {p}")
+            continue
 
         # --- front matter
         fm = front_matter(raw)
@@ -183,6 +196,8 @@ def main() -> int:
             d = dirpath.replace("\\", "/")
             inner = d[len(r):].strip("/")
             if any(part.startswith("_") for part in inner.split("/") if part):
+                continue
+            if inner == "records" or inner.startswith("records/"):
                 continue
             if any(f.endswith(".md") for f in files) and "index.md" not in files:
                 problems["index.md 없는 폴더"].append(d)
@@ -255,6 +270,9 @@ def main() -> int:
     print(f"문서 {len(docs)}개 검사")
     print(f"불변식 {len(doc_ids)}개 (automated 연결 {len(inv_tests)}개)")
     print(f"코드 역방향 표식 {len(code_ids)}개")
+    n_records = sum(1 for f in docs if "/records/" in f.replace("\\", "/"))
+    if n_records:
+        print(f"기록(records/) {n_records}개 — 규칙 면제. 깨진 링크 {len(record_broken)}곳은 집계만 한다")
     print()
 
     if pending:
