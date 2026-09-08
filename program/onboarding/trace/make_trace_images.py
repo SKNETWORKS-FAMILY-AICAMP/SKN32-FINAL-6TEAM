@@ -7,7 +7,7 @@
 
 근거는 셋이다. 지어낸 값은 없다.
   - 흐름과 코드 경로: `program/onboarding/trace_refund_case.html`
-  - 구조 분류(컴포넌트·모듈·인스턴스·Port): `final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md`
+  - 구조 분류(컴포넌트·모듈·인스턴스·Port): `final_project_cs/wiki/records/handoff/08_모듈_컴포넌트_목록.md`
   - 담당: `program/plan/A-COP_스프린트_에픽_설계.md`
 
 ★큰 구조와 작은 구조를 한 장 안에 같이 둔다. 왼쪽 세로 띠가 큰 구조(이 단계가

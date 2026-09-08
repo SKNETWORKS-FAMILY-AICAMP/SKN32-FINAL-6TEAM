@@ -2,7 +2,7 @@
 """그림을 그리는 도구. 내용은 make_trace_images.py 에 있다.
 
 원본은 `program/onboarding/trace_refund_case.html` 다. 코드 경로와 데이터는
-거기서 가져왔고, 구조 분류는 `final_project_cs/docs/handoff/08_모듈_컴포넌트_목록.md`,
+거기서 가져왔고, 구조 분류는 `final_project_cs/wiki/records/handoff/08_모듈_컴포넌트_목록.md`,
 담당은 `program/plan/A-COP_스프린트_에픽_설계.md` 를 따랐다.
 
 ★모든 장 위에 같은 진행바를 그린다. 열두 칸 중 지금 어디인지 칠한다.
