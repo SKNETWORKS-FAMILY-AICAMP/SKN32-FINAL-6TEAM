@@ -159,7 +159,7 @@
 
 이 모순이 실제로 코드를 어긋나게 했다 — 2026-08-30 `9c11327` 이 §3-A 를 근거로
 인라인 분류를 `voc` 게이트 아래 묶었고, 그것을 "voc 는 끌 수 없다" 는 사양으로
-`final_project_cs/docs/handoff/08` 에 기록했다.
+`final_project_cs/wiki/records/handoff/08_모듈_컴포넌트_목록.md` 에 기록했다.
 
 **코드와 cs 계약 문서는 2026-09-01 에 바로잡았다**(`app/composition.py` 게이트
 제거, `tests/contract/test_module_toggles.py`,

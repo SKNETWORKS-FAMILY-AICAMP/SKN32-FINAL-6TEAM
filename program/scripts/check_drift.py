@@ -614,7 +614,7 @@ def check_db_constraints(_text: str) -> int:
     if not real:
         print("    제약을 한 건도 못 읽었다. DB 도 마이그레이션도 안 보인다 — 건너뛴다.")
         return 0
-    print(f"    기준: {source} · 유니크 제약 {len(real)}종")
+    print(f"    기준: {source} · 유니크 제약 {len(real)}종 · 대상은 wiki 본문(records/ 제외)")
 
     flagged = 0
     for root in WIKI_ROOTS:
@@ -626,6 +626,13 @@ def check_db_constraints(_text: str) -> int:
                     continue
                 path = os.path.join(dirpath, name).replace("\\", "/")
                 lines = read(path).splitlines()
+                # ★`wiki/records/` 는 건너뛴다 (2026-09-08 `docs/` 통합).
+                #   날짜가 박힌 작업 기록이라 **고치지 않는 것이 성질**이다
+                #   (루트 `CLAUDE.md`, `check_wiki.py` 도 같은 이유로 면제한다).
+                #   통합 직후 여기서 27곳이 올라왔는데 전부 옛 기록의 옛 제약이었다 —
+                #   고칠 수 없는 것을 매번 보여 주면 경보가 경보가 아니게 된다.
+                if "/records/" in path:
+                    continue
                 for i, line in enumerate(lines, 1):
                     for m in UNIQUE_RE.finditer(line):
                         cols = frozenset(c.strip().strip("`\"' ")
