@@ -150,9 +150,7 @@ issue_code 접두        activity · booking · dining · flight · lodging · m
 
 `app/modules/customer_ops/feedback.py:48,51` — 위 §2 의 두 집합으로 교체.
 
-★**파일 위치도 정리 대상이다.** 여행 어휘를 `customer_ops` 파일이 들고 있게 된다.
-`[미확보]` 옮길지, 어휘를 설정으로 뺄지 안 정해졌다 —
-**어휘를 설정으로 빼면 도메인이 또 바뀌어도 코드를 안 고친다.**
+★`[결정 2026-09-10]` **`config/` 로 뺀다.** 그런데 `INTENTS` 만 빼면 부족하다 — **프롬프트에 커머스 어휘가 따로 박혀 있다**(`feedback.py:81`: `"intent is order|shipping|return|exchange|other"`). `issue_code` 는 상수에서 만드는데 `intent` 만 리터럴이다. **선언 하나에서 셋이 나와야 한다 — 프롬프트·출력 검증·라우팅.** → [설계결정 6건 §6](A-COP_여행MVP_설계결정_6건.md)
 
 ### ② 컨트롤러가 두 축을 쓰게
 
@@ -169,9 +167,10 @@ entry = self.registry.resolve(case_type=case_type, intent=intent)
 
 ★두 자리 다 고쳐야 한다. `:71` 은 capability 선택, `:167` 은 라우팅 재개다.
 
-`[미확보]` `issue_code` 가 `"other"` 이면 접두가 `"other"` 라 어느 팀에도 안 맞고
-`RegistryError` 가 난다. **그때 `escalated` 로 보내는 경로가 이미 있는지 확인이
-필요하다** — 없으면 예외가 그대로 올라간다.
+★`[실측 2026-09-10]` **경로가 이미 있다.** `controller.py:171` 이
+`except RegistryError` 로 잡아 `ROUTING_FAILED`(`failure_code: "no_team"`) 로 전이하고
+`status: "escalated"` 를 돌려준다. **`issue_code = "other"` 는 어느 팀에도 안 가고
+escalate 된다 — 그게 맞는 동작이고 이미 그렇게 된다.**
 
 ### ③ 가드 테스트를 등록표 기준으로
 
