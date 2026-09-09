@@ -313,6 +313,360 @@
   </div>
 </div>
 
+
+<!-- ===== 세부 아키텍처 (아래) ===== -->
+<h2>Team 하나의 내부 — 여섯 팀이 똑같이 돈다</h2>
+<p>가드 셋을 <strong>다 본다.</strong> 하나라도 걸리면 그 결과를 그대로 돌려주고, 셋 다 통과하면 <code>_guard()</code> 가 <code>None</code> 을 돌려줘 <code>execute()</code> 가 이어진다. 순서에 뜻이 있다 — 남의 일이면 판단하기 전에 넘기고, 못 하는 일이면 시작하지 않으며, 근거가 깎였으면 확정 답을 만들지 않는다.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1088 1088" role="img" aria-labelledby="detail-common-title detail-common-desc">
+  <title id="detail-common-title">TravelTeamBase 공통 부품을 사용하는 Team 내부 흐름</title>
+  <desc id="detail-common-desc">각 Team의 execute가 공통 부품을 호출한다. 가드는 team_id, capability, degraded 순서로 검사하며 실패하면 즉시 반환한다. 읽기 도구에 허용 목록, 중복 확인 집합, 예산을 전달하고 근거를 누적한다. 판정 뒤 응답, 모름, 에스컬레이션, 승인 대기 제안으로 나뉜다. Team은 부수 효과를 실행하지 않는다. 제공 원문은 _result 구현 중간에서 끝나므로 뒤쪽 반환 분기는 과제에 명시된 계약을 표시한다.</desc>
+
+  <rect width="1088" height="1088" fill="#fbfcfd"/>
+
+  <!-- 연결선을 노드보다 먼저 그린다. -->
+  <g fill="none" stroke="#2f5bd8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M352 56 V80 M344 72 L352 80 L360 72"/>
+    <path d="M352 152 V184 M344 176 L352 184 L360 176"/>
+    <path d="M352 256 V288 M344 280 L352 288 L360 280"/>
+    <path d="M352 360 V400 M344 392 L352 400 L360 392"/>
+    <path d="M656 116 H736 M728 108 L736 116 L728 124"/>
+    <path d="M656 220 H736 M728 212 L736 220 L728 228"/>
+    <path d="M656 324 H736 M728 316 L736 324 L728 332"/>
+    <path d="M352 544 V576 M344 568 L352 576 L360 568"/>
+    <path d="M352 704 V736 M344 728 L352 736 L360 728"/>
+    <path d="M352 792 V808 Q352 816 344 816 H160 Q152 816 152 824 V848 M144 840 L152 848 L160 840"/>
+    <path d="M352 792 V808 Q352 816 360 816 H936 Q944 816 944 824 V848 M936 840 L944 848 L952 840"/>
+    <path d="M416 816 V848 M408 840 L416 848 L424 840"/>
+    <path d="M680 816 V848 M672 840 L680 848 L688 840"/>
+    <path d="M944 960 V992 M936 984 L944 992 L952 984"/>
+  </g>
+
+  <!-- 화살표 라벨은 불투명 배경을 두고 선에서 8px 띄운다. -->
+  <g fill="#fbfcfd">
+    <rect x="368" y="160" width="64" height="20"/>
+    <rect x="368" y="264" width="64" height="20"/>
+    <rect x="368" y="368" width="64" height="20"/>
+  </g>
+  <g fill="#6b7488" font-family="monospace" font-size="12">
+    <text x="376" y="176">PASS</text>
+    <text x="376" y="280">PASS</text>
+    <text x="376" y="384">PASS</text>
+  </g>
+
+  <g stroke="#6b7488" fill="#f1f4f8">
+    <rect x="48" y="80" width="608" height="72" rx="6"/>
+    <rect x="48" y="184" width="608" height="72" rx="6"/>
+    <rect x="48" y="288" width="608" height="72" rx="6"/>
+    <rect x="736" y="80" width="304" height="72" rx="6"/>
+    <rect x="736" y="184" width="304" height="72" rx="6"/>
+    <rect x="736" y="288" width="304" height="72" rx="6"/>
+    <rect x="48" y="400" width="608" height="144" rx="6"/>
+    <rect x="48" y="576" width="608" height="128" rx="6"/>
+    <rect x="48" y="736" width="608" height="56" rx="6"/>
+    <rect x="32" y="848" width="240" height="112" rx="6"/>
+    <rect x="296" y="848" width="240" height="112" rx="6"/>
+    <rect x="560" y="848" width="240" height="112" rx="6"/>
+    <rect x="824" y="848" width="240" height="112" rx="6"/>
+    <rect x="824" y="992" width="240" height="64" rx="6"/>
+  </g>
+
+  <g font-family="sans-serif" fill="#161c28">
+    <text x="48" y="40" font-size="16">각 Team의 execute(task)가 공통 부품을 호출한다</text>
+
+    <text x="64" y="108" font-size="16">1 · _guard(task) — team_id</text>
+    <text x="64" y="132" font-size="12">task.team_id와 manifest.team_id가 다르면 즉시 반환한다</text>
+    <text x="752" y="108" font-size="16">handoff · HANDOFF</text>
+    <text x="752" y="132" font-size="12">handoff_capability = task.capability</text>
+
+    <text x="64" y="212" font-size="16">2 · _guard(task) — capability</text>
+    <text x="64" y="236" font-size="12">manifest.capabilities에 없으면 즉시 반환한다</text>
+    <text x="752" y="212" font-size="16">_escalate</text>
+    <text x="752" y="236" font-size="12">unsupported_capability</text>
+
+    <text x="64" y="316" font-size="16">3 · _guard(task) — context.degraded</text>
+    <text x="64" y="340" font-size="12">degraded가 참이면 즉시 반환한다</text>
+    <text x="752" y="316" font-size="16">_escalate</text>
+    <text x="752" y="340" font-size="12">degraded_context</text>
+
+    <text x="64" y="428" font-size="16">_read(task, name, arguments, seen)</text>
+    <text x="64" y="452" font-size="12">tools.call에 allowed_tools · seen · budget을 전달한다</text>
+    <text x="64" y="476" font-size="12">allowed_tools 밖 → ToolNotAllowed · seen으로 같은 호출을 차단한다</text>
+    <text x="64" y="500" font-size="12">budget = manifest.max_steps · 예산 초과 → ToolBudgetExceeded</text>
+    <text x="64" y="524" font-size="12" fill="#6b7488">검사는 ReadToolbox에 위임한다</text>
+
+    <text x="64" y="604" font-size="16">_evidence() — 근거를 누적한다</text>
+    <text x="64" y="628" font-size="12">base가 있으면 이어 쌓고, 없으면 task.context.evidence에서 시작한다</text>
+    <text x="64" y="652" font-size="12">source_type: read.* → tool_result / 그 외 → db</text>
+    <text x="64" y="676" font-size="12">confidence: 1.0 · observed_at: 현재 UTC</text>
+    <text x="64" y="696" font-size="12" fill="#6b7488">None · {} · [] 값은 추가하지 않는다</text>
+
+    <text x="64" y="772" font-size="16">각 Team의 판정 → 결과 계약을 선택한다</text>
+
+    <text x="48" y="880" font-size="16">_result</text>
+    <text x="48" y="908" font-size="12">RESPOND</text>
+    <text x="48" y="936" font-size="12">응답을 반환한다</text>
+
+    <text x="312" y="880" font-size="16">_unknown</text>
+    <text x="312" y="908" font-size="12">모르면 지어내지 않는다</text>
+    <text x="312" y="936" font-size="12">모름을 반환한다</text>
+
+    <text x="576" y="880" font-size="16">_escalate</text>
+    <text x="576" y="908" font-size="12">failure_code</text>
+    <text x="576" y="936" font-size="12">실패 사유를 전달한다</text>
+
+    <text x="840" y="880" font-size="16">_proposal</text>
+    <text x="840" y="908" font-size="12">ActionProposal</text>
+    <text x="840" y="936" font-size="12" fill="#a8720c">WAIT_FOR_APPROVAL</text>
+
+    <text x="840" y="1020" font-size="16">코어 Action 층</text>
+    <text x="840" y="1044" font-size="12">제안을 전달한다</text>
+
+    <text x="48" y="1016" font-size="16" fill="#a8720c">Team은 side effect를 실행하지 않는다</text>
+    <text x="48" y="1044" font-size="12" fill="#6b7488">실행할 작업은 제안으로 반환한다</text>
+  </g>
+</svg>
+<p>TravelTeamBase는 execute를 가로채지 않으며, 각 Team이 공통 부품을 직접 호출한다. 가드는 순서대로 검사하고 첫 실패에서 반환한다. 제공 원문이 _result 구현 중간에서 끝나므로, 판정 뒤 네 갈래는 과제에 명시된 계약을 표시한다. 도구 예외를 특정 반환 분기로 연결하는 처리는 원문에서 확인할 수 없어 생략한다.</p>
+<h2>팀별 — 실제 구현은 이렇게 다르다</h2>
+
+<h3>Activity</h3>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="detail-activity-title detail-activity-desc">
+  <title id="detail-activity-title">Activity — 274줄, 기상 조건 조회와 변경 승인 대기</title>
+  <desc id="detail-activity-desc">공통으로 예약과 규정을 읽고 예약 시각을 확인한다. 취소 가능 여부는 기한과 위약금율로 판단한다. 실행 가능 여부는 정원을 먼저 확인하고, 정원 초과가 아니면 장소를 조회하며 기상 민감 활동에만 날씨를 조회한다. 변경 제안은 승인 대기를 반환한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="24">274줄 · 공통 조회 후 capability 분기</text>
+    <text x="408" y="24">분기별 추가 조회 · 판단</text>
+    <text x="888" y="24">next_action</text>
+  </g>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1">
+    <path d="M368 84 H400 M392 80 L400 84 L392 88"/>
+    <path d="M368 156 H400 M392 152 L400 156 L392 160"/>
+    <path d="M368 228 H400 M392 224 L400 228 L392 232"/>
+    <path d="M856 84 H880 M872 80 L880 84 L872 88"/>
+    <path d="M856 156 H864 Q872 156 872 148 V92 Q872 84 880 84 M872 80 L880 84 L872 88"/>
+    <path d="M856 228 H880 M872 224 L880 228 L872 232"/>
+  </g>
+  <g stroke="#7a8599" stroke-width="1" fill="#f1f4f8">
+    <rect x="24" y="40" width="344" height="208" rx="6"/>
+    <rect x="400" y="56" width="456" height="56" rx="6"/>
+    <rect x="400" y="120" width="456" height="80" rx="6"/>
+    <rect x="400" y="208" width="456" height="40" rx="6"/>
+    <rect x="880" y="56" width="216" height="56" rx="6"/>
+    <rect x="880" y="208" width="216" height="40" rx="6"/>
+  </g>
+  <rect x="416" y="168" width="424" height="24" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g font-family="sans-serif" font-size="12" fill="#161c28">
+    <text x="40" y="60">read.booking · read.policy → 예약 시각 확인</text>
+    <text x="40" y="88">activity.check_cancelable</text>
+    <text x="40" y="160">activity.check_feasible</text>
+    <text x="40" y="232">activity.propose_change</text>
+    <text x="416" y="80">취소 기한 · 남은 시간 비교</text>
+    <text x="416" y="100">위약금율 미확인 시 금액을 만들지 않는다</text>
+    <text x="416" y="140">정원 초과면 즉시 RESPOND</text>
+    <text x="416" y="160">그 외 read.place → 기상 민감 여부 확인</text>
+    <text x="428" y="184">민감 활동만 read.weather · _weather_note() 46줄</text>
+    <text x="416" y="232">변경 제안</text>
+    <text x="896" y="88">RESPOND</text>
+    <text x="896" y="232">WAIT_FOR_APPROVAL</text>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="280">_unknown 사유 · 예약 내역 · 취소·환급 규정 · 예약 시각 · 취소 기한 · 기상 정보</text>
+    <text x="24" y="304">실제 호출 도구 · read.booking · read.policy · read.place · read.weather</text>
+  </g>
+</svg>
+<p>Activity만 기상 민감 활동에 read.weather를 호출하며, 전용 _weather_note()는 46줄이다. 취소·실행 가능 여부는 RESPOND로 답하고 변경 제안은 WAIT_FOR_APPROVAL로 반환한다.</p>
+
+<h3>Dining</h3>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="detail-dining-title detail-dining-desc">
+  <title id="detail-dining-title">Dining — 96줄, 영업 여부와 동행 조건 확인</title>
+  <desc id="detail-dining-desc">두 capability 모두 예약을 읽고 예약의 place_id로 장소를 조회하며 영업 정보의 확인 시각을 요구한다. check_open은 일정 시각의 영업 여부를 확인한다. check_conditions는 아이 동반, 할랄, 채식 등 요청 조건을 대조하며 모르는 조건은 unknown으로 처리한다. next_action은 RESPOND다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="24">96줄 · capability</text>
+    <text x="304" y="24">공통 도구 호출 순서</text>
+    <text x="648" y="24">분기별 확인</text>
+    <text x="944" y="24">next_action</text>
+  </g>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1">
+    <path d="M264 88 H272 Q280 88 280 96 V132 Q280 140 288 140 H304 M296 136 L304 140 L296 144"/>
+    <path d="M264 192 H272 Q280 192 280 184 V148 Q280 140 288 140"/>
+    <path d="M616 140 H624 Q632 140 632 132 V96 Q632 88 640 88 H648 M640 84 L648 88 L640 92"/>
+    <path d="M632 140 V184 Q632 192 640 192 H648 M640 188 L648 192 L640 196"/>
+    <path d="M904 88 H912 Q920 88 920 96 V132 Q920 140 928 140 H944 M936 136 L944 140 L936 144"/>
+    <path d="M904 192 H912 Q920 192 920 184 V148 Q920 140 928 140"/>
+  </g>
+  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
+    <rect x="24" y="56" width="240" height="64" rx="6"/>
+    <rect x="24" y="160" width="240" height="64" rx="6"/>
+    <rect x="304" y="64" width="312" height="160" rx="6"/>
+    <rect x="648" y="56" width="256" height="64" rx="6"/>
+    <rect x="944" y="112" width="152" height="56" rx="6"/>
+  </g>
+  <rect x="648" y="160" width="256" height="64" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g font-family="sans-serif" font-size="12" fill="#161c28">
+    <text x="40" y="92">dining.check_open</text>
+    <text x="40" y="196">dining.check_conditions</text>
+    <text x="320" y="92">read.booking(case_id)</text>
+    <text x="320" y="120">予約의 place_id로 장소 조회</text>
+    <text x="320" y="148">read.place(place_id)</text>
+    <text x="320" y="180">confirmed_at 필수</text>
+    <text x="320" y="204">확인 시각이 없으면 _unknown</text>
+    <text x="664" y="84">open_at_slot 확인</text>
+    <text x="664" y="108">일정 시각의 영업 여부</text>
+    <text x="664" y="184">아이 동반 · 할랄 · 채식</text>
+    <text x="664" y="208">요청 조건과 알려진 조건 대조</text>
+    <text x="960" y="144">RESPOND</text>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="264">_unknown 사유 · 예약 내역 · 장소·영업 정보 · 그 시각의 영업 여부 · 영업 정보의 확인 시각</text>
+    <text x="24" y="288">조건 분기 · 미확인 요청 조건은 _unknown("조건 …")으로 반환한다</text>
+    <text x="24" y="312">실제 호출 도구 · read.booking · read.place</text>
+  </g>
+</svg>
+<p>예약의 place_id로 장소를 조회하고 확인 시각을 검증한다. check_conditions는 아이 동반·할랄·채식 등 동행 조건을 대조하며, 모르는 조건은 모름으로 남긴다.</p>
+
+<h3>Mobility</h3>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="detail-mobility-title detail-mobility-desc">
+  <title id="detail-mobility-title">Mobility — 80줄, capability 선택 훅과 공통 시간 계산</title>
+  <desc id="detail-mobility-desc">Mobility만 select_capability(intent, input_text) 훅을 가진다. intent가 mobility이고 사건 표지가 있으면 mobility.exception을 선택하며 그 외에는 None을 반환한다. 세 capability의 execute 경로는 같으며 read.route 다음 read.transit을 호출하고 여유 시간과 이동 시간을 비교해 RESPOND를 반환한다. 허용 목록의 read.policy는 실제로 호출하지 않는다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="24">80줄 · 선택 훅</text>
+    <text x="408" y="24">capability · 동일 execute 경로</text>
+    <text x="680" y="24">실제 호출 도구 · 계산</text>
+    <text x="952" y="24">next_action</text>
+  </g>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1">
+    <path d="M376 136 H408 M400 132 L408 136 L400 140"/>
+    <path d="M648 136 H680 M672 132 L680 136 L672 140"/>
+    <path d="M920 136 H952 M944 132 L952 136 L944 140"/>
+  </g>
+  <rect x="24" y="48" width="352" height="184" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
+    <rect x="408" y="48" width="240" height="184" rx="6"/>
+    <rect x="680" y="48" width="240" height="184" rx="6"/>
+    <rect x="952" y="108" width="144" height="56" rx="6"/>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#161c28">
+    <text x="40" y="76">select_capability(intent, input_text)</text>
+    <text x="40" y="108">intent == "mobility" + 사건 표지</text>
+    <text x="40" y="136">놓쳤 · 못 탔 · 끊겼 · 지연됐</text>
+    <text x="40" y="160">결항 · 운행 중단</text>
+    <text x="40" y="192">일치하면 mobility.exception 선택</text>
+    <text x="40" y="216">그 외 None → 기본 동작에 맡긴다</text>
+    <text x="424" y="84">mobility.check_route</text>
+    <text x="424" y="120">mobility.status</text>
+    <text x="424" y="156">mobility.exception</text>
+    <text x="424" y="212">capability별 실행 분기 없음</text>
+    <text x="696" y="80">read.route(case_id)</text>
+    <text x="696" y="112">read.transit(route_id)</text>
+    <text x="696" y="148">gap_minutes ≥ duration_minutes</text>
+    <text x="696" y="180">last_departure_ok 기록</text>
+    <text x="696" y="212">막차 조건이 False면 경고</text>
+    <text x="968" y="140">RESPOND</text>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="272">_unknown 사유 · 구간 정보 · 운행 정보 · 이동 시간 또는 여유 시간</text>
+    <text x="24" y="300">실제 호출 도구 · read.route · read.transit — read.policy는 허용 목록에만 존재한다</text>
+  </g>
+</svg>
+<p>Mobility만 select_capability(intent, input_text) 훅으로 사건 표지를 검사한다. 세 capability는 같은 실행 경로에서 여유 시간과 이동 시간을 계산하고 RESPOND로 답한다.</p>
+
+<h3>Booking Handoff</h3>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="detail-booking-title detail-booking-desc">
+  <title id="detail-booking-title">Booking Handoff — 94줄, 공급자 대조와 변경·취소 제안</title>
+  <desc id="detail-booking-desc">공통으로 read.booking을 호출한다. booking.verify는 read.supplier로 공급자 예약 상태를 읽고 내부 상태와 비교하여 RESPOND를 반환한다. booking.prepare_change와 booking.prepare_cancel은 read.policy로 규정을 읽고 각각 booking.change 또는 booking.cancel 제안을 만들어 WAIT_FOR_APPROVAL을 반환한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="24">94줄 · 공통 조회</text>
+    <text x="264" y="24">capability 분기</text>
+    <text x="560" y="24">분기별 도구 · 처리</text>
+    <text x="880" y="24">next_action</text>
+  </g>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1">
+    <path d="M224 136 H232 Q240 136 240 128 V88 Q240 80 248 80 H264 M256 76 L264 80 L256 84"/>
+    <path d="M240 136 V184 Q240 192 248 192 H264 M256 188 L264 192 L256 196"/>
+    <path d="M528 80 H560 M552 76 L560 80 L552 84"/>
+    <path d="M528 192 H560 M552 188 L560 192 L552 196"/>
+    <path d="M848 80 H880 M872 76 L880 80 L872 84"/>
+    <path d="M848 192 H880 M872 188 L880 192 L872 196"/>
+  </g>
+  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
+    <rect x="24" y="104" width="200" height="64" rx="6"/>
+    <rect x="264" y="48" width="264" height="64" rx="6"/>
+    <rect x="264" y="144" width="264" height="96" rx="6"/>
+    <rect x="560" y="48" width="288" height="64" rx="6"/>
+    <rect x="560" y="144" width="288" height="96" rx="6"/>
+    <rect x="880" y="48" width="216" height="64" rx="6"/>
+  </g>
+  <rect x="880" y="160" width="216" height="64" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g font-family="sans-serif" font-size="12" fill="#161c28">
+    <text x="40" y="132">read.booking</text>
+    <text x="40" y="156">case_id で予約を参照</text>
+    <text x="280" y="84">booking.verify</text>
+    <text x="280" y="180">booking.prepare_change</text>
+    <text x="280" y="212">booking.prepare_cancel</text>
+    <text x="576" y="76">read.supplier(booking_id)</text>
+    <text x="576" y="100">供給者と内部の status を比較</text>
+    <text x="576" y="168">read.policy(query)</text>
+    <text x="576" y="196">booking.change / booking.cancel</text>
+    <text x="576" y="224">action_proposals に提案を格納</text>
+    <text x="896" y="84">RESPOND</text>
+    <text x="896" y="196">WAIT_FOR_APPROVAL</text>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="272">_unknown 사유 · 예약 내역 · 공급자 예약 상태 · 변경·취소 규정</text>
+    <text x="24" y="300">실제 호출 도구 · read.booking · read.supplier · read.policy</text>
+  </g>
+</svg>
+<p>verify는 공급자 상태와 내부 기록을 대조하며, 불일치하면 사람의 확인이 필요하다고 답한다. 변경·취소 준비는 제안을 만들고 WAIT_FOR_APPROVAL을 반환한다.</p>
+
+<h3>Lodging / Flight</h3>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 280" role="img" aria-labelledby="detail-locked-title detail-locked-desc">
+  <title id="detail-locked-title">Lodging / Flight — 73줄, 잠긴 예약을 읽는 공통 부모 클래스</title>
+  <desc id="detail-locked-desc">LodgingTeam과 FlightTeam은 _LockedBookingTeam을 상속한다. lodging.status와 flight.status는 공통 execute에서 read.booking만 호출한다. 예약이 없으면 예약 내역 unknown을 반환하고, 예약이 있으면 locked를 true로 기록하며 일정 조정 대상이 아니라는 답변과 RESPOND를 반환한다.</desc>
+  <rect width="1120" height="280" rx="6" fill="#fbfcfd"/>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="24">73줄 · 두 클래스의 capability</text>
+    <text x="352" y="24">공통 부모 클래스</text>
+    <text x="664" y="24">유일한 도구 호출</text>
+    <text x="920" y="24">next_action</text>
+  </g>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1">
+    <path d="M304 80 H320 Q328 80 328 88 V120 Q328 128 336 128 H352 M344 124 L352 128 L344 132"/>
+    <path d="M304 176 H320 Q328 176 328 168 V136 Q328 128 336 128"/>
+    <path d="M632 128 H664 M656 124 L664 128 L656 132"/>
+    <path d="M888 128 H920 M912 124 L920 128 L912 132"/>
+  </g>
+  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
+    <rect x="24" y="48" width="280" height="64" rx="6"/>
+    <rect x="24" y="144" width="280" height="64" rx="6"/>
+    <rect x="664" y="80" width="224" height="96" rx="6"/>
+    <rect x="920" y="96" width="176" height="64" rx="6"/>
+  </g>
+  <rect x="352" y="64" width="280" height="128" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g font-family="sans-serif" font-size="12" fill="#161c28">
+    <text x="40" y="76">LodgingTeam</text>
+    <text x="40" y="100">lodging.status</text>
+    <text x="40" y="172">FlightTeam</text>
+    <text x="40" y="196">flight.status</text>
+    <text x="368" y="92">_LockedBookingTeam</text>
+    <text x="368" y="120">두 클래스가 상속하는 execute()</text>
+    <text x="368" y="152">공통 예약 상태 조회</text>
+    <text x="368" y="176">capability별 실행 분기 없음</text>
+    <text x="680" y="108">read.booking(case_id)</text>
+    <text x="680" y="136">locked: True</text>
+    <text x="680" y="160">일정 조정 대상이 아님</text>
+    <text x="936" y="132">RESPOND</text>
+  </g>
+  <g font-family="sans-serif" font-size="12" fill="#6b7488">
+    <text x="24" y="240">_unknown 사유 · 예약 내역</text>
+    <text x="24" y="264">실제 호출 도구 · read.booking</text>
+  </g>
+</svg>
+<p>LodgingTeam과 FlightTeam은 _LockedBookingTeam의 실행 구현을 공유한다. read.booking만 호출하고 예약을 잠긴 상태로 취급하며, 일정 조정 대상이 아니라고 RESPOND로 답한다.</p>
+<!-- ===== 세부 아키텍처 끝 ===== -->
+
 <footer>
 근거 — program/plan/A-COP_구현계획서_v10.md §5 · §6 · program/plan/A-COP_여행Team모듈_구성안.md §0 · §2<br>
 팀 파일·줄수·capability·등록 상태는 2026-09-09 21:12 코드 실측 · Team 은 side effect 를 실행하지 않는다(v10 §6) — 제안만 Action 층으로 돌린다
