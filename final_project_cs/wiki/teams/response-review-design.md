@@ -6,7 +6,7 @@ status: draft
 tags: [agent, contract, evaluation]
 owners: [human:미배정]
 domain: commerce
-domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 코드에는 아직 등록돼 있다
+domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 2026-09-09 에 config/project.yaml 등록에서 빠졌고 소스만 app/modules/customer_ops/ 에 남아 있다
 ---
 
 # Response Review 내부 설계

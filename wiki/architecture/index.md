@@ -61,7 +61,7 @@ domain: travel
 
 ★**도메인을 바꾸는 일도 마찬가지다.** 2026-09-08 에 커머스 → 여행으로 한 번 바꿨다. 무엇을 갈아 끼우고 무엇을 안 끼우는지는 [`cs/domain-swap.md`](../../final_project_cs/wiki/domain-swap.md) 가 정본이고, **어느 문서가 도메인에 묶여 있는지**는 [../governance/domain-axis.md](../governance/domain-axis.md) 가 정한다.
 
-`[실측 2026-09-09]` **코드는 아직 커머스다.** `config/project.yaml` 에 여행 Team 이 0건이다. 위 그림은 v10 이 정한 목표지 지금 도는 것이 아니다.
+`[실측 2026-09-09]` **여행 Team 여섯이 `config/project.yaml` 에 붙었다**(`activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`). 단 **여행 Case 는 아직 안 돈다** — 코어 1 분류기 어휘가 쇼핑몰이라 여행 라벨이 `ClassificationFailed` 로 떨어진다. 조립은 되고 라우팅이 안 되는 구간이다.
 
 ## 이 영역의 불변식
 

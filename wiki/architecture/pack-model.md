@@ -70,17 +70,38 @@ domain: travel
 
 ## ★ 2026-09-08 판올림이 이 구조를 시험했다
 
-`[실측 2026-09-09]` 코어 코드를 안 고치고 도메인이 바뀌었나 — **아직 답이 안 나왔다. 여행 Team 이 코드에 하나도 없기 때문이다.**
+★**교체가 실제로 일어났고, 판정이 났다.** 이 절이 기다리던 시험이다.
+
+`[실측 2026-09-09]` 여행 Team 여섯이 코드에 붙었다.
 
 | 항목 | 실측 |
 |---|---|
-| `config/project.yaml` 등록 Team | **커머스 6종 그대로** (`voc_store_manager`·`response_generation_review`·`return_refund`·`procurement_order_payment`·`fulfillment_logistics`·`catalog_verification`) |
-| 여행 Team 등록 | **0건** (`activity`·`dining`·`mobility`·`booking` 문자열이 `project.yaml` 에 0회) |
+| `config/project.yaml` 등록 Team | **여행 6종** — `activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`. 커머스 6종은 **등록에서 빠졌다**(소스는 `app/modules/customer_ops/` 에 남아 있다) |
+| 모듈 | `app/modules/travel_ops/` 7파일 |
 | v10 이 계약을 바꿨나 | **안 바꿨다** — §0-2 "통합 계약 승계. 필드 변경 없음" |
 
-★**그래서 "Pack 교체가 성립한다"고 아직 말할 수 없다.** 문서상 교체됐을 뿐이다. **판정은 첫 여행 Team 이 붙는 시점에 난다** — 그때 `app/core/` 를 한 줄이라도 고쳐야 하면 이 절의 주장이 틀린 것이다.
+### ★ 판정 — 「Registry 등록만으로 끝난다」는 그대로는 못 쓴다
 
-`[미확보]` 그 판정을 자동으로 하는 검사가 없다. `test_engine_serves_another_domain.py` 가 가장 가깝지만 **커머스가 아닌 Team 을 실제로 꽂아 보지는 않는다.**
+`[실측 2026-09-09]` **`app/core/` 파일 둘을 고쳐야 했다.**
+
+| 파일 | 무엇을 | 왜 |
+|---|---|---|
+| `app/core/project_config.py` | `KNOWN_IMPLEMENTATION_REFS` 에 여행 6종의 **모듈 경로를 손으로 넣었다** | Composer 쓰기채널이 **허용 목록에 없는 ref 를 422 로 거부**한다. 안 넣으면 조립은 뜨는데 선언을 저장할 수 없다 |
+| `app/core/settings.py` | 외부 소스 자격증명 칸 4개(`weather_provider`·`kma_api_key`·`tour_api_key`·`odsay_api_key`) | 여행 Team 이 부르는 바깥이 커머스와 다르다 |
+
+★**둘 다 Team 로직이 아니라 경계 설정이다.** 판정 규칙·재계획·프롬프트는 한 줄도 코어에 안 들어갔다. 그래도 **"Core 파일을 하나라도 고쳐야 하면 실패다"** 라는 아래 문장을 문자 그대로 지키지는 못했다.
+
+`[실측]` `tests/architecture/test_basement_is_domain_free.py:53` 이 이 허용 목록을 **이미 예외로 뚫어 놨다**(2026-08-24). 도메인 어휘가 코어에 들어오는 것을 아는 채로 허용한 자리다.
+
+| 갈래 | 무엇 |
+|---|---|
+| ① 그대로 둔다 | 허용 목록은 보안 장치다. 도메인마다 손으로 넣는 값이 맞다 |
+| ② 선언으로 뺀다 | 목록을 `config/` 로 옮긴다. 그러면 코어를 안 고친다. **쓰기채널 보안이 선언 파일에 걸린다** |
+| ③ 문장을 고친다 | "Core **로직**을 고쳐야 하면 실패다"로 좁힌다 |
+
+`[미확보]` **안 정했다.** ②는 보안 경계를 옮기는 결정이라 [D-005](../decisions/D-005-write-gate.md)·[D-011](../decisions/D-011-composer-v3-gap.md) 과 함께 봐야 한다.
+
+`[미확보]` 이 판정을 자동으로 하는 검사가 없다. `test_engine_serves_another_domain.py` 가 가장 가깝지만 **코어를 안 고치고 꽂혔는지는 안 본다.**
 
 ## ★ 확장 판단은 "만들 수 있는가"가 아니다
 
@@ -150,9 +171,11 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 
 ## 현재 상태
 
-`[실측 2026-09-09]` **코드는 아직 커머스다.** cs 에 등록된 Team 은 커머스 6종이고 여행 Team 은 0건이다. **Core 격리 위반 0**은 유지된다.
+`[실측 2026-09-09]` **여행 Team 여섯이 붙었고 커머스 여섯은 등록에서 빠졌다.** 단위·계약·아키텍처 테스트 552개 통과. **Core 격리 위반 0**은 유지된다.
 
-★**문서와 코드가 갈라져 있는 구간이다.** wiki 의 여행 Team 문서 넷은 전부 `type: plan`(명세)이고 구현이 없다. 이 문서를 "지금 이렇게 돌고 있다"로 읽으면 안 된다.
+★**그런데 여행 Case 가 아직 안 돈다.** 코어 1 의 분류기 어휘가 쇼핑몰(`order`·`shipping`·`return`·`exchange`·`other`)이라 여행 라벨을 넣으면 `ClassificationFailed` 로 떨어지고 **여섯 팀 중 아무도 안 불린다**(다른 세션 실측 2026-09-09). Team 이 붙은 것과 도는 것은 다르다.
+
+★**이 문서를 "지금 이렇게 돌고 있다"로 읽으면 안 된다.** 조립은 되고 라우팅이 아직 안 된다.
 
 ## Pack 범위 판단
 
