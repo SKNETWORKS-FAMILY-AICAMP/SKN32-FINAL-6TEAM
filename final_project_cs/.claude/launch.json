@@ -13,6 +13,18 @@
         "--reload"
       ],
       "port": 8042
+    },
+    {
+      "name": "labeling-form",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8071",
+        "--directory",
+        "wiki/records/labeling"
+      ],
+      "port": 8071
     }
   ]
 }

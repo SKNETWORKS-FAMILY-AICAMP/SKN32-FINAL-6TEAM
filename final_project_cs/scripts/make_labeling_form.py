@@ -19,7 +19,7 @@
   비워 두는 것과 같은 이유다 — `eval/label_holdout_template.py` 주석 참고.
 
     python -m scripts.make_labeling_form
-    # 그다음 docs/labeling/holdout_labeling.html 을 브라우저로 연다
+    # 그다음 wiki/records/labeling/holdout_labeling.html 을 브라우저로 연다
 """
 from __future__ import annotations
 
@@ -237,7 +237,9 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="holdout 사람 채점용 로컬 HTML 폼 생성")
     parser.add_argument("--template", default="eval/reports/holdout_human_labels_template.jsonl")
-    parser.add_argument("--out", default="docs/labeling/holdout_labeling.html")
+    # ★2026-09-08 에 `docs/` 가 `wiki/records/` 로 통합됐다. 기본 경로만 안 따라와서
+    #   폼을 다시 만들면 옛 자리에 새 파일이 생기고, 사람은 낡은 쪽을 열게 된다.
+    parser.add_argument("--out", default="wiki/records/labeling/holdout_labeling.html")
     args = parser.parse_args()
 
     template_path = ROOT / args.template
