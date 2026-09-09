@@ -316,9 +316,20 @@ Registry 가 이미 `case_type` 으로 이 팀을 골랐다. 남은 판단은 **
                                           check_route 면 훅이 죽은 것이다
 ```
 
-`[미확보]` 나머지 다섯 팀에 이 훅을 넣을지는 안 정했다. **`activity` 는 필요해
-보인다** — 시연 시나리오가 `propose_change` 로 가야 하는데 기본은
-`check_feasible` 이다. `lodging` · `flight` 는 capability 가 하나뿐이라 필요 없다.
+### 어느 팀에 넣어야 하나 — 세어서 정했다
+
+`[실측 2026-09-10]` capability 가 **둘 이상인 팀만** 이 훅이 필요하다. 하나뿐이면
+고를 것이 없으므로 기본으로 가도 맞다.
+
+| 팀 | capability | 훅 | 판정 |
+|---|---:|---|---|
+| `activity` | 3 | 없음 | **필요** — 시연이 `propose_change` 로 가야 하는데 기본은 `check_feasible` |
+| `booking_handoff` | 3 | 없음 | **필요** — `verify` / `prepare_change` / `prepare_cancel` 이 갈린다 |
+| `dining` | 2 | 없음 | **필요** — `check_open` / `check_conditions` |
+| `mobility` | 3 | 있음 | 있다. 다만 **가드를 요청 종류로 바꿔야 한다**(위) |
+| `lodging` · `flight` | 1 | 없음 | **필요 없다** — 고를 것이 없다 |
+
+**넷에 필요하고 그중 하나만 있다.** 셋이 비어 있다.
 
 ---
 
