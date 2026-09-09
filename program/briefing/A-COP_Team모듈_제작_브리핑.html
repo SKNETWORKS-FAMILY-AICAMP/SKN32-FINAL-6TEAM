@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>A-COP Team 모듈 아키텍처 — 무엇으로 이루어지고 어떻게 만드나</title>
+<style>
+:root{--bg:#f6f7fa;--surface:#fff;--line:#dfe3ec;--text:#161c28;--dim:#5c667a;
+--code:#eef1f6;--band:#f0f2f7;--core:#2f5d8b;--mod:#8a5a20;
+--keep:#eefbf4;--keepL:#7fcaa6;--chg:#fff8e8;--chgL:#e3c26a;
+--warn:#fdeeee;--warnL:#e08a8a;--new:#eef4ff;--newL:#8ab0e8}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+--bg:#12151c;--surface:#191d26;--line:#2b3240;--text:#e6e9f0;--dim:#98a2b8;
+--code:#1f2430;--band:#1c212b;--core:#6fa8d6;--mod:#d6a45f;
+--keep:#12291f;--keepL:#2f6b50;--chg:#2b2415;--chgL:#7a6428;
+--warn:#2c1a1a;--warnL:#7d4141;--new:#161f30;--newL:#3c5a8a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font:15.5px/1.72 -apple-system,"Segoe UI",system-ui,"Malgun Gothic",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:34px 22px 90px}
+h1{font-size:27px;line-height:1.3;margin:0 0 6px;letter-spacing:-.4px}
+.sub{color:var(--dim);margin:0 0 26px;font-size:15px}
+h2{font-size:20px;margin:44px 0 12px;padding-top:16px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:28px 0 8px}
+h4{font-size:15px;margin:20px 0 6px;color:var(--dim)}
+p{margin:11px 0}
+code{background:var(--code);padding:1.5px 6px;border-radius:4px;
+font:13px ui-monospace,"Cascadia Mono",Consolas,monospace}
+pre{background:var(--code);padding:13px 16px;border-radius:8px;overflow-x:auto;
+font:12.4px/1.6 ui-monospace,Consolas,monospace;margin:12px 0}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--band);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.box{border:1px solid var(--line);border-left-width:4px;border-radius:8px;padding:13px 17px;margin:16px 0}
+.keep{background:var(--keep);border-left-color:var(--keepL)}
+.chg{background:var(--chg);border-left-color:var(--chgL)}
+.warn{background:var(--warn);border-left-color:var(--warnL)}
+.new{background:var(--new);border-left-color:var(--newL)}
+.lead{font-size:16.5px;font-weight:600;margin:18px 0 6px}
+ul,ol{margin:10px 0;padding-left:22px} li{margin:5px 0}
+.team{border:1px solid var(--line);border-radius:10px;margin:22px 0;overflow:hidden;background:var(--surface)}
+.thead{padding:12px 17px;background:var(--band);border-bottom:1px solid var(--line);
+display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.thead b{font-size:17px}
+.tbody{padding:14px 17px}
+.tag{display:inline-block;font-size:11.5px;padding:1.5px 9px;border-radius:99px;
+border:1px solid var(--line);background:var(--surface);white-space:nowrap}
+.t-mvp{border-color:var(--keepL);background:var(--keep)}
+.t-cut{border-color:var(--chgL);background:var(--chg)}
+.t-reg{border-color:var(--line);color:var(--dim)}
+.t-gap{border-color:var(--warnL);background:var(--warn)}
+.scroll{overflow-x:auto}
+.core{color:var(--core);font-weight:600}
+.mod{color:var(--mod);font-weight:600}
+.foot{margin-top:52px;padding-top:16px;border-top:1px solid var(--line);
+color:var(--dim);font-size:13px}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>Team 모듈 아키텍처 — 무엇으로 이루어지고 어떻게 만드나</h1>
+<p class="sub">2026-09-09 · 골격은 코드 AST 실측 · 규칙은 계획서 v10 §5 · 2026년 다중 에이전트 설계 패턴 연구와 대조</p>
+
+<div class="box keep">
+<p class="lead">한 줄</p>
+<p>Team 은 <b>선언(manifest) · 주입(도구) · 단일 진입점(execute) · 근거(evidence)</b>
+넷으로 이루어진다. 이 넷은 협상 대상이 아니다 — <b>여섯 팀 전부가 100%</b> 갖고 있고,
+Registry·Controller·평가 하네스가 전부 이 모양을 전제로 돈다.</p>
+</div>
+
+<h2>1. Team 하나의 해부</h2>
+
+<pre>class XxxTeam:
+    manifest = TeamManifest(...)            # ① 선언 — 코드 밖에서 읽는 계약
+    def __init__(self, tools): ...          # ② 주입 — 도구를 스스로 만들지 않는다
+    async def execute(task) -> TeamResult:  # ③ 단일 진입점
+        ...
+    def _evidence(...): ...                 # ④ 근거를 붙이는 자리</pre>
+
+<h3>① 선언 — manifest 가 하는 일</h3>
+<p>Team 의 <b>능력과 권한을 코드 밖에서 읽을 수 있게</b> 만든다.
+Registry 가 이걸 보고 라우팅하고, 도구 호출을 막고, 화면에 표시한다.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>필드</th><th>무엇을 정하나</th><th>누가 읽나</th></tr></thead>
+<tbody>
+<tr><td><code>team_id</code></td><td>이 팀의 식별자</td><td>Registry 등록 · <code>config/project.yaml</code></td></tr>
+<tr><td><code>capabilities</code></td><td>이 팀이 할 수 있는 일의 목록</td>
+    <td>Registry 가 task 의 capability 가 여기 있는지 본다</td></tr>
+<tr><td><code>accepted_case_types</code></td><td>어떤 Case 를 맡나</td>
+    <td>Registry 라우팅. <b>비우면 Case 를 직접 안 받는 팀</b>이 된다</td></tr>
+<tr><td><b><code>allowed_tools</code></b></td><td><b>쓸 수 있는 도구 — 권한 반경</b></td>
+    <td>Registry 가 이 밖의 호출에 <code>ToolNotAllowed</code></td></tr>
+<tr><td><code>knowledge_scope</code></td><td>RAG 가 어느 문서군을 넘기나</td><td>Context Broker</td></tr>
+<tr><td><code>required_context</code></td><td>무엇이 있어야 판정할 수 있나</td><td>Context Broker</td></tr>
+<tr><td><code>max_steps</code></td><td>반복 상한</td>
+    <td>★<b>지금은 아무도 안 읽는다</b> — §5 참조</td></tr>
+<tr><td><code>default_capability</code></td><td>고를 수 없을 때의 기본</td><td>Registry</td></tr>
+</tbody></table>
+</div>
+
+<h3>② 주입 — 도구를 스스로 만들지 않는다</h3>
+<p>Team 은 DB 커넥션도 LLM 클라이언트도 직접 만들지 않는다.
+조립 지점(<code>app/composition.py</code>)이 만들어서 <code>__init__</code> 으로 넣어 준다.</p>
+<pre>def __init__(self, tools: ReadToolbox, llm: Any | None = None) -> None:
+    self.tools, self.llm = tools, llm</pre>
+<p><b>이래서 Team 을 테스트할 때 가짜 도구를 넣을 수 있고, 원격(A2A)으로 뺄 수도 있다.</b></p>
+
+<h3>③ 단일 진입점 — execute() 의 다섯 칸</h3>
+<pre>1. 가드    if task.team_id != self.manifest.team_id:      → handoff
+           if task.capability not in ...capabilities:     → escalated
+           if task.context.degraded:                      → escalated
+
+2. 준비    seen: set[str] = set()                  # 같은 도구·같은 인자 재호출 차단
+           evidence = list(task.context.evidence)  # 근거 누적 시작
+
+3. 조회    self.tools.call(name, task.context, args, task.allowed_tools, seen)
+                                                   ↑ 여기서 권한이 강제된다
+
+4. 판단    ★도메인 규칙은 여기에만 있다.
+           계산으로 판정한다 — 시간 충돌·기한·인원·조건 누락에 LLM 을 부르지 않는다
+
+5. 반환    TeamResult(outcome, next_action, evidence, decisions, [ActionProposal])</pre>
+
+<div class="box warn">
+<p>★<b>가드 셋을 다 넣는다.</b> 실측하면 지금 이게 균일하지 않다 —
+<code>degraded</code> 5/6 = 83% · <code>capability</code> 4/6 = 67% ·
+<code>team_id</code> <b>1/6 = 17%</b>. 잘못 배선된 task 가 와도 다섯 팀은 조용히 처리한다.</p>
+</div>
+
+<h3>④ 근거 — 왜 이게 4대 요소인가</h3>
+<p>여섯 팀 전부가 <code>_evidence</code> 를 갖는다(6/6 = 100%).
+<b>답을 만드는 함수보다 근거를 붙이는 함수가 먼저 공통이 됐다.</b></p>
+<pre>Evidence(evidence_id, source_type, source_id, claim, value, confidence, observed_at)</pre>
+<p><b>모든 핵심 주장에 붙는다.</b> 근거를 못 대면 답을 만들지 않고
+<code>waiting_input</code> 이나 <code>escalated</code> 로 간다.</p>
+
+<h2>2. Team 이 반환하는 것 — TeamResult</h2>
+
+<pre>outcome            completed · escalated · handoff · failed
+next_action        respond · wait_for_input · wait_for_approval · call_tool
+                   · handoff · escalate · continue
+answer             판정 결과. ★고객 문장이 아니라 <b>판정</b>이다
+evidence           [Evidence]  — 무엇을 근거로 그렇게 판정했나
+decisions          [{...}]     — 판정의 구조화된 형태
+action_proposals   [ActionProposal] — ★<b>제안까지만</b>. 실행하지 않는다
+failure_code       왜 못 했나
+warnings           사람이 봐야 할 것</pre>
+
+<div class="box keep">
+<p>★<b><code>ActionProposal</code> 이 이 아키텍처의 안전 장치다.</b> Team 은
+환불·예약변경·취소를 <b>실행하지 않는다.</b> 제안을 만들고, 사람 승인
+(<code>action:approve</code> scope)을 거쳐 코어가 실행한다.
+제안에는 <code>idempotency_key</code> 가 붙어 <b>같은 요청 10회 → side effect 1회</b>가
+테스트로 증명된다.</p>
+</div>
+
+<h2>3. 여행 Team 이 갖는 셋 — 검증 · 감시 · 재계획</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>무엇</th><th>어디서 도나</th><th>LLM</th></tr></thead>
+<tbody>
+<tr><td><b>① 검증 규칙</b></td><td>이 예약이 지금 성립하는가</td>
+    <td><span class="mod">Team</span> — <code>execute()</code> 4칸</td>
+    <td><b>안 쓴다.</b> 계산으로 판정</td></tr>
+<tr><td><b>② 감시 소스</b></td><td>무엇이 바뀌었는지 본다</td>
+    <td><span class="core">코어 스케줄러</span> — 다음 확인 시점에 Case 를 연다
+        (<code>TriggerSource.SCHEDULE</code>). <b>Team 은 폴링하지 않는다</b></td>
+    <td>안 쓴다</td></tr>
+<tr><td><b>③ 재계획 후보</b></td><td>대신할 것을 찾는다</td>
+    <td><span class="mod">Team</span></td>
+    <td><b>여기서만 쓴다.</b> 생성물은 ①을 <b>다시 통과해야</b> 통지된다</td></tr>
+</tbody></table>
+</div>
+
+<div class="box new">
+<p class="lead">★ 후보의 공통 형태 — 이것만 맞추면 코어가 조립한다</p>
+<pre>{
+  "kind":         "activity" | "dining" | "mobility",  # ★코어는 이걸 안 본다
+  "start":        ISO8601,
+  "end":          ISO8601,
+  "place":        {"name", "lat", "lon"},
+  "cost":         {"amount", "currency"},
+  "locked":       bool,            # 잠긴 예약이면 코어가 안 건드린다
+  "evidence":     [Evidence],
+  "confirmed_at": ISO8601 | null   # null 이면 "미확인"으로 표시된다
+}</pre>
+<p>코어는 <b>시간이 겹치는지 · 이동 여유가 되는지 · 예산을 넘는지</b>만 본다.
+"골프인지 식당인지" 를 알 필요가 없어서 <b>도메인을 모른 채 조립</b>할 수 있다.</p>
+<p>★<b>이 형태가 정해져야 ③을 만들 수 있다.</b> 지금은 초안이지 계약이 아니다.</p>
+</div>
+
+<h2>4. 2026년 다중 에이전트 설계 패턴과의 대조</h2>
+
+<p>2026-01 arXiv 논문(<code>2601.03328</code>)이 정리한 다섯 패턴을 우리 구조와 맞춰 보면
+<b>다섯 중 넷이 이미 구현돼 있다.</b> 우연이 아니라 같은 실패를 피하려다 같은 모양이 된 것이다.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>연구가 말하는 패턴</th><th>막는 실패</th><th>우리 구조</th><th>상태</th></tr></thead>
+<tbody>
+<tr><td><b>Role/Capability Declaration</b><br>역할·능력을 명시 선언</td>
+    <td>에이전트가 자기 범위 밖 일을 한다</td>
+    <td><code>TeamManifest.capabilities</code> · <code>accepted_case_types</code></td>
+    <td><span class="tag t-mvp">6/6 = 100%</span></td></tr>
+<tr><td><b>Tool Permission Scoping</b><br>도구 접근을 좁힌다</td>
+    <td>의도치 않은·위험한 동작</td>
+    <td><code>allowed_tools</code> + Registry 의 <code>ToolNotAllowed</code>.
+        팀 쌍 <b>14/15 = 93%</b> 가 서로 다른 도구 집합</td>
+    <td><span class="tag t-mvp">강제됨</span></td></tr>
+<tr><td><b>Orchestration vs Autonomy</b><br>조정자가 흐름을 쥔다</td>
+    <td>에이전트가 서로를 부르며 흐름을 잃는다</td>
+    <td>Controller 가 시작·실행·반영을 쥔다. <b>Team 은 서로를 호출하지 않는다</b> —
+        넘길 때도 <code>outcome="handoff"</code> 로 코어에 돌려준다</td>
+    <td><span class="tag t-mvp">구현됨</span></td></tr>
+<tr><td><b>Human Approval Boundaries</b><br>사람 승인 경계</td>
+    <td>되돌릴 수 없는 실행</td>
+    <td><code>ActionProposal</code> + <code>action:approve</code> scope +
+        승인 직전 DB 재대조(<code>proposal_guard</code>)</td>
+    <td><span class="tag t-mvp">구현됨</span></td></tr>
+<tr><td><b>Output Verification</b><br>출력을 검증하고 쓴다</td>
+    <td>환각 · 사실 오류</td>
+    <td>제안의 식별자·금액을 <b>DB 와 대조</b>해 실행 전 차단.
+        인용 없는 주장 금지</td>
+    <td><span class="tag t-gap">부분</span> — 아래</td></tr>
+</tbody></table>
+</div>
+
+<div class="box warn">
+<p class="lead">★ 연구가 짚은 것 중 우리가 아직 안 지키는 것 둘</p>
+
+<p><b>1. 반복 상한(loop divergence)이 강제되지 않는다.</b>
+연구는 <i>"제약이 약한 에이전트는 같은 문제를 무한히 되풀이한다 — 최대 반복 횟수나
+명시적 종료 조건을 강제하라"</i> 고 한다. 우리는 <code>max_steps</code> 를
+<b>선언은 하는데 실행 경로에서 아무도 읽지 않는다</b>(실측: <code>contracts.py</code> 정의 ·
+<code>routes.py</code> 화면 표시 · <code>introspection</code> 뿐).</p>
+<pre>지금 막는 것   seen 집합 — <b>같은 도구를 같은 인자로</b> 다시 부르면 ToolLoopExceeded
+안 막는 것     같은 도구를 <b>다른 인자로</b> 계속 부르는 것. 상한이 없다</pre>
+<p>여행에서는 ③ 재계획이 LLM 을 쓰므로 <b>후보를 계속 만들어 내는 경로</b>가 생긴다.
+<b>Team 을 만들 때 단계 수를 세고 <code>max_steps</code> 를 넘으면 escalated 로 끝낸다.</b></p>
+
+<p><b>2. 검증 단(Reflection)이 파이프라인에 안 붙어 있다.</b>
+연구의 Output Verification 은 "생성한 것을 다른 주체가 검증한다" 인데,
+우리 검증 팀은 <b>설정에서 꺼져 있고 평가 경로에도 안 탄다</b>.
+그 결과 평가에서 답변이 <b>216행 중 9종(4.2%)</b> 뿐이고 <b>47.2% 가 빈 문자열</b>이었다 —
+Team 의 <b>내부 판정 문구가 그대로 고객 답변 자리로 나갔다.</b></p>
+<p>★<b>여행에서 이 자리를 각 Team 안의 ③ 뒤에 둔다</b>(v10 §5 — 생성한 대안은 판정을
+다시 통과해야 통지된다). <b>"통과했다"를 테스트로 증명하지 않으면 같은 일이 반복된다.</b></p>
+</div>
+
+<h2>5. 팀별 — 무엇을 만드나</h2>
+
+<!-- Activity -->
+<div class="team">
+<div class="thead"><b>Activity</b><span class="tag t-mvp">MVP 필수</span></div>
+<div class="tbody">
+<p><b>대상</b> — 골프(티타임) · 한강 수상 액티비티 · 겨울 스키·눈썰매.
+<b>우천 위약금 규정이 문서로 있고 예약 시각이 고정</b>인 레저.</p>
+<h4>manifest</h4>
+<pre>capabilities        ["activity.check_cancelable", "activity.request_change",
+                     "refund.calculate"]
+accepted_case_types ["activity"]
+allowed_tools       ["read.booking", "read.policy", "read.place", "read.weather"]
+knowledge_scope     ["activity", "cancellation", "refund", "weather"]
+max_steps           6            # ★세고 넘으면 escalated
+default_capability  "activity.check_cancelable"</pre>
+<h4>① 검증 (계산)</h4>
+<ul>
+<li>취소 기한 — 예약 시각 − 현재 시각 대 규정 시간</li>
+<li>인원이 정원을 넘는가 · 운영일·운영시간 안인가</li>
+<li>날씨 조건 — <b>규정에 기준 시각이 있는 경우만</b>(예: 티타임 2시간 전 강수량)</li>
+<li>위약금율 — 남은 시간 구간별 표. <b>모르면 금액을 만들지 않는다</b></li>
+</ul>
+<h4>② 감시 · ③ 재계획</h4>
+<p>기상청 초단기예보 · 운영 공지(코어 스케줄러가 Case 를 연다) /
+같은 시간대 대체 · 날짜 이동 · 환급 안내(LLM → ① 재통과)</p>
+</div></div>
+
+<!-- Booking Handoff -->
+<div class="team">
+<div class="thead"><b>Booking Handoff</b><span class="tag t-mvp">MVP 필수</span></div>
+<div class="tbody">
+<p>★<b>기본 동작은 「인계」다.</b> 무엇을 어떻게 바꿔야 하는지 정리해 넘긴다.
+실제로 예약을 바꾸는 것은 <b>시연 모드(Mock 공급자) 한정</b>이다.</p>
+<h4>manifest</h4>
+<pre>capabilities        ["booking.verify", "booking.prepare_change",
+                     "booking.prepare_cancel", "booking.status"]
+accepted_case_types ["booking"]
+allowed_tools       ["read.booking", "read.policy", "read.supplier"]
+knowledge_scope     ["booking", "cancellation", "penalty", "supplier"]</pre>
+<h4>내는 것</h4>
+<ul>
+<li><b>변경 링크 + 차액 + 대안</b> — 고객이 한 번에 처리할 수 있게</li>
+<li><b><code>ActionProposal</code></b> — 승인 대기. <b>Team 이 실행하지 않는다</b></li>
+<li>시연 모드에서만 위임 범위(금액·종류·되돌림 조건·횟수) 대조 후 Mock 실행 제안</li>
+</ul>
+<div class="box keep"><p>★<b><code>idempotency_key</code> 를 반드시 붙인다.</b>
+안 붙이면 같은 예약 변경이 두 번 나갈 수 있다.</p></div>
+</div></div>
+
+<!-- Mobility -->
+<div class="team">
+<div class="thead"><b>Mobility</b><span class="tag t-cut">절삭 가능</span></div>
+<div class="tbody">
+<h4>manifest</h4>
+<pre>capabilities        ["mobility.route", "mobility.status", "mobility.exception"]
+accepted_case_types ["mobility"]
+allowed_tools       ["read.route", "read.transit", "read.policy"]
+knowledge_scope     ["mobility", "transit", "route_exception"]</pre>
+<h4>① 검증 (계산)</h4>
+<ul><li>구간 이동 시간이 일정 간격 안에 들어가는가 — <b>여유 시간</b></li>
+<li>환승이 성립하는가 · <b>막차</b>를 넘기지 않는가</li></ul>
+<div class="box warn"><p>★<b>문의와 사건을 가르는 문구 판정이 함정이다.</b>
+"막차가 몇 시인가요"(문의) 대 "막차를 놓쳤어요"(사건).
+<b>요청을 분명히 밝히는 문구만 잡고, 신호가 없으면 기본 동작에 맡긴다.</b></p></div>
+</div></div>
+
+<!-- Dining -->
+<div class="team">
+<div class="thead"><b>Dining</b><span class="tag t-cut">절삭 가능</span></div>
+<div class="tbody">
+<h4>manifest</h4>
+<pre>capabilities        ["dining.check_open", "dining.check_conditions",
+                     "dining.request_reservation"]
+accepted_case_types ["dining"]
+allowed_tools       ["read.place", "read.policy", "read.booking"]
+knowledge_scope     ["dining", "opening_hours", "dietary"]</pre>
+<h4>① 검증 (계산)</h4>
+<ul><li>영업시간·휴무 — <b>오늘 여는지</b>가 아니라 <b>그 일정 시각에 여는지</b></li>
+<li>예약이 필요한 곳인가 · 예약이 잡혀 있는가</li>
+<li>동행 조건 — 아이 동반 · 할랄 · 채식</li></ul>
+<div class="box warn"><p>★<b>확인 수준을 같이 저장한다.</b>
+제공자의 영업시간 데이터는 <b>오늘부터 7일의 예정</b>이지 조회 순간의 개점 확인이 아니다.
+<b>재조회 시각을 현장 관찰 시각처럼 표시하면 안 된다</b> —
+<code>confirmed_at</code> 과 출처를 함께 남긴다.</p></div>
+</div></div>
+
+<!-- Lodging / Flight -->
+<div class="team">
+<div class="thead"><b>Lodging / Flight</b><span class="tag t-reg">등록만</span></div>
+<div class="tbody">
+<p>manifest 만 만들고 로직은 없다. 잠긴 예약(<code>locked: true</code>)으로만 취급해
+코어 조립이 건드리지 않게 한다.</p>
+<pre>capabilities        ["lodging.status"]      # 또는 ["flight.status"]
+accepted_case_types ["lodging"]
+allowed_tools       ["read.booking"]
+max_steps           2</pre>
+<div class="box chg"><p>★<b>껍데기는 혼란을 만든다.</b> 계약만 있고 동작이 없으면
+"이 팀은 뭘 하나" 를 매번 다시 확인하게 된다.
+<b>docstring 첫 줄에 「등록만 · 로직 없음 · 잠긴 예약 취급」을 적는다.</b></p></div>
+</div></div>
+
+<h2>6. 만드는 순서</h2>
+<ol>
+<li><b>후보 공통 형태를 계약으로 확정</b> (§3) — 없으면 ③을 만들 수 없다</li>
+<li><b>manifest 를 먼저 쓰고 <code>config/project.yaml</code> 에 등록</b> —
+    로직 없이 Registry 해석이 되는지 먼저 본다</li>
+<li><b>골격 다섯 칸</b> (§1 ③) — <b>가드 셋을 다 넣는다</b></li>
+<li><b>① 검증 규칙</b>만 구현. LLM 없이 계산으로. <b>여기까지가 뼈대</b></li>
+<li><b>테스트</b> — 판정 갈래마다 하나씩. 「모름」 갈래를 반드시 포함한다</li>
+<li><b>③ 재계획</b>(LLM) → 생성물이 ①을 <b>다시 통과하는지</b> 테스트로 증명</li>
+<li><b>② 감시</b> — 코어 스케줄러 쪽이라 Team 코드 변경이 없다</li>
+</ol>
+<div class="box keep"><p>★<b>4번까지 하면 팀 하나가 돈다.</b> ③·②가 없어도 검증은 성립한다.</p></div>
+
+<h2>7. 자주 밟는 함정</h2>
+<div class="scroll">
+<table>
+<thead><tr><th>함정</th><th>어떻게 나타나나</th><th>어떻게 피하나</th></tr></thead>
+<tbody>
+<tr><td><b>「모름」을 「없음」으로 읽는다</b></td>
+    <td>제한을 확인 못 했는데 "정책 근거상 가능합니다" 라고 답한다</td>
+    <td>NULL = 모름. <b>확인 못 한 것은 확인 못 했다고 답한다.</b>
+        하나라도 모르면 전체를 「모름」으로 둔다</td></tr>
+<tr><td><b>문구 판정이 너무 넓다</b></td>
+    <td>"취소해<b>야 하나요</b>?"(고민)를 취소 요청으로 잡는다</td>
+    <td>요청을 분명히 밝히는 문구만. 신호 없으면 <code>None</code> → 기본 동작</td></tr>
+<tr><td><b>답변을 하드코딩한다</b></td>
+    <td>내부 판정 문구가 그대로 고객 답변이 된다</td>
+    <td>Team 은 <b>판정</b>을 내고, 고객 문장은 통지 단계에서 만든다</td></tr>
+<tr><td><b>선언만 하고 안 쓰는 도구</b></td>
+    <td><code>allowed_tools</code> 에 있는데 호출이 0회</td>
+    <td>실제로 쓰는 것만 적는다. 안 쓰면 지운다</td></tr>
+<tr><td><b>선언만 하고 안 지키는 상한</b></td>
+    <td><code>max_steps</code> 를 아무도 안 읽는다</td>
+    <td>단계를 세고 넘으면 <code>escalated</code>. §4 참조</td></tr>
+<tr><td><b>테스트가 실제 경로를 안 탄다</b></td>
+    <td>검증 단계를 건너뛴 채 통과한다</td>
+    <td>두 단계가 <b>실제로 두 번 불렸는지</b>를 단언한다</td></tr>
+</tbody></table>
+</div>
+
+<h2>8. 시작 전에 정해야 하는 것</h2>
+<ul>
+<li><b>후보 공통 형태</b> — §3 은 초안이다. 확정 전에는 ③을 만들지 않는다</li>
+<li><b>반복 상한 강제</b> — <code>max_steps</code> 를 실행 경로에서 읽게 한다.
+    지금은 선언만 있다</li>
+<li><b>검증 단을 어디에 두나</b> — 각 Team 의 ③ 뒤. <b>탔는지를 테스트로 고정</b>한다</li>
+<li><b>계약 포장을 공용 기반으로 뺄지</b> — 빼면 가드가 6/6 으로 균일해진다.
+    지금은 같은 코드가 <b>315줄 복붙</b>돼 있다</li>
+<li><b>Activity 의 경계</b> — 실내 티켓류를 넣으면 감시 소스가 둘로 갈린다
+    (기상청 vs 공연 취소 공지). <code>[미확보]</code> 수요 비교가 없다</li>
+</ul>
+
+<h2>9. 참고 논문 — 무엇을 바꿨나</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>논문</th><th>핵심</th><th>우리에게 무엇을 바꾸나</th></tr></thead>
+<tbody>
+<tr><td><a href="https://arxiv.org/abs/2601.03328"><b>LLM-Enabled Multi-Agent Systems:
+    Empirical Evaluation and Insights into Emerging Design Patterns &amp; Paradigms</b></a><br>
+    <code>arXiv:2601.03328</code> · 2026-01</td>
+    <td>다중 에이전트 설계 패턴 다섯 — 역할·능력 선언 / 도구 권한 좁히기 /
+        조정 대 자율 / 출력 검증 / 사람 승인 경계.
+        <b>"검증 + 좁힌 권한 + 명시 선언을 함께 쓴 쪽이 자율 배치보다 안정적"</b></td>
+    <td><b>다섯 중 넷이 이미 구현돼 있다</b>(§4). 나머지 하나(출력 검증)가
+        <b>꺼져 있다는 것</b>이 이 대조로 드러났다</td></tr>
+
+<tr><td><a href="https://arxiv.org/abs/2606.19544"><b>Reliability without Validity:
+    A Systematic, Large-Scale Evaluation of LLM-as-a-Judge Models</b></a><br>
+    <code>arXiv:2606.19544</code> · 2026-06</td>
+    <td>9개 제공사 21개 채점자 · 118회 · 약 54만 판정.
+        ① <b>정확일치와 Cohen's kappa 사이 격차가 보편적</b>(MT-Bench 기준 33~41%p)
+        ② <b>일관성–편향 역설</b> — 재현성 0.95 이상인 채점자가 위치 편향 0.10 이상을 함께 가진다
+        ③ <b>장황함 편향은 이제 작다</b>(21개 전부 0.011 미만)</td>
+    <td>★<b>내 가설 하나가 약해졌다</b> — 아래</td></tr>
+</tbody></table>
+</div>
+
+<div class="box warn">
+<p class="lead">★ 논문이 내 설명 하나를 지웠다 — 그게 더 좋은 소식이다</p>
+<p>평가에서 <b>고정 워크플로 군이 우리 군을 모든 축에서 이겼다.</b> 나는 두 설명을 놓고 있었다.</p>
+<pre>가설 A  채점자가 <b>긴 산문을 선호</b>한다 (장황함 편향)
+가설 B  우리 군이 <b>내부 판정 문구를 그대로 답변 자리에 냈다</b> — 파이프라인 마지막 단이 빠졌다</pre>
+<p><b>논문이 A 를 약하게 만든다</b> — 2026년 채점자들의 장황함 편향은 0.011 미만으로,
+2023년 연구 대비 한 자릿수 낮다. 그리고 우리 실측이 B 를 직접 지지한다:</p>
+<pre>서로 다른 답변    216행 중 <b>9종 = 4.2%</b>
+빈 문자열         <b>102행 = 47.2%</b>
+평균 길이         <b>19자</b></pre>
+<p>이건 "짧아서 진 것" 이 아니라 <b>고객 답변이 아예 안 만들어진 것</b>이다.
+<b>Team 은 판정을 내고, 고객 문장은 그다음 단계가 만든다</b> — 그 단계를 빼면
+평가가 그것을 정직하게 잡아낸다.</p>
+</div>
+
+<div class="box new">
+<p><b>일치도를 잴 때 미리 알아 둘 것.</b> 위 논문 ①이 말하는
+<b>정확일치와 kappa 의 격차 33~41%p</b> 는 우리 일치도 측정에도 그대로 온다.
+"몇 % 가 같았다" 는 높게 나오고 <b>kappa 는 훨씬 낮게</b> 나온다 — 그게 정상이고,
+낮다고 채점자를 버릴 이유가 아니다.</p>
+<p>★그리고 <b>분산이 0 인 축은 kappa 를 못 만든다.</b> 채점자가 한 축에 늘 같은 값을 주면
+그 축의 kappa 는 1.0 아니면 0.0 두 값만 나온다 — <b>축을 만들 때 변별하는지부터 확인한다.</b></p>
+</div>
+
+<div class="foot">
+근거 — 코드 AST 실측: <code>app/modules/customer_ops/*.py</code> ·
+<code>app/core/contracts.py</code> · <code>app/tools/read_tools.py</code> ·
+<code>app/application/routing_sweeper.py</code> ·
+<code>tests/contract/test_team_tool_discipline.py</code><br>
+문서 — <code>program/plan/A-COP_구현계획서_v10.md</code> §4-B·4-D·5·6·9-A<br>
+연구 — <a href="https://arxiv.org/pdf/2601.03328">LLM-Enabled Multi-Agent Systems:
+Empirical Evaluation and Insights into Emerging Design Patterns &amp; Paradigms</a> (arXiv 2601.03328, 2026-01)
+</div>
+
+</div></body></html>
