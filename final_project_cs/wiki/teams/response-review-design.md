@@ -5,6 +5,8 @@ description: GEN→REV 흐름과 검증 4항목. 결정론 검사를 LLM 검사�
 status: draft
 tags: [agent, contract, evaluation]
 owners: [human:미배정]
+domain: commerce
+domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 코드에는 아직 등록돼 있다
 ---
 
 # Response Review 내부 설계

@@ -5,6 +5,7 @@ description: 원격 Team을 로컬과 같은 자리에서 실행한다. Controll
 status: draft
 tags: [agent, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Remote Team 실행

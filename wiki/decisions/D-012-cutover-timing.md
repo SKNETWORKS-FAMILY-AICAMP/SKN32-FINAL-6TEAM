@@ -4,6 +4,7 @@ title: 전환 시점 — 사용자 호출 대기
 description: 시점 고정을 뗐다. 준비는 끝났고 사용자 호출 대기다
 status: draft
 tags: [governance, documentation, release]
+domain: neutral
 ---
 
 # D-012 전환은 중간발표 후에 한다

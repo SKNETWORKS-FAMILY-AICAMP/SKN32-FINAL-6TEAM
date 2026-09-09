@@ -4,6 +4,7 @@ title: 추적 화면 교차검증과 그 뒤
 description: codex가 "반대" 판정한 6가지 지적. 최소 4가지가 이미 고쳐졌음을 코드로 확인했다
 status: draft
 tags: [testing, documentation]
+domain: neutral
 ---
 
 # 추적 화면 교차검증과 그 뒤

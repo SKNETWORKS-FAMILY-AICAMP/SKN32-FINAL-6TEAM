@@ -4,6 +4,8 @@ title: 이 소스들을 고른 이유 (선택 근거)
 description: REPORT.md는 "뭘 찾았는지"만 적혀 있고 "왜 이걸 골랐는지"가 없었다.
 status: draft
 tags: [data]
+domain: commerce
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # 이 소스들을 고른 이유 (선택 근거)

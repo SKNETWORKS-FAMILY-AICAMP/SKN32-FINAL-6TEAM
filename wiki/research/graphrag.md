@@ -5,6 +5,7 @@ description: 관계 탐색에 별도 Graph DB가 필요한지 조사. D-002로 �
 status: draft
 tags: [architecture, data]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # GraphRAG와 Graph Store 검토

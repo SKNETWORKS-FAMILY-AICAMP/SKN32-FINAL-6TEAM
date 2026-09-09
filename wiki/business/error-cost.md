@@ -4,6 +4,7 @@ title: 오류 1건이 분쟁까지 가면 얼마인가
 description: 분쟁조정 8건의 실제 금액을 셌다. 중앙값 5만원, 최대 152.6만원. 다만 이건 오류 비용이 아니다
 status: draft
 tags: [cost, data]
+domain: neutral
 ---
 
 # 오류 1건이 분쟁까지 가면 얼마인가

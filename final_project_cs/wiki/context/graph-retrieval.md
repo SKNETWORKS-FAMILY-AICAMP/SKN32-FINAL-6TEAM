@@ -5,6 +5,7 @@ description: Case·Issue·Policy·Team·Action 사이를 SQL 재귀 질의로 �
 status: draft
 tags: [data, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Graph 관계 탐색

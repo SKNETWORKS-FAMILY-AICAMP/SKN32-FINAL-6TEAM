@@ -4,6 +4,7 @@ title: 대규모 코드베이스 학습 게임 방법론
 description: acop_dojo에 적용할 교수법·게임 설계·자동화 원칙과 근거의 한계를 정리한다.
 status: draft
 tags: [architecture, evaluation, testing, documentation]
+domain: neutral
 ---
 
 ## 결론

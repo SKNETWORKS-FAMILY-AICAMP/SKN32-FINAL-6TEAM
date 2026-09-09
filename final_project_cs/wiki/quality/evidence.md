@@ -4,6 +4,7 @@ title: DoD 증거 색인
 description: DoD 29항목과 검증 로그 6건의 실측 증거가 어디 있고 무엇을 증명하며 어디가 낡았나
 status: draft
 tags: [testing, evaluation]
+domain: neutral
 ---
 
 # DoD 증거 색인

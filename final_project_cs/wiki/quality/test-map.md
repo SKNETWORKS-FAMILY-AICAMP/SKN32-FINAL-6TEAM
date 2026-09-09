@@ -5,6 +5,7 @@ description: 어떤 검사가 어디 있는가. 폴더 최상위만 보면 있�
 status: draft
 tags: [testing]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 테스트 지도

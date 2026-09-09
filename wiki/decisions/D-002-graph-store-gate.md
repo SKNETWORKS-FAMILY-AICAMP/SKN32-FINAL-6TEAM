@@ -5,6 +5,7 @@ description: MVP는 SqlGraphAdapter다. 별도 Graph DB는 정확도·비용·�
 status: draft
 tags: [architecture, data]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-002 Graph Store는 채택 게이트 통과 시에만

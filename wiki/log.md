@@ -3,6 +3,8 @@ type: guide
 title: 문서 변경 이력
 description: 중앙 허브 wiki의 추가·수정 기록. 최근 무엇이 바뀌었는지 여기서 확인한다
 status: draft
+domain: neutral
+domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 섞인다
 ---
 
 # 문서 변경 이력

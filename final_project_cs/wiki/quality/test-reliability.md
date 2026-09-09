@@ -4,6 +4,7 @@ title: 테스트를 못 믿게 되는 경우
 description: 흔들리는 테스트와, 테스트가 제품을 잘못 끌고 간 사례. 검사가 없는 것과는 다른 문제다
 status: draft
 tags: [testing]
+domain: neutral
 ---
 
 # 테스트를 못 믿게 되는 경우

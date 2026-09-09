@@ -4,6 +4,7 @@ title: 두 스트림이 같은 파일을 쓰지 않는다
 description: 인원이 아니라 디렉터리로 경계를 긋는다. 받은 산출물은 네 가지를 반드시 검사한다
 status: draft
 tags: [governance, contract]
+domain: neutral
 ---
 
 # 두 스트림이 같은 파일을 쓰지 않는다

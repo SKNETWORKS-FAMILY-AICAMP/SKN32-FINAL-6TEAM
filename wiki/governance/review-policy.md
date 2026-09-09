@@ -4,6 +4,7 @@ title: 리뷰 정책
 description: 누가 무엇을 검토하고 draft를 stable로 어떻게 올리는가. 6명이 동시에 써도 충돌하지 않게 하는 규칙
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 리뷰 정책

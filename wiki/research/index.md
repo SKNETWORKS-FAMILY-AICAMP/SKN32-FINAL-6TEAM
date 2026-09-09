@@ -3,6 +3,7 @@ type: guide
 title: Research
 description: 외부 조사와 비교 분석. 결정이 끝난 것은 여기 없고 decisions/에 있다
 status: draft
+domain: commerce
 ---
 
 # Research

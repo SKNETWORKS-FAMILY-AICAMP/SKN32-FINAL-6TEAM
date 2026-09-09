@@ -3,6 +3,7 @@ type: guide
 title: final_project_cs 시작하기
 description: A-COP 릴리스 대상 저장소의 구조와 작업별 진입점
 status: draft
+domain: neutral
 ---
 
 # final_project_cs 시작하기

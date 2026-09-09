@@ -5,6 +5,7 @@ description: 자기 관측 추천과 교차 프로젝트 추천을 나누고 둘
 status: draft
 tags: [architecture, evaluation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-009 추천 기능은 vision 으로

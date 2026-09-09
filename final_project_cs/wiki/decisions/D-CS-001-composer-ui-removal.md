@@ -5,6 +5,7 @@ description: 인증 없이 고객 접근이 가능한 앱에 구성기가 물려
 status: draft
 tags: [security, ui]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-CS-001 `/ui/composer` 폐기

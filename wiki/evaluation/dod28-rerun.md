@@ -5,6 +5,8 @@ description: 0% 는 모델이 나빠서가 아니라 근거를 못 받아서다.
 status: draft
 impl_scope: cs — 파인튜닝과 골든셋은 cs 도메인 평가다
 tags: [evaluation, governance]
+domain: commerce
+domain_note: 그때 재실행한 값의 기록이다
 ---
 
 # DoD-28 을 다시 재야 하는 이유

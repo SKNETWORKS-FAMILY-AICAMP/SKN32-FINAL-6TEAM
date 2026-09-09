@@ -3,6 +3,7 @@ type: guide
 title: acop_dojo 지식 지도
 description: cs의 구조와 동작을 실행 증거로 배우는 학습 프로그램. 부산물로 테스트 사각지대를 찾아낸다
 status: draft
+domain: neutral
 ---
 
 # acop_dojo 지식 지도

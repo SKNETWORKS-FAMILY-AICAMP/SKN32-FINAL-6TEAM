@@ -9,6 +9,7 @@ automation:
   command: acop-dojo report
   owner: process:dojo-report
   manual_edit: false
+domain: commerce
 ---
 
 # 테스트 사각지대

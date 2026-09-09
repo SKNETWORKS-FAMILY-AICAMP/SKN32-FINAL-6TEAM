@@ -5,6 +5,7 @@ description: 보류 판정을 버리지 않고 등록한다. 항목마다 관측
 status: draft
 impl_scope: cs — 제품 확장 항목이다. sample 은 계약 참조 구현이다
 tags: [architecture, governance]
+domain: commerce
 ---
 
 # 지금은 안 하는 것들

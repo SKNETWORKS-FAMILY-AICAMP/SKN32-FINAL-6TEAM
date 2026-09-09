@@ -5,6 +5,7 @@ description: 12,000 토큰을 섹션별로 나누고 정해진 순서로 자른�
 status: draft
 tags: [architecture, cost]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Context 예산

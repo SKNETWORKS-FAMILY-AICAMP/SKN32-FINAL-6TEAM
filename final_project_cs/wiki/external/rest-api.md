@@ -5,6 +5,7 @@ description: 엔드포인트 5개와 헬스체크. 쓰기는 여기로만 간다
 status: draft
 tags: [api, contract]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # REST API

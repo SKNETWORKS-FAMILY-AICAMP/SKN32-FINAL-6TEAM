@@ -5,6 +5,7 @@ description: 일치율 86.2%로 기준을 넘겼다. 애매 27.6%는 아직 미�
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 5차 — 고친 규칙으로 blind 재검증

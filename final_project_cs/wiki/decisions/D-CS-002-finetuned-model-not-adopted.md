@@ -5,6 +5,7 @@ description: 배선은 되지만 모델이 못 쓴다. 하이퍼파라미터가 
 status: draft
 tags: [evaluation, gpu, agent]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-CS-002 파인튜닝 모델을 채택하지 않는다

@@ -5,6 +5,7 @@ description: 액티비티 예약이 성립하는지 판정하고, 운영 변경�
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Activity Team

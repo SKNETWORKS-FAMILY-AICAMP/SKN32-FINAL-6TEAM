@@ -5,6 +5,7 @@ description: 고객 빌드에 쓰기 코드를 안 넣으면서 릴리즈 후 �
 status: draft
 tags: [architecture, security, contract]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-007 중앙 설정 저장소

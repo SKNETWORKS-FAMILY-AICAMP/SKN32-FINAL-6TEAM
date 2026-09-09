@@ -5,6 +5,7 @@ description: 테스트·평가·서버를 돌리는 명령
 status: draft
 tags: [testing, evaluation]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 실행

@@ -5,11 +5,14 @@ description: MVP에서 쓰는 것과 Phase 2로 미룬 것. Docker 는 지금 �
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 기술 스택
 
-`[실측]` v8 §12에서 이관.
+`[실측]` v8 §12에서 이관. `[미확보]` **v10 에는 대응하는 절이 없다** — `Docker`·`AWS` 문자열이 v10 본문에 0회다(루트 `CLAUDE.md` 사실표). 뺀 것인지 빠진 것인지 안 정해졌다.
+
+★**이 문서는 도메인이 바뀌어도 안 바뀐다.**
 
 ## MVP
 

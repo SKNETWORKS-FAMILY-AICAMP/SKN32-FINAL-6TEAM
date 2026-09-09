@@ -1,28 +1,47 @@
 ---
 type: concept
 title: Pack 모델
-description: 하나의 Runtime 위에 도메인 Pack을 교체·확장하는 구조. Team 추가가 리팩토링이 되면 실패다
+description: 하나의 Runtime 위에 도메인 Pack을 교체·확장하는 구조. 2026-09-08 여행 판올림이 이 구조의 첫 실증이다
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Pack 모델
 
+## ★ 「Pack」은 이 wiki 의 낱말이지 v10 의 낱말이 아니다
+
+`[실측 2026-09-09]` **`Pack` 문자열은 `A-COP_구현계획서_v10.md` 에 0회다.** v8 이 쓰던 낱말이고 계획서는 이제 안 쓴다.
+
+**그래도 이 문서를 지우지 않는다.** 낱말이 사라졌을 뿐 **기제는 v10 이 그대로 전제하고 있다** — v10 §0-2 가 "코어는 승계하고 Team 만 갈아 끼운다"로 판올림 전체를 정의하는데, 그게 성립하려면 아래 「교체가 성립하는 조건」 넷이 필요하다. 여기가 그 조건을 적어 두는 자리다.
+
+읽을 때 이렇게 옮긴다.
+
+| 이 문서 | v10 |
+|---|---|
+| Runtime (Core) | §6 승계하는 코어 규칙 · 코어 1·2 |
+| 도메인 Pack | §5 Team 모듈 구성 + §5-A 코어에서 바뀌는 것 |
+| Pack 교체 | §0-2 판올림 표 · [../../final_project_cs/wiki/domain-swap.md](../../final_project_cs/wiki/domain-swap.md) |
+
 ## 구조
 
+`[실측]` v10 §5·§5-A.
+
 ```text
-              A-COP Runtime (Core)
+              A-COP Runtime (Core)  ← 도메인을 모른다
    Case · Controller · Registry · Port · 승인 경계 · 감사 · 평가
                         │
-            ┌───────────┴───────────┐
-        CS Pack                 Commerce Ops Pack
-   VOC & Store Manager      Procurement + Order & Payment
-   Response Gen & Review    Fulfillment & Logistics
-                            Return & Refund (Mock)
-   (10주 착수 확정)          Catalog & Verification (A2A Remote)
-                            (검증 쇼핑몰 일정에 따라 조정)
+        ┌───────────────┴───────────────┐
+   여행 도메인 Pack                 (다음 도메인)
+   Activity        MVP 필수          갈아 끼우는 자리
+   Booking Handoff MVP 필수
+   Dining          4주차
+   Mobility        5주차
+   Lodging/Flight  등록만
 ```
+
+★**2026-09-08 에 이 그림의 오른쪽이 실제로 한 번 갈렸다.** 왼쪽 커머스 Pack(VOC & Store Manager · Response Gen & Review · Procurement+Order · Fulfillment · Return · Catalog)이 통째로 빠지고 여행 Team 다섯이 들어왔다. **이 문서가 주장하던 것이 처음으로 시험대에 올랐다** — 결과는 아래 「2026-09-08 판올림이 이 구조를 시험했다」.
 
 ## 판정 기준
 
@@ -49,9 +68,23 @@ owners: [human:미배정]
 
 **넷 중 하나라도 깨지면 Pack 교체가 불가능해진다.**
 
+## ★ 2026-09-08 판올림이 이 구조를 시험했다
+
+`[실측 2026-09-09]` 코어 코드를 안 고치고 도메인이 바뀌었나 — **아직 답이 안 나왔다. 여행 Team 이 코드에 하나도 없기 때문이다.**
+
+| 항목 | 실측 |
+|---|---|
+| `config/project.yaml` 등록 Team | **커머스 6종 그대로** (`voc_store_manager`·`response_generation_review`·`return_refund`·`procurement_order_payment`·`fulfillment_logistics`·`catalog_verification`) |
+| 여행 Team 등록 | **0건** (`activity`·`dining`·`mobility`·`booking` 문자열이 `project.yaml` 에 0회) |
+| v10 이 계약을 바꿨나 | **안 바꿨다** — §0-2 "통합 계약 승계. 필드 변경 없음" |
+
+★**그래서 "Pack 교체가 성립한다"고 아직 말할 수 없다.** 문서상 교체됐을 뿐이다. **판정은 첫 여행 Team 이 붙는 시점에 난다** — 그때 `app/core/` 를 한 줄이라도 고쳐야 하면 이 절의 주장이 틀린 것이다.
+
+`[미확보]` 그 판정을 자동으로 하는 검사가 없다. `test_engine_serves_another_domain.py` 가 가장 가깝지만 **커머스가 아닌 Team 을 실제로 꽂아 보지는 않는다.**
+
 ## ★ 확장 판단은 "만들 수 있는가"가 아니다
 
-`[실측]` v8 §8-B
+`[실측]` v8 §8-B (v10 §8 이 평가 대상만 여행 시나리오로 바꿨고, 이 판단 기준 자체는 안 바꿨다)
 
 > Team이 늘면 golden set과 라우팅 평가 축이 함께 늘어난다. 확장 판단은 **"만들 수 있는가"가 아니라 "채점할 수 있는가"**로 한다.
 
@@ -63,8 +96,8 @@ owners: [human:미배정]
 
 | | |
 |---|---|
-| **기능상 필요** | Catalog & Verification · Procurement · Order & Payment · Fulfillment & Logistics · Return & Refund … |
-| **착수** | 일정과 평가 여력이 허락하는 만큼 |
+| **기능상 필요** | Activity · Dining · Mobility · Booking Handoff · Lodging/Flight … |
+| **착수** | **Activity · Booking Handoff 둘** (v10 §9-B). 나머지는 4·5주차 |
 
 **몇 개를 만들 것인가는 아키텍처 제약이 아니라 일정 문제다.**
 
@@ -117,26 +150,33 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 
 ## 현재 상태
 
-`[실측]` `final_project_sample`과 `final_project_cs`에 Billing/Technical 2종이 구현돼 있고 **Core 격리 위반 0**이다.
+`[실측 2026-09-09]` **코드는 아직 커머스다.** cs 에 등록된 Team 은 커머스 6종이고 여행 Team 은 0건이다. **Core 격리 위반 0**은 유지된다.
 
-이 둘은 10주 착수 로드맵에 없다. **Team-플러그인 아키텍처가 실제로 동작한다는 증거로만 남긴다.**
+★**문서와 코드가 갈라져 있는 구간이다.** wiki 의 여행 Team 문서 넷은 전부 `type: plan`(명세)이고 구현이 없다. 이 문서를 "지금 이렇게 돌고 있다"로 읽으면 안 된다.
 
 ## Pack 범위 판단
 
-| Pack | Team | 근거 |
+`[실측]` v10 §5·§9-B.
+
+| 순서 | Team | 근거 |
 |---|---|---|
-| CS Pack | VOC & Store Manager, Response Generation & Review | 부트캠프 주제 자체. **확정** |
-| Commerce Ops Pack | Procurement+Order, Fulfillment, Return(Mock), Catalog(A2A) | 검증 쇼핑몰 운영에 필요. 일정 따라 조정 |
+| **MVP 필수** | **Activity** | 취소·변경 규정이 문서로 존재해 판정 규칙을 바로 쓴다. 예약금이 걸려 실패 비용이 크다 |
+| **MVP 필수** | **Booking Handoff** | 우리 일정을 고쳐도 업체 예약을 못 바꾸면 고객이 직접 처리한다 (팀 결정 2026-09-08) |
+| 4주차 | Dining | |
+| 5주차 | Mobility | 선제 조정 루프와 함께 |
+| 등록만 | Lodging / Flight | 잠긴 예약으로만 취급한다 |
 
 **6명 팀 전체가 이 구성으로 고정된다는 뜻은 아니다.**
 
-국외 배송·해외 구매대행의 실제 Live 연동은 Mock으로 남긴다.
+실제 업체 예약 실행은 Mock 으로 남긴다 — 실결제는 구현 단계 4다(v10 §4-C).
 
 ## Vision
 
-지금 안 하는 것. 재고·가격·발주·배송·정산의 전면 운영 자동화.
+지금 안 하는 것. 계획 생성 자체, 실결제, 전 도시 확장.
 
 **Pack 구조가 이걸 나중에 가능하게 만드는 장치다.** 지금 만들지는 않는다.
+
+★**그리고 다음 도메인 교체도 이 구조가 감당해야 한다.** 무엇을 갈아 끼우고 무엇을 안 끼우는지는 [../../final_project_cs/wiki/domain-swap.md](../../final_project_cs/wiki/domain-swap.md) 가 정본이다.
 
 ## 관계
 
@@ -144,4 +184,6 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 - [../product/scope.md](../product/scope.md) — Pack별 착수 범위
 - [../product/positioning.md](../product/positioning.md) — 상업적 근거
 - [`cs/teams/index.md`](../../final_project_cs/wiki/teams/index.md) — 도메인 Team
+- [`cs/domain-swap.md`](../../final_project_cs/wiki/domain-swap.md) — **무엇을 갈아 끼우고 무엇을 안 끼우나**
 - [`sample/wiki/teams/`](../../final_project_sample/wiki/teams/index.md) — **계약이 성립한다는 증거.** 예시 Team 이 여기 있다
+- [../governance/domain-axis.md](../governance/domain-axis.md) — 이 문서가 도메인에 묶여 있는지 표시하는 규칙

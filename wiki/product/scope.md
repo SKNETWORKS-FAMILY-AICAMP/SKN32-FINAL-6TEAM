@@ -4,6 +4,7 @@ title: 범위
 description: 여행 MVP 7주에 무엇을 만들고 무엇을 안 만드는가. Out of Scope가 In Scope보다 중요하다
 status: draft
 tags: [customer-operations, release]
+domain: travel
 ---
 
 # 범위

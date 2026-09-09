@@ -5,6 +5,7 @@ description: A/B/Proposed 비교군, 60+20 분리, 3회 반복, 통계 처리
 status: draft
 tags: [evaluation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 평가 프로토콜

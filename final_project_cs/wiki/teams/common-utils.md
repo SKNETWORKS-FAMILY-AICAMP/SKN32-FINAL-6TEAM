@@ -4,6 +4,7 @@ title: Team 공통 뼈대 — 설계는 있고 구현이 없다
 description: 반복되는 네 가지를 상속이 아니라 조합형 유틸로 뺀다. team_utils.py 가 아직 없다
 status: draft
 tags: [architecture, contract]
+domain: neutral
 ---
 
 # Team 공통 뼈대

@@ -5,6 +5,7 @@ description: Case가 지나는 12개 상태와 허용 전이. 실패는 조용�
 status: draft
 tags: [state, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Case 생명주기

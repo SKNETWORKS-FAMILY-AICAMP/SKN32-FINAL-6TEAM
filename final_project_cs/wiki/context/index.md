@@ -3,6 +3,7 @@ type: guide
 title: Context
 description: Team이 필요한 자료를 모아 주는 읽기 경로. Team은 직접 읽지 않는다
 status: draft
+domain: neutral
 ---
 
 # Context

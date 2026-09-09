@@ -5,6 +5,7 @@ description: 미판정 156건의 자동 판정을 표본 15건으로 확인했�
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 6차 — 휴리스틱 자동 판정 검증

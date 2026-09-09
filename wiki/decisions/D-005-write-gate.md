@@ -5,6 +5,8 @@ description: 착한 모델을 고르는 게 아니라 검사에 걸리는 모델
 status: draft
 tags: [security, architecture, evaluation]
 owners: [human:미배정]
+domain: neutral
+domain_note: 쓰기 게이트는 도메인 무관이다. 예시가 커머스다
 ---
 
 # D-005 쓰기 권한을 여는 전제 조건

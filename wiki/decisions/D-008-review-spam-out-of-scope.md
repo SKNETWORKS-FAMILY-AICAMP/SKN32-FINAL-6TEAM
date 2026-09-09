@@ -6,6 +6,7 @@ status: draft
 impl_scope: cs — 리뷰 스팸은 커머스 도메인 범위 판단이다
 tags: [customer-operations, security]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-008 가짜 리뷰 분류는 범위 밖

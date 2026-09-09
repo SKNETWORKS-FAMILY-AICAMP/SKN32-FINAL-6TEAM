@@ -4,6 +4,7 @@ title: front matter 규격
 description: 문서 머리에 붙이는 YAML 메타데이터. type만 필수이고 stable로 올릴 때 나머지가 필수가 된다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # front matter 규격
@@ -119,6 +120,22 @@ size_exempt_reason: 용어 카탈로그. 검색 대상이므로 한 파일로 �
 
 분할 규칙은 [document-standard.md](document-standard.md)의 "문서가 커질 때"에 있다.
 
+### `domain` · `domain_note`
+**이 문서가 도메인에 묶여 있는가.** `neutral` · `travel` · `commerce` 셋 중 하나다.
+
+```yaml
+domain: travel
+```
+
+`neutral` 인데 도메인 업무 어휘가 3회 이상 나오면 CI가 실패시킨다 — 주장이 거짓이기 때문이다. 정당한 경우(판올림을 설명하는 문서, 두 도메인 대조표)는 이유를 적어 면제한다.
+
+```yaml
+domain: neutral
+domain_note: 도메인 교체 자체를 다루는 문서다. 두 도메인 어휘가 예시로 나온다
+```
+
+지금 도메인이 아닌 값(`commerce`)에 `domain_note` 가 없으면 **판올림을 못 따라간 문서**로 집계된다. 규칙 전체는 [domain-axis.md](domain-axis.md).
+
 ### `automation`
 자동 생성 문서에만 붙인다.
 
@@ -139,6 +156,8 @@ automation:
 3. status: stable인데 title/description/owners가 없는가
 4. tags가 통제 목록에 있는가
 5. automation.manual_edit: false 문서가 수동 수정됐는가
+6. domain 값이 허용 목록에 있는가
+7. domain: neutral 인데 도메인 업무 어휘가 3회 이상인가
 ```
 
 ## 관계

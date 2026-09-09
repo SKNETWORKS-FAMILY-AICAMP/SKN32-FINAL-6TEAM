@@ -5,6 +5,7 @@ description: 모듈 7종·Port 3종은 바꾸고 Core 9종은 못 끈다. 저장
 status: draft
 tags: [architecture, contract, ui]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Composer 가 바꿀 수 있는 것

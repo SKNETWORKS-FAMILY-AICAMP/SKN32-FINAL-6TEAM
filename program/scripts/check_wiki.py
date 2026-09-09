@@ -45,6 +45,35 @@ TAGS = {
     "documentation", "governance",
 }
 
+#: ★도메인 축 (2026-09-09 신설). governance/domain-axis.md
+#:
+#:   2026-09-08 에 도메인이 커머스 → 여행으로 통째로 바뀌었다. 그런데 **어느 문서가
+#:   그 교체에 걸리는지 알 방법이 없어** grep 으로 훑어야 했고, grep 은 "쇼핑몰"
+#:   이라는 낱말이 안 든 문서를 놓쳤다 — `wiki/architecture/pack-model.md` 의
+#:   Pack 표가 그렇게 하루 넘게 커머스로 남아 있었다.
+#:
+#:   그래서 문서마다 front matter 에 **이 문서가 도메인에 묶여 있는가**를 적는다.
+#:   다음 교체 때 대상 목록이 grep 이 아니라 목록으로 나온다:
+#:
+#:       python program/scripts/check_wiki.py --domain travel
+CURRENT_DOMAIN = "travel"
+PAST_DOMAINS = ("commerce",)
+DOMAINS = {"neutral", CURRENT_DOMAIN, *PAST_DOMAINS}
+
+#: `domain: neutral` 을 주장하는 문서에 이 낱말이 여러 번 나오면 주장이 거짓이다.
+#:   ★도메인 **이름**("커머스"·"여행")은 넣지 않는다. 판올림 자체를 설명하는 문장에
+#:     정당하게 나오기 때문이다. 여기 넣는 것은 **업무 어휘**뿐이다.
+DOMAIN_VOCAB = {
+    "commerce": ("주문", "배송", "반품", "환불", "장바구니", "결제 수단",
+                 "order_id", "shipment", "sku", "cart", "refund"),
+    "travel": ("일정", "액티비티", "숙박", "항공", "여행자", "티타임",
+               "trip", "itinerary", "booking", "reservation", "activity"),
+}
+
+#: 두 번까지는 예시로 본다. 세 번부터 "이 문서는 그 도메인 얘기를 하고 있다"로 본다.
+#:   면제하려면 front matter 에 `domain_note:` 로 왜인지 적는다.
+DOMAIN_VOCAB_LIMIT = 2
+
 #: governance/document-standard.md — 문서가 커질 때
 SOFT_LINES = 300
 HARD_LINES = 500
@@ -116,6 +145,10 @@ def main() -> int:
     record_broken: list[str] = []         # records/ 안의 깨진 링크. 집계만 한다
     inv_in_docs: Counter[str] = Counter()
     inv_tests: list[tuple[str, str, str]] = []   # (doc, id, test path)
+    unmarked: list[str] = []                     # domain 미표시. 위반 아니고 집계다
+    by_domain: dict[str, list[str]] = defaultdict(list)
+    stale_todo: list[str] = []       # 옛 도메인인데 이유가 없다 = 다시 써야 한다
+    stale_recorded: list[str] = []   # 옛 도메인이지만 이유가 있다 = 그대로 둔다
 
     for f in docs:
         raw = open(f, encoding="utf-8").read()
@@ -156,6 +189,28 @@ def main() -> int:
             for tag in re.findall(r"[a-z][a-z0-9-]*", tags):
                 if tag not in TAGS:
                     problems["통제 목록에 없는 tag"].append(f"{rel}  ({tag})")
+
+            # --- 도메인 축
+            dom = fm.get("domain", "")
+            if not dom:
+                unmarked.append(rel)
+            elif dom not in DOMAINS:
+                problems["알 수 없는 domain"].append(f"{rel}  (domain: {dom})")
+            else:
+                by_domain[dom].append(rel)
+                if dom not in ("neutral", CURRENT_DOMAIN):
+                    # 지금 도메인이 아닌 값 = 옛 도메인으로 쓰인 문서.
+                    #   두 부류가 섞이므로 이유(domain_note)로 가른다.
+                    #     이유 있음 → 그때의 기록이거나 그 도메인이 맞는 문서. 그대로 둔다
+                    #     이유 없음 → 판올림을 못 따라간 것. 다시 써야 한다
+                    (stale_recorded if fm.get("domain_note") else stale_todo).append(rel)
+                if dom == "neutral" and not fm.get("domain_note"):
+                    b = FENCE.sub("", raw)
+                    for dname, words in DOMAIN_VOCAB.items():
+                        n = sum(b.count(w) for w in words)
+                        if n > DOMAIN_VOCAB_LIMIT:
+                            problems["neutral 인데 도메인 어휘가 있다"].append(
+                                f"{rel}  ({dname} 어휘 {n}회 — 고치거나 domain_note 로 이유를 적는다)")
 
         # --- 크기
         #   ★ front matter 만 본다. 본문 예시의 size_exempt 를 세면 안 된다.
@@ -273,6 +328,24 @@ def main() -> int:
     n_records = sum(1 for f in docs if "/records/" in f.replace("\\", "/"))
     if n_records:
         print(f"기록(records/) {n_records}개 — 규칙 면제. 깨진 링크 {len(record_broken)}곳은 집계만 한다")
+
+    # --- 도메인 축 집계
+    n_axis = sum(len(v) for v in by_domain.values())
+    n_all = n_axis + len(unmarked)
+    if n_all:
+        pct = round(100 * n_axis / n_all)
+        parts = " · ".join(f"{k} {len(v)}" for k, v in sorted(by_domain.items()))
+        print(f"도메인 축 표시 {n_axis}/{n_all} = {pct}%" + (f"  ({parts})" if parts else ""))
+        if unmarked:
+            print(f"    미표시 {len(unmarked)}개 — 위반 아님. 다음 교체 때 대상인지 알 수 없다")
+        if stale_todo:
+            print(f"    ★옛 도메인인데 이유가 없다 {len(stale_todo)}개 — 판올림을 못 따라간 문서다")
+            for x in stale_todo[:10]:
+                print(f"        {x}")
+            if len(stale_todo) > 10:
+                print(f"        ... 외 {len(stale_todo) - 10}개")
+        if stale_recorded:
+            print(f"    옛 도메인이나 이유가 붙어 있다 {len(stale_recorded)}개 — 그대로 둔다")
     print()
 
     if pending:
@@ -282,6 +355,19 @@ def main() -> int:
             print(f"    {t}")
         if len(targets) > 8:
             print(f"    ... 외 {len(targets) - 8}개")
+        print()
+
+    # --- `--domain <이름>` : 그 도메인에 묶인 문서 목록 (교체 대상 작업 목록)
+    if "--domain" in sys.argv:
+        i = sys.argv.index("--domain")
+        want = sys.argv[i + 1] if len(sys.argv) > i + 1 else CURRENT_DOMAIN
+        hits = sorted(by_domain.get(want, []))
+        print(f"domain: {want} 인 문서 {len(hits)}개 — 도메인을 바꾸면 이것들을 다시 쓴다")
+        for h in hits:
+            print(f"    {h}")
+        if unmarked:
+            print("")
+            print(f"  ★미표시 {len(unmarked)}개는 이 목록에 안 들어 있다. 목록이 아직 완전하지 않다")
         print()
 
     total = sum(len(v) for v in problems.values())

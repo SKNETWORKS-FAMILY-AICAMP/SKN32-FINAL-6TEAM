@@ -5,6 +5,7 @@ description: 승인이 필요한 업체 예약 건을 특정해 대안·차액�
 status: draft
 tags: [agent, customer-operations, security]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Booking Handoff Team

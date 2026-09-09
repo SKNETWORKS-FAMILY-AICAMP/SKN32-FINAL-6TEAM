@@ -5,6 +5,7 @@ description: 새 기능이 Core인가 Team인가를 판정하는 기준. 잘못 
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Core와 Team의 경계
@@ -19,7 +20,7 @@ owners: [human:미배정]
 
 | 책임 | 왜 Core인가 |
 |---|---|
-| Case 생명주기 | 환불이든 배송이든 상태 기계는 같다 |
+| Case 생명주기 | 환불이든 일정 조정이든 상태 기계는 같다 |
 | Controller (라우팅·재계획) | capability로 찾을 뿐 업무 내용을 모른다 |
 | Team Registry | 등록·해석만 한다 |
 | Shared State + CAS | 동시성 문제는 도메인 무관 |
@@ -32,12 +33,29 @@ owners: [human:미배정]
 
 도메인 지식이 필요한 것.
 
+`[실측]` v10 §5 — 여행 Team 넷의 값으로 적는다. **오른쪽 칸이 도메인마다 통째로 갈린다.**
+
+| 책임 | 왜 Team인가 |
+|---|---|
+| "이 액티비티 예약이 성립하는가" 판단 | 취소·환급 규정과 날씨 조건을 알아야 한다 |
+| "이 식사가 성립하는가" 판단 | 영업시간·휴무·할랄/채식 조건을 알아야 한다 |
+| 구간 이동이 되는가 판단 | 환승·막차 도메인 지식 |
+| 승인이 필요한 업체 건 특정 | 예약 종류별 변경 규정을 알아야 한다 |
+| 재계획 후보 생성 | 그 도메인에서 무엇이 대안인지 알아야 한다 |
+
+<details>
+<summary>v9(쇼핑몰) 시절 값 — 무엇이 갈렸는지 보려고 남긴다</summary>
+
 | 책임 | 왜 Team인가 |
 |---|---|
 | "환불 가능한가" 판단 | 반품 규정을 알아야 한다 |
 | 배송 지연 원인 분류 | 배송 도메인 지식 |
 | 응답 문장 생성·검토 | 업무 맥락 |
 | 이상 징후 판정 | 무엇이 정상인지 알아야 한다 |
+
+★**왼쪽 칸(책임의 모양)은 두 도메인이 거의 같다.** 갈리는 것은 "무엇을 알아야 하는가"뿐이다. 이게 Core/Team 경계가 도메인 교체를 견디는 이유다.
+
+</details>
 
 ## Team이 하지 않는 것 셋
 
@@ -70,6 +88,16 @@ DOMAIN_WORDS = (
 )
 ```
 
+### ★ [2026-09-09] 이 목록에 여행 어휘가 없다
+
+`[실측]` `tests/architecture/test_basement_is_domain_free.py`. **`trip`·`itinerary`·`booking`·`reservation`·`activity` 가 0개다.**
+
+**그래서 지금 이 가드는 여행 어휘가 코어로 새는 것을 못 막는다.** 커머스 어휘만 막는다.
+
+★**낡은 어휘를 지우면 안 된다. 더한다.** 커머스 낱말이 코어에 다시 들어와도 안 되는 것은 그대로이고, 목록은 **도메인이 바뀔 때마다 누적**된다. 이게 이 가드를 도메인 교체에 견디게 만드는 유일한 방법이다.
+
+`[미확보]` 코드 수정은 담당 세션 몫으로 넘겼다. 이 문서는 무엇이 비었는지만 적는다.
+
 예외는 `app/core/redaction.py` 하나다. PII 마스킹은 결제 식별자 **모양**을 알아야 가릴 수 있는데, 이건 도메인 로직이 아니라 **보안 규칙**이다. 예외에는 반드시 이유를 적는다.
 
 ## Team을 만들 자격
@@ -86,7 +114,16 @@ Team은 다음이 **전부** 독립될 때 만든다.
 
 하나라도 안 갈리면 기존 Team의 capability를 늘린다.
 
-### ★ [2026-09-03 정정] VOC 는 지금 껍데기다
+### ★ [2026-09-08 재정정] VOC Team 은 v10 에서 아예 빠졌다
+
+`[실측]` v10 §0-2 — **「VOC & Store Manager Team → 제외. 도메인이 사라졌다」.** 껍데기로 남기는 것도 아니고 목록에서 나갔다.
+
+**아래 2026-09-03 절은 그 전 판(v8·v9)의 판정이다.** 지우지 않고 남기는 이유는 **같은 사고가 어떻게 반복됐는지**가 이 절의 요지이기 때문이다 — 이번에도 v10 §0-2 가 Team 을 뺐는데 이 문서는 하루 넘게 안 고쳐졌다.
+
+<details>
+<summary>2026-09-03 정정 (v8 기준) — 기록으로 남긴다</summary>
+
+### [2026-09-03 정정] VOC 는 지금 껍데기다
 
 **이 절이 v7.1 의 옛 방어를 그대로 들고 있었다.** v8 이 재판정했는데 여기만 안 고쳤다.
 
@@ -117,6 +154,10 @@ v8 §7 재판정  →  cs wiki 는 반영          ✅
 
 `[실측]` **`check_wiki.py` 는 이걸 못 잡는다.** 형식과 링크만 보고 **두 문서가 서로 다른 말을 하는지는 안 본다.**
 
+</details>
+
+★**세 번째로 같은 일이 났다.** v10 이 2026-09-08 에 Team 목록을 통째로 갈았는데 이 폴더 10개 문서 중 **v10 을 인용하는 것이 0건**이었다(2026-09-09 실측). 그래서 이번에는 문서를 고치는 것으로 끝내지 않고 **표시를 만들었다** — [../governance/domain-axis.md](../governance/domain-axis.md).
+
 ## 잘못 판정하면
 
 | 잘못 | 증상 |
@@ -142,3 +183,5 @@ v8 §7 재판정  →  cs wiki 는 반영          ✅
 - [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract/index.md) · [sample](../../final_project_sample/wiki/teams/team-contract.md) — 계약 상세
 - [`team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) · [sample](../../final_project_sample/wiki/teams/team-boundary.md) — 구현 관점 경계
 - [../product/glossary.md](../product/glossary.md) — 용어
+- [`cs/domain-swap.md`](../../final_project_cs/wiki/domain-swap.md) — 도메인을 갈아 끼울 때 무엇을 바꾸나
+- [../governance/domain-axis.md](../governance/domain-axis.md) — 이 문서가 도메인에 묶여 있는지 표시하는 규칙

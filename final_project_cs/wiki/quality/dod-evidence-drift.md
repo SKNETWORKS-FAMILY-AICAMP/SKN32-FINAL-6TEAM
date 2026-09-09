@@ -5,6 +5,7 @@ description: DoD-22는 인용한 테스트 소스가 사라졌다. DoD-29는 등
 status: draft
 tags: [testing]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # DoD evidence 재검증 — 낡은 근거와 새 결함

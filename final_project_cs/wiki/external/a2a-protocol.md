@@ -5,6 +5,7 @@ description: 독립 배포된 Agent System에 장기 실행 업무를 위임한�
 status: draft
 tags: [api, agent, contract]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # A2A

@@ -5,6 +5,7 @@ description: 과거 이력과 유사 Case를 ContextPack에 넣는다. 예산에
 status: draft
 tags: [data]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Memory

@@ -4,6 +4,7 @@ title: 일수를 어떻게 산정하나
 description: 인·일이 아니라 실소요 일수를 쓴다. 4개 저장소 실측이 근거다
 status: draft
 tags: [governance, cost]
+domain: neutral
 ---
 
 # 일수를 어떻게 산정하나

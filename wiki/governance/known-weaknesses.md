@@ -4,6 +4,7 @@ title: 이 문서 표준이 무너지는 지점
 description: 설계 당시 예측한 약점 9종과, 그중 실제로 일어난 것을 대조한다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 이 문서 표준이 무너지는 지점

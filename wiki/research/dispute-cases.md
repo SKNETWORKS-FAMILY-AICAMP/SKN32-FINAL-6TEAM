@@ -4,6 +4,8 @@ title: 전자상거래 분쟁조정 사례
 description: 소비자24에서 수집한 청약철회 관련 분쟁 4건의 판단과 조정 결과를 정리한다.
 status: draft
 tags: [contract, evaluation, governance]
+domain: commerce
+domain_note: 분쟁 사례 조사다. 그때 모은 자료의 기록이다
 ---
 
 ## 결론

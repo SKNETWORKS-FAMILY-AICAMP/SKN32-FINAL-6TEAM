@@ -5,6 +5,7 @@ description: 학습 게임 방법론 조사에서 채택한 원칙. 도장의 �
 status: draft
 tags: [testing, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 설계 원칙 10개

@@ -3,6 +3,7 @@ type: guide
 title: Actions
 description: 바깥 세계를 실제로 바꾸는 유일한 경로. 제안·대조·승인·실행·발행이 여기서 갈린다
 status: draft
+domain: neutral
 ---
 
 # Actions

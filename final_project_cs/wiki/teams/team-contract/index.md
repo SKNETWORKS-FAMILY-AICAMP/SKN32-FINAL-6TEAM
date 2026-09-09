@@ -5,6 +5,7 @@ description: TeamTask 입력과 TeamResult 출력의 모양. contract_version 1.
 status: draft
 tags: [contract, agent]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Team 계약

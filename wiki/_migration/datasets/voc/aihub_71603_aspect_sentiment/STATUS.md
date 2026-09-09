@@ -4,6 +4,8 @@ title: AI Hub 71603 — 속성기반 감정분석 데이터
 description: AI Hub 71603 — 속성기반 감정분석 데이터
 status: draft
 tags: [data]
+domain: commerce
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # AI Hub 71603 — 속성기반 감정분석 데이터

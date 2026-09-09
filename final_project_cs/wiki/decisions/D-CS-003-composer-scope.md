@@ -5,6 +5,7 @@ description: 설정만으로 되는 것·재시작이 필요한 것·코드 배�
 status: draft
 tags: [architecture, contract, ui]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-CS-003 Composer 범위 — 세 층

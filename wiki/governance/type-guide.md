@@ -4,6 +4,7 @@ title: type 고르는 법
 description: type 11개의 정의와 판정 규칙. 고르기 전에 문서를 쪼갤지 먼저 묻는다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # type 고르는 법

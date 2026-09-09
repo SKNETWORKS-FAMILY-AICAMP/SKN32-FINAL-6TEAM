@@ -4,6 +4,7 @@ title: 이관 현황
 description: 판정 198/198. 반영률은 표본 17건에서 11~31%. 대조 39건은 2026-09-07 에 끝났다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 이관 현황

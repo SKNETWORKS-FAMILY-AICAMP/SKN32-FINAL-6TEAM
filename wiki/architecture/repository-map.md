@@ -5,6 +5,7 @@ description: 저장소 6개가 무엇을 소유하고 어떻게 참조하는가
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 저장소 지도

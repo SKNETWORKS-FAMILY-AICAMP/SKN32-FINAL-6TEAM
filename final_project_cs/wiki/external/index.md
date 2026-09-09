@@ -3,6 +3,7 @@ type: guide
 title: External
 description: 바깥과 만나는 면. REST·MCP·A2A와 Trust Boundary
 status: draft
+domain: neutral
 ---
 
 # External

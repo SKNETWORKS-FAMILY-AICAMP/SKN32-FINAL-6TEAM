@@ -3,6 +3,7 @@ type: guide
 title: 마일스톤
 description: 중간발표와 최종발표. 각각 무엇을 보여주는가
 status: draft
+domain: neutral
 ---
 
 # 마일스톤

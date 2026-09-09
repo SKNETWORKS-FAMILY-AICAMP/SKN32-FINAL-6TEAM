@@ -4,6 +4,7 @@ title: 이 wiki 를 실제로 쓰기 시작하는 조건
 description: 지금은 아무도 안 읽는다. 두 CLAUDE.md 어디에도 wiki 가 0회 나온다
 status: draft
 tags: [governance, documentation, release]
+domain: neutral
 ---
 
 # 이 wiki 를 실제로 쓰기 시작하는 조건

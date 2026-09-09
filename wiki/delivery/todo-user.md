@@ -5,6 +5,7 @@ description: AI가 준비를 끝내 둔 것. 사용자는 순서대로 실행하
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 사용자 실행 시트

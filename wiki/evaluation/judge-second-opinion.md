@@ -5,6 +5,7 @@ description: 같은 24건을 judge v3 외에 두 번 더 독립으로 채점했�
 status: draft
 tags: [evaluation, testing]
 impl_scope: cs — 평가 하네스와 골든셋은 cs 소유다. sample 은 계약 테스트로 검증한다
+domain: neutral
 ---
 
 # Judge 2차·3차 의견

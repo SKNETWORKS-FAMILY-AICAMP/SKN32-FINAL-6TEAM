@@ -5,6 +5,7 @@ description: 제안의 식별자·금액을 DB와 대조해 실행 전에 차단
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 근거 대조

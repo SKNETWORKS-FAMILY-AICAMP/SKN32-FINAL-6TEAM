@@ -10,6 +10,7 @@ sources:
   - id: S1
     title: 골든셋 72건
     resource: ../../final_project_cs/eval/datasets/golden.jsonl
+domain: commerce
 ---
 
 # 골든셋

@@ -5,6 +5,7 @@ description: codex를 독립 판정자로 붙였다. 28.9%. 2차의 4.5%가 확�
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 3차 — 독립 판정자 투입

@@ -5,6 +5,7 @@ description: 어떤 도구를 누가 쓸 수 있는가. Registry가 manifest 밖
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Tool Gateway

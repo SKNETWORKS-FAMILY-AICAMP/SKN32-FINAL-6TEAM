@@ -7,6 +7,8 @@ tags: [testing, architecture]
 owners: [human:미배정]
 size_exempt: true
 size_exempt_reason: 불변식 카탈로그. 전체를 훑어야 의미가 있다
+domain: neutral
+domain_note: 불변식 목록이다. 커머스 낱말은 금지 목록과 옛 테스트 이름으로 나온다
 ---
 
 # 불변식 카탈로그

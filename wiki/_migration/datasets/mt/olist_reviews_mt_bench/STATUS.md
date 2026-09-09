@@ -4,6 +4,8 @@ title: 번역 모델 15종 벤치마크 — Olist 리뷰 PT→EN / PT→KO
 description: x600 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
 status: draft
 tags: [testing]
+domain: neutral
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # 번역 모델 15종 벤치마크 — Olist 리뷰 PT→EN / PT→KO

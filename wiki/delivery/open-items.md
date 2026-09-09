@@ -5,6 +5,8 @@ description: 아직 안 끝난 일과 미확인 사항. 완료된 것은 여기 
 status: draft
 tags: [release]
 owners: [human:미배정]
+domain: travel
+domain_note: 남은 일 목록이다. 커머스에서 넘어온 항목이 섞여 있다
 ---
 
 # 열린 항목

@@ -5,6 +5,7 @@ description: type 8개로 45건을 분류했다. 애매 25%로 기준 미달
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 1차 — 표본 45건 첫 분류

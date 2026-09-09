@@ -4,6 +4,7 @@ title: 브리핑 안건 7건 판정
 description: 개발자2가 올린 데이터 범위 안건 7건을 독립 판정과 교차검증으로 정리한 결과
 status: draft
 tags: [data, evaluation, governance]
+domain: commerce
 ---
 
 # 브리핑 안건 7건 판정

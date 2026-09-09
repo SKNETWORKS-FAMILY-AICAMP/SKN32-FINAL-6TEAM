@@ -3,6 +3,7 @@ type: guide
 title: Product
 description: 무엇을 만들고 누구를 위한 것인가. 제품 정의·페인포인트·페르소나·범위·용어
 status: draft
+domain: travel
 ---
 
 # Product

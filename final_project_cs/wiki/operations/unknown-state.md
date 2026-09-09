@@ -5,6 +5,7 @@ description: 돈이 나갔는지 모르는 상태를 사람이 확인하고 닫�
 status: draft
 tags: [architecture, security]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # unknown 상태 대응 절차

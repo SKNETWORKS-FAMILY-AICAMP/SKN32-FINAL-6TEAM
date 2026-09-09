@@ -4,6 +4,7 @@ title: 문서 작성 표준
 description: A-COP 팀이 문서를 쓸 때 지키는 규칙. 하면 안 되는 것 5가지와 반드시 하는 것 5가지
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 문서 작성 표준

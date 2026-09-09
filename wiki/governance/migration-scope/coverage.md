@@ -4,6 +4,7 @@ title: 반영률 실측
 description: 원본 10건 79개 절을 대조했다. 완전 반영은 11%였다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 반영률 실측

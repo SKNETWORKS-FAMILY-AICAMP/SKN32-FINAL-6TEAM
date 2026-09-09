@@ -4,6 +4,7 @@ title: 스키마 필드 명세
 description: 테이블별 컬럼·타입·제약·인덱스 전체. handoff 계약 원문에서 옮겼다
 status: draft
 tags: [data, contract]
+domain: neutral
 ---
 
 # 스키마 필드 명세

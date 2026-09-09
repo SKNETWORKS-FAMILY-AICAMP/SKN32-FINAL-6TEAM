@@ -4,6 +4,7 @@ title: RAG 코퍼스를 쓸 때 지키는 것
 description: 중복 게이트를 어휘 분리로 넘긴다. 게이트를 우회하는 네 가지 수법은 이미 거부됐다
 status: draft
 tags: [data, evaluation]
+domain: commerce
 ---
 
 # RAG 코퍼스를 쓸 때 지키는 것

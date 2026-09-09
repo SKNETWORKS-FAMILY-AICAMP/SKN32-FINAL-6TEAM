@@ -5,6 +5,7 @@ description: 같은 요청이 여러 번 와도 side effect는 한 번. 재사�
 status: draft
 tags: [contract, architecture]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # idempotency

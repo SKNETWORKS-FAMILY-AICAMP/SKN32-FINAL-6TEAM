@@ -4,6 +4,7 @@ title: 반영률 실측 — 6차 이후
 description: 2026-09-04~07 대조 6~19차. 19차에서 대조필요 39건을 다 훑고 격차 넷을 건졌다
 status: draft
 tags: [governance, documentation]
+domain: commerce
 ---
 
 # 반영률 실측 — 6차 이후

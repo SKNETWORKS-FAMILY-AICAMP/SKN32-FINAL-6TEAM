@@ -15,6 +15,7 @@ sources:
   - id: S3
     title: 콜센터 CPH 수준
     resource: https://namu.wiki/w/%EC%BD%9C%EC%84%BC%ED%84%B0(%EA%B3%A0%EA%B0%9D%EC%84%BC%ED%84%B0)
+domain: neutral
 ---
 
 # 시장 규모

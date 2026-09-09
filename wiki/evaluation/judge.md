@@ -6,6 +6,7 @@ status: draft
 impl_scope: cs — judge 루브릭과 golden/holdout 평가는 cs 도메인 문항 위에서 돈다. sample 은 계약 테스트로 검증한다
 tags: [evaluation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # LLM-as-Judge

@@ -5,6 +5,7 @@ description: 규칙 수정 후 같은 표본 재분류. 4.5%가 나왔으나 혼
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 2차 — 수정 후 재검증

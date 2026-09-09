@@ -5,6 +5,7 @@ description: 무엇이 사람 승인 대상인가. 승인은 버그가 아니라
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 승인 경계

@@ -5,6 +5,7 @@ description: 6차에서 2/2 실패한 층을 전건 판정했다. type 일치 7.
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 7차 — research 26건 전건 판정

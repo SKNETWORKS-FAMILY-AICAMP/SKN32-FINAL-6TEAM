@@ -5,6 +5,8 @@ description: 1,517줄 계획서를 28개 파일로 쪼갠 스테이징. 아직 w
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # v8 분할 초안

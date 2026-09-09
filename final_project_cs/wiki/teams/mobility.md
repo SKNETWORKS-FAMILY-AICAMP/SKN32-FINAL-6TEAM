@@ -5,6 +5,7 @@ description: 구간 이동이 성립하는지 판정한다. 이 Team의 재계�
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Mobility Team

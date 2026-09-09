@@ -5,6 +5,7 @@ description: 10/10 맞았다. research 7.7%와 정반대다. 차이는 폴더가
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 8차 — evidence 표본 10건

@@ -3,6 +3,7 @@ type: guide
 title: Quality
 description: 무엇으로 보증하는가. 불변식 카탈로그·테스트 지도·평가 하네스·사각지대
 status: draft
+domain: neutral
 ---
 
 # Quality

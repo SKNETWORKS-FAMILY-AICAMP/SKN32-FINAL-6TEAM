@@ -5,6 +5,7 @@ description: 표본 B로 진짜 blind 대조. 일치율 69.0%. 둘 다 확실이
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 4차 — blind 대조

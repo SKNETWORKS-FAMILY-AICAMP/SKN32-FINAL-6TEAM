@@ -4,6 +4,7 @@ title: 번역 모델 비교 검증 방법론
 description: 번역 모델 순위 비교가 성립하는 조건과 검증된 표·한계를 정리한다.
 status: draft
 tags: [evaluation, data, documentation]
+domain: neutral
 ---
 
 ## 결론

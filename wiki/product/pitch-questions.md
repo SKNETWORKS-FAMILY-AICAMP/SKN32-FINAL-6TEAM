@@ -4,6 +4,7 @@ title: 심사에서 물어볼 다섯 가지
 description: 기술 질문만 있던 심사 질문표에 제품 질문 5행을 더한다. 답까지 정해 뒀다
 status: draft
 tags: [governance]
+domain: neutral
 ---
 
 # 심사에서 물어볼 다섯 가지

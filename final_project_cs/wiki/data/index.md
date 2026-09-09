@@ -3,6 +3,7 @@ type: guide
 title: Data
 description: 스키마·마이그레이션·tenant 격리. DDL 전문은 문서에 옮겨 적지 않는다
 status: draft
+domain: commerce
 ---
 
 # Data

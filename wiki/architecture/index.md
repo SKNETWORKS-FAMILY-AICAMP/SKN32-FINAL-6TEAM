@@ -3,6 +3,7 @@ type: guide
 title: Architecture
 description: 시스템 경계와 저장소 관계. 구현 세부는 각 코드 저장소 wiki에 있고 여기는 경계만 다룬다
 status: draft
+domain: travel
 ---
 
 # Architecture
@@ -16,7 +17,7 @@ status: draft
 1. [system-context.md](system-context.md) — 시스템 경계와 외부 행위자
 2. [core-design.md](core-design.md) — **Core 8개 구성요소**
 3. [core-vs-team.md](core-vs-team.md) — 무엇이 Core에 남고 무엇이 Team으로 가는가
-4. [pack-model.md](pack-model.md) — Runtime + CS Pack + Commerce Ops Pack
+4. [pack-model.md](pack-model.md) — **Runtime 위에 도메인 Pack 을 갈아 끼우는 구조**
 5. [concurrency.md](concurrency.md) — **경합 8종을 누가 처리하는가**
 6. [repository-map.md](repository-map.md) — 저장소 6개의 역할과 관계
 7. [tech-stack.md](tech-stack.md) — 쓰는 것과 미룬 것
@@ -31,6 +32,8 @@ status: draft
 | [concurrency.md](concurrency.md) | **어떤 경합을 누가 처리하나** | 담당이 겹치면 아무도 안 한다 |
 | [core-vs-team.md](core-vs-team.md) | 새 기능이 Core인가 Team인가 | 잘못 판정하면 Team 추가가 리팩토링이 된다 |
 | [pack-model.md](pack-model.md) | Pack을 어떻게 교체하는가 | Core가 Pack을 import하면 교체 불가 |
+| [tech-stack.md](tech-stack.md) | 무엇으로 만드나 | Docker 전제를 넣으면 이 기계에서 안 돈다 |
+| [diagrams.md](diagrams.md) | 어떤 그림이 있고 근거가 어디인가 | 계약이 바뀌면 조용히 낡는다 |
 | [repository-map.md](repository-map.md) | 어느 저장소가 무엇을 소유하는가 | 소유가 겹치면 이중 장부 |
 
 ## 핵심 판정 기준 하나
@@ -41,17 +44,24 @@ status: draft
 
 ## 구조 요약
 
+`[실측]` v10 §5·§6.
+
 ```text
-              A-COP Runtime (Core)
+              A-COP Runtime (Core)  ← 도메인을 모른다
    Case · Controller · Registry · Port · 승인 경계 · 감사 · 평가
                         │
-            ┌───────────┴───────────┐
-        CS Pack                 Commerce Ops Pack
-   VOC · Response Review     Procurement+Order · Fulfillment
-   (10주 착수 확정)           Return(Mock) · Catalog(A2A Remote)
+        ┌───────────────┴───────────────┐
+   여행 도메인 Pack                 (다음 도메인)
+   Activity · Booking Handoff       갈아 끼우는 자리
+   Dining · Mobility
+   Lodging/Flight (등록만)
 ```
 
 **Team을 늘리는 일이 리팩토링이 되면 설계가 잘못된 것이다.**
+
+★**도메인을 바꾸는 일도 마찬가지다.** 2026-09-08 에 커머스 → 여행으로 한 번 바꿨다. 무엇을 갈아 끼우고 무엇을 안 끼우는지는 [`cs/domain-swap.md`](../../final_project_cs/wiki/domain-swap.md) 가 정본이고, **어느 문서가 도메인에 묶여 있는지**는 [../governance/domain-axis.md](../governance/domain-axis.md) 가 정한다.
+
+`[실측 2026-09-09]` **코드는 아직 커머스다.** `config/project.yaml` 에 여행 Team 이 0건이다. 위 그림은 v10 이 정한 목표지 지금 도는 것이 아니다.
 
 ## 이 영역의 불변식
 

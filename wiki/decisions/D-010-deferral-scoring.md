@@ -5,6 +5,7 @@ description: 지금 채점식은 사람에게 넘긴 것을 벌점 처리한다.
 status: draft
 impl_scope: cs — 골든셋과 judge 채점은 cs 도메인 평가다. sample 은 계약 테스트로 검증한다
 tags: [evaluation, governance]
+domain: neutral
 ---
 
 # D-010 승인 대기를 실패로 셀 것인가

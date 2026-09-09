@@ -4,6 +4,7 @@ title: 작업 루프와 기록 의무
 description: 세션마다 무엇을 읽고 무엇을 남기는가. 파일명 체계가 wiki와 충돌한다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 작업 루프와 기록 의무

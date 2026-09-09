@@ -6,6 +6,7 @@ status: draft
 tags: [customer-operations]
 size_exempt: true
 size_exempt_reason: 용어 카탈로그. 검색 대상이므로 한 파일로 유지
+domain: neutral
 ---
 
 # 용어

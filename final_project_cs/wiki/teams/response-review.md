@@ -5,6 +5,8 @@ description: 응답을 생성하고 스스로 검토한다. accepted_case_types�
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]
+domain: commerce
+domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 코드에는 아직 등록돼 있다
 ---
 
 # Response Generation & Review Team

@@ -3,6 +3,7 @@ type: guide
 title: Business
 description: 얼마짜리인가. 건당 원가·인프라 비용·시장 규모·가격안
 status: draft
+domain: neutral
 ---
 
 # Business

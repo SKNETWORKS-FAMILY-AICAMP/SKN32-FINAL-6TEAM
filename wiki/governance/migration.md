@@ -8,6 +8,7 @@ sources:
   - id: S1
     title: 2026-08-31 문서 실측
     resource: ../../program/plan/A-COP_문서표준_설계_codex초안.md
+domain: neutral
 ---
 
 # 기존 문서 이관 계획

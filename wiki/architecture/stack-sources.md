@@ -4,6 +4,7 @@ title: A-COP 기술 스택 공식 문서
 description: 활용 기술의 공식 URL과 HTTP 200 확인 결과 및 링크 제외 사유를 정리한다.
 status: draft
 tags: [architecture, api, documentation]
+domain: neutral
 ---
 
 ## 결론

@@ -5,6 +5,7 @@ description: Customer Case의 공식 상태. 버전을 가지며 모든 갱신�
 status: draft
 tags: [state, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Shared State

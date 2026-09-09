@@ -7,6 +7,8 @@ tags: [evaluation]
 owners: [human:미배정]
 size_exempt: true
 size_exempt_reason: 지표 카탈로그. 산식을 찾을 때 한 파일에서 검색하는 게 빠르다
+domain: neutral
+domain_note: 지표 정의는 도메인 무관이다. 예시가 커머스다
 ---
 
 # 지표와 산식

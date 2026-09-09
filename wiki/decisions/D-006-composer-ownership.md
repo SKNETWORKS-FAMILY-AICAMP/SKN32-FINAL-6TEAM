@@ -5,6 +5,7 @@ description: 문장 두 개가 잘못 읽혀 세션마다 "UI에서 새로 만�
 status: draft
 tags: [architecture, ui, contract]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-006 Composer 소유권

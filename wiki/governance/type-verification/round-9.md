@@ -5,6 +5,7 @@ description: type 일치 42.9%. report-split 규칙을 기계 신호로 바꿔 �
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 9차 — dataset 28건 전건 판정

@@ -3,6 +3,8 @@ type: guide
 title: final_project_cs 지식 지도
 description: 릴리스 대상 저장소의 9개 영역과 각 영역이 답하는 질문
 status: draft
+domain: travel
+domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 ---
 
 # final_project_cs 지식 지도

@@ -4,6 +4,7 @@ title: acop_dojo 학습 게임 설계 검수
 description: 현재 설계의 치명적 약점과 근거 수준 및 변경 권고를 정리한다.
 status: draft
 tags: [architecture, evaluation, testing]
+domain: neutral
 ---
 
 ## 결론

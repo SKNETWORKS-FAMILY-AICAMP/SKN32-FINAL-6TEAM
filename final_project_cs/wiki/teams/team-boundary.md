@@ -5,6 +5,7 @@ description: Team이 하면 안 되는 것 셋. 이 설계의 핵심 규칙인�
 status: draft
 tags: [architecture, contract]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Team 경계

@@ -5,6 +5,7 @@ description: 기능 게이트 통과와 RC 선언은 다르다. 지금 RC 를 �
 status: draft
 tags: [release, evaluation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 릴리스 게이트

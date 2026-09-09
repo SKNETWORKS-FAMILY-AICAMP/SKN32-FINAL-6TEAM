@@ -5,6 +5,7 @@ description: 외부 발행을 보장하는 경계. tenant별 중복 제거와 �
 status: draft
 tags: [architecture, contract]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Outbox

@@ -5,6 +5,7 @@ description: 분류 체계가 실제로 판별 가능한지 4회에 걸쳐 쟀�
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # type 분류 검증

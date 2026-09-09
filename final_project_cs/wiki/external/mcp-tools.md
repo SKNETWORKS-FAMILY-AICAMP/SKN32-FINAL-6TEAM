@@ -5,6 +5,7 @@ description: 개인 AI가 쓰는 도구 3종. 전부 mcp:read이고 개수가 �
 status: draft
 tags: [api, security, contract]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # MCP 도구

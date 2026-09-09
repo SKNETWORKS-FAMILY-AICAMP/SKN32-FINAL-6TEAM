@@ -5,6 +5,7 @@ description: A/B/Proposed 세 군을 돌리고 통계까지 내는 실행 도구
 status: draft
 tags: [evaluation, testing]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 평가 하네스

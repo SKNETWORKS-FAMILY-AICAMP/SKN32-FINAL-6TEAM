@@ -5,11 +5,14 @@ description: 여덟 종류의 경합을 누가 처리하는가. 담당이 겹치
 status: draft
 tags: [architecture, state]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 경합과 동시성 책임
 
-`[실측]` v8 §8-C에서 이관.
+`[실측]` v8 §8-C에서 이관. **v10 §6 이 그대로 승계한다** — 낙관적 동시성·idempotency·이벤트 순서·outbox 제약 넷은 "바꾸면 코어를 다시 검증해야 한다"고 못 박혀 있다.
+
+★**이 문서는 도메인이 바뀌어도 안 바뀐다.** 경합의 종류는 주문이든 여행 일정이든 같다.
 
 ## 원칙
 

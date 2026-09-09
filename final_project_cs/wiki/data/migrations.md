@@ -5,6 +5,7 @@ description: 6개 파일과 순서. 재실행이 안전하다
 status: draft
 tags: [data]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 마이그레이션

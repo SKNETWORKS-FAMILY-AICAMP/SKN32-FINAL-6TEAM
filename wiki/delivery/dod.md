@@ -7,6 +7,7 @@ tags: [release, evaluation]
 owners: [human:미배정]
 size_exempt: true
 size_exempt_reason: 체크리스트. 통으로 훑어야 의미가 있다
+domain: neutral
 ---
 
 # 완료 기준 (DoD)

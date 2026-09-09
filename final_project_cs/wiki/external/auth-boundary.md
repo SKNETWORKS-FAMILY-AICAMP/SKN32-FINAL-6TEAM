@@ -5,6 +5,7 @@ description: 인증·scope·PII 마스킹. 외부 요청이 내부로 들어오�
 status: draft
 tags: [security, api]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Trust Boundary

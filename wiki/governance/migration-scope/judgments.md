@@ -5,6 +5,7 @@ description: 판정필요 36건과 미정 20건을 사람이 판정한 결과. �
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 이관 판정 내역

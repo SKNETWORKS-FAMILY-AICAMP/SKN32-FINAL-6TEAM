@@ -3,6 +3,7 @@ type: guide
 title: Decisions
 description: 되돌리려면 근거가 필요한 선택들. 기각한 대안도 함께 기록한다
 status: draft
+domain: commerce
 ---
 
 # Decisions

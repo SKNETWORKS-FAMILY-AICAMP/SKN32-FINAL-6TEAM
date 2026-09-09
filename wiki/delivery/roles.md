@@ -5,6 +5,7 @@ description: 6명을 코어 2·모델 3·검증&프론트 1로 배치한다. 소
 status: draft
 tags: [release]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 역할과 소유 경계

@@ -4,6 +4,7 @@ title: Team 계약 필드 명세
 description: TeamTask·TeamResult·Evidence·Manifest 의 필드·필수 여부·기본값 전체
 status: draft
 tags: [contract, architecture]
+domain: neutral
 ---
 
 # Team 계약 필드 명세

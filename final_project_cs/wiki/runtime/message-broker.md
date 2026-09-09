@@ -5,6 +5,7 @@ description: Task와 결과를 배달한다. 배달만 하고 흐름은 결정�
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Message Broker

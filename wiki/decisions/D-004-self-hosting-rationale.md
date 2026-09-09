@@ -16,6 +16,7 @@ sources:
   - id: S3
     title: 12GB VRAM OOM 기록
     resource: ../../final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md
+domain: neutral
 ---
 
 # D-004 자체호스팅은 규제 논거다

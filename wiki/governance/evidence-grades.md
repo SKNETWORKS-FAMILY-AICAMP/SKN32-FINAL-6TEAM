@@ -4,6 +4,7 @@ title: 근거 등급
 description: 주장마다 실측·외부·추정·미확보를 표시하는 규칙. 이 프로젝트가 이미 쓰던 관행을 규격화한 것
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 근거 등급

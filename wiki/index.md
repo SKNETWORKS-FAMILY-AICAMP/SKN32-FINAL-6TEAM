@@ -3,6 +3,8 @@ type: guide
 title: A-COP 지식 허브
 description: 중앙 허브의 8개 영역과 각 영역이 답하는 질문. 2026-09-08 도메인이 여행으로 바뀌었다
 status: draft
+domain: travel
+domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 ---
 
 # A-COP 지식 허브

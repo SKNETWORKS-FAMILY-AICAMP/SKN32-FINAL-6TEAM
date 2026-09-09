@@ -5,6 +5,8 @@ description: 배송 상태와 예외를 다룬다. 모르는 상태를 아는 �
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]
+domain: commerce
+domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 코드에는 아직 등록돼 있다
 ---
 
 # Fulfillment & Logistics Team

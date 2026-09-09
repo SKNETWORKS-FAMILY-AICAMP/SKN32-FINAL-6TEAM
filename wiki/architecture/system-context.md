@@ -5,6 +5,7 @@ description: 누가 A-COP과 대화하는가. 외부 행위자와 진입 경로 
 status: draft
 tags: [architecture, security]
 owners: [human:미배정]
+domain: travel
 ---
 
 # 시스템 경계
@@ -13,20 +14,22 @@ owners: [human:미배정]
 
 | 행위자 | 무엇을 하나 | 경로 |
 |---|---|---|
-| 고객 | 문의한다 | 쇼핑몰 화면 → REST |
+| 고객 (인바운드 여행자) | 일정을 제출하고 사건을 신고한다 | 여행 채널(앱·웹) → REST |
 | 상담원·운영자 | 검토·승인·감독한다 | 운영 UI |
-| 개인 AI | 고객 대신 조회·문의한다 | **MCP** |
+| **개인 에이전트 · 외부 LLM** | **일정을 만들어 넘긴다.** 고객 대신 조회·문의도 한다 | **MCP** |
 | 기업 Agent System | 업무를 위임받는다 | **A2A** |
-| 검증 쇼핑몰 | 주문·결제·배송 데이터를 제공한다 | REST |
+| 공급자 (액티비티·식당·교통·숙박) | 운영 정보와 예약 상태를 제공한다 | REST · Mock |
+
+★**계획을 만드는 것은 우리 일이 아니다**(v10 §4-A). 개인 에이전트가 만든 일정을 받아 **성립하는지 검증하고 여행 종료까지 지켜본다.** 그래서 위 표에서 개인 AI 가 단순 조회자가 아니라 **입력 생산자**다 — v9(쇼핑몰) 시절과 달라진 자리다.
 
 ## 진입 경로 3종
 
 ```text
-개인 AI ──── MCP ─────┐
+개인 에이전트 ─ MCP ──┐
                       │
 기업 Agent ── A2A ────┼──→ Agent Gateway ──→ Core
                       │    (Trust Boundary)
-쇼핑몰·UI ── REST ────┘
+여행 채널·UI ─ REST ──┘
 ```
 
 **Agent Gateway가 유일한 진입점이다.** 여기가 Trust Boundary다.
@@ -49,7 +52,8 @@ owners: [human:미배정]
 
 | 대상 | 무엇을 | 경계 |
 |---|---|---|
-| 검증 쇼핑몰 | Action 실행 요청 | **결제는 쇼핑몰이 실행** → [D-001](../decisions/D-001-payment-ownership.md) |
+| 공급자 | 장소·운영 조회 / 이동 시간 조회 / 기상 조회 (v10 §5-A) | 읽기다. **쓰기는 [D-005](../decisions/D-005-write-gate.md) 승인 경로** |
+| 업체 예약 | 변경 링크 생성. 시연 모드 한정 Mock 변경 | **승인 없이 실행하지 않는다** → [`booking-handoff.md`](../../final_project_cs/wiki/teams/booking-handoff.md) |
 | 알림 채널 | 고객·운영자 알림 | Outbox 경유 |
 | A2A Remote Agent | Task 위임 | Artifact 근거를 Context/DB와 대조 |
 
@@ -68,8 +72,9 @@ owners: [human:미배정]
 
 | 대상 | 왜 |
 |---|---|
-| 결제 실행 | [D-001](../decisions/D-001-payment-ownership.md) |
-| 포인트·쿠폰 잔액 변경 | 동 |
+| **일정 생성** | v10 §4-A — 외부 에이전트·LLM 의 일이다. 우리는 검증하고 지켜본다 |
+| 결제 실행 | [D-001](../decisions/D-001-payment-ownership.md). 여행에서도 실결제는 구현 단계 4다 (v10 §4-C) |
+| 실제 업체 예약 변경 | 협약 전까지 Mock. `supplier.tier == 'simulated'` 게이트 |
 | 음성 처리 (STT/TTS) | `[미확보]` 원가 미산정 |
 | OCR·영상 | 범위 밖 |
 

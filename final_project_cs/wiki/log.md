@@ -3,6 +3,8 @@ type: guide
 title: 문서 변경 이력 (cs)
 description: 이 저장소 wiki의 추가·수정 기록
 status: draft
+domain: neutral
+domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 섞인다
 ---
 
 # 문서 변경 이력 (cs)

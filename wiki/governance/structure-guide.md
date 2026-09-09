@@ -4,6 +4,7 @@ title: 문서 구조 짜는 법
 description: 폴더와 파일을 어떻게 배치하고 언제 쪼개는가. 파일이 폴더로 승격되는 규칙 포함
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 문서 구조 짜는 법

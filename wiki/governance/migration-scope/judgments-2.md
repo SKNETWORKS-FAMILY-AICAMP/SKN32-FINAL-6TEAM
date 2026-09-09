@@ -4,6 +4,7 @@ title: 2차 판정 내역 (2026-09-03)
 description: 미판정 24건 판정과 분할 10건 실행. 이관 6건 중 5건이 이미 반영돼 있었다
 status: draft
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 2차 판정 내역

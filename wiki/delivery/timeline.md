@@ -5,6 +5,8 @@ description: 선행 11일 + 공식 1W~9W. 중간발표 09-15, 최종발표 10-26
 status: draft
 tags: [release]
 owners: [human:미배정]
+domain: travel
+domain_note: 판올림 전후를 같이 싣는다
 ---
 
 # 전체 일정

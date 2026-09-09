@@ -3,6 +3,7 @@ type: guide
 title: A-COP 시작하기
 description: A-COP이 무엇이고 어느 문서부터 읽어야 하는지 알려주는 진입점. 도메인은 여행이다
 status: draft
+domain: travel
 ---
 
 # A-COP 시작하기

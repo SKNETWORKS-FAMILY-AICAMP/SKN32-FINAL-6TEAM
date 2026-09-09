@@ -5,6 +5,7 @@ description: 설계는 토글 전용인데 구현은 전체 교체다. 세 안�
 status: draft
 impl_scope: sample — Composer 는 sample 이 원본이고 cs 로 이식한다. D-006 참조
 tags: [architecture, api, contract]
+domain: neutral
 ---
 
 # D-011 Composer v3 설계와 구현 중 무엇을 맞출 것인가

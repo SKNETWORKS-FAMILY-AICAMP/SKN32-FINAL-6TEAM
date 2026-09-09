@@ -5,6 +5,7 @@ description: 에픽·스토리·작업 세 층. 스프린트는 층이 아니라
 status: draft
 tags: [release, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 티켓 구조

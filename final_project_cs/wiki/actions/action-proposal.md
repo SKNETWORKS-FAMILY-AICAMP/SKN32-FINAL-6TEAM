@@ -5,6 +5,7 @@ description: Team이 반환하는 제안. 실행이 아니다. 근거 ID가 대�
 status: draft
 tags: [contract, agent]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # ActionProposal

@@ -3,6 +3,7 @@ type: guide
 title: Decisions (cs)
 description: 이 저장소에만 영향을 주는 결정. 여러 저장소에 걸친 것은 중앙 허브에 있다
 status: draft
+domain: neutral
 ---
 
 # Decisions (cs)

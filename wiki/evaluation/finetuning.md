@@ -6,6 +6,8 @@ status: draft
 impl_scope: cs — 파인튜닝은 cs 도메인 골든셋으로 학습·평가한다. sample 에는 그 데이터가 없다
 tags: [evaluation, data]
 owners: [human:미배정]
+domain: commerce
+domain_note: 채택 보류로 결론이 확정된 실험의 기록이다
 ---
 
 # 파인튜닝 경로와 증명 범위

@@ -5,6 +5,7 @@ description: v1 의 policy_grounding 은 분산 0 인 상수였다. 군 순위�
 status: draft
 impl_scope: cs — 평가 하네스는 cs 소유다
 tags: [evaluation, testing]
+domain: neutral
 ---
 
 # D-014 judge 를 v1 에서 v3 로 바꾸고 현행 도메인 산출물을 다시 매긴다

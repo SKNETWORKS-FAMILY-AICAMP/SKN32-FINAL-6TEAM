@@ -4,6 +4,7 @@ title: 폰에서 Gemma 4 를 돌려 봤다
 description: Adreno 825 로 E4B 8.98 tok/s. 4070 SUPER 를 못 재는 동안 얻은 첫 자체 추론 실측
 status: draft
 tags: [gpu, cost, evaluation]
+domain: neutral
 ---
 
 # 폰에서 Gemma 4 를 돌려 봤다

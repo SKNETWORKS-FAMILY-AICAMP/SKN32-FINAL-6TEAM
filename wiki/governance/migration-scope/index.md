@@ -5,6 +5,7 @@ description: 전체 중 무엇을 옮기고 무엇을 두는가. 숫자는 스�
 status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 이관 범위 목록

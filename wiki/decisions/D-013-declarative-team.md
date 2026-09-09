@@ -4,6 +4,7 @@ title: Team 을 코드가 아니라 선언으로 만든다
 description: 네 방식을 비교했고 셋을 기각했다. 기각 사유가 이 결정의 값이다
 status: draft
 tags: [architecture, contract, security]
+domain: neutral
 ---
 
 # D-013 Team 을 코드가 아니라 선언으로 만든다

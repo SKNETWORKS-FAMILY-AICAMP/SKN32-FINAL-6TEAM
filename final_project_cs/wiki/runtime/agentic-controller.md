@@ -5,6 +5,7 @@ description: Case를 어느 Team으로 보낼지 정하고 재시도·재계획�
 status: draft
 tags: [architecture, agent]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # Agentic Controller

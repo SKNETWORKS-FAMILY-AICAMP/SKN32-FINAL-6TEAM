@@ -5,6 +5,7 @@ description: 무엇을 재서 무엇을 넘으면 채택인가. 지금까지 이
 status: draft
 impl_scope: cs — 응답 생성은 cs 도메인이다. sample 은 LLM 을 부르지 않는다
 tags: [evaluation, cost]
+domain: neutral
 ---
 
 # 응답 모델 후보를 고르는 기준

@@ -4,6 +4,7 @@ title: 포지셔닝
 description: A-COP은 자동응답 제품이 아니라 멀티에이전트 고객운영의 통제·검증층이다
 status: draft
 tags: [customer-operations]
+domain: commerce
 ---
 
 # 포지셔닝

@@ -5,6 +5,7 @@ description: 정정 안 된 한 절이 CLAUDE.md에 인용돼 코드까지 갔�
 status: draft
 impl_scope: cs — cs 저장소에서 난 드리프트 사고의 사후분석이다. 승격 사슬(v8 → cs CLAUDE.md → handoff/08 → composition.py)에 sample 은 없다
 tags: [governance, documentation]
+domain: neutral
 ---
 
 # 낡은 문장이 규칙으로 승격된 사고

@@ -5,6 +5,8 @@ description: capability를 Team 구현으로 해석한다. Core가 app.modules�
 status: draft
 tags: [architecture, agent]
 owners: [human:미배정]
+domain: neutral
+domain_note: Registry 기제는 도메인 무관이다. 표의 예시가 커머스 Team 이다
 ---
 
 # Team Registry

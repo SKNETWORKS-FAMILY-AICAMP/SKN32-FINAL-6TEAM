@@ -4,6 +4,7 @@ title: 검토·승인 시간을 재는 법
 description: 72% 절감이 이 숫자 하나에 달려 있다. 도구는 깔았고 30분이면 잰다
 status: draft
 tags: [cost, evaluation]
+domain: neutral
 ---
 
 # 검토·승인 시간을 재는 법

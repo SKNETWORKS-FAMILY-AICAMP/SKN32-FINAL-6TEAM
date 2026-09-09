@@ -4,6 +4,7 @@ title: introspection 계약
 description: 무엇이 조립돼 있나를 보여주고 얼마나 돌고 있나는 안 보여준다
 status: draft
 tags: [api, contract, security]
+domain: neutral
 ---
 
 # `GET /introspection` 계약 v1

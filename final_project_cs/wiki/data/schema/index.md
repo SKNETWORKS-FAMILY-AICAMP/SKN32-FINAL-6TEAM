@@ -5,6 +5,7 @@ description: 테이블 관계와 의미. DDL 전문은 옮겨 적지 않고 파�
 status: draft
 tags: [data, contract]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # 스키마

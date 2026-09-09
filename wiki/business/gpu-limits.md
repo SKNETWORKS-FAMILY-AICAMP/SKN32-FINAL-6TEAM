@@ -4,6 +4,7 @@ title: 우리 GPU 로 무엇이 되고 무엇이 안 되나
 description: 4070 SUPER 12GB 의 실제 한계. 카탈로그 12GB 와 쓸 수 있는 양이 다르다
 status: draft
 tags: [gpu, cost]
+domain: neutral
 ---
 
 # 우리 GPU 로 무엇이 되고 무엇이 안 되나

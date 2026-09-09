@@ -5,6 +5,7 @@ description: 정책·FAQ 문서를 찾아 ContextPack에 넣는다. tenant와 sc
 status: draft
 tags: [data, security]
 owners: [human:미배정]
+domain: commerce
 ---
 
 # RAG 검색

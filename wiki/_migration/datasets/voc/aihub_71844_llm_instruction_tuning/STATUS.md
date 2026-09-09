@@ -4,6 +4,8 @@ title: AI Hub 71844 — 민간 민원 상담 LLM 사전학습 및 Instruction Tu
 description: AI Hub 71844 — 민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터
 status: draft
 tags: [data]
+domain: neutral
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # AI Hub 71844 — 민간 민원 상담 LLM 사전학습 및 Instruction Tuning 데이터

@@ -5,6 +5,7 @@ description: intent·issue_code 는 100%인데 next_action 은 52.8%다. wait_fo
 status: draft
 impl_scope: cs — golden.jsonl 과 Proposed 실행 기록은 cs 도메인 평가다. sample 은 계약 테스트로 검증한다
 tags: [evaluation]
+domain: neutral
 ---
 
 # 분류 정확도와 confusion matrix

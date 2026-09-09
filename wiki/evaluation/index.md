@@ -3,6 +3,7 @@ type: guide
 title: Evaluation
 description: 무엇으로 증명하는가. 지표·프로토콜·골든셋·Judge 루브릭
 status: draft
+domain: neutral
 ---
 
 # Evaluation

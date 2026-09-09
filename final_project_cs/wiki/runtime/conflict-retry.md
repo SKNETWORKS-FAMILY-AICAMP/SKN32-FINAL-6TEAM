@@ -5,6 +5,7 @@ description: 낙관적 동시성에서 버전 충돌을 어떻게 판정하고 �
 status: draft
 tags: [state, architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 충돌과 재시도

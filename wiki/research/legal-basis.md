@@ -5,6 +5,8 @@ description: 청약철회와 개인정보 처리에 적용되는 법조문 원�
 status: draft
 tags: [contract, security, governance, documentation]
 impl_scope: cs — 이관 출처인 코퍼스 배분 기록이 cs 저장소에만 있다. 법령 사실 자체는 두 구현 모두에 해당한다
+domain: commerce
+domain_note: 전자상거래법 근거 조사다. 여행업은 별도 법령이라 다시 조사해야 한다
 ---
 
 ## 결론

@@ -4,6 +4,8 @@ title: 도메인을 갈아 끼울 때 무엇을 바꾸고 무엇을 두나
 description: 11행 체크리스트가 "무엇이 Core인가"의 정본이다. 이 목록이 sample 이 혼자 서는 근거다
 status: draft
 tags: [architecture, contract]
+domain: neutral
+domain_note: 무엇을 갈아 끼우나를 정하는 계약이다. 두 도메인을 대조한다
 ---
 
 # 도메인을 갈아 끼울 때
@@ -174,8 +176,21 @@ DOMAIN_WORDS = (
 
 **"무엇을 갈아 끼우나"의 목록은 살아 있고 "지금 뭐가 들어 있나"는 낡았다.** 이 문서는 후자를 옮기지 않는다 — 현재 값은 각 영역 문서가 정본이다.
 
+## 어느 문서를 다시 쓰나
+
+`[실측 2026-09-09]` 이 문서는 **무엇을 갈아 끼우나**를 정하고, 그게 **어느 문서에 걸리나**는 문서마다 front matter 의 `domain:` 이 말한다. 규칙은 [../../wiki/governance/domain-axis.md](../../wiki/governance/domain-axis.md).
+
+```bash
+python program/scripts/check_wiki.py --domain travel
+```
+
+★**2026-09-08 교체 때는 이 표시가 없어서 grep 으로 훑었고, 낱말이 안 든 문서를 놓쳤다** — `wiki/architecture/pack-model.md` 의 구조 표가 `Commerce Ops Pack` 인 채로 하루 넘게 남아 있었다. 다음 교체 때는 목록으로 나온다.
+
+`[실측 2026-09-09]` 지금 값 — 비-기록 문서 252개 중 `travel` 19 · `neutral` 169 · `commerce` 64(그중 **이유 없는 30개가 판올림을 못 따라간 것**).
+
 ## 관계
 
+- [../../wiki/governance/domain-axis.md](../../wiki/governance/domain-axis.md) — **문서 단위 교체 대상 목록**
 - [../../final_project_sample/wiki/quality/domain-swap.md](../../final_project_sample/wiki/quality/domain-swap.md) — sample 쪽 같은 문서
 - [../../wiki/architecture/core-vs-team.md](../../wiki/architecture/core-vs-team.md) — 경계 규칙
 - [data/migrations.md](data/migrations.md) — 마이그레이션 순서

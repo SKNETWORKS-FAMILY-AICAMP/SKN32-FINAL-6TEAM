@@ -18,6 +18,7 @@ sources:
   - id: S4
     title: 산업용 전기요금 kWh당 179원
     resource: https://www.kita.net/board/totalTradeNews/totalTradeNewsDetail.do?no=87073&siteId=1
+domain: commerce
 ---
 
 # 인프라 원가

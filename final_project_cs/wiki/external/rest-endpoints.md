@@ -4,6 +4,7 @@ title: 엔드포인트별 요청·응답 계약
 description: 다섯 경로의 필드·제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
 status: draft
 tags: [api, contract]
+domain: commerce
 ---
 
 # 엔드포인트별 요청·응답 계약

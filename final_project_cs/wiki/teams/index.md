@@ -3,6 +3,7 @@ type: guide
 title: Teams
 description: 업무 책임 단위. Registry 등록형이라 추가해도 Core가 안 바뀐다
 status: draft
+domain: travel
 ---
 
 # Teams

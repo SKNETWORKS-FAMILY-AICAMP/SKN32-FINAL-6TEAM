@@ -4,6 +4,8 @@ title: datasets 분할 결과 (적용 전)
 description: REPORT 10건을 22개로 나눈 결과. 아직 원본에 적용하지 않았다
 status: draft
 tags: [data, documentation]
+domain: neutral
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # datasets 분할 결과 (적용 전)

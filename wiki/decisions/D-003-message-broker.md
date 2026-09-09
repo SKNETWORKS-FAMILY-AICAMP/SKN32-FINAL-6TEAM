@@ -5,6 +5,7 @@ description: MVP는 in-process queue를 쓰고 MessageBusPort로 교체 가능�
 status: draft
 tags: [architecture]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # D-003 Message Broker는 in-process queue

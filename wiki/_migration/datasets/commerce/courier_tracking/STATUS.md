@@ -4,6 +4,8 @@ title: 택배 배송 이력 데이터셋
 description: 송장번호를 넣으면 그 택배가 언제 어디를 거쳐 갔는지 기록을 받아오는 도구와, 그 결과 데이터다.
 status: draft
 tags: [data]
+domain: commerce
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # 택배 배송 이력 데이터셋

@@ -5,6 +5,7 @@ description: 개인 AI 경로를 MCP로, 기업 Agent 경로를 A2A로 나눈 �
 status: draft
 tags: [architecture, api]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # A2A 채택 현황

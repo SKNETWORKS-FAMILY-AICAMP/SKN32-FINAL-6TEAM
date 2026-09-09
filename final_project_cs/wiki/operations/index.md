@@ -3,6 +3,7 @@ type: guide
 title: Operations
 description: 로컬에서 돌리는 법과 자주 막히는 곳
 status: draft
+domain: neutral
 ---
 
 # Operations

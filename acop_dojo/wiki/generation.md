@@ -5,6 +5,7 @@ description: 도장이 만드는 문서는 손으로 고치지 않는다. 명령
 status: draft
 tags: [testing, documentation]
 owners: [process:dojo-report]
+domain: neutral
 ---
 
 # 자동 생성물

@@ -4,6 +4,7 @@ title: 가드레일 수치 단일 출처
 description: 이 숫자들은 config/guardrails.yaml 에만 존재한다. 코드 두 곳에 나타나면 그 자체가 결함이다
 status: draft
 tags: [contract, architecture, security]
+domain: neutral
 ---
 
 # 가드레일 수치 단일 출처

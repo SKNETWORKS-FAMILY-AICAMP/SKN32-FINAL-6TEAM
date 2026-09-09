@@ -9,6 +9,7 @@ sources:
   - id: S1
     title: olist 리뷰 번역 벤치마크
     resource: ../../datasets/mt/olist_reviews_mt_bench/REPORT.md
+domain: neutral
 ---
 
 # 번역 모델 비교

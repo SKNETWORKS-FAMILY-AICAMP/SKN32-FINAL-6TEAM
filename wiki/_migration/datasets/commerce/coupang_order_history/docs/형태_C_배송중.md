@@ -4,6 +4,8 @@ title: 형태 C — 배송중 (실측 추가)
 description: 배송 전(A)과 배송 완료(B) 사이에 **배송중** 상태가 있다.
 status: draft
 tags: [architecture]
+domain: commerce
+domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 담아 둔 곳이라 고치지 않는다
 ---
 
 # 형태 C — 배송중 (실측 추가)

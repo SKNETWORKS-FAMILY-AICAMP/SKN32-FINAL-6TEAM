@@ -4,6 +4,7 @@ title: Team 을 어느 순서로 만드나
 description: 여섯 중 무엇을 먼저 하나. 2번이 기준 Team 인 이유와 1번의 함정
 status: draft
 tags: [architecture, contract]
+domain: commerce
 ---
 
 # Team 을 어느 순서로 만드나

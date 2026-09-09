@@ -5,6 +5,7 @@ description: 식사가 성립하는지 판정한다. 영업시간 데이터가 "
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]
+domain: travel
 ---
 
 # Dining Team

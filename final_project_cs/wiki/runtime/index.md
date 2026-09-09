@@ -3,6 +3,7 @@ type: guide
 title: Runtime
 description: Case가 만들어지고 흘러가고 끝나는 실행 기반. 이 영역은 도메인을 모른다
 status: draft
+domain: neutral
 ---
 
 # Runtime

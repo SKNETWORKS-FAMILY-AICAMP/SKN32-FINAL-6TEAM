@@ -5,6 +5,7 @@ description: 이 저장소에서 실제로 겪은 함정들. 증상에서 원인
 status: draft
 tags: [testing, gpu]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 막히면 여기부터

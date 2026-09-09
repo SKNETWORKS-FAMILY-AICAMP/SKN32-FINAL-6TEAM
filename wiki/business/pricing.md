@@ -5,6 +5,7 @@ description: 좌석당·건당·연간 라이선스 3안 비교. 아직 결정�
 status: draft
 tags: [cost]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # 가격안

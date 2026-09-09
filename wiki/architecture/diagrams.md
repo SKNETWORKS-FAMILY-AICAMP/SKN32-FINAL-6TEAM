@@ -5,6 +5,7 @@ description: 무엇을 그렸고 근거가 어디인가. 재생성 절차 포함
 status: draft
 tags: [architecture, documentation]
 owners: [human:미배정]
+domain: travel
 ---
 
 # 다이어그램 8종
@@ -29,13 +30,13 @@ python program/plan/diagram/build_showcase.py
 
 | 다이어그램 | 무엇을 그리나 |
 |---|---|
-| **유스케이스** | 외부 주체와 업무 기능 범위. Core·CS Pack·Commerce Pack·MCP·A2A·승인 경계·운영자 |
+| **유스케이스** | 외부 주체와 업무 기능 범위. Core·CS Pack·Commerce Pack·MCP·A2A·승인 경계·운영자 ★**낡음** |
 | **클래스** | 핵심 계약, `TeamExecutorPort`, `TeamResult`, `ActionProposal` 경계 |
 | **시퀀스** | Case 생성 → WAIT/RESUME → 승인 → 결과 반환 |
 | **상태** | 상태 전이 단일 진입점, 충돌, resume token, TTL 만료 |
 | **ERD** | 테이블·ENUM·FK·이벤트 소싱·중복 방지·`vector(1536)` |
 | **컴포넌트** | Core 8개 구성과 **두 Broker 분리**, 책임 경계 |
-| **A2A 시퀀스** | Agent Card → Task → input-required → Artifact. Catalog Remote 후보 선정 |
+| **A2A 시퀀스** | Agent Card → Task → input-required → Artifact. Catalog Remote 후보 선정 ★**낡음** |
 | **배포** | 3개 배포 단위와 **고객용 Composer 배제** 원칙 |
 
 ## ★ 상태 다이어그램의 라벨 두 종류
@@ -74,8 +75,20 @@ python program/plan/diagram/build_showcase.py
 | 테이블·ENUM | ERD |
 | Core 구성요소 | 컴포넌트 |
 | 배포 단위 | 배포 |
+| **도메인** | 유스케이스 · A2A 시퀀스 |
 
-`[미확보]` **자동 검사가 없다.** 계약이 바뀌어도 다이어그램은 조용히 낡는다.
+★**[2026-09-09 실측] 그림 여덟 중 둘이 이미 낡았다.** 2026-09-08 도메인 판올림을 안 반영했다.
+
+| 그림 | 무엇이 낡았나 |
+|---|---|
+| 유스케이스 | `CS Pack`·`Commerce Pack` 구획. v10 은 여행 Team 다섯이다 |
+| A2A 시퀀스 | Remote 후보가 `Catalog & Verification`. v10 §5 에 그 Team 이 없다 — 여행 쪽 대응은 **Place Verification 이고 아직 미해결**이다 |
+
+나머지 여섯(클래스·시퀀스·상태·ERD·컴포넌트·배포)은 **도메인 무관이라 안 낡았다.** 계약을 안 바꿨기 때문이다(v10 §0-2).
+
+`[미확보]` **다시 그리지 않았다.** PlantUML 서버 접속이 필요하고, 여행 Team 이 코드에 없어 유스케이스 확정 전이다.
+
+`[미확보]` **자동 검사가 없다.** 계약이 바뀌어도, 도메인이 바뀌어도 다이어그램은 조용히 낡는다.
 
 ## 관계
 

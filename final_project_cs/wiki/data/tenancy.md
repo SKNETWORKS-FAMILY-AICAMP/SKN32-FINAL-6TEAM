@@ -5,6 +5,7 @@ description: 모든 조회에 tenant_id를 넣는다. 조건 없는 쿼리는 �
 status: draft
 tags: [security, data]
 owners: [human:미배정]
+domain: neutral
 ---
 
 # tenant 격리

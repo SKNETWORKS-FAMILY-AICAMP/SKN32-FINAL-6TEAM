@@ -3,6 +3,7 @@ type: guide
 title: Delivery
 description: 언제 무엇을 내는가. 일정·마일스톤·DoD·역할
 status: draft
+domain: travel
 ---
 
 # Delivery
