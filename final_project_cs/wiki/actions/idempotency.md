@@ -5,7 +5,8 @@ description: 같은 요청이 여러 번 와도 side effect는 한 번. 재사�
 status: draft
 tags: [contract, architecture]
 owners: [human:미배정]
-domain: commerce
+domain: neutral
+domain_note: idempotency 기제는 도메인 무관이다. 예시가 환불 제안이다
 ---
 
 # idempotency

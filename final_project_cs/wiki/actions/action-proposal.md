@@ -5,7 +5,8 @@ description: Team이 반환하는 제안. 실행이 아니다. 근거 ID가 대�
 status: draft
 tags: [contract, agent]
 owners: [human:미배정]
-domain: commerce
+domain: neutral
+domain_note: ActionProposal 계약은 도메인 무관이다. refund.request 는 예시이자 계약 테스트 이름이다
 ---
 
 # ActionProposal

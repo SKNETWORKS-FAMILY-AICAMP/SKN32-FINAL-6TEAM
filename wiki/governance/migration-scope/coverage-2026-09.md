@@ -5,6 +5,7 @@ description: 2026-09-04~07 대조 6~19차. 19차에서 대조필요 39건을 다
 status: draft
 tags: [governance, documentation]
 domain: commerce
+domain_note: 이관 반영률을 그때 실측한 기록이다
 ---
 
 # 반영률 실측 — 6차 이후

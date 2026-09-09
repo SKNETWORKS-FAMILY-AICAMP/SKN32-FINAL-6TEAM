@@ -18,7 +18,8 @@ sources:
   - id: S4
     title: 산업용 전기요금 kWh당 179원
     resource: https://www.kita.net/board/totalTradeNews/totalTradeNewsDetail.do?no=87073&siteId=1
-domain: commerce
+domain: neutral
+domain_note: GPU·인프라 원가는 도메인 무관이다. 코퍼스 교체를 한 줄 언급한다
 ---
 
 # 인프라 원가

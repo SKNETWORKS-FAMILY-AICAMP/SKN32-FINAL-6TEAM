@@ -6,6 +6,7 @@ status: draft
 tags: [data, security]
 owners: [human:미배정]
 domain: commerce
+domain_note: 코드가 아직 커머스다 — 여행 전환 층 6(RAG 코퍼스 25문서 전부 쇼핑몰) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
 ---
 
 # RAG 검색

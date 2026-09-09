@@ -78,9 +78,10 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 | 검토·승인 1건 소요시간 | 내부 실험 | [business/unit-economics.md](business/unit-economics.md) |
 | 음성 채널 | 별도 원가 산정 | [business/infrastructure-cost.md](business/infrastructure-cost.md) |
 | ~~환불 계산 방식 전환 시점~~ | 쇼핑몰 전제라 여행에서는 해당 없음. D-001 재판정 대상 | [decisions/D-001-payment-ownership.md](decisions/D-001-payment-ownership.md) |
-| **MVP 대상 도시** (서울 권장) | 팀 결정 — 1주차 | v10 §0-3 |
-| **지원 언어 범위** | 영어 1개로 시작하나 방한 상위는 중국·일본·대만 | 동 |
-| **액티비티 운영 변경 정보를 어디서 받나** | 도시 선정 후 표본 조사 — 2주차 | 동 |
+| ~~MVP 대상 도시~~ | **닫힘 — 서울** (2026-09-10). 기술 제약이 아니라 검증 주장의 분모다 | [decisions/D-016-scope-narrowing-reasons.md](decisions/D-016-scope-narrowing-reasons.md) |
+| ~~지원 언어 범위~~ | **닫힘 — 영어 하나** (2026-09-09). 고객 언어 번역은 고객 에이전트 몫 | 동 |
+| **액티비티 운영 변경 정보를 어디서 받나** | 서울권 표본 조사 — 2주차. **도시가 정해져 시작 가능** | v10 §0-3 |
+| **구현 카탈로그를 어떻게 관리하나** | 손으로 유지하는 목록 둘을 없애는 안. UI 화면 셋 | [decisions/D-015-implementation-catalog.md](decisions/D-015-implementation-catalog.md) |
 | **59,000원 수용 여부** | 유료 파일럿 20~30팀 | 동 |
 | **`A2A`·`MCP`·`Docker`·`AWS`를 v10이 말하지 않는다** | 빠진 것인지 뺀 것인지 안 정해졌다 | `program/plan/A-COP_여행Team모듈_구성안.md` §0 |
 

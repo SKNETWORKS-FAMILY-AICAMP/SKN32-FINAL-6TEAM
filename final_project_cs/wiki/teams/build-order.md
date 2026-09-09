@@ -85,7 +85,7 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 | 2 | `business_subject` 폴백 제거 | 계약이라 나중에 바꾸면 그 위가 전부 따라 바뀐다 |
 | 3 | Activity 판정 규칙 실물화 | 지금은 계약 포장만 있다 |
 | 4 | 선제 조정 루프 | Mobility 와 함께 (v10 §9-B 5주차) |
-| `[미확보]` | **Place Verification** | v10 §5 에 없다. A2A 시연 자리가 이것뿐이라 구성안이 제안했고 **미해결**이다 |
+| 5 | **Place Verification 등록** | `[실측 2026-09-10]` **원격은 생겼다**(`travel_remote_agent.py` 202줄 · 통합 테스트 7건). `config/project.yaml` 등록이 **0건**이라 아직 부를 수 없다 |
 
 <details>
 <summary>v9(쇼핑몰) 순서 여섯 — 무엇이 갈렸는지 보려고 남긴다</summary>
@@ -99,6 +99,8 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 ★**그 함정이 지금 더 큰 모양으로 재현됐다.** 이번엔 빈 목록이 아니라 **분류기가 그 case_type 을 아예 못 만든다.** 같은 사고의 상류 버전이다.
 
 ★**6번을 마지막에 둔 이유** — local canonical 결과와 승인 경계를 먼저 고정해야 원격이 그것과 같은지 잰다. **Place Verification 에도 그대로 걸린다.**
+
+`[실측 2026-09-10]` **그런데 이번엔 원격이 먼저 나왔다.** 로컬 여섯이 라우팅도 안 되는 상태에서 원격이 생겼다 — 순서를 뒤집은 이유는 **A2A 로 부를 상대가 아예 없어졌기 때문**이고(등록 교체로 `catalog_verification` 이 빠졌다), 그 원격은 **시뮬레이터라 비교 기준이 아니라 왕복 증명이 목적**이다.
 
 </details>
 

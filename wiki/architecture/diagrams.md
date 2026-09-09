@@ -82,7 +82,7 @@ python program/plan/diagram/build_showcase.py
 | 그림 | 무엇이 낡았나 |
 |---|---|
 | 유스케이스 | `CS Pack`·`Commerce Pack` 구획. v10 은 여행 Team 다섯이다 |
-| A2A 시퀀스 | Remote 후보가 `Catalog & Verification`. v10 §5 에 그 Team 이 없다 — 여행 쪽 대응은 **Place Verification 이고 아직 미해결**이다 |
+| A2A 시퀀스 | Remote 후보가 `Catalog & Verification`. v10 §5 에 그 Team 이 없다 — **여행 쪽 대응 `Place Verification` 이 2026-09-10 에 생겼다**(`travel_remote_agent.py`). 그림만 안 고쳤다 |
 
 나머지 여섯(클래스·시퀀스·상태·ERD·컴포넌트·배포)은 **도메인 무관이라 안 낡았다.** 계약을 안 바꿨기 때문이다(v10 §0-2).
 

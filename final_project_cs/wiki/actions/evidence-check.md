@@ -5,7 +5,8 @@ description: 제안의 식별자·금액을 DB와 대조해 실행 전에 차단
 status: draft
 tags: [security, architecture]
 owners: [human:미배정]
-domain: commerce
+domain: neutral
+domain_note: 근거 대조 기제는 도메인 무관이다. 불변식 표의 예시가 커머스다
 ---
 
 # 근거 대조

@@ -4,6 +4,7 @@ title: Data
 description: 스키마·마이그레이션·tenant 격리. DDL 전문은 문서에 옮겨 적지 않는다
 status: draft
 domain: commerce
+domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
 ---
 
 # Data

@@ -6,6 +6,7 @@ status: draft
 tags: [governance, documentation]
 owners: [human:미배정]
 domain: commerce
+domain_note: 분류 체계 검증 9차의 기록이다
 ---
 
 # 9차 — dataset 28건 전건 판정

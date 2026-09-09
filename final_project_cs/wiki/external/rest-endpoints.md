@@ -5,6 +5,7 @@ description: 다섯 경로의 필드·제약·상태 전이. rest-api.md 가 300
 status: draft
 tags: [api, contract]
 domain: commerce
+domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — 라우트 25개 중 trip 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
 ---
 
 # 엔드포인트별 요청·응답 계약

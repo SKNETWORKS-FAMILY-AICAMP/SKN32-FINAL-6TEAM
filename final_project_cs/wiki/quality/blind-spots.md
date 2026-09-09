@@ -10,6 +10,7 @@ automation:
   owner: process:dojo-report
   manual_edit: false
 domain: commerce
+domain_note: 그때 실측한 사각지대다. 여행 Team 테스트가 붙으면 다시 잰다
 ---
 
 # 테스트 사각지대

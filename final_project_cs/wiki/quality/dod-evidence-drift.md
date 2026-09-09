@@ -6,6 +6,7 @@ status: draft
 tags: [testing]
 owners: [human:미배정]
 domain: commerce
+domain_note: 그때 재검증한 값의 기록이다
 ---
 
 # DoD evidence 재검증 — 낡은 근거와 새 결함
