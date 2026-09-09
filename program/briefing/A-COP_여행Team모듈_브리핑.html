@@ -270,12 +270,13 @@
     <div class="map">
       <div class="card">
         <h4>Activity <span class="pill pill--mvp">MVP</span></h4>
+        <p class="note">예시 — <b>골프(티타임)</b> · 한강 수상 액티비티 · 겨울 스키·눈썰매. <b>우천 위약금 규정이 문서로 있고 예약 시각이 고정</b>인 레저가 이 Team 의 규칙(날씨 조건 · 기상청 감시)에 맞는다.</p>
         <p class="from">← <code class="inl">return_refund</code> (396줄)</p>
         <p class="why"><strong>취소 가능 판정 → 접수 → 환급액 계산</strong>의 3단 구조가 같다.
         반품 기한↔취소 기한, 반품 사유별 배송비 부담↔우천 취소 위약금율, 수량 초과↔인원 초과.</p>
       </div>
       <div class="card">
-        <h4>Booking Execution <span class="pill pill--mvp">MVP</span></h4>
+        <h4>Booking Handoff <span class="pill pill--mvp">MVP</span></h4>
         <p class="from">← <code class="inl">procurement_order_payment</code> (366줄)</p>
         <p class="why">예약 생성·변경·취소·결제 상태의 자리가 같다.
         협약사 커넥터는 <strong>Mock</strong>으로 만든다.</p>
@@ -364,7 +365,7 @@
 
   <div class="section">
     <h2><span class="num">4</span> MVP는 둘</h2>
-    <p class="lead">최종발표까지 7주. Activity와 Booking Execution 둘만 필수다.</p>
+    <p class="lead">최종발표까지 7주. Activity와 Booking Handoff 둘만 필수다.</p>
 
     <div class="tablewrap">
       <table>
@@ -377,7 +378,7 @@
             예약금이 걸려 실패 비용이 크고, 시연에서 사건이 한눈에 보인다.</td>
           </tr>
           <tr>
-            <td><strong>Booking Execution</strong></td>
+            <td><strong>Booking Handoff</strong></td>
             <td><span class="pill pill--mvp">MVP</span></td>
             <td>계획서 v10의 <strong>“협약사 위임 실행”이 제품이 팔려는 것</strong>이다.
             이게 없으면 “고객이 방해받지 않고 보고만 받는다”를 보여줄 수 없다.</td>
@@ -390,7 +391,8 @@
       </table>
     </div>
 
-    <h3>Booking Execution이 MVP로 올라온 이유</h3>
+    <h3>Booking Handoff가 MVP로 올라온 이유</h3>
+    <p class="note">★이름이 <b>Execution 이 아니라 Handoff</b> 인 것이 핵심이다 — 기본 동작은 <b>인계</b>이고, 예약을 실제로 바꾸는 것은 <b>시연 모드 한정</b>이다(계획서 v10 §5). Team 은 side effect 를 실행하지 않는다는 규칙(§6)은 그대로다.</p>
     <p>처음 초안에서는 “공급자 계약이 없으니 나중에”로 미뤘다.
     <strong>그 판단은 틀렸다.</strong></p>
     <div class="callout">
