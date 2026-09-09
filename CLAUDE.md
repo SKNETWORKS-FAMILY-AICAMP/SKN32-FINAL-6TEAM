@@ -17,7 +17,7 @@
 
 ★`[2026-09-08 판올림]` 이 표는 09-07 까지 **v9 쇼핑몰** 기준이었다. 도메인이 여행으로
 바뀌었는데 **매 세션 자동으로 실리는 이 표만 안 바뀌어**, 모든 세션이 틀린 사실로 시작하고
-있었다. v9 기준 표가 필요하면 `program/plan/archive/` 의 v9 §0 을 본다.
+있었다. v9 기준 표가 필요하면 `program/plan/A-COP_구현계획서_v9.md` §0 을 본다 — **v9 는 archive 가 아니라 `program/plan/` 에 있다.** archive 는 v5~v8 이고 2026-09-09 에 압축했다(`program/plan/archive/README.md`).
 
 이 표가 오래됐으면 [`program/research/index.md`](program/research/index.md)의 「현재 기준 사실」 표가 정본이다. 둘은 같이 갱신한다. 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)와 각 저장소의 `wiki/`가 정본이다(2026-09-07 전환 완료). **읽는 순서는 wiki 먼저다.** 작업 기록(evidence·리포트)은 각 저장소의 `wiki/records/`에 있다(2026-09-08 `docs/`를 통합) — wiki가 인용한 근거를 확인할 때 연다. 두 곳이 다르면 wiki를 고치거나, 기록이 낡았다는 주석을 붙인다 — 기록 자체는 고치지 않는다.
 
