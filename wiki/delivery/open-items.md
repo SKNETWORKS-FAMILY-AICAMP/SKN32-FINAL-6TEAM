@@ -37,6 +37,8 @@ domain_note: 남은 일 목록이다. 커머스에서 넘어온 항목이 섞여
 | 항목 | 왜 AI가 안 하나 |
 |---|---|
 | `git push -u origin workspace` | **AI 세션은 푸시를 실행하지 않는다** |
+| **MVP 대상 도시 하나 고르기** (서울 권장) | **팀 결정.** 왜 좁히는지는 정해졌다(검증 주장의 분모) — 어디인지가 남았다 → [D-016](../decisions/D-016-scope-narrowing-reasons.md) |
+| ~~지원 언어 범위~~ | **닫힘 (2026-09-09).** 우리는 영어 하나만 내고 **고객 언어 번역은 고객 에이전트 몫**이다. MVP 절삭이 아니라 우리 층의 일이 아니다 |
 | ~~**★ wiki 저장소 전환**~~ | **닫힘 — 이미 실행됐다.** `[실측 2026-09-07]` 사용자 호출로 같은 날 243개 이동(`d976932`). 이 줄은 실행 뒤에도 "부르면 실행"으로 남아 있었다 → [D-012](../decisions/D-012-cutover-timing.md) |
 
 ## 미확인
@@ -100,6 +102,22 @@ domain_note: 남은 일 목록이다. 커머스에서 넘어온 항목이 섞여
 (`final_project_cs/wiki/records/evidence/` 의 `DoD-EVAL-DATASETS` 판정도
 "golden/holdout 이 쇼핑몰 도메인" 이라고 적혀 있다). **그 결정 전에는 이 셋의
 유효 여부를 말할 수 없다.**
+
+## ★ [2026-09-09] 구현 카탈로그를 UI 에서 관리한다 — 안이 나왔고 결정이 남았다
+
+`[실측]` 사용자 지시 2026-09-09. 상세와 갈래 넷은 [../decisions/D-015-implementation-catalog.md](../decisions/D-015-implementation-catalog.md).
+
+**무엇이 문제인가.** 새 Team 을 붙일 때 코어에 손으로 유지하는 목록 **둘**을 고쳐야 한다 — `app/core/project_config.py` 의 `KNOWN_IMPLEMENTATION_REFS` 와 `app/composer_host.py` 의 `IMPLEMENTATIONS`. **안 고치면 조립은 뜨는데 Composer 로 저장이 안 된다**(422). 2026-09-09 에 실제로 그렇게 됐고 **e2e 하나에서만 터졌다.**
+
+**권고안.** 목록을 UI 로 옮기는 게 아니라 **목록을 없앤다** — 배포된 `app/modules/` 를 스캔해 카탈로그를 계산한다. `TeamManifest.display_name` 이 이미 계약에 있다.
+
+★**콘솔에서 ref 를 직접 등록하는 안은 기각했다.** [D-013](../decisions/D-013-declarative-team.md) 이 임의 import 를 원격 코드 실행으로 판정했고, 게다가 **모듈 파일이 서버에 없으면 어차피 import 가 안 되므로 배포 없이 Team 을 추가하게 해 주지도 않는다.**
+
+| 누구 | 무엇 |
+|---|---|
+| **cs 코드 세션** | 스캔 방식 구현. 스캔 범위(`app/modules/`)를 **선언에 둬야** 나중에 코어를 안 고치고 넓힌다. `description` 을 manifest 에 넣을지 결정 |
+| **UI 세션** | **① 드리프트 보기**(배포됐는데 선언에 없는 것 / 선언에 있는데 파일이 없는 것) — 이번 사고가 정확히 첫째였고 아무 화면에도 안 보였다 · ② 표시 문구 편집 · ③ 카탈로그 항목의 출처 표시 |
+| **결정 필요** | 표시 문구를 manifest(코드)에 둘지 Composer 선언(데이터)에 둘지. 운영자가 고치려면 데이터여야 하는데 그러면 Team 이 자기 이름을 말하지 못한다 |
 
 ## 문서 쪽 열린 항목
 

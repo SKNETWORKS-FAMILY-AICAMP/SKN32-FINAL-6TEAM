@@ -3,7 +3,8 @@ type: guide
 title: Decisions
 description: 되돌리려면 근거가 필요한 선택들. 기각한 대안도 함께 기록한다
 status: draft
-domain: commerce
+domain: neutral
+domain_note: 결정 목록이다. 개별 결정의 도메인은 각 문서가 말한다
 ---
 
 # Decisions
@@ -83,4 +84,11 @@ domain: commerce
 | ID | 무엇 | 상태 |
 |---|---|---|
 | [D-014](D-014-judge-rebaseline.md) | **judge 를 v1 에서 v3 로 바꾼다** | **결정·시행.** v1 의 `policy_grounding` 이 분산 0 인 상수였다 |
+
+## [2026-09-09 추가] — 도메인 교체가 드러낸 것 둘
+
+| ID | 무엇 | 상태 |
+|---|---|---|
+| [D-015](D-015-implementation-catalog.md) | **구현 카탈로그를 손으로 유지하지 않는다** | **미결.** 사용자가 "UI 에서 관리 가능하게" 방향 지시(09-09). 갈래 넷 중 ④(배포된 `app/modules/` 스캔) 권고 + UI 화면 셋 |
+| [D-016](D-016-scope-narrowing-reasons.md) | **도시와 언어는 좁히는 이유가 다르다** | **결정 (09-09).** 도시는 검증 주장의 범위, 언어는 책임 경계 — 번역은 고객 에이전트 몫 |
 
