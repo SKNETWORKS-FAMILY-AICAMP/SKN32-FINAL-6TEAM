@@ -68,7 +68,7 @@ v9 §3-A 의 「부트캠프 주제 요구사항 ↔ 구현 대응표」(11행)�
 | | 개수 | 무엇 |
 |---|---:|---|
 | 코어(basement) — **손대지 않음** | 12영역 | 생명주기·계약·Registry·Context Broker·대조 규칙 엔진·Controller·Outbox·Ports·운영 UI·A2A·방어 지표 |
-| Team — **뼈대를 이어받음** | **3** | Activity(`return_refund`) · Mobility(`fulfillment_logistics`) · Booking Handoff(`procurement_order_payment`) |
+| Team — **뼈대를 이어받음** | **3** | **Activity**(레저 활동) · **Mobility**(구간 이동) · **Booking Handoff**(업체 예약 인계). 판정 구조를 각각 `return_refund` · `fulfillment_logistics` · `procurement_order_payment` 에서 가져온다 — **출처이지 팀 이름이 아니다** |
 | Team — **새로 만듦** | **1** | Dining |
 | Team — **등록만** | **2** | Lodging, Flight |
 | **v10 §5 소계** | **6** | 위 셋 |
@@ -125,6 +125,8 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 | `procurement_order_payment` | 366 | `order.create` · `order.modify` · `order.cancel` · `payment.status` | **Booking Handoff** | 예약 생성·변경·취소·결제 상태의 자리가 같다. **v10 에서 MVP 필수** — 협약사 커넥터를 Mock 으로 세운다 |
 | `voc_store_manager` | 101 | `voc.aggregate` · `voc.escalate` | **Trip Feedback** | 지금도 껍데기다(집계는 코어 1 소유). 여행에서도 껍데기로 유지 |
 
+★**이 표는 「무엇을 베꼈나」를 적은 것이지 「무엇인가」를 적은 것이 아니다.** `return_refund` 줄이 Activity 를 환불 팀으로 만들지 않는다 — Activity 는 **골프·수상·스키 같은 레저 활동 예약**을 판정하고, 그 판정이 취소 기한·위약금율을 다루기 때문에 구조가 같을 뿐이다.
+
 ★**"이어받는다"는 코드를 복사한다는 뜻이 아니다.** 판정 3단 구조·감시 소스
 연결부·ActionProposal 반환 모양을 뼈대로 쓰고, **판정 규칙과 어휘는 전부 새로
 쓴다.** 어느 쪽인지 아래 4절에서 나눈다.
@@ -135,11 +137,14 @@ Team 이 자기 객체만 보면 되도록 하려는 분리다.
 
 ### A. 여행 객체 Team
 
-| # | Team | 검증 규칙 | 감시 소스 | 재계획 | 출처 |
-|---|---|---|---|---|---|
-| 1 | **Activity** | 예약 시간·운영일·인원·날씨 조건·취소 기한·위약금율 | 운영 공지, 기상청 초단기예보, 예약 확인 | 같은 시간대 대체 액티비티, 날짜 이동, 환급 안내 | `return_refund` 뼈대 |
-| 2 | **Dining** | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 영업 공지, Places 영업시간(오늘 포함 7일) | 인접 대안, 식사 시간 이동 | **신규** |
-| 3 | **Mobility** | 구간 이동 시간·환승·막차·여유 시간 | 운행 정보, Routes API | 경로·순서 재배열 | `fulfillment_logistics` 뼈대 |
+★**팀 이름은 「무엇을 다루는가」로 읽는다. 출처 열은 판정 구조를 어디서 베꼈는지일 뿐 팀의 정체가 아니다.**
+`Activity(return_refund)` 처럼 붙여 부르면 **환불 팀으로 오해된다** — 실제로 2026-09-09 에 그렇게 잘못 그린 도해가 나왔다.
+
+| # | Team | **무엇을 다루나** | 검증 규칙 | 감시 소스 | 재계획 | 뼈대 출처 |
+|---|---|---|---|---|---|---|
+| 1 | **Activity** | **레저 활동 예약** — 골프(티타임) · 한강 수상 · 겨울 스키·눈썰매 | 예약 시간·운영일·인원·날씨 조건·취소 기한·위약금율 | 운영 공지, 기상청 초단기예보, 예약 확인 | 같은 시간대 대체 액티비티, 날짜 이동, 환급 안내 | `return_refund` |
+| 2 | **Dining** | **식당 예약** — 영업 여부와 동행 조건 | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 영업 공지, Places 영업시간(오늘 포함 7일) | 인접 대안, 식사 시간 이동 | **없음(신규)** |
+| 3 | **Mobility** | **구간 이동** — 환승·막차·여유 | 구간 이동 시간·환승·막차·여유 시간 | 운행 정보, Routes API | 경로·순서 재배열 | `fulfillment_logistics` |
 | 4 | **Lodging** | — | — | — | **등록만** |
 | 5 | **Flight** | — | — | — | **등록만** |
 

@@ -42,13 +42,13 @@
 
 <p class="eyebrow">A-COP · V9 SHOPPING → V10 TRAVEL</p>
 <h1>여행 Team 모듈 아키텍처</h1>
-<p class="sub">그대로 쓰는 것 · 뼈대만 이어받는 것 · 새로 만드는 것 · 등록만 · 미해결을 한 장에. 기준선 <code>A-COP_구현계획서_v10.md</code> §5</p>
+<p class="sub">그대로 쓰는 것 · 뼈대만 이어받는 것 · 새로 만드는 것 · 등록만 · 미해결을 한 장에. 기준선 <code>A-COP_구현계획서_v10.md</code> §5<br><strong>각 팀은 여행 객체로 읽는다</strong> — Activity 는 <strong>골프·수상·스키 같은 레저 예약</strong>이지 환불 팀이 아니다. <code>← return_refund</code> 는 <strong>판정 구조만</strong> 물려받았다는 뜻이다.</p>
 
 <div class="diagram">
 <svg viewBox="0 0 1216 560" role="img" aria-labelledby="acop-teams-title acop-teams-desc"
      xmlns="http://www.w3.org/2000/svg">
   <title id="acop-teams-title">A-COP 여행 Team 모듈 아키텍처</title>
-  <desc id="acop-teams-desc">외부 에이전트가 제출한 일정을 코어 Controller 가 받아 여섯 Team 에 위임하고, Team 은 판정만 해 ActionProposal 로 코어 Action 층에 돌려준다. 코어는 v9 에서 그대로 쓰고, Activity·Mobility·Booking Handoff 는 v9 팀의 뼈대만 이어받으며, Dining 은 새로 만들고, Lodging 과 Flight 는 등록만 하며, Place Verification 은 v10 에 없어 미해결이다.</desc>
+  <desc id="acop-teams-desc">외부 에이전트가 제출한 일정을 코어 Controller 가 받아 여섯 Team 에 위임하고, Team 은 판정만 해 ActionProposal 로 코어 Action 층에 돌려준다. Activity 는 골프·수상·스키 같은 레저 예약을, Dining 은 식당을, Mobility 는 이동을, Booking Handoff 는 업체 예약 변경 인계를 판정한다. 이 넷은 v9 쇼핑몰 팀의 판정 구조만 뼈대로 가져오고 규칙과 어휘는 새로 쓴다. 코어는 v9 에서 그대로 쓰고, Lodging 과 Flight 는 등록만 하며, Place Verification 은 v10 에 없어 미해결이다.</desc>
 
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
@@ -158,9 +158,9 @@
   <text x="168" y="396" fill="#161c28" font-size="12" font-weight="600"
         font-family="'Geist',sans-serif" text-anchor="middle">Activity</text>
   <text x="168" y="412" fill="#6b7488" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">← return_refund 396</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">golf · water · ski</text>
   <text x="168" y="428" fill="#7a8599" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">MVP</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">MVP · ← return_refund</text>
 
   <!-- Dining — FOCAL 1 -->
   <rect x="264" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
@@ -173,9 +173,9 @@
   <text x="344" y="396" fill="#161c28" font-size="12" font-weight="600"
         font-family="'Geist',sans-serif" text-anchor="middle">Dining</text>
   <text x="344" y="412" fill="#6b7488" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">no v9 ancestor</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">hours · closure · diet</text>
   <text x="344" y="428" fill="#7a8599" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">2nd</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">2nd · no v9 ancestor</text>
 
   <!-- Mobility -->
   <rect x="440" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
@@ -188,9 +188,9 @@
   <text x="520" y="396" fill="#161c28" font-size="12" font-weight="600"
         font-family="'Geist',sans-serif" text-anchor="middle">Mobility</text>
   <text x="520" y="412" fill="#6b7488" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">← fulfillment 163</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">transit · last train</text>
   <text x="520" y="428" fill="#7a8599" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">3rd</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">3rd · ← fulfillment</text>
 
   <!-- Booking Handoff -->
   <rect x="616" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
@@ -203,9 +203,9 @@
   <text x="696" y="396" fill="#161c28" font-size="12" font-weight="600"
         font-family="'Geist',sans-serif" text-anchor="middle">Booking Handoff</text>
   <text x="696" y="412" fill="#6b7488" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">← procurement 366</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">change link · delta</text>
   <text x="696" y="428" fill="#7a8599" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">MVP · not Execution</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">MVP · ← procurement</text>
 
   <!-- Lodging / Flight -->
   <rect x="792" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
@@ -234,9 +234,9 @@
   <text x="1048" y="396" fill="#161c28" font-size="12" font-weight="600"
         font-family="'Geist',sans-serif" text-anchor="middle">Place Verification</text>
   <text x="1048" y="412" fill="#6b7488" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">← catalog 121 · A2A</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">place · hours · A2A</text>
   <text x="1048" y="428" fill="#a8720c" font-size="9"
-        font-family="'Geist Mono',monospace" text-anchor="middle">not in v10</text>
+        font-family="'Geist Mono',monospace" text-anchor="middle">OPEN · ← catalog</text>
 
   <!-- ============ LEGEND ============ -->
   <line x1="64" y1="492" x2="1152" y2="492" stroke="rgba(22,28,40,0.10)" stroke-width="0.8"/>
