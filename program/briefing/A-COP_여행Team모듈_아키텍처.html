@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-COP 여행 Team 모듈 아키텍처</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbfcfd; --paper-2:#f1f4f8; --ink:#161c28; --muted:#6b7488;
+    --soft:#7a8599; --rule:rgba(22,28,40,0.12); --rule-solid:#dbe0ea;
+    --accent:#a8720c; --accent-tint:rgba(168,114,12,0.10); --link:#2f5bd8;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper); color:var(--ink); margin:0;
+       padding:48px 24px 72px;
+       font-family:'Geist','Noto Sans KR',sans-serif; font-size:15px; line-height:1.7}
+  .wrap{max-width:1240px; margin:0 auto}
+  .eyebrow{font-family:'Geist Mono',monospace; font-size:8px; letter-spacing:0.14em;
+           text-transform:uppercase; color:var(--soft); margin:0 0 8px}
+  h1{font-family:'Instrument Serif','Noto Sans KR',serif; font-size:1.75rem;
+     font-weight:400; margin:0 0 6px; line-height:1.3}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 32px}
+  .diagram{overflow-x:auto; margin:0 0 40px}
+  svg{display:block; min-width:1000px; width:100%; height:auto}
+  .cards{display:grid; grid-template-columns:1.15fr 1fr 0.85fr; gap:16px; margin:0 0 32px}
+  .card{background:#ffffff; border:1px solid var(--rule); border-radius:6px; padding:1.25rem}
+  .card h3{font-size:15px; margin:0; font-weight:600}
+  .card-header{display:flex; align-items:center; gap:8px; margin:4px 0 10px}
+  .card-dot{width:7px; height:7px; border-radius:50%; flex:none}
+  .dot-ink{background:var(--ink)} .dot-accent{background:var(--accent)}
+  .dot-muted{background:var(--muted)}
+  .card ul{margin:0; padding-left:18px} .card li{margin:5px 0; font-size:13.5px}
+  code{font-family:'Geist Mono',monospace; font-size:12.5px;
+       background:var(--paper-2); padding:1px 5px; border-radius:3px}
+  footer{margin-top:48px; padding-top:16px; border-top:1px solid var(--rule);
+         font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted); line-height:1.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="eyebrow">A-COP · V9 SHOPPING → V10 TRAVEL</p>
+<h1>여행 Team 모듈 아키텍처</h1>
+<p class="sub">그대로 쓰는 것 · 뼈대만 이어받는 것 · 새로 만드는 것 · 등록만 · 미해결을 한 장에. 기준선 <code>A-COP_구현계획서_v10.md</code> §5</p>
+
+<div class="diagram">
+<svg viewBox="0 0 1216 560" role="img" aria-labelledby="acop-teams-title acop-teams-desc"
+     xmlns="http://www.w3.org/2000/svg">
+  <title id="acop-teams-title">A-COP 여행 Team 모듈 아키텍처</title>
+  <desc id="acop-teams-desc">외부 에이전트가 제출한 일정을 코어 Controller 가 받아 여섯 Team 에 위임하고, Team 은 판정만 해 ActionProposal 로 코어 Action 층에 돌려준다. 코어는 v9 에서 그대로 쓰고, Activity·Mobility·Booking Handoff 는 v9 팀의 뼈대만 이어받으며, Dining 은 새로 만들고, Lodging 과 Flight 는 등록만 하며, Place Verification 은 v10 에 없어 미해결이다.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6b7488"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#a8720c"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2f5bd8"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#fbfcfd"/>
+
+  <!-- ============ ZONES (배경) ============ -->
+  <rect x="440" y="144" width="340" height="120" rx="8"
+        fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.10)" stroke-width="0.8"/>
+  <rect x="568" y="148" width="84" height="12" rx="2" fill="#fbfcfd"/>
+  <text x="610" y="157" fill="rgba(22,28,40,0.40)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.14em">CORE · KEEP</text>
+
+  <rect x="64" y="320" width="1088" height="144" rx="8"
+        fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.10)" stroke-width="0.8"/>
+  <rect x="524" y="324" width="168" height="12" rx="2" fill="#fbfcfd"/>
+  <text x="608" y="333" fill="rgba(22,28,40,0.40)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.14em">TEAM MODULES · JUDGE ONLY</text>
+
+  <!-- ============ ARROWS (노드보다 먼저) ============ -->
+
+  <!-- 외부 에이전트 → Controller -->
+  <path d="M 610,100 V 130 Q 610,138 602,138 H 542 Q 534,138 534,146 V 176"
+        fill="none" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+  <rect x="616" y="108" width="80" height="12" rx="2" fill="#fbfcfd"/>
+  <text x="656" y="117" fill="#2f5bd8" font-size="8" font-family="'Geist Mono',monospace"
+        text-anchor="middle" letter-spacing="0.06em">POST /v1/trips</text>
+
+  <!-- Controller → 위임 버스 -->
+  <line x1="534" y1="240" x2="534" y2="296" stroke="#6b7488" stroke-width="1.2"/>
+  <line x1="168" y1="296" x2="1048" y2="296" stroke="#6b7488" stroke-width="1.2"/>
+  <rect x="564" y="276" width="76" height="12" rx="2" fill="#fbfcfd"/>
+  <text x="602" y="285" fill="#6b7488" font-size="8" font-family="'Geist Mono',monospace"
+        text-anchor="middle" letter-spacing="0.06em">TEAMTASK</text>
+
+  <!-- 버스 → 각 Team -->
+  <line x1="168" y1="296" x2="168" y2="352" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="344" y1="296" x2="344" y2="352" stroke="#a8720c" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+  <line x1="520" y1="296" x2="520" y2="352" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="696" y1="296" x2="696" y2="352" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="872" y1="296" x2="872" y2="352" stroke="rgba(22,28,40,0.30)" stroke-width="1"
+        stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="1048" y1="296" x2="1048" y2="352" stroke="#a8720c" stroke-width="1"
+        stroke-dasharray="4,3" marker-end="url(#arrow-accent)"/>
+
+  <!-- Team → Action 층 (제안만) -->
+  <path d="M 1152,388 H 1168 Q 1176,388 1176,380 V 216 Q 1176,208 1168,208 H 764"
+        fill="none" stroke="#6b7488" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <rect x="920" y="188" width="100" height="12" rx="2" fill="#fbfcfd"/>
+  <text x="970" y="197" fill="#6b7488" font-size="8" font-family="'Geist Mono',monospace"
+        text-anchor="middle" letter-spacing="0.06em">ACTIONPROPOSAL</text>
+
+  <!-- ============ NODES ============ -->
+
+  <!-- 외부 에이전트 -->
+  <rect x="520" y="48" width="180" height="52" rx="6" fill="#fbfcfd"/>
+  <rect x="520" y="48" width="180" height="52" rx="6"
+        fill="rgba(107,116,136,0.10)" stroke="#7a8599" stroke-width="1"/>
+  <text x="610" y="72" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist','Noto Sans KR',sans-serif" text-anchor="middle">외부 에이전트</text>
+  <text x="610" y="88" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">OpenClaw · Hermes · LLM</text>
+
+  <!-- Controller -->
+  <rect x="464" y="176" width="140" height="64" rx="6" fill="#fbfcfd"/>
+  <rect x="464" y="176" width="140" height="64" rx="6"
+        fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
+  <rect x="472" y="184" width="32" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.40)" stroke-width="0.8"/>
+  <text x="488" y="193" fill="rgba(22,28,40,0.80)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">KEEP</text>
+  <text x="534" y="214" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Controller</text>
+  <text x="534" y="230" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">app/application</text>
+
+  <!-- Action Layer -->
+  <rect x="628" y="176" width="128" height="64" rx="6" fill="#fbfcfd"/>
+  <rect x="628" y="176" width="128" height="64" rx="6"
+        fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
+  <rect x="636" y="184" width="32" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.40)" stroke-width="0.8"/>
+  <text x="652" y="193" fill="rgba(22,28,40,0.80)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">KEEP</text>
+  <text x="692" y="214" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Action Layer</text>
+  <text x="692" y="230" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">side effect only here</text>
+
+  <!-- Activity -->
+  <rect x="88" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="88" y="352" width="160" height="88" rx="6"
+        fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+  <rect x="96" y="360" width="48" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.40)" stroke-width="0.8"/>
+  <text x="120" y="369" fill="rgba(22,28,40,0.80)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">REBUILD</text>
+  <text x="168" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Activity</text>
+  <text x="168" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">← return_refund 396</text>
+  <text x="168" y="428" fill="#7a8599" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">MVP</text>
+
+  <!-- Dining — FOCAL 1 -->
+  <rect x="264" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="264" y="352" width="160" height="88" rx="6"
+        fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <rect x="272" y="360" width="28" height="12" rx="2" fill="transparent"
+        stroke="rgba(168,114,12,0.50)" stroke-width="0.8"/>
+  <text x="286" y="369" fill="#a8720c" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">NEW</text>
+  <text x="344" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Dining</text>
+  <text x="344" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">no v9 ancestor</text>
+  <text x="344" y="428" fill="#7a8599" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">2nd</text>
+
+  <!-- Mobility -->
+  <rect x="440" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="440" y="352" width="160" height="88" rx="6"
+        fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+  <rect x="448" y="360" width="48" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.40)" stroke-width="0.8"/>
+  <text x="472" y="369" fill="rgba(22,28,40,0.80)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">REBUILD</text>
+  <text x="520" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Mobility</text>
+  <text x="520" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">← fulfillment 163</text>
+  <text x="520" y="428" fill="#7a8599" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">3rd</text>
+
+  <!-- Booking Handoff -->
+  <rect x="616" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="616" y="352" width="160" height="88" rx="6"
+        fill="#ffffff" stroke="#161c28" stroke-width="1.2"/>
+  <rect x="624" y="360" width="48" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.40)" stroke-width="0.8"/>
+  <text x="648" y="369" fill="rgba(22,28,40,0.80)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">RENAMED</text>
+  <text x="696" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Booking Handoff</text>
+  <text x="696" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">← procurement 366</text>
+  <text x="696" y="428" fill="#7a8599" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">MVP · not Execution</text>
+
+  <!-- Lodging / Flight -->
+  <rect x="792" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="792" y="352" width="160" height="88" rx="6"
+        fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1"
+        stroke-dasharray="4,3"/>
+  <rect x="800" y="360" width="32" height="12" rx="2" fill="transparent"
+        stroke="rgba(22,28,40,0.30)" stroke-width="0.8"/>
+  <text x="816" y="369" fill="rgba(22,28,40,0.60)" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">STUB</text>
+  <text x="872" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Lodging / Flight</text>
+  <text x="872" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">locked bookings only</text>
+  <text x="872" y="428" fill="#7a8599" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">register only</text>
+
+  <!-- Place Verification — FOCAL 2 -->
+  <rect x="968" y="352" width="160" height="88" rx="6" fill="#fbfcfd"/>
+  <rect x="968" y="352" width="160" height="88" rx="6"
+        fill="#ffffff" stroke="#a8720c" stroke-width="1" stroke-dasharray="4,4"/>
+  <rect x="976" y="360" width="32" height="12" rx="2" fill="transparent"
+        stroke="rgba(168,114,12,0.50)" stroke-width="0.8"/>
+  <text x="992" y="369" fill="#a8720c" font-size="7"
+        font-family="'Geist Mono',monospace" text-anchor="middle" letter-spacing="0.08em">OPEN</text>
+  <text x="1048" y="396" fill="#161c28" font-size="12" font-weight="600"
+        font-family="'Geist',sans-serif" text-anchor="middle">Place Verification</text>
+  <text x="1048" y="412" fill="#6b7488" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">← catalog 121 · A2A</text>
+  <text x="1048" y="428" fill="#a8720c" font-size="9"
+        font-family="'Geist Mono',monospace" text-anchor="middle">not in v10</text>
+
+  <!-- ============ LEGEND ============ -->
+  <line x1="64" y1="492" x2="1152" y2="492" stroke="rgba(22,28,40,0.10)" stroke-width="0.8"/>
+  <text x="64" y="512" fill="#6b7488" font-size="8" font-family="'Geist Mono',monospace"
+        letter-spacing="0.14em">LEGEND</text>
+
+  <rect x="140" y="500" width="16" height="12" rx="2" fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
+  <text x="164" y="510" fill="#161c28" font-size="12"
+        font-family="'Noto Sans KR',sans-serif">그대로 — 코어</text>
+
+  <rect x="340" y="500" width="16" height="12" rx="2" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
+  <text x="364" y="510" fill="#161c28" font-size="12"
+        font-family="'Noto Sans KR',sans-serif">뼈대만 이어받음</text>
+
+  <rect x="540" y="500" width="16" height="12" rx="2"
+        fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <text x="564" y="510" fill="#161c28" font-size="12"
+        font-family="'Noto Sans KR',sans-serif">새로 만듦</text>
+
+  <rect x="716" y="500" width="16" height="12" rx="2"
+        fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.20)" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="740" y="510" fill="#161c28" font-size="12"
+        font-family="'Noto Sans KR',sans-serif">등록만</text>
+
+  <rect x="864" y="500" width="16" height="12" rx="2"
+        fill="#ffffff" stroke="#a8720c" stroke-width="1" stroke-dasharray="4,4"/>
+  <text x="888" y="510" fill="#161c28" font-size="12"
+        font-family="'Noto Sans KR',sans-serif">미해결 — v10 에 없다</text>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <p class="eyebrow">KEEP · 손 안 댐</p>
+    <div class="card-header"><span class="card-dot dot-ink"></span><h3>코어는 갈아끼지 않는다</h3></div>
+    <ul>
+      <li>DB 19표 중 <strong>14표</strong>가 코어 — <code>customer_cases</code> · <code>case_events</code> · <code>outbox</code> · <code>knowledge_*</code></li>
+      <li>낙관적 동시성 · Idempotency · 이벤트 순서 · append-only 이력이 그대로 산다</li>
+      <li>바뀌는 것은 도메인 5표뿐 (v10 §6)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="eyebrow">REBUILD · 뼈대만</p>
+    <div class="card-header"><span class="card-dot dot-muted"></span><h3>폐기가 하나도 없다</h3></div>
+    <ul>
+      <li>v9 여섯 팀 전부 여행에 <strong>같은 모양의 자리</strong>가 있었다</li>
+      <li>물려받는 것은 판정 3단 구조와 반환 모양</li>
+      <li><strong>판정 규칙과 어휘는 전부 새로 쓴다</strong> — 코드 복사가 아니다</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="eyebrow">OPEN · 미해결</p>
+    <div class="card-header"><span class="card-dot dot-accent"></span><h3>결정이 남았다</h3></div>
+    <ul>
+      <li>Place Verification 이 <strong>v10 에 없다</strong></li>
+      <li>지금 <strong>유일한 A2A Remote 자리</strong>다</li>
+      <li>뺀 것인지 빠진 것인지 안 정해졌다</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+근거 — program/plan/A-COP_구현계획서_v10.md §5 · §6 · program/plan/A-COP_여행Team모듈_구성안.md §0 · §2<br>
+줄수·DB 표 수는 2026-09-09 코드·DB 실측 · Team 은 side effect 를 실행하지 않는다(v10 §6) — 제안만 Action 층으로 돌린다
+</footer>
+
+</div>
+</body>
+</html>
