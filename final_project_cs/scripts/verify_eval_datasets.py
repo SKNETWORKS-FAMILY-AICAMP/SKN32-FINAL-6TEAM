@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "eval/datasets/golden.jsonl"
 HOLDOUT = ROOT / "eval/datasets/holdout.jsonl"
-DOC_INDEX = ROOT / "docs/handoff/_prompts/_doc_index.json"
+DOC_INDEX = ROOT / "wiki/records/handoff/_prompts/_doc_index.json"
 
 ALLOWED_INTENTS = {"order", "shipping", "return", "exchange"}
 ALLOWED_CHANNELS = {"web", "chat", "email", "phone"}

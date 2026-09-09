@@ -1,7 +1,7 @@
 """capability 선택을 **LLM 에게 시키면 키워드보다 나은가**를 측정한다.
 
 ★기준선이 있어서 이 실험이 가능하다 —
-  `docs/reports/2026-09-03_S-CAPABILITY-SELECTION-측정_리포트.md` 가 지금
+  `wiki/records/reports/2026-09-03_S-CAPABILITY-SELECTION-측정_리포트.md` 가 지금
   방식(이름 매칭 + 키워드 훅)의 golden 라벨 대비 정확도를 **41.7%(25/60)** 로
   쟀다. 그 전에는 수치 자체가 없어서 무엇과 비교할지도 없었다.
 

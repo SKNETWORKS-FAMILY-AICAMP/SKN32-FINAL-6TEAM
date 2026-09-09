@@ -2,7 +2,7 @@
 cases, shaped like eval/datasets/golden.jsonl, so they can run through the
 real Team pipeline (Context Broker + return_refund/procurement_order_payment)
 via eval.runners.proposed and produce genuine, diverse review-task training
-data for stage 3 -- see docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §5.
+data for stage 3 -- see wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §5.
 
 golden.jsonl's own DB fixture (eval/runners/common.py::_seed_golden_fixtures)
 seeds the SAME hardcoded order (39,800 won, delivered) for every single case

@@ -3,7 +3,7 @@ fixed-string deterministic answer regardless of case specifics),
 fulfillment_logistics.py's shipment.status branch embeds the actual status
 into its answer (f"배송 상태는 {status}입니다."), so varying
 expected_issue_code produces genuinely different draft text per case (see
-docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §7.2 -- every prior source
+wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §7.2 -- every prior source
 collapsed to 2 unique drafts because return_refund's answer never varies).
 
 eval/runners/common.py::_seed_golden_fixtures maps expected_issue_code to

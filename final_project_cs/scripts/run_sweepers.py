@@ -9,7 +9,7 @@
     분류를 Case 생성 트랜잭션 밖으로  →  `classifying` 잔류
     실행을 접수 응답 뒤로              →  `routing` 잔류
 
-  자세한 경위는 `docs/reports/2026-09-03_경계를_나누며_생긴_틈과_승인이_막혀있던_제안.md`.
+  자세한 경위는 `wiki/records/reports/2026-09-03_경계를_나누며_생긴_틈과_승인이_막혀있던_제안.md`.
 
 ★**돌리는 주기는 이 파일이 정하지 않는다.** 임계값은
   `config/guardrails.yaml` 의 `reliability.*_stuck_after_seconds` 이고, 얼마나

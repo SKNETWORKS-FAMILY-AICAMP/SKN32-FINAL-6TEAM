@@ -49,7 +49,7 @@ def search_policy(
                 # 어댑터라 plain list 를 넘기면 double precision[] 로 렌더링되고
                 # `operator does not exist: vector <=> double precision[]` 로 죽는다.
                 # (2026-08-12: tuple -> `(...)` 로 죽고, list -> 배열로 죽었다.
-                #  docs/reports/debugs/2026-08-12_2010_RAG검색이_한번도_동작한적이_없다.md)
+                #  wiki/records/reports/debugs/2026-08-12_2010_RAG검색이_한번도_동작한적이_없다.md)
                 """SELECT chunk_id, content, metadata_json,
                           1 - (embedding <=> %s::vector) AS score
                    FROM knowledge_chunks kc JOIN knowledge_documents kd USING(document_id)

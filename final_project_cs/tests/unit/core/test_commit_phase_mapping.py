@@ -1,6 +1,6 @@
 """커밋↔Phase 자동 매핑의 경로 판정 규칙을 고정한다.
 
-★`docs/release_checklist.md` §5-3 이 "커밋 ↔ Phase 자동 매핑 없음(사람이 읽어
+★`wiki/records/release_checklist.md` §5-3 이 "커밋 ↔ Phase 자동 매핑 없음(사람이 읽어
   대조)"으로 남겨 뒀던 항목을 `scripts/map_commits_to_phase.py` 가 채운다.
   여기서는 git 이력에 의존하지 않는 **순수 판정 규칙**만 검사한다 — 커밋 이력은
   세션마다 달라져서 테스트가 흔들린다.

@@ -6,7 +6,7 @@
 
 ★왜 중요한가: `/ops/outbox` 는 `unknown` — **돈이 나갔는지 모르는** 메시지를
   다루는 화면이다. 이 제품에서 가장 센 위험이고 대응 절차서까지 있는데
-  (`docs/manuals/운영_unknown상태_대응절차.md`), 운영자가 주소를 직접 쳐야만
+  (`wiki/records/manuals/운영_unknown상태_대응절차.md`), 운영자가 주소를 직접 쳐야만
   갈 수 있었다. 갈 수 없는 화면으로는 절차를 밟을 수 없다.
 
   `final_project_sample` 에는 처음부터 메뉴에 있었다(`TENANT_NAV`) — 이식하며

@@ -10,7 +10,7 @@ app/infrastructure/llm/local_ft.py::LocalFTTeamLLM expects: send
 Same load pattern as diag_3b.py: plain bf16, no device_map, no
 quantization, CPU load then .to("cuda") -- the only path that avoids the
 Windows pagefile OSError documented in
-docs/reports/2026-08-30_S-DOD28-FINETUNE-PIPELINE_리포트.md.
+wiki/records/reports/2026-08-30_S-DOD28-FINETUNE-PIPELINE_리포트.md.
 
 Usage:
     uvicorn serve:app --host 127.0.0.1 --port 8100

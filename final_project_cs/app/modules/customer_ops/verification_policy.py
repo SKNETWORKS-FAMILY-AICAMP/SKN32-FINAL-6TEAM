@@ -2,7 +2,7 @@
 
 ★basement(`app/core/verification.py`)는 **규칙 엔진**이고, 이 파일이 **어휘**다.
   엔진은 한 줄도 바뀌지 않았다 — 이 저장소가 sample 에서 복사돼 왔다는 증거다
-  (`docs/handoff/10_도메인_교체_가이드.md` §1-2).
+  (`wiki/records/handoff/10_도메인_교체_가이드.md` §1-2).
 
 sample(구독·결제) → 이 저장소(커머스) 대응:
 

@@ -83,7 +83,7 @@ def create_app(controller=None, classifier=None, *,
                 "active_revision": runtime.active_revision,
                 "desired_revision": revision}
     # 운영 화면(Case/Trace/Approval/VOC). S-UI 가 소유 범위를 지켜 mount 함수만 제공하고
-    # 이 한 줄 등록을 리포트로 요청했다 — docs/reports/2026-08-12_S-UI_리포트.md §6
+    # 이 한 줄 등록을 리포트로 요청했다 — wiki/records/reports/2026-08-12_S-UI_리포트.md §6
     mount_ui(app)
     @app.exception_handler(HTTPException)
     async def http_error(_request: Request, exc: HTTPException):

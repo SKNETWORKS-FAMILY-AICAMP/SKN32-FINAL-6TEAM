@@ -52,7 +52,7 @@ class _TwoArgTeam:
 def test_instantiate_team_routes_single_positional_arg_by_name():
     """★2026-08-19 결함 — 개수만 보면 ReadToolbox 가 llm 자리로 잘못 들어간다.
 
-    docs/reports/debugs/2026-08-19_composition_단일인자_Team_llm_오배선.md
+    wiki/records/reports/debugs/2026-08-19_composition_단일인자_Team_llm_오배선.md
     """
     tools_sentinel, llm_sentinel = object(), object()
 

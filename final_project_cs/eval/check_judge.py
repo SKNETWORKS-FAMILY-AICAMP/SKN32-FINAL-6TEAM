@@ -5,7 +5,7 @@
 
 이 프로젝트를 이미 한 번 태운 실패가 정확히 이것이었다:
   > judge 가 환각 인용에 점수 — A 군이 `doc_06 §1` 을 지어냈고 실재 확인이 없었다
-  > (docs/reports/debugs/2026-08-13_1200_평가가_환각인용에_점수를_준다.md)
+  > (wiki/records/reports/debugs/2026-08-13_1200_평가가_환각인용에_점수를_준다.md)
 
 `rescore` 가 인용을 코퍼스와 대조해 `citations.valid` / `citations.invalid` 를 남긴다.
 그 사실과 judge 의 `policy_grounding` 점수가 어긋나는 행을 센다.
@@ -65,7 +65,7 @@ def audit(rows: list[dict]) -> dict:
     #   "근거가 없는데 점수를 줬나" 는 봤지만 "근거가 있을 때 점수가 늘 만점인가" 는
     #   아무도 안 봤다. 그래서 `policy_grounding` 이 **분산 0 인 상수**가 된 것을
     #   오래 못 잡았다 — 인용이 있으면 답변이 그것을 쓰든 말든 4 가 나온다.
-    #   근거: docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md
+    #   근거: wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md
     #
     #   ★상수 축은 지표가 아니다. 그 축의 kappa 는 1.0 아니면 0.0 두 값만 나오고
     #   (agreement.py 가 0/0 을 완전일치로 특례 처리한다) 총점에는 늘 같은 값을
@@ -124,7 +124,7 @@ def main() -> int:
             print(f"    {line}")
         print("  이 축은 '근거의 질' 이 아니라 '인용이 붙었나' 를 재고 있다.")
         print("  그 축의 kappa 는 1.0 아니면 0.0 만 나온다 — DoD-15 는 이 축을 못 잰다.")
-        print("  근거: docs/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md")
+        print("  근거: wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md")
         print("-" * 60)
     if total_bad:
         # ★실패로 끝낸다. 이 값이 0 이 아니면 평가 수치를 믿을 수 없다.

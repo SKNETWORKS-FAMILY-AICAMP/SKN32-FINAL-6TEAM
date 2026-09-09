@@ -7,7 +7,7 @@
 
 ★2026-09-02 실측: `procurement_order_payment.py` 세 곳이 답변을 영어로
   하드코딩하고 있었고, holdout 24건 중 **6건이 영어 답변**을 받았다
-  (`docs/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md`).
+  (`wiki/records/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md`).
   문자열만 고치면 다음에 또 생기므로 이 검사를 둔다.
 
 ★**소스를 읽어 검사한다.** 실행해서 잡으려면 모든 capability 의 모든 분기에

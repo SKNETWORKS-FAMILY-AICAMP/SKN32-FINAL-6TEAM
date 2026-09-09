@@ -1,7 +1,7 @@
 """DoD-22 — Team 은 인프라를 직접 부르지 않고, allowlist 밖 tool 은 런타임이 막는다.
 
 ★**이 파일은 2026-09-06 에 "근거가 없다" 는 것을 발견해 만들었다.**
-  `docs/evidence/DoD-22_Team_직접Tool호출_금지.md` 는 2026-08-16 에 「통과」로
+  `wiki/records/evidence/DoD-22_Team_직접Tool호출_금지.md` 는 2026-08-16 에 「통과」로
   판정하며 근거로 둘을 인용했는데, 확인해 보니
 
       정적(AST)  `tests/unit/core/test_core_isolation.py`

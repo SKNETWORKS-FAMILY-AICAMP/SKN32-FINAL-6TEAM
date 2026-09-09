@@ -8,7 +8,7 @@
   그보다 더 조용히 되돌아간다 — 누가 `with conn.transaction():` 하나를
   바깥으로 옮기면 끝이다. 그래서 결과가 아니라 **경계 자체**를 잰다.
 
-근거: docs/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md
+근거: wiki/records/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md
 """
 from __future__ import annotations
 

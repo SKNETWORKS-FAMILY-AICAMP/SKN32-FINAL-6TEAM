@@ -29,7 +29,7 @@ Classifier = Callable[[str], dict[str, str]]
 class CreateCase(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
-    # ★2026-09-01 발견(docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+    # ★2026-09-01 발견(wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
     #   구멍 2) — 둘 다 선언만 되고 어디서도 안 읽혔다. 클라이언트가
     #   idempotency_key 를 보내면 존중될 거라 믿을 텐데 조용히 무시됐다.
     #   지금은 존중한다(오면 그것을 쓰고, 없으면 request_id 로 서버가 계산).
@@ -114,7 +114,7 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
         with get_connection() as conn:
             with conn.transaction():
                 with conn.cursor() as cur:
-                    # ★2026-09-01 발견(docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+                    # ★2026-09-01 발견(wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
                     #   구멍 1) — 이 advisory lock 없이는 SELECT 로 "없다"를 본 두
                     #   동시 요청이 둘 다 통과해 Case 를 두 개 만들었다. 뒤엣것의
                     #   INSERT 는 ON CONFLICT DO UPDATE 로 충돌을 조용히 삼켜서
@@ -257,7 +257,7 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                     cur.execute("SELECT action_id FROM action_requests WHERE action_id=%s AND tenant_id=%s AND case_id=%s", (action_id, principal.tenant_id, case_id))
                     if cur.fetchone() is None: raise _error(404, "not_found", "resource not found")
                     # ★same check-then-insert race as create() (2026-09-01 finding,
-                    #   docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md).
+                    #   wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md).
                     cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{principal.tenant_id}:{idem}",))
                     cur.execute("SELECT action_id FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (principal.tenant_id, idem))
                     if cur.fetchone() is not None:
@@ -336,7 +336,7 @@ def _mcp_open(customer_id: str, message: str, channel: str) -> dict:
         with conn.transaction():
             with conn.cursor() as cur:
                 # ★same check-then-insert race as create() (2026-09-01 finding,
-                #   docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md) --
+                #   wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md) --
                 #   this path is actually exactly-once already in practice
                 #   (idem is a deterministic hash of customer_id+message, no
                 #   client-controlled request_id), but two genuinely-simultaneous

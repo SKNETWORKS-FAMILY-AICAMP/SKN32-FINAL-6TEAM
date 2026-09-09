@@ -228,7 +228,7 @@ def test_the_team_is_allowed_to_read_order_items():
 # ★2026-09-01 — "exchange" intent 는 이름으로 매칭되는 capability 가 없어
 #   늘 check_eligibility(정보성 응답)로만 갔다. select_capability 가 실행
 #   요청 문구를 잡아 return.request 경로로 보낼 수 있는지 확인한다
-#   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+#   (wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
 def test_select_capability_routes_explicit_exchange_request_to_return_request():
     assert ReturnRefundTeam.select_capability("exchange", "사이즈가 안 맞아서 교환하고 싶어요") == "return.request"
 
@@ -268,7 +268,7 @@ def test_intent_mixed_with_an_inquiry_defers_to_eligibility_check():
 
 # ★2026-09-03 — 상품 반품 제한을 실제로 보는지 (마이그레이션 008).
 #   전에는 이 검사가 아예 없으면서 답변만 "정책 근거상" 이라고 말했다
-#   (docs/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
+#   (wiki/records/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
 def _with_catalog(capability: str, restriction):
     """`read.catalog` 가 주어진 제한값을 돌려주는 픽스처."""
     task, tools = make_task(capability)

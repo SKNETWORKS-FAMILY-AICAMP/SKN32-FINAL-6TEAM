@@ -12,7 +12,7 @@ objects.  It does not create orders or call a payment provider.
   넷은 전부 한국어였다. ``response_review`` 가 켜져 있으면 한국어로 재작성
   되지만 기본값이 ``false`` 라 **영어 초안이 교정 없이 고객에게 나갔다.**
   DoD-15 사람 라벨링 템플릿을 만들다 발견했다 —
-  ``docs/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md``.
+  ``wiki/records/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md``.
   재발 방지는 ``tests/unit/teams/test_answers_are_korean.py`` 가 맡는다.
 """
 from __future__ import annotations
@@ -84,7 +84,7 @@ class ProcurementOrderPaymentTeam:
           어느 것도 제대로 못 고른다. "order" intent는 늘
           order.verify(정보성 조회)로만 갔다 — 실제 주문 취소/변경
           제안(order.cancel/order.modify)이 나오는 경로에 영원히 도달
-          못 함(docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          못 함(wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
           신호가 없으면 `None`을 돌려줘 기존 규칙(default order.verify)에
           그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
         """

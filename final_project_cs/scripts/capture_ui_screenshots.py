@@ -1,6 +1,6 @@
 """운영 UI 화면을 Playwright 로 캡처하고, 캡처하는 김에 실측까지 한다.
 
-★`docs/release_checklist.md` §5-3 의 마지막 미체크 항목("스크린샷 증거
+★`wiki/records/release_checklist.md` §5-3 의 마지막 미체크 항목("스크린샷 증거
   `docs/screenshots/` 없음 — 텍스트 실측으로 대체")을 채운다.
 
 ★**그림만 찍지 않는다.** 이 저장소는 "건수만 세는 검증"으로 두 번 실패했다

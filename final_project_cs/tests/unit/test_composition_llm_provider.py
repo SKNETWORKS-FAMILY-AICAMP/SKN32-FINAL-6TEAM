@@ -1,7 +1,7 @@
 """Guards the RAG-integration wiring added 2026-08-30: build_controller()
 must select LocalFTTeamLLM when settings.llm_provider == "local_ft", and
 OpenAITeamLLM otherwise (the pre-existing default). See
-docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md.
+wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md.
 """
 from __future__ import annotations
 

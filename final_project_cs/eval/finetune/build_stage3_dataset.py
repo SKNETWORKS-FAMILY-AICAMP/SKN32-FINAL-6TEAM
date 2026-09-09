@@ -15,7 +15,7 @@ input_text=<primary team's draft answer>, not the customer's message.
 This script reconstructs that real invocation shape from the judge-PASS
 rows of the golden Proposed run (their evidence was already judge-verified
 as properly grounded) and calls the actual (now-fixed, see
-docs/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md)
+wiki/records/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md)
 response.generate prompt for real, live, via OpenAITeamLLM -- so every
 training target is a genuine grounded completion, not a fabricated one.
 

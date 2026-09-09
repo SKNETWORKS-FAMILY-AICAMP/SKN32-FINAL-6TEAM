@@ -1,6 +1,6 @@
 """A-COP 계약 모델.
 
-★이 파일은 `docs/handoff/01_계약_Pydantic.md` 의 구현체다.
+★이 파일은 `wiki/records/handoff/01_계약_Pydantic.md` 의 구현체다.
   둘이 어긋나면 결함이다. 바꿀 때는 계약 문서를 먼저 고친다(RULE.md §3.5).
 
 기준선: ../A-COP_구현계획서_v5.md §7
@@ -319,7 +319,7 @@ class TeamManifest(BaseModel):
     #   동작) 중 아무 것도 이름으로 매칭하지 못할 때 쓸 capability를 팀이
     #   직접 선언한다. 안 적으면 registry가 capabilities[0]을 쓴다 — 전에는
     #   이 선택이 "왜 그건지" 아무 데도 안 적힌 채 일어났다
-    #   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+    #   (wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
     default_capability: str | None = None
 
 

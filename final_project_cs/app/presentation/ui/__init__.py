@@ -21,7 +21,7 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
       없는 채로 이 앱(고객 접근 가능 포트)에 물려 있었다 — 실측(2026-08-18)으로
       확인. 같은 기능은 이제 `final_project_ui`(별도 프로그램)가 대상의 인증된
       `/composer/*` API(scope 필요)로만 제공한다. 자세한 경위는
-      `docs/handoff/09_Composer_GUI_계약.md` 상단 주석 참고.
+      `wiki/records/handoff/09_Composer_GUI_계약.md` 상단 주석 참고.
     """
     if config is None:
         selected = getattr(app.state, "project_config_path", DEFAULT_PROJECT_CONFIG)

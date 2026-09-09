@@ -65,7 +65,7 @@ class FulfillmentLogisticsTeam:
           하나도 없어 늘 fulfillment.track(주문 단위 정보성 응답)으로만
           갔다 — 실제 교체/재배송 제안이 나오는 shipment.exception 경로에
           영원히 도달 못 함
-          (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          (wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
           신호가 없으면 `None`을 돌려줘 기존 규칙(default_capability=
           fulfillment.track)에 그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
         """

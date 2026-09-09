@@ -89,7 +89,7 @@ class ReturnRefundTeam:
           제대로 못 고른다(특히 "exchange"는 이름으로 매칭되는 capability가
           하나도 없어 늘 check_eligibility 로만 갔다 — 실제 교환/반품 신청
           경로(return.request)에 영원히 도달 못 함,
-          docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+          wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
           여기서 신호가 없으면 `None`을 돌려줘 기존 규칙(네임스페이스 매칭 →
           default_capability)에 그대로 맡긴다 — 기존 동작을 바꾸지 않는다.
         """
@@ -314,7 +314,7 @@ class ReturnRefundTeam:
                                 warnings=[f"반품 가능 기간 {period_days}일이 경과했습니다."])
 
         # ★상품 자체의 반품 제한을 본다 (2026-09-03,
-        #   docs/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
+        #   wiki/records/reports/debugs/2026-09-03_반품제한을_안_보고_정책근거상_가능하다고_답한다.md).
         #   전에는 이 검사가 아예 없으면서 답변만 "정책 근거상" 이라고 말했다.
         restriction, catalog_rows = self._restriction(task, order, seen)
         if catalog_rows:

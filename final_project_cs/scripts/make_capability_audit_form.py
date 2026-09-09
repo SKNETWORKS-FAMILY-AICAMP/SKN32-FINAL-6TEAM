@@ -1,6 +1,6 @@
 """capability 선택을 사람이 감사할 수 있는 로컬 HTML 폼을 만든다.
 
-★`docs/reports/2026-09-03_S-CAPABILITY-SELECTION-측정_리포트.md` 가 지금 방식의
+★`wiki/records/reports/2026-09-03_S-CAPABILITY-SELECTION-측정_리포트.md` 가 지금 방식의
   정확도를 **41.7%(25/60)** 로 쟀다. 낮다. 그런데 낮은 이유가 둘로 갈린다:
 
       (a) 휴리스틱이 틀렸다      → 규칙을 고치면 오른다

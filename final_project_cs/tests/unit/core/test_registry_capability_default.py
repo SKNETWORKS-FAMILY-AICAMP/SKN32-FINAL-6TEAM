@@ -3,7 +3,7 @@
 ★2026-09-01 — capability_for()가 intent와 이름으로 매칭되는 capability를
   못 찾으면 근거 없이 capabilities[0]을 골랐다. RegistryError로 막는 시도는
   실제 intent 5개 중 3개(shipping·exchange·other)의 정상 라우팅을 깨서
-  되돌렸다(docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+  되돌렸다(wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
   대신 팀이 그 기본값을 선언하게 하고, 안 적으면 전과 똑같이
   capabilities[0]을 쓴다 — 동작은 그대로, 근거만 명시적으로 남긴다.
 """

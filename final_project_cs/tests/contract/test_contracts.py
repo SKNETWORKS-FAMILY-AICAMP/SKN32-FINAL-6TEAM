@@ -1,4 +1,4 @@
-"""계약 모델 검증 — `docs/handoff/01_계약_Pydantic.md` 와의 대조.
+"""계약 모델 검증 — `wiki/records/handoff/01_계약_Pydantic.md` 와의 대조.
 
 ★"근거 없이 확정하지 않는다"와 "승인 없이 실행하지 않는다"(CLAUDE.md §0)가
   문서상의 다짐이 아니라 **계약이 거부하는 것**임을 여기서 증명한다.
@@ -330,7 +330,7 @@ def test_mixed_proposals_with_wait_for_approval_are_allowed() -> None:
 # 없고, 동시성 테스트는 타이밍에 따라 결과가 갈린다(단독 5회 중 1회 실패 실측).
 # 그래서 행동으로는 잡을 방법이 없어 문장 자체를 본다.
 #
-# 근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md
+# 근거: wiki/records/reports/debugs/2026-08-31_버전대조_가드_중복.md
 
 
 def test_projection_update_keeps_the_version_condition() -> None:

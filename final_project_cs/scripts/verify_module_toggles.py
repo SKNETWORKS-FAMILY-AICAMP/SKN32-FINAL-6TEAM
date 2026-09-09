@@ -3,7 +3,7 @@
 
     python -m scripts.verify_module_toggles
 
-계약 `docs/handoff/08_모듈_컴포넌트_목록.md` §2·§6-4 가 요구하는 동작을
+계약 `wiki/records/handoff/08_모듈_컴포넌트_목록.md` §2·§6-4 가 요구하는 동작을
 선언을 진짜로 고쳐 가며 확인한다. 단위 테스트는 설정을 주입해서 보지만,
 이 스크립트는 `config/project.yaml` 을 실제로 바꾸고 앱을 새 프로세스에서
 띄운다 — 조립이 기동 시점에 한 번만 일어나기 때문이다.

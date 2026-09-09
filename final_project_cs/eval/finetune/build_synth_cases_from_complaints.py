@@ -1,7 +1,7 @@
 """Turn real data.go.kr consumer-complaint Q&A into synthetic eval cases,
 same shape as build_synth_cases_from_orders.py, but using ORGANIC customer
 message text instead of a handful of templates -- addressing the input-
-diversity gap found in docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §6.4
+diversity gap found in wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §6.4
 (v6's holdout had only 2 unique draft strings across 84 examples because
 every synthetic case used templated messages driving the same deterministic
 Team capability).

@@ -7,7 +7,7 @@ If ``INTENTS`` does not contain every ``case_type`` a Team accepts, a Case
 with that intent can never route -- the classifier itself rejects the label
 before the Case reaches ``registry.resolve()``.
 
-See ``docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md``.
+See ``wiki/records/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md``.
 """
 from app.modules.customer_ops import VocStoreManagerTeam
 from app.modules.customer_ops.feedback import INTENTS

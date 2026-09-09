@@ -22,10 +22,10 @@ ALLOWED_KEYS = {"case_id", "run_id", "graph_revision", "node_name", "runtime_sta
 #: 업무 상태의 이름들. **최상위**에 나타나면 경계가 무너진 것이다.
 #
 # ★runtime_state **안**에는 같은 이름이 정당하게 들어갈 수 있다.
-#   docs/evidence/_raw/DoD-04_v2.md 에 runtime_state={'case_version':2,'status':'routing'}
+#   wiki/records/evidence/_raw/DoD-04_v2.md 에 runtime_state={'case_version':2,'status':'routing'}
 #   이 정상 예로 기록돼 있다. 실행 스냅샷은 관찰한 값을 담을 수 있고, 금지되는 것은
 #   그것을 권위 있는 projection 으로 쓰거나 복원하는 것이다.
-#   계약은 docs/evidence/DoD-04_checkpoint_projection_분리.md 의 "최상위 다섯 키" 다.
+#   계약은 wiki/records/evidence/DoD-04_checkpoint_projection_분리.md 의 "최상위 다섯 키" 다.
 BUSINESS_KEYS = {"status", "intent", "issue_code", "sentiment", "owner_team_id",
                  "version", "state_json", "answer", "evidence"}
 

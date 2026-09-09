@@ -133,7 +133,7 @@ class Controller:
         """Case 하나를 실행한다.
 
         ★트랜잭션을 **세 토막**으로 나눈다 (2026-09-01,
-          `docs/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md`).
+          `wiki/records/reports/2026-09-01_S-RUNCASE-TX-NARROWING_리포트.md`).
 
               A. 시작 기록 · 라우팅 · 재개 전이   ← 짧은 트랜잭션. Team 을 부르기 전에 커밋
               B. Team 실행 · 리뷰 패스            ← **트랜잭션 밖.** 외부 네트워크가 여기 있다

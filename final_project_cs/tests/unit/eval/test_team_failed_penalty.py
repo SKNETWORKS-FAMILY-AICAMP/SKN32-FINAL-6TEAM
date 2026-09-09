@@ -4,7 +4,7 @@
   로 정했는데, 아래쪽에서 인용 검증 결과로 rubric 을 다시 접으며
   `success = bool(judge["pass"])` 로 무조건 덮어썼다.
 
-  그래서 `docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md` 의 A/B 수치는
+  그래서 `wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md` 의 A/B 수치는
   의도한 판정이 빠진 채 나온 값이다. 재측정 전에는 쓰지 않는다.
 
   ★인라인이라 테스트를 걸 수 없었던 것이 이 결함이 오래 산 이유다.

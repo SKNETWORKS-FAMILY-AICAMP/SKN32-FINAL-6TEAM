@@ -151,7 +151,7 @@ def test_same_mcp_open_request_ten_times_has_one_case_and_action_request(api_fix
 
 
 def test_concurrent_identical_create_requests_produce_one_case(api_fixture):
-    """★2026-09-01 finding (docs/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+    """★2026-09-01 finding (wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
     구멍 1): the sequential 10x test above never exercised this -- ten
     *sequential* posts always see the previous one's committed row. Two
     *concurrent* posts could both pass the "not found" check before either

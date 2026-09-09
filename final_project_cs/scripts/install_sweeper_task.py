@@ -130,7 +130,7 @@ def main() -> int:
     print("  ★기계에 지속되는 설정이다 — 뗄 때는 --remove.")
     print()
     print("★`errored` 가 나오면 `--once` 가 exit 1 을 내고 스케줄러가 실패로 기록한다.")
-    print("  (`docs/manuals/운영_멈춘Case_되잡기.md`)")
+    print("  (`wiki/records/manuals/운영_멈춘Case_되잡기.md`)")
     return 0
 
 

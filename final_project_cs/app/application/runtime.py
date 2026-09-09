@@ -4,7 +4,7 @@
   이걸 갖고도 **릴리스 대상인 cs 에는 안 넣어** 있었다. 그래서 콘솔이 cs 대상에
   대고 "저장됐지만 반영 전" 이라고만 말할 뿐 반영시킬 길이 없었고, 화면은
   없는 엔드포인트(`POST /admin/reload`)를 부르라고 안내하기까지 했다
-  (`docs/reports/2026-09-06_Composer를_패키지로_들어냈다.md` §10).
+  (`wiki/records/reports/2026-09-06_Composer를_패키지로_들어냈다.md` §10).
 
 ★왜 필요한가 — 이 전까지 `/introspection` 은 매 요청마다 선언을 **다시 읽어서**
   `config_revision` 을 계산했다(`introspection/contract.py`). 그래서 Composer 로

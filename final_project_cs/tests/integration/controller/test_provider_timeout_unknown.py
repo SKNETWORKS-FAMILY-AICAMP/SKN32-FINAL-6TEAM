@@ -12,7 +12,7 @@ CLAUDE.md §0.2:
 ★여기서 재는 것은 **outbox(Message Broker) 발행 경로**다.
   action_requests 실행 경로는 이 시스템에 존재하지 않는다 —
   Team 은 제안까지만 하고 실제 provider 호출은 미구현이다.
-  그 사실은 docs/evidence/DoD-11_action_idempotency_승인.md 에 적어 두었다.
+  그 사실은 wiki/records/evidence/DoD-11_action_idempotency_승인.md 에 적어 두었다.
 """
 from __future__ import annotations
 

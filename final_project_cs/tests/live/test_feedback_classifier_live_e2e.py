@@ -8,7 +8,7 @@ subscription domain (``billing``/``technical``) while ``composition
 .build_classifier()`` -- the exact function this test exercises -- is the
 default classifier wired into ``POST /v1/cases``. Every real shopping-mall
 Case would have failed classification silently (safely escalated, but never
-routed). See docs/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md.
+routed). See wiki/records/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md.
 
 ★2026-08-17 수정: ``create_app(controller=None)`` 은 "controller 를 안 붙인다"는
 뜻이 아니다. ``app/presentation/api/app.py`` 를 보면, classifier 를 주입하지

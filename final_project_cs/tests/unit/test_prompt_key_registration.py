@@ -12,7 +12,7 @@ real DB-audited path at all. The pre-existing live smoke test
 because it constructs ``OpenAITeamLLM()`` with no ``connection_factory``,
 which skips the prompts-table lookup entirely.
 
-See ``docs/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md``.
+See ``wiki/records/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md``.
 """
 from pathlib import Path
 

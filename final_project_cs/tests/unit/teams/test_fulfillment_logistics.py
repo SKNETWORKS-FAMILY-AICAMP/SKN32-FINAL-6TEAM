@@ -117,7 +117,7 @@ async def test_tracking_answer_counts_the_shipments_it_read():
 #   늘 fulfillment.track(주문 단위 정보성 응답)으로만 갔다. select_capability
 #   가 분실·파손·지연 신고 문구를 잡아 shipment.exception 경로로 보낼 수
 #   있는지 확인한다
-#   (docs/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
+#   (wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
 def test_select_capability_routes_damage_report_to_shipment_exception():
     assert FulfillmentLogisticsTeam.select_capability("shipping", "받은 상품이 파손되어 왔어요") == "shipment.exception"
 

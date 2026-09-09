@@ -156,7 +156,7 @@ def test_two_writers_that_read_the_same_version_produce_exactly_one_conflict(
 # 둘 다 쓰기를 막지만 호출자에게는 뜻이 다르다. StateConflict 는 "다시 읽고
 # 재계산해라" 이고 InvalidTransition 은 "이 상태에서 할 수 없는 일" 이다.
 #
-# 근거: docs/reports/debugs/2026-08-31_버전대조_가드_중복.md §5
+# 근거: wiki/records/reports/debugs/2026-08-31_버전대조_가드_중복.md §5
 
 
 def _advance_to_running(conn, tenant: str, case_id) -> None:

@@ -5,7 +5,7 @@
   - 폴백 금지. 값이 없으면 명시적 예외로 실패한다. 기본값으로 조용히 대체하지 않는다.
 
 가드레일 수치는 config/guardrails.yaml 이 유일한 정의처다.
-같은 숫자를 코드 두 곳에 쓰면 그 자체가 결함이다(docs/handoff/06_가드레일_수치.md).
+같은 숫자를 코드 두 곳에 쓰면 그 자체가 결함이다(wiki/records/handoff/06_가드레일_수치.md).
 """
 
 from __future__ import annotations

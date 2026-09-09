@@ -49,7 +49,7 @@ class ReadToolbox:
         return None if row is None else dict(zip(columns, row))
 
     # ★쇼핑몰 CS 도메인 (sample 의 구독·결제에서 교체됨).
-    #   `docs/handoff/10_도메인_교체_가이드.md` §1 이 이 파일을 교체 지점으로 놓지 않았다 —
+    #   `wiki/records/handoff/10_도메인_교체_가이드.md` §1 이 이 파일을 교체 지점으로 놓지 않았다 —
     #   basement 순수성 게이트(`tests/architecture/`)의 대상이 `app/tools/` 를 빼먹었기 때문이다.
     #   실제로 이 파일은 `app/modules/` 와 마찬가지로 **도메인을 안다.**
     #   그 사실을 여기 기록해 둔다. 게이트 확장은 별도 작업이다.

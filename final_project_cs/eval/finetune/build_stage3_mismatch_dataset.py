@@ -1,6 +1,6 @@
 """Build INTENTIONALLY-MISMATCHED review-task training examples.
 
-docs/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §7.5 found the actual failure
+wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md §7.5 found the actual failure
 mode of stage3 v1-v7: the model learned "usually echo the draft" rather
 than "check the draft against evidence," because every training example so
 far had a draft that was ALREADY consistent with its evidence (the primary

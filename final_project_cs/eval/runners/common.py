@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 #:  ★채점자를 바꾸면 모든 점수가 같이 움직이므로 **v1 점수와 직접 비교하지 않는다.**
 #:  갈아탈 수 있다고 판단한 근거는 **같은 채점자 안에서 군 순위가 보존됐기** 때문이다
 #:  (B > Proposed > A, 양쪽 동일 — `eval/compare_baselines.py`).
-#:  근거: docs/reports/2026-09-06_S-JUDGE-GROUNDING-축_측정_리포트.md
+#:  근거: wiki/records/reports/2026-09-06_S-JUDGE-GROUNDING-축_측정_리포트.md
 JUDGE_PROMPT_PATH = ROOT / "prompts/judge/judge_v3.txt"
 RUBRIC_PATH = ROOT / "eval/judge/rubric.json"
 #: ★손으로 적지 않는다. 프롬프트 파일과 어긋나면 산출물이 어느 채점자로
@@ -439,7 +439,7 @@ def team_failed(arm: str, team_result: dict[str, Any] | None, record: dict[str, 
       있었고, 아래쪽에서 rubric 을 다시 접으며 `success` 를 무조건 덮어써서
       **한 번도 적용되지 않았다.** 인라인이라 테스트도 못 걸었다.
 
-      docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md 의 수치는 이 상태에서
+      wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md 의 수치는 이 상태에서
       나온 값이다. 재측정 전에는 쓰지 않는다.
     """
     if arm != "Proposed":
@@ -567,7 +567,7 @@ def _one(case: dict[str, Any], arm: str, repeat: int, args: argparse.Namespace, 
         #   위쪽 `if team_failed: success = False` 는 죽은 코드였다. 인용 검증
         #   결과를 반영해 rubric 을 다시 접는 이 블록이 success 를 무조건
         #   덮어써서, Proposed 에만 걸려 있던 추가 페널티가 **한 번도 적용된 적이
-        #   없다.** 근거: docs/evidence/DoD-15_AB_Proposed_60x3_holdout.md 와
+        #   없다.** 근거: wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md 와
         #   wiki/evaluation/metrics.md
         #
         #   ★이 수정은 Proposed 점수를 낮추는 방향이다. 그래도 고친다 —

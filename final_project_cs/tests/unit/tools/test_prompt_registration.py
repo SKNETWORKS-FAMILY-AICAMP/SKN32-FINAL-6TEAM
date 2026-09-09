@@ -27,7 +27,7 @@ def test_prompt_registration_allowlist_matches_cs_pack_teams():
     return_exchange prompt keys removed). It stayed empty until 2026-08-30, which
     silently broke ResponseGenerationReviewTeam's DB-audited LLM path (every real
     call raised 'no active prompt registered for response.generate') -- see
-    docs/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md. This asserts
+    wiki/records/reports/2026-08-30_S-PROMPT-KEY-REGISTRATION-GAP_리포트.md. This asserts
     the current, deliberate CS-pack set rather than "empty forever"."""
     assert ALLOWED_PROMPT_KEYS == frozenset({"response.generate", "response.review_tone"})
 
