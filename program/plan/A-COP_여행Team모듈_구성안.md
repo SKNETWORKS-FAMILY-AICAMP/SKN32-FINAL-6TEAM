@@ -261,11 +261,25 @@ subject = 객체 id    →  다른 키   6d8c07a4… / 7dd9ca…
 ②를 고르면 **조용한 병합이 사라진다.** 지금은 두 번째가 소리 없이 없어지는데,
 객체 id 가 키에 들어가면 서로 다른 행이 된다.
 
-`[미확보]` **무엇을 "대상 객체 id" 로 볼지는 Action 종류마다 다르다.**
-`booking.change` 는 `booking_id` 지만 Trip 전체를 바꾸는 Action 은 `trip_id` 다.
-**서버가 그것을 어떻게 아는가** — `arguments` 에서 꺼낼지, `action_type` 별 규칙표를
-둘지 정해야 한다. ★그리고 **서버가 검증한 값이어야 한다** — Team 이 준 값을
-그대로 쓰면 지금 주석이 경계한 것("The Team value is advisory")으로 돌아간다.
+★`[결정 2026-09-10]` **`action_type` 접두가 어느 인자에서 id 를 꺼낼지 정한다.**
+서버가 규칙표를 갖고, **인자에서 꺼낸 뒤 실재·소유를 확인한 값**만 키에 넣는다.
+
+| `action_type` 접두 | 꺼낼 인자 | 무엇인가 |
+|---|---|---|
+| `activity.*` · `dining.*` · `booking.*` | `booking_id` | 예약 한 건 |
+| `mobility.*` | `item_id` | 일정 항목 한 구간 |
+| `trip.*` | `trip_id` | 여행 전체 |
+
+★**없으면 폴백하지 않고 거부한다.** 대상을 특정 못 한 채 실행하면 무엇을 바꾸는지
+모르는 작업이 된다. `fulfillment_logistics` 가 이미 그렇게 한다
+(`shipment_identity_unknown` 으로 escalate).
+
+★**Team 이 준 값을 그대로 쓰지 않는다.** 서버가 인자에서 꺼내 **실재하는지·이 여행의
+것인지 확인한 뒤** 쓴다. 안 그러면 지금 주석이 경계한 자리로 돌아간다 —
+*"The Team value is advisory."*
+
+`[미확보]` 규칙표를 코드에 둘지 `config/` 에 둘지는 안 정했다. **어휘를 설정으로
+빼기로 했으므로(결정 6) 같이 가는 것이 자연스러워 보이지만, 이건 계약에 더 가깝다.**
 
 ★**이건 Team 얘기가 아니라 계약 얘기라 v10 §6(승계하는 코어 규칙)에 들어가야 한다.**
 지금 §6 의 Idempotency 줄은 `action_requests UNIQUE(tenant_id, idempotency_key)` 만 적고
