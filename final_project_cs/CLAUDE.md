@@ -1,11 +1,33 @@
 # A-COP — 작업 규칙 (도메인)
 
-이 저장소의 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)가 정본이다(2026-09-07 전환, 허브는 워크스페이스 루트 `wiki/`). 계획서(v9)는 범위·결정·일정만 맡는다. **읽는 순서는 wiki 본문 먼저다.** 작업 기록(evidence·리포트·옛 handoff)은 `wiki/records/`에 있고(2026-09-08 `docs/` 통합), 근거를 확인할 때 연다. 리포트는 `wiki/records/reports/`에 계속 쓰고, wiki 에는 결론 한 줄 + 링크만 적는다.
+이 저장소의 세부 설계·운영 사실은 [`wiki/index.md`](wiki/index.md)가 정본이다(2026-09-07 전환, 허브는 워크스페이스 루트 `wiki/`). 계획서(**v10**)는 범위·결정·일정만 맡는다. **읽는 순서는 wiki 본문 먼저다.** 작업 기록(evidence·리포트·옛 handoff)은 `wiki/records/`에 있고(2026-09-08 `docs/` 통합), 근거를 확인할 때 연다. 리포트는 `wiki/records/reports/`에 계속 쓰고, wiki 에는 결론 한 줄 + 링크만 적는다.
 
 **A-COP**(AI Customer Operations Platform)는 고객 메시지를 업무 **Case** 로 바꾸고,
 현재 상태·정책·이력·피드백 분류를 **Context Pack** 으로 조합하여
 **커머스 고객운영**(주문·결제·배송·반품·응답 검토) 업무를 **Agent Team** 이 처리하는
 AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가 REST/MCP 로 접속한다.
+
+---
+
+## ★ [2026-09-08] 도메인이 여행으로 바뀌었다 — 아래 대부분은 쇼핑몰 시절 기록이다
+
+기준선이 **v10** 이고 도메인은 **여행 CS** 다. 코어 계약·생명주기·동시성·감사·평가 도구는
+승계하지만 **Team 모듈과 도메인 데이터는 전량 신규**다(v10 §0-2).
+
+| | v9 (쇼핑몰) | **v10 (여행)** |
+|---|---|---|
+| Team | `return_refund` · `fulfillment_logistics` · `procurement_order_payment` · `catalog_verification` · `voc_store_manager` · `response_review` | **Activity · Dining · Mobility · Booking Handoff** · Lodging/Flight(등록만). MVP 필수는 Activity·Booking Handoff |
+| 코어 1 분류 라벨 | 주문·배송·반품·교환·기타 | **일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외** |
+| DoD | 29항목 | **22항목** |
+
+★**아래 문서 대부분은 쇼핑몰 시절에 쓰였다.** 상태표·성과 기록은 **그때 무엇이었는지**를
+말하는 기록이므로 지우지 않는다. 다만 **"지금 무엇인가"로 읽으면 안 된다** — 지금 값은
+루트 `CLAUDE.md` 사실표와 v10 이 정본이다.
+
+`[미확보]` 여행 Team 이 아직 코드에 없다. `config/project.yaml` 에 등록된 여섯은 여전히
+쇼핑몰 Team 이다. 전환 계획은 `../program/plan/A-COP_여행Team모듈_구성안.md`.
+
+---
 
 ★**옛 Billing/Subscription·Technical Entitlement 도메인은 이 프로젝트에 없다.**
 2026-08-18 결정으로 착수 목록에서 빠졌다(v8 §10). 지금 `config/project.yaml` 에 등록된
@@ -13,8 +35,10 @@ Team 은 여섯이다 — `response_generation_review`, `return_refund`, `procur
 `fulfillment_logistics`, `catalog_verification`, `voc_store_manager`(집계·급증 탐지는 코어 1 로
 옮겨 계약만 유지하는 껍데기, v9 §0 「v8 재판정」). 옛 도메인 이름이 남은 문서를 보면 낡은 것이다.
 
-기준선 문서: `../program/plan/A-COP_구현계획서_v9.md` (**읽기 전용 · 수정 금지**)
-v5~v8 등 이전 버전은 `../program/plan/.archive/`에 **압축·숨김**으로 있으며 평소엔 열지 않는다. ★**DoD 는 18 → 29 항목이다**(v9 §27).
+기준선 문서: `../program/plan/A-COP_구현계획서_v10.md` (**읽기 전용 · 수정 금지**)
+v9 는 `../program/plan/` 에 직전 판으로 남아 있고, v5~v8 은 `../program/plan/.archive/` 에
+**압축·숨김**이라 평소엔 열지 않는다. ★**DoD 는 v10 §12 의 22항목이다**(자동 17 · 아키텍처 테스트 3 · 측정 2).
+아래 「DoD (v8 §27, 1~29항목)」 줄의 29항목은 **쇼핑몰 시절 기준**이며 기록으로 남긴 것이다.
 
 ## 응답 언어
 
@@ -221,7 +245,7 @@ python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ## 7. 문서
 
 - 프로세스 규칙: `RULE.md` (**작업 전 필독**)
-- 기준선 계획: `../program/plan/A-COP_구현계획서_v9.md` (읽기 전용, v8 이하는 `../program/plan/.archive/`의 압축 보존본)
+- 기준선 계획: `../program/plan/A-COP_구현계획서_v10.md` (읽기 전용). v9 는 직전 판으로 `../program/plan/` 에, v5~v8 은 `../program/plan/.archive/` 에 압축·숨김
 - 실행계획: `wiki/records/plans/`
 - 계약: `wiki/records/handoff/`
 - 리포트: `wiki/records/reports/` · 결함: `wiki/records/reports/debugs/`

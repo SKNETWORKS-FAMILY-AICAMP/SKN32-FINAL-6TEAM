@@ -168,6 +168,65 @@ v10 이 Activity 에 준 판정 규칙은 **날씨 조건**이고 감시 소스�
 `[미확보]` 인바운드에서 골프·스키가 티켓류보다 큰지는 안 봤다. ①·② 판단에는
 그 수요 비교가 필요하다.
 
+★**[2026-09-09 미해결·계약] Case 에 타는 도메인 객체 id 의 규칙이 없다.**
+
+사용자 지적 — "쇼핑에서 여행으로 넘어오는데 이제 booking id 로 하는 게 말이 되냐,
+처음부터 어떻게 바뀌어도 쓸 수 있게 설계하자고 했잖아".
+
+`[실측 2026-09-09]` **자리는 이미 도메인 중립이다.** 코어 어디에도 도메인 id 가 없다 —
+`customer_cases` 컬럼에도, `app/core/`·`app/application/` 코드에도
+`order_id`·`booking_id`·`shipment_id` 가 **0회**다. 도메인 객체는
+`idempotency_key(tenant_id, request_id, action_type, **business_subject**)` 의
+`business_subject` 라는 **평범한 문자열 한 칸**으로 들어간다.
+
+★**문제는 칸이 아니라 그 칸에 무엇을 넣는지 규칙이 없다는 것이다.** 지금 세 가지가 섞여 있다.
+
+| 넣는 곳 | `business_subject` | 성격 |
+|---|---|---|
+| `app/application/controller.py:364` (코어) | `case_id` | Case |
+| `return_refund.py:387` | `case_id` | Case |
+| `voc_store_manager.py:79` | `case_id` | Case |
+| `fulfillment_logistics.py:151` | `shipment_id` (없으면 escalate) | 도메인 객체 |
+| `procurement_order_payment.py:149` | `order_id` → `customer_id` → `case_id` **3단 폴백** | 섞임 |
+
+### 이게 왜 여행에서 터지나
+
+키는 `f(tenant, request_id, action_type, subject)` 이고 `request_id` 는 **Case 당 하나**다
+(`idempotency.py:request_id_for_case`). 그래서 **한 Case 안에서 같은 종류의 작업을 두 객체에
+하면 키가 같아진다.**
+
+```
+subject = case_id   →  같은 키   f9b7ba83ae20bd0f   ← 둘째가 조용히 중복 처리된다
+subject = 객체 id    →  다른 키   6d8c07a4… / 7dd9ca…
+```
+
+`[실측 2026-09-09]` 위는 `idempotency_key()` 를 직접 불러 계산한 값이다.
+
+**쇼핑몰에서는 잘 안 드러났다.** Case 하나가 대개 주문 하나였다.
+**여행은 다르다** — Trip 하나에 액티비티·식당·이동 예약이 여럿이고, "비가 온다" 는
+사건 하나(Case 하나)가 **여러 예약을 동시에 바꾼다.** `subject = case_id` 인 Team 이
+그 상황을 만나면 두 번째 변경이 **막히거나 조용히 합쳐진다.**
+
+### 그래서 정할 것은 "booking id 로 바꾸자" 가 아니다
+
+`business_subject` 를 `booking_id` 로 이름 바꾸면 **다음 도메인에서 또 바꿔야 한다.**
+지금 이름은 이미 중립이고 맞다. 정해야 하는 것은 **규칙 하나**다.
+
+> **`business_subject` 에는 그 Action 이 바꾸는 대상 객체의 id 를 넣는다.
+> 대상이 특정되지 않으면 실행하지 않고 escalate 한다.**
+
+`fulfillment_logistics` 가 이미 그렇게 한다(`shipment_identity_unknown` 으로 escalate).
+나머지 넷을 여기에 맞춘다. **`case_id` 폴백을 지운다** — 폴백이 있으면 특정 실패가
+조용히 넘어가고, 그게 위 충돌의 원인이다.
+
+`[미확보]` 코어(`controller.py:364`)가 Team 제안이 아닌 자기 Action 을 만들 때 무엇을
+subject 로 쓸지는 더 봐야 한다. 코어는 도메인 객체를 모르므로 `case_id` 가 맞을 수도 있다.
+**그렇다면 "코어가 만드는 Action 은 Case 단위" 라고 적어야지 폴백으로 두면 안 된다.**
+
+★**이건 Team 얘기가 아니라 계약 얘기라 v10 §6(승계하는 코어 규칙)에 들어가야 한다.**
+지금 §6 의 Idempotency 줄은 `action_requests UNIQUE(tenant_id, idempotency_key)` 만 적고
+**키를 무엇으로 만드는지는 안 적는다.** 계획서 담당이 정할 몫으로 남긴다.
+
 ### B. 횡단 Team
 
 | # | Team | 하는 일 | 출처 |
