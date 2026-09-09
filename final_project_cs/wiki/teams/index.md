@@ -42,6 +42,11 @@ status: draft
 | [dining.md](dining.md) | 4주차 | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 인접 대안 · 식사 시간 이동 |
 | [mobility.md](mobility.md) | 5주차 | 구간 이동 시간·환승·막차·여유 | 경로·순서 재배열 |
 | Lodging / Flight | 등록만 | 잠긴 예약으로만 취급한다 | — |
+| Place Verification | **미해결** | 장소 존재·운영 정보를 외부 원장과 대조. **A2A Remote** | `[미확보]` v10 §5 에 없다. A2A 시연 자리가 이것뿐이라 구성안이 제안했다 |
+
+`[실측]` 뼈대로 베낄 쇼핑몰 Team — Activity ← `return_refund`, Mobility ← `fulfillment_logistics`, Place Verification ← `catalog_verification`. **Dining·Booking Handoff 는 신규다.**
+
+★**모든 Team 이 `business_subject` 규칙을 지켜야 한다** — 그 Action 이 바꾸는 대상 객체 id 를 넣고, 특정 안 되면 escalate 한다. `case_id` 폴백을 두지 않는다. 지금 옳게 하는 Team 은 `fulfillment_logistics` 하나뿐이다. 각 Team 페이지의 같은 이름 절 참고.
 
 **셋을 갖는다** — ① 검증 규칙 ② 감시 소스 ③ 재계획 후보. 판정은 코드가, 대안 생성은 LLM이 하고 **생성한 대안은 판정을 다시 통과해야 통지된다.** ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다** — 재계획 후보는 제안이지 확정이 아니다. [mobility.md](mobility.md)가 그 시험대다.
 

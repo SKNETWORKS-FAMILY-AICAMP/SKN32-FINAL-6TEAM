@@ -13,6 +13,8 @@ owners: [human:미배정]
 
 근거는 계획서 v10 §5. **MVP 필수는 아니다** — Activity·Booking Handoff 다음이다(v10 §9-B, 4주차).
 
+`[실측]` **뼈대로 쓸 쇼핑몰 Team 이 없다.** Activity 는 `return_refund`, Mobility 는 `fulfillment_logistics` 를 베끼는데 이 Team 은 **신규**다(`A-COP_여행Team모듈_구성안.md`).
+
 ## 셋을 갖는다
 
 ### ① 검증 규칙 — 코드가 판정한다
@@ -86,6 +88,25 @@ max_steps           = 5
 ```
 
 `[미확보]` 동행 조건(할랄·채식·아이 동반)을 `constraints` 에 어떤 모양으로 싣는지 안 정했다. 이건 Trip의 **필수 조건**에 속하므로 Context Broker가 싣는 쪽이 맞아 보이지만 정하지 않았다.
+
+## `business_subject` — 도메인이 바뀌어도 안 바꾸는 칸
+
+`[실측 2026-09-09]` `A-COP_여행Team모듈_구성안.md`. 도메인 객체 id 는 코어에 없다 — `customer_cases` 컬럼에도 `app/core/`·`app/application/` 코드에도 `order_id`·`booking_id` 가 **0회**다. 도메인 객체는 `idempotency_key(tenant_id, request_id, action_type, business_subject)` 의 `business_subject` **문자열 한 칸**으로 들어간다.
+
+★**칸 이름을 `booking_id` 로 바꾸면 다음 도메인에서 또 바꿔야 한다.** 이름은 이미 중립이고 맞다. 정해야 하는 것은 규칙이다.
+
+> **`business_subject` 에는 그 Action 이 바꾸는 대상 객체의 id 를 넣는다. 대상이 특정되지 않으면 실행하지 않고 escalate 한다.**
+
+**`case_id` 폴백을 두지 않는다.** 폴백이 있으면 특정 실패가 조용히 넘어간다. 그리고 여행에서 실제로 터진다 — `request_id` 는 Case 당 하나라서, **한 Case 안에서 같은 종류의 작업을 두 객체에 하면 키가 같아진다.**
+
+```
+subject = case_id   →  같은 키    ← 둘째가 조용히 중복 처리되거나 막힌다
+subject = 객체 id    →  다른 키
+```
+
+`[실측]` 쇼핑몰에서는 Case 하나가 대개 주문 하나라 잘 안 드러났다. 여행은 Trip 하나에 예약이 여럿이고 **"비가 온다" 는 사건 하나가 여러 예약을 동시에 바꾼다.**
+
+`[미확보]` 규칙을 계획서 §6(승계하는 코어 규칙)에 넣는 일은 계획서 담당 몫으로 남아 있다 — 지금 §6 은 제약만 적고 키를 무엇으로 만드는지는 안 적는다.
 
 ## 이 Team이 하지 않는 것
 
