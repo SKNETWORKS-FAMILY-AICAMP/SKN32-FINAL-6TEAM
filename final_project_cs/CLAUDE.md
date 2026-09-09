@@ -14,7 +14,7 @@ Team 은 여섯이다 — `response_generation_review`, `return_refund`, `procur
 옮겨 계약만 유지하는 껍데기, v9 §0 「v8 재판정」). 옛 도메인 이름이 남은 문서를 보면 낡은 것이다.
 
 기준선 문서: `../program/plan/A-COP_구현계획서_v9.md` (**읽기 전용 · 수정 금지**)
-v5~v8 등 이전 버전은 `../program/plan/archive/`에 보존본으로 있으며 수정하지 않는다. ★**DoD 는 18 → 29 항목이다**(v9 §27).
+v5~v8 등 이전 버전은 `../program/plan/.archive/`에 **압축·숨김**으로 있으며 평소엔 열지 않는다. ★**DoD 는 18 → 29 항목이다**(v9 §27).
 
 ## 응답 언어
 
@@ -221,7 +221,7 @@ python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ## 7. 문서
 
 - 프로세스 규칙: `RULE.md` (**작업 전 필독**)
-- 기준선 계획: `../program/plan/A-COP_구현계획서_v9.md` (읽기 전용, v8 이하는 `../program/plan/archive/`의 보존본)
+- 기준선 계획: `../program/plan/A-COP_구현계획서_v9.md` (읽기 전용, v8 이하는 `../program/plan/.archive/`의 압축 보존본)
 - 실행계획: `wiki/records/plans/`
 - 계약: `wiki/records/handoff/`
 - 리포트: `wiki/records/reports/` · 결함: `wiki/records/reports/debugs/`

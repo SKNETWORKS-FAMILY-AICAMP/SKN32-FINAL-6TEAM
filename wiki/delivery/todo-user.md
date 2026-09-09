@@ -114,7 +114,7 @@ python program/scripts/cutover_rewrite.py --layout wiki
 |---|---|
 | 유지 문서 대조 | **끝** — 18차까지, 잔여 0 → [coverage-2026-09.md](../governance/migration-scope/coverage-2026-09.md) |
 | 검사기 | `check_wiki.py` 통과 · 242문서 |
-| DoD-01 원본 v4 hash 판정 | **닫힘 (09-06 확인)** — evidence `DoD-01_v4원본_hash_불변.md`에 기준 hash(`b675556cf4d72e64…`, 21,790 bytes, 2026-08-12)가 있고 **지금 파일이 그 값과 일치한다**(`program/plan/archive/A-COP_구현계획서(4).md`). 08-20 "판정 불가"는 evidence를 안 본 것 |
+| DoD-01 원본 v4 hash 판정 | **닫힘 (09-06 확인)** — evidence `DoD-01_v4원본_hash_불변.md`에 기준 hash(`b675556cf4d72e64…`, 21,790 bytes, 2026-08-12)가 있고 **지금 파일이 그 값과 일치한다**. `[재확인 2026-09-09]` 그 파일은 `program/plan/.archive/보존본_v5-v8_2026-09-09.zip` 안으로 들어갔지만 **풀지 않고도 대조된다** — `sha256 = b675556cf4d72e64…`, 21,790 bytes 그대로다. 확인: `python -c "import zipfile,hashlib;print(hashlib.sha256(zipfile.ZipFile('program/plan/.archive/보존본_v5-v8_2026-09-09.zip').read('A-COP_구현계획서(4).md')).hexdigest())"`. 08-20 "판정 불가"는 evidence를 안 본 것 |
 | 추적 영상 mp4 넷 | **닫힘 (09-06 확인)** — 넷은 옛 판이 아니라 **용도가 다른 넷**이다: `추적`(그림 17장 crossfade), `추적_유튜브`(자막·챕터·썸네일판, 리포트 대상), `움직임`(케이스 하나가 프레임마다 움직이는 애니메이션), `낱장`(화면과 같은 배치의 애니메이션). 각각 만드는 스크립트가 따로 있고 `*.mp4`는 git 무시. 지울 것 없음 |
 
 ## 관계
