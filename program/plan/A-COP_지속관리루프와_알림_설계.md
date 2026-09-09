@@ -64,11 +64,15 @@ entry = self.registry.resolve(case_type=intent or "", intent=intent)
 ★**A 를 권한다.** 레지스트리가 이미 `resolve(case_type, intent)` 로 두 축을
 받게 만들어져 있다 — **설계는 이미 A 다. 컨트롤러가 그걸 안 쓰고 있을 뿐이다.**
 
-`[미확보]` `Classification` 에 칸을 하나 더 두는 것이 계약 변경인지 확인이
-필요하다. 지금 넷이다 — `sentiment` · `intent` · `issue_code` · `severity`.
-★**`issue_code` 가 이미 객체 종류를 접두로 달고 있다**(`order_payment_failed`,
-`shipping_delayed`). 새 칸 대신 **`issue_code` 접두를 `case_type` 으로 쓰는 것**도
-방법이다 — 그러면 계약이 안 바뀐다.
+`Classification` 은 지금 넷이다 — `sentiment` · `intent` · `issue_code` · `severity`.
+
+★`[실측 2026-09-10]` **칸을 더하는 것은 코어 계약 변경이 아니다.** `Classification` 은
+`app/modules/customer_ops/feedback.py:41` 의 frozen dataclass 이고 `app/core/` 에는
+**없다**. 쓰는 곳도 그 파일 하나다. Registry·A2A·평가 하네스가 안 걸린다.
+
+★**그래도 더하지 않는다.** `issue_code` 가 이미 객체 종류를 접두로 달고 있어
+(`order_payment_failed` · `shipping_delayed`) **거기서 `case_type` 을 뽑으면 된다.**
+칸을 안 늘리는 쪽이 항상 싸다 → [분류어휘 명세](A-COP_여행_분류어휘와_라우팅_명세.md).
 
 ---
 
@@ -162,9 +166,14 @@ publisher(...)  →  텔레그램 / 디코 / 이메일
 ★**어느 것을 골라도 코드는 같다.** `publisher` 함수 하나이므로 **셋을 다 만들어
 두고 설정으로 고르는 것**도 된다. 그게 v10 §6 의 "Ports" 성질과 맞는다.
 
-`[미확보]` 실제 붙이는 일은 안 해 봤다. 토큰·비밀 보관을 `.env` 로 할지
-`config/` 로 할지도 안 정했다 — **`.env.teamflow` 처럼 커밋 안 하는 자리가
-이미 관례로 있다.**
+★`[결정 2026-09-10]` **비밀은 `.env`, 나머지는 `config/`.** 이 저장소에
+**관례가 이미 있다** — `.env` 는 커밋하지 않고(`ACOP_OPENAI_API_KEY` 등), 형식만
+`.env.example` 로 올린다. 루트에도 `.env.teamflow` / `.env.teamflow.example` 이
+같은 모양이다. **웹훅 URL·토큰은 비밀이므로 `.env`**, 어느 채널을 쓸지·재시도
+횟수는 설정이므로 `config/`.
+
+`[미확보]` **실제로 붙여 보지는 않았다.** 위 채널 성질은 공개 문서에서 아는 것이고
+이 저장소에서 확인한 것이 아니다.
 
 ---
 
