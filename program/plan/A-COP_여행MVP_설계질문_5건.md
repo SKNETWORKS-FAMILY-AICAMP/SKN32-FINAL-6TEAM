@@ -354,6 +354,70 @@ v9 §3-A 에 「부트캠프 주제 요구사항 ↔ 구현 대응표」가 있�
 `[미확보]` 강사가 말한 "에이전트" 가 우리가 말하는 Team 과 같은 것인지 확인 안 했다.
 **같은 말을 다르게 쓰고 있으면 이 논의 자체가 헛돈다.** 먼저 물어볼 것.
 
+## 6-B. 그 셋은 각 Team 이 하나, 새 모듈이 하나
+
+`[2026-09-09]` **각 Team 이 각자 갖는다. 새 모듈은 필요 없고, 기존 한 팀에 몰지도
+않는다.** 다만 **셋의 상태가 다르다** — 하나는 이미 있고, 하나는 없고, 하나는
+한 팀에만 있다.
+
+`[실측 2026-09-09]` 지금 Team 여섯의 내부를 열어 보면:
+
+| v10 §5 가 준 것 | 지금 상태 | 여행에서 할 일 |
+|---|---|---|
+| **① 검증 규칙** | **이미 각 팀에 있다** — `execute()` 안의 판정 로직 (`return_refund` 125줄 · `fulfillment_logistics` 62줄) | **규칙만 갈아낀다.** 자리는 그대로 |
+| **② 감시 소스** | **없다** — `TeamManifest` 13필드에 주기·감시 관련이 하나도 없다 | **선언만 팀에 둔다.** 부르는 것은 sweeper |
+| **③ 재계획 후보 생성** | **한 팀만 한다** — `response_review._generate` 가 유일하게 `self.llm.complete` 를 부른다 | **4팀이 각자 갖는다.** 본은 이미 있다 |
+
+### ② 는 "선언" 만 팀에 둔다 — 실행을 넣으면 계약이 깨진다
+
+Team 은 `execute(task)` 로만 불린다(§2). **감시를 팀이 직접 돌면 두 번째 진입점이
+필요하고 그건 계약 변경**이다. 그래서 이렇게 가른다.
+
+```
+Team manifest   watch_sources: ["weather.short_term", "operator.notice"]   ← 선언
+sweeper(코어)    그 목록을 읽어 실제로 조회하고 변화를 비교한다              ← 실행
+```
+
+★**이러면 계약을 안 건드린다.** `TeamManifest` 에 필드 하나가 느는 것은
+`allowed_tools`·`knowledge_scope` 가 이미 그런 모양이라 같은 성격이다.
+
+`[미확보]` 그래도 필드 추가는 계약 변경이다. `config/` 에 두는 안과 견줘 정해야 한다.
+
+### ③ 은 본이 이미 있다 — 다만 네 곳 복붙이 된다
+
+`response_review._generate()` 가 그 모양이다.
+
+```python
+if self.llm is None:            # LLM 없으면 생성 안 한다
+    return 원문 그대로
+response = await self.llm.complete("response.generate", …)
+return self._decode(response)
+```
+
+v10 §5 가 이 팀을 Team 자리에서 내리고 **원칙을 각 Team 안으로 흡수**했으므로,
+Activity·Dining·Mobility·Booking Handoff 넷이 각자 `_generate` 를 갖게 된다.
+
+★**그러면 네 곳에 같은 뼈대가 복붙된다.** 지금 `_result`·`_evidence`·`_escalate`
+80줄이 이미 그 상태다 → [구성안의 계약 포장](A-COP_여행Team모듈_구성안.md).
+**③ 을 넣기 전에 그 포장을 `app/core/team_base.py` 로 빼는 편이 낫다** — 넣고 나서
+빼면 네 곳을 고쳐야 한다.
+
+### 경고 하나 — "선언만 하고 안 쓰는" 상태가 실제로 있다
+
+`[실측 2026-09-09]` `voc_store_manager` 는 `llm` 을 **주입받고도 `execute()` 에서
+한 번도 안 쓴다.** 분기는 `similar_case_count >= 2` 고정 임계값 하나다.
+
+★**②·③ 도 같은 꼴이 되기 쉽다.** manifest 에 `watch_sources` 를 적어 두고 sweeper 가
+안 읽거나, `_generate` 를 만들어 두고 안 부르는 상태. **선언과 동작이 갈리면
+문서만 보고는 못 알아챈다.** 검사로 막아야 한다 —
+
+```
+manifest 에 watch_sources 가 있는데 sweeper 가 안 읽는 Team 이 있으면 실패
+```
+
+`tests/contract/test_module_toggles.py::test_every_declared_module_has_a_gate` 가
+이미 같은 성격의 검사다. 그 옆에 붙인다.
+
 ## 7. 순서
 
 앞의 것이 뒤의 전제라 순서가 있다.
