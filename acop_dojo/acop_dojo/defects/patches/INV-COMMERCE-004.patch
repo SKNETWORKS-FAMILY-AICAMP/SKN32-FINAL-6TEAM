@@ -1,6 +1,6 @@
 --- a/app/modules/customer_ops/fulfillment_logistics.py
 +++ b/app/modules/customer_ops/fulfillment_logistics.py
-@@ -61,7 +61,7 @@
+@@ -114,7 +114,7 @@
                  phase = order.get("fulfillment_status") or order.get("status")
                  if not phase:
                      return self._escalate(task, evidence, "fulfillment_status_unknown")

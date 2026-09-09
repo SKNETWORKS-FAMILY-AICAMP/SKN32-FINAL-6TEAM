@@ -1,6 +1,6 @@
 --- a/app/modules/customer_ops/voc_store_manager.py
 +++ b/app/modules/customer_ops/voc_store_manager.py
-@@ -37,7 +37,7 @@
+@@ -41,7 +41,7 @@
          return evidence
  
      async def execute(self, task: TeamTask) -> TeamResult:

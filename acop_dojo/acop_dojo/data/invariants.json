@@ -48,7 +48,7 @@
     "INV-CLASS-002",
     "INV-CLASS-003"
    ],
-   "note": "값 검증 쪽(빈 문자열 라벨)은 앱 결함이라 결함으로 만들 수 없다. tests/integration/api/test_api_runtime.py 의 xfail(strict) 과 docs/reports/debugs/2026-09-01_분류_빈라벨_통과.md 가 추적한다.",
+   "note": "2026-09-01 에 보고한 빈 라벨 통과 결함은 코어 1 이 고쳤다(3aabf87). 분류 절차가 app/application/classification.py 로 빠져 결함 앵커도 그쪽으로 옮겼다. 근거: wiki/records/reports/debugs/2026-09-01_분류_빈라벨_통과.md",
    "rule": "분류 실패는 classification_failed 를 남기고 escalated 로 전환한다",
    "source": "CLAUDE.md §1",
    "status": "active"

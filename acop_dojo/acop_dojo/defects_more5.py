@@ -94,22 +94,15 @@ MORE5: list[Defect] = [
         defect_id="INV-CLASS-002",
         title="일부만 분류돼도 성공으로 친다",
         invariant="분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
-        path="app/presentation/api/cases.py",
-        old='if not result or not all(k in result for k in ("intent", "issue_code", "sentiment")):',
-        new="if not result:",
+        path="app/application/classification.py",
+        old=('        if not result or not all(str(result.get(label) or "").strip() '
+             'for label in REQUIRED_LABELS):'),
+        new="        if not result:",
         lesson=(
             "intent 만 오고 issue_code 가 빠진 응답이 성공으로 처리된다. 빈 라벨이 Case 에 "
             "저장되고 그 라벨로 라우팅까지 간다. 분류 실패는 escalated 로 가야 할 일이다."
         ),
         counterfactuals=["일부라도 있으면 쓸 만하다", "나중에 다시 분류하면 된다"],
-        excluded=(
-            "잡을 수 없다. API 쪽 검사를 지워도 domain/case.py 의 validate_payload 가 "
-            "CLASSIFIED 이벤트의 세 필드를 다시 검사해 InvalidTransition 을 던지고, "
-            "cases.py 의 except 가 그것을 받아 classification_failed 로 전환한다. "
-            "즉 관찰 가능한 동작이 바뀌지 않는 중복 방어 제거다(subsumed mutant). "
-            "실제 결함은 값 검증 쪽이다 — "
-            "final_project_cs/wiki/records/reports/debugs/2026-09-01_분류_빈라벨_통과.md"
-        ),
         difficulty=2,
     ),
     Defect(
@@ -143,9 +136,9 @@ MORE5: list[Defect] = [
         defect_id="INV-CLASS-003",
         title="분류 실패의 사유를 잃는다",
         invariant="분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
-        path="app/presentation/api/cases.py",
-        old='payload={"failure_code": "classification_failed"}',
-        new='payload={"failure_code": "unknown"}',
+        path="app/application/classification.py",
+        old='FAILURE_CODE = "classification_failed"',
+        new='FAILURE_CODE = "unknown"',
         lesson=(
             "escalated 로 가긴 하는데 왜 넘어왔는지가 사라진다. 받은 사람은 분류가 실패한 "
             "것인지 다른 이유인지 모른 채 처음부터 다시 조사해야 한다."

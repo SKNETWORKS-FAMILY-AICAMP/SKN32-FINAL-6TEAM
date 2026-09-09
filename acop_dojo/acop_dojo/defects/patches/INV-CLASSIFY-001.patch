@@ -1,6 +1,6 @@
 --- a/app/modules/customer_ops/feedback.py
 +++ b/app/modules/customer_ops/feedback.py
-@@ -100,7 +100,7 @@
+@@ -115,7 +115,7 @@
      if any(not isinstance(raw.get(key), str) or not raw[key].strip() for key in required):
          raise ClassificationFailed("classifier output is missing a required label")
      result = Classification(*(raw[key].strip() for key in required))

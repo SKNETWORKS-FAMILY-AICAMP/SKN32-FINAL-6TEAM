@@ -1,6 +1,6 @@
 --- a/app/modules/customer_ops/procurement_order_payment.py
 +++ b/app/modules/customer_ops/procurement_order_payment.py
-@@ -96,7 +96,7 @@
+@@ -150,7 +150,7 @@
              ),
              approval_required=True,
              risk_level=risk,

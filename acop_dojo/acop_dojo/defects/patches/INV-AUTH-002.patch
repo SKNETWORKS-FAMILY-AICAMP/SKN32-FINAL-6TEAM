@@ -1,6 +1,6 @@
 --- a/app/presentation/api/cases.py
 +++ b/app/presentation/api/cases.py
-@@ -143,7 +143,7 @@
+@@ -206,7 +206,7 @@
              return _view(repository.get_case(conn, tenant_id=principal.tenant_id, case_id=case_id))
  
      @router.post("/v1/cases/{case_id}/actions/{action_id}/approve")

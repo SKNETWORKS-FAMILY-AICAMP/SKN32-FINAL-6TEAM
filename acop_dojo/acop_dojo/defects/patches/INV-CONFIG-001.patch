@@ -1,6 +1,6 @@
 --- a/app/core/project_config.py
 +++ b/app/core/project_config.py
-@@ -79,7 +79,7 @@
+@@ -81,7 +81,7 @@
          try:
              return self.modules[module_id].enabled
          except KeyError as exc:

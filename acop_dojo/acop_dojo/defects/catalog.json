@@ -1,7 +1,7 @@
 {
  "baseline": {
   "failed": [],
-  "summary": "486 passed, 4 deselected, 1 xfailed, 36 warnings in 63.16s (0:01:03)"
+  "summary": "711 passed, 4 deselected, 36 warnings in 40.02s"
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -105,18 +105,36 @@
    ]
   },
   "INV-CLASS-002": {
-   "failed": [],
+   "failed": [
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_a_label_is_blank",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[intent]",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[issue_code]",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[sentiment]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[intent]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[issue_code]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[sentiment]"
+   ],
    "gates": {
     "applied": true,
     "applies": true,
-    "kills_tests": false,
+    "distinguishable": true,
+    "kills_tests": true,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
-   "path": "app/presentation/api/cases.py",
-   "summary": "482 passed, 4 deselected, 1 xfailed, 36 warnings in 32.33s",
-   "title": "일부만 분류돼도 성공으로 친다"
+   "path": "app/application/classification.py",
+   "summary": "7 failed, 704 passed, 4 deselected, 36 warnings in 35.88s",
+   "title": "일부만 분류돼도 성공으로 친다",
+   "unique_failures": [
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_a_label_is_blank",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[intent]",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[issue_code]",
+    "tests/integration/api/test_api_runtime.py::test_create_escalates_when_the_classifier_omits_a_required_label[sentiment]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[intent]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[issue_code]",
+    "tests/unit/core/test_classification_step.py::test_a_partial_result_is_a_failure_not_a_partial_success[sentiment]"
+   ]
   },
   "INV-CLASS-003": {
    "failed": [
@@ -131,8 +149,8 @@
     "reverts": true
    },
    "invariant": "분류 실패는 조용히 넘기지 않는다 — classification_failed 를 남기고 escalated 로 간다",
-   "path": "app/presentation/api/cases.py",
-   "summary": "1 failed, 484 passed, 4 deselected, 1 xfailed, 36 warnings in 25.99s",
+   "path": "app/application/classification.py",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 39.79s",
    "title": "분류 실패의 사유를 잃는다",
    "unique_failures": [
     "tests/integration/api/test_api_runtime.py::test_create_escalates_when_injected_classifier_fails"
@@ -174,7 +192,7 @@
    },
    "invariant": "제안에는 근거 id 가 붙어야 한다 — ContextPack 에 실재하는 것으로",
    "path": "app/modules/customer_ops/procurement_order_payment.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 29.81s",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 38.66s",
    "title": "제안이 근거 id 를 달지 않는다",
    "unique_failures": [
     "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
@@ -196,7 +214,7 @@
    },
    "invariant": "값을 모르면 비워 둔다 — 모르는 상태를 확정 답변으로 만들지 않는다",
    "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.24s",
+   "summary": "3 failed, 708 passed, 4 deselected, 36 warnings in 37.00s",
    "title": "배송 상태를 모르는데 아는 척 답한다",
    "unique_failures": [
     "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
@@ -218,7 +236,7 @@
    },
    "invariant": "답변은 근거와 일치해야 한다",
    "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.91s",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 36.44s",
    "title": "조회된 배송 건수를 세지 않고 0으로 답한다",
    "unique_failures": [
     "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
@@ -888,7 +906,7 @@
    },
    "invariant": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 늘리지 않는다",
    "path": "app/modules/customer_ops/return_refund.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 28.75s",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 35.63s",
    "title": "반품 가능 기간이 정책보다 길어졌다",
    "unique_failures": [
     "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"

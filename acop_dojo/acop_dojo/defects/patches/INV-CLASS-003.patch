@@ -1,11 +1,11 @@
---- a/app/presentation/api/cases.py
-+++ b/app/presentation/api/cases.py
-@@ -89,7 +89,7 @@
-                                     payload=result, actor_type="api", actor_id=principal.key_id)
-                 except Exception:
-                     transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=1, event_type=EventType.CLASSIFICATION_FAILED,
--                                    payload={"failure_code": "classification_failed"}, actor_type="api", actor_id=principal.key_id)
-+                                    payload={"failure_code": "unknown"}, actor_type="api", actor_id=principal.key_id)
-                 # ★status 를 기본값(proposed)으로 두면 이 idempotency 감사 기록 행이
-                 #   `/ui/approvals` 대기 큐(status IN proposed,pending_approval)에
-                 #   Case 를 만들 때마다 근거 없는 유령 항목으로 쌓인다 — action.approve
+--- a/app/application/classification.py
++++ b/app/application/classification.py
+@@ -35,7 +35,7 @@
+ REQUIRED_LABELS = ("intent", "issue_code", "sentiment")
+ 
+ #: 분류 실패를 기록할 때 쓰는 코드. 상태기계가 이걸 보고 `escalated` 로 보낸다.
+-FAILURE_CODE = "classification_failed"
++FAILURE_CODE = "unknown"
+ 
+ 
+ class Classifier(Protocol):
