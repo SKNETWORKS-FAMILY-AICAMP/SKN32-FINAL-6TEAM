@@ -12,14 +12,36 @@ tags: [architecture, contract]
 
 **이 문서가 cs 쪽에 없었다.** sample 에는 [domain-swap.md](../../final_project_sample/wiki/quality/domain-swap.md) 가 있는데 cs 에는 대응이 없었다.
 
+★**이 문서가 "도메인이 또 바뀌어도 이어서 작업할 수 있는가"의 정본이다.** 교체를 실제로 두 번 했다.
+
+| 언제 | 무엇에서 무엇으로 | 이 문서가 잡았나 |
+|---|---|---|
+| 2026-08-18 | 가상 SaaS(구독·결제) → 온라인 커머스 | 11행 목록이 이때 만들어졌다 |
+| **2026-09-08** | 커머스 → **여행** | **부분만.** 아래 「바꾸는 것」 3·4·5·7 이 빠져 있어 이번에 더했다 |
+
+**교체할 때마다 이 문서를 갱신한다.** 갱신하지 않으면 다음 교체에서 같은 것을 또 빠뜨린다 — 이번이 그랬다.
+
 ## 바꾸는 것 — 순서가 있다
 
 ```
-1. 도메인 테이블   2. 대조 선언   3. Agent Team
-4. 코퍼스          5. 평가 데이터  6. 시연
+1. 도메인 테이블   2. 대조 선언   3. 분류 라벨
+4. Context Broker 적재분         5. Action 목록
+6. Agent Team      7. Composer 소재
+8. 코퍼스          9. 평가 데이터  10. 시연
 ```
 
 **순서를 지켜야 한다.** 대조 선언 없이 Team 을 만들면 [evidence-check](actions/evidence-check.md) 가 전부 거부한다.
+
+★**[2026-09-09] 3·4·5·7이 여행 교체에서 추가됐다.** 그전 목록은 여섯 단계(테이블·대조 선언·Team·코퍼스·평가·시연)였는데, **실제로 갈아 끼운 것 넷이 빠져 있었다** — 계획서 v10 §5-A가 "코어에서 바뀌는 것"으로 넷을 따로 적었고 이 문서에는 그 항목이 없었다. `분류 라벨`·`Action` 은 이 문서에 등장 횟수 0이었다.
+
+| 추가된 단계 | v9 (쇼핑몰) | v10 (여행) |
+|---|---|---|
+| 3. 분류 라벨 | 주문·배송·반품·교환·기타 | 일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외 |
+| 4. Context Broker 적재분 | 주문·배송 정보 | 여행 상태(최신 일정·잠긴 예약·필수 조건·다음 확인 시점) |
+| 5. Action 목록 | 주문 조회·배송 조회·환불 실행 | 장소·운영 조회 / 이동 시간 조회 / 기상 조회 |
+| 7. Composer 소재 | 한국어 CS 문구 | 영어 통지 문구 + 운영자용 한국어 |
+
+★**4번이 헷갈리는 자리다.** 아래 11행은 "Context Broker 를 안 바꾼다"고 적는데 여기서는 바꾼다고 적는다. **둘 다 맞다** — 예산·절삭 규칙·`degraded` 신호라는 **기제**는 안 바뀌고, 무엇을 싣는지라는 **적재분**이 바뀐다. 기제와 적재분을 같은 말로 부르면 다음 교체에서 한쪽을 빠뜨린다.
 
 ### 1. 도메인 테이블
 
@@ -111,6 +133,25 @@ python -m pytest -q
 
 `[실측]` **아키텍처 테스트가 실패하면 그 파일을 `app/modules/` 로 옮기거나 선언으로 뺀다.** basement 에 도메인 어휘가 샌 것이다.
 
+### ★ [2026-09-09] 가드가 여행 어휘를 모른다
+
+`[실측]` `tests/architecture/test_basement_is_domain_free.py` 의 `DOMAIN_WORDS`.
+
+```python
+DOMAIN_WORDS = (
+    # 구독·결제 (현재 sample 도메인)
+    "payment", "subscription", "entitlement", "refund", "invoice",
+    # 커머스 (복사본이 쓸 도메인)
+    "order_id", "line_item", "shipment", "sku", "cart",
+)
+```
+
+**여행 어휘가 하나도 없다.** `trip`·`itinerary`·`booking`·`reservation`·`activity` 가 `app/core/` 에 들어가도 이 가드는 통과한다. 여행 Team 구현이 시작되면 그때가 가장 새기 쉬운 시점이다.
+
+★**이 목록은 "지금 도메인"이 아니라 "새면 안 되는 어휘 전부"다.** 도메인을 바꿀 때 옛 어휘를 지우지 않고 **더한다** — 그래야 되돌아갔을 때도 잡힌다. 목록 추가는 코드 담당 몫으로 [../../wiki/delivery/open-items.md](../../wiki/delivery/open-items.md) 에 올렸다.
+
+`[실측]` `test_engine_serves_another_domain.py` 는 **쇼핑몰 선언으로** 엔진을 돌려 도메인 무관을 증명한다. 여행으로 갈아탄 지금 이 테스트는 **오히려 강해졌다** — 우리가 만들고 있지 않은 도메인으로 검증하기 때문이다. 여행으로 바꾸지 않는다.
+
 ## 이 문서가 생긴 이유
 
 `[실측]` 원본 §4. 2026-08-16에 `app/core/verification.py`가 **구독·결제 어휘를 Core에 박고 있었다.** 그 상태로 쇼핑몰에 복사했다면 `order_id`가 "확인 불가 → 자동 거부"에 걸렸을 것이다 — 그 도메인의 가장 중요한 식별자가 basement의 거부 목록에 있는 정반대 상황이다.
@@ -125,8 +166,8 @@ python -m pytest -q
 
 | 원본 | 지금 |
 |---|---|
-| §1-1 "현재 도메인 테이블 4개 = `subscriptions`·`payments`·`entitlements`·`incidents`" | 옛 도메인. 지금은 `orders`·`order_items`·`shipments`·`returns` — 원본이 "쇼핑몰이면 이게 온다"고 적은 그것이 현재다 |
-| §1-3 Team 파일 `{billing,technical,feedback}.py` | 퇴역. 현행 여섯 Team은 [teams/index.md](teams/index.md) |
+| §1-1 "현재 도메인 테이블 4개 = `subscriptions`·`payments`·`entitlements`·`incidents`" | **두 판 낡았다.** 그다음이 `orders`·`order_items`·`shipments`·`returns`(쇼핑몰)였고, 2026-09-08 여행 교체로 그것도 옛 도메인이 됐다. 여행 테이블은 아직 안 만들었다 `[미확보]` — 새 집합체는 **Trip** 하나다(v10 §4-B) |
+| §1-3 Team 파일 `{billing,technical,feedback}.py` | 퇴역. 쇼핑몰 여섯 Team도 MVP 경로에서 빠졌고, 여행 Team 넷은 명세만 있다 → [teams/index.md](teams/index.md) |
 | §1-4 "25문서 / 300청크" | **306청크** ([context/rag-retrieval.md](context/rag-retrieval.md)) |
 | §1-5 `attack_fixtures.jsonl` 15건 | **17건** (atk-16·17 추가) |
 | §0 "예외 목록은 3개를 넘을 수 없다" | 지금도 맞다 — `INV-CS-ARCH-004`가 크기를 검사한다 |

@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import answers, boss, defect_stage, defects, invariants, mapgen, placement, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -347,6 +347,22 @@ def cmd_invariants(_: argparse.Namespace) -> int:
     return invariants.report(invariants.check(), separator=SEPARATOR)
 
 
+def cmd_refs(args: argparse.Namespace) -> int:
+    outcome = refs.scan(target_root())
+    code = refs.report(outcome, separator=SEPARATOR, limit=args.limit)
+    if code and args.fix:
+        applied = refs.fix(target_root(), outcome)
+        print(SEPARATOR)
+        print(f"파일 {applied['files']}개에서 참조 {applied['references']}건을 고쳤다.")
+        print(f"남은 {len(applied['left'])}건은 옮겨간 자리를 못 찾아 그대로 뒀다.")
+        print("주석 문자열만 바꿨지만 테스트로 확인한다.")
+        return 0
+    if code:
+        print(SEPARATOR)
+        print("주석이 틀리면 근거를 찾으러 간 사람이 빈손으로 돌아온다.")
+    return code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 도장")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -386,6 +402,12 @@ def build_parser() -> argparse.ArgumentParser:
     defects_cmd.add_argument("--rebuild", action="store_true", help="패치를 다시 만든다")
     defects_cmd.add_argument("--only", default=None, help="쉼표로 구분한 결함 id 만 검증한다")
     defects_cmd.set_defaults(func=cmd_defects)
+
+    refs_cmd = sub.add_parser("refs", help="문서를 가리키는 참조가 실재하는지 본다")
+    refs_cmd.add_argument("--limit", type=int, default=12)
+    refs_cmd.add_argument("--fix", action="store_true",
+                          help="옮겨간 자리를 찾은 것만 고친다")
+    refs_cmd.set_defaults(func=cmd_refs)
 
     sub.add_parser("invariants", help="규칙 원장과 결함 카탈로그가 맞는지 본다").set_defaults(func=cmd_invariants)
 
