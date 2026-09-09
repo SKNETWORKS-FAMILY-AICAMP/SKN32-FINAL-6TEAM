@@ -11,6 +11,8 @@ status: draft
 
 **Team을 늘리는 일이 리팩토링이 되면 설계가 잘못된 것이다.** Registry 등록만으로 끝나야 한다.
 
+★**[2026-09-08] 도메인이 여행으로 바뀌었다**(계획서 v10). 이 폴더에 **두 세대가 같이 있다** — 계약·경계·Registry 문서는 도메인을 모르므로 그대로 쓰고(이게 교체가 가능한 이유다), 여행 Team 4종은 명세만 있고, 쇼핑몰 Team 6종은 MVP 경로에서 빠졌으나 문서를 남긴다. 여행 Team은 지역 상품이 아니라 **여행을 구성하는 객체 종류**로 나눈다(v10 §5).
+
 ## 읽기 순서
 
 1. [team-contract.md](team-contract/index.md) — 무엇을 구현해야 하는가
@@ -29,19 +31,31 @@ status: draft
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |
 | [response-review-design.md](response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
 
-## 구현된 Team
+## 여행 Team — 명세만 있다 `[실측 2026-09-09]`
 
-`[실측]` `app/modules/customer_ops/`
+**코드가 없다.** `app/modules/` 에 파일이 없고 `config/project.yaml` 에도 등록돼 있지 않다. 아래는 무엇을 만들어야 하는가다.
 
-| Team | 파일 | Pack | 상태 |
+| Team | MVP | 무엇을 판정하나 | 재계획 |
 |---|---|---|---|
-| [voc-store-manager.md](voc-store-manager.md) | `voc_store_manager.py` | CS | **껍데기** — 등록·계약만 유지(v8 재판정 09-01, 집계·급증 탐지는 코어 1). 09-06 전까지 이 칸은 "10주 착수 확정"이었다 |
-| [response-review.md](response-review.md) | `response_review.py` | CS | **10주 착수 확정** |
-| [procurement-order.md](procurement-order.md) | `procurement_order_payment.py` | Commerce | 일정 따라 조정 |
-| [fulfillment-logistics.md](fulfillment-logistics.md) | `fulfillment_logistics.py` | Commerce | 동 |
-| [return-refund.md](return-refund.md) | `return_refund.py` | Commerce | 동 |
-| [catalog-verification.md](catalog-verification.md) | `catalog_verification.py` | Commerce (A2A Remote) | 동 |
-| — | `feedback.py` | CS | 인라인 분류 |
+| [activity.md](activity.md) | **필수** | 예약 시간·운영일·인원·날씨 조건·취소/환급 규정 | 같은 시간대 대체 · 날짜 이동 · 환급 안내 |
+| [booking-handoff.md](booking-handoff.md) | **필수** | 승인이 필요한 건 특정, 대안·차액 정리 | 변경 링크. **자동 실행은 `tier=='simulated'` 한정** |
+| [dining.md](dining.md) | 4주차 | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 인접 대안 · 식사 시간 이동 |
+| [mobility.md](mobility.md) | 5주차 | 구간 이동 시간·환승·막차·여유 | 경로·순서 재배열 |
+| Lodging / Flight | 등록만 | 잠긴 예약으로만 취급한다 | — |
+
+**셋을 갖는다** — ① 검증 규칙 ② 감시 소스 ③ 재계획 후보. 판정은 코드가, 대안 생성은 LLM이 하고 **생성한 대안은 판정을 다시 통과해야 통지된다.** ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다** — 재계획 후보는 제안이지 확정이 아니다. [mobility.md](mobility.md)가 그 시험대다.
+
+## 쇼핑몰 Team — MVP 경로에서 빠졌다
+
+`[실측]` 코드와 등록은 남아 있고 **호출되지 않는다**(v10 §0-2). 문서를 지우지 않는 이유는 골든셋·평가·불변식이 아직 이 Team들을 근거로 삼기 때문이다.
+
+| Pack | Team |
+|---|---|
+| CS | [voc-store-manager.md](voc-store-manager.md)(`voc_store_manager.py`, v8 재판정으로 이미 껍데기였다) · [response-review.md](response-review.md)(`response_review.py`) |
+| Commerce Ops | [procurement-order.md](procurement-order.md) · [fulfillment-logistics.md](fulfillment-logistics.md) · [return-refund.md](return-refund.md) · [catalog-verification.md](catalog-verification.md)(A2A Remote) |
+| — | `feedback.py` 인라인 분류는 **남는다.** 라벨만 교체된다 — 일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외 (v10 §5-A) |
+
+★각 칸의 옛 상태("10주 착수 확정"·"일정 따라 조정")는 v9 쇼핑몰 기준이라 뺐다. 개별 문서에 그 시점 사실로 남아 있다.
 
 정책 파일이 따로 있다.
 
@@ -274,14 +288,6 @@ teams:
 
 근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:213-221`
 
-## 만드는 순서
+## 만드는 순서 · 공통 뼈대
 
-**여섯 중 무엇을 먼저 하나는 [build-order.md](build-order.md) 에 있다.**
-
-## 공통 뼈대
-
-`[실측]` **반복되는 네 가지를 조합형 유틸로 빼는 설계가 있다.** 아직 구현은 없다.
-
-> **`app/modules/customer_ops/team_utils.py` — 2026-09-03 확인 결과 없음.**
-
-전문은 [common-utils.md](common-utils.md).
+만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 **아직 구현은 없다** — `[실측]` `app/modules/customer_ops/team_utils.py` 2026-09-03 확인 결과 없음.
