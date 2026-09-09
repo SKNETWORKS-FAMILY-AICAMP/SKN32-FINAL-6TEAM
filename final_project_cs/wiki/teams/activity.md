@@ -10,7 +10,7 @@ domain: travel
 
 # Activity Team
 
-★**아직 코드가 없다.** `app/modules/` 에 이 Team 파일이 없고 `config/project.yaml` 에도 등록돼 있지 않다 `[실측 2026-09-09]`. 이 문서는 **무엇을 만들어야 하는가**의 명세다. 구현되면 `type` 을 `concept` 으로 바꾸고 실측을 채운다.
+`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다).
 
 근거는 계획서 v10 §5. 여행 도메인 판올림(2026-09-08)으로 생긴 Team이다.
 
@@ -35,6 +35,26 @@ domain: travel
 | **다루는 것** | 일정의 **「무엇을 한다」 칸 전부** — 관람 · 체험 · 레저 · 공연 |
 | **하는 일** | ① 그 활동의 **정보를 제공한다** ② 일정에서 그 활동이 **성립하는지 판정한다** |
 | **예약은 조건이 아니다** | 경복궁은 예약 없이 간다. 그래도 **휴관일·운영시간·날씨**가 걸리므로 판정 대상이다 |
+
+### 범위 — 관광 분류체계로 못박는다
+
+`[팀원 제공 2026-09-10]` 말로 "활동 전반" 이라고만 두면 또 좁혀 읽는다. **외부 분류표에 걸어 둔다.**
+
+| 기준 | Activity 가 맡는 대분류 |
+|---|---|
+| **한국관광공사 관광정보 API**<br>(`data.go.kr` 15101578) | **A01 자연** · **A02 인문**(문화/예술/역사) · **A03 레포츠** · **A04 쇼핑** |
+
+**Google Places API** `place types` 기준:
+
+| 갈래 | 유형 |
+|---|---|
+| 자연 | `beach` · `island` · `lake` · `mountain_peak` · `nature_preserve` · `river` · `scenic_spot` · `woods` |
+| 인문·문화 | `historical_place` · `historical_landmark` · `castle` · `monument` · `cultural_landmark` · `tourist_attraction` · `museum` · `art_museum` · `history_museum` · `art_gallery` |
+| 쇼핑 | `shopping_mall` · `department_store` · `market` · `flea_market` · `farmers_market` · `gift_shop` · `clothing_store` · `womens_clothing_store` · `jewelry_store` · `shoe_store` · `cosmetics_store` · `toy_store` · `tea_store` · `book_store` · `electronics_store` · `sporting_goods_store` · `sportswear_store` · `liquor_store` |
+
+★`[미확보]` **이 분류는 확정이 아니다.** 쇼핑에서 제외한 **생활밀착형·저관광연관 21종**에
+시나리오에 넣은 **대형마트**가 포함돼 있다. **제외 목록을 다시 봐야 한다** — 제외 기준이
+"생활밀착"인데 관광객에게는 대형마트가 관광 목적지인 경우가 있다.
 
 | 활동 | 걸리는 감시 소스 | 예약 |
 |---|---|---|
@@ -171,6 +191,19 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 
 `[미확보]` 규칙을 계획서 §6(승계하는 코어 규칙)에 넣는 일은 계획서 담당 몫으로 남아 있다 — 지금 §6 은 제약만 적고 키를 무엇으로 만드는지는 안 적는다.
 
+## ★ 두 번 다시 이렇게 부르지 않는다
+
+`[실측]` 실제로 두 번 잘못 불렸다. 둘 다 **정의를 다른 데서 거꾸로 유도한** 것이다.
+
+| 잘못 부른 것 | 왜 그렇게 됐나 | 맞는 것 |
+|---|---|---|
+| **결제·환불 팀** | 뼈대를 `return_refund`·`procurement_order_payment` 에서 베껴서 도해에 그렇게 그렸다(2026-09-09) | **뼈대 출처는 판정 구조를 어디서 베꼈나일 뿐 팀의 정체가 아니다.** `Activity(return_refund)` 처럼 붙여 부르지 않는다 |
+| **레저 전용 팀** | 판정 규칙에 「날씨 조건」이 있으니 날씨 걸리는 것만 넣자고 좁혔다 | **규칙은 팀이 무엇을 보는지이지 팀이 무엇인지가 아니다.** 좁히면 경복궁·박물관·쇼핑이 갈 곳이 없다 |
+| (같은 뿌리) **예약 있는 것만** | 취소·위약금 판정이 눈에 띄어서 | **예약은 조건이 아니다.** 경복궁은 예약 없이 가도 휴관일·운영시간이 걸린다 |
+
+★**감시 소스가 항목마다 다른 것은 팀을 쪼갤 이유가 아니다.** 팀은 하나이고 셋을 다
+알되 **이 항목이 어디에 걸리는지를 판정**한다. 그게 이 Team 의 일이다.
+
 ## 이 Team이 하지 않는 것
 
 승계 경계 그대로다(v10 §6, [team-boundary.md](team-boundary.md)).
@@ -189,7 +222,8 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 |---|---|
 | 운영 변경 정보 출처 | `[미확보]` 공지 수집인가 업체 연결인가 — 2주차 결정 (v10 §0-3) |
 | 취소·환급 규정의 원문 | `[미확보]` 업체마다 다르다. 표본을 몇 개까지 모을지 안 정했다. **골프장 우천 위약금 규정이 가장 문서화가 잘 돼 있어 여기서 시작한다** |
-| Activity 정의 (레저로 좁히나) | `[미확보]` 위 「미해결」. 수요 비교가 선행 |
+| ~~Activity 정의 (레저로 좁히나)~~ | **닫힘 — 좁히지 않는다.** `[사용자 확정 2026-09-09 · 팀원 분류체계 2026-09-10]` 활동 그 자체(관광공사 A01 자연·A02 인문·A03 레포츠·A04 쇼핑). 수요 비교는 **필요 없다** — 둘 다 액티비티다 |
+| 쇼핑 분류의 제외 목록 | `[미확보]` 생활밀착형·저관광연관 **21종**을 제외했는데 시나리오의 **대형마트**가 거기 있다. 재검토 필요 |
 | 기상 조건 임계값 | `[미확보]` "우천이면 취소"의 판정선(강수량·풍속)을 규정에서 읽을 수 있는지 확인 필요 |
 | 골든셋 | `[실측]` 지금 골든셋 72건은 쇼핑몰이다. 이 Team의 시나리오는 0건 → v10 §8 |
 
