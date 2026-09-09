@@ -42,13 +42,13 @@
 
 <p class="eyebrow">A-COP · V9 SHOPPING → V10 TRAVEL</p>
 <h1>여행 Team 모듈 아키텍처</h1>
-<p class="sub">그대로 쓰는 것 · 뼈대만 이어받는 것 · 새로 만드는 것 · 등록만 · 미해결을 한 장에. 기준선 <code>A-COP_구현계획서_v10.md</code> §5<br><strong>각 팀은 여행 객체로 읽는다</strong> — Activity 는 <strong>골프·수상·스키 같은 레저 예약</strong>이지 환불 팀이 아니다. <code>← return_refund</code> 는 <strong>판정 구조만</strong> 물려받았다는 뜻이다.</p>
+<p class="sub">그대로 쓰는 것 · 뼈대만 이어받는 것 · 새로 만드는 것 · 등록만 · 미해결을 한 장에. 기준선 <code>A-COP_구현계획서_v10.md</code> §5<br><strong>각 팀은 여행 객체로 읽는다</strong> — Activity 는 <strong>골프·수상·스키 같은 레저 활동</strong>을 맡는다 — <strong>그 활동의 정보를 제공하고</strong> 예약이 성립하는지 판정한다. 환불 팀이 아니다. <code>← return_refund</code> 는 <strong>판정 구조만</strong> 물려받았다는 뜻이다.</p>
 
 <div class="diagram">
 <svg viewBox="0 0 1216 560" role="img" aria-labelledby="acop-teams-title acop-teams-desc"
      xmlns="http://www.w3.org/2000/svg">
   <title id="acop-teams-title">A-COP 여행 Team 모듈 아키텍처</title>
-  <desc id="acop-teams-desc">외부 에이전트가 제출한 일정을 코어 Controller 가 받아 여섯 Team 에 위임하고, Team 은 판정만 해 ActionProposal 로 코어 Action 층에 돌려준다. Activity 는 골프·수상·스키 같은 레저 예약을, Dining 은 식당을, Mobility 는 이동을, Booking Handoff 는 업체 예약 변경 인계를 판정한다. 이 넷은 v9 쇼핑몰 팀의 판정 구조만 뼈대로 가져오고 규칙과 어휘는 새로 쓴다. 코어는 v9 에서 그대로 쓰고, Lodging 과 Flight 는 등록만 하며, Place Verification 은 v10 에 없어 미해결이다.</desc>
+  <desc id="acop-teams-desc">외부 에이전트가 제출한 일정을 코어 Controller 가 받아 여섯 Team 에 위임하고, Team 은 판정만 해 ActionProposal 로 코어 Action 층에 돌려준다. Activity 는 골프·수상·스키 같은 레저 활동의 정보 제공과 예약 판정을, Dining 은 식당을, Mobility 는 이동을, Booking Handoff 는 업체 예약 변경 인계를 판정한다. 이 넷은 v9 쇼핑몰 팀의 판정 구조만 뼈대로 가져오고 규칙과 어휘는 새로 쓴다. 코어는 v9 에서 그대로 쓰고, Lodging 과 Flight 는 등록만 하며, Place Verification 은 v10 에 없어 미해결이다.</desc>
 
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
