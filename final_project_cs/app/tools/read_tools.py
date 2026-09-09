@@ -15,6 +15,21 @@ from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.rag.retriever import search_policy
 
 
+class ToolBudgetExceeded(RuntimeError):
+    """도구 호출이 `manifest.max_steps` 예산을 넘었다.
+
+    ★`ToolLoopExceeded` 와 **다른 예외다.** 원인이 다르기 때문이다 —
+      전자는 "같은 것을 또 불렀다"(중복), 이쪽은 "너무 많이 불렀다"(예산).
+      한 예외로 묶으면 로그에서 둘을 못 가른다.
+
+    ★2026-09-09 신설. 그전까지 `max_steps` 는 **선언만 되고 아무도 강제하지
+      않았다** — 정의·화면표시·introspection 에만 있고 실행 경로 3곳
+      (executor·controller·read_tools)에 0회였다. 테스트까지 있었지만
+      `manifest.max_steps == 6` 이라는 **선언값**만 봤다.
+      경위: wiki/records/reports/debugs/2026-09-09_max_steps가_강제되지_않는다.md
+    """
+
+
 class ToolLoopExceeded(RuntimeError):
     """The same named tool and normalized arguments were requested twice."""
 
@@ -151,7 +166,18 @@ class ReadToolbox:
             ("customer_id", "external_id", "email_hash", "created_at"),
         )
 
-    def call(self, name: str, context: ContextPack, arguments: dict[str, Any], allowed_tools: list[str], seen: set[str]) -> Any:
+    def call(self, name: str, context: ContextPack, arguments: dict[str, Any],
+             allowed_tools: list[str], seen: set[str], budget: int | None = None) -> Any:
+        """`budget` 은 이 Team 이 쓸 수 있는 도구 호출 수 상한이다.
+
+        ★기본값이 `None` 이라 **안 넘기면 예전과 똑같이 동작한다.** 호출부를
+          한꺼번에 고치지 않아도 되게 한 것이고, 넘기는 쪽은
+          `self.manifest.max_steps` 를 준다.
+        ★`seen` 의 크기를 그대로 센다 — 새 카운터를 만들지 않았다.
+          `seen` 은 중복 차단기지만 그 크기가 곧 호출 횟수라 예산으로 맞는다.
+        """
+        # ★예산 검사를 allowlist 보다 **먼저** 두지 않는다. 권한 없는 도구는
+        #   예산과 무관하게 거부돼야 하고, 그 편이 오류 메시지도 정확하다.
         if name not in allowed_tools:
             raise ToolNotAllowed(f"tool '{name}' is not allowed for this task")
         functions = {
@@ -168,6 +194,10 @@ class ReadToolbox:
         signature = name + ":" + json.dumps(arguments, sort_keys=True, default=str, separators=(",", ":"))
         if signature in seen:
             raise ToolLoopExceeded(f"repeated tool request: {name}")
+        if budget is not None and len(seen) >= budget:
+            raise ToolBudgetExceeded(
+                f"tool budget {budget} exhausted before '{name}' "
+                f"(already called {len(seen)})")
         seen.add(signature)
         return functions[name](ToolContext.from_pack(context), **arguments)
 
