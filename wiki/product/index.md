@@ -9,12 +9,14 @@ status: draft
 
 "이게 왜 필요한가"에 답해야 할 때 여기부터 본다.
 
+★**[2026-09-08] 도메인이 여행으로 바뀌었다.** 이 영역에서 [scope.md](scope.md)만 여행으로 갱신됐다. `positioning`·`problem`·`personas`·`pitch-questions`·`glossary`는 **아직 쇼핑몰 CS 기준**이다 — 제품 정의는 계획서 v10 §0-1·§1·§2를 먼저 본다. 낡은 문서를 지우지 않는 이유는 그 시점 판단의 근거라서다.
+
 ## 읽기 순서
 
 1. [positioning.md](positioning.md) — 무엇을 팔고 무엇을 팔지 않는가
 2. [problem.md](problem.md) — 누가 무엇 때문에 괴로운가
 3. [personas.md](personas.md) — 그 사람들이 누구인가
-4. [scope.md](scope.md) — 10주에 무엇까지 하는가
+4. [scope.md](scope.md) — **여행 MVP 7주에 무엇까지 하는가** (이 영역에서 유일하게 여행으로 갱신된 문서)
 5. [glossary.md](glossary.md) — 용어
 
 ## 각 문서
@@ -31,7 +33,7 @@ status: draft
 
 > 멀티에이전트를 **동작하게** 만드는 건 어렵지 않다. **믿을 수 있게** 만드는 게 어렵다.
 
-이 문장이 제품 전체를 설명한다. 우리가 파는 것은 새 모델도 새 RAG도 아니고 **멀티에이전트 고객운영의 통제·검증층**이다.
+이 문장은 도메인이 바뀌어도 그대로다. 우리가 파는 것은 새 모델도 새 RAG도 아니고 **검증·감시층**이다. 여행에서는 그것이 "외부가 만든 일정이 현실에서 성립하는지 확인하고, 여행이 끝날 때까지 변화를 먼저 잡는 것"이 된다(v10 §0-1).
 
 ## 이 영역이 정하는 것
 
@@ -42,7 +44,7 @@ status: draft
 | 자동화율을 앞세우지 않는다 | [../business/pricing.md](../business/pricing.md) 가격 논거가 오류 비용이 된다 |
 | human-on-the-loop | [../../../final_project_cs/wiki/actions/index.md](../../final_project_cs/wiki/actions/index.md) 승인 경계 |
 | 도메인 팩 교체 가능 | [../architecture/pack-model.md](../architecture/pack-model.md) |
-| 페르소나 3인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) 골든셋 구성 |
+| 페르소나 3인 | [../evaluation/golden-set.md](../evaluation/golden-set.md) 골든셋 구성 — `[실측]` 지금 골든셋 72건은 쇼핑몰이라 교체 대상 |
 
 ## 인접 영역
 

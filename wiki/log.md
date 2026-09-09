@@ -18,6 +18,22 @@ status: draft
 
 ---
 
+## 2026-09-09 — 진입점 문서를 여행으로
+
+도메인이 커머스 CS → 여행 CS 로 바뀐 뒤(계획서 v10, 2026-09-08) **세션이 처음 읽는 문서 다섯**을 여행으로 고쳤다. 어제 루트 `CLAUDE.md` 사실표가 쇼핑몰로 남아 모든 세션이 틀린 사실로 시작했던 것과 같은 종류의 위험이다.
+
+| 문서 | 무엇이 바뀌었나 |
+|---|---|
+| [quickstart.md](quickstart.md) | 제품 정의를 여행 지속관리 CS로. 30초 요약(1순위 고객·접점 API·7주·이용권 59,000원), 승계/버린 것, 사실 충돌 순위에 v10 추가 |
+| [index.md](index.md) | 「여행 판올림」 절 신설 — 낡음 실측(198문서 중 104개 53%가 커머스 낱말), 영역별 승계 여부. DoD 29 → 22, business 원가가 쇼핑몰 것이라는 표시. 미결정 표를 v10 §0-3 로 교체 |
+| [product/index.md](product/index.md) | 이 영역에서 scope 만 여행이고 positioning·problem·personas 는 쇼핑몰이라는 경고 |
+| [product/scope.md](product/scope.md) | **전면 개정.** 여행 MVP 7주 In/Out, 실행 경계(Pre-CS 는 우리 DB 일정 버전만·`tier=='simulated'` 게이트), Team 범위(Activity·Booking Handoff 필수), 지연 제약을 API 접점 기준으로 다시. 옛 커머스 범위는 「옛 도메인」 절로 보존 |
+| [cs/wiki/index.md](../final_project_cs/wiki/index.md) | 코어는 승계·Team 페이지 다섯은 쇼핑몰이라는 표시. v10 §5-A 의 코어 변경 넷과 Trip·`trigger_source` |
+
+**아직 안 한 것** — `positioning`·`problem`·`personas`·`glossary`·골든셋·business 숫자는 그대로 쇼핑몰이다. 여행 Team 페이지(Activity·Booking Handoff·Dining·Mobility)는 아직 0개다.
+
+---
+
 ## 2026-09-01 (5) — 시험 구축 완료
 
 ### 위치 정리
