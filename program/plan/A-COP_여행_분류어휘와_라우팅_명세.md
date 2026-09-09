@@ -220,11 +220,139 @@ def test_every_routable_case_type_is_reachable():
 | 슬러그 이름 다섯 | v10 §5-A 는 한국어만 적었다. 값이 DB·프롬프트·평가셋을 오간다 |
 | 분류 어휘의 자리 | `customer_ops` 파일이 여행 어휘를 들게 된다. 설정으로 빼면 다음 도메인에서 안 고쳐도 된다 |
 | `issue_code = "other"` 처리 | 접두가 어느 팀에도 안 맞는다. `escalated` 경로가 있는지 확인 |
-| `capability_for` 가 안 좁히는 것 | 시뮬레이션에서 `intent` 를 줘도 전부 **기본 capability** 로 떨어졌다. 요청 종류로 capability 를 고르려면 별도 규칙이 필요하다 |
+| `select_capability` 훅이 옛 축에 묶여 있다 | 아래 §6 |
 
-★**마지막 것이 중요하다.** 지금 구조로는 "사건 신고" 가 와도 `activity` 팀의
-`check_feasible`(기본)이 불린다. `propose_change` 로 가려면 **`capability_for` 가
-요청 종류를 읽어야 한다.** 지금은 `input_text` 만 본다.
+★**`capability_for` 가 요청 종류를 못 읽는다고 적었던 것은 틀렸다.** 읽는 장치가
+이미 있다 — 아래 §6 에서 정정한다.
+
+---
+
+## 6. ★정정 — `select_capability` 훅이 이미 있다. 그런데 옛 축에 묶여 있다
+
+### 앞 절에서 내가 틀리게 봤다
+
+§5 에 *"`capability_for` 가 요청 종류를 안 읽어서 전부 기본 capability 로
+떨어진다"* 고 적었다. **읽는 장치가 이미 있다.**
+
+`app/core/registry.py:104` 이 팀에게 먼저 묻는다.
+
+```python
+select = getattr(entry.module, "select_capability", None)
+if callable(select):
+    chosen = select(intent, input_text or "")
+    if chosen is not None:
+        if chosen not in entry.manifest.capabilities:
+            raise RegistryError(...)      # 선언 안 한 capability 는 거부
+        return chosen
+```
+
+★**Registry 가 문자열로 추측하지 않고 팀에게 묻는다.** 그 주석이 이유를 적어
+뒀다 — *"팀이 자기 capability 의 의미를 안다."* 돌려준 값이 manifest 에 선언돼
+있는지도 검사한다.
+
+**내가 전부 기본으로 떨어지는 것을 본 것은 시뮬레이션이 `manifest` 만 가진
+Stub 이었기 때문이다.** 훅이 없으니 당연히 기본으로 갔다. **도구를 잘못 만들어
+놓고 제품이 못 한다고 적었다.**
+
+### 진짜 문제는 다른 것이다
+
+`[실측 2026-09-09]` 여행 팀 여섯 중 **`mobility` 하나만** 이 훅을 구현했다.
+
+| 팀 | `select_capability` |
+|---|---|
+| `mobility` | **있음** |
+| `activity` · `booking_handoff` · `dining` · `lodging` · `flight` | 없음 → 기본으로 감 |
+
+그리고 그 하나가 **옛 축에 묶여 있다.**
+
+```python
+def select_capability(intent, input_text):
+    if intent != "mobility":     # ← intent 가 객체 종류라고 가정한다
+        return None
+```
+
+`[실측 2026-09-09]` 같은 문장(`"막차가 끊겼습니다"`)으로 두 축을 넣어 봤다.
+
+```
+intent="mobility"          → mobility.exception     (옛 축, 동작함)
+intent="incident_report"   → None                   (안 A, 훅이 죽는다)
+```
+
+★**안 A 를 적용하면 이 훅이 조용히 멈춘다.** 예외를 던지지 않고 `None` 을
+돌려주므로 **기본 capability 로 떨어지고 아무도 모른다.** 지연·결항이 와도
+`mobility.check_route` 가 불린다.
+
+### 그래서 명세를 하나 더 붙인다
+
+**`select_capability` 의 첫 줄 가드를 `intent` 가 아니라 `case_type` 으로 바꾼다.**
+
+```python
+# 지금 — intent 가 객체 종류라고 가정
+if intent != "mobility":
+    return None
+
+# 안 A 에서 — 요청 종류를 보고 고른다
+if intent == "incident_report" and any(m in input_text for m in _INCIDENT_MARKERS):
+    return "mobility.exception"
+return None
+```
+
+★**팀 안에서는 case_type 을 다시 확인할 필요가 없다.** 이 훅이 불린 시점에
+Registry 가 이미 `case_type` 으로 이 팀을 골랐다. 남은 판단은 **요청 종류와
+본문**이다.
+
+★**요청 종류가 생기면 이 훅이 더 정확해진다.** 지금은 본문 낱말
+(`"놓쳤"`·`"끊겼"`)만 보는데, `incident_report` 라는 신호가 같이 오면
+**본문이 애매해도 사건임을 안다.** 커머스에서 이 훅이 넓어 문의를 사건으로 잘못
+잡은 적이 있다고 그 파일 주석이 적어 뒀다 — 요청 종류가 그 오탐을 줄인다.
+
+### 확인 방법
+
+★**"안 깨지는지" 로 확인하면 안 된다.** 이 훅은 실패할 때 `None` 을 돌려주므로
+**깨져도 조용하다.** 다음을 봐야 한다.
+
+```
+"막차가 끊겼습니다" + incident_report  →  mobility.exception   이어야 한다
+                                          check_route 면 훅이 죽은 것이다
+```
+
+`[미확보]` 나머지 다섯 팀에 이 훅을 넣을지는 안 정했다. **`activity` 는 필요해
+보인다** — 시연 시나리오가 `propose_change` 로 가야 하는데 기본은
+`check_feasible` 이다. `lodging` · `flight` 는 capability 가 하나뿐이라 필요 없다.
+
+---
+
+## 7. 남은 셋 — 값을 제안한다
+
+### ① 슬러그 이름
+
+§2 에 적은 다섯(`itinerary_submit` 등)을 권한다. 근거는 셋이다 —
+기존 `INTENTS` 도 ASCII 였고, 값이 프롬프트·DB·평가셋을 오가며,
+v10 §5-A 의 한국어 뜻과 일대일로 붙는다.
+
+### ② 분류 어휘의 자리
+
+**`config/` 로 뺀다.** 지금 `app/modules/customer_ops/feedback.py` 가 들고 있는데,
+여행 어휘를 커머스 파일이 들게 되는 것 자체가 어긋남이다.
+
+★**빼면 다음 도메인에서 코드를 안 고친다.** 이 저장소는 이미 `config/project.yaml`
+로 Team 을 갈아 끼운다. 어휘도 같은 자리에 두는 것이 그 설계와 맞는다.
+
+`[미확보]` 어휘를 설정으로 빼면 **검증 시점이 기동 때로 옮겨간다.** 지금은 코드
+상수라 import 하면 끝인데, 설정이면 "선언한 `issue_code` 접두가 등록된 Team 을
+가리키나" 를 기동 때 확인해야 한다. `project_config.py` 가 이미
+`implementation_ref` 를 그렇게 검사한다 — 같은 자리에 붙일 수 있어 보인다.
+
+### ③ `issue_code = "other"` 처리
+
+`"other"` 는 접두가 없어 어느 팀에도 안 맞고 `RegistryError` 가 난다.
+
+**그게 맞는 동작이다.** 어느 객체 얘긴지 모르는 Case 를 아무 팀에나 보내면
+안 된다. 다만 **예외가 그대로 올라가면 안 되고 `escalated` 로 가야 한다.**
+
+`[미확보]` 그 경로가 이미 있는지 확인이 필요하다. `controller.py:167` 이
+`RegistryError` 를 잡는지 봐야 한다 — 안 잡으면 Case 가 `routing` 에 남고
+`routing_sweeper` 가 계속 되잡는다.
 
 ---
 
