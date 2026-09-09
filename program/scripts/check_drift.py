@@ -612,10 +612,11 @@ def _real_constraints() -> tuple[set[frozenset], str]:
         try:
             import psycopg
             out = set()
-            with psycopg.connect(dsn, connect_timeout=DB_TIMEOUT_SECONDS) as conn:
+            # ★`SET LOCAL statement_timeout = %s` 는 **SyntaxError 다** —
+            #   `SET` 은 자리표시자를 안 받는다(2026-09-09 실측). 접속 옵션으로 건다.
+            with psycopg.connect(dsn, connect_timeout=DB_TIMEOUT_SECONDS,
+                                 options=f"-c statement_timeout={DB_TIMEOUT_SECONDS * 1000}") as conn:
                 with conn.cursor() as cur:
-                    cur.execute("SET LOCAL statement_timeout = %s",
-                                (DB_TIMEOUT_SECONDS * 1000,))
                     cur.execute("SELECT pg_get_constraintdef(oid) "
                                 "FROM pg_constraint WHERE contype = 'u'")
                     for (definition,) in cur.fetchall():
