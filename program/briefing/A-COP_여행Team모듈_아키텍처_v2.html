@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-COP 여행 Team 모듈 아키텍처 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbfcfd; --paper-2:#f1f4f8; --ink:#161c28; --muted:#6b7488;
+    --soft:#7a8599; --rule:rgba(22,28,40,0.12); --rule-solid:#dbe0ea;
+    --accent:#a8720c; --accent-tint:rgba(168,114,12,0.10); --link:#2f5bd8;
+    --ok:#1f6f4a; --ok-tint:rgba(31,111,74,0.10);
+    --warn:#a8720c; --warn-tint:rgba(168,114,12,0.10);
+    --open:#8a5a2b; --gap:#8c2f39; --gap-tint:rgba(140,47,57,0.09);
+  }
+  *{box-sizing:border-box}
+  body{background:var(--paper); color:var(--ink); margin:0;
+       padding:48px 24px 72px;
+       font-family:'Geist','Noto Sans KR',sans-serif; font-size:15px; line-height:1.7}
+  .wrap{max-width:1240px; margin:0 auto}
+  .eyebrow{font-family:'Geist Mono',monospace; font-size:8px; letter-spacing:0.14em;
+           text-transform:uppercase; color:var(--soft); margin:0 0 8px}
+  h1{font-family:'Instrument Serif','Noto Sans KR',serif; font-size:1.75rem;
+     font-weight:400; margin:0 0 6px; line-height:1.3}
+  h2{font-family:'Instrument Serif','Noto Sans KR',serif; font-size:1.3rem;
+     font-weight:400; margin:52px 0 4px; line-height:1.3;
+     padding-top:20px; border-top:1px solid var(--rule)}
+  h2 .n{font-family:'Geist Mono',monospace; font-size:11px; color:var(--soft);
+        letter-spacing:0.1em; margin-right:10px; vertical-align:2px}
+  h3{font-size:14.5px; margin:26px 0 6px; font-weight:600}
+  .sub{color:var(--muted); font-size:14px; margin:0 0 12px}
+  .lead{color:var(--muted); font-size:13.5px; margin:0 0 20px; max-width:88ch}
+  .diagram{overflow-x:auto; margin:14px 0 28px}
+  svg{display:block; min-width:1000px; width:100%; height:auto}
+  code{font-family:'Geist Mono',monospace; font-size:12.5px;
+       background:var(--paper-2); padding:1px 5px; border-radius:3px}
+  table{border-collapse:collapse; width:100%; margin:12px 0 24px; font-size:13.5px}
+  th,td{border:1px solid var(--rule-solid); padding:8px 10px; text-align:left;
+        vertical-align:top}
+  th{background:var(--paper-2); font-weight:600; font-size:12.5px}
+  .mono{font-family:'Geist Mono',monospace; font-size:12px}
+  .note{background:#ffffff; border:1px solid var(--rule); border-left:3px solid var(--accent);
+        border-radius:4px; padding:12px 16px; margin:16px 0; font-size:13.5px}
+  .note strong{font-weight:600}
+  .note.gap{border-left-color:var(--gap)}
+  .p{display:inline-block; font-family:'Geist Mono',monospace; font-size:10px;
+     font-weight:600; padding:1px 5px; border-radius:3px; letter-spacing:0.04em;
+     background:var(--accent-tint); color:var(--accent); border:1px solid rgba(168,114,12,0.3)}
+  .st{display:inline-block; font-family:'Geist','Noto Sans KR',sans-serif; font-size:11px;
+      font-weight:500; padding:1px 7px; border-radius:3px; white-space:nowrap}
+  .st-ok{background:var(--ok-tint); color:var(--ok); border:1px solid rgba(31,111,74,0.28)}
+  .st-doc{background:var(--paper-2); color:var(--muted); border:1px solid var(--rule-solid)}
+  .st-unk{background:var(--warn-tint); color:var(--warn); border:1px solid rgba(168,114,12,0.3)}
+  .st-none{background:var(--gap-tint); color:var(--gap); border:1px solid rgba(140,47,57,0.28)}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; margin:10px 0 26px;
+          font-size:12px; color:var(--muted)}
+  .legend span{display:flex; align-items:center; gap:6px}
+  footer{margin-top:56px; padding-top:16px; border-top:1px solid var(--rule);
+         font-family:'Geist Mono',monospace; font-size:11px; color:var(--muted); line-height:1.9}
+  a{color:var(--link)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="eyebrow">A-COP · V11 TRAVEL · 실측 2026-09-10 · v2</p>
+<h1>여행 Team 모듈 아키텍처</h1>
+<p class="sub"><strong>누가 판단하고 누가 실행하는가</strong>, 그리고 <strong>그 경계를 무엇이 지키는가</strong>.
+기준선 <code>A-COP_구현계획서_v11.md</code>.</p>
+
+<div class="note gap">
+  <strong>★ 근거 표기를 고쳤다.</strong> v1 과 제작 브리핑은 아래 다섯을
+  <strong>「논문(arXiv:2601.03328)이 정리한 설계 패턴」</strong>이라고 적었다.
+  <strong>그 논문의 패턴 목록이 아니다.</strong> 논문 §4.2 Table 1 의 분류 차원은
+  Control Flow · Interaction Styles · History Sharing · Network Configurations ·
+  Human Interaction 다섯이고, 우리 다섯 중 겹치는 것은 사실상 둘이다.
+  <strong>그래서 이 판은 이것을 「우리 점검 항목」이라고 부른다</strong> — 논문의 논의에서
+  출발했지만 이름과 범위는 우리가 정한 것이다. 2026-09-10 에 arXiv 원문을 두 경로로 확인했다.
+</div>
+
+<h3>점검 항목 다섯 — 도해에서 이 표식으로 가리킨다</h3>
+<div class="legend">
+  <span><b class="p">P1</b> 역할·능력 선언</span>
+  <span><b class="p">P2</b> 도구 권한 좁히기</span>
+  <span><b class="p">P3</b> 조정 대 자율</span>
+  <span><b class="p">P4</b> 사람 승인 경계</span>
+  <span><b class="p">P5</b> 출력 검증</span>
+</div>
+
+<h3>상태는 색이 아니라 글자로 적는다</h3>
+<div class="legend">
+  <span><b class="st st-ok">코드 확인</b> 이 저장소에서 열어 확인했다</span>
+  <span><b class="st st-doc">문서 기재</b> 주석·문서에만 있고 실행 연결은 확인 안 했다</span>
+  <span><b class="st st-unk">미확인</b> 확인 못 했다</span>
+  <span><b class="st st-none">미구현·미등록</b> 없다</span>
+</div>
+<p class="lead">v1 은 <code>6 LIVE</code>·<code>STUB</code>·<code>OPEN</code> 을 한 종류처럼 섞어
+<strong>등록 여부·기능 범위·검증 수준</strong>이 구분되지 않았다. 셋은 다른 축이다.</p>
+
+
+<h3>이 문서에 나오는 말</h3>
+<table>
+  <thead><tr><th style="width:20%">말</th><th>뜻</th></tr></thead>
+  <tbody>
+    <tr><td><code>case_type</code> · <code>intent</code></td>
+        <td><strong>팀을 고르는 축 둘.</strong> <code>case_type</code> 은 <strong>대상 객체 종류</strong>이고
+            <code>issue_code</code> 의 접두에서 뽑는다(<code>activity_weather_risk</code> → <code>activity</code>).
+            <code>intent</code> 는 <strong>요청 종류</strong>다(일정 제출 · 사건 신고 · 확인 요청 · 조정 거부 · 그 외).
+            <code>resolve(case_type, intent)</code> 가 앞으로 팀을, 뒤로 capability 를 좁힌다</td></tr>
+    <tr><td><code>capability</code></td>
+        <td>한 팀이 할 줄 아는 일 하나. 이 문서에서 <code>cap 3</code> 은 capability 가 셋이라는 뜻이다</td></tr>
+    <tr><td><code>degraded</code></td>
+        <td><strong>근거가 깎인 상태.</strong> 필요한 조회가 빠졌거나 잘렸다는 표시이고,
+            이때는 확정 답을 만들지 않고 사람에게 넘긴다</td></tr>
+    <tr><td><code>ContextPack</code></td>
+        <td>Case 하나를 처리하는 데 실어 보내는 <strong>맥락 꾸러미</strong> — 상태 · 근거 · 규정 · 이력.
+            예산이 있어 다 못 실으면 무엇을 뺐는지 기록한다</td></tr>
+    <tr><td>멱등 키<br><span class="mono">idempotency key</span></td>
+        <td><strong>같은 요청이 두 번 들어와도 한 번만 실행되게 하는 열쇠.</strong>
+            tenant · 요청 id · 작업 종류 · <strong>대상</strong> 넷으로 만든다</td></tr>
+    <tr><td>바깥함<br><span class="mono">outbox</span></td>
+        <td>보낼 것을 DB 에 먼저 적어 두고 별도 일꾼이 꺼내 보내는 방식.
+            보냈다는 사실이 기록으로 남는다</td></tr>
+  </tbody>
+</table>
+
+
+<h2><span class="n">01</span>누가 판단하고 누가 실행하는가</h2>
+<p class="lead">Team 은 <strong>판단만</strong> 한다. 실행은 Action 층이 하고, 그 사이에
+<strong>사실 대조</strong>와 <strong>사람 승인</strong>이 있다. v1 전체도에는 이 둘이 없었다.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 1160 700" role="img" aria-labelledby="d1t d1d" xmlns="http://www.w3.org/2000/svg">
+  <title id="d1t">A-COP 여행 책임 경계</title>
+  <desc id="d1d">외부 에이전트의 요청이 진입·분류 층에서 요청 종류와 문제 코드로 나뉘고,
+  Controller 가 두 축으로 Team 을 고른다. 여섯 Team 은 읽기 도구로 조회해 판단만 하고
+  TeamResult 를 돌려준다. 답변은 고객에게 가고, 변경 제안은 사실 대조와 사람 승인을 지나
+  Action 층에서만 실행된다.</desc>
+  <defs>
+    <marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/>
+    </marker>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/>
+    </marker>
+  </defs>
+  <style>
+    .bx{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
+    .bxa{fill:#ffffff;stroke:#a8720c;stroke-width:1.4}
+    .bxg{fill:#f7f8fb;stroke:#dbe0ea;stroke-width:1;stroke-dasharray:3 3}
+    .t{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;fill:#161c28}
+    .tb{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12.5px;font-weight:600;fill:#161c28}
+    .m{font-family:'Geist Mono',monospace;font-size:9px;fill:#7a8599}
+    .ma{font-family:'Geist Mono',monospace;font-size:9px;fill:#a8720c}
+    .lb{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.08em}
+    .ln{stroke:#6b7488;stroke-width:1;fill:none;marker-end:url(#a1)}
+    .lna{stroke:#a8720c;stroke-width:1.3;fill:none;marker-end:url(#a2)}
+  </style>
+
+  <!-- lane A -->
+  <text x="24" y="34" class="lb">A · 들어오는 길</text>
+  <rect x="24" y="46" width="150" height="62" rx="5" class="bx"/>
+  <text x="99" y="72" class="tb" text-anchor="middle">외부 에이전트</text>
+  <text x="99" y="90" class="m" text-anchor="middle">OpenClaw · Hermes · LLM</text>
+
+  <rect x="214" y="40" width="186" height="74" rx="5" class="bxa"/>
+  <text x="307" y="60" class="tb" text-anchor="middle">진입 · 분류</text>
+  <text x="307" y="75" class="ma" text-anchor="middle">travel_ops/feedback.py 152</text>
+  <text x="307" y="90" class="m" text-anchor="middle">intent 5 — 요청 종류</text>
+  <text x="307" y="104" class="m" text-anchor="middle">issue_code 17 — 접두가 case_type</text>
+
+  <rect x="440" y="46" width="186" height="62" rx="5" class="bx"/>
+  <text x="533" y="68" class="tb" text-anchor="middle">Controller</text>
+  <text x="533" y="84" class="m" text-anchor="middle">app/application/controller.py</text>
+  <text x="533" y="99" class="ma" text-anchor="middle">resolve(case_type, intent) :72 :175</text>
+  <rect x="600" y="34" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <text x="613" y="45" class="ma" text-anchor="middle" font-weight="600">P3</text>
+
+  <line x1="174" y1="77" x2="208" y2="77" class="ln"/>
+  <line x1="400" y1="77" x2="434" y2="77" class="ln"/>
+
+  <!-- lane B -->
+  <text x="24" y="152" class="lb">B · 판단 — 여기서는 아무것도 실행되지 않는다</text>
+  <rect x="24" y="164" width="700" height="150" rx="6" class="bxg"/>
+  <text x="40" y="184" class="m">여섯 Team · app/modules/travel_ops/ · 전부 active: true</text>
+  <rect x="360" y="152" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <text x="373" y="163" class="ma" text-anchor="middle" font-weight="600">P1</text>
+
+  <rect x="40" y="194" width="150" height="50" rx="4" class="bx"/>
+  <text x="115" y="213" class="tb" text-anchor="middle">Activity</text>
+  <text x="115" y="230" class="m" text-anchor="middle">activity · cap 3 · 274</text>
+
+  <rect x="204" y="194" width="150" height="50" rx="4" class="bx"/>
+  <text x="279" y="213" class="tb" text-anchor="middle">Dining</text>
+  <text x="279" y="230" class="m" text-anchor="middle">dining · cap 2 · 96</text>
+
+  <rect x="368" y="194" width="150" height="50" rx="4" class="bx"/>
+  <text x="443" y="213" class="tb" text-anchor="middle">Mobility</text>
+  <text x="443" y="230" class="m" text-anchor="middle">mobility · cap 3 · 80</text>
+
+  <rect x="532" y="194" width="176" height="50" rx="4" class="bx"/>
+  <text x="620" y="213" class="tb" text-anchor="middle">Booking Handoff</text>
+  <text x="620" y="230" class="m" text-anchor="middle">booking · cap 3 · 94</text>
+
+  <rect x="40" y="254" width="314" height="46" rx="4" class="bx"/>
+  <text x="197" y="272" class="tb" text-anchor="middle">Lodging / Flight</text>
+  <text x="197" y="288" class="m" text-anchor="middle">locked_bookings.py 73 · cap 1 씩 · 잠긴 예약 조회로 범위 제한</text>
+
+  <rect x="368" y="254" width="340" height="46" rx="4" class="bx"/>
+  <text x="538" y="272" class="tb" text-anchor="middle">TravelTeamBase — 공통 계약 부품</text>
+  <text x="538" y="288" class="m" text-anchor="middle">_guard · _read · _evidence · _result · _escalate · _unknown · _proposal (_base.py 177)</text>
+
+  <rect x="760" y="164" width="180" height="82" rx="5" class="bxa"/>
+  <text x="850" y="188" class="tb" text-anchor="middle">읽기 도구</text>
+  <text x="850" y="205" class="m" text-anchor="middle">allowed_tools 밖 → 거부</text>
+  <text x="850" y="220" class="m" text-anchor="middle">seen · 중복 차단</text>
+  <text x="850" y="235" class="ma" text-anchor="middle">budget = max_steps</text>
+  <rect x="914" y="152" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <text x="927" y="163" class="ma" text-anchor="middle" font-weight="600">P2</text>
+
+  <rect x="760" y="252" width="180" height="62" rx="5" class="bxg"/>
+  <text x="850" y="270" class="tb" text-anchor="middle">A2A 원격</text>
+  <text x="850" y="284" class="m" text-anchor="middle">travel_remote_agent.py 202</text>
+  <text x="850" y="297" class="ma" text-anchor="middle">a2a_executor.enabled: false</text>
+  <text x="850" y="309" class="m" text-anchor="middle">team_executor: local — 지금은 안 쓴다</text>
+
+  <line x1="533" y1="108" x2="533" y2="158" class="ln"/>
+  <text x="545" y="132" class="m">TeamTask — 팀은 이미 정해져서 온다</text>
+  <line x1="724" y1="212" x2="754" y2="205" class="lna"/>
+
+
+  <!-- lane C -->
+  <text x="24" y="352" class="lb">C · 돌려주는 것 — 두 갈래다</text>
+  <rect x="24" y="364" width="220" height="56" rx="5" class="bx"/>
+  <text x="134" y="386" class="tb" text-anchor="middle">TeamResult</text>
+  <text x="134" y="403" class="m" text-anchor="middle">판정 · 근거 · 다음 행동 · 제안</text>
+  <line x1="374" y1="314" x2="200" y2="358" class="ln"/>
+
+  <rect x="300" y="356" width="230" height="34" rx="4" class="bx"/>
+  <text x="415" y="378" class="t" text-anchor="middle">답변 — 고객에게 전달</text>
+  <rect x="300" y="398" width="230" height="34" rx="4" class="bxa"/>
+  <text x="415" y="420" class="t" text-anchor="middle">ActionProposal — 실행하려면</text>
+  <line x1="244" y1="380" x2="294" y2="373" class="ln"/>
+  <line x1="244" y1="400" x2="294" y2="412" class="lna"/>
+
+  <!-- lane D -->
+  <text x="24" y="470" class="lb">D · 실행까지 — 실선은 코드로 확인한 것, 점선은 확인 못 한 것</text>
+  <rect x="24" y="482" width="200" height="70" rx="5" class="bxa"/>
+  <text x="124" y="504" class="tb" text-anchor="middle">제안 사실 대조</text>
+  <text x="124" y="520" class="m" text-anchor="middle">check_proposal</text>
+  <text x="124" y="535" class="m" text-anchor="middle">controller.py:332</text>
+  <rect x="198" y="470" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <text x="211" y="481" class="ma" text-anchor="middle" font-weight="600">P5</text>
+
+  <rect x="264" y="482" width="200" height="70" rx="5" class="bxa"/>
+  <text x="364" y="504" class="tb" text-anchor="middle">사람 승인</text>
+  <text x="364" y="520" class="m" text-anchor="middle">WAIT_FOR_APPROVAL</text>
+  <text x="364" y="535" class="m" text-anchor="middle">승인 · 거부</text>
+  <rect x="438" y="470" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <text x="451" y="481" class="ma" text-anchor="middle" font-weight="600">P4</text>
+
+  <rect x="504" y="482" width="200" height="70" rx="5" class="bxg"/>
+  <text x="604" y="502" class="tb" text-anchor="middle">실행 직전 재대조</text>
+  <text x="604" y="518" class="m" text-anchor="middle">주석에 설계가 적혀 있다</text>
+  <text x="604" y="532" class="ma" text-anchor="middle">★실행 연결은 확인 못 했다</text>
+  <text x="604" y="546" class="m" text-anchor="middle">그래서 점선이다</text>
+
+  <rect x="744" y="482" width="196" height="70" rx="5" class="bx"/>
+  <text x="842" y="504" class="tb" text-anchor="middle">Action 층</text>
+  <text x="842" y="520" class="m" text-anchor="middle">side effect 는 여기서만</text>
+  <text x="842" y="535" class="m" text-anchor="middle">Team 은 실행하지 않는다</text>
+
+  <line x1="415" y1="432" x2="180" y2="476" class="lna"/>
+  <line x1="224" y1="517" x2="258" y2="517" class="lna"/>
+  <line x1="464" y1="517" x2="498" y2="517" stroke="#a8720c" stroke-width="1.1" stroke-dasharray="4 3" fill="none"/>
+  <line x1="704" y1="517" x2="738" y2="517" stroke="#a8720c" stroke-width="1.1" stroke-dasharray="4 3" fill="none"/>
+
+  <!-- core note -->
+  <rect x="24" y="596" width="916" height="72" rx="5" class="bxg"/>
+  <text x="40" y="618" class="tb">코어 계약은 안 바뀌었다 — 그러나 「코어를 하나도 안 건드렸다」는 아니다</text>
+  <text x="40" y="637" class="m">여행으로 갈아끼우며 바뀐 것 셋: app/core/settings.py +127 (외부 제공자 키·호출 상한) ·</text>
+  <text x="40" y="652" class="m">app/core/project_config.py +46 (구현 허용목록 교체 · 기동 검사 신설) · controller.py 14 (라우팅 두 축)</text>
+  <text x="640" y="637" class="ma">아키텍처 가드 73개 통과</text>
+  <text x="640" y="652" class="ma">예외는 이유와 함께 적혀 있다</text>
+</svg>
+</div>
+
+<div class="note">
+  <strong>v1 에서 고친 것.</strong> v1 도해에는 <strong>제안 사실 대조와 사람 승인이 없었다</strong> —
+  Team 에서 Action 층으로 화살표가 바로 갔다. 그래서 「승인 없이는 아무것도 실행되지 않는다」는
+  이 제품의 핵심 약속이 그림에서 안 보였다. 그리고 <code>CORE · KEEP</code> 배지를 내렸다 —
+  <strong>사실이 아니고</strong>, 그건 개발 변경 범위이지 실행 책임이 아니다.
+</div>
+
+
+<h2><span class="n">02</span>Team 이 받을 수 있는 일과 돌려줄 수 있는 것</h2>
+<p class="lead">v1 에는 <code>accepted_case_types</code> 가 <strong>한 번도 안 나온다.</strong>
+그런데 그것이 <strong>팀을 고르는 축</strong>이다. 「역할을 적었다」와 「범위를 검사한다」는 다르다.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 1160 410" role="img" aria-labelledby="d2t d2d" xmlns="http://www.w3.org/2000/svg">
+  <title id="d2t">선언 · 과제 · 결과</title>
+  <desc id="d2d">TeamManifest 의 선언이 TeamTask 의 각 칸과 대응하고, 공통 가드가 그 대응을
+  실행 시점에 검사한다. 결과는 네 갈래로 나뉜다.</desc>
+  <style>
+    .bx2{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
+    .bx2a{fill:#ffffff;stroke:#a8720c;stroke-width:1.3}
+    .t2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;fill:#161c28}
+    .tb2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12.5px;font-weight:600;fill:#161c28}
+    .m2{font-family:'Geist Mono',monospace;font-size:9.5px;fill:#7a8599}
+    .ma2{font-family:'Geist Mono',monospace;font-size:9.5px;fill:#a8720c}
+    .ln2{stroke:#a8720c;stroke-width:1.1;fill:none;stroke-dasharray:4 3}
+    .hd{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.1em}
+  </style>
+
+  <text x="24" y="26" class="hd">선언 — TeamManifest</text>
+  <rect x="24" y="38" width="300" height="216" rx="6" class="bx2a"/>
+  <text x="44" y="62" class="tb2">accepted_case_types</text>
+  <text x="44" y="79" class="ma2">Controller 가 팀을 고르는 축. v1 에 빠져 있었다</text>
+  <text x="44" y="104" class="tb2">team_id</text>
+  <text x="44" y="121" class="m2">activity · dining · mobility · booking_handoff …</text>
+  <text x="44" y="146" class="tb2">capabilities · default_capability</text>
+  <text x="44" y="163" class="m2">activity.check_cancelable / check_feasible / propose_change</text>
+  <text x="44" y="178" class="ma2">고를 장치가 없으면 default_capability 로 간다</text>
+  <text x="44" y="203" class="tb2">allowed_tools · max_steps</text>
+  <text x="44" y="220" class="m2">read.booking · read.policy · read.place · read.weather</text>
+  <text x="44" y="236" class="m2">max_steps 6 (Lodging · Flight 는 2)</text>
+
+  <text x="424" y="26" class="hd">과제 — TeamTask</text>
+  <rect x="424" y="38" width="290" height="216" rx="6" class="bx2"/>
+  <text x="444" y="62" class="tb2">(Controller 가 이미 팀을 골랐다)</text>
+  <text x="444" y="79" class="ma2">case_type 은 여기 안 실린다. _guard 는 안 본다</text>
+  <text x="444" y="104" class="tb2">team_id</text>
+  <text x="444" y="121" class="m2">선언과 다르면 → HANDOFF</text>
+  <text x="444" y="146" class="tb2">capability</text>
+  <text x="444" y="163" class="m2">선언한 capabilities 에 없으면 → ESCALATE</text>
+  <text x="444" y="203" class="tb2">allowed_tools · context</text>
+  <text x="444" y="220" class="m2">도구 계층으로 그대로 넘어간다</text>
+  <text x="444" y="236" class="m2">context.degraded 면 → ESCALATE</text>
+
+  <text x="814" y="26" class="hd">결과 — TeamResult</text>
+  <rect x="814" y="38" width="322" height="200" rx="6" class="bx2"/>
+  <text x="834" y="64" class="tb2">outcome · confidence</text>
+  <text x="834" y="90" class="tb2">evidence</text>
+  <text x="834" y="108" class="m2">조회마다 출처와 확인 시각을 쌓는다</text>
+  <text x="834" y="134" class="tb2">next_action</text>
+  <text x="834" y="152" class="m2">RESPOND · HANDOFF · ESCALATE · WAIT_FOR_APPROVAL</text>
+  <text x="834" y="178" class="tb2">action_proposals</text>
+  <text x="834" y="196" class="ma2">여기에 담아 돌려준다 — 실행하지 않는다</text>
+  <text x="834" y="216" class="m2">approval_required = True</text>
+  <text x="834" y="234" class="ma2">멱등 키를 팀이 붙이지만 서버가 다시 만든다 (controller.py:374)</text>
+
+  <path d="M324 116 C374 116 374 116 418 116" class="ln2"/>
+  <path d="M324 158 C374 158 374 158 418 158" class="ln2"/>
+  <path d="M324 215 C374 215 374 215 418 215" class="ln2"/>
+  <path d="M714 150 C764 150 764 150 808 150" class="ln2"/>
+  <text x="332" y="110" class="m2">team_id</text>
+  <text x="332" y="152" class="m2">capability</text>
+  <text x="332" y="209" class="m2">도구 · 예산</text>
+
+  <rect x="24" y="284" width="1112" height="100" rx="6" fill="#f7f8fb" stroke="#dbe0ea" stroke-dasharray="3 3"/>
+  <text x="44" y="310" class="tb2">공통 가드 — 셋을 다 본다. 순서에 뜻이 있다 (_base.py:57 · 61 · 63)</text>
+  <text x="44" y="334" class="t2">1 · team_id — 남의 일이면 <tspan class="ma2">판단하기 전에</tspan> 넘긴다 (HANDOFF)</text>
+  <text x="44" y="354" class="t2">2 · capability — 못 하는 일이면 <tspan class="ma2">시작하지 않는다</tspan> (unsupported_capability)</text>
+  <text x="44" y="374" class="t2">3 · context.degraded — 근거가 깎였으면 <tspan class="ma2">확정 답을 만들지 않는다</tspan> (degraded_context)</text>
+  <text x="700" y="334" class="m2">셋 다 통과하면 _guard() 가 None 을 돌려주고</text>
+  <text x="700" y="354" class="m2">각 Team 의 execute() 가 이어진다.</text>
+  <text x="700" y="374" class="ma2">TravelTeamBase 는 execute() 를 대신 실행하지 않는다.</text>
+</svg>
+</div>
+
+<div class="note">
+  <strong>v1 의 「여섯 팀이 똑같이 돈다」를 내렸다.</strong>
+  <code>_base.py</code> 첫머리가 <strong>execute() 를 대신 실행하지 않는다</strong>고 못박았다.
+  상속만으로 호출 순서가 보장되지는 않는다. 정확히는 <strong>「공통 계약 부품을 쓴다」</strong>이다.
+</div>
+
+
+<h2><span class="n">03</span>Team 하나의 실행과 중단 조건</h2>
+<p class="lead">가드 셋을 지나면 조회하고, 근거를 쌓고, 판정한다. <strong>어디서 멈추는지</strong>가
+이 그림의 요점이다.</p>
+
+<div class="diagram">
+<svg viewBox="0 0 1160 430" role="img" aria-labelledby="d3t d3d" xmlns="http://www.w3.org/2000/svg">
+  <title id="d3t">Team 내부 실행과 중단</title>
+  <desc id="d3d">가드 셋을 순서대로 검사하고 첫 실패에서 반환한다. 조회는 허용 목록, 중복,
+  예산 세 가지로 막힌다. 판정 뒤 결과는 응답, 모름, 에스컬레이션, 승인 대기 제안으로 나뉜다.</desc>
+  <defs>
+    <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/>
+    </marker>
+    <marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/>
+    </marker>
+  </defs>
+  <style>
+    .b3{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
+    .b3a{fill:#ffffff;stroke:#a8720c;stroke-width:1.3}
+    .b3s{fill:#fdf7ee;stroke:#a8720c;stroke-width:1}
+    .t3{font-family:'Geist','Noto Sans KR',sans-serif;font-size:11.5px;fill:#161c28}
+    .tb3{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;font-weight:600;fill:#161c28}
+    .m3{font-family:'Geist Mono',monospace;font-size:9px;fill:#7a8599}
+    .ma3{font-family:'Geist Mono',monospace;font-size:9px;fill:#a8720c}
+    .l3{stroke:#6b7488;stroke-width:1;fill:none;marker-end:url(#a3)}
+    .l3a{stroke:#a8720c;stroke-width:1.1;fill:none;marker-end:url(#a4)}
+  </style>
+
+  <rect x="24" y="40" width="140" height="52" rx="5" class="b3"/>
+  <text x="94" y="62" class="tb3" text-anchor="middle">execute(task)</text>
+  <text x="94" y="79" class="m3" text-anchor="middle">각 Team 이 직접 부른다</text>
+
+  <rect x="200" y="40" width="128" height="52" rx="5" class="b3a"/>
+  <text x="264" y="62" class="tb3" text-anchor="middle">1 · team_id</text>
+  <text x="264" y="79" class="m3" text-anchor="middle">_base.py:57</text>
+  <rect x="364" y="40" width="128" height="52" rx="5" class="b3a"/>
+  <text x="428" y="62" class="tb3" text-anchor="middle">2 · capability</text>
+  <text x="428" y="79" class="m3" text-anchor="middle">_base.py:61</text>
+  <rect x="528" y="40" width="128" height="52" rx="5" class="b3a"/>
+  <text x="592" y="62" class="tb3" text-anchor="middle">3 · degraded</text>
+  <text x="592" y="79" class="m3" text-anchor="middle">_base.py:63</text>
+
+  <line x1="164" y1="66" x2="194" y2="66" class="l3"/>
+  <line x1="328" y1="66" x2="358" y2="66" class="l3"/>
+  <line x1="492" y1="66" x2="522" y2="66" class="l3"/>
+
+  <rect x="200" y="118" width="128" height="34" rx="4" class="b3s"/>
+  <text x="264" y="140" class="t3" text-anchor="middle">HANDOFF</text>
+  <rect x="364" y="118" width="128" height="34" rx="4" class="b3s"/>
+  <text x="428" y="140" class="t3" text-anchor="middle">ESCALATE</text>
+  <rect x="528" y="118" width="128" height="34" rx="4" class="b3s"/>
+  <text x="592" y="140" class="t3" text-anchor="middle">ESCALATE</text>
+  <line x1="264" y1="92" x2="264" y2="112" class="l3a"/>
+  <line x1="428" y1="92" x2="428" y2="112" class="l3a"/>
+  <line x1="592" y1="92" x2="592" y2="112" class="l3a"/>
+  <text x="272" y="108" class="m3">다르면</text>
+  <text x="436" y="108" class="m3">없으면</text>
+  <text x="600" y="108" class="m3">참이면</text>
+
+  <rect x="700" y="30" width="240" height="120" rx="6" class="b3a"/>
+  <text x="820" y="52" class="tb3" text-anchor="middle">_read — 막는 것 셋</text>
+  <text x="716" y="76" class="t3">허용 목록 밖 → 거부</text>
+  <text x="716" y="98" class="t3">seen 에 있으면 → 중복 차단</text>
+  <text x="716" y="120" class="t3">예산 초과 → 중단</text>
+  <text x="716" y="140" class="ma3">budget = manifest.max_steps (_base.py:78)</text>
+  <line x1="656" y1="66" x2="694" y2="80" class="l3"/>
+
+  <rect x="976" y="30" width="160" height="120" rx="6" class="b3"/>
+  <text x="1056" y="50" class="tb3" text-anchor="middle">_evidence</text>
+  <text x="1056" y="70" class="m3" text-anchor="middle">출처 · 확인 시각</text>
+  <text x="1056" y="86" class="m3" text-anchor="middle">빈 값은 안 넣는다</text>
+  <text x="1056" y="106" class="ma3" text-anchor="middle">★base 를 줘야</text>
+  <text x="1056" y="120" class="ma3" text-anchor="middle">앞 근거 위에 쌓인다</text>
+  <text x="1056" y="140" class="m3" text-anchor="middle">_base.py:82 · :97</text>
+  <line x1="940" y1="90" x2="970" y2="90" class="l3"/>
+
+  <rect x="24" y="212" width="1112" height="42" rx="5" fill="#f7f8fb" stroke="#dbe0ea"/>
+  <text x="580" y="238" class="tb3" text-anchor="middle">판정 — 코드가 한다 (v11 §4-D 의 계약. 공통 부품에는 LLM 호출이 없다)</text>
+
+  <rect x="24" y="290" width="256" height="76" rx="5" class="b3"/>
+  <text x="152" y="310" class="tb3" text-anchor="middle">_result — 결과를 만든다</text>
+  <text x="152" y="330" class="t3" text-anchor="middle">RESPOND · HANDOFF · ESCALATE ·</text>
+  <text x="152" y="346" class="t3" text-anchor="middle">WAIT_FOR_APPROVAL 을 다 만든다</text>
+  <text x="152" y="362" class="m3" text-anchor="middle">_base.py:125 · 전용이 아니다</text>
+
+  <rect x="304" y="290" width="256" height="76" rx="5" class="b3s"/>
+  <text x="432" y="310" class="tb3" text-anchor="middle">_unknown</text>
+  <text x="432" y="330" class="t3" text-anchor="middle">「모름」 사유를 가진 ESCALATE 다</text>
+  <text x="432" y="352" class="ma3" text-anchor="middle">_escalate 를 부른다 (_base.py:154)</text>
+
+  <rect x="584" y="290" width="256" height="76" rx="5" class="b3"/>
+  <text x="712" y="314" class="tb3" text-anchor="middle">_escalate</text>
+  <text x="712" y="334" class="t3" text-anchor="middle">실패 사유를 붙여 사람에게</text>
+  <text x="712" y="352" class="m3" text-anchor="middle">_base.py:135</text>
+
+  <rect x="864" y="290" width="272" height="76" rx="5" class="b3a"/>
+  <text x="1000" y="310" class="tb3" text-anchor="middle">_proposal — ActionProposal 만 만든다</text>
+  <text x="1000" y="330" class="t3" text-anchor="middle">approval_required = True. 실행하지 않는다</text>
+  <text x="1000" y="346" class="t3" text-anchor="middle">승인 대기는 _result 가 붙인다</text>
+  <text x="1000" y="362" class="m3" text-anchor="middle">_base.py:160 · wait_reason 은 :127 에서</text>
+
+  <line x1="300" y1="254" x2="200" y2="284" class="l3"/>
+  <line x1="480" y1="254" x2="440" y2="284" class="l3"/>
+  <line x1="680" y1="254" x2="712" y2="284" class="l3"/>
+  <line x1="860" y1="254" x2="980" y2="284" class="l3a"/>
+
+  <text x="24" y="392" class="m3">★ _unknown 은 독립 종료가 아니라 _escalate 를 부른다 — 「값이 없는 것」과 「모르는 것」은 다르고, 그 구분이 결과에 남는다.</text>
+  <text x="24" y="408" class="m3">★ _result 는 네 갈래를 다 만드는 공용 함수다. next_action 이 WAIT_FOR_APPROVAL 이면 wait_reason 을 스스로 채운다(:127).</text>
+  <text x="24" y="424" class="ma3">★ 예산은 「도구 호출 횟수」(len(seen) ≥ budget, read_tools.py:303)에 걸린다. 도구를 부르지 않는 반복까지 막는지는 확인하지 않았다.</text>
+</svg>
+</div>
+
+
+<h2><span class="n">04</span>「검증」은 네 가지다 — 갈라서 봐야 한다</h2>
+<p class="lead">v1 은 Team 의 <strong>도메인 판정</strong>을 자세히 설명했다. 그것이 뒤의 셋까지
+한다는 인상을 주는데, <strong>다른 일이다.</strong> 넷은 하는 곳도 시점도 다르다.</p>
+
+<table>
+  <thead><tr><th style="width:22%">무엇</th><th style="width:38%">하는 일</th><th style="width:24%">어디서</th><th style="width:16%">상태</th></tr></thead>
+  <tbody>
+    <tr><td><strong>도메인 판정</strong></td>
+        <td>영업 여부 · 이동 가능 · 취소 조건 · 인원 대 정원</td>
+        <td class="mono">각 Team 의 execute()</td>
+        <td><span class="st st-ok">코드 확인</span></td></tr>
+    <tr><td><strong>제안 사실 대조</strong></td>
+        <td>실행할 제안을 정책·사실과 대조하고 불일치를 모은다.
+            <span class="mono" style="font-size:11px">★대조 규칙의 내용과 「불일치가 나면 실제로 막히는지」는 확인 못 했다</span></td>
+        <td class="mono">controller.py:332<br>composition.py:257~274</td>
+        <td><span class="st st-ok">호출 확인</span></td></tr>
+    <tr><td><strong>실행 직전 재대조</strong></td>
+        <td>승인 대기 중에 사실이 바뀌었으면 실행 직전에 다시 본다</td>
+        <td class="mono">proposal_guard.py 주석에<br>설계가 적혀 있다</td>
+        <td><span class="st st-doc">문서 기재</span><br><span class="mono" style="font-size:11px">실행 연결 미확인</span></td></tr>
+    <tr><td><strong>고객 전달 전 검증</strong></td>
+        <td>답변과 생성한 대안이 근거·판정에 맞는지 확인한다</td>
+        <td class="mono">response_review<br>enabled: false</td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+  </tbody>
+</table>
+
+<div class="note gap">
+  <strong>★ v1 이후 잘못 말한 것을 여기서 바로잡는다.</strong>
+  2026-09-10 오전에 <strong>「출력 검증이 켜졌다」</strong>고 정리한 적이 있는데 <strong>과했다.</strong>
+  켜진 것은 <strong>제안 사실 대조</strong>까지다. 고객 답변과 생성 대안의 검증은 확인하지 못했고
+  <code>response_review</code> 는 여전히 꺼져 있다. <strong>연결됐다는 것과 막힌다는 것은 다르다.</strong>
+</div>
+
+<h3>근거가 어디서 와서 어디로 가나 — 점검 후보</h3>
+<div class="note">
+  <code>_base.py:82~104</code> 는 조회 결과로 <strong>새 근거를 만들고</strong>, <code>:176</code> 은 그
+  근거 id 를 제안에 넣는다. 그런데 <code>controller.py:327~328</code> 은 ContextPack 이 있으면
+  <strong>그 안의 근거 id 만</strong> 검증에 넘긴다.
+  <strong>Team 조회로 생긴 근거가 검증 전에 ContextPack 에 안 실린다면, 실제 조회에 근거한 제안이
+  거부될 수 있다.</strong>
+  ContextPack 갱신 경로를 열어보지 않았으므로 <span class="st st-unk">미확인</span> 으로 둔다 —
+  결함이라고 단정하지 않는다. 다만 <strong>「Team 이 만든 근거」와 「검증자가 믿는 근거」가
+  다를 수 있다</strong>는 것은 그림에서 지우면 안 된다.
+</div>
+
+
+<h2><span class="n">05</span>여섯 Team 은 무엇이 다른가</h2>
+<p class="lead">공통 뼈대는 02·03 에서 봤다. 여기서는 <strong>다른 것만</strong> 적는다.</p>
+
+<table>
+  <thead><tr>
+    <th style="width:14%">Team</th><th style="width:10%">받는 case_type</th>
+    <th style="width:24%">capability</th><th style="width:20%">조회하는 것</th>
+    <th style="width:32%">고유한 분기</th>
+  </tr></thead>
+  <tbody>
+    <tr><td><strong>Activity</strong><br><span class="mono">274줄 · max_steps 6</span></td>
+        <td class="mono">activity</td>
+        <td class="mono">activity.check_cancelable<br>activity.check_feasible<br>activity.propose_change<br><span style="color:#a8720c">기본 check_feasible</span></td>
+        <td class="mono">booking · policy<br>place · weather</td>
+        <td><strong>기상은 조건부로만 본다</strong> — 장소가 날씨에 걸리는 활동일 때만 조회한다.
+            실내 활동에 기상 판정을 걸면 틀린 이유로 불가가 난다</td></tr>
+    <tr><td><strong>Dining</strong><br><span class="mono">96줄 · max_steps 6</span></td>
+        <td class="mono">dining</td>
+        <td class="mono">dining.check_open<br>dining.check_conditions<br><span style="color:#a8720c">기본 check_open</span></td>
+        <td class="mono">place · policy<br>booking</td>
+        <td>동행 조건(식단 등)을 <strong>Case 상태</strong>에서 읽는다 — 항목이 아니라 여행 수준 조건이다</td></tr>
+    <tr><td><strong>Mobility</strong><br><span class="mono">80줄 · max_steps 6</span></td>
+        <td class="mono">mobility</td>
+        <td class="mono">mobility.check_route<br>mobility.status<br>mobility.exception<br><span style="color:#a8720c">기본 check_route</span></td>
+        <td class="mono">route · transit<br>policy</td>
+        <td><strong>여섯 중 유일하게 <code>select_capability</code> 를 구현했다</strong> —
+            본문 낱말을 보고 capability 를 고른다</td></tr>
+    <tr><td><strong>Booking Handoff</strong><br><span class="mono">94줄 · max_steps 6</span></td>
+        <td class="mono">booking</td>
+        <td class="mono">booking.verify<br>booking.prepare_change<br>booking.prepare_cancel<br><span style="color:#a8720c">기본 verify</span></td>
+        <td class="mono">booking · policy<br>supplier</td>
+        <td><strong>공급자 원장과 우리 기록을 따로 읽어 대조한다</strong> — 한 곳에서 읽으면
+            자기 자신과 비교하는 꼴이 된다</td></tr>
+    <tr><td><strong>Lodging / Flight</strong><br><span class="mono">73줄 · max_steps 2</span></td>
+        <td class="mono">lodging<br>flight</td>
+        <td class="mono">lodging.status<br>flight.status<br><span style="color:#a8720c">그것이 곧 기본</span></td>
+        <td class="mono">booking</td>
+        <td><strong>잠긴 예약 조회로 범위를 제한했다.</strong> 기능 제한이지 미구현이 아니다 —
+            capability 가 하나뿐이라 고를 것이 없다</td></tr>
+  </tbody>
+</table>
+<p class="lead"><span class="st st-ok">코드 확인</span> capability 이름 · <code>accepted_case_types</code> ·
+<code>max_steps</code> · <code>default_capability</code> · 줄수는 2026-09-10 에 각 파일의
+<code>TeamManifest</code> 에서 확인했다. 「고유한 분기」는 <strong>각 파일의 판정 본문을 읽은 것</strong>이다
+— 선언만으로는 알 수 없다.</p>
+
+<div class="note">
+  <strong>capability 접두가 팀 이름과 다른 곳이 하나 있다.</strong>
+  Booking Handoff 는 <code>team_id</code> 가 <code>booking_handoff</code> 인데 capability 접두는
+  <code>booking.</code> 이고 받는 <code>case_type</code> 도 <code>booking</code> 이다.
+  <code>issue_code</code> 접두(<code>booking_*</code>)와 맞춘 것이다.
+  <strong>팀 이름으로 capability 를 짐작하면 여기서 틀린다.</strong>
+</div>
+
+<div class="note">
+  <strong>고를 장치가 없어도 아무 데도 안 가는 것이 아니다.</strong> 여섯 팀 모두
+  <code>default_capability</code> 를 선언한다. <code>select_capability</code> 훅이 없으면
+  <strong>그 기본값으로 간다</strong> — 문제는 「고를 수 없다」가 아니라
+  <strong>「항상 같은 것으로 간다」</strong>이다. 사건 신고가 와도 Activity 는
+  <code>check_feasible</code> 로, Mobility 를 뺀 나머지가 그렇다.
+</div>
+
+
+<h2><span class="n">06</span>아직 보장하지 못하는 것</h2>
+<p class="lead">v1 은 이것을 배지 하나로 흘려 놓았다. <strong>「완료 확인 기준」</strong>을 같이 적는다 —
+무엇을 보이면 상태가 바뀌는지 적어야 다음 사람이 닫을 수 있다.</p>
+
+<table>
+  <thead><tr>
+    <th style="width:20%">항목</th><th style="width:14%">지금</th>
+    <th style="width:30%">지금 근거</th><th style="width:36%">완료 확인 기준</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>도구 호출 예산</td><td><span class="st st-ok">코드 확인</span></td>
+        <td>전달(<span class="mono">_base.py:78</span>)과 예외 정의(<span class="mono">ToolBudgetExceeded</span>)</td>
+        <td>다른 인자로 반복 호출해도 상한에서 멈추고, 호출자에게 정해진 결과로 돌아옴</td></tr>
+    <tr><td><strong>전체 반복 제한</strong></td><td><span class="st st-unk">미확인</span></td>
+        <td>—</td>
+        <td>도구를 부르지 않는 생성 반복과 재계획 반복의 종료 조건</td></tr>
+    <tr><td>제안 사실 대조</td><td><span class="st st-ok">코드 확인</span></td>
+        <td>정책 선택과 대조 호출(<span class="mono">controller.py:332</span>)</td>
+        <td>잘못된 제안이 <strong>실행 전에 막히는</strong> 경로</td></tr>
+    <tr><td>실행 직전 재대조</td><td><span class="st st-doc">문서 기재</span></td>
+        <td>주석에 설계가 적혀 있다. 실행 연결은 확인 안 했다</td>
+        <td>승인 대기 중 사실이 바뀐 건이 실행 직전에 다시 걸리는 경로</td></tr>
+    <tr><td><strong>고객 답변·대안 검증</strong></td><td><span class="st st-unk">미확인</span></td>
+        <td><span class="mono">response_review.enabled: false</span>. 켜면 기동이 막힌다</td>
+        <td>근거 없는 답변과 재판정 안 된 대안이 나가지 않는 경로</td></tr>
+    <tr><td><code>select_capability</code></td><td><span class="st st-none">미구현</span></td>
+        <td><strong>넷 중 하나만 있다.</strong> Mobility 만 구현했고, capability 둘 이상인 팀 넷에 필요하다. 나머지 셋은 <code>default_capability</code> 로만 간다</td>
+        <td>Activity · Dining · Booking Handoff 에 구현</td></tr>
+    <tr><td>멱등 키의 「대상」</td><td><span class="st st-none">미구현</span></td>
+        <td><strong>결정은 났고 코드가 안 따라왔다.</strong> v11 §4-E 가 대상 객체 id 로 정했는데 <span class="mono">controller.py:374</span> 는 Case id 고정이다. 팀이 붙인 키(<span class="mono">_base.py:169</span>)는 서버가 버린다</td>
+        <td>서버가 확인한 대상 객체 id 가 키에 들어감</td></tr>
+    <tr><td>무예약 활동 판정</td><td><span class="st st-none">미구현</span></td>
+        <td><strong>넣으면 두 번 막힌다.</strong> 예약이 없으면 <span class="mono">activity.py:76</span> 에서 「모름」으로 끝나고, 규정이 없어도 <span class="mono">:78</span> 에서 또 끝난다</td>
+        <td>판정 입력이 「예약」이 아니라 「일정 항목」으로 (v11 §5-D)</td></tr>
+    <tr><td>Place Verification</td><td><span class="st st-doc">문서 기재</span></td>
+        <td><strong>원격 Agent 는 있으나 지금 안 쓴다.</strong> <span class="mono">travel_remote_agent.py</span> 202줄이 있지만 <span class="mono">a2a_executor.enabled: false</span> · <span class="mono">team_executor: local</span> 이고, 실제 장소 원장에도 안 붙는 시뮬레이터다</td>
+        <td>제품 범위 결정 — 왕복·계약 증명으로 둘지, 실제 조회를 붙일지</td></tr>
+    <tr><td>응답 검토 Team</td><td><span class="st st-none">미구현</span></td>
+        <td>여행판이 아직 없다. 커머스판은 구현과 함께 걷어냈다. <span class="mono">enabled: false</span> 이고 켜면 기동이 막힌다고 YAML 주석이 적었다 — <strong>그 검증 구현은 확인 못 했다</strong></td>
+        <td>등록된 활성 팀으로 만들고 <span class="mono">enabled: true</span> 로 기동</td></tr>
+  </tbody>
+</table>
+
+
+<h2><span class="n">07</span>이 문서를 읽을 때</h2>
+<table>
+  <thead><tr><th style="width:30%">규칙</th><th>왜</th></tr></thead>
+  <tbody>
+    <tr><td><strong>줄수로 성숙도를 말하지 않는다</strong></td>
+        <td>v1 은 「Activity 가 204줄로 가장 크다」고 적었다. 줄수는 성숙도가 아니고,
+            v1 어긋남의 절반이 줄수였다. 이 판의 줄수는 <strong>파일을 식별하기 위한 것</strong>이다</td></tr>
+    <tr><td><strong>등록 · 범위 · 검증은 다른 축이다</strong></td>
+        <td>「등록됐다」가 「기능이 다 된다」가 아니고, 「기능이 된다」가 「검증됐다」가 아니다.
+            v1 의 <code>LIVE</code>·<code>STUB</code>·<code>OPEN</code> 은 이 셋을 섞었다</td></tr>
+    <tr><td><strong>삭제된 코드를 인용하지 않는다</strong></td>
+        <td>v1 은 커머스 여섯 팀의 가드 통계를 인용했는데 그 구현이 저장소에서 나갔다.
+            인용하려면 <strong>커밋 해시를 같이</strong> 적는다</td></tr>
+    <tr><td><strong>「확인 못 했다」를 적는다</strong></td>
+        <td>확인 범위를 안 적은 단정이 v1 에서 가장 많이 틀렸다</td></tr>
+    <tr><td><strong>한국어와 영어만 쓴다</strong></td>
+        <td>v1 도해에 다른 문자가 섞여 들어간 자리가 있었다. 코드 식별자 외에는
+            한국어로 적는다</td></tr>
+  </tbody>
+</table>
+
+<h3>v1 에서 무엇이 바뀌었나</h3>
+<p class="lead">v1(2026-09-09)은 「무엇이 있나」를 그렸다. 이 판은 <strong>「무엇을 어떻게 막나」</strong>로
+축을 바꾸고, v1 의 사실 오류를 고쳤다.</p>
+<table>
+  <thead><tr><th style="width:30%">v1</th><th>v2</th></tr></thead>
+  <tbody>
+    <tr><td>기준선 v10</td><td><strong>v11</strong></td></tr>
+    <tr><td><code>travel_ops/</code> 파일 5개</td><td><strong>9개</strong> — <code>feedback.py</code>(152) · <code>verification_policy.py</code>(96) 가 새로 들어왔다</td></tr>
+    <tr><td>Activity 204줄 · Dining 83줄 · <code>_base</code> 231줄</td><td><strong>274 · 96 · 177.</strong> v1 은 한 문서에서 204 와 274 를 둘 다 말했다</td></tr>
+    <tr><td>Place Verification 미등록 · 「뺀 건지 빠진 건지 안 정해졌다」</td><td>원격 Agent 는 <strong>만들어졌다</strong>. 다만 지금 안 쓰고 시뮬레이터다</td></tr>
+    <tr><td><code>CORE · KEEP</code> · 「코어 손 안 댐」</td><td><strong>내렸다.</strong> 사실이 아니고(01 도해 아래), 개발 변경 범위이지 실행 책임이 아니다</td></tr>
+    <tr><td><code>accepted_case_types</code> 0회</td><td>02 장의 <strong>축</strong>으로 세웠다</td></tr>
+    <tr><td>제안 대조 · 사람 승인이 도해에 없었다</td><td>01 D 레인으로 넣었다</td></tr>
+    <tr><td>커머스 6팀 가드 통계 인용</td><td><strong>뺐다.</strong> 그 구현이 저장소에서 나갔다</td></tr>
+    <tr><td>「제공 원문이 <code>_result</code> 중간에서 끝나므로…」 · 도해의 다른 문자</td><td><strong>뺐다</strong></td></tr>
+  </tbody>
+</table>
+<p class="lead">대조 기록은 <code>program/plan/A-COP_아키텍처브리핑_재설계안.md</code> 에 있다.
+이 판은 <strong>코덱스(gpt-6-astra) 검토를 거쳤고</strong>, 검토가 가드 줄 번호 셋 ·
+<code>_result</code>·<code>_proposal</code> 의 역할 · 02 장 대응선 · 「검증 세 가지」(넷이다)를 잡아냈다.</p>
+
+<footer>
+  <div>실측 2026-09-10 · 기준선 program/plan/A-COP_구현계획서_v11.md</div>
+  <div>코드 근거 final_project_cs/app/modules/travel_ops/ · app/application/controller.py · app/tools/read_tools.py · app/composition.py · config/project.yaml</div>
+  <div>대조 기록 program/plan/A-COP_아키텍처브리핑_재설계안.md · 직전 판 A-COP_여행Team모듈_아키텍처.html (v1, 2026-09-09)</div>
+  <div>점검 항목 다섯은 arXiv:2601.03328 의 논의에서 출발했으나 이름과 범위는 우리가 정한 것이다 — 논문의 패턴 목록이 아니다</div>
+</footer>
+
+</div>
+</body></html>
