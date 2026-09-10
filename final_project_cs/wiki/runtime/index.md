@@ -53,9 +53,9 @@ app/core/case_runtime/
 | 파일 | 무엇 |
 |---|---|
 | `app/core/transition.py` | 상태 전이 규칙 (232줄) |
-| `app/core/contracts.py` | 계약 정의 (346줄) |
+| `app/core/contracts.py` | 계약 정의 (352줄 — `[실측 2026-09-10 작업 트리]`, 전에는 346줄) |
 | `app/core/context.py` | 컨텍스트 (282줄) |
-| `app/core/registry.py` | Team Registry (93줄) |
+| `app/core/registry.py` | Team Registry (123줄 — `[실측 2026-09-10 작업 트리]`, 전에는 93줄) |
 
 ## 이 영역의 불변식
 

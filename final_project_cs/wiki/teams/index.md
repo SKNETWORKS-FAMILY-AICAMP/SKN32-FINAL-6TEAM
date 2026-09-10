@@ -27,14 +27,14 @@ domain: travel
 | [team-contract.md](team-contract/index.md) | `TeamTask` / `TeamResult` 모양 | `app/core/contracts.py` |
 | [team-boundary.md](team-boundary.md) | Team이 하면 안 되는 것 셋 | — |
 | [build-order.md](build-order.md) | 어느 순서로 만드나 | — |
-| [common-utils.md](common-utils.md) | 공통 뼈대 (미구현) | — |
+| [common-utils.md](common-utils.md) | 공통 뼈대 — `[2026-09-10]` `travel_ops/_base.py` 가 생겼다(설계 대조 전) | `app/modules/travel_ops/_base.py` |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |
 | [response-review-design.md](../records/legacy/teams/response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
 
-## 여행 Team — 명세만 있다 `[실측 2026-09-09]`
+## 여행 Team
 
-**코드가 없다.** `app/modules/` 에 파일이 없고 `config/project.yaml` 에도 등록돼 있지 않다. 아래는 무엇을 만들어야 하는가다.
+`[정정 2026-09-10]` 이 절은 「명세만 있다 — 코드가 없고 등록도 없다」(09-09)였다. **지금 작업 트리에는 코드가 있고 여섯이 등록돼 있다** — `app/modules/travel_ops/` 파일 10개, `config/project.yaml` 의 `implementation_ref` 6개(Activity · Booking Handoff · Mobility · Dining · Lodging · Flight). ★`[실측 git]` **git 에는 아직 없다** — travel_ops 는 추적되지 않고, git 의 등록 여섯은 커머스다. 아래 표는 각 Team 이 무엇을 판정하나다.
 
 | Team | MVP | 무엇을 판정하나 | 재계획 |
 |---|---|---|---|
@@ -66,15 +66,15 @@ domain: travel
 
 `[미확보]` **v11 §5 에 이 Team 이 없다.** 계획서에 넣는 일은 계획서 담당 몫이다.
 
-`[실측]` 뼈대로 베낄 쇼핑몰 Team — Activity ← `return_refund`, Mobility ← `fulfillment_logistics`, Place Verification ← `catalog_verification`. **Dining·Booking Handoff 는 신규다.**
+`[실측 2026-09-09]` 뼈대로 베낄 쇼핑몰 Team(`[2026-09-10]` 지금은 베껴 붙었고 원본은 작업 트리에서 지워졌다 — 아래는 어디서 왔나의 기록이다) — Activity ← `return_refund`, Mobility ← `fulfillment_logistics`, Place Verification ← `catalog_verification`. **Dining·Booking Handoff 는 신규다.**
 
-★**모든 Team 이 `business_subject` 규칙을 지켜야 한다** — 그 Action 이 바꾸는 대상 객체 id 를 넣고, 특정 안 되면 escalate 한다. `case_id` 폴백을 두지 않는다. 지금 옳게 하는 Team 은 `fulfillment_logistics` 하나뿐이다. 각 Team 페이지의 같은 이름 절 참고.
+★**모든 Team 이 `business_subject` 규칙을 지켜야 한다** — 그 Action 이 바꾸는 대상 객체 id 를 넣고, 특정 안 되면 escalate 한다. `case_id` 폴백을 두지 않는다. ~~지금 옳게 하는 Team 은 `fulfillment_logistics` 하나뿐이다.~~ `[정정 2026-09-10]` 쇼핑몰 코드 기준이었고 그 Team 은 작업 트리에서 지워졌다. **지금은 어느 여행 Team 에도 이 규칙이 적용되지 않는다** — Controller 가 멱등 키 대상을 `case_id` 로 고정한다(`app/application/controller.py:374`). 각 Team 페이지의 같은 이름 절 참고.
 
 **셋을 갖는다** — ① 검증 규칙 ② 감시 소스 ③ 재계획 후보. 판정은 코드가, 대안 생성은 LLM이 하고 **생성한 대안은 판정을 다시 통과해야 통지된다.** ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다** — 재계획 후보는 제안이지 확정이 아니다. [mobility.md](mobility.md)가 그 시험대다.
 
 ## 지난 도메인의 Team — 코드도 문서도 여기 없다
 
-`[실측 2026-09-10]` **커머스 Team 일곱은 코드가 삭제되고 문서는 [records/legacy/teams/](../records/legacy/teams/) 로 옮겼다.**
+`[실측 2026-09-10]` **커머스 Team 여섯은 코드가 작업 트리에서 삭제되고**(git 에는 아직 있다) **문서 일곱**(Team 여섯 + 응답 검토 설계 하나)**은 [records/legacy/teams/](../records/legacy/teams/) 로 옮겼다.**
 
 | | 2026-09-09 | **2026-09-10** |
 |---|---|---|

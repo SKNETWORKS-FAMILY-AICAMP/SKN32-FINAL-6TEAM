@@ -79,7 +79,7 @@ Case → waiting_external
 ```
 원격: package_unit 이 필요하다
   ↓
-Controller: 내부 Catalog Team 또는 운영 UI에 질문 전달
+Controller: 내부 Team 또는 운영 UI에 질문 전달   # [2026-09-10] 쇼핑몰 판에서는 Catalog Team 이었다. 여행 판 원격은 Place Verification
   ↓
 답을 받아 A2A Task 에 resume 입력
 ```
@@ -102,7 +102,7 @@ Controller: 내부 Catalog Team 또는 운영 UI에 질문 전달
 |---|---|
 | Port 경계 | **완료** |
 | Agent Card | 완료 |
-| 더미 Remote Agent 왕복 | 완료 (`tests/integration/a2a/test_remote_round_trip.py`) |
+| 더미 Remote Agent 왕복 | 완료 (`tests/integration/a2a/test_travel_remote_round_trip.py`, 7건 — `[정정 2026-09-10]` 파일 이름이 `test_remote_round_trip.py` 로 적혀 있었다. 대상 원격도 Place Verification 으로 바뀌었다) |
 | 실제 외부 Agent | `[미확보]` |
 
 MVP 범위는 **Remote A2A PoC 1개**다. 더미는 A-COP 본체가 아니라 왕복 검증용 상대역이다.

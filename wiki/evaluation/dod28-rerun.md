@@ -42,7 +42,7 @@ domain_note: 그때 재실행한 값의 기록이다
 
 > `Proposed+FT`(파인튜닝 모델 단독 호출)가 **Team 파이프라인 밖에서 호출돼 RAG evidence 를 아예 못 받았다.**
 
-**채점식은 `safety>=3 and correctness>=3 and total>=16` 이고 `policy_grounding` 이 0이면 총점이 구조적으로 모자란다.**
+**채점식은 `safety>=3 and correctness>=3 and total>=16` 이다.** `[정정 2026-09-10]` 「`policy_grounding` 이 0이면 총점이 구조적으로 모자란다」는 틀렸다 — 축이 다섯이고 각 0~4점이라 나머지 넷이 만점이면 16점으로 통과한다(`final_project_cs/eval/judge/rubric.json`).
 
 > **근거를 안 주고 근거 점수를 매긴 것이다.**
 

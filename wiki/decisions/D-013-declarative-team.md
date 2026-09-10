@@ -1,7 +1,7 @@
 ---
 type: decision
 title: Team 을 코드가 아니라 선언으로 만든다
-description: 네 방식을 비교했고 셋을 기각했다. 기각 사유가 이 결정의 값이다
+description: 네 방식을 비교했고 선언형을 권고했다. 나머지 셋은 기각이 아니라 조건부다
 status: draft
 tags: [architecture, contract, security]
 domain: neutral
@@ -84,6 +84,17 @@ TeamResult 로 제한하는 output schema
 `[실측]` **읽기 전용 선언형 Team 에 쓰기 도구를 넣는 요청**은 UI 가 자체 판정하지 않고 **서버가 422 로 거부한다.** → [sample/composer/ui-boundary.md](../../final_project_sample/wiki/composer/ui-boundary.md)
 
 `[미확보]` **`final_project_cs` 쪽 구현 상태는 확인하지 않았다.**
+
+## [2026-09-10] sample 구현과 대조
+
+`[실측 git]` 이 문서가 제안한 것 중 일부는 sample 에 이미 있고, 일부는 제안보다 좁게 구현됐다.
+
+| 이 문서 | sample 구현 |
+|---|---|
+| 「셋을 기각했다」(description) | `[정정]` 비교표는 셋을 **가능 · 개발 환경 한정 · 조건부**로 적었다. 기각이 아니다 |
+| 선언에 `parameters` 를 넣는다 | **이미 있다** — `TeamConfig.parameters`(`final_project_sample/acop_basement/core/project_config.py:115`), 선언형만 가질 수 있다(`:118`) |
+| 선언에 생성자 · 검토자 · 승인자 · 비용 한도 | **없다** — `TeamConfig` 필드는 `team_id` · `active` · `implementation_ref` · `parameters` 넷이다(같은 파일 100~125행을 읽었다) |
+| 「승인 필요한 side effect 는 `ActionProposal` 만 반환」 | **더 좁다** — 실행기는 읽기 전용이라 `ActionProposal` 을 **아예 만들지 않는다**(`acop_basement/teams/declarative.py:9`) |
 
 ## 관계
 

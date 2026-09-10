@@ -10,7 +10,7 @@ domain: neutral
 
 # 기술 스택
 
-`[실측]` v8 §12에서 이관. `[미확보]` **v10 에는 대응하는 절이 없다** — `Docker`·`AWS` 문자열이 v10 본문에 0회다(루트 `CLAUDE.md` 사실표). 뺀 것인지 빠진 것인지 안 정해졌다.
+`[실측]` v8 §12에서 이관. `[미확보]` **v11 에도 대응하는 절이 없다** — v11 에 `MCP`·`Docker`·`AWS` 가 나오는 곳은 「v11 이 이것들을 말하지 않는다」고 적은 한 줄(124행)뿐이다. 뺀 것인지 빠진 것인지 안 정해졌다. `[정정 2026-09-10]` 이 자리는 v10 기준으로 적혀 있었다. ★**아래 표는 기존 코드의 구현 선택이고 v11 이 정한 기술 결정이 아니다.**
 
 ★**이 문서는 도메인이 바뀌어도 안 바뀐다.**
 
@@ -23,7 +23,7 @@ REST/OpenAPI · MCP · A2A · React
 
 | 항목 | 선택 |
 |---|---|
-| Message Broker | **In-Process / Outbox 로 시작.** Adapter 교체 → [D-003](../decisions/D-003-message-broker.md) |
+| Message Broker | **DB Outbox 로 시작**(바깥함 표에 적고 발행 일꾼이 내보낸다 — `final_project_cs/app/infrastructure/messaging/worker.py`). `[정정 2026-09-10]` 「In-Process / Outbox」로 적혀 있었다. Adapter 교체 → [D-003](../decisions/D-003-message-broker.md) |
 | Graph Store | **`SqlGraphAdapter`.** 게이트 통과 시에만 교체 → [D-002](../decisions/D-002-graph-store-gate.md) |
 | 임베딩 | `text-embedding-3-small` = **1536차원** |
 
@@ -54,7 +54,7 @@ AWS · Docker (컨테이너 기반 배포)
 |---|---|
 | 임베딩 모델 | **DDL의 `vector(1536)`과 적재분 전체** |
 | Message Broker 구현 | consumer 계약 테스트 재실행 |
-| Graph Store | Projection 동기화 설계 (25~40인·일) |
+| Graph Store | Projection 동기화 설계 (25~40인·일 `[추정]` — D-002 와 같은 값) |
 
 ## 관계
 

@@ -17,9 +17,9 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 
 여기는 **코드와 같은 커밋에서 바뀌어야 하는 지식**만 둔다. 제품·일정·사업성은 [중앙 허브](../../wiki/index.md)에 있다.
 
-★**[2026-09-08] 도메인이 여행으로 바뀌었다**(그 판이 v10, 지금 기준선은 **v11**). **코어는 그대로 쓴다** — `runtime/`·`actions/`·`context/`의 계약·동시성·승인 경계는 도메인을 모르므로 유효하다. 반면 `teams/`의 Team 페이지 다섯(return-refund·fulfillment-logistics·procurement-order·catalog-verification·voc-store-manager)은 **MVP 경로에서 빠진 쇼핑몰 Team**이고, 여행 Team(Activity·Booking Handoff·Dining·Mobility)의 페이지는 아직 없다. `[실측 2026-09-09]`
+★**[2026-09-08] 도메인이 여행으로 바뀌었다**(그 판이 v10, 지금 기준선은 **v11**). **코어는 그대로 쓴다** — `runtime/`·`actions/`·`context/`의 계약·동시성·승인 경계는 도메인을 모르므로 유효하다. `[정정 2026-09-10]` 이 자리는 「`teams/` 에 쇼핑몰 Team 페이지 다섯이 남아 있고 여행 Team 페이지는 아직 없다」(09-09)였다. **지금은 반대다** — 여행 Team 페이지 넷이 있고 쇼핑몰 Team 문서 일곱은 legacy 로 옮겼다(아래 teams 절).
 
-여행에서 코어가 바뀌는 것은 **여섯**이다(v11 §5-A) — 분류 라벨(슬러그 `itinerary_submit`/`incident_report`/`confirm_request`/`adjust_reject`/`other`), **라우팅 축 둘**(`case_type`+`intent`, §5-B), **분류 어휘의 자리**(코드 상수 → `config/` 선언 하나), **capability 선택**(팀이 `select_capability` 로 고른다, §5-C), Context Broker가 싣는 것(여행 상태), Action 3종(장소·운영 / 이동 시간 / 기상), Composer 소재(**한국어** 통지 문구 — `[정정 2026-09-10]` v10 은 영어였다). 새 집합체는 **Trip** 하나이고 `Case`에 `trigger_source`·`trip_id`가 붙는다(§4-B).
+여행에서 코어가 바뀌는 것은 **일곱**이다(v11 §5-A 표 7행 — `[정정 2026-09-10]` 「여섯」으로 적혀 있었는데 아래 목록도 일곱이다) — 분류 라벨(슬러그 `itinerary_submit`/`incident_report`/`confirm_request`/`adjust_reject`/`other`), **라우팅 축 둘**(`case_type`+`intent`, §5-B), **분류 어휘의 자리**(코드 상수 → `config/` 선언 하나), **capability 선택**(팀이 `select_capability` 로 고른다, §5-C), Context Broker가 싣는 것(여행 상태), Action 3종(장소·운영 / 이동 시간 / 기상), Composer 소재(**한국어** 통지 문구 — `[정정 2026-09-10]` v10 은 영어였다). 새 집합체는 **Trip** 하나이고 `Case`에 `trigger_source`·`trip_id`가 붙는다(§4-B).
 
 ## 말 네 개를 먼저 나눈다
 

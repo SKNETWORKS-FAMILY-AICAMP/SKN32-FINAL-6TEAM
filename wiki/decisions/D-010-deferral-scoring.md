@@ -14,7 +14,7 @@ domain: neutral
 
 ## 문제
 
-`[실측]` 평가에서 실패로 잡힌 **156건이 전부 같은 모양**이었다.
+`[실측]` 평가에서 실패로 잡힌 **156건이 전부 같은 모양**이었다 — `[정정 2026-09-10]` **처음 진단이 그랬고, 세어 보니 아니었다**(아래 「세어 보니 아니다」 표: `respond` 84 · `escalate` 39 · `wait_for_approval` 33). 이 줄은 출발점 서술이다. `eval/judge/rubric.json` 의 `deferral_rule.why` 도 옛 진단을 그대로 적고 있다(코드 담당).
 
 ```json
 {"intent": "exchange", "issue_code": "exchange_process_steps",

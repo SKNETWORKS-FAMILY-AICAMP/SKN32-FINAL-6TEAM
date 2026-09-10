@@ -1,14 +1,15 @@
 ---
 type: decision
-title: judge 를 v1 에서 v3 로 바꾸고 현행 도메인 산출물을 다시 매긴다
+title: judge 를 v1 에서 v3 로 바꾸고 쇼핑몰 판 산출물을 다시 매긴다
 description: v1 의 policy_grounding 은 분산 0 인 상수였다. 군 순위가 보존되는 것을 확인하고 갈아탔다
 status: draft
 impl_scope: cs — 평가 하네스는 cs 소유다
 tags: [evaluation, testing]
-domain: neutral
+domain: commerce
+domain_note: judge 교체 판단(상수 축 제거)은 도메인과 무관하게 승계한다. 다시 매긴 720행은 쇼핑몰 산출물이다
 ---
 
-# D-014 judge 를 v1 에서 v3 로 바꾸고 현행 도메인 산출물을 다시 매긴다
+# D-014 judge 를 v1 에서 v3 로 바꾸고 쇼핑몰 판 산출물을 다시 매긴다
 
 `[실측]` **2026-09-06 결정·시행.** 팀 승인을 받은 것으로 진행했다.
 
@@ -33,7 +34,7 @@ golden  216행   policy_grounding = 4     (214/216, 99%)
 그래서 이 축은 **0~4 눈금을 쓴 이진 플래그**였다. 대표 수치로 인용돼 온
 "grounding 0.00 / 2.22 / 3.98" 은 근거의 질이 아니라 **「인용이 붙었나」** 였다.
 
-DoD-15 에 당장 걸렸다 — 상수 축의 kappa 는 1.0 아니면 0.0 두 값만 나온다.
+DoD-15(쇼핑몰 판 번호 — 채점자와 사람의 일치도. v11 의 DoD-15 는 「자동 실행 분기는 simulated 에서만」이다)에 당장 걸렸다 — 상수 축의 kappa 는 1.0 아니면 0.0 두 값만 나온다.
 사람이 24건 중 하나라도 4 가 아닌 점수를 주면 즉시 0.0 이 된다.
 
 근거: `final_project_cs/wiki/records/reports/debugs/2026-09-06_judge의_policy_grounding이_상수다.md`
@@ -41,7 +42,7 @@ DoD-15 에 당장 걸렸다 — 상수 축의 kappa 는 1.0 아니면 0.0 두 �
 ## 무엇을 재고 결정했나
 
 `judge_v1` 에서 **grounding 문장 하나만** 바꾼 판 둘을 만들어 같은 72건
-(golden 현행 도메인, 답변 고정)을 세 채점자로 매겼다.
+(golden 쇼핑몰 판, 답변 고정)을 세 채점자로 매겼다.
 
 | | grounding 변별 | **안 바꾼 네 축 이동** |
 |---|---|---|
@@ -72,7 +73,7 @@ judge-v3   A 0.0%  ·  B 46.8%  ·  Proposed 11.6%     → B > Proposed > A
 
 1. **`judge_v3.txt` 를 기본 채점자로 한다.** `eval/rescore.py` ·
    `eval/runners/common.py` 의 기본값을 바꿨다.
-2. **현행 도메인 산출물 720행을 v3 로 다시 매겼다** — A·B·Proposed 각 216 +
+2. **쇼핑몰 판 산출물 720행을 v3 로 다시 매겼다** — A·B·Proposed 각 216 +
    holdout 72. 옛 v1 산출물은 **지우지 않고** 그대로 둔다(무엇으로 매겼는지가
    기록이다).
 3. `JUDGE_PROMPT_VERSION` 을 **프롬프트 파일에서 읽게** 했다. 손으로 적혀 있던

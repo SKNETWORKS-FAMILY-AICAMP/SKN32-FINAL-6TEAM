@@ -162,9 +162,9 @@ idem = idempotency_key(
 
 `[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
 
-## 비동기 도구 시그니처
+## 도구 시그니처 — 계약은 비동기, 코드는 동기
 
-`[실측]` 세 도구의 계약 시그니처는 `async def`다.
+`[정정 2026-09-10]` **계약 문서의 시그니처는 `async def` 인데 코드는 동기 `def` 셋이다**(`app/presentation/api/mcp.py:8,13,18`). 아래는 계약 원문이다 — 세 도구의 계약 시그니처는 `async def`다.
 
 ```python
 async def get_my_cases(customer_id: str, limit: int = 20) -> list[dict]: ...

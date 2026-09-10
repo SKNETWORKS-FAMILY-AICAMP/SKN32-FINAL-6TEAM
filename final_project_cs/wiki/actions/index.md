@@ -55,7 +55,11 @@ Team
 ## 코드 구조
 
 ```text
-app/core/app/core/  (평면 구조)
+app/core/  (평면 구조)
+# [정정 2026-09-10] 경로가 app/core/app/core/ 로 겹쳐 적혀 있었다. 아래 하위 폴더 여섯은 app/core/ 에 없다
+#   (idempotency 만 idempotency.py 파일로 있다). 다른 위치에 있는지는 이 수정에서 찾지 않았다.
+#   지금 app/core/ 는 파일 contracts·transition·idempotency·verification·context·registry·settings 등과
+#   폴더 access_action·case_runtime·graph_retrieval·remote_team·shared 다. 아래는 옛 그림이다
 ├─ approval/      승인 경계
 ├─ audit/         감사 기록
 ├─ auth/          인증

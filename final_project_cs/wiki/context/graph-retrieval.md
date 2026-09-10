@@ -69,7 +69,7 @@ GraphStorePort            app/core/graph_retrieval/port.py     Protocol
 - 성능. 재귀 CTE가 큰 그래프에서 어떻게 되는지 모른다
 - GraphRAG로서의 검색 품질(v7 §9-D)은 이 항목 밖이다 → [../../../wiki/research/graphrag.md](../../../wiki/research/graphrag.md)
 
-`[실측]` 테스트 fixture 라벨은 옛 식별자다 — `post_cancel_charge`(옛 이슈 코드), `order_shipping`(퇴역 Team). 어댑터가 도메인 무관이라 판정은 유효하지만, evidence 출력의 `team:billing_subscription`과도 다르다. → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
+`[실측]` 테스트 fixture 라벨은 옛 식별자다 — `post_cancel_charge`(옛 이슈 코드), `order_shipping`(퇴역 Team — `[실측 2026-09-10]` **작업 트리에서는 `team:activity` 로 바뀌었고 git 에는 아직 `order_shipping`** 이다. `post_cancel_charge` 는 둘 다 그대로다). 어댑터가 도메인 무관이라 판정은 유효하지만, evidence 출력의 `team:billing_subscription`과도 다르다. → [../quality/dod-evidence-drift.md](../quality/dod-evidence-drift.md)
 
 ## 관계
 

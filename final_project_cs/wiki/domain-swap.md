@@ -149,7 +149,7 @@ DOMAIN_WORDS = (
 )
 ```
 
-**여행 어휘가 하나도 없다.** `trip`·`itinerary`·`booking`·`reservation`·`activity` 가 `app/core/` 에 들어가도 이 가드는 통과한다. 여행 Team 구현이 시작되면 그때가 가장 새기 쉬운 시점이다.
+**여행 어휘가 하나도 없다.** `[정정 2026-09-10 작업 트리]` **지금은 다섯이 들어갔다** — `booking`·`itinerary`·`lodging`·`supplier_booking`·`traveller`(`tests/architecture/test_basement_is_domain_free.py:47`). `[실측 git]` git 에는 아직 없다. `trip`·`itinerary`·`booking`·`reservation`·`activity` 가 `app/core/` 에 들어가도 이 가드는 통과한다. 여행 Team 구현이 시작되면 그때가 가장 새기 쉬운 시점이다.
 
 ★**이 목록은 "지금 도메인"이 아니라 "새면 안 되는 어휘 전부"다.** 도메인을 바꿀 때 옛 어휘를 지우지 않고 **더한다** — 그래야 되돌아갔을 때도 잡힌다. 목록 추가는 코드 담당 몫으로 [../../wiki/delivery/open-items.md](../../wiki/delivery/open-items.md) 에 올렸다.
 
@@ -170,9 +170,9 @@ DOMAIN_WORDS = (
 | 원본 | 지금 |
 |---|---|
 | §1-1 "현재 도메인 테이블 4개 = `subscriptions`·`payments`·`entitlements`·`incidents`" | **두 판 낡았다.** 그다음이 `orders`·`order_items`·`shipments`·`returns`(쇼핑몰)였고, 2026-09-08 여행 교체로 그것도 옛 도메인이 됐다. 여행 테이블은 아직 안 만들었다 `[미확보]` — 새 집합체는 **Trip** 하나다(v11 §4-B) |
-| §1-3 Team 파일 `{billing,technical,feedback}.py` | 퇴역. 쇼핑몰 여섯 Team도 MVP 경로에서 빠졌고, 여행 Team 넷은 명세만 있다 → [teams/index.md](teams/index.md) |
+| §1-3 Team 파일 `{billing,technical,feedback}.py` | 퇴역. 쇼핑몰 여섯 Team도 MVP 경로에서 빠졌고, 여행 Team 넷은 명세만 있다(`[정정 2026-09-10]` 지금 작업 트리에는 코드가 있고 여섯이 등록됐다 — git 에는 없다) → [teams/index.md](teams/index.md) |
 | §1-4 "25문서 / 300청크" | **306청크** ([context/rag-retrieval.md](context/rag-retrieval.md)) |
-| §1-5 `attack_fixtures.jsonl` 15건 | **17건** (atk-16·17 추가) |
+| §1-5 `attack_fixtures.jsonl` 15건 | **17건** (atk-16·17 추가) — `[2026-09-10]` 지금은 **23건**(작업 트리·git 같다) |
 | §0 "예외 목록은 3개를 넘을 수 없다" | 지금도 맞다 — `INV-CS-ARCH-004`가 크기를 검사한다 |
 
 **"무엇을 갈아 끼우나"의 목록은 살아 있고 "지금 뭐가 들어 있나"는 낡았다.** 이 문서는 후자를 옮기지 않는다 — 현재 값은 각 영역 문서가 정본이다.

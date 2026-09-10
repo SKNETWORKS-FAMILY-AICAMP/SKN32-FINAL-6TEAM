@@ -176,7 +176,7 @@ default_capability    = "activity.check_feasible"
 
 ★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.
 
-`[미확보]` `allowed_tools` 이름을 안 정했다. v11 §5-A가 정한 Action은 **장소·운영 조회 / 이동 시간 조회 / 기상 조회 세 개**이고 이름은 구현 때 붙인다. `accepted_case_types` 는 v11 §5-A의 새 분류 라벨(일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외)에서 왔다.
+`[정정 2026-09-10]` 「`allowed_tools` 이름을 안 정했다」는 낡았다 — 바로 위 manifest 에 넷(`read.booking`·`read.policy`·`read.place`·`read.weather`)이 붙어 있다. 그 전 서술 — `allowed_tools` 이름을 안 정했다. v11 §5-A가 정한 Action은 **장소·운영 조회 / 이동 시간 조회 / 기상 조회 세 개**이고 이름은 구현 때 붙인다. `accepted_case_types` 는 v11 §5-A의 새 분류 라벨(일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외)에서 왔다.
 
 ## `business_subject` — 도메인이 바뀌어도 안 바꾸는 칸
 

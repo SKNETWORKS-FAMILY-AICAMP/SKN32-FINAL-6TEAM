@@ -118,6 +118,8 @@ estimated_input_tokens = 2517
 
 `similar_cases`가 먼저, 낮은 점수 RAG가 나중 — 순서는 계약대로다. `case_state`는 omissions에 없다.
 
+`[실측 2026-09-10]` **Broker 는 `guardrails.yaml` 의 `eviction_order`·`never_evict` 를 읽지 않는다.** 읽는 키는 `context.token_budget`·`sections`·`max_evidence_items`·`max_similar_cases`·`max_history_summary_chars` 다섯이다(`app/core/context.py:94-99`). 제거 순서는 코드에 박힌 순서(`context.py:221` — `similar_cases → history_summary → policy_rag → tool_facts`)이고, 보호 대상도 코드 상수 `NEVER_EVICT = {system_instruction, case_state}`(`:40`)다. ★그래서 이 문서가 YAML 을 제어값처럼 설명한 대목은 **설계이지 지금 동작이 아니다** — YAML 을 바꿔도 동작은 안 바뀐다. 위 출력의 `similar_cases`·낮은 점수 RAG 는 YAML 표의 **첫째·셋째**라 「앞 둘이 관측됐다」로 읽으면 안 된다.
+
 `[미확보]` **`history_detail`과 `duplicate_tool_facts` 제거는 한 번도 출력에 나타난 적이 없다.** 그 섹션이 예산을 안 넘는 fixture였기 때문이다. 위 `eviction_order` 네 단계 중 **앞 둘만 관측됐고 뒤 둘은 코드에만 있다.** 운영 규모의 Case state·history·RAG 조합에서의 절삭도 관측 밖이다.
 
 ### 첫 판정이 부분이었던 이유

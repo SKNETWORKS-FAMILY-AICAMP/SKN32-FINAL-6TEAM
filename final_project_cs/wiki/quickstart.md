@@ -41,7 +41,7 @@ Agentic Controller ──── Team Registry ──── Agent Team
 |---|---|
 | [runtime/](runtime/index.md) | `app/core/` (평면) |
 | [actions/](actions/index.md) | `app/core/` (평면) |
-| [teams/](teams/index.md) | `app/modules/customer_ops/` |
+| [teams/](teams/index.md) | `app/modules/travel_ops/` — `[실측 2026-09-10]` 작업 트리 기준. git 에는 아직 `customer_ops/` 다(삭제·추가가 커밋 전) |
 | [context/](context/index.md) | `app/core/context.py`, `app/infrastructure/rag/` |
 | [external/](external/index.md) | `app/presentation/` |
 | [data/](data/index.md) | `app/infrastructure/db/` |
@@ -69,7 +69,7 @@ Agentic Controller ──── Team Registry ──── Agent Team
 | 규칙 | 어기면 |
 |---|---|
 | Team은 side effect를 실행하지 않는다. `ActionProposal`만 반환한다 | 승인 경계 우회 |
-| Team은 read 도구를 직접 호출하지 않는다. Context Broker가 넣어준다 | 컨텍스트 예산 붕괴 |
+| Team은 read 도구를 직접 호출하지 않는다. Context Broker가 넣어준다 — `[실측 2026-09-10 작업 트리]` **여행 코드는 `_read()` 로 직접 부른다**(허용·예산은 `ReadToolbox.call()` 이 강제). 원칙과 코드가 갈라져 있다 → [teams/team-boundary.md](teams/team-boundary.md) §2 | 컨텍스트 예산 붕괴 |
 | Core는 Team 내부를 import하지 않는다 | Pack 교체 불가 |
 | Core 계층에 도메인 어휘를 넣지 않는다 | `test_basement_is_domain_free` 실패 |
 
@@ -84,6 +84,8 @@ pytest tests/contract
 ```
 
 ```bash
+# [2026-09-10] eval/run.py 가 없다 — 이 명령은 돌지 않는다. 러너는 eval/runners/{baseline_a,baseline_b,proposed}.py 이고
+#   정답이 모델 입력에 들어가는 문제로 여행 평가 전에 고쳐야 한다(루트 wiki/evaluation/protocol.md)
 python -m eval.run --arm Proposed
 ```
 

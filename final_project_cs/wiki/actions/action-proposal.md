@@ -59,6 +59,8 @@ Team이 제안하지만 **최종 판정은 Core가 한다.** Team이 `approval_r
 
 ## 흐름에서의 위치
 
+`[실측 2026-09-10 작업 트리]` **아래 그림의 「위험도 판정 → 저위험 자동 실행」 갈래는 설계였고 코드에 없다.** `risk_level` 은 계약 필드로만 있고(`app/core/contracts.py:214`) Controller 는 제안을 전부 `pending_approval` 로 적는다(`app/application/controller.py:376-377`). `app/` 에서 `auto_execute`·`low_risk` 를 찾았고 안 나왔다 — 다른 이름의 분기는 이 검색이 놓칠 수 있다. 자동 실행 분기는 v11 DoD-15 가 **`tier == 'simulated'` 에서만** 열리게 정했다. 멱등 키도 Team 이 준 값이 아니라 **Core 가 쓰기 경계에서 다시 계산**한다(`controller.py:372`).
+
 ```text
 Team
  └→ ActionProposal          ← 여기

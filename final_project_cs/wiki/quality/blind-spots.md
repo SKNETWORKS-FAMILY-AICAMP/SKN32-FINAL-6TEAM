@@ -113,7 +113,7 @@ acop-dojo report
 **파이썬 검사가 먼저 걸린다.** SQL 조건까지 가려면 `SELECT` 와 `UPDATE` 사이에 다른
 트랜잭션이 끼어들어야 하는데, 단일 스레드 테스트에서는 그런 일이 안 생긴다.
 
-★**그래서 SQL 의 `AND version = ...` 을 지워도 지금 테스트는 전부 통과한다.**
+★**그래서 SQL 의 `AND version = ...` 을 지워도 지금 테스트는 전부 통과한다.** `[정정 2026-09-10]` **지금은 아니다** — `tests/contract/test_contracts.py:336` `test_projection_update_keeps_the_version_condition` 이 그 SQL 조건 문자열을 확인하고, `tests/integration/db/test_stale_write_conflict.py` 가 낡은 버전 쓰기 거부를 DB 에서 잰다(테스트 다섯). 이 절은 그 테스트들이 생기기 전 판정으로 읽는다.
 `tests/integration/db/test_stale_write_conflict.py` 의 세 테스트는 모두 파이썬
 검사에서 멈춘다 — SQL 조건을 검증한 적이 없다. 그런데 **진짜 동시 쓰기를 막는 것은
 SQL 쪽뿐이다.** 파이썬 검사는 자기가 읽은 값과만 비교하므로 경합을 못 본다.

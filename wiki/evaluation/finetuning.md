@@ -62,6 +62,8 @@ domain_note: 채택 보류로 결론이 확정된 실험의 기록이다
 
 `[실측]` v8 §15-8-A
 
+★`[2026-09-10]` **아래 모듈 여섯은 전부 쇼핑몰 Team 이고 여행 판(v11 §0-2)에서 빠졌다.** 현행 대상으로 읽지 않는다. 이 문서가 인용하는 `fulfillment_logistics.py` 는 작업 트리 0 · git 1 파일, `eval/finetune/` 은 작업 트리 0 · git 79 파일이다(작업 트리에는 `__pycache__` 만 남았다).
+
 | 모듈 | 도메인 사실 트랙 | 표현·의도 트랙 |
 |---|---|---|
 | Procurement + Order & Payment | 스마트스토어 주문·결제·취소 Case, Olist 관계 | Bitext 주문취소·조회, Kaggle 주문·계정 |
@@ -69,7 +71,7 @@ domain_note: 채택 보류로 결론이 확정된 실험의 기록이다
 | VOC & Store Manager | Case event·리뷰·반복 불만 집계 | Kaggle 상품불만·계정문제. **alert 정답은 도메인 트랙에서** |
 | Response Generation & Review | 각 모듈의 근거·정책·ActionProposal | Bitext·Kaggle 문장·톤 다양화 |
 | Catalog & Verification | 상품·SKU·Variant·가격, Olist 관계 | **검증 사실은 공개 문장에서 학습하지 않음** |
-| Return & Refund | 반품·교환·환불·증빙·정책 Case | Bitext 환불 intent. **현재 Mock이라 평가 배분 0** |
+| Return & Refund | 반품·교환·환불·증빙·정책 Case | Bitext 환불 intent. **(v8 당시) Mock이라 평가 배분 0** |
 
 **VOC와 Catalog 행의 단서가 중요하다.** 표현은 공개 데이터로 배우되 **정답은 도메인 데이터에서만** 온다.
 

@@ -64,7 +64,7 @@ def test_v1_surface_is_documented_when_it_grows()
 
 ## 승인은 REST 전용
 
-**마지막 엔드포인트가 유일한 승인 경로다.** MCP에는 없다.
+**승인 엔드포인트(`POST /v1/cases/{case_id}/actions/{action_id}/approve`)가 유일한 승인 경로다.** MCP에는 없다. `[정정 2026-09-10]` 「마지막 엔드포인트」로 적었는데 표의 마지막은 이제 바깥함 정리(`/v1/outbox/{message_id}/resolve`)다.
 
 승인자는 `action:approve` scope가 있어야 한다. → [../actions/approval.md](../actions/approval.md)
 
@@ -221,7 +221,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 | HTTP | 조건 | `error.code` |
 |---:|---|---|
-| `400` | 스키마 위반 | `contract_violation` |
+| `422` | 스키마 위반(요청 몸통 검증 실패) | `validation_error` — `[정정 2026-09-10]` 400 `contract_violation` 으로 적혀 있었다. 검증 실패는 422 로 나간다(`app/presentation/api/app.py:95-97`). 400 `contract_violation` 은 승인 결정 값이 `approved`/`rejected` 가 아닐 때 쓴다(`cases.py:210`) |
 | `401` | API key 없음 또는 무효 | `unauthenticated` |
 | `403` | scope 부족 또는 ownership 불일치 | `scope_denied` |
 | `404` | 존재하지 않거나 볼 권한이 없는 리소스 | `not_found` |

@@ -78,7 +78,7 @@ domain_note: 조립 기제는 도메인 무관이다. 예시로 커머스·여�
 | 책임 | 위치 | 소유 |
 |---|---|---|
 | 호출 시점·실패 처리·상태 전이 | `app/application/classification.py` | 코어 1 |
-| 라벨 어휘·프롬프트·provider 호출 | `app/modules/customer_ops/feedback.py` | 모델 |
+| 라벨 어휘·프롬프트·provider 호출 | `app/modules/travel_ops/feedback.py`(작업 트리. git 에는 아직 `customer_ops/feedback.py`) | 모델 |
 
 근거: `wiki/records/handoff/08_모듈_컴포넌트_목록.md:112-152`
 
@@ -184,7 +184,7 @@ teams:
 
 ## 만드는 순서 · 공통 뼈대
 
-만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 **아직 구현은 없다** — `[실측]` `app/modules/travel_ops/_base.py` 2026-09-03 확인 결과 없음.
+만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 `[정정 2026-09-10]` 「아직 구현은 없다」(09-03)는 낡았다 — **`app/modules/travel_ops/_base.py` 가 생겼다**(작업 트리, 커밋 전). common-utils 설계의 네 가지를 다 담았는지는 대조하지 않았다.
 
 ## 관계
 

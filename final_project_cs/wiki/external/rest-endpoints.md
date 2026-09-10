@@ -20,10 +20,10 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 | 필드 | JSON 타입 | 예시 | 필수 여부 |
 |---|---|---|---|
-| `request_id` | string | `"req_01"` | `[미확보]` |
-| `idempotency_key` | string | `"idem_01"` | `[미확보]` |
-| `tenant_id` | string | `"demo"` | `[미확보]` |
-| `customer_id` | string | `"cust_01"` | `[미확보]` |
+| `request_id` | string | `"req_01"` | 필수 |
+| `idempotency_key` | string | `"idem_01"` | 선택 — 보내면 **그 값을 쓴다** |
+| ~~`tenant_id`~~ | — | — | `[정정 2026-09-10]` **없다.** 요청 몸통에서 지웠다 — 테넌트는 인증(`principal.tenant_id`)에서만 온다. 보내면 `extra="forbid"` 라 거부된다(`app/presentation/api/cases.py:29-40`) |
+| `customer_id` | string (**UUID**) | `"3f2c…"` | 필수 — `[정정 2026-09-10]` 예시가 `"cust_01"` 이었는데 UUID 가 아니라 거부된다 |
 | `message` | string | `"배송완료로 떴는데 상품을 못 받았어요"` | `[미확보]` |
 | `channel` | string | `"personal_ai"` | `[미확보]`; `personal_ai \| mcp \| web \| api` 중 하나 |
 
@@ -39,7 +39,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 | `sentiment` | string | `"negative"` |
 | `links.self` | string | `"/v1/cases/case_01"` |
 
-`idempotency_key`는 서버가 재계산하며 클라이언트 값은 `request_id` 재료일 뿐이다. 같은 키로 재요청하면 새 Case를 만들지 않고 기존 결과를 그대로 반환한다.
+`[정정 2026-09-10]` **클라이언트가 `idempotency_key` 를 보내면 그 값을 쓴다.** 안 보냈을 때만 서버가 `request_id` 로 계산한다(`cases.py:106-111`). 「서버가 재계산하며 클라이언트 값은 재료일 뿐」은 2026-09-01 이전 동작이다. 같은 키로 재요청하면 새 Case를 만들지 않고 기존 결과를 그대로 반환한다.
 
 근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:47-67`
 

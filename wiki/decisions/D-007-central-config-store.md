@@ -27,6 +27,8 @@ domain: neutral
 >
 > **수천 배포 규모에서는 central 을 쓴다.**
 
+`[실측 2026-09-10]` **이 결정이 닿는 범위는 UI 프로젝트와 sample 이다.** cs 는 central 대상을 거부한다(`final_project_cs/app/composer_host.py` `_reject_central` — 「중앙 설정 저장소를 구현하지 않았다」). 아래 「구현 상태」 앞의 「두 배포 형태를 함께 두는 것 — 아직 결정 안 됐다」는 [D-004](D-004-self-hosting-rationale.md) 로 이어지는 **배포 형태** 이야기로 읽힌다. 설정 저장 모드(이 결정)와 축이 달라 「결정」과 「미결정」이 한 문서에 나란히 있다.
+
 ## 구조
 
 ```
@@ -135,7 +137,7 @@ CONSOLE_COMPOSER_MODE = direct | central
 
 `[실측 2026-09-06]` 사용자 방향 — **지금은 pip(direct) 방식으로 가고, 중앙은 UI 프로젝트의 옵션으로 열어 둔다.** 그 옵션은 이미 있다(`final_project_ui/console/profiles.py` `CONSOLE_COMPOSER_MODE`). 두 방식은 배타적이 아니라 같은 패키지의 두 모드다 → [D-011](D-011-composer-v3-gap.md) 2026-09-06 절.
 
-`[실측]` **전환에 코드 변경이 없다.** 그리고 **Composer 는 1곳에만 설치한다** — 수천 개 cs 에 설치하지 않는다.
+`[실측]` **전환에 코드 변경이 없다.** 그리고 **Composer 는 1곳에만 설치한다** — 수천 개 cs 에 설치하지 않는다. `[2026-09-10]` 둘 다 **UI 프로젝트·sample 에 한정**한다 — cs 는 central 을 거부하므로 cs 쪽 전환에는 중앙 저장소 구현이라는 코드 변경이 든다. 「1곳 설치」도 central 모드 이야기다.
 
 **그래서 마이그레이션 경로가 필요 없다.** 파일 모드가 기본으로 남아 있고 중앙은 **설정으로 켜는 옵션**이다.
 

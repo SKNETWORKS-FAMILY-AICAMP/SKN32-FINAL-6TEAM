@@ -81,7 +81,7 @@ worker.py                        stale `processing` 행을 unknown 으로 회수
 
 `[실측]` [DoD-11](../records/evidence/DoD-11_action_idempotency_승인.md)이 스스로 밝힌 경계.
 
-**`app/` 전체에서 `action_requests.status`를 `executing`/`succeeded`/`failed`/`unknown`으로 바꾸는 코드가 한 곳도 없다.** enum에 값만 있다.
+**`app/` 전체에서 `action_requests.status`를 `executing`/`succeeded`/`failed`/`unknown`으로 바꾸는 코드가 한 곳도 없다.** enum에 값만 있다. `[정정 2026-09-10]` 「enum 에 값만」은 너무 세다 — **`succeeded` 는 쓰인다.** Case 생성 감사 행을 `action_type="case.create"`, `status="succeeded"` 로 곧장 적는다(`app/presentation/api/cases.py:150-152`). 이 문장은 **승인된 제안을 실행해 상태를 옮기는 코드가 없다**는 뜻으로 읽는다. 바깥함(`outbox`) 표의 `status='unknown'` 은 다른 표라 별개다(`app/infrastructure/messaging/worker.py:28`).
 
 > **이것은 결함이 아니라 설계다.** Team은 side effect를 실행하지 않는다([CLAUDE.md §0.2](../../CLAUDE.md)). 승인 이후 실제 결제사 호출은 MVP 범위 밖이다.
 

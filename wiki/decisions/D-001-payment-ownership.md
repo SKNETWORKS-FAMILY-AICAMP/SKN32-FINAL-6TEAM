@@ -27,7 +27,7 @@ domain_note: 결제 소유 결정의 근거가 쇼핑몰 사례다. 결론(결�
 
 ## ★ [2026-09-10] 이 결정은 여행에서도 산다 — 근거만 커머스다
 
-`[실측 2026-09-10]` **아래 본문은 쇼핑몰 사례로 쓰였고 인용하는 코드 셋 중 둘은 삭제됐다**(`procurement_order_payment.py`·`return_refund.py`). **결론은 그대로 승계된다.**
+`[실측 2026-09-10]` **아래 본문은 쇼핑몰 사례로 쓰였고 인용하는 코드 셋 중 둘은 작업 트리에서 삭제됐다(`[실측 git]` git 에는 아직 있다 — 삭제가 커밋되지 않았다)**(`procurement_order_payment.py`·`return_refund.py`). **결론은 그대로 승계된다.**
 
 | 무엇 | 커머스에서 | **여행에서** |
 |---|---|---|
@@ -60,7 +60,7 @@ Team 이름에 "Payment"가 들어가 있고 `payment.status` capability가 있�
 
 ## 지금 상태 — 거의 이미 그렇다
 
-`[실측:S1]` DB 마이그레이션 6개 전체에 `payments` 테이블이 없다. 결제 상태는 `orders.status`에 섞여 있는 게 전부다.
+`[실측:S1]` DB 마이그레이션 6개 전체에 `payments` 테이블이 없다. `[실측 2026-09-10]` 지금 마이그레이션은 작업 트리 13개 · git 9개이고, 작업 트리 13개 전부에서 `CREATE TABLE payments` 를 찾았고 안 나왔다. 결제 상태는 `orders.status`에 섞여 있는 게 전부다.
 
 ```sql
 -- 002_domain_commerce.sql:19

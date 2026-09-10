@@ -53,7 +53,7 @@ Team이 `ActionProposal`을 반환하면 언젠가는 실행해야 한다. **그
 | **`amount`** | 최신 **실제 결제액**·환불 가능 잔액·통화 | 실행 전 거부 |
 | `quantity` | 주문 line item의 구매·취소 가능 수량 | 실행 전 거부 |
 | `action_type` | Registry scope와 approval matrix | 거부 또는 승인 대기 |
-| `evidence_ids` | ContextPack의 실제 evidence id와 **source digest** | 실행 전 거부 |
+| `evidence_ids` | ContextPack의 실제 evidence id — `[정정 2026-09-10]` 「와 **source digest**」로 적혀 있었는데 **digest 대조는 구현에 없다.** 코드는 근거 id 가 ContextPack 에 실재하는지만 본다(`final_project_cs/app/core/verification.py:161-163`) | 실행 전 거부 |
 | `idempotency_key` | 기존 key와 payload hash | 중복 실행 금지, 상태 조회 |
 
 `[실측]` 원문의 예가 명확하다.
@@ -115,10 +115,18 @@ action_id · case/run/task · 실패한 필드
 - 근거 없이 빠르게 처리할 수 없다. 근거 0건이면 제안 자체가 안 나온다
 - 대조 비용이 매 실행마다 든다 (DB 재조회 2회)
 
+## [2026-09-10] 여행 판에서 — 대조표는 쇼핑몰 예시다
+
+`[실측 2026-09-10 작업 트리]` 위 필드 대조표는 쇼핑몰·구독 예시다. 여행 판 선언은 `final_project_cs/app/modules/travel_ops/verification_policy.py:36` 에 있다 — 참조 둘(`booking_id` → `bookings`, `supplier_booking_id` → `supplier_bookings`)과 수량 규칙 둘(인원 ≤ 정원, 환급·차액 ≤ 예약 금액). `[실측 git]` 이 파일은 아직 커밋되지 않았다.
+
+참조 대조는 **이 고객 범위에 실재하는가**만 본다. 두 키가 서로 짝인지는 안 본다(`verification.py:145-150`).
+
+★DoD 번호가 바뀌었다 — 이 문서가 가리키던 DoD-24·25 는 쇼핑몰 판 뜻이다. v11 의 24·25 는 **제안 분리 · 링크가 늘 최신**이다.
+
 ## 관계
 
 - [`cs/actions/evidence-check.md`](../../final_project_cs/wiki/actions/evidence-check.md) — 구현
 - [`sample/wiki/runtime/`](../../final_project_sample/wiki/runtime/index.md) — `core/verification.py`. **도메인 선언을 주입받아** 대조한다
 - [D-001](D-001-payment-ownership.md) — `amount` 대조의 기준값 문제
 - [../evaluation/metrics.md](../evaluation/metrics.md) — 근거 지표
-- [../delivery/dod.md](../delivery/dod.md) — DoD-24·25
+- [../delivery/dod.md](../delivery/dod.md) — DoD-24·25(`[2026-09-10]` v11 에서 번호 뜻이 바뀌었다 — 아래 「여행 판에서」 절)

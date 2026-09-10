@@ -38,13 +38,15 @@ def search_policy(
 
 Team manifest의 `knowledge_scope`가 검색 범위를 정한다.
 
-`[실측]` 예: Return & Refund Team
+`[실측 2026-09-10 작업 트리]` 예: Activity Team(`app/modules/travel_ops/activity.py:40`)
 
 ```python
-knowledge_scope = ["order", "return", "refund", "exchange", "policy"]
+knowledge_scope = ["activity", "cancellation", "refund", "weather"]
 ```
 
-**Response Review Team은 `read.policy`만 갖는다.** 주문 문서를 못 본다.
+여행 Team 여섯의 `knowledge_scope` — Booking Handoff `booking`·`cancellation`·`penalty`·`supplier` · Dining `dining`·`opening_hours`·`dietary` · Mobility `mobility`·`transit`·`route_exception` · Lodging `lodging` · Flight `flight`. `[실측 git]` 이 코드는 아직 커밋되지 않았다.
+
+★**도구 권한(`allowed_tools`)과 검색 범위(`knowledge_scope`)는 다른 축이다.** `[정정 2026-09-10]` 이 자리는 「Response Review Team 은 `read.policy` 만 갖는다. 주문 문서를 못 본다」였다 — 퇴역 Team 이고, `read.policy` 는 **도구 권한**이라 어떤 문서를 검색하나는 정하지 않는다. 그건 `knowledge_scope` 가 정한다. ★**코퍼스가 아직 쇼핑몰 문서라는 것(아래)과 검색 코드·Team 이 쇼핑몰이라는 것은 다르다** — 검색 코드는 도메인을 모르고 Team 은 여행으로 바뀌었다. 바뀌지 않은 것은 코퍼스다.
 
 ## 코퍼스
 

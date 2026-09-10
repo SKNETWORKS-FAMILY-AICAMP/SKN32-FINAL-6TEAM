@@ -32,7 +32,7 @@ Case·Issue·Policy·Team·Action 사이의 관계 탐색이 필요하다. Graph
 
 우리 관계는 **PostgreSQL FK로 이미 정형화돼 있다.** 다시 추출할 이유가 없다.
 
-`[외부]` 외부 리서치에서는 Vector RAG 대비 3~5배 비용, 엔티티·관계 환각 위험, 엔터프라이즈 RAG 구현의 72~80%가 프로덕션에 도달하지 못했다는 분석이 보고됐다. **이 수치는 외부 인용이며 우리 환경 측정치가 아니다.**
+`[외부]` `[2026-09-10]` **출처 링크와 비율의 분모가 적혀 있지 않다** — 원문을 다시 찾기 전까지 아래 수치를 인용하지 않는다. 외부 리서치에서는 Vector RAG 대비 3~5배 비용, 엔티티·관계 환각 위험, 엔터프라이즈 RAG 구현의 72~80%가 프로덕션에 도달하지 못했다는 분석이 보고됐다. **이 수치는 외부 인용이며 우리 환경 측정치가 아니다.**
 
 ### 별도 Graph Store의 숨은 비용
 
@@ -48,7 +48,7 @@ Case·Issue·Policy·Team·Action 사이의 관계 탐색이 필요하다. Graph
 | 비용 | 추가 운영 비용이 개선에 비례 |
 | 지연 | p95가 악화되지 않음 |
 
-`[미확보]` 구체 임계값은 8~9주차 비교 실험에서 정한다.
+`[미확보]` 구체 임계값은 8~9주차 비교 실험에서 정한다. `[2026-09-10]` 「8~9주차」는 옛 일정이다 — v11 §9-B 7주 배분에 이 비교 실험 자리가 없다.
 
 ## 결과
 
@@ -58,7 +58,7 @@ Case·Issue·Policy·Team·Action 사이의 관계 탐색이 필요하다. Graph
 
 ## 못 하게 되는 것
 
-- 깊은 다중 홉 관계 탐색은 MVP에서 못 한다
+- 깊은 다중 홉 관계 탐색은 MVP에서 못 한다 — `[정정 2026-09-10]` 「못 한다」는 넓다. `SqlGraphAdapter.neighbors(depth=…)` 가 재귀 CTE 로 여러 홉을 간다(cs `final_project_cs/app/infrastructure/graphstore/sql_adapter.py:25,29,68` · sample `final_project_sample/acop_basement/infrastructure/graphstore/sql_adapter.py` 도 같은 재귀 CTE 다). 깊이가 커질 때 성능이 버티는지는 재지 않았다
 - 그래프 기반 추천·유사 케이스 탐색은 범위 밖
 
 ## 왜 Port를 지금 만드는가

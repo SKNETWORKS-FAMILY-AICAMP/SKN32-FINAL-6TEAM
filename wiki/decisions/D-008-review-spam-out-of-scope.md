@@ -6,7 +6,8 @@ status: draft
 impl_scope: cs — 리뷰 스팸은 커머스 도메인 범위 판단이다
 tags: [customer-operations, security]
 owners: [human:미배정]
-domain: neutral
+domain: commerce
+domain_note: 리뷰 스팸은 쇼핑몰 판 판단이다. 여행 판이 물려받는 것은 「자동 판정은 안 하고 사람에게 제안까지만」이라는 원칙 하나다
 ---
 
 # D-008 가짜 리뷰 분류는 범위 밖
