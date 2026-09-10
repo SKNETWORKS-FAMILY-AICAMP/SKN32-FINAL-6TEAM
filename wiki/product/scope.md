@@ -59,7 +59,7 @@ domain: travel
 | Team | **Activity**·**Booking Handoff** 둘이 MVP 필수. Dining·Mobility는 그다음, Lodging/Flight는 등록만 |
 | 검증 API | 엔드포인트 하나 — 코드 검증 / 확인 수준·시각 / 불가능 사유·완화 조건. 결과는 `ActionProposal` |
 | 지속 관리 루프 | 로컬 주기 작업. 최소 주기 = 출발 전날 / 매일 아침 / 각 예약 2시간 전 |
-| **일정 안내** `[2026-09-10 오후]` | **변화가 없어도** 그 세 시점에 「지금 무엇을 하면 되나」를 알린다. Case 를 만들지 않고 LLM 을 안 부른다 → [../architecture/notifications.md](../architecture/notifications.md) |
+| **일정 안내** `[2026-09-10 오후]` | 세 시점 — ①변경(**생성 포함**) ②여행·하루 시작 ③**각 항목 출발 시각**(이동 시간에서 역산). ③은 **어디로·언제 나서나·어떻게 가나(경로)** 를 담고 **그때 조회한다**. Case 를 만들지 않고 LLM 을 안 부른다 → [../architecture/notifications.md](../architecture/notifications.md) |
 | 선제 조정 | 변화 감지 → 재계획 → 재검증 → **최고 안 하나 적용** → 통지 → **재요청 시** 되돌림·교체 |
 | 업체 건 인계 | 바꿀 항목·대안·차액을 정리한 **변경 링크**. 우리 일정은 먼저 고쳐 두고 업체 건만 넘긴다 |
 | Action | **장소·운영 조회 / 이동 시간 조회 / 기상 조회** 세 개 (Mock 허용) |
