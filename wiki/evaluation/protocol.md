@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 평가 프로토콜
-description: A/B/Proposed 비교군, 60+20 분리, 3회 반복, 통계 처리
+description: A/B/Proposed 비교군, golden 72 · holdout 24 두 파일, 3회 반복, 통계 처리
 status: draft
 tags: [evaluation]
 owners: [human:미배정]
@@ -86,7 +86,7 @@ holdout  20건   최종 1회만
 
 **holdout을 개발 중에 보면 안 된다.** 보는 순간 golden과 같아진다.
 
-`[실측]` 현재 골든셋 총 72건이다. 60+20 분리는 이 중에서 한다.
+`[실측 2026-09-10]` **golden 72건 · holdout 24건이 별개 파일이다**(`eval/datasets/golden.jsonl`·`holdout.jsonl`). `[정정]` 「72건 중 60+20 분리」로 적혀 있었다 — **60+20=80 이라 72건 안에서는 산술적으로 불가능하다.** 둘 다 쇼핑몰 시나리오이고 여행은 0건이다.
 
 ## 반복
 
