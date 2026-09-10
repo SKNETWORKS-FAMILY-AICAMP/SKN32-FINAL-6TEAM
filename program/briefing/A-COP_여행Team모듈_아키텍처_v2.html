@@ -207,7 +207,7 @@
   <rect x="40" y="258" width="220" height="64" rx="4" class="bx"/>
   <text x="150" y="278" class="tb" text-anchor="middle">Lodging / Flight</text>
   <text x="150" y="296" class="m" text-anchor="middle">locked_bookings.py 73</text>
-  <text x="150" y="311" class="m" text-anchor="middle">cap 1 씩 · 잠긴 예약만</text>
+  <text x="150" y="311" class="m" text-anchor="middle">cap 1 씩 · 잠긴 것으로 취급</text>
 
   <rect x="274" y="258" width="434" height="64" rx="4" class="bx"/>
   <text x="491" y="278" class="tb" text-anchor="middle">TravelTeamBase — 공통 계약 부품</text>
@@ -247,8 +247,9 @@
   <text x="1136" y="478" class="lb" text-anchor="end">D · 실행까지 — 실선은 코드로 확인한 것, 점선은 확인 못 한 것</text>
   <rect x="24" y="490" width="212" height="78" rx="5" class="bxa"/>
   <text x="130" y="513" class="tb" text-anchor="middle">제안 사실 대조</text>
-  <text x="130" y="532" class="m" text-anchor="middle">check_proposal</text>
-  <text x="130" y="548" class="m" text-anchor="middle">controller.py:332</text>
+  <text x="130" y="530" class="m" text-anchor="middle">check_proposal :332</text>
+  <text x="130" y="545" class="ma" text-anchor="middle">호출은 확인</text>
+  <text x="130" y="558" class="ma" text-anchor="middle">차단 효력은 미확인</text>
   <rect x="204" y="478" width="26" height="15" rx="3" class="pb"/>
   <text x="217" y="489" class="ma" text-anchor="middle" font-weight="600">P5</text>
 
@@ -538,10 +539,11 @@
 <h2><span class="n">05</span>여섯 Team 은 무엇이 다른가</h2>
 <p class="lead">공통 뼈대는 02·03 에서 봤다. 여기서는 <strong>각 팀이 실제로 무엇을 조회하고
 어떻게 갈라지는지</strong>를 적는다. <span class="st st-ok">코드 확인</span> 2026-09-10 에
-다섯 파일을 열어 확인했고, <strong>코덱스(gpt-6-astra)가 같은 파일로 대조했다</strong>.</p>
+<strong>여섯 팀 · 다섯 구현 파일</strong>(Lodging 과 Flight 가 한 파일을 나눠 쓴다)을 열어
+확인했고, <strong>코덱스(gpt-6-astra)가 같은 파일로 대조했다</strong>.</p>
 
 <div class="note">
-  <strong>공통으로 먼저 도는 것.</strong> 다섯 팀 모두 <code>execute()</code> 첫머리에서
+  <strong>공통으로 먼저 도는 것.</strong> 다섯 구현 파일 모두 <code>execute()</code> 첫머리에서
   <code>_guard()</code> 를 부르고 <strong>결과가 있으면 그 자리에서 돌려준다.</strong>
   아래 설명은 전부 <strong>가드를 통과한 뒤</strong>의 이야기다.
 </div>
@@ -551,11 +553,12 @@
   <thead><tr><th style="width:22%">capability</th><th style="width:44%">무엇을 하나</th><th style="width:18%">조회</th><th style="width:16%">next_action</th></tr></thead>
   <tbody>
     <tr><td colspan="2"><strong>공통</strong> — 예약과 규정을 읽고 예약 시각을 확인한다 <span class="mono">(:66~83)</span></td>
-        <td class="mono">read.booking<br>read.policy</td><td class="mono">셋 다 없으면<br>_unknown</td></tr>
+        <td class="mono">read.booking<br>read.policy</td><td class="mono">셋 중 <strong>하나라도</strong><br>없으면 각각 _unknown</td></tr>
     <tr><td class="mono">activity.<br>check_cancelable</td>
         <td>취소 기한과 남은 시간을 비교한다 <span class="mono">(:94~125)</span>.
             ★<strong>기한과 남은 시간이 같으면 기한 안</strong>이다.
-            위약금율은 조건에 맞는 구간 중 <strong>최댓값</strong>을 택한다.
+            위약금율은 조건에 맞는 구간 중 <strong>최댓값</strong>을 택한다
+            <span class="mono">(:258~274)</span>.
             ★<strong>위약금율을 몰라도 금액을 지어내지 않는다</strong></td>
         <td class="mono">—</td><td class="mono">RESPOND</td></tr>
     <tr><td class="mono">activity.<br>check_feasible</td>
@@ -580,8 +583,9 @@
   이것부터 봐야 한다.
   <br><br>
   전용 <code>_weather_note()</code> 는 <strong>46줄</strong>(<span class="mono">:184~229</span>)이다.
-  기상 요청에는 좌표와 예약 시각을 넘기고, 답변에는 <strong>예보 대상 시각</strong>을 적는다 —
-  조회 시각은 decisions 에만 담는다.
+  기상 요청에는 좌표와 예약 시각을 넘기고, 답변에는 <strong>예보 대상 시각</strong>을 적는다.
+  조회 시각은 <strong>답변 본문에는 안 넣고 decisions 와 근거에 남긴다</strong>
+  <span class="mono">(:154~155)</span> — 근거가 만들어진 시각과는 또 다른 값이다.
 </div>
 
 <h3>Dining — 96줄 · 영업 여부와 동행 조건</h3>
@@ -593,8 +597,10 @@
         거기서 멈춘다</strong> <span class="mono">(:60~65)</span></td>
         <td class="mono">read.booking<br>read.place</td><td class="mono">confirmed_at<br>없으면 _unknown</td></tr>
     <tr><td class="mono">dining.check_open</td>
-        <td>그 시각의 영업 여부를 본다 <span class="mono">(:67~79)</span>.
-            ★응답에 <strong>「제공자 예정 정보이고 현장 확인이 아니다」</strong>는 경고가 붙는다</td>
+        <td>도구가 돌려준 <code>open_at_slot</code> 으로 응답한다 <span class="mono">(:67~79)</span>.
+            ★<strong>이 파일은 장소 id 만 넘기고 예약 시각을 넘기지 않는다</strong>
+            <span class="mono">(:52~53)</span> — <strong>「그 시각」이 맞는지는 도구가 보증해야 한다.</strong>
+            <br>★응답에 <strong>「제공자 예정 정보이고 현장 확인이 아니다」</strong>는 경고가 붙는다</td>
         <td class="mono">—</td><td class="mono">RESPOND</td></tr>
     <tr><td class="mono">dining.<br>check_conditions</td>
         <td>요청한 식단 조건을 장소가 아는 조건과 대조한다 <span class="mono">(:81~96)</span>.
@@ -603,7 +609,7 @@
   </tbody>
 </table>
 <div class="note gap">
-  ★★<strong>여기 결함 후보가 있다.</strong> 코덱스 대조에서 나왔다
+  ★★<strong>여기 결함이 있다.</strong> 코덱스가 반례 둘로 확정했다
   <span class="mono">(:81~96)</span>. 장소는 <strong>되는 조건</strong>과
   <strong>안 되는 조건</strong>을 따로 갖는데, <strong>안 되는 조건에 걸렸을 때의 실패 분기가 없다</strong>.
   그래서 —
@@ -612,8 +618,11 @@
     <li>충족 항목이 하나도 없으면 요청이 있었는데도 <strong>「요청한 조건이 없다」</strong>고 답한다</li>
     <li><strong>아이 동반을 별도로 판정하는 코드가 없다</strong> — v1 브리핑은 있다고 적었다</li>
   </ul>
-  <strong>불충족을 성공처럼 안내할 수 있다.</strong> v11 §8 의 첫 지표가 「필수 조건 위반 0건」이므로
-  이건 그 지표를 직접 건드린다. <span class="st st-unk">확인 필요</span>
+  <strong>반례 둘</strong> — ①요청이 「할랄·채식」이고 장소가 할랄만 알고 채식은 <strong>안 된다</strong>고
+  하면 <strong>모름 없이 「모두 만족」</strong>이 나온다. ②요청 전부가 「안 되는 조건」에 걸리면
+  <strong>「요청한 조건이 없다」</strong>고 답한다.
+  <br>v11 §8 의 첫 지표가 「필수 조건 위반 0건」이므로 이건 그 지표를 직접 건드린다.
+  <span class="st st-none">고쳐야 한다</span>
 </div>
 
 <h3>Mobility — 80줄 · 유일한 capability 선택 훅</h3>
@@ -621,11 +630,11 @@
   <thead><tr><th style="width:22%">무엇</th><th style="width:62%">어떻게</th><th style="width:16%">next_action</th></tr></thead>
   <tbody>
     <tr><td class="mono">select_capability</td>
-        <td><strong>여행 다섯 팀 중 이 팀만 갖고 있다</strong> <span class="mono">(:37~43)</span>.
-            요청 종류가 <code>mobility</code> 이고 본문에 사건 표지
+        <td><strong>여섯 팀 중 이 팀만 갖고 있다</strong> <span class="mono">(:37~43)</span>.
+            <strong><code>intent</code> 가 정확히 <code>"mobility"</code> 이고</strong> 본문에 사건 표지
             (<span class="mono">놓쳤 · 못 탔 · 끊겼 · 지연됐 · 결항 · 운행 중단</span>) 중 하나가
             있으면 <code>mobility.exception</code> 을 고르고, 아니면 <code>None</code> 을 돌려
-            폴백에 맡긴다</td>
+            폴백에 맡긴다 <span class="mono">(:39)</span></td>
         <td class="mono">—</td></tr>
     <tr><td class="mono">세 capability<br>공통 경로</td>
         <td>★<strong>capability 별 실행 분기가 없다</strong> <span class="mono">(:45~80)</span> —
@@ -636,9 +645,19 @@
   </tbody>
 </table>
 <div class="note gap">
-  ★<strong>주석과 코드가 어긋난 자리가 하나 있다.</strong> 주석은 물음표로 끝나는 단순 문의를
+  ★★<strong>이 훅은 지금 축에서 안 걸린다.</strong> 훅은 <code>intent == "mobility"</code> 를
+  요구하는데 <span class="mono">(:39)</span>, 우리가 정한 <code>intent</code> 는
+  <strong>요청 종류</strong>다(<code>incident_report</code> 등 — 말풀이 참고).
+  <strong>객체 종류는 <code>case_type</code> 쪽으로 갔다.</strong>
+  그래서 사건 문구가 와도 훅이 <code>None</code> 을 돌려주고 <strong>기본 capability 로 떨어진다</strong> —
+  막차가 끊겨도 <code>mobility.check_route</code> 가 불린다.
+  <br>★<strong>실패해도 예외를 안 던지므로 조용하다.</strong> 이것이 v11 §5-C 가 적은 자리다.
+  <span class="st st-unk">실제 전달값은 실행해 봐야 안다</span>
+  <br><br>
+  ★<strong>주석과 코드가 어긋난 자리도 있다.</strong> 주석은 물음표로 끝나는 단순 문의를
   제외한다고 적었는데 <strong>그 로직이 없다</strong> <span class="mono">(:33~43)</span>.
-  「결항 기준은?」 같은 질문도 사건 처리로 간다. <span class="st st-unk">확인 필요</span>
+  다만 위의 축 불일치 때문에 <strong>지금은 그 오분류에 닿지도 않는다</strong> —
+  <code>intent="mobility"</code> 로 부르는 경로가 생기면 그때 드러난다.
   <br><br>
   ★<strong>막차가 끊겨도 「불가」가 되지 않는다.</strong> <code>last_departure_ok</code> 가 거짓이어도
   성립 판정을 바꾸지 않고 경고만 붙인다 <span class="mono">(:45~80)</span>.
@@ -717,7 +736,9 @@
 
 <h3>「모름」으로 돌려주는 사유 — 코드에 적힌 그대로</h3>
 <p class="lead">★<strong>「값이 없다」와 「모른다」를 가르는 자리가 여기다.</strong>
-아래 문자열이 그대로 답변에 실린다.</p>
+아래 문자열은 <strong>답변 문장이 아니다</strong> — 공통 부품이 이걸로
+<code>failure_code</code>(<span class="mono">unknown_…</span>)와 경고를 만든다
+<span class="mono">(_base.py:154~156)</span>. <strong>고객이 어떤 문장을 받는지는 이 문서 밖이다.</strong></p>
 <table>
   <thead><tr><th style="width:16%">팀</th><th style="width:26%">사유</th><th style="width:42%">언제</th><th style="width:16%">줄</th></tr></thead>
   <tbody>
@@ -740,8 +761,9 @@
     <tr><td>Lodging<br>Flight</td><td class="mono">예약 내역</td><td class="mono">booking is None</td><td class="mono">:30~31</td></tr>
   </tbody>
 </table>
-<p class="lead"><span class="st st-ok">코드 확인</span> 위 17개는 각 파일이 직접 넘기는 사유
-문자열 그대로다. 공통 부품이 그 위에 붙이는 최종 오류 코드는 03장을 본다.</p>
+<p class="lead"><span class="st st-ok">코드 확인</span> 위 17행은 각 파일이 직접 넘기는 사유다 —
+<strong>16개는 고정 문자열이고, Dining 의 「조건 …」 한 행만 모르는 항목을 이어 붙이는 형식</strong>이다
+(<span class="mono">dining.py:88</span>). 공통 부품이 그 위에 붙이는 최종 실패 코드는 03장을 본다.</p>
 
 
 
@@ -786,15 +808,29 @@
     <tr><td><strong>Dining 조건 판정</strong></td><td><span class="st st-unk">확인 필요</span></td>
         <td><strong>안 되는 조건에 걸렸을 때의 실패 분기가 없다</strong>(<span class="mono">dining.py:81~96</span>).
             일부만 충족해도 「모두 만족」으로 답할 수 있다 — 05장</td>
-        <td>불충족 조건이 성립 판정을 못 통과하는 것. v11 §8 의 「필수 조건 위반 0건」이 이걸 잰다</td></tr>
-    <tr><td><strong>Booking 변경 준비</strong></td><td><span class="st st-none">미구현</span></td>
-        <td>v11 §5 는 「대안·차액을 정리한다」인데 <strong>규정 존재만 보고 위약금·대안·차액을
-            계산하지 않는다</strong>(<span class="mono">booking_handoff.py:77~94</span>)</td>
-        <td>변경 링크에 바뀔 항목·대안·차액이 담기는 것 (v11 DoD-17)</td></tr>
+        <td><strong>입력별 기대 결과를 정하고 그대로 나오는 것</strong> — 전부 충족 / 일부 불충족 /
+            전부 불충족 / 모르는 항목 섞임 / 요청 없음 <strong>다섯</strong>.
+            ★<strong>「요청 없음」과 「전부 불충족」을 반드시 가른다.</strong>
+            불충족 항목을 결과에 담고 <strong>답변과 판정이 같은 말을 해야</strong> 한다.
+            <span class="mono" style="font-size:11px">「불충족이 안 통과한다」만으로는 전부 모름으로
+            돌리는 구현도 통과한다</span></td></tr>
+    <tr><td><strong>Booking 변경 준비의<br>내용 채우기</strong></td><td><span class="st st-doc">부분 구현</span></td>
+        <td><strong>준비 경로와 승인 대기 제안은 있다.</strong> 없는 것은 <strong>내용</strong>이다 —
+            규정 존재만 보고 <strong>위약금·대안·차액을 계산하지 않는다</strong>
+            (<span class="mono">booking_handoff.py:77~94</span>). 제안 인자는
+            <code>booking_id</code> 와 사유뿐이다</td>
+        <td><strong>필드가 있는지가 아니라 값이 맞는지</strong> — 변경 전후 항목 · 대안 · 가격과
+            위약금의 근거 · 통화 · 차액 계산 규칙을 정하고, <strong>아는 입력에서 기대 금액과
+            일치</strong>해야 한다. 정보가 없으면 <strong>지어내지 말고 미확인으로</strong>.
+            취소 준비를 포함할지 범위도 정한다 (v11 DoD-17)</td></tr>
     <tr><td><strong>기상 불가 판정</strong></td><td><span class="st st-none">미구현</span></td>
         <td><strong>날씨로 「불가」를 만들지 않는다.</strong> 임계치를 넘어도 주의 문구만 붙는다
             (<span class="mono">activity.py:156~180</span>) — 05장</td>
-        <td>대표 시연(v11 §8-A)이 우천으로 활동을 깨뜨리려면 이 판정이 필요하다</td></tr>
+        <td><strong>운영 규정에 취소 기준이 있는 사례</strong>에서 예보와 대상 시각을 대조해
+            기대한 불가 결과가 나오는 것. 경계값 · 규정 없음 · 예보 없음 · 기상 비민감 활동의
+            기대 결과도 같이 정한다.
+            ★<strong>지금의 주의 문구 임계치를 취소 기준으로 전용하면 안 된다</strong> —
+            경고용으로 고른 수다</td></tr>
     <tr><td>응답 검토 Team</td><td><span class="st st-none">미구현</span></td>
         <td>여행판이 아직 없다. 커머스판은 구현과 함께 걷어냈다. <span class="mono">enabled: false</span> 이고, <strong>켜면 기동이 막힌다</strong> — <span class="mono">project_config.py:92</span> 의 <span class="mono">validate_response_review_owner</span> 가 등록된 활성 팀에 없는 owner 를 거부한다. ★<strong>끈 상태는 통과시킨다</strong> — 도메인 교체 중 옛 이름이 남는 것까지 막으면 교체를 못 한다</td>
         <td>등록된 활성 팀으로 만들고 <span class="mono">enabled: true</span> 로 기동</td></tr>
@@ -802,7 +838,168 @@
 </table>
 
 
-<h2><span class="n">07</span>이 문서를 읽을 때</h2>
+<h2><span class="n">07</span>한 사건이 흐르는 길</h2>
+<p class="lead">01~06 은 <strong>부품</strong>을 보여줬다. 그런데 실제로 일하려면
+<strong>한 사건이 처음부터 끝까지 어떻게 가는지</strong>를 알아야 한다.
+v11 §8-A 의 대표 시나리오(비가 와서 액티비티가 깨진다)로 따라간다.</p>
+
+<div class="note gap">
+  ★★<strong>이 장은 절반이 미확인이다.</strong> 01~06 은 각 부품을 코드로 확인했지만,
+  <strong>부품을 잇는 경로는 이 문서가 연 파일 밖에 있다</strong>(Controller 전체 · 되잡기 작업 ·
+  승인·실행 계층). <strong>확인한 칸과 확인 못 한 칸을 갈라 적는다</strong> —
+  이 장을 「이렇게 돈다」로 읽으면 안 되고 <strong>「이렇게 이어져야 한다」</strong>로 읽어야 한다.
+</div>
+
+<table>
+  <thead><tr>
+    <th style="width:5%">#</th><th style="width:24%">무슨 일이 일어나나</th>
+    <th style="width:26%">어느 부품이</th><th style="width:29%">무엇이 확인됐나</th>
+    <th style="width:16%">상태</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>1</td><td>감시가 기상 변화를 잡는다</td>
+        <td>되잡기 작업 (v11 §6-A)</td>
+        <td>아직 없다. 만들 것이다</td>
+        <td><span class="st st-none">미구현</span></td></tr>
+    <tr><td>2</td><td>Case 가 만들어진다</td>
+        <td>되잡기 작업 → Case</td>
+        <td>감시가 <strong>판정하지 않고 Case 만 만든다</strong>는 것이 계획서 결정이다</td>
+        <td><span class="st st-doc">계획서</span></td></tr>
+    <tr><td>3</td><td>요청 종류와 문제 코드로 나뉜다</td>
+        <td><code>travel_ops/feedback.py</code></td>
+        <td>어휘 <code>INTENTS</code> 5 · <code>ISSUE_CODES</code> 17 이 여행으로 교체됐다</td>
+        <td><span class="st st-ok">코드 확인</span></td></tr>
+    <tr><td>4</td><td>팀이 정해진다</td>
+        <td><code>controller.py:72 · :175</code></td>
+        <td><code>issue_code</code> 접두 → <code>case_type</code> 으로 팀을 고른다</td>
+        <td><span class="st st-ok">코드 확인</span></td></tr>
+    <tr><td>5</td><td>capability 가 정해진다</td>
+        <td><code>registry.py:89</code></td>
+        <td>훅 → 네임스페이스 → 기본값 순. ★<strong>여행 축에서는 훅이 안 걸려 기본값으로 간다</strong>(05장)</td>
+        <td><span class="st st-unk">실행 확인 필요</span></td></tr>
+    <tr><td>6</td><td>Activity 가 판정한다</td>
+        <td><code>activity.py:129~157</code></td>
+        <td>정원 → 장소 → 조건부 기상. ★<strong>날씨로 「불가」는 안 만든다</strong>(05장)</td>
+        <td><span class="st st-none">불가 판정 없음</span></td></tr>
+    <tr><td>7</td><td>대안을 만든다</td>
+        <td>—</td>
+        <td>★<strong>Activity 파일에 대안 생성이 없다</strong>. 누가 만드는지 이 문서는 모른다</td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+    <tr><td>8</td><td>대안을 다시 판정한다 (재검증)</td>
+        <td>—</td>
+        <td>v11 §5 가 「통지 전에 반드시」라고 못박았다. <strong>연결은 확인 못 했다</strong></td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+    <tr><td>9</td><td>예약 변경을 준비한다</td>
+        <td><code>booking_handoff.py:77~94</code></td>
+        <td>제안은 만든다. ★<strong>대안·차액·위약금은 안 채운다</strong>(05·06장)</td>
+        <td><span class="st st-doc">부분 구현</span></td></tr>
+    <tr><td>10</td><td>제안을 사실과 대조한다</td>
+        <td><code>controller.py:332</code></td>
+        <td>호출은 있다. <strong>불일치가 실제로 막는지는 확인 못 했다</strong></td>
+        <td><span class="st st-ok">호출 확인</span></td></tr>
+    <tr><td>11</td><td>사람이 승인한다</td>
+        <td>승인 계층</td>
+        <td><code>WAIT_FOR_APPROVAL</code> 로 올라간다는 것까지</td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+    <tr><td>12</td><td>고객에게 알린다</td>
+        <td>바깥함 · 통지 채널</td>
+        <td>v11 §6-A 가 정했다. <strong>이 문서가 연 파일에 없다</strong></td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+    <tr><td>13</td><td>거부하면 되돌린다</td>
+        <td>일정 버전</td>
+        <td>v11 DoD-8·9. <strong>이 문서가 연 파일에 없다</strong></td>
+        <td><span class="st st-unk">미확인</span></td></tr>
+  </tbody>
+</table>
+
+<div class="note gap">
+  ★★<strong>13단계 중 코드로 확인한 것은 넷(3·4·6·10)이다.</strong>
+  나머지 아홉은 <strong>계획서에만 있거나, 이 문서가 안 연 계층에 있거나, 아직 없다.</strong>
+  <br><br>
+  ★<strong>가장 크게 비어 있는 자리는 7~8이다</strong> — <strong>대안을 누가 만들고 누가 다시
+  판정하나.</strong> v11 §5 가 「생성한 대안은 판정을 다시 통과해야 통지된다」고 못박았는데,
+  <strong>Team 파일 어디에도 대안 생성이 없다.</strong> 이 자리가 비면 대표 시나리오의 5~6단계가
+  성립하지 않는다.
+</div>
+
+<div class="note">
+  <strong>Team 끼리는 서로 부르지 않는다.</strong> 위 흐름에서 Activity 다음 Booking Handoff 로
+  가는 것은 <strong>Team 이 Team 을 부르는 것이 아니라</strong> 코어가 Case 를 다시 라우팅하는 것이다.
+  <code>_base.py:57~60</code> 이 남의 일을 받으면 <strong>판단하기 전에 되돌려 준다</strong>(HANDOFF).
+  ★<strong>그런데 「Activity 판정 뒤 Booking 으로 이어지는 실제 시퀀스」는 이 문서가 확인 못 했다.</strong>
+</div>
+
+
+<h2><span class="n">08</span>이 문서가 답하지 않는 것</h2>
+<p class="lead">★<strong>「미확인」이라고 표시하는 것과, 그걸 만들 수 있게 설명하는 것은 다르다.</strong>
+이 문서는 <strong>책임 경계와 구현 위치</strong>를 보여준다. 아래 일은
+<strong>이 문서만으로는 못 한다</strong> — 어디를 더 봐야 하는지 적는다.</p>
+
+<table>
+  <thead><tr><th style="width:20%">누가</th><th style="width:40%">이 문서만으로 못 하는 일</th><th style="width:40%">무엇이 더 있어야 하나</th></tr></thead>
+  <tbody>
+    <tr><td><strong>연동 개발자</strong><br>요청을 보내는 쪽</td>
+        <td>취소 문의 · 조건 확인 · 변경 요청을 <strong>각각 어떤 입력으로 보내야</strong>
+            원하는 capability 에 닿는지 못 정한다</td>
+        <td>요청 예시와 <code>issue_code → case_type → intent → capability</code> 대응표.
+            ★<strong>05장의 Mobility 축 불일치부터 풀어야 한다</strong></td></tr>
+    <tr><td><strong>Team 개발자</strong></td>
+        <td>유효한 <code>TeamTask</code> 와 도구 응답을 못 만든다. <code>starts_at</code> 이
+            문자열인지 시각 객체인지, <code>dietary</code> 가 어디서 오는지 모른다</td>
+        <td>최소 입출력 스키마 · 필수 필드 · 타입과 시간대 · <strong>값이 없을 때의 뜻</strong>
+            (<code>None</code> 과 빈 값이 다른가) · 실제 예시</td></tr>
+    <tr><td><strong>도구 개발자</strong></td>
+        <td>Dining 의 <code>open_at_slot</code> 을 <strong>어느 시각에 맞출지</strong> 못 정한다
+            — 05장대로 이 파일은 시각을 안 넘긴다</td>
+        <td>도구별 인자·응답 계약 · 데이터 원천 · 대상 시각 전달 경로 · 캐시와 유효기간 ·
+            조회 실패의 뜻</td></tr>
+    <tr><td><strong>판정 구현자 · QA</strong></td>
+        <td><code>completed</code> 나 <code>RESPOND</code> 를 <strong>「성립」으로 읽어도 되는지</strong>
+            못 정한다. ★취소 불가도 <code>completed</code> 이고 예약 불일치도 <code>RESPOND</code> 다</td>
+        <td><strong>처리 완료와 도메인 판정의 분리</strong>.
+            <code>feasible</code> · <code>fits</code> · 조건 충족 같은 값의 뜻과 읽는 규칙</td></tr>
+    <tr><td><strong>여행 흐름 담당자</strong></td>
+        <td>Activity 불가 다음에 Mobility 재검토 · 대안 선택 · Booking 준비가
+            <strong>어떤 순서로 이어지는지</strong> 못 만든다 — 07장이 비어 있는 자리다</td>
+        <td>팀을 잇는 시퀀스 · 공유 상태를 누가 바꾸나 · 재판정 조건 · 대안 전달 형식 ·
+            <strong>언제 끝나나</strong></td></tr>
+    <tr><td><strong>승인 화면 · 실행 개발자</strong></td>
+        <td>사용자가 <strong>정확히 무엇을 승인하는지</strong>, 거부·만료·중복 클릭·승인 뒤 실패를
+            어떻게 다룰지 못 정한다</td>
+        <td>제안 식별자와 변경 전후 내용 · 승인 대상 버전 · 상태 전이 · 실행 결과와 보상 규칙.
+            ★<strong>지금 제안에는 id 와 사유뿐이다</strong>(05장)</td></tr>
+    <tr><td><strong>운영 담당자</strong></td>
+        <td>「모름」이나 도구 예외가 났을 때 <strong>누가 어디서 받아 무엇으로 재개하는지</strong> 모른다</td>
+        <td>담당 큐 · 실패 코드별 조치 · 알림과 재시도 · 추적 식별자.
+            <strong>「사람에게 넘긴다」는 운영 절차가 아니다</strong></td></tr>
+    <tr><td><strong>검증 · 감사 담당자</strong></td>
+        <td>특정 답변과 제안의 <strong>근거를 기록에서 되짚지</strong> 못하고, 오래된 근거가 쓰였는지
+            판단 못 한다</td>
+        <td>근거의 생성 → 전달 → 저장 → 검증 전 경로 · 근거 id 범위 ·
+            <strong>원천 확인 시각과 수집 시각의 구분</strong> · 보존과 최신성 규칙.
+            04장은 문제 후보만 적었다</td></tr>
+    <tr><td><strong>보안 · 플랫폼</strong></td>
+        <td><code>allowed_tools</code> 를 <strong>누가 정하는지</strong>, 과제의 권한이 선언보다
+            넓어질 수 없는지 판단 못 한다</td>
+        <td>권한을 만들고 좁히고 검사하는 지점과 신뢰 경계.
+            <code>_base.py:77</code> 은 <strong>과제의 목록을 그대로 넘긴다</strong> —
+            상위에서 보장하는 자리를 적어야 한다</td></tr>
+    <tr><td><strong>인수 · 릴리스</strong></td>
+        <td>어떤 증거로 <strong>「완료」를 붙여도 되는지</strong> 재현 못 한다.
+            「가드 73개 통과」와 날짜만으로는 대상 버전과 시험 범위를 못 짚는다</td>
+        <td>커밋 또는 판 식별자 · 검증 명령과 결과 위치 · 완료 기준별 시험 사례 ·
+            미해결 항목의 담당자</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  ★<strong>이 표는 코드에 그 기능이 없다는 뜻이 아니다.</strong> <strong>이 문서가 그 정보를
+  담지 않았다</strong>는 판정이다. 위 열 줄은 <strong>다음에 무엇을 쓸지의 목록</strong>이기도 하다.
+</div>
+
+
+
+<h2><span class="n">09</span>이 문서를 읽을 때</h2>
 <table>
   <thead><tr><th style="width:30%">규칙</th><th>왜</th></tr></thead>
   <tbody>
