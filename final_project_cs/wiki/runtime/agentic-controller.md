@@ -33,7 +33,7 @@ Case의 다음 단계를 정한다. 네 가지다.
 
 직접 생성하면 Registry가 무의미해지고 Pack 교체가 불가능해진다. → [../teams/team-registry.md](../teams/team-registry.md)
 
-**업무 판단을 하지 않는다.** "환불 되나"는 Team이 정한다. Controller는 **누가 정할지**를 정한다.
+**업무 판단을 하지 않는다.** "이 시각에 이 활동이 성립하나"는 Team이 정한다. Controller는 **누가 정할지**를 정한다.
 
 VOC & Store Manager와 대비하면 명확하다.
 

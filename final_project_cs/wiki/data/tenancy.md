@@ -39,9 +39,7 @@ customer 그 회사의 고객 단위    다른 고객 데이터가 보이면 안
 ## 인덱스가 받친다
 
 ```sql
-CREATE INDEX orders_tenant_customer_idx    ON orders (tenant_id, customer_id);
-CREATE INDEX shipments_tenant_customer_idx ON shipments (tenant_id, customer_id);
-CREATE INDEX returns_tenant_customer_idx   ON returns (tenant_id, customer_id);
+CREATE INDEX bookings_tenant_customer_idx ON bookings (tenant_id, customer_id, starts_at DESC);
 ```
 
 **복합 인덱스 순서가 `(tenant_id, customer_id)`다.** tenant만으로 좁히는 조회도 이 인덱스를 탄다.

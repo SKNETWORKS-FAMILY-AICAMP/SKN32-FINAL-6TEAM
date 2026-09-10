@@ -6,6 +6,7 @@ status: draft
 tags: [security, architecture]
 owners: [human:미배정]
 domain: neutral
+domain_note: Tool Gateway 기제는 도메인 무관이다. read 도구 목록은 도메인마다 갈리므로 여행 일곱과 커머스 일곱을 대조로 싣는다
 ---
 
 # Tool Gateway
@@ -28,18 +29,36 @@ domain: neutral
 
 | Team | 허용 도구 |
 |---|---|
-| Procurement + Order & Payment | `read.order` `read.account` `read.policy` `read.catalog` |
-| Return & Refund | `read.order` `read.return` `read.policy` |
-| Fulfillment & Logistics | `read.order` `read.shipment` `read.policy` |
-| Catalog & Verification | `read.catalog` `read.order_items` `read.policy` |
-| Response Review | `read.policy` |
+| Activity | `read.booking` `read.policy` `read.place` `read.weather` |
+| Booking Handoff | `read.booking` `read.policy` `read.supplier` |
+| Dining | `read.place` `read.policy` `read.booking` |
+| Mobility | `read.route` `read.transit` `read.policy` |
+| Lodging / Flight (등록만) | `read.booking` |
+
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` 의 `allowed_tools` 를 직접 셌다. **`[실측 git]` 미커밋이다.**
 
 **read 도구는 7종뿐이고 결제 조회는 없다.**
+
+```
+read.place · read.route · read.transit · read.weather
+read.booking · read.supplier · read.policy
+```
+
+★**도메인이 바뀌어도 「7종뿐이고 결제 조회는 없다」가 유지된다.** 낱말은 갈렸고 **개수와 금지 항목은 그대로다** — 결제를 우리가 갖지 않는다는 경계([D-001](../../../wiki/decisions/D-001-payment-ownership.md))가 도메인 무관이기 때문이다.
+
+<details>
+<summary>v9(쇼핑몰) read 도구 7종 — 무엇이 갈렸는지 보려고 남긴다</summary>
 
 ```
 read.order · read.order_items · read.shipment · read.return
 read.catalog · read.policy · read.account
 ```
+
+Team 별 배정 — Procurement+Order&Payment(`read.order`·`read.account`·`read.policy`·`read.catalog`) · Return&Refund(`read.order`·`read.return`·`read.policy`) · Fulfillment&Logistics(`read.order`·`read.shipment`·`read.policy`) · Catalog&Verification(`read.catalog`·`read.order_items`·`read.policy`) · Response Review(`read.policy`).
+
+★**`read.policy` 만 이름이 그대로다.** 정책 조회는 도메인이 바뀌어도 정책 조회다.
+
+</details>
 
 Team 이름에 "Payment"가 있지만 실제 권한이 없다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md)
 

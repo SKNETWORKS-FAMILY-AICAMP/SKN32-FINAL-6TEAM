@@ -19,7 +19,7 @@ Team이 선언한 `required_context`를 보고 자료를 읽어 **`ContextPack` 
 읽는 곳은 셋이다.
 
 ```
-read 도구 (주문·배송·정책·반품)
+read 도구 (장소·예약·정책·이동·기상)
 RAG 검색 (지식 문서)
 Memory (과거 이력)
 ```
