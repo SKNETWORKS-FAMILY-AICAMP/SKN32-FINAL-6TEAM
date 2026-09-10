@@ -11,7 +11,7 @@ domain_note: Registry 기제는 도메인 무관이다. 표의 예시가 커머�
 
 # Team Registry
 
-`app/core/registry.py` (93줄)
+`app/core/registry.py` (**123줄** — `[정정 2026-09-10]` 93줄로 적혀 있었다)
 
 ## 책임
 

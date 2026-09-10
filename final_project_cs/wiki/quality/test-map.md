@@ -56,7 +56,7 @@ tests/
 | 제공자 timeout | `integration/controller/` | `test_provider_timeout_unknown.py` |
 | 실행 직전 재확인 | `integration/api/` | `test_recheck_before_execution.py` |
 | 제안 차단 | `integration/controller/` | `test_proposal_guard_blocks.py` |
-| A2A 왕복 | `integration/a2a/` | `test_remote_round_trip.py` |
+| A2A 왕복 | `integration/a2a/` | **`test_travel_remote_round_trip.py`** (테스트 7건) `[정정 2026-09-10]` 옛 `test_remote_round_trip.py` 는 **작업 트리에서 삭제됐고 git 에는 남아 있다** — 커머스 원격의 것이었다 |
 | SQL Graph Adapter | `integration/graph/` | `test_sql_graph_adapter.py` |
 | RAG | `integration/rag/` | `test_rag_integration.py` |
 | LLM 호출 감사 | `integration/llm/` | `test_llm_call_audit_wiring.py` |
@@ -64,7 +64,7 @@ tests/
 
 ## 불변식과의 연결
 
-`[실측]` 불변식 51개 중 **48개가 위 테스트에 연결돼 있다.**
+`[실측 2026-09-10]` 불변식 **52개 중 49개**가 위 테스트에 연결돼 있다.
 
 연결 상태는 [invariants.md](invariants.md)에 있고, **검사기가 실제로 파일과 함수 존재를 확인한다.**
 
@@ -83,7 +83,7 @@ python program/scripts/check_wiki.py
 
 ## 코드 쪽 역방향 표식 — 완료
 
-`[실측]` **2026-09-01 완료. 48개.**
+`[실측]` **2026-09-01 완료. 그때 48개, 2026-09-10 기준 49개.**
 
 넣은 모양.
 

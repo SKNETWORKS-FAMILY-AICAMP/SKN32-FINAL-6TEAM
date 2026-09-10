@@ -26,7 +26,7 @@ domain: neutral
 | 필드 | 타입 | 필수 | 제약 |
 |---|---|---:|---|
 | `evidence_id` | `str` | 예 | — |
-| `source_type` | `Literal['customer_message', 'db', 'policy', 'tool_result', 'case_event']` | 예 | 열거값 밖 문자열 거부 |
+| `source_type` | `Literal['customer_message', 'db', 'policy', 'tool_result', 'case_event', 'remote_agent']` | 예 | 열거값 밖 문자열 거부. ★`[정정 2026-09-10]` **여섯째 `remote_agent` 가 빠져 있었다**(`contracts.py:108`) — A2A 원격이 돌려준 근거를 구분하는 값이다 |
 | `source_id` | `str` | 예 | `source_type='policy'`이면 `"{document_id}#c{chunk_no}"` 형식 |
 | `claim` | `str` | 예 | — |
 | `value` | `Any` | 예 | — |
@@ -34,6 +34,8 @@ domain: neutral
 | `observed_at` | `datetime` | 예 | — |
 
 `source_type`·`source_id`·`observed_at`은 의무다. 근거 없는 문장을 답변에 넣지 않는다.
+
+`[실측 2026-09-10]` **`ContextPack.token_budget: Literal[12000] = 12000`** 도 이 표에 빠져 있었다(`contracts.py:141`). **값이 하나로 고정된 필드**라 바꿀 수 없다 — 예산을 늘리려면 계약을 고쳐야 한다는 뜻이다.
 
 근거: `wiki/records/handoff/01_계약_Pydantic.md:43-58`
 

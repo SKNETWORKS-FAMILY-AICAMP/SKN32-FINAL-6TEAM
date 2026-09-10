@@ -17,7 +17,7 @@ domain: neutral
 >
 > **같은 숫자가 코드 두 곳에 나타나면 그 자체가 결함이다.**
 
-파이썬에서는 `app.core.settings.guardrails` 로만 읽는다.
+파이썬에서는 **`app.core.settings.get_guardrails()`** 로만 읽는다. `[정정 2026-09-10]` `settings.guardrails` 라는 접근점은 **없다** — 함수다(`settings.py:228`). 읽는 법은 점 경로다 — `get_guardrails().get("context.token_budget")`.
 
 **이 문서도 사본이다.** 값이 다르면 `guardrails.yaml` 이 맞다.
 

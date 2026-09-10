@@ -1,7 +1,7 @@
 ---
 type: plan
 title: Team 공통 뼈대 — 설계는 있고 구현이 없다
-description: 반복되는 네 가지를 상속이 아니라 조합형 유틸로 뺀다. team_utils.py 가 아직 없다
+description: 반복되는 네 가지를 조합형 유틸로 빼자는 설계안. 실제로는 상속 기반 _base.py 가 생겼다
 status: draft
 tags: [architecture, contract]
 domain: neutral
@@ -52,6 +52,22 @@ app/modules/customer_ops/team_utils.py     없음
 **설계만 있고 구현이 없다.** Team 6종이 각자 같은 코드를 들고 있다.
 
 `[미확보]` **중복이 실제로 얼마나 되는지 안 세었다.** 만들 값이 있는지는 그걸 봐야 안다.
+
+## ★ [2026-09-10] 공통 뼈대는 생겼다 — 다만 조합이 아니라 상속이다
+
+`[실측 2026-09-10 작업 트리]` **`app/modules/travel_ops/_base.py` (177줄)** 가 있고 여행 Team 여섯이 그것을 **상속**한다. **`[실측 git]` 미추적이다.**
+
+★**이 문서가 말하던 `team_utils.py` 는 여전히 없다.** 그런데 **「공통 뼈대 구현이 없다」고 읽으면 틀린다** — 뼈대는 생겼고 **방식이 이 문서의 제안과 다르다.**
+
+| | 이 문서의 제안 | 실제 |
+|---|---|---|
+| 방식 | **조합형 유틸**(순수 함수 넷) | **상속**(`TravelTeamBase`) |
+| 파일 | `team_utils.py` | `travel_ops/_base.py` |
+| 무엇이 들어 있나 | — | `_guard`·`_read`·`_evidence`·`_result`·`_escalate`·`_unknown`·`_proposal` |
+
+★**상속을 고른 대가가 이미 나왔다.** 공용 기반이라 **결함도 한꺼번에 물려받는다** — `business_subject` 3단 폴백이 여행 Team 전부에 걸린다(`_base.py:169`). 조합형이면 쓰는 Team 만 걸렸을 것이다. → [build-order.md](build-order.md)
+
+`[미확보]` **조합형으로 되돌릴지 정한 기록이 없다.** 아래 설계안은 그 판단의 재료로 남긴다.
 
 ## 관계
 

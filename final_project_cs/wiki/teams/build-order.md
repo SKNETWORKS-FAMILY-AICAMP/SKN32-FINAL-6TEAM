@@ -46,7 +46,7 @@ domain: travel
 
 | 항목 | 실측 |
 |---|---|
-| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **9개** — 위 여섯에 `feedback`(인라인 분류)·`verification_policy`·`__init__` 가 더해졌다. **`[실측 git]` 전부 미추적** |
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **10개** — 위 여섯에 `feedback`(인라인 분류)·`verification_policy`·`_base`·`__init__`. **`[실측 git]` 전부 미추적** |
 | 등록 | `config/project.yaml` 6팀 전부 `active: true`, `implementation_ref` 6/6 해석됨 |
 | 테스트 | 단위·계약·아키텍처 552개 통과 |
 
@@ -63,7 +63,9 @@ domain: travel
 
 ## ★ 지금 막혀 있는 것 — Team 순서가 아니라 그 앞이다
 
-`[실측 2026-09-09]` **여섯이 다 붙었는데 여행 Case 가 하나도 라우팅되지 않는다.**
+`[실측 2026-09-10 작업 트리]` **라우팅이 풀렸다.** `travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `controller.py:72,175` 가 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 git]` 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
+
+★**하루 전까지는 막혀 있었다.** `[실측 2026-09-09]` 분류 어휘가 쇼핑몰이라 여행 라벨이 전부 `ClassificationFailed` 로 떨어졌다. **그래서 v11 이 DoD-23(라우팅 도달성)을 세웠다** — 같은 일이 다시 나면 검사가 잡는다.
 
 ```
 INTENTS               order · shipping · return · exchange · other   ← 쇼핑몰

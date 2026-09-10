@@ -18,7 +18,7 @@ domain: neutral
 eval/
 ├─ runners/        baseline_a.py · baseline_b.py · proposed.py · common.py
 ├─ stats/          bootstrap · mcnemar · agreement
-├─ datasets/       golden.jsonl (60) · holdout (20)
+├─ datasets/       golden.jsonl (72) · holdout (24)   ← [정정 2026-09-10] 60·20 으로 적혀 있었다
 ├─ reports/        실행 결과 JSONL
 └─ finetune/       자체호스팅 실험
 ```
