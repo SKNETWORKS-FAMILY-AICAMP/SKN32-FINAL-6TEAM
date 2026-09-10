@@ -24,16 +24,17 @@ BLUE, GRAY, DARK = "#2a78d6", "#777777", "#333333"
 FONT_SIZE = 24.0
 DPI = 200
 PAD = 0.04
-PAGE_WIDTH, PAGE_HEIGHT = 6.2, 9.0
+PAGE_WIDTH, PAGE_HEIGHT = 6.2, 7.78
 MIN_PRINT_FONT = 6.0
 STATUSES = ("미구현", "미확인", "꺼짐", "미등록", "미확보")
-
-# 자동 배치에서 생긴 제목 관통을 없애기 위해 좌표와 경로를 고정한다.
-# dot 실행 파일의 -Kneato -n2 모드로 지정한 경로를 그대로 렌더링한다.
-# size 강제 축소, 순위 지정, 보이지 않는 배치 간선은 사용하지 않는다.
-# 좌표 단위는 pt이며, 아래 배치는 위에서 아래로 읽는다.
 W, H = 1740.0, 2345.0
 BOXES = {}
+
+# 6차: 요청 주체와 로컬 기계 내부의 좌표·글자·경로는 유지한다.
+# 오른쪽 외부 연동과 원격 경계를 올리고, 아래에 범례를 세로로 배치한다.
+# 이에 연결된 조회·모델 호출·발송의 세 경로만 조정한다.
+# 글자 크기와 내용, 상자 수와 간선 수는 유지한다.
+# -Kneato -n2로 좌표와 경로를 고정하며 강제 축소는 사용하지 않는다.
 
 GROUPS = [
     ("users", None, "로컬 기계 밖 · 요청 주체"),
@@ -262,10 +263,10 @@ POSITIONS = {
     "watch_recovery": (310, 636.5),
     "worker": (310, 503.5),
     "publisher": (310, 380),
-    "sources": (1440, 1330),
-    "llm": (1440, 1140),
-    "discord": (1440, 503.5),
-    "a2a": (1440, 294.5),
+    "sources": (1440, 1840),
+    "llm": (1440, 1650),
+    "discord": (1440, 1400),
+    "a2a": (1440, 1160),
 }
 
 # 왼쪽, 아래, 오른쪽, 위.
@@ -277,13 +278,12 @@ BOUNDS = {
     "action": (595, 479.75, 1130, 1049.75),
     "db": (40, 1040.25, 575, 1662.5),
     "jobs": (40, 313.5, 575, 997.5),
-    "external": (1160, 427.5, 1720, 1482),
-    "data": (1180, 1263.5, 1700, 1410.75),
-    "remote": (1160, 213.75, 1720, 384.75),
+    "external": (1160, 1324, 1720, 1995),
+    "data": (1180, 1773.5, 1700, 1920.75),
+    "remote": (1160, 1079.25, 1720, 1250.25),
 }
 
-# FLOWS와 같은 순서: 실제 경로의 꼭짓점들, 선 옆 라벨 중심.
-# 이 꼭짓점들은 상자나 보이지 않는 노드가 아니다.
+# FLOWS와 같은 순서: 경로 꼭짓점들, 선 옆 라벨 중심.
 ROUTES = [
     (
         [(820, 2076.0232), (820, 1954.84988)],
@@ -345,14 +345,14 @@ ROUTES = [
         (745.2512, 751.93654),
     ),
     (
-        [(1038.51, 1315.75), (1220, 1315.75), (1220, 1210),
-         (1440, 1210), (1440, 1294.15012)],
-        (1289.6232, 1242),
+        [(1038.51, 1315.75), (1185, 1315.75), (1185, 1730),
+         (1440, 1730), (1440, 1804.15012)],
+        (1310, 1751),
     ),
     (
-        [(1038.51, 1285), (1195, 1285), (1195, 1040),
-         (1440, 1040), (1440, 1088.0232)],
-        (1320, 1013.87488),
+        [(1038.51, 1285), (1165, 1285), (1165, 1560),
+         (1440, 1560), (1440, 1598.0232)],
+        (1320, 1533.87488),
     ),
     (
         [(434.6356, 902.5), (452.6356, 902.5), (452.6356, 1060),
@@ -386,8 +386,8 @@ ROUTES = [
         (212.25, 441.75),
     ),
     (
-        [(420.0088, 380), (1225.3644, 380),
-         (1225.3644, 503.5), (1243.3644, 503.5)],
+        [(420.0088, 380), (1145, 380),
+         (1145, 1400), (1243.3644, 1400)],
         (822.6866, 353.87488),
     ),
     (
@@ -401,6 +401,34 @@ ROUTES = [
          (489.7588, 1160), (489.7588, 1111.5), (471.7588, 1111.5)],
         (136.6256, 1681.5),
     ),
+]
+
+# 5차의 세 열을 같은 순서로 한 열에 배치한다. 내용 삭제는 없다.
+LEGEND = [
+    "로컬 · [결정] 일정 검증·변화 대응",
+    "→ 조정·재검증·통지·최신 링크",
+    "[미구현] 여행 전체 지속관리 연결",
+    "API 1/3 · [구현] case:write",
+    "tenant_id는 본문이 아닌 인증 결과",
+    "[실측 · 정적 확인]",
+    "app/presentation/api/cases.py:102~111",
+    "MCP 한계: 2.5",
+    "API 2/3 · [구현] 접수·조회·입력 재개",
+    "승인·운영 화면",
+    "Controller + Case 상태기계",
+    "여섯 로컬 Team 등록 · 작업·판단 결과 교환",
+    "Team 내부 v2 §03~04 · 계약 v2 §06",
+    "API 3/3 · Action · [구현]",
+    "상태 변경·외부 실행 통제",
+    "Team은 제안만 반환 · v2 §02·06",
+    "DB · [구현] PostgreSQL · pgvector",
+    "pgvector: 문서 의미 검색용 벡터 저장",
+    "외부 연동 · API 실제 응답 성공은 미검증",
+    "외부 데이터 · 응답은 조회 근거",
+    "현장 확인 아님 · [실측 · 정적 확인]",
+    "app/infrastructure/travel/base.py:200~209",
+    "키·설정 조립 및 Team 연결: 2.5",
+    "원격 · [구현·비활성] 코어 원격 호출 꺼짐",
 ]
 
 
@@ -535,57 +563,20 @@ def make_skeleton(sizes):
         target = g if parent is None else clusters[parent]
         target.subgraph(clusters[name])
 
-    # 테두리는 하나다. 세 열은 범례 내부의 글자 배치일 뿐이다.
-    # 업무 상자 28개를 셀 때 이 범례 노드만 제외한다.
-    columns = [
-        [
-            "로컬 · [결정] 일정 검증·변화 대응",
-            "→ 조정·재검증·통지·최신 링크",
-            "[미구현] 여행 전체 지속관리 연결",
-            "API 1/3 · [구현] case:write",
-            "tenant_id는 본문이 아닌 인증 결과",
-            "[실측 · 정적 확인]",
-            "app/presentation/api/cases.py:102~111",
-            "MCP 한계: 2.5",
-        ],
-        [
-            "API 2/3 · [구현] 접수·조회·입력 재개",
-            "승인·운영 화면",
-            "Controller + Case 상태기계",
-            "여섯 로컬 Team 등록 · 작업·판단 결과 교환",
-            "Team 내부 v2 §03~04 · 계약 v2 §06",
-            "API 3/3 · Action · [구현]",
-            "상태 변경·외부 실행 통제",
-            "Team은 제안만 반환 · v2 §02·06",
-        ],
-        [
-            "DB · [구현] PostgreSQL · pgvector",
-            "pgvector: 문서 의미 검색용 벡터 저장",
-            "외부 연동 · API 실제 응답 성공은 미검증",
-            "외부 데이터 · 응답은 조회 근거",
-            "현장 확인 아님 · [실측 · 정적 확인]",
-            "app/infrastructure/travel/base.py:200~209",
-            "키·설정 조립 및 Team 연결: 2.5",
-            "원격 · [구현·비활성] 코어 원격 호출 꺼짐",
-        ],
-    ]
+    # 테두리 하나인 범례를 오른쪽 열 아래에 둔다.
     label = (
         '<<TABLE BORDER="1" CELLBORDER="0" '
         'CELLSPACING="0" CELLPADDING="8">'
-        '<TR><TD COLSPAN="3">범례 · 경계 설명</TD></TR><TR>'
+        '<TR><TD>범례 · 경계 설명</TD></TR>'
+        '<TR><TD ALIGN="LEFT">'
+        + '<BR ALIGN="LEFT"/>'.join(map(escape, LEGEND))
+        + "</TD></TR></TABLE>>"
     )
-    label += "".join(
-        '<TD ALIGN="LEFT">'
-        + '<BR ALIGN="LEFT"/>'.join(map(escape, column))
-        + "</TD>"
-        for column in columns
-    )
-    label += "</TR></TABLE>>"
     g.node(
         "boundary_legend",
         label,
         shape="plain",
-        pos=f"{W/2},0!",
+        pos="1440,665!",
     )
     return g
 
@@ -753,6 +744,8 @@ def check(layout):
             )
 
     rectangles = rects(layout)
+    assert len(rectangles) == 133, len(rectangles)
+
     overlap_pairs = [
         (a[4], b[4])
         for i, a in enumerate(rectangles)
@@ -780,9 +773,8 @@ def check(layout):
     if hits:
         raise RuntimeError(f"선·글자 교차: {hits}")
 
+    # 업무 상자와 범례의 글자 넘침을 모두 검사한다.
     for obj in nodes:
-        if obj["name"] == "boundary_legend":
-            continue
         x, y = map(float, obj["pos"].split(","))
         width = float(obj["width"])*72
         height = float(obj["height"])*72
@@ -802,7 +794,9 @@ def check(layout):
         for op in obj.get(key, [])
         if op["op"] == "F"
     ]
+    assert min(sizes) == max(sizes) == FONT_SIZE
     smallest = min(sizes)
+
     x0, y0, x1, y1 = map(float, layout["bb"].split(","))
     width = (x1-x0)/72 + 2*PAD
     height = (y1-y0)/72 + 2*PAD
@@ -848,28 +842,49 @@ def main(write=True):
 
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
     pixel_width, pixel_height = struct.unpack(">II", png[16:24])
-    png_pt = smallest * min(
+    scale = min(
         1,
         PAGE_WIDTH*DPI/pixel_width,
         PAGE_HEIGHT*DPI/pixel_height,
+    )
+    png_pt = smallest * scale
+
+    assert pixel_width <= 4960 and pixel_height <= 6220, (
+        pixel_width, pixel_height
+    )
+    assert pixel_height/pixel_width <= 1.25, (
+        pixel_height/pixel_width
     )
     if png_pt < MIN_PRINT_FONT:
         raise RuntimeError(
             f"PNG 쪽 맞춤 최소 {png_pt:.3f}pt: 6pt 미달"
         )
 
-    # Graphviz 16 실측:
-    # 자연 크기: 23.691111 × 35.174722인치.
-    # PNG: 4738 × 7035px, 쪽 맞춤 최소 6.140725pt.
-    # 여유를 더한 JSON 글자 영역 기준: 넘침·겹침·선통과 모두 0.
-    # 브라우저 검사는 읽기 전용 환경의 임시 폴더 제한으로 실행하지 못했다.
-    # 이 검사를 check_text_fit.js의 브라우저 실측이라고 부르지 않는다.
-    # 내용 삭제·업무 상자 통합은 없다. 경계 설명만 하단 범례로 옮겼다.
+    # Graphviz 16.0.0, -Kneato -n2, Malgun Gothic, 200dpi 실측:
+    # PNG: 4738 × 5904px = 23.69 × 29.52인치.
+    # 세로/가로: 1.246095.
+    # 6.2 × 7.78인치 안 배치: 6.2 × 7.725791인치.
+    # JSON·PNG 중 보수적인 쪽 배치 최소 글자: 6.280837pt.
+    # JSON 글자 133개: 넘침 0 · 겹침 0 · 선통과 0.
+    # 브라우저 검사는 재실행하지 않았다.
+    # 검증은 메모리에서 수행하며, write=True일 때 PNG 하나만 쓴다.
     if write:
         with open(sys.argv[1] + ".png", "wb") as output:
             output.write(png)
 
-    return counts, width, height, min(json_pt, png_pt)
+    result = dict(
+        counts,
+        pixels=[pixel_width, pixel_height],
+        inches=[pixel_width/DPI, pixel_height/DPI],
+        page_inches=[
+            pixel_width/DPI*scale,
+            pixel_height/DPI*scale,
+        ],
+        min_pt=min(json_pt, png_pt),
+        text_count=len(rects(layout)),
+    )
+    print(json.dumps(result, ensure_ascii=False))
+    return result
 
 
 if __name__ == "__main__":
