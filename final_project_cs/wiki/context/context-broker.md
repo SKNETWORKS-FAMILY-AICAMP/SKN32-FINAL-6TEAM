@@ -26,7 +26,18 @@ Memory (과거 이력)
 
 ## 경계
 
-**Team은 read 도구를 직접 호출하지 않는다.** 부족하면 `need_more_context`로 Controller에 요청한다.
+★`[정정 2026-09-10]` **실제 배선은 이 절과 다르다.**
+
+| 무엇 | 누가 한다 |
+|---|---|
+| RAG 검색 | **Controller** 가 조회해 `ContextInputs` 로 넘긴다 |
+| 조립 | **Broker** 가 넘겨받은 것을 `ContextPack` 으로 조립한다 |
+| read 도구 | **Team** 이 `_read()` 로 직접 부른다 — 허용·예산은 `ReadToolbox.call()` 이 강제 |
+| 과거 이력 | **빈 목록이다.** `Controller._task()` 가 `history_entries=[]` 를 넘긴다 |
+
+그래서 위 「읽는 곳은 셋」은 **Broker 가 셋을 직접 읽는다**는 뜻이 아니다. 어느 쪽이 맞는지는 [team-boundary.md](../teams/team-boundary.md) §2 에 적어 두었다 — `[미확보]`.
+
+아래는 그 전 서술이다 — **Team은 read 도구를 직접 호출하지 않는다.** 부족하면 `need_more_context`로 Controller에 요청한다.
 
 이렇게 하는 이유는 **읽기 예산을 Core가 통제**하기 위해서다. → [context-budget.md](context-budget.md)
 

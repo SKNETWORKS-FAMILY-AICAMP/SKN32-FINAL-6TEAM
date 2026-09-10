@@ -6,6 +6,7 @@ status: draft
 tags: [architecture, contract]
 owners: [human:미배정]
 domain: neutral
+domain_note: Team 경계 규칙은 도메인 무관이다. 허용 도구 표만 도메인마다 갈리고 지금은 여행 값을 싣는다
 ---
 
 # Team 경계
@@ -44,6 +45,26 @@ Team은 `ActionProposal`만 반환한다. 실행은 [../actions/index.md](../act
 
 ## 2. read 도구를 직접 호출하지 않는다
 
+### ★ [2026-09-10] 코드가 이 규칙과 다르게 돈다 — 어느 쪽이 맞는지 안 정해졌다
+
+`[실측 2026-09-10 작업 트리]` **여행 Team 은 read 도구를 직접 부른다.** `travel_ops/_base.py:68` 의 `_read()` 가 `self.tools.call(name, context, arguments, allowed_tools, seen, budget=max_steps)` 를 호출하고, **허용 목록과 단계 예산은 `ReadToolbox.call()` 이 강제한다**(`app/tools/read_tools.py:279`).
+
+| | 이 절이 말하던 설계 | 지금 코드 |
+|---|---|---|
+| 누가 읽나 | **Context Broker 가 미리 읽어** `ContextPack` 에 넣는다 | **Team 이 `_read()` 로 부른다** |
+| 예산을 누가 통제하나 | Broker 가 토큰 예산으로 | **`ReadToolbox.call()` 이 단계 예산(`max_steps`)으로** |
+| 허용 여부를 누가 보나 | Registry | **`ReadToolbox.call()`** 이 `allowed_tools` 로 |
+
+★**통제는 사라지지 않았고 자리가 옮겨 갔다.** 허용 목록과 예산 둘 다 강제된다 — 다만 **Broker 앞이 아니라 도구 게이트에서.** 코드 주석이 그 이유를 적는다: 커머스에서 `max_steps` 가 선언만 되고 아무도 안 읽던 것을 막으려고 **예산을 여기서 항상 넘긴다.**
+
+★**`INV-CS-TEAM-004` 는 테스트가 없다**(`review` 판정). 그래서 이 차이를 아무 검사도 잡지 않았다.
+
+`[미확보]` **둘 중 하나다 — 불변식이 낡았거나, 코드가 불변식을 어겼다.** 문서 세션이 정할 수 없다. 코드·계획서 담당 몫이다. **정해지면 이 절과 `INV-CS-TEAM-004` 를 같이 고친다** — 지금 이 문장이 hub·cs 15곳 넘게 복제돼 있다.
+
+---
+
+아래는 그 결정 전의 서술이다.
+
 Context Broker가 `required_context`에 따라 읽어서 `ContextPack`에 넣어준다. 부족하면 `need_more_context`로 요청한다.
 
 ### 왜
@@ -64,11 +85,12 @@ Broker 우회 → evidence 중복 → 중앙값 10,670 토큰 → 12GB VRAM OOM
 
 | Team | 허용 도구 |
 |---|---|
-| Procurement + Order & Payment | `read.order`, `read.account`, `read.policy`, `read.catalog` |
-| Return & Refund | `read.order`, `read.return`, `read.policy` |
-| Fulfillment & Logistics | `read.order`, `read.shipment`, `read.policy` |
-| Catalog & Verification | `read.catalog`, `read.order_items`, `read.policy` |
-| Response Review | `read.policy` |
+| Activity | `read.booking`, `read.policy`, `read.place`, `read.weather` |
+| Booking Handoff | `read.booking`, `read.policy`, `read.supplier` |
+| Dining | `read.place`, `read.policy`, `read.booking` |
+| Mobility | `read.route`, `read.transit`, `read.policy` |
+
+`[실측 2026-09-10 작업 트리]` `travel_ops/*.py` 의 `allowed_tools`. 커머스 표는 [../records/legacy/teams/](../records/legacy/teams/) 쪽 기록으로 옮겼다.
 
 **선언은 있는데 "직접 호출하지 않는다"는 강제가 없다.**
 

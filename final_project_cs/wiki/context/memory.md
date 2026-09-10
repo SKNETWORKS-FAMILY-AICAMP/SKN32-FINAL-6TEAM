@@ -27,6 +27,8 @@ domain: neutral
 
 `[실측]` `config/guardrails.yaml`
 
+★`[실측 2026-09-10 작업 트리]` **예산은 있고 채워 넣는 곳이 비어 있다.** `Controller._task()` 가 `history_entries=[]` 를 넘기고 유사 Case 도 기본 빈 목록이다(`controller.py:93`). **그래서 이 두 섹션은 지금 늘 비어 있다** — 아래 「가장 먼저 잘리는 자리」는 채워졌을 때의 이야기다.
+
 ## ★ 가장 먼저 잘리는 자리다
 
 `SECTION_FILL_ORDER`에서 둘 다 뒤쪽이다.

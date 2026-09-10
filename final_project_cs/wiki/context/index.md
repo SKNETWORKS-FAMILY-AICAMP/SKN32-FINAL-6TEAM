@@ -14,7 +14,7 @@ domain: neutral
 
 `app/core/context.py`, `app/infrastructure/rag/`
 
-**Team은 read 도구를 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`으로 만들어 준다.
+★`[정정 2026-09-10]` **여행 Team 은 read 도구를 `_read()` 로 직접 부른다**(허용·예산은 `ReadToolbox.call()` 이 강제). 아래 설계와 다르고 어느 쪽이 맞는지 안 정해졌다 → [../teams/team-boundary.md](../teams/team-boundary.md) §2. 그 전 서술: **Team은 read 도구를 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`으로 만들어 준다.
 
 ## 왜 이렇게 하는가
 

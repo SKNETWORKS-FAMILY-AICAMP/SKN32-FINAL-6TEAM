@@ -65,7 +65,9 @@ domain: travel
 
 Team이 직접 실행하면 세 가지가 무너진다 — 승인 경계를 우회할 수 있고, 같은 요청이 두 번 실행될 수 있고, 감사 기록이 안 남는다.
 
-**2. read Tool을 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`에 넣어준다. 부족하면 `need_more_context`로 요청한다.
+**2. read Tool을 직접 호출하지 않는다.** Context Broker가 `required_context`에 따라 읽어서 `ContextPack`에 넣어준다.
+
+★`[실측 2026-09-10 작업 트리]` **여행 코드가 이 원칙과 다르게 돈다** — Team 이 `_read()` 로 read 도구를 부르고, 허용 목록과 단계 예산은 `ReadToolbox.call()` 이 강제한다. **통제는 남았고 자리가 Broker 앞에서 도구 게이트로 옮겨 갔다.** 원칙이 낡았는지 코드가 어겼는지는 `[미확보]` → [`cs/teams/team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) §2 부족하면 `need_more_context`로 요청한다.
 
 이렇게 하는 이유는 **읽기 예산을 Core가 통제**하기 위해서다. Team이 직접 읽으면 컨텍스트가 무한정 커진다.
 

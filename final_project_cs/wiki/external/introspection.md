@@ -11,7 +11,7 @@ domain: neutral
 
 `[실측]` `wiki/records/handoff/13_introspection_계약.md` 에서 이관.
 
-**`ops:introspect` scope 로 보호되는 read-only JSON API 다.** `contract_version` 은 `1.0`.
+**`ops:introspect` scope 로 보호되는 read-only JSON API 다.** `contract_version` 은 **`1.1`** (`app/introspection/contract.py:15`). `[정정 2026-09-10]` `1.0` 으로 적혀 있었다 — 1.1 에서 `active_revision`·`desired_revision`·`reload_state`·`reload_error` 가 더해졌다.
 
 응답은 `app.introspection.contract.snapshot()` 의 조립 메타데이터를 그대로 낸다.
 

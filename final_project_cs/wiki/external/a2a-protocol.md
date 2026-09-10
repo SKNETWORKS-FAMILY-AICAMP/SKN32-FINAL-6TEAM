@@ -158,6 +158,8 @@ deadline_s 기준
 
 **중복 Task를 막으려고 `case_id`와 idempotency key를 함께 쓴다.**
 
+★`[실측 2026-09-10]` **위 셋은 설계이고 구현되지 않았다.** `app/infrastructure/a2a/http_transport.py` 의 `submit()` 은 **멱등 키 없이** `task_id`·`capability`·`input_text`·`case_ref` 만 보내고, **재시도·지수 백오프 코드가 없다.** 401 이면 `remote_unauthorized` 로 끝나고 나머지는 예외로 올린다. **같은 Task 가 두 번 가면 원격이 두 번 처리한다.**
+
 ## ★ 원격 Artifact를 그대로 믿지 않는다
 
 원격 Agent가 완료 시 `verification_report`와 `evidence_manifest` Artifact를 반환한다.

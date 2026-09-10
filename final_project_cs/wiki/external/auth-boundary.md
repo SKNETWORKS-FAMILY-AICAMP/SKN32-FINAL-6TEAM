@@ -42,7 +42,7 @@ domain: neutral
 
 ## ② scope
 
-`[실측]` scope 10개는 guardrail이 소유한다. 코드에 흩어 놓지 않는다.
+`[실측 2026-09-10]` scope **12개**는 guardrail이 소유한다(`config/guardrails.yaml` `security.scopes`, `tests/security/test_scope_contract.py` 가 집합으로 검사). `[정정]` 이 줄은 10개로 적혀 있었다 — 같은 문서 51행은 12개였다. 코드에 흩어 놓지 않는다.
 
 | ID | 불변식 | 실행 위치 |
 |---|---|---|
@@ -65,7 +65,7 @@ domain: neutral
 | **`action:approve`** | **승인** |
 | `mcp:read` | MCP 도구 3종 |
 
-`+ ops:introspect` 등 총 10개. guardrail이 소유한다.
+`+ ops:introspect` · `ops:reload` 등 총 **12개**. guardrail이 소유한다. ★`[실측]` 그중 **`order:read`·`return:read` 둘은 커머스 scope 가 남은 것**이다 — 코드 담당 몫.
 
 **읽기와 쓰기와 승인을 나눈 게 핵심이다.** 하나로 묶으면 조회 권한만 주고 싶어도 승인까지 열린다.
 

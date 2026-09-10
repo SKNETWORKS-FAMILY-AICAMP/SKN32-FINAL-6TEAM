@@ -32,7 +32,7 @@ resume       : bool
 resume_node  : ResumeNode | None
 ```
 
-**`context`가 핵심이다.** Team은 여기 담긴 것만 쓴다. 직접 읽지 않는다. → [team-boundary.md](../team-boundary.md)
+**`context`가 핵심이다.** 설계는 「Team은 여기 담긴 것만 쓰고 직접 읽지 않는다」였다. ★`[정정 2026-09-10]` **여행 Team 은 `_read()` 로 직접 읽고**, `allowed_tools` 가 `ReadToolbox.call()` 의 허용 목록으로 **실제로 쓰인다.** 아래 「과도기 호환 필드」 설명은 그 전 판의 것이다 → [team-boundary.md](../team-boundary.md) §2
 
 ### ★ `allowed_tools`는 과도기 호환 필드다
 

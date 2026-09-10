@@ -82,7 +82,7 @@ DOMAIN_WORDS = (
 | `INV-CS-TEAM-001` | Team manifest는 프로토콜을 구현한다 | automated | `tests/contract/test_team_contract.py::test_team_manifests_implement_protocol` |
 | `INV-CS-TEAM-002` | manifest의 scope는 정확히 선언된다 | automated | `tests/contract/test_team_contract.py::test_manifest_scopes_are_exact` |
 | `INV-CS-TEAM-003` | Team은 side effect를 실행하지 않는다 | review | [../teams/team-boundary.md](../teams/team-boundary.md) |
-| `INV-CS-TEAM-004` | Team은 read 도구를 직접 호출하지 않는다 | review | 동 |
+| `INV-CS-TEAM-004` | Team은 read 도구를 직접 호출하지 않는다 ★**지금 코드가 어긴다** — 아래 | review | 동 |
 | `INV-CS-TEAM-005` | Team은 다른 Team을 직접 호출하지 않는다 | review | 동 |
 
 **003~005가 `review`인 게 약점이다.** 설계의 핵심 규칙인데 자동 판정이 없다. 사람이 리뷰에서 잡아야 한다.
@@ -343,6 +343,26 @@ python program/scripts/check_wiki.py
 |---|---|---|
 | `INV-CS-TEAM-003` | side effect를 실행하지 않는다 | Team 모듈이 `access_action/`을 import하는지 검사 |
 | `INV-CS-TEAM-004` | read 도구를 직접 호출하지 않는다 | Team 모듈이 `tools/`를 직접 import하는지 검사 |
+
+### ★ [2026-09-10] `INV-CS-TEAM-004` — 자기 검사 기준으로 깨져 있고, 그 검사가 없다
+
+`[실측 2026-09-10 작업 트리]` 위 줄이 정한 검사 기준은 **「Team 모듈이 `tools/` 를 직접 import 하는가」** 다. 그리고:
+
+| | 실측 |
+|---|---|
+| `travel_ops/_base.py:35` | **`from app.tools.read_tools import ReadToolbox`** — import 한다 |
+| `_base.py:68` `_read()` | `self.tools.call(...)` 로 **직접 부른다** |
+| 이 기준을 검사하는 테스트 | **없다.** `tests/architecture/` 에 `app.tools`·`ReadToolbox` 를 보는 검사가 0건 |
+
+★**그래서 어겨졌는데 아무도 몰랐다.** `review` 판정은 사람이 보라는 뜻인데 **사람이 안 봤다.** 이 저장소가 여러 번 적은 것과 같은 모양이다 — **검사가 없는 불변식은 선언일 뿐이다.**
+
+★**다만 통제가 사라진 것은 아니다.** 허용 목록과 단계 예산을 `ReadToolbox.call()` 이 강제한다 — **불변식이 막으려던 위험(읽기가 무한정 커지는 것)은 다른 자리에서 막히고 있다.**
+
+`[미확보]` **불변식을 고칠지 코드를 고칠지 안 정해졌다.**
+  · 불변식이 낡았다면 — 문장을 「Team 은 `ReadToolbox` 를 거치지 않고 읽지 않는다」로 바꾸고 **그 게이트를 검사하는 테스트**를 붙인다
+  · 코드가 어겼다면 — 읽기를 Broker 앞으로 되돌린다
+
+**어느 쪽이든 automated 로 올려야 한다.** 코드·계획서 담당 몫이다. 상세 → [../teams/team-boundary.md](../teams/team-boundary.md) §2
 | `INV-CS-TEAM-005` | 다른 Team을 직접 호출하지 않는다 | Team 모듈이 다른 Team을 import하는지 검사 |
 
 `tests/architecture/test_basement_is_domain_free.py`가 이미 import 검사를 하므로 **같은 방식으로 셋 다 가능해 보인다.**

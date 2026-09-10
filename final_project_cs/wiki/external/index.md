@@ -65,7 +65,7 @@ app/presentation/
 |---|---|---|
 | `INV-CS-SEC-001` | 유효하지 않은 토큰은 인증되지 않는다 | automated |
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | automated |
-| `INV-CS-SEC-007` | scope 10개는 guardrail이 소유한다 | automated |
+| `INV-CS-SEC-007` | scope **12개**는 guardrail이 소유한다 `[정정 2026-09-10]` | automated |
 | `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated |
 
 **`INV-CS-SEC-008`이 MCP 범위를 고정한다.** 도구를 늘리려면 이 테스트를 같이 고쳐야 하고, 그게 의도적 결정임을 강제한다.

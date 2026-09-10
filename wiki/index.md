@@ -36,7 +36,7 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 
 ### [business/](business/index.md) — 얼마짜리인가
 건당 원가, 인프라 비용, 시장 규모, 가격안.
-`[실측]` 여기 적힌 사람 1건 4,100~4,846원 · A-COP 병행 **1,132원**은 **쇼핑몰 CS 상담 원가**다(`business/unit-economics.md` 와 맞췄다 — 1,133 으로 적혀 있었다). 여행은 팀당 이용권(7일·4인·2도시 59,000원 기준)이라 산식이 다르다 — v11 §1. 인바운드 손익 재계산은 `[미확보]`.
+`[실측]` 여기 적힌 사람 1건 4,100~4,846원 · A-COP 병행 **1,132원**은 **쇼핑몰 CS 상담 원가**다(`business/unit-economics.md` 와 맞췄다 — 1,133 으로 적혀 있었다). 여행은 팀당 이용권(7일·4인·서울 1도시, 가격은 v11 §11-A)이라 산식이 다르다 — v11 §1. 인바운드 손익 재계산은 `[미확보]`.
 
 ### [architecture/](architecture/index.md) — 어떻게 나뉘는가
 시스템 경계, 저장소 관계, Core와 Team의 분리 기준, Pack 모델.
@@ -79,7 +79,7 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 | 음성 채널 | 별도 원가 산정 | [business/infrastructure-cost.md](business/infrastructure-cost.md) |
 | ~~환불 계산 방식 전환 시점~~ | 쇼핑몰 전제라 여행에서는 해당 없음. D-001 재판정 대상 | [decisions/D-001-payment-ownership.md](decisions/D-001-payment-ownership.md) |
 | ~~MVP 대상 도시~~ | **닫힘 — 서울** (2026-09-10). 기술 제약이 아니라 검증 주장의 분모다 | [decisions/D-016-scope-narrowing-reasons.md](decisions/D-016-scope-narrowing-reasons.md) |
-| ~~지원 언어 범위~~ | **닫힘 — 한국어 하나** (2026-09-10, v11 §0-4). 고객 언어 번역은 고객 에이전트 몫 | 동 |
+| ~~지원 언어 범위~~ | **닫힘 — 두 번 바뀌었다** (2026-09-10, v11 §0-4 결정 2 → 11). 원본 한국어, **링크·알림은 고객 언어로 우리가 옮긴다(기본 한·영)**, 에이전트 경로는 에이전트가 | 동 |
 | **액티비티 운영 변경 정보를 어디서 받나** | 서울권 표본 조사 — 2주차. **도시가 정해져 시작 가능** | v11 §0-3 |
 | **구현 카탈로그를 어떻게 관리하나** | 손으로 유지하는 목록 둘을 없애는 안. UI 화면 셋 | [decisions/D-015-implementation-catalog.md](decisions/D-015-implementation-catalog.md) |
 | **59,000원 수용 여부** | 유료 파일럿 20~30팀 | 동 |

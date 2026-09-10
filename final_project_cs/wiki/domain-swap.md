@@ -48,7 +48,8 @@ domain_note: 무엇을 갈아 끼우나를 정하는 계약이다. 두 도메인
 ### 1. 도메인 테이블
 
 ```
-app/infrastructure/db/migrations/002_domain_customer_ops.sql
+app/infrastructure/db/migrations/002_domain_commerce.sql   ← [정정 2026-09-10] customer_ops 로 적혀 있었다
+app/infrastructure/db/migrations/010_domain_travel.sql     ← 여행 (작업 트리)
   → 002_domain_<your>.sql
 ```
 
