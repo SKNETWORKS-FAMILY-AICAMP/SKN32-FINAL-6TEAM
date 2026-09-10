@@ -43,7 +43,7 @@ owners: [human:서유현]
 
 ## `type` 목록
 
-**11개다.** 목록과 판정 규칙은 분량이 커서 따로 뒀다.
+**12개다**(`check_wiki.py` `TYPES` — concept · contract · dataset · decision · evidence · guide · plan · policy · reference · report · research · runbook). `[정정 2026-09-10]` 11개로 적혀 있었다. 목록과 판정 규칙은 분량이 커서 따로 뒀다.
 
 → **[type-guide.md](type-guide.md)**
 

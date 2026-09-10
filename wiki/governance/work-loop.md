@@ -54,7 +54,7 @@ diff final_project_cs/RULE.md final_project_sample/RULE.md
  2. (삭제, 2026-09-08) records/history · records/plans 는 동결
 
 [수행]
- 3. 계획서(v9)·wiki 결정의 해당 단계만 한다. 범위 밖이면 open-items 에 올리고 결정 먼저
+ 3. 계획서(**v11**)·wiki 결정의 해당 단계만 한다. 범위 밖이면 open-items 에 올리고 결정 먼저
  4. 코드를 대체·삭제하면 legacy/ 에 보존한다
  5. 실행·테스트로 검증하고 재현 명령과 출력을 wiki/records/evidence/ 에 남긴다
 
@@ -125,7 +125,7 @@ VISION-NN_<제목>.md            docs/vision/   — 시점이 아니라 주제�
 
 `[실측]` `RULE.md` 가 `A-COP_구현계획서_v6.md` 를 **"구현·평가 기준선"**이라 부른다.
 
-**지금 기준선은 v10 이다**(2026-09-08 판올림, 도메인이 여행으로 교체됐다). v9 는 `program/plan/` 에 그대로 있고, v5~v8 은 `program/plan/.archive/` 에 **압축·숨김**이다(2026-09-09). → 루트 `CLAUDE.md`
+**지금 기준선은 v11 이다**(2026-09-10 판올림. 그 앞 v10 이 2026-09-08 에 도메인을 여행으로 교체했다). `[정정 2026-09-10]` v10 으로 적혀 있었다. v9 는 `program/plan/` 에 그대로 있고, v5~v8 은 `program/plan/.archive/` 에 **압축·숨김**이다(2026-09-09). → 루트 `CLAUDE.md`
 
 `[미확보]` **v6 참조 13곳을 고쳐야 하는지, 아니면 RULE.md 자체를 갱신할지 안 정했다.**
 

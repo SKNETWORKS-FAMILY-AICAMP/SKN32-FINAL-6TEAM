@@ -1,7 +1,7 @@
 ---
 type: plan
 title: 이 wiki 를 실제로 쓰기 시작하는 조건
-description: 지금은 아무도 안 읽는다. 두 CLAUDE.md 어디에도 wiki 가 0회 나온다
+description: 전환 전 상태 기록 — 그때는 두 CLAUDE.md 어디에도 wiki 가 0회 나왔다. 2026-09-10 지금은 루트 10회 · cs 33회다
 status: draft
 tags: [governance, documentation, release]
 domain: neutral

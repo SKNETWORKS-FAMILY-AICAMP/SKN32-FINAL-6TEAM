@@ -15,7 +15,7 @@ domain: neutral
 1. [structure-guide.md](structure-guide.md) — 폴더와 파일을 어떻게 배치하는가
 2. [document-standard.md](document-standard.md) — 문서 하나를 어떻게 쓰는가
 3. [front-matter.md](front-matter.md) — 문서 머리에 붙이는 메타데이터 규격
-4. [type-guide.md](type-guide.md) — **type 11개 고르는 법**
+4. [type-guide.md](type-guide.md) — **type 12개 고르는 법**
 5. [evidence-grades.md](evidence-grades.md) — 주장에 근거 등급 붙이는 법
 6. [domain-axis.md](domain-axis.md) — **도메인이 바뀔 때 어느 문서를 다시 쓰는가**
 6. [review-policy.md](review-policy.md) — 누가 무엇을 검토하는가
@@ -31,13 +31,13 @@ domain: neutral
 | [structure-guide.md](structure-guide.md) | 새 문서를 어디에 두고, 커지면 어떻게 쪼개는가 |
 | [document-standard.md](document-standard.md) | 문서를 어떻게 쓰는가 |
 | [front-matter.md](front-matter.md) | 어떤 필드를 언제 채우는가 |
-| [type-guide.md](type-guide.md) | **type 11개 중 무엇을 고르는가** |
+| [type-guide.md](type-guide.md) | **type 12개 중 무엇을 고르는가** |
 | [evidence-grades.md](evidence-grades.md) | 이 숫자가 실측인가 추정인가를 어떻게 표시하는가 |
 | [domain-axis.md](domain-axis.md) | **도메인이 바뀌면 이 문서를 다시 읽어야 하는가** |
 | [review-policy.md](review-policy.md) | draft를 stable로 올리려면 무엇이 필요한가 |
 | [migration.md](migration.md) | 이관 계획과 기준 |
 | [migration-scope/index.md](migration-scope/index.md) | **파일별 판정 목록.** 이관 대상 199건 · 사람 판정 60건 |
-| [type-verification/](type-verification/index.md) | 분류 체계가 실제로 판별 가능한가 (검증 4회) |
+| [type-verification/](type-verification/index.md) | 분류 체계가 실제로 판별 가능한가 (검증 **9회** — round-1 ~ round-9. `[정정 2026-09-10]` 4회로 적혀 있었다) |
 
 ## 이 표준의 세 원칙
 

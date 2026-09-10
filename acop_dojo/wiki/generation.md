@@ -40,7 +40,7 @@ automation:
 | 항목 | 왜 |
 |---|---|
 | 대상 revision | `git:04f6634` — 어느 코드에 대한 결과인지 |
-| 기준선 | `486 passed, 4 deselected, 1 xfailed` — 비교 대상 |
+| 기준선 | `[실측 2026-09-10]` 현재 카탈로그(`acop_dojo/defects/catalog.json`)는 **`711 passed, 4 deselected`** 다 — 비교 대상. `[정정]` `486 passed, 4 deselected, 1 xfailed` 로 적혀 있었다 — cs 테스트가 그 뒤 늘었다 |
 | 방법 | 최소 변경을 사본에 적용하고 전체 테스트 |
 | **분모에서 뺀 것과 이유** | 안 밝히면 0이 무엇에 대한 0인지 모른다 |
 | **이 숫자가 아닌 것** | "커버리지가 아니다"를 명시 |

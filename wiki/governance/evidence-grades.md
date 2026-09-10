@@ -188,7 +188,7 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 ### 검사기가 못 잡는다
 
-`[실측]` `check_wiki.py` 의 코드 경로 검사는 `os.path.exists` 만 본다 — **git 추적 여부를 안 본다.** 그래서 미추적 구현도 「존재」로 통과한다. 그리고 **「N파일」 같은 수치 단정은 아예 검사 대상이 아니다**(실제로 `travel_ops 7파일` 이라 적었는데 9파일이었다).
+`[실측 2026-09-10]` **고쳤다.** `check_wiki.py` 가 이제 **저장소별로 `git ls-files` 를 세어** 「디스크엔 있고 git 이 모르는 파일」을 따로 집계한다(`final_project_sample` 은 별도 저장소라 따로 센다). 아래는 고치기 전 서술이다 — 코드 경로 검사는 `os.path.exists` 만 본다 — **git 추적 여부를 안 본다.** 그래서 미추적 구현도 「존재」로 통과한다. 그리고 **「N파일」 같은 수치 단정은 아예 검사 대상이 아니다**(실제로 `travel_ops 7파일` 이라 적었는데 9파일이었다).
 
 `[미확보]` 수치 단정을 기계로 검사하는 방법을 안 정했다.
 

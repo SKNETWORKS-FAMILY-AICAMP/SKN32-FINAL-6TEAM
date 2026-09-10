@@ -1,7 +1,7 @@
 ---
 type: policy
 title: type 고르는 법
-description: type 11개의 정의와 판정 규칙. 고르기 전에 문서를 쪼갤지 먼저 묻는다
+description: type 12개의 정의와 판정 규칙. 고르기 전에 문서를 쪼갤지 먼저 묻는다
 status: draft
 tags: [governance, documentation]
 domain: neutral
@@ -13,7 +13,7 @@ domain: neutral
 
 ## 목록
 
-**10개다.** 8개로 시작했다가 [표본 검증](type-verification/index.md)에서 애매 비율 25%가 나와 2개를 추가했다.
+`[실측 2026-09-10]` **지금 12개다**(`check_wiki.py` `TYPES`). 아래는 늘어난 경위다 — 한때 **10개였다.** 8개로 시작했다가 [표본 검증](type-verification/index.md)에서 애매 비율 25%가 나와 2개를 추가했다.
 
 | type | 용도 | 예 |
 |---|---|---|
