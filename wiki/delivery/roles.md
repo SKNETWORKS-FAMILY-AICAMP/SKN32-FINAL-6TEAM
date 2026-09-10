@@ -54,9 +54,12 @@ Team은 Registry 등록형이라 개수가 늘 수 있다.
 
 | 축 | 성격 |
 |---|---|
-| VOC & Store Manager · Response Generation & Review | **CS Pack 고정 축** |
-| Procurement + Order & Payment · Fulfillment & Logistics | 검증 쇼핑몰 연계 축. 진행 범위에 따라 배치가 달라진다 |
-| Catalog & Verification | A2A Remote |
+| ~~VOC & Store Manager · Response Generation & Review~~ | ~~CS Pack 고정 축~~ — ★`[2026-09-10]` 커머스 Team 이라 코드에서 제거됐다(작업 트리, 커밋 전) |
+| ~~Procurement + Order & Payment · Fulfillment & Logistics~~ | ~~검증 쇼핑몰 연계 축~~ — 같은 이유로 제거 |
+| ~~Catalog & Verification~~ | ~~A2A Remote~~ — 자리를 Place Verification 이 물려받았다 |
+| **Activity · Booking Handoff** | **여행 MVP 필수 축**(v11 §5) |
+| Dining · Mobility | 4·5주차 (v11 §9-B `[추정]`) |
+| Place Verification | A2A Remote — 원격은 있고 등록은 0건 |
 
 **6명 팀 전체가 이 네 축에 고정되는 것은 아니다.**
 

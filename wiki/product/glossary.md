@@ -36,7 +36,7 @@ Case의 **공식 상태**. 버전을 가지며 모든 갱신은 CAS를 거친다
 
 **Team이 하지 않는 것 셋.**
 - side effect를 실행하지 않는다 (`ActionProposal`만 반환)
-- read Tool을 직접 호출하지 않는다 (Context Broker가 넣어준다)
+- read Tool을 직접 호출하지 않는다 (Context Broker가 넣어준다) — ★`[실측 2026-09-10 작업 트리]` 여행 코드는 `_read()` 로 직접 부른다(허용·예산은 `ReadToolbox.call()` 이 강제). 원칙과 코드가 갈라져 있다 → [`cs/teams/team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) §2
 - 다른 Team을 직접 호출하지 않는다 (Controller가 Task로 변환)
 
 → [`team-contract.md`](../../final_project_cs/wiki/teams/team-contract/index.md)

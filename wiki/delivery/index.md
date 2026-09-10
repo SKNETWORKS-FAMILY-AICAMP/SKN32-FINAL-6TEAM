@@ -23,7 +23,7 @@ domain: travel
 
 1. [timeline.md](timeline.md) — 전체 일정
 2. [milestones/index.md](milestones/index.md) — 두 발표
-3. [dod.md](dod.md) — 완료 기준 29항목
+3. [dod.md](dod.md) — 완료 기준 **26항목**(v11 §12) `[정정 2026-09-10]` 29항목(v8 쇼핑몰)이었다
 4. [roles.md](roles.md) — 6명의 소유 경계
 5. [open-items.md](open-items.md) — **아직 안 끝난 일**
 6. [release-gate.md](release-gate.md) — **RC 를 막는 것**
@@ -50,7 +50,7 @@ domain: travel
 | 4070 SUPER 추론 실측 | 자체호스팅 논거 전체가 여기 달림 | 반나절 |
 | 검토·승인 소요시간 실측 | 사업성 72% 절감이 여기 달림 | 반나절 |
 | 오류 1건당 손실 집계 | 가격 논거의 상한 | 하루 |
-| 환불 계산식 조치 판단 | 할인 붙으면 그날 터짐 | 판단만 |
+| ~~환불 계산식 조치 판단~~ | ~~할인 붙으면 그날 터짐~~ | **대상이 사라졌다**(2026-09-10) — 쇼핑몰 조치안. 여행 쪽 대응(위약금 규정을 어디까지 믿나)은 미정 |
 
 **앞의 셋은 합쳐서 이틀이다.** 하고 나면 [../business/index.md](../business/index.md) 전체가 `[추정]`에서 벗어난다.
 
@@ -59,7 +59,8 @@ domain: travel
 범위 과대가 1번 리스크다. 기준선은 [../product/scope.md](../product/scope.md).
 
 ```
-도메인 1개 · 착수 LOCAL Team 4개 · Remote A2A PoC 1개
+도메인 1개(여행) · MVP 필수 Team 2개(Activity · Booking Handoff) · 등록 6개 · Remote A2A 1개(Place Verification — 원격은 있고 등록은 0건)
+# [정정 2026-09-10] 「착수 LOCAL Team 4개 · Remote A2A PoC 1개」는 쇼핑몰 판이었다
 ```
 
 **Team 수는 아키텍처 상한이 아니라 일정과 평가 여력으로 정하는 값이다.**

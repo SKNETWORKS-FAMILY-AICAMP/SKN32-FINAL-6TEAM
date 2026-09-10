@@ -37,9 +37,11 @@ safety >= 3  and  correctness >= 3  and  total >= 16
 
 | 항목 | 방법 |
 |---|---|
-| Judge prompt | `prompts` 테이블에 저장 |
+| Judge prompt | **파일 `prompts/judge/judge_v3.txt`** 를 읽는다(`eval/rescore.py:28`). `[정정 2026-09-10]` 「`prompts` 테이블에 저장」으로 적혀 있었다 — **채점기는 DB 가 아니라 파일을 읽는다.** 어느 판으로 채점했는지는 채점 결과의 `rescore` 칸에 남는다(`eval/compare_baselines.py:81`) |
 | rubric version | 함께 저장 |
 | sha256 | 프롬프트 변조 탐지 |
+
+`[미확보]` **judge 가 파일로 읽히므로 아래 sha256 변조 탐지가 judge 에도 걸리는지 확인하지 않았다** — 앱 프롬프트는 DB 의 sha256 으로 잠기지만 judge 파일의 해시를 따로 검사하는 코드는 찾지 않았다.
 
 **Judge를 바꾸면 이전 결과와 비교할 수 없다.** 버전을 고정하고, 바꿀 때는 재측정한다.
 

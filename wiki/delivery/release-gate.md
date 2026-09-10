@@ -18,7 +18,7 @@ domain: neutral
 
 | | 뜻 | 지금 |
 |---|---|---|
-| **기능 게이트** | DoD 항목이 통과하는가 | 통과 24 · 부분통과 4 |
+| **기능 게이트** | DoD 항목이 통과하는가 | 통과 24 · 부분통과 4 — ★**v8 쇼핑몰 29항목 기준 값이다.** v11 26항목의 달성 현황은 `[미확보]` — `scripts/verify_dod.py` 가 아직 v8 을 센다 |
 | **RC 선언** | 내보내도 되는가 | **아니다** |
 
 **둘을 섞으면 안 된다.** 기능이 다 돌아도 내보낼 수 없는 상태가 있다.
@@ -94,7 +94,7 @@ golden 20건을 사람이 rubric 대로 채점
 
 ## 관계
 
-- [dod.md](dod.md) — 완료 기준 29항목
+- [dod.md](dod.md) — 완료 기준 **26항목**(v11)
 - [open-items.md](open-items.md) — 열린 항목
 - [../evaluation/judge.md](../evaluation/judge.md) — judge 루브릭
 - [../evaluation/protocol.md](../evaluation/protocol.md) — 평가 한계

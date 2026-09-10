@@ -1,7 +1,7 @@
 ---
 type: decision
 title: 가격안
-description: 좌석당·건당·연간 라이선스 3안 비교. 아직 결정하지 않았다
+description: 커머스 판의 좌석당·건당·연간 라이선스 3안 비교. 여행 판 가격은 pricing-travel.md 에서 팀당 49,000원으로 정했다
 status: draft
 tags: [cost]
 owners: [human:미배정]
