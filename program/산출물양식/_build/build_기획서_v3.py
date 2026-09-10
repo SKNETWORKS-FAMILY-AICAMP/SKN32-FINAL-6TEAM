@@ -184,7 +184,7 @@ for s in SECTIONS:
 
 # ── 양식 채우기 ─────────────────────────────────────────────────────
 d = Doc(TEMPLATE, os.path.join(HERE, "_tmp_plan_v3"))
-d.replace_text("SK 네트웍스 Family AI 00기 : _____팀", "SK 네트웍스 Family AI 32기 : 6팀 A-COP")
+d.replace_text("SK 네트웍스 Family AI 00기 : _____팀", "SK 네트웍스 Family AI 32기: 6팀")
 d.replace_text("2026. 4. 18. ", "2026. 9. 10.")
 d.replace_text("000", "김지혜, 서유현, 송채영, 정세환, 최상욱, 최연우")
 for s in SECTIONS:
