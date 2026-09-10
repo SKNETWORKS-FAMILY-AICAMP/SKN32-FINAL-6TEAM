@@ -59,8 +59,9 @@ domain: travel
 범위 과대가 1번 리스크다. 기준선은 [../product/scope.md](../product/scope.md).
 
 ```
-도메인 1개(여행) · MVP 필수 Team 2개(Activity · Booking Handoff) · 등록 6개 · Remote A2A 1개(Place Verification — 원격은 있고 등록은 0건)
+도메인 1개(여행) · MVP Team 3개(Activity · Dining · Mobility) · 등록 6개 · Remote A2A 1개(Place Verification — 원격은 있고 등록은 0건)
 # [정정 2026-09-10] 「착수 LOCAL Team 4개 · Remote A2A PoC 1개」는 쇼핑몰 판이었다
+# [결정 2026-09-10] Booking Handoff 는 MVP 에서 뺐다 — 09-08 승격을 뒤집음
 ```
 
 **Team 수는 아키텍처 상한이 아니라 일정과 평가 여력으로 정하는 값이다.**

@@ -12,7 +12,7 @@ domain: travel
 
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
-근거는 계획서 v11 §5. **MVP 필수는 아니다** — Activity·Booking Handoff 다음이다(v11 §9-B, 4주차).
+근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 일정은 v11 §9-B 4주차.
 
 `[실측]` **뼈대로 쓸 쇼핑몰 Team 이 없다.** Activity 는 `return_refund`, Mobility 는 `fulfillment_logistics` 를 베끼는데 이 Team 은 **신규**다(`A-COP_여행Team모듈_구성안.md`).
 

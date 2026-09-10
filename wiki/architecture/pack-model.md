@@ -34,10 +34,10 @@ domain: travel
                         │
         ┌───────────────┴───────────────┐
    여행 도메인 Pack                 (다음 도메인)
-   Activity        MVP 필수          갈아 끼우는 자리
-   Booking Handoff MVP 필수
-   Dining          4주차
-   Mobility        5주차
+   Activity        MVP               갈아 끼우는 자리
+   Dining          MVP (4주차)
+   Mobility        MVP (5주차)
+   Booking Handoff MVP 다음
    Lodging/Flight  등록만
 ```
 
@@ -123,7 +123,7 @@ domain: travel
 | | |
 |---|---|
 | **기능상 필요** | Activity · Dining · Mobility · Booking Handoff · Lodging/Flight … |
-| **착수** | **Activity · Booking Handoff 둘** (v11 §9-B). 나머지는 4·5주차 |
+| **착수 (MVP)** | **Activity · Dining · Mobility 셋** — Dining 4주차 · Mobility 5주차 (v11 §9-B). Booking Handoff 는 MVP 다음 |
 
 **몇 개를 만들 것인가는 아키텍처 제약이 아니라 일정 문제다.**
 
@@ -190,10 +190,10 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 
 | 순서 | Team | 근거 |
 |---|---|---|
-| **MVP 필수** | **Activity** | 취소·변경 규정이 문서로 존재해 판정 규칙을 바로 쓴다. 예약금이 걸려 실패 비용이 크다 |
-| **MVP 필수** | **Booking Handoff** | 우리 일정을 고쳐도 업체 예약을 못 바꾸면 고객이 직접 처리한다 (팀 결정 2026-09-08) |
-| 4주차 | Dining | |
-| 5주차 | Mobility | 선제 조정 루프와 함께 |
+| **MVP** | **Activity** | 취소·변경 규정이 문서로 존재해 판정 규칙을 바로 쓴다. 예약금이 걸려 실패 비용이 크다 |
+| **MVP** (4주차) | **Dining** | |
+| **MVP** (5주차) | **Mobility** | 선제 조정 루프와 함께 |
+| MVP 다음 | Booking Handoff | 우리 일정을 고쳐도 업체 예약을 못 바꾸면 고객이 직접 처리한다. `[결정 2026-09-10]` MVP 에서 뺐다 — 09-08 승격을 뒤집음 |
 | 등록만 | Lodging / Flight | 잠긴 예약으로만 취급한다 |
 
 **6명 팀 전체가 이 구성으로 고정된다는 뜻은 아니다.**

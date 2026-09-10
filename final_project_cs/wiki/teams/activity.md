@@ -1,7 +1,7 @@
 ---
 type: plan
 title: Activity Team
-description: 여행지에서 하는 활동 전반(관람·체험·레저) — 정보를 제공하고 일정에서 성립하는지 판정한다. 깨지면 대체 후보를 낸다. MVP 필수 둘 중 하나
+description: 여행지에서 하는 활동 전반(관람·체험·레저) — 정보를 제공하고 일정에서 성립하는지 판정한다. 깨지면 대체 후보를 낸다. MVP 셋(Activity·Dining·Mobility) 중 하나
 status: draft
 tags: [agent, customer-operations]
 owners: [human:미배정]

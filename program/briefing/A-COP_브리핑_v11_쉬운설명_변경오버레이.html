@@ -1057,7 +1057,7 @@ v11 §12 표의 번호 행을 세면 <strong>26</strong>이고(1~26), 갈래는 
 <strong>23·24·25·26 행이 실제로 있다</strong>(<code>[실측 2026-09-10 오후]</code>).
 <code>[정정]</code> 이 자리에 한때 <strong>「표는 22행」</strong>이라고 적혀 있었다. <strong>그건 이날 오전의 v11 을 센 값</strong>이고, 그 뒤 기준선에 <strong>23~26 이 더해졌다.</strong> 판올림 중인 문서를 세면 이렇게 어긋나므로, <strong>숫자를 적을 때는 센 시각을 같이 적는다</strong>.</p>
 </section>
-<section class="section" style="background:#f0fdfa;border:1px solid #5eead4"><h2 style="margin-top:0">이 문서를 읽는 법 — v8 에서 무엇이 바뀌었나</h2><p class="lead"><strong>이 판은 v8 브리핑을 고쳐 만들었습니다.</strong> 그림과 구조 설명은 <strong>그대로 살렸습니다</strong> — 도메인이 바뀌어도 <strong>속(코어)은 안 바뀌기</strong> 때문입니다.</p><p>쉽게 말하면 <strong>가게를 바꾼 게 아니라 파는 물건을 바꿨습니다.</strong> 계산대·영수증·환불 규칙(코어)은 그대로 두고 진열대(Team)만 갈아 끼웠습니다. <strong>그게 이 구조가 애초에 주장하던 것</strong>이고, 이번 교체가 그 실증입니다.</p><div class="table-wrap"><table><thead><tr><th>무엇</th><th>v8</th><th>v11</th></tr></thead><tbody><tr><td>도메인</td><td>커머스 CS (주문·배송·반품)</td><td><strong>여행 CS</strong> (일정 검증·변화 감지·선제 조정)</td></tr><tr><td>Team (v8) Return &amp; Refund · Fulfillment · Procurement · Catalog · VOC · Response Review</td><td><strong>Activity · Booking Handoff</strong>(MVP 필수) · Dining · Mobility · Lodging/Flight(등록만)</td></tr><tr><td>Case 를 누가 만드나</td><td>고객 문의</td><td>고객 문의 <strong>+ 감시 sweeper</strong>(안 물어도 먼저 찾아낸다)</td></tr><tr><td>DoD</td><td>29항목</td><td><strong>26항목</strong></td></tr><tr><td>기간</td><td>10주</td><td><strong>6주 4일</strong> · 최종발표 2026-10-26</td></tr></tbody></table></div><p class="small">아래 본문에서 <strong>여행 어휘로 바뀐 곳</strong>이 이 표의 내용입니다. 아키텍처 그림·폴더 구조·코어 규칙은 v8 그대로입니다.</p></section>
+<section class="section" style="background:#f0fdfa;border:1px solid #5eead4"><h2 style="margin-top:0">이 문서를 읽는 법 — v8 에서 무엇이 바뀌었나</h2><p class="lead"><strong>이 판은 v8 브리핑을 고쳐 만들었습니다.</strong> 그림과 구조 설명은 <strong>그대로 살렸습니다</strong> — 도메인이 바뀌어도 <strong>속(코어)은 안 바뀌기</strong> 때문입니다.</p><p>쉽게 말하면 <strong>가게를 바꾼 게 아니라 파는 물건을 바꿨습니다.</strong> 계산대·영수증·환불 규칙(코어)은 그대로 두고 진열대(Team)만 갈아 끼웠습니다. <strong>그게 이 구조가 애초에 주장하던 것</strong>이고, 이번 교체가 그 실증입니다.</p><div class="table-wrap"><table><thead><tr><th>무엇</th><th>v8</th><th>v11</th></tr></thead><tbody><tr><td>도메인</td><td>커머스 CS (주문·배송·반품)</td><td><strong>여행 CS</strong> (일정 검증·변화 감지·선제 조정)</td></tr><tr><td>Team (v8) Return &amp; Refund · Fulfillment · Procurement · Catalog · VOC · Response Review</td><td><strong>Activity · Dining · Mobility</strong>(MVP) · Booking Handoff(MVP 다음) · Lodging/Flight(등록만)</td></tr><tr><td>Case 를 누가 만드나</td><td>고객 문의</td><td>고객 문의 <strong>+ 감시 sweeper</strong>(안 물어도 먼저 찾아낸다)</td></tr><tr><td>DoD</td><td>29항목</td><td><strong>26항목</strong></td></tr><tr><td>기간</td><td>10주</td><td><strong>6주 4일</strong> · 최종발표 2026-10-26</td></tr></tbody></table></div><p class="small">아래 본문에서 <strong>여행 어휘로 바뀐 곳</strong>이 이 표의 내용입니다. 아키텍처 그림·폴더 구조·코어 규칙은 v8 그대로입니다.</p></section>
     <section class="section">
       <div class="acop-callout" style="font-size: 1.15em">
         <strong
@@ -1105,14 +1105,14 @@ Case · Controller · Registry · Port 3종 · 승인 경계 · 감사 · 평가
                          │
             ┌────────────┴────────────┐
       여행 도메인 팩              (다음 도메인 팩)
-   Activity · Booking Handoff      교체 가능
-   Dining · Mobility               Core 는 안 바뀐다
+   Activity · Dining · Mobility    교체 가능
+   Booking Handoff (MVP 다음)      Core 는 안 바뀐다
    Lodging/Flight (등록만)
-   (MVP 필수는 Activity·Booking Handoff 둘)</div></div>
+   (MVP 는 Activity·Dining·Mobility 셋)</div></div>
       <p class="small"><strong>도메인 지식이 필요하면 팩, 도메인과 무관하면 Core.</strong></p>
       <div class="acop-note">
         💬 쉬운 설명: 도메인 팩은 하나의 공통 엔진 위에 업무 묶음을 갈아끼우는 구조입니다. 이번 버전에서는
-        <strong>Activity</strong>(여행지에서 하는 활동)와 <strong>Booking Handoff</strong>(업체 예약 인계)가 MVP 필수입니다. <strong>Dining</strong>은 식당의 영업시간·휴무·동행 조건을, <strong>Mobility</strong>는 이동 시간·환승·막차를 봅니다 — 둘은 일정에 넣되 절삭할 수 있습니다. <strong>Lodging / Flight</strong>는 등록만 하고 <strong>잠긴 예약</strong>으로 취급합니다. 공통 기능은 Runtime에 두고 업무별 기능만 팩에 담습니다.
+        <strong>Activity</strong>(여행지에서 하는 활동)·<strong>Dining</strong>(식당)·<strong>Mobility</strong>(이동) 셋이 MVP입니다(2026-09-10 결정). <strong>Dining</strong>은 식당의 영업시간·휴무·동행 조건을, <strong>Mobility</strong>는 이동 시간·환승·막차를 봅니다. <strong>Booking Handoff</strong>(업체 예약 인계)는 MVP 다음 단계입니다. <strong>Lodging / Flight</strong>는 등록만 하고 <strong>잠긴 예약</strong>으로 취급합니다. 공통 기능은 Runtime에 두고 업무별 기능만 팩에 담습니다.
       </div>
     </section>
     <section class="section">
@@ -1259,7 +1259,7 @@ Case · Controller · Registry · Port 3종 · 승인 경계 · 감사 · 평가
               <li>고객 피드백을 단순 답변용 입력이 아니라 <strong>Customer Case</strong>로 관리</li>
               <li>
                 <strong>업무 책임 단위 Team 모듈</strong> 구성. v11 §5 가 여섯을 정했다 —
-                <strong>Activity · Booking Handoff</strong>(MVP 필수) · Dining · Mobility · Lodging/Flight(등록만)
+                <strong>Activity · Dining · Mobility</strong>(MVP) · Booking Handoff(MVP 다음) · Lodging/Flight(등록만) <code>[결정 2026-09-10]</code>
               </li>
               <li>RAG, Memory, Shared State를 통해 Agent 협업</li>
             </ul>
@@ -1525,13 +1525,13 @@ Case · Controller · Registry · Port 3종 · 승인 경계 · 감사 · 평가
               </div>
               <div style="padding: 14px">
                 <div class="acop-team-grid">
-                  <div class="acop-team">Dining · Mobility<small>Message Broker → Team Slot</small></div>
+                  <div class="acop-team">Activity · Dining · Mobility<small>여행 도메인 팩 · MVP</small></div>
                   <div class="acop-team">Lodging / Flight<small>등록만 · 잠긴 예약</small></div>
-                  <div class="acop-team">Activity · Booking Handoff<small>여행 도메인 팩 · MVP 필수</small></div>
+                  <div class="acop-team">Booking Handoff<small>Message Broker → Team Slot · MVP 다음</small></div>
                 </div>
                 <p class="small" style="margin: 10px 0 0">
-                  Activity 와 Booking Handoff 가 MVP 필수다. Dining · Mobility 가 그다음 축이고
-                  Lodging / Flight 는 등록만 한다(잠긴 예약으로 취급). <strong>Place Verification 은 v11 §5 팀 목록에 없다</strong> —
+                  MVP 는 Activity · Dining · Mobility 셋이다(<code>[결정 2026-09-10]</code> — 09-08 의 「Booking Handoff 를 MVP 필수로 승격」을 뒤집었다).
+                  Booking Handoff 는 MVP 다음 단계이고 Lodging / Flight 는 등록만 한다(잠긴 예약으로 취급). <strong>Place Verification 은 v11 §5 팀 목록에 없다</strong> —
                   <code>[정정 2026-09-10]</code> 후보였다가 채택되지 않았다.
                 </p>
               </div>
@@ -2747,10 +2747,9 @@ END / Retry / Replan</div>
           </div>
           <div class="card">
             <h3>Team 모듈s</h3>
-            <span class="pill">Dining</span>
-            <span class="pill">Lodging / Flight</span>
-            <span class="pill">Activity</span>
-            <span class="pill">Booking Handoff · Mobility</span>
+            <span class="pill">Activity · Dining · Mobility (MVP)</span>
+            <span class="pill">Lodging / Flight (등록만)</span>
+            <span class="pill">Booking Handoff (MVP 다음)</span>
             <span class="pill">Own Subgraph</span>
             <span class="pill">Own RAG/Memory Policy</span>
             <span class="pill">Own Tools</span>
@@ -3734,14 +3733,14 @@ TeamResult</div>
               <li>Graph PoC가 일정에 부담이면 Port/Schema와 평가 데이터만 남긴다.</li>
             </ul>
             <p class="small">
-              버리는 순서: ① Graph 외부 Adapter 비교 ② A2A Remote 확장 시나리오 ③ MCP tool 추가와 Dining·Mobility 확장 ④ 화면 장식과 추가 Team. Activity·Booking Handoff, 운영 UI, 평가 harness는 지킨다.
+              버리는 순서: ① Graph 외부 Adapter 비교 ② A2A Remote 확장 시나리오 ③ MCP tool 추가와 Booking Handoff ④ 화면 장식과 추가 Team. Activity·Dining·Mobility, 운영 UI, 평가 harness는 지킨다.
             </p>
           </div>
         </div>
         <div class="acop-note">
           💬 쉬운 설명: 대략적인 주차별 계획과, 시간이 부족해질 때 "무엇부터 포기할지"를 미리 정해둔
           것입니다. 가장 먼저 포기하는 건 그래프 비교 실험이고, 그다음은 외부 AI 협업(A2A) 시범,
-          그다음은 개인 AI 연동 기능 일부입니다. 반대로 끝까지 절대 포기하지 않는 건 최소 2개 팀의
+          그다음은 개인 AI 연동 기능 일부입니다. 반대로 끝까지 절대 포기하지 않는 건 MVP 3개 팀(Activity·Dining·Mobility)의
           실제 협업과, "자동화가 얼마나 잘 되는지 정직하게 측정하는 평가 체계"입니다.
         </div>
         <h3>6주 4일 우선순위 3개</h3>
@@ -3853,8 +3852,8 @@ TeamResult</div>
         <h3>11-2. Team 모듈 개발</h3>
         <div class="role-card agent">
           <p>
-            확정된 여행 Team <strong>여섯</strong>에 3명을 유동 배치한다 — Activity·Booking Handoff 가 MVP 필수,
-            Dining·Mobility 는 절삭 가능, Lodging·Flight 는 등록만 한다(v11 §5).
+            확정된 여행 Team <strong>여섯</strong>에 3명을 유동 배치한다 — Activity·Dining·Mobility 셋이 MVP,
+            Booking Handoff 는 MVP 다음 단계, Lodging·Flight 는 등록만 한다(<code>[결정 2026-09-10]</code>).
           </p>
           <ul>
             <li>Team 내부 Agent / Subgraph 구조</li>
@@ -3866,7 +3865,7 @@ TeamResult</div>
             <li>PoC 대상 Team 1개는 독립 프로세스로 배포하고 A2A Remote Team으로 연결 가능</li>
           </ul>
           <div class="boundary-note">
-            예: 지금은 여행 Team 여섯 중 <strong>MVP 필수 둘(Activity·Booking Handoff)</strong>에 사람을 모은다.
+            예: 지금은 여행 Team 여섯 중 <strong>MVP 셋(Activity·Dining·Mobility)</strong>에 사람을 모은다.
             내부 경합은 해당 Team이 책임하고, Team 간
             경합은 Core 1이 책임한다.
           </div>

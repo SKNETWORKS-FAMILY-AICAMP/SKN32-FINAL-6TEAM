@@ -63,7 +63,7 @@
 
 <h2><span class="n">01</span>한 장 요약</h2>
 <p>여행 객체별 여섯 팀이 <code>project.yaml:18~42</code>에 활성 등록돼 있다. 버스는 선택된 팀에 작업을 보내며 팀 간 재라우팅은 8장 참조. Activity는 여행지에서 하는 활동 그 자체로, 관광공사 분류 A01 자연 · A02 인문 · A03 레포츠 · A04 쇼핑을 포함하며 예약 유무·실내 여부·레저 여부로 좁히지 않는다(v11 §5). 범위 정본은 v11 §5와 <code>final_project_cs/wiki/teams/activity.md</code>다. 코드 주석은 레저와 경복궁 관람을 예로 들며(<code>activity.py:4~5</code>), 현재 판정은 예약과 시각을 요구한다(<code>activity.py:76~83</code>).</p>
-<p><span class="st st-doc">문서 기재</span> MVP 필수 Team은 Activity·Booking Handoff이고 Lodging/Flight는 등록만 한다(v11 §5). 대상 도시는 서울이며, 에이전트 API는 한국어로 내고 에이전트가 옮긴다. 여행계획서 링크·알림은 보낼 때 고객 언어로 생성한다(v11 §1).</p>
+<p><span class="st st-doc">문서 기재</span> MVP Team은 Activity·Dining·Mobility이고 Booking Handoff는 MVP 다음 단계, Lodging/Flight는 등록만 한다(v11 §5). 대상 도시는 서울이며, 에이전트 API는 한국어로 내고 에이전트가 옮긴다. 여행계획서 링크·알림은 보낼 때 고객 언어로 생성한다(v11 §1).</p>
 <p><span class="st st-ok">코드 확인</span> 입구는 <code>POST /v1/cases</code>다(<code>cases.py:102</code>). Case 생성 → CREATED 이벤트 → 생성 트랜잭션 밖에서 분류 → Controller가 있고 상태가 <code>routing</code>이면 응답 뒤 백그라운드 실행 순서다(<code>cases.py:135~137</code> · <code>cases.py:157</code> · <code>cases.py:160~166</code>).</p>
 <div class="diagram">
 <svg viewBox="0 0 1216 704" role="img" aria-labelledby="v2-main-title v2-main-desc" xmlns="http://www.w3.org/2000/svg">

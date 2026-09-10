@@ -54,8 +54,8 @@ domain: travel
                         │
         ┌───────────────┴───────────────┐
    여행 도메인 Pack                 (다음 도메인)
-   Activity · Booking Handoff       갈아 끼우는 자리
-   Dining · Mobility
+   Activity · Dining · Mobility     갈아 끼우는 자리
+   Booking Handoff (MVP 다음)
    Lodging/Flight (등록만)
 ```
 

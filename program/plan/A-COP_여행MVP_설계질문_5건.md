@@ -222,6 +222,7 @@ trip_watch_sweeper  →  변화 감지  →  Case  →  재계획·재검증
 이유 셋. **v10 이 MVP 필수로 고른 Team 둘을 한 번에 보여준다**(Activity ·
 Booking Handoff). **감시 소스가 기상청이라 변화를 만들어 내기 쉽다.**
 그리고 **승인 경계가 자연스럽게 등장한다.**
+`[결정 2026-09-10]` 이후 MVP Team 은 Activity·Dining·Mobility 셋이고 Booking Handoff 는 MVP 다음 단계다 — 아래 7번은 MVP 밖이다.
 
 ```
 1  일정 등록      한강 수상 액티비티 14:00 · 근처 식당 17:00 · 이동 30분
@@ -230,7 +231,7 @@ Booking Handoff). **감시 소스가 기상청이라 변화를 만들어 내기 
 4  Case 생성      "사건 신고" 로 분류 (v10 §5-A 라벨)
 5  Team 판정      Activity — 우천 취소 규정 적용, 대체 후보 생성
 6  재검증         대체안이 시간·예산·이동을 다시 통과해야 통지된다
-7  인계           Booking Handoff — 예약 변경 링크 + 차액 정리
+7  인계           Booking Handoff — 예약 변경 링크 + 차액 정리 (MVP 다음 단계)
 8  통지·거부      고객이 거부하면 이전 일정 버전으로 되돌린다
 ```
 

@@ -12,7 +12,7 @@ domain: travel
 
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
-근거는 계획서 v11 §5. **MVP 필수는 아니다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
+근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
 
 `[실측]` 뼈대는 쇼핑몰 `fulfillment_logistics` 에서 가져온다 — 구간·경로 판정이 구조가 같다. 그 Team 이 이미 `business_subject` 를 옳게 쓰는 유일한 Team 이기도 하다(아래).
 

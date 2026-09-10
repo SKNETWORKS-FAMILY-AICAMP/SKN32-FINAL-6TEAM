@@ -39,9 +39,9 @@ domain: travel
 | Team | MVP | 무엇을 판정하나 | 재계획 |
 |---|---|---|---|
 | [activity.md](activity.md) | **필수** | 예약 시간·운영일·인원·날씨 조건·취소/환급 규정 | 같은 시간대 대체 · 날짜 이동 · 환급 안내 |
-| [booking-handoff.md](booking-handoff.md) | **필수** | 승인이 필요한 건 특정, 대안·차액 정리 | 변경 링크. **자동 실행은 `tier=='simulated'` 한정** |
-| [dining.md](dining.md) | 4주차 | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 인접 대안 · 식사 시간 이동 |
-| [mobility.md](mobility.md) | 5주차 | 구간 이동 시간·환승·막차·여유 | 경로·순서 재배열 |
+| [booking-handoff.md](booking-handoff.md) | **MVP 다음** `[결정 2026-09-10]` | 승인이 필요한 건 특정, 대안·차액 정리 | 변경 링크. **자동 실행은 `tier=='simulated'` 한정** |
+| [dining.md](dining.md) | **필수** · 4주차 | 영업시간·휴무·예약 여부·동행 조건(아이·할랄·채식) | 인접 대안 · 식사 시간 이동 |
+| [mobility.md](mobility.md) | **필수** · 5주차 | 구간 이동 시간·환승·막차·여유 | 경로·순서 재배열 |
 | Lodging / Flight | 등록만 | 잠긴 예약으로만 취급한다 | — |
 | Place Verification | **원격이 생겼다. 등록은 0건** | 장소 존재·운영 정보를 외부 원장과 대조. **A2A Remote** | `[실측 2026-09-10]` 아래 |
 

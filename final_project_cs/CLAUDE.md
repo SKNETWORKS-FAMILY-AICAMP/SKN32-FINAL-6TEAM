@@ -16,7 +16,7 @@ AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가
 
 | | v9 (쇼핑몰) | **v10 (여행)** |
 |---|---|---|
-| Team | `return_refund` · `fulfillment_logistics` · `procurement_order_payment` · `catalog_verification` · `voc_store_manager` · `response_review` | **Activity · Dining · Mobility · Booking Handoff** · Lodging/Flight(등록만). MVP 필수는 Activity·Booking Handoff |
+| Team | `return_refund` · `fulfillment_logistics` · `procurement_order_payment` · `catalog_verification` · `voc_store_manager` · `response_review` | **Activity · Dining · Mobility · Booking Handoff** · Lodging/Flight(등록만). `[결정 2026-09-10]` MVP 는 Activity·Dining·Mobility 셋, Booking Handoff 는 MVP 다음 |
 | 코어 1 분류 라벨 | 주문·배송·반품·교환·기타 | **일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외** |
 | DoD | 29항목 | **26항목** |
 

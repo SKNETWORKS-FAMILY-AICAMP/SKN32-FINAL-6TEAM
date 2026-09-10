@@ -16,9 +16,9 @@ domain: travel
 | # | Team | 주차 | 왜 이 순서 |
 |---|---|---|---|
 | 1 | **Activity** | 2~3 | **취소·변경 규정이 문서로 존재한다.** 판정 규칙을 바로 쓸 수 있고 예약금이 걸려 실패 비용이 크다 |
-| 1 과 함께 | **Booking Handoff** | 2~3 | 감지해서 우리 일정을 고쳐도 **업체 예약을 못 바꾸면 고객이 결국 직접 처리한다** (팀 결정 2026-09-08) |
 | 2 | Dining | 4 | |
 | 3 | Mobility | 5 | **선제 조정 루프와 함께 붙는다** — 이 Team 의 재계획이 일정 순서 자체를 바꾸므로 루프가 있어야 의미가 있다 |
+| MVP 다음 | Booking Handoff | — | `[결정 2026-09-10]` MVP 에서 뺐다(09-08 에는 Activity 와 함께 가는 필수였다) |
 | 등록만 | Lodging / Flight | — | 잠긴 예약으로만 취급한다 |
 
 ### 왜 Activity 가 첫째인가
@@ -32,9 +32,11 @@ domain: travel
 
 다른 Team 은 이 둘 중 하나가 `[미확보]` 다 — Dining 은 임시휴무를 어디서 받는지 모르고, Mobility 는 운행 정보 출처가 미정이다.
 
-★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). 7주 배분이 추정이라 Dining·Mobility 는 절삭 가능해야 한다.
+★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). Dining·Mobility 도 MVP 다(`[결정 2026-09-10]`). 7주 배분이 추정이라 일정이 밀리면 둘을 뒤로 민다.
 
-### 왜 Booking Handoff 가 같이 가나
+### Booking Handoff 는 왜 필요한가 — MVP 다음
+
+`[결정 2026-09-10]` MVP 에서 뺐다. 아래는 이 Team 이 붙어야 하는 이유이고, 붙는 시점은 MVP 다음이다.
 
 **Activity 가 만들어 내는 결과의 절반이 업체 건이기 때문이다.** "10/03 골프를 10/04 로 옮기자"는 후보를 냈는데 그걸 넘길 곳이 없으면 감지가 제품이 되지 않는다.
 
@@ -111,6 +113,7 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 ## 관계
 
 - [index.md](index.md) — Team 영역
-- [activity.md](activity.md) · [booking-handoff.md](booking-handoff.md) — MVP 필수 둘
+- [activity.md](activity.md) · [dining.md](dining.md) · [mobility.md](mobility.md) — MVP 셋
+- [booking-handoff.md](booking-handoff.md) — MVP 다음
 - [common-utils.md](common-utils.md) — 공통 뼈대
 - [../../../wiki/delivery/open-items.md](../../../wiki/delivery/open-items.md) — 지금 막혀 있는 것

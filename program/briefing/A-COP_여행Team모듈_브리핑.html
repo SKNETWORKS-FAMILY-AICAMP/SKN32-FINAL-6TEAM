@@ -203,7 +203,7 @@
       <div class="stat"><b>5</b><span>뼈대 승계</span></div>
       <div class="stat"><b>1</b><span>신규 (Dining)</span></div>
       <div class="stat"><b>2</b><span>등록만</span></div>
-      <div class="stat"><b>2</b><span>MVP 필수</span></div>
+      <div class="stat"><b>3</b><span>MVP</span></div>
     </div>
 
     <p>처음에는 쇼핑몰 팀 셋(Procurement · Fulfillment · Catalog)을 버리는 것으로 봤다.
@@ -276,13 +276,13 @@
         반품 기한↔취소 기한, 반품 사유별 배송비 부담↔우천 취소 위약금율, 수량 초과↔인원 초과.</p>
       </div>
       <div class="card">
-        <h4>Booking Handoff <span class="pill pill--mvp">MVP</span></h4>
+        <h4>Booking Handoff <span class="pill pill--stub">MVP 다음</span></h4>
         <p class="from">← <code class="inl">procurement_order_payment</code> (366줄)</p>
         <p class="why">예약 생성·변경·취소·결제 상태의 자리가 같다.
         협약사 커넥터는 <strong>Mock</strong>으로 만든다.</p>
       </div>
       <div class="card">
-        <h4>Mobility</h4>
+        <h4>Mobility <span class="pill pill--mvp">MVP</span></h4>
         <p class="from">← <code class="inl">fulfillment_logistics</code> (163줄)</p>
         <p class="why"><strong>움직이는 것을 추적하고 예외를 잡는</strong> 구조가 같다.
         배송 지연 판정↔환승·막차 지연 판정, 미수령 조사↔경로 이탈.</p>
@@ -294,7 +294,7 @@
         A2A 원격 검증 자리도 그대로 쓸 수 있다.</p>
       </div>
       <div class="card">
-        <h4>Dining <span class="pill pill--new">신규</span></h4>
+        <h4>Dining <span class="pill pill--mvp">MVP</span> <span class="pill pill--new">신규</span></h4>
         <p class="from">대응하는 기존 팀 없음</p>
         <p class="why">영업시간·휴무·동행 조건(아이·할랄·채식)을 본다.
         쇼핑몰에 “영업시간”이라는 개념이 없어 새로 쓴다.</p>
@@ -364,8 +364,8 @@
   </div>
 
   <div class="section">
-    <h2><span class="num">4</span> MVP는 둘</h2>
-    <p class="lead">최종발표까지 7주. Activity와 Booking Handoff 둘만 필수다.</p>
+    <h2><span class="num">4</span> MVP는 셋</h2>
+    <p class="lead">최종발표까지 7주. MVP는 Activity · Dining · Mobility 셋이고, Booking Handoff는 MVP 다음 단계다 <code class="inl">[결정 2026-09-10]</code>.</p>
 
     <div class="tablewrap">
       <table>
@@ -377,21 +377,23 @@
             <td>취소·환급 규정이 <strong>문서로 존재</strong>해 판정 규칙을 바로 쓸 수 있다.
             예약금이 걸려 실패 비용이 크고, 시연에서 사건이 한눈에 보인다.</td>
           </tr>
+          <tr><td><strong>Dining</strong></td><td><span class="pill pill--mvp">MVP</span></td><td>변화가 잦아 시연 가치가 높다.</td></tr>
+          <tr><td><strong>Mobility</strong></td><td><span class="pill pill--mvp">MVP</span></td><td>앞의 둘이 바뀌면 늘 영향을 받는다.</td></tr>
           <tr>
             <td><strong>Booking Handoff</strong></td>
-            <td><span class="pill pill--mvp">MVP</span></td>
-            <td>계획서 v10의 <strong>“협약사 위임 실행”이 제품이 팔려는 것</strong>이다.
-            이게 없으면 “고객이 방해받지 않고 보고만 받는다”를 보여줄 수 없다.</td>
+            <td><span class="pill pill--stub">MVP 다음</span></td>
+            <td><code class="inl">[결정 2026-09-10]</code> MVP 다음 단계로 내렸다.
+            09-08 에는 계획서 v10의 “협약사 위임 실행”이 제품이 팔려는 것이라며 MVP 필수로 올렸었다.</td>
           </tr>
-          <tr><td>Dining</td><td>2순위</td><td>변화가 잦아 시연 가치는 높지만, Activity로 루프가 증명되면 같은 틀의 반복이다.</td></tr>
-          <tr><td>Mobility</td><td>3순위</td><td>앞의 둘이 바뀌면 늘 영향을 받지만, <strong>늦게 붙여도 코어 검증이 시간 충돌은 잡는다.</strong></td></tr>
           <tr><td>Place Verification</td><td>3순위</td><td>A2A 시연이 부트캠프 요구사항이라 <strong>발표 전에는 필요</strong>하다. 기능 가치보다 요구사항 충족이 이유다.</td></tr>
           <tr><td>Lodging · Flight</td><td><span class="pill pill--stub">등록만</span></td><td>잠긴 예약으로만 취급.</td></tr>
         </tbody>
       </table>
     </div>
 
-    <h3>Booking Handoff가 MVP로 올라온 이유</h3>
+    <h3>Booking Handoff는 MVP 다음</h3>
+    <p><code class="inl">[결정 2026-09-10]</code> <strong>Booking Handoff는 MVP가 아니다 — MVP 다음 단계다.</strong>
+    09-08 의 「등록만에서 MVP 필수로 승격」을 뒤집었다. 아래는 그때 올린 근거로 남겨 두며, 인계·세 층 같은 기능 설명은 그대로 유효하다.</p>
     <p class="note">★이름이 <b>Execution 이 아니라 Handoff</b> 인 것이 핵심이다 — 기본 동작은 <b>인계</b>이고, 예약을 실제로 바꾸는 것은 <b>시연 모드 한정</b>이다(계획서 v10 §5). Team 은 side effect 를 실행하지 않는다는 규칙(§6)은 그대로다.</p>
     <p>처음 초안에서는 “공급자 계약이 없으니 나중에”로 미뤘다.
     <strong>그 판단은 틀렸다.</strong></p>
@@ -407,14 +409,14 @@
       그 사실은 산출물에 표시한다.</p>
     </div>
 
-    <h3>MVP 둘로 보여주는 것</h3>
+    <h3>MVP로 보여주는 것</h3>
     <div class="flow">
       <ol>
         <li>액티비티 취소를 <b>우리가 먼저 감지</b>한다 (고객은 아직 모른다)</li>
         <li>재계획안을 만든다</li>
         <li>잠긴 예약과 필수 조건을 지켰는지 <b>다시 검증</b>한다</li>
-        <li>고객이 미리 위임한 범위 안인지 <b>대조</b>한다</li>
-        <li>범위 안이면 협약사(Mock) 예약을 <b>실행</b>한다</li>
+        <li>고객이 미리 위임한 범위 안인지 <b>대조</b>한다 <span class="pill pill--stub">MVP 다음</span></li>
+        <li>범위 안이면 협약사(Mock) 예약을 <b>실행</b>한다 <span class="pill pill--stub">MVP 다음</span></li>
         <li>통지 문구를 <b>검수</b>한다 (확정 단정·확인 시각 누락)</li>
         <li>고객 에이전트에 <b>선제 통지</b>한다</li>
         <li>고객이 거부하면 <b>되돌린다</b></li>
