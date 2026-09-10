@@ -17,9 +17,11 @@ domain: neutral
 ## MVP
 
 ```
-Python · FastAPI · PostgreSQL · pgvector · LangGraph
+Python · FastAPI · PostgreSQL · pgvector
 REST/OpenAPI · MCP · A2A · React
 ```
+
+★`[실측 2026-09-10 정정]` **이 줄에서 LangGraph 를 뺐다.** `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳). 흐름은 Controller 와 Case 상태기계가 맡는다. **의존성 줄을 지울지는 코드 세션 몫이다.** 부트캠프 양식 「AI 시스템 아키텍처」 2.3 절 제목에 LangGraph 가 박혀 있지만, 쓰지 않는 것을 쓴다고 적지 않는다.
 
 | 항목 | 선택 |
 |---|---|

@@ -108,6 +108,8 @@ transition_case()  →  case_events 추가  →  customer_cases projection 갱�
 
 ## LangGraph checkpoint와 구분한다
 
+★`[실측 2026-09-10]` **지금 LangGraph checkpoint 는 없다** — `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳). **이 절은 checkpoint 류를 도입하게 되면 지킬 규칙으로 읽는다.** 업무 상태의 권위는 지금도 `customer_cases` 다.
+
 **checkpoint로 업무 상태를 되돌리지 않는다.**
 
 | | 무엇 |

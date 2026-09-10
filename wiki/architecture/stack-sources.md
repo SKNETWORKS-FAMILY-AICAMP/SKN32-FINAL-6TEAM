@@ -16,7 +16,7 @@ domain: neutral
 | 기술 | 역할 | 공식 URL과 확인 결과 |
 |---|---|---|
 | Python | 코어 1 · MVP | `[실측]`[외부]` https://www.python.org/ — HTTP 200, 2026-08-17 |
-| LangGraph | 코어 1 · MVP | `[실측]`[외부]` https://langchain-ai.github.io/langgraph/ — HTTP 200, 2026-08-17 |
+| LangGraph | ~~코어 1 · MVP~~ **의존성에만 있고 쓰지 않는다** `[실측 2026-09-10]` — import 0곳 | `[실측]`[외부]` https://langchain-ai.github.io/langgraph/ — HTTP 200, 2026-08-17 |
 | PostgreSQL | 코어 1 · MVP | `[실측]`[외부]` https://www.postgresql.org/ — HTTP 200, 2026-08-17 |
 | Redis | 코어 1 · Phase 2 | `[실측]`[외부]` https://redis.io/ — HTTP 200, 2026-08-17 |
 | RabbitMQ | ❌ **기각** ([D-003](../decisions/D-003-message-broker.md)) | `[실측]`[외부]` https://www.rabbitmq.com/ — HTTP 200, 2026-08-17 |

@@ -82,8 +82,10 @@ Memory · Team별 Knowledge Scope
 
 | 계층 | 책임 |
 |---|---|
-| **Application / Coordination** | Agentic Controller, Top-Level LangGraph, Routing, Replan, WAIT/RESUME, Task/Event Contract, **MessageBus Port** |
+| **Application / Coordination** | Agentic Controller(＋Case 상태기계), Routing, Replan, WAIT/RESUME, Task/Event Contract, **MessageBus Port** |
 | **Infrastructure** | Redis / Redis Streams / RabbitMQ **Adapter** |
+
+★`[실측 2026-09-10 정정]` 이 표는 v8 §8-A 설계를 옮긴 것이고 Coordination 칸에 **「Top-Level LangGraph」** 가 있었다. `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳). 흐름은 **Controller 와 Case 상태기계(12종)** 가 정한다. Infrastructure 칸도 지금은 Redis·RabbitMQ 가 아니라 **DB 바깥함(`OutboxBrokerAdapter`)** 이다 — RabbitMQ 는 [D-003](../decisions/D-003-message-broker.md) 이 기각했고 Redis Streams 는 후보다.
 
 **핵심 규칙 한 줄.**
 
@@ -134,7 +136,7 @@ Capability 기반 Team routing · WAIT/RESUME · Replan/Retry
 Human Approval · 다른 Team handoff · 완료/종료 판단
 ```
 
-**Top-Level LangGraph가 이 계층에 있다.** 각 Agent Team은 별도 Subgraph를 가질 수 있다.
+★`[실측 2026-09-10 정정]` **이 자리는 「Top-Level LangGraph가 이 계층에 있다. 각 Agent Team은 별도 Subgraph를 가질 수 있다」였다 — 설계 때 문장이다.** 지금 이 계층은 **Controller 와 Case 상태기계**이고 LangGraph 는 import 0곳이다. Team 은 Subgraph 가 아니라 **레지스트리에 등록된 모듈**이다(`config/project.yaml` 의 `implementation_ref`).
 
 → [`agentic-controller.md`](../../final_project_cs/wiki/runtime/agentic-controller.md) · [sample](../../final_project_sample/wiki/runtime/agentic-controller.md)
 

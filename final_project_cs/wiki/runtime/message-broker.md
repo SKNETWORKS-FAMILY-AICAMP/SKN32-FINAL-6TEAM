@@ -21,9 +21,11 @@ domain: neutral
 **배달만 한다.**
 
 ```
-Top-Level LangGraph → 흐름을 결정
-Message Broker      → 배달
+Controller(＋Case 상태기계) → 흐름을 결정
+Message Broker             → 배달
 ```
+
+`[실측 2026-09-10 정정]` 첫 줄은 「Top-Level LangGraph → 흐름을 결정」이었다. `requirements.txt` 에 `langgraph==1.2.8` 이 있지만 **코드 어디서도 import 하지 않는다**(cs·sample·composer 0곳, 동적 import 도 0곳).
 
 **둘을 섞으면 안 된다.** Broker가 흐름을 결정하기 시작하면 실행 경로가 두 곳에 생긴다.
 
