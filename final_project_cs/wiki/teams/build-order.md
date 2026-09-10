@@ -46,7 +46,7 @@ domain: travel
 
 | 항목 | 실측 |
 |---|---|
-| 모듈 | `app/modules/travel_ops/` 7파일 — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings` |
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **9개** — 위 여섯에 `feedback`(인라인 분류)·`verification_policy`·`__init__` 가 더해졌다. **`[실측 git]` 전부 미추적** |
 | 등록 | `config/project.yaml` 6팀 전부 `active: true`, `implementation_ref` 6/6 해석됨 |
 | 테스트 | 단위·계약·아키텍처 552개 통과 |
 

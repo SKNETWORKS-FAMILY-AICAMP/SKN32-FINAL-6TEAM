@@ -1,7 +1,7 @@
 ---
 type: research
 title: 번역 모델 비교
-description: 다국어 응대 검토용 번역 성능 비교. 12GB VRAM 제약이 여기서도 드러났다
+description: 다국어 응대 검토용이었던 번역 성능 비교. 2026-09-10 결정으로 제품 경로에서 빠졌다
 status: draft
 tags: [evaluation, gpu]
 owners: [human:미배정]
@@ -83,7 +83,17 @@ domain: neutral
 
 ## 번역 성능 결론
 
-`[미확보]` 다국어 응대를 실제로 할지 아직 안 정했다. 성능 비교 결과는 [원본 REPORT](../../datasets/mt/olist_reviews_mt_bench/REPORT.md)에 있다.
+### ★ [2026-09-10] 다국어는 우리 일이 아니게 됐다 — `[미확보]` 가 닫혔다
+
+`[결정 2026-09-10]` v11 §1·§0-4 — **우리가 내는 언어는 한국어 하나**이고 **고객 언어로 옮기는 것은 접속한 개인 에이전트가 한다.**
+
+★**그래서 이 조사는 제품 경로에서 빠진다.** 우리 층에서 번역이 일어나지 않으므로 **번역 모델 비교는 우리 지표가 아니다.**
+
+★**다만 지우지 않는다.** 「다국어를 우리가 지지 않는다」는 판단의 근거로 남고, 접점 방식이 바뀌면 다시 쓴다. 그리고 **12GB VRAM 천장**이라는 측정 사실은 자체호스팅 논거에 그대로 쓰인다.
+
+`[미확보]` **우리가 보증하지 못하는 것이 생겼다** — 고객이 받는 문장은 상대 에이전트가 옮긴 것이다. v11 §1 이 **"다국어 지원이라고 말하지 않는다"** 고 못 박았다. 그 에이전트가 한국어를 실제로 옮기는지는 확인하지 않았다.
+
+성능 비교 결과는 [원본 REPORT](../../datasets/mt/olist_reviews_mt_bench/REPORT.md)에 있다.
 
 ### ★ 어느 숫자를 인용하나 — 08-24 GPU 서버 값만
 
@@ -109,4 +119,5 @@ domain: neutral
 
 - [../business/infrastructure-cost.md](../business/infrastructure-cost.md) — 12GB 제약의 사업적 함의
 - [../decisions/D-004-self-hosting-rationale.md](../decisions/D-004-self-hosting-rationale.md) — 자체호스팅 판단
-- [../product/scope.md](../product/scope.md) — 다국어는 아직 범위 밖
+- [../product/scope.md](../product/scope.md) — **다국어는 범위 밖이 아니라 우리 층의 일이 아니다**
+- [../decisions/D-016-scope-narrowing-reasons.md](../decisions/D-016-scope-narrowing-reasons.md) — 언어는 책임 경계다

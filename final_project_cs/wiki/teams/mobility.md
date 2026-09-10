@@ -10,7 +10,7 @@ domain: travel
 
 # Mobility Team
 
-★**아직 코드가 없다.** `app/modules/` 에 파일이 없고 `config/project.yaml` 에도 없다 `[실측 2026-09-09]`. 이 문서는 명세다. 구현되면 `type` 을 `concept` 으로 바꾼다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. **MVP 필수는 아니다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
 
@@ -66,18 +66,23 @@ Mobility: "오후 순서를 B→A→C 로 바꾸면 이동 40분이 줄어든다
 
 `[미확보]` 재배열 후보를 몇 개까지 내는지, 코어가 어떤 순서로 검증하는지 안 정했다. 조합이 폭발하는 자리다 — v11 §9-A는 **OR-Tools 최적화를 MVP에서 뺐다.** 규칙 기반 소수 후보로 시작한다.
 
-## manifest — 제안
+## manifest — 실제 구현
 
-★**제안이다. 코드에 없다.**
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities        = ["mobility.validate", "mobility.reorder"]
-accepted_case_types = ["itinerary_submitted", "incident_reported", "confirm_request"]
-required_context    = ["trip_state", "locked_bookings", "constraints"]
-allowed_tools       = ["read.route"]                      # 이름 미정
-knowledge_scope     = ["mobility", "transit", "route"]
-max_steps           = 5
+capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception"]
+accepted_case_types   = ["mobility"]                 # ★객체 종류다. 요청 종류가 아니다
+required_context      = ["case_state", "policy", "db_facts", "history"]
+allowed_tools         = ["read.route", "read.transit", "read.policy"]
+knowledge_scope       = ["mobility", "transit", "route_exception"]
+max_steps             = 6
+default_capability    = "mobility.check_route"
 ```
+
+★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
+
+★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.
 
 ★`locked_bookings` 가 이 Team에 특히 중요하다. **잠긴 예약(항공·숙박)은 순서 재배열의 고정점**이다. 움직일 수 없는 것을 모르면 재배열이 무의미해진다.
 

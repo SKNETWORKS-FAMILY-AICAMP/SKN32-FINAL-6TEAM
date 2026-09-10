@@ -134,6 +134,19 @@ CODE_PATH = re.compile(r"`((?:app|tests|eval|scripts|config)/[A-Za-z0-9_\-./]+\.
 CODE_ROOTS = ("final_project_cs", "final_project_sample", "acop_dojo", ".")
 CODE_ROOTS_GLOB = ("datasets/*/*",)
 
+#: ★디스크에는 있는데 git 이 모르는 파일 (2026-09-10 신설).
+#:
+#:   여러 세션이 한 워크트리를 공유하므로 **작업 트리와 git 이 거의 항상 다르다.**
+#:   2026-09-10 하루에 이 때문에 거짓 단정이 두 번 났다 —
+#:     · "customer_ops 삭제됨"  → 작업 트리엔 없고 git 엔 있었다
+#:     · "여행 라우팅 안 된다"  → 작업 트리엔 있고 git 엔 없었다
+#:   둘은 반대 방향이지만 기제가 하나다 — **한쪽만 세고 단정했다.**
+#:
+#:   `os.path.exists` 만 보면 미추적 구현도 「존재」로 통과한다. 그래서
+#:   문서가 인용한 경로가 **git 에 없으면 따로 센다** — 위반은 아니다.
+#:   근거로 쓰려면 「작업 트리 기준」이라고 적어야 한다.
+#:     → governance/evidence-grades.md 「코드 실측은 무엇을 셌는지 밝힌다」
+
 FENCE = re.compile(r"(?ms)^```.*?^```+\s*$")
 LINK = re.compile(r"\]\(([^)#]*\.md)\)")
 INV_DOC = re.compile(r"`(INV-[A-Z]+-[A-Z]+-\d{3})`")
@@ -165,7 +178,26 @@ def main() -> int:
     inv_in_docs: Counter[str] = Counter()
     inv_tests: list[tuple[str, str, str]] = []   # (doc, id, test path)
     unmarked: list[str] = []                     # domain 미표시. 위반 아니고 집계다
+
+    #: git 이 아는 파일 목록. 미추적 구현을 「존재」로 통과시키지 않으려고 미리 센다.
+    #:   ★저장소마다 따로 센다. `final_project_sample` 은 **별도 저장소**라 루트의
+    #:     `git ls-files` 에 없다 — 한 번에 세면 그쪽 파일이 전부 미추적으로 찍힌다.
+    import subprocess
+    tracked: set[str] = set()
+    for repo in ("", "final_project_sample", "acop_dojo"):
+        d = repo or "."
+        if not os.path.isdir(os.path.join(d, ".git")):
+            continue
+        try:
+            out = subprocess.run(["git", "-C", d, "ls-files"], capture_output=True,
+                                 text=True, encoding="utf-8", errors="replace",
+                                 check=True).stdout.splitlines()
+        except Exception:
+            continue                             # git 이 없으면 그 저장소만 건너뛴다
+        prefix = (repo + "/") if repo else ""
+        tracked |= {prefix + line for line in out}
     dead_code: list[str] = []                    # 없는 코드 파일을 인용하는 문서
+    untracked_code: list[str] = []               # 디스크엔 있고 git 이 모르는 파일을 인용
     by_domain: dict[str, list[str]] = defaultdict(list)
     stale_todo: list[str] = []       # 옛 도메인인데 이유가 없다 = 다시 써야 한다
     stale_recorded: list[str] = []   # 옛 도메인이지만 이유가 있다 = 그대로 둔다
@@ -264,6 +296,19 @@ def main() -> int:
             if any(glob.glob(os.path.join(g, cp)) for g in CODE_ROOTS_GLOB):
                 continue
             dead_code.append(f"{rel} -> {cp}")
+
+        #   ★첫 번째로 **실재하는** 저장소에서 멈춘 뒤 판정한다.
+        #     멈추지 않으면 `final_project_sample` 까지 내려가고, 그쪽은 별도
+        #     저장소라 루트의 `git ls-files` 에 없어서 전부 미추적으로 찍힌다
+        #     (처음 이렇게 만들어 111건이 거짓으로 나왔다).
+        for cp in set(CODE_PATH.findall(body)):
+            for r in CODE_ROOTS:
+                full = os.path.join(r, cp)
+                if not os.path.exists(full):
+                    continue
+                if full.replace("\\", "/") not in tracked:
+                    untracked_code.append(f"{rel} -> {cp}")
+                break
 
         # --- 불변식
         for inv in INV_DOC.findall(body):
@@ -386,6 +431,17 @@ def main() -> int:
             print(f"    {it}")
         if len(dead_code) > 12:
             print(f"    ... 외 {len(dead_code) - 12}건")
+        print()
+
+    if untracked_code:
+        uniq = sorted(set(untracked_code))
+        print(f"[{len(uniq)}] 인용한 코드 파일이 디스크엔 있고 git 이 모른다 — 위반 아니고 집계다")
+        print("    ★미커밋 구현을 근거로 쓴 것이다. 되돌려지면 그 문장이 거짓이 된다.")
+        print("      근거로 남기려면 「작업 트리 기준」이라고 적는다 — governance/evidence-grades.md")
+        for it in uniq[:10]:
+            print(f"    {it}")
+        if len(uniq) > 10:
+            print(f"    ... 외 {len(uniq) - 10}건")
         print()
 
     if pending:

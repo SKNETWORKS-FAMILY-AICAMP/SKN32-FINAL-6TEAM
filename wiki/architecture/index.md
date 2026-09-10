@@ -61,7 +61,9 @@ domain: travel
 
 ★**도메인을 바꾸는 일도 마찬가지다.** 2026-09-08 에 커머스 → 여행으로 한 번 바꿨다. 무엇을 갈아 끼우고 무엇을 안 끼우는지는 [`cs/domain-swap.md`](../../final_project_cs/wiki/domain-swap.md) 가 정본이고, **어느 문서가 도메인에 묶여 있는지**는 [../governance/domain-axis.md](../governance/domain-axis.md) 가 정한다.
 
-`[실측 2026-09-09]` **여행 Team 여섯이 `config/project.yaml` 에 붙었다**(`activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`). 단 **여행 Case 는 아직 안 돈다** — 코어 1 분류기 어휘가 쇼핑몰이라 여행 라벨이 `ClassificationFailed` 로 떨어진다. 조립은 되고 라우팅이 안 되는 구간이다.
+`[실측 2026-09-09]` **여행 Team 여섯이 `config/project.yaml` 에 붙었다**(`activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`).
+
+`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/modules/travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
 
 ## 이 영역의 불변식
 

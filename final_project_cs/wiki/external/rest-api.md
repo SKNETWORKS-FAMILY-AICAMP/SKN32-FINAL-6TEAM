@@ -102,7 +102,9 @@ create_app()  →  composition.build_classifier()  →  feedback.classify(masked
 
 `[실측]` [LIVE-CLASSIFIER-E2E](../records/evidence/LIVE-CLASSIFIER-E2E_검증.md). 위 수정 직후엔 Claude가 터미널에서 한 번 수동 확인한 것뿐이었다. 그걸 재실행 가능한 테스트로 바꿨다 — `tests/live/test_feedback_classifier_live_e2e.py`(`-m live`, 실 OpenAI 호출).
 
-**증명하는 것** — 운영 `POST /v1/cases`에 실 한국어 쇼핑몰 메시지를 보내면, 실제로 주입되는 그 classifier가 `intent="shipping"`을 돌려주고 `INTENTS` 검증을 통과해 `CLASSIFIED` 이벤트가 기록된다.
+★**[2026-09-10] 이 증거는 쇼핑몰 시절 것이다.** `[실측 2026-09-10 작업 트리]` 지금 classifier 가 허용하는 intent 는 `itinerary_submit`·`incident_report`·`confirm_request`·`adjust_reject`·`other` 다 — **쇼핑몰 입력을 넣으면 이제 분류 실패로 간다.** 그리고 `[미확보]` 그 live 테스트 자체가 아직 `shipping` 을 기대하므로 **코드와 테스트가 갈라져 있다**(코드 담당 몫).
+
+**증명하는 것**(그때) — 운영 `POST /v1/cases`에 실 한국어 쇼핑몰 메시지를 보내면, 실제로 주입되는 그 classifier가 `intent="shipping"`을 돌려주고 `INTENTS` 검증을 통과해 `CLASSIFIED` 이벤트가 기록된다.
 
 **만들다 계약의 오해가 둘 드러났다.**
 

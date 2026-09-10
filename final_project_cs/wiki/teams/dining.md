@@ -10,7 +10,7 @@ domain: travel
 
 # Dining Team
 
-★**아직 코드가 없다.** `app/modules/` 에 파일이 없고 `config/project.yaml` 에도 없다 `[실측 2026-09-09]`. 이 문서는 명세다. 구현되면 `type` 을 `concept` 으로 바꾼다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. **MVP 필수는 아니다** — Activity·Booking Handoff 다음이다(v11 §9-B, 4주차).
 
@@ -94,18 +94,23 @@ Dining: "19시 → 20시" 또는 "다른 가게" 후보를 낸다
 
 **Team은 다른 Team을 직접 호출하지 않는다.** 전체 정합성은 코어 검증 층이 본다(v11 §5).
 
-## manifest — 제안
+## manifest — 실제 구현
 
-★**제안이다. 코드에 없다.**
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities        = ["dining.validate", "dining.replan"]
-accepted_case_types = ["itinerary_submitted", "incident_reported", "confirm_request"]
-required_context    = ["trip_state", "constraints", "policy"]
-allowed_tools       = ["read.place", "read.route"]        # 이름 미정
-knowledge_scope     = ["dining", "opening_hours", "dietary_constraint"]
-max_steps           = 5
+capabilities          = ["dining.check_open", "dining.check_conditions"]
+accepted_case_types   = ["dining"]                   # ★객체 종류다. 요청 종류가 아니다
+required_context      = ["case_state", "policy", "db_facts", "history"]
+allowed_tools         = ["read.place", "read.policy", "read.booking"]
+knowledge_scope       = ["dining", "opening_hours", "dietary"]
+max_steps             = 6
+default_capability    = "dining.check_open"
 ```
+
+★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
+
+★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.
 
 `[미확보]` 동행 조건(할랄·채식·아이 동반)을 `constraints` 에 어떤 모양으로 싣는지 안 정했다. 이건 Trip의 **필수 조건**에 속하므로 Context Broker가 싣는 쪽이 맞아 보이지만 정하지 않았다.
 

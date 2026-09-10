@@ -77,7 +77,7 @@ domain: travel
 | 항목 | 실측 |
 |---|---|
 | `config/project.yaml` 등록 Team | **여행 6종** — `activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`. 커머스 6종은 **등록에서 빠졌다**(소스는 `app/modules/customer_ops/` 에 남아 있다) |
-| 모듈 | `app/modules/travel_ops/` 7파일 |
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **9개** — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings`·`feedback`·`verification_policy`·`__init__`. **`[실측 git]` 전부 미추적이다** |
 | v10 이 계약을 바꿨나 | **안 바꿨다** — §0-2 "통합 계약 승계. 필드 변경 없음" |
 
 ### ★ 판정 — 「Registry 등록만으로 끝난다」는 그대로는 못 쓴다
@@ -178,9 +178,11 @@ Core 파일을 하나라도 고쳐야 하면 실패다.
 
 `[실측 2026-09-09]` **여행 Team 여섯이 붙었고 커머스 여섯은 등록에서 빠졌다.** 단위·계약·아키텍처 테스트 552개 통과. **Core 격리 위반 0**은 유지된다.
 
-★**그런데 여행 Case 가 아직 안 돈다.** 코어 1 의 분류기 어휘가 쇼핑몰(`order`·`shipping`·`return`·`exchange`·`other`)이라 여행 라벨을 넣으면 `ClassificationFailed` 로 떨어지고 **여섯 팀 중 아무도 안 불린다**(다른 세션 실측 2026-09-09). Team 이 붙은 것과 도는 것은 다르다.
+★**하루 전까지 여행 Case 가 안 돌았다.** 분류기 어휘가 쇼핑몰이라 여행 라벨이 `ClassificationFailed` 로 떨어졌다(2026-09-09 실측).
 
-★**이 문서를 "지금 이렇게 돌고 있다"로 읽으면 안 된다.** 조립은 되고 라우팅이 아직 안 된다.
+`[실측 2026-09-10 작업 트리]` **여행 분류 어휘와 두 축 라우팅이 이미 적용돼 있다** — `app/modules/travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `app/application/controller.py:73,176` 이 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 2026-09-10 git]` 이 구현은 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
+
+★**이 문서를 읽을 때 작업 트리와 git 을 가려서 본다.** 여행 구현 전체가 아직 커밋 전이다 → [../governance/evidence-grades.md](../governance/evidence-grades.md)
 
 ## Pack 범위 판단
 

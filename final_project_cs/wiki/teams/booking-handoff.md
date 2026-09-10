@@ -10,7 +10,7 @@ domain: travel
 
 # Booking Handoff Team
 
-★**아직 코드가 없다.** `app/modules/` 에 파일이 없고 `config/project.yaml` 에도 없다 `[실측 2026-09-09]`. 이 문서는 명세다. 구현되면 `type` 을 `concept` 으로 바꾼다.
+★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/booking_handoff.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5·§4-C.
 
@@ -100,19 +100,25 @@ domain: travel
 
 시뮬레이션에서도 되돌림 시도를 상태로 남기고, **실패하면 사람에게 넘긴다.** 조용히 삼키지 않는다.
 
-## manifest — 제안
+## manifest — 실제 구현
 
-★**제안이다. 코드에 없다.**
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/booking_handoff.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities        = ["booking.identify_approval", "booking.prepare_handoff",
-                       "booking.simulate_change"]        # 셋째는 tier=='simulated' 한정
-accepted_case_types = ["incident_reported", "confirm_request", "adjustment_rejected"]
-required_context    = ["trip_state", "locked_bookings", "delegation_scope", "policy"]
-allowed_tools       = ["read.place"]                     # 이름 미정
-knowledge_scope     = ["booking", "cancellation_policy", "delegation"]
-max_steps           = 6
+capabilities          = ["booking.verify",           # 예약이 실재하고 우리가 아는 것과 같은가
+                         "booking.prepare_change",   # 변경에 필요한 것을 정리한다
+                         "booking.prepare_cancel"]   # 취소에 필요한 것을 정리한다
+accepted_case_types   = ["booking"]                  # ★객체 종류다. 요청 종류가 아니다
+required_context      = ["case_state", "policy", "db_facts", "history"]
+allowed_tools         = ["read.booking", "read.policy", "read.supplier"]
+knowledge_scope       = ["booking", "cancellation", "penalty", "supplier"]
+max_steps             = 6
+default_capability    = "booking.verify"
 ```
+
+★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
+
+★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.
 
 `[미확보]` `delegation_scope` 를 Context Broker가 싣는지, Team이 도구로 읽는지 안 정했다.
 

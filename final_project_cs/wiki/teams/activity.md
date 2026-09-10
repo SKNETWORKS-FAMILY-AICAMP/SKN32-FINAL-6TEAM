@@ -156,18 +156,25 @@ Activity: "10/03 15시 → 10/04 10시" 후보를 낸다
 
 ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다**(v11 §5). Activity는 자기 객체만 판정하고, 그 후보가 여행 전체에서 성립하는지는 코어가 판정한다. 이 경계를 흐리면 Team마다 전체 일정을 알아야 하고 Team 교체가 불가능해진다.
 
-## manifest — 제안
+## manifest — 실제 구현
 
-★**제안이다. 코드에 없다.** 실제 값은 구현할 때 정해진다.
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/activity.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities        = ["activity.validate", "activity.replan", "activity.refund_estimate"]
-accepted_case_types = ["itinerary_submitted", "incident_reported", "confirm_request"]
-required_context    = ["trip_state", "locked_bookings", "constraints", "policy"]
-allowed_tools       = ["read.place", "read.weather"]      # 이름 미정
-knowledge_scope     = ["activity", "cancellation_policy", "weather"]
-max_steps           = 6
+capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
+                         "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
+                         "activity.propose_change"]     # 대안을 제안한다 (승인 대기)
+accepted_case_types   = ["activity"]                    # ★객체 종류다. 요청 종류가 아니다
+required_context      = ["case_state", "policy", "db_facts", "history"]
+allowed_tools         = ["read.booking", "read.policy", "read.place", "read.weather"]
+knowledge_scope       = ["activity", "cancellation", "refund", "weather"]
+max_steps             = 6
+default_capability    = "activity.check_feasible"
 ```
+
+★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
+
+★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.
 
 `[미확보]` `allowed_tools` 이름을 안 정했다. v11 §5-A가 정한 Action은 **장소·운영 조회 / 이동 시간 조회 / 기상 조회 세 개**이고 이름은 구현 때 붙인다. `accepted_case_types` 는 v11 §5-A의 새 분류 라벨(일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외)에서 왔다.
 
