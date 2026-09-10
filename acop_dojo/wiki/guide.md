@@ -64,6 +64,8 @@ domain: neutral
 | `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
 | `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII는 재시도하지 않고 넘긴다 |
 | `team-commerce` | 팀 모듈 3 | Team은 side effect를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
+
+★`[실측 2026-09-10]` **팀 트랙 셋(`team-voc`·`team-review`·`team-commerce`)의 대상 코드가 cs 작업 트리에서 지워졌다.** 결함 카탈로그(`acop_dojo/defects/catalog.json`) **49개 중 10개 = 20%** 가 `app/modules/customer_ops/*` 를 가리킨다 — INV-CLASSIFY-001 · INV-COMMERCE-002~005 · INV-REVIEW-002 · INV-TEAM-001·002 · INV-VOC-001·002. **지금 cs 에 대면 이 열 개는 대상 파일이 없어 적용되지 않는다.** 그중 인라인 분류(`feedback.py`)는 지워진 게 아니라 `travel_ops/` 로 옮겨졌으니 **경로만 바꾸면 산다.** `[미확보]` 나머지 아홉을 여행 Team 으로 옮길지 버릴지는 dojo 담당 몫이다.
 | `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
 
 `[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다 — `--track core2`처럼 준다.

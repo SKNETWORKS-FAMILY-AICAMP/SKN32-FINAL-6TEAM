@@ -40,7 +40,7 @@ python dojo.py report
 
 ## 자동 생성 문서
 
-이 저장소가 만드는 문서는 전부 재생성 대상이다.
+`[정정 2026-09-10]` 「이 저장소가 만드는 문서는 전부 재생성 대상」은 넓었다 — **`python dojo.py report` 가 쓰는 것은 보고서 하나**(`program/research/테스트_사각지대_실측.md`, `cli.py` 의 `cmd_report`)다. **이 wiki 의 문서는 손으로 쓴다** — 재생성 대상이 아니다.
 
 ```yaml
 automation:
