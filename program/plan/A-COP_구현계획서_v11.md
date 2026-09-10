@@ -314,6 +314,10 @@ Trip 하나에 예약이 여럿이고, 예약 id 가 있다.
 `[미확보]` 위 규칙표를 코드에 둘지 `config/` 에 둘지는 안 정했다. **어휘는 설정으로
 빼기로 했지만(§5-B) 이건 계약에 더 가깝다.**
 
+★`[실측 2026-09-10 오후]` **아직 코드에 반영되지 않았다.** `controller.py:374` 가
+여전히 `business_subject=str(case["case_id"])` 다. §5-B(라우팅 두 축)는 이미
+적용됐는데 이것은 남아 있다 — **적용 순서에서 뒤로 밀린 것이지 취소된 것이 아니다.**
+
 ---
 
 ## 5. Team 모듈 구성
@@ -425,31 +429,55 @@ INTENTS = frozenset({
 })
 
 ISSUE_CODES = frozenset({
-    "activity_weather_risk", "activity_cancel_or_change", "activity_other",
-    "booking_change_needed", "booking_cancel_needed",
-    "booking_status_unknown", "booking_other",
-    "mobility_delay", "mobility_route_broken", "mobility_other",
-    "dining_closed", "dining_conditions_unmet", "dining_other",
-    "lodging_status", "lodging_other",
-    "flight_status", "flight_other",
+    # 활동 — 「여행지에서 하는 활동」 그 자체. 레저 전용이 아니다
+    "activity_cancel_or_change", "activity_weather_risk",
+    "activity_time_conflict", "activity_other",
+    # 식당
+    "dining_hours", "dining_conditions", "dining_other",
+    # 이동
+    "mobility_missed_or_disrupted", "mobility_route_infeasible", "mobility_other",
+    # 예약 인계 — 우리 기록과 공급자 원장의 대조
+    "booking_mismatch", "booking_change_request",
+    "booking_cancel_request", "booking_other",
+    # 등록만 — 잠긴 예약
+    "lodging_other", "flight_other",
+    # 어디에도 안 붙는 것 — escalate 된다
     "other",
 })
 ```
+
+★`[정정 2026-09-10 오후]` **이 목록은 코드에서 그대로 옮겨 적은 것이다**
+(`app/modules/travel_ops/feedback.py`). 이 절의 초판이 적었던 값과 **세부 이름이
+거의 다 달랐다** — 초판은 `booking_change_needed`·`dining_closed`·`mobility_delay`
+같은 이름이었고 `lodging_status`·`flight_status` 를 세었다. **코드 세션이 구현하면서
+이름을 다듬었고 계획서만 옛 이름으로 남아 있었다.** 접두가 같아 라우팅은 계속
+됐으므로 **아무도 못 알아챘다** — 값 목록을 계획서에 적을 때는 **코드가 정본**이다.
+
+★**달라진 것 셋** — `activity_time_conflict` 가 생겼고(시간 충돌),
+`lodging_status`·`flight_status` 가 빠졌다(등록만 하는 팀이라 `_other` 하나면 된다).
+합은 **18 → 17개**다.
 
 ★**슬러그를 쓴다.** v10 §5-A 는 한국어만 적었는데, 이 값은 프롬프트·DB·평가
 데이터셋을 오간다. 커머스 어휘도 ASCII 였다. 한국어 뜻과 일대일로 붙는다.
 
 | 팀 | 받는 `case_type` | 대응하는 `issue_code` | capability |
 |---|---|---|---|
-| `activity` | `activity` | `activity_*` 3개 | `check_cancelable` · `check_feasible` · `propose_change` |
+| `activity` | `activity` | `activity_*` **4개** | `check_cancelable` · `check_feasible` · `propose_change` |
 | `booking_handoff` | `booking` | `booking_*` 4개 | `verify` · `prepare_change` · `prepare_cancel` |
 | `mobility` | `mobility` | `mobility_*` 3개 | `check_route` · `status` · `exception` |
 | `dining` | `dining` | `dining_*` 3개 | `check_open` · `check_conditions` |
-| `lodging` | `lodging` | `lodging_*` 2개 | `status` |
-| `flight` | `flight` | `flight_*` 2개 | `status` |
+| `lodging` | `lodging` | `lodging_*` **1개** | `status` |
+| `flight` | `flight` | `flight_*` **1개** | `status` |
 
-`[실측 2026-09-09]` 이 값으로 시뮬레이션했다 — **`issue_code` 17개 전부 라우팅
-성공, 팀 여섯 전부 도달.** 접두가 팀 목록을 벗어나는 것도, 접두가 없는 팀도 없다.
+`[실측 2026-09-10]` 위 capability 이름은 각 팀 파일의 `TeamManifest` 에서 확인했다 —
+**여섯 팀 전부 일치한다.** `issue_code` 개수는 위 정정에 맞춰 고쳤다.
+
+`[실측 2026-09-09]` 이 값으로 시뮬레이션했다 — **`issue_code` 전부 라우팅 성공,
+팀 여섯 전부 도달.** 접두가 팀 목록을 벗어나는 것도, 접두가 없는 팀도 없다.
+
+★`[실측 2026-09-10]` **코드가 이 결정을 이미 적용했다.** `controller.py:72` 와 `:175`
+둘 다 `resolve(case_type=case_type_of(issue_code, fallback=intent), intent=intent)` 로
+두 축을 쓴다. 09-09 에 한 축으로 뭉개져 여행 Case 가 아무 데도 못 가던 자리다.
 
 ★**`"other"` 만 접두가 없고, 그 하나는 어느 팀에도 안 간다.** 어느 객체 얘긴지
 모르는 Case 를 아무 팀에나 보내면 안 된다. **사람에게 넘긴다** —
@@ -498,6 +526,9 @@ capability 로 떨어진다 — 예외가 안 난다.** 지연·결항이 와도
 | `lodging` · `flight` | 1 | 없음 | **필요 없다** — 고를 것이 없다 |
 
 **넷에 필요하고 그중 하나만 있다.**
+
+★`[실측 2026-09-10 오후]` **여전히 `mobility` 하나뿐이다.** `travel_ops/` 에서
+`def select_capability` 를 가진 파일이 그 하나다. 셋이 아직 비어 있다.
 
 ★**요청 종류가 생기면 이 훅이 더 정확해진다.** 지금은 본문 낱말만 보는데
 (`"끊겼"`·`"놓쳤"`), 「사건 신고」라는 신호가 같이 오면 **본문이 애매해도 사건임을
