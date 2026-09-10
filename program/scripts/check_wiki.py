@@ -115,6 +115,25 @@ IMPL_BIAS_OK = {
     "_migration/",
 }
 
+#: ★문서가 인용한 코드 경로가 실재하는지 (2026-09-10 신설).
+#:
+#:   2026-09-10 에 커머스 모듈이 삭제되자 **비-기록 문서 36곳이 없는 파일을
+#:   인용하는 상태**가 됐다. 링크 검사는 `.md` 만 보므로 이걸 못 잡았다.
+#:   문서가 `app/core/x.py` 를 근거로 적고 그 파일이 사라지면 **근거가 없는
+#:   문장이 남는다** — 그게 이 프로젝트가 가장 막으려는 것이다.
+#:
+#:   찾는 방법의 한계: 본문에 적힌 경로 문자열만 본다. 동적으로 조립되는
+#:   경로나 이름이 바뀐 같은 파일은 못 잡는다.
+CODE_PATH = re.compile(r"`((?:app|tests|eval|scripts|config)/[A-Za-z0-9_\-./]+\.(?:py|ya?ml|jsonl?|txt|md))`")
+
+#: 코드 경로를 찾을 저장소. 문서가 어느 저장소를 말하는지 경로만으로는 모르므로
+#: 전부에서 찾고 **어디에도 없을 때만** 센다.
+#:   ★`datasets/wiki/` 문서의 `scripts/x.py` 는 **그 데이터셋 폴더 기준**이다
+#:     (`datasets/<도메인>/<이름>/scripts/x.py`). 처음 이 검사를 넣었을 때
+#:     12건이 거짓양성으로 나왔고 전부 그 경우였다.
+CODE_ROOTS = ("final_project_cs", "final_project_sample", "acop_dojo", ".")
+CODE_ROOTS_GLOB = ("datasets/*/*",)
+
 FENCE = re.compile(r"(?ms)^```.*?^```+\s*$")
 LINK = re.compile(r"\]\(([^)#]*\.md)\)")
 INV_DOC = re.compile(r"`(INV-[A-Z]+-[A-Z]+-\d{3})`")
@@ -146,6 +165,7 @@ def main() -> int:
     inv_in_docs: Counter[str] = Counter()
     inv_tests: list[tuple[str, str, str]] = []   # (doc, id, test path)
     unmarked: list[str] = []                     # domain 미표시. 위반 아니고 집계다
+    dead_code: list[str] = []                    # 없는 코드 파일을 인용하는 문서
     by_domain: dict[str, list[str]] = defaultdict(list)
     stale_todo: list[str] = []       # 옛 도메인인데 이유가 없다 = 다시 써야 한다
     stale_recorded: list[str] = []   # 옛 도메인이지만 이유가 있다 = 그대로 둔다
@@ -234,6 +254,16 @@ def main() -> int:
                 pending.append(f"{rel} -> {p}")
             else:
                 problems["경로 오타 (폴더도 없음)"].append(f"{rel} -> {p}")
+
+        # --- 인용한 코드 경로가 실재하나
+        #   ★`records/` 는 위에서 continue 했으므로 여기 오지 않는다 — 옛 기록이
+        #     없어진 파일을 인용하는 것은 정상이다.
+        for cp in set(CODE_PATH.findall(body)):
+            if any(os.path.exists(os.path.join(r, cp)) for r in CODE_ROOTS):
+                continue
+            if any(glob.glob(os.path.join(g, cp)) for g in CODE_ROOTS_GLOB):
+                continue
+            dead_code.append(f"{rel} -> {cp}")
 
         # --- 불변식
         for inv in INV_DOC.findall(body):
@@ -347,6 +377,16 @@ def main() -> int:
         if stale_recorded:
             print(f"    옛 도메인이나 이유가 붙어 있다 {len(stale_recorded)}개 — 그대로 둔다")
     print()
+
+    if dead_code:
+        print(f"[{len(dead_code)}] 문서가 인용한 코드 파일이 없다 — 위반 아니고 집계다")
+        print("    ★둘을 가려야 한다 — 「삭제를 기록한 결정 문서」는 맞고,")
+        print("      「근거로 인용했는데 사라진 것」은 근거 없는 문장이 남은 것이다")
+        for it in sorted(dead_code)[:12]:
+            print(f"    {it}")
+        if len(dead_code) > 12:
+            print(f"    ... 외 {len(dead_code) - 12}건")
+        print()
 
     if pending:
         targets = sorted({p.split(' -> ')[1] for p in pending})

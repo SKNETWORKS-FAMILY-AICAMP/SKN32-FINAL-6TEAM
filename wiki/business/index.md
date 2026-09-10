@@ -82,7 +82,7 @@ domain: neutral
 
 | 순위 | 항목 | 방법 | 시간 |
 |---|---|---|---|
-| **1** | 3B 모델 처리량·지연·정확도 | `eval/finetune/serve.py` 부하 측정 + 골든셋 72건 재평가 | 하루 |
+| **1** | 3B 모델 처리량·지연·정확도 | ~~`eval/finetune/serve.py`~~ **삭제됨(2026-09-10)** — 도구를 다시 만들어야 한다. 골든셋도 여행 0건 | 하루 |
 | **2** | **검토·승인 1건 소요시간** | **도구 설치 완료** → [measure-review-time.md](measure-review-time.md). 30분이면 잰다 | **반나절** |
 | **2** | 오류 1건당 손실 | `datasets/voc/ecmc_dispute_casebook_2024` 금액 집계 | 하루 |
 | 3 | Baseline A·B 재측정 | 새 도메인 재측정본이 없다 | `[미확보]` |

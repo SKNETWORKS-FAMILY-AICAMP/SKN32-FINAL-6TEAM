@@ -173,7 +173,7 @@ teams:
 | `team_id` 중복 | 빌드 실패 |
 | 같은 capability를 두 Team이 주장 | 빌드 실패 |
 | 비활성화한 모듈을 호출하는 경로가 남음 | 빌드 실패 |
-| 미구현 port 선택 — `redis_streams`·`age`·`neo4j` | **조립 실패** (`tests/e2e/test_project_composition.py`) |
+| 미구현 port 선택 — `redis_streams`·`age`·`neo4j` | **조립 실패** (`tests/unit/test_project_composition.py`) |
 | `team_executor: a2a`인데 `a2a_executor` 모듈이 꺼져 있음 | **선택 불가** — 순서가 강제된다 |
 
 `[실측]` 아래 두 줄은 [DoD-20](../records/evidence/DoD-20_Port교체_Controller불변.md)이 확인한 것이다. `local → a2a` 교체는 `project.yaml` 선언으로 되고 Controller 코드 변경은 0이다 — 다만 **"불변"은 코드가 안 바뀐다는 뜻이지 성능·타임아웃 특성이 같다는 뜻이 아니고**, 교체 후 실제 원격 실행까지 돌린 건 아니다(선언이 바뀌고 조립이 통과하는 것까지). 그 다음 단계는 [../external/a2a-protocol.md](../external/a2a-protocol.md)의 Controller 종단 미확보 항목이다.
@@ -184,7 +184,7 @@ teams:
 
 ## 만드는 순서 · 공통 뼈대
 
-만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 **아직 구현은 없다** — `[실측]` `app/modules/customer_ops/team_utils.py` 2026-09-03 확인 결과 없음.
+만드는 순서는 [build-order.md](build-order.md). 반복되는 네 가지를 조합형 유틸로 빼는 설계는 [common-utils.md](common-utils.md)에 있고 **아직 구현은 없다** — `[실측]` `app/modules/travel_ops/_base.py` 2026-09-03 확인 결과 없음.
 
 ## 관계
 

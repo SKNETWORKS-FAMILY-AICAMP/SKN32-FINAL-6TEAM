@@ -6,7 +6,7 @@ status: draft
 tags: [contract, agent]
 owners: [human:미배정]
 domain: neutral
-domain_note: ActionProposal 계약은 도메인 무관이다. refund.request 는 예시이자 계약 테스트 이름이다
+domain_note: ActionProposal 계약은 도메인 무관이다. Action 어휘는 도메인마다 갈린다
 ---
 
 # ActionProposal
@@ -90,14 +90,14 @@ next_action == wait_for_approval
 `rationale_evidence_ids`가 가리키는 evidence가 **실재하는지**는 확인한다. **그 값이 옳은지**는 확인하지 않는다.
 
 ```
-Context에 order.total_cents = 30000 이 있다
-Team이 refund_amount_cents = 15000 을 제안하고 그 evidence를 가리킨다
+Context에 booking.amount_cents = 300000 이 있다
+Team이 refund_amount_cents = 150000 을 제안하고 그 evidence를 가리킨다
 → 근거 대조 통과 ✅
 
-그런데 실결제액이 25,000원이면 실제 환불은 12,500원이다  ❌
+그런데 업체 위약금 규정이 50% 가 아니라 30% 면 실제 환급은 90,000원이다  ❌
 ```
 
-**Context 자체가 틀리면 통과한다.** 조치는 [D-001](../../../wiki/decisions/D-001-payment-ownership.md).
+**Context 자체가 틀리면 통과한다.** `[실측 2026-09-10]` 여행에서 이 위험이 더 크다 — **위약금율이 업체마다 다르고 규정 원문을 아직 표본으로만 갖는다**(v11 §0-3). 커머스 쪽 같은 사례는 [D-001](../../../wiki/decisions/D-001-payment-ownership.md).
 
 ## ★ [2026-09-03] Action 어휘가 고정돼 있다 — 그런데 코드와 다르다
 
@@ -111,9 +111,30 @@ shipment.investigate · shipment.reroute · shipment.replace
 return.request · refund.request · voc.escalate
 ```
 
+### ★ [2026-09-10] 도메인이 바뀌어 어휘가 통째로 갈렸다
+
+`[실측 2026-09-10]` `app/modules/travel_ops/` 에서 직접 센 여행 어휘다. **위 커머스 9종은 코드에 없다.**
+
+| 접두 | Action |
+|---|---|
+| `activity.*` | `check_feasible` · `check_cancelable` · `propose_change` · `change` |
+| `booking.*` | `verify` · `prepare_change` · `prepare_cancel` · `change` · `cancel` |
+| `dining.*` | `check_open` · `check_conditions` |
+| `mobility.*` | `check_route` · `status` · `exception` |
+| `lodging.*` · `flight.*` | `status` (등록만) |
+| `read.*` | `place` · `route` · `transit` · `weather` · `booking` · `supplier` · `policy` |
+
+★**접두가 곧 라우팅 축이다.** v11 §5-B — `case_type`(객체 종류)을 `issue_code` 의 접두에서 뽑고, 그게 Team 선택에 쓰인다. **「접두사 규칙이 편하다」가 아니라 계약이 됐다.**
+
+★**`read.*` 와 나머지가 성질이 다르다.** `read.*` 는 Context Broker 가 부르는 조회이고, 나머지는 **제안의 종류**다. Team 은 `read.*` 를 직접 호출하지 않는다.
+
+`[미확보]` **9종 고정이라는 규칙이 여행에서도 유효한지 안 정했다.** 지금 여행 어휘는 스물셋이다 — 고정 상한이 아니라 Team 이 늘면 같이 는다.
+
 ### 왜 고정하나
 
 > **기존 코드와 계약 테스트가 쓰는 `refund.request` 와 namespace·동사 형식을 유지해 **idempotency key 와 audit 의 action type 이 흔들리지 않게** 한다.
+
+★**고정한 이유는 도메인이 바뀌어도 유효하다.** 갈린 것은 낱말이고 **`namespace.verb` 형식과 "한 번 정하면 안 흔든다"는 규칙은 그대로다** — `action_type` 이 idempotency key 의 한 칸이기 때문이다(v11 §4-E).
 
 **`action_type` 은 [idempotency key](idempotency.md) 의 입력이다.** 이름이 바뀌면 **같은 요청이 다른 키를 만든다.**
 

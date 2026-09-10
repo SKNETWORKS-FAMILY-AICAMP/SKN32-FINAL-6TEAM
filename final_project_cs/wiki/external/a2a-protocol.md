@@ -182,7 +182,7 @@ deadline_s 기준
 
 ## 더미 Remote Agent
 
-`app/presentation/a2a/remote_agent.py`
+`app/presentation/a2a/travel_remote_agent.py`
 
 **A-COP 본체가 아니라 왕복 검증용 상대역이다.** Core 도메인 격리 테스트의 예외 목록에 이유와 함께 올라 있다.
 

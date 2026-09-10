@@ -45,7 +45,7 @@ Linux는 VRAM 초과 시 바로 OOM인데, Windows는 초과분을 shared GPU me
 | 우회 | 방법 |
 |---|---|
 | 로딩 | `device_map="auto"`와 4-bit를 **모두 버리고** bf16으로 CPU에 올린 뒤 `.to("cuda")` |
-| 재현 | `eval/finetune/diag_3b.py` |
+| 재현 | ~~`eval/finetune/diag_3b.py`~~ **삭제됨(2026-09-10).** 현상과 우회는 여기 적힌 것이 전부다 — 재현 스크립트는 없다 |
 
 **자체호스팅을 제품으로 만들면 Linux를 전제해야 한다.**
 

@@ -57,7 +57,7 @@ domain: travel
 | | |
 |---|---|
 | **좋은 쪽** | 가드·`_result`·`_evidence`·`_escalate`·`_unknown`·`_proposal` 이 한 곳에 있다. Team 마다 다르게 하는 실수가 안 생긴다 |
-| **★나쁜 쪽** | **결함도 한꺼번에 물려받는다.** `_base.py:136` 의 `business_subject` 3단 폴백(`booking_id → trip_id → case_id`)이 **여행 Team 전부에 걸린다** — 전에는 한 Team 만의 문제였다 |
+| **★나쁜 쪽** | **결함도 한꺼번에 물려받는다.** `_base.py:169` 의 `business_subject` 3단 폴백(`booking_id → trip_id → case_id`)이 **여행 Team 전부에 걸린다** — 전에는 한 Team 만의 문제였다 |
 
 ★**공용 기반은 실수의 전파 경로이기도 하다.** 뼈대를 먼저 만들면 뼈대를 먼저 검증해야 한다.
 
@@ -73,7 +73,9 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 
 **분류기가 막으면 여섯 중 아무도 안 불린다.** 그래서 **Team 순서보다 코어 1 의 분류 어휘 교체가 먼저다**(v11 §9-B 1주차 "코어 라벨 교체").
 
-★**막으라고 만든 가드가 안 막는다.** `tests/unit/voc/test_feedback_intent_alignment.py` 가 등록표가 아니라 `VocStoreManagerTeam` 하나를 보는데, 그 Team 은 지금 `config/project.yaml` 에 등록조차 안 돼 있다. **고정된 예시를 보는 가드는 예시가 사라지면 가드가 아니게 된다.**
+★**막으라고 만든 가드가 안 막았다.** 옛 `test_feedback_intent_alignment.py` 가 등록표가 아니라 `VocStoreManagerTeam` 하나를 봤는데 그 Team 은 등록조차 안 돼 있었다. **고정된 예시를 보는 가드는 예시가 사라지면 가드가 아니게 된다.**
+
+`[실측 2026-09-10]` **그 가드는 삭제됐다.** 대신 v11 이 **DoD-23(라우팅 도달성)** 을 세웠고 `tests/unit/core/test_commit_phase_mapping.py::test_every_declared_prefix_is_reachable` 가 **등록표를 읽어** 모든 Team 에 닿는 접두가 있는지 본다 — 고정된 예시가 아니라 선언을 본다.
 
 **코드 수정은 담당 세션 몫이다** → [../../../wiki/delivery/open-items.md](../../../wiki/delivery/open-items.md)
 

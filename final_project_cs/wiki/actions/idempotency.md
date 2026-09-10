@@ -6,7 +6,7 @@ status: draft
 tags: [contract, architecture]
 owners: [human:미배정]
 domain: neutral
-domain_note: idempotency 기제는 도메인 무관이다. 예시가 환불 제안이다
+domain_note: idempotency 기제는 도메인 무관이다. 키의 「대상」 규칙은 v11 §4-E 가 정한다
 ---
 
 # idempotency
@@ -39,7 +39,7 @@ def idempotency_key(*, tenant_id, request_id, action_type, business_subject) -> 
 | `tenant_id` | 다른 테넌트의 같은 요청은 다른 것 |
 | `request_id` | 같은 요청인지 판정하는 축 |
 | `action_type` | 같은 요청이라도 환불과 알림은 다른 것 |
-| `business_subject` | 어느 주문·어느 건인지 |
+| `business_subject` | **어느 대상 객체인지.** v11 §4-E — 서버가 인자에서 꺼내 **실재·소유를 확인한** id 를 넣는다. 특정 못 하면 **폴백하지 않고 거부한다** |
 
 **각 조각을 먼저 해시한 뒤 이어 붙여 다시 해시한다.** 조각 경계를 명확히 해서 `"ab"+"c"`와 `"a"+"bc"`가 같은 키가 되는 걸 막는다.
 

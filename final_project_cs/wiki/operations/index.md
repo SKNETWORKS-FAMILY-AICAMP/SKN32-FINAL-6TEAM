@@ -61,7 +61,7 @@ GPU 메모리가 초과되면 Linux는 즉시 OOM으로 죽는데 **Windows는 s
 | v5 | 2,560 | OOM, 25분 소요 |
 | v6 | 1,024 | 완주 |
 
-우회는 `device_map="auto"`와 4-bit 양자화를 **모두 버리고** bf16으로 CPU에 올린 뒤 `.to("cuda")`로 옮기는 것이다. 재현 스크립트는 `eval/finetune/diag_3b.py`.
+우회는 `device_map="auto"`와 4-bit 양자화를 **모두 버리고** bf16으로 CPU에 올린 뒤 `.to("cuda")`로 옮기는 것이다. 재현 스크립트 ~~`eval/finetune/diag_3b.py`~~ 는 **2026-09-10 에 삭제됐다**.
 
 상세는 [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md).
 

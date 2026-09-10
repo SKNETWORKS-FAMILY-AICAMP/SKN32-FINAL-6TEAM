@@ -44,7 +44,7 @@ python -m pytest tests/unit/infrastructure/test_sql_graph_adapter.py -q
 
 **0건이 도는 명령은 통과처럼 보이지만 아무것도 증명하지 않는다** — 이
 문서가 DoD-22 를 두고 "가장 나쁜 종류" 라 한 것과 같은 부류다. DoD-20 의
-둘째 명령(`tests/e2e/test_project_composition.py`)도 같은 상태였다.
+둘째 명령(`tests/unit/test_project_composition.py`)도 같은 상태였다.
 
 그래서 cs 는 **evidence 안의 pytest 명령 30개를 `--collect-only` 로 일괄
 검사**했다. 지금 0건이 도는 것은 DoD-21 이 "이 명령은 0건이 돈다" 를

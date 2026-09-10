@@ -8,7 +8,7 @@ owners: [human:미배정]
 size_exempt: true
 size_exempt_reason: 불변식 카탈로그. 전체를 훑어야 의미가 있다
 domain: neutral
-domain_note: 불변식 목록이다. 커머스 낱말은 금지 목록과 옛 테스트 이름으로 나온다
+domain_note: 불변식 목록이다. 커머스 낱말은 금지 목록과 도메인 교체 대조군 테스트의 이름으로 나온다
 ---
 
 # 불변식 카탈로그
@@ -60,10 +60,18 @@ Core가 도메인을 모른다는 것을 지킨다. **Pack 교체 가능성의 �
 
 ```python
 DOMAIN_WORDS = (
+    # 구독·결제 (sample 도메인)
     "payment", "subscription", "entitlement", "refund", "invoice",
+    # 커머스 (v9 까지 이 저장소의 도메인. 2026-09-10 에 코드에서 나갔다)
     "order_id", "line_item", "shipment", "sku", "cart",
+    # ★여행 (v10~ 현재 도메인). 2026-09-10 추가
+    "booking", "itinerary", "lodging", "supplier_booking", "traveller",
 )
 ```
+
+★**도메인이 바뀌면 새 어휘를 여기 넣는 것까지가 교체다.** `[실측 2026-09-10]` 2026-09-08 에 도메인을 갈면서 `app/modules/travel_ops/` 만 만들고 이 목록은 안 늘렸다 — 그래서 **`booking_id` 가 코어로 새도 검사가 울지 않는 상태**였다.
+
+★**옛 어휘를 지우지 않는다.** 커머스 코드가 저장소에서 나갔어도 커머스 낱말이 코어에 들어오면 안 되는 것은 그대로다. **목록은 도메인마다 누적된다.**
 
 ---
 
@@ -118,7 +126,17 @@ DOMAIN_WORDS = (
 
 Action을 실행하기 전 근거를 대조한다.
 
-| ID | 불변식 | 판정 | 실행 위치 |
+### ★ 왜 이 표가 커머스 어휘인가 — 대조군이기 때문이다
+
+`[실측 2026-09-10]` **이 불변식들은 제품 도메인(여행)이 아니라 「제품이 쓰지 않는 다른 도메인」에서 돈다.**
+
+> 이 저장소의 주장은 "어떤 CS 플랫폼 요청이 와도 대응 가능한 범용 basement" 다. 그 주장은 **선언만으로는 증명되지 않는다.**
+
+`test_engine_serves_another_domain.py` 가 커머스 도메인 선언을 만들어 `app/core/verification.py` 를 **한 줄도 고치지 않고** 돌린다. **제품 도메인이 여행으로 바뀌면서 여기가 커머스 어휘의 정당한 자리가 됐다.**
+
+★**커머스를 저장소에서 걷어낼 때도 이 파일은 지우지 않는다.** 지우면 「도메인을 갈아끼울 수 있다」는 주장을 증명하는 **유일한 대조군**이 사라진다.
+
+| ID | 불변식 (대조 도메인 = 커머스) | 판정 | 실행 위치 |
 |---|---|---|---|
 | `INV-CS-VER-001` | 존재하지 않는 주문은 거부된다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_unknown_order_is_rejected` |
 | `INV-CS-VER-002` | 주문 총액을 넘는 환불은 거부된다 | automated | `::test_refund_over_the_order_total_is_rejected` |
@@ -129,6 +147,25 @@ Action을 실행하기 전 근거를 대조한다.
 | `INV-CS-VER-007` | 이 도메인의 불투명 필드는 거부된다 | automated | `::test_this_domains_opaque_field_is_rejected` |
 
 전부 `tests/architecture/test_engine_serves_another_domain.py`에 있다.
+
+### 제품 도메인(여행) 쪽 같은 검사
+
+`[실측 2026-09-10]` `tests/unit/core/test_proposal_verification.py` — **같은 엔진에 여행 선언을 물린다.** 둘이 쌍이라는 것이 이 구조의 요점이다.
+
+| 무엇을 본다 | 테스트 |
+|---|---|
+| 예약 금액을 넘는 환급은 거부된다 | `test_refund_larger_than_the_booking_amount_is_rejected` |
+| 없는 예약 id 는 거부된다 | `test_nonexistent_booking_id_is_rejected` |
+| **남의 공급자 예약은 거부된다** | `test_supplier_booking_owned_by_someone_else_is_rejected` |
+| 정원을 넘는 일행 수는 거부된다 | `test_party_size_over_the_capacity_is_rejected` |
+| 확인 못 한 식별자는 **무시가 아니라 거부** | `test_unverifiable_identifier_is_rejected_not_ignored` |
+| 대상 예약 없는 환급은 거부된다 | `test_refund_without_a_target_booking_is_rejected` |
+| **커머스 어휘가 조용히 통과하지 않는다** | `test_commerce_vocabulary_is_not_silently_accepted` |
+| 문제를 첫 건만 보고하지 않는다 | `test_every_problem_is_reported_not_just_the_first` |
+
+★**마지막에서 둘째가 이 판올림의 산물이다.** 커머스 어휘가 여행 경로로 새어 들어오는 것을 **제품 쪽에서도** 막는다.
+
+`[미확보]` **여행 쪽 검사에는 `INV-` 불변식 ID 가 안 붙어 있다.** 커머스 대조군만 ID 를 갖고 있어, 불변식 목록으로는 제품 도메인 검증이 보이지 않는다. ID 부여는 코드 담당 몫이다.
 
 ### ★ 이 불변식들이 못 잡는 것
 

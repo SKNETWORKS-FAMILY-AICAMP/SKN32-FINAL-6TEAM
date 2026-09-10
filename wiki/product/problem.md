@@ -86,7 +86,7 @@ domain: travel
 
 페인포인트가 추상적 우려가 아니라는 증거. `[실측 2026-09-09]`
 
-**한 사건이 여러 예약을 바꾸는데 키가 같아진다.** `app/modules/travel_ops/_base.py:136` 이 idempotency 의 `business_subject` 를 3단 폴백으로 만든다.
+**한 사건이 여러 예약을 바꾸는데 키가 같아진다.** `app/modules/travel_ops/_base.py:169` 이 idempotency 의 `business_subject` 를 3단 폴백으로 만든다.
 
 ```
 subject = booking_id  or  trip_id  or  case_id

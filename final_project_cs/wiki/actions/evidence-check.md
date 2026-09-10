@@ -6,7 +6,7 @@ status: draft
 tags: [security, architecture]
 owners: [human:미배정]
 domain: neutral
-domain_note: 근거 대조 기제는 도메인 무관이다. 불변식 표의 예시가 커머스다
+domain_note: 근거 대조 기제는 도메인 무관이다. 커머스 예시는 도메인 교체 대조군 테스트에서만 나온다
 ---
 
 # 근거 대조
@@ -43,14 +43,24 @@ Team이 ActionProposal 반환
 
 ## 무엇을 대조하는가
 
-| 대상 | 예 |
+`[실측 2026-09-10]` **제품 도메인은 여행이다.** 읽는 원본은 `bookings`·`supplier_bookings` 다(`app/tools/read_tools.py`).
+
+| 대상 | 예 (여행) |
 |---|---|
-| 식별자 | 이 `order_id`가 이 고객 것인가 |
-| 금액 | 환불액이 주문 총액을 넘는가 |
-| 수량 | 반품 수량이 주문 수량을 넘는가 |
-| 소유권 | 이 배송이 이 주문 것인가 |
+| 식별자 | 이 `booking_id` 가 이 여행 것인가 |
+| 금액 | 환급액이 **예약 금액**(`amount_cents`)을 넘는가 |
+| 수량 | **일행 수**(`party_size`)가 정원(`capacity`)을 넘는가 |
+| 소유권 | 이 **공급자 예약**(`supplier_bookings`)이 이 예약 것인가 |
 
 `Mismatch` 객체로 무엇이 왜 안 맞는지 남긴다.
+
+★**확인 못 한 식별자를 무시하지 않고 거부한다.** `tests/unit/core/test_proposal_verification.py::test_unverifiable_identifier_is_rejected_not_ignored` — **모르는 것을 통과시키면 대조가 의미를 잃는다.**
+
+★**커머스 어휘가 조용히 통과하지 않는다.** 같은 파일의 `test_commerce_vocabulary_is_not_silently_accepted` 가 막는다 — 도메인을 갈아끼운 뒤 옛 어휘가 제품 경로로 새는 것을 제품 쪽에서 잡는다.
+
+### 커머스 예시는 대조군에만 남는다
+
+`[실측]` `tests/architecture/test_engine_serves_another_domain.py` 가 **커머스 선언을 같은 엔진에 물려** 돌린다. **`verification.py` 를 한 줄도 고치지 않고** 돈다는 것이 이 저장소의 주장을 증명하는 자리다. → [`quality/invariants.md`](../quality/invariants.md)
 
 ## 순수 함수로 분리했다
 

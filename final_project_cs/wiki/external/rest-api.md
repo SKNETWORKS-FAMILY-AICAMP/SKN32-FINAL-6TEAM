@@ -96,7 +96,7 @@ create_app()  →  composition.build_classifier()  →  feedback.classify(masked
 
 `[미확보]` **얼마나 오래 있었는지는 모른다.** 이 파일을 건드린 커밋이 최초 도메인 전환 하나뿐이라 커밋 이력으로 특정이 안 된다.
 
-`[미확보]` 재발 방지 테스트(`tests/unit/voc/test_feedback_intent_alignment.py`)는 있지만 **[invariants.md](../quality/invariants.md) 카탈로그에 ID가 없다.** "INTENTS ⊇ 모든 Team의 `accepted_case_types`"는 라우팅이 성립하는 조건이라 불변식으로 올릴 만하다.
+`[실측 2026-09-10]` 옛 재발 방지 테스트(`test_feedback_intent_alignment.py`)는 **삭제됐다.** 대신 `tests/unit/core/test_commit_phase_mapping.py::test_every_declared_prefix_is_reachable` 가 등록표를 읽어 검사한다(DoD-23). `[미확보]` 그 테스트는 있지만 **[invariants.md](../quality/invariants.md) 카탈로그에 ID가 없다.** "INTENTS ⊇ 모든 Team의 `accepted_case_types`"는 라우팅이 성립하는 조건이라 불변식으로 올릴 만하다.
 
 ### 실제 API 경로를 진짜로 도는 e2e 테스트
 

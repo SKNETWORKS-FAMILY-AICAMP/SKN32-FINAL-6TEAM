@@ -159,7 +159,23 @@ return_refund · catalog_verification         Commerce Ops Pack
 feedback                                     인라인 분류
 ```
 
-`final_project_sample`의 Billing/Technical 2종은 **아키텍처 증거로만 남기고 착수 목록에 없다.**
+### ★ [2026-09-10] 지금 등록된 것은 여행 여섯이다
+
+`[실측 2026-09-10]` `config/project.yaml` 을 직접 셌다. **위 커머스 목록은 그때의 기록이고 코드에서 나갔다.**
+
+```
+activity · booking_handoff · mobility · dining   여행 Team (판정·제안)
+lodging · flight                                 등록만 (잠긴 예약)
+feedback                                         인라인 분류 — 남는다. 라벨만 교체됐다
+```
+
+| | 상태 |
+|---|---|
+| `app/modules/customer_ops/` | **삭제됨** (2026-09-10) |
+| 커머스 Team 문서 7건 | [records/legacy/teams/](../records/legacy/teams/) 로 이동 |
+| `place_verification` (A2A Remote) | **원격은 있고 등록은 0건** → [index.md](index.md) |
+
+★**`final_project_sample` 의 예시 Team 은 아키텍처 증거로만 남는다.** 그 저장소의 도메인은 구독·결제이고 이 저장소와 별개다.
 
 ## 등록된 Team 수의 변화
 
