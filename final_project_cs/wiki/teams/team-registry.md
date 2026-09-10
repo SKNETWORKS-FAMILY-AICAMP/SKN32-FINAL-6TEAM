@@ -171,7 +171,7 @@ feedback                                         인라인 분류 — 남는다.
 
 | | 상태 |
 |---|---|
-| `app/modules/customer_ops/` | **삭제됨** (2026-09-10) |
+| `app/modules/customer_ops/` | **작업 트리에서 제거** (2026-09-10, **커밋 전**). `feedback.py`·`verification_policy.py` 는 삭제가 아니라 `travel_ops/` 로 **이동**했다 |
 | 커머스 Team 문서 7건 | [records/legacy/teams/](../records/legacy/teams/) 로 이동 |
 | `place_verification` (A2A Remote) | **원격은 있고 등록은 0건** → [index.md](index.md) |
 

@@ -79,9 +79,14 @@ domain: travel
 | | 2026-09-09 | **2026-09-10** |
 |---|---|---|
 | `config/project.yaml` 등록 | 빠졌다 (소스는 남아 있었다) | — |
-| `app/modules/customer_ops/` | 남아 있었다 | **삭제됨** |
+| `app/modules/customer_ops/` | 남아 있었다 | **작업 트리에서 제거** (커밋 전) |
 | 커머스 A2A 원격 (`remote_agent.py`) | 남아 있었다 | **삭제됨.** 자리를 `travel_remote_agent.py` 가 물려받았다 |
 | wiki 문서 7건 | `wiki/teams/` 에 있었다 | **`wiki/records/legacy/teams/` 로 이동** |
+
+
+★**「삭제됨」의 범위를 정확히 적는다.** `[실측 2026-09-10]` **작업 트리에서는 파일이 없고 git 에는 아직 있다** — 삭제가 커밋되지 않았다(다른 세션의 진행 중 작업). **되돌려지면 이 표가 틀린다.**
+
+★**둘은 삭제가 아니라 이동이다.** `feedback.py`(인라인 분류)와 `verification_policy.py` 는 `app/modules/travel_ops/` 로 옮겨졌다 — 인라인 분류는 남고 **라벨만 교체된다**(v11 §5-A).
 
 ★**문서를 지우지 않고 옮긴 이유.** 판정의 **이유**가 도메인 무관이라 여행 Team 이 같은 문제를 다시 만난다. 그리고 도메인이 되돌아가면 그 판정을 다시 하게 되는데 **그걸 다시 논의하지 않으려고** 남긴다. → [records/legacy/index.md](../records/legacy/index.md)
 

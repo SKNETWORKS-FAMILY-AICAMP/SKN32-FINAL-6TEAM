@@ -90,6 +90,8 @@ escalated 로 전환
 
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
+★**아래 일곱은 제품 도메인이 아니라 대조군에서 돈다.** `test_engine_serves_another_domain.py` 가 커머스 선언을 같은 엔진에 물려 **`verification.py` 를 한 줄도 고치지 않고** 돌린다. 여행 쪽 쌍은 `tests/unit/core/test_proposal_verification.py` 다 → [`quality/invariants.md`](../quality/invariants.md)
+
 | `INV-CS-VER-001` | 존재하지 않는 주문은 거부된다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_unknown_order_is_rejected` |
 | `INV-CS-VER-002` | 주문 총액을 넘는 환불은 거부된다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_refund_over_the_order_total_is_rejected` |
 | `INV-CS-VER-003` | 부분 환불은 통과한다 | automated | `tests/architecture/test_engine_serves_another_domain.py::test_partial_refund_passes` |
@@ -148,7 +150,7 @@ escalated 로 전환
 
 **대조 대상 자체가 틀리면 통과한다.**
 
-`INV-CS-VER-002`는 "환불 ≤ 주문 총액"만 본다.
+`INV-CS-VER-002`는 "환불 ≤ 주문 총액"만 본다 — **대조군 기준이다.** 제품 경로의 같은 검사는 "환급 ≤ 예약 금액"이다(`test_refund_larger_than_the_booking_amount_is_rejected`).
 
 ```
 30,000원 주문 · 5,000원 쿠폰 → 실결제 25,000원
