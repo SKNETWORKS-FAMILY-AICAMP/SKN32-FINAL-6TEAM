@@ -37,7 +37,9 @@ domain: travel
 ## 1. Agent Gateway
 
 ```
-OAuth Access Token 검증 · user/client 식별 · Scope 검사
+API 키 검증 · user/client 식별 · Scope 검사
+
+★`[실측 2026-09-10]` **지금 구현은 OAuth 가 아니다.** `app/presentation/security.py` 가 **HMAC-SHA256 으로 만든 키를 SHA-256 다이제스트로 대조**하고 scope 를 본다. OAuth Access Token 검증은 설계에 있던 것이고 구현되지 않았다.
 요청 위험도 확인 · 승인된 요청만 Case Layer 로
 ```
 

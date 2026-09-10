@@ -19,8 +19,8 @@ domain: neutral
 
 | 어디 | 무엇 | 없으면 |
 |---|---|---|
-| `app/core/project_config.py` | `KNOWN_IMPLEMENTATION_REFS` (frozenset 12개) | `/composer/apply` 가 **422 로 거부** |
-| `app/composer_host.py` | `IMPLEMENTATIONS` (튜플 12개 — id·ref·display_name·description) | 콘솔 카탈로그에 안 뜬다 |
+| `app/core/project_config.py` | `KNOWN_IMPLEMENTATION_REFS` (frozenset — `[실측 2026-09-10 작업 트리]` **여행 6개**, git 은 커머스 6개. 작성 당시 12개였다) | `/composer/apply` 가 **422 로 거부** |
+| `app/composer_host.py` | `IMPLEMENTATIONS` (튜플 — 작업 트리 **여행 6개**, 작성 당시 12개 — id·ref·display_name·description) | 콘솔 카탈로그에 안 뜬다 |
 
 **둘은 같은 집합이어야 하고 아키텍처 테스트가 센다**(`test_composer_stays_out_of_this_repo.py:95`). 조립 경로는 이 표를 안 보기 때문에 **pytest 로도 e2e 하나에서만 터졌다.**
 
@@ -67,7 +67,7 @@ D-013 이 조건부로 남긴 것은 **「플러그인 디렉터리 스캔」**�
 
 ★**핵심은 이것이다** — `app/modules/` 안의 코드는 **이미 실행되도록 배포된 코드**다. 그것을 카탈로그에 올리는 일이 새로운 권한을 만들지 않는다. **손으로 유지하는 목록은 그 코드가 이미 거기 있다는 사실을 두 번 적는 것일 뿐이다.**
 
-`[실측]` 지금 12개 ref 가 **전부 `app.modules.` 접두사**다. 예외가 하나도 없다.
+`[실측 2026-09-10 작업 트리]` ref **6개**가 **전부 `app.modules.` 접두사**다(작성 당시 12개도 그랬다). 예외가 하나도 없다.
 
 `[실측]` `TeamManifest.display_name` 이 이미 계약에 있다(`app/core/contracts.py:307`). **카탈로그의 표시 이름을 Team 이 스스로 말한다.** `description` 은 계약에 없다 — 추가할 자리는 manifest 다.
 

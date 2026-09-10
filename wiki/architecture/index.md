@@ -19,7 +19,7 @@ domain: travel
 3. [core-vs-team.md](core-vs-team.md) — 무엇이 Core에 남고 무엇이 Team으로 가는가
 4. [pack-model.md](pack-model.md) — **Runtime 위에 도메인 Pack 을 갈아 끼우는 구조**
 5. [concurrency.md](concurrency.md) — **경합 8종을 누가 처리하는가**
-6. [repository-map.md](repository-map.md) — 저장소 6개의 역할과 관계
+6. [repository-map.md](repository-map.md) — 저장소 **7개**의 역할과 관계 (`final_project_ui` 포함)
 7. [tech-stack.md](tech-stack.md) — 쓰는 것과 미룬 것
 8. [notifications.md](notifications.md) — **알림 두 종류와 확인할 수 있는 것**
 9. [diagrams.md](diagrams.md) — 다이어그램 8종과 근거

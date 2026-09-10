@@ -90,7 +90,9 @@ DOMAIN_WORDS = (
 )
 ```
 
-### ★ [2026-09-09] 이 목록에 여행 어휘가 없다
+### ★ [2026-09-09] 이 목록에 여행 어휘가 없었다 — 2026-09-10 에 들어갔다
+
+`[실측 2026-09-10 작업 트리]` **이 절은 닫혔다.** `DOMAIN_WORDS` 에 `booking`·`itinerary`·`lodging`·`supplier_booking`·`traveller` **다섯이 더해졌고** 옛 어휘는 안 지웠다. 아래는 그 전 서술이다.
 
 `[실측]` `tests/architecture/test_basement_is_domain_free.py`. **`trip`·`itinerary`·`booking`·`reservation`·`activity` 가 0개다.**
 

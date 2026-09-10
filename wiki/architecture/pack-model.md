@@ -77,7 +77,7 @@ domain: travel
 | 항목 | 실측 |
 |---|---|
 | `config/project.yaml` 등록 Team | **여행 6종** — `activity`·`booking_handoff`·`mobility`·`dining`·`lodging`·`flight`. 커머스 6종은 **등록에서 빠졌다**(소스는 `app/modules/customer_ops/` 에 남아 있다) |
-| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **9개** — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings`·`feedback`·`verification_policy`·`__init__`. **`[실측 git]` 전부 미추적이다** |
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **10개** (`watch.py` 가 더해졌다) — `_base`·`activity`·`booking_handoff`·`dining`·`mobility`·`locked_bookings`·`feedback`·`verification_policy`·`__init__`. **`[실측 git]` 전부 미추적이다** |
 | v10 이 계약을 바꿨나 | **안 바꿨다** — §0-2 "통합 계약 승계. 필드 변경 없음" |
 
 ### ★ 판정 — 「Registry 등록만으로 끝난다」는 그대로는 못 쓴다

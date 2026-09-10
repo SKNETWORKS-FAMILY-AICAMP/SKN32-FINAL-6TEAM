@@ -10,6 +10,8 @@ domain: neutral
 
 # D-003 Message Broker는 in-process queue
 
+★`[실측 2026-09-10]` **지금 코드는 in-process queue 가 아니라 DB outbox 다.** `composition.py` 의 `build_broker()` 가 `config.ports.message_broker == "outbox"` 만 받고 `OutboxBrokerAdapter` 를 쓴다. **결정(RabbitMQ 기각 · Port 로 교체 가능하게)은 그대로 유효하고, MVP 구현 이름만 바뀌었다.** 아래 「in-process queue」 는 결정 당시의 표현이다.
+
 ## 맥락
 
 Team 간 Task 전달과 Action 결과 전파에 메시지 전달이 필요하다. 어떤 브로커를 쓸지 정해야 했다.

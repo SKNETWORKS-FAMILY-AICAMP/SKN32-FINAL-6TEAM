@@ -1,7 +1,7 @@
 ---
 type: decision
 title: Composer v3 설계와 구현 중 무엇을 맞출 것인가
-description: 설계는 토글 전용인데 구현은 전체 교체다. 세 안을 비교했고 결정에 질문 6개가 남아 있다
+description: 설계는 토글 전용인데 구현은 전체 교체다. 세 안을 비교했고 2026-09-06 에 결정됐다. [정정 2026-09-10] 이 줄은 질문 6개가 남았다고 적고 있었다. 원문: 결정에 질문 6개가 남아 있다
 status: draft
 impl_scope: sample — Composer 는 sample 이 원본이고 cs 로 이식한다. D-006 참조
 tags: [architecture, api, contract]

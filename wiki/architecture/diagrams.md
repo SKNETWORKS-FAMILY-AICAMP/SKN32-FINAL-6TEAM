@@ -22,7 +22,7 @@ python program/plan/diagram/render_all.py
 python program/plan/diagram/build_showcase.py
 ```
 
-**둘 다 PlantUML 서버 접속이 필요하다.** 오프라인에서는 안 된다.
+**`render_all.py` 는 PlantUML 서버 접속이 필요하다.** `build_showcase.py` 는 `[정정 2026-09-10]` **이미 렌더된 로컬 SVG 를 합칠 뿐이라 오프라인에서도 된다** — 「둘 다 서버가 필요하다」고 적혀 있었다.
 
 결과는 `A-COP_다이어그램_모음.html`이다.
 

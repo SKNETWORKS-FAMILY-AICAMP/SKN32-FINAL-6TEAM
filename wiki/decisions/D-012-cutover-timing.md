@@ -1,7 +1,7 @@
 ---
 type: decision
 title: 전환 시점 — 사용자 호출 대기
-description: 시점 고정을 뗐다. 준비는 끝났고 사용자 호출 대기다
+description: 시점 고정을 뗐고 2026-09-07 사용자 호출로 전환을 실행했다(d976932). [정정 2026-09-10] 호출 대기로 적혀 있었다
 status: draft
 tags: [governance, documentation, release]
 domain: neutral

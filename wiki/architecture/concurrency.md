@@ -62,6 +62,8 @@ Team 안에 Agent가 몇이든 그 안의 경합은 Team이 알아서 한다. Co
 
 ## 읽기와 쓰기 둘 다 Team을 거치지 않는다
 
+★`[실측 2026-09-10 작업 트리]` **읽기는 지금 코드가 이 표와 다르다** — 여행 Team 이 `_read()` → `ReadToolbox.call()` 로 직접 읽는다(허용·예산은 게이트가 강제). **쓰기 줄은 그대로 맞다.** → [`cs/teams/team-boundary.md`](../../final_project_cs/wiki/teams/team-boundary.md) §2 `[미확보]`
+
 | | Team이 하는 것 | 실제로 하는 쪽 |
 |---|---|---|
 | 읽기 | `required_context` 선언 | **Context Broker**가 미리 조회해 `ContextPack`에 넣는다 |
