@@ -44,7 +44,7 @@ domain: travel
 
 ## 구조 요약
 
-`[실측]` v10 §5·§6.
+`[실측]` v11 §5·§6.
 
 ```text
               A-COP Runtime (Core)  ← 도메인을 모른다

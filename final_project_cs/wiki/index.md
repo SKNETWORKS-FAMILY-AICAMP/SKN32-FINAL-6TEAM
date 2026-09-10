@@ -19,7 +19,7 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 
 ★**[2026-09-08] 도메인이 여행으로 바뀌었다**(계획서 v10). **코어는 그대로 쓴다** — `runtime/`·`actions/`·`context/`의 계약·동시성·승인 경계는 도메인을 모르므로 유효하다. 반면 `teams/`의 Team 페이지 다섯(return-refund·fulfillment-logistics·procurement-order·catalog-verification·voc-store-manager)은 **MVP 경로에서 빠진 쇼핑몰 Team**이고, 여행 Team(Activity·Booking Handoff·Dining·Mobility)의 페이지는 아직 없다. `[실측 2026-09-09]`
 
-여행에서 코어가 바뀌는 것은 넷뿐이다(v10 §5-A) — 분류 라벨(일정 제출/사건 신고/확인 요청/조정 거부/그 외), Context Broker가 싣는 것(여행 상태), Action 3종(장소·운영 / 이동 시간 / 기상), Composer 소재(영어 통지 문구). 새 집합체는 **Trip** 하나이고 `Case`에 `trigger_source`·`trip_id`가 붙는다(§4-B).
+여행에서 코어가 바뀌는 것은 넷뿐이다(v11 §5-A) — 분류 라벨(일정 제출/사건 신고/확인 요청/조정 거부/그 외), Context Broker가 싣는 것(여행 상태), Action 3종(장소·운영 / 이동 시간 / 기상), Composer 소재(영어 통지 문구). 새 집합체는 **Trip** 하나이고 `Case`에 `trigger_source`·`trip_id`가 붙는다(§4-B).
 
 ## 말 네 개를 먼저 나눈다
 
@@ -49,12 +49,12 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 ### [runtime/](runtime/index.md) — Case가 흘러가는 곳
 `app/core/` (평면)
 Case 생명주기, Shared State, Controller, 충돌 처리, 메시지 배달.
-**이 영역은 도메인을 모른다.** 환불이든 배송이든 여행 일정 조정이든 다 같은 Case다 — 그래서 여행 판올림에서 **그대로 승계한다**(v10 §6). 다만 Case를 시스템도 만든다는 것이 새로 붙는다(`trigger_source`).
+**이 영역은 도메인을 모른다.** 환불이든 배송이든 여행 일정 조정이든 다 같은 Case다 — 그래서 여행 판올림에서 **그대로 승계한다**(v11 §6). 다만 Case를 시스템도 만든다는 것이 새로 붙는다(`trigger_source`).
 
 ### [teams/](teams/index.md) — 업무 책임 단위
 `app/modules/customer_ops/`
 Team 계약, Registry, 경계, 개별 Team 페이지.
-`[실측 2026-09-09]` **개별 Team 문서는 쇼핑몰 7종이다.** 계약·Registry·경계 문서는 도메인과 무관하게 유효하고, 여행 Team 페이지는 아직 안 썼다 → v10 §5.
+`[실측 2026-09-09]` **개별 Team 문서는 쇼핑몰 7종이다.** 계약·Registry·경계 문서는 도메인과 무관하게 유효하고, 여행 Team 페이지는 아직 안 썼다 → v11 §5.
 
 ### [context/](context/index.md) — 읽기 경로
 `app/core/context.py`, `app/infrastructure/rag/`

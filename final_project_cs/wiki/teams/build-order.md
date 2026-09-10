@@ -9,7 +9,7 @@ domain: travel
 
 # Team 을 어느 순서로 만드나
 
-`[실측]` 근거는 v10 §5·§9-B.
+`[실측]` 근거는 v11 §5·§9-B.
 
 ## 계획한 순서
 
@@ -32,7 +32,7 @@ domain: travel
 
 다른 Team 은 이 둘 중 하나가 `[미확보]` 다 — Dining 은 임시휴무를 어디서 받는지 모르고, Mobility 는 운행 정보 출처가 미정이다.
 
-★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v10 §10 리스크). 7주 배분이 추정이라 Dining·Mobility 는 절삭 가능해야 한다.
+★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). 7주 배분이 추정이라 Dining·Mobility 는 절삭 가능해야 한다.
 
 ### 왜 Booking Handoff 가 같이 가나
 
@@ -71,7 +71,7 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 겹치는 것              0개  →  ClassificationFailed  →  escalated
 ```
 
-**분류기가 막으면 여섯 중 아무도 안 불린다.** 그래서 **Team 순서보다 코어 1 의 분류 어휘 교체가 먼저다**(v10 §9-B 1주차 "코어 라벨 교체").
+**분류기가 막으면 여섯 중 아무도 안 불린다.** 그래서 **Team 순서보다 코어 1 의 분류 어휘 교체가 먼저다**(v11 §9-B 1주차 "코어 라벨 교체").
 
 ★**막으라고 만든 가드가 안 막는다.** `tests/unit/voc/test_feedback_intent_alignment.py` 가 등록표가 아니라 `VocStoreManagerTeam` 하나를 보는데, 그 Team 은 지금 `config/project.yaml` 에 등록조차 안 돼 있다. **고정된 예시를 보는 가드는 예시가 사라지면 가드가 아니게 된다.**
 
@@ -84,7 +84,7 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 | 1 | **코어 1 분류 어휘 교체** | 이게 없으면 위 여섯이 전부 죽은 코드다 |
 | 2 | `business_subject` 폴백 제거 | 계약이라 나중에 바꾸면 그 위가 전부 따라 바뀐다 |
 | 3 | Activity 판정 규칙 실물화 | 지금은 계약 포장만 있다 |
-| 4 | 선제 조정 루프 | Mobility 와 함께 (v10 §9-B 5주차) |
+| 4 | 선제 조정 루프 | Mobility 와 함께 (v11 §9-B 5주차) |
 | 5 | **Place Verification 등록** | `[실측 2026-09-10]` **원격은 생겼다**(`travel_remote_agent.py` 202줄 · 통합 테스트 7건). `config/project.yaml` 등록이 **0건**이라 아직 부를 수 없다 |
 
 <details>

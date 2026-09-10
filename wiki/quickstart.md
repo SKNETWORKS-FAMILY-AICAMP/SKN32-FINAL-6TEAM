@@ -12,7 +12,7 @@ domain: travel
 
 A-COP은 **여행 지속관리 CS 플랫폼**이다. 외부 에이전트나 LLM이 만든 일정을 받아 **현실에서 성립하는지 검증하고, 여행이 끝날 때까지 상황 변화를 먼저 감지해 남은 일정을 조정한다.**
 
-**계획을 만드는 것은 우리 일이 아니다.** 계획 생성기를 만들면 트리플·Mindtrip·범용 에이전트와 정면으로 겹친다. 우리 가치는 계획이 현실에서 성립하는지 확인하는 데 있다 → 계획서 v10 §4-A.
+**계획을 만드는 것은 우리 일이 아니다.** 계획 생성기를 만들면 트리플·Mindtrip·범용 에이전트와 정면으로 겹친다. 우리 가치는 계획이 현실에서 성립하는지 확인하는 데 있다 → 계획서 v11 §4-A.
 
 ## 30초 요약
 
@@ -27,7 +27,7 @@ A-COP은 **여행 지속관리 CS 플랫폼**이다. 외부 에이전트나 LLM�
 | 일정 | 최종발표 2026-10-26 — 2026-09-08 기준 **7주**. MVP는 구현 단계 1(계획과 검증)까지 |
 | 팀 | 6명 |
 
-**승계한 것과 버린 것.** 코어 계약·Case 생명주기·동시성·감사·평가 하네스는 그대로 쓴다. Team 모듈과 도메인 데이터는 전량 신규다. 커머스 Team 4종과 VOC & Store Manager는 MVP 경로에서 빠졌다 → v10 §0-2.
+**승계한 것과 버린 것.** 코어 계약·Case 생명주기·동시성·감사·평가 하네스는 그대로 쓴다. Team 모듈과 도메인 데이터는 전량 신규다. 커머스 Team 4종과 VOC & Store Manager는 MVP 경로에서 빠졌다 → v11 §0-2.
 
 **말하지 않는 것.** "LLM으로 여행 계획을 짜 준다"로 설명하면 기존 제품과 구분되지 않는다. 우리가 파는 것은 **계획이 성립하는지 확인하고 여행 중 변화를 먼저 잡는 것**이다.
 
@@ -35,11 +35,11 @@ A-COP은 **여행 지속관리 CS 플랫폼**이다. 외부 에이전트나 LLM�
 
 | 하려는 일 | 여기부터 |
 |---|---|
-| 제품이 뭔지 알고 싶다 | 계획서 v10 §0-1·§1 (**wiki의 product/는 아직 쇼핑몰 기준**) |
+| 제품이 뭔지 알고 싶다 | 계획서 v11 §0-1·§1 (**wiki의 product/는 아직 쇼핑몰 기준**) |
 | 무엇을 만들고 안 만드나 | [product/scope.md](product/scope.md) — 여행 MVP 범위로 갱신됨 |
-| 누가 왜 쓰는지 알고 싶다 | v10 §1·§2. wiki [product/personas.md](product/personas.md)는 쇼핑몰 페르소나다 |
+| 누가 왜 쓰는지 알고 싶다 | v11 §1·§2. wiki [product/personas.md](product/personas.md)는 쇼핑몰 페르소나다 |
 | 코드를 고치려 한다 | [`final_project_cs/wiki/quickstart.md`](../final_project_cs/wiki/quickstart.md) |
-| Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) — 나누는 기준은 도메인과 무관하게 유효하다. 여행 Team 목록은 v10 §5 |
+| Team을 추가하려 한다 | [architecture/core-vs-team.md](architecture/core-vs-team.md) — 나누는 기준은 도메인과 무관하게 유효하다. 여행 Team 목록은 v11 §5 |
 | 평가를 돌리려 한다 | [evaluation/protocol.md](evaluation/protocol.md) — 하네스는 승계, **정답 시나리오는 교체 대상**(골든셋 72건은 쇼핑몰) |
 | 왜 이렇게 설계했는지 궁금하다 | [decisions/index.md](decisions/index.md) |
 | 사업성 숫자가 필요하다 | [business/unit-economics.md](business/unit-economics.md) |

@@ -20,7 +20,7 @@ sources:
     title: Core 도메인 격리 테스트
     resource: ../../final_project_cs/tests/architecture/test_basement_is_domain_free.py
 domain: commerce
-domain_note: 결제 소유 결정의 근거가 쇼핑몰 사례다. 결론(결제는 우리가 실행하지 않는다)은 v10 §4-C 가 승계했다
+domain_note: 결제 소유 결정의 근거가 쇼핑몰 사례다. 결론(결제는 우리가 실행하지 않는다)은 v11 §4-C 가 승계했다
 ---
 
 # D-001 결제 소유 경계
