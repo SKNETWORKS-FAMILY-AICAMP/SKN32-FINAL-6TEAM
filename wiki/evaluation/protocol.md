@@ -169,6 +169,34 @@ python -m eval.run --arm Proposed
 2. **실제 알파 로그가 아니다.** 운영 전환 전이라 실 고객 데이터가 없다
 3. **사람 라벨 20건이 아직 없다.** Judge 신뢰도를 확인 못 했다
 
+## ★ [2026-09-10] 정답이 모델 입력에 들어간다 — 쇼핑몰 시절 분류 수치가 무엇을 잰 것인가
+
+`[실측 2026-09-10]` codex 전수검사가 찾았고 코드로 끝까지 확인했다. **평가받는 모델이 정답을 보고 있었다.**
+
+골든 행의 키는 `case_id · channel · doc_ref · message · notes` 와 **정답 다섯** — `expected_intent` · `expected_issue_code` · `expected_next_action` · `expected_capability` · `expected_sentiment` 이다. `eval/runners/common.py` 에 **정답을 빼는 코드가 없다.** 그리고 실행 경로가 정답을 쓴다.
+
+| 어디 | 무엇이 정답을 쓰나 | 어느 군 |
+|---|---|---|
+| `common.py:479` → `:524` | **골든 행 전체를 `record` 에 담아 `json.dumps(record)` 로 모델 프롬프트에 넣는다** | **세 군 모두** |
+| `common.py:491` | **RAG 검색 필터에 정답 intent** 를 준다(`search_policy(..., [case["expected_intent"]])`) | **B** |
+| `common.py:359` | Team 을 **정답 intent** 로 고른다 | Proposed |
+| `common.py:391` | capability 를 **정답 capability** 로 고른다 | Proposed |
+| `common.py:410` | 케이스 상태에 **정답 issue_code** 를 넣는다 | Proposed |
+
+`206`행(fixture 예측)과 `303`행(채점)이 정답을 쓰는 것은 **맞는 자리**라 뺐다. `eval/rescore.py` 도 레코드를 넘기지만 그건 **채점기(judge)에게** 가는 것이라 정답이 들어가는 게 맞다.
+
+### 그래서 무엇이 무효인가
+
+| 수치 | 무엇을 잰 것인가 |
+|---|---|
+| intent · issue_code **100%** | **분류 능력이 아니다** — 입력에 정답이 있었다 |
+| next_action **52.8%**(Proposed) | **모델이 아니라 Team 로직**이다 — `common.py:531` 이 `next_action` 을 Team 결과로 덮어쓴다. 그 Team 도 정답으로 골라졌다 |
+| judge 비교표(A 0% · B 46.8% · Proposed 11.6%) | **공정한 비교가 아니다** — B 는 정답 intent 로 걸러진 근거를 받았고, 세 군 모두 정답을 봤다 |
+
+★**여행 평가 전에 고쳐야 한다.** 여행 골든셋(지금 0건)이 이 러너를 그대로 쓰면 같은 일이 난다. 코드 담당 몫이다 — 살아 있는 군의 모델 입력에서 `expected_*` 를 빼고, 라우팅·capability·검색에 정답을 쓰지 않는다(분류기 출력을 쓴다).
+
+`[미확보]` **정답을 뺀 상태의 수치는 아무도 안 쟀다.** 그래서 「실제 분류 정확도가 몇 %인가」는 지금 모른다.
+
 ## 관계
 
 - [metrics.md](metrics.md) — 무엇을 재는가

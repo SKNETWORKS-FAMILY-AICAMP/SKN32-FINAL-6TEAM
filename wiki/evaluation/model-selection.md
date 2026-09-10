@@ -129,6 +129,7 @@ domain: neutral
 **모델만 갈아끼우면 된다.** 골든셋·judge·채점 스크립트가 이미 있다.
 
 ```bash
+# [2026-09-10] eval/finetune/score_ft.py 는 작업 트리에서 지워졌다(git 에만 있다) — 이 명령은 지금 돌지 않는다
 python -m eval.finetune.score_ft --input eval/finetune/ft_predictions.jsonl \
        --output eval/reports/<날짜>_<모델>.jsonl
 ```

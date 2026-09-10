@@ -1,7 +1,7 @@
 ---
 type: report
 title: 분류 정확도와 confusion matrix
-description: intent·issue_code 는 100%인데 next_action 은 52.8%다. wait_for_input 과 handoff 를 한 번도 안 낸다
+description: intent·issue_code 100% 는 모델 입력에 정답이 들어간 결과였다. next_action 52.8% 는 모델이 아니라 Team 로직을 쟀다
 status: draft
 impl_scope: cs — golden.jsonl 과 Proposed 실행 기록은 cs 도메인 평가다. sample 은 계약 테스트로 검증한다
 tags: [evaluation]
@@ -54,7 +54,18 @@ next_action 분포:  respond 114 · wait_for_approval 60 · escalate 42
 
 **`wait_for_input`이 필요한 13건이 전부 다른 셋 중 하나로 잘못 갑니다.**
 
-## ★ 이건 프롬프트가 몰라서다
+## ★ [2026-09-10] 이 문서의 수치가 재는 것이 달랐다
+
+`[실측 2026-09-10]` **평가받는 모델의 입력에 정답이 들어가 있었다** — 골든 행 전체가 `json.dumps(record)` 로 프롬프트에 들어간다(`eval/runners/common.py:524`). 상세와 코드 위치는 [protocol.md](protocol.md) 「정답이 모델 입력에 들어간다」.
+
+| 이 문서의 수치 | 실제로 잰 것 |
+|---|---|
+| intent · issue_code **100%** | **분류 능력이 아니다** — 입력에 `expected_intent`·`expected_issue_code` 가 있었다 |
+| next_action **52.8%** | **모델이 아니라 Team 로직**이다 — Proposed 군은 `next_action` 을 Team 결과로 덮어쓴다(`common.py:531`). 그 Team 도 정답 intent 로 골라졌다 |
+
+★**그래서 아래 「프롬프트가 몰라서」「모델 행동 문제」라는 원인 설명은 틀렸다.** 모델이 고른 값이 아니라 Team 이 돌려준 값이다. 아래는 그 전 서술이다.
+
+## 이건 프롬프트가 몰라서다 — `[정정]` Team 로직이다
 
 `[실측]` 계약(`app/core/contracts.py:68-76`)에는 **`NextAction` 이 7개**다.
 
@@ -63,7 +74,7 @@ CONTINUE · WAIT_FOR_INPUT · WAIT_FOR_APPROVAL
 CALL_TOOL · HANDOFF · RESPOND · ESCALATE
 ```
 
-**값은 정의돼 있다. 모델이 그 값을 고르지 않을 뿐이다.**
+**값은 정의돼 있다.** `[정정 2026-09-10]` 「모델이 그 값을 고르지 않을 뿐」이라 적었는데 **고르는 것은 모델이 아니라 Team 이다**(Proposed 군 `next_action` 은 Team 결과로 덮어쓴다).
 
 > **추가 정보가 필요하면 물어봐야 하는데, 대신 승인 대기로 보내거나(과잉 안전) 그냥 답하거나(과잉 확신) 에스컬레이트한다(과잉 회피).**
 
@@ -78,9 +89,11 @@ CALL_TOOL · HANDOFF · RESPOND · ESCALATE
 | [metrics.md](metrics.md) 결함 1~4 | **judge 채점식**이 옳게 재는지 |
 | **이 문서** | **모델이 옳은 값을 고르는지** |
 
-**채점이 맞아도 모델이 틀리면 소용없다.** 이건 채점 문제가 아니라 **모델 행동 문제**다.
+**채점이 맞아도 모델이 틀리면 소용없다.** `[정정 2026-09-10]` 이건 채점 문제도 모델 행동 문제도 아니라 **Team 로직과 평가 러너의 문제**다 — next_action 은 Team 이 정하고, 그 Team 은 정답으로 골라졌다.
 
 ## 발표에서 쓸 수 있는 문장
+
+★★`[2026-09-10]` **아래 문장을 쓰면 안 된다.** 「의도 분류는 100%」는 **모델 입력에 정답이 들어간 결과**다. 발표에서 이렇게 말하면 틀린 주장이 된다. **정답을 뺀 상태로 다시 잴 때까지 분류 정확도는 「모른다」가 맞는 답이다.** 아래는 거둔 문장이다.
 
 > **의도 분류(intent·issue_code)는 100%. 다음 행동 선택(next_action)이 약점이고, 특히 "추가 정보를 물어야 할 때" 를 놓친다.**
 

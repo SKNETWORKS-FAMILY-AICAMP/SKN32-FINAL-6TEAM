@@ -51,7 +51,7 @@ domain: neutral
 
 `[실측 2026-09-07]` golden 216건 × 세 군. **judge v3 재기준선 산출물**
 (`eval/reports/2026-09-06_rebaseline_{A,B,Proposed}_judgev3.jsonl`)에서 뽑았다 —
-세 군이 **같은 실행**이라 서로 견줄 수 있다. 환율 1,400원 고정.
+`[정정 2026-09-10]` 「세 군이 **같은 실행**」이라 적었는데 **아니다** — **같은 judge(v3)로 09-06 에 재채점**한 것이고 실행은 다르다: A·B 는 `2026-08-24_reeval_A/B.jsonl`, Proposed 는 `2026-08-28_reeval_Proposed_v3.jsonl`(각 파일 `rescore.source_raw`). ★**그리고 공정한 비교가 아니다** — 세 군 모두 모델 입력에 정답이 들어갔고, **B 는 정답 intent 로 걸러진 근거를 받았다** → [protocol.md](protocol.md) 「정답이 모델 입력에 들어간다」. 환율 1,400원 고정.
 
 | | Baseline A | Baseline B | Proposed |
 |---|---|---|---|
