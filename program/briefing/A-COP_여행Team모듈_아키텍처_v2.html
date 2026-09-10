@@ -110,14 +110,22 @@
     <tr><td><code>capability</code></td>
         <td>한 팀이 할 줄 아는 일 하나. 이 문서에서 <code>cap 3</code> 은 capability 가 셋이라는 뜻이다</td></tr>
     <tr><td><code>degraded</code></td>
-        <td><strong>근거가 깎인 상태.</strong> 필요한 조회가 빠졌거나 잘렸다는 표시이고,
-            이때는 확정 답을 만들지 않고 사람에게 넘긴다</td></tr>
+        <td><strong>정책 근거를 못 갖춘 상태.</strong> 규정 검색이 실패했거나 결과가 하나도
+            없을 때 켜진다(<span class="mono">context.py:253</span>). 이때는 확정 답을 만들지 않고
+            사람에게 넘긴다. ★<strong><code>degraded</code> 면 무엇을 뺐는지를 반드시 남긴다</strong> —
+            빈 <span class="mono">omissions</span> 는 계약이 거부한다(<span class="mono">contracts.py:155</span>).
+            <strong>신호 없는 축소는 폴백이기 때문이다</strong></td></tr>
     <tr><td><code>ContextPack</code></td>
         <td>Case 하나를 처리하는 데 실어 보내는 <strong>맥락 꾸러미</strong> — 상태 · 근거 · 규정 · 이력.
-            예산이 있어 다 못 실으면 무엇을 뺐는지 기록한다</td></tr>
+            칸마다 토큰 예산이 있어 다 못 실으면 <strong>무엇을 뺐는지</strong>
+            <span class="mono">omissions</span> 에 남긴다</td></tr>
     <tr><td>멱등 키<br><span class="mono">idempotency key</span></td>
         <td><strong>같은 요청이 두 번 들어와도 한 번만 실행되게 하는 열쇠.</strong>
-            tenant · 요청 id · 작업 종류 · <strong>대상</strong> 넷으로 만든다</td></tr>
+            tenant · 요청 id · 작업 종류 · <strong>대상</strong> 넷으로 만든다.
+            ★<strong>키가 두 번 만들어진다</strong> — 팀이 제안에 붙이는 키
+            (<span class="mono">_base.py:172</span>, 대상은 예약 → 여행 → Case 순으로 고른다)와
+            <strong>서버가 저장 직전에 다시 만드는 키</strong>(<span class="mono">controller.py:374</span>).
+            <strong>저장되는 것은 서버 것이고, 지금 그 대상은 Case id 고정이다</strong> — 06장</td></tr>
     <tr><td>바깥함<br><span class="mono">outbox</span></td>
         <td>보낼 것을 DB 에 먼저 적어 두고 별도 일꾼이 꺼내 보내는 방식.
             보냈다는 사실이 기록으로 남는다</td></tr>
@@ -230,7 +238,7 @@
 
 
   <!-- lane C -->
-  <text x="24" y="352" class="lb">C · 돌려주는 것 — 두 갈래다</text>
+  <text x="24" y="352" class="lb">C · 돌려주는 것 — 여기서는 두 갈래만 그린다 (HANDOFF · ESCALATE 는 03장)</text>
   <rect x="24" y="364" width="220" height="56" rx="5" class="bx"/>
   <text x="134" y="386" class="tb" text-anchor="middle">TeamResult</text>
   <text x="134" y="403" class="m" text-anchor="middle">판정 · 근거 · 다음 행동 · 제안</text>
@@ -300,8 +308,9 @@
 <div class="diagram">
 <svg viewBox="0 0 1160 410" role="img" aria-labelledby="d2t d2d" xmlns="http://www.w3.org/2000/svg">
   <title id="d2t">선언 · 과제 · 결과</title>
-  <desc id="d2d">TeamManifest 의 선언이 TeamTask 의 각 칸과 대응하고, 공통 가드가 그 대응을
-  실행 시점에 검사한다. 결과는 네 갈래로 나뉜다.</desc>
+  <desc id="d2d">TeamManifest 의 선언이 TeamTask 의 각 칸과 대응한다. 공통 가드는 그중
+  팀 ID·capability·degraded 셋만 검사하고, 도구와 예산은 조회 함수가 따로 본다.
+  결과는 네 갈래로 나뉜다.</desc>
   <style>
     .bx2{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
     .bx2a{fill:#ffffff;stroke:#a8720c;stroke-width:1.3}
@@ -320,8 +329,8 @@
   <text x="44" y="104" class="tb2">team_id</text>
   <text x="44" y="121" class="m2">activity · dining · mobility · booking_handoff …</text>
   <text x="44" y="146" class="tb2">capabilities · default_capability</text>
-  <text x="44" y="163" class="m2">activity.check_cancelable / check_feasible / propose_change</text>
-  <text x="44" y="178" class="ma2">고를 장치가 없으면 default_capability 로 간다</text>
+  <text x="44" y="163" class="m2">activity.check_cancelable · activity.check_feasible · activity.propose_change</text>
+  <text x="44" y="178" class="ma2">고를 장치가 없으면 폴백 3단계로 — 05장</text>
   <text x="44" y="203" class="tb2">allowed_tools · max_steps</text>
   <text x="44" y="220" class="m2">read.booking · read.policy · read.place · read.weather</text>
   <text x="44" y="236" class="m2">max_steps 6 (Lodging · Flight 는 2)</text>
@@ -356,13 +365,13 @@
   <path d="M714 150 C764 150 764 150 808 150" class="ln2"/>
   <text x="332" y="110" class="m2">team_id</text>
   <text x="332" y="152" class="m2">capability</text>
-  <text x="332" y="209" class="m2">도구 · 예산</text>
+  <text x="332" y="209" class="m2">도구 · 예산 — 가드가 아니라 _read 가 본다</text>
 
   <rect x="24" y="284" width="1112" height="100" rx="6" fill="#f7f8fb" stroke="#dbe0ea" stroke-dasharray="3 3"/>
   <text x="44" y="310" class="tb2">공통 가드 — 셋을 다 본다. 순서에 뜻이 있다 (_base.py:57 · 61 · 63)</text>
   <text x="44" y="334" class="t2">1 · team_id — 남의 일이면 <tspan class="ma2">판단하기 전에</tspan> 넘긴다 (HANDOFF)</text>
   <text x="44" y="354" class="t2">2 · capability — 못 하는 일이면 <tspan class="ma2">시작하지 않는다</tspan> (unsupported_capability)</text>
-  <text x="44" y="374" class="t2">3 · context.degraded — 근거가 깎였으면 <tspan class="ma2">확정 답을 만들지 않는다</tspan> (degraded_context)</text>
+  <text x="44" y="374" class="t2">3 · context.degraded — 쓸 정책 근거가 하나도 없으면 <tspan class="ma2">확정 답을 만들지 않는다</tspan> (degraded_context)</text>
   <text x="700" y="334" class="m2">셋 다 통과하면 _guard() 가 None 을 돌려주고</text>
   <text x="700" y="354" class="m2">각 Team 의 execute() 가 이어진다.</text>
   <text x="700" y="374" class="ma2">TravelTeamBase 는 execute() 를 대신 실행하지 않는다.</text>
@@ -438,10 +447,10 @@
 
   <rect x="700" y="30" width="240" height="120" rx="6" class="b3a"/>
   <text x="820" y="52" class="tb3" text-anchor="middle">_read — 막는 것 셋</text>
-  <text x="716" y="76" class="t3">허용 목록 밖 → 거부</text>
-  <text x="716" y="98" class="t3">seen 에 있으면 → 중복 차단</text>
-  <text x="716" y="120" class="t3">예산 초과 → 중단</text>
-  <text x="716" y="140" class="ma3">budget = manifest.max_steps (_base.py:78)</text>
+  <text x="716" y="74" class="t3">허용 목록 밖 → ToolNotAllowed (:291)</text>
+  <text x="716" y="94" class="t3">같은 인자 재호출 → ToolLoopExceeded (:301)</text>
+  <text x="716" y="114" class="t3">부른 수 ≥ 예산 → ToolBudgetExceeded (:303)</text>
+  <text x="716" y="136" class="ma3">budget = manifest.max_steps (_base.py:78)</text>
   <line x1="656" y1="66" x2="694" y2="80" class="l3"/>
 
   <rect x="976" y="30" width="160" height="120" rx="6" class="b3"/>
@@ -475,8 +484,8 @@
   <rect x="864" y="290" width="272" height="76" rx="5" class="b3a"/>
   <text x="1000" y="310" class="tb3" text-anchor="middle">_proposal — ActionProposal 만 만든다</text>
   <text x="1000" y="330" class="t3" text-anchor="middle">approval_required = True. 실행하지 않는다</text>
-  <text x="1000" y="346" class="t3" text-anchor="middle">승인 대기는 _result 가 붙인다</text>
-  <text x="1000" y="362" class="m3" text-anchor="middle">_base.py:160 · wait_reason 은 :127 에서</text>
+  <text x="1000" y="346" class="t3" text-anchor="middle">next_action 은 부르는 쪽이 정한다</text>
+  <text x="1000" y="362" class="m3" text-anchor="middle">_base.py:160 · 키 생성 :172</text>
 
   <line x1="300" y1="254" x2="200" y2="284" class="l3"/>
   <line x1="480" y1="254" x2="440" y2="284" class="l3"/>
@@ -484,8 +493,8 @@
   <line x1="860" y1="254" x2="980" y2="284" class="l3a"/>
 
   <text x="24" y="392" class="m3">★ _unknown 은 독립 종료가 아니라 _escalate 를 부른다 — 「값이 없는 것」과 「모르는 것」은 다르고, 그 구분이 결과에 남는다.</text>
-  <text x="24" y="408" class="m3">★ _result 는 네 갈래를 다 만드는 공용 함수다. next_action 이 WAIT_FOR_APPROVAL 이면 wait_reason 을 스스로 채운다(:127).</text>
-  <text x="24" y="424" class="ma3">★ 예산은 「도구 호출 횟수」(len(seen) ≥ budget, read_tools.py:303)에 걸린다. 도구를 부르지 않는 반복까지 막는지는 확인하지 않았다.</text>
+  <text x="24" y="408" class="m3">★ _result 는 네 갈래를 다 만드는 공용 함수다. next_action 은 부르는 쪽이 넘긴다. wait_reason 은 안 넘겼거나 None 이고(:127) 그 next_action 에 정해진 사유가 있을 때만(:129) _result 가 채운다.</text>
+  <text x="24" y="424" class="ma3">★ 예산은 「받아 온 seen 의 크기」에 걸린다 — len(seen) ≥ budget (read_tools.py:303). 성공 횟수가 아니라 시도 기록이다(:307 에서 실행 전에 넣는다). 도구를 안 부르는 반복까지 막는지는 확인하지 않았다.</text>
 </svg>
 </div>
 
@@ -578,10 +587,11 @@
             capability 가 하나뿐이라 고를 것이 없다</td></tr>
   </tbody>
 </table>
-<p class="lead"><span class="st st-ok">코드 확인</span> capability 이름 · <code>accepted_case_types</code> ·
-<code>max_steps</code> · <code>default_capability</code> · 줄수는 2026-09-10 에 각 파일의
-<code>TeamManifest</code> 에서 확인했다. 「고유한 분기」는 <strong>각 파일의 판정 본문을 읽은 것</strong>이다
-— 선언만으로는 알 수 없다.</p>
+<p class="lead"><span class="st st-ok">코드 확인</span> 2026-09-10 기준.
+capability 이름 · <code>accepted_case_types</code> · <code>max_steps</code> ·
+<code>default_capability</code> 는 각 파일의 <code>TeamManifest</code> 에서,
+<strong>줄수는 파일 자체를 세어서</strong> 확인했다.
+「고유한 분기」는 <strong>각 파일의 판정 본문을 읽은 것</strong>이다 — 선언만으로는 알 수 없다.</p>
 
 <div class="note">
   <strong>capability 접두가 팀 이름과 다른 곳이 하나 있다.</strong>
@@ -592,11 +602,18 @@
 </div>
 
 <div class="note">
-  <strong>고를 장치가 없어도 아무 데도 안 가는 것이 아니다.</strong> 여섯 팀 모두
-  <code>default_capability</code> 를 선언한다. <code>select_capability</code> 훅이 없으면
-  <strong>그 기본값으로 간다</strong> — 문제는 「고를 수 없다」가 아니라
-  <strong>「항상 같은 것으로 간다」</strong>이다. 사건 신고가 와도 Activity 는
-  <code>check_feasible</code> 로, Mobility 를 뺀 나머지가 그렇다.
+  <strong>고를 장치가 없어도 아무 데도 안 가는 것이 아니다.</strong>
+  <code>select_capability</code> 훅이 없거나 <code>None</code> 을 돌려주면
+  <code>registry.py:89</code> 의 <code>capability_for</code> 가 <strong>세 단계로 떨어진다</strong> —
+  ① <strong>네임스페이스 매칭</strong>(<code>intent</code> 가 capability 접두와 맞나)
+  → ② <code>default_capability</code> → ③ 선언한 첫 capability.
+  <strong>여행 요청 종류는 capability 접두와 안 맞으므로</strong>(<code>incident_report</code> ↔
+  <code>activity.*</code>) ①에서 못 걸리고 <strong>②로 간다.</strong>
+  <br><br>
+  ★그래서 문제는 「고를 수 없다」가 아니라 <strong>「항상 같은 것으로 간다」</strong>이다.
+  사건 신고가 와도 Activity 는 <code>activity.check_feasible</code> 로 간다.
+  <span class="mono" style="font-size:11px">★훅·폴백 순서는 registry.py 에서 확인했다.
+  실제 라우팅 결과는 실행해 봐야 안다.</span>
 </div>
 
 
@@ -616,8 +633,9 @@
     <tr><td><strong>전체 반복 제한</strong></td><td><span class="st st-unk">미확인</span></td>
         <td>—</td>
         <td>도구를 부르지 않는 생성 반복과 재계획 반복의 종료 조건</td></tr>
-    <tr><td>제안 사실 대조</td><td><span class="st st-ok">코드 확인</span></td>
-        <td>정책 선택과 대조 호출(<span class="mono">controller.py:332</span>)</td>
+    <tr><td>제안 사실 대조</td><td><span class="st st-ok">호출 확인</span></td>
+        <td>정책 선택과 대조 호출이 있다(<span class="mono">controller.py:332</span>).
+            <strong>대조 규칙의 내용과 「불일치가 나면 실제로 막히는지」는 확인 못 했다</strong></td>
         <td>잘못된 제안이 <strong>실행 전에 막히는</strong> 경로</td></tr>
     <tr><td>실행 직전 재대조</td><td><span class="st st-doc">문서 기재</span></td>
         <td>주석에 설계가 적혀 있다. 실행 연결은 확인 안 했다</td>
@@ -638,7 +656,7 @@
         <td><strong>원격 Agent 는 있으나 지금 안 쓴다.</strong> <span class="mono">travel_remote_agent.py</span> 202줄이 있지만 <span class="mono">a2a_executor.enabled: false</span> · <span class="mono">team_executor: local</span> 이고, 실제 장소 원장에도 안 붙는 시뮬레이터다</td>
         <td>제품 범위 결정 — 왕복·계약 증명으로 둘지, 실제 조회를 붙일지</td></tr>
     <tr><td>응답 검토 Team</td><td><span class="st st-none">미구현</span></td>
-        <td>여행판이 아직 없다. 커머스판은 구현과 함께 걷어냈다. <span class="mono">enabled: false</span> 이고 켜면 기동이 막힌다고 YAML 주석이 적었다 — <strong>그 검증 구현은 확인 못 했다</strong></td>
+        <td>여행판이 아직 없다. 커머스판은 구현과 함께 걷어냈다. <span class="mono">enabled: false</span> 이고, <strong>켜면 기동이 막힌다</strong> — <span class="mono">project_config.py:92</span> 의 <span class="mono">validate_response_review_owner</span> 가 등록된 활성 팀에 없는 owner 를 거부한다. ★<strong>끈 상태는 통과시킨다</strong> — 도메인 교체 중 옛 이름이 남는 것까지 막으면 교체를 못 한다</td>
         <td>등록된 활성 팀으로 만들고 <span class="mono">enabled: true</span> 로 기동</td></tr>
   </tbody>
 </table>
