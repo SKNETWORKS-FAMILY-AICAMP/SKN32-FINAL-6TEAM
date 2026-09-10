@@ -54,7 +54,7 @@ domain: travel
 |---|---|---|
 | 공급자 | 장소·운영 조회 / 이동 시간 조회 / 기상 조회 (v11 §5-A) | 읽기다. **쓰기는 [D-005](../decisions/D-005-write-gate.md) 승인 경로** |
 | 업체 예약 | 변경 링크 생성. 시연 모드 한정 Mock 변경 | **승인 없이 실행하지 않는다** → [`booking-handoff.md`](../../final_project_cs/wiki/teams/booking-handoff.md) |
-| 알림 채널 | 고객·운영자 알림 | Outbox 경유 |
+| 알림 채널 | 고객·운영자 알림 **두 종류** — 변경 통지 · **일정 안내** | Outbox 경유 → [`notifications.md`](notifications.md) |
 | A2A Remote Agent | Task 위임 | Artifact 근거를 Context/DB와 대조 |
 
 **나가는 모든 것은 Action Layer를 거친다.** side effect가 일어나는 유일한 경로다.

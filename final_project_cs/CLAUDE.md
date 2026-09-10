@@ -18,7 +18,7 @@ AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가
 |---|---|---|
 | Team | `return_refund` · `fulfillment_logistics` · `procurement_order_payment` · `catalog_verification` · `voc_store_manager` · `response_review` | **Activity · Dining · Mobility · Booking Handoff** · Lodging/Flight(등록만). MVP 필수는 Activity·Booking Handoff |
 | 코어 1 분류 라벨 | 주문·배송·반품·교환·기타 | **일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외** |
-| DoD | 29항목 | **25항목** |
+| DoD | 29항목 | **26항목** |
 
 ★**아래 문서 대부분은 쇼핑몰 시절에 쓰였다.** 상태표·성과 기록은 **그때 무엇이었는지**를
 말하는 기록이므로 지우지 않는다. 다만 **"지금 무엇인가"로 읽으면 안 된다** — 지금 값은
@@ -47,7 +47,7 @@ Composer 카탈로그에도 남아 있어 되돌릴 수 있다. 전환 계획은
 
 기준선 문서: `../program/plan/A-COP_구현계획서_v11.md` (**읽기 전용 · 수정 금지**)
 v10·v9 는 `../program/plan/` 에 옛 판으로 남아 있고, v5~v8 은 `../program/plan/.archive/` 에
-**압축·숨김**이라 평소엔 열지 않는다. ★**DoD 는 v11 §12 의 25항목이다**(자동 19 · 아키텍처 테스트 4 · 측정 2).
+**압축·숨김**이라 평소엔 열지 않는다. ★**DoD 는 v11 §12 의 26항목이다**(자동 20 · 아키텍처 테스트 4 · 측정 2).
 ★`[2026-09-10]` v11 이 더한 것 — **라우팅은 두 축**(`case_type` 은 `issue_code` 접두에서,
 `intent` 는 요청 종류. v11 §5-B) · **멱등 키의 「대상」은 서버가 확인한 대상 객체 id**(§4-E) ·
 지속 관리 루프 둘(§6-A). **v10 §5-A 의 분류 라벨만으로는 Case 가 Team 에 도달하지 못한다.**
