@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 저장소 지도
-description: 저장소 6개가 무엇을 소유하고 어떻게 참조하는가
+description: 저장소 7개가 무엇을 소유하고 어떻게 참조하는가
 status: draft
 tags: [architecture]
 owners: [human:미배정]
@@ -10,7 +10,7 @@ domain: neutral
 
 # 저장소 지도
 
-## 6개
+## 7개
 
 | 저장소 | 역할 | 소유하는 것 |
 |---|---|---|
@@ -19,7 +19,10 @@ domain: neutral
 | `final_project_sample` | 참고 구현체 | 계약 선검증. cs로 이식하는 관계 |
 | `acop_dojo` | 학습 도장 | cs 구조를 실행 증거로 배우는 프로그램 |
 | `datasets` | 데이터 | 데이터셋과 스키마, REPORT |
+| `final_project_ui` | **운영 콘솔** | Composer 화면, DoD 화면. cs 의 `/composer/*` API 를 인증된 경로로만 호출한다 |
 | `gPUteer` | 사설 GPU 풀 | **별도 워크스페이스.** 개발 인프라 |
+
+★`[정정 2026-09-10]` **`final_project_ui` 가 이 표에 없었다.** 여섯으로 세고 있었는데 실재하는 저장소는 일곱이다 — Composer 콘솔이 거기 있고 [D-015](../decisions/D-015-implementation-catalog.md) 의 UI 화면 셋도 그 저장소 몫이다.
 
 ## sample과 cs의 관계
 

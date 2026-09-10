@@ -68,6 +68,10 @@ domain_note: 판올림 전후를 같이 싣는다
 
 `[실측]` v8 §25에서 이관. 공식 부트캠프 일정 기준.
 
+★**[2026-09-10] 아래 주차 배분은 쇼핑몰 일정이다.** `[실측]` 도메인이 2026-09-08 에 여행으로 바뀌었고 **여행 배분은 v11 §9-B** 가 따로 갖고 있다 — 1주 도시·언어 결정과 코어 라벨 교체, 2~3주 Activity, 4주 Dining, 5주 Mobility + 선제 조정 루프, 6~7주 평가·발표. ★**그 배분은 `[추정]` 이고 1주차가 끝나면 실측으로 다시 잡는다.**
+
+★**아래를 지우지 않는 이유는 기록이기 때문이다.** 무엇을 언제 했는지가 여기 있고, 여행 일정과 섞어 읽지 않도록 이 경계를 둔다.
+
 **Commerce Ops Pack(Procurement+Order·Fulfillment·Return·Catalog) 작업은 검증 쇼핑몰 프로젝트와 연계된 범위**이며, VOC·Response Generation & Review와 달리 그 프로젝트 진행에 따라 조정될 수 있다.
 
 | 주차 | 기간 | 공식 산출물 |
@@ -89,9 +93,9 @@ domain_note: 판올림 전후를 같이 싣는다
 
 | 양식 | 근거 |
 |---|---|
-| 프로젝트 기획서 | `program/plan/A-COP_구현계획서_v9.md`(2026-09-06 판올림. v8은 `archive/`) · [../product/index.md](../product/index.md) |
+| 프로젝트 기획서 | **`program/plan/A-COP_구현계획서_v11.md`** `[정정 2026-09-10]` — 이 칸은 v9 로 적혀 있었다. v9(쇼핑몰)·v10(여행 1판)은 같은 폴더에 직전 판으로, v8 이하는 `.archive/` 압축 · [../product/index.md](../product/index.md) |
 | WBS | 이 문서 · `program/research/_WBS원본_2026-08-17.md` |
-| 요구사항 정의서 (+ 5W 업데이트) | [dod.md](dod.md) — 29항목 |
+| 요구사항 정의서 (+ 5W 업데이트) | [dod.md](dod.md) — **26항목** `[정정 2026-09-10]` v11 §12. 29항목은 v8 쇼핑몰 기준이었다 |
 | 수집 데이터 보고서 | [datasets/catalog.md](../../datasets/wiki/catalog.md) + 각 데이터셋 `REPORT.md`. 순서: 상용 주문(쿠팡·네이버) → 배송 조회 도구 → 공개 VOC → 번역 비교 |
 | DB/저장소 설계 문서 | [cs data/schema](../../final_project_cs/wiki/data/schema/index.md) · [migrations](../../final_project_cs/wiki/data/migrations.md) |
 | 데이터 전처리 결과서 | 각 데이터셋의 `scripts/normalize.py`·`processed/` — 현황은 [catalog.md](../../datasets/wiki/catalog.md) |
