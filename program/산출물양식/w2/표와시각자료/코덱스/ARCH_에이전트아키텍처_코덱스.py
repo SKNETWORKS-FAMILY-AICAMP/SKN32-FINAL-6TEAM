@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import struct
 from html import escape
 from pathlib import Path
 
@@ -21,11 +22,16 @@ FONT = "Malgun Gothic"
 
 MIN_FONT_PT = 28
 PAGE_WIDTH_IN = 6.2
-PAGE_HEIGHT_IN = 9.0
+PAGE_HEIGHT_IN = 7.78
 PAD_IN = 0.02
+DPI = 200
 
-# 기존 label의 배치 공간을 유지하면서 글자와 선 사이 여백만 넓힌다.
-# 두 개의 "후속 실행 · 미확인" 라벨에 모두 적용한다.
+# 7차: 제목 묶음만 네 줄에서 두 줄로 합친다.
+# 제목 33.6pt, 나머지 28pt, 상자 배치·간선·상태 문구는 유지한다.
+# 제목 각 줄의 폭은 JSON 그리기 명령으로 28.7인치 이내인지 확인한다.
+# 실제 PNG 크기로 쪽 배치 최소 글자 크기를 판정한다.
+# 기준 미달이면 오류를 내고 PNG를 저장하지 않는다.
+
 EXTRA_PADDING_LABELS = {
     "조회 인자",
     "알림 발송 · 미구현",
@@ -204,7 +210,7 @@ def build():
         fontsize="33.6",
         fontcolor=DARK,
         bgcolor="white",
-        dpi="200",
+        dpi=str(DPI),
         rankdir="TB",
         nodesep="0.02",
         ranksep="0.02",
@@ -212,10 +218,8 @@ def build():
         splines="spline",
         labelloc="t",
         label=(
-            "AI 시스템 아키텍처 (멀티 에이전트 아키텍처)\n"
-            "코드 기준 2026-09-10 · 작업 트리\n"
-            "실선: 코드 확인\n"
-            "점선: 미구현 또는 미확인"
+            "AI 시스템 아키텍처 (멀티 에이전트 아키텍처) · 코드 기준 2026-09-10\n"
+            "실선: 코드 확인 · 점선: 미구현 또는 미확인"
         ),
     )
     g.attr(
@@ -247,7 +251,6 @@ def build():
     boxes = set()
     counts = {"solid": 0, "dashed": 0, "invis": 0}
 
-    # 기존 여섯 레인과 레인 내부 순서를 유지한다.
     for key, title, nodes in LANES:
         with g.subgraph(name="cluster_" + key) as c:
             c.attr(
@@ -299,9 +302,6 @@ def build():
         style = "dashed" if dashed else "solid"
         counts[style] += 1
 
-        # 문제가 된 라벨의 여백을 4pt에서 10pt로 늘린다.
-        # 기존 label이 확보하는 배치 공간과 문구를 유지한다.
-        # 배경으로 선을 가리거나 추가 상자를 만들지 않는다.
         padding = 10 if phrase in EXTRA_PADDING_LABELS else 4
         label = (
             '<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" '
@@ -316,24 +316,18 @@ def build():
             "id": f"flow_{edge_index}_{source}_to_{target}",
         }
 
-        # 배치용 방향만 바꾸고 화살촉으로 의미 방향을 보존한다.
         if order[source] > order[target]:
             source, target = target, source
             attrs["dir"] = "back"
 
-        # 포트는 방향 교환이 끝난 실제 DOT 끝점에 지정한다.
-        # 묶음 재계획의 세 반영 간선은 왼쪽 테두리에 연결한다.
         if source == "replan":
             attrs["tailport"] = "w"
         if target == "replan":
             attrs["headport"] = "w"
 
-        # 조회 간선 세 개는 Team 오른쪽 위 모서리에 연결한다.
-        # 위쪽 중앙의 묶음 제목과 상자 둘째 줄을 피한다.
         if (source, target) == ("read_tools", "team"):
             attrs["headport"] = "ne"
 
-        # 재실행 선은 Controller 위쪽 테두리에서 끝낸다.
         if (source, target) == ("approval", "controller"):
             attrs["headport"] = "n"
 
@@ -347,7 +341,7 @@ def build():
     return g
 
 
-def measure_and_validate(layout):
+def measure_and_validate(layout, png_bytes):
     objects = layout.get("objects", [])
     edges = layout.get("edges", [])
 
@@ -369,12 +363,26 @@ def measure_and_validate(layout):
                 for status in STATUS_WORDS
             ), edge.get("id")
 
-    # 사전 축소 없이 Graphviz가 계산한 실제 경계를 측정한다.
-    x0, y0, x1, y1 = map(float, layout["bb"].split(","))
-    natural_width_in = (x1 - x0) / 72 + 2 * PAD_IN
-    natural_height_in = (y1 - y0) / 72 + 2 * PAD_IN
+    # 루트 그래프의 제목 두 줄만 검사한다.
+    title_lines = [
+        item
+        for item in layout.get("_ldraw_", [])
+        if item.get("op") == "T"
+    ]
+    if len(title_lines) != 2:
+        raise RuntimeError(
+            "제목 두 줄의 실측 정보를 확인하지 못했습니다. "
+            "PNG를 저장하지 않았습니다."
+        )
+    for line in title_lines:
+        line_width_in = float(line["width"]) / 72
+        if line_width_in > 28.7:
+            raise RuntimeError(
+                f"제목 폭 초과: {line_width_in:.3f}인치 > 28.7인치. "
+                f"해당 줄: {line['text']}. "
+                "PNG를 저장하지 않았습니다."
+            )
 
-    # 그리기 명령에서 실제로 사용한 최소 글자 크기를 확인한다.
     font_sizes = []
     for obj in [layout] + objects + edges:
         for key, instructions in obj.items():
@@ -388,41 +396,77 @@ def measure_and_validate(layout):
     actual_min_font_pt = min(font_sizes)
     assert actual_min_font_pt >= MIN_FONT_PT
 
-    scale = min(
-        1.0,
-        PAGE_WIDTH_IN / natural_width_in,
-        PAGE_HEIGHT_IN / natural_height_in,
-    )
-    page_font_pt = actual_min_font_pt * scale
+    # PNG의 IHDR에서 실제 픽셀 크기를 읽는다. 외부 이미지 모듈 불필요.
+    assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+    assert len(png_bytes) >= 33
+    assert png_bytes[8:16] == b"\x00\x00\x00\x0dIHDR"
+    width_px, height_px = struct.unpack(">II", png_bytes[16:24])
+    assert width_px > 0 and height_px > 0
 
-    if page_font_pt < 6:
+    width_in = width_px / DPI
+    height_in = height_px / DPI
+
+    # size·ratio·viewport·후처리 축소 없이 렌더했는지 경계와 대조한다.
+    # PNG가 축소됐는데 원래의 28pt를 곱하는 잘못된 판정을 막는다.
+    x0, y0, x1, y1 = map(float, layout["bb"].split(","))
+    expected_width_px = ((x1 - x0) / 72 + 2 * PAD_IN) * DPI
+    expected_height_px = ((y1 - y0) / 72 + 2 * PAD_IN) * DPI
+    if (
+        abs(width_px - expected_width_px) > 2
+        or abs(height_px - expected_height_px) > 2
+    ):
         raise RuntimeError(
-            "가독성 기준 미달: "
-            f"자연 크기 {natural_width_in:.2f} × "
-            f"{natural_height_in:.2f}인치, "
-            f"6.2 × 9.0인치에 맞추면 최소 {page_font_pt:.2f}pt"
+            "JSON 경계와 PNG 실측 불일치: "
+            f"경계 예상 {expected_width_px:.2f} × "
+            f"{expected_height_px:.2f}px, "
+            f"PNG {width_px} × {height_px}px. "
+            "렌더 배율을 확인하기 전에는 가독성을 판정할 수 없습니다."
         )
 
-    return natural_width_in, natural_height_in, page_font_pt
+    scale = min(
+        1.0,
+        PAGE_WIDTH_IN / width_in,
+        PAGE_HEIGHT_IN / height_in,
+    )
+    page_width_in = width_in * scale
+    page_height_in = height_in * scale
+    page_font_pt = actual_min_font_pt * scale
+
+    report = (
+        f"상자 28 | 실선 17 | 점선 14 | "
+        f"PNG {width_px} × {height_px}px @ {DPI}dpi "
+        f"({width_in:.3f} × {height_in:.3f}인치) | "
+        f"쪽 배치 {page_width_in:.3f} × "
+        f"{page_height_in:.3f}인치 | "
+        f"쪽 배치 최소 {page_font_pt:.4f}pt"
+    )
+    print(report)
+
+    # 반올림한 표시값이 아니라 실제 계산값으로 통과 여부를 결정한다.
+    if page_font_pt < 6.0:
+        raise RuntimeError(
+            "가독성 기준 미달: "
+            f"{PAGE_WIDTH_IN} × {PAGE_HEIGHT_IN}인치에 맞추면 "
+            f"최소 {page_font_pt:.4f}pt입니다. "
+            "제목 묶음만 두 줄로 합쳤으며, "
+            "상자 배치·간선·다른 문구·글자 크기는 그대로입니다. "
+            "PNG를 저장하지 않았습니다."
+        )
+
+    return width_in, height_in, page_font_pt
 
 
 def render(output_stem):
     g = build()
 
-    # 중간 파일 없이 JSON과 PNG를 메모리에서 생성한다.
+    # 중간 파일 없이 메모리에서 생성하고 실제 PNG를 검사한다.
     layout = json.loads(g.pipe(format="json"))
-    width_in, height_in, page_font_pt = measure_and_validate(layout)
     png_bytes = g.pipe(format="png")
-    assert png_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+    measure_and_validate(layout, png_bytes)
 
+    # 기준을 통과한 경우에만 출력 파일을 생성한다.
     with open(str(output_stem) + ".png", "wb") as output:
         output.write(png_bytes)
-
-    print(
-        f"상자 28 | 실선 17 | 점선 14 | 보이지 않음 26 | "
-        f"자연 크기 {width_in:.2f} × {height_in:.2f}인치 | "
-        f"쪽 맞춤 최소 {page_font_pt:.2f}pt"
-    )
 
 
 if __name__ == "__main__":
