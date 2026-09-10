@@ -190,8 +190,8 @@ head(ws, 4, ["Team", "구분", "등록", "team_id", "capabilities", "accepted_ca
              "allowed_tools", "knowledge_scope", "max_steps", "default_capability", "구현 파일"],
      [16, 11, 9, 16, 30, 15, 22, 22, 9, 24, 20])
 
-ORDER = [("activity", "MVP 필수", MVP), ("booking_handoff", "MVP 필수", MVP),
-         ("dining", "절삭 가능", CUT), ("mobility", "절삭 가능", CUT),
+ORDER = [("activity", "MVP", MVP), ("dining", "MVP", MVP),
+         ("mobility", "MVP", MVP), ("booking_handoff", "MVP 다음", CUT),
          ("lodging", "등록만", STUB), ("flight", "등록만", STUB)]
 r = 5
 for tid, kind, fill in ORDER:
@@ -455,7 +455,7 @@ for i, o in enumerate([
     ("Dining 담당이 둘",
      "팀모듈4가 요식업 데이터·모듈 제안서를, 검증이 Dining 모듈 구조 설계를 하고 있다.", "팀"),
     ("Booking Handoff 담당 미정",
-     "회의록에 담당이 나오지 않는다. MVP 필수 둘 중 하나다.", "팀"),
+     "회의록에 담당이 나오지 않는다. MVP 다음 단계다([결정 2026-09-10]).", "팀"),
     ("무료·무예약 활동의 판정 규칙",
      "경복궁 관람처럼 취소 기한·위약금이 없는 항목에서 ④판정이 무엇을 보는지 안 정했다. "
      "휴관일·운영시간·이동 여유가 후보다.", "팀"),

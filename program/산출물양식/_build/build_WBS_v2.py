@@ -225,8 +225,8 @@ for i, text in enumerate([
     "★착수 2026-09-08·중간발표 09-15·최종발표 10-26. 09-10 기준 6주 4일이 남았다. "
     "향후 일정·담당 배분은 [추정]이며 1주차 실측으로 재산정한다. "
     "v11 §9-B는 필수 작업 누락을 명시하므로 확정 일정의 근거로 쓰지 않는다.",
-    "★일정이 밀리면 Team·이동, Team·요식 순으로 절삭을 검토한다. "
-    "Activity·Booking Handoff·감시·묶음 조정·배달·여행계획서 링크·일정 안내는 유지한다. "
+    "★일정이 밀리면 예약 인계(Booking Handoff — MVP 다음) 작업을 먼저 뒤로 민다. "
+    "Activity·Dining·Mobility(MVP)·감시·묶음 조정·배달·여행계획서 링크·일정 안내는 유지한다. "
     "Mobility Team을 줄여도 전체 일정 검증과 출발 안내의 선행 조건인 Routes 조회는 남긴다.",
     "★010~013의 표 정의는 존재하지만 trips·itinerary_versions·watch_schedule은 아직 설계다. "
     "read.route·read.transit은 항상 None이며 자동 실행 게이트도 [미구현]이다. "

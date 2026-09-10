@@ -546,7 +546,7 @@ for i, line in enumerate([
          "[실측] tier == 'simulated' 게이트는 app/·tests/에 0건이며 자동 실행 분기 자체가 [미구현]이다. "
          "알림 도달은 사양이 아니고 여행계획서 링크가 상태의 정본이다."),
     ("", "MVP는 서울·한국어, 개인 에이전트 API와 여행계획서 링크의 두 접점이다. "
-         "Activity와 Booking Handoff가 필수이며 Dining·Mobility Team은 절삭 가능하도록 설계한다. "
+         "MVP Team은 Activity·Dining·Mobility이고 Booking Handoff는 MVP 다음 단계다([결정 2026-09-10]). "
          "다만 이동 조회·전체 일정 검증·출발 안내 요구는 남는다. "
          "출력 번역은 개인 에이전트 몫이고 직접 링크·알림의 번역 경로는 [미확보]다. "
          "착수 2026-09-08, 최종발표 2026-10-26, 09-10 기준 남은 기간은 6주 4일이다. "
