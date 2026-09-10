@@ -10,7 +10,7 @@ domain: travel
 
 # Activity Team
 
-`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다).
+`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다.
 
 근거는 계획서 v11 §5. 여행 도메인 판올림(2026-09-08)으로 생긴 Team이다.
 
@@ -84,7 +84,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 이 있으니 "날씨 걸리는 것만 Activity" 로 좁혀 읽었다. **규칙은 팀이 무엇을 보는지이지
 팀이 무엇인지가 아니다.**
 
-`[미확보]` 무료·무예약 활동의 판정 규칙은 아직 안 썼다. 취소 기한·위약금이 없는
+`[2026-09-10]` **v11 §5-D 가 정했다** — Activity 가 판정하고 새 업무 규칙을 만들지 않는다. 단 판정 입력이 「예약」이 아니라 「일정 항목」이어야 한다. 지금 코드는 예약이 없으면 「모름」으로 끝난다(루트 CLAUDE.md 사실표 · `activity.py:66,76,78`). 아래는 그 전 서술이다 — `[미확보]` 무료·무예약 활동의 판정 규칙은 아직 안 썼다. 취소 기한·위약금이 없는
 항목에서 ④판정이 무엇을 보는지 정해야 한다 — 휴관일·운영시간·이동 여유가 후보다.
 
 ## 셋을 갖는다
@@ -141,6 +141,8 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 | 환급 안내 | 대체가 없고 취소가 유리할 때 |
 
 **후보 생성은 LLM이 하고, 생성한 후보는 ①을 다시 통과해야 통지된다**(v11 §5). 판정을 건너뛴 대안은 나가지 않는다.
+
+`[실측 2026-09-10 작업 트리]` **LLM 후보 생성은 아직 없다.** `_propose_change()`(`activity.py:232`)는 대안을 만들지 않는다 — 받은 예약에 `activity.change` 제안 하나(`booking_id`·`reason`)를 만들어 승인 대기에 올린다. 그래서 무예약 활동은 이 경로로도 제안을 못 만든다(아래 대조 표 절과 같은 문제).
 
 ## 재계획이 다른 Team의 일정을 건드린다
 

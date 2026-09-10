@@ -60,6 +60,8 @@ def open_support_case(customer_id: str, message: str, channel: str = "mcp") -> d
 
 **가운데 단계가 `open_support_case`가 사는 자리다.** 되돌릴 수 있고 조건이 붙는다.
 
+`[실측 2026-09-10]` **지금 코드는 이 표보다 느슨하다.** 쓰기인 `open_support_case` 도 `mcp:read` scope 로 열린다(`app/presentation/api/mcp.py:17`) — 별도 쓰기 scope 가 없다. MCP 경로의 rate limit 도 없다 — `app/` 에서 rate limit 을 찾았고 여행 외부 소스 조회용(`app/infrastructure/travel/`)만 나왔다. 다른 이름의 제한은 이 검색이 놓칠 수 있다. 위 표는 **목표 조건**으로 읽는다.
+
 **아래 단계는 MCP로 절대 안 간다.** 결제·환불·주문상태·구독·권한 부여.
 
 **Team의 reversible operational write도 이 경계를 우회하지 않는다.** `ActionProposal`로 Controller와 Action Layer에 보낸다.

@@ -61,7 +61,7 @@ action_type : review_integrity_concern
 Evidence    : 필수 필드 있음
 ```
 
-**우리 구조가 이미 이걸 지원한다.** 제안하고 사람이 판단하는 게 기본 흐름이다. → [D-005](D-005-write-gate.md)
+**우리 구조가 이미 이걸 지원한다.** `[정정 2026-09-10]` 지원하는 것은 **일반 제안·승인 흐름**이다. `review_integrity_concern` Action 종류는 구현돼 있지 않다(cs·sample `app/`·`acop_basement/` 에서 찾았고 안 나왔다). 제안하고 사람이 판단하는 게 기본 흐름이다. → [D-005](D-005-write-gate.md)
 
 ## 데이터가 부족하다
 
