@@ -109,11 +109,11 @@ MVP 범위는 **Remote A2A PoC 1개**다. 더미는 A-COP 본체가 아니라 �
 
 ## 후보 Team
 
-[catalog-verification.md](catalog-verification.md)가 A2A Remote 후보다. 장기 실행·추가 입력·Artifact 세 조건을 만족한다.
+[catalog-verification.md](../records/legacy/teams/catalog-verification.md)가 A2A Remote 후보다. 장기 실행·추가 입력·Artifact 세 조건을 만족한다.
 
 ## 관계
 
 - [team-contract.md](team-contract/index.md) — `TeamTask` / `TeamResult`
-- [catalog-verification.md](catalog-verification.md) — 후보 Team
+- [catalog-verification.md](../records/legacy/teams/catalog-verification.md) — 후보 Team
 - [../external/a2a-protocol.md](../external/a2a-protocol.md) — 프로토콜
 - [../runtime/agentic-controller.md](../runtime/agentic-controller.md) — Port를 쓰는 쪽

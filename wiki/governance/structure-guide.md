@@ -200,12 +200,12 @@ business/unit-economics/
 ```text
 teams/                      (11개 — 정상이지만 성격이 갈린다)
 ├─ index.md
-├─ team-contract.md         ┐
+├─ team-contract/           ┐
 ├─ team-registry.md         │ 계약·구조
 ├─ team-boundary.md         ┘
-├─ voc-store-manager.md     ┐
-├─ response-review.md       │ 개별 Team
-├─ return-refund.md         ┘
+├─ activity.md              ┐
+├─ dining.md                │ 개별 Team
+├─ mobility.md              ┘
 ...
         ↓ 20개를 넘으면
 teams/
@@ -213,6 +213,10 @@ teams/
 ├─ contract/                ← 계약·구조
 └─ modules/                 ← 개별 Team
 ```
+
+★**도메인이 바뀌면 위 예시의 아래 칸이 통째로 갈린다.** 2026-09-10 에 실제로 그렇게 됐고, 빠진 Team 문서는 **지우지 않고 `wiki/records/legacy/teams/` 로 옮겼다** — [domain-axis.md](domain-axis.md).
+
+★**그래서 쪼개는 기준을 도메인 어휘로 잡지 않는다.** 「계약·구조」와 「개별 Team」은 도메인이 바뀌어도 같은 축이다.
 
 ## 6. 이름 짓기
 

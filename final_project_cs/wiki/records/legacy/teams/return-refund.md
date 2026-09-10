@@ -120,7 +120,7 @@ amount = total * int(quantity) // item_count
 
 **근거를 남겨도 근거 자체가 틀린 기준이면 소용없다.**
 
-조치는 [중앙 허브 D-001](../../../wiki/decisions/D-001-payment-ownership.md). **1-A(품목별 배분)는 지금 할 수 있다.**
+조치는 [중앙 허브 D-001](../../../../../wiki/decisions/D-001-payment-ownership.md). **1-A(품목별 배분)는 지금 할 수 있다.**
 
 ## 골든셋 비중
 
@@ -136,9 +136,9 @@ amount = total * int(quantity) // item_count
 
 ## 관계
 
-- [team-contract.md](team-contract/index.md) — 계약
-- [team-boundary.md](team-boundary.md) — 경계
-- [../actions/action-proposal.md](../actions/action-proposal.md) — 제안 구조
-- [../actions/evidence-check.md](../actions/evidence-check.md) — 대조가 못 잡는 것
-- [../data/schema/index.md](../data/schema/index.md) — `order_items.unit_cents`
-- [../../../wiki/decisions/D-001-payment-ownership.md](../../../wiki/decisions/D-001-payment-ownership.md) — 조치안
+- [team-contract.md](../../../teams/team-contract/index.md) — 계약
+- [team-boundary.md](../../../teams/team-boundary.md) — 경계
+- [../actions/action-proposal.md](../../../actions/action-proposal.md) — 제안 구조
+- [../actions/evidence-check.md](../../../actions/evidence-check.md) — 대조가 못 잡는 것
+- [../data/schema/index.md](../../../data/schema/index.md) — `order_items.unit_cents`
+- [../../../wiki/decisions/D-001-payment-ownership.md](../../../../../wiki/decisions/D-001-payment-ownership.md) — 조치안

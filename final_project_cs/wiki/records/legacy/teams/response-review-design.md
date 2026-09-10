@@ -85,7 +85,7 @@ domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 202
 
 **REV는 전건이다.** 승인은 고위험만이다.
 
-→ [../actions/approval.md](../actions/approval.md)
+→ [../actions/approval.md](../../../actions/approval.md)
 
 ## 계약을 바꾸지 않는다
 
@@ -102,7 +102,7 @@ domain_note: v10 §0-2 가 MVP 경로에서 제외한 커머스 Team 이다. 202
 
 **계약을 바꾸면 `contract_version` 상향과 회귀 테스트가 함께 필요하다.** 그래서 안 바꿨다.
 
-→ [team-contract.md](team-contract/index.md)
+→ [team-contract.md](../../../teams/team-contract/index.md)
 
 ## 불변식
 
@@ -118,11 +118,11 @@ REV 반려 시 재시도 상한이 적용되는가 — 기존 테스트로 이�
 개인정보가 섞인 응답을 REV 자체 검증이 차단하는가 — 기존 테스트로 이미 확인됨
 ```
 
-→ [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md)
+→ [../../../wiki/delivery/dod.md](../../../../../wiki/delivery/dod.md)
 
 ## 관계
 
 - [response-review.md](response-review.md) — manifest와 운영 이력
-- [team-contract.md](team-contract/index.md) — `TeamResult` 매핑
-- [../actions/approval.md](../actions/approval.md) — 승인과의 차이
-- [../external/auth-boundary.md](../external/auth-boundary.md) — PII 마스킹
+- [team-contract.md](../../../teams/team-contract/index.md) — `TeamResult` 매핑
+- [../actions/approval.md](../../../actions/approval.md) — 승인과의 차이
+- [../external/auth-boundary.md](../../../external/auth-boundary.md) — PII 마스킹

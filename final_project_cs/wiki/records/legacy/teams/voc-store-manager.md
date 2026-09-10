@@ -57,7 +57,7 @@ Billing/Technical 2종을 "아키텍처 동작 증거로만 남긴다"고 처리
 
 **나중에 LLM 위임 판단을 실제로 넣으면 껍데기가 알맹이를 갖는다.** 그때 구조를 다시 건드리지 않는다.
 
-**Registry 등록형이라 Team 추가가 리팩토링이 아니라는 원칙이 이 미룸을 정당화한다.** → [pack-model](../../../wiki/architecture/pack-model.md)
+**Registry 등록형이라 Team 추가가 리팩토링이 아니라는 원칙이 이 미룸을 정당화한다.** → [pack-model](../../../../../wiki/architecture/pack-model.md)
 
 ### 지금 상태
 
@@ -72,7 +72,7 @@ Billing/Technical 2종을 "아키텍처 동작 증거로만 남긴다"고 처리
 출력  리포트 · 알림 · 다른 Team으로의 위임 제안   (TeamResult)
 ```
 
-**다른 Team을 직접 호출하지 않는다.** Controller가 Task로 변환한다. → [team-boundary.md](team-boundary.md)
+**다른 Team을 직접 호출하지 않는다.** Controller가 Task로 변환한다. → [team-boundary.md](../../../teams/team-boundary.md)
 
 ## `knowledge_scope`가 넓다
 
@@ -94,7 +94,7 @@ knowledge_scope = ["order", "shipping", "return", "exchange"]
 INTENTS ⊇ 모든 Team.accepted_case_types
 ```
 
-분류기가 내는 intent에 대응 Team이 없으면 Case가 갈 곳이 없어진다. 실제로 그런 결함이 있었다. → [../external/rest-api.md](../external/rest-api.md)
+분류기가 내는 intent에 대응 Team이 없으면 Case가 갈 곳이 없어진다. 실제로 그런 결함이 있었다. → [../external/rest-api.md](../../../external/rest-api.md)
 
 ## 이상의 정의
 
@@ -113,11 +113,11 @@ INTENTS ⊇ 모든 Team.accepted_case_types
 
 **alert가 많다고 좋은 게 아니다.** 운영자가 무시하기 시작하면 없는 것과 같다.
 
-→ [../../../wiki/evaluation/metrics.md](../../../wiki/evaluation/metrics.md)
+→ [../../../wiki/evaluation/metrics.md](../../../../../wiki/evaluation/metrics.md)
 
 ## 관계
 
-- [team-contract.md](team-contract/index.md) — 계약
-- [team-boundary.md](team-boundary.md) — 위임 규칙
+- [team-contract.md](../../../teams/team-contract/index.md) — 계약
+- [team-boundary.md](../../../teams/team-boundary.md) — 위임 규칙
 - [response-review.md](response-review.md) — 같은 CS Pack
-- [../../../wiki/product/personas.md](../../../wiki/product/personas.md) — 정미라가 이 alert를 본다
+- [../../../wiki/product/personas.md](../../../../../wiki/product/personas.md) — 정미라가 이 alert를 본다

@@ -88,7 +88,7 @@ RAG 통합 = 배선 + 재학습    둘 다 필요하다
 | 2 | **`golden.jsonl`이 이 Team을 단 한 건도 안 거친다.** 평가 데이터 재설계 필요 |
 | 3 | 12GB VRAM OOM 3회 + Windows WDDM 느린 실패 |
 
-**1번이 가장 컸다.** → [../teams/response-review.md](../teams/response-review.md)
+**1번이 가장 컸다.** → [../teams/response-review.md](../records/legacy/teams/response-review.md)
 
 ## 못 하게 되는 것
 
@@ -108,7 +108,7 @@ RAG 통합 = 배선 + 재학습    둘 다 필요하다
 
 - [../../../wiki/evaluation/finetuning.md](../../../wiki/evaluation/finetuning.md) — 파인튜닝 경로 설계
 - [../../../wiki/business/infrastructure-cost.md](../../../wiki/business/infrastructure-cost.md) — 12GB 제약
-- [../teams/response-review.md](../teams/response-review.md) — 발견된 결함
+- [../teams/response-review.md](../records/legacy/teams/response-review.md) — 발견된 결함
 - [../quality/eval-harness.md](../quality/eval-harness.md) — 평가 데이터 유효성
 - [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD-28
 

@@ -90,5 +90,5 @@ Evidence    : 필수 필드 있음
 ## 관계
 
 - [D-005](D-005-write-gate.md) — 근거 없이 실행하지 않는다
-- [`voc-store-manager.md`](../../final_project_cs/wiki/teams/voc-store-manager.md) — 이상 징후 판정
+- [`voc-store-manager.md`](../../final_project_cs/wiki/records/legacy/teams/voc-store-manager.md) — 이상 징후 판정
 - [../../datasets/wiki/catalog.md](../../datasets/wiki/catalog.md) — 리뷰 데이터셋

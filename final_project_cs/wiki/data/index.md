@@ -77,7 +77,7 @@ total_cents int NOT NULL,
 
 **정가인지 실결제액인지 구분이 없다.** 할인·포인트·쿠폰이 들어갈 자리가 없다.
 
-이게 [../teams/return-refund.md](../teams/return-refund.md)의 환불 계산이 할인에 취약한 근본 원인이다.
+이게 [../teams/return-refund.md](../records/legacy/teams/return-refund.md)의 환불 계산이 할인에 취약한 근본 원인이다.
 
 ## 이 영역의 불변식
 

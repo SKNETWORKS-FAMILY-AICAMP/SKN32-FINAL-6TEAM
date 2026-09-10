@@ -212,4 +212,4 @@ order_items (order_item_id, tenant_id, order_id, sku, name, quantity, unit_cents
 - [../product/scope.md](../product/scope.md) — 결제 실행은 Out of Scope
 - [../product/problem.md](../product/problem.md) — 이 결함이 층 1 페인의 실례
 - [../business/unit-economics.md](../business/unit-economics.md) — 오류 비용의 구체 사례
-- [`return-refund.md`](../../final_project_cs/wiki/teams/return-refund.md) — 구현
+- [`return-refund.md`](../../final_project_cs/wiki/records/legacy/teams/return-refund.md) — 구현

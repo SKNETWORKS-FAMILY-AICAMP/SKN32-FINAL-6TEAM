@@ -55,7 +55,7 @@ max_steps           = 6
 
 **A2A의 세 조건을 다 만족한다.** 단순 조회가 아니다.
 
-→ [../external/a2a-protocol.md](../external/a2a-protocol.md)
+→ [../external/a2a-protocol.md](../../../external/a2a-protocol.md)
 
 ## Remote 실행 시 흐름
 
@@ -97,7 +97,7 @@ tests/integration/a2a/test_remote_round_trip.py
 
 ## 관계
 
-- [team-contract.md](team-contract/index.md) — 계약
-- [remote-team-a2a.md](remote-team-a2a.md) — 원격 실행
-- [../external/a2a-protocol.md](../external/a2a-protocol.md) — 프로토콜
-- [../actions/evidence-check.md](../actions/evidence-check.md) — Artifact 대조
+- [team-contract.md](../../../teams/team-contract/index.md) — 계약
+- [remote-team-a2a.md](../../../teams/remote-team-a2a.md) — 원격 실행
+- [../external/a2a-protocol.md](../../../external/a2a-protocol.md) — 프로토콜
+- [../actions/evidence-check.md](../../../actions/evidence-check.md) — Artifact 대조

@@ -171,7 +171,7 @@ feedback                                     인라인 분류
 | 09-01 v8 재판정 | — | Response Generation & Review **확정**, VOC & Store Manager는 **등록·계약만 유지하는 껍데기**로. 08-19의 "하나뿐이던 등록 Team"이 껍데기가 되고 "미등록이던 Team"이 주인공이 됐다 |
 | 09-06 | **6개 전부 `active: true`** — voc · response_generation_review · return_refund · procurement_order_payment · fulfillment_logistics · catalog_verification | 6개가 다 `implementation_ref`로 실제 클래스를 가리킨다 |
 
-`[실측]` 루트 `CLAUDE.md`는 Return & Refund를 **(Mock)**, Catalog & Verification을 **(A2A Remote)**라 적는데 `project.yaml`엔 둘 다 다른 넷과 같은 모양으로 등록돼 있다. 등록 형식만으로는 안 보이지만 **`return_refund.py`는 docstring부터 `Mock-only`**다 — 2026-09-06 Mock 유지로 정했다 → [return-refund.md](return-refund.md) · [scope-verdicts](../../../wiki/delivery/scope-verdicts.md).
+`[실측]` 루트 `CLAUDE.md`는 Return & Refund를 **(Mock)**, Catalog & Verification을 **(A2A Remote)**라 적는데 `project.yaml`엔 둘 다 다른 넷과 같은 모양으로 등록돼 있다. 등록 형식만으로는 안 보이지만 **`return_refund.py`는 docstring부터 `Mock-only`**다 — 2026-09-06 Mock 유지로 정했다 → [return-refund.md](../records/legacy/teams/return-refund.md) · [scope-verdicts](../../../wiki/delivery/scope-verdicts.md).
 
 ## 관계
 

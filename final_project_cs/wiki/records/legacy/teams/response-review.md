@@ -74,7 +74,7 @@ response_review_policy.py   판정 기준
 선언·파인튜닝). `response_review.enabled`는 여전히 기본 `false`다 — 검증은
 끝났지만 운영에서는 아직 안 켰다.
 
-→ [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md)
+→ [../../../wiki/delivery/dod.md](../../../../../wiki/delivery/dod.md)
 
 ## ★ 실제로 죽어 있었다
 
@@ -112,11 +112,11 @@ prompts/response/review_tone.v1.md
 
 `prompts` 테이블에 `(prompt_key, version)` UNIQUE + sha256 immutable로 등록된다. **활성 프롬프트가 없으면 fail-closed다.**
 
-→ [../quality/eval-harness.md](../quality/eval-harness.md)
+→ [../quality/eval-harness.md](../../../quality/eval-harness.md)
 
 ## 관계
 
-- [team-contract.md](team-contract/index.md) — 계약
+- [team-contract.md](../../../teams/team-contract/index.md) — 계약
 - [voc-store-manager.md](voc-store-manager.md) — 같은 CS Pack
-- [../../../wiki/delivery/dod.md](../../../wiki/delivery/dod.md) — DoD-29
-- [../../../wiki/evaluation/judge.md](../../../wiki/evaluation/judge.md) — 검토 품질 평가
+- [../../../wiki/delivery/dod.md](../../../../../wiki/delivery/dod.md) — DoD-29
+- [../../../wiki/evaluation/judge.md](../../../../../wiki/evaluation/judge.md) — 검토 품질 평가

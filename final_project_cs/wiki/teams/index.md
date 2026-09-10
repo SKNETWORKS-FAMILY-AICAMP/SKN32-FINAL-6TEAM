@@ -30,7 +30,7 @@ domain: travel
 | [common-utils.md](common-utils.md) | 공통 뼈대 (미구현) | — |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |
 | [remote-team-a2a.md](remote-team-a2a.md) | A2A Remote Team 실행 | `app/core/remote_team/` |
-| [response-review-design.md](response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
+| [response-review-design.md](../records/legacy/teams/response-review-design.md) | **GEN→REV 내부 설계와 검증 4항목** | `response_review_policy.py` |
 
 ## 여행 Team — 명세만 있다 `[실측 2026-09-09]`
 
@@ -72,24 +72,24 @@ domain: travel
 
 **셋을 갖는다** — ① 검증 규칙 ② 감시 소스 ③ 재계획 후보. 판정은 코드가, 대안 생성은 LLM이 하고 **생성한 대안은 판정을 다시 통과해야 통지된다.** ★**전체 일정 정합성은 Team이 아니라 코어 검증 층이 본다** — 재계획 후보는 제안이지 확정이 아니다. [mobility.md](mobility.md)가 그 시험대다.
 
-## 쇼핑몰 Team — MVP 경로에서 빠졌다
+## 지난 도메인의 Team — 코드도 문서도 여기 없다
 
-`[실측]` 코드와 등록은 남아 있고 **호출되지 않는다**(v10 §0-2). 문서를 지우지 않는 이유는 골든셋·평가·불변식이 아직 이 Team들을 근거로 삼기 때문이다.
+`[실측 2026-09-10]` **커머스 Team 일곱은 코드가 삭제되고 문서는 [records/legacy/teams/](../records/legacy/teams/) 로 옮겼다.**
 
-| Pack | Team |
-|---|---|
-| CS | [voc-store-manager.md](voc-store-manager.md)(`voc_store_manager.py`, v8 재판정으로 이미 껍데기였다) · [response-review.md](response-review.md)(`response_review.py`) |
-| Commerce Ops | [procurement-order.md](procurement-order.md) · [fulfillment-logistics.md](fulfillment-logistics.md) · [return-refund.md](return-refund.md) · [catalog-verification.md](catalog-verification.md)(A2A Remote) |
-| — | `feedback.py` 인라인 분류는 **남는다.** 라벨만 교체된다 — 일정 제출 / 사건 신고 / 확인 요청 / 조정 거부 / 그 외 (v10 §5-A) |
+| | 2026-09-09 | **2026-09-10** |
+|---|---|---|
+| `config/project.yaml` 등록 | 빠졌다 (소스는 남아 있었다) | — |
+| `app/modules/customer_ops/` | 남아 있었다 | **삭제됨** |
+| 커머스 A2A 원격 (`remote_agent.py`) | 남아 있었다 | **삭제됨.** 자리를 `travel_remote_agent.py` 가 물려받았다 |
+| wiki 문서 7건 | `wiki/teams/` 에 있었다 | **`wiki/records/legacy/teams/` 로 이동** |
 
-★각 칸의 옛 상태("10주 착수 확정"·"일정 따라 조정")는 v9 쇼핑몰 기준이라 뺐다. 개별 문서에 그 시점 사실로 남아 있다.
+★**문서를 지우지 않고 옮긴 이유.** 판정의 **이유**가 도메인 무관이라 여행 Team 이 같은 문제를 다시 만난다. 그리고 도메인이 되돌아가면 그 판정을 다시 하게 되는데 **그걸 다시 논의하지 않으려고** 남긴다. → [records/legacy/index.md](../records/legacy/index.md)
 
-정책 파일이 따로 있다.
+★**뼈대를 물려받은 관계는 [activity](activity.md)·[mobility](mobility.md)·Place Verification 쪽에 적혀 있다.** 구조를 베꼈다는 뜻이고 **판정 규칙과 도메인 데이터는 전량 신규다**(v11 §0-2).
 
-| 파일 | 무엇 |
-|---|---|
-| `response_review_policy.py` | 검토 정책 |
-| `verification_policy.py` | 검증 정책 |
+`[실측]` **인라인 분류(`feedback.py`)는 남는다.** 라벨만 교체됐다 — `itinerary_submit` 일정 제출 / `incident_report` 사건 신고 / `confirm_request` 확인 요청 / `adjust_reject` 조정 거부 / `other` 그 외 (v11 §5-A).
+
+★**라우팅은 한 축이 아니라 둘이다**(v11 §5-B) — `case_type`(객체 종류, `issue_code` 접두에서 뽑는다) + `intent`(요청 종류). **요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다**는 것이 2026-09-09 실행으로 확인됐다.
 
 ## Team이 하지 않는 것 셋
 

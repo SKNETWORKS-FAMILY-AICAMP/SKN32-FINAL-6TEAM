@@ -129,7 +129,7 @@ Team은 다음이 **전부** 독립될 때 만든다.
 
 > **v8 §7 재판정 — 집계·급증 탐지는 코어 1 소유.** VOC & Store Manager 는 **Registry 등록·계약만 유지하는 껍데기**로 조정한다.
 
-→ [../../final_project_cs/wiki/teams/voc-store-manager.md](../../final_project_cs/wiki/teams/voc-store-manager.md)
+→ [../../final_project_cs/wiki/teams/voc-store-manager.md](../../final_project_cs/wiki/records/legacy/teams/voc-store-manager.md)
 
 **루트 `CLAUDE.md` 도 그렇게 적고 있다.**
 

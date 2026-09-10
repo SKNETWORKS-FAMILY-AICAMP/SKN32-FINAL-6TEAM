@@ -161,7 +161,7 @@ refund.calculate · return.request · voc.escalate
 | 금액·수량·배송지·결제수단이 포함되거나 **주문 상태를 바꾸는** 제안 | **`high`** + `approval_required=True` |
 | 주소·수취인·배송 상태 변경 | **`medium` 이상** |
 
-`[실측]` **`return_refund` 의 실제 값은 `medium` 이다.** 설계는 환불을 `high` 로 봤다. → [../teams/return-refund.md](../teams/return-refund.md)
+`[실측]` **`return_refund` 의 실제 값은 `medium` 이다.** 설계는 환불을 `high` 로 봤다. → [../teams/return-refund.md](../records/legacy/teams/return-refund.md)
 
 ## 관계
 
