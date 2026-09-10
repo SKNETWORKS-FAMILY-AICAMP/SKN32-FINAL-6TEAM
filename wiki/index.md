@@ -79,7 +79,7 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 | 음성 채널 | 별도 원가 산정 | [business/infrastructure-cost.md](business/infrastructure-cost.md) |
 | ~~환불 계산 방식 전환 시점~~ | 쇼핑몰 전제라 여행에서는 해당 없음. D-001 재판정 대상 | [decisions/D-001-payment-ownership.md](decisions/D-001-payment-ownership.md) |
 | ~~MVP 대상 도시~~ | **닫힘 — 서울** (2026-09-10). 기술 제약이 아니라 검증 주장의 분모다 | [decisions/D-016-scope-narrowing-reasons.md](decisions/D-016-scope-narrowing-reasons.md) |
-| ~~지원 언어 범위~~ | **닫힘 — 두 번 바뀌었다** (2026-09-10, v11 §0-4 결정 2 → 11). 원본 한국어, **링크·알림은 고객 언어로 우리가 옮긴다(기본 한·영)**, 에이전트 경로는 에이전트가 | 동 |
+| ~~지원 언어 범위~~ | **닫힘 — 세 번 바뀌었다** (2026-09-10, v11 §0-4 결정 2 → 11 → 14). 원본 한국어, **링크·알림은 보낼 때 고객 언어로 생성한다**(언어 목록 없음), 에이전트 경로는 에이전트가 | 동 |
 | **액티비티 운영 변경 정보를 어디서 받나** | 서울권 표본 조사 — 2주차. **도시가 정해져 시작 가능** | v11 §0-3 |
 | **구현 카탈로그를 어떻게 관리하나** | 손으로 유지하는 목록 둘을 없애는 안. UI 화면 셋 | [decisions/D-015-implementation-catalog.md](decisions/D-015-implementation-catalog.md) |
 | **49,000원 수용 여부** `[정정 2026-09-10]` 59,000원(2도시)에서 **팀당 49,000원 · 서울 · 최대 7일 · 4인**으로 내렸다 — v11 §0-4 결정 13, [business/pricing-travel.md](business/pricing-travel.md) | 유료 파일럿 20~30팀 | 동 |
