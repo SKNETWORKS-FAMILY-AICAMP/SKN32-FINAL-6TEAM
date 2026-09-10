@@ -54,10 +54,10 @@
 <tbody>
 <tr><th>판</th><td>v2 · 통합본 · 0~11장</td></tr>
 <tr><th>기준선</th><td><code>program/plan/A-COP_구현계획서_v11.md</code></td></tr>
-<tr><th>실측 시각</th><td>2026-09-10 · 가드 테스트 16:43 · HEAD 16:44 · 파일 지문 16:58 · 관문 16:58</td></tr>
+<tr><th>실측 시각</th><td>2026-09-10 · 가드 테스트 16:43 · HEAD 16:44 · 파일 지문 21:30 · 관문 21:30</td></tr>
 <tr><th>대상 코드</th><td>작성 시점 HEAD 29abb67 · 파일 식별은 11장 코드 지문 표. <code>travel_ops/</code>와 <code>app/application/routing.py</code>는 미추적이며, <code>tests/architecture/test_basement_is_domain_free.py</code>는 수정 상태다.</td></tr>
 <tr><th>대상 저장소</th><td><code>final_project_cs</code> · 여행 모듈, Controller, Registry, 프로젝트 설정을 대상으로 한다.</td></tr>
-<tr><th>검증 기록</th><td><code>check_arch_doc.py</code>: 합격 · 위반 0 · SVG 8 · 코드 인용 442 · 범위 밖 0. <code>check_text_fit.js</code>: SVG 8 · 글자 250 · 넘침 0 · 겹침 0 · 선통과 0이며, 실측 명령과 확인 범위는 11장에 둔다.</td></tr>
+<tr><th>검증 기록</th><td><code>check_arch_doc.py</code>: 합격 · 위반 0 · SVG 8 · 코드 인용 436 · 범위 밖 0. <code>check_text_fit.js</code>: SVG 8 · 글자 248 · 넘침 0 · 겹침 0 · 선통과 0이며, 실측 명령과 확인 범위는 11장에 둔다.</td></tr>
 </tbody>
 </table>
 
@@ -67,126 +67,135 @@
 <p><span class="st st-ok">코드 확인</span> 입구는 <code>POST /v1/cases</code>다(<code>cases.py:102</code>). Case 생성 → CREATED 이벤트 → 생성 트랜잭션 밖에서 분류 → Controller가 있고 상태가 <code>routing</code>이면 응답 뒤 백그라운드 실행 순서다(<code>cases.py:135~137</code> · <code>cases.py:157</code> · <code>cases.py:160~166</code>).</p>
 <div class="diagram">
 <svg viewBox="0 0 1216 704" role="img" aria-labelledby="v2-main-title v2-main-desc" xmlns="http://www.w3.org/2000/svg">
-<title id="v2-main-title">여행 Team과 코어 계약 경계</title>
-<desc id="v2-main-desc">외부 에이전트는 POST /v1/cases로 요청한다. Controller는 선택된 로컬 팀에 TeamTask를 보내고 TeamResult를 받는다. 여섯 로컬 팀은 TravelTeamBase를 공통 부모로 사용하며 Lodging과 Flight는 한 파일에 있다. Place Verification은 팀 목록에 미등록된 원격 시뮬레이터이며 A2A 실행기는 꺼져 있다. 사람 승인과 승인 이후 공급자 실행의 경계는 2장에 있다.</desc>
-<defs>
-  <marker id="v2-main-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
-    <path d="M0 0 L8 4 L0 8" fill="#6b7488"/>
-  </marker>
-</defs>
-<rect x="0" y="0" width="1216" height="704" rx="6" fill="#fbfcfd"/>
-<rect x="384" y="144" width="480" height="120" rx="6" fill="#f1f4f8" stroke="#dbe0ea" stroke-width="1"/>
-<rect x="64" y="320" width="896" height="288" rx="6" fill="#f1f4f8" stroke="#dbe0ea" stroke-width="1"/>
+  <title id="v2-main-title">여행 Team과 코어 계약 경계</title>
+  <desc id="v2-main-desc">외부 에이전트는 POST /v1/cases로 요청한다. Controller는 선택된 로컬 팀에 TeamTask를 보내고 TeamResult와 제안을 받는다. Activity, Dining, Mobility는 MVP이고 Booking Handoff는 MVP 다음이다. Lodging과 Flight는 등록만 되어 있으며 한 파일에서 예약을 잠김 취급한다. 여섯 로컬 팀은 TravelTeamBase를 공통 부모로 사용한다. Place Verification은 미등록 원격 시뮬레이터이며 A2A 실행기는 꺼져 있다. 승인 이후 공급자 실행은 미구현이며 사람 승인과 공급자 실행의 책임 경계는 2장에 있다.</desc>
 
-<g fill="none" stroke="#6b7488" stroke-width="1">
-  <path d="M608 100 V128 Q608 136 600 136 H472 Q464 136 464 144 V176" marker-end="url(#v2-main-arrow)"/>
-  <path d="M464 248 V288 Q464 296 472 296 H872"/>
-  <path d="M464 296 H168"/>
-  <path d="M168 296 V352" marker-end="url(#v2-main-arrow)"/>
-  <path d="M344 296 V352" marker-end="url(#v2-main-arrow)"/>
-  <path d="M520 296 V352" marker-end="url(#v2-main-arrow)"/>
-  <path d="M696 296 V352" marker-end="url(#v2-main-arrow)"/>
-  <path d="M872 296 V352" marker-end="url(#v2-main-arrow)"/>
-  <path d="M168 484 V492 Q168 500 176 500 H1176 Q1184 500 1184 492 V128 Q1184 120 1176 120 H584 Q576 120 576 128 V200 Q576 208 568 208" marker-end="url(#v2-main-arrow)"/>
-  <path d="M344 484 V500 M520 484 V500 M696 484 V500 M872 484 V500"/>
-  <path d="M568 224 H648" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow)"/>
-</g>
+  <defs>
+    <marker id="v2-main-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#6b7488"/>
+    </marker>
+    <marker id="v2-main-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#2f5bd8"/>
+    </marker>
+    <marker id="v2-main-arrow-muted" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#7a8599"/>
+    </marker>
+  </defs>
 
-<g font-family="'Geist','Noto Sans KR',sans-serif" fill="#161c28">
-  <rect x="520" y="48" width="176" height="52" rx="6" fill="#f1f4f8" stroke="#7a8599" stroke-width="1"/>
-  <text x="608" y="72" font-size="12" text-anchor="middle">외부 에이전트</text>
-  <text x="608" y="88" font-size="12" text-anchor="middle">일정·요청 입력</text>
+  <rect x="0" y="0" width="1216" height="704" fill="#fbfcfd"/>
 
-  <rect x="312" y="104" width="144" height="24" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="320" y="120" font-size="12" font-family="Geist Mono,monospace">POST /v1/cases</text>
+  <g fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.10)" stroke-width="0.8">
+    <rect x="352" y="140" width="528" height="132" rx="8"/>
+    <rect x="40" y="324" width="912" height="288" rx="8"/>
+  </g>
 
-  <rect x="624" y="88" width="232" height="24" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="632" y="104" font-size="12">TeamResult · 제안 반환</text>
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="616" y="160" text-anchor="middle">CORE · KEEP</text>
+    <text x="64" y="348">TEAM MODULES · 6 LOCAL · JUDGE ONLY</text>
+  </g>
 
-  <rect x="392" y="148" width="144" height="24" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="400" y="164" font-size="12">코어 계약 유지</text>
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M472 92 V176" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#v2-main-arrow-link)"/>
+    <path d="M472 248 V364"/>
+    <path d="M144 364 H848"/>
+    <path d="M144 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M320 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M496 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M672 364 V388" marker-end="url(#v2-main-arrow)"/>
+    <path d="M848 364 V388" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
+    <path d="M568 212 H664" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
+  </g>
 
-  <rect x="408" y="176" width="160" height="72" rx="6" fill="#fbfcfd" stroke="#161c28" stroke-width="1"/>
-  <text x="424" y="200" font-size="16">Controller</text>
-  <text x="424" y="220" font-size="12">판단 위임·승인 등록</text>
-  <text x="424" y="240" font-size="8" font-family="Geist Mono,monospace">controller.py:215 · :376</text>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
+    <text x="488" y="116" fill="#2f5bd8">POST /v1/cases</text>
+    <text x="488" y="288">TeamTask</text>
+    <text x="616" y="200" fill="#7a8599" text-anchor="middle">UNIMPLEMENTED</text>
+  </g>
 
-  <rect x="648" y="176" width="192" height="72" rx="6" fill="#fbfcfd" stroke="#161c28" stroke-width="1"/>
-  <text x="664" y="200" font-size="12">승인 이후 공급자 실행</text>
-  <text x="664" y="220" font-size="12">미구현</text>
-  <text x="664" y="240" font-size="12">책임 경계는 2장</text>
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="384" y="40" width="176" height="52" rx="6"/>
+    <rect x="376" y="176" width="192" height="72" rx="6"/>
+    <rect x="664" y="176" width="192" height="72" rx="6"/>
+    <rect x="64" y="528" width="864" height="60" rx="6"/>
+  </g>
 
-  <rect x="520" y="268" width="144" height="20" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="528" y="280" font-size="8" font-family="Geist Mono,monospace">TeamTask</text>
-  <rect x="432" y="324" width="352" height="20" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="440" y="336" font-size="8" font-family="Geist Mono,monospace">TEAM MODULES · 6 LOCAL · JUDGE ONLY</text>
+  <g fill="#ffffff" stroke="#161c28" stroke-width="1">
+    <rect x="64" y="388" width="160" height="104" rx="6"/>
+    <rect x="240" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="416" y="388" width="160" height="104" rx="6"/>
+    <rect x="592" y="388" width="160" height="104" rx="6"/>
+    <rect x="768" y="388" width="160" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
+    <rect x="976" y="388" width="208" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
+  </g>
 
-  <rect x="88" y="352" width="160" height="132" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <rect x="96" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="104" y="376" font-size="12">코드 확인</text>
-  <text x="96" y="404" font-size="12">Activity</text>
-  <text x="96" y="428" font-size="12">활동 가능 여부</text>
-  <text x="96" y="448" font-size="8" font-family="Geist Mono,monospace">activity.py 274 lines</text>
-  <text x="96" y="472" font-size="8" font-family="Geist Mono,monospace">activity.py:127</text>
+  <g fill="transparent" stroke="rgba(22,28,40,0.40)" stroke-width="0.8">
+    <rect x="72" y="396" width="32" height="16" rx="2"/>
+    <rect x="248" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
+    <rect x="424" y="396" width="32" height="16" rx="2"/>
+    <rect x="600" y="396" width="36" height="16" rx="2"/>
+    <rect x="776" y="396" width="36" height="16" rx="2"/>
+    <rect x="984" y="396" width="64" height="16" rx="2"/>
+    <rect x="672" y="184" width="56" height="16" rx="2"/>
+  </g>
 
-  <rect x="264" y="352" width="160" height="132" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
-  <rect x="272" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="280" y="376" font-size="12">코드 확인</text>
-  <text x="272" y="404" font-size="12">Dining</text>
-  <text x="272" y="428" font-size="12">영업·요청 조건</text>
-  <text x="272" y="448" font-size="8" font-family="Geist Mono,monospace">dining.py 96 lines</text>
-  <text x="272" y="472" font-size="8" font-family="Geist Mono,monospace">dining.py:64</text>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="7" font-weight="400" text-anchor="middle" letter-spacing="0.08em">
+    <text x="88" y="408">MVP</text>
+    <text x="264" y="408" fill="#a8720c">MVP</text>
+    <text x="440" y="408">MVP</text>
+    <text x="618" y="408">NEXT</text>
+    <text x="794" y="408">STUB</text>
+    <text x="1016" y="408">REMOTE OFF</text>
+    <text x="690" y="196">UNBUILT</text>
+  </g>
 
-  <rect x="440" y="352" width="160" height="132" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <rect x="448" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="456" y="376" font-size="12">코드 확인</text>
-  <text x="448" y="404" font-size="12">Mobility</text>
-  <text x="448" y="428" font-size="12">현재 구간 정보 모름</text>
-  <text x="448" y="448" font-size="8" font-family="Geist Mono,monospace">mobility.py 80 lines</text>
-  <text x="448" y="472" font-size="8" font-family="Geist Mono,monospace">mobility.py:54~55</text>
+  <g fill="#161c28" font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+    <text x="472" y="64">외부 에이전트</text>
+    <text x="472" y="196">Controller</text>
+    <text x="760" y="220">승인 이후 공급자 실행</text>
+    <text x="144" y="436">Activity</text>
+    <text x="320" y="436">Dining</text>
+    <text x="496" y="436">Mobility</text>
+    <text x="672" y="436">Booking Handoff</text>
+    <text x="848" y="436">Lodging / Flight</text>
+    <text x="1080" y="436">Place Verification</text>
+    <text x="496" y="548">TravelTeamBase</text>
+  </g>
 
-  <rect x="616" y="352" width="160" height="132" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <rect x="624" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="632" y="376" font-size="12">코드 확인</text>
-  <text x="624" y="404" font-size="12">Booking Handoff</text>
-  <text x="624" y="428" font-size="12">예약 대조·제안</text>
-  <text x="624" y="448" font-size="8" font-family="Geist Mono,monospace">booking_handoff.py 94 lines</text>
-  <text x="624" y="472" font-size="8" font-family="Geist Mono,monospace">booking_handoff.py:65</text>
+  <g fill="rgba(22,28,40,0.80)" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" text-anchor="middle">
+    <text x="472" y="80">일정·요청 입력</text>
+    <text x="472" y="216">판단 위임·승인 등록</text>
+    <text x="760" y="236">책임 경계는 2장</text>
+    <text x="144" y="456">활동 가능 여부</text>
+    <text x="320" y="456">영업·요청 조건</text>
+    <text x="496" y="456">현재 구간 정보 모름</text>
+    <text x="672" y="456">예약 대조·제안</text>
+    <text x="848" y="456">예약은 잠김 취급</text>
+    <text x="1080" y="456">원격 시뮬레이터</text>
+    <text x="496" y="564">여섯 로컬 팀의 공통 부모 · 선택된 로컬 팀 → Controller: TeamResult · 제안 반환</text>
+  </g>
 
-  <rect x="792" y="352" width="160" height="132" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <rect x="800" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="808" y="376" font-size="12">코드 확인</text>
-  <text x="800" y="404" font-size="12">Lodging / Flight</text>
-  <text x="800" y="428" font-size="12">예약은 잠김 취급</text>
-  <text x="800" y="448" font-size="8" font-family="Geist Mono,monospace">locked_bookings.py 73 lines</text>
-  <text x="800" y="472" font-size="8" font-family="Geist Mono,monospace">locked_bookings.py:37</text>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400" text-anchor="middle">
+    <text x="472" y="236">controller.py:215</text>
+    <text x="144" y="476">activity.py:127</text>
+    <text x="320" y="476">dining.py:64</text>
+    <text x="496" y="476">mobility.py:54~55</text>
+    <text x="672" y="476">booking_handoff.py:65</text>
+    <text x="848" y="476">locked_bookings.py:37</text>
+    <text x="1080" y="476">travel_remote_agent.py:44</text>
+    <text x="496" y="580">_guard · _read · _evidence · _result · _escalate · _unknown · _proposal (_base.py 177 lines)</text>
+  </g>
 
-  <rect x="968" y="352" width="160" height="132" rx="6" fill="#ffffff" stroke="#7a8599" stroke-width="1"/>
-  <rect x="976" y="360" width="80" height="24" rx="6" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="984" y="376" font-size="12">코드 확인</text>
-  <text x="976" y="400" font-size="12">Place Verification</text>
-  <text x="976" y="420" font-size="12">미등록 · 원격 시뮬레이터</text>
-  <text x="976" y="440" font-size="12">A2A 꺼짐</text>
-  <text x="976" y="456" font-size="8" font-family="Geist Mono,monospace">project.yaml:6~7</text>
-  <text x="976" y="472" font-size="8" font-family="Geist Mono,monospace">travel_remote_agent.py:44</text>
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="40" y="648">LEGEND</text>
+  </g>
 
-  <rect x="88" y="512" width="864" height="72" rx="6" fill="#fbfcfd" stroke="#161c28" stroke-width="1"/>
-  <text x="104" y="536" font-size="16">TravelTeamBase — 여섯 로컬 팀의 공통 부모</text>
-  <text x="104" y="560" font-size="12" font-family="Geist Mono,monospace">_guard · _read · _evidence · _result · _escalate · _unknown · _proposal</text>
-  <text x="104" y="576" font-size="8" font-family="Geist Mono,monospace">_base.py 177 lines</text>
-
-  <line x1="64" y1="632" x2="1152" y2="632" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="64" y="660" font-size="8" fill="#6b7488" font-family="Geist Mono,monospace">LEGEND</text>
-  <rect x="140" y="648" width="16" height="16" rx="6" fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
-  <text x="164" y="660" font-size="12">코어 계약 유지</text>
-  <rect x="328" y="648" width="16" height="16" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <text x="352" y="660" font-size="12">코드 확인 · 로컬 팀</text>
-  <rect x="568" y="648" width="16" height="16" rx="6" fill="#ffffff" stroke="#7a8599" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="592" y="660" font-size="12">점선 · 공급자 실행 미구현</text>
-  <rect x="880" y="648" width="16" height="16" rx="6" fill="#ffffff" stroke="#7a8599" stroke-width="1"/>
-  <text x="904" y="660" font-size="12">원격 · 미등록</text>
-  <text x="64" y="688" font-size="12">로컬 실행 설정: team_executor: local · a2a_executor.enabled: false</text>
-</g>
+  <g fill="rgba(22,28,40,0.80)" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400">
+    <text x="120" y="648">KEEP = 코어 계약 유지 · MVP = MVP 범위 · NEXT = MVP 다음 · STUB = 등록만 · REMOTE OFF = 원격 미등록·A2A 꺼짐 · UNBUILT = 미구현</text>
+    <text x="40" y="680">로컬 팀 · 등록만 · 원격 미등록 · 공급자 실행 미구현 · 로컬 실행 설정:</text>
+  </g>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
+    <text x="456" y="680">team_executor: local · a2a_executor.enabled: false</text>
+  </g>
 </svg>
 </div>
 
@@ -225,90 +234,124 @@
 <p>Team은 조회 근거로 판단하고 <code>TeamResult</code>를 반환한다. Controller는 결과 동작을 이벤트로 바꾸며, 승인 대기 제안은 degraded 차단과 사실 대조를 거쳐 승인 요청으로 등록한다. 사람 승인 API는 <span class="st st-ok">코드 확인</span>이다(<code>cases.py:208~276</code>). 승인 이후 공급자 실행은 app/ 검색에서 찾지 못했다 · 미구현(범위와 명령은 11장).</p>
 <div class="diagram">
 <svg viewBox="0 0 1216 648" role="img" aria-labelledby="v2-resp-title v2-resp-desc" xmlns="http://www.w3.org/2000/svg">
-<title id="v2-resp-title">판단·사실 대조·사람 승인·실행의 책임 경계</title>
-<desc id="v2-resp-desc">RESPOND는 COMPLETED 이벤트로 Case를 resolved로 바꾼다. WAIT_FOR_APPROVAL 제안은 degraded와 사실 불일치를 검사한 뒤 승인 요청으로 등록한다. 여행 구성은 대조 선언을 주입하며, 선언을 불러오지 못한 경우에만 대조 생략 경로가 열린다. 사람 승인 API는 구현돼 있고 APPROVED 이벤트는 waiting_approval을 resuming으로 바꾼다. 점선은 승인 이후 공급자 실행의 미구현 경계다. WAIT_FOR_INPUT, ESCALATE와 HANDOFF 처리는 아래 결과 표에 있다.</desc>
-<defs>
-  <marker id="v2-resp-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
-    <path d="M0 0 L8 4 L0 8" fill="#6b7488"/>
-  </marker>
-</defs>
-<rect x="0" y="0" width="1216" height="648" rx="6" fill="#fbfcfd"/>
+  <title id="v2-resp-title">판단·사실 대조·사람 승인·실행의 책임 경계</title>
+  <desc id="v2-resp-desc">Team의 판단은 TeamResult로 반환된다. RESPOND는 COMPLETED 이벤트로 Case를 resolved로 바꾸고 답변과 근거를 기록한다. WAIT_FOR_APPROVAL 제안은 degraded와 사실 불일치를 검사하며, 차단 결과가 없으면 승인 요청을 등록한다. 여행 구성은 대조 선언을 주입하며, 선언 로딩 실패 때만 degraded 차단 통과 후 사실 대조를 생략한다. 사람 승인 API는 구현돼 있고 APPROVED 이벤트는 waiting_approval을 resuming으로 바꾼다. 승인 이후 공급자 실행은 미구현이다.</desc>
 
-<g fill="none" stroke="#6b7488" stroke-width="1" marker-end="url(#v2-resp-arrow)">
-  <path d="M240 96 H288"/>
-  <path d="M552 96 H792"/>
-  <path d="M420 136 V192"/>
-  <path d="M420 288 V344"/>
-  <path d="M552 396 H624 Q632 396 632 388 V244 Q632 236 640 236 H792"/>
-  <path d="M552 428 H640 Q648 428 648 436 V492 Q648 500 656 500 H792"/>
-  <path d="M976 568 V576 H1184 Q1192 576 1192 568 V368 Q1192 360 1184 360 H1160" stroke-dasharray="4 4"/>
-</g>
+  <defs>
+    <marker id="v2-resp-arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#6b7488"/>
+    </marker>
+    <marker id="v2-resp-arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#2f5bd8"/>
+    </marker>
+    <marker id="v2-resp-arrow-accent" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#a8720c"/>
+    </marker>
+    <marker id="v2-resp-arrow-pending" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#7a8599"/>
+    </marker>
+  </defs>
 
-<g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-  <rect x="24" y="48" width="216" height="96" rx="6" fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
-  <text x="40" y="76" font-size="16">Team · 판단</text>
-  <text x="40" y="100" font-size="12">조회·근거·판정</text>
-  <text x="40" y="124" font-size="12">제안 생성: _base.py:170</text>
+  <rect x="0" y="0" width="1216" height="648" fill="#fbfcfd"/>
 
-  <rect x="288" y="48" width="264" height="88" rx="6" fill="#f1f4f8" stroke="#161c28" stroke-width="1"/>
-  <text x="304" y="76" font-size="16">TeamResult</text>
-  <text x="304" y="100" font-size="12">next_action · answer</text>
-  <text x="304" y="124" font-size="12">_base.py:125</text>
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="24" y="28">TEAM · JUDGMENT</text>
+    <text x="288" y="28">RESULT · PROPOSAL · CHECK</text>
+    <text x="792" y="28">STATE · APPROVAL · EXECUTION</text>
+  </g>
 
-  <rect x="592" y="68" width="160" height="20" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="600" y="80" font-size="12">RESPOND</text>
+  <g fill="none" stroke="#6b7488" stroke-width="1" marker-end="url(#v2-resp-arrow)">
+    <path d="M240 96 H288" stroke="#2f5bd8" stroke-width="1.2" marker-end="url(#v2-resp-arrow-link)"/>
+    <path d="M552 96 H792"/>
+    <path d="M420 144 V192"/>
+    <path d="M420 288 V344"/>
+    <path d="M552 380 H616 Q624 380 624 372 V244 Q624 236 632 236 H792" stroke="#a8720c" stroke-width="1.2" marker-end="url(#v2-resp-arrow-accent)"/>
+    <path d="M552 428 H696 Q704 428 704 420 V380 Q704 372 712 372 H792"/>
+    <path d="M976 416 V440"/>
+    <path d="M976 496 V520" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-resp-arrow-pending)"/>
+  </g>
 
-  <rect x="792" y="48" width="368" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <text x="808" y="76" font-size="16">COMPLETED 이벤트 → resolved</text>
-  <text x="808" y="100" font-size="12">코드 확인 · controller.py:353 · events.py:64</text>
-  <text x="808" y="124" font-size="12">답변과 근거를 상태에 기록한다</text>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="672" y="80">RESPOND</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" text-anchor="middle">
+    <text x="700" y="220" fill="#a8720c">degraded·불일치 차단</text>
+    <text x="628" y="412" fill="#6b7488">차단 결과 없음</text>
+  </g>
 
-  <rect x="288" y="192" width="264" height="96" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <text x="304" y="220" font-size="16">ActionProposal</text>
-  <text x="304" y="244" font-size="12">WAIT_FOR_APPROVAL</text>
-  <text x="304" y="268" font-size="12">booking_handoff.py:91</text>
+  <g stroke="#161c28" stroke-width="1">
+    <rect x="24" y="48" width="216" height="96" rx="6" fill="#ffffff"/>
+    <rect x="288" y="48" width="264" height="96" rx="6" fill="#fbfcfd"/>
+    <rect x="792" y="48" width="368" height="96" rx="6" fill="#fbfcfd"/>
+    <rect x="288" y="192" width="264" height="96" rx="6" fill="#fbfcfd"/>
+    <rect x="288" y="344" width="264" height="120" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="792" y="192" width="368" height="96" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="792" y="328" width="368" height="88" rx="6" fill="#fbfcfd"/>
+    <rect x="792" y="440" width="368" height="56" rx="6" fill="#fbfcfd"/>
+    <rect x="792" y="520" width="368" height="64" rx="6" fill="#fbfcfd" stroke="#7a8599" stroke-dasharray="4 4"/>
+  </g>
 
-  <rect x="288" y="344" width="264" height="120" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
-  <text x="304" y="372" font-size="16">제안 사실 대조</text>
-  <text x="304" y="396" font-size="12">코드 확인 · controller.py:365</text>
-  <text x="304" y="420" font-size="12">degraded 차단 → 선언 검사</text>
-  <text x="304" y="444" font-size="12">대조 불일치도 승인 등록 전 차단</text>
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="16" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="132" y="80">Team · 판단</text>
+    <text x="420" y="80">TeamResult</text>
+    <text x="420" y="224">ActionProposal</text>
+    <text x="420" y="380">제안 사실 대조</text>
+  </g>
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="976" y="80">COMPLETED 이벤트 → resolved</text>
+    <text x="976" y="224">GUARDRAIL_ESCALATED</text>
+    <text x="976" y="352">승인 요청 등록 → 사람 승인 API</text>
+    <text x="976" y="460">APPROVED</text>
+    <text x="976" y="548">승인 이후 공급자 실행</text>
+  </g>
 
-  <rect x="640" y="204" width="144" height="24" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="648" y="220" font-size="12">degraded·불일치 차단</text>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="132" y="104">조회·근거·판정·제안 생성</text>
+    <text x="976" y="104">답변과 근거를 상태에 기록한다</text>
+    <text x="420" y="408">degraded·사실 불일치 차단</text>
+    <text x="976" y="248">승인 요청 생성 전에 반환한다</text>
+    <text x="976" y="572">범위와 명령은 11장</text>
+  </g>
 
-  <rect x="792" y="192" width="368" height="96" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
-  <text x="808" y="220" font-size="16">GUARDRAIL_ESCALATED</text>
-  <text x="808" y="244" font-size="12">코드 확인 · controller.py:310 · :345</text>
-  <text x="808" y="268" font-size="12">승인 요청 생성 전에 반환한다</text>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="132" y="128">_base.py:170</text>
+    <text x="420" y="104">next_action · answer</text>
+    <text x="420" y="128">_base.py:125</text>
+    <text x="976" y="128">events.py:64</text>
+    <text x="420" y="248">WAIT_FOR_APPROVAL</text>
+    <text x="420" y="272">booking_handoff.py:91</text>
+    <text x="420" y="440">controller.py:365</text>
+    <text x="976" y="272">controller.py:310</text>
+    <text x="976" y="376">pending_approval · APPROVAL_REQUIRED</text>
+    <text x="976" y="400">cases.py:208</text>
+    <text x="976" y="480">waiting_approval → resuming · events.py:71</text>
+  </g>
 
-  <rect x="656" y="468" width="120" height="24" rx="6" fill="#fbfcfd" stroke="#fbfcfd" stroke-width="1"/>
-  <text x="664" y="484" font-size="12">차단 결과 없음</text>
+  <g font-family="'Geist Mono',monospace" font-size="7" font-weight="400" fill="#6b7488" text-anchor="middle" letter-spacing="0.08em">
+    <rect x="800" y="528" width="56" height="16" rx="2" fill="transparent" stroke="#7a8599" stroke-width="0.8"/>
+    <text x="816" y="540">UNBUILT</text>
+  </g>
 
-  <rect x="792" y="448" width="368" height="120" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <text x="808" y="472" font-size="16">승인 요청 등록 → 사람 승인 API</text>
-  <text x="808" y="492" font-size="12">pending_approval · APPROVAL_REQUIRED</text>
-  <text x="808" y="512" font-size="12">코드 확인 · controller.py:376 · cases.py:208</text>
-  <text x="808" y="532" font-size="12">APPROVED: waiting_approval → resuming</text>
-  <text x="808" y="552" font-size="12">events.py:71</text>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="504">여행 구성은 사실 대조 선언을 주입하며, 선언 로딩 실패 때만 대조 생략 경로가 열린다.</text>
+    <text x="24" y="528">degraded 차단 통과 후 사실 대조만 생략한다.</text>
+  </g>
 
-  <rect x="792" y="320" width="368" height="80" rx="6" fill="#f1f4f8" stroke="#7a8599" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="808" y="348" font-size="16">승인 이후 공급자 실행</text>
-  <text x="808" y="372" font-size="12">미구현</text>
-  <text x="808" y="388" font-size="12">범위와 명령은 11장</text>
-
-  <text x="24" y="508" font-size="12">여행 대조 선언 로딩 실패 때만 생략 경로가 열린다.</text>
-  <text x="24" y="532" font-size="12">degraded 차단 통과 후 사실 대조만 생략한다.</text>
-  <text x="24" y="556" font-size="12">composition.py:272~273 · controller.py:316~317</text>
-
-  <line x1="24" y1="600" x2="1192" y2="600" stroke="#dbe0ea" stroke-width="1"/>
-  <text x="24" y="628" font-size="8" fill="#6b7488" font-family="Geist Mono,monospace">LEGEND</text>
-  <rect x="112" y="612" width="16" height="16" rx="6" fill="#ffffff" stroke="#161c28" stroke-width="1"/>
-  <text x="144" y="628" font-size="12">실선 · 코드 확인</text>
-  <rect x="368" y="612" width="16" height="16" rx="6" fill="#f1f4f8" stroke="#7a8599" stroke-width="1" stroke-dasharray="4 4"/>
-  <text x="400" y="628" font-size="12">점선 · 공급자 실행 미구현</text>
-  <text x="688" y="628" font-size="12">사람 승인 API: cases.py:208 · 실행 경계는 본문 참조</text>
-</g>
+  <line x1="24" y1="600" x2="1192" y2="600" stroke="#dbe0ea" stroke-width="0.8"/>
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="628">LEGEND</text>
+  </g>
+  <g stroke-width="1">
+    <rect x="112" y="616" width="16" height="12" rx="2" fill="#fbfcfd" stroke="#161c28"/>
+    <rect x="352" y="616" width="16" height="12" rx="2" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
+    <rect x="632" y="616" width="16" height="12" rx="2" fill="#fbfcfd" stroke="#7a8599" stroke-dasharray="4 4"/>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="144" y="628">실선 · 코드 확인</text>
+    <text x="384" y="628">강조 · 승인 등록 전 차단</text>
+    <text x="664" y="628">점선 · 공급자 실행 미구현</text>
+    <text x="944" y="628">UNBUILT = 미구현</text>
+  </g>
 </svg>
 </div>
 <p><span class="st st-ok">코드 확인</span> 현재 조립은 여행 대조 선언을 주입한다(<code>composition.py:269~274</code>). 선언 로딩이 <code>ImportError</code>로 실패하면 빈 정책과 조회 목록을 반환하고(<code>composition.py:272~273</code>), degraded 차단을 통과한 제안은 <code>controller.py:316~317</code>에서 사실 대조를 생략한다. 이 통과 동작은 “빈 정책이면 전부 거부”라는 <code>composition.py:264~266</code> 주석과 모순된다. 결함과 완료 기준은 8장 참조.</p>
@@ -331,130 +374,137 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1088 1088" role="img" aria-labelledby="v2-common-title v2-common-desc">
   <title id="v2-common-title">TravelTeamBase 공통 부품을 사용하는 Team 내부 흐름</title>
-  <desc id="v2-common-desc">각 Team이 가드, 읽기 도구, 근거 함수와 결과 함수를 직접 호출한다. 여행 팀은 RESPOND, ESCALATE, HANDOFF, WAIT_FOR_APPROVAL을 사용한다. 규정 검색 실패나 결과 없음은 degraded_context로 조회 전에 종료된다. _unknown은 모름 사유를 가진 ESCALATE다. Controller는 ESCALATE를 GUARDRAIL_ESCALATED 이벤트로 처리하고 사유 코드를 기록한다. HANDOFF는 처리 분기가 없어 예외가 된다. Team은 제안만 반환하며 부수 효과를 실행하지 않는다.</desc>
+  <desc id="v2-common-desc">각 Team의 execute가 가드, 읽기 도구, 근거 함수와 결과 함수를 직접 호출한다. 가드는 team_id, capability, degraded를 순서대로 확인한다. 규정 검색 실패나 결과 없음은 조회 전에 degraded_context로 반환한다. 읽기 도구는 허용 목록, 등록 여부, 중복 호출과 예산을 검사한다. 근거는 base를 전달해야 누적된다. 여행 팀의 결과는 RESPOND, ESCALATE, HANDOFF, WAIT_FOR_APPROVAL이다. _unknown은 모름 사유를 가진 ESCALATE다. Controller는 ESCALATE의 사유 코드를 기록하며 HANDOFF 처리 분기가 없어 예외를 낸다. Team은 제안만 반환하며 부수 효과를 실행하지 않는다.</desc>
 
-  <rect width="1088" height="1088" fill="#fbfcfd"></rect>
-  <rect x="32" y="984" width="768" height="80" rx="6" fill="#f1f4f8" stroke="#dbe0ea" stroke-width="1"></rect>
+  <rect width="1088" height="1088" fill="#fbfcfd"/>
 
-  <g fill="none" stroke="#2f5bd8" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M352 56 V80 M344 72 L352 80 L360 72"></path>
-    <path d="M352 152 V184 M344 176 L352 184 L360 176"></path>
-    <path d="M352 256 V288 M344 280 L352 288 L360 280"></path>
-    <path d="M352 360 V400 M344 392 L352 400 L360 392"></path>
-    <path d="M656 116 H736 M728 108 L736 116 L728 124"></path>
-    <path d="M656 220 H736 M728 212 L736 220 L728 228"></path>
-    <path d="M656 324 H736 M728 316 L736 324 L728 332"></path>
-    <path d="M352 544 V576 M344 568 L352 576 L360 568"></path>
-    <path d="M352 704 V736 M344 728 L352 736 L360 728"></path>
-    <path d="M352 792 V808 Q352 816 344 816 H160 Q152 816 152 824 V848 M144 840 L152 848 L160 840"></path>
-    <path d="M352 792 V808 Q352 816 360 816 H936 Q944 816 944 824 V848 M936 840 L944 848 L952 840"></path>
-    <path d="M416 816 V848 M408 840 L416 848 L424 840"></path>
-    <path d="M680 816 V848 M672 840 L680 848 L688 840"></path>
-    <path d="M944 960 V992 M936 984 L944 992 L952 984"></path>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M352 56 V80"/>
+    <path d="M352 152 V184"/>
+    <path d="M352 256 V288"/>
+    <path d="M352 360 V400"/>
+    <path d="M352 488 V576"/>
+    <path d="M352 664 V736"/>
+  </g>
+  <g fill="none" stroke="#6b7488" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M656 116 H712"/>
+    <path d="M656 220 H712"/>
+    <path d="M656 324 H712"/>
+    <path d="M152 808 V848"/>
+    <path d="M436 808 V848"/>
+    <path d="M700 808 V848"/>
+    <path d="M944 808 V848"/>
+    <path d="M944 960 V992"/>
   </g>
 
-  <g fill="#fbfcfd">
-    <rect x="368" y="160" width="64" height="20"></rect>
-    <rect x="368" y="264" width="64" height="20"></rect>
-    <rect x="368" y="368" width="64" height="20"></rect>
+  <g fill="#2f5bd8" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
+    <text x="368" y="172">PASS</text>
+    <text x="368" y="276">PASS</text>
+    <text x="368" y="384">PASS</text>
   </g>
-  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="12">
-    <text x="376" y="176">PASS</text>
-    <text x="376" y="280">PASS</text>
-    <text x="376" y="384">PASS</text>
-  </g>
-
-  <g stroke="#6b7488" stroke-width="1" fill="#f1f4f8">
-    <rect x="48" y="80" width="608" height="72" rx="6"></rect>
-    <rect x="48" y="184" width="608" height="72" rx="6"></rect>
-    <rect x="48" y="288" width="608" height="72" rx="6"></rect>
-    <rect x="736" y="80" width="304" height="72" rx="6"></rect>
-    <rect x="736" y="184" width="304" height="72" rx="6"></rect>
-    <rect x="736" y="288" width="304" height="72" rx="6"></rect>
-    <rect x="48" y="400" width="608" height="144" rx="6"></rect>
-    <rect x="48" y="576" width="608" height="128" rx="6"></rect>
-    <rect x="48" y="736" width="992" height="56" rx="6"></rect>
-    <rect x="32" y="848" width="240" height="112" rx="6"></rect>
-    <rect x="296" y="848" width="240" height="112" rx="6"></rect>
-    <rect x="560" y="848" width="240" height="112" rx="6"></rect>
-    <rect x="824" y="848" width="240" height="112" rx="6"></rect>
-    <rect x="824" y="992" width="240" height="64" rx="6"></rect>
-    <rect x="736" y="400" width="304" height="144" rx="6"></rect>
-    <rect x="736" y="576" width="304" height="128" rx="6"></rect>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400" text-anchor="middle">
+    <text x="684" y="104">FAIL</text>
+    <text x="684" y="208">FAIL</text>
+    <text x="684" y="312">FAIL</text>
   </g>
 
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="752" y="420" font-family="'Geist Mono',monospace">ToolNotAllowed · read_tools.py</text>
-    <text x="752" y="440">허용 목록 밖 :291~292 · 미등록 :298~299</text>
-    <text x="752" y="464" font-family="'Geist Mono',monospace">ToolLoopExceeded</text>
-    <text x="752" y="484">중복 호출 · read_tools.py:301~302</text>
-    <text x="752" y="504" font-family="'Geist Mono',monospace">ToolBudgetExceeded</text>
-    <text x="752" y="524">예산 초과 · read_tools.py:303~306</text>
-    <text x="752" y="600">HANDOFF 처리 분기 없음</text>
-    <text x="752" y="624">예외 · controller.py:382</text>
-    <text x="752" y="648">정상 task는 team_id를 채운다</text>
-    <text x="752" y="672" font-family="'Geist Mono',monospace">controller.py:95</text>
-    <text x="752" y="696">따라서 정상 경로는 이 가드를 피한다</text>
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="48" y="80" width="608" height="72" rx="6"/>
+    <rect x="48" y="184" width="608" height="72" rx="6"/>
+    <rect x="48" y="288" width="608" height="72" rx="6"/>
+    <rect x="712" y="80" width="328" height="72" rx="6"/>
+    <rect x="712" y="184" width="328" height="72" rx="6"/>
+    <rect x="712" y="288" width="328" height="72" rx="6"/>
+    <rect x="48" y="400" width="608" height="88" rx="6"/>
+    <rect x="48" y="576" width="608" height="88" rx="6"/>
+    <rect x="712" y="400" width="328" height="64" rx="6"/>
+    <rect x="712" y="480" width="328" height="64" rx="6"/>
+    <rect x="712" y="560" width="328" height="64" rx="6"/>
+    <rect x="712" y="640" width="328" height="72" rx="6"/>
+    <rect x="32" y="736" width="1032" height="72" rx="6"/>
+    <rect x="32" y="848" width="240" height="112" rx="6"/>
+    <rect x="296" y="848" width="280" height="112" rx="6"/>
+    <rect x="600" y="848" width="200" height="112" rx="6"/>
+    <rect x="824" y="848" width="240" height="112" rx="6"/>
+    <rect x="824" y="992" width="240" height="72" rx="6"/>
   </g>
 
-  <g font-family="'Geist','Noto Sans KR',sans-serif" fill="#161c28">
-    <text x="48" y="40" font-size="16">각 Team의 execute(task)가 공통 부품을 호출한다</text>
-    <text x="736" y="40" font-size="12">177줄 · _base.py:38</text>
+  <g fill="rgba(22,28,40,0.02)" stroke="rgba(22,28,40,0.10)" stroke-width="0.8">
+    <rect x="32" y="984" width="768" height="80" rx="8"/>
+  </g>
 
-    <text x="64" y="108" font-size="16" font-family="'Geist Mono',monospace">1 · _guard(task) — team_id</text>
-    <text x="64" y="132" font-size="12">task.team_id와 manifest.team_id가 다르면 즉시 반환한다</text>
-    <text x="752" y="108" font-size="16" font-family="'Geist Mono',monospace">handoff · HANDOFF</text>
-    <text x="752" y="132" font-size="12" font-family="'Geist Mono',monospace">handoff_capability = task.capability</text>
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em">
+    <text x="48" y="40">TEAM EXECUTE(TASK) · COMMON TOOL CALLS</text>
+    <text x="712" y="40">GUARD RETURNS</text>
+  </g>
+  <g fill="#7a8599" font-family="'Geist Mono',monospace" font-size="8" font-weight="400" letter-spacing="0.14em" text-anchor="middle">
+    <text x="876" y="384">READTOOLBOX</text>
+  </g>
 
-    <text x="64" y="212" font-size="16" font-family="'Geist Mono',monospace">2 · _guard(task) — capability</text>
-    <text x="64" y="236" font-size="12">manifest.capabilities에 없으면 즉시 반환한다</text>
-    <text x="752" y="212" font-size="16" font-family="'Geist Mono',monospace">_escalate</text>
-    <text x="752" y="236" font-size="12" font-family="'Geist Mono',monospace">unsupported_capability</text>
+  <g fill="#161c28" font-family="'Geist','Noto Sans KR',sans-serif" font-size="16" font-weight="600" text-anchor="middle">
+    <text x="352" y="100">1 · _guard(task) — team_id</text>
+    <text x="352" y="212">2 · _guard(task) — capability</text>
+    <text x="352" y="316">3 · _guard(task) — context.degraded</text>
+    <text x="876" y="108">handoff · HANDOFF</text>
+    <text x="876" y="212">_escalate</text>
+    <text x="876" y="316">_escalate</text>
+    <text x="352" y="428">_read(task, name, arguments, seen)</text>
+    <text x="352" y="600">_evidence() · base를 넘겨 근거 누적</text>
+    <text x="548" y="760">_result(task, **kwargs)</text>
+    <text x="152" y="880">RESPOND</text>
+    <text x="700" y="880">HANDOFF</text>
+    <text x="944" y="880">승인 대기 제안</text>
+    <text x="944" y="1020">Controller</text>
+    <text x="416" y="1012">Team은 side effect를 실행하지 않는다</text>
+  </g>
 
-    <text x="64" y="316" font-size="16" font-family="'Geist Mono',monospace">3 · _guard(task) — context.degraded</text>
-    <text x="64" y="340" font-size="12">규정 검색 실패·결과 0건 → degraded 참 → 조회 전에 반환</text>
-    <text x="752" y="316" font-size="16" font-family="'Geist Mono',monospace">_escalate</text>
-    <text x="752" y="340" font-size="12" font-family="'Geist Mono',monospace">degraded_context</text>
+  <g fill="#161c28" font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" text-anchor="middle">
+    <text x="876" y="420">ToolNotAllowed</text>
+    <text x="876" y="500">ToolLoopExceeded</text>
+    <text x="876" y="580">ToolBudgetExceeded</text>
+    <text x="876" y="660">HANDOFF 처리 분기 없음</text>
+    <text x="436" y="880">ESCALATE · _escalate / _unknown</text>
+  </g>
 
-    <text x="64" y="428" font-size="16" font-family="'Geist Mono',monospace">_read(task, name, arguments, seen)</text>
-    <text x="64" y="452" font-size="12">tools.call에 allowed_tools · seen · budget을 전달한다</text>
-    <text x="64" y="476" font-size="12">허용 목록 밖 · 미등록 · 중복 호출 · 예산 초과를 ReadToolbox에서 차단한다</text>
-    <text x="64" y="500" font-size="12" font-family="'Geist Mono',monospace">budget = manifest.max_steps · _base.py:77</text>
-    <text x="64" y="524" font-size="12" fill="#6b7488">각 Team의 execute에는 도구 예외를 잡는 처리가 없다</text>
+  <g fill="rgba(22,28,40,0.80)" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" text-anchor="middle">
+    <text x="352" y="124">task.team_id와 manifest.team_id가 다르면 즉시 반환한다</text>
+    <text x="352" y="236">manifest.capabilities에 없으면 즉시 반환한다</text>
+    <text x="352" y="340">규정 검색 실패·결과 0건 → degraded 참 → 조회 전에 반환</text>
+    <text x="352" y="452">ReadToolbox가 검사한다 · Team의 execute는 도구 예외를 잡지 않는다</text>
+    <text x="352" y="624">base 없으면 문맥 근거에서 시작 · None·{}·[] 제외 · confidence: 1.0 · 현재 UTC</text>
+    <text x="876" y="440">허용 목록 밖 · 미등록 도구를 차단한다</text>
+    <text x="876" y="520">중복 호출을 차단한다</text>
+    <text x="876" y="600">예산 초과를 차단한다</text>
+    <text x="876" y="680">정상 task는 team_id를 채워 가드를 피한다</text>
+    <text x="548" y="780">여행 팀의 네 결과를 TeamResult로 포장한다 · WAIT_FOR_INPUT은 지원하지만 사용하지 않는다</text>
+    <text x="152" y="908">판정·응답 반환 → Case 상태 resolved</text>
+    <text x="436" y="908">모름 사유도 기록 → GUARDRAIL_ESCALATED</text>
+    <text x="700" y="908">team_id 불일치 반환 → 처리 예외</text>
+    <text x="944" y="908">_proposal → ActionProposal</text>
+    <text x="944" y="1044">대조 후 승인 요청을 만든다</text>
+    <text x="416" y="1036">실행할 작업은 제안으로 반환한다</text>
+  </g>
 
-    <text x="64" y="604" font-size="16">_evidence() — base를 넘겨야 앞선 호출의 근거가 누적된다</text>
-    <text x="64" y="628" font-size="12">base가 없으면 매번 task.context.evidence에서 시작한다 · _base.py:97</text>
-    <text x="64" y="652" font-size="12">source_type: read.* → tool_result / 그 외 → db</text>
-    <text x="64" y="676" font-size="12">confidence: 1.0 · observed_at: 현재 UTC</text>
-    <text x="64" y="696" font-size="12" fill="#6b7488">None · {} · [] 값은 추가하지 않는다</text>
+  <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400" text-anchor="middle">
+    <text x="352" y="140">177 lines · _base.py:38</text>
+    <text x="876" y="132">handoff_capability = task.capability</text>
+    <text x="876" y="236">unsupported_capability</text>
+    <text x="876" y="340">degraded_context</text>
+    <text x="352" y="472">tools.call: allowed_tools · seen · budget = manifest.max_steps · _base.py:77</text>
+    <text x="352" y="648">source_type: read.* → tool_result / else → db · observed_at: UTC · _base.py:97</text>
+    <text x="876" y="456">read_tools.py:291~299</text>
+    <text x="876" y="536">read_tools.py:301~302</text>
+    <text x="876" y="616">read_tools.py:303~306</text>
+    <text x="876" y="700">controller.py:95</text>
+    <text x="548" y="800">_base.py:125</text>
+    <text x="152" y="936">Controller → COMPLETED</text>
+    <text x="436" y="936">controller.py:379~381</text>
+    <text x="700" y="936">controller.py:382</text>
+    <text x="416" y="1052">_base.py:170</text>
+  </g>
 
-    <text x="64" y="760" font-size="16">_result(task, **kwargs) — 여행 팀이 쓰는 네 갈래를 TeamResult로 포장한다</text>
-    <text x="64" y="784" font-size="12">WAIT_FOR_INPUT도 공통부가 지원하지만 여행 팀은 쓰지 않는다 · _base.py:121 · _base.py:125</text>
-
-    <text x="48" y="880" font-size="16" font-family="'Geist Mono',monospace">RESPOND</text>
-    <text x="48" y="904" font-size="12">판정과 응답을 반환한다</text>
-    <text x="48" y="928" font-size="12" font-family="'Geist Mono',monospace">Controller → COMPLETED</text>
-    <text x="48" y="948" font-size="12">이벤트 → Case 상태 resolved</text>
-
-    <text x="312" y="872" font-size="16" font-family="'Geist Mono',monospace">ESCALATE</text>
-    <text x="312" y="892" font-size="12" font-family="'Geist Mono',monospace">_escalate / _unknown</text>
-    <text x="312" y="912" font-size="12" font-family="'Geist Mono',monospace">Controller →</text>
-    <text x="312" y="932" font-size="12" font-family="'Geist Mono',monospace">GUARDRAIL_ESCALATED</text>
-    <text x="312" y="952" font-size="12">사유 코드 · controller.py:379~381</text>
-
-    <text x="576" y="880" font-size="16" font-family="'Geist Mono',monospace">HANDOFF</text>
-    <text x="576" y="908" font-size="12">team_id 불일치 가드에서 반환</text>
-    <text x="576" y="936" font-size="12">Controller는 예외를 낸다</text>
-
-    <text x="840" y="880" font-size="16">승인 대기 제안</text>
-    <text x="840" y="908" font-size="12" font-family="'Geist Mono',monospace">_proposal → ActionProposal</text>
-    <text x="840" y="936" font-size="12" fill="#a8720c" font-family="'Geist Mono',monospace">WAIT_FOR_APPROVAL</text>
-
-    <text x="840" y="1020" font-size="16" font-family="'Geist Mono',monospace">Controller</text>
-    <text x="840" y="1044" font-size="12">대조 후 승인 요청을 만든다</text>
-
-    <text x="48" y="1016" font-size="16" fill="#a8720c">Team은 side effect를 실행하지 않는다</text>
-    <text x="48" y="1044" font-size="12" fill="#6b7488">실행할 작업은 제안으로 반환한다 · _base.py:170</text>
+  <g fill="#a8720c" font-family="'Geist Mono',monospace" font-size="9" font-weight="400" text-anchor="middle">
+    <text x="944" y="936">WAIT_FOR_APPROVAL</text>
   </g>
 </svg>
 </div>
@@ -473,50 +523,67 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="v2-activity-title v2-activity-desc">
   <title id="v2-activity-title">Activity — 274줄, 기상 조건 조회와 변경 승인 대기</title>
-  <desc id="v2-activity-desc">공통으로 예약과 규정을 읽고 예약 시각을 확인한다. read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 취소 가능 여부는 기한과 위약금율로 판단한다. 실행 가능 여부는 정원을 먼저 확인하고, 정원 초과가 아니면 장소를 조회하며 기상 민감 활동에만 날씨를 조회한다. 예보 객체가 None이면 기상 정보를 모름으로 처리한다. 예보 객체가 있어도 강수확률과 풍속 값이 모두 비면 경고를 붙이고 성립으로 답한다. 전용 _weather_note()는 46줄이며 날씨를 불가 판정이 아닌 주의 문구에 반영한다. 변경 제안은 승인 대기를 반환한다.</desc>
-  <rect width="1120" height="320" rx="6" fill="#fbfcfd"></rect>
-  <rect x="16" y="248" width="1088" height="72" rx="6" fill="#f1f4f8"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="24">274줄 · 기본 activity.check_feasible</text>
-    <text x="408" y="24">분기별 추가 조회 · 판단</text>
-    <text x="888" y="24" font-family="'Geist Mono',monospace">next_action</text>
+  <desc id="v2-activity-desc">공통으로 예약과 규정을 읽고 예약 시각을 확인한다. read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 취소 가능 여부는 기한과 위약금율로 판단하며 위약금율 미확인 시 금액을 만들지 않는다. 실행 가능 여부는 정원을 먼저 확인한다. 정원 초과면 feasible: False로 RESPOND를 반환하고, 그 외에는 장소와 기상 민감 여부를 확인한다. 기상 민감 활동만 날씨를 조회한다. 예보 객체가 None이면 기상 정보를 모름으로 처리하며, 강수확률과 풍속이 모두 비면 경고를 붙이고 성립으로 답한다. _weather_note()는 46줄이며 날씨를 불가 판정 대신 주의 문구에 반영한다. 변경 제안은 WAIT_FOR_APPROVAL을 반환한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="24">274 LINES · COMMON TOOL CALLS</text>
+    <text x="400" y="24">BRANCH TOOL CALLS · DECISIONS</text>
+    <text x="880" y="24">NEXT_ACTION</text>
   </g>
-  <g fill="none" stroke="#2f5bd8" stroke-width="1">
-    <path d="M368 84 H400 M392 80 L400 84 L392 88"></path>
-    <path d="M368 156 H400 M392 152 L400 156 L392 160"></path>
-    <path d="M368 228 H400 M392 224 L400 228 L392 232"></path>
-    <path d="M856 84 H880 M872 80 L880 84 L872 88"></path>
-    <path d="M856 156 H864 Q872 156 872 148 V92 Q872 84 880 84 M872 80 L880 84 L872 88"></path>
-    <path d="M856 228 H880 M872 224 L880 228 L872 232"></path>
+
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2">
+    <path d="M368 152 H400"/>
   </g>
-  <g stroke="#7a8599" stroke-width="1" fill="#f1f4f8">
-    <rect x="24" y="40" width="344" height="208" rx="6"></rect>
-    <rect x="400" y="56" width="456" height="56" rx="6"></rect>
-    <rect x="400" y="120" width="456" height="80" rx="6"></rect>
-    <rect x="400" y="208" width="456" height="40" rx="6"></rect>
-    <rect x="880" y="56" width="216" height="56" rx="6"></rect>
-    <rect x="880" y="208" width="216" height="40" rx="6"></rect>
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M368 72 H400"/>
+    <path d="M368 224 H400"/>
+    <path d="M856 72 H880"/>
+    <path d="M856 152 H880"/>
+    <path d="M856 224 H880"/>
   </g>
-  <rect x="416" y="168" width="424" height="24" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="40" y="60">read.booking — case_id 무시</text>
-    <text x="40" y="80">고객의 가장 이른 예약 1건</text>
-    <text x="40" y="100">read.policy → 예약 시각 확인</text>
-    <text x="40" y="128" font-family="'Geist Mono',monospace">activity.check_cancelable</text>
-    <text x="40" y="176" font-family="'Geist Mono',monospace">activity.check_feasible</text>
-    <text x="40" y="232" font-family="'Geist Mono',monospace">activity.propose_change</text>
-    <text x="416" y="80">취소 기한 · 남은 시간 비교</text>
-    <text x="416" y="100">위약금율 미확인 시 금액을 만들지 않는다</text>
-    <text x="416" y="140">정원 초과 → feasible: False → RESPOND</text>
-    <text x="416" y="160">그 외 read.place → 기상 민감 여부 확인</text>
-    <text x="428" y="184">민감 활동만 read.weather · 날씨는 주의 문구만</text>
-    <text x="416" y="232">변경 제안</text>
-    <text x="896" y="88" font-family="'Geist Mono',monospace">RESPOND</text>
-    <text x="896" y="232" font-family="'Geist Mono',monospace">WAIT_FOR_APPROVAL</text>
+
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="400" y="40" width="456" height="64" rx="6"/>
+    <rect x="400" y="120" width="456" height="64" rx="6"/>
+    <rect x="400" y="200" width="456" height="48" rx="6"/>
+    <rect x="880" y="40" width="216" height="64" rx="6"/>
+    <rect x="880" y="120" width="216" height="64" rx="6"/>
+    <rect x="880" y="200" width="216" height="48" rx="6"/>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="280">_unknown 사유 · 예약 내역 · 취소·환급 규정 · 예약 시각 · 취소 기한 · 기상 정보</text>
-    <text x="24" y="304">실제 호출 도구 · read.booking · read.policy · read.place · read.weather</text>
+  <g fill="#ffffff" stroke="#161c28" stroke-width="1">
+    <rect x="24" y="40" width="344" height="208" rx="6"/>
+  </g>
+  <rect x="32" y="48" width="32" height="16" rx="2" fill="#fbfcfd" stroke="#dbe0ea" stroke-width="0.8"/>
+  <g font-family="'Geist Mono',monospace" font-size="7" font-weight="400" fill="#6b7488" letter-spacing="0.08em" text-anchor="middle">
+    <text x="48" y="60">MVP</text>
+  </g>
+
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="196" y="120" font-size="16">Activity</text>
+    <text x="628" y="60">취소 가능 여부</text>
+    <text x="628" y="140">실행 가능 여부</text>
+    <text x="628" y="220">변경 제안</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="196" y="144">고객의 가장 이른 예약 1건 · 예약 시각 확인</text>
+    <text x="628" y="80">기한·남은 시간 비교 · 위약금율 미확인 시 금액 미생성</text>
+    <text x="628" y="160">정원 초과 시 불성립 · 그 외 장소·기상 민감 여부 확인</text>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="196" y="164">read.booking: case_id ignored · read.policy</text>
+    <text x="628" y="96">activity.check_cancelable</text>
+    <text x="628" y="176">activity.check_feasible · read.place · read.weather</text>
+    <text x="628" y="236">activity.propose_change</text>
+    <text x="988" y="76">RESPOND</text>
+    <text x="988" y="148">RESPOND</text>
+    <text x="988" y="168">capacity exceeded: feasible: False</text>
+    <text x="988" y="228">WAIT_FOR_APPROVAL</text>
+  </g>
+
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="284">기상 민감 활동만 날씨 조회 · 예보가 없으면 모름 · 강수확률·풍속 모두 비면 경고 후 성립 · 날씨는 주의 문구에 반영</text>
+    <text x="24" y="308">모름 사유 · 예약 내역 · 취소·환급 규정 · 예약 시각 · 취소 기한 · 기상 정보　|　MVP = 최소 기능 제품</text>
   </g>
 </svg>
 </div>
@@ -528,50 +595,66 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="v2-dining-title v2-dining-desc">
   <title id="v2-dining-title">Dining — 96줄, 영업 여부와 동행 조건 확인</title>
-  <desc id="v2-dining-desc">read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 두 capability 모두 예약의 place_id로 장소를 읽고 확인 시각을 요구한다. check_open은 일정 시각의 영업 여부를 답한다. check_conditions는 dietary와 dietary_absent에 없는 요청만 모름으로 처리한다. 일부 충족이면 모두 만족으로, 전부 불충족이면 요청한 조건이 없다는 문구로 답한다. 아이 동반은 별도로 판정하지 않는다.</desc>
-  <rect width="1120" height="320" rx="6" fill="#fbfcfd"></rect>
-  <rect x="16" y="248" width="1088" height="72" rx="6" fill="#f1f4f8"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="24">96줄 · 기본 check_open</text>
-    <text x="304" y="24">공통 도구 호출 순서</text>
-    <text x="648" y="24">분기별 확인</text>
-    <text x="944" y="24" font-family="'Geist Mono',monospace">next_action</text>
+  <desc id="v2-dining-desc">기본 capability는 check_open이다. read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 두 capability 모두 예약의 place_id로 장소를 읽고 confirmed_at을 요구하며 확인 시각이 없으면 _unknown으로 처리한다. check_open은 일정 시각의 영업 여부를 답한다. check_conditions는 dietary와 dietary_absent에 없는 요청만 _unknown으로 처리해 ESCALATE한다. 일부 충족이면 모두 만족으로, 전부 불충족이면 요청한 조건이 없다는 문구로 답하며 불충족 실패 분기는 없다. 아이 동반은 별도로 판정하지 않는다. 일반 응답의 next_action은 RESPOND다. 실제 호출 도구는 read.booking과 read.place이며 read.policy는 허용 목록에만 존재한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="24">96 LINES · DEFAULT CHECK_OPEN</text>
+    <text x="304" y="24">COMMON TOOL CALLS</text>
+    <text x="648" y="24">BRANCH CHECKS</text>
+    <text x="944" y="24">NEXT_ACTION</text>
   </g>
-  <g fill="none" stroke="#2f5bd8" stroke-width="1">
-    <path d="M264 88 H272 Q280 88 280 96 V132 Q280 140 288 140 H304 M296 136 L304 140 L296 144"></path>
-    <path d="M264 192 H272 Q280 192 280 184 V148 Q280 140 288 140"></path>
-    <path d="M616 140 H624 Q632 140 632 132 V96 Q632 88 640 88 H648 M640 84 L648 88 L640 92"></path>
-    <path d="M632 140 V184 Q632 192 640 192 H648 M640 188 L648 192 L640 196"></path>
-    <path d="M904 88 H912 Q920 88 920 96 V132 Q920 140 928 140 H944 M936 136 L944 140 L936 144"></path>
-    <path d="M904 192 H912 Q920 192 920 184 V148 Q920 140 928 140"></path>
+
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2">
+    <path d="M264 88 H276 Q284 88 284 96 V184 Q284 192 276 192 H264"/>
+    <path d="M284 104 H304"/>
+    <path d="M460 120 V160"/>
   </g>
-  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
-    <rect x="24" y="56" width="240" height="64" rx="6"></rect>
-    <rect x="24" y="160" width="240" height="64" rx="6"></rect>
-    <rect x="304" y="64" width="312" height="160" rx="6"></rect>
-    <rect x="648" y="56" width="256" height="64" rx="6"></rect>
-    <rect x="944" y="112" width="152" height="56" rx="6"></rect>
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M616 192 H632 V96 Q632 88 640 88 H648"/>
+    <path d="M904 88 H912 Q920 88 920 96 V184 Q920 192 912 192 H904"/>
+    <path d="M920 140 H944"/>
   </g>
-  <rect x="648" y="160" width="256" height="64" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="40" y="92" font-family="'Geist Mono',monospace">dining.check_open</text>
-    <text x="40" y="196" font-family="'Geist Mono',monospace">dining.check_conditions</text>
-    <text x="320" y="88">read.booking — case_id 무시</text>
-    <text x="320" y="108">고객의 가장 이른 예약 1건</text>
-    <text x="320" y="132">예약의 place_id로 장소 조회</text>
-    <text x="320" y="156" font-family="'Geist Mono',monospace">read.place(place_id)</text>
-    <text x="320" y="180">confirmed_at 필수</text>
-    <text x="320" y="204">확인 시각이 없으면 _unknown</text>
-    <text x="664" y="84">open_at_slot 확인</text>
-    <text x="664" y="108">일정 시각의 영업 여부</text>
-    <text x="664" y="184" font-family="'Geist Mono',monospace">dietary / dietary_absent</text>
-    <text x="664" y="208">불충족 실패 분기는 없다</text>
-    <text x="960" y="144" font-family="'Geist Mono',monospace">RESPOND</text>
+  <g fill="none" stroke="#a8720c" stroke-width="1.2">
+    <path d="M632 192 H648"/>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="264">_unknown 사유 · 예약 내역 · 장소·영업 정보 · 그 시각의 영업 여부 · 영업 정보의 확인 시각</text>
-    <text x="24" y="288">조건 분기 · 두 목록에 없는 요청만 _unknown("조건 …") → ESCALATE</text>
-    <text x="24" y="312">실제 호출 도구 · read.booking · read.place — read.policy는 허용 목록에만 존재한다</text>
+
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="24" y="56" width="240" height="64" rx="6"/>
+    <rect x="24" y="160" width="240" height="64" rx="6"/>
+    <rect x="304" y="56" width="312" height="64" rx="6"/>
+    <rect x="304" y="160" width="312" height="64" rx="6"/>
+    <rect x="648" y="56" width="256" height="64" rx="6"/>
+    <rect x="648" y="160" width="256" height="64" rx="6"/>
+    <rect x="944" y="112" width="152" height="56" rx="6"/>
+  </g>
+
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="144" y="84">영업 여부</text>
+    <text x="144" y="188">요청 조건</text>
+    <text x="460" y="76">예약 조회</text>
+    <text x="460" y="180">장소·확인 시각</text>
+    <text x="776" y="84">일정 시각의 영업 여부</text>
+    <text x="776" y="180">동행 조건 확인</text>
+    <text x="1020" y="144">RESPOND</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="460" y="96">고객의 가장 이른 예약 1건</text>
+    <text x="460" y="200">예약의 장소 조회 · 확인 시각 필수</text>
+    <text x="776" y="200">불충족 실패 분기는 없다</text>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="144" y="104">dining.check_open</text>
+    <text x="144" y="208">dining.check_conditions</text>
+    <text x="460" y="112">read.booking(case_id)</text>
+    <text x="460" y="216">read.place(place_id) · confirmed_at</text>
+    <text x="776" y="104">open_at_slot</text>
+    <text x="776" y="216">dietary / dietary_absent</text>
+  </g>
+
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="260">예약 조회는 case_id 무시 · 두 목록에 없는 요청만 _unknown → ESCALATE · 확인 시각이 없어도 _unknown</text>
+    <text x="24" y="284">일부 충족이면 모두 만족 · 전부 불충족이면 요청한 조건이 없다고 응답 · 아이 동반은 별도 판정하지 않음 · read.policy는 허용 목록에만 존재</text>
   </g>
 </svg>
 </div>
@@ -582,48 +665,48 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="v2-mobility-title v2-mobility-desc">
   <title id="v2-mobility-title">Mobility — 80줄, capability 선택 훅과 구간 정보 모름 종료</title>
-  <desc id="v2-mobility-desc">훅은 intent가 mobility가 아니면 None을 반환한다. 분류를 거친 Case는 기본 check_route를 쓴다. 사건 표지는 놓쳤, 못 탔, 끊겼, 지연됐, 결항, 운행 중단의 여섯 개다. 세 capability 모두 read.route가 None을 반환하여 구간 정보 모름으로 종료된다. read.transit도 미구현이며 시간 비교와 막차 판단에는 현재 도달하지 않는다.</desc>
-  <rect width="1120" height="320" rx="6" fill="#fbfcfd"></rect>
-  <rect x="16" y="248" width="1088" height="72" rx="6" fill="#f1f4f8"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="24">80줄 · 분류를 거친 Case는 훅 선택 불가</text>
-    <text x="408" y="24">capability · 동일 execute 경로</text>
-    <text x="680" y="24">현재 조회 · 종료</text>
-    <text x="952" y="24" font-family="'Geist Mono',monospace">next_action</text>
+  <desc id="v2-mobility-desc">훅은 intent가 mobility가 아니면 None을 반환한다. 분류를 거친 Case는 기본 check_route를 쓴다. 사건 표지는 놓쳤, 못 탔, 끊겼, 지연됐, 결항, 운행 중단의 여섯 개이며 일치하면 mobility.exception을 선택한다. 세 capability 모두 미구현인 read.route가 None을 반환하여 구간 정보 모름으로 종료되고 ESCALATE를 반환한다. read.transit도 미구현이며 시간 비교와 막차 판단에는 현재 도달하지 않는다. read.policy는 허용 목록에만 존재한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="24">MOBILITY · 80 LINES</text>
+    <text x="408" y="24">CAPABILITY · EXECUTE</text>
+    <text x="680" y="24">READ · EXIT</text>
+    <text x="952" y="24">NEXT_ACTION</text>
   </g>
-  <g fill="none" stroke="#2f5bd8" stroke-width="1">
-    <path d="M376 136 H408 M400 132 L408 136 L400 140"></path>
-    <path d="M648 136 H680 M672 132 L680 136 L672 140"></path>
-    <path d="M920 136 H952 M944 132 L952 136 L944 140"></path>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2">
+    <path d="M376 112 H408"/>
+    <path d="M648 112 H680"/>
+    <path d="M920 112 H952"/>
   </g>
-  <rect x="24" y="48" width="352" height="184" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"></rect>
-  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
-    <rect x="408" y="48" width="240" height="184" rx="6"></rect>
-    <rect x="680" y="48" width="240" height="184" rx="6"></rect>
-    <rect x="952" y="108" width="144" height="56" rx="6"></rect>
+  <rect x="24" y="48" width="352" height="128" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="408" y="48" width="240" height="128" rx="6"/>
+    <rect x="680" y="48" width="240" height="128" rx="6"/>
+    <rect x="952" y="84" width="144" height="56" rx="6"/>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="40" y="76" font-family="'Geist Mono',monospace">select_capability(intent, input_text)</text>
-    <text x="40" y="108" font-family="'Geist Mono',monospace">intent != "mobility" → None</text>
-    <text x="40" y="136">mobility일 때만 사건 표지 검사</text>
-    <text x="40" y="160">놓쳤 · 못 탔 · 끊겼 · 지연됐 · 결항 · 운행 중단</text>
-    <text x="40" y="192">일치하면 mobility.exception 선택</text>
-    <text x="40" y="216">분류 후에는 기본 check_route 선택</text>
-    <text x="424" y="84" font-family="'Geist Mono',monospace">mobility.check_route</text>
-    <text x="424" y="120" font-family="'Geist Mono',monospace">mobility.status</text>
-    <text x="424" y="156" font-family="'Geist Mono',monospace">mobility.exception</text>
-    <text x="424" y="212">capability별 실행 분기 없음</text>
-    <text x="696" y="80" font-family="'Geist Mono',monospace">read.route(case_id)</text>
-    <text x="696" y="112">미구현 · 항상 None</text>
-    <text x="696" y="148">_unknown("구간 정보")</text>
-    <text x="696" y="172" font-family="'Geist Mono',monospace">mobility.py:54~55</text>
-    <text x="696" y="212">세 capability 모두 여기서 종료</text>
-    <text x="968" y="140" font-family="'Geist Mono',monospace">ESCALATE</text>
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="200" y="88">Mobility · 선택 훅</text>
+    <text x="800" y="88">구간 조회</text>
+    <text x="1024" y="116">ESCALATE</text>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="268">현재 도달하지 않는 경로 · read.transit → 여유 시간 ≥ 이동 시간 비교 → RESPOND</text>
-    <text x="24" y="288">막차 조건이 False이면 경고 · read.transit도 미구현 · read_tools.py:252~258</text>
-    <text x="24" y="308">후속 _unknown 사유 · 운행 정보 · 이동 시간 또는 여유 시간 — read.policy는 허용 목록에만 존재한다</text>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="200" y="112">mobility일 때만 사건 표지 검사</text>
+    <text x="800" y="112">항상 None · 구간 정보 모름 종료</text>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="200" y="144">select_capability(intent, input_text)</text>
+    <text x="528" y="88">mobility.check_route</text>
+    <text x="528" y="112">mobility.status</text>
+    <text x="528" y="144">mobility.exception</text>
+    <text x="800" y="144">read.route(case_id) · mobility.py:54~55</text>
+  </g>
+  <rect x="688" y="56" width="56" height="16" rx="2" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
+  <g font-family="'Geist Mono',monospace" font-size="7" font-weight="400" fill="#a8720c" letter-spacing="0.08em" text-anchor="middle">
+    <text x="708" y="68">UNBUILT</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="224">사건 표지 · 놓쳤 · 못 탔 · 끊겼 · 지연됐 · 결항 · 운행 중단 → 일치하면 <tspan font-family="'Geist Mono',monospace" font-size="9" fill="#6b7488">mobility.exception</tspan> 선택 · 분류를 거친 Case는 기본 check_route 선택</text>
+    <text x="24" y="256">현재 도달하지 않는 경로 · <tspan font-family="'Geist Mono',monospace" font-size="9" fill="#6b7488">read.transit</tspan>(미구현) → 시간 비교·막차 판단 → <tspan font-family="'Geist Mono',monospace" font-size="9" fill="#6b7488">RESPOND</tspan> · <tspan font-family="'Geist Mono',monospace" font-size="9" fill="#6b7488">read.policy</tspan>는 허용 목록에만 존재 · <tspan font-family="'Geist Mono',monospace" font-size="9" fill="#6b7488">UNBUILT</tspan> = 미구현</text>
   </g>
 </svg>
 </div>
@@ -634,50 +717,70 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 320" role="img" aria-labelledby="v2-booking-title v2-booking-desc">
   <title id="v2-booking-title">Booking Handoff — 94줄, 공급자 대조와 변경·취소 제안</title>
-  <desc id="v2-booking-desc">공통으로 read.booking을 호출하며 case_id는 무시되고 고객의 가장 이른 예약 1건이 선택된다. booking.verify는 read.supplier로 공급자 예약 상태를 읽고 내부 상태와 비교하여 불일치해도 RESPOND를 반환한다. booking.prepare_change와 booking.prepare_cancel은 read.policy로 규정의 존재를 확인하고 근거로 담는다. 제안 인자는 booking_id와 reason이며 각각 booking.change 또는 booking.cancel 제안을 만들어 WAIT_FOR_APPROVAL을 반환한다.</desc>
-  <rect width="1120" height="320" rx="6" fill="#fbfcfd"></rect>
-  <rect x="16" y="248" width="1088" height="72" rx="6" fill="#f1f4f8"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="24">94줄 · 기본 verify</text>
-    <text x="264" y="24">capability 분기</text>
-    <text x="560" y="24">분기별 도구 · 처리</text>
-    <text x="880" y="24" font-family="'Geist Mono',monospace">next_action</text>
+  <desc id="v2-booking-desc">Booking Handoff는 MVP 다음이다. 기본 capability는 verify다. 공통으로 read.booking을 호출하며 case_id는 무시되고 고객의 가장 이른 예약 1건이 선택된다. booking.verify는 read.supplier로 공급자 예약 상태를 읽고 내부 상태와 비교하여 불일치해도 RESPOND를 반환한다. booking.prepare_change와 booking.prepare_cancel은 read.policy로 규정의 존재를 확인하고 근거로 담는다. 제안 인자는 booking_id와 reason이며 각각 booking.change 또는 booking.cancel 제안을 만들어 WAIT_FOR_APPROVAL을 반환한다.</desc>
+  <rect width="1120" height="320" rx="6" fill="#fbfcfd"/>
+
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="24">94 LINES · DEFAULT VERIFY</text>
+    <text x="264" y="24">CAPABILITY</text>
+    <text x="560" y="24">TOOLS · PROCESS</text>
+    <text x="880" y="24">NEXT_ACTION</text>
   </g>
-  <g fill="none" stroke="#2f5bd8" stroke-width="1">
-    <path d="M224 136 H232 Q240 136 240 128 V88 Q240 80 248 80 H264 M256 76 L264 80 L256 84"></path>
-    <path d="M240 136 V184 Q240 192 248 192 H264 M256 188 L264 192 L256 196"></path>
-    <path d="M528 80 H560 M552 76 L560 80 L552 84"></path>
-    <path d="M528 192 H560 M552 188 L560 192 L552 196"></path>
-    <path d="M848 80 H880 M872 76 L880 80 L872 84"></path>
-    <path d="M848 192 H880 M872 188 L880 192 L872 196"></path>
+
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2">
+    <path d="M224 136 H232 Q240 136 240 128 V88 Q240 80 248 80 H264"/>
+    <path d="M240 136 V184 Q240 192 248 192 H264"/>
   </g>
-  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
-    <rect x="24" y="88" width="200" height="96" rx="6"></rect>
-    <rect x="264" y="48" width="264" height="64" rx="6"></rect>
-    <rect x="264" y="144" width="264" height="96" rx="6"></rect>
-    <rect x="560" y="48" width="288" height="64" rx="6"></rect>
-    <rect x="560" y="144" width="288" height="96" rx="6"></rect>
-    <rect x="880" y="48" width="216" height="64" rx="6"></rect>
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M528 80 H560"/>
+    <path d="M528 192 H560"/>
+    <path d="M848 192 H880"/>
   </g>
-  <rect x="880" y="160" width="216" height="64" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="40" y="112" font-family="'Geist Mono',monospace">read.booking —</text>
-    <text x="40" y="136">case_id 무시</text>
-    <text x="40" y="160">고객의 가장 이른 예약 1건</text>
-    <text x="280" y="84" font-family="'Geist Mono',monospace">booking.verify</text>
-    <text x="280" y="180" font-family="'Geist Mono',monospace">booking.prepare_change</text>
-    <text x="280" y="212" font-family="'Geist Mono',monospace">booking.prepare_cancel</text>
-    <text x="576" y="76" font-family="'Geist Mono',monospace">read.supplier(booking_id)</text>
-    <text x="576" y="100">공급자와 내부 status 비교</text>
-    <text x="576" y="168" font-family="'Geist Mono',monospace">read.policy(query)</text>
-    <text x="576" y="196" font-family="'Geist Mono',monospace">booking.change / booking.cancel</text>
-    <text x="576" y="224">제안 인자: booking_id · reason</text>
-    <text x="896" y="84" font-family="'Geist Mono',monospace">RESPOND</text>
-    <text x="896" y="196" font-family="'Geist Mono',monospace">WAIT_FOR_APPROVAL</text>
+  <g fill="none" stroke="#a8720c" stroke-width="1.2">
+    <path d="M848 80 H880"/>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="272">_unknown 사유 · 예약 내역 · 공급자 예약 상태 · 변경·취소 규정</text>
-    <text x="24" y="300">실제 호출 도구 · read.booking · read.supplier · read.policy</text>
+
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="24" y="88" width="200" height="96" rx="6"/>
+    <rect x="264" y="48" width="264" height="64" rx="6"/>
+    <rect x="264" y="144" width="264" height="96" rx="6"/>
+    <rect x="560" y="48" width="288" height="64" rx="6"/>
+    <rect x="560" y="144" width="288" height="96" rx="6"/>
+    <rect x="880" y="48" width="216" height="64" rx="6"/>
+    <rect x="880" y="160" width="216" height="64" rx="6"/>
+  </g>
+
+  <rect x="32" y="96" width="36" height="16" rx="2" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"/>
+  <g font-family="'Geist Mono',monospace" font-size="7" font-weight="400" fill="#a8720c" text-anchor="middle" letter-spacing="0.08em">
+    <text x="50" y="108">NEXT</text>
+  </g>
+
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="124" y="128">read.booking</text>
+    <text x="396" y="168">변경·취소 준비</text>
+    <text x="704" y="72">read.supplier</text>
+    <text x="704" y="168">read.policy</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="124" y="148">고객의 가장 이른 예약 1건</text>
+    <text x="124" y="168">case_id 무시</text>
+    <text x="704" y="96">공급자와 내부 status 비교</text>
+    <text x="704" y="192">규정 존재 확인 · 근거 포함</text>
+    <text x="988" y="96">불일치해도 반환</text>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="396" y="84">booking.verify</text>
+    <text x="396" y="192">booking.prepare_change</text>
+    <text x="396" y="216">booking.prepare_cancel</text>
+    <text x="704" y="216">booking.change / booking.cancel</text>
+    <text x="988" y="72">RESPOND</text>
+    <text x="988" y="196">WAIT_FOR_APPROVAL</text>
+  </g>
+
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="276">제안 인자: booking_id · reason</text>
+    <text x="536" y="276">_unknown 사유 · 예약 내역 · 공급자 예약 상태 · 변경·취소 규정</text>
+    <text x="24" y="300">NEXT = MVP 다음</text>
   </g>
 </svg>
 </div>
@@ -689,47 +792,66 @@
 <div class="diagram">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 280" role="img" aria-labelledby="v2-locked-title v2-locked-desc">
   <title id="v2-locked-title">Lodging / Flight — 73줄, 잠긴 예약을 읽는 공통 부모 클래스</title>
-  <desc id="v2-locked-desc">LodgingTeam과 FlightTeam은 _LockedBookingTeam을 상속한다. lodging.status와 flight.status는 공통 execute에서 read.booking만 호출한다. read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 예약이 없으면 예약 내역을 모름 사유로 ESCALATE를 반환하고, 예약이 있으면 locked 값을 검사하지 않고 true로 기록하며 일정 조정 대상이 아니라는 답변과 RESPOND를 반환한다. 두 팀은 변경 제안을 만들지 않는 조회 전용이다.</desc>
-  <rect width="1120" height="280" rx="6" fill="#fbfcfd"></rect>
-  <rect x="16" y="224" width="1088" height="48" rx="6" fill="#f1f4f8"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="24">73줄 · 두 클래스의 capability</text>
-    <text x="352" y="24">공통 부모 클래스</text>
-    <text x="664" y="24">유일한 도구 호출</text>
-    <text x="920" y="24" font-family="'Geist Mono',monospace">next_action</text>
+  <desc id="v2-locked-desc">등록만 된 LodgingTeam과 FlightTeam은 _LockedBookingTeam을 상속한다. 공통 execute는 capability별 실행 분기 없이 read.booking만 호출한다. read.booking은 case_id를 무시하고 고객의 가장 이른 예약 1건을 반환한다. 예약이 있으면 locked 값을 검사하지 않고 true로 기록하며 일정 조정 대상이 아니라는 답변과 RESPOND를 반환한다. 예약이 없으면 예약 내역을 모름 사유로 ESCALATE를 반환한다. 두 팀은 변경 제안을 만들지 않는 조회 전용이다.</desc>
+  <rect width="1120" height="280" rx="6" fill="#fbfcfd"/>
+  <g font-family="'Geist Mono',monospace" font-size="8" font-weight="400" fill="#7a8599" letter-spacing="0.14em">
+    <text x="24" y="24">73 LINES</text>
+    <text x="312" y="24">SHARED EXECUTE</text>
+    <text x="640" y="24">READ.BOOKING</text>
+    <text x="936" y="24">NEXT_ACTION</text>
   </g>
-  <g fill="none" stroke="#2f5bd8" stroke-width="1">
-    <path d="M304 80 H320 Q328 80 328 88 V120 Q328 128 336 128 H352 M344 124 L352 128 L344 132"></path>
-    <path d="M304 176 H320 Q328 176 328 168 V136 Q328 128 336 128"></path>
-    <path d="M632 128 H664 M656 124 L664 128 L656 132"></path>
-    <path d="M888 128 H920 M912 124 L920 128 L912 132"></path>
+  <g fill="none" stroke="#6b7488" stroke-width="1">
+    <path d="M264 80 H280 Q288 80 288 88 V168 Q288 176 280 176 H264"/>
+    <path d="M288 128 H312"/>
+    <path d="M888 96 H936"/>
   </g>
-  <g fill="#f1f4f8" stroke="#7a8599" stroke-width="1">
-    <rect x="24" y="48" width="280" height="64" rx="6"></rect>
-    <rect x="24" y="144" width="280" height="64" rx="6"></rect>
-    <rect x="664" y="56" width="224" height="144" rx="6"></rect>
-    <rect x="920" y="96" width="176" height="64" rx="6"></rect>
+  <g fill="none" stroke="#2f5bd8" stroke-width="1.2">
+    <path d="M592 128 H640"/>
   </g>
-  <rect x="352" y="64" width="280" height="128" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="1"></rect>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#161c28">
-    <text x="40" y="76" font-family="'Geist Mono',monospace">LodgingTeam</text>
-    <text x="40" y="100" font-family="'Geist Mono',monospace">lodging.status</text>
-    <text x="40" y="172" font-family="'Geist Mono',monospace">FlightTeam</text>
-    <text x="40" y="196" font-family="'Geist Mono',monospace">flight.status</text>
-    <text x="368" y="92" font-family="'Geist Mono',monospace">_LockedBookingTeam</text>
-    <text x="368" y="120">두 클래스가 상속하는 execute()</text>
-    <text x="368" y="152">공통 예약 상태 조회</text>
-    <text x="368" y="176">capability별 실행 분기 없음</text>
-    <text x="680" y="80" font-family="'Geist Mono',monospace">read.booking —</text>
-    <text x="680" y="104">case_id 무시</text>
-    <text x="680" y="128">고객의 가장 이른 예약 1건</text>
-    <text x="680" y="156">예약이 있으면 locked: True</text>
-    <text x="680" y="180">일정 조정 대상이 아님</text>
-    <text x="936" y="132" font-family="'Geist Mono',monospace">RESPOND</text>
+  <g fill="none" stroke="#a8720c" stroke-width="1.2">
+    <path d="M888 168 H936"/>
   </g>
-  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" fill="#6b7488">
-    <text x="24" y="240">_unknown 사유 · 예약 내역</text>
-    <text x="24" y="264">실제 호출 도구 · read.booking</text>
+  <g fill="transparent" stroke="#161c28" stroke-width="1" stroke-dasharray="4 4">
+    <rect x="24" y="48" width="240" height="64" rx="6"/>
+    <rect x="24" y="144" width="240" height="64" rx="6"/>
+  </g>
+  <g fill="#fbfcfd" stroke="#161c28" stroke-width="1">
+    <rect x="312" y="64" width="280" height="128" rx="6"/>
+    <rect x="640" y="64" width="248" height="128" rx="6"/>
+    <rect x="936" y="64" width="160" height="56" rx="6"/>
+    <rect x="936" y="144" width="160" height="56" rx="6"/>
+  </g>
+  <g fill="#fbfcfd" stroke="#dbe0ea" stroke-width="0.8">
+    <rect x="32" y="56" width="40" height="16" rx="2"/>
+    <rect x="32" y="152" width="40" height="16" rx="2"/>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="7" font-weight="400" fill="#6b7488" text-anchor="middle" letter-spacing="0.08em">
+    <text x="52" y="68">STUB</text>
+    <text x="52" y="164">STUB</text>
+  </g>
+  <g font-family="'Geist','Noto Sans KR',sans-serif" font-size="12" font-weight="600" fill="#161c28" text-anchor="middle">
+    <text x="144" y="84">LodgingTeam</text>
+    <text x="144" y="180">FlightTeam</text>
+    <text x="452" y="100">_LockedBookingTeam</text>
+    <text x="764" y="100">read.booking</text>
+    <text x="1016" y="88">RESPOND</text>
+    <text x="1016" y="168">ESCALATE</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)" text-anchor="middle">
+    <text x="452" y="128">공통 예약 상태 조회</text>
+    <text x="764" y="128">고객의 가장 이른 예약 1건</text>
+    <text x="1016" y="108">예약 있음</text>
+    <text x="1016" y="188">예약 없음</text>
+  </g>
+  <g font-family="'Geist Mono',monospace" font-size="9" font-weight="400" fill="#6b7488" text-anchor="middle">
+    <text x="144" y="100">lodging.status</text>
+    <text x="144" y="196">flight.status</text>
+    <text x="452" y="156">execute()</text>
+    <text x="764" y="156">case_id ignored</text>
+  </g>
+  <g font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="400" fill="rgba(22,28,40,0.80)">
+    <text x="24" y="240">STUB = 등록만 · 두 팀은 조회 전용 · 변경 제안 없음 · 공통 execute는 capability별 실행 분기 없음</text>
+    <text x="24" y="264">예약 있음 · locked 검사 없이 true 기록 · 일정 조정 대상 아님 / 예약 없음 · _unknown 사유는 예약 내역 · 모름으로 처리</text>
   </g>
 </svg>
 </div>
@@ -941,12 +1063,12 @@
 <tr><th scope="row">도메인 분리 가드</th><td><code>final_project_cs</code>에서 <code>python -m pytest tests/architecture/test_basement_is_domain_free.py -q -p no:cacheprovider</code> → <strong>75 passed</strong>(2026-09-10 16:43). project_config.py는 이유가 적힌 명시 예외다.</td></tr>
 <tr><th scope="row">감시 경로 검색</th><td><code>final_project_cs</code>에서 <code>grep -rn "TravelWatcher\|tick_places" .</code> → watch.py 밖 호출처 0건. 감시는 관측과 변경 기록까지이며(<code>watch.py:185~215</code>·<code>watch.py:226</code>·<code>watch.py:251</code>), 감시 → Case 생성은 미구현이다.</td></tr>
 <tr><th scope="row">승인 이후 공급자 실행 검색</th><td><code>final_project_cs</code>에서 <code>grep -rn "action_requests\|approved\|execute_action" app</code>와 <code>grep -rn "ActionExecutor" app</code>로 검색했다. 승인 이후 공급자 실행은 app/ 검색에서 찾지 못했다 · 미구현(범위와 명령은 11장).</td></tr>
-<tr><th scope="row">문서 관문</th><td><code>final_workspace</code>에서 <code>python program/briefing/_template/check_arch_doc.py program/briefing/A-COP_여행Team모듈_아키텍처_v2.html</code> → <strong>합격 · 위반 0 · SVG 8 · 코드 인용 442 · 범위 밖 0</strong>. 통합 HTML을 브라우저에 열고 <code>program/briefing/_template/check_text_fit.js</code> 실행 → <strong>합격 · SVG 8 · 글자 250 · 넘침 0 · 겹침 0 · 선통과 0</strong>(두 결과 모두 2026-09-10 16:58 기록).</td></tr>
+<tr><th scope="row">문서 관문</th><td><code>final_workspace</code>에서 <code>python program/briefing/_template/check_arch_doc.py program/briefing/A-COP_여행Team모듈_아키텍처_v2.html</code> → <strong>합격 · 위반 0 · SVG 8 · 코드 인용 436 · 범위 밖 0</strong>. 통합 HTML을 브라우저에 열고 <code>program/briefing/_template/check_text_fit.js</code> 실행 → <strong>합격 · SVG 8 · 글자 248 · 넘침 0 · 겹침 0 · 선통과 0</strong>(두 결과 모두 2026-09-10 21:30 기록).</td></tr>
 <tr><th scope="row">확인하지 않은 것</th><td>대표 사건의 13단계 종단 실행과 공급자 연동 실행은 확인하지 않았으며, 5장의 처리 코드 존재 10/13·기본 경로 도달 6/13은 고객 입구 기준 정적 집계이고 ① 예 10건에는 부분 구현 단계가 포함된다. 가드와 문서 관문은 종단 성공을 증명하지 않으며, 문자열 검색은 다른 이름의 실행기·동적 호출을 놓칠 수 있고 app/ 밖 프로세스는 확인하지 않았다.</td></tr>
 </tbody>
 </table>
 <table>
-<caption>코드 지문 — sha256 앞 8자리 · 기본 17개 2026-09-10 16:58, 나머지 7개 16:58 실측 · 작업 폴더 final_project_cs · 명령 <code>sha256sum &lt;파일&gt;</code></caption>
+<caption>코드 지문 — sha256 앞 8자리 · 기본 17개 2026-09-10 21:30, 나머지 7개 21:30 실측 · 작업 폴더 final_project_cs · 명령 <code>sha256sum &lt;파일&gt;</code></caption>
 <thead><tr><th scope="col">파일</th><th scope="col">sha256 앞 8자리</th></tr></thead>
 <tbody>
 <tr><th scope="row"><code>app/application/controller.py</code></th><td><code>034d59d5</code></td></tr>

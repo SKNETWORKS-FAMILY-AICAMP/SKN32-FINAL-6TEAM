@@ -16,7 +16,8 @@
     const T = [...svg.querySelectorAll('text')].map(t => {
       let len = 0; try { len = t.getComputedTextLength(); } catch (e) {}
       const x = +t.getAttribute('x'), y = +t.getAttribute('y');
-      const a = t.getAttribute('text-anchor') || getComputedStyle(t).textAnchor || 'start';
+      // ★2026-09-10 — 정렬을 <g> 에서 물려받는 도해(v1 문법)는 속성만 읽으면 위치를 잘못 잰다. 계산값을 쓴다.
+      const a = getComputedStyle(t).textAnchor || t.getAttribute('text-anchor') || 'start';
       const fs = parseFloat(getComputedStyle(t).fontSize) || 12;
       const x0 = a === 'middle' ? x - len / 2 : (a === 'end' ? x - len : x);
       return { x0, x1: x0 + len, y0: y - fs * 0.85, y1: y + fs * 0.28, y, txt: t.textContent.trim() };
@@ -56,7 +57,7 @@
       el: r, x: +r.getAttribute('x') || 0, y: +r.getAttribute('y') || 0,
       w: +r.getAttribute('width'), h: +r.getAttribute('height') }));
     const textEls = [...svg.querySelectorAll('text')];
-    [...svg.querySelectorAll('line,path,polyline')].forEach(l => {
+    [...svg.querySelectorAll('line,path,polyline')].filter(l => !l.closest('marker,defs')).forEach(l => {
       let P = [];
       if (l.tagName === 'line') {
         const x1 = +l.getAttribute('x1'), y1 = +l.getAttribute('y1'), x2 = +l.getAttribute('x2'), y2 = +l.getAttribute('y2');
