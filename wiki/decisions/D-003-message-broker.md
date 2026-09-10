@@ -44,7 +44,7 @@ Team 간 Task 전달과 Action 결과 전파에 메시지 전달이 필요하다
 ## 결과
 
 - `MessageBusPort` 인터페이스를 둔다
-- Top-Level LangGraph가 흐름을 결정하고 **Broker는 배달만 한다**
+- ~~Top-Level LangGraph가 흐름을 결정하고 **Broker는 배달만 한다**~~ `[정정 2026-09-10]` Top-Level LangGraph가 흐름을 정한다는 말은 설계 문장이며, 현재는 `requirements.txt`에 `langgraph==1.2.8`이 있어도 cs·sample·composer 코드의 import가 동적 import를 포함해 0곳이고 Controller와 Case 상태기계(12종)가 흐름을 정하며 Broker는 배달을 맡는다(2026-09-10 LangGraph 실측).
 - Core 간 왕복은 `ExecuteAction` / `ActionResult`로 고정한다
 
 ## 주의점

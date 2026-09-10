@@ -23,7 +23,7 @@ domain_note: 역할과 소유 경계는 도메인 무관이다
 
 | 담당 | 인원 | 역할 | **담당하지 않는 것** |
 |---|---|---|---|
-| **코어 1** — Case Runtime & Coordination | 1 | Case·lifecycle·Shared State·CAS·Controller·Top-Level LangGraph·Registry·`TeamExecutorPort`·Message Broker 정책. **인라인 분류의 실행·실패 처리·상태 전이**와 Feedback Analytics 집계 배치 | 외부 인증, Tool 실행, Team 내부 로직, **분류 라벨 어휘와 프롬프트 품질** |
+| **코어 1** — Case Runtime & Coordination | 1 | Case·lifecycle·Shared State·CAS·Controller·~~Top-Level LangGraph~~·Registry·`TeamExecutorPort`·Message Broker 정책. **인라인 분류의 실행·실패 처리·상태 전이**와 Feedback Analytics 집계 배치. `[정정 2026-09-10]` Top-Level LangGraph는 설계 문장이며, `requirements.txt`의 `langgraph==1.2.8`과 달리 cs·sample·composer 코드에서는 동적 import를 포함해 import 0곳이고 현재 흐름은 Controller와 Case 상태기계(12종)가 정한다(2026-09-10 LangGraph 실측). | 외부 인증, Tool 실행, Team 내부 로직, **분류 라벨 어휘와 프롬프트 품질** |
 | **코어 2** — Access & Action Platform | 1 | Gateway·API/MCP·A2A Adapter·Tool/Action·approval·idempotency·audit | Case routing 판단, Team 내부 로직, **분류 실행** |
 | **모델** — Agent Team Module | 3 | Team 내부 graph/agent·프롬프트·retrieval·rerank·memory 정책·모델 선택과 라우팅·`TeamResult` 생성 규칙. **분류 라벨 어휘와 분류 프롬프트의 구현·품질** | Core 계약 변경, side effect 실행, **분류의 호출 시점과 실패 처리** |
 | **검증 & 프론트** | 1 | **평가 harness·golden/holdout 관리·지표·통계·회귀·contract test 실행**, 운영 UI, observability, 통합 데모 | 업무 로직 구현 |

@@ -96,6 +96,8 @@ replay_case(conn, tenant_id=..., case_id=...)
 
 ## LangGraph checkpoint와 다르다
 
+`[정정 2026-09-10]` 이 절의 제목은 옛 판단(LangGraph checkpoint가 구현된 듯 읽히는 비교)이다 — 지금은 아래 checkpoint(실행 재개용 상태 저장) 비교를 설계 문장으로 구분한다. 현재는 `requirements.txt`에 `langgraph==1.2.8`이 있어도 cs·sample·composer 코드에서 동적 import를 포함해 import 0곳이고 Controller와 Case 상태기계(12종)가 흐름을 정하므로 이 표를 LangGraph checkpoint가 구현됐다는 설명으로 읽지 않는다(2026-09-10 LangGraph 실측).
+
 | | Memory | checkpoint |
 |---|---|---|
 | 무엇 | 업무 이력 | 실행 snapshot |

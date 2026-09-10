@@ -32,7 +32,7 @@ Case의 **공식 상태**. 버전을 가지며 모든 갱신은 CAS를 거친다
 ### Agent Team
 업무 책임 단위. capability·책임·권한·지식·Tool 경계가 독립될 때 만든다.
 
-내부에 Agent가 몇 개인지, LangGraph를 쓰는지는 Team이 결정한다. Core는 관여하지 않는다.
+~~내부에 Agent가 몇 개인지, LangGraph를 쓰는지는 Team이 결정한다. Core는 관여하지 않는다.~~ `[정정 2026-09-10]` Team은 내부 Agent 수와 구현 방식을 정하고 Core는 그 내부를 모른다는 계약 원칙을 유지하되, LangGraph 사용은 설계 문장으로 구분하며 현재는 `requirements.txt`에 `langgraph==1.2.8`이 있어도 cs·sample·composer 코드에서 동적 import를 포함해 import 0곳이고 흐름은 Controller와 Case 상태기계(12종)가 정한다(2026-09-10 LangGraph 실측).
 
 **Team이 하지 않는 것 셋.**
 - side effect를 실행하지 않는다 (`ActionProposal`만 반환)

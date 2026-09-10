@@ -32,7 +32,7 @@ domain: travel
 
 다른 Team 은 이 둘 중 하나가 `[미확보]` 다 — Dining 은 임시휴무를 어디서 받는지 모르고, Mobility 는 운행 정보 출처가 미정이다.
 
-★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). Dining·Mobility 도 MVP 다(`[결정 2026-09-10]`). 7주 배분이 추정이라 일정이 밀리면 둘을 뒤로 민다.
+★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). Dining·Mobility 도 MVP 다(`[결정 2026-09-10]`). ~~7주 배분이 추정이라 일정이 밀리면 둘을 뒤로 민다.~~ `[정정 2026-09-10]` 일정 조정과 별개로 MVP Team은 Activity·Dining·Mobility 셋이며, Booking Handoff는 MVP 다음 단계이고 DoD-14~21을 제외한 18항목으로 MVP를 판정한다(v11 §0-4 결정 16).
 
 ### Booking Handoff 는 왜 필요한가 — MVP 다음
 
@@ -56,10 +56,14 @@ domain: travel
 
 ### 그 선택이 만든 것 — 좋은 쪽과 나쁜 쪽
 
+#### `business_subject`
+
+`[정정 2026-09-10]` Team의 `_base.py:169` 폴백 값은 최종 멱등 키에 쓰이지 않고 Core가 `business_subject=str(case["case_id"])`로 다시 계산하므로, 이 결함은 상속 선택의 근거가 아니며 수정 위치는 Core다. 근거: `app/application/controller.py:371-374`(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다). Team은 대상 id를 제안하고 서버는 인자에서 대상을 꺼내 실재·소유를 확인해야 한다 — activity·dining은 예약이 있으면 `booking_id`, 없으면 `item_id`, mobility는 `item_id`이며 특정하지 못하면 폴백하지 않고 거부한다(v11 §4-E 미구현). 아래 구현 순서의 작업도 이 Core 수정이다.
+
 | | |
 |---|---|
 | **좋은 쪽** | 가드·`_result`·`_evidence`·`_escalate`·`_unknown`·`_proposal` 이 한 곳에 있다. Team 마다 다르게 하는 실수가 안 생긴다 |
-| **★나쁜 쪽** | **결함도 한꺼번에 물려받는다.** `_base.py:169` 의 `business_subject` 3단 폴백(`booking_id → trip_id → case_id`)이 **여행 Team 전부에 걸린다** — 전에는 한 Team 만의 문제였다 |
+| **★나쁜 쪽** | `[정정 2026-09-10]` 위 「business_subject」 정정 참조 — Core 결함이므로 상속 선택의 근거가 아니다. |
 
 ★**공용 기반은 실수의 전파 경로이기도 하다.** 뼈대를 먼저 만들면 뼈대를 먼저 검증해야 한다.
 
@@ -88,7 +92,7 @@ INTENTS               order · shipping · return · exchange · other   ← 쇼
 | 순서 | 무엇 | 왜 |
 |---|---|---|
 | 1 | **코어 1 분류 어휘 교체** | 이게 없으면 위 여섯이 전부 죽은 코드다 |
-| 2 | `business_subject` 폴백 제거 | 계약이라 나중에 바꾸면 그 위가 전부 따라 바뀐다 |
+| 2 | ~~`business_subject` 폴백 제거~~ Core의 최종 키 대상 계산 수정 | `[정정 2026-09-10]` 위 「business_subject」 정정 참조. |
 | 3 | Activity 판정 규칙 실물화 | 지금은 계약 포장만 있다 |
 | 4 | 선제 조정 루프 | Mobility 와 함께 (v11 §9-B 5주차) |
 | 5 | **Place Verification 등록** | `[실측 2026-09-10]` **원격은 생겼다**(`travel_remote_agent.py` 202줄 · 통합 테스트 7건). `config/project.yaml` 등록이 **0건**이라 아직 부를 수 없다 |

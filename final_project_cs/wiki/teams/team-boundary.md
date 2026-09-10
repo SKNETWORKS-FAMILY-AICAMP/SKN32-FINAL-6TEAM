@@ -162,7 +162,7 @@ import 기반 정적 검사로 셋 다 잡을 수 있어 보인다.
 | 자유 | |
 |---|---|
 | 내부 Agent 수 | Team이 정한다 |
-| LangGraph·Subgraph 사용 | Team이 정한다 |
+| ~~LangGraph·Subgraph 사용~~ 내부 실행 구조와 구현 방식 | Team이 정하고 Core는 내부를 모른다는 계약 원칙을 유지한다. `[정정 2026-09-10]` LangGraph 사용은 설계 문장이며, `requirements.txt`의 `langgraph==1.2.8`과 달리 cs·sample·composer 코드에서는 동적 import를 포함해 import 0곳이고 현재 흐름은 Controller와 Case 상태기계(12종)가 정한다(2026-09-10 LangGraph 실측). |
 | 프롬프트 구성 | Team이 정한다 |
 | 재처리 로직 | Team이 정한다 |
 

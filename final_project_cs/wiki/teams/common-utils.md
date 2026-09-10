@@ -65,7 +65,7 @@ app/modules/customer_ops/team_utils.py     없음
 | 파일 | `team_utils.py` | `travel_ops/_base.py` |
 | 무엇이 들어 있나 | — | `_guard`·`_read`·`_evidence`·`_result`·`_escalate`·`_unknown`·`_proposal` |
 
-★**상속을 고른 대가가 이미 나왔다.** 공용 기반이라 **결함도 한꺼번에 물려받는다** — `business_subject` 3단 폴백이 여행 Team 전부에 걸린다(`_base.py:169`). 조합형이면 쓰는 Team 만 걸렸을 것이다. → [build-order.md](build-order.md)
+~~★**상속을 고른 대가가 이미 나왔다.** 공용 기반이라 **결함도 한꺼번에 물려받는다** — `business_subject` 3단 폴백이 여행 Team 전부에 걸린다(`_base.py:169`). 조합형이면 쓰는 Team 만 걸렸을 것이다.~~ `[정정 2026-09-10]` 그 Team 값은 최종 키에 쓰이지 않고 Core가 `app/application/controller.py:371-374`에서 `business_subject=str(case["case_id"])`로 고정하므로, 이 결함으로 상속과 조합의 우열을 판단할 수 없으며 고칠 곳은 Core의 미구현된 v11 §4-E다(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다). → [build-order.md](build-order.md)
 
 `[미확보]` **조합형으로 되돌릴지 정한 기록이 없다.** 아래 설계안은 그 판단의 재료로 남긴다.
 

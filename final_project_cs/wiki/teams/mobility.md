@@ -14,7 +14,7 @@ domain: travel
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
 
-`[실측]` 뼈대는 쇼핑몰 `fulfillment_logistics` 에서 가져온다 — 구간·경로 판정이 구조가 같다. 그 Team 이 이미 `business_subject` 를 옳게 쓰는 유일한 Team 이기도 하다(아래).
+`[실측]` 뼈대는 쇼핑몰 `fulfillment_logistics` 에서 가져온다 — 구간·경로 판정이 구조가 같다. `[정정 2026-09-10]` 아래 「business_subject」 절의 정정 참조 — Team의 대상 값만으로 최종 키가 옳다고 판단할 수 없다.
 
 ## ★ [2026-09-10] 판정 도구가 아직 값을 안 준다
 
@@ -28,7 +28,7 @@ domain: travel
 | 경로·소요 시간 조회 | **`None`** |
 | 환승·막차 데이터 | **`None`** |
 
-★**「모름」으로 끝나는 것이 폴백보다 낫다**(v11 §4-D). 값이 없으면 없다고 돌려주고, 추정으로 채우지 않는다. 다만 **문서가 판정을 현재 동작처럼 적으면 안 된다.**
+~~★**「모름」으로 끝나는 것이 폴백보다 낫다**(v11 §4-D). 값이 없으면 없다고 돌려주고, 추정으로 채우지 않는다.~~ `[정정 2026-09-10]` 필요한 값마다 대체 소스를 두어 1차 실패 시 대체로 값을 내고 대체까지 실패하면 치명 결함으로 서버를 끄며, 후보의 값이 불확실해도 하나를 골라 선택지를 나열하지 않되 근거 없는 문장 금지는 그대로 지킨다(v11 §0-4 결정 15). 현재 None 반환과 아래 `_unknown()`의 escalate는 코드 관찰이며 이 현행 사양을 구현한 해결책이 아니다. 다만 **문서가 판정을 현재 동작처럼 적으면 안 된다.**
 
 `[실측]` `select_capability()` 가 `intent == "mobility"` 만 본다 — 라우팅이 두 축이 됐으므로 그 분기도 같이 봐야 한다(코드 담당 몫).
 
@@ -104,6 +104,8 @@ default_capability    = "mobility.check_route"
 
 ## `business_subject` — 도메인이 바뀌어도 안 바꾸는 칸
 
+`[정정 2026-09-10]` Team이 제안한 대상 값의 적합성과 별개로 그 값은 최종 멱등 키에 쓰이지 않고 Core가 `business_subject=str(case["case_id"])`로 다시 계산한다. `booking_id` 유무와 무관하게 같은 Case·같은 종류의 제안이 서로 다른 객체를 바꾸면 충돌할 수 있으므로 결함의 수정 위치는 Core다. 근거: `app/application/controller.py:371-374`(2026-09-10 실측). Team은 대상 id를 제안하고 서버는 mobility의 `item_id`를 인자에서 꺼내 실재·소유를 확인한 뒤 최종 키에 쓰며, 대상을 특정하지 못하면 폴백하지 않고 거부해야 한다(v11 §4-E 미구현). 아래는 당시 Team 코드 관찰과 판단의 기록이다.
+
 `[실측 2026-09-09]` `A-COP_여행Team모듈_구성안.md`. 도메인 객체 id 는 코어에 없다 — `customer_cases` 컬럼에도 `app/core/`·`app/application/` 코드에도 `order_id`·`booking_id` 가 **0회**다. 도메인 객체는 `idempotency_key(tenant_id, request_id, action_type, business_subject)` 의 `business_subject` **문자열 한 칸**으로 들어간다.
 
 ★**칸 이름을 `booking_id` 로 바꾸면 다음 도메인에서 또 바꿔야 한다.** 이름은 이미 중립이고 맞다. 정해야 하는 것은 규칙이다.
@@ -121,21 +123,21 @@ subject = 객체 id    →  다른 키
 
 ### ★ [2026-09-09] 코드가 이 규칙을 안 지킨다
 
-`[실측]` `app/modules/travel_ops/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다.
+`[실측]` `app/modules/travel_ops/_base.py:169` — 여행 Team 공용 기반이 **3단 폴백**을 쓴다. `[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — Team 코드 관찰이며 최종 키 결함 자리는 Core다.
 
 ```python
 subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.case_id)
 ```
 
-★**`case_id` 로 떨어지는 마지막 칸이 위 규칙이 두지 말라고 한 바로 그것이다.** 그리고 이번엔 한 Team 이 아니라 **공용 기반이라 여행 Team 전부가 물려받는다.**
+`[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — 최종 키 결함 자리는 공용 기반의 상속이 아니라 Core다.
 
-`booking_id` 가 `None` 이면 조용히 `case_id` 가 되고, **한 Case 안의 두 예약이 같은 키를 갖는다.** 둘째가 중복으로 걸려 조용히 안 나간다.
+`[정정 2026-09-10]` 위 「business_subject」 절의 정정 참조 — 충돌은 `booking_id` 누락에 한정되지 않는다.
 
 | 지금 | 문서가 정한 것 |
 |---|---|
-| `booking_id` → `trip_id` → `case_id` | `booking_id` 없으면 **실행하지 않고 escalate** |
+| Core의 최종 키 대상 고정 | `[정정 2026-09-10]` 위 「business_subject」 정정 참조 — mobility는 `item_id`. |
 
-`[실측]` 보낼 자리는 이미 있다 — 같은 파일의 `_unknown()` 이 "값이 없는 게 아니라 모르는 상태"를 escalate 로 보낸다.
+`[실측]` 같은 파일의 `_unknown()`은 "값이 없는 게 아니라 모르는 상태"를 escalate로 보낸다. `[정정 2026-09-10]` 위 「판정 도구가 아직 값을 안 준다」 절의 결정 15 정정 참조 — 코드 관찰이다.
 
 **코드 수정은 담당 세션 몫이다.** 이 문서는 어긋남만 적는다.
 
