@@ -24,20 +24,33 @@ AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가
 말하는 기록이므로 지우지 않는다. 다만 **"지금 무엇인가"로 읽으면 안 된다** — 지금 값은
 루트 `CLAUDE.md` 사실표와 v10 이 정본이다.
 
-`[미확보]` 여행 Team 이 아직 코드에 없다. `config/project.yaml` 에 등록된 여섯은 여전히
-쇼핑몰 Team 이다. 전환 계획은 `../program/plan/A-COP_여행Team모듈_구성안.md`.
+★**[2026-09-09] 등록이 여행으로 넘어갔다.** `config/project.yaml` 의 여섯은 이제
+`app/modules/travel_ops/` 다 — `activity` · `booking_handoff` · `mobility` · `dining` ·
+`lodging`(등록만) · `flight`(등록만). **코어는 한 줄도 안 바뀌었다**(Registry 등록형).
+`app/modules/customer_ops/` 는 지우지 않았다 — 쇼핑몰 시절 기록이자 비교 대상이고,
+Composer 카탈로그에도 남아 있어 되돌릴 수 있다. 전환 계획은
+`../program/plan/A-COP_여행Team모듈_구성안.md`.
+
+`[미확보]` 여섯 중 `self.llm` 을 부르는 팀은 **0개**다(2026-09-09 실측). 판정이 계산으로
+되는 동안은 LLM 을 부르지 않는다(v10 §4-D). 여행용 **응답 검토 Team 은 아직 없다** —
+`response_review.owner_team_id` 는 옛 `response_generation_review` 를 가리킨 채
+`enabled: false` 다. 켜면 기동이 막힌다(`ProjectConfig.validate_response_review_owner`).
 
 ---
 
 ★**옛 Billing/Subscription·Technical Entitlement 도메인은 이 프로젝트에 없다.**
-2026-08-18 결정으로 착수 목록에서 빠졌다(v8 §10). 지금 `config/project.yaml` 에 등록된
-Team 은 여섯이다 — `response_generation_review`, `return_refund`, `procurement_order_payment`,
+2026-08-18 결정으로 착수 목록에서 빠졌다(v8 §10). ★**아래 여섯은 2026-09-09 로
+등록에서 빠졌다** — 구현은 `app/modules/customer_ops/` 에 그대로 있고, 무엇이었는지를
+말하는 기록이다. 지금 등록된 여섯은 위 여행 목록이다. 옛 등록은 — `response_generation_review`, `return_refund`, `procurement_order_payment`,
 `fulfillment_logistics`, `catalog_verification`, `voc_store_manager`(집계·급증 탐지는 코어 1 로
 옮겨 계약만 유지하는 껍데기, v9 §0 「v8 재판정」). 옛 도메인 이름이 남은 문서를 보면 낡은 것이다.
 
-기준선 문서: `../program/plan/A-COP_구현계획서_v10.md` (**읽기 전용 · 수정 금지**)
-v9 는 `../program/plan/` 에 직전 판으로 남아 있고, v5~v8 은 `../program/plan/.archive/` 에
-**압축·숨김**이라 평소엔 열지 않는다. ★**DoD 는 v10 §12 의 22항목이다**(자동 17 · 아키텍처 테스트 3 · 측정 2).
+기준선 문서: `../program/plan/A-COP_구현계획서_v11.md` (**읽기 전용 · 수정 금지**)
+v10·v9 는 `../program/plan/` 에 옛 판으로 남아 있고, v5~v8 은 `../program/plan/.archive/` 에
+**압축·숨김**이라 평소엔 열지 않는다. ★**DoD 는 v11 §12 의 24항목이다**(자동 18 · 아키텍처 테스트 4 · 측정 2).
+★`[2026-09-10]` v11 이 더한 것 — **라우팅은 두 축**(`case_type` 은 `issue_code` 접두에서,
+`intent` 는 요청 종류. v11 §5-B) · **멱등 키의 「대상」은 서버가 확인한 대상 객체 id**(§4-E) ·
+지속 관리 루프 둘(§6-A). **v10 §5-A 의 분류 라벨만으로는 Case 가 Team 에 도달하지 못한다.**
 아래 「DoD (v8 §27, 1~29항목)」 줄의 29항목은 **쇼핑몰 시절 기준**이며 기록으로 남긴 것이다.
 
 ## 응답 언어
@@ -245,7 +258,7 @@ python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ## 7. 문서
 
 - 프로세스 규칙: `RULE.md` (**작업 전 필독**)
-- 기준선 계획: `../program/plan/A-COP_구현계획서_v10.md` (읽기 전용). v9 는 직전 판으로 `../program/plan/` 에, v5~v8 은 `../program/plan/.archive/` 에 압축·숨김
+- 기준선 계획: `../program/plan/A-COP_구현계획서_v11.md` (읽기 전용). v10·v9 는 옛 판으로 `../program/plan/` 에, v5~v8 은 `../program/plan/.archive/` 에 압축·숨김
 - 실행계획: `wiki/records/plans/`
 - 계약: `wiki/records/handoff/`
 - 리포트: `wiki/records/reports/` · 결함: `wiki/records/reports/debugs/`

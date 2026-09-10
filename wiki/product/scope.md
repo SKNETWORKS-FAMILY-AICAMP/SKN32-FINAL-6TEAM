@@ -166,7 +166,7 @@ MVP 필수 Team   2개 (Activity · Booking Handoff)
 
 ## 관계
 
-- 계획서 `program/plan/A-COP_구현계획서_v10.md` — **도메인 사실의 정본**
+- 계획서 `program/plan/A-COP_구현계획서_v11.md` — **도메인 사실의 정본** (v10 은 직전 판으로 같은 폴더에)
 - [positioning.md](positioning.md) — 무엇을 파는가 `[실측]` 아직 쇼핑몰 기준
 - [../architecture/pack-model.md](../architecture/pack-model.md) — Pack 구조. 여행에서는 Team 종류 축으로 읽는다
 - [../delivery/timeline.md](../delivery/timeline.md) — 일정

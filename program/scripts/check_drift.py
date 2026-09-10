@@ -46,10 +46,12 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-#: ★2026-09-08 도메인 교체로 **v10 이 기준선이다.** 검사기가 v9 를 읽고 있으면
+#: ★2026-09-10 판올림으로 **v11 이 기준선이다.** 검사기가 옛 판을 읽고 있으면
 #:  낡은 문서를 지키게 된다 — 있는 것보다 나쁘다.
-#:  v9 는 아직 `program/plan/` 에 남아 있지만 기준선이 아니다.
-BASELINE = "program/plan/A-COP_구현계획서_v10.md"
+#:  v9·v10 은 아직 `program/plan/` 에 남아 있지만 기준선이 아니다.
+#:  (2026-09-08 에는 v10 이었다. 도메인 교체 판이었고, v11 은 그 위에 여행 전환
+#:   결정을 올린 판이다.)
+BASELINE = "program/plan/A-COP_구현계획서_v11.md"
 
 #: 판정 원장. 검사 1·5 는 **후보**를 모을 뿐이라 매번 같은 줄이 다시 올라온다.
 #:  2026-09-07 에 13건을 코드에 대고 판정했는데, 그 13건이 다음 세션에 그대로
