@@ -138,158 +138,148 @@
 <strong>사실 대조</strong>와 <strong>사람 승인</strong>이 있다. v1 전체도에는 이 둘이 없었다.</p>
 
 <div class="diagram">
-<svg viewBox="0 0 1160 700" role="img" aria-labelledby="d1t d1d" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1160 720" role="img" aria-labelledby="d1t d1d" xmlns="http://www.w3.org/2000/svg">
   <title id="d1t">A-COP 여행 책임 경계</title>
   <desc id="d1d">외부 에이전트의 요청이 진입·분류 층에서 요청 종류와 문제 코드로 나뉘고,
   Controller 가 두 축으로 Team 을 고른다. 여섯 Team 은 읽기 도구로 조회해 판단만 하고
-  TeamResult 를 돌려준다. 답변은 고객에게 가고, 변경 제안은 사실 대조와 사람 승인을 지나
-  Action 층에서만 실행된다.</desc>
+  TeamResult 를 돌려준다. 답변은 고객에게 가고, 변경 제안은 사실 대조와 사람 승인을
+  지나 Action 층에서만 실행된다.</desc>
   <defs>
     <marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/>
-    </marker>
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/></marker>
     <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/>
-    </marker>
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/></marker>
   </defs>
   <style>
     .bx{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
     .bxa{fill:#ffffff;stroke:#a8720c;stroke-width:1.4}
     .bxg{fill:#f7f8fb;stroke:#dbe0ea;stroke-width:1;stroke-dasharray:3 3}
-    .t{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;fill:#161c28}
     .tb{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12.5px;font-weight:600;fill:#161c28}
+    .t{font-family:'Geist','Noto Sans KR',sans-serif;font-size:11.5px;fill:#161c28}
     .m{font-family:'Geist Mono',monospace;font-size:9px;fill:#7a8599}
     .ma{font-family:'Geist Mono',monospace;font-size:9px;fill:#a8720c}
-    .lb{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.08em}
+    .lb{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.06em}
     .ln{stroke:#6b7488;stroke-width:1;fill:none;marker-end:url(#a1)}
     .lna{stroke:#a8720c;stroke-width:1.3;fill:none;marker-end:url(#a2)}
+    .lnd{stroke:#a8720c;stroke-width:1.1;fill:none;stroke-dasharray:4 3}
+    .pb{fill:rgba(168,114,12,0.10);stroke:#a8720c;stroke-width:0.8}
   </style>
+  <text x="1136" y="32" class="lb" text-anchor="end">A · 들어오는 길</text>
+  <rect x="24" y="42" width="160" height="60" rx="5" class="bx"/>
+  <text x="104" y="66" class="tb" text-anchor="middle">외부 에이전트</text>
+  <text x="104" y="85" class="m" text-anchor="middle">OpenClaw · Hermes · LLM</text>
 
-  <!-- lane A -->
-  <text x="24" y="34" class="lb">A · 들어오는 길</text>
-  <rect x="24" y="46" width="150" height="62" rx="5" class="bx"/>
-  <text x="99" y="72" class="tb" text-anchor="middle">외부 에이전트</text>
-  <text x="99" y="90" class="m" text-anchor="middle">OpenClaw · Hermes · LLM</text>
+  <rect x="224" y="36" width="220" height="74" rx="5" class="bxa"/>
+  <text x="334" y="57" class="tb" text-anchor="middle">진입 · 분류</text>
+  <text x="334" y="74" class="ma" text-anchor="middle">travel_ops/feedback.py 152</text>
+  <text x="334" y="89" class="m" text-anchor="middle">intent 5 — 요청 종류</text>
+  <text x="334" y="103" class="m" text-anchor="middle">issue_code 17 — 접두가 case_type</text>
 
-  <rect x="214" y="40" width="186" height="74" rx="5" class="bxa"/>
-  <text x="307" y="60" class="tb" text-anchor="middle">진입 · 분류</text>
-  <text x="307" y="75" class="ma" text-anchor="middle">travel_ops/feedback.py 152</text>
-  <text x="307" y="90" class="m" text-anchor="middle">intent 5 — 요청 종류</text>
-  <text x="307" y="104" class="m" text-anchor="middle">issue_code 17 — 접두가 case_type</text>
+  <rect x="484" y="36" width="240" height="74" rx="5" class="bx"/>
+  <text x="604" y="61" class="tb" text-anchor="middle">Controller</text>
+  <text x="604" y="79" class="m" text-anchor="middle">app/application/controller.py</text>
+  <text x="604" y="96" class="ma" text-anchor="middle">resolve(case_type, intent) :72 :175</text>
+  <rect x="694" y="24" width="26" height="15" rx="3" class="pb"/>
+  <text x="707" y="35" class="ma" text-anchor="middle" font-weight="600">P3</text>
 
-  <rect x="440" y="46" width="186" height="62" rx="5" class="bx"/>
-  <text x="533" y="68" class="tb" text-anchor="middle">Controller</text>
-  <text x="533" y="84" class="m" text-anchor="middle">app/application/controller.py</text>
-  <text x="533" y="99" class="ma" text-anchor="middle">resolve(case_type, intent) :72 :175</text>
-  <rect x="600" y="34" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
-  <text x="613" y="45" class="ma" text-anchor="middle" font-weight="600">P3</text>
+  <line x1="184" y1="72" x2="218" y2="72" class="ln"/>
+  <line x1="444" y1="72" x2="478" y2="72" class="ln"/>
 
-  <line x1="174" y1="77" x2="208" y2="77" class="ln"/>
-  <line x1="400" y1="77" x2="434" y2="77" class="ln"/>
+  <text x="1136" y="138" class="lb" text-anchor="end">B · 판단 — 여기서는 아무것도 실행되지 않는다</text>
+  <rect x="24" y="160" width="700" height="178" rx="6" class="bxg"/>
+  <text x="76" y="181" class="m">여섯 Team · app/modules/travel_ops/ · 전부 active: true</text>
+  <rect x="40" y="168" width="26" height="15" rx="3" class="pb"/>
+  <text x="53" y="179" class="ma" text-anchor="middle" font-weight="600">P1</text>
 
-  <!-- lane B -->
-  <text x="24" y="152" class="lb">B · 판단 — 여기서는 아무것도 실행되지 않는다</text>
-  <rect x="24" y="164" width="700" height="150" rx="6" class="bxg"/>
-  <text x="40" y="184" class="m">여섯 Team · app/modules/travel_ops/ · 전부 active: true</text>
-  <rect x="360" y="152" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
-  <text x="373" y="163" class="ma" text-anchor="middle" font-weight="600">P1</text>
+  <rect x="40" y="194" width="152" height="52" rx="4" class="bx"/>
+  <text x="116" y="214" class="tb" text-anchor="middle">Activity</text>
+  <text x="116" y="232" class="m" text-anchor="middle">activity · cap 3 · 274</text>
+  <rect x="206" y="194" width="152" height="52" rx="4" class="bx"/>
+  <text x="282" y="214" class="tb" text-anchor="middle">Dining</text>
+  <text x="282" y="232" class="m" text-anchor="middle">dining · cap 2 · 96</text>
+  <rect x="372" y="194" width="152" height="52" rx="4" class="bx"/>
+  <text x="448" y="214" class="tb" text-anchor="middle">Mobility</text>
+  <text x="448" y="232" class="m" text-anchor="middle">mobility · cap 3 · 80</text>
+  <rect x="538" y="194" width="170" height="52" rx="4" class="bx"/>
+  <text x="623" y="214" class="tb" text-anchor="middle">Booking Handoff</text>
+  <text x="623" y="232" class="m" text-anchor="middle">booking · cap 3 · 94</text>
 
-  <rect x="40" y="194" width="150" height="50" rx="4" class="bx"/>
-  <text x="115" y="213" class="tb" text-anchor="middle">Activity</text>
-  <text x="115" y="230" class="m" text-anchor="middle">activity · cap 3 · 274</text>
+  <rect x="40" y="258" width="220" height="64" rx="4" class="bx"/>
+  <text x="150" y="278" class="tb" text-anchor="middle">Lodging / Flight</text>
+  <text x="150" y="296" class="m" text-anchor="middle">locked_bookings.py 73</text>
+  <text x="150" y="311" class="m" text-anchor="middle">cap 1 씩 · 잠긴 예약만</text>
 
-  <rect x="204" y="194" width="150" height="50" rx="4" class="bx"/>
-  <text x="279" y="213" class="tb" text-anchor="middle">Dining</text>
-  <text x="279" y="230" class="m" text-anchor="middle">dining · cap 2 · 96</text>
+  <rect x="274" y="258" width="434" height="64" rx="4" class="bx"/>
+  <text x="491" y="278" class="tb" text-anchor="middle">TravelTeamBase — 공통 계약 부품</text>
+  <text x="491" y="296" class="m" text-anchor="middle">_guard · _read · _evidence · _result</text>
+  <text x="491" y="311" class="m" text-anchor="middle">_escalate · _unknown · _proposal (_base.py 177)</text>
 
-  <rect x="368" y="194" width="150" height="50" rx="4" class="bx"/>
-  <text x="443" y="213" class="tb" text-anchor="middle">Mobility</text>
-  <text x="443" y="230" class="m" text-anchor="middle">mobility · cap 3 · 80</text>
+  <rect x="768" y="160" width="368" height="86" rx="5" class="bxa"/>
+  <text x="952" y="183" class="tb" text-anchor="middle">읽기 도구</text>
+  <text x="952" y="202" class="m" text-anchor="middle">allowed_tools 밖 → 거부 · seen 으로 중복 차단</text>
+  <text x="952" y="219" class="ma" text-anchor="middle">budget = manifest.max_steps</text>
+  <text x="952" y="236" class="m" text-anchor="middle">막는 자리 셋은 03장</text>
+  <rect x="1094" y="148" width="26" height="15" rx="3" class="pb"/>
+  <text x="1107" y="159" class="ma" text-anchor="middle" font-weight="600">P2</text>
 
-  <rect x="532" y="194" width="176" height="50" rx="4" class="bx"/>
-  <text x="620" y="213" class="tb" text-anchor="middle">Booking Handoff</text>
-  <text x="620" y="230" class="m" text-anchor="middle">booking · cap 3 · 94</text>
+  <rect x="768" y="258" width="368" height="64" rx="5" class="bxg"/>
+  <text x="952" y="278" class="tb" text-anchor="middle">A2A 원격 — 지금은 안 쓴다</text>
+  <text x="952" y="296" class="m" text-anchor="middle">travel_remote_agent.py 202 · Place Verification</text>
+  <text x="952" y="311" class="ma" text-anchor="middle">a2a_executor.enabled: false · team_executor: local</text>
 
-  <rect x="40" y="254" width="314" height="46" rx="4" class="bx"/>
-  <text x="197" y="272" class="tb" text-anchor="middle">Lodging / Flight</text>
-  <text x="197" y="288" class="m" text-anchor="middle">locked_bookings.py 73 · cap 1 씩 · 잠긴 예약 조회로 범위 제한</text>
+  <line x1="604" y1="110" x2="604" y2="154" class="ln"/>
+  <text x="614" y="134" class="m">TeamTask — 팀은 이미 정해져서 온다</text>
+  <line x1="724" y1="212" x2="762" y2="202" class="lna"/>
 
-  <rect x="368" y="254" width="340" height="46" rx="4" class="bx"/>
-  <text x="538" y="272" class="tb" text-anchor="middle">TravelTeamBase — 공통 계약 부품</text>
-  <text x="538" y="288" class="m" text-anchor="middle">_guard · _read · _evidence · _result · _escalate · _unknown · _proposal (_base.py 177)</text>
+  <text x="1136" y="362" class="lb" text-anchor="end">C · 돌려주는 것 — 여기서는 두 갈래만 (HANDOFF · ESCALATE 는 03장)</text>
+  <rect x="24" y="374" width="230" height="60" rx="5" class="bx"/>
+  <text x="139" y="396" class="tb" text-anchor="middle">TeamResult</text>
+  <text x="139" y="415" class="m" text-anchor="middle">판정 · 근거 · 다음 행동 · 제안</text>
+  <line x1="139" y1="338" x2="139" y2="368" class="ln"/>
 
-  <rect x="760" y="164" width="180" height="82" rx="5" class="bxa"/>
-  <text x="850" y="188" class="tb" text-anchor="middle">읽기 도구</text>
-  <text x="850" y="205" class="m" text-anchor="middle">allowed_tools 밖 → 거부</text>
-  <text x="850" y="220" class="m" text-anchor="middle">seen · 중복 차단</text>
-  <text x="850" y="235" class="ma" text-anchor="middle">budget = max_steps</text>
-  <rect x="914" y="152" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
-  <text x="927" y="163" class="ma" text-anchor="middle" font-weight="600">P2</text>
+  <rect x="310" y="370" width="250" height="30" rx="4" class="bx"/>
+  <text x="435" y="390" class="t" text-anchor="middle">답변 — 고객에게 전달</text>
+  <rect x="310" y="408" width="250" height="30" rx="4" class="bxa"/>
+  <text x="435" y="428" class="t" text-anchor="middle">ActionProposal — 실행하려면</text>
+  <line x1="254" y1="396" x2="304" y2="388" class="ln"/>
+  <line x1="254" y1="414" x2="304" y2="422" class="lna"/>
 
-  <rect x="760" y="252" width="180" height="62" rx="5" class="bxg"/>
-  <text x="850" y="270" class="tb" text-anchor="middle">A2A 원격</text>
-  <text x="850" y="284" class="m" text-anchor="middle">travel_remote_agent.py 202</text>
-  <text x="850" y="297" class="ma" text-anchor="middle">a2a_executor.enabled: false</text>
-  <text x="850" y="309" class="m" text-anchor="middle">team_executor: local — 지금은 안 쓴다</text>
+  <text x="1136" y="478" class="lb" text-anchor="end">D · 실행까지 — 실선은 코드로 확인한 것, 점선은 확인 못 한 것</text>
+  <rect x="24" y="490" width="212" height="78" rx="5" class="bxa"/>
+  <text x="130" y="513" class="tb" text-anchor="middle">제안 사실 대조</text>
+  <text x="130" y="532" class="m" text-anchor="middle">check_proposal</text>
+  <text x="130" y="548" class="m" text-anchor="middle">controller.py:332</text>
+  <rect x="204" y="478" width="26" height="15" rx="3" class="pb"/>
+  <text x="217" y="489" class="ma" text-anchor="middle" font-weight="600">P5</text>
 
-  <line x1="533" y1="108" x2="533" y2="158" class="ln"/>
-  <text x="545" y="132" class="m">TeamTask — 팀은 이미 정해져서 온다</text>
-  <line x1="724" y1="212" x2="754" y2="205" class="lna"/>
+  <rect x="286" y="490" width="212" height="78" rx="5" class="bxa"/>
+  <text x="392" y="513" class="tb" text-anchor="middle">사람 승인</text>
+  <text x="392" y="532" class="m" text-anchor="middle">WAIT_FOR_APPROVAL</text>
+  <text x="392" y="548" class="m" text-anchor="middle">승인 · 거부</text>
+  <rect x="466" y="478" width="26" height="15" rx="3" class="pb"/>
+  <text x="479" y="489" class="ma" text-anchor="middle" font-weight="600">P4</text>
 
+  <rect x="548" y="490" width="252" height="78" rx="5" class="bxg"/>
+  <text x="674" y="511" class="tb" text-anchor="middle">실행 직전 재대조</text>
+  <text x="674" y="529" class="m" text-anchor="middle">주석에 설계가 적혀 있다</text>
+  <text x="674" y="545" class="ma" text-anchor="middle">실행 연결은 확인 못 했다</text>
+  <text x="674" y="561" class="m" text-anchor="middle">그래서 점선이다</text>
 
-  <!-- lane C -->
-  <text x="24" y="352" class="lb">C · 돌려주는 것 — 여기서는 두 갈래만 그린다 (HANDOFF · ESCALATE 는 03장)</text>
-  <rect x="24" y="364" width="220" height="56" rx="5" class="bx"/>
-  <text x="134" y="386" class="tb" text-anchor="middle">TeamResult</text>
-  <text x="134" y="403" class="m" text-anchor="middle">판정 · 근거 · 다음 행동 · 제안</text>
-  <line x1="374" y1="314" x2="200" y2="358" class="ln"/>
+  <rect x="850" y="490" width="286" height="78" rx="5" class="bx"/>
+  <text x="993" y="513" class="tb" text-anchor="middle">Action 층</text>
+  <text x="993" y="532" class="m" text-anchor="middle">side effect 는 여기서만</text>
+  <text x="993" y="548" class="m" text-anchor="middle">Team 은 실행하지 않는다</text>
 
-  <rect x="300" y="356" width="230" height="34" rx="4" class="bx"/>
-  <text x="415" y="378" class="t" text-anchor="middle">답변 — 고객에게 전달</text>
-  <rect x="300" y="398" width="230" height="34" rx="4" class="bxa"/>
-  <text x="415" y="420" class="t" text-anchor="middle">ActionProposal — 실행하려면</text>
-  <line x1="244" y1="380" x2="294" y2="373" class="ln"/>
-  <line x1="244" y1="400" x2="294" y2="412" class="lna"/>
+  <line x1="435" y1="438" x2="180" y2="484" class="lna"/>
+  <line x1="236" y1="529" x2="280" y2="529" class="lna"/>
+  <line x1="498" y1="529" x2="542" y2="529" class="lnd"/>
+  <line x1="800" y1="529" x2="844" y2="529" class="lnd"/>
 
-  <!-- lane D -->
-  <text x="24" y="470" class="lb">D · 실행까지 — 실선은 코드로 확인한 것, 점선은 확인 못 한 것</text>
-  <rect x="24" y="482" width="200" height="70" rx="5" class="bxa"/>
-  <text x="124" y="504" class="tb" text-anchor="middle">제안 사실 대조</text>
-  <text x="124" y="520" class="m" text-anchor="middle">check_proposal</text>
-  <text x="124" y="535" class="m" text-anchor="middle">controller.py:332</text>
-  <rect x="198" y="470" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
-  <text x="211" y="481" class="ma" text-anchor="middle" font-weight="600">P5</text>
-
-  <rect x="264" y="482" width="200" height="70" rx="5" class="bxa"/>
-  <text x="364" y="504" class="tb" text-anchor="middle">사람 승인</text>
-  <text x="364" y="520" class="m" text-anchor="middle">WAIT_FOR_APPROVAL</text>
-  <text x="364" y="535" class="m" text-anchor="middle">승인 · 거부</text>
-  <rect x="438" y="470" width="26" height="15" rx="3" fill="rgba(168,114,12,0.10)" stroke="#a8720c" stroke-width="0.8"/>
-  <text x="451" y="481" class="ma" text-anchor="middle" font-weight="600">P4</text>
-
-  <rect x="504" y="482" width="200" height="70" rx="5" class="bxg"/>
-  <text x="604" y="502" class="tb" text-anchor="middle">실행 직전 재대조</text>
-  <text x="604" y="518" class="m" text-anchor="middle">주석에 설계가 적혀 있다</text>
-  <text x="604" y="532" class="ma" text-anchor="middle">★실행 연결은 확인 못 했다</text>
-  <text x="604" y="546" class="m" text-anchor="middle">그래서 점선이다</text>
-
-  <rect x="744" y="482" width="196" height="70" rx="5" class="bx"/>
-  <text x="842" y="504" class="tb" text-anchor="middle">Action 층</text>
-  <text x="842" y="520" class="m" text-anchor="middle">side effect 는 여기서만</text>
-  <text x="842" y="535" class="m" text-anchor="middle">Team 은 실행하지 않는다</text>
-
-  <line x1="415" y1="432" x2="180" y2="476" class="lna"/>
-  <line x1="224" y1="517" x2="258" y2="517" class="lna"/>
-  <line x1="464" y1="517" x2="498" y2="517" stroke="#a8720c" stroke-width="1.1" stroke-dasharray="4 3" fill="none"/>
-  <line x1="704" y1="517" x2="738" y2="517" stroke="#a8720c" stroke-width="1.1" stroke-dasharray="4 3" fill="none"/>
-
-  <!-- core note -->
-  <rect x="24" y="596" width="916" height="72" rx="5" class="bxg"/>
-  <text x="40" y="618" class="tb">코어 계약은 안 바뀌었다 — 그러나 「코어를 하나도 안 건드렸다」는 아니다</text>
-  <text x="40" y="637" class="m">여행으로 갈아끼우며 바뀐 것 셋: app/core/settings.py +127 (외부 제공자 키·호출 상한) ·</text>
-  <text x="40" y="652" class="m">app/core/project_config.py +46 (구현 허용목록 교체 · 기동 검사 신설) · controller.py 14 (라우팅 두 축)</text>
-  <text x="640" y="637" class="ma">아키텍처 가드 73개 통과</text>
-  <text x="640" y="652" class="ma">예외는 이유와 함께 적혀 있다</text>
+  <rect x="24" y="612" width="1112" height="90" rx="5" class="bxg"/>
+  <text x="44" y="636" class="tb">코어 계약은 안 바뀌었다 — 그러나 「코어를 하나도 안 건드렸다」는 아니다</text>
+  <text x="44" y="659" class="m">여행으로 갈아끼우며 바뀐 것 셋 — app/core/settings.py +127 (외부 제공자 키 · 호출 상한)</text>
+  <text x="44" y="675" class="m">app/core/project_config.py +46 (구현 허용목록 교체 · 기동 검사 신설) · controller.py 14 (라우팅 두 축)</text>
+  <text x="44" y="691" class="ma">아키텍처 가드 73개 통과 · 예외는 이유와 함께 적혀 있다</text>
 </svg>
 </div>
 
@@ -306,7 +296,7 @@
 그런데 그것이 <strong>팀을 고르는 축</strong>이다. 「역할을 적었다」와 「범위를 검사한다」는 다르다.</p>
 
 <div class="diagram">
-<svg viewBox="0 0 1160 410" role="img" aria-labelledby="d2t d2d" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1160 420" role="img" aria-labelledby="d2t d2d" xmlns="http://www.w3.org/2000/svg">
   <title id="d2t">선언 · 과제 · 결과</title>
   <desc id="d2d">TeamManifest 의 선언이 TeamTask 의 각 칸과 대응한다. 공통 가드는 그중
   팀 ID·capability·degraded 셋만 검사하고, 도구와 예산은 조회 함수가 따로 본다.
@@ -314,67 +304,70 @@
   <style>
     .bx2{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
     .bx2a{fill:#ffffff;stroke:#a8720c;stroke-width:1.3}
-    .t2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;fill:#161c28}
-    .tb2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12.5px;font-weight:600;fill:#161c28}
-    .m2{font-family:'Geist Mono',monospace;font-size:9.5px;fill:#7a8599}
-    .ma2{font-family:'Geist Mono',monospace;font-size:9.5px;fill:#a8720c}
+    .t2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:11.5px;fill:#161c28}
+    .tb2{font-family:'Geist','Noto Sans KR',sans-serif;font-size:12px;font-weight:600;fill:#161c28}
+    .m2{font-family:'Geist Mono',monospace;font-size:9px;fill:#7a8599}
+    .ma2{font-family:'Geist Mono',monospace;font-size:9px;fill:#a8720c}
     .ln2{stroke:#a8720c;stroke-width:1.1;fill:none;stroke-dasharray:4 3}
-    .hd{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.1em}
+    .hd{font-family:'Geist Mono',monospace;font-size:8.5px;fill:#6b7488;letter-spacing:0.08em}
   </style>
+  <text x="24" y="24" class="hd">선언 — TeamManifest</text>
+  <rect x="24" y="34" width="356" height="222" rx="6" class="bx2a"/>
+  <text x="42" y="56" class="tb2">accepted_case_types</text>
+  <text x="42" y="72" class="ma2">Controller 가 팀을 고르는 축</text>
+  <text x="42" y="98" class="tb2">team_id</text>
+  <text x="42" y="114" class="m2">activity · dining · mobility · booking_handoff</text>
+  <text x="42" y="140" class="tb2">capabilities · default_capability</text>
+  <text x="42" y="156" class="m2">activity.check_cancelable</text>
+  <text x="42" y="169" class="m2">activity.check_feasible</text>
+  <text x="42" y="182" class="m2">activity.propose_change</text>
+  <text x="42" y="198" class="ma2">고를 장치가 없으면 폴백 3단계 — 05장</text>
+  <text x="42" y="224" class="tb2">allowed_tools · max_steps</text>
+  <text x="42" y="240" class="m2">read.booking · read.policy · read.place · read.weather / 6</text>
 
-  <text x="24" y="26" class="hd">선언 — TeamManifest</text>
-  <rect x="24" y="38" width="300" height="216" rx="6" class="bx2a"/>
-  <text x="44" y="62" class="tb2">accepted_case_types</text>
-  <text x="44" y="79" class="ma2">Controller 가 팀을 고르는 축. v1 에 빠져 있었다</text>
-  <text x="44" y="104" class="tb2">team_id</text>
-  <text x="44" y="121" class="m2">activity · dining · mobility · booking_handoff …</text>
-  <text x="44" y="146" class="tb2">capabilities · default_capability</text>
-  <text x="44" y="163" class="m2">activity.check_cancelable · activity.check_feasible · activity.propose_change</text>
-  <text x="44" y="178" class="ma2">고를 장치가 없으면 폴백 3단계로 — 05장</text>
-  <text x="44" y="203" class="tb2">allowed_tools · max_steps</text>
-  <text x="44" y="220" class="m2">read.booking · read.policy · read.place · read.weather</text>
-  <text x="44" y="236" class="m2">max_steps 6 (Lodging · Flight 는 2)</text>
+  <text x="440" y="24" class="hd">과제 — TeamTask</text>
+  <rect x="440" y="34" width="300" height="222" rx="6" class="bx2"/>
+  <text x="458" y="56" class="tb2">(Controller 가 이미 팀을 골랐다)</text>
+  <text x="458" y="72" class="ma2">case_type 은 여기 안 실린다</text>
+  <text x="458" y="98" class="tb2">team_id</text>
+  <text x="458" y="114" class="m2">선언과 다르면 → HANDOFF</text>
+  <text x="458" y="140" class="tb2">capability</text>
+  <text x="458" y="156" class="m2">선언한 capabilities 에 없으면</text>
+  <text x="458" y="169" class="m2">→ ESCALATE</text>
+  <text x="458" y="198" class="tb2">allowed_tools · context</text>
+  <text x="458" y="214" class="m2">도구 계층으로 그대로 넘어간다</text>
+  <text x="458" y="230" class="m2">context.degraded 면 → ESCALATE</text>
 
-  <text x="424" y="26" class="hd">과제 — TeamTask</text>
-  <rect x="424" y="38" width="290" height="216" rx="6" class="bx2"/>
-  <text x="444" y="62" class="tb2">(Controller 가 이미 팀을 골랐다)</text>
-  <text x="444" y="79" class="ma2">case_type 은 여기 안 실린다. _guard 는 안 본다</text>
-  <text x="444" y="104" class="tb2">team_id</text>
-  <text x="444" y="121" class="m2">선언과 다르면 → HANDOFF</text>
-  <text x="444" y="146" class="tb2">capability</text>
-  <text x="444" y="163" class="m2">선언한 capabilities 에 없으면 → ESCALATE</text>
-  <text x="444" y="203" class="tb2">allowed_tools · context</text>
-  <text x="444" y="220" class="m2">도구 계층으로 그대로 넘어간다</text>
-  <text x="444" y="236" class="m2">context.degraded 면 → ESCALATE</text>
+  <text x="800" y="24" class="hd">결과 — TeamResult</text>
+  <rect x="800" y="34" width="336" height="222" rx="6" class="bx2"/>
+  <text x="818" y="56" class="tb2">outcome · confidence</text>
+  <text x="818" y="82" class="tb2">evidence</text>
+  <text x="818" y="98" class="m2">조회마다 출처와 확인 시각을 붙인다</text>
+  <text x="818" y="124" class="tb2">next_action</text>
+  <text x="818" y="140" class="m2">RESPOND · HANDOFF · ESCALATE</text>
+  <text x="818" y="153" class="m2">WAIT_FOR_APPROVAL</text>
+  <text x="818" y="179" class="tb2">action_proposals</text>
+  <text x="818" y="195" class="ma2">담아서 돌려준다 — 실행하지 않는다</text>
+  <text x="818" y="211" class="m2">approval_required = True</text>
+  <text x="818" y="232" class="ma2">멱등 키는 서버가 다시 만든다</text>
+  <text x="818" y="245" class="ma2">controller.py:374</text>
 
-  <text x="814" y="26" class="hd">결과 — TeamResult</text>
-  <rect x="814" y="38" width="322" height="200" rx="6" class="bx2"/>
-  <text x="834" y="64" class="tb2">outcome · confidence</text>
-  <text x="834" y="90" class="tb2">evidence</text>
-  <text x="834" y="108" class="m2">조회마다 출처와 확인 시각을 쌓는다</text>
-  <text x="834" y="134" class="tb2">next_action</text>
-  <text x="834" y="152" class="m2">RESPOND · HANDOFF · ESCALATE · WAIT_FOR_APPROVAL</text>
-  <text x="834" y="178" class="tb2">action_proposals</text>
-  <text x="834" y="196" class="ma2">여기에 담아 돌려준다 — 실행하지 않는다</text>
-  <text x="834" y="216" class="m2">approval_required = True</text>
-  <text x="834" y="234" class="ma2">멱등 키를 팀이 붙이지만 서버가 다시 만든다 (controller.py:374)</text>
+  <path d="M380 108 C404 108 412 108 434 108" class="ln2"/>
+  <path d="M380 150 C404 150 412 150 434 150" class="ln2"/>
+  <path d="M380 234 C404 234 412 224 434 224" class="ln2"/>
+  <path d="M740 145 C764 145 772 145 794 145" class="ln2"/>
+  <text x="386" y="102" class="m2">team_id</text>
+  <text x="386" y="144" class="m2">capability</text>
+  <text x="386" y="218" class="m2">도구 · 예산</text>
 
-  <path d="M324 116 C374 116 374 116 418 116" class="ln2"/>
-  <path d="M324 158 C374 158 374 158 418 158" class="ln2"/>
-  <path d="M324 215 C374 215 374 215 418 215" class="ln2"/>
-  <path d="M714 150 C764 150 764 150 808 150" class="ln2"/>
-  <text x="332" y="110" class="m2">team_id</text>
-  <text x="332" y="152" class="m2">capability</text>
-  <text x="332" y="209" class="m2">도구 · 예산 — 가드가 아니라 _read 가 본다</text>
-
-  <rect x="24" y="284" width="1112" height="100" rx="6" fill="#f7f8fb" stroke="#dbe0ea" stroke-dasharray="3 3"/>
+  <rect x="24" y="286" width="1112" height="112" rx="6" fill="#f7f8fb" stroke="#dbe0ea" stroke-dasharray="3 3"/>
   <text x="44" y="310" class="tb2">공통 가드 — 셋을 다 본다. 순서에 뜻이 있다 (_base.py:57 · 61 · 63)</text>
-  <text x="44" y="334" class="t2">1 · team_id — 남의 일이면 <tspan class="ma2">판단하기 전에</tspan> 넘긴다 (HANDOFF)</text>
-  <text x="44" y="354" class="t2">2 · capability — 못 하는 일이면 <tspan class="ma2">시작하지 않는다</tspan> (unsupported_capability)</text>
-  <text x="44" y="374" class="t2">3 · context.degraded — 쓸 정책 근거가 하나도 없으면 <tspan class="ma2">확정 답을 만들지 않는다</tspan> (degraded_context)</text>
-  <text x="700" y="334" class="m2">셋 다 통과하면 _guard() 가 None 을 돌려주고</text>
-  <text x="700" y="354" class="m2">각 Team 의 execute() 가 이어진다.</text>
-  <text x="700" y="374" class="ma2">TravelTeamBase 는 execute() 를 대신 실행하지 않는다.</text>
+  <text x="44" y="334" class="t2">1 · team_id — 남의 일이면 판단하기 전에 넘긴다 (HANDOFF)</text>
+  <text x="44" y="356" class="t2">2 · capability — 못 하는 일이면 시작하지 않는다 (unsupported_capability)</text>
+  <text x="44" y="378" class="t2">3 · context.degraded — 쓸 정책 근거가 없으면 확정 답을 만들지 않는다 (degraded_context)</text>
+  <text x="660" y="334" class="m2">셋 다 통과하면 _guard() 가 None 을 돌려주고</text>
+  <text x="660" y="356" class="m2">각 Team 의 execute() 가 이어진다.</text>
+  <text x="660" y="378" class="ma2">TravelTeamBase 는 execute() 를 대신 실행하지 않는다.</text>
 </svg>
 </div>
 
@@ -390,17 +383,16 @@
 이 그림의 요점이다.</p>
 
 <div class="diagram">
-<svg viewBox="0 0 1160 430" role="img" aria-labelledby="d3t d3d" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1160 470" role="img" aria-labelledby="d3t d3d" xmlns="http://www.w3.org/2000/svg">
   <title id="d3t">Team 내부 실행과 중단</title>
-  <desc id="d3d">가드 셋을 순서대로 검사하고 첫 실패에서 반환한다. 조회는 허용 목록, 중복,
-  예산 세 가지로 막힌다. 판정 뒤 결과는 응답, 모름, 에스컬레이션, 승인 대기 제안으로 나뉜다.</desc>
+  <desc id="d3d">가드 셋을 순서대로 검사하고 첫 실패에서 반환한다. 조회는 허용 목록,
+  중복, 예산 세 가지로 막힌다. 판정 뒤 결과는 응답, 모름, 에스컬레이션,
+  승인 대기 제안으로 나뉜다.</desc>
   <defs>
     <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/>
-    </marker>
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#6b7488"/></marker>
     <marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/>
-    </marker>
+      <path d="M0,1 L7,4.5 L0,8 Z" fill="#a8720c"/></marker>
   </defs>
   <style>
     .b3{fill:#ffffff;stroke:#dbe0ea;stroke-width:1}
@@ -413,88 +405,85 @@
     .l3{stroke:#6b7488;stroke-width:1;fill:none;marker-end:url(#a3)}
     .l3a{stroke:#a8720c;stroke-width:1.1;fill:none;marker-end:url(#a4)}
   </style>
-
   <rect x="24" y="40" width="140" height="52" rx="5" class="b3"/>
-  <text x="94" y="62" class="tb3" text-anchor="middle">execute(task)</text>
-  <text x="94" y="79" class="m3" text-anchor="middle">각 Team 이 직접 부른다</text>
+  <text x="94" y="64" class="tb3" text-anchor="middle">execute(task)</text>
+  <text x="94" y="81" class="m3" text-anchor="middle">각 Team 이 직접 부른다</text>
 
-  <rect x="200" y="40" width="128" height="52" rx="5" class="b3a"/>
-  <text x="264" y="62" class="tb3" text-anchor="middle">1 · team_id</text>
-  <text x="264" y="79" class="m3" text-anchor="middle">_base.py:57</text>
-  <rect x="364" y="40" width="128" height="52" rx="5" class="b3a"/>
-  <text x="428" y="62" class="tb3" text-anchor="middle">2 · capability</text>
-  <text x="428" y="79" class="m3" text-anchor="middle">_base.py:61</text>
-  <rect x="528" y="40" width="128" height="52" rx="5" class="b3a"/>
-  <text x="592" y="62" class="tb3" text-anchor="middle">3 · degraded</text>
-  <text x="592" y="79" class="m3" text-anchor="middle">_base.py:63</text>
+  <rect x="192" y="40" width="126" height="52" rx="5" class="b3a"/>
+  <text x="255" y="64" class="tb3" text-anchor="middle">1 · team_id</text>
+  <text x="255" y="81" class="m3" text-anchor="middle">_base.py:57</text>
+  <rect x="346" y="40" width="126" height="52" rx="5" class="b3a"/>
+  <text x="409" y="64" class="tb3" text-anchor="middle">2 · capability</text>
+  <text x="409" y="81" class="m3" text-anchor="middle">_base.py:61</text>
+  <rect x="500" y="40" width="126" height="52" rx="5" class="b3a"/>
+  <text x="563" y="64" class="tb3" text-anchor="middle">3 · degraded</text>
+  <text x="563" y="81" class="m3" text-anchor="middle">_base.py:63</text>
 
-  <line x1="164" y1="66" x2="194" y2="66" class="l3"/>
-  <line x1="328" y1="66" x2="358" y2="66" class="l3"/>
-  <line x1="492" y1="66" x2="522" y2="66" class="l3"/>
+  <line x1="164" y1="66" x2="186" y2="66" class="l3"/>
+  <line x1="318" y1="66" x2="340" y2="66" class="l3"/>
+  <line x1="472" y1="66" x2="494" y2="66" class="l3"/>
 
-  <rect x="200" y="118" width="128" height="34" rx="4" class="b3s"/>
-  <text x="264" y="140" class="t3" text-anchor="middle">HANDOFF</text>
-  <rect x="364" y="118" width="128" height="34" rx="4" class="b3s"/>
-  <text x="428" y="140" class="t3" text-anchor="middle">ESCALATE</text>
-  <rect x="528" y="118" width="128" height="34" rx="4" class="b3s"/>
-  <text x="592" y="140" class="t3" text-anchor="middle">ESCALATE</text>
-  <line x1="264" y1="92" x2="264" y2="112" class="l3a"/>
-  <line x1="428" y1="92" x2="428" y2="112" class="l3a"/>
-  <line x1="592" y1="92" x2="592" y2="112" class="l3a"/>
-  <text x="272" y="108" class="m3">다르면</text>
-  <text x="436" y="108" class="m3">없으면</text>
-  <text x="600" y="108" class="m3">참이면</text>
+  <rect x="192" y="120" width="126" height="32" rx="4" class="b3s"/>
+  <text x="255" y="141" class="t3" text-anchor="middle">HANDOFF</text>
+  <rect x="346" y="120" width="126" height="32" rx="4" class="b3s"/>
+  <text x="409" y="141" class="t3" text-anchor="middle">ESCALATE</text>
+  <rect x="500" y="120" width="126" height="32" rx="4" class="b3s"/>
+  <text x="563" y="141" class="t3" text-anchor="middle">ESCALATE</text>
+  <line x1="255" y1="92" x2="255" y2="114" class="l3a"/>
+  <line x1="409" y1="92" x2="409" y2="114" class="l3a"/>
+  <line x1="563" y1="92" x2="563" y2="114" class="l3a"/>
+  <text x="262" y="109" class="m3">다르면</text>
+  <text x="416" y="109" class="m3">없으면</text>
+  <text x="570" y="109" class="m3">참이면</text>
 
-  <rect x="700" y="30" width="240" height="120" rx="6" class="b3a"/>
-  <text x="820" y="52" class="tb3" text-anchor="middle">_read — 막는 것 셋</text>
-  <text x="716" y="74" class="t3">허용 목록 밖 → ToolNotAllowed (:291~292)</text>
-  <text x="716" y="94" class="t3">같은 인자 재호출 → ToolLoopExceeded (:301~302)</text>
-  <text x="716" y="114" class="t3">부른 수 ≥ 예산 → ToolBudgetExceeded (:303~306)</text>
-  <text x="716" y="136" class="ma3">budget = manifest.max_steps (_base.py:78)</text>
-  <line x1="656" y1="66" x2="694" y2="80" class="l3"/>
+  <rect x="676" y="30" width="460" height="86" rx="6" class="b3a"/>
+  <text x="906" y="52" class="tb3" text-anchor="middle">_read — 막는 것 셋</text>
+  <text x="694" y="72" class="t3">허용 목록 밖 → ToolNotAllowed (read_tools.py:291~292)</text>
+  <text x="694" y="90" class="t3">같은 인자 재호출 → ToolLoopExceeded (:301~302)</text>
+  <text x="694" y="108" class="t3">부른 수 ≥ 예산 → ToolBudgetExceeded (:303~306)</text>
+  <line x1="626" y1="66" x2="670" y2="66" class="l3"/>
 
-  <rect x="976" y="30" width="160" height="120" rx="6" class="b3"/>
-  <text x="1056" y="50" class="tb3" text-anchor="middle">_evidence</text>
-  <text x="1056" y="70" class="m3" text-anchor="middle">출처 · 확인 시각</text>
-  <text x="1056" y="86" class="m3" text-anchor="middle">빈 값은 안 넣는다</text>
-  <text x="1056" y="106" class="ma3" text-anchor="middle">★base 를 줘야</text>
-  <text x="1056" y="120" class="ma3" text-anchor="middle">앞 근거 위에 쌓인다</text>
-  <text x="1056" y="140" class="m3" text-anchor="middle">_base.py:82 · :97</text>
-  <line x1="940" y1="90" x2="970" y2="90" class="l3"/>
+  <rect x="676" y="128" width="460" height="72" rx="6" class="b3"/>
+  <text x="906" y="150" class="tb3" text-anchor="middle">_evidence — 근거를 붙인다</text>
+  <text x="694" y="170" class="t3">출처 · 확인 시각을 붙이고 빈 값은 안 넣는다</text>
+  <text x="694" y="188" class="ma3">base 를 줘야 앞 근거 위에 쌓인다 (_base.py:82 · :97)</text>
+  <line x1="906" y1="116" x2="906" y2="122" class="l3"/>
 
-  <rect x="24" y="212" width="1112" height="42" rx="5" fill="#f7f8fb" stroke="#dbe0ea"/>
-  <text x="580" y="238" class="tb3" text-anchor="middle">판정 — 코드가 한다 (v11 §4-D 의 계약. 공통 부품에는 LLM 호출이 없다)</text>
+  <rect x="24" y="228" width="1112" height="42" rx="5" fill="#f7f8fb" stroke="#dbe0ea"/>
+  <text x="580" y="254" class="tb3" text-anchor="middle">판정 — 코드가 한다 (v11 §4-D 의 계약. 공통 부품에는 LLM 호출이 없다)</text>
 
-  <rect x="24" y="290" width="256" height="76" rx="5" class="b3"/>
-  <text x="152" y="310" class="tb3" text-anchor="middle">_result — 결과를 만든다</text>
-  <text x="152" y="330" class="t3" text-anchor="middle">RESPOND · HANDOFF · ESCALATE ·</text>
-  <text x="152" y="346" class="t3" text-anchor="middle">WAIT_FOR_APPROVAL 을 다 만든다</text>
-  <text x="152" y="362" class="m3" text-anchor="middle">_base.py:125 · 전용이 아니다</text>
+  <rect x="24" y="304" width="266" height="80" rx="5" class="b3"/>
+  <text x="157" y="326" class="tb3" text-anchor="middle">_result — 결과를 만든다</text>
+  <text x="157" y="345" class="t3" text-anchor="middle">네 갈래를 다 만드는 공용 함수</text>
+  <text x="157" y="362" class="m3" text-anchor="middle">RESPOND 전용이 아니다</text>
+  <text x="157" y="377" class="m3" text-anchor="middle">_base.py:125</text>
 
-  <rect x="304" y="290" width="256" height="76" rx="5" class="b3s"/>
-  <text x="432" y="310" class="tb3" text-anchor="middle">_unknown</text>
-  <text x="432" y="330" class="t3" text-anchor="middle">「모름」 사유를 가진 ESCALATE 다</text>
-  <text x="432" y="352" class="ma3" text-anchor="middle">_escalate 를 부른다 (_base.py:154)</text>
+  <rect x="306" y="304" width="266" height="80" rx="5" class="b3s"/>
+  <text x="439" y="326" class="tb3" text-anchor="middle">_unknown</text>
+  <text x="439" y="345" class="t3" text-anchor="middle">「모름」 사유를 가진 ESCALATE</text>
+  <text x="439" y="362" class="m3" text-anchor="middle">값이 없는 것과 모르는 것은 다르다</text>
+  <text x="439" y="377" class="ma3" text-anchor="middle">_escalate 를 부른다 (_base.py:154)</text>
 
-  <rect x="584" y="290" width="256" height="76" rx="5" class="b3"/>
-  <text x="712" y="314" class="tb3" text-anchor="middle">_escalate</text>
-  <text x="712" y="334" class="t3" text-anchor="middle">실패 사유를 붙여 사람에게</text>
-  <text x="712" y="352" class="m3" text-anchor="middle">_base.py:135</text>
+  <rect x="588" y="304" width="266" height="80" rx="5" class="b3"/>
+  <text x="721" y="326" class="tb3" text-anchor="middle">_escalate</text>
+  <text x="721" y="345" class="t3" text-anchor="middle">실패 사유를 붙여 사람에게</text>
+  <text x="721" y="362" class="m3" text-anchor="middle">failure_code 를 남긴다</text>
+  <text x="721" y="377" class="m3" text-anchor="middle">_base.py:135</text>
 
-  <rect x="864" y="290" width="272" height="76" rx="5" class="b3a"/>
-  <text x="1000" y="310" class="tb3" text-anchor="middle">_proposal — ActionProposal 만 만든다</text>
-  <text x="1000" y="330" class="t3" text-anchor="middle">approval_required = True. 실행하지 않는다</text>
-  <text x="1000" y="346" class="t3" text-anchor="middle">next_action 은 부르는 쪽이 정한다</text>
-  <text x="1000" y="362" class="m3" text-anchor="middle">_base.py:160 · 키 생성 :172</text>
+  <rect x="870" y="304" width="266" height="80" rx="5" class="b3a"/>
+  <text x="1003" y="326" class="tb3" text-anchor="middle">_proposal</text>
+  <text x="1003" y="345" class="t3" text-anchor="middle">ActionProposal 만 만든다</text>
+  <text x="1003" y="362" class="m3" text-anchor="middle">next_action 은 부르는 쪽이 정한다</text>
+  <text x="1003" y="377" class="m3" text-anchor="middle">_base.py:160 · 키 생성 :172</text>
 
-  <line x1="300" y1="254" x2="200" y2="284" class="l3"/>
-  <line x1="480" y1="254" x2="440" y2="284" class="l3"/>
-  <line x1="680" y1="254" x2="712" y2="284" class="l3"/>
-  <line x1="860" y1="254" x2="980" y2="284" class="l3a"/>
+  <line x1="300" y1="270" x2="200" y2="298" class="l3"/>
+  <line x1="480" y1="270" x2="440" y2="298" class="l3"/>
+  <line x1="680" y1="270" x2="720" y2="298" class="l3"/>
+  <line x1="860" y1="270" x2="980" y2="298" class="l3a"/>
 
-  <text x="24" y="392" class="m3">★ _unknown 은 독립 종료가 아니라 _escalate 를 부른다 — 「값이 없는 것」과 「모르는 것」은 다르고, 그 구분이 결과에 남는다.</text>
-  <text x="24" y="408" class="m3">★ _result 는 네 갈래를 다 만드는 공용 함수다. next_action 은 부르는 쪽이 넘긴다. wait_reason 은 안 넘겼거나 None 이고(:127) 그 next_action 에 정해진 사유가 있을 때만(:129) _result 가 채운다.</text>
-  <text x="24" y="424" class="ma3">★ 예산은 「받아 온 seen 의 크기」에 걸린다 — len(seen) ≥ budget (read_tools.py:303~306). 성공 횟수가 아니라 시도 기록이다(:307 에서 실행 전에 넣는다). 도구를 안 부르는 반복까지 막는지는 확인하지 않았다.</text>
+  <text x="24" y="412" class="m3">★ _unknown 은 독립 종료가 아니라 _escalate 를 부른다 — 값이 없는 것과 모르는 것은 다르고, 그 구분이 결과에 남는다.</text>
+  <text x="24" y="430" class="m3">★ _result 는 네 갈래를 다 만든다. next_action 은 부르는 쪽이 넘기고, wait_reason 은 안 넘겼거나 None 이고(:127) 그 next_action 에 정해진 사유가 있을 때만(:129) 채운다.</text>
+  <text x="24" y="448" class="ma3">★ 예산은 받아 온 seen 의 크기에 걸린다. 성공 횟수가 아니라 시도 기록이다(:307). 도구를 안 부르는 반복까지 막는지는 확인하지 않았다.</text>
 </svg>
 </div>
 
@@ -547,51 +536,163 @@
 
 
 <h2><span class="n">05</span>여섯 Team 은 무엇이 다른가</h2>
-<p class="lead">공통 뼈대는 02·03 에서 봤다. 여기서는 <strong>다른 것만</strong> 적는다.</p>
+<p class="lead">공통 뼈대는 02·03 에서 봤다. 여기서는 <strong>각 팀이 실제로 무엇을 조회하고
+어떻게 갈라지는지</strong>를 적는다. <span class="st st-ok">코드 확인</span> 2026-09-10 에
+다섯 파일을 열어 확인했고, <strong>코덱스(gpt-6-astra)가 같은 파일로 대조했다</strong>.</p>
 
+<div class="note">
+  <strong>공통으로 먼저 도는 것.</strong> 다섯 팀 모두 <code>execute()</code> 첫머리에서
+  <code>_guard()</code> 를 부르고 <strong>결과가 있으면 그 자리에서 돌려준다.</strong>
+  아래 설명은 전부 <strong>가드를 통과한 뒤</strong>의 이야기다.
+</div>
+
+<h3>Activity — 274줄 · 조건부 기상 조회와 변경 승인 대기</h3>
 <table>
-  <thead><tr>
-    <th style="width:14%">Team</th><th style="width:10%">받는 case_type</th>
-    <th style="width:24%">capability</th><th style="width:20%">조회하는 것</th>
-    <th style="width:32%">고유한 분기</th>
-  </tr></thead>
+  <thead><tr><th style="width:22%">capability</th><th style="width:44%">무엇을 하나</th><th style="width:18%">조회</th><th style="width:16%">next_action</th></tr></thead>
   <tbody>
-    <tr><td><strong>Activity</strong><br><span class="mono">274줄 · max_steps 6</span></td>
-        <td class="mono">activity</td>
-        <td class="mono">activity.check_cancelable<br>activity.check_feasible<br>activity.propose_change<br><span style="color:#a8720c">기본 check_feasible</span></td>
-        <td class="mono">booking · policy<br>place · weather</td>
-        <td><strong>기상은 조건부로만 본다</strong> — 장소가 날씨에 걸리는 활동일 때만 조회한다.
-            실내 활동에 기상 판정을 걸면 틀린 이유로 불가가 난다</td></tr>
-    <tr><td><strong>Dining</strong><br><span class="mono">96줄 · max_steps 6</span></td>
-        <td class="mono">dining</td>
-        <td class="mono">dining.check_open<br>dining.check_conditions<br><span style="color:#a8720c">기본 check_open</span></td>
-        <td class="mono">place · policy<br>booking</td>
-        <td>동행 조건(식단 등)을 <strong>Case 상태</strong>에서 읽는다 — 항목이 아니라 여행 수준 조건이다</td></tr>
-    <tr><td><strong>Mobility</strong><br><span class="mono">80줄 · max_steps 6</span></td>
-        <td class="mono">mobility</td>
-        <td class="mono">mobility.check_route<br>mobility.status<br>mobility.exception<br><span style="color:#a8720c">기본 check_route</span></td>
-        <td class="mono">route · transit<br>policy</td>
-        <td><strong>여섯 중 유일하게 <code>select_capability</code> 를 구현했다</strong> —
-            본문 낱말을 보고 capability 를 고른다</td></tr>
-    <tr><td><strong>Booking Handoff</strong><br><span class="mono">94줄 · max_steps 6</span></td>
-        <td class="mono">booking</td>
-        <td class="mono">booking.verify<br>booking.prepare_change<br>booking.prepare_cancel<br><span style="color:#a8720c">기본 verify</span></td>
-        <td class="mono">booking · policy<br>supplier</td>
-        <td><strong>공급자 원장과 우리 기록을 따로 읽어 대조한다</strong> — 한 곳에서 읽으면
-            자기 자신과 비교하는 꼴이 된다</td></tr>
-    <tr><td><strong>Lodging / Flight</strong><br><span class="mono">73줄 · max_steps 2</span></td>
-        <td class="mono">lodging<br>flight</td>
-        <td class="mono">lodging.status<br>flight.status<br><span style="color:#a8720c">그것이 곧 기본</span></td>
-        <td class="mono">booking</td>
-        <td><strong>잠긴 예약 조회로 범위를 제한했다.</strong> 기능 제한이지 미구현이 아니다 —
-            capability 가 하나뿐이라 고를 것이 없다</td></tr>
+    <tr><td colspan="2"><strong>공통</strong> — 예약과 규정을 읽고 예약 시각을 확인한다 <span class="mono">(:66~83)</span></td>
+        <td class="mono">read.booking<br>read.policy</td><td class="mono">셋 다 없으면<br>_unknown</td></tr>
+    <tr><td class="mono">activity.<br>check_cancelable</td>
+        <td>취소 기한과 남은 시간을 비교한다 <span class="mono">(:94~125)</span>.
+            ★<strong>기한과 남은 시간이 같으면 기한 안</strong>이다.
+            위약금율은 조건에 맞는 구간 중 <strong>최댓값</strong>을 택한다.
+            ★<strong>위약금율을 몰라도 금액을 지어내지 않는다</strong></td>
+        <td class="mono">—</td><td class="mono">RESPOND</td></tr>
+    <tr><td class="mono">activity.<br>check_feasible</td>
+        <td><strong>정원을 먼저 본다</strong> — 초과면 즉시 응답한다 <span class="mono">(:129~136)</span>.
+            초과가 아니면 장소를 조회하고, <strong>그 장소가 기상에 걸리는 활동일 때만</strong>
+            날씨를 본다 <span class="mono">(:138~157)</span>.
+            <br>★<strong>정원이나 인원이 없으면 정원 검사를 건너뛴다.</strong>
+            ★<strong>장소를 못 읽으면 「모름」이 아니라 경고를 달고 성립으로 간다</strong></td>
+        <td class="mono">read.place<br>read.weather<br>(조건부)</td><td class="mono">RESPOND</td></tr>
+    <tr><td class="mono">activity.<br>propose_change</td>
+        <td>대안을 실행하지 않고 제안으로 올린다 <span class="mono">(:232~244)</span>.
+            제안에 담는 것은 <code>booking_id</code> 와 사유다.
+            ★<strong>이 파일에는 대안 생성도 LLM 호출도 없다</strong></td>
+        <td class="mono">—</td><td class="mono">WAIT_FOR_<br>APPROVAL</td></tr>
   </tbody>
 </table>
-<p class="lead"><span class="st st-ok">코드 확인</span> 2026-09-10 기준.
-capability 이름 · <code>accepted_case_types</code> · <code>max_steps</code> ·
-<code>default_capability</code> 는 각 파일의 <code>TeamManifest</code> 에서,
-<strong>줄수는 파일 자체를 세어서</strong> 확인했다.
-「고유한 분기」는 <strong>각 파일의 판정 본문을 읽은 것</strong>이다 — 선언만으로는 알 수 없다.</p>
+<div class="note">
+  ★★<strong>날씨로 「불가」를 만들지 않는다.</strong> 임계치를 넘어도 <strong>주의 문구만</strong>
+  붙는다 <span class="mono">(:156~180 · :199~229)</span>. 예보 객체가 아예 없으면 「모름」이지만,
+  강수확률·풍속이 둘 다 없으면 경고로 처리하고 정상 결과를 돌려준다.
+  <strong>「비가 와서 못 한다」는 판정은 지금 코드에 없다</strong> — 대표 시연이 그 자리를 쓰려면
+  이것부터 봐야 한다.
+  <br><br>
+  전용 <code>_weather_note()</code> 는 <strong>46줄</strong>(<span class="mono">:184~229</span>)이다.
+  기상 요청에는 좌표와 예약 시각을 넘기고, 답변에는 <strong>예보 대상 시각</strong>을 적는다 —
+  조회 시각은 decisions 에만 담는다.
+</div>
+
+<h3>Dining — 96줄 · 영업 여부와 동행 조건</h3>
+<table>
+  <thead><tr><th style="width:22%">capability</th><th style="width:44%">무엇을 하나</th><th style="width:18%">조회</th><th style="width:16%">next_action</th></tr></thead>
+  <tbody>
+    <tr><td colspan="2"><strong>공통</strong> — 예약을 읽고 <strong>그 예약의 <code>place_id</code> 로</strong>
+        장소를 조회한다 <span class="mono">(:46~57)</span>. ★<strong>영업 정보의 확인 시각이 없으면
+        거기서 멈춘다</strong> <span class="mono">(:60~65)</span></td>
+        <td class="mono">read.booking<br>read.place</td><td class="mono">confirmed_at<br>없으면 _unknown</td></tr>
+    <tr><td class="mono">dining.check_open</td>
+        <td>그 시각의 영업 여부를 본다 <span class="mono">(:67~79)</span>.
+            ★응답에 <strong>「제공자 예정 정보이고 현장 확인이 아니다」</strong>는 경고가 붙는다</td>
+        <td class="mono">—</td><td class="mono">RESPOND</td></tr>
+    <tr><td class="mono">dining.<br>check_conditions</td>
+        <td>요청한 식단 조건을 장소가 아는 조건과 대조한다 <span class="mono">(:81~96)</span>.
+            <strong>양쪽 어디에도 없는 항목은 「모름」</strong>으로 남긴다</td>
+        <td class="mono">—</td><td class="mono">RESPOND</td></tr>
+  </tbody>
+</table>
+<div class="note gap">
+  ★★<strong>여기 결함 후보가 있다.</strong> 코덱스 대조에서 나왔다
+  <span class="mono">(:81~96)</span>. 장소는 <strong>되는 조건</strong>과
+  <strong>안 되는 조건</strong>을 따로 갖는데, <strong>안 되는 조건에 걸렸을 때의 실패 분기가 없다</strong>.
+  그래서 —
+  <ul style="margin:8px 0 0; padding-left:20px">
+    <li>요청 조건 중 <strong>일부만 충족해도 「모두 만족」</strong>으로 답할 수 있다</li>
+    <li>충족 항목이 하나도 없으면 요청이 있었는데도 <strong>「요청한 조건이 없다」</strong>고 답한다</li>
+    <li><strong>아이 동반을 별도로 판정하는 코드가 없다</strong> — v1 브리핑은 있다고 적었다</li>
+  </ul>
+  <strong>불충족을 성공처럼 안내할 수 있다.</strong> v11 §8 의 첫 지표가 「필수 조건 위반 0건」이므로
+  이건 그 지표를 직접 건드린다. <span class="st st-unk">확인 필요</span>
+</div>
+
+<h3>Mobility — 80줄 · 유일한 capability 선택 훅</h3>
+<table>
+  <thead><tr><th style="width:22%">무엇</th><th style="width:62%">어떻게</th><th style="width:16%">next_action</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">select_capability</td>
+        <td><strong>여행 다섯 팀 중 이 팀만 갖고 있다</strong> <span class="mono">(:37~43)</span>.
+            요청 종류가 <code>mobility</code> 이고 본문에 사건 표지
+            (<span class="mono">놓쳤 · 못 탔 · 끊겼 · 지연됐 · 결항 · 운행 중단</span>) 중 하나가
+            있으면 <code>mobility.exception</code> 을 고르고, 아니면 <code>None</code> 을 돌려
+            폴백에 맡긴다</td>
+        <td class="mono">—</td></tr>
+    <tr><td class="mono">세 capability<br>공통 경로</td>
+        <td>★<strong>capability 별 실행 분기가 없다</strong> <span class="mono">(:45~80)</span> —
+            셋이 같은 길을 간다. <code>read.route</code> 다음 <code>read.transit</code> 을 부르고
+            (구간을 못 읽으면 거기서 멈춘다), 여유 시간과 이동 시간을 비교한다
+            <span class="mono">(:65~80)</span></td>
+        <td class="mono">RESPOND</td></tr>
+  </tbody>
+</table>
+<div class="note gap">
+  ★<strong>주석과 코드가 어긋난 자리가 하나 있다.</strong> 주석은 물음표로 끝나는 단순 문의를
+  제외한다고 적었는데 <strong>그 로직이 없다</strong> <span class="mono">(:33~43)</span>.
+  「결항 기준은?」 같은 질문도 사건 처리로 간다. <span class="st st-unk">확인 필요</span>
+  <br><br>
+  ★<strong>막차가 끊겨도 「불가」가 되지 않는다.</strong> <code>last_departure_ok</code> 가 거짓이어도
+  성립 판정을 바꾸지 않고 경고만 붙인다 <span class="mono">(:45~80)</span>.
+  그리고 <strong>사건 capability 에 별도의 복구·대안 경로가 없다</strong> — 이름만 다르고 하는 일이 같다.
+  <br><br>
+  ★<code>read.policy</code> 는 <strong>허용 목록에만 있고 실제로 안 부른다</strong>
+  <span class="mono">(:25 · :45~80)</span>.
+</div>
+
+<h3>Booking Handoff — 94줄 · 공급자 원장 대조와 변경·취소 준비</h3>
+<table>
+  <thead><tr><th style="width:22%">capability</th><th style="width:44%">무엇을 하나</th><th style="width:18%">조회</th><th style="width:16%">next_action</th></tr></thead>
+  <tbody>
+    <tr><td colspan="2"><strong>공통</strong> — <code>read.booking</code> 으로 우리 기록을 읽는다 <span class="mono">(:45~49)</span></td>
+        <td class="mono">read.booking</td><td class="mono">없으면 _unknown</td></tr>
+    <tr><td class="mono">booking.verify</td>
+        <td><strong>공급자 원장을 따로 읽어 우리 기록과 대조한다</strong> <span class="mono">(:58~72)</span>.
+            한 곳에서 읽으면 자기 자신과 비교하는 꼴이 된다</td>
+        <td class="mono">read.supplier</td><td class="mono">RESPOND</td></tr>
+    <tr><td class="mono">booking.<br>prepare_change<br>prepare_cancel</td>
+        <td>규정을 읽고 <code>booking.change</code> / <code>booking.cancel</code> 제안을 만든다
+            <span class="mono">(:77~94)</span>. 규정이 없으면 먼저 「모름」</td>
+        <td class="mono">read.policy</td><td class="mono">WAIT_FOR_<br>APPROVAL</td></tr>
+  </tbody>
+</table>
+<div class="note gap">
+  ★★<strong>v11 §5 가 이 팀에 기대한 것과 코드가 다르다.</strong> 계획서는
+  「바꿔야 할 것·대안·차액을 정리한다」고 적었는데, <strong>지금 준비 단계는 규정이 있는지만
+  보고 위약금·대안·차액을 계산하지 않는다</strong> <span class="mono">(:77~94)</span>.
+  제안에 담기는 것은 <code>booking_id</code> 와 사유뿐이다.
+  <br><br>
+  ★<strong>대조가 상태 값 같음만 본다.</strong> 양쪽 상태가 다 비어 있으면
+  <strong>「없음 = 없음」으로 일치 판정</strong>이 날 수 있다 <span class="mono">(:65~72)</span>.
+  그리고 <strong>불일치가 나와도 응답만 하고 인계 작업을 만들지 않는다</strong>.
+  <span class="st st-unk">확인 필요</span>
+</div>
+
+<h3>Lodging / Flight — 73줄 · 잠긴 예약 조회</h3>
+<table>
+  <thead><tr><th style="width:22%">무엇</th><th style="width:62%">어떻게</th><th style="width:16%">next_action</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">lodging.status<br>flight.status</td>
+        <td>한 파일에 두 클래스이고 <strong>공통 조회 구현을 함께 쓴다</strong>
+            <span class="mono">(:21~37 · :46 · :64)</span>. 예약을 읽어 「잠긴 예약」이라는 이름으로
+            근거에 붙이고 상태를 돌려준다. <strong>변경 제안은 만들지 않는다</strong></td>
+        <td class="mono">RESPOND</td></tr>
+  </tbody>
+</table>
+<div class="note gap">
+  ★<strong>「잠겼다」를 검사하지 않는다.</strong> 예약이 있으면 <strong>무조건 잠긴 것으로 취급</strong>한다
+  <span class="mono">(:27~37)</span>. 공급자 상태도, 숙박·항공의 세부 조건도 조회하지 않는다.
+  <br>★<strong>이건 결함이 아니라 선언한 범위다</strong> — 계획서가 「등록만 · 잠긴 예약으로만 취급」이라고
+  정했다(v11 §5). 다만 <strong>범위 제한이지 「되는 것」이 아니라는 표시</strong>가 필요하다.
+</div>
 
 <div class="note">
   <strong>capability 접두가 팀 이름과 다른 곳이 하나 있다.</strong>
@@ -612,9 +713,36 @@ capability 이름 · <code>accepted_case_types</code> · <code>max_steps</code> 
   <br><br>
   ★그래서 문제는 「고를 수 없다」가 아니라 <strong>「항상 같은 것으로 간다」</strong>이다.
   사건 신고가 와도 Activity 는 <code>activity.check_feasible</code> 로 간다.
-  <span class="mono" style="font-size:11px">★훅·폴백 순서는 registry.py 에서 확인했다.
-  실제 라우팅 결과는 실행해 봐야 안다.</span>
 </div>
+
+<h3>「모름」으로 돌려주는 사유 — 코드에 적힌 그대로</h3>
+<p class="lead">★<strong>「값이 없다」와 「모른다」를 가르는 자리가 여기다.</strong>
+아래 문자열이 그대로 답변에 실린다.</p>
+<table>
+  <thead><tr><th style="width:16%">팀</th><th style="width:26%">사유</th><th style="width:42%">언제</th><th style="width:16%">줄</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="5">Activity</td><td class="mono">예약 내역</td><td class="mono">booking is None</td><td class="mono">:76~77</td></tr>
+    <tr><td class="mono">취소·환급 규정</td><td class="mono">not policy</td><td class="mono">:78~79</td></tr>
+    <tr><td class="mono">예약 시각</td><td class="mono">시각을 못 읽는다</td><td class="mono">:81~83</td></tr>
+    <tr><td class="mono">취소 기한</td><td class="mono">규정에 기한이 없다</td><td class="mono">:94~96</td></tr>
+    <tr><td class="mono">기상 정보</td><td class="mono">기상 민감 활동인데 예보가 없다</td><td class="mono">:145~157</td></tr>
+    <tr><td rowspan="5">Dining</td><td class="mono">예약 내역</td><td class="mono">booking is None</td><td class="mono">:49~50</td></tr>
+    <tr><td class="mono">장소·영업 정보</td><td class="mono">place is None</td><td class="mono">:56~57</td></tr>
+    <tr><td class="mono">영업 정보의 확인 시각</td><td class="mono">confirmed_at is None</td><td class="mono">:60~62</td></tr>
+    <tr><td class="mono">그 시각의 영업 여부</td><td class="mono">open_at_slot is None</td><td class="mono">:67~69</td></tr>
+    <tr><td class="mono">조건 (모르는 항목 나열)</td><td class="mono">되는 조건에도 안 되는 조건에도 없다</td><td class="mono">:83~88</td></tr>
+    <tr><td rowspan="3">Mobility</td><td class="mono">구간 정보</td><td class="mono">route is None</td><td class="mono">:54~55</td></tr>
+    <tr><td class="mono">운행 정보</td><td class="mono">transit is None</td><td class="mono">:61~62</td></tr>
+    <tr><td class="mono">이동 시간 또는 여유 시간</td><td class="mono">둘 중 하나가 없다</td><td class="mono">:65~68</td></tr>
+    <tr><td rowspan="3">Booking<br>Handoff</td><td class="mono">예약 내역</td><td class="mono">booking is None</td><td class="mono">:48~49</td></tr>
+    <tr><td class="mono">공급자 예약 상태</td><td class="mono">supplier is None</td><td class="mono">:62~63</td></tr>
+    <tr><td class="mono">변경·취소 규정</td><td class="mono">not policy</td><td class="mono">:80~81</td></tr>
+    <tr><td>Lodging<br>Flight</td><td class="mono">예약 내역</td><td class="mono">booking is None</td><td class="mono">:30~31</td></tr>
+  </tbody>
+</table>
+<p class="lead"><span class="st st-ok">코드 확인</span> 위 17개는 각 파일이 직접 넘기는 사유
+문자열 그대로다. 공통 부품이 그 위에 붙이는 최종 오류 코드는 03장을 본다.</p>
+
 
 
 <h2><span class="n">06</span>아직 보장하지 못하는 것</h2>
@@ -655,6 +783,18 @@ capability 이름 · <code>accepted_case_types</code> · <code>max_steps</code> 
     <tr><td>Place Verification</td><td><span class="st st-doc">문서 기재</span></td>
         <td><strong>원격 Agent 는 있으나 지금 안 쓴다.</strong> <span class="mono">travel_remote_agent.py</span> 202줄이 있지만 <span class="mono">a2a_executor.enabled: false</span> · <span class="mono">team_executor: local</span> 이고, 실제 장소 원장에도 안 붙는 시뮬레이터다</td>
         <td>제품 범위 결정 — 왕복·계약 증명으로 둘지, 실제 조회를 붙일지</td></tr>
+    <tr><td><strong>Dining 조건 판정</strong></td><td><span class="st st-unk">확인 필요</span></td>
+        <td><strong>안 되는 조건에 걸렸을 때의 실패 분기가 없다</strong>(<span class="mono">dining.py:81~96</span>).
+            일부만 충족해도 「모두 만족」으로 답할 수 있다 — 05장</td>
+        <td>불충족 조건이 성립 판정을 못 통과하는 것. v11 §8 의 「필수 조건 위반 0건」이 이걸 잰다</td></tr>
+    <tr><td><strong>Booking 변경 준비</strong></td><td><span class="st st-none">미구현</span></td>
+        <td>v11 §5 는 「대안·차액을 정리한다」인데 <strong>규정 존재만 보고 위약금·대안·차액을
+            계산하지 않는다</strong>(<span class="mono">booking_handoff.py:77~94</span>)</td>
+        <td>변경 링크에 바뀔 항목·대안·차액이 담기는 것 (v11 DoD-17)</td></tr>
+    <tr><td><strong>기상 불가 판정</strong></td><td><span class="st st-none">미구현</span></td>
+        <td><strong>날씨로 「불가」를 만들지 않는다.</strong> 임계치를 넘어도 주의 문구만 붙는다
+            (<span class="mono">activity.py:156~180</span>) — 05장</td>
+        <td>대표 시연(v11 §8-A)이 우천으로 활동을 깨뜨리려면 이 판정이 필요하다</td></tr>
     <tr><td>응답 검토 Team</td><td><span class="st st-none">미구현</span></td>
         <td>여행판이 아직 없다. 커머스판은 구현과 함께 걷어냈다. <span class="mono">enabled: false</span> 이고, <strong>켜면 기동이 막힌다</strong> — <span class="mono">project_config.py:92</span> 의 <span class="mono">validate_response_review_owner</span> 가 등록된 활성 팀에 없는 owner 를 거부한다. ★<strong>끈 상태는 통과시킨다</strong> — 도메인 교체 중 옛 이름이 남는 것까지 막으면 교체를 못 한다</td>
         <td>등록된 활성 팀으로 만들고 <span class="mono">enabled: true</span> 로 기동</td></tr>
