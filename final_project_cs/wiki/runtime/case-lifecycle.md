@@ -53,7 +53,7 @@ cancelled       → (없음)
 
 **세 가지 성질이 보인다.**
 
-1. **어느 상태에서든 `escalated`로 갈 수 있다.** 막히면 사람에게 넘기는 게 항상 가능하다
+1. **진행 중인 상태에서는 언제든 `escalated`로 갈 수 있다.** 막히면 사람에게 넘기는 게 항상 가능하다 — `classifying`·`routing`·`running`·대기 셋·`resuming`·`failed`. `[정정 2026-09-10]` 「어느 상태에서든」으로 적혀 있었는데 **바로 위 표와 모순이다** — `new`(→ classifying·cancelled)·`resolved`(→ cancelled)·`escalated`(자기 자신)·`cancelled`(종단) **넷은 직접 못 간다.**
 2. **대기 상태는 `resuming`을 거쳐야 `running`으로 돌아간다.** 직접 못 간다
 3. **`failed`는 종단이 아니다.** `escalated`로 간다. 실패를 방치하지 않는다
 

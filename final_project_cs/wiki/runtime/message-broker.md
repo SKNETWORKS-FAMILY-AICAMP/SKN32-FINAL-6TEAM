@@ -27,7 +27,9 @@ Message Broker      → 배달
 
 **둘을 섞으면 안 된다.** Broker가 흐름을 결정하기 시작하면 실행 경로가 두 곳에 생긴다.
 
-## MVP는 in-process queue
+## MVP는 in-process queue — 지금은 DB outbox 다
+
+★`[실측 2026-09-10]` **지금 조립은 in-process queue 가 아니라 DB 기반 `OutboxBrokerAdapter` 다**(`composition.py` 의 `build_broker()` 가 `message_broker == "outbox"` 만 받는다). 포트 이름도 **`MessageBrokerPort`**(`infrastructure/messaging/ports.py:6`)다 — 아래 `MessageBusPort` 는 설계 때 이름이다. 결정([D-003](../../../wiki/decisions/D-003-message-broker.md))은 그대로 유효하다.
 
 결정 근거는 [중앙 허브 D-003](../../../wiki/decisions/D-003-message-broker.md).
 

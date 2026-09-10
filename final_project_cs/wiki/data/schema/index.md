@@ -6,7 +6,7 @@ status: draft
 tags: [data, contract]
 owners: [human:미배정]
 domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain_note: [2026-09-10] 여행 표가 작업 트리에 생겼다(git 미추적). 아래 명세는 커머스 표 기준이다. 그 전 서술 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
 ---
 
 # 스키마
@@ -65,7 +65,7 @@ returns     (return_id, tenant_id, customer_id, order_id,
 
 ## ★ 결제 테이블이 없다
 
-`[실측]` 마이그레이션 6개 전체에 `payments`가 없다. 의도된 것이다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../../wiki/decisions/D-001-payment-ownership.md)
+`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. `[실측]` 그중 어디에도 `payments`가 없다. 의도된 것이다. → [../../../wiki/decisions/D-001-payment-ownership.md](../../../../wiki/decisions/D-001-payment-ownership.md)
 
 결제 상태는 `orders.status`에 섞여 있다.
 

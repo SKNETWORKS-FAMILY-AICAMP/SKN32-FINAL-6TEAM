@@ -98,6 +98,8 @@ DB 수준에서 `case_events`의 `UNIQUE(case_id, aggregate_version)`가 이를 
 
 **"정확히 한 번만 충돌한다"는 지켜진다. 다만 그 충돌이 어떤 예외로 보이는지는 읽는 시점에 따라 다르다.** 재시도 로직이 `StateConflict`만 잡으면 이 경우를 놓친다.
 
+★`[실측 2026-09-10]` **지금은 이 갈림이 없다.** `app/core/transition.py` 가 **리듀서를 부르기 전에 version 을 먼저 비교**한다(`if current.version != expected_version`). 진 쪽이 이긴 쪽 커밋 뒤에 읽어도 **version 이 이미 다르므로 `StateConflict` 가 먼저 난다** — `InvalidTransition` 까지 가지 않는다. **위 두 문단은 그 선검사가 들어가기 전 서술이다.**
+
 `[미확보]` 근본 원인은 `wiki/records/reports/debugs/2026-08-31_버전대조_가드_중복.md` §5에 있다. **고쳐졌는지는 이 wiki에서 확인하지 않았다.**
 
 ## 실행 유일성

@@ -87,7 +87,7 @@ python -c "import json; print(json.loads(open('eval/reports/raw_proposed.jsonl',
 ```
 
 `g-billing-*` · `g-technical-*` → **무효**
-`g-exchange-*` · `g-order-*` · `h-*` · `synth-*` → 유효
+`g-exchange-*` · `g-order-*` · `h-*` · `synth-*` → 유효 ★`[2026-09-10]` **쇼핑몰 골든셋 기준 규칙이다**(golden 72 · holdout 24, 전부 쇼핑몰). 여행 골든셋은 0건이라 이 접두 규칙은 여행 평가에 쓸 수 없다.
 
 → [../quality/eval-harness.md](../quality/eval-harness.md)
 

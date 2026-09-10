@@ -27,7 +27,7 @@ domain: neutral
 | [D-CS-001](D-CS-001-composer-ui-removal.md) | `/ui/composer` 폐기 | draft | 인증 경계 |
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
-| [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 7종·Port 3종·Core 9종 경계 | draft | Composer |
+| [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 **6종**·Port 3종·Core 9종 경계 `[정정 2026-09-10]` 7종이었다 — `composer_ui` 가 빠졌다 | draft | Composer |
 
 `[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 
@@ -36,7 +36,7 @@ domain: neutral
 | 후보 | 왜 결정으로 남겨야 하나 |
 |---|---|
 | 프롬프트 allowlist fail-closed | "왜 없으면 죽게 했지" 하고 완화하기 쉽다 |
-| `payment.status`가 DB를 안 읽음 | "구현 안 된 것"으로 오해하기 쉽다 |
+| `payment.status`가 DB를 안 읽음 | "구현 안 된 것"으로 오해하기 쉽다 — ★`[2026-09-10]` 커머스 capability 라 여행 코드에는 없다 |
 | Context 예산 12,000 고정 | "늘리면 되지" 하고 바꾸기 쉽다 |
 | timeout을 재시도 안 함 | "재시도 넣어야지" 하고 추가하기 쉽다 |
 
@@ -52,7 +52,7 @@ domain: neutral
 
 | ID | 결정 | 여기서 무엇이 바뀌나 |
 |---|---|---|
-| [D-001](../../../wiki/decisions/D-001-payment-ownership.md) | 결제는 쇼핑몰이 소유 | 환불 계산식을 대조 구조로 변경, `read.payment` 추가 |
+| [D-001](../../../wiki/decisions/D-001-payment-ownership.md) | 결제는 쇼핑몰이 소유 | 환불 계산식을 대조 구조로 변경, `read.payment` 추가 — ★`[2026-09-10]` 쇼핑몰 조치안이라 대상이 사라졌다. 결론(결제를 갖지 않는다)은 여행에서도 산다 |
 | [D-002](../../../wiki/decisions/D-002-graph-store-gate.md) | Graph Store는 게이트 통과 시에만 | `GraphStorePort` 유지, `SqlGraphAdapter`가 MVP |
 | [D-003](../../../wiki/decisions/D-003-message-broker.md) | in-process queue | `MessageBusPort` 유지, 중복 전달·retry 테스트 필요 |
 | [D-004](../../../wiki/decisions/D-004-self-hosting-rationale.md) | 자체호스팅은 규제 논거 | 3B 추론 실측 필요 |

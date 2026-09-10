@@ -1,7 +1,7 @@
 ---
 type: contract
 title: Composer 가 바꿀 수 있는 것
-description: 모듈 7종·Port 3종은 바꾸고 Core 9종은 못 끈다. 저장은 원자적이다
+description: 모듈 6종·Port 3종은 바꾸고 Core 9종은 못 끈다. 저장은 원자적이다. [정정 2026-09-10] 모듈 7종으로 적혀 있었다
 status: draft
 tags: [architecture, contract, ui]
 owners: [human:미배정]
@@ -12,7 +12,9 @@ domain: neutral
 
 `[실측]` `wiki/records/handoff/09_Composer_GUI_계약.md`에서 이관. **원본은 그대로 있다.**
 
-## 모듈 7종 — 켜고 끈다
+## 모듈 6종 — 켜고 끈다
+
+★`[실측 2026-09-10]` `config/project.yaml` 을 파서로 세면 **6개**다 — `vector_rag` · `graph_store` · `a2a_executor` · `mcp` · `voc` · `ops_ui`. **`composer_ui` 는 없다** — Composer 화면이 이 저장소에서 나가면서([D-CS-001](D-CS-001-composer-ui-removal.md)) 빠졌다. 아래 표의 `composer_ui` 행은 그 전 서술이다.
 
 | 모듈 | 끄면 |
 |---|---|

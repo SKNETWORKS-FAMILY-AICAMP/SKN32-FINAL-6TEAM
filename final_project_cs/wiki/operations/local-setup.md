@@ -24,7 +24,7 @@ domain: neutral
 |---|---|
 | PostgreSQL | 16.14 · `127.0.0.1:5433` |
 | extension | `vector` · `pgcrypto` |
-| DB | `acop` |
+| DB | **`acop_cs`** `[정정 2026-09-10]` `acop` 으로 적혀 있었다. 개발 서버는 `.claude/launch.json` 의 **`acop-cs-ui` · 8042** |
 | Python | 3.12.7 |
 
 ## ★ PostgreSQL이 안 떠 있을 때 — 기동 절차
@@ -52,7 +52,7 @@ $data = "C:\Users\playdata2\Documents\llm_workspace\_unified_mall_3\data\pgdata"
 `[실측]` conda env 안에 있다.
 
 ```powershell
-& "$env:USERPROFILE\anaconda3\envs\pgv\Library\bin\psql.exe" -h 127.0.0.1 -p 5433 -U postgres -d acop
+& "$env:USERPROFILE\anaconda3\envs\pgv\Library\bin\psql.exe" -h 127.0.0.1 -p 5433 -U postgres -d acop_cs
 ```
 
 ## 임베딩 차원

@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 마이그레이션
-description: 6개 파일과 순서. 재실행이 안전하다
+description: 마이그레이션 파일과 순서. 재실행이 안전하다. 2026-09-10 기준 작업 트리 13개 · git 9개
 status: draft
 tags: [data]
 owners: [human:미배정]
@@ -13,7 +13,9 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 
 
 `app/infrastructure/db/migrations/`
 
-## 6개
+## 6개 — 지금은 13개다
+
+`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. **아래 표는 커머스 시절 목록이다** — 제목은 6개인데 표는 7행이고, 실제는 그 뒤로 더 늘었다.
 
 `[실측]`
 

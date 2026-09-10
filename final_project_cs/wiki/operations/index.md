@@ -32,7 +32,8 @@ pytest tests/contract tests/security
 **평가**
 
 ```bash
-python -m eval.run --arm Proposed
+python -m eval.runners.proposed --dataset eval/datasets/golden.jsonl --repeats 3 --seed 7
+# [정정 2026-09-10] `eval.run --arm Proposed` 로 적혀 있었다 — eval/run.py 는 없다
 ```
 
 ## 환경

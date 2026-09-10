@@ -14,6 +14,8 @@ domain: neutral
 
 > **모든 query에 `tenant_id`와 `customer_id`(또는 `case_id`) 조건을 적용한다.**
 
+★`[실측 2026-09-10]` **규칙과 코드가 한 곳에서 다르다.** `repository.list_cases()` 는 `tenant_id` 가 필수이고 **`customer_id` 는 선택**이다 — 운영자 목록 화면은 tenant 전체를 본다. **고객 간 누출을 막는 것은 호출하는 쪽**이고 `INV-CS-SEC-005`(`test_case_list_does_not_leak_across_customers_in_one_tenant`)가 그 경로를 검사한다. 위 문장을 「모든 쿼리 함수가 customer 를 요구한다」로 읽으면 틀린다.
+
 **조건 없는 조회 쿼리는 그 자체가 보안 결함이다.** 결과가 비어 있어도 결함이다. 데이터가 늘면 새기 시작한다.
 
 ## 두 층

@@ -99,7 +99,7 @@ unknown outbox 의 확인 결과는 `/ops/outbox` 화면과 `/v1/outbox/{message
 | 하지 않는다 | 왜 |
 |---|---|
 | **Case·event·outbox 를 직접 수정** | `case_events` 는 append-only. projection 이 어긋난다 |
-| **timeout 뒤 worker 재실행** | **이중 실행이 난다** |
+| **timeout 뒤 worker 재실행** | **이중 실행이 날 수 있다** — 그래서 막는다. `[실측 2026-09-10]` 지금 worker 는 **`status='pending'` 만 집는다**(`messaging/worker.py:42`) — `unknown` 은 자동으로 다시 집히지 않는다. **이 규칙이 코드로 지켜지고 있다는 뜻이다.** 누가 `unknown` 을 손으로 `pending` 으로 되돌리면 그때 이중 실행이 난다 |
 
 **두 번째가 이 문서의 존재 이유다.** 재실행하고 싶은 충동을 규칙으로 막는다.
 

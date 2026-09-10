@@ -4,7 +4,7 @@ title: Data
 description: 스키마·마이그레이션·tenant 격리. DDL 전문은 문서에 옮겨 적지 않는다
 status: draft
 domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain_note: [2026-09-10] 여행 표가 작업 트리에 생겼다(010_domain_travel·011_place_catalog, git 미추적). 커머스 표를 지우는 011_drop_commerce_domain 은 pending 이다. 그 전 서술 — 여행 전환 층 5(DB 도메인 표 19표 중 여행 표 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
 ---
 
 # Data
@@ -18,7 +18,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 5(DB 도메인 
 | 문서 | 답하는 질문 |
 |---|---|
 | [schema.md](schema/index.md) | 테이블 관계와 의미 |
-| [migrations.md](migrations.md) | 마이그레이션 6개와 순서 |
+| [migrations.md](migrations.md) | 마이그레이션과 순서 — 작업 트리 13개 · git 9개 (6개로 적혀 있었다) |
 | [tenancy.md](tenancy.md) | tenant 격리를 어떻게 보장하는가 |
 
 **DDL 전문은 여기 옮겨 적지 않는다.** 실제 파일을 가리킨다.
@@ -59,7 +59,7 @@ products
 
 ## ★ 결제 테이블이 없다
 
-`[실측]` 마이그레이션 6개 전체에 `payments` 테이블이 없다. 결제 상태는 `orders.status`에 섞여 있다.
+`[실측 2026-09-10]` **마이그레이션은 작업 트리 13개 · git 9개**이고 `pending/` 에 미추적 `011_drop_commerce_domain.sql` 이 하나 있다. 여행 표는 `010_domain_travel.sql`(`places`·`bookings`·`supplier_bookings`)·`011_place_catalog.sql` 에 있다. `[실측]` 그중 어디에도 `payments` 테이블이 없다. 결제 상태는 `orders.status`에 섞여 있다.
 
 ```sql
 -- 002_domain_commerce.sql:19

@@ -72,7 +72,7 @@ Controller가 version=13 을 다시 읽고 재시도 또는 재계획
 
 `StateConflict` 예외가 `app/core/contracts.py`에 정의돼 있다.
 
-**충돌이 나면 부분 변경을 남기면 안 된다.** `INV-CS-RT-004`가 그것이고, 자동 판정이 없다.
+**충돌이 나면 부분 변경을 남기면 안 된다.** `[정정 2026-09-10]` 이 줄은 「`INV-CS-RT-004` 가 그것이고 자동 판정이 없다」고 적고 있었는데 **둘 다 틀렸다** — `INV-CS-RT-004` 는 **「부분 접기 결과가 단계별 결과와 같다」**(리듀서 결정성)이고 **automated** 다(`tests/unit/core/test_case_reducer.py::test_fold_reproduces_step_by_step_result`). `[미확보]` **「충돌 시 부분 변경을 남기지 않는다」를 어느 불변식이 지키는지는 찾지 못했다** — 트랜잭션 원자성으로 지켜질 것으로 보이나 그것을 이름 붙여 검사하는 불변식이 목록에 없다.
 
 ## 저장
 

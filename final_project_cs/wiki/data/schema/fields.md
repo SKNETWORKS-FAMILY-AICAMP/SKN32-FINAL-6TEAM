@@ -22,7 +22,7 @@ domain: neutral
 | 서버 | PostgreSQL `16.14`, `127.0.0.1:5433` |
 | 기동 방식 | conda env `pgv`의 `postgres.exe`; Windows 서비스 아님 |
 | `psql` | `%USERPROFILE%\anaconda3\envs\pgv\Library\bin\psql.exe`; PATH에 없음 |
-| DB 이름 | `acop`; 기존 `insurance_*`·`mall_vec` DB 변경 금지 |
+| DB 이름 | **`acop_cs`** (`.env.example`) `[정정 2026-09-10]` `acop` 으로 적혀 있었다; 기존 `insurance_*`·`mall_vec` DB 변경 금지 |
 | extension | `vector 0.8.3`, `pgcrypto 1.3`; 별도 `CREATE` 필요 |
 | Docker | 실행 환경에 없음; `docker/compose.yml`은 재현 문서용이며 실행 경로에서 제외 |
 
@@ -253,7 +253,7 @@ mock provider 데이터는 실결제와 무관하다. 위 건수는 축소할 �
 
 ## 테스트 데이터 정리 계약
 
-`[실측]` 통합 테스트는 `acop` DB를 사용하되 테스트 전용 tenant를 사용하고 fixture teardown에서 자신이 만든 행을 삭제한다. seed 데이터를 오염시켜서는 안 된다.
+`[실측]` 통합 테스트는 **`acop_cs`** DB를 사용하되 테스트 전용 tenant를 사용하고 fixture teardown에서 자신이 만든 행을 삭제한다. seed 데이터를 오염시켜서는 안 된다.
 
 근거: `wiki/records/handoff/02_DB_스키마.md:230-235`
 

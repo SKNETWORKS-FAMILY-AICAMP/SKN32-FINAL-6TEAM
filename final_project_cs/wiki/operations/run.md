@@ -74,7 +74,7 @@ python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ## 시연 데이터
 
 ```bash
-python -m scripts.seed_demo_cases
+python -m scripts.seed_demo_cases   # ★[2026-09-10] 작업 트리에서 삭제됨(git 에만 있다). 여행 시드는 미추적 scripts/seed_travel.py
 ```
 
 `[실측]` 재실행이 안전하다. `case_id`가 `uuid5`로 고정돼 있고 `cases_in_tenant`가 불변이다.
@@ -86,7 +86,7 @@ python -m scripts.seed_demo_cases
 | cust_01 / ORD-0101 배송완료 미수령 | `waiting_approval`에서 멈춤 |
 | cust_02 / ORD-0201 교환 기한 문의 | `resolved` 종단 |
 
-**하드코딩 UUID가 없다.** `scripts.seed`가 만든 실제 주문·배송 행을 조회해 근거로 쓴다.
+**하드코딩 UUID가 없다.** `scripts.seed`가 만든 실제 주문·배송 행을 조회해 근거로 쓴다. ★`[실측 2026-09-10 작업 트리]` `seed.py`·`seed_demo_cases.py` 는 **작업 트리에서 지워졌고 git 에만 남아 있다.** 여행 시드 `seed_travel.py` 가 작업 트리에 있고 **미추적**이다 — 이 절의 쇼핑몰 시나리오 둘은 지금 그대로 돌릴 수 없다.
 
 ## 개발 서버
 

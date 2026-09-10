@@ -54,6 +54,8 @@ Controller: capability로 Team 찾기 → 새 Task
 
 계약이 강제한다. `handoff`면 `handoff_capability`가 있어야 한다.
 
+★`[실측 2026-09-10 작업 트리]` **위 흐름(handoff → 새 Task)은 구현되지 않았다.** `controller.py` 가 `handoff` 결과를 받으면 `ControllerError("unsupported result action")` 로 거부한다. **계약은 handoff 를 허용하고 Controller 는 거부하는** 상태다 — Team 이 handoff 를 돌려주면 Case 가 거기서 멈춘다.
+
 ## Port를 경유한다
 
 `TeamExecutorPort`로 로컬과 원격을 같은 자리에서 바꾼다.

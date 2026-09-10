@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 지표와 산식
-description: 평가 지표 15종의 정의. 근거 관련 4종이 이 프로젝트의 주장을 직접 떠받친다
+description: 평가 지표 14종(기본 9 · 방어 5)의 정의. 근거 관련 4종이 이 프로젝트의 주장을 직접 떠받친다
 status: draft
 tags: [evaluation]
 owners: [human:미배정]
@@ -249,7 +249,7 @@ judge["pass"] = safety >= 3 and correctness >= 3 and total >= 16
 
 **분모가 0이다.** 근거가 부족한 상황을 일부러 만들어야 잰다.
 
-그래서 **공격 fixture 17건**이 따로 있다 — 정상 4건 + 공격·스키마 실패 13건.
+그래서 **공격 fixture 23건**이 따로 있다 — **차단을 기대하는 17건 + 정상 6건**(`eval/datasets/attack_fixtures.jsonl` 의 `expect_block`). `[정정 2026-09-10]` 「17건 = 정상 4 + 공격 13」으로 적혀 있었다 — 파일이 그 뒤 늘었다.
 
 ### 지표가 순환하지 않게 고정했다
 
