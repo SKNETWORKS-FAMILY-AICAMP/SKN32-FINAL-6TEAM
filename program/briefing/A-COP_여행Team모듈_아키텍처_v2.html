@@ -111,7 +111,7 @@
         <td>한 팀이 할 줄 아는 일 하나. 이 문서에서 <code>cap 3</code> 은 capability 가 셋이라는 뜻이다</td></tr>
     <tr><td><code>degraded</code></td>
         <td><strong>정책 근거를 못 갖춘 상태.</strong> 규정 검색이 실패했거나 결과가 하나도
-            없을 때 켜진다(<span class="mono">context.py:253</span>). 이때는 확정 답을 만들지 않고
+            없을 때 켜진다(<span class="mono">context.py:253~261</span>). 이때는 확정 답을 만들지 않고
             사람에게 넘긴다. ★<strong><code>degraded</code> 면 무엇을 뺐는지를 반드시 남긴다</strong> —
             빈 <span class="mono">omissions</span> 는 계약이 거부한다(<span class="mono">contracts.py:155</span>).
             <strong>신호 없는 축소는 폴백이기 때문이다</strong></td></tr>
@@ -447,9 +447,9 @@
 
   <rect x="700" y="30" width="240" height="120" rx="6" class="b3a"/>
   <text x="820" y="52" class="tb3" text-anchor="middle">_read — 막는 것 셋</text>
-  <text x="716" y="74" class="t3">허용 목록 밖 → ToolNotAllowed (:291)</text>
-  <text x="716" y="94" class="t3">같은 인자 재호출 → ToolLoopExceeded (:301)</text>
-  <text x="716" y="114" class="t3">부른 수 ≥ 예산 → ToolBudgetExceeded (:303)</text>
+  <text x="716" y="74" class="t3">허용 목록 밖 → ToolNotAllowed (:291~292)</text>
+  <text x="716" y="94" class="t3">같은 인자 재호출 → ToolLoopExceeded (:301~302)</text>
+  <text x="716" y="114" class="t3">부른 수 ≥ 예산 → ToolBudgetExceeded (:303~306)</text>
   <text x="716" y="136" class="ma3">budget = manifest.max_steps (_base.py:78)</text>
   <line x1="656" y1="66" x2="694" y2="80" class="l3"/>
 
@@ -494,7 +494,7 @@
 
   <text x="24" y="392" class="m3">★ _unknown 은 독립 종료가 아니라 _escalate 를 부른다 — 「값이 없는 것」과 「모르는 것」은 다르고, 그 구분이 결과에 남는다.</text>
   <text x="24" y="408" class="m3">★ _result 는 네 갈래를 다 만드는 공용 함수다. next_action 은 부르는 쪽이 넘긴다. wait_reason 은 안 넘겼거나 None 이고(:127) 그 next_action 에 정해진 사유가 있을 때만(:129) _result 가 채운다.</text>
-  <text x="24" y="424" class="ma3">★ 예산은 「받아 온 seen 의 크기」에 걸린다 — len(seen) ≥ budget (read_tools.py:303). 성공 횟수가 아니라 시도 기록이다(:307 에서 실행 전에 넣는다). 도구를 안 부르는 반복까지 막는지는 확인하지 않았다.</text>
+  <text x="24" y="424" class="ma3">★ 예산은 「받아 온 seen 의 크기」에 걸린다 — len(seen) ≥ budget (read_tools.py:303~306). 성공 횟수가 아니라 시도 기록이다(:307 에서 실행 전에 넣는다). 도구를 안 부르는 반복까지 막는지는 확인하지 않았다.</text>
 </svg>
 </div>
 
