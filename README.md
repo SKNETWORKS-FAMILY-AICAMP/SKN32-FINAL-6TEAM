@@ -143,14 +143,22 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 
 | 영역 | 기술 |
 |---|---|
-| Runtime | Python 3.12 |
-| API | FastAPI, Pydantic, pydantic-settings |
-| Database | PostgreSQL, pgvector, pgcrypto |
-| LLM | OpenAI 호환 provider, 모델·temperature·seed 설정 가능 |
-| RAG | OpenAI Embeddings, `knowledge_documents`, `knowledge_chunks`, vector search |
-| 외부 연동 | `httpx` 기반 여행 데이터 어댑터, 소스별 rate limit |
-| 운영 화면 | FastAPI HTML routes, HTML/CSS/JavaScript |
-| 품질 | pytest, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 실행 환경 | Python 3.12.7, PostgreSQL 16.14 |
+| API/웹 서버 | FastAPI 0.116.1, Uvicorn 0.35.0, Pydantic 2.13.4, pydantic-settings |
+| 데이터베이스 | PostgreSQL, `psycopg` 3.3.4, pgvector 0.5.0, pgcrypto |
+| 데이터 접근/마이그레이션 | `psycopg` 직접 SQL, 반복 실행 가능한 SQL migration runner |
+| LLM | OpenAI SDK 2.44.0, `openai`·`local_ft`·`mock` adapter, 모델·temperature·seed 설정 |
+| 오케스트레이션 | 자체 Core Controller·Registry·Port 구조 |
+| RAG/토큰 | OpenAI Embeddings, `tiktoken` 0.13.0, PostgreSQL/pgvector vector search |
+| 연동 프로토콜 | REST API, MCP 1.28.1(FastMCP read-only 3개 도구), A2A HTTP |
+| 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
+| Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
+| 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
+| 평가 | NumPy 2.2.1, SciPy 1.15.1, scikit-learn 1.6.1 |
+| 품질 | pytest 7.4.4, pytest-asyncio 0.25.2, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 설정/폼 | PyYAML, python-dotenv, python-multipart |
+
+> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
 
 ## 로컬 실행
 
