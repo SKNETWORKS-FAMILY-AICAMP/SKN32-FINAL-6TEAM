@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -266,7 +266,7 @@
+                 raise ValueError("respond 는 answer 가 있어야 한다.")
+ 
+         elif na is NextAction.ESCALATE:
+-            if not self.failure_code and not self.warnings:
++            if self.failure_code is None and self.warnings is None:
+                 raise ValueError("escalate 는 failure_code 또는 warnings 가 있어야 한다.")
+ 
+         # ★근거 없는 답변 금지 (CLAUDE.md §0.1)

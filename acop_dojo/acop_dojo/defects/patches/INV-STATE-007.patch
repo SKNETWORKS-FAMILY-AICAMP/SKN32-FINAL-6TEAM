@@ -1,0 +1,11 @@
+--- a/app/core/transition.py
++++ b/app/core/transition.py
+@@ -65,7 +65,7 @@
+         owner_team_id = %(owner_team_id)s,
+         version = version + 1, updated_at = now()
+     WHERE tenant_id = %(tenant_id)s AND case_id = %(case_id)s
+-      AND version = %(expected_version)s
++      AND version = version
+     RETURNING version
+ """
+ 

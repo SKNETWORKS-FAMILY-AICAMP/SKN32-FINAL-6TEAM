@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -254,7 +254,7 @@
+         elif na is NextAction.WAIT_FOR_APPROVAL:
+             if self.wait_reason != "human_approval":
+                 raise ValueError("wait_for_approval 은 wait_reason='human_approval' 이어야 한다.")
+-            if not self.action_proposals:
++            if self.action_proposals is None:
+                 raise ValueError("wait_for_approval 은 action_proposals 가 최소 1건 있어야 한다.")
+ 
+         elif na is NextAction.HANDOFF:

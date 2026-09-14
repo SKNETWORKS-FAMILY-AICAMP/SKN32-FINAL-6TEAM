@@ -1,0 +1,53 @@
+modules:
+  vector_rag:
+    enabled: true
+  graph_store:
+    enabled: true
+  a2a_executor:
+    enabled: false
+  mcp:
+    enabled: true
+  voc:
+    enabled: true
+  ops_ui:
+    enabled: true
+ports:
+  team_executor: local
+  message_broker: outbox
+  graph_store: sql
+teams:
+# ★2026-09-09 등록을 여행 도메인으로 교체했고(v10 §5), 2026-09-10 에 커머스
+#   구현을 저장소에서 걷어냈다. Registry 등록형이라 **코어는 한 줄도 안 바뀌었다**
+#   — 도메인 교체가 코어를 건드리지 않는다는 주장을 실제로 시험한 결과다.
+#   ★커머스로 되돌리려면 이 절만 고쳐서는 안 된다. 구현이 없으므로
+#     2026-09-10 이전 커밋에서 `app/modules/customer_ops/` 를 되살려야 한다.
+- team_id: activity
+  active: true
+  implementation_ref: app.modules.travel_ops.activity:ActivityTeam
+- team_id: booking_handoff
+  active: true
+  implementation_ref: app.modules.travel_ops.booking_handoff:BookingHandoffTeam
+- team_id: mobility
+  active: true
+  implementation_ref: app.modules.travel_ops.mobility:MobilityTeam
+- team_id: dining
+  active: true
+  implementation_ref: app.modules.travel_ops.dining:DiningTeam
+# 등록만 — 로직 없음. 잠긴 예약으로만 취급한다.
+- team_id: lodging
+  active: true
+  implementation_ref: app.modules.travel_ops.locked_bookings:LodgingTeam
+- team_id: flight
+  active: true
+  implementation_ref: app.modules.travel_ops.locked_bookings:FlightTeam
+response_review:
+  # ★[미확보] 여행 도메인에 응답 검토 Team 이 **아직 없다**(2026-09-10).
+  #   커머스판(`ResponseGenerationReviewTeam`)은 구현과 함께 걷어냈고, 이 절은
+  #   기능 자리만 남겨 둔 것이다. `enabled: false` 이며 **켜면 기동이 막힌다** —
+  #   `ProjectConfig.validate_response_review_owner` 가 등록된 활성 팀에 없는
+  #   owner 를 거부한다. 그 검사가 없던 때는 켜는 순간 고객 요청 처리 도중
+  #   `RegistryError` 로 죽는 구조였다.
+  #   재료는 남아 있다 — `prompts/response/generate.v2.md`(여행으로 다시 씀) ·
+  #   `review_tone.v1.md`(도메인 무관).
+  enabled: false
+  owner_team_id: travel_response_review

@@ -1,0 +1,11 @@
+--- a/app/core/idempotency.py
++++ b/app/core/idempotency.py
+@@ -9,7 +9,7 @@
+     """Return the v5 §10-1 key: sha256(tenant_id + request_id + action_type + subject)."""
+     hashed_parts = "".join(
+         hashlib.sha256(part.encode("utf-8")).hexdigest()
+-        for part in (tenant_id, request_id, action_type, business_subject)
++        for part in (tenant_id, request_id, action_type)
+     )
+     return hashlib.sha256(hashed_parts.encode("utf-8")).hexdigest()
+ 

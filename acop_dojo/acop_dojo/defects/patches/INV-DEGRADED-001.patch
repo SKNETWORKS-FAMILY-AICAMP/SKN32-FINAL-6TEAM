@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -152,7 +152,7 @@
+                 "Context Broker 가 절삭한 뒤에 만들어야 한다."
+             )
+         # ★신호 없는 축소는 폴백이다(RULE.md §3.2). degraded 면 무엇을 뺐는지 남긴다.
+-        if self.degraded and not self.omissions:
++        if self.degraded and self.omissions is None:
+             raise ValueError("degraded=True 인데 omissions 가 비었다. 무엇을 뺐는지 남겨야 한다.")
+         return self
+ 

@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "tenant_id": "demo",
+  "documents": [
+    {
+      "document_id": "doc_01",
+      "file": "documents/01_shipping_delivered-but-not-received.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_02",
+      "file": "documents/02_shipping_delivery-schedule.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_03",
+      "file": "documents/03_shipping_address-change.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_04",
+      "file": "documents/04_shipping_absence-redelivery.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_05",
+      "file": "documents/05_shipping_remote-area.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_06",
+      "file": "documents/06_order_order-lookup.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_07",
+      "file": "documents/07_order_order-change.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_08",
+      "file": "documents/08_order_cancel-timing.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_09",
+      "file": "documents/09_order_order-status.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_10",
+      "file": "documents/10_order_payment-failure.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_11",
+      "file": "documents/11_return_period.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_12",
+      "file": "documents/12_return_shipping-fee.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_13",
+      "file": "documents/13_return_restrictions.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_14",
+      "file": "documents/14_return_quantity.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "doc_15",
+      "file": "documents/15_exchange_period.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_16",
+      "file": "documents/16_exchange_process.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_17",
+      "file": "documents/17_exchange_refund-switch.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_18",
+      "file": "documents/18_refund_timing.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_19",
+      "file": "documents/19_refund_methods.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_20",
+      "file": "documents/20_refund_partial.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_21",
+      "file": "documents/21_refund_delay.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_22",
+      "file": "documents/22_support_intake.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_23",
+      "file": "documents/23_support_escalation.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_24",
+      "file": "documents/24_incident_system-outage.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_25",
+      "file": "documents/25_incident_bulk-delay.md",
+      "section_count": 12
+    }
+  ]
+}

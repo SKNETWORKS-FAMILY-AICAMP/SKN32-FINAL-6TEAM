@@ -1,0 +1,8 @@
+--- a/app/core/redaction.py
++++ b/app/core/redaction.py
+@@ -21,4 +21,4 @@
+         return {key: mask_json(item) for key, item in value.items()}
+     if isinstance(value, list):
+         return [mask_json(item) for item in value]
+-    return masked(value) if isinstance(value, str) else value
++    return value
