@@ -66,9 +66,12 @@ v11 §0-2 의 승계 행마다 도장이 실행으로 보여 주는 시나리오
 | 감사 · tenant 격리 · RLS | `audit-pii-redacted-v1` · `tenant-scope-query-v1` · `outbox-tenant-guard-v1` | RLS — tests/ 에서 `rls·RLS·row level` 로 찾았고 안 나왔다(다른 이름의 검사는 놓칠 수 있다) |
 | 평가 하네스 | `eval-defense-blocks-attacks-v1` (방어 지표가 코어 검증 엔진을 실제로 돌린다) | A/B/Proposed 실행·judge |
 | Composer | — | 별도 패키지 `acop_composer` 로 나갔다 — 이 도장의 대상 밖 |
-| 결정 15 (모르는 값 → 대체 소스 → 기동 중단) | — | ★**cs 에 경로가 아직 없다.** 원장 R-UNKNOWN-01 은 그 앞부분(지어내지 않는다)만 센다 |
+| 결정 15 (모르는 값 → 대체 소스 → 치명) | `fallback-chain-says-so-v1` (1차가 못 주면 대체가 답하고, 넘어간 사실을 숨기지 않는다) | "서버를 끈다" — `weather_chain.py` 머리말이 감시 쪽 몫이고 아직 없다고 적는다 |
 
-표 9행 중 시나리오가 하나라도 붙은 행은 7행이다(7/9 = 78%. 분모는 표의 행 전부 — 대상 밖인 Composer 와 cs 에 코드가 없는 결정 15 도 센다).
+표 9행 중 시나리오가 하나라도 붙은 행은 8행이다(8/9 = 89%. 분모는 표의 행 전부 — 대상 밖인 Composer 도 센다).
+☆결정 15 행은 처음에 "cs 에 경로가 아직 없다" 로 적었다. codex 검수 문장을 코드로 확인하지 않고 옮긴
+오류다 — 대체 소스 사슬과 치명 판정은 `app/infrastructure/travel/`(weather_chain · air_quality · disruptions)에 이미 있다.
+여행 도메인 인프라라 코어 결함으로는 세지 않고, 흐름을 보여 주는 시나리오만 붙였다.
 평가 하네스는 `eval/` 에 있어 실행 기록 수집기가 `app/` 과 함께 `eval/` 프레임도 모으게 넓혔다.
 빈 칸은 "테스트가 없다" 가 아니라 "도장이 아직 실행으로 보여 주지 않는다" 는 뜻이다.
 
@@ -239,9 +242,10 @@ python dojo.py patches      # 4초
   | `eval-defense-blocks-attacks-v1` | 196 | 10 (`eval/` 3 · 검증 엔진 6 · 익명 생성식 1) |
   | `audit-pii-redacted-v1` | 56 | 26 |
   | `tenant-scope-query-v1` | 8 | 4 |
+  | `fallback-chain-says-so-v1` | 2 | 2 |
   | 보스 `engine-serves-another-domain-v1` | 12 | 7 (전부 `verification.py`) |
 
-- 함수 해설: 위 트레이스들에서 비어 있던 33개를 채워 91개 → 124개. 위 트레이스의 고유 함수는 전부 해설이 있다
+- 함수 해설: 위 트레이스들에서 비어 있던 35개를 채워 91개 → 126개. 위 트레이스의 고유 함수는 전부 해설이 있다
   (`<locals>` 안의 익명 함수는 원래 해설하지 않는다)
 - ★"생존 0건" 은 **우리가 고른 39개 가설에 대한 검출률**이지 저장소 커버리지가 아니다 →
   [`테스트_사각지대_실측.md`](../program/research/테스트_사각지대_실측.md)

@@ -255,3 +255,18 @@ SCENARIOS["eval-defense-blocks-attacks-v1"] = Scenario(
     ),
     needs_db=False,
 )
+# ★v11 결정 15 — 모르는 값을 만들지 않는다. 사슬 자체는 여행 인프라에 있지만 구조는 도메인이 없다
+#  (소스 목록을 받아 차례로 묻는다). ☆처음엔 "cs 에 경로가 없다" 고 믿었다 — 확인 안 한 오류였다.
+SCENARIOS["fallback-chain-says-so-v1"] = Scenario(
+    scenario_id="fallback-chain-says-so-v1",
+    title="1차 소스가 못 주면 대체 소스가 답하고, 넘어간 사실을 숨기지 않는다",
+    nodeid=(
+        "tests/unit/travel/test_kma_weather.py"
+        "::test_when_the_primary_fails_the_fallback_answers_and_says_so"
+    ),
+    objective=(
+        "값을 모른다고 비워 두지도, 지어내지도 않는다 — 다음 소스에 묻는다. 누가 답했는지는 source 에, "
+        "대체로 넘어간 사실은 fell_back_from 에 남는다. 전부 실패하면 all_failed 로 센다(치명)."
+    ),
+    needs_db=False,
+)

@@ -124,7 +124,8 @@ PARKED_TRACK_IDS = frozenset({"team-voc", "team-review", "team-commerce"})
 assert PARKED_TRACK_IDS <= set(TRACKS), PARKED_TRACK_IDS - set(TRACKS)
 PARKED_TRACKS = {k: TRACKS.pop(k) for k in list(TRACKS) if k in PARKED_TRACK_IDS}
 TRACKS["all"] = _dataclasses.replace(
-    TRACKS["all"], scenarios=("status-inquiry-untouched-v1", "eval-defense-blocks-attacks-v1"))
+    TRACKS["all"], scenarios=("status-inquiry-untouched-v1", "eval-defense-blocks-attacks-v1",
+                              "fallback-chain-says-so-v1"))
 TRACKS["core1"] = _dataclasses.replace(
     TRACKS["core1"],
     scenarios=("status-inquiry-untouched-v1", "checkpoint-not-projection-v1",
