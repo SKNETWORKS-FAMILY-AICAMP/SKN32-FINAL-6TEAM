@@ -48,7 +48,15 @@ def test_a_recent_seoul_message_in_the_district_is_counted():
     assert [m["kind"] for m in value["for_region"]] == ["호우"]
     assert value["mode"] == "api" and value["covered"] is True
     assert calls[0]["serviceKey"] == "k" and calls[0]["rgnNm"] == "서울특별시"   # ★K 대문자
-    assert calls[0]["crtDt"] == _now().strftime("%Y%m%d") or len(calls) == 2
+    # ★`crtDt` 는 하한(실측) — 창 시작 날짜로 **한 번**만 부른다
+    window_start = datetime.fromisoformat(value["window"]["from"])
+    assert len(calls) == 1 and calls[0]["crtDt"] == window_start.strftime("%Y%m%d")
+
+
+def test_a_null_body_with_code_00_is_no_message():
+    """★실측 — 건수 0 이면 결과 코드 00 에 `body` 가 null 로 온다."""
+    source, _ = _source(None, total=0)
+    assert source.active(region="서울", at=_now(), district="종로구")["for_region"] == []
 
 
 def test_the_same_rules_as_the_sample_apply_missing_person_and_lifted_messages_are_ignored():

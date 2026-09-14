@@ -171,12 +171,15 @@ class DisasterMsgCsv:
         return {**base, "for_region": messages, "unclassified": unclassified}
 
 
-#: 재난안전데이터공유플랫폼 긴급재난문자.
-#:  ★`[미확인]` API 번호 `DSSP-IF-00247`·날짜 인자 `crtDt`·지역 인자 `rgnNm` 은 기억에서 온
-#:  값이다 — 공개 페이지(공공데이터포털 15134001·safetydata dataSn=228)는 로그인 전에
-#:  명세를 안 보인다(2026-09-14 확인). **키를 넣은 뒤 실호출로 확정한다.**
-#:  주소 형식 `…/V2/api/DSSP-IF-xxxxx` 와 `serviceKey`(K 대문자)·`returnType`·`pageNo`·
-#:  `numOfRows`, 응답의 `body` 배열은 같은 플랫폼 다른 API 사용기로 확인했다.
+#: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
+#:    `{"header":{"resultCode":"00","resultMsg":"NORMAL SERVICE"},"numOfRows":…,"pageNo":…,
+#:      "totalCount":…,"body":[{SN, CRT_DT, MSG_CN, RCPTN_RGN_NM, EMRG_STEP_NM, DST_SE_NM, …}]}`
+#:    건수 0 이면 `body` 가 **null** 이다(결과 코드는 여전히 00).
+#:  ★★`crtDt` 는 「그 날짜의 문자」가 아니라 **「그 날짜부터 지금까지」**다 — 2023-09-19 로
+#:    걸면 62,159건, 오늘로 걸면 4건, 어제로 걸면 42건(오늘 4 포함)이었다. `rgnNm` 은 지역
+#:    거름이다(「경기도 김포시」 488건). **순서는 호출마다 달랐다** — 순서에 기대지 않는다.
+#:  ★키에 IP 제한이 없다(발급 화면 「유저아이피 *.*.*.*」) — 서버 경유가 필요 없다.
+#:  ★`[미확인]` 하루 한도(같은 플랫폼 다른 API 사용기의 100/일을 보수적으로 쓴다).
 API_ENDPOINT = "https://www.safetydata.go.kr/V2/api/DSSP-IF-00247"
 API_PAGE_ROWS = 1000
 
@@ -184,8 +187,9 @@ API_PAGE_ROWS = 1000
 class DisasterMsgApi(TravelSource):
     """실키 판 — 샘플 CSV 판과 **같은 파서·같은 판정**, 같은 `active()` 모양.
 
-    ★하루치(생성일 `crtDt`)를 지역(`rgnNm`)으로 받아 창으로 자른다. 장소가 달라도 인자가
-      같아 캐시를 나눠 쓴다 — 하루 한도(100 `[미확인]`)가 낮아서 중요하다.
+    ★창의 **시작 날짜부터**(`crtDt` 는 하한이다, 실측) 지역(`rgnNm`) 문자를 한 번에 받아
+      창으로 자른다. 장소가 달라도 인자가 같아 캐시를 나눠 쓴다 — 하루 한도(100
+      `[미확인]`)가 낮아서 중요하다.
     ★창의 끝은 일정 시각과 지금 중 이른 쪽 — 아직 안 온 문자는 없다.
     ★모르는 모양은 모름(`None`)이다. 줄 하나라도 못 읽거나, 전체 건수가 받은 것보다 많으면
       (잘림) 목록 전체를 모름으로 둔다 — 못 읽은 것이 바로 그 호우 문자일 수 있다.
@@ -219,31 +223,30 @@ class DisasterMsgApi(TravelSource):
         at = at if at.tzinfo else at.replace(tzinfo=KST)
         until = min(at.astimezone(KST), now)
         window_start = until - timedelta(hours=lookback_hours)
-        days = sorted({window_start.date(), until.date()})
         rows: list[dict[str, Any]] = []
-        for day in days:
-            payload = self._fetch_json(API_ENDPOINT, {
-                "serviceKey": self._key, "returnType": "json", "pageNo": 1,
-                "numOfRows": API_PAGE_ROWS, "crtDt": day.strftime("%Y%m%d"),
-                "rgnNm": REGION_NAMES.get(region, region)})
-            if payload is None:
+        # ★`crtDt` 는 하한이다 — 창 시작 날짜로 **한 번** 부르면 지금까지가 온다(실측).
+        payload = self._fetch_json(API_ENDPOINT, {
+            "serviceKey": self._key, "returnType": "json", "pageNo": 1,
+            "numOfRows": API_PAGE_ROWS, "crtDt": window_start.strftime("%Y%m%d"),
+            "rgnNm": REGION_NAMES.get(region, region)})
+        if payload is None:
+            return None
+        body = payload.get("body")
+        if body is None:
+            body = []                                  # ★건수 0 이면 null 로 온다(실측)
+        if not isinstance(body, list):
+            self._miss("unexpected_shape", type(body).__name__)
+            return None
+        total = payload.get("totalCount")
+        if isinstance(total, (int, str)) and str(total).isdigit() and int(total) > len(body):
+            self._miss("truncated", f"{total} > {len(body)}")
+            return None
+        for raw in body:
+            row = parse_row(raw) if isinstance(raw, dict) else None
+            if row is None:
+                self._miss("bad_row", repr(raw)[:160])
                 return None
-            body = payload.get("body")
-            if body is None:
-                body = []                              # 자료 없음 표시로 여기 온 경우
-            if not isinstance(body, list):
-                self._miss("unexpected_shape", type(body).__name__)
-                return None
-            total = payload.get("totalCount")
-            if isinstance(total, (int, str)) and str(total).isdigit() and int(total) > len(body):
-                self._miss("truncated", f"{total} > {len(body)}")
-                return None
-            for raw in body:
-                row = parse_row(raw) if isinstance(raw, dict) else None
-                if row is None:
-                    self._miss("bad_row", repr(raw)[:160])
-                    return None
-                rows.append(row)
+            rows.append(row)
         messages, unclassified = judge(rows, region=region, district=district,
                                        window_start=window_start, at=until)
         return self.stamp({"mode": self.mode, "covered": True, "region": region,
