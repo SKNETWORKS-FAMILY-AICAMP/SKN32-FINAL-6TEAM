@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     kma_api_key: str = ""
     #: 기상청 기상특보 — ★지속관리 루프의 트리거    data.go.kr/data/15000415
     kma_warning_api_key: str = ""
+    #: 기상청 지진정보 — 최근 지진(규모·진앙)          data.go.kr/data/15000420
+    #:  ★조회는 오늘 기준 3일 전까지(2026-09-14 실측). 비우면 공통 키를 쓴다.
+    kma_earthquake_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
@@ -134,6 +137,7 @@ class Settings(BaseSettings):
     rate_airport_per_day: int = 1000         # 미확인 - 보수적
     rate_mofa_per_day: int = 1000            # 미확인 - 보수적
     rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
+    rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
@@ -162,6 +166,7 @@ class Settings(BaseSettings):
             "airport": self.rate_airport_per_day,
             "mofa": self.rate_mofa_per_day,
             "its": self.rate_its_per_day,
+            "kma_earthquake": self.rate_kma_earthquake_per_day,
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
         }
