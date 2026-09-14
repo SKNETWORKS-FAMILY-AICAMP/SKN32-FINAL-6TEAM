@@ -285,6 +285,48 @@ class ScenarioSession:
         self._collect()
         return outcome
 
+    # ── 운영콘솔이 읽는 것 ──────────────────────────────────────
+    def ops(self) -> dict[str, Any]:
+        """이 판(전용 테넌트)의 Case · 상태 전이 · 일정 버전 · 바깥함. **읽기만 한다.**
+
+        ★운영콘솔의 Case 목록은 설정 테넌트(`settings.tenant_id`)만 본다 — 시나리오 테넌트의
+          Case 가 거기 안 뜬다. 그래서 스위치 화면이 이것을 따로 읽는다(2026-09-15).
+        """
+        from .trip_api import _REASON_LABELS, _cause_label
+
+        with get_connection() as conn:
+            trip, _ = self.store.latest(conn, self.trip_id)
+            history = self.store.versions(conn, self.trip_id)
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT c.case_id, c.status::text, c.intent, c.issue_code, c.owner_team_id, "
+                    "c.version, c.subject, "
+                    "array_agg(e.event_type::text ORDER BY e.aggregate_version) "
+                    "FROM customer_cases c JOIN case_events e "
+                    "ON e.tenant_id = c.tenant_id AND e.case_id = c.case_id "
+                    "WHERE c.tenant_id = %s "
+                    "GROUP BY c.case_id, c.status, c.intent, c.issue_code, c.owner_team_id, "
+                    "c.version, c.subject ORDER BY min(e.created_at)", (self.tenant,))
+                cases = cur.fetchall()
+                cur.execute("SELECT status::text, count(*) FROM outbox WHERE tenant_id = %s "
+                            "AND topic = 'trip.notice' GROUP BY status", (self.tenant,))
+                outbox = {status: count for status, count in cur.fetchall()}
+        scene = SCENES[self.scene] if self.scene >= 0 else None
+        return {
+            "active": True, "tenant": self.tenant, "scene": self.scene, "scenes": len(SCENES),
+            "label": scene["label"] if scene else None, "clock": self.clock().strftime("%H:%M"),
+            "version": trip["version"],
+            "history": [{"version": h["version"],
+                         "reason": _REASON_LABELS.get(h["reason"], h["reason"]),
+                         "causes": [_cause_label(c) for c in h["causes"] or []]} for h in history],
+            "cases": [{"case_id": str(case_id), "status": status, "intent": intent,
+                       "issue_code": issue_code, "owner_team": owner, "version": version,
+                       "subject": subject, "events": list(events)}
+                      for case_id, status, intent, issue_code, owner, version, subject, events
+                      in cases],
+            "outbox": outbox,
+        }
+
     # ── 화면이 읽는 것 ──────────────────────────────────────────
     def feed(self) -> dict[str, Any]:
         from .trip_api import _REASON_LABELS, _cause_label
@@ -395,6 +437,13 @@ def build_scenario_router(*, classifier_factory: Callable[[], Any] | None = None
         if holder["session"] is None:
             return {"active": False}
         return holder["session"].feed()
+
+    @router.get("/scenario/ops")
+    def operations():
+        _enabled()
+        if holder["session"] is None:
+            return {"active": False}
+        return holder["session"].ops()
 
     @router.post("/scenario/next")
     def advance():

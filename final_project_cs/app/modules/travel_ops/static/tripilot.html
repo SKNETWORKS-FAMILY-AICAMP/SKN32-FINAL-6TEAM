@@ -196,7 +196,9 @@ function renderChat(pendingUserText) {
 }
 function renderChrome() {
   const f = state.feed;
-  if (!f) return;
+  // ★꺼진 판({active:false})에는 장면이 없다. 여기서 던지면 act() 가 busy 를 풀지 못해
+  //   꺼진 화면의 「시나리오 시작」이 영원히 안 눌렸다(2026-09-15, 녹화 중 발견).
+  if (!f || !f.active) return;
   const scene = f.scenes[f.scene] || {}, nextScene = f.scenes[f.scene + 1];
   $('#clock').textContent = f.clock; $('#tripTitle').textContent = f.title;
   $('#partyPill').textContent = `친구와 함께 · ${f.party_size}명`; $('#partyAvatar').textContent = `${f.party_size}인`;

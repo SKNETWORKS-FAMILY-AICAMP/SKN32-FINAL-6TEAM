@@ -112,6 +112,22 @@ def test_stopping_removes_the_scenario_tenant(client):
     assert client.get("/scenario/feed").json() == {"active": False}
 
 
+def test_ops_console_reads_the_scenario_tenant(client):
+    """★운영콘솔 Case 목록은 설정 테넌트만 본다 — 시나리오 판은 스위치 화면이 따로 읽는다."""
+    feed = client.post("/scenario/start").json()
+    for _ in range(4):                                         # 09:00 … 13:00 고객 차례
+        feed = client.post("/scenario/next").json()
+    client.post("/scenario/message", json={"message": feed["suggestion"]})
+    ops = client.get("/scenario/ops").json()
+    assert ops["tenant"] == feed["tenant"] and ops["version"] == 4
+    assert [h["version"] for h in ops["history"]] == [1, 2, 3, 4]
+    (case,) = ops["cases"]
+    assert case["status"] == "resolved" and case["subject"] == feed["suggestion"]
+    assert case["events"][0] == "created" and case["events"][-1] == "completed"
+    assert "routed" in case["events"]
+    assert "opsPanel" in client.get("/ui/scenario").text
+
+
 @pytest.mark.parametrize("host,target", [("tripilot.localhost:8042", "/tripilot"),
                                          ("scenario.localhost:8042", "/ui/scenario"),
                                          ("localhost:8042", "/ui/cases")])
