@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     #: 기상청 지진정보 — 최근 지진(규모·진앙)          data.go.kr/data/15000420
     #:  ★조회는 오늘 기준 3일 전까지(2026-09-14 실측). 비우면 공통 키를 쓴다.
     kma_earthquake_api_key: str = ""
+    #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
+    #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
+    disaster_msg_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
