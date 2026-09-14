@@ -133,8 +133,10 @@ PARKED_SCENARIO_IDS = frozenset({
     "return-refund-no-side-effect-v1",
 })
 PARKED_SCENARIOS = {k: v for k, v in SCENARIOS.items() if k in PARKED_SCENARIO_IDS}
+# 오타 난 id 를 조용히 넘기지 않는다 — 중지했다고 믿는 시나리오가 살아 있게 된다.
+assert PARKED_SCENARIO_IDS <= set(SCENARIOS), PARKED_SCENARIO_IDS - set(SCENARIOS)
 for _scenario_id in PARKED_SCENARIO_IDS:
-    SCENARIOS.pop(_scenario_id, None)
+    SCENARIOS.pop(_scenario_id)
 
 # ★베이스먼트 시나리오. 도메인이 바뀌어도 승계되는 코어(v11 §0-2)만 돈다 —
 #  Team 은 테스트용 가짜(FakeTeam)라 여행 Team 이 바뀌어도 이 경로는 그대로다.
@@ -171,6 +173,47 @@ SCENARIOS["engine-serves-another-domain-v1"] = Scenario(
     objective=(
         "보스전용. 코어는 도메인을 모른다는 주장의 유일한 대조군이다. "
         "선언만 갈아 끼우고 app/core/verification.py 는 그대로 쓴다."
+    ),
+    needs_db=False,
+)
+# ★2026-09-14 codex-alt 검수 — 승계 목록(v11 §0-2) 중 바깥함·Registry·TeamExecutorPort 가
+#  학습 시나리오에 없었다. 셋 다 도메인 어휘 없이 도는 테스트를 골랐다.
+SCENARIOS["outbox-tenant-guard-v1"] = Scenario(
+    scenario_id="outbox-tenant-guard-v1",
+    title="바깥함은 tenant 를 모르는 메시지를 내보내지 않는다",
+    nodeid=(
+        "tests/integration/messaging/test_outbox_tenant_guard.py"
+        "::test_publishing_without_any_tenant_is_rejected"
+    ),
+    objective=(
+        "메시지는 되돌릴 수 없다. tenant 가 비면 'unknown' 같은 임시값으로 채우지 않고 "
+        "발행을 거절한다 — 모르는 값을 지어내면 오류가 데이터가 된다."
+    ),
+    needs_db=True,
+)
+SCENARIOS["registry-default-capability-v1"] = Scenario(
+    scenario_id="registry-default-capability-v1",
+    title="Registry 는 맞는 기능이 없을 때 선언된 기본값으로 간다",
+    nodeid=(
+        "tests/unit/core/test_registry_capability_default.py"
+        "::test_unmatched_intent_falls_back_to_declared_default_capability"
+    ),
+    objective=(
+        "Core 는 Team 내부를 모른다. TeamManifest 선언만 보고 기능을 고르고, "
+        "요청 종류와 맞는 것이 없으면 Team 이 선언한 default_capability 를 쓴다."
+    ),
+    needs_db=False,
+)
+SCENARIOS["remote-team-failure-escalates-v1"] = Scenario(
+    scenario_id="remote-team-failure-escalates-v1",
+    title="원격 Team 이 실패하면 실패로 매핑되고 사람에게 넘어간다",
+    nodeid=(
+        "tests/integration/a2a/test_travel_remote_round_trip.py"
+        "::test_remote_failure_maps_to_escalate"
+    ),
+    objective=(
+        "TeamExecutorPort 뒤에 로컬 대신 A2A 원격이 붙어도 Core 가 받는 것은 같은 TeamResult 다. "
+        "원격이 못 하면 성공으로 추정하지 않고 escalate 로 돌려준다."
     ),
     needs_db=False,
 )

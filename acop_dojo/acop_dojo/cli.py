@@ -376,7 +376,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)
 
     trace_cmd = sub.add_parser("trace", help="시나리오 트레이스를 뜬다")
-    trace_cmd.add_argument("scenario", nargs="?", default="shipping-status-resolved-v1")
+    # 기본값이 중지한 커머스 시나리오를 가리켜 인자 없이 부르면 죽었다(2026-09-14 codex-alt 지적).
+    trace_cmd.add_argument("scenario", nargs="?", default="status-inquiry-untouched-v1")
     trace_cmd.add_argument("--verify", action="store_true", help="두 번 돌려 같은지 본다")
     trace_cmd.set_defaults(func=cmd_trace)
 

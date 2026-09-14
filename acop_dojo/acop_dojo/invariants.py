@@ -47,6 +47,13 @@ def check() -> dict[str, Any]:
         if status == "active" and not [d for d in ids if d not in excluded]:
             problems["no_defect"].append((rule_id, entry["rule"], entry.get("source", "")))
 
+    # 중지한 결함 참조도 본다. 되살릴 때 오타 난 id 가 조용히 사라지면 안 된다.
+    parked = {d.defect_id for d in defects_mod.PARKED}
+    for rule_id, entry in sorted(entries.items()):
+        for defect_id in entry.get("parked_defects", []):
+            if defect_id not in parked:
+                problems["unknown_defect"].append((rule_id, defect_id))
+
     problems["orphan_defect"] = sorted(known - set(seen))
     return {"entries": entries, "problems": problems,
             "active": sum(1 for e in entries.values() if e.get("status") == "active"),

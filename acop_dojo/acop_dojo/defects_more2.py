@@ -81,7 +81,7 @@ MORE2: list[Defect] = [
     Defect(
         defect_id="INV-OUTBOX-002",
         title="tenant 를 모를 때 임시값으로 채운다",
-        invariant="값을 모르면 비워 둔다 — 추정으로 채우지 않는다",
+        invariant="모르는 값을 추정값으로 채우지 않는다",
         path="app/infrastructure/messaging/outbox.py",
         old='                    tenant_id = payload.get("tenant_id") or case_tenant_id',
         new='                    tenant_id = payload.get("tenant_id") or case_tenant_id or "unknown"',
