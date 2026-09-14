@@ -84,11 +84,17 @@ def test_every_declared_api_key_appears_in_the_template():
     elsewhere = {"ACOP_OPENAI_API_KEY", "ACOP_SECRET_KEY",
                  "ACOP_COMPOSER_JWT_SECRET", "ACOP_COMPOSER_ISSUER_SECRET"}
     declared = {name for name in _declared_names()
-                if name.endswith("_KEY") and name not in elsewhere}
+                if _KEY_NAME.search(name) and name not in elsewhere}
     missing = sorted(declared - _template_names())
     assert not missing, (
         f"Settings 에 선언됐는데 템플릿에 없는 키: {missing}\n"
         f"  → `.env.apikeys.example` 에 발급처 링크와 함께 자리를 만든다.")
+
+
+#: 키 이름 — `_KEY` 로 끝나거나 `_KEY_1`·`_KEY_2` 처럼 번호가 붙는다.
+#:  ★2026-09-14 UTIC 키가 둘(등록 IP 마다 하나)이 되며 번호가 붙었다. `_KEY` 로 끝나는
+#:    이름만 보면 번호 붙은 키를 「기본값 없는 설정」으로 오판해 붉어진다.
+_KEY_NAME = re.compile(r"_KEY(_\d+)?$")
 
 
 def _is_secret(name: str) -> bool:
@@ -99,7 +105,7 @@ def _is_secret(name: str) -> bool:
       우리 채널에 글을 올린다. 그래서 `_WEBHOOK_URL` 도 비밀로 본다. 비밀은 템플릿에
       **비어 있어야** 하고, 비어 있어도 문자열이라 기동은 막히지 않는다.
     """
-    return name.endswith("_KEY") or name.endswith("_WEBHOOK_URL")
+    return bool(_KEY_NAME.search(name)) or name.endswith("_WEBHOOK_URL")
 
 
 def test_no_real_key_value_leaked_into_the_template():

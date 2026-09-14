@@ -108,11 +108,15 @@ class Settings(BaseSettings):
     #:    LINK 형이라 키가 ITS 에서 나온다.
     its_api_key: str = ""
     #: 경찰청 UTIC 도시교통정보센터 — 도로위험상황예보·돌발(행사·집회 포함)  utic.go.kr
-    #:  ★2026-09-14 신청, 승인 대기. **등록한 IP 에서만** 호출된다(<학원 PC IP>).
-    utic_api_key: str = ""
+    #:  ★**등록한 IP 에서만** 호출된다. 키가 **둘**이다 — 키마다 등록 IP 가 다르다(2026-09-14 발급).
+    #:    key 1 = 바로 부르는 자리의 IP   key 2 = 고정 IP 경유 서버의 IP
+    #:    ★실제 IP·서버 주소는 공용 파일에 적지 않는다 — `.env.apikeys` 에만.
+    #:  ☆처음엔 `.env.apikeys` 에 같은 이름을 두 줄 적었는데, 그러면 **뒤의 것만** 읽힌다.
+    utic_api_key_1: str = ""
+    utic_api_key_2: str = ""
     #: ★IP 에 묶인 API 를 **고정 IP 서버를 거쳐** 부른다(2026-09-14). UTIC 는 등록한 IP 에서만
-    #:  된다 — 개발 장소가 바뀌어도 되게 서버(<경유 서버 IP>, SSH 별칭 `<경유 서버 SSH 별칭>`)로 나간다.
-    #:  터널: `ssh -N -D 1080 <경유 서버 SSH 별칭>` → 이 값 `socks5://127.0.0.1:1080`. 비우면 경유 안 함.
+    #:  된다 — 개발 장소가 바뀌어도 되게 서버로 나간다. SSH SOCKS 터널을 열고 이 값을
+    #:  `socks5://127.0.0.1:<포트>` 로 둔다. 비우면 경유 안 함. ★서버 주소는 공용에 적지 않는다.
     outbound_proxy_url: str = ""
     #: 경유시킬 소스 이름(쉼표). ★기본은 IP 에 묶인 것만 — 전부 경유시키면 터널이 끊길 때
     #:  모든 소스가 한꺼번에 실패해 치명이 된다. `*` 는 전부.
@@ -184,6 +188,14 @@ class Settings(BaseSettings):
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
         }
+
+    def utic_key(self, *, proxied: bool) -> str:
+        """UTIC 호출에 쓸 키 — **나가는 IP 에 등록된 키**를 고른다.
+
+        서버를 거쳐 나가면 key 2, 바로 나가면 key 1.
+        ★다른 쪽 키로 대신하지 않는다 — 등록 IP 가 달라 어차피 거절된다. 비었으면 빈 문자열.
+        """
+        return (self.utic_api_key_2 if proxied else self.utic_api_key_1).strip()
 
     def public_data_key(self, override: str = "") -> str:
         """공공데이터포털 서비스 하나가 쓸 키. 둘 다 비었으면 빈 문자열.
