@@ -396,105 +396,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 principal: Principal = Depends(require_scope("trip:write"))):
         """고객 자유 문장 → **Case → 분류 → 추출 → 여행 창구 → Case 닫기**(v11 §5 경로).
 
-        ★Case 는 코어의 한 문(`transition_case`)으로만 움직인다:
-            CREATED → (분류) CLASSIFIED → ROUTED(여행 창구) → COMPLETED(= resolved)
-          분류 실패는 `classify_case` 가 escalated 로 보낸다. 신고 내용을 못 뽑았거나 창구가
-          받지 않는 문장이면 ROUTING_FAILED, 창구가 처리하지 못하면 GUARDRAIL_ESCALATED —
-          **추측으로 일정을 바꾸지 않고 사람에게 넘긴다.**
-        ★같은 `request_id` 는 Case 를 새로 만들지 않는다.
+        ★처리 규칙은 `trip_messages.handle_trip_message` 한 곳에 있다 — 시나리오 모드도
+          같은 것을 쓴다(한 규칙이 두 벌로 갈라지지 않게).
         """
-        from app.application.classification import classify_case
-        from app.application.routing import case_type_of
-        from app.core.transition import transition_case
-        from app.domain.events import EventType
-        from app.infrastructure.db import repository
-        from app.infrastructure.ollama_chat import OllamaError
+        from .trip_messages import TripNotFound, handle_trip_message
 
-        from .trip_intake import extract
-
-        tenant = principal.tenant_id
-        store = TripStore(tenant)
-        marker = {"trip_message": {"trip_id": str(trip_id), "request_id": request.request_id}}
-        with get_connection() as conn:
-            trip = _trip_or_404(conn, store, trip_id)
-            with conn.cursor() as cur:
-                cur.execute("SELECT case_id FROM customer_cases WHERE tenant_id=%s "
-                            "AND state_json @> %s::jsonb", (tenant, json.dumps(marker)))
-                existing = cur.fetchone()
-            if existing:
-                case = repository.get_case(conn, tenant_id=tenant, case_id=existing[0])
-                return {"status": "duplicate", "case_id": str(existing[0]),
-                        "case_status": str(case["status"])}
-            with conn.transaction():
-                case_id = repository.create_case(conn, tenant_id=tenant,
-                                                 customer_id=trip["customer_id"],
-                                                 subject=request.message, state_json=marker)
-                transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0,
-                                event_type=EventType.CREATED,
-                                payload={"channel": "trip_message", "message": request.message},
-                                actor_type="api", actor_id=principal.key_id)
-            # ★분류는 생성 트랜잭션 **밖**에서(v8 §3-A) — REST 접수와 같은 이유다.
-            event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=request.message,
-                                  classifier=_lazy("classifier", classifier_factory),
-                                  actor_id=principal.key_id)
-
-            def _move(event_type, payload):
-                case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-                with conn.transaction():
-                    transition_case(conn, tenant_id=tenant, case_id=case_id,
-                                    expected_version=case["version"], event_type=event_type,
-                                    payload=payload, actor_type="api", actor_id=principal.key_id)
-
-            def _view(extra):
-                case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-                return {"case_id": str(case_id), "case_status": str(case["status"]),
-                        "classification": {"intent": case.get("intent"),
-                                           "issue_code": case.get("issue_code")}, **extra}
-
-            if event is not EventType.CLASSIFIED:
-                return _view({"status": "escalated", "reason": "classification_failed"})
-            chat = _lazy("chat", chat_factory)
-            try:
-                report = extract(request.message, chat) if chat is not None else None
-                why = "no_extractor" if chat is None else "not_understood"
-            except OllamaError as exc:
-                report, why = None, f"extractor_failed: {exc}"[:120]
-            if report is None or report["type"] == "other":
-                reason = why if report is None else "not_a_trip_report"
-                _move(EventType.ROUTING_FAILED, {"failure_code": reason})
-                return _view({"status": "escalated", "reason": reason, "report": report})
-
-            case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-            # ★분류가 `other` 여도(실측: 품절 문장) 처리는 추출값으로 간다 — 담당은 여행 창구로 적는다.
-            team = case_type_of(case.get("issue_code") or "", fallback="trip_desk") or "trip_desk"
-            if team not in {"activity", "dining", "mobility", "booking", "lodging", "flight"}:
-                team = "trip_desk"
-            _move(EventType.ROUTED, {"owner_team_id": team,
-                                     "capability": f"trip_desk.{report['type']}"})
-        desk = _desk(store)
-        at = _seoul(request.at) or datetime.now(KST)
-        if report["type"] == "delay":
-            outcome = desk.report_delay(trip_id=trip_id, at=at, minutes=report["minutes"],
-                                        message=request.message, request_id=request.request_id)
-        elif report["type"] == "closed":
-            outcome = desk.report_closed(trip_id=trip_id, at=at, message=request.message,
-                                         request_id=request.request_id)
-        else:
-            outcome = desk.ask_nearby_store(trip_id=trip_id, at=at, products=report["products"],
-                                            message=request.message, request_id=request.request_id)
-        with get_connection() as conn:
-            if outcome.get("status") in ("adjusted", "answered", "still_fits"):
-                answer = (outcome.get("notice") or {}).get("text") or outcome.get("text") \
-                    or outcome.get("status")
-                ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
-                                             else str(outcome.get("status")))
-                # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다
-                #   (`GET /v1/cases/{id}` 의 `answer`).
-                _move(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer}})
-            else:
-                _move(EventType.GUARDRAIL_ESCALATED, {"guardrail": "trip_desk",
-                                                      "observed": str(outcome.get("status"))})
-            return _view({"status": outcome.get("status"), "report": report, "outcome": outcome})
+        store = TripStore(principal.tenant_id)
+        try:
+            return handle_trip_message(
+                tenant=principal.tenant_id, trip_id=trip_id, request_id=request.request_id,
+                message=request.message, at=_seoul(request.at) or datetime.now(KST),
+                classifier=_lazy("classifier", classifier_factory),
+                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id)
+        except TripNotFound:
+            raise _error(404, "not_found", "resource not found") from None
 
     @router.post("/v1/trips/{trip_id}/items/{item_id}/alternate")
     def alternate(trip_id: UUID, item_id: UUID, request: AlternateIn,

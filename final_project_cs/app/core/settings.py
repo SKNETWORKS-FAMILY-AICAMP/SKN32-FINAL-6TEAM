@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
     #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
     ollama_base_url: str = ""
+    #: 시나리오 모드(운영콘솔 스위치로 확정 시나리오 하루를 실제 시스템으로 돌리는 시연 기능).
+    #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
+    scenario_mode_enabled: bool = False
     ollama_model: str = "gemma4:12b"
     ollama_timeout_seconds: float = 60.0
 

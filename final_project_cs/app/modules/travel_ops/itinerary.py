@@ -196,6 +196,24 @@ class TripStore:
                      json.dumps(item.detail, ensure_ascii=False, default=str)))
         return new_version
 
+    def enqueue_message(self, conn, *, trip_id: UUID, key: str,
+                        payload: dict[str, Any]) -> None:
+        """일정 버전에 딸리지 않은 안내(하루 시작·출발·하루 정리 — v11 §6-B 의 ②·③).
+
+        ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
+          않게 `{trip_id}:{key}` 로 둔다.
+        """
+        with conn.cursor() as cur:
+            cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                        (self.tenant_id, trip_id))
+            row = cur.fetchone()
+            cur.execute(
+                "INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json) "
+                "VALUES (%s,%s,%s,%s) ON CONFLICT (tenant_id, topic, dedupe_key) DO NOTHING",
+                (self.tenant_id, "trip.notice", f"{trip_id}:{key}",
+                 json.dumps({"locale": row[0] if row else None, **payload},
+                            ensure_ascii=False, default=str)))
+
     def enqueue_notice(self, conn, *, trip_id: UUID, version: int,
                        payload: dict[str, Any]) -> None:
         """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다.

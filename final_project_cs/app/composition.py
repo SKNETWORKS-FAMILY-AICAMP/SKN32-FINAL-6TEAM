@@ -279,8 +279,12 @@ def build_domain_routers() -> list:
 
         return from_settings(get_settings())
 
+    from app.modules.travel_ops.scenario_mode import build_scenario_router
+
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory)]
+                              chat_factory=chat_factory),
+            # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
+            build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
 
 
 def build_verification(*, config=None):

@@ -21,12 +21,14 @@ SYSTEM = (
     "You extract a structured report from a traveller's message (usually Korean). "
     "Return JSON with keys: type, minutes, products.\n"
     "type: 'delay' (they will be late), 'closed' (the place they are at is closed today), "
-    "'stock_out' (items they wanted are sold out and they ask where else to buy), or 'other'.\n"
+    "'stock_out' (items they wanted are sold out and they ask where else to buy), "
+    "'change' (they ask to switch a plan we already changed to a different option, e.g. "
+    "'다른 식당으로 바꿔줘', '다른 걸로 해줘'), or 'other'.\n"
     "minutes: integer minutes of delay if stated, else null.\n"
     "products: list of product names they could not buy, copied from the message, else []."
 )
 
-TYPES = frozenset({"delay", "closed", "stock_out", "other"})
+TYPES = frozenset({"delay", "closed", "stock_out", "change", "other"})
 
 
 def validate(raw: Any, message: str) -> dict[str, Any] | None:
@@ -47,6 +49,10 @@ def validate(raw: Any, message: str) -> dict[str, Any] | None:
         return {"type": "delay", "minutes": minutes}
     if kind == "closed":
         return {"type": "closed"}
+    if kind == "change":
+        # ★재요청(v11 §1) — 무엇으로 바꿀지는 우리가 들고 있던 「다른 안」에서 고른다.
+        #   모델이 새 장소를 지어내게 두지 않는다.
+        return {"type": "change"}
     products = [str(p).strip() for p in raw.get("products") or [] if str(p).strip()]
     compact = message.replace(" ", "")
     products = [p for p in products if p.replace(" ", "") in compact]

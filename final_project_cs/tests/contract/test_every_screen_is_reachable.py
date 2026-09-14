@@ -22,7 +22,9 @@ from app.presentation.ui import theme
 
 #: 목록·상세가 아니라 **사람이 시작점으로 여는** 화면. 상세(`/ui/cases/{id}`)는
 #: 목록에서 들어가므로 메뉴에 없어도 된다.
-ENTRY_SCREENS = {"/ui/cases", "/ui/approvals", "/ui/admin", "/ops/outbox", "/ui/voc"}
+ENTRY_SCREENS = {"/ui/cases", "/ui/approvals", "/ui/admin", "/ops/outbox", "/ui/voc",
+                 # ★2026-09-14 시나리오 모드 스위치
+                 "/ui/scenario"}
 
 
 def _mounted_paths() -> set[str]:
