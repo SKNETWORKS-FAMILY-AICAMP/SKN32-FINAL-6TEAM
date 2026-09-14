@@ -228,3 +228,22 @@ DEFECTS.extend(MORE2)
 DEFECTS.extend(MORE3)
 DEFECTS.extend(MORE4)
 DEFECTS.extend(MORE5)
+
+# ★2026-09-14 커머스 중지. 도메인이 여행으로 바뀌어 커머스 Team 코드가 저장소에서 나갔다
+#  (app/modules/customer_ops/*.py 삭제). 이 결함들이 겨누던 파일이 없으므로 걸 수 없다.
+#  지우지 않는다 — 정의는 각 파일에 그대로 있고, 이 집합에서 빼면 되살아난다.
+#  학습 게임은 도메인이 바뀌어도 승계되는 베이스먼트(코어)에 집중한다(v11 §0-2).
+PARKED_COMMERCE = frozenset({
+    "INV-TEAM-001",
+    "INV-TEAM-002",
+    "INV-CLASSIFY-001",
+    "INV-VOC-001",
+    "INV-REVIEW-002",
+    "INV-COMMERCE-002",
+    "INV-COMMERCE-003",
+    "INV-COMMERCE-004",
+    "INV-COMMERCE-005",
+    "INV-VOC-002",
+})
+PARKED = [d for d in DEFECTS if d.defect_id in PARKED_COMMERCE]
+DEFECTS[:] = [d for d in DEFECTS if d.defect_id not in PARKED_COMMERCE]

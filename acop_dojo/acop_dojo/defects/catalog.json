@@ -156,120 +156,6 @@
     "tests/integration/api/test_api_runtime.py::test_create_escalates_when_injected_classifier_fails"
    ]
   },
-  "INV-CLASSIFY-001": {
-   "failed": [
-    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[intent-not_a_registered_intent]",
-    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[sentiment-furious]"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
-   "path": "app/modules/customer_ops/feedback.py",
-   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 26.72s",
-   "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다",
-   "unique_failures": [
-    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[intent-not_a_registered_intent]",
-    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[sentiment-furious]"
-   ]
-  },
-  "INV-COMMERCE-002": {
-   "failed": [
-    "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "제안에는 근거 id 가 붙어야 한다 — ContextPack 에 실재하는 것으로",
-   "path": "app/modules/customer_ops/procurement_order_payment.py",
-   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 38.66s",
-   "title": "제안이 근거 id 를 달지 않는다",
-   "unique_failures": [
-    "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
-   ]
-  },
-  "INV-COMMERCE-003": {
-   "failed": [
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[]",
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[unknown]"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "값을 모르면 비워 둔다 — 모르는 상태를 확정 답변으로 만들지 않는다",
-   "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "3 failed, 708 passed, 4 deselected, 36 warnings in 37.00s",
-   "title": "배송 상태를 모르는데 아는 척 답한다",
-   "unique_failures": [
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[]",
-    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[unknown]"
-   ]
-  },
-  "INV-COMMERCE-004": {
-   "failed": [
-    "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "답변은 근거와 일치해야 한다",
-   "path": "app/modules/customer_ops/fulfillment_logistics.py",
-   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 36.44s",
-   "title": "조회된 배송 건수를 세지 않고 0으로 답한다",
-   "unique_failures": [
-    "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
-   ]
-  },
-  "INV-COMMERCE-005": {
-   "failed": [
-    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
-    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
-    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
-    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
-    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
-   "path": "app/modules/customer_ops/catalog_verification.py",
-   "summary": "5 failed, 465 passed, 4 deselected, 36 warnings in 27.44s",
-   "title": "계약에 없는 능력을 받아도 처리한다",
-   "unique_failures": [
-    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
-    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
-    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
-    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
-    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
-   ]
-  },
   "INV-CONFIG-001": {
    "failed": [
     "tests/unit/core/test_project_config_declaration.py::test_require_module_on_undeclared_module_also_raises",
@@ -674,32 +560,6 @@
     "tests/contract/test_contracts.py::test_respond_rejects_empty_answer"
    ]
   },
-  "INV-REVIEW-002": {
-   "failed": [
-    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
-    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
-    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
-    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "생성된 답변은 금지어와 PII 를 검사한 뒤 내보낸다",
-   "path": "app/modules/customer_ops/response_review.py",
-   "summary": "4 failed, 466 passed, 4 deselected, 36 warnings in 30.30s",
-   "title": "금지어 검사가 사라졌다",
-   "unique_failures": [
-    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
-    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
-    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
-    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
-   ]
-  },
   "INV-SCOPE-001": {
    "failed": [
     "tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant"
@@ -892,46 +752,6 @@
     "tests/integration/db/test_stale_write_conflict.py::test_two_writers_that_read_the_same_version_produce_exactly_one_conflict"
    ]
   },
-  "INV-TEAM-001": {
-   "failed": [
-    "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 늘리지 않는다",
-   "path": "app/modules/customer_ops/return_refund.py",
-   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 35.63s",
-   "title": "반품 가능 기간이 정책보다 길어졌다",
-   "unique_failures": [
-    "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
-   ]
-  },
-  "INV-TEAM-002": {
-   "failed": [
-    "tests/unit/teams/test_response_review.py::test_refund_amount_above_order_total_is_fact_mismatch",
-    "tests/unit/teams/test_response_review_team.py::test_fact_mismatch_retries_and_later_pass_is_recorded",
-    "tests/unit/teams/test_response_review_team.py::test_return_quantity_over_item_count_is_fact_mismatch"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": false,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "생성된 답변은 사실과 대조한 뒤 내보낸다",
-   "path": "app/modules/customer_ops/response_review.py",
-   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.25s",
-   "title": "답변 검토에서 사실 대조 결과를 버린다",
-   "unique_failures": []
-  },
   "INV-TEAM-004": {
    "failed": [
     "tests/contract/test_contracts.py::test_approval_required_proposal_anywhere_in_the_list_forces_wait"
@@ -1046,6 +866,216 @@
     "tests/integration/controller/test_controller_integration.py::test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state"
    ]
   },
+  "INV-WAITINPUT-001": {
+   "failed": [
+    "tests/contract/test_contracts.py::test_wait_for_input_rejects_other_wait_reason"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "wait_for_input 은 wait_reason 이 customer_input 이어야 한다",
+   "path": "app/core/contracts.py",
+   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.40s",
+   "title": "입력 대기의 사유가 아무 값이나 통과한다",
+   "unique_failures": [
+    "tests/contract/test_contracts.py::test_wait_for_input_rejects_other_wait_reason"
+   ]
+  }
+ },
+ "parked": {
+  "INV-CLASSIFY-001": {
+   "failed": [
+    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[intent-not_a_registered_intent]",
+    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[sentiment-furious]"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 잘못된 라벨은 거부한다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/feedback.py",
+   "summary": "2 failed, 468 passed, 4 deselected, 36 warnings in 26.72s",
+   "title": "분류 라벨 검사가 or 에서 and 로 바뀌었다",
+   "unique_failures": [
+    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[intent-not_a_registered_intent]",
+    "tests/unit/voc/test_feedback.py::test_classifier_rejects_one_invalid_label_at_a_time[sentiment-furious]"
+   ]
+  },
+  "INV-COMMERCE-002": {
+   "failed": [
+    "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "제안에는 근거 id 가 붙어야 한다 — ContextPack 에 실재하는 것으로",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/procurement_order_payment.py",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 38.66s",
+   "title": "제안이 근거 id 를 달지 않는다",
+   "unique_failures": [
+    "tests/unit/teams/test_procurement_order_payment.py::test_proposal_carries_the_evidence_it_was_built_from"
+   ]
+  },
+  "INV-COMMERCE-003": {
+   "failed": [
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[]",
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[unknown]"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "값을 모르면 비워 둔다 — 모르는 상태를 확정 답변으로 만들지 않는다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/fulfillment_logistics.py",
+   "summary": "3 failed, 708 passed, 4 deselected, 36 warnings in 37.00s",
+   "title": "배송 상태를 모르는데 아는 척 답한다",
+   "unique_failures": [
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[UNAVAILABLE]",
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[]",
+    "tests/unit/teams/test_fulfillment_logistics.py::test_unknown_shipment_status_escalates_instead_of_answering[unknown]"
+   ]
+  },
+  "INV-COMMERCE-004": {
+   "failed": [
+    "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "답변은 근거와 일치해야 한다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/fulfillment_logistics.py",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 36.44s",
+   "title": "조회된 배송 건수를 세지 않고 0으로 답한다",
+   "unique_failures": [
+    "tests/unit/teams/test_fulfillment_logistics.py::test_tracking_answer_counts_the_shipments_it_read"
+   ]
+  },
+  "INV-COMMERCE-005": {
+   "failed": [
+    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/catalog_verification.py",
+   "summary": "5 failed, 465 passed, 4 deselected, 36 warnings in 27.44s",
+   "title": "계약에 없는 능력을 받아도 처리한다",
+   "unique_failures": [
+    "tests/unit/teams/test_catalog_verification.py::test_compliance_check_always_escalates_without_claiming_a_result",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_sku_returns_catalog_fact",
+    "tests/unit/teams/test_catalog_verification.py::test_lookup_unknown_sku_responds_not_found",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_matches_order_item",
+    "tests/unit/teams/test_catalog_verification.py::test_verify_listing_mismatch_escalates"
+   ]
+  },
+  "INV-REVIEW-002": {
+   "failed": [
+    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
+    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
+    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
+    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "생성된 답변은 금지어와 PII 를 검사한 뒤 내보낸다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/response_review.py",
+   "summary": "4 failed, 466 passed, 4 deselected, 36 warnings in 30.30s",
+   "title": "금지어 검사가 사라졌다",
+   "unique_failures": [
+    "tests/unit/teams/test_response_review.py::test_forbidden_word_retries_then_passes",
+    "tests/unit/teams/test_response_review.py::test_four_failed_reviews_escalate_with_retry_code",
+    "tests/unit/teams/test_response_review_team.py::test_deterministic_review_runs_before_tone_llm",
+    "tests/unit/teams/test_response_review_team.py::test_forbidden_word_retries_then_escalates"
+   ]
+  },
+  "INV-TEAM-001": {
+   "failed": [
+    "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": true,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 늘리지 않는다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/return_refund.py",
+   "summary": "1 failed, 710 passed, 4 deselected, 36 warnings in 35.63s",
+   "title": "반품 가능 기간이 정책보다 길어졌다",
+   "unique_failures": [
+    "tests/unit/teams/test_return_refund.py::test_expired_return_is_rejected_without_proposal"
+   ]
+  },
+  "INV-TEAM-002": {
+   "failed": [
+    "tests/unit/teams/test_response_review.py::test_refund_amount_above_order_total_is_fact_mismatch",
+    "tests/unit/teams/test_response_review_team.py::test_fact_mismatch_retries_and_later_pass_is_recorded",
+    "tests/unit/teams/test_response_review_team.py::test_return_quantity_over_item_count_is_fact_mismatch"
+   ],
+   "gates": {
+    "applied": true,
+    "applies": true,
+    "distinguishable": false,
+    "kills_tests": true,
+    "not_collection_error": true,
+    "reverts": true
+   },
+   "invariant": "생성된 답변은 사실과 대조한 뒤 내보낸다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "path": "app/modules/customer_ops/response_review.py",
+   "summary": "3 failed, 467 passed, 4 deselected, 36 warnings in 28.25s",
+   "title": "답변 검토에서 사실 대조 결과를 버린다",
+   "unique_failures": []
+  },
   "INV-VOC-001": {
    "failed": [
     "tests/unit/voc/test_feedback.py::test_classifier_fails_when_any_field_is_missing[intent]",
@@ -1062,6 +1092,7 @@
     "reverts": true
    },
    "invariant": "분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "path": "app/modules/customer_ops/feedback.py",
    "summary": "4 failed, 466 passed, 4 deselected, 36 warnings in 26.76s",
    "title": "분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
@@ -1089,6 +1120,7 @@
     "reverts": true
    },
    "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
+   "parked_reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "path": "app/modules/customer_ops/voc_store_manager.py",
    "summary": "5 failed, 465 passed, 4 deselected, 36 warnings in 29.81s",
    "title": "degraded 검사가 뒤집혔다",
@@ -1098,26 +1130,6 @@
     "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[0]",
     "tests/unit/teams/test_voc_store_manager.py::test_non_repeated_feedback_is_completed[1]",
     "tests/unit/teams/test_voc_store_manager.py::test_repeated_complaint_proposes_voc_escalation"
-   ]
-  },
-  "INV-WAITINPUT-001": {
-   "failed": [
-    "tests/contract/test_contracts.py::test_wait_for_input_rejects_other_wait_reason"
-   ],
-   "gates": {
-    "applied": true,
-    "applies": true,
-    "distinguishable": true,
-    "kills_tests": true,
-    "not_collection_error": true,
-    "reverts": true
-   },
-   "invariant": "wait_for_input 은 wait_reason 이 customer_input 이어야 한다",
-   "path": "app/core/contracts.py",
-   "summary": "1 failed, 469 passed, 4 deselected, 36 warnings in 26.40s",
-   "title": "입력 대기의 사유가 아무 값이나 통과한다",
-   "unique_failures": [
-    "tests/contract/test_contracts.py::test_wait_for_input_rejects_other_wait_reason"
    ]
   }
  },

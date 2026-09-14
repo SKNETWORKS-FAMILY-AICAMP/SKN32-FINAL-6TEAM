@@ -114,3 +114,17 @@ def owns(track: Track, path: str) -> bool:
     if not track.owns:
         return True
     return any(path.startswith(prefix) for prefix in track.owns)
+
+# ★2026-09-14 커머스 중지 — 팀 모듈 트랙 셋은 지워진 커머스 Team 코드를 가리킨다.
+#  학습 게임은 도메인이 바뀌어도 승계되는 베이스먼트에 집중한다(v11 §0-2).
+#  여행 Team 코드가 안정되면 그때 여행 트랙을 새로 짠다. 지우지 않고 목록에서만 뺀다.
+import dataclasses as _dataclasses  # noqa: E402
+
+PARKED_TRACK_IDS = frozenset({"team-voc", "team-review", "team-commerce"})
+PARKED_TRACKS = {k: TRACKS.pop(k) for k in list(TRACKS) if k in PARKED_TRACK_IDS}
+TRACKS["all"] = _dataclasses.replace(
+    TRACKS["all"], scenarios=("status-inquiry-untouched-v1",))
+TRACKS["core1"] = _dataclasses.replace(
+    TRACKS["core1"],
+    scenarios=("status-inquiry-untouched-v1", "checkpoint-not-projection-v1",
+               "case-reducer-versions-v1"))

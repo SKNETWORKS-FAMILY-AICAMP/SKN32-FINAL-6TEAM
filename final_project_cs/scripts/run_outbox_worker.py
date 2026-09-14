@@ -17,9 +17,23 @@ def publish(message: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
-    parser.parse_args()
-    worker = OutboxWorker(get_connection, publish)
-    worker.process_once()
+    parser.add_argument("--tenant", default=None, help="이 테넌트의 메시지만 집는다")
+    parser.add_argument("--drain", action="store_true", help="보낼 것이 없을 때까지 돈다")
+    args = parser.parse_args()
+
+    # ★`trip.notice`(일정 변경 통지)는 디스코드 웹훅으로 나간다(v11 §6-A). 웹훅이
+    #   비어 있으면 **실패로 남긴다** — 보낸 적 없는 알림을 `delivered` 로 찍지 않는다.
+    from app.core.settings import get_settings
+    from app.infrastructure.notify import DiscordWebhook
+
+    publisher = DiscordWebhook(get_settings().discord_webhook_url, fallback=publish)
+    worker = OutboxWorker(get_connection, publisher, tenant_id=args.tenant)
+    handled = 0
+    while worker.process_once():
+        handled += 1
+        if not args.drain:
+            break
+    print(json.dumps({"handled": handled}, ensure_ascii=False))
     return 0
 
 

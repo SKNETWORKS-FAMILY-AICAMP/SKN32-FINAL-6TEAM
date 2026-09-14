@@ -123,3 +123,54 @@ def get(scenario_id: str) -> Scenario:
     except KeyError:
         known = ", ".join(SCENARIOS)
         raise SystemExit(f"모르는 시나리오다: {scenario_id}\n아는 것: {known}") from None
+
+# ★2026-09-14 커머스 중지 — 이 시나리오들이 가리키던 테스트가 저장소에서 나갔다.
+#  지우지 않는다. 정의는 위에 그대로 있고, 이 집합에서 빼면 되살아난다.
+PARKED_SCENARIO_IDS = frozenset({
+    "shipping-status-resolved-v1", "voc-batch-tenant-scoped-v1", "review-pii-escalates-v1",
+    "procurement-policy-evidence-v1", "voc-degraded-escalates-v1",
+    "fulfillment-lost-shipment-approval-v1", "catalog-compliance-escalates-v1",
+    "return-refund-no-side-effect-v1",
+})
+PARKED_SCENARIOS = {k: v for k, v in SCENARIOS.items() if k in PARKED_SCENARIO_IDS}
+for _scenario_id in PARKED_SCENARIO_IDS:
+    SCENARIOS.pop(_scenario_id, None)
+
+# ★베이스먼트 시나리오. 도메인이 바뀌어도 승계되는 코어(v11 §0-2)만 돈다 —
+#  Team 은 테스트용 가짜(FakeTeam)라 여행 Team 이 바뀌어도 이 경로는 그대로다.
+SCENARIOS["status-inquiry-untouched-v1"] = Scenario(
+    scenario_id="status-inquiry-untouched-v1",
+    title="조회형 문의 하나가 도메인 데이터를 건드리지 않고 끝난다",
+    nodeid=(
+        "tests/integration/controller/test_controller_integration.py"
+        "::test_e2e_status_inquiry_does_not_touch_the_booking"
+    ),
+    objective=(
+        "Case 가 만들어지고 라우팅되고 Team 이 읽기만 한 뒤 닫히는 코어 전 구간을 본다. "
+        "Team 은 가짜라 도메인이 무엇이든 같은 경로다. 조회는 제안을 내지 않는다."
+    ),
+    needs_db=True,
+)
+SCENARIOS["checkpoint-not-projection-v1"] = Scenario(
+    scenario_id="checkpoint-not-projection-v1",
+    title="실행 스냅샷은 업무 상태가 아니다",
+    nodeid=(
+        "tests/integration/controller/test_controller_integration.py"
+        "::test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state"
+    ),
+    objective="checkpoint 를 고쳐도 Case 가 안 바뀐다 — 권위 있는 상태는 customer_cases 하나다.",
+    needs_db=True,
+)
+SCENARIOS["engine-serves-another-domain-v1"] = Scenario(
+    scenario_id="engine-serves-another-domain-v1",
+    title="같은 검증 엔진이 다른 도메인을 한 줄도 안 고치고 돌린다",
+    nodeid=(
+        "tests/architecture/test_engine_serves_another_domain.py"
+        "::test_refund_over_the_order_total_is_rejected"
+    ),
+    objective=(
+        "보스전용. 코어는 도메인을 모른다는 주장의 유일한 대조군이다. "
+        "선언만 갈아 끼우고 app/core/verification.py 는 그대로 쓴다."
+    ),
+    needs_db=False,
+)

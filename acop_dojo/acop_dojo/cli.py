@@ -164,6 +164,11 @@ def cmd_defects(args: argparse.Namespace) -> int:
             print(f"  패치 작성 {path.name}")
     only = args.only.split(",") if args.only else None
     outcome = validate.validate_all(target_root(), only=only)
+    if not outcome["entries"]:
+        # 검증 결과가 없으면 카탈로그를 건드리지 않는다. 예전에는 빈 결과로
+        # 덮어써 검증해 둔 결함 39건의 결과가 지워졌다.
+        print("검증 결과가 하나도 없다 — 카탈로그를 덮어쓰지 않는다.")
+        return 1
     data = defects.load_catalog()
     # 부분 검증이면 기존 결과를 지우지 않고 덮어쓴다.
     merged = dict(data.get("entries", {})) if only else {}
@@ -260,7 +265,7 @@ def cmd_tracks(_: argparse.Namespace) -> int:
     catalog = defects.load_catalog()
     playable = defect_stage.playable(catalog)
     print("")
-    print("학습 트랙 — 전체 1개 + 파트 6개")
+    print(f"학습 트랙 {len(tracks.TRACKS)}개 — 베이스먼트(도메인을 모르는 코어)")
     print(SEPARATOR)
     for track in tracks.TRACKS.values():
         mine = [d for d in playable
@@ -275,10 +280,10 @@ def cmd_tracks(_: argparse.Namespace) -> int:
     print(SEPARATOR)
     print("  쓰는 법:  python dojo.py learn 0 --track core1")
     print("            python dojo.py defect --track front")
-    print("            python dojo.py map --track team-review")
+    print("            python dojo.py map --track core2")
     print("")
-    print("  ★팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 모듈 성격으로 나눈 추정이다.")
-    print("   담당이 다르면 acop_dojo/acop_dojo/tracks.py 의 owns 만 고치면 된다.")
+    print(f"  중지: {', '.join(sorted(tracks.PARKED_TRACK_IDS))} — 커머스 Team 트랙이다.")
+    print("   도메인이 여행으로 바뀌어 대상 코드가 등록에서 빠졌다. 지우지 않고 세워 두었다.")
     return 0
 
 
@@ -333,7 +338,8 @@ def cmd_answers(args: argparse.Namespace) -> int:
 def cmd_patches(_: argparse.Namespace) -> int:
     outcome = validate.check_patches(target_root())
     broken = (len(outcome["anchor_broken"]) + len(outcome["apply_broken"])
-              + len(outcome["drift"]) + len(outcome["missing"]))
+              + len(outcome["drift"]) + len(outcome["missing"])
+              + len(outcome["source_missing"]))
     print(SEPARATOR)
     if broken:
         print(f"{broken}개가 낡았다. `python dojo.py defects --rebuild` 로 다시 만든다.")
@@ -413,7 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("patches", help="결함 patch 가 아직 유효한지 본다 (빠름)").set_defaults(func=cmd_patches)
 
-    sub.add_parser("tracks", help="학습 트랙 7개를 본다").set_defaults(func=cmd_tracks)
+    sub.add_parser("tracks", help="학습 트랙을 본다 (베이스먼트 4개)").set_defaults(func=cmd_tracks)
 
     placement_cmd = sub.add_parser("placement", help="어디부터 시작할지 재 본다")
     placement_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))

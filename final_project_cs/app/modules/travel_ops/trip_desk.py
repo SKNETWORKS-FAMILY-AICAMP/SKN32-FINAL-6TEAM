@@ -30,6 +30,14 @@ def _minutes(start: datetime, end: datetime | None, default: int = 60) -> int:
     return default if end is None else int((end - start).total_seconds() // 60)
 
 
+def _object_particle(word: str) -> str:
+    """을/를. 마지막 글자가 한글이 아니면 「을(를)」로 둔다 — 틀리게 붙이지 않는다."""
+    last = word.strip()[-1:] if word.strip() else ""
+    if not ("가" <= last <= "힣"):
+        return "을(를)"
+    return "을" if (ord(last) - 0xAC00) % 28 else "를"
+
+
 def _round_up_5(moment: datetime) -> datetime:
     extra = (-moment.minute) % 5
     return (moment + timedelta(minutes=extra)).replace(second=0, microsecond=0)
@@ -138,10 +146,15 @@ class TripDesk:
         best, alternates, rejected = choose(candidates)
         if best is None:
             return {"status": "unresolved", "rejected": {c.name: c.rejected for c in rejected}}
-        detour = (best.option or {}).get("detour_m")
-        text = (f"{best.name}이(가) 호텔로 돌아가는 동선 위에 있습니다(돌아가는 거리 약 {detour}m 추가, "
-                f"도보 약 {max(1, round(detour / WALK_M_PER_MIN))}분). {', '.join(products)}을(를) "
-                f"취급하는 매장이지만 지금 재고는 확인하지 못했습니다[미확인].")
+        detour = (best.option or {}).get("detour_m") or 0
+        # ★100m 안쪽이면 「돌아가는 거리」를 숫자로 말하지 않는다 — 9m·1분 같은 값은
+        #   정밀해 보이지만 좌표 근사에서 나온 잡음이다.
+        extra = ("거의 돌아가지 않아도 됩니다" if detour < 100 else
+                 f"돌아가는 거리 약 {detour}m 추가, 도보 약 {max(1, round(detour / WALK_M_PER_MIN))}분")
+        listed = ", ".join(products)
+        text = (f"{best.name}이(가) 호텔로 돌아가는 동선 위에 있습니다({extra}). "
+                f"{listed}{_object_particle(listed)} 취급하는 매장이지만 지금 재고는 확인하지 "
+                f"못했습니다[미확인].")
         return {"status": "answered", "text": text, "recommendation": best.name,
                 "stock": "unverified", "other_options": [c.name for c in alternates],
                 "rejected": {c.name: c.rejected for c in rejected},
