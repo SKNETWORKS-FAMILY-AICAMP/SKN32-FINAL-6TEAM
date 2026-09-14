@@ -16,9 +16,8 @@ from pathlib import Path
 SKIP_NAMES = {".git", "__pycache__", ".pytest_cache", ".venv", "node_modules"}
 #: 대상 저장소 기준 상대 경로. 용량만 크고 테스트가 쓰지 않는다.
 SKIP_PATHS = {"eval/reports"}
-#: 대상 저장소 밖을 읽는 곳이 하나 있다 — scripts/seed.py 가 워크스페이스의 datasets 를
-#: 참조한다. datasets 전체는 2.4GB 라 통째로 복사할 수 없어 필요한 파일만 옮긴다.
-SIBLING_FILES = ("datasets/commerce/coupang_order_history/processed/orders.jsonl",)
+#: 대상 저장소 밖(워크스페이스의 datasets/)은 사본에 넣지 않는다. 그 폴더는 개인 구매기록이라
+#: git 에서 뺐고, 그것을 읽던 scripts/seed.py 도 여행 전환 때 지워졌다(2026-09-14).
 
 
 def _ignore_factory(root: Path):
@@ -64,19 +63,7 @@ class Sandbox:
         self.root = Path(self._tmp) / self.target.name
         shutil.copytree(self.target, self.root,
                         ignore=_ignore_factory(self.target.resolve()), symlinks=False)
-        self._mirror_siblings()
         return self
-
-    def _mirror_siblings(self) -> None:
-        workspace = self.target.parent
-        assert self.root is not None
-        for rel in SIBLING_FILES:
-            source = workspace / rel
-            if not source.exists():
-                continue
-            destination = self.root.parent / rel
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
 
     def __exit__(self, *exc: object) -> None:
         if self._tmp:
