@@ -211,9 +211,10 @@ class DisruptionCheck:
     def _traffic(self, place: dict[str, Any], at: datetime | None) -> dict[str, Any]:
         """교통 돌발·통제. ★장소를 가리지 않는다 — 실내 일정도 가는 길이 막힌다.
 
-        ★지금은 ITS 만 붙어 있다. 시내 집회·행사는 UTIC 이 본체인데 승인 대기라,
-          ITS 에 태그로 들어온 것만 잡힌다(실측 서울 122건 중 [집회] 1건). 그 사실을
-          `note` 로 남긴다 — 「집회 없음」이라고 단정하지 않는다.
+        ★ITS 와 UTIC 를 **합친다**(`traffic_chain.CombinedTraffic`). 시내 집회·행사는 UTIC 이
+          본체다 — UTIC 가 못 답한 회차에는 ITS 에 태그로 들어온 것만 잡힌다(실측 서울 122건 중
+          [집회] 1건). 그때는 `note` 로 남긴다 — 「집회 없음」이라고 단정하지 않는다.
+        ★둘 중 하나만 답해도 판정은 한다(`partial_from` 에 못 답한 쪽). 둘 다 못 답하면 치명.
         """
         base = {"category": "traffic_control"}
         source = getattr(self.sources, "traffic", None)
@@ -227,20 +228,26 @@ class DisruptionCheck:
         moment = at if isinstance(at, datetime) else datetime.now(UTC)
         value = source.near(latitude=float(latitude), longitude=float(longitude), at=moment)
         if value is None:
-            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
-                    "reason": "교통 돌발을 못 읽었다"}
+            tried = [getattr(s, "name", "?") for s in getattr(source, "sources", [source])]
+            return {**base, "status": "failed", "tried": tried,
+                    "reason": "교통 돌발 소스가 모두 못 읽었다"}
         disruptions = [{"category": "traffic_control", "kind": item.get("reason"),
                         "road": item.get("road"), "distance_m": item.get("distance_m"),
-                        "message": item.get("message"), "source": value.get("source")}
+                        "message": item.get("message"),
+                        "source": item.get("source") or value.get("source")}
                        for item in value.get("for_place") or []]
         advisories = [{"category": "traffic_control", "field": "partial_lane",
                        "value": item.get("road"), "note": item.get("reason"),
-                       "source": value.get("source")}
+                       "source": item.get("source") or value.get("source")}
                       for item in value.get("advisories") or []]
-        return {**base, "status": "ok", "source": value.get("source"),
-                "confirmed_at": value.get("confirmed_at"),
-                "note": "시내 집회·행사는 UTIC 승인 대기 — ITS 에 태그된 것만 본다",
-                "_disruptions": disruptions, "_advisories": advisories}
+        answered = value.get("sources") or [value.get("source")]
+        result = {**base, "status": "ok", "source": value.get("source"),
+                  "confirmed_at": value.get("confirmed_at"),
+                  "partial_from": value.get("partial_from", []),
+                  "_disruptions": disruptions, "_advisories": advisories}
+        if "utic" not in answered:
+            result["note"] = "UTIC 가 답하지 않았다 — 시내 집회·행사는 ITS 에 태그된 것만 본다"
+        return result
 
 
     def _air(self, place: dict[str, Any], at: datetime | None,

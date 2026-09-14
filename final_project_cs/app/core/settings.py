@@ -154,6 +154,7 @@ class Settings(BaseSettings):
     rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
     rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
     rate_disaster_msg_per_day: int = 100     # 미확인 - 같은 플랫폼 다른 API 사용기의 100/일
+    rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
@@ -185,6 +186,7 @@ class Settings(BaseSettings):
             "kma_earthquake": self.rate_kma_earthquake_per_day,
             "open_meteo_air": self.rate_open_meteo_air_per_day,
             "disaster_msg": self.rate_disaster_msg_per_day,
+            "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
         }

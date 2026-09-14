@@ -322,6 +322,22 @@ def _public_data_key(settings: Any, field: str) -> str:
     return override or getattr(settings, "data_go_kr_key", "") or ""
 
 
+def _proxy_would_apply(settings: Any, name: str) -> bool:
+    """`apply_outbound_proxy()` 가 이 소스에 경유를 **실제로 걸까**. 키를 고를 때 쓴다.
+
+    ★조립 끝에서 거는 것과 같은 조건이어야 한다 — 어긋나면 key 2 를 들고 바로 나가거나
+      key 1 을 들고 서버로 나가 거절당한다.
+    """
+    import importlib.util
+
+    url = (getattr(settings, "outbound_proxy_url", "") or "").strip()
+    wanted = {part.strip() for part in (getattr(settings, "outbound_proxy_sources", "") or "")
+              .split(",") if part.strip()}
+    if not url or not ("*" in wanted or name in wanted):
+        return False
+    return not (url.startswith("socks") and importlib.util.find_spec("socksio") is None)
+
+
 def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str | None:
     """이름이 맞는 소스에만 경유 프록시를 건다. 못 걸면 **이유**를, 걸었으면 `None`.
 
@@ -457,15 +473,36 @@ def build_travel_sources(settings: Any) -> TravelSources:
         else:
             sources.unavailable["disaster"] = f"재난문자 샘플 CSV 가 없다: {sample}"
 
+    # ── 교통 돌발: ITS + UTIC 를 **합친다**(`traffic_chain.py`) ─────────────
+    #   둘이 보는 것이 다르다 — 시내 사고·행사·집회는 UTIC 가 본체다.
+    traffic_sources: list[Any] = []
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
     if its_key:
         from .its_traffic import ItsTrafficEvents
-        sources.traffic = ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache)
+        traffic_sources.append(ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache))
     else:
-        sources.unavailable["traffic"] = (
+        sources.unavailable["traffic_its"] = (
             "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
             "발급한 키를 .env.apikeys 에 채운다. ★공공데이터포털 키와 다른 키다.")
+    # ★UTIC 키는 IP 에 묶여 있다 — **실제로 나가는 길**에 맞는 키를 고른다.
+    #   서버 경유가 걸리면 key 2, 아니면 key 1. 다른 쪽 키로 대신하지 않는다(어차피 거절).
+    proxied = _proxy_would_apply(settings, "utic")
+    utic_key = settings.utic_key(proxied=proxied) if hasattr(settings, "utic_key") else ""
+    if utic_key:
+        from .utic import UticIncidents
+        traffic_sources.append(UticIncidents(service_key=utic_key, limiter=limiter, cache=cache))
+    else:
+        sources.unavailable["traffic_utic"] = (
+            f"ACOP_UTIC_API_KEY_{2 if proxied else 1} 가 비어 있다 — "
+            f"{'서버 경유' if proxied else '바로 부르는'} 길의 IP 에 등록된 키가 필요하다.")
+    if not traffic_sources:
+        sources.unavailable["traffic"] = "교통 돌발 — ITS·UTIC 키가 모두 없다"
+    elif len(traffic_sources) == 1:
+        sources.traffic = traffic_sources[0]
+    else:
+        from .traffic_chain import CombinedTraffic
+        sources.traffic = CombinedTraffic(traffic_sources)
 
     # ── 대기질: 1차(에어코리아 측정값) + 대체(Open-Meteo 모델 추정) — 결정 15 ─────
     # ★☆2026-09-14 실측 — 에어코리아가 연달아 504 SERVICETIMEOUT 을 냈다. 대체가 없으면

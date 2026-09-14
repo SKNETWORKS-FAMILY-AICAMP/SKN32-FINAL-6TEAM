@@ -63,6 +63,25 @@ def test_socks_without_socksio_is_not_applied_and_says_why(monkeypatch):
     assert utic._proxy is None
 
 
+def _built_utic(**overrides):
+    from app.core.settings import Settings
+    from app.infrastructure.travel.base import build_travel_sources
+
+    settings = Settings.model_construct(**{"its_api_key": "", "utic_api_key_1": "key-one",
+                                           "utic_api_key_2": "key-two", **overrides})
+    return build_travel_sources(settings).traffic
+
+
+def test_the_utic_key_follows_the_road_out():
+    """★UTIC 키는 IP 에 묶여 있다 — 서버를 거치면 key 2, 바로 나가면 key 1(실측: 반대로 쓰면 03 거절)."""
+    proxied = _built_utic(outbound_proxy_url="http://127.0.0.1:8888", outbound_proxy_sources="utic")
+    assert proxied._key == "key-two" and proxied._proxy == "http://127.0.0.1:8888"
+    direct = _built_utic(outbound_proxy_url="", outbound_proxy_sources="utic")
+    assert direct._key == "key-one" and direct._proxy is None
+    not_listed = _built_utic(outbound_proxy_url="http://127.0.0.1:8888", outbound_proxy_sources="its")
+    assert not_listed._key == "key-one" and not_listed._proxy is None
+
+
 def test_the_proxy_is_actually_passed_to_the_request(monkeypatch):
     seen = {}
 
