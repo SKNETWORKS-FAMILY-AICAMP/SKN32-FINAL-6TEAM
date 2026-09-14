@@ -15,6 +15,14 @@
       "port": 8042
     },
     {
+      "name": "tripilot",
+      "url": "http://tripilot.localhost:8042"
+    },
+    {
+      "name": "scenario-console",
+      "url": "http://scenario.localhost:8042"
+    },
+    {
       "name": "labeling-form",
       "runtimeExecutable": "python",
       "runtimeArgs": [

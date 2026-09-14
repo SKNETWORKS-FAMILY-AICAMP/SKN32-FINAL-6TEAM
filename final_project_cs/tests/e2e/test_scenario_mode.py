@@ -112,6 +112,15 @@ def test_stopping_removes_the_scenario_tenant(client):
     assert client.get("/scenario/feed").json() == {"active": False}
 
 
+@pytest.mark.parametrize("host,target", [("tripilot.localhost:8042", "/tripilot"),
+                                         ("scenario.localhost:8042", "/ui/scenario"),
+                                         ("localhost:8042", "/ui/cases")])
+def test_preview_host_names_land_on_their_screens(client, host, target):
+    """★앱 미리보기 목록은 localhost 주소에 경로를 못 붙인다 — 이름으로 나눠 같은 서버에 붙인다."""
+    response = client.get("/", headers={"host": host}, follow_redirects=False)
+    assert response.status_code == 307 and response.headers["location"] == target
+
+
 def test_everything_is_hidden_when_the_setting_is_off(monkeypatch):
     client = _client(monkeypatch, enabled=False)
     assert client.get("/tripilot").status_code == 404
