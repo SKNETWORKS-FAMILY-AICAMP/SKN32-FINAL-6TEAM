@@ -120,9 +120,18 @@ def test_voc_without_report_says_none(ui_fixture):
 
 
 def test_admin_shows_registered_teams_guardrails_and_masks_key(ui_fixture):
+    """★전에는 이름 **하나**(`voc_store_manager`)만 봤다. 그러면 나머지 다섯이
+    화면에서 빠져도 초록이고, 도메인이 바뀌면 그 한 줄 때문에 붉어진다.
+    등록된 **전부**가 보이는지 본다 — 이름은 등록에서 가져온다."""
+    import app.composition as composition
+
+    registered = sorted(m.team_id for m in composition.build_registry().manifests())
+    assert registered, "등록된 Team 이 없다 — config/project.yaml 을 확인한다."
+
     response = ui_fixture["client"].get("/ui/admin")
     assert response.status_code == 200
-    assert "voc_store_manager" in response.text
+    missing = [team_id for team_id in registered if team_id not in response.text]
+    assert not missing, f"/ui/admin 에 안 보이는 등록 Team: {missing}"
     assert "12000" in response.text
     assert "sk-****" in response.text
     assert settings_module.get_settings().openai_api_key not in response.text
@@ -141,7 +150,10 @@ def test_admin_reflects_a_newly_registered_team(ui_fixture, monkeypatch):
 
     import app.composition as composition
     base_registry = composition.build_registry()
-    teams = [base_registry.get("voc_store_manager").module]
+    # ★어느 팀이든 하나면 된다 — 이 검사가 보는 것은 "새 팀이 화면에 뜨는가"다.
+    #   이름을 박아 두면 등록이 바뀔 때마다 무관한 이유로 붉어진다.
+    any_registered = sorted(m.team_id for m in base_registry.manifests())[0]
+    teams = [base_registry.get(any_registered).module]
     monkeypatch.setattr(composition, "build_registry", lambda: TeamRegistry(teams + [FakeTeam()]))
     response = ui_fixture["client"].get("/ui/admin")
     assert response.status_code == 200

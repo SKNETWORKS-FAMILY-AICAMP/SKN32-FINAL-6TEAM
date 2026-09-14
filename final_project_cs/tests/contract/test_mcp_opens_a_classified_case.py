@@ -43,12 +43,12 @@ def _events(case_id: str) -> list[str]:
 
 def test_a_case_opened_over_mcp_is_classified(monkeypatch, customer_id):
     monkeypatch.setattr(cases_module, "_mcp_classifier",
-                        lambda: (lambda text: {"intent": "shipping",
-                                               "issue_code": "shipping_delayed",
+                        lambda: (lambda text: {"intent": "incident_report",
+                                               "issue_code": "mobility_missed_or_disrupted",
                                                "sentiment": "negative"}))
-    view = cases_module._mcp_open(customer_id, f"배송 문의 {uuid4().hex[:8]}", "mcp")
+    view = cases_module._mcp_open(customer_id, f"이동 문의 {uuid4().hex[:8]}", "mcp")
 
-    assert view["intent"] == "shipping"
+    assert view["intent"] == "incident_report"
     assert view["status"] != "escalated", "분류에 성공했는데 escalated 로 갔다"
     assert EventType.CLASSIFIED.value in _events(view["case_id"])
 
@@ -66,7 +66,7 @@ def test_a_broken_classifier_still_records_the_attempt(monkeypatch, customer_id)
 def test_repeated_identical_calls_open_one_case(monkeypatch, customer_id):
     """★MCP 도 동일 요청 여러 번 → Case 하나여야 한다."""
     monkeypatch.setattr(cases_module, "_mcp_classifier",
-                        lambda: (lambda text: {"intent": "shipping", "issue_code": "shipping_other",
+                        lambda: (lambda text: {"intent": "confirm_request", "issue_code": "mobility_other",
                                                "sentiment": "neutral"}))
     message = f"같은 문의 {uuid4().hex[:8]}"
     ids = {cases_module._mcp_open(customer_id, message, "mcp")["case_id"] for _ in range(4)}

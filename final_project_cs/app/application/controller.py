@@ -18,6 +18,7 @@ from app.domain.events import EventType
 from app.core.verification import Mismatch
 from app.application.case_service import ActiveRunError, CaseService, ResumeTokenError
 from app.application.proposal_guard import audit_payload, check_proposal, describe
+from app.application.routing import case_type_of
 
 
 class ControllerError(RuntimeError):
@@ -68,7 +69,9 @@ class Controller:
     def _capability(self, case: dict[str, Any]) -> str:
         """Return the capability selected by the injected Team registry."""
         intent = case.get("intent")
-        entry = self.registry.resolve(case_type=intent or "", intent=intent)
+        entry = self.registry.resolve(
+            case_type=case_type_of(case.get("issue_code"), fallback=intent),
+            intent=intent)
         return self.registry.capability_for(entry, intent, input_text=case.get("subject"))
 
     def _policy(self, tenant_id: str, query: str, scopes: list[str]) -> tuple[list[Any], bool]:
@@ -163,8 +166,15 @@ class Controller:
                 run_id = self.case_service.start_run(conn, tenant_id=tenant_id, case_id=case_id)
                 if case["status"] == CaseStatus.ROUTING:
                     try:
+                        # ★두 축이다(v11 §5-B). `case_type` 은 대상 객체 종류로
+                        #   `issue_code` 접두에서 나오고, `intent` 는 요청 종류다.
+                        #   전에는 같은 값을 둘 다에 넣었다 — 커머스에서는 두 축이
+                        #   우연히 같은 말이라 맞았지만, 여행에서는 요청 종류 다섯이
+                        #   여섯 팀 어느 것과도 안 맞아 **아무 데도 도달하지 못했다.**
                         intent = case.get("intent")
-                        entry = self.registry.resolve(case_type=intent or "", intent=intent)
+                        entry = self.registry.resolve(
+                            case_type=case_type_of(case.get("issue_code"), fallback=intent),
+                            intent=intent)
                         capability = self.registry.capability_for(entry, intent)
                         self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                     event_type=EventType.ROUTED, payload={"owner_team_id": entry.manifest.team_id, "capability": capability}, actor_id=actor_id)

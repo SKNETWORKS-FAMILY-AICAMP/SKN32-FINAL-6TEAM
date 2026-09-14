@@ -233,7 +233,7 @@ def test_concurrent_apply_one_wins_one_gets_409(tmp_path, monkeypatch, configure
 
 @pytest.mark.parametrize("target_type,target_id,field", [
     ("module", "vector_rag", "enabled"),
-    ("team", "voc_store_manager", "active"),
+    ("team", "lodging", "active"),   # ★등록돼 있기만 하면 어느 팀이든 된다
 ])
 def test_toggle_changes_only_one_registered_flag_and_audits(
     tmp_path, monkeypatch, configured, target_type, target_id, field

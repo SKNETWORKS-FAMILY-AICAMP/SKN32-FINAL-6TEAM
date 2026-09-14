@@ -23,7 +23,7 @@ from app.infrastructure.llm.local_ft import LocalFTTeamLLM
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.rag.retriever import search_policy
-from app.modules.customer_ops import feedback
+from app.modules.travel_ops import feedback
 from app.presentation.security import masked
 from app.tools.read_tools import ReadToolbox
 
@@ -40,7 +40,7 @@ def build_classifier(*, config: ProjectConfig | None = None):
 
       ★2026-08-30 `9c11327`(모듈 게이트 실효화)이 여기에 `require_module("voc")`
       를 걸었다. 게이트를 만든 작업 자체는 정당했지만, 인라인 분류가
-      **뺄 수 있는 Team 자리**(`app/modules/customer_ops/feedback.py`)에 있고
+      **뺄 수 있는 Team 자리**(그때는 `app/modules/customer_ops/feedback.py`)에 있고
       테스트도 `tests/unit/voc/` 에 있어서 **파일 위치를 소관으로 착각**한
       것이다. 근거로 삼은 `CLAUDE.md` §1 문장의 출처인 v8 §3-A 는 v7.1 개정이
       반영되지 않은 낡은 절이었다.
@@ -57,7 +57,7 @@ def build_classifier(*, config: ProjectConfig | None = None):
         언제 부르고 / 실패를 어떻게 처리하고 / 어느 상태로 보내는가
             → `app/application/classification.py::classify_case` (코어 1)
         라벨 어휘 · 프롬프트 · provider 호출
-            → `app/modules/customer_ops/feedback.py` (모델)
+            → `app/modules/travel_ops/feedback.py` (모델)
 
       이 함수는 그 둘을 잇는 **배선**이다 — 도메인 모듈의 `classify` 를 마스킹과
       함께 감싸 코어 1 이 부를 수 있는 모양으로 만든다.
@@ -155,7 +155,12 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
     _validate_modules(config)
     if tools is None:
         config.require_module("vector_rag", "default ReadToolbox")
-        tools = ReadToolbox(get_connection, policy_search=search_policy)
+        # ★바깥 소스는 **조립이 넣는다.** 도구가 스스로 만들면 테스트가 조용히
+        #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
+        from app.infrastructure.travel import build_travel_sources
+
+        tools = ReadToolbox(get_connection, policy_search=search_policy,
+                            travel=build_travel_sources(get_settings()))
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -253,7 +258,8 @@ def build_verification(*, config=None):
     """도메인의 대조 선언을 가져온다 (v7 §9-E).
 
     ★basement 는 규칙 엔진만 갖고, **어휘는 도메인이 선언**한다.
-      쇼핑몰 CS 로 복사하면 이 함수가 가리키는 모듈만 갈아 끼운다.
+      도메인을 갈아끼우면 이 함수가 가리키는 모듈만 바뀐다 — 2026-09-10 에
+      실제로 `customer_ops` → `travel_ops` 로 한 줄 바꿨다.
 
     ★선언이 없으면 **빈 정책**을 준다 — 그러면 대조할 것이 없어 통과가 아니라
       "선언되지 않은 필드" 로 전부 거부된다. 도메인을 안 붙이면 아무 Action 도 못 한다.
@@ -261,11 +267,11 @@ def build_verification(*, config=None):
     """
     from app.core.verification import VerificationPolicy
     try:
-        from app.modules.customer_ops.verification_policy import (
-            CUSTOMER_OPS_POLICY, FACT_QUERIES)
+        from app.modules.travel_ops.verification_policy import (
+            FACT_QUERIES, TRAVEL_OPS_POLICY)
     except ImportError:
         return VerificationPolicy(), ()
-    return CUSTOMER_OPS_POLICY, FACT_QUERIES
+    return TRAVEL_OPS_POLICY, FACT_QUERIES
 
 
 __all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller",

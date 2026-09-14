@@ -4,6 +4,8 @@ from app.composition import _instantiate_team, build_registry
 from app.core.contracts import NextAction, TeamManifest, TeamResult
 from app.tools.read_tools import ReadToolbox
 
+from tests.registered_teams import EXPECTED_TEAM_IDS
+
 
 class ExtraTeam:
     manifest = TeamManifest(
@@ -24,11 +26,7 @@ class ExtraTeam:
 
 def test_composition_registers_the_builtin_team_and_allows_extension():
     registry = build_registry(tools=ReadToolbox(lambda: None), llm=object())
-    assert {manifest.team_id for manifest in registry.manifests()} == {
-        "voc_store_manager", "response_generation_review",
-        "return_refund", "procurement_order_payment", "fulfillment_logistics",
-        "catalog_verification",
-    }
+    assert {manifest.team_id for manifest in registry.manifests()} == set(EXPECTED_TEAM_IDS)
 
     registry.register(ExtraTeam())
     assert registry.resolve(case_type="demo", intent="demo").manifest.team_id == "demo_team"

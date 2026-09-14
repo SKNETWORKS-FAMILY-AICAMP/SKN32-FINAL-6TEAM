@@ -57,7 +57,7 @@ async def test_complete_records_prompt_and_run(monkeypatch):
     monkeypatch.setattr("app.infrastructure.llm.openai.record_llm_call", lambda conn, **kwargs: recorded.update(kwargs))
 
     result = await OpenAITeamLLM(connection_factory=lambda: next(connections)).complete(
-        "order_shipping.answer", "hello", {}, run_id=run_id)
+        "activity.answer", "hello", {}, run_id=run_id)
     assert result == {"answer": "ok"}
     assert recorded["prompt_id"] == prompt_id
     assert recorded["run_id"] == run_id

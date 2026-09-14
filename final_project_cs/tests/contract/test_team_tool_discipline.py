@@ -56,11 +56,25 @@ TEAM_MODULES = _team_modules()
 def test_team_modules_are_actually_found():
     """★대상이 0개면 아래 검사는 언제나 통과한다 — 빈 검사 방지.
 
-    `config/project.yaml` 에 등록된 Team 은 여섯이다(`CLAUDE.md` 머리말).
+    ★2026-09-10 — 전에는 `>= 6` 이라는 **숫자**를 박아 뒀다("등록된 Team 은
+      여섯"). 그런데 세는 것은 Team 이 아니라 **파일**이라, 한 파일에 두 팀을
+      담는 순간(`locked_bookings.py` 의 Lodging·Flight) 숫자가 어긋난다.
+      숫자를 고치면 다음에 또 어긋나므로, **등록이 가리키는 파일**과 대조한다.
     """
-    assert len(TEAM_MODULES) >= 6, (
-        f"Team 모듈을 {len(TEAM_MODULES)}개밖에 못 찾았다. 경로나 manifest 선언 방식이 "
-        f"바뀌었는지 확인한다 — 못 찾으면 이 검사 전체가 무력해진다.")
+    from app.core.project_config import load_project_config
+
+    declared = {
+        Path(*team.implementation_ref.split(":")[0].split(".")).with_suffix(".py")
+        for team in load_project_config().teams
+    }
+    found = set(TEAM_MODULES)
+    missing = sorted(str(p) for p in declared - found)
+    assert declared, "config/project.yaml 에 Team 선언이 없다."
+    assert not missing, (
+        f"등록된 Team 이 사는 파일을 정적 검사가 못 찾았다: {missing} / "
+        f"찾은 파일: {sorted(str(p) for p in found)} — "
+        f"manifest 선언 방식이나 경로가 바뀌었는지 확인한다. "
+        f"못 찾으면 아래 규율 검사가 그 팀을 **건너뛴다.**")
 
 
 @pytest.mark.parametrize("path", TEAM_MODULES, ids=lambda p: p.stem)

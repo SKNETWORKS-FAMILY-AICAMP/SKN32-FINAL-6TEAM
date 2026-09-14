@@ -61,8 +61,8 @@ DELETE_ORDER = (
      "document_id IN (SELECT document_id FROM knowledge_documents WHERE tenant_id LIKE %s ESCAPE '\\')"),
     ("knowledge_documents", "tenant_id LIKE %s ESCAPE '\\'"),
     # ★부모가 없는 표들. `tenants` 로의 FK 가 없어서 테넌트를 지워도 **살아남는다** —
-    #   1차 정리에서 이걸 빠뜨려 `products` 368행을 고아로 만들었다(2026-09-07).
-    ("products", "tenant_id LIKE %s ESCAPE '\\'"),
+    #   1차 정리에서 이걸 빠뜨려 커머스 시절 `products` 368행을 고아로 만들었다
+    #   (2026-09-07). 여행에서 같은 성질을 갖는 것이 `places` 다(아래).
     ("feedback_analytics_reports", "tenant_id LIKE %s ESCAPE '\\'"),
     ("llm_calls", "run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id LIKE %s ESCAPE '\\')"),
     ("team_tasks", "run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id LIKE %s ESCAPE '\\')"),
@@ -72,10 +72,11 @@ DELETE_ORDER = (
     ("action_requests", "tenant_id LIKE %s ESCAPE '\\'"),
     ("case_events", "tenant_id LIKE %s ESCAPE '\\'"),
     ("outbox", "tenant_id LIKE %s ESCAPE '\\'"),
-    ("returns", "tenant_id LIKE %s ESCAPE '\\'"),
-    ("shipments", "tenant_id LIKE %s ESCAPE '\\'"),
-    ("order_items", "tenant_id LIKE %s ESCAPE '\\'"),
-    ("orders", "tenant_id LIKE %s ESCAPE '\\'"),
+    # 여행 도메인 — `supplier_bookings` 가 `bookings` 를, `bookings` 가 `places` 를 참조한다.
+    # ★순서가 곧 FK 순서다. 뒤집으면 외래키 위반으로 정리가 통째로 멈춘다.
+    ("supplier_bookings", "tenant_id LIKE %s ESCAPE '\\'"),
+    ("bookings", "tenant_id LIKE %s ESCAPE '\\'"),
+    ("places", "tenant_id LIKE %s ESCAPE '\\'"),
     ("customer_cases", "tenant_id LIKE %s ESCAPE '\\'"),
     ("customers", "tenant_id LIKE %s ESCAPE '\\'"),
     ("tenants", "tenant_id LIKE %s ESCAPE '\\'"),

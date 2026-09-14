@@ -36,7 +36,7 @@ def make_evidence(evidence_id: str = "ev_1") -> Evidence:
     )
 
 
-def make_pack(case_id=None, team_id="order_shipping", **overrides) -> ContextPack:
+def make_pack(case_id=None, team_id="activity", **overrides) -> ContextPack:
     payload = {
         "pack_id": uuid4(),
         "case_id": case_id or uuid4(),
@@ -54,7 +54,7 @@ def make_result(**overrides) -> TeamResult:
     payload = {
         "task_id": uuid4(),
         "run_id": uuid4(),
-        "team_id": "order_shipping",
+        "team_id": "activity",
         "outcome": "completed",
         "confidence": 0.8,
         "next_action": NextAction.RESPOND,
@@ -215,7 +215,7 @@ def _task(**overrides) -> TeamTask:
         "task_id": uuid4(),
         "run_id": uuid4(),
         "case_id": case_id,
-        "team_id": "order_shipping",
+        "team_id": "activity",
         "capability": "billing.investigate",
         "case_version": 3,
         "input_text": "해지했는데 결제가 됐어요",

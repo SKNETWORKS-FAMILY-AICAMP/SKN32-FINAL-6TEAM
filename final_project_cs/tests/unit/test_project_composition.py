@@ -10,6 +10,8 @@ from app.core.project_config import ProjectConfig, ProjectConfigError, load_proj
 from app.core.registry import RegistryError
 from app.tools.read_tools import ReadToolbox
 
+from tests.registered_teams import EXPECTED_TEAM_IDS
+
 
 class IncompleteTeam:
     manifest = object()
@@ -25,8 +27,8 @@ def _config(*, teams=None, graph_enabled=True, graph_port="sql", broker="outbox"
     return ProjectConfig.model_validate({
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": broker, "graph_store": graph_port},
-        "teams": teams or [{"team_id": "voc_store_manager", "active": True,
-                             "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"}],
+        "teams": teams or [{"team_id": "activity", "active": True,
+                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
     })
 
 
@@ -35,12 +37,12 @@ def _tools():
 
 
 def test_declaration_controls_active_routing_and_keeps_inactive_manifest():
-    config = _config(teams=[{"team_id": "voc_store_manager", "active": True,
-                             "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"}])
+    config = _config(teams=[{"team_id": "activity", "active": True,
+                             "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}])
     registry = build_registry(config=config, tools=_tools(), llm=object())
 
-    assert {manifest.team_id for manifest in registry.manifests()} == {"voc_store_manager"}
-    assert registry.get("voc_store_manager").manifest.active is True
+    assert {manifest.team_id for manifest in registry.manifests()} == {"activity"}
+    assert registry.get("activity").manifest.active is True
     with pytest.raises(RegistryError, match="exactly one active team"):
         registry.resolve(case_type="technical")
 
@@ -81,9 +83,9 @@ def test_composer_ui_is_no_longer_a_registered_module():
 def test_duplicate_capability_is_rejected():
     config = _config(teams=[
         {"team_id": "one", "active": True,
-         "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"},
+         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
         {"team_id": "two", "active": True,
-         "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"},
+         "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"},
     ])
     with pytest.raises(CompositionError, match="duplicate capability"):
         build_registry(config=config, tools=_tools(), llm=object())
@@ -128,7 +130,7 @@ teams:
     ("implementation_ref", "message"),
     [
         ("app.nonexistent:Missing", "cannot be imported"),
-        ("app.modules.customer_ops:Missing", "not defined"),
+        ("app.modules.travel_ops:Missing", "not defined"),
         ("tests.unit.test_project_composition:IncompleteTeam", "TeamModule"),
         ("not-a-ref", "expected 'package.module:Class'"),
     ],
@@ -149,8 +151,4 @@ def test_load_project_config_does_not_import_inactive_implementation():
 
 def test_load_project_config_accepts_normal_declaration():
     config = load_project_config(Path("config") / "project.yaml")
-    assert {team.team_id for team in config.teams} == {
-        "voc_store_manager", "response_generation_review",
-        "return_refund", "procurement_order_payment", "fulfillment_logistics",
-        "catalog_verification",
-    }
+    assert {team.team_id for team in config.teams} == set(EXPECTED_TEAM_IDS)

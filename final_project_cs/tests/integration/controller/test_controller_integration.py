@@ -109,15 +109,21 @@ def db():
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM returns WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM shipments WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM order_items WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM orders WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
 
 
-def seed_case(conn, tenant, *, intent="billing", issue="invoice"):
+def seed_case(conn, tenant, *, intent="billing", issue="billing_invoice"):
+    """★`issue` 의 **접두가 `case_type`** 이다(v11 §5-B,
+    `app/application/routing.py::case_type_of`). 전에는 `issue="invoice"`
+    였는데, 그때는 Controller 가 `intent` 를 두 축 모두에 썼기 때문에
+    `issue_code` 가 무엇이든 상관없었다. 지금은 상관있다 — 프로덕션과
+    같은 모양으로 접두를 붙인다. 안 붙이면 라우팅이 실패하고, 그것은
+    가짜 판정이 아니라 **실제로 일어나는 일**이다."""
     with conn.cursor() as cur:
         cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,%s) RETURNING customer_id", (tenant, uuid4().hex))
         customer = cur.fetchone()[0]
@@ -143,7 +149,7 @@ def fake_policy(*_args):
 
 def test_controller_capability_comes_from_registered_new_team():
     controller = Controller(TeamRegistry([DemoTeam()]))
-    assert controller._capability({"intent": "demo", "issue_code": "anything"}) == "demo.investigate"
+    assert controller._capability({"intent": "demo", "issue_code": "demo_anything"}) == "demo.investigate"
 
 
 def test_inactive_team_is_not_resolved():
@@ -257,7 +263,7 @@ def test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_stat
 
 def test_routing_failure_escalates_when_no_registered_team(db):
     conn, tenant = db
-    case_id, _ = seed_case(conn, tenant, intent="unhandled", issue="unknown")
+    case_id, _ = seed_case(conn, tenant, intent="unhandled", issue="unhandled_unknown")
     result = asyncio.run(Controller(TeamRegistry([]), policy_search=fake_policy,
                                     context_broker=FakeContextBroker()).run_case(tenant_id=tenant, case_id=case_id))
     assert result["status"] == "escalated"
@@ -266,34 +272,41 @@ def test_routing_failure_escalates_when_no_registered_team(db):
         assert events[-1]["event_type"] == "routing_failed"
 
 
-def test_e2e_delivery_inquiry_does_not_touch_the_order(db):
+def test_e2e_status_inquiry_does_not_touch_the_booking(db):
     """★조회형 문의는 도메인 데이터를 건드리지 않는다.
 
-    sample(구독)에서는 Free/Pro 권한 불일치였다. 커머스에서는 **배송 조회**가
-    같은 성질을 갖는다 — 답을 만들되 주문·배송 상태를 바꾸지 않는다.
+    sample(구독)에서는 Free/Pro 권한 불일치였고, 커머스에서는 배송 조회였다.
+    여행에서는 **공급자 확정 상태 조회**가 같은 성질을 갖는다 — 답을 만들되
+    예약과 공급자 원장을 바꾸지 않는다.
     """
     conn, tenant = db
-    case_id, customer = seed_case(conn, tenant, intent="return", issue="delivery_status")
+    case_id, customer = seed_case(conn, tenant, intent="return", issue="return_status_inquiry")
     with conn.transaction():
         with conn.cursor() as cur:
-            cur.execute("INSERT INTO orders (tenant_id,customer_id,order_no,total_cents,item_count,status) "
-                        "VALUES (%s,%s,'ORD-RO-1',50000,2,'shipped') RETURNING order_id", (tenant, customer))
-            order_id = cur.fetchone()[0]
-            cur.execute("INSERT INTO shipments (tenant_id,customer_id,order_id,carrier,status) "
-                        "VALUES (%s,%s,%s,'CJ','in_transit')", (tenant, customer, order_id))
+            cur.execute("INSERT INTO bookings (tenant_id,customer_id,booking_no,kind,status,"
+                        "starts_at,party_size,capacity,amount_cents) "
+                        "VALUES (%s,%s,'BK-RO-1','activity','confirmed',"
+                        "now() + interval '2 days',2,4,50000) RETURNING booking_id",
+                        (tenant, customer))
+            booking_id = cur.fetchone()[0]
+            cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,"
+                        "supplier_ref,status) VALUES (%s,%s,'SUP-A','SR-RO-1','confirmed')",
+                        (tenant, booking_id))
     conn.commit()
     with conn.cursor() as cur:
-        cur.execute("SELECT status,carrier FROM shipments WHERE tenant_id=%s AND customer_id=%s",
-                    (tenant, customer))
+        cur.execute("SELECT b.status, sb.status FROM bookings b "
+                    "JOIN supplier_bookings sb ON sb.booking_id = b.booking_id "
+                    "WHERE b.tenant_id=%s AND b.customer_id=%s", (tenant, customer))
         before = cur.fetchone()
     team = FakeTechnicalTeam()
     result = asyncio.run(Controller(TeamRegistry([team]), policy_search=fake_policy,
                                     context_broker=FakeContextBroker()).run_case(tenant_id=tenant, case_id=case_id))
     assert result["status"] == "resolved"
     with conn.cursor() as cur:
-        cur.execute("SELECT status,carrier FROM shipments WHERE tenant_id=%s AND customer_id=%s",
-                    (tenant, customer))
-        assert cur.fetchone() == before, "조회형 문의가 배송 상태를 바꿨다"
+        cur.execute("SELECT b.status, sb.status FROM bookings b "
+                    "JOIN supplier_bookings sb ON sb.booking_id = b.booking_id "
+                    "WHERE b.tenant_id=%s AND b.customer_id=%s", (tenant, customer))
+        assert cur.fetchone() == before, "조회형 문의가 예약·공급자 상태를 바꿨다"
 
 
 def test_replay_case_is_projection_equivalent(db):

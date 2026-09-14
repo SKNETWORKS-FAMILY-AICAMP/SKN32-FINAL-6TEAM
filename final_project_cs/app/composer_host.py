@@ -129,41 +129,42 @@ class _Stores:
 #: 이 제품이 등록한 구현. ★`app/core/project_config.py` 의
 #:  `KNOWN_IMPLEMENTATION_REFS` 와 **같은 집합**이어야 한다 — 아래 게이트가 센다.
 IMPLEMENTATIONS: tuple[Implementation, ...] = (
+    # ── 여행 (v10 §5) — 2026-09-09 등록분 ──────────────────────────────
     Implementation(
-        id="team.procurement_order_payment",
-        ref="app.modules.customer_ops.procurement_order_payment:ProcurementOrderPaymentTeam",
-        display_name="발주·주문·결제 Team",
-        description="주문 조회와 결제 사실 확인. 실행은 제안까지다.",
+        id="team.activity",
+        ref="app.modules.travel_ops.activity:ActivityTeam",
+        display_name="Activity Team",
+        description="활동 예약의 취소 가능 여부·실행 가능 여부. 변경은 제안까지다.",
     ),
     Implementation(
-        id="team.fulfillment_logistics",
-        ref="app.modules.customer_ops.fulfillment_logistics:FulfillmentLogisticsTeam",
-        display_name="물류·배송 Team",
-        description="배송 상태 조회와 지연 판단.",
+        id="team.booking_handoff",
+        ref="app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
+        display_name="Booking Handoff Team",
+        description="공급자 원장과 대조하고 변경·취소를 승인 대기로 넘긴다.",
     ),
     Implementation(
-        id="team.return_refund",
-        ref="app.modules.customer_ops.return_refund:ReturnRefundTeam",
-        display_name="반품·환불 Team (Mock)",
-        description="반품 자격과 환불 금액 산정. 쇼핑몰 연동은 Mock 이다.",
+        id="team.mobility",
+        ref="app.modules.travel_ops.mobility:MobilityTeam",
+        display_name="Mobility Team",
+        description="구간 이동이 일정 안에 들어가는지 계산한다.",
     ),
     Implementation(
-        id="team.catalog_verification",
-        ref="app.modules.customer_ops.catalog_verification:CatalogVerificationTeam",
-        display_name="카탈로그 검증 Team (A2A Remote)",
-        description="상품 정보 대조. A2A 원격 실행 경로다.",
+        id="team.dining",
+        ref="app.modules.travel_ops.dining:DiningTeam",
+        display_name="Dining Team",
+        description="그 일정 시각에 여는지와 동행 조건을 확인한다.",
     ),
     Implementation(
-        id="team.response_review",
-        ref="app.modules.customer_ops.response_review:ResponseGenerationReviewTeam",
-        display_name="응답 생성·검토 Team",
-        description="톤 결정 → 생성 → 결정론 검토 → 톤 검토. PII 는 즉시 escalate.",
+        id="team.lodging",
+        ref="app.modules.travel_ops.locked_bookings:LodgingTeam",
+        display_name="Lodging Team (등록만)",
+        description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),
     Implementation(
-        id="team.voc_store_manager",
-        ref="app.modules.customer_ops:VocStoreManagerTeam",
-        display_name="VOC·스토어 매니저 Team (껍데기)",
-        description="Registry 등록·계약만 유지한다. 집계·급증 탐지는 코어 1 소유다(v9 §0).",
+        id="team.flight",
+        ref="app.modules.travel_ops.locked_bookings:FlightTeam",
+        display_name="Flight Team (등록만)",
+        description="잠긴 예약으로만 취급한다. 조정 제안을 만들지 않는다.",
     ),
 )
 

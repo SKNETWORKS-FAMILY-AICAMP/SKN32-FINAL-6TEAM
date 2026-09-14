@@ -165,3 +165,10 @@ program/onboarding/trace/.trace_build_*/
 
 # 발표 자료 작업 중 백업본. 최종본만 산출물양식/ 에 둔다
 program/산출물양식/_backup/
+
+# 백업 압축본 — 저장소 통째라 키 파일이 들어 있을 수 있고 100MB 를 넘는다 (2026-09-14)
+.backup/
+# 발표 자료 빌드 작업 폴더 — node_modules 수천 개가 딸려 온다 (2026-09-14)
+.pptx-build/
+# Office 가 문서를 열 때 만드는 잠금 파일
+~$*

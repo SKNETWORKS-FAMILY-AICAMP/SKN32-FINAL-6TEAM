@@ -104,11 +104,15 @@
     <path d="M672 364 V388" marker-end="url(#v2-main-arrow)"/>
     <path d="M848 364 V388" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
     <path d="M568 212 H664" stroke="#7a8599" stroke-dasharray="4 4" marker-end="url(#v2-main-arrow-muted)"/>
+    <!-- 선택된 로컬 Team → Controller: 제안 반환 루프 -->
+    <path d="M928 558 H952 V296 H592 V264 H552 V248" stroke-width="1.2" marker-end="url(#v2-main-arrow)"/>
   </g>
 
   <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="9" font-weight="400">
     <text x="488" y="116" fill="#2f5bd8">POST /v1/cases</text>
     <text x="488" y="288">TeamTask</text>
+    <rect x="700" y="280" width="120" height="16" rx="2" fill="#fbfcfd"/>
+    <text x="760" y="291" text-anchor="middle">ACTIONPROPOSAL</text>
     <text x="616" y="200" fill="#7a8599" text-anchor="middle">UNIMPLEMENTED</text>
   </g>
 
@@ -120,18 +124,18 @@
   </g>
 
   <g fill="#ffffff" stroke="#161c28" stroke-width="1">
-    <rect x="64" y="388" width="160" height="104" rx="6"/>
+    <rect x="64" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
     <rect x="240" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
-    <rect x="416" y="388" width="160" height="104" rx="6"/>
+    <rect x="416" y="388" width="160" height="104" rx="6" fill="rgba(168,114,12,0.10)" stroke="#a8720c"/>
     <rect x="592" y="388" width="160" height="104" rx="6"/>
     <rect x="768" y="388" width="160" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
     <rect x="976" y="388" width="208" height="104" rx="6" fill="transparent" stroke-dasharray="4 4"/>
   </g>
 
   <g fill="transparent" stroke="rgba(22,28,40,0.40)" stroke-width="0.8">
-    <rect x="72" y="396" width="32" height="16" rx="2"/>
+    <rect x="72" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
     <rect x="248" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
-    <rect x="424" y="396" width="32" height="16" rx="2"/>
+    <rect x="424" y="396" width="32" height="16" rx="2" stroke="rgba(168,114,12,0.50)"/>
     <rect x="600" y="396" width="36" height="16" rx="2"/>
     <rect x="776" y="396" width="36" height="16" rx="2"/>
     <rect x="984" y="396" width="64" height="16" rx="2"/>
@@ -139,9 +143,9 @@
   </g>
 
   <g fill="#6b7488" font-family="'Geist Mono',monospace" font-size="7" font-weight="400" text-anchor="middle" letter-spacing="0.08em">
-    <text x="88" y="408">MVP</text>
+    <text x="88" y="408" fill="#a8720c">MVP</text>
     <text x="264" y="408" fill="#a8720c">MVP</text>
-    <text x="440" y="408">MVP</text>
+    <text x="440" y="408" fill="#a8720c">MVP</text>
     <text x="618" y="408">NEXT</text>
     <text x="794" y="408">STUB</text>
     <text x="1016" y="408">REMOTE OFF</text>

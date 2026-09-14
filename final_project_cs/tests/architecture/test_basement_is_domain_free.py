@@ -1,7 +1,8 @@
 """★basement 층에 업무 도메인 어휘가 들어오지 못하게 막는다.
 
 이 저장소의 목표는 **어떤 CS 플랫폼 요청이 와도 바로 대응 가능한 범용 basement** 다.
-쇼핑몰 CS 는 이 프로젝트를 **복사해서** 만든다.
+도메인은 `app/modules/**` 와 `config/**` 에만 산다 — 2026-09-08-10 에 커머스 CS 를
+여행 CS 로 통째로 갈아끼우면서 그 주장을 실제로 시험했고, basement 는 안 바뀌었다.
 
 그래서 지켜야 할 경계가 있다:
 
@@ -34,10 +35,16 @@ DOMAIN_DIRS = ("modules",)
 #: 업무 도메인 어휘. ★"고객·케이스·팀" 처럼 CS 일반 개념은 넣지 않는다 —
 #:  그건 이 플랫폼이 다루는 대상 자체다.
 DOMAIN_WORDS = (
-    # 구독·결제 (현재 sample 도메인)
+    # 구독·결제 (sample 도메인)
     "payment", "subscription", "entitlement", "refund", "invoice",
-    # 커머스 (복사본이 쓸 도메인)
+    # 커머스 (v9 까지 이 저장소의 도메인. 2026-09-10 에 코드에서 나갔다)
     "order_id", "line_item", "shipment", "sku", "cart",
+    # ★여행 (v10~ 현재 도메인). 2026-09-10 추가.
+    #   전에는 여기 여행 어휘가 **하나도 없었다** — 도메인을 갈아끼우면서
+    #   `app/modules/travel_ops/` 만 만들고 이 목록은 안 늘렸기 때문이다.
+    #   그래서 `booking_id` 가 코어로 새도 검사가 울지 않는 상태였다.
+    #   도메인을 바꾸면 **새 어휘를 여기 넣는 것까지가 교체다.**
+    "booking", "itinerary", "lodging", "supplier_booking", "traveller",
 )
 
 PATTERN = re.compile("|".join(DOMAIN_WORDS), re.IGNORECASE)
@@ -48,8 +55,8 @@ ALLOWED = {
     # 도메인 로직이 아니라 **보안 규칙**이다.
     "app/core/redaction.py",
     # 원격 Agent 데모. A-COP 본체가 아니라 **왕복 검증용 상대역**이며,
-    # 복사본은 이 파일을 자기 도메인으로 갈아 끼운다.
-    "app/presentation/a2a/remote_agent.py",
+    # 도메인을 바꾸면 이 파일도 같이 갈아 끼운다.
+    "app/presentation/a2a/travel_remote_agent.py",
     # Composer 쓰기채널의 KNOWN_IMPLEMENTATION_REFS allowlist(2026-08-24,
     # S-BASEMENT-08). 인증된 사용자가 임의 모듈을 import 시키는 걸 막으려면
     # 이 제품이 실제로 등록한 구현체 이름을 알아야 화이트리스트가 동작한다 —
@@ -111,7 +118,23 @@ def test_domain_modules_are_allowed_to_know_their_domain():
 # invariant: INV-CS-ARCH-004
 def test_allow_list_stays_small():
     """★예외 목록이 늘어나면 경계가 무너지는 중이라는 뜻이다."""
+    # ★2026-09-10 에 잠시 4 였다 — 원격 Agent 데모가 커머스판·여행판 두 벌이던
+    #   동안이다. 커머스판을 지우자 `test_allow_list_has_no_stale_entries` 가
+    #   울었고 3 으로 돌아왔다. **느슨해진 상한은 스스로 조여져야 한다.**
     assert len(ALLOWED) <= 3, f"예외가 {len(ALLOWED)}개다. 늘리기 전에 설계를 의심하라: {sorted(ALLOWED)}"
+
+
+def test_allow_list_has_no_stale_entries():
+    """★없는 파일을 가리키는 예외는 지운다.
+
+    남겨 두면 예외 목록이 **줄지 않고 늘기만 한다**. 상한이 느슨해지는 것도
+    그렇게 시작한다 — 실제로 2026-09-10 에 상한을 3 에서 4 로 올렸고, 그
+    사유였던 커머스판 파일이 사라지면 여기서 잡혀 다시 3 이 된다.
+    """
+    stale = sorted(path for path in ALLOWED if not Path(path).exists())
+    assert not stale, (
+        f"ALLOWED 가 없는 파일을 가리킨다: {stale} "
+        f"→ 목록에서 지우고 `test_allow_list_stays_small` 의 상한도 그만큼 내린다.")
 
 
 # invariant: INV-CS-ARCH-002

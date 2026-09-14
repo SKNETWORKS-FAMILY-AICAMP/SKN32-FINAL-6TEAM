@@ -32,10 +32,12 @@ def approval_case():
             cur.execute("INSERT INTO customers (tenant_id, external_id) VALUES (%s,%s) RETURNING customer_id",
                         (tenant, "recheck-" + uuid4().hex))
             customer_id = cur.fetchone()[0]
-            cur.execute("INSERT INTO orders (tenant_id, customer_id, order_no, total_cents, item_count, status) "
-                        "VALUES (%s,%s,'ORD-RECHECK',%s,2,'delivered') RETURNING order_id",
-                        (tenant, customer_id, 3_000_000))
-            order_id = cur.fetchone()[0]
+            cur.execute("INSERT INTO bookings (tenant_id, customer_id, booking_no, kind, status, "
+                        "starts_at, party_size, capacity, amount_cents) "
+                        "VALUES (%s,%s,%s,'activity','confirmed', now() + interval '3 days', 2, 4, %s) "
+                        "RETURNING booking_id",
+                        (tenant, customer_id, "BK-RECHECK-" + uuid4().hex[:8], 3_000_000))
+            booking_id = cur.fetchone()[0]
             cur.execute("INSERT INTO customer_cases (tenant_id, customer_id, status, subject, version) "
                         "VALUES (%s,%s,'waiting_approval',%s,1) RETURNING case_id",
                         (tenant, customer_id, "recheck fixture"))
@@ -45,11 +47,11 @@ def approval_case():
                         (tenant, case_id))
         action_id = repository.create_action_request(
             conn, tenant_id=tenant, case_id=case_id, action_type="refund",
-            arguments={"order_id": str(order_id), "refund_amount": 30_000},
+            arguments={"booking_id": str(booking_id), "refund_amount": 30_000},
             idempotency_key="recheck-" + uuid4().hex, status="pending_approval")
         conn.commit()
     yield {"tenant": tenant, "case_id": case_id, "action_id": action_id,
-           "order_id": order_id, "customer_id": customer_id}
+           "booking_id": booking_id, "customer_id": customer_id}
     with get_connection() as conn:
         with conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM action_approvals WHERE action_id IN "
@@ -57,7 +59,9 @@ def approval_case():
             cur.execute("DELETE FROM action_requests WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM case_events WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM customer_cases WHERE case_id=%s", (case_id,))
-            cur.execute("DELETE FROM orders WHERE customer_id=%s", (customer_id,))
+            cur.execute("DELETE FROM supplier_bookings WHERE booking_id IN "
+                        "(SELECT booking_id FROM bookings WHERE customer_id=%s)", (customer_id,))
+            cur.execute("DELETE FROM bookings WHERE customer_id=%s", (customer_id,))
             cur.execute("DELETE FROM customers WHERE customer_id=%s", (customer_id,))
 
 
@@ -81,7 +85,7 @@ def test_approval_succeeds_when_facts_still_match(approval_case):
     assert response.status_code == 200, response.text
 
 
-def test_approval_is_blocked_when_the_order_total_shrank_after_the_proposal(approval_case):
+def test_approval_is_blocked_when_the_booking_amount_shrank_after_the_proposal(approval_case):
     """★제안 뒤에 실제 결제액이 줄면 승인이 막힌다.
 
     30,000원 환불 제안이 저장된 뒤 결제액을 10,000원으로 낮춘다.
@@ -89,8 +93,8 @@ def test_approval_is_blocked_when_the_order_total_shrank_after_the_proposal(appr
     """
     with get_connection() as conn:
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE orders SET total_cents=%s WHERE order_id=%s",
-                        (1_000_000, approval_case["order_id"]))
+            cur.execute("UPDATE bookings SET amount_cents=%s WHERE booking_id=%s",
+                        (1_000_000, approval_case["booking_id"]))
         conn.commit()
 
     response = _approve(_client(), approval_case["case_id"], approval_case["action_id"])
@@ -108,8 +112,8 @@ def test_blocked_approval_records_the_reason_without_raw_values(approval_case):
     """조용히 거절하지 않는다. 그러나 금액 원문을 남기지도 않는다."""
     with get_connection() as conn:
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE orders SET total_cents=1000 WHERE order_id=%s",
-                        (approval_case["order_id"],))
+            cur.execute("UPDATE bookings SET amount_cents=1000 WHERE booking_id=%s",
+                        (approval_case["booking_id"],))
         conn.commit()
 
     _approve(_client(), approval_case["case_id"], approval_case["action_id"])
@@ -128,8 +132,8 @@ def test_rejection_does_not_run_the_recheck(approval_case):
     """★거절은 아무것도 실행하지 않는다. 사실이 어긋나도 거절은 되어야 한다."""
     with get_connection() as conn:
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE orders SET total_cents=1 WHERE order_id=%s",
-                        (approval_case["order_id"],))
+            cur.execute("UPDATE bookings SET amount_cents=1 WHERE booking_id=%s",
+                        (approval_case["booking_id"],))
         conn.commit()
 
     client = _client()

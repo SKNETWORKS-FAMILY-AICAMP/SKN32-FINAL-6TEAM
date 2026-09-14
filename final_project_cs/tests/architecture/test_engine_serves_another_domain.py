@@ -1,12 +1,20 @@
 """★basement 주장을 **실제로** 검증한다 — 같은 엔진에 다른 도메인을 물린다.
 
 이 저장소의 목표는 "어떤 CS 플랫폼 요청이 와도 대응 가능한 범용 basement" 다.
-그 주장은 **선언만으로는 증명되지 않는다.** 여기서 쇼핑몰 도메인 선언을 만들어
-`app/core/verification.py` 를 **한 줄도 고치지 않고** 돌린다.
+그 주장은 **선언만으로는 증명되지 않는다.** 여기서 커머스(쇼핑몰) 도메인 선언을
+만들어 `app/core/verification.py` 를 **한 줄도 고치지 않고** 돌린다.
+
+★**이 파일에 커머스 어휘가 있는 것이 맞다.** 2026-09-10 에 제품 도메인이
+  여행으로 바뀌면서, 여기가 커머스 어휘의 **정당한 자리**가 됐다 — 「제품이
+  쓰지 않는 다른 도메인」이 곧 커머스이기 때문이다. 제품 도메인(여행)의 같은
+  검사는 `tests/unit/core/test_proposal_verification.py` 에 있고, 둘이 **같은
+  엔진에 다른 선언을 물려** 돈다는 것이 이 쌍의 요점이다.
+  ☆그래서 커머스를 저장소에서 걷어낼 때도 이 파일은 지우지 않는다. 지우면
+    「도메인을 갈아끼울 수 있다」는 주장을 증명하는 유일한 대조군이 사라진다.
 
 ★이 테스트가 깨지면 basement 가 특정 도메인에 묶였다는 뜻이다.
   실제로 2026-08-16 이전 버전은 `order_id` 를 basement 의 "확인 불가 → 거부" 목록에
-  박아 둬서, 쇼핑몰의 **가장 중요한 식별자가 자동 거부**됐다.
+  박아 둬서, 그때 제품 도메인이던 쇼핑몰의 **가장 중요한 식별자가 자동 거부**됐다.
 """
 from __future__ import annotations
 
@@ -15,7 +23,7 @@ from decimal import Decimal
 from app.core.verification import (Facts, QuantityRule, VerificationPolicy,
                                    verify_proposal)
 
-# ── 쇼핑몰 CS 도메인 선언 (basement 는 이걸 모른다) ───────────────────────────
+# ── 커머스 CS 도메인 선언 — **제품 도메인이 아니다.** basement 는 이걸 모른다 ──
 MALL_POLICY = VerificationPolicy(
     references={"order_id": "orders", "shipment_id": "shipments"},
     quantities=(
@@ -55,7 +63,7 @@ def fields(problems) -> set[str]:
     return {p.field for p in problems}
 
 
-# ── ★쇼핑몰의 핵심 식별자가 통과해야 한다 ─────────────────────────────────────
+# ── ★그 도메인의 핵심 식별자가 통과해야 한다 ─────────────────────────────────
 def test_order_id_is_verifiable_here_not_auto_rejected():
     """★예전 basement 는 `order_id` 를 무조건 거부했다. 지금은 선언에 따라 대조한다."""
     assert check(arguments={"order_id": ORDER}) == []
@@ -98,7 +106,7 @@ def test_shipment_ownership_is_checked():
 
 # invariant: INV-CS-VER-007
 def test_this_domains_opaque_field_is_rejected():
-    """쇼핑몰에서는 `coupon_id` 가 대조 불가다 — 도메인마다 다르다."""
+    """커머스에서는 `coupon_id` 가 대조 불가다 — 도메인마다 다르다."""
     assert "coupon_id" in fields(check(arguments={"coupon_id": "CPN-1"}))
 
 

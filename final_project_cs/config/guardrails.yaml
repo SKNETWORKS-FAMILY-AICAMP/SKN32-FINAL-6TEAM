@@ -160,3 +160,19 @@ evaluation:
     - no_approval
     - no_rag
     - no_feedback_inline
+
+# ── 여행 외부 소스 (2026-09-09 신설) ────────────────────────────────
+travel:
+  # 바깥 호출 상한(초). ★reliability.team_timeout_seconds(90) 보다 작아야 한다 —
+  #   안 그러면 Team 이 먼저 죽어 어느 소스가 늦었는지 못 가른다.
+  source_timeout_seconds: 8
+  weather:
+    # ★★이 둘은 **판정 기준이 아니라 주의 문구 기준**이다.
+    #   운영 규정(취소·순연 기준)은 `read.policy` 가 대야 하고, 그게 없으면
+    #   Team 은 "규정 기준은 확인되지 않았다" 라고 말한다. 여기 숫자로
+    #   「불가」를 만들지 않는다 — 근거 없는 확정이 되기 때문이다
+    #   (CLAUDE.md §0.1).
+    # ★출처: 정해진 것이 없어 **우리가 고른 값**이다. 측정에서 나오지 않았다.
+    #   여행 정책 코퍼스가 생기면 이 둘은 사라지고 규정이 그 자리를 받는다.
+    advisory_precipitation_probability: 60   # %
+    advisory_wind_speed_kmh: 40

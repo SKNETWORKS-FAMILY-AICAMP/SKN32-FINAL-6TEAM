@@ -36,8 +36,8 @@ def _config(**overrides) -> ProjectConfig:
     return ProjectConfig.model_validate({
         "modules": modules,
         "ports": {"team_executor": "local", "message_broker": "outbox", "graph_store": "sql"},
-        "teams": [{"team_id": "voc_store_manager", "active": True,
-                   "implementation_ref": "app.modules.customer_ops:VocStoreManagerTeam"}],
+        "teams": [{"team_id": "activity", "active": True,
+                   "implementation_ref": "app.modules.travel_ops.activity:ActivityTeam"}],
     })
 
 
@@ -52,7 +52,7 @@ def test_inline_classification_is_not_gated_by_voc(monkeypatch):
        처리다. VOC 는 이미 분류된 Case events 를 입력받는다."
 
     ★2026-08-30 `9c11327` 이 여기에 게이트를 걸었던 것은, 인라인 분류가
-      `app/modules/customer_ops/feedback.py` 에 있고 테스트가 `tests/unit/voc/`
+      `app/modules/customer_ops/feedback.py`(당시) 에 있고 테스트가 `tests/unit/voc/`
       에 있어서 **파일 위치를 소관으로 착각**한 결과다. 근거로 삼은 v8 §3-A
       (199·204행)는 v7.1 개정이 반영되지 않은 낡은 절이었다.
 

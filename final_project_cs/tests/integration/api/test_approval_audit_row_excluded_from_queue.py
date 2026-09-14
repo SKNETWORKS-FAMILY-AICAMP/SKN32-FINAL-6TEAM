@@ -37,10 +37,12 @@ def approval_case():
             cur.execute("INSERT INTO customers (tenant_id, external_id) VALUES (%s,%s) RETURNING customer_id",
                         (tenant, "audit-queue-" + uuid4().hex))
             customer_id = cur.fetchone()[0]
-            cur.execute("INSERT INTO orders (tenant_id, customer_id, order_no, total_cents, item_count, status) "
-                        "VALUES (%s,%s,'ORD-AUDITQ',%s,1,'delivered') RETURNING order_id",
+            cur.execute("INSERT INTO bookings (tenant_id, customer_id, booking_no, kind, status, "
+                        "starts_at, party_size, capacity, amount_cents) "
+                        "VALUES (%s,%s,'BK-AUDITQ','activity','confirmed', "
+                        "now() + interval '5 days', 1, 2, %s) RETURNING booking_id",
                         (tenant, customer_id, 3_000_000))
-            order_id = cur.fetchone()[0]
+            booking_id = cur.fetchone()[0]
             cur.execute("INSERT INTO customer_cases (tenant_id, customer_id, status, subject, version) "
                         "VALUES (%s,%s,'waiting_approval',%s,1) RETURNING case_id",
                         (tenant, customer_id, "audit queue fixture"))
@@ -50,11 +52,11 @@ def approval_case():
                         (tenant, case_id))
         action_id = repository.create_action_request(
             conn, tenant_id=tenant, case_id=case_id, action_type="refund",
-            arguments={"order_id": str(order_id), "refund_amount": 30_000},
+            arguments={"booking_id": str(booking_id), "refund_amount": 30_000},
             idempotency_key="audit-queue-" + uuid4().hex, status="pending_approval")
         conn.commit()
     yield {"tenant": tenant, "case_id": case_id, "action_id": action_id,
-           "order_id": order_id, "customer_id": customer_id}
+           "booking_id": booking_id, "customer_id": customer_id}
     with get_connection() as conn:
         with conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM action_approvals WHERE action_id IN "
@@ -62,7 +64,9 @@ def approval_case():
             cur.execute("DELETE FROM action_requests WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM case_events WHERE case_id=%s", (case_id,))
             cur.execute("DELETE FROM customer_cases WHERE case_id=%s", (case_id,))
-            cur.execute("DELETE FROM orders WHERE customer_id=%s", (customer_id,))
+            cur.execute("DELETE FROM supplier_bookings WHERE booking_id IN "
+                        "(SELECT booking_id FROM bookings WHERE customer_id=%s)", (customer_id,))
+            cur.execute("DELETE FROM bookings WHERE customer_id=%s", (customer_id,))
             cur.execute("DELETE FROM customers WHERE customer_id=%s", (customer_id,))
 
 

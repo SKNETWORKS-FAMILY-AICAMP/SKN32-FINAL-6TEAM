@@ -59,10 +59,10 @@ def _controller(team, *, broker=None):
     Controller 는 기본값으로 아무 어휘도 갖지 않는다 — basement 이기 때문이다.
     선언을 안 주면 대조를 건너뛴다. 그래서 여기서 도메인 선언을 붙인다.
     """
-    from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY, FACT_QUERIES
+    from app.modules.travel_ops.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
     return Controller(TeamRegistry([team]), policy_search=fake_policy,
                       context_broker=broker or FakeContextBroker(),
-                      verification_policy=CUSTOMER_OPS_POLICY, fact_queries=FACT_QUERIES)
+                      verification_policy=TRAVEL_OPS_POLICY, fact_queries=FACT_QUERIES)
 
 
 def _run(conn, tenant, team):
@@ -114,10 +114,10 @@ def test_rejection_is_recorded_with_hashed_values_not_raw(db):  # noqa: F811
     assert "50000" not in blob
 
 
-def test_unverifiable_order_id_is_blocked(db):  # noqa: F811
-    """이 MVP 에 orders 가 없다 — 확인 못 하면 실행하지 않는다."""
+def test_unverifiable_booking_id_is_blocked(db):  # noqa: F811
+    """이 Case 에 붙은 예약이 없다 — 확인 못 하면 실행하지 않는다."""
     conn, tenant = db
-    case_id = _run(conn, tenant, ProposingTeam({"order_id": "ord-42"}))
+    case_id = _run(conn, tenant, ProposingTeam({"booking_id": "bkg-42"}))
     assert _action_rows(conn, tenant, case_id) == 0
     assert case_versions(conn, tenant, case_id)[0] == "escalated"
 

@@ -5,7 +5,7 @@
   `GET /v1/cases/{case_id}` 가 그대로 돌려준다. 이 제품의 고객은 한국어를
   쓴다.
 
-★2026-09-02 실측: `procurement_order_payment.py` 세 곳이 답변을 영어로
+★2026-09-02 실측(커머스 시절): `procurement_order_payment.py` 세 곳이 답변을 영어로
   하드코딩하고 있었고, holdout 24건 중 **6건이 영어 답변**을 받았다
   (`wiki/records/reports/debugs/2026-09-02_한국어_문의에_영어로_답한다.md`).
   문자열만 고치면 다음에 또 생기므로 이 검사를 둔다.
@@ -22,7 +22,9 @@ from pathlib import Path
 
 import pytest
 
-TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "modules" / "customer_ops"
+# ★2026-09-10 여행으로 옮겼다. 검사 논리는 그대로다 — 아래 2026-09-02 사고는
+#   커머스 팀에서 났지만 원인(답변 문자열을 손으로 적는다)은 도메인과 무관하다.
+TEAM_DIR = Path(__file__).resolve().parents[3] / "app" / "modules" / "travel_ops"
 HANGUL = re.compile(r"[가-힣]")
 
 #: 값을 그대로 끼워 넣는 자리(`{status}` 등)는 영문 토큰일 수 있다. 문장이

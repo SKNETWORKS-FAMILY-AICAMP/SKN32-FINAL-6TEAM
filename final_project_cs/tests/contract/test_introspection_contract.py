@@ -5,6 +5,8 @@ from app import composition
 from app.core.project_config import load_project_config
 from app.core.project_config import config_revision as revision
 
+from tests.registered_teams import EXPECTED_TEAM_IDS
+
 
 def test_snapshot_has_composition_only_shape_and_redacts_key(monkeypatch):
     class Settings:
@@ -77,7 +79,10 @@ def test_snapshot_has_composition_only_shape_and_redacts_key(monkeypatch):
     assert not any(key in data for key in ("document_count", "chunk_count", "case_statuses", "outbox_statuses"))
 
 
-def test_snapshot_contains_all_five_active_project_teams(monkeypatch):
+def test_snapshot_contains_every_active_project_team(monkeypatch):
+    """★이름에 개수를 박지 않는다. 전에는 `..._all_five_...` 였는데 그때도
+    실제로는 여섯이었고(v8 에서 하나 늘 때 이름만 안 고쳤다), 여행으로 넘어와
+    또 여섯이다. **이름이 세는 수는 아무도 안 고친다.**"""
     monkeypatch.setattr("app.composition.build_broker", lambda **kwargs: object())
     monkeypatch.setattr("app.composition.build_graph_store", lambda **kwargs: object())
     config = load_project_config()
@@ -87,10 +92,7 @@ def test_snapshot_contains_all_five_active_project_teams(monkeypatch):
         registry=registry,
         executor=composition.build_team_executor(registry=registry, config=config),
     )
-    assert {item["team_id"] for item in data["team_manifests"]} == {
-        "voc_store_manager", "response_generation_review", "return_refund",
-        "procurement_order_payment", "fulfillment_logistics", "catalog_verification",
-    }
+    assert {item["team_id"] for item in data["team_manifests"]} == set(EXPECTED_TEAM_IDS)
     assert all(item["active"] for item in data["team_manifests"])
 
 

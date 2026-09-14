@@ -26,7 +26,7 @@ def test_two_requests_on_one_case_get_different_keys() -> None:
     second = request_id_for_case({"case_id": case_id, "state_json": {"request_id": "REQ-2"}})
     assert first != second
     key = {
-        "tenant_id": "t1", "action_type": "refund.issue", "business_subject": "ORD-1",
+        "tenant_id": "t1", "action_type": "refund.issue", "business_subject": "BK-1",
     }
     assert idempotency_key(request_id=first, **key) != idempotency_key(request_id=second, **key)
 

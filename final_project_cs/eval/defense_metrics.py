@@ -92,8 +92,8 @@ def score(rows: Iterable[dict[str, Any]], policy: Any = None) -> DefenseReport:
     """
     if policy is None:
         # ★평가는 도메인 선언을 **읽어서** 쓴다. 지표 코드가 어휘를 갖지 않는다.
-        from app.modules.customer_ops.verification_policy import CUSTOMER_OPS_POLICY
-        policy = CUSTOMER_OPS_POLICY
+        from app.modules.travel_ops.verification_policy import TRAVEL_OPS_POLICY
+        policy = TRAVEL_OPS_POLICY
 
     claimed = matched = 0          # 근거 정합
     excess = total_claims = 0      # 근거 초과

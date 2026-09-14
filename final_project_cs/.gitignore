@@ -2,6 +2,10 @@
 .env
 .env.local
 *.key
+# ★바깥 데이터 소스 API 키. `*.key` 도 `.env` 도 이 이름을 **안 잡는다** —
+#   `*.key` 는 `.key` 로 끝나는 이름만, `.env` 는 그 이름 하나만 매치한다.
+#   그래서 명시한다. 템플릿(`.env.apikeys.example`)은 커밋한다.
+.env.apikeys
 
 # 파이썬
 __pycache__/

@@ -55,10 +55,9 @@ def api_fixture(monkeypatch):
                     cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM returns WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM shipments WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM order_items WHERE tenant_id=%s", (tenant,))
-                    cur.execute("DELETE FROM orders WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM places WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))
                     cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
@@ -250,8 +249,8 @@ def test_message_route_passes_issued_resume_token_to_controller(api_fixture):
 def test_mcp_open_support_case_changes_only_case_state(api_fixture):
     before = {}
     with get_connection() as conn, conn.cursor() as cur:
-        # ★MCP 는 read-only 다. 돈·주문 상태를 건드리지 않는다.
-        for table in ("action_requests", "orders", "shipments"):
+        # ★MCP 는 read-only 다. 돈·예약 상태를 건드리지 않는다.
+        for table in ("action_requests", "bookings", "supplier_bookings"):
             cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
             before[table] = cur.fetchone()[0]
     result = _mcp_open(str(api_fixture["customer"]), "open from mcp", "test")
@@ -259,7 +258,7 @@ def test_mcp_open_support_case_changes_only_case_state(api_fixture):
     #   하지 않고** `classification_unavailable` 을 적어 늘 escalated 였다 —
     #   계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)이 "Case 생성과 분류 시작까지"
     #   라고 정한 것과 어긋나 있었다. 이제 분류에 성공하면 routing 으로 간다.
-    #   ★이 테스트가 보는 것은 상태가 아니라 **돈·주문을 안 건드린다** 는 것이다.
+    #   ★이 테스트가 보는 것은 상태가 아니라 **돈·예약을 안 건드린다** 는 것이다.
     assert result["status"] in {"classifying", "routing", "escalated"}
     assert _mcp_cases(str(api_fixture["customer"]), 20)
     assert _mcp_detail(str(api_fixture["customer"]), result["case_id"])["case_id"] == result["case_id"]

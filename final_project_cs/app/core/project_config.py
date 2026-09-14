@@ -15,13 +15,24 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROJECT_CONFIG = REPO_ROOT / "config" / "project.yaml"
 
+#: Composer 쓰기채널이 **저장을 허용하는** 구현 참조. 여기 없는 ref 는
+#: `/composer/apply` 가 422 로 거부한다.
+#: ★2026-09-09 — 여행 여섯을 여기 **안 넣은 채** `config/project.yaml` 만
+#:   갈아끼웠더니, 조립(`build_registry`)은 멀쩡히 뜨는데 Composer 로는
+#:   그 선언을 **저장할 수 없는** 상태가 됐다. 조립 경로가 이 표를 안 보기
+#:   때문에 pytest 로도 e2e 하나(`test_composer_write_channel`)에서만 터졌다.
+#:   **선언을 옮기면 이 표도 같이 옮긴다.**
+#: ★2026-09-10 커머스 여섯을 뺐다. 구현(`app/modules/customer_ops/`)이 저장소에서
+#:  나갔으므로 카탈로그에 남기면 **고를 수는 있는데 import 가 안 되는** 항목이 된다.
+#:  옛 목록이 필요하면 그날 이전 커밋을 본다.
 KNOWN_IMPLEMENTATION_REFS = frozenset({
-    "app.modules.customer_ops:VocStoreManagerTeam",
-    "app.modules.customer_ops.response_review:ResponseGenerationReviewTeam",
-    "app.modules.customer_ops.return_refund:ReturnRefundTeam",
-    "app.modules.customer_ops.procurement_order_payment:ProcurementOrderPaymentTeam",
-    "app.modules.customer_ops.fulfillment_logistics:FulfillmentLogisticsTeam",
-    "app.modules.customer_ops.catalog_verification:CatalogVerificationTeam",
+    # 여행 (v10 §5) — 현재 등록분
+    "app.modules.travel_ops.activity:ActivityTeam",
+    "app.modules.travel_ops.booking_handoff:BookingHandoffTeam",
+    "app.modules.travel_ops.mobility:MobilityTeam",
+    "app.modules.travel_ops.dining:DiningTeam",
+    "app.modules.travel_ops.locked_bookings:LodgingTeam",
+    "app.modules.travel_ops.locked_bookings:FlightTeam",
 })
 
 
@@ -75,6 +86,29 @@ class ProjectConfig(BaseModel):
         duplicates = sorted({team_id for team_id in ids if ids.count(team_id) > 1})
         if duplicates:
             raise ValueError(f"duplicate team_id in project declaration: {', '.join(duplicates)}")
+        return self
+
+    @model_validator(mode="after")
+    def validate_response_review_owner(self) -> "ProjectConfig":
+        """검토 팀을 켰으면 그 팀이 **등록돼 있어야** 한다.
+
+        ★2026-09-09 — 도메인을 여행으로 갈아끼우며 팀 목록이 통째로 바뀌었는데
+          `response_review.owner_team_id` 는 옛 `response_generation_review` 를
+          가리킨 채 남았다. `enabled: false` 라 아무 데서도 안 터졌지만, 켜는
+          순간 `Controller._maybe_review` 의 `registry.get()` 이 **고객 요청
+          처리 도중** `RegistryError` 로 죽는다. 기동 때 잡는다.
+
+        ★끈 상태는 통과시킨다. 도메인 교체 중에 옛 이름이 남아 있는 것은
+          「아직 대체 팀이 없다」는 사실이고, 그것까지 막으면 교체를 못 한다.
+        """
+        if not self.response_review.enabled:
+            return self
+        registered = {team.team_id for team in self.teams if team.active}
+        if self.response_review.owner_team_id not in registered:
+            raise ValueError(
+                f"response_review.enabled 인데 owner_team_id "
+                f"'{self.response_review.owner_team_id}' 가 등록된 활성 팀에 없다. "
+                f"등록된 활성 팀: {sorted(registered)}")
         return self
 
     def module_enabled(self, module_id: str) -> bool:
