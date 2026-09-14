@@ -70,8 +70,10 @@ def build_classifier(*, config: ProjectConfig | None = None):
     from app.core.settings import get_settings
 
     config = config or load_project_config()
-    if not get_settings().openai_api_key:
-        raise RuntimeError("OpenAI API key is missing")
+    settings = get_settings()
+    # ★제공자는 둘 중 하나면 된다 — OpenAI 키, 또는 로컬 Ollama 주소(2026-09-14, 크레딧 소진).
+    if not settings.openai_api_key and not (settings.ollama_base_url or "").strip():
+        raise RuntimeError("LLM provider is missing — set ACOP_OPENAI_API_KEY or ACOP_OLLAMA_BASE_URL")
 
     def classify(message: str) -> dict[str, str]:
         result = feedback.classify(masked(message))
@@ -270,7 +272,15 @@ def build_domain_routers() -> list:
 
         return DisruptionCheck(build_travel_sources(get_settings())).check
 
-    return [build_trip_router(check_factory=check_factory)]
+    def chat_factory():
+        # ★자유 문장에서 신고를 뽑는 LLM — 로컬 Ollama(Gemma 4). 없으면 None → 추출 없이 escalate.
+        from app.core.settings import get_settings
+        from app.infrastructure.ollama_chat import from_settings
+
+        return from_settings(get_settings())
+
+    return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
+                              chat_factory=chat_factory)]
 
 
 def build_verification(*, config=None):

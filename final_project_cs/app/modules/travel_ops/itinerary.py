@@ -198,7 +198,16 @@ class TripStore:
 
     def enqueue_notice(self, conn, *, trip_id: UUID, version: int,
                        payload: dict[str, Any]) -> None:
-        """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다."""
+        """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다.
+
+        ★여행의 언어(`locale`)를 싣는다 — 보낼 때 그 언어로 옮긴다(결정 14).
+        """
+        if "locale" not in payload:
+            with conn.cursor() as cur:
+                cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                            (self.tenant_id, trip_id))
+                row = cur.fetchone()
+            payload = {**payload, "locale": row[0] if row else None}
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json) "

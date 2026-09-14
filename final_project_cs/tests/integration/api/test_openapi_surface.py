@@ -39,6 +39,8 @@ CONTRACT_V1_PATHS = {
     "/v1/trips/{trip_id}/reports",
     "/v1/trips/{trip_id}/items/{item_id}/alternate",
     "/v1/trips/{trip_id}/rollback",
+    # ★2026-09-14 고객 자유 문장 → Case → 분류 → 여행 창구
+    "/v1/trips/{trip_id}/messages",
 }
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}

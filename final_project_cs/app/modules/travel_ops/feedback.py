@@ -124,11 +124,33 @@ def _openai_llm(text: str) -> dict[str, Any]:
         raise ClassificationFailed(f"LLM classification failed: {exc}") from exc
 
 
+def _ollama_llm(text: str) -> dict[str, Any]:
+    """로컬 Ollama(Gemma 4)로 분류한다 — `ACOP_OLLAMA_BASE_URL` 이 있을 때.
+
+    ★2026-09-14 OpenAI 크레딧 소진(429 실측)으로 붙였다. 같은 프롬프트·같은 검증을 쓴다 —
+      제공자만 바뀌고 라벨 규칙은 그대로다.
+    """
+    from app.infrastructure.ollama_chat import OllamaError, from_settings
+
+    chat = from_settings(get_settings())
+    if chat is None:
+        raise ClassificationFailed("Ollama base url is missing")
+    try:
+        return chat.json(_SYSTEM_PROMPT, text)
+    except OllamaError as exc:
+        raise ClassificationFailed(f"Ollama classification failed: {exc}") from exc
+
+
+def _default_llm() -> LLM:
+    """설정이 고른 제공자 — Ollama 주소가 있으면 Ollama, 없으면 OpenAI."""
+    return _ollama_llm if (get_settings().ollama_base_url or "").strip() else _openai_llm
+
+
 def classify(text: str, llm: LLM | None = None) -> Classification:
     """주입 가능한 LLM 으로 분류한다. 불완전한 출력은 **크게** 실패한다."""
     if not isinstance(text, str) or not text.strip():
         raise ClassificationFailed("feedback text is empty")
-    provider: LLM = llm or _openai_llm
+    provider: LLM = llm or _default_llm()
     try:
         raw = provider(masked(text))
     except ClassificationFailed:

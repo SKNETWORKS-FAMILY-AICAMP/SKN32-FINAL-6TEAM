@@ -144,9 +144,14 @@ def main() -> int:
             from app.core.settings import get_settings
             from app.infrastructure.messaging.worker import OutboxWorker
             from app.infrastructure.notify import DiscordWebhook
+            from app.infrastructure.notify.translate import make_translator
+            from app.infrastructure.ollama_chat import from_settings
 
-            worker = OutboxWorker(get_connection, DiscordWebhook(get_settings().discord_webhook_url),
-                                  tenant_id=tenant)
+            # ★여행 언어(zh-TW)로 옮겨 보낸다(결정 14) — Ollama(Gemma 4)가 있을 때.
+            chat = from_settings(get_settings())
+            hook = DiscordWebhook(get_settings().discord_webhook_url,
+                                  translator=make_translator(chat) if chat else None)
+            worker = OutboxWorker(get_connection, hook, tenant_id=tenant)
             sent = 0
             while worker.process_once():
                 sent += 1

@@ -75,12 +75,18 @@ def _tracked_text_files() -> list[Path]:
 
 
 # ── 검사기 자체 ──────────────────────────────────────────────────
-@pytest.mark.parametrize("sample", [
-    "# 등록한 key 2의 ip : 8.8.8.8",
-    "ssh ubuntu@8.8.4.4",
-    "https://discord.com/api/webhooks/123456/abc",
-    "-----BEGIN OPENSSH PRIVATE KEY-----",
-])
+#: ★표본은 **실행할 때 조립한다.** 글자 그대로 두면 이 파일이 추적되는 순간 아래 저장소
+#:  검사가 이 파일을 잡는다(2026-09-14 실제로 걸렸다).
+_PUBLIC_IP = ".".join(["8", "8", "8", "8"])
+_SAMPLES = [
+    f"# 등록한 key 2의 ip : {_PUBLIC_IP}",
+    "ssh " + "ubuntu" + "@" + ".".join(["8", "8", "4", "4"]),
+    "https://discord.com/api/" + "webhooks/" + "123456/abc",
+    "-----BEGIN OPENSSH " + "PRIVATE KEY-----",
+]
+
+
+@pytest.mark.parametrize("sample", _SAMPLES)
 def test_the_detector_catches_each_kind(sample):
     assert find_leaks(sample), f"검사기가 못 잡았다: {sample}"
 

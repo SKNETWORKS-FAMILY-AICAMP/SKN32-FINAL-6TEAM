@@ -98,8 +98,28 @@ def api(monkeypatch):
     def classifier(_message):
         return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}
 
-    client = TestClient(create_app(classifier=classifier,
-                                   domain_routers=[build_trip_router(check_factory=lambda: check)]))
+    def trip_classifier(message):
+        # ★분류기 흉내 — 실제 제공자(Gemma 4)는 라이브 확인에서 본다
+        if "모르는" in message:
+            return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}
+        code = "dining_hours" if ("늦" in message or "휴무" in message) else "activity_other"
+        return {"intent": "incident_report", "issue_code": code, "sentiment": "negative"}
+
+    class ScenarioChat:
+        """추출기 흉내 — 시나리오 세 문장에 모델이 낼 법한 값을 준다."""
+
+        def json(self, system, message):
+            if "늦을" in message:
+                return {"type": "delay", "minutes": 70, "products": []}
+            if "휴무" in message:
+                return {"type": "closed", "minutes": None, "products": []}
+            if "품절" in message:
+                return {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}
+            return {"type": "other"}
+
+    client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
+        check_factory=lambda: check, classifier_factory=lambda: trip_classifier,
+        chat_factory=ScenarioChat)]))
 
     def auth(scope):
         return {"Authorization": "Bearer " + security._development_key(scope, original.secret_key)}
@@ -117,6 +137,10 @@ def api(monkeypatch):
     yield {"client": client, "auth": auth, "tenant": tenant, "customer": customer,
            "tick": tick, "notices": notices, "store": store}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        # ★자유 문장 경로가 Case 를 만든다 — FK 순서대로 먼저 지운다
+        cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+        cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
+        cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s", "DELETE FROM customers WHERE tenant_id=%s",
                     "DELETE FROM tenants WHERE tenant_id=%s"):
@@ -283,6 +307,55 @@ def test_rollback_restores_and_the_watcher_leaves_it_alone(api):
                                  json={"request_id": "rb-2", "base_version": 3, "to_version": 3},
                                  headers=api["auth"]("trip:write"))
     assert invalid.status_code == 409 and invalid.json()["error"]["code"] == "invalid_version"
+
+
+# ── 고객 자유 문장 ─────────────────────────────────────────────
+def _say(api, trip_id, kind, request_id=None, text=None):
+    report = REPORTS.get(kind, {})
+    return api["client"].post(f"/v1/trips/{trip_id}/messages", headers=api["auth"]("trip:write"),
+                              json={"request_id": request_id or f"say-{kind}",
+                                    "message": text or report["message"],
+                                    "at": _iso(report.get("at", "13:00"))})
+
+
+def _case_events(case_id):
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT event_type FROM case_events WHERE case_id=%s ORDER BY aggregate_version",
+                    (case_id,))
+        return [r[0] for r in cur.fetchall()]
+
+
+def test_the_three_customer_sentences_go_case_classify_desk_and_close(api):
+    """★구조화 신고와 **같은 결과**여야 한다 — 요식-P3 · 요식-P7 · 액-08."""
+    trip_id = _create(api)["trip_id"]
+    delay = _say(api, trip_id, "delay").json()
+    assert delay["status"] == "adjusted" and delay["outcome"]["to"] == "성수 브런치 식당(시나리오)"
+    assert delay["case_status"] == "resolved"
+    assert delay["classification"]["issue_code"] == "dining_hours"
+    assert _case_events(delay["case_id"]) == ["created", "classified", "routed", "completed"]
+
+    closed = _say(api, trip_id, "closed").json()
+    assert closed["outcome"]["to"] == "서울역 한식당(시나리오)" and closed["case_status"] == "resolved"
+
+    stock = _say(api, trip_id, "stock_out").json()
+    assert stock["status"] == "answered" and "[미확인]" in stock["outcome"]["text"]
+    assert stock["report"]["products"] == ["라면 선물세트", "스팸 선물세트"]
+    assert _detail(api, trip_id)["version"] == 3             # 생성 + 요식 둘
+
+
+def test_a_repeated_message_does_not_open_a_second_case(api):
+    trip_id = _create(api)["trip_id"]
+    first = _say(api, trip_id, "delay").json()
+    again = _say(api, trip_id, "delay").json()
+    assert again["status"] == "duplicate" and again["case_id"] == first["case_id"]
+    assert _detail(api, trip_id)["version"] == 2
+
+
+def test_a_sentence_the_desk_cannot_use_is_escalated_not_guessed(api):
+    trip_id = _create(api)["trip_id"]
+    result = _say(api, trip_id, "other", request_id="say-x", text="그냥 궁금한 게 있어요").json()
+    assert result["status"] == "escalated" and result["case_status"] == "escalated"
+    assert _detail(api, trip_id)["version"] == 1             # ★일정은 그대로
 
 
 # ── 계획서 링크 ────────────────────────────────────────────────

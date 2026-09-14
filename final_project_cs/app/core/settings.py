@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_seed: int = 7
     local_ft_base_url: str = ""
+    #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
+    #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
+    #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).
+    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
+    #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
+    ollama_base_url: str = ""
+    ollama_model: str = "gemma4:12b"
+    ollama_timeout_seconds: float = 60.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.

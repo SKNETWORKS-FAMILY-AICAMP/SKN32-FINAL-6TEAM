@@ -25,8 +25,13 @@ def main() -> int:
     #   비어 있으면 **실패로 남긴다** — 보낸 적 없는 알림을 `delivered` 로 찍지 않는다.
     from app.core.settings import get_settings
     from app.infrastructure.notify import DiscordWebhook
+    from app.infrastructure.notify.translate import make_translator
+    from app.infrastructure.ollama_chat import from_settings
 
-    publisher = DiscordWebhook(get_settings().discord_webhook_url, fallback=publish)
+    # ★보낼 때 고객 언어로 옮긴다(결정 14) — Ollama(Gemma 4)가 설정돼 있을 때.
+    chat = from_settings(get_settings())
+    publisher = DiscordWebhook(get_settings().discord_webhook_url, fallback=publish,
+                               translator=make_translator(chat) if chat else None)
     worker = OutboxWorker(get_connection, publisher, tenant_id=args.tenant)
     handled = 0
     while worker.process_once():
