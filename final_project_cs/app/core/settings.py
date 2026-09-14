@@ -107,6 +107,13 @@ class Settings(BaseSettings):
     #: 경찰청 UTIC 도시교통정보센터 — 도로위험상황예보·돌발(행사·집회 포함)  utic.go.kr
     #:  ★2026-09-14 신청, 승인 대기. **등록한 IP 에서만** 호출된다(<학원 PC IP>).
     utic_api_key: str = ""
+    #: ★IP 에 묶인 API 를 **고정 IP 서버를 거쳐** 부른다(2026-09-14). UTIC 는 등록한 IP 에서만
+    #:  된다 — 개발 장소가 바뀌어도 되게 서버(<경유 서버 IP>, SSH 별칭 `<경유 서버 SSH 별칭>`)로 나간다.
+    #:  터널: `ssh -N -D 1080 <경유 서버 SSH 별칭>` → 이 값 `socks5://127.0.0.1:1080`. 비우면 경유 안 함.
+    outbound_proxy_url: str = ""
+    #: 경유시킬 소스 이름(쉼표). ★기본은 IP 에 묶인 것만 — 전부 경유시키면 터널이 끊길 때
+    #:  모든 소스가 한꺼번에 실패해 치명이 된다. `*` 는 전부.
+    outbound_proxy_sources: str = "utic"
 
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com

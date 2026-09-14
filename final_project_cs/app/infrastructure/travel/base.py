@@ -66,8 +66,12 @@ class TravelSource:
 
     def __init__(self, *, timeout: float = DEFAULT_TIMEOUT_SECONDS,
                  transport: Callable[..., httpx.Response] | None = None,
-                 limiter: Any | None = None, cache: Any | None = None) -> None:
+                 limiter: Any | None = None, cache: Any | None = None,
+                 proxy: str | None = None) -> None:
         self._timeout = timeout
+        # ★경유 프록시(고정 IP 서버). 조립이 `apply_outbound_proxy()` 로 넣는다 — IP 에 묶인
+        #   소스만. 없으면 바로 나간다.
+        self._proxy = proxy or None
         # ★응답 캐시(`cache.py`). 없으면 매번 나간다 — 단위 시험이 그 상태다.
         self._cache = cache
         # ★마지막으로 받아 온 값의 시각 — `stamp()` 가 확인 시각으로 쓴다. 요청 스레드마다
@@ -82,6 +86,9 @@ class TravelSource:
 
     # ── 하위 클래스가 쓰는 부품 ──────────────────────────────────
     def _http_get(self, url: str, params: dict[str, Any]) -> httpx.Response:
+        proxy = getattr(self, "_proxy", None)
+        if proxy:
+            return httpx.get(url, params=params, timeout=self._timeout, proxy=proxy)
         return httpx.get(url, params=params, timeout=self._timeout)
 
     def _allow(self) -> bool:
@@ -313,6 +320,30 @@ def _public_data_key(settings: Any, field: str) -> str:
     return override or getattr(settings, "data_go_kr_key", "") or ""
 
 
+def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str | None:
+    """이름이 맞는 소스에만 경유 프록시를 건다. 못 걸면 **이유**를, 걸었으면 `None`.
+
+    ★사슬(`FallbackWeather`·`FallbackAir`)은 안의 소스까지 본다 — 사슬 이름이 아니라
+      실제로 바깥에 나가는 어댑터 이름으로 고른다.
+    ★SOCKS 인데 `socksio` 가 없으면 **걸지 않는다.** 걸면 요청 순간 ImportError 로
+      점검이 통째로 죽는다. 대신 이유를 돌려주고 조립이 `unavailable` 에 적는다.
+    """
+    import importlib.util
+
+    url = (url or "").strip()
+    wanted = {name.strip() for name in (names or "").split(",") if name.strip()}
+    if not url or not wanted:
+        return None
+    if url.startswith("socks") and importlib.util.find_spec("socksio") is None:
+        return (f"경유 프록시 {url} 는 SOCKS 인데 socksio 가 없다 — 경유하지 않는다. "
+                f"`pip install socksio`(httpx[socks]) 뒤 다시 띄운다. 대상: {sorted(wanted)}")
+    for value in vars(sources).values():
+        for source in getattr(value, "sources", [value]):
+            if isinstance(source, TravelSource) and ("*" in wanted or source.name in wanted):
+                source._proxy = url
+    return None
+
+
 def build_travel_sources(settings: Any) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
 
@@ -476,4 +507,10 @@ def build_travel_sources(settings: Any) -> TravelSources:
         source = OdsayTransit(service_key=settings.odsay_api_key, limiter=limiter, cache=cache)
         sources.transit = source
         sources.route = source
+
+    # ── 고정 IP 서버 경유 (IP 에 묶인 소스만) ─────────────────────────
+    reason = apply_outbound_proxy(sources, url=getattr(settings, "outbound_proxy_url", ""),
+                                  names=getattr(settings, "outbound_proxy_sources", ""))
+    if reason:
+        sources.unavailable["outbound_proxy"] = reason
     return sources
