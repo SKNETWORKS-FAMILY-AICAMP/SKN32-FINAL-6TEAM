@@ -254,6 +254,25 @@ def build_controller(*, registry: TeamRegistry | None = None,
     )
 
 
+def build_domain_routers() -> list:
+    """도메인이 여는 HTTP 표면 — 지금은 여행 API 하나.
+
+    ★presentation 은 도메인을 import 하지 못한다(INV-CS-ARCH-001). 그래서 조립이
+      만들어 `create_app()` 에 넣는다. 점검기는 **처음 쓸 때** 조립한다 — 기동이
+      바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
+    """
+    from app.modules.travel_ops.trip_api import build_trip_router
+
+    def check_factory():
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.base import build_travel_sources
+        from app.infrastructure.travel.disruptions import DisruptionCheck
+
+        return DisruptionCheck(build_travel_sources(get_settings())).check
+
+    return [build_trip_router(check_factory=check_factory)]
+
+
 def build_verification(*, config=None):
     """도메인의 대조 선언을 가져온다 (v7 §9-E).
 

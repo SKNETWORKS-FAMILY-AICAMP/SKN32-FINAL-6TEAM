@@ -25,8 +25,8 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 
 from .itinerary import Item, StaleItinerary, TripStore
-from .replan import (activity_candidates, change_notice, choose, route_candidates,
-                     route_notice)
+from .replan import (activity_candidates, alternate_record, change_notice, choose,
+                     route_candidates, route_notice)
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -38,6 +38,7 @@ class TripTickResult:
     fatal: list[dict[str, Any]] = field(default_factory=list)
     unhandled: list[dict[str, Any]] = field(default_factory=list)
     unresolved: list[dict[str, Any]] = field(default_factory=list)
+    pinned: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _next_after(items: list[Item], item: Item) -> Item | None:
@@ -60,6 +61,11 @@ class TripWatcher:
             due = self.store.due(conn, start=now, end=now + lookahead)
             places = self.store.places(conn)
         for trip_id, item in due:
+            if item.detail.get("customer_pinned"):
+                # ★고객이 되돌려 고른 항목은 다시 자동으로 바꾸지 않는다. 안 그러면
+                #   되돌림 → 다음 틱 자동 변경 → 되돌림 … 이 끝없이 돈다. 세어서 남긴다.
+                result.pinned.append({"trip_id": str(trip_id), "item": item.title})
+                continue
             if item.kind == "mobility":
                 result.checked += 1
                 self._check_route(trip_id, item, now, result)
@@ -101,13 +107,16 @@ class TripWatcher:
         replacement = lambda current: current.replaced_by(  # noqa: E731
             place=best.place, title=f"{best.place['name']} 관람",
             detail={"auto_adjusted_at": now.isoformat(),
-                    "other_options": notice["other_options"]})
+                    "other_options": notice["other_options"],
+                    "alternates": [alternate_record(c) for c in alternates]})
         self._apply(trip_id, item, replacement, causes, notice, result,
                     summary={"from": item.place["name"], "to": best.place["name"]})
 
     # ── 이동 ───────────────────────────────────────────────────
     def _check_route(self, trip_id, item, now, result) -> None:
-        route = self.routes.get(str(item.detail.get("route")))
+        # ★경로 정의는 항목이 들고 온다(`route_def`, 등록 API 가 넣는다). 재생 시험처럼
+        #   밖에서 준 `routes` 가 있으면 그것이 먼저다.
+        route = self.routes.get(str(item.detail.get("route"))) or item.detail.get("route_def")
         if not route or self.route_events is None:
             return
         options = {option["id"]: option for option in route["options"]}
@@ -144,7 +153,8 @@ class TripWatcher:
             starts_at=best.starts_at, ends_at=best.ends_at,
             detail={**current.detail, "option": best.key,
                     "auto_adjusted_at": now.isoformat(),
-                    "other_options": notice["other_options"]})
+                    "other_options": notice["other_options"],
+                    "alternates": [alternate_record(c) for c in alternates]})
         self._apply(trip_id, item, replacement, causes, notice, result,
                     summary={"from": planned.get("label"),
                              "to": (best.option or {}).get("label")})

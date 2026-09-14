@@ -134,6 +134,11 @@ security:
     #   수 있지만 반영은 그 순간 트래픽이 받는 것을 바꾼다. 저장하는 사람과
     #   반영 시점을 정하는 사람이 같아야 할 이유도 없다 (2026-09-06, sample 이식).
     - ops:reload
+    # ★여행(Trip) — 일정 등록·조회와 고객 신고·재요청(다른 안 교체·되돌림).
+    #   `case:*` 와 나눈다 — Trip 은 Case 보다 오래 살고(여행 끝까지), 쓰기가
+    #   일정 버전을 올린다(v11 §4-B · §6-C-6). 2026-09-14 추가.
+    - trip:read
+    - trip:write
   composer_jwt_ttl_minutes: 30
   # ★MCP 에는 mcp:read 외 어떤 scope 도 부여하지 않는다
   mcp_allowed_scopes:

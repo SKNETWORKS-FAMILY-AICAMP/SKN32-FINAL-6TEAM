@@ -2,7 +2,14 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing 중 하나만 돌린다.
+    --only      classifying | routing | trip 중 하나만 돌린다.
+
+★`trip` 은 v11 §6-A 의 **감시 루프**다(되잡기 작업 넷째). 앞으로 90분 안에 시작할
+  일정 항목을 실제 소스(기상·특보·재난문자·교통·대기)로 점검하고, 깨졌으면 새 일정
+  버전 + 통지를 한 트랜잭션으로 쓴다. 보내는 일은 배달 루프(`run_outbox_worker`)다.
+  `fatal`(결정 15 — 대체 소스까지 실패)은 고치지 않고 세어 알린다 → `--once` 면 exit 1.
+  `[미구현]` 실제 경로 사건 소스(무정차·통제)는 아직 안 붙었다 — 이동 항목 점검은
+  재생 시험에서만 돈다(UTIC 승인 대기).
 
 ★두 sweeper 는 경계를 나누며 생긴 틈을 막는 장치다:
 
@@ -67,7 +74,29 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
         with get_connection() as conn:
             result["routing"] = sweep_stuck_routing(
                 conn, tenant_id=tenant_id, run_case=run_case, actor_id="sweeper")
+    if only in (None, "trip"):
+        result["trip"] = _run_trip_watch(tenant_id)
     return result
+
+
+def _run_trip_watch(tenant_id: str) -> dict[str, int]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.infrastructure.travel.base import build_travel_sources
+    from app.infrastructure.travel.disruptions import DisruptionCheck
+    from app.modules.travel_ops.itinerary import TripStore
+    from app.modules.travel_ops.trip_watch import TripWatcher
+
+    watcher = TripWatcher(
+        store=TripStore(tenant_id),
+        check=DisruptionCheck(build_travel_sources(get_settings())).check,
+        connection_factory=get_connection,
+        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")))
+    outcome = watcher.tick()
+    return {"checked": outcome.checked, "adjusted": len(outcome.adjusted),
+            "fatal": len(outcome.fatal), "unresolved": len(outcome.unresolved),
+            "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned)}
 
 
 def _report_errors(result: dict[str, dict[str, int]]) -> int:
@@ -80,6 +109,12 @@ def _report_errors(result: dict[str, dict[str, int]]) -> int:
     """
     total = 0
     for name, counts in sorted(result.items()):
+        # ★결정 15 — 대체 소스까지 실패한 치명은 **사람이 봐야 한다.** 세기만 하고 넘기지 않는다.
+        fatal = int(counts.get("fatal", 0))
+        if fatal:
+            total += fatal
+            print(f"★{name} sweeper: fatal={fatal} — 소스가 대체까지 실패해 판정하지 못한 "
+                  f"일정 항목이 있다(결정 15)", file=sys.stderr, flush=True)
         errored = int(counts.get("errored", 0))
         if errored:
             total += errored
@@ -94,7 +129,7 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing"), default=None)
+    parser.add_argument("--only", choices=("classifying", "routing", "trip"), default=None)
     args = parser.parse_args()
 
     tenant_id = get_settings().tenant_id

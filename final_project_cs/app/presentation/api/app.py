@@ -13,7 +13,8 @@ from app.presentation.ui import mount_ui
 
 
 def create_app(controller=None, classifier=None, *,
-               composer_write_router=None, composer_auth_router=None) -> FastAPI:
+               composer_write_router=None, composer_auth_router=None,
+               domain_routers=None) -> FastAPI:
     """릴리즈 빌드는 Composer 없이 뜬다.
 
     ★v9 §8-D — **cs 소스 안에 Composer 구현을 두지 않는다.** 2026-09-06 이전에는
@@ -46,6 +47,11 @@ def create_app(controller=None, classifier=None, *,
     runtime_controller = controller if injected_controller or getattr(classifier, "__module__", "").startswith("app.composition") else None
     app.include_router(build_router(classifier, runtime_controller))
     app.include_router(build_outbox_router())
+    # ★도메인 라우터는 조립이 만든다 — 이 층은 도메인을 import 하지 못한다
+    #   (INV-CS-ARCH-001). 테스트는 `domain_routers=[...]` 로 갈아 끼운다.
+    for router in (composition.build_domain_routers() if domain_routers is None
+                   else domain_routers):
+        app.include_router(router)
     if composer_auth_router is not None:
         app.include_router(composer_auth_router)
     if composer_write_router is not None:
