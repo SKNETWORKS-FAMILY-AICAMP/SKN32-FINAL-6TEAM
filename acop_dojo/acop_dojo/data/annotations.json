@@ -4,6 +4,7 @@
  "app/application/case_service.py::CaseService.checkpoint": "team.execute 직전 지점을 남긴다. 이건 실행 스냅샷이지 업무 상태가 아니다.",
  "app/application/case_service.py::CaseService.finish_run": "실행 기록을 닫는다. 이야기가 끝났다.",
  "app/application/case_service.py::CaseService.start_run": "실행 기록을 연다. 같은 Case 에 두 실행이 겹치는 것을 여기서 막는다.",
+ "app/application/classification.py::classify_case": "분류를 부르고 결과를 한 문(transition_case)으로 기록한다. Case 생성 트랜잭션 밖에서 부르고, LLM 에는 가린 원문만 넘긴다. 라벨 값을 못 얻으면 classification_failed 로 escalated.",
  "app/application/controller.py::Controller.__init__": "조립하는 쪽이 준 부품(Registry·실행기·저장소·검증 선언)을 받는다. 대조 어휘도 주입받는다 — Controller 가 어떤 필드를 대조하는지 알면 코어가 한 도메인에 묶인다.",
  "app/application/controller.py::Controller._apply_result": "결과를 이벤트로 바꿔 상태에 반영한다. 여기도 결국 transition_case 를 지난다.",
  "app/application/controller.py::Controller._capability": "이 Case 가 요구하는 능력 이름을 뽑는다.",
@@ -66,6 +67,8 @@
  "app/infrastructure/db/repository.py::create_action_request": "Action 요청을 만든다. 여기서 멱등키가 유일성을 지켜서, 같은 요청이 열 번 와도 행은 하나다.",
  "app/infrastructure/db/repository.py::create_case": "Case 행을 만든다. 여기서부터 이야기가 시작한다. 아직 상태 전이는 일어나지 않았다.",
  "app/infrastructure/db/repository.py::get_case": "tenant_id 와 case_id 를 함께 걸어 읽는다. 조건 하나만으로 읽는 조회는 그 자체가 결함이다.",
+ "app/infrastructure/db/repository.py::get_case_events": "Case 의 이벤트를 version 순서로 읽는다. tenant 와 case 조건을 둘 다 건다.",
+ "app/infrastructure/db/repository.py::list_cases": "Case 목록을 읽는다. tenant 조건은 항상 붙고, customer 가 주어지면 그 조건을 더한다 — customer 를 비워도 tenant 밖으로는 안 나간다.",
  "app/infrastructure/db/session.py::database_dsn": "설정의 DSN 을 psycopg 형식으로 바꾼다. 접속 정보를 코드에 다시 쓰지 않는다.",
  "app/infrastructure/db/session.py::get_connection": "DB 연결을 연다. 연결 오류를 삼키지 않고 그대로 올린다 — 조용한 폴백을 만들지 않으려는 것이다.",
  "app/infrastructure/messaging/outbox.py::OutboxBrokerAdapter.__init__": "DB 연결을 만드는 함수를 받는다. 바깥함은 메시지를 바로 보내지 않고 같은 DB 에 먼저 적는다.",
@@ -98,6 +101,7 @@
  "app/modules/customer_ops/voc_store_manager.py::VocStoreManagerTeam.execute": "VOC 문의를 처리한다. ContextPack 이 축소됐으면(degraded) 정책을 찾지 않고 바로 사람에게 넘긴다 — 근거가 부족한 상태에서 확정 답변을 만들지 않으려는 것이다.",
  "app/presentation/a2a/travel_remote_agent.py::_require_auth": "원격 쪽 인증. 토큰이 다르면 401 — 다른 원격의 토큰으로는 안 열린다.",
  "app/presentation/a2a/travel_remote_agent.py::create_travel_remote_agent": "테스트용 원격 Agent 앱(장소 확인)을 만든다. behavior 로 정상·실패·무한대기 경로를 고른다 — 정상 경로는 하나뿐이다.",
+ "app/presentation/api/cases.py::_case_or_404": "tenant 조건으로 Case 를 꺼내고, 없거나 다른 고객 것이면 404. '남의 것' 과 '없는 것' 을 같은 응답으로 돌려 존재 여부도 새지 않게 한다.",
  "app/presentation/api/cases.py::_view": "외부로 나갈 모양으로 바꾼다. 내부 필드를 그대로 흘리지 않는 경계다.",
  "app/presentation/security.py::_configured_keys": "설정에 등록된 키를 모은다. 여기 없는 키는 어떤 경로로도 통하지 않는다.",
  "app/presentation/security.py::_development_key": "개발용 키를 secret 과 scope 로 유도한다. scope 마다 다른 키가 나오므로 키 하나로 전 권한을 얻지 못한다.",
@@ -115,5 +119,8 @@
  "app/presentation/ui/theme.py::kv_table": "키-값 표를 만든다.",
  "app/presentation/ui/theme.py::notice": "경고를 띄운다. degraded 나 근거 없음이 여기로 나온다.",
  "app/presentation/ui/theme.py::page": "HTML 뼈대를 만든다.",
- "app/presentation/ui/theme.py::stat": "숫자 한 칸을 만든다."
+ "app/presentation/ui/theme.py::stat": "숫자 한 칸을 만든다.",
+ "eval/defense_metrics.py::Ratio.value": "분자·분모로 비율을 낸다. 분모가 0 이면 0% 가 아니라 None(모름) — 0 으로 적으면 좋아 보인다.",
+ "eval/defense_metrics.py::_facts_from": "fixture 의 사실을 엔진이 읽는 Facts 로 싣는다. 컬렉션 이름을 여기서 열거하지 않는다 — 도메인이 바뀌면 이름도 바뀐다.",
+ "eval/defense_metrics.py::score": "공격 fixture 마다 코어 검증 엔진을 실제로 돌려 다섯 지표를 센다. fixture 에 적힌 판정을 세지 않는다 — 정답과 판정을 같은 파일에서 읽으면 무엇을 재도 100% 가 나온다."
 }

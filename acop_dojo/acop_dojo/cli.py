@@ -175,10 +175,18 @@ def cmd_defects(args: argparse.Namespace) -> int:
     merged.update(outcome["entries"])
     data["entries"] = merged
     data["baseline"] = outcome["baseline"]
+    data["baseline"]["unexpected"] = outcome.get("unexpected_baseline", [])
     print("")
     print(f"카탈로그 저장: {defects.save_catalog(data)}")
     if outcome["collisions"]:
         print("겹침 경고:", outcome["collisions"])
+    if data["baseline"]["unexpected"]:
+        # 결과는 저장했다. 다만 모르는 기준선 실패가 있으면 성공으로 끝내지 않는다.
+        print(f"\n✗ 알려진 목록(data/known_baseline.json)에 없는 기준선 실패 "
+              f"{len(data['baseline']['unexpected'])}건 — 결함 판정에서는 뺐다. 원인을 본다:")
+        for nodeid in data["baseline"]["unexpected"]:
+            print(f"    {nodeid}")
+        return 1
     return 0
 
 

@@ -63,12 +63,13 @@ v11 §0-2 의 승계 행마다 도장이 실행으로 보여 주는 시나리오
 | Controller · TeamExecutorPort · Registry | `status-inquiry-untouched-v1` · `registry-default-capability-v1` · `remote-team-failure-escalates-v1` | |
 | 동시성·정합성 | `api-idempotent-create-v1` · `checkpoint-not-projection-v1` · `outbox-tenant-guard-v1` | ★§4-E 「대상 객체 id」 멱등 키 — **cs 에 아직 없다**(`controller.py:374` 가 여전히 `business_subject=case_id`, v11 도 미반영이라 적는다). 없는 코드는 가르칠 수 없다 |
 | 근거 대조 · 승인 게이트 | 보스 `engine-serves-another-domain-v1` · `ui-evidence-free-proposal-v1` | |
-| 감사 · tenant 격리 · RLS | `outbox-tenant-guard-v1` (tenant 경계 일부) | 감사 기록·RLS 전용 시나리오 |
-| 평가 하네스 | — | 전부 |
+| 감사 · tenant 격리 · RLS | `audit-pii-redacted-v1` · `tenant-scope-query-v1` · `outbox-tenant-guard-v1` | RLS — tests/ 에서 `rls·RLS·row level` 로 찾았고 안 나왔다(다른 이름의 검사는 놓칠 수 있다) |
+| 평가 하네스 | `eval-defense-blocks-attacks-v1` (방어 지표가 코어 검증 엔진을 실제로 돌린다) | A/B/Proposed 실행·judge |
 | Composer | — | 별도 패키지 `acop_composer` 로 나갔다 — 이 도장의 대상 밖 |
 | 결정 15 (모르는 값 → 대체 소스 → 기동 중단) | — | ★**cs 에 경로가 아직 없다.** 원장 R-UNKNOWN-01 은 그 앞부분(지어내지 않는다)만 센다 |
 
-표 9행 중 시나리오가 하나라도 붙은 행은 6행이다(6/9 = 67%. 분모는 표의 행 전부 — 대상 밖인 Composer 와 cs 에 코드가 없는 결정 15 도 센다).
+표 9행 중 시나리오가 하나라도 붙은 행은 7행이다(7/9 = 78%. 분모는 표의 행 전부 — 대상 밖인 Composer 와 cs 에 코드가 없는 결정 15 도 센다).
+평가 하네스는 `eval/` 에 있어 실행 기록 수집기가 `app/` 과 함께 `eval/` 프레임도 모으게 넓혔다.
 빈 칸은 "테스트가 없다" 가 아니라 "도장이 아직 실행으로 보여 주지 않는다" 는 뜻이다.
 
 **자동 뮤테이션을 쓰지 않는다.** 구글의 대규모 사례에서 개발자가 뮤턴트의 85% 를
@@ -164,6 +165,17 @@ python dojo.py invariants   # 0.3초
 
 ★**"생존 0건" 은 결함이 붙은 규칙에 한한 이야기다.** 원장이 그 분모를 드러낸다.
 
+### 원장이 둘이다 — 정본은 cs 쪽
+
+정본은 cs 의 `final_project_cs/wiki/quality/invariants.md`(INV-CS-*) 다. 이 도장의 R-* 는 결함을 묶으려고
+만든 보조 원장이다. 둘을 사람이 문장끼리 짝짓지 않고 **실행 증거로** 잇는다 — 정본 규칙마다 적힌
+판정 테스트를, 도장 결함이 실제로 깨뜨렸는지 카탈로그의 실패 목록에서 찾는다. `invariants` 명령과
+보고서가 이 대조를 매번 다시 계산한다.
+
+`[실측 2026-09-14]` 정본 52개(자동 판정 49개) 중 도장 결함이 판정 테스트를 깨뜨리는 것은 12개(12/49 = 24%)다.
+나머지 37개는 "안전하다" 가 아니라 "도장이 그 규칙을 어기는 결함을 아직 안 만들었다" 는 뜻이다.
+반대로 정본 판정 테스트가 아닌 다른 테스트로만 잡히는 도장 결함은 이 대조에 안 나온다.
+
 ## patch 는 조용히 낡는다
 
 결함은 unified diff 로 갖고 있어서 `app/` 이 바뀌면 hunk 위치가 밀린다.
@@ -193,6 +205,11 @@ python dojo.py patches      # 4초
 전체 테스트를 한 번 돌려 그 실패를 기준선으로 적고, 결함이 **새로** 깨뜨린 테스트만
 잡힌 것으로 센다. 수리 판정(`defect --fix`, `boss --fix`)도 같다.
 
+기준선 실패는 둘로 가른다. `acop_dojo/data/known_baseline.json` 에 이유와 날짜를 적어 둔 것(지금은
+외부 API 잔액에 달린 RAG 통합 테스트)은 조용히 뺀다. 거기 없는 것도 판정에서는 빼지만 게이트를
+**실패(exit 1)로 끝내고** 보고서에 따로 표시한다 — 다른 작업이 깨뜨린 무결성 검사를 환경 탓으로
+묻어 두지 않으려고.
+
 대가가 있다. 기준선에서 이미 깨진 테스트만 지키는 규칙은 그 판정에서 보이지 않는다.
 그래서 보고서가 기준선 실패를 이름으로 전부 적는다. 전에는 기준선이 하나라도 깨지면
 게이트가 멈추고 빈 결과로 카탈로그를 덮어써 기록이 지워졌다 — 이제 결과가 비면 덮어쓰지 않는다.
@@ -205,7 +222,7 @@ python dojo.py patches      # 4초
 - ★첫 전체 회차에서 두 결함(INV-OUTBOX-002 · INV-EVIDENCE-001)의 실행에 setup 오류가 94건·119건 났는데
   `-rf` 라 목록에 안 올라 판정에서 빠졌다. `-rfE` 로 고쳐 두 결함만 다시 돌리니 오류 0, 각자 겨냥한 테스트 하나만
   깨졌다. `[추정]` 그 시각 같은 DB 를 쓰는 다른 실행과 겹친 것이다 — 원인은 확인하지 못했다.
-  나머지 37건은 첫 회차 결과 그대로다
+  그 뒤 `-rfE` · 사본 git 저장소를 넣은 채 39건 전체를 다시 돌렸다 — 39/39 잡힘, 오류 난 회차 0, 되돌림 실패 0
 - 결함 카탈로그: 49건 중 활성 **39건**, 중지 10건(커머스). 활성 39건 **전부 잡힌다(39/39 = 100%)**,
   생존 0 · 적용 불가 0 · 되돌림 실패 0. 자기만 깨뜨리는 테스트가 없는 결함 2건(INV-PII-003·004 —
   깨지는 테스트가 전부 다른 결함과 겹친다. 둘의 자카드는 0.33 이라 실패 화면은 다르다). 실패 집합이 똑같은 쌍은 0
@@ -219,9 +236,12 @@ python dojo.py patches      # 4초
   | `remote-team-failure-escalates-v1` | 19 | 18 |
   | `registry-default-capability-v1` | 7 | 7 |
   | `outbox-tenant-guard-v1` | 4 | 4 |
+  | `eval-defense-blocks-attacks-v1` | 196 | 10 (`eval/` 3 · 검증 엔진 6 · 익명 생성식 1) |
+  | `audit-pii-redacted-v1` | 56 | 26 |
+  | `tenant-scope-query-v1` | 8 | 4 |
   | 보스 `engine-serves-another-domain-v1` | 12 | 7 (전부 `verification.py`) |
 
-- 함수 해설: 위 여섯 트레이스에서 비어 있던 26개를 채워 91개 → 117개. 여섯 트레이스의 고유 함수는 전부 해설이 있다
+- 함수 해설: 위 트레이스들에서 비어 있던 33개를 채워 91개 → 124개. 위 트레이스의 고유 함수는 전부 해설이 있다
   (`<locals>` 안의 익명 함수는 원래 해설하지 않는다)
 - ★"생존 0건" 은 **우리가 고른 39개 가설에 대한 검출률**이지 저장소 커버리지가 아니다 →
   [`테스트_사각지대_실측.md`](../program/research/테스트_사각지대_실측.md)

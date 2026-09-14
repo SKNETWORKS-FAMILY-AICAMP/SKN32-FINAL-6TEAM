@@ -55,9 +55,15 @@ def _teachable(steps: list[dict[str, Any]]) -> list[str]:
     return labels
 
 
-def _ready(data: dict[str, Any]) -> bool:
+def _missing(data: dict[str, Any]) -> list[str]:
+    """보스전 앞에 남은 것. 0~2단계는 해 봤으면 된다 — 자기 채점이라 통과 표시가 약하다.
+    3단계는 pytest 가 판정하니 **통과**해야 한다. 예전엔 기록이 있기만 하면 열려,
+    결함을 못 고친 채로도 들어왔다(2026-09-14 codex-alt 지적)."""
     stages = data.get("stages", {})
-    return all(stage in stages for stage in ("0", "1", "2", "3"))
+    missing = [f"{s}단계" for s in ("0", "1", "2") if s not in stages]
+    if stages.get("3", {}).get("status") != "passed":
+        missing.append("3단계 통과(결함 수리를 pytest 가 인정해야 한다)")
+    return missing
 
 
 def _pick(prompt: str, options: list[str]) -> str:
@@ -216,9 +222,9 @@ def _vocabulary_question(target: Path) -> Callable[[], bool] | None:
 def play(target: Path, trace: dict[str, Any], *, fix: Path | None = None,
          force: bool = False, defect_id: str | None = None) -> int:
     data = progress.load()
-    if not _ready(data) and not force:
-        missing = [s for s in ("0", "1", "2", "3") if s not in data.get("stages", {})]
-        print(f"보스전은 0~3단계를 지난 뒤에 연다. 아직 안 한 단계: {', '.join(missing)}")
+    missing = _missing(data)
+    if missing and not force:
+        print(f"보스전은 0~2단계를 해 보고 3단계를 통과한 뒤에 연다. 남은 것: {', '.join(missing)}")
         print("그래도 열려면 --force 를 준다.")
         return 1
 

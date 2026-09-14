@@ -82,8 +82,11 @@ def gap_report(target_revision: str) -> str:
                   f"사본에서 결함을 넣기 전에 이미 {len(known_broken)}건이 실패했다. 결함 판정은",
                   "이것을 뺀 **새 실패**로 했다. 대가가 있다 — 여기 있는 테스트만 지키는 규칙은",
                   "이번 판정에서 보이지 않는다.", ""]
+        unexpected = set((catalog.get("baseline") or {}).get("unexpected") or [])
         for nodeid in known_broken:
-            lines.append(f"- `{nodeid}`")
+            mark = " — ★알려진 목록(`data/known_baseline.json`)에 없다. 원인을 봐야 한다" \
+                if nodeid in unexpected else ""
+            lines.append(f"- `{nodeid}`{mark}")
 
     parked = catalog.get("parked", {})
     if parked:
@@ -135,6 +138,31 @@ def gap_report(target_revision: str) -> str:
             lines.append(f"| **{rule_id}** {rule} | {source} |")
     else:
         lines.append("활성 규칙 전부에 결함이 하나 이상 붙어 있다.")
+
+    # 정본(INV-CS-*)과는 실행 증거로 잇는다 — 정본 판정 테스트를 결함이 실제로 깨뜨렸는가.
+    canon = invariants_mod.canonical()
+    if canon:
+        automated = sorted(c for c, r in canon.items() if r["kind"] == "automated")
+        links = invariants_mod.canonical_links(catalog)
+        lines += [
+            "",
+            "## 정본 원장과의 대조",
+            "",
+            f"정본은 cs 의 `wiki/quality/invariants.md` 다. 자동 판정 규칙 {len(automated)}개 중 "
+            f"**{len(links)}개**({len(links) * 100 // max(len(automated), 1)}%)의 판정 테스트를 "
+            "도장 결함이 실제로 깨뜨렸다. 사람이 문장을 짝지은 것이 아니라 카탈로그의 실패 목록과 "
+            "정본의 실행 위치가 겹친 것만 셌다.",
+            "",
+            "나머지는 \"그 규칙이 안전하다\" 가 아니라 \"도장이 그 규칙을 어기는 결함을 아직 안 만들었다\" 는 뜻이다. "
+            "반대로 정본 판정 테스트가 아닌 다른 테스트로만 잡히는 결함은 여기 이어지지 않는다.",
+            "",
+            "| 정본 ID | 규칙 | 깨뜨린 도장 결함 |",
+            "|---|---|---|",
+        ]
+        for canon_id in automated:
+            hit = ", ".join(links.get(canon_id, [])) or "—"
+            lines.append(f"| `{canon_id}` | {canon[canon_id]['rule']} | {hit} |")
+        lines.append("")
     lines += [
         "## 이 숫자로 말할 수 있는 것",
         "",

@@ -217,3 +217,41 @@ SCENARIOS["remote-team-failure-escalates-v1"] = Scenario(
     ),
     needs_db=False,
 )
+# ★2026-09-14 승계 목록의 남은 빈 행 둘 — 감사·tenant 격리, 평가 하네스.
+#  RLS 는 tests/ 에서 'rls|RLS|row level' 로 찾았고 안 나왔다(다른 이름의 검사는 놓칠 수 있다).
+SCENARIOS["audit-pii-redacted-v1"] = Scenario(
+    scenario_id="audit-pii-redacted-v1",
+    title="PII 는 DB·API·감사 기록 어디에도 원문으로 남지 않는다",
+    nodeid=(
+        "tests/security/test_pii_redaction_runtime.py"
+        "::test_case_message_is_redacted_in_db_api_and_audit"
+    ),
+    objective=(
+        "DB 에만 가리고 감사 기록에 원문이 남는 실수를 한 번에 막는다. 원문은 저장 전에 가려지고, "
+        "LLM 과 감사 기록에는 가린 것만 간다(정본 INV-CS-SEC-004)."
+    ),
+    needs_db=True,
+)
+SCENARIOS["tenant-scope-query-v1"] = Scenario(
+    scenario_id="tenant-scope-query-v1",
+    title="고객을 지정하지 않은 조회도 tenant 밖으로 나가지 않는다",
+    nodeid=(
+        "tests/security/test_query_scope.py"
+        "::test_case_list_without_customer_stays_inside_the_tenant"
+    ),
+    objective=(
+        "조건 없는 조회는 그 자체가 보안 결함이다. customer 를 비워도 tenant 조건은 빠지지 않는다"
+        "(정본 INV-CS-SEC-006)."
+    ),
+    needs_db=True,
+)
+SCENARIOS["eval-defense-blocks-attacks-v1"] = Scenario(
+    scenario_id="eval-defense-blocks-attacks-v1",
+    title="방어 지표는 fixture 의 정답을 세지 않고 실제 방어를 돌려 잰다",
+    nodeid="tests/unit/eval/test_defense_metrics.py::test_attack_fixtures_are_all_blocked",
+    objective=(
+        "평가 하네스가 공격 fixture 마다 코어 검증 엔진을 실제로 돌려 막혔는지 센다. "
+        "정답과 판정을 같은 파일에서 읽으면 무엇을 재도 100% 가 나온다 — 처음 구현이 그랬다."
+    ),
+    needs_db=False,
+)
