@@ -36,7 +36,7 @@ class ActivityTeam(TravelTeamBase):
         ],
         accepted_case_types=["activity"],
         required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.policy", "read.place", "read.weather"],
+        allowed_tools=["read.booking", "read.policy", "read.place", "read.disruptions"],
         knowledge_scope=["activity", "cancellation", "refund", "weather"],
         max_steps=6,
         active=True,
@@ -139,26 +139,47 @@ class ActivityTeam(TravelTeamBase):
         evidence = self._evidence(task, source_id="read.place",
                                   claim="장소·운영 정보", value=place, base=evidence)
 
-        # ★기상은 **날씨가 판정에 들어가는 활동**에만 본다. 모르면 안 본다 —
-        #   실내 활동에 기상 판정을 걸면 틀린 이유로 불가 판정이 난다.
-        forecast: dict[str, Any] | None = None
-        if isinstance(place, dict) and place.get(self._WEATHER_SENSITIVE_KEY):
-            forecast = self._read(task, "read.weather", {
+        # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
+        #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
+        #   점검이 장소 속성으로 정한다 — Team 이 소스 조합을 들고 있지 않는다.
+        report: dict[str, Any] | None = None
+        if isinstance(place, dict):
+            report = self._read(task, "read.disruptions", {
                 "place_id": booking.get("place_id"),
-                # ★좌표와 시각을 **넘겨야** 답이 온다. "어디인지 모르는 곳의
-                #   날씨" 는 없다 — 좌표가 없으면 소스가 「모름」을 돌려준다.
                 "latitude": place.get("latitude"),
                 "longitude": place.get("longitude"),
-                "at": booking.get("starts_at"),
+                "weather_sensitive": bool(place.get(self._WEATHER_SENSITIVE_KEY)),
+                "region": self._REGION,
+                # ★구를 알면 넘긴다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
+                "district": place.get("district"),
+                "starts_at": booking.get("starts_at"),
             }, seen)
-            evidence = self._evidence(task, source_id="read.weather",
-                                      claim="기상 예보", value=forecast, base=evidence)
-            if forecast is None:
-                return self._unknown(task, "기상 정보", evidence)
+            evidence = self._evidence(task, source_id="read.disruptions",
+                                      claim="일정 성립 점검", value=report, base=evidence)
+            # ★결정 15 — 항목 하나라도 1차·대체 소스까지 못 가져오면 **치명**이다.
+            #   조회 실패를 일정 변경 사유로 쓰지 않는다(멀쩡한 일정이 바뀐다).
+            if report is None or report.get("verdict") == "fatal":
+                failed = (report or {}).get("failed_categories") or ["성립 점검 전체"]
+                return self._escalate(task, "fatal_source_failure", evidence, warnings=[
+                    f"값을 끝까지 못 가져온 항목: {', '.join(failed)} — 대체 소스까지 "
+                    f"실패했다(결정 15: 치명). 모르는 채로 성립이라고 답하지 않는다"])
+            # ★이상이 **하나라도** 있으면 일정 변경 대상이다.
+            if report.get("verdict") == "disrupted":
+                kinds = ", ".join(str(d.get("kind")) for d in report.get("disruptions", []))
+                return self._propose_change(
+                    task, booking, evidence,
+                    reason=f"일정 성립 점검 이상 — {kinds}",
+                    answer=(f"현재 {self._REGION}에 {kinds}가 발효 중이라 이 일정은 "
+                            f"바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
+                    decisions={"feasible": False, "reason": "disrupted",
+                               "disruptions": report.get("disruptions", [])})
 
+        forecast = self._checked_value(report, "forecast")
         warnings = [] if place is not None else ["장소·운영 정보를 확인하지 못했다"]
         decisions: dict[str, Any] = {"feasible": True,
                                      "place_confirmed": place is not None}
+        if report is not None:
+            decisions["not_connected"] = report.get("not_connected", [])
         answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
         if place is None:
             answer += " 운영 정보는 확인되지 않아 그 부분은 판정하지 않았습니다."
@@ -171,6 +192,7 @@ class ActivityTeam(TravelTeamBase):
                 "precipitation_probability": forecast.get("precipitation_probability"),
                 "wind_speed_kmh": forecast.get("wind_speed_kmh"),
                 "source": forecast.get("source"),
+                "fell_back_from": forecast.get("fell_back_from", []),
                 "confirmed_at": forecast.get("confirmed_at"),
             }
 
@@ -178,6 +200,18 @@ class ActivityTeam(TravelTeamBase):
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    # ── 성립 점검 부품 ────────────────────────────────────────
+    #: 점검할 지역. ★v11 §1 — 대상 도시는 서울 하나다.
+    _REGION = "서울"
+
+    @staticmethod
+    def _checked_value(report: dict[str, Any] | None, category: str) -> dict[str, Any] | None:
+        """점검 결과에서 한 항목의 값을 꺼낸다. 해당 없음·미연결이면 `None`."""
+        for check in (report or {}).get("checks", []):
+            if check.get("category") == category and check.get("status") == "ok":
+                return check.get("value")
+        return None
 
     # ── 기상 문구 ──────────────────────────────────────────────
     @staticmethod
@@ -229,19 +263,24 @@ class ActivityTeam(TravelTeamBase):
         return note, advisories
 
     # ── ③ 재계획 — 제안까지만 ──────────────────────────────────
-    def _propose_change(self, task: TeamTask, booking: dict,
-                        evidence: list) -> TeamResult:
-        """★대안을 실행하지 않는다. `ActionProposal` 로 승인 대기에 올린다."""
+    def _propose_change(self, task: TeamTask, booking: dict, evidence: list, *,
+                        reason: str | None = None, answer: str | None = None,
+                        decisions: dict[str, Any] | None = None) -> TeamResult:
+        """★대안을 실행하지 않는다. `ActionProposal` 로 승인 대기에 올린다.
+
+        `reason` 이 없으면 고객 문장 그대로(고객이 바꿔 달라고 한 경우), 있으면
+        점검이 찾은 이상(감시·점검이 바꾸자고 하는 경우)이다.
+        """
         proposal = self._proposal(
             task, "activity.change",
-            {"booking_id": booking.get("booking_id"), "reason": task.input_text},
+            {"booking_id": booking.get("booking_id"), "reason": reason or task.input_text},
             evidence)
         return self._result(
             task, outcome="completed", confidence=0.6, evidence=evidence,
             next_action=NextAction.WAIT_FOR_APPROVAL,
-            answer="변경 제안을 만들었습니다. 승인 뒤에 진행됩니다.",
+            answer=answer or "변경 제안을 만들었습니다. 승인 뒤에 진행됩니다.",
             action_proposals=[proposal],
-            decisions=[{"proposed": "activity.change"}])
+            decisions=[{"proposed": "activity.change", **(decisions or {})}])
 
     # ── 규정 읽기 ──────────────────────────────────────────────
     @staticmethod

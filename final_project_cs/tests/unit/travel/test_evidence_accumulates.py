@@ -39,11 +39,14 @@ async def test_activity_keeps_every_source_it_read():
         "read.policy": [{"cancel_deadline_hours": 24}],
         "read.place": {"place_id": "p1", "weather_sensitive": True,
                        "latitude": 37.5, "longitude": 127.0},
-        "read.weather": {"matched_hour": "2026-09-10T14:00",
-                         "precipitation_probability": 10, "wind_speed_kmh": 5.0},
+        "read.disruptions": {"verdict": "clear", "disruptions": [], "advisories": [],
+                             "failed_categories": [], "not_connected": [],
+                             "checks": [{"category": "forecast", "status": "ok", "value": {
+                                 "matched_hour": "2026-09-10T14:00",
+                                 "precipitation_probability": 10, "wind_speed_kmh": 5.0}}]},
     })).execute(request)
 
-    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.weather"]
+    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.disruptions"]
 
 
 @pytest.mark.asyncio

@@ -95,6 +95,16 @@ class Settings(BaseSettings):
     #: 외교부 국가·지역별 여행경보 — 해외 확장 시   data.go.kr/data/15076237
     mofa_api_key: str = ""
 
+    # 정부 교통정보 — ★공공데이터포털 공통 키와 **다른 키**다(각 기관이 따로 발급).
+    #: 국토교통부 ITS 국가교통정보센터 — 돌발상황  its.go.kr/opendata
+    #:  ★2026-09-14 발급·실호출 확인. 고속도로·국도만이 아니라 **시내 도로(시군도)도
+    #:    온다**(서울 122건 중 시군도 10·국도 6·지방도 2). 공공데이터포털 15040465 는
+    #:    LINK 형이라 키가 ITS 에서 나온다.
+    its_api_key: str = ""
+    #: 경찰청 UTIC 도시교통정보센터 — 도로위험상황예보·돌발(행사·집회 포함)  utic.go.kr
+    #:  ★2026-09-14 신청, 승인 대기. **등록한 IP 에서만** 호출된다(<학원 PC IP>).
+    utic_api_key: str = ""
+
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
@@ -116,6 +126,7 @@ class Settings(BaseSettings):
     rate_kma_per_day: int = 1000             # 미확인 - 보수적
     rate_airport_per_day: int = 1000         # 미확인 - 보수적
     rate_mofa_per_day: int = 1000            # 미확인 - 보수적
+    rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
@@ -143,6 +154,7 @@ class Settings(BaseSettings):
             "tago": self.rate_tago_per_day,
             "airport": self.rate_airport_per_day,
             "mofa": self.rate_mofa_per_day,
+            "its": self.rate_its_per_day,
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
         }

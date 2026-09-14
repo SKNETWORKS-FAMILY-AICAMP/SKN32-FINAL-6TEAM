@@ -225,6 +225,14 @@ class TravelSources:
     #: 국가유산청 — ★키가 필요 없어서 **항상 붙는다**(2026-09-10 실호출 확인).
     #:  좌표를 모르는 장소의 좌표를 채우는 데만 쓴다. 운영시간은 주지 않는다.
     heritage: Any | None = None
+    #: 기상청 기상특보 — 지금 그 지역에 발효 중인 특보. 공공데이터포털 공통 키.
+    warning: Any | None = None
+    #: 외교부 여행경보 — 해외 확장용(v11 MVP 는 서울뿐이라 지금 부르는 Team 없음).
+    advisory: Any | None = None
+    #: 행정안전부 긴급재난문자. ★지금은 **샘플 CSV 판**(실키 발급 대기, 2026-09-14).
+    disaster: Any | None = None
+    #: 국토교통부 ITS 돌발상황 — 교통 사고·공사·통제(시내 도로 포함, 실측).
+    traffic: Any | None = None
     transit: Any | None = None
     route: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
@@ -301,6 +309,52 @@ def build_travel_sources(settings: Any) -> TravelSources:
         else:
             from .weather_chain import FallbackWeather
             sources.weather = FallbackWeather(chain)
+
+    warning_key = _public_data_key(settings, "kma_warning_api_key")
+    if warning_key:
+        from .kma_warning import KmaWarningSource
+        sources.warning = KmaWarningSource(service_key=warning_key, limiter=limiter)
+    else:
+        sources.unavailable["warning"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_KMA_WARNING_API_KEY)가 비어 있다. "
+            "공공데이터포털 「기상청_기상특보 조회서비스」 활용신청 후 .env.apikeys 에 채운다.")
+
+    mofa_key = _public_data_key(settings, "mofa_api_key")
+    if mofa_key:
+        from .mofa import MofaTravelAlarm
+        sources.advisory = MofaTravelAlarm(service_key=mofa_key, limiter=limiter)
+    else:
+        sources.unavailable["advisory"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_MOFA_API_KEY)가 비어 있다. "
+            "공공데이터포털 「외교부_국가·지역별 여행경보」 활용신청 후 .env.apikeys 에 채운다.")
+
+    # ★재난문자 — 키가 아직 안 나와 **샘플 CSV** 를 쓴다(사용자 지시 2026-09-14).
+    #   샘플 기간(2023-09-16~19) 밖을 물으면 점검이 「미연결」로 답한다 —
+    #   「재난문자 없음」이라고 하지 않는다. 키가 나오면 `disaster_msg_source=api`.
+    disaster_mode = getattr(settings, "disaster_msg_source", "sample")
+    if disaster_mode == "sample":
+        from pathlib import Path
+
+        from .disaster_msg import DEFAULT_SAMPLE_PATH, DisasterMsgCsv
+        sample = Path(getattr(settings, "disaster_msg_sample_path", "") or DEFAULT_SAMPLE_PATH)
+        if sample.exists():
+            sources.disaster = DisasterMsgCsv(sample)
+        else:
+            sources.unavailable["disaster"] = f"재난문자 샘플 CSV 가 없다: {sample}"
+    else:
+        sources.unavailable["disaster"] = (
+            "행정안전부 긴급재난문자 API 판은 아직 없다 — 키 발급 대기 "
+            "(data.go.kr/data/15134001)")
+
+    # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
+    its_key = getattr(settings, "its_api_key", "") or ""
+    if its_key:
+        from .its_traffic import ItsTrafficEvents
+        sources.traffic = ItsTrafficEvents(service_key=its_key, limiter=limiter)
+    else:
+        sources.unavailable["traffic"] = (
+            "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
+            "발급한 키를 .env.apikeys 에 채운다. ★공공데이터포털 키와 다른 키다.")
 
     holiday_key = _public_data_key(settings, "holiday_api_key")
     if holiday_key:
