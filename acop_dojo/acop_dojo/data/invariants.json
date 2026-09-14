@@ -3,12 +3,14 @@
  "_check": "python dojo.py invariants",
  "entries": {
   "R-ANSWER-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-COMMERCE-004"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "답변은 근거와 일치해야 한다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-AUTH-01": {
    "defects": [
@@ -35,13 +37,15 @@
    "status": "active"
   },
   "R-CLASS-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-CLASSIFY-001",
     "INV-VOC-001"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "분류가 실패하면 조용히 넘기지 않는다 — 빠진 필드도 틀린 라벨도 거부",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-CLASS-02": {
    "defects": [
@@ -71,7 +75,9 @@
   },
   "R-CTX-02": {
    "defects": [
-    "INV-DEGRADED-001",
+    "INV-DEGRADED-001"
+   ],
+   "parked_defects": [
     "INV-VOC-002"
    ],
    "rule": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 남기고 확정 답변을 만들지 않는다",
@@ -88,7 +94,9 @@
   },
   "R-EVID-02": {
    "defects": [
-    "INV-EVIDENCE-002",
+    "INV-EVIDENCE-002"
+   ],
+   "parked_defects": [
     "INV-COMMERCE-002"
    ],
    "rule": "든 근거는 ContextPack 에 실재해야 하고 제안에도 붙어야 한다",
@@ -152,13 +160,15 @@
    "status": "active"
   },
   "R-REVIEW-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-TEAM-002",
     "INV-REVIEW-002"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "생성된 답변은 금지어·PII·사실을 검사한 뒤 내보낸다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-SCOPE-01": {
    "defects": [
@@ -219,20 +229,24 @@
    "status": "active"
   },
   "R-TEAM-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-TEAM-001"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 바꾸지 않는다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-TEAM-02": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-COMMERCE-005"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-TEAM-03": {
    "defects": [
@@ -244,7 +258,9 @@
   },
   "R-UNKNOWN-01": {
    "defects": [
-    "INV-OUTBOX-002",
+    "INV-OUTBOX-002"
+   ],
+   "parked_defects": [
     "INV-COMMERCE-003"
    ],
    "rule": "값을 모르면 비워 둔다 — 추정으로 채우거나 확정 답변으로 만들지 않는다",

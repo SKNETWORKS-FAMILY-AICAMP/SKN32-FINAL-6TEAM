@@ -51,6 +51,16 @@ def distinct(catalog: dict, candidates: list[str]) -> list[str]:
     return sorted(seen.values())
 
 
+def new_failures(catalog: dict, failed: list[str]) -> list[str]:
+    """결함 없이도 깨지는 테스트를 뺀 실패. 수리 판정은 이것이 비었는지로 한다.
+
+    사본에는 .git 이 없고, RAG 테스트는 외부 API 잔액에 달려 있다. 이것들까지
+    초록이어야 통과라고 하면 아무도 통과하지 못한다(2026-09-14 기준선 5건 실측).
+    """
+    known = set((catalog.get("baseline") or {}).get("failed") or [])
+    return sorted(set(failed) - known)
+
+
 def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
          track: str = "all") -> int:
     catalog = defects_mod.load_catalog()
@@ -84,7 +94,7 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
 
         for nodeid in entry["failed"]:
             print(f"  FAILED  {nodeid}")
-        print(f"  passed  {424 - len(entry['failed'])}")
+        print(f"  나머지는 통과 (기준선 {catalog.get('baseline', {}).get('summary', '?')})")
 
         if fix is not None:
             print(f"\n  낸 패치를 적용한다: {fix}")
@@ -95,12 +105,13 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
             print("  전체 테스트를 돌린다 (40초쯤 걸린다)")
             result = sandbox.pytest()
             print(f"  {result.summary}")
-            passed = not result.failed
-            print("\n  통과. 테스트가 전부 초록으로 돌아왔다." if passed
-                  else f"\n  아직이다. 남은 실패: {result.failed[:4]}")
+            remaining = new_failures(catalog, result.failed)
+            passed = not remaining
+            print("\n  통과. 결함이 깨뜨린 테스트가 전부 초록으로 돌아왔다." if passed
+                  else f"\n  아직이다. 남은 실패: {remaining[:4]}")
             progress.record_stage("3", status="passed" if passed else "partial",
                                   detail={"defect": chosen, "oracle": "pytest",
-                                          "remaining": result.failed})
+                                          "remaining": remaining})
             if passed:
                 progress.claim_ability("불변식 복구", evidence=f"defect:{chosen}", confirmed=True)
                 # 같은 규칙을 나중에 다른 코드에서 다시 묻는다.

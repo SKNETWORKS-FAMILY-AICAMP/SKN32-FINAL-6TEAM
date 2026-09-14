@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 도장 사용법
-description: 트랙 7개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
+description: 베이스먼트 트랙 4개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
 status: draft
 tags: [testing, documentation]
 owners: [human:미배정]
@@ -26,8 +26,8 @@ domain: neutral
 | `learn 1` | 복원 — 빈칸에 들어갈 함수를 고른다 |
 | `learn 2` | 대조 — 예상 순서를 세우고 실측과 겹친다 |
 | `defect [ID] [--fix 패치]` | 결함 문제. `--fix`를 주면 pytest가 판정한다 |
-| `boss [--fix 패치]` | 보스전 — **안 배운 모듈에서 같은 규칙**을 찾고 고친다 |
-| `tracks` | 학습 트랙 7개 |
+| `boss [--fix 패치]` | 보스전 — **안 배운 코드(검증 엔진)에서 같은 규칙**을 찾고 고친다 |
+| `tracks` | 학습 트랙 4개 (중지 3개) |
 | `placement --track X` | 어디부터 시작할지 실측 문제로 잰다 |
 | `scenarios [--verify-all]` | 시나리오 목록. 전부 두 번 떠서 같은지 검사 |
 | `answers` | 서술 답안을 동료 검토용 루브릭과 함께 내보낸다 |
@@ -50,9 +50,9 @@ domain: neutral
 
 **트레이스가 재현되지 않으면 학습 자료로 쓸 수 없다.** 매번 다른 걸 보여주면 무엇이 규칙이고 무엇이 우연인지 구분이 안 된다.
 
-## 트랙 7개
+## 트랙 4개 (중지 3개)
 
-`[실측]` 전체 1개와 파트 6개.
+`[실측 2026-09-14]` 전체 1개와 파트 3개가 돈다. 처음엔 파트 6개였고 커머스 팀 모듈 셋을 중지했다.
 
 **경계를 사람이 아니라 디렉터리로 긋는다.** `docs/handoff/05_분업_규칙.md`가 같은 이유로 그렇게 한다.
 
@@ -61,16 +61,16 @@ domain: neutral
 | `all` | 전원 | Case가 만들어지고 라우팅되고 처리된 뒤 닫히는 전 구간 |
 | `core1` | 코어 1 | **상태는 이벤트를 접은 결과다.** `transition_case`만이 상태를 바꾼다 |
 | `core2` | 코어 2 | 같은 요청을 열 번 보내도 side effect는 한 번. scope 없는 호출은 거부 |
-| `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
-| `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII는 재시도하지 않고 넘긴다 |
-| `team-commerce` | 팀 모듈 3 | Team은 side effect를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
-
-★`[실측 2026-09-10]` **팀 트랙 셋(`team-voc`·`team-review`·`team-commerce`)의 대상 코드가 cs 작업 트리에서 지워졌다.** 결함 카탈로그(`acop_dojo/defects/catalog.json`) **49개 중 10개 = 20%** 가 `app/modules/customer_ops/*` 를 가리킨다 — INV-CLASSIFY-001 · INV-COMMERCE-002~005 · INV-REVIEW-002 · INV-TEAM-001·002 · INV-VOC-001·002. **지금 cs 에 대면 이 열 개는 대상 파일이 없어 적용되지 않는다.** 그중 인라인 분류(`feedback.py`)는 지워진 게 아니라 `travel_ops/` 로 옮겨졌으니 **경로만 바꾸면 산다.** `[미확보]` 나머지 아홉을 여행 Team 으로 옮길지 버릴지는 dojo 담당 몫이다.
 | `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
+| ~~`team-voc`~~ · ~~`team-review`~~ · ~~`team-commerce`~~ | 팀 모듈 | **중지** (2026-09-14) |
+
+★`[실측 2026-09-10]` **팀 트랙 셋의 대상 코드가 cs 작업 트리에서 지워졌다.** 결함 카탈로그 **49개 중 10개 = 20%** 가 `app/modules/customer_ops/*` 를 가리켰다 — INV-CLASSIFY-001 · INV-COMMERCE-002~005 · INV-REVIEW-002 · INV-TEAM-001·002 · INV-VOC-001·002.
+
+`[결정 2026-09-14]` **도장은 베이스먼트(도메인을 모르는 코어)만 다룬다. 커머스는 지우지 않고 중지했다** — 결함 10은 `catalog.json` 의 `parked`, 시나리오 8은 `scenarios.py` 의 `PARKED_SCENARIO_IDS`, 트랙 3은 `tracks.py` 의 `PARKED_TRACK_IDS`, 원장 규칙 5는 `status: parked`. 여행 Team 트랙은 Team 코드가 자리를 잡은 뒤에 만든다.
 
 `[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다 — `--track core2`처럼 준다.
 
-`[추정]` **팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 모듈 성격으로 나눈 것이다.** 담당이 다르면 `acop_dojo/tracks.py`의 `owns`만 고치면 결함·지도·시나리오가 따라온다.
+`[추정]` 중지한 팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 모듈 성격으로 나눈 것이었다. 여행 Team 트랙을 만들 때 다시 정한다 — `acop_dojo/tracks.py`의 `owns`만 고치면 결함·지도·시나리오가 따라온다.
 
 **각 트랙의 "설명할 수 있어야 하는 것"이 그대로 불변식이다.** → [../../final_project_cs/wiki/quality/invariants.md](../../final_project_cs/wiki/quality/invariants.md)
 
@@ -82,9 +82,13 @@ domain: neutral
 
 ## 보스전이 핵심이다
 
-`boss`는 **안 배운 모듈에서 같은 규칙을 찾아 고치게 한다.**
+`boss`는 **안 배운 코드에서 같은 규칙을 찾아 고치게 한다.**
 
 `learn`과 `defect`가 "이 코드에서 이 규칙"이라면, `boss`는 **"규칙을 이해했는가"**를 묻는다.
+
+`[실측 2026-09-14]` 보스는 베이스먼트의 검증 엔진 `app/core/verification.py` 다. 시나리오 `engine-serves-another-domain-v1` — 커머스 선언을 물린 엔진이 5만원 주문의 7만원 환불을 거부하는 테스트 — 의 트레이스는 12단계, 고유 함수 7개로 **전부 `verification.py` 안**이다. 묻는 것은 역할 셋(입구·수량 검사·숫자 맞춤), 판정, Team 코드가 나오는가, 엔진에 커머스 어휘가 있는가 — 마지막 둘은 트레이스와 엔진 파일을 직접 읽어 답을 낸다. 수리 문제는 그 파일의 결함 셋(INV-VERIFY-001 · INV-EVIDENCE-002 · INV-QUANTITY-001)에서 나온다.
+
+★앞의 보스는 커머스 환불 Team(`customer_ops/return_refund.py`)이었다. 도메인 전환으로 파일이 지워져 열리지 않았다. **Team 은 도메인이 바뀌면 통째로 바뀐다 — 보스는 바뀌지 않는 쪽에 둔다.**
 
 같은 규칙을 다른 자리에서 못 찾으면 외운 것이지 안 게 아니다.
 

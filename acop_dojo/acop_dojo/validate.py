@@ -29,11 +29,19 @@ def validate_all(target: Path, *, verbose: bool = True,
         baseline = sandbox.pytest()
         sandbox.sweep()
         report["baseline"] = {"summary": baseline.summary, "failed": baseline.failed}
-        if baseline.failed:
-            print(f"  ✗ 기준선이 이미 깨져 있다: {baseline.failed}")
-            return report
+        # ★기준선의 실패는 결함 판정에서 뺀다. 공유 저장소는 다른 작업 때문에 늘 몇 건이
+        #   깨져 있을 수 있고, 사본에는 .git 이 없어 git 을 묻는 테스트는 원래 실패한다.
+        #   예전에는 여기서 멈추고 빈 결과를 돌려줘 카탈로그가 통째로 지워졌다.
+        #   대가 — 기준선에서 이미 깨진 테스트가 지키는 규칙은 이번 판정에서 보이지 않는다.
+        known_broken = set(baseline.failed)
         if verbose:
-            print(f"  ✓ {baseline.summary}")
+            if known_broken:
+                print(f"  ! 결함 없이도 {len(known_broken)}건이 실패한다 — 판정에서 뺀다")
+                for nodeid in sorted(known_broken):
+                    print(f"      {nodeid}")
+                print(f"    {baseline.summary}")
+            else:
+                print(f"  ✓ {baseline.summary}")
 
         selected = [d for d in defects_mod.DEFECTS
                     if only is None or d.defect_id in only]
@@ -62,18 +70,19 @@ def validate_all(target: Path, *, verbose: bool = True,
 
             result = sandbox.pytest()
             sandbox.sweep()
-            entry["failed"] = result.failed
+            new_failures = sorted(set(result.failed) - known_broken)
+            entry["failed"] = new_failures
             entry["summary"] = result.summary
-            entry["gates"]["kills_tests"] = bool(result.failed)
+            entry["gates"]["kills_tests"] = bool(new_failures)
             entry["gates"]["not_collection_error"] = not any(
-                nodeid.endswith(".py") for nodeid in result.failed)
+                nodeid.endswith(".py") for nodeid in new_failures)
             if verbose:
-                mark = "✓" if result.failed else "✗"
+                mark = "✓" if new_failures else "✗"
                 print(f"  {mark} {result.summary}")
-                for nodeid in result.failed[:6]:
+                for nodeid in new_failures[:6]:
                     print(f"      {nodeid}")
-                if len(result.failed) > 6:
-                    print(f"      … 외 {len(result.failed) - 6}개")
+                if len(new_failures) > 6:
+                    print(f"      … 외 {len(new_failures) - 6}개")
 
             reverted, message = sandbox.apply(patch, reverse=True)
             after = (sandbox.root / defect.path).read_bytes()
@@ -122,7 +131,7 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
       이미 만들어 둔 patch 가 **아직 쓸 수 있는가**의 문제다.
     """
     report: dict[str, Any] = {"ok": [], "anchor_broken": [], "apply_broken": [],
-                              "drift": [], "missing": []}
+                              "drift": [], "missing": [], "source_missing": []}
     with Sandbox(target) as sandbox:
         assert sandbox.root is not None
         for defect in defects_mod.DEFECTS:
@@ -130,6 +139,11 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
             source = sandbox.root / defect.path
             if not patch.exists():
                 report["missing"].append(defect.defect_id)
+                continue
+            # 겨누는 파일 자체가 없으면 앵커를 볼 수도 없다. 죽지 말고 보고한다 —
+            # 도메인이 바뀌어 Team 코드가 통째로 지워졌을 때 실제로 여기서 죽었다.
+            if not source.exists():
+                report["source_missing"].append((defect.defect_id, defect.path))
                 continue
             with source.open(encoding="utf-8", newline="") as handle:
                 original = handle.read()
@@ -169,6 +183,8 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
             print(f"  ✗ patch 가 낡았다        {defect_id}  (context 가 밀렸다 — 재생성하면 된다)")
         for defect_id in report["drift"]:
             print(f"  ~ 생성 결과와 다르다     {defect_id}  (붙기는 하지만 재생성하면 달라진다)")
+        for defect_id, path in report["source_missing"]:
+            print(f"  ✗ 겨누는 파일이 없다     {defect_id}  ({path} — 지워졌거나 옮겨졌다)")
         for defect_id in report["missing"]:
             print(f"  ✗ patch 파일이 없다      {defect_id}")
     return report

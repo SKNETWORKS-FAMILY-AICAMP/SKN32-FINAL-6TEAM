@@ -76,6 +76,23 @@ def gap_report(target_revision: str) -> str:
             "게이트에 걸어 본다. 규칙만 늘리고 세는 곳을 안 만들면 다시 벌어진다.",
         ]
 
+    known_broken = (catalog.get("baseline") or {}).get("failed") or []
+    if known_broken:
+        lines += ["", "## 결함 없이도 깨져 있던 테스트", "",
+                  f"사본에서 결함을 넣기 전에 이미 {len(known_broken)}건이 실패했다. 결함 판정은",
+                  "이것을 뺀 **새 실패**로 했다. 대가가 있다 — 여기 있는 테스트만 지키는 규칙은",
+                  "이번 판정에서 보이지 않는다.", ""]
+        for nodeid in known_broken:
+            lines.append(f"- `{nodeid}`")
+
+    parked = catalog.get("parked", {})
+    if parked:
+        lines += ["", "## 중지한 것 — 커머스", "",
+                  f"도메인이 여행으로 바뀌어 커머스 Team 을 겨누던 결함 {len(parked)}건을 세지 않는다.",
+                  "지우지 않고 카탈로그의 `parked` 에 옮겨 두었다 — 위의 모든 수치는 이것을 뺀 것이다.", ""]
+        for defect_id, entry in sorted(parked.items()):
+            lines.append(f"- {defect_id} — `{entry.get('path', '?')}`")
+
     if excluded:
         lines += ["", "## 분모에서 뺀 것", "",
                   "신호가 안정적이지 않아 세지 않는다. **뺀 것을 밝히지 않으면 0 이라는 수치가",

@@ -27,9 +27,28 @@ python dojo.py doctor
 **먼저 해설된 완주를 보여준다.** 처음 보는 사람에게 곧바로 예측을 시키면 탐색
 부담이 학습으로 오인된다. 0단계는 채점하지 않는다.
 
-**마지막은 안 배운 모듈에서 본다.** 같은 코드에서 한 번 더 물으면 그 코드를 외웠는지만
-알 수 있다. 보스전은 0~2단계 트레이스가 한 번도 지나가지 않은 Team 모듈에서 열리고,
-기록도 acquisition(처음 성공) · retention(재시도) · transfer(안 배운 모듈)로 나눠 남긴다.
+**마지막은 안 배운 코드에서 본다.** 같은 코드에서 한 번 더 물으면 그 코드를 외웠는지만
+알 수 있다. 보스전은 학습 트랙이 한 번도 지나가지 않은 베이스먼트의 검증 엔진
+(`app/core/verification.py`)에서 열리고, 엔진에 물리는 선언도 제품 도메인(여행)이 아니라
+커머스다 — 엔진을 한 줄도 안 고치고 다른 도메인이 도는지를 본다. 기록은
+acquisition(처음 성공) · retention(재시도) · transfer(안 배운 코드)로 나눠 남긴다.
+
+## 지금은 베이스먼트만 다룬다 (2026-09-14)
+
+제품 도메인이 커머스에서 여행으로 바뀌었다. 도메인을 모르는 코어(베이스먼트) —
+Case 생명주기 12상태, 계약, Controller·Registry, 동시성·멱등성·바깥함, 검증 엔진 — 는
+그대로 승계됐고, Team 모듈과 도메인 데이터는 전부 새로 만든다.
+
+그래서 도장도 베이스먼트만 다룬다. 커머스 Team 을 겨누던 것은 **지우지 않고 중지했다.**
+
+| 중지한 것 | 수 | 어디에 남아 있나 |
+|---|---|---|
+| 결함 | 10 | `defects.py` 의 `PARKED` · `catalog.json` 의 `parked` |
+| 시나리오 | 8 | `scenarios.py` 의 `PARKED_SCENARIO_IDS` |
+| 트랙 | 3 (`team-voc` · `team-review` · `team-commerce`) | `tracks.py` 의 `PARKED_TRACK_IDS` |
+| 원장 규칙 | 5 | `data/invariants.json` 의 `status: parked` |
+
+여행 Team 트랙은 Team 코드가 자리를 잡은 뒤에 만든다. 지금 만들면 매주 낡는다.
 
 **자동 뮤테이션을 쓰지 않는다.** 구글의 대규모 사례에서 개발자가 뮤턴트의 85% 를
 무의미하다고 분류했다. 대신 이 저장소가 문서로 못 박은 불변식에서 사람이 손으로
@@ -45,45 +64,43 @@ python dojo.py doctor
 | `learn 1` | 복원 — 빈칸에 들어갈 함수를 고른다 |
 | `learn 2` | 대조 — 예상 순서를 세우고 실측과 겹친다 |
 | `defect [ID] [--fix 패치]` | 결함 문제. `--fix` 를 주면 pytest 가 판정한다 |
-| `boss [--fix 패치] [--defect ID] [--force]` | 보스전 — 안 배운 모듈에서 같은 규칙을 찾고 고친다 |
+| `boss [--fix 패치] [--defect ID] [--force]` | 보스전 — 안 배운 코드(검증 엔진)에서 같은 규칙을 찾고 고친다 |
 | `invariants` | 규칙 원장과 결함 카탈로그가 맞는지 본다 (0.3초) |
 | `patches` | 결함 patch 가 아직 유효한지 본다 (4초, 테스트 안 돌림) |
-| `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트를 돌린다 (20분) |
+| `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트를 돌린다 (약 30분) |
 | `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 본다 |
 | `report` | 검증 결과로 사각지대 보고서를 다시 쓴다 |
 | `map` | 웹 지도를 그린다 |
-| `tracks` | 학습 트랙 7개를 본다 |
+| `tracks` | 학습 트랙을 본다 (4개, 중지 3개) |
 | `placement --track X` | 어디부터 시작할지 실측 문제로 잰다 |
 | `scenarios [--verify-all]` | 시나리오 목록 · 전부 두 번 떠서 같은지 검사 |
 | `answers` | 서술 답안을 동료 검토용 루브릭과 함께 내보낸다 |
 | `review` | 예약된 복습을 꺼낸다 — 같은 규칙을 다른 코드에서 묻는다 |
 | `status` | 진행 상황 |
 
-## 트랙 7개
+## 트랙 4개 (중지 3개)
 
-전체 1개와 파트 6개다. 경계는 사람이 아니라 디렉터리로 긋는다 —
-`docs/handoff/05_분업_규칙.md` 가 같은 이유로 그렇게 한다.
+처음에는 전체 1개와 파트 6개, 7개였다. 커머스 팀 모듈 트랙 셋을 중지해 지금은 4개가 돈다.
+경계는 사람이 아니라 디렉터리로 긋는다 — `docs/handoff/05_분업_규칙.md` 가 같은 이유로 그렇게 한다.
 
 | 트랙 | 담당 | 이 파트에서 반드시 설명할 수 있어야 하는 것 |
 |---|---|---|
 | `all` | 전원 | Case 가 만들어지고 라우팅되고 처리된 뒤 닫히는 전 구간 |
-| `core1` | 코어 1 | 상태는 이벤트를 접은 결과다. `transition_case` 만이 상태를 바꾼다 |
+| `core1` | 코어 1 | 상태는 이벤트를 접은 결과다. `transition_case` 만이 상태를 바꾼다. 체크포인트는 업무 상태가 아니다 |
 | `core2` | 코어 2 | 같은 요청을 열 번 보내도 side effect 는 한 번. scope 없는 호출은 거부 |
-| `team-voc` | 팀 모듈 1 | 분류 실패를 조용히 넘기지 않는다. 배치는 tenant 안에서 멱등 |
-| `team-review` | 팀 모듈 2 | 근거 없는 답변을 만들지 않는다. PII 는 재시도하지 않고 넘긴다 |
-| `team-commerce` | 팀 모듈 3 | Team 은 side effect 를 실행하지 않는다. 정책 값을 바꾸지 않는다 |
 | `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
+| ~~`team-voc`~~ · ~~`team-review`~~ · ~~`team-commerce`~~ | 팀 모듈 | 중지 — 대상 코드 `app/modules/customer_ops/` 가 도메인 전환으로 등록에서 빠졌다 |
 
 트랙마다 자기 시나리오, 자기 결함, 자기 지도가 붙는다.
 
 ```bash
-python dojo.py learn 0 --track core2
-python dojo.py defect --track front
-python dojo.py map --track team-review
+python dojo.py learn 0 --track core1
+python dojo.py defect --track core2
+python dojo.py map --track front
 ```
 
-★팀 모듈 3분할은 저장소에 사람 배정 문서가 없어 **모듈 성격으로 나눈 추정**이다.
-담당이 다르면 `acop_dojo/tracks.py` 의 `owns` 만 고치면 결함·지도·시나리오가 따라온다.
+`all` 과 `core1` 의 첫 시나리오는 `status-inquiry-untouched-v1` 이다. 여행 도메인과 무관한
+가짜 Team 을 진짜 Controller 에 물려, 상태 조회 요청이 예약을 건드리지 않고 끝나는 전 구간을 본다.
 
 ## 지도는 먼저 그려 보고 대조한다
 

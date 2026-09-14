@@ -37,8 +37,8 @@ from typing import Any, Callable
 #:  재난문자는 여기 없다 — 샘플 CSV 판이 붙어 있고(`disaster_msg.py`), 소스가
 #:  없을 때의 이유는 조립이 `unavailable["disaster"]` 에 적는다.
 NOT_CONNECTED: dict[str, str] = {
-    "air_quality": "에어코리아 대기오염정보 — 승인됐으나 키 반영 대기 (data.go.kr/data/15073861)",
-    "earthquake": "기상청 지진정보 — 승인됐으나 키 반영 대기 (data.go.kr/data/15000420)",
+    # ★2026-09-14 실측: 공통 키로 호출된다(최근 3일까지만 조회). 어댑터만 아직 없다.
+    "earthquake": "기상청 지진정보 — 호출은 되나 어댑터 미구현 (data.go.kr/data/15000420)",
 }
 
 
@@ -81,6 +81,7 @@ class DisruptionCheck:
             "weather_warning": lambda: self._warning(region, sensitive),
             "disaster_msg": lambda: self._disaster(place, starts_at, region, sensitive),
             "traffic_control": lambda: self._traffic(place, starts_at),
+            "air_quality": lambda: self._air(place, starts_at, sensitive),
         }
         # ★동시에 돌린다 — 소스 하나가 느려도 나머지를 기다리게 하지 않는다.
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -220,6 +221,43 @@ class DisruptionCheck:
                 "confirmed_at": value.get("confirmed_at"),
                 "note": "시내 집회·행사는 UTIC 승인 대기 — ITS 에 태그된 것만 본다",
                 "_disruptions": disruptions, "_advisories": advisories}
+
+
+    def _air(self, place: dict[str, Any], at: datetime | None,
+             sensitive: bool) -> dict[str, Any]:
+        """대기질. ★날씨 영향 장소에만 — 전망 데크의 시야, 야외 활동.
+
+        발령 **기준**을 넘으면 이상, 등급 「나쁨」(3) 이상은 주의다. 기준은
+        `air_quality.ALERT_THRESHOLDS`(대기환경보전법 시행규칙 별표 7).
+        """
+        base = {"category": "air_quality"}
+        if not sensitive:
+            return {**base, "status": "not_applicable", "reason": "날씨 영향을 받지 않는 장소"}
+        source = getattr(self.sources, "air", None)
+        if source is None:
+            reason = (getattr(self.sources, "unavailable", {}) or {}).get(
+                "air", "에어코리아 대기오염정보 소스 없음")
+            return {**base, "status": "not_connected", "reason": reason}
+        district = place.get("district")
+        if not district:
+            return {**base, "status": "failed", "reason": "장소의 구를 몰라 측정소를 고를 수 없다"}
+        value = source.at(district=district, at=at)
+        if value is None:
+            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
+                    "reason": "대기질을 못 읽었다"}
+        alert = value.get("alert")
+        disruptions = [] if not alert else [{
+            "category": "air_quality", "kind": f"{alert['pollutant']} {alert['level']} 기준 초과",
+            "value": alert["value"], "limit": alert["limit"], "station": value.get("station"),
+            "basis": value.get("basis"), "source": value.get("source"),
+            "mode": value.get("mode", "live")}]
+        grades = [g for g in (value.get("pm10_grade"), value.get("pm25_grade")) if g]
+        advisories = [] if alert or not grades or max(grades) < 3 else [{
+            "category": "air_quality", "field": "grade", "value": max(grades),
+            "station": value.get("station"), "source": value.get("source")}]
+        return {**base, "status": "ok", "source": value.get("source"),
+                "mode": value.get("mode", "live"), "confirmed_at": value.get("confirmed_at"),
+                "value": value, "_disruptions": disruptions, "_advisories": advisories}
 
 
 __all__ = ["DisruptionCheck", "NOT_CONNECTED", "forecast_advisories"]

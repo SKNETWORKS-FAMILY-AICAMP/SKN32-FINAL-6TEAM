@@ -91,6 +91,17 @@ def test_every_declared_api_key_appears_in_the_template():
         f"  → `.env.apikeys.example` 에 발급처 링크와 함께 자리를 만든다.")
 
 
+def _is_secret(name: str) -> bool:
+    """이름으로 비밀을 가른다.
+
+    ★2026-09-14 — 처음엔 `_KEY` 로 끝나는 이름만 비밀로 봤다. 그런데 **디스코드
+      웹훅 URL 은 이름이 `_URL` 이어도 자격 증명**이다 — 그 주소를 가진 사람은 누구나
+      우리 채널에 글을 올린다. 그래서 `_WEBHOOK_URL` 도 비밀로 본다. 비밀은 템플릿에
+      **비어 있어야** 하고, 비어 있어도 문자열이라 기동은 막히지 않는다.
+    """
+    return name.endswith("_KEY") or name.endswith("_WEBHOOK_URL")
+
+
 def test_no_real_key_value_leaked_into_the_template():
     """★**비밀은** 템플릿에서 비어 있어야 한다. 채운 채 커밋하는 사고를 막는다.
 
@@ -101,7 +112,7 @@ def test_no_real_key_value_leaked_into_the_template():
     """
     secrets = [line for line in TEMPLATE.read_text(encoding="utf-8").splitlines()
                if (matched := _ASSIGNMENT.match(line))
-               and matched.group(1).endswith("_KEY")
+               and _is_secret(matched.group(1))
                and line.split("=", 1)[1].strip()]
     assert not secrets, f"템플릿에 키 값이 채워진 줄이 있다: {secrets}"
 
@@ -116,7 +127,7 @@ def test_settings_that_are_not_secrets_carry_a_default():
     blank = []
     for line in TEMPLATE.read_text(encoding="utf-8").splitlines():
         matched = _ASSIGNMENT.match(line)
-        if matched and not matched.group(1).endswith("_KEY") \
+        if matched and not _is_secret(matched.group(1)) \
                 and not line.split("=", 1)[1].strip():
             blank.append(matched.group(1))
     assert not blank, (
