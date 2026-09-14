@@ -233,6 +233,11 @@ class TravelSources:
     disaster: Any | None = None
     #: 국토교통부 ITS 돌발상황 — 교통 사고·공사·통제(시내 도로 포함, 실측).
     traffic: Any | None = None
+    #: 에어코리아 대기오염정보 — 구 측정소의 1시간 값(실측 2026-09-14).
+    air: Any | None = None
+    #: 경로에 걸린 운행·통제 사건(무정차·도로 통제). 지금은 재생 입력만 있다 —
+    #:  실시간 지하철 운행·UTIC 통제가 붙으면 같은 `affecting()` 모양으로 끼운다.
+    route_events: Any | None = None
     transit: Any | None = None
     route: Any | None = None
     #: 키가 없어 못 붙인 소스 이름들. ★조용히 비워 두지 않는다.
@@ -355,6 +360,15 @@ def build_travel_sources(settings: Any) -> TravelSources:
         sources.unavailable["traffic"] = (
             "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
             "발급한 키를 .env.apikeys 에 채운다. ★공공데이터포털 키와 다른 키다.")
+
+    air_key = _public_data_key(settings, "airkorea_api_key")
+    if air_key:
+        from .air_quality import AirKoreaRealtime
+        sources.air = AirKoreaRealtime(service_key=air_key, limiter=limiter)
+    else:
+        sources.unavailable["air"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_AIRKOREA_API_KEY)가 비어 있다. "
+            "공공데이터포털 「에어코리아 대기오염정보」 활용신청 후 채운다.")
 
     holiday_key = _public_data_key(settings, "holiday_api_key")
     if holiday_key:
