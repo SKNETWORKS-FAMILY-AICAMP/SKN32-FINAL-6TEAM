@@ -41,8 +41,6 @@ class ResponseCache:
 
     def get(self, key: Hashable) -> tuple[Any, datetime] | None:
         """(복사본, 처음 받아 온 시각). 없거나 지났으면 `None`."""
-        if self.ttl_seconds <= 0:
-            return None
         with self._lock:
             entry = self._items.get(key)
             if entry is None:
@@ -54,11 +52,14 @@ class ResponseCache:
             self.hits += 1
             return copy.deepcopy(value), fetched_at
 
-    def put(self, key: Hashable, value: Any, *, fetched_at: datetime | None = None) -> None:
-        if self.ttl_seconds <= 0:
+    def put(self, key: Hashable, value: Any, *, fetched_at: datetime | None = None,
+            ttl_seconds: float | None = None) -> None:
+        """★`ttl_seconds` 로 소스별 유지 시간을 준다 — 하루 한도가 낮은 소스(재난문자)는 길게."""
+        ttl = self.ttl_seconds if ttl_seconds is None else ttl_seconds
+        if ttl <= 0:
             return
         with self._lock:
-            self._items[key] = (self.clock() + self.ttl_seconds, fetched_at or self.wall(),
+            self._items[key] = (self.clock() + ttl, fetched_at or self.wall(),
                                 copy.deepcopy(value))
             self.stores += 1
 

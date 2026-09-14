@@ -178,7 +178,8 @@ class TravelSource:
         now = datetime.now(UTC)
         self._fetch_state.fetched_at = now
         if self._cache is not None:
-            self._cache.put(self._cache_key(url, params), value, fetched_at=now)
+            self._cache.put(self._cache_key(url, params), value, fetched_at=now,
+                            ttl_seconds=getattr(self, "cache_ttl_seconds", None))
 
     def _fetch_xml(self, url: str, params: dict[str, Any]) -> str | None:
         """XML 을 문자열로 읽는다. 실패면 `None`.
@@ -284,7 +285,8 @@ class TravelSources:
     warning: Any | None = None
     #: 외교부 여행경보 — 해외 확장용(v11 MVP 는 서울뿐이라 지금 부르는 Team 없음).
     advisory: Any | None = None
-    #: 행정안전부 긴급재난문자. ★지금은 **샘플 CSV 판**(실키 발급 대기, 2026-09-14).
+    #: 행정안전부 긴급재난문자. 키(`ACOP_DISASTER_MSG_API_KEY`)가 있으면 API 판,
+    #:  없으면 **샘플 CSV 판**(2023-09 일부 기간만).
     disaster: Any | None = None
     #: 국토교통부 ITS 돌발상황 — 교통 사고·공사·통제(시내 도로 포함, 실측).
     traffic: Any | None = None
@@ -433,11 +435,19 @@ def build_travel_sources(settings: Any) -> TravelSources:
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_MOFA_API_KEY)가 비어 있다. "
             "공공데이터포털 「외교부_국가·지역별 여행경보」 활용신청 후 .env.apikeys 에 채운다.")
 
-    # ★재난문자 — 키가 아직 안 나와 **샘플 CSV** 를 쓴다(사용자 지시 2026-09-14).
-    #   샘플 기간(2023-09-16~19) 밖을 물으면 점검이 「미연결」로 답한다 —
-    #   「재난문자 없음」이라고 하지 않는다. 키가 나오면 `disaster_msg_source=api`.
-    disaster_mode = getattr(settings, "disaster_msg_source", "sample")
-    if disaster_mode == "sample":
+    # ★재난문자 — **키가 있으면 API 판, 없으면 샘플 CSV 판**(2026-09-14 키 발급).
+    #   ☆전에는 `disaster_msg_source` 로 골랐는데 그 이름이 `Settings` 에 없어서(extra=forbid)
+    #     설정으로 바꿀 길이 없었다 — 키를 넣어도 영원히 샘플 판이었을 자리다.
+    #   샘플 판은 샘플 기간(2023-09-16~19) 밖을 「미연결」로 답한다 — 「없음」이라 하지 않는다.
+    disaster_key = (getattr(settings, "disaster_msg_api_key", "") or "").strip()
+    if disaster_key:
+        from .disaster_msg import DisasterMsgApi
+
+        # ★하루 한도가 낮아(100 `[미확인]`) 이 소스만 캐시를 길게 둔다.
+        ttl = float(guardrails.get("travel.disaster_msg_cache_seconds") or 0) or None
+        sources.disaster = DisasterMsgApi(service_key=disaster_key, limiter=limiter,
+                                          cache=cache, cache_ttl_seconds=ttl)
+    else:
         from pathlib import Path
 
         from .disaster_msg import DEFAULT_SAMPLE_PATH, DisasterMsgCsv
@@ -446,10 +456,6 @@ def build_travel_sources(settings: Any) -> TravelSources:
             sources.disaster = DisasterMsgCsv(sample)
         else:
             sources.unavailable["disaster"] = f"재난문자 샘플 CSV 가 없다: {sample}"
-    else:
-        sources.unavailable["disaster"] = (
-            "행정안전부 긴급재난문자 API 판은 아직 없다 — 키 발급 대기 "
-            "(data.go.kr/data/15134001)")
 
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
