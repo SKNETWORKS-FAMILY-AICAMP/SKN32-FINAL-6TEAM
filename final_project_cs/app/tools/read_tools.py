@@ -125,6 +125,9 @@ class ReadToolbox:
     def _travel_tools(self) -> dict[str, Any]:
         return {
             "read.booking":  self.booking,
+            "read.disruptions": self.disruptions,
+            "read.weather_warning": self.weather_warning,
+            "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
             "read.weather":  self.weather,
             "read.route":    self.route,
@@ -248,6 +251,51 @@ class ReadToolbox:
         return self.travel.weather.forecast(
             latitude=float(latitude), longitude=float(longitude),
             at=_as_datetime(at))
+
+    def disruptions(self, scope: ToolContext, *, place_id: Any = None,
+                    latitude: float | None = None, longitude: float | None = None,
+                    weather_sensitive: bool | None = None, region: str = "서울",
+                    district: str | None = None, starts_at: Any = None,
+                    **_: Any) -> dict[str, Any] | None:
+        """일정 항목 하나의 **성립 점검** — 바깥 소스를 한 번에 돌려 판정 하나로.
+
+        ★Team 은 예보·특보를 따로 부르지 않고 이것 하나만 부른다(도구 1회).
+          감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
+        ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
+        """
+        if self.travel is None:
+            return None
+        from app.infrastructure.travel.disruptions import DisruptionCheck
+
+        return DisruptionCheck(self.travel).check(
+            place={"place_id": place_id, "latitude": latitude, "longitude": longitude,
+                   "weather_sensitive": bool(weather_sensitive), "district": district},
+            starts_at=_as_datetime(starts_at), region=str(region))
+
+    def weather_warning(self, scope: ToolContext, *, region: str = "서울",
+                        **_: Any) -> dict[str, Any] | None:
+        """지금 발효 중인 기상특보와 그중 `region` 을 덮는 것. 모르면 `None`.
+
+        ★빈 목록(`for_region=[]`)은 「그 지역 특보 없음」이라는 **아는 사실**이고,
+          `None` 은 조회를 못 한 것이다. Team 이 둘을 섞으면 조회가 죽은 날
+          「특보 없음」이라고 답한다.
+        """
+        if self.travel is None or getattr(self.travel, "warning", None) is None:
+            return None
+        return self.travel.warning.active(region=str(region))
+
+    def travel_advisory(self, scope: ToolContext, *, country_iso2: str | None = None,
+                        **_: Any) -> dict[str, Any] | None:
+        """그 나라의 외교부 여행경보. 나라 코드를 모르면 묻지 않는다(`None`).
+
+        ★v11 MVP 는 서울뿐이라 이 도구를 선언한 Team 은 아직 없다 — 해외로
+          넓힐 때 쓸 자리를 먼저 둔다.
+        """
+        if self.travel is None or getattr(self.travel, "advisory", None) is None:
+            return None
+        if not country_iso2:
+            return None
+        return self.travel.advisory.country(iso2=str(country_iso2))
 
     def route(self, scope: ToolContext, **_: Any) -> None:
         """이동 시간. `[미구현]` — Routes API 를 붙일 자리."""
