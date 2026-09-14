@@ -23,10 +23,14 @@
 """
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime
+import logging
 from typing import Any
 
 from .base import TravelSource
+
+logger = logging.getLogger(__name__)
 
 ENDPOINT = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"
 
@@ -87,8 +91,11 @@ class AirKoreaRealtime(TravelSource):
         return TravelSource._body_error(payload)
 
     def at(self, *, district: str | None, sido: str = "서울",
-           at: datetime | None = None) -> dict[str, Any] | None:
+           at: datetime | None = None, latitude: float | None = None,
+           longitude: float | None = None) -> dict[str, Any] | None:
         """그 구의 측정소 값. 구를 모르면 `None` — 시도 전체로 뭉개 답하지 않는다.
+
+        ★좌표는 받기만 한다 — 사슬(`FallbackAir`)의 다음 소스(모델)가 쓴다.
 
         ★`at` 은 받기만 한다. 이 서비스는 **지금 값**만 준다 — 먼 미래 시각이면
           점검이 예보 쪽을 봐야 한다(아직 없다). 지금 값을 미래 값으로 쓰지 않도록
@@ -114,4 +121,104 @@ class AirKoreaRealtime(TravelSource):
         return self.stamp(reading(match, source=self.name), source=self.name)
 
 
-__all__ = ["ALERT_THRESHOLDS", "AirKoreaRealtime", "alert_level", "reading"]
+#: Open-Meteo 대기질 — ★키가 없다(2026-09-14 실호출 200, 2.7초). CAMS 모델 추정값.
+MODEL_ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality"
+MODEL_BASIS = ("Open-Meteo 대기질 모델(CAMS) 추정값을 발령 기준에 대 본 것 — "
+               "측정소 실측이 아니고, 공식 발령은 2시간 평균이다")
+
+
+class OpenMeteoAir(TravelSource):
+    """에어코리아의 **대체 소스**(결정 15).
+
+    ☆2026-09-14 실측 — 에어코리아가 첫 호출 0.2초 뒤 연달아 `504 SERVICETIMEOUT_ERROR`
+      (공급자 게이트웨이 10.5초)를 냈다. 우리 제한시간을 늘려도 소용없다. 대체가 없으면
+      그때마다 대기질 「모름」→ 치명이다.
+
+    ★측정값이 아니라 **모델 추정값**이다. 그래서 `mode="model"`, `basis` 에 그렇게 적는다 —
+      「측정소에서 기준을 넘었다」고 말하지 않는다. 등급(grade)은 주지 않는다(`None`).
+    ★일정 시각의 **그 시간 값**을 쓴다(예보 포함 72시간). 없으면 `None` — 가장 가까운 값으로
+      채우지 않는다.
+    """
+
+    name = "open_meteo_air"
+
+    @staticmethod
+    def _body_error(payload: dict[str, Any]) -> str | None:
+        # ★Open-Meteo 는 오류를 `{"error": true, "reason": "…"}` 로 준다 — 공통 규칙이
+        #   `error` 를 목록·사전으로만 보면 참/거짓 값을 놓친다.
+        if payload.get("error") is True:
+            return str(payload.get("reason") or "error")
+        return TravelSource._body_error(payload)
+
+    def at(self, *, district: str | None = None, sido: str = "서울",
+           at: datetime | None = None, latitude: float | None = None,
+           longitude: float | None = None) -> dict[str, Any] | None:
+        from datetime import timezone
+        from zoneinfo import ZoneInfo
+
+        if latitude is None or longitude is None:
+            self._miss("no_coordinates", "모델 값은 좌표로 찾는다")
+            return None
+        kst = ZoneInfo("Asia/Seoul")
+        moment = (at if isinstance(at, datetime) else datetime.now(timezone.utc))
+        moment = (moment if moment.tzinfo else moment.replace(tzinfo=kst)).astimezone(kst)
+        hour = moment.strftime("%Y-%m-%dT%H:00")
+        payload = self._fetch_json(MODEL_ENDPOINT, {
+            # ★좌표를 둘째 자리로 줄인다 — 모델 격자(약 0.1°)보다 촘촘하니 값은 같고,
+            #   가까운 장소끼리 캐시를 나눠 쓴다.
+            "latitude": round(float(latitude), 2), "longitude": round(float(longitude), 2),
+            "hourly": "pm10,pm2_5", "timezone": "Asia/Seoul",
+            "past_hours": 6, "forecast_hours": 72})
+        if payload is None:
+            return None
+        hourly = payload.get("hourly") or {}
+        times = hourly.get("time") or []
+        if hour not in times:
+            self._miss("hour_out_of_range", hour)
+            return None
+        index = times.index(hour)
+        pick = lambda key: _int((hourly.get(key) or [None] * len(times))[index])  # noqa: E731
+        pm10, pm25 = pick("pm10"), pick("pm2_5")
+        if pm10 is None and pm25 is None:
+            self._miss("empty_values", hour)
+            return None
+        return self.stamp({
+            "station": None, "data_time": hour, "pm10": pm10, "pm25": pm25,
+            "pm10_grade": None, "pm25_grade": None, "alert": alert_level(pm10, pm25),
+            "basis": MODEL_BASIS, "kind": "air_quality", "mode": "model",
+            "grid": {"latitude": payload.get("latitude"), "longitude": payload.get("longitude")},
+        }, source=self.name)
+
+
+class FallbackAir:
+    """대기질 대체 사슬 — `FallbackWeather` 와 같은 규칙(결정 15).
+
+    1차가 못 주면 다음 소스로 값을 낸다. 넘어간 사실은 `fell_back_from` 에 싣는다.
+    사슬 전체가 실패하면 `None` — 점검이 치명으로 판정한다.
+    """
+
+    name = "air_chain"
+
+    def __init__(self, sources: list[Any]) -> None:
+        if not sources:
+            raise ValueError("FallbackAir 에 소스가 하나도 없다")
+        self.sources = list(sources)
+        self.misses: Counter[str] = Counter()
+
+    def at(self, **kwargs: Any) -> dict[str, Any] | None:
+        failed: list[str] = []
+        for source in self.sources:
+            result = source.at(**kwargs)
+            if result is not None:
+                if failed:
+                    self.misses["fell_back"] += 1
+                    result = {**result, "fell_back_from": failed}
+                return result
+            failed.append(getattr(source, "name", type(source).__name__))
+        self.misses["all_failed"] += 1
+        logger.error("air chain exhausted — every source failed: %s", failed)
+        return None
+
+
+__all__ = ["ALERT_THRESHOLDS", "AirKoreaRealtime", "FallbackAir", "MODEL_BASIS",
+           "OpenMeteoAir", "alert_level", "reading"]

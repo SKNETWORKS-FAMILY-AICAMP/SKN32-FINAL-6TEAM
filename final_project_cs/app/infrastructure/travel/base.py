@@ -430,14 +430,22 @@ def build_travel_sources(settings: Any) -> TravelSources:
             "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
             "발급한 키를 .env.apikeys 에 채운다. ★공공데이터포털 키와 다른 키다.")
 
+    # ── 대기질: 1차(에어코리아 측정값) + 대체(Open-Meteo 모델 추정) — 결정 15 ─────
+    # ★☆2026-09-14 실측 — 에어코리아가 연달아 504 SERVICETIMEOUT 을 냈다. 대체가 없으면
+    #   그때마다 치명이다. 대체는 키가 없어서 **항상** 붙는다.
+    from .air_quality import AirKoreaRealtime, FallbackAir, OpenMeteoAir
+
+    air_chain: list[Any] = []
     air_key = _public_data_key(settings, "airkorea_api_key")
     if air_key:
-        from .air_quality import AirKoreaRealtime
-        sources.air = AirKoreaRealtime(service_key=air_key, limiter=limiter, cache=cache)
+        air_chain.append(AirKoreaRealtime(service_key=air_key, limiter=limiter, cache=cache))
     else:
-        sources.unavailable["air"] = (
+        sources.unavailable["air_airkorea"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_AIRKOREA_API_KEY)가 비어 있다. "
-            "공공데이터포털 「에어코리아 대기오염정보」 활용신청 후 채운다.")
+            "공공데이터포털 「에어코리아 대기오염정보」 활용신청 후 채운다. "
+            "그동안은 Open-Meteo 모델 추정값만 쓴다.")
+    air_chain.append(OpenMeteoAir(limiter=limiter, cache=cache))
+    sources.air = air_chain[0] if len(air_chain) == 1 else FallbackAir(air_chain)
 
     holiday_key = _public_data_key(settings, "holiday_api_key")
     if holiday_key:

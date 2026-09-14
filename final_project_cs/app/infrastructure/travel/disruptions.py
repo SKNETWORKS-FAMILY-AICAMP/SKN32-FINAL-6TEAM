@@ -259,12 +259,15 @@ class DisruptionCheck:
                 "air", "에어코리아 대기오염정보 소스 없음")
             return {**base, "status": "not_connected", "reason": reason}
         district = place.get("district")
-        if not district:
-            return {**base, "status": "failed", "reason": "장소의 구를 몰라 측정소를 고를 수 없다"}
-        value = source.at(district=district, at=at)
+        latitude, longitude = place.get("latitude"), place.get("longitude")
+        if not district and (latitude is None or longitude is None):
+            # ★측정소는 구로, 모델 대체는 좌표로 찾는다. 둘 다 없으면 어디 값인지 모른다.
+            return {**base, "status": "failed", "reason": "장소의 구도 좌표도 몰라 값을 고를 수 없다"}
+        value = source.at(district=district, at=at, latitude=latitude, longitude=longitude)
         if value is None:
-            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
-                    "reason": "대기질을 못 읽었다"}
+            tried = [getattr(s, "name", "?") for s in getattr(source, "sources", [source])]
+            return {**base, "status": "failed", "tried": tried,
+                    "reason": "1차·대체 소스가 모두 대기질을 못 냈다"}
         alert = value.get("alert")
         disruptions = [] if not alert else [{
             "category": "air_quality", "kind": f"{alert['pollutant']} {alert['level']} 기준 초과",
@@ -277,6 +280,7 @@ class DisruptionCheck:
             "station": value.get("station"), "source": value.get("source")}]
         return {**base, "status": "ok", "source": value.get("source"),
                 "mode": value.get("mode", "live"), "confirmed_at": value.get("confirmed_at"),
+                "fell_back_from": value.get("fell_back_from", []),
                 "value": value, "_disruptions": disruptions, "_advisories": advisories}
 
 
