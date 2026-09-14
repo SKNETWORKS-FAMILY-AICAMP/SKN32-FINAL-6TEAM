@@ -39,6 +39,8 @@ class TripTickResult:
     unhandled: list[dict[str, Any]] = field(default_factory=list)
     unresolved: list[dict[str, Any]] = field(default_factory=list)
     pinned: list[dict[str, Any]] = field(default_factory=list)
+    #: 경로 사건 소스가 **답할 수 없는** 대상(지하철 무정차 등) — 「사건 없음」과 다르다.
+    unchecked: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _next_after(items: list[Item], item: Item) -> Item | None:
@@ -122,8 +124,20 @@ class TripWatcher:
         options = {option["id"]: option for option in route["options"]}
         chosen = str(item.detail.get("option") or route["planned"])
         planned = options.get(chosen, {})
-        events = self.route_events.affecting(sorted({target for option in options.values()
-                                                     for target in option.get("uses", [])}))
+        targets = sorted({target for option in options.values()
+                          for target in option.get("uses", [])})
+        events = self.route_events.affecting(targets)
+        if events is None:
+            # ★경로 사건을 못 읽었다 — 「사건 없음」으로 넘기지 않는다(결정 15 의 치명).
+            result.fatal.append({"trip_id": str(trip_id), "item": item.title,
+                                 "report": {"verdict": "fatal",
+                                            "failed_categories": ["route_events"]}})
+            return
+        unsupported = getattr(self.route_events, "unsupported", None)
+        blind = unsupported(planned.get("uses", [])) if callable(unsupported) else []
+        if blind:
+            result.unchecked.append({"trip_id": str(trip_id), "item": item.title,
+                                     "targets": blind})
         hit = {target: events[target] for target in planned.get("uses", []) if target in events}
         if not hit:
             return

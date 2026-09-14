@@ -79,16 +79,31 @@ class UticIncidents(TravelSource):
         self._key = service_key
         self._now = now or (lambda: datetime.now(KST))
 
-    def near(self, *, latitude: float, longitude: float, at: datetime,
-             radius_m: int = DEFAULT_RADIUS_M) -> dict[str, Any] | None:
-        """장소 반경 안에서 `at` 시각에 걸리는 돌발. 못 읽었으면 `None`(ITS 와 같은 모양)."""
-        at = at if at.tzinfo else at.replace(tzinfo=KST)
+    def records(self) -> list[dict[str, str]] | None:
+        """전국 돌발 레코드(캐시를 나눠 쓴다). 못 읽으면 `None`."""
         text = self._fetch_xml(ENDPOINT, {"key": self._key})
         if text is None:
             return None
         records = parse_records(text)
         if records is None:
             self._miss("bad_xml", text[:120])
+        return records
+
+    def active_at(self, record: dict[str, str], at: datetime) -> bool:
+        """그 시각에 걸리는 돌발인가 — 시작 전·끝난 뒤·끝 모르는 먼 미래는 아니다."""
+        start, end = _parse_time(record.get("startDate")), _parse_time(record.get("endDate"))
+        if start is not None and at < start:
+            return False
+        if end is not None and at > end:
+            return False
+        return not (end is None and at > self._now() + timedelta(hours=OPEN_ENDED_HOURS))
+
+    def near(self, *, latitude: float, longitude: float, at: datetime,
+             radius_m: int = DEFAULT_RADIUS_M) -> dict[str, Any] | None:
+        """장소 반경 안에서 `at` 시각에 걸리는 돌발. 못 읽었으면 `None`(ITS 와 같은 모양)."""
+        at = at if at.tzinfo else at.replace(tzinfo=KST)
+        records = self.records()
+        if records is None:
             return None
 
         now = self._now()
@@ -127,4 +142,55 @@ class UticIncidents(TravelSource):
                           source=self.name)
 
 
-__all__ = ["ENDPOINT", "UticIncidents", "classify", "parse_records", "title_tags"]
+class UticRouteEvents:
+    """감시 루프의 **경로 사건** 소스 — `ReplayRouteEvents.affecting()` 과 같은 모양.
+
+    ★답하는 대상은 **도로(`도로:이름`)뿐**이다. 지금 걸려 있는 사고·전체 차로 통제·집회·행사가
+      그 도로에 있으면 `road_control`. 부분 차로 공사(주의)는 경로를 끊지 않는다.
+    ★지하철 무정차(`N호선:역`)·버스·도보는 실시간 소스가 없다. 그 대상은 「사건 없음」으로
+      답하지 않고 `unsupported()` 로 **확인 못 한 대상**이라고 드러낸다 — 감시 결과가 센다.
+    ★UTIC 를 못 읽으면 `None` — 감시 루프가 그 이동 항목을 치명으로 남긴다(결정 15).
+    """
+
+    ROAD = "도로:"
+
+    def __init__(self, incidents: UticIncidents) -> None:
+        self.incidents = incidents
+        self.name = "utic_route_events"
+
+    def unsupported(self, targets: list[str]) -> list[str]:
+        return [target for target in targets if not target.startswith(self.ROAD)]
+
+    def affecting(self, targets: list[str], at: datetime | None = None
+                  ) -> dict[str, dict[str, Any]] | None:
+        roads = [t for t in targets if t.startswith(self.ROAD)]
+        if not roads:
+            return {}
+        records = self.incidents.records()
+        if records is None:
+            return None
+        moment = at or self.incidents._now()
+        found: dict[str, dict[str, Any]] = {}
+        for target in roads:
+            road = target[len(self.ROAD):]
+            for record in records:
+                if road not in (record.get("roadName") or "") and \
+                        road not in (record.get("incidentTitle") or ""):
+                    continue
+                level, reason = classify(record)
+                if level != "disruption" or not self.incidents.active_at(record, moment):
+                    continue
+                end = _parse_time(record.get("endDate"))
+                # ★문구는 공급자 값으로만 만든다 — 없는 이유를 붙이지 않는다.
+                found[target] = self.incidents.stamp({
+                    "effect": "road_control", "reason": reason,
+                    "summary": f"{road}에 {reason}이(가) 있습니다(경찰청 UTIC 돌발정보)",
+                    "title": record.get("incidentTitle"),
+                    "incident_id": record.get("incidentId"),
+                    "ends_at": end.isoformat() if end else None}, source="utic")
+                break
+        return found
+
+
+__all__ = ["ENDPOINT", "UticIncidents", "UticRouteEvents", "classify", "parse_records",
+           "title_tags"]

@@ -490,8 +490,11 @@ def build_travel_sources(settings: Any) -> TravelSources:
     proxied = _proxy_would_apply(settings, "utic")
     utic_key = settings.utic_key(proxied=proxied) if hasattr(settings, "utic_key") else ""
     if utic_key:
-        from .utic import UticIncidents
-        traffic_sources.append(UticIncidents(service_key=utic_key, limiter=limiter, cache=cache))
+        from .utic import UticIncidents, UticRouteEvents
+        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache)
+        traffic_sources.append(utic)
+        # ★같은 레코드로 감시 루프의 **경로 사건**(도로 통제)도 답한다 — 요청은 캐시로 나눠 쓴다.
+        sources.route_events = UticRouteEvents(utic)
     else:
         sources.unavailable["traffic_utic"] = (
             f"ACOP_UTIC_API_KEY_{2 if proxied else 1} 가 비어 있다 — "

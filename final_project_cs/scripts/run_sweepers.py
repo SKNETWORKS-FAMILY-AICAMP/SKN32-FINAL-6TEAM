@@ -8,8 +8,8 @@
   일정 항목을 실제 소스(기상·특보·재난문자·교통·대기)로 점검하고, 깨졌으면 새 일정
   버전 + 통지를 한 트랜잭션으로 쓴다. 보내는 일은 배달 루프(`run_outbox_worker`)다.
   `fatal`(결정 15 — 대체 소스까지 실패)은 고치지 않고 세어 알린다 → `--once` 면 exit 1.
-  `[미구현]` 실제 경로 사건 소스(무정차·통제)는 아직 안 붙었다 — 이동 항목 점검은
-  재생 시험에서만 돈다(UTIC 승인 대기).
+  경로 사건: **도로 통제는 UTIC 가 답한다**(2026-09-14). `[미구현]` 지하철 무정차는
+  실시간 소스가 없다 — 그 대상은 `unchecked` 로 센다(「사건 없음」이라 하지 않는다).
 
 ★두 sweeper 는 경계를 나누며 생긴 틈을 막는 장치다:
 
@@ -88,15 +88,19 @@ def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     from app.modules.travel_ops.itinerary import TripStore
     from app.modules.travel_ops.trip_watch import TripWatcher
 
+    sources = build_travel_sources(get_settings())
     watcher = TripWatcher(
         store=TripStore(tenant_id),
-        check=DisruptionCheck(build_travel_sources(get_settings())).check,
+        check=DisruptionCheck(sources).check,
         connection_factory=get_connection,
-        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")))
+        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
+        # ★도로 통제는 UTIC 가 답한다. 지하철 무정차는 소스가 없어 `unchecked` 로 센다.
+        route_events=sources.route_events)
     outcome = watcher.tick()
     return {"checked": outcome.checked, "adjusted": len(outcome.adjusted),
             "fatal": len(outcome.fatal), "unresolved": len(outcome.unresolved),
-            "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned)}
+            "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
+            "unchecked": len(outcome.unchecked)}
 
 
 def _report_errors(result: dict[str, dict[str, int]]) -> int:
