@@ -184,7 +184,8 @@ class UticRouteEvents:
                 # ★문구는 공급자 값으로만 만든다 — 없는 이유를 붙이지 않는다.
                 found[target] = self.incidents.stamp({
                     "effect": "road_control", "reason": reason,
-                    "summary": f"{road}에 {reason}이(가) 있습니다(경찰청 UTIC 돌발정보)",
+                    # ☆처음엔 「{reason}이(가) 있습니다」였다 — 실측 통지가 「통제이(가)」로 어색했다
+                    "summary": f"{road} {reason}(경찰청 UTIC 돌발정보)",
                     "title": record.get("incidentTitle"),
                     "incident_id": record.get("incidentId"),
                     "ends_at": end.isoformat() if end else None}, source="utic")
