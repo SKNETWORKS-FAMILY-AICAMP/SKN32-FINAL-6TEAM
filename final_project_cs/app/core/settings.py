@@ -164,13 +164,27 @@ class Settings(BaseSettings):
     rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
     rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
     rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
-    rate_disaster_msg_per_day: int = 100     # 미확인 - 같은 플랫폼 다른 API 사용기의 100/일
+    rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
+    #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
     rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
+
+    # 유료 전환 가능 소스 (2026-09-15 결정) — 무료 한도의 **절반**만 쓴다(여유 2배).
+    #  ★Google 은 하루가 아니라 **월** 무료 한도다. 하루로 나눌 때 31일로 나눈다 —
+    #    짧은 달 기준으로 나누면 31일 달에 넘친다.
+    #  ★어댑터는 아직 없다. 이름을 먼저 잡아 두는 것은 붙이는 날 제한이 조용히 빠지지
+    #    않게 하려는 것이다(`test_every_configured_source_name_matches_a_real_adapter`).
+    #  확인: Google Maps Platform 가격표·필드표 (2026-09-15 조회)
+    #    Place Details — 영업시간(currentOpeningHours·regularOpeningHours)을 요청하면
+    #      **Enterprise** 등급. 무료 월 1,000건, 초과 $20/1,000 → 1,000 / 31 / 2 = 16
+    #    Compute Routes — 교통 반영(TRAFFIC_AWARE)은 **Pro** 등급. 무료 월 5,000건,
+    #      초과 $10/1,000 → 5,000 / 31 / 2 = 80.  TRANSIT 모드의 등급은 문서에 없다(미확인)
+    rate_google_places_per_day: int = 16
+    rate_google_routes_per_day: int = 80
 
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
@@ -200,6 +214,8 @@ class Settings(BaseSettings):
             "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
+            "google_places": self.rate_google_places_per_day,
+            "google_routes": self.rate_google_routes_per_day,
         }
 
     def utic_key(self, *, proxied: bool) -> str:
