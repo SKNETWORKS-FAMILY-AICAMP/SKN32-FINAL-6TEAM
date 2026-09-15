@@ -68,7 +68,8 @@ DOMAIN_FIELDS = {
 class Collector:
     """`sys.monitoring` 콜백이 채우는 버퍼."""
 
-    app_root: str
+    #: 모을 폴더의 절대 경로. 하나(str)거나 여럿(tuple) — startswith 에 그대로 넘긴다.
+    app_root: str | tuple[str, ...]
     cwd: str
     active: bool = False
     events: list[dict[str, Any]] = field(default_factory=list)
@@ -83,7 +84,9 @@ class Collector:
             return None
         qualname = code.co_qualname
         # 클래스 본문 프레임은 호출이 아니라 정의다. 흐름에 넣지 않는다.
-        if qualname and "." not in qualname and qualname[:1].isupper():
+        # ★밑줄로 시작하는 비공개 클래스(`_LockedBookingTeam`)도 본문이다. 첫 글자만 보면
+        #   '_' 라 함수로 새어 들어왔다(2026-09-14 평가 시나리오 트레이스에서 발견).
+        if qualname and "." not in qualname and qualname.lstrip("_")[:1].isupper():
             return None
         # 연속한 두 이벤트는 호출 관계가 아니다. 지도에 "누가 누구를 부른다"를 그리려면
         # 실제 호출자를 봐야 한다. 콜백 위쪽 프레임이 지금 진입한 함수이고, 그 f_back 이 호출자다.
@@ -194,7 +197,11 @@ def run_in_process(nodeid: str) -> dict[str, Any]:
     import pytest
 
     cwd = os.getcwd()
-    collector = Collector(app_root=str(Path("app").resolve()), cwd=cwd)
+    # ★app/ 과 eval/ 을 모은다. 평가 하네스(eval/)는 승계 목록(v11 §0-2)의 한 행인데
+    #   app/ 만 모으면 방어 지표가 코어 검증 엔진을 부르는 흐름에서 부르는 쪽이 사라진다.
+    #   str.startswith 는 튜플을 받는다 — 거르는 두 자리(on_py_start·호출자 찾기)가 그대로 돈다.
+    collector = Collector(app_root=(str(Path("app").resolve()), str(Path("eval").resolve())),
+                          cwd=cwd)
     tool = sys.monitoring.PROFILER_ID
     events_mod = sys.monitoring.events
 

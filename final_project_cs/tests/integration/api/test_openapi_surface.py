@@ -31,6 +31,16 @@ CONTRACT_V1_PATHS = {
     "/v1/cases/{case_id}/messages",
     "/v1/cases/{case_id}/actions/{action_id}/approve",
     "/v1/outbox/{message_id}/resolve",
+    # ★2026-09-14 여행 API(`app/modules/travel_ops/trip_api.py`) — 등록·조회·신고·재요청.
+    #   scope `trip:read`·`trip:write`, 등록은 request_id 멱등, 신고·재요청은 원인 칸의
+    #   request_id 로 중복을 막는다.
+    "/v1/trips",
+    "/v1/trips/{trip_id}",
+    "/v1/trips/{trip_id}/reports",
+    "/v1/trips/{trip_id}/items/{item_id}/alternate",
+    "/v1/trips/{trip_id}/rollback",
+    # ★2026-09-14 고객 자유 문장 → Case → 분류 → 여행 창구
+    "/v1/trips/{trip_id}/messages",
 }
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}

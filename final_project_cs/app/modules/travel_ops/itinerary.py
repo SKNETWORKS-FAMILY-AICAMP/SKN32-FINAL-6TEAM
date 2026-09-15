@@ -74,17 +74,27 @@ class TripStore:
     # ── 만들기 ──────────────────────────────────────────────────
     def create_trip(self, conn, *, customer_id: UUID, title: str, locale: str | None,
                     party_size: int | None, items: list[Item],
-                    constraints: dict[str, Any] | None = None) -> tuple[UUID, int]:
+                    constraints: dict[str, Any] | None = None,
+                    request_key: str | None = None,
+                    request_sha256: str | None = None) -> tuple[UUID, int]:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO trips (tenant_id, customer_id, title, locale, party_size, constraints) "
-                "VALUES (%s,%s,%s,%s,%s,%s) RETURNING trip_id",
+                "INSERT INTO trips (tenant_id, customer_id, title, locale, party_size, constraints, "
+                "request_key, request_sha256) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING trip_id",
                 (self.tenant_id, customer_id, title, locale, party_size,
-                 json.dumps(constraints or {}, ensure_ascii=False)))
+                 json.dumps(constraints or {}, ensure_ascii=False), request_key, request_sha256))
             trip_id = cur.fetchone()[0]
         version = self.append_version(conn, trip_id=trip_id, base_version=0, items=items,
                                       reason="created", causes=[])
         return trip_id, version
+
+    def by_request_key(self, conn, request_key: str) -> tuple[UUID, str | None] | None:
+        """같은 등록 요청으로 이미 만든 여행 — `(trip_id, 몸통 지문)`."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT trip_id, request_sha256 FROM trips WHERE tenant_id=%s "
+                        "AND request_key=%s", (self.tenant_id, request_key))
+            row = cur.fetchone()
+        return (row[0], row[1]) if row else None
 
     # ── 읽기 ────────────────────────────────────────────────────
     def latest(self, conn, trip_id: UUID) -> tuple[dict[str, Any], list[Item]]:
@@ -131,6 +141,28 @@ class TripStore:
                     found.append((trip_id, item))
         return found
 
+    def versions(self, conn, trip_id: UUID) -> list[dict[str, Any]]:
+        """버전 이력 — 무엇이 왜 바뀌었나. 계획서 링크와 되돌림이 읽는다."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT version, reason, cause_json, created_at FROM itinerary_versions "
+                        "WHERE tenant_id=%s AND trip_id=%s ORDER BY version",
+                        (self.tenant_id, trip_id))
+            return [dict(zip(("version", "reason", "causes", "created_at"), row))
+                    for row in cur.fetchall()]
+
+    def version_for_request(self, conn, trip_id: UUID, request_id: str) -> int | None:
+        """★이 요청으로 이미 올린 버전. 같은 신고를 두 번 받아 두 번 고치지 않게 한다.
+
+        ☆같은 「70분 늦음」을 다시 적용하면 이미 옮긴 점심을 **또** 70분 민다 —
+          재시도가 일정을 망가뜨린다. 원인 칸에 요청 id 를 남기고 여기서 찾는다.
+        """
+        with conn.cursor() as cur:
+            cur.execute("SELECT version FROM itinerary_versions WHERE tenant_id=%s AND trip_id=%s "
+                        "AND cause_json @> %s::jsonb ORDER BY version LIMIT 1",
+                        (self.tenant_id, trip_id, json.dumps([{"request_id": request_id}])))
+            row = cur.fetchone()
+        return row[0] if row else None
+
     def places(self, conn) -> list[dict[str, Any]]:
         with conn.cursor() as cur:
             cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + " FROM places WHERE tenant_id=%s",
@@ -164,9 +196,36 @@ class TripStore:
                      json.dumps(item.detail, ensure_ascii=False, default=str)))
         return new_version
 
+    def enqueue_message(self, conn, *, trip_id: UUID, key: str,
+                        payload: dict[str, Any]) -> None:
+        """일정 버전에 딸리지 않은 안내(하루 시작·출발·하루 정리 — v11 §6-B 의 ②·③).
+
+        ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
+          않게 `{trip_id}:{key}` 로 둔다.
+        """
+        with conn.cursor() as cur:
+            cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                        (self.tenant_id, trip_id))
+            row = cur.fetchone()
+            cur.execute(
+                "INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json) "
+                "VALUES (%s,%s,%s,%s) ON CONFLICT (tenant_id, topic, dedupe_key) DO NOTHING",
+                (self.tenant_id, "trip.notice", f"{trip_id}:{key}",
+                 json.dumps({"locale": row[0] if row else None, **payload},
+                            ensure_ascii=False, default=str)))
+
     def enqueue_notice(self, conn, *, trip_id: UUID, version: int,
                        payload: dict[str, Any]) -> None:
-        """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다."""
+        """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다.
+
+        ★여행의 언어(`locale`)를 싣는다 — 보낼 때 그 언어로 옮긴다(결정 14).
+        """
+        if "locale" not in payload:
+            with conn.cursor() as cur:
+                cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                            (self.tenant_id, trip_id))
+                row = cur.fetchone()
+            payload = {**payload, "locale": row[0] if row else None}
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO outbox (tenant_id, topic, dedupe_key, payload_json) "

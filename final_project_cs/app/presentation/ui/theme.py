@@ -212,6 +212,8 @@ NAV = (
     #   처음부터 있었다(`TENANT_NAV`). 이식하며 빠진 것으로 보인다.
     ("/ops/outbox", "Outbox unknown"),
     ("/ui/voc", "VOC"),
+    # ★2026-09-14 시나리오 모드 스위치 — 확정 시나리오 하루를 실제 시스템으로 돌리는 시연.
+    ("/ui/scenario", "Scenario"),
     ("/ui/admin", "Admin"),
 )
 

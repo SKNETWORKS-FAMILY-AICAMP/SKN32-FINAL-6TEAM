@@ -184,6 +184,95 @@ def _admin_value(value: Any) -> str:
     return _json(value) if isinstance(value, (dict, list, tuple)) else _safe(value)
 
 
+@router.get("/scenario", response_class=HTMLResponse)
+def scenario_switch() -> HTMLResponse:
+    """시나리오 모드 스위치 — 켜면 확정 시나리오 하루를 **실제 시스템으로** 돌린다.
+
+    ★이 화면은 스위치와 상태만 가진다. 실제 동작(전용 테넌트·감시 루프·Gemma 분류)은
+      `/scenario/*` API 가 한다 — 이 층은 도메인을 import 하지 못한다(INV-CS-ARCH-001).
+    ★설정 `scenario_mode_enabled` 가 꺼져 있으면 API 가 404 라 스위치가 막힌 채로 보인다.
+    """
+    enabled = bool(getattr(settings_module.get_settings(), "scenario_mode_enabled", False))
+    body = f"""
+<style>
+.sw{{display:flex;align-items:center;gap:14px;margin:6px 0 14px}}
+.sw input{{appearance:none;width:52px;height:30px;border-radius:30px;background:#c9d1cc;position:relative;cursor:pointer;transition:background .2s}}
+.sw input:checked{{background:#2e6047}}
+.sw input::after{{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}}
+.sw input:checked::after{{left:25px}}
+.sw input:disabled{{opacity:.45;cursor:not-allowed}}
+.sc-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}}
+.sc-grid div{{border:1px solid var(--line,#dfe3eb);border-radius:10px;padding:10px}}
+.sc-grid small{{display:block;opacity:.7}}
+</style>
+<section class='card'>
+  <div class='sw'><input type='checkbox' id='scSwitch' aria-label='시나리오 모드' {'' if enabled else 'disabled'}>
+    <div><strong id='scState'>확인 중…</strong><br><small>켜면 전용 테넌트에 확정 시나리오 여행을 만들고 08:00 장면부터 시작한다. 끄면 그 테넌트를 통째로 지운다.</small></div></div>
+  {'' if enabled else "<p><strong>설정에서 꺼져 있다</strong> — <code>ACOP_SCENARIO_MODE_ENABLED=true</code> 를 로컬 <code>.env</code> 에 두고 다시 띄운다.</p>"}
+  <div class='sc-grid'><div><small>장면</small><strong id='scScene'>—</strong></div><div><small>시나리오 시계</small><strong id='scClock'>—</strong></div><div><small>테넌트</small><strong id='scTenant'>—</strong></div></div>
+  <p><button id='scNext' disabled>다음 장면 →</button> <a id='scOpen' href='/tripilot' target='_blank' rel='noopener'>사용자 화면(triPilot) 열기 ↗</a></p>
+  <p class='muted'>사건(화재·통제·휴무·경보)은 재생 입력이고, 대안·통지·일정 버전·Case 는 실제 코드가 만든다. 고객 장면은 사용자 화면 채팅으로 문장을 보내면 Gemma 4 가 분류·추출한다.</p>
+</section>
+<section class='card' id='opsPanel' hidden>
+  <header class='card__head'><h2>시나리오 운영 현황</h2><p class='card__sub'>이 판의 전용 테넌트를 읽기만 한다 — Case · 상태 전이 · 일정 버전 · 바깥함(outbox)</p></header>
+  <div class='grid'>
+    <div class='stat'><span class='stat__label'>일정 버전</span><strong class='stat__value' id='opsVersion'>—</strong></div>
+    <div class='stat'><span class='stat__label'>Case 종결 / 전체</span><strong class='stat__value' id='opsResolved'>—</strong></div>
+    <div class='stat'><span class='stat__label'>사람에게 넘김</span><strong class='stat__value' id='opsEscalated'>—</strong></div>
+    <div class='stat'><span class='stat__label'>통지 적재</span><strong class='stat__value' id='opsOutbox'>—</strong></div>
+  </div>
+  <h3>Case — 고객 문장마다 하나</h3>
+  <div class='scroll-x'><table><thead><tr><th>case</th><th>status</th><th>고객 문장 · 상태 전이</th><th>intent · issue_code</th><th>owner_team</th></tr></thead><tbody id='opsCases'></tbody></table></div>
+  <h3>일정 버전 — 쌓이기만 한다(최신이 위)</h3>
+  <ol class='ops-hist' id='opsHistory'></ol>
+</section>
+<style>
+.ops-hist{{list-style:none;margin:6px 0 0;padding:0}}
+.ops-hist li{{padding:8px 0;border-top:1px solid var(--line,#dfe3eb);font-size:13px}}
+.ops-chain{{display:block;font-size:12px;opacity:.75;margin-top:3px}}
+</style>
+<script>
+const q = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({{'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}})[c]);
+const tone = s => s === 'resolved' ? 'done' : /escalat|fail/.test(s) ? 'critical' : /waiting/.test(s) ? 'warn' : 'active';
+async function ops() {{
+  const o = await call('/scenario/ops');
+  const on = Boolean(o && o.active);
+  q('#opsPanel').hidden = !on;
+  if (!on) return;
+  q('#opsVersion').textContent = 'v' + o.version;
+  q('#opsResolved').textContent = `${{o.cases.filter(c => c.status === 'resolved').length}} / ${{o.cases.length}}`;
+  q('#opsEscalated').textContent = String(o.cases.filter(c => c.status === 'escalated').length);
+  q('#opsOutbox').textContent = Object.entries(o.outbox).map(([k, n]) => `${{k}} ${{n}}`).join(' · ') || '0';
+  q('#opsCases').innerHTML = o.cases.map(c => `<tr data-case="${{esc(c.case_id)}}"><td class='mono'>${{esc(c.case_id.slice(0, 8))}}</td><td><span class='pill pill--${{tone(c.status)}}'>${{esc(c.status)}}</span></td><td>${{esc(c.subject)}}<span class='ops-chain'>${{c.events.map(esc).join(' → ')}}</span></td><td>${{esc(c.intent || '미분류')}}<br><span class='muted'>${{esc(c.issue_code || '—')}}</span></td><td>${{esc(c.owner_team || '미배정')}}</td></tr>`).join('')
+    || "<tr><td class='muted' colspan='5'>아직 없음 — 고객 문장이 들어오면 Case 가 생긴다</td></tr>";
+  q('#opsHistory').innerHTML = o.history.slice().reverse().map(h => `<li data-v="${{h.version}}"><span class='pill'>v${{h.version}}</span> ${{esc(h.reason)}}<span class='ops-chain'>${{esc(h.causes.join(' · ') || '—')}}</span></li>`).join('');
+}}
+async function call(path, post) {{
+  const r = await fetch(path, post ? {{method: 'POST', headers: {{'content-type': 'application/json'}}, body: '{{}}'}} : {{}});
+  return r.ok ? r.json() : null;
+}}
+function show(s) {{
+  const on = Boolean(s && s.active);
+  q('#scSwitch').checked = on; q('#scNext').disabled = !on;
+  q('#scState').textContent = on ? '시나리오 모드 켜짐' : '시나리오 모드 꺼짐';
+  q('#scScene').textContent = on ? `${{s.scene + 1}} / ${{s.scenes}} · ${{s.label || ''}}` : '—';
+  q('#scClock').textContent = on ? s.clock : '—'; q('#scTenant').textContent = on ? s.tenant : '—';
+}}
+async function refresh() {{ show(await call('/scenario/status')); ops(); }}
+q('#scSwitch').addEventListener('change', async e => {{
+  e.target.disabled = true; q('#scState').textContent = e.target.checked ? '켜는 중…' : '끄는 중…';
+  await call(e.target.checked ? '/scenario/start' : '/scenario/stop', true);
+  e.target.disabled = false; refresh();
+}});
+q('#scNext').addEventListener('click', async () => {{ q('#scNext').disabled = true; await call('/scenario/next', true); refresh(); }});
+// ★사용자 화면에서 일어난 일(고객 문장·재요청)도 여기서 보이게 2초마다 다시 읽는다.
+refresh(); setInterval(refresh, 2000);
+</script>"""
+    return _page("Scenario 모드", body, current="/ui/scenario",
+                 lede="확정 시나리오 하루를 실제 시스템으로 돌리는 시연 스위치")
+
+
 @router.get("/admin", response_class=HTMLResponse)
 def admin() -> HTMLResponse:
     data = _admin_snapshot()

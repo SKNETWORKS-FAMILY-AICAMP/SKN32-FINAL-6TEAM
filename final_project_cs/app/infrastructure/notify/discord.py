@@ -23,9 +23,12 @@
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 MAX_CONTENT = 2000
 
@@ -58,12 +61,30 @@ class DiscordWebhook:
 
     def __init__(self, url: str, *, timeout: float = 8.0,
                  transport: Callable[..., httpx.Response] | None = None,
-                 fallback: Callable[[dict[str, Any]], Any] | None = None) -> None:
+                 fallback: Callable[[dict[str, Any]], Any] | None = None,
+                 translator: Callable[[str, str], str] | None = None) -> None:
         self.url = url
         self._timeout = timeout
         self._post = transport or self._http_post
         # ★다른 주제는 원래 발행자에게 넘긴다. 이 파일이 모든 주제를 삼키지 않는다.
         self._fallback = fallback
+        # ★보낼 때 고객 언어로 옮긴다(결정 14). 없으면 한국어 원문 그대로.
+        self._translator = translator
+        self.translation_failures = 0
+
+    def _localize(self, content: str, locale: str | None) -> str:
+        """★번역이 실패해도 알림은 보낸다 — 원문에 실패 표시를 붙인다(안 보내는 것보다 낫다).
+        실패는 세어 둔다(조용한 스킵 금지)."""
+        from .translate import is_korean
+
+        if self._translator is None or is_korean(locale):
+            return content
+        try:
+            return self._translator(content, str(locale))
+        except Exception as exc:
+            self.translation_failures += 1
+            logger.warning("notice translation failed (%s): %s", locale, exc)
+            return f"[번역 실패 — 한국어 원문] {content}"
 
     def _http_post(self, url: str, json: dict[str, Any]) -> httpx.Response:
         return httpx.post(url, json=json, timeout=self._timeout)
@@ -76,7 +97,10 @@ class DiscordWebhook:
         if not self.url:
             raise NoticeNotConfigured(
                 "ACOP_DISCORD_WEBHOOK_URL 이 비어 있다 — 알림을 보내지 않았다")
-        content = render(message.get("payload") or {})
+        payload = message.get("payload") or {}
+        content = self._localize(render(payload), payload.get("locale"))
+        if len(content) > MAX_CONTENT:
+            content = content[:MAX_CONTENT - 12] + "\n…(잘림)"
         try:
             response = self._post(self.url, json={"content": content})
         except httpx.TimeoutException as exc:

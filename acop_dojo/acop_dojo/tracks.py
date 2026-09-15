@@ -121,10 +121,17 @@ def owns(track: Track, path: str) -> bool:
 import dataclasses as _dataclasses  # noqa: E402
 
 PARKED_TRACK_IDS = frozenset({"team-voc", "team-review", "team-commerce"})
+assert PARKED_TRACK_IDS <= set(TRACKS), PARKED_TRACK_IDS - set(TRACKS)
 PARKED_TRACKS = {k: TRACKS.pop(k) for k in list(TRACKS) if k in PARKED_TRACK_IDS}
 TRACKS["all"] = _dataclasses.replace(
-    TRACKS["all"], scenarios=("status-inquiry-untouched-v1",))
+    TRACKS["all"], scenarios=("status-inquiry-untouched-v1", "eval-defense-blocks-attacks-v1",
+                              "fallback-chain-says-so-v1"))
 TRACKS["core1"] = _dataclasses.replace(
     TRACKS["core1"],
     scenarios=("status-inquiry-untouched-v1", "checkpoint-not-projection-v1",
-               "case-reducer-versions-v1"))
+               "case-reducer-versions-v1", "outbox-tenant-guard-v1",
+               "registry-default-capability-v1"))
+TRACKS["core2"] = _dataclasses.replace(
+    TRACKS["core2"],
+    scenarios=("api-idempotent-create-v1", "remote-team-failure-escalates-v1",
+               "audit-pii-redacted-v1", "tenant-scope-query-v1"))

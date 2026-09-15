@@ -55,9 +55,15 @@ def _teachable(steps: list[dict[str, Any]]) -> list[str]:
     return labels
 
 
-def _ready(data: dict[str, Any]) -> bool:
+def _missing(data: dict[str, Any]) -> list[str]:
+    """보스전 앞에 남은 것. 0~2단계는 해 봤으면 된다 — 자기 채점이라 통과 표시가 약하다.
+    3단계는 pytest 가 판정하니 **통과**해야 한다. 예전엔 기록이 있기만 하면 열려,
+    결함을 못 고친 채로도 들어왔다(2026-09-14 codex-alt 지적)."""
     stages = data.get("stages", {})
-    return all(stage in stages for stage in ("0", "1", "2", "3"))
+    missing = [f"{s}단계" for s in ("0", "1", "2") if s not in stages]
+    if stages.get("3", {}).get("status") != "passed":
+        missing.append("3단계 통과(결함 수리를 pytest 가 인정해야 한다)")
+    return missing
 
 
 def _pick(prompt: str, options: list[str]) -> str:
@@ -90,23 +96,91 @@ def _role_questions(labels: list[str]) -> list[Callable[[], bool]]:
     return asked
 
 
-def _outcome_question(trace: dict[str, Any]) -> Callable[[], bool] | None:
-    """판정을 묻는다. 답은 트레이스가 아니라 그 테스트의 단언이다 — 테스트가 통과했을 때만 묻는다."""
-    if trace.get("outcome", {}).get("status") != "passed":
+#: 판정 문항에 쓰는 세 번째 도메인. 트레이스(커머스)에도 제품(여행)에도 없는 선언이다.
+_LESSON_POLICY = {"references": {"lesson_id": "lessons"},
+                  "quantity": {"field": "refund_fee", "reference": "lesson_id",
+                               "limit_key": "price_won", "scale": 1}}
+_ENGINE_PROBE = """
+import json, sys
+from decimal import Decimal
+from app.core.verification import Facts, QuantityRule, VerificationPolicy, verify_proposal
+spec = json.loads(sys.argv[1])
+q = spec["policy"]["quantity"]
+policy = VerificationPolicy(references=spec["policy"]["references"],
+                            quantities=(QuantityRule(field=q["field"], reference=q["reference"],
+                                                     limit_key=q["limit_key"], scale=Decimal(q["scale"])),))
+facts = Facts(collections={"lessons": spec["lessons"]}, evidence_ids=frozenset({"ev-1"}))
+problems = verify_proposal(arguments=spec["arguments"], rationale_evidence_ids=["ev-1"],
+                           facts=facts, policy=policy)
+print(json.dumps([[p.field, p.reason] for p in problems], ensure_ascii=False))
+"""
+
+
+def _lesson_case(rng: random.Random) -> tuple[str, dict[str, Any], int]:
+    """매번 다른 상황을 만든다. 같은 문항을 외워 다시 통과하지 못하게 한다.
+
+    돌려주는 것: 화면에 보일 상황 · 제안 인자 · 수업 L-7 의 가격
+    """
+    price = rng.choice([30_000, 45_000, 60_000, 80_000])
+    kind = rng.choice(["over", "within", "unknown_ref", "no_ref", "undeclared"])
+    if kind == "over":
+        amount = price + rng.choice([5_000, 10_000, 20_000])
+        return (f"{price:,}원 수업 L-7 에 {amount:,}원 환불",
+                {"lesson_id": "L-7", "refund_fee": amount}, price)
+    if kind == "within":
+        amount = rng.choice([price // 2, price - 5_000, price])
+        return (f"{price:,}원 수업 L-7 에 {amount:,}원 환불",
+                {"lesson_id": "L-7", "refund_fee": amount}, price)
+    if kind == "unknown_ref":
+        return "등록되지 않은 수업 L-99 를 가리키는 제안", {"lesson_id": "L-99"}, price
+    if kind == "no_ref":
+        return f"수업 id 없이 {price // 2:,}원 환불", {"refund_fee": price // 2}, price
+    return (f"{price:,}원 수업 L-7 에 쿠폰 코드를 붙인 제안",
+            {"lesson_id": "L-7", "coupon_code": "SPRING"}, price)
+
+
+def _outcome_question(target: Path) -> Callable[[], bool] | None:
+    """판정을 묻는다. 정답은 사람이 적지 않는다 — 대상 저장소의 엔진을 실제로 돌려 얻는다.
+
+    ★처음 판은 트레이스의 커머스 상황을 그대로 묻고 답을 코드에 박았다. 재도전하면 외워서
+    통과한다(2026-09-14 codex-alt 지적). 지금은 트레이스에 없는 도메인(수업 예약)의
+    선언과 값을 매번 새로 만든다 — 배운 규칙을 새 입력에 적용해야 맞힌다.
+    """
+    import json
+    import subprocess
+    import sys
+
+    situation, arguments, price = _lesson_case(random.Random())
+    spec ={"policy": _LESSON_POLICY, "lessons": {"L-7": {"lesson_id": "L-7", "price_won": price}},
+            "arguments": arguments}
+    try:
+        run = subprocess.run([sys.executable, "-c", _ENGINE_PROBE,
+                              json.dumps(spec, ensure_ascii=False)],
+                             cwd=target, capture_output=True, text=True, encoding="utf-8",
+                             timeout=60, check=True)
+        problems = json.loads(run.stdout.strip().splitlines()[-1])
+    except (subprocess.SubprocessError, ValueError, IndexError):
+        return None  # 엔진을 못 돌리면 묻지 않는다 — 묻지 않은 것은 분모에 넣지 않는다
+
+    options = ["통과 — 문제 없음", "refund_fee 에서 걸린다",
+               "lesson_id 에서 걸린다", "coupon_code 에서 걸린다"]
+    fields = {field for field, _ in problems}
+    answer = options[0] if not fields else next(
+        (o for o in options[1:] if o.split()[0] in fields), None)
+    if answer is None or len(fields) > 1:
         return None
 
     def ask() -> bool:
-        options = ["통과 — 문제 없음",
-                   "refund_amount 에서 걸린다",
-                   "order_id 에서 걸린다",
-                   "선언되지 않은 필드라서 걸린다"]
-        print("\n  상황: 5만원짜리 주문(ord-1001)에 7만원 환불 제안이 들어왔다.")
+        print("\n  선언이 또 바뀌었다 — 이번엔 수업 예약이다. 엔진은 그대로다.")
+        print("    references  lesson_id → lessons")
+        print("    quantities  refund_fee ≤ lessons[lesson_id].price_won  (scale 1)")
+        print(f"  상황: {situation}")
         picked = _pick("엔진은 어떻게 판정하나?", options)
-        ok = picked == options[1]
-        print(f"  {'맞다.' if ok else '아니다.'}  {options[1]}.")
-        print("  주문은 있으니 order_id 는 통과한다. 금액 규칙이 주문 총액(total_cents)을")
-        print("  상한으로 잡고, 원 단위 제안을 scale 100 으로 맞춰 비교한다.")
-        print("  이 규칙을 엔진이 아는 게 아니다 — 테스트가 넘긴 선언(QuantityRule)에 적혀 있다.")
+        ok = picked == answer
+        print(f"  {'맞다.' if ok else '아니다.'}  {answer}.")
+        for field, reason in problems:
+            print(f"  엔진이 낸 이유 — {field}: {reason}")
+        print("  답은 사람이 적지 않았다. 방금 이 저장소의 verification.py 를 돌려서 얻었다.")
         return ok
     return ask
 
@@ -148,9 +222,9 @@ def _vocabulary_question(target: Path) -> Callable[[], bool] | None:
 def play(target: Path, trace: dict[str, Any], *, fix: Path | None = None,
          force: bool = False, defect_id: str | None = None) -> int:
     data = progress.load()
-    if not _ready(data) and not force:
-        missing = [s for s in ("0", "1", "2", "3") if s not in data.get("stages", {})]
-        print(f"보스전은 0~3단계를 지난 뒤에 연다. 아직 안 한 단계: {', '.join(missing)}")
+    missing = _missing(data)
+    if missing and not force:
+        print(f"보스전은 0~2단계를 해 보고 3단계를 통과한 뒤에 연다. 남은 것: {', '.join(missing)}")
         print("그래도 열려면 --force 를 준다.")
         return 1
 
@@ -163,7 +237,7 @@ def play(target: Path, trace: dict[str, Any], *, fix: Path | None = None,
         print(f"  {index:2d}  {label}")
 
     questions = _role_questions(labels)
-    questions += [q for q in (_outcome_question(trace), _layer_question(labels),
+    questions += [q for q in (_outcome_question(target), _layer_question(labels),
                               _vocabulary_question(target)) if q is not None]
     correct = sum(bool(ask()) for ask in questions)
     total = len(questions)

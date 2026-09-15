@@ -175,10 +175,18 @@ def cmd_defects(args: argparse.Namespace) -> int:
     merged.update(outcome["entries"])
     data["entries"] = merged
     data["baseline"] = outcome["baseline"]
+    data["baseline"]["unexpected"] = outcome.get("unexpected_baseline", [])
     print("")
     print(f"카탈로그 저장: {defects.save_catalog(data)}")
     if outcome["collisions"]:
         print("겹침 경고:", outcome["collisions"])
+    if data["baseline"]["unexpected"]:
+        # 결과는 저장했다. 다만 모르는 기준선 실패가 있으면 성공으로 끝내지 않는다.
+        print(f"\n✗ 알려진 목록(data/known_baseline.json)에 없는 기준선 실패 "
+              f"{len(data['baseline']['unexpected'])}건 — 결함 판정에서는 뺐다. 원인을 본다:")
+        for nodeid in data["baseline"]["unexpected"]:
+            print(f"    {nodeid}")
+        return 1
     return 0
 
 
@@ -376,7 +384,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)
 
     trace_cmd = sub.add_parser("trace", help="시나리오 트레이스를 뜬다")
-    trace_cmd.add_argument("scenario", nargs="?", default="shipping-status-resolved-v1")
+    # 기본값이 중지한 커머스 시나리오를 가리켜 인자 없이 부르면 죽었다(2026-09-14 codex-alt 지적).
+    trace_cmd.add_argument("scenario", nargs="?", default="status-inquiry-untouched-v1")
     trace_cmd.add_argument("--verify", action="store_true", help="두 번 돌려 같은지 본다")
     trace_cmd.set_defaults(func=cmd_trace)
 

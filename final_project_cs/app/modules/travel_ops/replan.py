@@ -294,6 +294,21 @@ def _reason_phrase(causes: list[dict[str, Any]], place: dict[str, Any]) -> str:
     return "운영 상황이 바뀌어"
 
 
+def alternate_record(candidate: Candidate) -> dict[str, Any]:
+    """재요청용으로 들고 있는 「다른 안」 하나(§6-C-4 6단계).
+
+    ★이름만 두면 재요청 때 **다시 계산**해야 하고, 그 사이 입력이 바뀌면 고객이 본
+      「다른 안」과 다른 것이 들어간다. 적용에 필요한 값을 그대로 적어 둔다.
+    """
+    return {"key": candidate.key, "name": candidate.name,
+            "place_id": candidate.place["place_id"] if candidate.place else None,
+            "option": (candidate.option or {}).get("id") if candidate.option else None,
+            "option_label": (candidate.option or {}).get("label") if candidate.option else None,
+            "starts_at": candidate.starts_at.isoformat() if candidate.starts_at else None,
+            "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
+            "walk_min": candidate.walk_min}
+
+
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:
     return {"text": text, "language": "ko",      # ★고객 언어 옮김은 보낼 때(결정 14)
             "causes": causes, "changed": changed,
@@ -365,6 +380,6 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
                             "at": best.starts_at.isoformat()})
 
 
-__all__ = ["Candidate", "activity_candidates", "change_notice", "choose", "dining_candidates",
+__all__ = ["Candidate", "activity_candidates", "alternate_record", "change_notice", "choose", "dining_candidates",
            "dining_fits", "dining_notice", "distance_m", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]

@@ -103,7 +103,8 @@ def test_an_indoor_place_does_not_call_weather_sources_at_all():
 def test_unconnected_sources_are_listed_not_hidden_and_not_fatal():
     report = _check(_Weather(_fc()), _Warning(_warn()))
     # ★재난문자는 소스가 없으면 미연결로 잡힌다(샘플 판이 없는 이 시험 조립)
-    assert set(report["not_connected"]) == set(NOT_CONNECTED) | {"disaster_msg", "traffic_control", "air_quality"}
+    assert set(report["not_connected"]) == set(NOT_CONNECTED) | {
+        "disaster_msg", "traffic_control", "air_quality", "earthquake"}
     assert report["verdict"] == "clear"
 
 

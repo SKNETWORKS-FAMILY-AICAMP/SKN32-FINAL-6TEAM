@@ -16,11 +16,14 @@ def test_scopes_are_guardrail_owned():
       (저장)와 분리한다 — 저장은 되돌릴 수 있지만 반영은 그 순간 트래픽이 받는
       것을 바꾼다.
 
+    ★2026-09-14: `trip:read`·`trip:write` 추가(여행 일정 API). Trip 은 Case 보다
+      오래 살고 쓰기가 일정 버전을 올린다 — `case:*` 와 나눈다.
+
     ★이름에서 개수를 뺐다 — scope 가 늘 때마다 함수 이름이 낡는다."""
     assert set(get_guardrails().get("security.scopes")) == {
         "case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read",
         "composer:read", "composer:validate", "composer:write", "composer:admin",
-        "ops:introspect", "ops:reload",
+        "ops:introspect", "ops:reload", "trip:read", "trip:write",
     }
 
 

@@ -260,10 +260,11 @@
    "defects": [
     "INV-OUTBOX-002"
    ],
+   "note": "2026-09-14 문장 교체. 옛 문장 '값을 모르면 비워 둔다' 는 v11 결정 15(대체 소스로 값을 내고, 대체도 실패하면 치명)가 뒤집었다. 결정 15 의 대체 소스 사슬·치명 판정은 cs 의 app/infrastructure/travel/(weather_chain·air_quality·disruptions)에 있다 — 여행 도메인 인프라라 이 코어 규칙의 결함으로는 세지 않는다. '서버를 끈다' 부분은 weather_chain.py 머리말이 감시 쪽 몫이고 아직 없다고 적는다. ☆처음엔 'cs 에 경로가 아직 없다' 로 적었다 — codex 검수 문장을 코드로 확인하지 않고 옮긴 오류다.",
    "parked_defects": [
     "INV-COMMERCE-003"
    ],
-   "rule": "값을 모르면 비워 둔다 — 추정으로 채우거나 확정 답변으로 만들지 않는다",
+   "rule": "모르는 값을 추정값으로 채우지 않는다 — 그럴듯한 가짜 값('unknown' tenant 등)이 데이터가 된다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
   },

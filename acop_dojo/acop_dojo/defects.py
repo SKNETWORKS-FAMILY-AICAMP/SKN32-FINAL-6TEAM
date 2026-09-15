@@ -156,6 +156,11 @@ def by_id(defect_id: str) -> Defect:
     for defect in DEFECTS:
         if defect.defect_id == defect_id:
             return defect
+    # 중지한 결함도 찾아 준다. 진행 기록·복습 예약에 옛 id 가 남아 있으면
+    # 여기서 SystemExit 가 나 `review` 가 통째로 죽는다. 문제로 내는지는 playable 이 따로 가른다.
+    for defect in PARKED:
+        if defect.defect_id == defect_id:
+            return defect
     known = ", ".join(d.defect_id for d in DEFECTS)
     raise SystemExit(f"모르는 결함이다: {defect_id}\n아는 것: {known}")
 

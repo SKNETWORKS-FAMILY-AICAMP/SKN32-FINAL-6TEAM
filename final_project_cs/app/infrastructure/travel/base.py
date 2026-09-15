@@ -26,6 +26,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import logging
+import threading
 from typing import Any, Callable
 
 import httpx
@@ -65,8 +66,17 @@ class TravelSource:
 
     def __init__(self, *, timeout: float = DEFAULT_TIMEOUT_SECONDS,
                  transport: Callable[..., httpx.Response] | None = None,
-                 limiter: Any | None = None) -> None:
+                 limiter: Any | None = None, cache: Any | None = None,
+                 proxy: str | None = None) -> None:
         self._timeout = timeout
+        # ★경유 프록시(고정 IP 서버). 조립이 `apply_outbound_proxy()` 로 넣는다 — IP 에 묶인
+        #   소스만. 없으면 바로 나간다.
+        self._proxy = proxy or None
+        # ★응답 캐시(`cache.py`). 없으면 매번 나간다 — 단위 시험이 그 상태다.
+        self._cache = cache
+        # ★마지막으로 받아 온 값의 시각 — `stamp()` 가 확인 시각으로 쓴다. 요청 스레드마다
+        #   따로 둔다(여러 요청이 같은 어댑터를 동시에 쓸 수 있다).
+        self._fetch_state = threading.local()
         # ★테스트가 네트워크 없이 돌 수 있게 주입 지점을 연다. 기본값은 실제 호출이다.
         self._get = transport or self._http_get
         # ★속도 제한기. 없으면 제한 없이 나간다 - 단위 시험이 그 상태다.
@@ -76,6 +86,9 @@ class TravelSource:
 
     # ── 하위 클래스가 쓰는 부품 ──────────────────────────────────
     def _http_get(self, url: str, params: dict[str, Any]) -> httpx.Response:
+        proxy = getattr(self, "_proxy", None)
+        if proxy:
+            return httpx.get(url, params=params, timeout=self._timeout, proxy=proxy)
         return httpx.get(url, params=params, timeout=self._timeout)
 
     def _allow(self) -> bool:
@@ -105,7 +118,11 @@ class TravelSource:
 
         ★타임아웃을 성공으로 추정하지 않는다(`CLAUDE.md` §0.2). 재시도도 하지
           않는다 — 여기서 자동 재시도를 걸면 공급자 장애 때 우리가 부하를 보탠다.
+        ★캐시를 **제한기보다 먼저** 본다 — 재사용은 바깥으로 안 나가니 한도를 안 쓴다.
         """
+        cached = self._from_cache(url, params)
+        if cached is not None:
+            return cached
         if not self._allow():
             return None
         try:
@@ -137,7 +154,32 @@ class TravelSource:
             # ★HTTP 200 인데 본문이 오류인 경우. ODsay 가 실제로 이렇게 답한다.
             self._miss("body_error", problem)
             return None
+        self._remember(url, params, payload)
         return payload
+
+    # ── 응답 캐시 ────────────────────────────────────────────────
+    def _cache_key(self, url: str, params: dict[str, Any]) -> tuple:
+        return (self.name, url, tuple(sorted((str(k), str(v)) for k, v in params.items())))
+
+    def _from_cache(self, url: str, params: dict[str, Any]) -> Any | None:
+        self._fetch_state.fetched_at = None
+        self._fetch_state.from_cache = False
+        if self._cache is None:
+            return None
+        hit = self._cache.get(self._cache_key(url, params))
+        if hit is None:
+            return None
+        value, fetched_at = hit
+        self._fetch_state.fetched_at, self._fetch_state.from_cache = fetched_at, True
+        return value
+
+    def _remember(self, url: str, params: dict[str, Any], value: Any) -> None:
+        """★성공한 응답만 여기 온다. 실패는 담지 않는다."""
+        now = datetime.now(UTC)
+        self._fetch_state.fetched_at = now
+        if self._cache is not None:
+            self._cache.put(self._cache_key(url, params), value, fetched_at=now,
+                            ttl_seconds=getattr(self, "cache_ttl_seconds", None))
 
     def _fetch_xml(self, url: str, params: dict[str, Any]) -> str | None:
         """XML 을 문자열로 읽는다. 실패면 `None`.
@@ -145,6 +187,9 @@ class TravelSource:
         ★국가유산청은 JSON 을 주지 않는다 — `application/xml` 뿐이다.
           그래서 `_fetch_json` 을 못 쓴다. 규율(①~④)은 그대로 지킨다.
         """
+        cached = self._from_cache(url, params)
+        if cached is not None:
+            return cached
         if not self._allow():
             return None
         try:
@@ -164,6 +209,7 @@ class TravelSource:
             # ★XML 이 아니면 대개 오류 페이지다. 빈 응답도 여기서 걸린다.
             self._miss("not_xml", text[:200])
             return None
+        self._remember(url, params, text)
         return text
 
     @staticmethod
@@ -197,16 +243,26 @@ class TravelSource:
                 return str(message["errMsg"])
         return None
 
-    @staticmethod
-    def stamp(payload: dict[str, Any], *, source: str) -> dict[str, Any]:
+    def stamp(self, payload: dict[str, Any], *, source: str) -> dict[str, Any]:
         """조회 결과에 **확인 시각과 출처**를 박는다.
 
         ★`confirmed_at` 은 「우리가 확인한 시각」이지 「현장이 그러한 시각」이
           아니다. Team 이 이 둘을 섞어 말하면 예정 정보를 관찰처럼 전한다
           (v10 §4-D). Team 쪽 문구도 그렇게 적어 뒀다.
+        ★캐시에서 꺼낸 값이면 **처음 받아 온 시각**을 쓰고 `from_cache` 를 붙인다 —
+          재사용한 값에 「지금 확인」을 찍으면 확인 시각을 속인다(2026-09-14).
+          시각은 한 번 쓰면 비운다 — 조회 없이 부른 `stamp()` 가 옛 시각을 물려받지 않게.
         """
-        return {**payload, "confirmed_at": datetime.now(UTC).isoformat(),
-                "source": source}
+        state = getattr(self, "_fetch_state", None)
+        fetched_at = getattr(state, "fetched_at", None) if state is not None else None
+        from_cache = bool(getattr(state, "from_cache", False)) if state is not None else False
+        if state is not None:
+            state.fetched_at, state.from_cache = None, False
+        stamped = {**payload, "confirmed_at": (fetched_at or datetime.now(UTC)).isoformat(),
+                   "source": source}
+        if from_cache:
+            stamped["from_cache"] = True
+        return stamped
 
 
 @dataclass
@@ -229,12 +285,15 @@ class TravelSources:
     warning: Any | None = None
     #: 외교부 여행경보 — 해외 확장용(v11 MVP 는 서울뿐이라 지금 부르는 Team 없음).
     advisory: Any | None = None
-    #: 행정안전부 긴급재난문자. ★지금은 **샘플 CSV 판**(실키 발급 대기, 2026-09-14).
+    #: 행정안전부 긴급재난문자. 키(`ACOP_DISASTER_MSG_API_KEY`)가 있으면 API 판,
+    #:  없으면 **샘플 CSV 판**(2023-09 일부 기간만).
     disaster: Any | None = None
     #: 국토교통부 ITS 돌발상황 — 교통 사고·공사·통제(시내 도로 포함, 실측).
     traffic: Any | None = None
     #: 에어코리아 대기오염정보 — 구 측정소의 1시간 값(실측 2026-09-14).
     air: Any | None = None
+    #: 기상청 지진정보 — 최근 지진(규모·진앙). 공공데이터포털 공통 키(실측 2026-09-14).
+    earthquake: Any | None = None
     #: 경로에 걸린 운행·통제 사건(무정차·도로 통제). 지금은 재생 입력만 있다 —
     #:  실시간 지하철 운행·UTIC 통제가 붙으면 같은 `affecting()` 모양으로 끼운다.
     route_events: Any | None = None
@@ -245,6 +304,8 @@ class TravelSources:
     #: 소스 전부가 같은 것을 공유한다 - 따로 두면 한 키를 두 소스가 나눠
     #: 쓸 때 합계가 한도를 넘는다.
     limiter: Any | None = None
+    #: 응답 캐시 — 제한기처럼 소스 전부가 하나를 공유한다(`cache.py`).
+    cache: Any | None = None
 
 
 def _public_data_key(settings: Any, field: str) -> str:
@@ -261,6 +322,46 @@ def _public_data_key(settings: Any, field: str) -> str:
     return override or getattr(settings, "data_go_kr_key", "") or ""
 
 
+def _proxy_would_apply(settings: Any, name: str) -> bool:
+    """`apply_outbound_proxy()` 가 이 소스에 경유를 **실제로 걸까**. 키를 고를 때 쓴다.
+
+    ★조립 끝에서 거는 것과 같은 조건이어야 한다 — 어긋나면 key 2 를 들고 바로 나가거나
+      key 1 을 들고 서버로 나가 거절당한다.
+    """
+    import importlib.util
+
+    url = (getattr(settings, "outbound_proxy_url", "") or "").strip()
+    wanted = {part.strip() for part in (getattr(settings, "outbound_proxy_sources", "") or "")
+              .split(",") if part.strip()}
+    if not url or not ("*" in wanted or name in wanted):
+        return False
+    return not (url.startswith("socks") and importlib.util.find_spec("socksio") is None)
+
+
+def apply_outbound_proxy(sources: TravelSources, *, url: str, names: str) -> str | None:
+    """이름이 맞는 소스에만 경유 프록시를 건다. 못 걸면 **이유**를, 걸었으면 `None`.
+
+    ★사슬(`FallbackWeather`·`FallbackAir`)은 안의 소스까지 본다 — 사슬 이름이 아니라
+      실제로 바깥에 나가는 어댑터 이름으로 고른다.
+    ★SOCKS 인데 `socksio` 가 없으면 **걸지 않는다.** 걸면 요청 순간 ImportError 로
+      점검이 통째로 죽는다. 대신 이유를 돌려주고 조립이 `unavailable` 에 적는다.
+    """
+    import importlib.util
+
+    url = (url or "").strip()
+    wanted = {name.strip() for name in (names or "").split(",") if name.strip()}
+    if not url or not wanted:
+        return None
+    if url.startswith("socks") and importlib.util.find_spec("socksio") is None:
+        return (f"경유 프록시 {url} 는 SOCKS 인데 socksio 가 없다 — 경유하지 않는다. "
+                f"`pip install socksio`(httpx[socks]) 뒤 다시 띄운다. 대상: {sorted(wanted)}")
+    for value in vars(sources).values():
+        for source in getattr(value, "sources", [value]):
+            if isinstance(source, TravelSource) and ("*" in wanted or source.name in wanted):
+                source._proxy = url
+    return None
+
+
 def build_travel_sources(settings: Any) -> TravelSources:
     """설정을 보고 붙일 수 있는 것만 붙인다.
 
@@ -271,17 +372,25 @@ def build_travel_sources(settings: Any) -> TravelSources:
     from .heritage import HeritageSource
     from .open_meteo import OpenMeteoWeather
 
+    from app.core.settings import get_guardrails
+
+    from .cache import ResponseCache
     from .ratelimit import RateLimiter, interval_for
 
+    guardrails = get_guardrails()
+    # ★몰림 허용·재사용 시간은 가드레일 한 곳에 둔다(`travel.rate_burst`·`travel.source_cache_seconds`).
+    burst = max(1, int(guardrails.get("travel.rate_burst") or 1))
     limits = (settings.source_rate_limits()
               if hasattr(settings, "source_rate_limits") else {})
     limiter = RateLimiter(
-        intervals={name: interval_for(per_day) for name, per_day in limits.items()},
+        intervals={name: interval_for(per_day, burst=burst) for name, per_day in limits.items()},
+        bursts={name: burst for name in limits},
         max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
+    cache = ResponseCache(ttl_seconds=float(guardrails.get("travel.source_cache_seconds") or 0))
 
-    sources = TravelSources(limiter=limiter)
+    sources = TravelSources(limiter=limiter, cache=cache)
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.
-    sources.heritage = HeritageSource(limiter=limiter)
+    sources.heritage = HeritageSource(limiter=limiter, cache=cache)
     # ── 기상: 1차 + 대체 (v11 §0-4 결정 15) ─────────────────────────
     # ★`weather_provider` 는 **어느 쪽이 먼저인가**만 정한다. 붙일 수 있는 것은
     #   전부 붙이고 나머지를 대체로 둔다 — 1차가 못 주면 대체가 값을 낸다.
@@ -290,14 +399,14 @@ def build_travel_sources(settings: Any) -> TravelSources:
     provider = getattr(settings, "weather_provider", "open_meteo")
     weather_by_name: dict[str, Any] = {
         # ★키가 필요 없다(2026-09-09 실호출 200 확인). 그래서 조건 없이 붙는다.
-        "open_meteo": OpenMeteoWeather(limiter=limiter),
+        "open_meteo": OpenMeteoWeather(limiter=limiter, cache=cache),
     }
     # ★서비스별 키가 비면 공공데이터포털 공통 키로 떨어진다 — 계정 하나면
     #   키도 하나이기 때문이다. 둘 다 비면 빈 문자열이고 그건 「없음」이다.
     kma_key = _public_data_key(settings, "kma_api_key")
     if kma_key:
         from .kma import KmaWeather
-        weather_by_name["kma"] = KmaWeather(service_key=kma_key, limiter=limiter)
+        weather_by_name["kma"] = KmaWeather(service_key=kma_key, limiter=limiter, cache=cache)
     else:
         sources.unavailable["weather_kma"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_KMA_API_KEY)가 비어 있다. "
@@ -318,26 +427,43 @@ def build_travel_sources(settings: Any) -> TravelSources:
     warning_key = _public_data_key(settings, "kma_warning_api_key")
     if warning_key:
         from .kma_warning import KmaWarningSource
-        sources.warning = KmaWarningSource(service_key=warning_key, limiter=limiter)
+        sources.warning = KmaWarningSource(service_key=warning_key, limiter=limiter, cache=cache)
     else:
         sources.unavailable["warning"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_KMA_WARNING_API_KEY)가 비어 있다. "
             "공공데이터포털 「기상청_기상특보 조회서비스」 활용신청 후 .env.apikeys 에 채운다.")
 
+    quake_key = _public_data_key(settings, "kma_earthquake_api_key")
+    if quake_key:
+        from .kma_earthquake import KmaEarthquakeSource
+        sources.earthquake = KmaEarthquakeSource(service_key=quake_key, limiter=limiter, cache=cache)
+    else:
+        sources.unavailable["earthquake"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_KMA_EARTHQUAKE_API_KEY)가 비어 있다. "
+            "공공데이터포털 「기상청_지진정보 조회서비스」(15000420) 활용신청 후 .env.apikeys 에 채운다.")
+
     mofa_key = _public_data_key(settings, "mofa_api_key")
     if mofa_key:
         from .mofa import MofaTravelAlarm
-        sources.advisory = MofaTravelAlarm(service_key=mofa_key, limiter=limiter)
+        sources.advisory = MofaTravelAlarm(service_key=mofa_key, limiter=limiter, cache=cache)
     else:
         sources.unavailable["advisory"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_MOFA_API_KEY)가 비어 있다. "
             "공공데이터포털 「외교부_국가·지역별 여행경보」 활용신청 후 .env.apikeys 에 채운다.")
 
-    # ★재난문자 — 키가 아직 안 나와 **샘플 CSV** 를 쓴다(사용자 지시 2026-09-14).
-    #   샘플 기간(2023-09-16~19) 밖을 물으면 점검이 「미연결」로 답한다 —
-    #   「재난문자 없음」이라고 하지 않는다. 키가 나오면 `disaster_msg_source=api`.
-    disaster_mode = getattr(settings, "disaster_msg_source", "sample")
-    if disaster_mode == "sample":
+    # ★재난문자 — **키가 있으면 API 판, 없으면 샘플 CSV 판**(2026-09-14 키 발급).
+    #   ☆전에는 `disaster_msg_source` 로 골랐는데 그 이름이 `Settings` 에 없어서(extra=forbid)
+    #     설정으로 바꿀 길이 없었다 — 키를 넣어도 영원히 샘플 판이었을 자리다.
+    #   샘플 판은 샘플 기간(2023-09-16~19) 밖을 「미연결」로 답한다 — 「없음」이라 하지 않는다.
+    disaster_key = (getattr(settings, "disaster_msg_api_key", "") or "").strip()
+    if disaster_key:
+        from .disaster_msg import DisasterMsgApi
+
+        # ★하루 한도가 낮아(100 `[미확인]`) 이 소스만 캐시를 길게 둔다.
+        ttl = float(guardrails.get("travel.disaster_msg_cache_seconds") or 0) or None
+        sources.disaster = DisasterMsgApi(service_key=disaster_key, limiter=limiter,
+                                          cache=cache, cache_ttl_seconds=ttl)
+    else:
         from pathlib import Path
 
         from .disaster_msg import DEFAULT_SAMPLE_PATH, DisasterMsgCsv
@@ -346,34 +472,62 @@ def build_travel_sources(settings: Any) -> TravelSources:
             sources.disaster = DisasterMsgCsv(sample)
         else:
             sources.unavailable["disaster"] = f"재난문자 샘플 CSV 가 없다: {sample}"
-    else:
-        sources.unavailable["disaster"] = (
-            "행정안전부 긴급재난문자 API 판은 아직 없다 — 키 발급 대기 "
-            "(data.go.kr/data/15134001)")
 
+    # ── 교통 돌발: ITS + UTIC 를 **합친다**(`traffic_chain.py`) ─────────────
+    #   둘이 보는 것이 다르다 — 시내 사고·행사·집회는 UTIC 가 본체다.
+    traffic_sources: list[Any] = []
     # ★ITS 는 공공데이터포털 공통 키가 아니라 **ITS 가 발급한 키**를 쓴다.
     its_key = getattr(settings, "its_api_key", "") or ""
     if its_key:
         from .its_traffic import ItsTrafficEvents
-        sources.traffic = ItsTrafficEvents(service_key=its_key, limiter=limiter)
+        traffic_sources.append(ItsTrafficEvents(service_key=its_key, limiter=limiter, cache=cache))
     else:
-        sources.unavailable["traffic"] = (
+        sources.unavailable["traffic_its"] = (
             "ACOP_ITS_API_KEY 가 비어 있다. ITS 국가교통정보센터(its.go.kr/opendata) 에서 "
             "발급한 키를 .env.apikeys 에 채운다. ★공공데이터포털 키와 다른 키다.")
+    # ★UTIC 키는 IP 에 묶여 있다 — **실제로 나가는 길**에 맞는 키를 고른다.
+    #   서버 경유가 걸리면 key 2, 아니면 key 1. 다른 쪽 키로 대신하지 않는다(어차피 거절).
+    proxied = _proxy_would_apply(settings, "utic")
+    utic_key = settings.utic_key(proxied=proxied) if hasattr(settings, "utic_key") else ""
+    if utic_key:
+        from .utic import UticIncidents, UticRouteEvents
+        utic = UticIncidents(service_key=utic_key, limiter=limiter, cache=cache)
+        traffic_sources.append(utic)
+        # ★같은 레코드로 감시 루프의 **경로 사건**(도로 통제)도 답한다 — 요청은 캐시로 나눠 쓴다.
+        sources.route_events = UticRouteEvents(utic)
+    else:
+        sources.unavailable["traffic_utic"] = (
+            f"ACOP_UTIC_API_KEY_{2 if proxied else 1} 가 비어 있다 — "
+            f"{'서버 경유' if proxied else '바로 부르는'} 길의 IP 에 등록된 키가 필요하다.")
+    if not traffic_sources:
+        sources.unavailable["traffic"] = "교통 돌발 — ITS·UTIC 키가 모두 없다"
+    elif len(traffic_sources) == 1:
+        sources.traffic = traffic_sources[0]
+    else:
+        from .traffic_chain import CombinedTraffic
+        sources.traffic = CombinedTraffic(traffic_sources)
 
+    # ── 대기질: 1차(에어코리아 측정값) + 대체(Open-Meteo 모델 추정) — 결정 15 ─────
+    # ★☆2026-09-14 실측 — 에어코리아가 연달아 504 SERVICETIMEOUT 을 냈다. 대체가 없으면
+    #   그때마다 치명이다. 대체는 키가 없어서 **항상** 붙는다.
+    from .air_quality import AirKoreaRealtime, FallbackAir, OpenMeteoAir
+
+    air_chain: list[Any] = []
     air_key = _public_data_key(settings, "airkorea_api_key")
     if air_key:
-        from .air_quality import AirKoreaRealtime
-        sources.air = AirKoreaRealtime(service_key=air_key, limiter=limiter)
+        air_chain.append(AirKoreaRealtime(service_key=air_key, limiter=limiter, cache=cache))
     else:
-        sources.unavailable["air"] = (
+        sources.unavailable["air_airkorea"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_AIRKOREA_API_KEY)가 비어 있다. "
-            "공공데이터포털 「에어코리아 대기오염정보」 활용신청 후 채운다.")
+            "공공데이터포털 「에어코리아 대기오염정보」 활용신청 후 채운다. "
+            "그동안은 Open-Meteo 모델 추정값만 쓴다.")
+    air_chain.append(OpenMeteoAir(limiter=limiter, cache=cache))
+    sources.air = air_chain[0] if len(air_chain) == 1 else FallbackAir(air_chain)
 
     holiday_key = _public_data_key(settings, "holiday_api_key")
     if holiday_key:
         from .holiday import HolidaySource
-        sources.holiday = HolidaySource(service_key=holiday_key, limiter=limiter)
+        sources.holiday = HolidaySource(service_key=holiday_key, limiter=limiter, cache=cache)
     else:
         sources.unavailable["holiday"] = (
             "ACOP_DATA_GO_KR_KEY(또는 ACOP_HOLIDAY_API_KEY)가 비어 있다. "
@@ -388,7 +542,7 @@ def build_travel_sources(settings: Any) -> TravelSources:
     else:
         from .tour_api import TourApiPlace
         sources.place = TourApiPlace(
-            service_key=_public_data_key(settings, "tour_api_key"), limiter=limiter)
+            service_key=_public_data_key(settings, "tour_api_key"), limiter=limiter, cache=cache)
 
     if not getattr(settings, "odsay_api_key", ""):
         sources.unavailable["transit"] = (
@@ -396,7 +550,13 @@ def build_travel_sources(settings: Any) -> TravelSources:
             ".env.apikeys 에 채운다. ★공공데이터포털 키와 **다른 키**다.")
     else:
         from .odsay import OdsayTransit
-        source = OdsayTransit(service_key=settings.odsay_api_key, limiter=limiter)
+        source = OdsayTransit(service_key=settings.odsay_api_key, limiter=limiter, cache=cache)
         sources.transit = source
         sources.route = source
+
+    # ── 고정 IP 서버 경유 (IP 에 묶인 소스만) ─────────────────────────
+    reason = apply_outbound_proxy(sources, url=getattr(settings, "outbound_proxy_url", ""),
+                                  names=getattr(settings, "outbound_proxy_sources", ""))
+    if reason:
+        sources.unavailable["outbound_proxy"] = reason
     return sources

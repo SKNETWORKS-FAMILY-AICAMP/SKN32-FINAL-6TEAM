@@ -6,10 +6,12 @@
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 from . import defects as defects_mod
+from .config import data_dir
 from .sandbox import Sandbox
 
 
@@ -34,11 +36,19 @@ def validate_all(target: Path, *, verbose: bool = True,
         #   예전에는 여기서 멈추고 빈 결과를 돌려줘 카탈로그가 통째로 지워졌다.
         #   대가 — 기준선에서 이미 깨진 테스트가 지키는 규칙은 이번 판정에서 보이지 않는다.
         known_broken = set(baseline.failed)
+        # ★미리 알고 있는 환경 의존 실패(data/known_baseline.json)와 그 밖의 것을 가른다.
+        #   그 밖의 것도 판정에서는 빼지만 게이트는 실패로 끝낸다 — 다른 작업이 깨뜨린
+        #   무결성 검사를 '환경 탓' 으로 묻어 두지 않으려고.
+        prefixes = [e["prefix"] for e in json.loads(
+            (data_dir() / "known_baseline.json").read_text(encoding="utf-8"))["entries"]]
+        unexpected = sorted(n for n in known_broken if not n.startswith(tuple(prefixes)))
+        report["unexpected_baseline"] = unexpected
         if verbose:
             if known_broken:
                 print(f"  ! 결함 없이도 {len(known_broken)}건이 실패한다 — 판정에서 뺀다")
                 for nodeid in sorted(known_broken):
-                    print(f"      {nodeid}")
+                    mark = "✗ 모르는 실패" if nodeid in unexpected else "  알려진 실패"
+                    print(f"    {mark}  {nodeid}")
                 print(f"    {baseline.summary}")
             else:
                 print(f"  ✓ {baseline.summary}")

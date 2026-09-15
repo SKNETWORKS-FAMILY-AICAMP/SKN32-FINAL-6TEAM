@@ -89,7 +89,8 @@ class ReplayAir(_ReplaySource):
     kind = "air_quality"
 
     def at(self, *, district: str | None, sido: str = "서울",
-           at: datetime | None = None) -> dict[str, Any] | None:
+           at: datetime | None = None, latitude: float | None = None,
+           longitude: float | None = None) -> dict[str, Any] | None:
         from .air_quality import reading
 
         event = self.timeline.current(self.kind, district=district)

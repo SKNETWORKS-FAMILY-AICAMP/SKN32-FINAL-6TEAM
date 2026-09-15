@@ -30,16 +30,16 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+import math
 from typing import Any, Callable
 
 #: 아직 못 붙인 항목과 그 이유. ★활용신청이 끝나 어댑터가 붙으면 여기서 지운다.
 #:  재난문자는 여기 없다 — 샘플 CSV 판이 붙어 있고(`disaster_msg.py`), 소스가
 #:  없을 때의 이유는 조립이 `unavailable["disaster"]` 에 적는다.
-NOT_CONNECTED: dict[str, str] = {
-    # ★2026-09-14 실측: 공통 키로 호출된다(최근 3일까지만 조회). 어댑터만 아직 없다.
-    "earthquake": "기상청 지진정보 — 호출은 되나 어댑터 미구현 (data.go.kr/data/15000420)",
-}
+#:  ☆2026-09-14 지진정보가 여기 있다가 어댑터(`kma_earthquake.py`)가 붙어 빠졌다.
+#:    지금은 비어 있다 — 소스가 없을 때의 이유는 조립이 `unavailable` 에 적는다.
+NOT_CONNECTED: dict[str, str] = {}
 
 
 def forecast_advisories(forecast: dict[str, Any], *, pop_limit: float | None,
@@ -65,13 +65,32 @@ def _default_limits() -> tuple[float | None, float | None]:
             guardrails.get("travel.weather.advisory_wind_speed_kmh"))
 
 
+def _default_quake_rules() -> tuple[float, float, float]:
+    """(규모 하한, 반경 km, 돌아보는 시간). 값은 `config/guardrails.yaml` 한 곳에만 둔다."""
+    from app.core.settings import get_guardrails
+
+    guardrails = get_guardrails()
+    return (float(guardrails.get("travel.earthquake.magnitude_min")),
+            float(guardrails.get("travel.earthquake.radius_km")),
+            float(guardrails.get("travel.earthquake.lookback_hours")))
+
+
+def _distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    h = (math.sin((p2 - p1) / 2) ** 2
+         + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2)
+    return 2 * 6371.0 * math.asin(math.sqrt(h))
+
+
 class DisruptionCheck:
     """`TravelSources` 를 받아 일정 항목 하나를 점검한다."""
 
     def __init__(self, sources: Any, *,
-                 limits: Callable[[], tuple[float | None, float | None]] | None = None) -> None:
+                 limits: Callable[[], tuple[float | None, float | None]] | None = None,
+                 quake_rules: Callable[[], tuple[float, float, float]] | None = None) -> None:
         self.sources = sources
         self._limits = limits or _default_limits
+        self._quake_rules = quake_rules or _default_quake_rules
 
     def check(self, *, place: dict[str, Any], starts_at: datetime | None,
               region: str = "서울") -> dict[str, Any]:
@@ -82,6 +101,7 @@ class DisruptionCheck:
             "disaster_msg": lambda: self._disaster(place, starts_at, region, sensitive),
             "traffic_control": lambda: self._traffic(place, starts_at),
             "air_quality": lambda: self._air(place, starts_at, sensitive),
+            "earthquake": lambda: self._earthquake(place, starts_at),
         }
         # ★동시에 돌린다 — 소스 하나가 느려도 나머지를 기다리게 하지 않는다.
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -191,9 +211,10 @@ class DisruptionCheck:
     def _traffic(self, place: dict[str, Any], at: datetime | None) -> dict[str, Any]:
         """교통 돌발·통제. ★장소를 가리지 않는다 — 실내 일정도 가는 길이 막힌다.
 
-        ★지금은 ITS 만 붙어 있다. 시내 집회·행사는 UTIC 이 본체인데 승인 대기라,
-          ITS 에 태그로 들어온 것만 잡힌다(실측 서울 122건 중 [집회] 1건). 그 사실을
-          `note` 로 남긴다 — 「집회 없음」이라고 단정하지 않는다.
+        ★ITS 와 UTIC 를 **합친다**(`traffic_chain.CombinedTraffic`). 시내 집회·행사는 UTIC 이
+          본체다 — UTIC 가 못 답한 회차에는 ITS 에 태그로 들어온 것만 잡힌다(실측 서울 122건 중
+          [집회] 1건). 그때는 `note` 로 남긴다 — 「집회 없음」이라고 단정하지 않는다.
+        ★둘 중 하나만 답해도 판정은 한다(`partial_from` 에 못 답한 쪽). 둘 다 못 답하면 치명.
         """
         base = {"category": "traffic_control"}
         source = getattr(self.sources, "traffic", None)
@@ -207,20 +228,26 @@ class DisruptionCheck:
         moment = at if isinstance(at, datetime) else datetime.now(UTC)
         value = source.near(latitude=float(latitude), longitude=float(longitude), at=moment)
         if value is None:
-            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
-                    "reason": "교통 돌발을 못 읽었다"}
+            tried = [getattr(s, "name", "?") for s in getattr(source, "sources", [source])]
+            return {**base, "status": "failed", "tried": tried,
+                    "reason": "교통 돌발 소스가 모두 못 읽었다"}
         disruptions = [{"category": "traffic_control", "kind": item.get("reason"),
                         "road": item.get("road"), "distance_m": item.get("distance_m"),
-                        "message": item.get("message"), "source": value.get("source")}
+                        "message": item.get("message"),
+                        "source": item.get("source") or value.get("source")}
                        for item in value.get("for_place") or []]
         advisories = [{"category": "traffic_control", "field": "partial_lane",
                        "value": item.get("road"), "note": item.get("reason"),
-                       "source": value.get("source")}
+                       "source": item.get("source") or value.get("source")}
                       for item in value.get("advisories") or []]
-        return {**base, "status": "ok", "source": value.get("source"),
-                "confirmed_at": value.get("confirmed_at"),
-                "note": "시내 집회·행사는 UTIC 승인 대기 — ITS 에 태그된 것만 본다",
-                "_disruptions": disruptions, "_advisories": advisories}
+        answered = value.get("sources") or [value.get("source")]
+        result = {**base, "status": "ok", "source": value.get("source"),
+                  "confirmed_at": value.get("confirmed_at"),
+                  "partial_from": value.get("partial_from", []),
+                  "_disruptions": disruptions, "_advisories": advisories}
+        if "utic" not in answered:
+            result["note"] = "UTIC 가 답하지 않았다 — 시내 집회·행사는 ITS 에 태그된 것만 본다"
+        return result
 
 
     def _air(self, place: dict[str, Any], at: datetime | None,
@@ -239,12 +266,15 @@ class DisruptionCheck:
                 "air", "에어코리아 대기오염정보 소스 없음")
             return {**base, "status": "not_connected", "reason": reason}
         district = place.get("district")
-        if not district:
-            return {**base, "status": "failed", "reason": "장소의 구를 몰라 측정소를 고를 수 없다"}
-        value = source.at(district=district, at=at)
+        latitude, longitude = place.get("latitude"), place.get("longitude")
+        if not district and (latitude is None or longitude is None):
+            # ★측정소는 구로, 모델 대체는 좌표로 찾는다. 둘 다 없으면 어디 값인지 모른다.
+            return {**base, "status": "failed", "reason": "장소의 구도 좌표도 몰라 값을 고를 수 없다"}
+        value = source.at(district=district, at=at, latitude=latitude, longitude=longitude)
         if value is None:
-            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
-                    "reason": "대기질을 못 읽었다"}
+            tried = [getattr(s, "name", "?") for s in getattr(source, "sources", [source])]
+            return {**base, "status": "failed", "tried": tried,
+                    "reason": "1차·대체 소스가 모두 대기질을 못 냈다"}
         alert = value.get("alert")
         disruptions = [] if not alert else [{
             "category": "air_quality", "kind": f"{alert['pollutant']} {alert['level']} 기준 초과",
@@ -257,7 +287,53 @@ class DisruptionCheck:
             "station": value.get("station"), "source": value.get("source")}]
         return {**base, "status": "ok", "source": value.get("source"),
                 "mode": value.get("mode", "live"), "confirmed_at": value.get("confirmed_at"),
+                "fell_back_from": value.get("fell_back_from", []),
                 "value": value, "_disruptions": disruptions, "_advisories": advisories}
+
+
+    def _earthquake(self, place: dict[str, Any], at: datetime | None) -> dict[str, Any]:
+        """지진. ★장소를 가리지 않는다 — 실내 시설도 점검·운영 중단이 난다.
+
+        반경 안 + 규모 하한 이상 → 이상, 반경 안 + 미만 → 주의, 반경 밖 → 무시.
+        ★「지진 없음」은 빈 목록(아는 사실), 조회 실패는 `None`(모름 → 치명)이다.
+        """
+        from .kma_earthquake import window_until
+
+        base = {"category": "earthquake"}
+        source = getattr(self.sources, "earthquake", None)
+        if source is None:
+            reason = (getattr(self.sources, "unavailable", {}) or {}).get(
+                "earthquake", "기상청 지진정보 소스 없음 (data.go.kr/data/15000420)")
+            return {**base, "status": "not_connected", "reason": reason}
+        latitude, longitude = place.get("latitude"), place.get("longitude")
+        if latitude is None or longitude is None:
+            return {**base, "status": "failed", "reason": "장소 좌표 없음"}
+        magnitude_min, radius_km, lookback_hours = self._quake_rules()
+        until = window_until(at if isinstance(at, datetime) else None, datetime.now(UTC))
+        value = source.recent(since=until - timedelta(hours=lookback_hours), until=until)
+        if value is None:
+            return {**base, "status": "failed", "tried": [getattr(source, "name", "?")],
+                    "reason": "지진정보를 못 읽었다"}
+        disruptions, advisories = [], []
+        for event in value.get("events") or []:
+            distance = round(_distance_km(float(latitude), float(longitude),
+                                          event["latitude"], event["longitude"]), 1)
+            if distance > radius_km:
+                continue
+            record = {"category": "earthquake", "magnitude": event["magnitude"],
+                      "distance_km": distance, "location": event.get("location"),
+                      "at": event.get("at"), "intensity": event.get("intensity"),
+                      "source": value.get("source")}
+            if event["magnitude"] >= magnitude_min:
+                disruptions.append({**record, "kind": f"규모 {event['magnitude']} 지진"})
+            else:
+                advisories.append({**record, "field": "magnitude", "value": event["magnitude"],
+                                   "limit": magnitude_min})
+        return {**base, "status": "ok", "source": value.get("source"),
+                "confirmed_at": value.get("confirmed_at"), "window": value.get("window"),
+                "rules": {"magnitude_min": magnitude_min, "radius_km": radius_km,
+                          "lookback_hours": lookback_hours},
+                "_disruptions": disruptions, "_advisories": advisories}
 
 
 __all__ = ["DisruptionCheck", "NOT_CONNECTED", "forecast_advisories"]

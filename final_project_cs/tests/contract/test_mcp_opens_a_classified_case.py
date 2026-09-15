@@ -20,19 +20,49 @@ from uuid import uuid4
 
 import pytest
 
+import app.core.settings as settings_module
 from app.domain.events import EventType
 from app.infrastructure.db.session import get_connection
 from app.presentation.api import cases as cases_module
 
 
 @pytest.fixture()
-def customer_id() -> str:
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT customer_id FROM customers WHERE tenant_id='demo' LIMIT 1")
-        row = cur.fetchone()
-    if row is None:
-        pytest.skip("demo 고객이 없다 — seed 를 먼저 돌린다")
-    return str(row[0])
+def customer_id(monkeypatch) -> str:
+    """★이 시험 전용 테넌트와 고객. 끝나면 FK 순서대로 지운다.
+
+    ☆2026-09-14 전에는 운영 테넌트 `demo` 의 아무 고객이나(`LIMIT 1`) 골라 매 실행마다
+      Case 3건을 남기고 지우지 않았다. 다른 세션이 막 만든 고객에 Case 6건이 붙어
+      그 고객을 FK 때문에 지울 수 없게 됐다.
+
+    ★`_mcp_open` 은 테넌트를 `_mcp_principal()` → 호출 시점의
+      `app.core.settings.get_settings().tenant_id` 로 정한다(`cases.py`). 그래서 그
+      함수를 갈아 끼우면 이 경로 전체가 전용 테넌트로 간다.
+    """
+    original = settings_module.get_settings()
+    tenant = "test_mcp_open_" + uuid4().hex
+    test_settings = original.model_copy(update={"tenant_id": tenant})
+    monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+    customer = uuid4()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO tenants (tenant_id, name) VALUES (%s, %s)", (tenant, "mcp open test"))
+        cur.execute("INSERT INTO customers (customer_id, tenant_id, external_id) VALUES (%s, %s, %s)",
+                    (customer, tenant, "mcp-open-customer"))
+    try:
+        yield str(customer)
+    finally:
+        # ★하나라도 FK 로 막히면 트랜잭션이 통째로 롤백돼 아무것도 안 지워진다 —
+        #   `tests/integration/api/test_api_runtime.py` 의 `api_fixture` 와 같은 순서.
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+            cur.execute("DELETE FROM team_tasks WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+            cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
+            cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
 
 
 def _events(case_id: str) -> list[str]:
