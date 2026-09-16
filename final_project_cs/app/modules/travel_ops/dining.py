@@ -9,32 +9,63 @@
 """
 from __future__ import annotations
 
+from typing import Any
+
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
 from ._base import TravelTeamBase
+from .itinerary_changes import plan_closed, plan_delay
+from .itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
 
-class DiningTeam(TravelTeamBase):
+class DiningTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="dining",
         display_name="Dining Team",
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
-        capabilities=["dining.check_open", "dining.check_conditions"],
+        capabilities=["dining.check_open", "dining.check_conditions",
+                      "dining.itinerary"],   # ★`[2026-09-17]` 여행 일정 관리 — 늦음 · 휴무 · 재요청
         accepted_case_types=["dining"],
-        required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=["read.place", "read.policy", "read.booking"],
+        # ★`[2026-09-17]` `policy` 를 뺐다 — 이 Team 은 정책 문서를 판단에 쓰지 않는다(선언만 있었다).
+        required_context=["case_state", "db_facts", "history"],
+        allowed_tools=["read.place", "read.policy", "read.booking", *ITINERARY_TOOLS],
         knowledge_scope=["dining", "opening_hours", "dietary"],
-        max_steps=6,
+        max_steps=12,
         active=True,
-        implementation_revision="2026-09-09",
+        implementation_revision="2026-09-17",
         default_capability="dining.check_open",
     )
+
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
+        return "dining.itinerary" if ItineraryWork._wants_itinerary(state or {}) else None
+
+    async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
+        if kind not in ("delay", "closed"):
+            return await super().handle_report(task, kind, ctx)
+        places = self.catalog(task, ctx)
+        if places is None:
+            return self._unknown(task, "장소 목록", ctx["evidence"])
+        request_id = task.context.current_state.get("request_id")
+        if kind == "delay":
+            minutes = ctx["report"].get("minutes")
+            if not minutes:
+                return self._unknown(task, "늦는 시간", ctx["evidence"])
+            plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+                              minutes=int(minutes), message=task.input_text, request_id=request_id)
+        else:
+            plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
+                               message=task.input_text, request_id=request_id)
+        return self.settle(task, ctx, plan)
 
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        if task.capability == self.itinerary_capability:
+            return await self.run_itinerary(task)
 
         seen: set[str] = set()
         # ★★2026-09-09 결함 수정. 전에는 `read.place` 를 `case_id` 로 불렀다.

@@ -15,6 +15,11 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-17 — Case 버전만으로 여행 일정 관리가 돈다
+
+시나리오용 여행 버전에만 있던 일정 관리(감시 조정·고객 신고·다른 안·되돌리기·통지)를 Case → Controller → Team → 코어 적용 경로로 옮겼다. 같은 재생 하루에서 두 버전의 결과가 같다. 계약 페이지 넷(`external/rest-endpoints.md` subject_ref · `actions/approval.md` 승인 없이 적용 · `teams/team-contract/index.md` · `context/context-broker.md`)과 Team 페이지 셋을 고쳤다.
+→ [records/reports/2026-09-17_0536_Case버전_여행일정관리_이식_리포트.md](records/reports/2026-09-17_0536_Case버전_여행일정관리_이식_리포트.md)
+
 ## 2026-09-01 (2) — 역방향 표식 완료. 양방향 잠김
 
 cs 프로젝트가 테스트에 `# invariant:` 표식을 넣었다.

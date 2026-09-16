@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
+from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
 from app.core.context import ContextBroker, ContextInputs
 from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
 from app.core.idempotency import idempotency_key, request_id_for_case
@@ -35,7 +36,8 @@ class Controller:
                  case_service: CaseService | None = None, graph_revision: str = "controller-v1",
                  team_executor: Any | None = None, broker: Any | None = None,
                  verification_policy: Any | None = None, fact_queries: Any = (),
-                 response_review: Any | None = None) -> None:
+                 response_review: Any | None = None,
+                 action_handlers: ActionHandlers | None = None) -> None:
         # ★대조 어휘는 주입받는다. Controller 는 어떤 필드를 대조하는지 모른다 —
         #   알면 basement 가 특정 업무 도메인에 묶인다.
         from app.core.verification import VerificationPolicy
@@ -65,14 +67,31 @@ class Controller:
         self.team_executor = team_executor
         self.broker = broker
         self.response_review = response_review
+        # ★적용기는 조립이 넣는다. 없으면 **빈 표** — 승인 없는 제안은 전부 escalated 로 간다.
+        self.action_handlers = action_handlers or ActionHandlers()
+
+    #: ★Team 이 볼 수 있는 Case 상태 칸 — **이름이 중립인 것만.** 무엇을 가리키는지는
+    #:  도메인이 채운다(`[결정 2026-09-17]` wiki `external/rest-endpoints.md` subject_ref).
+    TEAM_STATE_KEYS = ("subject_ref", "trigger_source", "trigger")
+
+    @classmethod
+    def _team_state(cls, case: dict[str, Any]) -> dict[str, Any]:
+        state = case.get("state_json") or {}
+        return {key: state[key] for key in cls.TEAM_STATE_KEYS if state.get(key) is not None}
+
+    @staticmethod
+    def _case_type(case: dict[str, Any]) -> str:
+        state = case.get("state_json") or {}
+        return case_type_of(case.get("issue_code"), fallback=case.get("intent"),
+                            hint=state.get("routing_hint"),
+                            hint_wins=bool(state.get("routing_hint_verified")))
 
     def _capability(self, case: dict[str, Any]) -> str:
         """Return the capability selected by the injected Team registry."""
         intent = case.get("intent")
-        entry = self.registry.resolve(
-            case_type=case_type_of(case.get("issue_code"), fallback=intent),
-            intent=intent)
-        return self.registry.capability_for(entry, intent, input_text=case.get("subject"))
+        entry = self.registry.resolve(case_type=self._case_type(case), intent=intent)
+        return self.registry.capability_for(entry, intent, input_text=case.get("subject"),
+                                            state=self._team_state(case))
 
     def _policy(self, tenant_id: str, query: str, scopes: list[str]) -> tuple[list[Any], bool]:
         try:
@@ -83,14 +102,23 @@ class Controller:
 
     def _task(self, case: dict[str, Any], entry, run_id: UUID, *, resume: bool = False,
               resume_node: str | None = None, retrieval_failed: bool = False) -> TeamTask:
-        policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
+        # ★`[결정 2026-09-17]` Team 이 정책 근거를 선언했을 때만 RAG 를 돈다.
+        #   전에는 `required_context` 가 선언만 되고 읽히지 않아, 정책 문서가 필요 없는
+        #   일(실시간 사실로 판단하는 일정 조정)도 결과 0건이면 degraded → 전부 사람에게 갔다.
+        policy_required = "policy" in (entry.manifest.required_context or [])
+        if policy_required:
+            policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
+        else:
+            policy, retrieval_failed = [], False
         current = {"case_id": str(case["case_id"]), "customer_id": str(case["customer_id"]), "status": str(case["status"]),
                    "version": case["version"], "intent": case.get("intent"), "issue_code": case.get("issue_code"),
                    "sentiment": case.get("sentiment"), "owner_team_id": case.get("owner_team_id")}
         current["request_id"] = request_id_for_case(case)
+        current.update(self._team_state(case))
         inputs = ContextInputs(case_id=case["case_id"], tenant_id=case["tenant_id"], team_id=entry.manifest.team_id,
                                knowledge_scope=entry.manifest.knowledge_scope, system_instruction="Answer using the supplied evidence.",
-                               current_state=current, policy_chunks=policy, history_entries=[], retrieval_failed=retrieval_failed)
+                               current_state=current, policy_chunks=policy, history_entries=[], retrieval_failed=retrieval_failed,
+                               policy_required=policy_required)
         context = self.context_broker.build(inputs)
         return TeamTask(task_id=uuid4(), run_id=run_id, case_id=case["case_id"], team_id=entry.manifest.team_id,
                         capability=self._capability(case), case_version=case["version"], input_text=case["subject"], context=context,
@@ -172,10 +200,11 @@ class Controller:
                         #   우연히 같은 말이라 맞았지만, 여행에서는 요청 종류 다섯이
                         #   여섯 팀 어느 것과도 안 맞아 **아무 데도 도달하지 못했다.**
                         intent = case.get("intent")
-                        entry = self.registry.resolve(
-                            case_type=case_type_of(case.get("issue_code"), fallback=intent),
-                            intent=intent)
-                        capability = self.registry.capability_for(entry, intent)
+                        entry = self.registry.resolve(case_type=self._case_type(case), intent=intent)
+                        # ★`_task()` 와 **같은 인자로** 고른다. 전에는 여기서만 `input_text` 없이
+                        #   골라 ROUTED 이벤트의 capability 와 실제로 Team 에 준 것이 갈릴 수 있었다.
+                        capability = self.registry.capability_for(
+                            entry, intent, input_text=case.get("subject"), state=self._team_state(case))
                         self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                     event_type=EventType.ROUTED, payload={"owner_team_id": entry.manifest.team_id, "capability": capability}, actor_id=actor_id)
                     except RegistryError as exc:
@@ -351,7 +380,24 @@ class Controller:
     def _event_for_result(self, conn, case: dict[str, Any], result: TeamResult, *, context: Any = None):
         na = result.next_action
         if na is NextAction.RESPOND:
-            return EventType.COMPLETED, {"answer_ref": str(uuid4()), "state_patch": {"answer": result.answer, "evidence": [e.model_dump(mode="json") for e in result.evidence]}}, []
+            state_patch: dict[str, Any] = {"answer": result.answer,
+                                           "evidence": [e.model_dump(mode="json") for e in result.evidence]}
+            outbox: list[OutboxMessage] = []
+            # ★`[결정 2026-09-17]` 답과 함께 온 **승인 없는 제안**을 버리지 않는다.
+            #   전에는 이 갈래가 제안을 보지 않아 조용히 사라졌다. 적용 조건은
+            #   wiki `actions/approval.md` 「승인 없이 적용되는 제안」.
+            auto = [p for p in result.action_proposals if not p.approval_required]
+            if auto:
+                blocked = self._reject_unverified(conn, case, result, context)
+                if blocked is not None:
+                    return blocked
+                applied = self._apply_auto_proposals(conn, case, auto)
+                if isinstance(applied, tuple):
+                    return applied
+                state_patch["applied_actions"] = [record for record, _ in applied]
+                for _, messages in applied:
+                    outbox.extend(messages)
+            return EventType.COMPLETED, {"answer_ref": str(uuid4()), "state_patch": state_patch}, outbox
         if na is NextAction.WAIT_FOR_INPUT:
             token = self.case_service.new_resume_token(); self._last_token = token
             metadata = self.case_service.resume_metadata(token, "customer_input")
@@ -380,6 +426,65 @@ class Controller:
             guardrail = result.failure_code or "team_escalated"
             return EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": result.warnings or [guardrail]}, []
         raise ControllerError(f"unsupported result action: {na.value}")
+
+    @staticmethod
+    def _escalation(guardrail: str, observed: str):
+        return EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": [observed]}, []
+
+    def _apply_auto_proposals(self, conn, case: dict[str, Any], proposals: list[Any]):
+        """승인 없는 제안을 **한 savepoint 안에서 전부** 적용한다.
+
+        하나라도 못 하면 전부 되돌리고 escalated 전이를 돌려준다 — 두 제안 중 하나만
+        반영된 대상을 남기지 않는다. 성공하면 `[(기록, outbox 메시지들)]` 을 돌려준다.
+        """
+        class _Stop(Exception):
+            def __init__(self, outcome):
+                self.outcome = outcome
+
+        applied: list[tuple[dict[str, Any], list[OutboxMessage]]] = []
+        try:
+            with conn.transaction():
+                for proposal in proposals:
+                    handler = self.action_handlers.get(proposal.action_type)
+                    if handler is None:
+                        raise _Stop(self._escalation(
+                            "action_handler_missing", f"적용기가 없는 제안 종류: {proposal.action_type}"))
+                    if not getattr(handler, "auto_apply", False) or proposal.risk_level != "low":
+                        raise _Stop(self._escalation(
+                            "action_requires_approval",
+                            f"{proposal.action_type} 는 승인 없이 적용하지 않는다(risk={proposal.risk_level})"))
+                    try:
+                        subject = handler.subject(proposal.arguments)
+                    except ActionRejected as exc:
+                        raise _Stop(self._escalation("action_rejected", str(exc))) from exc
+                    key = idempotency_key(tenant_id=case["tenant_id"], request_id=request_id_for_case(case),
+                                          action_type=proposal.action_type, business_subject=subject)
+                    existing = self.repository.find_action_request(conn, tenant_id=case["tenant_id"],
+                                                                   idempotency_key=key)
+                    if existing is not None and existing["status"] == "succeeded":
+                        # ★같은 대상에 같은 요청이 이미 적용됐다 — 다시 적용하지 않는다.
+                        applied.append(({"action_id": str(existing["action_id"]),
+                                         "action_type": proposal.action_type,
+                                         "result_ref": existing["provider_ref"], "replayed": True}, []))
+                        continue
+                    try:
+                        outcome = handler.apply(conn, tenant_id=case["tenant_id"],
+                                                customer_id=case["customer_id"], case_id=case["case_id"],
+                                                arguments=proposal.arguments)
+                    except ActionConflict as exc:
+                        raise _Stop(self._escalation("action_target_changed", str(exc))) from exc
+                    except ActionRejected as exc:
+                        raise _Stop(self._escalation("action_rejected", str(exc))) from exc
+                    action_id = self.repository.create_action_request(
+                        conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
+                        action_type=proposal.action_type, arguments=proposal.arguments,
+                        idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
+                    applied.append(({"action_id": str(action_id), "action_type": proposal.action_type,
+                                     "result_ref": outcome.result_ref, "summary": outcome.summary},
+                                    list(outcome.outbox)))
+        except _Stop as stop:
+            return stop.outcome
+        return applied
 
     async def resume(self, *, tenant_id: str, case_id: UUID, token: str, actor_id: str = "controller", event_id: str | None = None) -> dict[str, Any]:
         with self.connection_factory() as conn:

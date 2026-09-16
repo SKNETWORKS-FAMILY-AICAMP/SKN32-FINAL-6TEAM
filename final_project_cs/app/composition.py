@@ -220,7 +220,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      broker: Any | None = None, tools: ReadToolbox | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
                      config_path: str | Path | None = None,
-                     config: ProjectConfig | None = None) -> Controller:
+                     config: ProjectConfig | None = None,
+                     action_handlers: Any | None = None) -> Controller:
     """Assemble the application Controller and inject every concrete adapter.
 
     ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
@@ -253,6 +254,7 @@ def build_controller(*, registry: TeamRegistry | None = None,
         verification_policy=verification_policy,
         fact_queries=fact_queries,
         response_review=config.response_review,
+        action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
     )
 
 
@@ -285,6 +287,31 @@ def build_domain_routers() -> list:
                               chat_factory=chat_factory),
             # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
             build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
+
+
+def build_subject_resolver():
+    """Case 가 가리키는 대상을 확인하는 도메인 확인기(`[결정 2026-09-17]`).
+
+    ★선언이 없으면 `None` — 그 조립에서 `subject_ref` 를 보내면 422 다(조용히 무시하지 않는다).
+    """
+    try:
+        from app.modules.travel_ops.subjects import resolve_subject
+    except ImportError:
+        return None
+    return resolve_subject
+
+
+def build_action_handlers():
+    """승인 없이 적용되는 제안의 도메인 적용기(`[결정 2026-09-17]`).
+
+    ★선언이 없으면 빈 표 — 승인 없는 제안은 전부 escalated 로 간다.
+    """
+    from app.core.actions import ActionHandlers
+    try:
+        from app.modules.travel_ops.itinerary_actions import ACTION_HANDLERS
+    except ImportError:
+        return ActionHandlers()
+    return ActionHandlers(ACTION_HANDLERS)
 
 
 def build_verification(*, config=None):

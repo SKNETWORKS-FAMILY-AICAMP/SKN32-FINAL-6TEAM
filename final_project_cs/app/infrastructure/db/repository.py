@@ -39,10 +39,21 @@ def get_case_events(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[
         return [dict(zip(("event_id","aggregate_version","event_type","payload_json","actor_type","actor_id","created_at"), r)) for r in cur.fetchall()]
 
 
-def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, action_type: str, arguments: dict[str, Any], idempotency_key: str, status: str = "proposed") -> UUID:
+def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, action_type: str, arguments: dict[str, Any], idempotency_key: str, status: str = "proposed", provider_ref: str | None = None) -> UUID:
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status) VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments), idempotency_key, status))
+        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status, provider_ref) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments), idempotency_key, status, provider_ref))
         return cur.fetchone()[0]
+
+
+def find_action_request(conn: Connection, *, tenant_id: str, idempotency_key: str) -> dict[str, Any] | None:
+    """멱등 키로 이미 기록된 작업을 찾는다. 없으면 None."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT action_id, case_id, action_type, status, provider_ref FROM action_requests "
+                    "WHERE tenant_id=%s AND idempotency_key=%s", (tenant_id, idempotency_key))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return dict(zip(("action_id", "case_id", "action_type", "status", "provider_ref"), row))
 
 
 def create_approval(conn: Connection, *, action_id: UUID, decision: str, approver_id: str | None = None) -> UUID:

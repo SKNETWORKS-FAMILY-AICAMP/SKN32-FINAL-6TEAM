@@ -37,6 +37,23 @@ risk_level        : low | medium | high
 
 **Team이 승인을 우회할 수 없다는 게 핵심이다.**
 
+## 승인 없이 적용되는 제안 `[결정 2026-09-17]`
+
+v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 고치고 알리는 것(Pre-CS)은 우리 DB 안의 일정 버전에만** 적용한다. 그 자리를 코어가 도메인을 모르고 여는 규칙은 이렇다.
+
+| 조건 | 모두 참이어야 적용한다 |
+|---|---|
+| Team 결과 | `next_action=respond` 이고 제안의 `approval_required=false` |
+| 적용기 | 조립이 그 `action_type` 의 **적용기**를 주입했고, 적용기가 `auto_apply=True` 를 선언했다 |
+| 위험도 | 제안의 `risk_level=low` |
+| 사실 대조 | 도메인 대조 선언(`VerificationPolicy`)을 통과한다 — 승인 제안과 **같은 검사** |
+| Context | `degraded=false` |
+
+- **하나라도 거짓이면 적용하지 않고 `escalated`** 로 보낸다(`guardrail`: `action_handler_missing`·`action_requires_approval`·`action_proposal_verification_failed`·`degraded_context_blocks_action`). 제안을 조용히 버리지 않는다 — 전에는 `respond` 결과의 제안이 저장도 실행도 안 되고 사라졌다(`controller.py:353-354`, 2026-09-17 실측).
+- **적용 · `action_requests` 기록(`status=succeeded`) · Case 완료 전이 · 통지(outbox)는 한 트랜잭션**이다. 적용기가 「대상이 그 사이 바뀌었다」(`ActionConflict`)를 내면 그 부분만 되돌리고 `escalated`(`action_target_changed`) — 재계산 없이 다시 밀어 넣지 않는다.
+- 멱등 키의 대상은 **적용기가 인자에서 꺼낸 대상 id**다(v11 §4-E). 같은 키가 이미 `succeeded` 면 다시 적용하지 않는다.
+- ★**승인이 필요한 제안을 승인 뒤 실행하는 코드는 여전히 없다**(2026-09-17 실측, 저장소 전체 `UPDATE action_requests` 0건). 그 몫은 Booking Handoff(MVP 다음)다.
+
 ## 승인자 권한
 
 승인자는 `action:approve` scope를 가져야 한다.

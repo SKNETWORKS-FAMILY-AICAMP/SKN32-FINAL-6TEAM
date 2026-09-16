@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 
-def case_type_of(issue_code: str | None, *, fallback: str | None = None) -> str:
+def case_type_of(issue_code: str | None, *, fallback: str | None = None,
+                 hint: str | None = None, hint_wins: bool = False) -> str:
     """`issue_code` 의 접두를 돌려준다. 없으면 `fallback`, 그것도 없으면 빈 문자열.
 
     ★`fallback` 이 있는 이유는 **하위호환**이다. `issue_code` 가 없는 옛 Case
@@ -25,12 +26,26 @@ def case_type_of(issue_code: str | None, *, fallback: str | None = None) -> str:
     ★`_` 가 없는 코드는 **그대로 돌려준다** — 억지로 쪼개 팀을 고르지 않는다.
       받는 팀이 없으면 `RegistryError` 가 나고 Case 는 `escalated` 로 간다.
       모르는 것을 아무 팀에나 보내는 것보다 낫다.
+
+    ★`hint` 는 **분류가 대상 접두를 못 붙였을 때만** 쓴다(`[결정 2026-09-17]`).
+      Case 가 가리키는 대상(`state_json.subject_ref`)을 서버가 확인하면서 그 대상
+      부분의 종류를 힌트로 남긴다. 분류가 접두를 붙였으면 **분류가 이긴다** —
+      힌트는 「어느 객체 얘기인지 문장에 없다」를 메우는 자리이지 분류를 덮는
+      자리가 아니다.
+    ★예외 하나 — `hint_wins`. 클라이언트가 대상 부분을 **지정하고 서버가 확인한** 경우 그 종류는
+      추측이 아니라 사실이다. 화면 버튼이 보낸 「화면에서 다른 안 선택」 같은 문장에 분류가 아무
+      접두나 붙여도 그 사실이 이긴다(2026-09-17, 식당 항목이 activity 로 가서 escalated 된 것을 보고).
     """
     code = (issue_code or "").strip()
+    wanted = (hint or "").strip()
+    if wanted and hint_wins:
+        return wanted
     if not code:
-        return (fallback or "").strip()
+        return wanted or (fallback or "").strip()
     prefix, separator, _rest = code.partition("_")
-    return prefix if separator else code
+    if separator:
+        return prefix
+    return wanted or code
 
 
 __all__ = ["case_type_of"]

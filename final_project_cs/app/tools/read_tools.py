@@ -74,6 +74,13 @@ class ReadToolbox:
     #:  **안 넣으면 여행 도구가 전부 「모름」을 돌려주고 네트워크를 타지 않는다.**
     #:  테스트가 조용히 바깥으로 나가는 사고를 구조로 막는다.
     travel: Any | None = None
+    #: ★`[결정 2026-09-17]` 성립 점검기를 갈아 끼우는 자리. 없으면 `travel` 로 만든다.
+    #:  시나리오(재생 소스·한도)와 실운영이 **같은 도구 이름**으로 다른 점검기를 쓴다.
+    check: Callable[..., dict[str, Any]] | None = None
+    #: 경로 사건 소스. 없으면 `travel.route_events` 를 쓴다.
+    route_events: Any | None = None
+    #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
+    report_extractor: Callable[[str], dict[str, Any] | None] | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -134,6 +141,12 @@ class ReadToolbox:
             "read.transit":  self.transit,
             "read.supplier": self.supplier,
             "read.holiday":  self.holiday,
+            # ★`[결정 2026-09-17]` Case 버전의 일정 관리 — 일정·옛 버전·장소 목록·경로 사건·신고 내용
+            "read.itinerary": self.itinerary,
+            "read.itinerary_version": self.itinerary_version,
+            "read.place_catalog": self.place_catalog,
+            "read.route_events": self.route_events_for,
+            "read.customer_report": self.customer_report,
         }
 
     #: 여행 예약의 컬럼. ★`_one()` 이 zip 으로 붙이므로 SELECT 순서와 **같아야** 한다.
@@ -252,6 +265,89 @@ class ReadToolbox:
             latitude=float(latitude), longitude=float(longitude),
             at=_as_datetime(at))
 
+    # ── 일정(Trip) ──────────────────────────────────────────────
+    def _trip_store(self, scope: ToolContext):
+        from app.modules.travel_ops.itinerary import TripStore
+
+        return TripStore(scope.tenant_id)
+
+    def itinerary(self, scope: ToolContext, *, trip_id: Any = None,
+                  **_: Any) -> dict[str, Any] | None:
+        """그 여행의 **최신 일정 버전**. 이 고객의 여행이 아니면 `None`(있는지도 말하지 않는다)."""
+        if not trip_id:
+            return None
+        from app.modules.travel_ops.itinerary import item_to_dict
+
+        store = self._trip_store(scope)
+        with self.connection_factory() as conn:
+            try:
+                trip, items = store.latest(conn, UUID(str(trip_id)))
+            except (KeyError, ValueError):
+                return None
+        if str(trip["customer_id"]) != str(scope.customer_id):
+            return None
+        return {"trip": {"trip_id": str(trip["trip_id"]), "version": trip["version"],
+                         "title": trip["title"], "locale": trip["locale"],
+                         "party_size": trip["party_size"], "constraints": trip["constraints"] or {}},
+                "items": [item_to_dict(item) for item in items]}
+
+    def itinerary_version(self, scope: ToolContext, *, trip_id: Any = None, version: Any = None,
+                          **_: Any) -> dict[str, Any] | None:
+        """옛 일정 버전의 항목(되돌림용). 이 고객의 여행이 아니거나 없는 버전이면 `None`."""
+        if not trip_id or version is None:
+            return None
+        from app.modules.travel_ops.itinerary import item_to_dict
+
+        store = self._trip_store(scope)
+        with self.connection_factory() as conn:
+            try:
+                trip, _ = store.latest(conn, UUID(str(trip_id)))
+                if str(trip["customer_id"]) != str(scope.customer_id):
+                    return None
+                wanted = int(version)
+                if not 1 <= wanted <= trip["version"]:
+                    return None
+                items = store.items(conn, UUID(str(trip_id)), wanted)
+            except (KeyError, ValueError):
+                return None
+        return {"trip_id": str(trip_id), "version": wanted,
+                "items": [item_to_dict(item) for item in items]}
+
+    def place_catalog(self, scope: ToolContext, **_: Any) -> list[dict[str, Any]] | None:
+        """이 테넌트의 장소 목록 — 대안 후보를 고르는 재료. ★빈 목록은 「장소가 없다」는 아는 사실이다."""
+        store = self._trip_store(scope)
+        with self.connection_factory() as conn:
+            return store.places(conn)
+
+    def route_events_for(self, scope: ToolContext, *, targets: list[str] | None = None,
+                         **_: Any) -> dict[str, Any] | None:
+        """구간 대상들에 걸린 운행·통제 사건. 소스가 없으면 `None`.
+
+        ★`events=None` 은 「사건 없음」이 아니라 **못 읽음**이다(결정 15 의 치명).
+          `unsupported` 는 소스가 **답할 수 없는** 대상 — 「사건 없음」과 다르다.
+        """
+        source = self.route_events or (getattr(self.travel, "route_events", None) if self.travel else None)
+        if source is None:
+            return None
+        wanted = [str(t) for t in (targets or [])]
+        unsupported = getattr(source, "unsupported", None)
+        return {"events": source.affecting(wanted),
+                "unsupported": list(unsupported(wanted)) if callable(unsupported) else []}
+
+    def customer_report(self, scope: ToolContext, *, text: str | None = None,
+                        **_: Any) -> dict[str, Any] | None:
+        """고객 문장에서 신고 내용을 뽑는다. 뽑는 함수가 없으면 `None`(모름).
+
+        ★뽑기가 **실패한 것**은 `{"type": None, "error": ...}` 로 돌려준다 — 「못 알아들음」과
+          「뽑을 수단이 없음」을 Team 이 가르게. 실패를 빈 결과로 바꾸지 않는다.
+        """
+        if self.report_extractor is None or not text:
+            return None
+        try:
+            return self.report_extractor(str(text))
+        except Exception as exc:                      # ★세어서 남긴다 — 조용히 삼키지 않는다
+            return {"type": None, "error": f"{type(exc).__name__}: {exc}"[:200]}
+
     def disruptions(self, scope: ToolContext, *, place_id: Any = None,
                     latitude: float | None = None, longitude: float | None = None,
                     weather_sensitive: bool | None = None, region: str = "서울",
@@ -263,14 +359,16 @@ class ReadToolbox:
           감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
         ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
         """
+        place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
+                 "weather_sensitive": bool(weather_sensitive), "district": district}
+        if self.check is not None:
+            return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
         if self.travel is None:
             return None
         from app.infrastructure.travel.disruptions import DisruptionCheck
 
         return DisruptionCheck(self.travel).check(
-            place={"place_id": place_id, "latitude": latitude, "longitude": longitude,
-                   "weather_sensitive": bool(weather_sensitive), "district": district},
-            starts_at=_as_datetime(starts_at), region=str(region))
+            place=place, starts_at=_as_datetime(starts_at), region=str(region))
 
     def weather_warning(self, scope: ToolContext, *, region: str = "서울",
                         **_: Any) -> dict[str, Any] | None:

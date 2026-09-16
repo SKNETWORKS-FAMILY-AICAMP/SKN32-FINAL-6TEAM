@@ -165,14 +165,22 @@ Activity: "10/03 15시 → 10/04 10시" 후보를 낸다
 ```python
 capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
                          "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
-                         "activity.propose_change"]     # 대안을 제안한다 (승인 대기)
+                         "activity.propose_change",     # 대안을 제안한다 (승인 대기)
+                         "activity.itinerary"]          # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["activity"]                    # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "policy", "db_facts", "history"]
-allowed_tools         = ["read.booking", "read.policy", "read.place", "read.weather"]
+required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+allowed_tools         = ["read.booking", "read.policy", "read.place", "read.disruptions",
+                         "read.itinerary", "read.itinerary_version", "read.place_catalog",
+                         "read.customer_report"]
 knowledge_scope       = ["activity", "cancellation", "refund", "weather"]
-max_steps             = 6
+max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "activity.check_feasible"
 ```
+
+### `[2026-09-17]` Case 버전의 여행 일정 관리 — `activity.itinerary`
+
+여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)면 `select_capability(intent, input_text, state)` 가 고른다. **감시 Case**(`trigger_source=schedule`)는 그 항목을 `read.disruptions` 로 다시 점검해 `disrupted` 면 대안 하나를 제안하고(액-02), **품절 문의**는 동선 위 매장을 답하며 일정은 안 바꾼다 — 재고는 `[미확인]`(액-08). **재요청**(다른 안 · 되돌리기)도 받는다.
+계산은 시나리오용 버전과 같은 `itinerary_changes.py`, 쓰기는 `itinerary.apply` 제안 → 코어가 Case 완료와 한 트랜잭션으로 적용·통지([../actions/approval.md](../actions/approval.md)). `policy` 를 `required_context` 에서 뺐고(정책 0건이 degraded 를 만든다) `max_steps` 는 후보 재점검 때문에 12. 대조 시험 `tests/scenario/test_case_version_day.py`.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 

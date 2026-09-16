@@ -149,3 +149,8 @@ evidence 예산 400자로 낮춰서야 완주
 - [memory.md](memory.md) — 이력
 - [../teams/team-contract/index.md](../teams/team-contract/index.md) — `ContextPack` 계약
 - [../teams/team-boundary.md](../teams/team-boundary.md) — 왜 Team이 직접 안 읽는가
+
+## `[결정 2026-09-17]` 정책 근거가 필요 없는 Team
+
+`ContextInputs.policy_required=False` 이면(Team 이 `required_context` 에 `policy` 를 선언하지 않았을 때) **정책 결과가 없다는 이유로 `degraded` 로 표시하지 않는다.** 조회를 시도했다가 **실패한 것**(`retrieval_failed`)은 여전히 `degraded` 다 — 모르는 것과 필요 없는 것은 다르다.
+

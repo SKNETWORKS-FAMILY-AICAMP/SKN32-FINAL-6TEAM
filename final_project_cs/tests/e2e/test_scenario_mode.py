@@ -142,3 +142,69 @@ def test_everything_is_hidden_when_the_setting_is_off(monkeypatch):
     assert client.get("/tripilot").status_code == 404
     assert client.get("/scenario/status").status_code == 404
     assert client.post("/scenario/start").status_code == 404
+
+
+# ── Case 엔진 — 같은 하루를 Case 버전으로 ───────────────────────
+def _case_classifier(message):
+    """★대상이 없는 재요청(「다른 안으로 바꿔줘」)은 접두를 붙이지 않는다 — 실제 분류 규칙 3."""
+    if "바꿔" in message:
+        return {"intent": "adjust_reject", "issue_code": "other", "sentiment": "neutral"}
+    return _classifier(message)
+
+
+@pytest.fixture()
+def case_client(monkeypatch):
+    original = settings_module.get_settings()
+    settings = original.model_copy(update={"scenario_mode_enabled": True})
+    monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
+    monkeypatch.setattr(security, "get_settings", lambda: settings)
+    client = TestClient(create_app(
+        classifier=lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_scenario_router(classifier_factory=lambda: _case_classifier,
+                                              chat_factory=_Chat)]))
+    yield client
+    client.post("/scenario/stop")
+
+
+def test_the_whole_day_runs_through_cases_when_the_engine_is_case(case_client):
+    client = case_client
+    feed = client.post("/scenario/start", json={"engine": "case"}).json()
+    assert feed["engine"] == "case" and feed["version"] == 1
+
+    def step():
+        return client.post("/scenario/next").json()
+
+    feed = step()                                              # 09:00 액-02 — 감시 Case
+    assert feed["version"] == 2 and any("아쿠아리움" in t for t in _texts(feed, notice=True))
+    assert step()["version"] == 3                              # 10:45 이동-B1
+    step()                                                     # 11:15
+    feed = step()                                              # 13:00 요식-P3
+    feed = client.post("/scenario/message", json={"message": feed["suggestion"]}).json()
+    assert feed["version"] == 4
+    assert _texts(feed, notice=True)[-1] and feed["chat"][-1]["case_status"] == "resolved"
+    step()                                                     # 15:00
+    step()                                                     # 15:30
+    assert step()["version"] == 5                              # 17:10 이동-A6
+    step()                                                     # 18:00
+    feed = client.post("/scenario/message", json={"message": "저녁 식당이 오늘 임시휴무래요"}).json()
+    assert feed["version"] == 6
+    step()                                                     # 19:40
+    feed = client.post("/scenario/message",
+                       json={"message": "라면 선물세트랑 스팸 선물세트가 품절이에요"}).json()
+    assert "[미확인]" in feed["chat"][-1]["text"] and feed["version"] == 6
+
+    # 운영콘솔이 읽는 것 — 감시 Case 셋 + 고객 Case 셋, 전부 종결, 담당 Team 이 붙었다
+    ops = client.get("/scenario/ops").json()
+    assert len(ops["cases"]) == 6 and all(c["status"] == "resolved" for c in ops["cases"]), ops["cases"]
+    assert {c["owner_team"] for c in ops["cases"]} == {"activity", "mobility", "dining"}
+
+    # 재요청 — 화면의 다른 안 · 채팅의 「다른 안으로 바꿔줘」
+    lunch = next(i for i in feed["items"] if i["seq"] == 5)
+    feed = client.post("/scenario/alternate", json={"item_id": lunch["item_id"],
+                                                    "choice": lunch["other_options"][0]["key"]}).json()
+    assert feed["version"] == 7
+    feed = client.post("/scenario/message", json={"message": "다른 안으로 바꿔줘"}).json()
+    assert feed["version"] == 8 and feed["chat"][-1]["case_status"] == "resolved"
+
+    # 「다시 시작」은 엔진을 안 바꾼다
+    assert client.post("/scenario/start", json={}).json()["engine"] == "case"

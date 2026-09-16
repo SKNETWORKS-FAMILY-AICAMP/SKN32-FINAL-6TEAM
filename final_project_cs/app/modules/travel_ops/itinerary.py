@@ -55,6 +55,39 @@ class Item:
                     place=place if place else self.place)
 
 
+def _iso(moment: datetime | None) -> str | None:
+    return moment.isoformat() if moment else None
+
+
+def _uuid(value: Any) -> UUID | None:
+    return None if value in (None, "") else UUID(str(value))
+
+
+def item_to_dict(item: Item) -> dict[str, Any]:
+    """항목을 JSON 으로 — 읽기 도구의 결과와 제안 인자(`itinerary.apply`)가 이 모양을 쓴다."""
+    return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind, "title": item.title,
+            "place_id": str(item.place_id) if item.place_id else None,
+            "starts_at": _iso(item.starts_at), "ends_at": _iso(item.ends_at),
+            "locked": item.locked, "booking_id": str(item.booking_id) if item.booking_id else None,
+            "replaces_item_id": str(item.replaces_item_id) if item.replaces_item_id else None,
+            "detail": item.detail, "place": item.place}
+
+
+def item_from_dict(data: dict[str, Any]) -> Item:
+    """`item_to_dict` 의 반대. ★시각은 오프셋이 붙은 ISO 문자열이어야 한다 — 없으면 거부한다."""
+    starts = datetime.fromisoformat(str(data["starts_at"]))
+    ends = datetime.fromisoformat(str(data["ends_at"])) if data.get("ends_at") else None
+    for moment in (starts, ends):
+        if moment is not None and moment.tzinfo is None:
+            raise ValueError("itinerary item time must carry a UTC offset")
+    return Item(item_id=UUID(str(data["item_id"])), seq=int(data["seq"]), kind=str(data["kind"]),
+                title=str(data["title"]), place_id=_uuid(data.get("place_id")), starts_at=starts,
+                ends_at=ends, locked=bool(data.get("locked", False)),
+                booking_id=_uuid(data.get("booking_id")),
+                replaces_item_id=_uuid(data.get("replaces_item_id")),
+                detail=dict(data.get("detail") or {}), place=data.get("place"))
+
+
 PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
                  "weather_sensitive", "attributes")
 

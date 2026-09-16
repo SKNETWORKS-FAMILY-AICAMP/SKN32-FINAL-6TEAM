@@ -87,14 +87,29 @@ Mobility: "오후 순서를 B→A→C 로 바꾸면 이동 40분이 줄어든다
 `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception"]
+capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception",
+                         "mobility.itinerary"]         # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["mobility"]                 # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "policy", "db_facts", "history"]
-allowed_tools         = ["read.route", "read.transit", "read.policy"]
+required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+allowed_tools         = ["read.route", "read.transit", "read.policy", "read.route_events",
+                         "read.itinerary", "read.itinerary_version", "read.place_catalog",
+                         "read.customer_report"]
 knowledge_scope       = ["mobility", "transit", "route_exception"]
-max_steps             = 6
+max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "mobility.check_route"
 ```
+
+### `[2026-09-17]` Case 버전의 여행 일정 관리 — `mobility.itinerary`
+
+**시나리오용 여행 버전(`trip_watch`·`trip_desk`)이 하던 일을 이 Team 이 Case 로 한다.** 여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)가 오면 `select_capability(intent, input_text, state)` 가 `mobility.itinerary` 를 고른다.
+
+- **감시 Case**(`trigger_source=schedule`) — 구간 사건을 `read.route_events` 로 **다시** 읽고, 계획한 수단이 막혔으면 경로를 다시 고른다(이동-B1 · 이동-A6). 사건을 못 읽으면(`events=None`) 「사건 없음」으로 넘기지 않고 escalate 한다(결정 15).
+- **재요청** — 다른 안으로(`change`) · 되돌리기(`rollback`).
+
+- 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
+- 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
+- `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
+- 하루 전체 대조: `tests/scenario/test_case_version_day.py` — 같은 재생 입력에서 두 버전의 버전 수·마지막 항목·통지 문구가 같다.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 
