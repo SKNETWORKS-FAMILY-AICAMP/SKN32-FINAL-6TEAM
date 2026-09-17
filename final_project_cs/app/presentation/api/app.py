@@ -14,7 +14,7 @@ from app.presentation.ui import mount_ui
 
 def create_app(controller=None, classifier=None, *,
                composer_write_router=None, composer_auth_router=None,
-               domain_routers=None, subject_resolver=None) -> FastAPI:
+               domain_routers=None, subject_resolver=None, subject_interpreter=None) -> FastAPI:
     """릴리즈 빌드는 Composer 없이 뜬다.
 
     ★v9 §8-D — **cs 소스 안에 Composer 구현을 두지 않는다.** 2026-09-06 이전에는
@@ -48,7 +48,9 @@ def create_app(controller=None, classifier=None, *,
     # ★대상 확인기도 조립이 만든다 — 이 층은 대상이 무엇인지 모른다(INV-CS-ARCH-001).
     if subject_resolver is None:
         subject_resolver = composition.build_subject_resolver()
-    app.include_router(build_router(classifier, runtime_controller, subject_resolver))
+    if subject_interpreter is None:
+        subject_interpreter = composition.build_subject_interpreter()
+    app.include_router(build_router(classifier, runtime_controller, subject_resolver, subject_interpreter))
     app.include_router(build_outbox_router())
     # ★도메인 라우터는 조립이 만든다 — 이 층은 도메인을 import 하지 못한다
     #   (INV-CS-ARCH-001). 테스트는 `domain_routers=[...]` 로 갈아 끼운다.

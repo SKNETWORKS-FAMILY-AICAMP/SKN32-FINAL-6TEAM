@@ -63,6 +63,9 @@ def _classifier(message: str) -> dict[str, str]:
 
 
 def _extractor(message: str) -> dict:
+    if "되돌려" in message:
+        import re
+        return {"type": "rollback", "to_version": int(re.findall(r"\d+", message)[0])}
     if "바꿔" in message:
         return {"type": "change"}
     for report in REPORTS.values():
@@ -323,3 +326,57 @@ def test_the_same_disruption_opens_one_case(case_world):
                                    case_id=first.opened[0]["case_id"])["status"] == "resolved"
     second = case_world["engine"].tick()
     assert second.opened == [] and _latest(case_world)[0]["version"] == 2
+
+
+# ── 실제 Gemma 처럼 틀리게 분류해도 담당이 맞는가 ─────────────────
+def _gemma_like_classifier(message: str) -> dict[str, str]:
+    """★2026-09-17 실제 gemma4:12b 실측(문장마다 3회 같은 결과)을 흉내 낸다 — 접두가 자주 빗나간다."""
+    if "늦" in message:
+        return {"intent": "incident_report", "issue_code": "activity_time_conflict", "sentiment": "negative"}
+    if "휴무" in message:
+        return {"intent": "incident_report", "issue_code": "dining_other", "sentiment": "negative"}
+    if any(word in message for word in ("바꿔", "되돌려")):
+        return {"intent": "adjust_reject", "issue_code": "booking_change_request", "sentiment": "neutral"}
+    return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}
+
+
+def test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong(case_world):
+    world = dict(case_world)
+    check, route_events = _sources(world["clock"])
+    world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
+                                 classifier=_gemma_like_classifier, report_extractor=_extractor,
+                                 clock=world["clock"])
+    outcomes = _run_case_day(world)
+    for key, team in (("p3", "dining"), ("p7", "dining"), ("a8", "activity")):
+        view = outcomes[key]
+        assert view["case_status"] == "resolved" and view["owner_team_id"] == team, (key, view)
+    assert outcomes["p3"]["classification"]["issue_code"] == "activity_time_conflict"   # 분류는 그대로 남는다
+    assert _latest(world)[0]["version"] == 6
+
+    engine, customer, trip_id = world["engine"], world["customer"], world["trip_id"]
+    free = engine.message(customer_id=customer, trip_id=trip_id, text="다른 안으로 바꿔줘", request_id="g-swap")
+    assert free["case_status"] == "resolved" and free["owner_team_id"] == "dining", free
+    back = engine.message(customer_id=customer, trip_id=trip_id, text="6번 일정으로 되돌려 주세요",
+                          request_id="g-back")
+    assert back["case_status"] == "resolved", back
+    trip, items = _latest(world)
+    assert trip["version"] == 8 and _shape(items) == _shape(_items_at(world, 6))
+
+
+def test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification(case_world):
+    def broken(message: str) -> dict:
+        raise TimeoutError("ollama down")
+
+    world = dict(case_world)
+    check, route_events = _sources(world["clock"])
+    world["engine"] = CaseEngine(tenant_id=world["tenant"], check=check, route_events=route_events,
+                                 classifier=_classifier, report_extractor=broken, clock=world["clock"])
+    view = _say(world, "closed")
+    assert view["owner_team_id"] == "dining", view          # 분류 접두(dining_hours)로 갔다
+    assert view["case_status"] != "resolved", view           # 추출이 죽었는데 확답하지 않는다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT state_json FROM customer_cases WHERE tenant_id=%s AND case_id=%s",
+                    (world["tenant"], view["case_id"]))
+        state = cur.fetchone()[0]
+    assert state["interpretation"]["error"].startswith("TimeoutError"), state
+    assert state.get("routing_hint_verified") is not True, state

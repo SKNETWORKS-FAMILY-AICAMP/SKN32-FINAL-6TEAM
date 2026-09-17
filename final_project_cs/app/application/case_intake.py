@@ -14,6 +14,10 @@
   - `labels` — 시스템이 여는 Case 는 무엇이 문제인지 **이미 안다.** LLM 분류를 부르지
     않고 그 라벨로 `CLASSIFIED` 를 남긴다. 사람이 쓴 글이 아니므로 추측할 것이 없다
   - `trigger_source` — v11 §4-B. 고객이 연 것인지 감시가 연 것인지 기록한다
+  - `subject_interpreter` — `[2026-09-17]` 대상이 정해진 고객 Case 는 **분류 직전에** 문장을 해석해
+    담당을 정한다. 실제 Gemma 로 재 보니 신고 추출(종류)은 정확한데 분류 접두는 자주 빗나갔다 —
+    「점심에 70분 늦을 것 같아요」가 `activity_time_conflict` 로 가서 사람에게 넘어갔다.
+    해석은 **트랜잭션 밖**에서 하고, 결과는 분류와 **같은 이벤트**의 `state_patch` 로 기록한다
 """
 from __future__ import annotations
 
@@ -45,7 +49,8 @@ def open_case(conn: Any, *, repository: Any, tenant_id: str, customer_id: UUID, 
               idempotency_key: str | None = None, subject_ref: dict[str, Any] | None = None,
               subject_resolver: Callable[..., Any] | None = None, trigger_source: str = "customer",
               trigger: dict[str, Any] | None = None, labels: dict[str, str] | None = None,
-              classifier: Callable[[str], dict[str, str]] | None = None) -> OpenedCase:
+              classifier: Callable[[str], dict[str, str]] | None = None,
+              subject_interpreter: Callable[..., dict[str, Any]] | None = None) -> OpenedCase:
     key = idempotency_key or make_idempotency_key(
         tenant_id=tenant_id, request_id=request_id, action_type="case.create",
         business_subject=f"{customer_id}:{message}")
@@ -100,8 +105,18 @@ def open_case(conn: Any, *, repository: Any, tenant_id: str, customer_id: UUID, 
                             payload={label: labels[label] for label in REQUIRED_LABELS},
                             actor_type=actor_type, actor_id=actor_id)
     else:
+        patch: dict[str, Any] = {}
+        if subject_interpreter is not None and state.get("subject_ref"):
+            try:
+                reading = subject_interpreter(text=message, subject_ref=state["subject_ref"]) or {}
+            except Exception as exc:            # ★삼키지 않는다 — 실패를 상태에 남기고 분류 경로로 간다
+                reading = {"error": f"{type(exc).__name__}: {exc}"[:200]}
+            patch["interpretation"] = reading
+            if reading.get("routing_hint"):
+                patch["routing_hint"] = reading["routing_hint"]
+                patch["routing_hint_verified"] = True
         classify_case(conn, tenant_id=tenant_id, case_id=case_id, text=message,
-                      classifier=classifier, actor_id=actor_id)
+                      classifier=classifier, actor_id=actor_id, state_patch=patch or None)
     return OpenedCase(case_id=case_id, created=True)
 
 

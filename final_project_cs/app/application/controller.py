@@ -72,7 +72,7 @@ class Controller:
 
     #: ★Team 이 볼 수 있는 Case 상태 칸 — **이름이 중립인 것만.** 무엇을 가리키는지는
     #:  도메인이 채운다(`[결정 2026-09-17]` wiki `external/rest-endpoints.md` subject_ref).
-    TEAM_STATE_KEYS = ("subject_ref", "trigger_source", "trigger")
+    TEAM_STATE_KEYS = ("subject_ref", "trigger_source", "trigger", "interpretation")
 
     @classmethod
     def _team_state(cls, case: dict[str, Any]) -> dict[str, Any]:

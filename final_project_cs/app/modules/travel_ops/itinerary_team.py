@@ -85,6 +85,15 @@ class ItineraryWork:
 
         kind = request.get("type")
         report: dict[str, Any] = {}
+        reading = (state.get("interpretation") or {}).get("report")
+        if not kind and isinstance(reading, dict) and reading.get("type"):
+            # ★접수가 분류 직전에 이미 뽑았다 — 같은 문장을 모델에 두 번 묻지 않는다.
+            report, kind = reading, reading["type"]
+            ctx["evidence"] = self._evidence(task, source_id="case.interpretation",
+                                             claim="접수 때 고객 문장에서 뽑은 신고", value=report,
+                                             base=ctx["evidence"])
+            if kind == "other":
+                return self._escalate(task, "report_not_understood", ctx["evidence"])
         if not kind:
             report = self._read(task, "read.customer_report", {"text": task.input_text}, seen) or {}
             ctx["evidence"] = self._evidence(task, source_id="read.customer_report",
@@ -134,7 +143,7 @@ class ItineraryWork:
 
     def _rollback(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
         ref, trip, items = ctx["ref"], ctx["trip"], ctx["items"]
-        to_version = ctx["request"].get("to_version")
+        to_version = ctx["report"].get("to_version")
         if to_version is None:
             return self._unknown(task, "되돌릴 버전", ctx["evidence"])
         base = int(ref.get("base_version") or trip["version"])

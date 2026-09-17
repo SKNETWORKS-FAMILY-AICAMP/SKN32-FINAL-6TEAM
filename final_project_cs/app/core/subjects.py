@@ -37,4 +37,9 @@ class ResolvedSubject:
 
 SubjectResolver = Callable[..., ResolvedSubject]
 
-__all__ = ["ResolvedSubject", "SubjectNotFound", "SubjectResolver", "SubjectUnsupported"]
+#: `[2026-09-17]` 대상이 정해진 고객 Case 의 문장 해석기 — **트랜잭션 밖**에서 분류 직전에 부른다.
+#:  `interpreter(*, text, subject_ref) -> {"routing_hint": str | None, "report": dict | None}`
+#:  돌려준 `routing_hint` 는 확인된 힌트로 기록돼 분류 접두보다 우선한다.
+SubjectInterpreter = Callable[..., dict[str, Any]]
+
+__all__ = ["ResolvedSubject", "SubjectInterpreter", "SubjectNotFound", "SubjectResolver", "SubjectUnsupported"]

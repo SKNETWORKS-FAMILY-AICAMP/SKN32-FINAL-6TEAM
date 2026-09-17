@@ -44,7 +44,7 @@ class Classifier(Protocol):
 
 def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
                   classifier: Classifier | None, actor_id: str,
-                  expected_version: int = 1) -> EventType:
+                  expected_version: int = 1, state_patch: dict[str, Any] | None = None) -> EventType:
     """분류를 수행하고 그 결과를 **한 문으로** 기록한다.
 
     ★반드시 Case 생성 트랜잭션 **밖에서** 부른다. 안에서 부르면 외부 provider 를
@@ -75,6 +75,9 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
         payload: dict[str, Any] = dict(result)
     except Exception:
         event, payload = EventType.CLASSIFICATION_FAILED, {"failure_code": FAILURE_CODE}
+    if state_patch:
+        # ★`[2026-09-17]` 분류와 **같은 이벤트**로 기록한다 — Case 상태는 한 문으로만 바뀐다.
+        payload["state_patch"] = dict(state_patch)
 
     with conn.transaction():
         transition_case(conn, tenant_id=tenant_id, case_id=case_id,

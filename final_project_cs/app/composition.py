@@ -149,6 +149,25 @@ def _instantiate_team(implementation: type, tools: ReadToolbox, llm: Any | None)
         raise CompositionError(f"cannot instantiate Team implementation {implementation}: {exc}") from exc
 
 
+def build_report_extractor():
+    """고객 문장에서 여행 신고(늦음·휴무·품절·재요청)를 뽑는 함수 — Case 버전 Team 의 `read.customer_report`.
+
+    ★`[2026-09-17]` 이 자리가 비어 있었다. 시험과 시나리오 모드는 조립기(`case_engine`)에 직접
+      넣어서 돌았고, **운영 조립(`build_registry`)만 안 넣어** 실제 `/v1/cases` 로 온 여행 신고가
+      Team 에서 「신고 내용 모름」으로 사람에게 갈 자리였다.
+    ★Ollama(Gemma 4)가 설정돼 있을 때만 만든다. 없으면 `None` — Team 은 지어내지 않고 escalate 한다.
+      만드는 것 자체는 I/O 가 없다(부를 때 나간다).
+    """
+    from app.infrastructure.ollama_chat import from_settings
+
+    chat = from_settings(get_settings())
+    if chat is None:
+        return None
+    from app.modules.travel_ops.trip_intake import extract
+
+    return lambda text: extract(text, chat)
+
+
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
@@ -162,7 +181,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         from app.infrastructure.travel import build_travel_sources
 
         tools = ReadToolbox(get_connection, policy_search=search_policy,
-                            travel=build_travel_sources(get_settings()))
+                            travel=build_travel_sources(get_settings()),
+                            report_extractor=build_report_extractor())
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -301,6 +321,15 @@ def build_subject_resolver():
     return resolve_subject
 
 
+def build_subject_interpreter():
+    """`[2026-09-17]` 대상이 정해진 고객 Case 의 문장 해석기. 선언이 없으면 `None`."""
+    try:
+        from app.modules.travel_ops.subjects import make_subject_interpreter
+    except ImportError:
+        return None
+    return make_subject_interpreter(build_report_extractor())
+
+
 def build_action_handlers():
     """승인 없이 적용되는 제안의 도메인 적용기(`[결정 2026-09-17]`).
 
@@ -334,5 +363,5 @@ def build_verification(*, config=None):
     return TRAVEL_OPS_POLICY, FACT_QUERIES
 
 
-__all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller",
+__all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller", "build_report_extractor",
            "build_graph_store", "build_registry", "build_team_executor"]

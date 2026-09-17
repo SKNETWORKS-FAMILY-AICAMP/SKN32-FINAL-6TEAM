@@ -65,8 +65,9 @@ def resolve_subject(conn: Any, *, tenant_id: str, customer_id: UUID,
     recent = recent_changed_item(store, conn, trip_id, trip["version"], items)
 
     normalized = {"kind": KIND, "id": str(trip_id), "version": trip["version"],
-                  "part_id": str(part_id) if part_id else None,
+                  "part_id": str(part_id) if part_id else None, "part_kind": part_kind,
                   "recent_part_id": str(recent.item_id) if recent else None,
+                  "recent_part_kind": recent.kind if recent else None,
                   "base_version": subject_ref.get("base_version"),
                   "request": subject_ref.get("request")}
     hint = part_kind or (recent.kind if recent else None)
@@ -74,4 +75,32 @@ def resolve_subject(conn: Any, *, tenant_id: str, customer_id: UUID,
     return ResolvedSubject(subject_ref=normalized, routing_hint=hint, hint_is_verified=part_kind is not None)
 
 
-__all__ = ["KIND", "recent_changed_item", "resolve_subject"]
+#: 신고 종류 → 그 일을 맡는 대상 종류(= Team). 재요청은 **대상 항목의 종류**를 따른다.
+REPORT_OWNER = {"delay": "dining", "closed": "dining", "stock_out": "activity"}
+
+
+def make_subject_interpreter(extractor):
+    """`[2026-09-17]` 여행 Case 의 문장 해석기 — 신고 종류로 담당을 정한다(`app/core/subjects.py`).
+
+    ★화면 버튼처럼 **구조가 정해진 요청**(`subject_ref.request.type`)은 모델을 부르지 않는다.
+    ★모르면 힌트를 내지 않는다 — 그때는 분류 접두로 간다(지어내지 않는다).
+    """
+    def interpret(*, text: str, subject_ref: dict) -> dict:
+        request = dict(subject_ref.get("request") or {})
+        report = {k: v for k, v in request.items() if k != "at"} if request.get("type") else None
+        if report is None:
+            if extractor is None:
+                return {"routing_hint": None, "report": None, "reason": "no_extractor"}
+            report = extractor(text)
+        kind = (report or {}).get("type")
+        if kind in REPORT_OWNER:
+            hint = REPORT_OWNER[kind]
+        elif kind in ("change", "rollback"):
+            hint = subject_ref.get("part_kind") or subject_ref.get("recent_part_kind")
+        else:
+            hint = None
+        return {"routing_hint": hint, "report": report}
+    return interpret
+
+
+__all__ = ["KIND", "REPORT_OWNER", "make_subject_interpreter", "recent_changed_item", "resolve_subject"]

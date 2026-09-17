@@ -114,7 +114,8 @@ def _run_case_detached(controller: Any, *, tenant_id: str, case_id: UUID, actor_
 
 
 def build_router(classifier: Classifier | None = None, controller: Any | None = None,
-                 subject_resolver: Callable[..., Any] | None = None) -> APIRouter:
+                 subject_resolver: Callable[..., Any] | None = None,
+                 subject_interpreter: Callable[..., Any] | None = None) -> APIRouter:
     router = APIRouter()
     @router.post("/v1/cases", status_code=201)
     def create(request: CreateCase, background: BackgroundTasks,
@@ -132,7 +133,8 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
                                    message=request.message, channel=request.channel,
                                    actor_type="api", actor_id=principal.key_id,
                                    idempotency_key=request.idempotency_key, subject_ref=subject,
-                                   subject_resolver=subject_resolver, classifier=classifier)
+                                   subject_resolver=subject_resolver, classifier=classifier,
+                                   subject_interpreter=subject_interpreter)
             except IdempotencyConflict as exc:
                 raise _error(409, "idempotency_key_reused", str(exc)) from exc
             except SubjectNotFound as exc:

@@ -87,3 +87,79 @@ python program/scripts/check_wiki.py
 ```
 
 첫 실행 위반 5건 중 1건이 이 작업 — `final_project_cs/wiki/teams/activity.md (304줄)` 300줄 초과. 절을 줄여 295줄로 고친 뒤 **위반 4건**(이 작업이 건드리지 않은 `acop_dojo/wiki/guide.md` · `acop_dojo/wiki/handoff-2026-09-14.md` · 허브 `wiki/travel_api_competitor_census_2026-09-11.md` · `decisions/D-017`).
+
+## 7. 후속(2026-09-17 오후) — 운영 조립 · 실제 Gemma
+
+### 7-1. 시험
+
+```powershell
+python -m pytest tests/scenario/test_case_version_day.py tests/unit/travel/test_trip_intake.py -q
+```
+
+```
+16 passed in 10.34s
+```
+
+(그 뒤 해석기 실패 시험 1건을 더해 `test_case_version_day.py` 7건.) 새로 넣은 것:
+
+- `test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong` — 아래 7-2 에서 실제 Gemma 가 붙인 **틀린 접두를 그대로** 내는 분류기로 하루 + 자유 재요청 + 되돌리기. 늦음·휴무 → dining, 품절 → activity, 전부 `resolved`, 일정 v8 이 v6 과 같은 모양.
+- 일부러 깨뜨림: `case_engine.py` 의 `self.interpreter` 를 `None` 으로 → `1 failed, 5 passed in 9.61s`(바로 이 시험). 원복 후 통과.
+- `test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classification` — 추출기가 `TimeoutError` → `state_json.interpretation.error` 에 남고 분류 접두(dining)로 가며 `resolved` 가 아니다.
+- `test_trip_intake.py` — 되돌리기 번호가 문장에 없으면 버린다 · 해석기가 신고 종류로 담당을 고른다 · 구조가 정해진 요청은 모델을 안 부른다.
+- 앞서 넣은 것: `tests/e2e/test_case_version_rest.py`(REST 종단) · `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(승인 대기 도달) · `tests/unit/test_report_extractor_wiring.py`(운영 조립 추출기).
+
+넓은 범위(라이브 제외, ML 시험 폴더 제외 — 다른 세션 작업):
+
+```powershell
+python -m pytest tests/unit tests/contract tests/architecture tests/integration tests/scenario tests/e2e tests/security -q -m "not live" --ignore=tests/unit/ml
+```
+
+```
+3 failed, 1079 passed, 36 warnings in 85.79s
+```
+
+실패 3건은 §5 와 같은 RAG 시험(OpenAI 크레딧 소진)이다.
+
+### 7-2. 실제 gemma4:12b — 문장별 분류·추출, 3회 × 3실행
+
+스크립트는 세션 임시 폴더(저장소 밖)에 있다: 문장 7개를 분류기(`composition.build_classifier`)와 추출기(`composition.build_report_extractor`)에 각 3회. **3실행 × 3회 = 9회 모두 같은 값**이었다.
+
+| 문장 | 분류(intent, issue_code) | 추출 |
+|---|---|---|
+| 팝업스토어 줄이 길어서 점심에 70분 늦을 것 같아요 | incident_report, **activity_time_conflict** | delay, 70 |
+| 저녁 먹으려던 식당이 오늘 임시휴무래요 | incident_report, dining_other | closed |
+| 라면 선물세트랑 스팸 선물세트가 품절이에요… | **other, other** | stock_out, 제품 2 |
+| 다른 안으로 바꿔줘 | adjust_reject, **booking_change_request** | change |
+| 화면에서 다른 안 선택 | other, other | change |
+| 6번 일정으로 되돌려 주세요 | adjust_reject, **booking_change_request** | rollback, 6 (고치기 전: change) |
+| 그냥 궁금한 게 있어요 | other, other | other |
+
+한 호출 1.4~2.4초. 굵은 접두는 담당과 어긋난다 — 추출 종류는 7문장 모두 맞다.
+
+### 7-3. 실제 gemma4:12b — 하루 전체(감시는 재생, 고객 문장만 실제 모델)
+
+| 고객 단계 | 고치기 전(1실행) | 고친 뒤(3실행, 모두 같음) |
+|---|---|---|
+| 늦음 | escalated · activity · `report_delay_not_handled_by_team` | **resolved · dining** |
+| 휴무 | resolved · dining | resolved · dining |
+| 품절 | escalated · mobility · `report_stock_out_not_handled_by_team` | **resolved · activity** |
+| 화면 버튼 다른 안 | resolved · dining | resolved · dining |
+| 다른 안으로 바꿔줘 | escalated · booking_handoff · `degraded_context` | **resolved · dining** |
+| 6번 일정으로 되돌려 주세요 | (재지 않음) | **resolved · dining**, v9 |
+| 그냥 궁금한 게 있어요 | escalated · mobility · `report_not_understood` | escalated · dining · `report_not_understood` (의도한 결과 — 무엇을 원하는지 모르면 사람에게) |
+
+`resolved`: 고치기 전 2/6 = 33% → 고친 뒤 6/7 = 86%(분모 = 고객 단계 수. 남은 1은 사람에게 가야 맞는 문장). 감시 Case 3건은 3실행 모두 `resolved`. 고객 단계 한 건 3.2~3.8초(화면 버튼은 추출을 건너뛰어 1.6초).
+
+★표본은 문장 7개 · 하루 1종이다. 다른 표현·다른 언어에서 추출이 맞는지는 이것으로 말하지 못한다.
+
+### 7-4. 전체(라이브 제외)
+
+```powershell
+python -m pytest -m "not live" -q
+```
+
+```
+3 failed, 1107 passed, 7 deselected, 36 warnings in 95.22s
+```
+
+실패 3건은 §5 와 같은 RAG 시험이다. 1107 에는 이 작업 트리의 다른 세션 ML 시험(`tests/unit/ml`, 이 커밋에 없음)이 섞여 있다.

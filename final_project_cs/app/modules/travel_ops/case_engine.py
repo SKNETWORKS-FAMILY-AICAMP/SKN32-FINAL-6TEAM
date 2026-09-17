@@ -24,7 +24,7 @@ from app.infrastructure.db.session import get_connection
 from app.tools.read_tools import ReadToolbox
 
 from .itinerary import TripStore
-from .subjects import KIND, resolve_subject
+from .subjects import KIND, make_subject_interpreter, resolve_subject
 from .trip_watch_cases import TripWatchCaseOpener
 
 ACTOR = "case_engine"
@@ -44,6 +44,7 @@ class CaseEngine:
         from app.core.project_config import load_project_config
 
         self.tenant_id, self.clock, self.classifier = tenant_id, clock, classifier
+        self.interpreter = make_subject_interpreter(report_extractor)
         self.store = TripStore(tenant_id)
         tools = ReadToolbox(get_connection, policy_search=_no_policy, travel=None, check=check,
                             route_events=route_events, report_extractor=report_extractor)
@@ -77,7 +78,7 @@ class CaseEngine:
             opened = open_case(conn, repository=repository, tenant_id=self.tenant_id, customer_id=customer_id,
                                request_id=request_id, message=text, channel="chat", actor_type="api",
                                actor_id=ACTOR, subject_ref=subject, subject_resolver=resolve_subject,
-                               classifier=self.classifier)
+                               classifier=self.classifier, subject_interpreter=self.interpreter)
             status = str(repository.get_case(conn, tenant_id=self.tenant_id, case_id=opened.case_id)["status"])
         if opened.created and status == "routing":
             self.run(case_id=opened.case_id)

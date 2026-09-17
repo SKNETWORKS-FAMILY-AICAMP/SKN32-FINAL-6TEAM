@@ -39,9 +39,18 @@ def get_case_events(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[
         return [dict(zip(("event_id","aggregate_version","event_type","payload_json","actor_type","actor_id","created_at"), r)) for r in cur.fetchall()]
 
 
+def _json_text(value: Any) -> str:
+    """★UUID·시각을 문자열로 — 제안 인자는 DB 에서 읽은 값(UUID 객체)을 그대로 싣는다.
+    그대로 쓰면 `TypeError: Object of type UUID is not JSON serializable` 로 Case 실행이 통째로
+    실패했다(2026-09-17, wiki/records/reports/debugs/2026-09-17_1450_여행_승인제안이_근거대조에서_전부_막힌다.md)."""
+    import json
+
+    return json.dumps(value, ensure_ascii=False, default=str)
+
+
 def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, action_type: str, arguments: dict[str, Any], idempotency_key: str, status: str = "proposed", provider_ref: str | None = None) -> UUID:
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status, provider_ref) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments), idempotency_key, status, provider_ref))
+        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status, provider_ref) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments, dumps=_json_text), idempotency_key, status, provider_ref))
         return cur.fetchone()[0]
 
 
