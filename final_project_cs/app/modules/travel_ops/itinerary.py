@@ -160,6 +160,13 @@ class TripStore:
             out.append(item)
         return out
 
+    def active_trip_ids(self, conn) -> list[UUID]:
+        """진행 중인 여행. 안내 되잡기 작업이 읽는다."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT trip_id FROM trips WHERE tenant_id=%s AND status='active' ORDER BY trip_id",
+                        (self.tenant_id,))
+            return [row[0] for row in cur.fetchall()]
+
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
         """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다."""
         with conn.cursor() as cur:
@@ -230,7 +237,7 @@ class TripStore:
         return new_version
 
     def enqueue_message(self, conn, *, trip_id: UUID, key: str,
-                        payload: dict[str, Any]) -> None:
+                        payload: dict[str, Any]) -> bool:
         """일정 버전에 딸리지 않은 안내(하루 시작·출발·하루 정리 — v11 §6-B 의 ②·③).
 
         ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
@@ -246,6 +253,8 @@ class TripStore:
                 (self.tenant_id, "trip.notice", f"{trip_id}:{key}",
                  json.dumps({"locale": row[0] if row else None, **payload},
                             ensure_ascii=False, default=str)))
+            # ★새로 넣었으면 True. 이미 있던 키면 False — 되잡기 작업이 「보냄」과 「이미 보냄」을 가른다.
+            return cur.rowcount == 1
 
     def enqueue_notice(self, conn, *, trip_id: UUID, version: int,
                        payload: dict[str, Any]) -> None:

@@ -36,6 +36,17 @@ class BookingHandoffTeam(TravelTeamBase):
         default_capability="booking.verify",
     )
 
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        """★`[2026-09-18]` 분류 결과로 취소·변경 준비를 고른다. 전에는 이 함수가 없어 어떤 예약 요청이든
+        기본 capability(`booking.verify`)로만 불렸고, 준비 capability 둘은 라우팅으로 닿을 수 없었다."""
+        code = str((state or {}).get("issue_code") or "")
+        if code == "booking_cancel_request":
+            return "booking.prepare_cancel"
+        if code == "booking_change_request":
+            return "booking.prepare_change"
+        return None
+
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:

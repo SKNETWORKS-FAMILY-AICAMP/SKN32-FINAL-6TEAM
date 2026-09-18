@@ -102,6 +102,16 @@ python -m scripts.run_sweepers --interval 60
 
 `classifying`·`routing`에 임계값(300초·600초) 넘게 남은 Case를 다시 처리한다. 출력의 `errored`가 0이 아니면 사람이 본다. 임계값·주기의 뜻은 [../quality/guardrails.md](../quality/guardrails.md).
 
+`[2026-09-18]` 같은 실행이 여행도 돈다 — 순서대로:
+
+| 이름 | 하는 일 |
+|---|---|
+| `trip_cases` | ★기본 감시. 곧 시작할 일정 항목을 점검하고 깨졌으면 **시스템 Case** 를 열어 Team 이 고친다(Case 버전) |
+| `trip_reminders` | 일정 안내 — 하루 시작(첫 항목 60분 전 · 전날 20시)과 출발(이동 항목 15분 전). Case 를 안 만든다. 값은 가드레일 `travel.reminders.*` |
+| `trip` | 시나리오용 여행 버전의 감시. `--only trip` 으로만 돈다 — `trip_cases` 와 함께 돌리지 않는다 |
+
+`fatal`(경로·점검 소스가 대체까지 실패)이 0 이 아니면 `--once` 는 exit 1 이다.
+
 화면 4개.
 
 ```

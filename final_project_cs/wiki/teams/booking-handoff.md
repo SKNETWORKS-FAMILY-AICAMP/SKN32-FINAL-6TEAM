@@ -136,6 +136,8 @@ max_steps             = 6
 default_capability    = "booking.verify"
 ```
 
+`[2026-09-18]` **준비 capability 둘에 라우팅으로 닿는다.** 전에는 `select_capability` 가 없어 어떤 예약 요청이든 `booking.verify` 로만 불렸다. 이제 분류 결과로 고른다 — `booking_cancel_request` → `booking.prepare_cancel`, `booking_change_request` → `booking.prepare_change`, 그 밖은 기본(`verify`). 코어가 capability 선택에 `issue_code` 를 넘긴다. **승인 뒤 실행**도 생겼다 — [../actions/approval.md](../actions/approval.md) 「승인 뒤 실행」(취소는 Mock 공급자에 실행, 변경은 인계).
+
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 
 ★**요청 종류 다섯만으로는 여섯 팀 어디에도 안 간다** — 2026-09-09 실행으로 확인됐고 그래서 v11 이 축을 둘로 갈랐다.

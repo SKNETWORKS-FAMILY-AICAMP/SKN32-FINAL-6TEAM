@@ -15,6 +15,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-18 — 간헐 실패 원인(UUID 가림) · 일정 안내 · 승인 뒤 실행
+
+「원인 모름 간헐 실패」는 코어 가림 규칙이 UUID 를 전화번호로 가리던 결함이었다(`records/reports/debugs/2026-09-18_1425_…`). 일정 안내(하루 시작·출발)를 운영 되잡기 작업으로 만들고, 기본 감시를 Case 버전으로 바꿨다(`operations/run.md`). 승인된 제안을 코어가 적용기로 실행하고, Booking Handoff 준비 capability 에 라우팅이 닿는다(`actions/approval.md` 「승인 뒤 실행」 · `actions/idempotency.md` · `teams/booking-handoff.md`). 리포트 `records/reports/2026-09-18_1500_…`.
+
 ## 2026-09-17 — Case 버전: 문장 해석이 분류보다 먼저, 실제 Gemma 로 확인
 
 실제 gemma4:12b 로 재니 분류 접두가 늦음·품절·재요청 문장에서 빗나가 사람에게 넘어갔다. 대상이 정해진 고객 Case 는 분류 직전에 신고를 추출해 담당을 정하도록 바꿨다(`external/rest-endpoints.md` subject_ref 절, `teams/team-contract/index.md`). 여행 승인 제안이 근거 대조에서 막히던 결함도 고쳤다(`records/reports/debugs/2026-09-17_1450_…`).

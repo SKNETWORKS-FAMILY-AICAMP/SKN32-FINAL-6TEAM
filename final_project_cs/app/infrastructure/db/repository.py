@@ -65,6 +65,23 @@ def find_action_request(conn: Connection, *, tenant_id: str, idempotency_key: st
     return dict(zip(("action_id", "case_id", "action_type", "status", "provider_ref"), row))
 
 
+def approved_pending_actions(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[dict[str, Any]]:
+    """승인됐지만 아직 실행하지 않은 제안(`[2026-09-18]`). 승인 뒤 재개가 읽는다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT ar.action_id, ar.action_type, ar.arguments_json FROM action_requests ar "
+                    "WHERE ar.tenant_id=%s AND ar.case_id=%s AND ar.status='pending_approval' "
+                    "AND EXISTS (SELECT 1 FROM action_approvals ap WHERE ap.action_id=ar.action_id "
+                    "AND ap.decision='approved') ORDER BY ar.created_at, ar.action_id", (tenant_id, case_id))
+        return [dict(zip(("action_id", "action_type", "arguments"), row)) for row in cur.fetchall()]
+
+
+def set_action_status(conn: Connection, *, tenant_id: str, action_id: UUID, status: str,
+                      provider_ref: str | None = None) -> None:
+    with conn.cursor() as cur:
+        cur.execute("UPDATE action_requests SET status=%s, provider_ref=COALESCE(%s, provider_ref) "
+                    "WHERE tenant_id=%s AND action_id=%s", (status, provider_ref, tenant_id, action_id))
+
+
 def create_approval(conn: Connection, *, action_id: UUID, decision: str, approver_id: str | None = None) -> UUID:
     with conn.cursor() as cur:
         cur.execute("INSERT INTO action_approvals (action_id, approver_id, decision, decided_at) VALUES (%s,%s,%s,now()) RETURNING approval_id", (action_id, approver_id, decision)); return cur.fetchone()[0]

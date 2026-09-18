@@ -6,6 +6,7 @@ status: draft
 tags: [security, architecture]
 owners: [human:미배정]
 domain: neutral
+domain_note: 승인 경계 규칙은 도메인 무관이다. 「승인 없이 적용」·「승인 뒤 실행」 절이 지금 조립의 예(여행 일정·예약 적용기)를 한 줄씩 든다
 ---
 
 # 승인 경계
@@ -52,7 +53,25 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 - **하나라도 거짓이면 적용하지 않고 `escalated`** 로 보낸다(`guardrail`: `action_handler_missing`·`action_requires_approval`·`action_proposal_verification_failed`·`degraded_context_blocks_action`). 제안을 조용히 버리지 않는다 — 전에는 `respond` 결과의 제안이 저장도 실행도 안 되고 사라졌다(`controller.py:353-354`, 2026-09-17 실측).
 - **적용 · `action_requests` 기록(`status=succeeded`) · Case 완료 전이 · 통지(outbox)는 한 트랜잭션**이다. 적용기가 「대상이 그 사이 바뀌었다」(`ActionConflict`)를 내면 그 부분만 되돌리고 `escalated`(`action_target_changed`) — 재계산 없이 다시 밀어 넣지 않는다.
 - 멱등 키의 대상은 **적용기가 인자에서 꺼낸 대상 id**다(v11 §4-E). 같은 키가 이미 `succeeded` 면 다시 적용하지 않는다.
-- ★**승인이 필요한 제안을 승인 뒤 실행하는 코드는 여전히 없다**(2026-09-17 실측, 저장소 전체 `UPDATE action_requests` 0건). 그 몫은 Booking Handoff(MVP 다음)다.
+- ~~승인이 필요한 제안을 승인 뒤 실행하는 코드는 여전히 없다~~ — `[2026-09-18]` 아래 절로 채웠다.
+
+## 승인 뒤 실행 `[2026-09-18]`
+
+전에는 승인하면 Case 가 `resuming` → **Team 을 다시 불렀을 뿐** 아무것도 실행되지 않았다(Team 은 side effect 를 안 한다). 이제 **코어가 실행한다.**
+
+| 단계 | 무엇 |
+|---|---|
+| 승인 대기로 갈 때 | `state_json.wait_reason = "human_approval"` 을 적는다. 전에는 안 적어 재개가 기본값 `customer_input` 으로 읽혔다 |
+| 재개할 때 | 승인됐고(`action_approvals.decision=approved`) 아직 `pending_approval` 인 제안을 모은다 |
+| 적용기가 **전부** 있으면 | 한 savepoint 안에서 적용기를 부르고 `action_requests.status=succeeded`·`provider_ref` 를 적은 뒤 `completed`(→ `resolved`). 적용기가 준 outbox 는 같은 트랜잭션 |
+| 하나라도 적용기가 없으면 | 예전처럼 Team 을 다시 부른다 — 적용기가 없는 도메인의 승인 흐름은 안 바뀐다 |
+| 적용기가 거부·충돌 | 전부 되돌리고 그 제안 `failed`, Case `escalated`(`action_rejected`·`action_target_changed`) |
+| 시간 초과·연결 오류 | **성공으로 추정하지 않는다** — `unknown` 으로 남기고 `escalated`(`action_provider_unknown`), 자동 재실행 없음 |
+
+- 적용기는 `auto_apply=False` 로 선언한다 — 승인 없이 오면 위 절의 규칙이 `action_requires_approval` 로 막는다.
+- 승인 직전 재검증은 승인 API 가 이미 한다(아래 「승인 전 재검증」). 적용기는 적용 순간 대상을 **한 번 더** 잠가 확인한다.
+- 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/modules/travel_ops/booking_actions.py`.
+- 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름).
 
 ## 승인자 권한
 

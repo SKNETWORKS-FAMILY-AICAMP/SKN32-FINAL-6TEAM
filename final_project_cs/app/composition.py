@@ -331,16 +331,18 @@ def build_subject_interpreter():
 
 
 def build_action_handlers():
-    """승인 없이 적용되는 제안의 도메인 적용기(`[결정 2026-09-17]`).
+    """제안의 도메인 적용기 — 승인 없이 적용되는 것(`[결정 2026-09-17]`)과 승인 뒤 실행되는 것(`[2026-09-18]`).
 
     ★선언이 없으면 빈 표 — 승인 없는 제안은 전부 escalated 로 간다.
     """
     from app.core.actions import ActionHandlers
     try:
+        from app.modules.travel_ops.booking_actions import APPROVED_HANDLERS
         from app.modules.travel_ops.itinerary_actions import ACTION_HANDLERS
     except ImportError:
         return ActionHandlers()
-    return ActionHandlers(ACTION_HANDLERS)
+    # ★`[2026-09-18]` 승인된 예약 제안의 적용기도 싣는다(`auto_apply=False` — 승인 없이는 안 돈다).
+    return ActionHandlers([*ACTION_HANDLERS, *APPROVED_HANDLERS])
 
 
 def build_verification(*, config=None):

@@ -39,7 +39,7 @@ def idempotency_key(*, tenant_id, request_id, action_type, business_subject) -> 
 | `tenant_id` | 다른 테넌트의 같은 요청은 다른 것 |
 | `request_id` | 같은 요청인지 판정하는 축 |
 | `action_type` | 같은 요청이라도 환불과 알림은 다른 것 |
-| `business_subject` | **어느 대상 객체인지.** ★**사양(v11 §4-E)** — 서버가 인자에서 꺼내 **실재·소유를 확인한** id 를 넣는다. 특정 못 하면 폴백하지 않고 거부한다. ★**구현은 아직 아니다** — `[실측 2026-09-10 작업 트리]` `controller.py:374` 가 **`business_subject=str(case["case_id"])`** 로 Case id 를 넣는다. `[정정]` 이 칸은 사양을 구현처럼 적고 있었다 |
+| `business_subject` | **어느 대상 객체인지.** ★**사양(v11 §4-E)** — 서버가 인자에서 꺼내 **실재·소유를 확인한** id 를 넣는다. 특정 못 하면 폴백하지 않고 거부한다. ★`[2026-09-18]` **적용기가 있는 제안은 구현됐다** — 승인 제안·승인 없는 제안 모두 적용기의 `subject(arguments)` 가 꺼낸 대상 id 를 넣고, 못 꺼내면 `escalated`(`action_rejected`). **적용기가 없는 제안은 아직 Case id**(`business_subject=str(case["case_id"])`)다 — 한 Case 의 둘째 제안이 사라지는 결함이 그쪽엔 남아 있다. 시험 `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive` |
 
 **각 조각을 먼저 해시한 뒤 이어 붙여 다시 해시한다.** 조각 경계를 명확히 해서 `"ab"+"c"`와 `"a"+"bc"`가 같은 키가 되는 걸 막는다.
 

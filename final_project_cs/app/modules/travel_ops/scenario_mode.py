@@ -222,26 +222,28 @@ class ScenarioSession:
             return self.store.latest(conn, self.trip_id)
 
     def _day_start(self) -> None:
+        # ★문구는 `trip_reminders` 한 곳 — 운영 되잡기 작업과 같은 것을 쓴다(`[2026-09-18]`).
+        from .trip_reminders import day_text
+
         trip, items = self._items()
-        stops = [f"{_hm(i.starts_at)} {i.title}" for i in items if i.kind != "mobility"]
-        text = ("좋은 아침이에요! 오늘 일정을 안내해 드릴게요.\n" + " → ".join(stops) +
-                "\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.")
         with get_connection() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=self.trip_id, key="day_start",
-                                       payload={"text": text, "kind": "day_start",
-                                                "version": trip["version"]})
+                                       payload={"text": day_text(items, self.clock().date()),
+                                                "kind": "day_start", "version": trip["version"]})
 
     def _departure(self) -> None:
+        from .trip_reminders import build_departure
+
         trip, items = self._items()
         now = self.clock()
         move = next((i for i in items if i.kind == "mobility" and i.starts_at >= now), None)
         if move is None:
             return
-        after = next((i for i in items if i.seq > move.seq), None)
-        text = (f"{_hm(move.starts_at)} 출발 — {move.title} ({_hm(move.starts_at)}–{_hm(move.ends_at)})."
-                + (f"\n다음 일정: {_hm(after.starts_at)} {after.title}." if after else ""))
+        status, text = build_departure(move, items, route_events=self.watcher.route_events, routes=None, now=now)
+        if text is None:          # held · fatal — 낡은 경로를 알리지 않는다
+            return
         with get_connection() as conn, conn.transaction():
-            self.store.enqueue_message(conn, trip_id=self.trip_id, key=f"departure:{move.seq}",
+            self.store.enqueue_message(conn, trip_id=self.trip_id, key=f"departure:{move.item_id}",
                                        payload={"text": text, "kind": "departure",
                                                 "version": trip["version"]})
 
