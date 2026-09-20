@@ -22,6 +22,14 @@
 #   ★ 버스 구간이 불가이면 노선교체(같은 두 정류장의 다른 노선)·수단교체(정류장 근처 역끼리 지하철)를 연다.
 #   ★ 시간표 부분 적재에 대안 후보 노선·정류장 근처 역을 포함한다 — 종전에는 ⓑ 노선교체가 회귀에서 죽어 있었다.
 #
+# 규칙 v0.5 (2026-09-20 · 20번 방 · 다목적 후보 + 동급 판정)
+#   ★ 케이스가 `legs` 대신 `multi: {from, to}` 를 주면 역 순서 777간선 위에서 **기준별 대표안**
+#     (최단·최소환승·최소도보 — modules/mobility/candidates.py)과 역 앞 정류장 버스 직행 후보를 만들고,
+#     후보마다 **같은 판정기**(verify_case)로 시각을 확정한다. 순위 없음. verify_multi.
+#   ★ tie_band — 두 후보의 도착 차이가 대기 불확실성(버스 = 대기 추정치 · 지하철 = 0) 안이면 「동급」.
+#     이유는 시간 밖 축(환승·도보·등급)으로만 말한다. rules tie_band.
+#   ★ `legs` 케이스의 판정 경로는 손대지 않았다 — 회귀 91건은 그대로다.
+#
 # 판정 값 넷
 #   feasible          성립
 #   infeasible        불가 (+완화 조건)
@@ -42,6 +50,7 @@ from modules.mobility.transfer_walk import TransferWalk                 # noqa: 
 from modules.mobility.bus import BusRoutes                              # noqa: E402
 from modules.mobility.geo import StationCoords, meters                  # noqa: E402
 from modules.mobility.exits import StationExits                         # noqa: E402
+from modules.mobility.candidates import CandidateGraph                  # noqa: E402
 from modules.mobility.timeutil import (to_min, to_service_min, fmt_min,  # noqa: E402
                                        fmt_wall, day_type_of, MIN_DAY)
 
@@ -160,6 +169,12 @@ class CaseResult:
     alternatives: list = field(default_factory=list)
     alt_tried: list = field(default_factory=list)
     taxi: dict = None
+    # 다목적 후보(v0.5 · multi 케이스에서만 채워진다). 순위 없음 — 목록 순서는 규칙 candidates.기준 의 순서다.
+    candidates: list = None
+    ties: list = None                        # 동급 쌍 [{a, b, delta_min, band_min, axes}]
+    dropped_candidates: list = None          # 허용_소요_배수·버스 직행 상한으로 뺀 후보
+    bus_rejected: list = None                # 불가·근거없음으로 접은 버스 직행 후보 [{label, verdict, reason}]
+    axis_best: dict = None                   # 판정 뒤 축별 최소 후보 {도착: [n], 환승: [n], 도보: [n]} — 순위 아님
 
 
 # ── 검증기 ────────────────────────────────────────────────────────────────
@@ -178,6 +193,12 @@ class Verifier:
         sj = rules["last_train"]["신정지선_토요일_예외"]["value"]
         self.sinjeong = (sj["line"], set(sj["stations"]))
         self.disr = []          # 이 케이스의 이슈 조건. verify_case 가 매 건 갈아 끼운다.
+        self._cg = {}           # 후보 생성기(v0.5) — first_visit 별로 하나. 길찾기 가산이 달라진다
+
+    def candidate_graph(self, first_visit=True):
+        if first_visit not in self._cg:
+            self._cg[first_visit] = CandidateGraph(self.lo, self.tw, self.R, first_visit)
+        return self._cg[first_visit]
 
     # 규칙 값 꺼내기 — 값이 없으면 죽는다. 조용히 기본값을 쓰지 않는다.
     def rv(self, *path):
@@ -938,8 +959,182 @@ class Verifier:
                 "dist_m": dist, "walk_m": walk_m, "factor": factor, "reason": None, "relief": None,
                 "warnings": [], "evidence": [src, rule_ev]}
 
+    # ── 다목적 후보 (규칙 v0.5 · 20번 방) ────────────────────────────────
+    MULTI_STRIP = ("multi", "expect", "expect_candidates_min", "expect_criteria", "expect_candidate_legs",
+                   "expect_candidate_arrive", "expect_tie", "expect_tie_axes", "expect_feasible_max",
+                   "expect_no_line_feasible", "note")
+
+    def verify_multi(self, case):
+        """`multi: {from, to}` 케이스 — 후보를 만들고 **후보마다 verify_case 를 그대로** 돌린다.
+
+        생성기(candidates.py)는 판정하지 않는다. 이슈·시간표·환승 상한은 전부 판정기가 본다.
+        ★ 순위를 매기지 않는다 — candidates 의 순서는 규칙 candidates.기준 의 순서지 우열이 아니다.
+        ★ tie_band — 도착이 있는 두 후보의 차이가 (불확실성 A + 불확실성 B) 안이면 동급. 이유는 시간 밖 축.
+        """
+        origin, dest = case["multi"]["from"], case["multi"]["to"]
+        first_visit = case.get("first_visit", True)
+        party = case.get("party", {}) or {}
+        C = self.R["candidates"]
+        d = _date.fromisoformat(case["date"])
+        day_type = day_type_of(d, self.holidays)
+        now = to_service_min(case.get("depart_at"))
+        if now is None:
+            raise SystemExit(f"[{case.get('id')}] depart_at 이 없다.")
+        warns, ev = [], [self._ev_rule("candidates.기준", "확정")]
+        cg = self.candidate_graph(first_visit)
+        tlim = self.rv("limits", "transfers", "default")          # 환승 상한 — 판정기와 같은 값(동행별)
+        for k in ("infant", "elderly", "fatigue_high"):
+            if party.get(k):
+                tlim = min(tlim, self.rv("limits", "transfers", k))
+        gen = cg.candidates(origin, dest, C["기준"]["value"], max_transfers=tlim)
+        if not gen:
+            return self._finish(case, day_type, [], "unknown",
+                                f"{origin}→{dest} 를 잇는 지하철 후보를 역 순서에서 만들지 못했다",
+                                "근거없음", None, None, None, warns, ev)
+
+        keep, dropped = [], []
+        ev.append(self._ev_rule("candidates.허용_소요_배수", "추정"))
+        for c in gen:
+            keep.append({"criteria": list(c.criteria), "legs": c.legs, "est_min": c.est_min,
+                         "transfers": c.transfers, "walk_min": c.walk_min, "gen_grade": c.grade,
+                         "fallback_edges": c.fallback_edges, "walk_in": 0, "walk_out": 0})
+
+        # 버스 직행 후보 — 대안 열거 ⓒ 와 같은 후보 공간
+        if C["버스_직행_후보"]["value"] and self.bus and self.sc:
+            radius = self.rv("alternatives", "정류장_반경_m")
+            excluded = self.rv("bus", "route_type_제외") or []
+            wlim = self._walk_limit(party)
+            pa, pb = self.sc.by_name.get(origin), self.sc.by_name.get(dest)
+            if pa and pb and pa.get("lat") is not None and pb.get("lat") is not None:
+                for r, x, y, span, da, db in self.bus.routes_between(
+                        pa["lat"], pa["lng"], pb["lat"], pb["lng"], radius):
+                    if r.route_type_nm in excluded or max(da, db) > wlim:
+                        continue
+                    keep.append({"criteria": ["버스직행"],
+                                 "legs": [{"mode": "bus", "route": r.route_nm,
+                                           "from": x["station_nm"], "to": y["station_nm"]}],
+                                 "est_min": None, "transfers": 0, "walk_min": None, "gen_grade": "추정",
+                                 "fallback_edges": [], "walk_in": da, "walk_out": db})
+            ev.append(self._ev_rule("candidates.버스_직행_후보", "확정"))
+
+        # 후보마다 같은 판정기 — 대안 열거는 끈다(후보끼리가 이미 대안이다)
+        speed = self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
+        wm = lambda m: math.ceil(m / speed / 60) if m else 0
+        base = {k: v for k, v in case.items() if k not in self.MULTI_STRIP}
+        base["no_alternatives"] = True
+        out = []
+        for n, c in enumerate(keep, 1):
+            sub = dict(base, id=f"{case.get('id')}/{n}", legs=c["legs"],
+                       depart_at=now + wm(c["walk_in"]))
+            r = self.verify_case(sub)
+            arr = r.arrive_min + wm(c["walk_out"]) if r.arrive_min is not None else None
+            bus_wait = sum((l.wait_min or 0) for l in r.legs
+                           if l.verdict == "feasible" and l.label.startswith("버스 "))
+            unc = bus_wait if any(l.get("mode") == "bus" for l in c["legs"]) \
+                else self.rv("tie_band", "지하철_불확실성_분")
+            walk_total = (c["walk_min"] or 0) + wm(c["walk_in"]) + wm(c["walk_out"])
+            out.append({"n": n, "criteria": c["criteria"], "legs": c["legs"],
+                        "label": " → ".join(
+                            (f"버스 {l['route']} {l['from']}→{l['to']}" if l.get("mode") == "bus"
+                             else f"{l['line']} {l['from']}→{l['to']}") for l in c["legs"]),
+                        "verdict": r.verdict, "reason": r.reason, "relief": r.relief, "grade": r.grade,
+                        "depart_min": now + wm(c["walk_in"]), "arrive_min": arr,
+                        "walk_in_min": wm(c["walk_in"]), "walk_out_min": wm(c["walk_out"]),
+                        "transfers": c["transfers"], "walk_min": round(walk_total, 1),
+                        "est_min": c["est_min"], "gen_grade": c["gen_grade"],
+                        "fallback_edges": c["fallback_edges"],
+                        "uncertainty_min": unc, "warnings": r.warnings, "legs_result": r.legs,
+                        "evidence": r.evidence, "tie_with": []})
+
+        # 버스 직행 상한 — 성립한 버스 후보를 도보 짧은 순으로 N개만 남긴다(자르는 기준이지 순위가 아니다).
+        #   불가·근거없음 버스 후보는 bus_rejected 로 접는다. rules candidates.버스_직행_최대.
+        bmax = C["버스_직행_최대"]["value"]
+        bus_rejected, kept = [], []
+        live_bus = sorted((c for c in out if "버스직행" in c["criteria"] and c["verdict"] == "feasible"),
+                          key=lambda c: (c["walk_in_min"] + c["walk_out_min"], c["n"]))
+        keep_n = {c["n"] for c in live_bus[:bmax]}
+        for c in out:
+            if "버스직행" not in c["criteria"] or c["n"] in keep_n:
+                kept.append(c)
+            elif c["verdict"] == "feasible":
+                dropped.append({"criteria": c["criteria"], "legs": c["legs"], "est_min": None,
+                                "transfers": 0, "walk_min": c["walk_min"], "arrive_min": c["arrive_min"],
+                                "why": f"버스 직행 상한 {bmax}개(도보 순)"})
+            else:
+                bus_rejected.append({"label": c["label"], "verdict": c["verdict"], "reason": c["reason"]})
+        if len(kept) != len(out):
+            ev.append(self._ev_rule("candidates.버스_직행_최대", "추정"))
+        out = kept
+        for i, c in enumerate(out, 1):          # 번호를 다시 매긴다 — 목록에 남은 순서로
+            c["n"] = i
+
+        # tie_band
+        ties = []
+        axes_rule = self.rv("tie_band", "이유_축")
+        live = [c for c in out if c["verdict"] == "feasible" and c["arrive_min"] is not None]
+        is_bus = lambda c: any(l.get("mode") == "bus" for l in c["legs"])
+        ev.append(self._ev_rule("tie_band.비교_대상", "확정"))
+        for i in range(len(live)):
+            for j in range(i + 1, len(live)):
+                A, B = live[i], live[j]
+                if is_bus(A) == is_bus(B):          # 지하철×버스 만 비교한다(rules tie_band.비교_대상)
+                    continue
+                delta = abs(A["arrive_min"] - B["arrive_min"])
+                band = A["uncertainty_min"] + B["uncertainty_min"]
+                if delta <= band:
+                    axes = {}
+                    for ax in axes_rule:
+                        if ax == "환승":
+                            axes[ax] = (A["transfers"], B["transfers"])
+                        elif ax == "도보":
+                            axes[ax] = (A["walk_min"], B["walk_min"])
+                        elif ax == "등급":
+                            axes[ax] = (A["grade"], B["grade"])
+                    txt = " · ".join(f"{k} {v[0]} vs {v[1]}" for k, v in axes.items())
+                    same = all(v[0] == v[1] for v in axes.values())
+                    ties.append({"a": A["n"], "b": B["n"], "delta_min": delta, "band_min": band,
+                                 "axes": axes, "same_on_axes": same})
+                    A["tie_with"].append(B["n"]); B["tie_with"].append(A["n"])
+                    warns.append(self.warn_msg("MOB_W_TIE_BAND", a=A["label"], b=B["label"],
+                                               delta=delta, band=band,
+                                               axes=txt + (" — 축에서도 차이 없음" if same else "")))
+        if ties:
+            ev.append(self._ev_rule("tie_band.판정", "확정"))
+            ev.append(self._ev_rule("tie_band.버스_불확실성", "추정"))
+
+        # 확정 축 — 판정기가 낸 값으로 축마다 「가장 작은」 후보를 표시한다(동률 전부). 순위가 아니라 축별 사실이다.
+        #   생성기의 기준 표식(최단 등)은 추정치로 고른 것이라 판정 뒤 도착 순서와 다를 수 있다(공릉→회현에서 실제로 그랬다).
+        axis_best = {}
+        if live:
+            for ax, fn in (("도착", lambda c: c["arrive_min"]), ("환승", lambda c: c["transfers"]),
+                           ("도보", lambda c: c["walk_min"])):
+                m = min(fn(c) for c in live)
+                axis_best[ax] = [c["n"] for c in live if fn(c) == m]
+        nf = sum(1 for c in out if c["verdict"] == "feasible")
+        if nf:
+            # 케이스 등급 = 성립 후보 중 **가장 좋은** 등급. 케이스 판정 「성립하는 후보가 있다」는 그 후보 하나로
+            # 뒷받침되므로 최악값을 쓰면 과소평가다. 후보마다의 등급은 candidates[].grade 에 그대로 있다.
+            verdict = "feasible"
+            grade = max((c["grade"] for c in out if c["verdict"] == "feasible"),
+                        key=lambda g: GRADE_ORDER[g.split(":")[0]])
+        elif all(c["verdict"] == "unknown" for c in out):
+            verdict, grade = "unknown", "근거없음"
+        else:
+            verdict, grade = "infeasible", worst(*[c["grade"] for c in out])
+        reason = (f"{origin}→{dest} 후보 {len(out)}개 중 성립 {nf}개"
+                  + (f" · 동급 {len(ties)}쌍" if ties else "") + " (순위 없음)")
+        res = self._finish(case, day_type, [], verdict, reason, grade, None, None,
+                           None if nf else "후보 전부 불가 — 출발 시각을 옮기거나 수단을 바꾼다", warns, ev)
+        res.candidates, res.ties, res.dropped_candidates, res.bus_rejected = out, ties, dropped, bus_rejected
+        res.axis_best = axis_best
+        if not nf:
+            res.taxi = self._taxi()
+        return res
+
     # ── 케이스 한 건 ──
     def verify_case(self, case):
+        if case.get("multi"):
+            return self.verify_multi(case)
         d = _date.fromisoformat(case["date"])
         day_type = day_type_of(d, self.holidays)
         is_sat = d.weekday() == 5
@@ -1141,6 +1336,41 @@ def show(case, res, verbose=False):
         print(f"  완화 조건: {res.relief}")
     for w in dedup_warn(res.warnings):
         print(f"  ! [{w['code']}] {w['text']}")
+    if res.candidates is not None:
+        print(f"  후보 {len(res.candidates)}개 (순위 없음 — 순서는 규칙 candidates.기준 의 순서다)")
+        for c in res.candidates:
+            arr = f" → 도착 {fmt_min(c['arrive_min'])}" if c["arrive_min"] is not None else ""
+            w = (f" (도보 {c['walk_in_min']}+{c['walk_out_min']}분 포함)"
+                 if c["walk_in_min"] or c["walk_out_min"] else "")
+            tie = f" ≈동급 #{','.join(map(str, c['tie_with']))}" if c["tie_with"] else ""
+            print(f"    #{c['n']} [{'·'.join(c['criteria'])}] {c['label']} — {MARK[c['verdict']]} "
+                  f"{fmt_min(c['depart_min'])} 출발{arr}{w} · 환승 {c['transfers']} · 도보 {c['walk_min']:g}분 "
+                  f"[{c['grade']}]{tie}")
+            if c["verdict"] != "feasible":
+                print(f"       {c['reason']}")
+            cw = [w["code"] for w in dedup_warn(c.get("warnings"))]
+            if cw:
+                print(f"       ! {' '.join(cw)}")
+            if verbose:
+                for l in c["legs_result"]:
+                    extra = (f" · 승차 {l.ride_min:g}분[{l.ride_grade}] → 도착 {fmt_min(l.arrive_min)}"
+                             if l.ride_min is not None else "")
+                    print(f"       - {l.label}: {MARK[l.verdict]} {l.reason}{extra}")
+        if res.axis_best:
+            print("    축별 사실(순위 아님): " + " · ".join(
+                f"{ax} 최소 #{','.join(map(str, ns))}" for ax, ns in res.axis_best.items()))
+        for t in res.ties:
+            print(f"    ≈ 동급 #{t['a']} · #{t['b']} — 도착 차이 {t['delta_min']}분 ≤ 불확실성 {t['band_min']}분 · "
+                  + " · ".join(f"{k} {v[0]} vs {v[1]}" for k, v in t["axes"].items())
+                  + (" (축에서도 차이 없음)" if t["same_on_axes"] else ""))
+        for dcand in res.dropped_candidates:
+            lg = " → ".join((f"버스 {l['route']} {l['from']}→{l['to']}" if l.get("mode") == "bus"
+                            else f"{l['line']} {l['from']}→{l['to']}") for l in dcand["legs"])
+            why = dcand.get("why") or f"생성기 추정 {dcand['est_min']}분 — 허용 소요 배수 초과"
+            print(f"    ✗ 뺀 후보 [{'·'.join(dcand['criteria'])}] {lg} — {why}")
+        if res.bus_rejected:
+            print(f"    · 버스 직행 후보 중 성립 안 함 {len(res.bus_rejected)}개: "
+                  + " / ".join(f"{b['label']}({MARK[b['verdict']]}: {b['reason']})" for b in res.bus_rejected))
     if res.taxi:
         print(f"  대안 {len(res.alternatives)}개 (순위 없음 — 총소요 등급이 추정이라 순위 자체가 추정이 된다)")
         for al in res.alternatives:
@@ -1220,15 +1450,23 @@ def main():
     # ★ 19번 방(2026-09-19): 대안이 쓸 (노선, 역) 도 같이 올린다. 종전에는 케이스 구간의 노선만 올려서
     #   ⓑ 노선교체(다른 노선)와 버스 구간의 수단교체(지하철) 후보가 시간표 없음 → 근거없음으로 죽었다.
     #   런타임(runtime.py)은 전체를 상주시키므로 이 차이는 회귀에서만 있었다.
-    wanted = {(l["line"], nm) for c in cases for l in c["legs"] if l.get("line")
-              for nm in (l["from"], l["to"])}
+    # ★ 20번 방(2026-09-20): multi 케이스는 legs 가 없다 — 생성기를 먼저 돌려 후보 구간의 (노선, 역)을 올린다.
+    #   생성기는 시간표를 안 쓰므로 여기서 미리 돌릴 수 있다. 판정 때 다시 만들어도 같은 후보가 나온다.
+    pre_legs = []
+    for c in cases:
+        if c.get("multi"):
+            cg = CandidateGraph(lo, tw, rules, c.get("first_visit", True))
+            for cand in cg.candidates(c["multi"]["from"], c["multi"]["to"], rules["candidates"]["기준"]["value"]):
+                pre_legs += cand.legs
+    all_legs = [l for c in cases for l in c.get("legs") or []] + pre_legs
+    wanted = {(l["line"], nm) for l in all_legs if l.get("line") for nm in (l["from"], l["to"])}
     lines_of = collections.defaultdict(set)
     for ln, L in lo.doc["lines"].items():
         for st in L["stations"]:
             lines_of[st["station_nm"]].add(ln)
     radius = rules["alternatives"]["정류장_반경_m"]["value"]
     for c in cases:
-        for l in c["legs"]:
+        for l in c.get("legs") or []:
             if l.get("line"):
                 for ln in lines_of[l["from"]] & lines_of[l["to"]]:
                     wanted |= {(ln, l["from"]), (ln, l["to"])}
@@ -1314,6 +1552,49 @@ def main():
             if ea is not None and ea != r.arrive_min:
                 miss.append((c["id"], f"도착 {fmt_min(ea)}", f"도착 {fmt_min(r.arrive_min)}"))
                 print(f"  >> MISS 도착 기대 {fmt_min(ea)} / 판정 {fmt_min(r.arrive_min)}")
+            # ★ 다목적 후보 축(2026-09-20 · 20번 방). 후보 수·기준·구간열·기준별 도착·동급·성립 상한·노선별 불가.
+            #   「있어야 한다」와 「없어야 한다」를 둘 다 둔다(expect_tie: false · expect_feasible_max · expect_no_line_feasible).
+            cs = r.candidates or []
+            cm = c.get("expect_candidates_min")
+            if cm is not None and len(cs) < cm:
+                miss.append((c["id"], f"후보 {cm}개 이상", f"{len(cs)}개"))
+                print(f"  >> MISS 후보 {cm}개 이상 기대 / 실제 {len(cs)}개")
+            for cr in c.get("expect_criteria") or []:
+                if not any(cr in x["criteria"] for x in cs):
+                    miss.append((c["id"], f"기준 '{cr}' 후보", str([x["criteria"] for x in cs])))
+                    print(f"  >> MISS 기준 '{cr}' 을 단 후보가 없다")
+            for cr, legs in (c.get("expect_candidate_legs") or {}).items():
+                want = [tuple(x) for x in legs]
+                got = [[(l.get("line") or f"버스{l.get('route')}", l["from"], l["to"]) for l in x["legs"]]
+                       for x in cs if cr in x["criteria"]]
+                if not any([tuple(g) for g in gl] == want for gl in got):
+                    miss.append((c["id"], f"{cr} 구간열 {want}", str(got)))
+                    print(f"  >> MISS {cr} 구간열 기대 {want} / 실제 {got}")
+            for cr, at in (c.get("expect_candidate_arrive") or {}).items():
+                got = [fmt_min(x["arrive_min"]) for x in cs if cr in x["criteria"]]
+                if fmt_min(to_service_min(at)) not in got:
+                    miss.append((c["id"], f"{cr} 도착 {at}", str(got)))
+                    print(f"  >> MISS {cr} 도착 기대 {at} / 실제 {got}")
+            et = c.get("expect_tie")
+            if et is not None and bool(r.ties) != et:
+                miss.append((c["id"], f"동급 {'있음' if et else '없음'}", f"{len(r.ties or [])}쌍"))
+                print(f"  >> MISS 동급 {'있음' if et else '없음'} 기대 / 실제 {len(r.ties or [])}쌍")
+            for ax in c.get("expect_tie_axes") or []:
+                if not any(ax in t["axes"] for t in (r.ties or [])):
+                    miss.append((c["id"], f"동급 이유 축 '{ax}'", str([list(t['axes']) for t in (r.ties or [])])))
+                    print(f"  >> MISS 동급 이유 축 '{ax}' 가 없다")
+            fm = c.get("expect_feasible_max")
+            nf = sum(1 for x in cs if x["verdict"] == "feasible")
+            if fm is not None and nf > fm:
+                miss.append((c["id"], f"성립 후보 {fm}개 이하", f"{nf}개"))
+                print(f"  >> MISS 성립 후보 {fm}개 이하 기대 / 실제 {nf}개")
+            nl = c.get("expect_no_line_feasible")
+            if nl:
+                bad = [x["label"] for x in cs if x["verdict"] == "feasible"
+                       and any(l.get("line") == nl for l in x["legs"])]
+                if bad:
+                    miss.append((c["id"], f"{nl} 후보 성립 없음", str(bad)))
+                    print(f"  >> MISS {nl} 을 쓰는 후보가 성립했다 — {bad}")
 
     tally = collections.Counter(r.verdict for r in results)
     print("\n" + "─" * 60)
