@@ -241,14 +241,14 @@ DEFECTS.extend(MORE5)
 PARKED_COMMERCE = frozenset({
     "INV-TEAM-001",
     "INV-TEAM-002",
-    "INV-CLASSIFY-001",
-    "INV-VOC-001",
+    
+    
     "INV-REVIEW-002",
     "INV-COMMERCE-002",
     "INV-COMMERCE-003",
     "INV-COMMERCE-004",
-    "INV-COMMERCE-005",
-    "INV-VOC-002",
+    
+    
 })
 PARKED = [d for d in DEFECTS if d.defect_id in PARKED_COMMERCE]
 DEFECTS[:] = [d for d in DEFECTS if d.defect_id not in PARKED_COMMERCE]

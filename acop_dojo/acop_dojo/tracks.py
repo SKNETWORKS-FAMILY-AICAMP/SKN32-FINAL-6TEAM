@@ -131,6 +131,17 @@ TRACKS["core1"] = _dataclasses.replace(
     scenarios=("status-inquiry-untouched-v1", "checkpoint-not-projection-v1",
                "case-reducer-versions-v1", "outbox-tenant-guard-v1",
                "registry-default-capability-v1"))
+# ★2026-09-21 여행 Team 트랙을 연다. 커머스 트랙 셋은 중지된 채로 둔다.
+#  좁게 시작한다 — 결함 넷(경로를 여행으로 옮긴 것)과 시나리오 하나.
+#  여행 Team 코드는 자주 바뀐다. patches(4초) 가 밀린 것을 잡는다.
+TRACKS["team-travel"] = Track(
+    track_id="team-travel",
+    title="Team — 여행 (Activity · Dining · Mobility)",
+    owner_hint="팀 모듈",
+    owns=("app/modules/travel_ops/",),
+    scenarios=("travel-team-keeps-every-evidence-v1",),
+    focus="읽은 것마다 근거가 쌓인다. 분류가 실패하면 조용히 넘기지 않는다",
+)
 TRACKS["core2"] = _dataclasses.replace(
     TRACKS["core2"],
     scenarios=("api-idempotent-create-v1", "remote-team-failure-escalates-v1",
