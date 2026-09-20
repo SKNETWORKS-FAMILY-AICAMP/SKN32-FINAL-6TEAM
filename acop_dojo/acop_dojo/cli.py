@@ -139,6 +139,19 @@ def cmd_status(_: argparse.Namespace) -> int:
             print(f"    테스트가 못 잡는 것 {len(survived)}개 — 문제로 쓰지 않는다")
             for defect_id in sorted(survived):
                 print(f"      {defect_id}  {entries[defect_id][chr(112)+chr(97)+chr(116)+chr(104)]}")
+    # 처음부터 쌓기는 진행 파일이 따로다(작업 폴더 옆). 한 화면에서 같이 본다.
+    build_state = build.load_state()
+    if build_state.get("prepared_at") or build_state.get("steps"):
+        all_steps = build.steps()
+        done = sum(1 for s in all_steps
+                   if build_state["steps"].get(str(s.index), {}).get("status") == "passed")
+        print("")
+        print(f"  처음부터 쌓기  {done}/{len(all_steps)}단계 통과"
+              + (f" · 꺼내 본 참고 구현 {len(build_state[chr(114)+chr(101)+chr(118)+chr(101)+chr(97)+chr(108)+chr(101)+chr(100)])}개"
+                 if build_state["revealed"] else ""))
+        if done < len(all_steps):
+            nxt = _next_step(all_steps, build_state)
+            print(f"    다음: {nxt}. {build.get(nxt).title}  (python dojo.py build brief {nxt})")
     print(f"\n  진행 파일  {progress.progress_path()}")
     return 0
 

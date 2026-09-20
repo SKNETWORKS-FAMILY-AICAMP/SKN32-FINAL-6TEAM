@@ -101,7 +101,8 @@ v11 §0-2 의 승계 행마다 도장이 실행으로 보여 주는 시나리오
 | `scenarios [--verify-all]` | 시나리오 목록 · 전부 두 번 떠서 같은지 검사 |
 | `answers` | 서술 답안을 동료 검토용 루브릭과 함께 내보낸다 |
 | `review` | 예약된 복습을 꺼낸다 — 같은 규칙을 다른 코드에서 묻는다 |
-| `status` | 진행 상황 |
+| `status` | 진행 상황 (0~4단계 · 결함 · 처음부터 쌓기) |
+| `build steps\|start\|brief N\|check N\|reveal N <파일>` | 처음부터 쌓기 — 빈 폴더에서 베이스먼트를 만든다 (대상 `final_project_sample`) |
 
 ## 트랙 4개 (중지 3개)
 
