@@ -39,7 +39,7 @@ def idempotency_key(*, tenant_id, request_id, action_type, business_subject) -> 
 | `tenant_id` | 다른 테넌트의 같은 요청은 다른 것 |
 | `request_id` | 같은 요청인지 판정하는 축 |
 | `action_type` | 같은 요청이라도 환불과 알림은 다른 것 |
-| `business_subject` | **어느 대상 객체인지.** ★**사양(v11 §4-E)** — 서버가 인자에서 꺼내 **실재·소유를 확인한** id 를 넣는다. 특정 못 하면 폴백하지 않고 거부한다. ★`[2026-09-18]` **적용기가 있는 제안은 구현됐다** — 승인 제안·승인 없는 제안 모두 적용기의 `subject(arguments)` 가 꺼낸 대상 id 를 넣고, 못 꺼내면 `escalated`(`action_rejected`). **적용기가 없는 제안은 아직 Case id**(`business_subject=str(case["case_id"])`)다 — 한 Case 의 둘째 제안이 사라지는 결함이 그쪽엔 남아 있다. 시험 `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive` |
+| `business_subject` | **어느 대상 객체인지.** ★**사양(v11 §4-E)** — 서버가 인자에서 꺼내 **실재·소유를 확인한** id 를 넣는다. 특정 못 하면 폴백하지 않고 거부한다. ★`[2026-09-18]` **적용기가 있는 제안은 구현됐다** — 승인 제안·승인 없는 제안 모두 적용기의 `subject(arguments)` 가 꺼낸 대상 id 를 넣고, 못 꺼내면 `escalated`(`action_rejected`). **적용기가 없는 제안은 아직 Case id**(`business_subject=str(case["case_id"])`)다. `[2026-09-20]` 그래도 **조용히 사라지지는 않는다** — 같은 키에 **다른 인자**의 제안이 이미 있으면 합치지 않고 `escalated`(`action_key_collision`). 같은 인자면 그대로 멱등이다. 시험 `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive` |
 
 **각 조각을 먼저 해시한 뒤 이어 붙여 다시 해시한다.** 조각 경계를 명확히 해서 `"ab"+"c"`와 `"a"+"bc"`가 같은 키가 되는 걸 막는다.
 

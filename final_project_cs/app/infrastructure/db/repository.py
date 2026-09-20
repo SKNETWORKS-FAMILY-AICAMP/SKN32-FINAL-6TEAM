@@ -57,12 +57,13 @@ def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, ac
 def find_action_request(conn: Connection, *, tenant_id: str, idempotency_key: str) -> dict[str, Any] | None:
     """멱등 키로 이미 기록된 작업을 찾는다. 없으면 None."""
     with conn.cursor() as cur:
-        cur.execute("SELECT action_id, case_id, action_type, status, provider_ref FROM action_requests "
-                    "WHERE tenant_id=%s AND idempotency_key=%s", (tenant_id, idempotency_key))
+        cur.execute("SELECT action_id, case_id, action_type, status, provider_ref, arguments_json "
+                    "FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s",
+                    (tenant_id, idempotency_key))
         row = cur.fetchone()
     if row is None:
         return None
-    return dict(zip(("action_id", "case_id", "action_type", "status", "provider_ref"), row))
+    return dict(zip(("action_id", "case_id", "action_type", "status", "provider_ref", "arguments"), row))
 
 
 def approved_pending_actions(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[dict[str, Any]]:

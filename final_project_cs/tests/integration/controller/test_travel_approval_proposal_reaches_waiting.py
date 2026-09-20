@@ -21,7 +21,6 @@ from app import composition
 from app.application.case_intake import open_case
 from app.application.controller import Controller
 from app.core.context import PolicyChunk
-from app.core.contracts import InvalidTransition
 from app.core.registry import TeamRegistry
 from app.core.transition import transition_case
 from app.domain.events import EventType
@@ -130,9 +129,10 @@ def test_an_approved_cancel_is_executed_once_against_the_mock_supplier(world):
     assert ours == theirs == "cancelled"
     assert actions == [("booking.cancel", "succeeded", "mock-supplier:mock:SUP-1:cancelled")]
     assert [kind for kind, _ in events][-3:] == ["approved", "resumed", "completed"]
-    # 같은 Case 를 다시 돌려도 두 번 실행하지 않는다 — 끝난 Case 는 상태기계가 막는다
-    with pytest.raises(InvalidTransition):
-        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    # 같은 Case 를 다시 돌려도 두 번 실행하지 않는다 — `[2026-09-20]` Team 을 아예 안 부른다
+    # (전에는 부른 뒤 결과를 쓸 때 상태기계가 `InvalidTransition` 으로 막았다)
+    again = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    assert again["skipped"] == "not_runnable" and again["status"] == "resolved"
     assert _state(tenant, case_id, booking)[3] == actions
 
 
@@ -222,3 +222,42 @@ def test_two_proposals_for_two_bookings_in_one_case_both_survive(world):
     assert str(case["status"]) == "waiting_approval", events[-1]
     assert len(case["state_json"]["action_ids"]) == 2 and len(set(case["state_json"]["action_ids"])) == 2
     assert sorted(a[1] for a in actions) == ["pending_approval", "pending_approval"]
+
+
+def test_a_case_that_waits_for_approval_is_not_run_again_by_the_sweeper(world):
+    """되잡기 작업이 같은 Case 를 또 집어도 Team 을 다시 부르지 않는다 — 기다림을 푸는 것은 승인이다."""
+    tenant, customer, booking = world
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    before = _state(tenant, case_id, booking)[4]
+    again = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    assert again["skipped"] == "not_runnable" and again["status"] == "waiting_approval"
+    assert _state(tenant, case_id, booking)[4] == before          # 이벤트가 하나도 안 늘었다
+
+
+class TwoBookingsNoHandler(TwoBookings):
+    """적용기가 없는 조립에서는 키의 대상이 Case id 라 둘째 제안이 같은 키가 된다."""
+
+
+def test_a_second_proposal_that_would_be_swallowed_goes_to_a_human(world):
+    """★조용히 사라지게 두지 않는다 — 같은 키에 다른 인자면 `action_key_collision`."""
+    from app.core.actions import ActionHandlers
+
+    tenant, customer, booking = world
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO bookings (tenant_id,customer_id,booking_no,kind,status,starts_at,party_size,"
+                    "capacity,amount_cents) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING booking_id",
+                    (tenant, customer, "BK-3", "dining", "confirmed", datetime.now(UTC) + timedelta(days=6),
+                     2, 4, 3000000))
+        second = cur.fetchone()[0]
+    team = TwoBookingsNoHandler(ReadToolbox(get_connection, policy_search=_policy))
+    team.second = str(second)
+    controller = Controller(TeamRegistry([team]), policy_search=_policy, connection_factory=get_connection,
+                            repository=repository, verification_policy=TRAVEL_OPS_POLICY,
+                            fact_queries=FACT_QUERIES, action_handlers=ActionHandlers())
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_key_collision", events[-1]
+    assert ours == theirs == "confirmed"

@@ -15,6 +15,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-20 — 변경 통지에도 계획서 링크 · 끝난 Case 재실행 차단 · 멱등 키 충돌 표면화
+
+변경 통지(①)에 `plan_url` 이 빠져 있던 것을 채웠다(`wiki/architecture/notifications.md` 허브 표 갱신). 끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다(`actions/approval.md`). 적용기가 없어 키의 대상이 Case id 인 제안은 둘째가 합쳐져 사라지던 것을 `action_key_collision` 로 드러낸다(`actions/idempotency.md`).
+
 ## 2026-09-18 — 간헐 실패 원인(UUID 가림) · 일정 안내 · 승인 뒤 실행
 
 「원인 모름 간헐 실패」는 코어 가림 규칙이 UUID 를 전화번호로 가리던 결함이었다(`records/reports/debugs/2026-09-18_1425_…`). 일정 안내(하루 시작·출발)를 운영 되잡기 작업으로 만들고, 기본 감시를 Case 버전으로 바꿨다(`operations/run.md`). 승인된 제안을 코어가 적용기로 실행하고, Booking Handoff 준비 capability 에 라우팅이 닿는다(`actions/approval.md` 「승인 뒤 실행」 · `actions/idempotency.md` · `teams/booking-handoff.md`). 리포트 `records/reports/2026-09-18_1500_…`.

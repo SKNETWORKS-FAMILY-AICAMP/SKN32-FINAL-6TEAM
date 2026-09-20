@@ -29,6 +29,18 @@ class ControllerError(RuntimeError):
 logger = logging.getLogger(__name__)
 
 
+def _plain(value: Any) -> Any:
+    """DB(jsonb)에 실릴 모양으로 — UUID·시각이 문자열이 된 값끼리 견준다."""
+    import json
+
+    return json.loads(json.dumps(value, ensure_ascii=False, default=str))
+
+#: `run_case` 가 Team 을 부를 수 있는 상태. 그 밖(끝난 Case · 사람·고객·바깥을 기다리는 Case)은
+#: 부르지 않고 그대로 돌려준다 — 기다림을 푸는 것은 승인 API 와 `resume()` 이다.
+RUNNABLE_STATUSES = frozenset({CaseStatus.NEW, CaseStatus.CLASSIFYING, CaseStatus.ROUTING,
+                               CaseStatus.RUNNING, CaseStatus.RESUMING})
+
+
 class Controller:
     def __init__(self, registry: TeamRegistry, *, context_broker: ContextBroker | None = None,
                  policy_search: Callable[..., list[Any]] | None = None,
@@ -204,6 +216,12 @@ class Controller:
             case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
             if case is None:
                 raise ControllerError("case not found")
+            if case["status"] not in RUNNABLE_STATUSES:
+                # ★`[2026-09-20]` 끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다. 전에는
+                #   불러 놓고 결과를 쓸 때 상태기계가 `InvalidTransition` 으로 막았다 — 결과는 같지만
+                #   LLM·도구를 한 번 더 쓰고, 실패 사유가 「전이 오류」로 보여 원인을 가린다.
+                return {"case_id": str(case_id), "status": str(case["status"]), "version": case["version"],
+                        "skipped": "not_runnable"}
 
             # ── A. 시작·라우팅·재개 ────────────────────────────────────────────
             with conn.transaction():
@@ -458,6 +476,15 @@ class Controller:
                     tenant_id=case["tenant_id"], request_id=request_id_for_case(case),
                     action_type=proposal.action_type, business_subject=subject,
                 )
+                # ★`[2026-09-20]` 적용기가 없어 키의 대상이 Case id 인 제안은 **둘째가 조용히 합쳐진다**
+                #   (`ON CONFLICT … DO UPDATE` 가 같은 행을 돌려준다). 합치기 전에 인자가 같은지 보고,
+                #   다르면 사람에게 넘긴다 — 제안 하나가 말없이 사라지지 않게. 같은 인자면 그대로 멱등이다.
+                existing = self.repository.find_action_request(conn, tenant_id=case["tenant_id"],
+                                                               idempotency_key=server_key)
+                if existing is not None and existing.get("arguments") != _plain(proposal.arguments):
+                    return self._escalation(
+                        "action_key_collision",
+                        f"{proposal.action_type}: 같은 멱등 키에 다른 인자의 제안이 이미 있다")
                 action_ids.append(str(self.repository.create_action_request(conn, tenant_id=case["tenant_id"], case_id=case["case_id"], action_type=proposal.action_type,
                     arguments=proposal.arguments, idempotency_key=server_key, status="pending_approval")))
             # ★`[2026-09-18]` 무엇을 기다리는지 적는다. 전에는 안 적어 승인 뒤 재개가 기본값
