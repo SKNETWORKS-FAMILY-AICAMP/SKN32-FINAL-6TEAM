@@ -1,0 +1,207 @@
+{
+ "note": "버스 분기 회귀 케이스 v1 — **실제 버스 데이터(bus_route_v1 18노선)** 기준. 실행: python scripts/verify_time.py --cases tests/mobility/bus_legs_v1.json --check-expect (★ v0.4 부터 BUS-03·07 의 지하철 대안이 02호선 시간표를 읽는다 — 전체 시간표로 돌린다)",
+ "built_at": "2026-09-10",
+ "주의": [
+  "승차 소요 = 구간 거리 ÷ 표정속도(rules.bus.표정속도). 2026-09-10 저녁에 근거가 확보돼 도착 시각이 나온다. 값_우선순위는 노선별 실측 > 유형별 통계 > 근거없음.",
+  "첫차·막차·배차가 요일 구분 없이 하나로 온다. 휴일 판정에는 경고가 붙는다.",
+  "버스 막차가 22:20~23:40 으로 지하철보다 이르다 — 저녁 마지막 구간이 버스면 거기가 판정의 핵심이다."
+ ],
+ "cases": [
+  {
+   "id": "BUS-01",
+   "note": "2016 건대입구→성수 낮",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "11:12",
+   "expect_warn_codes": [
+    "MOB_W_SPEED_NO_PEAK"
+   ]
+  },
+  {
+   "id": "BUS-02",
+   "note": "첫차 이전 — 2016 첫차 04:10. v0.4(2026-09-19): 버스 대안 축이 생겼지만 03:50 은 N62·N73 도 지하철도 전부 운행 전이라 대안 0 — expect_alt_max 로 잠근다",
+   "date": "2026-09-11",
+   "depart_at": "03:50",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "infeasible",
+   "expect_relief_contains": "첫차 04:10",
+   "expect_alt_max": 0
+  },
+  {
+   "id": "BUS-03",
+   "note": "막차 이후 — 2016 막차 22:20. 지하철보다 이르다. v0.4(2026-09-19): 버스 구간의 수단교체 축이 생겨 02호선 건대입구→성수(22:42 출발 → 22:47, 접근 43m·이탈 122m 포함)가 대안으로 선다 — 종전에는 택시만",
+   "date": "2026-09-11",
+   "depart_at": "22:40",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "infeasible",
+   "expect_relief_contains": "수단 교체",
+   "expect_alt_min": 1,
+   "expect_alt_axis": "수단교체",
+   "expect_alt_arrive": "22:47"
+  },
+  {
+   "id": "BUS-04",
+   "note": "막차 근처 — 대기를 배차 전부(11분)로 잡는다",
+   "date": "2026-09-11",
+   "depart_at": "22:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "22:17"
+  },
+  {
+   "id": "BUS-05",
+   "note": "★왕복 노선의 함정 — 성수역1번출구(seq 32)→건대입구역사거리(107)는 실제로 75정거장이다. 길 건너 짝(성수역4번출구 103→건대입구역6번출구 105)이면 2정거장. 판정은 맞지만 더 짧은 길을 알려야 한다(rules bus.우회_경고)",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "성수역1번출구",
+     "to": "건대입구역사거리.건대병원"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "13:28",
+   "expect_warn_codes": [
+    "MOB_W_BUS_DETOUR"
+   ]
+  },
+  {
+   "id": "BUS-06",
+   "note": "수집 안 된 노선",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "9999",
+     "from": "가",
+     "to": "나"
+    }
+   ],
+   "expect": "unknown",
+   "expect_warn_codes": [
+    "MOB_W_BUS_ROUTE_NOT_COLLECTED"
+   ]
+  },
+  {
+   "id": "BUS-07",
+   "note": "심야 N62 — 23:40 첫차, 27:10 막차. 낮에는 불가. v0.4(2026-09-19): 노선교체 2016(같은 정류장 100m 안 · 11:06 → 11:12) + 수단교체 02호선(11:01 → 11:06) 두 대안 — 종전에는 택시만",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "N62",
+     "from": "건대입구역",
+     "to": "성수역"
+    }
+   ],
+   "expect": "infeasible",
+   "expect_relief_contains": "23:40",
+   "expect_alt_min": 2,
+   "expect_alt_axis": "노선교체",
+   "expect_alt_arrive": "11:12"
+  },
+  {
+   "id": "BUS-08",
+   "note": "휴일 — 요일축 없음 경고",
+   "date": "2026-09-12",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "11:12",
+   "expect_warn_codes": [
+    "MOB_W_BUS_NO_DAYTYPE"
+   ]
+  },
+  {
+   "id": "BUS-09",
+   "note": "★긴 구간 — 12,066m ÷ 지선 14.0 km/h = 51.7분. 표정속도가 바뀌면 여기가 울린다",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "중랑공영차고지.신내역",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "11:58"
+  },
+  {
+   "id": "BUS-10",
+   "note": "★같은 구간 휴일 — 지선 15.2 라 4분 빠르다. 요일축이 붙었다는 확인",
+   "date": "2026-09-12",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "중랑공영차고지.신내역",
+     "to": "성수역1번출구"
+    }
+   ],
+   "expect": "feasible",
+   "expect_arrive": "11:54"
+  },
+  {
+   "id": "BUS-11",
+   "note": "★통계 금지 노선 — 01A 남산은 순환 통계(21.3)를 쓰지 않는다. 실측 15.3 과 -28% 어긋나 도착이 5분 이르게 나온다. 노선별 실측값이 규칙에 들어오면 이 케이스가 MISS 로 울린다",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "mode": "bus",
+     "route": "01A",
+     "from": "충무로역.한옥마을.한국의집",
+     "to": "남산서울타워"
+    }
+   ],
+   "expect": "feasible",
+   "expect_warn_codes": [
+    "MOB_W_BUS_SPEED_BLOCKED_ROUTE"
+   ]
+  }
+ ]
+}
