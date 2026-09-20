@@ -37,6 +37,7 @@ domain_note: 결정 목록이다. 개별 결정의 도메인은 각 문서가 �
 | [D-007](D-007-central-config-store.md) | 중앙 설정 저장소 (direct/central 2모드) | draft | Composer·배포 |
 | [D-008](D-008-review-spam-out-of-scope.md) | 가짜 리뷰 분류는 제품 기능으로 안 낸다 | draft | VOC·데이터 |
 | [D-009](D-009-recommendation-scope.md) | 추천 기능은 vision 으로 미룬다 | draft | 제품 범위 |
+| [D-018](D-018-decision15-stop-paths.md) | **결정 15 의 「서버를 끈다」는 세 층** — 조립·실행·배치 | draft | 여행 런타임·문서 |
 
 ## 결정 문서 골격
 

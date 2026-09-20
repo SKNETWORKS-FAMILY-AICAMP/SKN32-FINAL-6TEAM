@@ -15,6 +15,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-21 — v11 26항목을 실행으로 세는 DoD 검사기
+
+`scripts/verify_dod_v11.py` 를 만들었다. 항목마다 그것을 보는 시험(node id)을 적어 두고 실제로 돌린다 — 재는 것이 없으면 「미측정」이고 통과로 세지 않는다. 첫 실측 통과 16/26 = 62%, MVP 18 기준 16/18 = 89%(허브 `wiki/delivery/dod.md`). 옛 `scripts/verify_dod.py` 는 v8 29항목 기록으로 남긴다.
+
 ## 2026-09-20 — 변경 통지에도 계획서 링크 · 끝난 Case 재실행 차단 · 멱등 키 충돌 표면화
 
 변경 통지(①)에 `plan_url` 이 빠져 있던 것을 채웠다(`wiki/architecture/notifications.md` 허브 표 갱신). 끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다(`actions/approval.md`). 적용기가 없어 키의 대상이 Case id 인 제안은 둘째가 합쳐져 사라지던 것을 `action_key_collision` 로 드러낸다(`actions/idempotency.md`).

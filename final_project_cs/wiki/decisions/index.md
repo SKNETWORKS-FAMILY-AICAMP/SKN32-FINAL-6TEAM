@@ -56,6 +56,7 @@ domain: neutral
 | [D-002](../../../wiki/decisions/D-002-graph-store-gate.md) | Graph Store는 게이트 통과 시에만 | `GraphStorePort` 유지, `SqlGraphAdapter`가 MVP |
 | [D-003](../../../wiki/decisions/D-003-message-broker.md) | in-process queue | `MessageBusPort` 유지, 중복 전달·retry 테스트 필요 |
 | [D-004](../../../wiki/decisions/D-004-self-hosting-rationale.md) | 자체호스팅은 규제 논거 | 3B 추론 실측 필요 |
+| [D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md) | 결정 15 는 층마다 멈춘다 | 기동 조립 거부 · Case 는 `fatal_source_failure` 로 사람 인계 · 스위퍼 exit 1. **고칠 코드는 없다** |
 
 ## 관계
 
