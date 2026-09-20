@@ -181,3 +181,11 @@ program/산출물양식/_backup/
 # 규칙은 더 이상 적용되지 않는다. ★루트에 고정한다 — final_project_cs/eval/datasets
 # (골든셋) 는 걸리지 않아야 한다.
 /datasets/
+
+# mobility local
+.metrics/
+Claude outputs/
+*.bak_*
+demo*.html
+selfcheck*.json
+fold_sample.json
