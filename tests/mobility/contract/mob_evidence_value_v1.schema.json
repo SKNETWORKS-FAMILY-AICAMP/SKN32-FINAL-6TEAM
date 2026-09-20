@@ -33,6 +33,9 @@
     },
     {
       "$ref": "#/$defs/source"
+    },
+    {
+      "$ref": "#/$defs/car_leg"
     }
   ],
   "$defs": {
@@ -436,6 +439,12 @@
               "$ref": "#/$defs/verdict_value"
             },
             "airport_bus": {
+              "$ref": "#/$defs/verdict_value"
+            },
+            "bike": {
+              "$ref": "#/$defs/verdict_value"
+            },
+            "car": {
               "$ref": "#/$defs/verdict_value"
             }
           }
@@ -931,7 +940,9 @@
             "bus",
             "taxi",
             "walk",
-            "airport_bus"
+            "airport_bus",
+            "bike",
+            "car"
           ]
         },
         "verdict": {
@@ -993,8 +1004,231 @@
             "walk",
             "bus",
             "issue",
+            "bike",
             "기타"
           ]
+        }
+      }
+    },
+    "car_leg": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "자동차·택시 구간 요약(21번 방 · v0.6). 저장소 설계 3차 변경점 §3. 좌표열·edge 목록·경로 API 원값은 넣지 않는다 — additionalProperties:false 가 막는다.",
+      "required": [
+        "v",
+        "kind",
+        "leg_id",
+        "grade",
+        "mode",
+        "distance_m",
+        "topis_time_s",
+        "day_type",
+        "hour_start",
+        "coverage_m",
+        "coverage_pct",
+        "source_id"
+      ],
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "kind": {
+          "const": "car_leg"
+        },
+        "leg_id": {
+          "$ref": "#/$defs/leg_id"
+        },
+        "grade": {
+          "$ref": "#/$defs/grade"
+        },
+        "mode": {
+          "enum": [
+            "car",
+            "taxi"
+          ]
+        },
+        "distance_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "topis_time_s": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gh_time_s": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "GraphHopper 정적 소요 — 참고값. 판정에는 쓰지 않는다(18번: 정적 11.1% vs 프로파일 3.6%)"
+        },
+        "depart_min": {
+          "$ref": "#/$defs/service_min_null"
+        },
+        "arrive_min": {
+          "$ref": "#/$defs/service_min_null"
+        },
+        "day_type": {
+          "enum": [
+            "평일",
+            "토요일",
+            "휴일"
+          ],
+          "description": "프로파일 요일형 — 시간표 day_type(weekday/holiday)과 다른 축이다. config holidays(A10)가 정본"
+        },
+        "hour_start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23
+        },
+        "coverage_m": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "topis",
+            "class",
+            "default"
+          ],
+          "properties": {
+            "topis": {
+              "type": "number",
+              "minimum": 0
+            },
+            "class": {
+              "type": "number",
+              "minimum": 0
+            },
+            "default": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "coverage_pct": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "topis",
+            "class",
+            "default"
+          ],
+          "properties": {
+            "topis": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "class": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "default": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "n_edges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "n_links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "link_id",
+              "m"
+            ],
+            "properties": {
+              "link_id": {
+                "type": "string",
+                "maxLength": 10
+              },
+              "m": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "description": "어느 링크를 몇 m — 요약. 좌표 없음"
+        },
+        "source_id": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "maxLength": 60
+          }
+        },
+        "fare_kind": {
+          "enum": [
+            "중형",
+            "대형_모범"
+          ]
+        },
+        "fare_won": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meter_won": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toll_won": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toll_basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "slow_s": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slow_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "night_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "out_of_city": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "null = 미판정(서울 경계 폴리곤 없음). 미적용 = 하한 방향"
+        },
+        "fare_basis": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/warning"
+          },
+          "maxItems": 6
+        },
+        "basis": {
+          "$ref": "#/$defs/basis"
         }
       }
     }

@@ -30,15 +30,31 @@
 #     이유는 시간 밖 축(환승·도보·등급)으로만 말한다. rules tie_band.
 #   ★ `legs` 케이스의 판정 경로는 손대지 않았다 — 회귀 91건은 그대로다.
 #
+# 규칙 v0.6 (2026-09-20 · 21번 방 · 자동차·택시 판정)
+#   ★ 택시 대안이 「소요 판단 불가」에서 **소요·요금(추정)** 으로 바뀐다 — 18번 도로망 그래프(GraphHopper 상주 서버,
+#     캐시 없음) 위에서 TOPIS 프로파일로 edge 마다 소요를 재계산하고(modules/mobility/car.py) 15번 산식으로 요금을 낸다.
+#     라우터에 닿지 못하면 종전대로 근거없음 + MOB_W_CAR_ROUTER_DOWN. 지어내지 않는다.
+#   ★ legs 에 mode=car / mode=taxi 구간이 생겼다(verify_leg_car). from/to 는 역명 또는 'lat,lng'.
+#   ★ 경로는 저장하지 않는다 — LegResult.car / CaseResult.taxi.car 에는 거리·소요·커버·링크 요약만 남는다.
+#   ★ --gh-url (기본 rules car.graphhopper.url · 환경변수 MOBILITY_GH_URL · 'none' · 'fixture:<파일>') ·
+#     --allow-router-down 은 라우터 없는 실행에서 expect_taxi 축을 SKIP 으로 세어 준다(조용히 통과시키지 않는다).
+#
+# 규칙 v0.7 (2026-09-20 · 22번 방 · 자전거(따릉이) 판정 · rules bike.ddareungi)
+#   ★ legs 에 mode=bike. from/to 는 역명(station_coords) 또는 {lat,lng,name}. verify_leg_bike.
+#     출발·도착 반경 station_walk_m 안 운영 대여소 ≥1 → 후보(없으면 **불가**) · 출발 대여소 실시간 거치(bikeList 단건, 값만 쓰고 버림)
+#     · 만 12세 이하 제외 · LCD 전용 출발 대여소 제외 · 요금·초과 경고(> 50분) · 소요 = 도보 + 대여 3 + bike 프로파일 + 반납 3.
+#   ★ 시각을 확정하지 않는다 — 소요만. 대안 열거 수단교체 축과 multi 후보(「자전거」)에 들어간다. tie_band 는 여전히 지하철×버스.
+#   ★ 라우터(GraphHopper)·실시간 조회가 없으면 죽지 않고 **근거없음**으로 낸다 — 판정은 성립, 소요·가용은 미상.
+#
 # 판정 값 넷
 #   feasible          성립
 #   infeasible        불가 (+완화 조건)
 #   rejected_by_limit 성립하지만 동행 상한 초과로 탈락
 #   unknown           근거 없음
 #   ※ 탈락과 불가를 구분하는 게 핵심이다. 탈락은 "되지만 이 일행에게 무리", 불가는 "안 된다".
-import argparse, json, math, sys, difflib, collections
+import argparse, json, math, os, sys, difflib, collections
 from dataclasses import dataclass, field
-from datetime import date as _date
+from datetime import date as _date, datetime as _datetime, timedelta as _timedelta
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -51,6 +67,9 @@ from modules.mobility.bus import BusRoutes                              # noqa: 
 from modules.mobility.geo import StationCoords, meters                  # noqa: E402
 from modules.mobility.exits import StationExits                         # noqa: E402
 from modules.mobility.candidates import CandidateGraph                  # noqa: E402
+from modules.mobility.car import CarGraph, CarService, RouterDown, make_router   # noqa: E402
+from modules.mobility.bike import (BikeStations, BikeLive, BikeRouter,   # noqa: E402
+                                   party_excluded as bike_party_excluded, fare as bike_fare)
 from modules.mobility.timeutil import (to_min, to_service_min, fmt_min,  # noqa: E402
                                        fmt_wall, day_type_of, MIN_DAY)
 
@@ -151,6 +170,22 @@ class LegResult:
     dropped: dict = field(default_factory=dict)
     warnings: list = field(default_factory=list)
     evidence: list = field(default_factory=list)
+    car: dict = None                         # 자동차·택시 구간 요약(v0.6 · 경로 없음) — 접기가 kind=car_leg 로 올린다
+    walk_min: int = None                     # 구간 안 도보(자전거 — 대여소까지·대여소에서, v0.7). 지하철·버스는 None
+
+
+def leg_txt(l):
+    """구간 한 줄 표기. from/to 가 dict(좌표)인 자전거 구간도 이름으로 찍는다."""
+    nm = lambda x: x.get("name") or f"{x.get('lat')},{x.get('lng')}" if isinstance(x, dict) else x
+    if l.get("mode") == "bus":
+        return f"버스 {l['route']} {nm(l['from'])}→{nm(l['to'])}"
+    if l.get("mode") == "bike":
+        return f"자전거 {nm(l['from'])}→{nm(l['to'])}"
+    return f"{l.get('line')} {nm(l['from'])}→{nm(l['to'])}"
+
+
+def leg_mode(l):
+    return l.get("mode", "subway")
 
 
 @dataclass
@@ -179,10 +214,16 @@ class CaseResult:
 
 # ── 검증기 ────────────────────────────────────────────────────────────────
 class Verifier:
-    def __init__(self, tt, lo, rules, holidays, tw=None, bus=None, sc=None, ex=None):
+    def __init__(self, tt, lo, rules, holidays, tw=None, bus=None, sc=None, ex=None, car=None,
+                 bk=None, bike_live=None, bike_router=None):
         self.tt, self.lo, self.R, self.tw, self.bus = tt, lo, rules, tw, bus
         self.sc = sc
         self.ex = ex            # 역 출구 좌표(OSM · 추정) — 지하철↔버스 환승에만 쓴다 (19번 방)
+        self.car = car          # CarService(그래프 + 라우터 + 규칙) — 없으면 택시는 종전대로 근거없음 (21번 방)
+        self._case_date = None  # verify_case 가 매 건 갈아 끼운다 — 자동차 소요는 날짜(요일형)가 필요하다
+        self.bk = bk            # 따릉이 운영 대여소(22번 방) — 없으면 자전거는 근거없음
+        self.bike_live = bike_live      # 실시간 거치 조회(BikeLive) — None 이면 가용 근거없음
+        self.bike_router = bike_router  # GraphHopper(bike/foot) — None 이면 소요 근거없음
         self._lines_of = None
         self.holidays = holidays
         self.rules_src = rules.get("source_id", "mobility_rules")
@@ -643,6 +684,203 @@ class Verifier:
                          warnings=warn, evidence=ev)
 
 
+    # ── 자전거(따릉이) — 시간표가 없다. 소요만 낸다 (규칙 v0.7 · 22번 방 · rules bike.ddareungi) ──
+    def bike_enabled(self):
+        b = (self.R.get("bike") or {}).get("ddareungi")
+        return bool(b and b.get("enabled"))
+
+    def _bike_point(self, x):
+        """역명(station_coords) 또는 {lat,lng,name} → (lat, lng, 표시 이름). 못 찾으면 None."""
+        if isinstance(x, dict):
+            if x.get("lat") is None or x.get("lng") is None:
+                return None
+            return x["lat"], x["lng"], x.get("name") or f"{x['lat']:.4f},{x['lng']:.4f}"
+        if self.sc:
+            p = self.sc.by_name.get(x)
+            if p and p.get("lat") is not None:
+                return p["lat"], p["lng"], f"{x}역"
+        return None
+
+    def _bike_walk(self, lat1, lng1, lat2, lng2):
+        """대여소까지 도보 — GraphHopper foot 거리(추정) → 없으면 직선 × 우회계수(추정). (m, 분, 근거 dict)"""
+        B = self.R["bike"]["ddareungi"]
+        speed = self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
+        straight = meters(lat1, lng1, lat2, lng2)
+        r = (self.bike_router.route(B["ride"]["walk_profile"], lat1, lng1, lat2, lng2)
+             if self.bike_router and self.bike_router.available() else None)
+        if r:
+            dist, basis = r["distance_m"], f"보행망 {r['basis']}"
+            ev = {"source_type": "db", "source_id": r["source_id"], "grade": "추정", "observed_at": None,
+                  "claim": f"도보 {dist:,.0f}m (직선 {straight:,.0f}m · {basis})"}
+        else:
+            factor = B["station_walk_detour"]["value"]
+            dist, basis = straight * factor, f"직선×{factor:g}"
+            ev = self._ev_rule(f"bike.ddareungi.station_walk_detour — {basis}", "추정")
+            ev["claim"] = f"도보 {dist:,.0f}m (직선 {straight:,.0f}m × {factor:g} — 보행망 없음)"
+        return dist, math.ceil(dist / speed / 60), ev, straight
+
+    def verify_leg_bike(self, idx, leg, now_min, day_type, party=None, live_fixture=None):
+        """따릉이 구간. 17번 §4 표 그대로 —
+
+        후보     출발·도착 각각 반경 station_walk_m 안 운영 대여소 ≥1. 없으면 **불가**(근거없음이 아니다 — 대여소 목록은 확정이다).
+        가용     출발 대여소 bikeList 단건 조회 → parkingBikeTotCnt ≥ 1. 도착은 검사 안 함(거치대 초과 반납 가능).
+                 응답은 값만 쓰고 버린다 — 이력엔 checked_at + 개수. 조회 못 하면 후보 유지 · 가용 근거없음 · 경고.
+        제외     만 12세 이하 동반 → 불가(확정). 출발 대여소 LCD 전용 → 다음 대여소로(추정).
+        요금     1h 1,000 … 초과 200원/5분. 승차 > overtime_warn_min → MOB_W_BIKE_OVERTIME.
+        소요     도보(보행망) + 대여 3 + bike 프로파일 + 반납 3 — 대여·반납은 ◇ 근거없음.
+        시각     확정하지 않는다. 출발 시각 = now, 도착 = now + 소요(추정). 라우터가 없으면 도착을 내지 않는다.
+        """
+        party = party or {}
+        B = self.R["bike"]["ddareungi"]
+        a_raw, b_raw = leg["from"], leg["to"]
+        a_nm = a_raw.get("name") if isinstance(a_raw, dict) else a_raw
+        b_nm = b_raw.get("name") if isinstance(b_raw, dict) else b_raw
+        label = f"자전거 {a_nm}→{b_nm}"
+        if not self.bike_enabled():
+            return LegResult(idx, label, "unknown", "규칙 bike.ddareungi 가 꺼져 있다", grade="근거없음")
+        if self.bk is None:
+            return LegResult(idx, label, "unknown", "따릉이 대여소 목록(bike_stations_v1.jsonl)을 읽지 못했다",
+                             grade="근거없음")
+        ev, warn = [], []
+
+        # 0) 연령 제외 — 운영사 규칙(확정)
+        why = bike_party_excluded(party, B)
+        if why:
+            return LegResult(idx, label, "infeasible", why, grade="확정",
+                             relief="자전거 대신 다른 수단. 만 13세 이상은 회원가입 후 이용",
+                             evidence=[self._ev_rule("bike.ddareungi.exclude.age_max_excluded", "확정")])
+
+        # 1) 양끝 좌표
+        pa, pb = self._bike_point(a_raw), self._bike_point(b_raw)
+        if pa is None or pb is None:
+            miss = a_nm if pa is None else b_nm
+            return LegResult(idx, label, "unknown", f"'{miss}' 의 좌표가 없다 — 대여소를 찾을 수 없다", grade="근거없음")
+        radius = B["station_walk_m"]["value"]
+        st_src = {"source_type": "db", "source_id": self.bk.source_id, "grade": "확정",
+                  "observed_at": self.bk.checked_at}
+        A = self.bk.stations_near(pa[0], pa[1], radius)
+        Bs = self.bk.stations_near(pb[0], pb[1], radius)
+        for lst, where in ((A, pa[2]), (Bs, pb[2])):
+            if not lst:
+                return LegResult(idx, label, "infeasible",
+                                 f"{where} 반경 {radius}m 안에 운영 중인 따릉이 대여소가 없다", grade="확정",
+                                 relief="반경 밖 대여소까지 걷거나 다른 수단",
+                                 warnings=[self.warn_msg("MOB_W_BIKE_NO_STATION", where=where, radius_m=radius)],
+                                 evidence=[dict(st_src, claim=f"{where} 반경 {radius}m 운영 대여소 0곳 "
+                                                              f"(목록 {len(self.bk.rows):,}곳 · {self.bk.checked_at})"),
+                                           self._ev_rule("bike.ddareungi.station_walk_m", "추정")])
+        ev.append(self._ev_rule("bike.ddareungi.station_walk_m", "추정"))
+
+        # 2) 출발 대여소 — 가까운 순으로 candidate_stations 곳. LCD 전용은 건너뛰고, 실시간 거치 ≥1 이어야 한다
+        live = (BikeLive.from_fixture(live_fixture) if live_fixture else None) or self.bike_live
+        pick, avail, avail_grade = None, None, "근거없음"
+        lcd_skipped, empty = [], []
+        mode_grade = "확정"
+        checked = 0                                   # 실시간 조회(호출 예산)에 드는 대여소만 센다 — LCD 건너뜀은 호출이 아니다
+        for d, st in A:
+            qr = BikeStations.qr_ok(st)
+            if qr is False and B["exclude"]["lcd_origin"]["value"]:
+                lcd_skipped.append(st)
+                warn.append(self.warn_msg("MOB_W_BIKE_LCD_SKIPPED", station=st["name"]))
+                continue
+            if checked >= B["candidate_stations"]["value"]:
+                break
+            checked += 1
+            L = live.get(st["stationId"]) if live else None
+            if L is not None and L["available"] < 1:
+                empty.append((st, L))
+                ev.append({"source_type": "db", "source_id": L["source_id"], "grade": "확정",
+                           "observed_at": L["checked_at"],
+                           "claim": f"{st['name']}({st['stationId']}) 거치 {L['available']}대 — 빌릴 수 없어 건너뜀"})
+                continue
+            pick, avail = (d, st), L
+            if qr is None:
+                warn.append(self.warn_msg("MOB_W_BIKE_MODE_UNKNOWN", station=st["name"]))
+                mode_grade = "추정"
+            elif st.get("mode") != "QR":
+                mode_grade = "추정"                    # 'LCD,QR' 혼합 — xlsx 속성이라 추정
+            break
+        if lcd_skipped:
+            ev.append(self._ev_rule("bike.ddareungi.exclude.lcd_origin", "추정"))
+        if pick is None:
+            if empty:
+                st, L = empty[0]
+                return LegResult(idx, label, "infeasible",
+                                 f"{pa[2]} 근처 대여소 {len(empty)}곳이 조회 시각({L['checked_at']}) 거치 0대다",
+                                 grade="확정", relief="몇 분 뒤 다시 조회하거나 다른 수단", warnings=warn, evidence=ev,
+                                 dropped={"거치0": len(empty), "LCD전용": len(lcd_skipped)})
+            return LegResult(idx, label, "infeasible",
+                             f"{pa[2]} 반경 {radius}m 안 대여소 {len(lcd_skipped)}곳이 전부 LCD 전용이다 — "
+                             f"외국인 비회원(QR)은 빌릴 수 없다", grade="추정",
+                             relief="회원가입(만 13세 이상) 또는 다른 수단", warnings=warn, evidence=ev,
+                             dropped={"LCD전용": len(lcd_skipped)})
+        da, sa = pick
+        db, sb = Bs[0]
+        ev.append(dict(st_src, claim=f"출발 대여소 {sa['name']}({sa['stationId']} · {sa.get('mode') or '운영방식 미상'} · "
+                                     f"거치대 {sa.get('rack')}) 직선 {da:,.0f}m · 도착 대여소 {sb['name']}({sb['stationId']}) "
+                                     f"직선 {db:,.0f}m"))
+        if avail is not None:
+            avail_grade = "확정"
+            ev.append({"source_type": "db", "source_id": avail["source_id"], "grade": "확정",
+                       "observed_at": avail["checked_at"],
+                       "claim": f"{sa['name']} 거치 {avail['available']}대 (조회 시각의 값 · 저장 안 함)"})
+        else:
+            why = "실시간 조회 없음" if live is None else "응답 없음"
+            warn.append(self.warn_msg("MOB_W_BIKE_LIVE_UNKNOWN", station=sa["name"], why=why))
+            ev.append(self._ev_rule(f"bike.ddareungi.live_check — {why}", "근거없음"))
+        ev.append(self._ev_rule("bike.ddareungi.live_check", "확정"))
+
+        # 3) 소요 = 도보 + 대여 + 승차 + 반납 + 도보
+        wdist_in, wmin_in, wev_in, _ = self._bike_walk(pa[0], pa[1], sa["lat"], sa["lon"])
+        wdist_out, wmin_out, wev_out, _ = self._bike_walk(sb["lat"], sb["lon"], pb[0], pb[1])
+        ev += [wev_in, wev_out]
+        rent = B["rent_return_min"]["value"]
+        ev.append(self._ev_rule("bike.ddareungi.rent_return_min", "근거없음"))
+        ride = ride_grade = None
+        r = (self.bike_router.route(B["ride"]["profile"], sa["lat"], sa["lon"], sb["lat"], sb["lon"])
+             if self.bike_router and self.bike_router.available() else None)
+        if r:
+            ride = round(r["time_s"] / 60, 1)
+            ride_grade = "추정"
+            ev.append({"source_type": "db", "source_id": r["source_id"], "grade": "추정", "observed_at": None,
+                       "claim": f"{sa['name']} → {sb['name']} bike 프로파일 {r['distance_m']/1000:.2f}km · "
+                                f"{ride:g}분 ({r['basis']})"})
+            ev.append(self._ev_rule("bike.ddareungi.ride", "추정"))
+        else:
+            ride_grade = "근거없음"
+            ev.append(self._ev_rule("bike.ddareungi.ride — 라우터·픽스처 없음 → 승차 소요 없음", "근거없음"))
+
+        # 4) 요금 · 초과 경고 · 외국인 안내
+        fare_txt = ""
+        if ride is not None:
+            f = bike_fare(B["fare"], ride)
+            fare_txt = f" · 이용권 {f['pass']} {f['pass_won']:,}원" + (
+                f" + 초과 {f['overtime_min']}분 {f['overtime_won']:,}원" if f["overtime_won"] else "")
+            ev.append(self._ev_rule("bike.ddareungi.fare.passes", "확정"))
+            if ride > B["fare"]["overtime_warn_min"]["value"]:
+                warn.append(self.warn_msg("MOB_W_BIKE_OVERTIME", ride_min=f"{ride:g}",
+                                          warn_min=B["fare"]["overtime_warn_min"]["value"]))
+                ev.append(self._ev_rule("bike.ddareungi.fare.overtime_warn_min", "추정"))
+        if party.get("foreign", True):
+            g = B["foreigner_guide"]["value"]
+            warn.append(self.warn_msg("MOB_W_BIKE_FOREIGNER_GUIDE", la=g[0], lb=g[1], lc=g[2]))
+            ev.append({"source_type": "policy", "source_id": B["foreigner_guide"]["source_id"], "grade": "확정",
+                       "observed_at": self.R["bike"]["effective_date"], "claim": "외국인 비회원 이용 가능 — 앱 Foreigner · 해외카드/DSP · 이메일 대여번호"})
+
+        total = wmin_in + rent + (math.ceil(ride) if ride is not None else 0) + rent + wmin_out
+        arrive = now_min + total if ride is not None else None
+        grade = worst("확정", mode_grade, avail_grade, ride_grade)
+        reason = (f"대여소 {sa['name']}(도보 {wmin_in}분) → {sb['name']}(도보 {wmin_out}분)"
+                  + (f" · 승차 {ride:g}분" if ride is not None else " · 승차 소요 근거없음")
+                  + f" · 대여·반납 {rent * 2}분"
+                  + (f" · 거치 {avail['available']}대" if avail else " · 거치 미상")
+                  + fare_txt)
+        res = LegResult(idx, label, "feasible", reason, grade=grade, depart_min=now_min, arrive_min=arrive,
+                        wait_min=0, ride_min=ride, ride_grade=ride_grade, warnings=warn, evidence=ev,
+                        dropped={k: v for k, v in (("LCD전용", len(lcd_skipped)), ("거치0", len(empty))) if v})
+        res.walk_min = wmin_in + wmin_out
+        return res
+
     def _rollover_relief(self, now_min, first_min):
         """운행일 연장 시각(24 시 이상)이 실은 **그날 아침 첫차 이전**인 경우.
 
@@ -726,6 +964,7 @@ class Verifier:
         wlim = self._walk_limit(party)
         line, a, b = leg.get("line"), leg["from"], leg["to"]
         is_bus = leg.get("mode") == "bus"
+        is_bike_leg = leg.get("mode") == "bike"       # 자전거 구간의 대안은 택시만(모르는 것) — 자기_자신_제외
         out, tried = [], []
         excluded = self.rv("bus", "route_type_제외") or []
 
@@ -742,11 +981,13 @@ class Verifier:
             t = (at if at is not None else now_min) + walk_min(walk_in)
             r = (self.verify_leg_bus(idx, newleg, t, day_type)
                  if newleg.get("mode") == "bus"
+                 else self.verify_leg_bike(idx, newleg, t, day_type, party, case.get("bike_live"))
+                 if newleg.get("mode") == "bike"
                  else self.verify_leg(idx, newleg, t, day_type, is_sat))
             tried.append((axis, label, r.verdict))
             if r.verdict == "feasible":
                 arr = r.arrive_min + walk_min(walk_out) if r.arrive_min is not None else None
-                out.append({"axis": axis, "label": label, "leg": newleg,
+                out.append({"axis": axis, "label": label, "leg": newleg, "mode": leg_mode(newleg),
                             "depart_min": r.depart_min, "arrive_min": arr,
                             "walk_in_min": walk_min(walk_in), "walk_out_min": walk_min(walk_out),
                             "grade": r.grade, "reason": r.reason, "note": note,
@@ -852,7 +1093,31 @@ class Verifier:
                               "from": x["station_nm"], "to": y["station_nm"]},
                              walk_in=da, walk_out=db)
 
-        return out[:maxn], tried, self._taxi()
+            # ⓓ 자전거(따릉이) — 수단교체 축의 마지막 후보(규칙 v0.7 · 22번 방 · bike.ddareungi).
+            #   지하철 구간은 역 좌표, 버스 구간은 요청한 두 정류장 좌표에서 반경 안 대여소를 찾는다.
+            #   대여소까지 도보는 verify_leg_bike 안에서 재므로 walk_in/out 은 0 이다.
+            #   버스·지하철 후보가 최대_제시 를 이미 채웠으면 열거하지 않는다 — 축 순서가 곧 규칙이다.
+            if axis == "수단교체" and self.bike_enabled() and len(out) < maxn and not is_bike_leg:
+                if is_bus and bx is not None:
+                    fr = {"lat": bx["lat"], "lng": bx["lng"], "name": f"{bx['station_nm']} 정류장"}
+                    to = {"lat": by["lat"], "lng": by["lng"], "name": f"{by['station_nm']} 정류장"}
+                    src = f"{bx['station_nm']}→{by['station_nm']}"
+                elif line and self.sc:
+                    fr, to, src = a, b, f"{a}→{b}"
+                else:
+                    fr = to = None
+                if fr is not None:
+                    take(axis, f"따릉이 {src} — 반경 {self.R['bike']['ddareungi']['station_walk_m']['value']}m 대여소",
+                         {"mode": "bike", "from": fr, "to": to})
+
+
+        # 택시 — 불가가 난 구간의 양 끝(역 좌표 · 버스는 정류장 좌표)에서 그 시각 출발 (v0.6)
+        if is_bus:
+            ts = (bx["lng"], bx["lat"]) if bx is not None else None
+            te = (by["lng"], by["lat"]) if by is not None else None
+        else:
+            ts, te = self._pt(line, a), self._pt(line, b)
+        return out[:maxn], tried, self._taxi(ts, te, now_min)
 
     def _ev_tt(self, line, station, day_type, claim):
         return {"source_type": "db", "source_id": f"timetable_v1@{self.tt.fetched_at}",
@@ -868,10 +1133,107 @@ class Verifier:
         return self.rv("limits", "walk_m", "infant_or_luggage" if (
             party.get("infant") or party.get("luggage")) else "default")
 
-    def _taxi(self):
-        # 택시 — 후보에서 빼지 않는다. 검토해서 탈락시킨 게 아니라 **모르는** 것이다
-        return {"axis": "수단교체", "label": "택시", "verdict": "unknown",
-                "reason": self.rv("alternatives", "택시"), "grade": "근거없음"}
+    # ── 자동차·택시 (규칙 v0.6 · 21번 방) ─────────────────────────────────
+    def _pt(self, line, where):
+        """구간 끝점 → (lng, lat). 역명(역 좌표) · 'lat,lng' 문자열 · {lat, lng} dict. 못 찾으면 None."""
+        if isinstance(where, dict):
+            return (where["lng"], where["lat"]) if where.get("lat") is not None else None
+        if isinstance(where, str) and "," in where:
+            try:
+                la, lo = (float(x) for x in where.split(",", 1))
+                return (lo, la)
+            except ValueError:
+                return None
+        if not self.sc or not where:
+            return None
+        v = self.sc.get(line, where) if line else self.sc.by_name.get(where)
+        return (v["lng"], v["lat"]) if v and v.get("lat") is not None else None
+
+    def _depart_dt(self, now_min):
+        d = self._case_date or _date.today()
+        return _datetime(d.year, d.month, d.day) + _timedelta(minutes=int(now_min))
+
+    def _car_evidence(self, c):
+        ev = [{"source_type": "db", "source_id": c["source_id"][0], "grade": "추정",
+               "observed_at": "2026-05-31",
+               "claim": f"자동차 {c['distance_m']/1000:.1f} km · {c['day_type']} {c['hour_start']}시 출발 소요 "
+                        f"{c['topis_time_s']/60:.1f}분 · 커버 topis {c['coverage_pct']['topis']}% / "
+                        f"class {c['coverage_pct']['class']}% / default {c['coverage_pct']['default']}% "
+                        f"(링크 {c['n_links']}개)"},
+              {"source_type": "db", "source_id": c["source_id"][1], "grade": "확정",
+               "observed_at": "2026-09-18", "claim": f"도로망 경로 거리 {c['distance_m']:,.0f} m (좌표열은 저장하지 않는다)"},
+              self._ev_rule("car.등급", "확정"), self._ev_rule("car.coverage", "추정")]
+        if c["mode"] == "taxi":
+            ev.append(self._ev_rule("taxi.fare.산식", "확정"))
+            ev.append({"source_type": "policy", "source_id": "seoul_taxi_fare@2023-02-01(확인 2026-09-19)",
+                       "grade": "추정", "observed_at": "2026-09-19",
+                       "claim": f"택시({c['fare_kind']}) 요금 하한 {c['fare_won']:,}원 = 미터 {c['meter_won']:,}"
+                                + (f" + 통행료 {c['toll_won']:,}" if c["toll_won"] else "")
+                                + f" · 심야율 {c['night_rate']:g} · 저속 {c['slow_s']}초"})
+            ev.append(self._ev_rule("car.택시_대기", "근거없음"))
+        return ev
+
+    def _car_warnings(self, c):
+        ws = [self.warn_msg(code, **kw) for code, kw in c["warn"]]
+        if c["mode"] == "taxi":
+            ws.append(self.warn_msg("MOB_W_TAXI_FARE_LOWER_BOUND", fare_won=f"{c['fare_won']:,}",
+                                    toll=(f" (통행료 {c['toll_won']:,}원 포함)" if c["toll_won"] else "")))
+        return ws
+
+    def _car_run(self, s, e, now_min, taxi):
+        """CarService 호출 한 번. 반환 (요약 dict | None, 실패 사유). 예외를 밖으로 내지 않는다."""
+        if self.car is None:
+            return None, "자동차 판정 서비스가 없다(그래프 미적재 또는 라우터 없음)"
+        if s is None or e is None:
+            return None, "출발·도착 좌표를 못 찾았다"
+        try:
+            c = self.car.leg(s, e, self._depart_dt(now_min), taxi=taxi)
+        except RouterDown as ex:
+            return None, str(ex)
+        return c, None
+
+    def _taxi(self, s=None, e=None, now_min=None):
+        """택시 대안 — 후보에서 빼지 않는다. 라우터가 있으면 소요·요금(추정), 없으면 **모르는** 것이다(근거없음)."""
+        base = {"axis": "수단교체", "label": "택시", "leg": {"mode": "taxi"}}
+        if s is None or e is None or now_min is None:
+            return dict(base, verdict="unknown", grade="근거없음",
+                        reason="택시 구간의 출발·도착 지점을 정하지 못했다 — 소요 판단 불가",
+                        warnings=[])
+        c, why = self._car_run(s, e, now_min, taxi=True)
+        if c is None:
+            return dict(base, verdict="unknown", grade="근거없음",
+                        reason=f"소요 판단 불가 — {why}",
+                        warnings=[self.warn_msg("MOB_W_CAR_ROUTER_DOWN", reason=why[:80])])
+        ride = round(c["topis_time_s"] / 60, 1)
+        arr = int(now_min) + math.ceil(ride)
+        return dict(base, verdict="feasible", grade=c["grade"],
+                    reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 요금 하한 {c['fare_won']:,}원({c['fare_kind']})",
+                    depart_min=int(now_min), arrive_min=arr, ride_min=ride,
+                    distance_m=c["distance_m"], fare_won=c["fare_won"], fare_kind=c["fare_kind"],
+                    warnings=self._car_warnings(c), evidence=self._car_evidence(c),
+                    car={k: v for k, v in c.items() if k != "warn"})
+
+    def verify_leg_car(self, idx, leg, now_min, day_type):
+        """자동차·택시 구간. 성립 여부는 「경로가 있다」이고 소요는 프로파일(추정). 라우터 없으면 근거없음."""
+        taxi = leg.get("mode") == "taxi"
+        a_nm, b_nm = leg["from"], leg["to"]
+        label = f"{'택시' if taxi else '자동차'} {a_nm}→{b_nm}"
+        s, e = self._pt(leg.get("line"), a_nm), self._pt(leg.get("line"), b_nm)
+        c, why = self._car_run(s, e, now_min, taxi)
+        if c is None:
+            if s is None or e is None:
+                return LegResult(idx, label, "unknown", f"{why} ({a_nm if s is None else b_nm})", grade="근거없음")
+            return LegResult(idx, label, "unknown", f"도로 소요를 낼 수 없다 — {why}", grade="근거없음",
+                             warnings=[self.warn_msg("MOB_W_CAR_ROUTER_DOWN", reason=why[:80])])
+        ride = round(c["topis_time_s"] / 60, 1)
+        arr = int(now_min) + math.ceil(ride)
+        reason = (f"{fmt_min(now_min)} 출발 · {c['distance_m']/1000:.1f} km · 소요 {ride:g}분"
+                  + (f" · 요금 하한 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
+        return LegResult(idx, label, "feasible", reason, grade=c["grade"],
+                         depart_min=int(now_min), arrive_min=arr, wait_min=0 if taxi else None,
+                         ride_min=ride, ride_grade=c["grade"],
+                         warnings=self._car_warnings(c), evidence=self._car_evidence(c),
+                         car={k: v for k, v in c.items() if k != "warn"})
 
     def _bus_stop_row(self, leg, which):
         """버스 구간의 승차('from')/하차('to') 정류장 행. 노선·정류장을 못 찾으면 None."""
@@ -1017,6 +1379,13 @@ class Verifier:
                                  "fallback_edges": [], "walk_in": da, "walk_out": db})
             ev.append(self._ev_rule("candidates.버스_직행_후보", "확정"))
 
+        # 자전거 후보(규칙 v0.7 · 22번 방) — 역 좌표 기준. 판정(대여소·가용·소요)은 verify_leg_bike 가 한다.
+        if self.bike_enabled() and self.R["bike"]["ddareungi"]["multi_후보"]["value"] and self.bk and self.sc:
+            keep.append({"criteria": ["자전거"], "legs": [{"mode": "bike", "from": origin, "to": dest}],
+                         "est_min": None, "transfers": 0, "walk_min": None, "gen_grade": "추정",
+                         "fallback_edges": [], "walk_in": 0, "walk_out": 0})
+            ev.append(self._ev_rule("bike.ddareungi.multi_후보", "추정"))
+
         # 후보마다 같은 판정기 — 대안 열거는 끈다(후보끼리가 이미 대안이다)
         speed = self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
         wm = lambda m: math.ceil(m / speed / 60) if m else 0
@@ -1032,11 +1401,10 @@ class Verifier:
                            if l.verdict == "feasible" and l.label.startswith("버스 "))
             unc = bus_wait if any(l.get("mode") == "bus" for l in c["legs"]) \
                 else self.rv("tie_band", "지하철_불확실성_분")
-            walk_total = (c["walk_min"] or 0) + wm(c["walk_in"]) + wm(c["walk_out"])
+            walk_total = ((c["walk_min"] or 0) + wm(c["walk_in"]) + wm(c["walk_out"])
+                          + sum((l.walk_min or 0) for l in r.legs))       # 자전거 구간 안 도보(v0.7)
             out.append({"n": n, "criteria": c["criteria"], "legs": c["legs"],
-                        "label": " → ".join(
-                            (f"버스 {l['route']} {l['from']}→{l['to']}" if l.get("mode") == "bus"
-                             else f"{l['line']} {l['from']}→{l['to']}") for l in c["legs"]),
+                        "label": " → ".join(leg_txt(l) for l in c["legs"]),
                         "verdict": r.verdict, "reason": r.reason, "relief": r.relief, "grade": r.grade,
                         "depart_min": now + wm(c["walk_in"]), "arrive_min": arr,
                         "walk_in_min": wm(c["walk_in"]), "walk_out_min": wm(c["walk_out"]),
@@ -1073,12 +1441,13 @@ class Verifier:
         axes_rule = self.rv("tie_band", "이유_축")
         live = [c for c in out if c["verdict"] == "feasible" and c["arrive_min"] is not None]
         is_bus = lambda c: any(l.get("mode") == "bus" for l in c["legs"])
+        is_bike = lambda c: any(l.get("mode") == "bike" for l in c["legs"])
         ev.append(self._ev_rule("tie_band.비교_대상", "확정"))
         for i in range(len(live)):
             for j in range(i + 1, len(live)):
                 A, B = live[i], live[j]
-                if is_bus(A) == is_bus(B):          # 지하철×버스 만 비교한다(rules tie_band.비교_대상)
-                    continue
+                if is_bus(A) == is_bus(B) or is_bike(A) or is_bike(B):
+                    continue                         # 지하철×버스 만 비교한다(rules tie_band.비교_대상) — 자전거는 비교 밖(v0.7)
                 delta = abs(A["arrive_min"] - B["arrive_min"])
                 band = A["uncertainty_min"] + B["uncertainty_min"]
                 if delta <= band:
@@ -1128,7 +1497,7 @@ class Verifier:
         res.candidates, res.ties, res.dropped_candidates, res.bus_rejected = out, ties, dropped, bus_rejected
         res.axis_best = axis_best
         if not nf:
-            res.taxi = self._taxi()
+            res.taxi = self._taxi(self._pt(None, origin), self._pt(None, dest), now)
         return res
 
     # ── 케이스 한 건 ──
@@ -1136,6 +1505,7 @@ class Verifier:
         if case.get("multi"):
             return self.verify_multi(case)
         d = _date.fromisoformat(case["date"])
+        self._case_date = d
         day_type = day_type_of(d, self.holidays)
         is_sat = d.weekday() == 5
         stage = case.get("stage", "planning")
@@ -1164,11 +1534,29 @@ class Verifier:
         prev_line = None
         for i, leg in enumerate(case["legs"]):
             mode = leg.get("mode", "subway")
-            if mode not in ("subway", "bus"):
+            if mode not in ("subway", "bus", "car", "taxi", "bike"):
                 raise SystemExit(f"[{case.get('id')}] 모르는 수단이다: mode={mode}")
+            if mode in ("car", "taxi"):
+                # 자동차·택시 구간(v0.6). 앞 구간이 있으면 수단 교체 = 환승 1회로 센다. 승차 지점까지의 도보·대기는
+                # 자료가 없어 0분(car.택시_대기 근거없음) — 구간 사유에 적고 요금 경고가 하한이라 말한다.
+                if prev_line is not None:
+                    transfers += 1
+                r = self.verify_leg_car(i, leg, now, day_type)
+                legs.append(r)
+                warns += r.warnings
+                ev += r.evidence
+                if r.verdict != "feasible":
+                    return self._finish(case, day_type, legs, r.verdict, r.reason,
+                                        worst(*[x.grade for x in legs]), None, None, None, warns, ev)
+                now = r.arrive_min
+                prev_line = mode
+                continue
             if prev_line is not None:
                 transfers += 1
                 st = leg.get("from")
+                st = st.get("name") if isinstance(st, dict) else st      # 자전거 구간은 좌표 dict 일 수 있다
+                prev_mode = leg_mode(case["legs"][i - 1])
+                with_bike = (mode == "bike" or prev_mode == "bike")
                 # ★ 환승역이 무정차면 갈아탈 수 없다. 출발·도착역 검사(verify_leg)로는 안 잡힌다 —
                 #   여기서는 그 역이 앞 구간의 '도착'이자 뒤 구간의 '출발'이라 둘 다 통과해 버린다.
                 dsk = (self._disr("station_skip", line=prev_line, station=st)
@@ -1193,7 +1581,12 @@ class Verifier:
                 prev_leg = case["legs"][i - 1]
                 mixed = (mode == "bus") != (prev_leg.get("mode", "subway") == "bus")
                 label, w, tg, twarn = f"환승 {st}", None, "추정", []
-                if mixed:
+                if with_bike:
+                    # ★ 자전거와의 환승(v0.7 · 22번 방). 대여소까지·대여소에서의 도보는 **자전거 구간 안에서** 잰다
+                    #   (verify_leg_bike → LegResult.walk_min) — 여기서 또 더하면 이중 계산이다. 길찾기 가산만 붙인다.
+                    label, walk, tev = f"환승 {st} ↔ 자전거", 0, []
+                    dist_txt = "(대여소까지 도보는 자전거 구간 안에서 잰다)"
+                elif mixed:
                     # ★ 지하철↔버스 환승 (규칙 v0.4 · 19번 방 · rules.transfer.stop_station_walk).
                     #   v0.3.1 까지는 tw.lookup 이 지하철↔지하철만 타서 **도보 0분 + 길찾기 1분**으로
                     #   붙였고 정류장↔역 근접을 아예 보지 않았다 — MIX-04 가 성수 정류장 → 여의도역 환승을
@@ -1251,6 +1644,7 @@ class Verifier:
                     + (f" + 길찾기 {wf}분" if wf else " (초행 아님)")
                     + f" = +{add}분", grade=tg, warnings=twarn))
             r = (self.verify_leg_bus(i, leg, now, day_type) if mode == "bus"
+                 else self.verify_leg_bike(i, leg, now, day_type, party, case.get("bike_live")) if mode == "bike"
                  else self.verify_leg(i, leg, now, day_type, is_sat))
             legs.append(r)
             warns += r.warnings
@@ -1270,14 +1664,16 @@ class Verifier:
                 tail = (i == len(case["legs"]) - 1) and arrive_by is None
                 return self._finish(
                     case, day_type, legs, "feasible" if tail else "unknown",
-                    f"{r.label} 은 그 시각 편성이 있다({fmt_min(r.depart_min)} 출발) — "
-                    f"승차 소요를 낼 수 없어 도착 시각은 내지 않는다"
+                    (f"{r.label} 은 성립한다(대여소·{fmt_min(r.depart_min)} 출발) — 승차 소요를 낼 수 없어 도착 시각은 내지 않는다"
+                     if mode == "bike" else
+                     f"{r.label} 은 그 시각 편성이 있다({fmt_min(r.depart_min)} 출발) — "
+                     f"승차 소요를 낼 수 없어 도착 시각은 내지 않는다")
                     if tail else
                     f"{r.label} 의 승차 소요를 낼 수 없어 이후 구간의 시각을 이어 갈 수 없다 "
                     f"(그 구간 편성은 있다: {fmt_min(r.depart_min)} 출발)",
                     "근거없음", None, None, None, warns, ev)
             now = r.arrive_min
-            prev_line = leg.get("line") or f"버스{leg.get('route')}"
+            prev_line = "자전거" if mode == "bike" else (leg.get("line") or f"버스{leg.get('route')}")
 
         # 동행 상한 — 성립하더라도 이 일행에게 무리인가
         lim = self.rv("limits", "transfers", "default")
@@ -1364,8 +1760,7 @@ def show(case, res, verbose=False):
                   + " · ".join(f"{k} {v[0]} vs {v[1]}" for k, v in t["axes"].items())
                   + (" (축에서도 차이 없음)" if t["same_on_axes"] else ""))
         for dcand in res.dropped_candidates:
-            lg = " → ".join((f"버스 {l['route']} {l['from']}→{l['to']}" if l.get("mode") == "bus"
-                            else f"{l['line']} {l['from']}→{l['to']}") for l in dcand["legs"])
+            lg = " → ".join(leg_txt(l) for l in dcand["legs"])
             why = dcand.get("why") or f"생성기 추정 {dcand['est_min']}분 — 허용 소요 배수 초과"
             print(f"    ✗ 뺀 후보 [{'·'.join(dcand['criteria'])}] {lg} — {why}")
         if res.bus_rejected:
@@ -1386,7 +1781,16 @@ def show(case, res, verbose=False):
                 if aw["code"] not in seen_codes:
                     print(f"      ! [{aw['code']}] {aw['text']}")
         if res.taxi:
-            print(f"    · [수단교체] 택시 — {res.taxi['reason']} [근거없음]")
+            tx = res.taxi
+            if tx["verdict"] == "feasible":
+                print(f"    · [수단교체] 택시 — {fmt_min(tx['depart_min'])} 출발 → 도착 {fmt_min(tx['arrive_min'])} · "
+                      f"{tx['reason']} [{tx['grade']}]")
+                seen_codes = {x["code"] for x in res.warnings}
+                for aw in dedup_warn(tx.get("warnings")):
+                    if aw["code"] not in seen_codes:
+                        print(f"      ! [{aw['code']}] {aw['text']}")
+            else:
+                print(f"    · [수단교체] 택시 — {tx['reason']} [근거없음]")
         if verbose and res.alt_tried:
             print("    열거한 후보: " + ", ".join(f"{lb}={MARK[v]}" for _ax, lb, v in res.alt_tried))
     if verbose:
@@ -1411,9 +1815,19 @@ def main():
     ap.add_argument("--bus-stops")
     ap.add_argument("--station-coords")
     ap.add_argument("--station-exits")
+    ap.add_argument("--bike-stations", help="따릉이 운영 대여소 jsonl (v0.7 · 22번 방). 없으면 자전거는 근거없음")
+    ap.add_argument("--bike-fixture", help="GraphHopper 거리·시간 요약 픽스처 json — 서버 없이 회귀를 돌릴 때")
+    ap.add_argument("--bike-live", default="none",
+                    help="실시간 거치 조회: none(기본 · 근거없음) · env(SEOUL_OPENAPI_KEY 로 실제 호출) · <픽스처 json 경로>")
+    ap.add_argument("--bike-record", help="GraphHopper 실제 응답의 거리·시간 요약을 이 픽스처 파일에 **추가** 기록한다(형상 없음)")
     ap.add_argument("--rules", default=str(REPO / "config" / "mobility" / "rules_v0.3.json"))
     ap.add_argument("--holidays", default=str(REPO / "config" / "mobility" / "holidays_2026_2027.json"))
     ap.add_argument("--case", help="이 id 만 돌린다")
+    ap.add_argument("--graph-dir", help="도로망 그래프 자료 폴더(기본 processed/mobility/graph)")
+    ap.add_argument("--gh-url", help="GraphHopper 주소 · 'none' · 'fixture:<합성경로 파일>' "
+                                     "(기본: 환경변수 MOBILITY_GH_URL → rules car.graphhopper.url)")
+    ap.add_argument("--allow-router-down", action="store_true",
+                    help="라우터에 못 닿아 택시가 근거없음이면 expect_taxi 축을 MISS 대신 SKIP 으로 센다(클라우드 실행용)")
     ap.add_argument("--check-expect", action="store_true", help="expect 와 대조하고 MISS 면 종료코드 1")
     ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--json", help="판정 결과를 이 경로에 저장")
@@ -1429,6 +1843,9 @@ def main():
         args.bus_stops = args.bus_stops or str(PROCESSED / "mobility" / "bus_stops_v1.jsonl")
         args.station_coords = args.station_coords or str(PROCESSED / "mobility" / "station_coords.json")
         args.station_exits = args.station_exits or str(PROCESSED / "mobility" / "station_exits_v1.json")
+    if not args.bike_stations:
+        from scripts.collect._paths import PROCESSED
+        args.bike_stations = str(PROCESSED / "mobility" / "bike_stations_v1.jsonl")
 
     doc = json.loads(Path(args.cases).read_text(encoding="utf-8"))
     cases = doc["cases"] if isinstance(doc, dict) else doc
@@ -1445,6 +1862,22 @@ def main():
     bus = BusRoutes.load(args.bus_route, args.bus_stops)
     sc = StationCoords.load(args.station_coords)
     ex = StationExits.load(args.station_exits)
+    bk = BikeStations.load(args.bike_stations)
+    bike_live = None
+    if args.bike_live == "env":
+        from dotenv import load_dotenv
+        load_dotenv(REPO / ".env")
+        bike_live = BikeLive.from_env()
+        if bike_live is None:
+            print("  ! --bike-live env 인데 SEOUL_OPENAPI_KEY 가 없다 — 가용은 근거없음으로 낸다")
+    elif args.bike_live and args.bike_live != "none":
+        bike_live = BikeLive.from_fixture(json.loads(Path(args.bike_live).read_text(encoding="utf-8")))
+    fixture = json.loads(Path(args.bike_fixture).read_text(encoding="utf-8")) if args.bike_fixture else {}
+    record = None
+    if args.bike_record:
+        rp = Path(args.bike_record)
+        record = json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else {}
+        fixture = dict(record, **fixture) if fixture else dict(record)
 
     # 시간표는 케이스에 나오는 (노선, 역) 만 올린다 — 46만 행을 통째로 들지 않는다.
     # ★ 19번 방(2026-09-19): 대안이 쓸 (노선, 역) 도 같이 올린다. 종전에는 케이스 구간의 노선만 올려서
@@ -1494,8 +1927,31 @@ def main():
         print("  ! 역 출구표(station_exits_v1.json)를 못 찾았다 — 정류장↔역 환승은 역 좌표로 잰다")
     else:
         print(f"역 출구 {ex.built_at} · {len(ex.exits)}역명 · {sum(len(v) for v in ex.exits.values()):,}출구 [{ex.grade}]")
-    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex)
-    results, miss = [], []
+    # 자동차·택시(v0.6) — 그래프 자료는 프로세스당 한 번, 라우터는 캐시 없이 매번 묻는다
+    car = None
+    gh_spec = args.gh_url or os.environ.get("MOBILITY_GH_URL") or rules["car"]["graphhopper"]["url"]["value"]
+    cg = CarGraph.load(args.graph_dir, holidays)
+    if cg is None:
+        print("  ! 도로망 그래프 자료(graph/topis_class_factor_v1.json 등)를 못 찾았다 — 택시·자동차는 근거없음으로 낸다")
+    else:
+        router = make_router(gh_spec)
+        car = CarService(cg, router, rules)
+        info = router.info()
+        print(f"도로망 {len(cg.prof):,}셀 · 링크표 way {len(cg.seg):,} · 라우터 {gh_spec} → "
+              + (f"응답(version {info.get('version')})" if info else "**응답 없음** — 택시·자동차는 근거없음"))
+    # 자전거 라우터(22번) — 21번의 라우터 객체를 **그대로** 쓴다(profile=bike/foot). 응답이 있을 때만 붙이고,
+    #   아니면 자전거 픽스처(--bike-fixture / --bike-record)만. 자동차 합성 픽스처(fixture:)는 자전거 키가 없어 소요 근거없음이 된다.
+    live_router = router if (cg is not None and info) else None
+    pbf_date = (rules.get("bike") or {}).get("pbf_date") or "2026-09-18"
+    bike_router = BikeRouter(live_router, fixture, pbf_date, record=record) if (live_router or fixture) else None
+    if bk is None:
+        print("  ! 따릉이 대여소(bike_stations_v1.jsonl)를 못 찾았다 — 자전거는 근거없음으로 낸다")
+    else:
+        print(f"따릉이 대여소 {len(bk.rows):,}곳 · {bk.checked_at} · 라우터 "
+              f"{'GraphHopper ' + bike_router.url if (bike_router and bike_router.url) else ('픽스처 ' + str(len(fixture)) + '건' if fixture else '없음(소요 근거없음)')}"
+              f" · 실시간 {'env' if args.bike_live == 'env' else ('픽스처' if bike_live else '없음(가용 근거없음)')}")
+    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car, bk, bike_live, bike_router)
+    results, miss, skipped = [], [], []
     for c in cases:
         r = v.verify_case(c)
         results.append(r)
@@ -1523,6 +1979,20 @@ def main():
                 got = [x["label"] for x in r.alternatives]
                 miss.append((c["id"], f"대안 {ax}개 이하", f"{len(r.alternatives)}개: {got}"))
                 print(f"  >> MISS 대안 {ax}개 이하 기대 / 실제 {len(r.alternatives)}개 — {got}")
+            # ★ 수단별 대안 상한(2026-09-20 · 22번 방). 자전거 후보가 생기면서 「대안 0」 잠금(ISSUE-06·ALT-03)이
+            #   자전거 하나로 풀린다 — 자전거는 지하철 이슈를 상속하지 않으므로 나오는 게 맞다. 잠금을 수단별로 옮긴다.
+            axm = c.get("expect_alt_max_by_mode") or {}
+            for md, mx in axm.items():
+                got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
+                if len(got) > mx:
+                    miss.append((c["id"], f"{md} 대안 {mx}개 이하", f"{len(got)}개: {got}"))
+                    print(f"  >> MISS {md} 대안 {mx}개 이하 기대 / 실제 {len(got)}개 — {got}")
+            amn = c.get("expect_alt_min_by_mode") or {}
+            for md, mn in amn.items():
+                got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
+                if len(got) < mn:
+                    miss.append((c["id"], f"{md} 대안 {mn}개 이상", f"{len(got)}개"))
+                    print(f"  >> MISS {md} 대안 {mn}개 이상 기대 / 실제 {len(got)}개")
             aar = c.get("expect_alt_arrive")
             if aar:
                 got = [fmt_min(x["arrive_min"]) for x in r.alternatives]
@@ -1548,6 +2018,22 @@ def main():
                 if lack:
                     miss.append((c["id"], f"경고 {lack}", str(sorted(got))))
                     print(f"  >> MISS 경고 {lack} 가 없다 — 실제 {sorted(got)}")
+            # ★ 「없어야 한다」 경고 축 + 사유 문구 축(2026-09-20 · 22번 방). 외국인 안내가 foreign=false 에 붙으면 잡는다.
+            wa = c.get("expect_warn_codes_absent")
+            if wa:
+                got = {w["code"] for w in (r.warnings or [])}
+                for al in (r.alternatives or []):
+                    got |= {w["code"] for w in (al.get("warnings") or [])}
+                bad = [x for x in wa if x in got]
+                if bad:
+                    miss.append((c["id"], f"경고 {bad} 없음", str(sorted(got))))
+                    print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다 — 실제 {sorted(got)}")
+            rc = c.get("expect_reason_contains")
+            if rc:
+                blob = " | ".join([r.reason or ""] + [(l.reason or "") for l in (r.legs or [])])
+                if rc not in blob:
+                    miss.append((c["id"], f"사유에 '{rc}'", blob[:160]))
+                    print(f"  >> MISS 사유에 '{rc}' 가 없다 — 실제: {blob[:160]}")
             ea = to_service_min(c.get("expect_arrive")) if c.get("expect_arrive") else None
             if ea is not None and ea != r.arrive_min:
                 miss.append((c["id"], f"도착 {fmt_min(ea)}", f"도착 {fmt_min(r.arrive_min)}"))
@@ -1565,7 +2051,8 @@ def main():
                     print(f"  >> MISS 기준 '{cr}' 을 단 후보가 없다")
             for cr, legs in (c.get("expect_candidate_legs") or {}).items():
                 want = [tuple(x) for x in legs]
-                got = [[(l.get("line") or f"버스{l.get('route')}", l["from"], l["to"]) for l in x["legs"]]
+                got = [[("자전거" if l.get("mode") == "bike" else l.get("line") or f"버스{l.get('route')}",
+                         l["from"], l["to"]) for l in x["legs"]]
                        for x in cs if cr in x["criteria"]]
                 if not any([tuple(g) for g in gl] == want for gl in got):
                     miss.append((c["id"], f"{cr} 구간열 {want}", str(got)))
@@ -1595,14 +2082,88 @@ def main():
                 if bad:
                     miss.append((c["id"], f"{nl} 후보 성립 없음", str(bad)))
                     print(f"  >> MISS {nl} 을 쓰는 후보가 성립했다 — {bad}")
+            # ★ 등급 · 경고 부재 · 자동차 구간 축(2026-09-20 · 21번 방).
+            #   expect_warn_absent 는 「없어야 한다」 축 — 골목 100% 구간에 class 경고가 섞이면 안 된다(CAR-06).
+            eg = c.get("expect_grade")
+            if eg and r.grade != eg:
+                miss.append((c["id"], f"등급 {eg}", r.grade))
+                print(f"  >> MISS 등급 기대 {eg} / 판정 {r.grade}")
+            wa = c.get("expect_warn_absent")
+            if wa:
+                got = {w["code"] for w in (r.warnings or [])}
+                for al in (r.alternatives or []):
+                    got |= {w["code"] for w in (al.get("warnings") or [])}
+                bad = [x for x in wa if x in got]
+                if bad:
+                    miss.append((c["id"], f"경고 없음 {wa}", f"있음 {bad}"))
+                    print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다")
+            etl = c.get("expect_taxi_leg")
+            if etl:
+                cl = next((l.car for l in r.legs if getattr(l, "car", None)), None) or {}
+                cov = cl.get("coverage_pct") or {}
+                checks = [("fare_won", cl.get("fare_won"), lambda a, b: a == b),
+                          ("night_rate", cl.get("night_rate"), lambda a, b: a == b),
+                          ("slow_s", cl.get("slow_s"), lambda a, b: a == b),
+                          ("day_type", cl.get("day_type"), lambda a, b: a == b),
+                          ("coverage_class_pct_min", cov.get("class"), lambda a, b: a is not None and a >= b),
+                          ("coverage_default_pct_min", cov.get("default"), lambda a, b: a is not None and a >= b),
+                          ("coverage_default_pct_max", cov.get("default"), lambda a, b: a is not None and a <= b)]
+                for k, gotv, fn in checks:
+                    if k in etl and not fn(gotv, etl[k]):
+                        miss.append((c["id"], f"자동차 구간 {k} {etl[k]}", str(gotv)))
+                        print(f"  >> MISS 자동차 구간 {k} 기대 {etl[k]} / 실제 {gotv}")
+            # ★ 택시 대안 축(2026-09-20 · 21번 방). verdict · arrive · fare_won(정확) · fare_min/max_won(범위) · warn_codes.
+            #   라우터 없이 돌리면 택시가 근거없음이라 전부 MISS 다 — 그게 맞다. --allow-router-down 을 주면
+            #   **SKIP 으로 세어 보이게** 통과시킨다(조용히 통과가 아니다). expect_taxi: {"verdict": "unknown"} 는
+            #   라우터 유무와 무관하게 「택시도 못 낸다」를 잠근다.
+            et = c.get("expect_taxi")
+            if et is not None:
+                tx = r.taxi or {}
+                down = (tx.get("verdict") == "unknown"
+                        and any(w["code"] == "MOB_W_CAR_ROUTER_DOWN" for w in (tx.get("warnings") or [])))
+                if down and args.allow_router_down and et.get("verdict") != "unknown":
+                    skipped.append((c["id"], "expect_taxi"))
+                    print("  >> SKIP expect_taxi — 라우터 없음(--allow-router-down)")
+                else:
+                    tmiss = []
+                    if not tx:
+                        tmiss.append(("택시 대안", "없음"))
+                    if et.get("verdict") and tx.get("verdict") != et["verdict"]:
+                        tmiss.append((f"택시 {MARK[et['verdict']]}", MARK.get(tx.get("verdict"), "없음")))
+                    if et.get("arrive") and fmt_min(to_service_min(et["arrive"])) != fmt_min(tx.get("arrive_min")):
+                        tmiss.append((f"택시 도착 {et['arrive']}", fmt_min(tx.get("arrive_min"))))
+                    fw = tx.get("fare_won")
+                    if et.get("fare_won") is not None and fw != et["fare_won"]:
+                        tmiss.append((f"택시 요금 {et['fare_won']:,}", str(fw)))
+                    if et.get("fare_min_won") is not None and (fw is None or fw < et["fare_min_won"]):
+                        tmiss.append((f"택시 요금 ≥ {et['fare_min_won']:,}", str(fw)))
+                    if et.get("fare_max_won") is not None and (fw is None or fw > et["fare_max_won"]):
+                        tmiss.append((f"택시 요금 ≤ {et['fare_max_won']:,}", str(fw)))
+                    if et.get("grade") and tx.get("grade") != et["grade"]:
+                        tmiss.append((f"택시 등급 {et['grade']}", str(tx.get("grade"))))
+                    got_w = {w["code"] for w in (tx.get("warnings") or [])}
+                    lack = [x for x in (et.get("warn_codes") or []) if x not in got_w]
+                    if lack:
+                        tmiss.append((f"택시 경고 {lack}", str(sorted(got_w))))
+                    for e_, g_ in tmiss:
+                        miss.append((c["id"], e_, g_))
+                        print(f"  >> MISS {e_} 기대 / 실제 {g_}")
 
     tally = collections.Counter(r.verdict for r in results)
     print("\n" + "─" * 60)
     print("판정 " + " · ".join(f"{MARK[k]} {tally[k]}" for k in VERDICTS if tally[k]))
     if args.check_expect:
-        print(f"기대 대조 — 케이스 {len(cases)}건 중 어긋남 {len(miss)}건")
+        print(f"기대 대조 — 케이스 {len(cases)}건 중 어긋남 {len(miss)}건"
+              + (f" · 라우터 없음 SKIP {len(skipped)}건 ({', '.join(i for i, _ in skipped)}) — 노트북 묶음에서 확인한다"
+                 if skipped else ""))
         for i, e, g in miss:
             print(f"  MISS {i}: 기대 {e} → {g}")
+    if record is not None and bike_router is not None:
+        Path(args.bike_record).write_text(json.dumps(record, ensure_ascii=False, indent=1) + "\n",
+                                          encoding="utf-8", newline="\n")
+        print(f"GraphHopper 요약 픽스처 {len(record)}건 → {args.bike_record} (호출 {bike_router.calls}회 · 형상 없음)")
+    if bike_live is not None and bike_live.key:
+        print(f"bikeList 호출 {bike_live.calls}회 (1일 한도 {rules['bike']['ddareungi']['live_check']['daily_quota']})")
     if args.json:
         Path(args.json).write_text(json.dumps(
             [r.__dict__ for r in results], ensure_ascii=False, default=lambda o: o.__dict__,

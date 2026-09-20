@@ -8,6 +8,9 @@
 경계: 이 파일은 계약 타입을 import 하지 않는다. dict 를 만들 뿐이다.
       팀 코드가 오면 `MobilityTeam.execute()` 가 이 dict 로 `TeamResult` 를 만든다.
       **팀 코드 없이 지금 돌아가고, 골든 픽스처가 그대로 시험이 된다.**
+
+v0.6 (2026-09-20 · 21번 방): 자동차·택시 구간(LegResult.car)과 성립한 택시 대안(CaseResult.taxi.car)을
+      `kind = car_leg` 로 올린다 — 거리·소요·커버·링크 요약·요금뿐, 좌표열·edge 는 없다(저장소 3차 변경점 §3).
 """
 
 # 판정 어휘가 두 곳에서 다르다 — 판정기는 feasible/infeasible, 저장소 CHECK 는 ok/fail.
@@ -20,7 +23,24 @@ CONF = {"확정": 0.95, "추정": 0.6, "근거없음": 0.2}
 SRC_OF = [("timetable_v1", "timetable"), ("tago_subway", "timetable"),
           ("mobility_rules", "rule"), ("transfer_walk", "walk"),
           ("osm_subway_entrance", "walk"), ("station_coords", "walk"),   # 정류장↔역 환승 도보 (v0.4 · 19번 방)
-          ("bus", "bus"), ("core.current_state", "issue")]
+          ("bus", "bus"), ("core.current_state", "issue"),
+          ("seoul_bike_station", "bike"), ("seoul_bikeList", "bike"), ("osm_bike_graph", "bike"),   # 따릉이 (v0.7 · 22번 방)
+          ("bikeseoul_foreigner_guide", "bike")]
+CAR_KEYS = ("mode", "distance_m", "topis_time_s", "gh_time_s", "day_type", "hour_start", "coverage_m", "coverage_pct",
+            "n_edges", "n_links", "links", "source_id", "fare_kind", "fare_won", "meter_won", "toll_won", "toll_basis",
+            "slow_s", "slow_m", "night_rate", "out_of_city", "fare_basis")   # car_leg 로 올리는 필드 — 경로·좌표는 없다
+
+
+def _car_value(car, leg_id, depart_min, arrive_min, warnings, basis):
+    """LegResult.car / taxi.car (CarService.leg 요약) → Evidence.value kind=car_leg."""
+    v = {"v": 1, "kind": "car_leg", "leg_id": leg_id, "grade": car.get("grade", "근거없음")}
+    for k in CAR_KEYS:
+        if k in car:
+            v[k] = car[k]
+    v["depart_min"], v["arrive_min"] = depart_min, arrive_min
+    v["warnings"] = [w for w in (warnings or []) if isinstance(w, dict)][:6]
+    v["basis"] = {k: basis[k] for k in ("timetable_built_at", "rules_version")}
+    return v
 MAXLEG = 8          # 구간 상한 — 예산 34건(run 1 + rule 1 + 8×4)
 MAXEV = 40          # ContextPack.evidence 상한. TeamResult 쪽 상한은 미확인이라 같은 값을 쓴다
 ANSWER_MAX = 6000
@@ -92,6 +112,15 @@ def fold_case(case, *, task_id, basis, case_id=None):
                    "claim": f"{lg.get('label', lid)} 판정 — {lv}({lg.get('grade')})",
                    "value": val, "confidence": CONF.get(lg.get("grade"), 0.2),
                    "observed_at": basis["decided_at"]})
+        if lg.get("car"):                                   # 자동차·택시 구간 요약 (v0.6)
+            cv = _car_value(lg["car"], lid, lg.get("depart_min"), lg.get("arrive_min"), lw, basis)
+            val["by_mode"] = {cv["mode"]: lv}
+            ev.append({"evidence_id": f"mob:{lid}:car_leg:1", "source_type": "db", "source_id": sid,
+                       "claim": f"{lg.get('label', lid)} — {cv['distance_m']/1000:.1f} km · {cv['topis_time_s']/60:.1f}분"
+                                + (f" · 요금 하한 {cv['fare_won']:,}원" if cv.get("fare_won") is not None else "")
+                                + f" [{cv['grade']}]",
+                       "value": cv, "confidence": CONF.get(cv["grade"], 0.2),
+                       "observed_at": basis["decided_at"]})
         decisions.append({"leg_id": lid, "verdict": DECISION[lv],
                           "evidence_grade": lg.get("grade", "근거없음"),
                           "evidence_ids": [f"mob:{lid}:verdict:1"] + srcs})
@@ -108,10 +137,33 @@ def fold_case(case, *, task_id, basis, case_id=None):
                    "value": {"v": 1, "kind": "alt", "leg_id": (with_ev or ["L1"])[0],
                              "grade": al.get("grade", "근거없음"),
                              "axis": al.get("axis", "수단교체"),
-                             "mode": "bus" if "버스" in str(al.get("label")) else "subway",
+                             "mode": ((al.get("leg") or {}).get("mode")
+                                      or al.get("mode")     # 22번(v0.7): 대안 dict 의 mode(subway/bus/bike)
+                                      or ("bus" if "버스" in str(al.get("label")) else "subway")),
                              "verdict": "ok", "depart_min": al.get("depart_min"),
                              "arrive_min": al.get("arrive_min"), "warnings": aw},
                    "confidence": CONF.get(al.get("grade"), 0.2), "observed_at": basis["decided_at"]})
+
+    # ── 택시 대안 (v0.6). 성립했을 때만 — 근거없음(라우터 없음)은 종전대로 answer 문장에만 남는다
+    tx = case.get("taxi") or {}
+    if tx.get("verdict") == "feasible" and tx.get("car"):
+        tw = [w for w in (tx.get("warnings") or []) if isinstance(w, dict)]
+        warn_all += tw
+        tlid = (with_ev or ["L1"])[-1]                      # 불가가 난 구간 = 마지막 구간
+        aid = f"mob:_:alt:{len(alt_ids) + 1}"
+        alt_ids.append(aid)
+        ev.append({"evidence_id": aid, "source_type": "db", "source_id": sid,
+                   "claim": f"대안 — 택시 {tx.get('reason', '')}",
+                   "value": {"v": 1, "kind": "alt", "leg_id": tlid, "grade": tx.get("grade", "근거없음"),
+                             "axis": "수단교체", "mode": "taxi", "verdict": "ok",
+                             "depart_min": tx.get("depart_min"), "arrive_min": tx.get("arrive_min"),
+                             "warnings": tw[:6]},
+                   "confidence": CONF.get(tx.get("grade"), 0.2), "observed_at": basis["decided_at"]})
+        cv = _car_value(tx["car"], tlid, tx.get("depart_min"), tx.get("arrive_min"), tw, basis)
+        ev.append({"evidence_id": "mob:_:car_leg:1", "source_type": "db", "source_id": sid,
+                   "claim": f"택시 대안 — {cv['distance_m']/1000:.1f} km · {cv['topis_time_s']/60:.1f}분 · "
+                            f"요금 하한 {cv.get('fare_won', 0):,}원 [{cv['grade']}]",
+                   "value": cv, "confidence": CONF.get(cv["grade"], 0.2), "observed_at": basis["decided_at"]})
 
     # ── 결과 요약. ★ 이 한 건이 '구간이 조용히 사라지지 않는다'의 마지막 장치다
     cnt = {"ok": 0, "fail": 0, "rejected_by_limit": 0, "unknown": 0}
@@ -143,6 +195,9 @@ def fold_case(case, *, task_id, basis, case_id=None):
         t = f"[{lid}] {lg.get('label', '')} {VERDICT.get(lg.get('verdict'), 'unknown')}" \
             f"({lg.get('grade')}) — 도착 {_fmt(lg.get('arrive_min'))}"
         lines.append(t)
+    if tx.get("verdict") == "feasible":
+        lines.append(f"[{(with_ev or ['L1'])[-1]}] 택시 대안 {_fmt(tx.get('depart_min'))} 출발 → 도착 {_fmt(tx.get('arrive_min'))} · "
+                     f"{tx.get('reason', '')} ({tx.get('grade')})")
     for w in warn_all + case_w:
         if w.get("to_answer") and w["code"] not in seen:
             seen.add(w["code"])

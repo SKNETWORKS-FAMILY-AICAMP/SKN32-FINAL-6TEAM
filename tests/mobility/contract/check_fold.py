@@ -159,5 +159,67 @@ try:
 except Exception as _e:
     ck(False, "판 번호를 읽지 못했다: %s" % _e)
 
+# ── ★ 2026-09-20 신설(21번 방). 자동차·택시 구간 — kind=car_leg. 골든은 합성 경로 픽스처로 돌린 판정을 접은 것.
+#   확인하는 것: ① 스키마 ② 자동차 구간마다 car_leg 근거가 verdict 와 짝으로 있다 ③ 택시 대안이 성립하면 alt(mode=taxi)+car_leg
+#   ④ 라우터 다운(CAR-08)은 car_leg 이 **없다**(지어내지 않는다) ⑤ 골목 100%(CAR-06)는 등급 근거없음 ⑥ 하한 경고가 answer 에 있다
+#   ⑦ 음성 — 좌표열·edge·경로 API 원값·모르는 mode 는 거부된다.
+print("[12] 자동차·택시 접기 — kind=car_leg (v0.6 · 21번 방)")
+CG = os.path.join(D, "mob_evidence_car_golden_v1.json")
+try:
+    CAR = json.load(open(CG, encoding="utf-8"))["results"]
+except Exception as _e:
+    CAR = None
+    ck(False, "mob_evidence_car_golden_v1.json 을 읽지 못했다: %s" % _e)
+if CAR:
+    ck(set(CAR) >= {"CAR-01", "CAR-02", "CAR-06", "CAR-08", "CAR-11"}, "골든에 다섯 케이스가 있다 %s" % sorted(CAR))
+    for cid, res in CAR.items():
+        cev = res["evidence"]
+        for e in cev:
+            errs = sorted(V.iter_errors(e["value"]), key=lambda x: x.path)
+            ck(not errs, f"{cid} {e['evidence_id']} ({e['value']['kind']})" + ("" if not errs else " :: " + errs[0].message[:120]))
+        cl = [e for e in cev if e["value"]["kind"] == "car_leg"]
+        vd = {e["value"]["leg_id"]: e["value"] for e in cev if e["value"]["kind"] == "verdict"}
+        for e in cl:
+            v = e["value"]
+            ck(v["leg_id"] in vd, f"{cid} car_leg {e['evidence_id']} 의 구간 {v['leg_id']} 에 verdict 근거가 있다")
+            ck(set(v["coverage_pct"]) == {"topis", "class", "default"} and abs(sum(v["coverage_pct"].values()) - 100) < 0.5,
+               f"{cid} 커버 비율 합 100 — {v['coverage_pct']}")
+            ck(all(k not in v for k in ("coords", "points", "edges", "path", "geometry")), f"{cid} car_leg 에 경로·좌표 없음")
+            ck(v["grade"] in ("추정", "근거없음"), f"{cid} car_leg 등급은 확정이 될 수 없다({v['grade']})")
+        if cid == "CAR-01":
+            ck(len(cl) == 1 and cl[0]["value"]["mode"] == "car" and "fare_won" not in cl[0]["value"], "CAR-01 자동차 구간 car_leg 1건 · 요금 없음")
+            ck(vd["L0"].get("by_mode") == {"car": "ok"}, "CAR-01 verdict.by_mode = {car: ok}")
+        if cid == "CAR-02":
+            v = cl[0]["value"]
+            ck(v["mode"] == "taxi" and v["fare_won"] == 8000 and v["night_rate"] == 0.2, f"CAR-02 택시 요금 8,000 · 심야 0.2 — {v.get('fare_won')}/{v.get('night_rate')}")
+            ck("호출료" in res["answer"] and "8,000" in res["answer"], "CAR-02 하한 경고가 answer 에 실렸다")
+        if cid == "CAR-06":
+            ck(cl and cl[0]["value"]["grade"] == "근거없음" and cl[0]["value"]["coverage_pct"]["default"] > 50, "CAR-06 골목 100% → 근거없음")
+            ck(any(w["code"] == "MOB_W_CAR_SPEED_DEFAULT" for w in cl[0]["value"]["warnings"]), "CAR-06 car_leg.warnings 에 MOB_W_CAR_SPEED_DEFAULT")
+        if cid == "CAR-08":
+            ck(not cl, "CAR-08 라우터 다운 — car_leg 근거를 만들지 않는다")
+            ck(vd["L0"]["verdict"] == "unknown" and "MOB_W_CAR_ROUTER_DOWN" in res["warnings"], "CAR-08 verdict unknown + ROUTER_DOWN 경고")
+            ck("도로 경로 서버" in res["answer"], "CAR-08 라우터 다운이 answer 에 보인다")
+        if cid == "CAR-11":
+            alts = [e for e in cev if e["value"]["kind"] == "alt"]
+            tx = [e for e in alts if e["value"]["mode"] == "taxi"]
+            ck(len(tx) == 1 and tx[0]["value"]["verdict"] == "ok" and tx[0]["value"]["arrive_min"] == 280, "CAR-11 택시 대안 alt(mode=taxi, 04:40)")
+            ck(len(cl) == 1 and cl[0]["evidence_id"] == "mob:_:car_leg:1" and cl[0]["value"]["fare_won"] == 6700, "CAR-11 택시 대안 car_leg 1건 · 요금 6,700")
+            ck("택시 대안" in res["answer"] and "6,700" in res["answer"], "CAR-11 택시 대안이 answer 에 있다")
+    _c = json.loads(json.dumps([e["value"] for e in CAR["CAR-02"]["evidence"] if e["value"]["kind"] == "car_leg"][0]))
+    def _tc(name, mut):
+        v = json.loads(json.dumps(_c)); mut(v)
+        ck(not V.is_valid(v), "거부 — car_leg " + name)
+    _tc("좌표열(coords)", lambda v: v.update(coords=[[127.0, 37.5]]))
+    _tc("경로 점(points)", lambda v: v.update(points={"coordinates": [[127.0, 37.5]]}))
+    _tc("edge 목록(edges)", lambda v: v.update(edges=[{"way": 1, "m": 10}]))
+    _tc("경로 API 원값(route_api_raw)", lambda v: v.update(route_api_raw={"paths": []}))
+    _tc("모르는 mode(bike)", lambda v: v.update(mode="bike"))
+    _tc("등급 확정 이외 값", lambda v: v.update(grade="대충"))
+    _tc("커버 비율 100 초과", lambda v: v["coverage_pct"].update(topis=120))
+    _tc("링크 요약 21개 초과", lambda v: v.update(links=[{"link_id": "1", "m": 1.0}] * 21))
+    _tc("시계외 문자열", lambda v: v.update(out_of_city="yes"))
+    ck(V.is_valid(_c), "원본 car_leg 은 통과한다")
+
 print("\n실패 %d 건" % len(fail))
 sys.exit(1 if fail else 0)

@@ -29,7 +29,9 @@
       ],
       "expect": "infeasible",
       "expect_relief_contains": "앞뒤 역",
-      "expect_alt_max": 0
+      "expect_alt_max": 1,
+      "expect_alt_max_by_mode": {"subway": 0, "bus": 0},
+      "note_v0.7": "2026-09-20 · 22번: 따릉이 대안 1개가 붙는다(성수역 무정차는 자전거와 무관). 지하철·버스 대안 0 잠금은 수단별 축으로 유지"
     },
     {
       "id": "ISSUE-02",
@@ -183,7 +185,7 @@
     },
     {
       "id": "ISSUE-06",
-      "note": "★이슈가 대안으로 승계되는가 — ALT-01 과 같은 상황인데 N73 이 운행중단이다. 대안이 0개여야 한다. 1개가 나오면 대안 열거가 이슈를 안 보고 있는 것이다",
+      "note": "★이슈가 대안으로 승계되는가 — ALT-01 과 같은 상황인데 N73 이 운행중단이다. 지하철·버스 대안이 0개여야 한다. 1개가 나오면 대안 열거가 이슈를 안 보고 있는 것이다. (v0.7 · 22번) 따릉이 대안 1개는 정상 — 버스 운행중단을 상속할 이유가 없다",
       "date": "2026-09-11",
       "depart_at": "24:55",
       "disruptions": [
@@ -204,7 +206,8 @@
         }
       ],
       "expect": "infeasible",
-      "expect_alt_max": 0
+      "expect_alt_max": 1,
+      "expect_alt_max_by_mode": {"subway": 0, "bus": 0}
     },
     {
       "id": "ISSUE-07",
