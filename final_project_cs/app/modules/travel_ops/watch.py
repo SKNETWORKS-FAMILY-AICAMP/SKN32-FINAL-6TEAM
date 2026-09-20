@@ -132,6 +132,43 @@ class TravelWatcher:
                        "bookings", "last_seen")
             return [dict(zip(columns, row)) for row in cur.fetchall()]
 
+    def due_activities(self, limit: int = DEFAULT_BATCH) -> list[dict[str, Any]]:
+        """가장 오래전에 본 활동부터. ★한 번도 안 본 것이 먼저 온다.
+
+        ★**활동 시작 3시간 이내인 것만** 본다(wiki/teams/activity.md 「조회
+          시점·재검토 주기」의 결정 그대로). 「가까운 일정만 재검토한다」는
+          `due_places`의 원칙(다가오는 예약만)과 같은 이유이고, 재난문자는
+          거기서 한 번 더 좁힌다 — 하루 내내 모든 활동을 5분마다 볼 수는 없다.
+
+        ★**`place_id`가 해소된 활동만** 본다. 재난문자는 지역(좌표) 기준으로
+          찾는데, `place_id IS NULL`(015 — 아직 `places`로 안 해소됨)이면
+          어느 지역을 볼지 모른다. 이것도 「모름」이지 「재난 없음」이 아니라서
+          여기서 조용히 걸러진다 — `tick_activities`가 `unknown`으로 센다.
+        """
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT a.id::text, a.name, a.activity_time,
+                       p.latitude, p.longitude,
+                       max(o.observed_at) AS last_seen
+                  FROM activities a
+                  JOIN places p ON p.place_id = a.place_id
+                  LEFT JOIN watch_observations o
+                         ON o.tenant_id = a.tenant_id
+                        AND o.target_kind = 'activity'
+                        AND o.target_id = a.id::text
+                 WHERE a.tenant_id = %s
+                   AND a.activity_time > now()
+                   AND a.activity_time <= now() + interval '3 hours'
+                 GROUP BY a.id, a.name, a.activity_time, p.latitude, p.longitude
+                 -- ★NULLS FIRST: 한 번도 안 본 것을 맨 앞에 둔다
+                 ORDER BY max(o.observed_at) ASC NULLS FIRST
+                 LIMIT %s
+                """, (self.tenant_id, limit))
+            columns = ("activity_id", "name", "activity_time", "latitude", "longitude",
+                       "last_seen")
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
     #: 우리 장소 종류 -> 공급자 관광타입들. ★**하나가 아니다.**
     #:  계획서 v11 §5 의 Activity 는 자연·인문·레포츠·쇼핑을 다 포함해서
     #:  관광지(12)·문화시설(14)·레포츠(28)·쇼핑(38)에 걸친다.
@@ -210,6 +247,56 @@ class TravelWatcher:
                 kind="place", target_id=str(target["place_id"]),
                 source=source.name, watched=watched, payload=found,
                 bookings=[b for b in (target.get("bookings") or []) if b])
+            if change is not None:
+                result.changes.append(change)
+        return result
+
+    def tick_activities(self, limit: int = DEFAULT_BATCH) -> TickResult:
+        """활동 시작 3시간 이내인 것을 `limit`개만 본다. 재난문자 관련성을 본다.
+
+        ★`self.sources.disaster`는 아직 구현체가 없다(재난문자API 클라이언트
+          코드 0줄 — wiki/teams/activity.md 「TourAPI · 재난문자API 연동」).
+          `tick_places`가 `self.sources.place`에 duck-typed로 의존하는 것과
+          같은 방식으로, 여기서는 기대하는 인터페이스만 정한다:
+
+              source.name                                    -> str
+              source.near(lat, lng, *, within: datetime)      -> dict | None
+                  {"messages": [{"SN": ..., "EMRG_STEP_NM": ..., ...}, ...]}
+
+          실제 클라이언트가 생기면 이 인터페이스만 맞추면 붙는다.
+        """
+        result = TickResult()
+        source = getattr(self.sources, "disaster", None)
+        if source is None:
+            result.note = "재난문자 소스가 안 붙어 있다(키 없음). 감시할 수 없다"
+            return result
+
+        for target in self.due_activities(limit):
+            result.checked += 1
+            lat, lng = target.get("latitude"), target.get("longitude")
+            if lat is None or lng is None:
+                # ★장소는 해소됐지만 좌표가 없다 — 모름이지 재난 없음이 아니다.
+                result.unknown += 1
+                continue
+            found = source.near(float(lat), float(lng), within=target["activity_time"])
+            if found is None:
+                # ★소스가 「모름」을 줬다(속도 제한 등). 재난 없음으로 넘기지 않는다.
+                result.unknown += 1
+                continue
+
+            # ★지문은 메시지 신원+긴급단계만 본다. 발령·해제뿐 아니라
+            #   안전안내→위급재난 같은 단계 변경도 변화로 잡는다.
+            watched = {
+                "active": sorted(
+                    f"{m.get('SN')}:{m.get('EMRG_STEP_NM')}"
+                    for m in found.get("messages", [])),
+            }
+            # `[미확보]` 이 활동에 걸린 예약을 찾아 `affected_bookings`에 채우는
+            #   일은 아직 안 한다 — 무예약 활동은 애초에 예약이 없고, 예약이
+            #   있는 경우의 조회 방법(장소·시각으로 역추적)은 정해지지 않았다.
+            change = self._record(
+                kind="activity", target_id=str(target["activity_id"]),
+                source=source.name, watched=watched, payload=found, bookings=[])
             if change is not None:
                 result.changes.append(change)
         return result

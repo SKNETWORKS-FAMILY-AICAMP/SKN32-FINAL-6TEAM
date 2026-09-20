@@ -4,7 +4,7 @@
 > 등록 없이 폐기하면 같은 논의를 반복하게 된다.
 > 갱신 규칙은 `RULE.md` §4.4 참조.
 
-최종 갱신: 2026-08-16
+최종 갱신: 2026-09-20
 
 > 비용은 인·일이 아니라 **6인 AI 협업 팀 기준 실소요 일수**다. 산정 근거는 각 VISION 문서 §4 참조.
 
@@ -27,6 +27,7 @@
 - 멀티테넌시 실운영(현재는 컬럼만 있고 값 1개 고정) / 데이터 격리 논의 / tenant 수·계약·운영자 모델이 정리되지 않았다.
 - 3번째 Agent Team / Team 확장 논의 / 책임·입력 계약·도입 Case 유형이 정리되지 않았다.
 - Chatwoot / Zammad 등 오픈소스 헬프데스크의 Case 상태 머신 조사 / 운영 UI·Case 모델 논의 / 제품별 라이선스·상태 모델·통합 범위를 확인하지 않았다.
+- 승인된 Action의 실제 실행 계층(Phase 2 executor) / Activity `activity.submit_itinerary`(2026-09-20) 설계 중 — 이 시스템 전체(`activity.change` 포함 모든 action type)에 "승인 후 실제로 실행" 하는 코드가 없다는 걸 확인했다. `run_outbox_worker.py`의 `publish()`가 "Transport is intentionally an injected boundary in Phase 1"이라 명시한 no-op 스텁이다 / Activity 하나의 범위가 아니라 시스템 전체(outbox·action_type별 dispatcher) 설계가 필요해서 사용자가 "나중에 별도로 설계하자"고 명시적으로 미뤘다. wiki/teams/activity.md 「일정 제출」절 참고
 
 ## 폐기된 항목
 
@@ -37,3 +38,4 @@
 - 2026-08-13 최초 작성. 7개 비전 문서의 인덱스와 미문서화 후보를 등록했다.
 - 2026-08-13 비용 산정 방식을 실소요 일수로 재산정했다. 근거는 2026-08-12 15:14~17:35 커밋 구간의 실측이다.
 - 2026-08-16 VISION-08(Commerce Ops Pack)·09(사이트 생성·판매) 등록. 제품 구조를 하나의 Runtime + 두 도메인 팩으로 재정의한 결과다.
+- 2026-09-20 "승인된 Action의 실제 실행 계층(Phase 2 executor)" 등록. Activity의 일정 제출 capability를 설계하다가 시스템 전체에 이 계층이 없다는 걸 발견했고, 사용자가 별도 설계로 미뤘다.

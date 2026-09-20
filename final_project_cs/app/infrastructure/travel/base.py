@@ -220,6 +220,10 @@ class TravelSources:
 
     weather: Any | None = None
     place: Any | None = None
+    #: 재난문자방송 — `[미구현 2026-09-20]` 클라이언트가 아직 없다. 슬롯만
+    #:  먼저 둔다(`read.disaster` 도구가 `getattr`로 이 자리를 본다) — 클라이언트가
+    #:  생기면 `build_travel_sources()`에 조립 한 줄만 추가하면 된다.
+    disaster: Any | None = None
     #: 한국천문연구원 특일 정보 — 공휴일. 공공데이터포털 공통 키를 쓴다.
     holiday: Any | None = None
     #: 국가유산청 — ★키가 필요 없어서 **항상 붙는다**(2026-09-10 실호출 확인).
@@ -321,6 +325,20 @@ def build_travel_sources(settings: Any) -> TravelSources:
         from .tour_api import TourApiPlace
         sources.place = TourApiPlace(
             service_key=_public_data_key(settings, "tour_api_key"), limiter=limiter)
+
+    if not _public_data_key(settings, "disaster_api_key"):
+        sources.unavailable["disaster"] = (
+            "ACOP_DATA_GO_KR_KEY(또는 ACOP_DISASTER_API_KEY)가 비어 있다. "
+            "재난안전데이터 공유플랫폼(safetydata.go.kr) 가입·키 발급 후 "
+            ".env.apikeys 에 채운다. ★공통 키로 되는지는 미확인 — "
+            "disaster_msg.py 참고.")
+    else:
+        from .disaster_msg import DisasterMsgSource
+        # ★★이 클라이언트는 실 키로 검증되지 않았다(disaster_msg.py 모듈
+        #   docstring 참고) — 키를 넣어도 첫 실호출까지는 "붙었다"일 뿐
+        #   "돈다"가 아니다. 첫 실호출 결과를 그 docstring에 반드시 남긴다.
+        sources.disaster = DisasterMsgSource(
+            service_key=_public_data_key(settings, "disaster_api_key"), limiter=limiter)
 
     if not getattr(settings, "odsay_api_key", ""):
         sources.unavailable["transit"] = (

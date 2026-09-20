@@ -126,7 +126,9 @@ class ReadToolbox:
         return {
             "read.booking":  self.booking,
             "read.place":    self.place,
+            "read.place_search": self.place_search,
             "read.weather":  self.weather,
+            "read.disaster": self.disaster,
             "read.route":    self.route,
             "read.transit":  self.transit,
             "read.supplier": self.supplier,
@@ -138,7 +140,8 @@ class ReadToolbox:
                         "party_size", "capacity", "amount_cents", "locked", "place_id")
     _PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
                       "weather_sensitive", "confirmed_at", "open_at_slot",
-                      "dietary", "dietary_absent")
+                      "dietary", "dietary_absent",
+                      "source_content_id", "source_content_type_id")
 
     def booking(self, scope: ToolContext, *, booking_id: str | None = None,
                 **_: Any) -> dict[str, Any] | None:
@@ -175,10 +178,36 @@ class ReadToolbox:
             return None      # ★어느 장소인지 모르면 조회하지 않는다
         row = self._one(
             "SELECT place_id, name, kind, latitude, longitude, weather_sensitive, "
-            "hours_confirmed_at, open_at_slot, dietary, dietary_absent FROM places "
+            "hours_confirmed_at, open_at_slot, dietary, dietary_absent, "
+            "source_content_id, source_content_type_id FROM places "
             "WHERE tenant_id=%s AND place_id=%s",
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
-        return self._fill_coordinates(row)
+        return self._fill_operating(self._fill_coordinates(row))
+
+    def _fill_operating(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
+        """TourAPI 운영시간 **원문**을 붙인다. ★boolean으로 만들지 않는다.
+
+        `tour_api.py`의 `operating()`이 이미 그렇게 설계돼 있다 — `usetime`·
+        `restdate`는 자연어이고 예외 조건(「화요일 휴무, 단 공휴일과 겹치면
+        개방」류)이 섞여 있어 규칙으로 펴면 하나 틀린 게 고객을 문 닫힌 곳
+        앞에 세운다. 여기서도 파싱하지 않는다 — `place["operating"]`에
+        원문 그대로 실어 Team에 넘기고, Team은 그걸 판정이 아니라 **안내
+        문구**로만 쓴다(activity.py 참고).
+
+        ★신원(`source_content_id`)이 아직 해소 안 됐거나(013) TourAPI 소스가
+          안 붙어 있으면(키 없음) **채우지 않는다** — 모름을 모름으로 둔다.
+        """
+        if row is None:
+            return None
+        content_id = row.get("source_content_id")
+        content_type_id = row.get("source_content_type_id")
+        source = getattr(self.travel, "place", None) if self.travel else None
+        if source is None or not content_id or not content_type_id:
+            return row
+        operating = source.operating(str(content_id), str(content_type_id))
+        if operating is not None:
+            row["operating"] = operating
+        return row
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
@@ -206,6 +235,37 @@ class ReadToolbox:
         row["coordinates_source"] = found["source"]
         row["coordinates_confirmed_at"] = found["confirmed_at"]
         return row
+
+    def place_search(self, scope: ToolContext, *, name: str | None = None,
+                     kind: str | None = None, **_: Any) -> dict[str, Any] | None:
+        """이름으로 장소 후보 하나를 찾는다(공급자 카탈로그, **우리 DB 조회가 아니다**).
+
+        ★`place()`와 다르다 — `place()`는 **이미 아는** `place_id`로 우리
+          `places` 테이블을 읽고, 이건 **아직 모르는** 장소를 이름만으로
+          TourAPI에서 찾는다. 「일정 제출」처럼 고객이 새로 말한 장소를
+          다루는 자리에서 쓴다.
+
+        ★애매하면 **`None`(모름)** — 확정하지 않는다. `tour_api.py.find()`가
+          이미 이 규율을 지킨다(제목 정확일치 1건일 때만 확정, 2건 이상이면
+          "경복궁"이 서울 궁궐·울산 음식점으로 갈리는 것처럼 애매함 자체를
+          답으로 준다). 여기서 그 규율을 느슨하게 만들지 않는다.
+
+        ★`kind`(activity/dining/lodging/flight)를 주면 그 종류로만 좁혀
+          받는다 — `watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑을 쓴다.
+        """
+        if self.travel is None or self.travel.place is None:
+            return None
+        if not name or not name.strip():
+            return None
+        # ★`watch.py`의 `KIND_TO_CONTENT_TYPES`와 같은 매핑이다. Team 내부
+        #   모듈을 이 파일에서 import하지 않으려고(basement가 Team을 모르는
+        #   경계) 작게 복제한다 — 값이 갈라지면 나란히 있는 두 자리가 서로
+        #   드러내 준다.
+        allowed = {"activity": {"12", "14", "28", "38"}, "dining": {"39"},
+                  "lodging": {"32"}, "flight": set()}.get(kind or "")
+        narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
+        return self.travel.place.find(
+            name.strip(), content_type_id=narrow, allowed_types=allowed or None)
 
     def holiday(self, scope: ToolContext, *, on: Any = None,
                 **_: Any) -> dict[str, Any] | None:
@@ -246,6 +306,35 @@ class ReadToolbox:
         if latitude is None or longitude is None:
             return None
         return self.travel.weather.forecast(
+            latitude=float(latitude), longitude=float(longitude),
+            at=_as_datetime(at))
+
+    def disaster(self, scope: ToolContext, *, latitude: float | None = None,
+                 longitude: float | None = None, at: Any = None,
+                 **_: Any) -> dict[str, Any] | None:
+        """그 좌표 인근·그 시각 기준의 재난문자 목록. 모르면 `None`.
+
+        ★`weather()`와 같은 규율이다 — **좌표를 모르면 묻지 않는다.**
+          "어디인지 모르는 곳의 재난"은 없다.
+
+        ★`[미구현 2026-09-20]` `self.travel.disaster`는 아직 아무도 안 채운다
+          (`TravelSources.disaster`, `build_travel_sources()`의
+          `unavailable["disaster"]` 참고 — 키 문제가 아니라 클라이언트
+          자체가 없다). 지금은 항상 `None`(모름)이다. 클라이언트가 생기면
+          이 함수는 그대로 두고 조립 지점만 바뀐다(`weather`/`place`와 같은
+          패턴).
+
+        ★반환 모양(클라이언트가 생기면): `{"messages": [{"SN":...,
+          "EMRG_STEP_NM":...,"DST_SE_NM":...,"MSG_CN":...}, ...],
+          "confirmed_at":..., "source":...}`. 재난문자 원문(`MSG_CN`)은
+          자연어다 — TourAPI 운영시간과 같은 이유로 Team은 이걸 통으로
+          해석하지 않는다(`activity.py`의 `_disaster_blocks()` 참고).
+        """
+        if self.travel is None or self.travel.disaster is None:
+            return None
+        if latitude is None or longitude is None:
+            return None
+        return self.travel.disaster.near(
             latitude=float(latitude), longitude=float(longitude),
             at=_as_datetime(at))
 
