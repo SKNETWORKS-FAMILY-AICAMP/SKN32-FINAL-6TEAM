@@ -15,6 +15,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-21 (오후) — 일정을 받을 때 코드로 판정하고, 불가능하면 이유·완화 조건을 붙여 거절
+
+`app/modules/travel_ops/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.
+
 ## 2026-09-21 — v11 26항목을 실행으로 세는 DoD 검사기
 
 `scripts/verify_dod_v11.py` 를 만들었다. 항목마다 그것을 보는 시험(node id)을 적어 두고 실제로 돌린다 — 재는 것이 없으면 「미측정」이고 통과로 세지 않는다. 첫 실측 통과 16/26 = 62%, MVP 18 기준 16/18 = 89%(허브 `wiki/delivery/dod.md`). 옛 `scripts/verify_dod.py` 는 v8 29항목 기록으로 남긴다.

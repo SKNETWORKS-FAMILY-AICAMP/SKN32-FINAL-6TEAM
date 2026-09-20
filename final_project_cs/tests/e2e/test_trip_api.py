@@ -376,3 +376,30 @@ def test_the_plan_link_always_shows_the_latest_version(api):
     assert wrong.status_code == 404
     other = api["client"].get(f"/plan/{uuid4()}?t={plan_token(api['tenant'], trip_id)}")
     assert other.status_code == 404                                    # ★다른 여행 토큰으로 못 연다
+
+
+# ── 받을 때 판정 (2026-09-21, v11 DoD-2·3) ──────────────────────
+def test_an_impossible_itinerary_is_refused_with_reasons_and_remedies(api):
+    """★거절은 이유와 **완화 조건**을 같이 낸다. 받아 두고 나중에 고치지 않는다."""
+    body = _body(api["customer"], request_id="bad-1")
+    lunch = next(it for it in body["items"] if it["seq"] == 5)
+    lunch["starts_at"] = _iso("12:30")                 # 앞 쇼핑(11:15~13:00)과 겹친다
+    move = next(it for it in body["items"] if it["seq"] == 6)
+    move["ends_at"] = _iso("15:05")                    # 20분 걸리는 경로를 5분으로 잡는다
+    response = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert response.status_code == 422, response.text
+    error = response.json()["error"]
+    assert error["code"] == "itinerary_infeasible"
+    codes = {v["code"] for v in error["violations"]}
+    assert codes == {"overlap", "move_too_short"}, error["violations"]
+    assert all(v["reason"] and v["remedy"] for v in error["violations"])
+
+    # ★일정은 저장되지 않았다 — 거절은 아무것도 남기지 않는다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM trips WHERE tenant_id=%s", (api["tenant"],))
+        assert cur.fetchone()[0] == 0
+
+
+def test_the_confirmed_day_is_accepted_as_submitted(api):
+    """판정이 운영을 막으면 안 된다 — 확정 시나리오 하루는 그대로 201."""
+    assert _create(api, request_id="ok-1")["version"] == 1

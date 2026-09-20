@@ -121,6 +121,16 @@ class RollbackIn(BaseModel):
     message: str | None = None
 
 
+def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
+    """등록 요청 안의 장소를 판정기가 읽는 모양으로. 저장 전이라 DB 를 보지 않는다."""
+    if key is None:
+        return None
+    for place in places:
+        if place.key == key:
+            return {"name": place.name, "attributes": dict(place.attributes or {})}
+    return None
+
+
 def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
@@ -134,6 +144,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ── 계획서 링크 ──────────────────────────────────────────────────
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
+from .itinerary_checks import Part, check_itinerary
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 
 
@@ -290,6 +301,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise _error(422, "unknown_place", f"item {it.seq} refers to unknown place")
             if it.route is not None and it.route not in request.routes:
                 raise _error(422, "unknown_route", f"item {it.seq} refers to unknown route")
+        # ★`[2026-09-21]` 받을 때 **코드로 판정**한다(v11 §12 DoD-2). 불가능하면 이유와 완화 조건을
+        #   붙여 거절한다(DoD-3) — 전에는 참조·순서만 보고 그대로 받아 감시가 뒤에서 고쳤다.
+        violations = check_itinerary(
+            [Part(seq=it.seq, kind=it.kind, title=it.title, starts_at=_seoul(it.starts_at),
+                  ends_at=_seoul(it.ends_at),
+                  place=_place_view(it.place, request.places), route=request.routes.get(str(it.route)),
+                  detail=it.detail)
+             for it in request.items],
+            constraints=request.constraints, party_size=request.party_size)
+        if violations:
+            raise _error(422, "itinerary_infeasible",
+                         "이 일정은 그대로 수행할 수 없습니다: "
+                         + " / ".join(v.reason for v in violations),
+                         violations=[v.as_dict() for v in violations])
         key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
                               action_type="trip.create", business_subject=str(request.customer_id))
         body_sha = hashlib.sha256(request.model_dump_json().encode()).hexdigest()

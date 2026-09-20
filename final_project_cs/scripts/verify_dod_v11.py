@@ -47,11 +47,21 @@ ITEMS: tuple[Item, ...] = (
         T + "e2e/test_trip_api.py::test_a_second_trip_reuses_known_places_without_overwriting_them",
     )),
     Item(2, "예약 시간 충돌·이동 여유·예산·동행 조건을 코드로 판정한다", "자동", (
+        T + "unit/travel/test_itinerary_checks.py::test_two_items_that_overlap",
+        T + "unit/travel/test_itinerary_checks.py::test_a_move_shorter_than_the_planned_option",
+        T + "unit/travel/test_itinerary_checks.py::test_zero_minutes_between_two_districts",
+        T + "unit/travel/test_itinerary_checks.py::test_outside_opening_hours_and_inside_the_break",
+        T + "unit/travel/test_itinerary_checks.py::test_a_place_that_does_not_take_the_agreed_payment",
+        T + "unit/travel/test_itinerary_checks.py::test_a_plan_over_the_budget_counts_heads",
+        T + "unit/travel/test_itinerary_checks.py::test_what_we_do_not_know_is_not_a_violation",
         T + "e2e/test_trip_api.py::test_create_rejects_unknown_references_and_needs_the_write_scope",
-    ), note="★등록 때 보는 것은 **참조·순서**뿐이다. 시간 충돌·이동 여유·예산·동행은 감시(§6-C)가 "
-            "항목별로 볼 뿐, **일정을 받을 때 한 번에 판정하는 코드가 없다** — 부분만 잰다"),
-    Item(3, "불가능한 일정을 이유와 완화 조건을 붙여 거절한다", "자동", (),
-         note="받을 때 거절하는 경로가 없다(2번의 연장). 지금은 받아 두고 감시가 항목마다 고친다"),
+    ), note="`[2026-09-21]` 보낸 값으로 판정한다 — 겹침·이동 소요·영업시간·브레이크·결제·예산. "
+            "**모르는 칸은 판정하지 않는다**(결정 15) — 이동 항목이 없는 구간은 구가 다를 때만 본다"),
+    Item(3, "불가능한 일정을 이유와 완화 조건을 붙여 거절한다", "자동", (
+        T + "e2e/test_trip_api.py::test_an_impossible_itinerary_is_refused_with_reasons_and_remedies",
+        T + "e2e/test_trip_api.py::test_the_confirmed_day_is_accepted_as_submitted",
+        T + "unit/travel/test_itinerary_checks.py::test_every_violation_carries_a_reason_and_a_remedy",
+    ), note="422 `itinerary_infeasible` + 위반마다 `reason`·`remedy`. 거절하면 아무것도 저장하지 않는다"),
     Item(4, "모든 판정 근거에 출처와 확인 시각이 붙는다", "자동", (
         T + "contract/test_contracts.py::test_answer_without_evidence_is_rejected",
         T + "contract/test_contracts.py::test_proposal_cannot_cite_unknown_evidence",
