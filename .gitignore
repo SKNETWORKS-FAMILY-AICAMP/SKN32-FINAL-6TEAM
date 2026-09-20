@@ -38,6 +38,10 @@ credentials*
 Thumbs.db
 .DS_Store
 *.swp
+# JetBrains(PyCharm 등) 프로젝트 설정 — 개인 로컬 경로·최근 파일 목록이 섞여
+# 있어 공유 가치가 없고, 저장소 안 어느 하위 폴더에서 열든(role-activity·
+# final_project_cs 등) 다 걸리게 슬래시 없이 둔다.
+.idea/
 
 # 임시 작업물
 .tmp_*
