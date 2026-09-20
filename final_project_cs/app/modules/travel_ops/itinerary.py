@@ -261,7 +261,13 @@ class TripStore:
         """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다.
 
         ★여행의 언어(`locale`)를 싣는다 — 보낼 때 그 언어로 옮긴다(결정 14).
+        ★`[2026-09-20]` **계획서 링크도 싣는다.** 상태의 정본은 링크인데(v11 §6-A) 변경 통지에만
+          링크가 없었다 — 일정 안내(②·③)에는 붙고 ①에는 안 붙는 상태였다.
         """
+        if "plan_url" not in payload:
+            from .plan_link import plan_url
+
+            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
         if "locale" not in payload:
             with conn.cursor() as cur:
                 cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
