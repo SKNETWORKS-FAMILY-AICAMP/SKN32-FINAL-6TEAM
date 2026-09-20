@@ -549,10 +549,14 @@ def build_travel_sources(settings: Any) -> TravelSources:
             "ACOP_ODSAY_API_KEY 가 비어 있다. lab.odsay.com 에서 발급해 "
             ".env.apikeys 에 채운다. ★공공데이터포털 키와 **다른 키**다.")
     else:
-        from .odsay import OdsayTransit
-        source = OdsayTransit(service_key=settings.odsay_api_key, limiter=limiter, cache=cache)
-        sources.transit = source
-        sources.route = source
+        # ★ODsay 어댑터(`odsay.py`)는 아직 없다 — 한 번도 커밋된 적이 없다. ☆2026-09-18 전에는 여기서
+        #   `from .odsay import OdsayTransit` 를 불러, 키를 채우는 순간 조립 전체가 ModuleNotFoundError 로
+        #   죽었다(`kma.py` 때와 같은 모양). 어댑터가 생기기 전까지 키가 있어도 **없다고 이름으로 남긴다** —
+        #   조용한 대체가 아니다(RULE.md §3.2). 경로(`read.route`)·운행(`read.transit`)은 「모름」이다.
+        #   경위: wiki/records/reports/debugs/2026-09-18_1520_ODsay_키를_넣으면_감시소스_조립이_죽는다.md
+        sources.unavailable["transit"] = (
+            "ODsay 어댑터 미구현 — ACOP_ODSAY_API_KEY 는 채워져 있지만 odsay.py 가 없다. "
+            "대중교통 경로·운행은 조회하지 않는다.")
 
     # ── 고정 IP 서버 경유 (IP 에 묶인 소스만) ─────────────────────────
     reason = apply_outbound_proxy(sources, url=getattr(settings, "outbound_proxy_url", ""),

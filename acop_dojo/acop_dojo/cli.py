@@ -5,9 +5,10 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
-from . import answers, boss, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, build, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -138,6 +139,19 @@ def cmd_status(_: argparse.Namespace) -> int:
             print(f"    테스트가 못 잡는 것 {len(survived)}개 — 문제로 쓰지 않는다")
             for defect_id in sorted(survived):
                 print(f"      {defect_id}  {entries[defect_id][chr(112)+chr(97)+chr(116)+chr(104)]}")
+    # 처음부터 쌓기는 진행 파일이 따로다(작업 폴더 옆). 한 화면에서 같이 본다.
+    build_state = build.load_state()
+    if build_state.get("prepared_at") or build_state.get("steps"):
+        all_steps = build.steps()
+        done = sum(1 for s in all_steps
+                   if build_state["steps"].get(str(s.index), {}).get("status") == "passed")
+        print("")
+        print(f"  처음부터 쌓기  {done}/{len(all_steps)}단계 통과"
+              + (f" · 꺼내 본 참고 구현 {len(build_state[chr(114)+chr(101)+chr(118)+chr(101)+chr(97)+chr(108)+chr(101)+chr(100)])}개"
+                 if build_state["revealed"] else ""))
+        if done < len(all_steps):
+            nxt = _next_step(all_steps, build_state)
+            print(f"    다음: {nxt}. {build.get(nxt).title}  (python dojo.py build brief {nxt})")
     print(f"\n  진행 파일  {progress.progress_path()}")
     return 0
 
@@ -199,6 +213,120 @@ def cmd_boss(args: argparse.Namespace) -> int:
     trace = load_or_capture(boss.BOSS_SCENARIO)
     return boss.play(target_root(), trace, fix=Path(args.fix) if args.fix else None,
                      force=args.force, defect_id=args.defect)
+
+
+def _build_brief(step: build.Step) -> None:
+    print("")
+    print(f"{step.index}단계 · {step.title}")
+    print(SEPARATOR)
+    print(f"  왜 지금 이것인가")
+    for line in step.why.splitlines():
+        print(f"    {line}")
+    print("")
+    print("  만들 파일")
+    for rel in step.paths():
+        info = build.spec(rel)
+        done = "✓" if rel in build.written(step) else " "
+        print(f"   {done} {rel}  ({info.get('lines', '?')}줄)  {info.get('summary', '')}")
+        for name in info.get("names", []):
+            print(f"        {name}")
+        if info.get("imports"):
+            print(f"        쓰는 것: {', '.join(info['imports'])}")
+    print("")
+    print("  이 단계를 판정하는 테스트")
+    for nodeid in step.tests:
+        print(f"    {nodeid}")
+    for note in step.notes:
+        print(f"\n  {note}")
+    print("")
+    print(f"  통과하면 말할 수 있어야 하는 것: {step.claim}")
+    print("")
+    print(f"  판정:  python dojo.py build check {step.index}")
+    print(f"  막히면: python dojo.py build reveal {step.index} <파일>  (기록에 남는다)")
+
+
+def cmd_build(args: argparse.Namespace) -> int:
+    action = args.action
+    all_steps = build.steps()
+    state = build.load_state()
+
+    if action == "steps":
+        print("")
+        print(f"처음부터 쌓기 — {len(all_steps)}단계 · 대상 {build.build_target_root().name}")
+        print(SEPARATOR)
+        for step in all_steps:
+            mark = {"passed": "✓", "in_progress": "…"}.get(
+                state["steps"].get(str(step.index), {}).get("status"), " ")
+            print(f"  {mark} {step.index:2}. {step.title:22} 파일 {len(step.paths())} · 테스트 {len(step.tests)}")
+            print(f"       {step.claim}")
+        done = sum(1 for s in all_steps if state["steps"].get(str(s.index), {}).get("status") == "passed")
+        print(SEPARATOR)
+        print(f"  통과 {done}/{len(all_steps)}")
+        if state["revealed"]:
+            print(f"  꺼내 본 참고 구현 {len(state['revealed'])}개: {', '.join(state['revealed'])}")
+        return 0
+
+    if action == "start":
+        workspace, emptied = build.prepare(force=args.force)
+        state = build.load_state()
+        state["prepared_at"] = datetime.now(UTC).isoformat()
+        if args.force:
+            # 새 판이다. 앞 판의 통과·꺼내 본 기록을 남기면 이번 판 상태를 못 읽는다.
+            state["steps"], state["revealed"] = {}, []
+        build.save_state(state)
+        print("")
+        print(f"작업 폴더를 만들었다: {workspace}")
+        print(f"  {build.BUILD_PACKAGE}/ 에서 모듈 {len(emptied)}개를 비웠다. 나머지(app·tests·config)는 그대로다.")
+        print("  원본 저장소는 건드리지 않는다 — 여기서만 쓴다.")
+        print("")
+        _build_brief(all_steps[0])
+        return 0
+
+    step = build.get(args.step or _next_step(all_steps, state))
+    if action == "brief":
+        _build_brief(step)
+        return 0
+    if action == "reveal":
+        path = build.reveal(step, args.path)
+        print(f"참고 구현을 꺼냈다: {path}")
+        print("기록에 남겼다. 직접 쓴 것과 섞이지 않게 나중에 다시 지우고 써 봐도 된다.")
+        return 0
+
+    # 3단계(저장소)부터 DB 를 쓰는 테스트가 섞인다. 꺼져 있으면 테스트마다 오래 기다리다 실패한다.
+    if step.index >= 3 and build.database_reachable() is False:
+        host, port = build.database_endpoint() or ("?", "?")
+        print(f"\nDB({host}:{port})에 붙을 수 없다 — 판정하지 않았다. 코드 문제가 아니다.")
+        print("  PostgreSQL 이 떠 있는지 먼저 본다. 이 기계에선 서비스가 아니라 재부팅 뒤 안 떠 있을 수 있다.")
+        print("  기동 절차: final_project_sample/wiki/records/manuals/2026-08-12_1520_환경_기동절차.md")
+        return 2
+
+    print(f"\n{step.index}단계 · {step.title} — 테스트 {len(step.tests)}개를 돌린다")
+    print(SEPARATOR)
+    passed, result = build.check(step)
+    build.record(step, passed=passed, result=result)
+    print(f"  {result.summary}")
+    for nodeid in result.failed[:8]:
+        print(f"  FAILED  {nodeid}")
+    print(SEPARATOR)
+    if passed:
+        print("  통과. 이 단계까지 만든 것만으로 이 테스트들이 돈다.")
+        nxt = _next_step(all_steps, build.load_state())
+        if nxt <= len(all_steps):
+            print("")
+            _build_brief(build.get(nxt))
+        else:
+            print("  마지막 단계다. 베이스먼트를 끝까지 쌓았다.")
+    else:
+        print("  아직이다. 깨진 테스트를 읽고 무엇을 요구하는지 먼저 말로 정리한다.")
+        print(f"  명세만 다시 보려면: python dojo.py build brief {step.index}")
+    return 0 if passed else 1
+
+
+def _next_step(all_steps: list[build.Step], state: dict) -> int:
+    for step in all_steps:
+        if state["steps"].get(str(step.index), {}).get("status") != "passed":
+            return step.index
+    return len(all_steps)
 
 
 def cmd_report(args: argparse.Namespace) -> int:
@@ -400,6 +528,14 @@ def build_parser() -> argparse.ArgumentParser:
     boss_cmd.add_argument("--force", action="store_true", help="앞 단계를 안 해도 연다")
     boss_cmd.add_argument("--defect", default=None, help="같은 결함을 다시 받는다")
     boss_cmd.set_defaults(func=cmd_boss)
+
+    build_cmd = sub.add_parser("build", help="처음부터 쌓기 — 빈 폴더에서 베이스먼트를 만든다")
+    build_cmd.add_argument("action", choices=["steps", "start", "brief", "check", "reveal"],
+                           nargs="?", default="steps")
+    build_cmd.add_argument("step", nargs="?", type=int, default=None, help="단계 번호")
+    build_cmd.add_argument("path", nargs="?", default=None, help="reveal 로 꺼낼 파일")
+    build_cmd.add_argument("--force", action="store_true", help="작업 폴더를 새로 만든다")
+    build_cmd.set_defaults(func=cmd_build)
 
     map_cmd = sub.add_parser("map", help="웹 지도를 그린다")
     map_cmd.add_argument("--scenario", default=None)

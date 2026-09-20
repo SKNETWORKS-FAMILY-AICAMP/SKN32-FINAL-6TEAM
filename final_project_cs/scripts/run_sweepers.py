@@ -2,9 +2,21 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_reminders 중 하나만 돌린다.
 
-★`trip` 은 v11 §6-A 의 **감시 루프**다(되잡기 작업 넷째). 앞으로 90분 안에 시작할
+★`trip_reminders` 는 **일정 안내**(v11 §6-B ②하루 시작 · ③항목 출발)다(`[2026-09-18]`).
+  Case 를 만들지 않고 LLM 을 부르지 않는다. 최신 일정 버전을 읽어 때가 된 안내를 바깥함에
+  넣는다 — 같은 안내는 `outbox` UNIQUE 가 한 번만 받는다. 감시 뒤에 돈다.
+
+★`trip_cases` 는 **Case 버전의 감시 루프**다(`[2026-09-17]`). 점검은 `trip` 과 같고, 깨진
+  항목을 직접 고치지 않고 **시스템 Case 를 열어** Controller → Team → 코어 적용으로 보낸다
+  (v11 §6-A ① 「되잡기 작업은 Case 를 만들기만 한다」). `trip` 과 **함께 돌리지 않는다** —
+  같은 사건을 두 경로가 다룬다.
+  ★`[결정 2026-09-18]` **`--only` 없이 돌 때 들어가는 감시는 이쪽이다**(전에는 `trip`).
+  실제 gemma4:12b 로 하루를 3회 돌려 감시 Case 3건이 매번 `resolved` 였다
+  (wiki `records/evidence/CASE-VERSION-ITINERARY_이식검증.md` §7). `trip` 은 `--only trip` 으로 남는다.
+
+★`trip` 은 v11 §6-A 의 **감시 루프**의 시나리오용 여행 버전이다(되잡기 작업 넷째, `--only trip`). 앞으로 90분 안에 시작할
   일정 항목을 실제 소스(기상·특보·재난문자·교통·대기)로 점검하고, 깨졌으면 새 일정
   버전 + 통지를 한 트랜잭션으로 쓴다. 보내는 일은 배달 루프(`run_outbox_worker`)다.
   `fatal`(결정 15 — 대체 소스까지 실패)은 고치지 않고 세어 알린다 → `--once` 면 exit 1.
@@ -74,9 +86,66 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
         with get_connection() as conn:
             result["routing"] = sweep_stuck_routing(
                 conn, tenant_id=tenant_id, run_case=run_case, actor_id="sweeper")
-    if only in (None, "trip"):
+    # ★`[결정 2026-09-18]` 기본 감시는 **Case 버전**(`trip_cases`)이다. 시나리오용 여행 버전(`trip`)은
+    #   `--only trip` 으로만 돈다. 둘을 함께 돌리지 않는다 — 같은 사건을 두 경로가 다룬다.
+    if only == "trip":
         result["trip"] = _run_trip_watch(tenant_id)
+    if only in (None, "trip_cases"):
+        result["trip_cases"] = _run_trip_watch_cases(tenant_id)
+    # ★감시 **뒤에** 돈다 — 변경 통지가 먼저 나가고, 안내는 바뀐 최신 일정으로 계산된다(v11 §6-B).
+    if only in (None, "trip_reminders"):
+        result["trip_reminders"] = _run_trip_reminders(tenant_id)
     return result
+
+
+def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.infrastructure.travel.base import build_travel_sources
+    from app.modules.travel_ops.itinerary import TripStore
+    from app.modules.travel_ops.trip_api import plan_url
+    from app.modules.travel_ops.trip_reminders import TripReminders
+
+    sources = build_travel_sources(get_settings())
+    reminders = TripReminders(store=TripStore(tenant_id), connection_factory=get_connection,
+                              clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
+                              route_events=sources.route_events,
+                              link=lambda trip_id: plan_url(tenant_id, trip_id))
+    outcome = reminders.tick()
+    return {"trips": outcome.trips, "sent": len(outcome.sent), "already": outcome.already,
+            "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route}
+
+
+def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
+    import asyncio
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app import composition
+    from app.infrastructure.db import repository
+    from app.infrastructure.travel.base import build_travel_sources
+    from app.infrastructure.travel.disruptions import DisruptionCheck
+    from app.modules.travel_ops.itinerary import TripStore
+    from app.modules.travel_ops.trip_watch_cases import TripWatchCaseOpener
+
+    sources = build_travel_sources(get_settings())
+    controller = composition.build_controller()
+
+    def run_case(**kwargs):
+        # ★Controller 의 run_case 는 coroutine 이다 — sweeper 는 동기 루프라 여기서 돌린다.
+        return asyncio.run(controller.run_case(**kwargs))
+
+    opener = TripWatchCaseOpener(
+        store=TripStore(tenant_id), check=DisruptionCheck(sources).check,
+        connection_factory=get_connection, clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")),
+        repository=repository, run_case=run_case, route_events=sources.route_events)
+    outcome = opener.tick()
+    escalated = sum(1 for run in outcome.ran if run.get("status") == "escalated")
+    return {"checked": outcome.checked, "opened": len(outcome.opened), "existing": len(outcome.existing),
+            "ran": len(outcome.ran), "escalated": escalated, "fatal": len(outcome.fatal),
+            "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
+            "unchecked": len(outcome.unchecked)}
 
 
 def _run_trip_watch(tenant_id: str) -> dict[str, int]:
@@ -133,7 +202,8 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip"), default=None)
+    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_reminders"),
+                        default=None)
     args = parser.parse_args()
 
     tenant_id = get_settings().tenant_id

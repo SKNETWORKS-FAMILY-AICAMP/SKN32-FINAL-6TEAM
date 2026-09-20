@@ -132,15 +132,9 @@ def _seoul(moment: datetime | None) -> datetime | None:
 
 
 # ── 계획서 링크 ──────────────────────────────────────────────────
-def plan_token(tenant_id: str, trip_id: UUID | str) -> str:
-    """여행별 토큰. ★저장하지 않는다 — 비밀 키로 매번 다시 계산해 맞춰 본다."""
-    secret = settings_module.get_settings().secret_key.encode()
-    return hmac.new(secret, f"plan:{tenant_id}:{trip_id}".encode(), hashlib.sha256).hexdigest()[:32]
-
-
-def plan_url(tenant_id: str, trip_id: UUID | str) -> str:
-    base = settings_module.get_settings().public_base_url.rstrip("/")
-    return f"{base}/plan/{trip_id}?t={plan_token(tenant_id, trip_id)}"
+# ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
+#   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
+from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 
 
 # ── 보기 ────────────────────────────────────────────────────────

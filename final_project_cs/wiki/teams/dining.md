@@ -113,14 +113,30 @@ Dining: "19시 → 20시" 또는 "다른 가게" 후보를 낸다
 `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
-capabilities          = ["dining.check_open", "dining.check_conditions"]
+capabilities          = ["dining.check_open", "dining.check_conditions",
+                         "dining.itinerary"]           # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["dining"]                   # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "policy", "db_facts", "history"]
-allowed_tools         = ["read.place", "read.policy", "read.booking"]
+required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+allowed_tools         = ["read.place", "read.policy", "read.booking",
+                         "read.itinerary", "read.itinerary_version", "read.place_catalog",
+                         "read.customer_report"]
 knowledge_scope       = ["dining", "opening_hours", "dietary"]
-max_steps             = 6
+max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "dining.check_open"
 ```
+
+### `[2026-09-17]` Case 버전의 여행 일정 관리 — `dining.itinerary`
+
+**시나리오용 여행 버전(`trip_watch`·`trip_desk`)이 하던 일을 이 Team 이 Case 로 한다.** 여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)가 오면 `select_capability(intent, input_text, state)` 가 `dining.itinerary` 를 고른다.
+
+- **늦음**(`delay`) — 다음 식사가 늦은 도착 시각에 성립하는지 보고, 안 되면 대체 식당을 제안한다(요식-P3).
+- **당일 휴무**(`closed`) — 걸어갈 수 있는 대체 식당을 제안한다(요식-P7).
+- **재요청** — 다른 안으로(`change`) · 되돌리기(`rollback`).
+
+- 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
+- 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
+- `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
+- 하루 전체 대조: `tests/scenario/test_case_version_day.py` — 같은 재생 입력에서 두 버전의 버전 수·마지막 항목·통지 문구가 같다.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 

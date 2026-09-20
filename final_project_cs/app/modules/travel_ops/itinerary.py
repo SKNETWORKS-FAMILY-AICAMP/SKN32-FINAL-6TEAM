@@ -55,6 +55,39 @@ class Item:
                     place=place if place else self.place)
 
 
+def _iso(moment: datetime | None) -> str | None:
+    return moment.isoformat() if moment else None
+
+
+def _uuid(value: Any) -> UUID | None:
+    return None if value in (None, "") else UUID(str(value))
+
+
+def item_to_dict(item: Item) -> dict[str, Any]:
+    """항목을 JSON 으로 — 읽기 도구의 결과와 제안 인자(`itinerary.apply`)가 이 모양을 쓴다."""
+    return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind, "title": item.title,
+            "place_id": str(item.place_id) if item.place_id else None,
+            "starts_at": _iso(item.starts_at), "ends_at": _iso(item.ends_at),
+            "locked": item.locked, "booking_id": str(item.booking_id) if item.booking_id else None,
+            "replaces_item_id": str(item.replaces_item_id) if item.replaces_item_id else None,
+            "detail": item.detail, "place": item.place}
+
+
+def item_from_dict(data: dict[str, Any]) -> Item:
+    """`item_to_dict` 의 반대. ★시각은 오프셋이 붙은 ISO 문자열이어야 한다 — 없으면 거부한다."""
+    starts = datetime.fromisoformat(str(data["starts_at"]))
+    ends = datetime.fromisoformat(str(data["ends_at"])) if data.get("ends_at") else None
+    for moment in (starts, ends):
+        if moment is not None and moment.tzinfo is None:
+            raise ValueError("itinerary item time must carry a UTC offset")
+    return Item(item_id=UUID(str(data["item_id"])), seq=int(data["seq"]), kind=str(data["kind"]),
+                title=str(data["title"]), place_id=_uuid(data.get("place_id")), starts_at=starts,
+                ends_at=ends, locked=bool(data.get("locked", False)),
+                booking_id=_uuid(data.get("booking_id")),
+                replaces_item_id=_uuid(data.get("replaces_item_id")),
+                detail=dict(data.get("detail") or {}), place=data.get("place"))
+
+
 PLACE_COLUMNS = ("place_id", "name", "kind", "latitude", "longitude",
                  "weather_sensitive", "attributes")
 
@@ -127,6 +160,13 @@ class TripStore:
             out.append(item)
         return out
 
+    def active_trip_ids(self, conn) -> list[UUID]:
+        """진행 중인 여행. 안내 되잡기 작업이 읽는다."""
+        with conn.cursor() as cur:
+            cur.execute("SELECT trip_id FROM trips WHERE tenant_id=%s AND status='active' ORDER BY trip_id",
+                        (self.tenant_id,))
+            return [row[0] for row in cur.fetchall()]
+
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
         """최신 버전에서 `[start, end)` 에 시작하는 항목. 감시 루프가 읽는다."""
         with conn.cursor() as cur:
@@ -197,7 +237,7 @@ class TripStore:
         return new_version
 
     def enqueue_message(self, conn, *, trip_id: UUID, key: str,
-                        payload: dict[str, Any]) -> None:
+                        payload: dict[str, Any]) -> bool:
         """일정 버전에 딸리지 않은 안내(하루 시작·출발·하루 정리 — v11 §6-B 의 ②·③).
 
         ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
@@ -213,13 +253,21 @@ class TripStore:
                 (self.tenant_id, "trip.notice", f"{trip_id}:{key}",
                  json.dumps({"locale": row[0] if row else None, **payload},
                             ensure_ascii=False, default=str)))
+            # ★새로 넣었으면 True. 이미 있던 키면 False — 되잡기 작업이 「보냄」과 「이미 보냄」을 가른다.
+            return cur.rowcount == 1
 
     def enqueue_notice(self, conn, *, trip_id: UUID, version: int,
                        payload: dict[str, Any]) -> None:
         """★적용된 일정 버전당 통지 하나(§6-C-6). 같은 버전을 두 번 넣으면 막힌다.
 
         ★여행의 언어(`locale`)를 싣는다 — 보낼 때 그 언어로 옮긴다(결정 14).
+        ★`[2026-09-20]` **계획서 링크도 싣는다.** 상태의 정본은 링크인데(v11 §6-A) 변경 통지에만
+          링크가 없었다 — 일정 안내(②·③)에는 붙고 ①에는 안 붙는 상태였다.
         """
+        if "plan_url" not in payload:
+            from .plan_link import plan_url
+
+            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
         if "locale" not in payload:
             with conn.cursor() as cur:
                 cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",

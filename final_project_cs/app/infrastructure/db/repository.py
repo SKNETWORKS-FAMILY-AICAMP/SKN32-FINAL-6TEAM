@@ -39,10 +39,47 @@ def get_case_events(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[
         return [dict(zip(("event_id","aggregate_version","event_type","payload_json","actor_type","actor_id","created_at"), r)) for r in cur.fetchall()]
 
 
-def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, action_type: str, arguments: dict[str, Any], idempotency_key: str, status: str = "proposed") -> UUID:
+def _json_text(value: Any) -> str:
+    """★UUID·시각을 문자열로 — 제안 인자는 DB 에서 읽은 값(UUID 객체)을 그대로 싣는다.
+    그대로 쓰면 `TypeError: Object of type UUID is not JSON serializable` 로 Case 실행이 통째로
+    실패했다(2026-09-17, wiki/records/reports/debugs/2026-09-17_1450_여행_승인제안이_근거대조에서_전부_막힌다.md)."""
+    import json
+
+    return json.dumps(value, ensure_ascii=False, default=str)
+
+
+def create_action_request(conn: Connection, *, tenant_id: str, case_id: UUID, action_type: str, arguments: dict[str, Any], idempotency_key: str, status: str = "proposed", provider_ref: str | None = None) -> UUID:
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status) VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments), idempotency_key, status))
+        cur.execute("INSERT INTO action_requests (tenant_id, case_id, action_type, arguments_json, idempotency_key, status, provider_ref) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING action_id", (tenant_id, case_id, action_type, Json(arguments, dumps=_json_text), idempotency_key, status, provider_ref))
         return cur.fetchone()[0]
+
+
+def find_action_request(conn: Connection, *, tenant_id: str, idempotency_key: str) -> dict[str, Any] | None:
+    """멱등 키로 이미 기록된 작업을 찾는다. 없으면 None."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT action_id, case_id, action_type, status, provider_ref FROM action_requests "
+                    "WHERE tenant_id=%s AND idempotency_key=%s", (tenant_id, idempotency_key))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return dict(zip(("action_id", "case_id", "action_type", "status", "provider_ref"), row))
+
+
+def approved_pending_actions(conn: Connection, *, tenant_id: str, case_id: UUID) -> list[dict[str, Any]]:
+    """승인됐지만 아직 실행하지 않은 제안(`[2026-09-18]`). 승인 뒤 재개가 읽는다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT ar.action_id, ar.action_type, ar.arguments_json FROM action_requests ar "
+                    "WHERE ar.tenant_id=%s AND ar.case_id=%s AND ar.status='pending_approval' "
+                    "AND EXISTS (SELECT 1 FROM action_approvals ap WHERE ap.action_id=ar.action_id "
+                    "AND ap.decision='approved') ORDER BY ar.created_at, ar.action_id", (tenant_id, case_id))
+        return [dict(zip(("action_id", "action_type", "arguments"), row)) for row in cur.fetchall()]
+
+
+def set_action_status(conn: Connection, *, tenant_id: str, action_id: UUID, status: str,
+                      provider_ref: str | None = None) -> None:
+    with conn.cursor() as cur:
+        cur.execute("UPDATE action_requests SET status=%s, provider_ref=COALESCE(%s, provider_ref) "
+                    "WHERE tenant_id=%s AND action_id=%s", (status, provider_ref, tenant_id, action_id))
 
 
 def create_approval(conn: Connection, *, action_id: UUID, decision: str, approver_id: str | None = None) -> UUID:

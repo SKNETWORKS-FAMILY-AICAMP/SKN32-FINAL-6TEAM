@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""일정 감시 — **곧 시작할 항목**을 점검하고, 깨졌으면 먼저 고쳐 알린다.
+"""일정 감시 — **곧 시작할 항목**을 점검하고, 깨졌으면 먼저 고쳐 알린다(시나리오용 여행 버전).
 
 ★`watch.py` 는 **장소 정보**(이름·주소·좌표·분류)가 바뀐 것을 본다. 시나리오의 사건은
   **운영 상태**(미세먼지 경보·운행 중단·통제·휴무)라 거기서 안 잡힌다(설계대응 §3).
@@ -15,6 +15,10 @@
     4  같은 사건으로 두 번 고치지 않는다 — 대체 항목은 원인이 사라진 곳이라 다음 틱의
        점검이 `clear` 가 된다. 그래도 겹치면 기준 버전 조건이 막는다
 
+★`[2026-09-17]` **대안 계산은 `itinerary_changes.py` 가 한다** — Case 버전의 감시 Case
+  (`trip_watch_cases.py`)와 Team 이 같은 계산을 쓴다. 이 파일은 점검·읽기·쓰기만 한다.
+  옮기기 전 원본: `legacy/final_project_cs/app/modules/travel_ops/trip_watch.py`.
+
 ★`[미구현]` 식사 항목의 **시스템 감지**(당일 휴무 등)는 소스가 없다 — 요식-P3·P7 은
   고객 신고로 들어온다(`trip_desk.py`). 식사 항목이 여기서 깨지면 `unhandled` 로 센다.
 """
@@ -25,8 +29,8 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 
 from .itinerary import Item, StaleItinerary, TripStore
-from .replan import (activity_candidates, alternate_record, change_notice, choose,
-                     route_candidates, route_notice)
+from .itinerary_changes import (ItineraryChange, NoChange, next_after, plan_activity_adjustment,
+                                plan_route_adjustment, planned_option, route_of, route_targets)
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -41,11 +45,6 @@ class TripTickResult:
     pinned: list[dict[str, Any]] = field(default_factory=list)
     #: 경로 사건 소스가 **답할 수 없는** 대상(지하철 무정차 등) — 「사건 없음」과 다르다.
     unchecked: list[dict[str, Any]] = field(default_factory=list)
-
-
-def _next_after(items: list[Item], item: Item) -> Item | None:
-    later = [other for other in items if other.seq > item.seq]
-    return min(later, key=lambda other: other.seq) if later else None
 
 
 class TripWatcher:
@@ -86,47 +85,18 @@ class TripWatcher:
             if item.kind != "activity":
                 result.unhandled.append(entry)
                 continue
-            self._adjust_activity(trip_id, item, report, places, now, result)
+            plan = plan_activity_adjustment(item=item, report=report, places=places,
+                                            check=self.check, now=now)
+            self._settle(trip_id, item, plan, result)
         return result
-
-    # ── 활동 ───────────────────────────────────────────────────
-    def _adjust_activity(self, trip_id, item, report, places, now, result) -> None:
-        causes = report.get("disruptions", [])
-        candidates = activity_candidates(original=item.place, places=places,
-                                         start=item.starts_at, end=item.ends_at, causes=causes)
-        best, alternates, rejected = choose(
-            candidates, lambda c: self.check(place=c.place, starts_at=item.starts_at))
-        if best is None:
-            # ★못 풀면 부분 반영하지 않는다(§6-C-5). 사람에게 넘길 재료를 남긴다.
-            result.unresolved.append({"trip_id": str(trip_id), "item": item.title,
-                                      "causes": causes,
-                                      "rejected": {c.name: c.rejected for c in rejected}})
-            return
-        replay = any(cause.get("mode") == "replay" for cause in causes)
-        notice = change_notice(original=item.place, replacement=best.place,
-                               start=item.starts_at, causes=causes,
-                               alternates=alternates, replay=replay)
-        replacement = lambda current: current.replaced_by(  # noqa: E731
-            place=best.place, title=f"{best.place['name']} 관람",
-            detail={"auto_adjusted_at": now.isoformat(),
-                    "other_options": notice["other_options"],
-                    "alternates": [alternate_record(c) for c in alternates]})
-        self._apply(trip_id, item, replacement, causes, notice, result,
-                    summary={"from": item.place["name"], "to": best.place["name"]})
 
     # ── 이동 ───────────────────────────────────────────────────
     def _check_route(self, trip_id, item, now, result) -> None:
-        # ★경로 정의는 항목이 들고 온다(`route_def`, 등록 API 가 넣는다). 재생 시험처럼
-        #   밖에서 준 `routes` 가 있으면 그것이 먼저다.
-        route = self.routes.get(str(item.detail.get("route"))) or item.detail.get("route_def")
+        route = route_of(item, self.routes)
         if not route or self.route_events is None:
             return
-        options = {option["id"]: option for option in route["options"]}
-        chosen = str(item.detail.get("option") or route["planned"])
-        planned = options.get(chosen, {})
-        targets = sorted({target for option in options.values()
-                          for target in option.get("uses", [])})
-        events = self.route_events.affecting(targets)
+        _, planned = planned_option(item, route)
+        events = self.route_events.affecting(route_targets(route))
         if events is None:
             # ★경로 사건을 못 읽었다 — 「사건 없음」으로 넘기지 않는다(결정 15 의 치명).
             result.fatal.append({"trip_id": str(trip_id), "item": item.title,
@@ -138,59 +108,38 @@ class TripWatcher:
         if blind:
             result.unchecked.append({"trip_id": str(trip_id), "item": item.title,
                                      "targets": blind})
-        hit = {target: events[target] for target in planned.get("uses", []) if target in events}
-        if not hit:
+        if not any(target in events for target in planned.get("uses", [])):
             return
-        causes = [{"category": "route_event", "target": target, **event}
-                  for target, event in hit.items()]
         with self._connect() as conn:
             _, items = self.store.latest(conn, trip_id)
-        following = _next_after(items, item)
-        candidates = route_candidates(
-            route={**route, "planned": chosen}, depart=item.starts_at,
-            planned_arrival=item.ends_at or item.starts_at,
-            next_start=following.starts_at if following else None, events=events)
-        best, alternates, rejected = choose(candidates)
-        if best is None:
-            result.unresolved.append({"trip_id": str(trip_id), "item": item.title,
-                                      "causes": causes,
-                                      "rejected": {c.name: c.rejected for c in rejected}})
+        plan = plan_route_adjustment(item=item, following=next_after(items, item), route=route,
+                                     events=events, now=now)
+        self._settle(trip_id, item, plan, result)
+
+    def _settle(self, trip_id, item: Item, plan, result: TripTickResult) -> None:
+        if isinstance(plan, NoChange):
+            if plan.status == "unresolved":
+                result.unresolved.append({"trip_id": str(trip_id), "item": item.title,
+                                          **plan.detail})
             return
-        replay = any(cause.get("mode") == "replay" for cause in causes)
-        next_title = following.title if following else None
-        notice = route_notice(route={**route, "planned": chosen}, planned=planned, best=best,
-                              alternates=alternates, rejected=rejected, causes=causes,
-                              planned_arrival=item.ends_at or item.starts_at,
-                              next_title=next_title, replay=replay)
-        replacement = lambda current: current.replaced_by(  # noqa: E731
-            place=None, title=f"{route['from']} → {route['to']} · {(best.option or {}).get('label')}",
-            starts_at=best.starts_at, ends_at=best.ends_at,
-            detail={**current.detail, "option": best.key,
-                    "auto_adjusted_at": now.isoformat(),
-                    "other_options": notice["other_options"],
-                    "alternates": [alternate_record(c) for c in alternates]})
-        self._apply(trip_id, item, replacement, causes, notice, result,
-                    summary={"from": planned.get("label"),
-                             "to": (best.option or {}).get("label")})
+        self._apply(trip_id, item, plan, result)
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────
-    def _apply(self, trip_id, item, replacement, causes, notice, result, *, summary) -> None:
+    def _apply(self, trip_id, item: Item, plan: ItineraryChange, result: TripTickResult) -> None:
         with self._connect() as conn, conn.transaction():
             trip, items = self.store.latest(conn, trip_id)
             if not any(current.item_id == item.item_id for current in items):
                 return   # ★그 사이 다른 쪽이 이 항목을 이미 바꿨다 — 옛 계산을 밀어 넣지 않는다
-            new_items = [replacement(current) if current.item_id == item.item_id else current
-                         for current in items]
             try:
                 version = self.store.append_version(
-                    conn, trip_id=trip_id, base_version=trip["version"], items=new_items,
-                    reason="auto_adjusted", causes=causes)
+                    conn, trip_id=trip_id, base_version=trip["version"],
+                    items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
             except StaleItinerary:
                 return
             self.store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                                      payload={**notice, "version": version})
-        result.adjusted.append({"trip_id": str(trip_id), "version": version, **summary,
-                                "notice": notice})
+                                      payload={**plan.notice, "version": version})
+        result.adjusted.append({"trip_id": str(trip_id), "version": version, **plan.summary,
+                                "notice": plan.notice})
 
 
 __all__ = ["DEFAULT_LOOKAHEAD", "TripTickResult", "TripWatcher"]

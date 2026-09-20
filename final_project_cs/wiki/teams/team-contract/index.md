@@ -110,6 +110,15 @@ rationale_evidence_ids : list[str]   ← 근거 대조용
 
 ## 계약이 스스로 검사하는 것
 
+### ★ `[결정 2026-09-17]` 계약 밖에서 코어가 Team 에 대해 쓰는 것 둘
+
+**계약 필드는 안 바뀌었다(`contract_version` 1.0 그대로).** 이미 있던 선언을 코어가 **실제로 쓰기 시작**한 것이다.
+
+| 무엇 | 전 | 지금 |
+|---|---|---|
+| `TeamManifest.required_context` | 선언만 되고 Controller 가 안 읽었다 — 모든 Case 에서 정책 RAG 를 돌리고, 결과가 없으면 `degraded` | **`policy` 를 선언한 Team 에만** 정책 RAG 를 돌린다. 선언 안 한 Team 의 Case 는 정책 결과가 없다는 이유로 `degraded` 가 되지 않는다. 일정 관리처럼 **실시간 사실로 판단하는 일**이 정책 문서 부재로 전부 사람에게 넘어가던 것을 푼다 |
+| 모듈의 `select_capability` | `(intent, input_text)` | `(intent, input_text, state)` 도 받는다 — **세 번째 인자를 선언한 모듈에만** Case 의 `state_json` 에서 온 `subject_ref`·`trigger_source` 를 넘긴다(`[2026-09-17]` 대상 해석기가 남긴 `interpretation` 도). 두 인자 모듈은 그대로 돈다 |
+
 `[실측]` `TeamResult`에 `model_validator`가 있다. 모순된 조합을 만들 수 없다.
 
 | `next_action` | 강제되는 것 |

@@ -15,6 +15,19 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-18 — 간헐 실패 원인(UUID 가림) · 일정 안내 · 승인 뒤 실행
+
+「원인 모름 간헐 실패」는 코어 가림 규칙이 UUID 를 전화번호로 가리던 결함이었다(`records/reports/debugs/2026-09-18_1425_…`). 일정 안내(하루 시작·출발)를 운영 되잡기 작업으로 만들고, 기본 감시를 Case 버전으로 바꿨다(`operations/run.md`). 승인된 제안을 코어가 적용기로 실행하고, Booking Handoff 준비 capability 에 라우팅이 닿는다(`actions/approval.md` 「승인 뒤 실행」 · `actions/idempotency.md` · `teams/booking-handoff.md`). 리포트 `records/reports/2026-09-18_1500_…`.
+
+## 2026-09-17 — Case 버전: 문장 해석이 분류보다 먼저, 실제 Gemma 로 확인
+
+실제 gemma4:12b 로 재니 분류 접두가 늦음·품절·재요청 문장에서 빗나가 사람에게 넘어갔다. 대상이 정해진 고객 Case 는 분류 직전에 신고를 추출해 담당을 정하도록 바꿨다(`external/rest-endpoints.md` subject_ref 절, `teams/team-contract/index.md`). 여행 승인 제안이 근거 대조에서 막히던 결함도 고쳤다(`records/reports/debugs/2026-09-17_1450_…`).
+
+## 2026-09-17 — Case 버전만으로 여행 일정 관리가 돈다
+
+시나리오용 여행 버전에만 있던 일정 관리(감시 조정·고객 신고·다른 안·되돌리기·통지)를 Case → Controller → Team → 코어 적용 경로로 옮겼다. 같은 재생 하루에서 두 버전의 결과가 같다. 계약 페이지 넷(`external/rest-endpoints.md` subject_ref · `actions/approval.md` 승인 없이 적용 · `teams/team-contract/index.md` · `context/context-broker.md`)과 Team 페이지 셋을 고쳤다.
+→ [records/reports/2026-09-17_0536_Case버전_여행일정관리_이식_리포트.md](records/reports/2026-09-17_0536_Case버전_여행일정관리_이식_리포트.md)
+
 ## 2026-09-01 (2) — 역방향 표식 완료. 양방향 잠김
 
 cs 프로젝트가 테스트에 `# invariant:` 표식을 넣었다.

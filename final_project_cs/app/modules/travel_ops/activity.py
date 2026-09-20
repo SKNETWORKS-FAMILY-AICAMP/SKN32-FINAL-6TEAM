@@ -21,9 +21,11 @@ from typing import Any
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
 from ._base import TravelTeamBase
+from .itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
+from .itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
 
-class ActivityTeam(TravelTeamBase):
+class ActivityTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="activity",
         display_name="Activity Team",
@@ -33,14 +35,18 @@ class ActivityTeam(TravelTeamBase):
             "activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
             "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
             "activity.propose_change",     # 대안을 제안한다 (승인 대기)
+            "activity.itinerary",          # ★`[2026-09-17]` 여행 일정 관리 — 감시 Case · 품절 · 재요청
         ],
         accepted_case_types=["activity"],
-        required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.policy", "read.place", "read.disruptions"],
+        # ★`[2026-09-17]` `policy` 를 뺐다 — 규정은 `read.policy` 도구로 **직접** 읽고(없으면 모름),
+        #   일정 관리는 실시간 사실로 판단한다. 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다.
+        required_context=["case_state", "db_facts", "history"],
+        allowed_tools=["read.booking", "read.policy", "read.place", "read.disruptions", *ITINERARY_TOOLS],
         knowledge_scope=["activity", "cancellation", "refund", "weather"],
-        max_steps=6,
+        # ★대안 후보마다 재점검한다(도구 1회씩) — 6 으로는 후보 셋에서 예산이 끝난다.
+        max_steps=12,
         active=True,
-        implementation_revision="2026-09-09",
+        implementation_revision="2026-09-17",
         default_capability="activity.check_feasible",
     )
 
@@ -57,10 +63,64 @@ class ActivityTeam(TravelTeamBase):
         reference = when if when.tzinfo else when.replace(tzinfo=UTC)
         return (reference - datetime.now(UTC)).total_seconds() / 3600
 
+    @staticmethod
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
+        return "activity.itinerary" if ItineraryWork._wants_itinerary(state or {}) else None
+
+    async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """감시가 연 Case — 그 항목을 **다시 점검**하고, 깨졌으면 대안을 계산해 제안한다."""
+        trigger = task.context.current_state.get("trigger") or {}
+        item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
+        if item is None:
+            return self.settle(task, ctx, NoChange("gone"))
+        if item.kind != "activity" or item.place is None:
+            return self._escalate(task, "target_kind_mismatch", ctx["evidence"])
+        report = self._read(task, "read.disruptions", self.check_arguments(item.place, item.starts_at),
+                            ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.disruptions", claim="성립 점검",
+                                         value=report, base=ctx["evidence"])
+        if report is None or report.get("verdict") == "fatal":
+            # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
+            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
+        if report.get("verdict") != "disrupted":
+            return self.settle(task, ctx, NoChange("clear"))
+        places = self.catalog(task, ctx)
+        if places is None:
+            return self._unknown(task, "장소 목록", ctx["evidence"])
+        plan = plan_activity_adjustment(item=item, report=report, places=places,
+                                        check=self.recheck(task, ctx), now=ctx["at"])
+        return self.settle(task, ctx, plan)
+
+    async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
+        if kind != "stock_out":
+            return await super().handle_report(task, kind, ctx)
+        products = list(ctx["report"].get("products") or [])
+        if not products:
+            return self._unknown(task, "품절 상품", ctx["evidence"])
+        places = self.catalog(task, ctx)
+        if places is None:
+            return self._unknown(task, "장소 목록", ctx["evidence"])
+        answer = plan_nearby_store(items=ctx["items"], places=places, at=ctx["at"], products=products,
+                                   message=task.input_text,
+                                   request_id=task.context.current_state.get("request_id"))
+        if answer.get("status") != "answered":
+            return self._escalate(task, "store_unresolved", ctx["evidence"],
+                                  warnings=[str(answer.get("message") or "동선 위 매장을 찾지 못했다")])
+        # ★일정은 바꾸지 않는다 — 제안 없이 답만. 재고는 `[미확인]` 으로 말한다.
+        return self._result(task, outcome="completed", confidence=0.7, evidence=ctx["evidence"],
+                            answer=answer["text"], next_action=NextAction.RESPOND,
+                            decisions=[{"itinerary": "store_recommended",
+                                        "recommendation": answer["recommendation"],
+                                        "stock": answer["stock"],
+                                        "other_options": answer["other_options"]}])
+
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        if task.capability == self.itinerary_capability:
+            return await self.run_itinerary(task)
 
         seen: set[str] = set()
         booking = self._read(task, "read.booking", {"case_id": str(task.case_id)}, seen)

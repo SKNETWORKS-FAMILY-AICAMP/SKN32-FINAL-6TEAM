@@ -11,7 +11,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.contracts import InvalidTransition, StateConflict
+from app.application.case_intake import IdempotencyConflict, open_case
 from app.application.controller import ControllerError
+from app.core.subjects import SubjectNotFound, SubjectUnsupported
 from app.core.idempotency import idempotency_key
 from app.core.transition import transition_case
 from app.domain.events import EventType
@@ -40,6 +42,20 @@ class CreateCase(BaseModel):
     customer_id: UUID
     message: str = Field(min_length=1)
     channel: str
+    subject_ref: SubjectRefIn | None = None
+
+
+class SubjectRefIn(BaseModel):
+    """Case 가 가리키는 대상 — `[결정 2026-09-17]` wiki `external/rest-endpoints.md`.
+
+    ★이름이 중립이다. 무엇을 가리키는지는 조립이 주입한 확인기가 안다.
+    """
+    model_config = ConfigDict(extra="forbid")
+    kind: str = Field(min_length=1)
+    id: UUID
+    part_id: UUID | None = None
+    base_version: int | None = Field(default=None, ge=1)
+    request: dict[str, Any] | None = None
 
 
 class MessageRequest(BaseModel):
@@ -97,66 +113,38 @@ def _run_case_detached(controller: Any, *, tenant_id: str, case_id: UUID, actor_
         logger.exception("detached run_case failed: tenant=%s case=%s", tenant_id, case_id)
 
 
-def build_router(classifier: Classifier | None = None, controller: Any | None = None) -> APIRouter:
+def build_router(classifier: Classifier | None = None, controller: Any | None = None,
+                 subject_resolver: Callable[..., Any] | None = None,
+                 subject_interpreter: Callable[..., Any] | None = None) -> APIRouter:
     router = APIRouter()
     @router.post("/v1/cases", status_code=201)
     def create(request: CreateCase, background: BackgroundTasks,
                principal: Principal = Depends(require_scope("case:write"))):
         tenant = principal.tenant_id
-        # ★client-supplied key wins when present (HTTP idempotency convention is
-        #   the client provides the key); server falls back to computing one
-        #   from request_id only when the client didn't send one.
-        idem = request.idempotency_key or idempotency_key(
-            tenant_id=tenant, request_id=request.request_id, action_type="case.create",
-            business_subject=f"{request.customer_id}:{request.message}")
-        body_fingerprint = hashlib.sha256(
-            f"{request.customer_id}:{request.message}:{request.channel}".encode("utf-8")).hexdigest()
+        # ★절차는 코어 1 의 접수 함수가 갖는다(`app/application/case_intake.py`) — 감시 루프가
+        #   여는 시스템 Case 와 같은 문을 지난다. 이 라우트는 HTTP 로 옮기기만 한다.
+        #   멱등·잠금·「분류는 생성 트랜잭션 밖」 규칙은 그 함수에 그대로 옮겼다
+        #   (옮기기 전 경위 주석은 git 이력 `cases.py` 2026-09-16 판에 있다).
+        subject = request.subject_ref.model_dump(mode="json") if request.subject_ref else None
         with get_connection() as conn:
-            with conn.transaction():
-                with conn.cursor() as cur:
-                    # ★2026-09-01 발견(wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
-                    #   구멍 1) — 이 advisory lock 없이는 SELECT 로 "없다"를 본 두
-                    #   동시 요청이 둘 다 통과해 Case 를 두 개 만들었다. 뒤엣것의
-                    #   INSERT 는 ON CONFLICT DO UPDATE 로 충돌을 조용히 삼켜서
-                    #   500 도 안 났다 — 두 요청 모두 201 로 성공하고 서로 다른
-                    #   case_id 를 받았다(실측 확인). register_prompt_files()·
-                    #   case_service.start_run() 과 같은 패턴으로 잠근다.
-                    cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", (f"{tenant}:{idem}",))
-                    cur.execute("SELECT case_id, arguments_json FROM action_requests WHERE tenant_id=%s AND idempotency_key=%s", (tenant, idem))
-                    existing = cur.fetchone()
-                if existing:
-                    existing_case_id, existing_args = existing
-                    stored_fingerprint = existing_args.get("body_sha256") if isinstance(existing_args, dict) else None
-                    if stored_fingerprint is not None and stored_fingerprint != body_fingerprint:
-                        raise _error(409, "idempotency_key_reused",
-                                     "same idempotency_key was used for a request with a different body")
-                    case = repository.get_case(conn, tenant_id=tenant, case_id=existing_case_id)
-                    return _view(case)
-                case_id = repository.create_case(conn, tenant_id=tenant, customer_id=request.customer_id, subject=request.message, state_json={"request_id": request.request_id})
-                transition_case(conn, tenant_id=tenant, case_id=case_id, expected_version=0, event_type=EventType.CREATED,
-                                payload={"channel": request.channel, "message": request.message}, actor_type="api", actor_id=principal.key_id)
-                # ★분류는 여기서 하지 않는다 — 아래 트랜잭션 **밖**에서 한다.
-                #   전에는 이 자리에서 LLM 을 불렀고, 그러면 `pg_advisory_xact_lock`
-                #   과 커넥션을 잡은 채 외부 provider 를 기다리게 된다. 느린 응답
-                #   하나가 같은 키의 접수 전체를 막고, 타임아웃이면 **Case 생성까지
-                #   롤백**된다(v8 §3-A [2026-09-01 교정] 결함 2).
-                #   v8 §7-A 도 "Case 생성 transaction 밖에서" 로 고쳐졌다.
-                # ★status 를 기본값(proposed)으로 두면 이 idempotency 감사 기록 행이
-                #   `/ui/approvals` 대기 큐(status IN proposed,pending_approval)에
-                #   Case 를 만들 때마다 근거 없는 유령 항목으로 쌓인다 — action.approve
-                #   행과 같은 결함(2026-08-17 발견, docs/reports/debugs/
-                #   2026-08-17_2250_UI승인큐_유령항목.md). Case 생성 자체는 승인 대상이
-                #   아니라 이미 끝난 일이므로 종결 상태로 남긴다.
-                repository.create_action_request(conn, tenant_id=tenant, case_id=case_id, action_type="case.create",
-                                                arguments={"request_id": request.request_id, "body_sha256": body_fingerprint},
-                                                idempotency_key=idem, status="succeeded")
-            # ── 여기서 생성 트랜잭션이 끝난다. 아래는 잠금을 놓은 뒤다 ──
-            # ★분류의 **실행 절차는 코어 1 이 갖는다**(app/application/classification.py).
-            #   이 라우트는 "언제" 만 정한다 — 절차가 여기 박혀 있으면 Controller 도
-            #   재시도 작업도 같은 분류를 부를 수 없다(v8 §3-A 결함 1).
-            classify_case(conn, tenant_id=tenant, case_id=case_id, text=request.message,
-                          classifier=classifier, actor_id=principal.key_id)
+            try:
+                opened = open_case(conn, repository=repository, tenant_id=tenant,
+                                   customer_id=request.customer_id, request_id=request.request_id,
+                                   message=request.message, channel=request.channel,
+                                   actor_type="api", actor_id=principal.key_id,
+                                   idempotency_key=request.idempotency_key, subject_ref=subject,
+                                   subject_resolver=subject_resolver, classifier=classifier,
+                                   subject_interpreter=subject_interpreter)
+            except IdempotencyConflict as exc:
+                raise _error(409, "idempotency_key_reused", str(exc)) from exc
+            except SubjectNotFound as exc:
+                raise _error(404, "not_found", "resource not found") from exc
+            except SubjectUnsupported as exc:
+                raise _error(422, "subject_ref_unsupported", str(exc)) from exc
+            case_id = opened.case_id
             view = _view(repository.get_case(conn, tenant_id=tenant, case_id=case_id))
+            if not opened.created:
+                return view
         if controller is not None and view["status"] == "routing":
             # ★응답을 보낸 **뒤에** 돌린다. 접수는 "받았다" 를 빨리 답하는 일이다.
             #   진행 결과는 `GET /v1/cases/{case_id}` 로 확인한다 — 그래서 아래

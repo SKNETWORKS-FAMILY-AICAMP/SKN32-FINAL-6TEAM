@@ -81,6 +81,10 @@ class ContextInputs:
     similar_cases: list[dict[str, Any]] = field(default_factory=list)
     #: RAG 조회 자체가 실패했을 때 True. 근거가 없다는 사실을 숨기지 않는다(v5 §9-4).
     retrieval_failed: bool = False
+    #: ★`[결정 2026-09-17]` Team 이 `required_context` 에 `policy` 를 선언했나.
+    #:  선언 안 한 Team 은 정책 결과가 없다는 이유로 degraded 가 되지 않는다.
+    #:  조회를 **시도했다가 실패한 것**은 여전히 degraded 다 — 모르는 것과 필요 없는 것은 다르다.
+    policy_required: bool = True
 
 
 class ContextBudgetError(RuntimeError):
@@ -255,7 +259,7 @@ class ContextBroker:
         )
         if inputs.retrieval_failed:
             omissions.append("policy_rag:retrieval_failed")
-        elif not chunks and not inputs.policy_chunks:
+        elif not chunks and not inputs.policy_chunks and inputs.policy_required:
             # 애초에 조회 결과가 없었던 것도 근거 부족이다.
             degraded = True
             omissions.append("policy_rag:no_results")

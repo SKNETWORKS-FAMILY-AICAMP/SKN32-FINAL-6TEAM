@@ -14,6 +14,11 @@
   통지·Case 답에서 온다 — 이 파일은 문장을 지어내지 않는다(안내 셋은 일정 값으로 만든다).
 ★**전용 테넌트**에서 돈다. 운영 데이터를 건드리지 않고, 끄면 그 테넌트를 통째로 지운다.
 ★설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다 — 릴리즈에 열리지 않게.
+★`[2026-09-17]` **엔진 둘** — 시작할 때 고른다(`POST /scenario/start {"engine": …}`).
+    trip  시나리오용 여행 버전 — 감시(`TripWatcher`)·창구(`TripDesk`)가 직접 쓴다(위 표)
+    case  Case 버전 — 감시가 시스템 Case 를 열고, 고객 문장·재요청도 Case 로 연다.
+          Controller → activity·dining·mobility Team → 코어가 `itinerary.apply` 적용·통지
+          (`case_engine.py`). 같은 하루가 같은 결과인지는 `tests/scenario/test_case_version_day.py`
 """
 from __future__ import annotations
 
@@ -21,7 +26,7 @@ from datetime import datetime, timedelta
 import json
 from pathlib import Path
 import threading
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -75,7 +80,7 @@ def _hm(moment: datetime | None) -> str:
 class ScenarioSession:
     """시나리오 한 판. ★메모리에 한 판만 산다(시연용). 데이터는 전용 테넌트 DB 에 있다."""
 
-    def __init__(self, *, classifier: Any, chat: Any) -> None:
+    def __init__(self, *, classifier: Any, chat: Any, engine: str = "trip") -> None:
         from app.infrastructure.travel.base import TravelSources
         from app.infrastructure.travel.disruptions import DisruptionCheck
         from app.infrastructure.travel.replay import (ReplayAir, ReplayRouteEvents, ReplayTimeline,
@@ -98,6 +103,16 @@ class ScenarioSession:
                                    clock=self.clock, routes=None,
                                    route_events=ReplayRouteEvents(self.timeline))
         self.desk = TripDesk(store=self.store, connection_factory=get_connection, check=check)
+        self.engine = engine
+        self.case_engine = None
+        if engine == "case":
+            from .case_engine import CaseEngine
+            from .trip_intake import extract
+
+            self.case_engine = CaseEngine(
+                tenant_id=self.tenant, check=check, route_events=ReplayRouteEvents(self.timeline),
+                classifier=classifier, clock=self.clock,
+                report_extractor=(lambda text: extract(text, chat)) if chat is not None else None)
         self.classifier, self.chat = classifier, chat
         self.scene = -1
         self.log: list[dict[str, Any]] = []
@@ -119,6 +134,7 @@ class ScenarioSession:
                 cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,%s) "
                             "RETURNING customer_id", (self.tenant, "taiwan-friends"))
                 customer = cur.fetchone()[0]
+                self.customer_id = customer
                 ids = {}
                 for place in data["places"]:
                     cur.execute(
@@ -144,16 +160,10 @@ class ScenarioSession:
         self._collect(show=False)
 
     def cleanup(self) -> None:
-        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-            for sql in ("DELETE FROM action_requests WHERE tenant_id=%s",
-                        "DELETE FROM case_events WHERE tenant_id=%s",
-                        "DELETE FROM customer_cases WHERE tenant_id=%s",
-                        "DELETE FROM outbox WHERE tenant_id=%s",
-                        "DELETE FROM trips WHERE tenant_id=%s",
-                        "DELETE FROM places WHERE tenant_id=%s",
-                        "DELETE FROM customers WHERE tenant_id=%s",
-                        "DELETE FROM tenants WHERE tenant_id=%s"):
-                cur.execute(sql, (self.tenant,))
+        # ★Case 엔진은 실행 기록(agent_runs·team_tasks)까지 남긴다 — 공용 정리로 FK 순서대로 지운다.
+        from .case_engine import cleanup_tenant
+
+        cleanup_tenant(self.tenant)
 
     # ── 채팅 기록 ───────────────────────────────────────────────
     def _say(self, role: str, text: str, **meta: Any) -> None:
@@ -193,12 +203,16 @@ class ScenarioSession:
         if kind == "day_start":
             self._day_start()
         elif kind in ("watch", "departure"):
-            result = self.watcher.tick()
+            result = self.case_engine.tick() if self.case_engine else self.watcher.tick()
             if kind == "departure":
                 self._departure()
             if result.fatal:
                 self._say("assistant", f"점검 소스가 답하지 않은 항목이 {len(result.fatal)}개 있어 "
                                        "일정을 바꾸지 않고 사람에게 넘겼어요(결정 15).", kind="fatal")
+            escalated = [run for run in getattr(result, "ran", []) if run.get("status") != "resolved"]
+            if escalated:
+                self._say("assistant", f"감시가 연 Case {len(escalated)}건은 일정을 바꾸지 않고 "
+                                       "사람에게 넘겼어요.", kind="escalated")
         elif kind == "summary":
             self._summary()
         self._collect()
@@ -208,26 +222,28 @@ class ScenarioSession:
             return self.store.latest(conn, self.trip_id)
 
     def _day_start(self) -> None:
+        # ★문구는 `trip_reminders` 한 곳 — 운영 되잡기 작업과 같은 것을 쓴다(`[2026-09-18]`).
+        from .trip_reminders import day_text
+
         trip, items = self._items()
-        stops = [f"{_hm(i.starts_at)} {i.title}" for i in items if i.kind != "mobility"]
-        text = ("좋은 아침이에요! 오늘 일정을 안내해 드릴게요.\n" + " → ".join(stops) +
-                "\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.")
         with get_connection() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=self.trip_id, key="day_start",
-                                       payload={"text": text, "kind": "day_start",
-                                                "version": trip["version"]})
+                                       payload={"text": day_text(items, self.clock().date()),
+                                                "kind": "day_start", "version": trip["version"]})
 
     def _departure(self) -> None:
+        from .trip_reminders import build_departure
+
         trip, items = self._items()
         now = self.clock()
         move = next((i for i in items if i.kind == "mobility" and i.starts_at >= now), None)
         if move is None:
             return
-        after = next((i for i in items if i.seq > move.seq), None)
-        text = (f"{_hm(move.starts_at)} 출발 — {move.title} ({_hm(move.starts_at)}–{_hm(move.ends_at)})."
-                + (f"\n다음 일정: {_hm(after.starts_at)} {after.title}." if after else ""))
+        status, text = build_departure(move, items, route_events=self.watcher.route_events, routes=None, now=now)
+        if text is None:          # held · fatal — 낡은 경로를 알리지 않는다
+            return
         with get_connection() as conn, conn.transaction():
-            self.store.enqueue_message(conn, trip_id=self.trip_id, key=f"departure:{move.seq}",
+            self.store.enqueue_message(conn, trip_id=self.trip_id, key=f"departure:{move.item_id}",
                                        payload={"text": text, "kind": "departure",
                                                 "version": trip["version"]})
 
@@ -248,6 +264,8 @@ class ScenarioSession:
 
     # ── 고객 ────────────────────────────────────────────────────
     def message(self, text: str) -> dict[str, Any]:
+        if self.case_engine is not None:
+            return self._message_case(text)
         from .trip_messages import handle_trip_message
 
         self._say("user", text)
@@ -276,7 +294,37 @@ class ScenarioSession:
             self.log[-1].update(meta)
         return result
 
+    def _message_case(self, text: str) -> dict[str, Any]:
+        """Case 엔진 — 고객 문장 하나가 여행을 가리키는 Case 하나다."""
+        self._say("user", text)
+        view = self.case_engine.message(customer_id=self.customer_id, trip_id=self.trip_id, text=text,
+                                        request_id=f"chat-{len(self.log)}-{uuid4().hex[:6]}")
+        if self.scene >= 0 and SCENES[self.scene]["kind"] == "customer":
+            self.reported.add(self.scene)
+        added = self._collect()
+        meta = {"case_id": view["case_id"], "case_status": view["case_status"],
+                "classification": view["classification"], "owner_team": view["owner_team_id"]}
+        if view["case_status"] != "resolved":
+            self._say("assistant", "말씀하신 내용으로는 일정을 바꿀 근거를 찾지 못했어요. "
+                                   "상담원에게 넘겼어요 — 추측으로 일정을 바꾸지 않았어요.",
+                      kind="escalated", **meta)
+        elif not added:
+            self._say("assistant", view["answer"] or "처리했어요.", kind="answer", **meta)
+        elif self.log and self.log[-1].get("notice"):
+            self.log[-1].update(meta)
+        return {**view, "status": "escalated" if view["case_status"] != "resolved" else "resolved"}
+
     def alternate(self, item_id: UUID, choice: str | None) -> dict[str, Any]:
+        if self.case_engine is not None:
+            trip, _ = self._items()
+            view = self.case_engine.message(customer_id=self.customer_id, trip_id=self.trip_id,
+                                            text="화면에서 다른 안 선택", request_id=f"swap-{uuid4().hex[:8]}",
+                                            part_id=item_id, base_version=trip["version"],
+                                            request={"type": "change", "choice": choice})
+            self._collect()
+            if view["case_status"] == "resolved" and view["applied_actions"]:
+                return {**view, "status": "adjusted"}
+            return {**view, "status": (view["escalation"] or {}).get("guardrail") or view["case_status"]}
         trip, _ = self._items()
         outcome = self.desk.swap_alternate(trip_id=self.trip_id, item_id=item_id,
                                            base_version=trip["version"], choice=choice,
@@ -341,7 +389,7 @@ class ScenarioSession:
             report = next(r for r in self.data["customer_reports"] if r["type"] == scene["report"])
             pending = report["message"]
         return {
-            "active": True, "tenant": self.tenant, "trip_id": str(self.trip_id),
+            "active": True, "engine": self.engine, "tenant": self.tenant, "trip_id": str(self.trip_id),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"], "clock": self.clock().strftime("%H:%M"),
             "scene": self.scene, "scenes": [{"time": s["time"], "label": s["label"],
@@ -370,6 +418,12 @@ class ScenarioSession:
         }
 
 
+class StartIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    #: 없으면 **마지막에 고른 엔진**(처음이면 trip) — 사용자 화면의 「다시 시작」이 엔진을 바꾸지 않게.
+    engine: Literal["trip", "case"] | None = None
+
+
 class MessageIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     message: str = Field(min_length=1, max_length=600)
@@ -384,7 +438,7 @@ class AlternateIn(BaseModel):
 def build_scenario_router(*, classifier_factory: Callable[[], Any] | None = None,
                           chat_factory: Callable[[], Any] | None = None) -> APIRouter:
     router = APIRouter(tags=["scenario-mode"])
-    holder: dict[str, ScenarioSession | None] = {"session": None}
+    holder: dict[str, Any] = {"session": None, "engine": "trip"}
     lock = threading.Lock()
 
     def _session() -> ScenarioSession:
@@ -407,17 +461,19 @@ def build_scenario_router(*, classifier_factory: Callable[[], Any] | None = None
         return {"active": True, "scene": session.scene, "scenes": len(SCENES),
                 "label": SCENES[session.scene]["label"] if session.scene >= 0 else None,
                 "clock": session.clock().strftime("%H:%M"), "trip_id": str(session.trip_id),
-                "tenant": session.tenant}
+                "tenant": session.tenant, "engine": session.engine}
 
     @router.post("/scenario/start")
-    def start():
+    def start(request: StartIn | None = None):
         _enabled()
         with lock:
             if holder["session"] is not None:
                 holder["session"].cleanup()
+            engine = (request.engine if request and request.engine else holder["engine"])
+            holder["engine"] = engine
             session = ScenarioSession(
                 classifier=classifier_factory() if classifier_factory else None,
-                chat=chat_factory() if chat_factory else None)
+                chat=chat_factory() if chat_factory else None, engine=engine)
             holder["session"] = session
             session.next()                              # 08:00 하루 안내부터
             return session.feed()
