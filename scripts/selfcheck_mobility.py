@@ -44,6 +44,7 @@ from modules.mobility.transfer_walk import TransferWalk                   # noqa
 from modules.mobility.bus import BusRoutes                                # noqa: E402
 from modules.mobility.geo import StationCoords                            # noqa: E402
 from modules.mobility.exits import StationExits                           # noqa: E402
+from modules.mobility.bike import BikeStations                             # noqa: E402
 from modules.mobility.timeutil import to_service_min, fmt_min, day_type_of  # noqa: E402
 
 SEV_ORDER = {"critical": 0, "warn": 1, "info": 2}
@@ -52,8 +53,9 @@ SEV_ORDER = {"critical": 0, "warn": 1, "info": 2}
 # ── 탐침 만들기 ────────────────────────────────────────────────────────────
 def route_key(legs):
     """구간 묶음을 비교 가능한 열쇠로. mode·route 까지 포함해야 버스가 안 섞인다."""
+    nm = lambda x: x.get("name") or f"{x.get('lat')},{x.get('lng')}" if isinstance(x, dict) else x   # 자전거 좌표 dict(v0.7)
     return tuple((l.get("mode", "subway"), l.get("line"), l.get("route"),
-                  l.get("from"), l.get("to")) for l in legs)
+                  nm(l.get("from")), nm(l.get("to"))) for l in legs)
 
 
 def reverse_route(legs):
@@ -294,7 +296,9 @@ def check_invariants(rows, args):
         cell = (row["probe"]["_dtag"], row["probe"]["_dir"])
         for l in row["probe"]["legs"]:
             for nm in (l.get("from"), l.get("to")):
-                k = (l.get("line") or f"버스{l.get('route')}", nm)
+                if isinstance(nm, dict):                      # 자전거 좌표 끝점(v0.7) — 이름으로 센다
+                    nm = nm.get("name") or f"{nm.get('lat')},{nm.get('lng')}"
+                k = ("자전거" if l.get("mode") == "bike" else l.get("line") or f"버스{l.get('route')}", nm)
                 tot[k] += 1
                 cell_tot[(k, cell)] += 1
                 if unk:
@@ -434,6 +438,8 @@ def main():
     ap.add_argument("--transfer-walk"); ap.add_argument("--bus-route")
     ap.add_argument("--bus-stops"); ap.add_argument("--station-coords")
     ap.add_argument("--station-exits")
+
+    ap.add_argument("--bike-stations")
     ap.add_argument("--rules", default=str(REPO / "config" / "mobility" / "rules_v0.3.json"))
     ap.add_argument("--holidays",
                     default=str(REPO / "config" / "mobility" / "holidays_2026_2027.json"))
@@ -477,6 +483,7 @@ def main():
         args.bus_stops = args.bus_stops or str(M / "bus_stops_v1.jsonl")
         args.station_coords = args.station_coords or str(M / "station_coords.json")
         args.station_exits = args.station_exits or str(M / "station_exits_v1.json")
+        args.bike_stations = args.bike_stations or str(M / "bike_stations_v1.jsonl")
 
     holidays = set(json.loads(Path(args.holidays).read_text(encoding="utf-8"))["holidays"])
     rules = json.loads(Path(args.rules).read_text(encoding="utf-8"))
@@ -504,9 +511,10 @@ def main():
     bus = BusRoutes.load(args.bus_route, args.bus_stops)
     sc = StationCoords.load(args.station_coords)
     ex = StationExits.load(args.station_exits)          # 19번 방 — 지하철↔버스 환승용
+    bk = BikeStations.load(args.bike_stations)          # 22번 방 — 자전거 씨앗(bike_legs_v1)이 근거없음으로 죽지 않게
     print(f"시간표 {tt.rows:,}행 · 역 {len(tt.stations)} · 수집 {tt.fetched_at}")
 
-    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex)
+    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk)
     t0 = time.time()
     rows = []
     for i, p in enumerate(probes):

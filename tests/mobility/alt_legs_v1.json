@@ -76,7 +76,9 @@
         }
       ],
       "expect": "infeasible",
-      "expect_alt_max": 0,
+      "expect_alt_max": 1,
+      "expect_alt_max_by_mode": {"subway": 0, "bus": 0},
+      "note_v0.7": "2026-09-20 · 22번: 따릉이 여의도→왕십리 대안 1개가 붙는다(직행 버스 없음은 그대로). 지하철·버스 0 잠금은 수단별 축으로",
       "expect_taxi": {
         "verdict": "feasible",
         "grade": "추정",

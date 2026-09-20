@@ -60,6 +60,7 @@ def default_paths():
             "bus_stops": p / "bus_stops_v1.jsonl",
             "station_coords": p / "station_coords.json",
             "station_exits": p / "station_exits_v1.json",      # 19번 방 — 지하철↔버스 환승(OSM 출구, 추정)
+            "bike_stations": p / "bike_stations_v1.jsonl",     # 22번 방 — 따릉이 운영 대여소(없어도 돈다 · 자전거 근거없음)
             "meta": p / "timetable_v1_meta.json",
             "rules": c / "rules_v0.3.json",
             "holidays": c / "holidays_2026_2027.json"}
@@ -90,7 +91,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
         P = dict(P, **{k: Path(v) for k, v in paths.items()})
 
     # station_exits 는 없어도 돈다(역 좌표로 대신) — 단 경고를 찍는다
-    missing = [k for k, v in P.items() if k not in ("meta", "station_exits") and not Path(v).exists()]
+    missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations") and not Path(v).exists()]
     if missing:
         raise RuntimeError(f"판정기 입력이 없다: {missing}")
 
@@ -103,7 +104,19 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
     bus = vt.BusRoutes.load(str(P["bus_route"]), str(P["bus_stops"]))
     sc = vt.StationCoords.load(str(P["station_coords"]))
     ex = vt.StationExits.load(str(P["station_exits"]))
-    verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex)
+    # 따릉이(v0.7 · 22번 방). 실시간 조회는 .env SEOUL_OPENAPI_KEY, 라우터는 .env MOBILITY_GH_URL(21번과 같은 주소) — 둘 다 없으면 근거없음으로 낸다.
+    bk = vt.BikeStations.load(str(P["bike_stations"]))
+    import os
+    bike_live = vt.BikeLive.from_env()
+    # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
+    gh = os.environ.get("MOBILITY_GH_URL") or ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value")
+    bike_router = None
+    if gh and str(gh).startswith("http"):
+        from modules.mobility.car import make_router
+        rt = make_router(gh)
+        if rt.info():
+            bike_router = vt.BikeRouter(rt, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
+    verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, bike_live=bike_live, bike_router=bike_router)
 
     # ── 시간표 '판'. meta 의 built_at 이 있으면 그것, 없으면 행의 수집일.
     #    둘은 다른 값이다 — 어느 쪽인지 접두어로 남긴다. 판정 이력이 "어느 판으로 냈는지"를 잃으면 안 된다.
@@ -121,7 +134,9 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
              "bus_routes": len(bus.by_id) if bus else 0,
              "transfer_pairs": len(tw.pairs) if tw else 0,
              "station_coords": len(sc.by_key) if sc else 0,
-             "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0}
+             "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0,
+             "bike_stations": len(bk.rows) if bk else 0,
+             "bike_live": bool(bike_live), "bike_router": bool(bike_router)}
     if not quiet:
         # ★ 출발없음을 같이 찍는다(2026-09-14). 수집 행 수(463,326)와 올라간 행 수가 달라서,
         #   이 줄만 보면 "46만이라더니 44만이네"가 된다. 차이는 출발 시각이 '000000'(출발 없음)인 행이다.
@@ -132,6 +147,11 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
         print("[mobility] ! 환승 거리표가 없다 — 환승 도보는 근거없음으로 낸다")
     if ex is None:
         print("[mobility] ! 역 출구표(station_exits_v1.json)가 없다 — 정류장↔역 환승은 역 좌표로 잰다")
+    if bk is None:
+        print("[mobility] ! 따릉이 대여소(bike_stations_v1.jsonl)가 없다 — 자전거는 근거없음으로 낸다")
+    elif not quiet:
+        print(f"[mobility] 따릉이 {len(bk.rows):,}곳 · 실시간 {'on' if bike_live else 'off(근거없음)'} · "
+              f"라우터 {'on' if bike_router else 'off(소요 근거없음)'}")
 
     return Runtime(verifier, timetable_built_at=built_at,
                    rules_version=rules["rules_version"], stats=stats)
