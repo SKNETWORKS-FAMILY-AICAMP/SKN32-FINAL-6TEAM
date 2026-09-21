@@ -14,7 +14,7 @@ CREATE SCHEMA IF NOT EXISTS dining;
 
 
 -- D-10 출처 한 건
-CREATE TABLE dining.dn_source (
+CREATE TABLE IF NOT EXISTS dining.dn_source (
     source_code        text PRIMARY KEY,
     display_name       text NOT NULL,
     source_kind        text NOT NULL,
@@ -36,7 +36,7 @@ COMMENT ON CONSTRAINT dn_source_provider_id_only_chk ON dining.dn_source IS
 
 
 -- D-11 적재 한 번
-CREATE TABLE dining.dn_load_meta (
+CREATE TABLE IF NOT EXISTS dining.dn_load_meta (
     load_id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     source_code        text NOT NULL REFERENCES dining.dn_source(source_code),
     fetched_at         timestamptz NOT NULL,
@@ -56,7 +56,7 @@ COMMENT ON COLUMN dining.dn_load_meta.row_count IS
 
 
 -- D-12 장소 원장 한 곳
-CREATE TABLE dining.dn_place (
+CREATE TABLE IF NOT EXISTS dining.dn_place (
     place_uid      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name_ko        text NOT NULL,
     name_en        text,
@@ -85,7 +85,7 @@ COMMENT ON COLUMN dining.dn_place.is_synthetic IS
 
 
 -- D-13 공공 원천 레코드 한 판
-CREATE TABLE dining.dn_source_record (
+CREATE TABLE IF NOT EXISTS dining.dn_source_record (
     record_id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     load_id            uuid NOT NULL REFERENCES dining.dn_load_meta(load_id),
     source_code        text NOT NULL REFERENCES dining.dn_source(source_code),
@@ -105,7 +105,7 @@ COMMENT ON COLUMN dining.dn_source_record.raw_json IS
 
 
 -- D-01 평소 영업 규칙 한 건
-CREATE TABLE dining.dn_hours_rule (
+CREATE TABLE IF NOT EXISTS dining.dn_hours_rule (
     rule_id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     place_uid          uuid NOT NULL REFERENCES dining.dn_place(place_uid),
     source_code        text NOT NULL REFERENCES dining.dn_source(source_code),
@@ -147,7 +147,7 @@ COMMENT ON COLUMN dining.dn_hours_rule.break_state IS
 
 
 -- D-02 영업 구간 한 칸
-CREATE TABLE dining.dn_hours_interval (
+CREATE TABLE IF NOT EXISTS dining.dn_hours_interval (
     rule_id          uuid NOT NULL REFERENCES dining.dn_hours_rule(rule_id) ON DELETE CASCADE,
     seq              smallint NOT NULL,
     open_min         smallint NOT NULL,
@@ -173,7 +173,7 @@ COMMENT ON TABLE dining.dn_hours_interval IS
 
 
 -- D-03 휴무 규칙 한 건
-CREATE TABLE dining.dn_closure_rule (
+CREATE TABLE IF NOT EXISTS dining.dn_closure_rule (
     closure_id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     place_uid          uuid NOT NULL REFERENCES dining.dn_place(place_uid),
     source_code        text NOT NULL REFERENCES dining.dn_source(source_code),
@@ -233,16 +233,16 @@ COMMENT ON TABLE dining.dn_closure_rule IS
 
 
 -- 인덱스 (설계 3.3 의 Q-D1, Q-D2, Q-D3, Q-D11)
-CREATE INDEX dn_hours_rule_lookup_idx
+CREATE INDEX IF NOT EXISTS dn_hours_rule_lookup_idx
     ON dining.dn_hours_rule (place_uid, rule_kind, weekday) WHERE retired_at IS NULL;
 
-CREATE INDEX dn_closure_rule_lookup_idx
+CREATE INDEX IF NOT EXISTS dn_closure_rule_lookup_idx
     ON dining.dn_closure_rule (place_uid) WHERE retired_at IS NULL;
 
-CREATE INDEX dn_place_coord_idx
+CREATE INDEX IF NOT EXISTS dn_place_coord_idx
     ON dining.dn_place (lat, lng) WHERE record_status = 'active';
 
-CREATE INDEX dn_source_record_place_idx
+CREATE INDEX IF NOT EXISTS dn_source_record_place_idx
     ON dining.dn_source_record (place_uid, source_code);
 
 
@@ -257,4 +257,10 @@ VALUES
     ('operator_check',     '운영자 확인',                'operator',  'content',   true,  NULL),
     ('customer_report',    '고객 신고',                  'customer',  'content',   true,  NULL),
     ('synthetic_scenario', '합성 시나리오',              'synthetic', 'content',   false, '운영 판정에 쓰지 않는다'),
-    ('mock_places',        '모의 조회',                  'mock',      'id_only',   false, '합성 장소에만 연결');
+    ('mock_places',        '모의 조회',                  'mock',      'id_only',   false, '합성 장소에만 연결')
+ON CONFLICT (source_code) DO UPDATE
+   SET display_name = EXCLUDED.display_name,
+       source_kind = EXCLUDED.source_kind,
+       storage_mode = EXCLUDED.storage_mode,
+       production_allowed = EXCLUDED.production_allowed,
+       note = EXCLUDED.note;

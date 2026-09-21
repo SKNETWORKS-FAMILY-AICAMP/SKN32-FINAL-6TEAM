@@ -322,36 +322,7 @@ END;
 $$;
 
 
--- 코어로 내보내는 한 줄
--- 연결된 장소마다 open_at_slot 과 확인 시각을 계산한다.
--- 쓰기는 코어 어댑터가 하고 이 뷰는 값만 만든다.
-CREATE OR REPLACE FUNCTION dining.core_place_state(
-    p_tenant_id text,
-    p_core_place_id uuid,
-    p_starts_at timestamptz,
-    p_ends_at   timestamptz DEFAULT NULL
-)
-RETURNS TABLE (
-    open_at_slot        boolean,
-    needs_check         boolean,
-    attributes          jsonb,
-    hours_confirmed_at  timestamptz
-)
-LANGUAGE sql
-STABLE
-AS $$
-    SELECT dining.open_at_slot(l.place_uid, p_starts_at, p_ends_at),
-           dining.needs_last_order_check(l.place_uid, p_starts_at, p_ends_at),
-           dining.core_attributes(l.place_uid, (p_starts_at AT TIME ZONE 'Asia/Seoul')::date),
-           (SELECT max(m.fetched_at)
-              FROM dining.v_hours_rule_active r
-              JOIN dining.dn_source_record sr ON sr.record_id = r.record_id
-              JOIN dining.dn_load_meta m      ON m.load_id   = sr.load_id
-             WHERE r.place_uid = l.place_uid)
-    FROM dining.dn_core_place_link l
-    WHERE l.tenant_id = p_tenant_id
-      AND l.core_place_id = p_core_place_id
-$$;
-
-COMMENT ON FUNCTION dining.core_place_state IS
-    'hours_confirmed_at 은 공급자 자료를 받은 시각이며 현장 확인 시각이 아니다. dining.py 가 이 값이 없으면 확인했다고 말하지 않는다.';
+-- 코어로 내보내는 한 줄인 dining.core_place_state 는 여기서 만들지 않는다.
+-- 명절 경고 칸이 늘어나면서 돌려주는 모양이 바뀌었고, 그 함수가 쓰는
+-- needs_holiday_check 는 023 에서 만들어진다. 한 함수를 두 파일이 서로 다르게
+-- 정의하면 마이그레이션을 다시 돌릴 때 반환 형이 충돌한다. 정의는 023 한 곳에만 둔다.
