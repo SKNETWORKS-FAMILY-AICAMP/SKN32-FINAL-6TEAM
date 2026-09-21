@@ -1,38 +1,27 @@
 # -*- coding: utf-8 -*-
 """행정안전부 긴급재난문자 — 재난안전데이터 공유플랫폼(safetydata.go.kr).
 
-★★★**이 파일은 `tour_api.py`와 격이 다르다 — 실 키로 검증되지 않았다.**
-  `tour_api.py`는 "실측(2026-09-10, 실 키로)"라고 못박을 수 있었지만, 이
-  어댑터는 **API 키를 발급받지 못해 실제 호출을 한 번도 못 해 봤다.**
-  아래는 2026-09-20 웹 조사로 확인한 것과 추정한 것을 나눈 것이다 —
-  실 키가 생기면 **가장 먼저 이 구분을 검증하고 이 주석을 갱신한다.**
+★★★**실측(2026-09-21, 실 키로)** — 5/5 live 테스트 통과. 현재 발령 0건, 응답 구조 정상.
+  `ACOP_DISASTER_API_KEY` — data.go.kr **공통 키가 아니다**.
+  safetydata.go.kr 에 **별도 가입·신청**해서 받은 키다.
 
-**확인됨** (같은 플랫폼의 자매 API·공식 데이터셋 페이지에서 실제 코드/설명 확인):
-  - 기본 URL 패턴: `https://www.safetydata.go.kr/V2/api/DSSP-IF-<번호>`
-    (이 API는 `DSSP-IF-00247` — data.go.kr 15134001 "행정안전부_긴급재난문자"
-    와 같은 데이터셋의 V2 인터페이스)
-  - 공통 파라미터: `serviceKey`(대문자 K) · `returnType=json` · `pageNo` ·
-    `numOfRows`
-  - 지역 필터 파라미터 `rgnNm` 존재(서버가 지역명으로 거를 수 있다)
-  - 응답은 최상위 `body` 키 아래 **배열**(자매 API인 대피소 DSSP-IF-00195 로
-    확인 — `data.get("body", [])`)
-  - 응답 필드명 `MSG_CN`·`RCPTN_RGN_NM`·`EMRG_STEP_NM`·`CRT_DT`·`DST_SE_NM`
-    (검색으로 데이터셋 설명에서 확인 — `wiki/records/reports/`의 013·016
-    마이그레이션 설계와 같은 이름이다)
+**확인됨(2026-09-21 실호출)**:
+  - 기본 URL: `https://www.safetydata.go.kr/V2/api/DSSP-IF-00247`
+  - 공통 파라미터: `serviceKey`(대문자 K) · `returnType=json` · `pageNo` · `numOfRows`
+  - 지역 필터 파라미터 `rgnNm` 존재
+  - 응답은 최상위 `body` 키 아래 **배열** — 정상 응답 시 `body` 는 항상 list
+  - 응답 필드명: `SN`·`CRT_DT`·`MSG_CN`·`RCPTN_RGN_NM`·`DST_SE_NM`·`EMRG_STEP_NM`
+  - `CRT_DT` 포맷: `"2023/09/19 12:22:17"` 형태 — `%Y/%m/%d %H:%M:%S`
+    (처음엔 14자리 `yyyyMMddHHmmss`로 추정했으나 틀렸다)
+    못 읽으면 그 메시지는 "언제인지 모름"으로 **걸러내지 않고 포함시킨다**.
 
 **추정(미검증)**:
   - 서버 쪽 날짜 범위 필터 파라미터 이름 — **그래서 이 클라이언트는 서버
     필터에 기대지 않는다.** 넓게 받아서(`rgnNm`만 걸고) **클라이언트 쪽에서
-    `CRT_DT`로 최근 것만 자른다**(`_recent_only`). 서버가 모르는 파라미터를
-    보내 응답이 깨지는 위험을 피한다.
-  - 오류 봉투 모양(`header.resultCode` 류) — data.go.kr 계열 관례를
-    방어적으로만 본다. 확신하지 못하므로 **HTTP 200 이고 `body` 가 없으면
+    `CRT_DT`로 최근 것만 자른다**(`_recent_only`).
+  - 오류 봉투 모양(`header.resultCode` 류) — 실호출에서 오류가 없어 아직 못 봤다.
+    data.go.kr 계열 관례를 방어적으로만 본다. **HTTP 200 이고 `body` 가 없으면
     무조건 `body_error`로 센다**(성공으로 잘못 읽지 않는다, `CLAUDE.md` §0.2).
-
-**확인됨(2026-09-21 실호출)**:
-  - `CRT_DT` 포맷: `"2023/09/19 12:22:17"` 형태 — `%Y/%m/%d %H:%M:%S`.
-    처음엔 14자리 `yyyyMMddHHmmss`로 추정했으나 틀렸다. 못 읽으면
-    그 메시지는 "언제인지 모름"으로 **걸러내지 않고 포함시킨다**.
 
 ★규율(①~④)은 `base.py`의 `TravelSource`를 그대로 따른다. ★★지역·주제
   관련성을 이 클라이언트가 판정하지 않는다 — 원문(`MSG_CN`)을 해석하지 않고

@@ -581,8 +581,8 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~`activities.disaster_api_content_id`를 정적 FK로 둘지 관측으로 다룰지~~ | **닫힘 — `[결정 2026-09-20]`** `watch_observations`(`target_kind='activity'`)로. `016_activities_disaster_to_watch.sql` → [재난문자 관련성 절](#재난문자-관련성--watch_observations로-결정) |
 | ~~`due_activities()`(watch.py 감시 루프 배선)~~ | **닫힘 — `[실측 2026-09-20]`** `due_activities()`·`tick_activities()` 구현됨 → [재난문자 관련성 절](#재난문자-관련성--watch_observations로-결정) |
 | ~~재난문자API 실제 클라이언트~~ | **부분 닫힘 — `[구현 2026-09-20]`** `app/infrastructure/travel/disaster_msg.py` 작성·조립 완료. **단 실 키로 검증 안 됨**(키 발급 못 받음) → [재난문자 등급 대조 절](#재난문자-등급-대조--check_feasible-배선) |
-| 재난문자 키가 공통 키(`data_go_kr_key`)로 되는지 | `[미확보 2026-09-20]` safetydata.go.kr가 별도 가입을 요구할 수 있다 |
-| 재난문자 날짜·오류 봉투 파라미터/모양 추정치 | `[미확보 2026-09-20]` 서버 날짜 필터 파라미터 이름을 몰라 클라이언트 쪽에서 자른다. 오류 봉투 모양도 자매 API 관례를 방어적으로 가정했을 뿐이다 — 실 키로 첫 호출 시 검증 필요 |
+| ~~재난문자 키가 공통 키(`data_go_kr_key`)로 되는지~~ | **닫힘 — `[확인 2026-09-21]`** data.go.kr 공통 키와 **별개다.** safetydata.go.kr 에 별도 가입·신청해서 발급받아야 한다. `ACOP_DISASTER_API_KEY` 설정 완료 |
+| 재난문자 날짜·오류 봉투 파라미터/모양 추정치 | `[부분 닫힘 2026-09-21]` 실 키로 live 테스트 5/5 통과, 응답 구조·필드명·CRT_DT 포맷 확인 완료. **오류 봉투 모양**과 **서버 날짜 필터 파라미터**는 아직 미검증 — 정상 응답만 봤고 오류 케이스는 못 봤다 |
 | 재난문자 "위급재난" 판정의 지역·주제 관련성 미확인 | `[미확보 2026-09-20]` `_disaster_blocks`가 등급만 보고 지역·재해구분은 안 본다 — 오탐(무관한 위급재난으로 막힘) 가능성이 남아 있다 |
 | ~~TourAPI 클라이언트를 `check_feasible`에 배선~~ | **닫힘 — `[구현 2026-09-20]`** `read_tools.place()`가 `source_content_id`로 `operating()`을 불러 `place["operating"]`에 원문을 싣는다. `activity.py`는 원칙적으로 근거·안내 문구로만 쓰되, **휴무 요일 대조 하나만 예외**로 `feasible`을 바꾼다 → [휴무 요일 대조 절](#휴무-요일-대조--유일한-예외) |
 | `tick_activities()`의 `affected_bookings` | `[미확보 2026-09-20]` 항상 빈 리스트다 — 예약과의 역추적 방법 미정 |
