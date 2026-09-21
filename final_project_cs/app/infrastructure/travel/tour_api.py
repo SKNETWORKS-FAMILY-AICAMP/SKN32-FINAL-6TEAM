@@ -13,6 +13,12 @@
       restdate "매주 화요일. 단 정기휴일이 공휴일·대체공휴일과 겹치면 개방하며,
                 그 다음의 첫 번째 비공휴일이 정기휴일임"
 
+실측(2026-09-21, 실 키로) — ACOP_TOUR_API_KEY 검증. 4/4 live 테스트 통과:
+  [1] find("경복궁", allowed_types={12,14,28}) → content_id=126508, lat=37.5760, lon=126.9767
+  [2] operating(126508, 12) → usetime/restdate 원문 정상 반환, parsed=False
+  [3] by_content_id(126508, 12) → matched_title=경복궁, address=서울특별시 종로구 사직로 161
+  [4] find("듣도보도못한곳XYZ") → None (not_found 미스 정상 기록)
+
 ★★**`usetime`·`restdate` 를 파싱해 boolean 으로 만들지 않는다.**
   둘 다 **자연어**다. 위 `restdate` 하나만 봐도 「매주 화요일 휴무 / 단 공휴일과
   겹치면 개방 / 그 다음 첫 비공휴일이 휴무」라는 3중 조건이다. 이걸 규칙으로
