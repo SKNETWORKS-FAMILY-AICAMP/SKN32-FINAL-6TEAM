@@ -15,6 +15,7 @@
 #   C5 막차 열차의 행선지 — 단축운행 확인
 #   C6 행선지가 진행 방향에 있는가
 #   C7 역 영문명 — 값 단위 결함 + **역 단위 일관성**(같은 한글 역명은 같은 영문명) (2026-09-13 추가)
+#   C8 역 좌표 — 다른 역명끼리 50 m 안이면 원본 행 오류 의심 + 좌표 보정표가 살아 있는가 (2026-09-21 · 34번)
 import collections
 import json
 import re
@@ -495,6 +496,52 @@ else:
         else:
             say("→ 규칙 결함 0역 · 역 단위 일관성 0건. 사람이 판정한 4건도 보정이 남아 있다.")
         say()
+
+# ── C8. 역 좌표 — 인접역 겹침 · 보정표 ─────────────────────────────
+# 왜: 원본 표준데이터에서 마곡 행이 발산 좌표(7 m), 이촌(4호선) 행이 신용산 좌표(14 m)를 들고 있었다(19번 발견 · 25번 원인).
+#   값 하나씩 보면 멀쩡한 서울 좌표라 어떤 범위 검사에도 안 걸리고, 출구표에서 그 역만 출구 0개가 되어 조용히 역 좌표로 잰다.
+#   9/21 전수: 정상 역 중 다른 역명끼리 가장 가까운 쌍도 200 m 밖 → 50 m 는 오탐 없이 잡는 선.
+say("## C8. 역 좌표 — 다른 역명끼리 50 m 안 · 좌표 보정표")
+say()
+ADJ_M = 50
+COORD_FIX = Path(__file__).resolve().parents[2] / "config" / "mobility" / "station_coord_fix.json"
+if not COORDS.exists():
+    say(f"→ 건너뜀 — `{COORDS.name}` 이 없다.")
+    say()
+else:
+    import math as _m
+    _st = json.loads(COORDS.read_text(encoding="utf-8"))["stations"]
+    def _dist(a, b):
+        dy = (b[0] - a[0]) * 111_320
+        dx = (b[1] - a[1]) * 111_320 * _m.cos(_m.radians((a[0] + b[0]) / 2))
+        return _m.hypot(dx, dy)
+    _pt = {}
+    for _v in _st.values():
+        _pt.setdefault(_v["station_nm"], (_v["lat"], _v["lng"]))
+    _nms = sorted(_pt)
+    _adj = sorted((round(_dist(_pt[a], _pt[b])), a, b) for i, a in enumerate(_nms) for b in _nms[i + 1:]
+                  if _dist(_pt[a], _pt[b]) <= ADJ_M)
+    _fx = json.loads(COORD_FIX.read_text(encoding="utf-8")).get("역별", {}) if COORD_FIX.exists() else {}
+    _lostc = [_k for _k, _f in _fx.items()
+              if _k in _st and (abs(_st[_k]["lat"] - _f["lat"]) > 1e-6 or abs(_st[_k]["lng"] - _f["lng"]) > 1e-6)]
+    say(f"역명 {len(_nms)}개 · 다른 역명끼리 {ADJ_M} m 안 **{len(_adj)}쌍** · 좌표 보정표 {len(_fx)}키 중 미반영 **{len(_lostc)}**")
+    say()
+    if _adj:
+        say("| 거리 | 역 | 역 |")
+        say("|---:|---|---|")
+        for _d, _a, _b in _adj:
+            say(f"| {_d} m | {_a} | {_b} |")
+        say()
+    if _adj or _lostc:
+        fail += 1
+        if _adj:
+            say(f"→ **실패.** 서로 다른 역이 {ADJ_M} m 안에 겹친다 — 원본 행이 옆 역 좌표를 들고 있을 가능성이 크다. "
+                "원본 다른 행·OSM 역 노드로 대조해 `config/mobility/station_coord_fix.json` 에 넣는다.")
+        if _lostc:
+            say(f"→ **실패.** 보정표 좌표가 결과에 없다: {', '.join(_lostc)}. 보정표를 못 읽은 채 재빌드됐을 가능성이 크다.")
+    else:
+        say(f"→ 겹침 0쌍 · 보정표 {len(_fx)}키 반영됨.")
+    say()
 
 # ── 마무리 ─────────────────────────────────────────────────────────
 say("## 결론")

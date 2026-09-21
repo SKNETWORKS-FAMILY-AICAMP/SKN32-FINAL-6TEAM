@@ -21,7 +21,13 @@
 #   config/mobility/station_nm_en_fix.json 으로 보정하고 원본은 station_nm_en_src 에 남긴다.
 #   2026-09-13 추가: 약어 정책(Int'l 통일)과 역 단위 일관성(같은 한글 역명은 같은 영문명).
 #   보정한 역은 station_nm_en_grade='추정'. 검사는 scripts/check_station_names.py.
-import json, re, argparse, collections, unicodedata
+#
+# ★좌표 보정 (2026-09-21 · 34번 방). 원본 표준데이터 행 자체가 옆 역 좌표를 든 경우가 있다 —
+#   마곡(5호선) 행 = 발산 좌표(7 m) · 이촌(4호선) 행 = 신용산 좌표(14 m). 우리 처리 탓이 아니다.
+#   config/mobility/station_coord_fix.json 으로 덮고 원본은 coord_src_lat/lng 에 남긴다(coord_source=station_coord_fix).
+#   빌드 때 원본 좌표가 옆 역과 ADJ_WARN_M 넘게 떨어져 있으면 '원본이 고쳐진 듯' 을 찍는다 — 그때 보정표 항목을 지운다.
+#   결과 파일 쪽 검사(다른 역명끼리 ADJ_WARN_M 안)는 consistency_check C8.
+import json, math, re, argparse, collections, unicodedata
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from _paths import RAW_MOBILITY, PROCESSED
@@ -34,6 +40,8 @@ STATIONS = RAW_MOBILITY / "stations_all.json"
 SOURCE = "kric_station_standard"          # 좌표 출처
 NAME_SOURCE = "seoul_opendata_OA-15442"   # 역명(한글·영문) 출처 — 좌표와 다르다
 FIXES = Path(__file__).resolve().parents[2] / "config" / "mobility" / "station_nm_en_fix.json"
+COORD_FIXES = Path(__file__).resolve().parents[2] / "config" / "mobility" / "station_coord_fix.json"
+ADJ_WARN_M = 50        # 다른 역명끼리 이 안이면 원본 좌표 오류 의심 — 9/21 전수: 정상 최근접쌍은 200 m 밖
 
 _fx = json.loads(FIXES.read_text(encoding="utf-8")) if FIXES.exists() else {"치환": {"규칙": []}, "역별": {}}
 # 규칙마다 등급이 다르다 — 오탈자 교정은 확정 유지, 약어 통일은 우리가 고른 것이라 추정으로 내린다
@@ -64,6 +72,41 @@ def fix_en(key, en):
         return out, grade, " + ".join(dict.fromkeys(kinds))
     return en, "확정", None
 
+
+def meters(lat1, lng1, lat2, lng2):
+    dy = (lat2 - lat1) * 111_320
+    dx = (lng2 - lng1) * 111_320 * math.cos(math.radians((lat1 + lat2) / 2))
+    return math.hypot(dx, dy)
+
+
+def nearest_other(coords, key, lat, lng):
+    """다른 역명 중 가장 가까운 것 → (거리 m, 역명). 환승역(같은 역명)은 뺀다."""
+    nm = coords[key]["station_nm"]
+    best = (float("inf"), None)
+    for k, v in coords.items():
+        if v["station_nm"] == nm:
+            continue
+        d = meters(lat, lng, v["lat"], v["lng"])
+        if d < best[0]:
+            best = (d, v["station_nm"])
+    return best
+
+
+def adjacent_pairs(coords, limit=ADJ_WARN_M):
+    """다른 역명끼리 limit m 안인 쌍 — 역명 단위(환승역은 한 점)."""
+    by_nm = {}
+    for v in coords.values():
+        by_nm.setdefault(v["station_nm"], (v["lat"], v["lng"]))
+    nms = sorted(by_nm)
+    out = []
+    for i, a in enumerate(nms):
+        for b in nms[i + 1:]:
+            d = meters(*by_nm[a], *by_nm[b])
+            if d <= limit:
+                out.append((round(d), a, b))
+    return sorted(out)
+
+
 # 수도권만 남긴다 ── 한국철도공사는 전국이라 노선명으로 한 번 더 거른다
 KEEP_OPERATOR = re.compile(r"서울교통공사|한국철도공사|코레일|공항철도|인천교통공사|신분당|의정부|용인|김포|"
                            r"우이신설|메트로9호선|경기철도|새서울|남서울|서부광역|국가철도공단|에스알|SR|"
@@ -91,8 +134,10 @@ def keys_of(nm):
       지하철 시간표 매칭에서 겪은 것과 같은 함정이다(소싱 문서 3-1 표).
     """
     base = base_name(nm)
-    out = {norm(nm), norm(base), norm(re.sub(r"역$", "", base)), norm(base + "역")}
-    return {k for k in out if k}
+    # ★순서가 있는 목록이다 (2026-09-21 · 34번). 예전엔 set 이라 `next(...)` 가 PYTHONHASHSEED 에 따라
+    #   다른 키를 먼저 집었다 — '서울역' 4키가 실행마다 1호선 행(0133)과 공항철도 행(A01, 377 m)을 오갔다.
+    out = [norm(nm), norm(base), norm(re.sub(r"역$", "", base)), norm(base + "역")]
+    return [k for k in dict.fromkeys(out) if k]
 
 
 def find_src():
@@ -143,6 +188,7 @@ print(f"표준데이터 {len(raw)}행 ← {src.name}")
 
 # ── 표준데이터 → 역명별 좌표 ─────────────────────────────────────
 coords_by_name, basis, dropped = {}, set(), collections.Counter()
+exact_by_name = {}   # 34번: '서울역' 이 공항철도 '서울' 행의 파생 키('서울'+'역')에 먼저 잡히지 않도록 원본 이름 그대로인 키를 먼저 본다
 for row in raw:
     nm, line = pick(row, "역사명", "역명"), str(pick(row, "노선명") or "")
     lat, lng = pick(row, "역위도", "위도"), pick(row, "역경도", "경도")
@@ -157,7 +203,11 @@ for row in raw:
     if "철도공사" in op and line not in KORAIL_SEOUL:
         dropped[f"코레일 수도권밖:{line}"] += 1; continue
     rec = {"lat": float(lat), "lng": float(lng), "src_name": str(nm), "operator": op, "src_line": line}
-    for k in keys_of(nm):
+    ks = keys_of(nm)
+    for k in dict.fromkeys([norm(nm), norm(base_name(nm))]):   # 원본 역명 그대로(괄호 포함·제외) — '역' 붙이기/떼기 없음
+        if k:
+            exact_by_name.setdefault(k, rec)
+    for k in ks:
         coords_by_name.setdefault(k, rec)
 print(f"수도권 역명 키 {len(coords_by_name)}개 (제외 {sum(dropped.values())}행)")
 
@@ -168,7 +218,10 @@ coords, missing = {}, []
 fixed = collections.Counter()
 for s in stations:
     key = f"{s['LINE_NUM']}|{s['STATION_NM']}"
-    hit = next((coords_by_name[k] for k in keys_of(s["STATION_NM"]) if k in coords_by_name), None)
+    _ks = keys_of(s["STATION_NM"])
+    _ex = [k for k in dict.fromkeys([norm(s["STATION_NM"]), norm(base_name(s["STATION_NM"]))]) if k]
+    hit = next((exact_by_name[k] for k in _ex if k in exact_by_name), None) \
+        or next((coords_by_name[k] for k in _ks if k in coords_by_name), None)
     if not hit:
         missing.append(key); continue
     en_src = s.get("STATION_NM_ENG")
@@ -183,6 +236,34 @@ for s in stations:
                    "src_name": hit["src_name"], "src_line": hit["src_line"],
                    "source": SOURCE, "coord_source": SOURCE, "name_source": NAME_SOURCE,
                    "fetched_at": fetched, "fetched_at_precision": "day"}
+
+# ── 좌표 보정 (34번 방) ─────────────────────────────────────────
+_cfx = json.loads(COORD_FIXES.read_text(encoding="utf-8")).get("역별", {}) if COORD_FIXES.exists() else {}
+coord_fixed, coord_fix_stale, coord_fix_missing = [], [], []
+adj_before = adjacent_pairs(coords)
+for key, fx in _cfx.items():
+    if key not in coords:
+        coord_fix_missing.append(key); continue
+    r = coords[key]
+    d_src, nb = nearest_other(coords, key, r["lat"], r["lng"])
+    if fx.get("kind", "원본오류") == "원본오류" and d_src > ADJ_WARN_M:
+        coord_fix_stale.append((key, round(d_src), nb))
+    moved = meters(r["lat"], r["lng"], fx["lat"], fx["lng"])
+    r.update({"coord_src_lat": r["lat"], "coord_src_lng": r["lng"],
+              "lat": fx["lat"], "lng": fx["lng"],
+              "coord_source": "station_coord_fix", "coord_grade": fx.get("grade", "추정"),
+              "coord_fix": fx.get("why"), "coord_fix_src": fx.get("source"),
+              "coord_fix_checked_at": fx.get("checked_at")})
+    coord_fixed.append((key, round(d_src), nb, round(moved), f'{fx.get("kind", "원본오류")}·{fx.get("grade")}'))
+adj_after = adjacent_pairs(coords)
+for key, d, nb, mv, g in coord_fixed:
+    print(f"좌표 보정 {key}: 매핑된 원본 행이 {nb} 와 {d} m → {mv} m 옮김 [{g}]")
+for key, d, nb in coord_fix_stale:
+    print(f"  ! {key}: 원본 좌표가 옆 역({nb})과 {d} m — 원본이 고쳐진 듯. 보정표 항목 삭제 검토")
+for key in coord_fix_missing:
+    print(f"  ! 보정표 키 {key} 가 역 목록에 없다")
+print(f"인접역 {ADJ_WARN_M} m 안(다른 역명): 보정 전 {len(adj_before)}쌍 → 후 {len(adj_after)}쌍"
+      + (f" — {adj_after}" if adj_after else ""))
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT.write_text(json.dumps({"source": SOURCE, "src_file": src.name, "data_basis_date": fetched,
@@ -210,7 +291,13 @@ lines += ["", "## 읽는 법", "",
           "", "## 영문명 보정", "",
           f"- 보정 {sum(v for k, v in fixed.items() if k)}역 — " + (", ".join(f"{k} {v}역" for k, v in fixed.most_common() if k) or "없음"),
           "- 원본은 `station_nm_en_src` 에 남는다. 등급: 역별 보정·약어 통일 = `추정`, 문자 치환(오탈자) = 확정 유지.",
-          "- 표: `config/mobility/station_nm_en_fix.json` · 검사: `python scripts/check_station_names.py`"]
+          "- 표: `config/mobility/station_nm_en_fix.json` · 검사: `python scripts/check_station_names.py`",
+          "", "## 좌표 보정 (원본 행 오류)", "",
+          f"- 보정 {len(coord_fixed)}키 — " + (" · ".join(f"{k}(원본이 {nb} 와 {d} m · {mv} m 이동 · {g})" for k, d, nb, mv, g in coord_fixed) or "없음"),
+          f"- 인접역 {ADJ_WARN_M} m 안(다른 역명): 보정 전 {len(adj_before)}쌍 → 후 {len(adj_after)}쌍"
+          + (" — " + ", ".join(f"{a}/{b} {d} m" for d, a, b in adj_after) if adj_after else ""),
+          ("- **원본이 고쳐진 듯한 항목**: " + ", ".join(f"{k}({nb} {d} m)" for k, d, nb in coord_fix_stale)) if coord_fix_stale else "- 원본 오류 그대로(보정표 유효)",
+          "- 원본은 `coord_src_lat/lng`, 표는 `config/mobility/station_coord_fix.json`, 결과 검사는 `consistency_check` C8."]
 REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"좌표 {len(coords)}/{len(stations)}역 → {OUT}")
 print(f"미확보 {len(missing)}역 · 리포트 → {REPORT}")
