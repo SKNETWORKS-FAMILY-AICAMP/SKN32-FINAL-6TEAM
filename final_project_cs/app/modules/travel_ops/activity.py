@@ -159,6 +159,16 @@ class ActivityTeam(TravelTeamBase):
 
     def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,
                         remaining: float, evidence: list, seen: set[str]) -> TeamResult:
+        # ★이미 시작됐거나 종료된 활동은 성립하지 않는다 — `remaining`이 음수면
+        #   지금 이 순간 이미 과거다. 「성립합니다(-2.0시간)」는 틀린 답이다.
+        if remaining < 0:
+            return self._result(
+                task, outcome="completed", confidence=1.0, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer=f"이미 시작됐거나 종료된 활동입니다({-remaining:.1f}시간 경과).",
+                decisions=[{"feasible": False, "reason": "already_started",
+                            "hours_elapsed": round(-remaining, 1)}])
+
         party = booking.get("party_size")
         capacity = booking.get("capacity")
         if party is not None and capacity is not None and party > capacity:

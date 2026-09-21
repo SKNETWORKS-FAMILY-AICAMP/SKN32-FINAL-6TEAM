@@ -158,3 +158,68 @@ async def test_booking_without_place_id_asks_read_place_for_none():
     assert arguments["place_id"] is None
     assert result.outcome == "completed"
     assert result.decisions[0]["place_confirmed"] is False
+
+
+# ── 결함 2: 시작 시각이 지난 예약도 성립으로 답하던 버그 ──────────────────
+
+@pytest.mark.asyncio
+async def test_past_booking_returns_feasible_false():
+    """이미 시작된 예약(`starts_at`이 2시간 전) — `feasible: False`로 답해야 한다.
+
+    결함: 고치기 전엔 「성립합니다(-2.0시간)」라고 틀린 답을 만들었다.
+    수정: `_check_feasible()`에서 `remaining < 0`이면 즉시 already_started로 반환.
+    """
+    booking = {**FULL_BOOKING, "starts_at": in_hours(-2)}
+    result = await ActivityTeam(FakeTools(_values(booking=booking))).execute(_task())
+    _show("starts_at 2시간 전", result)
+
+    assert result.outcome == "completed"
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["reason"] == "already_started"
+
+
+@pytest.mark.asyncio
+async def test_past_booking_hours_elapsed_is_positive_and_approximate():
+    """`hours_elapsed`는 **양수** — 경과 시간이다(-remaining)."""
+    booking = {**FULL_BOOKING, "starts_at": in_hours(-2)}
+    result = await ActivityTeam(FakeTools(_values(booking=booking))).execute(_task())
+
+    elapsed = result.decisions[0]["hours_elapsed"]
+    assert elapsed > 0, "경과 시간은 양수여야 한다"
+    assert abs(elapsed - 2.0) < 0.1, f"약 2시간이어야 하는데 {elapsed}가 나왔다"
+
+
+@pytest.mark.asyncio
+async def test_past_booking_answer_mentions_elapsed():
+    """answer 문구에 '이미 시작됐거나 종료된' 문구가 들어 있어야 한다."""
+    booking = {**FULL_BOOKING, "starts_at": in_hours(-2)}
+    result = await ActivityTeam(FakeTools(_values(booking=booking))).execute(_task())
+
+    assert "이미 시작됐거나 종료된" in result.answer
+
+
+@pytest.mark.asyncio
+async def test_future_booking_is_still_feasible():
+    """★회귀 가드 — 미래 예약(`starts_at`이 30시간 뒤)은 feasible이 True다.
+
+    `remaining < 0` 분기가 미래 예약까지 잡아선 안 된다.
+    """
+    result = await ActivityTeam(FakeTools(_values())).execute(_task())
+    _show("starts_at 30시간 후 (회귀 가드)", result)
+
+    assert result.outcome == "completed"
+    assert result.decisions[0]["feasible"] is True
+
+
+@pytest.mark.asyncio
+async def test_past_booking_does_not_call_read_place():
+    """시작 전 검사에서 immediately 반환하므로 `read.place`를 부르지 않는다.
+
+    already_started 경로에서 장소 조회를 낭비하지 않는다는 것을 고정한다.
+    """
+    booking = {**FULL_BOOKING, "starts_at": in_hours(-2)}
+    tools = FakeTools(_values(booking=booking))
+    await ActivityTeam(tools).execute(_task())
+
+    called_names = [name for name, _ in tools.calls]
+    assert "read.place" not in called_names
