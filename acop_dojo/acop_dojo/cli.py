@@ -8,7 +8,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import answers, boss, build, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, build, server, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -584,6 +584,10 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd = sub.add_parser("report", help="검증 결과로 사각지대 보고서를 쓴다")
     report_cmd.add_argument("--out", default=None)
     report_cmd.set_defaults(func=cmd_report)
+
+    serve_cmd = sub.add_parser("serve", help="브라우저에서 도장을 돌린다 (로컬 서버)")
+    serve_cmd.add_argument("--port", type=int, default=8765)
+    serve_cmd.set_defaults(func=lambda args: server.serve(args.port))
 
     sub.add_parser("status", help="진행 상황").set_defaults(func=cmd_status)
     return parser
