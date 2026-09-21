@@ -35,6 +35,8 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
+from app.infrastructure.notify.phrase import Phrase
+
 from .itinerary import Item, TripStore
 from .itinerary_changes import planned_option, route_of, route_targets
 
@@ -101,20 +103,46 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules) ->
     return due
 
 
-def day_text(items: list[Item], day: date, *, eve: bool = False) -> str:
+# ★★안내 문구는 **틀 + 원값**으로 만든다(`app/infrastructure/notify/phrase.py`).
+#   시각·장소 이름·소요 분은 전부 `{...}` 자리의 **값**이라 번역을 타지 않고, 틀은 값이
+#   없으므로 **언어마다 한 번만** 옮기면 된다(wiki `architecture/notifications.md` 「언어」).
+#   ☆완성 문장을 담아 두면 값이 다른 알림끼리 섞인다 — 그래서 틀만 담는다.
+def day_phrase(items: list[Item], day: date, *, eve: bool = False) -> Phrase:
     stops = [f"{_hm(i.starts_at)} {i.title}" for i in _by_day(items).get(day, []) if i.kind != "mobility"]
     head = ("내일 일정을 미리 안내해 드릴게요." if eve else "좋은 아침이에요! 오늘 일정을 안내해 드릴게요.")
-    return (head + "\n" + " → ".join(stops) +
-            "\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.")
+    return Phrase(head + "\n{stops}\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.",
+                  {"stops": " → ".join(stops)})
+
+
+def departure_phrase(move: Item, following: Item | None, how: dict[str, Any] | None) -> Phrase:
+    template = "{leave} 출발 — {title} ({leave}–{ends})."
+    values: dict[str, Any] = {"leave": _hm(move.starts_at), "title": move.title,
+                              "ends": _hm(move.ends_at)}
+    if following:
+        template += "\n다음 일정: {next_at} {next_title}."
+        values |= {"next_at": _hm(following.starts_at), "next_title": following.title}
+    if how:
+        eta = " · 약 {eta_min}분" if how.get("eta_min") is not None else ""
+        template += f"\n가는 방법: {{how}}{eta} (경로 확인 {{checked}})"
+        values |= {"how": how["label"], "eta_min": how.get("eta_min"), "checked": _hm(how["checked_at"])}
+    return Phrase(template, values)
+
+
+def day_text(items: list[Item], day: date, *, eve: bool = False) -> str:
+    return day_phrase(items, day, eve=eve).render()
 
 
 def departure_text(move: Item, following: Item | None, how: dict[str, Any] | None) -> str:
-    text = (f"{_hm(move.starts_at)} 출발 — {move.title} ({_hm(move.starts_at)}–{_hm(move.ends_at)})."
-            + (f"\n다음 일정: {_hm(following.starts_at)} {following.title}." if following else ""))
-    if how:
-        eta = f" · 약 {how['eta_min']}분" if how.get("eta_min") is not None else ""
-        text += f"\n가는 방법: {how['label']}{eta} (경로 확인 {_hm(how['checked_at'])})"
-    return text
+    return departure_phrase(move, following, how).render()
+
+
+def notice_fields(phrase: Phrase) -> dict[str, Any]:
+    """통지 payload 에 실을 칸 — 완성 문장(`text`)과 **틀·원값**을 같이 싣는다.
+
+    ★`text` 는 화면·시험이 읽는 한국어 원문이고, `template`·`values` 는 발송이 언어마다
+      한 번만 옮기기 위한 것이다. 둘은 같은 `Phrase` 에서 나오므로 어긋날 수 없다.
+    """
+    return {"text": phrase.render(), "template": phrase.template, "values": dict(phrase.values)}
 
 
 @dataclass
@@ -164,9 +192,10 @@ class TripReminders:
         if self.link is not None:
             base["plan_url"] = self.link(trip_id)
         if reminder.kind != "departure":
-            return {**base, "text": day_text(items, reminder.day, eve=reminder.kind == "day_eve")}
-        status, text = build_departure(reminder.move, items, route_events=self.route_events,
-                                       routes=self.routes, now=now)
+            return {**base,
+                    **notice_fields(day_phrase(items, reminder.day, eve=reminder.kind == "day_eve"))}
+        status, phrase = build_departure(reminder.move, items, route_events=self.route_events,
+                                         routes=self.routes, now=now)
         entry = {"trip_id": str(trip_id), "item": reminder.move.title}
         if status == "fatal":
             result.fatal.append({**entry, "failed_categories": ["route_events"]})
@@ -176,18 +205,18 @@ class TripReminders:
             return None
         if status == "no_route":
             result.no_route += 1
-        return {**base, "text": text, "item_id": str(reminder.move.item_id)}
+        return {**base, **notice_fields(phrase), "item_id": str(reminder.move.item_id)}
 
 
 def build_departure(move: Item, items: list[Item], *, route_events: Any, routes: dict[str, Any] | None,
-                    now: datetime) -> tuple[str, str | None]:
-    """출발 안내 문구와 상태 — `ok` · `no_route`(경로 정의·소스 없음, 어디로·언제만) ·
+                    now: datetime) -> tuple[str, Phrase | None]:
+    """출발 안내 문구(틀+원값)와 상태 — `ok` · `no_route`(경로 정의·소스 없음, 어디로·언제만) ·
     `held`(계획한 수단에 사건 — 감시가 고칠 일) · `fatal`(경로 사건을 못 읽음, 결정 15)."""
     following = next((i for i in sorted(items, key=lambda i: i.seq) if i.seq > move.seq), None)
     route = route_of(move, routes)
     if not route or route_events is None:
         # ★경로 정의나 경로 사건 소스가 없다 — 어디로·언제만 보낸다. 「모름」 문장은 안 넣는다.
-        return "no_route", departure_text(move, following, None)
+        return "no_route", departure_phrase(move, following, None)
     _, planned = planned_option(move, route)
     events = route_events.affecting(route_targets(route))
     if events is None:
@@ -197,8 +226,9 @@ def build_departure(move: Item, items: list[Item], *, route_events: Any, routes:
         return "held", None
     how = {"label": planned.get("label") or planned.get("id"), "eta_min": planned.get("eta_min"),
            "checked_at": now}
-    return "ok", departure_text(move, following, how)
+    return "ok", departure_phrase(move, following, how)
 
 
 __all__ = ["Reminder", "ReminderRules", "ReminderTickResult", "TripReminders", "build_departure",
-           "day_text", "departure_text", "plan_reminders"]
+           "day_phrase", "day_text", "departure_phrase", "departure_text", "notice_fields",
+           "plan_reminders"]

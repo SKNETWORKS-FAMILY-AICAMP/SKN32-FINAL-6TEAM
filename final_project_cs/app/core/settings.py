@@ -139,6 +139,11 @@ class Settings(BaseSettings):
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
+    #: 알림 문구틀의 언어별 생성 캐시 파일(저장소 기준 상대 경로, `var/` 는 커밋되지 않는다).
+    #:  ★배달 루프는 `--once` 로도 돌아 프로세스가 매번 죽는다 — 파일로 남겨야 다음 실행이
+    #:  이어 쓴다. 담기는 것은 **틀**뿐이고 시각·장소·금액 같은 값은 들어가지 않는다
+    #:  (`app/infrastructure/notify/phrase.py`). 비우면 그 프로세스 안에서만 재사용한다.
+    notice_phrasebook_path: str = "var/notice_phrasebook.json"
     #: 여행계획서 링크의 앞부분(v11 §1 접점 ②). 알림에 **누를 수 있는 주소**로 싣는다.
     #:  ★비밀이 아니다 — 링크의 보호는 여행별 토큰(HMAC)이 맡는다.
     #:  기본값은 로컬 개발 서버(`.claude/launch.json` 의 `acop-cs-ui`, 8042).

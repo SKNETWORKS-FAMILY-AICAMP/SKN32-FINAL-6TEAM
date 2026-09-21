@@ -141,15 +141,20 @@ def main() -> int:
         for item in items:
             print(f"  {item.starts_at:%H:%M}~{(item.ends_at or item.starts_at):%H:%M}  {item.title}")
         if args.send:
-            from app.core.settings import get_settings
+            from app.core.settings import REPO_ROOT, get_settings
             from app.infrastructure.messaging.worker import OutboxWorker
-            from app.infrastructure.notify import DiscordWebhook
+            from app.infrastructure.notify import DiscordWebhook, PhraseCache
             from app.infrastructure.notify.translate import make_translator
             from app.infrastructure.ollama_chat import from_settings
 
             # ★여행 언어(zh-TW)로 옮겨 보낸다(결정 14) — Ollama(Gemma 4)가 있을 때.
-            chat = from_settings(get_settings())
-            hook = DiscordWebhook(get_settings().discord_webhook_url,
+            settings = get_settings()
+            chat = from_settings(settings)
+            # ★문구틀은 언어마다 한 번만 옮긴다 — 하루치 안내가 여러 건이라 여기서 바로 재사용된다.
+            phrases = PhraseCache(path=(REPO_ROOT / settings.notice_phrasebook_path)
+                                  if settings.notice_phrasebook_path else None)
+            phrases.load()
+            hook = DiscordWebhook(settings.discord_webhook_url, phrases=phrases,
                                   translator=make_translator(chat) if chat else None)
             worker = OutboxWorker(get_connection, hook, tenant_id=tenant)
             sent = 0
@@ -159,6 +164,8 @@ def main() -> int:
                 cur.execute("SELECT status, count(*) FROM outbox WHERE tenant_id=%s GROUP BY status",
                             (tenant,))
                 print(f"\n디스코드 전송: 처리 {sent}건 · 상태 {dict(cur.fetchall())}")
+            phrases.save()
+            print(f"문구틀 캐시: {phrases.stats()}")
     finally:
         if not args.keep:
             cleanup(tenant)
