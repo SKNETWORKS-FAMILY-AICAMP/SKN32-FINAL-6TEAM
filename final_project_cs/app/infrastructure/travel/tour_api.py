@@ -40,8 +40,27 @@ from .base import TravelSource
 
 BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
 
-#: 관광 타입. v11 §5 의 Activity 범위(A01 자연·A02 인문·A03 레포츠·A04 쇼핑)와
-#: 대응한다. 39(음식점)는 Dining 쪽이고 32(숙박)는 Lodging 쪽이다.
+#: 신분류체계 대분류(lclsSystm1) → 이름. 한국관광공사 2023년 개편.
+#: 실측(2026-09-21): searchKeyword2 응답에서 직접 확인한 코드.
+#: Activity 담당(wiki/teams/activity.md §범위): NA·HS·VE·LS·EX·SH.
+#: 대분류 10종 중 9종 확인 — 나머지 1종은 아직 미관측.
+LARGE_CLASS_NAMES = {
+    # ── Activity 담당 ──────────────────────────────────────
+    "NA": "자연관광",    # 산·하천·해양·생태·자연공원
+    "HS": "역사관광",    # 역사유적지·유물·종교성지·안보관광지 (경복궁=HS01)
+    "VE": "문화관광",    # 랜드마크·테마파크·공연·전시·박물관·미술관
+    "LS": "레저스포츠",  # 골프·스키·수상레저·항공레저
+    "EX": "체험관광",    # 전통·공예·농산어촌체험·템플스테이·웰니스
+    "SH": "쇼핑",        # 대형마트(SH03) 포함
+    # ── Activity 미담당 ────────────────────────────────────
+    "FD": "음식",        # 음식점·식도락
+    "AC": "숙박",        # 호텔·리조트·펜션·캠핑
+    "EV": "행사·이벤트", # 축제·공연·전시 행사 (contenttypeid=15)
+}
+
+#: 구분류(contenttypeid) → 이름. ★API 서버 필터링(find() allowed_types,
+#: watch.py KIND_TO_CONTENT_TYPES)은 여전히 이 축을 쓴다 —
+#: 신분류 lclsSystm1 코드로 서버 필터링이 되는지 미확인.
 CONTENT_TYPE_NAMES = {
     "12": "관광지", "14": "문화시설", "15": "행사·공연·축제", "25": "여행코스",
     "28": "레포츠", "32": "숙박", "38": "쇼핑", "39": "음식점",
@@ -118,10 +137,13 @@ class TourApiPlace(TravelSource):
             return None
 
         content_type = str(row.get("contenttypeid") or "")
+        large_class = str(row.get("lclsSystm1") or "")
         return self.stamp({
             "content_id": str(row.get("contentid") or ""),
             "content_type_id": content_type,
             "content_type_name": CONTENT_TYPE_NAMES.get(content_type),
+            "large_class_code": large_class or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
             "latitude": latitude,
             "longitude": longitude,
@@ -191,11 +213,14 @@ class TourApiPlace(TravelSource):
             return None
 
         row = rows[0]
+        large_class = str(row.get("lclsSystm1") or "")
         return self.stamp({
             "content_id": content_id,
             "content_type_id": str(row.get("contenttypeid") or content_type_id),
             "content_type_name": CONTENT_TYPE_NAMES.get(
                 str(row.get("contenttypeid") or content_type_id)),
+            "large_class_code": large_class or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
             "latitude": self._number(row, "mapy"),
             "longitude": self._number(row, "mapx"),
@@ -253,6 +278,10 @@ class TourApiPlace(TravelSource):
             "title": str(row.get("title") or "").strip(),
             "address": str(row.get("addr1") or "").strip() or None,
             "latitude": number("mapy"), "longitude": number("mapx"),
+            "large_class_code": str(row.get("lclsSystm1") or "") or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(str(row.get("lclsSystm1") or "")),
+            "lclsSystm2": str(row.get("lclsSystm2") or "") or None,
+            "lclsSystm3": str(row.get("lclsSystm3") or "") or None,
             # ★공급자가 말한 수정 시각. 우리가 받은 시각과 섞지 않는다.
             "source_modified_at": str(row.get("modifiedtime") or "") or None,
             "raw": row,
@@ -316,4 +345,4 @@ class TourApiPlace(TravelSource):
         return TravelSource._body_error(payload)
 
 
-__all__ = ["BASE_URL", "CONTENT_TYPE_NAMES", "TourApiPlace"]
+__all__ = ["BASE_URL", "CONTENT_TYPE_NAMES", "LARGE_CLASS_NAMES", "TourApiPlace"]
