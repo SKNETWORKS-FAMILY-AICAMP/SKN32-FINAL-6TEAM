@@ -208,6 +208,7 @@ def scenario_switch() -> HTMLResponse:
 <section class='card'>
   <div class='sw'><input type='checkbox' id='scSwitch' aria-label='시나리오 모드' {'' if enabled else 'disabled'}>
     <div><strong id='scState'>확인 중…</strong><br><small>켜면 전용 테넌트에 확정 시나리오 여행을 만들고 08:00 장면부터 시작한다. 끄면 그 테넌트를 통째로 지운다.</small></div></div>
+  <p><label>엔진 <select id='scEngine'><option value='trip'>시나리오용 여행 버전 — 감시·창구가 직접 고친다</option><option value='case'>Case 버전 — Case → Team → 코어 적용</option></select></label> <small class='muted'>켜기 전에 고른다. 켜진 동안은 바꿀 수 없다.</small></p>
   {'' if enabled else "<p><strong>설정에서 꺼져 있다</strong> — <code>ACOP_SCENARIO_MODE_ENABLED=true</code> 를 로컬 <code>.env</code> 에 두고 다시 띄운다.</p>"}
   <div class='sc-grid'><div><small>장면</small><strong id='scScene'>—</strong></div><div><small>시나리오 시계</small><strong id='scClock'>—</strong></div><div><small>테넌트</small><strong id='scTenant'>—</strong></div></div>
   <p><button id='scNext' disabled>다음 장면 →</button> <a id='scOpen' href='/tripilot' target='_blank' rel='noopener'>사용자 화면(triPilot) 열기 ↗</a></p>
@@ -248,8 +249,8 @@ async function ops() {{
     || "<tr><td class='muted' colspan='5'>아직 없음 — 고객 문장이 들어오면 Case 가 생긴다</td></tr>";
   q('#opsHistory').innerHTML = o.history.slice().reverse().map(h => `<li data-v="${{h.version}}"><span class='pill'>v${{h.version}}</span> ${{esc(h.reason)}}<span class='ops-chain'>${{esc(h.causes.join(' · ') || '—')}}</span></li>`).join('');
 }}
-async function call(path, post) {{
-  const r = await fetch(path, post ? {{method: 'POST', headers: {{'content-type': 'application/json'}}, body: '{{}}'}} : {{}});
+async function call(path, post, body) {{
+  const r = await fetch(path, post ? {{method: 'POST', headers: {{'content-type': 'application/json'}}, body: JSON.stringify(body || {{}})}} : {{}});
   return r.ok ? r.json() : null;
 }}
 function show(s) {{
@@ -257,12 +258,15 @@ function show(s) {{
   q('#scSwitch').checked = on; q('#scNext').disabled = !on;
   q('#scState').textContent = on ? '시나리오 모드 켜짐' : '시나리오 모드 꺼짐';
   q('#scScene').textContent = on ? `${{s.scene + 1}} / ${{s.scenes}} · ${{s.label || ''}}` : '—';
-  q('#scClock').textContent = on ? s.clock : '—'; q('#scTenant').textContent = on ? s.tenant : '—';
+  q('#scClock').textContent = on ? s.clock : '—'; q('#scTenant').textContent = on ? `${{s.tenant}} · ${{s.engine}}` : '—';
+  if (on && s.engine) q('#scEngine').value = s.engine;
+  q('#scEngine').disabled = on;
 }}
 async function refresh() {{ show(await call('/scenario/status')); ops(); }}
 q('#scSwitch').addEventListener('change', async e => {{
   e.target.disabled = true; q('#scState').textContent = e.target.checked ? '켜는 중…' : '끄는 중…';
-  await call(e.target.checked ? '/scenario/start' : '/scenario/stop', true);
+  await call(e.target.checked ? '/scenario/start' : '/scenario/stop', true,
+             e.target.checked ? {{engine: q('#scEngine').value}} : {{}});
   e.target.disabled = false; refresh();
 }});
 q('#scNext').addEventListener('click', async () => {{ q('#scNext').disabled = true; await call('/scenario/next', true); refresh(); }});

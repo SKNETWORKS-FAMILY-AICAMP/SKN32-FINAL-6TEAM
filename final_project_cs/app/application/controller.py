@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
+from app.core.actions import ActionConflict, ActionHandlers, ActionRejected
 from app.core.context import ContextBroker, ContextInputs
 from app.core.contracts import CaseStatus, InvalidTransition, NextAction, TeamTask, TeamResult, RESUME_NODE_FOR_WAIT, StateConflict
 from app.core.idempotency import idempotency_key, request_id_for_case
@@ -35,7 +36,8 @@ class Controller:
                  case_service: CaseService | None = None, graph_revision: str = "controller-v1",
                  team_executor: Any | None = None, broker: Any | None = None,
                  verification_policy: Any | None = None, fact_queries: Any = (),
-                 response_review: Any | None = None) -> None:
+                 response_review: Any | None = None,
+                 action_handlers: ActionHandlers | None = None) -> None:
         # ★대조 어휘는 주입받는다. Controller 는 어떤 필드를 대조하는지 모른다 —
         #   알면 basement 가 특정 업무 도메인에 묶인다.
         from app.core.verification import VerificationPolicy
@@ -65,14 +67,47 @@ class Controller:
         self.team_executor = team_executor
         self.broker = broker
         self.response_review = response_review
+        # ★적용기는 조립이 넣는다. 없으면 **빈 표** — 승인 없는 제안은 전부 escalated 로 간다.
+        self.action_handlers = action_handlers or ActionHandlers()
+
+    #: ★Team 이 볼 수 있는 Case 상태 칸 — **이름이 중립인 것만.** 무엇을 가리키는지는
+    #:  도메인이 채운다(`[결정 2026-09-17]` wiki `external/rest-endpoints.md` subject_ref).
+    TEAM_STATE_KEYS = ("subject_ref", "trigger_source", "trigger", "interpretation")
+
+    @classmethod
+    def _team_state(cls, case: dict[str, Any]) -> dict[str, Any]:
+        state = case.get("state_json") or {}
+        return {key: state[key] for key in cls.TEAM_STATE_KEYS if state.get(key) is not None}
+
+    @staticmethod
+    def _wait_reason(case: dict[str, Any]) -> str:
+        """★`wait_reason` 을 안 적던 때(2026-09-18 전) 승인 대기에 들어간 Case 는 제안 id 로 알아본다."""
+        state = case.get("state_json") or {}
+        return state.get("wait_reason") or ("human_approval" if state.get("action_ids") else "customer_input")
+
+    @classmethod
+    def _capability_state(cls, case: dict[str, Any]) -> dict[str, Any]:
+        """capability 선택에 넘기는 상태. ★`[2026-09-18]` 분류 결과 `issue_code` 도 싣는다 —
+        한 Team 안에서 capability 를 가를 수 있는 것이 그것뿐인 모듈이 있다. 전에는 그런 Team 이
+        어떤 요청이든 기본 capability 로만 불렸다(경위: wiki/records/reports/debugs/2026-09-17_1450 §6)."""
+        state = cls._team_state(case)
+        if case.get("issue_code"):
+            state["issue_code"] = case["issue_code"]
+        return state
+
+    @staticmethod
+    def _case_type(case: dict[str, Any]) -> str:
+        state = case.get("state_json") or {}
+        return case_type_of(case.get("issue_code"), fallback=case.get("intent"),
+                            hint=state.get("routing_hint"),
+                            hint_wins=bool(state.get("routing_hint_verified")))
 
     def _capability(self, case: dict[str, Any]) -> str:
         """Return the capability selected by the injected Team registry."""
         intent = case.get("intent")
-        entry = self.registry.resolve(
-            case_type=case_type_of(case.get("issue_code"), fallback=intent),
-            intent=intent)
-        return self.registry.capability_for(entry, intent, input_text=case.get("subject"))
+        entry = self.registry.resolve(case_type=self._case_type(case), intent=intent)
+        return self.registry.capability_for(entry, intent, input_text=case.get("subject"),
+                                            state=self._capability_state(case))
 
     def _policy(self, tenant_id: str, query: str, scopes: list[str]) -> tuple[list[Any], bool]:
         try:
@@ -83,14 +118,23 @@ class Controller:
 
     def _task(self, case: dict[str, Any], entry, run_id: UUID, *, resume: bool = False,
               resume_node: str | None = None, retrieval_failed: bool = False) -> TeamTask:
-        policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
+        # ★`[결정 2026-09-17]` Team 이 정책 근거를 선언했을 때만 RAG 를 돈다.
+        #   전에는 `required_context` 가 선언만 되고 읽히지 않아, 정책 문서가 필요 없는
+        #   일(실시간 사실로 판단하는 일정 조정)도 결과 0건이면 degraded → 전부 사람에게 갔다.
+        policy_required = "policy" in (entry.manifest.required_context or [])
+        if policy_required:
+            policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
+        else:
+            policy, retrieval_failed = [], False
         current = {"case_id": str(case["case_id"]), "customer_id": str(case["customer_id"]), "status": str(case["status"]),
                    "version": case["version"], "intent": case.get("intent"), "issue_code": case.get("issue_code"),
                    "sentiment": case.get("sentiment"), "owner_team_id": case.get("owner_team_id")}
         current["request_id"] = request_id_for_case(case)
+        current.update(self._team_state(case))
         inputs = ContextInputs(case_id=case["case_id"], tenant_id=case["tenant_id"], team_id=entry.manifest.team_id,
                                knowledge_scope=entry.manifest.knowledge_scope, system_instruction="Answer using the supplied evidence.",
-                               current_state=current, policy_chunks=policy, history_entries=[], retrieval_failed=retrieval_failed)
+                               current_state=current, policy_chunks=policy, history_entries=[], retrieval_failed=retrieval_failed,
+                               policy_required=policy_required)
         context = self.context_broker.build(inputs)
         return TeamTask(task_id=uuid4(), run_id=run_id, case_id=case["case_id"], team_id=entry.manifest.team_id,
                         capability=self._capability(case), case_version=case["version"], input_text=case["subject"], context=context,
@@ -172,10 +216,11 @@ class Controller:
                         #   우연히 같은 말이라 맞았지만, 여행에서는 요청 종류 다섯이
                         #   여섯 팀 어느 것과도 안 맞아 **아무 데도 도달하지 못했다.**
                         intent = case.get("intent")
-                        entry = self.registry.resolve(
-                            case_type=case_type_of(case.get("issue_code"), fallback=intent),
-                            intent=intent)
-                        capability = self.registry.capability_for(entry, intent)
+                        entry = self.registry.resolve(case_type=self._case_type(case), intent=intent)
+                        # ★`_task()` 와 **같은 인자로** 고른다. 전에는 여기서만 `input_text` 없이
+                        #   골라 ROUTED 이벤트의 capability 와 실제로 Team 에 준 것이 갈릴 수 있었다.
+                        capability = self.registry.capability_for(
+                            entry, intent, input_text=case.get("subject"), state=self._capability_state(case))
                         self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                                     event_type=EventType.ROUTED, payload={"owner_team_id": entry.manifest.team_id, "capability": capability}, actor_id=actor_id)
                     except RegistryError as exc:
@@ -189,13 +234,25 @@ class Controller:
                 resume = False
                 resume_node = None
                 if case["status"] == CaseStatus.RESUMING:
-                    wait_reason = (case.get("state_json") or {}).get("wait_reason", "customer_input")
+                    wait_reason = self._wait_reason(case)
                     resume_node = RESUME_NODE_FOR_WAIT[wait_reason]
                     transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                     event_type=EventType.RESUMED, payload={"resume_node": resume_node},
                                     actor_type="controller", actor_id=actor_id)
                     case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
                     resume = True
+                    if wait_reason == "human_approval":
+                        approved = self.repository.approved_pending_actions(conn, tenant_id=tenant_id,
+                                                                            case_id=case_id)
+                        # ★적용기가 **전부** 있을 때만 코어가 실행한다. 하나라도 없으면 예전처럼 Team 을
+                        #   다시 부른다 — 적용기가 없는 도메인의 승인 흐름을 이 변경이 바꾸지 않게.
+                        if approved and all(self.action_handlers.get(a["action_type"]) for a in approved):
+                            # ★A 단계 트랜잭션 안이다 — 여기서 돌려주면 블록을 나가며 함께 커밋된다.
+                            transition = self._apply_approved(conn, case, approved, actor_id)
+                            self.case_service.finish_run(
+                                conn, run_id, "succeeded" if transition.status == CaseStatus.RESOLVED else "failed")
+                            return {"case_id": str(case_id), "run_id": str(run_id),
+                                    "status": transition.status.value, "version": transition.version}
                 if time.monotonic() - started > get_guardrails().get("reliability.case_wall_clock_seconds"):
                     transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"],
                                     event_type=EventType.GUARDRAIL_ESCALATED,
@@ -351,7 +408,24 @@ class Controller:
     def _event_for_result(self, conn, case: dict[str, Any], result: TeamResult, *, context: Any = None):
         na = result.next_action
         if na is NextAction.RESPOND:
-            return EventType.COMPLETED, {"answer_ref": str(uuid4()), "state_patch": {"answer": result.answer, "evidence": [e.model_dump(mode="json") for e in result.evidence]}}, []
+            state_patch: dict[str, Any] = {"answer": result.answer,
+                                           "evidence": [e.model_dump(mode="json") for e in result.evidence]}
+            outbox: list[OutboxMessage] = []
+            # ★`[결정 2026-09-17]` 답과 함께 온 **승인 없는 제안**을 버리지 않는다.
+            #   전에는 이 갈래가 제안을 보지 않아 조용히 사라졌다. 적용 조건은
+            #   wiki `actions/approval.md` 「승인 없이 적용되는 제안」.
+            auto = [p for p in result.action_proposals if not p.approval_required]
+            if auto:
+                blocked = self._reject_unverified(conn, case, result, context)
+                if blocked is not None:
+                    return blocked
+                applied = self._apply_auto_proposals(conn, case, auto)
+                if isinstance(applied, tuple):
+                    return applied
+                state_patch["applied_actions"] = [record for record, _ in applied]
+                for _, messages in applied:
+                    outbox.extend(messages)
+            return EventType.COMPLETED, {"answer_ref": str(uuid4()), "state_patch": state_patch}, outbox
         if na is NextAction.WAIT_FOR_INPUT:
             token = self.case_service.new_resume_token(); self._last_token = token
             metadata = self.case_service.resume_metadata(token, "customer_input")
@@ -369,17 +443,141 @@ class Controller:
             action_ids = []
             for proposal in result.action_proposals:
                 # The Team value is advisory. The server owns the final key at the write boundary.
+                # ★`[2026-09-18]` v11 §4-E — 적용기가 있으면 키의 대상은 **적용기가 인자에서 꺼낸 대상 id**다.
+                #   Case id 로 두면 한 Case 가 서로 다른 대상 둘에 같은 종류의 제안을 낼 때 둘째가
+                #   같은 키로 합쳐져 **조용히 사라진다**. 대상을 못 꺼내면 폴백하지 않고 사람에게 넘긴다.
+                #   적용기가 없는 도메인은 예전 그대로(Case id).
+                handler = self.action_handlers.get(proposal.action_type)
+                subject = str(case["case_id"])
+                if handler is not None:
+                    try:
+                        subject = handler.subject(proposal.arguments)
+                    except ActionRejected as exc:
+                        return self._escalation("action_rejected", str(exc))
                 server_key = idempotency_key(
                     tenant_id=case["tenant_id"], request_id=request_id_for_case(case),
-                    action_type=proposal.action_type, business_subject=str(case["case_id"]),
+                    action_type=proposal.action_type, business_subject=subject,
                 )
                 action_ids.append(str(self.repository.create_action_request(conn, tenant_id=case["tenant_id"], case_id=case["case_id"], action_type=proposal.action_type,
                     arguments=proposal.arguments, idempotency_key=server_key, status="pending_approval")))
-            return EventType.APPROVAL_REQUIRED, {"action_id": action_ids[0], "state_patch": {"action_ids": action_ids}}, []
+            # ★`[2026-09-18]` 무엇을 기다리는지 적는다. 전에는 안 적어 승인 뒤 재개가 기본값
+            #   `customer_input` 으로 읽혀 재개 지점이 `validate_input` 이 됐다.
+            return EventType.APPROVAL_REQUIRED, {"action_id": action_ids[0],
+                                                 "state_patch": {"action_ids": action_ids,
+                                                                 "wait_reason": "human_approval"}}, []
         if na is NextAction.ESCALATE:
             guardrail = result.failure_code or "team_escalated"
             return EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": result.warnings or [guardrail]}, []
         raise ControllerError(f"unsupported result action: {na.value}")
+
+    @staticmethod
+    def _escalation(guardrail: str, observed: str):
+        return EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": [observed]}, []
+
+    def _apply_auto_proposals(self, conn, case: dict[str, Any], proposals: list[Any]):
+        """승인 없는 제안을 **한 savepoint 안에서 전부** 적용한다.
+
+        하나라도 못 하면 전부 되돌리고 escalated 전이를 돌려준다 — 두 제안 중 하나만
+        반영된 대상을 남기지 않는다. 성공하면 `[(기록, outbox 메시지들)]` 을 돌려준다.
+        """
+        class _Stop(Exception):
+            def __init__(self, outcome):
+                self.outcome = outcome
+
+        applied: list[tuple[dict[str, Any], list[OutboxMessage]]] = []
+        try:
+            with conn.transaction():
+                for proposal in proposals:
+                    handler = self.action_handlers.get(proposal.action_type)
+                    if handler is None:
+                        raise _Stop(self._escalation(
+                            "action_handler_missing", f"적용기가 없는 제안 종류: {proposal.action_type}"))
+                    if not getattr(handler, "auto_apply", False) or proposal.risk_level != "low":
+                        raise _Stop(self._escalation(
+                            "action_requires_approval",
+                            f"{proposal.action_type} 는 승인 없이 적용하지 않는다(risk={proposal.risk_level})"))
+                    try:
+                        subject = handler.subject(proposal.arguments)
+                    except ActionRejected as exc:
+                        raise _Stop(self._escalation("action_rejected", str(exc))) from exc
+                    key = idempotency_key(tenant_id=case["tenant_id"], request_id=request_id_for_case(case),
+                                          action_type=proposal.action_type, business_subject=subject)
+                    existing = self.repository.find_action_request(conn, tenant_id=case["tenant_id"],
+                                                                   idempotency_key=key)
+                    if existing is not None and existing["status"] == "succeeded":
+                        # ★같은 대상에 같은 요청이 이미 적용됐다 — 다시 적용하지 않는다.
+                        applied.append(({"action_id": str(existing["action_id"]),
+                                         "action_type": proposal.action_type,
+                                         "result_ref": existing["provider_ref"], "replayed": True}, []))
+                        continue
+                    try:
+                        outcome = handler.apply(conn, tenant_id=case["tenant_id"],
+                                                customer_id=case["customer_id"], case_id=case["case_id"],
+                                                arguments=proposal.arguments)
+                    except ActionConflict as exc:
+                        raise _Stop(self._escalation("action_target_changed", str(exc))) from exc
+                    except ActionRejected as exc:
+                        raise _Stop(self._escalation("action_rejected", str(exc))) from exc
+                    action_id = self.repository.create_action_request(
+                        conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
+                        action_type=proposal.action_type, arguments=proposal.arguments,
+                        idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
+                    applied.append(({"action_id": str(action_id), "action_type": proposal.action_type,
+                                     "result_ref": outcome.result_ref, "summary": outcome.summary},
+                                    list(outcome.outbox)))
+        except _Stop as stop:
+            return stop.outcome
+        return applied
+
+    def _apply_approved(self, conn, case: dict[str, Any], approved: list[dict[str, Any]], actor_id: str):
+        """**승인된** 제안을 적용기로 실행한다(`[2026-09-18]`, wiki `actions/approval.md`).
+
+        ★전에는 승인하면 Case 가 `resuming` → Team 재실행으로 갔고, Team 은 side effect 를 안 하니
+          **아무것도 실행되지 않았다.** 실행은 코어가 한다 — Team 이 아니다(CLAUDE.md §0.2).
+        ★한 savepoint 안에서 전부 — 하나라도 못 하면 전부 되돌리고 escalated.
+        ★공급자 시간 초과·연결 오류는 성공으로 추정하지 않는다 — `unknown` 으로 남기고 재실행하지
+          않는다(CLAUDE.md §0.2). 승인 직전 재검증은 승인 API 가 이미 했다(v7 §9-E).
+        """
+        applied: list[dict[str, Any]] = []
+        outbox: list[OutboxMessage] = []
+        failure: tuple[str, str, str] | None = None     # (guardrail, observed, action 상태)
+        failed_action = None
+        try:
+            with conn.transaction():
+                for action in approved:
+                    handler = self.action_handlers.get(action["action_type"])
+                    try:
+                        outcome = handler.apply(conn, tenant_id=case["tenant_id"], customer_id=case["customer_id"],
+                                                case_id=case["case_id"], arguments=action["arguments"])
+                    except ActionConflict as exc:
+                        failure, failed_action = ("action_target_changed", str(exc), "failed"), action
+                        raise
+                    except ActionRejected as exc:
+                        failure, failed_action = ("action_rejected", str(exc), "failed"), action
+                        raise
+                    except (TimeoutError, ConnectionError) as exc:
+                        failure, failed_action = ("action_provider_unknown", str(exc), "unknown"), action
+                        raise
+                    self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
+                                                      action_id=action["action_id"], status="succeeded",
+                                                      provider_ref=outcome.result_ref)
+                    applied.append({"action_id": str(action["action_id"]), "action_type": action["action_type"],
+                                    "result_ref": outcome.result_ref, "summary": outcome.summary})
+                    outbox.extend(outcome.outbox)
+        except (ActionConflict, ActionRejected, TimeoutError, ConnectionError):
+            guardrail, observed, status = failure
+            self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
+                                              action_id=failed_action["action_id"], status=status)
+            return transition_case(conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
+                                   expected_version=case["version"], event_type=EventType.GUARDRAIL_ESCALATED,
+                                   payload={"guardrail": guardrail, "observed": [observed]},
+                                   actor_type="controller", actor_id=actor_id)
+        answer = "승인된 작업을 실행했습니다: " + ", ".join(a["action_type"] for a in applied)
+        return transition_case(conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
+                               expected_version=case["version"], event_type=EventType.COMPLETED,
+                               payload={"answer_ref": str(uuid4()),
+                                        "state_patch": {"answer": answer, "applied_actions": applied}},
+                               actor_type="controller", actor_id=actor_id, outbox=outbox)
 
     async def resume(self, *, tenant_id: str, case_id: UUID, token: str, actor_id: str = "controller", event_id: str | None = None) -> dict[str, Any]:
         with self.connection_factory() as conn:
@@ -393,7 +591,7 @@ class Controller:
                 try:
                     with conn.transaction():
                         transition_case(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.WAIT_EXPIRED,
-                                        payload={"wait_reason": (case.get("state_json") or {}).get("wait_reason", "customer_input")}, actor_type="controller", actor_id=actor_id)
+                                        payload={"wait_reason": self._wait_reason(case)}, actor_type="controller", actor_id=actor_id)
                     # The connection context may roll back when the original
                     # token error is re-raised. Make the escalation durable.
                     conn.commit()
@@ -405,7 +603,7 @@ class Controller:
                 raise ControllerError(str(exc)) from exc
             try:
                 with conn.transaction():
-                    wait_reason = (case.get("state_json") or {}).get("wait_reason", "customer_input")
+                    wait_reason = self._wait_reason(case)
                     node = RESUME_NODE_FOR_WAIT[wait_reason]
                     self._transition_with_retry(conn, tenant_id=tenant_id, case_id=case_id, expected_version=case["version"], event_type=EventType.VALID_INPUT,
                                                 payload={"resume_token_hash": self.case_service.token_hash(token), "state_patch": {"resume_token_used": True, "last_resume_event_id": event_id}}, actor_id=actor_id)

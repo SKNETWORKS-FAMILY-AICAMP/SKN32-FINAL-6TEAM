@@ -8,25 +8,32 @@
 """
 from __future__ import annotations
 
+from typing import Any
+
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
 from ._base import TravelTeamBase
+from .itinerary_changes import (NoChange, next_after, plan_route_adjustment, route_of,
+                                route_targets)
+from .itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
 
-class MobilityTeam(TravelTeamBase):
+class MobilityTeam(ItineraryWork, TravelTeamBase):
     manifest = TeamManifest(
         team_id="mobility",
         display_name="Mobility Team",
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
-        capabilities=["mobility.check_route", "mobility.status", "mobility.exception"],
+        capabilities=["mobility.check_route", "mobility.status", "mobility.exception",
+                      "mobility.itinerary"],   # ★`[2026-09-17]` 여행 일정 관리 — 구간 사건 · 재요청
         accepted_case_types=["mobility"],
-        required_context=["case_state", "policy", "db_facts", "history"],
-        allowed_tools=["read.route", "read.transit", "read.policy"],
+        # ★`[2026-09-17]` `policy` 를 뺐다 — 이 Team 은 정책 문서를 판단에 쓰지 않는다(선언만 있었다).
+        required_context=["case_state", "db_facts", "history"],
+        allowed_tools=["read.route", "read.transit", "read.policy", "read.route_events", *ITINERARY_TOOLS],
         knowledge_scope=["mobility", "transit", "route_exception"],
-        max_steps=6,
+        max_steps=12,
         active=True,
-        implementation_revision="2026-09-09",
+        implementation_revision="2026-09-17",
         default_capability="mobility.check_route",
     )
 
@@ -35,17 +42,41 @@ class MobilityTeam(TravelTeamBase):
     _INCIDENT_MARKERS = ("놓쳤", "못 탔", "끊겼", "지연됐", "결항", "운행 중단")
 
     @staticmethod
-    def select_capability(intent: str | None, input_text: str) -> str | None:
+    def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
+        # ★`[2026-09-17]` 여행이 정해진 Case 는 일정 관리로 — 문구 판정보다 먼저 본다.
+        if ItineraryWork._wants_itinerary(state or {}):
+            return "mobility.itinerary"
         if intent != "mobility":
             return None
         if any(marker in input_text for marker in MobilityTeam._INCIDENT_MARKERS):
             return "mobility.exception"
         return None   # 신호가 없으면 기본 동작에 맡긴다
 
+    async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """감시가 연 Case — 구간 사건을 **다시 읽고**, 계획한 수단이 막혔으면 경로를 다시 고른다."""
+        trigger = task.context.current_state.get("trigger") or {}
+        item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
+        if item is None:
+            return self.settle(task, ctx, NoChange("gone"))
+        route = route_of(item) if item.kind == "mobility" else None
+        if route is None:
+            return self._unknown(task, "경로 정의", ctx["evidence"])
+        view = self._read(task, "read.route_events", {"targets": route_targets(route)}, ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.route_events", claim="구간 운행·통제 사건",
+                                         value=view, base=ctx["evidence"])
+        if view is None or view.get("events") is None:
+            # ★사건을 못 읽었다 — 「사건 없음」으로 넘기지 않는다(결정 15 의 치명).
+            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
+        plan = plan_route_adjustment(item=item, following=next_after(ctx["items"], item), route=route,
+                                     events=view["events"], now=ctx["at"])
+        return self.settle(task, ctx, plan)
+
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
+        if task.capability == self.itinerary_capability:
+            return await self.run_itinerary(task)
 
         seen: set[str] = set()
         route = self._read(task, "read.route", {"case_id": str(task.case_id)}, seen)

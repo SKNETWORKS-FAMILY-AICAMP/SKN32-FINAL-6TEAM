@@ -48,6 +48,9 @@ def render(payload: dict[str, Any]) -> str:
         lines.append("다른 안: " + ", ".join(map(str, others)))
     if payload.get("version") is not None:
         lines.append(f"(일정 버전 {payload['version']})")
+    if payload.get("plan_url"):
+        # ★상태의 정본은 링크다(v11 §6-A) — 안내에는 늘 붙인다.
+        lines.append(str(payload["plan_url"]))
     content = "\n".join(lines)
     if len(content) > MAX_CONTENT:
         content = content[:MAX_CONTENT - 12] + "\n…(잘림)"

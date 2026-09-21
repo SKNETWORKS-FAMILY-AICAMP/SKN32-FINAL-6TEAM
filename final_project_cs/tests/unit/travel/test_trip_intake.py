@@ -42,3 +42,33 @@ def test_extract_uses_the_chat_and_validates():
             assert "type" in system and user == DELAY
             return {"type": "delay", "minutes": "70", "products": []}
     assert extract(DELAY, Chat()) == {"type": "delay", "minutes": 70}
+
+
+def test_rollback_needs_a_version_number_that_is_in_the_sentence():
+    from app.modules.travel_ops.trip_intake import validate
+    assert validate({"type": "rollback", "to_version": 6}, "6번 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": 6}
+    assert validate({"type": "rollback", "to_version": 4}, "6번 일정으로 되돌려 주세요") is None   # 지어낸 번호
+    assert validate({"type": "rollback", "to_version": None}, "예전 일정으로 되돌려 주세요") is None
+
+
+def test_the_interpreter_picks_the_team_from_the_report_not_the_classifier():
+    from app.modules.travel_ops.subjects import make_subject_interpreter
+    reports = {"늦": {"type": "delay", "minutes": 70}, "품절": {"type": "stock_out", "products": ["라면"]},
+               "바꿔": {"type": "change"}, "궁금": {"type": "other"}}
+    calls = []
+
+    def extractor(text):
+        calls.append(text)
+        return next(value for key, value in reports.items() if key in text)
+
+    interpret = make_subject_interpreter(extractor)
+    ref = {"kind": "trip", "id": "t", "recent_part_kind": "mobility"}
+    assert interpret(text="70분 늦어요", subject_ref=ref)["routing_hint"] == "dining"
+    assert interpret(text="라면 품절", subject_ref=ref)["routing_hint"] == "activity"
+    assert interpret(text="다른 걸로 바꿔줘", subject_ref=ref)["routing_hint"] == "mobility"
+    assert interpret(text="그냥 궁금해요", subject_ref=ref)["routing_hint"] is None
+    # ★화면 버튼(구조가 정해진 요청)은 모델을 부르지 않는다
+    before = len(calls)
+    structured = interpret(text="화면에서 다른 안 선택",
+                           subject_ref={**ref, "part_kind": "dining", "request": {"type": "change", "at": "x"}})
+    assert structured == {"routing_hint": "dining", "report": {"type": "change"}} and len(calls) == before

@@ -86,7 +86,8 @@ class TeamRegistry:
         return matches[0]
 
     @staticmethod
-    def capability_for(entry: RegisteredTeam, intent: str | None = None, *, input_text: str | None = None) -> str:
+    def capability_for(entry: RegisteredTeam, intent: str | None = None, *, input_text: str | None = None,
+                       state: dict | None = None) -> str:
         """Return the registered capability selected for a resolved Team."""
         # ★intent(5종, 거친 라벨)만으로는 팀의 capability(팀마다 2~6종,
         #   세분화된 동작) 중 어느 것이 맞는지 못 가른다 — 실측으로 확인된
@@ -104,7 +105,16 @@ class TeamRegistry:
         intent = (intent or "").lower() or None
         select = getattr(entry.module, "select_capability", None)
         if callable(select):
-            chosen = select(intent, input_text or "")
+            # ★`[결정 2026-09-17]` 세 번째 인자(`state`)를 **선언한 모듈에만** 넘긴다.
+            #   두 인자 모듈은 그대로 돈다 — 모든 Team 을 한꺼번에 고치지 않게.
+            import inspect
+
+            try:
+                accepts_state = len(inspect.signature(select).parameters) >= 3
+            except (TypeError, ValueError):
+                accepts_state = False
+            chosen = (select(intent, input_text or "", dict(state or {})) if accepts_state
+                      else select(intent, input_text or ""))
             if chosen is not None:
                 if chosen not in entry.manifest.capabilities:
                     raise RegistryError(
