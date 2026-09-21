@@ -454,8 +454,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     @router.get("/plan/{trip_id}")
     def plan(trip_id: UUID, t: str = Query(...), format: str | None = Query(None)):
-        """★로그인 없는 링크. 토큰이 틀리면 **있는지도 말하지 않는다**(404)."""
-        tenant = settings_module.get_settings().tenant_id
+        """★로그인 없는 링크. 토큰이 틀리면 **있는지도 말하지 않는다**(404).
+
+        ★`[2026-09-22]` 여행이 **어느 테넌트 것인지 먼저 찾아** 그 테넌트로 토큰을 맞춘다. 전에는
+          설정된 테넌트 하나로만 맞춰서, 다른 테넌트의 여행(시나리오 모드의 전용 테넌트)은 통지에
+          링크가 실려 나가도 **404** 였다 — 화면에서 링크를 눌러 보고 찾았다.
+        ★이 한 줄만 테넌트 조건 없이 읽는다(`CLAUDE.md` §1 의 예외). 이 경로에서는 **링크가 곧
+          자격**이고, 여기서 얻는 것은 테넌트 문자열 하나뿐이다. 그 뒤 모든 조회는 그 테넌트로 묶고,
+          토큰이 틀리면 여행이 있든 없든 404 다.
+        """
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT tenant_id FROM trips WHERE trip_id=%s", (trip_id,))
+            row = cur.fetchone()
+        tenant = row[0] if row else settings_module.get_settings().tenant_id
         if not hmac.compare_digest(t, plan_token(tenant, trip_id)):
             raise _error(404, "not_found", "resource not found")
         store = TripStore(tenant)

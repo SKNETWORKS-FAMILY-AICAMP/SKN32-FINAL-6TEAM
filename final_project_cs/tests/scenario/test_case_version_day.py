@@ -380,3 +380,22 @@ def test_a_failing_interpreter_is_recorded_and_the_case_still_routes_by_classifi
         state = cur.fetchone()[0]
     assert state["interpretation"]["error"].startswith("TimeoutError"), state
     assert state.get("routing_hint_verified") is not True, state
+
+
+def test_every_notice_carries_the_plan_link_whichever_path_made_it(case_world):
+    """★`[2026-09-22]` Case 버전의 변경 통지에 링크가 빠져 있었다 — 화면에서 통지를 열어 보고 찾았다.
+
+    시나리오용 여행 버전은 `TripStore.enqueue_notice` 가 붙여 주는데, Case 버전은 코어가 바깥함에
+    **직접** 써서 그 자리를 지나지 않았다. 통지를 만드는 길이 여럿이라 **길마다** 본다.
+    """
+    from app.modules.travel_ops.plan_link import plan_url
+
+    _run_case_day(case_world)
+    link = plan_url(case_world["tenant"], case_world["trip_id"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT dedupe_key, payload_json FROM outbox WHERE tenant_id=%s AND topic='trip.notice'",
+                    (case_world["tenant"],))
+        rows = cur.fetchall()
+    assert rows, "통지가 하나도 없다"
+    missing = [key for key, payload in rows if payload.get("plan_url") != link]
+    assert missing == [], missing

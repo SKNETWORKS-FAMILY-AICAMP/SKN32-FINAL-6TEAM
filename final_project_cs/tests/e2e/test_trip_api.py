@@ -403,3 +403,38 @@ def test_an_impossible_itinerary_is_refused_with_reasons_and_remedies(api):
 def test_the_confirmed_day_is_accepted_as_submitted(api):
     """판정이 운영을 막으면 안 된다 — 확정 시나리오 하루는 그대로 201."""
     assert _create(api, request_id="ok-1")["version"] == 1
+
+
+def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
+    """★시나리오 모드처럼 **다른 테넌트**의 여행도 링크로 열린다 — 통지에 실린 링크가 404 였다."""
+    from app.modules.travel_ops.itinerary import Item, TripStore
+    from app.modules.travel_ops.trip_api import plan_token
+
+    other = "planlink_" + uuid4().hex[:10]
+    with get_connection() as conn:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO tenants (tenant_id,name) VALUES (%s,%s)", (other, "plan link"))
+            cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,%s) RETURNING customer_id",
+                        (other, "someone"))
+            customer = cur.fetchone()[0]
+        store = TripStore(other)
+        with conn.transaction():
+            trip_id, _ = store.create_trip(conn, customer_id=customer, title="다른 테넌트 여행",
+                                           locale="ko", party_size=2,
+                                           items=[Item(item_id=uuid4(), seq=1, kind="activity",
+                                                       title="첫 일정", place_id=None,
+                                                       starts_at=_at("09:00"), ends_at=_at("10:00"))],
+                                           constraints={})
+    try:
+        page = api["client"].get(f"/plan/{trip_id}?t={plan_token(other, trip_id)}")
+        assert page.status_code == 200 and "다른 테넌트 여행" in page.text
+        wrong = api["client"].get(f"/plan/{trip_id}?t={plan_token(api['tenant'], trip_id)}")
+        assert wrong.status_code == 404          # ★다른 테넌트 이름으로 만든 토큰은 안 통한다
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM itinerary_items WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM itinerary_versions WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM trips WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM customers WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (other,))
