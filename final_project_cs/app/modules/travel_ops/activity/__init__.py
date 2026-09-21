@@ -21,7 +21,7 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
-from ._base import TravelTeamBase
+from .._base import TravelTeamBase
 
 
 class ActivityTeam(TravelTeamBase):
