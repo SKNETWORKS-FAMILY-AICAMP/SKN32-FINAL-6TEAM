@@ -229,8 +229,11 @@ BEGIN
         (p_place_uid, p_source_code, p_topic, p_target_at, p_outcome, v_state,
          CASE WHEN p_outcome = 'ok' THEN p_value_num END,
          p_value_detail, left(p_evidence, 500),
-         -- 실패는 짧게만 기억한다. 한 번 막혔다고 하루를 포기하지 않는다.
-         CASE WHEN p_outcome = 'ok' THEN dining.live_ttl(p_topic) ELSE 120 END,
+         -- 알아낸 것이 있을 때만 오래 기억한다.
+         -- 실패는 물론이고 「열어 봤지만 모르겠다」도 짧게만 둔다.
+         -- 알아낸 것이 없는데 조회를 막으면 하루 내내 모르는 채로 지나간다.
+         CASE WHEN p_outcome = 'ok' AND v_state <> 'unknown'
+              THEN dining.live_ttl(p_topic) ELSE 120 END,
          p_checked_by)
     RETURNING check_id INTO v_id;
 
