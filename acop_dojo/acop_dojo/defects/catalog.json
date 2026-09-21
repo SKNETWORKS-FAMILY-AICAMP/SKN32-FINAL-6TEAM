@@ -1,12 +1,15 @@
 {
  "baseline": {
   "failed": [
+   "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_cancel_is_executed_once_against_the_mock_supplier",
    "tests/integration/rag/test_rag_integration.py::test_search_relevance[\\ubc30\\uc1a1\\uc644\\ub8cc\\ub85c \\ub5b4\\ub294\\ub370 \\ubabb \\ubc1b\\uc558\\uc5b4\\uc694-doc_01]",
    "tests/integration/rag/test_rag_integration.py::test_search_relevance[\\uc8fc\\ubb38\\uc740 3\\uac1c\\uc778\\ub370 \\ubc18\\ud488\\uc744 5\\uac1c \\uc2e0\\uccad\\ud588\\uc5b4\\uc694-doc_14]",
    "tests/integration/rag/test_rag_integration.py::test_tenant_isolation_and_scope_filter"
   ],
-  "summary": "3 failed, 1127 passed, 4 skipped, 7 deselected, 36 warnings in 103.50s (0:01:43)",
-  "unexpected": []
+  "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 188.51s (0:03:08)",
+  "unexpected": [
+   "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_cancel_is_executed_once_against_the_mock_supplier"
+  ]
  },
  "entries": {
   "INV-APPROVAL-001": {
@@ -182,53 +185,18 @@
    ]
   },
   "INV-COMMERCE-005": {
-   "failed": [
-    "tests/contract/test_proposal_fields_are_declared.py::test_at_least_one_proposal_was_actually_produced",
-    "tests/e2e/test_case_version_rest.py::test_a_delay_sentence_changes_the_trip_through_the_rest_path",
-    "tests/e2e/test_case_version_rest.py::test_a_stock_question_is_answered_without_changing_the_trip",
-    "tests/e2e/test_scenario_mode.py::test_the_whole_day_runs_through_cases_when_the_engine_is_case",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_booking_that_became_locked_after_approval_is_not_touched",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_cancel_request_routes_to_prepare_cancel_and_waits_for_approval",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_case_that_waits_for_approval_is_not_run_again_by_the_sweeper",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_second_proposal_that_would_be_swallowed_goes_to_a_human",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_cancel_is_executed_once_against_the_mock_supplier",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_change_is_handed_off_not_invented",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_without_a_handler_the_old_resume_path_is_kept",
-    "tests/scenario/test_case_version_day.py::test_a_stale_base_version_is_escalated_not_applied",
-    "tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases",
-    "tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version",
-    "tests/scenario/test_case_version_day.py::test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong",
-    "tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case",
-    "tests/unit/travel/test_activity_weather.py::test_a_bad_forecast_still_does_not_produce_a_refusal",
-    "tests/unit/travel/test_activity_weather.py::test_a_calm_forecast_adds_no_advisory",
-    "tests/unit/travel/test_activity_weather.py::test_a_failed_check_is_fatal_instead_of_guessing",
-    "tests/unit/travel/test_activity_weather.py::test_a_forecast_with_no_usable_values_does_not_claim_it_was_checked",
-    "tests/unit/travel/test_activity_weather.py::test_an_indoor_place_passes_its_sensitivity_so_the_check_skips_weather",
-    "tests/unit/travel/test_activity_weather.py::test_no_report_at_all_is_fatal_too",
-    "tests/unit/travel/test_activity_weather.py::test_the_answer_says_it_is_a_forecast_not_an_observation",
-    "tests/unit/travel/test_activity_weather.py::test_the_check_is_one_call_carrying_coordinates_time_and_sensitivity",
-    "tests/unit/travel/test_activity_weather.py::test_the_forecast_hour_source_and_unconnected_checks_are_recorded",
-    "tests/unit/travel/test_evidence_accumulates.py::test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones",
-    "tests/unit/travel/test_evidence_accumulates.py::test_activity_keeps_every_source_it_read",
-    "tests/unit/travel/test_evidence_accumulates.py::test_booking_handoff_keeps_both_sides_of_the_comparison",
-    "tests/unit/travel/test_evidence_accumulates.py::test_dining_reads_the_booking_before_the_place",
-    "tests/unit/travel/test_weather_warning_and_advisory.py::test_a_failed_category_is_fatal_not_a_schedule_change",
-    "tests/unit/travel/test_weather_warning_and_advisory.py::test_a_warning_in_effect_means_the_schedule_must_change"
-   ],
+   "failed": [],
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": false,
-    "kills_tests": true,
+    "kills_tests": false,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "path": "app/modules/travel_ops/_base.py",
-   "summary": "35 failed, 1095 passed, 4 skipped, 7 deselected, 36 warnings in 89.60s (0:01:29)",
-   "title": "계약에 없는 능력을 받아도 처리한다",
-   "unique_failures": []
+   "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 129.60s (0:02:09)",
+   "title": "capability 검사를 Team 에서 뺀다"
   },
   "INV-CONFIG-001": {
    "failed": [
@@ -999,53 +967,18 @@
    ]
   },
   "INV-VOC-002": {
-   "failed": [
-    "tests/contract/test_proposal_fields_are_declared.py::test_at_least_one_proposal_was_actually_produced",
-    "tests/e2e/test_case_version_rest.py::test_a_delay_sentence_changes_the_trip_through_the_rest_path",
-    "tests/e2e/test_case_version_rest.py::test_a_stock_question_is_answered_without_changing_the_trip",
-    "tests/e2e/test_scenario_mode.py::test_the_whole_day_runs_through_cases_when_the_engine_is_case",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_booking_that_became_locked_after_approval_is_not_touched",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_cancel_request_routes_to_prepare_cancel_and_waits_for_approval",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_case_that_waits_for_approval_is_not_run_again_by_the_sweeper",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_a_second_proposal_that_would_be_swallowed_goes_to_a_human",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_cancel_is_executed_once_against_the_mock_supplier",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_an_approved_change_is_handed_off_not_invented",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_two_proposals_for_two_bookings_in_one_case_both_survive",
-    "tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py::test_without_a_handler_the_old_resume_path_is_kept",
-    "tests/scenario/test_case_version_day.py::test_a_stale_base_version_is_escalated_not_applied",
-    "tests/scenario/test_case_version_day.py::test_re_requests_run_through_cases",
-    "tests/scenario/test_case_version_day.py::test_the_case_version_runs_the_whole_day_like_the_trip_version",
-    "tests/scenario/test_case_version_day.py::test_the_interpretation_routes_correctly_even_when_the_classifier_prefix_is_wrong",
-    "tests/scenario/test_case_version_day.py::test_the_same_disruption_opens_one_case",
-    "tests/unit/travel/test_activity_weather.py::test_a_bad_forecast_still_does_not_produce_a_refusal",
-    "tests/unit/travel/test_activity_weather.py::test_a_calm_forecast_adds_no_advisory",
-    "tests/unit/travel/test_activity_weather.py::test_a_failed_check_is_fatal_instead_of_guessing",
-    "tests/unit/travel/test_activity_weather.py::test_a_forecast_with_no_usable_values_does_not_claim_it_was_checked",
-    "tests/unit/travel/test_activity_weather.py::test_an_indoor_place_passes_its_sensitivity_so_the_check_skips_weather",
-    "tests/unit/travel/test_activity_weather.py::test_no_report_at_all_is_fatal_too",
-    "tests/unit/travel/test_activity_weather.py::test_the_answer_says_it_is_a_forecast_not_an_observation",
-    "tests/unit/travel/test_activity_weather.py::test_the_check_is_one_call_carrying_coordinates_time_and_sensitivity",
-    "tests/unit/travel/test_activity_weather.py::test_the_forecast_hour_source_and_unconnected_checks_are_recorded",
-    "tests/unit/travel/test_evidence_accumulates.py::test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones",
-    "tests/unit/travel/test_evidence_accumulates.py::test_activity_keeps_every_source_it_read",
-    "tests/unit/travel/test_evidence_accumulates.py::test_booking_handoff_keeps_both_sides_of_the_comparison",
-    "tests/unit/travel/test_evidence_accumulates.py::test_dining_reads_the_booking_before_the_place",
-    "tests/unit/travel/test_weather_warning_and_advisory.py::test_a_failed_category_is_fatal_not_a_schedule_change",
-    "tests/unit/travel/test_weather_warning_and_advisory.py::test_a_warning_in_effect_means_the_schedule_must_change"
-   ],
+   "failed": [],
    "gates": {
     "applied": true,
     "applies": true,
-    "distinguishable": false,
-    "kills_tests": true,
+    "kills_tests": false,
     "not_collection_error": true,
     "reverts": true
    },
    "invariant": "ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
    "path": "app/modules/travel_ops/_base.py",
-   "summary": "35 failed, 1095 passed, 4 skipped, 7 deselected, 36 warnings in 96.73s (0:01:36)",
-   "title": "degraded 검사가 뒤집혔다",
-   "unique_failures": []
+   "summary": "4 failed, 1161 passed, 4 skipped, 7 deselected, 36 warnings in 127.44s (0:02:07)",
+   "title": "degraded 검사를 Team 에서 뺀다"
   },
   "INV-WAITINPUT-001": {
    "failed": [
