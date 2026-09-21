@@ -338,10 +338,18 @@ def parse_closure(raw: str) -> tuple[list[dict], list[str]]:
 
     if "설" in text or "추석" in text or "명절" in text:
         scope = "whole_period" if "연휴" in text else "day_of"
-        for name in ("설날", "추석"):
-            if name[0] in text or name in text:
-                out.append({"pattern_kind": "named_holiday",
-                            "holiday_name": name, "holiday_scope": scope})
+        named = [n for n in ("설날", "추석") if n[0] in text or n in text]
+        # 「명절당일」 처럼 어느 명절인지 안 적은 경우. 우리나라에서 명절은
+        # 통상 설과 추석이므로 둘 다로 본다. 고치기 전에는 이름을 못 찾아
+        # 규칙도 메모도 없이 사라졌고, 명절에 영업으로 판정됐다.
+        if not named:
+            named = ["설날", "추석"]
+            notes.append("명절 이름이 적혀 있지 않아 설과 추석으로 본다")
+        for name in named:
+            out.append({"pattern_kind": "named_holiday",
+                        "holiday_name": name, "holiday_scope": scope})
+        if "문의" in text or "확인" in text:
+            notes.append("휴무 여부를 업소에 문의하라는 표기가 있다")
         handled = True
 
     if re.search(r"\d{1,2}\s*월\s*\d{1,2}\s*일", text):

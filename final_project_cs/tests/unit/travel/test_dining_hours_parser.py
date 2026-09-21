@@ -214,6 +214,27 @@ def test_담지_못하는_휴무는_규칙을_만들지_않고_남긴다(text):
     assert notes
 
 
+@pytest.mark.parametrize("text, scope", [
+    ("명절당일", "day_of"),
+    ("명절연휴(전화문의)", "whole_period"),
+])
+def test_명절_이름이_없어도_설과_추석으로_본다(text, scope):
+    """★2026-09-21 회귀. 「명절당일」 처럼 어느 명절인지 안 적으면 설과 추석 글자를
+    못 찾아 규칙도 메모도 없이 사라졌다. 명절에 쉬는 집이 영업으로 판정돼
+    닫힌 집에 사람을 보내는 방향이었다.
+    """
+    rules, notes = ph.parse_closure(text)
+    assert {r["holiday_name"] for r in rules} == {"설날", "추석"}
+    assert {r["holiday_scope"] for r in rules} == {scope}
+    assert any("명절 이름" in n for n in notes)
+
+
+def test_문의하라는_표기를_메모로_남긴다():
+    """확정이 아니라는 신호다. 규칙은 만들되 사람이 볼 수 있게 남긴다."""
+    _, notes = ph.parse_closure("명절연휴(전화문의)")
+    assert any("문의" in n for n in notes)
+
+
 def test_당일의_일을_일요일로_읽지_않는다():
     """★2026-09-21 회귀. 「설·추석 당일」 에서 「당일」 의 「일」 을 일요일로 읽어
     매주 일요일 휴무가 함께 만들어졌다. 「토요일」 안의 「일」 과 같은 종류다.
