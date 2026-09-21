@@ -8,16 +8,16 @@ import json, sys
 from pathlib import Path
 
 def find_rules():
-    """인자로 받거나, 상위 폴더를 훑어 final_project_cs/app/infrastructure/travel/mobility/rules/rules_*.json 을 찾는다."""
+    """인자로 받거나, 상위 폴더를 훑어 final_project_cs/app/modules/travel_ops/mobility_engine/rules/rules_*.json 을 찾는다."""
     if len(sys.argv) > 1:
         return Path(sys.argv[1])
     here = Path(__file__).resolve()
     for parent in here.parents:
-        hits = sorted((parent / "final_project_cs" / "app" / "infrastructure"
-                      / "travel" / "mobility" / "rules").glob("rules_*.json"))
+        hits = sorted((parent / "final_project_cs" / "app" / "modules"
+                      / "travel_ops" / "mobility_engine" / "rules").glob("rules_*.json"))
         if hits:
             return hits[-1]
-    raise SystemExit("final_project_cs/app/infrastructure/travel/mobility/rules/rules_*.json 을 찾지 못했다. 경로를 인자로 주면 된다.")
+    raise SystemExit("final_project_cs/app/modules/travel_ops/mobility_engine/rules/rules_*.json 을 찾지 못했다. 경로를 인자로 주면 된다.")
 
 
 RULES = find_rules()

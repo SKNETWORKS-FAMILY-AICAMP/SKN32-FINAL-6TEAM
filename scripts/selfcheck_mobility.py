@@ -39,14 +39,14 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.infrastructure.travel.mobility.verify_time import Timetable, Verifier                       # noqa: E402
-from app.infrastructure.travel.mobility.line_order import LineOrder                         # noqa: E402
-from app.infrastructure.travel.mobility.transfer_walk import TransferWalk                   # noqa: E402
-from app.infrastructure.travel.mobility.bus import BusRoutes                                # noqa: E402
-from app.infrastructure.travel.mobility.geo import StationCoords                            # noqa: E402
-from app.infrastructure.travel.mobility.exits import StationExits                           # noqa: E402
-from app.infrastructure.travel.mobility.bike import BikeStations                             # noqa: E402
-from app.infrastructure.travel.mobility.timeutil import to_service_min, fmt_min, day_type_of  # noqa: E402
+from app.modules.travel_ops.mobility_engine.verify_time import Timetable, Verifier                       # noqa: E402
+from app.modules.travel_ops.mobility_engine.line_order import LineOrder                         # noqa: E402
+from app.modules.travel_ops.mobility_engine.transfer_walk import TransferWalk                   # noqa: E402
+from app.modules.travel_ops.mobility_engine.bus import BusRoutes                                # noqa: E402
+from app.modules.travel_ops.mobility_engine.geo import StationCoords                            # noqa: E402
+from app.modules.travel_ops.mobility_engine.exits import StationExits                           # noqa: E402
+from app.modules.travel_ops.mobility_engine.bike import BikeStations                             # noqa: E402
+from app.modules.travel_ops.mobility_engine.timeutil import to_service_min, fmt_min, day_type_of  # noqa: E402
 
 SEV_ORDER = {"critical": 0, "warn": 1, "info": 2}
 
@@ -441,9 +441,9 @@ def main():
     ap.add_argument("--station-exits")
 
     ap.add_argument("--bike-stations")
-    ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "rules_v0.3.json"))
+    ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json"))
     ap.add_argument("--holidays",
-                    default=str(REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "holidays_2026_2027.json"))
+                    default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json"))
     ap.add_argument("--base-date", default="2026-09-14", help="요일 대표일을 여기서부터 고른다")
     ap.add_argument("--step", type=int, default=30, help="출발 시각 간격(분)")
     ap.add_argument("--from-min", type=int, default=5 * 60)

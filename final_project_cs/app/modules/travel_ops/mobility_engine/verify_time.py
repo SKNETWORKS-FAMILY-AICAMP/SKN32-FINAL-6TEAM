@@ -1,11 +1,11 @@
-# app/infrastructure/travel/mobility/verify_time.py — 시각 검증기 v2 (지하철 분기)
+# app/modules/travel_ops/mobility_engine/verify_time.py — 시각 검증기 v2 (지하철 분기)
 #
 # "그 구간 이동이 그 시각에 성립하는가" 를 코드가 판정한다. 이 모듈의 본체다.
 # 실행: 저장소 루트에서
 #   $env:PYTHONPATH="final_project_cs"    (한 셸에 한 번)
-#   python -m app.infrastructure.travel.mobility.verify_time --cases tests/mobility/synthetic_legs_v1.json --check-expect
-#   python -m app.infrastructure.travel.mobility.verify_time --cases tests/mobility/synthetic_legs_v1.json --case LT-03 --verbose
-#   python -m app.infrastructure.travel.mobility.verify_time --cases ... --timetable <경로> --json out.json
+#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/synthetic_legs_v1.json --check-expect
+#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/synthetic_legs_v1.json --case LT-03 --verbose
+#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases ... --timetable <경로> --json out.json
 #
 # v1 과 달라진 것 (2026-09-10)
 #   ★ 시각을 **분 단위 정수**로 다룬다. strptime 을 쓰지 않는다 — 시간표 dep_time 에

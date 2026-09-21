@@ -49,7 +49,7 @@ def run_all(outdir):
         out = outdir / (fn.replace(".json", "_result.json"))
         if out.exists():
             out.unlink()
-        cmd = [sys.executable, "-m", "app.infrastructure.travel.mobility.verify_time",
+        cmd = [sys.executable, "-m", "app.modules.travel_ops.mobility_engine.verify_time",
                "--cases", str(T / fn), "--json", str(out), "--check-expect"]
         if tt:
             cmd += ["--timetable", str(tt)]

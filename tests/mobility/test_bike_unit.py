@@ -18,9 +18,9 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.infrastructure.travel.mobility.verify_time import Verifier      # noqa: E402
-from app.infrastructure.travel.mobility.geo import StationCoords        # noqa: E402
-from app.infrastructure.travel.mobility.bike import (BikeStations, BikeLive,  # noqa: E402
+from app.modules.travel_ops.mobility_engine.verify_time import Verifier      # noqa: E402
+from app.modules.travel_ops.mobility_engine.geo import StationCoords        # noqa: E402
+from app.modules.travel_ops.mobility_engine.bike import (BikeStations, BikeLive,  # noqa: E402
                                                         BikeRouter, fare)
 
 fails = []
@@ -33,8 +33,8 @@ def ck(cond, msg):
 
 
 def main():
-    rules = json.loads((REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
-    holidays = set(json.loads((REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
+    rules = json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
+    holidays = set(json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
     try:
         from scripts.collect._paths import PROCESSED
         sc = StationCoords.load(PROCESSED / "mobility" / "station_coords.json")

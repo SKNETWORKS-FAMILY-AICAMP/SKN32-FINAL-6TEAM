@@ -17,13 +17,13 @@ sys.path.insert(0, str(HERE.parent))                 # 저장소 루트
 sys.path.insert(0, str(HERE.parent / "final_project_cs"))   # 판정 패키지
 sys.path.insert(0, str(HERE / "collect"))            # _paths
 from _paths import PROCESSED, RAW_MOBILITY           # noqa: E402
-from app.infrastructure.travel.mobility.timeutil import to_min   # noqa: E402
+from app.modules.travel_ops.mobility_engine.timeutil import to_min   # noqa: E402
 
 KST = timezone(timedelta(hours=9))
 MOB = PROCESSED / "mobility"
 SCHEMA = HERE.parent / "sql" / "mobility_schema.sql"
-CONFIG = (HERE.parent / "final_project_cs" / "app" / "infrastructure"
-          / "travel" / "mobility" / "rules")
+CONFIG = (HERE.parent / "final_project_cs" / "app" / "modules"
+          / "travel_ops" / "mobility_engine" / "rules")
 REF_TABLES = ["mob_timetable", "mob_line_edge", "mob_station_coord", "mob_transfer_walk",
               "mob_congestion", "mob_bus_route", "mob_bus_stop", "mob_bus_speed",
               "mob_airport_bus_departure", "mob_holiday"]

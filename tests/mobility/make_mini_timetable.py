@@ -22,8 +22,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "final_project_cs"))
-from app.infrastructure.travel.mobility.line_order import LineOrder  # noqa: E402
-from app.infrastructure.travel.mobility.timeutil import fmt_min      # noqa: E402
+from app.modules.travel_ops.mobility_engine.line_order import LineOrder  # noqa: E402
+from app.modules.travel_ops.mobility_engine.timeutil import fmt_min      # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "mini_timetable_v2.jsonl"
 FETCHED = "2026-09-09"

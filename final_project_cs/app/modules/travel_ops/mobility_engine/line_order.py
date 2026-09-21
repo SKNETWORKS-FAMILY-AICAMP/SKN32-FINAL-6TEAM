@@ -1,8 +1,8 @@
-# final_project_cs/app/infrastructure/travel/mobility/line_order.py — line_station_order_v1.json 조회 계층
+# final_project_cs/app/modules/travel_ops/mobility_engine/line_order.py — line_station_order_v1.json 조회 계층
 # 02번 방(막차 판정)이 쓰는 진입점. 판정은 코드가 하고, 값마다 근거 등급을 함께 돌려준다.
 #
 # 쓰는 법
-#   from app.infrastructure.travel.mobility.line_order import LineOrder
+#   from app.modules.travel_ops.mobility_engine.line_order import LineOrder
 #   lo = LineOrder.load()
 #   lo.passes("02호선", "강남", dest="성수", target="잠실")
 #     → Verdict(value=True, grade="확정", path=[...], reason="...")

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """이동·동선 Team 모듈 — **껍데기**. 팀 저장소의 Team 모듈 자리에 놓는다.
 
-이 파일만 계약을 만진다. 본체(`final_project_cs/app/infrastructure/travel/mobility/adapter.py`)는 계약을 모른다.
+이 파일만 계약을 만진다. 본체(`final_project_cs/app/modules/travel_ops/mobility_engine/adapter.py`)는 계약을 모른다.
 계약이 바뀌면 **여기만** 바뀐다.
 
 등록: config/project.yaml 에 한 줄.
@@ -25,7 +25,7 @@ from typing import Any
 
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
-from app.infrastructure.travel.mobility.adapter import MobilityAdapter
+from app.modules.travel_ops.mobility_engine.adapter import MobilityAdapter
 
 # ★ 두 값이 우연히 같은 글자일 뿐 **다른 축**이다. 9/14 판은 INTENT 하나로 둘을 겸해서 갈래가 안 갈렸다.
 CASE_TYPE = "mobility"      # issue_code 접두 — 팀을 고른다 [feedback.ISSUE_CODES]
@@ -67,7 +67,7 @@ class MobilityTeam:
     def __init__(self, verifier: Any = None) -> None:
         # 판정기는 시간표 195MB 를 든다 — 프로세스 수명 동안 **하나만** 만든다.
         if verifier is None:
-            from app.infrastructure.travel.mobility.runtime import get_verifier     # 무거운 것은 늦게 든다
+            from app.modules.travel_ops.mobility_engine.runtime import get_verifier     # 무거운 것은 늦게 든다
             verifier = get_verifier()      # 프로세스당 하나 — 약 33초 · 상주 약 91MB
         self._adapter = MobilityAdapter(
             verifier.verify_case,

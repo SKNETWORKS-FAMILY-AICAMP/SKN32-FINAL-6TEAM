@@ -14,7 +14,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "final_project_cs"))
 sys.path.insert(0, str(REPO))
-from app.infrastructure.travel.mobility.timeutil import (to_min,  # noqa: E402
+from app.modules.travel_ops.mobility_engine.timeutil import (to_min,  # noqa: E402
                                                           to_service_min, fmt_min)
 
 DEFAULT = ["02호선:성수", "02호선:까치산", "02호선:신도림", "02호선:도림천",

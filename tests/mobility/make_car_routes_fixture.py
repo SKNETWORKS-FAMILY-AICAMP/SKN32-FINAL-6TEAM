@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "final_project_cs"))
-from app.infrastructure.travel.mobility.car import FixtureRouter, hav  # noqa: E402
+from app.modules.travel_ops.mobility_engine.car import FixtureRouter, hav  # noqa: E402
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--graph-dir")

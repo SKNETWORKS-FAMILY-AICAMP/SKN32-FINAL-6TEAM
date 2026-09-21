@@ -15,7 +15,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "final_project_cs"))
-from app.infrastructure.travel.mobility.fold import fold_case  # noqa: E402
+from app.modules.travel_ops.mobility_engine.fold import fold_case  # noqa: E402
 
 SCHEMA = REPO / "tests" / "mobility" / "contract" / "mob_evidence_value_v1.schema.json"
 METRICS = REPO / ".metrics"
