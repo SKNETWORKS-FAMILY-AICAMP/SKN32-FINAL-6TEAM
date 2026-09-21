@@ -39,6 +39,7 @@ domain: neutral
 | `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트 — **20분** |
 | `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 |
 | `map` | 웹 지도. 간선이 숨겨져 있다 — 아래 |
+| `serve [--port N]` | **브라우저에서 돌린다** — 로컬 서버(127.0.0.1)를 띄운다. 실행·출력·답변 전송까지 화면에서 한다 |
 | `build steps\|start\|brief N\|check N\|reveal N <파일>` | **처음부터 쌓기** — 빈 폴더에서 베이스먼트를 직접 만든다 (대상은 `final_project_sample`) |
 
 `[실측]` 2026-09-06 [README](../README.md)와 대조해 위 다섯을 채웠다. `boss`에는 `--defect ID`·`--force`도 있다. 파이썬 3.12 이상(`sys.monitoring`)과 대상 저장소의 PostgreSQL이 필요하다 — 470개 테스트 중 상당수가 DB를 쓴다.
