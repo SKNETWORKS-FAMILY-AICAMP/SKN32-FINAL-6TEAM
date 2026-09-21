@@ -134,6 +134,9 @@ if args.only != "gaps":
                 print(f"  역코드 없음: {ln} {j}")
                 continue
             # 접속역 바로 옆 지선 역(FR '<base>-1')의 시간표에서 지선 열차번호를 모은다.
+            # ★ fr_base_of 는 set 이라 원소가 둘 이상이면 next(iter(...)) 가 PYTHONHASHSEED 에 따라 흔들린다.
+            #   2026-09-21(35번 방) stations_all.json 기준 서울 접속역 5곳 모두 원소 1개(금천구청 P144 · 병점 P157 ·
+            #   소요산 100 · 성수 211 · 신도림 234) → 지금 산출은 영향 없음. 둘 이상이 생기면 sorted(...) 로 고정할 것.
             first = nm_of_fr.get((ln, f"{next(iter(fr_base_of(ln, dests)), '')}-1"))
             probe_cd = cd_of.get((ln, first)) if first else None
             for day_key, wk in WEEK.items():
