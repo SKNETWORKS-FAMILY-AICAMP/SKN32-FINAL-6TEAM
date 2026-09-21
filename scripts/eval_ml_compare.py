@@ -5,7 +5,7 @@
 질문 하나: **시간표를 안 보고, 입력 특징만으로 판정을 배울 수 있는가.**
 배울 수 있으면 시간표 46만 행이 필요 없고, 못 배우면 "판정은 코드"가 숫자로 서는 것이다.
 
-  A · 현행  : 시간표 조회 + 규칙 코드 (scripts/verify_time.py)
+  A · 현행  : 시간표 조회 + 규칙 코드 (final_project_cs/app/infrastructure/travel/mobility/verify_time.py)
   C · ML    : 역쌍·좌표·노선·요일·시각 → 판정 3클래스 (feasible / infeasible / unknown)
               로지스틱 · HistGradientBoosting · MLP(작은 DL)
 
@@ -27,16 +27,17 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _p in (REPO / "final_project_cs", REPO):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
-from scripts.verify_time import Timetable, Verifier                        # noqa: E402
+from app.infrastructure.travel.mobility.verify_time import Timetable, Verifier                        # noqa: E402
 from scripts.selfcheck_mobility import build_probes, expand_seeds           # noqa: E402
-from modules.mobility.line_order import LineOrder                          # noqa: E402
-from modules.mobility.transfer_walk import TransferWalk                    # noqa: E402
-from modules.mobility.bus import BusRoutes                                 # noqa: E402
-from modules.mobility.geo import StationCoords                             # noqa: E402
-from modules.mobility.timeutil import day_type_of, to_service_min          # noqa: E402
+from app.infrastructure.travel.mobility.line_order import LineOrder                          # noqa: E402
+from app.infrastructure.travel.mobility.transfer_walk import TransferWalk                    # noqa: E402
+from app.infrastructure.travel.mobility.bus import BusRoutes                                 # noqa: E402
+from app.infrastructure.travel.mobility.geo import StationCoords                             # noqa: E402
+from app.infrastructure.travel.mobility.timeutil import day_type_of, to_service_min          # noqa: E402
 
 CLASSES = ["feasible", "infeasible", "unknown"]
 KO = {"feasible": "성립", "infeasible": "불가", "unknown": "근거없음"}
@@ -177,8 +178,8 @@ def main():
     ap.add_argument("--from-min", type=int, default=5 * 60)
     ap.add_argument("--to-min", type=int, default=28 * 60)
     ap.add_argument("--base-date", default="2026-09-14")
-    ap.add_argument("--rules", default=str(REPO / "config" / "mobility" / "rules_v0.3.json"))
-    ap.add_argument("--holidays", default=str(REPO / "config" / "mobility" / "holidays_2026_2027.json"))
+    ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "rules_v0.3.json"))
+    ap.add_argument("--holidays", default=str(REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "holidays_2026_2027.json"))
     ap.add_argument("--reg", nargs="+", default=None, help="회귀 케이스 파일(expect 있는 것)")
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seeds-rng", type=int, nargs="+", default=[0, 1, 2, 3, 4])

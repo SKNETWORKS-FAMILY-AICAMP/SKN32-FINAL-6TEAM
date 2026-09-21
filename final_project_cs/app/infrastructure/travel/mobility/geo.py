@@ -24,7 +24,7 @@ class StationCoords:
     @classmethod
     def load(cls, path=None):
         if path is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             path = PROCESSED / "mobility" / "station_coords.json"
         p = Path(path)
         if not p.exists():

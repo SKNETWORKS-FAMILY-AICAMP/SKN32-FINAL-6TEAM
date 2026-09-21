@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """판정기를 프로세스당 하나 세운다. 껍데기(`team_mobility.py`)가 부르는 유일한 무거운 자리.
 
-  from modules.mobility.runtime import build_verifier
+  from app.infrastructure.travel.mobility.runtime import build_verifier
   v = build_verifier()          # 한 번. 약 33초 · 상주 약 91MB
 
 왜 전부 올리나 (2026-09-14 실측, `scripts/probe_timetable_load.py`)
@@ -30,29 +30,25 @@ import sys
 import threading
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+PKG = Path(__file__).resolve().parent
 _LOCK = threading.Lock()
 _SINGLETON = None
 
+# ★ 31번 방(2026-09-21) — 판정기가 같은 패키지 안으로 들어왔다.
+#   종전에는 scripts/verify_time.py 를 spec_from_file_location 으로 **파일째** 들었다
+#   ("CLI 스크립트라 패키지가 아니다"). 이제 형제 모듈이라 그 트릭이 필요 없다.
+#   그 트릭을 남겨 두면 파일 로드된 모듈 안에서 상대 import 가 죽는다.
+from . import verify_time as _vt                            # noqa: E402
+
 
 def _load_verify_time():
-    """scripts/verify_time.py 를 모듈로 든다. CLI 스크립트라 패키지가 아니다."""
-    if "mobility_verify_time" in sys.modules:
-        return sys.modules["mobility_verify_time"]
-    path = REPO / "scripts" / "verify_time.py"
-    if not path.exists():
-        raise RuntimeError(f"판정기를 못 찾았다: {path}")
-    spec = importlib.util.spec_from_file_location("mobility_verify_time", path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["mobility_verify_time"] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    return _vt
 
 
 def default_paths():
-    from scripts.collect._paths import PROCESSED           # noqa: E402
+    from .paths import PROCESSED                            # noqa: E402
     p = PROCESSED / "mobility"
-    c = REPO / "config" / "mobility"
+    c = PKG / "rules"
     return {"timetable": p / "timetable_v1.jsonl",
             "order": p / "line_station_order_v1.json",
             "transfer_walk": p / "transfer_walk_v1.json",
@@ -112,7 +108,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
     gh = os.environ.get("MOBILITY_GH_URL") or ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value")
     bike_router = None
     if gh and str(gh).startswith("http"):
-        from modules.mobility.car import make_router
+        from .car import make_router
         rt = make_router(gh)
         if rt.info():
             bike_router = vt.BikeRouter(rt, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")

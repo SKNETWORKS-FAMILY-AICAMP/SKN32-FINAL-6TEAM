@@ -17,9 +17,10 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve()
-ROOT = next((p for p in HERE.parents if (p / "modules" / "mobility").is_dir()), None)
+ROOT = next((p for p in HERE.parents
+            if (p / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility").is_dir()), None)
 if ROOT is None:
-    raise SystemExit(f"modules/mobility 를 못 찾았다 (시작: {HERE})")
+    raise SystemExit(f"final_project_cs/app/infrastructure/travel/mobility 를 못 찾았다 (시작: {HERE})")
 CS = ROOT / "final_project_cs"
 if not (CS / "app" / "core" / "registry.py").exists():
     raise SystemExit(f"팀 코어가 없다: {CS} — develop 을 받은 뒤 돌린다")

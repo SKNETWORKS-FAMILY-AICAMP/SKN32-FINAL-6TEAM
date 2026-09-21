@@ -36,13 +36,14 @@ import requests
 from _paths import RAW_MOBILITY, PROCESSED
 
 REPO = Path(__file__).resolve().parents[2]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _p in (REPO / "final_project_cs", REPO):          # 31번 방 — 판정 패키지가 final_project_cs 아래로 갔다
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 try:
     # ★ 요일축은 판정기와 **같은 자**를 써야 한다. 여기서 따로 정의하면
     #   실측값은 holiday 로 쌓였는데 판정은 weekday 로 찾는 어긋남이 난다.
-    from modules.mobility.timeutil import day_type_of
-    _HOL = set(json.loads((REPO / "config" / "mobility" / "holidays_2026_2027.json")
+    from app.infrastructure.travel.mobility.timeutil import day_type_of
+    _HOL = set(json.loads((REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "holidays_2026_2027.json")
                           .read_text(encoding="utf-8"))["holidays"])
 except Exception as _e:                                    # 관측만 할 때는 없어도 된다
     day_type_of, _HOL = None, set()
@@ -165,7 +166,7 @@ if missing:
 if not obs_paths:
     raise SystemExit(f"관측 파일이 하나도 없다 → {RAW_MOBILITY}/bus_pos_obs_*.jsonl")
 if day_type_of is None:
-    raise SystemExit("요일축을 못 읽었다 — config/mobility/holidays_2026_2027.json 을 확인한다")
+    raise SystemExit("요일축을 못 읽었다 — final_project_cs/app/infrastructure/travel/mobility/rules/holidays_2026_2027.json 과 PYTHONPATH 를 확인한다")
 print("집계 대상 " + ", ".join(x.name for x in obs_paths))
 
 # 노선별 정류장 누적거리 (sect_dist_m 는 직전 정류장으로부터의 거리)
@@ -247,7 +248,7 @@ result = {
     "method": "같은 차량(plainNo)의 연속 관측을 run 으로 묶고, run 안의 모든 간격을 거리 0 까지 포함해 "
               "누적한 뒤 총거리÷총시간. 중간 정차 포함, 기·종점 구간 제외. "
               "순번이 안 늘어난 간격을 버리면 빠른 구간만 남아 속도가 부풀려지므로 버리지 않는다. "
-              "요일축(weekday/holiday)은 modules.mobility.timeutil.day_type_of 와 같은 자로 나눈다.",
+              "요일축(weekday/holiday)은 app.infrastructure.travel.mobility.timeutil.day_type_of 와 같은 자로 나눈다.",
     "grade": "추정", "routes": {},
 }
 

@@ -12,7 +12,7 @@
 import json, os, math, datetime as _dt
 from pathlib import Path
 
-from modules.mobility.geo import meters
+from .geo import meters
 
 
 class BikeStations:
@@ -25,7 +25,7 @@ class BikeStations:
     @classmethod
     def load(cls, path=None):
         if path is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             path = PROCESSED / "mobility" / "bike_stations_v1.jsonl"
         p = Path(path)
         if not p.exists():

@@ -14,7 +14,7 @@ import json, collections
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from modules.mobility.timeutil import to_min
+from .timeutil import to_min
 
 
 @dataclass
@@ -50,7 +50,7 @@ class BusRoutes:
     @classmethod
     def load(cls, route_path=None, stop_path=None):
         if route_path is None or stop_path is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             base = PROCESSED / "mobility"
             route_path = route_path or base / "bus_route_v1.jsonl"
             stop_path = stop_path or base / "bus_stops_v1.jsonl"
@@ -116,7 +116,7 @@ class BusRoutes:
 
     def stops_near(self, lat, lng, within_m):
         """좌표 근처의 정류장 행. (거리, row) 로 가까운 순."""
-        from modules.mobility.geo import meters
+        from .geo import meters
         out = []
         for rows in self.stops.values():
             for s in rows:

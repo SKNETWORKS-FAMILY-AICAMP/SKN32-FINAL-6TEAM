@@ -1,10 +1,11 @@
-# scripts/verify_time.py — 시각 검증기 v2 (지하철 분기)
+# app/infrastructure/travel/mobility/verify_time.py — 시각 검증기 v2 (지하철 분기)
 #
 # "그 구간 이동이 그 시각에 성립하는가" 를 코드가 판정한다. 이 모듈의 본체다.
 # 실행: 저장소 루트에서
-#   python scripts/verify_time.py --cases tests/mobility/synthetic_legs_v1.json --check-expect
-#   python scripts/verify_time.py --cases tests/mobility/synthetic_legs_v1.json --case LT-03 --verbose
-#   python scripts/verify_time.py --cases ... --timetable <경로> --json out.json
+#   $env:PYTHONPATH="final_project_cs"    (한 셸에 한 번)
+#   python -m app.infrastructure.travel.mobility.verify_time --cases tests/mobility/synthetic_legs_v1.json --check-expect
+#   python -m app.infrastructure.travel.mobility.verify_time --cases tests/mobility/synthetic_legs_v1.json --case LT-03 --verbose
+#   python -m app.infrastructure.travel.mobility.verify_time --cases ... --timetable <경로> --json out.json
 #
 # v1 과 달라진 것 (2026-09-10)
 #   ★ 시각을 **분 단위 정수**로 다룬다. strptime 을 쓰지 않는다 — 시간표 dep_time 에
@@ -57,21 +58,23 @@ from dataclasses import dataclass, field
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+# ★ 31번 방(2026-09-21) — 저장소 루트를 sys.path 에 끼우지 않는다.
+#   이 파일은 이제 패키지 모듈이다. CLI 는 python -m 으로 부른다.
+PKG = Path(__file__).resolve().parent
+RULES_DIR = PKG / "rules"
 
-from modules.mobility.line_order import LineOrder                      # noqa: E402
-from modules.mobility.transfer_walk import TransferWalk                 # noqa: E402
-from modules.mobility.bus import BusRoutes                              # noqa: E402
-from modules.mobility.geo import StationCoords, meters                  # noqa: E402
-from modules.mobility.exits import StationExits                         # noqa: E402
-from modules.mobility.candidates import CandidateGraph                  # noqa: E402
-from modules.mobility.car import CarGraph, CarService, RouterDown, make_router   # noqa: E402
-from modules.mobility.bike import (BikeStations, BikeLive, BikeRouter,   # noqa: E402
-                                   party_excluded as bike_party_excluded, fare as bike_fare)
-from modules.mobility.timeutil import (to_min, to_service_min, fmt_min,  # noqa: E402
-                                       fmt_wall, day_type_of, MIN_DAY)
+from .paths import REPO_ROOT                                            # noqa: E402
+from .line_order import LineOrder                                       # noqa: E402
+from .transfer_walk import TransferWalk                                 # noqa: E402
+from .bus import BusRoutes                                              # noqa: E402
+from .geo import StationCoords, meters                                  # noqa: E402
+from .exits import StationExits                                         # noqa: E402
+from .candidates import CandidateGraph                                  # noqa: E402
+from .car import CarGraph, CarService, RouterDown, make_router          # noqa: E402
+from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402
+                   party_excluded as bike_party_excluded, fare as bike_fare)
+from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402
+                       fmt_wall, day_type_of, MIN_DAY)
 
 VERDICTS = ("feasible", "infeasible", "rejected_by_limit", "unknown")
 GRADE_ORDER = {"확정": 2, "추정": 1, "근거없음": 0}
@@ -1820,8 +1823,8 @@ def main():
     ap.add_argument("--bike-live", default="none",
                     help="실시간 거치 조회: none(기본 · 근거없음) · env(SEOUL_OPENAPI_KEY 로 실제 호출) · <픽스처 json 경로>")
     ap.add_argument("--bike-record", help="GraphHopper 실제 응답의 거리·시간 요약을 이 픽스처 파일에 **추가** 기록한다(형상 없음)")
-    ap.add_argument("--rules", default=str(REPO / "config" / "mobility" / "rules_v0.3.json"))
-    ap.add_argument("--holidays", default=str(REPO / "config" / "mobility" / "holidays_2026_2027.json"))
+    ap.add_argument("--rules", default=str(RULES_DIR / "rules_v0.3.json"))
+    ap.add_argument("--holidays", default=str(RULES_DIR / "holidays_2026_2027.json"))
     ap.add_argument("--case", help="이 id 만 돌린다")
     ap.add_argument("--graph-dir", help="도로망 그래프 자료 폴더(기본 processed/mobility/graph)")
     ap.add_argument("--gh-url", help="GraphHopper 주소 · 'none' · 'fixture:<합성경로 파일>' "
@@ -1835,7 +1838,7 @@ def main():
 
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
-        from scripts.collect._paths import PROCESSED
+        from .paths import PROCESSED
         args.timetable = args.timetable or str(PROCESSED / "mobility" / "timetable_v1.jsonl")
         args.order = args.order or str(PROCESSED / "mobility" / "line_station_order_v1.json")
         args.transfer_walk = args.transfer_walk or str(PROCESSED / "mobility" / "transfer_walk_v1.json")
@@ -1844,7 +1847,7 @@ def main():
         args.station_coords = args.station_coords or str(PROCESSED / "mobility" / "station_coords.json")
         args.station_exits = args.station_exits or str(PROCESSED / "mobility" / "station_exits_v1.json")
     if not args.bike_stations:
-        from scripts.collect._paths import PROCESSED
+        from .paths import PROCESSED
         args.bike_stations = str(PROCESSED / "mobility" / "bike_stations_v1.jsonl")
 
     doc = json.loads(Path(args.cases).read_text(encoding="utf-8"))
@@ -1866,7 +1869,7 @@ def main():
     bike_live = None
     if args.bike_live == "env":
         from dotenv import load_dotenv
-        load_dotenv(REPO / ".env")
+        load_dotenv(REPO_ROOT / ".env")
         bike_live = BikeLive.from_env()
         if bike_live is None:
             print("  ! --bike-live env 인데 SEOUL_OPENAPI_KEY 가 없다 — 가용은 근거없음으로 낸다")

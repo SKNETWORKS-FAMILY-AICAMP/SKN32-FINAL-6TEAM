@@ -103,7 +103,7 @@ class CarGraph:
     @classmethod
     def load(cls, graph_dir=None, holidays=None):
         if graph_dir is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             graph_dir = PROCESSED / "mobility" / "graph"
         p = Path(graph_dir)
         if not (p / "topis_class_factor_v1.json").exists():

@@ -38,7 +38,7 @@ class TransferWalk:
     @classmethod
     def load(cls, path=None, speed_mps=DEFAULT_SPEED_MPS):
         if path is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             path = PROCESSED / "mobility" / "transfer_walk_v1.json"
         p = Path(path)
         if not p.exists():

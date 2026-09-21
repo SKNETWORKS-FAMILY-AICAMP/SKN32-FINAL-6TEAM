@@ -63,12 +63,13 @@ def hhmm(m):
 
 def run_verify(args, extra):
     out = Path(tempfile.mkdtemp()) / "verdicts.json"
-    cmd = [sys.executable, str(REPO / "scripts" / "verify_time.py"),
+    cmd = [sys.executable, "-m", "app.infrastructure.travel.mobility.verify_time",
            "--cases", args.cases, "--json", str(out)] + extra
     # ★ 자식 출력을 파이프로 받으면 파이썬이 콘솔 인코딩이 아니라 로캘 인코딩을 쓴다.
     #    한국어 Windows 에서는 cp949 라서 verify_time.py 의 "—" 에서 UnicodeEncodeError 로 죽는다.
     #    (PowerShell 에서 직접 돌릴 때는 콘솔이 UTF-8 이라 안 터진다 — 파이프일 때만 난다.)
-    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+           PYTHONPATH=str(REPO / "final_project_cs"))
     r = subprocess.run(cmd, cwd=str(REPO), capture_output=True, text=True,
                        encoding="utf-8", errors="replace", env=env)
     if not out.exists():
@@ -321,7 +322,7 @@ def main():
 <div class="nav"><button id="prev">← 이전</button><button id="next">다음 →</button>
 <button id="allb">전체 보기 (A)</button><span id="pos" class="hint"></span></div>
 {body}
-<footer>생성 {e(now)} · 케이스 <code>{e(Path(a.cases).name)}</code> · 판정 <code>scripts/verify_time.py</code><br>
+<footer>생성 {e(now)} · 케이스 <code>{e(Path(a.cases).name)}</code> · 판정 <code>final_project_cs/app/infrastructure/travel/mobility/verify_time.py</code><br>
 사고 소식은 <b>mock 주입</b>이다 — 감시→Case 생성이 미구현이라 코어가 넣어 주지 않는다. 판정은 mock 이 아니다.<br>
 경로 API 응답은 원값도 가공값도 저장하지 않는다. 이 화면도 저장하지 않는다.</footer>
 </div><script>{JS}</script></body></html>"""

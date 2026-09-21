@@ -108,7 +108,7 @@ def map_task_to_case(task):
 class MobilityAdapter:
     """판정기를 주입받아 TeamTask 를 처리한다.
 
-    verify(case) -> CaseResult dict   판정기. scripts/verify_time.py 의 Verifier.verify_case
+    verify(case) -> CaseResult dict   판정기. 같은 패키지 verify_time.py 의 Verifier.verify_case
     basis: **정적인 것만** — {"timetable_built_at", "rules_version"}.
            나머지 둘은 정적이 아니라서 어댑터가 케이스마다 만든다:
              service_date  ← 입력의 date (케이스마다 다르다)

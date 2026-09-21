@@ -20,17 +20,18 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _p in (REPO / "final_project_cs", REPO):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 from scripts.eval_ml_compare import (CLASSES, KO, norm_verdict, featurize, score,        # noqa: E402
                                      flips_in_series)
-from scripts.verify_time import Timetable, Verifier                                       # noqa: E402
+from app.infrastructure.travel.mobility.verify_time import Timetable, Verifier                                       # noqa: E402
 from scripts.selfcheck_mobility import build_probes, expand_seeds                          # noqa: E402
-from modules.mobility.line_order import LineOrder                                         # noqa: E402
-from modules.mobility.transfer_walk import TransferWalk                                   # noqa: E402
-from modules.mobility.bus import BusRoutes                                                # noqa: E402
-from modules.mobility.geo import StationCoords                                            # noqa: E402
+from app.infrastructure.travel.mobility.line_order import LineOrder                                         # noqa: E402
+from app.infrastructure.travel.mobility.transfer_walk import TransferWalk                                   # noqa: E402
+from app.infrastructure.travel.mobility.bus import BusRoutes                                                # noqa: E402
+from app.infrastructure.travel.mobility.geo import StationCoords                                            # noqa: E402
 
 
 # ── 「소스 존재」 특징 — 값이 아니라 존재 여부만 본다 ────────────────────
@@ -119,8 +120,8 @@ def main():
     from scripts.collect._paths import PROCESSED
     M = PROCESSED / "mobility"
     out = Path(args.out) if args.out else (M / "ml_compare_v2"); out.mkdir(parents=True, exist_ok=True)
-    holidays = set(json.loads((REPO / "config/mobility/holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
-    rules = json.loads((REPO / "config/mobility/rules_v0.3.json").read_text(encoding="utf-8"))
+    holidays = set(json.loads((REPO / "final_project_cs/app/infrastructure/travel/mobility/rules/holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
+    rules = json.loads((REPO / "final_project_cs/app/infrastructure/travel/mobility/rules/rules_v0.3.json").read_text(encoding="utf-8"))
 
     routes, dates, probes = build_probes(args.seeds, holidays, args.step, 300, 1680, _date.fromisoformat(args.base_date))
     print(f"구간 {len(routes)}종 → 탐침 {len(probes):,}건")

@@ -1,8 +1,8 @@
-# modules/mobility/line_order.py — line_station_order_v1.json 조회 계층
+# final_project_cs/app/infrastructure/travel/mobility/line_order.py — line_station_order_v1.json 조회 계층
 # 02번 방(막차 판정)이 쓰는 진입점. 판정은 코드가 하고, 값마다 근거 등급을 함께 돌려준다.
 #
 # 쓰는 법
-#   from modules.mobility.line_order import LineOrder
+#   from app.infrastructure.travel.mobility.line_order import LineOrder
 #   lo = LineOrder.load()
 #   lo.passes("02호선", "강남", dest="성수", target="잠실")
 #     → Verdict(value=True, grade="확정", path=[...], reason="...")
@@ -52,7 +52,7 @@ class LineOrder:
     @classmethod
     def load(cls, path=None):
         if path is None:
-            from scripts.collect._paths import PROCESSED      # 저장소에서 돌릴 때
+            from .paths import PROCESSED
             path = PROCESSED / "mobility" / "line_station_order_v1.json"
         return cls(json.loads(Path(path).read_text(encoding="utf-8")))
 

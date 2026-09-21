@@ -8,7 +8,7 @@
 import json
 from pathlib import Path
 
-from modules.mobility.geo import meters
+from .geo import meters
 
 
 class StationExits:
@@ -22,7 +22,7 @@ class StationExits:
     @classmethod
     def load(cls, path=None):
         if path is None:
-            from scripts.collect._paths import PROCESSED
+            from .paths import PROCESSED
             path = PROCESSED / "mobility" / "station_exits_v1.json"
         p = Path(path)
         if not p.exists():

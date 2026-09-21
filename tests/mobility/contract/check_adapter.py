@@ -3,7 +3,7 @@
 
   python tests/mobility/contract/check_adapter.py
 
-★ 경로를 박지 않는다. 이 파일 위치에서 저장소 뿌리를 거슬러 올라가 modules/mobility 를 찾는다.
+★ 경로를 박지 않는다. 이 파일 위치에서 저장소 뿌리를 거슬러 올라가 final_project_cs/app/infrastructure/travel/mobility 를 찾는다.
   (2026-09-14: 컨테이너 절대경로가 박혀 있어 노트북에서 FileNotFoundError 가 났다.)
 """
 import importlib.util
@@ -12,10 +12,11 @@ import types
 from pathlib import Path
 
 HERE = Path(__file__).resolve()
-ROOT = next((p for p in HERE.parents if (p / "modules" / "mobility").is_dir()), None)
+ROOT = next((p for p in HERE.parents
+            if (p / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility").is_dir()), None)
 if ROOT is None:
-    raise SystemExit(f"modules/mobility 를 못 찾았다 (시작: {HERE})")
-SRC = ROOT / "modules" / "mobility"
+    raise SystemExit(f"final_project_cs/app/infrastructure/travel/mobility 를 못 찾았다 (시작: {HERE})")
+SRC = ROOT / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility"
 
 # 패키지로 올려야 adapter.py 의 `from . import fold` 가 산다.
 pkg = types.ModuleType("mob"); pkg.__path__ = [str(SRC)]

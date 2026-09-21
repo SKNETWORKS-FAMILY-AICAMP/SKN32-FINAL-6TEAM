@@ -11,7 +11,8 @@
 #   토요일 · 일요일 · 공휴일 → holiday
 #   ※ 수도권 TAGO 는 토요일(02)을 주지 않고 토·일·공휴일을 03 으로 준다(소싱 문서 3-1).
 #     서울교통공사 공식 시간표도 평일 / 토·공휴일 2종이라 이 규칙과 맞는다.
-# 출력: config/mobility/holidays_<시작>_<끝>.json — git 에 둔다(연 단위로만 바뀌고 팀원도 쓴다).
+# 출력: final_project_cs/app/infrastructure/travel/mobility/rules/holidays_<시작>_<끝>.json — git 에 둔다(연 단위로만 바뀌고 팀원도 쓴다).
+#   ★ 31번 방(2026-09-21) — 판정기가 읽는 자리로 옮겼다. 옛 config/mobility 에 쓰면 판정기는 **조용히 옛 달력을 쓴다.**
 import os, json, argparse, time
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
@@ -24,7 +25,7 @@ KEY = os.environ["DATA_GO_KR_KEY"]
 BASE = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService"
 SOURCE = "kasi_spcde"                       # 한국천문연구원 특일 정보
 KST = timezone(timedelta(hours=9))
-OUT_DIR = REPO / "config" / "mobility"
+OUT_DIR = REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules"
 
 
 def day_type_of(d: date, holidays: set) -> str:

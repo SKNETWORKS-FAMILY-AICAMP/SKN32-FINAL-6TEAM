@@ -200,7 +200,8 @@ def main():
         p.write_text(text, encoding="utf-8")
         print(f"[5] {p.name}  {len(text):,} bytes")
     print(f"\n  다음: 회귀를 새 파일로 한 번 돌려 본다(v1 은 그대로 둔 채)\n"
-          f"  python scripts/verify_time.py --cases tests/mobility/bus_legs_v1.json --check-expect \\\n"
+          f"  $env:PYTHONPATH=\"final_project_cs\"\n"
+          f"  python -m app.infrastructure.travel.mobility.verify_time --cases tests/mobility/bus_legs_v1.json --check-expect \\\n"
           f"      --bus-route data/travel/processed/mobility/bus_route_{suffix}.jsonl \\\n"
           f"      --bus-stops data/travel/processed/mobility/bus_stops_{suffix}.jsonl")
 

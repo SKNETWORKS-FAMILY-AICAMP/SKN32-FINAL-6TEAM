@@ -15,11 +15,12 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO))
-from modules.mobility.car import taxi_fare, taxi_rate, daytype_kr, CarService  # noqa: E402
+sys.path.insert(0, str(REPO / "final_project_cs"))
+from app.infrastructure.travel.mobility.car import (taxi_fare, taxi_rate,  # noqa: E402
+                                                        daytype_kr, CarService)
 
-R = json.loads((REPO / "config" / "mobility" / "rules_v0.3.json").read_text(encoding="utf-8"))
-H = set(json.loads((REPO / "config" / "mobility" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
+R = json.loads((REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
+H = set(json.loads((REPO / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
 F = R["taxi"]["fare"]
 ok = fail = 0
 

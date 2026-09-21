@@ -42,13 +42,14 @@ def run_all(outdir):
     """
     import os
     outdir.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+           PYTHONPATH=str(REPO / "final_project_cs"))
     paths, t0, bad = [], time.time(), []
     for fn, tt in RUNS:
         out = outdir / (fn.replace(".json", "_result.json"))
         if out.exists():
             out.unlink()
-        cmd = [sys.executable, str(REPO / "scripts" / "verify_time.py"),
+        cmd = [sys.executable, "-m", "app.infrastructure.travel.mobility.verify_time",
                "--cases", str(T / fn), "--json", str(out), "--check-expect"]
         if tt:
             cmd += ["--timetable", str(tt)]

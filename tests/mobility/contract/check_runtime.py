@@ -16,11 +16,13 @@ import types
 from pathlib import Path
 
 HERE = Path(__file__).resolve()
-ROOT = next((p for p in HERE.parents if (p / "modules" / "mobility").is_dir()), None)
+ROOT = next((p for p in HERE.parents
+            if (p / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility").is_dir()), None)
 if ROOT is None:
-    raise SystemExit(f"modules/mobility 를 못 찾았다 (시작: {HERE})")
+    raise SystemExit(f"final_project_cs/app/infrastructure/travel/mobility 를 못 찾았다 (시작: {HERE})")
 sys.path.insert(0, str(ROOT))
-SRC = ROOT / "modules" / "mobility"
+sys.path.insert(0, str(ROOT / "final_project_cs"))
+SRC = ROOT / "final_project_cs" / "app" / "infrastructure" / "travel" / "mobility"
 
 pkg = types.ModuleType("mob"); pkg.__path__ = [str(SRC)]
 sys.modules["mob"] = pkg
