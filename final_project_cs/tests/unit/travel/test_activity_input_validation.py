@@ -100,13 +100,17 @@ async def test_missing_policy_json_escalates_instead_of_guessing():
 # ── 있으면 좋지만 없어도 판정은 계속되는 값 ──────────────────────
 
 @pytest.mark.asyncio
-async def test_missing_place_json_does_not_block_the_judgement():
-    """장소 JSON이 없다(`read.place` → `None`) — **거부가 아니라 "모름" 표시**로 넘어간다."""
+async def test_missing_place_json_returns_feasible_false():
+    """장소 JSON이 없다(`read.place` → `None`) — **escalate 하지 않지만 `feasible: False`**.
+
+    결함 1 수정(2026-09-21): 고치기 전엔 「성립합니다 … 판정하지 않았습니다」라는
+    앞뒤 모순된 답을 만들었다. 장소 운영 여부를 알 수 없으면 성립을 단정할 수 없다.
+    """
     result = await ActivityTeam(FakeTools(_values(place=None))).execute(_task())
     _show("place 없음", result)
 
     assert result.outcome == "completed"          # ★escalate 하지 않는다 = 사람한테 안 넘기고 Team이 계속 답한다
-    assert result.decisions[0]["feasible"] is True
+    assert result.decisions[0]["feasible"] is False   # ★결함 1 수정 — 성립을 단정하지 않는다
     assert result.decisions[0]["place_confirmed"] is False
     assert "장소·운영 정보를 확인하지 못했다" in result.warnings
     assert "판정하지 않았습니다" in result.answer
@@ -158,6 +162,37 @@ async def test_booking_without_place_id_asks_read_place_for_none():
     assert arguments["place_id"] is None
     assert result.outcome == "completed"
     assert result.decisions[0]["place_confirmed"] is False
+
+
+# ── 결함 1: 장소 정보 없어도 성립으로 답하던 버그 ────────────────────────
+
+@pytest.mark.asyncio
+async def test_missing_place_answer_does_not_say_feasible():
+    """answer가 '성립합니다'로 시작하지 않는다 — feasible:False인데 성립이라 하면 모순."""
+    result = await ActivityTeam(FakeTools(_values(place=None))).execute(_task())
+
+    assert "성립합니다" not in result.answer
+
+
+@pytest.mark.asyncio
+async def test_missing_place_answer_contains_판정_not_possible():
+    """answer에 '판정하지 않았습니다' 또는 그에 준하는 문구가 있어야 한다."""
+    result = await ActivityTeam(FakeTools(_values(place=None))).execute(_task())
+
+    assert "판정하지 않았습니다" in result.answer
+
+
+@pytest.mark.asyncio
+async def test_present_place_is_still_feasible_with_good_data():
+    """★회귀 가드 — 장소가 있는 정상 경우는 여전히 feasible:True다.
+
+    `place is not None and ...` 조건이 정상 케이스를 잘못 막아선 안 된다.
+    """
+    result = await ActivityTeam(FakeTools(_values())).execute(_task())
+
+    assert result.decisions[0]["feasible"] is True
+    assert result.decisions[0]["place_confirmed"] is True
+    assert "성립합니다" in result.answer
 
 
 # ── 결함 2: 시작 시각이 지난 예약도 성립으로 답하던 버그 ──────────────────

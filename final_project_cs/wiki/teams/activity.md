@@ -348,7 +348,7 @@ EMRG_STEP_NM in {"위급재난"}  →  True (막는다)
 
 | 번호 | 결함 | 근거 |
 |---|---|---|
-| 1 | 장소 정보가 없어도 경고와 함께 성립으로 답한다 | `activity.py:159~164` |
+| ~~1~~ | ~~장소 정보가 없어도 경고와 함께 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `decisions["feasible"]`에 `place is not None and` 가드 추가, answer에 `elif place is None:` 분기 추가. 테스트 3건 추가(`test_activity_input_validation.py`). | `activity.py:254~268` |
 | ~~2~~ | ~~시작 시각이 지난 예약도 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `_check_feasible()`에 `remaining < 0` 가드 추가, `already_started` 반환. 테스트 5건 추가(`test_activity_input_validation.py`). | `activity.py:162~170` |
 | 3 | 취소·순연 규정·시각이 없으면 "모름"으로만 끝나고 판정하지 않는다 | `activity.py:78~83` |
 | 4 | 주석의 "대안 생성만 LLM"이 실행 코드에 없다(문서-코드 불일치) | `activity.py:8~9`, `232~244` |

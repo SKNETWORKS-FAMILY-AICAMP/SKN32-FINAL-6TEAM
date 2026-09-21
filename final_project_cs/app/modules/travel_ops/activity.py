@@ -252,8 +252,11 @@ class ActivityTeam(TravelTeamBase):
             disaster_blocks = self._disaster_blocks(disaster.get("messages"))
 
         warnings = [] if place is not None else ["장소·운영 정보를 확인하지 못했다"]
-        decisions: dict[str, Any] = {"feasible": not (weekday_match or disaster_blocks),
-                                     "place_confirmed": place is not None}
+        # ★장소 정보가 없으면 운영 여부를 알 수 없다 — 성립을 단정하지 않는다.
+        #   `place is None`이면 weekday_match·disaster_blocks와 무관하게 False.
+        decisions: dict[str, Any] = {
+            "feasible": place is not None and not (weekday_match or disaster_blocks),
+            "place_confirmed": place is not None}
         # ★첫 문장이 뒤의 판정과 어긋나면 안 된다 — 이미 불가를 아는 순간에도
         #   "성립합니다"로 시작하지 않는다.
         if weekday_match:
@@ -262,10 +265,11 @@ class ActivityTeam(TravelTeamBase):
         elif disaster_blocks:
             answer = (f"요청하신 시각(시작까지 {remaining:.1f}시간) 인근에 "
                       f"위급재난 문자가 확인됩니다.")
+        elif place is None:
+            answer = (f"장소·운영 정보를 확인하지 못했습니다(시작까지 {remaining:.1f}시간). "
+                      f"운영 여부를 알 수 없어 성립 여부를 판정하지 않았습니다.")
         else:
             answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
-        if place is None:
-            answer += " 운영 정보는 확인되지 않아 그 부분은 판정하지 않았습니다."
         if operating is not None:
             answer += " " + self._operating_note(operating)
             if weekday_match:
