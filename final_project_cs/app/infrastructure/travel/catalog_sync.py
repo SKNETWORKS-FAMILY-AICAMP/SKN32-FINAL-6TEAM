@@ -211,19 +211,23 @@ class PlaceCatalogSync:
                 cur.execute(
                     "INSERT INTO place_catalog (tenant_id, source, content_id, "
                     "content_type_id, area_code, title, address, latitude, longitude, "
+                    "large_class_code, large_class_name, "
                     "source_modified_at, raw_json) "
-                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+                    "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
                     "ON CONFLICT (tenant_id, source, content_id) DO UPDATE SET "
                     "content_type_id=EXCLUDED.content_type_id, "
                     "area_code=EXCLUDED.area_code, title=EXCLUDED.title, "
                     "address=EXCLUDED.address, latitude=EXCLUDED.latitude, "
                     "longitude=EXCLUDED.longitude, "
+                    "large_class_code=EXCLUDED.large_class_code, "
+                    "large_class_name=EXCLUDED.large_class_name, "
                     "source_modified_at=EXCLUDED.source_modified_at, "
                     "raw_json=EXCLUDED.raw_json, fetched_at=now()",
                     (self.tenant_id, self.source.name, content_id,
                      row.get("content_type_id"), row.get("area_code"),
                      row.get("title"), row.get("address"),
                      row.get("latitude"), row.get("longitude"),
+                     row.get("large_class_code"), row.get("large_class_name"),
                      row.get("source_modified_at"),
                      json.dumps(row.get("raw") or {}, ensure_ascii=False)))
                 written += 1

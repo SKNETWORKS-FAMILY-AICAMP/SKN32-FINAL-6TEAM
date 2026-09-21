@@ -58,14 +58,6 @@ LARGE_CLASS_NAMES = {
     "EV": "행사·이벤트", # 축제·공연·전시 행사 (contenttypeid=15)
 }
 
-#: 구분류(contenttypeid) → 이름. ★API 서버 필터링(find() allowed_types,
-#: watch.py KIND_TO_CONTENT_TYPES)은 여전히 이 축을 쓴다 —
-#: 신분류 lclsSystm1 코드로 서버 필터링이 되는지 미확인.
-CONTENT_TYPE_NAMES = {
-    "12": "관광지", "14": "문화시설", "15": "행사·공연·축제", "25": "여행코스",
-    "28": "레포츠", "32": "숙박", "38": "쇼핑", "39": "음식점",
-}
-
 
 class TourApiPlace(TravelSource):
     name = "tour_api"
@@ -144,7 +136,6 @@ class TourApiPlace(TravelSource):
         return self.stamp({
             "content_id": str(row.get("contentid") or ""),
             "content_type_id": content_type,
-            "content_type_name": CONTENT_TYPE_NAMES.get(content_type),
             "large_class_code": large_class or None,
             "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
@@ -220,8 +211,6 @@ class TourApiPlace(TravelSource):
         return self.stamp({
             "content_id": content_id,
             "content_type_id": str(row.get("contenttypeid") or content_type_id),
-            "content_type_name": CONTENT_TYPE_NAMES.get(
-                str(row.get("contenttypeid") or content_type_id)),
             "large_class_code": large_class or None,
             "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
@@ -348,4 +337,4 @@ class TourApiPlace(TravelSource):
         return TravelSource._body_error(payload)
 
 
-__all__ = ["BASE_URL", "CONTENT_TYPE_NAMES", "LARGE_CLASS_NAMES", "TourApiPlace"]
+__all__ = ["BASE_URL", "LARGE_CLASS_NAMES", "TourApiPlace"]
