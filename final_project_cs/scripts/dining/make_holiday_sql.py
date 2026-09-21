@@ -19,9 +19,9 @@ from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-DATA = os.path.join(ROOT, "data")
-OUT = ROOT
+ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
+DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
+OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
 
 SRC = "holidays_2026_2027.json"
 

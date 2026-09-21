@@ -14,44 +14,30 @@
 ## 폴더 구성
 
 ```
-dining/
-  README.md
-  sql/
-    01_schema.sql        테이블 7개와 인덱스, 출처 등록
-    02_core_link.sql     코어 연결 표, 판정 뷰, 판정 함수
-    03_matcher.sql       코어 장소와 원장 장소를 잇는 매칭기
-    04_holiday.sql       명절과 공휴일 경고, 임시 공휴일 달력
-    05_links.sql         지도 링크와 전화번호
-  scripts/
-    parse_hours.py       영업시간과 휴무 원문을 구조로
-    make_load_sql.py     구조를 적재 SQL 로
-    make_audit_sheet.py  오추출률 측정용 대조표
-    make_holiday_sql.py  공휴일 달력을 적재 SQL 로
-  data/
+final_project_cs/
+  app/infrastructure/db/migrations/
+    020_dining_schema.sql      테이블 7개와 인덱스, 출처 등록
+    021_dining_core_link.sql   코어 연결 표, 판정 뷰, 판정 함수
+    022_dining_matcher.sql     코어 장소와 원장 장소를 잇는 매칭기
+    023_dining_holiday.sql     명절과 공휴일 경고, 공휴일 달력 표
+    024_dining_links.sql       지도 링크와 전화번호
+  app/modules/travel_ops/dining/
+    __init__.py                DiningTeam. 액티비티와 같은 모양이다
+  scripts/dining/
+    README.md                  이 문서
+    parse_hours.py             영업시간과 휴무 원문을 구조로
+    make_load_sql.py           구조를 적재 SQL 로
+    make_holiday_sql.py        공휴일 달력을 적재 SQL 로
+    make_audit_sheet.py        오추출률 측정용 대조표
+  data/dining/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
     holidays_2026_2027.json          공휴일 달력 46일
-  .gitignore
+    _build/                          생성물. 저장소에 넣지 않는다
 ```
 
-파일 이름 앞의 번호가 실행 순서다. SQL 은 번호대로 돌리면 된다.
-
-### 지금 있는 파일과의 대응
-
-| 지금 위치 | 저장소 위치 |
-|---|---|
-| SKN_Final/요식_DB_스키마_1차_2026-09-19.sql | sql/01_schema.sql |
-| SKN_Final/요식_DB_코어연결_2026-09-20.sql | sql/02_core_link.sql |
-| SKN_Final/요식_DB_매칭기_2026-09-21.sql | sql/03_matcher.sql |
-| (이 저장소에서 새로 만듦) | sql/04_holiday.sql |
-| (이 저장소에서 새로 만듦) | sql/05_links.sql |
-| (이 저장소에서 새로 만듦) | scripts/make_holiday_sql.py |
-| 이동 쪽에서 받음 | data/holidays_2026_2027.json |
-| travel-data/parse_hours.py | scripts/parse_hours.py |
-| travel-data/make_load_sql.py | scripts/make_load_sql.py |
-| travel-data/make_audit_sheet.py | scripts/make_audit_sheet.py |
-
----
+마이그레이션 번호 020 번대는 요식 구간이다. 코어가 001 부터 019 까지 쓰고
+도메인마다 열 개씩 나눠 쓰자는 제안이며 아직 팀 합의 전이다.
 
 ## 전제
 
@@ -83,27 +69,27 @@ pg_ctl -D <데이터 디렉터리> -o "-p 5433" -l <데이터 디렉터리>/serv
 ### 1. 스키마
 
 ```
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f sql/01_schema.sql
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f sql/02_core_link.sql
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/020_dining_schema.sql
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/021_dining_core_link.sql
 ```
 
 ```
-psql ... -f sql/04_holiday.sql
-psql ... -f sql/05_links.sql
+psql ... -f app/infrastructure/db/migrations/023_dining_holiday.sql
+psql ... -f app/infrastructure/db/migrations/024_dining_links.sql
 ```
 
 `04` 는 달력 표를 만들기만 하고 값은 넣지 않는다. 값은 아래 4번에서 넣는다.
 
-`03_matcher.sql` 은 코어 `places` 표가 있어야 올라간다. 코어 DB 에 얹는 경우에만 돌린다.
-나머지는 순서대로 돌리면 되고, `05` 는 `04` 의 함수를 고쳐 쓰므로 뒤에 와야 한다.
+`022_dining_matcher.sql` 은 코어 `places` 표가 있어야 올라간다. 코어 DB 에 얹는 경우에만 돌린다.
+나머지는 순서대로 돌리면 되고, `024` 는 `023` 의 함수를 고쳐 쓰므로 뒤에 와야 한다.
 
 ### 2. 원문을 구조로
 
 ```
-python scripts/parse_hours.py
+python scripts/dining/parse_hours.py
 ```
 
-`data/tourapi_음식점_소개정보.json` 을 읽어 `parsed_hours.json` 을 만든다.
+`data/dining/tourapi_음식점_소개정보.json` 을 읽어 `data/dining/_build/parsed_hours.json` 을 만든다.
 표본 200건 기준으로 이런 값이 나온다.
 
 | 항목 | 값 |
@@ -117,8 +103,8 @@ python scripts/parse_hours.py
 ### 3. 적재
 
 ```
-python scripts/make_load_sql.py
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f load_200.sql
+python scripts/dining/make_load_sql.py
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f data/dining/_build/load_200.sql
 ```
 
 장소와 레코드의 식별자를 관광공사 `contentid` 에서 만들기 때문에 같은 파일을 다시 돌려도 결과가 같다.
@@ -155,11 +141,11 @@ SELECT reason, count(*) FROM dining.v_link_gap GROUP BY reason;
 ### 5. 공휴일 달력
 
 ```
-python scripts/make_holiday_sql.py
-psql ... -f holidays.sql
+python scripts/dining/make_holiday_sql.py
+psql ... -f data/dining/_build/holidays.sql
 ```
 
-`data/holidays_2026_2027.json` 을 읽어 `holidays.sql` 을 만든다.
+`data/dining/holidays_2026_2027.json` 을 읽어 `_build/holidays.sql` 을 만든다.
 46일이 들어가고 그중 13일이 명절로 잡힌다.
 
 확인.
@@ -299,7 +285,7 @@ UPDATE places SET attributes = attributes || '{"hours": [...]}'::jsonb WHERE ...
 | 오추출률 | 측정하지 않았다. 위의 비율은 모두 뽑았는지를 센 것이지 맞게 뽑았는지가 아니다 |
 | 이름 유사도 기준 | 0.75 는 파이썬으로 잰 값이다. 여기서는 편집거리로 재므로 계산 방식이 다르다 |
 
-오추출률은 `scripts/make_audit_sheet.py` 로 대조표를 만들어 사람이 확인한다.
+오추출률은 `scripts/dining/make_audit_sheet.py` 로 대조표를 만들어 사람이 확인한다.
 파서를 고친 뒤에 재야 의미가 있다.
 
 ---

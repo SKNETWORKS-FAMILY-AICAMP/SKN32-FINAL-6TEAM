@@ -13,9 +13,9 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
-from ._base import TravelTeamBase
-from .itinerary_changes import plan_closed, plan_delay
-from .itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from .._base import TravelTeamBase
+from ..itinerary_changes import plan_closed, plan_delay
+from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
 
 class DiningTeam(ItineraryWork, TravelTeamBase):

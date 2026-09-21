@@ -21,9 +21,9 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-DATA = os.path.join(ROOT, "data")   # 원본 데이터
-OUT = ROOT                          # 생성물은 저장소 뿌리에 둔다
+ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
+DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
+OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
 SAMPLE = 100
 SEED = 20260921
 

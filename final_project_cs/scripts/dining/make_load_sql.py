@@ -16,9 +16,9 @@ from datetime import date
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-DATA = os.path.join(ROOT, "data")   # 원본 데이터
-OUT = ROOT                          # 생성물은 저장소 뿌리에 둔다
+ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
+DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
+OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
 
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000001")
 LOAD_ID = str(uuid.uuid5(NS, "load:tourapi:2026-09-21"))
