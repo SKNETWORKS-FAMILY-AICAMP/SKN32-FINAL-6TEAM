@@ -81,18 +81,17 @@ class TourApiPlace(TravelSource):
     # ── 찾기 ────────────────────────────────────────────────────
     def find(self, place_name: str, *,
              content_type_id: str | None = None,
-             allowed_types: "set[str] | None" = None) -> dict[str, Any] | None:
+             allowed_types: "set[str] | None" = None,
+             allowed_large_classes: "set[str] | None" = None) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 애매하면 `None`(모름).
 
         ★`content_type_id` 를 주면 공급자 쪽에서 그 종류로 좁혀 검색한다.
-        ★`allowed_types` 는 **받아 온 뒤 걸러 낼** 종류들이다.
+        ★`allowed_types` 는 **받아 온 뒤 걸러 낼** 구분류(contenttypeid) 집합이다.
+        ★`allowed_large_classes` 는 **신분류체계 대분류(lclsSystm1)** 로 걸러 낼
+          집합이다(2026-09-21 개편). `watch.py.KIND_TO_LARGE_CLASSES` 가 이걸 쓴다.
 
-          둘을 나눈 이유(2026-09-10). 우리 `activity` 는 관광타입 하나가
-          아니다 — 계획서 v11 §5 의 Activity 는 자연·인문·레포츠·쇼핑을 다
-          포함해서 **12·14·28·38 에 걸친다.** 공급자 파라미터는 한 번에 한
-          종류만 받으므로, 여러 종류를 허용하려면 **넓게 받아 좁게 거른다.**
-          처음엔 `activity → 12` 하나로 잡았다가 레포츠·문화시설 장소가
-          전부 「못 찾음」이 됐다.
+          서버 파라미터는 여전히 contenttypeid 한 종류만 받는다 — lclsSystm1 로
+          서버 필터링이 되는지 미확인. 따라서 넓게 받아 클라이언트에서 좁힌다.
         """
         if not self._key:
             self._miss("no_service_key")
@@ -118,10 +117,14 @@ class TourApiPlace(TravelSource):
         wanted = place_name.strip()
         exact = [row for row in rows if str(row.get("title", "")).strip() == wanted]
         if allowed_types:
-            # ★우리가 다루는 종류 밖은 뺀다. 「경복궁」의 울산 음식점(39)이
-            #   activity 후보에서 이걸로 빠진다.
+            # 구분류(contenttypeid) 필터 — 하위호환.
             exact = [row for row in exact
                      if str(row.get("contenttypeid") or "") in allowed_types]
+        if allowed_large_classes:
+            # ★신분류체계 대분류(lclsSystm1) 필터 — 같은 contenttypeid=12라도
+            #   HS(역사관광)·NA(자연관광)·VE(문화관광)를 정확히 구분한다.
+            exact = [row for row in exact
+                     if str(row.get("lclsSystm1") or "") in allowed_large_classes]
         if not exact:
             self._miss("no_exact_title", f"{wanted}: {len(rows)}건 중 정확일치 0")
             return None

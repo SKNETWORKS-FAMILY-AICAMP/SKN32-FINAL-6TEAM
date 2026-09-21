@@ -169,15 +169,18 @@ class TravelWatcher:
                        "last_seen")
             return [dict(zip(columns, row)) for row in cur.fetchall()]
 
-    #: 우리 장소 종류 -> 공급자 관광타입들. ★**하나가 아니다.**
-    #:  계획서 v11 §5 의 Activity 는 자연·인문·레포츠·쇼핑을 다 포함해서
-    #:  관광지(12)·문화시설(14)·레포츠(28)·쇼핑(38)에 걸친다.
-    #:  처음엔 `activity → 12` 하나로 잡았다가 레포츠·문화시설 장소가 전부
-    #:  「못 찾음」이 됐다(2026-09-10). 모르는 종류는 힌트 없이 찾는다.
-    KIND_TO_CONTENT_TYPES = {
-        "activity": {"12", "14", "28", "38"},
-        "dining": {"39"},
-        "lodging": {"32"},
+    #: 우리 장소 종류 → 신분류체계 대분류(lclsSystm1) 집합.
+    #:  `tour_api.find(allowed_large_classes=...)` 클라이언트 필터로 쓴다.
+    #:
+    #:  [2026-09-21 개편] 구분류(contenttypeid) 기반 KIND_TO_CONTENT_TYPES를
+    #:  신분류체계로 교체. contenttypeid=12(관광지) 하나가 HS·NA·VE에 걸치므로
+    #:  구분류로는 「경복궁(HS)」과 「한라산(NA)」을 구분하지 못했다.
+    #:
+    #:  Activity 담당: NA·HS·VE·LS·EX·SH (wiki/teams/activity.md §범위)
+    KIND_TO_LARGE_CLASSES = {
+        "activity": {"NA", "HS", "VE", "LS", "EX", "SH"},
+        "dining": {"FD"},
+        "lodging": {"AC"},
         "flight": set(),
     }
 
@@ -198,11 +201,11 @@ class TravelWatcher:
             return source.by_content_id(
                 str(content_id), str(target.get("content_type_id") or ""))
 
-        allowed = self.KIND_TO_CONTENT_TYPES.get(str(target.get("kind") or ""))
-        # ★한 종류만이면 공급자 쪽에서 좁혀 받고, 여럿이면 넓게 받아 거른다.
-        narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
-        found = source.find(str(target["name"]), content_type_id=narrow,
-                            allowed_types=allowed or None)
+        allowed = self.KIND_TO_LARGE_CLASSES.get(str(target.get("kind") or ""))
+        # ★신분류체계(lclsSystm1) 클라이언트 필터. 서버는 넓게 받는다 —
+        #   lclsSystm1으로 서버 필터링이 되는지 미확인.
+        found = source.find(str(target["name"]),
+                            allowed_large_classes=allowed or None)
         if found is not None:
             self._remember_identity(target["place_id"], source.name, found)
         return found
@@ -242,6 +245,7 @@ class TravelWatcher:
                 "longitude": found.get("longitude"),
                 "address": found.get("address"),
                 "content_type_id": found.get("content_type_id"),
+                "large_class_code": found.get("large_class_code"),
             }
             change = self._record(
                 kind="place", target_id=str(target["place_id"]),
