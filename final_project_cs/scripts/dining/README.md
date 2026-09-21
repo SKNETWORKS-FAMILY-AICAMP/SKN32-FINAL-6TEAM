@@ -34,6 +34,7 @@ final_project_cs/
     make_audit_sheet.py        오추출률 측정용 대조표
     run_check.py               현장 확인 한 번을 돌린다
     inspect_app.py             원장 확인기. 판정을 눈으로 따라가는 화면
+    dev_up.py                  DB 와 확인기를 한 번에 띄운다
   data/dining/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
@@ -296,11 +297,21 @@ python scripts/dining/run_check.py show --place 대돈집
 되었고 그 규칙이 어떤 답을 내는지 한 자리에서 본다.
 
 ```bash
+python scripts/dining/dev_up.py
+```
+
+DB 가 떠 있는지 보고 안 떠 있으면 켜고, 원장이 준비됐는지 보고, 확인기를 띄운 뒤
+브라우저를 연다. 어느 폴더에서 실행해도 되므로 파이참에서 파일만 눌러도 된다.
+`--check` 를 주면 띄우지 않고 준비 상태만 본다.
+
+손으로 띄우려면 `final_project_cs` 에서 이렇게 한다.
+
+```bash
 set DINING_DSN=postgresql://postgres@localhost:5433/dining_dev
 python -m uvicorn scripts.dining.inspect_app:app --port 8011 --reload
 ```
 
-`final_project_cs` 에서 띄우고 `http://127.0.0.1:8011` 로 연다.
+둘 다 `http://127.0.0.1:8011` 로 연다.
 
 보이는 것은 그 시각 판정과 근거, 이번 주 요일별 영업시간, 원문, 여행 조건별 결과,
 현장 확인 물음과 기록이다. 영업 규칙과 휴무 규칙은 여기서 고치지 않는다.
