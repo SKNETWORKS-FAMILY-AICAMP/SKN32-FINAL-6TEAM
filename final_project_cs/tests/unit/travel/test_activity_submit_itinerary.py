@@ -57,6 +57,8 @@ def test_select_capability_routes_itinerary_submit_intent():
 def test_select_capability_leaves_other_intents_to_existing_rules():
     """다른 intent는 손대지 않는다 — 기존 check_feasible 등 라우팅이 그대로다."""
     assert ActivityTeam.select_capability("confirm_request", "") is None
+    assert ActivityTeam.select_capability("incident_report", "") is None
+    assert ActivityTeam.select_capability("other", "") is None
     assert ActivityTeam.select_capability(None, "") is None
 
 
@@ -66,6 +68,22 @@ def test_registry_actually_resolves_to_the_new_capability_end_to_end():
     entry = registry.get("activity")
     chosen = registry.capability_for(entry, "itinerary_submit", input_text="화요일에 경복궁 갈래")
     assert chosen == "activity.submit_itinerary"
+
+
+# ── propose_change 라우팅 ────────────────────────────────────────
+
+def test_select_capability_routes_adjust_reject_to_propose_change():
+    """`adjust_reject` — 고객이 현재 상태를 거부하고 대안을 요청할 때."""
+    assert ActivityTeam.select_capability("adjust_reject", "") == "activity.propose_change"
+    assert ActivityTeam.select_capability("adjust_reject", "다른 날로 바꿔주세요") == "activity.propose_change"
+
+
+def test_select_capability_propose_change_via_registry():
+    """`adjust_reject`가 실제 `TeamRegistry`를 통해 propose_change로 도달하는지."""
+    registry = TeamRegistry([ActivityTeam(tools=None)])
+    entry = registry.get("activity")
+    chosen = registry.capability_for(entry, "adjust_reject", input_text="일정 변경 원해요")
+    assert chosen == "activity.propose_change"
 
 
 # ── 실행 — 예약을 찾지 않는다 ──────────────────────────────────

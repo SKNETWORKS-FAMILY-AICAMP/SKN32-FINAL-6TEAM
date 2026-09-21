@@ -589,7 +589,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | `allowed_tools`·`knowledge_scope`와 신규 연동의 어긋남 | `[미확보 2026-09-20]` manifest 절 참고 — TourAPI·재난문자API용 도구 이름, `weather` scope 처리 미정 |
 | ~~`itinerary_submit`이 100% escalate 되던 문제~~ | **닫힘 — `[구현 2026-09-20]`** `activity.submit_itinerary` + `select_capability` 훅 → [일정 제출 절](#일정-제출--예약-없이-시작하는-capability) |
 | ~~Phase 2 — 승인된 `activity.submit` 제안을 실제로 `activities`/`places`에 반영하는 실행기~~ | **비전으로 등록 — `[결정 2026-09-20]`** 사용자가 "나중에 별도로 설계하자"고 명시적으로 미뤘다. Activity 하나의 범위를 넘는 시스템 전체(action_type dispatcher) 설계라 `wiki/records/vision/TODO_VISION.md`에 등록(RULE.md §4.4) |
-| `activity.propose_change`의 라우팅 미도달 | `[미확보]` `submit_itinerary`와 별개 문제로 남아 있다 — `propose_change`(기존 예약 변경)는 여전히 capability 네임스페이스가 안 맞아 선택 안 됨 |
+| ~~`activity.propose_change`의 라우팅 미도달~~ | **닫힘 — `[구현 2026-09-21]`** `select_capability`에 `intent="adjust_reject"` → `activity.propose_change` 분기 추가. 테스트 2건(`test_activity_submit_itinerary.py`) |
 | ~~`weather_sensitive`가 실 데이터에서 검증 불가~~ | **완화 — `[구현 2026-09-20]`** `_weather_sensitive_from_title()`로 이름 단서 추정(추정 사실은 항상 공개). **완전히 닫힌 건 아니다** — 키워드에 안 걸리는 장소(예: "경복궁")는 여전히 `None`이고, 근본 원인(프로덕션에 `places` 쓰기 경로 자체가 없음)은 그대로다 → [`weather_sensitive` 절](#weather_sensitive--db가-모르면-장소명으로-추정한다) |
 
 ## 세션 리포트 (2026-09-20)

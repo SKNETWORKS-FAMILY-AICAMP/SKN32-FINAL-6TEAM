@@ -54,18 +54,23 @@ class ActivityTeam(TravelTeamBase):
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str) -> str | None:
-        """`intent="itinerary_submit"`이면 전용 capability로 보낸다.
+        """`intent`에 따라 capability를 고른다. `registry.capability_for()`의 훅.
 
-        ★`registry.capability_for()`의 훅이다(`registry.py:105~114`). 이게
-        없으면 이름 매칭도 `default_capability` 폴백도 `itinerary_submit`을
-        못 받는다 — capability 이름이 `activity.*`고 intent는
-        `itinerary_submit`이라 네임스페이스가 안 겹친다. 실제로 그래서
-        **지금까지는 일정 제출이 100% escalate 됐다**(`unknown_예약 내역`) —
-        `check_feasible`이 기본으로 선택돼 존재하지도 않는 예약을 찾으려
-        했기 때문이다. `mobility.py`의 같은 훅(사건 신고 키워드 매칭)이 선례다.
+        ★INTENTS 5종(`itinerary_submit`·`incident_report`·`confirm_request`·
+          `adjust_reject`·`other`)은 모두 `activity.*` 네임스페이스와 겹치지
+          않는다 — 이 훅 없이는 `registry.py:115~119`의 이름 매칭이 항상 실패하고
+          `default_capability`("check_feasible")만 선택된다.
+
+        | intent           | capability              | 이유 |
+        |------------------|-------------------------|------|
+        | itinerary_submit | activity.submit_itinerary | 예약 없이 새 일정 제출 |
+        | adjust_reject    | activity.propose_change   | 고객이 현재 상태를 거부하고 대안 요청 |
+        | 나머지           | None → 기존 규칙          | check_feasible·check_cancelable 등 |
         """
         if intent == "itinerary_submit":
             return "activity.submit_itinerary"
+        if intent == "adjust_reject":
+            return "activity.propose_change"
         return None   # 신호가 없으면 기존 규칙(네임스페이스 → default)에 맡긴다
 
     @staticmethod
