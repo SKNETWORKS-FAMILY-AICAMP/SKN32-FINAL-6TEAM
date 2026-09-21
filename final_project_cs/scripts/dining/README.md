@@ -21,6 +21,8 @@ final_project_cs/
     022_dining_matcher.sql     코어 장소와 원장 장소를 잇는 매칭기
     023_dining_holiday.sql     명절과 공휴일 경고, 공휴일 달력 표
     024_dining_links.sql       지도 링크와 전화번호
+    025_dining_attribute.sql   매장 속성. 조건별 판정
+    026_dining_live_check.sql  현장 확인 기록과 물음 만들기
   app/modules/travel_ops/dining/
     __init__.py                DiningTeam. 액티비티와 같은 모양이다
   scripts/dining/
@@ -28,7 +30,10 @@ final_project_cs/
     parse_hours.py             영업시간과 휴무 원문을 구조로
     make_load_sql.py           구조를 적재 SQL 로
     make_holiday_sql.py        공휴일 달력을 적재 SQL 로
+    make_attribute_sql.py      매장 속성을 적재 SQL 로
     make_audit_sheet.py        오추출률 측정용 대조표
+    run_check.py               현장 확인 한 번을 돌린다
+    inspect_app.py             원장 확인기. 판정을 눈으로 따라가는 화면
   data/dining/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
@@ -263,6 +268,46 @@ CHECK (outcome = 'ok' OR value_state = 'unknown')
 `catchtable_trial` 의 답도 표에는 남지만 `v_live_check_fresh` 에서 빠지므로 판정에 닿지 않는다.
 검수 안 된 LLM 추출을 다루는 방식과 같다. 시연에서 보이더라도 화면과 발표에
 **제휴 전제 시험 구현**이라고 적는다.
+
+돌리는 것은 `run_check.py` 다. 백엔드를 갈아끼워 조회 수단을 바꾼다.
+
+```bash
+set DINING_DSN=postgresql://postgres@localhost:5433/dining_dev
+
+python scripts/dining/run_check.py ask  --place 대돈집 --at "2026-09-25 12:00"
+python scripts/dining/run_check.py run  --place 대돈집 --at "2026-09-25 12:00" --backend manual
+python scripts/dining/run_check.py show --place 대돈집
+```
+
+| 백엔드 | 무엇 |
+|---|---|
+| `stub` | 정해둔 답. 파이프라인이 도는지 볼 때 |
+| `manual` | 사람이 열어 보고 적는다. 네이버 대조 작업을 옮긴 것 |
+| `catchtable` | 비어 있다. 브라우저를 몰아야 해서 스크립트에 담기지 않는다 |
+
+캐치테이블은 `ask` 로 물음을 뽑아 사람이 브라우저로 확인하고 `run --backend manual`
+로 적는다. 로그인은 사람이 하고 예약 버튼은 누르지 않는다.
+
+---
+
+## 원장 확인기
+
+판정이 왜 그렇게 나왔는지 SQL 없이 따라가는 화면이다. 원문 한 줄이 어떤 규칙이
+되었고 그 규칙이 어떤 답을 내는지 한 자리에서 본다.
+
+```bash
+set DINING_DSN=postgresql://postgres@localhost:5433/dining_dev
+python -m uvicorn scripts.dining.inspect_app:app --port 8011 --reload
+```
+
+`final_project_cs` 에서 띄우고 `http://127.0.0.1:8011` 로 연다.
+
+보이는 것은 그 시각 판정과 근거, 이번 주 요일별 영업시간, 원문, 여행 조건별 결과,
+현장 확인 물음과 기록이다. 영업 규칙과 휴무 규칙은 여기서 고치지 않는다.
+그것은 적재기의 일이다. 쓰기는 현장 확인 기록 한 가지뿐이며 그것도 관측이지 규칙이 아니다.
+
+목록의 대부분이 `record_status = unknown` 인데 인허가 자료를 아직 붙이지 않아서이며
+오늘 영업 여부와 무관하다. 화면에서는 폐업만 따로 보인다.
 
 ---
 
