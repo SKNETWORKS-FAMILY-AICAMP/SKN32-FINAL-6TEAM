@@ -110,10 +110,30 @@ ITEMS: tuple[Item, ...] = (
         T + "contract/test_team_tool_discipline.py::test_tool_outside_allowed_tools_is_refused_at_runtime",
         T + "contract/test_contracts.py::test_approval_required_proposal_forces_wait_for_approval",
     )),
-    Item(14, "실제 공급자에는 자동 실행이 걸리지 않는다", "아키텍처", (), mvp=False,
-         note="공급자 등급(`tier`) 개념이 코드에 없다. 지금 공급자는 Mock 하나뿐이고 승인 뒤에만 실행된다"),
-    Item(15, "자동 실행 분기는 tier=='simulated' 에서만 열린다", "아키텍처", (), mvp=False,
-         note="14 와 같은 이유로 잴 것이 없다"),
+    Item(14, "실제 공급자에는 자동 실행이 걸리지 않는다", "아키텍처", (
+        T + "architecture/test_supplier_tier_gate.py::test_no_booking_handler_applies_without_human_approval",
+        T + "architecture/test_supplier_tier_gate.py::test_the_tier_column_defaults_to_the_real_supplier",
+        T + "integration/controller/test_travel_approval_proposal_reaches_waiting.py::"
+            "test_an_approved_cancel_on_a_real_supplier_never_touches_the_ledger",
+    ), mvp=False,
+         note="`[2026-09-22]` 공급자 등급이 **데이터에** 생겼다(마이그레이션 017 `supplier_bookings.tier`, "
+              "기본값 `real`). 등급이 `simulated` 가 아니면 적용기가 원장을 건드리지 않고 `ActionRejected` "
+              "→ 코어가 전부 되돌리고 `action_rejected` 로 사람에게 넘긴다. 예약 적용기는 전부 "
+              "`auto_apply=False` 라 **승인 뒤에만** 온다 — 두 문을 같이 잠근다"),
+    Item(15, "자동 실행 분기는 tier=='simulated' 에서만 열린다", "아키텍처", (
+        T + "architecture/test_supplier_tier_gate.py::"
+            "test_every_write_to_the_supplier_ledger_passes_the_tier_gate_first",
+        T + "architecture/test_supplier_tier_gate.py::test_the_gate_actually_catches_an_ungated_write",
+        T + "architecture/test_supplier_tier_gate.py::test_the_gate_opens_only_for_the_simulated_tier",
+        T + "integration/controller/test_travel_approval_proposal_reaches_waiting.py::"
+            "test_a_supplier_row_without_a_tier_is_treated_as_real",
+        T + "integration/controller/test_travel_approval_proposal_reaches_waiting.py::"
+            "test_the_ledger_only_moves_for_the_simulated_tier",
+    ), mvp=False,
+         note="`[2026-09-22]` AST 로 **공급자 원장을 바꾸는 SQL 전부**를 찾아 같은 함수 안에서 게이트가 "
+              "그보다 **앞에** 불리는지 센다 — 새 적용기가 한 줄 더 써도 잡힌다. ★검사기 자신도 시험한다"
+              "(게이트 없는 코드·순서 뒤바뀐 코드를 넣어 빨간지 확인) — DoD-23 의 「통과하면서 못 잡는 "
+              "가드」를 되풀이하지 않으려는 것이다. 게이트를 실제로 지워 5건이 빨간 것을 확인하고 원복했다"),
     Item(16, "업체 건은 실행하지 않고 변경 링크를 만든다", "자동", (), mvp=False,
          note="변경 **링크**는 없다. 대신 승인 뒤 인계 메시지를 바깥함에 넣는다(booking.handoff)"),
     Item(17, "변경 링크에 바뀔 항목·대안·차액이 들어 있다", "자동", (), mvp=False,

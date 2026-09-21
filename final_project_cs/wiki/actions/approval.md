@@ -71,8 +71,9 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 - 적용기는 `auto_apply=False` 로 선언한다 — 승인 없이 오면 위 절의 규칙이 `action_requires_approval` 로 막는다.
 - 승인 직전 재검증은 승인 API 가 이미 한다(아래 「승인 전 재검증」). 적용기는 적용 순간 대상을 **한 번 더** 잠가 확인한다.
 - 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/modules/travel_ops/booking_actions.py`.
+- `[2026-09-22]` ★**승인이 나도 실제 공급자 원장은 안 바꾼다.** `booking.cancel` 은 `supplier_bookings.tier == 'simulated'` 일 때만 원장을 건드리고, 그 밖(기본값 `real`)이면 `ActionRejected` → 전부 되돌리고 `action_rejected` 로 사람에게 간다. **승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다**(v11 §4-C · DoD-14·15). → [../teams/booking-handoff.md](../teams/booking-handoff.md#2026-09-22-게이트가-생겼다--이-절이-명세였다가-사실이-됐다)
 - `[2026-09-20]` **끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다**(`RUNNABLE_STATUSES`). 전에는 되잡기 작업이 같은 Case 를 또 집으면 Team 을 한 번 더 돌린 뒤 결과를 쓸 때 상태기계가 막았다 — 결과는 같지만 모델·도구를 한 번 더 쓰고 사유가 「전이 오류」로 보였다. 기다림을 푸는 것은 승인 API 와 `resume()` 이다.
-- 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름).
+- 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름 · `[2026-09-22]` 공급자 등급별 실행/거부 3건) · `tests/architecture/test_supplier_tier_gate.py`(등급 게이트, 6건).
 
 ## 승인자 권한
 

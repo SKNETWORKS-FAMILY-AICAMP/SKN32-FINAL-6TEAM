@@ -139,13 +139,16 @@ def main() -> None:
                  f"BK-{key.upper()}", kind, status, hours(start_h), party, cap, amount, locked))
 
         for booking_key, supplier, status in SUPPLIER:
+            # ★`[2026-09-22]` 등급을 **적어서** 넣는다(마이그레이션 017 · DoD-14·15). 이 시드는
+            #   전부 시연용 Mock 공급자라 `simulated` 다. 안 적으면 기본값 `real` 이 되고 시연의
+            #   자동 취소가 `action_rejected` 로 막힌다 — 안전한 쪽이지만 시연이 안 돈다.
             cur.execute(
                 "INSERT INTO supplier_bookings (supplier_booking_id, tenant_id, booking_id, "
-                "supplier, supplier_ref, status, confirmed_at) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "supplier, supplier_ref, status, confirmed_at, tier) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
                 "ON CONFLICT (supplier_booking_id) DO UPDATE SET status=EXCLUDED.status, "
-                "confirmed_at=EXCLUDED.confirmed_at",
+                "confirmed_at=EXCLUDED.confirmed_at, tier=EXCLUDED.tier",
                 (stable(f"supplier:{booking_key}"), DEMO, booking_ids[booking_key],
-                 supplier, f"REF-{booking_key.upper()}", status, hours(-4)))
+                 supplier, f"REF-{booking_key.upper()}", status, hours(-4), "simulated"))
 
     with get_connection() as conn, conn.cursor() as cur:
         counts = {}

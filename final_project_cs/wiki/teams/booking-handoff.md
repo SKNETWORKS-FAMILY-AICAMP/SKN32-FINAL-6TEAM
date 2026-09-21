@@ -21,9 +21,9 @@ domain: travel
 | 명세 | 코드 |
 |---|---|
 | 승인이 필요한 건 특정 · 대안 정리 | **있다** — `_verify()`·`_prepare()` 가 **승인 대기 제안만** 돌려준다 |
-| **`tier == 'simulated'` 게이트** | **없다.** `simulated` 문자열이 `app/`·`tests/` 에 **0회**다 |
-| **협약사 Mock 자동 실행** | **없다.** 자동 실행 분기 자체가 없다 |
-| `supplier.tier` 칼럼 | **없다.** `010_domain_travel.sql` 의 `supplier_bookings` 에 `tier` 가 없다 |
+| **`tier == 'simulated'` 게이트** | ~~없다~~ → **있다** `[2026-09-22]`. 아래 「안전장치」 절 |
+| **협약사 Mock 자동 실행** | **없다.** 자동 실행 분기 자체가 없다 — 지금 실행은 전부 **승인 뒤**다 |
+| `supplier.tier` 칼럼 | ~~없다~~ → **있다** `[2026-09-22]` `supplier_bookings.tier`(마이그레이션 017, 기본값 `real`) |
 | 변경 링크 생성 | **없다.** 링크를 만드는 코드가 없다 |
 
 ★**이게 나쁜 상태가 아니다.** 기본 동작이 **인계**이고 자동 실행은 시연이므로, **없는 쪽이 기본 규칙에 맞다.** 문서가 「있는 것처럼」 적은 것이 문제다.
@@ -65,6 +65,25 @@ domain: travel
 자동 실행 분기는 `supplier.tier == 'simulated'` 일 때만 열린다. 실제 공급자가 등록되면 그 건은 승인 경로로 간다. **아키텍처 테스트로 막는다**(v10 DoD-14·15).
 
 ★**시연 모드는 이 Team 안에 갇힌다.** 다른 Team은 이 분기를 모른다.
+
+#### `[2026-09-22]` 게이트가 생겼다 — 이 절이 명세였다가 사실이 됐다
+
+등급이 **데이터에** 있다 — `supplier_bookings.tier`(마이그레이션 [017](../../app/infrastructure/db/migrations/017_supplier_tier.sql)).
+**기본값은 `real`** 이고 DB CHECK 가 값을 `('real','simulated')` 둘로 묶는다. 등급을 잊은 행은
+전부 실제 공급자로 취급돼 자동 실행이 막힌다 — **잊음의 대가가 돈인 쪽으로 기울이지 않는다.**
+
+| 등급 | 적용기가 하는 일 |
+|---|---|
+| `simulated` | 공급자 원장(`supplier_bookings`)과 우리 예약을 함께 바꾼다 |
+| 그 밖(기본 `real`·`None`·오타) | 원장을 **한 글자도 안 건드리고** `ActionRejected` → 코어가 전부 되돌리고 `action_rejected` 로 사람에게 |
+
+- 판정은 **`simulated` 가 아닌 것 전부를 막는** 쪽이다. 「`real` 이면 막는다」로 쓰면 등급을 못 읽은 행이 자동 실행 대상이 된다.
+- 등급은 **적용 시점에** `FOR UPDATE` 로 읽는다 — 제안을 만든 뒤 등급이 바뀌었을 수 있다. 승인 **뒤**에 바뀌어도 막힌다.
+- `booking.change` 는 원장을 어느 등급에서도 안 건드린다(인계) — 그래서 게이트가 없다.
+- 시험: [`tests/architecture/test_supplier_tier_gate.py`](../../tests/architecture/test_supplier_tier_gate.py)(6) —
+  AST 로 **원장을 바꾸는 SQL 전부**를 찾아 게이트가 그보다 앞에 불리는지 센다. ★검사기 자신도 시험한다.
+  행동은 [`test_travel_approval_proposal_reaches_waiting.py`](../../tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py) 의 3건.
+  근거 → [evidence](../records/evidence/DoD-v11-14-15_공급자등급게이트.md) · [리포트](../records/reports/2026-09-22_0831_DoD-14-15_공급자등급게이트_리포트.md)
 
 ## 2번은 빈손으로 넘기지 않는다
 

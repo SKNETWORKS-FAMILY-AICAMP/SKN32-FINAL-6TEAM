@@ -52,8 +52,10 @@ def world():
                     (tenant, customer, "BK-1", "activity", "confirmed", datetime.now(UTC) + timedelta(days=5),
                      2, 4, 5000000))
         booking = cur.fetchone()[0]
-        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status) "
-                    "VALUES (%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-1", "confirmed"))
+        # ★`[2026-09-22]` 등급을 **적어서** 넣는다(마이그레이션 017). 기본값은 `real` 이라
+        #   안 적으면 자동 실행 분기가 안 열린다 — 여기 공급자는 이름 그대로 시연용 Mock 이다.
+        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status,tier) "
+                    "VALUES (%s,%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-1", "confirmed", "simulated"))
     yield tenant, customer, booking
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
@@ -134,6 +136,74 @@ def test_an_approved_cancel_is_executed_once_against_the_mock_supplier(world):
     again = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
     assert again["skipped"] == "not_runnable" and again["status"] == "resolved"
     assert _state(tenant, case_id, booking)[3] == actions
+
+
+def _set_tier(booking, tier):
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE supplier_bookings SET tier=%s WHERE booking_id=%s", (tier, booking))
+
+
+# invariant: DoD-14
+def test_an_approved_cancel_on_a_real_supplier_never_touches_the_ledger(world):
+    """★v11 §12 DoD-14 — **승인이 나도** 실제 공급자 원장은 자동으로 바뀌지 않는다.
+
+    승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다(v11 §4-C).
+    등급이 `real` 이면 원장도 우리 예약도 **그대로**이고 Case 가 사람에게 간다.
+    """
+    tenant, customer, booking = world
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    _approve(tenant, case_id)
+    _set_tier(booking, "real")                       # 승인 **뒤에** 실제 공급자로 밝혀져도 막힌다
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_rejected", events[-1]
+    assert ours == theirs == "confirmed"             # ★한 글자도 안 바뀌었다
+    assert actions == [("booking.cancel", "failed", None)]
+
+
+# invariant: DoD-15
+def test_a_supplier_row_without_a_tier_is_treated_as_real(world):
+    """★기본값이 안전한 쪽이라는 것을 **DB 에 대고** 잰다 — 등급을 잊은 행은 자동 실행 대상이 아니다."""
+    tenant, customer, booking = world
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM supplier_bookings WHERE booking_id=%s", (booking,))
+        # tier 를 적지 않는다 — 마이그레이션 017 의 기본값이 무엇인지 그대로 드러난다
+        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status) "
+                    "VALUES (%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-9", "confirmed"))
+        cur.execute("SELECT tier FROM supplier_bookings WHERE booking_id=%s", (booking,))
+        assert cur.fetchone()[0] == "real"
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    _approve(tenant, case_id)
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_rejected", events[-1]
+    assert ours == theirs == "confirmed"
+    assert actions == [("booking.cancel", "failed", None)]
+
+
+# invariant: DoD-15
+def test_the_ledger_only_moves_for_the_simulated_tier(world):
+    """★같은 조립·같은 승인에서 **등급만** 바꿔 두 결과를 나란히 본다.
+
+    한쪽만 보면 "원래 안 바뀌는 건지, 등급 때문에 안 바뀐 건지" 를 구분하지 못한다.
+    """
+    tenant, customer, booking = world
+    outcomes = {}
+    for index, tier in enumerate(("real", "simulated")):
+        _set_tier(booking, tier)
+        controller = _controller()
+        case_id = _open(tenant, customer, "booking_cancel_request", request_id=f"req-tier-{index}")
+        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+        _approve(tenant, case_id)
+        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+        case, ours, theirs, actions, _ = _state(tenant, case_id, booking)
+        outcomes[tier] = (str(case["status"]), ours, theirs, actions[0][1])
+    assert outcomes["real"] == ("escalated", "confirmed", "confirmed", "failed")
+    assert outcomes["simulated"] == ("resolved", "cancelled", "cancelled", "succeeded")
 
 
 def test_an_approved_change_is_handed_off_not_invented(world):
