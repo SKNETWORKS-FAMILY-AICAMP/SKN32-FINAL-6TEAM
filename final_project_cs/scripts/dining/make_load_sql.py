@@ -47,12 +47,20 @@ def main() -> None:
                json.load(open(os.path.join(DATA, "tourapi_서울_음식점_목록.json"), encoding="utf-8"))}
 
     out = ["-- parse_hours.py 결과 적재. 생성 파일이므로 직접 고치지 않는다.",
-           "BEGIN;", ""]
+           "BEGIN;", "",
+           "-- 파서를 고친 뒤 다시 돌리면 고친 결과가 반영되어야 한다.",
+           "-- 규칙 id 는 차례로 매기므로 규칙 수가 줄면 남은 옛 행이 그대로 살아남는다.",
+           "-- 「명절당일」이 유령 일요일 휴무로 남아 있던 것이 그래서였다.",
+           "-- 이 출처가 만든 것만 지운다. operator_check 처럼 사람이 넣은 것은 건드리지 않는다.",
+           f"DELETE FROM dining.dn_closure_rule WHERE source_code = '{SOURCE}';",
+           f"DELETE FROM dining.dn_hours_rule   WHERE source_code = '{SOURCE}';",
+           "-- 구간은 규칙에 ON DELETE CASCADE 로 달려 있어 함께 지워진다.",
+           ""]
 
     out.append("INSERT INTO dining.dn_load_meta "
                "(load_id, source_code, fetched_at, schema_version, scope, row_count, raw_uri, status)")
     out.append(f"VALUES ('{LOAD_ID}', '{SOURCE}', now(), 'KorService2/detailIntro2', "
-               f"'성수, 경복궁, 잠실, 서울역, 명동', {len(parsed)}, "
+               f"'성수, 경복궁, 잠실, 서울역', {len(parsed)}, "
                f"'travel-data/tourapi_음식점_소개정보.json', 'loaded')")
     out.append("ON CONFLICT (load_id) DO NOTHING;\n")
 
