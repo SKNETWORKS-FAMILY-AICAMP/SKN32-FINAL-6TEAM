@@ -1,0 +1,123 @@
+---
+type: plan
+title: Team 을 어느 순서로 만드나
+description: 여행 Team 을 무엇부터 하나. 그리고 실제로는 여섯이 한꺼번에 붙어서 순서가 다르게 흘렀다
+status: draft
+tags: [architecture, contract]
+domain: travel
+---
+
+# Team 을 어느 순서로 만드나
+
+`[실측]` 근거는 v11 §5·§9-B.
+
+## 계획한 순서
+
+| # | Team | 주차 | 왜 이 순서 |
+|---|---|---|---|
+| 1 | **Activity** | 2~3 | **취소·변경 규정이 문서로 존재한다.** 판정 규칙을 바로 쓸 수 있고 예약금이 걸려 실패 비용이 크다 |
+| 2 | Dining | 4 | |
+| 3 | Mobility | 5 | **선제 조정 루프와 함께 붙는다** — 이 Team 의 재계획이 일정 순서 자체를 바꾸므로 루프가 있어야 의미가 있다 |
+| MVP 다음 | Booking Handoff | — | `[결정 2026-09-10]` MVP 에서 뺐다(09-08 에는 Activity 와 함께 가는 필수였다) |
+| 등록만 | Lodging / Flight | — | 잠긴 예약으로만 취급한다 |
+
+### 왜 Activity 가 첫째인가
+
+**판정 규칙을 밖에서 가져올 수 있는 유일한 Team 이다.**
+
+```
+골프장 우천 위약금 규정  →  그대로 판정 규칙이 된다
+기상청 초단기예보        →  그대로 감시 소스가 된다
+```
+
+다른 Team 은 이 둘 중 하나가 `[미확보]` 다 — Dining 은 임시휴무를 어디서 받는지 모르고, Mobility 는 운행 정보 출처가 미정이다.
+
+★**Activity 하나만으로도 루프가 성립하도록 설계한다**(v11 §10 리스크). Dining·Mobility 도 MVP 다(`[결정 2026-09-10]`). ~~7주 배분이 추정이라 일정이 밀리면 둘을 뒤로 민다.~~ `[정정 2026-09-10]` 일정 조정과 별개로 MVP Team은 Activity·Dining·Mobility 셋이며, Booking Handoff는 MVP 다음 단계이고 DoD-14~21을 제외한 18항목으로 MVP를 판정한다(v11 §0-4 결정 16).
+
+### Booking Handoff 는 왜 필요한가 — MVP 다음
+
+`[결정 2026-09-10]` MVP 에서 뺐다. 아래는 이 Team 이 붙어야 하는 이유이고, 붙는 시점은 MVP 다음이다.
+
+**Activity 가 만들어 내는 결과의 절반이 업체 건이기 때문이다.** "10/03 골프를 10/04 로 옮기자"는 후보를 냈는데 그걸 넘길 곳이 없으면 감지가 제품이 되지 않는다.
+
+★**그리고 여기가 가장 위험한 자리다.** 자동 실행 분기가 실제 공급자로 새면 승인 없이 남의 돈이 나간다. `tier == 'simulated'` 게이트를 **아키텍처 테스트로** 막는다(DoD-14·15).
+
+## ★ 실제로는 이 순서로 안 갔다
+
+`[실측 2026-09-09]` **여섯이 한꺼번에 붙었다.**
+
+| 항목 | 실측 |
+|---|---|
+| 모듈 | `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/*.py` **10개** — 위 여섯에 `feedback`(인라인 분류)·`verification_policy`·`_base`·`__init__`. **`[실측 git]` 전부 미추적** |
+| 등록 | `config/project.yaml` 6팀 전부 `active: true`, `implementation_ref` 6/6 해석됨 |
+| 테스트 | 단위·계약·아키텍처 552개 통과 |
+
+**순서를 지키는 것보다 `_base.py` 로 계약 포장을 한 번에 만드는 쪽이 쌌기 때문이다.** 여섯이 같은 뼈대를 쓰므로 하나씩 붙이면 뼈대를 여섯 번 고치게 된다.
+
+### 그 선택이 만든 것 — 좋은 쪽과 나쁜 쪽
+
+#### `business_subject`
+
+`[정정 2026-09-10]` Team의 `_base.py:169` 폴백 값은 최종 멱등 키에 쓰이지 않고 Core가 `business_subject=str(case["case_id"])`로 다시 계산하므로, 이 결함은 상속 선택의 근거가 아니며 수정 위치는 Core다. 근거: `app/application/controller.py:371-374`(2026-09-10 실측; `open-items.md`의 「전제가 틀렸다」 판정과 같다). Team은 대상 id를 제안하고 서버는 인자에서 대상을 꺼내 실재·소유를 확인해야 한다 — activity·dining은 예약이 있으면 `booking_id`, 없으면 `item_id`, mobility는 `item_id`이며 특정하지 못하면 폴백하지 않고 거부한다(v11 §4-E 미구현). 아래 구현 순서의 작업도 이 Core 수정이다.
+
+| | |
+|---|---|
+| **좋은 쪽** | 가드·`_result`·`_evidence`·`_escalate`·`_unknown`·`_proposal` 이 한 곳에 있다. Team 마다 다르게 하는 실수가 안 생긴다 |
+| **★나쁜 쪽** | `[정정 2026-09-10]` 위 「business_subject」 정정 참조 — Core 결함이므로 상속 선택의 근거가 아니다. |
+
+★**공용 기반은 실수의 전파 경로이기도 하다.** 뼈대를 먼저 만들면 뼈대를 먼저 검증해야 한다.
+
+## ★ 지금 막혀 있는 것 — Team 순서가 아니라 그 앞이다
+
+`[실측 2026-09-10 작업 트리]` **라우팅이 풀렸다.** `travel_ops/feedback.py` 의 `INTENTS` 다섯이 슬러그이고 `ISSUE_CODES` 가 여행 17개이며, `controller.py:72,175` 가 `case_type_of(issue_code)` 와 `intent` 를 **둘 다** 넘긴다. **`[실측 git]` 아직 커밋 전이다** — 되돌려지면 다시 막힌다.
+
+★**하루 전까지는 막혀 있었다.** `[실측 2026-09-09]` 분류 어휘가 쇼핑몰이라 여행 라벨이 전부 `ClassificationFailed` 로 떨어졌다. **그래서 v11 이 DoD-23(라우팅 도달성)을 세웠다** — 같은 일이 다시 나면 검사가 잡는다.
+
+```
+INTENTS               order · shipping · return · exchange · other   ← 쇼핑몰
+여행 Team 이 받는 것   activity · booking · mobility · dining · lodging · flight
+겹치는 것              0개  →  ClassificationFailed  →  escalated
+```
+
+**분류기가 막으면 여섯 중 아무도 안 불린다.** 그래서 **Team 순서보다 코어 1 의 분류 어휘 교체가 먼저다**(v11 §9-B 1주차 "코어 라벨 교체").
+
+★**막으라고 만든 가드가 안 막았다.** 옛 `test_feedback_intent_alignment.py` 가 등록표가 아니라 `VocStoreManagerTeam` 하나를 봤는데 그 Team 은 등록조차 안 돼 있었다. **고정된 예시를 보는 가드는 예시가 사라지면 가드가 아니게 된다.**
+
+`[실측 2026-09-10]` **그 가드는 삭제됐다.** 대신 v11 이 **DoD-23(라우팅 도달성)** 을 세웠고 `tests/unit/core/test_commit_phase_mapping.py::test_every_declared_prefix_is_reachable` 가 **등록표를 읽어** 모든 Team 에 닿는 접두가 있는지 본다 — 고정된 예시가 아니라 선언을 본다.
+
+**코드 수정은 담당 세션 몫이다** → [../../../wiki/delivery/open-items.md](../../../wiki/delivery/open-items.md)
+
+## 다음에 무엇을 만드나
+
+| 순서 | 무엇 | 왜 |
+|---|---|---|
+| 1 | **코어 1 분류 어휘 교체** | 이게 없으면 위 여섯이 전부 죽은 코드다 |
+| 2 | ~~`business_subject` 폴백 제거~~ Core의 최종 키 대상 계산 수정 | `[정정 2026-09-10]` 위 「business_subject」 정정 참조. |
+| 3 | Activity 판정 규칙 실물화 | 지금은 계약 포장만 있다 |
+| 4 | 선제 조정 루프 | Mobility 와 함께 (v11 §9-B 5주차) |
+| 5 | **Place Verification 등록** | `[실측 2026-09-10]` **원격은 생겼다**(`travel_remote_agent.py` 202줄 · 통합 테스트 7건). `config/project.yaml` 등록이 **0건**이라 아직 부를 수 없다 |
+
+<details>
+<summary>v9(쇼핑몰) 순서 여섯 — 무엇이 갈렸는지 보려고 남긴다</summary>
+
+1 Response Generation & Review(구현이 끝나 있어 가장 빨리 데모) · 2 Return & Refund(Mock) · 3 Procurement + Order & Payment · 4 Fulfillment & Logistics · 5 VOC & Store Manager 보완 · 6 Catalog & Verification(A2A 라 마지막).
+
+★**2번이 기준 Team 이었던 이유** — 외부 연동 없이 승인 경계 전체(`ContextPack → ActionProposal → 승인 대기`)를 보일 수 있는 유일한 Team 이고, 금융 side effect 가 fixture 로 격리돼 실수해도 돈이 안 나갔다. **여행에서 그 자리는 Activity 다**(규정이 문서로 있고 Mock 예약 확인이 허용된다).
+
+★**1번의 함정** — `response_generation_review` 가 구현은 됐는데 `accepted_case_types=[]` 라 **Registry 가 선택할 수 없었다.** "구현됐다"와 "선택된다"는 다르다.
+
+★**그 함정이 지금 더 큰 모양으로 재현됐다.** 이번엔 빈 목록이 아니라 **분류기가 그 case_type 을 아예 못 만든다.** 같은 사고의 상류 버전이다.
+
+★**6번을 마지막에 둔 이유** — local canonical 결과와 승인 경계를 먼저 고정해야 원격이 그것과 같은지 잰다. **Place Verification 에도 그대로 걸린다.**
+
+`[실측 2026-09-10]` **그런데 이번엔 원격이 먼저 나왔다.** 로컬 여섯이 라우팅도 안 되는 상태에서 원격이 생겼다 — 순서를 뒤집은 이유는 **A2A 로 부를 상대가 아예 없어졌기 때문**이고(등록 교체로 `catalog_verification` 이 빠졌다), 그 원격은 **시뮬레이터라 비교 기준이 아니라 왕복 증명이 목적**이다.
+
+</details>
+
+## 관계
+
+- [index.md](index.md) — Team 영역
+- [activity.md](activity.md) · [dining.md](dining.md) · [mobility.md](mobility.md) — MVP 셋
+- [booking-handoff.md](booking-handoff.md) — MVP 다음
+- [common-utils.md](common-utils.md) — 공통 뼈대
+- [../../../wiki/delivery/open-items.md](../../../wiki/delivery/open-items.md) — 지금 막혀 있는 것

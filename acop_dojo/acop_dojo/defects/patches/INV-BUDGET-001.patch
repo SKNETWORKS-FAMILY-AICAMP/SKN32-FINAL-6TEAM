@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -146,7 +146,7 @@
+     @model_validator(mode="after")
+     def _budget_and_signals(self) -> ContextPack:
+         # 예산을 넘긴 팩은 애초에 만들어지면 안 된다 (deterministic truncation 이 선행한다)
+-        if self.estimated_input_tokens > self.token_budget:
++        if self.estimated_input_tokens > self.token_budget * 2:
+             raise ValueError(
+                 f"ContextPack 이 예산을 넘었다: {self.estimated_input_tokens} > {self.token_budget}. "
+                 "Context Broker 가 절삭한 뒤에 만들어야 한다."

@@ -1,0 +1,9 @@
+--- a/app/core/idempotency.py
++++ b/app/core/idempotency.py
+@@ -17,5 +17,5 @@
+ def request_id_for_case(case: dict[str, Any]) -> str:
+     """Use the originating request id, with a stable case id fallback for older cases."""
+     state = case.get("state_json") or {}
+-    return str(state.get("request_id") or case["case_id"])
++    return str(case["case_id"])
+ 

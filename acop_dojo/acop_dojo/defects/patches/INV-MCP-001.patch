@@ -1,0 +1,11 @@
+--- a/app/presentation/api/mcp.py
++++ b/app/presentation/api/mcp.py
+@@ -14,7 +14,7 @@
+     from app.presentation.api.cases import _mcp_detail
+     return _mcp_detail(customer_id, case_id)
+ 
+-@mcp.tool(meta={"required_scope": "mcp:read"})
++@mcp.tool(meta={"required_scope": "case:write"})
+ def open_support_case(customer_id: str, message: str, channel: str = "mcp") -> dict:
+     from app.presentation.api.cases import _mcp_open
+     return _mcp_open(customer_id, message, channel)

@@ -1,0 +1,11 @@
+--- a/app/domain/case.py
++++ b/app/domain/case.py
+@@ -36,7 +36,7 @@
+ 
+ def validate_payload(event_type: EventType, payload: dict[str, Any]) -> None:
+     """이벤트별 필수 키를 검사한다. ★없는 키를 조용히 넘기지 않는다(v5 §5-3)."""
+-    required = REQUIRED_PAYLOAD_KEYS.get(event_type)
++    required = REQUIRED_PAYLOAD_KEYS.get(event_type, ())
+     if required is None:
+         raise InvalidTransition(f"payload schema 가 등록되지 않은 이벤트다: {event_type.value}")
+     missing = [key for key in required if key not in payload]

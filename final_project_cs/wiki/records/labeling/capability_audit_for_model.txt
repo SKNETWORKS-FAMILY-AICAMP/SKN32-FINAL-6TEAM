@@ -1,0 +1,51 @@
+너는 커머스 고객응대 시스템의 라우팅을 감사한다.
+
+아래 JSONL 각 줄은 고객 문의 하나다. `capabilities` 는 그 문의를 맡은 팀이 실제로
+가진 기능 목록이다. **그중 어느 기능으로 처리하는 것이 맞는지** 판정해라.
+
+판정 규칙:
+- 고객이 무엇을 해 달라고 하는지를 본다. 규칙·조건을 묻는 것과 실행을 요청하는 것은 다르다.
+- ★**한 문장만으로 정할 수 없으면 "UNDECIDABLE" 을 골라라.** 억지로 하나를 고르면
+  애매함이 불일치로 둔갑한다. 실제로 이 데이터에서 같은 두 기능 사이를 양방향으로
+  틀리는 현상이 관측됐다 — 경계가 문장에 없을 수 있다.
+- `capabilities` 밖의 이름을 만들어내지 마라.
+
+각 줄마다 JSON 한 줄씩 출력한다. 다른 말은 쓰지 마라:
+{"case_id":"...","capability":"고른 기능 또는 UNDECIDABLE","confidence":"high|medium|low","why":"한 문장"}
+
+--- 입력 ---
+{"case_id": "g-exchange-04", "intent": "exchange", "team_id": "return_refund", "message": "교환할 상품을 회수한 뒤에는 어떤 순서로 검수와 재출고가 진행되나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-06", "intent": "exchange", "team_id": "return_refund", "message": "회수는 끝났는데 새 상품이 아직 출고되지 않았어요. 현재 단계를 확인해 주세요.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-07", "intent": "exchange", "team_id": "return_refund", "message": "교환 상품이 품절이면 환불로 바꿀 수 있나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-08", "intent": "exchange", "team_id": "return_refund", "message": "검수에서 교환이 반려되면 환불 전환을 신청할 수 있는지 알고 싶습니다.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-09", "intent": "exchange", "team_id": "return_refund", "message": "단종된 상품이라 교환이 어렵다고 합니다. 환불 금액은 어떻게 정해지나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-10", "intent": "exchange", "team_id": "return_refund", "message": "교환 대신 환불을 선택하면 제가 최종적으로 동의해야 하는 단계가 있나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-11", "intent": "exchange", "team_id": "return_refund", "message": "교환을 한 번 신청했다가 취소하고 다시 신청하려고 합니다. 제한이 있나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-12", "intent": "exchange", "team_id": "return_refund", "message": "같은 상품을 두 번 교환할 수 있는지 궁금합니다.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-exchange-14", "intent": "exchange", "team_id": "return_refund", "message": "교환 신청을 취소했는데 이미 발송된 새 상품은 어떻게 되나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-order-04", "intent": "order", "team_id": "procurement_order_payment", "message": "아직 출고 전이라 배송지를 바꾸고 싶어요. 주문 전체를 취소하지 않고 주소만 수정할 수 있나요?", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-05", "intent": "order", "team_id": "procurement_order_payment", "message": "색상 옵션을 다른 것으로 바꾸고 싶은데 이미 결제한 주문도 변경되나요?", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-06", "intent": "order", "team_id": "procurement_order_payment", "message": "주문 수량 하나만 줄이고 나머지 상품은 그대로 받고 싶습니다.", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-07", "intent": "order", "team_id": "procurement_order_payment", "message": "결제 직후 주문을 취소했는데 판매자 사정으로 취소된 건이라 승인이 필요한가요?", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-13", "intent": "order", "team_id": "procurement_order_payment", "message": "카드 결제가 계속 실패해서 주문을 못 하고 있습니다. 먼저 어떤 내용을 확인해야 하나요?", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-14", "intent": "order", "team_id": "procurement_order_payment", "message": "결제 오류가 났는데 돈이 빠져나간 것처럼 보여요. 이중 결제인지 확인 부탁드립니다.", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-order-15", "intent": "order", "team_id": "procurement_order_payment", "message": "간편결제가 실패한 뒤 주문 상태가 어떻게 남는지 알고 싶습니다.", "capabilities": ["procurement.quote", "order.verify", "order.create", "order.modify", "order.cancel", "payment.status"]}
+{"case_id": "g-return-03", "intent": "return", "team_id": "return_refund", "message": "반품 신청을 오늘 접수하면 접수 시점은 언제로 기록되나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-04", "intent": "return", "team_id": "return_refund", "message": "마음이 바뀌어서 반품하려고 합니다. 반품 배송비는 누가 부담하나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-05", "intent": "return", "team_id": "return_refund", "message": "받은 상품이 주문한 것과 달라서 반품하려는데 배송비를 제가 먼저 내야 하나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-06", "intent": "return", "team_id": "return_refund", "message": "왕복 배송비가 청구됐는데 반품 배송비가 어떻게 계산됐는지 알려 주세요.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-08", "intent": "return", "team_id": "return_refund", "message": "주문제작 상품인데 단순히 마음에 들지 않아서 반품하고 싶습니다.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-10", "intent": "return", "team_id": "return_refund", "message": "두 개를 반품하려고 신청했는데 시스템에는 세 개로 입력됐습니다. 수량을 바로잡아 주세요.", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-12", "intent": "return", "team_id": "return_refund", "message": "반품 수량을 주문 수량보다 많이 입력했는데 바로 접수되지 않습니다. 어떻게 처리되나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-return-13", "intent": "return", "team_id": "return_refund", "message": "부분 반품을 하면 반품하지 않은 상품의 주문 상태도 함께 바뀌나요?", "capabilities": ["return.check_eligibility", "return.request", "refund.calculate"]}
+{"case_id": "g-shipping-01", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "배송완료라고 뜨는데 현관과 경비실 어디에도 물건이 없습니다. 조사해 주세요.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-02", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "택배사에 확인을 요청한 지 며칠 됐는데 아직 답이 없어요. 언제까지 기다려야 하나요?", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-03", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "가족이 대신 받은 것 같은데 배송완료 미수령으로 접수해도 될까요?", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-08", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "출고 후에 이사한 주소로 보내 달라고 요청할 수 있을까요?", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-09", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "배송지를 한 번 바꿨는데 다시 다른 주소로 바꾸고 싶어요. 가능한 횟수가 정해져 있나요?", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-10", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "택배 기사님이 왔을 때 집을 비워서 받지 못했습니다. 재배송을 신청하고 싶어요.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-11", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "부재가 반복되면 상품이 반송될 수 있나요? 절차를 알려 주세요.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-12", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "재배송을 요청했는데 추가 배송비를 제가 내야 하는지 궁금합니다.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-13", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "제주 지역으로 보내는 주문인데 일반 배송보다 얼마나 더 걸리는지 알고 싶습니다.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-14", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "도서 지역이라 배송이 어렵다고 표시됐습니다. 배송 불가 지역인지 확인해 주세요.", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}
+{"case_id": "g-shipping-15", "intent": "shipping", "team_id": "fulfillment_logistics", "message": "섬 지역 반품을 하게 되면 반품 배송비가 일반 지역과 다른가요?", "capabilities": ["fulfillment.track", "shipment.status", "shipment.exception"]}

@@ -1,0 +1,11 @@
+--- a/app/core/verification.py
++++ b/app/core/verification.py
+@@ -160,7 +160,7 @@
+     problems.extend(_verify_quantities(arguments, facts, policy))
+ 
+     # 4) 근거 id — ContextPack 에 실재하는 evidence 여야 한다
+-    for evidence_id in sorted(set(rationale_evidence_ids) - facts.evidence_ids):
++    for evidence_id in sorted(facts.evidence_ids - set(rationale_evidence_ids)):
+         problems.append(Mismatch(
+             "evidence_ids", "ContextPack 에 없는 근거를 든다", digest("in_context"), digest(evidence_id)))
+ 

@@ -1,0 +1,11 @@
+--- a/app/infrastructure/messaging/outbox.py
++++ b/app/infrastructure/messaging/outbox.py
+@@ -20,7 +20,7 @@
+                     cur.execute("SELECT tenant_id FROM customer_cases WHERE case_id=%s LIMIT 1", (payload.get("case_id"),))
+                     row = cur.fetchone()
+                     case_tenant_id = row[0] if row else None
+-                    tenant_id = payload.get("tenant_id") or case_tenant_id
++                    tenant_id = payload.get("tenant_id") or case_tenant_id or "unknown"
+                     if tenant_id is None:
+                         raise ValueError("tenant_id is required for outbox publish")
+                     if case_tenant_id is not None and payload.get("tenant_id") not in (None, case_tenant_id):

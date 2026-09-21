@@ -1,0 +1,11 @@
+--- a/app/application/classification.py
++++ b/app/application/classification.py
+@@ -69,7 +69,7 @@
+         #   보이는데 실제로는 아무 라벨이 없다** — `CLAUDE.md` §1 이 막으려는
+         #   "조용한 분류 성공 위장" 그 자체다. 라우팅도 빈 intent 로 가서
+         #   엉뚱한 곳에서 실패한다.
+-        if not result or not all(str(result.get(label) or "").strip() for label in REQUIRED_LABELS):
++        if not result:
+             raise ValueError("classifier returned no usable labels")
+         event: EventType = EventType.CLASSIFIED
+         payload: dict[str, Any] = dict(result)

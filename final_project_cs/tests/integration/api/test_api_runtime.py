@@ -1,0 +1,487 @@
+from __future__ import annotations
+
+from concurrent.futures import ThreadPoolExecutor
+from uuid import UUID, uuid4
+
+import pytest
+from fastapi.testclient import TestClient
+
+import app.core.settings as settings_module
+from app.infrastructure.db.session import get_connection
+from app.presentation import security
+from app.presentation.api.app import create_app
+from app.presentation.api.cases import _mcp_cases, _mcp_detail, _mcp_open
+from app.application.controller import ControllerError
+
+
+@pytest.fixture()
+def api_fixture(monkeypatch):
+    original = settings_module.get_settings()
+    tenant = "test_api_" + uuid4().hex
+    customer = uuid4()
+    other_customer = uuid4()
+    test_settings = original.model_copy(update={"tenant_id": tenant})
+    monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
+    monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+
+    with get_connection() as conn:
+        with conn.transaction():
+            with conn.cursor() as cur:
+                cur.execute("INSERT INTO tenants (tenant_id, name) VALUES (%s, %s)", (tenant, "api test"))
+                cur.execute("INSERT INTO customers (customer_id, tenant_id, external_id) VALUES (%s, %s, %s)", (customer, tenant, "customer-1"))
+                cur.execute("INSERT INTO customers (customer_id, tenant_id, external_id) VALUES (%s, %s, %s)", (other_customer, tenant, "customer-2"))
+
+    def token(scope: str) -> str:
+        return "Bearer " + security._development_key(scope, original.secret_key)
+
+    def cleanup() -> None:
+        """★FK 순서대로 지운다. **하나라도 막히면 트랜잭션이 통째로 롤백되어
+        아무것도 안 지워지고, 테넌트 행까지 남는다** — 조용히.
+
+        ★2026-09-07 — `agent_runs`·`team_tasks`·`llm_calls` 셋이 빠져 있었다.
+          이 픽스처는 REST 를 태우므로 Controller 가 실제로 돌면 그 표들이 생기고,
+          그 순간 `DELETE FROM customer_cases` 가 FK 로 막힌다. 지금은 대부분의
+          테스트가 분류기를 주입해 거기까지 안 가지만, **배선이 조금만 바뀌면
+          터지는 자리**다. 같은 저장소의 `tests/live/` 픽스처는 이미 셋을 지우고
+          이유까지 적어 뒀는데 이쪽만 안 따라왔다.
+        """
+        with get_connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM llm_calls WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+                    cur.execute("DELETE FROM team_tasks WHERE run_id IN (SELECT run_id FROM agent_runs WHERE tenant_id=%s)", (tenant,))
+                    cur.execute("DELETE FROM agent_runs WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))
+                    cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM places WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM customers WHERE tenant_id=%s", (tenant,))
+                    cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (tenant,))
+
+    try:
+        def classifier(_message: str) -> dict[str, str]:
+            return {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"}
+
+        yield {"client": TestClient(create_app(classifier=classifier)), "tenant": tenant, "customer": customer, "other_customer": other_customer, "token": token}
+    finally:
+        cleanup()
+
+
+def create_case(api_fixture, request_id: str = "seed") -> UUID:
+    response = api_fixture["client"].post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": request_id, "customer_id": str(api_fixture["customer"]), "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    return UUID(response.json()["case_id"])
+
+
+def test_post_case_enters_injected_controller_runtime(api_fixture):
+    calls = []
+
+    class FakeController:
+        async def run_case(self, **kwargs):
+            calls.append(kwargs)
+            return {"case_id": str(kwargs["case_id"]), "status": "routing", "version": 2}
+
+    app = create_app(
+        controller=FakeController(),
+        classifier=lambda _message: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"},
+    )
+    response = TestClient(app).post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "controller-runtime", "customer_id": str(api_fixture["customer"]), "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201
+    assert len(calls) == 1
+    assert calls[0]["tenant_id"] == api_fixture["tenant"]
+
+
+@pytest.mark.parametrize("scope", ["case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read"])
+def test_unauthorized_matrix_for_each_scope_and_rest_endpoint(api_fixture, scope):
+    case_id = create_case(api_fixture, "matrix-" + scope)
+    client = api_fixture["client"]
+    headers = {"Authorization": api_fixture["token"](scope)}
+    requests = {
+        "create": ("post", "/v1/cases", {"request_id": "matrix-create-" + scope, "customer_id": str(api_fixture["customer"]), "message": "matrix", "channel": "test"}),
+        "list": ("get", f"/v1/cases?customer_id={api_fixture['customer']}", None),
+        "detail": ("get", f"/v1/cases/{case_id}", None),
+        "message": ("post", f"/v1/cases/{case_id}/messages", {"request_id": "matrix-message-" + scope, "message": "follow up"}),
+        "approve": ("post", f"/v1/cases/{case_id}/actions/{uuid4()}/approve", {"decision": "approved", "approver_id": "matrix"}),
+    }
+    expected = {"create": 201 if scope == "case:write" else 403,
+                "list": 200 if scope == "case:read" else 403,
+                "detail": 200 if scope == "case:read" else 403,
+                "message": 422 if scope == "case:write" else 403,
+                "approve": 404 if scope == "action:approve" else 403}
+    for name, (method, url, body) in requests.items():
+        response = getattr(client, method)(url, headers=headers, json=body) if body else getattr(client, method)(url, headers=headers)
+        assert response.status_code == expected[name], f"{scope} {name}: {response.status_code} {response.text}"
+        if response.status_code in {403, 404}:
+            assert set(response.json()) == {"error"}
+
+
+def test_same_create_request_ten_times_has_one_action_request(api_fixture):
+    payload = {"request_id": "same-request", "customer_id": str(api_fixture["customer"]), "message": "repeat me", "channel": "test"}
+    responses = [api_fixture["client"].post("/v1/cases", headers={"Authorization": api_fixture["token"]("case:write")}, json=payload) for _ in range(10)]
+    assert [response.status_code for response in responses] == [201] * 10
+    case_ids = {response.json()["case_id"] for response in responses}
+    assert len(case_ids) == 1
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+
+
+def test_same_mcp_open_request_ten_times_has_one_case_and_action_request(api_fixture):
+    results = [_mcp_open(str(api_fixture["customer"]), "repeat from mcp", "test") for _ in range(10)]
+    assert len({result["case_id"] for result in results}) == 1
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s AND action_type=%s",
+                    (api_fixture["tenant"], "mcp.open_support_case"))
+        assert cur.fetchone()[0] == 1
+
+
+def test_concurrent_identical_create_requests_produce_one_case(api_fixture):
+    """★2026-09-01 finding (wiki/records/reports/debugs/2026-09-01_Case생성_멱등성_세_구멍.md
+    구멍 1): the sequential 10x test above never exercised this -- ten
+    *sequential* posts always see the previous one's committed row. Two
+    *concurrent* posts could both pass the "not found" check before either
+    committed, each creating a genuinely separate Case (empirically
+    confirmed: [201, 201] with two different case_ids, 2 rows in
+    customer_cases, only 1 in action_requests -- the second INSERT's
+    ON CONFLICT DO UPDATE swallowed the collision instead of raising, so
+    there was no error surfaced anywhere)."""
+    payload = {"request_id": "concurrent-request", "customer_id": str(api_fixture["customer"]), "message": "race me", "channel": "test"}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        responses = list(pool.map(
+            lambda _: api_fixture["client"].post("/v1/cases", headers={"Authorization": api_fixture["token"]("case:write")}, json=payload),
+            range(2)))
+    assert [response.status_code for response in responses] == [201, 201]
+    case_ids = {response.json()["case_id"] for response in responses}
+    assert len(case_ids) == 1, f"concurrent identical requests produced {len(case_ids)} distinct cases: {case_ids}"
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+        cur.execute("SELECT count(*) FROM action_requests WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+
+
+def test_client_supplied_idempotency_key_is_respected(api_fixture):
+    """★2026-09-01 finding, 구멍 2: CreateCase.idempotency_key was declared
+    (extra="forbid" would reject a typo of it) but never read anywhere --
+    a client sending it would reasonably believe it was honored. Two
+    different request_ids with the same client-chosen idempotency_key and
+    the same body must collapse to one case."""
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    base = {"idempotency_key": "client-chosen-key-1", "customer_id": str(api_fixture["customer"]), "message": "help me", "channel": "test"}
+    r1 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-a"})
+    r2 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-b"})
+    assert r1.status_code == 201 and r2.status_code == 201
+    assert r1.json()["case_id"] == r2.json()["case_id"]
+
+
+def test_reusing_idempotency_key_with_a_different_body_is_409(api_fixture):
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    base = {"idempotency_key": "client-chosen-key-2", "customer_id": str(api_fixture["customer"]), "channel": "test"}
+    r1 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-a", "message": "first message"})
+    r2 = api_fixture["client"].post("/v1/cases", headers=headers, json={**base, "request_id": "req-b", "message": "a completely different message"})
+    assert r1.status_code == 201
+    assert r2.status_code == 409
+    assert r2.json()["error"]["code"] == "idempotency_key_reused"
+
+
+def test_concurrent_identical_mcp_open_requests_produce_one_case(api_fixture):
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(
+            lambda _: _mcp_open(str(api_fixture["customer"]), "race me from mcp", "test"), range(2)))
+    case_ids = {result["case_id"] for result in results}
+    assert len(case_ids) == 1, f"concurrent identical MCP opens produced {len(case_ids)} distinct cases: {case_ids}"
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM customer_cases WHERE tenant_id=%s", (api_fixture["tenant"],))
+        assert cur.fetchone()[0] == 1
+
+
+def test_case_from_other_customer_is_not_found(api_fixture):
+    case_id = create_case(api_fixture)
+    response = api_fixture["client"].get(
+        f"/v1/cases/{case_id}?customer_id={api_fixture['other_customer']}",
+        headers={"Authorization": api_fixture["token"]("case:read")},
+    )
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "not_found"
+
+
+def test_message_route_passes_issued_resume_token_to_controller(api_fixture):
+    case_id = create_case(api_fixture, "resume-route")
+    calls = []
+
+    class ResumeController:
+        async def resume(self, **kwargs):
+            calls.append(kwargs)
+            if kwargs["token"] != "issued-token":
+                raise ControllerError("invalid resume token")
+            return {"case_id": str(case_id), "status": "routing", "version": 2}
+
+    client = TestClient(create_app(
+        controller=ResumeController(),
+        classifier=lambda _message: {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"},
+    ))
+    headers = {"Authorization": api_fixture["token"]("case:write")}
+    valid = client.post(f"/v1/cases/{case_id}/messages", headers=headers,
+                        json={"request_id": "resume-valid", "message": "attacker supplied text", "token": "issued-token"})
+    assert valid.status_code == 200
+    assert calls[0]["token"] == "issued-token"
+
+    invalid = client.post(f"/v1/cases/{case_id}/messages", headers=headers,
+                          json={"request_id": "resume-invalid", "message": "issued-token", "token": "not-issued"})
+    assert invalid.status_code == 401
+    assert invalid.json()["error"]["code"] == "invalid_resume_token"
+
+
+def test_mcp_open_support_case_changes_only_case_state(api_fixture):
+    before = {}
+    with get_connection() as conn, conn.cursor() as cur:
+        # ★MCP 는 read-only 다. 돈·예약 상태를 건드리지 않는다.
+        for table in ("action_requests", "bookings", "supplier_bookings"):
+            cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
+            before[table] = cur.fetchone()[0]
+    result = _mcp_open(str(api_fixture["customer"]), "open from mcp", "test")
+    # ★`routing` 이 들어왔다(2026-09-06). 전에는 MCP 경로가 분류를 **시도조차
+    #   하지 않고** `classification_unavailable` 을 적어 늘 escalated 였다 —
+    #   계약(`CLAUDE.md` §0.2 · `docs/handoff/03`)이 "Case 생성과 분류 시작까지"
+    #   라고 정한 것과 어긋나 있었다. 이제 분류에 성공하면 routing 으로 간다.
+    #   ★이 테스트가 보는 것은 상태가 아니라 **돈·예약을 안 건드린다** 는 것이다.
+    assert result["status"] in {"classifying", "routing", "escalated"}
+    assert _mcp_cases(str(api_fixture["customer"]), 20)
+    assert _mcp_detail(str(api_fixture["customer"]), result["case_id"])["case_id"] == result["case_id"]
+    with get_connection() as conn, conn.cursor() as cur:
+        for table, count in before.items():
+            cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (api_fixture["tenant"],))
+            actual = cur.fetchone()[0]
+            assert actual == (count + 1 if table == "action_requests" else count)
+
+
+def test_normal_create_and_detail_flow(api_fixture):
+    case_id = create_case(api_fixture, "normal")
+    response = api_fixture["client"].get(f"/v1/cases/{case_id}", headers={"Authorization": api_fixture["token"]("case:read")})
+    assert response.status_code == 200
+    assert response.json()["status"] in {"classifying", "routing"}
+
+
+def test_detail_evidence_carries_the_actual_event_payload(api_fixture):
+    # ★2026-09-01 발견 — value 가 {} 로 하드코딩돼 있어 API 로는 "무슨 단계를
+    #   지났다"만 보이고 "무엇을 근거로" 는 안 보였다. created 이벤트는 항상
+    #   channel/message 를 payload 로 남기므로 그 필드가 실제로 나오는지 잰다.
+    case_id = create_case(api_fixture, "evidence-payload")
+    response = api_fixture["client"].get(f"/v1/cases/{case_id}", headers={"Authorization": api_fixture["token"]("case:read")})
+    assert response.status_code == 200
+    evidence = response.json()["evidence"]
+    created = next(item for item in evidence if item["claim"] == "created")
+    assert created["value"].get("channel") is not None
+    assert not all(item["value"] == {} for item in evidence)
+
+
+def test_create_classifies_case_and_records_classified_event(api_fixture):
+    case_id = create_case(api_fixture, "classification-success")
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT status, intent, issue_code, sentiment FROM customer_cases WHERE tenant_id=%s AND case_id=%s",
+            (api_fixture["tenant"], case_id),
+        )
+        case = cur.fetchone()
+        cur.execute(
+            "SELECT event_type FROM case_events WHERE tenant_id=%s AND case_id=%s ORDER BY aggregate_version",
+            (api_fixture["tenant"], case_id),
+        )
+        events = [row[0] for row in cur.fetchall()]
+
+    assert case == ("routing", "billing", "payment_failed", "negative")
+    assert events == ["created", "classified"]
+
+
+def test_create_escalates_when_injected_classifier_fails(api_fixture):
+    failing_app = create_app(classifier=lambda _message: (_ for _ in ()).throw(RuntimeError("classifier down")))
+    client = TestClient(failing_app)
+    response = client.post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "classification-failure", "customer_id": str(api_fixture["customer"]), "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["status"] == "escalated"
+    case_id = UUID(response.json()["case_id"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT status, intent, issue_code, sentiment FROM customer_cases WHERE tenant_id=%s AND case_id=%s",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchone() == ("escalated", None, None, None)
+        cur.execute(
+            "SELECT event_type, payload_json->>'failure_code' FROM case_events WHERE tenant_id=%s AND case_id=%s ORDER BY aggregate_version",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchall() == [("created", None), ("classification_failed", "classification_failed")]
+
+
+def test_state_conflict_is_rendered_as_409(api_fixture):
+    case_id = create_case(api_fixture, "conflict")
+    response = api_fixture["client"].post(
+        f"/v1/cases/{case_id}/messages",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "conflict-message", "message": "follow up", "expected_version": 0},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+@pytest.mark.parametrize("tool", [_mcp_cases, _mcp_detail, _mcp_open])
+def test_mcp_read_scope_tools_execute_only_with_mcp_principal(api_fixture, tool):
+    principal = security.authenticate(api_fixture["token"]("mcp:read"))
+    assert "mcp:read" in principal.scopes
+    if tool is _mcp_cases:
+        assert tool(str(api_fixture["customer"]), 20) == []
+    elif tool is _mcp_detail:
+        case_id = create_case(api_fixture, "mcp-detail")
+        assert tool(str(api_fixture["customer"]), str(case_id))["case_id"] == str(case_id)
+    else:
+        result = tool(str(api_fixture["customer"]), "mcp tool", "test")
+        # ★`routing` 추가(2026-09-06) — MCP 경로가 분류를 하게 되면서 성공 시
+        #   routing 으로 간다. 이 테스트가 보는 것은 상태가 아니라 **mcp 원칙이
+        #   있어야만 tool 이 돈다** 는 것이다.
+        assert result["status"] in {"classifying", "routing", "escalated"}
+
+
+# ── 2026-09-01: 분류기가 "일부만" 돌려준 경우 ────────────────────────
+#
+# 위 테스트는 분류기가 **예외를 던지는** 경우만 본다. 그래서 필수 키 검사를
+# `if not result:` 로 좁혀도 470개가 전부 통과했다. intent 만 오고 issue_code 가
+# 빠진 응답이 성공으로 처리돼 빈 라벨이 저장되고 그 라벨로 라우팅까지 간다.
+# CLAUDE.md §1 — "분류 실패는 조용히 넘기지 않는다".
+
+
+@pytest.mark.parametrize("missing", ["intent", "issue_code", "sentiment"])
+def test_create_escalates_when_the_classifier_omits_a_required_label(api_fixture, missing):
+    labels = {"intent": "billing", "issue_code": "payment_failed", "sentiment": "negative"}
+    labels.pop(missing)
+    client = TestClient(create_app(classifier=lambda _message: dict(labels)))
+    response = client.post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": f"partial-{missing}", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["status"] == "escalated", (
+        f"{missing} 가 빠졌는데 분류가 성공으로 처리됐다"
+    )
+    case_id = UUID(response.json()["case_id"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT status, intent, issue_code, sentiment FROM customer_cases "
+            "WHERE tenant_id=%s AND case_id=%s",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchone() == ("escalated", None, None, None), (
+            "부분 분류 결과가 Case 에 저장됐다 — 값을 모르면 비워 둔다"
+        )
+        cur.execute(
+            "SELECT event_type FROM case_events WHERE tenant_id=%s AND case_id=%s "
+            "ORDER BY aggregate_version",
+            (api_fixture["tenant"], case_id),
+        )
+        assert cur.fetchall() == [("created",), ("classification_failed",)]
+
+
+def test_create_escalates_when_a_label_is_blank(api_fixture):
+    """빈 문자열도 라벨이 아니다. 키는 있는데 값이 없는 응답을 본다.
+
+    ★2026-09-01 에 이 테스트를 쓸 때는 앱이 통과시켜서 `xfail(strict=True)`
+      로 두었다. 2026-09-03 에 `app/application/classification.py` 가 키 존재
+      대신 **값**을 보도록 고쳐져 실제로 통과한다 — strict 였기 때문에 고친
+      순간 XPASS 로 알려줬고, 그래서 표식을 뗀다.
+    """
+    client = TestClient(create_app(classifier=lambda _message: {
+        "intent": "billing", "issue_code": "  ", "sentiment": "negative"}))
+    response = client.post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "blank-label", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["status"] == "escalated"
+
+
+def test_create_does_not_wait_for_the_agent_run(api_fixture):
+    """★접수 응답은 에이전트 실행을 기다리지 않는다 (v8 §3-A [2026-09-01 교정]).
+
+    전에는 라우트가 `run_case()` 를 그 자리에서 기다렸다 — 실측 p50 20~34초 ·
+    p95 32~51초. 고객이 문의를 넣고 그만큼 붙잡혀 있었다.
+
+    ★응답에 run 관련 필드를 **넣지 않는다.** 있다가 없다가 하는 필드를 두면
+      클라이언트가 "없으면 실패" 로 잘못 읽는다. 진행은 `GET /v1/cases/{id}` 로
+      확인한다.
+    """
+    started = []
+
+    class SlowController:
+        async def run_case(self, **kwargs):
+            started.append(kwargs)
+            return {"case_id": str(kwargs["case_id"]), "status": "waiting_approval",
+                    "version": 3, "run_id": str(uuid4()), "next_action": "WAIT_FOR_APPROVAL",
+                    "resume_token": "tok"}
+
+    app = create_app(
+        controller=SlowController(),
+        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+                               "sentiment": "negative"},
+    )
+    response = TestClient(app).post(
+        "/v1/cases",
+        headers={"Authorization": api_fixture["token"]("case:write")},
+        json={"request_id": "detached-run", "customer_id": str(api_fixture["customer"]),
+              "message": "please help", "channel": "test"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    # ★run 결과는 접수 응답에 없다 — GET 으로 본다
+    assert not {"run_id", "next_action", "resume_token"} & set(body)
+    assert set(body) == {"case_id", "status", "version", "intent", "issue_code",
+                         "sentiment", "links"}
+    # 분류는 접수 안에서 끝난다(LLM 한 번) — 그래서 여기서 바로 보인다
+    assert body["intent"] == "billing"
+    # TestClient 는 응답을 보낸 **뒤** background task 를 돌린다. 즉 실행은
+    # 일어나되 응답을 붙잡지 않았다.
+    assert len(started) == 1
+
+
+def test_a_failing_detached_run_does_not_break_the_intake(api_fixture, caplog):
+    """★떼어낸 실행이 터져도 접수는 성공한다. 다만 조용히 죽지 않는다."""
+    class ExplodingController:
+        async def run_case(self, **kwargs):
+            raise RuntimeError("agent exploded")
+
+    app = create_app(
+        controller=ExplodingController(),
+        classifier=lambda _m: {"intent": "billing", "issue_code": "payment_failed",
+                               "sentiment": "negative"},
+    )
+    with caplog.at_level("ERROR"):
+        response = TestClient(app).post(
+            "/v1/cases",
+            headers={"Authorization": api_fixture["token"]("case:write")},
+            json={"request_id": "detached-boom", "customer_id": str(api_fixture["customer"]),
+                  "message": "please help", "channel": "test"},
+        )
+
+    assert response.status_code == 201
+    assert any("detached run_case failed" in record.message for record in caplog.records)

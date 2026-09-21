@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/catalog_verification.py
++++ b/app/modules/customer_ops/catalog_verification.py
+@@ -50,7 +50,7 @@
+ 
+     async def execute(self, task: TeamTask) -> TeamResult:
+         evidence = list(task.context.evidence)
+-        if task.capability not in self.manifest.capabilities:
++        if task.capability in self.manifest.capabilities:
+             return self._result(task, outcome="escalated", confidence=0.0, evidence=evidence,
+                                 next_action=NextAction.ESCALATE, failure_code="unsupported_capability")
+         if task.context.degraded:

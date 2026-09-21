@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -258,7 +258,7 @@
+                 raise ValueError("wait_for_approval 은 action_proposals 가 최소 1건 있어야 한다.")
+ 
+         elif na is NextAction.HANDOFF:
+-            if not self.handoff_capability:
++            if self.handoff_capability is None:
+                 raise ValueError("handoff 는 handoff_capability 가 있어야 한다.")
+ 
+         elif na is NextAction.RESPOND:

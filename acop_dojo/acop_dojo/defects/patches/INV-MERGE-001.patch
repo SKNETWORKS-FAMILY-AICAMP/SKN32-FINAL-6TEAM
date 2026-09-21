@@ -1,0 +1,11 @@
+--- a/app/domain/case.py
++++ b/app/domain/case.py
+@@ -66,7 +66,7 @@
+         )
+ 
+     # state_json 은 덮어쓰기가 아니라 병합이다. 이전 근거를 지우지 않는다.
+-    state = dict(current.state_json)
++    state = {}
+     if isinstance(payload.get("state_patch"), dict):
+         state.update(payload["state_patch"])
+     state["last_event"] = event_type.value

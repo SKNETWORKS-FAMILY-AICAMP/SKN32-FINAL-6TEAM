@@ -1,0 +1,30 @@
+{
+  "rows": 60,
+  "metrics": {
+    "grounding_match": {
+      "n": 681,
+      "d": 702,
+      "ratio": 0.9701
+    },
+    "grounding_excess": {
+      "n": 21,
+      "d": 702,
+      "ratio": 0.0299
+    },
+    "proper_abstention": {
+      "n": 0,
+      "d": 0,
+      "ratio": null
+    },
+    "over_abstention": {
+      "n": 21,
+      "d": 60,
+      "ratio": 0.35
+    },
+    "schema_compliance": {
+      "n": 60,
+      "d": 60,
+      "ratio": 1.0
+    }
+  }
+}

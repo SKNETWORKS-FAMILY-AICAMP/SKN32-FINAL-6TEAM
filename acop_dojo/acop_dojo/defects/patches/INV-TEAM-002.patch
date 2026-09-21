@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/response_review.py
++++ b/app/modules/customer_ops/response_review.py
+@@ -90,7 +90,7 @@
+                 arguments=claims, rationale_evidence_ids=[], facts=facts,
+                 policy=CUSTOMER_OPS_POLICY,
+             )
+-            problems.extend(f"fact_mismatch:{m.field}" for m in mismatches)
++            problems.extend([])
+         return problems
+ 
+     async def _generate(self, task: TeamTask, evidence: list[Evidence], retry: int, tone_profile: str) -> dict[str, Any]:

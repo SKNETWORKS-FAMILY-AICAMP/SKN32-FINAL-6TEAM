@@ -1,0 +1,11 @@
+--- a/app/infrastructure/messaging/worker.py
++++ b/app/infrastructure/messaging/worker.py
+@@ -52,7 +52,7 @@
+             except (TimeoutError, ConnectionError) as exc:
+                 with conn.transaction():
+                     with conn.cursor() as cur:
+-                        cur.execute("UPDATE outbox SET status='unknown',last_error=%s,locked_at=NULL WHERE message_id=%s", (str(exc), message_id))
++                        cur.execute("UPDATE outbox SET status='sent',last_error=%s,locked_at=NULL WHERE message_id=%s", (str(exc), message_id))
+                 return True
+             except Exception as exc:
+                 status = "dead_letter" if attempts + 1 >= self.max_attempts else "pending"

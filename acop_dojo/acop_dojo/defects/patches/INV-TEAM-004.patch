@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -277,7 +277,7 @@
+ 
+         # ★Team 은 승인 없이 실행하지 않는다 (CLAUDE.md §0.2)
+         #   승인이 필요한 제안을 내면서 next_action 이 wait_for_approval 이 아니면 모순이다.
+-        if any(p.approval_required for p in self.action_proposals):
++        if self.action_proposals and self.action_proposals[0].approval_required:
+             if na is not NextAction.WAIT_FOR_APPROVAL:
+                 raise ValueError(
+                     "approval_required=True 인 제안이 있는데 next_action 이 "
