@@ -15,6 +15,10 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-22 — 여행 평가 데이터셋·러너로 DoD-22 를 재고, MVP 18항목이 전부 통과
+
+`eval/datasets/travel_scenarios.jsonl`(시나리오 10건)과 `eval/runners/travel_scenarios.py` 를 만들었다. 확정 하루를 변형해 흘리고 **적용된 모든 일정 버전**을 등록 때와 같은 판정기로 다시 본다 — 실측 10/10 통과 · 필수 조건 위반 0건. 결제 필터를 일부러 꺼 보니 위반 3건을 잡았다. 허브 `wiki/delivery/dod.md` 갱신 — 전체 18/26, **MVP 18/18**(남은 미측정 8 은 전부 Booking Handoff 몫).
+
 ## 2026-09-21 (오후) — 일정을 받을 때 코드로 판정하고, 불가능하면 이유·완화 조건을 붙여 거절
 
 `app/modules/travel_ops/itinerary_checks.py` 신설 — 겹침·이동 소요·영업시간·브레이크·결제·예산을 보낸 값으로 판정한다. 모르는 칸은 판정하지 않는다(결정 15). `POST /v1/trips` 가 `422 itinerary_infeasible` + `violations[]`(`reason`·`remedy`)로 거절한다(`external/rest-endpoints.md`). v11 DoD-2·3 이 미측정에서 통과로 — 전체 17/26, MVP 17/18.

@@ -176,4 +176,15 @@ def _trip_violations(items: list[Part], constraints: Mapping[str, Any],
     return found
 
 
-__all__ = ["Part", "Violation", "check_itinerary"]
+def parts_from_items(items: Iterable[Any], routes: Mapping[str, Any] | None = None) -> list[Part]:
+    """저장된 일정 항목(`itinerary.Item`)을 판정 입력으로. ★등록 때와 **같은 판정기**를 쓰려고 둔다 —
+    평가(`eval/runners/travel_scenarios.py`)가 적용된 버전마다 이걸로 다시 본다."""
+    parts: list[Part] = []
+    for item in items:
+        route = (routes or {}).get(str((item.detail or {}).get("route"))) or (item.detail or {}).get("route_def")
+        parts.append(Part(seq=item.seq, kind=item.kind, title=item.title, starts_at=item.starts_at,
+                          ends_at=item.ends_at, place=item.place, route=route, detail=item.detail))
+    return parts
+
+
+__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items"]

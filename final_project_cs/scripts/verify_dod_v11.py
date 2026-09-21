@@ -126,9 +126,13 @@ ITEMS: tuple[Item, ...] = (
          note="지금 기록되는 것은 무엇을(action_type·인자)·결과(provider_ref)뿐이다 — 금액·되돌림 기한 칸이 없다"),
     Item(21, "(시연) 되돌림이 실패하면 사람에게 넘어간다", "자동", (), mvp=False,
          note="업체 예약 되돌림 경로가 없다"),
-    Item(22, "평가 시나리오에서 필수 조건 위반 0건", "측정", (),
-         note="★여행 골든셋이 0건이다(골든셋 72건은 쇼핑몰 시절). 확정 시나리오 하루는 `tests/scenario` 가 "
-              "보지만 그건 **시험**이지 평가 데이터셋 측정이 아니다"),
+    Item(22, "평가 시나리오에서 필수 조건 위반 0건", "측정", (
+        T + "scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint",
+        T + "scenario/test_travel_eval_scenarios.py::test_the_dataset_and_the_runner_still_match",
+    ), note="`[2026-09-22]` 여행 평가 데이터셋 `eval/datasets/travel_scenarios.jsonl`(시나리오 10건)과 "
+            "러너 `python -m eval.runners.travel_scenarios`. 적용된 **모든 일정 버전**을 등록 때와 같은 "
+            "판정기로 다시 본다. 실측 10/10 통과 · 위반 0건(보고서 `eval/reports/`). ★표본은 하루 1종 · "
+            "서울 1도시다 — 다른 일정을 대표하지 않는다. 시험은 성격이 다른 네 건만 돌린다"),
     Item(23, "등록된 모든 Team 에 도달하는 issue_code 접두가 있다", "아키텍처", (
         T + "unit/travel/test_feedback_case_type_alignment.py::test_every_routable_case_type_has_at_least_one_issue_code",
         T + "unit/travel/test_feedback_case_type_alignment.py::test_every_issue_code_either_routes_or_is_deliberately_unroutable",
