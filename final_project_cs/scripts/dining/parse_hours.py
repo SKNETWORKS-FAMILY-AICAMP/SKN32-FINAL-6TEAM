@@ -77,7 +77,7 @@ def days_from_token(token: str) -> tuple[int, ...]:
         start, end = DAY_NO[span.group(1)], DAY_NO[span.group(2)]
         if start <= end:
             return tuple(range(start, end + 1))
-        return tuple(range(start, 8)) + tuple(range(1, end + 1))
+        return tuple(sorted(tuple(range(start, 8)) + tuple(range(1, end + 1))))
     found = []
     # 「토요일」 안의 「일」 을 일요일로 읽지 않도록 요일 표기를 먼저 떼어낸다.
     rest = token
@@ -318,7 +318,18 @@ def parse_closure(raw: str) -> tuple[list[dict], list[str]]:
                 out.append({"pattern_kind": "weekly", "weekday": day})
         handled = True
 
-    if not handled and not re.search(r"격주|비정기|부정기|유동", text):
+    # 담지 못하는 표기를 먼저 걸러낸다. 아래 요일 훑기가 너무 관대해서
+    # 「봄, 가을 : 월요일, 화요일」 을 매주 월화 휴무로 만들어 버렸다.
+    if re.search(r"봄|여름|가을|겨울|비정기|부정기|유동", text):
+        notes.append("계절 또는 비정기 휴무라 담지 못함")
+        handled = True
+    if re.search(r"격주", text):
+        notes.append("격주 휴무는 규칙으로 담지 못함")
+        handled = True
+
+    # 「매주」 없이 요일만 적은 경우. 「주말」, 「월요일」 처럼 요일이 분명할 때만 본다.
+    # 「설·추석 당일」 의 「당일」 에서 일요일을 읽어내던 자리다.
+    if not handled and RE_DAY_WORD.search(text):
         bare = days_from_token(text)
         if bare:
             for day in bare:
@@ -335,14 +346,6 @@ def parse_closure(raw: str) -> tuple[list[dict], list[str]]:
 
     if re.search(r"\d{1,2}\s*월\s*\d{1,2}\s*일", text):
         notes.append("연도 없는 특정일 표기라 날짜 규칙으로 담지 못함")
-        handled = True
-
-    if re.search(r"격주", text):
-        notes.append("격주 휴무는 규칙으로 담지 못함")
-        handled = True
-
-    if re.search(r"봄|여름|가을|겨울|비정기|부정기|유동", text):
-        notes.append("계절 또는 비정기 휴무라 담지 못함")
         handled = True
 
     if not handled:
