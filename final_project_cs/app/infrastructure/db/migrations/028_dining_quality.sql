@@ -115,8 +115,60 @@ COMMENT ON VIEW dining.v_quality_summary IS
     '정확도의 분모는 판정이 난 건수다. 모름을 틀림으로 세면 정답을 늘릴수록 점수가 떨어진다.';
 
 
--- 두 버전 사이에 무엇이 바뀌었나
+-- 두 실행 사이에 무엇이 바뀌었나
 -- 총량만 보면 고친 것과 깨진 것이 상쇄되어 보이지 않는다.
+--
+-- 버전이 아니라 실행으로 비교한다.
+-- 파서를 고치면 버전이 바뀌지만, 사람이 확인한 값을 원장에 넣는 것처럼
+-- 파서가 그대로인데 원장만 달라지는 일이 있다. 그때 버전으로는 비교할 수 없다.
+CREATE OR REPLACE FUNCTION dining.quality_delta_runs(
+    p_prev uuid,
+    p_cur  uuid
+)
+RETURNS TABLE (
+    change     text,
+    name_ko    text,
+    check_kind text,
+    check_key  text,
+    prev       text,
+    cur        text,
+    expected   jsonb,
+    actual_cur jsonb
+)
+LANGUAGE sql
+STABLE
+AS $fn$
+    WITH a AS (SELECT * FROM dining.dn_quality_result WHERE run_id = p_prev),
+         b AS (SELECT * FROM dining.dn_quality_result WHERE run_id = p_cur)
+    SELECT CASE
+             WHEN a.verdict = 'unknown'  AND b.verdict = 'unknown'  THEN '그대로 모름'
+             WHEN a.verdict = 'unknown'  AND b.verdict = 'match'    THEN '모름에서 맞음'
+             WHEN a.verdict = 'unknown'  AND b.verdict = 'mismatch' THEN '모름에서 틀림'
+             WHEN a.verdict = 'match'    AND b.verdict = 'unknown'  THEN '맞음에서 모름'
+             WHEN a.verdict = 'mismatch' AND b.verdict = 'unknown'  THEN '틀림에서 모름'
+             WHEN a.verdict = 'mismatch' AND b.verdict = 'match'    THEN '고쳐짐'
+             WHEN a.verdict = 'match'    AND b.verdict = 'mismatch' THEN '깨짐'
+             WHEN a.verdict = 'match'                               THEN '그대로 맞음'
+             WHEN a.verdict IS NULL OR b.verdict IS NULL            THEN '한쪽만 봄'
+             ELSE '그대로 틀림'
+           END,
+           p.name_ko, t.check_kind, t.check_key,
+           coalesce(a.verdict, '(없음)'), coalesce(b.verdict, '(없음)'),
+           t.expected, b.actual
+    FROM dining.dn_truth t
+    JOIN dining.dn_place p ON p.place_uid = t.place_uid
+    LEFT JOIN a ON a.truth_id = t.truth_id
+    LEFT JOIN b ON b.truth_id = t.truth_id
+    WHERE t.retired_at IS NULL
+      AND (a.truth_id IS NOT NULL OR b.truth_id IS NOT NULL)
+    ORDER BY 1, p.name_ko
+$fn$;
+
+COMMENT ON FUNCTION dining.quality_delta_runs IS
+    '깨진 것을 먼저 본다. 고친 셋과 깨진 하나는 총량으로는 상쇄되어 보이지 않는다.';
+
+
+-- 버전으로 비교하고 싶을 때. 각 버전의 마지막 실행을 쓴다.
 CREATE OR REPLACE FUNCTION dining.quality_delta(
     p_prev text,
     p_cur  text,

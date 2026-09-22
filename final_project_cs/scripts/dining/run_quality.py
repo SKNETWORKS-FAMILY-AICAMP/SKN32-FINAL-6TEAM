@@ -146,14 +146,32 @@ def run(dry: bool) -> int:
     return 0
 
 
-def delta(prev: str, cur_v: str) -> int:
+def delta(prev: str | None = None, cur_v: str | None = None) -> int:
+    """두 실행을 비교한다. 버전을 주면 그 버전의 마지막 실행끼리 본다."""
     with connect() as conn, conn.cursor() as cur:
-        cur.execute("""
-            SELECT change, name_ko, check_kind, prev, cur
-            FROM dining.quality_delta(%s, %s, 'reality')""", (prev, cur_v))
+        if prev is None:
+            # 파서가 그대로여도 원장이 바뀌면 결과가 달라진다.
+            # 그때는 버전이 같으므로 실행으로 비교해야 한다.
+            cur.execute("""
+                SELECT run_id, rules_version, started_at FROM dining.dn_quality_run
+                WHERE metric = 'reality' ORDER BY started_at DESC LIMIT 2""")
+            got = cur.fetchall()
+            if len(got) < 2:
+                print("비교할 실행이 둘 이상 있어야 한다.")
+                return 1
+            (b_id, b_ver, b_at), (a_id, a_ver, a_at) = got
+            print(f"이전  {a_at:%m-%d %H:%M}  {a_ver}")
+            print(f"현재  {b_at:%m-%d %H:%M}  {b_ver}")
+            cur.execute("""
+                SELECT change, name_ko, check_kind, prev, cur
+                FROM dining.quality_delta_runs(%s, %s)""", (a_id, b_id))
+        else:
+            cur.execute("""
+                SELECT change, name_ko, check_kind, prev, cur
+                FROM dining.quality_delta(%s, %s, 'reality')""", (prev, cur_v))
         rows = cur.fetchall()
     if not rows:
-        print("비교할 실행이 없다. 두 버전 모두 채점한 적이 있어야 한다.")
+        print("비교할 실행이 없다. 두 쪽 모두 채점한 적이 있어야 한다.")
         return 1
     # 깨진 것을 맨 위에 둔다. 총량으로는 고친 것과 상쇄되어 보이지 않는다.
     order = {"깨짐": 0, "맞음에서 모름": 1, "고쳐짐": 2, "모름에서 맞음": 3,
@@ -179,11 +197,15 @@ def delta(prev: str, cur_v: str) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="정답셋에 대고 원장을 채점한다.")
     ap.add_argument("--dry", action="store_true", help="기록하지 않고 결과만 본다")
-    ap.add_argument("--delta", nargs=2, metavar=("이전", "현재"),
-                    help="두 버전을 비교한다")
+    ap.add_argument("--delta", nargs="*", metavar="버전",
+                    help="비교한다. 인자가 없으면 최근 두 실행을 본다")
     args = ap.parse_args()
-    if args.delta:
-        return delta(*args.delta)
+    if args.delta is not None:
+        if len(args.delta) == 2:
+            return delta(*args.delta)
+        if len(args.delta) == 0:
+            return delta()
+        raise SystemExit("--delta 는 인자가 없거나 버전 둘이다")
     return run(args.dry)
 
 
