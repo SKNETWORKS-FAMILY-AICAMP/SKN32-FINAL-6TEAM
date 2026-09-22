@@ -170,7 +170,9 @@ capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 �
 accepted_case_types   = ["activity"]                    # ★객체 종류다. 요청 종류가 아니다
 required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
 policy_optional_capabilities = ["activity.itinerary"]                      # [2026-09-22] 일정 관리만 면제
-allowed_tools         = ["read.booking", "read.policy", "read.place", "read.disruptions",
+allowed_tools         = ["read.booking", "read.booking_terms",  # [2026-09-23] 수치는 여기서 온다
+                         "read.policy",                        #   문장 근거만 댄다
+                         "read.place", "read.disruptions",
                          "read.itinerary", "read.itinerary_version", "read.place_catalog",
                          "read.customer_report"]
 knowledge_scope       = ["travel_activity", "travel_weather",            # [2026-09-22] 여행 scope 로 교체
@@ -178,6 +180,13 @@ knowledge_scope       = ["travel_activity", "travel_weather",            # [2026
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "activity.check_feasible"
 ```
+
+★`[2026-09-23]` **취소 기한·위약금율은 `read.booking_terms` 가 댄다** — `read.policy` 가 아니다.
+전에는 RAG 청크에서 꺼내려 해서 두 값이 **언제나 `None`** 이었고, 「지금 취소하면 얼마인가」가
+한 번도 답해진 적이 없다. 수치는 표 `cancellation_terms`(예약 → 공급자 → 종류 순으로 찾는다),
+문장 근거는 그대로 RAG. 결정 [D-CS-006](../decisions/D-CS-006-cancellation-terms-are-structured.md) ·
+실측 [2026-09-23_취소조건_구조화_실측.md](../records/evidence/2026-09-23_취소조건_구조화_실측.md).
+
 
 ### `[2026-09-17]` Case 버전의 여행 일정 관리 — `activity.itinerary`
 

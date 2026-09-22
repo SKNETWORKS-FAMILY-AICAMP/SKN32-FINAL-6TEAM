@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.context import PolicyChunk
 from app.modules.travel_ops.activity import ActivityTeam
 from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
 from app.modules.travel_ops.dining import DiningTeam
@@ -36,7 +37,12 @@ async def test_activity_keeps_every_source_it_read():
     result = await ActivityTeam(FakeTools({
         "read.booking": {"booking_id": "b1", "place_id": "p1",
                          "starts_at": in_hours(30), "party_size": 2, "capacity": 4},
-        "read.policy": [{"cancel_deadline_hours": 24}],
+        # ★`[2026-09-23]` **실제 `read.policy` 가 주는 모양**으로 바꿨다. 전에는
+        #   `[{"cancel_deadline_hours": 24}]` 라는 dict 목록이어서, 운영에서는
+        #   한 번도 안 되던 수치 읽기가 시험에서는 되는 것처럼 보였다
+        #   (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md).
+        "read.policy": [PolicyChunk(document_id="t_doc_01", chunk_no=1, scope="travel_activity", score=0.7,
+                                     content="취소·환급은 업체 조건을 따른다.")],
         "read.place": {"place_id": "p1", "weather_sensitive": True,
                        "latitude": 37.5, "longitude": 127.0},
         "read.disruptions": {"verdict": "clear", "disruptions": [], "advisories": [],
@@ -99,7 +105,12 @@ async def test_a_missing_value_adds_no_evidence_but_keeps_the_earlier_ones():
     result = await ActivityTeam(FakeTools({
         "read.booking": {"booking_id": "b1", "place_id": "p1",
                          "starts_at": in_hours(30), "party_size": 2, "capacity": 4},
-        "read.policy": [{"cancel_deadline_hours": 24}],
+        # ★`[2026-09-23]` **실제 `read.policy` 가 주는 모양**으로 바꿨다. 전에는
+        #   `[{"cancel_deadline_hours": 24}]` 라는 dict 목록이어서, 운영에서는
+        #   한 번도 안 되던 수치 읽기가 시험에서는 되는 것처럼 보였다
+        #   (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md).
+        "read.policy": [PolicyChunk(document_id="t_doc_01", chunk_no=1, scope="travel_activity", score=0.7,
+                                     content="취소·환급은 업체 조건을 따른다.")],
         "read.place": None,          # ★장소를 모른다
     })).execute(request)
 
