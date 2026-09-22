@@ -42,7 +42,8 @@ domain: travel
 | [mt-methodology.md](mt-methodology.md) | 번역 비교가 성립하는 조건 5가지 | 무관 | — |
 | [legal-basis.md](legal-basis.md) | 전자상거래법 · 개인정보보호법 조문 | **쇼핑몰** | 개인정보 부분만 유효 |
 | [dispute-cases.md](dispute-cases.md) | 분쟁조정 4건 | **쇼핑몰** | 여행에 안 쓰인다 |
-| [traveler-attribute-sources.md](traveler-attribute-sources.md) | 식이 제약·무장애 데이터를 다섯 소스에서 불러 본 채움률 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
+| [dietary-data-sources.md](dietary-data-sources.md) | 채식·할랄·알러지 데이터를 다섯 소스에서 불러 본 채움률 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
+| [accessibility-data-sources.md](accessibility-data-sources.md) | 무장애·유모차·지하철 승강기 데이터 | **여행** | → 동 |
 
 ### ★ [2026-09-09 정정] 번역 조사는 제품 경로에서 빠진다
 

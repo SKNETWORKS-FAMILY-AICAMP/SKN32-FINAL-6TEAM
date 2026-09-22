@@ -55,9 +55,17 @@ v11 결정 15는 **값을 모르는 상황을 만들지 않는 것**이다. 물�
 
 ---
 
+## 식이 제약을 다루는 방법
+
+1. **자동 적용을 끈다.** 제약이 있다고 답한 여행자에게는 식당 대안을 자동 교체하지 않고 후보만 제시한다. 자동 교체는 불편이 아니라 사고가 될 수 있다
+2. **카테고리 수준의 순위 강등은 한다.** 「해산물 전문」 분류는 있으므로 뒤로 민다. 단 **「여기는 안전하다」고는 말하지 않는다** — 틀리는 방향이 안전한 쪽일 때만 쓴다
+3. **확인 수단을 붙인다.** 대안 카드에 업체 전화번호와 메뉴 링크를 싣고 「알러지 정보는 확인하지 못했습니다. 방문 전 업체에 확인하세요」를 붙인다
+
+★**리뷰·메뉴 글을 LLM에게 읽혀 알러지를 판정하는 방법은 쓰지 않는다.** 틀렸을 때의 결과가 일정 불편이 아니라 응급실이다.
+
 ## 실측 요약 — 자세한 것은 조사 문서로
 
-근거는 [../research/traveler-attribute-sources.md](../research/traveler-attribute-sources.md)에 전부 있다. 여기서는 결론만 적는다.
+근거는 [../research/dietary-data-sources.md](../research/dietary-data-sources.md) · [../research/accessibility-data-sources.md](../research/accessibility-data-sources.md)에 전부 있다. 여기서는 결론만 적는다.
 
 | 물어보고 싶었던 것 | 데이터가 있나 | 판정 |
 |---|---|---|
@@ -71,7 +79,7 @@ v11 결정 15는 **값을 모르는 상황을 만들지 않는 것**이다. 물�
 
 ## 관련
 
-- [../research/traveler-attribute-sources.md](../research/traveler-attribute-sources.md) — 다섯 소스를 부른 기록과 재현 방법
+- [../research/dietary-data-sources.md](../research/dietary-data-sources.md) · [../research/accessibility-data-sources.md](../research/accessibility-data-sources.md) — 다섯 소스를 부른 기록과 재현 방법
 - [../architecture/notifications.md](../architecture/notifications.md) — 알림 세 시점, 언어, 대체 소스
 - [scope.md](scope.md) — 무엇을 안 하는가
 - [../decisions/D-018-decision15-stop-paths.md](../decisions/D-018-decision15-stop-paths.md) — 값이 안 나올 때 무엇을 멈추는가
