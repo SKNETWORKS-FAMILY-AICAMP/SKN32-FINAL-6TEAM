@@ -105,11 +105,24 @@ def api_places(q: str = "", limit: int = 300):
             for u, n, a, s, c in rows]
 
 
+#: 대체 후보의 「다음 일정」 자리에 넣어 볼 곳. 합성 일정이며 좌표만 실제다.
+NEXT_SPOTS = {
+    "":       (None, None,      None),
+    "seoul_forest": ("서울숲",  37.5444, 127.0374),
+    "gyeongbok":    ("경복궁",  37.5796, 126.9770),
+    "lotte":        ("롯데타워", 37.5125, 127.1025),
+    "seoul_st":     ("서울역",  37.5547, 126.9707),
+}
+
+
 @app.get("/api/place/{uid}")
-def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parking,takeout"):
+def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parking,takeout",
+              next_spot: str = "", alt_conds: str = ""):
     when = parse_at(at)
     visit = when.date()
     codes = [c.strip() for c in conds.split(",") if c.strip()]
+    alt_codes = [c.strip() for c in alt_conds.split(",") if c.strip()]
+    spot = NEXT_SPOTS.get(next_spot, NEXT_SPOTS[""])
 
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""
@@ -179,7 +192,43 @@ def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parkin
             cur.execute("SELECT dining.live_state(%s, %s)", (uid, topic))
             live[topic] = cur.fetchone()[0]
 
+        # 대체 후보 세 축. 원래 가려던 곳의 종류도 함께 보여야 유사도를 읽을 수 있다.
+        cur.execute("SELECT dining.cuisine_tags(%s)", (uid,))
+        tags = cur.fetchone()[0]
+        cur.execute(
+            "SELECT axis, axis_label, place_uid, name_ko, reason "
+            "FROM dining.suggest_alternatives(%s, %s, %s, %s, %s, %s)",
+            (uid, when, ends, alt_codes, spot[1], spot[2]))
+        alts = []
+        for axis, label, auid, aname, why in cur.fetchall():
+            row = {"axis": axis, "label": label,
+                   "uid": str(auid) if auid else None, "name": aname, "why": why,
+                   "waiting": None}
+            if auid:
+                # 웨이팅은 축이 아니라 표시다. 순위를 바꾸지 않는다.
+                cur.execute("""
+                    SELECT value_state, value_num, value_detail, source_code, asked_at
+                    FROM dining.dn_live_check
+                    WHERE place_uid = %s AND topic = 'waiting' AND outcome = 'ok'
+                    ORDER BY asked_at DESC LIMIT 1""", (auid,))
+                got = cur.fetchone()
+                if got:
+                    row["waiting"] = {"state": got[0], "num": got[1], "detail": got[2],
+                                      "source": got[3], "at": got[4].isoformat()}
+            alts.append(row)
+
+        cur.execute("""
+            SELECT count(*), min(distance_m), max(radius_used)
+            FROM dining.alternative_pool(%s, %s, %s, %s)""",
+            (uid, when, ends, alt_codes))
+        pool_n, pool_min, pool_radius = cur.fetchone()
+
     return {
+        "tags": tags,
+        "alternatives": alts,
+        "pool": {"n": pool_n, "nearest": round(pool_min) if pool_min else None,
+                 "radius": pool_radius},
+        "next_spot": {"key": next_spot, "name": spot[0]},
         "uid": uid, "name": name, "area": area, "address": addr, "phone": phone,
         "status": status, "lat": lat, "lng": lng,
         "raw_hours": raw[0], "raw_rest": raw[1],
@@ -269,6 +318,13 @@ button.go{background:var(--accent);color:#fff;border-color:transparent}
      border:1px solid var(--line);color:var(--dim);margin-right:4px}
 a{color:var(--accent)}
 .hint{color:var(--dim);font-size:12.5px;margin-top:7px}
+.alt{border-top:1px solid var(--line);padding:9px 0}
+.alt:first-of-type{border-top:none}
+.alt .ax{color:var(--dim);font-size:12px;letter-spacing:.03em}
+.alt .nm{font-size:15.5px;font-weight:650;margin-top:1px}
+.tag.no{color:var(--no);border-color:var(--no)}
+.tag.unk{color:var(--unk);border-color:var(--unk)}
+label.hint{display:inline-flex;align-items:center;gap:5px;margin:0}
 .big{font-size:19px;font-weight:650}
 .wk td{padding:4px 9px 4px 0}
 .wk .d{width:38px;color:var(--dim)}
@@ -281,7 +337,9 @@ a{color:var(--accent)}
 </main>
 <script>
 const $=s=>document.querySelector(s);
-let cur=null, at=null;
+let cur=null, at=null, nextSpot='', altCond=false;
+const SPOTS={'':'(모름 — 파급을 못 잰다)', seoul_forest:'서울숲',
+             gyeongbok:'경복궁', lotte:'롯데타워', seoul_st:'서울역'};
 
 function initAt(){
   const d=new Date(); d.setMinutes(0,0,0);
@@ -321,8 +379,31 @@ async function loadList(){
 
 async function loadPlace(){
   if(!cur) return;
-  const d=await (await fetch(`/api/place/${cur}?at=${encodeURIComponent(at)}`)).json();
+  const q=`/api/place/${cur}?at=${encodeURIComponent(at)}`
+    +`&next_spot=${nextSpot}&alt_conds=${altCond?'card_payment':''}`;
+  const d=await (await fetch(q)).json();
   const j=d.judge;
+
+  const alts=d.alternatives.map(a=>{
+    if(!a.name) return `<div class="alt"><div class="ax">${a.label}</div>`
+      +`<div class="unk">비어 있음</div>`
+      +`<div class="hint">${esc(a.why['비어 있음']||'')}`
+      +`${a.why['필요한 것']?' — 필요한 것: '+esc(a.why['필요한 것']):''}</div></div>`;
+    const bits=Object.entries(a.why)
+      .filter(([k])=>!['영업','조건','근거'].includes(k))
+      .map(([k,v])=>`${k} ${Array.isArray(v)?v.join('·'):esc(v)}`).join(' · ');
+    const cs = a.why['조건']===true ? '' :
+      (a.why['조건']===false ? '<span class="tag no">조건 아님</span>'
+                             : '<span class="tag unk">조건 모름</span>');
+    const os = a.why['영업']===true ? '' : '<span class="tag unk">영업 모름</span>';
+    const w = a.waiting
+      ? `<div class="hint">지금 ${a.waiting.num!=null?a.waiting.num+'팀':a.waiting.state}`
+        +` · ${a.waiting.source}, 제휴 전 시험 표시</div>` : '';
+    return `<div class="alt"><div class="ax">${a.label}</div>`
+      +`<div class="nm">${esc(a.name)} ${os}${cs}</div>`
+      +`<div class="hint">${bits}</div>`
+      +`${a.why['근거']?`<div class="hint">${esc(a.why['근거'])}</div>`:''}${w}</div>`;
+  }).join('');
   const wk=d.week.map(w=>{
     let body;
     if(w.closed) body='<span class="no">휴무</span>';
@@ -366,6 +447,7 @@ async function loadPlace(){
   <div class="ctl">
     <b style="font-size:17px">${esc(d.name)}</b>
     <span class="tag">${esc(d.area)}</span>
+    ${(d.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
     ${d.status==='closed'?'<span class="tag no">폐업</span>':''}
     <input type="datetime-local" id="at" value="${at}">
     <button class="go" onclick="at=$('#at').value;loadPlace()">이 시각으로 판정</button>
@@ -394,6 +476,22 @@ async function loadPlace(){
   </div>
 
   <div class="card"><h2>여행 조건</h2><table>${conds}</table></div>
+
+  <div class="card"><h2>대체 후보 — 축마다 한 곳</h2>
+    <div class="ctl">
+      <label class="hint">다음 일정</label>
+      <select id="ns" onchange="nextSpot=this.value;loadPlace()">
+        ${Object.entries(SPOTS).map(([k,v])=>
+          `<option value="${k}"${k===nextSpot?' selected':''}>${v}</option>`).join('')}
+      </select>
+      <label class="hint"><input type="checkbox" id="ac"
+        ${altCond?'checked':''} onchange="altCond=this.checked;loadPlace()"> 카드 결제 필요</label>
+      <span class="hint">후보 ${d.pool.n}곳 · 반경 ${d.pool.radius}m</span>
+    </div>
+    ${alts}
+    <p class="hint">같은 기준으로 줄 세우지 않는다. 축이 다르면 답도 달라야 한다.
+      웨이팅은 축이 아니라 표시이며 순위를 바꾸지 않는다.</p>
+  </div>
 
   <div class="card"><h2>현장 확인</h2>${promptBox}
     <table style="margin-top:10px">${checks}</table>
