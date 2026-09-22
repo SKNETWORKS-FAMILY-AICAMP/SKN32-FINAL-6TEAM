@@ -106,3 +106,31 @@ def test_without_a_place_to_send_it_says_so_instead_of_pretending(monkeypatch):
     patched = original.model_copy(update={"discord_webhook_url": "", "ops_alert_webhook_url": ""})
     monkeypatch.setattr(settings_module, "get_settings", lambda: patched)
     assert "보낼 곳이 없다" in guard.send_alert("outbox", "failing", streak=3)
+
+
+# ── 등록 대상 고르기 (2026-09-22) ──────────────────────────────
+def test_only_accepts_both_a_comma_list_and_repeated_flags():
+    """★`--only a --only b --only c` 가 **조용히 마지막 하나**로 줄어 셋 중 둘이 안 걸렸다."""
+    from scripts.ops.jobs import select
+
+    assert [j.name for j in select("sweepers,outbox")] == ["sweepers", "outbox"]
+    assert [j.name for j in select(["sweepers", "outbox", "daily_feedback"])] == \
+        ["sweepers", "outbox", "daily_feedback"]
+    assert [j.name for j in select(["sweepers,outbox", "daily_feedback", "outbox"])] == \
+        ["sweepers", "outbox", "daily_feedback"], "같은 이름을 두 번 줘도 두 번 걸지 않는다"
+
+
+def test_an_unknown_job_name_stops_instead_of_being_skipped():
+    from scripts.ops.jobs import select
+
+    with pytest.raises(SystemExit, match="모르는 작업 이름"):
+        select(["sweepers", "없는작업"])
+
+
+def test_the_app_job_uses_the_public_base_url_port():
+    """★앱 포트와 공개 주소가 어긋나면 통지에 실린 계획서 링크가 죽은 주소를 가리킨다."""
+    from app.core.settings import get_settings
+    from scripts.ops.jobs import JOBS
+
+    port = str(get_settings().public_base_url).rsplit(":", 1)[-1].strip("/")
+    assert port in JOBS["app"].argv, (port, JOBS["app"].argv)

@@ -110,7 +110,9 @@ JOBS: dict[str, Job] = {
         name="app",
         title="앱 (uvicorn · 에이전트 API · 여행계획서 링크 · 운영 화면)",
         kind="resident",
-        argv=["-m", "uvicorn", "app.presentation.api.app:app", "--port", "8043"],
+        # ★포트는 공개 주소(`ACOP_PUBLIC_BASE_URL`)와 **같아야** 한다. 8043 으로 띄웠더니
+        #   통지에 실린 계획서 링크가 죽은 주소를 가리켰다(2026-09-22).
+        argv=["-m", "uvicorn", "app.presentation.api.app:app", "--port", "8042"],
         task_name="A-COP cs app",
         max_silence_seconds=None,
         why="접점이 둘인데(에이전트 API · 여행계획서 링크) 둘 다 이 프로세스다. "
@@ -125,17 +127,27 @@ JOBS: dict[str, Job] = {
 DEFAULT_JOBS = ("sweepers", "outbox", "daily_feedback", "app")
 
 
-def select(only: str | None) -> list[Job]:
-    """`--only a,b` 를 Job 목록으로. 없는 이름은 조용히 넘기지 않고 죽는다."""
+def select(only: str | list[str] | None) -> list[Job]:
+    """`--only a,b` 와 `--only a --only b` 를 **둘 다** Job 목록으로. 모르는 이름은 죽는다.
+
+    ★`[2026-09-22]` 쉼표만 받던 때 `--only a --only b --only c` 가 **조용히 마지막 하나**로
+      줄었다(argparse 기본 동작). 등록했다는 말은 맞았지만 셋 중 둘이 안 걸렸다.
+    """
     if not only:
         return [JOBS[name] for name in DEFAULT_JOBS]
-    picked = []
-    for raw in only.split(","):
+    raws: list[str] = []
+    for chunk in ([only] if isinstance(only, str) else list(only)):
+        raws += str(chunk).split(",")
+    picked, seen = [], set()
+    for raw in raws:
         name = raw.strip()
         if not name:
             continue
         if name not in JOBS:
             raise SystemExit(f"★모르는 작업 이름: {name!r} — 있는 것: {', '.join(JOBS)}")
+        if name in seen:            # 같은 이름을 두 번 줘도 두 번 걸지 않는다
+            continue
+        seen.add(name)
         picked.append(JOBS[name])
     return picked
 

@@ -261,8 +261,11 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="실제로 등록한다")
     parser.add_argument("--remove", action="store_true", help="뗀다")
     parser.add_argument("--status", action="store_true", help="지금 걸려 있나")
-    parser.add_argument("--only", default=None,
-                        help=f"쉼표로. 있는 것: {', '.join(JOBS)}")
+    # ★`[2026-09-22]` **두 가지를 다 받는다** — `--only a,b` 도, `--only a --only b` 도.
+    #   쉼표만 받던 때 `--only sweepers --only outbox --only daily_feedback` 을 주니 argparse 가
+    #   **마지막 하나만** 남겨 셋 중 하나만 걸렸다. 사람이 틀리게 쓴 것이 아니라 받는 쪽이 좁았다.
+    parser.add_argument("--only", action="append", default=None,
+                        help=f"쉼표로 묶거나 여러 번. 있는 것: {', '.join(JOBS)}")
     parser.add_argument("--pgdata", default=os.environ.get("ACOP_PGDATA"),
                         help="PostgreSQL 데이터 디렉터리(서비스 등록용)")
     parser.add_argument("--pgctl", default=os.environ.get("ACOP_PGCTL"), help="pg_ctl.exe 경로")
