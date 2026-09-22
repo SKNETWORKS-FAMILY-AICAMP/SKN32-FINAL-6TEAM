@@ -32,6 +32,10 @@ final_project_cs/
     make_holiday_sql.py        공휴일 달력을 적재 SQL 로
     make_attribute_sql.py      매장 속성을 적재 SQL 로
     make_audit_sheet.py        오추출률 측정용 대조표
+    make_truth_sql.py          검수한 대조표를 정답셋으로
+    make_operator_sql.py       검수자가 확인한 실제 값을 원장으로
+    run_quality.py             정답셋에 대고 채점하고 실행끼리 비교
+    report_quality.py          품질 결과를 문서로
     run_check.py               현장 확인 한 번을 돌린다
     inspect_app.py             원장 확인기. 판정을 눈으로 따라가는 화면
     dev_up.py                  DB 와 확인기를 한 번에 띄운다
@@ -39,6 +43,7 @@ final_project_cs/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
     holidays_2026_2027.json          공휴일 달력 46일
+    truth/                           사람이 검수한 결과. 정답셋의 원본이다
     _build/                          생성물. 저장소에 넣지 않는다
 ```
 
@@ -319,6 +324,92 @@ python -m uvicorn scripts.dining.inspect_app:app --port 8011 --reload
 
 목록의 대부분이 `record_status = unknown` 인데 인허가 자료를 아직 붙이지 않아서이며
 오늘 영업 여부와 무관하다. 화면에서는 폐업만 따로 보인다.
+
+---
+
+## 품질을 재는 법
+
+고쳤는데 좋아졌는지 말할 수 없으면 고친 것이 아니다.
+
+**실행 로그만으로는 알 수 없다.** 입력이 매번 달라서 어제 8% 오늘 6% 가
+고쳐서인지 쉬운 자료가 들어와서인지 구분되지 않는다. 같은 입력에 버전만
+바꿔 돌려야 차이가 개선이 된다. 그래서 고정된 정답셋이 있어야 한다.
+
+### 지표 둘을 섞지 않는다
+
+| 지표 | 묻는 것 | 우리가 고칠 수 있나 | 어디서 재나 |
+|---|---|---|---|
+| **원장 정확도** | 지금 원장이 실제 가게와 맞는가 | 예. 확인해서 넣으면 된다 | `run_quality.py` |
+| **파서 정확도** | 원문을 제대로 읽었는가 | 예. 파서를 고치면 된다 | 회귀 시험 34개 |
+
+섞으면 관광공사가 틀린 것이 우리 오류율로 들어온다. 원장 정확도가 올라가도
+파서는 그대로다. 사람이 확인한 값을 넣어 올린 것을 파서가 좋아졌다고 말하면 안 된다.
+
+### 세 표로 나눈다
+
+```
+dn_truth           정답. 고정이며 사람이 확인한 것만 들어온다
+dn_quality_run     실행 한 번. 버전이 붙는다
+dn_quality_result  그 실행의 건별 결과
+```
+
+### 모름을 틀림으로 세지 않는다
+
+정확도의 분모는 판정이 난 건수다. 판정이 나지 않은 것을 틀림으로 세면
+정답을 늘릴수록 점수가 떨어지는 이상한 일이 생긴다. 버전을 비교할 때도
+`모름 → 모름` 을 따로 센다.
+
+### 총량이 아니라 깨진 것을 본다
+
+셋을 고치고 하나가 깨져도 총량은 둘 늘어서, 숫자만 보면 깨진 것이 보이지 않는다.
+`--delta` 는 깨진 것을 맨 위에 놓는다.
+
+### 버전은 파서 내용에서 만든다
+
+손으로 적어 두면 안 바뀐다. 파서를 일곱 번 고치는 동안 `v1` 그대로였고,
+그래서 어제 결과와 오늘 결과를 구분할 방법이 없었다. 지금은
+`parse_hours.py` 의 해시를 쓰므로 내용이 바뀌면 값이 바뀐다.
+
+다만 **파서가 그대로인데 원장만 달라지는 일**이 있다. 사람이 확인한 값을
+넣는 경우가 그렇다. 그때는 버전이 같으므로 실행끼리 비교해야 한다.
+`--delta` 를 인자 없이 부르면 최근 두 실행을 본다.
+
+### 돌리는 순서
+
+```bash
+python scripts/dining/make_truth_sql.py            # 검수 결과를 정답셋으로
+psql ... -f data/dining/_build/truth.sql
+
+python scripts/dining/run_quality.py               # 채점하고 기록
+
+python scripts/dining/make_operator_sql.py --dry   # 무엇이 바뀌는지 먼저 본다
+python scripts/dining/make_operator_sql.py
+psql ... -f data/dining/_build/operator.sql
+
+python scripts/dining/run_quality.py               # 다시 채점
+python scripts/dining/run_quality.py --delta       # 무엇이 고쳐지고 깨졌나
+python scripts/dining/report_quality.py --save     # 문서로
+```
+
+`--dry` 를 먼저 보는 것이 중요하다. 검수자가 적은 칸만 고치고 적지 않은 칸은
+관광공사 값을 그대로 두는데, 그 경계가 맞는지는 눈으로 확인해야 한다.
+
+### 관광공사 규칙을 지우지 않는다
+
+사람이 확인한 값을 넣을 때 같은 요일의 관광공사 규칙은 `retired_at` 으로
+물러나게 한다. 지우면 무엇이 어떻게 틀렸는지가 사라진다.
+
+물러나게 하지 않으면 안 된다. `day_intervals` 는 출처를 가리지 않고 살아 있는
+규칙을 모두 돌려주므로, 그냥 두면 구간이 두 겹으로 겹쳐 판정이 엉킨다.
+
+### 정답셋의 전제
+
+지금 정답셋은 2026-09-21 에 사람이 100곳을 네이버 지도로 대조한 결과다.
+**표시가 없는 행은 「안 봤음」이 아니라 「보았고 같았음」이다.** 전수 확인이었기
+때문이며, 그 사실을 `dn_truth.evidence` 에 적어 두었다. 이 전제가 바뀌면
+숫자가 통째로 달라지므로 다음 사람이 확인할 수 있어야 한다.
+
+원본은 `data/dining/truth/` 에 있다. 저장소 밖에만 두면 다음에 잃어버린다.
 
 ---
 

@@ -84,8 +84,25 @@ def api_summary():
         blind = cur.fetchone()[0]
         cur.execute("SELECT count(*) FROM dining.dn_live_check")
         checks = cur.fetchone()[0]
+
+        # 원장이 실제와 얼마나 맞는가. 파서 실력이 아니다.
+        cur.execute("""
+            SELECT 정확도, 맞음, 틀림, 모름, 정답건수, started_at
+            FROM dining.v_quality_summary WHERE metric = 'reality'
+            ORDER BY started_at DESC LIMIT 1""")
+        got = cur.fetchone()
+        quality = None
+        if got:
+            quality = {"accuracy": float(got[0]) if got[0] is not None else None,
+                       "ok": got[1], "bad": got[2], "unknown": got[3],
+                       "n": got[4], "at": got[5].isoformat()}
+        cur.execute("""
+            SELECT source_code, count(*) FROM dining.v_hours_rule_active
+            GROUP BY 1 ORDER BY 2 DESC""")
+        sources = [{"code": s, "n": n} for s, n in cur.fetchall()]
     return {"places": places, "rules": rules, "closures": closures,
-            "areas": areas, "blind": blind, "checks": checks}
+            "areas": areas, "blind": blind, "checks": checks,
+            "quality": quality, "sources": sources}
 
 
 @app.get("/api/places")
@@ -324,6 +341,7 @@ a{color:var(--accent)}
 .alt .nm{font-size:15.5px;font-weight:650;margin-top:1px}
 .tag.no{color:var(--no);border-color:var(--no)}
 .tag.unk{color:var(--unk);border-color:var(--unk)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
 label.hint{display:inline-flex;align-items:center;gap:5px;margin:0}
 .big{font-size:19px;font-weight:650}
 .wk td{padding:4px 9px 4px 0}
@@ -361,8 +379,19 @@ function esc(s){return (s??'').toString().replace(/[<>&]/g,c=>({'<':'&lt;','>':'
 
 async function loadSummary(){
   const s=await (await fetch('/api/summary')).json();
-  $('#sum').textContent=`장소 ${s.places} · 영업규칙 ${s.rules} · 휴무규칙 ${s.closures}`
+  let html=`장소 ${s.places} · 영업규칙 ${s.rules} · 휴무규칙 ${s.closures}`
     +` · 영업시간 모름 ${s.blind}곳 · 현장확인 ${s.checks}건`;
+  if(s.quality && s.quality.accuracy!=null){
+    const q=s.quality;
+    // 이 숫자는 원장이 실제와 얼마나 맞는가이며 파서 실력이 아니다.
+    // 제목에 그 구분을 적어 둔다. 줄여 쓰면 파서 정확도로 읽힌다.
+    html+=` · <b title="정답 ${q.n}건 중 맞음 ${q.ok} 틀림 ${q.bad} 모름 ${q.unknown}. `
+      +`원장이 실제 가게와 얼마나 맞는가이며 파서 정확도가 아니다.">`
+      +`원장 정확도 ${q.accuracy}%</b>`;
+  }
+  const conf=(s.sources||[]).find(x=>x.code==='operator_check');
+  if(conf) html+=` · <span title="사람이 확인해 넣은 규칙">확인됨 ${conf.n}</span>`;
+  $('#sum').innerHTML=html;
 }
 
 async function loadList(){
@@ -410,6 +439,9 @@ async function loadPlace(){
     else if(!w.intervals.length) body='<span class="unk">모름</span>';
     else body=w.intervals.map(i=>`${i.open}–${i.close}`
         +(i.lo!=='모름'&&i.lo!=='없음'?` <span class="tag">LO ${i.lo}</span>`:'')).join(' , ');
+    // 사람이 확인해 넣은 값인지 원문에서 읽은 값인지 구분이 보여야 한다.
+    const conf=w.intervals.some(i=>i.source==='operator_check');
+    if(conf) body+=' <span class="tag ok" title="사람이 확인해 넣은 값">확인됨</span>';
     return `<tr><td class="d${w.today?' today':''}">${w.day}</td><td>${body}</td></tr>`;
   }).join('');
 
