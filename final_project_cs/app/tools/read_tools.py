@@ -136,6 +136,9 @@ class ReadToolbox:
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
             "read.place":    self.place,
+            # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
+            #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
+            "read.dining_state": self.dining_state,
             "read.weather":  self.weather,
             "read.route":    self.route,
             "read.transit":  self.transit,
@@ -195,6 +198,23 @@ class ReadToolbox:
             "WHERE tenant_id=%s AND place_id=%s",
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
         return self._fill_coordinates(row)
+
+    def dining_state(self, scope: ToolContext, *, place_id: str | None = None,
+                     at: Any = None, until: Any = None, **_: Any) -> dict[str, Any] | None:
+        """그 시각 그 장소의 요식 판정. 없으면 `None`(모름).
+
+        ★`read.place` 와 달리 **시각을 받는다.** `places.open_at_slot` 은 칸
+          하나라 어느 예약이든 같은 값이고, 12시 예약과 22시 예약을 가를 수 없다.
+
+        ★코어 표를 읽지도 쓰지도 않는다. 코어 `place_id` 를 요식 원장 장소로
+          바꾸는 것은 `dining.dn_core_place_link` 이고 그것도 요식 표다.
+
+        ★`open_at_slot` 이 NULL 이면 **모름**이다. 받는 쪽이 「아니다」로 읽으면
+          안 된다 — 그 구분은 Team 이 한다.
+        """
+        from app.modules.travel_ops.dining.ledger import dining_state
+        with self.connection_factory() as conn:
+            return dining_state(conn, scope.tenant_id, place_id, at, until)
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
