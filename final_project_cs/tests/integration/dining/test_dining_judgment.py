@@ -108,6 +108,7 @@ def place(conn):
         conn.execute("DELETE FROM dining.dn_attribute WHERE place_uid = %s", (uid,))
         # 관측과 휴무 범위도 장소를 붙들고 있다. 빼먹으면 지우다 외래키에 걸린다.
         conn.execute("DELETE FROM dining.dn_live_check WHERE place_uid = %s", (uid,))
+        conn.execute("DELETE FROM dining.dn_notice WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_closure_coverage WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_place WHERE place_uid = %s", (uid,))
 
@@ -395,3 +396,102 @@ def test_시험_출처의_답도_재질문을_막는다(conn, place):
     after = conn.execute("SELECT dining.check_prompt(%s, %s, true)",
                          (uid, at(1, "12:00"))).fetchone()[0]
     assert after is None or "waiting" not in after["topics"]
+
+
+# ──────────────────────────────────────────────────────────────
+# 알림 억제 (032)
+# ──────────────────────────────────────────────────────────────
+#
+# 알림은 사용자의 주의를 쓴다. 바꾸지 않을 말로 주의를 쓰면 정작 바꿔야 할
+# 때 읽히지 않는다. 그래서 여기서 지키는 것은 「보내는가」보다 「안 보내는가」다.
+
+def decide(conn, place_uid, at_, trial=True):
+    return conn.execute("SELECT dining.notice_decision(%s, %s, %s)",
+                        (place_uid, at_, trial)).fetchone()[0]
+
+
+def test_아무것도_모르면_알리지_않는다(conn, place):
+    uid = place()
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is False
+
+
+def test_확인되지_않습니다_를_보내지_않는다(conn, place):
+    # 읽지 못했다는 말은 사용자에게 쓸모가 없다.
+    uid = place()
+    record(conn, uid, "catchtable_trial", "waiting", outcome="blocked", state="unknown")
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is False
+
+
+def test_줄이_짧으면_알리지_않는다(conn, place):
+    # 좋은 소식은 행동을 바꾸지 않는다.
+    uid = place()
+    conn.execute("SELECT dining.record_live_check(%s, 'catchtable_trial', 'waiting',"
+                 " 'ok', 'yes', 3)", (uid,))
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is False
+    assert "3팀" in got["reason"]
+
+
+def test_붐비면_숫자를_담아_알린다(conn, place):
+    uid = place()
+    conn.execute("SELECT dining.record_live_check(%s, 'catchtable_trial', 'waiting',"
+                 " 'ok', 'yes', 41)", (uid,))
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is True
+    assert got["kind"] == "crowded"
+    assert "41팀" in got["body"]
+
+
+def test_팀_수를_모르면_붐빈다고_말하지_않는다(conn, place):
+    # 웨이팅이 있다는 것만으로는 사용자가 판단할 수 없다.
+    uid = place()
+    record(conn, uid, "catchtable_trial", "waiting", state="yes")
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is False
+    assert got["reason"] == "팀 수를 모른다"
+
+
+def test_쉰다면_알린다(conn, place):
+    uid = place()
+    record(conn, uid, "catchtable_trial", "closure", state="yes")
+    got = decide(conn, uid, at(1, "12:00"))
+    assert got["send"] is True
+    assert got["kind"] == "closed"
+
+
+def test_같은_말을_두_번_하지_않는다(conn, place):
+    uid = place()
+    conn.execute("SELECT dining.record_live_check(%s, 'catchtable_trial', 'waiting',"
+                 " 'ok', 'yes', 41)", (uid,))
+    when = at(1, "12:00")
+    first = decide(conn, uid, when)
+    assert first["send"] is True
+    conn.execute("SELECT dining.record_notice(%s, %s, %s, %s)",
+                 (uid, when, first["kind"], first["body"]))
+    again = decide(conn, uid, when)
+    assert again["send"] is False
+    assert again["reason"] == "이미 말했다"
+    conn.execute("DELETE FROM dining.dn_notice WHERE place_uid = %s", (uid,))
+
+
+def test_본_갈래에서는_시험_출처로_알리지_않는다(conn, place):
+    uid = place()
+    conn.execute("SELECT dining.record_live_check(%s, 'catchtable_trial', 'waiting',"
+                 " 'ok', 'yes', 41)", (uid,))
+    assert decide(conn, uid, at(1, "12:00"), trial=False)["send"] is False
+
+
+def test_자동_조회는_방문_60분과_20분_전에만_묻는다(conn):
+    rows = conn.execute(
+        "SELECT x, dining.watch_window(now() + x) FROM unnest(ARRAY["
+        "interval '3 hours', interval '58 minutes', interval '40 minutes',"
+        "interval '18 minutes', interval '5 minutes']) AS x").fetchall()
+    assert [r[1] for r in rows] == [None, "T-60", None, "T-20", None]
+
+
+def test_자동_조회_문장은_고정이다(conn, place):
+    uid = place()
+    got = conn.execute("SELECT dining.ambient_prompt(%s)", (uid,)).fetchone()[0]
+    assert got.endswith("현재 웨이팅 몇 팀인지 알아봐. 또는 영업 중인지 아닌지.")
