@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     #:    이 앱에서 **삭제**했다(D-CS-001) — 인증 없이 닿는 화면에 권한 있는 조작을 두지 않는다.
     #:    위임은 「한 건 승인」이 아니라 **서 있는 권한**이라 그 기준이 더 강하게 걸린다.
     #:    화면은 기본적으로 **읽기 전용**이고, 주고 거두는 것은 scope 가 걸린 REST 로 한다.
+    #: 상시 작업이 연속 실패했을 때 운영자에게 알릴 곳. 비우면 `discord_webhook_url` 을 쓴다.
+    #:  ★고객 통지와 **다른 곳으로 보낼 수 있게** 자리를 나눠 둔다 — 운영 알림이 고객 채널로 가면
+    #:    고객이 우리 장애를 본다. 실제 주소는 `.env` 에만 적는다.
+    ops_alert_webhook_url: str = ""
     ui_delegation_write_enabled: bool = False
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"

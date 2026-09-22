@@ -32,6 +32,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from scripts.ops.guard import (Skipped, note_result, only_one, prune_logs,  # noqa: E402
+                              send_alert)
 from scripts.ops.jobs import HEARTBEAT_DIR, JOBS, LOG_DIR, Job  # noqa: E402
 
 #: 콘솔 창을 만들지 않는다. Windows 전용 플래그라 다른 OS 에서는 0 을 쓴다.
@@ -82,6 +84,22 @@ def append_log(job: Job, record: dict) -> Path:
 
 
 def run(job: Job, *, timeout: int) -> int:
+    """한 회차. ★`[2026-09-22]` 겹치면 건너뛰고, 연속 실패면 알리고, 오래된 로그를 지운다."""
+    try:
+        with only_one(HEARTBEAT_DIR / f"{job.name}.lock"):
+            return _run_once(job, timeout=timeout)
+    except Skipped as exc:
+        # ★건너뜀을 **성공으로 적지 않는다.** 흔적에 남겨 점검이 「돌았다」로 읽지 않게 한다.
+        record = {"job": job.name, "command": " ".join(command_for(job)), "state": "skipped",
+                  "started_at": _now(), "finished_at": _now(), "duration_seconds": 0.0,
+                  "exit_code": 0, "stdout_tail": f"건너뜀 — {exc}", "stderr_tail": ""}
+        write_heartbeat(job, record)
+        append_log(job, record)
+        sys.stdout.write(f"건너뜀 — {exc}" + chr(10))
+        return 0
+
+
+def _run_once(job: Job, *, timeout: int) -> int:
     argv = command_for(job)
     started = datetime.now()
     try:
@@ -108,6 +126,18 @@ def run(job: Job, *, timeout: int) -> int:
     }
     write_heartbeat(job, record)
     append_log(job, record)
+    removed = prune_logs(LOG_DIR)
+    if removed:
+        sys.stdout.write(f"오래된 로그 {len(removed)}개 지움: {', '.join(removed[:3])}"
+                         + (" …" if len(removed) > 3 else "") + chr(10))
+    # ★연속 실패면 운영자에게 알린다 — 한 번만. 스케줄러의 「마지막 결과」를 사람이 봐야만
+    #   아는 상태를 끝낸다(바깥함 일꾼이 4시간 넘게 안 돌고도 아무 데도 안 떴다).
+    verdict = note_result(HEARTBEAT_DIR, job.name, exit_code=exit_code,
+                          detail=_tail(err or out, 300))
+    if verdict["should_alert"]:
+        sys.stdout.write(f"운영 알림({verdict['kind']}, 연속 {verdict['streak']}회): "
+                         + send_alert(job.name, verdict["kind"], streak=verdict["streak"],
+                                      detail=_tail(err or out, 300)) + chr(10))
     # ★사람이 직접 불렀을 때를 위해 그대로 흘려 준다. 스케줄러(pythonw)가 부르면 아무 데도 안 간다 —
     #   그래서 위에서 파일에 먼저 남겼다.
     if out:
