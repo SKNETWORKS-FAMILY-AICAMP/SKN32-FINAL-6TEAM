@@ -29,6 +29,14 @@ KNOWLEDGE = REPO_ROOT / "knowledge"
 DOCUMENTS = KNOWLEDGE / "documents"
 MANIFEST = KNOWLEDGE / "manifest.json"
 
+# ★`[2026-09-22]` 코퍼스가 **둘**이 됐다 — 쇼핑몰(기록)과 여행(운영). 한 폴더에 섞지
+#   않는다: 섞으면 중복·유사도 검사가 **두 도메인을 가로질러** 돌아서, 쇼핑몰 코퍼스가
+#   2026-08-17 에 받은 판정(전 항목 통과)이 여행 문서가 늘 때마다 달라진다.
+#   검사는 **컬렉션마다 따로** 돈다 — 그래서 쇼핑몰 쪽 수치는 오늘도 그때와 같다.
+TRAVEL_KNOWLEDGE = KNOWLEDGE / "travel"
+TRAVEL_DOCUMENTS = TRAVEL_KNOWLEDGE / "documents"
+TRAVEL_MANIFEST = TRAVEL_KNOWLEDGE / "manifest.json"
+
 # ── 인수 기준 ────────────────────────────────────────────────────────
 # 건수는 config/guardrails.yaml (rag.*) 이 정한다. 내용 기준은 여기서 정한다.
 MAX_INTRA_DOC_SENTENCE_REPEAT = 1  # 한 문서 안에서 같은 문장이 두 번 나오면 실패
@@ -98,6 +106,19 @@ SCOPE_PLAN = {
     "incident": 2,     # 시스템 장애·대량 배송 지연
 }
 
+# ★여행 CS 도메인. 합이 guardrails 의 rag.travel.document_count 와 같아야 한다.
+# ★★scope 이름에 `travel_` 을 붙인다. 쇼핑몰 scope 와 **한 글자도 겹치면 안 된다** —
+#   검색은 `scope = ANY(allowed_scopes)` 하나로 거르므로, 이름이 겹치는 순간 여행 Team 이
+#   쇼핑몰 문서를 근거로 집어 온다. 겹치지 않음은 검사 9 가 센다.
+TRAVEL_SCOPE_PLAN = {
+    "travel_activity": 3,      # 활동 취소 접수 · 무료·무예약 판정 · 관람/자연 운영 통제
+    "travel_weather": 2,       # 기상 사유 취소·순연 · 대기질/폭염/한파/지진 경보
+    "travel_dining": 2,        # 식사 예약 조정·노쇼 · 대체 식당 판정
+    "travel_mobility": 3,      # 운행 중단·지연 대체 · 연결 실패 책임 · 이동 환불 안내
+    "travel_cancellation": 1,  # 취소·환급 일반과 인계 (Team 넷이 공유한다)
+    "travel_access": 1,        # 동행 조건 — 이동 보조 · 유아 · 고령 · 식이·종교
+}
+
 # 시나리오가 근거로 삼아야 할 표현.
 # ★이것이 없으면 코퍼스가 "그럴듯하지만 우리 시나리오에 답하지 못하는" 글이 된다.
 SCENARIO_PROBES = {
@@ -111,18 +132,34 @@ SCENARIO_PROBES = {
     "승인 없이 실행 금지": r"승인\s*(없이|전에는).{0,40}(실행|처리)",
 }
 
+# ★여행 시나리오가 근거로 삼아야 할 표현. 사용자가 실제로 던지는 문장에서 뽑았다 —
+#   「비가 와서 야외 활동을 못 하게 됐다」·「예약을 이틀 전에 취소하면」.
+TRAVEL_SCENARIO_PROBES = {
+    "우천으로 야외 활동이 깨진 경우": r"(강수|우천|비)[^\n]{0,60}(귀책|업체|무료|위약금|순연)",
+    "취소 시점 구간(숫자)": r"\d+\s*(시간|일)\s*(전|이내|이후|앞)",
+    "무료·무예약 활동 판정": r"(무료|무예약)[^\n]{0,60}(판정|일정\s*항목|확인)",
+    "운행 중단 시 대체 안내": r"(운행\s*중단|결항|지연)[^\n]{0,60}(대체|우회|연계)",
+    "동행 조건 확인": r"(휠체어|유아|동행\s*조건)[^\n]{0,60}(확인|표기)",
+    # 공통 — 쓰기는 승인을 거친다
+    "승인 없이 실행 금지": r"승인\s*(없이|전에는)[^\n]{0,40}(실행|처리|변경)",
+}
+
 NUMBER_PATTERN = re.compile(r"\d+\s*(일|영업일|시간|분|초|%|퍼센트|원|건|회|개월|년)")
 
 failures: list[str] = []
 notes: list[str] = []
+#: 지금 검사 중인 컬렉션 이름. 실패·기록 줄 앞에 붙어 **어느 코퍼스의 수인지** 보이게 한다.
+#: ★이름을 `label` 로 두면 안 된다 — 이 파일 안에 `for label, pattern in ...` 이 둘 있어서
+#:   `global` 선언과 함께 쓰면 반복 변수가 이 값을 덮어쓴다(실제로 덮어썼다).
+_collection: str = ""
 
 
 def fail(message: str) -> None:
-    failures.append(message)
+    failures.append(f"[{_collection}] {message}" if _collection else message)
 
 
 def note(message: str) -> None:
-    notes.append(message)
+    notes.append(f"[{_collection}] {message}" if _collection else message)
 
 
 def char_grams(text: str, n: int = 6) -> set[str]:
@@ -149,19 +186,40 @@ def sentences(text: str) -> list[str]:
     return [s.strip() for s in re.split(r"[.!?]\s|\n", text) if len(s.strip()) > 15]
 
 
-def main() -> int:
+def check_collection(
+    name: str,
+    documents_dir: Path,
+    manifest_path: Path,
+    scope_plan: dict[str, int],
+    probes: dict[str, str],
+    guardrail_prefix: str,
+) -> None:
+    """코퍼스 하나를 검사한다. 실패는 `failures` 에 쌓인다.
+
+    ★**컬렉션을 가로질러 재지 않는다.** 중복·유사도·템플릿 검사는 전부 이 함수 안에서
+      그 컬렉션의 청크만 본다 — 그래야 쇼핑몰 코퍼스의 판정이 여행 문서가 늘어도
+      그대로다(두 코퍼스는 공존할 뿐 서로의 기준이 아니다).
+    """
+    global _collection
+    _collection = name
     from app.core.settings import get_guardrails
 
     guardrails = get_guardrails()
-    want_docs = guardrails.get("rag.document_count")
-    chunk_min = guardrails.get("rag.chunk_total_min")
-    chunk_max = guardrails.get("rag.chunk_total_max")
-    per_min = guardrails.get("rag.chunks_per_document_min")
-    per_max = guardrails.get("rag.chunks_per_document_max")
+    want_docs = guardrails.get(f"{guardrail_prefix}.document_count")
+    chunk_min = guardrails.get(f"{guardrail_prefix}.chunk_total_min")
+    chunk_max = guardrails.get(f"{guardrail_prefix}.chunk_total_max")
+    per_min = guardrails.get(f"{guardrail_prefix}.chunks_per_document_min")
+    per_max = guardrails.get(f"{guardrail_prefix}.chunks_per_document_max")
+
+    SCOPE_PLAN = scope_plan
+    SCENARIO_PROBES = probes
+    DOCUMENTS = documents_dir
+    MANIFEST = manifest_path
+    KNOWLEDGE = manifest_path.parent
 
     if not DOCUMENTS.is_dir():
-        print(f"[FAIL] 코퍼스 디렉터리 없음: {DOCUMENTS}")
-        return 1
+        fail(f"코퍼스 디렉터리 없음: {DOCUMENTS}")
+        return
 
     files = sorted(DOCUMENTS.glob("*.md"))
     docs: dict[str, list[tuple[str, str]]] = {}
@@ -422,6 +480,31 @@ def main() -> int:
                     f"{entry.get('document_id')}: section_count 선언 "
                     f"{entry.get('section_count')} != 실측 {actual}"
                 )
+
+
+def main() -> int:
+    # ★콘솔이 cp949 여도 죽지 않게 한다. 전에는 **전 항목 통과했는데도** 마지막 줄의
+    #   `—` 에서 UnicodeEncodeError 로 죽어 종료코드 1(=인수 불가)이 나왔다.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+    check_collection("쇼핑몰", DOCUMENTS, MANIFEST, SCOPE_PLAN, SCENARIO_PROBES, "rag")
+    check_collection("여행", TRAVEL_DOCUMENTS, TRAVEL_MANIFEST, TRAVEL_SCOPE_PLAN,
+                     TRAVEL_SCENARIO_PROBES, "rag.travel")
+
+    # ── 9. ★두 코퍼스의 scope 가 겹치면 안 된다 ──────────────────────
+    # 검색은 `scope = ANY(allowed_scopes)` 하나로 거른다. 이름이 겹치면 여행 Team 이
+    # 쇼핑몰 문서를, 쇼핑몰 Team 이 여행 문서를 근거로 집어 온다.
+    global _collection
+    _collection = "공통"
+    overlap = sorted(set(SCOPE_PLAN) & set(TRAVEL_SCOPE_PLAN))
+    if overlap:
+        fail(f"두 코퍼스가 같은 scope 를 쓴다: {overlap} — 검색이 도메인을 가로지른다")
+    else:
+        note(f"scope 겹침 0건 (쇼핑몰 {len(SCOPE_PLAN)}종 · 여행 {len(TRAVEL_SCOPE_PLAN)}종)")
 
     # ── 출력 ────────────────────────────────────────────────────────
     print("=" * 78)

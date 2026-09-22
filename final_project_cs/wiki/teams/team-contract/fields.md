@@ -167,6 +167,33 @@ Controller가 allowlist·scope·승인·idempotency를 검증한다.
 | `active` | `bool` | 아니오 | 기본값 `True` |
 | `implementation_revision` | `str` | 예 | — |
 | `default_capability` | `str \| None` | 아니오 | 기본값 `None`; 없으면 `capabilities[0]` 사용 |
+| `policy_optional_capabilities` | `list[str]` | 아니오 | 기본값 `[]`; 값은 `capabilities` 안의 이름이어야 한다 |
+
+### ★ `[2026-09-22]` `policy_optional_capabilities` — 왜 생겼나
+
+`required_context` 는 **Team 단위**인데 정책 근거가 필요한지는 **capability 마다 다르다.**
+
+| 예 | 정책이 필요한가 |
+|---|---|
+| `activity.check_cancelable` · `check_feasible` | **필요하다.** 취소 기한·위약금·기상 사유 판정이 규정 해석이다 |
+| `activity.itinerary` (감시가 연 일정 관리) | **아니다.** 예보·운행·영업 같은 **실시간 사실**로 판단한다 |
+
+한 Team 이 둘을 다 갖고 있어서, `policy` 를 선언하면 일정 관리까지 정책 0건에 막히고
+빼면 취소 판정이 근거 없이 답하게 된다. 2026-09-17 에는 **빼는 쪽**을 골랐고(코퍼스에
+여행 문서가 0건이었다), 그 때문에 정책 근거가 필요한 capability 도 RAG 없이 돌았다.
+
+그래서 **예외 목록을 Team 이 선언한다.** Controller 는 이렇게 읽는다.
+
+```
+정책 RAG 를 돈다  =  "policy" in required_context  AND  선택된 capability ∉ policy_optional_capabilities
+```
+
+★**예외 목록은 「근거 없이 답해도 된다」는 뜻이 아니다.** 그 capability 는 근거를
+**도구(`read.disruptions`·`read.place` …)로 직접 가져와** `TeamResult.evidence` 에 싣는다.
+근거 없는 문장 금지(`CLAUDE.md` §0.1)는 그대로다 — 근거의 **출처**가 다를 뿐이다.
+
+★계약 필드가 **늘었다.** 같은 major 의 optional 필드 추가라 `contract_version` 은 1.0 그대로다
+(v6 §21). 안 적은 Team 은 예전과 똑같이 돈다.
 
 근거: `wiki/records/handoff/01_계약_Pydantic.md:163-187`
 

@@ -133,7 +133,14 @@ class Controller:
         # ★`[결정 2026-09-17]` Team 이 정책 근거를 선언했을 때만 RAG 를 돈다.
         #   전에는 `required_context` 가 선언만 되고 읽히지 않아, 정책 문서가 필요 없는
         #   일(실시간 사실로 판단하는 일정 조정)도 결과 0건이면 degraded → 전부 사람에게 갔다.
-        policy_required = "policy" in (entry.manifest.required_context or [])
+        # ★`[2026-09-22]` 요구를 **capability 단위**로 좁혔다. Team 단위로는
+        #   「취소 판정은 규정이 필요하고 일정 관리는 아니다」를 나눌 수 없어서, 09-17 에는
+        #   Team 전체에서 `policy` 를 빼는 쪽으로 풀었고 그 바람에 취소·성립 판정도
+        #   근거 없이 돌았다. 이제 Team 이 면제 목록을 선언한다
+        #   (`TeamManifest.policy_optional_capabilities` · wiki `teams/team-contract/fields.md`).
+        capability = self._capability(case)
+        policy_required = ("policy" in (entry.manifest.required_context or [])
+                           and capability not in (entry.manifest.policy_optional_capabilities or []))
         if policy_required:
             policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
         else:
@@ -149,7 +156,9 @@ class Controller:
                                policy_required=policy_required)
         context = self.context_broker.build(inputs)
         return TeamTask(task_id=uuid4(), run_id=run_id, case_id=case["case_id"], team_id=entry.manifest.team_id,
-                        capability=self._capability(case), case_version=case["version"], input_text=case["subject"], context=context,
+                        # ★위에서 이미 고른 값을 쓴다 — 두 번 고르면 정책 판정에 쓴 capability 와
+                        #   Team 이 실제로 받는 capability 가 갈릴 수 있다.
+                        capability=capability, case_version=case["version"], input_text=case["subject"], context=context,
                         allowed_tools=entry.manifest.allowed_tools, deadline_at=datetime.now(UTC) + timedelta(seconds=get_guardrails().get("reliability.team_timeout_seconds")),
                         resume=resume, resume_node=resume_node)
 

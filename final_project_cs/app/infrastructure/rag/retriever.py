@@ -81,8 +81,24 @@ def search_policy(
             if cur.fetchone() is None:
                 return []
 
+            name, column, _dim = _provider()
+            # ★`[2026-09-22]` 문서는 있는데 **고른 제공자의 벡터 칸이 통째로 비어 있으면** 예외다.
+            #   아래 검색은 `{column} IS NOT NULL` 로 거르므로 그냥 두면 0건이 돌아가고, 부르는 쪽은
+            #   그걸 「규정이 없다」로 읽는다 — 신호 없는 축소이고 이 저장소가 금지하는 폴백이다
+            #   (RULE.md §3.2). 실제로 여행 코퍼스는 1024칸만 채워져 있어서(OpenAI 크레딧 없음)
+            #   제공자를 openai 로 되돌리면 여행 Team 이 전부 조용히 근거 0건이 된다.
+            cur.execute(
+                f"""SELECT 1 FROM knowledge_chunks kc JOIN knowledge_documents kd USING(document_id)
+                    WHERE kd.tenant_id=%s AND kd.scope = ANY(%s) AND kc.{column} IS NOT NULL LIMIT 1""",
+                (tenant_id, allowed_scopes),
+            )
+            if cur.fetchone() is None:
+                raise RuntimeError(
+                    f"scope {sorted(allowed_scopes)} 에 문서는 있는데 {name} 제공자의 벡터 칸"
+                    f"({column})이 비어 있다 — 그 코퍼스를 이 제공자로 적재해야 한다"
+                    " (scripts/ingest_corpus_local.py · scripts/embed_chunks_local.py)")
+
             query_embedding = _embed_query(query)
-            _, column, _dim = _provider()
             cur.execute(
                 # ★%s::vector 캐스트가 필요하다. register_vector() 는 numpy 배열용
                 # 어댑터라 plain list 를 넘기면 double precision[] 로 렌더링되고

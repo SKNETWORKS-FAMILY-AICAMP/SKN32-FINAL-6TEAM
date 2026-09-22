@@ -321,6 +321,37 @@ class TeamManifest(BaseModel):
     #   이 선택이 "왜 그건지" 아무 데도 안 적힌 채 일어났다
     #   (wiki/records/reports/debugs/2026-09-01_capability_for_폴백이_근거없이_기능을_고른다.md).
     default_capability: str | None = None
+    #: ★`[2026-09-22]` `required_context` 의 `policy` 를 **면제**받는 capability 목록.
+    #:
+    #:  `required_context` 는 Team 단위인데 정책 근거가 필요한지는 **capability 마다 다르다.**
+    #:  `activity.check_cancelable` 은 취소 기한·위약금을 규정에서 읽어야 하지만,
+    #:  `activity.itinerary`(감시가 연 일정 관리)는 예보·운행·영업 같은 **실시간 사실**로
+    #:  판단한다. 한 Team 이 둘을 다 갖고 있어서 Team 단위 선언으로는 갈리지 않았다 —
+    #:  2026-09-17 에는 `policy` 를 통째로 빼는 쪽을 골랐고(그때는 여행 코퍼스가 0건),
+    #:  그래서 정책이 필요한 capability 까지 근거 없이 돌았다.
+    #:
+    #:  Controller 는 이렇게 읽는다(`app/application/controller.py`):
+    #:      정책 RAG 를 돈다 = "policy" in required_context AND capability ∉ 이 목록
+    #:
+    #:  ★면제는 「근거 없이 답해도 된다」가 아니다. 그 capability 는 근거를 도구로 직접
+    #:   가져와 `TeamResult.evidence` 에 싣는다. 근거 없는 문장 금지는 그대로다.
+    #:  ★optional 필드 추가라 `contract_version` 은 1.0 그대로다(v6 §21). 안 적은 Team 은 그대로 돈다.
+    #:  계약 문서: `wiki/teams/team-contract/fields.md`
+    policy_optional_capabilities: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _policy_optional_capabilities_are_declared(self) -> "TeamManifest":
+        """★면제 목록에 **선언되지 않은 capability 이름**이 있으면 거부한다.
+
+        오타 하나가 조용히 아무것도 면제하지 않는 상태를 만든다 — 그러면 일정 관리가
+        정책 0건에 막히는데 선언만 보면 막힐 리 없어 보인다.
+        """
+        unknown = [name for name in self.policy_optional_capabilities if name not in self.capabilities]
+        if unknown:
+            raise ValueError(
+                f"{self.team_id}.policy_optional_capabilities 가 선언되지 않은 capability 를 "
+                f"가리킨다: {unknown} (capabilities={self.capabilities})")
+        return self
 
 
 @runtime_checkable

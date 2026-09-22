@@ -207,10 +207,13 @@ capabilities          = ["booking.verify",           # 예약이 실재하고 �
 accepted_case_types   = ["booking"]                  # ★객체 종류다. 요청 종류가 아니다
 required_context      = ["case_state", "policy", "db_facts", "history"]
 allowed_tools         = ["read.booking", "read.policy", "read.supplier"]
-knowledge_scope       = ["booking", "cancellation", "penalty", "supplier"]
+knowledge_scope       = ["travel_cancellation", "travel_activity",       # [2026-09-22] 여행 scope 로 교체
+                         "travel_dining"]                                  #   앞 값 넷은 전부 문서 0건이었다
 max_steps             = 6
 default_capability    = "booking.verify"
 ```
+
+★★`[2026-09-22]` **이 Team 은 그때까지 모든 Case 가 사람에게 가고 있었다.** `policy` 를 필수로 선언해 뒀는데 위 `knowledge_scope` **넷 다 문서 0건**이라(DB 실측) 검색 0건 → `degraded=True` → `_guard` 가 곧바로 `escalated` 였다. 여행 코퍼스를 넣고 scope 를 바꿔 닫았다 — [../records/reports/debugs/2026-09-22_정책scope에_문서가_0건인_팀들.md](../records/reports/debugs/2026-09-22_정책scope에_문서가_0건인_팀들.md). 같은 결함이 Lodging·Flight 에도 있었고 그 둘은 `policy` 선언 자체를 뺐다(정책을 읽을 도구도 없는 팀이다).
 
 `[2026-09-18]` **준비 capability 둘에 라우팅으로 닿는다.** 전에는 `select_capability` 가 없어 어떤 예약 요청이든 `booking.verify` 로만 불렸다. 이제 분류 결과로 고른다 — `booking_cancel_request` → `booking.prepare_cancel`, `booking_change_request` → `booking.prepare_change`, `[2026-09-22]` `booking_revert_request` → `booking.prepare_revert`, 그 밖은 기본(`verify`). 코어가 capability 선택에 `issue_code` 를 넘긴다. **승인 뒤 실행**도 생겼다 — [../actions/approval.md](../actions/approval.md) 「승인 뒤 실행」(취소는 Mock 공급자에 실행, 변경은 인계).
 

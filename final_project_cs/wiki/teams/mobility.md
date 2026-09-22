@@ -92,11 +92,13 @@ Mobility: "오후 순서를 B→A→C 로 바꾸면 이동 40분이 줄어든다
 capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception",
                          "mobility.itinerary"]         # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["mobility"]                 # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
+policy_optional_capabilities = ["mobility.itinerary"]                      # [2026-09-22] 일정 관리만 면제
 allowed_tools         = ["read.route", "read.transit", "read.policy", "read.route_events",
                          "read.itinerary", "read.itinerary_version", "read.place_catalog",
                          "read.customer_report"]
-knowledge_scope       = ["mobility", "transit", "route_exception"]
+knowledge_scope       = ["travel_mobility", "travel_weather",            # [2026-09-22] 여행 scope 로 교체
+                         "travel_cancellation"]                            #   `transit`·`route_exception` 은 문서 0건이라 뺐다
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "mobility.check_route"
 ```
@@ -111,6 +113,10 @@ default_capability    = "mobility.check_route"
 - 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
 - `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
+
+★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
+
+★**여유 시간 계산은 여전히 코드가 한다**(`have >= need`). 코퍼스가 대는 것은 「누구 사정으로 보나」와 「어디까지 말하나」다.
 - 하루 전체 대조: `tests/scenario/test_case_version_day.py` — 같은 재생 입력에서 두 버전의 버전 수·마지막 항목·통지 문구가 같다.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.

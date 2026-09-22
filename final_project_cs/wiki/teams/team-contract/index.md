@@ -119,6 +119,18 @@ rationale_evidence_ids : list[str]   ← 근거 대조용
 | `TeamManifest.required_context` | 선언만 되고 Controller 가 안 읽었다 — 모든 Case 에서 정책 RAG 를 돌리고, 결과가 없으면 `degraded` | **`policy` 를 선언한 Team 에만** 정책 RAG 를 돌린다. 선언 안 한 Team 의 Case 는 정책 결과가 없다는 이유로 `degraded` 가 되지 않는다. 일정 관리처럼 **실시간 사실로 판단하는 일**이 정책 문서 부재로 전부 사람에게 넘어가던 것을 푼다 |
 | 모듈의 `select_capability` | `(intent, input_text)` | `(intent, input_text, state)` 도 받는다 — **세 번째 인자를 선언한 모듈에만** Case 의 `state_json` 에서 온 `subject_ref`·`trigger_source` 를 넘긴다(`[2026-09-17]` 대상 해석기가 남긴 `interpretation` 도). 두 인자 모듈은 그대로 돈다 |
 
+### ★ `[2026-09-22]` 정책 요구를 **capability 단위**로 좁혔다
+
+위 2026-09-17 결정은 Team 단위라 **한 Team 안에서 갈리는 경우**를 못 다뤘다. 그때는
+여행 코퍼스가 0건이라 Activity·Dining·Mobility 에서 `policy` 를 통째로 뺐고, 그 결과
+**취소·성립 판정도 정책 근거 없이** 돌았다. 여행 코퍼스(12문서·130청크)가 들어오면서
+`policy` 를 되돌리되, 일정 관리 capability 만 예외로 둔다 —
+[`fields.md`](fields.md) 의 `policy_optional_capabilities`.
+
+```
+정책 RAG 를 돈다  =  "policy" in required_context  AND  capability ∉ policy_optional_capabilities
+```
+
 `[실측]` `TeamResult`에 `model_validator`가 있다. 모순된 조합을 만들 수 없다.
 
 | `next_action` | 강제되는 것 |

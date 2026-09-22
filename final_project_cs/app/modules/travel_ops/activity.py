@@ -40,13 +40,25 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         accepted_case_types=["activity"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 규정은 `read.policy` 도구로 **직접** 읽고(없으면 모름),
         #   일정 관리는 실시간 사실로 판단한다. 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다.
-        required_context=["case_state", "db_facts", "history"],
+        # ★`[2026-09-22]` **되돌렸다.** 그때 0건이던 까닭은 코퍼스가 쇼핑몰 25문서뿐이고 여행 문서가
+        #   0건이었기 때문이다(`knowledge/travel/` 12문서·130청크로 채웠다). 이제 아래 scope 에
+        #   문서가 있어 검색이 0건으로 떨어지지 않는다. `policy` 를 선언해야 Controller 가 RAG 를
+        #   돌고(`app/application/controller.py:134`) 그 결과가 ContextPack·Evidence 에 실린다 —
+        #   「근거 없는 문장 금지」(CLAUDE.md §0.1)를 지키려면 근거가 실제로 실려야 한다.
+        required_context=["case_state", "policy", "db_facts", "history"],
+        # ★일정 관리만 면제한다 — 예보·운행·영업 같은 **실시간 사실**로 판단하는 일이라
+        #   정책 검색 결과에 막히면 안 된다(감시 루프가 여는 Case 가 전부 사람에게 간다).
+        policy_optional_capabilities=["activity.itinerary"],
         allowed_tools=["read.booking", "read.policy", "read.place", "read.disruptions", *ITINERARY_TOOLS],
-        knowledge_scope=["activity", "cancellation", "refund", "weather"],
+        # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
+        #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
+        #   쇼핑몰 환불 문서를 근거로 집어 왔다. 이름이 겹치지 않게 `travel_` 을 붙이고
+        #   겹침 0건을 `scripts/check_corpus.py` 검사 9 가 센다.
+        knowledge_scope=["travel_activity", "travel_weather", "travel_cancellation", "travel_access"],
         # ★대안 후보마다 재점검한다(도구 1회씩) — 6 으로는 후보 셋에서 예산이 끝난다.
         max_steps=12,
         active=True,
-        implementation_revision="2026-09-17",
+        implementation_revision="2026-09-22",
         default_capability="activity.check_feasible",
     )
 

@@ -28,12 +28,19 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
                       "dining.itinerary"],   # ★`[2026-09-17]` 여행 일정 관리 — 늦음 · 휴무 · 재요청
         accepted_case_types=["dining"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 이 Team 은 정책 문서를 판단에 쓰지 않는다(선언만 있었다).
-        required_context=["case_state", "db_facts", "history"],
+        # ★`[2026-09-22]` **되돌렸다.** 여행 코퍼스가 생겨 이 scope 에 문서가 있다
+        #   (조정·노쇼 기준 `t_doc_06`, 대체 식당 판정 `t_doc_07`, 동행 조건 `t_doc_12`).
+        #   ★단 **「이 집이 할랄인가」는 여전히 RAG 가 아니다** — 그건 사실이라 `read.place` 가 댄다.
+        #   코퍼스에는 「무엇이 확인되면 가능하다고 말해도 되나」만 들어 있다(t_doc_12 §조건은 사실이고…).
+        required_context=["case_state", "policy", "db_facts", "history"],
+        policy_optional_capabilities=["dining.itinerary"],
         allowed_tools=["read.place", "read.policy", "read.booking", *ITINERARY_TOOLS],
-        knowledge_scope=["dining", "opening_hours", "dietary"],
+        # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
+        #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
+        knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
         max_steps=12,
         active=True,
-        implementation_revision="2026-09-17",
+        implementation_revision="2026-09-22",
         default_capability="dining.check_open",
     )
 

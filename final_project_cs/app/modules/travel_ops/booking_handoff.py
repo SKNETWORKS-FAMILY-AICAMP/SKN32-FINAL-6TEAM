@@ -32,10 +32,14 @@ class BookingHandoffTeam(TravelTeamBase):
         accepted_case_types=["booking"],
         required_context=["case_state", "policy", "db_facts", "history"],
         allowed_tools=["read.booking", "read.policy", "read.supplier"],
-        knowledge_scope=["booking", "cancellation", "penalty", "supplier"],
+        # ★`[2026-09-22]` 앞 값(`booking`·`cancellation`·`penalty`·`supplier`)은 **네 개 모두
+        #   문서 0건인 scope** 였다(DB 실측). 즉 이 Team 은 `policy` 를 필수로 선언해 두고
+        #   검색 결과 0건 → degraded → **모든 Case 가 사람에게** 가고 있었다.
+        #   여행 코퍼스의 인계·취소 문서로 바꾼다 — 공통 절차는 `t_doc_11`, 갈래별 기준은 활동·식사 문서.
+        knowledge_scope=["travel_cancellation", "travel_activity", "travel_dining"],
         max_steps=6,
         active=True,
-        implementation_revision="2026-09-09",
+        implementation_revision="2026-09-22",
         default_capability="booking.verify",
     )
 

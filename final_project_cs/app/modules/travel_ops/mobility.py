@@ -28,12 +28,19 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
                       "mobility.itinerary"],   # ★`[2026-09-17]` 여행 일정 관리 — 구간 사건 · 재요청
         accepted_case_types=["mobility"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 이 Team 은 정책 문서를 판단에 쓰지 않는다(선언만 있었다).
-        required_context=["case_state", "db_facts", "history"],
+        # ★`[2026-09-22]` **되돌렸다.** 여행 코퍼스가 생겼다 — 중단·지연 대체(`t_doc_08`),
+        #   연결 실패 책임과 여유(`t_doc_09`), 환불 안내 범위(`t_doc_10`).
+        #   ★**여유 시간 계산은 여전히 코드가 한다**(`have >= need`). 코퍼스가 대는 것은
+        #   「누구 사정으로 보나」와 「어디까지 말하나」이고 그건 계산이 아니라 규정 해석이다.
+        required_context=["case_state", "policy", "db_facts", "history"],
+        policy_optional_capabilities=["mobility.itinerary"],
         allowed_tools=["read.route", "read.transit", "read.policy", "read.route_events", *ITINERARY_TOOLS],
-        knowledge_scope=["mobility", "transit", "route_exception"],
+        # ★`[2026-09-22]` `transit`·`route_exception` 은 문서 0건이던 scope 라 지운다.
+        #   날씨는 이동에도 걸리므로(태풍·대설) `travel_weather` 를 함께 둔다.
+        knowledge_scope=["travel_mobility", "travel_weather", "travel_cancellation"],
         max_steps=12,
         active=True,
-        implementation_revision="2026-09-17",
+        implementation_revision="2026-09-22",
         default_capability="mobility.check_route",
     )
 
