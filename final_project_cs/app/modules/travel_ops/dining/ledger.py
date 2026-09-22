@@ -159,26 +159,27 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
     }
 
 
-def enrich_place(conn, tenant_id: str, place: dict[str, Any] | None,
-                 at: Any = None, until: Any = None) -> dict[str, Any] | None:
-    """코어 `read.place` 결과에 요식 원장 값을 얹는다.
+def merge_state(place: dict[str, Any] | None,
+                state: dict[str, Any] | None) -> dict[str, Any] | None:
+    """코어 장소 정보에 원장 판정을 얹는다. DB 를 쓰지 않는다.
+
+    Team 은 도구로 받은 dict 만 갖고 있고 연결이 없다. 그래서 합치는 일을
+    따로 떼어 둔다. 도구를 통해 오든 함수를 직접 부르든 같은 규칙으로 합쳐진다.
 
     코어가 이미 가진 값을 덮어쓰지 않는다. 비어 있을 때만 채운다.
     덮어쓰면 코어가 확인해 둔 값을 우리가 지우게 되고, 그것은 우리 권한이 아니다.
-
-    `read.place` 가 시각을 받게 되면 이 함수를 그 안에서 부르면 된다.
-    시각이 없으면 아무것도 채우지 않는다 — 시각 없이 답할 수 있는 척하지 않는다.
     """
     if place is None:
         return None
-    state = dining_state(conn, tenant_id, place.get("place_id"), at, until)
     if state is None or not state.get("linked"):
         return place
 
     out = dict(place)
     filled = []
+    # 코어 SQL 칸 이름은 hours_confirmed_at 이지만 도구가 돌려주는 dict 의 키는
+    # confirmed_at 이다 (_PLACE_COLUMNS). 받는 쪽 이름에 맞춘다.
     for core_key, our_key in (("open_at_slot", "open_at_slot"),
-                              ("hours_confirmed_at", "confirmed_at")):
+                              ("confirmed_at", "confirmed_at")):
         if out.get(core_key) is None and state.get(our_key) is not None:
             out[core_key] = state[our_key]
             filled.append(core_key)
@@ -199,3 +200,16 @@ def enrich_place(conn, tenant_id: str, place: dict[str, Any] | None,
     if filled:
         out["dining_source"] = "dining_ledger"
     return out
+
+
+def enrich_place(conn, tenant_id: str, place: dict[str, Any] | None,
+                 at: Any = None, until: Any = None) -> dict[str, Any] | None:
+    """`read.place` 결과에 원장을 얹는다. 조회와 합치기를 한 번에 한다.
+
+    `read.place` 가 시각을 받게 되면 이 함수를 그 안에서 부르면 된다.
+    시각이 없으면 아무것도 채우지 않는다 — 시각 없이 답할 수 있는 척하지 않는다.
+    """
+    if place is None:
+        return None
+    state = dining_state(conn, tenant_id, place.get("place_id"), at, until)
+    return merge_state(place, state)

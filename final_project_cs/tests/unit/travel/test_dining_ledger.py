@@ -155,7 +155,7 @@ def test_모르는_조건은_어느_목록에도_넣지_않는다():
 # ── 코어 결과에 얹기 ──────────────────────────────────────────
 
 def test_비어_있을_때만_채운다():
-    row = {"place_id": CORE_ID, "open_at_slot": None, "hours_confirmed_at": None,
+    row = {"place_id": CORE_ID, "open_at_slot": None, "confirmed_at": None,
            "dietary": [], "dietary_absent": []}
     got = ledger.enrich_place(linked(OPEN_STATE), "demo", row,
                               "2026-09-22 12:00+09:00")
@@ -163,8 +163,18 @@ def test_비어_있을_때만_채운다():
     assert got["dining_source"] == "dining_ledger"
 
 
+def test_확인_시각은_코어_키_이름으로_채운다():
+    """SQL 칸은 hours_confirmed_at 이지만 도구가 주는 키는 confirmed_at 이다."""
+    row = {"place_id": CORE_ID, "open_at_slot": None, "confirmed_at": None,
+           "dietary": [], "dietary_absent": []}
+    got = ledger.enrich_place(linked(OPEN_STATE), "demo", row,
+                              "2026-09-22 12:00+09:00")
+    assert got["confirmed_at"] == CONFIRMED
+    assert "hours_confirmed_at" not in got
+
+
 def test_코어가_아는_값은_덮지_않는다():
-    row = {"place_id": CORE_ID, "open_at_slot": False, "hours_confirmed_at": None,
+    row = {"place_id": CORE_ID, "open_at_slot": False, "confirmed_at": None,
            "dietary": [], "dietary_absent": []}
     got = ledger.enrich_place(linked(OPEN_STATE), "demo", row,
                               "2026-09-22 12:00+09:00")
@@ -172,7 +182,7 @@ def test_코어가_아는_값은_덮지_않는다():
 
 
 def test_조건_목록은_합치고_지우지_않는다():
-    row = {"place_id": CORE_ID, "open_at_slot": None, "hours_confirmed_at": None,
+    row = {"place_id": CORE_ID, "open_at_slot": None, "confirmed_at": None,
            "dietary": ["vegetarian"], "dietary_absent": []}
     conn = linked(OPEN_STATE, {"halal": True})
     got = ledger.enrich_place(conn, "demo", row, "2026-09-22 12:00+09:00")
