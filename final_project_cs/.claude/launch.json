@@ -42,9 +42,9 @@
         "uvicorn",
         "app.presentation.api.app:app",
         "--port",
-        "8043"
+        "8042"
       ],
-      "port": 8043
+      "port": 8042
     }
   ]
 }

@@ -296,6 +296,12 @@ CANNOT_AT_ALL = [
 
 
 def main() -> int:
+    # ★윈도 콘솔 기본 인코딩(cp949)으로는 이 표의 글자가 안 나간다 — 출력만 UTF-8 로 돌린다.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
     parser = argparse.ArgumentParser(description="상시 실행이 살아 있나(읽기만 한다)")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--strict", action="store_true", help="경고도 실패로 센다")

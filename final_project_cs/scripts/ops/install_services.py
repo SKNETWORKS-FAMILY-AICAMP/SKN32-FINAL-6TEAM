@@ -251,6 +251,12 @@ def remove(job: Job, *, pg_ctl: str | None) -> int:
 
 
 def main() -> int:
+    # ★윈도 콘솔 기본 인코딩(cp949)으로는 이 표의 글자가 안 나간다 — 출력만 UTF-8 로 돌린다.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
     parser = argparse.ArgumentParser(description="상시 실행을 이 기계에 건다(기본은 미리보기)")
     parser.add_argument("--apply", action="store_true", help="실제로 등록한다")
     parser.add_argument("--remove", action="store_true", help="뗀다")

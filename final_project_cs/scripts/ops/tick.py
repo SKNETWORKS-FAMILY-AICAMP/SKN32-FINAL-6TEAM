@@ -146,6 +146,12 @@ def run_resident(job: Job) -> int:
 
 
 def main() -> int:
+    # ★윈도 콘솔 기본 인코딩(cp949)으로는 이 표의 글자가 안 나간다 — 출력만 UTF-8 로 돌린다.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
     parser = argparse.ArgumentParser(description="상시 작업 한 회차를 돌리고 흔적을 남긴다")
     parser.add_argument("job", choices=[name for name, j in JOBS.items() if j.kind != "service"])
     parser.add_argument("--show", action="store_true", help="부를 명령만 보여 주고 끝낸다")
