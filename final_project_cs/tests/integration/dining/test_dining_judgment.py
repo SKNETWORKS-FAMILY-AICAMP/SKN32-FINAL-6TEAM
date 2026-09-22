@@ -106,6 +106,9 @@ def place(conn):
         conn.execute("DELETE FROM dining.dn_hours_rule WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_closure_rule WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_attribute WHERE place_uid = %s", (uid,))
+        # 관측과 휴무 범위도 장소를 붙들고 있다. 빼먹으면 지우다 외래키에 걸린다.
+        conn.execute("DELETE FROM dining.dn_live_check WHERE place_uid = %s", (uid,))
+        conn.execute("DELETE FROM dining.dn_closure_coverage WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_place WHERE place_uid = %s", (uid,))
 
 
@@ -331,3 +334,64 @@ def test_닫힌_곳은_후보에서_빠지고_모르는_곳은_남는다(conn, p
     assert names.get("여는곳") is True
     assert "닫는곳" not in names
     assert "모르는곳" in names and names["모르는곳"] is None
+
+
+# ──────────────────────────────────────────────────────────────
+# 시험 갈래와 재질문 (031)
+# ──────────────────────────────────────────────────────────────
+#
+# 026 은 「판정에 쓸 수 있나」 하나로 재질문까지 판단했다. 그래서 시험 출처의
+# 답도 실패한 조회도 영영 「안 물었다」로 남았다. 손으로 돌 때는 안 보이지만
+# 감시 틱에 물리면 같은 곳을 끝없이 다시 묻는다.
+
+def record(conn, place_uid, source, topic, outcome="ok", state="yes"):
+    return conn.execute(
+        "SELECT dining.record_live_check(%s, %s, %s, %s, %s)",
+        (place_uid, source, topic, outcome, state)).fetchone()[0]
+
+
+def test_시험_출처는_본_갈래_판정에_닿지_않는다(conn, place):
+    uid = place()
+    record(conn, uid, "catchtable_trial", "waiting")
+    got = conn.execute("SELECT dining.live_state(%s, 'waiting')", (uid,)).fetchone()[0]
+    assert got is None
+
+
+def test_시험_갈래에서는_같은_값이_보인다(conn, place):
+    uid = place()
+    record(conn, uid, "catchtable_trial", "waiting")
+    got = conn.execute("SELECT dining.live_state(%s, 'waiting', true)",
+                       (uid,)).fetchone()[0]
+    assert got is not None
+    assert got["state"] == "yes"
+    assert got["source"] == "catchtable_trial"
+
+
+def test_시험_갈래도_실패한_조회는_값으로_쓰지_않는다(conn, place):
+    uid = place()
+    # 갈래가 갈린 것은 출처 등급 하나뿐이다. 성패는 양쪽 다 따진다.
+    record(conn, uid, "catchtable_trial", "vacancy", outcome="blocked", state="unknown")
+    got = conn.execute("SELECT dining.live_state(%s, 'vacancy', true)",
+                       (uid,)).fetchone()[0]
+    assert got is None
+
+
+def test_막힌_조회도_잠시_재질문을_막는다(conn, place):
+    uid = place()
+    # 실패의 TTL 은 120초다. 영영 막는 것이 아니라 잠깐 쉰다.
+    before = conn.execute("SELECT dining.check_prompt(%s, %s, true)",
+                          (uid, at(1, "12:00"))).fetchone()[0]
+    assert "waiting" in before["topics"]
+
+    record(conn, uid, "catchtable_trial", "waiting", outcome="blocked", state="unknown")
+    after = conn.execute("SELECT dining.check_prompt(%s, %s, true)",
+                         (uid, at(1, "12:00"))).fetchone()[0]
+    assert after is None or "waiting" not in after["topics"]
+
+
+def test_시험_출처의_답도_재질문을_막는다(conn, place):
+    uid = place()
+    record(conn, uid, "catchtable_trial", "waiting")
+    after = conn.execute("SELECT dining.check_prompt(%s, %s, true)",
+                         (uid, at(1, "12:00"))).fetchone()[0]
+    assert after is None or "waiting" not in after["topics"]

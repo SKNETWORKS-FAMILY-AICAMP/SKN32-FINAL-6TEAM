@@ -315,12 +315,37 @@ def cmd_answer(args) -> int:
         seen[topic] = one
 
     path = catchtable.write_answer(uid, args.url, seen)
+    at = parse_at(args.at) if args.at else None
+
+    # 파일에 쓴 뒤 곧바로 읽어서 적는다.
+    #
+    # 여기서 seen 을 그대로 적지 않는 이유가 있다. read_answer 가 본 시각과
+    # 신선도와 값 모양을 따지는 곳이고, 그것을 건너뛰면 검사받지 않은 값이
+    # 들어온다. 쓴 것을 다시 읽어야 규칙이 한 곳에만 있다.
+    #
+    # run 을 한 번 더 돌게 하지 않는 이유도 있다. 방금 물어본 것은 재질문
+    # 억제에 걸려 check_prompt 가 NULL 을 돌려주므로, 답이 왔는데도 120초
+    # 동안 주워 가지 못한다. 답은 물음과 달리 미룰 이유가 없다.
     print(f"{name} — 답 놓음 ({len(seen)}가지)")
-    for topic, one in seen.items():
-        print(f"  {TOPIC_LABEL[topic]:8s} {one['state']:8s} "
-              f"{one.get('num', '')} {one.get('detail', '')}".rstrip())
+    with connect() as conn, conn.cursor() as cur:
+        for topic in seen:
+            got = catchtable.read_answer(uid, topic)
+            source = args.source or default_source("catchtable", topic)
+            cur.execute(
+                "SELECT dining.record_live_check(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (uid, source, topic,
+                 got.get("outcome", "error"),
+                 got.get("value_state", "unknown"),
+                 got.get("value_num"),
+                 got.get("value_detail"),
+                 got.get("evidence"),
+                 at, "run_check:answer"))
+            conn.commit()
+            mark = "OK " if got.get("outcome") == "ok" else "실패"
+            print(f"  {mark} {TOPIC_LABEL[topic]:8s} {got.get('value_state'):8s} "
+                  f"[{source}] {got.get('value_detail') or ''}")
     print(f"  {path}")
-    print(f"  이제: run --place {args.place} --at ... --vacancy --backend catchtable")
+    print(f"  본 것: show --place {args.place} --trial")
     return 0
 
 
@@ -345,9 +370,10 @@ def cmd_pending(args) -> int:
 def cmd_show(args) -> int:
     with connect() as conn, conn.cursor() as cur:
         uid, name = resolve_place(cur, args.place)
-        print(f"{name}")
+        print(f"{name}" + ("  (시험 갈래)" if args.trial else ""))
         for topic in TOPIC_LABEL:
-            cur.execute("SELECT dining.live_state(%s, %s)", (uid, topic))
+            cur.execute("SELECT dining.live_state(%s, %s, %s)",
+                        (uid, topic, args.trial))
             got = cur.fetchone()[0]
             if got is None:
                 # 기한이 지났거나 확인한 적이 없다. 닫혔다는 뜻이 아니다.
@@ -392,6 +418,8 @@ def main() -> int:
     p_answer = sub.add_parser("answer", help="브라우저에서 본 것을 적어 둔다")
     common(p_answer)
     p_answer.add_argument("--url", required=True, help="실제로 본 화면 주소")
+    p_answer.add_argument("--at", help="방문 시각. 적어 두면 어느 때를 본 것인지 남는다")
+    p_answer.add_argument("--source", help="출처를 직접 고를 때만")
     p_answer.add_argument("--saw", required=True, nargs="+",
                           metavar="주제=상태[:숫자][:설명]",
                           help="예) waiting=yes:41:현재 웨이팅 41팀  vacancy=no")
@@ -402,6 +430,8 @@ def main() -> int:
 
     p_show = sub.add_parser("show", help="확인한 것을 본다")
     common(p_show)
+    p_show.add_argument("--trial", action="store_true",
+                        help="시험 갈래. 캐치테이블처럼 운영 판정에서 뺀 출처까지 본다")
     p_show.set_defaults(func=cmd_show)
 
     args = ap.parse_args()
