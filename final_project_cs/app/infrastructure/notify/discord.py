@@ -34,6 +34,7 @@ from typing import Any, Callable
 import httpx
 
 from .phrase import Phrase, PhraseCache, fill
+from .suppressed import NoticeSuppressed
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +123,15 @@ class DiscordWebhook:
 
     TOPICS = frozenset({"trip.notice"})
 
-    def __init__(self, url: str, *, timeout: float = 8.0,
+    #: 바깥으로 보낼 테넌트. ★`[2026-09-22]` **기본이 「운영 테넌트 하나」**다 — 시연·시험 테넌트의
+    #:  통지가 실제 채널로 나간 사고가 있었다(8건). `None` 을 주면 전부 보낸다(옛 동작).
+    def __init__(self, url: str, *, timeout: float = 8.0, allowed_tenants: set[str] | None = None,
                  transport: Callable[..., httpx.Response] | None = None,
                  fallback: Callable[[dict[str, Any]], Any] | None = None,
                  translator: Callable[[str, str], str] | None = None,
                  phrases: PhraseCache | None = None) -> None:
         self.url = url
+        self.allowed_tenants = None if allowed_tenants is None else set(allowed_tenants)
         self._timeout = timeout
         self._post = transport or self._http_post
         # ★다른 주제는 원래 발행자에게 넘긴다. 이 파일이 모든 주제를 삼키지 않는다.
@@ -163,6 +167,11 @@ class DiscordWebhook:
             if self._fallback is not None:
                 return self._fallback(message)
             return None
+        tenant = str(message.get("tenant_id") or "")
+        if self.allowed_tenants is not None and tenant not in self.allowed_tenants:
+            raise NoticeSuppressed(
+                f"보낼 대상이 아닌 테넌트({tenant or '이름 없음'}) — 바깥으로 보내지 않았다. "
+                f"보내는 테넌트: {sorted(self.allowed_tenants)}")
         if not self.url:
             raise NoticeNotConfigured(
                 "ACOP_DISCORD_WEBHOOK_URL 이 비어 있다 — 알림을 보내지 않았다")

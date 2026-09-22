@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Callable
 
 from app.core.settings import get_guardrails
+from app.infrastructure.notify.suppressed import NoticeSuppressed
 
 
 class OutboxWorker:
@@ -39,16 +40,27 @@ class OutboxWorker:
                 with conn.cursor() as cur:
                     scope = "AND tenant_id=%s " if self.tenant_id else ""
                     params = (self.tenant_id,) if self.tenant_id else ()
-                    cur.execute("SELECT message_id,topic,payload_json,attempts FROM outbox WHERE status='pending' "
+                    cur.execute("SELECT message_id,topic,payload_json,attempts,tenant_id FROM outbox "
+                                "WHERE status='pending' "
                                 f"AND available_at<=now() {scope}"
                                 "ORDER BY available_at FOR UPDATE SKIP LOCKED LIMIT 1", params)
                     row = cur.fetchone()
                     if row is None:
                         return False
-                    message_id, topic, payload, attempts = row
+                    message_id, topic, payload, attempts, tenant_id = row
                     cur.execute("UPDATE outbox SET status='processing',attempts=attempts+1,locked_at=now() WHERE message_id=%s", (message_id,))
             try:
-                self.publisher({"message_id": str(message_id), "topic": topic, "payload": payload})
+                self.publisher({"message_id": str(message_id), "topic": topic, "payload": payload,
+                                "tenant_id": tenant_id})
+            except NoticeSuppressed as exc:
+                # ★`[2026-09-22]` **보내면 안 되는 것**이다(시연·시험 테넌트). `delivered` 로 찍으면
+                #   보낸 적 없는 알림이 보낸 것으로 남는다. 다시 집지도 않는다 — 사유와 함께 남긴다.
+                #   경위: 시연 테넌트의 통지 8건이 실제 채널로 나갔다(2026-09-22).
+                with conn.transaction():
+                    with conn.cursor() as cur:
+                        cur.execute("UPDATE outbox SET status='skipped',last_error=%s,locked_at=NULL "
+                                    "WHERE message_id=%s", (str(exc)[:500], message_id))
+                return True
             except (TimeoutError, ConnectionError) as exc:
                 with conn.transaction():
                     with conn.cursor() as cur:
