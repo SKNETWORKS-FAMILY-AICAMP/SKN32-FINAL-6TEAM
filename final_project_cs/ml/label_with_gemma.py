@@ -30,7 +30,8 @@ ISSUE_CODES = (
     "activity_cancel_or_change", "activity_weather_risk", "activity_time_conflict", "activity_other",
     "dining_hours", "dining_conditions", "dining_other",
     "mobility_missed_or_disrupted", "mobility_route_infeasible", "mobility_other",
-    "booking_mismatch", "booking_change_request", "booking_cancel_request", "booking_other",
+    "booking_mismatch", "booking_change_request", "booking_cancel_request",
+    "booking_revert_request", "booking_other",
     "lodging_other", "flight_other",
     "other",
 )
@@ -39,7 +40,10 @@ ISSUE_CODES = (
 #:  적었다. 바꾸면 라벨 분포가 바뀌므로 판(version)을 올린다.
 #: ★v2 — 30건 시험에서 「승차권 구매취소 환급거절」「철도 예약 취소 환급 지연」이 규칙 1 을
 #:  어기고 결항 코드로 붙었다. 교통권·이용권도 규칙 1 에 든다고 적었다(2026-09-17).
-GUIDE_VERSION = "2026-09-17.v2"
+#: ★v3 — `booking_revert_request` 를 더했다(v11 §12 DoD-21). **취소해 달라**(cancel)와
+#:  **되돌려 달라**(revert)는 반대 방향이라 한 코드에 담으면 되돌림 요청이 또 취소로 간다.
+#:  라벨 집합이 늘었으므로 판을 올린다 — 앞 판으로 붙인 라벨과 섞어 세지 않는다(2026-09-22).
+GUIDE_VERSION = "2026-09-22.v3"
 GUIDE = """
 [요청 종류 intent — 무엇을 해 달라는 글인가]
 - itinerary_submit : 여행 일정·계획을 새로 내거나 등록·검토해 달라는 글
@@ -62,6 +66,7 @@ GUIDE = """
 - booking_mismatch          : 예약 내용이 약속과 다른 문제 (날짜·인원·객실·좌석 불일치, 예약 누락, 임의 변경)
 - booking_change_request    : 예약을 바꿔 달라는 요청
 - booking_cancel_request    : 예약 취소·환불·위약금·취소수수료 문제
+- booking_revert_request    : 우리가 이미 바꾼(취소한) 예약을 원래대로 되돌려 달라는 요청
 - booking_other             : 그 밖의 예약·결제 문제
 - lodging_other             : 숙박 시설 자체의 문제 (시설, 위생, 서비스) — 예약·환불 문제가 아닐 때
 - flight_other              : 항공 이용의 그 밖 문제 (마일리지, 수하물, 좌석 서비스) — 예약·환불·결항이 아닐 때
