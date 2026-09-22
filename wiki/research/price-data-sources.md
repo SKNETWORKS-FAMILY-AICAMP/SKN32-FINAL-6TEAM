@@ -112,13 +112,23 @@ domain: travel
 
 ## 6. 해 볼 순서
 
-| # | 할 일 | 왜 이 순서인가 |
-|---|---|---|
-| 1 | [전국문화기반시설총람](https://www.data.go.kr/data/15125097/openapi.do) 신청 → `관람료` 채움률 측정 | **자동승인·무료**라 가장 싸고 빠르다 |
-| 2 | [Viator Basic](https://partnerresources.viator.com/travel-commerce/levels-of-access/) 가입 → 서울 액티비티 가격 확인 | 사전 승인이 없다 |
-| 3 | [구글 키](https://developers.google.com/maps/billing-and-pricing/billing-overview) → 서울 식당 30곳 `priceLevel`·`priceRange` 채움률 | 카드 등록이 필요해 사람이 해야 한다 |
-| 4 | [Terra API](https://docs.terra.tripadvisor.com/docs/overview) | 위가 막힐 때의 대안. 종료 일정이 겹쳐 있어 후순위 |
-| 5 | [KOPIS](https://www.data.go.kr/data/15097805/openapi.do) · [문체부 전시정보](https://www.data.go.kr/data/15105037/openapi.do) | 공연·전시로 범위가 좁다 |
+| # | 할 일 | 링크 | 비용 | 사람이 할 일 | 걸리는 시간 |
+|---|---|---|---|---|---|
+| 1 | 전국문화기반시설총람 → `관람료` 채움률 측정 | [data.go.kr/data/15125097](https://www.data.go.kr/data/15125097/openapi.do) | **무료** · 개발계정 일 10,000건 | 로그인 후 **활용신청** 한 번 (개발·운영 **둘 다 자동승인**) | 분 단위 |
+| 2 | Viator Basic → 서울 액티비티 가격 확인 | [levels-of-access](https://partnerresources.viator.com/travel-commerce/levels-of-access/) · [API 문서](https://docs.viator.com/partner-api/affiliate/technical/) | **가입 0원** (수수료 8~12%는 예약 발생 시) | 제휴 가입. **사전 승인 없음** | 시간 단위 |
+| 3 | 구글 → 서울 식당 30곳 `priceLevel`·`priceRange` 채움률 | [billing-overview](https://developers.google.com/maps/billing-and-pricing/billing-overview) · [요금](https://developers.google.com/maps/billing-and-pricing/pricing) | Place Details **Enterprise $20/1,000** = 건당 30원 · **월 1,000건 무료** → 30곳 측정은 **0원** | **카드 등록**된 Cloud Billing 계정 | 시간 단위 |
+| 4 | TripAdvisor Terra | [docs.terra.tripadvisor.com](https://docs.terra.tripadvisor.com/docs/overview) | **첫 1,000콜 무료** · 이후 종량제(단가 비공개) | 자율 가입 + 표시 의무 준수 | 위가 막힐 때 |
+| 5 | KOPIS · 문체부 전시정보 | [KOPIS](https://www.data.go.kr/data/15097805/openapi.do) · [전시정보](https://www.data.go.kr/data/15105037/openapi.do) | 무료 | 활용신청 | 공연·전시로 범위가 좁다 |
+
+★**1 번은 새 키가 필요 없다.** Base URL 이 `apis.data.go.kr/B553457/rgnCltrFcltExmnv1` 라서 **지금 있는 `ACOP_DATA_GO_KR_KEY` 를 그대로 쓴다.** 그 서비스에 활용신청이 안 돼 있을 뿐이다 — `[실측 2026-09-22]` 세 오퍼레이션 모두 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR`(코드 30)가 떨어졌다.
+
+오퍼레이션 10개 — `clifMsmv1`(박물관) · `clifArglv1`(미술관) · `clifClcnv1`(문예회관) · `clifLbrryv1`(공공도서관) · `clifNtnLbrryv1`(국립도서관) · `clifLtrm1`(문학관) · `clifLvclCntrv1`(생활문화센터) · `clifLclcv1`(지방문화원) · `clifClhsv1`(문화의집) · `clifLcclFndtv1`(지역문화재단).
+
+신청이 끝났는지 확인하는 한 줄:
+
+```
+GET https://apis.data.go.kr/B553457/rgnCltrFcltExmnv1/clifMsmv1?serviceKey=<키>&numOfRows=1&pageNo=1&type=json
+```
 
 ★**1·2·3 은 모두 사람이 가입·신청해야 한다.** AI 세션은 계정 생성과 카드 등록을 하지 않는다.
 
