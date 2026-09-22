@@ -118,6 +118,10 @@ def cleanup_tenant(tenant_id: str) -> None:
                     "DELETE FROM case_events WHERE tenant_id=%s",
                     "DELETE FROM customer_cases WHERE tenant_id=%s",
                     "DELETE FROM outbox WHERE tenant_id=%s",
+                    # ★위임(019)과 그 이력(021)도 고객을 참조한다 — 고객보다 먼저 지운다.
+                    #   빠뜨리면 FK 가 `customers` 삭제를 막아 이 함수가 통째로 실패한다.
+                    "DELETE FROM delegation_events WHERE tenant_id=%s",
+                    "DELETE FROM delegations WHERE tenant_id=%s",
                     "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s",
                     "DELETE FROM customers WHERE tenant_id=%s",

@@ -41,6 +41,14 @@ CONTRACT_V1_PATHS = {
     "/v1/trips/{trip_id}/rollback",
     # ★2026-09-14 고객 자유 문장 → Case → 분류 → 여행 창구
     "/v1/trips/{trip_id}/messages",
+    # ★2026-09-22 위임(`app/modules/travel_ops/delegation_api.py`) — 승인 뒤 자동 실행을
+    #   여는 둘째 문을 주고 거두는 자리. scope `delegation:read`·`delegation:write`
+    #   (`action:approve` 와 나눈다 — 승인은 제안 한 건, 위임은 거둘 때까지 서 있는 권한),
+    #   상태 변경은 누가·왜 를 필수로 받고 `delegation_events`(021)에 덧붙여 기록한다.
+    "/v1/delegations",
+    "/v1/delegations/{customer_id}",
+    "/v1/delegations/{customer_id}/grant",
+    "/v1/delegations/{customer_id}/revoke",
 }
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}

@@ -46,6 +46,10 @@ LIMIT_TOTAL = "over_total_cap"
 LIMIT_COUNT = "over_change_count"
 LIMIT_FREE_CANCELLATION = "outside_free_cancellation_window"
 
+#: 이력(021)에 쌓이는 **행위** 이름. ★마이그레이션 021 의 CHECK 와 같은 값이어야 한다.
+GRANTED = "granted"
+REVOKED = "revoked"
+
 #: 순서가 곧 판정 순서다. 앞의 것이 걸리면 뒤는 보지 않는다.
 LIMITS: tuple[str, ...] = (
     LIMIT_DELEGATION_ABSENT, LIMIT_DELEGATION_REVOKED, LIMIT_KIND, LIMIT_AMOUNT_UNKNOWN,
@@ -225,6 +229,19 @@ def require(conn: Any, *, tenant_id: str, customer_id: Any, booking: Mapping[str
     return decision
 
 
+def _record(conn: Any, *, tenant_id: str, customer_id: Any, action: str,
+            actor: str | None, note: str | None) -> None:
+    """이력 한 줄을 **덧붙인다**(021, append-only).
+
+    ★`delegations` 한 행은 **지금 상태**만 든다 — 다시 주면 `ON CONFLICT DO UPDATE` 가
+      `revoked_at`·`revoked_by` 를 지운다. 「주기 → 거두기 → 다시 주기」를 하면 누가 언제
+      거뒀는지가 덮여 사라지므로, 상태를 바꾼 **행위**를 따로 쌓는다.
+    """
+    with conn.cursor() as cur:
+        cur.execute("INSERT INTO delegation_events (tenant_id, customer_id, action, actor_id, note) "
+                    "VALUES (%s,%s,%s,%s,%s)", (tenant_id, str(customer_id), action, actor, note))
+
+
 def grant(conn: Any, *, tenant_id: str, customer_id: Any, by: str | None = None,
           note: str | None = None) -> None:
     """위임을 준다(다시 주면 철회를 지운다). 시연·시험·운영 도구가 쓴다."""
@@ -234,6 +251,7 @@ def grant(conn: Any, *, tenant_id: str, customer_id: Any, by: str | None = None,
                     "SET granted_at=now(), revoked_at=NULL, revoked_by=NULL, "
                     "granted_by=EXCLUDED.granted_by, note=EXCLUDED.note",
                     (tenant_id, str(customer_id), by, note))
+    _record(conn, tenant_id=tenant_id, customer_id=customer_id, action=GRANTED, actor=by, note=note)
 
 
 def revoke(conn: Any, *, tenant_id: str, customer_id: Any, by: str | None = None,
@@ -242,15 +260,91 @@ def revoke(conn: Any, *, tenant_id: str, customer_id: Any, by: str | None = None
 
     돌려주는 값은 「철회할 위임이 있었나」다. 없었으면 False — 이미 자동 실행이 막힌
     상태이므로 오류가 아니다. 다만 **조용히 True 라고 하지 않는다.**
+
+    ★이력(021)은 **실제로 거둔 때만** 쌓는다. 거둘 것이 없었는데 「거뒀다」를 남기면
+      이력이 거짓이 된다.
     """
     with conn.cursor() as cur:
         cur.execute("UPDATE delegations SET revoked_at=COALESCE(%s, now()), revoked_by=%s, "
                     "note=COALESCE(%s, note) WHERE tenant_id=%s AND customer_id=%s "
                     "AND revoked_at IS NULL",
                     (at, by, note, tenant_id, str(customer_id)))
-        return cur.rowcount > 0
+        changed = cur.rowcount > 0
+    if changed:
+        _record(conn, tenant_id=tenant_id, customer_id=customer_id, action=REVOKED,
+                actor=by, note=note)
+    return changed
 
 
-__all__ = ["Decision", "LIMITS", "LIMIT_AMOUNT_UNKNOWN", "LIMIT_COUNT", "LIMIT_DELEGATION_ABSENT",
-           "LIMIT_DELEGATION_REVOKED", "LIMIT_FREE_CANCELLATION", "LIMIT_KIND", "LIMIT_PER_ACTION",
-           "LIMIT_TOTAL", "Scope", "grant", "judge", "require", "revoke"]
+# ── 읽기 — 운영 화면·API 가 쓰는 자리 ────────────────────────────────────────
+#: ★`delegations` 한 행이 답하는 것은 셋뿐이다 — 있다 / 살아 있다 / 거뒀다.
+STATE_ABSENT = "absent"
+STATE_LIVE = "live"
+STATE_REVOKED = "revoked"
+
+
+def _state_of(row: Mapping[str, Any] | None) -> str:
+    if row is None:
+        return STATE_ABSENT
+    return STATE_REVOKED if row.get("revoked_at") is not None else STATE_LIVE
+
+
+def spent_cents(conn: Any, *, tenant_id: str, customer_id: Any) -> int:
+    """이 고객에게 **이미 나간** 자동 실행 금액 합. 판정이 쓰는 것과 **같은 셈**이다."""
+    return _spent_cents(conn, tenant_id=tenant_id, customer_id=customer_id)
+
+
+def listing(conn: Any, *, tenant_id: str) -> list[dict[str, Any]]:
+    """테넌트의 위임 전부 — 살아 있는 것이 위로. 누적 사용액을 함께 센다.
+
+    ★누적은 판정(`_spent_cents`)과 **같은 조건**으로 센다 — 화면의 수와 게이트의 수가
+      갈라지면 운영자가 본 것이 판정의 근거가 아니게 된다.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT d.customer_id, d.granted_at, d.revoked_at, d.granted_by, d.revoked_by, d.note, "
+            "COALESCE((SELECT SUM(ar.amount_cents) FROM action_requests ar "
+            "          JOIN customer_cases c ON c.case_id = ar.case_id "
+            "          WHERE ar.tenant_id = d.tenant_id AND c.customer_id = d.customer_id "
+            "            AND ar.status='succeeded' AND ar.delegation_json IS NOT NULL "
+            "            AND ar.amount_cents IS NOT NULL), 0) AS spent_cents "
+            "FROM delegations d WHERE d.tenant_id=%s "
+            "ORDER BY (d.revoked_at IS NOT NULL), d.granted_at DESC", (tenant_id,))
+        keys = ("customer_id", "granted_at", "revoked_at", "granted_by", "revoked_by", "note",
+                "spent_cents")
+        rows = [dict(zip(keys, row)) for row in cur.fetchall()]
+    for row in rows:
+        row["state"] = _state_of(row)
+    return rows
+
+
+def state(conn: Any, *, tenant_id: str, customer_id: Any) -> dict[str, Any]:
+    """한 고객의 지금 상태 + 누적 사용액. ★행이 없으면 `absent` — 「모름」이 아니다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT granted_at, revoked_at, granted_by, revoked_by, note FROM delegations "
+                    "WHERE tenant_id=%s AND customer_id=%s", (tenant_id, str(customer_id)))
+        row = cur.fetchone()
+    found = None if row is None else dict(
+        zip(("granted_at", "revoked_at", "granted_by", "revoked_by", "note"), row))
+    out: dict[str, Any] = {"customer_id": str(customer_id), "state": _state_of(found),
+                           "granted_at": None, "revoked_at": None, "granted_by": None,
+                           "revoked_by": None, "note": None}
+    out.update(found or {})
+    out["spent_cents"] = spent_cents(conn, tenant_id=tenant_id, customer_id=customer_id)
+    return out
+
+
+def history(conn: Any, *, tenant_id: str, customer_id: Any, limit: int = 50) -> list[dict[str, Any]]:
+    """누가·언제·왜 주고 거뒀나(021). 최신이 위."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT action, actor_id, note, at FROM delegation_events "
+                    "WHERE tenant_id=%s AND customer_id=%s ORDER BY seq DESC LIMIT %s",
+                    (tenant_id, str(customer_id), int(limit)))
+        return [dict(zip(("action", "actor_id", "note", "at"), row)) for row in cur.fetchall()]
+
+
+__all__ = ["Decision", "GRANTED", "LIMITS", "LIMIT_AMOUNT_UNKNOWN", "LIMIT_COUNT",
+           "LIMIT_DELEGATION_ABSENT", "LIMIT_DELEGATION_REVOKED", "LIMIT_FREE_CANCELLATION",
+           "LIMIT_KIND", "LIMIT_PER_ACTION", "LIMIT_TOTAL", "REVOKED", "STATE_ABSENT",
+           "STATE_LIVE", "STATE_REVOKED", "Scope", "grant", "history", "judge", "listing",
+           "require", "revoke", "spent_cents", "state"]

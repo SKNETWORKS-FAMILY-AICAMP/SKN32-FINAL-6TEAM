@@ -78,6 +78,33 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 - `[2026-09-20]` **끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다**(`RUNNABLE_STATUSES`). 전에는 되잡기 작업이 같은 Case 를 또 집으면 Team 을 한 번 더 돌린 뒤 결과를 쓸 때 상태기계가 막았다 — 결과는 같지만 모델·도구를 한 번 더 쓰고 사유가 「전이 오류」로 보였다. 기다림을 푸는 것은 승인 API 와 `resume()` 이다.
 - 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름 · `[2026-09-22]` 공급자 등급별 실행/거부 3건) · `tests/architecture/test_supplier_tier_gate.py`(등급 게이트, 6건) · `[2026-09-22]` `tests/integration/controller/test_delegation_scope.py`(위임 범위·철회·장부·되돌림, 13건).
 
+### 위임을 누가 주고 거두나 `[2026-09-22]`
+
+`[실측]` **운영자다.** 자리는 REST `/v1/delegations/*` 와 운영 화면 `/ui/delegations` 다
+(구현 [`app/modules/travel_ops/delegation_api.py`](../../app/modules/travel_ops/delegation_api.py) ·
+화면 `app/presentation/ui/routes.py`). **전에는 자리가 없었다** — 판정(`delegation.py`)과
+`delegations` 표(019)는 있는데 주고 거두는 경로가 없어 사람이 손으로 SQL 을 쳐야 했다.
+「위임은 언제든 철회할 수 있다」가 그동안 말뿐이었다는 뜻이다.
+
+| | |
+|---|---|
+| 권한 | `delegation:read`(보기) · `delegation:write`(주기·거두기). ★**`action:approve` 로는 못 한다** |
+| ★왜 승인 권한과 나눴나 | 승인은 **제안 한 건**에 "이 변경을 해도 된다" 이고, 위임은 **서 있는 권한**이다 — 한 번 주면 거둘 때까지 그 고객의 모든 자동 실행이 한계 안에서 열린다. 영향 범위가 다르면 scope 를 나누는 것이 이 저장소의 방식이다(`composer:admin`·`ops:reload` 가 같은 기준으로 갈라졌다) |
+| 무엇을 받나 | **누가**(`actor_id`)와 **왜**(`note`). 둘 다 필수이고 공백만 보내면 `422` — 근거 없이 위임 상태를 바꾸지 않는다 |
+| ★맡기기 전에 보여 주는 것 | 화면이 **확인 단계**를 둔다 — 열리는 한계 · 이 고객에게 이미 나간 금액 · 남은 여유 · 지금까지 주고 거둔 기록. 그 화면은 **아무것도 바꾸지 않는다**. 거두기에는 확인 단계를 두지 않는다(막는 방향이고, 한 번 더 묻는 사이에 자동 실행이 나갈 수 있다) |
+| ★거둘 것이 없으면 | `409 no_live_delegation` + 화면에 사유. **「거뒀다」고 답하지 않는다** — 200 으로 넘기면 운영자가 "눌렀으니 됐겠지" 로 간다(아래 「승인 실패가 조용히 삼켜지고 있었다」와 같은 형태다) |
+| ★이력은 덮이지 않는다 | 주기·거두기가 `delegation_events`(마이그레이션 [021](../../app/infrastructure/db/migrations/021_delegation_audit_trail.sql))에 **덧붙는다**. `delegations` 한 행은 다시 주기가 `revoked_at`·`revoked_by` 를 NULL 로 덮으므로, 021 이 없으면 **「누가 언제 거뒀나」가 사라진다** — 019 자신이 지키라고 적어 둔 것이 다시 주는 순간 깨지고 있었다 |
+| 한계 값은 화면에서 못 바꾼다 | `config/guardrails.yaml` `travel.delegation` 이 정본이다(RULE.md §3.1). 화면은 읽어서 보일 뿐이다 |
+| 거둔 뒤 | 판정은 **적용 순간**에 하므로 승인 뒤·재개 전에 거둬도 그 건은 열리지 않는다. 이미 나간 건은 **되돌림 경로**로만 무른다(아래 절) |
+
+★**이 화면에는 로그인이 없다** — `/ui/*` 전체가 그렇고 승인 화면도 같다(이 앱은 인증 없이
+열린다). 위임을 주는 버튼이 그 위에 올라갔으므로 **승인 화면과 같은 크기의 구멍**이다.
+→ [../records/reports/2026-09-22_1720_위임_주고거두는_화면과_API_리포트.md](../records/reports/2026-09-22_1720_위임_주고거두는_화면과_API_리포트.md) §미해결
+
+시험: [`tests/integration/api/test_delegation_api.py`](../../tests/integration/api/test_delegation_api.py)(12 — 권한·주기·거두기 뒤 게이트가 실제로 닫히나·이력) ·
+[`tests/integration/api/test_ui_delegation_screen.py`](../../tests/integration/api/test_ui_delegation_screen.py)(8 — 열리나·무엇이 열리는지 먼저 보이나·실패가 보이나).
+계약 → [../external/rest-endpoints.md](../external/rest-endpoints.md#위임--v1delegations-2026-09-22)
+
 ### 되돌림도 승인 뒤 실행이다 `[2026-09-22]`
 
 자동 실행을 무르는 것도 같은 경로를 탄다 — issue_code `booking_revert_request` → capability `booking.prepare_revert` → 제안 `booking.revert` → 승인 → 적용기 `BookingRevert`(v11 §12 DoD-21).

@@ -143,6 +143,17 @@ security:
     #   일정 버전을 올린다(v11 §4-B · §6-C-6). 2026-09-14 추가.
     - trip:read
     - trip:write
+    # ★★위임(delegation) — **승인 뒤 자동 실행을 여는 둘째 문**을 주고 거두는 자리
+    #   (v11 §12 DoD-18·19 · wiki `teams/booking-handoff.md` 「위임 범위」). 2026-09-22 추가.
+    #   ★`action:approve` 와 나눈다. 승인은 **제안 한 건**에 "이 변경을 해도 된다" 이고,
+    #   위임은 **서 있는 권한**이다 — 한 번 주면 거둘 때까지 그 고객의 모든 자동 실행이
+    #   한계(`travel.delegation`) 안에서 열린다. 영향 범위가 다르면 scope 를 나누는 것이
+    #   이 저장소의 방식이다(`composer:admin` 을 `composer:write` 에서, `ops:reload` 를
+    #   저장에서 나눈 것과 같은 기준).
+    #   ★읽기를 따로 둔다 — 현황을 보는 것과 상태를 바꾸는 것은 다른 사람의 일일 수 있다
+    #   (`trip:read`/`trip:write` 와 같은 모양).
+    - delegation:read
+    - delegation:write
   composer_jwt_ttl_minutes: 30
   # ★MCP 에는 mcp:read 외 어떤 scope 도 부여하지 않는다
   mcp_allowed_scopes:

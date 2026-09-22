@@ -35,6 +35,10 @@ STATE_TONE: dict[str, str] = {
     "resolved": "done", "delivered": "done", "succeeded": "done", "approved": "done",
     # 아직 / 중단
     "new": "idle", "cancelled": "idle", "pending": "idle",
+    # ★위임(2026-09-22). **살아 있는 위임은 "문이 열려 있다"** 는 뜻이라 운영자가 알고
+    #   있어야 한다 — 알람(critical)은 아니지만 회색(idle)도 아니다. 거둔 것은 닫힌
+    #   상태이므로 조용한 색이 맞다. 색은 장식이 아니라 분류다.
+    "live": "warn", "revoked": "idle", "absent": "idle",
 }
 
 
@@ -211,6 +215,10 @@ NAV = (
     #   메뉴에 있어야 한다고 전제하고 쓴 것이다. `final_project_sample` 에는
     #   처음부터 있었다(`TENANT_NAV`). 이식하며 빠진 것으로 보인다.
     ("/ops/outbox", "Outbox unknown"),
+    # ★2026-09-22 추가. 위임은 **승인 뒤 자동 실행을 여는 둘째 문**이고, 그 문을 주고
+    #   거두는 자리가 이 제품에 없어 운영자가 손으로 SQL 을 쳐야 했다.
+    #   거두기가 화면에 없으면 「언제든 철회할 수 있다」가 말뿐이 된다.
+    ("/ui/delegations", "Delegations"),
     ("/ui/voc", "VOC"),
     # ★2026-09-14 시나리오 모드 스위치 — 확정 시나리오 하루를 실제 시스템으로 돌리는 시연.
     ("/ui/scenario", "Scenario"),

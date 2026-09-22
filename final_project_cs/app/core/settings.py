@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
     #:  ★모델을 바꾸면 차원이 바뀐다(OpenAI 1536 · bge-m3 1024). 그래서 **칸을 따로** 두고
     #:    둘을 공존시킨다(CLAUDE.md §1 「덮어쓰지 않고 공존시킨다」).
+    #: 운영 화면(`/ui/delegations`)에서 **위임을 주고 거둘 수 있나**. 기본은 꺼짐.
+    #:  ★`[2026-09-22]` `/ui/*` 에는 **로그인이 없다**. 2026-08-18 에 같은 이유로 Composer 화면을
+    #:    이 앱에서 **삭제**했다(D-CS-001) — 인증 없이 닿는 화면에 권한 있는 조작을 두지 않는다.
+    #:    위임은 「한 건 승인」이 아니라 **서 있는 권한**이라 그 기준이 더 강하게 걸린다.
+    #:    화면은 기본적으로 **읽기 전용**이고, 주고 거두는 것은 scope 가 걸린 REST 로 한다.
+    ui_delegation_write_enabled: bool = False
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
