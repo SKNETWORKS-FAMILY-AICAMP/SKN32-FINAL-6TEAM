@@ -15,6 +15,11 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-22 (밤) — 위임을 주고 거두는 자리 · 상시 실행을 서버 쪽으로
+
+위임 REST `/v1/delegations/*` 와 운영 화면 `/ui/delegations` 가 생겼다(`external/rest-endpoints.md`·`actions/approval.md`). ★화면에서 **위임을 바꾸는 것은 기본이 꺼짐**이다 — `/ui/*` 에는 로그인이 없고, 같은 이유로 2026-08-18 에 Composer 화면을 지웠다(D-CS-001). 다시 주기가 철회 기록을 덮던 결함을 고쳤다(`delegation_events`, 021).
+상시 실행(DB·되잡기·안내·바깥함 일꾼·앱)을 서비스/서버로 옮기는 준비를 문서와 스크립트로 만들었다 — `operations/always-on.md`·`operations/move-to-server.md`·`scripts/ops/`. 시스템 설정은 바꾸지 않았다(등록 0건).
+
 ## 2026-09-22 (밤) — 알림은 운영 테넌트만 바깥으로 나간다
 
 ★사고: 점검을 한 회차 돌리는 사이에 **시연 테넌트의 통지 8건이 실제 채널로 나갔다**(고객 언어가 대만 중국어라 외국어로 도착). 일꾼이 모든 테넌트를 집고 있었다. 이제 기본은 운영 테넌트 하나뿐이고, 나머지는 `skipped` 로 사유와 함께 남는다 — `delivered` 로 찍지 않는다. 일부러 보내려면 `--send-tenant` 로 고른다(허브 `wiki/architecture/notifications.md` 「누구에게 보내나」).
