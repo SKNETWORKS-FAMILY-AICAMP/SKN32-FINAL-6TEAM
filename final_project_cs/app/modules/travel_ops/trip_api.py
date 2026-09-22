@@ -10,6 +10,10 @@
     ① 개인 에이전트 API   `/v1/trips/*`            Bearer + scope(`trip:read`·`trip:write`)
     ② 여행계획서 링크      `/plan/{trip_id}?t=…`    로그인 없음 · 여행별 토큰(HMAC)
 
+★`[2026-09-22]` ②와 **같은 모양의 링크가 하나 더** 있다 — 업체 예약 변경 링크
+  `/booking-change/{booking_id}?t=…`(예약별 토큰, v11 §4-C · DoD-16·17). 접점을 늘린 것이
+  아니라 ② 안의 한 장면이다: 우리 일정은 고쳐 두고 **업체 건만** 고객이 직접 진행하도록 넘긴다.
+
 ★**상태의 정본은 링크다.** 통지를 못 봐도 링크에서 맞는 것을 본다 — 링크는 매번
   최신 버전을 읽는다(DoD-25). 통지가 닿았는지는 사양에 넣지 않는다.
 
@@ -144,6 +148,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ── 계획서 링크 ──────────────────────────────────────────────────
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
+from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
 from .itinerary_checks import Part, check_itinerary
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 
@@ -478,7 +483,32 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return JSONResponse(view)
         return HTMLResponse(_render_plan(view))
 
+    @router.get("/booking-change/{booking_id}")
+    def booking_change(booking_id: UUID, t: str = Query(...), format: str | None = Query(None)):
+        """업체 예약 **변경 링크**(v11 §4-C · §12 DoD-16·17).
+
+        ★계획서 링크와 같은 모양이다 — 로그인 없음 · 토큰이 틀리면 **있는지도 말하지 않는다**(404)
+          · 예약이 **어느 테넌트 것인지 먼저 찾아** 그 테넌트로 토큰을 맞춘다.
+        ★**아무것도 쓰지 않는다.** 그래서 승인도 scope 도 없다 — 업체 예약을 바꾸는 것은 고객이
+          업체 쪽에서 하고, 우리는 무엇을·어떤 대안으로·얼마 차이로 바꿔야 하는지만 보인다.
+        ★이 한 줄만 테넌트 조건 없이 읽는다(`CLAUDE.md` §1 의 예외 — 계획서 링크와 같은 이유).
+          이 경로에서는 **링크가 곧 자격**이고 여기서 얻는 것은 테넌트 문자열 하나뿐이다.
+        """
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT tenant_id FROM bookings WHERE booking_id=%s", (booking_id,))
+            row = cur.fetchone()
+        tenant = row[0] if row else settings_module.get_settings().tenant_id
+        if not hmac.compare_digest(t, change_token(tenant, booking_id)):
+            raise _error(404, "not_found", "resource not found")
+        with get_connection() as conn:
+            view = change_view(conn, tenant_id=tenant, booking_id=booking_id)
+        if view is None:
+            raise _error(404, "not_found", "resource not found")
+        if format == "json":
+            return JSONResponse(view)
+        return HTMLResponse(render_change(view))
+
     return router
 
 
-__all__ = ["build_trip_router", "plan_token", "plan_url"]
+__all__ = ["build_trip_router", "change_token", "change_url", "plan_token", "plan_url"]
