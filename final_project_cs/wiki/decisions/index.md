@@ -28,6 +28,7 @@ domain: neutral
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
 | [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 **6종**·Port 3종·Core 9종 경계 `[정정 2026-09-10]` 7종이었다 — `composer_ui` 가 빠졌다 | draft | Composer |
+| [D-CS-005](D-CS-005-odsay-not-used.md) | **ODsay 를 쓰지 않는다** — 약관이 결과 데이터 저장·가공을 사전 동의 없이 금지하고 무료 한도가 30회/일. 이동 시간은 일정이 들고 오는 경로 정의로 간다 | draft | 외부 소스 |
 
 `[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 

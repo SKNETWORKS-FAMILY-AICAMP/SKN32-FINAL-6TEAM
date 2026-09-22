@@ -62,6 +62,13 @@ class Settings(BaseSettings):
     #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
     scenario_mode_enabled: bool = False
     ollama_model: str = "gemma4:12b"
+    #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
+    #:  ★`[2026-09-22]` 크레딧 없이 돌릴 길을 **명시적으로** 둔다. 조용한 폴백이 아니다 —
+    #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
+    #:  ★모델을 바꾸면 차원이 바뀐다(OpenAI 1536 · bge-m3 1024). 그래서 **칸을 따로** 두고
+    #:    둘을 공존시킨다(CLAUDE.md §1 「덮어쓰지 않고 공존시킨다」).
+    embedding_provider: str = "openai"
+    ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────

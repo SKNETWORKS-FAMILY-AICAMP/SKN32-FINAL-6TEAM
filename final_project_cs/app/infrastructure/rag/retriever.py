@@ -11,20 +11,58 @@ from app.core.settings import get_guardrails, get_settings
 from app.infrastructure.db.session import get_connection
 
 
+#: 제공자별 (벡터 칸, 차원). ★`[2026-09-22]` 두 임베딩이 **공존한다** — 1536 칸을 지우지 않았다.
+#:  어느 쪽으로 검색할지는 설정(`ACOP_EMBEDDING_PROVIDER`)이 정하고, **고른 쪽 칸이 비어 있으면
+#:  검색은 예외를 낸다.** 다른 칸으로 몰래 넘어가지 않는다(RULE.md §3.2 「신호 없는 축소 금지」).
+PROVIDERS = {"openai": ("embedding", 1536), "ollama": ("embedding_1024", 1024)}
+
+
+def _provider() -> tuple[str, str, int]:
+    name = (get_settings().embedding_provider or "openai").strip().lower()
+    if name not in PROVIDERS:
+        raise RuntimeError(f"ACOP_EMBEDDING_PROVIDER 는 {sorted(PROVIDERS)} 중 하나여야 한다: {name!r}")
+    column, dim = PROVIDERS[name]
+    return name, column, dim
+
+
 @lru_cache(maxsize=64)
 def _embed_query(query: str) -> list[float]:
     settings = get_settings()
-    if not settings.openai_api_key.strip():
-        raise RuntimeError("ACOP_OPENAI_API_KEY is required for retrieval; no embedding fallback is available")
-    vector = OpenAI(api_key=settings.openai_api_key).embeddings.create(
-        model=settings.embedding_model, input=query
-    ).data[0].embedding
-    expected = get_guardrails().get("rag.embedding_dim")
-    if len(vector) != expected:
-        raise ValueError(f"query embedding dimension mismatch: expected {expected}, got {len(vector)}")
+    name, _, dim = _provider()
+    if name == "ollama":
+        vector = _embed_with_ollama(query, settings)
+    else:
+        if not settings.openai_api_key.strip():
+            raise RuntimeError("ACOP_OPENAI_API_KEY is required for retrieval; no embedding fallback is available")
+        vector = OpenAI(api_key=settings.openai_api_key).embeddings.create(
+            model=settings.embedding_model, input=query
+        ).data[0].embedding
+    if len(vector) != dim:
+        raise ValueError(f"query embedding dimension mismatch: expected {dim}, got {len(vector)}")
     # Keep the embedding as a list so pgvector's psycopg adapter serializes it
     # as a vector literal ([...]), rather than a PostgreSQL tuple literal (...).
     return list(vector)
+
+
+def _embed_with_ollama(query: str, settings) -> list[float]:
+    """로컬 임베딩(Ollama `/api/embed`). ★본문이 오류여도 200 으로 오는 공급자가 있어 본문을 본다."""
+    import json
+    import urllib.request
+
+    if not settings.ollama_base_url:
+        raise RuntimeError("ACOP_EMBEDDING_PROVIDER=ollama 인데 ACOP_OLLAMA_BASE_URL 이 비어 있다")
+    request = urllib.request.Request(
+        settings.ollama_base_url.rstrip("/") + "/api/embed",
+        data=json.dumps({"model": settings.ollama_embedding_model, "input": query}).encode(),
+        headers={"content-type": "application/json"})
+    with urllib.request.urlopen(request, timeout=settings.ollama_timeout_seconds) as response:
+        payload = json.loads(response.read())
+    if payload.get("error"):
+        raise RuntimeError(f"로컬 임베딩 실패: {payload['error']}")
+    vectors = payload.get("embeddings") or ([payload["embedding"]] if payload.get("embedding") else [])
+    if not vectors:
+        raise RuntimeError("로컬 임베딩이 빈 응답을 줬다")
+    return list(vectors[0])
 
 
 def search_policy(
@@ -44,17 +82,18 @@ def search_policy(
                 return []
 
             query_embedding = _embed_query(query)
+            _, column, _dim = _provider()
             cur.execute(
                 # ★%s::vector 캐스트가 필요하다. register_vector() 는 numpy 배열용
                 # 어댑터라 plain list 를 넘기면 double precision[] 로 렌더링되고
                 # `operator does not exist: vector <=> double precision[]` 로 죽는다.
                 # (2026-08-12: tuple -> `(...)` 로 죽고, list -> 배열로 죽었다.
                 #  wiki/records/reports/debugs/2026-08-12_2010_RAG검색이_한번도_동작한적이_없다.md)
-                """SELECT chunk_id, content, metadata_json,
-                          1 - (embedding <=> %s::vector) AS score
+                f"""SELECT chunk_id, content, metadata_json,
+                          1 - ({column} <=> %s::vector) AS score
                    FROM knowledge_chunks kc JOIN knowledge_documents kd USING(document_id)
-                   WHERE kd.tenant_id = %s AND kd.scope = ANY(%s)
-                   ORDER BY embedding <=> %s::vector LIMIT %s""",
+                   WHERE kd.tenant_id = %s AND kd.scope = ANY(%s) AND {column} IS NOT NULL
+                   ORDER BY {column} <=> %s::vector LIMIT %s""",
                 (query_embedding, tenant_id, allowed_scopes, query_embedding, limit),
             )
             rows = cur.fetchall()

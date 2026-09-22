@@ -47,3 +47,44 @@ def test_tenant_isolation_and_scope_filter():
     results = search_policy("demo", "환불 지연 문의", ["refund"])
     assert all(chunk.scope == "refund" for chunk in results)
     assert all(chunk.document_id not in {"doc_01", "doc_14"} for chunk in results)
+
+
+# ── 임베딩 제공자 (2026-09-22) ──────────────────────────────────
+def test_the_provider_choice_is_explicit_and_never_falls_back(monkeypatch):
+    """★고른 제공자가 이상하거나 준비가 안 됐으면 **예외**다 — 다른 칸으로 몰래 넘어가지 않는다."""
+    import pytest
+
+    from app.core import settings as settings_module
+    from app.infrastructure.rag import retriever
+
+    original = settings_module.get_settings()
+
+    def use(**overrides):
+        patched = original.model_copy(update=overrides)
+        monkeypatch.setattr(settings_module, "get_settings", lambda: patched)
+        monkeypatch.setattr(retriever, "get_settings", lambda: patched)
+        retriever._embed_query.cache_clear()
+
+    use(embedding_provider="openai")
+    assert retriever._provider() == ("openai", "embedding", 1536)
+    use(embedding_provider="ollama")
+    assert retriever._provider() == ("ollama", "embedding_1024", 1024)
+
+    use(embedding_provider="gemini")                      # 없는 제공자
+    with pytest.raises(RuntimeError, match="ACOP_EMBEDDING_PROVIDER"):
+        retriever._provider()
+
+    use(embedding_provider="ollama", ollama_base_url="")   # 주소가 없다
+    with pytest.raises(RuntimeError, match="ACOP_OLLAMA_BASE_URL"):
+        retriever._embed_query("정책을 찾는다")
+    retriever._embed_query.cache_clear()
+
+
+def test_both_embedding_columns_are_filled_for_the_loaded_corpus():
+    """★두 벡터가 **공존**한다(1536 칸을 지우지 않았다). 한쪽이 비면 그 제공자로는 검색이 안 된다."""
+    from app.infrastructure.db.session import get_connection
+
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*), count(embedding), count(embedding_1024) FROM knowledge_chunks")
+        total, openai_dim, local_dim = cur.fetchone()
+    assert total == openai_dim == local_dim, (total, openai_dim, local_dim)
