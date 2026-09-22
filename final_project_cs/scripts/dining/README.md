@@ -319,10 +319,38 @@ python scripts/dining/run_check.py show --place 대돈집
 |---|---|
 | `stub` | 정해둔 답. 파이프라인이 도는지 볼 때 |
 | `manual` | 사람이 열어 보고 적는다. 네이버 대조 작업을 옮긴 것 |
-| `catchtable` | 비어 있다. 브라우저를 몰아야 해서 스크립트에 담기지 않는다 |
+| `catchtable` | 파일로 넘기고 파일로 받는다. 브라우저를 모는 쪽은 밖에 있다 |
 
-캐치테이블은 `ask` 로 물음을 뽑아 사람이 브라우저로 확인하고 `run --backend manual`
-로 적는다. 로그인은 사람이 하고 예약 버튼은 누르지 않는다.
+### 캐치테이블 다리 (제휴 전제 시험 구현)
+
+공식 접근 경로가 없고 로그인한 화면 안에서만 값이 보인다. 조회하는 쪽은 브라우저를
+모는 무언가여야 하고 그것은 스크립트 안에 들어올 수 없다. 그래서 둘로 끊었다.
+
+```
+run --backend catchtable      →  _build/catchtable/<uid>.ask.json 을 놓는다
+브라우저를 모는 쪽                  사람이든 MCP 가 깔린 우리 PC 든
+                              →  <uid>.answer.json 을 놓는다
+run --backend catchtable      →  DB 에 적는다 (출처 catchtable_trial)
+```
+
+`pending` 으로 기다리는 의뢰를 본다. 답 파일의 모양은 `ask.json` 의
+`how_to_answer` 에 같이 적혀 있다.
+
+```bash
+python scripts/dining/run_check.py run --place 메이플탑 --at "2026-09-25 12:00" --vacancy --backend catchtable
+python scripts/dining/run_check.py pending
+```
+
+지키는 것 셋 — `catchtable.py` 머리말에 같은 말이 있다.
+
+1. 여기서 온 값은 판정에 닿지 않는다. 출처가 `catchtable_trial` 이라 `v_live_check_fresh` 에서 빠진다.
+2. **본 시각이 없거나 낡은 답은 모름이다.** 빈자리·웨이팅은 15분, 영업시간·휴무는 12시간.
+3. 읽지 못한 것을 아니다로 적지 않는다. `blocked` 는 값이 언제나 `unknown` 이다.
+
+제휴가 되어 API 가 열리면 이 다리를 걷어내고 그 자리에 호출을 넣는다.
+DB 도 `run_check.py` 도 캐치테이블이 무엇인지 모르는 채로 남는다.
+
+로그인은 사람이 하고 예약 버튼은 누르지 않는다. 한 곳만 보고 목록은 훑지 않는다.
 
 ---
 

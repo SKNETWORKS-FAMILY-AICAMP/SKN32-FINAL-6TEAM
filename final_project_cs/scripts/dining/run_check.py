@@ -9,13 +9,16 @@ DB 는 무엇을 물을지 알고, 이 스크립트는 그 물음을 밖으로 �
 백엔드
     stub        정해둔 답을 돌려준다. 파이프라인이 도는지 볼 때 쓴다.
     manual      물음을 띄우고 사람이 보고 답을 적어 넣는다.
-    catchtable  아직 없다. 제휴 전제이며 브라우저를 몰아야 해서 이 안에 담기지 않는다.
+    catchtable  파일로 넘기고 파일로 받는다. 브라우저를 모는 쪽은 밖에 있다.
+                제휴 전제 시험 구현. catchtable.py 의 머리말을 보라.
 
 사용법
     python scripts/dining/run_check.py ask  --place 대돈집 --at "2026-09-25 12:00"
     python scripts/dining/run_check.py run  --place 대돈집 --at "2026-09-25 12:00" --backend stub
     python scripts/dining/run_check.py run  --place 대돈집 --at "2026-09-25 12:00" --backend manual --vacancy
     python scripts/dining/run_check.py show --place 대돈집
+    python scripts/dining/run_check.py run  --place 대돈집 --at "2026-09-25 12:00" --vacancy --backend catchtable
+    python scripts/dining/run_check.py pending
 
 접속
     DINING_DSN 이 있으면 그것을 쓰고, 없으면 코어 설정을 따른다.
@@ -171,17 +174,20 @@ def backend_manual(topic: str, prompt: dict) -> dict:
 
 
 def backend_catchtable(topic: str, prompt: dict) -> dict:
-    """아직 없다.
+    """답 파일이 와 있으면 그것을 읽고, 없으면 의뢰를 놓는다.
 
-    캐치테이블은 화면 안에서만 값이 보이고 공식 접근 경로가 막혀 있다.
-    브라우저를 몰아야 하므로 이 스크립트 안에 담기지 않는다.
-    제휴가 되면 여기에 API 호출을 넣고 출처를 바꾸면 된다.
-
-    그때까지는 사람이 확인기를 대신한다. README 의 「현장 확인」 절을 보라.
+    조회하는 쪽이 브라우저를 몰아야 해서 이 함수 안에서 끝나지 않는다.
+    한 번 돌리면 「무엇을 봐 달라」가 놓이고, 답이 놓인 뒤 다시 돌리면 적힌다.
+    답이 오기 전의 결과는 blocked 이며 값은 모름이다. 아니다가 아니다.
     """
-    return dict(outcome="blocked", value_state="unknown",
-                value_detail="제휴 전제 시험 구현. 자동 조회 경로가 없다.",
-                evidence="catchtable:not_implemented")
+    import catchtable
+
+    uid = prompt["place_uid"]
+    got = catchtable.read_answer(uid, topic)
+    if got["evidence"] == "catchtable:asked":
+        # 아직 답이 없다. 무엇을 봐 달라를 놓아 둔다.
+        catchtable.write_ask(uid, prompt, list(prompt.get("topics") or [topic]))
+    return got
 
 
 BACKENDS = {
@@ -276,6 +282,24 @@ def cmd_run(args) -> int:
     return 0
 
 
+def cmd_pending(args) -> int:
+    """답을 기다리는 캐치테이블 의뢰를 보인다. 브라우저를 모는 쪽이 읽을 목록이다."""
+    import catchtable
+
+    rows = catchtable.pending()
+    if not rows:
+        print("기다리는 의뢰 없다.")
+        return 0
+    for one in rows:
+        print(f"{one.get('name')}  ({one.get('asked_at')})")
+        print(f"  {one.get('sentence')}")
+        print(f"  {one.get('search_url')}")
+        for t in one.get("topics") or []:
+            print(f"    {TOPIC_LABEL.get(t['topic'], t['topic']):8s} {t['read']}")
+        print(f"  답은 여기에: {one['how_to_answer']['file']}")
+    return 0
+
+
 def cmd_show(args) -> int:
     with connect() as conn, conn.cursor() as cur:
         uid, name = resolve_place(cur, args.place)
@@ -322,6 +346,9 @@ def main() -> int:
     p_run.add_argument("--backend", default="manual", choices=sorted(BACKENDS))
     p_run.add_argument("--source", help="출처를 직접 고를 때만")
     p_run.set_defaults(func=cmd_run)
+
+    p_pending = sub.add_parser("pending", help="답을 기다리는 캐치테이블 의뢰")
+    p_pending.set_defaults(func=cmd_pending)
 
     p_show = sub.add_parser("show", help="확인한 것을 본다")
     common(p_show)
