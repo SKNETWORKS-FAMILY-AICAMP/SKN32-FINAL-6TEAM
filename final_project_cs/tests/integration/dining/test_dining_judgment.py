@@ -74,7 +74,7 @@ def conn():
         dsn = _admin_dsn().rsplit("/", 1)[0] + "/" + name
 
     conn = psycopg.connect(dsn, autocommit=True)
-    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "02*_dining_*.sql"))):
+    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql"))):
         if os.path.basename(path) in SKIP:
             continue
         conn.execute(open(path, encoding="utf-8").read())

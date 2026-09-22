@@ -285,6 +285,24 @@ KOR_NTH = {"첫": 1, "한": 1, "둘": 2, "두": 2, "셋": 3, "세": 3,
            "넷": 4, "네": 4, "다섯": 5}
 
 
+def closure_state(text: str, closures: list[dict], notes: list[str]) -> str:
+    """휴무 정보를 어디까지 아는가. 세 값이다.
+
+    present  휴무 규칙을 만들었다
+    none     연중무휴라고 적혀 있다. 확인된 없음이다
+    unknown  원문이 없거나, 있어도 규칙으로 담지 못했다
+
+    「규칙이 없다」를 「쉬는 날이 없다」로 읽으면 안 된다.
+    표본에서 연중무휴 121곳과 원문 없음 3곳이 똑같이 「안 쉰다」로 답하고 있었다.
+    거기에 계절 휴무처럼 원문은 있는데 담지 못한 3곳이 더 섞여 있었다.
+    """
+    if closures:
+        return "present"
+    if "무휴" in text:
+        return "none"
+    return "unknown"
+
+
 def parse_closure(raw: str) -> tuple[list[dict], list[str]]:
     text = norm(raw)
     notes: list[str] = []
@@ -406,6 +424,8 @@ def main() -> None:
             "rest_text": norm(row.get("restdatefood", "")),
             "rules": hours,
             "closures": closures,
+            "closure_state": closure_state(norm(row.get("restdatefood", "")),
+                                           closures, cnotes),
             "notes": hnotes + cnotes,
         })
 

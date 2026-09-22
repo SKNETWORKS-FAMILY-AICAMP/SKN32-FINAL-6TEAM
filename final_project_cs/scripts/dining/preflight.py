@@ -164,7 +164,7 @@ def check_db(rep: Report) -> None:
     with conn, conn.cursor() as cur:
         cur.execute("SELECT to_regclass('dining.dn_place')")
         if cur.fetchone()[0] is None:
-            rep.add(BLOCK, "요식 스키마가 없다", "020~028 을 먼저 올려라")
+            rep.add(BLOCK, "요식 스키마가 없다", "요식 마이그레이션을 먼저 올려라")
             return
         cur.execute("SELECT count(*) FROM dining.dn_place")
         places = cur.fetchone()[0]

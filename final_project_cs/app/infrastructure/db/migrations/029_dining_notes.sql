@@ -109,7 +109,16 @@ BEGIN
             'text', '명절이나 공휴일이라 영업시간이 다를 수 있다');
     END IF;
 
-    -- 3. 브레이크타임. 그 시간에 가면 헛걸음한다.
+    -- 3. 정기 휴무를 아는가. 모르면 다른 요일로 옮길 때 위험하다.
+    --    030 이 없는 DB 에서도 돌아야 하므로 함수가 있을 때만 부른다.
+    IF to_regprocedure('dining.needs_closure_check(uuid)') IS NOT NULL
+       AND dining.needs_closure_check(p_place_uid) THEN
+        v_notes := v_notes || jsonb_build_object(
+            'kind', 'closure_unknown', 'source', 'ledger',
+            'text', '정기 휴무가 있는지 자료에 없다. 쉬는 날이 없다는 뜻은 아니다');
+    END IF;
+
+    -- 4. 브레이크타임. 그 시간에 가면 헛걸음한다.
     SELECT a.close_min AS starts, b.open_min AS ends INTO v_row
       FROM dining.day_intervals(p_place_uid, v_date) a
       JOIN dining.day_intervals(p_place_uid, v_date) b ON b.seq = a.seq + 1
@@ -121,7 +130,7 @@ BEGIN
                     || dining.min_to_hhmm(v_row.ends::smallint) || ' 는 브레이크타임이다');
     END IF;
 
-    -- 4. 자정을 넘기는가. 늦은 일정에서만 쓸모 있다.
+    -- 5. 자정을 넘기는가. 늦은 일정에서만 쓸모 있다.
     IF EXISTS (SELECT 1 FROM dining.day_intervals(p_place_uid, v_date)
                 WHERE close_min > 1440) AND v_min >= 1200 THEN
         SELECT max(close_min) INTO v_row
@@ -132,13 +141,13 @@ BEGIN
                     || ' 까지 한다');
     END IF;
 
-    -- 5. 원문에 있던 말. 구조로 담지 못했지만 사람에게 쓸모 있다.
+    -- 6. 원문에 있던 말. 구조로 담지 못했지만 사람에게 쓸모 있다.
     FOR v_txt IN SELECT unnest(dining.source_notes(p_place_uid)) LOOP
         v_notes := v_notes || jsonb_build_object(
             'kind', 'source_note', 'source', 'tourapi_kor_food', 'text', v_txt);
     END LOOP;
 
-    -- 6. 요일마다 다른가. 다른 날로 옮길 때 헷갈리는 지점이다.
+    -- 7. 요일마다 다른가. 다른 날로 옮길 때 헷갈리는 지점이다.
     IF (SELECT count(DISTINCT (open_min, close_min))
           FROM dining.dn_hours_rule r
           JOIN dining.dn_hours_interval i ON i.rule_id = r.rule_id
@@ -148,7 +157,7 @@ BEGIN
             'text', '요일마다 영업시간이 다르다');
     END IF;
 
-    -- 7. 못 가게 만드는 속성. 「불가」로 확인된 것만 쓴다.
+    -- 8. 못 가게 만드는 속성. 「불가」로 확인된 것만 쓴다.
     --    가능한 것을 일일이 적으면 줄만 늘고 읽히지 않는다.
     FOR v_txt IN
         SELECT CASE a.attr_code
@@ -164,7 +173,7 @@ BEGIN
             'kind', 'attribute', 'source', 'ledger', 'text', v_txt);
     END LOOP;
 
-    -- 8. 대표메뉴. 무엇을 먹을지 고르는 재료다.
+    -- 9. 대표메뉴. 무엇을 먹을지 고르는 재료다.
     SELECT trim(split_part(sr.raw_json ->> 'firstmenu', '/', 1)) INTO v_txt
       FROM dining.dn_source_record sr
      WHERE sr.place_uid = p_place_uid AND sr.raw_json ->> 'firstmenu' <> ''

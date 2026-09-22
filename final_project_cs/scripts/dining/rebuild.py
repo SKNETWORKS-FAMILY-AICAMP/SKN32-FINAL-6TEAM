@@ -38,6 +38,9 @@ BUILD = os.path.join(ROOT, "data", "dining", "_build")
 PG_PORT = int(os.environ.get("DINING_PG_PORT", "5433"))
 PG_USER = os.environ.get("DINING_DB_USER", "postgres")
 
+#: 번호로 고르지 않는다. 030 을 더했을 때 02* 패턴이 못 잡아 적재가 깨졌다.
+#: 요식 파일인지로 고르면 번호가 늘어도 따라온다.
+
 #: 코어 `places` 표가 있어야 올라가는 것. 없으면 건너뛴다.
 NEEDS_CORE = {"022_dining_matcher.sql"}
 
@@ -112,7 +115,7 @@ def check() -> bool:
         ready = False
     else:
         say("OK", f"psql {PSQL}")
-    files = sorted(glob.glob(os.path.join(MIGRATIONS, "02*_dining_*.sql")))
+    files = sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql")))
     say("OK" if files else "!!", f"마이그레이션 {len(files)}개")
     for script, _ in LOADS:
         path = os.path.join(HERE, script)
@@ -165,7 +168,7 @@ def main() -> int:
         "코어 places 있음 — 매칭기도 올린다" if core else
         "코어 places 없음 — 022 매칭기는 건너뛴다")
 
-    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "02*_dining_*.sql"))):
+    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql"))):
         name = os.path.basename(path)
         if name in NEEDS_CORE and not core:
             say("..", f"{name} 건너뜀")

@@ -67,6 +67,7 @@ def main() -> None:
            "-- 규칙 id 는 차례로 매기므로 규칙 수가 줄면 남은 옛 행이 그대로 살아남는다.",
            "-- 「명절당일」이 유령 일요일 휴무로 남아 있던 것이 그래서였다.",
            "-- 이 출처가 만든 것만 지운다. operator_check 처럼 사람이 넣은 것은 건드리지 않는다.",
+           f"DELETE FROM dining.dn_closure_coverage WHERE source_code = '{SOURCE}';",
            f"DELETE FROM dining.dn_closure_rule WHERE source_code = '{SOURCE}';",
            f"DELETE FROM dining.dn_hours_rule   WHERE source_code = '{SOURCE}';",
            "-- 구간은 규칙에 ON DELETE CASCADE 로 달려 있어 함께 지워진다.",
@@ -133,6 +134,16 @@ def main() -> None:
                     f"{lo if lo is not None else 'NULL'}, '{iv['last_order_state']}')"
                     " ON CONFLICT (rule_id, seq) DO NOTHING;")
                 n_interval += 1
+
+        # 휴무를 어디까지 아는가. 규칙이 없는 것과 쉬는 날이 없는 것은 다르다.
+        out.append(
+            "INSERT INTO dining.dn_closure_coverage (place_uid, source_code, record_id, "
+            "state, source_text, valid_from) VALUES ("
+            f"'{place_uid}', '{SOURCE}', '{record_id}', "
+            f"'{row.get('closure_state', 'unknown')}', {q(row['rest_text'][:400])}, "
+            f"'{VALID_FROM}')"
+            " ON CONFLICT (place_uid, source_code) DO UPDATE SET state = EXCLUDED.state,"
+            " source_text = EXCLUDED.source_text;")
 
         for idx, closure in enumerate(row["closures"], 1):
             closure_id = str(uuid.uuid5(NS, f"closure:tourapi:{cid}:{idx}"))
