@@ -79,13 +79,49 @@ domain: travel
 | 소스 (링크) | 주는 것 | 비용 | 접근 |
 |---|---|---|---|
 | **[구글 Places](https://developers.google.com/maps/documentation/places/web-service/data-fields)** | `priceLevel`(5단계) + `priceRange`(금액) | **Enterprise** SKU — [$20/1,000건](https://developers.google.com/maps/billing-and-pricing/pricing) = 건당 약 **30원** · **월 1,000건 무료** | [카드 등록된 Cloud Billing 계정 필수](https://developers.google.com/maps/billing-and-pricing/billing-overview) |
-| **[Viator 파트너 API](https://docs.viator.com/partner-api/affiliate/technical/)** | 액티비티 **상품 가격** | **가입 비용 없음** (수수료 8~12%는 예약이 일어날 때) | ★[Basic 은 사전 승인 없이 즉시 시작](https://partnerresources.viator.com/travel-commerce/levels-of-access/). 실시간 가용·가격은 Full(인증 필요) |
+| **[Viator 파트너 API](https://docs.viator.com/partner-api/affiliate/technical/)** | 액티비티 **상품 가격** (단건) | **가입 비용 없음** (수수료 8~12%는 예약이 일어날 때) | ★[Basic 은 사전 승인·인증 없이 즉시 시작](https://partnerresources.viator.com/travel-commerce/levels-of-access/). **벌크와 실시간은 Full**(승인·인증 필요). ★★**§11-A 제휴 일곱 조건에 걸린다**(아래) |
 | **[TripAdvisor Terra API](https://docs.terra.tripadvisor.com/docs/overview)** | 식당·관광지 price level | **첫 1,000콜 무료** · 이후 종량제(공개 단가 미확인) | 자율 가입 · 표시 의무(버블 평점·리뷰 날짜·크레딧) |
 | [Klook Partner API](https://klook.gitbook.io/openapi) | 액티비티 가격·재고 | 공개 단가 없음 | 파트너 신청·심사. 아시아태평양 강세라 한국 상품이 많다 |
 | [GetYourGuide Partner API](https://api.getyourguide.com/) | 동 | 공개 단가 없음 | 파트너 포털 문의 |
 | ~~[Amadeus Tours & Activities](https://developers.amadeus.com/self-service/category/destination-experiences/api-doc/tours-and-activities)~~ | 액티비티 가격 | — | ❌**셀프서비스 티어가 2026년 중반 폐지**돼 기존 키가 비활성화됐다 |
 
 ★**구글과 Terra 가 주는 것은 「가격대」이고, Viator·Klook 이 주는 것은 「판매가」다.** 우리가 §6-C 에서 쓰려는 추가 비용은 후자에 가깝지만, 후자는 **그 플랫폼에서 파는 상품에 한정**된다. 경복궁 입장료는 어느 쪽도 주지 않는다.
+
+### Viator Basic 이 정확히 무엇을 주나
+
+`[외부 2026-09-22]` 접근 등급 비교표를 그대로 옮긴다.
+
+| 기능 | Basic | Full | Full + Booking |
+|---|---|---|---|
+| 사전 승인 | **불필요** | 필요 | 필요 |
+| 인증(certification) | **불필요** | 필요 | 필요 |
+| 단건 상품 데이터 | ✓ | ✓ | ✓ |
+| 검색 조건으로 상품 요약 | ✓ | ✓ | ✓ |
+| ★**단건 가용·가격 조회** | **✓** | ✓ | ✓ |
+| 벌크 상품 데이터 | ✗ | ✓ | ✓ |
+| 벌크 가용·가격 | ✗ | ✓ | ✓ |
+| **실시간** 가용·가격 | ✗ | ✓ | ✓ |
+| 리뷰 평점·개수 | ✓ | ✓ | ✓ |
+| 여행자 리뷰 본문·사진 | ✗ | ✓ | ✓ |
+| 결제·예약 | ✗ | ✗ | ✓ |
+| 거래가 일어나는 곳 | viator.com | viator.com | 우리 사이트 |
+
+★**Basic 으로 단건 가격 조회가 된다.** 우리가 필요한 건 대안 후보 몇 개의 가격이라 단건이면 족하다. 대신 **벌크도 실시간도 아니므로 감시 루프의 2분 폴링에는 못 쓴다** — 값을 읽는 시점과 고객이 여는 시점이 벌어진다.
+
+### ★그런데 계획서 §11-A 에 걸린다
+
+v11 §11-A 는 **「판정에 개입하는 광고·제휴」**를 넣으려면 일곱 가지를 다 지키라고 적었다 — ①판정과 분리 ②표시 ③거부해도 대안이 남을 것 ④후보 생성은 비상업 기준 ⑤같은 재검증 ⑥개입 감사 ⑦제휴 끄기.
+
+Viator Basic 은 **제휴(affiliate) 프로그램**이고 전제가 「고객을 viator.com 으로 보내 거래를 마치게 한다」다. 우리가 예약 수수료를 받는 상품을 대안으로 내밀면 **④ 후보 생성이 비상업 기준이 아니게 된다.**
+
+**두 갈래로 갈린다.**
+
+| 쓰는 법 | §11-A 와의 관계 |
+|---|---|
+| 가격 **참고값으로만** 읽고 제휴 링크를 안 붙인다 | 판정과 분리(①)는 지켜진다. 단 **제휴 목적 외 사용이라 약관 확인이 필요하다** `[미확보]` |
+| 대안 카드에 Viator 상품과 링크를 싣는다 | 일곱 조건을 **전부** 설계에 넣어야 한다. MVP 기간에 감당하기 어렵다 |
+
+→ **가격만 읽는 쪽이 현실적이다.** 다만 그것이 약관상 허용되는지를 가입 전에 확인해야 한다 — 확인 전에는 「쓸 수 있다」고 적지 않는다.
 
 ---
 
@@ -115,7 +151,7 @@ domain: travel
 | # | 할 일 | 링크 | 비용 | 사람이 할 일 | 걸리는 시간 |
 |---|---|---|---|---|---|
 | 1 | 전국문화기반시설총람 → `관람료` 채움률 측정 | [data.go.kr/data/15125097](https://www.data.go.kr/data/15125097/openapi.do) | **무료** · 개발계정 일 10,000건 | 로그인 후 **활용신청** 한 번 (개발·운영 **둘 다 자동승인**) | 분 단위 |
-| 2 | Viator Basic → 서울 액티비티 가격 확인 | [levels-of-access](https://partnerresources.viator.com/travel-commerce/levels-of-access/) · [API 문서](https://docs.viator.com/partner-api/affiliate/technical/) | **가입 0원** (수수료 8~12%는 예약 발생 시) | 제휴 가입. **사전 승인 없음** | 시간 단위 |
+| 2 | Viator Basic → 서울 액티비티 가격 확인 | [levels-of-access](https://partnerresources.viator.com/travel-commerce/levels-of-access/) · [API 문서](https://docs.viator.com/partner-api/affiliate/technical/) · [약관](https://www.viator.com/support/termsAndConditions) | **가입 0원** (수수료 8~12%는 예약 발생 시) | 제휴 가입. **사전 승인·인증 없음.** ★**가입 전에 「가격만 읽고 링크는 안 붙이는 것」이 약관상 되는지 확인** | 시간 단위 |
 | 3 | 구글 → 서울 식당 30곳 `priceLevel`·`priceRange` 채움률 | [billing-overview](https://developers.google.com/maps/billing-and-pricing/billing-overview) · [요금](https://developers.google.com/maps/billing-and-pricing/pricing) | Place Details **Enterprise $20/1,000** = 건당 30원 · **월 1,000건 무료** → 30곳 측정은 **0원** | **카드 등록**된 Cloud Billing 계정 | 시간 단위 |
 | 4 | TripAdvisor Terra | [docs.terra.tripadvisor.com](https://docs.terra.tripadvisor.com/docs/overview) | **첫 1,000콜 무료** · 이후 종량제(단가 비공개) | 자율 가입 + 표시 의무 준수 | 위가 막힐 때 |
 | 5 | KOPIS · 문체부 전시정보 | [KOPIS](https://www.data.go.kr/data/15097805/openapi.do) · [전시정보](https://www.data.go.kr/data/15105037/openapi.do) | 무료 | 활용신청 | 공연·전시로 범위가 좁다 |
