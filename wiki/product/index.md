@@ -18,7 +18,8 @@ domain: travel
 2. [problem.md](problem.md) — 누가 무엇 때문에 괴로운가
 3. [personas.md](personas.md) — 그 사람들이 누구인가
 4. [scope.md](scope.md) — **여행 MVP 7주에 무엇까지 하는가** (이 영역에서 유일하게 여행으로 갱신된 문서)
-5. [glossary.md](glossary.md) — 용어
+5. [traveler-profile.md](traveler-profile.md) — **여행자에게 무엇을 물어보는가.** 항목마다 데이터가 실제로 오는지 불러서 확인한 기록
+6. [glossary.md](glossary.md) — 용어
 
 ## 각 문서
 
@@ -28,6 +29,7 @@ domain: travel
 | [problem.md](problem.md) | 지금 사람들이 어떻게 버티고 있는가 |
 | [personas.md](personas.md) | 누가 쓰고 **누가 돈을 내는가** |
 | [scope.md](scope.md) | 무엇을 안 하는가 |
+| [traveler-profile.md](traveler-profile.md) | 여행자 프로필로 무엇을 받고 무엇을 안 받는가. 왜 알러지·유모차를 안 받는가 |
 | [glossary.md](glossary.md) | Case·Team·Capability·Action이 각각 무엇인가 |
 
 ## 한 문장
