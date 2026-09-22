@@ -52,21 +52,9 @@ AS $$
 $$;
 
 
--- 두 좌표 사이 거리(미터). PostGIS 를 쓰지 않으므로 직접 계산한다.
-CREATE OR REPLACE FUNCTION dining.distance_m(
-    p_lat1 double precision, p_lng1 double precision,
-    p_lat2 double precision, p_lng2 double precision
-)
-RETURNS double precision
-LANGUAGE sql
-IMMUTABLE
-AS $$
-    SELECT 2 * 6371000 * asin(sqrt(
-        power(sin(radians(p_lat2 - p_lat1) / 2), 2)
-        + cos(radians(p_lat1)) * cos(radians(p_lat2))
-          * power(sin(radians(p_lng2 - p_lng1) / 2), 2)
-    ))
-$$;
+-- 거리 계산은 021 로 옮겼다.
+-- 022 는 코어 places 표가 있어야 올라가는데, 대체 후보(027)도 이 함수를 쓴다.
+-- 여기 두면 코어 없이 세울 때 027 이 통째로 안 올라간다.
 
 
 -- 후보 목록

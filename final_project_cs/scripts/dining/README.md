@@ -23,8 +23,12 @@ final_project_cs/
     024_dining_links.sql       지도 링크와 전화번호
     025_dining_attribute.sql   매장 속성. 조건별 판정
     026_dining_live_check.sql  현장 확인 기록과 물음 만들기
+    027_dining_alternatives.sql 대체 후보 세 축
+    028_dining_quality.sql     정답셋과 품질 측정
   app/modules/travel_ops/dining/
-    __init__.py                DiningTeam. 액티비티와 같은 모양이다
+    __init__.py                DiningTeam 재수출만
+    team.py                    DiningTeam 본체
+    ledger.py                  원장을 코어가 읽을 모양으로
   scripts/dining/
     README.md                  이 문서
     parse_hours.py             영업시간과 휴무 원문을 구조로
@@ -32,13 +36,14 @@ final_project_cs/
     make_holiday_sql.py        공휴일 달력을 적재 SQL 로
     make_attribute_sql.py      매장 속성을 적재 SQL 로
     make_audit_sheet.py        오추출률 측정용 대조표
-    make_truth_sql.py          검수한 대조표를 정답셋으로
-    make_operator_sql.py       검수자가 확인한 실제 값을 원장으로
-    run_quality.py             정답셋에 대고 채점하고 실행끼리 비교
-    report_quality.py          품질 결과를 문서로
     run_check.py               현장 확인 한 번을 돌린다
     inspect_app.py             원장 확인기. 판정을 눈으로 따라가는 화면
     dev_up.py                  DB 와 확인기를 한 번에 띄운다
+    rebuild.py                 빈 DB 에서 처음부터 세운다
+    make_truth_sql.py          검수 대조표를 정답셋으로
+    make_operator_sql.py       검수한 실제 값을 원장으로
+    run_quality.py             채점하고 실행끼리 비교
+    report_quality.py          품질 결과를 문서로
   data/dining/
     tourapi_음식점_소개정보.json     영업시간 원문 200건
     tourapi_서울_음식점_목록.json    좌표와 주소 990건
@@ -77,6 +82,20 @@ pg_ctl -D <데이터 디렉터리> -o "-p 5433" -l <데이터 디렉터리>/serv
 
 ## 실행 순서
 
+### 0. 한 번에 세우기
+
+```bash
+python scripts/dining/rebuild.py
+```
+
+빈 DB 를 만들어 마이그레이션부터 채점까지 한 번에 한다. 7초쯤 걸린다.
+`--check` 는 세우지 않고 준비물만 보고, `--db` 로 다른 이름을 줄 수 있다.
+`--keep` 을 주면 있는 DB 를 지우지 않고 그 위에 얹는다.
+
+**코어 `places` 가 없어도 선다.** 022 매칭기만 건너뛴다. 원장 자체는 혼자 서야
+하고, 그것을 확인하는 것이 이 명령의 목적이다. 아래 낱개 명령은 무슨 일이
+일어나는지 알고 싶을 때 본다.
+
 ### 1. 스키마
 
 ```
@@ -89,10 +108,21 @@ psql ... -f app/infrastructure/db/migrations/023_dining_holiday.sql
 psql ... -f app/infrastructure/db/migrations/024_dining_links.sql
 ```
 
-`04` 는 달력 표를 만들기만 하고 값은 넣지 않는다. 값은 아래 4번에서 넣는다.
+```
+psql ... -f app/infrastructure/db/migrations/025_dining_attribute.sql
+psql ... -f app/infrastructure/db/migrations/026_dining_live_check.sql
+psql ... -f app/infrastructure/db/migrations/027_dining_alternatives.sql
+psql ... -f app/infrastructure/db/migrations/028_dining_quality.sql
+```
+
+`023` 은 달력 표를 만들기만 하고 값은 넣지 않는다. 값은 아래 5번에서 넣는다.
 
 `022_dining_matcher.sql` 은 코어 `places` 표가 있어야 올라간다. 코어 DB 에 얹는 경우에만 돌린다.
 나머지는 순서대로 돌리면 되고, `024` 는 `023` 의 함수를 고쳐 쓰므로 뒤에 와야 한다.
+
+거리 계산 `distance_m` 은 `021` 에 있다. 원래 `022` 에 있었는데, 코어 없이 세우면
+`022` 를 건너뛰게 되고 그러면 대체 후보(`027`)가 통째로 안 올라갔다. 코어와 무관한
+계산은 코어에 매이지 않은 자리에 둔다.
 
 ### 2. 원문을 구조로
 
@@ -129,7 +159,7 @@ SELECT (SELECT count(*) FROM dining.dn_place)          AS place,
        (SELECT count(*) FROM dining.dn_closure_rule)   AS closure;
 ```
 
-200 / 1265 / 1661 / 124 가 나오면 정상이다.
+200 / 1366 / 1863 / 120 이 나오면 정상이다.
 
 ### 4. 매칭 (코어 DB 에서만)
 

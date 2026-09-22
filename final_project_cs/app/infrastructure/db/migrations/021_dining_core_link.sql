@@ -85,6 +85,27 @@ COMMENT ON FUNCTION dining.day_intervals IS
     '공휴일 규칙(rule_kind=holiday)은 아직 반영하지 않는다. 공휴일 달력 공통화가 정해지면 분기를 넣는다.';
 
 
+-- 두 좌표 사이 거리(미터). PostGIS 를 쓰지 않으므로 직접 계산한다.
+--
+-- 022 에 있던 것을 옮겼다. 022 는 코어 places 표가 있어야 올라가는데
+-- 대체 후보(027)도 이 함수를 쓴다. 코어 없이 원장만 세우는 경우가 있으므로
+-- 코어와 무관한 계산은 코어에 매이지 않은 자리에 둔다.
+CREATE OR REPLACE FUNCTION dining.distance_m(
+    p_lat1 double precision, p_lng1 double precision,
+    p_lat2 double precision, p_lng2 double precision
+)
+RETURNS double precision
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT 2 * 6371000 * asin(sqrt(
+        power(sin(radians(p_lat2 - p_lat1) / 2), 2)
+        + cos(radians(p_lat1)) * cos(radians(p_lat2))
+          * power(sin(radians(p_lng2 - p_lng1) / 2), 2)
+    ))
+$$;
+
+
 -- 방문일이 휴무인가
 -- 공휴일과 명절은 날짜를 여기서 판단하지 않는다. 달력이 붙기 전까지 false 로 둔다.
 CREATE OR REPLACE FUNCTION dining.is_closed_on(
