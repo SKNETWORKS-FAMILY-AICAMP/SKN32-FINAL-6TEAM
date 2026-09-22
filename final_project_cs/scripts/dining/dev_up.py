@@ -67,11 +67,61 @@ def port_open(port: int, host: str = "127.0.0.1", timeout: float = 0.7) -> bool:
         return s.connect_ex((host, port)) == 0
 
 
+def server_ready() -> bool:
+    """자리가 열린 것과 답할 수 있는 것은 다르다.
+
+    PostgreSQL 은 복구를 하는 동안에도 포트부터 연다. 그때 붙으면
+    「the database system is starting up」 으로 거절당한다.
+    컴퓨터를 껐다 켠 직후에는 거의 늘 이 상태를 거친다.
+    """
+    if not port_open(PG_PORT):
+        return False
+
+    ready = find_exe("pg_isready")
+    if ready:
+        # 0 준비됨, 1 아직 거절, 2 응답 없음
+        done = subprocess.run([ready, "-h", "127.0.0.1", "-p", str(PG_PORT), "-q"],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                              stdin=subprocess.DEVNULL)
+        return done.returncode == 0
+
+    try:
+        import psycopg
+        with psycopg.connect(
+                f"postgresql://{DB_USER}@localhost:{PG_PORT}/postgres",
+                connect_timeout=3):
+            return True
+    except Exception:                                   # noqa: BLE001
+        return False
+
+
+def wait_ready(seconds: float = 60.0) -> bool:
+    """답할 수 있을 때까지 기다린다. 복구가 길면 그만큼 걸린다."""
+    said = False
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        if server_ready():
+            say("OK", "PostgreSQL 떴다")
+            return True
+        waited = seconds - (deadline - time.time())
+        if waited > 5 and not said:
+            # 오래 걸리면 멈춘 것처럼 보인다. 무엇을 기다리는지 말해 준다.
+            say("..", "복구 중이라 조금 걸린다")
+            said = True
+        time.sleep(0.5)
+    return False
+
+
 def start_postgres() -> bool:
     """떠 있으면 그대로 두고, 아니면 켠다. 켜지 못하면 False."""
-    if port_open(PG_PORT):
+    if server_ready():
         say("OK", f"PostgreSQL 이 이미 {PG_PORT} 에 떠 있다")
         return True
+
+    if port_open(PG_PORT):
+        # 이미 떠 있는데 아직 복구 중이다. 새로 켜려 들면 안 된다.
+        say("..", "PostgreSQL 이 기동 중이다. 기다린다")
+        return wait_ready()
 
     pg_ctl = find_exe("pg_ctl")
     if not pg_ctl:
@@ -93,13 +143,11 @@ def start_postgres() -> bool:
             [pg_ctl, "-D", PG_DATA, "-o", f"-p {PG_PORT}", "-l", log, "start"],
             stdout=sink, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
 
-    # pg_ctl 은 먼저 돌아오고 서버가 뒤늦게 자리를 잡는 경우가 있다.
-    # 기다리는 기준은 pg_ctl 이 끝났는지가 아니라 자리가 열렸는지다.
-    for _ in range(40):
-        if port_open(PG_PORT):
-            say("OK", "PostgreSQL 떴다")
-            return True
-        time.sleep(0.5)
+    # pg_ctl 은 먼저 돌아오고 서버가 뒤늦게 자리를 잡는다.
+    # 기다리는 기준은 pg_ctl 이 끝났는지도, 자리가 열렸는지도 아니고
+    # 물음에 답할 수 있는지다.
+    if wait_ready():
+        return True
 
     proc.terminate()
     say("!!", "PostgreSQL 이 뜨지 않았다")
