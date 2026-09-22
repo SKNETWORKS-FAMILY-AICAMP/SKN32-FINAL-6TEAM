@@ -31,8 +31,14 @@ DAY_NAME = {1: "월", 2: "화", 3: "수", 4: "목", 5: "금", 6: "토", 7: "일"
 
 
 def hhmm(minute: int | None) -> str:
+    """모르는 시각은 빈 칸이 아니라 물음표로 적는다.
+
+    빈 칸이면 「-22:00」 같은 값이 나오고 엑셀이 그것을 수식으로 읽어
+    #NAME? 를 띄운다. 검수자가 원문과 비교할 값 자체가 사라졌다.
+    물음표는 사람이 읽어도 「모른다」로 읽힌다.
+    """
     if minute is None:
-        return ""
+        return "?"
     return f"{(minute // 60) % 24:02d}:{minute % 60:02d}" + ("(익일)" if minute >= 1440 else "")
 
 
@@ -114,6 +120,17 @@ def tags(row: dict) -> str:
     return ",".join(marks) or "단순"
 
 
+def csv_safe(value) -> str:
+    """엑셀이 수식으로 읽는 첫 글자를 막는다.
+
+    = + - @ 로 시작하는 칸은 수식으로 해석된다. 앞에 공백 하나를 두면
+    글자로 읽히고, 보이는 값은 거의 그대로다. 앞따옴표는 CSV 로 열 때
+    그대로 보여서 쓰지 않는다.
+    """
+    text = "" if value is None else str(value)
+    return " " + text if text[:1] in ("=", "+", "-", "@") else text
+
+
 BLANKS = ["시작", "종료", "브레이크", "라스트오더", "요일", "휴무", "틀린방향", "메모"]
 
 
@@ -141,7 +158,7 @@ def main() -> None:
     with open(csv_path, "w", encoding="utf-8-sig", newline="") as fp:
         writer = csv.writer(fp)
         writer.writerow(header)
-        writer.writerows(body)
+        writer.writerows([csv_safe(cell) for cell in line] for line in body)
 
     style = (
         "body{font-family:'Malgun Gothic',sans-serif;font-size:13px;margin:24px;color:#1F2933}"
