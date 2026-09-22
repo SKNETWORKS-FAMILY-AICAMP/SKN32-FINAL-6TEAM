@@ -34,6 +34,15 @@ KIND_KO = {
 DAY_KO = {"weekday": "평일", "sat": "토요일", "sun": "일요일", "holiday": "휴일"}
 
 
+def _warn_html(x):
+    import html
+    if isinstance(x, dict):
+        dim = "" if x.get("to_answer") else " dim"
+        return (f'<div class="warn{dim}">! {html.escape(str(x.get("text", "")))}'
+                f' <span class="wcode">{html.escape(str(x.get("code", "")))}</span></div>')
+    return f'<div class="warn">! {html.escape(str(x))}</div>'
+
+
 def e(x):
     return html.escape("" if x is None else str(x))
 
@@ -130,7 +139,7 @@ def scene(i, n, case, res):
     # 구간별
     lr = []
     for l in res.get("legs", []):
-        w = "".join(f'<div class="warn">! {e(x)}</div>' for x in (l.get("warnings") or []))
+        w = "".join(_warn_html(x) for x in (l.get("warnings") or []))
         dropped = l.get("dropped") or {}
         dr = ('<div class="drop">거른 행 — ' +
               ", ".join(f"{e(k)} {e(v)}" for k, v in dropped.items()) + "</div>") if dropped else ""
@@ -171,7 +180,7 @@ def scene(i, n, case, res):
                     + (f'<details><summary>열거하고 떨어뜨린 후보 {len(tried)}건</summary><ul class="tried">{tr}</ul></details>' if tr else "")
                     + tx + "</div>")
 
-    warns = "".join(f'<div class="warn">! {e(x)}</div>' for x in (res.get("warnings") or []))
+    warns = "".join(_warn_html(x) for x in (res.get("warnings") or []))
 
     return f'''<section class="scene" id="s{i}" data-i="{i}">
 <div class="sh"><span class="num">장면 {i} / {n}</span><span class="cid">{e(cid)}</span></div>
@@ -238,6 +247,7 @@ h3{font-size:15px;margin:0 0 10px}
 .reason{margin:6px 0;font-size:14.5px}
 .relief{margin:8px 0 0;font-size:14px;background:#f4f6f8;border-left:3px solid var(--mut);padding:7px 10px;border-radius:0 7px 7px 0}
 .warn{font-size:13.5px;color:var(--lim);background:#fff8ec;border-radius:6px;padding:5px 9px;margin-top:6px}
+.warn.dim{opacity:.65}.wcode{font-size:11px;color:#9a8a6a;margin-left:6px}
 .block{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
 .leg{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:9px}
 .legh{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
