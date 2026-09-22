@@ -18,7 +18,7 @@ domain: travel
 
 ## 1. 불러서 잰 것
 
-### 한국관광공사 TourAPI (KorService2)
+### 한국관광공사 TourAPI (KorService2) — [서비스 안내](https://www.data.go.kr/data/15101578/openapi.do) · 무료
 
 종류별로 `detailIntro2` 필드를 전부 뽑고 서울 표본의 채움률을 셌다.
 
@@ -35,7 +35,7 @@ domain: travel
 
 ★**경복궁 입장료를 TourAPI 에서 얻을 방법이 없다.** 필드도 없고 본문에도 금액이 없다. 이게 문제의 크기를 보여준다.
 
-### OpenStreetMap (Overpass)
+### OpenStreetMap ([Overpass API](https://overpass-api.de/), 미러 [private.coffee](https://overpass.private.coffee/)) — 키 없음 · 무료 · [ODbL](https://www.openstreetmap.org/copyright)
 
 | 서울 | 전체 | `fee`(유무) | `charge`(금액) |
 |---|---|---|---|
@@ -47,9 +47,11 @@ domain: travel
 
 ### 그 밖에 이미 확인한 것
 
-- **카카오 로컬** — 응답 필드 12개에 가격 없음
-- **네이버 지역 검색** — 응답 필드 9개에 가격 없음
-- **한국문화정보원 전국 세계 음식점**(9,502건) — 28개 열에 가격 없음
+| 소스 (링크) | 비용 | 가격 필드 |
+|---|---|---|
+| [카카오 로컬](https://developers.kakao.com/docs/latest/ko/local/dev-guide) | 무료(일 한도) | 응답 필드 12개에 **없음** |
+| 네이버 지역 검색 (`developers.naver.com/docs/serviceapi/search/local/local.md`) | 무료 | 응답 필드 9개에 **없음** (문서는 이 환경에서 열리지 않아 `[외부]`) |
+| [한국문화정보원 전국 세계 음식점](https://www.data.go.kr/data/15111398/fileData.do) (9,502건) | **무료** | 28개 열에 **없음** |
 
 ---
 
@@ -57,11 +59,12 @@ domain: travel
 
 `[외부 2026-09-22]` 공공데이터포털에서 「입장료」·「관람료」로 찾았다. **셋 다 아직 못 불렀다** — 별도 키나 활용신청이 필요하다.
 
-| 서비스 | 무엇 | 조건 |
-|---|---|---|
-| ★**한국문화정보원_전국문화기반시설총람 조회서비스** (`/data/15125097`) | 전국 도서관·박물관·미술관·문예회관, **`관람료` 필드 포함** | **자동승인 · 무료 · 일일 10,000건** |
-| 문화체육관광부_12개 기관 전시정보 (`/data/15105037`) | 전시 관람료 | 활용신청 |
-| 예술경영지원센터_KOPIS 공연목록 (`/data/15097805`) | 공연 티켓 가격 | 활용신청 |
+| 서비스 (링크) | 무엇 | 비용 | 조건 |
+|---|---|---|---|
+| ★[한국문화정보원_전국문화기반시설총람 조회서비스](https://www.data.go.kr/data/15125097/openapi.do) | 전국 도서관·박물관·미술관·문예회관, **`관람료` 필드 포함** | **무료** | **자동승인** · 일일 10,000건 |
+| [문화체육관광부_12개 기관 전시정보](https://www.data.go.kr/data/15105037/openapi.do) | 전시 관람료 | 무료 | 활용신청 |
+| [예술경영지원센터_KOPIS 공연목록](https://www.data.go.kr/data/15097805/openapi.do) | 공연 티켓 가격 | 무료 | 활용신청 |
+| [KOPIS 오픈API 안내](https://kopis.or.kr/por/cs/openapi/openApiList.do?menuId=MNU_00074) | 위의 원 제공처 | 무료 | 자체 키 |
 
 ★**첫째가 가장 유망하다.** 자동승인이고 무료이고 일일 한도가 10,000건이다. `api.kcisa.kr` 쪽은 **우리 `ACOP_DATA_GO_KR_KEY` 로 403**(`API Key is not valid`)이 떨어졌다 — KCISA 자체 키가 따로 필요하다.
 
@@ -73,14 +76,14 @@ domain: travel
 
 ## 3. 상용 API
 
-| 소스 | 주는 것 | 접근 | 판정 |
+| 소스 (링크) | 주는 것 | 비용 | 접근 |
 |---|---|---|---|
-| **구글 Places** | `priceLevel`(5단계) + `priceRange`(금액) | **Enterprise** SKU · $20/1,000 = 건당 약 30원 · 월 1,000건 무료 | 식당에 가장 현실적. **한국 채움률 미측정** |
-| **Viator 파트너 API** | 액티비티 **상품 가격** | ★**Basic 은 사전 승인 없이 즉시 시작 · 가입 비용 없음.** 실시간 가용·가격은 Full 등급(인증 필요) | 액티비티 실제 판매가를 **지금 당장** 볼 수 있는 유일한 길 |
-| **TripAdvisor Terra API** | 식당·관광지 price level | 자율 가입 · **첫 1,000콜 무료** · 이후 종량제 · 표시 의무(버블 평점·리뷰 날짜·크레딧) | 구 Content API 는 2026-08-31, Partner API·데이터피드는 2026-10-30 종료 |
-| Klook Partner API | 액티비티 가격·재고 | 파트너 신청·심사 | 아시아태평양 강세라 한국 상품이 많다 |
-| GetYourGuide Partner API | 동 | 파트너 포털 문의 | |
-| ~~Amadeus Tours & Activities~~ | 액티비티 가격 | — | ❌**셀프서비스 티어가 2026년 중반 폐지**돼 기존 키가 비활성화됐다 |
+| **[구글 Places](https://developers.google.com/maps/documentation/places/web-service/data-fields)** | `priceLevel`(5단계) + `priceRange`(금액) | **Enterprise** SKU — [$20/1,000건](https://developers.google.com/maps/billing-and-pricing/pricing) = 건당 약 **30원** · **월 1,000건 무료** | [카드 등록된 Cloud Billing 계정 필수](https://developers.google.com/maps/billing-and-pricing/billing-overview) |
+| **[Viator 파트너 API](https://docs.viator.com/partner-api/affiliate/technical/)** | 액티비티 **상품 가격** | **가입 비용 없음** (수수료 8~12%는 예약이 일어날 때) | ★[Basic 은 사전 승인 없이 즉시 시작](https://partnerresources.viator.com/travel-commerce/levels-of-access/). 실시간 가용·가격은 Full(인증 필요) |
+| **[TripAdvisor Terra API](https://docs.terra.tripadvisor.com/docs/overview)** | 식당·관광지 price level | **첫 1,000콜 무료** · 이후 종량제(공개 단가 미확인) | 자율 가입 · 표시 의무(버블 평점·리뷰 날짜·크레딧) |
+| [Klook Partner API](https://klook.gitbook.io/openapi) | 액티비티 가격·재고 | 공개 단가 없음 | 파트너 신청·심사. 아시아태평양 강세라 한국 상품이 많다 |
+| [GetYourGuide Partner API](https://api.getyourguide.com/) | 동 | 공개 단가 없음 | 파트너 포털 문의 |
+| ~~[Amadeus Tours & Activities](https://developers.amadeus.com/self-service/category/destination-experiences/api-doc/tours-and-activities)~~ | 액티비티 가격 | — | ❌**셀프서비스 티어가 2026년 중반 폐지**돼 기존 키가 비활성화됐다 |
 
 ★**구글과 Terra 가 주는 것은 「가격대」이고, Viator·Klook 이 주는 것은 「판매가」다.** 우리가 §6-C 에서 쓰려는 추가 비용은 후자에 가깝지만, 후자는 **그 플랫폼에서 파는 상품에 한정**된다. 경복궁 입장료는 어느 쪽도 주지 않는다.
 
@@ -90,11 +93,11 @@ domain: travel
 
 | 경로 | 판정 |
 |---|---|
-| 공공데이터포털 파일데이터 직접 내려받기 | **정당하다.** 이미 그렇게 받았다(세계 음식점 9,502건) |
-| Overpass API | **정당하다.** OSM 의 공식 질의 창구다. 단 ODbL |
+| [공공데이터포털](https://www.data.go.kr/) 파일데이터 직접 내려받기 | **정당하다.** 이미 그렇게 받았다(세계 음식점 9,502건) |
+| [Overpass API](https://overpass-api.de/) | **정당하다.** OSM 의 공식 질의 창구다. 단 ODbL |
 | 관광공사 공개 PDF | **정당하다.** 공개 배포물이다 |
 | 네이버 플레이스 · 카카오맵 상세 · 캐치테이블 | ❌ 화면에는 가격이 있지만 공식 API 에 없다. **약관 위반 소지 + 기술적 차단.** 산출물에 「긁었다」가 남는다 |
-| Apify 등의 Klook · HappyCow · TripAdvisor 스크래퍼 | ❌ 같은 문제. 제3자가 남의 약관을 대신 지켜 주지 않는다 |
+| [Apify](https://apify.com/) 등의 Klook · [HappyCow](https://www.happycow.net/) · TripAdvisor 스크래퍼 | ❌ 같은 문제. 제3자가 남의 약관을 대신 지켜 주지 않는다 |
 
 ---
 
@@ -111,13 +114,60 @@ domain: travel
 
 | # | 할 일 | 왜 이 순서인가 |
 |---|---|---|
-| 1 | 전국문화기반시설총람 신청 → `관람료` 채움률 측정 | **자동승인·무료**라 가장 싸고 빠르다 |
-| 2 | Viator Basic 가입 → 서울 액티비티 가격 확인 | 사전 승인이 없다 |
-| 3 | 구글 키 → 서울 식당 30곳 `priceLevel`·`priceRange` 채움률 | 카드 등록이 필요해 사람이 해야 한다 |
-| 4 | Terra API | 위가 막힐 때의 대안. 종료 일정이 겹쳐 있어 후순위 |
-| 5 | KOPIS · 문체부 전시정보 | 공연·전시로 범위가 좁다 |
+| 1 | [전국문화기반시설총람](https://www.data.go.kr/data/15125097/openapi.do) 신청 → `관람료` 채움률 측정 | **자동승인·무료**라 가장 싸고 빠르다 |
+| 2 | [Viator Basic](https://partnerresources.viator.com/travel-commerce/levels-of-access/) 가입 → 서울 액티비티 가격 확인 | 사전 승인이 없다 |
+| 3 | [구글 키](https://developers.google.com/maps/billing-and-pricing/billing-overview) → 서울 식당 30곳 `priceLevel`·`priceRange` 채움률 | 카드 등록이 필요해 사람이 해야 한다 |
+| 4 | [Terra API](https://docs.terra.tripadvisor.com/docs/overview) | 위가 막힐 때의 대안. 종료 일정이 겹쳐 있어 후순위 |
+| 5 | [KOPIS](https://www.data.go.kr/data/15097805/openapi.do) · [문체부 전시정보](https://www.data.go.kr/data/15105037/openapi.do) | 공연·전시로 범위가 좁다 |
 
 ★**1·2·3 은 모두 사람이 가입·신청해야 한다.** AI 세션은 계정 생성과 카드 등록을 하지 않는다.
+
+## 출처 링크 — 이 문서가 부르거나 읽은 곳
+
+**공공데이터포털** — 검색은 `https://www.data.go.kr/tcs/dss/selectDataSetList.do?keyword=<낱말>` 형식이다.
+
+| 무엇 | 링크 | 비용 |
+|---|---|---|
+| 전국문화기반시설총람 조회서비스 (`관람료` 필드) | https://www.data.go.kr/data/15125097/openapi.do | 무료 · 자동승인 · 일 10,000건 |
+| 문체부 12개 기관 전시정보 | https://www.data.go.kr/data/15105037/openapi.do | 무료 · 활용신청 |
+| KOPIS 공연목록 (티켓 가격) | https://www.data.go.kr/data/15097805/openapi.do | 무료 · 활용신청 |
+| 전국 세계 음식점 데이터 (9,502건, 가격 없음) | https://www.data.go.kr/data/15111398/fileData.do | 무료 |
+| 무장애 여행 정보 | https://www.data.go.kr/data/15101897/openapi.do | 무료 · 개발단계 자동승인 · 일 1,000건 |
+| 서울 지하철역 엘리베이터 위치정보 (파일) | https://www.data.go.kr/data/15098148/fileData.do | 무료 · 2022-01-11 기준 |
+| 서울 지하철역 엘리베이터 위치정보 (API, LINK 방식) | https://www.data.go.kr/data/15098158/openapi.do | 무료 · 서울 열린데이터광장 키 필요 |
+| 코레일 역별 엘리베이터 이동경로 | https://www.data.go.kr/data/15041689/openapi.do | 무료 · 활용신청 |
+| 경기도 무슬림 친화 음식점 | https://www.data.go.kr/data/15099378/fileData.do | 무료 · 경기도만 |
+
+**상용·해외 API**
+
+| 무엇 | 링크 | 비용 |
+|---|---|---|
+| 구글 Places 데이터 필드 | https://developers.google.com/maps/documentation/places/web-service/data-fields | — |
+| 구글 Maps Platform 요금 | https://developers.google.com/maps/billing-and-pricing/pricing | Place Details Enterprise $20/1,000 · E+Atmosphere $25/1,000 |
+| 구글 결제 계정 안내 | https://developers.google.com/maps/billing-and-pricing/billing-overview | 카드 등록 필수 · SKU별 월 무료 한도 + $300 체험 |
+| Viator 파트너 API 문서 | https://docs.viator.com/partner-api/affiliate/technical/ | 가입 비용 없음 |
+| Viator 접근 등급 (Basic/Full/Full+Booking) | https://partnerresources.viator.com/travel-commerce/levels-of-access/ | Basic 사전 승인 없음 |
+| TripAdvisor Terra API | https://docs.terra.tripadvisor.com/docs/overview | 첫 1,000콜 무료 · 이후 종량제 |
+| Klook Open API | https://klook.gitbook.io/openapi | 공개 단가 없음 · 심사 |
+| GetYourGuide Partner API | https://api.getyourguide.com/ | 공개 단가 없음 · 심사 |
+| Amadeus Tours & Activities ❌ | https://developers.amadeus.com/self-service/category/destination-experiences/api-doc/tours-and-activities | 셀프서비스 티어 2026년 중반 폐지 |
+| 카카오 로컬 | https://developers.kakao.com/docs/latest/ko/local/dev-guide | 무료(일 한도) |
+| 네이버 지역 검색 | `https://developers.naver.com/docs/serviceapi/search/local/local.md` ★검사기가 `.md` 를 상대 경로로 읽어 링크로 걸지 않는다 | 무료 · 한 번에 최대 5건 |
+| Overpass API (OSM) | https://overpass-api.de/ · 미러 https://overpass.private.coffee/ | 무료 · 키 없음 · 호출 제한 빡빡 |
+| OSM 라이선스 (ODbL) | https://www.openstreetmap.org/copyright | 출처 표시 의무 |
+| KOPIS 오픈API 안내 | https://kopis.or.kr/por/cs/openapi/openApiList.do?menuId=MNU_00074 | 무료 · 자체 키 |
+| 문화빅데이터플랫폼 — 무슬림 친화 식당 데이터 | https://www.bigdata-culture.kr/bigdata/user/data_market/detail.do?id=38970490-3b91-11eb-af9a-4b03f0a582d6 | **유료 11,000,000원** (맛보기 0원) |
+| HappyCow (공개 API 없음) | https://www.happycow.net/ | `/api` 404 |
+
+**우리가 직접 부르는 엔드포인트**
+
+```
+TourAPI        https://apis.data.go.kr/B551011/KorService2
+무장애          https://apis.data.go.kr/B551011/KorWithService2
+카카오 로컬      https://dapi.kakao.com/v2/local/search/keyword.json
+Overpass       https://overpass-api.de/api/interpreter
+KCISA          https://api.kcisa.kr/openapi/...   ← 자체 키 필요(우리 키로 403)
+```
 
 ## 관련
 

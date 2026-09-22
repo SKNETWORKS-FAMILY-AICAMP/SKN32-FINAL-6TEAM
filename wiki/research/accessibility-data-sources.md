@@ -145,6 +145,6 @@ TourAPI 일일 한도는 `ACOP_RATE_TOUR_API_PER_DAY=1000`이고, 이 문서를 
 ## 관련
 
 - [notifications.md](../architecture/notifications.md) — 알림 세 시점, 언어, 대체 소스
-- [scope.md](scope.md) — 무엇을 안 하는가
+- [../product/scope.md](../product/scope.md) — 무엇을 안 하는가
 - [D-018 결정 15 중단 경로](../decisions/D-018-decision15-stop-paths.md) — 값이 안 나올 때 무엇을 멈추는가
 - `program/plan/A-COP_구현계획서_v11.md` §6-C(동시 다발 · 탈락 조건 · 사전식 비교), §0-4 결정 14·15
