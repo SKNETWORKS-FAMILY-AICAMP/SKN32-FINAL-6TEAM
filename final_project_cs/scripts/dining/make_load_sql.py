@@ -8,6 +8,7 @@ psycopg 없이 psql 로 넣을 수 있게 파일로 뽑는다. 같은 파일을 
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -23,8 +24,22 @@ OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000001")
 LOAD_ID = str(uuid.uuid5(NS, "load:tourapi:2026-09-21"))
 SOURCE = "tourapi_kor_food"
-RULES_VERSION = "2026-09-21-parse_hours-v1"
 VALID_FROM = date(2026, 9, 21).isoformat()
+
+
+def rules_version() -> str:
+    """파서 내용에서 버전을 만든다.
+
+    손으로 적어 두면 안 바뀐다. 파서를 일곱 번 고치는 동안 v1 그대로였고,
+    그래서 어제 결과와 오늘 결과를 구분할 방법이 없었다.
+    파일 내용이 바뀌면 값이 바뀌어야 한다. 그래야 품질 비교가 성립한다.
+    """
+    src = os.path.join(HERE, "parse_hours.py")
+    digest = hashlib.sha256(open(src, "rb").read()).hexdigest()[:8]
+    return f"parse_hours-{digest}"
+
+
+RULES_VERSION = rules_version()
 
 
 def q(value) -> str:
