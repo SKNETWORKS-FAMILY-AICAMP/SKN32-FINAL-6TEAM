@@ -99,9 +99,9 @@ distance · id · phone · place_name · place_url · road_address_name · x · 
 |---|---|---|
 | `diet:vegan` | **55** | 111 |
 | `diet:vegetarian` | **53** | 144 |
-| `diet:halal` | **10** | 측정 실패(호출 제한) |
+| `diet:halal` | **10** | 22 |
 | `diet:kosher` | 0 | — |
-| `diet:gluten_free` | 측정 실패 | 측정 실패 |
+| `diet:gluten_free` | 3 | 9 |
 | 대조군 `amenity=restaurant` | **26,555** | — |
 
 서울 비건 55곳은 서울 음식점 26,555곳의 **0.21%**(55/26,555)다.
@@ -115,7 +115,11 @@ distance · id · phone · place_name · place_url · road_address_name · x · 
 | 카카오 `vegan` 상호 매칭 | 17 |
 | TourAPI | 1~2 |
 
-라벨의 뜻도 분명하다. `yes` 와 `only` 가 갈려 있어 **「채식 메뉴가 있다」와 「채식 전용이다」를 구분**할 수 있다. 문화정보원 데이터가 바베큐집을 채식으로 찍은 것과 다르다.
+라벨의 뜻도 분명하다. `yes` 와 `only` 가 갈려 있어 **「채식 메뉴가 있다」와 「채식 전용이다」를 구분**할 수 있다.
+
+**이름을 직접 봤다.** 서울 `diet:vegan` 표본 12곳 — 오세계향(`only`) · 발우공양(`yes`) · 수카라 · Plant · Yona's Kitchen(`only`) · 야미요밀 Vegan Bakery(`only`) · DalYang(vegan·vegetarian 둘 다 `only`) · Vegetus · The Raw by Twins 등. **전부 말이 되는 곳이다.** 문화정보원 데이터가 바베큐집과 이자카야를 채식으로 찍은 것과 대조된다.
+
+서울 `diet:halal` 표본 10곳 — 할랄부산집 · **더 할랄 가이즈**(`only`) · Om Restaurant · 고고인디안쿠진 · 봄베그릴 · 마리푸드 등. 이쪽도 라벨이 맞다. ★교차 확인도 된다 — Om Restaurant 은 카카오에서 「옴 레스토랑 광화문점」으로, 발우공양은 TourAPI 「사찰음식」으로도 잡혔다.
 
 **한계 둘**
 
@@ -124,7 +128,7 @@ distance · id · phone · place_name · place_url · road_address_name · x · 
 
 호출 방법 — `https://overpass-api.de/api/interpreter` 에 POST, 본문은
 `[out:json][timeout:50];(nwr["diet:vegan"~"yes|only"](37.42,126.76,37.70,127.18););out count;`
-★**호출 제한이 빡빡하다.** 여러 질의를 잇달아 던지면 429 가 온다. 미러(`overpass.private.coffee` 등)로 돌리거나 사이에 쉬어야 한다.
+★**호출 제한은 한 IP 당 동시 2슬롯이다.** `https://overpass-api.de/api/status` 를 `User-Agent` 를 붙여 부르면 `Rate limit: 2` 와 남은 슬롯이 나온다. `[사고 2026-09-22]` 질의를 3~4개 **동시에** 던져 429 와 타임아웃으로 절반이 실패했고, 「측정 실패」로 문서에 적었다가 **하나씩 순차로 다시 던져 전부 받았다.** 데이터가 없어서가 아니라 호출을 잘못해서 못 받은 것이었다 — **응답이 안 온 것과 값이 없는 것을 가려서 적는다.**
 
 ### HappyCow — **공개 API 가 없다**
 
