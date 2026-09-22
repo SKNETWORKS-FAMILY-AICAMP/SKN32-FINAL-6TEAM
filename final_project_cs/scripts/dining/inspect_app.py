@@ -209,6 +209,10 @@ def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parkin
             cur.execute("SELECT dining.live_state(%s, %s)", (uid, topic))
             live[topic] = cur.fetchone()[0]
 
+        # 특이사항. 근거 없이 뜨는 줄이 없어야 하므로 kind 와 source 를 함께 받는다.
+        cur.execute("SELECT dining.place_notes(%s, %s)", (uid, when))
+        notes = cur.fetchone()[0] or []
+
         # 대체 후보 세 축. 원래 가려던 곳의 종류도 함께 보여야 유사도를 읽을 수 있다.
         cur.execute("SELECT dining.cuisine_tags(%s)", (uid,))
         tags = cur.fetchone()[0]
@@ -222,6 +226,9 @@ def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parkin
                    "uid": str(auid) if auid else None, "name": aname, "why": why,
                    "waiting": None}
             if auid:
+                # 후보를 고를 때야말로 특이사항이 필요하다. 두 줄만 붙인다.
+                cur.execute("SELECT dining.place_notes(%s, %s, 2)", (auid, when))
+                row["notes"] = cur.fetchone()[0] or []
                 # 웨이팅은 축이 아니라 표시다. 순위를 바꾸지 않는다.
                 cur.execute("""
                     SELECT value_state, value_num, value_detail, source_code, asked_at
@@ -241,6 +248,7 @@ def api_place(uid: str, at: str | None = None, conds: str = "card_payment,parkin
         pool_n, pool_min, pool_radius = cur.fetchone()
 
     return {
+        "notes": notes,
         "tags": tags,
         "alternatives": alts,
         "pool": {"n": pool_n, "nearest": round(pool_min) if pool_min else None,
@@ -339,6 +347,8 @@ a{color:var(--accent)}
 .alt:first-of-type{border-top:none}
 .alt .ax{color:var(--dim);font-size:12px;letter-spacing:.03em}
 .alt .nm{font-size:15.5px;font-weight:650;margin-top:1px}
+.note{font-size:13.5px;padding:3px 0 3px 11px;border-left:2px solid var(--line);margin-top:4px}
+.note .tag{margin-left:6px}
 .tag.no{color:var(--no);border-color:var(--no)}
 .tag.unk{color:var(--unk);border-color:var(--unk)}
 .tag.ok{color:var(--ok);border-color:var(--ok)}
@@ -428,10 +438,12 @@ async function loadPlace(){
     const w = a.waiting
       ? `<div class="hint">지금 ${a.waiting.num!=null?a.waiting.num+'팀':a.waiting.state}`
         +` · ${a.waiting.source}, 제휴 전 시험 표시</div>` : '';
+    // 고를 때 필요한 정보라 후보 아래에 붙인다. 두 줄까지만.
+    const an = (a.notes||[]).map(n=>`<div class="note">${esc(n.text)}</div>`).join('');
     return `<div class="alt"><div class="ax">${a.label}</div>`
       +`<div class="nm">${esc(a.name)} ${os}${cs}</div>`
       +`<div class="hint">${bits}</div>`
-      +`${a.why['근거']?`<div class="hint">${esc(a.why['근거'])}</div>`:''}${w}</div>`;
+      +`${a.why['근거']?`<div class="hint">${esc(a.why['근거'])}</div>`:''}${w}${an}</div>`;
   }).join('');
   const wk=d.week.map(w=>{
     let body;
@@ -506,6 +518,12 @@ async function loadPlace(){
       <tr><th>전화</th><td>${esc(d.phone)||'—'}</td></tr>
     </table>
   </div>
+
+  ${d.notes && d.notes.length ? `<div class="card"><h2>특이사항</h2>
+    ${d.notes.map(n=>`<div class="note">${esc(n.text)}`
+      +`<span class="tag">${n.source==='ledger'?'원장':'원문'}</span></div>`).join('')}
+    <p class="hint">근거가 있는 것만 적는다. 혼잡한 시간대처럼 자료가 없는 것은 쓰지 않는다.</p>
+  </div>` : ''}
 
   <div class="card"><h2>여행 조건</h2><table>${conds}</table></div>
 
