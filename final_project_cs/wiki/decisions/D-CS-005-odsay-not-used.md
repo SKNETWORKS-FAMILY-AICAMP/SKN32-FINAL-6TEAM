@@ -3,7 +3,7 @@ type: decision
 title: ODsay 대중교통 API 를 쓰지 않는다
 description: 약관이 결과 데이터의 저장·가공을 사전 동의 없이 금지하고, 무료 한도가 하루 30회다. 지금 있는 것으로 간다
 status: draft
-tags: [external, legal]
+tags: [architecture, governance]
 owners: [human:미배정]
 domain: travel
 ---

@@ -77,10 +77,49 @@ def approved_pending_actions(conn: Connection, *, tenant_id: str, case_id: UUID)
 
 
 def set_action_status(conn: Connection, *, tenant_id: str, action_id: UUID, status: str,
-                      provider_ref: str | None = None) -> None:
+                      provider_ref: str | None = None, ledger: dict[str, Any] | None = None) -> None:
+    """작업의 상태(+결과 참조)를 적는다.
+
+    ★`[2026-09-22]` `ledger` 는 실행 장부 칸(v11 §12 DoD-20, 마이그레이션 019) —
+      `amount_cents`·`amount_source`·`reason`·`revert_deadline`·`delegation`. 적용기가 채운
+      값이며 코어는 뜻을 모른다. ★**None 으로 기존 값을 지우지 않는다**(`COALESCE`) — 실패
+      경로에서 상태만 바꿀 때 앞서 적은 근거가 사라지면 「왜 실행했나」가 없어진다.
+    """
+    fields = ledger or {}
     with conn.cursor() as cur:
-        cur.execute("UPDATE action_requests SET status=%s, provider_ref=COALESCE(%s, provider_ref) "
-                    "WHERE tenant_id=%s AND action_id=%s", (status, provider_ref, tenant_id, action_id))
+        cur.execute("UPDATE action_requests SET status=%s, provider_ref=COALESCE(%s, provider_ref), "
+                    "amount_cents=COALESCE(%s, amount_cents), "
+                    "amount_source=COALESCE(%s, amount_source), "
+                    "reason=COALESCE(%s, reason), "
+                    "revert_deadline=COALESCE(%s, revert_deadline), "
+                    # ★`::jsonb` 를 빼면 COALESCE 가 `json` 과 `jsonb` 를 못 맞춘다
+                    #   (`CannotCoerce`) — INSERT 는 대상 칼럼이 타입을 정해 주지만 COALESCE 는 아니다.
+                    "delegation_json=COALESCE(%s::jsonb, delegation_json), "
+                    "prior_state_json=COALESCE(%s::jsonb, prior_state_json) "
+                    "WHERE tenant_id=%s AND action_id=%s",
+                    (status, provider_ref, fields.get("amount_cents"), fields.get("amount_source"),
+                     fields.get("reason"), fields.get("revert_deadline"),
+                     Json(fields["delegation"], dumps=_json_text) if fields.get("delegation") else None,
+                     Json(fields["prior_state"], dumps=_json_text) if fields.get("prior_state") else None,
+                     tenant_id, action_id))
+
+
+def action_execution_record(conn: Connection, *, tenant_id: str, action_id: UUID) -> dict[str, Any] | None:
+    """실행 장부 한 줄 — 무엇을 · 왜 · 얼마에 · 되돌림 기한 (v11 §12 DoD-20).
+
+    ★`amount_cents` 가 None 이면 **「확인되지 않았다」**다. 0 으로 읽지 않는다.
+    """
+    with conn.cursor() as cur:
+        cur.execute("SELECT action_type, arguments_json, status, provider_ref, amount_cents, "
+                    "amount_source, reason, revert_deadline, delegation_json, prior_state_json, "
+                    "created_at FROM action_requests WHERE tenant_id=%s AND action_id=%s",
+                    (tenant_id, action_id))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return dict(zip(("action_type", "arguments", "status", "provider_ref", "amount_cents",
+                     "amount_source", "reason", "revert_deadline", "delegation", "prior_state",
+                     "created_at"), row))
 
 
 def create_approval(conn: Connection, *, action_id: UUID, decision: str, approver_id: str | None = None) -> UUID:

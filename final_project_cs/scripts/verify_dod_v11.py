@@ -134,18 +134,77 @@ ITEMS: tuple[Item, ...] = (
               "그보다 **앞에** 불리는지 센다 — 새 적용기가 한 줄 더 써도 잡힌다. ★검사기 자신도 시험한다"
               "(게이트 없는 코드·순서 뒤바뀐 코드를 넣어 빨간지 확인) — DoD-23 의 「통과하면서 못 잡는 "
               "가드」를 되풀이하지 않으려는 것이다. 게이트를 실제로 지워 5건이 빨간 것을 확인하고 원복했다"),
-    Item(16, "업체 건은 실행하지 않고 변경 링크를 만든다", "자동", (), mvp=False,
-         note="변경 **링크**는 없다. 대신 승인 뒤 인계 메시지를 바깥함에 넣는다(booking.handoff)"),
-    Item(17, "변경 링크에 바뀔 항목·대안·차액이 들어 있다", "자동", (), mvp=False,
-         note="16 이 없으므로 잴 것이 없다"),
-    Item(18, "(시연) 위임 범위를 벗어난 자동 실행이 0건", "측정", (), mvp=False,
-         note="위임 범위(delegation_scope) 가 아직 계약에 없다"),
-    Item(19, "(시연) 위임을 철회하면 진행 중인 자동 실행이 멈춘다", "자동", (), mvp=False,
-         note="18 과 같은 이유"),
-    Item(20, "(시연) 자동 실행에 무엇을·왜·얼마에·되돌림 기한이 기록된다", "자동", (), mvp=False,
-         note="지금 기록되는 것은 무엇을(action_type·인자)·결과(provider_ref)뿐이다 — 금액·되돌림 기한 칸이 없다"),
-    Item(21, "(시연) 되돌림이 실패하면 사람에게 넘어간다", "자동", (), mvp=False,
-         note="업체 예약 되돌림 경로가 없다"),
+    Item(16, "업체 건은 실행하지 않고 변경 링크를 만든다", "자동", (
+        T + "e2e/test_booking_change_link.py::"
+            "test_a_real_supplier_booking_is_handed_off_by_link_and_the_ledger_stays_put",
+        T + "e2e/test_booking_change_link.py::test_a_wrong_token_never_says_whether_the_booking_exists",
+    ), mvp=False,
+         note="`[2026-09-22]` 변경 링크가 생겼다 — `GET /booking-change/{booking_id}?t=…` "
+              "(`app/modules/travel_ops/change_link.py`, 예약별 HMAC 토큰·로그인 없음·토큰이 틀리면 "
+              "404). **아무것도 쓰지 않으므로 승인도 scope 도 없다.** `booking.change` 적용기는 "
+              "공급자 원장을 어느 등급에서도 건드리지 않고 그 링크를 인계 메시지(`booking.handoff`)에 "
+              "싣는다 — 등급 `real` 로 두고 원장이 한 글자도 안 바뀌는 것을 실측한다"),
+    Item(17, "변경 링크에 바뀔 항목·대안·차액이 들어 있다", "자동", (
+        T + "e2e/test_booking_change_link.py::"
+            "test_the_link_shows_the_item_the_alternatives_and_the_difference",
+        T + "e2e/test_booking_change_link.py::"
+            "test_a_difference_we_cannot_compute_says_so_instead_of_inventing_one",
+    ), mvp=False,
+         note="`[2026-09-22]` 바뀔 항목=`bookings`+`places.name`+`supplier_bookings` · 대안=그 예약에 "
+              "걸린 일정 항목의 `detail.alternates`(감시 루프가 들고 둔 「다른 안」, 새로 계산하지 "
+              "않는다) · 차액=양쪽 **1인 가격**(`places.attributes.price_krw`) 차 × 인원. "
+              "★★**차액을 지어내지 않는다** — 한쪽 가격이라도 없으면 `difference_krw=None` 이고 "
+              "화면은 「확인되지 않았습니다」+ 어느 쪽을 몰라서인지 적는다(결정 15). 둘째 시험이 "
+              "가격 없는 장소를 일부러 넣어 그것을 본다"),
+    Item(18, "(시연) 위임 범위를 벗어난 자동 실행이 0건", "측정", (
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_no_out_of_scope_automatic_execution_in_the_measured_flood",
+        T + "integration/controller/test_delegation_scope.py::test_every_limit_actually_blocked_something",
+        T + "integration/controller/test_delegation_scope.py::test_every_rejection_names_its_gate",
+    ), mvp=False,
+         note="`[2026-09-22]` 재는 것은 스크립트다 — `python -m scripts.measure_delegation_scope`. "
+              "**실측 13건을 흘려 범위 밖 10건 중 자동 실행 0건**(분모는 범위 밖 시도 10건). 같이 본 것 — "
+              "범위 안인데 막힌 건수 0/3 · 기대와 다른 문이 막은 건수 0/10. 위임 범위는 설정 "
+              "`travel.delegation`(건당·누적·횟수·종류·무료취소·되돌림창, **우리가 고른 값**)과 데이터 "
+              "`delegations`(살아 있나 — 행이 없으면 위임이 없다)에 있다. 시험은 그 스크립트를 불러 수를 "
+              "고정하고, 한계마다 실제로 막은 경우가 있는지도 센다. ★게이트를 열어 두고 재봤다 — 같은 "
+              "13건에서 **9건이 새고**(90%) 시험 6건이 빨갛다. ☆표본은 한계마다 한 경우씩이며 운영 분포가 아니다"),
+    Item(19, "(시연) 위임을 철회하면 진행 중인 자동 실행이 멈춘다", "자동", (
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_revoking_after_the_approval_stops_the_execution",
+        T + "integration/controller/test_delegation_scope.py::test_after_a_revocation_no_new_execution_opens",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_one_out_of_scope_proposal_rolls_the_whole_batch_back",
+    ), mvp=False,
+         note="`[2026-09-22]` 판정을 **적용 순간에** 한다(위임 행을 `FOR UPDATE` 로 잠가 읽는다) — 적용이 한 "
+              "트랜잭션이라 「반쯤 나간 자동 실행」이 없고, 승인과 적용 사이(사람이 누른 뒤 재개가 도는 사이)에 "
+              "철회되면 원장이 한 글자도 안 바뀌고 `action_rejected` 로 사람에게 간다. ★한 Case 의 제안 둘 중 "
+              "하나가 범위 밖이면 **첫째까지 되돌린다** — 위임 없는 상태에서 원장에 한 건이라도 남는 쪽이 더 나쁘다"),
+    Item(20, "(시연) 자동 실행에 무엇을·왜·얼마에·되돌림 기한이 기록된다", "자동", (
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_the_ledger_records_what_why_how_much_and_the_revert_deadline",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_an_amount_we_do_not_know_is_left_empty_not_invented",
+    ), mvp=False,
+         note="`[2026-09-22]` 마이그레이션 019 가 `action_requests` 에 칸을 더했다 — `amount_cents`+"
+              "`amount_source`(★DB CHECK 가 둘을 같이 채우거나 같이 비우게 한다) · `reason` · "
+              "`revert_deadline` · `delegation_json`(판정 근거) · `prior_state_json`(되돌릴 때 돌아갈 상태). "
+              "★**모르는 금액은 비운다** — NULL 은 0 이 아니라 「확인되지 않았다」다(인계 `booking.change` 는 "
+              "차액을 모르므로 NULL). 적용기가 채우고 코어가 그대로 적는다 — 코어는 뜻을 모른다"),
+    Item(21, "(시연) 되돌림이 실패하면 사람에게 넘어간다", "자동", (
+        T + "integration/controller/test_delegation_scope.py::test_a_revert_restores_both_ledgers",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_a_revert_after_the_deadline_goes_to_a_human",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_a_revert_without_a_recorded_prior_state_goes_to_a_human",
+        T + "integration/controller/test_delegation_scope.py::"
+            "test_a_revert_on_a_real_supplier_never_touches_the_ledger",
+    ), mvp=False,
+         note="`[2026-09-22]` 되돌림 경로가 생겼다 — `booking.revert` 적용기 + 준비 capability "
+              "`booking.prepare_revert`(issue_code `booking_revert_request`). 실패 사유 셋을 실측했다: 기한 "
+              "경과 · 돌아갈 상태 미기록(★`confirmed` 를 **지어내지 않는다**) · 공급자 등급. 셋 다 되돌림 "
+              "요청의 `action_requests` 행이 `failed` 로 남고 Case 가 `escalated` 로 간다(사유는 `case_events` "
+              "에 append-only). ★되는 경우도 함께 본다 — 안 되는 것만 보면 늘 실패하는 코드도 초록이다"),
     Item(22, "평가 시나리오에서 필수 조건 위반 0건", "측정", (
         T + "scenario/test_travel_eval_scenarios.py::test_a_scenario_runs_without_breaking_a_hard_constraint",
         T + "scenario/test_travel_eval_scenarios.py::test_the_dataset_and_the_runner_still_match",

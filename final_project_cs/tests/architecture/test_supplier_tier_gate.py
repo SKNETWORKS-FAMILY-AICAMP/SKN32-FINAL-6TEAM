@@ -50,6 +50,14 @@ SEEDING_FILES = {
     "scripts/seed_travel.py",
     # 시험 잔여물 정리. 시험 tenant 만 지운다(`tenant_id LIKE`).
     "scripts/cleanup_test_residue.py",
+    # ★`[2026-09-22]` DoD-18 측정 하네스. **자기가 만든 throwaway tenant** 안에서만
+    #   원장 행을 만들고(INSERT) 재고 나서 지운다(DELETE) — 남의 예약을 바꾸는 `UPDATE`
+    #   는 한 줄도 없다. 자동 실행 분기는 이 파일에 없다. 그 분기가 게이트를 지나는지를
+    #   **재는** 쪽이고, 그 측정이 실제로 게이트를 세는 것은
+    #   `tests/integration/controller/test_delegation_scope.py` 가 확인한다.
+    #   ☆예외를 셋으로 늘린 것은 경계가 한 칸 물러난 것이다. 넷째를 넣으려면 그때는
+    #     「원장을 만드는 자리」를 한 모듈로 모으는 쪽을 먼저 검토한다.
+    "scripts/measure_delegation_scope.py",
 }
 
 
@@ -176,7 +184,19 @@ def test_the_tier_column_defaults_to_the_real_supplier():
 
 
 def test_the_exception_list_stays_small():
-    """★예외가 늘면 경계가 무너지는 중이다."""
-    assert len(SEEDING_FILES) <= 2, f"예외가 {len(SEEDING_FILES)}개다: {sorted(SEEDING_FILES)}"
+    """★예외가 늘면 경계가 무너지는 중이다.
+
+    ★`[2026-09-22]` 상한을 2 → 3 으로 올렸다(DoD-18 측정 하네스). 숫자만 올리지 않고
+      **예외가 무엇을 해도 되는지**를 함께 못박는다 — 예외 파일은 원장 행을 만들고
+      지울 수 있을 뿐 **남의 행을 바꾸지 못한다**(`UPDATE supplier_bookings` 금지).
+      자동 실행이 바꾸는 것은 언제나 이미 있는 행이므로, UPDATE 를 예외에서 빼면
+      「자동 실행이 예외 파일로 새는」 길이 닫힌다.
+    """
+    assert len(SEEDING_FILES) <= 3, f"예외가 {len(SEEDING_FILES)}개다: {sorted(SEEDING_FILES)}"
     stale = sorted(path for path in SEEDING_FILES if not Path(path).exists())
     assert not stale, f"없는 파일을 가리키는 예외다: {stale}"
+    updating = sorted(path for path in SEEDING_FILES
+                      if re.search(r"\bUPDATE\s+supplier_bookings", Path(path).read_text(encoding="utf-8"),
+                                   re.IGNORECASE))
+    assert not updating, ("예외 파일이 공급자 원장을 **바꾼다**(UPDATE) — 예외는 행을 만들고 "
+                          f"지우는 자리까지다: {updating}")

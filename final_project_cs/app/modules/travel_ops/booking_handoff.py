@@ -25,6 +25,9 @@ class BookingHandoffTeam(TravelTeamBase):
             "booking.verify",          # 예약이 실재하고 우리가 아는 것과 같은가
             "booking.prepare_change",  # 변경에 필요한 것을 정리한다
             "booking.prepare_cancel",  # 취소에 필요한 것을 정리한다
+            # ★`[2026-09-22]` 자동 실행을 **되돌리는** 것을 정리한다(v11 §12 DoD-21).
+            #   되돌림은 보상 거래라 실패할 수 있고, 실패하면 사람에게 간다.
+            "booking.prepare_revert",
         ],
         accepted_case_types=["booking"],
         required_context=["case_state", "policy", "db_facts", "history"],
@@ -45,6 +48,8 @@ class BookingHandoffTeam(TravelTeamBase):
             return "booking.prepare_cancel"
         if code == "booking_change_request":
             return "booking.prepare_change"
+        if code == "booking_revert_request":
+            return "booking.prepare_revert"          # ★`[2026-09-22]` DoD-21
         return None
 
     async def execute(self, task: TeamTask) -> TeamResult:
@@ -91,8 +96,10 @@ class BookingHandoffTeam(TravelTeamBase):
         if not policy:
             return self._unknown(task, "변경·취소 규정", evidence)
 
-        action = ("booking.cancel" if task.capability == "booking.prepare_cancel"
-                  else "booking.change")
+        # ★`[2026-09-22]` 준비 capability → 적용기가 맡는 작업 종류. 전에는 삼항식이라
+        #   새 준비 capability 가 조용히 `booking.change` 로 떨어졌다.
+        action = {"booking.prepare_cancel": "booking.cancel",
+                  "booking.prepare_revert": "booking.revert"}.get(task.capability, "booking.change")
         proposal = self._proposal(
             task, action,
             {"booking_id": booking.get("booking_id"), "reason": task.input_text},

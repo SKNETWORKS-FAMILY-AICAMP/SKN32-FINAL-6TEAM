@@ -200,7 +200,7 @@ domain: travel
 안내 되잡기 작업으로 쌓은 안내를 가짜 전송기·가짜 번역기로 흘려 쟀다 — 3언어 7일 여행에서
 안내 **126건에 모델 호출 9회**(재사용 117/126 = **92.9%**), 1일 여행은 18건에 9회(50.0%).
 호출 수를 정하는 것은 안내 수가 아니라 **(문구틀 수 × 언어 수)** 다. 값이 섞인 안내 **0/1,572건**.
-표본과 못 재는 것은 [리포트](../../final_project_cs/wiki/records/reports/2026-09-22_0836_알림문구_재사용률_실측_리포트.md)
+표본과 못 재는 것은 구현 저장소의 리포트 `wiki/records/reports/2026-09-22_0836_알림문구_재사용률_실측_리포트.md`
 — **재생이지 운영 트래픽이 아니고**, 실제 모델의 번역 거부율은 안 쟀다.
 
 ## 채널
@@ -233,4 +233,4 @@ domain: travel
 - [../product/scope.md](../product/scope.md) — MVP 범위에서의 안내
 - [../decisions/D-005-write-gate.md](../decisions/D-005-write-gate.md) — 업체 예약은 승인 경로다
 - [../business/unit-economics.md](../business/unit-economics.md) — 안내가 원가에 붙지 않는 이유
-- `[2026-09-22]` 문구틀 캐시를 만든 기록 — [`final_project_cs/wiki/records/reports/2026-09-22_0759_알림문구_언어별_생성캐시_리포트.md`](../../final_project_cs/wiki/records/reports/2026-09-22_0759_알림문구_언어별_생성캐시_리포트.md)
+- `[2026-09-22]` 문구틀 캐시를 만든 기록 — 구현 저장소의 `wiki/records/reports/2026-09-22_0759_알림문구_언어별_생성캐시_리포트.md`

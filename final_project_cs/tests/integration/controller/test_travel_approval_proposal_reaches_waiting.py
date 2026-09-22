@@ -26,6 +26,7 @@ from app.core.transition import transition_case
 from app.domain.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
+from app.modules.travel_ops import delegation
 from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
 from app.modules.travel_ops.case_engine import cleanup_tenant
 from app.modules.travel_ops.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
@@ -56,8 +57,13 @@ def world():
         #   안 적으면 자동 실행 분기가 안 열린다 — 여기 공급자는 이름 그대로 시연용 Mock 이다.
         cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status,tier) "
                     "VALUES (%s,%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-1", "confirmed", "simulated"))
+        # ★`[2026-09-22]` **위임을 적어서** 넣는다(마이그레이션 019). 행이 없으면 위임이 없고
+        #   자동 실행 분기가 안 열린다 — 017 의 `tier` 와 같은 방향이다(잊음의 대가가 돈인
+        #   쪽으로 기울이지 않는다). 위임 범위 자체는 `test_delegation_scope.py` 가 본다.
+        delegation.grant(conn, tenant_id=tenant, customer_id=customer, by="fixture")
     yield tenant, customer, booking
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM delegations WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))

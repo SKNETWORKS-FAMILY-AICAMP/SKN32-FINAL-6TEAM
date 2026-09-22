@@ -549,6 +549,13 @@ class Controller:
                         conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
                         action_type=proposal.action_type, arguments=proposal.arguments,
                         idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
+                    # ★`[2026-09-22]` 실행 장부(v11 §12 DoD-20). 적을 것이 하나도 없으면 UPDATE 를
+                    #   내지 않는다 — 장부 칸을 안 쓰는 적용기(일정 조정)의 경로를 건드리지 않는다.
+                    ledger = outcome.ledger()
+                    if any(value is not None for value in ledger.values()):
+                        self.repository.set_action_status(
+                            conn, tenant_id=case["tenant_id"], action_id=action_id,
+                            status="succeeded", ledger=ledger)
                     applied.append(({"action_id": str(action_id), "action_type": proposal.action_type,
                                      "result_ref": outcome.result_ref, "summary": outcome.summary},
                                     list(outcome.outbox)))
@@ -585,9 +592,13 @@ class Controller:
                     except (TimeoutError, ConnectionError) as exc:
                         failure, failed_action = ("action_provider_unknown", str(exc), "unknown"), action
                         raise
+                    # ★`[2026-09-22]` 실행 장부를 같은 UPDATE 로 적는다(v11 §12 DoD-20) —
+                    #   무엇을(action_type·인자)·왜(reason)·얼마에(amount_cents·출처)·되돌림 기한.
+                    #   코어는 이 값들의 뜻을 모른다. 적용기가 채우고 여기서 그대로 싣는다.
                     self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
                                                       action_id=action["action_id"], status="succeeded",
-                                                      provider_ref=outcome.result_ref)
+                                                      provider_ref=outcome.result_ref,
+                                                      ledger=outcome.ledger())
                     applied.append({"action_id": str(action["action_id"]), "action_type": action["action_type"],
                                     "result_ref": outcome.result_ref, "summary": outcome.summary})
                     outbox.extend(outcome.outbox)
