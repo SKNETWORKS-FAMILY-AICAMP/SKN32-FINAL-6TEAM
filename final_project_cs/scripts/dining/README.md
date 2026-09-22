@@ -364,6 +364,35 @@ DB 도 `run_check.py` 도 캐치테이블이 무엇인지 모르는 채로 남�
 
 로그인은 사람이 하고 예약 버튼은 누르지 않는다. 한 곳만 보고 목록은 훑지 않는다.
 
+#### 브라우저를 직접 모는 갈래 (catchtable_auto.py)
+
+**기본은 꺼져 있다.** 2026-09-22 에 `app.catchtable.co.kr/robots.txt` 를 확인했다.
+검색엔진 봇 아홉 개만 이름을 대고 열려 있고 그 뒤가 `User-agent: *` `Disallow: /` 다.
+우리 스크립트는 `*` 에 해당하며, 읽기만 해도 해당한다.
+
+그래서 켜는 데 둘이 필요하다. 하나만으로는 돌지 않는다.
+
+```bash
+set DINING_CATCHTABLE_AUTO=1
+python scripts/dining/catchtable_auto.py --login
+python scripts/dining/catchtable_auto.py --place 메이플탑 --i-know --show --uid <place_uid>
+```
+
+| 지키는 것 | 어떻게 |
+|---|---|
+| 저절로 돌지 않는다 | 환경 변수 + `--i-know` 둘 다 필요 |
+| 한 번에 한 곳 | `--place` 필수, 목록을 훑지 않는다 |
+| 로그인하지 않는다 | 사람이 `--login` 으로 한 번. 계정 정보를 받는 자리가 없다 |
+| 예약하지 않는다 | 읽기만. 버튼을 누르지 않는다 |
+| 못 읽으면 모름 | 로그인이 풀리면 화면이 비고, 빈 화면을 값으로 읽지 않는다 |
+| 판단하지 않는다 | 글자만 건져 `catchtable.write_answer` 로 넘긴다 |
+
+로그인 상태는 `data/dining/_build/catchtable_profile/` 에 남는다. `_build/` 가
+`.gitignore` 에 있으므로 저장소에 올라가지 않는다.
+
+**무인 반복은 이 파일의 용도가 아니다.** 시연에서 한 번 보일 때만 켠다.
+서비스로 돌리는 자동화는 제휴 뒤 API 로 한다.
+
 ---
 
 ## 원장 확인기
