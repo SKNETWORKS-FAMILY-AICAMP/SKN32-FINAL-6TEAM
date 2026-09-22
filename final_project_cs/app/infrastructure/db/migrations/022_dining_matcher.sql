@@ -149,23 +149,45 @@ COMMENT ON FUNCTION dining.link_core_places IS
 
 -- 연결되지 않은 코어 장소
 -- 왜 안 이어졌는지 나눠서 보여준다. 커버리지를 재는 자리이기도 하다.
+--
+-- 이름이 같은데 반경 밖인 경우를 따로 가른다.
+-- 「80m 안에 없음」으로만 적으면 이름이 똑같은 집이 300m 에 있다는 사실이 사라진다.
+-- 좌표 출처가 다르면 수백 미터 차이는 흔하고, 그때는 사람이 보면 곧 판단할 수 있다.
+-- 자동으로 잇지는 않는다 — 잘못 이으면 다른 식당의 영업시간으로 판정하게 된다.
 CREATE OR REPLACE VIEW dining.v_link_gap AS
+WITH nearby_same_name AS (
+    SELECT c.place_id, min(dining.distance_m(c.latitude, c.longitude, d.lat, d.lng)) AS m
+    FROM places c
+    JOIN dining.dn_place d
+      ON dining.norm_name(d.name_ko) = dining.norm_name(c.name)
+     AND d.lat IS NOT NULL
+    WHERE c.kind = 'dining' AND c.latitude IS NOT NULL
+      AND dining.distance_m(c.latitude, c.longitude, d.lat, d.lng) <= 2000
+    GROUP BY c.place_id
+)
 SELECT c.tenant_id,
        c.place_id AS core_place_id,
        c.name     AS core_name,
        CASE
          WHEN c.latitude IS NULL OR c.longitude IS NULL THEN '코어 좌표 없음'
+         WHEN EXISTS (SELECT 1 FROM dining.v_link_candidate v
+                      WHERE v.core_place_id = c.place_id
+                        AND (v.name_exact OR v.name_sim >= 0.75)) THEN '연결 대상'
          WHEN NOT EXISTS (SELECT 1 FROM dining.v_link_candidate v
-                          WHERE v.core_place_id = c.place_id)      THEN '80m 안에 원장 장소 없음'
+                          WHERE v.core_place_id = c.place_id)
+              AND n.m IS NOT NULL                                THEN '이름은 같은데 멀다'
          WHEN NOT EXISTS (SELECT 1 FROM dining.v_link_candidate v
-                          WHERE v.core_place_id = c.place_id
-                            AND (v.name_exact OR v.name_sim >= 0.75)) THEN '가깝지만 이름이 다름'
-         ELSE '연결 대상'
-       END AS reason
+                          WHERE v.core_place_id = c.place_id)     THEN '80m 안에 원장 장소 없음'
+         ELSE '가깝지만 이름이 다름'
+       END AS reason,
+       round(n.m)::int AS same_name_m
 FROM places c
+LEFT JOIN nearby_same_name n ON n.place_id = c.place_id
 WHERE c.kind = 'dining'
   AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l
                   WHERE l.tenant_id = c.tenant_id AND l.core_place_id = c.place_id);
 
 COMMENT ON VIEW dining.v_link_gap IS
     '연결되지 않은 코어 식당과 그 사유. 사유별 건수가 곧 커버리지 보고서의 재료다.';
+COMMENT ON COLUMN dining.v_link_gap.same_name_m IS
+    '이름이 같은 원장 장소까지의 거리. 반경 밖이라 자동으로 잇지 않았다는 뜻이며 사람이 확인할 거리다.';
