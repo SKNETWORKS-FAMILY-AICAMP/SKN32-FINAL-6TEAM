@@ -19,6 +19,7 @@ DB 는 무엇을 물을지 알고, 이 스크립트는 그 물음을 밖으로 �
     python scripts/dining/run_check.py show --place 대돈집
     python scripts/dining/run_check.py run  --place 대돈집 --at "2026-09-25 12:00" --vacancy --backend catchtable
     python scripts/dining/run_check.py pending
+    python scripts/dining/run_check.py answer --place 메이플탑         --url https://app.catchtable.co.kr/ct/shop/... --saw waiting=yes:41 vacancy=no
 
 접속
     DINING_DSN 이 있으면 그것을 쓰고, 없으면 코어 설정을 따른다.
@@ -282,6 +283,47 @@ def cmd_run(args) -> int:
     return 0
 
 
+def cmd_answer(args) -> int:
+    """브라우저에서 읽은 것을 답 파일로 놓는다.
+
+    본 시각은 받지 않는다. 화면을 본 직후에 이것을 부르는 것이 전제이고,
+    시각을 손으로 적게 하면 본 시각이 아니라 적은 시각이 들어간다.
+    """
+    import catchtable
+
+    with connect() as conn, conn.cursor() as cur:
+        uid, name = resolve_place(cur, args.place)
+
+    seen = {}
+    for raw in args.saw:
+        # waiting=yes:41:현재 웨이팅 41팀
+        topic, _, rest = raw.partition("=")
+        topic = topic.strip()
+        if topic not in TOPIC_LABEL:
+            print(f"모르는 주제: {topic}. 쓸 수 있는 것 — {', '.join(TOPIC_LABEL)}")
+            return 2
+        state, _, tail = rest.partition(":")
+        num, _, detail = tail.partition(":")
+        one = {"state": state.strip() or "unknown"}
+        if num.strip().isdigit():
+            one["num"] = int(num.strip())
+        elif num.strip() and not detail:
+            # 숫자 자리에 말이 들어왔으면 그것을 설명으로 본다
+            detail = num
+        if detail.strip():
+            one["detail"] = detail.strip()
+        seen[topic] = one
+
+    path = catchtable.write_answer(uid, args.url, seen)
+    print(f"{name} — 답 놓음 ({len(seen)}가지)")
+    for topic, one in seen.items():
+        print(f"  {TOPIC_LABEL[topic]:8s} {one['state']:8s} "
+              f"{one.get('num', '')} {one.get('detail', '')}".rstrip())
+    print(f"  {path}")
+    print(f"  이제: run --place {args.place} --at ... --vacancy --backend catchtable")
+    return 0
+
+
 def cmd_pending(args) -> int:
     """답을 기다리는 캐치테이블 의뢰를 보인다. 브라우저를 모는 쪽이 읽을 목록이다."""
     import catchtable
@@ -346,6 +388,14 @@ def main() -> int:
     p_run.add_argument("--backend", default="manual", choices=sorted(BACKENDS))
     p_run.add_argument("--source", help="출처를 직접 고를 때만")
     p_run.set_defaults(func=cmd_run)
+
+    p_answer = sub.add_parser("answer", help="브라우저에서 본 것을 적어 둔다")
+    common(p_answer)
+    p_answer.add_argument("--url", required=True, help="실제로 본 화면 주소")
+    p_answer.add_argument("--saw", required=True, nargs="+",
+                          metavar="주제=상태[:숫자][:설명]",
+                          help="예) waiting=yes:41:현재 웨이팅 41팀  vacancy=no")
+    p_answer.set_defaults(func=cmd_answer)
 
     p_pending = sub.add_parser("pending", help="답을 기다리는 캐치테이블 의뢰")
     p_pending.set_defaults(func=cmd_pending)

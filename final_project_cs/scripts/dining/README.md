@@ -337,9 +337,21 @@ run --backend catchtable      →  DB 에 적는다 (출처 catchtable_trial)
 `how_to_answer` 에 같이 적혀 있다.
 
 ```bash
+# 1. 무엇을 봐 달라를 놓는다
 python scripts/dining/run_check.py run --place 메이플탑 --at "2026-09-25 12:00" --vacancy --backend catchtable
+
+# 2. 기다리는 의뢰를 본다 (브라우저를 모는 쪽이 읽을 목록)
 python scripts/dining/run_check.py pending
+
+# 3. 브라우저에서 본 것을 적는다. 본 시각은 손으로 적지 않고 이때 찍힌다
+python scripts/dining/run_check.py answer --place 메이플탑     --url https://app.catchtable.co.kr/ct/shop/...     --saw waiting=yes:41:현재 웨이팅 41팀  vacancy=no
+
+# 4. 다시 돌리면 DB 에 적힌다
+python scripts/dining/run_check.py run --place 메이플탑 --at "2026-09-25 12:00" --vacancy --backend catchtable
 ```
+
+**로그인은 사람이 한다.** 계정 정보는 스크립트도 확인기도 받지 않는다. 사람이 한 번
+로그인해 둔 창에서 읽기만 하며, 로그아웃도 사람이 한다.
 
 지키는 것 셋 — `catchtable.py` 머리말에 같은 말이 있다.
 

@@ -180,6 +180,28 @@ def read_answer(place_uid: str, topic: str, now: datetime | None = None) -> dict
                 value_detail=detail, evidence=evidence)
 
 
+def write_answer(place_uid: str, url: str, seen: dict,
+                 observed_at: datetime | None = None) -> str:
+    """본 것을 답 파일로 놓는다.
+
+    본 시각은 받지 않고 여기서 찍는다. 손으로 적게 하면 화면을 본 시각이 아니라
+    파일을 쓴 시각이 들어가고, 그러면 신선도 판정이 거짓말이 된다.
+    브라우저에서 읽은 직후에 부르는 것이 전제다.
+
+    seen 은 {주제: {"state": ..., "num": ..., "detail": ...}} 다.
+    모르는 주제는 넣지 않는다. 빈 칸과 「아니다」는 다르다.
+    """
+    body = {
+        "observed_at": (observed_at or datetime.now(KST)).isoformat(timespec="seconds"),
+        "url": url,
+        "answers": seen,
+    }
+    path = answer_path(place_uid)
+    with open(path, "w", encoding="utf-8") as fp:
+        json.dump(body, fp, ensure_ascii=False, indent=2)
+    return path
+
+
 def pending() -> list[dict]:
     """답을 기다리는 의뢰 목록. 답 파일이 생기면 빠진다."""
     out = []

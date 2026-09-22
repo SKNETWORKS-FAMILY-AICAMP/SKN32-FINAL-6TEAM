@@ -175,3 +175,20 @@ def test_답이_놓이면_기다리는_목록에서_빠진다(folder):
     assert len(ct.pending()) == 1
     write_answer(folder, observed_at="2026-09-25T12:05:00+09:00", answers={})
     assert ct.pending() == []
+
+
+# ── 답 놓기 ────────────────────────────────────────────────
+
+def test_답을_놓으면_바로_읽힌다(folder):
+    ct.write_answer(UID, "https://app.catchtable.co.kr/ct/shop/x",
+                    {"waiting": {"state": "yes", "num": 41}})
+    got = ct.read_answer(UID, "waiting")
+    assert got["outcome"] == "ok"
+    assert got["value_num"] == 41
+
+
+def test_본_시각은_손으로_적지_않고_찍힌다(folder):
+    # 사람이 적게 하면 화면을 본 시각이 아니라 파일을 쓴 시각이 들어간다.
+    path = ct.write_answer(UID, "https://x", {"waiting": {"state": "yes"}})
+    got = json.loads(open(path, encoding="utf-8").read())
+    assert ct._parse_observed(got["observed_at"]) is not None
