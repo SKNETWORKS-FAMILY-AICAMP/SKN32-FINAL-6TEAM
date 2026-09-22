@@ -151,3 +151,106 @@ def test_a_request_outside_the_product_is_refused_before_any_work():
             assert refused.code == code
         else:                                          # pragma: no cover - 실패하면 여기로 온다
             raise AssertionError(f"{city}/{days}일/{party}인 이 통과했다")
+
+# ── 요청을 규정에 붙인다 (RAG) `[2026-09-22]` ──────────────────────
+class _Chunk:
+    """`PolicyChunk` 와 같은 모양(dataclass 가 아니라 속성만 흉내낸다)."""
+
+    def __init__(self, document_id, chunk_no, content, score, scope):
+        self.document_id, self.chunk_no = document_id, chunk_no
+        self.content, self.score, self.scope = content, score, scope
+
+    @property
+    def source_id(self):
+        return f"{self.document_id}#c{self.chunk_no}"
+
+
+def _ask(preferences="실내 위주") -> planner.PlanRequest:
+    return planner.PlanRequest(city="서울", start_date=DAY, days=1, party_size=2,
+                               preferences=preferences)
+
+
+def test_the_request_is_searched_against_the_travel_corpus_only():
+    """★여행 질의가 쇼핑몰 `refund` 문서를 끌어온 적이 있다 — scope 를 여기서 못 박는다."""
+    seen = {}
+
+    def search(*, tenant_id, query, allowed_scopes, top_k):
+        seen.update(tenant_id=tenant_id, query=query, scopes=allowed_scopes, top_k=top_k)
+        return [_Chunk("t_doc_04", 3, "특보가 발효 중이면 업체 공지를 확인한다.", 0.81, "travel_weather")]
+
+    found = planner.ground_request(tenant_id="t1", request=_ask("비 오면 어쩌죠"), search=search)
+
+    assert seen["query"] == "비 오면 어쩌죠"          # 고객이 한 말 그대로 묻는다
+    assert seen["scopes"] == list(planner.PLAN_SCOPES)
+    assert all(scope.startswith("travel_") for scope in seen["scopes"]), seen["scopes"]
+    assert found["hits"] == 1
+    assert found["evidence"][0] == {"source_type": "policy", "source_id": "t_doc_04#c3",
+                                    "scope": "travel_weather", "score": 0.81,
+                                    "excerpt": "특보가 발효 중이면 업체 공지를 확인한다."}
+
+
+def test_with_nothing_said_it_asks_about_the_request_and_says_so():
+    """★고객이 아무 말도 안 했다고 검색을 건너뛰면 그 초안만 근거가 없어진다."""
+    asked = {}
+
+    def search(*, tenant_id, query, allowed_scopes, top_k):
+        asked["query"] = query
+        return []
+
+    found = planner.ground_request(tenant_id="t1", request=_ask(""), search=search)
+    assert "서울" in asked["query"] and "1일" in asked["query"]
+    assert found["asked"].startswith("요청 요약")
+
+
+def test_zero_hits_is_written_down_not_swallowed():
+    found = planner.ground_request(tenant_id="t1", request=_ask(),
+                                   search=lambda **_: [])
+    assert found["hits"] == 0 and "0건" in found["note"]
+    assert "규정을 보지 않고 짰다" in found["note"]
+
+
+def test_a_search_failure_is_written_down_and_does_not_stop_the_draft():
+    """★검색이 죽었다고 초안을 못 내면 안 되지만, **죽었다는 사실은 나가야 한다**."""
+
+    def boom(**_):
+        raise RuntimeError("1024칸이 비어 있다")
+
+    found = planner.ground_request(tenant_id="t1", request=_ask(), search=boom)
+    assert found["hits"] == 0
+    assert "규정을 못 읽었다" in found["note"] and "1024칸이 비어 있다" in found["note"]
+
+
+def test_nothing_found_means_the_prompt_gets_no_policy_section():
+    assert planner.grounding_text({"evidence": []}) == ""
+    assert planner.grounding_text({}) == ""
+    text = planner.grounding_text({"evidence": [{"scope": "travel_access", "excerpt": "동반 조건"}]})
+    assert text == "- (travel_access) 동반 조건"
+
+
+def test_the_model_sees_the_policy_as_background_not_as_numbers_to_quote():
+    """★규정에서 시각·가격을 읽어 오면 우리가 DB 에서 채우는 값과 어긋난다."""
+    captured = {}
+
+    class Chat:
+        def json(self, system, user):
+            captured["user"] = user
+            return {"activities": ["1"], "dining": []}
+
+    planner.order_with_model(Chat(), activities=[_cand("가")], dining=[],
+                             preferences="아이 동반", day_label="2026-10-05 (day 1)",
+                             grounding="- (travel_access) 동반 조건을 미리 확인한다")
+    assert "동반 조건을 미리 확인한다" in captured["user"]
+    assert "do not quote numbers" in captured["user"]
+
+
+def test_without_grounding_the_policy_section_is_absent_entirely():
+    captured = {}
+
+    class Chat:
+        def json(self, system, user):
+            captured["user"] = user
+            return {"activities": [], "dining": []}
+
+    planner.order_with_model(Chat(), activities=[_cand("가")], dining=[],
+                             preferences="", day_label="d", grounding="")
+    assert "Operator policy" not in captured["user"]

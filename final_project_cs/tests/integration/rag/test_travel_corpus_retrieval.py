@@ -131,3 +131,45 @@ def test_every_team_that_requires_policy_has_documents_in_its_scope():
     assert not offenders, (
         "policy 를 필수로 선언했는데 그 scope 에 문서가 0건인 Team 이 있다 — "
         f"이 Team 의 모든 Case 가 degraded 로 escalated 된다: {offenders}")
+
+# ── 일정 생성기가 요청을 이 코퍼스에 붙인다 `[2026-09-22]` ─────────
+@pytest.mark.parametrize("preferences", [
+    "비가 오면 야외 활동은 어떻게 되나요",
+    "아이 동반이라 유모차로 다닐 수 있는 곳이 좋아요",
+    "지하철이 멈추면 다음 예약은 어떻게 되나요",
+])
+def test_the_planner_grounds_a_request_in_travel_rules_only(preferences):
+    """★`POST /v1/trips/plan` 이 고객의 말로 **이 코퍼스**를 검색한다.
+
+    ★여기서 쇼핑몰 문서가 하나라도 나오면 그건 2026-09-22 에 고친 결함이 되돌아온 것이다
+      (여행 질의 top-8 중 7건이 쇼핑몰 환불 문서였다).
+    """
+    from datetime import date
+
+    from app.modules.travel_ops.planner import PlanRequest, ground_request, grounding_text
+
+    found = ground_request(
+        tenant_id="demo",
+        request=PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2,
+                            preferences=preferences))
+
+    assert found["hits"] > 0, (preferences, found["note"])
+    assert all(item["scope"] in TRAVEL_SCOPES for item in found["evidence"]), found["evidence"]
+    assert all(item["source_type"] == "policy" and "#c" in item["source_id"]
+               for item in found["evidence"])
+    # 모델에게 보일 형태에도 그 조각이 그대로 실린다
+    text = grounding_text(found)
+    assert found["evidence"][0]["excerpt"][:20] in text
+
+
+def test_grounding_never_reaches_into_the_commerce_corpus():
+    """★상품 범위 밖의 말을 해도 쇼핑몰 문서를 끌어오면 안 된다."""
+    from datetime import date
+
+    from app.modules.travel_ops.planner import PlanRequest, ground_request
+
+    found = ground_request(
+        tenant_id="demo",
+        request=PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2,
+                            preferences="환불 받을 수 있나요 배송은 언제 오나요"))
+    assert all(item["scope"] in TRAVEL_SCOPES for item in found["evidence"]), found["evidence"]

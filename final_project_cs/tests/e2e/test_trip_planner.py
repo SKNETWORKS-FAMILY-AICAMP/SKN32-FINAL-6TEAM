@@ -434,3 +434,55 @@ def test_planning_needs_the_write_scope(api):
                                 json={"request_id": "p-scope", "customer_id": str(api["customer"]),
                                       "start_date": START.isoformat(), "days": 1, "party_size": 2})
     assert denied.status_code == 403
+
+# ── 요청을 규정에 붙인 결과가 응답에 실린다 `[2026-09-22]` ─────────
+def test_the_answer_says_whether_it_read_the_rules_at_all(api):
+    """★이 테넌트에는 코퍼스가 없다 — **0건이라고 적혀 나와야** 한다.
+
+    조용히 빠지면 부르는 쪽은 규정을 보고 짠 초안과 못 보고 짠 초안을 구별할 수 없다.
+    실제 코퍼스가 있는 테넌트에서 무엇이 오는지는
+    `tests/integration/rag/test_travel_corpus_retrieval.py` 가 본다.
+    """
+    body = api["ask"](preferences="비 오면 어쩌죠").json()
+    rag = body["rag"]
+    assert rag["hits"] == 0 and rag["evidence"] == []
+    assert "0건" in rag["note"] and "규정을 보지 않고 짰다" in rag["note"]
+    assert rag["query"] == "비 오면 어쩌죠"
+    assert all(scope.startswith("travel_") for scope in rag["scopes"]), rag["scopes"]
+    # ★규정을 0건 읽었어도 초안은 나온다 — 규정은 초안의 성립 조건이 아니다
+    assert body["checks"]["violations"] == [] and len(body["draft"]["items"]) == 8
+
+
+def test_with_no_rules_found_the_prompt_carries_no_policy_section(api):
+    """★0건인데 규정 절을 붙이면 모델은 **빈 규정**을 규정으로 읽는다."""
+    chat = StubChat()
+    assert api["ask"](chat=chat, preferences="아이 동반", request_id="plan-grounded").status_code == 200
+    assert chat.calls > 0
+    assert all("Operator policy" not in seen for seen in chat.seen)
+    assert any("아이 동반" in seen for seen in chat.seen)      # 고객의 말은 그대로 간다
+
+def test_rules_that_were_found_reach_both_the_model_and_the_answer(api, monkeypatch):
+    """★규정을 찾았을 때 **모델 프롬프트**와 **응답의 근거** 둘 다에 실리는지 본다.
+
+    ★이 시험이 있어야 `plan_trip` 이 규정을 모델에게 넘기는 줄을 지웠을 때 빨개진다 —
+      0건 경로만 보면 지워도 초록이다.
+    """
+    from app.infrastructure.rag import retriever
+
+    class Chunk:
+        document_id, chunk_no, score, scope = "t_doc_12", 4, 0.77, "travel_access"
+        content = "동반자가 있으면 이동 여유를 더 둔다."
+
+        @property
+        def source_id(self):
+            return f"{self.document_id}#c{self.chunk_no}"
+
+    monkeypatch.setattr(retriever, "search_policy", lambda **_: [Chunk()])
+    chat = StubChat()
+    body = api["ask"](chat=chat, preferences="아이 동반", request_id="plan-with-rules").json()
+
+    assert body["rag"]["hits"] == 1
+    assert body["rag"]["evidence"][0]["source_id"] == "t_doc_12#c4"
+    assert body["rag"]["evidence"][0]["source_type"] == "policy"
+    assert any("동반자가 있으면 이동 여유를 더 둔다." in seen for seen in chat.seen),         "규정을 찾았는데 모델에게 안 보였다"
+    assert any("Operator policy" in seen for seen in chat.seen)

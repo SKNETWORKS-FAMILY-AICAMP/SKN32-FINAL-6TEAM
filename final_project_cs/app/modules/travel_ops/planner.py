@@ -61,6 +61,13 @@ MAX_REPAIR_ROUNDS = 3            #: 고쳐서 다시 판정하는 횟수. 넘으
 CATALOG_LIMIT_PER_KIND = 400     #: 카탈로그에서 한 번에 읽는 후보 수(종류별)
 SHORTLIST_PER_DAY = 8            #: 모델에게 보이는 하루치 활동 후보 수
 
+#: ★`[2026-09-22]` **요청을 규정에 붙이는 데 읽는 scope.** 여행 것만 넣는다 — 여행 질의가
+#:  쇼핑몰 `refund` 문서를 끌어와 top-8 중 7건이 쇼핑몰이던 적이 있다
+#:  (`wiki/records/reports/debugs/2026-09-22_정책scope에_문서가_0건인_팀들.md`).
+PLAN_SCOPES = ("travel_activity", "travel_dining", "travel_access", "travel_weather")
+PLAN_RAG_TOP_K = 5               #: 우리가 고른 값
+GROUNDING_CHARS = 420            #: 모델에게 보이는 규정 조각 하나의 길이 상한(우리가 고른 값)
+
 #: 상품 범위 — v11 §1. **커버 못 하는 범위를 상품에 넣지 않는다.**
 SUPPORTED_CITIES = {"서울", "seoul", "Seoul", "SEOUL"}
 MAX_DAYS = 7
@@ -415,13 +422,65 @@ def _order_lines(candidates: list[Cand]) -> str:
     return "\n".join(lines)
 
 
+def ground_request(*, tenant_id: str, request: PlanRequest,
+                   search: Callable[..., Any] | None = None) -> dict[str, Any]:
+    """고객이 **요청한 것**을 우리 규정에 붙인다 — 여행 코퍼스를 그 요청으로 검색한다.
+
+    ★★**이것이 바꾸는 것은 「근거」이지 「후보 고르기」가 아니다.** 규정 문서는 장소를 담지
+      않는다(무엇이 열려 있고 얼마인지는 `places`·`place_catalog` 가 안다). 그래서 여기서 온
+      조각은 ①모델이 순서를 짤 때 같이 보는 바탕이 되고 ②초안에 `evidence` 로 실려 나간다.
+      **후보를 걸러 내지 않는다** — 규정 문장과 장소 속성을 기계로 맞출 방법이 아직 없다.
+      「RAG 를 붙였으니 초안이 규정을 지킨다」고 읽으면 안 된다.
+
+    ★**검색이 실패하거나 0건이면 그 사실을 적는다.** 조용히 넘기면 부르는 쪽은 규정을 보고
+      짠 초안과 못 보고 짠 초안을 구별할 수 없다 — 신호 없는 축소다(`RULE.md` §3.2).
+      다만 초안 만들기 자체는 멈추지 않는다. 규정은 초안의 **설명**이고, 성립 조건은
+      `check_itinerary` 가 따로 본다.
+    """
+    finder = search
+    if finder is None:                      # 부르는 쪽이 안 주면 실제 검색기를 쓴다
+        from app.infrastructure.rag.retriever import search_policy as finder  # noqa: PLC0415
+    query = (request.preferences.strip()
+             or f"{request.city} {request.days}일 {request.party_size}인 여행 일정을 짠다")
+    asked = "고객의 말" if request.preferences.strip() else "요청 요약(고객이 아무 말도 안 했다)"
+    found: dict[str, Any] = {"query": query, "asked": asked, "scopes": list(PLAN_SCOPES),
+                             "hits": 0, "evidence": [], "note": ""}
+    try:
+        chunks = finder(tenant_id=tenant_id, query=query,
+                        allowed_scopes=list(PLAN_SCOPES), top_k=PLAN_RAG_TOP_K)
+    except Exception as exc:                # noqa: BLE001 — 어떤 실패든 **말하고** 넘어간다
+        found["note"] = f"규정을 못 읽었다({type(exc).__name__}: {exc}) — 초안은 규정을 보지 않고 짰다"
+        return found
+    found["evidence"] = [
+        {"source_type": "policy", "source_id": getattr(chunk, "source_id", ""),
+         "scope": getattr(chunk, "scope", ""),
+         "score": round(float(getattr(chunk, "score", 0.0)), 4),
+         "excerpt": str(getattr(chunk, "content", ""))[:GROUNDING_CHARS]}
+        for chunk in chunks or []]
+    found["hits"] = len(found["evidence"])
+    found["note"] = ("규정 조각을 모델에게 보이고 초안에 근거로 실었다. ★후보를 거르지는 않는다"
+                     if found["hits"] else
+                     f"scope {list(PLAN_SCOPES)} 에서 0건이다 — 초안은 규정을 보지 않고 짰다")
+    return found
+
+
+def grounding_text(found: Mapping[str, Any]) -> str:
+    """모델에게 보일 형태로. 없으면 **빈 문자열**이라 프롬프트에 그 절이 아예 안 붙는다."""
+    return "\n".join(f"- ({item['scope']}) {item['excerpt']}"
+                        for item in found.get("evidence") or [])
+
+
 def order_with_model(chat: Any, *, activities: list[Cand], dining: list[Cand],
-                     preferences: str, day_label: str) -> dict[str, list[str]]:
+                     preferences: str, day_label: str,
+                     grounding: str = "") -> dict[str, list[str]]:
     """모델에게 **순서만** 받는다. 번호도 우리 후보 키도 받고, 목록에 없는 값은 버린다."""
     listed = activities + dining
     by_number = {str(index): cand.key for index, cand in enumerate(listed, start=1)}
     allowed = {cand.key for cand in listed}
-    user = (f"Day: {day_label}\nTraveller's words: {preferences or '(none)'}\n\n"
+    # ★규정은 **바탕**으로만 붙인다. 모델이 내는 것은 여전히 줄 번호뿐이고, 규정에서
+    #   시각·가격·장소를 읽어 오지 않는다 — 그건 우리가 DB 에서 채운다.
+    policy = ((f"\n\nOperator policy (background only, do not quote numbers from it):\n{grounding}") if grounding else "")
+    user = (f"Day: {day_label}\nTraveller's words: {preferences or '(none)'}{policy}\n\n"
             f"Candidates (use the number at the start of the line):\n{_order_lines(listed)}")
     raw = chat.json(ORDER_SYSTEM, user)
     picked: dict[str, list[str]] = {}
@@ -659,11 +718,15 @@ class PlanOutcome:
     checks: dict[str, Any]
     coverage: dict[str, Any]
     calls: dict[str, int]
+    #: ★`[2026-09-22]` 이 요청을 **우리 규정에 붙인 결과**. `evidence` 가 초안과 함께 나가고,
+    #:  같은 조각을 모델이 순서를 짤 때 바탕으로 봤다. **후보를 거르지는 않는다**
+    #:  (`ground_request` 의 설명). 0건이거나 못 읽었으면 `note` 가 그렇게 말한다.
+    rag: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         return {"draft": self.draft.as_dict(), "planner": self.planner,
                 "candidates": self.candidates, "checks": self.checks,
-                "coverage": self.coverage, "calls": self.calls}
+                "coverage": self.coverage, "calls": self.calls, "rag": self.rag}
 
 
 def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str, Any]:
@@ -681,11 +744,16 @@ def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str,
 
 
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
-              tour_api: Any | None = None) -> PlanOutcome:
+              tour_api: Any | None = None,
+              search: Callable[..., Any] | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`."""
     request.validate()
     pref = preference_profile(request.preferences)
     calls = {"tour_api": 0}
+    # ★요청을 **우리 규정에 붙인다**(RAG). 근거로 실어 내보내고 모델에게도 바탕으로 보인다.
+    #   ★후보를 거르지는 않는다 — `ground_request` 의 설명을 그대로 읽는다.
+    rag = ground_request(tenant_id=tenant_id, request=request, search=search)
+    grounding = grounding_text(rag)
 
     pool = load_candidates(conn, tenant_id=tenant_id)
     if tour_api is not None and not any(cand.origin != "places" for cand in pool):
@@ -727,7 +795,8 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
             try:
                 picks = order_with_model(chat, activities=day_acts, dining=day_dine,
                                          preferences=request.preferences,
-                                         day_label=f"{day.isoformat()} (day {index + 1})")
+                                         day_label=f"{day.isoformat()} (day {index + 1})",
+                                         grounding=grounding)
                 model_calls += 1
             except Exception as exc:                      # noqa: BLE001 — 어떤 실패든 규칙으로 간다
                 mode, note = "rules", f"모델을 부르지 못해 규칙으로 짰다: {type(exc).__name__}: {exc}"
@@ -816,7 +885,7 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                     "chosen": len({item["place"] for item in items}),
                     "by_source": _count_by(chosen.values(), "origin")},
         checks={"rounds": rounds, "repairs": fixed, "violations": []},
-        coverage=_coverage(items, chosen), calls=calls)
+        coverage=_coverage(items, chosen), calls=calls, rag=rag)
 
 
 def _available(shortlist: list[Cand], everything: list[Cand], used: set[str],
@@ -853,5 +922,5 @@ def _check(items: list[dict[str, Any]], places: dict[str, Cand],
 
 
 __all__ = ["Cand", "PlanDraft", "PlanOutcome", "PlanRefused", "PlanRequest", "Preference",
-           "build_day", "load_candidates", "order_with_model", "plan_trip",
-           "preference_profile", "rank_candidates", "repair"]
+           "build_day", "ground_request", "grounding_text", "load_candidates",
+           "order_with_model", "plan_trip", "preference_profile", "rank_candidates", "repair"]
