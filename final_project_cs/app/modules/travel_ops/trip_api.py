@@ -26,7 +26,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import hashlib
 import hmac
 import html
@@ -37,7 +37,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
@@ -89,6 +89,46 @@ class CreateTrip(BaseModel):
     places: list[PlaceIn] = Field(default_factory=list)
     items: list[ItemIn] = Field(min_length=1)
     routes: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class PlanIn(BaseModel):
+    """★`[2026-09-22]` **일정 생성 요청** — v11 §4-A(「계획 생성은 우리 일이 아니다」)를 뒤집는
+    경로다. 사용자 지시로 만들었고, 계획서는 읽기 전용이라 고치지 않았다. 뒤집는다는 사실과
+    이 생성기가 못 하는 것은 리포트에 적었다.
+
+    ★**`register` 기본값은 `false` 다.** 등록은 여행 상태를 만들고 **통지를 내보낸다**(계획서
+      링크가 처음 나가는 자리, v11 §6-B). 초안을 보자고 부른 요청이 조용히 고객에게 링크를
+      보내면 안 된다 — 에이전트가 초안을 보고 **명시적으로** `register:true` 를 보낼 때만 등록한다.
+    """
+
+    #: ★칸 이름은 `register_now` 인데 **바깥 이름은 `register`** 다. 둘을 가르는 이유:
+    #:  `register` 를 필드 이름으로 쓰면 `BaseModel` 의 이름을 가려 pydantic 이 경고하고,
+    #:  `Field(alias=...)` 로 붙이면 FastAPI 가 몸통 모델을 다시 감쌀 때
+    #:  `UnsupportedFieldAttributeWarning` 이 매 요청마다 뜬다(둘 다 실측). 그래서 **받기 전에
+    #:  이름만 옮긴다** — 바깥 계약(`register`)은 그대로 두고 경고도 남기지 않는다.
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(min_length=1)
+    customer_id: UUID
+    city: str = "서울"
+    start_date: date
+    days: int = Field(ge=1, le=7)
+    party_size: int = Field(ge=1, le=4)
+    locale: str | None = None
+    title: str | None = None
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    #: 고객의 자유 문장. 예 「실내 위주, 아이 동반, 매운 음식 싫어요」
+    preferences: str = ""
+    register_now: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_register(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "register" in data:
+            # ★`{**data, ...}` 로 쓰면 `**data` 가 먼저 펴져 `register` 가 그대로 남고
+            #   `extra="forbid"` 에 걸린다(실측 — 422 가 났다). 복사한 뒤 옮긴다.
+            data = dict(data)
+            data["register_now"] = data.pop("register")
+        return data
 
 
 class ReportIn(BaseModel):
@@ -259,7 +299,8 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
 
 def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
-                      chat_factory: Callable[[], Any] | None = None) -> APIRouter:
+                      chat_factory: Callable[[], Any] | None = None,
+                      place_factory: Callable[[], Any] | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게."""
     router = APIRouter()
     cache: dict[str, Any] = {}
@@ -294,7 +335,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     @router.post("/v1/trips", status_code=201)
     def create(request: CreateTrip, principal: Principal = Depends(require_scope("trip:write"))):
-        tenant = principal.tenant_id
+        return _create_trip(principal.tenant_id, request)
+
+    def _create_trip(tenant: str, request: CreateTrip) -> dict[str, Any]:
+        """★등록의 **유일한** 본문이다. `/v1/trips` 도 `/v1/trips/plan?register=true` 도 여기로
+        들어온다 — 생성기가 판정을 건너뛰는 길을 만들지 않으려고 하나로 둔다."""
         store = TripStore(tenant)
         keys = [p.key for p in request.places]
         if len(set(keys)) != len(keys):
@@ -382,6 +427,46 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             "language": "ko", "causes": [], "changed": None, "other_options": [],
             "replay": False, "version": version, "plan_url": url})
         return trip_id
+
+    @router.post("/v1/trips/plan")
+    def plan_draft(request: PlanIn, principal: Principal = Depends(require_scope("trip:write"))):
+        """요청 → 초안 일정 → **판정 통과** → (원하면) 등록. v11 §4-A 를 뒤집는 경로다.
+
+        ★**판정을 건너뛰는 길이 없다.** 생성기가 `check_itinerary` 로 스스로 판정해 고치고,
+          등록하면 `_create_trip` 이 **같은 판정기를 한 번 더** 돌린다.
+        ★**멱등** — 같은 `request_id` 로 등록까지 두 번 오면 모델도 부르지 않고 이미 만든
+          여행을 그대로 돌려준다(`trips.request_key`).
+        """
+        from . import planner as planner_module
+
+        tenant = principal.tenant_id
+        store = TripStore(tenant)
+        key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
+                              action_type="trip.create", business_subject=str(request.customer_id))
+        if request.register_now:
+            with get_connection() as conn:
+                existing = store.by_request_key(conn, key)
+                if existing is not None:
+                    return {"status": "duplicate", "created": False,
+                            "trip": _trip_view(conn, store, existing[0])}
+        ask = planner_module.PlanRequest(
+            city=request.city, start_date=request.start_date, days=request.days,
+            party_size=request.party_size, constraints=request.constraints,
+            preferences=request.preferences, title=request.title, locale=request.locale)
+        try:
+            with get_connection() as conn:
+                outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
+                                                   chat=_lazy("chat", chat_factory),
+                                                   tour_api=_lazy("place", place_factory))
+        except planner_module.PlanRefused as refused:
+            raise _error(422, refused.code, refused.message, **refused.detail) from None
+        result: dict[str, Any] = {"status": "drafted", **outcome.as_dict()}
+        if request.register_now:
+            body = outcome.draft.as_create_body(request_id=request.request_id,
+                                                customer_id=request.customer_id)
+            result = {**result, "status": "registered",
+                      "trip": _create_trip(tenant, CreateTrip.model_validate(body))}
+        return result
 
     @router.get("/v1/trips/{trip_id}")
     def detail(trip_id: UUID, customer_id: UUID | None = Query(None),

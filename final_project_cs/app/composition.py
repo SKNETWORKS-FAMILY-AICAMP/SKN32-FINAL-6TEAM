@@ -307,8 +307,16 @@ def build_domain_routers() -> list:
     from app.modules.travel_ops.delegation_api import build_delegation_router
     from app.modules.travel_ops.scenario_mode import build_scenario_router
 
+    def place_factory():
+        # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
+        #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.base import build_travel_sources
+
+        return build_travel_sources(get_settings()).place
+
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory),
+                              chat_factory=chat_factory, place_factory=place_factory),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),
