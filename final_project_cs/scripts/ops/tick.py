@@ -44,6 +44,23 @@ CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 DEFAULT_TIMEOUT_SECONDS = 600
 
 
+def say(text: str, *, err: bool = False) -> None:
+    """사람이 직접 불렀을 때만 찍는다.
+
+    ★`[2026-09-22]` **`pythonw` 로 창 없이 돌면 `sys.stdout` 이 `None` 이다.** 그대로 `write` 를
+      부르면 `AttributeError` 로 죽고, 스케줄러의 「마지막 결과」가 **1** 이 된다 — 흔적과 로그에는
+      이미 `exit=0` 이 적힌 뒤라 「로그는 성공인데 스케줄러는 실패」라는 엇갈린 상태가 된다.
+      실제로 등록 직후 그렇게 났다.
+    """
+    stream = sys.stderr if err else sys.stdout
+    if stream is None:                      # pythonw — 찍을 곳이 없다. 기록은 이미 파일에 남았다
+        return
+    try:
+        stream.write(text if text.endswith(chr(10)) else text + chr(10))
+    except (OSError, ValueError):           # 닫힌 파이프도 작업 결과를 덮지 않는다
+        pass
+
+
 def command_for(job: Job, *, python: str | None = None) -> list[str]:
     """이 작업이 실제로 돌릴 명령. 등록 미리보기도 이 함수를 쓴다."""
     if job.kind == "service":
@@ -95,7 +112,7 @@ def run(job: Job, *, timeout: int) -> int:
                   "exit_code": 0, "stdout_tail": f"건너뜀 — {exc}", "stderr_tail": ""}
         write_heartbeat(job, record)
         append_log(job, record)
-        sys.stdout.write(f"건너뜀 — {exc}" + chr(10))
+        say(f"건너뜀 — {exc}")
         return 0
 
 
@@ -128,22 +145,22 @@ def _run_once(job: Job, *, timeout: int) -> int:
     append_log(job, record)
     removed = prune_logs(LOG_DIR)
     if removed:
-        sys.stdout.write(f"오래된 로그 {len(removed)}개 지움: {', '.join(removed[:3])}"
-                         + (" …" if len(removed) > 3 else "") + chr(10))
+        say(f"오래된 로그 {len(removed)}개 지움: {', '.join(removed[:3])}"
+            + (" …" if len(removed) > 3 else ""))
     # ★연속 실패면 운영자에게 알린다 — 한 번만. 스케줄러의 「마지막 결과」를 사람이 봐야만
     #   아는 상태를 끝낸다(바깥함 일꾼이 4시간 넘게 안 돌고도 아무 데도 안 떴다).
     verdict = note_result(HEARTBEAT_DIR, job.name, exit_code=exit_code,
                           detail=_tail(err or out, 300))
     if verdict["should_alert"]:
-        sys.stdout.write(f"운영 알림({verdict['kind']}, 연속 {verdict['streak']}회): "
-                         + send_alert(job.name, verdict["kind"], streak=verdict["streak"],
-                                      detail=_tail(err or out, 300)) + chr(10))
+        say(f"운영 알림({verdict['kind']}, 연속 {verdict['streak']}회): "
+            + send_alert(job.name, verdict["kind"], streak=verdict["streak"],
+                         detail=_tail(err or out, 300)))
     # ★사람이 직접 불렀을 때를 위해 그대로 흘려 준다. 스케줄러(pythonw)가 부르면 아무 데도 안 간다 —
     #   그래서 위에서 파일에 먼저 남겼다.
     if out:
-        sys.stdout.write(out if out.endswith("\n") else out + "\n")
+        say(out)
     if err:
-        sys.stderr.write(err if err.endswith("\n") else err + "\n")
+        say(err, err=True)
     return exit_code
 
 
@@ -192,7 +209,7 @@ def main() -> int:
 
     job = JOBS[args.job]
     if args.show:
-        print(" ".join(command_for(job)))
+        say(" ".join(command_for(job)))
         print(f"  작업     : {job.title}")
         print(f"  주기     : {job.every_minutes and f'{job.every_minutes}분마다' or job.daily_at or '상주'}")
         print(f"  기록     : {HEARTBEAT_DIR / (job.name + '.json')}")

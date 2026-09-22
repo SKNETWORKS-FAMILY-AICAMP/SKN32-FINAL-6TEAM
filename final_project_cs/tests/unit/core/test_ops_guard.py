@@ -134,3 +134,31 @@ def test_the_app_job_uses_the_public_base_url_port():
 
     port = str(get_settings().public_base_url).rsplit(":", 1)[-1].strip("/")
     assert port in JOBS["app"].argv, (port, JOBS["app"].argv)
+
+
+def test_writing_output_never_kills_a_windowless_run(monkeypatch):
+    """★`pythonw` 로 창 없이 돌면 `sys.stdout` 이 None 이다 — 찍다가 죽으면 스케줄러가 실패로 본다.
+
+    실제로 등록 직후 그렇게 났다: 로그·흔적에는 `exit=0` 이 적혔는데 작업 스케줄러의
+    「마지막 결과」는 1 이었다. 기록을 남긴 **뒤** 출력에서 죽었기 때문이다.
+    """
+    import sys as _sys
+
+    from scripts.ops import tick
+
+    monkeypatch.setattr(_sys, "stdout", None)
+    monkeypatch.setattr(_sys, "stderr", None)
+    tick.say("창이 없어도 죽지 않는다")
+    tick.say("표준 오류도 마찬가지", err=True)
+
+
+def test_a_closed_pipe_does_not_kill_it_either(monkeypatch):
+    import io
+    import sys as _sys
+
+    from scripts.ops import tick
+
+    closed = io.StringIO()
+    closed.close()
+    monkeypatch.setattr(_sys, "stdout", closed)
+    tick.say("닫힌 파이프")
