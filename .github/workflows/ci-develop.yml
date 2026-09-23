@@ -54,6 +54,11 @@ jobs:
       ACOP_SECRET_KEY: dummy-secret-key-for-ci-0123456789abcdef
       ACOP_COMPOSER_JWT_SECRET: dummy-composer-jwt-secret-for-ci-0123456789
       ACOP_COMPOSER_ISSUER_SECRET: dummy-composer-issuer-secret-for-ci-0123456789
+      # ★acop_composer(설정 변경 관리 채널)의 소스는 final_project_sample/ 에 있고
+      #   requirements.txt 에는 없다. sample 을 pip 로 깔면 sample 의 app 패키지까지 깔려
+      #   cs 의 app 과 이름이 겹치므로, 경로 뒤쪽에 붙여 acop_composer 만 찾게 한다.
+      #   (로컬은 sample 이 편집 모드로 설치돼 있어서 이 문제가 안 드러났다 — 2026-09-24)
+      PYTHONPATH: ${{ github.workspace }}/final_project_sample
     defaults:
       run:
         working-directory: final_project_cs
@@ -67,5 +72,14 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - name: DB 스키마 만들기
         run: python -m app.infrastructure.db.migrate
+      # 새 DB 에는 프롬프트가 없다. 계약 시험이 배포 중인 프롬프트를 확인하므로 먼저 등록한다.
+      - name: 프롬프트 등록
+        run: python -m scripts.register_prompts
+      # ★test_deactivating_does_not_erase_history 는 「DB 에 비활성 프롬프트가 1개 이상 있다」를
+      #   요구한다. 개발 DB 에는 옛 Team 프롬프트 기록이 남아 있어 통과하지만 새 DB 에는
+      #   과거 기록이 없어 반드시 실패한다 — 코드가 아니라 DB 이력을 검사하는 시험이다.
+      #   가짜 기록을 넣어 맞추지 않고, 시험이 스스로 기록을 만들도록 고칠 때까지 여기서만 뺀다.
       - name: 시험
-        run: python -m pytest tests/architecture tests/contract tests/unit -q
+        run: >-
+          python -m pytest tests/architecture tests/contract tests/unit -q
+          --deselect tests/contract/test_active_prompts_are_the_deployed_set.py::test_deactivating_does_not_erase_history
