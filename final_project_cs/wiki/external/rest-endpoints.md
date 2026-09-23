@@ -352,8 +352,10 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 서버는 키 원문을 저장하지 않는다(SHA-256 만). 웹은 키를 브라우저 저장소에 두고, 사용자에게 **따로 보관하라고 한 번 보여 준다.**
   브라우저 저장소는 그 페이지의 모든 스크립트가 읽을 수 있으므로 **새는 것을 전제로** 두고, 새면 `rotate` 로 끊는다.
 - 브라우저 출처는 설정 `ACOP_WEB_ALLOWED_ORIGINS`(쉼표로 여럿, 기본 `http://127.0.0.1:3100,http://localhost:3100`)만 받는다.
-- `[미완]` 키 없이 열린 `POST /v1/web/session` 에 발급 속도 제한이 없다.
-- 시험 `tests/e2e/test_web_api.py` 9건.
+- 키 없이 열린 `POST /v1/web/session` 은 **주소마다 한 시간에 20개**까지(`security.web_session_issue_per_hour`).
+  넘으면 `429 too_many_sessions` + `Retry-After`. 이미 가진 키로 하는 일은 막지 않는다. ★프로세스 안에서 세고,
+  역방향 프록시 뒤에서는 모두 같은 주소로 보여 함께 막힌다 — 그때는 원 주소로 세도록 바꿔야 한다.
+- 시험 `tests/e2e/test_web_api.py` 10건.
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 

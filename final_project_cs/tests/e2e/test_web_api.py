@@ -12,10 +12,20 @@ from __future__ import annotations
 
 import copy
 
+import pytest
+
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops.survey import SURVEY_VERSION
 
 from .test_trip_api import SCENARIO, _body, api  # noqa: F401 — 픽스처를 그대로 쓴다
+
+
+@pytest.fixture(autouse=True)
+def _fresh_issue_counter(monkeypatch):
+    """발급 속도 제한은 프로세스 안에서 센다 — 시험끼리 수가 쌓여 뒤 시험이 429 를 맞지 않게 비운다."""
+    from app.modules.travel_ops import web_session
+
+    monkeypatch.setattr(web_session, "_issued", {})
 
 
 def _session(api) -> dict:
@@ -139,3 +149,26 @@ def test_only_the_web_origin_may_call_from_a_browser(api):
     other = api["client"].options("/v1/web/session", headers={
         "Origin": "https://evil.example", "Access-Control-Request-Method": "POST"})
     assert other.headers.get("access-control-allow-origin") is None
+
+
+def test_one_address_cannot_mint_users_without_end(api, monkeypatch):
+    """★키 없이 열린 발급 경로 — 한 주소에서 한 시간에 정한 수까지만. 넘으면 429 + Retry-After."""
+    from app.modules.travel_ops import web_session
+
+    monkeypatch.setattr(web_session, "_issue_limit", lambda: (2, 3600.0))
+    assert [api["client"].post("/v1/web/session").status_code for _ in range(2)] == [201, 201]
+    third = api["client"].post("/v1/web/session")
+    assert third.status_code == 429 and third.json()["error"]["code"] == "too_many_sessions"
+    assert 0 < int(third.headers["retry-after"]) <= 3600
+    # 이미 가진 키로 하는 일은 막지 않는다 — 막는 것은 **새로 찍어 내기**뿐이다
+    assert api["client"].get("/v1/web/trips", headers=_h(_first_key(api))).status_code == 200
+
+
+def _first_key(api) -> str:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT customer_id FROM web_user_keys WHERE tenant_id=%s LIMIT 1", (api["tenant"],))
+        [customer] = cur.fetchone()
+    from app.modules.travel_ops.web_session import rotate
+
+    with get_connection() as conn, conn.transaction():
+        return rotate(conn, tenant_id=api["tenant"], customer_id=customer)

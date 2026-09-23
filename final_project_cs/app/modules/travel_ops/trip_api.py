@@ -35,7 +35,7 @@ from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -681,10 +681,17 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return tenant, customer
 
     @router.post("/v1/web/session", status_code=201)
-    def web_session():
-        """첫 방문 — 사용자와 키를 만든다. ★키 원문은 **이번에만** 돌려준다. 사용자에게 보관하게 한다."""
-        from .web_session import issue
+    def web_session(http: Request):
+        """첫 방문 — 사용자와 키를 만든다. ★키 원문은 **이번에만** 돌려준다. 사용자에게 보관하게 한다.
+        ★키 없이 열린 유일한 쓰기 경로라 **주소마다 한 시간에 몇 개**로 막는다(`security.web_session_issue_per_hour`)."""
+        from .web_session import issue, issue_wait
 
+        wait = issue_wait(http.client.host if http.client else "unknown")
+        if wait:
+            error = _error(429, "too_many_sessions", "새 키를 너무 많이 받았다 — 잠시 뒤에 다시 하거나 가진 키를 넣는다",
+                           retry_after_seconds=int(wait))
+            error.headers = {"Retry-After": str(int(wait))}
+            raise error
         tenant = settings_module.get_settings().tenant_id
         with get_connection() as conn, conn.transaction():
             customer, raw = issue(conn, tenant_id=tenant)
