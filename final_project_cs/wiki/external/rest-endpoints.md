@@ -314,6 +314,47 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 길게 보면 이 칸은 외부가 쓰지 않는 것이 맞다 — 경로 조회(`read.route`)가 생기면 `uses` 는 **우리가 조회해서
   만든다.** 지금은 D-CS-005(ODsay 미사용)에 따라 경로 정의를 외부가 들고 오므로 표기를 공개한다.
 
+## 보류 제안 — `/v1/trips/{trip_id}/proposals*` `[2026-09-24]`
+
+`[실측]` `app/modules/travel_ops/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
+감시가 일정 문제를 찾았는데 **바로 바꾸지 않고 묻는 경우**(설문 15번 「먼저 물어봐줘」, 또는 「변경 안 할 일정」 항목 자체를
+바꿔야 할 때) 이 자리에 제안이 쌓인다.
+
+| 경로 | scope | 뜻 |
+|---|---|---|
+| `GET /v1/trips/{trip_id}/proposals` | `trip:read` | 그 여행의 제안 전부. `status` = `open` · `chosen` · `kept` · `expired` · `superseded` |
+| `POST /v1/trips/{trip_id}/proposals/{proposal_id}/choose` | `trip:write` | 몸통 `{"key": "<options[].key>"}` 로 그 안을 적용, `{"key": null}` 이면 **원래 일정 유지**(`kept`) |
+
+- 제안 한 건: `proposal_id` · `item_id` · `base_version` · `reason`(`ask_first` · `protected`) · `protected_by` · `safety` ·
+  `expires_at`(= 그 일정 끝) · `causes` · `options[]`(`key` · `rank` · `name` · `starts_at`, 1순위가 우리 최적안).
+- **먼저 고른 쪽이 이긴다** — 이미 정해졌으면 `409 already_decided`, 제안 뒤 판이 바뀌었으면 `409 stale`, 없는 제안은 `404`.
+  거절 상세는 `error.detail` 아래에 있다. ★거절되면 **아무것도 바뀌지 않는다**(한 트랜잭션).
+- 답이 없으면 그 일정이 끝날 때 `expired` — **원래 일정대로 간다.**
+
+## 웹(고객 브라우저) — `/v1/web/*` `[2026-09-24]`
+
+`[실측]` `app/modules/travel_ops/trip_api.py` · 키 `app/modules/travel_ops/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
+★서버용 scope 키(테넌트 전체)를 브라우저에 넣지 않는다. 웹은 **사용자 식별 키** 하나로 **그 사용자 본인의 여행만** 연다.
+
+| 경로 | 인증 | 뜻 |
+|---|---|---|
+| `POST /v1/web/session` | 없음 | 첫 방문 — 사용자와 키를 만든다. 응답 `user_key` 는 **이번에만** 나온다 |
+| `POST /v1/web/session/rotate` | 키 | 새 키. **옛 키는 바로 무효** |
+| `GET /v1/web/trips` | 키 | 내 여행 목록 |
+| `POST /v1/web/trips` | 키 | 등록 — `/v1/trips` 와 같은 몸통에서 **`customer_id` 를 빼고** 보낸다(보내면 `422 customer_id_not_allowed`, 키가 정한다) |
+| `GET /v1/web/trips/{trip_id}` | 키 | 여행 조회 |
+| `GET /v1/web/trips/{trip_id}/proposals` · `POST …/{proposal_id}/choose` | 키 | 위 보류 제안과 같은 규칙 |
+| `POST /v1/web/trips/{trip_id}/messages` | 키 | 「에이전트에게 변경 요청」 — 자유 문장. `/v1/trips/{id}/messages` 와 같은 처리 |
+| `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice` |
+
+- 키는 헤더 **`X-User-Key`** 로 보낸다. 형식 `acop_u_…`. 없거나 틀리거나 거둔 키는 모두 `401`(어느 쪽인지 말하지 않는다).
+- **남의 여행은 `404`** — 있는지도 말하지 않는다. 서버용 scope 키로는 웹 경로가 열리지 않는다(`401`).
+- 서버는 키 원문을 저장하지 않는다(SHA-256 만). 웹은 키를 브라우저 저장소에 두고, 사용자에게 **따로 보관하라고 한 번 보여 준다.**
+  브라우저 저장소는 그 페이지의 모든 스크립트가 읽을 수 있으므로 **새는 것을 전제로** 두고, 새면 `rotate` 로 끊는다.
+- 브라우저 출처는 설정 `ACOP_WEB_ALLOWED_ORIGINS`(쉼표로 여럿, 기본 `http://127.0.0.1:3100,http://localhost:3100`)만 받는다.
+- `[미완]` 키 없이 열린 `POST /v1/web/session` 에 발급 속도 제한이 없다.
+- 시험 `tests/e2e/test_web_api.py` 9건.
+
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 
 `[실측]` `app/modules/travel_ops/delegation_api.py`. 라우터는 도메인 폴더에 있고

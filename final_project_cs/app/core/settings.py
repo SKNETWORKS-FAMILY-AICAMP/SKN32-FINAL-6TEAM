@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     #   **비어 있으면 아무도 못 들어온다**(기본이 닫힘). `python -m scripts.ui_operator` 가 한 줄을 만든다.
     #   원문 비밀번호는 어디에도 두지 않는다. D-CS-007.
     ui_operators: str = ""
+    # ★`[2026-09-24]` 웹(`frontend/apps/web`, 포트 3100)이 이 API 를 부르는 출처. 쉼표로 여럿.
+    #   서버용 scope 키가 아니라 사용자 식별 키(`X-User-Key`)만 받는다(D-020 · 025).
+    web_allowed_origins: str = "http://127.0.0.1:3100,http://localhost:3100"
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0

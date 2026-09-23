@@ -55,7 +55,28 @@ CONTRACT_V1_PATHS = {
     "/v1/delegations/{customer_id}",
     "/v1/delegations/{customer_id}/grant",
     "/v1/delegations/{customer_id}/revoke",
+    # ★2026-09-24 보류 제안(「먼저 물어봐줘」 · 변경 안 할 일정, D-020) — 에이전트가 보고 고른다.
+    #   scope `trip:read`·`trip:write`. 먼저 고른 쪽이 이기고 나중 쪽은 409(`pending_changes`, 024).
+    "/v1/trips/{trip_id}/proposals",
+    "/v1/trips/{trip_id}/proposals/{proposal_id}/choose",
+    # ★2026-09-24 웹(고객 브라우저) — scope 키가 아니라 **사용자 식별 키**(`X-User-Key`, 025).
+    #   그 사용자 본인의 여행만 연다. `/v1/web/session` 만 키 없이 열린다(첫 방문 발급).
+    "/v1/web/session",
+    "/v1/web/session/rotate",
+    "/v1/web/trips",
+    "/v1/web/trips/{trip_id}",
+    "/v1/web/trips/{trip_id}/proposals",
+    "/v1/web/trips/{trip_id}/proposals/{proposal_id}/choose",
+    "/v1/web/trips/{trip_id}/messages",
+    "/v1/web/trips/{trip_id}/notices",
 }
+
+# ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.
+#   `/v1/web/session`: 첫 방문에 사용자 식별 키를 발급하는 자리라 키를 받을 수 없다(D-020 · 025).
+OPEN_WRITE_PATHS = {"/v1/web/session"}
+
+# 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
+AUTH_DEPENDENCIES = ("require_scope.", "._web_customer")
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}
 
@@ -99,19 +120,34 @@ def test_write_endpoints_require_a_scope_dependency() -> None:
 
     OpenAPI 스키마가 아니라 **실제 라우트 의존성**을 본다 —
     스키마만 보면 "문서에는 있는데 코드에는 없는" 경우를 놓친다.
-    """
-    from app.presentation.security import require_scope  # noqa: F401
 
-    offenders = []
+    ☆`[2026-09-24 정정]` 앞 판은 의존성 객체를 **문자열로 바꿔** `"scope"` 를 찾았다. 그 문자열에는
+      FastAPI 가 모든 의존성에 붙이는 `security_scopes` 필드 이름이 늘 들어 있어서 **어떤 경로든 통과했다**
+      — 인증 없는 `/v1/web/session` 을 붙였는데도 울지 않아 알았다. 이제 의존성 함수를 이름으로 본다.
+    """
+    def calls(dependant) -> list[str]:
+        found = []
+        for sub in dependant.dependencies:
+            found.append(getattr(sub.call, "__qualname__", repr(sub.call)))
+            found += calls(sub)
+        return found
+
+    offenders, checked = [], 0
     for route in app.routes:
         path = getattr(route, "path", "")
         methods = {m.lower() for m in getattr(route, "methods", set())}
-        if not path.startswith("/v1/") or not (methods & WRITE_METHODS):
+        if not path.startswith("/v1/") or not (methods & WRITE_METHODS) or path in OPEN_WRITE_PATHS:
             continue
-        dependencies = str(getattr(route, "dependant", ""))
-        if "require_scope" not in dependencies and "scope" not in dependencies.lower():
+        checked += 1
+        if not any(marker in name for name in calls(route.dependant) for marker in AUTH_DEPENDENCIES):
             offenders.append((sorted(methods), path))
-    assert not offenders, f"scope 의존성이 없는 쓰기 경로: {offenders}"
+    assert checked > 0, "쓰기 경로를 하나도 못 셌다 — 검사가 헛돈다"
+    assert not offenders, f"인증 의존성이 없는 쓰기 경로: {offenders}"
+
+
+def test_the_open_write_path_list_names_only_real_paths() -> None:
+    """열어 둔 목록이 낡으면(경로가 없어졌는데 남으면) 다음 사람이 같은 이름으로 몰래 열 수 있다."""
+    assert OPEN_WRITE_PATHS <= _v1_paths()
 
 
 def test_v1_surface_is_documented_when_it_grows() -> None:
