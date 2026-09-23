@@ -102,7 +102,8 @@ def _ollama_vectors(units: Sequence[Unit]) -> np.ndarray:
     missing = [i for i, k in enumerate(keys) if k not in stored]
     for start in range(0, len(missing), BATCH):
         chunk = missing[start:start + BATCH]
-        out = _post("/api/embed", {"model": EMBED_MODEL, "input": [texts[i] for i in chunk]}, timeout=300)
+        # 서버가 살아 있는데 멎은 경우 너무 오래 기다리지 않는다(첫 모델 적재는 수십 초 걸린다)
+        out = _post("/api/embed", {"model": EMBED_MODEL, "input": [texts[i] for i in chunk]}, timeout=90)
         for i, vec in zip(chunk, out["embeddings"]):
             stored[keys[i]] = np.asarray(vec, dtype=np.float32)
     if missing:

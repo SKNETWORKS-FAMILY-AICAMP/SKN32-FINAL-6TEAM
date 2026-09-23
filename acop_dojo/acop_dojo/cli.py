@@ -95,15 +95,29 @@ def cmd_trace(args: argparse.Namespace) -> int:
 
 
 def cmd_learn(args: argparse.Namespace) -> int:
+    import random
+
     track = tracks.get(args.track)
+    # 쉬움은 늘 같은 시나리오·같은 빈칸(시드 7)이다. 보통·어려움은 그대로 두면 외워서 넘긴다 —
+    # 실행 기록이 있는 이 트랙의 시나리오 가운데 하나를 고르고 빈칸도 매번 새로 고른다.
+    varied = ask.level() != "easy" and args.stage in {"1", "2"}
     scenario_id = args.scenario or track.scenario
+    if varied and not args.scenario:
+        ready = [s for s in track.scenarios if s in scenarios.SCENARIOS and trace_path(s).exists()]
+        scenario_id = random.choice(ready) if ready else scenario_id
     if args.track != "all":
         print(f"[{track.title}]  핵심: {track.focus}")
+    if varied:
+        print(f"시나리오: {scenario_id}  (보통·어려움은 시나리오와 빈칸을 매번 새로 고른다)")
     trace = load_or_capture(scenario_id)
-    handler = {"0": stages.stage0_worked_example,
-               "1": stages.stage1_reconstruct,
-               "2": stages.stage2_contrast}[args.stage]
-    handler(trace)
+    if args.stage == "0":
+        stages.stage0_worked_example(trace)
+        return 0
+    handler = {"1": stages.stage1_reconstruct, "2": stages.stage2_contrast}[args.stage]
+    if varied:
+        handler(trace, seed=random.randrange(1 << 30))
+    else:
+        handler(trace)
     return 0
 
 
@@ -495,16 +509,17 @@ def cmd_placement(args: argparse.Namespace) -> int:
 
 def cmd_quiz(args: argparse.Namespace) -> int:
     if args.action == "selftest":
-        return quiz.selftest(per_family=args.count if args.count != 5 else 30, track_id=args.track,
+        return quiz.selftest(per_family=args.count or 0, track_id=args.track,
                              allow_ollama=not args.no_ollama)
     if args.action == "pool":
         m = quiz.material(track_id=args.track, allow_ollama=not args.no_ollama)
-        print(f"색인: 함수 {len(m.index.units)}개 (이 트랙 {len(m.units)}개) · 실행 기록 {len(m.traces)}개")
+        print(f"색인: 함수 {len(m.index.units)}개 (이 트랙 {len(m.units)}개) · 실행 기록 {len(m.traces)}개"
+              f" (코드가 바뀌어 뺀 것 {len(m.stale_traces)}개)")
         print(f"오답 고르기: {m.vectors.source}")
         for fam, n in quiz.pool_sizes(m).items():
             print(f"  {quiz.FAMILY_TITLES[fam]:<10} ({fam})  대상 {n}")
         return 0
-    return quiz.run(track_id=args.track, count=args.count, family=args.family, seed=args.seed)
+    return quiz.run(track_id=args.track, count=args.count or 5, family=args.family, seed=args.seed)
 
 
 def cmd_answers(args: argparse.Namespace) -> int:
@@ -616,7 +631,8 @@ def build_parser() -> argparse.ArgumentParser:
     quiz_cmd = sub.add_parser("quiz", help="코드 전체에서 그때그때 만든 문제를 푼다")
     quiz_cmd.add_argument("action", nargs="?", default="run", choices=["run", "pool", "selftest"])
     quiz_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
-    quiz_cmd.add_argument("--count", type=int, default=5, help="문제 수 (selftest 에서는 유형마다 만들 수)")
+    quiz_cmd.add_argument("--count", type=int, default=None,
+                          help="문제 수, 기본 5 (selftest 에서는 유형마다 검사할 수, 기본은 전부)")
     quiz_cmd.add_argument("--family", choices=list(quiz.FAMILIES), help="한 유형만 낸다")
     quiz_cmd.add_argument("--seed", type=int, help="같은 문제를 다시 보고 싶을 때")
     quiz_cmd.add_argument("--no-ollama", action="store_true", help="로컬 임베딩 대신 단어 빈도로 오답을 고른다")

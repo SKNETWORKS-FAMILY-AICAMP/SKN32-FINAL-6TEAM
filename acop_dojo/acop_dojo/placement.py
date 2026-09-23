@@ -134,8 +134,8 @@ def _generated_questions(tally: ask.Tally, track_id: str) -> int:
     m = quiz.material(track_id=track_id)
     questions = quiz.draw(m, 2, families=["identify", "trace_next"])
     if len(questions) < 2:
-        questions += quiz.draw(m, 2 - len(questions), families=["caller", "callee"],
-                               seen={q.fingerprint for q in questions})
+        seen = set(progress.load().get("quiz", {}).get("seen", [])) | {q.fingerprint for q in questions}
+        questions += quiz.draw(m, 2 - len(questions), families=["caller", "callee"], seen=seen)
     results = []
     for number, q in enumerate(questions, 1):
         ok, answer = quiz.pose(q, f"{number}. ")

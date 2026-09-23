@@ -4,16 +4,16 @@
 대상을 골라 문제를 만든다. 정답은 늘 구문 트리나 실행 기록에서 기계로 뽑는다.
 
 유형 여섯
-  caller      이 함수를 직접 부르는 쪽은?          (정적 호출 관계)
-  callee      이 함수가 안에서 직접 부르는 것은?     (정적 호출 관계)
+  caller      이 함수를 직접 부르는 쪽은?          (풀 수 있는 정적 호출만)
+  callee      이 함수가 안에서 직접 부르는 것은?     (풀 수 있는 정적 호출만)
   identify    이름을 가린 코드 — 어느 함수인가?     (구문 트리)
   guard_exc   이 조건이 참이면 어떤 예외가 나나?     (구문 트리의 if … raise)
   guard_cond  가린 검사 조건을 채운다               (구문 트리 + 조건 변형)
-  trace_next  실제 실행에서 이 함수 다음은?         (저장된 실행 기록)
+  trace_next  실제 실행에서 이 함수 다음은?         (저장된 실행 기록 — 코드보다 새 것만)
 
 난이도가 바꾸는 것
-  쉬움    유형 넷. 오답은 아무 데서나 고른다. 보기로 시작한다. 같은 문제가 다시 나올 수 있다.
-  보통    유형 여섯. 오답은 뜻이 가까운 함수 스무 개 가운데서 고른다.
+  쉬움    유형 넷. 오답은 다른 층에서 고른다(지우기 쉽다). 보기로 시작한다. 같은 문제가 다시 나올 수 있다.
+  보통    유형 여섯. 오답은 뜻이 가까운 함수 스무 개 가운데서 고른다. 본 문제는 되도록 피한다.
   어려움  오답은 뜻이 가장 가까운 셋이다(임베딩). 한 번 나온 문제는 다시 내지 않는다.
           한 판 안에서는 뜻 묶음(군집)이 겹치지 않게 대상을 고른다.
 
@@ -22,12 +22,15 @@
 from __future__ import annotations
 
 import ast
+import itertools
 import json
 import random
 import re
+import subprocess
 import zlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Callable, Sequence
 
 from . import ask, progress, semantic
@@ -53,6 +56,7 @@ LEVEL_FAMILIES = {
 MASK = "□□□"
 MAX_SHOWN_LINES = 28
 SEEN_LIMIT = 5000
+MAX_CALLERS = 8
 
 
 class LazyHint:
@@ -74,12 +78,12 @@ class LazyHint:
 @dataclass
 class Question:
     family: str
-    target: str                  # 대상 uid (기록·중복 판정용)
+    target: str                  # 문제의 정체(기록·중복 판정용) — 정답 보기와 무관하다
     prompt: str
     body: list[str]              # 문제 위에 보여 줄 코드 줄
     options: list[str]
     right: int
-    accept: set[str] | None      # 직접 쓰기로 받을 답(정규화한 이름). None 이면 보기만
+    accept: set[str] | None      # 직접 쓰기로 받을 답(소문자 qualname). None 이면 보기만
     hints: list[Any]
     evidence: str                # 정답의 근거(파일:줄 또는 실행 기록)
     path: str                    # 기록용 — 어느 파일에서 나온 문제인가
@@ -87,7 +91,8 @@ class Question:
 
     @property
     def fingerprint(self) -> str:
-        return f"{self.family}|{self.target}|{self.options[self.right]}"
+        # 정답 보기를 넣지 않는다. 같은 질문에 부르는 쪽만 다른 보기가 나와도 같은 문제다.
+        return f"{self.family}|{self.target}"
 
 
 # ── 재료 ─────────────────────────────────────────────────────────────────
@@ -99,10 +104,36 @@ class Material:
     traces: dict[str, list[dict[str, Any]]]
     rng: random.Random
     level: str
+    stale_traces: list[str] = field(default_factory=list)
+
+
+def _trace_is_fresh(trace_file: Path, paths: Sequence[str], root: Path) -> bool:
+    """기록을 뜬 뒤 그 기록이 거친 파일이 바뀌었으면 낡은 것이다.
+
+    git 으로 본다 — 기록 파일보다 나중에 커밋됐거나 지금 커밋 안 된 수정이 있으면 낡았다.
+    git 을 못 쓰면 파일 수정 시각으로 본다(체크아웃만 해도 낡았다고 보는 쪽으로 틀린다).
+    """
+    made = trace_file.stat().st_mtime
+    try:
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", *paths], cwd=root,
+                               capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=20, check=True).stdout.strip()
+        last = subprocess.run(["git", "log", "-1", "--format=%ct", "--", *paths], cwd=root,
+                              capture_output=True, text=True, encoding="utf-8", errors="replace",
+                              timeout=20, check=True).stdout.strip()
+        return not dirty and (not last or int(last) <= made)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return all((root / p).stat().st_mtime <= made for p in paths if (root / p).exists())
+
+
+def _def_name(symbol: str) -> str:
+    """기록의 함수 이름에서 def 이름. 안쪽 것(`f.<locals>.<genexpr>`)은 품은 함수(f)로 본다."""
+    return symbol.split(".<locals>")[0].split(".")[-1]
 
 
 def load_traces(track: tracks_mod.Track | None,
-                defs: dict[str, list[str]] | None = None) -> dict[str, list[dict[str, Any]]]:
+                index: Index | None = None) -> tuple[dict[str, list[dict[str, Any]]], list[str]]:
+    """(쓸 수 있는 실행 기록, 낡아서 뺀 시나리오)."""
     from . import scenarios as scenarios_mod
 
     folder = WORKSPACE_ROOT / ".acop_dojo" / "traces"
@@ -110,6 +141,7 @@ def load_traces(track: tracks_mod.Track | None,
     wanted = set(track.scenarios) if track and track.owns else set(scenarios_mod.SCENARIOS)
     root = target_root()
     out: dict[str, list[dict[str, Any]]] = {}
+    stale: list[str] = []
     for path in sorted(folder.glob("*.json")):
         if path.stem not in wanted:
             continue
@@ -117,20 +149,18 @@ def load_traces(track: tracks_mod.Track | None,
             steps = json.loads(path.read_text(encoding="utf-8")).get("steps", [])
         except (json.JSONDecodeError, OSError):
             continue
-        seq: list[dict[str, Any]] = []
-        for step in steps:
-            if "<locals>" in step.get("symbol", "") or not step.get("path", "").startswith("app/"):
-                continue
-            if seq and seq[-1]["symbol"] == step["symbol"] and seq[-1]["path"] == step["path"]:
-                continue
-            seq.append(step)
-        # 기록 뒤에 파일이 옮겨졌거나 함수가 사라졌으면 그 기록은 지금 코드의 사실이 아니다
-        # (2026-09-24 코덱스 점검 — ui-evidence-free-proposal-v1 에 지금 없는 `_nav` 가 있었다)
-        fresh = all((root / s["path"]).exists() for s in seq) and (
-            defs is None or all(s["symbol"].split(".")[-1] in defs.get(s["path"], ()) for s in seq))
-        if len(seq) >= 6 and fresh:
+        # 원래 순서를 그대로 둔다. <locals> 호출도 지우지 않는다 — 지우면 「다음 호출」이 바뀐다.
+        seq = [s for s in steps if s.get("path", "").startswith("app/")]
+        if len(seq) < 6:
+            continue
+        paths = sorted({s["path"] for s in seq})
+        exists = all((root / p).exists() for p in paths) and (
+            index is None or all(_def_name(s["symbol"]) in index.defs(s["path"]) for s in seq))
+        if exists and _trace_is_fresh(path, paths, root):
             out[path.stem] = seq
-    return out
+        else:
+            stale.append(path.stem)
+    return out, stale
 
 
 def material(*, track_id: str = "all", level: str | None = None, seed: int | None = None,
@@ -139,15 +169,40 @@ def material(*, track_id: str = "all", level: str | None = None, seed: int | Non
     track = tracks_mod.get(track_id)
     units = [u for u in index.units if tracks_mod.owns(track, u.path)] or index.units
     vecs = semantic.vectors(index.units, allow_ollama=allow_ollama)
-    return Material(index=index, vectors=vecs, units=units, traces=load_traces(track, index.defs),
-                    rng=random.Random(seed), level=level or ask.level())
+    traces, stale = load_traces(track, index)
+    return Material(index=index, vectors=vecs, units=units, traces=traces,
+                    rng=random.Random(seed), level=level or ask.level(), stale_traces=stale)
 
 
 # ── 공통 도구 ────────────────────────────────────────────────────────────
 def norm(text: str) -> str:
-    """직접 쓴 답을 비교할 모양으로. 경로·클래스를 붙여 써도 마지막 이름만 본다."""
-    text = text.strip().strip("`'\" ").replace("()", "")
-    return re.split(r"[:./\s]+", text)[-1].lower() if text else ""
+    """직접 쓴 답을 비교할 모양으로. 경로는 떼고 클래스.메서드 는 남긴다."""
+    text = text.strip().strip("`'\" ").replace("()", "").split("  (")[0]
+    text = text.split("::")[-1].split("/")[-1].strip()
+    return text.lower()
+
+
+def qual_of(option: str) -> str:
+    """보기 문자열에서 이름 부분(클래스.메서드)만. 「이름  (경로)」·「파일::이름」 둘 다."""
+    return option.split("  (")[0].split("::")[-1].strip().lower()
+
+
+def accepted(q: Question) -> tuple[set[str], set[str]]:
+    """(온전한 이름으로 받는 답, 짧은 이름으로도 받는 답).
+
+    짧은 이름(메서드 이름만)은 다른 보기와 겹치지 않을 때만 받는다 — `Guardrails.get` 과
+    `TeamRegistry.get` 이 함께 있으면 `get` 만으로는 어느 쪽인지 모른다.
+    """
+    full = set(q.accept or ())
+    others = {qual_of(o).split(".")[-1] for i, o in enumerate(q.options) if qual_of(o) not in full}
+    short = {a.split(".")[-1] for a in full} - others
+    return full, short
+
+
+def judge(q: Question, text: str) -> bool:
+    answer = norm(text)
+    full, short = accepted(q)
+    return answer in full or answer in short
 
 
 def label(u: Unit) -> str:
@@ -164,8 +219,9 @@ def distractors(m: Material, anchor: str, pool: Sequence[Unit], k: int = 3) -> l
     if m.level == "normal":
         near = m.vectors.nearest(anchor, pool, 20)
         return m.rng.sample(near, k) if len(near) >= k else []
-    anchor_layer = m.index.by_uid().get(anchor)
-    far = [u for u in pool if anchor_layer is None or u.layer != anchor_layer.layer] or pool
+    # 쉬움 — 다른 층에서 고른다. 층이 다르면 지우기 쉽다
+    anchor_unit = m.index.by_uid().get(anchor)
+    far = [u for u in pool if anchor_unit is None or u.layer != anchor_unit.layer]
     return m.rng.sample(far, k) if len(far) >= k else m.rng.sample(pool, k)
 
 
@@ -203,9 +259,23 @@ def strip_docstring(source: str) -> str:
     return source
 
 
-def describe_hint(u: Unit) -> LazyHint:
+def mask_name(text: str, name: str) -> str:
+    """이름을 가린다. 네 글자 이상이면 더 긴 이름 속에 든 것도 가린다
+    (`_capability_state` 가 남아 `_capability` 를 알려 주던 것 — 2026-09-24 코덱스 재점검)."""
+    pattern = re.escape(name) if len(name) >= 4 else rf"\b{re.escape(name)}\b"
+    return re.sub(pattern, MASK, text)
+
+
+def name_visible(text: str, name: str) -> bool:
+    pattern = re.escape(name) if len(name) >= 4 else rf"\b{re.escape(name)}\b"
+    return re.search(pattern, text) is not None
+
+
+def describe_hint(u: Unit, also: Sequence[str] = ()) -> LazyHint:
     def make() -> str:
         sentence, source = semantic.describe(u)
+        for name in also:                       # 정답 예외 이름 같은 것도 가린다
+            sentence = re.sub(re.escape(name), "□□", sentence, flags=re.IGNORECASE)
         return f"이 함수가 하는 일: {sentence}  [{source}가 쓴 설명]"
     return LazyHint(make)
 
@@ -217,12 +287,15 @@ def prefix_hint(name: str) -> str:
 # ── 유형별 생성 ──────────────────────────────────────────────────────────
 def gen_caller(m: Material, target: Unit) -> Question | None:
     callers = m.index.callers_of(target)
-    if not callers or len(callers) > 8:
+    if not callers or len(callers) > MAX_CALLERS:
         return None
     truth = m.rng.choice(callers)
     caller_ids = {c.uid for c in callers}
+    # 이름으로라도 target 을 부르는 함수는 오답에서 뺀다(못 푼 호출일 수 있다)
+    caller_names = {c.name for c in callers}
+    # 이름으로라도 target 을 부르는 함수, 부르는 쪽과 이름이 같은 함수(직접 쓰기에서 구별 못 함)는 뺀다
     pool = [u for u in m.index.units if u.uid not in caller_ids and u.uid != target.uid
-            and u.name not in {c.name for c in callers}]
+            and target.name not in u.mentions and u.name not in caller_names]
     wrong = distractors(m, truth.uid, pool)
     if len(wrong) < 3:
         return None
@@ -231,12 +304,14 @@ def gen_caller(m: Material, target: Unit) -> Question | None:
         family="caller", target=target.uid, path=target.path,
         prompt=f"`{target.qualname}` 를 직접 부르는 함수를 쓴다.",
         body=[f"  {target.path}:{target.line}", f"    {target.signature}"],
-        options=options, right=right, accept={c.name.lower() for c in callers},
+        options=options, right=right, accept={c.qualname.lower() for c in callers},
         hints=[f"부르는 쪽 하나는 {ask.layer_of(truth.path)}에 있다.",
                f"그 파일은 {truth.path}다.", prefix_hint(truth.name)],
         evidence=f"{truth.path}:{truth.line} `{truth.qualname}` 안에서 `{target.name}(…)` 을 부른다."
-                 + (f" 부르는 쪽은 모두 {len(callers)}곳이다." if len(callers) > 1 else ""),
-        checks={"callers": sorted(caller_ids), "wrong": [u.uid for u in wrong], "truth_option": label(truth)})
+                 + (f" 부르는 쪽은 모두 {len(callers)}곳이다: "
+                    + ", ".join(f"`{c.qualname}`" for c in callers) if len(callers) > 1 else ""),
+        checks={"callers": sorted(caller_ids), "wrong": [u.uid for u in wrong],
+                "truth": truth.uid, "truth_option": label(truth)})
 
 
 def gen_callee(m: Material, target: Unit) -> Question | None:
@@ -245,9 +320,8 @@ def gen_callee(m: Material, target: Unit) -> Question | None:
         return None
     truth = m.rng.choice(callees)
     callee_ids = {c.uid for c in callees}
-    called_names = set(target.calls)
     pool = [u for u in m.index.units if u.uid not in callee_ids and u.uid != target.uid
-            and u.name not in called_names]
+            and u.name not in target.mentions]
     wrong = distractors(m, truth.uid, pool)
     if len(wrong) < 3:
         return None
@@ -256,12 +330,13 @@ def gen_callee(m: Material, target: Unit) -> Question | None:
         family="callee", target=target.uid, path=target.path,
         prompt=f"`{target.qualname}` 가 안에서 직접 부르는 저장소 함수를 하나 쓴다.",
         body=[f"  {target.path}:{target.line}", f"    {target.signature}"],
-        options=options, right=right, accept={c.name.lower() for c in callees},
+        options=options, right=right, accept={c.qualname.lower() for c in callees},
         hints=[f"하나는 {ask.layer_of(truth.path)}에 있다.", f"그 파일은 {truth.path}다.",
                prefix_hint(truth.name)],
-        evidence=f"`{target.qualname}` 본문이 부르는 저장소 함수: "
-                 + ", ".join(f"`{c.name}`" for c in callees[:6]) + (" …" if len(callees) > 6 else ""),
-        checks={"callees": sorted(callee_ids), "wrong": [u.uid for u in wrong], "truth_option": label(truth)})
+        evidence=f"`{target.qualname}` 본문이 직접 부르는 저장소 함수: "
+                 + ", ".join(f"`{c.qualname}`" for c in callees[:6]) + (" …" if len(callees) > 6 else ""),
+        checks={"callees": sorted(callee_ids), "wrong": [u.uid for u in wrong],
+                "truth": truth.uid, "truth_option": label(truth)})
 
 
 def gen_identify(m: Material, target: Unit) -> Question | None:
@@ -272,37 +347,30 @@ def gen_identify(m: Material, target: Unit) -> Question | None:
     wrong = distractors(m, target.uid, pool)
     if len(wrong) < 3:
         return None
-    body = strip_docstring(target.source)
-    body = re.sub(rf"\b{re.escape(target.name)}\b", MASK, body)
+    body = mask_name(strip_docstring(target.source), target.name)
     options, right = shuffled(m, label(target), [label(u) for u in wrong])
     return Question(
         family="identify", target=target.uid, path=target.path,
         prompt=f"이름({MASK})과 설명 글을 가린 코드다. 어느 함수인지 이름을 쓴다.",
         body=["  " + line for line in window(body)],
-        options=options, right=right, accept={target.name.lower(), target.qualname.lower()},
+        options=options, right=right, accept={target.qualname.lower()},
         hints=[f"{ask.layer_of(target.path)}의 {target.path.rsplit('/', 1)[0]}/ 폴더에 있다.",
                describe_hint(target), prefix_hint(target.name)],
         evidence=f"{target.path}:{target.line} `{target.qualname}`",
         checks={"wrong": [u.uid for u in wrong], "truth_option": label(target)})
 
 
-def _exception_pool(m: Material) -> dict[str, list[Unit]]:
-    out: dict[str, list[Unit]] = {}
-    for u in m.index.units:
-        for g in u.guards:
-            out.setdefault(g.exc, []).append(u)
-    return out
+def _exception_pool(m: Material) -> list[str]:
+    return sorted({g.exc for u in m.index.units for g in u.guards})
 
 
 def gen_guard_exc(m: Material, target: Unit) -> Question | None:
     if not target.guards:
         return None
     guard = m.rng.choice(target.guards)
-    same_cond = {g.exc for g in target.guards if g.cond == guard.cond}
-    if len(same_cond) > 1:
+    if len({g.exc for g in target.guards if same_meaning(g.cond, guard.cond)}) > 1:
         return None
-    pool = _exception_pool(m)
-    others = [name for name in pool if name != guard.exc]
+    others = [name for name in _exception_pool(m) if name != guard.exc]
     if len(others) < 3:
         return None
     if m.level == "easy":
@@ -321,20 +389,69 @@ def gen_guard_exc(m: Material, target: Unit) -> Question | None:
         body=[f"  {target.path}:{target.line}"] + ["  " + l for l in window(
             re.sub(rf"\b{re.escape(guard.exc)}\b", MASK, target.source), rel_line)],
         options=options, right=right, accept={guard.exc.lower()},
-        hints=[describe_hint(target),
+        hints=[describe_hint(target, also=[guard.exc]),
                f"예외 이름은 {len(guard.exc)}글자다.", prefix_hint(guard.exc)],
         evidence=f"{target.path}:{guard.line}  if {guard.cond}: raise {guard.exc}",
         checks={"truth": guard.exc, "wrong": wrong, "truth_option": guard.exc})
 
 
+# ── 조건 다루기 ──────────────────────────────────────────────────────────
 _INVERSE = {ast.Eq: ast.NotEq, ast.NotEq: ast.Eq, ast.In: ast.NotIn, ast.NotIn: ast.In,
             ast.Is: ast.IsNot, ast.IsNot: ast.Is, ast.Lt: ast.GtE, ast.GtE: ast.Lt,
             ast.Gt: ast.LtE, ast.LtE: ast.Gt}
 _NEIGHBOR = {ast.Lt: ast.LtE, ast.LtE: ast.Lt, ast.Gt: ast.GtE, ast.GtE: ast.Gt}
+#: 부정 쪽 비교를 긍정 쪽의 not 으로 바꿔 센다 — `a != b` 와 `not a == b` 를 같은 뜻으로 본다
+_POSITIVE = {ast.NotEq: ast.Eq, ast.NotIn: ast.In, ast.IsNot: ast.Is, ast.GtE: ast.Lt, ast.LtE: ast.Gt}
+MAX_ATOMS = 10
+
+
+def _truth_table(exprs: Sequence[str]) -> list[tuple[bool, ...]] | None:
+    """조건들을 참·거짓 표로. 조건 안의 비교·이름 하나하나를 참/거짓 칸으로 보고 모든 경우를 센다."""
+    atoms: dict[str, int] = {}
+
+    def build(n: ast.AST) -> Callable[[tuple[bool, ...]], bool]:
+        if isinstance(n, ast.BoolOp):
+            parts = [build(v) for v in n.values]
+            if isinstance(n.op, ast.And):
+                return lambda e: all(p(e) for p in parts)
+            return lambda e: any(p(e) for p in parts)
+        if isinstance(n, ast.UnaryOp) and isinstance(n.op, ast.Not):
+            inner = build(n.operand)
+            return lambda e: not inner(e)
+        if isinstance(n, ast.Compare) and len(n.ops) == 1 and type(n.ops[0]) in _POSITIVE:
+            inner = build(ast.Compare(n.left, [_POSITIVE[type(n.ops[0])]()], n.comparators))
+            return lambda e: not inner(e)
+        idx = atoms.setdefault(ast.dump(n), len(atoms))
+        return lambda e: e[idx]
+
+    try:
+        fns = [build(ast.parse(x, mode="eval").body) for x in exprs]
+    except SyntaxError:
+        return None
+    if len(atoms) > MAX_ATOMS:
+        return None
+    rows = list(itertools.product((False, True), repeat=len(atoms)))
+    return [tuple(fn(r) for r in rows) for fn in fns]
+
+
+def same_meaning(a: str, b: str) -> bool:
+    table = _truth_table([a, b])
+    if table is None:
+        try:
+            return ast.dump(ast.parse(a, mode="eval")) == ast.dump(ast.parse(b, mode="eval"))
+        except SyntaxError:
+            return a == b
+    return table[0] == table[1]
+
+
+def is_constant(cond: str) -> bool:
+    """늘 참이거나 늘 거짓인 조건. 보기로 내면 뜻 없는 오답이 된다."""
+    table = _truth_table([cond])
+    return table is not None and len(set(table[0])) == 1
 
 
 def mutations(cond: str) -> list[str]:
-    """조건을 조금씩 비튼 것들. 뜻이 원래 조건과 같은 것은 만들지 않는다."""
+    """조건을 조금씩 비튼 것들. 뜻이 같거나 늘 참·거짓인 것은 쓰는 쪽(gen)에서 거른다."""
     try:
         tree = ast.parse(cond, mode="eval").body
     except SyntaxError:
@@ -349,8 +466,6 @@ def mutations(cond: str) -> list[str]:
         if op in _NEIGHBOR:                                         # 경계 하나 차이
             out.append(ast.unparse(ast.Compare(tree.left, [_NEIGHBOR[op]()], tree.comparators)))
     elif isinstance(tree, ast.BoolOp):
-        if len({ast.dump(v) for v in tree.values}) == 1:           # `x and x` — 바꿔도 뜻이 같다
-            return []
         swapped = ast.BoolOp(ast.Or() if isinstance(tree.op, ast.And) else ast.And(), tree.values)
         out.append(ast.unparse(swapped))
         for i, value in enumerate(tree.values):                     # 한 항만 뒤집는다
@@ -362,13 +477,6 @@ def mutations(cond: str) -> list[str]:
         out.append(f"not {cond}" if isinstance(tree, (ast.Name, ast.Attribute, ast.Call, ast.Subscript))
                    else f"not ({cond})")
     return out
-
-
-def same_meaning(a: str, b: str) -> bool:
-    try:
-        return ast.dump(ast.parse(a, mode="eval")) == ast.dump(ast.parse(b, mode="eval"))
-    except SyntaxError:
-        return a == b
 
 
 def masked_condition(source: str, guard: Guard, first_line: int) -> str | None:
@@ -392,6 +500,20 @@ def masked_condition(source: str, guard: Guard, first_line: int) -> str | None:
     return None
 
 
+def _other_tests(source: str, first_line: int, guard_line: int) -> list[str]:
+    """같은 함수 안의 다른 조건들(if·while·삼항). 같은 조건이 또 보이면 가려도 소용없다."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    rel = guard_line - first_line + 1
+    out = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.If, ast.While, ast.IfExp)) and not (isinstance(node, ast.If) and node.lineno == rel):
+            out.append(ast.unparse(node.test))
+    return out
+
+
 def _names_in(code: str) -> set[str]:
     try:
         return {n.id for n in ast.walk(ast.parse(code)) if isinstance(n, ast.Name)}
@@ -406,6 +528,8 @@ def gen_guard_cond(m: Material, target: Unit) -> Question | None:
     masked = masked_condition(target.source, guard, target.line)
     if masked is None or masked.count(MASK) != 1:
         return None
+    if any(same_meaning(t, guard.cond) for t in _other_tests(target.source, target.line, guard.line)):
+        return None
     candidates = mutations(guard.cond)
     near = m.vectors.nearest(target.uid, [u for u in m.index.units if u.guards], 15)
     borrowed = [g.cond for u in near for g in u.guards]
@@ -415,7 +539,8 @@ def gen_guard_cond(m: Material, target: Unit) -> Question | None:
     candidates += borrowed
     wrong: list[str] = []
     for cond in candidates:
-        if len(cond) > 90 or same_meaning(cond, guard.cond) or any(same_meaning(cond, w) for w in wrong):
+        if len(cond) > 90 or is_constant(cond) or same_meaning(cond, guard.cond) \
+                or any(same_meaning(cond, w) for w in wrong):
             continue
         wrong.append(cond)
         if len(wrong) == 3:
@@ -432,22 +557,47 @@ def gen_guard_cond(m: Material, target: Unit) -> Question | None:
         hints=[f"이 검사가 참이면 `{guard.exc}` 를 던진다. 무엇을 막는 검사인지 먼저 읽는다.",
                describe_hint(target)],
         evidence=f"{target.path}:{guard.line}  if {guard.cond}: raise {guard.exc}",
-        checks={"truth": guard.cond, "wrong": wrong, "truth_option": f"if {guard.cond}:"})
+        checks={"truth": guard.cond, "wrong": wrong, "truth_option": f"if {guard.cond}:",
+                "masked": masked})
 
 
-def gen_trace_next(m: Material, _: Unit | None = None) -> Question | None:
+def trace_label(step: dict[str, Any]) -> str:
+    return f"{step['path'].rsplit('/', 1)[-1]}::{step['symbol']}"
+
+
+def trace_spots(seq: list[dict[str, Any]]) -> list[int]:
+    """「다음 호출」을 물을 수 있는 자리. 기록 원래 순서를 그대로 쓴다.
+
+    빼는 자리: 안쪽 함수(<locals>)가 끼는 곳, 같은 함수를 연달아 여러 번 부른 곳(repeat) —
+    거기서 「다음」은 자기 자신이다 —, 같은 함수가 기록에 두 번 이상 나오는 곳(어느 쪽인지 모른다).
+    """
+    labels = [trace_label(s) for s in seq]
+    spots = []
+    for i in range(len(seq) - 1):
+        a, b = seq[i], seq[i + 1]
+        if "<locals>" in a["symbol"] or "<locals>" in b["symbol"]:
+            continue
+        if a.get("repeat", 1) != 1 or labels.count(labels[i]) != 1 or labels[i + 1] == labels[i]:
+            continue
+        spots.append(i)
+    return spots
+
+
+def gen_trace_next(m: Material, _: Unit | None = None, *, spot: tuple[str, int] | None = None) -> Question | None:
     if not m.traces:
         return None
-    scenario = m.rng.choice(sorted(m.traces))
+    if spot:
+        scenario, i = spot
+    else:
+        scenario = m.rng.choice(sorted(m.traces))
+        spots = trace_spots(m.traces[scenario])
+        if not spots:
+            return None
+        i = m.rng.choice(spots)
     seq = m.traces[scenario]
-    labels = [f"{s['path'].rsplit('/', 1)[-1]}::{s['symbol']}" for s in seq]
-    spots = [i for i in range(len(labels) - 1)
-             if labels.count(labels[i]) == 1 and labels[i + 1] != labels[i]]
-    if not spots:
-        return None
-    i = m.rng.choice(spots)
+    labels = [trace_label(s) for s in seq]
     truth = labels[i + 1]
-    others = [l for l in dict.fromkeys(labels) if l not in (truth, labels[i])]
+    others = [l for l in dict.fromkeys(labels) if l not in (truth, labels[i]) and "<locals>" not in l]
     if len(others) < 3:
         return None
     if m.level == "easy":
@@ -462,14 +612,15 @@ def gen_trace_next(m: Material, _: Unit | None = None) -> Question | None:
         family="trace_next", target=f"trace:{scenario}#{i}", path=seq[i]["path"],
         prompt=f"시나리오 `{scenario}` 를 실제로 돌렸을 때 `{labels[i]}` 다음에 처음 불린 함수를 쓴다.",
         body=[f"  {seq[i]['path']}:{seq[i].get('line', '')}  {seq[i]['symbol']}  (실행 {i + 1}번째)"],
-        options=options, right=right, accept={step["symbol"].split(".")[-1].lower()},
+        options=options, right=right, accept={step["symbol"].lower()},
         hints=[f"다음 함수는 {ask.layer_of(step['path'])}에 있다.", f"그 파일은 {step['path']}다.",
                prefix_hint(step["symbol"].split(".")[-1])],
         evidence=f"실행 기록 .acop_dojo/traces/{scenario}.json 의 {i + 2}번째 호출: {step['path']} {step['symbol']}",
-        checks={"truth": truth, "labels": labels, "at": i, "truth_option": truth})
+        checks={"truth": truth, "scenario": scenario, "at": i, "truth_option": truth,
+                "cluster_uid": f"{seq[i]['path']}::{seq[i]['symbol']}"})
 
 
-GENERATORS: dict[str, Callable[[Material, Unit], Question | None]] = {
+GENERATORS: dict[str, Callable[..., Question | None]] = {
     "caller": gen_caller, "callee": gen_callee, "identify": gen_identify,
     "guard_exc": gen_guard_exc, "guard_cond": gen_guard_cond, "trace_next": gen_trace_next,
 }
@@ -482,7 +633,11 @@ def _quiz_record() -> dict[str, Any]:
 
 def draw(m: Material, count: int, *, families: Sequence[str] | None = None,
          seen: set[str] | None = None, attempts: int = 400) -> list[Question]:
-    """count 문제를 뽑는다. 어려움은 본 문제를 빼고, 한 판 안에서 뜻 묶음이 겹치지 않게 한다."""
+    """count 문제를 뽑는다.
+
+    쉬움은 본 문제도 낸다. 보통은 안 본 문제를 먼저 내고 모자라면 본 문제로 채운다.
+    어려움은 본 문제를 내지 않고, 한 판 안에서 뜻 묶음이 겹치지 않게 한다.
+    """
     families = list(families or LEVEL_FAMILIES[m.level])
     seen = seen if seen is not None else set(_quiz_record().get("seen", []))
     file_counts: dict[str, int] = _quiz_record().get("files", {})
@@ -490,91 +645,119 @@ def draw(m: Material, count: int, *, families: Sequence[str] | None = None,
     used_clusters: set[int] = set()
     out: list[Question] = []
     fingerprints: set[str] = set()
-    for n in range(attempts):
-        if len(out) >= count:
-            break
-        family = families[n % len(families)]
-        if family == "trace_next":
-            q = gen_trace_next(m)
-        else:
-            # 아직 적게 나온 파일에서 먼저 고른다
-            sample = m.rng.sample(m.units, min(40, len(m.units)))
-            sample.sort(key=lambda u: file_counts.get(u.path, 0))
-            target = next((u for u in sample if clusters.get(u.uid, -1) not in used_clusters), sample[0])
-            q = GENERATORS[family](m, target)
-        if q is None or q.fingerprint in fingerprints:
-            continue
-        if m.level != "easy" and q.fingerprint in seen:
-            continue
-        if not validate(m, q):
-            continue
-        base = q.target.split("#")[0]
-        if base in clusters:
-            used_clusters.add(clusters[base])
-        fingerprints.add(q.fingerprint)
-        out.append(q)
+    passes = (False, True) if m.level == "normal" else ((True,) if m.level == "easy" else (False,))
+    for allow_seen in passes:
+        for n in range(attempts):
+            if len(out) >= count:
+                break
+            family = families[n % len(families)]
+            if family == "trace_next":
+                q = gen_trace_next(m)
+            else:
+                # 아직 적게 나온 파일에서 먼저 고른다
+                sample = m.rng.sample(m.units, min(40, len(m.units)))
+                sample.sort(key=lambda u: file_counts.get(u.path, 0))
+                target = next((u for u in sample if clusters.get(u.uid, -1) not in used_clusters), sample[0])
+                q = GENERATORS[family](m, target)
+            if q is None or q.fingerprint in fingerprints:
+                continue
+            if not allow_seen and q.fingerprint in seen:
+                continue
+            if check(m, q):
+                continue
+            base = q.checks.get("cluster_uid") or q.target.split("#")[0]
+            if base in clusters:
+                if m.level == "hard" and clusters[base] in used_clusters:
+                    continue
+                used_clusters.add(clusters[base])
+            fingerprints.add(q.fingerprint)
+            out.append(q)
     return out
 
 
-# ── 자체 검사 — 정답이 정확히 하나인가 ──────────────────────────────────
-def validate(m: Material, q: Question) -> list[str] | bool:
-    problems = check(m, q)
-    return not problems
+# ── 자체 검사 ────────────────────────────────────────────────────────────
+def _call_pattern(m: Material, caller: Unit, callee: Unit) -> str:
+    """caller 소스에서 callee 를 부르는 모양. `import … as 별칭` 으로 가져온 이름도 센다."""
+    table = m.index.tables.get(caller.path)
+    names = {callee.name} | {local for local, (_, original) in (table.imported.items() if table else [])
+                             if original == callee.name}
+    return r"\b(" + "|".join(re.escape(n) for n in sorted(names)) + r")\s*\("
 
 
 def check(m: Material, q: Question) -> list[str]:
+    """정답이 정확히 하나인가, 정답이 드러나지 않는가. 문제가 있으면 이유 목록."""
     problems: list[str] = []
-    truth = q.checks.get("truth_option")
-    if truth is None or q.options[q.right] != truth:
-        problems.append("정답 번호가 정답 보기를 가리키지 않는다")
     if len(q.options) != 4 or len(set(q.options)) != 4:
         problems.append("보기가 넷이 아니거나 겹친다")
     if not 0 <= q.right < len(q.options):
-        problems.append("정답 번호가 보기 밖이다")
+        return problems + ["정답 번호가 보기 밖이다"]
+    if q.options[q.right] != q.checks.get("truth_option"):
+        problems.append("정답 번호가 정답 보기를 가리키지 않는다")
     units = m.index.by_uid()
     if q.family == "caller":
         target = units[q.target]
         for uid in q.checks["wrong"]:
-            if target.name in units[uid].calls:
-                problems.append(f"오답 {uid} 가 실제로 부른다")
+            if target.name in units[uid].mentions:
+                problems.append(f"오답 {uid} 가 그 이름을 부른다")
+        # 따로 확인 — 정답 쪽 소스에 호출 모양이 실제로 있다
+        if not re.search(_call_pattern(m, units[q.checks["truth"]], target), units[q.checks["truth"]].source):
+            problems.append("정답 쪽 소스에 호출이 보이지 않는다")
     if q.family == "callee":
+        target = units[q.target.split("#")[0]]
         for uid in q.checks["wrong"]:
-            if uid in q.checks["callees"]:
-                problems.append(f"오답 {uid} 가 실제로 불린다")
+            if uid in q.checks["callees"] or units[uid].name in target.mentions:
+                problems.append(f"오답 {uid} 가 실제로 불릴 수 있다")
+        if not re.search(_call_pattern(m, target, units[q.checks["truth"]]), target.source):
+            problems.append("대상 소스에 정답 호출이 보이지 않는다")
     if q.family == "identify":
         target = units[q.target]
         if any(units[uid].name == target.name for uid in q.checks["wrong"]):
             problems.append("오답에 같은 이름이 있다")
-        if any(re.search(rf"\b{re.escape(target.name)}\b", line) for line in q.body):
+        if any(name_visible(line, target.name) for line in q.body):
             problems.append("가린 코드에 이름이 남았다")
     if q.family == "guard_exc":
         if q.checks["truth"] in q.checks["wrong"]:
             problems.append("오답에 정답 예외가 있다")
+        if any(re.search(rf"\b{re.escape(q.checks['truth'])}\b", line) for line in q.body):
+            problems.append("코드에 정답 예외가 남았다")
     if q.family == "guard_cond":
         conds = [q.checks["truth"], *q.checks["wrong"]]
-        for a in range(4):
-            for b in range(a + 1, 4):
+        for a in range(len(conds)):
+            for b in range(a + 1, len(conds)):
                 if same_meaning(conds[a], conds[b]):
-                    problems.append("보기 둘이 같은 조건이다")
-        if sum(line.count(MASK) for line in q.body) != 1:
+                    problems.append("보기 둘이 같은 뜻이다")
+        if q.checks["masked"].count(MASK) != 1:
             problems.append("가린 자리가 하나가 아니다")
+        if re.search(rf"\b(if|elif|while)\s+{re.escape(q.checks['truth'])}\s*:", q.checks["masked"]):
+            problems.append("가린 코드에 같은 조건이 그대로 있다")
     if q.family == "trace_next":
-        labels, at = q.checks["labels"], q.checks["at"]
-        if labels[at + 1] != q.checks["truth"]:
-            problems.append("정답이 실행 기록의 다음 호출이 아니다")
+        # 따로 확인 — 디스크의 원래 기록을 다시 읽어 다음 호출을 본다
+        raw = json.loads((WORKSPACE_ROOT / ".acop_dojo" / "traces" / f"{q.checks['scenario']}.json")
+                         .read_text(encoding="utf-8"))["steps"]
+        raw = [s for s in raw if s.get("path", "").startswith("app/")]
+        at = q.checks["at"]
+        if trace_label(raw[at + 1]) != q.checks["truth"] or raw[at].get("repeat", 1) != 1:
+            problems.append("정답이 원래 기록의 다음 호출이 아니다")
+    if q.accept is not None:
+        full, short = accepted(q)
+        for i, option in enumerate(q.options):
+            if i != q.right and (qual_of(option) in full or qual_of(option).split(".")[-1] in short):
+                problems.append("오답을 직접 쓰면 정답으로 채점된다")
     return problems
 
 
 def pool_sizes(m: Material) -> dict[str, int]:
-    """유형마다 문제를 낼 수 있는 대상 수(분모). 오답 조합은 세지 않는다."""
-    names = m.index.unique_names()
+    """유형마다 문제를 낼 수 있는 자리 수(분모). 생성기와 같은 조건으로 센다."""
+    guards_ok = sum(1 for u in m.units for g in u.guards
+                    if len({h.exc for h in u.guards if same_meaning(h.cond, g.cond)}) == 1)
     return {
-        "caller": sum(1 for u in m.units if u.name in names and 0 < len(m.index.callers_of(u)) <= 8),
+        "caller": sum(1 for u in m.units if 0 < len(m.index.callers_of(u)) <= MAX_CALLERS),
         "callee": sum(1 for u in m.units if len(m.index.callees_of(u)) >= 2),
         "identify": sum(1 for u in m.units if len(u.source) >= 150 and not u.name.startswith("__")),
-        "guard_exc": sum(len(u.guards) for u in m.units),
-        "guard_cond": sum(len(u.guards) for u in m.units),
-        "trace_next": sum(max(0, len(seq) - 1) for seq in m.traces.values()),
+        "guard_exc": guards_ok,
+        "guard_cond": sum(1 for u in m.units for g in u.guards
+                          if not any(same_meaning(t, g.cond) for t in _other_tests(u.source, u.line, g.line))),
+        "trace_next": sum(len(trace_spots(seq)) for seq in m.traces.values()),
     }
 
 
@@ -590,7 +773,7 @@ def pose(q: Question, number: str = "") -> tuple[bool, ask.Answer]:
         ok = answer.index == q.right
     else:
         answer = ask.free(q.prompt, hints=q.hints, fallback=(q.options, q.right))
-        ok = (answer.index == q.right) if answer.via_choices else norm(answer.text) in q.accept
+        ok = (answer.index == q.right) if answer.via_choices else judge(q, answer.text)
     right = q.options[q.right]
     print(f"  {'맞다.' if ok else '아니다.'}  정답: {right}")
     print(f"  근거: {q.evidence}")
@@ -628,6 +811,9 @@ def run(*, track_id: str = "all", count: int = 5, family: str | None = None,
     print(f"문제 풀기 · {track.title} · 난이도 {ask.NAMES.get(m.level, m.level)}")
     print("코드 전체에서 그때그때 만든 문제다. 정답은 코드 구문과 실행 기록에서 뽑았다.")
     print(f"  오답 고르기: {m.vectors.source}")
+    if m.stale_traces:
+        print(f"  코드가 바뀌어 쓰지 않은 실행 기록 {len(m.stale_traces)}개 — 새로 뜨려면 "
+              f"python dojo.py trace <시나리오>  (예: {m.stale_traces[0]})")
     print(SEPARATOR)
     questions = draw(m, count, families=[family] if family else None)
     if not questions:
@@ -650,25 +836,37 @@ def run(*, track_id: str = "all", count: int = 5, family: str | None = None,
     return 0
 
 
-def selftest(*, per_family: int = 30, track_id: str = "all", allow_ollama: bool = True) -> int:
-    """유형·난이도마다 문제를 만들어 정답이 하나뿐인지 검사한다. 대상 수(분모)도 적는다."""
+def selftest(*, per_family: int = 0, track_id: str = "all", allow_ollama: bool = True) -> int:
+    """낼 수 있는 자리를 전부(또는 유형마다 per_family 개) 만들어 check() 로 검사한다.
+
+    이 검사가 보는 것: 보기 넷·정답 하나·정답 번호·오답이 정답 조건에 걸리지 않음·가린 것이 새지 않음,
+    그리고 정답 쪽 소스에 호출이 실제로 있는지·실행 기록 원본의 다음 호출과 같은지.
+    보지 않는 것: 정적으로 못 푸는 호출(동적 호출·상속)로 생기는 관계의 빠짐.
+    """
     failed = 0
     base = material(track_id=track_id, seed=0, allow_ollama=allow_ollama)
-    print(f"색인: 함수 {len(base.index.units)}개 (대상 트랙 {len(base.units)}개) · 실행 기록 {len(base.traces)}개")
+    print(f"색인: 함수 {len(base.index.units)}개 (대상 트랙 {len(base.units)}개) · "
+          f"실행 기록 {len(base.traces)}개 (낡아서 뺀 것 {len(base.stale_traces)}개)")
     print(f"오답 고르기: {base.vectors.source}")
-    print("유형별 대상 수(문제를 낼 수 있는 함수·검사·호출 자리):")
-    for fam, n in pool_sizes(base).items():
+    sizes = pool_sizes(base)
+    print("유형별 대상 수(문제를 낼 수 있는 자리):")
+    for fam, n in sizes.items():
         print(f"  {fam:<11} {n}")
     for level in ("easy", "normal", "hard"):
         for fam in FAMILIES:
             m = Material(index=base.index, vectors=base.vectors, units=base.units, traces=base.traces,
                          rng=random.Random(zlib.crc32(f"{level}/{fam}".encode())), level=level)
             made, bad = 0, 0
-            for _ in range(per_family * 4):
-                if made >= per_family:
-                    break
-                target = m.rng.choice(m.units)
-                q = gen_trace_next(m) if fam == "trace_next" else GENERATORS[fam](m, target)
+            if fam == "trace_next":
+                jobs = [(sc, i) for sc, seq in sorted(m.traces.items()) for i in trace_spots(seq)]
+                make = lambda job: gen_trace_next(m, spot=job)          # noqa: E731
+            else:
+                jobs = list(m.units)
+                make = lambda job: GENERATORS[fam](m, job)              # noqa: E731
+            if per_family:
+                jobs = m.rng.sample(jobs, min(per_family, len(jobs)))
+            for job in jobs:
+                q = make(job)
                 if q is None:
                     continue
                 made += 1
@@ -678,7 +876,8 @@ def selftest(*, per_family: int = 30, track_id: str = "all", allow_ollama: bool 
                     if bad <= 2:
                         print(f"  [실패] {level}/{fam} {q.target}: {problems}")
             failed += bad
-            print(f"  {level:<6} {fam:<11} 만든 문제 {made:>3} · 검사 실패 {bad}")
+            print(f"  {level:<6} {fam:<11} 검사한 문제 {made:>4} · 실패 {bad}")
     print("")
-    print("[통과] 만든 문제 모두 정답이 하나뿐이다." if not failed else f"[실패] {failed}건")
+    print("[통과] 만든 문제가 모두 자체 검사를 통과했다(정적으로 못 푸는 호출은 이 검사 밖이다)."
+          if not failed else f"[실패] {failed}건")
     return 0 if not failed else 1
