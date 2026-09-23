@@ -75,11 +75,9 @@ jobs:
       # 새 DB 에는 프롬프트가 없다. 계약 시험이 배포 중인 프롬프트를 확인하므로 먼저 등록한다.
       - name: 프롬프트 등록
         run: python -m scripts.register_prompts
-      # ★test_deactivating_does_not_erase_history 는 「DB 에 비활성 프롬프트가 1개 이상 있다」를
-      #   요구한다. 개발 DB 에는 옛 Team 프롬프트 기록이 남아 있어 통과하지만 새 DB 에는
-      #   과거 기록이 없어 반드시 실패한다 — 코드가 아니라 DB 이력을 검사하는 시험이다.
-      #   가짜 기록을 넣어 맞추지 않고, 시험이 스스로 기록을 만들도록 고칠 때까지 여기서만 뺀다.
+      # ☆2026-09-24 test_deactivating_does_not_erase_history 를 여기서 빼 두었다가 되돌렸다 —
+      #   「DB 에 비활성 프롬프트가 있나」(개발 DB 이력)를 세던 시험을, 시험 안에서 한 판을 올리고
+      #   바꾼 뒤 옛 판이 남는지 보게(롤백되는 트랜잭션 안에서) 고쳤다. 빈 DB 에서도 성립한다.
       - name: 시험
         run: >-
           python -m pytest tests/architecture tests/contract tests/unit -q
-          --deselect tests/contract/test_active_prompts_are_the_deployed_set.py::test_deactivating_does_not_erase_history
