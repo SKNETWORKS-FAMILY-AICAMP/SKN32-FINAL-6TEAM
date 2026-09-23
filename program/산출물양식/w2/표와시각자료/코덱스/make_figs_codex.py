@@ -5,7 +5,6 @@ GRAPHVIZ_BIN = Path(r"C:\Program Files\Graphviz\bin")
 if GRAPHVIZ_BIN.is_dir():
     os.environ["PATH"] = str(GRAPHVIZ_BIN) + os.pathsep + os.environ.get("PATH", "")
 
-import re
 from html import escape
 
 from docx import Document

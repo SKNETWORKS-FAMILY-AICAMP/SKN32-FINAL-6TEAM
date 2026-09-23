@@ -16,8 +16,8 @@
 """
 import sys
 
-from draw import (AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, LINE, OUT, PURPLE,
-                  RED, STEPS, arrow, box, canvas, save)
+from draw import (AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, OUT, PURPLE,
+                  RED, STEPS, box, canvas, save)
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 

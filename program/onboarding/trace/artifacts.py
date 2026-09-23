@@ -9,7 +9,7 @@
 ★컬럼 이름은 `app/infrastructure/db/migrations/001_schema.sql` 에서 그대로 옮겼다.
   파일 이름도 실제로 있는 것만 적었다. 지어낸 이름은 없다.
 """
-from draw import AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, LINE, PURPLE, RED, box, canvas, save
+from draw import AMBER, BLUE, DIM, GREEN, INK, PURPLE, RED, box, canvas, save
 
 
 #: 한 줄 높이. ★0.030 으로 잡았더니 좌열 두 상자가 캔버스 아래로 넘쳤다.

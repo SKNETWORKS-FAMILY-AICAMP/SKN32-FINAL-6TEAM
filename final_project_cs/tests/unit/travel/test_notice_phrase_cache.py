@@ -9,7 +9,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 

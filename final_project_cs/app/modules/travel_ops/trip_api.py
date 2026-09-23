@@ -41,7 +41,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
-import json
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope

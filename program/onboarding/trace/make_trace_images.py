@@ -17,8 +17,8 @@
 import os
 import sys
 
-from draw import (AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, LINE, OUT, PURPLE,
-                  RED, STEPS, arrow, box, canvas, save)
+from draw import (AMBER, BLUE, DIM, FAINT, GREEN, GREY, INK, OUT, PURPLE,
+                  RED, STEPS, box, canvas, save)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import figures as F  # noqa: E402

@@ -9,8 +9,6 @@
 """
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import Any
 
 from . import ask
@@ -92,7 +90,7 @@ def run(track_id: str, trace: dict[str, Any]) -> int:
             "규칙을 어긴 파일을 쓴다. 경로의 일부만 써도 된다.",
             hints=[f"깨진 규칙: {defect.invariant}",
                    f"그 파일은 {ask.layer_of(actual)}에 있다.",
-                   f"실패한 테스트 이름에 그 파일의 역할이 드러난다."],
+                   "실패한 테스트 이름에 그 파일의 역할이 드러난다."],
             fallback=(files, index)))
         ok = (third.index == index) if third.via_choices else (
             bool(third.text) and third.text.lower() in actual.lower())

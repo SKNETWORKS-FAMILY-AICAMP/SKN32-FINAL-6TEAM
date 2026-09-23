@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import httpx
-import pytest
 
 from app.infrastructure.travel.heritage import HeritageSource
 from app.infrastructure.travel.base import TravelSources

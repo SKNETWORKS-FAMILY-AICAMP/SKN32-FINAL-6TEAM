@@ -6,7 +6,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.modules.travel_ops.itinerary_checks import Part, check_itinerary

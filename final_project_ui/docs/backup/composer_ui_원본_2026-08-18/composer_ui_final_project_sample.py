@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import html
 from pathlib import Path
 from typing import Any, get_args, get_type_hints
 
 import yaml
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 
 from app.application.composer_service import RevisionConflict, apply_candidate
 from app.core.project_config import (
@@ -270,7 +269,7 @@ async def composer_post(request: Request) -> HTMLResponse:
         #   (`docs/reports/2026-08-17_S-COMPOSER-WRITE-CHANNEL_검토.md`).
         candidate = apply_candidate(raw, base_revision=current.revision, path=_path(request))
         return _render(request, candidate, notice="저장했습니다. 변경 사항을 적용하려면 애플리케이션을 재기동하세요.")
-    except RevisionConflict as exc:
+    except RevisionConflict:
         return _render(request, current, errors=[
             "다른 변경이 먼저 적용됐다. 화면을 새로고침해 최신 구성을 다시 확인하라."])
     except (ProjectConfigError, OSError, yaml.YAMLError, ValueError) as exc:

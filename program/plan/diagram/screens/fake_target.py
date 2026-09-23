@@ -5,7 +5,6 @@
 고친 코드가 실제로 사유를 보내는지 브라우저로 확인하려고 만들었다.
 """
 import json
-import re
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 ISSUER = "issuer-secret"

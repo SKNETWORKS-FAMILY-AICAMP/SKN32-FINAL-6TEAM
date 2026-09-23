@@ -18,7 +18,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from ml import REPO_ROOT, artifact_dir                     # noqa: E402
+from ml import artifact_dir                     # noqa: E402
 from ml.build_intent_pool import FILES, RAW, TRAVEL_ITEMS, _column   # noqa: E402
 from ml.preprocess import DEFAULT_SOURCE, _EXTRA_PII       # noqa: E402
 

@@ -7,7 +7,6 @@ from typing import Any
 from psycopg import Connection
 from psycopg.types.json import Json
 
-from app.core.transition import OutboxMessage
 
 
 def _count(rows: list[tuple[str, str]]) -> dict[str, dict[str, int]]:

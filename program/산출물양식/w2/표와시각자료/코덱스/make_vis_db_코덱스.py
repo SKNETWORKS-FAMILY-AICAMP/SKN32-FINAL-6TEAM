@@ -12,7 +12,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
-from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle, FancyArrowPatch
 from matplotlib.ticker import MaxNLocator
 from docx import Document

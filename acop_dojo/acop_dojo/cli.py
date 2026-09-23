@@ -229,7 +229,7 @@ def _build_brief(step: build.Step) -> None:
     print("")
     print(f"{step.index}단계 · {step.title}")
     print(SEPARATOR)
-    print(f"  이 단계를 지금 만드는 이유")
+    print("  이 단계를 지금 만드는 이유")
     for line in step.why.splitlines():
         print(f"    {line}")
     print("")
@@ -390,7 +390,7 @@ def cmd_review(args: argparse.Namespace) -> int:
         print(f"  규칙: {concept}")
         if other:
             catalog = defects.load_catalog()
-            print(f"  같은 규칙을 다른 코드에 적용한다. 아래는 실패한 테스트다.")
+            print("  같은 규칙을 다른 코드에 적용한다. 아래는 실패한 테스트다.")
             for nodeid in catalog["entries"][other]["failed"][:4]:
                 print(f"    FAILED  {nodeid}")
             target_defect = defects.by_id(other)

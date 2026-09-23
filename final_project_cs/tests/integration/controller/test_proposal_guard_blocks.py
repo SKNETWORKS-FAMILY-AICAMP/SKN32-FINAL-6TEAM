@@ -13,7 +13,6 @@ import asyncio
 from datetime import UTC, datetime
 from uuid import uuid4
 
-import pytest
 
 from app.core.contracts import (ActionProposal, ContextPack, Evidence, NextAction,
                                 TeamManifest, TeamResult)

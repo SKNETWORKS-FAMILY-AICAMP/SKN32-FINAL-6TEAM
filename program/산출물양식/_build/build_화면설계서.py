@@ -6,7 +6,6 @@
 화면 구성은 2026-08-28에 콘솔을 실제로 띄워 확인한 것이다.
 """
 import os
-import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -20,14 +20,13 @@
 `앵커` 는 **문단의 전체 텍스트**와 비교한다. 같은 문단이 여럿이면 첫째 뒤에 넣는다.
 표 바로 위에 굵은 캡션 문단을 하나 둔다 — 캡션이 곧 앵커가 되어 다음 표를 이어 붙일 수 있다.
 """
-import copy
 import time
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches, Pt, RGBColor
+from docx.shared import Inches, Pt
 
 FONT = "맑은 고딕"
 HEAD_FILL = "DDE7F0"   # WBS·요구사항 머리행과 같은 색

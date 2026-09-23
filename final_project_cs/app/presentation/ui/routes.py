@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 import app.core.settings as settings_module
 from app import composition
-from app.core.project_config import ProjectConfigError, load_project_config
+from app.core.project_config import ProjectConfigError
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.db.session import get_connection

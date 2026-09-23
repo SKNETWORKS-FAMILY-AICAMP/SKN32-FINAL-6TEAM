@@ -194,7 +194,7 @@ def test_a_windowless_streak_leaves_the_alert_in_the_log(tmp_path, monkeypatch):
     """★창 없이(`stdout=None`) 연속 실패해도 **로그 파일에 알림 줄**이 남아야 한다."""
     import sys as _sys
 
-    from scripts.ops import guard, jobs, tick
+    from scripts.ops import jobs, tick
 
     monkeypatch.setattr(tick, "HEARTBEAT_DIR", tmp_path / "hb")
     monkeypatch.setattr(tick, "LOG_DIR", tmp_path / "logs")

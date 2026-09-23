@@ -9,7 +9,6 @@ python-pptx 는 기존 파일의 슬라이드를 복제하는 기능이 없다. 
   그래서 관계를 새로 달고 rId 를 바꿔 적는다.
 """
 import copy
-import re
 
 from PIL import Image
 from pptx.oxml.ns import qn

@@ -545,7 +545,7 @@ def check_progress_claims(text: str) -> int:
     hits = [h for h in hits if fingerprint(5, h[1], h[2]) not in LEDGER_ROWS]
 
     if not hits:
-        print(f"    새로 볼 것 없음." + (f" (판정됨 {settled}줄)" if settled else ""))
+        print("    새로 볼 것 없음." + (f" (판정됨 {settled}줄)" if settled else ""))
         return 0
 
     by_section: dict[str, list[tuple[int, str]]] = defaultdict(list)

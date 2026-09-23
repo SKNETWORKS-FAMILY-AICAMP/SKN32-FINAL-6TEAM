@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import html
 from pathlib import Path
 from typing import Any, get_args, get_type_hints
 
 import yaml
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 
 from app.core.project_config import (
     DEFAULT_PROJECT_CONFIG,

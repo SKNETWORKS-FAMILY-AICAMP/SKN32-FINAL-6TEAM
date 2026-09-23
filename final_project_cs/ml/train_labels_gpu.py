@@ -255,7 +255,7 @@ def main():
     parser.add_argument("--save-models", nargs="*", default=None,
                         help="이 모델만 가중치를 저장한다(디스크). 없으면 모두")
     args = parser.parse_args()
-    gpu_limit_gb = limit_gpu_memory()
+    _gpu_limit_gb = limit_gpu_memory()
     # ★실행 중인 순서 스크립트를 고치지 않고 설정을 바꾸는 자리 — 바꾼 값은 결과에 남긴다.
     overrides_path = Path(__file__).with_name("label_train_overrides.json")
     overrides = json.loads(overrides_path.read_text(encoding="utf-8")) if overrides_path.exists() else {}

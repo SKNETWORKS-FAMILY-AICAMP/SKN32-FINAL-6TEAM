@@ -12,7 +12,6 @@ import json
 import time
 from pathlib import Path
 
-from eval.next_action_mapping import ACTION_MAP, NEXT_ACTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
 #: 기본은 judge-v1 — **바꾸지 않는다.** 지금까지의 모든 수치가 v1 로 매겨져 있고,
