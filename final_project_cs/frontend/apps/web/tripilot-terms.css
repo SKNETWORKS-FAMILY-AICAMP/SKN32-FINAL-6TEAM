@@ -1,0 +1,24 @@
+.embedded-onboarding .topbar,.embedded-onboarding .j-topbar,.embedded-onboarding #card-0{display:none}
+.embedded-onboarding .phone{margin:0;border:0;border-radius:0;box-shadow:none;min-height:100svh;width:100%;max-width:none}
+.embedded-onboarding .intro{padding-top:16px}
+button.terms-summary{display:block;width:100%;text-align:left;border:1px solid var(--line);cursor:pointer}
+.terms-read-link{display:block;margin-top:10px;color:var(--green);font-weight:650}
+.terms-check:has(input:disabled){opacity:.5;cursor:not-allowed}
+.terms-continue{width:100%;margin-top:16px}
+.terms-open{overflow:hidden}
+.terms-dialog{position:fixed;inset:0;width:100%;max-width:none;height:100dvh;max-height:none;margin:0;border:0;padding:0;background:#f7f9f3;color:var(--ink);overflow:hidden}
+.terms-dialog[open]{display:flex;flex-direction:column}
+.terms-dialog::backdrop{background:#f7f9f3}
+.terms-full-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:24px 22px 18px;border-bottom:1px solid var(--line);flex-shrink:0}
+.terms-full-header small{font-size:9px;letter-spacing:1px;color:var(--muted)}
+.terms-full-header h2{font-size:20px;line-height:1.5;margin:8px 0 0;letter-spacing:-.6px}
+.terms-close{background:transparent;min-width:44px;min-height:44px;font-size:27px}
+.terms-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 23px 24px;scrollbar-gutter:stable}
+.terms-scroll h3{font-size:15px;margin:25px 0 9px}
+.terms-scroll p{font-size:13px;line-height:1.95;color:#526858;margin:0}
+.terms-scroll .terms-end{padding-top:22px;font-size:11px;color:var(--green)}
+.terms-full-footer{flex-shrink:0;padding:15px 22px max(18px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:white}
+.terms-full-footer .terms-check{min-height:44px;margin:0}
+.terms-full-footer .consent-mark{color:transparent;font-size:12px;line-height:14px;text-align:center}
+.terms-full-footer input:checked + .consent-mark{color:white}
+#terms-read-hint{font-size:11px;line-height:1.6;color:var(--muted);margin:0 0 12px}

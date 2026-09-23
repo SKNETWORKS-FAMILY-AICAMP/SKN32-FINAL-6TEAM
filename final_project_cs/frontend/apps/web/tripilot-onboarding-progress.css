@@ -1,0 +1,21 @@
+/* The marker follows the fill as answers are selected or cleared. */
+.progress-track {
+  overflow: visible;
+  margin-top: 23px;
+}
+
+.progress-fill {
+  position: relative;
+}
+
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  width: 25.14px;
+  height: 22px;
+  transform: translateX(50%);
+  background: url("tripilot-traveler-icon.svg") center / contain no-repeat;
+  pointer-events: none;
+}

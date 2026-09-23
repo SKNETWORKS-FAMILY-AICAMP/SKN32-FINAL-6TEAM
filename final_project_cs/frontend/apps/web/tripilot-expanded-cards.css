@@ -1,0 +1,58 @@
+/* Separate preview: the iframe begins directly below the shared brand header. */
+/* Lock the page only while the expanded onboarding is actually visible. */
+.expanded-cards body.card-expanded:has(> #app:not([hidden])){overflow:hidden}
+.expanded-cards:has(body.card-expanded > #app:not([hidden])){overflow:hidden}
+/* Keep long card content reachable without a visible scrollbar or gutter. */
+.expanded-cards .card.active{scrollbar-width:none;scrollbar-gutter:auto}
+.expanded-cards .card.active::-webkit-scrollbar{display:none;width:0;height:0}
+.expanded-cards .card.active{
+  position:fixed;inset:8px 12px 12px;z-index:20;margin:0;
+  height:calc(100dvh - 20px);border:1px solid var(--green);
+  border-radius:20px;background:#fff;box-shadow:0 12px 36px #24392f16;
+  overflow-y:auto;overscroll-behavior:contain;
+  animation:expandCard .36s cubic-bezier(.22,.8,.2,1) both;
+}
+.expanded-cards .card.active > .card-head{
+  position:sticky;top:0;z-index:2;background:#fff;min-height:85px;
+  border-bottom:1px solid var(--line);
+}
+.expanded-cards .card.active > .card-content{display:block;opacity:1}
+.expanded-cards .card.active > .card-content > .content-inner{overflow:visible}
+.expanded-cards #card-1.active .card-padding{padding-top:22px}
+.expanded-cards #card-1.active .divider{display:none}
+.expanded-cards #card-1.active .terms-summary{padding:20px;min-height:145px}
+.expanded-cards #card-1.active .terms-check{margin-top:22px}
+.expanded-cards #card-1.active .card-padding{
+  min-height:calc(100dvh - 106px);display:flex;flex-direction:column;
+}
+.expanded-cards #card-1.active .terms-continue{flex:none;margin-top:auto;min-height:48px}
+.expanded-cards #card-1.active .draft-note{margin-bottom:24px}
+.expanded-cards #card-2.active:not(.done){
+  background:#fff;border-color:var(--green);box-shadow:0 12px 36px #24392f16;
+  overflow-y:auto;
+}
+.expanded-cards .question-slide{
+  min-height:var(--question-card-height,calc(100dvh - 82px));border:0;border-radius:0;box-shadow:none;
+  padding:14px 18px 12px;
+  display:flex;flex-direction:column;
+}
+.expanded-cards .question-slide .question{flex:1;display:flex;flex-direction:column}
+.expanded-cards .question-slide .question-nav{margin-top:auto;padding-top:12px}
+.expanded-cards .question-slide .slide-top{min-height:44px;margin-bottom:10px}
+.expanded-cards .question-slide .progress-track{margin-top:17px;margin-bottom:16px}
+.expanded-cards .question-slide .question h2{margin-bottom:7px}
+.expanded-cards .question-slide .helper{margin-bottom:14px}
+.expanded-cards .question-slide .group-label{margin-top:13px;margin-bottom:7px}
+.expanded-cards .question-slide .group-label:first-child{margin-top:0}
+.expanded-cards .question-slide .counter-list{margin-top:12px}
+.expanded-cards .question-slide .counter-row{min-height:55px}
+.expanded-cards .question-slide .field{margin-top:11px}
+.expanded-cards .question-slide .error:empty{margin:0}
+.expanded-cards .question-viewport{border-radius:0}
+.expanded-cards .carousel-footer{padding-bottom:12px}
+.expanded-cards .card.active .chevron{color:var(--green)}
+@keyframes expandCard{
+  from{opacity:.65;transform:translateY(22px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.expanded-cards .card.active{animation:none}}

@@ -1,0 +1,19 @@
+.container { max-width: 1120px; margin: auto; padding: 0 36px; }
+.form { min-height: calc(100svh - 101px); display: flex; flex-direction: column; }
+.editor { padding-top: 32px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.labelRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-weight: 600; }
+.labelRow label span { color: var(--color-primary); font-size: 11px; margin-left: 5px; }
+.labelRow button { font-size: 12px; font-weight: 400; }
+.editor textarea { padding: 14px; width: 100%; min-width: 0; flex: 1; min-height: 310px; resize: vertical; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 6px; line-height: 1.9; }
+.editor textarea[aria-invalid=true] { border-color: var(--color-error); }
+.inputMeta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--color-muted); }
+.inputMeta span { font-variant-numeric: tabular-nums; }
+.error { padding: 11px 14px; background: var(--color-error-soft); color: var(--color-error); border-left: 3px solid var(--color-error); font-size: 12px; margin-top: 14px; }
+.warning { padding: 10px 14px; color: var(--color-warning); background: var(--color-warning-soft); font-size: 12px; margin-top: 12px; }
+.actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; border-top: 1px solid var(--color-border); margin-top: 22px; }
+.actions span { color: var(--color-muted); font-size: 12px; }
+.demoOptions { color: var(--color-muted); font-size: 12px; margin-top: 15px; }
+.demoOptions summary { padding: 6px 0; }
+.demoOptions label { display: block; margin: 6px 0; }
+.demoOptions select { width: 100%; max-width: 350px; background: var(--color-subtle); padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 6px; }
+@media (max-width: 550px) { .container { padding: 0 18px; } .editor { padding-top: 24px; } .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; } .actions span { grid-column: 1 / -1; grid-row: 1; text-align: center; } .actions a, .actions button { grid-row: 2; } .editor textarea { min-height: 350px; } }
