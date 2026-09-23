@@ -52,6 +52,7 @@ LOADS = [
     ("make_attribute_sql.py", "attributes.sql"),
     ("make_truth_sql.py",     "truth.sql"),
     ("make_operator_sql.py",  "operator.sql"),
+    ("make_vegan_sql.py",     "vegan.sql"),
 ]
 
 
