@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ko" class="expanded-cards">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>triPilot · 카드 슬라이드 온보딩</title>
+<style>
+:root{--bg:#F3F5F3;--white:#FFFFFF;--surface:#F6F7F5;--ink:#24392F;--muted:#6D7C73;--line:#DCE3DD;--green:#2E6047;--tint:#E9F2EB;font-family:"Segoe UI","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{cursor:default}button,input,select{ -webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--green);outline-offset:3px}button{border:0}input[type="checkbox"],input[type="radio"]{accent-color:var(--green)}
+.phone{width:100%;max-width:402px;min-height:874px;margin:28px auto;background:var(--bg);overflow:hidden;position:relative;border:1px solid var(--line);border-radius:32px;box-shadow:0 22px 65px #24392f0c}.topbar{height:85px;padding:27px 24px 16px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;gap:9px;align-items:center;font-weight:750;font-size:21px;letter-spacing:-.7px}.brand-mark{width:29px;height:29px;border-radius:9px;background:var(--green);color:white;display:grid;place-items:center;font-size:26px;font-weight:600;line-height:1;padding-bottom:4px}.top-note{font-size:10px;letter-spacing:1.7px;color:var(--muted);font-weight:650}.intro{padding:23px 24px 25px}.eyebrow{display:flex;gap:6px;align-items:center;font-size:11px;letter-spacing:1.2px;font-weight:650;color:var(--green);margin-bottom:12px}.eyebrow-dot{height:5px;width:5px;border-radius:50%;background:var(--green)}h1{font-size:28px;line-height:1.45;letter-spacing:-1.25px;margin:0;font-weight:720}.intro p{font-size:13px;line-height:1.75;color:var(--muted);margin:11px 0 0}.stack{padding:0 20px;display:flex;flex-direction:column;gap:13px}.card{border:1px solid var(--line);border-radius:20px;background:var(--white);transition:border-color .3s,box-shadow .3s;overflow:hidden}.first-render .card:nth-child(2){animation-delay:.11s}.first-render .card:nth-child(3){animation-delay:.22s}.card.active{border-color:var(--green);box-shadow:0 6px 18px #24392f07}.card-head{background:none;width:100%;min-height:91px;padding:19px 18px;display:flex;align-items:center;gap:12px;text-align:left}.step-number{flex:0 0 31px;width:31px;height:31px;border-radius:11px;display:grid;place-items:center;background:var(--surface);color:var(--muted);font-size:12px;font-weight:700}.active .step-number,.done .step-number{background:var(--tint);color:var(--green)}.step-copy{flex:1;min-width:0}.step-title{display:block;font-size:15px;font-weight:700;letter-spacing:-.4px}.step-sub{display:block;font-size:11px;color:var(--muted);line-height:1.55;margin-top:4px}.chevron{width:16px;height:16px;color:var(--muted);transition:transform .4s}.active .chevron{transform:rotate(180deg)}.card-head:disabled{opacity:.67}.card-content{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .5s cubic-bezier(.22,.8,.2,1),opacity .35s}.active .card-content{grid-template-rows:1fr;opacity:1}.content-inner{min-height:0;overflow:hidden}.card-padding{padding:0 18px 20px}.divider{height:1px;background:var(--line);margin:0 0 19px}.language-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.language-option{padding:19px 15px 16px;text-align:left;min-height:127px;border:1px solid var(--line);border-radius:14px;background:var(--surface);position:relative;transition:.18s}.language-option:hover,.chip:hover{border-color:var(--green)}.language-option.selected{border-color:var(--green);background:var(--tint)}.language-symbol{font-size:25px;font-weight:550;line-height:1.4;display:block;margin-bottom:12px}.language-name{display:block;font-size:14px;font-weight:650}.language-native{font-size:11px;color:var(--muted);display:block;margin-top:3px}.selection-dot{position:absolute;right:12px;top:13px;width:15px;height:15px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}.selected .selection-dot{border-color:var(--green);background:var(--green);color:white}.selected .selection-dot::after{content:'✓';font-size:10px}.microcopy{color:var(--muted);font-size:10px;line-height:1.7;margin:15px 0 0;display:flex;gap:6px;align-items:flex-start}.tiny-icon{width:13px;height:13px;flex-shrink:0;margin-top:2px}.terms-intro{font-size:14px;font-weight:650;line-height:1.6;margin:0 0 12px}.terms-summary{padding:14px;border-radius:12px;background:var(--surface);font-size:12px;line-height:1.85;color:var(--muted);margin-bottom:16px}.terms-summary p{margin:0}.terms-summary strong{display:block;color:var(--ink);font-weight:600;margin-bottom:5px}.terms-check{min-height:60px;display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.8;cursor:pointer}.terms-check input{width:19px;height:19px;flex-shrink:0;margin:2px 0 0}.draft-note{font-size:10px;color:var(--muted);margin:7px 0 0;line-height:1.6}.question-progress{display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:.3px;font-weight:650;margin-bottom:8px;color:var(--green)}.progress-track{height:3px;background:var(--surface);border-radius:5px;overflow:hidden;margin-bottom:24px}.progress-fill{height:100%;background:var(--green);border-radius:5px;transition:width .3s}.question-viewport{position:relative;overflow:hidden}.question{width:100%;padding:0 2px}.question h2{font-size:21px;font-weight:700;line-height:1.45;letter-spacing:-.9px;margin:0 0 9px}.question .helper{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 21px}.question .helper .optional{display:inline-block;background:var(--tint);color:var(--green);padding:1px 6px;border-radius:4px;margin-left:4px;font-size:10px}.group-label{font-size:11px;line-height:1.6;font-weight:650;color:var(--muted);margin:20px 0 9px}.group-label:first-child{margin-top:0}.chips{display:flex;flex-wrap:wrap;gap:8px}.chips.grid{display:grid;grid-template-columns:1fr 1fr}.chip{background:var(--white);border:1px solid var(--line);border-radius:11px;min-height:46px;padding:11px 13px;font-size:12px;font-weight:500;line-height:1.4;text-align:center;transition:background .14s,border-color .14s}.chip.selected{background:var(--tint);border-color:var(--green);color:var(--green);font-weight:650}.chips.grid .chip{min-height:55px}.option-icon{display:block;height:23px;margin-bottom:5px;color:var(--green)}.option-icon svg{height:20px;width:20px}.question label.field{display:block;font-size:11px;font-weight:600;margin:15px 0 0;color:var(--muted)}.field input,.field select{display:block;width:100%;min-width:0;min-height:46px;color:var(--ink);border:1px solid var(--line);border-radius:10px;background:var(--white);padding:11px 10px;margin-top:7px;font-size:12px}.field input::placeholder{color:var(--muted);opacity:.65}.field input[type="file"]{font-size:10px;padding:9px 8px}.field input::file-selector-button{font:inherit;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:var(--ink);margin-right:8px}.two-columns{display:grid;grid-template-columns:1fr 1fr;gap:9px}.counter-list{border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-top:17px}.counter-row{display:flex;align-items:center;justify-content:space-between;min-height:65px;border-bottom:1px solid var(--line)}.counter-row:last-child{border-bottom:0}.counter-label{font-size:12px;font-weight:600}.counter-caption{display:block;color:var(--muted);font-size:10px;font-weight:400;margin-top:3px}.counter{display:flex;align-items:center;gap:4px}.counter button{height:44px;width:44px;background:none;color:var(--green);font-size:21px;border-radius:9px}.counter button:disabled{color:var(--line)}.counter output{min-width:19px;text-align:center;font-size:13px;font-weight:650}.question-nav{display:flex;gap:9px;margin-top:23px}.previous{width:60px;min-height:47px;border:1px solid var(--line);border-radius:11px;background:white;font-size:12px}.next{flex:1;min-height:47px;border-radius:11px;background:var(--green);color:white;font-size:12px;font-weight:650;display:flex;align-items:center;justify-content:center;gap:8px}.next:disabled{background:var(--line);color:var(--muted)}.next svg{width:15px;height:15px}.skip{width:100%;min-height:44px;background:none;font-size:11px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}.error{font-size:10px;line-height:1.6;color:var(--muted);margin:12px 0 0;min-height:0}.bottom-note{margin:25px 28px 29px;color:var(--muted);font-size:10px;line-height:1.9;text-align:center}.bottom-note .leaf{font-size:16px;display:block;margin-bottom:5px;color:var(--green)}.success{text-align:center;padding:7px 0 0}.success-symbol{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--tint);color:var(--green);font-size:25px;margin:0 auto 18px}.success h2{font-size:21px;line-height:1.5;margin:0 0 10px;letter-spacing:-.7px}.success p{font-size:12px;color:var(--muted);line-height:1.9;margin:0 0 22px}.summary-mini{background:var(--surface);border-radius:12px;padding:14px;text-align:left;margin-bottom:19px}.summary-row{display:flex;justify-content:space-between;gap:15px;font-size:11px;line-height:1.7;margin:5px 0}.summary-row span{color:var(--muted)}.summary-row strong{font-weight:600;text-align:right}.success .next{width:100%}.prototype-note{font-size:10px!important;margin:15px 0 0!important}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@keyframes arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card.done:not(.active) .card-head{min-height:64px;padding:14px 18px}.card.done:not(.active) .step-sub{display:none}.phone:has(#card-2.active) .intro{padding-top:5px;padding-bottom:18px}.phone:has(#card-2.active) .intro .eyebrow{margin-bottom:8px;font-size:10px}.phone:has(#card-2.active) .intro h1{font-size:24px;line-height:1.4}.phone:has(#card-2.active) .intro p{margin-top:7px;font-size:11px;line-height:1.65}
+@media(max-width:450px){.phone{margin:0;border:0;border-radius:0;box-shadow:none;min-height:100svh}.topbar{padding-top:23px;height:77px}.intro{padding-top:20px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Each question remains a separate card while the complete track moves. */
+#card-2.active:not(.done){background:transparent;border-color:transparent;box-shadow:none;overflow:visible}
+#card-2.active:not(.done)>.card-head{display:none}
+#card-2:not(.done)>.card-content>.content-inner>.card-padding{padding:0}
+#card-2:not(.done)>.card-content>.content-inner>.card-padding>.divider{display:none}
+.question-viewport{overflow:hidden;touch-action:pan-y pinch-zoom;transition:height .34s ease;outline:0;border-radius:20px}
+.question-track{display:flex;align-items:flex-start;gap:12px;width:100%;transition:transform .36s cubic-bezier(.22,.8,.25,1.06);will-change:transform}
+.question-track.dragging{transition:none}
+.question-slide{flex:0 0 100%;min-width:0;border:1px solid var(--green);border-radius:20px;background:var(--white);padding:19px 18px 20px;box-shadow:0 6px 18px #24392f07}
+.slide-top{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;background:none;text-align:left;margin-bottom:17px}.slide-top .chevron{flex-shrink:0}
+.slide-top .step-number{background:var(--tint);color:var(--green)}
+.slide-top .step-title{font-size:13px}
+.slide-top .step-sub{font-size:10px}
+.slide-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--green);white-space:nowrap}
+.question-slide .progress-track{margin-bottom:23px}
+.question-slide .question{padding:0}
+.carousel-footer{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 0}
+.carousel-dots{display:flex;align-items:center;justify-content:center;gap:6px;height:18px}
+.carousel-dot{width:4px;height:4px;background:var(--line);border-radius:99px;transition:width .36s cubic-bezier(.22,.8,.25,1.06),background .24s}
+.carousel-dot[aria-current="step"]{width:18px;background:var(--green)}
+.carousel-hint{margin:0;font-size:10px;color:var(--muted);line-height:1.7}
+@media(prefers-reduced-motion:reduce){.question-track,.question-viewport{transition:none!important}}
+
+
+/* Short feedback stays local to the control the traveler just used. */
+.first-render .card{animation:arrive .6s both}
+.language-option,.chip,.next,.previous{transition:transform .14s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.language-option:active:not(:disabled),.chip:active:not(:disabled),.next:active:not(:disabled),.previous:active:not(:disabled){transform:scale(.97)}
+.chip{position:relative;padding-right:30px}
+.option-check{position:absolute;right:9px;top:50%;width:13px;height:13px;transform:translateY(-50%);opacity:0;pointer-events:none}
+.chip.selected .option-check{opacity:1}
+.drawn-check{display:block;width:100%;height:100%}
+.drawn-check path{stroke-dasharray:1;stroke-dashoffset:0}
+.selection-feedback.selected{animation:selectionTint .22s ease-out both}
+.selection-feedback:not(.selected){animation:deselectionTint .22s ease-out both}
+.selection-feedback .drawn-check path{animation:drawCheck .2s ease-out both}
+.selection-feedback .selection-dot::after{animation:checkPop .22s ease-out both}
+.progress-fill{transition:width .36s cubic-bezier(.22,.8,.25,1)}
+.terms-check{position:relative}
+.terms-check input{position:absolute;width:1px;height:1px;margin:0;opacity:0}
+.consent-mark{position:relative;flex:0 0 19px;width:19px;height:19px;margin-top:2px;padding:2px;border:1px solid var(--line);border-radius:5px;background:var(--white);color:var(--white)}
+.consent-mark .drawn-check{opacity:0}
+.terms-check input:checked + .consent-mark{background:var(--green);border-color:var(--green)}
+.terms-check input:checked + .consent-mark .drawn-check{opacity:1}
+.terms-check input:focus-visible + .consent-mark{outline:3px solid var(--green);outline-offset:3px}
+.success-symbol{position:relative}
+.success-symbol .drawn-check{width:30px;height:30px}
+.completion-motion{animation:checkPop .32s cubic-bezier(.2,.8,.3,1) both}
+.completion-motion .drawn-check path{animation:drawCheck .24s ease-out both}
+.success-symbol.completion-motion .drawn-check path{animation-duration:.32s;animation-delay:.08s}
+.success-symbol.completion-motion::after{content:'';position:absolute;inset:0;border:1px solid var(--green);border-radius:50%;pointer-events:none;animation:completionRing .6s ease-out both}
+@keyframes selectionTint{from{background-color:var(--surface)}}
+@keyframes deselectionTint{from{background-color:var(--tint)}}
+@keyframes drawCheck{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes checkPop{0%{transform:scale(.85)}65%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes completionRing{from{transform:scale(.9);opacity:.3}to{transform:scale(1.48);opacity:0}}
+@media(prefers-reduced-motion:reduce){.language-option:active,.chip:active,.next:active,.previous:active{transform:none!important}.success-symbol.completion-motion::after{display:none}}
+</style>
+<link rel="stylesheet" href="tripilot-onboarding-scene.css">
+<link rel="stylesheet" href="tripilot-onboarding-progress.css">
+<link rel="stylesheet" href="tripilot-journey.css">
+<link rel="stylesheet" href="tripilot-terms.css">
+<link rel="stylesheet" href="tripilot-expanded-cards.css">
+<link rel="stylesheet" href="tripilot-navigation-variants.css">
+</head>
+<body>
+<main class="phone" id="app"></main>
+<div id="announcer" class="sr-only" aria-live="polite"></div>
+<script src="tripilot-terms.js"></script>
+<script src="tripilot-onboarding-scene.js"></script>
+<script src="tripilot-journey-data.js"></script>
+<script src="tripilot-journey-workspace.js"></script>
+<script src="tripilot-journey.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const embedded = new URLSearchParams(location.search).get('embed')==='intro';
+  document.documentElement.classList.toggle('embedded-onboarding',embedded);
+  const reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const checkIcon=()=>'<svg class="drawn-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="1" d="m3 8 3 3 7-7"/></svg>';
+  function selectionFeedback(selector){
+    const control=$(selector);if(!control)return;
+    control.focus({preventScroll:true});
+    syncScene('selection');
+    if(reducedMotion())return;
+    control.classList.add('selection-feedback');
+    control.animate([{transform:'scale(.97)',boxShadow:'0 0 0 0 #2E604700'},{transform:'scale(1.015)',boxShadow:'0 0 0 3px #2E604714',offset:.6},{transform:'scale(1)',boxShadow:'0 0 0 0 #2E604700'}],{duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  function completionFeedback(selector){syncScene(selector==='.consent-mark'?'consent':'complete');if(!reducedMotion())$(selector)?.classList.add('completion-motion')}
+
+  const state = {lang:'ko',languageChosen:false,open:null,agreed:false,step:0,complete:false,busy:false,answers:{themes:[],companions:[],adults:1,children:0,infants:0,allergies:[],diet:[],foodReligion:[],foodNone:false,foodSkip:false,transport:[],budget:'',budgetCustom:'',citizen:'',priority:'',detailFood:'',detailActivity:'',detailTransport:'',religion:''}};
+  function syncScene(feedback){window.triPilotScene.update({stage:state.open,step:state.step,totalSteps:questions.length,complete:state.complete,lang:state.lang,feedback})}
+  // Carry the introduction language into setup; standalone previews stay Korean.
+  if(new URLSearchParams(location.search).get('lang')==='en')state.lang='en';
+  if(embedded){state.languageChosen=true;state.open=null;}
+  const t=(ko,en)=>state.lang==='ko'?ko:en;
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const svg=(name)=>{const paths={down:'<path d="m4 6 4 4 4-4"/>',arrow:'<path d="M3 8h10M9 4l4 4-4 4"/>',lock:'<rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/>',leaf:'<path d="M13 2C5 1 1 5 3 11c5 4 10 0 10-9Z"/><path d="m2 14 8-9"/>',food:'<path d="M4 2v5m-2-5v3c0 3 4 3 4 0V2M4 8v6M11 2v12M11 2c-3 1-4 6 0 6"/>',nature:'<path d="m1 13 5-9 4 9H1Zm7 0 4-6 3 6H8Z"/><circle cx="12" cy="3" r="1"/>',culture:'<path d="m2 5 6-3 6 3H2Zm1 3v4m5-4v4m5-4v4M1 14h14"/>',activity:'<path d="m2 13 4-6 3 3 5-8M10 2h4v4"/>',shopping:'<path d="M3 6h10l1 8H2l1-8ZM5 6V4a3 3 0 0 1 6 0v2"/>',local:'<path d="m1 7 7-5 7 5M3 6v8h10V6M6 14v-4h4v4"/>',public:'<rect x="3" y="1" width="10" height="12" rx="3"/><path d="M3 7h10M5 13l-1 2m7-2 1 2M6 10h0m4 0h0"/>',walk:'<circle cx="9" cy="2" r="1"/><path d="m5 7 3-3 2 3 3 1M8 5l-2 5-3 4m4-4 4 4"/>',car:'<path d="m2 7 2-4h8l2 4M2 7h12v6H2V7Zm2 6v2m8-2v2M4 10h1m6 0h1"/>',taxi:'<path d="m2 7 2-4h8l2 4M2 7h12v6H2V7Zm2 6v2m8-2v2M6 1h4M4 10h1m6 0h1"/>'};return '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.leaf)+'</svg>'};
+  const opts={themes:[['food','맛집 탐방','Food discoveries'],['nature','자연과 힐링','Nature & rest'],['culture','문화와 역사','Culture & history'],['activity','액티비티','Adventure'],['shopping','쇼핑','Shopping'],['local','로컬 일상','Local life']],companions:[['alone','혼자','Solo'],['partner','연인','Partner'],['friends','친구','Friends'],['family','가족','Family'],['other','기타','Other']],allergies:[['nuts','견과류','Nuts'],['shellfish','갑각류','Shellfish'],['milk','우유','Milk'],['egg','달걀','Eggs'],['wheat','밀','Wheat'],['other','기타','Other']],diet:[['vegetarian','채식','Vegetarian'],['vegan','비건','Vegan']],foodReligion:[['pork','돼지고기','Pork'],['beef','소고기','Beef'],['alcohol','술','Alcohol'],['other','기타','Other']],transport:[['public','대중교통','Public transit'],['walk','도보','Walking'],['car','렌터카','Rental car'],['taxi','택시','Taxi']],budget:[['low','30만 원 이하','Up to ₩300k'],['mid','30–60만 원','₩300k–600k'],['high','60–100만 원','₩600k–1m'],['premium','100만 원 이상','Over ₩1m'],['custom','직접 입력','Enter an amount']],citizen:[['domestic','내국인','Korean national'],['foreign','외국인','Foreign national']],priority:[['food','음식','Food'],['activity','활동','Activities'],['transport','이동','Getting around']],detailFood:[['taste','맛','Taste'],['kindness','친절','Kindness'],['clean','청결','Cleanliness']],detailActivity:[['extreme','익스트림','Extreme'],['healing','힐링','Relaxation'],['diy','DIY','DIY'],['shopping','쇼핑','Shopping']],detailTransport:[['public','대중교통','Public transit'],['walk','도보','Walking'],['car','차','Car']],religion:[['none','없음','None'],['christian','기독교','Protestant'],['catholic','천주교','Catholic'],['buddhist','불교','Buddhist'],['muslim','이슬람교','Muslim'],['hindu','힌두교','Hindu'],['other','기타','Other'],['skip','응답하지 않음','Prefer not to say']]};
+  const stepNames=[['여행 테마','Travel themes'],['여행자 구성','Your companions'],['기피 음식','Food preferences'],['선호 이동수단','Transport'],['예산','Budget'],['내국인 여부','Nationality'],['여행 우선순위','Your priority'],['세부 우선순위','The finer details'],['종교','Religious considerations']];
+  const questions=[['어떤 여행을 좋아하세요?','What’s your kind of trip?','마음에 드는 테마를 모두 골라 주세요.','Choose all the themes that speak to you.'],['누구와 함께 떠나나요?','Who’s coming along?','동행인과 아이를 포함해 알려 주세요.','Tell us who’s joining, including little ones.'],['피하고 싶은 음식이 있나요?','Any foods to avoid?','필요한 식사 조건만 선택해 주세요.','Share only the food preferences you want to.'],['어떻게 이동하고 싶나요?','How will you get around?','편한 이동수단을 모두 골라 주세요.','Choose all the ways you enjoy getting around.'],['여행 예산은 얼마인가요?','What’s your travel budget?','1인 기준 전체 여행 예산이에요.','Your total trip budget, per person.'],['한국 국적이신가요?','Are you a Korean national?','여행에 필요한 안내를 맞춰 드릴게요.','This helps tailor the travel information.'],['가장 중요한 것은 무엇인가요?','What matters most to you?','여행에서 중요한 한 가지를 골라 주세요.','Choose the one thing that matters most.'],['어떤 점을 더 중요하게 보나요?','It’s all in the details.','음식 · 활동 · 이동에서 각각 하나씩 골라 주세요.','Choose one preference in each category.'],['종교적 고려가 필요한가요?','Any religious considerations?','여행에 반영하고 싶을 때만 알려 주세요.','Share only if you’d like this considered.']];
+  function chosenLabel(group,val){const o=(opts[group]||[]).find(x=>x[0]===val);return o?t(o[1],o[2]):t('미선택','Not selected')}
+  function chip(group,o,multi=false,icon=false){const v=state.answers[group],selected=Array.isArray(v)?v.includes(o[0]):v===o[0];return `<button type="button" class="chip${selected?' selected':''}" data-group="${group}" data-value="${o[0]}" data-multi="${multi}" aria-pressed="${selected}"><span class="option-check" aria-hidden="true">${checkIcon()}</span>${icon?`<span class="option-icon">${svg(o[0])}</span>`:''}${esc(t(o[1],o[2]))}</button>`}
+  function chips(group,list=opts[group],multi=false,grid=false,icon=false){return `<div class="chips${grid?' grid':''}" role="group">${list.map(o=>chip(group,o,multi,icon)).join('')}</div>`}
+  function label(ko,en){return `<p class="group-label">${t(ko,en)}</p>`}
+  function input(key,ko,en,type='text',placeholder=''){return `<label class="field">${t(ko,en)}<input type="${type}" data-field="${key}" value="${esc(state.answers[key])}" ${placeholder?`placeholder="${esc(placeholder)}"`:''} ${type==='number'?'min="1" inputmode="numeric"':''}></label>`}
+  function counter(key,ko,en,capKo,capEn,min){let a=state.answers;return `<div class="counter-row"><span class="counter-label">${t(ko,en)}<span class="counter-caption">${t(capKo,capEn)}</span></span><div class="counter"><button type="button" data-count="${key}" data-delta="-1" aria-label="${t(ko+' 인원 줄이기','Fewer '+en.toLowerCase())}" ${a[key]<=min?'disabled':''}>−</button><output aria-label="${t(ko+' 인원',en+' count')}">${a[key]}</output><button type="button" data-count="${key}" data-delta="1" aria-label="${t(ko+' 인원 늘리기','More '+en.toLowerCase())}" ${a[key]>=20?'disabled':''}>+</button></div></div>`}
+  function questionBody(index=state.step){let a=state.answers;switch(index){
+    case 0:return chips('themes',opts.themes,true,true,true);
+    case 1:return chips('companions',opts.companions,true)+`<div class="counter-list">${counter('adults','성인','Adults','만 13세 이상','Ages 13+',1)}${counter('children','어린이','Children','만 2–12세','Ages 2–12',0)}${counter('infants','유아','Infants','만 2세 미만','Under 2',0)}</div>`;
+    case 2:return label('알레르기','Allergies')+chips('allergies',opts.allergies,true)+label('식단','Diet')+chips('diet',opts.diet,true)+label('종교상 피하는 음식','Religious food restrictions')+chips('foodReligion',opts.foodReligion,true)+`<div class="chips" style="margin-top:17px"><button type="button" data-action="food-none" class="chip${a.foodNone?' selected':''}" aria-pressed="${a.foodNone}">${t('해당 없음','None apply')}</button></div>`;
+    case 3:return chips('transport',opts.transport,true,true,true);
+    case 4:return `<div class="question-progress" style="margin:0 0 11px"><span>${t('전체 여행 · 1인','Entire trip · per person')}</span><span>₩ KRW</span></div>`+chips('budget',opts.budget,false,true)+(a.budget==='custom'?input('budgetCustom','예산 입력 (원)','Budget amount (KRW)','number',t('예: 800000','e.g. 800000')):'');
+    case 5:return chips('citizen',opts.citizen,false,true);
+    case 6:return chips('priority',opts.priority,false,true,true);
+    case 7:return label('음식','Food')+chips('detailFood')+label('활동','Activities')+chips('detailActivity')+label('이동','Getting around')+chips('detailTransport');
+    case 8:return chips('religion',opts.religion,false,true);
+  }}
+  function valid(index=state.step){const a=state.answers;switch(index){case 0:return a.themes.length>0;case 1:return a.companions.length>0&&a.adults>=1&&(a.companions.includes('alone')?a.adults===1&&a.children===0&&a.infants===0:a.adults+a.children+a.infants>=2);case 2:return true;case 3:return a.transport.length>0;case 4:return !!a.budget&&(a.budget!=='custom'||Number.isFinite(Number(a.budgetCustom))&&Number(a.budgetCustom)>0);case 5:return !!a.citizen;case 6:return !!a.priority;case 7:return !!a.detailFood&&!!a.detailActivity&&!!a.detailTransport;case 8:return true;default:return false}}
+  function validationHint(index=state.step){const a=state.answers;if(index===1&&a.companions.length&& !a.companions.includes('alone')&&a.adults+a.children+a.infants<2)return t('동행하는 여행은 총인원을 2명 이상으로 설정해 주세요.','Set at least two travelers when traveling with others.');return ''}
+  function answeredCount(){const a=state.answers;return questions.filter((_,index)=>{if(index===2)return a.foodNone||a.allergies.length||a.diet.length||a.foodReligion.length;if(index===questions.length-1)return !!a.religion;return valid(index)}).length}
+  function updateProgress(){
+    const count=answeredCount(),label=t('답변한 질문','Answered questions');
+    document.querySelectorAll('.slide-count').forEach(counter=>{counter.textContent=String(count).padStart(2,'0')+' / '+questions.length;counter.setAttribute('aria-label',label+' '+count+' / '+questions.length)});
+    document.querySelectorAll('.question-slide .progress-track').forEach(track=>{track.setAttribute('aria-label',label);track.setAttribute('aria-valuenow',String(count));track.querySelector('.progress-fill').style.width=(count/questions.length*100)+'%'});
+  }
+  function updateValidation(){
+    updateProgress();
+    const slide=$('#slide-'+state.step);if(!slide)return;
+    const b=slide.querySelector('[data-action="next"]');if(b)b.disabled=!valid();
+    const e=slide.querySelector('.error');if(e)e.textContent=validationHint();
+    fitCarousel();
+  }
+  function questionMarkup(index){
+    const q=questions[index],optional=[2,questions.length-1].includes(index),active=index===state.step,count=answeredCount();
+    return `<article class="question-slide" id="slide-${index}" data-slide="${index}" role="group" aria-roledescription="${t('슬라이드','slide')}" aria-labelledby="question-title-${index}" aria-hidden="${!active}" ${active?'':'inert'}><button type="button" class="slide-top" data-card="2" aria-expanded="${state.open===2}" aria-controls="content-2"><span class="step-number">${embedded?'02':'03'}</span><span class="step-copy"><span class="step-title">${t('여행 취향 알아보기','Your travel preferences')}</span><span class="step-sub">${t(stepNames[index][0],stepNames[index][1])}</span></span><span class="slide-count" aria-label="${t('답변한 질문','Answered questions')} ${count} / ${questions.length}">${String(count).padStart(2,'0')} / ${questions.length}</span><span class="chevron">${svg('down')}</span></button><div class="progress-track" role="progressbar" aria-label="${t('답변한 질문','Answered questions')}" aria-valuemin="0" aria-valuemax="${questions.length}" aria-valuenow="${count}"><div class="progress-fill" style="width:${count/questions.length*100}%"></div></div><div class="question"><h2 tabindex="-1" id="question-title-${index}">${t(q[0],q[1])}</h2><p class="helper">${t(q[2],q[3])}${optional?`<span class="optional">${t('선택','Optional')}</span>`:''}</p><div class="question-body">${questionBody(index)}</div><p class="error" id="validation-${index}" role="status">${validationHint(index)}</p><div class="question-nav"><button type="button" class="previous" data-action="previous">${t('이전','Back')}</button><button type="button" class="next" data-action="next" ${valid(index)?'':'disabled'}>${index===questions.length-1?t('설정 완료','Finish setup'):t('다음','Next')}${svg('arrow')}</button></div>${optional?`<button type="button" class="skip" data-action="skip">${t('응답하지 않고 넘어가기','Skip this question')}</button>`:''}</div></article>`;
+  }
+  function renderQuestion(){
+    const slide=$('#slide-'+state.step);if(!slide)return;
+    const focused=document.activeElement;
+    const focusKey=focused?.dataset.group ? `[data-group="${focused.dataset.group}"][data-value="${focused.dataset.value}"]`
+      : focused?.dataset.count ? `[data-count="${focused.dataset.count}"][data-delta="${focused.dataset.delta}"]`
+      : focused?.dataset.action ? `[data-action="${focused.dataset.action}"]` : null;
+    slide.querySelector('.question-body').innerHTML=questionBody();
+    updateValidation();
+    if(focusKey)slide.querySelector(focusKey)?.focus({preventScroll:true});
+  }
+  let resizeObserver=null,releaseTimer=null,gesture=null,suppressClickUntil=0;
+  function fitCarousel(){
+    const viewport=$('#question-viewport'),slide=$('#slide-'+state.step);
+    const card=$('#card-2'),footer=card?.querySelector('.carousel-footer');
+    if(card?.classList.contains('active')&&footer){
+      // Reserve the actual footer height inside the card, rather than adding it below a viewport-sized slide.
+      card.style.setProperty('--question-card-height',Math.max(0,card.clientHeight-footer.offsetHeight-1)+'px');
+    }
+    if(viewport&&slide&&slide.offsetHeight)viewport.style.height=slide.offsetHeight+'px';
+  }
+  function positionTrack(drag=0){
+    const track=$('#question-track');if(track)track.style.transform=`translateX(calc(${-state.step*100}% - ${state.step*12}px + ${drag}px))`;
+  }
+  function mountCarousel(){
+    if(resizeObserver)resizeObserver.disconnect();
+    const viewport=$('#question-viewport');if(!viewport)return;
+    viewport.innerHTML=`<div class="question-track" id="question-track">${questions.map((_,i)=>questionMarkup(i)).join('')}</div>`;
+    viewport.setAttribute('aria-label',t('여행 취향 질문 카드','Travel preference question cards'));
+    viewport.setAttribute('aria-roledescription',t('캐러셀','carousel'));
+    syncCarousel();
+    updateProgress();
+    if(typeof ResizeObserver!=='undefined'){
+      resizeObserver=new ResizeObserver(()=>fitCarousel());
+      document.querySelectorAll('.question-slide').forEach(slide=>resizeObserver.observe(slide));
+    }
+  }
+  function syncCarousel(){
+    positionTrack();
+    document.querySelectorAll('.question-slide').forEach((slide,i)=>{
+      slide.inert=i!==state.step;slide.setAttribute('aria-hidden',String(i!==state.step));
+    });
+    document.querySelectorAll('.carousel-dot').forEach((dot,i)=>{
+      if(i===state.step)dot.setAttribute('aria-current','step');else dot.removeAttribute('aria-current');
+    });
+    requestAnimationFrame(fitCarousel);
+    syncScene();
+  }
+  function finishTransition(){
+    clearTimeout(releaseTimer);state.busy=false;fitCarousel();
+    if(state.open===2&&!state.complete)$('#question-title-'+state.step)?.focus({preventScroll:true});
+  }
+  function successMarkup(){const a=state.answers;return `<div class="success"><div class="success-symbol" aria-hidden="true">${checkIcon()}</div><h2>${t('여행 취향을 모두 알아봤어요.','Your preferences are all set.')}</h2><p>${t('나를 닮은 여행의 첫걸음.<br>언제든 답변을 다시 바꿀 수 있어요.','A first step toward a trip that feels like you.<br>You can change your answers anytime.')}</p><div class="summary-mini"><div class="summary-row"><span>${t('선택 언어','Language')}</span><strong>${t('한국어','English')}</strong></div><div class="summary-row"><span>${t('여행 테마','Travel themes')}</span><strong>${esc(a.themes.map(v=>chosenLabel('themes',v)).join(' · '))}</strong></div><div class="summary-row"><span>${t('함께하는 인원','Travelers')}</span><strong>${a.adults+a.children+a.infants}${t('명',' people')}</strong></div><div class="summary-row"><span>${t('가장 중요한 것','Top priority')}</span><strong>${esc(chosenLabel('priority',a.priority))}</strong></div></div><button type="button" class="next j-home-continue" data-action="journey-start">${window.triPilotJourney.hasTrip()?t('내 여행 이어보기','Continue my trip'):t('여행 계획 등록하기','Add my travel plan')}${svg('arrow')}</button><button type="button" class="next j-edit-preferences" data-action="edit">${t('여행 취향 수정하기','Edit your preferences')}${svg('arrow')}</button><p class="prototype-note">${t('화면 확인용 목업입니다. 입력 내용은 이 페이지에서만 유지됩니다.','Interactive preview. Answers stay in this page only.')}</p></div>`}
+  function cardHeader(n,title,sub,disabled,done){return `<button type="button" class="card-head" data-card="${n}" aria-expanded="${state.open===n}" aria-controls="content-${n}" ${disabled?'disabled':''}><span class="step-number">${done?'✓':'0'+(embedded?n:n+1)}</span><span class="step-copy"><span class="step-title">${title}</span><span class="step-sub">${sub}</span></span><span class="chevron">${svg('down')}</span></button>`}
+  let hasRendered=false;
+  function render(){$('#app').classList.toggle('first-render',!hasRendered);hasRendered=true;document.documentElement.lang=state.lang;document.title=t('triPilot · 카드 슬라이드 온보딩','triPilot · Card carousel onboarding');$('#app').innerHTML=`<header class="topbar"><div class="brand" aria-label="triPilot"><span class="brand-mark" aria-hidden="true">t</span>triPilot</div><span class="top-note">${t('나에게 맞는 여행','TRAVEL, YOUR WAY')}</span></header><section class="intro"><div class="eyebrow"><span class="eyebrow-dot"></span>${t('당신다운 여행의 시작','A LITTLE ABOUT YOU')}</div><h1>${t('당신의 여행,<br>취향부터 맞춰요.','Your next journey.<br>Made more you.')}</h1><p>${embedded?t('약관을 확인하고,<br>좋아하는 것부터 함께 알아볼게요.','Review the terms,<br>then tell us what you love.'):t('세 단계로 차근차근.<br>좋아하는 것부터 함께 알아볼게요.','Three simple steps to get started.<br>Let’s begin with what you love.')}</p></section><div class="stack"><section class="card ${state.open===0?'active ':''}${state.languageChosen?'done':''}" id="card-0">${cardHeader(0,t('언어 선택','Choose your language'),state.languageChosen?t('한국어로 선택됨','English selected'):t('편한 언어를 선택해 주세요.','Choose the language you prefer.'),false,state.languageChosen)}<div class="card-content" id="content-0" ${state.open===0?'':'inert'} aria-hidden="${state.open!==0}"><div class="content-inner"><div class="card-padding"><div class="divider"></div><div class="language-grid"><button type="button" class="language-option ${state.languageChosen&&state.lang==='ko'?'selected':''}" data-language="ko" lang="ko" aria-pressed="${state.languageChosen&&state.lang==='ko'}"><span class="selection-dot"></span><span class="language-symbol">가</span><span class="language-name">한국어</span><span class="language-native">Korean</span></button><button type="button" class="language-option ${state.languageChosen&&state.lang==='en'?'selected':''}" data-language="en" lang="en" aria-pressed="${state.languageChosen&&state.lang==='en'}"><span class="selection-dot"></span><span class="language-symbol">Aa</span><span class="language-name">English</span><span class="language-native">${t('영어','English')}</span></button></div><div class="question-nav" style="margin-top:16px"><button type="button" class="next" data-action="language-next" ${state.languageChosen?'':'disabled'}>${state.languageChosen?t('한국어로 계속','Continue in English'):t('언어를 선택해 주세요','Choose a language')}${svg('arrow')}</button></div><p class="microcopy"><span class="tiny-icon">${svg('lock')}</span>${t('선택한 언어로 모든 화면을 안내해 드려요.','All following screens will use your chosen language.')}</p></div></div></div></section><section class="card ${state.open===1?'active ':''}${state.agreed?'done':''}" id="card-1">${cardHeader(1,t('약관 동의','Terms & consent'),state.agreed?t('필수 내용을 확인했어요.','Required consent completed.'):t('시작하기 전에 확인해 주세요.','A quick check before you begin.'),!state.languageChosen,state.agreed)}<div class="card-content" id="content-1" ${state.open===1?'':'inert'} aria-hidden="${state.open!==1}"><div class="content-inner"><div class="card-padding"><div class="divider"></div><p class="terms-intro">${t('여행을 시작하기 전에','Before we begin')}</p><button type="button" class="terms-summary" data-action="read-terms" aria-haspopup="dialog"><strong>${t('서비스 이용 및 개인정보 안내','Service & personal data')}</strong><p>${t('입력한 일정과 취향을 여행 지원에 활용합니다. 종교와 식사 관련 정보는 원하는 경우에만 입력할 수 있습니다.','Your schedule and preferences are used to support your travel. Religion and food information are optional.')}</p><span class="terms-read-link">${t('전체 약관 읽기 ↗','Read full terms ↗')}</span></button><label class="terms-check"><input type="checkbox" id="terms-check" ${window.triPilotTerms.hasRead()?'':'disabled'} ${state.agreed?'checked':''}><span class="consent-mark" aria-hidden="true">${checkIcon()}</span><span>${t('[필수] 서비스 이용약관 및 개인정보 수집·이용 내용을 확인하고 동의합니다.','[Required] I have reviewed and agree to the terms of service and the collection and use of personal data.')}</span></label><p class="draft-note">${t('목업용 약관 요약 · 실제 약관 검토 전','Draft terms summary for the mockup · not final terms')}</p><button type="button" class="next terms-continue" data-action="terms-next" ${state.agreed?'':'disabled'}>${t('동의하고 다음으로','Agree and continue')}${svg('arrow')}</button></div></div></div></section><section class="card ${state.open===2?'active ':''}${state.complete?'done':''}" id="card-2">${cardHeader(2,t('여행 취향 알아보기','Your travel preferences'),state.complete?t(questions.length+'가지 질문을 모두 마쳤어요.','All '+questions.length+' questions completed.'):t(questions.length+'가지 질문으로 더 나다운 여행.',questions.length+' questions for a trip that fits you.'),!state.agreed,state.complete)}<div class="card-content" id="content-2" ${state.open===2?'':'inert'} aria-hidden="${state.open!==2}"><div class="content-inner"><div class="card-padding"><div class="divider"></div>${state.complete?successMarkup():`<div class="question-viewport" id="question-viewport"></div><div class="carousel-footer"><div class="carousel-dots" aria-hidden="true">${questions.map((_,i)=>`<span class="carousel-dot" ${i===state.step?'aria-current="step"':''}></span>`).join('')}</div><p class="carousel-hint">${t('← 카드를 좌우로 밀어 이동하세요 →','← Swipe the cards to move →')}</p></div>`}</div></div></div></section></div><footer class="bottom-note"><span class="leaf">${svg('leaf')}</span>${t('정답은 없어요. 당신이 좋아하는 여행이면 충분해요.','There’s no right answer. Just the journey you love.')}</footer>`;if(resizeObserver)resizeObserver.disconnect();if(!state.complete)mountCarousel();$('.bottom-note .leaf svg').style.cssText='width:17px;height:17px';syncScene();window.triPilotTerms.bind(state.lang);syncExpandedCard();}
+  function syncExpandedCard(){
+    const active=document.querySelector('.card.active');
+    document.body.classList.toggle('card-expanded',!!active);
+    document.querySelectorAll('#app > .intro,#app > .bottom-note').forEach(element=>{element.inert=!!active;});
+    document.querySelectorAll('.card').forEach(element=>{element.inert=!!active && element!==active;});
+    if(active)requestAnimationFrame(()=>{active.querySelector('button:not(:disabled)')?.focus({preventScroll:true});});
+  }
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape' && !document.querySelector('.terms-dialog[open]') && state.open!==null){
+      const previous=state.open;openCard(null);document.querySelector('#card-'+previous+' > .card-head')?.focus({preventScroll:true});
+    }
+  });
+  let autoOpenTimer=null;
+  function openCard(n){if(n===1&&!state.languageChosen||n===2&&!state.agreed)return;state.open=n;document.querySelectorAll('.card').forEach((c,i)=>{c.classList.toggle('active',i===n);c.querySelectorAll('[data-card]').forEach(head=>head.setAttribute('aria-expanded',String(i===n)));const content=c.querySelector('.card-content');content.inert=i!==n;content.setAttribute('aria-hidden',String(i!==n))});syncScene('toggle');syncExpandedCard();if(n===2){requestAnimationFrame(fitCarousel);setTimeout(()=>{fitCarousel();ensureVisible()},420)}}
+  function ensureVisible(){if(document.querySelector('.card.active'))return;const target=$('#card-'+state.open);if(!target)return;const rect=target.getBoundingClientRect();if(rect.top<12||rect.top>innerHeight*.6)target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}
+  function announce(){const q=questions[state.step];$('#announcer').textContent=(state.step+1)+' / '+questions.length+'. '+t(q[0],q[1])}
+  function changeStep(dir,fromSwipe=false){
+    if(state.busy||state.complete||state.open!==2||!state.agreed)return;
+    if(dir>0&&!valid()){
+      const error=$('#validation-'+state.step);
+      if(error)error.textContent=validationHint()||t('이 카드의 선택을 마치면 다음으로 이동할 수 있어요.','Complete this card before moving forward.');
+      fitCarousel();positionTrack();return;
+    }
+    if(dir<0&&state.step===0){if(!fromSwipe)openCard(1);positionTrack();return;}
+    if(dir>0&&state.step===questions.length-1){
+      if(fromSwipe){positionTrack();return;}
+      const missing=questions.findIndex((_,i)=>!valid(i));
+      if(missing>=0){state.step=missing;syncCarousel();syncScene('advance');announce();return;}
+      state.complete=true;state.open=2;render();completionFeedback('.success-symbol');ensureVisible();
+      $('#announcer').textContent=t('여행 취향 설정을 완료했어요.','Your preferences are complete.');return;
+    }
+    state.busy=true;state.step+=dir;
+    syncCarousel();syncScene('advance');announce();
+    if(reducedMotion())finishTransition();else releaseTimer=setTimeout(finishTransition,400);
+  }
+  document.addEventListener('click',event=>{const el=event.target.closest('button');if(!el||el.disabled||Date.now()<suppressClickUntil)return;
+    if(state.busy||gesture?.dragging)return;
+    if(el.dataset.language){clearTimeout(releaseTimer);state.busy=false;gesture=null;state.lang=el.dataset.language;state.languageChosen=true;state.open=0;render();selectionFeedback('[data-language="'+state.lang+'"]');return}
+    if(el.dataset.card!==undefined){clearTimeout(autoOpenTimer);const n=Number(el.dataset.card),closing=state.open===n;openCard(closing?null:n);if(closing)$('#card-'+n+' > .card-head').focus({preventScroll:true});return}
+    if(el.dataset.group){const key=el.dataset.group,value=el.dataset.value,a=state.answers;if(el.dataset.multi==='true'){if(key==='companions'){if(value==='alone'){a.companions=a.companions.includes('alone')?[]:['alone'];a.adults=1;a.children=0;a.infants=0}else{a.companions=a.companions.filter(v=>v!=='alone');a.companions=a.companions.includes(value)?a.companions.filter(v=>v!==value):[...a.companions,value];if(a.companions.length&&a.adults+a.children+a.infants===1)a.adults=2}}else{a[key]=a[key].includes(value)?a[key].filter(v=>v!==value):[...a[key],value]}if(['allergies','diet','foodReligion'].includes(key)){a.foodNone=false;a.foodSkip=false}}else a[key]=a[key]===value?'':value;renderQuestion();selectionFeedback('[data-group="'+key+'"][data-value="'+value+'"]');return}
+    if(el.dataset.count){const key=el.dataset.count,a=state.answers;a[key]=Math.max(key==='adults'?1:0,Math.min(20,a[key]+Number(el.dataset.delta)));if(a.companions.includes('alone')&&a.adults+a.children+a.infants>1)a.companions=[];renderQuestion();syncScene('selection');return}
+    switch(el.dataset.action){case 'read-terms':window.triPilotTerms.open();break;case 'terms-next':if(state.agreed)openCard(2);break;case 'language-next':openCard(state.agreed?2:1);break;case 'next':changeStep(1);break;case 'previous':changeStep(-1);break;case 'skip':if(state.step===2){state.answers.allergies=[];state.answers.diet=[];state.answers.foodReligion=[];state.answers.foodNone=false;state.answers.foodSkip=true}else if(state.step===questions.length-1)state.answers.religion='';renderQuestion();changeStep(1);break;case 'food-none':{const a=state.answers;a.foodNone=!a.foodNone;a.foodSkip=false;if(a.foodNone){a.allergies=[];a.diet=[];a.foodReligion=[]}renderQuestion();selectionFeedback('[data-action="food-none"]');break}case 'journey-start':window.triPilotJourney.open({lang:state.lang,answers:state.answers,onHome:lang=>{state.lang=lang;render();ensureVisible()}});break;case 'edit':state.complete=false;state.step=0;state.open=2;render();ensureVisible();break}
+  });
+  document.addEventListener('input',event=>{if(event.target.dataset.field){state.answers[event.target.dataset.field]=event.target.value;updateValidation()}});
+  document.addEventListener('change',event=>{if(event.target.id==='terms-check'){if(!window.triPilotTerms.hasRead()){event.target.checked=false;return;}clearTimeout(autoOpenTimer);state.agreed=event.target.checked;state.open=1;if(!state.agreed)state.complete=false;render();if(state.agreed)completionFeedback('.consent-mark');else syncScene('consent');/* Remain on the consent card to show the synchronized state. */}});
+
+  document.addEventListener('transitionend',event=>{
+    if(event.target.id==='question-track'&&event.propertyName==='transform'&&state.busy)finishTransition();
+  });
+  document.addEventListener('pointerdown',event=>{
+    const viewport=event.target.closest('#question-viewport');
+    if(!viewport||state.open!==2||state.complete||state.busy||event.isPrimary===false||event.button!==0)return;
+    if(event.target.closest('input,select,textarea,label,a,.question-nav,.skip'))return;
+    gesture={id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,dragging:false,viewport};
+  });
+  document.addEventListener('pointermove',event=>{
+    if(!gesture||gesture.id!==event.pointerId)return;
+    const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;
+    if(!gesture.dragging){
+      if(Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)){gesture=null;return;}
+      if(Math.abs(dx)<12||Math.abs(dx)<Math.abs(dy)*1.25)return;
+      gesture.dragging=true;gesture.viewport.setPointerCapture(event.pointerId);
+      $('#question-track').classList.add('dragging');
+    }
+    gesture.dx=dx;
+    if(event.cancelable)event.preventDefault();
+    const edge=dx>0&&state.step===0||dx<0&&(state.step===questions.length-1||!valid());
+    positionTrack(edge?dx*.2:dx);
+  },{passive:false});
+  function endGesture(event,cancelled=false){
+    if(!gesture||gesture.id!==event.pointerId)return;
+    const g=gesture;gesture=null;
+    if(g.viewport.hasPointerCapture(event.pointerId))g.viewport.releasePointerCapture(event.pointerId);
+    $('#question-track')?.classList.remove('dragging');
+    if(g.dragging)suppressClickUntil=Date.now()+350;
+    const threshold=Math.max(42,Math.min(70,g.viewport.clientWidth*.16));
+    if(!cancelled&&g.dragging&&Math.abs(g.dx)>=threshold)changeStep(g.dx<0?1:-1,true);
+    positionTrack();
+  }
+  document.addEventListener('pointerup',event=>endGesture(event));
+  document.addEventListener('pointercancel',event=>endGesture(event,true));
+  document.addEventListener('keydown',event=>{
+    if(state.open!==2||state.complete||!event.target.closest('#question-viewport'))return;
+    if(event.target.closest('input,select,textarea'))return;
+    if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();changeStep(event.key==='ArrowRight'?1:-1,true);}
+  });
+  addEventListener('resize',()=>{gesture=null;$('#question-track')?.classList.remove('dragging');positionTrack();fitCarousel()});
+
+  render();if(!embedded)autoOpenTimer=setTimeout(()=>openCard(0),650);
+  window.addEventListener('message',event=>{
+    if(!embedded || event.source!==window.parent || event.data?.type!=='tripilot:set-language' || !['en','ko'].includes(event.data.lang))return;
+    if(state.lang===event.data.lang)return;
+    state.lang=event.data.lang;
+    if(!$('#app').hidden){
+      const scrollPosition=window.scrollY;
+      const cardScroll=$('#card-'+state.open)?.scrollTop||0;
+      render();
+      requestAnimationFrame(()=>{window.scrollTo({top:scrollPosition,behavior:'instant'});const card=$('#card-'+state.open);if(card)card.scrollTop=cardScroll;});
+    }
+    window.triPilotJourney.setLanguage(state.lang);
+  });
+  // Page-only state; this prototype does not send or persist submitted information.
+})();
+</script>
+</body>
+</html>
