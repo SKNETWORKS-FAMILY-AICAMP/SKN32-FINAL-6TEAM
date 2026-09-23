@@ -97,22 +97,22 @@
       {"id": "subway_direct", "label": "2호선 잠실→성수 직통", "eta_min": 13, "walk_m": 250,
        "fare_krw": 1400, "uses": ["2호선:잠실", "2호선:성수"]},
       {"id": "konkuk_bus", "label": "건대입구역에서 내려 버스로 가는 길", "eta_min": 23, "walk_m": 350,
-       "fare_krw": 1400, "uses": ["2호선:잠실", "2호선:건대입구", "버스:성수동"]},
+       "fare_krw": 1400, "uses": ["2호선:잠실", "2호선:건대입구", "버스:2016", "도로:아차산로"]},
       {"id": "ttukseom_bus", "label": "뚝섬역에서 내려 버스로 되돌아가는 길", "eta_min": 25, "walk_m": 420,
-       "fare_krw": 1400, "uses": ["2호선:잠실", "2호선:뚝섬", "버스:성수동"]}]},
+       "fare_krw": 1400, "uses": ["2호선:잠실", "2호선:뚝섬", "버스:2224", "도로:아차산로"]}]},
     "seongsu_to_palace": {"from": "성수역", "to": "경복궁역", "planned": "subway", "options": [
       {"id": "subway", "label": "2호선·3호선 환승", "eta_min": 30, "walk_m": 300, "fare_krw": 1500,
-       "uses": ["2호선:성수", "3호선:경복궁"]}]},
+       "uses": ["2호선:성수", "2호선:을지로3가", "3호선:을지로3가", "3호선:경복궁"]}]},
     "palace_to_dinner": {"from": "경복궁", "to": "서울역 저녁 식당(시나리오)", "planned": "bus_sejong", "options": [
       {"id": "bus_sejong", "label": "세종대로 직통 버스", "eta_min": 20, "eta_min_if_controlled": 55,
-       "walk_m": 200, "fare_krw": 1500, "uses": ["도로:세종대로"]},
+       "walk_m": 200, "fare_krw": 1500, "uses": ["버스:7022", "도로:세종대로"]},
       {"id": "subway_transfer", "label": "지하철(3호선 → 4호선 환승 1회)", "eta_min": 28, "walk_m": 450,
        "walk_note": "통제 구역에 걸린 도보 구간은 우회로로 안내", "fare_krw": 1500,
-       "uses": ["3호선:경복궁", "4호선:서울역"]},
+       "uses": ["3호선:경복궁", "3호선:충무로", "4호선:충무로", "4호선:서울역"]},
       {"id": "taxi", "label": "택시", "eta_min": 15, "eta_min_if_controlled": null,
        "walk_m": 0, "fare_krw": 9000, "uses": ["도로:세종대로"]}]},
     "dinner_to_mart": {"from": "서울역 저녁 식당(시나리오)", "to": "롯데마트 서울역점", "planned": "walk", "options": [
-      {"id": "walk", "label": "도보", "eta_min": 5, "walk_m": 400, "fare_krw": 0, "uses": ["도보:서울역"]}]}
+      {"id": "walk", "label": "도보", "eta_min": 5, "walk_m": 400, "fare_krw": 0, "uses": []}]}
   },
   "timeline": [
     {"kind": "forecast", "from": "2026-09-23T00:00:00+09:00", "until": "2026-09-24T00:00:00+09:00",
