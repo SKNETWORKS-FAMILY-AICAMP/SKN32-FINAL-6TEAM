@@ -47,7 +47,7 @@ KST = ZoneInfo("Asia/Seoul")
 class ReminderRules:
     day_start_lead: timedelta = timedelta(minutes=60)
     departure_lead: timedelta = timedelta(minutes=15)
-    eve_hour: int | None = 20
+    eve_hour: int | None = None     # [2026-09-24] 끈다 — 하루 시작 알림이 그 몫이다(D-020)
 
     @classmethod
     def from_guardrails(cls) -> "ReminderRules":
