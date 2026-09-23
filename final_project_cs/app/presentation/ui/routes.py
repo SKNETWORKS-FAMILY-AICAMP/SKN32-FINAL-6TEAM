@@ -520,6 +520,249 @@ async def approve(request: Request, case_id: UUID, action_id: UUID) -> RedirectR
     return RedirectResponse("/ui/approvals", status_code=303)
 
 
+# ── 위임 — 승인 뒤 자동 실행을 여는 둘째 문 ────────────────────────────────────
+# ★이 층은 도메인을 모른다(INV-CS-ARCH-001). 그래서 SQL 도 설정도 직접 읽지 않고,
+#   조립이 붙인 도메인 경로 `/v1/delegations` 를 **같은 프로세스 안에서** 불러 그 응답을
+#   그린다. 한계 값의 이름표(`limits[].label`·`value`)도 도메인이 붙여 준다 —
+#   화면은 표로 그릴 뿐 그 숫자가 무슨 뜻인지 모른다.
+# ★`/ui/scenario` 가 도메인 경로를 부르는 것과 같은 모양이되, **서버에서 그린다** —
+#   화면이 200 을 내면서 비어 있던 사고가 이 저장소에 있었다. 브라우저 JS 로 그리면
+#   그 상태를 시험이 못 본다.
+_DELEGATION_PATH = "/v1/delegations"
+
+
+async def _call_api(request: Request, method: str, path: str, *, scope: str,
+                    payload: dict[str, Any] | None = None) -> httpx.Response:
+    """같은 앱의 API 를 부른다. 승인 화면이 이미 쓰는 길(ASGI transport)과 같다."""
+    token = _development_key(scope, settings_module.get_settings().secret_key)
+    transport = httpx.ASGITransport(app=request.app)
+    async with httpx.AsyncClient(transport=transport,
+                                 base_url=str(request.base_url).rstrip("/")) as client:
+        return await client.request(method, path, headers={"Authorization": f"Bearer {token}"},
+                                    json=payload)
+
+
+def _failure_page(title: str, headline: str, response: httpx.Response, back: str) -> HTMLResponse:
+    """★실패를 삼키지 않는다 — 무엇이 왜 안 됐는지 화면에 적는다.
+
+    승인 화면에서 배운 것이다(2026-09-05): 성공과 실패가 같은 303 을 내던 동안
+    운영자는 "눌렀으니 됐겠지" 로 넘어갔다. 되돌릴 수 없는 행위에서 가장 위험한 형태다.
+    """
+    reason = _safe(response.text[:600]) or f"HTTP {response.status_code}"
+    return _page(title, theme.card(
+        headline,
+        f"<p>요청이 처리되지 않았습니다. HTTP {response.status_code}</p>"
+        f"<pre>{reason}</pre>"
+        f"<p><a href='{back}'>목록으로 돌아가기</a></p>", tone="critical"),
+        current="/ui/delegations")
+
+
+def _limits_table(limits: list[dict[str, Any]]) -> str:
+    return theme.kv_table(tuple((row.get("label", ""), row.get("value", "")) for row in limits))
+
+
+def _change_form(customer_id: str, action: str, label: str, *, ghost: bool = False) -> str:
+    """한 줄짜리 상태 변경 폼. ★누가·왜 를 안 적으면 누를 수 없다(필수 입력)."""
+    css = " class='ghost'" if ghost else ""
+    return (f"<form class='deleg-form' method='post' action='/ui/delegations'>"
+            f"<input type='hidden' name='action' value='{_safe(action)}'>"
+            f"<input type='hidden' name='customer_id' value='{_safe(customer_id)}'>"
+            f"<input name='actor_id' required minlength='1' placeholder='누가 (담당자)'>"
+            f"<input name='note' required minlength='1' placeholder='왜 (근거)'>"
+            f"<button{css}>{_safe(label)}</button></form>")
+
+
+# ★브라우저로 열어 보고 고쳤다(2026-09-22). 폼 입력이 min-width 를 밀어 표가 넓어지자
+#   「근거」칸이 **한 줄에 한 글자씩** 접혀 읽을 수 없었다. 운영자가 읽으려고 만든 칸이
+#   읽히지 않으면 없는 것과 같다. 시각도 마이크로초까지 나와 세 줄로 접혔다 —
+#   분까지만 보이고 원값은 title 로 남긴다(자르지만 버리지는 않는다).
+_DELEG_CSS = """<style>
+.deleg-form{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:0}
+.deleg-form input{font-size:.82rem;padding:.35rem .5rem;min-width:8rem}
+.deleg-form button{padding:.35rem .8rem;font-size:.82rem}
+td.deleg-note{min-width:11rem}
+td.deleg-when,td.deleg-act{white-space:nowrap}
+</style>"""
+
+
+def _when(value: Any) -> str:
+    """시각을 분까지만 보인다. ★원값은 title 에 남긴다 — 로그와 대조할 수 있어야 한다."""
+    if not value:
+        return "—"
+    text = str(value)
+    return f"<span title='{_safe(text)}'>{_safe(text[:16].replace('T', ' '))}</span>"
+
+
+@router.get("/delegations", response_class=HTMLResponse)
+async def delegations(request: Request) -> HTMLResponse:
+    """위임 현황 — 누구에게 살아 있나 · 무엇을 맡긴 것인가 · 얼마가 이미 나갔나."""
+    response = await _call_api(request, "GET", _DELEGATION_PATH, scope="delegation:read")
+    if response.is_error:
+        # ★빈 화면을 내지 않는다. 조립에 도메인 경로가 없으면 그 사실이 보여야 한다.
+        return _failure_page("위임", "현황을 읽지 못했습니다", response, "/ui/cases")
+    data = response.json()
+    rows = data.get("rows") or []
+    counts = data.get("counts") or {}
+
+    warning = theme.notice(
+        "위임을 주면 이 고객 건은 승인 뒤 사람 손 없이 업체 원장까지 반영됩니다. "
+        "아래 범위를 벗어난 건은 그래도 사람에게 옵니다. 거두면 그 순간부터 막히며, "
+        "이미 나간 건은 되돌림 경로로만 무를 수 있습니다.", tone="critical")
+    summary = "<div class='grid'>" + "".join((
+        theme.stat("살아 있는 위임", counts.get("live", 0),
+                   tone="warn" if counts.get("live") else "",
+                   hint="자동 실행이 열려 있습니다" if counts.get("live") else ""),
+        theme.stat("거둔 위임", counts.get("revoked", 0)),
+        theme.stat("기록 전체", counts.get("total", 0)),
+    )) + "</div>"
+    limits = theme.card("지금 맡기는 범위", _limits_table(data.get("limits") or []),
+                        subtitle="config/guardrails.yaml 단일 출처 — 화면에서 바꾸지 않습니다")
+
+    body_rows = []
+    for row in rows:
+        customer = str(row.get("customer_id"))
+        live = row.get("state") == "live"
+        action, label = ("revoke", "거두기") if live else ("grant", "다시 주기")
+        body_rows.append(
+            "<tr>"
+            f"<td class='mono'>{_safe(customer)}</td>"
+            f"<td>{theme.pill(row.get('state'), label='살아 있음' if live else '거둠')}</td>"
+            f"<td class='muted deleg-when'>{_when(row.get('granted_at'))}<br>"
+            f"{_safe(row.get('granted_by') or '기록 없음')}</td>"
+            f"<td class='muted deleg-when'>{_when(row.get('revoked_at'))}<br>"
+            f"{_safe(row.get('revoked_by') or '—')}</td>"
+            f"<td class='mono'>{_safe(row.get('spent_label'))}</td>"
+            f"<td class='mono'>{_safe(row.get('remaining_label'))}</td>"
+            f"<td class='deleg-note'>{_safe(row.get('note') or '—')}</td>"
+            f"<td class='deleg-act'>{_change_form(customer, action, label, ghost=live)}</td>"
+            "</tr>")
+    listing = theme.card(
+        "위임 기록", theme.table(
+            ("customer", "상태", "준 시각 · 사람", "거둔 시각 · 사람", "이미 나간 금액",
+             "남은 여유", "근거", ""),
+            body_rows, empty="위임 기록이 없습니다 — 아무에게도 자동 실행이 열려 있지 않습니다"),
+        subtitle="이미 나간 금액은 판정이 쓰는 것과 같은 셈입니다")
+
+    grant_card = theme.card(
+        "새로 맡기기",
+        "<p class='muted'>고객 id 는 Case 목록·상세에서 확인합니다. 누르면 "
+        "<strong>무엇이 열리는지 먼저 보여 드리고</strong> 다시 한 번 확인합니다.</p>"
+        "<form class='deleg-form' method='post' action='/ui/delegations'>"
+        "<input type='hidden' name='action' value='grant'>"
+        "<input name='customer_id' required minlength='1' placeholder='customer_id (UUID)' "
+        "style='min-width:20rem'>"
+        "<input name='actor_id' required minlength='1' placeholder='누가 (담당자)'>"
+        "<input name='note' required minlength='1' placeholder='왜 (근거)'>"
+        "<button>확인 화면으로</button></form>", tone="warn")
+
+    return _page("위임", _DELEG_CSS + warning + summary + limits + listing + grant_card,
+                 current="/ui/delegations",
+                 lede="승인 뒤 자동 실행을 여는 둘째 문입니다. 승인 자체를 대신하지 않습니다.")
+
+
+def _confirm_page(customer_id: str, actor_id: str, note: str, detail: dict[str, Any]) -> HTMLResponse:
+    """★되돌릴 수 없는 쪽(맡기기)은 **무엇이 바뀌는지 먼저 보여 준다.**
+
+    거두기는 이 단계를 두지 않는다 — 막는 방향이고, 한 번 더 묻는 사이에 자동 실행이
+    나갈 수 있다.
+    """
+    state = detail.get("state")
+    already = state == "live"
+    history = detail.get("history") or []
+    past = "".join(
+        f"<li>{_when(e.get('at'))} · <strong>{_safe(e.get('action'))}</strong> · "
+        f"{_safe(e.get('actor_id') or '기록 없음')} — {_safe(e.get('note') or '근거 없음')}</li>"
+        for e in history[:10])
+    facts = theme.kv_table((
+        ("customer", customer_id),
+        ("지금 상태", "살아 있음" if already else ("거둠" if state == "revoked" else "기록 없음")),
+        ("이미 나간 금액", detail.get("spent_label")),
+        ("남은 여유", detail.get("remaining_label")),
+        ("맡기는 사람", actor_id),
+        ("근거", note),
+    ))
+    notice = theme.notice(
+        "이미 살아 있는 위임입니다. 다시 맡기면 준 시각이 지금으로 바뀝니다."
+        if already else
+        "확인을 누르면 이 고객 건은 승인 뒤 사람 손 없이 업체 원장까지 반영됩니다.",
+        tone="warn" if already else "critical")
+    form = ("<form class='deleg-form' method='post' action='/ui/delegations'>"
+            "<input type='hidden' name='action' value='grant'>"
+            "<input type='hidden' name='confirm' value='yes'>"
+            f"<input type='hidden' name='customer_id' value='{_safe(customer_id)}'>"
+            f"<input type='hidden' name='actor_id' value='{_safe(actor_id)}'>"
+            f"<input type='hidden' name='note' value='{_safe(note)}'>"
+            "<button>확인 — 맡긴다</button></form>"
+            "<p><a href='/ui/delegations'>취소하고 목록으로</a></p>")
+    body = (_DELEG_CSS + notice
+            + theme.card("맡길 대상", facts, tone="critical")
+            + theme.card("이 범위가 열립니다", _limits_table(detail.get("limits") or []),
+                         subtitle="벗어난 건은 그대로 사람에게 옵니다")
+            + theme.card("지금까지 주고 거둔 기록",
+                         f"<ul>{past}</ul>" if past else theme.notice("기록 없음", tone="info"),
+                         subtitle="덧붙이기만 합니다 — 지우거나 고치지 않습니다")
+            + theme.card(None, form))
+    return _page("위임 — 확인", body, current="/ui/delegations",
+                 lede="누르기 전에 무엇이 열리는지 읽으십시오.")
+
+
+@router.post("/delegations")
+async def change_delegation(request: Request):
+    """맡기기 · 거두기 — 도메인 API 로 보내고 **실패하면 사유를 화면에 띄운다.**"""
+    if not getattr(settings_module.get_settings(), "ui_delegation_write_enabled", False):
+        # ★`[2026-09-22]` `/ui/*` 에는 로그인이 없다 — 인증 없이 닿는 화면에 **서 있는 권한**을
+        #   주는 버튼을 두지 않는다(D-CS-001 이 같은 이유로 Composer 화면을 지웠다).
+        #   켜려면 `ACOP_UI_DELEGATION_WRITE_ENABLED=true`, 그 전에 화면 앞에 인증을 둔다.
+        return _page("위임 처리 막힘", theme.card(
+            "이 화면에서는 위임을 바꿀 수 없습니다",
+            "<p>운영 화면에는 로그인이 없습니다. <b>위임은 한 건 승인이 아니라 서 있는 권한</b>이라 "
+            "인증 없는 화면에서 주고 거두지 않습니다.</p>"
+            "<p>주고 거두기는 scope 가 걸린 <code>POST /v1/delegations/{customer_id}/grant</code>"
+            "·<code>/revoke</code> 로 합니다(<code>delegation:write</code>).</p>"
+            "<p>이 화면에서 굳이 써야 하면 <code>ACOP_UI_DELEGATION_WRITE_ENABLED=true</code> 로 켜되, "
+            "<b>화면 앞에 인증을 먼저 두십시오.</b></p>"
+            "<p><a href='/ui/delegations'>목록으로 돌아가기</a></p>", tone="critical"),
+            current="/ui/delegations")
+    form = await request.form()
+    action = str(form.get("action", ""))
+    customer_id = str(form.get("customer_id", "")).strip()
+    actor_id = str(form.get("actor_id", "")).strip()
+    note = str(form.get("note", "")).strip()
+
+    if action not in ("grant", "revoke"):
+        return _page("위임 처리 실패", theme.card(
+            "알 수 없는 요청", f"<p>지원하지 않는 동작입니다: <code>{_safe(action)}</code></p>"
+            "<p><a href='/ui/delegations'>목록으로 돌아가기</a></p>", tone="critical"),
+            current="/ui/delegations")
+    try:
+        UUID(customer_id)
+    except ValueError:
+        # ★서버까지 보내지 않고 여기서 막는다. 형식이 틀린 id 는 422 로 돌아와
+        #   "무엇이 잘못됐는지" 가 오히려 흐려진다.
+        return _page("위임 처리 실패", theme.card(
+            "고객 id 형식이 아닙니다",
+            f"<p>입력한 값: <code>{_safe(customer_id) or '(비어 있음)'}</code></p>"
+            "<p>Case 목록·상세의 customer_id(UUID)를 그대로 붙여 넣으십시오.</p>"
+            "<p><a href='/ui/delegations'>목록으로 돌아가기</a></p>", tone="critical"),
+            current="/ui/delegations")
+
+    if action == "grant" and str(form.get("confirm", "")) != "yes":
+        detail = await _call_api(request, "GET", f"{_DELEGATION_PATH}/{customer_id}",
+                                 scope="delegation:read")
+        if detail.is_error:
+            return _failure_page("위임 처리 실패", "이 고객을 확인하지 못했습니다", detail,
+                                 "/ui/delegations")
+        return _confirm_page(customer_id, actor_id, note, detail.json())
+
+    response = await _call_api(request, "POST", f"{_DELEGATION_PATH}/{customer_id}/{action}",
+                               scope="delegation:write",
+                               payload={"actor_id": actor_id, "note": note})
+    if response.is_error:
+        headline = "맡기지 못했습니다" if action == "grant" else "거두지 못했습니다"
+        return _failure_page("위임 처리 실패", headline, response, "/ui/delegations")
+    return RedirectResponse("/ui/delegations", status_code=303)
+
+
 @router.get("/ops/outbox", response_class=HTMLResponse)
 def outbox() -> HTMLResponse:
     rows = _unknown_outbox()

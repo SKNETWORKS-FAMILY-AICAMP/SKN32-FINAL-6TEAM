@@ -8,7 +8,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import answers, boss, build, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, boss, build, server, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -158,15 +158,12 @@ def cmd_status(_: argparse.Namespace) -> int:
 
 def cmd_map(args: argparse.Namespace) -> int:
     track = tracks.get(args.track)
-    trace = None
-    path = trace_path(args.scenario or track.scenario)
-    if path.exists():
-        trace = json.loads(path.read_text(encoding="utf-8"))
-    else:
-        print("트레이스가 없다. 실측 호출 간선 없이 import 만 그린다. (acop-dojo trace 를 먼저 돌린다)")
+    scenario_id = args.scenario or track.scenario
+    scenarios.get(scenario_id)
+    context = mapgen.snapshot(track.track_id, scenario_id)
     out = Path(args.out) if args.out else WORKSPACE_ROOT / ".acop_dojo" / "map.html"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(mapgen.build(target_root(), trace, progress.load(), track),
+    out.write_text(mapgen.build(target_root(), None, progress.load(), track, context=context),
                    encoding="utf-8")
     print(f"지도를 그렸다: {out}")
     return 0
@@ -587,6 +584,11 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd = sub.add_parser("report", help="검증 결과로 사각지대 보고서를 쓴다")
     report_cmd.add_argument("--out", default=None)
     report_cmd.set_defaults(func=cmd_report)
+
+    serve_cmd = sub.add_parser("serve", help="브라우저에서 도장을 돌린다 (로컬 서버)")
+    serve_cmd.add_argument("--port", type=int, default=8765)
+    serve_cmd.add_argument("--no-open", action="store_true", help="브라우저를 자동으로 열지 않는다")
+    serve_cmd.set_defaults(func=lambda args: server.serve(args.port, open_browser=not args.no_open))
 
     sub.add_parser("status", help="진행 상황").set_defaults(func=cmd_status)
     return parser

@@ -10,6 +10,10 @@
     ① 개인 에이전트 API   `/v1/trips/*`            Bearer + scope(`trip:read`·`trip:write`)
     ② 여행계획서 링크      `/plan/{trip_id}?t=…`    로그인 없음 · 여행별 토큰(HMAC)
 
+★`[2026-09-22]` ②와 **같은 모양의 링크가 하나 더** 있다 — 업체 예약 변경 링크
+  `/booking-change/{booking_id}?t=…`(예약별 토큰, v11 §4-C · DoD-16·17). 접점을 늘린 것이
+  아니라 ② 안의 한 장면이다: 우리 일정은 고쳐 두고 **업체 건만** 고객이 직접 진행하도록 넘긴다.
+
 ★**상태의 정본은 링크다.** 통지를 못 봐도 링크에서 맞는 것을 본다 — 링크는 매번
   최신 버전을 읽는다(DoD-25). 통지가 닿았는지는 사양에 넣지 않는다.
 
@@ -22,7 +26,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import hashlib
 import hmac
 import html
@@ -33,7 +37,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
@@ -87,6 +91,46 @@ class CreateTrip(BaseModel):
     routes: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
+class PlanIn(BaseModel):
+    """★`[2026-09-22]` **일정 생성 요청** — v11 §4-A(「계획 생성은 우리 일이 아니다」)를 뒤집는
+    경로다. 사용자 지시로 만들었고, 계획서는 읽기 전용이라 고치지 않았다. 뒤집는다는 사실과
+    이 생성기가 못 하는 것은 리포트에 적었다.
+
+    ★**`register` 기본값은 `false` 다.** 등록은 여행 상태를 만들고 **통지를 내보낸다**(계획서
+      링크가 처음 나가는 자리, v11 §6-B). 초안을 보자고 부른 요청이 조용히 고객에게 링크를
+      보내면 안 된다 — 에이전트가 초안을 보고 **명시적으로** `register:true` 를 보낼 때만 등록한다.
+    """
+
+    #: ★칸 이름은 `register_now` 인데 **바깥 이름은 `register`** 다. 둘을 가르는 이유:
+    #:  `register` 를 필드 이름으로 쓰면 `BaseModel` 의 이름을 가려 pydantic 이 경고하고,
+    #:  `Field(alias=...)` 로 붙이면 FastAPI 가 몸통 모델을 다시 감쌀 때
+    #:  `UnsupportedFieldAttributeWarning` 이 매 요청마다 뜬다(둘 다 실측). 그래서 **받기 전에
+    #:  이름만 옮긴다** — 바깥 계약(`register`)은 그대로 두고 경고도 남기지 않는다.
+    model_config = ConfigDict(extra="forbid")
+    request_id: str = Field(min_length=1)
+    customer_id: UUID
+    city: str = "서울"
+    start_date: date
+    days: int = Field(ge=1, le=7)
+    party_size: int = Field(ge=1, le=4)
+    locale: str | None = None
+    title: str | None = None
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    #: 고객의 자유 문장. 예 「실내 위주, 아이 동반, 매운 음식 싫어요」
+    preferences: str = ""
+    register_now: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_register(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "register" in data:
+            # ★`{**data, ...}` 로 쓰면 `**data` 가 먼저 펴져 `register` 가 그대로 남고
+            #   `extra="forbid"` 에 걸린다(실측 — 422 가 났다). 복사한 뒤 옮긴다.
+            data = dict(data)
+            data["register_now"] = data.pop("register")
+        return data
+
+
 class ReportIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str = Field(min_length=1)
@@ -121,6 +165,16 @@ class RollbackIn(BaseModel):
     message: str | None = None
 
 
+def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
+    """등록 요청 안의 장소를 판정기가 읽는 모양으로. 저장 전이라 DB 를 보지 않는다."""
+    if key is None:
+        return None
+    for place in places:
+        if place.key == key:
+            return {"name": place.name, "attributes": dict(place.attributes or {})}
+    return None
+
+
 def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
@@ -134,6 +188,9 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ── 계획서 링크 ──────────────────────────────────────────────────
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
+from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
+from .itinerary_checks import Part, check_itinerary, parts_from_items
+from .density import measure_density
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 
 
@@ -162,7 +219,8 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"], "items": [_item_view(item) for item in items],
-            "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"])}
+            "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
+            **measure_density(parts_from_items(items), trip.get("constraints") or {})}
 
 
 #: ★고객이 보는 화면에 내부 이름(`customer_report · delay`)을 그대로 싣지 않는다 —
@@ -243,7 +301,8 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
 
 def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
-                      chat_factory: Callable[[], Any] | None = None) -> APIRouter:
+                      chat_factory: Callable[[], Any] | None = None,
+                      place_factory: Callable[[], Any] | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게."""
     router = APIRouter()
     cache: dict[str, Any] = {}
@@ -278,7 +337,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     @router.post("/v1/trips", status_code=201)
     def create(request: CreateTrip, principal: Principal = Depends(require_scope("trip:write"))):
-        tenant = principal.tenant_id
+        return _create_trip(principal.tenant_id, request)
+
+    def _create_trip(tenant: str, request: CreateTrip) -> dict[str, Any]:
+        """★등록의 **유일한** 본문이다. `/v1/trips` 도 `/v1/trips/plan?register=true` 도 여기로
+        들어온다 — 생성기가 판정을 건너뛰는 길을 만들지 않으려고 하나로 둔다."""
         store = TripStore(tenant)
         keys = [p.key for p in request.places]
         if len(set(keys)) != len(keys):
@@ -290,6 +353,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise _error(422, "unknown_place", f"item {it.seq} refers to unknown place")
             if it.route is not None and it.route not in request.routes:
                 raise _error(422, "unknown_route", f"item {it.seq} refers to unknown route")
+        # ★`[2026-09-21]` 받을 때 **코드로 판정**한다(v11 §12 DoD-2). 불가능하면 이유와 완화 조건을
+        #   붙여 거절한다(DoD-3) — 전에는 참조·순서만 보고 그대로 받아 감시가 뒤에서 고쳤다.
+        violations = check_itinerary(
+            [Part(seq=it.seq, kind=it.kind, title=it.title, starts_at=_seoul(it.starts_at),
+                  ends_at=_seoul(it.ends_at),
+                  place=_place_view(it.place, request.places), route=request.routes.get(str(it.route)),
+                  detail=it.detail)
+             for it in request.items],
+            constraints=request.constraints, party_size=request.party_size)
+        if violations:
+            raise _error(422, "itinerary_infeasible",
+                         "이 일정은 그대로 수행할 수 없습니다: "
+                         + " / ".join(v.reason for v in violations),
+                         violations=[v.as_dict() for v in violations])
         key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
                               action_type="trip.create", business_subject=str(request.customer_id))
         body_sha = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
@@ -352,6 +429,46 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             "language": "ko", "causes": [], "changed": None, "other_options": [],
             "replay": False, "version": version, "plan_url": url})
         return trip_id
+
+    @router.post("/v1/trips/plan")
+    def plan_draft(request: PlanIn, principal: Principal = Depends(require_scope("trip:write"))):
+        """요청 → 초안 일정 → **판정 통과** → (원하면) 등록. v11 §4-A 를 뒤집는 경로다.
+
+        ★**판정을 건너뛰는 길이 없다.** 생성기가 `check_itinerary` 로 스스로 판정해 고치고,
+          등록하면 `_create_trip` 이 **같은 판정기를 한 번 더** 돌린다.
+        ★**멱등** — 같은 `request_id` 로 등록까지 두 번 오면 모델도 부르지 않고 이미 만든
+          여행을 그대로 돌려준다(`trips.request_key`).
+        """
+        from . import planner as planner_module
+
+        tenant = principal.tenant_id
+        store = TripStore(tenant)
+        key = idempotency_key(tenant_id=tenant, request_id=request.request_id,
+                              action_type="trip.create", business_subject=str(request.customer_id))
+        if request.register_now:
+            with get_connection() as conn:
+                existing = store.by_request_key(conn, key)
+                if existing is not None:
+                    return {"status": "duplicate", "created": False,
+                            "trip": _trip_view(conn, store, existing[0])}
+        ask = planner_module.PlanRequest(
+            city=request.city, start_date=request.start_date, days=request.days,
+            party_size=request.party_size, constraints=request.constraints,
+            preferences=request.preferences, title=request.title, locale=request.locale)
+        try:
+            with get_connection() as conn:
+                outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
+                                                   chat=_lazy("chat", chat_factory),
+                                                   tour_api=_lazy("place", place_factory))
+        except planner_module.PlanRefused as refused:
+            raise _error(422, refused.code, refused.message, **refused.detail) from None
+        result: dict[str, Any] = {"status": "drafted", **outcome.as_dict()}
+        if request.register_now:
+            body = outcome.draft.as_create_body(request_id=request.request_id,
+                                                customer_id=request.customer_id)
+            result = {**result, "status": "registered",
+                      "trip": _create_trip(tenant, CreateTrip.model_validate(body))}
+        return result
 
     @router.get("/v1/trips/{trip_id}")
     def detail(trip_id: UUID, customer_id: UUID | None = Query(None),
@@ -429,8 +546,19 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
     @router.get("/plan/{trip_id}")
     def plan(trip_id: UUID, t: str = Query(...), format: str | None = Query(None)):
-        """★로그인 없는 링크. 토큰이 틀리면 **있는지도 말하지 않는다**(404)."""
-        tenant = settings_module.get_settings().tenant_id
+        """★로그인 없는 링크. 토큰이 틀리면 **있는지도 말하지 않는다**(404).
+
+        ★`[2026-09-22]` 여행이 **어느 테넌트 것인지 먼저 찾아** 그 테넌트로 토큰을 맞춘다. 전에는
+          설정된 테넌트 하나로만 맞춰서, 다른 테넌트의 여행(시나리오 모드의 전용 테넌트)은 통지에
+          링크가 실려 나가도 **404** 였다 — 화면에서 링크를 눌러 보고 찾았다.
+        ★이 한 줄만 테넌트 조건 없이 읽는다(`CLAUDE.md` §1 의 예외). 이 경로에서는 **링크가 곧
+          자격**이고, 여기서 얻는 것은 테넌트 문자열 하나뿐이다. 그 뒤 모든 조회는 그 테넌트로 묶고,
+          토큰이 틀리면 여행이 있든 없든 404 다.
+        """
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT tenant_id FROM trips WHERE trip_id=%s", (trip_id,))
+            row = cur.fetchone()
+        tenant = row[0] if row else settings_module.get_settings().tenant_id
         if not hmac.compare_digest(t, plan_token(tenant, trip_id)):
             raise _error(404, "not_found", "resource not found")
         store = TripStore(tenant)
@@ -442,7 +570,32 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return JSONResponse(view)
         return HTMLResponse(_render_plan(view))
 
+    @router.get("/booking-change/{booking_id}")
+    def booking_change(booking_id: UUID, t: str = Query(...), format: str | None = Query(None)):
+        """업체 예약 **변경 링크**(v11 §4-C · §12 DoD-16·17).
+
+        ★계획서 링크와 같은 모양이다 — 로그인 없음 · 토큰이 틀리면 **있는지도 말하지 않는다**(404)
+          · 예약이 **어느 테넌트 것인지 먼저 찾아** 그 테넌트로 토큰을 맞춘다.
+        ★**아무것도 쓰지 않는다.** 그래서 승인도 scope 도 없다 — 업체 예약을 바꾸는 것은 고객이
+          업체 쪽에서 하고, 우리는 무엇을·어떤 대안으로·얼마 차이로 바꿔야 하는지만 보인다.
+        ★이 한 줄만 테넌트 조건 없이 읽는다(`CLAUDE.md` §1 의 예외 — 계획서 링크와 같은 이유).
+          이 경로에서는 **링크가 곧 자격**이고 여기서 얻는 것은 테넌트 문자열 하나뿐이다.
+        """
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT tenant_id FROM bookings WHERE booking_id=%s", (booking_id,))
+            row = cur.fetchone()
+        tenant = row[0] if row else settings_module.get_settings().tenant_id
+        if not hmac.compare_digest(t, change_token(tenant, booking_id)):
+            raise _error(404, "not_found", "resource not found")
+        with get_connection() as conn:
+            view = change_view(conn, tenant_id=tenant, booking_id=booking_id)
+        if view is None:
+            raise _error(404, "not_found", "resource not found")
+        if format == "json":
+            return JSONResponse(view)
+        return HTMLResponse(render_change(view))
+
     return router
 
 
-__all__ = ["build_trip_router", "plan_token", "plan_url"]
+__all__ = ["build_trip_router", "change_token", "change_url", "plan_token", "plan_url"]

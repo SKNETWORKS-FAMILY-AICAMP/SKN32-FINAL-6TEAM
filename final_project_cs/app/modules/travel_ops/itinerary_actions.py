@@ -110,8 +110,13 @@ class ItineraryApply:
                                            causes=list(arguments.get("causes") or []), case_id=case_id)
         except StaleItinerary as exc:
             raise ActionConflict(str(exc)) from exc
-        payload = _plain({"locale": trip.get("locale"), **dict(arguments.get("notice") or {}),
-                          "version": version})
+        # ★`[2026-09-22]` **링크를 싣는다.** 상태의 정본은 링크다(v11 §6-A). 시나리오용 여행 버전은
+        #   `TripStore.enqueue_notice` 가 붙여 주지만 Case 버전은 코어가 바깥함에 **직접** 쓰기 때문에
+        #   그 자리를 지나지 않아 링크 없이 나갔다 — 화면에서 통지를 열어 보고 찾았다.
+        from .plan_link import plan_url
+
+        payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+                          **dict(arguments.get("notice") or {}), "version": version})
         return AppliedAction(
             result_ref=f"trip:{trip_id}:v{version}",
             summary=_plain({"trip_id": str(trip_id), "version": version,

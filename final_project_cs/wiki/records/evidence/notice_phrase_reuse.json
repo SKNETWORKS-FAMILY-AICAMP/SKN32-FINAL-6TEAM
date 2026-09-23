@@ -1,0 +1,638 @@
+{
+ "measured_at": "2026-09-22T08:41:27.296673+09:00",
+ "scenario": "app/modules/travel_ops/scenarios/seoul_day_taiwan_friends.json",
+ "locales": [
+  "zh-TW",
+  "en",
+  "ja"
+ ],
+ "runs": [
+  {
+   "days": 1,
+   "locales": [
+    "zh-TW",
+    "en",
+    "ja"
+   ],
+   "tenant": "phrase_306e9035e6",
+   "rules": {
+    "day_start_lead_min": 60.0,
+    "departure_lead_min": 15.0,
+    "eve_hour": 20
+   },
+   "items_per_trip": 11,
+   "ticks": {
+    "count": 6,
+    "sent": 18,
+    "already": 0,
+    "held": 0,
+    "fatal": 0,
+    "no_route": 0
+   },
+   "cold": {
+    "notices": 18,
+    "model_calls": 9,
+    "reused": 9,
+    "denominator": 18,
+    "reuse_rate": 0.5,
+    "cache_entries": 9,
+    "preloaded_entries": 0,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "en": {
+      "notices": 6,
+      "model_calls": 3
+     },
+     "zh-TW": {
+      "notices": 6,
+      "model_calls": 3
+     },
+     "ja": {
+      "notices": 6,
+      "model_calls": 3
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 3,
+      "model_calls": 3
+     },
+     "day_start": {
+      "notices": 3,
+      "model_calls": 3
+     },
+     "departure": {
+      "notices": 12,
+      "model_calls": 3
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[en] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/6bb01d93-87e2-48ae-aa6c-790afaff9e3b?t=…"
+   },
+   "warm": {
+    "notices": 18,
+    "model_calls": 0,
+    "reused": 18,
+    "denominator": 18,
+    "reuse_rate": 1.0,
+    "cache_entries": 9,
+    "preloaded_entries": 9,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "en": {
+      "notices": 6,
+      "model_calls": 0
+     },
+     "zh-TW": {
+      "notices": 6,
+      "model_calls": 0
+     },
+     "ja": {
+      "notices": 6,
+      "model_calls": 0
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 3,
+      "model_calls": 0
+     },
+     "day_start": {
+      "notices": 3,
+      "model_calls": 0
+     },
+     "departure": {
+      "notices": 12,
+      "model_calls": 0
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[en] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/6bb01d93-87e2-48ae-aa6c-790afaff9e3b?t=…"
+   },
+   "change_notice_contrast": {
+    "notices": 18,
+    "model_calls": 18,
+    "reuse_rate": 0.0
+   },
+   "self_check": {
+    "what": "완성 문장을 담는 캐시로 같은 안내를 흘렸을 때",
+    "notices": 18,
+    "mismatches": 9,
+    "example": {
+     "dedupe_key": "6bb01d93-87e2-48ae-aa6c-790afaff9e3b:departure:9593f86f-0139-4c74-9075-ed61fad1c1fe",
+     "kind": "departure",
+     "locale": "en",
+     "expected": "[en] 15:00 출발 — 성수역 → 경복궁역 · 1일차 (15:00–15:30).\n다음 일정: 15:30 경복궁 한복 탐방 · 1일차.\n가는 방법: 2호선·3호선 환승 · 약 30분 (경로 확인 14:45)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/6bb01d93-87e2-48ae-aa6c-790afaff9e3b?t=…",
+     "got": "[en] 10:50 출발 — 잠실역 → 성수역 · 1일차 (10:50–11:10).\n다음 일정: 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차.\n가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:35)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/6bb01d93-87e2-48ae-aa6c-790afaff9e3b?t=…"
+    }
+   },
+   "cleaned_up": true
+  },
+  {
+   "days": 2,
+   "locales": [
+    "zh-TW",
+    "en",
+    "ja"
+   ],
+   "tenant": "phrase_4cac0ee4ed",
+   "rules": {
+    "day_start_lead_min": 60.0,
+    "departure_lead_min": 15.0,
+    "eve_hour": 20
+   },
+   "items_per_trip": 22,
+   "ticks": {
+    "count": 12,
+    "sent": 36,
+    "already": 0,
+    "held": 0,
+    "fatal": 0,
+    "no_route": 0
+   },
+   "cold": {
+    "notices": 36,
+    "model_calls": 9,
+    "reused": 27,
+    "denominator": 36,
+    "reuse_rate": 0.75,
+    "cache_entries": 9,
+    "preloaded_entries": 0,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "zh-TW": {
+      "notices": 12,
+      "model_calls": 3
+     },
+     "ja": {
+      "notices": 12,
+      "model_calls": 3
+     },
+     "en": {
+      "notices": 12,
+      "model_calls": 3
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 6,
+      "model_calls": 3
+     },
+     "day_start": {
+      "notices": 6,
+      "model_calls": 3
+     },
+     "departure": {
+      "notices": 24,
+      "model_calls": 3
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[zh-TW] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/020134dc-d829-4313-9951-fbd26f799a9d?t=…"
+   },
+   "warm": {
+    "notices": 36,
+    "model_calls": 0,
+    "reused": 36,
+    "denominator": 36,
+    "reuse_rate": 1.0,
+    "cache_entries": 9,
+    "preloaded_entries": 9,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "zh-TW": {
+      "notices": 12,
+      "model_calls": 0
+     },
+     "ja": {
+      "notices": 12,
+      "model_calls": 0
+     },
+     "en": {
+      "notices": 12,
+      "model_calls": 0
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 6,
+      "model_calls": 0
+     },
+     "day_start": {
+      "notices": 6,
+      "model_calls": 0
+     },
+     "departure": {
+      "notices": 24,
+      "model_calls": 0
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[zh-TW] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/020134dc-d829-4313-9951-fbd26f799a9d?t=…"
+   },
+   "change_notice_contrast": {
+    "notices": 36,
+    "model_calls": 36,
+    "reuse_rate": 0.0
+   },
+   "self_check": {
+    "what": "완성 문장을 담는 캐시로 같은 안내를 흘렸을 때",
+    "notices": 36,
+    "mismatches": 27,
+    "example": {
+     "dedupe_key": "020134dc-d829-4313-9951-fbd26f799a9d:departure:2b138d8f-1ecf-4fc9-a861-d90bba7545c1",
+     "kind": "departure",
+     "locale": "zh-TW",
+     "expected": "[zh-TW] 15:00 출발 — 성수역 → 경복궁역 · 1일차 (15:00–15:30).\n다음 일정: 15:30 경복궁 한복 탐방 · 1일차.\n가는 방법: 2호선·3호선 환승 · 약 30분 (경로 확인 14:45)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/020134dc-d829-4313-9951-fbd26f799a9d?t=…",
+     "got": "[zh-TW] 10:50 출발 — 잠실역 → 성수역 · 1일차 (10:50–11:10).\n다음 일정: 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차.\n가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:35)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/020134dc-d829-4313-9951-fbd26f799a9d?t=…"
+    }
+   },
+   "cleaned_up": true
+  },
+  {
+   "days": 3,
+   "locales": [
+    "zh-TW",
+    "en",
+    "ja"
+   ],
+   "tenant": "phrase_0e62cb3868",
+   "rules": {
+    "day_start_lead_min": 60.0,
+    "departure_lead_min": 15.0,
+    "eve_hour": 20
+   },
+   "items_per_trip": 33,
+   "ticks": {
+    "count": 18,
+    "sent": 54,
+    "already": 0,
+    "held": 0,
+    "fatal": 0,
+    "no_route": 0
+   },
+   "cold": {
+    "notices": 54,
+    "model_calls": 9,
+    "reused": 45,
+    "denominator": 54,
+    "reuse_rate": 0.8333333333333334,
+    "cache_entries": 9,
+    "preloaded_entries": 0,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "ja": {
+      "notices": 18,
+      "model_calls": 3
+     },
+     "en": {
+      "notices": 18,
+      "model_calls": 3
+     },
+     "zh-TW": {
+      "notices": 18,
+      "model_calls": 3
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 9,
+      "model_calls": 3
+     },
+     "day_start": {
+      "notices": 9,
+      "model_calls": 3
+     },
+     "departure": {
+      "notices": 36,
+      "model_calls": 3
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[ja] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/11c533e4-34ba-442c-b61a-617993565186?t=…"
+   },
+   "warm": {
+    "notices": 54,
+    "model_calls": 0,
+    "reused": 54,
+    "denominator": 54,
+    "reuse_rate": 1.0,
+    "cache_entries": 9,
+    "preloaded_entries": 9,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "ja": {
+      "notices": 18,
+      "model_calls": 0
+     },
+     "en": {
+      "notices": 18,
+      "model_calls": 0
+     },
+     "zh-TW": {
+      "notices": 18,
+      "model_calls": 0
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 9,
+      "model_calls": 0
+     },
+     "day_start": {
+      "notices": 9,
+      "model_calls": 0
+     },
+     "departure": {
+      "notices": 36,
+      "model_calls": 0
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[ja] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/11c533e4-34ba-442c-b61a-617993565186?t=…"
+   },
+   "change_notice_contrast": {
+    "notices": 54,
+    "model_calls": 54,
+    "reuse_rate": 0.0
+   },
+   "self_check": {
+    "what": "완성 문장을 담는 캐시로 같은 안내를 흘렸을 때",
+    "notices": 54,
+    "mismatches": 45,
+    "example": {
+     "dedupe_key": "11c533e4-34ba-442c-b61a-617993565186:departure:2b01bd34-a59b-4872-b2eb-81d354a8d560",
+     "kind": "departure",
+     "locale": "ja",
+     "expected": "[ja] 15:00 출발 — 성수역 → 경복궁역 · 1일차 (15:00–15:30).\n다음 일정: 15:30 경복궁 한복 탐방 · 1일차.\n가는 방법: 2호선·3호선 환승 · 약 30분 (경로 확인 14:45)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/11c533e4-34ba-442c-b61a-617993565186?t=…",
+     "got": "[ja] 10:50 출발 — 잠실역 → 성수역 · 1일차 (10:50–11:10).\n다음 일정: 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차.\n가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:35)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/11c533e4-34ba-442c-b61a-617993565186?t=…"
+    }
+   },
+   "cleaned_up": true
+  },
+  {
+   "days": 5,
+   "locales": [
+    "zh-TW",
+    "en",
+    "ja"
+   ],
+   "tenant": "phrase_b34e03a785",
+   "rules": {
+    "day_start_lead_min": 60.0,
+    "departure_lead_min": 15.0,
+    "eve_hour": 20
+   },
+   "items_per_trip": 55,
+   "ticks": {
+    "count": 30,
+    "sent": 90,
+    "already": 0,
+    "held": 0,
+    "fatal": 0,
+    "no_route": 0
+   },
+   "cold": {
+    "notices": 90,
+    "model_calls": 9,
+    "reused": 81,
+    "denominator": 90,
+    "reuse_rate": 0.9,
+    "cache_entries": 9,
+    "preloaded_entries": 0,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "en": {
+      "notices": 30,
+      "model_calls": 3
+     },
+     "zh-TW": {
+      "notices": 30,
+      "model_calls": 3
+     },
+     "ja": {
+      "notices": 30,
+      "model_calls": 3
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 15,
+      "model_calls": 3
+     },
+     "day_start": {
+      "notices": 15,
+      "model_calls": 3
+     },
+     "departure": {
+      "notices": 60,
+      "model_calls": 3
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[en] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/65373f68-3bc7-4995-bf93-95265057cdc6?t=…"
+   },
+   "warm": {
+    "notices": 90,
+    "model_calls": 0,
+    "reused": 90,
+    "denominator": 90,
+    "reuse_rate": 1.0,
+    "cache_entries": 9,
+    "preloaded_entries": 9,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "en": {
+      "notices": 30,
+      "model_calls": 0
+     },
+     "zh-TW": {
+      "notices": 30,
+      "model_calls": 0
+     },
+     "ja": {
+      "notices": 30,
+      "model_calls": 0
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 15,
+      "model_calls": 0
+     },
+     "day_start": {
+      "notices": 15,
+      "model_calls": 0
+     },
+     "departure": {
+      "notices": 60,
+      "model_calls": 0
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[en] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/65373f68-3bc7-4995-bf93-95265057cdc6?t=…"
+   },
+   "change_notice_contrast": {
+    "notices": 90,
+    "model_calls": 90,
+    "reuse_rate": 0.0
+   },
+   "self_check": {
+    "what": "완성 문장을 담는 캐시로 같은 안내를 흘렸을 때",
+    "notices": 90,
+    "mismatches": 81,
+    "example": {
+     "dedupe_key": "65373f68-3bc7-4995-bf93-95265057cdc6:departure:f5ba898d-4845-4078-9f4f-c83db611b787",
+     "kind": "departure",
+     "locale": "en",
+     "expected": "[en] 15:00 출발 — 성수역 → 경복궁역 · 1일차 (15:00–15:30).\n다음 일정: 15:30 경복궁 한복 탐방 · 1일차.\n가는 방법: 2호선·3호선 환승 · 약 30분 (경로 확인 14:45)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/65373f68-3bc7-4995-bf93-95265057cdc6?t=…",
+     "got": "[en] 10:50 출발 — 잠실역 → 성수역 · 1일차 (10:50–11:10).\n다음 일정: 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차.\n가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:35)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/65373f68-3bc7-4995-bf93-95265057cdc6?t=…"
+    }
+   },
+   "cleaned_up": true
+  },
+  {
+   "days": 7,
+   "locales": [
+    "zh-TW",
+    "en",
+    "ja"
+   ],
+   "tenant": "phrase_fa69a2900a",
+   "rules": {
+    "day_start_lead_min": 60.0,
+    "departure_lead_min": 15.0,
+    "eve_hour": 20
+   },
+   "items_per_trip": 77,
+   "ticks": {
+    "count": 42,
+    "sent": 126,
+    "already": 0,
+    "held": 0,
+    "fatal": 0,
+    "no_route": 0
+   },
+   "cold": {
+    "notices": 126,
+    "model_calls": 9,
+    "reused": 117,
+    "denominator": 126,
+    "reuse_rate": 0.9285714285714286,
+    "cache_entries": 9,
+    "preloaded_entries": 0,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "ja": {
+      "notices": 42,
+      "model_calls": 3
+     },
+     "zh-TW": {
+      "notices": 42,
+      "model_calls": 3
+     },
+     "en": {
+      "notices": 42,
+      "model_calls": 3
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 21,
+      "model_calls": 3
+     },
+     "day_start": {
+      "notices": 21,
+      "model_calls": 3
+     },
+     "departure": {
+      "notices": 84,
+      "model_calls": 3
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[ja] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/483819ec-db71-4e25-b1e1-1d6c50aa5663?t=…"
+   },
+   "warm": {
+    "notices": 126,
+    "model_calls": 0,
+    "reused": 126,
+    "denominator": 126,
+    "reuse_rate": 1.0,
+    "cache_entries": 9,
+    "preloaded_entries": 9,
+    "rejected_translations": 0,
+    "translation_failures": 0,
+    "per_locale": {
+     "ja": {
+      "notices": 42,
+      "model_calls": 0
+     },
+     "zh-TW": {
+      "notices": 42,
+      "model_calls": 0
+     },
+     "en": {
+      "notices": 42,
+      "model_calls": 0
+     }
+    },
+    "per_kind": {
+     "day_eve": {
+      "notices": 21,
+      "model_calls": 0
+     },
+     "day_start": {
+      "notices": 21,
+      "model_calls": 0
+     },
+     "departure": {
+      "notices": 84,
+      "model_calls": 0
+     }
+    },
+    "mismatches": [],
+    "longest_content": 359,
+    "sample": "[ja] 내일 일정을 미리 안내해 드릴게요.\n09:00 호텔 조식 · 1일차 → 10:00 잠실 스카이타워 전망 관람 · 1일차 → 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차 → 13:00 성수 점심 식사(예약) · 1일차 → 15:30 경복궁 한복 탐방 · 1일차 → 18:00 저녁 식사 · 1일차 → 19:30 롯데마트 서울역점 식료품 쇼핑 · 1일차\n\n일정에 영향을 주는 변동이 확인되면 먼저 조정하고 알려드릴게요.\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/483819ec-db71-4e25-b1e1-1d6c50aa5663?t=…"
+   },
+   "change_notice_contrast": {
+    "notices": 126,
+    "model_calls": 126,
+    "reuse_rate": 0.0
+   },
+   "self_check": {
+    "what": "완성 문장을 담는 캐시로 같은 안내를 흘렸을 때",
+    "notices": 126,
+    "mismatches": 117,
+    "example": {
+     "dedupe_key": "483819ec-db71-4e25-b1e1-1d6c50aa5663:departure:9c7a8e3d-3c97-4663-a07b-931b413f66c7",
+     "kind": "departure",
+     "locale": "ja",
+     "expected": "[ja] 15:00 출발 — 성수역 → 경복궁역 · 1일차 (15:00–15:30).\n다음 일정: 15:30 경복궁 한복 탐방 · 1일차.\n가는 방법: 2호선·3호선 환승 · 약 30분 (경로 확인 14:45)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/483819ec-db71-4e25-b1e1-1d6c50aa5663?t=…",
+     "got": "[ja] 10:50 출발 — 잠실역 → 성수역 · 1일차 (10:50–11:10).\n다음 일정: 11:15 성수동 팝업스토어·향수 쇼룸 · 1일차.\n가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:35)\n(일정 버전 1)\nhttp://127.0.0.1:8042/plan/483819ec-db71-4e25-b1e1-1d6c50aa5663?t=…"
+    }
+   },
+   "cleaned_up": true
+  }
+ ],
+ "mismatches_total": 0,
+ "self_check_toothless_days": []
+}

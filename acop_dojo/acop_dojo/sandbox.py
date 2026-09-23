@@ -69,6 +69,10 @@ class Sandbox:
         #   반대 방향 검사(템플릿이 무시되지 않는가)는 오히려 '저장소 아님' 오류로 우연히 통과했다.
         #   빈 저장소 하나로 둘 다 원본과 같게 돈다. git apply 도 그대로 된다(실측).
         subprocess.run(["git", "init", "-q"], cwd=self.root, capture_output=True, check=False)
+        # ★색인에도 올린다(커밋은 안 한다). `git ls-files` 로 추적 파일을 훑는 검사가 있어서,
+        #   빈 저장소면 "추적 파일을 하나도 못 읽었다" 로 사본에서만 실패한다(2026-09-21 실측).
+        subprocess.run(["git", "-c", "core.autocrlf=false", "add", "-A"],
+                       cwd=self.root, capture_output=True, check=False)
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -113,8 +117,14 @@ class Sandbox:
         args = [sys.executable, "-m", "pytest", "-q", "--no-header", "-p", "no:cacheprovider",
                 "--tb=no", "-rfE"]
         args.extend(selection or [])
-        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
-                              timeout=timeout, check=False)
+        try:
+            proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
+                                  timeout=timeout, check=False)
+        except subprocess.TimeoutExpired:
+            # ★시간 초과를 예외로 터뜨리면 게이트가 통째로 죽는다(2026-09-21 cs 기준선에서 실제로 죽었다).
+            #   결과로 말한다. 무엇을 돌리다 멈췄는지는 selection 이 들고 있다.
+            return RunResult(124, sorted(selection or []),
+                             f"{timeout}초 안에 끝나지 않았다 — 판정하지 못했다", "")
         failed = []
         for line in proc.stdout.splitlines():
             if line.startswith("FAILED ") or line.startswith("ERROR "):

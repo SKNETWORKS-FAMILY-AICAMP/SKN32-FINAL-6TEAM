@@ -71,6 +71,9 @@ ISSUE_CODES = frozenset({
     # 예약 인계 — 우리 기록과 공급자 원장의 대조
     "booking_mismatch", "booking_change_request",
     "booking_cancel_request", "booking_other",
+    # ★`[2026-09-22]` 자동 실행을 되돌려 달라는 요청(v11 §12 DoD-21). 되돌림은 보상 거래라
+    #   실패할 수 있고, 실패하면 사람에게 간다 — 그 경로가 이 코드로 들어온다
+    "booking_revert_request",
     # 등록만 — 잠긴 예약
     "lodging_other", "flight_other",
     # 어디에도 안 붙는 것. ★접두가 없으므로 라우팅은 실패하고 escalate 된다.

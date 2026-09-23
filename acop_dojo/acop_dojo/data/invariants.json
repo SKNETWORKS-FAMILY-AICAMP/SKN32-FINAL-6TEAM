@@ -37,15 +37,14 @@
    "status": "active"
   },
   "R-CLASS-01": {
-   "defects": [],
-   "parked_defects": [
+   "defects": [
     "INV-CLASSIFY-001",
     "INV-VOC-001"
    ],
-   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "분류가 실패하면 조용히 넘기지 않는다 — 빠진 필드도 틀린 라벨도 거부",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "parked"
+   "status": "active"
   },
   "R-CLASS-02": {
    "defects": [
@@ -75,11 +74,10 @@
   },
   "R-CTX-02": {
    "defects": [
-    "INV-DEGRADED-001"
-   ],
-   "parked_defects": [
+    "INV-DEGRADED-001",
     "INV-VOC-002"
    ],
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 남기고 확정 답변을 만들지 않는다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -239,14 +237,13 @@
    "status": "parked"
   },
   "R-TEAM-02": {
-   "defects": [],
-   "parked_defects": [
+   "defects": [
     "INV-COMMERCE-005"
    ],
-   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "parked"
+   "status": "active"
   },
   "R-TEAM-03": {
    "defects": [

@@ -32,6 +32,8 @@ domain: neutral
 
 `psql`도 PATH에 없다. → [local-setup.md](local-setup.md)
 
+`[2026-09-22]` **낡은 `postmaster.pid` 가 남아 `pg_ctl` 이 조용히 실패하는 경우**와 비정상 종료 증거·가설 판정은 → [../records/manuals/운영_로컬DB_기동과_비정상종료.md](../records/manuals/운영_로컬DB_기동과_비정상종료.md)
+
 ## 2. Windows WDDM 느린 실패
 
 **증상이 특이하다. 즉시 죽지 않고 25분을 끈다.**

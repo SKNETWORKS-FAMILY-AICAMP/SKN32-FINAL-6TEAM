@@ -1,0 +1,483 @@
+{
+  "measured_at": "2026-09-22T03:18:39.297088+00:00",
+  "scope": {
+    "max_per_action_cents": 5000000,
+    "max_total_cents": 15000000,
+    "max_changes_per_booking": 2,
+    "kinds": [
+      "activity",
+      "dining"
+    ],
+    "free_cancellation_lead_hours": 72,
+    "revert_window_hours": 24
+  },
+  "summary": {
+    "attempts": 13,
+    "out_of_scope_attempts": 10,
+    "in_scope_attempts": 3,
+    "out_of_scope_executions": 0,
+    "in_scope_blocked": 0,
+    "blocked_for_another_reason": 0
+  },
+  "rows": [
+    {
+      "name": "범위 안 — 실행된다",
+      "expect_limit": null,
+      "case_status": "resolved",
+      "action_status": "succeeded",
+      "guardrail": null,
+      "observed": "",
+      "limit_seen": null,
+      "ours_before": "confirmed",
+      "ours_after": "cancelled",
+      "supplier_before": "confirmed",
+      "supplier_after": "cancelled",
+      "ledger_moved": true,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "e5abdf03-4901-466d-b5cd-3dce9f8a090b"
+        },
+        "status": "succeeded",
+        "provider_ref": "mock-supplier:mock:SUP-TGT:cancelled",
+        "amount_cents": 5000000,
+        "amount_source": "bookings.amount_cents",
+        "reason": "예약을 정리해 주세요",
+        "revert_deadline": "2026-09-23 12:18:31.863510+09:00",
+        "delegation": {
+          "kind": "activity",
+          "limit": null,
+          "allowed": true,
+          "observed": "위임 범위 안 — 5000000(전) · 종류 activity · 누적 0 · 0회째",
+          "judged_at": "2026-09-22T03:18:31.863510+00:00",
+          "booking_id": "e5abdf03-4901-466d-b5cd-3dce9f8a090b",
+          "granted_at": "2026-09-22T12:18:31.402953+09:00",
+          "spent_cents": 0,
+          "amount_cents": 5000000,
+          "kinds_allowed": [
+            "activity",
+            "dining"
+          ],
+          "changes_so_far": 0,
+          "max_total_cents": 15000000,
+          "revert_deadline": "2026-09-23T03:18:31.863510+00:00",
+          "max_per_action_cents": 5000000,
+          "free_cancellation_until": "2026-09-25T12:18:31.401314+09:00",
+          "max_changes_per_booking": 2
+        },
+        "prior_state": {
+          "booking_status": "confirmed",
+          "supplier_status": "confirmed"
+        },
+        "created_at": "2026-09-22 12:18:31.752586+09:00"
+      }
+    },
+    {
+      "name": "범위 안 — 같은 예약 1회째 이력이 있다",
+      "expect_limit": null,
+      "case_status": "resolved",
+      "action_status": "succeeded",
+      "guardrail": null,
+      "observed": "",
+      "limit_seen": null,
+      "ours_before": "confirmed",
+      "ours_after": "cancelled",
+      "supplier_before": "confirmed",
+      "supplier_after": "cancelled",
+      "ledger_moved": true,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "73f74d70-a3c5-4ee2-9f72-b4df9b18a1a5"
+        },
+        "status": "succeeded",
+        "provider_ref": "mock-supplier:mock:SUP-TGT:cancelled",
+        "amount_cents": 5000000,
+        "amount_source": "bookings.amount_cents",
+        "reason": "예약을 정리해 주세요",
+        "revert_deadline": "2026-09-23 12:18:32.502787+09:00",
+        "delegation": {
+          "kind": "activity",
+          "limit": null,
+          "allowed": true,
+          "observed": "위임 범위 안 — 5000000(전) · 종류 activity · 누적 5000000 · 1회째",
+          "judged_at": "2026-09-22T03:18:32.502787+00:00",
+          "booking_id": "73f74d70-a3c5-4ee2-9f72-b4df9b18a1a5",
+          "granted_at": "2026-09-22T12:18:32.149760+09:00",
+          "spent_cents": 5000000,
+          "amount_cents": 5000000,
+          "kinds_allowed": [
+            "activity",
+            "dining"
+          ],
+          "changes_so_far": 1,
+          "max_total_cents": 15000000,
+          "revert_deadline": "2026-09-23T03:18:32.502787+00:00",
+          "max_per_action_cents": 5000000,
+          "free_cancellation_until": "2026-09-25T12:18:32.144838+09:00",
+          "max_changes_per_booking": 2
+        },
+        "prior_state": {
+          "booking_status": "confirmed",
+          "supplier_status": "confirmed"
+        },
+        "created_at": "2026-09-22 12:18:32.400446+09:00"
+      }
+    },
+    {
+      "name": "범위 안 — 누적이 상한에 붙었지만 넘지 않는다",
+      "expect_limit": null,
+      "case_status": "resolved",
+      "action_status": "succeeded",
+      "guardrail": null,
+      "observed": "",
+      "limit_seen": null,
+      "ours_before": "confirmed",
+      "ours_after": "cancelled",
+      "supplier_before": "confirmed",
+      "supplier_after": "cancelled",
+      "ledger_moved": true,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "e1f4519d-23de-403b-bf7a-dabd20280088"
+        },
+        "status": "succeeded",
+        "provider_ref": "mock-supplier:mock:SUP-TGT:cancelled",
+        "amount_cents": 5000000,
+        "amount_source": "bookings.amount_cents",
+        "reason": "예약을 정리해 주세요",
+        "revert_deadline": "2026-09-23 12:18:33.144507+09:00",
+        "delegation": {
+          "kind": "activity",
+          "limit": null,
+          "allowed": true,
+          "observed": "위임 범위 안 — 5000000(전) · 종류 activity · 누적 10000000 · 0회째",
+          "judged_at": "2026-09-22T03:18:33.144507+00:00",
+          "booking_id": "e1f4519d-23de-403b-bf7a-dabd20280088",
+          "granted_at": "2026-09-22T12:18:32.789370+09:00",
+          "spent_cents": 10000000,
+          "amount_cents": 5000000,
+          "kinds_allowed": [
+            "activity",
+            "dining"
+          ],
+          "changes_so_far": 0,
+          "max_total_cents": 15000000,
+          "revert_deadline": "2026-09-23T03:18:33.144507+00:00",
+          "max_per_action_cents": 5000000,
+          "free_cancellation_until": "2026-09-25T12:18:32.785160+09:00",
+          "max_changes_per_booking": 2
+        },
+        "prior_state": {
+          "booking_status": "confirmed",
+          "supplier_status": "confirmed"
+        },
+        "created_at": "2026-09-22 12:18:33.045283+09:00"
+      }
+    },
+    {
+      "name": "위임 기록이 없다",
+      "expect_limit": "delegation_absent",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation delegation_absent: 이 고객의 위임 기록이 없다 — 자동 실행 대상이 아니다 (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "delegation_absent",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "b2ea7c39-44a7-4e8e-ae6f-97cf5e5e665d"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:33.612542+09:00"
+      }
+    },
+    {
+      "name": "위임이 철회됐다",
+      "expect_limit": "delegation_revoked",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation delegation_revoked: 위임이 2026-09-22T12:18:34.012355+09:00 에 철회됐다 (철회자 measure) (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "delegation_revoked",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "e9a0f97c-288c-4026-aa18-9a95d8192650"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:34.193341+09:00"
+      }
+    },
+    {
+      "name": "승인 뒤에 철회됐다",
+      "expect_limit": "delegation_revoked",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation delegation_revoked: 위임이 2026-09-22T12:18:34.852595+09:00 에 철회됐다 (철회자 ops-measure) (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "delegation_revoked",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "373a665d-ebe5-44bf-a413-80b3e2d35582"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:34.765856+09:00"
+      }
+    },
+    {
+      "name": "위임 대상이 아닌 종류",
+      "expect_limit": "kind_not_delegated",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation kind_not_delegated: 예약 종류 'lodging' 는 위임 대상이 아니다 — 위임된 종류: ['activity', 'dining'] (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "kind_not_delegated",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "f582d727-074e-4182-9229-4a5d8bf94305"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:35.367747+09:00"
+      }
+    },
+    {
+      "name": "금액을 모른다",
+      "expect_limit": "amount_unknown",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation amount_unknown: 예약 금액이 확인되지 않았다 — 상한 안인지 판정할 수 없다 (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "amount_unknown",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "eec067c9-259e-4803-a9aa-e3f96a763aab"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:35.945959+09:00"
+      }
+    },
+    {
+      "name": "건당 상한 초과",
+      "expect_limit": "over_per_action_cap",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation over_per_action_cap: 건당 상한 초과: 5000001 > 5000000(전) (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "over_per_action_cap",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "0a15e7d8-2fa7-46ab-9020-fc91a97ac8ac"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:36.514004+09:00"
+      }
+    },
+    {
+      "name": "누적 상한 초과",
+      "expect_limit": "over_total_cap",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation over_total_cap: 누적 상한 초과: 이미 15000000 + 이번 5000000 > 15000000(전) (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "over_total_cap",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "c4cc1154-7958-480d-8579-26adda436392"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:37.172006+09:00"
+      }
+    },
+    {
+      "name": "같은 예약 횟수 초과",
+      "expect_limit": "over_change_count",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation over_change_count: 같은 예약 자동 실행 횟수 초과: 이미 2회 >= 2회 (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "over_change_count",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "51bf9a9c-e52e-400d-9262-51b06d42a9dc"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:37.831422+09:00"
+      }
+    },
+    {
+      "name": "무료 취소 구간 밖",
+      "expect_limit": "outside_free_cancellation_window",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "delegation outside_free_cancellation_window: 무료 취소 구간이 아니다 — 구간 끝 2026-09-22T11:18:38.230609+09:00 (v11 §12 DoD-18 · wiki teams/booking-handoff.md 「위임 범위」)",
+      "limit_seen": "outside_free_cancellation_window",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "8dc2433a-68df-44b7-9ef9-57fca0ea666f"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:38.402225+09:00"
+      }
+    },
+    {
+      "name": "실제 공급자 등급",
+      "expect_limit": "supplier_tier",
+      "case_status": "escalated",
+      "action_status": "failed",
+      "guardrail": "action_rejected",
+      "observed": "supplier tier 'real' is not 'simulated' — a real supplier ledger is never changed by the automatic branch; this booking goes to a human (v11 §4-C, DoD-14)",
+      "limit_seen": "supplier_tier",
+      "ours_before": "confirmed",
+      "ours_after": "confirmed",
+      "supplier_before": "confirmed",
+      "supplier_after": "confirmed",
+      "ledger_moved": false,
+      "record": {
+        "action_type": "booking.cancel",
+        "arguments": {
+          "reason": "예약을 정리해 주세요",
+          "booking_id": "be70fee2-845a-486b-a978-77a0a6a06af4"
+        },
+        "status": "failed",
+        "provider_ref": null,
+        "amount_cents": null,
+        "amount_source": null,
+        "reason": null,
+        "revert_deadline": null,
+        "delegation": null,
+        "prior_state": null,
+        "created_at": "2026-09-22 12:18:38.972254+09:00"
+      }
+    }
+  ]
+}

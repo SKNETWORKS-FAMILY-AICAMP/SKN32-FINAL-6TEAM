@@ -16,6 +16,8 @@ domain: neutral
 | [run.md](run.md) | 무엇을 어떻게 실행하는가 |
 | [troubleshooting.md](troubleshooting.md) | 막히면 어디를 보는가 |
 | [unknown-state.md](unknown-state.md) | **돈이 나갔는지 모를 때** |
+| [always-on.md](always-on.md) | **무엇이 늘 돌아야 하고, 죽으면 무엇으로 아는가** |
+| [move-to-server.md](move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
 
 ## 자주 쓰는 명령
 

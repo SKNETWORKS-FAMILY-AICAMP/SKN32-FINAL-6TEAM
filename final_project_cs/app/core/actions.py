@@ -34,11 +34,36 @@ class ActionConflict(RuntimeError):
 
 @dataclass(frozen=True)
 class AppliedAction:
-    """적용 결과. ★`outbox` 는 코어가 Case 전이와 **같은 트랜잭션**에 싣는다."""
+    """적용 결과. ★`outbox` 는 코어가 Case 전이와 **같은 트랜잭션**에 싣는다.
+
+    ★`[2026-09-22]` 아래 다섯은 **실행 장부의 칸**이다(v11 §12 DoD-20, 마이그레이션 019).
+      코어는 이 값들이 무슨 뜻인지 모른다 — 적용기가 채우고 코어가 `action_requests` 에
+      그대로 적는다. 전에는 장부에 「무엇을(action_type·인자)」과 「결과(provider_ref)」뿐이라
+      **얼마에 실행됐고 언제까지 되돌릴 수 있는지 아무 데도 없었다.**
+
+        amount_cents      얼마에. ★None 은 0 이 아니라 **「확인되지 않았다」**다 — 지어내지 않는다
+        amount_source     그 금액을 어디서 읽었나. 금액과 **같이** 채우거나 같이 비운다(DB CHECK)
+        reason            왜. 고객 문장·사건 사유를 그대로 싣는다
+        revert_deadline   되돌림 기한. None 이면 되돌릴 수 있는 종류가 아니다
+        delegation        위임 범위 판정의 근거(무엇을 무엇과 비교했나). 위임을 안 쓴 작업은 None
+        prior_state       **되돌리려면 무엇으로 돌아가야 하나.** 없으면 되돌림이 상태를 지어내게 된다
+    """
 
     result_ref: str
     summary: dict[str, Any] = field(default_factory=dict)
     outbox: list[OutboxMessage] = field(default_factory=list)
+    amount_cents: int | None = None
+    amount_source: str | None = None
+    reason: str | None = None
+    revert_deadline: Any = None
+    delegation: dict[str, Any] | None = None
+    prior_state: dict[str, Any] | None = None
+
+    def ledger(self) -> dict[str, Any]:
+        """`action_requests` 에 적을 칸들. 코어가 그대로 넘긴다."""
+        return {"amount_cents": self.amount_cents, "amount_source": self.amount_source,
+                "reason": self.reason, "revert_deadline": self.revert_deadline,
+                "delegation": self.delegation, "prior_state": self.prior_state}
 
 
 class ActionHandler(Protocol):

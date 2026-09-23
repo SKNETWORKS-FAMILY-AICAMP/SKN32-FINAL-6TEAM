@@ -1,5 +1,9 @@
 """Verify the v5 Definition of Done against evidence and the test suite.
 
+★`[2026-09-21]` **이 스크립트가 세는 것은 v8 의 29항목**(쇼핑몰 시절)이다. 기준선은 2026-09-10 에
+  v11 26항목으로 바뀌었다 — 지금 달성률은 `python -m scripts.verify_dod_v11` 이 센다. 이 파일은
+  그때 무엇을 통과했는지의 **기록**으로 남긴다(지우면 그 사실이 사라진다).
+
 This checker is intentionally read-only with respect to ``wiki/records/evidence``.
 It reports the state of every DoD item and returns non-zero until all items
 have an explicit passing judgement and the test suite has no failures.

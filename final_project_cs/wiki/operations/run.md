@@ -112,6 +112,8 @@ python -m scripts.run_sweepers --interval 60
 
 `fatal`(경로·점검 소스가 대체까지 실패)이 0 이 아니면 `--once` 는 exit 1 이다.
 
+★`[2026-09-22]` **이것을 손으로 띄우지 않고 상시로 돌리는 배치**와 살아 있는지 보는 점검(`python -m scripts.ops.healthcheck`)은 → [always-on.md](always-on.md)
+
 화면 4개.
 
 ```

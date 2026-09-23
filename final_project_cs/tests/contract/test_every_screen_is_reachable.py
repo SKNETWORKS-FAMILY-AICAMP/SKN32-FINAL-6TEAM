@@ -24,7 +24,11 @@ from app.presentation.ui import theme
 #: 목록에서 들어가므로 메뉴에 없어도 된다.
 ENTRY_SCREENS = {"/ui/cases", "/ui/approvals", "/ui/admin", "/ops/outbox", "/ui/voc",
                  # ★2026-09-14 시나리오 모드 스위치
-                 "/ui/scenario"}
+                 "/ui/scenario",
+                 # ★2026-09-22 위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리.
+                 #   「언제든 철회할 수 있다」가 말뿐이 되지 않으려면 누를 자리가 있어야 하고,
+                 #   그 자리는 메뉴에서 닿아야 한다(이 파일이 `/ops/outbox` 에서 배운 것).
+                 "/ui/delegations"}
 
 
 def _mounted_paths() -> set[str]:

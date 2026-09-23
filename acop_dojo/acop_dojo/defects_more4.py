@@ -11,7 +11,7 @@ MORE4: list[Defect] = [
         defect_id="INV-VOC-001",
         title="분류 필수 필드 검사가 any 에서 all 로 바뀌었다",
         invariant="분류가 실패하면 조용히 넘기지 않는다 — 필드가 빠지면 거부한다",
-        path="app/modules/customer_ops/feedback.py",
+        path="app/modules/travel_ops/feedback.py",
         old="    if any(not isinstance(raw.get(key), str) or not raw[key].strip() for key in required):",
         new="    if all(not isinstance(raw.get(key), str) or not raw[key].strip() for key in required):",
         lesson=(
@@ -75,11 +75,12 @@ MORE4: list[Defect] = [
     ),
     Defect(
         defect_id="INV-VOC-002",
-        title="degraded 검사가 뒤집혔다",
+        title="degraded 검사를 Team 에서 뺀다",
         invariant="ContextPack 이 축소됐으면(degraded) 확정 답변을 만들지 않는다",
-        path="app/modules/customer_ops/voc_store_manager.py",
-        old="        if task.context.degraded:",
-        new="        if not task.context.degraded:",
+        path="app/modules/travel_ops/_base.py",
+        old=("        if task.context.degraded:" + chr(10)
+             + '            return self._escalate(task, "degraded_context")' + chr(10)),
+        new="",
         lesson=(
             "조건이 뒤집히면 정상 맥락을 넘기고 축소된 맥락으로 답을 만든다. 정확히 "
             "반대로 동작한다 — degraded 일 때야말로 확정 답변을 만들면 안 되는 때다."
@@ -103,11 +104,12 @@ MORE4: list[Defect] = [
     ),
     Defect(
         defect_id="INV-COMMERCE-005",
-        title="계약에 없는 능력을 받아도 처리한다",
+        title="capability 검사를 Team 에서 뺀다",
         invariant="Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
-        path="app/modules/customer_ops/catalog_verification.py",
-        old="        if task.capability not in self.manifest.capabilities:",
-        new="        if task.capability in self.manifest.capabilities:",
+        path="app/modules/travel_ops/_base.py",
+        old=("        if task.capability not in self.manifest.capabilities:" + chr(10)
+             + '            return self._escalate(task, "unsupported_capability")' + chr(10)),
+        new="",
         lesson=(
             "조건이 뒤집히면 자기가 할 수 있다고 선언한 일은 거부하고, 선언하지 않은 일을 "
             "받아 처리한다. Registry 가 계약을 보고 라우팅하는 의미가 사라진다. "
