@@ -46,8 +46,19 @@ from .replan import distance_m, walk_minutes
 KST = ZoneInfo("Asia/Seoul")
 
 # ── 우리가 고른 값 (측정 아님) ────────────────────────────────────
-DAY_START = time(9, 30)          #: 하루 첫 일정 시작
-DAY_END = time(21, 30)           #: 하루 마지막 일정이 끝나야 하는 시각
+def _day_window() -> tuple[time, time]:
+    """★`[2026-09-24]` 하루 시간은 **가드레일 한 곳**(`travel.day_window`)에서 읽는다(D-020).
+    팀 결정 — 하루 시작 08:00(평균 일정 시작 9시보다 식사 1시간 앞), 마감 22:00. 생성기는 식사를 짜지
+    않으니 **첫 활동은 시작 + 1시간(09:00)** 이다. 전에는 09:30~21:30 이 코드에 박혀 팀 결정과 달랐다."""
+    from app.core.settings import get_guardrails
+
+    guard = get_guardrails()
+    start_h, start_m = (int(x) for x in str(guard.get("travel.day_window.default_start")).split(":"))
+    end_h, end_m = (int(x) for x in str(guard.get("travel.day_window.default_end")).split(":"))
+    return time(start_h + 1, start_m), time(end_h, end_m)
+
+
+DAY_START, DAY_END = _day_window()   #: 하루 첫 활동 · 마지막 일정이 끝나야 하는 시각
 ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
