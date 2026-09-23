@@ -46,6 +46,8 @@ ACTIONS: dict[str, dict[str, Any]] = {
     "boss": {"argv": ["boss"], "params": ["fix", "force"], "asks": True},
     "review": {"argv": ["review"], "params": [], "asks": True},
     "placement": {"argv": ["placement"], "params": ["track"], "asks": True},
+    "quiz": {"argv": ["quiz"], "params": ["track", "count", "family"], "asks": True},
+    "quiz_pool": {"argv": ["quiz", "pool"], "params": ["track"]},
     "build_steps": {"argv": ["build", "steps"], "params": []},
     "build_start": {"argv": ["build", "start"], "params": ["force"]},
     "build_brief": {"argv": ["build", "brief"], "params": ["step"]},
@@ -111,6 +113,16 @@ def _validate(action: str, params: dict[str, Any]) -> list[str]:
             if str(value) not in ask.LEVELS and str(value) not in ask.NAMES:
                 raise ValueError(f"모르는 난이도다: {value}")
             argv.append(str(value))
+        elif name == "count":
+            count = int(value)
+            if not 1 <= count <= 20:
+                raise ValueError(f"문제 수는 1~20 이다: {value}")
+            argv += ["--count", str(count)]
+        elif name == "family":
+            from . import quiz
+            if str(value) not in quiz.FAMILIES:
+                raise ValueError(f"모르는 문제 유형이다: {value}")
+            argv += ["--family", str(value)]
         elif name == "force":
             argv.append("--force")
         elif name == "fix":
@@ -143,9 +155,12 @@ def send_input(job_id: str, line: str) -> None:
     job = JOBS[job_id]
     if job.done or job.process.stdin is None:
         raise ValueError("이미 끝난 작업이다")
-    job.process.stdin.write(line.rstrip("\n") + "\n")
+    # 한 번에 답 하나. \r 이나 줄바꿈이 섞이면 빈 답이 하나 더 들어가 다음 문제가 오답 처리된다.
+    clean = " ".join(line.replace("\r", "").split("\n")).rstrip()
+    # 메아리를 먼저 적는다. 쓰고 나서 적으면 자식의 다음 질문이 메아리보다 앞에 찍힐 수 있다.
+    job.lines.append(f"> {clean}")
+    job.process.stdin.write(clean + "\n")
     job.process.stdin.flush()
-    job.lines.append(f"> {line}")
 
 
 def state() -> dict[str, Any]:

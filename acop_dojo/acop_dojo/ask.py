@@ -6,7 +6,7 @@
   어려움  힌트도 보기 전환도 없다.
 
 어느 질문에서든 `힌트` 를 치면 힌트가 한 단계씩 열린다(최대 셋: 방향 → 좁히기 → 거의 답).
-보기 문제의 마지막 힌트는 오답 둘을 지운다.
+보기 문제(보기 넷 이상)는 셋째 단계가 오답 둘 지우기다. 직접 쓰다가 보기로 바꿔도 번호가 이어진다.
 
 도움을 받은 사실은 남긴다. 힌트를 보고 맞힌 것과 혼자 맞힌 것을 한 숫자로 섞으면
 기록을 보고 자기가 어디쯤인지 알 수 없다. 그래서 문제마다 힌트 수와 보기 전환 여부를 적고,
@@ -24,6 +24,7 @@ LEVELS = {"쉬움": "easy", "보통": "normal", "어려움": "hard"}
 NAMES = {v: k for k, v in LEVELS.items()}
 HINT_WORDS = {"?", "힌트", "hint", "h", "ㅎ"}
 GIVEUP_WORDS = {"모르겠다", "모름", "몰라", "보기", "pass", "모르겠어"}
+HINT_TIERS = 3
 
 
 def level() -> str:
@@ -84,7 +85,11 @@ class Tally:
 
 
 def _read(prompt: str) -> str:
-    return input(prompt).strip()
+    try:
+        return input(prompt).strip()
+    except EOFError:
+        # 터미널에서 입력을 닫으면(Ctrl+Z·Ctrl+D) 오류 대신 멈춘다. 기록은 판이 끝날 때만 쓴다.
+        raise SystemExit("\n  입력이 끝나 문제를 멈췄다. 이번 판은 기록하지 않았다.") from None
 
 
 def _show_hint(hints: Sequence[str], used: int, total: int | None = None) -> int:
@@ -99,37 +104,40 @@ def _show_hint(hints: Sequence[str], used: int, total: int | None = None) -> int
     return used + 1
 
 
-def _guide() -> str:
-    if level() == "hard":
+def _guide(has_hints: bool) -> str:
+    # 힌트가 없는 문제에 「힌트를 입력한다」고 하면 누른 뒤에야 없다는 걸 안다
+    if level() == "hard" or not has_hints:
         return ""
     return "  (막히면 `힌트`를 입력한다.)"
 
 
 def choice(prompt: str, options: Sequence[str], *, hints: Sequence[str] = (),
-           answer_index: int | None = None, letters: bool = False) -> Answer:
-    """보기에서 고른다. answer_index 를 주면 마지막 힌트로 오답 둘을 지울 수 있다."""
+           answer_index: int | None = None, letters: bool = False, start: int = 0) -> Answer:
+    """보기에서 고른다. answer_index 를 주면 셋째 힌트가 오답 둘 지우기가 된다.
+
+    start 는 직접 쓰기에서 이미 연 힌트 수다 — 보기로 바꿔도 번호가 이어진다.
+    """
     shown = list(range(len(options)))
-    tiers = list(hints)
     can_eliminate = answer_index is not None and len(options) >= 4 and level() != "hard"
-    if can_eliminate:
-        tiers.append("__eliminate__")
+    tiers = (list(hints)[:HINT_TIERS - 1] + ["__eliminate__"]) if can_eliminate \
+        else list(hints)[:HINT_TIERS]
 
     def render() -> None:
         for position, index in enumerate(shown):
             mark = chr(97 + position) if letters else str(position + 1)
             print(f"    {mark}  {options[index]}")
 
-    print(f"\n  {prompt}{_guide()}")
+    print(f"\n  {prompt}{_guide(bool(tiers) and start < len(tiers))}")
     render()
-    used = 0
+    used = min(start, len(tiers))
     while True:
         raw = _read("  > ")
         lowered = raw.lower()
         if lowered in HINT_WORDS:
             if used < len(tiers) and tiers[used] == "__eliminate__" and level() != "hard":
-                wrong = [i for i in shown if i != answer_index]
-                keep = wrong[:1] + [answer_index]
-                shown = [i for i in shown if i in keep]
+                # 보기가 몇 개든 오답은 정확히 둘만 지운다
+                removed = set([i for i in shown if i != answer_index][:2])
+                shown = [i for i in shown if i not in removed]
                 used += 1
                 print(f"  힌트 {used}/{len(tiers)}  오답 두 개를 제외했다.")
                 render()
@@ -141,7 +149,8 @@ def choice(prompt: str, options: Sequence[str], *, hints: Sequence[str] = (),
         elif raw.isdigit() and 1 <= int(raw) <= len(shown):
             index = shown[int(raw) - 1]
         else:
-            print("  보기 번호를 입력한다." + ("" if level() == "hard" else " 막히면 `힌트`를 입력한다."))
+            print("  보기 번호를 입력한다." + (" 막히면 `힌트`를 입력한다."
+                                             if level() != "hard" and used < len(tiers) else ""))
             continue
         return Answer(text=options[index], index=index, hints=used)
 
@@ -154,9 +163,12 @@ def free(prompt: str, *, hints: Sequence[str] = (),
         answer = choice(prompt, options, hints=hints, answer_index=right)
         answer.via_choices = True
         return answer
+    hints = list(hints)[:HINT_TIERS]
     tip = ""
-    if level() != "hard":
-        tip = "  (막히면 `힌트`를 입력한다" + (", 답을 모르면 `모르겠다`를 입력한다" if fallback else "") + ".)"
+    if level() != "hard" and (hints or fallback):
+        parts = (["막히면 `힌트`를 입력한다"] if hints else []) + \
+                (["답을 모르면 `모르겠다`를 입력한다"] if fallback else [])
+        tip = "  (" + ", ".join(parts) + ".)"
     print(f"\n  {prompt}{tip}")
     used = 0
     while True:
@@ -167,15 +179,14 @@ def free(prompt: str, *, hints: Sequence[str] = (),
         if raw.lower() in GIVEUP_WORDS and fallback and level() != "hard":
             options, right = fallback
             print("  보기 중에서 답을 고른다. 이 문제는 보기를 사용했다고 기록한다.")
-            answer = choice("답을 고른다.", options, hints=hints[used:], answer_index=right)
-            answer.hints += used
+            answer = choice("답을 고른다.", options, hints=hints, answer_index=right, start=used)
             answer.via_choices = True
             return answer
         return Answer(text=raw, hints=used)
 
 
 def yes_no(prompt: str, *, hints: Sequence[str] = ()) -> Answer:
-    print(f"\n  {prompt} (y/n){_guide()}")
+    print(f"\n  {prompt} (y/n){_guide(bool(hints))}")
     used = 0
     while True:
         raw = _read("  > ").lower()
