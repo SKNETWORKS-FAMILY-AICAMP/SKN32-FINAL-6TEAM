@@ -88,6 +88,14 @@ def check_migrations(rep: Report) -> None:
         rep.add(WARN, "요식 구간(020~029)에 다른 도메인이 들어왔다",
                 ", ".join(intruders))
 
+    # 반대쪽도 본다. 남이 우리 칸에 들어온 것만 보면 우리가 넘어간 것은 안 보인다.
+    overflow = sorted(name for n, names in by_number.items()
+                      if n not in DINING_RANGE for name in names
+                      if "dining" in name)
+    if overflow:
+        rep.add(WARN, f"요식이 제안한 구간(020~029)을 넘었다 ({len(overflow)}개)",
+                ", ".join(overflow) + "\n다른 도메인이 030 대를 받으면 겹친다. MERGE.md 「마이그레이션 번호」")
+
 
 # ── 2. Team 등록 ────────────────────────────────────────────
 

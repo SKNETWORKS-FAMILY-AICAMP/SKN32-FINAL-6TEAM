@@ -495,3 +495,160 @@ def test_자동_조회_문장은_고정이다(conn, place):
     uid = place()
     got = conn.execute("SELECT dining.ambient_prompt(%s)", (uid,)).fetchone()[0]
     assert got.endswith("현재 웨이팅 몇 팀인지 알아봐. 또는 영업 중인지 아닌지.")
+
+
+# ──────────────────────────────────────────────────────────────
+# 깨어났을 때 할 일 (tick.py)
+# ──────────────────────────────────────────────────────────────
+#
+# 깨우는 쪽이 무엇으로 바뀌든 이 파일은 고치지 않는다. 그러려면 몇 번을
+# 부르든, 언제 부르든 결과가 같아야 한다. 그것을 여기서 본다.
+#
+# tick.py 는 travel_ops 꾸러미를 거치면 openai 까지 끌려오므로 경로로 부른다.
+
+import importlib.util as _ilu
+from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+
+_TICK = os.path.join(os.path.dirname(__file__), "..", "..", "..",
+                     "app", "modules", "travel_ops", "dining", "tick.py")
+_spec = _ilu.spec_from_file_location("dining_tick", os.path.abspath(_TICK))
+tick = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(tick)
+
+_KST = _tz(_td(hours=9))
+
+
+class Reader:
+    """읽는 쪽 흉내. 몇 번 불렸는지 센다."""
+
+    def __init__(self, seen=None, boom=False):
+        self.calls = 0
+        self.seen = seen or {}
+        self.boom = boom
+
+    def __call__(self, place_uid, name, sentence):
+        self.calls += 1
+        self.sentence = sentence
+        if self.boom:
+            raise RuntimeError("로그인이 풀렸다")
+        return "https://example/shop", self.seen
+
+
+def _now():
+    return _dt.now(_KST)
+
+
+def test_물을_때가_아니면_묻지_않는다(conn, place):
+    uid, read = place(), Reader()
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(hours=3), fetch=read)
+    assert got["window"] is None
+    assert read.calls == 0
+
+
+def test_20분_전에_한_번_묻고_적는다(conn, place):
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 3}, "closure": {"state": "no"}})
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18), fetch=read)
+    assert got["window"] == "T-20"
+    assert read.calls == 1
+    assert read.sentence.endswith("현재 웨이팅 몇 팀인지 알아봐. 또는 영업 중인지 아닌지.")
+    assert {r["topic"] for r in got["recorded"]} == {"waiting", "closure"}
+
+
+def test_같은_틱을_두_번_불러도_한_번만_묻는다(conn, place):
+    # 깨우는 쪽이 1분 크론이든 두 번 겹쳐 돌든 결과가 같아야 한다.
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 3}, "closure": {"state": "no"}})
+    at = _now() + _td(minutes=18)
+    tick.tick_one(conn, _now(), uid, at, fetch=read)
+    tick.tick_one(conn, _now(), uid, at, fetch=read)
+    assert read.calls == 1
+
+
+def test_붐비면_20분_전에_말한다(conn, place):
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 41}, "closure": {"state": "no"}})
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18),
+                        fetch=read, trial=True)
+    assert got["notice"] is not None
+    assert got["notice"]["kind"] == "crowded"
+    assert "41팀" in got["notice"]["body"]
+
+
+def test_붐벼도_60분_전에는_말하지_않는다(conn, place):
+    # 60분 전 숫자는 도착할 때 이미 낡았다.
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 41}, "closure": {"state": "no"}})
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=58),
+                        fetch=read, trial=True)
+    assert got["window"] == "T-60"
+    assert got["notice"] is None
+
+
+def test_쉰다면_60분_전에도_말한다(conn, place):
+    uid = place()
+    read = Reader({"closure": {"state": "yes"}})
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=58),
+                        fetch=read, trial=True)
+    assert got["notice"]["kind"] == "closed"
+
+
+def test_두_번_불러도_알림은_한_번이다(conn, place):
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 41}, "closure": {"state": "no"}})
+    at = _now() + _td(minutes=18)
+    first = tick.tick_one(conn, _now(), uid, at, fetch=read, trial=True)
+    again = tick.tick_one(conn, _now(), uid, at, fetch=read, trial=True)
+    assert first["notice"] is not None
+    assert again["notice"] is None
+
+
+def test_읽는_쪽이_터져도_틱은_돌고_말하지_않는다(conn, place):
+    uid = place()
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18),
+                        fetch=Reader(boom=True), trial=True)
+    assert all(r["outcome"] == "error" and r["state"] == "unknown"
+               for r in got["recorded"])
+    assert got["notice"] is None
+
+
+def test_화면에_없던_주제는_모름이다(conn, place):
+    uid = place()
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18),
+                        fetch=Reader({"waiting": {"state": "no", "num": 0}}), trial=True)
+    closure = next(r for r in got["recorded"] if r["topic"] == "closure")
+    assert closure["outcome"] == "blocked"
+    assert closure["state"] == "unknown"
+
+
+def test_참거짓은_팀_수가_아니다(conn, place):
+    uid = place()
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18),
+                        fetch=Reader({"waiting": {"state": "yes", "num": True}}), trial=True)
+    waiting = next(r for r in got["recorded"] if r["topic"] == "waiting")
+    assert waiting["num"] is None
+    assert got["notice"] is None
+
+
+def test_본_갈래에서는_캐치테이블_값으로_말하지_않는다(conn, place):
+    uid = place()
+    read = Reader({"waiting": {"state": "yes", "num": 41}, "closure": {"state": "no"}})
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18), fetch=read)
+    assert got["notice"] is None
+
+
+def test_읽는_쪽이_없으면_묻지_않고_물을_것만_돌려준다(conn, place):
+    uid = place()
+    got = tick.tick_one(conn, _now(), uid, _now() + _td(minutes=18))
+    assert set(got["asked"]) == {"closure", "waiting"}
+    assert got["recorded"] == []
+
+
+def test_틱_한_번은_창_안의_곳만_묻는다(conn, place):
+    near, far = place(), place()
+    read = Reader({"waiting": {"state": "no", "num": 0}, "closure": {"state": "no"}})
+    now = _now()
+    out = tick.tick_once(conn, now, [(near, now + _td(minutes=18)),
+                                     (far, now + _td(hours=5))], fetch=read)
+    assert read.calls == 1
+    assert [r["window"] for r in out] == ["T-20", None]
