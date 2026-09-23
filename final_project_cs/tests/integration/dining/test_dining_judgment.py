@@ -22,7 +22,6 @@
 """
 from __future__ import annotations
 
-import glob
 import os
 import uuid
 from datetime import date, datetime, timedelta, timezone
@@ -30,22 +29,9 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 KST = timezone(timedelta(hours=9))
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
-
-#: 022 는 코어 places 표가 있어야 올라간다. 판정과 무관하므로 뺀다.
-SKIP = {"022_dining_matcher.sql"}
-
 TENANT = "test"
 #: 2026-09-21 은 월요일이다. 요일 계산이 섞이지 않게 고정한다.
 MONDAY = date(2026, 9, 21)
-
-
-def _admin_dsn() -> str:
-    port = os.environ.get("DINING_PG_PORT", "5433")
-    user = os.environ.get("DINING_DB_USER", "postgres")
-    return f"postgresql://{user}@localhost:{port}/postgres"
 
 
 def at(day_offset: int, hhmm: str) -> datetime:
@@ -54,63 +40,6 @@ def at(day_offset: int, hhmm: str) -> datetime:
     return datetime.combine(MONDAY + timedelta(days=day_offset),
                             datetime.min.time(), tzinfo=KST).replace(
         hour=hour % 24, minute=minute) + timedelta(days=hour // 24)
-
-
-@pytest.fixture(scope="session")
-def conn():
-    psycopg = pytest.importorskip("psycopg", reason="psycopg 가 없다")
-    dsn = os.environ.get("DINING_TEST_DSN")
-    made = None
-    if dsn is None:
-        name = f"dining_test_{os.getpid()}"
-        try:
-            admin = psycopg.connect(_admin_dsn(), connect_timeout=5, autocommit=True)
-        except Exception as exc:                        # noqa: BLE001
-            pytest.skip(f"DB 에 붙지 못했다: {str(exc).splitlines()[0]}")
-        with admin:
-            admin.execute(f'DROP DATABASE IF EXISTS "{name}"')
-            admin.execute(f'CREATE DATABASE "{name}"')
-        made = name
-        dsn = _admin_dsn().rsplit("/", 1)[0] + "/" + name
-
-    conn = psycopg.connect(dsn, autocommit=True)
-    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql"))):
-        if os.path.basename(path) in SKIP:
-            continue
-        conn.execute(open(path, encoding="utf-8").read())
-    yield conn
-    conn.close()
-    if made:
-        with psycopg.connect(_admin_dsn(), autocommit=True) as admin:
-            admin.execute(f'DROP DATABASE IF EXISTS "{made}"')
-
-
-@pytest.fixture
-def place(conn):
-    """합성 장소를 하나 만들고 시험이 끝나면 지운다."""
-    made: list[str] = []
-
-    def make(name: str = "시험식당", lat=37.5, lng=127.0) -> str:
-        uid = str(uuid.uuid4())
-        conn.execute(
-            "INSERT INTO dining.dn_place (place_uid, name_ko, area, record_status, "
-            "is_synthetic, lat, lng) VALUES (%s, %s, '시험', 'active', true, %s, %s)",
-            (uid, f"{name}-{uid[:8]}", lat, lng))
-        made.append(uid)
-        return uid
-
-    yield make
-    for uid in made:
-        conn.execute("DELETE FROM dining.dn_hours_interval i USING dining.dn_hours_rule r "
-                     "WHERE i.rule_id = r.rule_id AND r.place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_hours_rule WHERE place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_closure_rule WHERE place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_attribute WHERE place_uid = %s", (uid,))
-        # 관측과 휴무 범위도 장소를 붙들고 있다. 빼먹으면 지우다 외래키에 걸린다.
-        conn.execute("DELETE FROM dining.dn_live_check WHERE place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_notice WHERE place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_closure_coverage WHERE place_uid = %s", (uid,))
-        conn.execute("DELETE FROM dining.dn_place WHERE place_uid = %s", (uid,))
 
 
 def add_hours(conn, place_uid: str, weekday: int, spans, *, retired=False) -> str:
