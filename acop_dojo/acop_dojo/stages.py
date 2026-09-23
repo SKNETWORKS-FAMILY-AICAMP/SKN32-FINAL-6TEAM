@@ -13,6 +13,7 @@ import textwrap
 from pathlib import Path
 from typing import Any
 
+from . import ask
 from . import progress
 from .config import data_dir
 
@@ -123,6 +124,7 @@ def stage1_reconstruct(trace: dict[str, Any], *, seed: int = 7, blanks: int = 5)
     print("앞뒤 흐름을 보고 가운데 빠진 함수를 고른다.")
     print(SEPARATOR)
     correct = 0
+    tally = ask.Tally()
     answers: list[dict[str, Any]] = []
     for position in targets:
         before, target, after = steps[position - 1], steps[position], steps[position + 1]
@@ -133,10 +135,14 @@ def stage1_reconstruct(trace: dict[str, Any], *, seed: int = 7, blanks: int = 5)
         print(f"\n  {before['i']:3d}  {_key(before)}")
         print(f"  {target['i']:3d}  ???")
         print(f"  {after['i']:3d}  {_key(after)}\n")
-        for index, option in enumerate(options):
-            print(f"    {chr(97 + index)}  {option}")
-        raw = input("\n  > ").strip().lower()
-        picked = options[ord(raw[0]) - 97] if raw[:1].isalpha() and 0 <= ord(raw[:1]) - 97 < len(options) else ""
+        caller = target.get("caller")
+        answer = tally.add(ask.choice(
+            "빈칸에 들어갈 함수는?", options, letters=True,
+            answer_index=options.index(right),
+            hints=[f"{ask.layer_of(right.split('::')[0])}의 함수다",
+                   (f"{caller} 가 부르는 함수다" if caller
+                    else f"파일은 {right.split('::')[0]} 이다")]))
+        picked = answer.text
         ok = picked == right
         correct += ok
         print("  맞다." if ok else f"  아니다. 정답은 {right} 다.")
@@ -144,15 +150,19 @@ def stage1_reconstruct(trace: dict[str, Any], *, seed: int = 7, blanks: int = 5)
 
     print(f"\n{SEPARATOR}")
     print(f"{correct}/{blanks} 맞혔다.")
-    print("이제 한 줄로 쓴다 — 이 경로에서 상태를 바꾸는 함수는 왜 하나뿐인가?")
-    explanation = input("  > ").strip()
+    explanation = tally.add(ask.free(
+        "이제 한 줄로 쓴다 — 이 경로에서 상태를 바꾸는 함수는 왜 하나뿐인가?",
+        hints=["Case 상태를 저장하는 표(customer_cases)를 고치는 SQL 이 어디 있는지 찾는다",
+               "app/core/transition.py 의 transition_case 를 본다",
+               "그 한 곳이 버전 대조·payload 검사·이벤트 기록을 모두 한다"])).text
     print("\n  모범답안: customer_cases 를 UPDATE 하는 곳이 transition.py 한 군데뿐이라,")
     print("  상태 변경이 전부 같은 검사(버전 대조·payload 검증·이벤트 기록)를 지나게 된다.")
     print("  본인 답과 비교해 빠진 게 있으면 지금 메모해 둔다.")
     progress.record_stage(
         "1", status="passed" if correct == blanks else "partial",
         detail={"correct": correct, "of": blanks, "answers": answers,
-                "explanation": explanation, "grading": "self"})
+                "explanation": explanation, "grading": "self", **tally.detail()})
+    print(f"  {tally.summary()}")
     progress.claim_ability(
         "실행경로 복원", evidence=f"stage1:{correct}/{blanks}", confirmed=correct == blanks)
 
@@ -185,7 +195,23 @@ def stage2_contrast(trace: dict[str, Any], *, seed: int = 7, count: int = 7) -> 
     print(SEPARATOR)
     for index, step in enumerate(shuffled, start=1):
         print(f"  {index}  {_key(step)}")
-    raw = input("\n  > ").strip()
+    tally = ask.Tally()
+    number = {id(step): index for index, step in enumerate(shuffled, start=1)}
+    truth = " ".join(str(number[id(step)]) for step in cards)
+    # 보기는 정답 순서 하나와, 정답을 조금씩 흐트러뜨린 순서 셋이다.
+    shaken = []
+    for k in range(1, len(cards)):
+        swapped = cards[:]
+        swapped[k - 1], swapped[k] = swapped[k], swapped[k - 1]
+        shaken.append(" ".join(str(number[id(step)]) for step in swapped))
+    orderings = sorted(set([truth] + rng.sample(shaken, min(3, len(shaken)))))
+    reply = tally.add(ask.free(
+        "실행 순서대로 번호를 나열한다.",
+        hints=[f"가장 먼저 도는 것은 {number[id(cards[0])]}번이다",
+               f"가장 나중에 도는 것은 {number[id(cards[-1])]}번이다",
+               f"{number[id(cards[0])]}번 바로 다음은 {number[id(cards[1])]}번이다"],
+        fallback=(orderings, orderings.index(truth))))
+    raw = reply.text
     try:
         order = [int(token) for token in raw.replace(",", " ").split()]
     except ValueError:
@@ -204,12 +230,17 @@ def stage2_contrast(trace: dict[str, Any], *, seed: int = 7, count: int = 7) -> 
         mark = "=" if same else "≠"
         print(f"  {_short(mine):<40} {mark} {_short(real)}")
     print(f"\n  {hits}/{len(cards)} 자리가 맞았다.")
-    print("\n차이가 난 자리 하나를 골라, 왜 그 순서가 아니었는지 쓴다.")
-    explanation = input("  > ").strip()
+    explanation = tally.add(ask.free(
+        "차이가 난 자리 하나를 골라, 왜 그 순서가 아니었는지 쓴다.",
+        hints=["라우팅은 status 가 routing 일 때만 일어난다",
+               "ContextPack(Team 에게 넘기는 맥락 묶음)은 Team 을 부르기 전에 만들어진다",
+               "상태 반영은 Team 결과를 받은 뒤다"])).text
     print("\n  힌트: 이 시나리오에서 라우팅은 status 가 routing 일 때만 일어나고,")
     print("  ContextPack 은 Team 을 부르기 전에 만들어지며, 상태 반영은 결과를 받은 뒤다.")
     progress.record_stage(
         "2", status="passed" if hits >= len(cards) - 1 else "partial",
-        detail={"hits": hits, "of": len(cards), "explanation": explanation, "grading": "self"})
+        detail={"hits": hits, "of": len(cards), "explanation": explanation, "grading": "self",
+                **tally.detail()})
+    print(f"  {tally.summary()}")
     progress.claim_ability(
         "경로 예측과 대조", evidence=f"stage2:{hits}/{len(cards)}", confirmed=False)

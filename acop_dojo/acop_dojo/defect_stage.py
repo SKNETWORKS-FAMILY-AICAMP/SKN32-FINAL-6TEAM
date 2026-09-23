@@ -12,6 +12,7 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
+from . import ask
 from . import defects as defects_mod
 from . import progress
 from . import review
@@ -119,13 +120,33 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
             return 0 if passed else 1
 
     print(f"\n{SEPARATOR}")
-    print("어느 파일이 바뀌었나? (경로 일부만 써도 된다)")
-    guess = input("  > ").strip()
-    hit = bool(guess) and guess.lower() in defect.path.lower()
+    tally = ask.Tally()
+    pool = [defects_mod.by_id(d).path for d in playable(catalog)]
+    options, right = ask.file_choices(defect.path, pool)
+    guess = tally.add(ask.free(
+        "어느 파일이 바뀌었나? (경로 일부만 써도 된다)",
+        hints=[f"깨진 규칙은 이것이다 — {defect.invariant}",
+               f"그 파일은 {ask.layer_of(defect.path)}에 있다",
+               f"바뀐 줄은 원래 이렇게 생겼다 — {defect.old.strip().splitlines()[0][:70]}"],
+        fallback=(options, right)))
+    hit = (guess.index == right) if guess.via_choices else (
+        bool(guess.text) and guess.text.lower() in defect.path.lower())
     print(f"  {'맞다.' if hit else '아니다.'}  실제로는 {defect.path} 다.")
 
-    print("\n왜 이것이 규칙 위반인지 한 줄로 쓴다.")
-    explanation = input("  > ").strip()
+    # 설명 보기는 정답 설명 하나와 흔한 오해로 만든다. 오해가 모자라면 다른 규칙의 설명으로 채운다.
+    wrongs = list(defect.counterfactuals)
+    others = [d.lesson for d in defects_mod.DEFECTS
+              if d.defect_id != chosen and d.invariant != defect.invariant]
+    while len(wrongs) < 3 and others:
+        wrongs.append(others.pop(0))
+    reasons = sorted(wrongs[:3] + [defect.lesson])
+    said = tally.add(ask.free(
+        "왜 이것이 규칙 위반인지 한 줄로 쓴다.",
+        hints=[f"지키던 규칙 — {defect.invariant}",
+               f"바뀐 것 — {defect.old.strip().splitlines()[0][:60]} → {(defect.new.strip() or '(삭제)')[:60]}",
+               "그 줄이 사라지거나 바뀌면 어떤 요청이 검사 없이 지나가는지 떠올린다"],
+        fallback=(reasons, reasons.index(defect.lesson))))
+    explanation = said.text
 
     print(f"\n{SEPARATOR}")
     print(f"  깨진 규칙   {defect.invariant}")
@@ -139,9 +160,11 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
     print("\n  스스로 대조한다. 본인 답이 위 설명의 핵심을 담고 있나?")
     print(f"  직접 고쳐 보려면:  acop-dojo defect {chosen} --fix 내패치.patch")
 
+    print(f"\n  {tally.summary()}")
     progress.record_stage("3", status="explored",
                           detail={"defect": chosen, "file_guess_ok": hit,
-                                  "explanation": explanation, "grading": "self"})
+                                  "explanation": explanation, "grading": "self",
+                                  **tally.detail()})
     progress.claim_ability("불변식 설명", evidence=f"defect:{chosen}", confirmed=False)
     review.schedule(defect.invariant, source=chosen)
     return 0

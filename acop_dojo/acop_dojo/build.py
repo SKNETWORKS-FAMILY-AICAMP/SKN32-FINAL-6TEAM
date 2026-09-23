@@ -275,3 +275,122 @@ def reveal(step: Step, rel_path: str) -> Path:
         state["revealed"].append(rel_path)
         save_state(state)
     return target
+
+
+# ── 힌트 세 단계 ──────────────────────────────────────────────────────────────
+# 쌓기는 코드를 쓰는 문제라 보기(4지선다)가 맞지 않는다. 대신 한 단계씩 더 알려 준다.
+#   1  판정 테스트가 무엇을 불러오는가 — 그 이름을 만들면 불러오기는 된다
+#   2  참고 구현의 함수·클래스가 각각 무슨 일을 하는가(설명 첫 줄)
+#   3  뼈대 — 서명과 설명만 있고 본문은 NotImplementedError 인 파일
+# 쓴 힌트는 기록한다. 뼈대는 학습자가 이미 쓴 파일을 덮지 않는다.
+HINT_TIERS = 3
+
+
+def _imports_from_tests(step: "Step") -> dict[str, list[str]]:
+    """판정 테스트가 이 단계 모듈에서 불러오는 이름. 테스트 파일을 AST 로 읽는다."""
+    wanted = {f"{BUILD_PACKAGE}." + m for m in step.modules}
+    found: dict[str, set[str]] = {}
+    for test in step.tests:
+        path = build_target_root() / test
+        if not path.exists():
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module in wanted:
+                found.setdefault(node.module, set()).update(a.name for a in node.names)
+    return {k: sorted(v) for k, v in sorted(found.items())}
+
+
+def _first_line(node: ast.AST) -> str:
+    doc = ast.get_docstring(node) or ""
+    return doc.strip().splitlines()[0] if doc.strip() else "(설명 없음)"
+
+
+def _explain(rel_path: str) -> list[str]:
+    source = build_target_root() / rel_path
+    if not source.exists():
+        return []
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    lines = []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if node.name.startswith("_") and not isinstance(node, ast.ClassDef):
+                continue
+            lines.append(f"{node.name} — {_first_line(node)}")
+    return lines
+
+
+def skeleton(rel_path: str) -> str:
+    """참고 구현에서 본문을 걷어낸 뼈대. 서명·설명·Enum 값·import 는 남긴다."""
+    source = (build_target_root() / rel_path).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    class Hollow(ast.NodeTransformer):
+        def _hollow(self, node):
+            doc = ast.get_docstring(node)
+            body = [ast.Expr(ast.Constant(doc))] if doc else []
+            body.append(ast.Raise(exc=ast.Call(ast.Name("NotImplementedError", ast.Load()),
+                                               [ast.Constant("여기를 채운다")], [])))
+            node.body = body
+            return node
+
+        def visit_FunctionDef(self, node):
+            return self._hollow(node)
+
+        def visit_AsyncFunctionDef(self, node):
+            return self._hollow(node)
+
+    hollow = Hollow().visit(tree)
+    # 모듈 수준의 큰 표(전이표처럼 문제의 알맹이인 것)는 비운다. 이름과 타입만 남긴다.
+    for node in hollow.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)) and isinstance(
+                getattr(node, "value", None), (ast.Dict, ast.List, ast.Set, ast.Tuple)):
+            value = node.value
+            node.value = type(value)(**{f: [] for f in value._fields
+                                        if f in ("keys", "values", "elts")},
+                                     **({"ctx": ast.Load()} if "ctx" in value._fields else {}))
+    ast.fix_missing_locations(hollow)
+    return ("# 뼈대 — 서명과 설명만 남겼다. `raise NotImplementedError` 자리를 채운다.\n"
+            "# 비워 둔 표({} · [])는 테스트가 무엇을 기대하는지 보고 채운다.\n\n"
+            + ast.unparse(hollow) + "\n")
+
+
+def next_hint(step: "Step") -> tuple[int, list[str]]:
+    """다음 힌트를 연다. (몇 번째 힌트인가, 보여 줄 줄들)"""
+    state = load_state()
+    entry = state["steps"].setdefault(str(step.index), {"attempts": 0})
+    tier = entry.get("hints_used", 0) + 1
+    if tier > HINT_TIERS:
+        return HINT_TIERS + 1, ["세 단계를 다 열었다. 더 막히면 `build reveal` 로 참고 구현을 꺼낸다."]
+    out: list[str] = []
+    if tier == 1:
+        imports = _imports_from_tests(step)
+        if not imports:
+            out.append("판정 테스트가 이 단계 모듈을 직접 부르지 않는다. 앞 단계 모듈과 함께 불린다.")
+        for module, names in imports.items():
+            out.append(f"{module.replace('.', '/')}.py 에서 테스트가 부르는 이름: {', '.join(names)}")
+        out.append("이 이름들이 있으면 적어도 불러오기는 된다. 그다음 테스트가 무엇을 기대하는지 본다.")
+    elif tier == 2:
+        for rel in step.paths():
+            explained = _explain(rel)
+            if explained:
+                out.append(rel)
+                out.extend(f"    {line}" for line in explained)
+    else:
+        for rel in step.paths():
+            source = build_target_root() / rel
+            if not source.exists() or rel.endswith("__init__.py"):
+                continue
+            target = build_workspace() / rel
+            text = skeleton(rel)
+            if target.exists() and target.read_text(encoding="utf-8", errors="replace").strip():
+                hint_path = target.with_suffix(".skeleton.py")
+                hint_path.write_text(text, encoding="utf-8")
+                out.append(f"{rel} — 이미 쓴 파일이 있어 덮지 않았다. 뼈대는 {hint_path.name} 에 따로 두었다.")
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(text, encoding="utf-8")
+                out.append(f"{rel} — 뼈대를 넣었다. 본문을 채운다.")
+    entry["hints_used"] = tier
+    save_state(state)
+    return tier, out

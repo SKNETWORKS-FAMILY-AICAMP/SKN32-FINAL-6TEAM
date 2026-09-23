@@ -32,6 +32,7 @@ from .config import WORKSPACE_ROOT, build_workspace, target_root
 ACTIONS: dict[str, dict[str, Any]] = {
     "doctor": {"argv": ["doctor"], "params": []},
     "status": {"argv": ["status"], "params": []},
+    "level": {"argv": ["level"], "params": ["level"]},
     "tracks": {"argv": ["tracks"], "params": []},
     "scenarios": {"argv": ["scenarios"], "params": []},
     "invariants": {"argv": ["invariants"], "params": []},
@@ -48,6 +49,7 @@ ACTIONS: dict[str, dict[str, Any]] = {
     "build_start": {"argv": ["build", "start"], "params": ["force"]},
     "build_brief": {"argv": ["build", "brief"], "params": ["step"]},
     "build_check": {"argv": ["build", "check"], "params": ["step"]},
+    "build_hint": {"argv": ["build", "hint"], "params": ["step"]},
 }
 MAX_LINES = 4000
 
@@ -103,6 +105,11 @@ def _validate(action: str, params: dict[str, Any]) -> list[str]:
             argv.append(str(value))
         elif name == "step":
             argv.append(str(build.get(int(value)).index))
+        elif name == "level":
+            from . import ask
+            if str(value) not in ask.LEVELS and str(value) not in ask.NAMES:
+                raise ValueError(f"모르는 난이도다: {value}")
+            argv.append(str(value))
         elif name == "force":
             argv.append("--force")
         elif name == "fix":
@@ -167,7 +174,14 @@ def state() -> dict[str, Any]:
                     "baseline": catalog.get("baseline", {}).get("summary")},
         "actions": {name: spec["params"] for name, spec in ACTIONS.items()},
         "asks_input": sorted(n for n, s in ACTIONS.items() if s.get("asks")),
+        "level": _level_name(),
+        "hint_words": ["힌트"], "giveup_words": ["모르겠다"],
     }
+
+
+def _level_name() -> str:
+    from . import ask
+    return ask.NAMES.get(ask.level(), ask.level())
 
 
 def ui_path() -> Path | None:

@@ -8,7 +8,7 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import answers, boss, build, server, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, ask, boss, build, server, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -102,6 +102,19 @@ def cmd_learn(args: argparse.Namespace) -> int:
                "1": stages.stage1_reconstruct,
                "2": stages.stage2_contrast}[args.stage]
     handler(trace)
+    return 0
+
+
+def cmd_level(args: argparse.Namespace) -> int:
+    if args.value:
+        ask.set_level(args.value)
+    now = ask.NAMES.get(ask.level(), ask.level())
+    print(f"난이도: {now}")
+    print("  쉬움    보기가 있는 문제는 처음부터 보기로 낸다. 힌트를 쓸 수 있다.")
+    print("  보통    먼저 직접 답한다. 막히면 `모르겠다` 로 보기(4지선다)로 바꾼다. 힌트를 쓸 수 있다.")
+    print("  어려움  힌트도 보기 전환도 없다.")
+    print("  문제를 푸는 중 `힌트` 를 치면 힌트가 한 단계씩 열린다(최대 셋).")
+    print("  바꾸기:  python dojo.py level 쉬움")
     return 0
 
 
@@ -239,7 +252,8 @@ def _build_brief(step: build.Step) -> None:
     print(f"  통과하면 말할 수 있어야 하는 것: {step.claim}")
     print("")
     print(f"  판정:  python dojo.py build check {step.index}")
-    print(f"  막히면: python dojo.py build reveal {step.index} <파일>  (기록에 남는다)")
+    print(f"  막히면: python dojo.py build hint {step.index}  (세 단계 · 기록에 남는다)")
+    print(f"  그래도 막히면: python dojo.py build reveal {step.index} <파일>")
 
 
 def cmd_build(args: argparse.Namespace) -> int:
@@ -282,6 +296,15 @@ def cmd_build(args: argparse.Namespace) -> int:
     step = build.get(args.step or _next_step(all_steps, state))
     if action == "brief":
         _build_brief(step)
+        return 0
+    if action == "hint":
+        tier, lines = build.next_hint(step)
+        print(f"\n{step.index}단계 · {step.title} — 힌트 {min(tier, build.HINT_TIERS)}/{build.HINT_TIERS}")
+        print(SEPARATOR)
+        for line in lines:
+            print(f"  {line}")
+        print("\n  쓴 힌트는 기록에 남는다. 다음 힌트:  python dojo.py build hint "
+              f"{step.index}")
         return 0
     if action == "reveal":
         path = build.reveal(step, args.path)
@@ -370,20 +393,27 @@ def cmd_review(args: argparse.Namespace) -> int:
             print(f"  같은 규칙이 다른 코드에서도 깨진다. 깨진 테스트만 보여준다.")
             for nodeid in catalog["entries"][other]["failed"][:4]:
                 print(f"    FAILED  {nodeid}")
-            print("  어느 파일인가?")
-            guess = input("  > ").strip()
-            actual = defects.by_id(other).path
-            ok = bool(guess) and guess.lower() in actual.lower()
+            target_defect = defects.by_id(other)
+            actual = target_defect.path
+            files, index = ask.file_choices(
+                actual, [defects.by_id(d).path for d in defect_stage.playable(catalog)])
+            guess = ask.free("어느 파일인가? (경로 일부만 써도 된다)",
+                             hints=[f"그 파일은 {ask.layer_of(actual)}에 있다",
+                                    f"바뀐 줄은 원래 이렇게 생겼다 — "
+                                    f"{target_defect.old.strip().splitlines()[0][:70]}"],
+                             fallback=(files, index))
+            ok = (guess.index == index) if guess.via_choices else (
+                bool(guess.text) and guess.text.lower() in actual.lower())
             print(f"  {'맞다.' if ok else '아니다.'}  {actual}")
         else:
-            print("  이 규칙을 한 줄로 쓰고, 어느 파일이 지키는지 대라.")
-            input("  > ")
+            source_hint = defects.by_id(entry["source"]).path if entry.get("source") else ""
+            ask.free("이 규칙을 한 줄로 쓰고, 어느 파일이 지키는지 대라.",
+                     hints=([f"그 파일은 {ask.layer_of(source_hint)}에 있다"] if source_hint else []))
             source = defects.by_id(entry["source"]) if entry.get("source") else None
             if source:
                 print(f"  모범답안: {source.lesson}")
                 print(f"  지키는 곳: {source.path}")
-            print("  스스로 대조한다. 맞았나? (y/n)")
-            ok = input("  > ").strip().lower().startswith("y")
+            ok = ask.yes_no("스스로 대조한다. 맞았나?").text == "y"
         review.record(concept, recalled=ok)
     print("")
     print(SEPARATOR)
@@ -527,7 +557,7 @@ def build_parser() -> argparse.ArgumentParser:
     boss_cmd.set_defaults(func=cmd_boss)
 
     build_cmd = sub.add_parser("build", help="처음부터 쌓기 — 빈 폴더에서 베이스먼트를 만든다")
-    build_cmd.add_argument("action", choices=["steps", "start", "brief", "check", "reveal"],
+    build_cmd.add_argument("action", choices=["steps", "start", "brief", "check", "hint", "reveal"],
                            nargs="?", default="steps")
     build_cmd.add_argument("step", nargs="?", type=int, default=None, help="단계 번호")
     build_cmd.add_argument("path", nargs="?", default=None, help="reveal 로 꺼낼 파일")
@@ -589,6 +619,10 @@ def build_parser() -> argparse.ArgumentParser:
     serve_cmd.add_argument("--port", type=int, default=8765)
     serve_cmd.add_argument("--no-open", action="store_true", help="브라우저를 자동으로 열지 않는다")
     serve_cmd.set_defaults(func=lambda args: server.serve(args.port, open_browser=not args.no_open))
+
+    level_cmd = sub.add_parser("level", help="난이도를 보거나 바꾼다 (쉬움 · 보통 · 어려움)")
+    level_cmd.add_argument("value", nargs="?", default=None)
+    level_cmd.set_defaults(func=cmd_level)
 
     sub.add_parser("status", help="진행 상황").set_defaults(func=cmd_status)
     return parser

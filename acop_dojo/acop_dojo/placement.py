@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from . import ask
 from . import defect_stage
 from . import defects as defects_mod
 from . import progress
@@ -49,24 +50,29 @@ def run(track_id: str, trace: dict[str, Any]) -> int:
     print("세 문제다. 맞히려고 하지 말고 지금 아는 만큼만 답한다.")
     print(SEPARATOR)
     score = 0
+    tally = ask.Tally()
 
-    print("")
-    print("  1. 이 저장소에서 Case 의 상태를 바꾸는 함수는 하나뿐이다. 이름은?")
-    answer = input("  > ").strip().lower()
-    ok = "transition_case" in answer.replace(" ", "")
+    names = ["apply_event", "create_case", "fold_events", "transition_case"]
+    first = tally.add(ask.free(
+        "1. 이 저장소에서 Case 의 상태를 바꾸는 함수는 하나뿐이다. 이름은?",
+        hints=["코어(core) 층에 있다", "파일은 app/core/transition.py 다", "이름이 transition 으로 시작한다"],
+        fallback=(names, names.index("transition_case"))))
+    ok = "transition_case" in first.text.lower().replace(" ", "")
     score += ok
     print(f"  {'맞다.' if ok else '아니다.'}  transition_case (app/core/transition.py)")
 
     options = _first_symbols(trace)
-    print("")
-    print("  2. 이 트랙의 대표 시나리오에서 가장 먼저 불리는 것은? 번호로 답한다.")
-    for index, option in enumerate(options, start=1):
-        print(f"    {index}  {option}")
-    raw = input("  > ").strip()
-    picked = options[int(raw) - 1] if raw.isdigit() and 1 <= int(raw) <= len(options) else ""
-    ok = picked == options[0]
+    # 정답이 늘 첫 보기에 있던 것을 고친다(2026-09-23). 보기를 정렬해 자리를 가린다.
+    right = options[0]
+    shown = sorted(options)
+    second = tally.add(ask.choice(
+        "2. 이 트랙의 대표 시나리오에서 가장 먼저 불리는 것은?", shown,
+        answer_index=shown.index(right),
+        hints=[f"{ask.layer_of(right.split('::')[0])}의 함수다"]))
+    picked = second.text
+    ok = picked == right
     score += ok
-    print(f"  {'맞다.' if ok else '아니다.'}  {options[0]}")
+    print(f"  {'맞다.' if ok else '아니다.'}  {right}")
 
     catalog = defects_mod.load_catalog()
     mine = [d for d in defect_stage.playable(catalog)
@@ -75,12 +81,21 @@ def run(track_id: str, trace: dict[str, Any]) -> int:
         chosen = mine[0]
         entry = catalog["entries"][chosen]
         print("")
-        print("  3. 규칙 하나를 깨뜨렸더니 이 테스트가 깨졌다. 어느 파일이겠나?")
+        print("  3. 규칙 하나를 깨뜨렸더니 이 테스트가 깨졌다.")
         for nodeid in entry["failed"][:3]:
             print(f"      FAILED  {nodeid}")
-        guess = input("  > ").strip()
-        actual = defects_mod.by_id(chosen).path
-        ok = bool(guess) and guess.lower() in actual.lower()
+        defect = defects_mod.by_id(chosen)
+        actual = defect.path
+        files, index = ask.file_choices(
+            actual, [defects_mod.by_id(d).path for d in defect_stage.playable(catalog)])
+        third = tally.add(ask.free(
+            "어느 파일이겠나? (경로 일부만 써도 된다)",
+            hints=[f"깨진 규칙은 이것이다 — {defect.invariant}",
+                   f"그 파일은 {ask.layer_of(actual)}에 있다",
+                   f"실패한 테스트 이름에 그 파일이 하는 일이 드러난다"],
+            fallback=(files, index)))
+        ok = (third.index == index) if third.via_choices else (
+            bool(third.text) and third.text.lower() in actual.lower())
         score += ok
         print(f"  {'맞다.' if ok else '아니다.'}  {actual}")
     else:
