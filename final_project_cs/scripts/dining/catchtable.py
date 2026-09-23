@@ -42,9 +42,13 @@ STATES = ("yes", "no", "unknown")
 
 #: 답이 얼마나 신선해야 하는가. 주제마다 다르다.
 #: 빈자리·웨이팅은 몇 분이면 바뀌고, 영업시간·휴무는 그날 안이면 된다.
+#:
+#: 빈자리·웨이팅은 DB 의 live_ttl 과 같은 5분이어야 한다. 예전에는 15분이었는데,
+#: DB 는 본 시각이 아니라 적은 시각부터 기한을 세므로 10분 된 값이 5분 더
+#: 「지금」 행세를 했다. 여기서 더 짧게 끊어야 그 틈이 없다.
 FRESH_SECONDS = {
-    "vacancy": 15 * 60,
-    "waiting": 15 * 60,
+    "vacancy": 5 * 60,
+    "waiting": 5 * 60,
     "hours":   12 * 60 * 60,
     "closure": 12 * 60 * 60,
 }
@@ -57,7 +61,9 @@ WHAT_TO_READ = {
     "closure": "휴무일 표기와 「소식」 탭의 명절 공지.",
 }
 
-SEARCH_URL = "https://app.catchtable.co.kr/ct/search?keyword={q}"
+#: /ct/search?keyword= 는 껍데기만 오는 죽은 경로다 (2026-09-22 확인).
+#: 홈에서 검색창에 쳐야 결과가 나온다. 그래서 홈을 준다.
+SEARCH_URL = "https://app.catchtable.co.kr/  (검색창에 「{q}」)"
 
 
 def _build_dir() -> str:

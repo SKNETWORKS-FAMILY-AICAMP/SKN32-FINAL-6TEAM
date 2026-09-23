@@ -33,7 +33,8 @@ import os
 import sys
 from datetime import datetime
 
-sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):      # 시험에서 불러올 때는 없다
+    sys.stdout.reconfigure(encoding="utf-8")
 
 #: 조회에 걸 상한. check_prompt 가 돌려주는 값과 같아야 한다.
 DEFAULT_TIMEOUT = 8
@@ -65,7 +66,14 @@ def connect():
             raise SystemExit(
                 "접속 주소를 찾지 못했다. DINING_DSN 을 정해 주거나 코어 설정을 갖춰라.\n"
                 f"  원인: {exc}") from exc
-    return psycopg.connect(dsn)
+    # 상한을 둔다. 없으면 DB 가 꺼져 있을 때 에러 없이 영원히 기다린다.
+    # catchtable_auto 가 브라우저로 다 읽은 뒤 여기서 멈추면 본 것이 날아간다.
+    try:
+        return psycopg.connect(dsn, connect_timeout=5)
+    except psycopg.OperationalError as exc:
+        raise SystemExit(
+            "DB 에 닿지 못했다. 꺼져 있으면 scripts/dining/dev_up.py 로 켠다.\n"
+            f"  원인: {str(exc).splitlines()[0]}") from exc
 
 
 def resolve_place(cur, name_or_uid: str) -> tuple[str, str]:
@@ -204,7 +212,9 @@ def default_source(backend: str, topic: str) -> str:
     사람이 눈으로 본 것은 operator_check 다. 기계가 지도를 읽은 것은 그 아래다.
     빈자리와 웨이팅은 출처가 캐치테이블이라 운영 판정에 쓰지 않는다.
     """
-    if topic in ("vacancy", "waiting"):
+    # 캐치테이블 화면에서 본 것은 영업시간이든 휴무든 캐치테이블 출처다.
+    # 예전에는 이 줄이 없어 auto_map_check 로 적혔다. 지도를 본 적이 없는데도.
+    if backend == "catchtable" or topic in ("vacancy", "waiting"):
         return "catchtable_trial"
     if backend == "manual":
         return "operator_check"
@@ -283,6 +293,59 @@ def cmd_run(args) -> int:
     return 0
 
 
+def record_answer(uid: str, topics: list[str], at, source: str | None,
+                  checked_by: str) -> None:
+    """답 파일에서 주제마다 한 줄씩 읽어 DB 에 적는다.
+
+    파일에 쓴 값을 그대로 적지 않고 read_answer 를 거친다. 본 시각과 신선도와
+    값 모양을 따지는 곳이 거기 한 곳이어야 한다.
+
+    run 을 거치지 않는 이유. 방금 물어본 것은 031 의 재질문 억제에 걸려
+    check_prompt 가 NULL 을 돌려주므로, 답이 왔는데도 주워 가지 못한다.
+    답은 물음과 달리 미룰 이유가 없다.
+    """
+    import catchtable
+
+    with connect() as conn, conn.cursor() as cur:
+        for topic in topics:
+            got = catchtable.read_answer(uid, topic)
+            src = source or default_source("catchtable", topic)
+            cur.execute(
+                "SELECT dining.record_live_check(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (uid, src, topic,
+                 got.get("outcome", "error"),
+                 got.get("value_state", "unknown"),
+                 got.get("value_num"),
+                 got.get("value_detail"),
+                 got.get("evidence"),
+                 at, checked_by))
+            conn.commit()
+            mark = "OK " if got.get("outcome") == "ok" else "실패"
+            print(f"  {mark} {TOPIC_LABEL[topic]:8s} {got.get('value_state'):8s} "
+                  f"[{src}] {got.get('value_detail') or ''}")
+
+
+def cmd_pickup(args) -> int:
+    """이미 놓인 답 파일을 DB 에 적는다. 브라우저를 모는 쪽이 파일만 놓았을 때 쓴다."""
+    import catchtable
+
+    with connect() as conn, conn.cursor() as cur:
+        uid, name = resolve_place(cur, args.place)
+    path = catchtable.answer_path(uid)
+    if not os.path.isfile(path):
+        print(f"{name}: 놓인 답이 없다.")
+        return 1
+    with open(path, encoding="utf-8") as fp:
+        topics = [t for t in (json.load(fp).get("answers") or {}) if t in TOPIC_LABEL]
+    if not topics:
+        print(f"{name}: 답 파일에 주제가 없다. 적을 것이 없다.")
+        return 1
+    print(f"{name} — 놓인 답을 적는다 ({len(topics)}가지)")
+    record_answer(uid, topics, parse_at(args.at) if args.at else None,
+                  args.source, "run_check:pickup")
+    return 0
+
+
 def cmd_answer(args) -> int:
     """브라우저에서 읽은 것을 답 파일로 놓는다.
 
@@ -327,23 +390,7 @@ def cmd_answer(args) -> int:
     # 억제에 걸려 check_prompt 가 NULL 을 돌려주므로, 답이 왔는데도 120초
     # 동안 주워 가지 못한다. 답은 물음과 달리 미룰 이유가 없다.
     print(f"{name} — 답 놓음 ({len(seen)}가지)")
-    with connect() as conn, conn.cursor() as cur:
-        for topic in seen:
-            got = catchtable.read_answer(uid, topic)
-            source = args.source or default_source("catchtable", topic)
-            cur.execute(
-                "SELECT dining.record_live_check(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (uid, source, topic,
-                 got.get("outcome", "error"),
-                 got.get("value_state", "unknown"),
-                 got.get("value_num"),
-                 got.get("value_detail"),
-                 got.get("evidence"),
-                 at, "run_check:answer"))
-            conn.commit()
-            mark = "OK " if got.get("outcome") == "ok" else "실패"
-            print(f"  {mark} {TOPIC_LABEL[topic]:8s} {got.get('value_state'):8s} "
-                  f"[{source}] {got.get('value_detail') or ''}")
+    record_answer(uid, list(seen), at, args.source, "run_check:answer")
     print(f"  {path}")
     print(f"  본 것: show --place {args.place} --trial")
     return 0
@@ -424,6 +471,12 @@ def main() -> int:
                           metavar="주제=상태[:숫자][:설명]",
                           help="예) waiting=yes:41:현재 웨이팅 41팀  vacancy=no")
     p_answer.set_defaults(func=cmd_answer)
+
+    p_pickup = sub.add_parser("pickup", help="이미 놓인 답 파일을 적는다")
+    common(p_pickup)
+    p_pickup.add_argument("--at", help="방문 시각")
+    p_pickup.add_argument("--source", help="출처를 직접 고를 때만")
+    p_pickup.set_defaults(func=cmd_pickup)
 
     p_pending = sub.add_parser("pending", help="답을 기다리는 캐치테이블 의뢰")
     p_pending.set_defaults(func=cmd_pending)

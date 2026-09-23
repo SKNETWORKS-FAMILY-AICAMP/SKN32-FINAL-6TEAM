@@ -356,7 +356,7 @@ python scripts/dining/run_check.py run --place 메이플탑 --at "2026-09-25 12:
 지키는 것 셋 — `catchtable.py` 머리말에 같은 말이 있다.
 
 1. 여기서 온 값은 판정에 닿지 않는다. 출처가 `catchtable_trial` 이라 `v_live_check_fresh` 에서 빠진다.
-2. **본 시각이 없거나 낡은 답은 모름이다.** 빈자리·웨이팅은 15분, 영업시간·휴무는 12시간.
+2. **본 시각이 없거나 낡은 답은 모름이다.** 빈자리·웨이팅은 5분 (DB 기한과 같게), 영업시간·휴무는 12시간.
 3. 읽지 못한 것을 아니다로 적지 않는다. `blocked` 는 값이 언제나 `unknown` 이다.
 
 제휴가 되어 API 가 열리면 이 다리를 걷어내고 그 자리에 호출을 넣는다.
@@ -386,6 +386,7 @@ python scripts/dining/catchtable_auto.py --place 메이플탑 --i-know --show --
 | 예약하지 않는다 | 읽기만. 버튼을 누르지 않는다 |
 | 못 읽으면 모름 | 로그인이 풀리면 화면이 비고, 빈 화면을 값으로 읽지 않는다 |
 | 판단하지 않는다 | 글자만 건져 `catchtable.write_answer` 로 넘긴다 |
+| 읽고 바로 적는다 | DB 에 닿으면 곧바로 적는다. 닿지 않으면 파일만 놓고 `run_check.py pickup` |
 
 로그인 상태는 `data/dining/_build/catchtable_profile/` 에 남는다. `_build/` 가
 `.gitignore` 에 있으므로 저장소에 올라가지 않는다.

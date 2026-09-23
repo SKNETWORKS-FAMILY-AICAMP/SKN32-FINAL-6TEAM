@@ -37,6 +37,9 @@
     python scripts/dining/catchtable_auto.py --place 메이플탑 --i-know
     python scripts/dining/catchtable_auto.py --place 메이플탑 --i-know --show
 
+    읽은 뒤 DB 에 닿으면 바로 적는다. 닿지 않으면 답 파일만 놓고
+    run_check.py pickup 으로 나중에 적는다.
+
     --show 를 주면 브라우저 창이 보인다. 시연에서는 이쪽이 낫다.
     처음 한 번은 --login 으로 창을 띄워 두고 사람이 직접 로그인한다.
 """
@@ -47,7 +50,8 @@ import os
 import re
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):      # 시험에서 불러올 때는 없다
+    sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
@@ -73,14 +77,47 @@ def guard(args) -> str | None:
     return None
 
 
-def _num_of_teams(text: str) -> int | None:
-    """「현재 웨이팅 41팀」 같은 줄에서 숫자만. 없으면 None 이다.
+def parse_waiting(text: str) -> dict | None:
+    """매장 페이지 글자에서 매장 웨이팅 한 줄을 읽는다. 못 읽으면 None 이다.
 
-    「웨이팅이 없어요」에는 숫자가 없다. 그때 0 을 넣는 것은 읽은 것이 아니라
-    지어낸 것이므로, 0 은 부르는 쪽에서 붙인다.
+    화면 전체를 뒤지지 않는다. 예전에는 「웨이팅」과 「팀」이 같이 있는 줄을
+    찾았는데, 하단 버튼의 「2팀 이상부터 온라인 웨이팅 가능」이 걸려 웨이팅
+    2팀이 되었다. 「웨이팅이 없어요」도 화면 전체에서 찾았는데, 매장은 41팀인데
+    포장이 없어요인 곳에서 「웨이팅 없음」이 되었다.
+
+    그래서 자리를 못 박는다. 매장 페이지는 「매장 식사」 다음 줄에 상태를 적는다.
+        매장 식사
+        웨이팅이 없어요          ← 이 줄
+    그 줄만 본다. 「매장 식사」가 없으면 읽지 않는다. 빈 칸이 모름이다.
+
+    「웨이팅이 없어요」에만 0 을 붙인다. 숫자가 없는 줄에서 0 을 넣는 것은
+    읽은 것이 아니라 지어낸 것이다.
     """
-    got = re.search(r"(\d+)\s*팀", text)
-    return int(got.group(1)) if got else None
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    for i, line in enumerate(lines):
+        if line != "매장 식사":
+            continue
+        if i + 1 >= len(lines):
+            return None
+        status = lines[i + 1]
+        if "없어요" in status:
+            return {"state": "no", "num": 0, "detail": status}
+        got = re.search(r"(\d+)\s*팀", status)
+        if got and "이상" not in status:
+            return {"state": "yes", "num": int(got.group(1)), "detail": status[:120]}
+        return None
+    return None
+
+
+def parse_hours(text: str) -> dict | None:
+    """매장정보 글자에서 요일별 영업시간 줄을 모은다. 판단은 하지 않는다."""
+    hours = [l.strip() for l in text.splitlines()
+             if re.match(r"^[월화수목금토일]\s*·", l.strip())]
+    if not hours:
+        return None
+    # state 가 unknown 인 이유. 이 파일은 화면을 옮겨 적을 뿐이고
+    # 우리 원장과 같은지 다른지는 사람이 대조해 정한다.
+    return {"state": "unknown", "detail": " / ".join(hours)[:200]}
 
 
 def read_one(place_name: str, show: bool) -> dict:
@@ -101,11 +138,14 @@ def read_one(place_name: str, show: bool) -> dict:
             page.goto(HOME, wait_until="domcontentloaded")
 
             # 2  검색창에 상호를 친다. 사람이 하던 것과 같은 길이다.
-            box = page.get_by_placeholder(re.compile("검색"))
-            box.first.click()
-            box.first.fill(place_name)
+            # 검색칸을 누르면 검색 화면으로 넘어가며 칸이 새로 그려진다.
+            # 누른 요소에 fill 하면 이미 떨어진 요소라 시간 초과가 난다.
+            # 그래서 누른 뒤에는 포커스를 가진 곳에 키보드로 친다.
+            page.get_by_placeholder(re.compile("검색")).first.click()
+            page.wait_for_timeout(1500)
+            page.keyboard.type(place_name, delay=60)
             page.keyboard.press("Enter")
-            page.wait_for_timeout(2500)
+            page.wait_for_timeout(3000)
 
             # 3  결과에서 그 이름을 고른다. 없으면 여기서 끝이다.
             hit = page.get_by_text(place_name, exact=False).first
@@ -113,33 +153,19 @@ def read_one(place_name: str, show: bool) -> dict:
             page.wait_for_timeout(3000)
             url = page.url
 
-            body = page.inner_text("body")
-            if "웨이팅" in body:
-                if "웨이팅이 없어요" in body:
-                    seen["waiting"] = {"state": "no", "num": 0,
-                                       "detail": "웨이팅이 없어요"}
-                else:
-                    line = next((l for l in body.splitlines()
-                                 if "웨이팅" in l and "팀" in l), "")
-                    teams = _num_of_teams(line)
-                    if teams is not None:
-                        seen["waiting"] = {"state": "yes", "num": teams,
-                                           "detail": line.strip()[:120]}
-                    # 숫자를 못 찾았으면 아무것도 적지 않는다. 빈 칸이 모름이다.
+            waiting = parse_waiting(page.inner_text("body"))
+            if waiting:
+                seen["waiting"] = waiting
+            # 못 읽었으면 아무것도 적지 않는다. 빈 칸이 모름이다.
 
             # 4  매장정보. 요일별 영업시간과 라스트오더가 여기에 있다.
             if "/ct/shop/" in url:
                 info = url.split("?")[0].rstrip("/") + "/info"
                 page.goto(info, wait_until="domcontentloaded")
                 page.wait_for_timeout(2500)
-                text = page.inner_text("body")
-                hours = [l.strip() for l in text.splitlines()
-                         if re.match(r"^[월화수목금토일]\s*·", l.strip())]
+                hours = parse_hours(page.inner_text("body"))
                 if hours:
-                    seen["hours"] = {"state": "unknown",
-                                     "detail": " / ".join(hours)[:200]}
-                    # state 가 unknown 인 이유. 이 파일은 화면을 옮겨 적을 뿐이고
-                    # 우리 원장과 같은지 다른지는 사람이 대조해 정한다.
+                    seen["hours"] = hours
 
         except PWTimeout:
             # 매달리지 않는다. 못 읽은 것은 빈 칸으로 남고 그것이 모름이다.
@@ -174,7 +200,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="브라우저를 몰아 한 곳을 읽는다. 시험용이며 기본은 꺼져 있다.")
     ap.add_argument("--place", help="상호명")
-    ap.add_argument("--uid", help="place_uid. 주면 답 파일을 그 이름으로 놓는다")
+    ap.add_argument("--uid", help="place_uid. 없으면 DB 에서 이름으로 찾는다")
     ap.add_argument("--i-know", action="store_true",
                     help="robots.txt 를 알고도 켠다")
     ap.add_argument("--show", action="store_true", help="창을 보이게")
@@ -215,12 +241,35 @@ def main() -> int:
         print(f"  {topic:8s} {one.get('state'):8s} "
               f"{one.get('num', '')} {one.get('detail', '')}".rstrip())
 
-    if args.uid:
-        path = catchtable.write_answer(args.uid, got["url"], seen)
-        print(f"  답 놓음: {path}")
-        print(f"  이제: run_check.py answer 없이도 run --backend catchtable 로 주워진다")
-    else:
-        print("  --uid 를 주면 답 파일로 놓는다.")
+    # 어느 장소의 답인지 정한다. --uid 가 없으면 DB 에서 이름으로 찾는다.
+    uid = args.uid
+    try:
+        import run_check
+        if not uid:
+            with run_check.connect() as conn, conn.cursor() as cur:
+                uid, _ = run_check.resolve_place(cur, args.place)
+    except Exception as exc:                         # noqa: BLE001
+        if not uid:
+            print(f"  DB 에 닿지 못해 장소를 못 정했다: {str(exc).splitlines()[0]}")
+            print("  --uid 를 주면 답 파일만이라도 놓는다.")
+            return 1
+        run_check = None
+
+    path = catchtable.write_answer(uid, got["url"], seen)
+    print(f"  답 놓음: {path}")
+
+    # 파일만 놓고 run 으로 주우라고 하면 안 된다. 방금 물어본 것은 031 의
+    # 재질문 억제에 걸려 run 이 주워 가지 못한다. 그래서 여기서 바로 적는다.
+    if run_check is None:
+        print(f"  DB 에 닿지 않았다. 나중에: run_check.py pickup --place {args.place}")
+        return 0
+    try:
+        run_check.record_answer(uid, list(seen), None, None, "catchtable_auto")
+    except Exception as exc:                         # noqa: BLE001
+        print(f"  적지 못했다: {str(exc).splitlines()[0]}")
+        print(f"  나중에: run_check.py pickup --place {args.place}")
+        return 1
+    print(f"  본 것: run_check.py show --place {args.place} --trial")
     return 0
 
 

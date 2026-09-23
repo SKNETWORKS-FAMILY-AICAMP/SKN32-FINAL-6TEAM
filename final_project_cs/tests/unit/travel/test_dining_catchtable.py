@@ -73,7 +73,7 @@ def test_본_시각이_없으면_지금_값으로_쓰지_않는다(folder):
     assert got["evidence"] == "catchtable:no_timestamp"
 
 
-def test_웨이팅은_십오분이_지나면_낡은_값이다(folder):
+def test_웨이팅은_오분이_지나면_낡은_값이다(folder):
     write_answer(folder,
                  observed_at="2026-09-25T11:50:00+09:00",
                  answers={"waiting": {"state": "yes", "num": 41}})
@@ -192,3 +192,99 @@ def test_본_시각은_손으로_적지_않고_찍힌다(folder):
     path = ct.write_answer(UID, "https://x", {"waiting": {"state": "yes"}})
     got = json.loads(open(path, encoding="utf-8").read())
     assert ct._parse_observed(got["observed_at"]) is not None
+
+
+def test_육분_된_웨이팅도_낡았다(folder):
+    # 예전에는 15분까지 받았다. DB 는 적은 시각부터 기한을 세므로
+    # 10분 된 값이 5분 더 「지금」 행세를 했다. 여기서 5분으로 끊는다.
+    write_answer(folder,
+                 observed_at="2026-09-25T12:04:00+09:00",
+                 answers={"waiting": {"state": "yes", "num": 41}})
+    assert ct.read_answer(UID, "waiting", now=now())["evidence"] == "catchtable:stale"
+
+
+# ── 화면 글자 읽기 (catchtable_auto) ─────────────────────────
+#
+# 2026-09-22 에 크롬으로 실제로 읽은 메이플탑 매장 페이지 글자다.
+# 파서가 틀리면 값이 틀린다. 브라우저 없이 여기서 잡는다.
+
+AUTO = os.path.join(os.path.dirname(MODULE), "catchtable_auto.py")
+
+
+def _load_script(name, filename):
+    import sys
+    sys.path.insert(0, os.path.dirname(MODULE))
+    spec = importlib.util.spec_from_file_location(
+        name, os.path.join(os.path.dirname(MODULE), filename))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+auto = _load_script("dining_catchtable_auto", "catchtable_auto.py")
+
+
+def lines(*rows):
+    return "\n".join(rows) + "\n"
+
+
+MAPLETOP = lines(
+    "예약", "웨이팅", "새로고침", "매장", "매장 식사", "웨이팅이 없어요",
+    "요일별 평균 웨이팅 시간", "대체로 웨이팅이 없습니다",
+    "2팀 이상부터 온라인 웨이팅 가능",
+)
+
+
+def test_실제_화면에서_웨이팅_없음을_읽는다():
+    got = auto.parse_waiting(MAPLETOP)
+    assert got == {"state": "no", "num": 0, "detail": "웨이팅이 없어요"}
+
+
+def test_하단_버튼의_2팀을_웨이팅으로_읽지_않는다():
+    # 예전 파서는 「웨이팅」과 「팀」이 같은 줄에 있으면 읽었다.
+    text = lines("매장 식사", "확인 중", "2팀 이상부터 온라인 웨이팅 가능")
+    assert auto.parse_waiting(text) is None
+
+
+def test_포장이_없어요여도_매장_41팀은_41팀이다():
+    # 예전 파서는 화면 어디든 「웨이팅이 없어요」가 있으면 없음으로 읽었다.
+    text = lines("매장", "매장 식사", "41팀", "포장", "포장 주문", "웨이팅이 없어요")
+    got = auto.parse_waiting(text)
+    assert got["state"] == "yes"
+    assert got["num"] == 41
+
+
+def test_매장_식사가_없으면_읽지_않는다():
+    # 로그인이 풀려 껍데기만 오면 이 줄이 없다. 없음이 아니라 모름이다.
+    assert auto.parse_waiting(lines("캐치테이블", "즐거운 미식 생활의 시작")) is None
+
+
+def test_실제_매장정보에서_요일별_영업시간을_모은다():
+    text = lines("영업시간", "월·09:00 ~ 18:00", "월·17:30·라스트오더",
+                 "토·09:00 ~ 19:00", "월·18:30·라스트오더", "홈페이지")
+    got = auto.parse_hours(text)
+    assert got["state"] == "unknown"
+    assert "토·09:00 ~ 19:00" in got["detail"]
+
+
+def test_꺼져_있으면_돌지_않는다(monkeypatch):
+    class Args:
+        i_know = True
+
+    monkeypatch.delenv("DINING_CATCHTABLE_AUTO", raising=False)
+    assert auto.guard(Args()) is not None
+
+    monkeypatch.setenv("DINING_CATCHTABLE_AUTO", "1")
+    Args.i_know = False
+    assert auto.guard(Args()) is not None
+
+    Args.i_know = True
+    assert auto.guard(Args()) is None
+
+
+def test_캐치테이블에서_본_영업시간은_캐치테이블_출처다():
+    rc = _load_script("dining_run_check", "run_check.py")
+    # 예전에는 auto_map_check 로 적혔다. 지도를 본 적이 없는데도.
+    assert rc.default_source("catchtable", "hours") == "catchtable_trial"
+    assert rc.default_source("catchtable", "closure") == "catchtable_trial"
+    assert rc.default_source("manual", "hours") == "operator_check"
