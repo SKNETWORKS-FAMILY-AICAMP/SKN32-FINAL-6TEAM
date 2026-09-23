@@ -178,7 +178,7 @@ def build_router(classifier: Classifier | None = None, controller: Any | None = 
         if controller is None:
             raise _error(500, "misconfigured", "controller not configured for resume")
         with get_connection() as conn:
-            case = _case_or_404(conn, principal, case_id)
+            _case = _case_or_404(conn, principal, case_id)
         try:
             outcome = controller.resume(tenant_id=principal.tenant_id, case_id=case_id, token=request.token,
                                         actor_id=principal.key_id, event_id=request.request_id)

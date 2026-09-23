@@ -1,7 +1,6 @@
 """Claim and deliver outbox rows without deleting them."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any, Callable
 
 from app.core.settings import get_guardrails

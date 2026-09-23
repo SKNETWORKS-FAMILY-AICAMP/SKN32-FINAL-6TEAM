@@ -17,7 +17,7 @@ from app.core.settings import get_guardrails
 from app.core.transition import OutboxMessage, transition_case
 from app.domain.events import EventType
 from app.core.verification import Mismatch
-from app.application.case_service import ActiveRunError, CaseService, ResumeTokenError
+from app.application.case_service import CaseService, ResumeTokenError
 from app.application.proposal_guard import audit_payload, check_proposal, describe
 from app.application.routing import case_type_of
 

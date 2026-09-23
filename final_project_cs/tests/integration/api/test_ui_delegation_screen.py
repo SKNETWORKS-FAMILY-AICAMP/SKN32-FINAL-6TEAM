@@ -27,6 +27,7 @@ from app.modules.travel_ops import delegation
 from app.modules.travel_ops.case_engine import cleanup_tenant
 from app.presentation import security
 from app.presentation.api.app import create_app
+from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 SCREEN = "/ui/delegations"
 
@@ -35,9 +36,9 @@ SCREEN = "/ui/delegations"
 def world(monkeypatch):
     original = settings_module.get_settings()
     tenant = "delegui_" + uuid4().hex[:10]
-    # ★`[2026-09-22]` 화면에서 위임을 바꾸는 것은 **기본이 꺼짐**이다(`/ui/*` 에 로그인이 없다).
-    #   이 시험들은 그 기능을 보는 것이라 켜고 돌린다 — 기본이 막힌다는 것은 아래 따로 본다.
-    patched = original.model_copy(update={"tenant_id": tenant, "ui_delegation_write_enabled": True})
+    # ★`[2026-09-23]` 전에는 설정 스위치(`ui_delegation_write_enabled`)를 켜고 돌렸다 — 화면에 로그인이
+    #   없어서 기본을 꺼 두었기 때문이다. 이제 로그인 + `delegation:write` 가 막는다(D-CS-007).
+    patched = original.model_copy(update={"tenant_id": tenant})
     monkeypatch.setattr(settings_module, "get_settings", lambda: patched)
     monkeypatch.setattr(security, "get_settings", lambda: patched)
 
@@ -47,7 +48,9 @@ def world(monkeypatch):
                     "RETURNING customer_id", (tenant,))
         customer = cur.fetchone()[0]
 
-    yield TestClient(create_app(), raise_server_exceptions=False), tenant, customer
+    client = TestClient(create_app(), raise_server_exceptions=False)
+    login(client, monkeypatch, operator_id="op-1")
+    yield client, tenant, customer
     cleanup_tenant(tenant)
 
 
@@ -153,15 +156,15 @@ def test_a_malformed_customer_id_is_told_plainly(world):
     assert "cust_01" in response.text
 
 
-def test_by_default_the_screen_cannot_change_a_delegation(monkeypatch):
-    """★`/ui/*` 에는 로그인이 없다 — **서 있는 권한**을 주는 버튼을 기본으로 열어 두지 않는다.
+def test_an_operator_without_delegation_write_cannot_change_a_delegation(monkeypatch):
+    """★위임은 한 건 승인이 아니라 **서 있는 권한**이다 — scope 가 없는 운영자는 못 준다.
 
-    2026-08-18 에 같은 이유로 Composer 화면을 이 앱에서 지웠다(D-CS-001). 위임은 한 건 승인이
-    아니라 그 고객의 다음 자동 실행 전부를 여는 것이라 기준이 더 세다.
+    `[2026-09-23]` 전에는 설정 스위치(기본 꺼짐)가 막았다. 화면에 로그인이 없어서였다. 이제 로그인한
+    운영자의 **scope** 가 막는다 — 막혔으면 403 과 사유가 뜨고 **아무것도 안 바뀐다.**
     """
     original = settings_module.get_settings()
     tenant = "delegoff_" + uuid4().hex[:10]
-    patched = original.model_copy(update={"tenant_id": tenant})      # 기본값(꺼짐) 그대로
+    patched = original.model_copy(update={"tenant_id": tenant})
     monkeypatch.setattr(settings_module, "get_settings", lambda: patched)
     monkeypatch.setattr(security, "get_settings", lambda: patched)
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -171,9 +174,11 @@ def test_by_default_the_screen_cannot_change_a_delegation(monkeypatch):
         customer = cur.fetchone()[0]
     try:
         client = TestClient(create_app(), raise_server_exceptions=False)
-        response = client.post(SCREEN, data={"action": "grant", "customer_id": str(customer),
-                                             "actor_id": "ops-1", "note": "확인"})
-        assert response.status_code == 200 and "이 화면에서는 위임을 바꿀 수 없습니다" in response.text
+        login(client, monkeypatch, operator_id="viewer", scopes=("case:read", "delegation:read"))
+        response = client.post(SCREEN, data={"action": "grant", "confirm": "yes",
+                                             "customer_id": str(customer), "note": "확인"})
+        assert response.status_code == 403
+        assert "위임 변경 권한이 없습니다" in response.text and "delegation:write" in response.text
         with get_connection() as conn, conn.cursor() as cur:
             cur.execute("SELECT count(*) FROM delegations WHERE tenant_id=%s", (tenant,))
             assert cur.fetchone()[0] == 0, "막혔다면서 위임이 생겼다"
@@ -181,3 +186,14 @@ def test_by_default_the_screen_cannot_change_a_delegation(monkeypatch):
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             for table in ("delegation_events", "delegations", "customers", "tenants"):
                 cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
+
+
+def test_the_record_names_the_logged_in_operator_not_what_the_form_says(world):
+    """★입력 칸의 `actor_id` 를 믿으면 **남의 이름으로** 맡기고 거둘 수 있다."""
+    client, tenant, customer = world
+    client.post(SCREEN, data={"action": "grant", "confirm": "yes", "customer_id": str(customer),
+                              "actor_id": "someone-else", "note": "맡김"}, follow_redirects=False)
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT actor_id FROM delegation_events WHERE tenant_id=%s", (tenant,))
+        actors = [row[0] for row in cur.fetchall()]
+    assert actors == ["op-1"], actors

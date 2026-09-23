@@ -175,6 +175,21 @@ Action approval · provider result · before/after hash · actor
 
 **저장이 막혔다고 LLM으로 새는 경로까지 막힌 건 아니다.** 위 `INV-CS-SEC-004`는 "DB·API·audit"을 검사하지 **LLM 입력**은 검사하지 않는다 — 이 항목은 별개로 남아 있다.
 
+## ★ 운영 화면(`/ui/*`) 로그인 `[2026-09-23]`
+
+API 는 scope 키로, **운영 화면은 운영자 로그인으로** 들어온다. 전에는 화면에 로그인이 없고 쓰기 버튼이
+**서버 안에서 scope 키를 스스로 만들어** 불러서, `/ui` 에 닿으면 누구나 승인·위임을 할 수 있었다.
+
+| | |
+|---|---|
+| 계정 | `ACOP_UI_OPERATORS`(`.env`) — id · PBKDF2 해시 · scopes. **없으면 화면이 닫힌다** |
+| 세션 | 서명 쿠키(HMAC · 8시간 · HttpOnly · SameSite=Strict). 권한을 줄이면 **다음 요청부터** 반영 |
+| 쓰기 | 승인·바깥함 해소 `action:approve` · 위임 `delegation:write`. 없으면 403, 아무것도 안 바뀐다 |
+| 기록 | 승인자·처리자·위임 행위자 = **로그인한 운영자 id** |
+| 막지 않는 것 | `/scenario/*`(시연 — `/ui` 밖) · CSRF 토큰(SameSite 에 기댐) · 잠금은 프로세스 안 |
+
+결정 [D-CS-007](../decisions/D-CS-007-ui-operator-login.md) · 실측 [2026-09-23_운영화면_로그인.md](../records/evidence/2026-09-23_운영화면_로그인.md)
+
 ## 실패 사례
 
 `[실측]` **인증 전 요청이 500을 냈다.** `os.getenv`로 설정을 읽어서였다. 인증 실패가 401이 아니라 500이면 공격자에게 내부 상태를 알려준다.

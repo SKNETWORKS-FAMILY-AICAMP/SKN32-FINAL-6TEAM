@@ -1,5 +1,4 @@
 from pathlib import Path
-from urllib.parse import quote
 
 from docx import Document
 from docx.enum.section import WD_ORIENT, WD_SECTION
