@@ -17,7 +17,8 @@ from app.modules.travel_ops.case_engine import cleanup_tenant
 import pytest
 
 # ★`[2026-09-24]` 전날 안내는 껐다(D-020) — 흐름은 하루 시작 → 다음 일정 → 이동의 반복이다
-RULES = ReminderRules(day_start_lead=timedelta(minutes=60), departure_lead=timedelta(minutes=15), eve_hour=None)
+# ★`[2026-09-24 사용자 지시]` 이동 알림은 **이동을 시작하는 그 시각** — 앞에 붙이는 분이 없다
+RULES = ReminderRules(day_start_lead=timedelta(minutes=60), eve_hour=None)
 
 
 def _kinds_sent(outcome):
@@ -73,9 +74,11 @@ def test_windows_follow_the_first_item_and_each_move():
     assert kinds("07:59") == []                        # ★전날 안내는 껐다 — 08:00 전에는 아무것도 없다
     assert kinds("08:00") == ["day_start"]             # 하루 시작 — 팀 기본 08:00
     assert kinds("09:00") == ["next_item"]             # 첫 일정(조식)이 시작 — 다음 일정(10:00) 안내
-    assert kinds("10:35") == ["departure", "next_item"]  # 10:00 일정 중 · 10:50 이동 15분 전
-    assert kinds("10:50") == []                        # 이동이 시작했다
-    moves = [r.move.seq for hhmm in ("10:40", "14:50", "17:05", "19:10")
+    assert kinds("10:35") == ["next_item"]             # 10:00 일정 중 — ★이동(10:50)은 아직 알리지 않는다
+    assert kinds("10:49") == []                        # ★「N분 전」 이동 알림은 없다(앞 판은 10:35 에 나갔다)
+    assert kinds("10:50") == ["departure"]             # ★이동을 시작하는 그 시각
+    assert kinds("11:10") == []                        # 이동이 끝났다 — 끝난 뒤의 「출발하세요」는 없다
+    moves = [r.move.seq for hhmm in ("10:50", "15:00", "17:15", "19:20")
              for r in plan_reminders(items, now=_at(hhmm), rules=RULES) if r.kind == "departure"]
     assert moves == [3, 6, 8, 10]
 
@@ -84,12 +87,12 @@ def test_windows_follow_the_first_item_and_each_move():
 def test_a_day_of_ticks_sends_each_reminder_once(world):
     reminders = _reminders(world, route_events=_NoEvents())
     sent = []
-    for hhmm in ("07:00", "08:05", "08:30", "10:40", "10:45", "14:50", "17:05", "19:10", "21:00"):
+    for hhmm in ("07:00", "08:05", "08:30", "10:40", "10:50", "15:00", "17:15", "19:20", "21:00"):
         world["clock"].now = _at(hhmm)
         outcome = reminders.tick()
         assert outcome.fatal == [] and outcome.held == [], (hhmm, outcome)
         sent += [s["key"].split(":")[0] for s in outcome.sent]
-    # ★하루 시작 → (10:40 틱: 10:00 일정의 다음 일정 안내 · 이동) → 이동 … 틱이 일정 시작 시각에 걸린
+    # ★하루 시작 → (10:40 틱: 10:00 일정의 다음 일정 안내) → 이동(출발 시각) … 틱이 일정 시작 시각에 걸린
     #   곳에서만 「다음 일정」이 나간다. 운영의 되잡기는 1분마다 돈다.
     assert sent == ["day_start", "next_item", "departure", "departure", "departure", "departure"]
 
@@ -97,7 +100,7 @@ def test_a_day_of_ticks_sends_each_reminder_once(world):
     assert len(notices) == 6 and len({key for key, _ in notices}) == 6        # ★DoD-26 — 한 번씩
     departure = next(p for k, p in notices if k.startswith("departure:"))
     assert "10:50 출발" in departure["text"] and "다음 일정: 11:15" in departure["text"]
-    assert "가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:40)" in departure["text"]
+    assert "가는 방법: 2호선 잠실→성수 직통 · 약 13분 (경로 확인 10:50)" in departure["text"]
     rendered = render(departure)
     assert rendered.endswith(f"https://plan.example/{world['trip_id']}")     # 링크는 늘 붙는다
     day = next(p for k, p in notices if k.startswith("day_start:"))
@@ -105,17 +108,17 @@ def test_a_day_of_ticks_sends_each_reminder_once(world):
 
 
 def test_the_same_moment_twice_is_already_sent(world):
-    world["clock"].now = _at("10:40")
+    world["clock"].now = _at("10:50")
     first = _reminders(world, route_events=_NoEvents()).tick()
     again = _reminders(world, route_events=_NoEvents()).tick()
-    assert _kinds_sent(first) == ["next_item", "departure"]
-    assert again.sent == [] and again.already == 2
-    assert len(_notices(world)) == 2
+    assert _kinds_sent(first) == ["departure"]
+    assert again.sent == [] and again.already == 1
+    assert len(_notices(world)) == 1
 
 
 def test_a_route_that_cannot_be_read_is_not_announced(world):
     """★결정 15 — 경로 사건을 못 읽었으면 「그럴듯한 경로 문장」을 보내지 않고 치명으로 센다."""
-    world["clock"].now = _at("10:40")
+    world["clock"].now = _at("10:50")
     outcome = _reminders(world, route_events=_Broken()).tick()
     assert "departure" not in _kinds_sent(outcome) and len(outcome.fatal) == 1
     assert not any(k.startswith("departure:") for k, _ in _notices(world))
@@ -125,7 +128,7 @@ def test_a_disrupted_route_is_held_for_the_watch_then_the_new_move_is_announced(
     """계획한 수단에 사건 — 낡은 경로를 안내하지 않는다. 감시가 이동을 바꾸면 새 항목이 안내된다."""
     clock = world["clock"]
     _, route_events = _sources(clock)                       # 재생 — 10:45 에 2호선 무정차
-    clock.now = _at("10:45")
+    clock.now = _at("10:50")
     held = _reminders(world, route_events=route_events).tick()
     assert "departure" not in _kinds_sent(held)
     assert [h["item"] for h in held.held] == [SCENARIO["items"][2]["title"]]
@@ -143,7 +146,7 @@ def test_a_disrupted_route_is_held_for_the_watch_then_the_new_move_is_announced(
 
 
 def test_without_a_route_source_where_and_when_still_go(world):
-    world["clock"].now = _at("10:40")
+    world["clock"].now = _at("10:50")
     outcome = _reminders(world, route_events=None).tick()
     assert "departure" in _kinds_sent(outcome) and outcome.no_route == 1
     text = next(p for k, p in _notices(world) if k.startswith("departure:"))["text"]
@@ -226,7 +229,7 @@ def test_no_departure_is_announced_toward_an_item_waiting_for_an_answer(world):
         PendingStore(world["tenant"]).open(
             conn, trip_id=world["trip_id"], item=target, base_version=1,
             decision=Decision("ask", "ask_first", None, False), causes=[], options=[])
-    world["clock"].now = _at("10:40")
+    world["clock"].now = _at("10:50")
     _reminders(world, route_events=_NoEvents()).tick()
     departure = next(p for k, p in _notices(world) if k.startswith("departure:"))
     assert departure.get("waiting") is True

@@ -17,7 +17,10 @@
                    첫 항목 − day_start_lead 로 당긴다                         ~ 첫 항목 시작
                    ★새벽 3시에 모은 전날까지의 이슈(바뀐 일정 · 답을 기다리는 일정)를 함께 싣는다
     ② 다음 일정    각 일정(이동 제외)이 **시작할 때** 그다음 일정을 안내          ~ 그 일정 끝
-    ③ 이동         이동 항목 시작 − departure_lead_minutes                   ~ 이동 항목 시작
+    ③ 이동         ★**이동 항목이 시작하는 그 시각**(= 출발 시각)             ~ 이동 항목 끝
+                   `[2026-09-24 사용자 지시]` 앞 판은 「이동 15분 전」이었다 — 이동이 몇 분인지와 상관없이
+                   고정 15분을 앞에 붙인 것이라 틀렸다. 여유는 **일정이 이미 품는다**: 출발 = 다음 일정 시작
+                   − 이동 시간 − 여유(생성기가 거꾸로 잡는다, `planner.add_moves`). 알림은 그 출발 시각에 간다.
        (전날 저녁   전날 eve_hour 시 — 2026-09-24 에 껐다. ①이 그 몫이다)
 
     ★답을 기다리는 일정(보류 제안, `pending.py`)으로는 「출발하세요」를 보내지 않는다 —
@@ -55,7 +58,6 @@ KST = ZoneInfo("Asia/Seoul")
 @dataclass(frozen=True)
 class ReminderRules:
     day_start_lead: timedelta = timedelta(minutes=60)
-    departure_lead: timedelta = timedelta(minutes=15)
     eve_hour: int | None = None     # [2026-09-24] 끈다 — 하루 시작 알림이 그 몫이다(D-020)
     #: 사용자가 그날 시작 시각을 안 줬을 때의 하루 시작 알림 시각 — 팀 결정 08:00(D-020)
     day_start_at: time = time(8, 0)
@@ -68,7 +70,6 @@ class ReminderRules:
         eve = g.get("travel.reminders.eve_hour")
         hour, minute = (int(x) for x in str(g.get("travel.day_window.default_start")).split(":"))
         return cls(day_start_lead=timedelta(minutes=float(g.get("travel.reminders.day_start_lead_minutes"))),
-                   departure_lead=timedelta(minutes=float(g.get("travel.reminders.departure_lead_minutes"))),
                    eve_hour=None if eve is None else int(eve), day_start_at=time(hour, minute))
 
 
@@ -123,9 +124,12 @@ def plan_reminders(items: list[Item], *, now: datetime, rules: ReminderRules,
         for move in day_items:
             if move.kind != "mobility":
                 continue
-            leave_due = move.starts_at - rules.departure_lead
-            if leave_due <= now < move.starts_at:
-                due.append(Reminder("departure", f"departure:{move.item_id}", leave_due, move.starts_at,
+            # ★③ 이동 — **출발 시각 그 자체**(이동 항목 시작). 「N분 전」을 붙이지 않는다(D-020).
+            #   틱이 늦게 돌아도 이동이 끝나기 전이면 보낸다 — 끝난 뒤의 「출발하세요」는 보내지 않는다.
+            following = next((i for i in day_items if i.seq > move.seq and i.kind != "mobility"), None)
+            until = move.ends_at or (following.starts_at if following else move.starts_at + timedelta(minutes=1))
+            if move.starts_at <= now < until:
+                due.append(Reminder("departure", f"departure:{move.item_id}", move.starts_at, until,
                                     day, move))
     return sorted(due, key=lambda r: (r.due_at, r.kind))
 
@@ -177,7 +181,7 @@ def next_item_phrase(current: Item, following: Item, move: Item | None) -> Phras
     values: dict[str, Any] = {"now_title": current.title, "next_at": _hm(following.starts_at),
                               "next_title": following.title}
     if move is not None:
-        template += "\n이동은 {leave} 출발 예정이에요 — 출발 전에 다시 알려 드릴게요."
+        template += "\n이동은 {leave} 출발 예정이에요 — 출발할 때 다시 알려 드릴게요."
         values["leave"] = _hm(move.starts_at)
     return Phrase(template, values)
 

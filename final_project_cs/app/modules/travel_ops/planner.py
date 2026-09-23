@@ -63,9 +63,12 @@ ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
 DINNER_FROM = time(18, 0)
-TRANSFER_MIN_MIN = 10            #: 항목 사이 최소 이동 여유
+TRANSFER_MIN_MIN = 10            #: 겹침을 고칠 때 뒤로 미는 최소 분
 TRANSFER_MAX_MIN = 60            #: 도보 환산이 이보다 크면 여기서 자른다(대중교통을 쓸 구간이다)
 TRANSFER_UNKNOWN_MIN = 20        #: 좌표를 몰라 거리를 못 재는 구간
+#: ★`[2026-09-24 사용자 지시]` 도착해서 다음 일정 시작까지 두는 **여유**. 출발 시각은
+#:  **다음 일정 시작 − 이동 시간 − 이 여유**로 거꾸로 잡고, 이동 알림은 그 출발 시각에 간다(D-020).
+MOVE_BUFFER_MIN = 10
 ACTIVITIES_PER_DAY = 2
 DINING_PER_DAY = 2               #: 점심·저녁
 MAX_REPAIR_ROUNDS = 3            #: 고쳐서 다시 판정하는 횟수. 넘으면 거절한다
@@ -524,15 +527,21 @@ def _at(day: date, clock: time) -> datetime:
     return datetime.combine(day, clock, tzinfo=KST)
 
 
-def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str]:
-    """다음 항목까지 둘 여유. (분, 근거). ★**추정이다** — 도보 분당 80m 환산이고 실제 경로를
-    조회하지 않는다(등록은 사람이 기다리는 요청이라 바깥을 부르지 않는다)."""
+def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str, str]:
+    """**이동 시간**(여유 제외). (분, 근거, 수단 표기). ★**추정이다** — 직선거리를 도보 분당 80m 로
+    환산하고 실제 경로를 조회하지 않는다(경로 조회 소스가 아직 없다 — 구글 경로 키 자리만 있다).
+    ☆`[2026-09-24]` 앞 판은 이 값에 최소 10분을 섞어 「이동 + 여유」를 한 숫자로 냈다. 이제 둘을 나눈다 —
+      이동 시간은 이동 항목의 길이가 되고, 여유(`MOVE_BUFFER_MIN`)는 도착 뒤에 둔다."""
     if here.lat is None or there.lat is None:
-        return TRANSFER_UNKNOWN_MIN, "좌표를 몰라 기본 여유"
+        return TRANSFER_UNKNOWN_MIN, "좌표를 몰라 기본 이동 시간", "기본 이동 시간"
     meters = distance_m({"latitude": here.lat, "longitude": here.lon},
                         {"latitude": there.lat, "longitude": there.lon})
-    minutes = min(TRANSFER_MAX_MIN, max(TRANSFER_MIN_MIN, walk_minutes(meters)))
-    return minutes, f"직선 {round(meters)}m ÷ 도보 80m/분 [추정]"
+    walk = walk_minutes(meters)
+    if walk > TRANSFER_MAX_MIN:
+        return (TRANSFER_MAX_MIN,
+                f"직선 {round(meters)}m — 도보 {walk}분이라 대중교통 구간, {TRANSFER_MAX_MIN}분 상한 [추정]",
+                "대중교통 권장")
+    return walk, f"직선 {round(meters)}m ÷ 도보 80m/분 [추정]", "도보 기준"
 
 
 def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, datetime]:
@@ -576,8 +585,9 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
     for index, (cand, kind, minutes) in enumerate(plan):
         basis = "하루 시작"
         if previous is not None:
-            gap, basis = _transfer_minutes(previous, cand)
-            cursor = cursor + timedelta(minutes=gap)
+            # ★이동 시간 + 도착 뒤 여유를 비워 둔다 — 그 자리에 이동 항목이 들어간다(`add_moves`)
+            travel, basis, _ = _transfer_minutes(previous, cand)
+            cursor = cursor + timedelta(minutes=travel + MOVE_BUFFER_MIN)
         if kind == "dining":
             floor = LUNCH_FROM if not any(it["kind"] == "dining" for it in items) else DINNER_FROM
             cursor = max(cursor, _at(day, floor))
@@ -590,6 +600,57 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
                                              "district": cand.district, "day": day.isoformat()}}})
         cursor, previous = end, cand
     return items
+
+
+# ── 이동 항목 — 출발 시각을 거꾸로 잡는다 ────────────────────────
+def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
+              ) -> tuple[list[dict[str, Any]], dict[str, Any], list[str]]:
+    """같은 날 이어지는 두 장소 사이에 **이동 항목**을 넣는다. (항목들, routes, 민 내역).
+
+    ★`[2026-09-24 사용자 지시]` 출발 = **다음 일정 시작 − 이동 시간 − 여유**(`MOVE_BUFFER_MIN`).
+      이동 알림은 이 출발 시각에 간다(`trip_reminders`) — 「N분 전」을 따로 붙이지 않는다.
+      앞 판은 이동 항목을 만들지 않아 **생성기가 짠 여행에는 이동 알림이 아예 없었다.**
+    ★앞 장소가 끝난 뒤 이동 + 여유를 둘 자리가 모자라면(고치는 중 장소가 바뀐 경우) 다음 일정부터
+      **그날 안에서 뒤로 민다** — 민 내역을 돌려준다. 하루 마감을 넘기는지는 부르는 쪽이 본다.
+    ★이동 시간은 `_transfer_minutes` 의 **추정**이다. 경로 정의의 `uses` 는 비워 둔다 — 어떤 노선을
+      타는지 우리가 모르기 때문이다(지어내지 않는다). 그래서 감시는 이 구간의 노선 사건을 보지 않는다.
+    """
+    ordered = sorted(items, key=lambda it: (_planned_day(it), it["starts_at"], it["seq"]))
+    out: list[dict[str, Any]] = []
+    routes: dict[str, Any] = {}
+    notes: list[str] = []
+    for index, item in enumerate(ordered):
+        previous = ordered[index - 1] if index else None
+        if previous is not None and _planned_day(previous) == _planned_day(item):
+            travel, basis, label = _transfer_minutes(places[previous["place"]], places[item["place"]])
+            need = travel + MOVE_BUFFER_MIN
+            end = previous["ends_at"] or previous["starts_at"]
+            free = int((item["starts_at"] - end).total_seconds() // 60)
+            if free < need:
+                # ★번호(seq)가 아니라 **시각**으로 민다 — 고치는 중 민 항목은 번호 순서와 시각 순서가
+                #   어긋날 수 있다(실측: 번호로 밀었더니 저녁 식당과 그 앞 이동이 겹쳤다).
+                pivot, day = item["starts_at"], _planned_day(item)
+                for later in items:
+                    if _planned_day(later) == day and later["starts_at"] >= pivot:
+                        later["starts_at"] += timedelta(minutes=need - free)
+                        if later["ends_at"]:
+                            later["ends_at"] += timedelta(minutes=need - free)
+                notes.append(f"move({item['seq']}): 이동 {travel}분 + 여유 {MOVE_BUFFER_MIN}분을 두려고 "
+                             f"{item['title']} 부터 {need - free}분 뒤로 밀었다")
+            leave = item["starts_at"] - timedelta(minutes=need)
+            key = f"move-{len(routes) + 1}"
+            routes[key] = {"planned": "estimate",
+                           "options": [{"id": "estimate", "label": label, "eta_min": travel, "uses": []}]}
+            out.append({"seq": 0, "kind": "mobility", "title": f"{previous['title']} → {item['title']}",
+                        "place": None, "route": key, "starts_at": leave,
+                        "ends_at": leave + timedelta(minutes=travel),
+                        "detail": {"planner": {"day": _planned_day(item), "transfer_basis": basis,
+                                               "travel_min": travel, "buffer_min": MOVE_BUFFER_MIN,
+                                               "leave_rule": "다음 일정 시작 − 이동 시간 − 여유"}}})
+        out.append(item)
+    for number, item in enumerate(out, start=1):
+        item["seq"] = number
+    return out, routes, notes
 
 
 # ── 고쳐서 다시 판정한다 ─────────────────────────────────────────
@@ -743,6 +804,7 @@ class PlanOutcome:
 def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str, Any]:
     """★**판정이 실제로 본 칸이 몇이나 되는지** 분자/분모로 적는다. 모르는 칸은 통과가 아니라
     「판정하지 않음」이고, 그 사실을 숨기면 초안이 실제보다 안전해 보인다."""
+    items = [item for item in items if item.get("place")]      # 이동 항목은 장소 칸이 없다
     total = len(items)
     with_hours = sum(1 for item in items if "hours" in places[item["place"]].attributes)
     with_price = sum(1 for item in items if "price_krw" in places[item["place"]].attributes)
@@ -853,30 +915,29 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
             violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="완화 조건을 하나 풀거나(예산·결제 조건) 후보를 더 받는다")
-    # ★★`check_itinerary` 는 **하루가 몇 시에 끝나야 하는지 모른다** — 그건 우리 상품의 약속이지
-    #   일정의 성립 조건이 아니다. 고치는 과정에서 뒤로 민 항목이 한밤중으로 넘어갈 수 있으므로
-    #   여기서 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다.
-    overflow = [item for item in items
-                if (item["ends_at"] or item["starts_at"])
-                > _at(date.fromisoformat(_planned_day(item)), DAY_END)]
-    if overflow:
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니")
+    # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
+    #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
+    items, routes, moved = add_moves(items, chosen)
+    fixed += moved
+    violations = _check(items, chosen, request, routes)
+    if violations:
         raise PlanRefused(
-            "day_overflow",
-            f"고치다 보니 {len(overflow)}개 항목이 하루 마감({DAY_END.strftime('%H:%M')})을 넘었다: "
-            + ", ".join(f"{item['title']}"
-                        f"({(item['ends_at'] or item['starts_at']).strftime('%m-%d %H:%M')})"
-                        for item in overflow),
-            items=[item["seq"] for item in overflow],
+            "plan_infeasible",
+            "이동 시간을 넣고 나니 판정을 통과하지 못했다: "
+            + " / ".join(violation.reason for violation in violations),
+            violations=[violation.as_dict() for violation in violations],
             repair_rounds=rounds, repairs_applied=fixed,
-            remedy="하루 항목을 줄이거나 시작 시각을 앞당길 수 있는 장소로 바꾼다")
+            remedy="하루 항목을 줄이거나 가까운 장소로 바꾼다")
+    _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니")
 
     draft = PlanDraft(
         title=request.title or f"서울 {request.days}일 여행 ({request.start_date.isoformat()})",
         locale=request.locale, party_size=request.party_size,
         constraints=dict(request.constraints),
         places=[chosen[key].as_place() for key in
-                sorted({item["place"] for item in items}, key=lambda k: str(k))],
-        items=items)
+                sorted({item["place"] for item in items if item.get("place")}, key=lambda k: str(k))],
+        items=items, routes=routes)
     if mode == "llm" and from_model == 0:
         # ★★모델을 부르긴 했는데 **쓴 것이 하나도 없다.** 그래도 `llm` 이라고 적으면 조용한
         #   폴백이다(`RULE.md` §3.2) — 실제로 gemma4:12b 가 줄 번호를 내서 이 상태가 났었다.
@@ -893,10 +954,29 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                  "preference": pref.as_dict()},
         candidates={"pool": len(pool), "after_preference": len(ranked),
                     "activity": len(activities), "dining": len(dining),
-                    "chosen": len({item["place"] for item in items}),
+                    "chosen": len({item["place"] for item in items if item.get("place")}),
                     "by_source": _count_by(chosen.values(), "origin")},
         checks={"rounds": rounds, "repairs": fixed, "violations": []},
         coverage=_coverage(items, chosen), calls=calls, rag=rag)
+
+
+def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str) -> None:
+    """★★`check_itinerary` 는 **하루가 몇 시에 끝나야 하는지 모른다** — 그건 우리 상품의 약속이지
+    일정의 성립 조건이 아니다. 고치는 과정이나 이동 자리를 내는 과정에서 뒤로 민 항목이 한밤중으로
+    넘어갈 수 있으므로 따로 본다. 넘으면 「고쳤다」고 하지 않고 거절한다."""
+    overflow = [item for item in items
+                if (item["ends_at"] or item["starts_at"])
+                > _at(date.fromisoformat(_planned_day(item)), DAY_END)]
+    if overflow:
+        raise PlanRefused(
+            "day_overflow",
+            f"{why} {len(overflow)}개 항목이 하루 마감({DAY_END.strftime('%H:%M')})을 넘었다: "
+            + ", ".join(f"{item['title']}"
+                        f"({(item['ends_at'] or item['starts_at']).strftime('%m-%d %H:%M')})"
+                        for item in overflow),
+            items=[item["seq"] for item in overflow],
+            repair_rounds=rounds, repairs_applied=fixed,
+            remedy="하루 항목을 줄이거나 시작 시각을 앞당길 수 있는 장소로 바꾼다")
 
 
 def _available(shortlist: list[Cand], everything: list[Cand], used: set[str],
@@ -922,16 +1002,18 @@ def _count_by(candidates: Iterable[Cand], attribute: str) -> dict[str, int]:
 
 
 def _check(items: list[dict[str, Any]], places: dict[str, Cand],
-           request: PlanRequest) -> list[Violation]:
+           request: PlanRequest, routes: Mapping[str, Any] | None = None) -> list[Violation]:
     """★**등록이 쓰는 것과 같은 판정기다.** 여기에 따로 만든 판정은 없다."""
     return check_itinerary(
         [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
               starts_at=item["starts_at"], ends_at=item["ends_at"],
-              place=places[item["place"]].for_check(), route=None, detail=item["detail"])
+              place=places[item["place"]].for_check() if item.get("place") else None,
+              route=(routes or {}).get(str(item.get("route"))) if item.get("route") else None,
+              detail=item["detail"])
          for item in items],
         constraints=request.constraints, party_size=request.party_size)
 
 
 __all__ = ["Cand", "PlanDraft", "PlanOutcome", "PlanRefused", "PlanRequest", "Preference",
-           "build_day", "ground_request", "grounding_text", "load_candidates",
+           "add_moves", "build_day", "ground_request", "grounding_text", "load_candidates",
            "order_with_model", "plan_trip", "preference_profile", "rank_candidates", "repair"]
