@@ -10,8 +10,6 @@ import 만 보면 그 결합이 지도에서 사라진다.
 from __future__ import annotations
 
 import ast
-import html
-import json
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -57,15 +55,21 @@ def static_imports(target: Path) -> dict[str, set[str]]:
     return edges
 
 
+def trace_module(path: str) -> str:
+    """패키지 초기화 파일도 AST 지도와 같은 모듈 이름으로 읽는다."""
+    suffix = "/__init__.py"
+    return (path[:-len(suffix)] if path.endswith(suffix) else path[:-3]).replace("/", ".")
+
+
 def runtime_calls(trace: dict[str, Any]) -> Counter:
     """실측 호출 간선. 연속 순서가 아니라 실제 호출자를 쓴다."""
     symbol_module = {}
     for step in trace.get("steps", []):
-        symbol_module[step["symbol"]] = step["path"][:-3].replace("/", ".")
+        symbol_module[step["symbol"]] = trace_module(step["path"])
     counts: Counter = Counter()
     for step in trace.get("steps", []):
         caller = step.get("caller")
-        callee_module = step["path"][:-3].replace("/", ".")
+        callee_module = trace_module(step["path"])
         caller_module = symbol_module.get(caller) if caller else None
         if caller_module and caller_module != callee_module:
             counts[(caller_module, callee_module)] += 1
@@ -113,182 +117,21 @@ def _edge(positions, a: str, b: str, klass: str, weight: int = 1) -> str:
 
 
 def measured_order(trace: dict[str, Any] | None) -> list[str]:
-    """실측 트레이스가 지나간 모듈 순서(중복 제거). 예상과 대조할 정답이다."""
+    """실측 모듈 순서. 연속 중복만 묶고 재방문은 남긴다."""
     order: list[str] = []
     for step in (trace or {}).get('steps', []):
-        module = step['path'][:-3].replace('/', '.')
+        module = trace_module(step['path'])
         if not order or order[-1] != module:
             order.append(module)
     return order
 
 
+def snapshot(track_id: str, scenario_id: str) -> dict[str, Any]:
+    from .map_ui import snapshot as collect
+    return collect(track_id, scenario_id)
+
+
 def build(target: Path, trace: dict[str, Any] | None, progress: dict[str, Any],
-          track: Any = None) -> str:
-    imports = static_imports(target)
-    modules = set(imports) | {m for targets in imports.values() for m in targets}
-    indegree: Counter = Counter()
-    for sources in imports.values():
-        for module in sources:
-            indegree[module] += 1
-    calls = runtime_calls(trace) if trace else Counter()
-    visited = {entry.split("::")[0][:-3].replace("/", ".")
-               for entry in progress.get("discovered", [])}
-    positions, order, columns, height = layout(modules)
-
-    parts = []
-    for source, targets in imports.items():
-        for destination in targets:
-            parts.append(_edge(positions, source, destination, "imp"))
-    for (source, destination), weight in calls.items():
-        parts.append(_edge(positions, source, destination, "run hide", weight))
-    for layer in order:
-        x, _ = positions[columns[layer][0]]
-        parts.append(f'<text class="lyr" x="{x:.0f}" y="{TOP - 18:.0f}">{html.escape(layer)}</text>')
-    for module in sorted(modules):
-        x, y = positions[module]
-        klass = "seen" if module in visited else "unseen"
-        # 트랙이 있으면 내 담당이 아닌 것은 흐리게 둔다. 남의 디렉터리는 배울 대상이 아니다.
-        if track is not None and track.owns:
-            from . import tracks as tracks_mod
-            if not tracks_mod.owns(track, module.replace(".", "/") + ".py") and \
-                    not tracks_mod.owns(track, module.replace(".", "/") + "/"):
-                klass += " other"
-        label = module.replace("app.", "")
-        count = indegree[module]
-        badge = (f'<text class="deg" x="{x + NODE_W - 8:.0f}" y="{y + 17:.0f}">{count}</text>'
-                 if count else "")
-        parts.append(
-            f'<g class="n {klass}" data-m="{module}"><rect x="{x:.0f}" y="{y:.0f}" width="{NODE_W}" '
-            f'height="{NODE_H}" rx="5"/>'
-            f'<text x="{x + 8:.0f}" y="{y + 17:.0f}">{html.escape(label[:26])}</text>{badge}</g>')
-
-    stages = progress.get("stages", {})
-    done = ", ".join(f"{k}단계 {v.get('status')}" for k, v in sorted(stages.items())) or "아직 없음"
-    rows = "".join(
-        f"<li>{html.escape(name)} — {'확정' if info['state'] == 'confirmed' else '잠정'}"
-        f" <span class='ev'>{html.escape(info['evidence'])}</span></li>"
-        for name, info in sorted(progress.get("abilities", {}).items())) or "<li>아직 없음</li>"
-    import_count = sum(len(v) for v in imports.values())
-    return TEMPLATE.format(
-        width=WIDTH, height=f"{height:.0f}", body="".join(parts), modules=len(modules),
-        imports=import_count, calls=len(calls), visited=len(visited), done=html.escape(done),
-        rows=rows, track_title=track.title if track is not None else "전체",
-        measured=json.dumps(measured_order(trace), ensure_ascii=False))
-
-
-TEMPLATE = """<!doctype html>
-<html lang="ko"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>A-COP 지식 지도</title>
-<style>
-:root{{--bg:#fff;--fg:#1a1a1a;--mut:#8a8a8a;--line:#e2e2e2;--seen:#e8f0fe;--seenb:#4a7fd4;--run:#c96a12}}
-@media (prefers-color-scheme:dark){{:root{{--bg:#1c1c1c;--fg:#e8e8e8;--mut:#909090;--line:#3a3a3a;--seen:#1e3050;--seenb:#5a8fe4;--run:#e08a3a}}}}
-*{{box-sizing:border-box}}
-body{{margin:0;padding:24px;background:var(--bg);color:var(--fg);
-font:15px/1.7 -apple-system,"Segoe UI",system-ui,sans-serif}}
-h1{{font-size:20px;font-weight:500;margin:0 0 4px}}
-p.sub{{color:var(--mut);margin:0 0 20px}}
-.wrap{{overflow-x:auto;border:1px solid var(--line);border-radius:10px;padding:8px}}
-svg{{display:block}}
-.lyr{{fill:var(--mut);font-size:12px}}
-.n rect{{fill:none;stroke:var(--line)}}
-.n text{{fill:var(--mut);font-size:11px;font-family:ui-monospace,Consolas,monospace}}
-.n.seen rect{{fill:var(--seen);stroke:var(--seenb)}}
-.n.seen text{{fill:var(--fg)}}
-.n.other{{opacity:.28}}
-.hide{{display:none}}
-.n{{cursor:pointer}}
-.n.pick rect{{fill:var(--run);stroke:var(--run)}}
-.n.pick text{{fill:#fff}}
-.bar{{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}}
-.bar button{{font:inherit;padding:.4rem .8rem;border:1px solid var(--line);border-radius:8px;
-background:var(--bg);color:var(--fg);cursor:pointer}}
-.pane{{margin:12px 0 0;font-size:14px;line-height:1.8}}
-.ok{{color:#0a7d3f}}.no{{color:#b42318}}
-.deg{{text-anchor:end;font-size:10px}}
-path{{fill:none}}
-path.imp{{stroke:var(--line)}}
-path.run{{stroke:var(--run);opacity:.85}}
-.legend{{display:flex;gap:20px;flex-wrap:wrap;margin:14px 0 0;color:var(--mut);font-size:13px}}
-.sw{{display:inline-block;width:26px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}}
-ul{{margin:6px 0 0;padding-left:20px}}
-.ev{{color:var(--mut);font-family:ui-monospace,Consolas,monospace;font-size:12px}}
-footer{{margin-top:24px;color:var(--mut);font-size:13px}}
-code{{font-family:ui-monospace,Consolas,monospace}}
-</style></head><body>
-<h1>A-COP 지식 지도 — {track_title}</h1>
-<p class="sub">모듈 {modules}개 · 정적 import 간선 {imports}개 · 실측 호출 간선 {calls}개 ·
-지나간 모듈 {visited}개</p>
-<div class="bar">
-<span>먼저 예상한다 — 요청이 지나갈 모듈을 순서대로 누른다.</span>
-<button id="undo">되돌리기</button>
-<button id="clear">비우기</button>
-<button id="reveal">실측과 대조</button>
-</div>
-<div class="pane" id="pane">아직 아무것도 안 눌렀다.</div>
-<div class="wrap"><svg viewBox="0 0 {width} {height}" width="{width}" height="{height}">
-{body}
-</svg></div>
-<div class="legend">
-<span><span class="sw" style="border-color:var(--line)"></span>정적 import</span>
-<span><span class="sw" style="border-color:var(--run)"></span>실측 호출</span>
-<span>칠해진 칸 = 트레이스가 실제로 지나간 모듈</span>
-<span>흐린 칸 = 이 트랙의 담당이 아닌 모듈</span>
-<span>오른쪽 숫자 = 이 모듈을 import 하는 곳의 수</span>
-</div>
-<footer>
-<div>진행: {done}</div>
-<div>능력</div><ul>{rows}</ul>
-<div style="margin-top:10px">이 문서는 CLI 가 남긴 진행 파일과 실측 트레이스만 읽어 그린다.
-정적 import 는 <code>composition.py</code> 가 importlib 로 만드는 결합을 보여주지 못한다.</div>
-</footer>
-<script>
-const measured = {measured};
-const picked = [];
-const pane = document.getElementById("pane");
-const nodes = Array.from(document.querySelectorAll("g.n"));
-function label(name) {{ return name.replace("app.", ""); }}
-function draw() {{
-  if (!picked.length) {{ pane.textContent = "아직 아무것도 안 눌렀다."; return; }}
-  pane.textContent = "내 예상: " + picked.map(label).join("  ->  ");
-}}
-nodes.forEach(function (node) {{
-  node.addEventListener("click", function () {{
-    picked.push(node.getAttribute("data-m"));
-    node.classList.add("pick");
-    draw();
-  }});
-}});
-document.getElementById("undo").addEventListener("click", function () {{
-  const name = picked.pop();
-  if (name && !picked.includes(name)) {{
-    const node = nodes.find(function (n) {{ return n.getAttribute("data-m") === name; }});
-    if (node) node.classList.remove("pick");
-  }}
-  draw();
-}});
-document.getElementById("clear").addEventListener("click", function () {{
-  picked.length = 0;
-  nodes.forEach(function (n) {{ n.classList.remove("pick"); }});
-  draw();
-}});
-document.getElementById("reveal").addEventListener("click", function () {{
-  document.querySelectorAll("path.run").forEach(function (edge) {{ edge.classList.remove("hide"); }});
-  const mine = picked.map(label);
-  const seen = [];
-  measured.map(label).forEach(function (m) {{ if (!seen.includes(m)) seen.push(m); }});
-  const real = seen;
-  const hit = mine.filter(function (m) {{ return real.includes(m); }});
-  const missed = real.filter(function (m) {{ return !mine.includes(m); }});
-  const extra = mine.filter(function (m) {{ return !real.includes(m); }});
-  let out = "<b>실측(처음 지나간 순서):</b> " + real.join("  -&gt;  ");
-  out += "<br><span class='muted'>실제로는 " + measured.length + "번 오간다. 같은 모듈을 여러 번 지난다.</span>";
-  out += "<br><b>맞은 것</b> <span class='ok'>" + hit.length + "/" + real.length + "</span>";
-  if (missed.length) out += "<br><b>빠뜨린 것</b> <span class='no'>" + missed.join(", ") + "</span>";
-  if (extra.length) out += "<br><b>없는데 넣은 것</b> <span class='no'>" + extra.join(", ") + "</span>";
-  out += "<br>맞은 개수보다 <b>왜 틀렸는지</b>가 중요하다. 빠뜨린 모듈이 무슨 일을 하는지 코드에서 확인한다.";
-  pane.innerHTML = out;
-}});
-</script>
-</body></html>
-"""
+          track: Any = None, *, context: dict[str, Any] | None = None) -> str:
+    from .map_ui import render
+    return render(target, trace, progress, track, context=context)

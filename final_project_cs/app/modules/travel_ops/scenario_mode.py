@@ -223,28 +223,29 @@ class ScenarioSession:
 
     def _day_start(self) -> None:
         # ★문구는 `trip_reminders` 한 곳 — 운영 되잡기 작업과 같은 것을 쓴다(`[2026-09-18]`).
-        from .trip_reminders import day_text
+        from .trip_reminders import day_phrase, notice_fields
 
         trip, items = self._items()
         with get_connection() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=self.trip_id, key="day_start",
-                                       payload={"text": day_text(items, self.clock().date()),
+                                       payload={**notice_fields(day_phrase(items, self.clock().date())),
                                                 "kind": "day_start", "version": trip["version"]})
 
     def _departure(self) -> None:
-        from .trip_reminders import build_departure
+        from .trip_reminders import build_departure, notice_fields
 
         trip, items = self._items()
         now = self.clock()
         move = next((i for i in items if i.kind == "mobility" and i.starts_at >= now), None)
         if move is None:
             return
-        status, text = build_departure(move, items, route_events=self.watcher.route_events, routes=None, now=now)
-        if text is None:          # held · fatal — 낡은 경로를 알리지 않는다
+        status, phrase = build_departure(move, items, route_events=self.watcher.route_events,
+                                         routes=None, now=now)
+        if phrase is None:        # held · fatal — 낡은 경로를 알리지 않는다
             return
         with get_connection() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=self.trip_id, key=f"departure:{move.item_id}",
-                                       payload={"text": text, "kind": "departure",
+                                       payload={**notice_fields(phrase), "kind": "departure",
                                                 "version": trip["version"]})
 
     def _summary(self) -> None:

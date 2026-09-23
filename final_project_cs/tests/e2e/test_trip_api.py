@@ -194,6 +194,24 @@ def test_create_is_idempotent_and_the_first_notice_carries_the_plan_link(api):
     assert reused.json()["error"]["code"] == "idempotency_key_reused"
 
 
+@pytest.mark.parametrize("preference", [{"level": "normal"}, {"target_density": 0.6}])
+def test_density_warning_survives_registration_duplicate_and_read(api, preference):
+    body = _body(api["customer"])
+    body["items"] = [{"seq": 1, "kind": "activity", "title": "긴 방문",
+                      "starts_at": f"{DAY}T10:00:00+09:00", "ends_at": f"{DAY}T18:00:00+09:00"}]
+    body["constraints"] = {"density": {**preference, "days": {DAY: {
+        "starts_at": f"{DAY}T10:00:00+09:00", "ends_at": f"{DAY}T22:00:00+09:00", "buffer_minutes": 0}}}}
+    first = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert first.status_code == 201, first.text
+    view = first.json()
+    assert view["warnings"][0]["code"] == "density_exceeded"
+    assert view["density"][0]["policy_basis"] == ("research_calibrated" if "level" in preference else "user_preference")
+    assert view["density"][0]["breakdown"]["scheduled_minutes"] == 480
+    again = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write")).json()
+    assert again["created"] is False and again["density"] == view["density"]
+    assert _detail(api, view["trip_id"])["density"] == view["density"]
+
+
 def test_a_second_trip_reuses_known_places_without_overwriting_them(api):
     """☆2026-09-14 개발 서버에서 발견 — 같은 테넌트의 두 번째 여행이 이미 있는 장소를
     적자 UNIQUE(tenant_id, name, kind) 로 500 이 났다. 여행마다 테넌트를 새로 만드는
@@ -376,3 +394,65 @@ def test_the_plan_link_always_shows_the_latest_version(api):
     assert wrong.status_code == 404
     other = api["client"].get(f"/plan/{uuid4()}?t={plan_token(api['tenant'], trip_id)}")
     assert other.status_code == 404                                    # ★다른 여행 토큰으로 못 연다
+
+
+# ── 받을 때 판정 (2026-09-21, v11 DoD-2·3) ──────────────────────
+def test_an_impossible_itinerary_is_refused_with_reasons_and_remedies(api):
+    """★거절은 이유와 **완화 조건**을 같이 낸다. 받아 두고 나중에 고치지 않는다."""
+    body = _body(api["customer"], request_id="bad-1")
+    lunch = next(it for it in body["items"] if it["seq"] == 5)
+    lunch["starts_at"] = _iso("12:30")                 # 앞 쇼핑(11:15~13:00)과 겹친다
+    move = next(it for it in body["items"] if it["seq"] == 6)
+    move["ends_at"] = _iso("15:05")                    # 20분 걸리는 경로를 5분으로 잡는다
+    response = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert response.status_code == 422, response.text
+    error = response.json()["error"]
+    assert error["code"] == "itinerary_infeasible"
+    codes = {v["code"] for v in error["violations"]}
+    assert codes == {"overlap", "move_too_short"}, error["violations"]
+    assert all(v["reason"] and v["remedy"] for v in error["violations"])
+
+    # ★일정은 저장되지 않았다 — 거절은 아무것도 남기지 않는다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM trips WHERE tenant_id=%s", (api["tenant"],))
+        assert cur.fetchone()[0] == 0
+
+
+def test_the_confirmed_day_is_accepted_as_submitted(api):
+    """판정이 운영을 막으면 안 된다 — 확정 시나리오 하루는 그대로 201."""
+    assert _create(api, request_id="ok-1")["version"] == 1
+
+
+def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
+    """★시나리오 모드처럼 **다른 테넌트**의 여행도 링크로 열린다 — 통지에 실린 링크가 404 였다."""
+    from app.modules.travel_ops.itinerary import Item, TripStore
+    from app.modules.travel_ops.trip_api import plan_token
+
+    other = "planlink_" + uuid4().hex[:10]
+    with get_connection() as conn:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO tenants (tenant_id,name) VALUES (%s,%s)", (other, "plan link"))
+            cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,%s) RETURNING customer_id",
+                        (other, "someone"))
+            customer = cur.fetchone()[0]
+        store = TripStore(other)
+        with conn.transaction():
+            trip_id, _ = store.create_trip(conn, customer_id=customer, title="다른 테넌트 여행",
+                                           locale="ko", party_size=2,
+                                           items=[Item(item_id=uuid4(), seq=1, kind="activity",
+                                                       title="첫 일정", place_id=None,
+                                                       starts_at=_at("09:00"), ends_at=_at("10:00"))],
+                                           constraints={})
+    try:
+        page = api["client"].get(f"/plan/{trip_id}?t={plan_token(other, trip_id)}")
+        assert page.status_code == 200 and "다른 테넌트 여행" in page.text
+        wrong = api["client"].get(f"/plan/{trip_id}?t={plan_token(api['tenant'], trip_id)}")
+        assert wrong.status_code == 404          # ★다른 테넌트 이름으로 만든 토큰은 안 통한다
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM itinerary_items WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM itinerary_versions WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM trips WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM customers WHERE tenant_id=%s", (other,))
+            cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (other,))

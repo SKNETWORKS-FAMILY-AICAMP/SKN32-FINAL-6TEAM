@@ -1,7 +1,7 @@
 ---
 type: guide
 title: 도장 사용법
-description: 베이스먼트 트랙 4개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
+description: 학습 트랙 5개와 명령. 정답은 pytest와 실측 트레이스가 판정한다
 status: draft
 tags: [testing, documentation]
 owners: [human:미배정]
@@ -27,7 +27,7 @@ domain: neutral
 | `learn 2` | 대조 — 예상 순서를 세우고 실측과 겹친다 |
 | `defect [ID] [--fix 패치]` | 결함 문제. `--fix`를 주면 pytest가 판정한다 |
 | `boss [--fix 패치]` | 보스전 — **안 배운 코드(검증 엔진)에서 같은 규칙**을 찾고 고친다 |
-| `tracks` | 학습 트랙 4개 (중지 3개) |
+| `tracks` | 학습 트랙 5개 (중지 3개) |
 | `placement --track X` | 어디부터 시작할지 실측 문제로 잰다 |
 | `scenarios [--verify-all]` | 시나리오 목록. 전부 두 번 떠서 같은지 검사 |
 | `answers` | 서술 답안을 동료 검토용 루브릭과 함께 내보낸다 |
@@ -39,6 +39,7 @@ domain: neutral
 | `defects [--rebuild] [--only ID,ID]` | 결함 카탈로그 등록 게이트 — **20분** |
 | `stability [--repeats N]` | 결함이 매번 같은 신호를 내는지 |
 | `map` | 웹 지도. 간선이 숨겨져 있다 — 아래 |
+| `serve [--port N]` | **브라우저에서 돌린다** — 로컬 서버(127.0.0.1)를 띄운다. 실행·출력·답변 전송까지 화면에서 한다 |
 | `build steps\|start\|brief N\|check N\|reveal N <파일>` | **처음부터 쌓기** — 빈 폴더에서 베이스먼트를 직접 만든다 (대상은 `final_project_sample`) |
 
 `[실측]` 2026-09-06 [README](../README.md)와 대조해 위 다섯을 채웠다. `boss`에는 `--defect ID`·`--force`도 있다. 파이썬 3.12 이상(`sys.monitoring`)과 대상 저장소의 PostgreSQL이 필요하다 — 470개 테스트 중 상당수가 DB를 쓴다.
@@ -51,7 +52,7 @@ domain: neutral
 
 **트레이스가 재현되지 않으면 학습 자료로 쓸 수 없다.** 매번 다른 걸 보여주면 무엇이 규칙이고 무엇이 우연인지 구분이 안 된다.
 
-## 트랙 4개 (중지 3개)
+## 트랙 5개 (중지 3개)
 
 `[실측 2026-09-14]` 전체 1개와 파트 3개가 돈다. 처음엔 파트 6개였고 커머스 팀 모듈 셋을 중지했다.
 
@@ -63,11 +64,14 @@ domain: neutral
 | `core1` | 코어 1 | **상태는 이벤트를 접은 결과다.** `transition_case`만이 상태를 바꾼다. 체크포인트는 업무 상태가 아니다. 바깥함은 tenant 를 모르는 메시지를 내보내지 않는다. Registry 는 선언만 보고 기능을 고른다 |
 | `core2` | 코어 2 | 같은 요청을 열 번 보내도 side effect는 한 번. scope 없는 호출은 거부. 원격 Team 이 실패하면 성공으로 추정하지 않고 사람에게 넘긴다. PII 는 DB·API·감사 기록 어디에도 원문으로 남지 않고, 고객을 비운 조회도 tenant 밖으로 안 나간다 |
 | `front` | 프론트 | 근거 없는 제안은 화면에서 결정할 수 없어야 한다 |
+| `team-travel` | 팀 모듈 | 읽은 것마다 근거가 쌓인다. 분류가 실패하면 조용히 넘기지 않는다 (2026-09-21 신설) |
 | ~~`team-voc`~~ · ~~`team-review`~~ · ~~`team-commerce`~~ | 팀 모듈 | **중지** (2026-09-14) |
 
 ★`[실측 2026-09-10]` **팀 트랙 셋의 대상 코드가 cs 작업 트리에서 지워졌다.** 결함 카탈로그 **49개 중 10개 = 20%** 가 `app/modules/customer_ops/*` 를 가리켰다 — INV-CLASSIFY-001 · INV-COMMERCE-002~005 · INV-REVIEW-002 · INV-TEAM-001·002 · INV-VOC-001·002.
 
-`[결정 2026-09-14]` **도장은 베이스먼트(도메인을 모르는 코어)만 다룬다. 커머스는 지우지 않고 중지했다** — 결함 10은 `catalog.json` 의 `parked`, 시나리오 8은 `scenarios.py` 의 `PARKED_SCENARIO_IDS`, 트랙 3은 `tracks.py` 의 `PARKED_TRACK_IDS`, 원장 규칙 5는 `status: parked`. 여행 Team 트랙은 Team 코드가 자리를 잡은 뒤에 만든다.
+`[결정 2026-09-14]` **도장은 베이스먼트(도메인을 모르는 코어)만 다룬다. 커머스는 지우지 않고 중지했다** — 결함 10은 `catalog.json` 의 `parked`, 시나리오 8은 `scenarios.py` 의 `PARKED_SCENARIO_IDS`, 트랙 3은 `tracks.py` 의 `PARKED_TRACK_IDS`, 원장 규칙 5는 `status: parked`.
+
+`[결정 2026-09-21]` **여행 Team 트랙(`team-travel`)을 열었다.** 좁게 시작한다 — 시나리오 하나(`travel-team-keeps-every-evidence-v1`, DB 없이 도는 회귀 테스트)와, 중지했던 결함 중 조각이 여행 코드에 남은 넷(INV-CLASSIFY-001 · INV-VOC-001 · INV-VOC-002 · INV-COMMERCE-005)을 `app/modules/travel_ops/` 경로로 옮긴 것이다. 규칙은 도메인이 바뀌어도 같다. 남은 중지는 6건이고, 여행 Team 코드는 자주 바뀌므로 `patches`(4초)로 자주 본다.
 
 `[실측]` 이 표가 "7개"라면서 `front`를 빼고 6개만 적고 있었다(2026-09-06 정정). 트랙마다 자기 시나리오·결함·지도가 붙는다 — `--track core2`처럼 준다.
 

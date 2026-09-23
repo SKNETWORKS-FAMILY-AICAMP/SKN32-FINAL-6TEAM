@@ -279,7 +279,10 @@ def build_controller(*, registry: TeamRegistry | None = None,
 
 
 def build_domain_routers() -> list:
-    """도메인이 여는 HTTP 표면 — 지금은 여행 API 하나.
+    """도메인이 여는 HTTP 표면 — 여행 API · 위임 · 시나리오 모드.
+
+    `[정정 2026-09-22]` 이 줄은 「여행 API 하나」라고 적혀 있었다. 시나리오 라우터가
+    늘어난 뒤에도 안 고쳐져 있었고, 여기에 위임까지 더해 셋이 됐다.
 
     ★presentation 은 도메인을 import 하지 못한다(INV-CS-ARCH-001). 그래서 조립이
       만들어 `create_app()` 에 넣는다. 점검기는 **처음 쓸 때** 조립한다 — 기동이
@@ -301,10 +304,22 @@ def build_domain_routers() -> list:
 
         return from_settings(get_settings())
 
+    from app.modules.travel_ops.delegation_api import build_delegation_router
     from app.modules.travel_ops.scenario_mode import build_scenario_router
 
+    def place_factory():
+        # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
+        #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.base import build_travel_sources
+
+        return build_travel_sources(get_settings()).place
+
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory),
+                              chat_factory=chat_factory, place_factory=place_factory),
+            # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
+            #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
+            build_delegation_router(),
             # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
             build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
 

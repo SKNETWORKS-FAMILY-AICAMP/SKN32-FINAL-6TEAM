@@ -42,6 +42,10 @@ domain: travel
 | [mt-methodology.md](mt-methodology.md) | 번역 비교가 성립하는 조건 5가지 | 무관 | — |
 | [legal-basis.md](legal-basis.md) | 전자상거래법 · 개인정보보호법 조문 | **쇼핑몰** | 개인정보 부분만 유효 |
 | [dispute-cases.md](dispute-cases.md) | 분쟁조정 4건 | **쇼핑몰** | 여행에 안 쓰인다 |
+| [place-api-quota-and-terms.md](place-api-quota-and-terms.md) | 장소 API 쿼터와 「받은 것을 쌓아도 되는가」 | **여행** | 감시 루프가 구글을 못 쓰는 이유 |
+| [price-data-sources.md](price-data-sources.md) | 식당·액티비티 가격을 불러 본 채움률과 상용·공공 후보 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
+| [dietary-data-sources.md](dietary-data-sources.md) | 채식·할랄·알러지 데이터를 다섯 소스에서 불러 본 채움률 | **여행** | → [product/traveler-profile.md](../product/traveler-profile.md) |
+| [accessibility-data-sources.md](accessibility-data-sources.md) | 무장애·유모차·지하철 승강기 데이터 | **여행** | → 동 |
 
 ### ★ [2026-09-09 정정] 번역 조사는 제품 경로에서 빠진다
 

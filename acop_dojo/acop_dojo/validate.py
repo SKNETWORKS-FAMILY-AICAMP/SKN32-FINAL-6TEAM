@@ -29,6 +29,12 @@ def validate_all(target: Path, *, verbose: bool = True,
         if verbose:
             print("기준선을 확인한다 (결함 없는 상태에서 전부 통과해야 한다)")
         baseline = sandbox.pytest()
+        if baseline.returncode == 124:
+            # 기준선이 끝나지 않으면 무엇이 새 실패인지 알 수 없다. 여기서 멈춘다.
+            print(f"  ✗ 기준선이 {baseline.summary}. 결함 판정을 시작하지 않는다.")
+            print("    대상 저장소에서 끝나지 않는 테스트를 먼저 찾는다 — pytest -v 로 마지막 줄을 본다.")
+            report["baseline"] = {"summary": baseline.summary, "failed": []}
+            return report
         sandbox.sweep()
         report["baseline"] = {"summary": baseline.summary, "failed": baseline.failed}
         # ★기준선의 실패는 결함 판정에서 뺀다. 공유 저장소는 다른 작업 때문에 늘 몇 건이

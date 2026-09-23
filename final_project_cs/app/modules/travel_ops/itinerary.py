@@ -242,7 +242,13 @@ class TripStore:
 
         ★같은 `key` 는 두 번 들어가지 않는다(`outbox` UNIQUE). 버전 통지와 키가 겹치지
           않게 `{trip_id}:{key}` 로 둔다.
+        ★`[2026-09-22]` 부르는 쪽이 안 넣었으면 **계획서 링크를 여기서 붙인다** — 시나리오 모드의
+          안내가 링크 없이 나가고 있었다(되잡기 작업은 넣어 주고 있었다).
         """
+        if "plan_url" not in payload:
+            from .plan_link import plan_url
+
+            payload = {**payload, "plan_url": plan_url(self.tenant_id, trip_id)}
         with conn.cursor() as cur:
             cur.execute("SELECT locale FROM trips WHERE tenant_id=%s AND trip_id=%s",
                         (self.tenant_id, trip_id))

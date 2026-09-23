@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+import json
+
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid5
 
@@ -83,6 +85,20 @@ SUPPLIER = [
     ("hotel",      "NamsanStay", "confirmed"),
 ]
 
+#: 취소 조건 (마이그레이션 023). `(scope_type, scope_id, 기한시간, {"남은시간": 위약금율})`
+#:
+#: ★★**전부 시연용 Mock 이다 — 실제 업체 약관이 아니다.** `source` 에 그렇게 적는다.
+#:   섞이면 고객에게 지어낸 금액을 말하게 된다. 실제 약관이 들어오면 그때 `source` 가
+#:   달라지고, 답변의 근거도 그 값을 가리킨다.
+#:
+#: ★범위를 **셋 다** 깔아 두는 이유: 찾는 순서(예약 → 공급자 → 종류)가 실제로 데이터로
+#:   밟혀야 한다. 하나만 깔면 대체 경로가 한 번도 안 도는 채로 시연이 지나간다.
+TERMS = [
+    ("kind",     "activity",   24, {"24": 0.5, "48": 0.3}),   # 마지막 대체 — 종류 기본값
+    ("supplier", "PineCreek",  48, {"48": 0.3, "72": 0.1}),   # 이 공급자는 더 이르다
+    ("booking",  "golf-late",   6, {"6": 0.8}),               # 이 건만 따로 정한 조건
+]
+
 
 def ensure_customer(conn, external_id: str) -> UUID:
     with conn.cursor() as cur:
@@ -139,17 +155,35 @@ def main() -> None:
                  f"BK-{key.upper()}", kind, status, hours(start_h), party, cap, amount, locked))
 
         for booking_key, supplier, status in SUPPLIER:
+            # ★`[2026-09-22]` 등급을 **적어서** 넣는다(마이그레이션 017 · DoD-14·15). 이 시드는
+            #   전부 시연용 Mock 공급자라 `simulated` 다. 안 적으면 기본값 `real` 이 되고 시연의
+            #   자동 취소가 `action_rejected` 로 막힌다 — 안전한 쪽이지만 시연이 안 돈다.
             cur.execute(
                 "INSERT INTO supplier_bookings (supplier_booking_id, tenant_id, booking_id, "
-                "supplier, supplier_ref, status, confirmed_at) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "supplier, supplier_ref, status, confirmed_at, tier) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
                 "ON CONFLICT (supplier_booking_id) DO UPDATE SET status=EXCLUDED.status, "
-                "confirmed_at=EXCLUDED.confirmed_at",
+                "confirmed_at=EXCLUDED.confirmed_at, tier=EXCLUDED.tier",
                 (stable(f"supplier:{booking_key}"), DEMO, booking_ids[booking_key],
-                 supplier, f"REF-{booking_key.upper()}", status, hours(-4)))
+                 supplier, f"REF-{booking_key.upper()}", status, hours(-4), "simulated"))
+
+        for scope_type, scope_id, deadline, table in TERMS:
+            # ★`[2026-09-23]` 취소 조건은 **구조화된 표**에서 온다. 전에는 `activity` 가
+            #   RAG 청크에서 수치를 꺼내려 해 언제나 `None` 이었다
+            #   (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md).
+            target = str(booking_ids[scope_id]) if scope_type == "booking" else scope_id
+            cur.execute(
+                "INSERT INTO cancellation_terms (term_id, tenant_id, scope_type, scope_id, "
+                "cancel_deadline_hours, penalty_by_hours, source) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                "ON CONFLICT (tenant_id, scope_type, scope_id) DO UPDATE SET "
+                "cancel_deadline_hours=EXCLUDED.cancel_deadline_hours, "
+                "penalty_by_hours=EXCLUDED.penalty_by_hours, source=EXCLUDED.source",
+                (stable(f"terms:{scope_type}:{scope_id}"), DEMO, scope_type, target,
+                 deadline, json.dumps(table),
+                 "seed:mock — 시연용이다. 실제 업체 약관이 아니다"))
 
     with get_connection() as conn, conn.cursor() as cur:
         counts = {}
-        for table in ("places", "bookings", "supplier_bookings"):
+        for table in ("places", "bookings", "supplier_bookings", "cancellation_terms"):
             cur.execute(f"SELECT count(*) FROM {table} WHERE tenant_id=%s", (DEMO,))
             counts[table] = cur.fetchone()[0]
         # ★대조 대상이 실제로 어긋나 있는지 **세어서** 확인한다. 없으면

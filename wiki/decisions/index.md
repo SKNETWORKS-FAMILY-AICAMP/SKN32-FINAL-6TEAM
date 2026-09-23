@@ -9,6 +9,8 @@ domain_note: 결정 목록이다. 개별 결정의 도메인은 각 문서가 �
 
 # Decisions
 
+- [D-019 여행 밀도 관측 경고](D-019-travel-density.md) — 2026-09-22 구현. 수치는 추정 정책이며 거절·자동 삭제 전환은 미확정.
+
 **왜 그렇게 했는가**를 남기는 곳이다.
 
 문서가 없으면 나중에 누군가 코드만 보고 "왜 이렇게 했지, 고쳐야겠다" 하면서 되돌린다. 특히 에이전트가 그런다. 그래서 **기각한 대안을 함께 적는다.**
@@ -37,6 +39,7 @@ domain_note: 결정 목록이다. 개별 결정의 도메인은 각 문서가 �
 | [D-007](D-007-central-config-store.md) | 중앙 설정 저장소 (direct/central 2모드) | draft | Composer·배포 |
 | [D-008](D-008-review-spam-out-of-scope.md) | 가짜 리뷰 분류는 제품 기능으로 안 낸다 | draft | VOC·데이터 |
 | [D-009](D-009-recommendation-scope.md) | 추천 기능은 vision 으로 미룬다 | draft | 제품 범위 |
+| [D-018](D-018-decision15-stop-paths.md) | **결정 15 의 「서버를 끈다」는 세 층** — 조립·실행·배치 | draft | 여행 런타임·문서 |
 
 ## 결정 문서 골격
 

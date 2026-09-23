@@ -30,6 +30,7 @@ import asyncio
 import pytest
 
 from app.composition import build_registry
+from app.core.context import PolicyChunk
 from app.core.contracts import ContextPack, TeamTask
 from app.modules.travel_ops.verification_policy import TRAVEL_OPS_POLICY
 
@@ -46,8 +47,14 @@ _TOOL_VALUES: dict[str, Any] = {
     "read.booking": {"booking_id": "b-1", "booking_no": "BK-1", "kind": "activity",
                      "status": "confirmed", "starts_at": _SOON, "party_size": 2,
                      "capacity": 4, "amount_cents": 100_000, "locked": False},
-    "read.policy": [{"cancel_deadline_hours": 48, "penalty_rate": 0.2,
-                     "change_deadline_hours": 24}],
+    # ★`[2026-09-23]` `read.policy` 는 **문장 근거**만 댄다 — 실제 모양(`PolicyChunk`)으로
+    #   바꿨다. 수치는 `read.booking_terms` 가 댄다
+    #   (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md).
+    "read.policy": [PolicyChunk(document_id="t_doc_01", chunk_no=1, scope="travel_activity",
+                                score=0.7, content="취소·환급은 업체 조건을 따른다.")],
+    "read.booking_terms": {"booking_id": "b-1", "matched_scope": "supplier",
+                           "cancel_deadline_hours": 48, "penalty_by_hours": {"48": 0.2},
+                           "source": "test:fixture", "observed_at": _SOON},
     "read.place": {"place_id": "p-1", "name": "장소", "weather_sensitive": False,
                    "confirmed_at": _SOON, "open_at_slot": True,
                    "dietary": [], "dietary_absent": []},

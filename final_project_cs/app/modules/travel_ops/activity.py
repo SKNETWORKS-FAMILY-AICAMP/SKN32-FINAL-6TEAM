@@ -40,13 +40,29 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         accepted_case_types=["activity"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 규정은 `read.policy` 도구로 **직접** 읽고(없으면 모름),
         #   일정 관리는 실시간 사실로 판단한다. 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다.
-        required_context=["case_state", "db_facts", "history"],
-        allowed_tools=["read.booking", "read.policy", "read.place", "read.disruptions", *ITINERARY_TOOLS],
-        knowledge_scope=["activity", "cancellation", "refund", "weather"],
+        # ★`[2026-09-22]` **되돌렸다.** 그때 0건이던 까닭은 코퍼스가 쇼핑몰 25문서뿐이고 여행 문서가
+        #   0건이었기 때문이다(`knowledge/travel/` 12문서·130청크로 채웠다). 이제 아래 scope 에
+        #   문서가 있어 검색이 0건으로 떨어지지 않는다. `policy` 를 선언해야 Controller 가 RAG 를
+        #   돌고(`app/application/controller.py:134`) 그 결과가 ContextPack·Evidence 에 실린다 —
+        #   「근거 없는 문장 금지」(CLAUDE.md §0.1)를 지키려면 근거가 실제로 실려야 한다.
+        required_context=["case_state", "policy", "db_facts", "history"],
+        # ★일정 관리만 면제한다 — 예보·운행·영업 같은 **실시간 사실**로 판단하는 일이라
+        #   정책 검색 결과에 막히면 안 된다(감시 루프가 여는 Case 가 전부 사람에게 간다).
+        policy_optional_capabilities=["activity.itinerary"],
+        # ★`[2026-09-23]` `read.booking_terms` 를 더했다 — **수치는 이 도구가** 댄다.
+        #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
+        #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
+        allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
+                       "read.disruptions", *ITINERARY_TOOLS],
+        # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
+        #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
+        #   쇼핑몰 환불 문서를 근거로 집어 왔다. 이름이 겹치지 않게 `travel_` 을 붙이고
+        #   겹침 0건을 `scripts/check_corpus.py` 검사 9 가 센다.
+        knowledge_scope=["travel_activity", "travel_weather", "travel_cancellation", "travel_access"],
         # ★대안 후보마다 재점검한다(도구 1회씩) — 6 으로는 후보 셋에서 예산이 끝난다.
         max_steps=12,
         active=True,
-        implementation_revision="2026-09-17",
+        implementation_revision="2026-09-22",
         default_capability="activity.check_feasible",
     )
 
@@ -143,28 +159,45 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._unknown(task, "예약 시각", evidence)
 
         if task.capability == "activity.check_cancelable":
-            return self._check_cancelable(task, booking, policy, remaining, evidence)
+            # ★수치는 규정 문장이 아니라 **이 예약의 조건**에서 온다(마이그레이션 023).
+            terms = self._read(task, "read.booking_terms",
+                               {"booking_id": booking.get("booking_id")}, seen)
+            evidence = self._evidence(task, source_id="read.booking_terms",
+                                      claim="이 예약의 취소 조건", value=terms, base=evidence)
+            return self._check_cancelable(task, booking, terms, remaining, evidence)
         if task.capability == "activity.check_feasible":
             return self._check_feasible(task, booking, policy, remaining, evidence, seen)
         return self._propose_change(task, booking, evidence)
 
     # ── ① 검증 — 계산으로만 ────────────────────────────────────
-    def _check_cancelable(self, task: TeamTask, booking: dict, policy: Any,
+    def _check_cancelable(self, task: TeamTask, booking: dict, terms: Any,
                           remaining: float, evidence: list) -> TeamResult:
-        deadline = self._policy_hours(policy, "cancel_deadline_hours")
+        deadline = self._terms_hours(terms, "cancel_deadline_hours")
         if deadline is None:
             return self._unknown(task, "취소 기한", evidence)
 
         if remaining < deadline:
+            # ★`[2026-09-23 실측]` 두 값이 같은 자리에서 반올림되면 답변이 **자기모순으로
+            #   보인다** — 「6시간 전까지 취소할 수 있는데 지금은 6.0시간 남았습니다」가
+            #   실제로 나왔다(demo BK-GOLF-LATE, 기한 6시간 · 남은 5.98시간). 고객은 이걸
+            #   읽고 「그럼 되는 거 아닌가」 하고 다시 묻는다. 겨우 넘긴 경우는 **분으로** 말한다.
+            late_minutes = (deadline - remaining) * 60
+            if round(remaining, 1) >= round(deadline, 1):
+                how = (f"규정상 시작 {deadline:g}시간 전까지 취소할 수 있는데 "
+                       f"{late_minutes:.0f}분 차이로 지났습니다.")
+            else:
+                how = (f"규정상 시작 {deadline:g}시간 전까지 취소할 수 있는데 "
+                       f"지금은 {remaining:.1f}시간 남았습니다.")
             return self._result(
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
-                answer=f"취소 기한이 지났습니다. 규정상 시작 {deadline:g}시간 전까지 "
-                       f"취소할 수 있는데 지금은 {remaining:.1f}시간 남았습니다.",
+                answer=f"취소 기한이 지났습니다. {how}",
                 decisions=[{"cancelable": False, "hours_remaining": round(remaining, 1),
-                            "deadline_hours": deadline}])
+                            "deadline_hours": deadline,
+                            # ★분자/분모를 남긴다 — 「얼마나 늦었나」가 재문의의 첫 질문이다
+                            "late_by_minutes": round(late_minutes)}])
 
-        penalty = self._penalty_rate(policy, remaining)
+        penalty = self._penalty_rate(terms, remaining)
         if penalty is None:
             # ★위약금율을 모르면 **금액을 만들지 않는다.** 취소 가능 여부만 말한다.
             return self._result(
@@ -342,32 +375,58 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             action_proposals=[proposal],
             decisions=[{"proposed": "activity.change", **(decisions or {})}])
 
-    # ── 규정 읽기 ──────────────────────────────────────────────
-    @staticmethod
-    def _policy_hours(policy: Any, key: str) -> float | None:
-        for chunk in policy if isinstance(policy, list) else []:
-            if isinstance(chunk, dict) and chunk.get(key) is not None:
-                try:
-                    return float(chunk[key])
-                except (TypeError, ValueError):
-                    return None
-        return None
+    # ── 취소 조건 읽기 ────────────────────────────────────────
+    #
+    # ★★`[2026-09-23]` **이 둘은 전에 언제나 `None` 을 냈다.** `read.policy` 가 주는
+    #   `PolicyChunk` 를 `isinstance(chunk, dict)` 로 걸렀기 때문이다 — 그 검사가 항상
+    #   거짓이라 어떤 코퍼스를 넣어도 취소 기한·위약금율이 안 나왔고, 제품이 약속한
+    #   「지금 취소하면 얼마인가」가 한 번도 답해진 적이 없다. 이제 **구조화된 조건**
+    #   (`read.booking_terms` · 마이그레이션 023)을 읽는다.
+    #   기록 — `wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`
+    #
+    # ★**청크 목록을 받으면 그건 잘못 부른 것이다.** 조용히 `None` 을 내면 그 오진이
+    #   또 몇 달 간다 — 모양이 다르면 그렇게 말한다(아래 `_terms_dict`).
 
     @staticmethod
-    def _penalty_rate(policy: Any, remaining: float) -> float | None:
-        """남은 시간 구간별 위약금율. 규정에 구간이 없으면 `None`(모름)."""
+    def _terms_dict(terms: Any) -> dict[str, Any] | None:
+        """구조화된 취소 조건만 받는다. `None`(모름)과 **잘못된 모양**을 가른다."""
+        if terms is None:
+            return None
+        if isinstance(terms, dict):
+            return terms
+        raise TypeError(
+            "취소 조건은 `read.booking_terms` 가 주는 dict 여야 한다 — 받은 것: "
+            f"{type(terms).__name__}. RAG 청크에서 수치를 꺼내려던 옛 경로다"
+            " (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md)")
+
+    @classmethod
+    def _terms_hours(cls, terms: Any, key: str) -> float | None:
+        found = cls._terms_dict(terms)
+        if found is None or found.get(key) is None:
+            return None
+        try:
+            return float(found[key])
+        except (TypeError, ValueError):
+            return None
+
+    @classmethod
+    def _penalty_rate(cls, terms: Any, remaining: float) -> float | None:
+        """남은 시간 구간별 위약금율. 조건에 구간이 없으면 `None`(모름).
+
+        ★표는 「남은 시간이 이 값보다 적으면 이 율」이다. 여러 구간에 걸리면 **가장 센
+          율**을 고른다 — 고객에게 유리한 쪽으로 틀리면 나중에 더 받아야 하고, 그건
+          우리가 말을 바꾸는 것이 된다.
+        """
+        found = cls._terms_dict(terms)
+        table = (found or {}).get("penalty_by_hours")
+        if not isinstance(table, dict):
+            return None
         best: float | None = None
-        for chunk in policy if isinstance(policy, list) else []:
-            if not isinstance(chunk, dict):
+        for hours, rate in table.items():
+            try:
+                if remaining < float(hours):
+                    value = float(rate)
+                    best = value if best is None else max(best, value)
+            except (TypeError, ValueError):
                 continue
-            table = chunk.get("penalty_by_hours")
-            if not isinstance(table, dict):
-                continue
-            for hours, rate in table.items():
-                try:
-                    if remaining < float(hours):
-                        value = float(rate)
-                        best = value if best is None else max(best, value)
-                except (TypeError, ValueError):
-                    continue
         return best

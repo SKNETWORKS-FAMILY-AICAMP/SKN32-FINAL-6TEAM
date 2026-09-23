@@ -139,3 +139,20 @@ def test_without_a_route_source_where_and_when_still_go(world):
     assert len(outcome.sent) == 1 and outcome.no_route == 1
     text = _notices(world)[0][1]["text"]
     assert "10:50 출발" in text and "가는 방법" not in text and "모름" not in text
+
+
+# ── 변경 통지에도 링크가 붙는다 (2026-09-20) ────────────────────
+def test_a_change_notice_carries_the_plan_link(world):
+    """★상태의 정본은 링크다(v11 §6-A). 전에는 안내(②·③)에만 붙고 변경 통지(①)에는 없었다."""
+    from app.modules.travel_ops.plan_link import plan_url
+    from app.modules.travel_ops.trip_watch import TripWatcher
+
+    clock = world["clock"]
+    check, route_events = _sources(clock)
+    clock.now = _at("09:00")
+    watcher = TripWatcher(store=world["store"], check=check, connection_factory=get_connection, clock=clock,
+                          route_events=route_events)
+    assert len(watcher.tick().adjusted) == 1
+    key, payload = _notices(world)[0]
+    assert key == "v2" and payload["plan_url"] == plan_url(world["tenant"], world["trip_id"])
+    assert render(payload).endswith(payload["plan_url"])

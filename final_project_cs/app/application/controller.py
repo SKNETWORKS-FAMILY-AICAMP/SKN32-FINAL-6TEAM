@@ -29,6 +29,18 @@ class ControllerError(RuntimeError):
 logger = logging.getLogger(__name__)
 
 
+def _plain(value: Any) -> Any:
+    """DB(jsonb)에 실릴 모양으로 — UUID·시각이 문자열이 된 값끼리 견준다."""
+    import json
+
+    return json.loads(json.dumps(value, ensure_ascii=False, default=str))
+
+#: `run_case` 가 Team 을 부를 수 있는 상태. 그 밖(끝난 Case · 사람·고객·바깥을 기다리는 Case)은
+#: 부르지 않고 그대로 돌려준다 — 기다림을 푸는 것은 승인 API 와 `resume()` 이다.
+RUNNABLE_STATUSES = frozenset({CaseStatus.NEW, CaseStatus.CLASSIFYING, CaseStatus.ROUTING,
+                               CaseStatus.RUNNING, CaseStatus.RESUMING})
+
+
 class Controller:
     def __init__(self, registry: TeamRegistry, *, context_broker: ContextBroker | None = None,
                  policy_search: Callable[..., list[Any]] | None = None,
@@ -121,7 +133,14 @@ class Controller:
         # ★`[결정 2026-09-17]` Team 이 정책 근거를 선언했을 때만 RAG 를 돈다.
         #   전에는 `required_context` 가 선언만 되고 읽히지 않아, 정책 문서가 필요 없는
         #   일(실시간 사실로 판단하는 일정 조정)도 결과 0건이면 degraded → 전부 사람에게 갔다.
-        policy_required = "policy" in (entry.manifest.required_context or [])
+        # ★`[2026-09-22]` 요구를 **capability 단위**로 좁혔다. Team 단위로는
+        #   「취소 판정은 규정이 필요하고 일정 관리는 아니다」를 나눌 수 없어서, 09-17 에는
+        #   Team 전체에서 `policy` 를 빼는 쪽으로 풀었고 그 바람에 취소·성립 판정도
+        #   근거 없이 돌았다. 이제 Team 이 면제 목록을 선언한다
+        #   (`TeamManifest.policy_optional_capabilities` · wiki `teams/team-contract/fields.md`).
+        capability = self._capability(case)
+        policy_required = ("policy" in (entry.manifest.required_context or [])
+                           and capability not in (entry.manifest.policy_optional_capabilities or []))
         if policy_required:
             policy, retrieval_failed = self._policy(case["tenant_id"], case["subject"], entry.manifest.knowledge_scope)
         else:
@@ -137,7 +156,9 @@ class Controller:
                                policy_required=policy_required)
         context = self.context_broker.build(inputs)
         return TeamTask(task_id=uuid4(), run_id=run_id, case_id=case["case_id"], team_id=entry.manifest.team_id,
-                        capability=self._capability(case), case_version=case["version"], input_text=case["subject"], context=context,
+                        # ★위에서 이미 고른 값을 쓴다 — 두 번 고르면 정책 판정에 쓴 capability 와
+                        #   Team 이 실제로 받는 capability 가 갈릴 수 있다.
+                        capability=capability, case_version=case["version"], input_text=case["subject"], context=context,
                         allowed_tools=entry.manifest.allowed_tools, deadline_at=datetime.now(UTC) + timedelta(seconds=get_guardrails().get("reliability.team_timeout_seconds")),
                         resume=resume, resume_node=resume_node)
 
@@ -204,6 +225,12 @@ class Controller:
             case = self.repository.get_case(conn, tenant_id=tenant_id, case_id=case_id)
             if case is None:
                 raise ControllerError("case not found")
+            if case["status"] not in RUNNABLE_STATUSES:
+                # ★`[2026-09-20]` 끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다. 전에는
+                #   불러 놓고 결과를 쓸 때 상태기계가 `InvalidTransition` 으로 막았다 — 결과는 같지만
+                #   LLM·도구를 한 번 더 쓰고, 실패 사유가 「전이 오류」로 보여 원인을 가린다.
+                return {"case_id": str(case_id), "status": str(case["status"]), "version": case["version"],
+                        "skipped": "not_runnable"}
 
             # ── A. 시작·라우팅·재개 ────────────────────────────────────────────
             with conn.transaction():
@@ -458,6 +485,15 @@ class Controller:
                     tenant_id=case["tenant_id"], request_id=request_id_for_case(case),
                     action_type=proposal.action_type, business_subject=subject,
                 )
+                # ★`[2026-09-20]` 적용기가 없어 키의 대상이 Case id 인 제안은 **둘째가 조용히 합쳐진다**
+                #   (`ON CONFLICT … DO UPDATE` 가 같은 행을 돌려준다). 합치기 전에 인자가 같은지 보고,
+                #   다르면 사람에게 넘긴다 — 제안 하나가 말없이 사라지지 않게. 같은 인자면 그대로 멱등이다.
+                existing = self.repository.find_action_request(conn, tenant_id=case["tenant_id"],
+                                                               idempotency_key=server_key)
+                if existing is not None and existing.get("arguments") != _plain(proposal.arguments):
+                    return self._escalation(
+                        "action_key_collision",
+                        f"{proposal.action_type}: 같은 멱등 키에 다른 인자의 제안이 이미 있다")
                 action_ids.append(str(self.repository.create_action_request(conn, tenant_id=case["tenant_id"], case_id=case["case_id"], action_type=proposal.action_type,
                     arguments=proposal.arguments, idempotency_key=server_key, status="pending_approval")))
             # ★`[2026-09-18]` 무엇을 기다리는지 적는다. 전에는 안 적어 승인 뒤 재개가 기본값
@@ -522,6 +558,13 @@ class Controller:
                         conn, tenant_id=case["tenant_id"], case_id=case["case_id"],
                         action_type=proposal.action_type, arguments=proposal.arguments,
                         idempotency_key=key, status="succeeded", provider_ref=outcome.result_ref)
+                    # ★`[2026-09-22]` 실행 장부(v11 §12 DoD-20). 적을 것이 하나도 없으면 UPDATE 를
+                    #   내지 않는다 — 장부 칸을 안 쓰는 적용기(일정 조정)의 경로를 건드리지 않는다.
+                    ledger = outcome.ledger()
+                    if any(value is not None for value in ledger.values()):
+                        self.repository.set_action_status(
+                            conn, tenant_id=case["tenant_id"], action_id=action_id,
+                            status="succeeded", ledger=ledger)
                     applied.append(({"action_id": str(action_id), "action_type": proposal.action_type,
                                      "result_ref": outcome.result_ref, "summary": outcome.summary},
                                     list(outcome.outbox)))
@@ -558,9 +601,13 @@ class Controller:
                     except (TimeoutError, ConnectionError) as exc:
                         failure, failed_action = ("action_provider_unknown", str(exc), "unknown"), action
                         raise
+                    # ★`[2026-09-22]` 실행 장부를 같은 UPDATE 로 적는다(v11 §12 DoD-20) —
+                    #   무엇을(action_type·인자)·왜(reason)·얼마에(amount_cents·출처)·되돌림 기한.
+                    #   코어는 이 값들의 뜻을 모른다. 적용기가 채우고 여기서 그대로 싣는다.
                     self.repository.set_action_status(conn, tenant_id=case["tenant_id"],
                                                       action_id=action["action_id"], status="succeeded",
-                                                      provider_ref=outcome.result_ref)
+                                                      provider_ref=outcome.result_ref,
+                                                      ledger=outcome.ledger())
                     applied.append({"action_id": str(action["action_id"]), "action_type": action["action_type"],
                                     "result_ref": outcome.result_ref, "summary": outcome.summary})
                     outbox.extend(outcome.outbox)

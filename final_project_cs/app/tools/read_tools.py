@@ -132,6 +132,8 @@ class ReadToolbox:
     def _travel_tools(self) -> dict[str, Any]:
         return {
             "read.booking":  self.booking,
+            # ★수치(취소 기한·위약금율)는 여기서 온다. `read.policy` 는 문장 근거만 댄다
+            "read.booking_terms": self.booking_terms,
             "read.disruptions": self.disruptions,
             "read.weather_warning": self.weather_warning,
             "read.travel_advisory": self.travel_advisory,
@@ -176,6 +178,57 @@ class ReadToolbox:
                              self._BOOKING_COLUMNS)
         return self._one(select + " ORDER BY starts_at ASC LIMIT 1",
                          (scope.tenant_id, scope.customer_id), self._BOOKING_COLUMNS)
+
+    #: 취소 조건을 찾는 순서 — 좁은 것부터. v11 결정 15 「값마다 대체 소스를 둔다」를
+    #: 데이터로 구현한 것이다(마이그레이션 023).
+    _TERM_SCOPES = ("booking", "supplier", "kind")
+    _TERM_COLUMNS = ("scope_type", "scope_id", "cancel_deadline_hours",
+                     "penalty_by_hours", "source", "observed_at")
+
+    def booking_terms(self, scope: ToolContext, *, booking_id: str | None = None,
+                      **_: Any) -> dict[str, Any] | None:
+        """이 예약의 **취소 조건**. 없으면 `None`(모름). `[2026-09-23]`
+
+        ★★**왜 도구가 따로 있나.** 전에는 `activity` 가 취소 기한·위약금율을 `read.policy`
+          가 준 RAG 청크에서 꺼내려 했다. 청크는 `PolicyChunk` 이고 코드는 `dict` 를 보고
+          있어서 **두 값이 언제나 `None`** 이었다 — 어떤 코퍼스를 넣어도 그랬다
+          (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
+          이제 **수치는 이 도구가, 문장 근거는 `read.policy` 가** 댄다.
+
+        ★찾는 순서는 예약 → 공급자 → 종류다. 좁은 것이 이긴다 — 이 예약에 따로 적힌
+          조건이 있으면 공급자 기본값을 덮는다. 셋 다 없으면 `None` 이고,
+          **모름이면 부르는 쪽이 금액을 만들지 않는다.**
+
+        ★`matched_scope` 를 같이 돌려준다. 「이 예약의 조건」인지 「종류 기본값」인지를
+          받는 쪽이 알아야 답변의 확신도가 달라진다. `source` 는 어디서 온 값인가다 —
+          시연용 Mock 과 실제 업체 약관이 섞이면 고객에게 지어낸 금액을 말하게 된다.
+        """
+        booking = self.booking(scope, booking_id=booking_id)
+        if booking is None:
+            return None
+        keys = {"booking": str(booking.get("booking_id")), "kind": booking.get("kind")}
+        supplier = self._one(
+            "SELECT supplier FROM supplier_bookings WHERE tenant_id=%s AND booking_id=%s "
+            "ORDER BY confirmed_at DESC NULLS LAST LIMIT 1",
+            (scope.tenant_id, booking.get("booking_id")), ("supplier",))
+        if supplier is not None:
+            keys["supplier"] = supplier["supplier"]
+        for scope_type in self._TERM_SCOPES:
+            scope_id = keys.get(scope_type)
+            if not scope_id:
+                continue
+            found = self._one(
+                "SELECT scope_type, scope_id, cancel_deadline_hours, penalty_by_hours, "
+                "source, observed_at FROM cancellation_terms "
+                "WHERE tenant_id=%s AND scope_type=%s AND scope_id=%s",
+                (scope.tenant_id, scope_type, str(scope_id)), self._TERM_COLUMNS)
+            if found is not None:
+                return {"booking_id": str(booking.get("booking_id")),
+                        "matched_scope": found["scope_type"],
+                        "cancel_deadline_hours": float(found["cancel_deadline_hours"]),
+                        "penalty_by_hours": found["penalty_by_hours"] or {},
+                        "source": found["source"], "observed_at": found["observed_at"]}
+        return None
 
     def place(self, scope: ToolContext, *, place_id: str | None = None,
               **_: Any) -> dict[str, Any] | None:

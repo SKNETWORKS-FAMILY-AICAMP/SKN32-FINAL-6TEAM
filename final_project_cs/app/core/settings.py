@@ -62,6 +62,23 @@ class Settings(BaseSettings):
     #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
     scenario_mode_enabled: bool = False
     ollama_model: str = "gemma4:12b"
+    #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
+    #:  ★`[2026-09-22]` 크레딧 없이 돌릴 길을 **명시적으로** 둔다. 조용한 폴백이 아니다 —
+    #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
+    #:  ★모델을 바꾸면 차원이 바뀐다(OpenAI 1536 · bge-m3 1024). 그래서 **칸을 따로** 두고
+    #:    둘을 공존시킨다(CLAUDE.md §1 「덮어쓰지 않고 공존시킨다」).
+    #: 운영 화면(`/ui/delegations`)에서 **위임을 주고 거둘 수 있나**. 기본은 꺼짐.
+    #:  ★`[2026-09-22]` `/ui/*` 에는 **로그인이 없다**. 2026-08-18 에 같은 이유로 Composer 화면을
+    #:    이 앱에서 **삭제**했다(D-CS-001) — 인증 없이 닿는 화면에 권한 있는 조작을 두지 않는다.
+    #:    위임은 「한 건 승인」이 아니라 **서 있는 권한**이라 그 기준이 더 강하게 걸린다.
+    #:    화면은 기본적으로 **읽기 전용**이고, 주고 거두는 것은 scope 가 걸린 REST 로 한다.
+    #: 상시 작업이 연속 실패했을 때 운영자에게 알릴 곳. 비우면 `discord_webhook_url` 을 쓴다.
+    #:  ★고객 통지와 **다른 곳으로 보낼 수 있게** 자리를 나눠 둔다 — 운영 알림이 고객 채널로 가면
+    #:    고객이 우리 장애를 본다. 실제 주소는 `.env` 에만 적는다.
+    ops_alert_webhook_url: str = ""
+    ui_delegation_write_enabled: bool = False
+    embedding_provider: str = "openai"
+    ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
@@ -139,6 +156,11 @@ class Settings(BaseSettings):
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
+    #: 알림 문구틀의 언어별 생성 캐시 파일(저장소 기준 상대 경로, `var/` 는 커밋되지 않는다).
+    #:  ★배달 루프는 `--once` 로도 돌아 프로세스가 매번 죽는다 — 파일로 남겨야 다음 실행이
+    #:  이어 쓴다. 담기는 것은 **틀**뿐이고 시각·장소·금액 같은 값은 들어가지 않는다
+    #:  (`app/infrastructure/notify/phrase.py`). 비우면 그 프로세스 안에서만 재사용한다.
+    notice_phrasebook_path: str = "var/notice_phrasebook.json"
     #: 여행계획서 링크의 앞부분(v11 §1 접점 ②). 알림에 **누를 수 있는 주소**로 싣는다.
     #:  ★비밀이 아니다 — 링크의 보호는 여행별 토큰(HMAC)이 맡는다.
     #:  기본값은 로컬 개발 서버(`.claude/launch.json` 의 `acop-cs-ui`, 8042).

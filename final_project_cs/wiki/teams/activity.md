@@ -168,19 +168,32 @@ capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 �
                          "activity.propose_change",     # 대안을 제안한다 (승인 대기)
                          "activity.itinerary"]          # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["activity"]                    # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
-allowed_tools         = ["read.booking", "read.policy", "read.place", "read.disruptions",
+required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
+policy_optional_capabilities = ["activity.itinerary"]                      # [2026-09-22] 일정 관리만 면제
+allowed_tools         = ["read.booking", "read.booking_terms",  # [2026-09-23] 수치는 여기서 온다
+                         "read.policy",                        #   문장 근거만 댄다
+                         "read.place", "read.disruptions",
                          "read.itinerary", "read.itinerary_version", "read.place_catalog",
                          "read.customer_report"]
-knowledge_scope       = ["activity", "cancellation", "refund", "weather"]
+knowledge_scope       = ["travel_activity", "travel_weather",            # [2026-09-22] 여행 scope 로 교체
+                         "travel_cancellation", "travel_access"]           #   앞 값의 `refund` 는 쇼핑몰 scope 였다
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "activity.check_feasible"
 ```
+
+★`[2026-09-23]` **취소 기한·위약금율은 `read.booking_terms` 가 댄다** — `read.policy` 가 아니다.
+전에는 RAG 청크에서 꺼내려 해서 두 값이 **언제나 `None`** 이었고, 「지금 취소하면 얼마인가」가
+한 번도 답해진 적이 없다. 수치는 표 `cancellation_terms`(예약 → 공급자 → 종류 순으로 찾는다),
+문장 근거는 그대로 RAG. 결정 [D-CS-006](../decisions/D-CS-006-cancellation-terms-are-structured.md) ·
+실측 [2026-09-23_취소조건_구조화_실측.md](../records/evidence/2026-09-23_취소조건_구조화_실측.md).
+
 
 ### `[2026-09-17]` Case 버전의 여행 일정 관리 — `activity.itinerary`
 
 여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)면 `select_capability(intent, input_text, state)` 가 고른다. **감시 Case**(`trigger_source=schedule`)는 그 항목을 `read.disruptions` 로 다시 점검해 `disrupted` 면 대안 하나를 제안하고(액-02), **품절 문의**는 동선 위 매장을 답하며 일정은 안 바꾼다 — 재고는 `[미확인]`(액-08). **재요청**(다른 안 · 되돌리기)도 받는다.
 계산은 시나리오용 버전과 같은 `itinerary_changes.py`, 쓰기는 `itinerary.apply` 제안 → 코어가 Case 완료와 한 트랜잭션으로 적용·통지([../actions/approval.md](../actions/approval.md)). `policy` 를 `required_context` 에서 뺐고(정책 0건이 degraded 를 만든다) `max_steps` 는 후보 재점검 때문에 12. 대조 시험 `tests/scenario/test_case_version_day.py`.
+
+★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 
@@ -226,6 +239,8 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 `[실측]` 보낼 자리는 이미 있다 — 같은 파일의 `_unknown()` 이 "값이 없는 게 아니라 모르는 상태"를 escalate 로 보낸다.
 
 `[정정 2026-09-10]` 이는 현재 코드의 관찰이며, 필요한 값을 모를 때의 현행 사양은 대체 소스로 값을 내고 대체까지 실패하면 서버를 끄되 근거 없는 문장은 만들지 않는 것이다(v11 §0-4 결정 15).
+
+`[정정 2026-09-21]` 그 「서버를 끈다」가 어디서 멈추는가는 층마다 다르다 — 기동 조립 실패는 기동 거부, Case 실행 중 실패는 서버를 내리지 않고 사람 인계(`fatal_source_failure`), 배치 스위퍼는 exit 1. 코드가 이미 그렇게 동작한다([D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md)). 아래 escalate 는 그 층의 구현이며 미구현 표시가 아니다.
 
 **코드 수정은 담당 세션 몫이다.** 이 문서는 어긋남만 적는다.
 

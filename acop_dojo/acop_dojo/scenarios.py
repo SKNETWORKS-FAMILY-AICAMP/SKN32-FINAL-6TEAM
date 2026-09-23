@@ -270,3 +270,19 @@ SCENARIOS["fallback-chain-says-so-v1"] = Scenario(
     ),
     needs_db=False,
 )
+
+# ★2026-09-21 여행 Team 트랙의 첫 시나리오. 커머스 Team 이 나가고 처음으로 도메인 Team 을 다시 다룬다.
+#  고른 기준 — DB·네트워크를 안 쓰고, 실제로 났던 결함의 회귀 테스트다.
+SCENARIOS["travel-team-keeps-every-evidence-v1"] = Scenario(
+    scenario_id="travel-team-keeps-every-evidence-v1",
+    title="도구를 여럿 부른 Team 은 근거를 전부 남긴다",
+    nodeid=(
+        "tests/unit/travel/test_evidence_accumulates.py"
+        "::test_activity_keeps_every_source_it_read"
+    ),
+    objective=(
+        "근거 없는 문장은 답변에 넣지 않는다 — 그러려면 읽은 것마다 근거가 쌓여야 한다. "
+        "2026-09-09 에는 두 번째 도구 호출이 첫 번째 근거를 덮어써, 넷을 읽은 Case 의 근거가 하나만 남았다."
+    ),
+    needs_db=False,
+)

@@ -59,6 +59,8 @@ domain: travel
 
 ~~v11 §4-D의 세 갈래 — 계산으로 판정 가능 / 확인 수준을 높일 수 있음 / 모름 — 이 Team은 **가운데와 오른쪽이 섞이는 자리**다.~~ `[정정 2026-09-10]` 필요한 값마다 대체 소스를 두어 1차 실패 시 대체로 값을 내고 대체까지 실패하면 치명 결함으로 서버를 끄며, 후보의 값이 불확실해도 하나를 골라 선택지를 나열하지 않되 근거 없는 문장 금지는 그대로 지킨다(v11 §0-4 결정 15; 앞 판 §4-D·DoD-5 대체). 아래 `_unknown()`의 escalate는 현재 코드 관찰이며 이 현행 사양을 구현한 해결책이 아니다.
 
+`[정정 2026-09-21]` 그 「서버를 끈다」가 어디서 멈추는가는 층마다 다르다 — 기동 조립 실패는 기동 거부, Case 실행 중 실패는 서버를 내리지 않고 사람 인계(`fatal_source_failure`), 배치 스위퍼는 exit 1. 코드가 이미 그렇게 동작한다([D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md)). 아래 escalate 는 그 층의 구현이며 미구현 표시가 아니다.
+
 ### ② 감시 소스
 
 | 소스 | 무엇을 본다 | 상태 |
@@ -116,11 +118,13 @@ Dining: "19시 → 20시" 또는 "다른 가게" 후보를 낸다
 capabilities          = ["dining.check_open", "dining.check_conditions",
                          "dining.itinerary"]           # [2026-09-17] 여행 일정 관리
 accepted_case_types   = ["dining"]                   # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
+policy_optional_capabilities = ["dining.itinerary"]                        # [2026-09-22] 일정 관리만 면제
 allowed_tools         = ["read.place", "read.policy", "read.booking",
                          "read.itinerary", "read.itinerary_version", "read.place_catalog",
                          "read.customer_report"]
-knowledge_scope       = ["dining", "opening_hours", "dietary"]
+knowledge_scope       = ["travel_dining", "travel_cancellation",         # [2026-09-22] 여행 scope 로 교체
+                         "travel_access"]                                  #   `opening_hours`·`dietary` 는 문서 0건이라 뺐다
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "dining.check_open"
 ```
@@ -136,6 +140,10 @@ default_capability    = "dining.check_open"
 - 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
 - `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
+
+★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
+
+★**「이 집이 할랄인가」는 여전히 RAG 가 아니다.** 그건 **사실**이라 `read.place` 가 대고, 코퍼스에는 「무엇이 확인되면 가능하다고 말해도 되나」만 들어 있다.
 - 하루 전체 대조: `tests/scenario/test_case_version_day.py` — 같은 재생 입력에서 두 버전의 버전 수·마지막 항목·통지 문구가 같다.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.

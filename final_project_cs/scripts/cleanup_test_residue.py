@@ -51,7 +51,9 @@ BACKUP_ROOT = REPO_ROOT / "var" / "test_residue_backup"
 #:   (`test_db_integration.py:124`·`test_feedback.py:40`). 이름이 `test` 로
 #:   시작하지 않아 1차 정리에서 통째로 빠졌다 — 접두어를 코드에서 찾아 세지 않고
 #:   짐작한 탓이다(2026-09-07). 테스트가 새 접두어를 쓰기 시작하면 여기도 는다.
-PREFIXES = ("test\\_", "live\\_classifier\\_", "other\\_", "voc\\_other\\_")
+#:  ★`deleg\_` 는 DoD-18 측정 하네스(`scripts/measure_delegation_scope.py`)와 그 시험이
+#:   쓴다. 하네스는 `finally` 로 치우지만 **중단된 실행**은 남는다 — 위 주석과 같은 이유다.
+PREFIXES = ("test\\_", "live\\_classifier\\_", "other\\_", "voc\\_other\\_", "deleg\\_")
 
 #: FK 순서. ★하나라도 빠지면 트랜잭션이 통째로 롤백되어 **아무것도 안 지워진다.**
 #:  복원은 이 순서를 **거꾸로** 탄다(부모부터 넣어야 자식의 FK 가 성립한다).
@@ -78,6 +80,8 @@ DELETE_ORDER = (
     ("bookings", "tenant_id LIKE %s ESCAPE '\\'"),
     ("places", "tenant_id LIKE %s ESCAPE '\\'"),
     ("customer_cases", "tenant_id LIKE %s ESCAPE '\\'"),
+    # ★`[2026-09-22]` 위임(마이그레이션 019). `customers` 로 FK 가 있어 **그보다 먼저** 지운다.
+    ("delegations", "tenant_id LIKE %s ESCAPE '\\'"),
     ("customers", "tenant_id LIKE %s ESCAPE '\\'"),
     ("tenants", "tenant_id LIKE %s ESCAPE '\\'"),
 )

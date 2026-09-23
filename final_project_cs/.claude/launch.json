@@ -33,6 +33,18 @@
         "wiki/records/labeling"
       ],
       "port": 8071
+    },
+    {
+      "name": "acop-cs-ui-stable",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.presentation.api.app:app",
+        "--port",
+        "8042"
+      ],
+      "port": 8042
     }
   ]
 }

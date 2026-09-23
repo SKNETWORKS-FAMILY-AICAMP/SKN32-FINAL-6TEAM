@@ -19,11 +19,17 @@ def test_scopes_are_guardrail_owned():
     ★2026-09-14: `trip:read`·`trip:write` 추가(여행 일정 API). Trip 은 Case 보다
       오래 살고 쓰기가 일정 버전을 올린다 — `case:*` 와 나눈다.
 
+    ★2026-09-22: `delegation:read`·`delegation:write` 추가(위임을 주고 거두는 API).
+      `action:approve` 와 나눈다 — 승인은 **제안 한 건**에 "이 변경을 해도 된다" 이고,
+      위임은 **서 있는 권한**이라 거둘 때까지 그 고객의 모든 자동 실행이 한계 안에서
+      열린다. `composer:admin`·`ops:reload` 를 나눈 것과 같은 기준(영향 범위)이다.
+
     ★이름에서 개수를 뺐다 — scope 가 늘 때마다 함수 이름이 낡는다."""
     assert set(get_guardrails().get("security.scopes")) == {
         "case:read", "case:write", "order:read", "return:read", "action:approve", "mcp:read",
         "composer:read", "composer:validate", "composer:write", "composer:admin",
         "ops:introspect", "ops:reload", "trip:read", "trip:write",
+        "delegation:read", "delegation:write",
     }
 
 

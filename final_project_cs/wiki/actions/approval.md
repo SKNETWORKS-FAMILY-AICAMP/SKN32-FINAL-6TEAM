@@ -71,7 +71,53 @@ v11 §4-C — **업체 예약은 승인 없이 실행하지 않는다. 먼저 �
 - 적용기는 `auto_apply=False` 로 선언한다 — 승인 없이 오면 위 절의 규칙이 `action_requires_approval` 로 막는다.
 - 승인 직전 재검증은 승인 API 가 이미 한다(아래 「승인 전 재검증」). 적용기는 적용 순간 대상을 **한 번 더** 잠가 확인한다.
 - 여행: `booking.cancel` 은 **시연용 Mock 공급자**(`supplier_bookings`)와 우리 예약을 함께 `cancelled` 로, `booking.change` 는 바꿀 내용이 인자에 없어 **지어내지 않고 인계**한다(예약 `change_requested` + 바깥함 `booking.handoff`). `app/modules/travel_ops/booking_actions.py`.
-- 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름).
+- `[2026-09-22]` 그 인계 메시지에 **변경 링크**(`change_url`)가 실린다 — 고객이 바뀔 항목·대안·차액을 보고 **업체 쪽에서 직접** 진행한다(v11 §4-C · DoD-16·17). ★**링크를 만들고 여는 경로에는 승인이 없다** — 아무것도 쓰지 않기 때문이다. 승인이 필요한 것은 우리 예약을 `change_requested` 로 옮기는 기록 쪽이다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#변경-링크-2026-09-22--이-절도-명세였다가-사실이-됐다)
+- `[2026-09-22]` ★**승인이 나도 실제 공급자 원장은 안 바꾼다.** `booking.cancel` 은 `supplier_bookings.tier == 'simulated'` 일 때만 원장을 건드리고, 그 밖(기본값 `real`)이면 `ActionRejected` → 전부 되돌리고 `action_rejected` 로 사람에게 간다. **승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다**(v11 §4-C · DoD-14·15). → [../teams/booking-handoff.md](../teams/booking-handoff.md#2026-09-22-게이트가-생겼다--이-절이-명세였다가-사실이-됐다)
+- `[2026-09-22]` ★**문이 하나 더 있다 — 위임 범위.** 등급 게이트를 지나도 **금액·대상 종류·횟수·되돌림 조건**을 벗어나면 원장을 건드리지 않고 `action_rejected` 로 사람에게 간다(v11 §12 DoD-18·19). 등급이 「누구의 원장인가」라면 위임은 「얼마까지 맡겼나」다. 판정은 **적용 순간에** 하므로 승인과 적용 사이에 위임이 철회되면 그 건은 열리지 않는다. → [../teams/booking-handoff.md](../teams/booking-handoff.md#위임-범위--1번에서만-쓴다)
+- `[2026-09-22]` **적용은 장부에 넷을 적는다** — 무엇을(`action_type`·대상 id)·왜(`reason`)·얼마에(`amount_cents` + **그 금액을 어디서 읽었는지** `amount_source`)·되돌림 기한(`revert_deadline`). 마이그레이션 019 가 `action_requests` 에 만든 칸이고, **값은 적용기가 채우고 코어는 뜻을 모른다**(`AppliedAction.ledger()`). ★**모르는 금액은 비운다 — NULL 은 0 이 아니라 「확인되지 않았다」**다(인계 `booking.change` 는 차액을 모른다). DB CHECK 가 금액과 출처를 같이 채우거나 같이 비우게 한다.
+- `[2026-09-20]` **끝났거나 기다리는 중인 Case 에는 Team 을 부르지 않는다**(`RUNNABLE_STATUSES`). 전에는 되잡기 작업이 같은 Case 를 또 집으면 Team 을 한 번 더 돌린 뒤 결과를 쓸 때 상태기계가 막았다 — 결과는 같지만 모델·도구를 한 번 더 쓰고 사유가 「전이 오류」로 보였다. 기다림을 푸는 것은 승인 API 와 `resume()` 이다.
+- 시험: `tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py`(라우팅 → 승인 대기 → 승인 → 실행 · 잠긴 예약 거부 · 적용기 없는 조립은 예전 흐름 · `[2026-09-22]` 공급자 등급별 실행/거부 3건) · `tests/architecture/test_supplier_tier_gate.py`(등급 게이트, 6건) · `[2026-09-22]` `tests/integration/controller/test_delegation_scope.py`(위임 범위·철회·장부·되돌림, 13건).
+
+### 위임을 누가 주고 거두나 `[2026-09-22]`
+
+`[실측]` **운영자다.** 자리는 REST `/v1/delegations/*` 와 운영 화면 `/ui/delegations` 다
+(구현 [`app/modules/travel_ops/delegation_api.py`](../../app/modules/travel_ops/delegation_api.py) ·
+화면 `app/presentation/ui/routes.py`). **전에는 자리가 없었다** — 판정(`delegation.py`)과
+`delegations` 표(019)는 있는데 주고 거두는 경로가 없어 사람이 손으로 SQL 을 쳐야 했다.
+「위임은 언제든 철회할 수 있다」가 그동안 말뿐이었다는 뜻이다.
+
+| | |
+|---|---|
+| 권한 | `delegation:read`(보기) · `delegation:write`(주기·거두기). ★**`action:approve` 로는 못 한다** |
+| ★왜 승인 권한과 나눴나 | 승인은 **제안 한 건**에 "이 변경을 해도 된다" 이고, 위임은 **서 있는 권한**이다 — 한 번 주면 거둘 때까지 그 고객의 모든 자동 실행이 한계 안에서 열린다. 영향 범위가 다르면 scope 를 나누는 것이 이 저장소의 방식이다(`composer:admin`·`ops:reload` 가 같은 기준으로 갈라졌다) |
+| 무엇을 받나 | **누가**(`actor_id`)와 **왜**(`note`). 둘 다 필수이고 공백만 보내면 `422` — 근거 없이 위임 상태를 바꾸지 않는다 |
+| ★맡기기 전에 보여 주는 것 | 화면이 **확인 단계**를 둔다 — 열리는 한계 · 이 고객에게 이미 나간 금액 · 남은 여유 · 지금까지 주고 거둔 기록. 그 화면은 **아무것도 바꾸지 않는다**. 거두기에는 확인 단계를 두지 않는다(막는 방향이고, 한 번 더 묻는 사이에 자동 실행이 나갈 수 있다) |
+| ★거둘 것이 없으면 | `409 no_live_delegation` + 화면에 사유. **「거뒀다」고 답하지 않는다** — 200 으로 넘기면 운영자가 "눌렀으니 됐겠지" 로 간다(아래 「승인 실패가 조용히 삼켜지고 있었다」와 같은 형태다) |
+| ★이력은 덮이지 않는다 | 주기·거두기가 `delegation_events`(마이그레이션 [021](../../app/infrastructure/db/migrations/021_delegation_audit_trail.sql))에 **덧붙는다**. `delegations` 한 행은 다시 주기가 `revoked_at`·`revoked_by` 를 NULL 로 덮으므로, 021 이 없으면 **「누가 언제 거뒀나」가 사라진다** — 019 자신이 지키라고 적어 둔 것이 다시 주는 순간 깨지고 있었다 |
+| 한계 값은 화면에서 못 바꾼다 | `config/guardrails.yaml` `travel.delegation` 이 정본이다(RULE.md §3.1). 화면은 읽어서 보일 뿐이다 |
+| 거둔 뒤 | 판정은 **적용 순간**에 하므로 승인 뒤·재개 전에 거둬도 그 건은 열리지 않는다. 이미 나간 건은 **되돌림 경로**로만 무른다(아래 절) |
+
+★**이 화면에는 로그인이 없다** — `/ui/*` 전체가 그렇고 승인 화면도 같다(이 앱은 인증 없이
+열린다). 위임을 주는 버튼이 그 위에 올라갔으므로 **승인 화면과 같은 크기의 구멍**이다.
+→ [../records/reports/2026-09-22_1720_위임_주고거두는_화면과_API_리포트.md](../records/reports/2026-09-22_1720_위임_주고거두는_화면과_API_리포트.md) §미해결
+
+시험: [`tests/integration/api/test_delegation_api.py`](../../tests/integration/api/test_delegation_api.py)(12 — 권한·주기·거두기 뒤 게이트가 실제로 닫히나·이력) ·
+[`tests/integration/api/test_ui_delegation_screen.py`](../../tests/integration/api/test_ui_delegation_screen.py)(8 — 열리나·무엇이 열리는지 먼저 보이나·실패가 보이나).
+계약 → [../external/rest-endpoints.md](../external/rest-endpoints.md#위임--v1delegations-2026-09-22)
+
+### 되돌림도 승인 뒤 실행이다 `[2026-09-22]`
+
+자동 실행을 무르는 것도 같은 경로를 탄다 — issue_code `booking_revert_request` → capability `booking.prepare_revert` → 제안 `booking.revert` → 승인 → 적용기 `BookingRevert`(v11 §12 DoD-21).
+
+| | |
+|---|---|
+| 무엇으로 되돌리나 | 장부의 `prior_state_json`. ★**없으면 되돌리지 않고 사람에게** — `confirmed` 를 지어내지 않는다(취소 전이 `requested`·`changed` 였을 수도 있다) |
+| 언제까지 | 장부의 `revert_deadline`. **그 건에 적힌 기한**을 본다 — 지금 설정으로 다시 계산하지 않는다(설정을 바꿔 지난 건의 기한을 늘리거나 줄이면 장부가 거짓이 된다) |
+| 등급 게이트 | **선다.** 되돌림도 공급자 원장을 바꾼다 |
+| 위임 범위 게이트 | **세우지 않는다.** 되돌림은 위임을 쓰는 것이 아니라 위임으로 한 일을 무르는 것이다 — 철회로 되돌림까지 막으면 이미 나간 변경을 원상복구할 길이 사라진다 |
+| 실패하면 | 되돌림 요청의 `action_requests` 행이 `failed`(코어가 savepoint 를 되돌린 **뒤** 적는다 — 실패 기록이 롤백에 안 휩쓸린다) + Case `escalated`. 사유는 `case_events` 에 append-only. **조용히 삼키지 않는다** |
+
+근거 → [../records/evidence/DoD-v11-18-21_위임범위와_되돌림.md](../records/evidence/DoD-v11-18-21_위임범위와_되돌림.md)
 
 ## 승인자 권한
 

@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "tenant_id": "demo",
+  "collection": "travel",
+  "documents": [
+    {
+      "document_id": "t_doc_01",
+      "file": "documents/t01_activity_cancel-intake.md",
+      "section_count": 11
+    },
+    {
+      "document_id": "t_doc_02",
+      "file": "documents/t02_activity_free-no-reservation.md",
+      "section_count": 10
+    },
+    {
+      "document_id": "t_doc_03",
+      "file": "documents/t03_activity_operation-control.md",
+      "section_count": 10
+    },
+    {
+      "document_id": "t_doc_04",
+      "file": "documents/t04_weather_cancellation-standard.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "t_doc_05",
+      "file": "documents/t05_weather_air-heat-quake.md",
+      "section_count": 11
+    },
+    {
+      "document_id": "t_doc_06",
+      "file": "documents/t06_dining_reservation-adjust.md",
+      "section_count": 11
+    },
+    {
+      "document_id": "t_doc_07",
+      "file": "documents/t07_dining_alternative.md",
+      "section_count": 10
+    },
+    {
+      "document_id": "t_doc_08",
+      "file": "documents/t08_mobility_disruption.md",
+      "section_count": 11
+    },
+    {
+      "document_id": "t_doc_09",
+      "file": "documents/t09_mobility_connection-liability.md",
+      "section_count": 10
+    },
+    {
+      "document_id": "t_doc_10",
+      "file": "documents/t10_mobility_refund-guidance.md",
+      "section_count": 10
+    },
+    {
+      "document_id": "t_doc_11",
+      "file": "documents/t11_cancellation_general-handoff.md",
+      "section_count": 13
+    },
+    {
+      "document_id": "t_doc_12",
+      "file": "documents/t12_access_companion-conditions.md",
+      "section_count": 11
+    }
+  ]
+}

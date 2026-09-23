@@ -1,0 +1,477 @@
+{
+  "run_id": "20260922_075123",
+  "dataset": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\eval\\datasets\\travel_scenarios.jsonl",
+  "llm": "흉내(분류·추출)",
+  "sources": "재생",
+  "results": [
+    {
+      "case_id": "t-confirmed",
+      "what": "확정 하루 전부 — 감시 사건 셋 + 고객 신고 셋",
+      "tenant": "eval_07691bff6a",
+      "steps": [
+        {
+          "step": "tick:09:00",
+          "opened": 1,
+          "fatal": 0
+        },
+        {
+          "step": "tick:10:45",
+          "opened": 1,
+          "fatal": 0
+        },
+        {
+          "step": "say:delay",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "tick:14:50",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:17:10",
+          "opened": 1,
+          "fatal": 0
+        },
+        {
+          "step": "say:closed",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "say:stock_out",
+          "status": "resolved",
+          "team": "activity"
+        }
+      ],
+      "cases": {
+        "resolved": 6,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 6,
+      "last_items": [
+        "1 호텔 조식",
+        "2 아쿠아리움 관람",
+        "3 잠실역 → 성수역 · 건대입구역에서 내려 버스로 가는 길",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 브런치 식당(시나리오) 식사",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당(시나리오) · 지하철(3호선 → 4호선 환승 1회)",
+        "9 서울역 한식당(시나리오) 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 5,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-quiet",
+      "what": "아무 사건도 없는 하루 — 일정이 그대로여야 한다",
+      "tenant": "eval_0c6af351ba",
+      "steps": [
+        {
+          "step": "tick:09:00",
+          "opened": 0,
+          "fatal": 1
+        },
+        {
+          "step": "tick:10:45",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:14:50",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:17:10",
+          "opened": 0,
+          "fatal": 0
+        }
+      ],
+      "cases": {
+        "resolved": 0,
+        "escalated": 0
+      },
+      "fatal": 1,
+      "violations": [],
+      "versions": 1,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 0,
+      "verdict": {
+        "passed": false,
+        "failures": [
+          "소스가 대체까지 실패 1건(결정 15)"
+        ]
+      }
+    },
+    {
+      "case_id": "t-air-only",
+      "what": "미세먼지 경보만 — 야외 전망대가 실내로 바뀐다",
+      "tenant": "eval_d8f990ae63",
+      "steps": [
+        {
+          "step": "tick:09:00",
+          "opened": 1,
+          "fatal": 0
+        },
+        {
+          "step": "tick:10:45",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:14:50",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:17:10",
+          "opened": 0,
+          "fatal": 0
+        }
+      ],
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 2,
+      "last_items": [
+        "1 호텔 조식",
+        "2 아쿠아리움 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 1,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-route-only",
+      "what": "경로 사건만 — 이동 수단이 바뀐다",
+      "tenant": "eval_4d2b2d30f2",
+      "steps": [
+        {
+          "step": "tick:09:00",
+          "opened": 0,
+          "fatal": 1
+        },
+        {
+          "step": "tick:10:45",
+          "opened": 1,
+          "fatal": 0
+        },
+        {
+          "step": "tick:14:50",
+          "opened": 0,
+          "fatal": 0
+        },
+        {
+          "step": "tick:17:10",
+          "opened": 1,
+          "fatal": 0
+        }
+      ],
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      },
+      "fatal": 1,
+      "violations": [],
+      "versions": 3,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역 · 건대입구역에서 내려 버스로 가는 길",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당(시나리오) · 지하철(3호선 → 4호선 환승 1회)",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 2,
+      "verdict": {
+        "passed": false,
+        "failures": [
+          "소스가 대체까지 실패 1건(결정 15)"
+        ]
+      }
+    },
+    {
+      "case_id": "t-delay-only",
+      "what": "늦음 신고만 — 점심이 밀린다",
+      "tenant": "eval_6a8bb946e7",
+      "steps": [
+        {
+          "step": "say:delay",
+          "status": "resolved",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 2,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 브런치 식당(시나리오) 식사",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 1,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-closed-only",
+      "what": "휴무 신고만 — 저녁 식당이 바뀐다",
+      "tenant": "eval_873c7d361f",
+      "steps": [
+        {
+          "step": "say:closed",
+          "status": "resolved",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 2,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 서울역 한식당(시나리오) 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 1,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-stock-only",
+      "what": "품절 문의만 — 답만 하고 일정은 그대로",
+      "tenant": "eval_a6ea49fec1",
+      "steps": [
+        {
+          "step": "say:stock_out",
+          "status": "resolved",
+          "team": "activity"
+        }
+      ],
+      "cases": {
+        "resolved": 1,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 1,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 0,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-delay-long",
+      "what": "늦음 200분 — 브레이크 타임을 넘겨 다시 잡아야 한다",
+      "tenant": "eval_755cdf6a23",
+      "steps": [
+        {
+          "step": "say:delay:200",
+          "status": "escalated",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 0,
+        "escalated": 1
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 1,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 점심 식사(예약)",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 0,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-cash-only",
+      "what": "현금만 쓰는 여행 — 바꾼 식당도 현금을 받아야 한다",
+      "tenant": "eval_0f338e7819",
+      "steps": [
+        {
+          "step": "say:closed",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "say:delay",
+          "status": "resolved",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 3,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 국수 식당(시나리오) 식사",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 서울역 백반집(시나리오·현금만) 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 2,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    },
+    {
+      "case_id": "t-swap-rollback",
+      "what": "다른 안으로 바꾸고 되돌리기 — 되살린 일정도 필수 조건을 지켜야 한다",
+      "tenant": "eval_ff82e32abc",
+      "steps": [
+        {
+          "step": "say:delay",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "swap:5",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "rollback:2",
+          "status": "resolved",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 3,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [],
+      "versions": 4,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 브런치 식당(시나리오) 식사",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 저녁 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 3,
+      "verdict": {
+        "passed": true,
+        "failures": []
+      }
+    }
+  ],
+  "summary": {
+    "cases": 10,
+    "passed": 8,
+    "violations": 0
+  }
+}

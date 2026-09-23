@@ -260,6 +260,8 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 
 ## 관계
 
+- [travel-density.md](travel-density.md) — 여행 등록·조회 응답의 밀도 측정과 경고(선택 확장 1.1)
+
 - [mcp-tools.md](mcp-tools.md) — 읽기 전용 경로
 - [a2a-protocol.md](a2a-protocol.md) — 업무 위임 경로
 - [auth-boundary.md](auth-boundary.md) — 인증·scope·PII

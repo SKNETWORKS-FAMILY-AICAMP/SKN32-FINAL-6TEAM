@@ -28,6 +28,8 @@ domain: neutral
 | [D-CS-002](D-CS-002-finetuned-model-not-adopted.md) | **파인튜닝 모델 채택 안 함** | draft | 평가·자체호스팅 |
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
 | [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 **6종**·Port 3종·Core 9종 경계 `[정정 2026-09-10]` 7종이었다 — `composer_ui` 가 빠졌다 | draft | Composer |
+| [D-CS-006](D-CS-006-cancellation-terms-are-structured.md) | **취소 기한·위약금율은 구조화된 표에서 읽는다** — RAG 청크에서 꺼내려던 경로가 구조상 언제나 `None` 이었다. 수치는 `cancellation_terms`(예약→공급자→종류), 문장 근거는 `read.policy` | draft | RAG · 판정 |
+| [D-CS-005](D-CS-005-odsay-not-used.md) | **ODsay 를 쓰지 않는다** — 약관이 결과 데이터 저장·가공을 사전 동의 없이 금지하고 무료 한도가 30회/일. 이동 시간은 일정이 들고 오는 경로 정의로 간다 | draft | 외부 소스 |
 
 `[미확보]` `wiki/records/plans/`·`wiki/records/reports/`에서 이관 대상을 더 골라야 한다.
 
@@ -56,6 +58,7 @@ domain: neutral
 | [D-002](../../../wiki/decisions/D-002-graph-store-gate.md) | Graph Store는 게이트 통과 시에만 | `GraphStorePort` 유지, `SqlGraphAdapter`가 MVP |
 | [D-003](../../../wiki/decisions/D-003-message-broker.md) | in-process queue | `MessageBusPort` 유지, 중복 전달·retry 테스트 필요 |
 | [D-004](../../../wiki/decisions/D-004-self-hosting-rationale.md) | 자체호스팅은 규제 논거 | 3B 추론 실측 필요 |
+| [D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md) | 결정 15 는 층마다 멈춘다 | 기동 조립 거부 · Case 는 `fatal_source_failure` 로 사람 인계 · 스위퍼 exit 1. **고칠 코드는 없다** |
 
 ## 관계
 
