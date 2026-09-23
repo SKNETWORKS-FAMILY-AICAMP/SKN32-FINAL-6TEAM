@@ -43,16 +43,18 @@ domain_note: 실행·결정 시트다. 항목의 도메인은 각 항목이 가�
 
 `[실측 2026-09-09]` `role-core1` 이 `origin/role-core1` 보다 **19 커밋** 앞서 있다.
 
+★`[2026-09-23]` 브랜치 이름이 **`role-manager`** 로 바뀌었다(「코어」 대신 「매니저」로 부르기로 했다). 아래 명령도 새 이름이다 — **옛 이름(`role-core1`)으로 push 하면 그 이름의 브랜치가 다시 생긴다.** 위 줄의 수치는 09-09 당시 기록이라 그대로 둔다.
+
 - [ ] 실행 전 — 다른 세션의 미커밋 파일은 스테이징하지 않는다
 
 ```bash
-git push origin role-core1
+git push origin role-manager
 ```
 
 거부되면(non-fast-forward) 억지로 밀지 않는다.
 
 ```powershell
-git pull --rebase origin role-core1; if ($?) { python program/scripts/check_wiki.py }; if ($?) { git push origin role-core1 }
+git pull --rebase origin role-manager; if ($?) { python program/scripts/check_wiki.py }; if ($?) { git push origin role-manager }
 ```
 
 ## 3. 코드 세션에 넘어간 것 — 보고만 받으면 된다
