@@ -78,8 +78,8 @@ class Tally:
 
     def summary(self) -> str:
         if not self.hints and not self.via_choices:
-            return f"도움 없이 답했다 (난이도 {NAMES.get(level(), level())})"
-        return (f"힌트 {self.hints}번 · 보기로 바꾼 문제 {self.via_choices}개 "
+            return f"도움 없이 답했다. (난이도: {NAMES.get(level(), level())})"
+        return (f"힌트를 {self.hints}번 썼고, {self.via_choices}개 문제를 보기로 바꿨다. "
                 f"(난이도 {NAMES.get(level(), level())})")
 
 
@@ -90,10 +90,10 @@ def _read(prompt: str) -> str:
 def _show_hint(hints: Sequence[str], used: int, total: int | None = None) -> int:
     """다음 힌트를 연다. total 은 이 문제에 있는 힌트 전체 수다(오답 지우기까지 센다)."""
     if level() == "hard":
-        print("  어려움에서는 힌트가 없다.")
+        print("  어려움 난이도에서는 힌트를 제공하지 않는다.")
         return used
     if used >= len(hints):
-        print("  더 줄 힌트가 없다." if hints else "  이 문제에는 힌트가 없다.")
+        print("  모든 힌트를 확인했다." if hints else "  이 문제에는 힌트가 없다.")
         return used
     print(f"  힌트 {used + 1}/{total or len(hints)}  {hints[used]}")
     return used + 1
@@ -102,7 +102,7 @@ def _show_hint(hints: Sequence[str], used: int, total: int | None = None) -> int
 def _guide() -> str:
     if level() == "hard":
         return ""
-    return "  (막히면 `힌트`)"
+    return "  (막히면 `힌트`를 입력한다.)"
 
 
 def choice(prompt: str, options: Sequence[str], *, hints: Sequence[str] = (),
@@ -131,7 +131,7 @@ def choice(prompt: str, options: Sequence[str], *, hints: Sequence[str] = (),
                 keep = wrong[:1] + [answer_index]
                 shown = [i for i in shown if i in keep]
                 used += 1
-                print(f"  힌트 {used}/{len(tiers)}  오답 둘을 지웠다.")
+                print(f"  힌트 {used}/{len(tiers)}  오답 두 개를 제외했다.")
                 render()
             else:
                 used = _show_hint([t for t in tiers if t != "__eliminate__"], used, len(tiers))
@@ -141,7 +141,7 @@ def choice(prompt: str, options: Sequence[str], *, hints: Sequence[str] = (),
         elif raw.isdigit() and 1 <= int(raw) <= len(shown):
             index = shown[int(raw) - 1]
         else:
-            print("  보기 번호로 답한다." + ("" if level() == "hard" else " 막히면 `힌트`."))
+            print("  보기 번호를 입력한다." + ("" if level() == "hard" else " 막히면 `힌트`를 입력한다."))
             continue
         return Answer(text=options[index], index=index, hints=used)
 
@@ -156,7 +156,7 @@ def free(prompt: str, *, hints: Sequence[str] = (),
         return answer
     tip = ""
     if level() != "hard":
-        tip = "  (막히면 `힌트`" + (", 모르면 `모르겠다`" if fallback else "") + ")"
+        tip = "  (막히면 `힌트`를 입력한다" + (", 답을 모르면 `모르겠다`를 입력한다" if fallback else "") + ".)"
     print(f"\n  {prompt}{tip}")
     used = 0
     while True:
@@ -166,8 +166,8 @@ def free(prompt: str, *, hints: Sequence[str] = (),
             continue
         if raw.lower() in GIVEUP_WORDS and fallback and level() != "hard":
             options, right = fallback
-            print("  보기로 바꾼다. 이 문제는 보기로 답했다고 기록한다.")
-            answer = choice("고른다.", options, hints=hints[used:], answer_index=right)
+            print("  보기 중에서 답을 고른다. 이 문제는 보기를 사용했다고 기록한다.")
+            answer = choice("답을 고른다.", options, hints=hints[used:], answer_index=right)
             answer.hints += used
             answer.via_choices = True
             return answer
@@ -184,18 +184,18 @@ def yes_no(prompt: str, *, hints: Sequence[str] = ()) -> Answer:
             continue
         if raw[:1] in {"y", "n", "예", "아", "ㅇ", "ㄴ"}:
             return Answer(text="y" if raw[:1] in {"y", "예", "ㅇ"} else "n", hints=used)
-        print("  y 또는 n 으로 답한다.")
+        print("  y 또는 n을 입력한다.")
 
 
 # ── 힌트 재료 — 이미 검증된 데이터에서만 뽑는다 ─────────────────────────
 LAYER_NAMES = {
-    "app/presentation": "입구(presentation) 층 — 바깥 요청을 받는 곳",
-    "app/application": "응용(application) 층 — 흐름을 짜는 곳",
-    "app/core": "코어(core) 층 — 규칙과 계약",
-    "app/domain": "도메인(domain) 층 — 상태와 이벤트",
-    "app/infrastructure": "인프라(infrastructure) 층 — DB·메시지·외부 연결",
-    "app/modules": "Team 모듈 층",
-    "app/tools": "도구(tools) 층 — Team 이 읽을 때 거치는 곳",
+    "app/presentation": "입구(presentation: 외부 요청을 받는 영역) 층",
+    "app/application": "응용(application: 처리 흐름을 구성하는 영역) 층",
+    "app/core": "코어(core: 규칙과 계약을 담는 영역) 층",
+    "app/domain": "도메인(domain: 상태와 이벤트를 담는 영역) 층",
+    "app/infrastructure": "인프라(infrastructure: DB·메시지·외부 시스템을 연결하는 영역) 층",
+    "app/modules": "Team(작업을 수행하는 모듈) 층",
+    "app/tools": "도구(tools: Team이 데이터를 읽을 때 거치는 영역) 층",
 }
 
 

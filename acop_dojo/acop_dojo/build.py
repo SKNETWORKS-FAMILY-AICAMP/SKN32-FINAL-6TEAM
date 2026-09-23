@@ -69,7 +69,7 @@ def steps() -> list[Step]:
 def get(index: int) -> Step:
     all_steps = steps()
     if not 1 <= index <= len(all_steps):
-        raise SystemExit(f"단계는 1~{len(all_steps)} 이다. 받은 값: {index}")
+        raise SystemExit(f"단계 번호는 1~{len(all_steps)} 중에서 고른다. 입력한 값: {index}")
     return all_steps[index - 1]
 
 
@@ -109,8 +109,8 @@ def prepare(*, force: bool = False) -> tuple[Path, list[str]]:
     """
     workspace = build_workspace()
     if workspace.exists() and not force:
-        raise SystemExit(f"작업 폴더가 이미 있다: {workspace}\n다시 시작하려면 --force 를 준다 "
-                         f"(직접 쓴 코드가 지워진다).")
+        raise SystemExit(f"작업 폴더가 이미 있다: {workspace}\n처음부터 다시 시작하려면 --force를 사용한다. "
+                         f"직접 작성한 코드는 지워진다.")
     if workspace.exists():
         shutil.rmtree(workspace, ignore_errors=True)
     workspace.parent.mkdir(parents=True, exist_ok=True)
@@ -197,7 +197,7 @@ def run_tests(selection: list[str], *, timeout: int = 600) -> RunResult:
     except subprocess.TimeoutExpired:
         # ★끝나지 않는 테스트가 실제로 있다(2026-09-16 sample 실측). 예외로 죽지 말고 결과로 말한다.
         return RunResult(124, sorted(selection),
-                         f"{timeout}초 안에 끝나지 않았다 — 판정하지 못했다", "")
+                         f"{timeout}초 안에 테스트가 끝나지 않아 판정하지 못했다.", "")
     failed = []
     for line in proc.stdout.splitlines():
         if line.startswith("FAILED ") or line.startswith("ERROR "):
@@ -264,8 +264,8 @@ def record(step: Step, *, passed: bool, result: RunResult) -> dict[str, Any]:
 def reveal(step: Step, rel_path: str) -> Path:
     """참고 구현을 작업 폴더로 꺼낸다. 꺼낸 사실을 기록에 남긴다."""
     if rel_path not in step.paths():
-        raise SystemExit(f"{step.index}단계의 파일이 아니다: {rel_path}\n"
-                         f"이 단계 파일: {', '.join(step.paths())}")
+        raise SystemExit(f"{step.index}단계에서 만들 파일이 아니다: {rel_path}\n"
+                         f"이 단계에서 만들 파일: {', '.join(step.paths())}")
     source = build_target_root() / rel_path
     target = build_workspace() / rel_path
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -361,15 +361,15 @@ def next_hint(step: "Step") -> tuple[int, list[str]]:
     entry = state["steps"].setdefault(str(step.index), {"attempts": 0})
     tier = entry.get("hints_used", 0) + 1
     if tier > HINT_TIERS:
-        return HINT_TIERS + 1, ["세 단계를 다 열었다. 더 막히면 `build reveal` 로 참고 구현을 꺼낸다."]
+        return HINT_TIERS + 1, ["힌트 세 단계를 모두 확인했다. 더 막히면 `build reveal`로 참고 구현을 확인한다."]
     out: list[str] = []
     if tier == 1:
         imports = _imports_from_tests(step)
         if not imports:
-            out.append("판정 테스트가 이 단계 모듈을 직접 부르지 않는다. 앞 단계 모듈과 함께 불린다.")
+            out.append("판정 테스트는 이 단계 모듈을 직접 호출하지 않고 앞 단계 모듈과 함께 호출한다.")
         for module, names in imports.items():
-            out.append(f"{module.replace('.', '/')}.py 에서 테스트가 부르는 이름: {', '.join(names)}")
-        out.append("이 이름들이 있으면 적어도 불러오기는 된다. 그다음 테스트가 무엇을 기대하는지 본다.")
+            out.append(f"{module.replace('.', '/')}.py에서 테스트가 불러오는 이름: {', '.join(names)}")
+        out.append("먼저 위 이름을 정의한다. 그다음 테스트에서 각 이름에 기대하는 동작을 확인한다.")
     elif tier == 2:
         for rel in step.paths():
             explained = _explain(rel)
@@ -386,11 +386,11 @@ def next_hint(step: "Step") -> tuple[int, list[str]]:
             if target.exists() and target.read_text(encoding="utf-8", errors="replace").strip():
                 hint_path = target.with_suffix(".skeleton.py")
                 hint_path.write_text(text, encoding="utf-8")
-                out.append(f"{rel} — 이미 쓴 파일이 있어 덮지 않았다. 뼈대는 {hint_path.name} 에 따로 두었다.")
+                out.append(f"{rel}은 이미 작성한 내용이 있어 덮어쓰지 않았다. 뼈대는 {hint_path.name}에 따로 저장했다.")
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(text, encoding="utf-8")
-                out.append(f"{rel} — 뼈대를 넣었다. 본문을 채운다.")
+                out.append(f"{rel}에 뼈대를 넣었다. 비어 있는 본문을 채운다.")
     entry["hints_used"] = tier
     save_state(state)
     return tier, out

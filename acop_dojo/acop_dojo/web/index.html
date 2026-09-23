@@ -14,57 +14,57 @@
 <body>
 <a class="skip" href="#output">실행 출력으로 이동</a>
 <div class="shell">
-<header class="top"><div class="brand"><div class="seal" aria-hidden="true">도</div><div><strong>acop dojo</strong><div class="eyebrow">학습 도장 / LOCAL</div></div></div><div class="connection"><span id="connection" class="badge" role="status">서버 확인 중</span><button id="refresh" type="button">다시 확인</button></div></header>
+<header class="top"><div class="brand"><div class="seal" aria-hidden="true">도</div><div><strong>acop dojo</strong><div class="eyebrow">학습 도장 / 내 컴퓨터</div></div></div><div class="connection"><span id="connection" class="badge" role="status">연결 확인 중</span><button id="refresh" type="button">다시 확인</button></div></header>
 <div id="offline" class="notice" role="alert" hidden></div>
-<section class="intro"><div><h1>읽고, 실행하고, 답한다.</h1><p class="muted">실제 실행을 따라 배운다. 판정과 근거는 서버 출력에 남는다.</p></div><span class="badge">로컬 실행실</span></section>
+<section class="intro"><div><h1>읽고, 실행하고, 답해 보세요.</h1><p class="muted">직접 실행하며 배워 보세요. 학습 결과와 해설은 실행 출력에서 확인하세요.</p></div><span class="badge">내 컴퓨터에서 학습</span></section>
 <section class="card level-panel" aria-labelledby="level-title">
-<div class="level-layout"><h2 id="level-title">문제 난이도</h2><span id="current-level" class="badge" role="status">서버 확인 중</span></div>
+<div class="level-layout"><h2 id="level-title">문제 난이도</h2><span id="current-level" class="badge" role="status">연결 확인 중</span></div>
 <div class="level-options" role="group" aria-label="문제 난이도 변경"><button type="button" data-level="쉬움" aria-pressed="false" disabled>쉬움</button><button type="button" data-level="보통" aria-pressed="false" disabled>보통</button><button type="button" data-level="어려움" aria-pressed="false" disabled>어려움</button></div>
-<p class="hint">쉬움은 보기가 있는 문제를 처음부터 4지선다로 푼다. 보통은 직접 답하다가 보기로 바꾼다. 어려움은 문제 힌트와 보기 전환이 없다.</p>
-<p id="level-note" class="hint" role="status">난이도는 실행 전에 바꾼다.</p>
+<p class="hint">쉬움은 보기가 있는 문제를 처음부터 4지선다로 풉니다. 보통은 직접 답하다가 보기로 바꿀 수 있습니다. 어려움은 힌트와 보기 전환 없이 도전합니다.</p>
+<p id="level-note" class="hint" role="status">시작하기 전에 난이도를 선택하세요.</p>
 </section>
 <main class="layout">
 <div>
 <section class="card" aria-label="실행 선택">
 <nav class="tabs" aria-label="활동 종류"><button data-tab="learn" aria-pressed="true">학습</button><button data-tab="build" aria-pressed="false">쌓기</button><button data-tab="tools" aria-pressed="false">점검·기록</button></nav>
 <div class="pad">
-<div class="row"><h2 id="panel-title">학습을 고른다</h2><span id="action-count" class="muted"></span></div>
-<p id="panel-hint" class="hint">서버에서 실행 목록을 가져온다.</p>
+<div class="row"><h2 id="panel-title">학습을 선택하세요</h2><span id="action-count" class="muted"></span></div>
+<p id="panel-hint" class="hint">학습 목록을 불러오고 있습니다.</p>
 <div id="actions" class="action-grid"></div>
-<form id="run-form"><fieldset id="config" style="border:0;padding:0;margin:0" disabled><div id="params" class="parameters stack"></div><button id="run" class="primary run" type="submit">실행한다 →</button></fieldset></form>
-<p id="run-hint" class="hint" style="margin-top:10px">실행 중에는 새 작업을 시작하지 않는다.</p>
+<form id="run-form"><fieldset id="config" style="border:0;padding:0;margin:0" disabled><div id="params" class="parameters stack"></div><button id="run" class="primary run" type="submit">실행하기 →</button></fieldset></form>
+<p id="run-hint" class="hint" style="margin-top:10px">다음 활동은 현재 실행이 끝난 뒤 시작하세요.</p>
 <section id="build-help" class="build-help" aria-labelledby="build-help-title" hidden>
-<h3 id="build-help-title">막히면 한 단계씩 연다</h3><p id="build-help-step" class="hint"></p>
-<ol><li>테스트가 부르는 이름을 본다.</li><li>함수 설명을 본다.</li><li>작업 폴더에 뼈대 파일을 만든다.</li></ol>
-<p class="hint">힌트 사용은 엔진에 기록된다. 이미 쓴 파일은 덮지 않고 별도 뼈대 파일을 만든다.</p>
-<button id="build-hint" type="button" disabled>이 단계의 다음 힌트를 연다</button><p id="build-help-note" class="hint">열린 차수는 서버 출력에서 확인한다.</p>
+<h3 id="build-help-title">막히면 힌트를 하나씩 확인하세요</h3><p id="build-help-step" class="hint"></p>
+<ol><li>테스트에서 사용하는 이름을 확인하세요.</li><li>함수 설명을 읽어 보세요.</li><li>작업 폴더에 만든 뼈대 파일을 확인하세요.</li></ol>
+<p class="hint">힌트 사용은 학습 기록에 남습니다. 작성한 코드는 유지하고, 뼈대 파일은 따로 만듭니다.</p>
+<button id="build-hint" type="button" disabled>이 단계의 다음 힌트 보기</button><p id="build-help-note" class="hint">어디까지 힌트를 봤는지 실행 출력에서 확인하세요.</p>
 </section>
 <div id="steps" class="steps" aria-label="쌓기 단계" hidden></div>
 </div></section>
-<details class="card records" open><summary>서버에 남은 학습 기록</summary><div class="record-body"><p id="updated" class="hint">아직 가져오지 못했다.</p><div id="records"></div><details><summary style="padding:12px 0;font-size:13px">진행 기록 원문</summary><pre id="progress" class="raw"></pre></details></div></details>
-<details class="card records"><summary>카탈로그와 실행 대상</summary><div id="catalog" class="record-body"></div></details>
+<details class="card records" open><summary>내 학습 기록</summary><div class="record-body"><p id="updated" class="hint">학습 기록을 불러오려면 다시 확인을 누르세요.</p><div id="records"></div><details><summary style="padding:12px 0;font-size:13px">진행 기록 원문</summary><pre id="progress" class="raw"></pre></details></div></details>
+<details class="card records"><summary>문제 목록과 작업 폴더</summary><div id="catalog" class="record-body"></div></details>
 </div>
 <section class="card console" aria-label="실행실">
-<div class="console-head"><div class="row"><h2 id="job-title">실행 출력</h2><span id="job-status" class="badge" role="status">시작 전</span></div><p id="job-meta" class="job-meta">동작을 고르면 여기에서 실행을 따라간다.</p></div>
-<pre id="output" class="terminal" tabindex="0" aria-label="서버 실행 출력">아직 실행한 작업이 없다.
+<div class="console-head"><div class="row"><h2 id="job-title">실행 출력</h2><span id="job-status" class="badge" role="status">시작 전</span></div><p id="job-meta" class="job-meta">학습할 활동을 선택하세요. 진행 내용은 여기에 표시합니다.</p></div>
+<pre id="output" class="terminal" tabindex="0" aria-label="학습 실행 출력">왼쪽에서 학습할 활동을 선택하고 실행하세요.
 
-01  왼쪽에서 동작과 범위를 고른다.
-02  실행 중인 출력에서 문제를 읽는다.
-03  아래 입력창으로 한 줄씩 답한다.
+01  왼쪽에서 활동과 학습 범위를 선택하세요.
+02  실행 버튼을 누르고 여기에 나온 문제를 읽으세요.
+03  아래 입력창에 한 줄씩 답하세요.
 
-종료 코드는 실행이 끝나면 표시한다.</pre>
-<div class="console-tools"><label><input id="follow" type="checkbox" checked> 새 출력을 따라간다</label><div><button id="download" type="button" disabled>출력 저장</button> <button id="stop" type="button" disabled>실행 중단</button></div></div>
-<form id="answer-form" class="answer"><label for="answer">답변</label><p id="answer-hint" class="hint">답변을 받는 동작을 실행하면 입력창이 열린다.</p><div class="answer-row"><input id="answer" type="text" autocomplete="off" placeholder="문제를 읽고 한 줄로 답한다" disabled aria-describedby="answer-hint"><button id="send" type="submit" disabled>답변 전송</button></div>
+학습이 끝나면 실행 출력에서 결과를 확인하세요.</pre>
+<div class="console-tools"><label><input id="follow" type="checkbox" checked> 새 출력으로 자동 이동</label><div><button id="download" type="button" disabled>출력 저장</button> <button id="stop" type="button" disabled>실행 중단</button></div></div>
+<form id="answer-form" class="answer"><label for="answer">답변</label><p id="answer-hint" class="hint">답변하는 학습을 시작하세요. 실행하면 입력창이 열립니다.</p><div class="answer-row"><input id="answer" type="text" autocomplete="off" placeholder="문제를 읽고 한 줄로 답하세요" disabled aria-describedby="answer-hint"><button id="send" type="submit" disabled>답변 전송</button></div>
 <section class="help-box" aria-labelledby="help-title"><h3 id="help-title">막혔을 때</h3>
-<p class="hint">힌트 사용과 보기로 답한 사실은 엔진에 기록된다.</p>
-<div class="help-actions"><button id="hint-request" type="button" disabled>다음 힌트를 요청한다</button><button id="giveup-request" type="button" disabled>모르겠다 · 보기로 바꾼다</button></div>
-<p id="help-note" class="hint" role="status">문제의 도움 안내를 기다린다.</p>
-<p class="hint">힌트는 최대 셋이다. 보기 문제의 마지막 힌트는 오답 둘을 지운다. 바뀐 보기 번호는 출력에서 확인한다.</p>
+<p class="hint">힌트를 보거나 보기로 답하면 학습 기록에 남습니다.</p>
+<div class="help-actions"><button id="hint-request" type="button" disabled>다음 힌트 보기</button><button id="giveup-request" type="button" disabled>모르겠다 · 보기로 바꾸기</button></div>
+<p id="help-note" class="hint" role="status">문제가 나오면 도움 안내를 확인하세요.</p>
+<p class="hint">힌트는 최대 3개입니다. 보기 문제의 마지막 힌트는 오답 2개를 지웁니다. 답하기 전에 바뀐 보기 번호를 실행 출력에서 확인하세요.</p>
 </section></form>
 <p id="feedback" class="feedback" role="status" hidden></p>
 </section>
 </main>
-<footer>이 화면은 <code>python dojo.py serve</code>로 연다. 기존 정적 지도와 별도로 동작한다.<br>출력은 서버가 보관하는 최근 4,000줄이다. 화면은 점수나 통과 여부를 계산하지 않는다.</footer>
+<footer>이 화면을 다시 열려면 <code>python dojo.py serve</code>를 실행하세요.<br>학습 결과는 실행 출력에서 확인하세요. 최근 4,000줄을 볼 수 있습니다.</footer>
 </div>
 <script>
 'use strict';
@@ -78,9 +78,9 @@ function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefi
 function feedback(message){$('feedback').textContent=message;$('feedback').hidden=!message;}
 function persist(){try{if(job)sessionStorage.setItem(storageKey,JSON.stringify(job));else sessionStorage.removeItem(storageKey);}catch{}}
 function connection(ok,message=''){
- online=ok;$('connection').textContent=ok?'● 서버 연결됨':'● 서버 연결 안 됨';$('connection').className='badge '+(ok?'online':'offline');$('offline').hidden=ok;
- if(!ok)$('offline').textContent=location.protocol==='file:'?'파일만 열어서는 실행할 수 없다. python dojo.py serve 실행 후 http://127.0.0.1:8765/ 로 접속한다.':'서버에 연결할 수 없다. 실행 종료 여부도 확인할 수 없다. python dojo.py serve 실행 상태를 확인한다. 연결되면 출력을 다시 가져온다. '+message;
- if(job&&!job.done)$('job-status').textContent=ok?(job.asks?'실행 중 · 답변 가능':'실행 중'):'연결 끊김 · 종료 미확인';
+ online=ok;$('connection').textContent=ok?'● 연결됨':'● 연결을 확인하세요';$('connection').className='badge '+(ok?'online':'offline');$('offline').hidden=ok;
+ if(!ok)$('offline').textContent=location.protocol==='file:'?'python dojo.py serve를 실행한 뒤 http://127.0.0.1:8765/ 로 접속하세요.':'python dojo.py serve가 실행 중인지 확인하고 다시 확인을 누르세요. 연결되면 진행 내용을 다시 불러옵니다. '+message;
+ if(job&&!job.done)$('job-status').textContent=ok?(job.asks?'실행 중 · 답변 가능':'실행 중'):'연결을 확인하세요';
  controls();
 }
 async function api(path,body){
@@ -96,44 +96,47 @@ function controls(){
  const active=job&&!job.done;
  $('config').disabled=!state||!online||!!active||starting;
  document.querySelectorAll('#actions button,#steps button').forEach(b=>b.disabled=!!active||starting||!online);
- $('run').textContent=starting?'실행 요청 중…':active?'현재 작업이 끝나면 실행한다':`${labels[action]||action} 실행 →`;
+ $('run').textContent=starting?'실행 요청 중…':active?'현재 실행이 끝날 때까지 기다려 주세요':`${labels[action]||action} 실행 →`;
  $('stop').disabled=!active||!online||stopping;$('stop').textContent=stopping?'중단 요청 중…':'실행 중단';
  const canAnswer=active&&job.asks&&online&&!posting&&!job.awaitingOutput;
  $('answer').disabled=!canAnswer;$('send').disabled=!canAnswer;
- $('answer-hint').textContent=active&&job.asks?'출력에 나온 질문에 한 줄씩 답한다. 빈 답변도 보낼 수 있다. 입력 대기 여부는 서버가 제공하지 않는다.':active?'이 동작은 답변을 받지 않는다.':job?'작업이 끝났다. 종료 상태와 출력을 확인한다.':'답변을 받는 동작을 실행하면 입력창이 열린다.';
+ $('answer-hint').textContent=active&&job.asks?'실행 출력의 현재 질문을 읽고 한 줄씩 답하세요. 질문에 따라 빈 답변도 보낼 수 있습니다.':active?'진행 내용을 실행 출력에서 확인하세요. 답변을 입력할 필요는 없습니다.':job?'실행 출력에서 결과를 확인하세요. 작업이 끝났습니다.':'답변하는 학습을 시작하세요. 실행하면 입력창이 열립니다.';
  $('download').disabled=!job;
  helpControls();
 }
 function helpContext(){
  // The API exposes no question metadata. Only enable shortcuts advertised by ask.py.
- let hint=false,choices=false;
+ let hint=false,choices=false,exhausted=false,yesNoHint=false;
  for(const raw of ($('output').textContent||'').split('\n')){
   const line=raw.replace(/^\s*(?:>\s*)+/, '').trim();
   if(/^> /.test(raw)){
    if(['힌트','hint','h','ㅎ','?'].includes(line.toLowerCase()))continue;
    hint=false;choices=false;
   }
-  if(line.includes('(막히면 `힌트`')){hint=true;choices=line.includes('`모르겠다`');}
-  if(line.includes('보기로 바꾼다. 이 문제는'))choices=false;
-  if(/^(더 줄 힌트가 없다|이 문제에는 힌트가 없다|어려움에서는 힌트가 없다)/.test(line))hint=false;
-  const tier=line.match(/^힌트 (\d+)\/(\d+)/);if(tier&&Number(tier[1])>=Number(tier[2]))hint=false;
+  if(line.includes('(y/n)'))yesNoHint=line.includes('(막히면 `힌트`');
+  if(line.includes('(막히면 `힌트`')){hint=true;choices=line.includes('`모르겠다`');exhausted=false;}
+  if(line.includes('보기로 바꾼다. 이 문제는')||line.includes('보기 중에서 답을 고른다. 이 문제는'))choices=false;
+  if(line.startsWith('보기 번호를 입력한다.')){hint=!exhausted&&line.includes('막히면 `힌트`');choices=false;}
+  if(line==='y 또는 n을 입력한다.')hint=yesNoHint&&!exhausted;
+  if(/^(더 줄 힌트가 없다|모든 힌트를 확인했다|이 문제에는 힌트가 없다|어려움에서는 힌트가 없다|어려움 난이도에서는 힌트를 제공하지 않는다)/.test(line)){hint=false;exhausted=true;}
+  const tier=line.match(/^힌트 (\d+)\/(\d+)/);if(tier&&Number(tier[1])>=Number(tier[2])){hint=false;exhausted=true;}
  }
  return {hint,choices};
 }
 function helpControls(){
  const active=job&&!job.done, level=state?.level, known=['쉬움','보통','어려움'].includes(level);
- $('current-level').textContent=known?'현재 · '+level:'현재 난이도 미제공';
+ $('current-level').textContent=known?'현재 · '+level:'난이도를 다시 확인하세요';
  document.querySelectorAll('[data-level]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.level===level));b.disabled=!online||!known||!state?.actions?.level||!!active||starting;});
- $('level-note').textContent=!known||!state?.actions?.level?'서버가 난이도 기능을 제공하지 않는다. 최신 서버로 다시 실행한 뒤 확인한다.':active?'현재 작업이 끝나면 난이도를 바꿀 수 있다.':'선택하면 변경을 요청한다. 현재 난이도는 서버 응답으로 확인한다.';
+ $('level-note').textContent=!known||!state?.actions?.level?'학습 프로그램을 최신 버전으로 다시 실행하고 난이도를 확인하세요.':active?'현재 실행이 끝난 뒤 난이도를 선택하세요.':'원하는 난이도를 선택하세요. 변경 후 위에 표시된 현재 난이도를 확인하세요.';
  const context=helpContext(), ready=active&&job.asks&&online&&!posting&&!job.awaitingOutput;
  $('hint-request').disabled=!(ready&&known&&level!=='어려움'&&state?.hint_words?.length&&context.hint);
  $('giveup-request').disabled=!(ready&&level==='보통'&&state?.giveup_words?.length&&context.choices);
- $('help-note').textContent=!online?'서버 연결 후 도움을 요청한다.':!active||!job.asks?'답변을 받는 문제를 실행하면 도움을 요청할 수 있다.':!known?'서버가 도움 기능을 제공하지 않는다.':level==='어려움'?'어려움에서는 문제 힌트와 보기 전환을 쓸 수 없다.':posting||job.awaitingOutput?'요청 뒤 새 출력을 기다린다. 전송 여부가 불확실하면 출력을 먼저 확인한다.':context.hint||context.choices?'[추정] 출력의 도움 안내를 읽었다. 현재 질문을 확인한 뒤 누른다.':'현재 출력에서 사용할 도움 안내를 확인하지 못했다. 입력 대기 여부는 서버가 제공하지 않는다.';
+ $('help-note').textContent=!online?'다시 확인을 눌러 연결한 뒤 도움을 요청하세요.':!active||!job.asks?'답변하는 학습을 시작하세요. 문제를 풀다가 도움을 요청할 수 있습니다.':!known?'학습 프로그램을 다시 실행하고 현재 난이도를 확인하세요.':level==='어려움'?'힌트가 필요하면 실행을 마친 뒤 쉬움 또는 보통을 선택하세요. 어려움은 도움 없이 풉니다.':posting||job.awaitingOutput?'새 출력이 나올 때까지 기다려 주세요. 다시 보내기 전에 진행 내용을 확인하세요.':context.hint||context.choices?'현재 질문을 확인한 뒤 필요한 도움 버튼을 누르세요.':'실행 출력의 현재 질문과 도움 안내를 확인하세요.';
  const step=$('param-step')?.value;
  $('build-help').hidden=tab!=='build';
- $('build-help-step').textContent=step?`${step}단계 · ${state?.build_steps.find(s=>String(s.index)===step)?.title||''}`:'단계 설명이나 검사를 골라 단계를 선택한다.';
+ $('build-help-step').textContent=step?`${step}단계 · ${state?.build_steps.find(s=>String(s.index)===step)?.title||''}`:'단계 설명이나 단계 검사를 누른 뒤 학습할 단계를 선택하세요.';
  $('build-hint').disabled=!online||!state?.actions?.build_hint||!step||!!active||starting;
- $('build-help-note').textContent=!state?.actions?.build_hint?'서버가 쌓기 힌트 기능을 제공하지 않는다.':active?'현재 작업이 끝나면 이어서 연다.':'요청할 때마다 다음 차수를 연다. 열린 차수는 서버 출력에서 확인한다.';
+ $('build-help-note').textContent=!state?.actions?.build_hint?'단계 설명을 먼저 읽어 보세요. 힌트가 필요하면 학습 프로그램을 최신 버전으로 다시 실행하세요.':active?'현재 실행이 끝난 뒤 다음 힌트를 확인하세요.':'버튼을 누를 때마다 다음 힌트를 볼 수 있습니다. 실행 출력에서 확인하세요.';
 }
 function field(name,title,options){
  const label=node('label',undefined,'field');label.append(node('span',title));let input;
@@ -145,11 +148,11 @@ function showContext(){
  const box=$('context');if(!box)return;box.replaceChildren();
  const track=state.tracks.find(t=>t.id===$('param-track')?.value),scenario=state.scenarios.find(s=>s.id===$('param-scenario')?.value),step=state.build_steps.find(s=>String(s.index)===$('param-step')?.value);
  if(track){box.append(node('p',track.focus),node('p','담당 · '+track.owner,'hint'));}
- if(scenario){box.append(node('p',scenario.objective),node('p',scenario.needs_db?'DB가 필요하다.':'DB 없이 실행한다.','hint'));}
- if(step){selectedStep=String(step.index);box.append(node('p',step.claim),node('p','서버 상태 · '+(step.status??'기록 없음'),'hint'));const details=node('details');details.append(node('summary','파일과 테스트'));details.append(node('pre',[...step.files,...step.tests].join('\n'),'raw'));box.append(details);}
- if(action==='build_start')box.append(node('p','쌓기용 작업 폴더를 준비한다. 코드를 편집하는 기능은 이 API에 없다.'));
- if(action==='map')box.append(node('p','기존 정적 지도 산출물을 생성하는 명령이다. 실행하면 해당 산출물이 갱신된다.'));
- if(action==='defect'||action==='boss')box.append(node('p','패치가 있으면 서버 작업 폴더의 파일 경로를 쓴다. 이 화면에는 파일 업로드 기능이 없다.'));
+ if(scenario){box.append(node('p',scenario.objective),node('p',scenario.needs_db?'실행 전에 데이터베이스(DB)를 준비하세요.':'데이터베이스(DB) 없이 실행할 수 있습니다.','hint'));}
+ if(step){selectedStep=String(step.index);box.append(node('p',step.claim),node('p','진행 상태 · '+(step.status??'기록 없음'),'hint'));const details=node('details');details.append(node('summary','파일과 테스트'));details.append(node('pre',[...step.files,...step.tests].join('\n'),'raw'));box.append(details);}
+ if(action==='build_start')box.append(node('p','먼저 쌓기 작업 폴더를 준비하세요. 준비한 폴더의 코드는 사용하시는 편집기로 작성하세요.'));
+ if(action==='map')box.append(node('p','학습 지도를 만들려면 실행하세요. 기존 지도는 새 내용으로 바뀝니다.'));
+ if(action==='defect'||action==='boss')box.append(node('p','패치를 적용하려면 작업 폴더에 패치 파일을 저장한 뒤 파일 경로를 입력하세요.'));
  box.hidden=!box.childNodes.length;
  helpControls();
  document.querySelectorAll('#steps button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.step===$('param-step')?.value)));
@@ -163,7 +166,7 @@ function renderConfig(){
   else if(name==='step'){const el=field(name,'쌓기 단계',state.build_steps.map(s=>[String(s.index),`${s.index} · ${s.title}`]));if(state.build_steps.some(s=>String(s.index)===selectedStep))el.value=selectedStep;}
   else if(name==='force'){
    const label=node('label',undefined,'check'),input=node('input');input.type='checkbox';input.name=name;input.id='param-force';
-   label.append(input,node('span',action==='build_start'?'기존 쌓기 작업을 지우고 다시 준비한다. 직접 쓴 코드도 지워진다.':'선행 조건을 건너뛰고 실행한다. (--force)'));$('params').append(label);
+   label.append(input,node('span',action==='build_start'?'기존 쌓기 작업을 지우고 다시 준비합니다. 직접 작성한 코드도 삭제합니다.':'선행 조건을 건너뛰고 실행합니다. (--force)'));$('params').append(label);
   }else field(name,name==='fix'?'패치 파일 경로 · 선택':name);
  }
  $('params').append(node('div',undefined,'description'));$('params').lastChild.id='context';
@@ -171,28 +174,28 @@ function renderConfig(){
 }
 function renderActions(){
  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===tab)));
- $('panel-title').textContent={learn:'학습을 고른다',build:'한 단계씩 쌓는다',tools:'근거를 확인한다'}[tab];
- $('panel-hint').textContent={learn:'트랙과 단계를 고르고 실제 실행을 따라간다.',build:'설명을 읽고 작업 폴더의 코드를 작성한 뒤 검사한다.',tools:'환경과 기록을 서버 명령으로 확인한다.'}[tab];
+ $('panel-title').textContent={learn:'학습을 선택하세요',build:'한 단계씩 쌓아 보세요',tools:'학습 결과를 확인하세요'}[tab];
+ $('panel-hint').textContent={learn:'학습 트랙과 단계를 선택하고 실행하세요.',build:'단계 설명을 읽고 작업 폴더에 코드를 작성한 뒤 검사하세요.',tools:'환경 점검이나 학습 기록 확인을 선택하고 실행하세요.'}[tab];
  const names=(tab==='tools'?Object.keys(state.actions).filter(n=>n!=='level'&&!groups.learn.includes(n)&&!groups.build.includes(n)):groups[tab]).filter(n=>n in state.actions);
- if(!names.includes(action))action=names[0];$('action-count').textContent=names.length+'개 동작';$('actions').replaceChildren();
+ if(!names.includes(action))action=names[0];$('action-count').textContent=names.length+'개 활동';$('actions').replaceChildren();
  for(const name of names){const b=node('button',undefined,'action');b.type='button';b.append(node('strong',labels[name]||name),node('small',name));b.setAttribute('aria-pressed',String(name===action));b.onclick=()=>{action=name;renderActions();};$('actions').append(b);}
  $('steps').hidden=tab!=='build';$('steps').replaceChildren();
  if(tab==='build')for(const s of state.build_steps){const b=node('button',undefined,'step');b.type='button';b.dataset.step=String(s.index);b.append(node('b',String(s.index).padStart(2,'0')),node('span',s.title),node('small',s.status??'기록 없음'));b.onclick=()=>{if(!['build_brief','build_check','build_hint'].includes(action)){action='build_brief';renderActions();}$('param-step').value=String(s.index);showContext();};$('steps').append(b);}
  renderConfig();
 }
 function renderRecords(){
- $('updated').textContent='서버에서 읽음 · '+new Date().toLocaleTimeString('ko-KR');$('records').replaceChildren();
+ $('updated').textContent='최근 확인 · '+new Date().toLocaleTimeString('ko-KR');$('records').replaceChildren();
  const stages=Object.entries(state.progress.stages||{});
- if(!stages.length)$('records').append(node('p','남은 단계 기록이 없다.','hint'));
- for(const [stage,data] of stages){const r=node('div',undefined,'record');r.append(node('strong',`${stage}단계`),node('span',' · '+(data.status??'상태 없음')),node('p',`시도 ${data.attempts??'기록 없음'} · 판정 근거 ${data.oracle??data.grading??'별도 필드 없음'}`,'hint'));const detail=[];if(data.level!==undefined)detail.push('난이도 '+({easy:'쉬움',normal:'보통',hard:'어려움'}[data.level]||data.level));if(data.hints_used!==undefined)detail.push('힌트 '+data.hints_used+'번');if(data.answered_with_choices!==undefined)detail.push('보기로 답한 문제 '+data.answered_with_choices+'개');r.append(node('p',detail.length?detail.join(' · '):'도움 사용 기록은 제공되지 않았다.','help-record'));$('records').append(r);}
+ if(!stages.length)$('records').append(node('p','학습을 시작해 보세요. 아직 저장된 단계 기록이 없습니다.','hint'));
+ for(const [stage,data] of stages){const r=node('div',undefined,'record');r.append(node('strong',`${stage}단계`),node('span',' · '+(data.status??'상태 없음')),node('p',`시도 ${data.attempts??'기록 없음'} · 판정 근거 ${data.oracle??data.grading??'기록 없음'}`,'hint'));const detail=[];if(data.level!==undefined)detail.push('난이도 '+({easy:'쉬움',normal:'보통',hard:'어려움'}[data.level]||data.level));if(data.hints_used!==undefined)detail.push('힌트 '+data.hints_used+'번');if(data.answered_with_choices!==undefined)detail.push('보기로 답한 문제 '+data.answered_with_choices+'개');r.append(node('p',detail.length?detail.join(' · '):'힌트와 보기 사용 기록이 없습니다.','help-record'));$('records').append(r);}
  $('progress').textContent=JSON.stringify(state.progress,null,2);$('catalog').replaceChildren();
- for(const [title,value] of [['카탈로그 항목',state.catalog.entries],['실행 가능',state.catalog.playable],['보류',state.catalog.parked],['살아남은 결함',state.catalog.survived.join(', ')||'없음'],['기준 실행',state.catalog.baseline??'기록 없음'],['보류 트랙',state.parked_tracks.join(', ')],['대상 저장소',state.target],['쌓기 작업 폴더',state.build_target]]){const r=node('div',undefined,'record');r.append(node('strong',title),node('p',String(value),'raw'));$('catalog').append(r);}
+ for(const [title,value] of [['전체 문제 수',state.catalog.entries],['실행 가능',state.catalog.playable],['보류',state.catalog.parked],['테스트에서 발견하지 못한 결함',state.catalog.survived.join(', ')||'없음'],['기준 실행',state.catalog.baseline??'기록 없음'],['보류 트랙',state.parked_tracks.join(', ')],['대상 저장소',state.target],['쌓기 작업 폴더',state.build_target]]){const r=node('div',undefined,'record');r.append(node('strong',title),node('p',String(value),'raw'));$('catalog').append(r);}
 }
 async function refresh(){
  if(refreshing||location.protocol==='file:'){if(location.protocol==='file:')connection(false);return;}refreshing=true;
- try{const previous=JSON.stringify(state?.actions);state=await api('/api/state');if(previous!==JSON.stringify(state.actions))renderActions();renderRecords();showContext();controls();}catch(e){if(e.status)feedback('상태를 가져오지 못했다. '+e.message);}finally{refreshing=false;}
+ try{const previous=JSON.stringify(state?.actions);state=await api('/api/state');if(previous!==JSON.stringify(state.actions))renderActions();renderRecords();showContext();controls();}catch(e){if(e.status)feedback('다시 확인을 눌러 학습 상태를 불러오세요. '+e.message);}finally{refreshing=false;}
 }
-function paintJob(){if(!job)return;$('job-title').textContent=labels[job.action]||job.action;$('job-meta').textContent=`작업 ${job.id} · ${(job.argv||[]).join(' ')}`;$('job-status').textContent=job.done?(job.missing?'작업 확인 불가':`종료 코드 ${job.returncode===null?'미제공':job.returncode}`):!online?'연결 끊김 · 종료 미확인':job.asks?'실행 중 · 답변 가능':'실행 중';controls();}
+function paintJob(){if(!job)return;$('job-title').textContent=labels[job.action]||job.action;$('job-meta').textContent=`작업 ${job.id} · ${(job.argv||[]).join(' ')}`;$('job-status').textContent=job.done?(job.missing?'학습을 다시 시작하세요':`종료 코드 ${job.returncode===null?'실행 출력을 확인하세요':job.returncode}`):!online?'연결을 확인하세요':job.asks?'실행 중 · 답변 가능':'실행 중';controls();}
 async function poll(){
  if(!job||job.done)return;const id=job.id;
  try{
@@ -201,28 +204,28 @@ async function poll(){
   const data=await api(`/api/jobs/${encodeURIComponent(id)}?offset=0`);if(job.id!==id)return;
   const content=data.lines.join('\n');if(job.awaitingOutput&&content!==job.inputBaseline){job.awaitingOutput=false;delete job.inputBaseline;}if($('output').textContent!==content){const top=$('output').scrollTop;$('output').textContent=content;$('output').scrollTop=$('follow').checked?$('output').scrollHeight:top;}
   job.done=data.done;job.returncode=data.returncode;if(data.action)job.action=data.action;persist();paintJob();
-  if(job.done){feedback('실행이 끝났다. 종료 코드와 서버 출력을 확인한다.');await refresh();if(job.action==='level'&&job.params?.level&&state?.level!==job.params.level)feedback('요청한 난이도와 서버의 현재 난이도가 다르다. 현재 난이도는 '+(state?.level??'미제공')+'이다. 서버 출력을 확인한다.');}
- }catch(e){if(e.status===404){job.done=true;job.missing=true;persist();paintJob();feedback('서버에 이 작업이 없다. 서버가 재시작됐을 수 있다. [추정] 종료 코드는 확인할 수 없다.');}else if(e.status)feedback('출력을 가져오지 못했다. '+e.message);}
+  if(job.done){feedback('실행 출력에서 결과를 확인하세요. 실행이 끝났습니다.');await refresh();if(job.action==='level'&&job.params?.level&&state?.level!==job.params.level)feedback('원하는 난이도를 다시 선택하세요. 현재 난이도: '+(state?.level??'실행 출력을 확인하세요')+'. 자세한 내용은 실행 출력에서 확인하세요.');}
+ }catch(e){if(e.status===404){job.done=true;job.missing=true;persist();paintJob();feedback('남아 있는 실행 출력을 확인한 뒤 학습을 다시 시작하세요.');}else if(e.status)feedback('다시 확인을 눌러 연결한 뒤 실행 출력을 확인하세요. '+e.message);}
  if(job&&!job.done)pollTimer=setTimeout(poll,online?700:3000);
 }
 $('run-form').onsubmit=async e=>{
  e.preventDefault();if(!state||!online||starting||(job&&!job.done))return;
  const params={};for(const name of state.actions[action]){const el=$('param-'+name);params[name]=el.type==='checkbox'?el.checked:el.value;}
- if(action==='build_start'&&params.force&&!confirm(`쌓기 작업 폴더를 지우고 다시 준비한다. 직접 쓴 코드도 지워진다.\n${state.build_target}\n계속 실행할까?`))return;
+ if(action==='build_start'&&params.force&&!confirm(`쌓기 작업 폴더를 다시 준비할까요? 직접 작성한 코드도 모두 삭제합니다.\n${state.build_target}\n필요한 코드를 따로 저장했는지 확인한 뒤 진행하세요.`))return;
  await runAction(action,params);
 };
 async function runAction(requested,params){
  if(!state||!online||starting||(job&&!job.done)||!state.actions[requested])return;
  starting=true;controls();feedback('');
  try{const data=await api('/api/run',{action:requested,params});job={id:data.job,action:requested,params,argv:data.argv,asks:state.asks_input.includes(requested),done:false,returncode:null};persist();$('output').textContent='';$('answer').value='';paintJob();clearTimeout(pollTimer);poll();}
- catch(err){feedback(err.status?'실행 요청이 거절됐다. '+err.message:'실행 요청의 응답을 받지 못했다. 작업 생성 여부는 확인할 수 없다. 자동으로 다시 실행하지 않는다.');}
+ catch(err){feedback(err.status?'실행 설정을 확인하고 다시 실행하세요. '+err.message:'다시 실행하기 전에 학습 프로그램의 진행 상태를 확인하세요. 실행 요청에 대한 응답이 도착하지 않았습니다.');}
  finally{starting=false;controls();}
 };
 async function sendLine(line,help=false){
  if(!job||job.done||!job.asks||!online||posting||job.awaitingOutput)return;
  posting=true;job.awaitingOutput=true;job.inputBaseline=$('output').textContent;persist();controls();
- try{await api(`/api/jobs/${encodeURIComponent(job.id)}/input`,{line});if(!help)$('answer').value='';feedback(help?'도움을 요청했다. 열린 힌트와 보기는 서버 출력에서 확인한다.':'답변을 보냈다. 다음 출력을 확인한다.');}
- catch(err){if(err.status){job.awaitingOutput=false;delete job.inputBaseline;}feedback(err.status?'입력 전송이 거절됐다. '+err.message:'입력 전송 여부를 확인할 수 없다. 연결 후 출력을 확인한다. 자동으로 다시 보내지 않는다.');}
+ try{await api(`/api/jobs/${encodeURIComponent(job.id)}/input`,{line});if(!help)$('answer').value='';feedback(help?'실행 출력에서 힌트나 보기를 확인하세요. 도움을 요청했습니다.':'다음 출력을 확인하세요. 답변을 보냈습니다.');}
+ catch(err){if(err.status){job.awaitingOutput=false;delete job.inputBaseline;}feedback(err.status?'현재 질문과 답변을 확인한 뒤 다시 보내세요. '+err.message:'연결한 뒤 실행 출력을 먼저 확인하세요. 답변이 반영되지 않았을 때만 다시 보내세요.');}
  finally{posting=false;persist();controls();if(!help&&!$('answer').disabled)$('answer').focus();}
 }
 $('answer-form').onsubmit=e=>{e.preventDefault();sendLine($('answer').value);};
@@ -230,12 +233,12 @@ $('hint-request').onclick=()=>{if(!$('hint-request').disabled)sendLine(state.hin
 $('giveup-request').onclick=()=>{if(!$('giveup-request').disabled)sendLine(state.giveup_words[0],true);};
 $('build-hint').onclick=()=>{if(!$('build-hint').disabled)runAction('build_hint',{step:$('param-step').value});};
 document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{if(!b.disabled)runAction('level',{level:b.dataset.level});});
-$('stop').onclick=async()=>{if(!job||job.done||!online||stopping)return;stopping=true;controls();try{await api(`/api/jobs/${encodeURIComponent(job.id)}/stop`,{});feedback('중단을 요청했다. 서버 종료 코드를 기다린다.');}catch(e){feedback('중단 요청을 확인하지 못했다. '+e.message);}finally{stopping=false;controls();}};
+$('stop').onclick=async()=>{if(!job||job.done||!online||stopping)return;stopping=true;controls();try{await api(`/api/jobs/${encodeURIComponent(job.id)}/stop`,{});feedback('실행이 끝날 때까지 기다려 주세요. 중단을 요청했습니다.');}catch(e){feedback('실행이 멈췄는지 확인하세요. 중단 요청에 대한 응답을 받지 못했습니다. '+e.message);}finally{stopping=false;controls();}};
 $('download').onclick=()=>{const url=URL.createObjectURL(new Blob([$('job-meta').textContent+'\n'+$('job-status').textContent+'\n\n'+$('output').textContent],{type:'text/plain;charset=utf-8'}));const a=node('a');a.href=url;a.download=`dojo-${job.id}.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('follow').onchange=()=>{if($('follow').checked)$('output').scrollTop=$('output').scrollHeight;};
 $('refresh').onclick=refresh;
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(!state)return;tab=b.dataset.tab;renderActions();});
-try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');if(saved&&typeof saved.id==='string'&&!saved.done){job=saved;paintJob();$('output').textContent='이전 작업의 출력을 다시 가져온다.';}}catch{}
+try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');if(saved&&typeof saved.id==='string'&&!saved.done){job=saved;paintJob();$('output').textContent='이전 학습 내용을 불러오고 있습니다.';}}catch{}
 refresh();if(job&&!job.done)poll();setInterval(refresh,10000);
 </script>
 </body>
