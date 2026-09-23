@@ -2,6 +2,18 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "acop-all",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "& (Join-Path $env:USERPROFILE '.acop-ops\\start-acop.ps1')"
+      ],
+      "port": 8042
+    },
+    {
       "name": "acop-cs-ui",
       "runtimeExecutable": "python",
       "runtimeArgs": [
