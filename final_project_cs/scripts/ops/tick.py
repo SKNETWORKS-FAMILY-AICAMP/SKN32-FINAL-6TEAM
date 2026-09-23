@@ -33,7 +33,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.ops.guard import (Skipped, note_result, only_one, prune_logs,  # noqa: E402
-                              send_alert)
+                              record_alert, send_alert)
 from scripts.ops.jobs import HEARTBEAT_DIR, JOBS, LOG_DIR, Job  # noqa: E402
 
 #: 콘솔 창을 만들지 않는다. Windows 전용 플래그라 다른 OS 에서는 0 을 쓴다.
@@ -100,6 +100,15 @@ def append_log(job: Job, record: dict) -> Path:
     return path
 
 
+def append_alert_line(job: Job, *, kind: str, streak: int, outcome: str) -> Path:
+    """로그에 **알림 한 줄**을 남긴다 — 회차 줄과 같은 파일, 같은 시각 형식이라 `grep 알림` 으로 보인다."""
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    path = LOG_DIR / f"{job.name}-{datetime.now().strftime('%Y%m%d')}.log"
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(f"{_now()}\t알림\t{kind} · 연속 {streak}회 · {outcome}\n")
+    return path
+
+
 def run(job: Job, *, timeout: int) -> int:
     """한 회차. ★`[2026-09-22]` 겹치면 건너뛰고, 연속 실패면 알리고, 오래된 로그를 지운다."""
     try:
@@ -152,9 +161,14 @@ def _run_once(job: Job, *, timeout: int) -> int:
     verdict = note_result(HEARTBEAT_DIR, job.name, exit_code=exit_code,
                           detail=_tail(err or out, 300))
     if verdict["should_alert"]:
-        say(f"운영 알림({verdict['kind']}, 연속 {verdict['streak']}회): "
-            + send_alert(job.name, verdict["kind"], streak=verdict["streak"],
-                         detail=_tail(err or out, 300)))
+        outcome = send_alert(job.name, verdict["kind"], streak=verdict["streak"],
+                             detail=_tail(err or out, 300))
+        # ★★결과를 **파일에** 남긴다. `say()` 만 쓰면 스케줄러(`pythonw`)에서 버려져서,
+        #   2026-09-23 에 8시간 연속 실패하는 동안 알림이 나갔는지 아무 데도 안 남았다.
+        record_alert(HEARTBEAT_DIR, job.name, kind=verdict["kind"],
+                     streak=verdict["streak"], outcome=outcome)
+        append_alert_line(job, kind=verdict["kind"], streak=verdict["streak"], outcome=outcome)
+        say(f"운영 알림({verdict['kind']}, 연속 {verdict['streak']}회): {outcome}")
     # ★사람이 직접 불렀을 때를 위해 그대로 흘려 준다. 스케줄러(pythonw)가 부르면 아무 데도 안 간다 —
     #   그래서 위에서 파일에 먼저 남겼다.
     if out:

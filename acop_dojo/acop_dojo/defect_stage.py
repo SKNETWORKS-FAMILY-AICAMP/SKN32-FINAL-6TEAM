@@ -12,6 +12,7 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
+from . import ask
 from . import defects as defects_mod
 from . import progress
 from . import review
@@ -69,46 +70,46 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
     options = [d for d in playable(catalog)
                if tracks_mod.owns(track_def, defects_mod.by_id(d).path)]
     if not options:
-        print(f"{track_def.title} 에서 낼 수 있는 결함이 없다.")
-        print("카탈로그가 비었으면 `python dojo.py defects --rebuild` 를 먼저 돌린다.")
+        print(f"{track_def.title}에서 출제할 수 있는 결함이 없다.")
+        print("결함 카탈로그가 비어 있다면 먼저 `python dojo.py defects --rebuild`를 실행한다.")
         return 1
     chosen = defect_id or random.choice(distinct(catalog, options))
     if chosen not in options:
-        print(f"{chosen} 은 게이트를 통과하지 못했다. 낼 수 있는 것: {', '.join(options)}")
+        print(f"{chosen}은 게이트(출제 가능 여부 검사)를 통과하지 못했다. 출제할 수 있는 결함: {', '.join(options)}")
         return 1
 
     defect = defects_mod.by_id(chosen)
     entry = catalog["entries"][chosen]
     patch = defects_mod.PATCH_DIR / f"{chosen}.patch"
 
-    print(f"\n3단계 · 결함   {chosen}")
-    print("코드 한 곳을 바꿨다. 깨진 테스트만 보여준다.")
+    print(f"\n3단계 · 결함 찾고 고치기   {chosen}")
+    print("코드 한 곳에 결함을 넣었다. 실패한 테스트를 보고 원인을 찾는다.")
     print(SEPARATOR)
 
     with Sandbox(target) as sandbox:
         assert sandbox.root is not None
         applied, message = sandbox.apply(patch)
         if not applied:
-            print(f"결함을 심지 못했다: {message}")
+            print(f"결함을 적용하지 못했다. 원인: {message}")
             return 1
 
         for nodeid in entry["failed"]:
             print(f"  FAILED  {nodeid}")
-        print(f"  나머지는 통과 (기준선 {catalog.get('baseline', {}).get('summary', '?')})")
+        print(f"  표시하지 않은 테스트는 통과했다. (기준선: {catalog.get('baseline', {}).get('summary', '?')})")
 
         if fix is not None:
-            print(f"\n  낸 패치를 적용한다: {fix}")
+            print(f"\n  제출한 패치를 적용한다: {fix}")
             ok, message = sandbox.apply(fix)
             if not ok:
-                print(f"  패치가 적용되지 않는다: {message}")
+                print(f"  패치를 적용하지 못했다. 원인: {message}")
                 return 1
-            print("  전체 테스트를 돌린다 (40초쯤 걸린다)")
+            print("  전체 테스트를 실행한다. 약 40초가 걸린다.")
             result = sandbox.pytest()
             print(f"  {result.summary}")
             remaining = new_failures(catalog, result.failed)
             passed = not remaining
-            print("\n  통과. 결함이 깨뜨린 테스트가 전부 초록으로 돌아왔다." if passed
-                  else f"\n  아직이다. 남은 실패: {remaining[:4]}")
+            print("\n  통과했다. 결함 때문에 실패한 테스트를 모두 복구했다." if passed
+                  else f"\n  아직 통과하지 못했다. 남은 실패: {remaining[:4]}")
             progress.record_stage("3", status="passed" if passed else "partial",
                                   detail={"defect": chosen, "oracle": "pytest",
                                           "remaining": remaining})
@@ -119,13 +120,33 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
             return 0 if passed else 1
 
     print(f"\n{SEPARATOR}")
-    print("어느 파일이 바뀌었나? (경로 일부만 써도 된다)")
-    guess = input("  > ").strip()
-    hit = bool(guess) and guess.lower() in defect.path.lower()
+    tally = ask.Tally()
+    pool = [defects_mod.by_id(d).path for d in playable(catalog)]
+    options, right = ask.file_choices(defect.path, pool)
+    guess = tally.add(ask.free(
+        "결함이 들어간 파일을 쓴다. 경로의 일부만 써도 된다.",
+        hints=[f"깨진 규칙: {defect.invariant}",
+               f"그 파일은 {ask.layer_of(defect.path)}에 있다.",
+               f"바뀐 줄의 원래 코드: {defect.old.strip().splitlines()[0][:70]}"],
+        fallback=(options, right)))
+    hit = (guess.index == right) if guess.via_choices else (
+        bool(guess.text) and guess.text.lower() in defect.path.lower())
     print(f"  {'맞다.' if hit else '아니다.'}  실제로는 {defect.path} 다.")
 
-    print("\n왜 이것이 규칙 위반인지 한 줄로 쓴다.")
-    explanation = input("  > ").strip()
+    # 설명 보기는 정답 설명 하나와 흔한 오해로 만든다. 오해가 모자라면 다른 규칙의 설명으로 채운다.
+    wrongs = list(defect.counterfactuals)
+    others = [d.lesson for d in defects_mod.DEFECTS
+              if d.defect_id != chosen and d.invariant != defect.invariant]
+    while len(wrongs) < 3 and others:
+        wrongs.append(others.pop(0))
+    reasons = sorted(wrongs[:3] + [defect.lesson])
+    said = tally.add(ask.free(
+        "이 변경이 규칙을 어긴 이유를 한 줄로 쓴다.",
+        hints=[f"원래 지키던 규칙: {defect.invariant}",
+               f"코드 변경: {defect.old.strip().splitlines()[0][:60]} → {(defect.new.strip() or '(삭제)')[:60]}",
+               "그 줄이 사라지거나 바뀌었을 때 검사 없이 통과하는 요청을 찾는다."],
+        fallback=(reasons, reasons.index(defect.lesson))))
+    explanation = said.text
 
     print(f"\n{SEPARATOR}")
     print(f"  깨진 규칙   {defect.invariant}")
@@ -133,15 +154,17 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
     print(f"       →      {defect.new.strip() or '(삭제)'}")
     print(f"\n  {defect.lesson}")
     if defect.counterfactuals:
-        print("\n  다음처럼 답했다면 아직 이해한 게 아니다.")
+        print("\n  아래 설명은 이 결함의 원인이 아니다.")
         for item in defect.counterfactuals:
             print(f"    - {item}")
-    print("\n  스스로 대조한다. 본인 답이 위 설명의 핵심을 담고 있나?")
-    print(f"  직접 고쳐 보려면:  acop-dojo defect {chosen} --fix 내패치.patch")
+    print("\n  본인 답과 위 설명을 비교하고, 핵심 원인이 들어 있는지 확인한다.")
+    print(f"  직접 고치기:  acop-dojo defect {chosen} --fix 내패치.patch")
 
+    print(f"\n  {tally.summary()}")
     progress.record_stage("3", status="explored",
                           detail={"defect": chosen, "file_guess_ok": hit,
-                                  "explanation": explanation, "grading": "self"})
+                                  "explanation": explanation, "grading": "self",
+                                  **tally.detail()})
     progress.claim_ability("불변식 설명", evidence=f"defect:{chosen}", confirmed=False)
     review.schedule(defect.invariant, source=chosen)
     return 0

@@ -162,3 +162,58 @@ def test_a_closed_pipe_does_not_kill_it_either(monkeypatch):
     closed.close()
     monkeypatch.setattr(_sys, "stdout", closed)
     tick.say("닫힌 파이프")
+
+
+# ── 알림을 **보냈는지**가 남는가 (2026-09-23) ─────────────────────
+def test_the_alert_outcome_is_kept_in_the_state_file(tmp_path):
+    """★★2026-09-23 재부팅 뒤 DB 가 8시간 내려가 157회 연속 실패했는데, 알림이 나갔는지
+    **아무 데도 안 남았다.** 결과를 `say()` 로만 찍었고 스케줄러(`pythonw`)는 그걸 버린다."""
+    from scripts.ops.guard import record_alert
+
+    for _ in range(ALERT_AFTER):
+        note_result(tmp_path, "outbox", exit_code=1, detail="DB 연결 실패")
+    record_alert(tmp_path, "outbox", kind="failing", streak=ALERT_AFTER, outcome="알림 실패: HTTP 404")
+
+    state = json.loads((tmp_path / "outbox.alert.json").read_text(encoding="utf-8"))
+    assert state["last_alert"]["outcome"] == "알림 실패: HTTP 404"      # 실패도 그대로 남는다
+    assert state["last_alert"]["kind"] == "failing" and state["last_alert"]["streak"] == ALERT_AFTER
+
+
+def test_the_next_run_does_not_erase_the_last_alert(tmp_path):
+    """★매 회차 상태를 새로 쓰면 「마지막으로 알린 것」이 1분 뒤에 지워진다."""
+    from scripts.ops.guard import record_alert
+
+    record_alert(tmp_path, "sweepers", kind="failing", streak=3, outcome="알림 보냄")
+    note_result(tmp_path, "sweepers", exit_code=1)
+    note_result(tmp_path, "sweepers", exit_code=0)
+    state = json.loads((tmp_path / "sweepers.alert.json").read_text(encoding="utf-8"))
+    assert state["last_alert"]["outcome"] == "알림 보냄"
+
+
+def test_a_windowless_streak_leaves_the_alert_in_the_log(tmp_path, monkeypatch):
+    """★창 없이(`stdout=None`) 연속 실패해도 **로그 파일에 알림 줄**이 남아야 한다."""
+    import sys as _sys
+
+    from scripts.ops import jobs, tick
+
+    monkeypatch.setattr(tick, "HEARTBEAT_DIR", tmp_path / "hb")
+    monkeypatch.setattr(tick, "LOG_DIR", tmp_path / "logs")
+    monkeypatch.setattr(_sys, "stdout", None)
+    monkeypatch.setattr(_sys, "stderr", None)
+    sent = []
+    monkeypatch.setattr(tick, "send_alert",
+                        lambda job, kind, **kw: sent.append((job, kind)) or "알림 보냄")
+
+    class Done:
+        returncode, stdout, stderr = 1, "", "psycopg.errors.ConnectionTimeout"
+
+    monkeypatch.setattr(tick.subprocess, "run", lambda *a, **k: Done())
+    job = jobs.JOBS["outbox"]
+    for _ in range(ALERT_AFTER):
+        tick.run(job, timeout=5)
+
+    assert sent == [("outbox", "failing")], "연속 3회째에 한 번 알려야 한다"
+    log = next((tmp_path / "logs").glob("outbox-*.log")).read_text(encoding="utf-8")
+    assert "\t알림\tfailing · 연속 3회 · 알림 보냄" in log
+    state = json.loads((tmp_path / "hb" / "outbox.alert.json").read_text(encoding="utf-8"))
+    assert state["last_alert"]["outcome"] == "알림 보냄"

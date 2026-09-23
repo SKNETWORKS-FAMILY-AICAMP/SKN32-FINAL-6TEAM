@@ -136,10 +136,35 @@ def note_result(state_dir: Path, job: str, *, exit_code: int, detail: str = "") 
             kind, alerted = "failing", True
 
     path.parent.mkdir(parents=True, exist_ok=True)
+    # ★`last_alert` 는 이어 쓴다 — 매 회차 새로 쓰면 「마지막으로 알린 것」이 다음 회차에 지워진다.
+    kept = {"last_alert": state["last_alert"]} if "last_alert" in state else {}
     path.write_text(json.dumps({"streak": streak, "alerted": alerted, "detail": detail[:500],
-                                "at": datetime.now().astimezone().isoformat(timespec="seconds")},
-                               ensure_ascii=False), encoding="utf-8")
+                                "at": datetime.now().astimezone().isoformat(timespec="seconds"),
+                                **kept}, ensure_ascii=False), encoding="utf-8")
     return {"streak": streak, "should_alert": kind is not None, "kind": kind}
+
+
+def record_alert(state_dir: Path, job: str, *, kind: str, streak: int, outcome: str) -> dict[str, Any]:
+    """알림을 **보냈는지·못 보냈는지**를 상태 파일에 남긴다. `[2026-09-23]`
+
+    ★★왜. 2026-09-23 재부팅 뒤 DB 가 8시간 내려가 있는 동안 되잡기·바깥함이 각각 157·158회
+      연속 실패했다. 알림은 연속 3회째에 나갔어야 하는데, 그 결과를 `say()` 로만 찍고 있었고
+      스케줄러(`pythonw`)에서는 그 출력이 **버려진다.** 그래서 알림이 나갔는지 **아무 데도
+      안 남았다** — 알림 장치를 만들어 두고 그 장치가 도는지를 못 보는 상태였다.
+    ★결과 문자열(`send_alert` 가 돌려준 것)을 그대로 적는다. 「보낼 곳이 없다」·「알림 실패」도
+      성공과 같은 무게로 남는다.
+    """
+    path = _alert_state_path(state_dir, job)
+    try:
+        state = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        state = {}
+    entry = {"kind": kind, "streak": streak, "outcome": outcome,
+             "at": datetime.now().astimezone().isoformat(timespec="seconds")}
+    state["last_alert"] = entry
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+    return entry
 
 
 def send_alert(job: str, kind: str, *, streak: int, detail: str = "") -> str:
@@ -171,4 +196,4 @@ def send_alert(job: str, kind: str, *, streak: int, detail: str = "") -> str:
 
 
 __all__ = ["ALERT_AFTER", "LOG_RETENTION_DAYS", "Skipped", "note_result", "only_one",
-           "prune_logs", "send_alert"]
+           "prune_logs", "record_alert", "send_alert"]

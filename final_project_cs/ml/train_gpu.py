@@ -288,7 +288,7 @@ def main():
     parser.add_argument("--save-models", nargs="*", default=None,
                         help="이 모델만 가중치를 저장한다(디스크). 없으면 모두")
     args = parser.parse_args()
-    gpu_limit_gb = limit_gpu_memory()
+    _gpu_limit_gb = limit_gpu_memory()
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
