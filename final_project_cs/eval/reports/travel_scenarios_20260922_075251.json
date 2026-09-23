@@ -1,0 +1,85 @@
+{
+  "run_id": "20260922_075251",
+  "dataset": "C:\\Users\\playdata2\\Documents\\final_workspace\\final_project_cs\\eval\\datasets\\travel_scenarios.jsonl",
+  "llm": "흉내(분류·추출)",
+  "sources": "재생",
+  "results": [
+    {
+      "case_id": "t-cash-only",
+      "what": "현금만 쓰는 여행 — 바꾼 식당도 현금을 받아야 한다",
+      "tenant": "eval_cd81414183",
+      "steps": [
+        {
+          "step": "say:closed",
+          "status": "resolved",
+          "team": "dining"
+        },
+        {
+          "step": "say:delay",
+          "status": "resolved",
+          "team": "dining"
+        }
+      ],
+      "cases": {
+        "resolved": 2,
+        "escalated": 0
+      },
+      "fatal": 0,
+      "violations": [
+        {
+          "version": 2,
+          "code": "payment_not_accepted",
+          "items": [
+            9
+          ],
+          "reason": "서울역 한식당(시나리오) 식사: 결제 조건은 cash 인데 이곳은 card 만 받는다",
+          "remedy": "cash 을(를) 받는 곳으로 바꾸거나 여행 제약에서 결제 조건을 뺀다"
+        },
+        {
+          "version": 3,
+          "code": "payment_not_accepted",
+          "items": [
+            5
+          ],
+          "reason": "성수 브런치 식당(시나리오) 식사: 결제 조건은 cash 인데 이곳은 card 만 받는다",
+          "remedy": "cash 을(를) 받는 곳으로 바꾸거나 여행 제약에서 결제 조건을 뺀다"
+        },
+        {
+          "version": 3,
+          "code": "payment_not_accepted",
+          "items": [
+            9
+          ],
+          "reason": "서울역 한식당(시나리오) 식사: 결제 조건은 cash 인데 이곳은 card 만 받는다",
+          "remedy": "cash 을(를) 받는 곳으로 바꾸거나 여행 제약에서 결제 조건을 뺀다"
+        }
+      ],
+      "versions": 3,
+      "last_items": [
+        "1 호텔 조식",
+        "2 잠실 스카이타워 전망 관람",
+        "3 잠실역 → 성수역",
+        "4 성수동 팝업스토어·향수 쇼룸",
+        "5 성수 브런치 식당(시나리오) 식사",
+        "6 성수역 → 경복궁역",
+        "7 경복궁 한복 탐방",
+        "8 경복궁 → 서울역 저녁 식당",
+        "9 서울역 한식당(시나리오) 식사",
+        "10 저녁 식당 → 롯데마트 서울역점",
+        "11 롯데마트 서울역점 식료품 쇼핑"
+      ],
+      "notices": 2,
+      "verdict": {
+        "passed": false,
+        "failures": [
+          "필수 조건 위반 3건"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "cases": 1,
+    "passed": 0,
+    "violations": 3
+  }
+}

@@ -194,6 +194,24 @@ def test_create_is_idempotent_and_the_first_notice_carries_the_plan_link(api):
     assert reused.json()["error"]["code"] == "idempotency_key_reused"
 
 
+@pytest.mark.parametrize("preference", [{"level": "normal"}, {"target_density": 0.6}])
+def test_density_warning_survives_registration_duplicate_and_read(api, preference):
+    body = _body(api["customer"])
+    body["items"] = [{"seq": 1, "kind": "activity", "title": "긴 방문",
+                      "starts_at": f"{DAY}T10:00:00+09:00", "ends_at": f"{DAY}T18:00:00+09:00"}]
+    body["constraints"] = {"density": {**preference, "days": {DAY: {
+        "starts_at": f"{DAY}T10:00:00+09:00", "ends_at": f"{DAY}T22:00:00+09:00", "buffer_minutes": 0}}}}
+    first = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert first.status_code == 201, first.text
+    view = first.json()
+    assert view["warnings"][0]["code"] == "density_exceeded"
+    assert view["density"][0]["policy_basis"] == ("research_calibrated" if "level" in preference else "user_preference")
+    assert view["density"][0]["breakdown"]["scheduled_minutes"] == 480
+    again = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write")).json()
+    assert again["created"] is False and again["density"] == view["density"]
+    assert _detail(api, view["trip_id"])["density"] == view["density"]
+
+
 def test_a_second_trip_reuses_known_places_without_overwriting_them(api):
     """☆2026-09-14 개발 서버에서 발견 — 같은 테넌트의 두 번째 여행이 이미 있는 장소를
     적자 UNIQUE(tenant_id, name, kind) 로 500 이 났다. 여행마다 테넌트를 새로 만드는

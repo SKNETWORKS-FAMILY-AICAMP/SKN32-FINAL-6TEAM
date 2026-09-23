@@ -189,7 +189,8 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
 from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
-from .itinerary_checks import Part, check_itinerary
+from .itinerary_checks import Part, check_itinerary, parts_from_items
+from .density import measure_density
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 
 
@@ -218,7 +219,8 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"], "items": [_item_view(item) for item in items],
-            "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"])}
+            "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
+            **measure_density(parts_from_items(items), trip.get("constraints") or {})}
 
 
 #: ★고객이 보는 화면에 내부 이름(`customer_report · delay`)을 그대로 싣지 않는다 —
