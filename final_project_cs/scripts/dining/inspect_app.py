@@ -114,9 +114,10 @@ def api_places(q: str = "", limit: int = 300):
                      WHERE c.place_uid = p.place_uid)
             FROM dining.dn_place p
             WHERE (%s = '' OR p.name_ko ILIKE '%%' || %s || '%%'
-                           OR p.area ILIKE '%%' || %s || '%%')
+                           OR p.area ILIKE '%%' || %s || '%%'
+                           OR p.hub  ILIKE '%%' || %s || '%%')
             ORDER BY p.area, p.name_ko
-            LIMIT %s""", (q, q, q, limit))
+            LIMIT %s""", (q, q, q, q, limit))
         rows = cur.fetchall()
     return [{"uid": str(u), "name": n, "area": a, "status": s, "closures": c}
             for u, n, a, s, c in rows]

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 import uuid
 from datetime import date
@@ -54,6 +55,12 @@ def jq(obj) -> str:
     return "$j$" + json.dumps(obj, ensure_ascii=False) + "$j$::jsonb"
 
 
+def district(address: str | None) -> str | None:
+    """주소의 자치구. area 는 자치구이고 권역은 hub 로 간다(033)."""
+    m = re.search(r"([가-힣]+구)\s", address or "")
+    return m.group(1) if m else None
+
+
 def main() -> None:
     parsed = json.load(open(os.path.join(OUT, "parsed_hours.json"), encoding="utf-8"))
     intro = {r["contentid"]: r for r in
@@ -92,12 +99,14 @@ def main() -> None:
         lat = lst.get("mapy") or None
         lng = lst.get("mapx") or None
         phone = (src.get("infocenterfood") or lst.get("tel") or "").strip() or None
+        address = lst.get("addr1") or src.get("_addr")
 
         out.append(
             "INSERT INTO dining.dn_place (place_uid, name_ko, road_address, lat, lng, "
-            "coord_source, area, phone, record_status) VALUES ("
-            f"'{place_uid}', {q(row['title'])}, {q(lst.get('addr1') or src.get('_addr'))}, "
-            f"{lat or 'NULL'}, {lng or 'NULL'}, '{SOURCE}', {q(row['area'])}, {q(phone)}, 'unknown')"
+            "coord_source, area, hub, phone, record_status) VALUES ("
+            f"'{place_uid}', {q(row['title'])}, {q(address)}, "
+            f"{lat or 'NULL'}, {lng or 'NULL'}, '{SOURCE}', "
+            f"{q(district(address) or row['area'])}, {q(row['area'])}, {q(phone)}, 'unknown')"
             " ON CONFLICT (place_uid) DO NOTHING;")
         n_place += 1
 
