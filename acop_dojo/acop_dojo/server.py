@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import threading
@@ -124,9 +125,11 @@ def start(action: str, params: dict[str, Any]) -> Job:
     if action not in ACTIONS:
         raise ValueError(f"모르는 동작이다: {action}")
     argv = _validate(action, params)
+    # 서버를 어떻게 띄웠든(터미널·실행 파일·앱 미리보기) 작업은 UTF-8 로 읽고 쓴다.
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     process = subprocess.Popen(
         [sys.executable, "-u", str(WORKSPACE_ROOT / "dojo.py"), *argv],
-        cwd=WORKSPACE_ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        cwd=WORKSPACE_ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1)
     job = Job(job_id=uuid.uuid4().hex[:12], action=action, argv=argv, process=process)
     with _LOCK:

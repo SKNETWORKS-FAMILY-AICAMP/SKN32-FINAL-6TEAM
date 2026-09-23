@@ -629,7 +629,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    for stream in (sys.stdout, sys.stderr):
+    # stdin 도 맞춘다. 웹 서버는 답을 UTF-8 로 보낸다. 윈도우 기본(cp949)으로 읽으면
+    # `힌트` 가 깨진 글자로 들어가 오답으로 채점된다(2026-09-24 실제로 났다).
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
     args = build_parser().parse_args(argv)
