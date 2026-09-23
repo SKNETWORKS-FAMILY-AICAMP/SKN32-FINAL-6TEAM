@@ -233,9 +233,14 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "없는 주소다"})
 
 
-def serve(port: int = 8765) -> int:
+def serve(port: int = 8765, *, open_browser: bool = True) -> int:
     httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"도장 서버: http://127.0.0.1:{port}")
+    url = f"http://127.0.0.1:{port}"
+    print(f"도장 서버: {url}")
+    if open_browser:
+        # 터미널을 못 보는 사람도 바로 화면을 본다. 서버가 뜬 뒤에 연다.
+        import webbrowser
+        threading.Timer(0.4, lambda: webbrowser.open(url)).start()
     print(f"  대상 저장소 {target_root()}")
     print("  돌릴 수 있는 것: " + ", ".join(ACTIONS))
     print("  멈추려면 Ctrl+C")

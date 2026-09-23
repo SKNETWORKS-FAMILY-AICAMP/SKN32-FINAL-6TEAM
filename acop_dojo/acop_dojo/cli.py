@@ -587,7 +587,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     serve_cmd = sub.add_parser("serve", help="브라우저에서 도장을 돌린다 (로컬 서버)")
     serve_cmd.add_argument("--port", type=int, default=8765)
-    serve_cmd.set_defaults(func=lambda args: server.serve(args.port))
+    serve_cmd.add_argument("--no-open", action="store_true", help="브라우저를 자동으로 열지 않는다")
+    serve_cmd.set_defaults(func=lambda args: server.serve(args.port, open_browser=not args.no_open))
 
     sub.add_parser("status", help="진행 상황").set_defaults(func=cmd_status)
     return parser
