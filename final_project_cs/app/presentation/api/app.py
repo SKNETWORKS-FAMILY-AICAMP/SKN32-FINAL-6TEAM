@@ -101,7 +101,10 @@ def create_app(controller=None, classifier=None, *,
         detail = exc.detail if isinstance(exc.detail, dict) else {
             "error": {"code": "http_error", "message": str(exc.detail)}
         }
-        return JSONResponse(status_code=exc.status_code, content=detail)
+        # ★`[2026-09-23]` 헤더를 버리고 있었다 — 운영 화면 관문의 303 에 `Location` 이 빠져 브라우저가
+        #   로그인 화면으로 못 갔다. 예외가 들고 온 헤더(`Location`·`WWW-Authenticate` 등)는 그대로 싣는다.
+        return JSONResponse(status_code=exc.status_code, content=detail,
+                            headers=getattr(exc, "headers", None))
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, _exc: RequestValidationError):

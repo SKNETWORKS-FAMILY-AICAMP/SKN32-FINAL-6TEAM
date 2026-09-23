@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.presentation.ui import mount_ui
+from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 
 def _client(path: Path) -> TestClient:
@@ -47,6 +48,14 @@ def workdir():
         path.rmdir()
 
 
+def test_logged_out_the_root_lands_on_the_login_screen(workdir):
+    """★로그인 안 한 채로 첫 화면을 열면 **로그인 화면**에 닿는다 — 운영 화면이 새지 않는다(D-CS-007)."""
+    client = _client(_write(workdir, ops_ui=True))
+    landed = client.get("/")
+    assert landed.status_code == 200 and "운영자 id" in landed.text
+    assert "Case 목록" not in landed.text
+
+
 def test_root_redirects_to_cases_when_ops_ui_is_on(workdir):
     client = _client(_write(workdir, ops_ui=True))
     response = client.get("/", follow_redirects=False)
@@ -60,8 +69,9 @@ def test_root_stays_404_when_every_ui_module_is_off(workdir):
     assert client.get("/", follow_redirects=False).status_code == 404
 
 
-def test_root_actually_lands_on_a_real_page(workdir):
+def test_root_actually_lands_on_a_real_page(workdir, monkeypatch):
     client = _client(_write(workdir, ops_ui=True))
+    login(client, monkeypatch)
     landed = client.get("/")  # follow_redirects 기본 True
     assert landed.status_code == 200
     assert "Case 목록" in landed.text
