@@ -37,6 +37,7 @@ final_project_cs/
     make_attribute_sql.py      매장 속성을 적재 SQL 로
     make_audit_sheet.py        오추출률 측정용 대조표
     run_check.py               현장 확인 한 번을 돌린다
+    place_link.py              가게 링크를 넣는다. 단축 주소는 긴 주소로 바꿔 넣는다
     inspect_app.py             원장 확인기. 판정을 눈으로 따라가는 화면
     dev_up.py                  DB 와 확인기를 한 번에 띄운다
     rebuild.py                 빈 DB 에서 처음부터 세운다
@@ -260,6 +261,29 @@ SELECT * FROM dining.core_place_state(
 지도 링크는 저장하지 않고 상호명과 주소로 그때그때 만든다. 우리가 만든 검색 주소이지
 공급자가 준 데이터가 아니므로 약관을 따질 일이 없다. 다만 특정 가게가 아니라 검색 결과로 가므로
 화면에도 그렇게 적는다.
+
+### 가게 링크 (035)
+
+사람이 열어 보고 「이 가게가 맞다」고 한 링크는 `dn_external_ref` 에 둔다. 다섯 가지다 —
+`naver_place`, `google_place`, `instagram`, `tripadvisor`, `homepage`. 링크만 저장하고
+링크 너머의 내용(게시물, 리뷰)은 저장하지도 읽지도 않는다.
+
+`map_links` 는 확인된 링크를 `place_links` 아래에 더한다. `naver`, `google`, `kind='search'` 는
+그대로라 이미 읽는 쪽(명절 경고, 확인 요청)은 바뀌지 않는다. `candidate` 와 `dead` 는 나가지 않는다.
+
+```bash
+# 공유 버튼으로 복사한 단축 주소를 그대로 붙여 넣는다. 한 번 따라가 긴 주소로 바꿔 넣는다
+python scripts/dining/place_link.py add --place 닥터비건 --kind naver_place --url https://naver.me/5abcXYZ --by 홍길동
+# 방금 열어 보고 맞다고 확인했으면 --valid. 없으면 candidate 로 들어가 사용자에게 나가지 않는다
+python scripts/dining/place_link.py add --place 닥터비건 --kind instagram --url https://instagram.com/drvegan_official --by 홍길동 --valid
+python scripts/dining/place_link.py list   --place 닥터비건
+python scripts/dining/place_link.py verify --ref <ref_id> --by 홍길동
+python scripts/dining/place_link.py dead   --ref <ref_id> --by 홍길동
+```
+
+단축 주소는 DB 가 받지 않는다. 모양만으로는 어느 가게인지 알 수 없어서 모양 검사와 중복 검사가
+무력해지기 때문이다. 도구는 단축 주소 서버가 돌려준 「어디로 가라」만 읽고 멈추며, 목적지 지도
+페이지는 열지 않는다. 모양 규칙은 DB 의 `external_ref_url_ok` 한 곳에만 있다.
 
 ---
 

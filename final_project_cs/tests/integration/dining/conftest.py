@@ -78,6 +78,8 @@ def place(conn):
         conn.execute("DELETE FROM dining.dn_live_check WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_notice WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_closure_coverage WHERE place_uid = %s", (uid,))
+        # 링크 시험이 가게 링크를 붙인다.
+        conn.execute("DELETE FROM dining.dn_external_ref WHERE place_uid = %s", (uid,))
         # 분류 시험이 원문을 붙인다. 원문도 장소를 붙들고 있다.
         conn.execute("DELETE FROM dining.dn_source_record WHERE place_uid = %s", (uid,))
         conn.execute("DELETE FROM dining.dn_place WHERE place_uid = %s", (uid,))
