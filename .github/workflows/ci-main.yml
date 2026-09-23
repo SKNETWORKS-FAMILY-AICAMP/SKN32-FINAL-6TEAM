@@ -72,16 +72,15 @@ jobs:
         run: python -m scripts.seed_travel
       - name: 아키텍처 시험 (먼저 본다 — 가장 싸고 어기면 되돌리기 비싸다)
         run: python -m pytest tests/architecture -q
-      # ★빼는 것 두 가지 — 둘 다 코드가 아니라 CI 에 없는 자원을 요구한다.
+      # ★빼는 것 하나 — 코드가 아니라 CI 에 없는 자원을 요구한다.
       #   tests/integration/rag: 정책 문서 코퍼스가 적재돼 있어야 한다(쇼핑몰 25문서·306청크,
       #     여행 12문서·130청크). 적재에는 실제 임베딩(OpenAI 키 · 로컬 1024칸 모델)이 필요해
       #     키·모델이 없는 CI 에서는 만들 수 없다. live 시험처럼 로컬·수동으로 돌린다.
-      #   test_deactivating_does_not_erase_history: 새 DB 에는 과거 기록이 없다(ci-develop.yml 참고).
+      #   ☆test_deactivating_does_not_erase_history 는 2026-09-24 고쳐 다시 넣었다(ci-develop.yml 참고).
       - name: 전체 시험
         run: >-
           python -m pytest -q
           --ignore=tests/integration/rag
-          --deselect tests/contract/test_active_prompts_are_the_deployed_set.py::test_deactivating_does_not_erase_history
 
   docker:
     name: Docker 빌드
