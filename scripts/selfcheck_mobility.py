@@ -18,6 +18,9 @@
   INV-JUMP      1스텝 차이인데 도착이 60분 넘게 벌어진다 (배차 공백일 수도 있다)
   INV-DAYTYPE   같은 시각인데 평일/휴일 도착이 30분 넘게 다르다
   INV-UNKNOWN   특정 역·노선에만 판단불가가 몰린다 (데이터 구멍)
+  INV-WORST     최악 도착이 예정 도착보다 이르다 · @ 가 버퍼보다 작다 (v0.8 이중 계산 붕괴)
+  INV-OUT       밖 판(out)이 내부와 어긋난다 — 성립인데 예정 시각이 없다 · 불가인데 이유 코드가 없다 ·
+                성립인데 여유가 음수다 · 밖 판정이 둘 밖의 값이다 (v0.8)
 
 2026-09-10 에 잡았던 실제 버그 둘이 이 규칙에 그대로 걸린다 —
 자정 넘김 미정규화는 INV-MIDNIGHT·INV-MONO, 행선지 필드 역전은 INV-SYM.
@@ -192,6 +195,31 @@ def check_invariants(rows, args):
             #   도착 시각을 내놓으면서 근거가 없다고 하는 것만 모순이다.
             add(findings, "INV-GRADE", "warn", p,
                 f"도착 {fmt_min(arr)} 을 내놓으면서 근거 등급은 '근거없음' 이다")
+        # v0.8 — 이중 계산 · 밖 판
+        aw, mg, bf = r.get("arrive_worst_min"), r.get("margin_min"), r.get("buffer_min")
+        if arr is not None and aw is not None and aw < arr:
+            add(findings, "INV-WORST", "critical", p,
+                f"최악 도착 {fmt_min(aw)} 이 예정 도착 {fmt_min(arr)} 보다 이르다")
+        if mg is not None and bf is not None and mg < bf:
+            add(findings, "INV-WORST", "critical", p, f"@ {mg}분이 버퍼 {bf}분보다 작다")
+        o = r.get("out")
+        if o is not None:
+            ov = o.get("verdict")
+            if ov not in ("feasible", "infeasible"):
+                add(findings, "INV-OUT", "critical", p, f"밖 판정이 둘 밖의 값이다: {ov!r}")
+            elif ov == "feasible":
+                if o.get("arrive_min") is None and "candidates" not in o:
+                    add(findings, "INV-OUT", "critical", p, "밖 성립인데 예정 시각(arrive_min)이 없다")
+                if o.get("slack_min") is not None and o["slack_min"] < 0:
+                    add(findings, "INV-OUT", "critical", p, f"밖 성립인데 여유 {o['slack_min']}분(음수)이다")
+                if o.get("code"):
+                    add(findings, "INV-OUT", "warn", p, f"밖 성립인데 이유 코드 {o['code']} 가 붙어 있다")
+            else:
+                if not o.get("code"):
+                    add(findings, "INV-OUT", "critical", p, "밖 불가인데 이유 코드가 없다")
+                if r.get("verdict") == "feasible" and o.get("code") not in ("no_data",):
+                    add(findings, "INV-OUT", "critical", p,
+                        f"내부 성립인데 밖 불가({o.get('code')}) — no_data(예정 시각 없음) 말고는 갈릴 수 없다")
 
     # 2) 같은 (구간·방향·요일) 안에서 출발시각을 따라가며 본다
     by_series = collections.defaultdict(list)
@@ -464,7 +492,10 @@ def main():
     ap.add_argument("--unknown-global", type=float, default=0.6,
                     help="전체 판단불가 비율이 이보다 높으면 역별 편중 대신 한 건으로 낸다")
     ap.add_argument("--per-rule", type=int, default=8, help="보고서에 규칙당 몇 건까지 쓸지")
-    ap.add_argument("--out", default="selfcheck_report.md")
+    # ★ v0.8(39번 방): 기본 출력을 추적 파일(selfcheck_report.md)에서 미추적 폴더(.metrics/)로 옮긴다 —
+    #   50번 방에서 자기점검이 추적 파일을 덮어써 merge 를 막았다(결함 2). `selfcheck*.json` 과 같은 자리다.
+    ap.add_argument("--out", default=".metrics/selfcheck_report.md")
+    ap.add_argument("--lfd", action="store_true", help="마지막 성립 출발 역산까지 돌린다(느리다 · 기본 끔)")
     ap.add_argument("--json", dest="json_out", default=None)
     ap.add_argument("--explain", action="store_true", help="상위 이상을 GPT 에게 설명시킨다")
     ap.add_argument("--explain-model", default="gpt-4o-mini")
@@ -515,7 +546,13 @@ def main():
     bk = BikeStations.load(args.bike_stations)          # 22번 방 — 자전거 씨앗(bike_legs_v1)이 근거없음으로 죽지 않게
     print(f"시간표 {tt.rows:,}행 · 역 {len(tt.stations)} · 수집 {tt.fetched_at}")
 
-    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk)
+    # v0.8 — 혼잡도(@ 부품)를 CLI·runtime 과 같은 두 파일로 연결한다(GPT 대조 2026-09-24 #3 — 없으면 혼잡 가산 경로가 탐침에서 안 돈다)
+    from app.modules.travel_ops.mobility_engine.congestion import Congestion
+    cg_dir = Path(args.timetable).parent
+    cg_data = Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
+    print(f"혼잡도 {cg_data.rows:,}셀" if cg_data else "혼잡도 없음(가산 근거없음)")
+    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, cg_data=cg_data)
+    v.lfd_enabled = bool(args.lfd)                       # v0.8 — 탐침 수천 건에 역산을 얹으면 수십 배 느려진다
     t0 = time.time()
     rows = []
     for i, p in enumerate(probes):
@@ -526,6 +563,9 @@ def main():
             rows.append({"probe": p, "result": {
                 "verdict": r.verdict, "grade": r.grade, "reason": r.reason,
                 "arrive_min": r.arrive_min, "slack_min": r.slack_min,
+                # v0.8 — 이중 계산 값과 밖 판
+                "arrive_worst_min": r.arrive_worst_min, "margin_min": r.margin_min,
+                "buffer_min": r.buffer_min, "code": r.code, "out": r.out,
                 "day_type": r.day_type, "n_alt": len(r.alternatives or []),
                 "ride_sum": round(sum(rides), 1) if len(rides) == len(r.legs or []) and rides else None,
                 "has_bus": any((l.get("mode") == "bus") for l in p["legs"]),
@@ -540,6 +580,12 @@ def main():
     tally = collections.Counter(
         r["result"]["verdict"] if not r.get("error") else "ERROR" for r in rows)
     print(f"판정 {dict(tally)} · {elapsed:.1f}초")
+    cg_hits = collections.Counter(w["code"] for r in rows if not r.get("error")
+                                  for w in (r["result"].get("warnings") or []) if w["code"].startswith("MOB_W_CONGESTION"))
+    moved = sum(1 for r in rows if not r.get("error") and r["result"].get("arrive_worst_min") is not None
+                and r["result"].get("arrive_min") is not None and r["result"]["arrive_worst_min"] > r["result"]["arrive_min"]
+                and not r["result"].get("has_bus"))
+    print(f"혼잡 경고 {dict(cg_hits) or 0} · 버스 없는 탐침에서 최악 > 예정(혼잡 다음 편 이동 실행) {moved}건")
 
     findings = check_invariants(rows, args)
     sev = collections.Counter(f["severity"] for f in findings)

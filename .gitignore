@@ -189,3 +189,5 @@ Claude outputs/
 demo*.html
 selfcheck*.json
 fold_sample.json
+# 39 (2026-09-24) 자기점검 보고서는 미추적 — 기본 출력은 .metrics/ (50 결함 2)
+selfcheck_report.md

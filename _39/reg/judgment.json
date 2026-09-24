@@ -1,0 +1,4202 @@
+[
+ {
+  "id": "J-SLACK-01",
+  "verdict": "feasible",
+  "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) · 여유 5분",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 845,
+  "slack_min": 5,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 845,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 840,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 845,
+   "arrive_worst_min": 845,
+   "margin_min": 10,
+   "slack_min": 5,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 840,
+   "arrive_by_min": 860
+  }
+ },
+ {
+  "id": "J-SLACK-02",
+  "verdict": "infeasible",
+  "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) 이 필요 시각 14:12 를 3분 넘긴다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 845,
+  "slack_min": -3,
+  "relief": "늦어도 13:54 출발이면 성립 · 안 되면 택시",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "arrive_late",
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 845,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 834,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 840,
+   "code": "arrive_late",
+   "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) 이 필요 시각 14:12 를 3분 넘긴다",
+   "relief": "늦어도 13:54 출발이면 성립 · 안 되면 택시",
+   "arrive_min": 845,
+   "arrive_worst_min": 845,
+   "margin_min": 10,
+   "slack_min": -3,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 834,
+   "arrive_by_min": 852
+  }
+ },
+ {
+  "id": "J-WORST-01",
+  "verdict": "infeasible",
+  "reason": "예정 11:12 +@15분(최악 11:17 + 버퍼 10분) 이 필요 시각 11:25 를 2분 넘긴다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 672,
+    "wait_min": 6,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 672,
+  "slack_min": -2,
+  "relief": "늦어도 10:58 출발이면 성립 · 안 되면 택시",
+  "warnings": [
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "택시 구간의 출발·도착 지점을 정하지 못했다 — 소요 판단 불가",
+   "warnings": []
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "arrive_late",
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 677,
+    "wait_min": 11,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 677,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 12,
+  "eta_worst_min": 17,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 658,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 660,
+   "code": "arrive_late",
+   "reason": "예정 11:12 +@15분(최악 11:17 + 버퍼 10분) 이 필요 시각 11:25 를 2분 넘긴다",
+   "relief": "늦어도 10:58 출발이면 성립 · 안 되면 택시",
+   "arrive_min": 672,
+   "arrive_worst_min": 677,
+   "margin_min": 15,
+   "slack_min": -2,
+   "eta_min": 12,
+   "eta_worst_min": 17,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 658,
+   "arrive_by_min": 685
+  }
+ },
+ {
+  "id": "J-WORST-02",
+  "verdict": "infeasible",
+  "reason": "최악값으로는 25:04 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:58 성수행)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 N73 잠실역8번출구→건대입구역1번출구",
+    "verdict": "feasible",
+    "reason": "24:27 승차 예상 (대기 18분 — 배차의 절반) · 잠실역8번출구(seq 18) → 건대입구역1번출구(seq 25)",
+    "grade": "추정",
+    "depart_min": 1467,
+    "arrive_min": 1485,
+    "wait_min": 18,
+    "ride_min": 17.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 정류장 건대입구역1번출구 ↔ 02호선 건대입구",
+    "verdict": "feasible",
+    "reason": "도보 1분(43m 직선×1.4 = 60m) + 길찾기 1분 = +2분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "02호선 건대입구→성수",
+    "verdict": "feasible",
+    "reason": "24:58 성수행 승차 (대기 11분)",
+    "grade": "추정",
+    "depart_min": 1498,
+    "arrive_min": 1501,
+    "wait_min": 11,
+    "ride_min": 2.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 건대입구 weekday: 24:58 출발 성수행 (그 방향 457편 중, 24:58~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 건대입구 에서 1정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1501,
+  "slack_min": null,
+  "relief": "늦어도 24:03 출발이면 최악값으로도 성립 · 안 되면 택시",
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+    "class": "grade",
+    "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 N73 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_BEST_OK_WORST_FAIL",
+    "class": "better_option",
+    "text": "예정대로면 25:01 도착이지만 최악값으로는 성립하지 않는다 (25:04 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:58 성수행)) — 앞 편으로 당기거나 택시",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+   },
+   {
+    "source_type": "db",
+    "source_id": "osm_subway_entrance@2026-09-16",
+    "grade": "추정",
+    "observed_at": "2026-09-21T14:13:35+09:00",
+    "claim": "정류장 건대입구역1번출구 ↔ 건대입구역 6번 출구 직선 43m (출구 귀속 name_match)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "transfer.stop_station_walk"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 건대입구 weekday: 24:58 출발 성수행 (그 방향 457편 중, 24:58~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 건대입구 에서 1정거장 뒤 성수 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 건대입구 weekday: 그 방향 마지막 출발 24:58"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 N62(심야) — 건대입구역1번출구까지 도보 108m(2분) · 2정거장 · 하차 후 209m(4분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N62",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    },
+    "mode": "bus",
+    "depart_min": 1526,
+    "arrive_min": 1536,
+    "walk_in_min": 2,
+    "walk_out_min": 4,
+    "grade": "추정",
+    "reason": "25:26 승차 예상 (대기 20분 — 배차 전부(최악)) · 건대입구역1번출구(seq 103) → 성수역1번출구(seq 105)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 N62 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N62 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1506
+   },
+   {
+    "axis": "수단교체",
+    "label": "버스 N73(심야) — 건대입구역1번출구까지 도보 108m(2분) · 2정거장 · 하차 후 209m(4분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N73",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    },
+    "mode": "bus",
+    "depart_min": 1541,
+    "arrive_min": 1551,
+    "walk_in_min": 2,
+    "walk_out_min": 4,
+    "grade": "추정",
+    "reason": "25:41 승차 예상 (대기 35분 — 배차 전부(최악)) · 건대입구역1번출구(seq 25) → 성수역1번출구(seq 27)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 N73 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1506
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "버스 2016(지선) — 건대입구역1번출구까지 도보 108m(2분) · 2정거장 · 하차 후 209m(4분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 N62(심야) — 건대입구역1번출구까지 도보 108m(2분) · 2정거장 · 하차 후 209m(4분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 N73(심야) — 건대입구역1번출구까지 도보 108m(2분) · 2정거장 · 하차 후 209m(4분)",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 N73 잠실역8번출구→건대입구역1번출구",
+    "verdict": "feasible",
+    "reason": "24:44 승차 예상 (대기 35분 — 배차 전부(최악)) · 잠실역8번출구(seq 18) → 건대입구역1번출구(seq 25)",
+    "grade": "추정",
+    "depart_min": 1484,
+    "arrive_min": 1502,
+    "wait_min": 35,
+    "ride_min": 17.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 N73 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "환승 정류장 건대입구역1번출구 ↔ 02호선 건대입구",
+    "verdict": "feasible",
+    "reason": "도보 1분(43m 직선×1.4 = 60m) + 길찾기 1분 = +2분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "02호선 건대입구→성수",
+    "verdict": "infeasible",
+    "reason": "25:04 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:58 성수행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:58 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "행선지없음": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 건대입구 weekday: 그 방향 마지막 출발 24:58"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": 52,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1443,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1449,
+   "code": "after_last",
+   "reason": "최악값으로는 25:04 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:58 성수행)",
+   "relief": "늦어도 24:03 출발이면 최악값으로도 성립 · 안 되면 택시",
+   "arrive_min": 1501,
+   "eta_min": 52,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1443
+  }
+ },
+ {
+  "id": "J-WORST-03",
+  "verdict": "feasible",
+  "reason": "예정 24:46 +@25분(최악 25:01 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 N73 잠실역8번출구→건대입구역1번출구",
+    "verdict": "feasible",
+    "reason": "24:18 승차 예상 (대기 18분 — 배차의 절반) · 잠실역8번출구(seq 18) → 건대입구역1번출구(seq 25)",
+    "grade": "추정",
+    "depart_min": 1458,
+    "arrive_min": 1476,
+    "wait_min": 18,
+    "ride_min": 17.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 정류장 건대입구역1번출구 ↔ 02호선 건대입구",
+    "verdict": "feasible",
+    "reason": "도보 1분(43m 직선×1.4 = 60m) + 길찾기 1분 = +2분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "02호선 건대입구→성수",
+    "verdict": "feasible",
+    "reason": "24:43 성수행 승차 (대기 5분)",
+    "grade": "추정",
+    "depart_min": 1483,
+    "arrive_min": 1486,
+    "wait_min": 5,
+    "ride_min": 2.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 건대입구 weekday: 24:43 출발 성수행 (그 방향 457편 중, 24:43~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 건대입구 에서 1정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1486,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+    "class": "grade",
+    "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 N73 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+   },
+   {
+    "source_type": "db",
+    "source_id": "osm_subway_entrance@2026-09-16",
+    "grade": "추정",
+    "observed_at": "2026-09-21T14:13:35+09:00",
+    "claim": "정류장 건대입구역1번출구 ↔ 건대입구역 6번 출구 직선 43m (출구 귀속 name_match)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "transfer.stop_station_walk"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 건대입구 weekday: 24:43 출발 성수행 (그 방향 457편 중, 24:43~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 건대입구 에서 1정거장 뒤 성수 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 건대입구 weekday: 24:58 출발 성수행 (그 방향 457편 중, 24:58~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 N73 잠실역8번출구→건대입구역1번출구",
+    "verdict": "feasible",
+    "reason": "24:35 승차 예상 (대기 35분 — 배차 전부(최악)) · 잠실역8번출구(seq 18) → 건대입구역1번출구(seq 25)",
+    "grade": "추정",
+    "depart_min": 1475,
+    "arrive_min": 1493,
+    "wait_min": 35,
+    "ride_min": 17.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 N73 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 운행 23:30~27:45 · 배차 35분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N73(심야): 잠실역8번출구→건대입구역1번출구 4,546m (7정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 간선 유형 통계(weekday) 15.3 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "환승 정류장 건대입구역1번출구 ↔ 02호선 건대입구",
+    "verdict": "feasible",
+    "reason": "도보 1분(43m 직선×1.4 = 60m) + 길찾기 1분 = +2분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "02호선 건대입구→성수",
+    "verdict": "feasible",
+    "reason": "24:58 성수행 승차 (대기 3분) [최악]",
+    "grade": "추정",
+    "depart_min": 1498,
+    "arrive_min": 1501,
+    "wait_min": 3,
+    "ride_min": 2.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 건대입구 weekday: 24:58 출발 성수행 (그 방향 457편 중, 24:58~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 건대입구 에서 1정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1501,
+  "buffer_min": 10,
+  "margin_min": 25,
+  "eta_min": 46,
+  "eta_worst_min": 61,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1443,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1440,
+   "arrive_min": 1486,
+   "arrive_worst_min": 1501,
+   "margin_min": 25,
+   "eta_min": 46,
+   "eta_worst_min": 61,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1443
+  }
+ },
+ {
+  "id": "J-CONG-01",
+  "verdict": "feasible",
+  "reason": "예정 08:36 +@12분(최악 08:38 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:32 성수행 승차 (대기 2분)",
+    "grade": "추정",
+    "depart_min": 512,
+    "arrive_min": 516,
+    "wait_min": 2,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 2분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:32 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 516,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+    "class": "effort",
+    "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 2분을 더했다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_metro_congestion@2026-06-30",
+    "grade": "추정",
+    "observed_at": "2026-09-10",
+    "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "congestion.levels.매우혼잡"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 서초 weekday: 08:32 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 서초 weekday: 08:34 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:34 성수행 승차 (대기 4분) [최악]",
+    "grade": "추정",
+    "depart_min": 514,
+    "arrive_min": 518,
+    "wait_min": 4,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 2분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:34 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 518,
+  "buffer_min": 10,
+  "margin_min": 12,
+  "eta_min": 6,
+  "eta_worst_min": 8,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 510,
+   "arrive_min": 516,
+   "arrive_worst_min": 518,
+   "margin_min": 12,
+   "eta_min": 6,
+   "eta_worst_min": 8,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "J-CONG-02",
+  "verdict": "feasible",
+  "reason": "예정 08:36 +@10분(최악 08:36 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:32 성수행 승차 (대기 2분)",
+    "grade": "추정",
+    "depart_min": 512,
+    "arrive_min": 516,
+    "wait_min": 2,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:32 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 516,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_metro_congestion@2026-06-30",
+    "grade": "추정",
+    "observed_at": "2026-09-10",
+    "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 서초 weekday: 08:32 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:32 성수행 승차 (대기 2분) [최악]",
+    "grade": "추정",
+    "depart_min": 512,
+    "arrive_min": 516,
+    "wait_min": 2,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:32 출발 성수행 (그 방향 456편 중, 08:32~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 516,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 6,
+  "eta_worst_min": 6,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 510,
+   "arrive_min": 516,
+   "arrive_worst_min": 516,
+   "margin_min": 10,
+   "eta_min": 6,
+   "eta_worst_min": 6,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "J-CONG-03",
+  "verdict": "feasible",
+  "reason": "예정 08:41 +@10분(최악 08:41 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 사당→강남",
+    "verdict": "feasible",
+    "reason": "08:31 성수행 승차 (대기 1분)",
+    "grade": "추정",
+    "depart_min": 511,
+    "arrive_min": 521,
+    "wait_min": 1,
+    "ride_min": 9.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_SEVERE",
+      "class": "better_option",
+      "text": "02호선 사당 출발 열차가 극심 혼잡(144.6%)이다 — 덜 붐비는 후보를 같이 본다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 사당 외선 weekday 08:30 혼잡도 144.6% (극심)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 사당 weekday: 08:31 출발 성수행 (그 방향 456편 중, 08:31~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 사당 에서 4정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 521,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_CONGESTION_SEVERE",
+    "class": "better_option",
+    "text": "02호선 사당 출발 열차가 극심 혼잡(144.6%)이다 — 덜 붐비는 후보를 같이 본다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_metro_congestion@2026-06-30",
+    "grade": "추정",
+    "observed_at": "2026-09-10",
+    "claim": "02호선 사당 외선 weekday 08:30 혼잡도 144.6% (극심)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 사당 weekday: 08:31 출발 성수행 (그 방향 456편 중, 08:31~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 사당 에서 4정거장 뒤 강남 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 사당→강남",
+    "verdict": "feasible",
+    "reason": "08:31 성수행 승차 (대기 1분) [최악]",
+    "grade": "추정",
+    "depart_min": 511,
+    "arrive_min": 521,
+    "wait_min": 1,
+    "ride_min": 9.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_SEVERE",
+      "class": "better_option",
+      "text": "02호선 사당 출발 열차가 극심 혼잡(144.6%)이다 — 덜 붐비는 후보를 같이 본다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 사당 외선 weekday 08:30 혼잡도 144.6% (극심)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 사당 weekday: 08:31 출발 성수행 (그 방향 456편 중, 08:31~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 사당 에서 4정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 521,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1485,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 510,
+   "arrive_min": 521,
+   "arrive_worst_min": 521,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1485
+  }
+ },
+ {
+  "id": "J-NODATA-01",
+  "verdict": "unknown",
+  "reason": "02호선 시간표에 '없는역' 이 없다",
+  "grade": "근거없음",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→없는역",
+    "verdict": "unknown",
+    "reason": "02호선 시간표에 '없는역' 이 없다",
+    "grade": "근거없음",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_STATION_NOT_IN_TIMETABLE",
+      "class": "data",
+      "text": "02호선 시간표에 '없는역' 이 없다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": "no_data",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_STATION_NOT_IN_TIMETABLE",
+    "class": "data",
+    "text": "02호선 시간표에 '없는역' 이 없다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "no_data",
+  "verdict_best": "unknown",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 840,
+   "code": "no_data",
+   "reason": "02호선 시간표에 '없는역' 이 없다",
+   "buffer_min": 10
+  }
+ },
+ {
+  "id": "J-LIMIT-01",
+  "verdict": "rejected_by_limit",
+  "reason": "환승 2회로 상한(infant 1회)을 넘는다 — 성립하지만 이 일행에게는 무리다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "09:00 마천행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 540,
+    "arrive_min": 567,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 왕십리",
+    "verdict": "feasible",
+    "reason": "도보 1.4분(86m) + 길찾기 1분 = +3분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:57 구리행 승차 (대기 6분)",
+    "grade": "확정",
+    "depart_min": 597,
+    "arrive_min": 599,
+    "wait_min": 6,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 599,
+  "slack_min": null,
+  "relief": "환승이 적은 노선으로 교체",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "왕십리 05호선↔02호선 86m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "잠실 02호선↔08호선 190m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "확정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "limits.transfers.infant"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "over_limit",
+  "verdict_best": "feasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": 59,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 540,
+   "code": "over_limit",
+   "reason": "환승 2회로 상한(infant 1회)을 넘는다 — 성립하지만 이 일행에게는 무리다",
+   "relief": "환승이 적은 노선으로 교체",
+   "arrive_min": 599,
+   "eta_min": 59,
+   "buffer_min": 10
+  }
+ },
+ {
+  "id": "J-DISR-01",
+  "verdict": "infeasible",
+  "reason": "02호선 이 운행중단이다 (시험 이슈)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "infeasible",
+    "reason": "02호선 이 운행중단이다 (시험 이슈)",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "다른 노선 또는 수단으로 우회. 복구 시각은 우리가 모른다",
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "case_event",
+      "source_id": "core.current_state.replan",
+      "grade": "추정",
+      "observed_at": null,
+      "claim": "02호선 운행중단"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "disruption",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "다른 노선 또는 수단으로 우회. 복구 시각은 우리가 모른다",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "case_event",
+    "source_id": "core.current_state.replan",
+    "grade": "추정",
+    "observed_at": null,
+    "claim": "02호선 운행중단"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "leg": {
+     "mode": "bus",
+     "route": "6705A",
+     "from": "강변역A",
+     "to": "잠실롯데월드호텔.롯데타워"
+    },
+    "mode": "bus",
+    "depart_min": 863,
+    "arrive_min": 883,
+    "walk_in_min": 3,
+    "walk_out_min": 5,
+    "grade": "추정",
+    "reason": "14:23 승차 예상 (대기 20분 — 배차의 절반) · 강변역A(seq 31) → 잠실롯데월드호텔.롯데타워(seq 32)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_AIRPORT",
+      "class": "grade",
+      "text": "6705A 은 공항 노선이라 통계에 없다 — 간선 값으로 대용했다. 공항버스의 빠른 평균속도는 고속도로 구간에서 나오는데 여기서 쓰는 구간은 시내 정류장 사이라 그 속도가 적용되지 않는다. 느리게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_AIRPORT_FARE",
+      "class": "cost",
+      "text": "공항버스는 시내버스와 요금 체계가 다르다(별도 요금·현금/카드 상이). 대안으로 제시할 때 경고를 붙인다 — 요금 데이터는 수집하지 않았다.",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 843
+   },
+   {
+    "axis": "수단교체",
+    "label": "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "leg": {
+     "mode": "bus",
+     "route": "302",
+     "from": "구의3동주민센터",
+     "to": "잠실역.잠실대교남단"
+    },
+    "mode": "bus",
+    "depart_min": 854,
+    "arrive_min": 871,
+    "walk_in_min": 8,
+    "walk_out_min": 2,
+    "grade": "추정",
+    "reason": "14:14 승차 예상 (대기 6분 — 배차의 절반) · 구의3동주민센터(seq 85) → 잠실역.잠실대교남단(seq 89)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 848
+   }
+  ],
+  "alt_tried": [
+   [
+    "출발시각_이동",
+    "14:02 출발로 미룸",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "disruption",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 840,
+   "code": "disruption",
+   "reason": "02호선 이 운행중단이다 (시험 이슈)",
+   "relief": "다른 노선 또는 수단으로 우회. 복구 시각은 우리가 모른다",
+   "buffer_min": 10
+  }
+ },
+ {
+  "id": "J-CONG-04",
+  "verdict": "feasible",
+  "reason": "예정 08:38 +@13분(최악 08:41 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:34 성수행 승차 (대기 1분)",
+    "grade": "추정",
+    "depart_min": 514,
+    "arrive_min": 518,
+    "wait_min": 1,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 3분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:34 출발 성수행 (그 방향 456편 중, 08:34~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 518,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+    "class": "effort",
+    "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 3분을 더했다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_metro_congestion@2026-06-30",
+    "grade": "추정",
+    "observed_at": "2026-09-10",
+    "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "congestion.levels.매우혼잡"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 서초 weekday: 08:34 출발 성수행 (그 방향 456편 중, 08:34~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 서초 weekday: 08:37 출발 성수행 (그 방향 456편 중, 08:34~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 서초→강남",
+    "verdict": "feasible",
+    "reason": "08:37 성수행 승차 (대기 4분) [최악]",
+    "grade": "추정",
+    "depart_min": 517,
+    "arrive_min": 521,
+    "wait_min": 4,
+    "ride_min": 4.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 21,
+     "운행종료후_한바퀴": 2
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "02호선 서초 출발 열차가 매우 혼잡(122.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 3분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "02호선 서초 외선 weekday 08:30 혼잡도 122.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 서초 weekday: 08:37 출발 성수행 (그 방향 456편 중, 08:34~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 서초 에서 2정거장 뒤 강남 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 521,
+  "buffer_min": 10,
+  "margin_min": 13,
+  "eta_min": 5,
+  "eta_worst_min": 8,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 513,
+   "arrive_min": 518,
+   "arrive_worst_min": 521,
+   "margin_min": 13,
+   "eta_min": 5,
+   "eta_worst_min": 8,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "J-MULTI-01",
+  "verdict": "feasible",
+  "reason": "잠실→성수 후보 2개 중 성립 1개 (순위 없음)",
+  "grade": "추정",
+  "legs": [],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "candidates.기준"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "candidates.허용_소요_배수"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "candidates.버스_직행_후보"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bike.ddareungi.multi_후보"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "candidates.버스_직행_최대"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "tie_band.비교_대상"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": [
+   {
+    "n": 1,
+    "criteria": [
+     "최단",
+     "최소환승",
+     "최소도보"
+    ],
+    "legs": [
+     {
+      "line": "02호선",
+      "from": "잠실",
+      "to": "성수"
+     }
+    ],
+    "label": "02호선 잠실→성수",
+    "verdict": "feasible",
+    "reason": "예정 14:15 +@10분(최악 14:15 + 버퍼 10분) · 여유 5분",
+    "relief": null,
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 855,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "transfers": 0,
+    "walk_min": 0,
+    "est_min": 10.7,
+    "gen_grade": "추정",
+    "fallback_edges": [],
+    "uncertainty_min": 0,
+    "warnings": [],
+    "legs_result": [
+     {
+      "idx": 0,
+      "label": "02호선 잠실→성수",
+      "verdict": "feasible",
+      "reason": "14:04 성수행 승차 (대기 4분)",
+      "grade": "추정",
+      "depart_min": 844,
+      "arrive_min": 855,
+      "wait_min": 4,
+      "ride_min": 10.7,
+      "ride_grade": "추정",
+      "relief": null,
+      "dropped": {
+       "단축운행": 22
+      },
+      "warnings": [],
+      "evidence": [
+       {
+        "source_type": "db",
+        "source_id": "timetable_v1@2026-09-09",
+        "grade": "확정",
+        "observed_at": "2026-09-09",
+        "claim": "02호선 잠실 weekday: 14:04 출발 성수행 (그 방향 457편 중, 14:04~ 안에서 도착이 가장 이른 편)"
+       },
+       {
+        "source_type": "db",
+        "source_id": "line_station_order_v1",
+        "grade": "추정",
+        "observed_at": "2026-09-11T10:16:28+09:00",
+        "claim": "성수행(D) 한 바퀴 도는 편성 열차는 잠실 에서 5정거장 뒤 성수 을 지난다"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "확정",
+        "observed_at": "2026-09-24",
+        "claim": "last_train.행선지_확인"
+       }
+      ],
+      "car": null,
+      "walk_min": null,
+      "code": null,
+      "worst": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 14:04 출발 성수행 (그 방향 457편 중, 14:04~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 잠실 에서 5정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "buffer.by_stage.planning"
+     }
+    ],
+    "tie_with": [],
+    "code": null,
+    "arrive_worst_min": 855,
+    "margin_min": 10,
+    "buffer_min": 10,
+    "slack_min": 5,
+    "eta_min": 15,
+    "last_feasible_depart_min": 844,
+    "out": {
+     "verdict": "feasible",
+     "depart_min": 840,
+     "arrive_min": 855,
+     "arrive_worst_min": 855,
+     "margin_min": 10,
+     "slack_min": 5,
+     "eta_min": 15,
+     "eta_worst_min": 15,
+     "buffer_min": 10,
+     "last_feasible_depart_min": 844,
+     "arrive_by_min": 870
+    }
+   },
+   {
+    "n": 2,
+    "criteria": [
+     "자전거"
+    ],
+    "legs": [
+     {
+      "mode": "bike",
+      "from": "잠실",
+      "to": "성수"
+     }
+    ],
+    "label": "자전거 잠실→성수",
+    "verdict": "unknown",
+    "reason": "자전거 잠실→성수 의 승차 소요를 낼 수 없어 이후 구간의 시각을 이어 갈 수 없다 (그 구간 편성은 있다: 14:00 출발)",
+    "relief": null,
+    "grade": "근거없음",
+    "depart_min": 840,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "transfers": 0,
+    "walk_min": 4,
+    "est_min": null,
+    "gen_grade": "추정",
+    "fallback_edges": [],
+    "uncertainty_min": 0,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LCD_SKIPPED",
+      "class": "data",
+      "text": "잠실역 8번출구 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BIKE_LCD_SKIPPED",
+      "class": "data",
+      "text": "롯데월드타워(잠실역2번출구 쪽) 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "잠실역 6번출구 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "legs_result": [
+     {
+      "idx": 0,
+      "label": "자전거 잠실→성수",
+      "verdict": "feasible",
+      "reason": "대여소 잠실역 6번출구(도보 3분) → 유원지식산업센터 앞(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+      "grade": "근거없음",
+      "depart_min": 840,
+      "arrive_min": null,
+      "wait_min": 0,
+      "ride_min": null,
+      "ride_grade": "근거없음",
+      "relief": null,
+      "dropped": {
+       "LCD전용": 2
+      },
+      "warnings": [
+       {
+        "code": "MOB_W_BIKE_LCD_SKIPPED",
+        "class": "data",
+        "text": "잠실역 8번출구 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+        "to_answer": false
+       },
+       {
+        "code": "MOB_W_BIKE_LCD_SKIPPED",
+        "class": "data",
+        "text": "롯데월드타워(잠실역2번출구 쪽) 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+        "to_answer": false
+       },
+       {
+        "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+        "class": "data",
+        "text": "잠실역 6번출구 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+        "to_answer": true
+       },
+       {
+        "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+        "class": "data",
+        "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+        "to_answer": true
+       }
+      ],
+      "evidence": [
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "추정",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.station_walk_m"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "추정",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.exclude.lcd_origin"
+       },
+       {
+        "source_type": "db",
+        "source_id": "seoul_bike_station@2026-09-19",
+        "grade": "확정",
+        "observed_at": "2026-09-19T21:55+09:00",
+        "claim": "출발 대여소 잠실역 6번출구(ST-840 · QR · 거치대 13) 직선 130m · 도착 대여소 유원지식산업센터 앞(ST-3325) 직선 30m"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "근거없음",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.live_check — 실시간 조회 없음"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "확정",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.live_check"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "추정",
+        "observed_at": "2026-09-24",
+        "claim": "도보 170m (직선 130m × 1.3 — 보행망 없음)"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "추정",
+        "observed_at": "2026-09-24",
+        "claim": "도보 39m (직선 30m × 1.3 — 보행망 없음)"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "근거없음",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.rent_return_min"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "mobility_rules@v0.8",
+        "grade": "근거없음",
+        "observed_at": "2026-09-24",
+        "claim": "bike.ddareungi.ride — 라우터·픽스처 없음 → 승차 소요 없음"
+       },
+       {
+        "source_type": "policy",
+        "source_id": "bikeseoul_foreigner_guide@2026-09-19",
+        "grade": "확정",
+        "observed_at": "2026-09-20",
+        "claim": "외국인 비회원 이용 가능 — 앱 Foreigner · 해외카드/DSP · 이메일 대여번호"
+       }
+      ],
+      "car": null,
+      "walk_min": 4,
+      "code": null,
+      "worst": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.station_walk_m"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.exclude.lcd_origin"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bike_station@2026-09-19",
+      "grade": "확정",
+      "observed_at": "2026-09-19T21:55+09:00",
+      "claim": "출발 대여소 잠실역 6번출구(ST-840 · QR · 거치대 13) 직선 130m · 도착 대여소 유원지식산업센터 앞(ST-3325) 직선 30m"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.live_check — 실시간 조회 없음"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.live_check"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "도보 170m (직선 130m × 1.3 — 보행망 없음)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "도보 39m (직선 30m × 1.3 — 보행망 없음)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.rent_return_min"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "bike.ddareungi.ride — 라우터·픽스처 없음 → 승차 소요 없음"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "bikeseoul_foreigner_guide@2026-09-19",
+      "grade": "확정",
+      "observed_at": "2026-09-20",
+      "claim": "외국인 비회원 이용 가능 — 앱 Foreigner · 해외카드/DSP · 이메일 대여번호"
+     }
+    ],
+    "tie_with": [],
+    "code": "no_data",
+    "arrive_worst_min": null,
+    "margin_min": null,
+    "buffer_min": 10,
+    "slack_min": null,
+    "eta_min": null,
+    "last_feasible_depart_min": null,
+    "out": {
+     "verdict": "infeasible",
+     "depart_min": 840,
+     "code": "no_data",
+     "reason": "자전거 잠실→성수 의 승차 소요를 낼 수 없어 이후 구간의 시각을 이어 갈 수 없다 (그 구간 편성은 있다: 14:00 출발)",
+     "buffer_min": 10,
+     "arrive_by_min": 870
+    }
+   }
+  ],
+  "ties": [],
+  "dropped_candidates": [],
+  "bus_rejected": [
+   {
+    "label": "버스 N73 잠실역7번출구→성수역1번출구",
+    "verdict": "infeasible",
+    "reason": "14:03 은 N73 첫차(23:30) 이전이다"
+   }
+  ],
+  "axis_best": {
+   "도착": [
+    1
+   ],
+   "환승": [
+    1
+   ],
+   "도보": [
+    1
+   ]
+  },
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "buffer_min": 10,
+   "arrive_by_min": 870,
+   "candidates": [
+    {
+     "n": 1,
+     "label": "02호선 잠실→성수",
+     "verdict": "feasible",
+     "depart_min": 840,
+     "arrive_min": 855,
+     "arrive_worst_min": 855,
+     "margin_min": 10,
+     "slack_min": 5,
+     "eta_min": 15,
+     "eta_worst_min": 15,
+     "buffer_min": 10,
+     "last_feasible_depart_min": 844,
+     "arrive_by_min": 870
+    },
+    {
+     "n": 2,
+     "label": "자전거 잠실→성수",
+     "verdict": "infeasible",
+     "depart_min": 840,
+     "code": "no_data",
+     "reason": "자전거 잠실→성수 의 승차 소요를 낼 수 없어 이후 구간의 시각을 이어 갈 수 없다 (그 구간 편성은 있다: 14:00 출발)",
+     "buffer_min": 10,
+     "arrive_by_min": 870
+    }
+   ]
+  }
+ },
+ {
+  "id": "J-CAR-01",
+  "verdict": "unknown",
+  "reason": "도로 소요를 낼 수 없다 — 라우터 없이 실행 중(--gh-url none)",
+  "grade": "근거없음",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "택시 강변→잠실",
+    "verdict": "unknown",
+    "reason": "도로 소요를 낼 수 없다 — 라우터 없이 실행 중(--gh-url none)",
+    "grade": "근거없음",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_CAR_ROUTER_DOWN",
+      "class": "data",
+      "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+      "to_answer": true
+     }
+    ],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": "no_data",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_CAR_ROUTER_DOWN",
+    "class": "data",
+    "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+    "to_answer": true
+   }
+  ],
+  "evidence": [],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "no_data",
+  "verdict_best": "unknown",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 840,
+   "code": "no_data",
+   "reason": "도로 소요를 낼 수 없다 — 라우터 없이 실행 중(--gh-url none)",
+   "buffer_min": 10,
+   "arrive_by_min": 900
+  }
+ },
+ {
+  "id": "J-LATE-02",
+  "verdict": "infeasible",
+  "reason": "예정 05:41 +@10분(최악 05:41 + 버퍼 10분) 이 필요 시각 05:40 를 11분 넘긴다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "05:36 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 336,
+    "arrive_min": 341,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 05:36 출발 성수행 (그 방향 472편 중, 05:36~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 341,
+  "slack_min": -11,
+  "relief": "출발을 당겨도 맞는 편이 없다(첫차 이후로는 못 맞춘다) · 택시",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 05:36 출발 성수행 (그 방향 472편 중, 05:36~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "arrive_late",
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "05:36 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 336,
+    "arrive_min": 341,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 05:36 출발 성수행 (그 방향 472편 중, 05:36~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 341,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 336,
+   "code": "arrive_late",
+   "reason": "예정 05:41 +@10분(최악 05:41 + 버퍼 10분) 이 필요 시각 05:40 를 11분 넘긴다",
+   "relief": "출발을 당겨도 맞는 편이 없다(첫차 이후로는 못 맞춘다) · 택시",
+   "arrive_min": 341,
+   "arrive_worst_min": 341,
+   "margin_min": 10,
+   "slack_min": -11,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "arrive_by_min": 340
+  }
+ },
+ {
+  "id": "J-CONG-05",
+  "verdict": "feasible",
+  "reason": "예정 10:43 +@22분(최악 10:55 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "04호선 남태령→사당",
+    "verdict": "feasible",
+    "reason": "10:40 불암산(당고개)행 승차 (대기 10분)",
+    "grade": "추정",
+    "depart_min": 640,
+    "arrive_min": 643,
+    "wait_min": 10,
+    "ride_min": 2.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 109
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "04호선 남태령 출발 열차가 매우 혼잡(104.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 12분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "04호선 남태령 상선 saturday 10:30 혼잡도 104.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "04호선 남태령 holiday: 10:40 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 643,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+    "class": "effort",
+    "text": "04호선 남태령 출발 열차가 매우 혼잡(104.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 12분을 더했다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_metro_congestion@2026-06-30",
+    "grade": "추정",
+    "observed_at": "2026-09-10",
+    "claim": "04호선 남태령 상선 saturday 10:30 혼잡도 104.0% (매우혼잡)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "congestion.levels.매우혼잡"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "04호선 남태령 holiday: 10:40 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "04호선 남태령 holiday: 10:52 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "04호선 남태령→사당",
+    "verdict": "feasible",
+    "reason": "10:52 불암산(당고개)행 승차 (대기 22분) [최악]",
+    "grade": "추정",
+    "depart_min": 652,
+    "arrive_min": 655,
+    "wait_min": 22,
+    "ride_min": 2.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 109
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_CONGESTION_EXTRA_WAIT",
+      "class": "effort",
+      "text": "04호선 남태령 출발 열차가 매우 혼잡(104.0%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 12분을 더했다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_metro_congestion@2026-06-30",
+      "grade": "추정",
+      "observed_at": "2026-09-10",
+      "claim": "04호선 남태령 상선 saturday 10:30 혼잡도 104.0% (매우혼잡)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "congestion.levels.매우혼잡"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "04호선 남태령 holiday: 10:52 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 655,
+  "buffer_min": 10,
+  "margin_min": 22,
+  "eta_min": 13,
+  "eta_worst_min": 25,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1429,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 630,
+   "arrive_min": 643,
+   "arrive_worst_min": 655,
+   "margin_min": 22,
+   "eta_min": 13,
+   "eta_worst_min": 25,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1429
+  }
+ },
+ {
+  "id": "J-CONG-06",
+  "verdict": "feasible",
+  "reason": "예정 10:43 +@10분(최악 10:43 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "04호선 남태령→사당",
+    "verdict": "feasible",
+    "reason": "10:40 불암산(당고개)행 승차 (대기 10분)",
+    "grade": "추정",
+    "depart_min": 640,
+    "arrive_min": 643,
+    "wait_min": 10,
+    "ride_min": 2.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 109
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "04호선 남태령 holiday: 10:40 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 643,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "04호선 남태령 holiday: 10:40 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "04호선 남태령→사당",
+    "verdict": "feasible",
+    "reason": "10:40 불암산(당고개)행 승차 (대기 10분) [최악]",
+    "grade": "추정",
+    "depart_min": 640,
+    "arrive_min": 643,
+    "wait_min": 10,
+    "ride_min": 2.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "행선지없음": 109
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "04호선 남태령 holiday: 10:40 출발 불암산(당고개)행 (그 방향 106편 중, 10:40~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "불암산행 열차는 남태령 에서 1정거장 뒤 사당 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 643,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 13,
+  "eta_worst_min": 13,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1429,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 630,
+   "arrive_min": 643,
+   "arrive_worst_min": 643,
+   "margin_min": 10,
+   "eta_min": 13,
+   "eta_worst_min": 13,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1429
+  }
+ }
+]

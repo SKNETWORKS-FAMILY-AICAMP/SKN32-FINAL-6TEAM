@@ -1,8 +1,8 @@
 {
- "rules_version": "v0.7",
- "effective_date": "2026-09-20",
- "supersedes": "v0.6",
- "source_id": "mobility_rules@v0.7",
+ "rules_version": "v0.8",
+ "effective_date": "2026-09-24",
+ "supersedes": "v0.7",
+ "source_id": "mobility_rules@v0.8",
  "source_id_근거_2026-09-14": "판 번호가 두 군데에 있다 — rules_version 과 이 source_id. 판정 근거(policy Evidence)의 source_id 는 rules_version 이 아니라 **이 값**을 그대로 쓴다(verify_time.py:165 → _ev_rule). 2026-09-14 에 rules_version 만 v0.3.1 로 올리고 이 값을 v0.3 으로 두어, **규칙은 v0.3.1 인데 판정 근거는 v0.3 이라고 기록되는** 상태가 잠시 있었다 (데모 HTML 을 재생성해 근거 표를 눈으로 보고 발견). 두 값은 항상 같은 판을 가리켜야 한다 — check_fold [11] 이 그것을 검사한다. · 2026-09-19 v0.4: 둘을 함께 올렸다(v0.4 / mobility_rules@v0.4). 파일명은 그대로 rules_v0.3.json — 2026-09-14 방침(파일명 유지, 내부 버전만).",
  "author": "서유현 (Mobility 담당)",
  "purpose": "이동 구간의 제약 대조에 쓰는 규칙. Evidence(source_type='policy', source_id=이 파일의 source_id, observed_at=effective_date)로 판정에 붙는다.",
@@ -1886,6 +1886,93 @@
    "근거": "bike.ddareungi.station_walk_m. 후보를 만들지 않은 이유이고 고객이 다른 수단을 봐야 하므로 answer 로 간다.",
    "site": "verify_time.py — verify_leg_bike",
    "구현": true
+  },
+  "MOB_W_CONGESTION_SEVERE": {
+   "class": "better_option",
+   "to_answer": true,
+   "text": "{line} {station} 출발 열차가 극심 혼잡({pct}%)이다 — 덜 붐비는 후보를 같이 본다",
+   "params": [
+    "line",
+    "station",
+    "pct"
+   ],
+   "근거": "congestion.levels.극심.action = suggest_alternative. 고객이 다른 후보를 고를 수 있으므로 answer 로 간다.",
+   "site": "verify_time.py — verify_leg(_congestion_hit)",
+   "구현": true
+  },
+  "MOB_W_CONGESTION_EXTRA_WAIT": {
+   "class": "effort",
+   "to_answer": true,
+   "text": "{line} {station} 출발 열차가 매우 혼잡({pct}%)이라 짐·유아·어르신 동행은 한 편을 보낼 수 있다 — 최악값에 {extra}분을 더했다",
+   "params": [
+    "line",
+    "station",
+    "pct",
+    "extra"
+   ],
+   "근거": "congestion.levels.매우혼잡.action = board_wait_extra_headway(조건부). worst 통과에서만 시각이 바뀌고, 경고는 best 에도 붙는다.",
+   "site": "verify_time.py — verify_leg(_congestion_hit)",
+   "구현": true
+  },
+  "MOB_W_WORST_NO_SPREAD": {
+   "class": "data",
+   "to_answer": false,
+   "text": "{what} 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+   "params": [
+    "what"
+   ],
+   "근거": "judgment.worst.부품 — 41(버스)·자동차·자전거는 스프레드 소스가 없다. 지어내지 않고 드러낸다. 고객 행동을 바꾸는 말이 아니라 evidence 에만.",
+   "site": "verify_time.py — verify_leg_bus · _chain",
+   "구현": true
+  },
+  "MOB_W_BEST_OK_WORST_FAIL": {
+   "class": "better_option",
+   "to_answer": true,
+   "text": "예정대로면 {best} 도착이지만 최악값으로는 성립하지 않는다 ({why}) — 앞 편으로 당기거나 택시",
+   "params": [
+    "best",
+    "why"
+   ],
+   "근거": "12번 규칙 14 — 막차 근처는 등급이 아니라 앞단에서 당겨 타게 한다. 판정은 불가이고, 고객이 출발을 당길 수 있으므로 answer 로 간다.",
+   "site": "verify_time.py — verify_case",
+   "구현": true
+  },
+  "MOB_W_CONGESTION_CROWDED": {
+   "class": "effort",
+   "to_answer": true,
+   "text": "{line} {station} 출발 열차가 혼잡({pct}%)이다 — 짐·유아·어르신 동행은 승차가 불편할 수 있다",
+   "params": [
+    "line",
+    "station",
+    "pct"
+   ],
+   "근거": "congestion.levels.혼잡.action = warning(조건부). 시각은 안 바뀐다 — 고객이 대비하도록 answer 로 간다.",
+   "site": "verify_time.py — verify_leg(_congestion_hit)",
+   "구현": true
+  },
+  "MOB_W_CONGESTION_NO_NEXT": {
+   "class": "data",
+   "to_answer": false,
+   "text": "{line} {station} 출발 열차가 매우 혼잡({pct}%)인데 같은 경로의 다음 편이 탐색 창 안에 없다 — 최악값을 넓히지 못했다",
+   "params": [
+    "line",
+    "station",
+    "pct"
+   ],
+   "근거": "매우혼잡 가산은 「다음 편」이 있어야 한다. 막차 근처엔 없다 — 넓히지 못한 사실을 evidence 에 남긴다(판정은 안 바꾼다).",
+   "site": "verify_time.py — verify_leg(_congestion_hit)",
+   "구현": true
+  },
+  "MOB_W_LFD_CAP": {
+   "class": "data",
+   "to_answer": false,
+   "text": "마지막 성립 출발 역산이 상한 {n}회에 걸려 멈췄다 — 「없다」가 아니라 「못 찾았다」",
+   "params": [
+    "n"
+   ],
+   "근거": "judgment.last_feasible_depart.max_probe. 상한에 걸린 None 과 진짜 None 을 구분한다.",
+   "site": "verify_time.py — _seal",
+   "구현": true
   }
  },
  "candidates": {
@@ -1953,9 +2040,9 @@
    "근거": "동급 판정은 **지하철 후보와 버스 후보 사이**에서만 한다. 버스끼리는 둘 다 추정이라 순위_미부여가 이미 덮고, 지하철끼리는 불확실성 0 이라 도착이 같을 때만 남는다(그 경우도 순위_미부여). 2026-09-20 첫 실행에서 버스끼리 동급(2224 vs 성동10 · 6705A vs 302)만 잔뜩 나와 지하철 vs 버스 비교가 묻혔다 — 그래서 좁혔다."
   },
   "버스_불확실성": {
-   "value": "wait_min",
+   "value": "spread_min",
    "grade": "추정",
-   "근거": "bus.wait_model(배차 절반)·worst_case(막차 근처 배차 전부)가 낸 대기 추정치 자체를 불확실성 폭으로 쓴다 — 실제 대기는 0~배차 사이라 추정치의 오차가 곧 그 값이다. 버스 구간이 여럿이면 합한다."
+   "근거": "v0.8 — 불확실성 폭은 @ 부품이다: 후보의 최악 도착 − 예정 도착(버퍼 제외 · 버스 = 배차 전부 − 절반 · 지하철 0). 종전(v0.5)은 bus.wait_model 의 대기 추정치(배차 절반)를 그대로 폭으로 썼다 — 값은 거의 같고(배차 홀수면 1분 차) 정의가 @ 와 하나로 묶인다. worst 를 못 낸 후보(도착 없음)는 종전 값."
   },
   "지하철_불확실성_분": {
    "value": 0,
@@ -2134,5 +2221,106 @@
   "warnings 6종 추가 — MOB_W_BIKE_OVERTIME(cost) · MOB_W_BIKE_FOREIGNER_GUIDE(data) · MOB_W_BIKE_LIVE_UNKNOWN(data) · MOB_W_BIKE_NO_STATION(data) · MOB_W_BIKE_LCD_SKIPPED(data, evidence 만) · MOB_W_BIKE_MODE_UNKNOWN(grade). 21번 뒤의 경고 수에 +6.",
   "회귀 축 4종 추가 — expect_alt_max_by_mode · expect_alt_min_by_mode · expect_warn_codes_absent · expect_reason_contains. expect_alt_max_by_mode({subway|bus|bike: n}) · alternatives[] 에 mode 필드. ISSUE-06·ALT-03 의 「대안 0」 잠금은 subway·bus 0 으로 옮겼다(자전거는 지하철 이슈를 상속하지 않으므로 나오는 것이 맞다).",
   "회귀 편입 — tests/mobility/bike_legs_v1.json 신설. 기존 97건 중 판정값 변경 0 — 바뀐 것은 자전거 대안이 붙은 케이스의 **대안 개수**뿐(문서 22번 §4)."
+ ],
+ "judgment": {
+  "설명": "@ 판정 계약(v0.8 · 39번 방 · 12번 규칙 13~15). 구간 열을 best(예정)·worst(최악) 두 번 통과한다. **판정은 worst, 표시는 best + @.** 밖으로는 성립/불가 둘 — 성립 = 예정 시각 + @(margin_min) · 불가 = 이유 코드 + 대안 + 마지막 성립 출발 시각(안에서만). 등급(확정/추정/근거없음)은 밖으로 나가지 않는다 — 안에서 최악값을 고르는 기계다.",
+  "effective_date": "2026-09-24",
+  "two_values": {
+   "value": [
+    "feasible",
+    "infeasible"
+   ],
+   "grade": "확정",
+   "근거": "앱은 예정 시각만 주고 ±는 사용자가 겪는다 — 우리는 그 ±를 통계로 산정해 @로 준다(9/22 결정). 판단불가는 불가(no_data), 동행 상한 탈락은 불가(over_limit). 내부 판정 넷(feasible/infeasible/rejected_by_limit/unknown)은 접기·자기점검·로그가 그대로 읽는다."
+  },
+  "worst": {
+   "value": "best 통과와 같은 구간 열을 최악 가정으로 다시 통과한다",
+   "grade": "확정",
+   "부품": {
+    "bus_wait": "배차 전부(bus.worst_case = headway_full). best 는 절반(막차 근처는 전부)",
+    "subway_transfer": "앞 구간의 **최악 도착**에서 다음 편을 고른다 — 환승 놓침이 저절로 들어간다",
+    "congestion": "매우혼잡(≥100%) + 조건(luggage·infant·elderly)이면 **같은 경로(같은 방향·편성 경로)** 의 다음 편(탐색 창 candidate_scan_min 안 · 도착 가장 이른 편)으로 미룬다(congestion.levels.매우혼잡.action). 순환선에서 반대 방향 한 바퀴 편성을 집지 않는다. 혼잡(80~100)+조건은 경고만, 극심은 경고만",
+    "policy_buffer": "buffer.by_stage(10/15분)를 @ 에 더한다 — 수단 무관(종전 v0.7 과 같은 자리). 41(버스 p90)이 닫히면 버스는 버퍼 대신 p90 스프레드로 바꾼다",
+    "bus_ride_spread": "근거없음 — 41 대기. worst 승차 = best 승차, MOB_W_WORST_NO_SPREAD 로 드러낸다",
+    "car_spread": "근거없음 — TOPIS 프로파일은 시간대 평균. worst = best, 같은 경고",
+    "bike_spread": "근거없음 — worst = best, 같은 경고"
+   },
+   "근거": "12번 규칙 15 — 추정 폭은 좁힐 수 있으면 좁히고, 못 좁히는 자리는 최악값을 넓게 잡아 @에 흡수한다. 다만 근거 없는 상수는 넣지 않는다(27번 규칙 14) — 스프레드 소스가 없는 수단은 worst = best 로 두고 경고 코드로 드러낸다."
+  },
+  "worst_bus_ride_spread": {
+   "value": null,
+   "grade": "근거없음",
+   "근거": "41 버스 구간 통행속도(p10/중앙/p90)가 닫히면 값이 들어온다. 그 전엔 null."
+  },
+  "worst_car_spread": {
+   "value": null,
+   "grade": "근거없음",
+   "근거": "TOPIS 링크 프로파일에 분산이 없다. 소스가 생기면 값이 들어온다."
+  },
+  "margin": {
+   "value": "(최악 도착 − 예정 도착) + buffer.by_stage",
+   "unit": "min",
+   "grade": "확정",
+   "근거": "@ 의 정의. slack_min = 도착 목표 − 예정 도착 − @ (음수 = 늦음 → 불가 arrive_late). eta_min(예정 소요 · 중앙값)에는 @ 를 섞지 않는다 — 팀 density.py 가 자기 버퍼를 더한다(◆밀도-2)."
+  },
+  "last_feasible_depart": {
+   "value": "같은 worst 판정기로 출발 시각을 뒤에서부터 역산",
+   "grade": "확정",
+   "max_probe": {
+    "value": 600,
+    "unit": "회",
+    "grade": "추정",
+    "근거": "첫 구간이 지하철이면 편성 목록(막차부터), 버스·자동차·자전거면 상한(도착 목표·막차)에서 1분씩 내려온다. 600회면 10시간 폭 — 그 이상은 상한이 잘못 잡힌 것이다."
+   },
+   "근거": "12번 규칙 14 — 막차는 등급이 아니라 값이다. 여유가 버퍼 아래면 마지막 성립 출발 시각을 넘겨 앞단이 당기고, 0 아래면 택시. **코어 계약으로는 안 낸다**(출력 스펙 v1.1 · 본인 9/23 — 32 가 items[]·routes{} 를 만들 때 뺀다). 판정기 안에서 성립·막차 판단과 relief 문장에 쓰고, out(32 의 입력)에는 싣는다. 첫 구간이 자동차·택시·자전거면 시간표가 없어 「마지막 편」이 없다 → None."
+  },
+  "reason_codes": {
+   "value": {
+    "no_data": "판단불가 — 시간표·노선·좌표·소요 근거가 없다(내부 unknown). 성립인데 예정 시각을 못 내는 경우도 여기",
+    "before_first": "첫차 이전(지하철·버스)",
+    "after_last": "막차 이후(지하철·버스) — 최악값 기준으로 놓치는 경우 포함",
+    "service_gap": "다음 출발까지 공백 상한(service_window.gap_max_min) 초과",
+    "no_service": "그 방향 편성·노선 구간이 없다",
+    "disruption": "이슈(운행중단·무정차·구간차단·환승역 무정차) — 완화는 우회·복구 대기",
+    "transfer_walk": "정류장↔역 환승 도보가 상한을 넘는다",
+    "arrive_late": "예정 도착 + @ 가 도착 목표를 넘긴다(slack_min < 0)",
+    "over_limit": "성립하지만 동행 환승 상한 초과(내부 rejected_by_limit)",
+    "mode_unavailable": "그 수단을 쓸 수 없다(대여소 없음·거치 0·연령 제외·LCD 전용)"
+   },
+   "grade": "확정",
+   "근거": "불가는 이유 코드로 말한다(12번 규칙 13). 문장(reason)은 바뀌어도 코드는 안 바뀐다 — 회귀 expect_reason 과 로그(40)가 코드를 본다. multi 케이스는 후보 코드 중 가장 흔한 것."
+  },
+  "out": {
+   "value": [
+    "verdict",
+    "code",
+    "reason",
+    "relief",
+    "depart_min",
+    "arrive_min",
+    "arrive_worst_min",
+    "margin_min",
+    "slack_min",
+    "eta_min",
+    "eta_worst_min",
+    "buffer_min",
+    "p90_eta_min",
+    "last_feasible_depart_min",
+    "arrive_by_min"
+   ],
+   "grade": "확정",
+   "근거": "CaseResult.out — 밖으로 나가는 판 = **32 의 입력**. 모르는 값은 키를 뺀다(출력 스펙 v1 §2). 등급·내부 판정·근거 없음. 32 가 이 dict 로 items[]·routes{} 를 만든다 — 코어 계약 칸은 기존 것만(새 키 0), last_feasible_depart_min·verdict·code 등은 코어로 안 나간다(계획서 작성 콜에만). multi 케이스는 out.candidates[] 에 후보마다의 같은 모양(출발지 기준으로 되돌린 값)."
+  }
+ },
+ "changelog_v0.8": [
+  "2026-09-24 · 39번 방(코드 · @ 판정 계약). 판정을 바꾸므로 rules_version v0.7 → v0.8, source_id mobility_rules@v0.8. 파일명은 유지.",
+  "judgment 절 신설 — 최악값·최선값 이중 계산(구간 열 두 번 통과 · 판정은 worst · 표시는 best + @) · 밖 판정 둘(feasible/infeasible) · 이유 코드 10종 · margin/slack 정의 · last_feasible_depart 역산(안에서만) · out 키 목록.",
+  "worst 부품 — 버스 대기 배차 전부 · 환승은 최악 도착에서 다음 편 · 혼잡 매우혼잡+조건이면 배차 1회 더(33번 9호선 혼잡도 · 1~8호선 혼잡도) · 정책 버퍼는 @ 에(수단 무관 · v0.7 과 같은 자리) · 버스 승차·자동차·자전거 스프레드는 근거없음(41 대기 · worst = best · MOB_W_WORST_NO_SPREAD).",
+  "tie_band.버스_불확실성 → spread_min(최악 − 예정). 값은 거의 같고 정의가 @ 와 하나가 된다.",
+  "경고 4종 신설 — MOB_W_CONGESTION_SEVERE · MOB_W_CONGESTION_EXTRA_WAIT · MOB_W_WORST_NO_SPREAD · MOB_W_BEST_OK_WORST_FAIL.",
+  "회귀 기대값 재정의 — expect 는 밖 판정 둘 · 옛 4값은 expect_internal · expect_reason(코드) · expect_slack_min/expect_margin_min 범위 · expect_last_depart. 옛 expect(unknown·rejected_by_limit)는 어휘 밖이라 MISS 다.",
+  "코어로 나가는 값은 출력 스펙 v1.3 대로 기존 칸만(32 가 out 으로 만든다) — eta_min 은 중앙값 · 버퍼 안 섞음 · 새 키 0.",
+  "대조(2026-09-24 · 자체 대조 13건 채택 11) — 혼잡 다음 편은 같은 경로만(순환선 @94 결함) · worst 통과가 도착을 못 내면 예정=최악 + 경고 · 자동차·자전거 첫 구간은 역산 없음(라우터 호출 폭주) + 케이스 안 구간 캐시 · 역산 상한 경고(MOB_W_LFD_CAP) · multi 밖 판은 후보 밖 판으로 · multi 도착 목표에 이탈 도보 반영 · worst 실패 대안도 worst 로 · 경고·근거 중복 제거 · 혼잡 warning 액션 구현(MOB_W_CONGESTION_CROWDED) · 다음 편 없음 경고(MOB_W_CONGESTION_NO_NEXT).",
+  "GPT 대조(2026-09-24 · 제시 6 · 채택 3 · 기각 2 · 보류 1) 반영 — ①역산으로 성립 출발을 못 찾으면 「N분 당기면 성립」을 말하지 않는다(택시만) ②토요일과 겹친 공휴일의 혼잡도 요일은 sunday(congestion.day_type.공휴일_처리 그대로 · Congestion.day_key(is_holiday)) ③자기점검에 혼잡도 연결(가산 경로가 탐침에서 돈다 · 실행 건수 집계). 보류: 수단 무관 정책 버퍼 vs 스펙 v1.3(41 뒤 32 에서 확정)."
  ]
 }

@@ -1,0 +1,6018 @@
+[
+ {
+  "id": "R-BASE-01",
+  "verdict": "feasible",
+  "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 845,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 845,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 845,
+   "arrive_worst_min": 845,
+   "margin_min": 10,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-BASE-02",
+  "verdict": "feasible",
+  "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) · 여유 15분",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 845,
+  "slack_min": 15,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 845,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 852,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 845,
+   "arrive_worst_min": 845,
+   "margin_min": 10,
+   "slack_min": 15,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 852,
+   "arrive_by_min": 870
+  }
+ },
+ {
+  "id": "R-BUFFER-01",
+  "verdict": "infeasible",
+  "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) 이 필요 시각 14:12 를 3분 넘긴다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 845,
+  "slack_min": -3,
+  "relief": "늦어도 13:54 출발이면 성립 · 안 되면 택시",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "arrive_late",
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 845,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:00 출발 성수행 (그 방향 472편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 845,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 834,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 840,
+   "code": "arrive_late",
+   "reason": "예정 14:05 +@10분(최악 14:05 + 버퍼 10분) 이 필요 시각 14:12 를 3분 넘긴다",
+   "relief": "늦어도 13:54 출발이면 성립 · 안 되면 택시",
+   "arrive_min": 845,
+   "arrive_worst_min": 845,
+   "margin_min": 10,
+   "slack_min": -3,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 834,
+   "arrive_by_min": 852
+  }
+ },
+ {
+  "id": "R-FIRST-01",
+  "verdict": "infeasible",
+  "reason": "04:30 은 02호선 강변 의 weekday 첫차(05:36) 이전이다",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "infeasible",
+    "reason": "04:30 은 02호선 강변 의 weekday 첫차(05:36) 이전이다",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "출발을 05:36 로 미루면 성립",
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 그 방향 첫 출발 05:36"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "before_first",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "출발을 05:36 로 미루면 성립",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 그 방향 첫 출발 05:36"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "출발시각_이동",
+    "label": "05:36 출발로 미룸",
+    "leg": {
+     "line": "02호선",
+     "from": "강변",
+     "to": "잠실"
+    },
+    "mode": "subway",
+    "depart_min": 336,
+    "arrive_min": 341,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "추정",
+    "reason": "05:36 성수행 승차 (대기 0분)",
+    "note": null,
+    "warnings": [],
+    "at": 336
+   },
+   {
+    "axis": "수단교체",
+    "label": "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "leg": {
+     "mode": "bus",
+     "route": "302",
+     "from": "구의3동주민센터",
+     "to": "잠실역.잠실대교남단"
+    },
+    "mode": "bus",
+    "depart_min": 284,
+    "arrive_min": 301,
+    "walk_in_min": 8,
+    "walk_out_min": 2,
+    "grade": "추정",
+    "reason": "04:44 승차 예상 (대기 6분 — 배차의 절반) · 구의3동주민센터(seq 85) → 잠실역.잠실대교남단(seq 89)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 278
+   }
+  ],
+  "alt_tried": [
+   [
+    "출발시각_이동",
+    "05:36 출발로 미룸",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "before_first",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 270,
+   "code": "before_first",
+   "reason": "04:30 은 02호선 강변 의 weekday 첫차(05:36) 이전이다",
+   "relief": "출발을 05:36 로 미루면 성립",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-LAST-01",
+  "verdict": "feasible",
+  "reason": "예정 24:35 +@10분(최악 24:35 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:30 서울대입구(관악구청)행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 1470,
+    "arrive_min": 1475,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1475,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:30 서울대입구(관악구청)행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 1470,
+    "arrive_min": 1475,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1475,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1470,
+   "arrive_min": 1475,
+   "arrive_worst_min": 1475,
+   "margin_min": 10,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-LAST-02",
+  "verdict": "feasible",
+  "reason": "예정 24:55 +@10분(최악 24:55 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:50 삼성(무역센터)행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 1490,
+    "arrive_min": 1495,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:50 출발 삼성(무역센터)행 (그 방향 472편 중, 24:50~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "삼성행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1495,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 24:50 출발 삼성(무역센터)행 (그 방향 472편 중, 24:50~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "삼성행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:50 삼성(무역센터)행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 1490,
+    "arrive_min": 1495,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:50 출발 삼성(무역센터)행 (그 방향 472편 중, 24:50~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "삼성행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1495,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1490,
+   "arrive_min": 1495,
+   "arrive_worst_min": 1495,
+   "margin_min": 10,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-LAST-03",
+  "verdict": "infeasible",
+  "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "infeasible",
+    "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 그 방향 마지막 출발 24:50"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 그 방향 마지막 출발 24:50"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N6703",
+     "from": "강변역A",
+     "to": "잠실롯데월드호텔.롯데타워"
+    },
+    "mode": "bus",
+    "depart_min": 1534,
+    "arrive_min": 1554,
+    "walk_in_min": 3,
+    "walk_out_min": 5,
+    "grade": "추정",
+    "reason": "25:34 승차 예상 (대기 40분 — 배차의 절반) · 강변역A(seq 24) → 잠실롯데월드호텔.롯데타워(seq 25)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_AIRPORT",
+      "class": "grade",
+      "text": "N6703 은 공항 노선이라 통계에 없다 — 간선 값으로 대용했다. 공항버스의 빠른 평균속도는 고속도로 구간에서 나오는데 여기서 쓰는 구간은 시내 정류장 사이라 그 속도가 적용되지 않는다. 느리게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_AIRPORT_FARE",
+      "class": "cost",
+      "text": "공항버스는 시내버스와 요금 체계가 다르다(별도 요금·현금/카드 상이). 대안으로 제시할 때 경고를 붙인다 — 요금 데이터는 수집하지 않았다.",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1494
+   },
+   {
+    "axis": "수단교체",
+    "label": "따릉이 강변→잠실 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "강변",
+     "to": "잠실"
+    },
+    "mode": "bike",
+    "depart_min": 1491,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 강변역 4번출구 뒤(도보 2분) → 잠실역 8번출구(도보 2분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "강변역 4번출구 뒤 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1491
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 강변→잠실 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1491,
+   "code": "after_last",
+   "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+   "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-WALL-01",
+  "verdict": "feasible",
+  "reason": "예정 24:35 +@10분(최악 24:35 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:30 서울대입구(관악구청)행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 1470,
+    "arrive_min": 1475,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1475,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "24:30 서울대입구(관악구청)행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 1470,
+    "arrive_min": 1475,
+    "wait_min": 0,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 24:30 출발 서울대입구(관악구청)행 (그 방향 472편 중, 24:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "서울대입구행(U) 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1475,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 5,
+  "eta_worst_min": 5,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1470,
+   "arrive_min": 1475,
+   "arrive_worst_min": 1475,
+   "margin_min": 10,
+   "eta_min": 5,
+   "eta_worst_min": 5,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-WALL-02",
+  "verdict": "infeasible",
+  "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "infeasible",
+    "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 그 방향 마지막 출발 24:50"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 그 방향 마지막 출발 24:50"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N6703",
+     "from": "강변역A",
+     "to": "잠실롯데월드호텔.롯데타워"
+    },
+    "mode": "bus",
+    "depart_min": 1534,
+    "arrive_min": 1554,
+    "walk_in_min": 3,
+    "walk_out_min": 5,
+    "grade": "추정",
+    "reason": "25:34 승차 예상 (대기 40분 — 배차의 절반) · 강변역A(seq 24) → 잠실롯데월드호텔.롯데타워(seq 25)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_AIRPORT",
+      "class": "grade",
+      "text": "N6703 은 공항 노선이라 통계에 없다 — 간선 값으로 대용했다. 공항버스의 빠른 평균속도는 고속도로 구간에서 나오는데 여기서 쓰는 구간은 시내 정류장 사이라 그 속도가 적용되지 않는다. 느리게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_AIRPORT_FARE",
+      "class": "cost",
+      "text": "공항버스는 시내버스와 요금 체계가 다르다(별도 요금·현금/카드 상이). 대안으로 제시할 때 경고를 붙인다 — 요금 데이터는 수집하지 않았다.",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1494
+   },
+   {
+    "axis": "수단교체",
+    "label": "따릉이 강변→잠실 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "강변",
+     "to": "잠실"
+    },
+    "mode": "bike",
+    "depart_min": 1491,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 강변역 4번출구 뒤(도보 2분) → 잠실역 8번출구(도보 2분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "강변역 4번출구 뒤 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1491
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 강변→잠실 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1491,
+   "code": "after_last",
+   "reason": "24:51 이후 잠실 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 삼성(무역센터)행)",
+   "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-SHORT-01",
+  "verdict": "feasible",
+  "reason": "예정 23:34 +@10분(최악 23:34 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "23:07 하남검단산역행 승차 (대기 7분)",
+    "grade": "추정",
+    "depart_min": 1387,
+    "arrive_min": 1414,
+    "wait_min": 7,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 23:07 출발 하남검단산역행 (그 방향 197편 중, 23:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "하남검단산행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1414,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 23:07 출발 하남검단산역행 (그 방향 197편 중, 23:07~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "하남검단산행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "23:07 하남검단산역행 승차 (대기 7분) [최악]",
+    "grade": "추정",
+    "depart_min": 1387,
+    "arrive_min": 1414,
+    "wait_min": 7,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 23:07 출발 하남검단산역행 (그 방향 197편 중, 23:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "하남검단산행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1414,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 34,
+  "eta_worst_min": 34,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1465,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1380,
+   "arrive_min": 1414,
+   "arrive_worst_min": 1414,
+   "margin_min": 10,
+   "eta_min": 34,
+   "eta_worst_min": 34,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1465
+  }
+ },
+ {
+  "id": "R-SHORT-02",
+  "verdict": "feasible",
+  "reason": "예정 24:52 +@10분(최악 24:52 + 버퍼 10분)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "24:25 군자(능동)행 승차 (대기 0분)",
+    "grade": "확정",
+    "depart_min": 1465,
+    "arrive_min": 1492,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 24:25 출발 군자(능동)행 (그 방향 197편 중, 24:25~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "군자행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1492,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 24:25 출발 군자(능동)행 (그 방향 197편 중, 24:25~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "확정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "군자행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "24:25 군자(능동)행 승차 (대기 0분) [최악]",
+    "grade": "확정",
+    "depart_min": 1465,
+    "arrive_min": 1492,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 24:25 출발 군자(능동)행 (그 방향 197편 중, 24:25~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "군자행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1492,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 27,
+  "eta_worst_min": 27,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1465,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1465,
+   "arrive_min": 1492,
+   "arrive_worst_min": 1492,
+   "margin_min": 10,
+   "eta_min": 27,
+   "eta_worst_min": 27,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1465
+  }
+ },
+ {
+  "id": "R-SHORT-03",
+  "verdict": "infeasible",
+  "reason": "24:26 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "infeasible",
+    "reason": "24:26 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "여의도",
+     "to": "왕십리"
+    },
+    "mode": "bike",
+    "depart_min": 1466,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 여의도역2번출구 앞(도보 4분) → 왕십리역 4번 출구 건너편(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "여의도역2번출구 앞 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1466
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1465,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1466,
+   "code": "after_last",
+   "reason": "24:26 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+   "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1465
+  }
+ },
+ {
+  "id": "R-TERM-01",
+  "verdict": "infeasible",
+  "reason": "24:40 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "infeasible",
+    "reason": "24:40 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "여의도",
+     "to": "왕십리"
+    },
+    "mode": "bike",
+    "depart_min": 1480,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 여의도역2번출구 앞(도보 4분) → 왕십리역 4번 출구 건너편(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "여의도역2번출구 앞 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1480
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1465,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1480,
+   "code": "after_last",
+   "reason": "24:40 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+   "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1465
+  }
+ },
+ {
+  "id": "R-NODEST-01",
+  "verdict": "infeasible",
+  "reason": "24:52 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "infeasible",
+    "reason": "24:52 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "여의도",
+     "to": "왕십리"
+    },
+    "mode": "bike",
+    "depart_min": 1492,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 여의도역2번출구 앞(도보 4분) → 왕십리역 4번 출구 건너편(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "여의도역2번출구 앞 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1492
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1465,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1492,
+   "code": "after_last",
+   "reason": "24:52 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+   "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1465
+  }
+ },
+ {
+  "id": "R-DIR-01",
+  "verdict": "feasible",
+  "reason": "예정 14:15 +@10분(최악 14:15 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 잠실→성수",
+    "verdict": "feasible",
+    "reason": "14:04 성수행 승차 (대기 4분)",
+    "grade": "추정",
+    "depart_min": 844,
+    "arrive_min": 855,
+    "wait_min": 4,
+    "ride_min": 10.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 14:04 출발 성수행 (그 방향 457편 중, 14:04~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 잠실 에서 5정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 855,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 잠실 weekday: 14:04 출발 성수행 (그 방향 457편 중, 14:04~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 잠실 에서 5정거장 뒤 성수 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 잠실→성수",
+    "verdict": "feasible",
+    "reason": "14:04 성수행 승차 (대기 4분) [최악]",
+    "grade": "추정",
+    "depart_min": 844,
+    "arrive_min": 855,
+    "wait_min": 4,
+    "ride_min": 10.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 14:04 출발 성수행 (그 방향 457편 중, 14:04~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 잠실 에서 5정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 855,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 15,
+  "eta_worst_min": 15,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1490,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 855,
+   "arrive_worst_min": 855,
+   "margin_min": 10,
+   "eta_min": 15,
+   "eta_worst_min": 15,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1490
+  }
+ },
+ {
+  "id": "R-DIR-02",
+  "verdict": "feasible",
+  "reason": "예정 14:09 +@10분(최악 14:09 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→성수",
+    "verdict": "feasible",
+    "reason": "14:02 성수행 승차 (대기 2분)",
+    "grade": "추정",
+    "depart_min": 842,
+    "arrive_min": 849,
+    "wait_min": 2,
+    "ride_min": 6.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:02 출발 성수행 (그 방향 457편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 강변 에서 3정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 849,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 14:02 출발 성수행 (그 방향 457편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(D) 한 바퀴 도는 편성 열차는 강변 에서 3정거장 뒤 성수 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→성수",
+    "verdict": "feasible",
+    "reason": "14:02 성수행 승차 (대기 2분) [최악]",
+    "grade": "추정",
+    "depart_min": 842,
+    "arrive_min": 849,
+    "wait_min": 2,
+    "ride_min": 6.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 14:02 출발 성수행 (그 방향 457편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(D) 한 바퀴 도는 편성 열차는 강변 에서 3정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 849,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 9,
+  "eta_worst_min": 9,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1494,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 849,
+   "arrive_worst_min": 849,
+   "margin_min": 10,
+   "eta_min": 9,
+   "eta_worst_min": 9,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1494
+  }
+ },
+ {
+  "id": "R-LOOP-01",
+  "verdict": "feasible",
+  "reason": "예정 14:11 +@10분(최악 14:11 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 성수→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 851,
+    "wait_min": 0,
+    "ride_min": 10.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113,
+     "행선지없음": 49
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+      "class": "grade",
+      "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.시발열차_판별"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 5정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 851,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+    "class": "grade",
+    "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.시발열차_판별"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 5정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 성수→잠실",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 851,
+    "wait_min": 0,
+    "ride_min": 10.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113,
+     "행선지없음": 49
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+      "class": "grade",
+      "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.시발열차_판별"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 5정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 851,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1411,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 851,
+   "arrive_worst_min": 851,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1411
+  }
+ },
+ {
+  "id": "R-LOOP-02",
+  "verdict": "feasible",
+  "reason": "예정 09:47 +@10분(최악 09:47 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 587,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 587,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 17,
+  "eta_worst_min": 17,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1487,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 570,
+   "arrive_min": 587,
+   "arrive_worst_min": 587,
+   "margin_min": 10,
+   "eta_min": 17,
+   "eta_worst_min": 17,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1487
+  }
+ },
+ {
+  "id": "R-ORIG-01",
+  "verdict": "feasible",
+  "reason": "예정 14:15 +@10분(최악 14:15 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 까치산→도림천",
+    "verdict": "feasible",
+    "reason": "14:05 신도림행 승차 (대기 5분)",
+    "grade": "추정",
+    "depart_min": 845,
+    "arrive_min": 855,
+    "wait_min": 5,
+    "ride_min": 9.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 까치산 weekday: 14:05 출발 신도림행 (그 방향 111편 중, 14:05~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 까치산 에서 3정거장 뒤 도림천 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 855,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 까치산 weekday: 14:05 출발 신도림행 (그 방향 111편 중, 14:05~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "신도림행 열차는 까치산 에서 3정거장 뒤 도림천 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 까치산→도림천",
+    "verdict": "feasible",
+    "reason": "14:05 신도림행 승차 (대기 5분) [최악]",
+    "grade": "추정",
+    "depart_min": 845,
+    "arrive_min": 855,
+    "wait_min": 5,
+    "ride_min": 9.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 까치산 weekday: 14:05 출발 신도림행 (그 방향 111편 중, 14:05~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 까치산 에서 3정거장 뒤 도림천 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 855,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 15,
+  "eta_worst_min": 15,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1505,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 855,
+   "arrive_worst_min": 855,
+   "margin_min": 10,
+   "eta_min": 15,
+   "eta_worst_min": 15,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1505
+  }
+ },
+ {
+  "id": "R-ORIG-02",
+  "verdict": "feasible",
+  "reason": "예정 14:07 +@10분(최악 14:07 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 성수→강변",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 847,
+    "wait_min": 0,
+    "ride_min": 6.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113,
+     "행선지없음": 49
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+      "class": "grade",
+      "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.시발열차_판별"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 3정거장 뒤 강변 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 847,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+    "class": "grade",
+    "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.시발열차_판별"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 3정거장 뒤 강변 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 성수→강변",
+    "verdict": "feasible",
+    "reason": "14:00 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 847,
+    "wait_min": 0,
+    "ride_min": 6.2,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113,
+     "행선지없음": 49
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_ORIGIN_TERMINAL_DEST",
+      "class": "grade",
+      "text": "성수 는 시발역이라 행선지가 역 자신으로 기록된다 — 어디까지 가는지는 노선 구조로 추정했다(rules last_train.시발열차_판별)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.시발열차_판별"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 성수 weekday: 14:00 출발 성수행 (그 방향 430편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 성수 에서 3정거장 뒤 강변 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 847,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 7,
+  "eta_worst_min": 7,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1411,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 847,
+   "arrive_worst_min": 847,
+   "margin_min": 10,
+   "eta_min": 7,
+   "eta_worst_min": 7,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1411
+  }
+ },
+ {
+  "id": "R-TRANS-01",
+  "verdict": "feasible",
+  "reason": "예정 09:59 +@10분(최악 09:59 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "09:00 마천행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 540,
+    "arrive_min": 567,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 왕십리",
+    "verdict": "feasible",
+    "reason": "도보 1.4분(86m) + 길찾기 1분 = +3분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:57 구리행 승차 (대기 6분)",
+    "grade": "확정",
+    "depart_min": 597,
+    "arrive_min": 599,
+    "wait_min": 6,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 599,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "왕십리 05호선↔02호선 86m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "잠실 02호선↔08호선 190m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "확정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "09:00 마천행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 540,
+    "arrive_min": 567,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "환승 왕십리",
+    "verdict": "feasible",
+    "reason": "도보 1.4분(86m) + 길찾기 1분 = +3분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 2,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 2,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:57 구리행 승차 (대기 6분) [최악]",
+    "grade": "확정",
+    "depart_min": 597,
+    "arrive_min": 599,
+    "wait_min": 6,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 599,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 59,
+  "eta_worst_min": 59,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1423,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 540,
+   "arrive_min": 599,
+   "arrive_worst_min": 599,
+   "margin_min": 10,
+   "eta_min": 59,
+   "eta_worst_min": 59,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1423
+  }
+ },
+ {
+  "id": "R-LIMIT-01",
+  "verdict": "rejected_by_limit",
+  "reason": "환승 2회로 상한(infant 1회)을 넘는다 — 성립하지만 이 일행에게는 무리다",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "feasible",
+    "reason": "09:00 마천행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 540,
+    "arrive_min": 567,
+    "wait_min": 0,
+    "ride_min": 26.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 왕십리",
+    "verdict": "feasible",
+    "reason": "도보 1.4분(86m) + 길찾기 1분 = +3분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "02호선 왕십리→잠실",
+    "verdict": "feasible",
+    "reason": "09:30 성수행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 570,
+    "arrive_min": 587,
+    "wait_min": 0,
+    "ride_min": 16.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 27,
+     "운행종료후_한바퀴": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 2,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:57 구리행 승차 (대기 6분)",
+    "grade": "확정",
+    "depart_min": 597,
+    "arrive_min": 599,
+    "wait_min": 6,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 599,
+  "slack_min": null,
+  "relief": "환승이 적은 노선으로 교체",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 09:00 출발 마천행 (그 방향 197편 중, 09:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "마천행 열차는 여의도 에서 14정거장 뒤 왕십리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "왕십리 05호선↔02호선 86m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 왕십리 weekday: 09:30 출발 성수행 (그 방향 451편 중, 09:30~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 왕십리 에서 8정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "잠실 02호선↔08호선 190m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "08호선 잠실 weekday: 09:57 출발 구리행 (그 방향 159편 중, 09:57~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "확정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "limits.transfers.infant"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "over_limit",
+  "verdict_best": "feasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": 59,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 540,
+   "code": "over_limit",
+   "reason": "환승 2회로 상한(infant 1회)을 넘는다 — 성립하지만 이 일행에게는 무리다",
+   "relief": "환승이 적은 노선으로 교체",
+   "arrive_min": 599,
+   "eta_min": 59,
+   "buffer_min": 10
+  }
+ },
+ {
+  "id": "R-LIMIT-02",
+  "verdict": "feasible",
+  "reason": "예정 09:16 +@10분(최악 09:16 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "09:01 성수행 승차 (대기 1분)",
+    "grade": "추정",
+    "depart_min": 541,
+    "arrive_min": 546,
+    "wait_min": 1,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 09:01 출발 성수행 (그 방향 472편 중, 09:01~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   },
+   {
+    "idx": 1,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:14 구리행 승차 (대기 4분)",
+    "grade": "확정",
+    "depart_min": 554,
+    "arrive_min": 556,
+    "wait_min": 4,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:14 출발 구리행 (그 방향 159편 중, 09:14~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 556,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 09:01 출발 성수행 (그 방향 472편 중, 09:01~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "db",
+    "source_id": "transfer_walk_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-10T12:30:26+09:00",
+    "claim": "잠실 02호선↔08호선 190m ÷ 1.04 m/s"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "08호선 잠실 weekday: 09:14 출발 구리행 (그 방향 159편 중, 09:14~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "확정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "09:01 성수행 승차 (대기 1분) [최악]",
+    "grade": "추정",
+    "depart_min": 541,
+    "arrive_min": 546,
+    "wait_min": 1,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 09:01 출발 성수행 (그 방향 472편 중, 09:01~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "환승 잠실",
+    "verdict": "feasible",
+    "reason": "도보 3분(190m) + 길찾기 1분 = +4분",
+    "grade": "추정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   },
+   {
+    "idx": 1,
+    "label": "08호선 잠실→몽촌토성",
+    "verdict": "feasible",
+    "reason": "09:14 구리행 승차 (대기 4분) [최악]",
+    "grade": "확정",
+    "depart_min": 554,
+    "arrive_min": 556,
+    "wait_min": 4,
+    "ride_min": 1.8,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 160
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "08호선 잠실 weekday: 09:14 출발 구리행 (그 방향 159편 중, 09:14~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "확정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "구리행 열차는 잠실 에서 1정거장 뒤 몽촌토성 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 556,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 16,
+  "eta_worst_min": 16,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1470,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 540,
+   "arrive_min": 556,
+   "arrive_worst_min": 556,
+   "margin_min": 10,
+   "eta_min": 16,
+   "eta_worst_min": 16,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1470
+  }
+ },
+ {
+  "id": "R-SAT-01",
+  "verdict": "feasible",
+  "reason": "예정 10:07 +@10분(최악 10:07 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분)",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 607,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SINJEONG_SAT",
+    "class": "grade",
+    "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.신정지선_토요일_예외"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분) [최악]",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 607,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 7,
+  "eta_worst_min": 7,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1432,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 607,
+   "arrive_worst_min": 607,
+   "margin_min": 10,
+   "eta_min": 7,
+   "eta_worst_min": 7,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1432
+  }
+ },
+ {
+  "id": "R-SUN-01",
+  "verdict": "feasible",
+  "reason": "예정 10:07 +@10분(최악 10:07 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분)",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 607,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분) [최악]",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 607,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 7,
+  "eta_worst_min": 7,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1432,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 607,
+   "arrive_worst_min": 607,
+   "margin_min": 10,
+   "eta_min": 7,
+   "eta_worst_min": 7,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1432
+  }
+ },
+ {
+  "id": "R-HOL-01",
+  "verdict": "feasible",
+  "reason": "예정 10:07 +@10분(최악 10:07 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분)",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 607,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SINJEONG_SAT",
+    "class": "grade",
+    "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.신정지선_토요일_예외"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 양천구청→신정네거리",
+    "verdict": "feasible",
+    "reason": "10:03 까치산행 승차 (대기 3분) [최악]",
+    "grade": "추정",
+    "depart_min": 603,
+    "arrive_min": 607,
+    "wait_min": 3,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 양천구청 holiday: 10:03 출발 까치산행 (그 방향 105편 중, 10:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 양천구청 에서 1정거장 뒤 신정네거리 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 607,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 7,
+  "eta_worst_min": 7,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1432,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 607,
+   "arrive_worst_min": 607,
+   "margin_min": 10,
+   "eta_min": 7,
+   "eta_worst_min": 7,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1432
+  }
+ },
+ {
+  "id": "R-SAT-02",
+  "verdict": "feasible",
+  "reason": "예정 10:11 +@10분(최악 10:11 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분)",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 611,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SINJEONG_SAT",
+    "class": "grade",
+    "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.신정지선_토요일_예외"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분) [최악]",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 611,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1430,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 611,
+   "arrive_worst_min": 611,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1430
+  }
+ },
+ {
+  "id": "R-SUN-02",
+  "verdict": "feasible",
+  "reason": "예정 10:11 +@10분(최악 10:11 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분)",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 611,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분) [최악]",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 611,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1430,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 611,
+   "arrive_worst_min": 611,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1430
+  }
+ },
+ {
+  "id": "R-HOL-03",
+  "verdict": "feasible",
+  "reason": "예정 10:11 +@10분(최악 10:11 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분)",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 611,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SINJEONG_SAT",
+    "class": "grade",
+    "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.신정지선_토요일_예외"
+   },
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 신정네거리→양천구청",
+    "verdict": "feasible",
+    "reason": "10:07 신도림행 승차 (대기 7분) [최악]",
+    "grade": "추정",
+    "depart_min": 607,
+    "arrive_min": 611,
+    "wait_min": 7,
+    "ride_min": 3.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 105
+    },
+    "warnings": [
+     {
+      "code": "MOB_W_SINJEONG_SAT",
+      "class": "grade",
+      "text": "2호선 신정지선은 토요일 시간표가 따로 있다 — 토요일 판정 등급을 추정으로 내린다 (rules last_train.신정지선_토요일_예외)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.신정지선_토요일_예외"
+     },
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신정네거리 holiday: 10:07 출발 신도림행 (그 방향 105편 중, 10:07~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "신도림행 열차는 신정네거리 에서 1정거장 뒤 양천구청 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 611,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1430,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 600,
+   "arrive_min": 611,
+   "arrive_worst_min": 611,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1430
+  }
+ },
+ {
+  "id": "R-HOL-02",
+  "verdict": "feasible",
+  "reason": "예정 14:11 +@10분(최악 14:11 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:06 성수행 승차 (대기 6분)",
+    "grade": "추정",
+    "depart_min": 846,
+    "arrive_min": 851,
+    "wait_min": 6,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 10
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 holiday: 14:06 출발 성수행 (그 방향 381편 중, 14:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 851,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 holiday: 14:06 출발 성수행 (그 방향 381편 중, 14:03~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "feasible",
+    "reason": "14:06 성수행 승차 (대기 6분) [최악]",
+    "grade": "추정",
+    "depart_min": 846,
+    "arrive_min": 851,
+    "wait_min": 6,
+    "ride_min": 4.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "운행종료후_한바퀴": 10
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 holiday: 14:06 출발 성수행 (그 방향 381편 중, 14:03~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행(U) 한 바퀴 도는 편성 열차는 강변 에서 2정거장 뒤 잠실 을 지난다"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 851,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 11,
+  "eta_worst_min": 11,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1429,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 851,
+   "arrive_worst_min": 851,
+   "margin_min": 10,
+   "eta_min": 11,
+   "eta_worst_min": 11,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1429
+  }
+ },
+ {
+  "id": "R-MISSING-01",
+  "verdict": "feasible",
+  "reason": "예정 14:02 +@10분(최악 14:02 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 신도림→도림천",
+    "verdict": "feasible",
+    "reason": "14:00 까치산행 승차 (대기 0분)",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 842,
+    "wait_min": 0,
+    "ride_min": 2.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 479
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신도림 weekday: 14:00 출발 까치산행 (그 방향 110편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 신도림 에서 1정거장 뒤 도림천 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 842,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 신도림 weekday: 14:00 출발 까치산행 (그 방향 110편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "까치산행 열차는 신도림 에서 1정거장 뒤 도림천 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 신도림→도림천",
+    "verdict": "feasible",
+    "reason": "14:00 까치산행 승차 (대기 0분) [최악]",
+    "grade": "추정",
+    "depart_min": 840,
+    "arrive_min": 842,
+    "wait_min": 0,
+    "ride_min": 2.0,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 479
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신도림 weekday: 14:00 출발 까치산행 (그 방향 110편 중, 14:00~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "까치산행 열차는 신도림 에서 1정거장 뒤 도림천 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 842,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 2,
+  "eta_worst_min": 2,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1491,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 842,
+   "arrive_worst_min": 842,
+   "margin_min": 10,
+   "eta_min": 2,
+   "eta_worst_min": 2,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1491
+  }
+ },
+ {
+  "id": "R-NOTRAVEL-01",
+  "verdict": "feasible",
+  "reason": "예정 14:12 +@10분(최악 14:12 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 신답→성수",
+    "verdict": "feasible",
+    "reason": "14:06 성수행 승차 (대기 6분)",
+    "grade": "추정",
+    "depart_min": 846,
+    "arrive_min": 852,
+    "wait_min": 6,
+    "ride_min": 5.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신답 weekday: 14:06 출발 성수행 (그 방향 113편 중, 14:06~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행 열차는 신답 에서 2정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 852,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 신답 weekday: 14:06 출발 성수행 (그 방향 113편 중, 14:06~ 안에서 도착이 가장 이른 편)"
+   },
+   {
+    "source_type": "db",
+    "source_id": "line_station_order_v1",
+    "grade": "추정",
+    "observed_at": "2026-09-11T10:16:28+09:00",
+    "claim": "성수행 열차는 신답 에서 2정거장 뒤 성수 을 지난다"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "last_train.행선지_확인"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "02호선 신답→성수",
+    "verdict": "feasible",
+    "reason": "14:06 성수행 승차 (대기 6분) [최악]",
+    "grade": "추정",
+    "depart_min": 846,
+    "arrive_min": 852,
+    "wait_min": 6,
+    "ride_min": 5.5,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {
+     "단축운행": 113
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 신답 weekday: 14:06 출발 성수행 (그 방향 113편 중, 14:06~ 안에서 도착이 가장 이른 편)"
+     },
+     {
+      "source_type": "db",
+      "source_id": "line_station_order_v1",
+      "grade": "추정",
+      "observed_at": "2026-09-11T10:16:28+09:00",
+      "claim": "성수행 열차는 신답 에서 2정거장 뒤 성수 을 지난다"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "확정",
+      "observed_at": "2026-09-24",
+      "claim": "last_train.행선지_확인"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 852,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 12,
+  "eta_worst_min": 12,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1495,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 840,
+   "arrive_min": 852,
+   "arrive_worst_min": 852,
+   "margin_min": 10,
+   "eta_min": 12,
+   "eta_worst_min": 12,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1495
+  }
+ }
+]

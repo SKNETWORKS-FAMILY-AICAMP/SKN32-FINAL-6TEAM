@@ -21,6 +21,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:50",
    "expect_arrive": "14:05"
   },
   {
@@ -37,6 +43,16 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_slack_min": [
+    15,
+    15
+   ],
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "14:12",
    "expect_arrive": "14:05"
   },
   {
@@ -52,7 +68,18 @@
      "to": "잠실"
     }
    ],
-   "expect": "infeasible"
+   "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "arrive_late",
+   "expect_slack_min": [
+    -3,
+    -3
+   ],
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "13:54"
   },
   {
    "id": "R-FIRST-01",
@@ -67,6 +94,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "before_first",
+   "expect_last_depart": "24:50",
    "expect_relief_contains": "05:36"
   },
   {
@@ -82,6 +112,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:50",
    "expect_arrive": "24:35"
   },
   {
@@ -97,6 +133,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:50",
    "expect_arrive": "24:55"
   },
   {
@@ -112,6 +154,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "24:50",
    "expect_relief_contains": "수단 교체",
    "expect_warn_codes": [
     "MOB_W_AIRPORT_FARE",
@@ -131,6 +176,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:50",
    "expect_arrive": "24:35"
   },
   {
@@ -146,6 +197,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "24:50",
    "expect_relief_contains": "수단 교체"
   },
   {
@@ -161,6 +215,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:25",
    "expect_arrive": "23:34"
   },
   {
@@ -176,6 +236,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:25",
    "expect_arrive": "24:52"
   },
   {
@@ -191,6 +257,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "24:25",
    "expect_relief_contains": "수단 교체"
   },
   {
@@ -206,6 +275,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "24:25",
    "expect_relief_contains": "수단 교체"
   },
   {
@@ -221,6 +293,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "24:25",
    "expect_relief_contains": "수단 교체"
   },
   {
@@ -236,6 +311,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:50",
    "expect_arrive": "14:15"
   },
   {
@@ -251,6 +332,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:54",
    "expect_arrive": "14:09"
   },
   {
@@ -266,6 +353,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:31",
    "expect_arrive": "14:11",
    "expect_warn_codes": [
     "MOB_W_ORIGIN_TERMINAL_DEST"
@@ -284,6 +377,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:47",
    "expect_arrive": "09:47"
   },
   {
@@ -298,7 +397,13 @@
      "to": "도림천"
     }
    ],
-   "expect": "feasible"
+   "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "25:05"
   },
   {
    "id": "R-ORIG-02",
@@ -313,6 +418,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:31",
    "expect_arrive": "14:07"
   },
   {
@@ -338,6 +449,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:43",
    "expect_arrive": "09:59"
   },
   {
@@ -365,7 +482,10 @@
      "to": "몽촌토성"
     }
    ],
-   "expect": "rejected_by_limit"
+   "expect": "infeasible",
+   "expect_internal": "rejected_by_limit",
+   "expect_reason": "over_limit",
+   "expect_last_depart_none": true
   },
   {
    "id": "R-LIMIT-02",
@@ -388,6 +508,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:30",
    "expect_arrive": "09:16"
   },
   {
@@ -403,6 +529,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:52",
    "expect_arrive": "10:07",
    "expect_warn_codes": [
     "MOB_W_SINJEONG_SAT"
@@ -421,6 +553,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:52",
    "expect_arrive": "10:07"
   },
   {
@@ -436,6 +574,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:52",
    "expect_arrive": "10:07"
   },
   {
@@ -451,6 +595,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:50",
    "expect_arrive": "10:11",
    "expect_warn_codes": [
     "MOB_W_SINJEONG_SAT"
@@ -469,6 +619,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:50",
    "expect_arrive": "10:11"
   },
   {
@@ -484,6 +640,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:50",
    "expect_arrive": "10:11"
   },
   {
@@ -499,6 +661,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "23:49",
    "expect_arrive": "14:11"
   },
   {
@@ -514,6 +682,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:51",
    "expect_arrive": "14:02"
   },
   {
@@ -528,7 +702,14 @@
      "to": "성수"
     }
    ],
-   "expect": "feasible"
+   "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "24:55"
   }
- ]
+ ],
+ "note_v0.8": "2026-09-24 · 39번 방 — 기대값 재정의. expect = 밖 판정 둘(feasible/infeasible) · expect_internal = 옛 4값(내부 판정) · expect_reason = 이유 코드 · expect_slack_min/expect_margin_min = [하한, 상한] · expect_last_depart = 마지막 성립 출발(worst 역산 · 없으면 expect_last_depart_none). 옛 expect 값은 expect_internal 로 옮겼다 — 값을 바꾼 것이 아니라 축을 나눈 것이다."
 }

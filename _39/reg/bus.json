@@ -1,0 +1,2241 @@
+[
+ {
+  "id": "BUS-01",
+  "verdict": "feasible",
+  "reason": "예정 11:12 +@15분(최악 11:17 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 672,
+    "wait_min": 6,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 672,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 677,
+    "wait_min": 11,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 677,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 12,
+  "eta_worst_min": 17,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 660,
+   "arrive_min": 672,
+   "arrive_worst_min": 677,
+   "margin_min": 15,
+   "eta_min": 12,
+   "eta_worst_min": 17,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-02",
+  "verdict": "infeasible",
+  "reason": "03:50 (+1일) 은 2016 첫차(04:10) 이전이다 (전날 막차 22:20 는 이미 지났다)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "infeasible",
+    "reason": "03:50 (+1일) 은 2016 첫차(04:10) 이전이다 (전날 막차 22:20 는 이미 지났다)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "20분 뒤 첫차 04:10 를 기다리면 성립",
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 구간"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "before_first",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "20분 뒤 첫차 04:10 를 기다리면 성립",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 구간"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [
+   [
+    "노선교체",
+    "버스 N62(심야) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "infeasible"
+   ],
+   [
+    "노선교체",
+    "버스 N73(심야) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "02호선 건대입구→성수 로 교체 — 건대입구역까지 도보 43m(1분) · 하차 후 122m(2분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 건대입구역1번출구→성수역1번출구 — 반경 300m 대여소",
+    "infeasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "before_first",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1670,
+   "code": "before_first",
+   "reason": "03:50 (+1일) 은 2016 첫차(04:10) 이전이다 (전날 막차 22:20 는 이미 지났다)",
+   "relief": "20분 뒤 첫차 04:10 를 기다리면 성립",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-03",
+  "verdict": "infeasible",
+  "reason": "22:40 은 2016 막차(22:20) 이후다",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "infeasible",
+    "reason": "22:40 은 2016 막차(22:20) 이후다",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "수단 교체(지하철·택시)",
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 구간"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "after_last",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "수단 교체(지하철·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 구간"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "02호선 건대입구→성수 로 교체 — 건대입구역까지 도보 43m(1분) · 하차 후 122m(2분)",
+    "leg": {
+     "line": "02호선",
+     "from": "건대입구",
+     "to": "성수"
+    },
+    "mode": "subway",
+    "depart_min": 1362,
+    "arrive_min": 1367,
+    "walk_in_min": 1,
+    "walk_out_min": 2,
+    "grade": "추정",
+    "reason": "22:42 성수행 승차 (대기 1분)",
+    "note": null,
+    "warnings": [],
+    "at": 1361
+   }
+  ],
+  "alt_tried": [
+   [
+    "노선교체",
+    "버스 N62(심야) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "infeasible"
+   ],
+   [
+    "노선교체",
+    "버스 N73(심야) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "02호선 건대입구→성수 로 교체 — 건대입구역까지 도보 43m(1분) · 하차 후 122m(2분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 건대입구역1번출구→성수역1번출구 — 반경 300m 대여소",
+    "infeasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "after_last",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 1360,
+   "code": "after_last",
+   "reason": "22:40 은 2016 막차(22:20) 이후다",
+   "relief": "수단 교체(지하철·택시)",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-04",
+  "verdict": "feasible",
+  "reason": "예정 22:17 +@10분(최악 22:17 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "22:11 승차 예상 (대기 11분 — 배차 전부(막차 근처)) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 1331,
+    "arrive_min": 1337,
+    "wait_min": 11,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 1337,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "22:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 1331,
+    "arrive_min": 1337,
+    "wait_min": 11,
+    "ride_min": 5.9,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 1337,
+  "buffer_min": 10,
+  "margin_min": 10,
+  "eta_min": 17,
+  "eta_worst_min": 17,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 1320,
+   "arrive_min": 1337,
+   "arrive_worst_min": 1337,
+   "margin_min": 10,
+   "eta_min": 17,
+   "eta_worst_min": 17,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-05",
+  "verdict": "feasible",
+  "reason": "예정 13:28 +@15분(최악 13:33 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 성수역1번출구→건대입구역사거리.건대병원",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 성수역1번출구(seq 32) → 건대입구역사거리.건대병원(seq 107)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 808,
+    "wait_min": 6,
+    "ride_min": 141.6,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_DETOUR",
+      "class": "better_option",
+      "text": "이 구간은 75정거장이라 노선을 거의 한 바퀴 돈다 — 근처 정류장 짝(성수역4번출구 → 건대입구(가상))으로 타면 3정거장이다. 요청한 정류장 기준 판정은 맞지만 더 짧은 길이 있다(rules bus.우회_경고)",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.우회_경고"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 성수역1번출구→건대입구역사거리.건대병원 33,030m (75정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 808,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_DETOUR",
+    "class": "better_option",
+    "text": "이 구간은 75정거장이라 노선을 거의 한 바퀴 돈다 — 근처 정류장 짝(성수역4번출구 → 건대입구(가상))으로 타면 3정거장이다. 요청한 정류장 기준 판정은 맞지만 더 짧은 길이 있다(rules bus.우회_경고)",
+    "to_answer": true
+   },
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.우회_경고"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 성수역1번출구→건대입구역사거리.건대병원 33,030m (75정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 성수역1번출구→건대입구역사거리.건대병원",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 성수역1번출구(seq 32) → 건대입구역사거리.건대병원(seq 107)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 813,
+    "wait_min": 11,
+    "ride_min": 141.6,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BUS_DETOUR",
+      "class": "better_option",
+      "text": "이 구간은 75정거장이라 노선을 거의 한 바퀴 돈다 — 근처 정류장 짝(성수역4번출구 → 건대입구(가상))으로 타면 3정거장이다. 요청한 정류장 기준 판정은 맞지만 더 짧은 길이 있다(rules bus.우회_경고)",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.우회_경고"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 성수역1번출구→건대입구역사거리.건대병원 33,030m (75정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 813,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 148,
+  "eta_worst_min": 153,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 660,
+   "arrive_min": 808,
+   "arrive_worst_min": 813,
+   "margin_min": 15,
+   "eta_min": 148,
+   "eta_worst_min": 153,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-06",
+  "verdict": "unknown",
+  "reason": "노선 '9999' 이 수집 범위에 없다 (수집된 717노선 밖)",
+  "grade": "근거없음",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 9999 가→나",
+    "verdict": "unknown",
+    "reason": "노선 '9999' 이 수집 범위에 없다 (수집된 717노선 밖)",
+    "grade": "근거없음",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_ROUTE_NOT_COLLECTED",
+      "class": "data",
+      "text": "노선 '9999' 미수집 — seoul_bus_collect.py --routes 로 추가한다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [],
+    "car": null,
+    "walk_min": null,
+    "code": "no_data",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_ROUTE_NOT_COLLECTED",
+    "class": "data",
+    "text": "노선 '9999' 미수집 — seoul_bus_collect.py --routes 로 추가한다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "no_data",
+  "verdict_best": "unknown",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 660,
+   "code": "no_data",
+   "reason": "노선 '9999' 이 수집 범위에 없다 (수집된 717노선 밖)",
+   "buffer_min": 10
+  }
+ },
+ {
+  "id": "BUS-07",
+  "verdict": "infeasible",
+  "reason": "11:00 은 N62 첫차(23:40) 이전이다",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 N62 건대입구역→성수역",
+    "verdict": "infeasible",
+    "reason": "11:00 은 N62 첫차(23:40) 이전이다",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "출발을 23:40 로 미루면 성립",
+    "dropped": {},
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "N62(심야): 운행 구간"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": "before_first",
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "출발을 23:40 로 미루면 성립",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "N62(심야): 운행 구간"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "노선교체",
+    "label": "버스 2016(지선) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "leg": {
+     "mode": "bus",
+     "route": "2016",
+     "from": "건대입구역1번출구",
+     "to": "성수역1번출구"
+    },
+    "mode": "bus",
+    "depart_min": 666,
+    "arrive_min": 672,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "추정",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 660
+   },
+   {
+    "axis": "수단교체",
+    "label": "02호선 건대입구→성수 로 교체 — 건대입구역까지 도보 43m(1분) · 하차 후 122m(2분)",
+    "leg": {
+     "line": "02호선",
+     "from": "건대입구",
+     "to": "성수"
+    },
+    "mode": "subway",
+    "depart_min": 661,
+    "arrive_min": 666,
+    "walk_in_min": 1,
+    "walk_out_min": 2,
+    "grade": "추정",
+    "reason": "11:01 성수행 승차 (대기 0분)",
+    "note": null,
+    "warnings": [],
+    "at": 661
+   }
+  ],
+  "alt_tried": [
+   [
+    "노선교체",
+    "버스 2016(지선) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "feasible"
+   ],
+   [
+    "노선교체",
+    "버스 N73(심야) 로 교체 — 건대입구역1번출구 → 성수역1번출구 2정거장",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "02호선 건대입구→성수 로 교체 — 건대입구역까지 도보 43m(1분) · 하차 후 122m(2분)",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": "before_first",
+  "verdict_best": "infeasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1630,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 660,
+   "code": "before_first",
+   "reason": "11:00 은 N62 첫차(23:40) 이전이다",
+   "relief": "출발을 23:40 로 미루면 성립",
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1630
+  }
+ },
+ {
+  "id": "BUS-08",
+  "verdict": "feasible",
+  "reason": "예정 11:12 +@15분(최악 11:17 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 672,
+    "wait_min": 6,
+    "ride_min": 5.4,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_NO_DAYTYPE",
+      "class": "grade",
+      "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 672,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_NO_DAYTYPE",
+    "class": "grade",
+    "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 건대입구역1번출구→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 건대입구역1번출구(seq 30) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 677,
+    "wait_min": 11,
+    "ride_min": 5.4,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_NO_DAYTYPE",
+      "class": "grade",
+      "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 건대입구역1번출구→성수역1번출구 1,371m (2정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 677,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 12,
+  "eta_worst_min": 17,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 660,
+   "arrive_min": 672,
+   "arrive_worst_min": 677,
+   "margin_min": 15,
+   "eta_min": 12,
+   "eta_worst_min": 17,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-09",
+  "verdict": "feasible",
+  "reason": "예정 11:58 +@15분(최악 12:03 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 중랑공영차고지.신내역→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 중랑공영차고지.신내역(seq 1) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 718,
+    "wait_min": 6,
+    "ride_min": 51.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 718,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 중랑공영차고지.신내역→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 중랑공영차고지.신내역(seq 1) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 723,
+    "wait_min": 11,
+    "ride_min": 51.7,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(weekday) 14.0 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 723,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 58,
+  "eta_worst_min": 63,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 660,
+   "arrive_min": 718,
+   "arrive_worst_min": 723,
+   "margin_min": 15,
+   "eta_min": 58,
+   "eta_worst_min": 63,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-10",
+  "verdict": "feasible",
+  "reason": "예정 11:54 +@15분(최악 11:59 + 버퍼 10분)",
+  "grade": "추정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 2016 중랑공영차고지.신내역→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:06 승차 예상 (대기 6분 — 배차의 절반) · 중랑공영차고지.신내역(seq 1) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 666,
+    "arrive_min": 714,
+    "wait_min": 6,
+    "ride_min": 47.6,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_NO_DAYTYPE",
+      "class": "grade",
+      "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": 714,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_NO_DAYTYPE",
+    "class": "grade",
+    "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_SPEED_NO_PEAK",
+    "class": "grade",
+    "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+    "to_answer": false
+   },
+   {
+    "code": "MOB_W_WORST_NO_SPREAD",
+    "class": "data",
+    "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+    "to_answer": false
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.worst_case"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst.bus_ride_spread"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "확정",
+    "observed_at": "2026-09-24",
+    "claim": "judgment.worst"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "buffer.by_stage.planning"
+   }
+  ],
+  "day_type": "holiday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": [
+   {
+    "idx": 0,
+    "label": "버스 2016 중랑공영차고지.신내역→성수역1번출구",
+    "verdict": "feasible",
+    "reason": "11:11 승차 예상 (대기 11분 — 배차 전부(최악)) · 중랑공영차고지.신내역(seq 1) → 성수역1번출구(seq 32)",
+    "grade": "추정",
+    "depart_min": 671,
+    "arrive_min": 719,
+    "wait_min": 11,
+    "ride_min": 47.6,
+    "ride_grade": "추정",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_NO_DAYTYPE",
+      "class": "grade",
+      "text": "2016 의 첫차·막차·배차는 요일 구분 없이 하나로 온다 — holiday 판정에 평일 값을 그대로 쓴 것이다(rules.bus.요일축_없음)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_WORST_NO_SPREAD",
+      "class": "data",
+      "text": "버스 2016 승차 소요 의 스프레드(p90) 근거가 없어 최악값을 예정값과 같게 두었다",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 운행 04:10~22:20 · 배차 11분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.worst_case"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "judgment.worst.bus_ride_spread"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "2016(지선): 중랑공영차고지.신내역→성수역1번출구 12,066m (31정거장)"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 지선 유형 통계(holiday) 15.2 km/h"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": true
+   }
+  ],
+  "arrive_worst_min": 719,
+  "buffer_min": 10,
+  "margin_min": 15,
+  "eta_min": 54,
+  "eta_worst_min": 59,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": 1340,
+  "out": {
+   "verdict": "feasible",
+   "depart_min": 660,
+   "arrive_min": 714,
+   "arrive_worst_min": 719,
+   "margin_min": 15,
+   "eta_min": 54,
+   "eta_worst_min": 59,
+   "buffer_min": 10,
+   "last_feasible_depart_min": 1340
+  }
+ },
+ {
+  "id": "BUS-11",
+  "verdict": "feasible",
+  "reason": "버스 01A 충무로역.한옥마을.한국의집→남산서울타워 은 그 시각 편성이 있다(11:05 출발) — 승차 소요를 낼 수 없어 도착 시각은 내지 않는다",
+  "grade": "근거없음",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "버스 01A 충무로역.한옥마을.한국의집→남산서울타워",
+    "verdict": "feasible",
+    "reason": "11:05 승차 예상 (대기 5분 — 배차의 절반) · 승차 소요 근거없음 · 충무로역.한옥마을.한국의집(seq 2) → 남산서울타워(seq 9)",
+    "grade": "근거없음",
+    "depart_min": 665,
+    "arrive_min": null,
+    "wait_min": 5,
+    "ride_min": null,
+    "ride_grade": "근거없음",
+    "relief": null,
+    "dropped": {},
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_BLOCKED_ROUTE",
+      "class": "data",
+      "text": "01A 은 유형별 통계를 쓰지 않기로 한 노선이다 — 실측과 크게 어긋난다(rules bus.표정속도.통계_금지_노선). 노선별 실측값이 규칙에 들어오면 도착 시각이 나온다",
+      "to_answer": true
+     }
+    ],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "seoul_bus_route@2026-09-10",
+      "grade": "확정",
+      "observed_at": "2026-09-10",
+      "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.wait_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "추정",
+      "observed_at": "2026-09-24",
+      "claim": "bus.ride_model"
+     },
+     {
+      "source_type": "policy",
+      "source_id": "mobility_rules@v0.8",
+      "grade": "근거없음",
+      "observed_at": "2026-09-24",
+      "claim": "bus.표정속도 — 값 없음"
+     }
+    ],
+    "car": null,
+    "walk_min": null,
+    "code": null,
+    "worst": false
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": null,
+  "warnings": [
+   {
+    "code": "MOB_W_BUS_SPEED_BLOCKED_ROUTE",
+    "class": "data",
+    "text": "01A 은 유형별 통계를 쓰지 않기로 한 노선이다 — 실측과 크게 어긋난다(rules bus.표정속도.통계_금지_노선). 노선별 실측값이 규칙에 들어오면 도착 시각이 나온다",
+    "to_answer": true
+   }
+  ],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "seoul_bus_route@2026-09-10",
+    "grade": "확정",
+    "observed_at": "2026-09-10",
+    "claim": "01A(순환): 운행 06:30~23:00 · 배차 9분"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.wait_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "추정",
+    "observed_at": "2026-09-24",
+    "claim": "bus.ride_model"
+   },
+   {
+    "source_type": "policy",
+    "source_id": "mobility_rules@v0.8",
+    "grade": "근거없음",
+    "observed_at": "2026-09-24",
+    "claim": "bus.표정속도 — 값 없음"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null,
+  "code": null,
+  "verdict_best": "feasible",
+  "legs_worst": null,
+  "arrive_worst_min": null,
+  "buffer_min": 10,
+  "margin_min": null,
+  "eta_min": null,
+  "eta_worst_min": null,
+  "p90_eta_min": null,
+  "last_feasible_depart_min": null,
+  "out": {
+   "verdict": "infeasible",
+   "depart_min": 660,
+   "code": "no_data",
+   "reason": "버스 01A 충무로역.한옥마을.한국의집→남산서울타워 은 그 시각 편성이 있다(11:05 출발) — 승차 소요를 낼 수 없어 도착 시각은 내지 않는다",
+   "buffer_min": 10
+  }
+ }
+]

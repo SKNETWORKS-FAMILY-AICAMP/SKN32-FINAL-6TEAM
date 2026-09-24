@@ -1,0 +1,1058 @@
+﻿50번 merge 전 기록 — 2026-09-23 14:08:17 · 기기 PLAYDATA
+git version 2.54.0.windows.1
+브랜치 role-mobility · 추적 파일 변경 0건
+
+===== ① HEAD =====
+  git log --oneline -1
+7e913e8 38: demo_render - render dict warnings (text/code/to_answer), string warnings unchanged
+  (종료코드 0)
+
+===== ① fetch =====
+  git fetch origin
+From https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM
+   201dad5..bd264d2  develop     -> origin/develop
+   201dad5..bd264d2  role-core   -> origin/role-core
+   70c4ba6..793f484  role-dining -> origin/role-dining
+  (종료코드 0)
+
+origin/develop = bd264d2  (전체 해시 → _50/develop_hash.txt · 50_merge.ps1 이 이 해시를 merge 한다)
+
+===== ① 201dad5 가 HEAD 의 조상인가 (0 = 예) =====
+  git merge-base --is-ancestor 201dad5 HEAD
+  (종료코드 0)
+
+===== ① merge-base HEAD origin/develop =====
+  git merge-base --short HEAD origin/develop
+error: unknown option `short'
+usage: git merge-base [-a | --all] <commit> <commit>...
+   or: git merge-base [-a | --all] --octopus <commit>...
+   or: git merge-base --is-ancestor <commit> <commit>
+   or: git merge-base --independent <commit>...
+   or: git merge-base --fork-point <ref> [<commit>]
+System.Management.Automation.RemoteException
+    -a, --[no-]all        output all common ancestors
+    --octopus             find ancestors for a single n-way merge
+    --independent         list revs not reachable from others
+    --is-ancestor         is the first one ancestor of the other?
+    --fork-point          find where <commit> forked from reflog of <ref>
+System.Management.Automation.RemoteException
+  (종료코드 129)
+
+===== ① HEAD 가 이미 develop 을 다 담았나 — develop 에만 있는 커밋 수 =====
+  git rev-list --count HEAD..origin/develop
+1
+  (종료코드 0)
+
+===== ① 사이 커밋 201dad5..origin/develop =====
+  git log --oneline --date=format:%m-%d %H:%M --format=%h %ad %an | %s 201dad5..origin/develop
+bd264d2 09-23 13:59 Your Name | feat: 감시 주기 3분 근거·여행 밀도 측정과 참고 구현체(final_project_sample)를 함께 올린다
+  (종료코드 0)
+
+===== ① 사이 커밋 (merge 제외 · 파일 목록) =====
+  git log --no-merges --name-status --format=--- %h %an | %s 201dad5..origin/develop
+  → _50/commits_name_status.txt (954줄)
+  (종료코드 0)
+
+===== ② 전체 diff --stat =====
+  git diff --stat=200 -M 201dad5..origin/develop
+ .claude/launch.json                                                                                              |  22 +-
+ acop_dojo/README.md                                                                                              |  54 ++++-
+ acop_dojo/acop_dojo/cli.py                                                                                       |  18 +-
+ acop_dojo/acop_dojo/data/annotations.json                                                                        |  13 ++
+ acop_dojo/acop_dojo/data/invariants.json                                                                         |  19 +-
+ acop_dojo/acop_dojo/defects.py                                                                                   |   8 +-
+ acop_dojo/acop_dojo/defects/catalog.json                                                                         | 200 +++++++++++++----
+ acop_dojo/acop_dojo/defects/patches/INV-AUTH-002.patch                                                           |   2 +-
+ acop_dojo/acop_dojo/defects/patches/INV-CLASSIFY-001.patch                                                       |   6 +-
+ acop_dojo/acop_dojo/defects/patches/INV-COMMERCE-005.patch                                                       |  18 +-
+ acop_dojo/acop_dojo/defects/patches/INV-PII-001.patch                                                            |   2 +-
+ acop_dojo/acop_dojo/defects/patches/INV-PII-002.patch                                                            |   6 +-
+ acop_dojo/acop_dojo/defects/patches/INV-PII-003.patch                                                            |   2 +-
+ acop_dojo/acop_dojo/defects/patches/INV-PII-004.patch                                                            |   2 +-
+ acop_dojo/acop_dojo/defects/patches/INV-UI-001.patch                                                             |   2 +-
+ acop_dojo/acop_dojo/defects/patches/INV-VOC-001.patch                                                            |   6 +-
+ acop_dojo/acop_dojo/defects/patches/INV-VOC-002.patch                                                            |  20 +-
+ acop_dojo/acop_dojo/defects_more3.py                                                                             |   2 +-
+ acop_dojo/acop_dojo/defects_more4.py                                                                             |  20 +-
+ acop_dojo/acop_dojo/map_ui.py                                                                                    | 170 +++++++++++++++
+ acop_dojo/acop_dojo/mapgen.py                                                                                    | 191 ++---------------
+ acop_dojo/acop_dojo/sandbox.py                                                                                   |  14 +-
+ acop_dojo/acop_dojo/scenarios.py                                                                                 |  16 ++
+ acop_dojo/acop_dojo/server.py                                                                                    | 256 ++++++++++++++++++++++
+ acop_dojo/acop_dojo/tracks.py                                                                                    |  11 +
+ acop_dojo/acop_dojo/validate.py                                                                                  |   6 +
+ acop_dojo/acop_dojo/web/index.html                                                                               | 178 +++++++++++++++
+ acop_dojo/demos/strata.html                                                                                      |  51 +++++
+ acop_dojo/wiki/guide.md                                                                                          |  12 +-
+ acop_dojo/wiki/handoff-2026-09-14.md                                                                             |  25 ++-
+ final_project_cs/.claude/launch.json                                                                             |  12 ++
+ final_project_cs/.env.apikeys.example                                                                            |  21 ++
+ final_project_cs/.env.example                                                                                    |   6 +
+ final_project_cs/app/application/controller.py                                                                   |  53 ++++-
+ final_project_cs/app/composition.py                                                                              |  19 +-
+ final_project_cs/app/core/actions.py                                                                             |  27 ++-
+ final_project_cs/app/core/contracts.py                                                                           |  31 +++
+ final_project_cs/app/core/settings.py                                                                            |  22 ++
+ final_project_cs/app/infrastructure/db/migrations/017_supplier_tier.sql                                          |  28 +++
+ final_project_cs/app/infrastructure/db/migrations/019_delegation_and_execution_record.sql                        |  76 +++++++
+ final_project_cs/app/infrastructure/db/migrations/020_local_embedding_column.sql                                 |  10 +
+ final_project_cs/app/infrastructure/db/migrations/021_delegation_audit_trail.sql                                 |  52 +++++
+ final_project_cs/app/infrastructure/db/migrations/022_knowledge_chunk_openai_embedding_nullable.sql              |  19 ++
+ final_project_cs/app/infrastructure/db/migrations/023_cancellation_terms.sql                                     |  63 ++++++
+ final_project_cs/app/infrastructure/db/repository.py                                                             |  52 ++++-
+ final_project_cs/app/infrastructure/messaging/worker.py                                                          |  18 +-
+ final_project_cs/app/infrastructure/notify/__init__.py                                                           |   3 +-
+ final_project_cs/app/infrastructure/notify/discord.py                                                            | 126 ++++++++---
+ final_project_cs/app/infrastructure/notify/phrase.py                                                             | 159 ++++++++++++++
+ final_project_cs/app/infrastructure/notify/suppressed.py                                                         |  18 ++
+ final_project_cs/app/infrastructure/notify/translate.py                                                          |   7 +-
+ final_project_cs/app/infrastructure/rag/retriever.py                                                             |  79 +++++--
+ final_project_cs/app/modules/travel_ops/activity.py                                                              | 129 ++++++++---
+ final_project_cs/app/modules/travel_ops/booking_actions.py                                                       | 234 ++++++++++++++++++--
+ final_project_cs/app/modules/travel_ops/booking_handoff.py                                                       |  19 +-
+ final_project_cs/app/modules/travel_ops/case_engine.py                                                           |   4 +
+ final_project_cs/app/modules/travel_ops/change_link.py                                                           | 298 ++++++++++++++++++++++++++
+ final_project_cs/app/modules/travel_ops/delegation.py                                                            | 350 ++++++++++++++++++++++++++++++
+ final_project_cs/app/modules/travel_ops/delegation_api.py                                                        | 195 +++++++++++++++++
+ final_project_cs/app/modules/travel_ops/density.py                                                               | 188 ++++++++++++++++
+ final_project_cs/app/modules/travel_ops/dining.py                                                                |  13 +-
+ final_project_cs/app/modules/travel_ops/feedback.py                                                              |   3 +
+ final_project_cs/app/modules/travel_ops/itinerary.py                                                             |   6 +
+ final_project_cs/app/modules/travel_ops/itinerary_actions.py                                                     |   9 +-
+ final_project_cs/app/modules/travel_ops/itinerary_checks.py                                                      | 190 +++++++++++++++++
+ final_project_cs/app/modules/travel_ops/locked_bookings.py                                                       |  16 +-
+ final_project_cs/app/modules/travel_ops/mobility.py                                                              |  13 +-
+ final_project_cs/app/modules/travel_ops/planner.py                                                               | 926 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/app/modules/travel_ops/scenario_mode.py                                                         |  13 +-
+ final_project_cs/app/modules/travel_ops/trip_api.py                                                              | 169 ++++++++++++++-
+ final_project_cs/app/modules/travel_ops/trip_reminders.py                                                        |  66 ++++--
+ final_project_cs/app/presentation/ui/routes.py                                                                   | 243 +++++++++++++++++++++
+ final_project_cs/app/presentation/ui/theme.py                                                                    |   8 +
+ final_project_cs/app/tools/read_tools.py                                                                         |  53 +++++
+ final_project_cs/config/guardrails.yaml                                                                          |  78 +++++++
+ final_project_cs/eval/datasets/travel_scenarios.jsonl                                                            |  10 +
+ final_project_cs/eval/reports/travel_scenarios_20260922_075038.json                                              | 477 +++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/eval/reports/travel_scenarios_20260922_075123.json                                              | 477 +++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/eval/reports/travel_scenarios_20260922_075218.json                                              | 473 ++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/eval/reports/travel_scenarios_20260922_075251.json                                              |  85 ++++++++
+ final_project_cs/eval/runners/travel_scenarios.py                                                                | 306 ++++++++++++++++++++++++++
+ final_project_cs/knowledge/ingest.py                                                                             |  19 +-
+ final_project_cs/knowledge/travel/documents/t01_activity_cancel-intake.md                                        |  44 ++++
+ final_project_cs/knowledge/travel/documents/t02_activity_free-no-reservation.md                                  |  41 ++++
+ final_project_cs/knowledge/travel/documents/t03_activity_operation-control.md                                    |  41 ++++
+ final_project_cs/knowledge/travel/documents/t04_weather_cancellation-standard.md                                 |  47 ++++
+ final_project_cs/knowledge/travel/documents/t05_weather_air-heat-quake.md                                        |  44 ++++
+ final_project_cs/knowledge/travel/documents/t06_dining_reservation-adjust.md                                     |  44 ++++
+ final_project_cs/knowledge/travel/documents/t07_dining_alternative.md                                            |  41 ++++
+ final_project_cs/knowledge/travel/documents/t08_mobility_disruption.md                                           |  44 ++++
+ final_project_cs/knowledge/travel/documents/t09_mobility_connection-liability.md                                 |  41 ++++
+ final_project_cs/knowledge/travel/documents/t10_mobility_refund-guidance.md                                      |  41 ++++
+ final_project_cs/knowledge/travel/documents/t11_cancellation_general-handoff.md                                  |  50 +++++
+ final_project_cs/knowledge/travel/documents/t12_access_companion-conditions.md                                   |  44 ++++
+ final_project_cs/knowledge/travel/manifest.json                                                                  |  67 ++++++
+ final_project_cs/ml/label_with_gemma.py                                                                          |   9 +-
+ final_project_cs/scripts/{ => _backup/2026-09-21_0029_install_sweeper_task}/install_sweeper_task.py              |   0
+ final_project_cs/scripts/check_corpus.py                                                                         | 103 ++++++++-
+ final_project_cs/scripts/cleanup_test_residue.py                                                                 |   6 +-
+ final_project_cs/scripts/embed_chunks_local.py                                                                   | 101 +++++++++
+ final_project_cs/scripts/experiments/density_cascade_report.py                                                   |  78 +++++++
+ final_project_cs/scripts/experiments/density_cascade_sim.py                                                      | 164 ++++++++++++++
+ final_project_cs/scripts/ingest_corpus_local.py                                                                  | 170 +++++++++++++++
+ final_project_cs/scripts/measure_delegation_scope.py                                                             | 392 ++++++++++++++++++++++++++++++++++
+ final_project_cs/scripts/measure_notice_phrases.py                                                               | 417 ++++++++++++++++++++++++++++++++++++
+ final_project_cs/scripts/ops/__init__.py                                                                         |  10 +
+ final_project_cs/scripts/ops/guard.py                                                                            | 174 +++++++++++++++
+ final_project_cs/scripts/ops/healthcheck.py                                                                      | 342 +++++++++++++++++++++++++++++
+ final_project_cs/scripts/ops/install_services.py                                                                 | 318 +++++++++++++++++++++++++++
+ final_project_cs/scripts/ops/jobs.py                                                                             | 162 ++++++++++++++
+ final_project_cs/scripts/ops/tick.py                                                                             | 231 ++++++++++++++++++++
+ final_project_cs/scripts/replay_scenario.py                                                                      |  15 +-
+ final_project_cs/scripts/run_outbox_worker.py                                                                    |  25 ++-
+ final_project_cs/scripts/seed_travel.py                                                                          |  42 +++-
+ final_project_cs/scripts/verify_dod.py                                                                           |   4 +
+ final_project_cs/scripts/verify_dod_v11.py                                                                       | 352 ++++++++++++++++++++++++++++++
+ final_project_cs/tests/architecture/test_supplier_tier_gate.py                                                   | 202 ++++++++++++++++++
+ final_project_cs/tests/contract/test_every_screen_is_reachable.py                                                |   6 +-
+ final_project_cs/tests/contract/test_proposal_fields_are_declared.py                                             |  11 +-
+ final_project_cs/tests/e2e/test_booking_change_link.py                                                           | 239 +++++++++++++++++++++
+ final_project_cs/tests/e2e/test_trip_api.py                                                                      |  80 +++++++
+ final_project_cs/tests/e2e/test_trip_planner.py                                                                  | 488 ++++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/tests/integration/api/test_delegation_api.py                                                    | 240 +++++++++++++++++++++
+ final_project_cs/tests/integration/api/test_openapi_surface.py                                                   |  14 ++
+ final_project_cs/tests/integration/api/test_ui_delegation_screen.py                                              | 183 ++++++++++++++++
+ final_project_cs/tests/integration/controller/test_delegation_scope.py                                           | 341 +++++++++++++++++++++++++++++
+ final_project_cs/tests/integration/controller/test_travel_approval_proposal_reaches_waiting.py                   | 127 ++++++++++-
+ final_project_cs/tests/integration/rag/test_rag_integration.py                                                   | 110 +++++++++-
+ final_project_cs/tests/integration/rag/test_travel_corpus_retrieval.py                                           | 175 +++++++++++++++
+ final_project_cs/tests/integration/tools/__init__.py                                                             |   0
+ final_project_cs/tests/integration/tools/test_booking_terms_lookup.py                                            | 121 +++++++++++
+ final_project_cs/tests/scenario/test_case_version_day.py                                                         |  19 ++
+ final_project_cs/tests/scenario/test_travel_eval_scenarios.py                                                    |  42 ++++
+ final_project_cs/tests/scenario/test_trip_reminders.py                                                           |  17 ++
+ final_project_cs/tests/security/test_scope_contract.py                                                           |   6 +
+ final_project_cs/tests/unit/core/test_ops_guard.py                                                               | 164 ++++++++++++++
+ final_project_cs/tests/unit/travel/test_activity_cancelable.py                                                   | 150 +++++++++++++
+ final_project_cs/tests/unit/travel/test_activity_weather.py                                                      |   8 +-
+ final_project_cs/tests/unit/travel/test_density.py                                                               | 181 ++++++++++++++++
+ final_project_cs/tests/unit/travel/test_evidence_accumulates.py                                                  |  15 +-
+ final_project_cs/tests/unit/travel/test_itinerary_checks.py                                                      | 129 +++++++++++
+ final_project_cs/tests/unit/travel/test_notice_phrase_cache.py                                                   | 216 +++++++++++++++++++
+ final_project_cs/tests/unit/travel/test_notice_tenant_guard.py                                                   |  61 ++++++
+ final_project_cs/tests/unit/travel/test_planner.py                                                               | 256 ++++++++++++++++++++++
+ final_project_cs/tests/unit/travel/test_weather_warning_and_advisory.py                                          |   8 +-
+ final_project_cs/wiki/actions/approval.md                                                                        |  48 ++++-
+ final_project_cs/wiki/actions/idempotency.md                                                                     |   2 +-
+ final_project_cs/wiki/context/index.md                                                                           |   2 +
+ final_project_cs/wiki/context/rag-retrieval.md                                                                   |  30 +--
+ final_project_cs/wiki/context/travel-corpus.md                                                                   | 110 ++++++++++
+ final_project_cs/wiki/decisions/D-CS-005-odsay-not-used.md                                                       |  57 +++++
+ final_project_cs/wiki/decisions/D-CS-006-cancellation-terms-are-structured.md                                    |  73 +++++++
+ final_project_cs/wiki/decisions/index.md                                                                         |   3 +
+ final_project_cs/wiki/external/rest-api.md                                                                       |   2 +
+ final_project_cs/wiki/external/rest-endpoints.md                                                                 |  90 +++++++-
+ final_project_cs/wiki/external/travel-density.md                                                                 |  40 ++++
+ final_project_cs/wiki/log.md                                                                                     |  54 +++++
+ final_project_cs/wiki/operations/always-on.md                                                                    | 192 +++++++++++++++++
+ final_project_cs/wiki/operations/index.md                                                                        |   2 +
+ final_project_cs/wiki/operations/move-to-server.md                                                               | 240 +++++++++++++++++++++
+ final_project_cs/wiki/operations/run.md                                                                          |   2 +
+ final_project_cs/wiki/operations/troubleshooting.md                                                              |   2 +
+ final_project_cs/wiki/quality/eval-harness.md                                                                    |  25 ++-
+ final_project_cs/wiki/records/evidence/2026-09-22_density-research-tests.md                                      |  15 ++
+ final_project_cs/wiki/records/evidence/2026-09-22_density-tests.md                                               |  21 ++
+ final_project_cs/wiki/records/evidence/2026-09-22_실제_외부API_호출확인.md                                       |  55 +++++
+ final_project_cs/wiki/records/evidence/2026-09-22_일정생성기_RAG배선.md                                          |  73 +++++++
+ final_project_cs/wiki/records/evidence/2026-09-22_일정생성기_살아있는앱_실측.md                                  |  87 ++++++++
+ final_project_cs/wiki/records/evidence/2026-09-23_취소조건_구조화_실측.md                                        |  86 ++++++++
+ final_project_cs/wiki/records/evidence/DoD-06T_여행_정책코퍼스_적재.md                                           | 136 ++++++++++++
+ final_project_cs/wiki/records/evidence/DoD-v11-14-15_공급자등급게이트.md                                         | 123 +++++++++++
+ final_project_cs/wiki/records/evidence/DoD-v11-16-17_변경링크.md                                                 | 130 +++++++++++
+ final_project_cs/wiki/records/evidence/DoD-v11-18-19_위임을_주고_거두는_자리.md                                  | 166 ++++++++++++++
+ final_project_cs/wiki/records/evidence/DoD-v11-18-21_위임범위와_되돌림.md                                        | 241 +++++++++++++++++++++
+ final_project_cs/wiki/records/evidence/DoD-v11-18_위임범위_측정.json                                             | 483 +++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/wiki/records/evidence/notice_phrase_reuse.json                                                  | 638 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/wiki/records/evidence/notice_phrase_reuse_langs.json                                            | 492 ++++++++++++++++++++++++++++++++++++++++++
+ final_project_cs/wiki/records/manuals/_backup/2026-09-21_0029_운영_멈춘Case_되잡기/운영_멈춘Case_되잡기.md       | 151 +++++++++++++
+ final_project_cs/wiki/records/manuals/운영_로컬DB_기동과_비정상종료.md                                           | 366 +++++++++++++++++++++++++++++++
+ final_project_cs/wiki/records/manuals/운영_멈춘Case_되잡기.md                                                    |  88 ++++----
+ final_project_cs/wiki/records/reports/2026-09-21_0100_결정15_적용경로_실측.md                                    |  69 ++++++
+ final_project_cs/wiki/records/reports/2026-09-22_0759_알림문구_언어별_생성캐시_리포트.md                         | 123 +++++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_0831_DoD-14-15_공급자등급게이트_리포트.md                       |  67 ++++++
+ final_project_cs/wiki/records/reports/2026-09-22_0836_알림문구_재사용률_실측_리포트.md                           | 221 +++++++++++++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_1150_DoD-16-17_업체예약_변경링크_리포트.md                      | 117 ++++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_1450_DoD-18-21_위임범위와_되돌림_리포트.md                      |  95 +++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_1630_상시실행을_서버쪽으로_옮기는_준비.md                       |  79 +++++++
+ final_project_cs/wiki/records/reports/2026-09-22_1720_위임_주고거두는_화면과_API_리포트.md                       | 118 ++++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_2200_여행밀도_관측경고.md                                       |  27 +++
+ final_project_cs/wiki/records/reports/2026-09-22_2205_일정생성기_v11-4A를_뒤집는다.md                            | 278 ++++++++++++++++++++++++
+ final_project_cs/wiki/records/reports/2026-09-22_2230_여행밀도_근거조사.md                                       |  59 +++++
+ final_project_cs/wiki/records/reports/2026-09-22_2240_여행밀도_근거반영_구현.md                                  |  23 ++
+ final_project_cs/wiki/records/reports/2026-09-22_2300_여행밀도_근거자료.md                                       |  67 ++++++
+ final_project_cs/wiki/records/reports/2026-09-22_2340_여행RAG코퍼스_작성과_배선_리포트.md                        | 163 ++++++++++++++
+ final_project_cs/wiki/records/reports/2026-09-23_0215_여행밀도_전환횟수_모의실험.md                              |  97 +++++++++
+ final_project_cs/wiki/records/reports/debugs/2026-09-22_위임_다시주기가_철회기록을_덮는다.md                     |  85 ++++++++
+ final_project_cs/wiki/records/reports/debugs/2026-09-22_정책scope에_문서가_0건인_팀들.md                         |  72 +++++++
+ final_project_cs/wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md                         | 111 ++++++++++
+ final_project_cs/wiki/teams/activity.md                                                                          |  21 +-
+ final_project_cs/wiki/teams/booking-handoff.md                                                                   | 195 +++++++++++------
+ final_project_cs/wiki/teams/dining.md                                                                            |  12 +-
+ final_project_cs/wiki/teams/mobility.md                                                                          |  12 +-
+ final_project_cs/wiki/teams/team-contract/fields.md                                                              |  27 +++
+ final_project_cs/wiki/teams/team-contract/index.md                                                               |  12 ++
+ final_project_sample/.claude/launch.json                                                                         |  30 +++
+ final_project_sample/.dockerignore                                                                               |   8 +
+ final_project_sample/.env.example                                                                                |  29 +++
+ final_project_sample/.github/workflows/deploy.yml                                                                |  48 +++++
+ final_project_sample/.gitignore                                                                                  |  41 ++++
+ final_project_sample/CHANGELOG.md                                                                                |  78 +++++++
+ final_project_sample/Dockerfile                                                                                  |  20 ++
+ final_project_sample/Dockerfile.customer                                                                         |  15 ++
+ final_project_sample/RULE.md                                                                                     | 283 ++++++++++++++++++++++++
+ final_project_sample/acop_basement/__init__.py                                                                   |   0
+ final_project_sample/acop_basement/application/__init__.py                                                       |   0
+ final_project_sample/acop_basement/application/case_service.py                                                   | 101 +++++++++
+ final_project_sample/acop_basement/application/classification.py                                                 |  90 ++++++++
+ final_project_sample/acop_basement/application/classification_sweeper.py                                         |  90 ++++++++
+ final_project_sample/acop_basement/application/config_source.py                                                  |  67 ++++++
+ final_project_sample/acop_basement/application/controller.py                                                     | 368 +++++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/application/feedback_job.py                                                   |  98 +++++++++
+ final_project_sample/acop_basement/application/proposal_guard.py                                                 | 112 ++++++++++
+ final_project_sample/acop_basement/application/routing_sweeper.py                                                |  92 ++++++++
+ final_project_sample/acop_basement/application/runtime.py                                                        | 108 ++++++++++
+ final_project_sample/acop_basement/core/__init__.py                                                              |   0
+ final_project_sample/acop_basement/core/audit_store.py                                                           | 162 ++++++++++++++
+ final_project_sample/acop_basement/core/config_store.py                                                          | 197 +++++++++++++++++
+ final_project_sample/acop_basement/core/context.py                                                               | 278 ++++++++++++++++++++++++
+ final_project_sample/acop_basement/core/contracts.py                                                             | 353 ++++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/core/graph_retrieval/__init__.py                                              |   3 +
+ final_project_sample/acop_basement/core/graph_retrieval/port.py                                                  |   7 +
+ final_project_sample/acop_basement/core/idempotency.py                                                           |  25 +++
+ final_project_sample/acop_basement/core/project_config.py                                                        | 307 ++++++++++++++++++++++++++
+ final_project_sample/acop_basement/core/redaction.py                                                             |  24 +++
+ final_project_sample/acop_basement/core/registry.py                                                              |  95 +++++++++
+ final_project_sample/acop_basement/core/remote_team/__init__.py                                                  |   5 +
+ final_project_sample/acop_basement/core/remote_team/a2a_executor.py                                              | 133 ++++++++++++
+ final_project_sample/acop_basement/core/remote_team/executor.py                                                  |  36 ++++
+ final_project_sample/acop_basement/core/revision_store.py                                                        | 186 ++++++++++++++++
+ final_project_sample/acop_basement/core/settings.py                                                              | 121 +++++++++++
+ final_project_sample/acop_basement/core/transition.py                                                            | 230 ++++++++++++++++++++
+ final_project_sample/acop_basement/core/verification.py                                                          | 217 +++++++++++++++++++
+ final_project_sample/acop_basement/domain/__init__.py                                                            |   0
+ final_project_sample/acop_basement/domain/case.py                                                                | 100 +++++++++
+ final_project_sample/acop_basement/domain/events.py                                                              | 135 ++++++++++++
+ final_project_sample/acop_basement/infrastructure/__init__.py                                                    |   0
+ final_project_sample/acop_basement/infrastructure/a2a/__init__.py                                                |   0
+ final_project_sample/acop_basement/infrastructure/a2a/http_transport.py                                          |  78 +++++++
+ final_project_sample/acop_basement/infrastructure/db/__init__.py                                                 |   0
+ final_project_sample/acop_basement/infrastructure/db/migrate.py                                                  |  48 +++++
+ final_project_sample/acop_basement/infrastructure/db/migrations/001_schema.sql                                   |  29 +++
+ final_project_sample/acop_basement/infrastructure/db/migrations/003_outbox_resolution.sql                        |   4 +
+ final_project_sample/acop_basement/infrastructure/db/migrations/004_agent_runs_active_uniqueness.sql             |   8 +
+ final_project_sample/acop_basement/infrastructure/db/migrations/005_outbox_dedupe_key_tenant_scoped.sql          |  23 ++
+ final_project_sample/acop_basement/infrastructure/db/migrations/006_project_configs.sql                          |  27 +++
+ final_project_sample/acop_basement/infrastructure/db/migrations/007_composer_audit_events.sql                    |  25 +++
+ final_project_sample/acop_basement/infrastructure/db/migrations/008_stuck_case_sweep_index.sql                   |  20 ++
+ final_project_sample/acop_basement/infrastructure/db/migrations/009_project_config_revisions.sql                 |  33 +++
+ final_project_sample/acop_basement/infrastructure/db/repository.py                                               |  62 ++++++
+ final_project_sample/acop_basement/infrastructure/db/session.py                                                  |  23 ++
+ final_project_sample/acop_basement/infrastructure/graphstore/__init__.py                                         |   3 +
+ final_project_sample/acop_basement/infrastructure/graphstore/sql_adapter.py                                      | 128 +++++++++++
+ final_project_sample/acop_basement/infrastructure/llm/__init__.py                                                |   3 +
+ final_project_sample/acop_basement/infrastructure/llm/openai.py                                                  |  63 ++++++
+ final_project_sample/acop_basement/infrastructure/messaging/__init__.py                                          |   4 +
+ final_project_sample/acop_basement/infrastructure/messaging/outbox.py                                            |  42 ++++
+ final_project_sample/acop_basement/infrastructure/messaging/ports.py                                             |   9 +
+ final_project_sample/acop_basement/infrastructure/messaging/worker.py                                            |  76 +++++++
+ final_project_sample/acop_basement/infrastructure/rag/__init__.py                                                |   1 +
+ final_project_sample/acop_basement/infrastructure/rag/retriever.py                                               |  70 ++++++
+ final_project_sample/acop_basement/introspection/__init__.py                                                     |  18 ++
+ final_project_sample/acop_basement/introspection/contract.py                                                     | 151 +++++++++++++
+ final_project_sample/acop_basement/presentation/__init__.py                                                      |   0
+ final_project_sample/acop_basement/presentation/a2a/__init__.py                                                  |   3 +
+ final_project_sample/acop_basement/presentation/a2a/agent_card.py                                                |  14 ++
+ final_project_sample/acop_basement/presentation/a2a/remote_agent.py                                              | 169 +++++++++++++++
+ final_project_sample/acop_basement/presentation/api/__init__.py                                                  |   0
+ final_project_sample/acop_basement/presentation/api/app.py                                                       | 123 +++++++++++
+ final_project_sample/acop_basement/presentation/api/cases.py                                                     | 335 +++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/presentation/api/mcp.py                                                       |  20 ++
+ final_project_sample/acop_basement/presentation/api/outbox.py                                                    |  55 +++++
+ final_project_sample/acop_basement/presentation/security.py                                                      |  58 +++++
+ final_project_sample/acop_basement/presentation/ui/__init__.py                                                   |  53 +++++
+ final_project_sample/acop_basement/presentation/ui/routes.py                                                     | 411 +++++++++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/presentation/ui/theme.py                                                      | 426 ++++++++++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/teams/__init__.py                                                             |   6 +
+ final_project_sample/acop_basement/teams/declarative.py                                                          | 168 +++++++++++++++
+ final_project_sample/acop_basement/tools/__init__.py                                                             |   0
+ final_project_sample/acop_basement/tools/read_tools.py                                                           | 100 +++++++++
+ final_project_sample/acop_composer/__init__.py                                                                   |   0
+ final_project_sample/acop_composer/api.py                                                                        | 565 ++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_sample/acop_composer/auth.py                                                                       | 119 +++++++++++
+ final_project_sample/acop_composer/catalog.py                                                                    |  73 +++++++
+ final_project_sample/acop_composer/host.py                                                                       | 134 ++++++++++++
+ final_project_sample/acop_composer/service.py                                                                    | 208 ++++++++++++++++++
+ final_project_sample/acop_composer/service_app.py                                                                |  72 +++++++
+ final_project_sample/acop_composer/stores.py                                                                     | 109 ++++++++++
+ final_project_sample/app/__init__.py                                                                             |   0
+ final_project_sample/app/composer_host.py                                                                        | 203 ++++++++++++++++++
+ final_project_sample/app/composition.py                                                                          | 256 ++++++++++++++++++++++
+ final_project_sample/app/config_service.py                                                                       |  16 ++
+ final_project_sample/app/entrypoint.py                                                                           |  29 +++
+ final_project_sample/app/modules/__init__.py                                                                     |   0
+ final_project_sample/app/modules/customer_ops/__init__.py                                                        |   3 +
+ final_project_sample/app/modules/customer_ops/feedback.py                                                        | 104 +++++++++
+ final_project_sample/app/modules/customer_ops/feedback_team.py                                                   |  74 +++++++
+ final_project_sample/app/modules/customer_ops/read_tools.py                                                      |  63 ++++++
+ final_project_sample/app/modules/customer_ops/response_review.py                                                 | 163 ++++++++++++++
+ final_project_sample/app/modules/customer_ops/response_review_policy.py                                          |  58 +++++
+ final_project_sample/app/modules/customer_ops/verification_policy.py                                             |  58 +++++
+ final_project_sample/config/guardrails.yaml                                                                      | 161 ++++++++++++++
+ final_project_sample/config/migrations/002_domain_customer_ops.sql                                               |  10 +
+ final_project_sample/config/project.yaml                                                                         |  21 ++
+ final_project_sample/docker/compose.yml                                                                          |  58 +++++
+ final_project_sample/eval/__init__.py                                                                            |   1 +
+ final_project_sample/eval/check_judge.py                                                                         |  96 +++++++++
+ final_project_sample/eval/datasets/attack_fixtures.jsonl                                                         |  15 ++
+ final_project_sample/eval/datasets/golden.jsonl                                                                  |  60 ++++++
+ final_project_sample/eval/datasets/holdout.jsonl                                                                 |  20 ++
+ final_project_sample/eval/defense_metrics.py                                                                     | 169 +++++++++++++++
+ final_project_sample/eval/judge/rubric.json                                                                      |  12 ++
+ final_project_sample/eval/label_holdout_template.py                                                              |  45 ++++
+ final_project_sample/eval/next_action_mapping.py                                                                 |  66 ++++++
+ final_project_sample/eval/reports/2026-08-12_평가결과_리포트.md                                                  |  58 +++++
+ final_project_sample/eval/reports/abl_no_approval.jsonl                                                          |  60 ++++++
+ final_project_sample/eval/reports/abl_no_context_broker.jsonl                                                    |  60 ++++++
+ final_project_sample/eval/reports/abl_no_feedback_inline.jsonl                                                   |  60 ++++++
+ final_project_sample/eval/reports/abl_no_rag.jsonl                                                               |  60 ++++++
+ final_project_sample/eval/reports/abl_no_team_split.jsonl                                                        |  60 ++++++
+ final_project_sample/eval/reports/holdout_human_labels_template.jsonl                                            |  20 ++
+ final_project_sample/eval/reports/holdout_human_labels_template_README.md                                        |  30 +++
+ final_project_sample/eval/reports/live_smoke.jsonl                                                               |   5 +
+ final_project_sample/eval/reports/rescored_baseline_a.jsonl                                                      | 180 ++++++++++++++++
+ final_project_sample/eval/reports/rescored_baseline_b.jsonl                                                      | 180 ++++++++++++++++
+ final_project_sample/eval/reports/rescored_proposed.jsonl                                                        | 180 ++++++++++++++++
+ final_project_sample/eval/reports/sample_pairs.jsonl                                                             |   5 +
+ final_project_sample/eval/reports/sample_raw.jsonl                                                               |  10 +
+ final_project_sample/eval/rescore.py                                                                             |  99 +++++++++
+ final_project_sample/eval/runners/__init__.py                                                                    |   1 +
+ final_project_sample/eval/runners/baseline_a.py                                                                  |   5 +
+ final_project_sample/eval/runners/baseline_b.py                                                                  |   5 +
+ final_project_sample/eval/runners/common.py                                                                      | 435 +++++++++++++++++++++++++++++++++++++
+ final_project_sample/eval/runners/proposed.py                                                                    |   8 +
+ final_project_sample/eval/stats/__init__.py                                                                      |   1 +
+ final_project_sample/eval/stats/agreement.py                                                                     |  92 ++++++++
+ final_project_sample/eval/stats/bootstrap.py                                                                     |  58 +++++
+ final_project_sample/eval/stats/make_pairs.py                                                                    |  62 ++++++
+ final_project_sample/eval/stats/mcnemar.py                                                                       |  72 +++++++
+ final_project_sample/eval/tests/__init__.py                                                                      |   0
+ final_project_sample/eval/tests/test_stats_and_datasets.py                                                       |  46 ++++
+ final_project_sample/examples/__init__.py                                                                        |   1 +
+ final_project_sample/examples/catalog.py                                                                         |  65 ++++++
+ final_project_sample/examples/customer_ops/__init__.py                                                           |   6 +
+ final_project_sample/examples/customer_ops/billing.py                                                            |  93 ++++++++
+ final_project_sample/examples/customer_ops/technical.py                                                          |  66 ++++++
+ final_project_sample/examples/tests/__init__.py                                                                  |   1 +
+ final_project_sample/examples/tests/test_team_scenarios.py                                                       |  88 ++++++++
+ final_project_sample/infra/aws/README.md                                                                         |  31 +++
+ final_project_sample/infra/aws/main.tf                                                                           | 260 ++++++++++++++++++++++
+ final_project_sample/infra/aws/outputs.tf                                                                        |   6 +
+ final_project_sample/infra/aws/variables.tf                                                                      |  61 ++++++
+ final_project_sample/knowledge/documents/01_billing_monthly-cycle.md                                             |  46 ++++
+ final_project_sample/knowledge/documents/02_billing_annual-renewal.md                                            |  46 ++++
+ final_project_sample/knowledge/documents/03_billing_retry-failure.md                                             |  46 ++++
+ final_project_sample/knowledge/documents/04_billing_tax-invoice.md                                               |  46 ++++
+ final_project_sample/knowledge/documents/05_billing_invoice-delivery.md                                          |  46 ++++
+ final_project_sample/knowledge/documents/06_refund_refund-after-cancel.md                                        |  46 ++++
+ final_project_sample/knowledge/documents/07_refund_refund-window.md                                              |  46 ++++
+ final_project_sample/knowledge/documents/08_refund_partial-proration.md                                          |  46 ++++
+ final_project_sample/knowledge/documents/09_refund_processing-exception.md                                       |  46 ++++
+ final_project_sample/knowledge/documents/10_subscription_cancel.md                                               |  46 ++++
+ final_project_sample/knowledge/documents/11_subscription_plan-change.md                                          |  46 ++++
+ final_project_sample/knowledge/documents/12_subscription_auto-renew.md                                           |  46 ++++
+ final_project_sample/knowledge/documents/13_subscription_trial.md                                                |  46 ++++
+ final_project_sample/knowledge/documents/14_entitlement_plan-matrix.md                                           |  46 ++++
+ final_project_sample/knowledge/documents/15_entitlement_sync-delay.md                                            |  46 ++++
+ final_project_sample/knowledge/documents/16_entitlement_plan-transition.md                                       |  46 ++++
+ final_project_sample/knowledge/documents/17_entitlement_limit-overage.md                                         |  46 ++++
+ final_project_sample/knowledge/documents/18_entitlement_diagnosis.md                                             |  46 ++++
+ final_project_sample/knowledge/documents/19_incident_severity.md                                                 |  46 ++++
+ final_project_sample/knowledge/documents/20_incident_entitlement-outage.md                                       |  46 ++++
+ final_project_sample/knowledge/documents/21_incident_compensation.md                                             |  46 ++++
+ final_project_sample/knowledge/documents/22_technical_login-diagnosis.md                                         |  46 ++++
+ final_project_sample/knowledge/documents/23_technical_api-errors.md                                              |  46 ++++
+ final_project_sample/knowledge/documents/24_support_intake-escalation.md                                         |  46 ++++
+ final_project_sample/knowledge/documents/25_support_approval-actions.md                                          |  46 ++++
+ final_project_sample/knowledge/ingest.py                                                                         | 173 +++++++++++++++
+ final_project_sample/knowledge/manifest.json                                                                     | 131 ++++++++++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/01_billing_billing-cycle.md                                  |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/02_billing_billing-retry.md                                  |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/03_billing_billing-tax.md                                    |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/04_billing_billing-invoice.md                                |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/05_billing_billing-payment-method.md                         |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/06_refund_refund-after-cancel.md                             |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/07_refund_refund-deadline.md                                 |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/08_refund_refund-proration.md                                |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/09_refund_refund-processing.md                               |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/10_subscription_subscription-cancel.md                       |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/11_subscription_subscription-change.md                       |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/12_subscription_subscription-renewal.md                      |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/13_subscription_subscription-trial.md                        |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/14_entitlement_entitlement-matrix.md                         |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/15_entitlement_entitlement-sync.md                           |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/16_entitlement_entitlement-free-pro.md                       |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/17_entitlement_entitlement-limits.md                         |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/18_entitlement_entitlement-diagnosis.md                      |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/19_incident_incident-severity.md                             |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/20_incident_incident-entitlement.md                          |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/21_incident_incident-communication.md                        |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/22_technical_technical-login.md                              |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/23_technical_technical-api-errors.md                         |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/24_support_support-escalation.md                             |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/25_support_support-approval.md                               |  58 +++++
+ final_project_sample/legacy/S-RAG_v1_보일러플레이트/manifest.json                                                | 281 ++++++++++++++++++++++++
+ final_project_sample/packages/acop_composer_ui/acop_composer_ui/__init__.py                                      |  17 ++
+ final_project_sample/packages/acop_composer_ui/acop_composer_ui/client.py                                        | 248 +++++++++++++++++++++
+ final_project_sample/packages/acop_composer_ui/pyproject.toml                                                    |  18 ++
+ final_project_sample/prompts/billing/classify_billing.v1.md                                                      |   3 +
+ final_project_sample/prompts/billing/classify_billing.v2.md                                                      |   3 +
+ final_project_sample/prompts/billing/explain_billing.v1.md                                                       |   3 +
+ final_project_sample/prompts/billing/explain_billing.v2.md                                                       |   3 +
+ final_project_sample/prompts/billing/propose_refund.v1.md                                                        |   3 +
+ final_project_sample/prompts/billing/propose_refund.v2.md                                                        |   3 +
+ final_project_sample/prompts/judge/arms/baseline_a_v1.txt                                                        |   4 +
+ final_project_sample/prompts/judge/arms/baseline_b_v1.txt                                                        |   4 +
+ final_project_sample/prompts/judge/arms/proposed_v1.txt                                                          |   4 +
+ final_project_sample/prompts/judge/judge_v1.txt                                                                  |   2 +
+ final_project_sample/prompts/technical/classify_entitlement.v1.md                                                |   3 +
+ final_project_sample/prompts/technical/classify_entitlement.v2.md                                                |   3 +
+ final_project_sample/prompts/technical/diagnose_entitlement.v1.md                                                |   3 +
+ final_project_sample/prompts/technical/diagnose_entitlement.v2.md                                                |   3 +
+ final_project_sample/prompts/technical/propose_support_action.v1.md                                              |   3 +
+ final_project_sample/prompts/technical/propose_support_action.v2.md                                              |   3 +
+ final_project_sample/pyproject.toml                                                                              |  25 +++
+ final_project_sample/pytest.ini                                                                                  |   4 +
+ final_project_sample/requirements.txt                                                                            |  39 ++++
+ final_project_sample/scripts/__init__.py                                                                         |   0
+ final_project_sample/scripts/basement_manifest.py                                                                |  70 ++++++
+ final_project_sample/scripts/check_corpus.py                                                                     | 352 ++++++++++++++++++++++++++++++
+ final_project_sample/scripts/check_env.py                                                                        | 140 ++++++++++++
+ final_project_sample/scripts/cleanup_test_residue.py                                                             | 235 ++++++++++++++++++++
+ final_project_sample/scripts/export_basement.py                                                                  | 108 ++++++++++
+ final_project_sample/scripts/install_sweeper_task.py                                                             | 141 ++++++++++++
+ final_project_sample/scripts/publish_public.py                                                                   | 208 ++++++++++++++++++
+ final_project_sample/scripts/run_daily_feedback.py                                                               |  61 ++++++
+ final_project_sample/scripts/run_outbox_worker.py                                                                |  28 +++
+ final_project_sample/scripts/run_sweepers.py                                                                     | 120 +++++++++++
+ final_project_sample/scripts/scaffold_project.py                                                                 | 110 ++++++++++
+ final_project_sample/scripts/seed.py                                                                             | 132 ++++++++++++
+ final_project_sample/scripts/seed_demo_cases.py                                                                  | 182 ++++++++++++++++
+ final_project_sample/scripts/verify_dod.py                                                                       | 176 +++++++++++++++
+ final_project_sample/scripts/verify_module_toggles.py                                                            | 106 +++++++++
+ final_project_sample/tests/__init__.py                                                                           |   0
+ final_project_sample/tests/architecture/__init__.py                                                              |   0
+ final_project_sample/tests/architecture/test_basement_is_domain_free.py                                          | 117 ++++++++++
+ final_project_sample/tests/architecture/test_basement_manifest_covers_every_package.py                           |  36 ++++
+ final_project_sample/tests/architecture/test_composer_package_boundary.py                                        | 108 ++++++++++
+ final_project_sample/tests/architecture/test_composer_ui_package_boundary.py                                     |  75 +++++++
+ final_project_sample/tests/architecture/test_consumer_idempotency_gate.py                                        |  42 ++++
+ final_project_sample/tests/architecture/test_engine_serves_another_domain.py                                     | 117 ++++++++++
+ final_project_sample/tests/architecture/test_records_live_in_wiki.py                                             |  23 ++
+ final_project_sample/tests/contract/__init__.py                                                                  |   0
+ final_project_sample/tests/contract/test_case_state_table.py                                                     |  97 +++++++++
+ final_project_sample/tests/contract/test_contracts.py                                                            | 248 +++++++++++++++++++++
+ final_project_sample/tests/contract/test_core_isolation.py                                                       |  27 +++
+ final_project_sample/tests/contract/test_default_capability.py                                                   |  47 ++++
+ final_project_sample/tests/contract/test_every_screen_is_reachable.py                                            |  47 ++++
+ final_project_sample/tests/contract/test_guardrail_numbers_are_not_hardcoded.py                                  |  51 +++++
+ final_project_sample/tests/contract/test_mcp_opens_a_classified_case.py                                          |  66 ++++++
+ final_project_sample/tests/contract/test_module_toggles.py                                                       | 170 +++++++++++++++
+ final_project_sample/tests/contract/test_team_contract.py                                                        |  19 ++
+ final_project_sample/tests/contracts/__init__.py                                                                 |   1 +
+ final_project_sample/tests/contracts/test_console_read_contracts.py                                              |  76 +++++++
+ final_project_sample/tests/contracts/test_introspection_contract.py                                              |  42 ++++
+ final_project_sample/tests/e2e/__init__.py                                                                       |   0
+ final_project_sample/tests/e2e/test_audience_boundary.py                                                         |  82 +++++++
+ final_project_sample/tests/e2e/test_composer_catalog_changes.py                                                  | 403 ++++++++++++++++++++++++++++++++++
+ final_project_sample/tests/e2e/test_composer_ui_client_contract.py                                               | 238 +++++++++++++++++++++
+ final_project_sample/tests/e2e/test_composer_write_channel.py                                                    | 351 ++++++++++++++++++++++++++++++
+ final_project_sample/tests/e2e/test_config_service.py                                                            | 191 +++++++++++++++++
+ final_project_sample/tests/e2e/test_introspection_endpoint.py                                                    |  73 +++++++
+ final_project_sample/tests/e2e/test_operations_ui.py                                                             | 123 +++++++++++
+ final_project_sample/tests/e2e/test_reload_endpoint.py                                                           |  87 ++++++++
+ final_project_sample/tests/e2e/test_root_landing.py                                                              |  70 ++++++
+ final_project_sample/tests/integration/__init__.py                                                               |   0
+ final_project_sample/tests/integration/a2a/__init__.py                                                           |   0
+ final_project_sample/tests/integration/a2a/test_remote_round_trip.py                                             | 209 ++++++++++++++++++
+ final_project_sample/tests/integration/api/__init__.py                                                           |   0
+ final_project_sample/tests/integration/api/test_api_runtime.py                                                   | 383 +++++++++++++++++++++++++++++++++
+ final_project_sample/tests/integration/api/test_openapi_surface.py                                               | 112 ++++++++++
+ final_project_sample/tests/integration/api/test_outbox_resolution.py                                             | 110 ++++++++++
+ final_project_sample/tests/integration/api/test_recheck_before_execution.py                                      | 140 ++++++++++++
+ final_project_sample/tests/integration/api/test_ui_approval_failure_is_visible.py                                |  37 ++++
+ final_project_sample/tests/integration/controller/__init__.py                                                    |   1 +
+ final_project_sample/tests/integration/controller/test_active_run_uniqueness.py                                  |  84 ++++++++
+ final_project_sample/tests/integration/controller/test_controller_integration.py                                 | 449 ++++++++++++++++++++++++++++++++++++++
+ final_project_sample/tests/integration/controller/test_outbox_tenant_isolation.py                                | 152 +++++++++++++
+ final_project_sample/tests/integration/controller/test_proposal_guard_blocks.py                                  | 164 ++++++++++++++
+ final_project_sample/tests/integration/controller/test_provider_timeout_unknown.py                               | 181 ++++++++++++++++
+ final_project_sample/tests/integration/db/test_db_integration.py                                                 |  91 ++++++++
+ final_project_sample/tests/integration/graph/__init__.py                                                         |   1 +
+ final_project_sample/tests/integration/graph/test_sql_graph_adapter.py                                           | 139 ++++++++++++
+ final_project_sample/tests/integration/rag/test_rag_integration.py                                               |  49 +++++
+ final_project_sample/tests/integration/test_audit_store.py                                                       | 118 ++++++++++
+ final_project_sample/tests/integration/test_central_config_source.py                                             | 119 +++++++++++
+ final_project_sample/tests/integration/test_config_store.py                                                      | 127 +++++++++++
+ final_project_sample/tests/integration/test_declarative_team_composition.py                                      |  82 +++++++
+ final_project_sample/tests/integration/test_revision_store.py                                                    |  85 ++++++++
+ final_project_sample/tests/integration/test_runtime_reload.py                                                    |  96 +++++++++
+ final_project_sample/tests/live/__init__.py                                                                      |   0
+ final_project_sample/tests/live/test_llm_live.py                                                                 |  17 ++
+ final_project_sample/tests/security/__init__.py                                                                  |   0
+ final_project_sample/tests/security/test_pii_redaction_runtime.py                                                |  76 +++++++
+ final_project_sample/tests/security/test_scope_contract.py                                                       |  26 +++
+ final_project_sample/tests/unit/__init__.py                                                                      |   0
+ final_project_sample/tests/unit/application/test_composer_service.py                                             |  46 ++++
+ final_project_sample/tests/unit/core/__init__.py                                                                 |   0
+ final_project_sample/tests/unit/core/test_case_reducer.py                                                        | 161 ++++++++++++++
+ final_project_sample/tests/unit/core/test_classification_sweeper.py                                              | 213 ++++++++++++++++++
+ final_project_sample/tests/unit/core/test_config_revision.py                                                     | 112 ++++++++++
+ final_project_sample/tests/unit/core/test_context_budget.py                                                      |  45 ++++
+ final_project_sample/tests/unit/core/test_idempotency.py                                                         |  25 +++
+ final_project_sample/tests/unit/core/test_proposal_verification.py                                               | 159 ++++++++++++++
+ final_project_sample/tests/unit/core/test_routing_sweeper.py                                                     | 139 ++++++++++++
+ final_project_sample/tests/unit/eval/test_agreement.py                                                           |  38 ++++
+ final_project_sample/tests/unit/eval/test_defense_metrics.py                                                     |  93 ++++++++
+ final_project_sample/tests/unit/infrastructure/test_graph_v7_axes.py                                             | 103 +++++++++
+ final_project_sample/tests/unit/infrastructure/test_migrate.py                                                   |  53 +++++
+ final_project_sample/tests/unit/ports/__init__.py                                                                |   0
+ final_project_sample/tests/unit/ports/test_team_ports.py                                                         | 139 ++++++++++++
+ final_project_sample/tests/unit/scripts/__init__.py                                                              |   1 +
+ final_project_sample/tests/unit/scripts/test_export_basement.py                                                  |  58 +++++
+ final_project_sample/tests/unit/scripts/test_run_sweepers_signals_errors.py                                      |  87 ++++++++
+ final_project_sample/tests/unit/scripts/test_scaffold_project.py                                                 |  72 +++++++
+ final_project_sample/tests/unit/teams/__init__.py                                                                |   0
+ final_project_sample/tests/unit/teams/test_declarative_team.py                                                   | 163 ++++++++++++++
+ final_project_sample/tests/unit/teams/test_response_review_team.py                                               | 145 +++++++++++++
+ final_project_sample/tests/unit/test_composition_root.py                                                         |  39 ++++
+ final_project_sample/tests/unit/test_project_composition.py                                                      | 161 ++++++++++++++
+ final_project_sample/tests/unit/voc/__init__.py                                                                  |   0
+ final_project_sample/tests/unit/voc/test_feedback.py                                                             |  75 +++++++
+ final_project_sample/tests/unit/voc/test_feedback_runtime.py                                                     |  52 +++++
+ final_project_sample/wiki/composer/auth-scope.md                                                                 |  90 ++++++++
+ final_project_sample/wiki/composer/design-gap.md                                                                 |  86 ++++++++
+ final_project_sample/wiki/composer/index.md                                                                      |  54 +++++
+ final_project_sample/wiki/composer/ui-boundary.md                                                                | 135 ++++++++++++
+ final_project_sample/wiki/composer/write-channel.md                                                              |  74 +++++++
+ final_project_sample/wiki/contracts/index.md                                                                     |  76 +++++++
+ final_project_sample/wiki/index.md                                                                               | 109 ++++++++++
+ final_project_sample/wiki/operations/index.md                                                                    |  62 ++++++
+ final_project_sample/wiki/operations/local-setup.md                                                              |  97 +++++++++
+ final_project_sample/wiki/operations/packaging.md                                                                |  52 +++++
+ final_project_sample/wiki/operations/run.md                                                                      | 111 ++++++++++
+ final_project_sample/wiki/operations/stuck-case-sweeper.md                                                       | 106 +++++++++
+ final_project_sample/wiki/operations/troubleshooting.md                                                          |  92 ++++++++
+ final_project_sample/wiki/quality/another-domain.md                                                              |  66 ++++++
+ final_project_sample/wiki/quality/architecture-tests.md                                                          |  49 +++++
+ final_project_sample/wiki/quality/domain-free.md                                                                 |  52 +++++
+ final_project_sample/wiki/quality/domain-swap.md                                                                 |  99 +++++++++
+ final_project_sample/wiki/quality/evidence.md                                                                    |  88 ++++++++
+ final_project_sample/wiki/quality/index.md                                                                       | 108 ++++++++++
+ final_project_sample/wiki/quality/invariants.md                                                                  |  94 ++++++++
+ final_project_sample/wiki/quality/verification.md                                                                |  73 +++++++
+ final_project_sample/wiki/records/evidence/DoD-01_v4원본_hash_불변.md                                            |  31 +++
+ final_project_sample/wiki/records/evidence/DoD-02_상태전이_규약_준수.md                                          |  64 ++++++
+ final_project_sample/wiki/records/evidence/DoD-03_동시성_appendonly_replay.md                                    |  60 ++++++
+ final_project_sample/wiki/records/evidence/DoD-04_checkpoint_projection_분리.md                                  |  48 +++++
+ final_project_sample/wiki/records/evidence/DoD-05_ContextPack_토큰예산.md                                        |  55 +++++
+ final_project_sample/wiki/records/evidence/DoD-06_정책FAQ_25건_300청크.md                                        | 112 ++++++++++
+ final_project_sample/wiki/records/evidence/DoD-07_tenant격리_PII.md                                              |  72 +++++++
+ final_project_sample/wiki/records/evidence/DoD-08_TeamModule_manifest_호환.md                                    |  60 ++++++
+ final_project_sample/wiki/records/evidence/DoD-09_인라인분류_전건실행.md                                         |  55 +++++
+ final_project_sample/wiki/records/evidence/DoD-10_일일배치_급증report.md                                         | 103 +++++++++
+ final_project_sample/wiki/records/evidence/DoD-11_action_idempotency_승인.md                                     | 110 ++++++++++
+ final_project_sample/wiki/records/evidence/DoD-12_outbox_원자성_replay.md                                        |  68 ++++++
+ final_project_sample/wiki/records/evidence/DoD-13_REST5_MCP3_계약일치.md                                         |  47 ++++
+ final_project_sample/wiki/records/evidence/DoD-14_API키_scope_구분.md                                            |  47 ++++
+ final_project_sample/wiki/records/evidence/DoD-15_AB_Proposed_60x3_holdout.md                                    | 182 ++++++++++++++++
+ final_project_sample/wiki/records/evidence/DoD-16_bootstrap_McNemar_한계.md                                      |  75 +++++++
+ final_project_sample/wiki/records/evidence/DoD-17_마일스톤_게이트.md                                             |  88 ++++++++
+ final_project_sample/wiki/records/evidence/DoD-18_UI_시나리오_종단표시.md                                        | 137 ++++++++++++
+ final_project_sample/wiki/records/evidence/DoD-19_LOCAL_A2A_정규화.md                                            |  50 +++++
+ final_project_sample/wiki/records/evidence/DoD-20_Port교체_Controller불변.md                                     |  44 ++++
+ final_project_sample/wiki/records/evidence/DoD-21_Graph_관계질의.md                                              |  79 +++++++
+ final_project_sample/wiki/records/evidence/DoD-22_Team_직접Tool호출_금지.md                                      |  47 ++++
+ final_project_sample/wiki/records/evidence/DoD-23_consumer_idempotency.md                                        |  75 +++++++
+ final_project_sample/wiki/records/evidence/DoD-24_ActionProposal_근거대조.md                                     | 137 ++++++++++++
+ final_project_sample/wiki/records/evidence/DoD-25_degraded_자동실행_금지.md                                      |  67 ++++++
+ final_project_sample/wiki/records/evidence/DoD-26_A2A_Catalog_왕복.md                                            |  78 +++++++
+ final_project_sample/wiki/records/evidence/DoD-27_A2A_실패_취소_인증.md                                          |  76 +++++++
+ final_project_sample/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md                                           | 154 +++++++++++++
+ final_project_sample/wiki/records/evidence/DoD-29_ResponseGenerationReview.md                                    |  83 +++++++
+ final_project_sample/wiki/records/evidence/MODULE-TOGGLES_실효화_검증.md                                         | 106 +++++++++
+ final_project_sample/wiki/records/evidence/_raw/DoD-04.md                                                        |  22 ++
+ final_project_sample/wiki/records/evidence/_raw/DoD-04_v2.md                                                     |  35 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-04_v3.md                                                     |  35 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-05.md                                                        |  26 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-05_v2.md                                                     |  31 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-05_v3.md                                                     |  33 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-05_v4.md                                                     |  23 ++
+ final_project_sample/wiki/records/evidence/_raw/DoD-07.md                                                        |  28 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-07_v2.md                                                     |  49 +++++
+ final_project_sample/wiki/records/evidence/_raw/DoD-08.md                                                        |  21 ++
+ final_project_sample/wiki/records/evidence/_raw/DoD-09.md                                                        |  27 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-09_v2.md                                                     |  43 ++++
+ final_project_sample/wiki/records/evidence/_raw/DoD-10.md                                                        |  28 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-10_v2.md                                                     |  27 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-10_v3.md                                                     |  44 ++++
+ final_project_sample/wiki/records/evidence/_raw/DoD-10_v4.md                                                     |  26 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-11_v3.md                                                     |  44 ++++
+ final_project_sample/wiki/records/evidence/_raw/DoD-13.md                                                        |  20 ++
+ final_project_sample/wiki/records/evidence/_raw/DoD-14.md                                                        |  25 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-15.md                                                        |  30 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-16.md                                                        |  24 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-17.md                                                        |  34 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-18.md                                                        |  27 +++
+ final_project_sample/wiki/records/evidence/_raw/DoD-18_v3.md                                                     |  41 ++++
+ final_project_sample/wiki/records/handoff/01_계약_Pydantic.md                                                    | 214 +++++++++++++++++++
+ final_project_sample/wiki/records/handoff/02_DB_스키마.md                                                        | 244 +++++++++++++++++++++
+ final_project_sample/wiki/records/handoff/03_REST_MCP_인터페이스.md                                              | 193 +++++++++++++++++
+ final_project_sample/wiki/records/handoff/04_Team_모듈_계약.md                                                   | 129 +++++++++++
+ final_project_sample/wiki/records/handoff/05_분업_규칙.md                                                        | 126 +++++++++++
+ final_project_sample/wiki/records/handoff/06_가드레일_수치.md                                                    | 120 +++++++++++
+ final_project_sample/wiki/records/handoff/07_모듈화_구조.md                                                      | 141 ++++++++++++
+ final_project_sample/wiki/records/handoff/08_모듈_컴포넌트_목록.md                                               | 127 +++++++++++
+ final_project_sample/wiki/records/handoff/09_Composer_GUI_계약.md                                                | 202 ++++++++++++++++++
+ final_project_sample/wiki/records/handoff/10_도메인_교체_가이드.md                                               | 230 ++++++++++++++++++++
+ final_project_sample/wiki/records/handoff/11_콘솔_읽기_계약.md                                                   |  32 +++
+ final_project_sample/wiki/records/handoff/12_introspection_계약.md                                               |  66 ++++++
+ final_project_sample/wiki/records/handoff/13_Composer_쓰기채널_계약.md                                           | 414 +++++++++++++++++++++++++++++++++++
+ final_project_sample/wiki/records/handoff/14_배포_계약.md                                                        |  59 +++++
+ final_project_sample/wiki/records/handoff/15_basement_버전_배포_계약.md                                          |  58 +++++
+ final_project_sample/wiki/records/handoff/README.md                                                              |  20 ++
+ final_project_sample/wiki/records/handoff/_prompts/S-ADMINUI.md                                                  | 124 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-API.md                                                      | 162 ++++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-API_fix.md                                                  | 140 ++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BASEMENT-AUDIT.md                                           | 108 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BASEMENT-AUDIT2.md                                          | 122 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-01-CORE-SAFETY.md                                   |  64 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-02-CONTEXT-RAG-A2A.md                               |  62 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-03-TEAMS-VOC.md                                     |  61 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-04-MCP-IDEMPOTENCY-RESUME.md                        |  65 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-05-GRAPHSTORE-REST.md                               |  62 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-06-CONTROLLER-TRANSITION.md                         |  67 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-07-COMPOSER-EVAL.md                                 |  61 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-08-전체점검.md                                      | 101 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-BUGHUNT-09-패키지분리이후.md                                | 107 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CAPABILITY.md                                               |  91 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-CATALOG-CHANGES.md                                 | 148 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-DEPLOY-DOCS-01.md                                  |  87 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-DEPLOY-STAGE2-LOCAL.md                             |  98 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-DEPLOYMENT-TOPOLOGY-CONSULT.md                     |  94 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-RELOAD-CONTRACT-DESIGN.md                          | 113 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-SCOPE-OWNERSHIP-CROSSCHECK.md                      | 103 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-V2-JWT.md                                          | 122 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-WIRE.md                                            |  87 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER-WRITE-CHANNEL.md                                   |  79 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSER.md                                                 | 127 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-COMPOSITION.md                                              | 102 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CONFIGVALIDATE.md                                           | 107 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CONSOLE-IA-REVIEW.md                                        |  79 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CONSOLE-P4P6.md                                             | 116 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CONSOLE-PACKAGE.md                                          | 105 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CONSUMER-IDEMPOTENCY-GATE.md                                |  71 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CS-BASEMENT-VERSION-REF.md                                  |  84 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CS-SAMPLE-DRIFT-CONSULT.md                                  | 131 ++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CTRL.md                                                     | 124 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CTRL_resume_fix.md                                          |  72 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-CTRL_tests.md                                               | 113 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DASHBOARD-SPLIT.md                                          |  77 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DB.md                                                       | 145 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DB_fix.md                                                   | 152 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DEAD-CODE-AUDIT.md                                          |  69 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DECLARATIVE-TEAM-RUNTIME.md                                 | 120 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DEMO-SEED.md                                                |  91 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DOCKER-STAGE1.md                                            |  85 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DOCKER-STAGE2-AWS-DRAFT.md                                  |  62 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DOD.md                                                      | 105 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-DODFINISH.md                                                |  99 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVAL.md                                                     | 109 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVAL_fix_prompt.md                                          |  91 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVAL_grounding.md                                           | 106 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVAL_live.md                                                | 114 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVAL_run.md                                                 | 108 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EVIDENCE.md                                                 |  92 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-EXAMPLES-SEPARATION-AUDIT.md                                |  62 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-FINETUNE-SCOPE-CONSULT.md                                   | 115 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-FIX3.md                                                     | 125 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-GAPTEST.md                                                  | 107 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-GRAPHTEST.md                                                | 110 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-IDEMKEY.md                                                  |  98 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-INTROSPECT.md                                               | 140 ++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-ISOLATION.md                                                |  97 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-JSONFIX.md                                                  |  63 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-JUDGE-AGREEMENT-HARNESS.md                                  |  81 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-LLMFIX.md                                                   |  91 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-MIGRATE-DUPLICATE-GUARD.md                                  |  69 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-MODULARIZE.md                                               | 150 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PIP-PACKAGE-ACOP-BASEMENT.md                                | 159 ++++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PORTS.md                                                    | 149 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PORTS2.md                                                   | 113 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PROJECTYAML.md                                              | 134 ++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PROPOSED.md                                                 | 102 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-PROPOSED2.md                                                | 104 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_corpus.md                                               | 198 +++++++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_corpus_v3.md                                            | 127 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_corpus_v4.md                                            | 106 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_corpus_v5.md                                            | 122 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_ingest.md                                               | 117 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RAG_ingest_fix.md                                           | 105 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-REMEASURE.md                                                | 108 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RESCORE.md                                                  | 108 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-RESPONSE-REVIEW-TEAM.md                                     | 129 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-SCAFFOLD-CLI-01.md                                          | 146 +++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-SCAFFOLD-DESIGN.md                                          |  99 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-STATSFIX.md                                                 | 114 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-SUBMIT.md                                                   | 113 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-TEAM.md                                                     |  97 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-TEAMANSWER.md                                               |  80 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-TIMEOUT.md                                                  |  79 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-TRACE-ABL.md                                                | 130 +++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-UI-QUALITY.md                                               | 100 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-UI.md                                                       |  84 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-UNKNOWN-OPS-SCREEN.md                                       | 108 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VERSIONING-01-SEMVER.md                                     |  65 ++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VERSIONING-02-MANIFEST-EXPORT.md                            |  98 +++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VERSIONING-03-BOUNDARY-TOOLS.md                             | 107 ++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VERSIONING-DESIGN-CONSULT.md                                |  86 ++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VERSIONING-PIP-RISK-CONSULT.md                              |  83 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VOC-TEAM.md                                                 | 135 ++++++++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-VOC.md                                                      |  82 +++++++
+ final_project_sample/wiki/records/handoff/_prompts/S-WIRE.md                                                     |  84 ++++++++
+ final_project_sample/wiki/records/history/2026-08-12_Claude.md                                                   |  45 ++++
+ final_project_sample/wiki/records/history/2026-08-12_S-API.md                                                    |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-API_fix.md                                                |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-CTRL.md                                                   |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-CTRL_resume_fix.md                                        |   9 +
+ final_project_sample/wiki/records/history/2026-08-12_S-CTRL_tests.md                                             |   8 +
+ final_project_sample/wiki/records/history/2026-08-12_S-DB.md                                                     |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-DB_fix.md                                                 |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-DOD.md                                                    |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-EVAL.md                                                   |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-EVAL_live.md                                              |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-EVAL_run.md                                               |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-EVIDENCE.md                                               |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-GAPTEST.md                                                |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_ingest.md                                             |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_ingest_fix.md                                         |   8 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_v2.md                                                 |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_v3.md                                                 |   8 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_v4.md                                                 |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_v5.md                                                 |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-RAG_코퍼스25건.md                                         |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-TEAM.md                                                   |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-UI.md                                                     |   6 +
+ final_project_sample/wiki/records/history/2026-08-12_S-VOC.md                                                    |   7 +
+ final_project_sample/wiki/records/history/2026-08-12_S-WIRE.md                                                   |   8 +
+ final_project_sample/wiki/records/history/2026-08-13_S-GRAPHTEST.md                                              |   8 +
+ final_project_sample/wiki/records/history/2026-08-13_비전_문서_작성.md                                           |   6 +
+ final_project_sample/wiki/records/history/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md                            |   6 +
+ final_project_sample/wiki/records/history/2026-08-18_Billing_Technical_examples_분리.md                          |   7 +
+ final_project_sample/wiki/records/history/2026-08-31_모듈토글_실효화.md                                          |  39 ++++
+ final_project_sample/wiki/records/manuals/2026-08-12_1520_환경_기동절차.md                                       |  97 +++++++++
+ final_project_sample/wiki/records/manuals/2026-08-17_unknown_처리_런북.md                                        |  18 ++
+ final_project_sample/wiki/records/plans/2026-08-12_1507_A-COP_실행계획서_v1.md                                   | 308 ++++++++++++++++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-14_1546_A-COP_init_plan_6인팀_v1.md                              | 219 +++++++++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-16_v7_격차해소_실행계획.md                                       | 149 +++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-17_Docker_AWS_배포_모듈화_계획.md                                |  66 ++++++
+ final_project_sample/wiki/records/plans/2026-08-17_개발콘솔_재설계_실행계획.md                                   | 188 ++++++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-18_Composer_배포_경계_분리_계획.md                               | 146 +++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-19_예제_카탈로그_스캐폴딩_CLI_1층_계획.md                        | 132 ++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-28_선언형Team_카탈로그CRUD_계획.md                               | 143 +++++++++++++
+ final_project_sample/wiki/records/plans/2026-08-31_모듈토글_실효화_설계.md                                       | 100 +++++++++
+ final_project_sample/wiki/records/release_checklist.md                                                           | 153 +++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_1630_P0-P1_및_Codex1차_검수_리포트.md                       | 146 +++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_2045_RAG검색_수정_리포트.md                                 |  90 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-API_REST_MCP_리포트.md                                    |  99 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-API_수정_리포트.md                                        |  70 ++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-CTRL_resume수정_리포트.md                                 |  74 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-CTRL_리포트.md                                            |  77 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-CTRL_테스트_리포트.md                                     |  84 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-DB_seed보강_테스트격리_리포트.md                          |  94 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-DB_스키마_마이그레이션_리포트.md                          |  98 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-DOD_검증도구_리포트.md                                    |  78 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-EVAL_리포트.md                                            |  96 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-EVAL_실제실행_리포트.md                                   |  19 ++
+ final_project_sample/wiki/records/reports/2026-08-12_S-EVAL_전량실행_리포트.md                                   |  75 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-EVIDENCE_실측수집_리포트.md                               |  35 +++
+ final_project_sample/wiki/records/reports/2026-08-12_S-GAPTEST_리포트.md                                         |  77 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_검색수정_리포트.md                                    | 106 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_적재_검색_리포트.md                                   |  77 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_코퍼스25건_v2_리포트.md                               |  54 +++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_코퍼스25건_리포트.md                                  |  91 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_코퍼스_v3_리포트.md                                   |  50 +++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_코퍼스_v4_리포트.md                                   |  60 ++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-RAG_코퍼스_v5_리포트.md                                   |  49 +++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-TEAM_리포트.md                                            |  85 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-UI_리포트.md                                              |  76 +++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-VOC_리포트.md                                             |  60 ++++++
+ final_project_sample/wiki/records/reports/2026-08-12_S-WIRE_분류기연결_리포트.md                                 |  49 +++++
+ final_project_sample/wiki/records/reports/2026-08-12_평가결과_리포트.md                                          |  50 +++++
+ final_project_sample/wiki/records/reports/2026-08-12_평가러너_프롬프트배선_수정.md                               |  47 ++++
+ final_project_sample/wiki/records/reports/2026-08-13_1153_비전_문서_작성_리포트.md                               |  50 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_1300_비전_비용_재산정_리포트.md                             |  25 +++
+ final_project_sample/wiki/records/reports/2026-08-13_1300_신계획서_A2A_Graph_반영률_점검.md                      |  74 +++++++
+ final_project_sample/wiki/records/reports/2026-08-13_Basement_구조검사.md                                        |  90 ++++++++
+ final_project_sample/wiki/records/reports/2026-08-13_Basement_구조검사_v2.md                                     |  96 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-CAPABILITY_리포트.md                                      |  71 ++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-COMPOSITION_리포트.md                                     |  67 ++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-FIX3_리포트.md                                            |  55 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-GRAPHTEST_리포트.md                                       |  58 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-ISOLATION_리포트.md                                       |  21 ++
+ final_project_sample/wiki/records/reports/2026-08-13_S-JSONFIX_리포트.md                                         |  24 +++
+ final_project_sample/wiki/records/reports/2026-08-13_S-LLMFIX_리포트.md                                          |  48 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-MODULARIZE_리포트.md                                      |  55 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-PORTS2_리포트.md                                          |  50 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-PORTS_리포트.md                                           |  56 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-PROPOSED2_리포트.md                                       |  60 ++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-PROPOSED_리포트.md                                        |  59 +++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-REMEASURE_리포트.md                                       |  61 ++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-RESCORE_리포트.md                                         | 100 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-STATSFIX_리포트.md                                        |  36 ++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-SUBMIT_리포트.md                                          |  66 ++++++
+ final_project_sample/wiki/records/reports/2026-08-13_S-TEAMANSWER_리포트.md                                      |  29 +++
+ final_project_sample/wiki/records/reports/2026-08-13_평가_인용검증_수정.md                                       |  51 +++++
+ final_project_sample/wiki/records/reports/2026-08-14_1546_A-COP_init_plan_6인팀_v1_리포트.md                     |  46 ++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-ADMINUI_리포트.md                                         |  99 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-COMPOSER-WIRE_리포트.md                                   |  63 ++++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-COMPOSER_리포트.md                                        |  62 ++++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-CONFIGVALIDATE_리포트.md                                  |  64 ++++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-DODFINISH_리포트.md                                       |  35 +++
+ final_project_sample/wiki/records/reports/2026-08-14_S-IDEMKEY_리포트.md                                         |  53 +++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-PROJECTYAML_리포트.md                                     |  53 +++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-TRACE-ABL_리포트.md                                       |  37 ++++
+ final_project_sample/wiki/records/reports/2026-08-14_S-UI-QUALITY_리포트.md                                      |  64 ++++++
+ final_project_sample/wiki/records/reports/2026-08-14_모듈구성기_설계검토.md                                      | 118 ++++++++++
+ final_project_sample/wiki/records/reports/2026-08-16_v7_반영도_검토.md                                           | 177 +++++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-17_Docker_AWS_IaC_초안_리포트.md                               |  34 +++
+ final_project_sample/wiki/records/reports/2026-08-17_S-COMPOSER-WRITE-CHANNEL_검토.md                            | 134 ++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-CONSOLE-IA-REVIEW_리포트.md                               | 192 +++++++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-CONSOLE-P4P6_리포트.md                                    |  78 +++++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-CONSOLE-PACKAGE_리포트.md                                 |  71 ++++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-DASHBOARD-SPLIT_검토.md                                   | 120 +++++++++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-DOCKER-STAGE1_리포트.md                                   |  35 +++
+ final_project_sample/wiki/records/reports/2026-08-17_S-INTROSPECT_리포트.md                                      |  55 +++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-JUDGE-AGREEMENT-HARNESS.md                                |  49 +++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-UNKNOWN-OPS-SCREEN_리포트.md                              |  38 ++++
+ final_project_sample/wiki/records/reports/2026-08-17_S-VOC-TEAM_리포트.md                                        |  15 ++
+ final_project_sample/wiki/records/reports/2026-08-17_consumer-idempotency-gate.md                                |  27 +++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_01_안전핵심부.md                                   |  49 +++++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_02_컨텍스트_RAG_A2A.md                             |  42 ++++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_03_Teams_VOC.md                                    |  25 +++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_04_MCP_idempotency_resume.md                       |  29 +++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_05_GraphStore_REST.md                              |  39 ++++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_06_Controller_전이표.md                            |  41 ++++
+ final_project_sample/wiki/records/reports/2026-08-17_버그사냥_07_Composer_eval.md                                |  47 ++++
+ final_project_sample/wiki/records/reports/2026-08-17_죽은코드_감사.md                                            |  45 ++++
+ final_project_sample/wiki/records/reports/2026-08-18_Billing_Technical_examples_분리_리포트.md                   |  75 +++++++
+ final_project_sample/wiki/records/reports/2026-08-18_S-COMPOSER-DEPLOY-DOCS-01_리포트.md                         |  34 +++
+ final_project_sample/wiki/records/reports/2026-08-18_S-COMPOSER-V2-JWT.md                                        |  30 +++
+ final_project_sample/wiki/records/reports/2026-08-18_S-PIP-PACKAGE-ACOP-BASEMENT_report.md                       |  37 ++++
+ final_project_sample/wiki/records/reports/2026-08-18_S-RESPONSE-REVIEW-TEAM_DoD-29_리포트.md                     |  51 +++++
+ final_project_sample/wiki/records/reports/2026-08-18_S-VERSIONING-01-SEMVER_리포트.md                            |  38 ++++
+ final_project_sample/wiki/records/reports/2026-08-18_S-VERSIONING-02-MANIFEST-EXPORT_리포트.md                   |  47 ++++
+ final_project_sample/wiki/records/reports/2026-08-18_S-VERSIONING-03-BOUNDARY-TOOLS_보고서.md                    |  63 ++++++
+ final_project_sample/wiki/records/reports/2026-08-19_Composer_reload_계약_설계검토.md                            | 104 +++++++++
+ final_project_sample/wiki/records/reports/2026-08-19_DoD28_파인튜닝_범위_설계검토.md                             | 160 ++++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-19_S-COMPOSER-DEPLOY-STAGE2-LOCAL_리포트.md                    |  70 ++++++
+ final_project_sample/wiki/records/reports/2026-08-19_S-MIGRATE-DUPLICATE-GUARD_리포트.md                         |  58 +++++
+ final_project_sample/wiki/records/reports/2026-08-19_S-SCAFFOLD-CLI-01_리포트.md                                 | 129 +++++++++++
+ final_project_sample/wiki/records/reports/2026-08-28_S-COMPOSER-CATALOG-CHANGES_리포트.md                        | 116 ++++++++++
+ final_project_sample/wiki/records/reports/2026-08-28_S-DECLARATIVE-TEAM-RUNTIME_리포트.md                        | 116 ++++++++++
+ final_project_sample/wiki/records/reports/2026-08-29_S-AUDIT-STORE_리포트.md                                     | 112 ++++++++++
+ final_project_sample/wiki/records/reports/2026-08-31_reload_계약_구현.md                                         | 138 ++++++++++++
+ final_project_sample/wiki/records/reports/2026-08-31_모듈토글_실효화_리포트.md                                   | 154 +++++++++++++
+ final_project_sample/wiki/records/reports/2026-09-06_sample의_LLM감사추적이_끊겨있다.md                          |  74 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-12_1600_RAG코퍼스_섹션이_보일러플레이트로_채워짐.md     |  99 +++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-12_1720_RAG코퍼스_v2_문장템플릿과_게이트_구멍.md        |  75 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-12_1830_S-API가_실행되지_않는다.md                      |  78 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-12_2010_RAG검색이_한번도_동작한적이_없다.md             |  93 ++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-12_2230_Controller가_resuming에서_resumed를_건너뛴다.md |  59 +++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1200_평가가_환각인용에_점수를_준다.md                |  73 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1230_PII가_평문으로_저장된다.md                      |  66 ++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1400_모듈화가_순환import로_실패했다.md               |  87 ++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1500_Proposed군이_실제시스템을_돌리지_않는다.md      |  76 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1600_Team의_LLM_실호출_경로가_동작한적이_없다.md     |  69 ++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-13_1800_next_action_지표가_어휘일치를_잰다.md           |  76 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-14_시계에_걸린_테스트가_가끔_실패한다.md                |  67 ++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_검사하는_척하는_검사들.md                            | 123 +++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_동시_apply_테스트가_flaky했다.md                     |  68 ++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_01_5건_발견_3건_수정.md                     | 118 ++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_02_3건_발견_2건_수정_1건_해소.md            |  87 ++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_03_환불제안이_매번_거부됐다.md              | 102 +++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_04_4건_발견_2건_수정_1건_보류_1건_해소.md   | 109 ++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_05_2건_수정.md                              |  60 ++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_06_동시실행가드_경합_수정.md                |  80 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_07_임시파일누수_수정_및_범위위반.md         |  78 +++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-17_버그사냥_08_미해결3건_처리.md                        | 116 ++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-18_Composer_v2_ResponseReview_검수.md                   | 162 ++++++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-18_versioning_스트림3_검수.md                           | 119 +++++++++++
+ final_project_sample/wiki/records/reports/debugs/2026-08-18_버그사냥_08_전체점검.md                              |  96 +++++++++
+ final_project_sample/wiki/records/submission/00_제출산출물_인덱스.md                                             |  16 ++
+ final_project_sample/wiki/records/submission/01_수집데이터_및_전처리.md                                          |  31 +++
+ final_project_sample/wiki/records/submission/02_시스템_아키텍처.md                                               |  47 ++++
+ final_project_sample/wiki/records/submission/03_RAG_LLM_벡터DB_구현.md                                           |  26 +++
+ final_project_sample/wiki/records/submission/04_테스트_계획_및_결과.md                                           |  36 ++++
+ final_project_sample/wiki/records/submission/05A_DB_스키마.md                                                    |  31 +++
+ final_project_sample/wiki/records/submission/05B_보안_경계.md                                                    |  19 ++
+ final_project_sample/wiki/records/submission/06_시연_시나리오.md                                                 |  24 +++
+ final_project_sample/wiki/records/submission/07_한계와_다음_단계.md                                              |  40 ++++
+ final_project_sample/wiki/records/vision/ESTIMATION_BASELINE.md                                                  | 132 ++++++++++++
+ final_project_sample/wiki/records/vision/TODO_VISION.md                                                          |  45 ++++
+ final_project_sample/wiki/records/vision/VISION-01_추론_기법_확장.md                                             |  64 ++++++
+ final_project_sample/wiki/records/vision/VISION-02_전용_Graph_Store_도입.md                                      |  72 +++++++
+ final_project_sample/wiki/records/vision/VISION-03_멀티_LLM_프로바이더_모델_라우팅.md                            |  61 ++++++
+ final_project_sample/wiki/records/vision/VISION-04_A2A_생태계_확장.md                                            |  62 ++++++
+ final_project_sample/wiki/records/vision/VISION-05_메시징_내구_실행_확장.md                                      |  73 +++++++
+ final_project_sample/wiki/records/vision/VISION-06_지식_메모리_확장.md                                           |  62 ++++++
+ final_project_sample/wiki/records/vision/VISION-07_정책_엔진_Decagon_AOP_방식.md                                 |  62 ++++++
+ final_project_sample/wiki/records/vision/VISION-08_Commerce_Ops_Pack.md                                          |  33 +++
+ final_project_sample/wiki/records/vision/VISION-09_사이트_생성_판매.md                                           |  33 +++
+ final_project_sample/wiki/records/vision/VISION-10_예제_카탈로그_스캐폴딩_CLI.md                                 | 106 +++++++++
+ final_project_sample/wiki/records/vision/VISION-11_고객_지식_수집과_승인형_RAG_색인.md                           |  96 +++++++++
+ final_project_sample/wiki/records/vision/VISION-12_평가셋_작성_보조와_독립_검증.md                               |  88 ++++++++
+ final_project_sample/wiki/records/vision/VISION-13_자기_관측_기반_구성_진단과_추천.md                            | 137 ++++++++++++
+ final_project_sample/wiki/runtime/agentic-controller.md                                                          | 106 +++++++++
+ final_project_sample/wiki/runtime/case-lifecycle.md                                                              |  77 +++++++
+ final_project_sample/wiki/runtime/conflict-retry.md                                                              |  80 +++++++
+ final_project_sample/wiki/runtime/context-pack.md                                                                | 128 +++++++++++
+ final_project_sample/wiki/runtime/idempotency.md                                                                 |  81 +++++++
+ final_project_sample/wiki/runtime/index.md                                                                       |  89 ++++++++
+ final_project_sample/wiki/runtime/message-broker.md                                                              | 108 ++++++++++
+ final_project_sample/wiki/runtime/shared-state.md                                                                |  72 +++++++
+ final_project_sample/wiki/teams/example-teams.md                                                                 |  96 +++++++++
+ final_project_sample/wiki/teams/index.md                                                                         |  52 +++++
+ final_project_sample/wiki/teams/team-boundary.md                                                                 | 101 +++++++++
+ final_project_sample/wiki/teams/team-contract.md                                                                 |  96 +++++++++
+ final_project_sample/wiki/teams/team-registry.md                                                                 |  81 +++++++
+ wiki/architecture/notifications.md                                                                               |  42 +++-
+ wiki/decisions/D-018-decision15-stop-paths.md                                                                    |  69 ++++++
+ wiki/decisions/D-019-travel-density.md                                                                           |  29 +++
+ wiki/decisions/index.md                                                                                          |   3 +
+ wiki/delivery/dod.md                                                                                             |  19 +-
+ wiki/log.md                                                                                                      |  39 ++++
+ wiki/product/index.md                                                                                            |   4 +-
+ wiki/product/traveler-profile.md                                                                                 |  86 ++++++++
+ wiki/research/accessibility-data-sources.md                                                                      | 150 +++++++++++++
+ wiki/research/dietary-data-sources.md                                                                            | 235 ++++++++++++++++++++
+ wiki/research/index.md                                                                                           |   4 +
+ wiki/research/place-api-quota-and-terms.md                                                                       | 138 ++++++++++++
+ wiki/research/price-data-sources.md                                                                              | 222 +++++++++++++++++++
+ 도장 열기.bat                                                                                                    |   8 +
+ 952 files changed, 79637 insertions(+), 651 deletions(-)
+  (종료코드 0)
+
+===== ② 우리가 읽는 팀 파일 --stat =====
+  git diff --stat=200 -M 201dad5..origin/develop -- final_project_cs/app/modules/travel_ops/mobility.py final_project_cs/app/tools/read_tools.py final_project_cs/app/infrastructure/travel/ :(glob)**/test_transit_source_assembly.py final_project_cs/app/core/ final_project_cs/app/application/controller.py :(glob)**/project.yaml final_project_cs/app/modules/travel_ops/__init__.py final_project_cs/app/modules/travel_ops/itinerary_team.py :(glob)**/*schema* :(glob)**/*contract*
+ final_project_cs/app/application/controller.py                                 |  53 ++++++++++++++++-
+ final_project_cs/app/core/actions.py                                           |  27 ++++++++-
+ final_project_cs/app/core/contracts.py                                         |  31 ++++++++++
+ final_project_cs/app/core/settings.py                                          |  22 +++++++
+ final_project_cs/app/modules/travel_ops/mobility.py                            |  13 ++++-
+ final_project_cs/app/tools/read_tools.py                                       |  53 +++++++++++++++++
+ final_project_cs/tests/security/test_scope_contract.py                         |   6 ++
+ final_project_sample/acop_basement/core/contracts.py                           | 353 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_sample/acop_basement/infrastructure/db/migrations/001_schema.sql |  29 ++++++++++
+ final_project_sample/acop_basement/introspection/contract.py                   | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_sample/config/project.yaml                                       |  21 +++++++
+ final_project_sample/tests/contract/test_contracts.py                          | 248 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_sample/tests/contract/test_team_contract.py                      |  19 +++++++
+ final_project_sample/tests/contracts/test_console_read_contracts.py            |  76 +++++++++++++++++++++++++
+ final_project_sample/tests/contracts/test_introspection_contract.py            |  42 ++++++++++++++
+ final_project_sample/tests/e2e/test_composer_ui_client_contract.py             | 238 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ final_project_sample/tests/security/test_scope_contract.py                     |  26 +++++++++
+ final_project_sample/wiki/teams/team-contract.md                               |  96 +++++++++++++++++++++++++++++++
+ 18 files changed, 1497 insertions(+), 7 deletions(-)
+  (종료코드 0)
+
+===== ② 우리가 읽는 팀 파일 전체 diff =====
+  git diff -M 201dad5..origin/develop -- final_project_cs/app/modules/travel_ops/mobility.py final_project_cs/app/tools/read_tools.py final_project_cs/app/infrastructure/travel/ :(glob)**/test_transit_source_assembly.py final_project_cs/app/core/ final_project_cs/app/application/controller.py :(glob)**/project.yaml final_project_cs/app/modules/travel_ops/__init__.py final_project_cs/app/modules/travel_ops/itinerary_team.py :(glob)**/*schema* :(glob)**/*contract*
+  → _50/watched.diff (1717줄)
+  (종료코드 0)
+
+===== ② 우리 자리를 팀이 건드렸나 (0줄이어야 한다) =====
+  git diff --stat=200 -M 201dad5..origin/develop -- final_project_cs/app/modules/travel_ops/mobility_engine/ tests/mobility/ scripts/ modules/ docs/mobility/ config/mobility/ requirements-mobility.txt .gitignore
+  (종료코드 0)
+
+===== ② 충돌 미리보기 (작업트리 안 바꿈 · 1 = 충돌 있음) =====
+  git merge-tree --write-tree --name-only HEAD origin/develop
+fbb9599ca18e2133674c0d0a722f2d11e694bb4c
+  (종료코드 0)
+
+===== ② develop 의 Team 에 넘기는 상태 키 =====
+  git grep -n TEAM_STATE_KEYS origin/develop -- final_project_cs/app/application/controller.py
+origin/develop:final_project_cs/app/application/controller.py:87:    TEAM_STATE_KEYS = ("subject_ref", "trigger_source", "trigger", "interpretation")
+origin/develop:final_project_cs/app/application/controller.py:92:        return {key: state[key] for key in cls.TEAM_STATE_KEYS if state.get(key) is not None}
+  (종료코드 0)
+
+①② 기록 끝 → _50/50_before.txt · _50/watched.diff · _50/commits_name_status.txt
+회귀 before 시작 (약 10분) → _50/reg_before.txt
+회귀 before 종료코드 0

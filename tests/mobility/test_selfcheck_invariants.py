@@ -96,6 +96,29 @@ case("판단불가 편중", {"INV-UNKNOWN"},
                   [{"line": "02호선", "from": "강변", "to": "잠실"}]),
        "result": R(arrive=620 + i * 30)} for i in range(6)])
 
+# ⑨ v0.8 — 최악 도착이 예정보다 이르다 · @ 가 버퍼보다 작다
+case("이중 계산 붕괴", {"INV-WORST"},
+     [{"probe": P("a", 0, "F", "weekday", 600),
+       "result": dict(R(arrive=620), arrive_worst_min=615, margin_min=5, buffer_min=10,
+                      out={"verdict": "feasible", "arrive_min": 620})}])
+
+# ⑩ v0.8 — 밖 판이 내부와 어긋난다: 불가인데 코드 없음 · 성립인데 여유 음수 · 둘 밖의 값
+case("밖 판 어긋남", {"INV-OUT"},
+     [{"probe": P("a", 0, "F", "weekday", 600),
+       "result": dict(R("infeasible"), out={"verdict": "infeasible"})},
+      {"probe": P("b", 0, "F", "weekday", 630),
+       "result": dict(R(arrive=650), out={"verdict": "feasible", "arrive_min": 650, "slack_min": -2})},
+      {"probe": P("c", 0, "F", "weekday", 660),
+       "result": dict(R("unknown"), out={"verdict": "unknown", "code": "no_data"})}])
+
+# ⑪ v0.8 정상 — 내부 unknown → 밖 불가 no_data · 내부 성립 + 예정 없음 → 밖 불가 no_data 는 정상이다
+case("밖 판 정상(오탐 확인)", set(),
+     [{"probe": P(f"a{i}", 0, "F", "weekday", 600 + i * 30),
+       "result": dict(R(arrive=620 + i * 30, ride=20), arrive_worst_min=625 + i * 30, margin_min=15, buffer_min=10,
+                      out={"verdict": "feasible", "arrive_min": 620 + i * 30, "margin_min": 15})} for i in range(6)] +
+     [{"probe": P("u", 1, "F", "weekday", 600), "result": dict(R("unknown"), out={"verdict": "infeasible", "code": "no_data"})},
+      {"probe": P("v", 1, "F", "weekday", 630), "result": dict(R(arrive=None), out={"verdict": "infeasible", "code": "no_data"})}])
+
 # ⑧ 정상 데이터 — 하나도 울면 안 된다
 case("정상(오탐 확인)", set(),
      [{"probe": P(f"n{i}", 0, "F", "weekday", 600 + i * 30),

@@ -21,6 +21,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    15,
+    15
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "11:12",
    "expect_warn_codes": [
     "MOB_W_SPEED_NO_PEAK"
@@ -40,6 +46,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "before_first",
+   "expect_last_depart": "22:20",
    "expect_relief_contains": "첫차 04:10",
    "expect_alt_max": 0
   },
@@ -57,6 +66,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "after_last",
+   "expect_last_depart": "22:20",
    "expect_relief_contains": "수단 교체",
    "expect_alt_min": 1,
    "expect_alt_axis": "수단교체",
@@ -76,6 +88,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    10,
+    10
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "22:17"
   },
   {
@@ -92,6 +110,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    15,
+    15
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "13:28",
    "expect_warn_codes": [
     "MOB_W_BUS_DETOUR"
@@ -110,7 +134,10 @@
      "to": "나"
     }
    ],
-   "expect": "unknown",
+   "expect": "infeasible",
+   "expect_internal": "unknown",
+   "expect_reason": "no_data",
+   "expect_last_depart_none": true,
    "expect_warn_codes": [
     "MOB_W_BUS_ROUTE_NOT_COLLECTED"
    ]
@@ -129,6 +156,9 @@
     }
    ],
    "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "before_first",
+   "expect_last_depart": "27:10",
    "expect_relief_contains": "23:40",
    "expect_alt_min": 2,
    "expect_alt_axis": "노선교체",
@@ -148,6 +178,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    15,
+    15
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "11:12",
    "expect_warn_codes": [
     "MOB_W_BUS_NO_DAYTYPE"
@@ -167,6 +203,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    15,
+    15
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "11:58"
   },
   {
@@ -183,6 +225,12 @@
     }
    ],
    "expect": "feasible",
+   "expect_internal": "feasible",
+   "expect_margin_min": [
+    15,
+    15
+   ],
+   "expect_last_depart": "22:20",
    "expect_arrive": "11:54"
   },
   {
@@ -198,10 +246,14 @@
      "to": "남산서울타워"
     }
    ],
-   "expect": "feasible",
+   "expect": "infeasible",
+   "expect_internal": "feasible",
+   "expect_reason": "no_data",
+   "expect_last_depart_none": true,
    "expect_warn_codes": [
     "MOB_W_BUS_SPEED_BLOCKED_ROUTE"
    ]
   }
- ]
+ ],
+ "note_v0.8": "2026-09-24 · 39번 방 — 기대값 재정의. expect = 밖 판정 둘(feasible/infeasible) · expect_internal = 옛 4값(내부 판정) · expect_reason = 이유 코드 · expect_slack_min/expect_margin_min = [하한, 상한] · expect_last_depart = 마지막 성립 출발(worst 역산 · 없으면 expect_last_depart_none). 옛 expect 값은 expect_internal 로 옮겼다 — 값을 바꾼 것이 아니라 축을 나눈 것이다."
 }

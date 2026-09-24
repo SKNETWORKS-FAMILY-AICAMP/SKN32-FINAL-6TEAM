@@ -1,0 +1,602 @@
+[
+ {
+  "id": "ALT-01",
+  "verdict": "infeasible",
+  "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 잠실→성수",
+    "verdict": "infeasible",
+    "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+     }
+    ],
+    "car": null,
+    "walk_min": null
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 N73(심야) — 잠실역7번출구까지 도보 157m(3분) · 8정거장 · 하차 후 209m(4분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N73",
+     "from": "잠실역7번출구",
+     "to": "성수역1번출구"
+    },
+    "mode": "bus",
+    "depart_min": 1516,
+    "arrive_min": 1543,
+    "walk_in_min": 3,
+    "walk_out_min": 4,
+    "grade": "추정",
+    "reason": "25:16 승차 예상 (대기 18분 — 배차의 절반) · 잠실역7번출구(seq 19) → 성수역1번출구(seq 27)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1498
+   },
+   {
+    "axis": "수단교체",
+    "label": "따릉이 잠실→성수 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "잠실",
+     "to": "성수"
+    },
+    "mode": "bike",
+    "depart_min": 1495,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 잠실역 6번출구(도보 3분) → 유원지식산업센터 앞(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LCD_SKIPPED",
+      "class": "data",
+      "text": "잠실역 8번출구 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BIKE_LCD_SKIPPED",
+      "class": "data",
+      "text": "롯데월드타워(잠실역2번출구 쪽) 은 LCD 전용 대여소라 외국인 비회원(QR)이 빌릴 수 없다 — 다음 대여소로",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "잠실역 6번출구 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1495
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "버스 N73(심야) — 잠실역7번출구까지 도보 157m(3분) · 8정거장 · 하차 후 209m(4분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 잠실→성수 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null
+ },
+ {
+  "id": "ALT-02",
+  "verdict": "infeasible",
+  "reason": "04:30 은 02호선 강변 의 weekday 첫차(05:36) 이전이다",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 강변→잠실",
+    "verdict": "infeasible",
+    "reason": "04:30 은 02호선 강변 의 weekday 첫차(05:36) 이전이다",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "출발을 05:36 로 미루면 성립",
+    "dropped": {
+     "운행종료후_한바퀴": 7
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 강변 weekday: 그 방향 첫 출발 05:36"
+     }
+    ],
+    "car": null,
+    "walk_min": null
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "출발을 05:36 로 미루면 성립",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 강변 weekday: 그 방향 첫 출발 05:36"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "출발시각_이동",
+    "label": "05:36 출발로 미룸",
+    "leg": {
+     "line": "02호선",
+     "from": "강변",
+     "to": "잠실"
+    },
+    "mode": "subway",
+    "depart_min": 336,
+    "arrive_min": 341,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "추정",
+    "reason": "05:36 성수행 승차 (대기 0분)",
+    "note": null,
+    "warnings": [],
+    "at": 336
+   },
+   {
+    "axis": "수단교체",
+    "label": "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "leg": {
+     "mode": "bus",
+     "route": "302",
+     "from": "구의3동주민센터",
+     "to": "잠실역.잠실대교남단"
+    },
+    "mode": "bus",
+    "depart_min": 284,
+    "arrive_min": 301,
+    "walk_in_min": 8,
+    "walk_out_min": 2,
+    "grade": "추정",
+    "reason": "04:44 승차 예상 (대기 6분 — 배차의 절반) · 구의3동주민센터(seq 85) → 잠실역.잠실대교남단(seq 89)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 278
+   }
+  ],
+  "alt_tried": [
+   [
+    "출발시각_이동",
+    "05:36 출발로 미룸",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "버스 6705A(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 N6703(공항) — 강변역A까지 도보 136m(3분) · 1정거장 · 하차 후 289m(5분)",
+    "infeasible"
+   ],
+   [
+    "수단교체",
+    "버스 302(간선) — 구의3동주민센터까지 도보 489m(8분) · 4정거장 · 하차 후 69m(2분)",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null
+ },
+ {
+  "id": "ALT-03",
+  "verdict": "infeasible",
+  "reason": "24:40 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "05호선 여의도→왕십리",
+    "verdict": "infeasible",
+    "reason": "24:40 이후 왕십리 까지 가는 열차가 없다 (그 방향 마지막 출발 24:25 군자(능동)행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 198,
+     "종착열차": 1
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+     }
+    ],
+    "car": null,
+    "walk_min": null
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:25 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "05호선 여의도 weekday: 그 방향 마지막 출발 24:25"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "leg": {
+     "mode": "bike",
+     "from": "여의도",
+     "to": "왕십리"
+    },
+    "mode": "bike",
+    "depart_min": 1480,
+    "arrive_min": null,
+    "walk_in_min": 0,
+    "walk_out_min": 0,
+    "grade": "근거없음",
+    "reason": "대여소 여의도역2번출구 앞(도보 4분) → 왕십리역 4번 출구 건너편(도보 1분) · 승차 소요 근거없음 · 대여·반납 6분 · 거치 미상",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BIKE_LIVE_UNKNOWN",
+      "class": "data",
+      "text": "여의도역2번출구 앞 의 지금 거치 수를 조회하지 못했다(실시간 조회 없음) — 빌릴 수 있는지는 현장에서 확인해야 한다",
+      "to_answer": true
+     },
+     {
+      "code": "MOB_W_BIKE_FOREIGNER_GUIDE",
+      "class": "data",
+      "text": "따릉이 외국인 이용: 앱 시작화면에서 Foreigner 를 고른다(영어 · 설정에서 중국어·일본어) · 결제는 한국 밖에서 발급된 신용카드 또는 Discover Seoul Pass 바우처 번호 — 국내 카드는 회원가입이 필요하다 · 결제 후 이메일로 대여번호가 온다 · 같은 이메일로 중복 결제 불가 · 1인 1매",
+      "to_answer": true
+     }
+    ],
+    "at": 1480
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "따릉이 여의도→왕십리 — 반경 300m 대여소",
+    "feasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null
+ },
+ {
+  "id": "ALT-04",
+  "verdict": "infeasible",
+  "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 잠실→성수",
+    "verdict": "infeasible",
+    "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+     }
+    ],
+    "car": null,
+    "walk_min": null
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [],
+  "alt_tried": [],
+  "taxi": null,
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null
+ },
+ {
+  "id": "ALT-05",
+  "verdict": "infeasible",
+  "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+  "grade": "확정",
+  "legs": [
+   {
+    "idx": 0,
+    "label": "02호선 잠실→성수",
+    "verdict": "infeasible",
+    "reason": "24:55 이후 성수 까지 가는 열차가 없다 (그 방향 마지막 출발 24:50 성수행)",
+    "grade": "확정",
+    "depart_min": null,
+    "arrive_min": null,
+    "wait_min": null,
+    "ride_min": null,
+    "ride_grade": "확정",
+    "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+    "dropped": {
+     "단축운행": 22
+    },
+    "warnings": [],
+    "evidence": [
+     {
+      "source_type": "db",
+      "source_id": "timetable_v1@2026-09-09",
+      "grade": "확정",
+      "observed_at": "2026-09-09",
+      "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+     }
+    ],
+    "car": null,
+    "walk_min": null
+   }
+  ],
+  "arrive_min": null,
+  "slack_min": null,
+  "relief": "24:50 까지 출발하면 성립. 이후는 수단 교체(버스·택시)",
+  "warnings": [],
+  "evidence": [
+   {
+    "source_type": "db",
+    "source_id": "timetable_v1@2026-09-09",
+    "grade": "확정",
+    "observed_at": "2026-09-09",
+    "claim": "02호선 잠실 weekday: 그 방향 마지막 출발 24:50"
+   }
+  ],
+  "day_type": "weekday",
+  "alternatives": [
+   {
+    "axis": "수단교체",
+    "label": "버스 N73(심야) — 잠실역7번출구까지 도보 157m(3분) · 8정거장 · 하차 후 209m(4분)",
+    "leg": {
+     "mode": "bus",
+     "route": "N73",
+     "from": "잠실역7번출구",
+     "to": "성수역1번출구"
+    },
+    "mode": "bus",
+    "depart_min": 1516,
+    "arrive_min": 1543,
+    "walk_in_min": 3,
+    "walk_out_min": 4,
+    "grade": "추정",
+    "reason": "25:16 승차 예상 (대기 18분 — 배차의 절반) · 잠실역7번출구(seq 19) → 성수역1번출구(seq 27)",
+    "note": null,
+    "warnings": [
+     {
+      "code": "MOB_W_BUS_SPEED_PROXY_NIGHT",
+      "class": "grade",
+      "text": "N73 은 심야 노선이라 통계에 없다 — 간선 값으로 대용했다. 심야는 실제로 더 빠르므로 소요를 크게 보는 쪽이다(보수적)",
+      "to_answer": false
+     },
+     {
+      "code": "MOB_W_SPEED_NO_PEAK",
+      "class": "grade",
+      "text": "표정속도는 시간대별로 갈리지 않는다 — 퇴근 첨두가 담기지 않았다(rules bus.표정속도.시간대별_없음)",
+      "to_answer": false
+     }
+    ],
+    "at": 1498
+   }
+  ],
+  "alt_tried": [
+   [
+    "수단교체",
+    "버스 N73(심야) — 잠실역7번출구까지 도보 157m(3분) · 8정거장 · 하차 후 209m(4분)",
+    "feasible"
+   ],
+   [
+    "수단교체",
+    "따릉이 잠실→성수 — 반경 300m 대여소",
+    "infeasible"
+   ]
+  ],
+  "taxi": {
+   "axis": "수단교체",
+   "label": "택시",
+   "leg": {
+    "mode": "taxi"
+   },
+   "verdict": "unknown",
+   "grade": "근거없음",
+   "reason": "소요 판단 불가 — 라우터 없이 실행 중(--gh-url none)",
+   "warnings": [
+    {
+     "code": "MOB_W_CAR_ROUTER_DOWN",
+     "class": "data",
+     "text": "도로 경로 서버에 닿지 못해 자동차·택시 소요를 내지 않았다 (라우터 없이 실행 중(--gh-url none))",
+     "to_answer": true
+    }
+   ]
+  },
+  "candidates": null,
+  "ties": null,
+  "dropped_candidates": null,
+  "bus_rejected": null,
+  "axis_best": null
+ }
+]

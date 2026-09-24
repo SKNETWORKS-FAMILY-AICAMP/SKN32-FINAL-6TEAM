@@ -1,0 +1,15 @@
+--- /dev/fd/63	2026-09-24 20:41:49.897594640 +0900
++++ /dev/fd/62	2026-09-24 20:41:49.897594640 +0900
+@@ -112,7 +112,11 @@
+         rt = make_router(gh)
+         if rt.info():
+             bike_router = vt.BikeRouter(rt, {}, (rules.get("bike") or {}).get("pbf_date") or "2026-09-18")
+-    verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, bike_live=bike_live, bike_router=bike_router)
++    # 혼잡도(v0.8 · 39번 방 · @ 부품) — 파일이 없으면 가산 없음(근거없음). 판정기 CLI 와 같은 두 파일.
++    cg_dir = Path(P["timetable"]).parent
++    cg_data = vt.Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
++    verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, bike_live=bike_live, bike_router=bike_router,
++                           cg_data=cg_data)
+ 
+     # ── 시간표 '판'. meta 의 built_at 이 있으면 그것, 없으면 행의 수집일.
+     #    둘은 다른 값이다 — 어느 쪽인지 접두어로 남긴다. 판정 이력이 "어느 판으로 냈는지"를 잃으면 안 된다.
