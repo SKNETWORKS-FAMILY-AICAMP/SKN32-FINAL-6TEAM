@@ -710,9 +710,33 @@ class Verifier:
         if day_type != "weekday":
             warn.append(self.warn_msg("MOB_W_BUS_NO_DAYTYPE", route=nm, day_type=day_type))
 
+        # 0) 운행 요일 — 45번 방(2026-09-24). bus_route 의 service_days: 'daily'(기본) · None(미상).
+        #    필드가 없는 옛 파일은 종전 동작(매일). 미상·모르는 값은 판정하지 않는다 — 틀린 「성립」보다 no_data.
+        #    'weekday' 같은 요일 분기는 두지 않는다 — case["date"] 는 **운행일**이고(04:00 전 시각은 그 운행일의 연장),
+        #    「월~금」과 「공휴일 제외 평일」의 구분 근거도 아직 없다. 쓰는 노선이 생기면 그때 의미부터 정한다.
+        sd = r.raw.get("service_days", "daily") if r.raw else "daily"
+        if sd != "daily":
+            why = (r.raw.get("service_days_basis") or "근거 없음") if sd is None else f"알 수 없는 service_days 값 {sd!r}"
+            return LegResult(idx, label, "unknown", f"{nm} 의 운행 요일을 모른다 — {why}",
+                             grade="근거없음", code="no_data", warnings=warn,
+                             evidence=[self._ev_bus(r, "운행 요일 미상")])
+
         # 1) 운행 구간 — 여기만 확정이다
         if r.first_min is None or r.last_min is None:
-            return LegResult(idx, label, "unknown", f"{nm} 의 첫차·막차가 없다", grade="근거없음", code="no_data")
+            return LegResult(idx, label, "unknown",
+                             f"{nm} 의 첫차·막차가 없다" + (f" ({r.raw.get('window_note')})" if r.raw.get("window_note") else ""),
+                             grade="근거없음", code="no_data")
+        # ★ 45: 운행일 경계(04:00) 뒤에도 전날 운행분이 도는 노선(N61 막차 28:10). 04:00~04:10 요청은
+        #   to_service_min 이 올리지 않아 그날 첫차(23:40) 이전으로 읽혀 「확정 불가」가 나갔다.
+        #   전날 운행일로 옮겨 판정하면 운행일·요일형이 바뀌므로 여기서 하지 않는다 → 판정 안 함(no_data).
+        #   운행일로 다시 물으려면 전날 날짜 + '28:05' 같은 운행일 표기로 준다.
+        if now_min < r.first_min and now_min + MIN_DAY <= r.last_min:
+            return LegResult(idx, label, "unknown",
+                             f"{fmt_min(now_min)} 은 운행일 경계(04:00) 뒤지만 {nm} 의 전날 운행분이 아직 돈다 "
+                             f"(막차 {fmt_min(r.last_min)}) — 이 운행일로는 판정하지 않는다",
+                             grade="근거없음", code="no_data",
+                             relief=f"전날 날짜로 {fmt_min(now_min + MIN_DAY)} 에 다시 판정",
+                             warnings=warn, evidence=[self._ev_bus(r, "운행 구간")])
         if now_min < r.first_min:
             return LegResult(idx, label, "infeasible",
                              f"{fmt_min(now_min)} 은 {nm} 첫차({fmt_min(r.first_min)}) 이전이다",
