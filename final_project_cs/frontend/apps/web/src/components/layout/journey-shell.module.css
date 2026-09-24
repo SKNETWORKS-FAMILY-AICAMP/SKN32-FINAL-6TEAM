@@ -1,0 +1,31 @@
+.page { position: relative; isolation: isolate; min-height: 100svh; padding: 28px 0; background: #f4f6f0; }
+.shell { width: calc(100% - 40px); max-width: 1120px; min-height: calc(100svh - 56px); margin: 0 auto; overflow: clip; border: 1px solid #ffffffc7; border-radius: 32px; background: #f7f9f3ed; box-shadow: 0 24px 80px #24392f14; backdrop-filter: blur(16px); font-size: 13px; line-height: 1.65; }
+/* A filtered ancestor would anchor the fixed trip navigation to the card instead of the viewport. */
+.shell[data-view="trip"] { backdrop-filter: none; }
+.skip { position: absolute; top: -100px; left: 16px; z-index: 60; background: var(--color-surface); padding: 10px 15px; border-radius: 10px; }
+.skip:focus { top: 8px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 90px; padding: 22px 36px; border-bottom: 1px solid #dce3ddaa; }
+.brand { display: flex; align-items: center; gap: 9px; min-height: 44px; font-size: 21px; font-weight: 750; letter-spacing: -.7px; color: var(--color-text); text-decoration: none; }
+.mark { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 9px; background: var(--color-primary); color: var(--color-on-primary); font-size: 26px; line-height: 1; padding-bottom: 4px; }
+.actions { display: flex; align-items: center; gap: 8px; }
+.homeButton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 11px; color: var(--color-muted); }
+.homeButton:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.main { padding: 28px 36px 0; }
+.main:focus { outline: none; }
+.footer { border-top: 1px solid #dce3ddaa; padding: 17px 0 20px; margin-top: 26px; font-size: 10px; color: var(--color-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.footer > span { display: flex; gap: 6px; align-items: center; }
+.footer p { font-size: 10px; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .main { padding: 25px 24px 0; }
+  .topbar { padding-left: 24px; padding-right: 24px; }
+}
+@media (max-width: 768px) { .shell { max-width: 560px; } }
+@media (max-width: 450px) {
+  .page { padding: 0; }
+  .shell { width: 100%; min-height: 100svh; border: 0; border-radius: 0; box-shadow: none; }
+  .topbar { min-height: 77px; padding: 16px 20px; gap: 10px; }
+  .brand { font-size: 20px; }
+  .actions { gap: 5px; }
+  .main { padding: 24px 20px 0; }
+  .footer { padding: 14px 0 20px; font-size: 9px; }
+}

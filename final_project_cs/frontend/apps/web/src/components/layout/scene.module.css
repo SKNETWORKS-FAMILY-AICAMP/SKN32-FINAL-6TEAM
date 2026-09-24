@@ -1,0 +1,19 @@
+/* Sized by its own width, so the phone crop also applies inside the intro's device frame. */
+.scene { --scene-x: 0px; --scene-y: 0px; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #f4f6f0; contain: strict; container-type: inline-size; }
+.camera { position: absolute; inset: -20px; transform: translate3d(calc(var(--scene-x) + var(--scene-progress)), var(--scene-y), 0) scale(1.025); transition: transform .65s cubic-bezier(.22, .8, .25, 1); }
+.layer { position: absolute; inset: 0; opacity: 0; transform: scale(1.025); transition: opacity 1s ease, transform 1.4s ease; }
+.layer[data-active="true"][data-loaded="true"] { opacity: 1; transform: scale(1); }
+.layer img { object-fit: cover; object-position: center bottom; }
+.veil { position: absolute; inset: 0; background: linear-gradient(180deg, #f9faf659 0%, #f9faf608 50%, #eaf0e31a 100%); }
+.light { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at 76% 75%, #fffdf5c7, transparent 58%); }
+@container (max-width: 450px) {
+  .camera { inset: -16px; }
+  .layer img { object-position: 36% bottom; }
+  .layer[data-scene="river"] img { object-position: 23% bottom; }
+  .layer[data-scene="journey"] img { object-position: 65% bottom; }
+  .veil { background: linear-gradient(180deg, #fbfcf4b3 0%, #f9faf54d 48%, #f4f7ec33 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .camera, .layer { transform: none; transition: none; }
+  .light { display: none; }
+}

@@ -1,0 +1,12 @@
+.stage { min-height: 100dvh; background: #e9eee7; padding: 24px 0; }
+/* `contain: layout` anchors fixed-position children (drawer, expanded cards) to the frame. */
+.device { position: relative; contain: layout; width: min(100%, 402px); height: min(874px, calc(100dvh - 48px)); margin: 0 auto; border-radius: 30px; overflow: hidden; box-shadow: 0 25px 90px #24392f20; background: var(--color-paper); border: 1px solid #fff; }
+.header { position: absolute; z-index: 5; top: 0; left: 0; right: 0; height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 25px; background: linear-gradient(var(--color-paper) 60%, #f7f9f300); }
+.brand { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 21px; font-weight: 750; letter-spacing: -.8px; color: var(--color-text); text-decoration: none; }
+.mark { display: grid; place-items: center; width: 29px; height: 29px; background: var(--color-primary); color: var(--color-on-primary); border-radius: 9px; font-size: 26px; line-height: 1; padding-bottom: 4px; }
+.overlay { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+.overlay:empty { display: none; }
+@media (max-width: 720px) {
+  .stage { padding: 0; }
+  .device { height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+}

@@ -8,7 +8,7 @@
 
 | 앱 | 위치 | 기술스택 | 상태 |
 |---|---|---|---|
-| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 웹 MVP 1차 5개 화면 구현, 명시적인 데모 어댑터로 실행 |
+| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 2026-09-23 목업 기준 소개·온보딩·5개 화면 구현, 한/영 전환, 명시적인 데모 어댑터로 실행 |
 | 개발팀 콘솔 | [apps/dev-console](apps/dev-console/README.md) | Next.js 16 + React 19 + TypeScript | 팀별·코어 통합 테스트, 사례·A/B 비교, 샘플 어댑터 구현 |
 | 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js + React + TypeScript | 웹 개발 범위. 폴더 준비, 앱 초기화 전 |
 | 모바일 앱 | [apps/mobile](apps/mobile/README.md) | Expo + React Native + TypeScript — 기존 선택 보존 | 3순위 보류. 폴더만 예약, 이번 초기화·개발·배포 제외 |

@@ -1,22 +1,26 @@
 @import "../styles/tokens.css";
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--color-surface); color: var(--color-text); font: 14px/1.6 "Segoe UI", "Malgun Gothic", sans-serif; }
+body { margin: 0; background: var(--color-background); color: var(--color-text); font-family: var(--font-sans); font-size: 13px; line-height: 1.65; font-synthesis: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button, a, summary { -webkit-tap-highlight-color: transparent; }
 button, summary { cursor: pointer; }
+button { border: 0; background: none; padding: 0; }
 button:disabled { cursor: not-allowed; }
-a { color: var(--color-primary); }
+a { color: inherit; }
 h1, h2, h3, p { margin: 0; }
-h1 { font-size: 27px; line-height: 1.4; letter-spacing: -1px; font-weight: 600; }
-h2 { font-size: 18px; line-height: 1.5; font-weight: 600; }
-h3 { font-size: 14px; font-weight: 600; }
-strong { font-weight: 600; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
-button:disabled { opacity: .5; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, main:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
 svg { flex-shrink: 0; }
 [hidden] { display: none !important; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-@media (max-width: 550px) { h1 { font-size: 23px; } input, select, textarea { font-size: 16px; } }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* App scrollbars: a soft green thumb on a transparent, arrow-free track. */
+::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { background: #bdd3bf; border-radius: 999px; min-height: 32px; }
+::-webkit-scrollbar-thumb:hover { background: #a5c2a9; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+@supports not selector(::-webkit-scrollbar) { :root { scrollbar-width: thin; scrollbar-color: #bdd3bf transparent; } }
+
+@media (max-width: 550px) { input, select, textarea { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

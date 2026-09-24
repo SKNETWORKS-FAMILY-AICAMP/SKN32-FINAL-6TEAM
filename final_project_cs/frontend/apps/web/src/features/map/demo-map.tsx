@@ -1,21 +1,24 @@
-import type { CSSProperties } from "react";
-import { MapPin } from "lucide-react";
+"use client";
+
+import { useT } from "@/lib/settings";
 import type { TripMapProps } from "./trip-map";
 import styles from "./demo-map.module.css";
 
-/** Explicit diagram provider. It is never a fallback for an unavailable live map. */
-export function DemoMap({ stops, selectedId, dayNumber, onSelect }: TripMapProps) {
-  const rows = Math.max(2, Math.ceil(stops.length / 2));
-  return <div className={styles.map}>
-    <div className={styles.mapheading}><MapPin size={18} aria-hidden="true" /><strong>{dayNumber}일차 장소</strong><small>{stops.length}곳 · 방문 순서 표시</small></div>
-    <div className={styles.pins} role="group" aria-label="일정 장소 핀 · 예시 배치" style={{ minHeight: `${Math.max(250, rows * 65)}px` }}>
-      {stops.map((stop, index) => {
-        const left = index % 2 === 0 ? 24 : 76;
-        const top = 10 + Math.floor(index / 2) * (76 / (rows - 1));
-        return <button type="button" key={stop.id} className={styles.pin} style={{ "--pin-left": `${left}%`, "--pin-top": `${top}%` } as CSSProperties} aria-label={`${index + 1}. ${stop.title} 지도에서 선택`} aria-pressed={selectedId === stop.id} onClick={() => onSelect(stop.id)}>{index + 1}<span aria-hidden="true">{stop.title}</span></button>;
-      })}
-      {stops.length === 0 && <p className={styles.empty}>이 날짜에 등록한 장소가 없어요.</p>}
-    </div>
-    <p className={styles.mapcaption}>위치 개념도 · 실제 지도와 경로가 아닌 예시 배치</p>
+/** Visit-order diagram of the mockup. Explicit provider, never a fallback for a live map. */
+export function DemoMap({ stops, selectedId, onSelect }: TripMapProps) {
+  const t = useT();
+  if (!stops.length) return <p className={styles.empty}>{t("일정을 등록하면 방문 순서가 표시돼요.", "Add stops to see their visit order.")}</p>;
+  const height = Math.max(230, Math.ceil(stops.length / 3) * 100 + 24);
+  const points = stops.map((stop, index) => {
+    const row = Math.floor(index / 3), column = row % 2 ? 2 - index % 3 : index % 3;
+    return { stop, index, x: 60 + column * 120, y: 48 + row * 100 };
+  });
+  return <div className={styles.diagram} style={{ aspectRatio: `360 / ${height}` }}>
+    <svg viewBox={`0 0 360 ${height}`} aria-hidden="true" focusable="false"><polyline className={styles.path} points={points.map(({ x, y }) => `${x},${y}`).join(" ")} /></svg>
+    <div className={styles.points}>{points.map(({ stop, index, x, y }) => (
+      <button key={stop.id} type="button" id={`map-point-${stop.id}`} className={styles.point} style={{ left: `${x / 360 * 100}%`, top: `${y / height * 100}%` }} aria-pressed={selectedId === stop.id} aria-label={`${index + 1}. ${stop.title}`} onClick={() => onSelect(stop.id)}>
+        <span className={styles.number}>{index + 1}</span><span className={styles.label}>{stop.title}</span>
+      </button>
+    ))}</div>
   </div>;
 }

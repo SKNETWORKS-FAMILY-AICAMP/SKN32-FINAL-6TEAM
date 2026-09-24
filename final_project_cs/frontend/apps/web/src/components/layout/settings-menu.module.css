@@ -1,0 +1,26 @@
+.menuButton { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid var(--color-border); border-radius: 11px; background: #ffffffd9; color: var(--color-primary); }
+.menuButton:hover { border-color: var(--color-primary); }
+.overlay { position: fixed; inset: 0; z-index: 50; background: #24392f33; display: flex; justify-content: flex-end; pointer-events: auto; animation: fade .2s ease both; }
+.panel { width: min(320px, 86%); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--color-paper); border-left: 1px solid #ffffff; box-shadow: -12px 0 40px #24392f1c; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 22px; animation: slide .32s cubic-bezier(.22, .8, .2, 1) both; }
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.head h2 { font-size: 20px; line-height: 1.4; letter-spacing: -.6px; }
+.eyebrow { font-size: 9px; letter-spacing: 1.6px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+.close { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; color: var(--color-muted); }
+.close:hover { color: var(--color-primary); background: var(--color-soft); }
+.group { border: 0; margin: 0; padding: 0; display: grid; gap: 9px; }
+.group legend { padding: 0; margin-bottom: 9px; font-size: 11px; font-weight: 650; color: var(--color-muted); letter-spacing: .3px; }
+.segment { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--color-border); border-radius: 14px; background: #ffffffd9; }
+.segment label { position: relative; display: grid; place-items: center; min-height: 44px; border-radius: 10px; font-size: 12px; font-weight: 600; color: var(--color-primary); cursor: pointer; transition: background .2s, color .2s; }
+.segment label:has(input:checked) { background: var(--color-primary); color: var(--color-on-primary); }
+.segment input, .option input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.segment label:has(input:focus-visible), .option:has(input:focus-visible) { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+.option { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 14px 15px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); cursor: pointer; transition: border-color .2s, background .2s; }
+.option::before { content: ""; flex: 0 0 16px; width: 16px; height: 16px; margin-top: 2px; border: 1px solid var(--color-border); border-radius: 50%; background: var(--color-surface); box-shadow: inset 0 0 0 3px var(--color-surface); }
+.option:has(input:checked) { border-color: var(--color-primary); background: var(--color-soft); }
+.option:has(input:checked)::before { border-color: var(--color-primary); background: var(--color-primary); box-shadow: inset 0 0 0 3px var(--color-soft); }
+.option span { display: grid; gap: 3px; }
+.option strong { font-size: 13px; font-weight: 650; }
+.option small { font-size: 11px; line-height: 1.6; color: var(--color-muted); }
+.note { margin-top: auto; font-size: 10px; line-height: 1.7; color: var(--color-muted); }
+@keyframes fade { from { opacity: 0; } }
+@keyframes slide { from { transform: translateX(24px); opacity: .6; } }
