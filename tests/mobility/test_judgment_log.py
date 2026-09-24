@@ -122,10 +122,11 @@ with tempfile.TemporaryDirectory() as d:
     lines = (Path(d) / jl.LOG_NAME).read_text(encoding="utf-8").splitlines()
     check("로그 3줄(차단 1줄은 안 씀)", len(lines) == 3 and lg.n_blocked == 1)
     bl = [json.loads(x) for x in (Path(d) / jl.BLOCKED_NAME).read_text(encoding="utf-8").splitlines()]
-    check("차단 파일은 키 경로만(값 없음)", bl[0]["hits"] == ["ext_calls_key:raw"] and "…" not in json.dumps(bl))
-    dd = json.loads(Path(dump).read_text(encoding="utf-8"))
-    check("덤프 = 어긋난 2건 · decisions_detail 있음", [x["case_id"] for x in dd["cases"]] == ["T-2", "T-4"]
-          and "legs" in dd["cases"][0]["decisions_detail"])
+    check("차단 파일은 키 경로만(값·키 이름 없음)", bl[0]["hits"] == ["ext_calls_key:$.ext_calls[0].<1개 키>"]
+          and "…" not in json.dumps(bl) and "raw" not in json.dumps(bl))
+    dd = [json.loads(x) for x in Path(dump).read_text(encoding="utf-8").splitlines()]
+    check("덤프(JSONL) = 어긋난 2건 · decisions_detail 있음", [x["case_id"] for x in dd] == ["T-2", "T-4"]
+          and "legs" in dd[0]["decisions_detail"])
     check("이유만 어긋나도 match False(T-4 no_data ≠ after_last)", json.loads(lines[2])["match"] is False)
     try:
         jl.JudgmentLogger(d, device="home-pc", stream=err).open()
@@ -176,6 +177,60 @@ with tempfile.TemporaryDirectory() as d:
 c = dict(CASE, expect_arrive="14:07", expect_slack_min=[5, 5], expect_margin_min=[0, 5], expect_last_depart="14:00")
 r = rec(c)
 check("miss_axes — 도착·@ 어긋남을 잡는다(match 는 2값이라 True)", r["match"] is True and r["miss_axes"] == ["arrive", "margin_min"])
+
+# 4-4 GPT 대조(2026-09-24) 잠금
+with tempfile.TemporaryDirectory() as d:
+    out = io.StringIO()
+    lg = jl.JudgmentLogger(d, device="laptop", stream=out).open()
+    lg.record(dict(CASE, id="G1", alt_source="37.4991,127.0310"), result(), latency_ms=1)
+    lg.record(dict(CASE, id="G1b", alt_dropped={"n": 1, "reasons": {"37.49,127.03": 1}}), result(), latency_ms=1)
+    blob = (Path(d) / jl.BLOCKED_NAME).read_text(encoding="utf-8") + out.getvalue()
+    check("(GPT #1) 어휘 밖 alt_source·사유 코드 원값이 차단 파일·콘솔에 안 남는다",
+          "37.49" not in blob and "alt_source:$.alt_source(own/odsay 밖)" in blob)
+
+    class Boom:
+        def write(self, *_):
+            raise OSError("disk full")
+
+        def close(self):
+            raise OSError("disk full")
+    lg._fh = Boom()
+    ok = True
+    try:
+        r0 = lg.record(dict(CASE, id="G2"), result(), latency_ms=1)
+        lg.close()
+    except Exception:
+        ok = False
+    check("(GPT #2) 로그 쓰기·닫기 OSError 가 판정 쪽으로 안 샌다 · 로거 실패로 센다", ok and r0 is None and lg.n_log_error == 2)
+
+with tempfile.TemporaryDirectory() as d:
+    lg = jl.JudgmentLogger(d, device="laptop", stream=io.StringIO()).open()
+    bad = result("infeasible", "after_last", evidence=[{"grade": "확정", "observed_at": "x", "sectionTime": 3}])
+    lg.record(dict(CASE, id="G3", expect="feasible"), bad, latency_ms=1)
+    lg.close()
+    log_txt = (Path(d) / jl.LOG_NAME).read_text(encoding="utf-8") if (Path(d) / jl.LOG_NAME).exists() else ""
+    bl = [json.loads(x) for x in (Path(d) / jl.BLOCKED_NAME).read_text(encoding="utf-8").splitlines()]
+    check("(GPT #3) 덤프에서 걸린 ODsay 키 → 로그 줄도 안 쓰고 차단 파일·건수에 반영",
+          "G3" not in log_txt and lg.n_blocked == 1 and any("sectionTime" in h for h in bl[0]["hits"])
+          and not list(Path(d).glob("regression_fail_dump_*")))
+
+    (Path(d) / "regression_fail_dump_20260101.json").write_text('{"cases": [', encoding="utf-8")
+    lg = jl.JudgmentLogger(d, device="laptop", stream=io.StringIO()).open()
+    lg.record(dict(CASE, id="G4", expect=None, expect_last_depart_none=True), result(), latency_ms=1)
+    lg.close()
+    row = json.loads((Path(d) / jl.LOG_NAME).read_text(encoding="utf-8").splitlines()[-1])
+    check("(GPT #4) expect 없이 값 축만 있어도 miss_axes · 덤프", row["expected"] is None
+          and row["miss_axes"] == ["last_depart_none"] and lg.n_dumped == 1)
+    check("(GPT #7) 덤프는 JSONL append — 옛 깨진 덤프 파일과 무관, 읽고 덮어쓰기 없음", lg.n_log_error == 0)
+    lg2 = jl.JudgmentLogger(d, device="laptop", stream=io.StringIO()).open()
+    lg2.record(dict(CASE, id="G5", expect="infeasible"), result(), latency_ms=1)
+    lg.open()
+    lg.record(dict(CASE, id="G6", expect="infeasible"), result(), latency_ms=1)
+    lg.close()
+    lg2.close()
+    ids = [json.loads(x)["case_id"] for p_ in Path(d).glob("regression_fail_dump_*.jsonl")
+           for x in p_.read_text(encoding="utf-8").splitlines()]
+    check("(GPT #7) 두 기록기가 겹쳐 닫혀도 덤프를 안 잃는다", {"G4", "G5", "G6"} <= set(ids))
 
 # 5 install — multi 재귀는 맨 바깥만
 class FakeV:
@@ -234,7 +289,10 @@ except ImportError:
 
 b = binary_report(["no_data", "x", "no_data", "x"], ["no_data", "no_data", "x", "x"], "no_data")
 check("binary_report TP1 FP1 FN1 TN1 · P=R=0.5", (b["tp"], b["fp"], b["fn"], b["tn"]) == (1, 1, 1, 1) and b["precision"] == 0.5)
-check("분모 0 은 None", classify_report(["a"], ["a"], ["a", "b"]).per_class["b"]["precision"] is None)
+cr = classify_report(["a"], ["a"], ["a", "b"])
+check("분모 0 은 precision None(표 —)", cr.per_class["b"]["precision"] is None)
+check("(GPT #6) 실제·예측 모두 없는 클래스 F1 = 0 (None 아님) · 표에도 0.000",
+      cr.per_class["b"]["f1"] == 0.0 and "| b | — | — | 0.000 |" in cr.to_markdown())
 cat = misclassified_catalog(list("abcde"), ["f", "f", "i", "f", "f"], ["i", "i", "f", "f", "i"], 2)
 check("카탈로그 셀 정렬·상한", list(cat) == [("f", "i"), ("i", "f")] and cat[("f", "i")]["count"] == 3
       and len(cat[("f", "i")]["examples"]) == 2)
@@ -253,6 +311,14 @@ check("no_data P=0.5 R=1.0 (TP1 FP1 FN0)", "| 1 | 1 | 0 |" in md and "0.500 | 1.
 check("카탈로그에 N3(성립 오판)·N2(이유 오판)", "N3" in md and "N2" in md and "after_last → no_data" in md)
 check("기대 성립 줄의 진실 이유는 (성립)", "(성립)" in md)
 check("옛 4값 기대는 채점에서 빼고 따로 적는다", "OLD1(unknown)" in md)
+mix = [dict(rec(dict(CASE, id="R1")), source="regression"),
+       dict(rec(dict(CASE, id="F1", expect="infeasible"), result("feasible")), source="field")]
+md2 = rep.report(mix)
+check("(GPT #5) 회귀·실측을 한 점수로 합치지 않는다 — field accuracy 0.000 · regression 1.000 따로",
+      "source=field · 실데이터 · n=1" in md2 and "source=regression · 실데이터 · n=1" in md2
+      and "accuracy 0.000 (n=1)" in md2 and "n=2" not in md2.split("## 3.")[0])
+nox = [dict(rec(dict(CASE, id="X1", expect=None, expect_arrive="14:09")), expected=None)]
+check("(GPT #4) 보고서 카탈로그가 expected 없는 값 축 실패를 싣는다", "X1" in rep.report(nox).split("## 6.")[0])
 rows2 = [dict(r, run_id="zzz-old", ts="2026-09-24T09:00:00+09:00") for r in rows[:2]] + \
         [dict(r, run_id="aaa-new", ts="2026-09-24T10:00:00+09:00") for r in rows[2:4]]
 check("latest 는 run_id 문자열이 아니라 시각으로 고른다", {r["run_id"] for r in rep.pick_runs(rows2, "latest")} == {"aaa-new"})

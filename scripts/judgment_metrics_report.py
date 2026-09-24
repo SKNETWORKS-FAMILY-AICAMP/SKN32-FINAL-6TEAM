@@ -123,26 +123,43 @@ def report(rows, *, catalog_n=5, dump_dir=None, blocked_n=0):
     # 기대값이 2값 어휘 밖(옛 4값 unknown·rejected_by_limit)이면 채점에서 빼고 따로 센다 — 조용히 떨구지 않는다
     off = [r for r in lab_all if r["expected"].get("verdict") not in VERDICTS]
     lab = [r for r in lab_all if r["expected"].get("verdict") in VERDICTS]
-    real = [r for r in lab if not r.get("synthetic")]
-    syn = [r for r in lab if r.get("synthetic")]
 
-    w("## 2. 2×2 — 밖 판정(feasible/infeasible)\n")
-    srcs = {r.get("source") for r in lab}
-    if "regression" in srcs:
+    # (GPT #5) 채점은 **source 별로만** 낸다 — 회귀(판정기 잠금값)와 실측(field)을 한 점수로 합치지 않는다
+    SRC_ORDER = {"field": 0, "regression": 1, "selfcheck": 2, "adhoc": 3}
+    sources = sorted({str(r.get("source")) for r in lab}, key=lambda x: (SRC_ORDER.get(x, 9), x))
+
+    def f3(v):
+        return "—" if v is None else f"{v:.3f}"
+
+    def reason_sets(part):
+        known = [r for r in part if r["expected"]["verdict"] == "feasible" or r["expected"].get("reason")]
+        yt = [(r["expected"]["reason"] if r["expected"]["verdict"] == "infeasible" else FEAS) for r in known]
+        yp = [((r.get("reason") or "(코드없음)") if r.get("verdict") == "infeasible"
+               else FEAS if r.get("verdict") == "feasible" else "(판정없음)") for r in known]
+        return known, yt, yp
+
+    w("## 2. 2×2 — 밖 판정(feasible/infeasible) · source 별\n")
+    if "regression" in sources:
         w("> **읽는 법** — 회귀(`source=regression`)의 `expect` 는 판정기를 **잠근 값**이다(39 가 v0.8 출력으로 재정의). "
-          "여기 1.000 은 「회귀가 안 깨졌다」와 같은 말이지 정확도가 아니다. 정확도의 근거는 25 실측을 대조한 "
-          "`source=field` 줄이고, 28 이 그 줄로 같은 표를 낸다.\n")
-    for name, part in (("실데이터", real), ("합성(synthetic)", syn)):
-        if not part:
-            w(f"_{name}: 기대값 있는 줄 없음_\n")
-            continue
-        rep = classify_report([r["expected"]["verdict"] for r in part], [pv(r) for r in part], VERDICTS)
-        w(rep.to_markdown(f"{name} · n={len(part)}"))
-    for src in sorted({r.get("alt_source") for r in lab}):
-        part = [r for r in lab if r.get("alt_source") == src]
-        if src != "own" or len({r.get("alt_source") for r in lab}) > 1:
+          "회귀 표의 1.000 은 「회귀가 안 깨졌다」와 같은 말이지 정확도가 아니다. 정확도는 `source=field`(25 실측) 표만 본다. "
+          "두 소스는 합치지 않는다.\n")
+    if not sources:
+        w("_기대값 있는 줄 없음_\n")
+    for src in sources:
+        s_lab = [r for r in lab if str(r.get("source")) == src]
+        for name, part in (("실데이터", [r for r in s_lab if not r.get("synthetic")]),
+                           ("합성(synthetic)", [r for r in s_lab if r.get("synthetic")])):
+            if not part:
+                continue
             rep = classify_report([r["expected"]["verdict"] for r in part], [pv(r) for r in part], VERDICTS)
-            w(rep.to_markdown(f"alt_source={src} · n={len(part)}"))
+            w(rep.to_markdown(f"source={src} · {name} · n={len(part)}"))
+        alts = {r.get("alt_source") for r in s_lab}
+        if len(alts) > 1 or alts - {"own"}:
+            for a_src in sorted(str(x) for x in alts):
+                part = [r for r in s_lab if str(r.get("alt_source")) == a_src and not r.get("synthetic")]
+                if part:
+                    rep = classify_report([r["expected"]["verdict"] for r in part], [pv(r) for r in part], VERDICTS)
+                    w(rep.to_markdown(f"source={src} · alt_source={a_src} · 실데이터 n={len(part)}"))
     w(f"_alt_source 분포: {dict(collections.Counter(r.get('alt_source') for r in lab))}_\n")
     if off:
         w(f"_기대값이 2값 어휘 밖이라 채점에서 뺀 줄 {len(off)}건: "
@@ -151,60 +168,68 @@ def report(rows, *, catalog_n=5, dump_dir=None, blocked_n=0):
     if nopred:
         w(f"_밖 판정이 없는 줄(표에서 「라벨 밖」으로 빠짐) {len(nopred)}건: {', '.join(nopred[:10])}_\n")
 
-    w("## 3. reason 분해\n")
+    w("## 3. reason 분해 · source 별\n")
     pred_codes = collections.Counter(r.get("reason") for r in rows if r.get("verdict") == "infeasible")
-    w("예측 불가의 이유 코드 (전체 줄):\n")
+    w("예측 불가의 이유 코드 (고른 줄 전체 · 채점 아님):\n")
     w("| 이유 | 건수 |")
     w("|---|---:|")
     for k, n in pred_codes.most_common():
         w(f"| {k} | {n} |")
     w("")
-    known = [r for r in real if r["expected"]["verdict"] == "feasible" or r["expected"].get("reason")]
-    yt = [(r["expected"]["reason"] if r["expected"]["verdict"] == "infeasible" else FEAS) for r in known]
-    yp = [((r.get("reason") or "(코드없음)") if r.get("verdict") == "infeasible"
-           else FEAS if r.get("verdict") == "feasible" else "(판정없음)") for r in known]
-    codes = [FEAS] + sorted({c for c in yt + yp if c != FEAS})
-    if known:
-        rep = classify_report(yt, yp, codes)
-        w(rep.to_markdown(f"이유 confusion (실데이터 · 진실 이유를 아는 줄 n={len(known)} — 기대 성립 + 기대 불가 중 expect_reason 있는 것)"))
-    n_unk = sum(1 for r in real if r["expected"]["verdict"] == "infeasible" and not r["expected"].get("reason"))
-    w(f"_기대 불가인데 expect_reason 이 없어 이유 채점에서 뺀 줄: {n_unk}_\n")
+    per_src = {}
+    for src in sources:
+        real = [r for r in lab if str(r.get("source")) == src and not r.get("synthetic")]
+        known, yt, yp = reason_sets(real)
+        per_src[src] = (known, yt, yp)
+        if known:
+            codes = [FEAS] + sorted({c for c in yt + yp if c != FEAS})
+            w(classify_report(yt, yp, codes).to_markdown(
+                f"source={src} · 이유 confusion (실데이터 · 진실 이유를 아는 줄 n={len(known)})"))
+        n_unk = sum(1 for r in real if r["expected"]["verdict"] == "infeasible" and not r["expected"].get("reason"))
+        if n_unk:
+            w(f"_source={src}: 기대 불가인데 expect_reason 이 없어 이유 채점에서 뺀 줄 {n_unk}_\n")
 
-    w("## 4. no_data precision/recall\n")
-    if known:
-        b = binary_report(yt, yp, "no_data")
-        def f(v):
-            return "—" if v is None else f"{v:.3f}"
-        w("| TP | FP | FN | TN | precision | recall | F1 | n |")
-        w("|---:|---:|---:|---:|---:|---:|---:|---:|")
-        w(f"| {b['tp']} | {b['fp']} | {b['fn']} | {b['tn']} | {f(b['precision'])} | {f(b['recall'])} | {f(b['f1'])} | {b['n']} |")
-        w("")
-        w("- precision = 「모른다」고 낸 것 중 진짜 근거가 없던 비율(등급 정직도와 같은 성격) · recall = 근거 없는 것을 「모른다」로 잡은 비율")
-        w("- 합성 줄은 뺐다(mini 시간표는 일부러 비운 칸이 있다)\n")
+    w("## 4. no_data precision/recall · source 별\n")
+    w("| source | TP | FP | FN | TN | precision | recall | F1 | n |")
+    w("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for src, (known, yt, yp) in per_src.items():
+        if known:
+            b = binary_report(yt, yp, "no_data")
+            w(f"| {src} | {b['tp']} | {b['fp']} | {b['fn']} | {b['tn']} | {f3(b['precision'])} | {f3(b['recall'])} | {f3(b['f1'])} | {b['n']} |")
+    w("")
+    w("- precision = 「모른다」고 낸 것 중 진짜 근거가 없던 비율(등급 정직도와 같은 성격) · recall = 근거 없는 것을 「모른다」로 잡은 비율")
+    w("- 합성 줄은 뺐다(mini 시간표는 일부러 비운 칸이 있다)\n")
 
     w("## 5. 오분류 카탈로그\n")
-    cat2 = misclassified_catalog(lab, [r["expected"]["verdict"] for r in lab], [pv(r) for r in lab], catalog_n)
-    catr = misclassified_catalog(known, yt, yp, catalog_n) if known else {}
-    if not cat2 and not catr and not any(r.get("miss_axes") for r in lab_all):
-        w("_어긋난 줄 없음 — 2값·이유·값 잠금 축 모두 기대와 같다_\n")
-    for title, cat in (("2값", cat2), ("이유 코드", catr)):
-        for (t, p), cell in cat.items():
-            w(f"**{title} {t} → {p}** · {cell['count']}건\n")
-            w("| case_id | 묶음 | 입력 | 예측 이유 | 내부 | run |")
-            w("|---|---|---|---|---|---|")
-            for r in cell["examples"]:
-                w(f"| {r['case_id']} | {r.get('bundle')} | {brief(r)} | {r.get('reason')} | {r.get('verdict_internal')} | {r.get('run_id')} |")
-            w("")
-    ax = [r for r in lab_all if r.get("miss_axes")]
+    any_cat = False
+    for src in sources:
+        s_lab = [r for r in lab if str(r.get("source")) == src]
+        known, yt, yp = per_src[src]
+        cat2 = misclassified_catalog(s_lab, [r["expected"]["verdict"] for r in s_lab], [pv(r) for r in s_lab], catalog_n)
+        catr = misclassified_catalog(known, yt, yp, catalog_n) if known else {}
+        for title, cat in (("2값", cat2), ("이유 코드", catr)):
+            for (t, p), cell in cat.items():
+                any_cat = True
+                w(f"**source={src} · {title} {t} → {p}** · {cell['count']}건\n")
+                w("| case_id | 묶음 | 입력 | 예측 이유 | 내부 | run |")
+                w("|---|---|---|---|---|---|")
+                for r in cell["examples"]:
+                    w(f"| {r['case_id']} | {r.get('bundle')} | {brief(r)} | {r.get('reason')} | {r.get('verdict_internal')} | {r.get('run_id')} |")
+                w("")
+    # (GPT #4) 값 잠금 축은 판정 기대값이 없는 줄도 본다
+    ax = [r for r in rows if r.get("miss_axes")]
     if ax:
-        w(f"**값 잠금 축 어긋남(도착·여유·@·늦어도 출발)** · {len(ax)}건 — 2값·이유는 맞아도 덤프된다\n")
-        w("| case_id | 묶음 | 축 | 입력 |")
-        w("|---|---|---|---|")
+        any_cat = True
+        w(f"**값 잠금 축 어긋남(도착·여유·@·늦어도 출발)** · {len(ax)}건 — 2값·이유가 맞거나 판정 기대값이 없어도 덤프된다\n")
+        w("| source | case_id | 묶음 | 축 | 입력 |")
+        w("|---|---|---|---|---|")
         for r in ax[:catalog_n * 4]:
-            w(f"| {r['case_id']} | {r.get('bundle')} | {', '.join(r['miss_axes'])} | {brief(r)} |")
+            w(f"| {r.get('source')} | {r['case_id']} | {r.get('bundle')} | {', '.join(r['miss_axes'])} | {brief(r)} |")
         w("")
-    if cat2 or catr or ax:
-        w(f"상세(decisions_detail)는 `{dump_dir or 'logs'}/regression_fail_dump_YYYYMMDD.json` — case_id·run_id 로 찾는다.\n")
+    if any_cat:
+        w(f"상세(decisions_detail)는 `{dump_dir or 'logs'}/regression_fail_dump_YYYYMMDD.jsonl` — case_id·run_id 로 찾는다.\n")
+    else:
+        w("_어긋난 줄 없음 — 2값·이유·값 잠금 축 모두 기대와 같다_\n")
 
     unl = [r for r in rows if not r.get("expected")]
     w("## 6. 정답 없는 줄 (자기점검 등 · 채점 안 함)\n")

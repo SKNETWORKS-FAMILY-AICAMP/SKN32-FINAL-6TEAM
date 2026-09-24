@@ -21,8 +21,7 @@ def _div(a, b):
 
 
 def _f1(p, r):
-    if p is None and r is None:
-        return None
+    # 분모 0 칸은 F1 = 0(sklearn zero_division=0 · 계약). 실제·예측 모두 없는 클래스도 0(GPT #6)
     p, r = p or 0.0, r or 0.0
     return 2 * p * r / (p + r) if (p + r) else 0.0
 

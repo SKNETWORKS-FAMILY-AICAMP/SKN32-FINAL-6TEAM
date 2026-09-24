@@ -3,7 +3,7 @@
 
 두 층 — 설계 v2 §1
   · 상시 로그  `judged_log_v1.jsonl` — 판정 1건 1줄(얇게). 회귀·자기점검·실측 대조 실행마다 append
-  · 실패 덤프  `regression_fail_dump_YYYYMMDD.json` — 기대와 어긋난 케이스만(두껍게). 로그만 보고 어느 분기를 고칠지
+  · 실패 덤프  `regression_fail_dump_YYYYMMDD.jsonl` — 기대와 어긋난 케이스만(두껍게 · 한 케이스 한 줄 append). 로그만 보고 어느 분기를 고칠지
 
 1줄 필드 (27 첫 메시지 · 39 인계 §5 「40」)
   case_id · ts · input · verdict(밖 2값) · reason(밖 이유 코드) · eta(예정 소요 · 중앙값) · slack_min
@@ -17,6 +17,9 @@
 저장 금지 — 설계 v2 §1·§2-1 · 규칙 23
   · ODsay 가 준 값(응답 원문 · subPath · sectionTime · mapObj/loadLane · ODsay 소요·요금) → **차단 목록 검사**.
     걸리면 그 줄을 쓰지 않고 경고 + `judged_log_blocked_v1.jsonl` 에 **키 경로만** 남긴다(값은 안 남김)
+  · 차단 범위: 로그 줄과 덤프를 **쓰기 전에 같이** 검사한다 — 어느 쪽이 걸려도 둘 다 안 쓴다. 차단 파일·콘솔에는 값 없이 경로·사유만
+  · ★ 로거는 키 이름·표식·좌표로만 본다. ODsay 숫자가 **이름을 바꿔** 우리 칸(eta 등)에 들어오면 구별하지 못한다(GPT #8) —
+    그건 44 어댑터 계약이다: 로거에 넘기는 결과는 D7 재조립 후 **우리 판정기가 다시 낸 CaseResult** 뿐이다
   · 좌표 원값 → 입력 정리 단계에서 버린다(역명·노선명·시각·동행조건만). 문자열 안의 좌표쌍도 가린다
   · `ext_calls` 는 호출 메타데이터(api·n·ok·fail·latency_ms)만 · `alt_dropped` 는 건수·사유 코드만
 
@@ -41,7 +44,7 @@ from pathlib import Path
 
 LOG_NAME = "judged_log_v1.jsonl"
 BLOCKED_NAME = "judged_log_blocked_v1.jsonl"
-DUMP_FMT = "regression_fail_dump_{ymd}.json"
+DUMP_FMT = "regression_fail_dump_{ymd}.jsonl"   # (GPT #7) 한 케이스 한 줄 append — 읽고 덮어쓰기 없음
 DEVICE_FILE = "DEVICE.txt"
 LOG_SCHEMA = "judged_log/1 (40 · 2값)"
 KST = timezone(timedelta(hours=9))
@@ -71,7 +74,9 @@ _CODE_RE = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
 
 
 class BlockedRecord(ValueError):
+    """hits 는 **키 경로·사유 코드만**. 만드는 쪽이 값을 넣어도 여기서 좌표쌍을 가린다(GPT #1)."""
     def __init__(self, hits):
+        hits = [scrub_text(str(h)) for h in hits]
         super().__init__("차단 목록에 걸렸다: " + ", ".join(hits[:8]))
         self.hits = hits
 
@@ -157,10 +162,10 @@ def sanitize_input(case, result=None):
 
 def _ext_calls(x):
     out = []
-    for c in x or []:
+    for i, c in enumerate(x or []):
         extra = set(c) - set(EXT_CALL_KEYS)
         if extra:
-            raise BlockedRecord([f"ext_calls_key:{k}" for k in sorted(extra)])
+            raise BlockedRecord([f"ext_calls_key:$.ext_calls[{i}].<{len(extra)}개 키>"])
         o = {k: c[k] for k in EXT_CALL_KEYS if k in c}
         bad = [k for k in ("n", "ok", "fail") if k in o and not (isinstance(o[k], int) and not isinstance(o[k], bool))]
         if "latency_ms" in o and not (isinstance(o["latency_ms"], (int, float)) and not isinstance(o["latency_ms"], bool)):
@@ -177,9 +182,13 @@ def _alt_dropped(x):
     if not x:
         return {"n": 0, "reasons": {}}
     reasons = x.get("reasons") or {}
-    bad = [k for k in reasons if not _CODE_RE.match(str(k))] + [k for k in x if k not in ("n", "reasons")]
-    if bad or not all(isinstance(v, int) for v in reasons.values()):
-        raise BlockedRecord([f"alt_dropped:{k}" for k in bad] or ["alt_dropped:값이 정수가 아니다"])
+    bad_code = [k for k in reasons if not _CODE_RE.match(str(k))]
+    bad_key = [k for k in x if k not in ("n", "reasons")]
+    if bad_code or bad_key or not all(isinstance(v, int) for v in reasons.values()):
+        # 사유 코드·키 이름도 입력값이다 — 이름은 안 남기고 개수만(GPT #1)
+        raise BlockedRecord((["alt_dropped:$.alt_dropped.reasons.<코드 형식 밖 %d개>" % len(bad_code)] if bad_code else [])
+                            + (["alt_dropped:$.alt_dropped.<허용 밖 키 %d개>" % len(bad_key)] if bad_key else [])
+                            or ["alt_dropped:$.alt_dropped.reasons.<정수 아님>"])
     n = x.get("n", sum(reasons.values()))
     if not isinstance(n, int) or isinstance(n, bool):
         raise BlockedRecord(["alt_dropped:n 이 정수가 아니다"])
@@ -271,13 +280,13 @@ def build_record(case, result, *, latency_ms, run_id, source, bundle=None, synth
         "latency_ms": round(latency_ms, 1) if latency_ms is not None else None,
         "expected": exp,
         "match": is_match(exp, out),
-        "miss_axes": miss_axes(case, result) if exp is not None else [],
+        "miss_axes": miss_axes(case, result),      # (GPT #4) 판정 기대값 유무와 무관하게
         "alt_source": case.get("alt_source", "own"),
         "ext_calls": _ext_calls(case.get("ext_calls")),
         "alt_dropped": _alt_dropped(case.get("alt_dropped")),
     }
     if rec["alt_source"] not in ("own", "odsay"):
-        raise BlockedRecord([f"alt_source:{rec['alt_source']}"])
+        raise BlockedRecord(["alt_source:$.alt_source(own/odsay 밖)"])      # 값은 안 남긴다(GPT #1)
     hits = scan_blocked(rec)
     if hits:
         raise BlockedRecord(hits)
@@ -343,7 +352,8 @@ class JudgmentLogger:
         self.allow_other_device = allow_other_device
         self.stream = stream or sys.stdout      # PowerShell 5 는 stderr 를 오류 레코드로 감싼다 — stdout 으로
         self.n_written = self.n_blocked = self.n_mismatch = self.n_log_error = self.n_judge_error = 0
-        self.dumps = []
+        self.n_dumped = 0
+        self.dump_path = None
         self._fh = None
 
     # 한 기기 규칙
@@ -385,46 +395,63 @@ class JudgmentLogger:
             print(f"  ! {lp.name} 끝 줄이 잘려 있었다 — 줄을 바꿔 이어 쓴다(보고서는 깨진 줄을 세고 건너뛴다)", file=self.stream)
         return self
 
+    def _block(self, case_id, hits, what="판정 로그"):
+        self.n_blocked += 1
+        print(f"  ! {what} 차단 [{case_id}] — 키 경로 {len(hits)}건(값 없음): {', '.join(hits[:4])}", file=self.stream)
+        try:
+            with open(self.dir / BLOCKED_NAME, "a", encoding="utf-8", newline="\n") as bf:
+                bf.write(json.dumps({"ts": datetime.now(KST).isoformat(timespec="seconds"), "run_id": self.run_id,
+                                     "case_id": case_id, "what": what, "hits": hits}, ensure_ascii=False) + "\n")
+        except Exception as e:                       # (GPT #2) 차단 기록 실패도 판정 쪽으로 안 샌다
+            self.n_log_error += 1
+            print(f"  ! 차단 기록 실패 — {type(e).__name__}", file=self.stream)
+
     def record(self, case, result, *, latency_ms, rules_version=None, timetable_build=None):
+        """판정 1건 기록. **어떤 예외도 밖으로 안 낸다**(GPT #2) — 로거 실패가 판정·자기점검 결과를 바꾸면 안 된다.
+
+        차단 범위(GPT #3): 줄과 덤프를 **쓰기 전에 같이** 검사한다. 어느 쪽이든 걸리면 둘 다 안 쓰고 차단 파일에 경로만.
+        """
+        cid = scrub_text(str(case.get("id")))
         try:
             rec = build_record(case, result, latency_ms=latency_ms, run_id=self.run_id, source=self.source,
                                bundle=self.bundle, synthetic=self.synthetic, device=self.device,
                                rules_version=rules_version, timetable_build=timetable_build)
+            bad = rec["match"] is False or bool(rec["miss_axes"])
+            dump = build_dump(rec, case, result) if (bad and self.dump_on) else None
         except BlockedRecord as e:
-            self.n_blocked += 1
-            print(f"  ! 판정 로그 차단 [{case.get('id')}] — {e}", file=self.stream)
-            with open(self.dir / BLOCKED_NAME, "a", encoding="utf-8", newline="\n") as bf:
-                bf.write(json.dumps({"ts": datetime.now(KST).isoformat(timespec="seconds"), "run_id": self.run_id,
-                                     "case_id": case.get("id"), "hits": e.hits}, ensure_ascii=False) + "\n")
+            self._block(cid, e.hits)
             return None
-        except Exception as e:                       # 로거 실패가 판정 결과를 바꾸면 안 된다(자기점검은 예외를 판정 오류로 센다)
+        except Exception as e:
             self.n_log_error += 1
-            print(f"  ! 판정 로그 실패 [{case.get('id')}] — {type(e).__name__}: {e}", file=self.stream)
+            print(f"  ! 판정 로그 실패 [{cid}] — {type(e).__name__}", file=self.stream)
             return None
-        self._fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        self.n_written += 1
-        if rec["match"] is False or rec["miss_axes"]:
-            self.n_mismatch += 1
-            if self.dump_on:
-                try:
-                    self.dumps.append(build_dump(rec, case, result))
-                except Exception as e:
-                    print(f"  ! 실패 덤프 {'차단' if isinstance(e, BlockedRecord) else '실패'} [{case.get('id')}] — {e}",
-                          file=self.stream)
+        try:
+            self._fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            self.n_written += 1
+            if bad:
+                self.n_mismatch += 1
+            if dump is not None:
+                self.dump_path = self.dir / DUMP_FMT.format(ymd=datetime.now(KST).strftime("%Y%m%d"))
+                with open(self.dump_path, "a", encoding="utf-8", newline="\n") as df:
+                    df.write(json.dumps(dump, ensure_ascii=False, default=str) + "\n")    # 한 번의 write
+                self.n_dumped += 1
+        except Exception as e:
+            self.n_log_error += 1
+            print(f"  ! 판정 로그 쓰기 실패 [{cid}] — {type(e).__name__}: {e}", file=self.stream)
+            return None
         return rec
 
     def close(self):
-        if self._fh:
-            self._fh.close()
-            self._fh = None
-        path = None
-        if self.dumps:
-            path = self.dir / DUMP_FMT.format(ymd=datetime.now(KST).strftime("%Y%m%d"))
-            doc = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"schema": LOG_SCHEMA, "cases": []}
-            doc["cases"] += self.dumps
-            path.write_text(json.dumps(doc, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+        try:
+            if self._fh:
+                self._fh.close()
+        except Exception as e:
+            self.n_log_error += 1
+            print(f"  ! 로그 닫기 실패 — {type(e).__name__}", file=self.stream)
+        self._fh = None
+        path = self.dump_path if self.n_dumped else None
         print(f"판정 로그 {self.n_written}줄 → {self.dir / LOG_NAME} · run {self.run_id} · 기기 {self.device}"
-              f" · 기대 어긋남 {self.n_mismatch}" + (f" → 덤프 {path}" if path else "")
+              f" · 기대 어긋남 {self.n_mismatch}" + (f" → 덤프 {self.n_dumped}건 {path}" if path else "")
               + (f" · **차단 {self.n_blocked}**" if self.n_blocked else "")
               + (f" · 로거 실패 {self.n_log_error}" if self.n_log_error else "")
               + (f" · 판정 예외(기록 안 됨) {self.n_judge_error}" if self.n_judge_error else ""), file=self.stream)
