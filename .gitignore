@@ -195,3 +195,5 @@ selfcheck_report.md
 _39/
 _50/
 50_*.ps1
+# 40 (2026-09-24) 방 작업폴더는 git 밖 · 판정 로그는 DATA_DIR logs\ (한 기기)
+_40/
