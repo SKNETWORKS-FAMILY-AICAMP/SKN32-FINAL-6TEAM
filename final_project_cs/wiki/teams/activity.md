@@ -10,7 +10,7 @@ domain: travel
 
 # Activity Team
 
-`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다.
+`[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다. `[정정 2026-09-24]` **이 경로는 낡았다.** commit `1bc9d51`(`refactor(activity): travel_ops/activity/ 패키지로 분리`)로 `app/modules/travel_ops/activity.py`는 `app/modules/travel_ops/activity/__init__.py`(패키지, 621줄)로 쪼개졌다. 이 문서 안의 `activity.py:NN` 인용을 전부 이 경로·라인 번호로 갱신했다.
 
 근거는 계획서 v11 §5. 여행 도메인 판올림(2026-09-08)으로 생긴 Team이다.
 
@@ -93,7 +93,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 `[결정 2026-09-10]` v11 §5-D — Activity가 판정하고 새 업무 규칙을 만들지 않는다. 판정 입력은 「예약」이 아니라 「일정 항목」이다.
 
-`[실측 2026-09-10]` 코드는 아직 이 결정을 따라가지 못했다 — 예약이 없으면 「모름」으로 끝난다(`activity.py:66,76,78`).
+`[실측 2026-09-10]` 코드는 아직 이 결정을 따라가지 못했다 — 예약이 없으면 「모름」으로 끝난다(`activity/__init__.py:109~116`).
 
 ## 셋을 갖는다
 
@@ -178,7 +178,85 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 **후보 생성은 LLM이 하고, 생성한 후보는 ①을 다시 통과해야 통지된다**(v11 §5). 판정을 건너뛴 대안은 나가지 않는다.
 
-`[실측 2026-09-10 작업 트리]` **LLM 후보 생성은 아직 없다.** `_propose_change()`(`activity.py:232`)는 대안을 만들지 않는다 — 받은 예약에 `activity.change` 제안 하나(`booking_id`·`reason`)를 만들어 승인 대기에 올린다. 그래서 무예약 활동은 이 경로로도 제안을 못 만든다(아래 대조 표 절과 같은 문제).
+### 대안 생성 규칙 — `[사용자 제공 2026-09-24]`
+
+★LLM이 후보를 **얼마나 넓게 뿌릴지가 아니라 어떻게 좁힐지**의 규칙이다. 아직 코드에 없다 — 위 "후보 생성은 LLM, ①이 다시 통과시킨다"는 v11 §5 원칙 아래, **필터링 단계**의 구체적 기준만 여기 못박는다. 세 필드(`contenttypeid`·`lclsSystm1/2/3`·`sigungucode`) 모두 TourAPI 원본 필드이고, `scripts/activities_candidates_seoul_enriched.csv`(위 [manifest·데이터 저장 절](#현재-장소-변경-감지-가능한-목록-확장-예정) 참고)에 이미 컬럼으로 있다.
+
+| 단계 | 기준 | 무엇을 거르나 |
+|---|---|---|
+| ① 대안 가능 여부 | `business_hours`(운영시간) · `closed_days`(휴무일) | 그 시간대에 실제로 열려 있는 장소만 남긴다 |
+| ② 대안 유사도 | `contenttypeid` · `lclsSystm1` · `lclsSystm2` · `lclsSystm3` · `sigungucode` | 기존 일정과 **같은 갈래**(관광타입·신분류체계 대/중/소분류·시군구)의 장소만 남긴다 |
+| ③ 선호도 반영(설문 추가 예정) | 이동/활동 중요도에 따라 ②의 필드 우선순위를 바꾼다 | 아래 우선순위표 |
+| ④ 순위 산출 | ①②③ 통과 후보가 여럿이면 유사도 점수로 1·2·3위를 뽑는다 | [대안 순위 산출](#대안-순위-산출--제안-2026-09-24-미확보) 절 |
+
+③의 우선순위(왼쪽이 높다):
+
+| 중요도 타입 | 우선순위 |
+|---|---|
+| 이동 중요 | `sigungucode` > `lclsSystm1` > `lclsSystm2` > `lclsSystm3` > `contenttypeid` |
+| 활동 중요 | `lclsSystm1` > `sigungucode` > `lclsSystm2` > `lclsSystm3` > `contenttypeid` |
+
+★`[정정 2026-09-24 추가]` `contenttypeid`가 ②단계(대안 유사도)의 5개 필드 중 하나인데도 원래 우선순위표엔 빠져 있었다. **최하위(5번째)로 추가한다** — 신분류체계 연계 정의서 대조 결과, `contenttypeid`는 `lclsSystm1`보다 거친(coarse) 구분류다. 예: 역사관광(HS)·체험관광(EX)이라는 서로 다른 대분류가 `contenttypeid`에서는 똑같이 "12 관광지"로 묶인다(AC05 캠핑처럼 같은 대분류 안에서도 소분류에 따라 값이 갈리는 예외도 있어 일관성도 낮다). `lclsSystm1~3`이 이미 더 세밀하게 갈라주므로 `contenttypeid`는 추가 판별력이 거의 없고, 아래 "폴백" 규칙에도 **가장 먼저 빠지는 게 합리적이다.**
+
+`[팀원 제공 2026-09-24, 다이어그램]` 우선순위 결정 흐름을 도식화하면 아래와 같다. 이동 1순위·액티비티 1순위 각각 **고정값(항상 유지되는 필드)**을 먼저 못박고, 그다음 어떤 필드부터 제외할지를 순서로 정한다.
+
+```mermaid
+flowchart LR
+    A[대체 장소 검토] --> B["공통 고려 컬럼<br/>· 대분류 · 중분류 · 소분류<br/>· 타입 · 시군구코드<br/>· 운영시간★ · 휴점일★"]
+    B --> C[이동 1순위 선택자]
+    B --> D[액티비티 1순위 선택자]
+    C --> E["시군구 컬럼 고정값★"]
+    D --> F["대분류 컬럼 고정값★"]
+    E --> E1[1순위: 관광타입 컬럼 제외]
+    E --> E2[2순위: 소분류 컬럼 제외]
+    E --> E3[3순위: 중분류 컬럼 제외]
+    E --> E4[4순위: 대분류 컬럼 제외]
+    F --> F1[1순위: 관광타입 컬럼 제외]
+    F --> F2[2순위: 소분류 컬럼 제외]
+    F --> F3[3순위: 중분류 컬럼 제외]
+    F --> F4[4순위: 시군구코드 컬럼 제외]
+```
+
+**폴백**: ②(또는 ③ 반영 후)의 유형 필터링 결과가 **0건**이면, 우선순위가 **가장 낮은 필드부터 하나씩 제거**하며 다시 필터링한다. `[정정 2026-09-24]` 위 우선순위표 기준으로는 `contenttypeid`가 최하위이므로 **가장 먼저** 빠진다 — 예: 활동 중요 타입에서 0건이면 `contenttypeid`를 먼저 빼고 재시도, 그래도 0건이면 `lclsSystm3`을, 그래도 0건이면 `lclsSystm2`까지 뺀다.
+
+### 대안 순위 산출 — `[제안 2026-09-24, 미확보]`
+
+★`[정정 2026-09-24]` **이 절은 "## 셋을 갖는다"의 넷째 항목이 아니다.** 위 [대안 생성 규칙](#대안-생성-규칙--사용자-제공-2026-09-24) 표의 ④단계를 풀어 쓴 것뿐이고, "대안 생성 규칙" 전체가 [③ 재계획 후보](#-재계획-후보)의 하위 절차다. v11 §5가 모든 여행 Team에 못박은 "셋"(검증 규칙·감시 소스·재계획 후보)은 그대로다.
+
+①②③을 통과한 후보가 **여럿**이면, 유사도 점수로 1·2·3위를 뽑는다. ①②③이 범주형 일치(같은 분류인가 아닌가)만 판정하는 것과 달리, 이 순위 산출은 **연속값 비교**로 순서를 매긴다.
+
+| 신호 | 출처 | 확보 상태 |
+|---|---|---|
+| 좌표 거리 | `tour.mapx`/`mapy` | **바로 가능** |
+| 평점·리뷰 수 | Google Places API(`rating`, `userRatingCount`) | 미확보 — 별도 호출 필요 |
+| 영업시간 여유도 | `restdate_text`/`usetime_text`(원문) | `[사용자 확정 2026-09-24]` **파싱 필요함이 확정** — 구현은 아직 없음 |
+| 가격대 유사성 | Google Places API(`priceLevel`) | 미확보 |
+
+**1차 구현(확정하기 쉬운 범위):** 좌표 거리만으로 오름차순 정렬해 1·2·3위 출력.
+
+```
+1. ①②③ 통과 후보 목록
+2. 각 후보 ↔ (원래 장소 또는 그날 다음 일정) 직선거리 계산
+3. 거리 오름차순 정렬 → 1·2·3위
+```
+
+**확장안:** 여러 신호를 가중합으로 묶은 점수.
+
+```
+유사도 점수 = w1 × (1/거리) + w2 × 평점 + w3 × 영업시간_여유도 + w4 × 가격대_유사도
+```
+
+★`[미확보 2026-09-24]` `w2`(평점)·`w4`(가격대)는 Google Places API 추가 호출이 선행되어야 계산 가능 — 6절 요금제 문서의 비용 이슈와 연결됨. 가중치를 189행의 "이동 중요/활동 중요" 선호도와 연결할지, 동점 처리를 어떤 필드로 할지도 미정.
+
+★`[사용자 제공 2026-09-24]` **선호도가 `null`이면 ③(우선순위 판정)을 아예 고려하지 않는다.** 설문에 응답하지 않은 경우 이동/활동 중요도를 임의로 가정하지 않는다 — ②까지만 적용하고 필드 순서를 매기지 않은 채로(동순위) 넘긴다. 폴백(0건일 때 후순위 필드 제거)도 이 경우 "가장 낮은 우선순위"가 없으므로 적용하지 않는다.
+
+★`[미확보 2026-09-24]` **①의 두 필드는 아직 판정 가능한 자리에 없다.** `place_catalog`는 지금 `business_hours`·`closed_days`를 구조화 컬럼이 아니라 `raw_json`에만 담는다(`scripts/load_place_catalog_csv.py:62~64` — CSV의 보강 컬럼은 `raw`로 들어갈 뿐 별도 컬럼이 아니다). 판정 경로가 실제로 쓰는 것은 [휴무 요일 대조](#휴무-요일-대조--유일한-예외)의 `restdate_text`(자연어 원문, `places` 테이블)다. `business_hours`/`closed_days`가 이 `restdate_text`/`usetime_text`와 같은 원본을 가리키는 이름인지, 아니면 카탈로그에 별도로 승격해야 하는 필드인지는 안 정해졌다.
+
+★`[미확보 2026-09-24]` `sigungucode`도 지금 `place_catalog`엔 안 실린다(`to_row()`가 `area_code`를 서울 고정값 `"1"`로만 넣는다 — 시군구 단위는 없다). 유사도·우선순위 판정에 쓰려면 `place_catalog`에 컬럼을 추가하거나 `raw_json`에서 읽어야 한다.
+
+★**②·③은 후보 생성 이후의 필터이지 ①(판정)을 대신하지 않는다.** 유사도로 골라낸 후보도 통지 전에 [①검증 규칙](#-검증-규칙--코드가-판정한다)을 다시 통과해야 한다 — 위 원칙 그대로다.
+
+`[실측 2026-09-10 작업 트리]` **LLM 후보 생성은 아직 없다.** `_propose_change()`(`activity/__init__.py:497`)는 대안을 만들지 않는다 — 받은 예약에 `activity.change` 제안 하나(`booking_id`·`reason`)를 만들어 승인 대기에 올린다. 그래서 무예약 활동은 이 경로로도 제안을 못 만든다(아래 대조 표 절과 같은 문제).
 
 ★`[실측 2026-09-20]` `Activity_모듈_스펙.md` §3-3 — 더 근본적인 문제가 하나 더 있다. **분류 경로가 `activity.propose_change`에 아예 도달하지 못한다.** 분류된 intent(`itinerary_submit` 등)가 이 Team의 capability 네임스페이스와 매칭되지 않아서, 지금 분류 경로는 항상 기본 capability(`activity.check_feasible`)만 고른다(`registry.py:115~119`). LLM 후보 생성이 없는 것과는 별개로, **애초에 변경 제안 경로 자체가 선택되지 않는다.** `[정정 2026-09-20]` **`itinerary_submit` 쪽은 아래 절에서 닫혔다** — `propose_change`(기존 예약 변경)와는 다른 별도 capability(`submit_itinerary`, 신규 일정)로 받기로 했다. `propose_change` 자체의 라우팅 미도달은 아직 안 고쳤다.
 
@@ -198,7 +276,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 - **manifest**: `capabilities`에 `activity.submit_itinerary` 추가. `allowed_tools`에 `read.place_search` 추가
 - **라우팅**: `ActivityTeam.select_capability(intent, input_text)` 신설(`registry.py:105~114`의 기존 훅 — `mobility.py`가 선례) — `intent == "itinerary_submit"`이면 이 capability를 고른다. **코어(`registry.py`)는 한 줄도 안 고쳤다**
-- **`execute()` 분기**: 이 capability만 `read.booking`을 부르기 **전에** 갈린다(`activity.py` `execute()` 상단) — 나머지 셋은 예약이 있다고 전제하는 공통 경로를 그대로 탄다
+- **`execute()` 분기**: 이 capability만 `read.booking`을 부르기 **전에** 갈린다(`activity/__init__.py` `execute()` 상단, 84~97행) — 나머지 셋은 예약이 있다고 전제하는 공통 경로를 그대로 탄다
 - **`read.place_search`(신규 도구, `read_tools.py`)**: `place()`(이미 아는 `place_id`로 우리 DB 조회)와 다르다 — **아직 모르는** 장소를 이름으로 TourAPI에서 찾는다. `tour_api.py.find()`를 그대로 감싼다. 정확일치 1건이 아니면(동명이인 등) 확정하지 않고 `None`(013이 겪은 문제 재발 방지)
 - **`_submit_itinerary()`**: `current_state`에서 `requested_place_name`·`requested_activity_time`을 읽는다(고객 문장을 이 Team이 직접 파싱하지 않는다 — 그건 분류·추출 계층의 몫). 장소를 찾으면 `activity.submit`(`risk="low"`, `activity.change`의 기본값 `high`보다 낮다 — 고객 자기 입력이라 위험도가 낮다는 판단) 제안을 만들어 `WAIT_FOR_APPROVAL`. 못 찾으면(애매함 포함) **사람에게 escalate하지 않고** `WAIT_FOR_INPUT`으로 고객에게 되묻는다 — 계약에 선언만 되고 아무도 안 쓰던 `required_input_schema`의 **첫 실사용 사례**
 
@@ -212,7 +290,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 ### 판정 순서
 
-1. **정원 확인** — 정원 초과 시 즉시 `feasible: False`로 RESPOND (`activity.py:107`, `131~136`)
+1. **정원 확인** — 정원 초과 시 즉시 `feasible: False`로 RESPOND (`activity/__init__.py:172~179`)
 2. **장소 확인(TourAPI 조회)** — 운영시간·휴무 **원문** 확인. `[구현 2026-09-20]` 아래 참고
 3. **재난문자API 조회** — 재난상황 없는지 감지. **세부 사양 미정**
 
@@ -220,7 +298,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 ★★`[정정 2026-09-20, 재정정]` 앞서 이 절은 "TourAPI 클라이언트가 `scripts/seed_travel.py`와 테스트에서만 쓰인다"고 적었다 — **이것도 부정확했다.** `app/infrastructure/travel/base.py`의 `build_travel_sources()`가 이미 `sources.place = TourApiPlace(...)`로 조립하고 있었고, `composition.py:160~163`이 그걸 `ReadToolbox(travel=...)`에 실제로 주입한다. **빠진 건 클라이언트도 배선 진입점도 아니라, `ReadToolbox.place()`(=`read.place` 도구)가 그 `self.travel.place`를 안 쓰고 있었다는 것 하나였다.**
 
-**`[구현 2026-09-20]` 그 한 곳을 이었다.** `app/tools/read_tools.py`의 `place()`가 이제 `places.source_content_id`/`source_content_type_id`(013으로 해소된 신원)가 있으면 `self.travel.place.operating(content_id, content_type_id)`를 불러 `place["operating"]`에 담는다(`_fill_operating()`). `activity.py`의 `_check_feasible()`이 이 값을 근거(`read.place.operating`)와 안내 문구(`_operating_note()`)로 쓴다. `tour_api.py`의 `operating()`이 애초에 `usetime_text`·`restdate_text`를 자연어 원문으로만 주고 `answers_open_at_slot: False`로 명시한다(파싱하면 "화요일 휴무, 단 공휴일과 겹치면 개방" 같은 예외 조건에서 하나 틀려도 고객이 문 닫힌 곳 앞에 선다). `read.weather`가 강수확률·풍속을 판정에 안 쓰는 것과 같은 원칙이다.
+**`[구현 2026-09-20]` 그 한 곳을 이었다.** `app/tools/read_tools.py`의 `place()`가 이제 `places.source_content_id`/`source_content_type_id`(013으로 해소된 신원)가 있으면 `self.travel.place.operating(content_id, content_type_id)`를 불러 `place["operating"]`에 담는다(`_fill_operating()`). `activity/__init__.py:160`의 `_check_feasible()`이 이 값을 근거(`read.place.operating`)와 안내 문구(`_operating_note()`)로 쓴다. `tour_api.py`의 `operating()`이 애초에 `usetime_text`·`restdate_text`를 자연어 원문으로만 주고 `answers_open_at_slot: False`로 명시한다(파싱하면 "화요일 휴무, 단 공휴일과 겹치면 개방" 같은 예외 조건에서 하나 틀려도 고객이 문 닫힌 곳 앞에 선다). `read.weather`가 강수확률·풍속을 판정에 안 쓰는 것과 같은 원칙이다.
 
 새 도구 이름을 안 만들었다 — `allowed_tools`(`read.place`)·budget 변경이 필요 없다.
 
@@ -230,7 +308,7 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 ★★`[결정 2026-09-20]` **위 "`feasible`을 이 값으로 바꾸지 않는다"에 예외가 하나 생겼다.** 처음엔 원문 전체를 절대 파싱하지 않기로 했었다(그래서 회귀 가드 테스트까지 만들었다). 그런데 사용자가 "화요일에 요청하면 false가 나와야 한다"는 구체적 기대를 냈고, 그건 정확히 그 원칙과 부딪혔다 — 다시 확인했더니 **"요일 하나만 좁게 비교하고, 예외 조건은 절대 반영하지 않으며, 반영 안 했다는 사실을 안내문에 반드시 남긴다"** 는 조건으로 좁혀서 만들기로 정했다("전체 파싱" 대신 "요일 하나"를 선택 — 세 방향 중 가장 좁은 것).
 
-`_weekday_closure_match(restdate_text, at)`(`activity.py`)가 하는 일 전부:
+`_weekday_closure_match(restdate_text, at)`(`activity/__init__.py:367`)가 하는 일 전부:
 
 ```
 weekday_name = <요청 시각의 요일>
@@ -243,21 +321,28 @@ return weekday_name in restdate_text and "휴무" in restdate_text
 | `False` | `restdate_text`는 있지만 요일이 안 맞는다 | 안 바뀜(`True`) |
 | `None` | `restdate_text` 자체가 없다(모름) | 안 바뀜(`True`) |
 
-`True`일 때 answer에 **반드시** 붙는 캐비앗: *"단, 이 판단은 요일만 비교한 것이고 공휴일과 겹치는 경우 같은 예외 조건은 반영하지 않았습니다 — 정확한 개방 여부는 원문을 직접 확인하세요."* 이 문장이 빠지면 "요일만 본 근사 판정"이 "확정 판정"처럼 보인다 — 그래서 테스트(`test_a_real_place_on_its_closure_weekday_is_marked_infeasible_with_caveat`)가 이 문구 존재를 강제한다.
+`True`일 때 answer에 **반드시** 붙는 캐비앗: *"단, 이 판단은 요일만 비교한 것이고 공휴일과 겹치는 경우 같은 예외 조건은 반영하지 않았습니다 — 정확한 개방 여부는 원문을 직접 확인하세요."* 이 문장이 빠지면 "요일만 본 근사 판정"이 "확정 판정"처럼 보인다 — 그래서 테스트(`[정정 2026-09-24]` 파일 리팩터로 개명, 지금은 `test_activity_check_feasible.py`의 `test_closure_weekday_marks_infeasible_with_caveat`)가 이 문구 존재를 강제한다.
 
 ★**`usetime_text`는 여전히 절대 안 본다.** 오직 `restdate_text` 대 요일 하나뿐이다. 강수확률·풍속(날씨)도 여전히 안 본다 — 이 예외는 "휴무 요일 대조" 하나로 한정된다.
 
-`[실측 2026-09-20]` **정식 테스트 파일** — `tests/unit/travel/test_activity_tour_operating.py`(6건, `test_activity_weather.py`와 같은 패턴). `FakeTools`로 `read.place` 응답에 `operating` 서브딕트를 직접 넣어 API 키·DB·네트워크 없이 검증한다. `DEFAULT_STARTS_AT`을 고정 시각(2026-10-03, 실측 토요일)으로 박아 뒀다 — 상대 시각(`in_hours`)을 쓰면 테스트 실행일이 우연히 화요일일 때 무관한 테스트가 이유 없이 깨지는 flaky 버그가 생기기 때문이다.
+★`[정정 2026-09-24]` **위 "절대 안 본다"는 `check_feasible`의 판정(성립 여부) 경로에 한정된다.** [대안 순위 산출](#대안-순위-산출--제안-2026-09-24-미확보)의 "영업시간 여유도" 신호는 성립 여부를 바꾸는 게 아니라 **이미 성립(feasible)한 후보들 사이의 순서만 매기는** 용도라, `[사용자 확정 2026-09-24]` `usetime_text`/`restdate_text`의 구조화 파싱이 필요하다고 확인됐다. 다만 파싱 결과를 다시 `feasible` 판정에 되먹이면(휴무 요일 대조 이상으로) 이 절의 원칙과 다시 충돌하므로, 순위 산출은 어디까지나 정렬 점수 계산에만 쓰고 판정에는 안 쓴다는 경계를 지켜야 한다.
 
-| 테스트 | 확인하는 것 |
+`[실측 2026-09-20]` **정식 테스트 파일** — `tests/unit/travel/test_activity_tour_operating.py`(6건, `test_activity_weather.py`와 같은 패턴). `[정정 2026-09-24]` 이 파일명은 이후 리팩터로 바뀌었다 — 지금은 `tests/unit/travel/test_activity_check_feasible.py`(74~145행, 6건)에 이 테스트들이 들어 있다. `FakeTools`로 `read.place` 응답에 `operating` 서브딕트를 직접 넣어 API 키·DB·네트워크 없이 검증한다. `DEFAULT_STARTS_AT`을 고정 시각(2026-10-03, 실측 토요일)으로 박아 뒀다 — 상대 시각(`in_hours`)을 쓰면 테스트 실행일이 우연히 화요일일 때 무관한 테스트가 이유 없이 깨지는 flaky 버그가 생기기 때문이다.
+
+★`[정정 2026-09-24]` 아래 테스트명은 파일 리팩터(`test_activity_check_feasible.py`로 통합) 때 실제로 바뀐 이름이다 — 옛 이름(`test_free_text_closure_without_a_weekday_pattern_does_not_flip_feasibility` 등)은 지금 코드베이스에 없다.
+
+| 테스트(`test_activity_check_feasible.py`) | 확인하는 것 |
 |---|---|
-| `test_free_text_closure_without_a_weekday_pattern_does_not_flip_feasibility` | "매주 &lt;요일&gt; 휴무" 패턴이 아닌 휴무 문구는 여전히 무시된다(회귀 가드) |
-| `test_a_real_place_on_a_non_closure_weekday_stays_feasible` | 경복궁·토요일 — 요일 안 맞음, `feasible: True` |
-| `test_a_real_place_on_its_closure_weekday_is_marked_infeasible_with_caveat` | 경복궁·화요일 — `feasible: False`, 캐비앗 문구·경고 필수 |
+| `test_non_weekday_pattern_does_not_flip_feasibility` | "매주 &lt;요일&gt; 휴무" 패턴이 아닌 휴무 문구는 여전히 무시된다(회귀 가드) |
+| `test_non_closure_weekday_stays_feasible` | 경복궁·토요일 — 요일 안 맞음, `feasible: True` |
+| `test_closure_weekday_marks_infeasible_with_caveat` | 경복궁·화요일 — `feasible: False`, 캐비앗 문구·경고 필수 |
+| `test_operating_text_appears_in_answer_and_evidence` | 운영시간 원문이 안내 문구·근거·decisions에 실린다(문서에 없던 테스트) |
+| `test_no_operating_info_omits_tourapi_mention` | operating 자체가 없으면 TourAPI 언급 없이 판정한다(문서에 없던 테스트) |
+| `test_operating_with_empty_fields_does_not_claim_checked` | 필드가 비어 있으면 "확인했다"고 말하지 않는다(문서에 없던 테스트) |
 
 ★`[정정 2026-09-20]` **재난문자API 클라이언트는 여전히 없지만("코드 0줄"), 배선과 판정 함수는 생겼다.** 아래 절 참고 — 클라이언트 부재와 "check_feasible이 재난문자를 볼 줄 안다"는 별개다(TourAPI가 처음 그랬던 것과 같은 구도).
 
-참고로 `activity.check_cancelable`(취소 가능 여부)은 **위약금율이 확인되지 않으면 금액을 생성하지 않는다**(`activity.py:94`) — 근거 없는 숫자를 만들지 않는다는 이 Team의 원칙(아래 「이 Team이 하지 않는 것」)과 일치하는, 이미 지켜지고 있는 동작이다.
+참고로 `activity.check_cancelable`(취소 가능 여부)은 **위약금율이 확인되지 않으면 금액을 생성하지 않는다**(`activity/__init__.py:140~150`) — 근거 없는 숫자를 만들지 않는다는 이 Team의 원칙(아래 「이 Team이 하지 않는 것」)과 일치하는, 이미 지켜지고 있는 동작이다.
 
 ### 재난문자 등급 대조 — `check_feasible` 배선
 
@@ -283,7 +368,7 @@ return weekday_name in restdate_text and "휴무" in restdate_text
 
 가짜 HTTP 전송으로 검증한 것(실제 네트워크 없이): 정상 응답 파싱·오류 봉투 감지(`resultCode≠00`)·오래된 메시지 필터링·`region_name`→`rgnNm` 전달 — 전부 확인. **실 키로 첫 호출을 해본 뒤에야 위 "추정" 칸이 "확인"으로 넘어간다.**
 
-`activity.py`의 `_disaster_blocks(messages)`가 판정 함수다.
+`activity/__init__.py:394`의 `_disaster_blocks(messages)`가 판정 함수다.
 
 ```
 EMRG_STEP_NM in {"위급재난"}  →  True (막는다)
@@ -294,15 +379,20 @@ EMRG_STEP_NM in {"위급재난"}  →  True (막는다)
 
 날씨(`weather_sensitive`에만 걸림)와 달리 **재난문자는 실내외를 안 가리고 항상 조회한다** — 재난은 장소 종류와 무관하다.
 
-`[실측 2026-09-20]` **정식 테스트** — `tests/unit/travel/test_activity_disaster.py`(5건). `FakeTools`로 `read.disaster` 응답을 직접 넣어 API 키·DB·네트워크·실제 클라이언트 없이 검증한다.
+`[실측 2026-09-20]` **정식 테스트** — `tests/unit/travel/test_activity_disaster.py`(5건). `[정정 2026-09-24]` 이 파일명은 이후 리팩터로 바뀌었다 — 지금은 `tests/unit/travel/test_activity_check_feasible.py`(195~272행, 8건으로 늘었다)에 이 테스트들이 들어 있다. `FakeTools`로 `read.disaster` 응답을 직접 넣어 API 키·DB·네트워크·실제 클라이언트 없이 검증한다.
 
-| 테스트 | 확인하는 것 |
+★`[정정 2026-09-24]` 아래 테스트명도 리팩터로 바뀌었다 — 옛 이름은 지금 코드베이스에 없다. 건수도 5건 → 8건으로 늘었다. 옛 표의 "소스가 `None`이면 아무 말도 안 만듦"·"`read.disaster` 키 생략 시 하위 호환" 두 케이스에 정확히 대응하는 테스트는 이 파일에서 못 찾았다 — 다른 파일로 옮겼는지 빠졌는지는 확인 필요(`[미확보 2026-09-24]`).
+
+| 테스트(`test_activity_check_feasible.py`) | 확인하는 것 |
 |---|---|
-| `test_critical_disaster_blocks_feasibility_with_caveat` | "위급재난" 1건 → `feasible: False` + 캐비앗·경고 필수 |
-| `test_lower_grade_messages_are_surfaced_but_do_not_block` | "긴급재난"·"안전안내" → 근거로만 전함, `feasible` 안 바뀜 |
-| `test_no_disaster_messages_says_none_confirmed` | 목록이 빈 배열이면 "없다"고 정직하게 답함(모름과 구분) |
-| `test_no_disaster_source_does_not_claim_it_was_checked` | 소스가 `None`(지금 실제 상태)이면 아무 말도 안 만듦 |
-| `test_disaster_tool_is_not_even_declared_in_the_fake_when_omitted` | 옛 테스트가 `read.disaster` 키를 안 줘도 안 죽음(하위 호환) |
+| `test_critical_disaster_blocks_feasible` | "위급재난" 1건 → `feasible: False`, answer에 "위급재난" 포함 |
+| `test_critical_disaster_has_relevance_caveat` | 위급재난 판정에 지역·주제 관련성 미확인 캐비앗이 answer·warnings에 함께 실림 |
+| `test_non_critical_grade_does_not_block` | "안전안내" 등 낮은 등급은 근거로만 전함, `feasible` 안 바뀜 |
+| `test_empty_messages_note` | 목록이 빈 배열이면 "없다"고 정직하게 답함(모름과 구분) |
+| `test_disaster_structure_invariants` | 재난문자가 있을 때 outcome·decisions·answer 구조 불변량(문서에 없던 테스트) |
+| `test_disaster_decision_fields_all_present` | `decisions.disaster`에 `messages`·`blocks`·`confirmed_at`·`source`가 모두 있다(문서에 없던 테스트) |
+| `test_disaster_evidence_recorded` | `read.disaster` 결과가 evidence에 기록된다(문서에 없던 테스트) |
+| `test_disaster_none_omits_decision_key` | `read.disaster`가 `None`이면 `decisions`에 `disaster` 키가 없다 |
 
 ### 현재 장소 변경 감지 가능한 목록 (확장 예정)
 
@@ -345,16 +435,16 @@ EMRG_STEP_NM in {"위급재난"}  →  True (막는다)
 
 ## 알려진 결함 — 코드 실측
 
-`[실측 2026-09-20]` `Activity_모듈_스펙.md` §2·§7·§9-2가 정리한, 기존 코드(`activity.py`) 기준 결함이다. 이 문서(activity.md)에 처음 옮긴다.
+`[실측 2026-09-20]` `Activity_모듈_스펙.md` §2·§7·§9-2가 정리한, 기존 코드(`activity/__init__.py`) 기준 결함이다. 이 문서(activity.md)에 처음 옮긴다.
 
 | 번호 | 결함 | 근거 |
 |---|---|---|
-| ~~1~~ | ~~장소 정보가 없어도 경고와 함께 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `decisions["feasible"]`에 `place is not None and` 가드 추가, answer에 `elif place is None:` 분기 추가. 테스트 3건 추가(`test_activity_input_validation.py`). | `activity.py:254~268` |
-| ~~2~~ | ~~시작 시각이 지난 예약도 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `_check_feasible()`에 `remaining < 0` 가드 추가, `already_started` 반환. 테스트 5건 추가(`test_activity_input_validation.py`). | `activity.py:162~170` |
-| 3 | 취소·순연 규정·시각이 없으면 "모름"으로만 끝나고 판정하지 않는다 | `activity.py:78~83` |
-| 4 | 주석의 "대안 생성만 LLM"이 실행 코드에 없다(문서-코드 불일치) | `activity.py:8~9`, `232~244` |
-| 5 (참고, 날씨 — 현재 구현 범위 아님) | 예보 객체의 강수확률·풍속 값이 모두 비어도 `feasible: True` | `activity.py:208~211`, `160~180` |
-| 6 | `read.booking`이 `case_id`를 무시하고 고객 예약 중 `starts_at`이 가장 이른 1건을 반환한다 — 종류·과거·취소 여부를 걸러내지 않는다 | `activity.py:66`, `read_tools.py:143~162` |
+| ~~1~~ | ~~장소 정보가 없어도 경고와 함께 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `decisions["feasible"]`에 `place is not None and` 가드 추가, answer에 `elif place is None:` 분기 추가. 테스트 3건 추가(`test_activity_input_validation.py`). | `activity/__init__.py:254~268` |
+| ~~2~~ | ~~시작 시각이 지난 예약도 성립으로 답한다~~ — **수정 완료(2026-09-21)**: `_check_feasible()`에 `remaining < 0` 가드 추가, `already_started` 반환. 테스트 5건 추가(`test_activity_input_validation.py`). | `activity/__init__.py:162~170` |
+| 3 | 취소·순연 규정·시각이 없으면 "모름"으로만 끝나고 판정하지 않는다 | `activity/__init__.py:111~116` |
+| 4 | 주석의 "대안 생성만 LLM"이 실행 코드에 없다(문서-코드 불일치) | `activity/__init__.py:7~9`, `497~509` |
+| 5 (참고, 날씨 — 현재 구현 범위 아님) | 예보 객체의 강수확률·풍속 값이 모두 비어도 `feasible: True`(날씨는 `decisions["feasible"]` 계산에 아예 안 들어간다) | `activity/__init__.py:217~236`, `468~476` |
+| 6 | `read.booking`이 `case_id`를 무시하고 고객 예약 중 `starts_at`이 가장 이른 1건을 반환한다 — 종류·과거·취소 여부를 걸러내지 않는다 | `activity/__init__.py:99`, `read_tools.py:146~165` |
 
 ## 재계획이 다른 Team의 일정을 건드린다
 
@@ -372,7 +462,7 @@ Activity: "10/03 15시 → 10/04 10시" 후보를 낸다
 
 ## manifest — 실제 구현
 
-`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/activity.py`. **한때 이 절은 「제안이다. 코드에 없다」였다.**
+`[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/activity/__init__.py`(`[정정 2026-09-24]` 패키지 분리 전엔 `activity.py`). **한때 이 절은 「제안이다. 코드에 없다」였다.**
 
 ```python
 capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
@@ -448,7 +538,7 @@ kind text NOT NULL,  -- activity / dining / lodging / flight
 
 | Team | `places` 사용 | 근거 |
 |---|---|---|
-| Activity | 사용 | `activity.py:138` — `read.place`를 `booking.place_id`로 호출 |
+| Activity | 사용 | `activity/__init__.py:181` — `read.place`를 `booking.place_id`로 호출 |
 | Dining | 사용 | `dining.py:52~53` — 같은 패턴(`place_id`로 `read.place` 호출) |
 | Mobility | **미사용** | `read.route`·`read.transit`만 쓴다(`mobility.py:25,51,57`) — "장소 하나"가 아니라 "구간 이동"을 판정해서 구조적으로 다르다 |
 
@@ -585,12 +675,13 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~재난문자 키가 공통 키(`data_go_kr_key`)로 되는지~~ | **닫힘 — `[확인 2026-09-21]`** data.go.kr 공통 키와 **별개다.** safetydata.go.kr 에 별도 가입·신청해서 발급받아야 한다. `ACOP_DISASTER_API_KEY` 설정 완료 |
 | 재난문자 날짜·오류 봉투 파라미터/모양 추정치 | `[부분 닫힘 2026-09-21]` 실 키로 live 테스트 5/5 통과, 응답 구조·필드명·CRT_DT 포맷 확인 완료. **오류 봉투 모양**과 **서버 날짜 필터 파라미터**는 아직 미검증 — 정상 응답만 봤고 오류 케이스는 못 봤다 |
 | 재난문자 "위급재난" 판정의 지역·주제 관련성 미확인 | `[미확보 2026-09-20]` `_disaster_blocks`가 등급만 보고 지역·재해구분은 안 본다 — 오탐(무관한 위급재난으로 막힘) 가능성이 남아 있다 |
-| ~~TourAPI 클라이언트를 `check_feasible`에 배선~~ | **닫힘 — `[구현 2026-09-20]`** `read_tools.place()`가 `source_content_id`로 `operating()`을 불러 `place["operating"]`에 원문을 싣는다. `activity.py`는 원칙적으로 근거·안내 문구로만 쓰되, **휴무 요일 대조 하나만 예외**로 `feasible`을 바꾼다 → [휴무 요일 대조 절](#휴무-요일-대조--유일한-예외) |
+| ~~TourAPI 클라이언트를 `check_feasible`에 배선~~ | **닫힘 — `[구현 2026-09-20]`** `read_tools.place()`가 `source_content_id`로 `operating()`을 불러 `place["operating"]`에 원문을 싣는다. `activity/__init__.py`는 원칙적으로 근거·안내 문구로만 쓰되, **휴무 요일 대조 하나만 예외**로 `feasible`을 바꾼다 → [휴무 요일 대조 절](#휴무-요일-대조--유일한-예외) |
 | `tick_activities()`의 `affected_bookings` | `[미확보 2026-09-20]` 항상 빈 리스트다 — 예약과의 역추적 방법 미정 |
 | `allowed_tools`·`knowledge_scope`와 신규 연동의 어긋남 | `[미확보 2026-09-20]` manifest 절 참고 — TourAPI·재난문자API용 도구 이름, `weather` scope 처리 미정 |
 | ~~`itinerary_submit`이 100% escalate 되던 문제~~ | **닫힘 — `[구현 2026-09-20]`** `activity.submit_itinerary` + `select_capability` 훅 → [일정 제출 절](#일정-제출--예약-없이-시작하는-capability) |
 | ~~Phase 2 — 승인된 `activity.submit` 제안을 실제로 `activities`/`places`에 반영하는 실행기~~ | **비전으로 등록 — `[결정 2026-09-20]`** 사용자가 "나중에 별도로 설계하자"고 명시적으로 미뤘다. Activity 하나의 범위를 넘는 시스템 전체(action_type dispatcher) 설계라 `wiki/records/vision/TODO_VISION.md`에 등록(RULE.md §4.4) |
 | ~~`activity.propose_change`의 라우팅 미도달~~ | **닫힘 — `[구현 2026-09-21]`** `select_capability`에 `intent="adjust_reject"` → `activity.propose_change` 분기 추가. 테스트 2건(`test_activity_submit_itinerary.py`) |
+| 대안 생성 규칙의 `business_hours`·`closed_days`·`sigungucode` 소스 | `[미확보 2026-09-24]` 세 필드 모두 `place_catalog` 구조화 컬럼이 아니다(`raw_json`뿐이거나 아예 안 실림) — [대안 생성 규칙 절](#대안-생성-규칙--사용자-제공-2026-09-24) 참고. 카탈로그 컬럼 승격이 먼저 필요할 수 있다 |
 | ~~`weather_sensitive`가 실 데이터에서 검증 불가~~ | **완화 — `[구현 2026-09-20]`** `_weather_sensitive_from_title()`로 이름 단서 추정(추정 사실은 항상 공개). **완전히 닫힌 건 아니다** — 키워드에 안 걸리는 장소(예: "경복궁")는 여전히 `None`이고, 근본 원인(프로덕션에 `places` 쓰기 경로 자체가 없음)은 그대로다 → [`weather_sensitive` 절](#weather_sensitive--db가-모르면-장소명으로-추정한다) |
 
 ## 세션 리포트 (2026-09-20)
