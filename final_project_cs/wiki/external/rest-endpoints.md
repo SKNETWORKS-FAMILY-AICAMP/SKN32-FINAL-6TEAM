@@ -185,21 +185,24 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 
 | 규칙 | 계약 |
 |---|---|
-| 받는 것 | `request_id` · `customer_id` · `city`(서울만) · `start_date` · `days`(1~7) · `party_size`(1~4) · `locale` · `title` · `constraints`(`payment`·`budget_krw`) · `preferences`(자유 문장) · `register`(기본 `false`) |
+| 받는 것 | `request_id` · `customer_id` · `city`(서울만) · `start_date` · `days`(1~7) · `party_size`(1~4) · `locale` · `title` · `constraints`(`payment`·`budget_krw`·`survey`·`density`) · `preferences`(자유 문장) · `register`(기본 `false`) |
 | 내는 것 | `draft`(**`POST /v1/trips` 가 받는 그대로** — `places`+`items`+`routes`) · `planner` · `candidates` · `checks` · `coverage` · `calls` · **`rag`** |
 | ★★**판정** | 초안은 **등록이 쓰는 그 판정기**(`check_itinerary`)를 통과해야만 나온다. 위반이 나오면 고쳐서 다시 판정하고(최대 3회, `MAX_REPAIR_ROUNDS`) 끝내 못 고치면 `422 plan_infeasible` + 위반·완화 조건·시도한 고침. **판정을 건너뛰는 길이 없다** — `register:true` 면 등록이 같은 판정기를 한 번 더 돌린다 |
 | **장소 출처** | ①우리 DB `places` ②`place_catalog`(TourAPI 지역 동기화분) ③TourAPI 실시간은 ②가 **비었을 때만**. 지어내지 않는다. 좌표를 모르는 장소는 후보에서 뺀다 |
 | ★**모르는 값** | 카탈로그 장소는 영업시간·가격이 **없다.** 비워 두므로 판정이 그 칸을 **보지 않는다**. `coverage` 가 「영업시간 n/N · 가격 n/N · 구 n/N」로 분자/분모를 적는다 — 모름은 통과가 아니다 |
 | ★**LLM 의 몫** | **순서뿐이다.** 모델은 후보 목록의 **줄 번호**만 내고, 시각·좌표·가격·이름은 서버가 채운다. 목록에 없는 값은 버린다. 모델이 없거나 죽으면 규칙 순위로 짜고 `planner.mode=rules`+`note` 로 말한다. ★모델을 불렀는데 **쓴 값이 하나도 없으면** `mode` 가 `rules` 로 내려간다(`from_model`/`items` 로 분자/분모) — 조용한 폴백을 막는다 |
 | ★**`rag` — 요청을 규정에 붙인다** `[2026-09-22]` | 고객의 말로 **여행 코퍼스**를 검색한다(scope `travel_activity`·`travel_dining`·`travel_access`·`travel_weather`, top 5). 찾은 조각은 ①모델이 순서를 짤 때 **바탕**으로 보이고 ②응답에 `evidence`(`source_type: policy` · `source_id` · `scope` · `score` · `excerpt`)로 실린다. ★★**후보를 거르지는 않는다** — 규정 문장과 장소 속성을 기계로 맞출 방법이 아직 없다. 고객이 아무 말도 안 하면 요청 요약으로 묻고 그 사실을 `asked` 에 적는다. **0건이거나 못 읽었으면 `note` 가 그렇게 말하고 초안은 그대로 나간다**(규정은 초안의 성립 조건이 아니다 — 성립은 `check_itinerary` 가 본다) |
+| ★**하루 곳 수 — 설문 16번** `[2026-09-24]` | `constraints.survey.pace`(여유/보통/빡빡)를 **등록과 같은 함수**(`apply_survey`)로 밀도 목표(0.40/0.55/0.70)로 바꾼다. 하루 활동 수는 표로 박지 않고 **1~4곳으로 하루를 실제로 짜서**(이동 포함) `measure_density` 로 재고, 목표를 넘지 않고 판정도 통과하는 **가장 많은 수**를 고른다. 결과는 `planner.density.days[]`(`activities`·`candidates`·`actual_density`·`target_density`·`tried[]`). 밀도 목표가 없으면 하루 2곳이고 `note` 가 그렇게 말한다. 틀린 설문은 `422 invalid_survey` |
+| ★**이동 항목** `[2026-09-24]` | 같은 날 장소 사이마다 `mobility` 항목을 넣는다 — **출발 = 다음 일정 시작 − 이동 시간 − 여유 10분**. 이동 알림은 이 출발 시각에 나간다. 경로 정의는 `routes["move-n"]` 이고 계획 수단 `estimate` 의 `eta_min` 이 추정 이동 시간, `uses` 는 비운다(노선을 모른다) |
 | **선호** | 키워드 대조다(모델 아님). 실내/야외 · 아이 동반 · 싫다고 한 것. 싫다고 한 것은 **탈락**이지 감점이 아니다. 한계 — 요리 분류 표가 없어 **이름으로만** 거른다 |
 | 멱등 | `register:true` 는 `/v1/trips` 와 **같은 멱등 키**(`trips.request_key`). 같은 `request_id` 가 다시 오면 **모델도 부르지 않고** 이미 만든 여행을 `{"status":"duplicate","created":false,"trip":…}` 로 돌려준다 |
 | ★`register` 기본값 | **`false`.** 등록은 상태를 만들고 **통지를 내보낸다**(계획서 링크가 처음 나가는 자리). 초안을 보자고 부른 요청이 조용히 고객에게 링크를 보내면 안 된다 |
-| 거절 | `422 city_not_supported`(서울만) · `422 out_of_product_scope`(7일·4인) · `422 not_enough_candidates`(필요 수와 가진 수를 같이 적는다) · `422 plan_infeasible`(위반 + 완화 조건 + 시도한 고침) · `422 day_overflow`(고치다 하루 마감 21:30 을 넘겼다 — 판정기는 이 값을 모른다) · `422 plan_short`(우리 쪽 결함 — 항목이 덜 짜였다. **짧아진 채로 내주지 않는다**) |
+| 거절 | `422 city_not_supported`(서울만) · `422 out_of_product_scope`(7일·4인) · `422 not_enough_candidates`(필요 수와 가진 수를 같이 적는다) · `422 plan_infeasible`(위반 + 완화 조건 + 시도한 고침) · `422 day_overflow`(고치거나 이동 자리를 내다 하루 마감 22:00 을 넘겼다 — 판정기는 이 값을 모른다) · `422 invalid_survey` · `422 plan_short`(우리 쪽 결함 — 항목이 덜 짜였다. **짧아진 채로 내주지 않는다**) |
 | 바깥 호출 | **TourAPI 0회**가 정상이다(카탈로그를 읽는다). `calls.tour_api`·`calls.model` 로 센다 |
 
-**아직 못 하는 것** — 실제 예약·가격 확인, 서울 밖 도시, 이동 항목(`mobility`)과 경로 소요.
-항목 사이 여유는 **직선거리 ÷ 도보 80m/분 `[추정]`**이고 실제 경로를 조회하지 않는다.
+**아직 못 하는 것** — 실제 예약·가격 확인, 서울 밖 도시, **실제 경로 소요**.
+`[2026-09-24]` 이동 항목은 넣지만 이동 시간은 **직선거리 ÷ 도보 80m/분 `[추정]`**(60분 상한)이고 실제 경로를 조회하지 않는다
+(구글 경로 키 자리만 있다). 여유 10분은 여유 답과 상관없이 같다 — **우리가 고른 값**이다.
 자세한 목록은 리포트 §「이 생성기가 못 하는 것」.
 
 ### `GET /booking-change/{booking_id}` — 업체 건을 넘기는 링크 `[2026-09-22]`

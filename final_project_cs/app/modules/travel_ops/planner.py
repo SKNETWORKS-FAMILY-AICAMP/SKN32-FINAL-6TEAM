@@ -34,12 +34,16 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import copy
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, time, timedelta
 import re
 from typing import Any, Callable, Iterable, Mapping, Sequence
 from zoneinfo import ZoneInfo
 
+from pydantic import ValidationError
+
+from .density import measure_density
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
 
@@ -69,7 +73,11 @@ TRANSFER_UNKNOWN_MIN = 20        #: 좌표를 몰라 거리를 못 재는 구간
 #: ★`[2026-09-24 사용자 지시]` 도착해서 다음 일정 시작까지 두는 **여유**. 출발 시각은
 #:  **다음 일정 시작 − 이동 시간 − 이 여유**로 거꾸로 잡고, 이동 알림은 그 출발 시각에 간다(D-020).
 MOVE_BUFFER_MIN = 10
-ACTIVITIES_PER_DAY = 2
+ACTIVITIES_PER_DAY = 2          #: 밀도 목표가 **없을 때** 하루 활동 수(설문 16번을 안 받은 요청)
+#: ★`[2026-09-24]` 밀도 목표가 있으면(설문 16번 여유 → `travel.survey.pace_to_density_level`) 하루 활동 수를
+#:  **짜 본 하루를 재서** 정한다 — 이 범위에서 목표를 넘지 않는 가장 많은 수. 상한·하한은 우리가 고른 값이다.
+MAX_ACTIVITIES_PER_DAY = 4
+MIN_ACTIVITIES_PER_DAY = 1
 DINING_PER_DAY = 2               #: 점심·저녁
 MAX_REPAIR_ROUNDS = 3            #: 고쳐서 다시 판정하는 횟수. 넘으면 거절한다
 CATALOG_LIMIT_PER_KIND = 400     #: 카탈로그에서 한 번에 읽는 후보 수(종류별)
@@ -545,22 +553,21 @@ def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str, str]:
 
 
 def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, datetime]:
-    """아는 영업시간 안으로 당겨 놓는다. **모르면 그대로 둔다**(모름은 판정 대상이 아니다)."""
+    """여는 시각 전이면 여는 시각으로 **민다.** 모르면 그대로 둔다(모름은 판정 대상이 아니다)."""
     hours = cand.attributes.get("hours")
     end = start + timedelta(minutes=minutes)
     if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
         return start, end
     try:
         opens = time(*map(int, str(hours[0]).split(":")))
-        closes = time(*map(int, str(hours[1]).split(":")))
     except (TypeError, ValueError):
         return start, end
     if start.time() < opens:
         start = _at(start.date(), opens)
         end = start + timedelta(minutes=minutes)
-    if end.time() > closes:
-        end = _at(start.date(), closes)
-        start = min(start, end - timedelta(minutes=minutes))
+    # ★`[2026-09-24]` 닫는 시각을 넘어도 **앞으로 당기지 않는다.** 앞 판은 시작을 당겨 맞췄는데, 그러면
+    #   앞 일정과의 사이(이동 시간 + 여유)를 먹는다 — 이동 항목을 넣으며 다시 밀려 결국 닫는 시각을 넘겼다
+    #   (실측: 「18:18 종료인데 18:00 에 닫는다」). 넘으면 그대로 두고 판정(`after_closing`)이 장소를 바꾸게 한다.
     return start, end
 
 
@@ -651,6 +658,71 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
     for number, item in enumerate(out, start=1):
         item["seq"] = number
     return out, routes, notes
+
+
+# ── 밀도 목표에 맞춘 하루 (설문 16번) ─────────────────────────────
+def density_target(constraints: Mapping[str, Any]) -> float | None:
+    """여행 제약의 밀도 목표(0~1). 없으면 None — 그때는 하루 활동 수를 기본값으로 둔다.
+    ★목표를 읽는 규칙은 `measure_density` 와 같다(직접 준 `target_density` 가 이기고, 아니면 `level`)."""
+    density = constraints.get("density")
+    if not isinstance(density, Mapping):
+        return None
+    if density.get("target_density") is not None:
+        return float(density["target_density"])
+    if density.get("level") is None:
+        return None
+    from app.core.settings import get_guardrails
+
+    return float(get_guardrails().get("travel.density.targets")[density["level"]])
+
+
+def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
+              routes: Mapping[str, Any]) -> list[Part]:
+    return [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
+                 starts_at=item["starts_at"], ends_at=item["ends_at"],
+                 place=places[item["place"]].for_check() if item.get("place") else None,
+                 route=routes.get(str(item.get("route"))) if item.get("route") else None,
+                 detail=item["detail"])
+            for item in items]
+
+
+def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Mapping[str, Cand],
+            constraints: Mapping[str, Any], seq_from: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """★밀도 목표 안에서 **활동을 가장 많이** 넣은 하루. (항목들, 잰 결과).
+
+    곳 수를 표로 박지 않는다 — 활동 n 곳으로 하루를 **실제로 짜고**(이동 항목 포함) `measure_density` 로
+    재서, 목표를 넘지 않고 하루 마감(`DAY_END`) 안에 끝나는 가장 큰 n 을 고른다. 거리가 가까운 날은 더
+    들어가고 먼 날은 덜 들어간다. ★하루 창이 없어 **잴 수 없으면** 기본 수(`ACTIVITIES_PER_DAY`)로 짜고
+    그렇다고 적는다 — 못 잰 것을 맞췄다고 하지 않는다.
+    """
+    top = min(MAX_ACTIVITIES_PER_DAY, len(activities))
+    tried: list[dict[str, Any]] = []
+    for count in range(top, MIN_ACTIVITIES_PER_DAY - 1, -1):
+        items = build_day(day, activities[:count], dining, seq_from=seq_from)
+        trial, routes, _ = add_moves(copy.deepcopy(items), places)
+        measured = measure_density(_parts_of(trial, places, routes), constraints)
+        entry = next((row for row in measured["density"] if row["date"] == day.isoformat()), None)
+        if entry is None or entry["status"] == "unmeasurable":
+            fallback = min(ACTIVITIES_PER_DAY, len(activities))
+            return (build_day(day, activities[:fallback], dining, seq_from=seq_from),
+                    {"date": day.isoformat(), "activities": fallback, "status": "unmeasurable",
+                     "reasons": (entry or {}).get("reasons") or ["그날 하루 창이 없다"],
+                     "note": f"밀도를 잴 수 없어 기본 {fallback}곳으로 짰다"})
+        ends = max((item["ends_at"] or item["starts_at"]) for item in trial)
+        # ★밀도만 보지 않는다 — 이동을 넣은 하루가 **같은 판정기**(영업시간·겹침·이동 시간)도 통과해야 한다
+        broken = check_itinerary(_parts_of(trial, places, routes), constraints=constraints)
+        tried.append({"activities": count, "actual_density": round(entry["actual_density"], 3),
+                      "violations": [v.code for v in broken]})
+        if entry["status"] == "ok" and not broken and ends <= _at(day, DAY_END):
+            return items, {"date": day.isoformat(), "activities": count, "status": "ok",
+                           "candidates": len(activities),        # ★이날 넣어 볼 수 있던 활동 후보 수
+                           "target_density": entry["target_density"],
+                           "actual_density": round(entry["actual_density"], 3), "tried": tried}
+    # ★하한으로도 목표를 넘는다 — 빈 하루를 내지 않고 하한으로 짜고 넘는다고 적는다(밀도는 관측값, D-019)
+    items = build_day(day, activities[:MIN_ACTIVITIES_PER_DAY], dining, seq_from=seq_from)
+    return items, {"date": day.isoformat(), "activities": MIN_ACTIVITIES_PER_DAY, "status": "exceeded",
+                   "target_density": tried[-1:] and entry["target_density"], "tried": tried,
+                   "note": f"활동 {MIN_ACTIVITIES_PER_DAY}곳으로도 목표를 넘는다 — 식사·이동만으로 찬다"}
 
 
 # ── 고쳐서 다시 판정한다 ─────────────────────────────────────────
@@ -821,6 +893,21 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
               search: Callable[..., Any] | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`."""
     request.validate()
+    # ★`[2026-09-24]` 설문(`constraints.survey`)을 **등록과 같은 함수로** 먼저 적용한다 — 16번 여유가
+    #   밀도 목표가 되고, 생성기는 그 목표에 맞춰 하루 활동 수를 정한다(`fit_day`). 등록이 다시 적용해도
+    #   이미 채운 목표는 그대로다.
+    from .survey import apply_survey
+
+    try:
+        request = replace(request, constraints=apply_survey(
+            request.constraints, (request.start_date + timedelta(days=i) for i in range(request.days))))
+    except ValidationError as exc:
+        raise PlanRefused("invalid_survey", "constraints.survey 가 설문 계약과 다르다",
+                          problems=[{"field": ".".join(str(p) for p in e["loc"]), "reason": e["msg"]}
+                                    for e in exc.errors()]) from None
+    target = density_target(request.constraints)
+    per_day = MAX_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
+    floor_per_day = MIN_ACTIVITIES_PER_DAY if target is not None else ACTIVITIES_PER_DAY
     pref = preference_profile(request.preferences)
     calls = {"tour_api": 0}
     # ★요청을 **우리 규정에 붙인다**(RAG). 근거로 실어 내보내고 모델에게도 바탕으로 보인다.
@@ -836,7 +923,7 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     ranked = rank_candidates(pool, pref)
     activities = [cand for cand in ranked if cand.kind == "activity"]
     dining = [cand for cand in ranked if cand.kind == "dining"]
-    need_act, need_din = ACTIVITIES_PER_DAY * request.days, DINING_PER_DAY * request.days
+    need_act, need_din = floor_per_day * request.days, DINING_PER_DAY * request.days
     if len(activities) < need_act or len(dining) < need_din:
         raise PlanRefused(
             "not_enough_candidates",
@@ -857,10 +944,12 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     chosen: dict[str, Cand] = {}
     used: set[str] = set()
     model_calls, from_model = 0, 0        # ★몇 번 불렀고 **그중 몇 개가 실제로 쓰였나**
+    fits: list[dict[str, Any]] = []       # ★하루마다 밀도 목표에 맞춘 결과(설문 16번)
+    want = 0
     for index, (day_acts, day_dine) in enumerate(pools):
         # ★**같은 곳을 이틀 넣지 않는다.** 하루치 후보에서 이미 쓴 것을 빼고, 모자라면 전체
         #   순위에서 아직 안 쓴 것으로 채운다.
-        day_acts = _available(day_acts, activities, used, ACTIVITIES_PER_DAY)
+        day_acts = _available(day_acts, activities, used, per_day)
         day_dine = _available(day_dine, dining, used, DINING_PER_DAY)
         day = request.start_date + timedelta(days=index)
         picks = {"activities": [], "dining": []}
@@ -874,20 +963,28 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
             except Exception as exc:                      # noqa: BLE001 — 어떤 실패든 규칙으로 간다
                 mode, note = "rules", f"모델을 부르지 못해 규칙으로 짰다: {type(exc).__name__}: {exc}"
                 chat = None
-        day_act = _merge(picks["activities"], day_acts, ACTIVITIES_PER_DAY)
+        day_act = _merge(picks["activities"], day_acts, per_day)
         day_din = _merge(picks["dining"], day_dine, DINING_PER_DAY)
+        if target is not None:
+            day_items, fit = fit_day(day, day_act, day_din, places={c.key: c for c in day_act + day_din},
+                                     constraints=request.constraints, seq_from=len(items) + 1)
+            day_act = day_act[:fit["activities"]]
+            fits.append(fit)
+        else:
+            day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1)
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
+        # ★실제로 넣은 것만 「썼다」로 센다 — 목표 때문에 빠진 후보는 다른 날이 쓸 수 있다
         used.update(cand.key for cand in day_act + day_din)
         for cand in day_act + day_din:
             chosen[cand.key] = cand
-        items += build_day(day, day_act, day_din, seq_from=len(items) + 1)
+        want += len(day_act) + len(day_din)
+        items += day_items
 
     # ★★**조용히 짧아지지 않게 센다.** 후보가 모자라면 `_merge` 가 자리를 덜 채우고, 그러면
     #   「3일 일정」이라며 항목이 덜 든 초안이 나간다 — 아무 신호 없이. 위에서 총량을 확인했으니
     #   여기 걸리면 그건 **우리 쪽 결함**이고, 그때도 조용히 넘기지 않는다.
-    want = request.days * (ACTIVITIES_PER_DAY + DINING_PER_DAY)
-    if len(items) != want:
+    if len(items) != want or want < request.days * (floor_per_day + DINING_PER_DAY):
         raise PlanRefused("plan_short",
                           f"{request.days}일치는 항목 {want}개여야 하는데 {len(items)}개만 짜였다",
                           have=len(items), need=want,
@@ -950,8 +1047,13 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
         planner={"mode": mode, "note": note or "모델이 순서를 짰다(시각·좌표·가격은 서버가 채웠다)",
                  "model_calls": model_calls,
                  # ★**분자/분모** — 일정에 들어간 항목 중 몇 개를 모델이 골랐나.
-                 "from_model": from_model, "items": len(items),
-                 "preference": pref.as_dict()},
+                 "from_model": from_model,
+                 "items": sum(1 for item in items if item.get("place")),
+                 "preference": pref.as_dict(),
+                 # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다
+                 "density": ({"target_density": target, "days": fits} if target is not None else
+                             {"target_density": None,
+                              "note": f"밀도 목표가 없어 하루 활동 {ACTIVITIES_PER_DAY}곳으로 짰다"})},
         candidates={"pool": len(pool), "after_preference": len(ranked),
                     "activity": len(activities), "dining": len(dining),
                     "chosen": len({item["place"] for item in items if item.get("place")}),
@@ -1015,5 +1117,5 @@ def _check(items: list[dict[str, Any]], places: dict[str, Cand],
 
 
 __all__ = ["Cand", "PlanDraft", "PlanOutcome", "PlanRefused", "PlanRequest", "Preference",
-           "add_moves", "build_day", "ground_request", "grounding_text", "load_candidates",
+           "add_moves", "build_day", "density_target", "fit_day", "ground_request", "grounding_text", "load_candidates",
            "order_with_model", "plan_trip", "preference_profile", "rank_candidates", "repair"]

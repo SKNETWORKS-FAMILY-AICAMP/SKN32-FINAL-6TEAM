@@ -548,3 +548,55 @@ def test_the_registered_plan_announces_the_move_when_it_starts(api):
     kinds = lambda at: [r.kind for r in plan_reminders(items, now=at, rules=rules)]  # noqa: E731
     assert "departure" not in kinds(move.starts_at - timedelta(minutes=1))
     assert "departure" in kinds(move.starts_at)
+
+
+# ── ⑧ 설문 16번 여유 → 밀도 목표 → 하루 활동 수 (2026-09-24, D-020) ─────────────
+def _survey(pace: str) -> dict:
+    from app.modules.travel_ops.survey import SURVEY_VERSION
+
+    return {"survey": {"version": SURVEY_VERSION, "pace": pace}}
+
+
+def test_pace_decides_how_many_places_a_day_by_measuring_the_day(api):
+    """★곳 수를 표로 박지 않는다 — 하루를 짜 보고 **밀도를 재서** 목표를 넘지 않는 가장 많은 수를 넣는다."""
+    counts = {}
+    for pace in ("relaxed", "packed"):
+        body = api["ask"](request_id=f"p-{pace}", constraints=_survey(pace)).json()
+        assert body["status"] == "drafted", body
+        density = body["planner"]["density"]
+        assert density["target_density"] == {"relaxed": 0.40, "packed": 0.70}[pace]
+        for day in density["days"]:
+            assert day["status"] == "ok", day
+            assert day["actual_density"] <= day["target_density"]
+            # 하나 더 넣은 하루는 **목표를 넘었거나 판정에 걸렸다** — 상한(4곳)이 아니면 「가장 많이」의 근거가 남는다
+            #   (실측: 빡빡한 날 4곳은 밀도 0.599 로 목표 안이었지만 닫는 시각에 걸려 빠졌다)
+            if day["activities"] < min(4, day["candidates"]):
+                bigger = [t for t in day["tried"] if t["activities"] == day["activities"] + 1]
+                assert bigger and (bigger[0]["actual_density"] > day["target_density"]
+                                   or bigger[0]["violations"]), day
+        counts[pace] = [day["activities"] for day in density["days"]]
+        # ★등록이 재는 밀도와 같은 값이다 — 같은 함수(`measure_density`)를 같은 제약으로 부른다
+        assert body["draft"]["constraints"]["density"]["level"] == {"relaxed": "low", "packed": "high"}[pace]
+        _assert_leave_rule(body["draft"])
+    assert sum(counts["packed"]) > sum(counts["relaxed"]), counts
+
+
+def test_without_a_pace_the_day_keeps_the_default_and_says_so(api):
+    body = api["ask"](request_id="p-nopace").json()
+    assert body["planner"]["density"]["target_density"] is None
+    assert "밀도 목표가 없어" in body["planner"]["density"]["note"]
+    assert len(_stops(body["draft"])) == 2 * (2 + 2)
+
+
+def test_a_wrong_survey_is_refused_before_planning(api):
+    response = api["ask"](request_id="p-badsurvey",
+                          constraints={"survey": {"version": "2026-09-24.v1", "pace": "turbo"}})
+    assert response.status_code == 422 and response.json()["error"]["code"] == "invalid_survey"
+
+
+def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
+    body = api["ask"](request_id="p-packed-reg", register=True, constraints=_survey("packed")).json()
+    assert body["status"] == "registered", body
+    planned = {d["date"]: d["actual_density"] for d in body["planner"]["density"]["days"]}
+    registered = {row["date"]: round(row["actual_density"], 3) for row in body["trip"]["density"]}
+    assert registered == planned
