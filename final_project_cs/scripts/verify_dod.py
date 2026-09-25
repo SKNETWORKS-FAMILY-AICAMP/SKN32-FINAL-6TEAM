@@ -131,7 +131,7 @@ def _run_tests() -> tuple[str, int, int, int, int, int]:
 
 def main() -> int:
     print("=" * 64)
-    print(f"A-COP DoD 검증  (v8 §27 · {len(ITEMS)}항목, 1~28은 v7 번호 보존)")
+    print(f"triPilot DoD 검증  (v8 §27 · {len(ITEMS)}항목, 1~28은 v7 번호 보존)")
     print("=" * 64)
     print(f"{' #':>3}  {'항목':<36} {'evidence':<8} {'판정':<8} 결과")
 

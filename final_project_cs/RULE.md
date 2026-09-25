@@ -1,4 +1,4 @@
-# RULE.md — A-COP 작업 규칙 (프로세스)
+# RULE.md — triPilot 작업 규칙 (프로세스)
 
 > 이 문서는 이 저장소에서 수행되는 **모든 작업(사람 · Claude · Codex 공통)**에 적용되는 **프로세스 규칙**이다.
 > 계획서·리포트·이력이 이 문서와 충돌하면 이 문서가 우선한다.
@@ -119,7 +119,7 @@ v6 와 실제 구현이 어긋나면 `wiki/records/plans/` 에 사유를 적고,
 
 ### 3.5 ★계약을 코드보다 먼저 고친다 (Contract-first)
 
-A-COP 의 핵심은 `TeamTask`/`TeamResult`/`ContextPack` 계약이다.
+triPilot 의 핵심은 `TeamTask`/`TeamResult`/`ContextPack` 계약이다.
 **계약을 바꾸는 변경은 wiki 본문의 계약 페이지(`wiki/teams/team-contract/`·`wiki/external/`·허브 `wiki/contracts/`)를 먼저 고치고 그 다음 코드를 고친다.** 순서를 뒤집지 않는다. `wiki/records/handoff/`는 2026-09-08부터 동결된 기록이라 고치지 않는다 — 옛 계약 문구가 필요하면 거기서 읽되, 현재 계약은 wiki 본문이다.
 
 - `app/core/contracts.py` 는 `wiki/records/handoff/01_계약_Pydantic.md` 의 구현체다. 둘이 어긋나면 **결함**이다.
@@ -251,7 +251,7 @@ evidence 없는 DoD 체크는 `scripts/verify_dod.py` 가 **미통과로 센다.
 
 이유는 두 가지다.
 
-1. **MVP 제외와 영구 기각은 다르다.** A-COP 은 모듈형 플랫폼이라 Agent Team 수와 A2A 범위가
+1. **MVP 제외와 영구 기각은 다르다.** triPilot 은 모듈형 플랫폼이라 Agent Team 수와 A2A 범위가
    커지면 지금 미룬 것들이 필요해진다. 판단 근거가 규모였다면 규모가 바뀔 때 판단도 바뀐다.
 2. 기록하지 않으면 **같은 논의를 반복**한다. 왜 안 했는지가 남지 않으면 다음 사람이 처음부터 검토한다.
 

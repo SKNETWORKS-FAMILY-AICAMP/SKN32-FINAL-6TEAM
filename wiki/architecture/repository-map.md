@@ -39,7 +39,7 @@ final_project_sample          final_project_cs
 
 ## gPUteer의 위치
 
-**A-COP 제품의 일부가 아니다.** 개발·학습 인프라 비용을 낮추는 별도 프로젝트다.
+**triPilot 제품의 일부가 아니다.** 개발·학습 인프라 비용을 낮추는 별도 프로젝트다.
 
 | gPUteer가 푸는 것 | 못 푸는 것 |
 |---|---|
@@ -49,7 +49,7 @@ final_project_sample          final_project_cs
 
 gPUteer 문서가 스스로 **"GPU 메모리를 물리적으로 합치는 기술이 아니다"**라고 명시한다. VRAM 문제는 다른 수단으로 푼다. → [../business/infrastructure-cost.md](../business/infrastructure-cost.md)
 
-**A-COP 사업성 계산에는 gPUteer를 개발 단계 비용 절감 요인으로만 넣는다.** 고객사의 자체호스팅 문제를 푸는 제품이 아니다. 섞어 설명하면 심사에서 혼선이 생긴다.
+**triPilot 사업성 계산에는 gPUteer를 개발 단계 비용 절감 요인으로만 넣는다.** 고객사의 자체호스팅 문제를 푸는 제품이 아니다. 섞어 설명하면 심사에서 혼선이 생긴다.
 
 ## 문서를 어디에 두는가
 

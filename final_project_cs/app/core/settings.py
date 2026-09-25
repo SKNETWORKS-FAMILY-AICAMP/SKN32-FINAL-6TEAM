@@ -1,4 +1,4 @@
-"""A-COP 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
+"""triPilot 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
 
 규칙 (RULE.md §3.1, §3.2):
   - 하드코딩 금지. API 키·모델명·경로·가드레일 수치를 코드에 직접 쓰지 않는다.

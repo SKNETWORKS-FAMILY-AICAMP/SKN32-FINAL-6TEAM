@@ -108,7 +108,7 @@ CUSTOMER_OPS_POLICY = VerificationPolicy(
 | Controller | 실행 루프 |
 | Settings / guardrails | 설정의 단일 출처 |
 
-> **이것들을 끄면 A-COP 이 아니게 된다.**
+> **이것들을 끄면 triPilot 이 아니게 된다.**
 
 **두 목록이 거의 같다.** 위 11행은 "도메인을 바꿔도 안 바뀌는 것"이고 이 9종은 "사용자가 끌 수 없는 것"이다.
 

@@ -1,7 +1,7 @@
 ---
 type: policy
 title: 문서 작성 표준
-description: A-COP 팀이 문서를 쓸 때 지키는 규칙. 하면 안 되는 것 5가지와 반드시 하는 것 5가지
+description: triPilot 팀이 문서를 쓸 때 지키는 규칙. 하면 안 되는 것 5가지와 반드시 하는 것 5가지
 status: draft
 tags: [governance, documentation]
 domain: neutral
@@ -176,7 +176,7 @@ business/unit-economics.md          (600줄이 됨)
 business/unit-economics/
    ├─ index.md          ← 결론과 지도. 원래 문서의 요약이 여기 남는다
    ├─ human-cost.md     ← 사람 원가 적산
-   ├─ acop-cost.md      ← A-COP 원가
+   ├─ acop-cost.md      ← triPilot 원가
    └─ comparison.md     ← 비교와 결론
 ```
 

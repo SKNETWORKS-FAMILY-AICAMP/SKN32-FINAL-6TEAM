@@ -137,7 +137,7 @@ def cmd_level(args: argparse.Namespace) -> int:
 def cmd_status(_: argparse.Namespace) -> int:
     data = progress.load()
     titles = {"0": "해설된 완주", "1": "복원", "2": "대조", "3": "결함", "4": "보스전"}
-    print("\nA-COP 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
+    print("\ntriPilot 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
     print(SEPARATOR)
     for stage, title in titles.items():
         entry = data["stages"].get(stage)
@@ -564,7 +564,7 @@ def cmd_refs(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 코드 학습 프로그램")
+    parser = argparse.ArgumentParser(prog="acop-dojo", description="triPilot 코드 학습 프로그램")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)

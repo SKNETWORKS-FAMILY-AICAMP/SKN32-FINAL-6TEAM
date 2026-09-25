@@ -24,7 +24,7 @@ HEARTBEAT_DIR = OPS_DIR / "heartbeat"
 LOG_DIR = OPS_DIR / "logs"
 
 #: PostgreSQL 을 Windows 서비스로 등록할 때 쓸 이름.
-#: ★저장소 이름이 아니라 **클러스터** 이름을 넣는다 — 이 클러스터는 A-COP 만의 것이
+#: ★저장소 이름이 아니라 **클러스터** 이름을 넣는다 — 이 클러스터는 triPilot 만의 것이
 #:   아니다. 같은 데이터 디렉터리에 옆 프로젝트 DB 가 함께 있다
 #:   (`wiki/operations/local-setup.md` §「알아야 할 것」).
 PG_SERVICE_NAME = "pgv-postgresql-5433"
@@ -74,7 +74,7 @@ JOBS: dict[str, Job] = {
         kind="tick",
         argv=["-m", "scripts.run_sweepers", "--once"],
         every_minutes=1,
-        task_name="A-COP cs sweepers",
+        task_name="triPilot cs sweepers",
         max_silence_seconds=600,
         why="접수·분류·실행을 나눈 대가다. 안 돌면 `classifying`·`routing` 에 남은 Case 가 "
             "영원히 그대로 있고, 일정 안내(v11 §6-B)가 때를 놓친다.",
@@ -87,7 +87,7 @@ JOBS: dict[str, Job] = {
         kind="tick",
         argv=["-m", "scripts.run_outbox_worker", "--once", "--drain"],
         every_minutes=1,
-        task_name="A-COP cs outbox",
+        task_name="triPilot cs outbox",
         max_silence_seconds=600,
         why="통지는 바깥함(`outbox`)에 쌓이기만 한다. 일꾼이 안 돌면 고객에게 아무것도 안 나간다 — "
             "그런데 시스템 어디에도 오류가 안 뜬다.",
@@ -99,7 +99,7 @@ JOBS: dict[str, Job] = {
         kind="tick",
         argv=["-m", "scripts.run_daily_feedback"],  # --date 는 tick 이 그날 날짜로 채운다
         daily_at="09:10",  # guardrails `feedback_analytics.batch_time_utc: 00:10` = KST 09:10
-        task_name="A-COP cs daily-feedback",
+        task_name="triPilot cs daily-feedback",
         max_silence_seconds=60 * 60 * 30,  # 하루 + 여유 6시간
         why="`config/guardrails.yaml` 의 `feedback_analytics.batch_time_utc: 00:10` 이 정한 배치다. "
             "안 돌면 급증을 아무도 못 본다.",
@@ -113,7 +113,7 @@ JOBS: dict[str, Job] = {
         # ★포트는 공개 주소(`ACOP_PUBLIC_BASE_URL`)와 **같아야** 한다. 8043 으로 띄웠더니
         #   통지에 실린 계획서 링크가 죽은 주소를 가리켰다(2026-09-22).
         argv=["-m", "uvicorn", "app.presentation.api.app:app", "--port", "8042"],
-        task_name="A-COP cs app",
+        task_name="triPilot cs app",
         max_silence_seconds=None,
         why="접점이 둘인데(에이전트 API · 여행계획서 링크) 둘 다 이 프로세스다. "
             "★**상태의 정본이 링크**라서(v11 §9-C) 앱이 꺼지면 고객이 맞는 것을 볼 데가 없다.",

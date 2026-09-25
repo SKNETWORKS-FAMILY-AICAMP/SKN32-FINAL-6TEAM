@@ -1,13 +1,13 @@
 ---
 type: guide
-title: A-COP 지식 허브
+title: triPilot 지식 허브
 description: 중앙 허브의 8개 영역과 각 영역이 답하는 질문. 2026-09-08 도메인이 여행으로 바뀌었다
 status: draft
 domain: travel
 domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 ---
 
-# A-COP 지식 허브
+# triPilot 지식 허브
 
 처음이면 [quickstart.md](quickstart.md)부터 본다.
 
@@ -36,7 +36,7 @@ domain_note: 판올림 이력을 싣는다. 두 도메인이 대조로 나온다
 
 ### [business/](business/index.md) — 얼마짜리인가
 건당 원가, 인프라 비용, 시장 규모, 가격안.
-`[실측]` 여기 적힌 사람 1건 4,100~4,846원 · A-COP 병행 **1,132원**은 **쇼핑몰 CS 상담 원가**다(`business/unit-economics.md` 와 맞췄다 — 1,133 으로 적혀 있었다). 여행은 팀당 이용권(7일·4인·서울 1도시, 가격은 v11 §11-A)이라 산식이 다르다 — v11 §1. 인바운드 손익 재계산은 `[미확보]`.
+`[실측]` 여기 적힌 사람 1건 4,100~4,846원 · triPilot 병행 **1,132원**은 **쇼핑몰 CS 상담 원가**다(`business/unit-economics.md` 와 맞췄다 — 1,133 으로 적혀 있었다). 여행은 팀당 이용권(7일·4인·서울 1도시, 가격은 v11 §11-A)이라 산식이 다르다 — v11 §1. 인바운드 손익 재계산은 `[미확보]`.
 
 ### [architecture/](architecture/index.md) — 어떻게 나뉘는가
 시스템 경계, 저장소 관계, Core와 Team의 분리 기준, Pack 모델.

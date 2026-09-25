@@ -127,7 +127,7 @@ def main() -> int:
 
     width = max(len(label) for label, _ in CHECKS)
     print("=" * (width + 60))
-    print("A-COP 환경 점검")
+    print("triPilot 환경 점검")
     print("=" * (width + 60))
     for label, detail in CHECKS:
         print(f"{label.ljust(width)}  {detail}")

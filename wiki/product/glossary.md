@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 용어
-description: A-COP에서 쓰는 핵심 용어 정의. 문서와 코드가 같은 뜻으로 쓰는지 확인하는 기준
+description: triPilot에서 쓰는 핵심 용어 정의. 문서와 코드가 같은 뜻으로 쓰는지 확인하는 기준
 status: draft
 tags: [customer-operations]
 size_exempt: true
@@ -75,7 +75,7 @@ Core가 근거를 대조하고, 위험도를 판정하고, 필요하면 사람 �
 ### Action
 바깥 세계를 실제로 바꾸는 동작. 환불 실행, 알림 발송 등.
 
-**A-COP에서 side effect가 일어나는 유일한 경로다.**
+**triPilot에서 side effect가 일어나는 유일한 경로다.**
 
 ### Team Registry
 capability를 Team 구현으로 해석하는 곳.

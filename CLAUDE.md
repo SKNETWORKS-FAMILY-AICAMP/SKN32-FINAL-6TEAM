@@ -1,9 +1,10 @@
-# A-COP 루트 작업 기준
+# triPilot 루트 작업 기준
 
 아래 표는 여러 문서에 반복되는 현재 기준 사실이다.
 
 | 사실 | 현재 값 | 정본 | 확인일 |
 |---|---|---|---|
+| ★**이름** | `[2026-09-25 사용자]` **프로젝트(제품) 이름은 triPilot, 팀 이름은 A-COPilot.** 「A-COP」은 옛 이름이다 — 문서·화면에서 제품을 가리킬 때 A-COP 이라 쓰지 않는다. ★그대로 두는 것: 팀 이름 A-COPilot · 실제 파일 이름(`A-COP_구현계획서_v11.md` 등) · 코드 식별자(`ACOP_` 환경변수 · `acop_cs` DB · `acop_composer` · `acop_dojo`) · 기록 문서(계획서 v11 읽기 전용 · `records/` · 조사·브리핑·산출물) | `README.md` | 2026-09-25 |
 | 문서 기준선 | **v11** (2026-09-10 판올림). **v10 은 직전 판으로 `program/plan/` 에 그대로 있다** — 무엇이 달라졌는지는 v11 §0-2A 가 표로 적었다. v9 도 같은 폴더에, v8 이하는 보존본 `program/plan/.archive/` — **압축·숨김. 평소엔 열지 않는다**. 계획서 = 범위·결정·일정, 세부 설계·운영 사실 = wiki | `program/plan/A-COP_구현계획서_v11.md` §0 | 2026-09-10 |
 | **도메인** | **여행 CS** — 2026-09-08 팀 결정으로 커머스 CS 에서 교체. 코어 계약·생명주기·동시성·감사·평가 도구는 승계, Team 모듈과 도메인 데이터는 전량 신규 | `program/plan/A-COP_구현계획서_v11.md` §0 | 2026-09-10 |
 | Team 목록 — v11 §5 | Activity · Dining · Mobility · **Booking Handoff** · Lodging/Flight(등록만). `[결정 2026-09-10]` **MVP 는 Activity · Dining · Mobility 셋.** **Booking Handoff 는 MVP 가 아니다 — MVP 다음 단계**(09-08 「MVP 필수 승격」을 뒤집음). 그 몫인 DoD-14~21 은 MVP 판정에서 뺀다 | `program/plan/A-COP_구현계획서_v11.md` §5 · §0-4 결정 16 | 2026-09-10 |
@@ -88,7 +89,7 @@ v9 기준 표가 필요하면 `program/plan/A-COP_구현계획서_v9.md` §0 을
 
 폴더 규칙과 각 데이터셋의 상태는 [`datasets/README.md`](datasets/README.md)가 정본이다. 새 데이터셋을 만들기 전에 먼저 읽는다.
 
-| 데이터셋 | 무엇인가 | A-COP에서 쓰는 곳 |
+| 데이터셋 | 무엇인가 | triPilot에서 쓰는 곳 |
 |---|---|---|
 | [`commerce/coupang_order_history`](datasets/commerce/coupang_order_history/) | 쿠팡 주문·배송 기록 | Core 1 Context Broker의 주문 정보 |
 | [`commerce/naver_order_history`](datasets/commerce/naver_order_history/) | 네이버 주문 기록 | 동. 쇼핑몰 두 곳으로 구조 편향을 막는다 |

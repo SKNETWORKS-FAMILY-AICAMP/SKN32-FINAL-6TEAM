@@ -42,7 +42,7 @@ $data = "C:\Users\playdata2\Documents\llm_workspace\_unified_mall_3\data\pgdata"
 
 | 알아야 할 것 | |
 |---|---|
-| **데이터 디렉터리가 저장소 밖이다** | `_unified_mall_3/data/pgdata`. `acop`은 그 클러스터 안에 있고 **`insurance_*`·`mall_vec` 등 옆 프로젝트 DB와 같은 서버**다. 이 서버를 내리면 옆 프로젝트도 멈춘다. A-COP은 `acop`만 쓴다 |
+| **데이터 디렉터리가 저장소 밖이다** | `_unified_mall_3/data/pgdata`. `acop`은 그 클러스터 안에 있고 **`insurance_*`·`mall_vec` 등 옆 프로젝트 DB와 같은 서버**다. 이 서버를 내리면 옆 프로젝트도 멈춘다. triPilot은 `acop`만 쓴다 |
 | 비정상 종료 후 | 기동 때 자동 복구가 돈다(`automatic recovery in progress … redo done`). fsync에 **40초 이상** 걸릴 수 있으니 `pg_ctl start`가 느려도 기다린다 |
 | 기동 후 | **건수를 대조하고 작업을 재개한다.** `knowledge_documents=25 · knowledge_chunks=306`(cs `CLAUDE.md` §5). 원본 매뉴얼의 `payments=30·knowledge_chunks=300`은 옛 도메인 값이라 지금과 다르다 |
 | extension | `vector`·`pgcrypto`는 **마이그레이션이 만든다.** `CREATE EXTENSION`을 손으로 치지 않는다 — 마이그레이션이 유일한 경로여야 재현된다 |

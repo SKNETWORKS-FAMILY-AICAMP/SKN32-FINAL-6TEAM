@@ -59,7 +59,7 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 `[정정 2026-09-10]` **재측정본은 있다**(`2026-08-24_reeval_A/B.jsonl`, 각 216행). ★다만 그 실행은 **모델 입력에 정답이 들어간 채** 돌았다 → [../evaluation/protocol.md](../evaluation/protocol.md). 그 전 서술 — Baseline A(단순 LLM)와 B(RAG)의 새 도메인 재측정본이 없다.
 
-그래서 **"A-COP이 단순 LLM보다 몇 배 비싸다"를 지금은 말할 수 없다.** 심사에서 "그냥 GPT 부르면 되는데 왜"가 나오면 답할 근거가 없다.
+그래서 **"triPilot이 단순 LLM보다 몇 배 비싸다"를 지금은 말할 수 없다.** 심사에서 "그냥 GPT 부르면 되는데 왜"가 나오면 답할 근거가 없다.
 
 **재측정이 필요하다.** 명령은 `final_project_cs/wiki/records/reports/2026-08-17_1540_RAG적재_평가데이터셋_재작성_리포트.md` §5에 있다.
 

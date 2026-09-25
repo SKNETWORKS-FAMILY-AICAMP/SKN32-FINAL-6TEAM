@@ -364,10 +364,10 @@ def _exception_pool(m: Material) -> list[str]:
     return sorted({g.exc for u in m.index.units for g in u.guards})
 
 
-def gen_guard_exc(m: Material, target: Unit) -> Question | None:
+def gen_guard_exc(m: Material, target: Unit, guard: Guard | None = None) -> Question | None:
     if not target.guards:
         return None
-    guard = m.rng.choice(target.guards)
+    guard = guard or m.rng.choice(target.guards)
     if len({g.exc for g in target.guards if same_meaning(g.cond, guard.cond)}) > 1:
         return None
     others = [name for name in _exception_pool(m) if name != guard.exc]
@@ -521,10 +521,10 @@ def _names_in(code: str) -> set[str]:
         return set()
 
 
-def gen_guard_cond(m: Material, target: Unit) -> Question | None:
+def gen_guard_cond(m: Material, target: Unit, guard: Guard | None = None) -> Question | None:
     if not target.guards:
         return None
-    guard = m.rng.choice(target.guards)
+    guard = guard or m.rng.choice(target.guards)
     masked = masked_condition(target.source, guard, target.line)
     if masked is None or masked.count(MASK) != 1:
         return None
@@ -860,6 +860,10 @@ def selftest(*, per_family: int = 0, track_id: str = "all", allow_ollama: bool =
             if fam == "trace_next":
                 jobs = [(sc, i) for sc, seq in sorted(m.traces.items()) for i in trace_spots(seq)]
                 make = lambda job: gen_trace_next(m, spot=job)          # noqa: E731
+            elif fam in ("guard_exc", "guard_cond"):
+                # 검사문 하나하나가 문제 자리다 — 함수마다 하나만 보면 나머지는 검사 밖에 남는다
+                jobs = [(u, g) for u in m.units for g in u.guards]
+                make = lambda job: GENERATORS[fam](m, job[0], job[1])   # noqa: E731
             else:
                 jobs = list(m.units)
                 make = lambda job: GENERATORS[fam](m, job)              # noqa: E731

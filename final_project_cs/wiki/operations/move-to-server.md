@@ -98,7 +98,7 @@ python -m scripts.ops.install_services --apply --only postgres `
 - `<데이터디렉터리>` 값은 [local-setup.md](local-setup.md)가 갖고 있다.
 - **등록만 하고 시작하지 않는다.** 지금 도는 postmaster 가 같은 디렉터리를 쥐고 있어서다.
   **효력은 다음 재부팅부터**이고, 그때 서비스로 뜬다.
-- ★★**이 클러스터는 A-COP 만의 것이 아니다.** 같은 데이터 디렉터리에 옆 프로젝트 DB 가
+- ★★**이 클러스터는 triPilot 만의 것이 아니다.** 같은 데이터 디렉터리에 옆 프로젝트 DB 가
   함께 있다([local-setup.md](local-setup.md) §「알아야 할 것」). 등록하면 **그쪽 수명도
   함께 바뀐다** — 그래서 `--yes-shared-cluster` 를 따로 받는다. **팀 합의가 먼저다.**
 - 지금 당장 바꾸고 싶으면 도는 postmaster 를 **정상 종료**한 뒤 서비스를 시작한다.

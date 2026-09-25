@@ -51,7 +51,7 @@ domain: travel
 `[실측]` v11 §5·§6.
 
 ```text
-              A-COP Runtime (Core)  ← 도메인을 모른다
+              triPilot Runtime (Core)  ← 도메인을 모른다
    Case · Controller · Registry · Port · 승인 경계 · 감사 · 평가
                         │
         ┌───────────────┴───────────────┐

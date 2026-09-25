@@ -93,7 +93,7 @@ action_id · case/run/task · 실패한 필드
 
 ## 3차 지표를 옮긴 대응
 
-| 3차 프로젝트 | A-COP |
+| 3차 프로젝트 | triPilot |
 |---|---|
 | 인용 정합률 | **근거 정합률** |
 | `verdict="unknown"` | `next_action="escalate"` |
