@@ -91,6 +91,13 @@ Team을 추가·교체할 때 **Core 코드가 바뀌지 않게** 하는 장치�
 
 **도메인 어휘가 들어오면 테스트가 실패한다.** → `INV-CS-ARCH-001`
 
+### 매니저 (옛 이름: 코어 담당)
+**사람·역할·브랜치의 이름이다.** 예전 「코어 1·코어 2 담당」을 지금 「매니저」라 부르고, 조직 저장소 브랜치는 `role-manager` 다(2026-09-14 `role-core1`·`role-core2` → `role-core`, 2026-09-23 `role-manager`).
+
+코드 층 이름인 **Core** 는 바뀌지 않았다 — 설계 문서·코드에서 Core 는 여전히 Core 다.
+
+→ [../delivery/roles.md](../delivery/roles.md) §이름 대응
+
 ### Pack
 도메인 지식을 담은 Team 묶음. CS Pack, Commerce Ops Pack.
 
@@ -141,6 +148,7 @@ Context/DB에 없는데 모델이 주장한 비율. **할루시네이션 지표�
 | Team | Agent | Team은 책임 단위, Agent는 그 안의 구현 |
 | MCP | A2A | 도구 호출 vs 업무 위임 |
 | Core | Pack | 도메인 모름 vs 도메인 앎 |
+| 매니저 | Core | 사람·역할·브랜치 이름(`role-manager`, 옛 코어 담당) vs 코드 층 이름 |
 | escalate | handoff | 근거 부족으로 넘김 vs 처음부터 사람 몫 |
 
 ## 관계

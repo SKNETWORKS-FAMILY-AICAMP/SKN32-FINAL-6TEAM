@@ -12,7 +12,7 @@ triPilot은 고객의 자연어 요청을 업무 **Case**로 접수하고, 현�
 
 | 팀원 | 담당 영역 | 주요 역할 |
 |---|---|---|
-| 최연우 | Core 1 Runtime | Case 12단계 상태전이 머신, CAS 동시성 제어, 2축 Registry 라우팅 |
+| 최연우 | Core 1 Runtime (역할 이름 **매니저**, 브랜치 `role-manager`) | Case 12단계 상태전이 머신, CAS 동시성 제어, 2축 Registry 라우팅 |
 | 서유현 | Mobility Team | 실시간 운행 중단·도로 통제 감지, 우회로 탐색, 출발 시각 역산 알고리즘 |
 | 정세환 | Dining Team | 영업시간·브레이크타임 대조, 해외카드 결제 검증, CatchTable·Tripadvisor 연동 |
 | 최상욱 | UI & 검증 (요식 지원) | 동적 여행계획서 웹(`/t/{token}`), 18개 MVP DoD 검증 하네스, 요식업 데이터 정제 |
@@ -369,6 +369,8 @@ python -m pytest tests/e2e -q
 ```text
 feature/*  →  role-manager  →  develop  →  release/main
 ```
+
+`role-manager` 는 코어 담당(옛 `role-core1`·`role-core2`) 브랜치입니다. 팀원 브랜치는 `role-activity`·`role-dining`·`role-mobility`·`role-eval-ui` 입니다. 문서의 「코어 1·코어 2」와 지금 이름의 대응은 [`wiki/delivery/roles.md`](wiki/delivery/roles.md) 「이름 대응」에 있습니다.
 
 푸시 전에는 다음을 확인합니다.
 
