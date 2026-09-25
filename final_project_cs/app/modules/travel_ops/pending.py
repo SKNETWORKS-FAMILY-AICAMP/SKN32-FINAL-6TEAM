@@ -79,8 +79,11 @@ def decide(*, constraints: dict[str, Any] | None, item: Item,
 def options_from(plan: ItineraryChange, item: Item) -> list[dict[str, Any]]:
     """계산된 안을 **적용에 필요한 값 그대로** 1위부터 적는다(다시 계산하지 않게)."""
     best = plan.replacements.get(item.item_id)
-    if best is None:
-        return []
+    return [] if best is None else options_for(best)
+
+
+def options_for(best: Item) -> list[dict[str, Any]]:
+    """최고 안(바꿔 넣을 항목) 하나와 그것이 들고 있는 「다른 안」을 1위부터."""
     ranked = [applied_record(best)] + list(best.detail.get("alternates") or [])
     return [{**record, "rank": rank} for rank, record in enumerate(ranked, start=1)]
 
@@ -243,4 +246,4 @@ def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:
 
 
 __all__ = ["Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES", "choose", "decide",
-           "is_safety", "options_from", "proposal_notice", "protected_reason"]
+           "is_safety", "options_for", "options_from", "proposal_notice", "protected_reason"]

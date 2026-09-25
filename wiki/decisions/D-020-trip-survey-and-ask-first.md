@@ -104,7 +104,7 @@ domain: travel
 | 에이전트 API 로 제안 보기·고르기 | **완료** — `GET /v1/trips/{id}/proposals`(`trip:read`) · `POST …/proposals/{pid}/choose`(`trip:write`). 웹과 같은 규칙 |
 | 새벽 3시 정리 — 식당 영업 확인 | **미완** — 구글 키 자리만 있다(`ACOP_GOOGLE_MAPS_API_KEY`, 비어 있음). 우리 장소와 구글 장소를 잇는 id 가 아직 없다 |
 | 고객 신고 경로(`trip_desk`) | **완료** `[2026-09-25]` — 늦음·휴무 신고도 같은 판정 문을 지난다. 신고는 「문제가 생겼다」이지 「이 안으로」가 아니라서 어느 안으로 바꿀지는 우리가 고른다 → 먼저 물어봐줘·변경 안 할 일정이면 묻는다(`status: asked`, 같은 신고가 다시 와도 제안은 하나). 고객이 직접 고른 것(다른 안으로·되돌리기·제안 고르기)은 판정 문을 지나지 않는다. 자유 문장 경로는 물었으면 Case 를 닫는다(답 = 묻는 문장). 시험 `tests/e2e/test_desk_gate.py` 4건 |
-| Case 경로(Teams) | **미완** — 판정 문을 아직 안 지난다 |
+| Case 경로(Teams) | **완료** `[2026-09-25]` — 일정 적용기(`itinerary_actions.py`, `itinerary.apply`)가 같은 판정을 탄다. 묻는 경우 새 버전을 쓰지 않고 보류 제안을 열어 묻는 알림을 Case 완료와 같은 트랜잭션으로 내보낸다(`summary.status = asked`). 안전 사건은 원인(`causes`)의 종류로 가른다. 고객이 고른 변경(`customer_request`·`rollback`·`customer_choice`)은 지나지 않는다. 시험 `tests/scenario/test_case_path_gate.py` 5건. ★이제 **일정을 바꾸는 세 경로(감시 · 고객 신고 · Case) 모두** 같은 판정 문을 지난다 |
 | 익명 키 발급 속도 제한 | **완료** — 키 없이 열린 `POST /v1/web/session` 을 주소마다 한 시간에 20개로 막는다(`429` + `Retry-After`). 프로세스 안에서 센다 — 프록시 뒤에 두면 원 주소로 세도록 바꿔야 한다 |
 
 ## 아직 정하지 않은 것

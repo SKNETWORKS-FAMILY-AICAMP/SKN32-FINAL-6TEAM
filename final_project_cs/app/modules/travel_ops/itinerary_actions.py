@@ -17,6 +17,12 @@
 ★통지는 직접 넣지 않고 `AppliedAction.outbox` 로 돌려준다 — 코어가 Case 완료 전이와
   **같은 트랜잭션**에 싣는다. 버전당 하나(`{trip_id}:v{version}`, §6-C-6)는 시나리오
   버전의 `TripStore.enqueue_notice` 와 같은 키다.
+
+★`[2026-09-25]` **감시·신고에서 온 변경은 판정 문을 지난다**(`pending.decide`, D-020) — 시나리오용 여행
+  버전의 감시(`trip_watch`)·신고(`trip_desk`)와 같은 판정·같은 보류 제안·같은 알림이다.
+  설문 15번 「먼저 물어봐줘」거나 「변경 안 할 일정」이 걸리면 **새 버전을 쓰지 않고** 제안을 열고
+  묻는 알림을 돌려준다(`summary.status = "asked"`). 안전 사건은 원인(`causes`)의 종류로 가른다.
+  ★고객이 **직접 고른 것**(다른 안으로 · 되돌리기 · 제안 고르기)은 지나지 않는다 — 그 자체가 답이다.
 """
 from __future__ import annotations
 
@@ -27,11 +33,14 @@ from uuid import UUID
 from app.core.actions import ActionConflict, ActionRejected, AppliedAction
 from app.core.transition import OutboxMessage
 
-from .itinerary import StaleItinerary, TripStore, item_from_dict, item_to_dict
+from .itinerary import Item, StaleItinerary, TripStore, item_from_dict, item_to_dict
 from .itinerary_changes import ItineraryChange
+from .pending import PendingStore, decide, options_for, proposal_notice
 
 ACTION_TYPE = "itinerary.apply"
 NOTICE_TOPIC = "trip.notice"
+#: 고객이 직접 고른 변경 — 판정 문을 지나지 않는다(그 자체가 답이다)
+CHOSEN_BY_CUSTOMER = frozenset({"customer_request", "rollback", "customer_choice"})
 
 
 def _plain(value: Any) -> Any:
@@ -104,6 +113,12 @@ class ItineraryApply:
         if unknown:
             raise ActionRejected(f"places not in this tenant: {unknown}")
 
+        if arguments.get("full_items") is None and str(arguments["reason"]) not in CHOSEN_BY_CUSTOMER:
+            asked = _ask_instead(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base,
+                                 current=current, replacements=replacements, arguments=arguments)
+            if asked is not None:
+                return asked
+
         try:
             version = store.append_version(conn, trip_id=trip_id, base_version=base, items=new_items,
                                            reason=str(arguments["reason"]),
@@ -123,6 +138,41 @@ class ItineraryApply:
                             "reason": arguments["reason"], **dict(arguments.get("summary") or {})}),
             outbox=[OutboxMessage(topic=NOTICE_TOPIC, payload=payload,
                                   dedupe_key=f"{trip_id}:v{version}")])
+
+
+def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
+                 current: list[Item], replacements: Mapping[UUID, Item],
+                 arguments: Mapping[str, Any]) -> AppliedAction | None:
+    """바꿀 항목 중 하나라도 판정이 「바꾸지 말라」면 **바꾸지 않고 묻는다.** None 이면 바꿔도 된다."""
+    from .plan_link import plan_url
+
+    causes = list(arguments.get("causes") or [])
+    report = {"disruptions": causes}           # ★안전 사건 여부는 원인의 종류(`category`)로 가른다
+    pending = PendingStore(tenant_id)
+    for item_id, best in replacements.items():
+        item = next(i for i in current if i.item_id == item_id)
+        decision = decide(constraints=trip.get("constraints"), item=item, report=report)
+        if decision.action == "apply":
+            continue
+        options = options_for(best)
+        proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base,
+                                   decision=decision, causes=causes, options=options)
+        already = proposal_id is None
+        if already:                               # 이미 물었다 — 다시 알리지 않는다
+            proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
+                               if row["item_id"] == item.item_id and row["base_version"] == base)
+        summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id),
+                          "version": base, "proposal_id": str(proposal_id), "item": item.title,
+                          "reason": decision.reason, "protected_by": decision.protected_by,
+                          "safety": decision.safety})
+        outbox = [] if already else [OutboxMessage(
+            topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
+            payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+                            **proposal_notice(item=item, decision=decision, causes=causes,
+                                              options=options, proposal_id=proposal_id)}))]
+        return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{proposal_id}", summary=summary,
+                             outbox=outbox)
+    return None
 
 
 ACTION_HANDLERS = (ItineraryApply(),)
