@@ -813,7 +813,7 @@ def run(*, track_id: str = "all", count: int = 5, family: str | None = None,
     print(f"  오답 고르기: {m.vectors.source}")
     if m.stale_traces:
         print(f"  코드가 바뀌어 쓰지 않은 실행 기록 {len(m.stale_traces)}개 — 새로 뜨려면 "
-              f"python dojo.py trace <시나리오>  (예: {m.stale_traces[0]})")
+              f"python dojo.py quiz refresh")
     print(SEPARATOR)
     questions = draw(m, count, families=[family] if family else None)
     if not questions:
@@ -834,6 +834,35 @@ def run(*, track_id: str = "all", count: int = 5, family: str | None = None,
     print(f"  {tally.summary()}")
     print("  다시 하면 다른 문제가 나온다.")
     return 0
+
+
+def refresh(*, track_id: str = "all") -> int:
+    """낡은 실행 기록만 골라 다시 뜬다. cs 는 여러 사람이 계속 고치므로 기록은 금방 낡는다.
+
+    DB 가 필요한 시나리오는 DB 가 떠 있어야 뜬다. 실패한 것은 이름과 이유를 적고 넘어간다.
+    """
+    from . import scenarios as scenarios_mod
+    from . import tracer
+
+    index = build_index()
+    _, stale = load_traces(tracks_mod.get(track_id), index)
+    if not stale:
+        print("낡은 실행 기록이 없다. 모든 기록이 지금 코드보다 새것이다.")
+        return 0
+    print(f"낡은 실행 기록 {len(stale)}개를 다시 뜬다.")
+    failed = []
+    for sid in stale:
+        scenario = scenarios_mod.get(sid)
+        out = WORKSPACE_ROOT / ".acop_dojo" / "traces" / f"{sid}.json"
+        try:
+            trace = tracer.capture(scenario.nodeid, target=target_root(), out_path=out)
+            print(f"  [통과] {sid}  실행 지점 {trace['summary']['steps']}개")
+        except Exception as exc:  # noqa: BLE001 — 한 시나리오 실패로 나머지를 멈추지 않는다
+            failed.append(sid)
+            hint = " (DB 가 필요한 시나리오다 — DB 가 떠 있는지 본다)" if scenario.needs_db else ""
+            print(f"  [실패] {sid}{hint}: {str(exc).splitlines()[0][:160] if str(exc) else type(exc).__name__}")
+    print(f"다시 뜬 기록 {len(stale) - len(failed)}/{len(stale)}개.")
+    return 0 if not failed else 1
 
 
 def selftest(*, per_family: int = 0, track_id: str = "all", allow_ollama: bool = True) -> int:

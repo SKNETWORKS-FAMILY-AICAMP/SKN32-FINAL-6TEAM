@@ -137,7 +137,7 @@ def cmd_level(args: argparse.Namespace) -> int:
 def cmd_status(_: argparse.Namespace) -> int:
     data = progress.load()
     titles = {"0": "해설된 완주", "1": "복원", "2": "대조", "3": "결함", "4": "보스전"}
-    print("\ntriPilot 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
+    print("\nA-COP 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
     print(SEPARATOR)
     for stage, title in titles.items():
         entry = data["stages"].get(stage)
@@ -511,6 +511,8 @@ def cmd_quiz(args: argparse.Namespace) -> int:
     if args.action == "selftest":
         return quiz.selftest(per_family=args.count or 0, track_id=args.track,
                              allow_ollama=not args.no_ollama)
+    if args.action == "refresh":
+        return quiz.refresh(track_id=args.track)
     if args.action == "pool":
         m = quiz.material(track_id=args.track, allow_ollama=not args.no_ollama)
         print(f"색인: 함수 {len(m.index.units)}개 (이 트랙 {len(m.units)}개) · 실행 기록 {len(m.traces)}개"
@@ -564,7 +566,7 @@ def cmd_refs(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="acop-dojo", description="triPilot 코드 학습 프로그램")
+    parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 코드 학습 프로그램")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)
@@ -629,7 +631,7 @@ def build_parser() -> argparse.ArgumentParser:
     placement_cmd.set_defaults(func=cmd_placement)
 
     quiz_cmd = sub.add_parser("quiz", help="코드 전체에서 그때그때 만든 문제를 푼다")
-    quiz_cmd.add_argument("action", nargs="?", default="run", choices=["run", "pool", "selftest"])
+    quiz_cmd.add_argument("action", nargs="?", default="run", choices=["run", "pool", "selftest", "refresh"])
     quiz_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
     quiz_cmd.add_argument("--count", type=int, default=None,
                           help="문제 수, 기본 5 (selftest 에서는 유형마다 검사할 수, 기본은 전부)")
