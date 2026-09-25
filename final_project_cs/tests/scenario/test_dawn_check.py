@@ -158,12 +158,23 @@ def test_an_unknown_meter_is_refused():
 
 
 def test_the_configured_caps_stay_under_the_free_tier():
-    """★월 상한 + 하루 상한 ≤ 무료 한도 — 월 경계 시간대가 어긋나도 넘지 않게(요금표 2026-09-25)."""
-    free = {"google_places_details_enterprise": 1000, "google_places_text_search_pro": 5000}
+    """★모든 요금 단위: 월 상한 + 하루 상한 ≤ 무료 한도, 하루 ≤ 월 ÷ 31 — 월 경계가 어긋나도 넘지 않게."""
+    from app.core.settings import get_guardrails
+    from app.infrastructure.travel.call_budget import UNLIMITED
+    from app.infrastructure.travel.google_places import METER_DETAILS, METER_SEARCH
+
+    free = get_guardrails().get("travel.google_budget.free_monthly")
     caps = google_caps()
-    assert set(caps) == set(free)
+    assert set(caps) == set(free) and len(free) >= 60
     for meter, cap in caps.items():
-        assert cap["month"] + cap["day"] <= free[meter] and cap["day"] <= cap["month"] // 31
+        if free[meter] is None:
+            assert cap == {"month": UNLIMITED, "day": UNLIMITED}
+            continue
+        assert cap["month"] + cap["day"] <= free[meter], meter
+        assert 1 <= cap["day"] <= cap["month"] // 31, meter
+    # ★새벽 식당 확인이 실제로 쓰는 둘 — 영업시간(Enterprise 1,000) · 장소 찾기(Pro 5,000)
+    assert caps[METER_DETAILS] == {"month": 969, "day": 31}
+    assert caps[METER_SEARCH] == {"month": 4844, "day": 156}
 
 
 # ── 새벽 작업 ────────────────────────────────────────────────────

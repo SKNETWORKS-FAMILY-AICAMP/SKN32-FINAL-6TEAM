@@ -11,7 +11,8 @@
 ★실패한 호출도 한 칸 쓴 것으로 센다(과금 여부를 추측하지 않는다 — 보수적).
 ★월 경계 시간대를 구글이 적어 두지 않았다 `[확인 2026-09-25, 요금표]`. 그래서 **UTC 월**로 세고
   월 상한을 무료 한도보다 작게 둔다 — 시간대가 어긋나 두 달에 걸쳐 세어져도 넘지 않게
-  (여유 = 월 상한과 무료 한도의 차 ≥ 하루 상한). 값은 가드레일 `travel.google_budget.*`.
+  (여유 = 월 상한과 무료 한도의 차 ≥ 하루 상한). 무료 한도 표는 가드레일 `travel.google_budget.free_monthly`,
+  상한은 `caps_from_free` 한 규칙으로 계산한다.
 """
 from __future__ import annotations
 
@@ -67,11 +68,24 @@ class _Exhausted(Exception):
     """예산이 찼다 — 트랜잭션을 되돌려 월·일 어느 줄도 올리지 않는다."""
 
 
+#: 무료 한도가 「무제한」인 요금 단위의 상한 — 세기만 하고 막지는 않는다
+UNLIMITED = 2_000_000_000
+
+
+def caps_from_free(free: int | None) -> dict[str, int]:
+    """월 무료 한도 → {월, 하루} 상한. ★하루 = 무료 ÷ 32(내림), 월 = 무료 − 하루 → 월 + 하루 ≤ 무료."""
+    if free is None:
+        return {"month": UNLIMITED, "day": UNLIMITED}
+    day = int(free) // 32
+    return {"month": int(free) - day, "day": day}
+
+
 def google_caps() -> dict[str, dict[str, int]]:
+    """가드레일의 무료 한도 표(`travel.google_budget.free_monthly`)에서 요금 단위마다 상한을 만든다."""
     from app.core.settings import get_guardrails
 
-    budget = get_guardrails().get("travel.google_budget")
-    return {meter: {"month": int(v["month"]), "day": int(v["day"])} for meter, v in budget.items()}
+    free = get_guardrails().get("travel.google_budget.free_monthly")
+    return {meter: caps_from_free(value) for meter, value in free.items()}
 
 
-__all__ = ["CallBudget", "google_caps"]
+__all__ = ["CallBudget", "UNLIMITED", "caps_from_free", "google_caps"]

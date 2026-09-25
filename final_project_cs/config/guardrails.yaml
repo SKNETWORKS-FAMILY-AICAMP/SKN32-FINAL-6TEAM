@@ -231,13 +231,97 @@ travel:
     until: "08:00"
     match_radius_m: 300
   # -- 구글 호출 예산 (2026-09-25 사용자 지시: 무료 한도를 **무조건** 넘지 않는다) --
-  # 무료 한도 `[확인 2026-09-25, 공식 요금표]`: Place Details Enterprise 월 1,000 · Text Search Pro 월 5,000.
-  # ★월 경계 시간대를 구글이 적어 두지 않았다 → UTC 월로 세고 **월 상한 + 하루 상한 ≤ 무료 한도**로 둔다
-  #   (경계가 하루 어긋나 두 달에 걸쳐 세어져도 넘지 않게). 하루 상한 = 월 상한 ÷ 31 (내림).
+  # ★키는 지도 API 전체에 열어 두고(나중에 경로·지오코딩 등을 쓸 수 있다), 제한은 **여기서 요금 단위마다** 건다.
+  #   표에 없는 요금 단위는 **부르지 않는다**(`call_budget.CallBudget` — 한도를 모르면 막는다).
+  # 무료 한도 = 공식 요금표의 「free usage cap」(월) `[확인 2026-09-25]`
+  #   https://developers.google.com/maps/billing-and-pricing/pricing — null 은 무제한(세기만 한다).
+  # ★상한 규칙(코드가 계산한다): **하루 = 무료 ÷ 32(내림), 월 = 무료 − 하루.**
+  #   월 경계 시간대를 구글이 적어 두지 않았다 → UTC 월로 세고 월 + 하루 ≤ 무료 한도로 둔다
+  #   (경계가 하루 어긋나 두 달에 걸쳐 세어져도 넘지 않게). 예: 1,000 → 하루 31 · 월 969.
   # 실패한 호출도 한 칸으로 센다(보수적). DB(`external_call_budget`, 027)에서 모든 프로세스가 같이 센다.
+  # ★요금표가 바뀌면 이 표만 고친다. 호출하는 코드는 자기 요금 단위 이름만 안다.
   google_budget:
-    google_places_details_enterprise: {month: 950, day: 30}     # 950 + 30 = 980 ≤ 1,000
-    google_places_text_search_pro: {month: 4800, day: 150}      # 4,800 + 150 = 4,950 ≤ 5,000
+    free_monthly:
+      # ── 지도 표시 ──
+      google_maps_dynamic_maps: 10000
+      google_maps_embed: null
+      google_maps_sdk: null
+      google_maps_static_maps: 10000
+      google_maps_static_street_view: 10000
+      google_maps_street_view_metadata: null
+      google_maps_aerial_view: 5000
+      google_maps_dynamic_street_view: 5000
+      google_maps_elevation: 5000
+      google_maps_immersive_maps: 5000
+      google_map_tiles_2d: 100000
+      google_map_tiles_street_view: 100000
+      google_map_tiles_photorealistic_3d: 1000
+      # ── 경로 ──
+      google_routes_compute_routes_essentials: 10000
+      google_routes_route_matrix_essentials: 10000
+      google_routes_compute_routes_pro: 5000
+      google_routes_route_matrix_pro: 5000
+      google_routes_compute_routes_enterprise: 1000
+      google_routes_route_matrix_enterprise: 1000
+      google_roads_nearest_road: 5000
+      google_roads_route_traveled: 5000
+      google_roads_speed_limits: 5000
+      google_route_optimization_single_vehicle: 5000
+      google_route_optimization_fleet: 1000
+      google_navigation_request: 1000
+      # ── 장소 (Places API New) ──
+      google_places_autocomplete_requests: 10000
+      google_places_autocomplete_session: null
+      google_geocoding: 10000
+      google_geolocation: 10000
+      google_maps_grounding_lite: 10000
+      google_places_details_essentials_ids_only: null
+      google_places_details_essentials: 10000
+      google_places_details_pro: 5000
+      google_places_details_enterprise: 1000              # ★새벽 식당 확인이 쓴다(영업시간)
+      google_places_details_enterprise_atmosphere: 1000
+      google_places_details_photos: 1000
+      google_places_text_search_essentials_ids_only: null
+      google_places_text_search_pro: 5000                 # ★새벽 식당 확인이 쓴다(장소 찾기)
+      google_places_text_search_enterprise: 1000
+      google_places_text_search_enterprise_atmosphere: 1000
+      google_places_nearby_search_pro: 5000
+      google_places_nearby_search_enterprise: 1000
+      google_places_nearby_search_enterprise_atmosphere: 1000
+      google_places_aggregate: 5000
+      google_places_ui_kit_query: 10000
+      google_places_ui_kit_autocomplete_session: 10000
+      google_places_ui_kit_pro: 5000
+      google_time_zone: 10000
+      google_address_validation_pro: 5000
+      google_address_validation_enterprise: 1000
+      # ── 환경 ──
+      google_air_quality: 10000
+      google_weather: 10000
+      google_pollen: 5000
+      google_solar_building_insights: 10000
+      google_solar_data_layers: 1000
+      # ── 옛 장소 API (Legacy) ──
+      google_legacy_places_autocomplete_request: 10000
+      google_legacy_places_autocomplete_session_with_details: null
+      google_legacy_places_autocomplete_session_without_details: 5000
+      google_legacy_places_query_autocomplete: 10000
+      google_legacy_places_basic_data: null
+      google_legacy_places_find_place_id_only: null
+      google_legacy_places_details_id_refresh: null
+      google_legacy_places_find_current_place: 5000
+      google_legacy_places_find_place: 5000
+      google_legacy_places_nearby_search: 5000
+      google_legacy_places_text_search: 5000
+      google_legacy_places_details: 5000
+      google_legacy_places_atmosphere_data: 1000
+      google_legacy_places_contact_data: 1000
+      google_legacy_places_photo: 1000
+      # ── 옛 경로 API (Legacy) ──
+      google_legacy_directions: 10000
+      google_legacy_distance_matrix: 10000
+      google_legacy_directions_advanced: 5000
+      google_legacy_distance_matrix_advanced: 5000
   density:
     # 여행 일정 점유 연구의 Low 관측치(약 40%)를 기준으로 한 운영 구간.
     # Low는 원문 관측값, 나머지는 Low~High 사이의 단계적 운영 구간이다.
