@@ -115,8 +115,14 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
     from app.modules.travel_ops.dawn_check import DawnCheck
     from app.modules.travel_ops.itinerary import TripStore
 
-    key = get_settings().google_maps_api_key
-    source = (GooglePlaces(api_key=key, match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
+    from app.infrastructure.travel.base import build_travel_sources
+
+    settings = get_settings()
+    key = settings.google_maps_api_key
+    # ★하루 호출 상한(`ACOP_RATE_GOOGLE_PLACES_PER_DAY`)을 **같은 제한기**로 건다 — 넘으면 부르지 않고
+    #   `rate_limited` 로 세며, 그 항목은 `fatal` 로 남아 창 안에서 다시 시도된다(요금이 새지 않게).
+    source = (GooglePlaces(api_key=key, limiter=build_travel_sources(settings).limiter,
+                           match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
               if key else None)
     outcome = DawnCheck(store=TripStore(tenant_id), connection_factory=get_connection,
                         clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source).tick()
