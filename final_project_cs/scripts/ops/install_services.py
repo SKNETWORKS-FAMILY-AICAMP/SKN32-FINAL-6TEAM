@@ -161,7 +161,7 @@ def preview(job: Job, *, pg_ctl: str | None, pgdata: str | None, port: int) -> N
         print(f"    되돌리기  : python -m scripts.ops.install_services --remove --only {job.name}")
         print(f"              (= {shown(pg_unregister_argv(pg_ctl or 'pg_ctl', job.task_name))})")
         print("    권한      : ★**관리자 필요**")
-        print("    ★★이 클러스터는 A-COP 만의 것이 아니다 — 옆 프로젝트 DB 가 같은")
+        print("    ★★이 클러스터는 triPilot 만의 것이 아니다 — 옆 프로젝트 DB 가 같은")
         print("        데이터 디렉터리에 있다. 등록하면 그쪽 수명도 함께 바뀐다.")
         print("        그래서 `--yes-shared-cluster` 를 따로 받는다.")
     else:
@@ -296,7 +296,7 @@ def main() -> int:
         return 1 if failed else 0
 
     print("=" * 78)
-    print("A-COP 상시 실행 — 등록 **미리보기**. 아무것도 바꾸지 않았다")
+    print("triPilot 상시 실행 — 등록 **미리보기**. 아무것도 바꾸지 않았다")
     print("=" * 78)
     print(f"저장소  : {REPO_ROOT}")
     print(f"파이썬  : {pythonw()}")

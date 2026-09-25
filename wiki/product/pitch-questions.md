@@ -41,7 +41,7 @@ domain: commerce
 
 ### 기존 CS 챗봇과 뭐가 다른가
 
-> **챗봇은 답변을 만들고, A-COP 은 답변을 검증하고 승인 경계를 관리한다.**
+> **챗봇은 답변을 만들고, triPilot 은 답변을 검증하고 승인 경계를 관리한다.**
 
 **근거 없는 주장을 거부하고, 기권하는 비율까지 지표로 낸다.** → [../evaluation/metrics.md](../evaluation/metrics.md)
 

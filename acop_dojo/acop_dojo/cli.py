@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import answers, ask, boss, build, server, defect_stage, defects, invariants, mapgen, placement, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
+from . import answers, ask, boss, build, server, defect_stage, defects, invariants, mapgen, placement, quiz, refs, progress, report, review, scenarios, stability, stages, tracer, tracks, validate
 from .config import WORKSPACE_ROOT, target_root
 
 SEPARATOR = "─" * 62
@@ -52,7 +53,8 @@ def cmd_doctor(_: argparse.Namespace) -> int:
 
     proc = subprocess.run(
         [sys.executable, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider"],
-        cwd=target, capture_output=True, text=True, timeout=600, check=False)
+        cwd=target, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=600, check=False)
     tail = [line for line in proc.stdout.strip().splitlines() if "collected" in line]
     print(f"  테스트 수집            {tail[-1] if tail else '실패'}")
     if not tail:
@@ -93,15 +95,29 @@ def cmd_trace(args: argparse.Namespace) -> int:
 
 
 def cmd_learn(args: argparse.Namespace) -> int:
+    import random
+
     track = tracks.get(args.track)
+    # 쉬움은 늘 같은 시나리오·같은 빈칸(시드 7)이다. 보통·어려움은 그대로 두면 외워서 넘긴다 —
+    # 실행 기록이 있는 이 트랙의 시나리오 가운데 하나를 고르고 빈칸도 매번 새로 고른다.
+    varied = ask.level() != "easy" and args.stage in {"1", "2"}
     scenario_id = args.scenario or track.scenario
+    if varied and not args.scenario:
+        ready = [s for s in track.scenarios if s in scenarios.SCENARIOS and trace_path(s).exists()]
+        scenario_id = random.choice(ready) if ready else scenario_id
     if args.track != "all":
         print(f"[{track.title}]  핵심: {track.focus}")
+    if varied:
+        print(f"시나리오: {scenario_id}  (보통·어려움은 시나리오와 빈칸을 매번 새로 고른다)")
     trace = load_or_capture(scenario_id)
-    handler = {"0": stages.stage0_worked_example,
-               "1": stages.stage1_reconstruct,
-               "2": stages.stage2_contrast}[args.stage]
-    handler(trace)
+    if args.stage == "0":
+        stages.stage0_worked_example(trace)
+        return 0
+    handler = {"1": stages.stage1_reconstruct, "2": stages.stage2_contrast}[args.stage]
+    if varied:
+        handler(trace, seed=random.randrange(1 << 30))
+    else:
+        handler(trace)
     return 0
 
 
@@ -121,7 +137,7 @@ def cmd_level(args: argparse.Namespace) -> int:
 def cmd_status(_: argparse.Namespace) -> int:
     data = progress.load()
     titles = {"0": "해설된 완주", "1": "복원", "2": "대조", "3": "결함", "4": "보스전"}
-    print("\nA-COP 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
+    print("\ntriPilot 학습 진행 (passed=통과, partial=일부 통과, in_progress=진행 중)")
     print(SEPARATOR)
     for stage, title in titles.items():
         entry = data["stages"].get(stage)
@@ -491,6 +507,23 @@ def cmd_placement(args: argparse.Namespace) -> int:
     return placement.run(args.track, load_or_capture(track.scenario))
 
 
+def cmd_quiz(args: argparse.Namespace) -> int:
+    if args.action == "selftest":
+        return quiz.selftest(per_family=args.count or 0, track_id=args.track,
+                             allow_ollama=not args.no_ollama)
+    if args.action == "refresh":
+        return quiz.refresh(track_id=args.track)
+    if args.action == "pool":
+        m = quiz.material(track_id=args.track, allow_ollama=not args.no_ollama)
+        print(f"색인: 함수 {len(m.index.units)}개 (이 트랙 {len(m.units)}개) · 실행 기록 {len(m.traces)}개"
+              f" (코드가 바뀌어 뺀 것 {len(m.stale_traces)}개)")
+        print(f"오답 고르기: {m.vectors.source}")
+        for fam, n in quiz.pool_sizes(m).items():
+            print(f"  {quiz.FAMILY_TITLES[fam]:<10} ({fam})  대상 {n}")
+        return 0
+    return quiz.run(track_id=args.track, count=args.count or 5, family=args.family, seed=args.seed)
+
+
 def cmd_answers(args: argparse.Namespace) -> int:
     out = Path(args.out) if args.out else WORKSPACE_ROOT / ".acop_dojo" / "answers.md"
     print(f"답안을 모았다: {answers.write(out)}")
@@ -533,7 +566,7 @@ def cmd_refs(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="acop-dojo", description="A-COP 코드 학습 프로그램")
+    parser = argparse.ArgumentParser(prog="acop-dojo", description="triPilot 코드 학습 프로그램")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="환경 점검").set_defaults(func=cmd_doctor)
@@ -591,11 +624,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("patches", help="결함 패치가 현재 코드에도 적용되는지 빠르게 검사한다").set_defaults(func=cmd_patches)
 
-    sub.add_parser("tracks", help="베이스먼트(도메인을 모르는 코어) 학습 트랙 4개를 본다").set_defaults(func=cmd_tracks)
+    sub.add_parser("tracks", help="학습 트랙 목록을 본다").set_defaults(func=cmd_tracks)
 
     placement_cmd = sub.add_parser("placement", help="어디부터 시작할지 재 본다")
     placement_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
     placement_cmd.set_defaults(func=cmd_placement)
+
+    quiz_cmd = sub.add_parser("quiz", help="코드 전체에서 그때그때 만든 문제를 푼다")
+    quiz_cmd.add_argument("action", nargs="?", default="run", choices=["run", "pool", "selftest", "refresh"])
+    quiz_cmd.add_argument("--track", default="all", choices=list(tracks.TRACKS))
+    quiz_cmd.add_argument("--count", type=int, default=None,
+                          help="문제 수, 기본 5 (selftest 에서는 유형마다 검사할 수, 기본은 전부)")
+    quiz_cmd.add_argument("--family", choices=list(quiz.FAMILIES), help="한 유형만 낸다")
+    quiz_cmd.add_argument("--seed", type=int, help="같은 문제를 다시 보고 싶을 때")
+    quiz_cmd.add_argument("--no-ollama", action="store_true", help="로컬 임베딩 대신 단어 빈도로 오답을 고른다")
+    quiz_cmd.set_defaults(func=cmd_quiz)
 
     scenarios_cmd = sub.add_parser("scenarios", help="시나리오 목록과 결정성 검사")
     scenarios_cmd.add_argument("--verify-all", action="store_true")
@@ -629,8 +672,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    for stream in (sys.stdout, sys.stderr):
+    # stdin 도 맞춘다. 웹 서버는 답을 UTF-8 로 보낸다. 윈도우 기본(cp949)으로 읽으면
+    # `힌트` 가 깨진 글자로 들어가 오답으로 채점된다(2026-09-24 실제로 났다).
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
+    # 이 프로세스가 띄우는 파이썬(pytest·검증 엔진)도 UTF-8 로 쓰게 한다. 읽는 쪽은 UTF-8 로 읽는다.
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    os.environ.setdefault("PYTHONUTF8", "1")
     args = build_parser().parse_args(argv)
     return args.func(args)

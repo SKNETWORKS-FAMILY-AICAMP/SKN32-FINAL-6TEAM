@@ -1,4 +1,4 @@
-"""A-COP 계약 모델.
+"""triPilot 계약 모델.
 
 ★이 파일은 `wiki/records/handoff/01_계약_Pydantic.md` 의 구현체다.
   둘이 어긋나면 결함이다. 바꿀 때는 계약 문서를 먼저 고친다(RULE.md §3.5).

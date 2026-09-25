@@ -1,6 +1,6 @@
 ---
 type: reference
-title: A-COP 법적 근거 원문
+title: triPilot 법적 근거 원문
 description: 청약철회와 개인정보 처리에 적용되는 법조문 원문과 재현 가능한 조회 방법을 정리한다.
 status: draft
 tags: [contract, security, governance, documentation]

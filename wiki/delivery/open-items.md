@@ -151,7 +151,7 @@ domain_note: 남은 일 목록이다. 커머스에서 넘어온 항목이 섞여
 
 ## 문서 쪽 열린 항목
 
-★**[2026-09-10] 루트 `CLAUDE.md` 의 데이터 폴더 표 — 루트 파일 담당 몫.** `[실측]` 루트 `CLAUDE.md` 「데이터 폴더」 표가 커머스·VOC·번역 데이터를 **「A-COP에서 쓰는 곳」** 으로 현재형 안내한다 — 「Core 1 Context Broker의 주문 정보」·「Core 2의 배송조회 Action 실행부」·「다국어 응대 검토용」. **여행 도메인에서는 셋 다 아니다**(v11 §7, [D-016](../decisions/D-016-scope-narrowing-reasons.md)). 같은 표를 [datasets/wiki/index.md](../../datasets/wiki/index.md) 에서는 고쳤다. **매 세션 자동으로 실리는 파일이라** 여기가 낡으면 모든 세션이 틀린 배치로 시작한다 — 2026-09-08 사실표가 그렇게 됐던 것과 같다.
+★**[2026-09-10] 루트 `CLAUDE.md` 의 데이터 폴더 표 — 루트 파일 담당 몫.** `[실측]` 루트 `CLAUDE.md` 「데이터 폴더」 표가 커머스·VOC·번역 데이터를 **「triPilot에서 쓰는 곳」** 으로 현재형 안내한다 — 「Core 1 Context Broker의 주문 정보」·「Core 2의 배송조회 Action 실행부」·「다국어 응대 검토용」. **여행 도메인에서는 셋 다 아니다**(v11 §7, [D-016](../decisions/D-016-scope-narrowing-reasons.md)). 같은 표를 [datasets/wiki/index.md](../../datasets/wiki/index.md) 에서는 고쳤다. **매 세션 자동으로 실리는 파일이라** 여기가 낡으면 모든 세션이 틀린 배치로 시작한다 — 2026-09-08 사실표가 그렇게 됐던 것과 같다.
 
 | 항목 | 어디 |
 |---|---|

@@ -69,7 +69,7 @@ def test_the_day_is_laid_out_by_us_and_passes_the_check():
             _cand("저녁", kind="dining", lat=37.577, hours=["11:00", "21:00"], district="종로구")]
     items = planner.build_day(DAY, acts, dine, seq_from=1)
     assert [item["seq"] for item in items] == [1, 2, 3, 4]
-    assert items[0]["starts_at"] == datetime(2026, 10, 5, 9, 30, tzinfo=KST)
+    assert items[0]["starts_at"] == datetime.combine(DAY, planner.DAY_START, tzinfo=KST)  # 설정값(09:00, D-020)
     assert items[1]["starts_at"].time().hour == 12            # 점심은 12시 전으로 안 간다
     assert items[3]["starts_at"].time().hour == 18            # 저녁은 18시 전으로 안 간다
     for earlier, later in zip(items, items[1:]):
@@ -87,7 +87,7 @@ def test_an_item_is_pushed_inside_the_opening_hours_we_know():
 def test_hours_we_do_not_know_are_left_alone():
     """★모르는 칸을 「09:00 에 연다」로 채우지 않는다 — 그러면 지어낸 값이 판정을 통과한다."""
     items = planner.build_day(DAY, [_cand("모르는 곳")], [], seq_from=1)
-    assert items[0]["starts_at"] == datetime(2026, 10, 5, 9, 30, tzinfo=KST)
+    assert items[0]["starts_at"] == datetime.combine(DAY, planner.DAY_START, tzinfo=KST)  # 설정값(09:00, D-020)
     assert "hours" not in items[0]["detail"].get("planner", {})
 
 

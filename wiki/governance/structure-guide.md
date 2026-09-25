@@ -138,7 +138,7 @@ business/unit-economics.md          600줄
 business/unit-economics/
    ├─ index.md          ← 결론과 지도
    ├─ human-cost.md     ← 사람 원가
-   ├─ acop-cost.md      ← A-COP 원가
+   ├─ acop-cost.md      ← triPilot 원가
    └─ comparison.md     ← 비교
 ```
 
@@ -157,13 +157,13 @@ business/unit-economics/
 ```markdown
 ⭕ # 단위경제
 
-   사람 1건 4,100~4,846원. A-COP 병행 1,132원. 그중 LLM은 3.03원.
+   사람 1건 4,100~4,846원. triPilot 병행 1,132원. 그중 LLM은 3.03원.
    **비용의 99.7%는 여전히 사람이다.**
 
    | 문서 | 답하는 질문 |
    |---|---|
    | [human-cost.md](human-cost.md) | 상담원 1인 실비가 얼마인가 |
-   | [acop-cost.md](acop-cost.md) | A-COP이 건당 얼마 쓰는가 |
+   | [acop-cost.md](acop-cost.md) | triPilot이 건당 얼마 쓰는가 |
    | [comparison.md](comparison.md) | 합치면 얼마가 되는가 |
 ```
 

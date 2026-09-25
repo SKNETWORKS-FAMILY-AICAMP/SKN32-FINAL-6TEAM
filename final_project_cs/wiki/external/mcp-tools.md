@@ -13,7 +13,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 `app/presentation/api/mcp.py`
 
-개인 AI(ChatGPT·Claude 등)가 A-COP에 연결하는 경로다.
+개인 AI(ChatGPT·Claude 등)가 triPilot에 연결하는 경로다.
 
 ★`[실측 2026-09-10 · 작업 트리 기준]` **이 경로는 지금 열려 있지 않다.** 도구 셋의 선언·함수·시험은 있으나 **MCP 전송으로 띄우는 곳이 없다** — 앱이 mount 하지 않고(`sse_app`·`streamable_http_app`·`mount` 0곳) `mcp run`·실행 스크립트·launch 설정도 없다. 시험은 Python 함수를 직접 부른다. 그리고 호출 주체는 외부 호출자가 아니라 **설정의 tenant + 고정 `mcp:read`** 로 만든다(아래 「scope 확인」의 코드). `open_support_case` 는 생성·분류까지만 하고 **Controller 를 부르지 않는다**(`app/presentation/api/cases.py:329~366`). 이 방법이 놓칠 수 있는 것: 누군가 `mcp run` 을 손으로 띄우고 적지 않은 경우. 코드 담당에게 넘겼다 → [인계](../../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
 
@@ -22,7 +22,7 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 `[실측]` 전문이 짧아 그대로 싣는다.
 
 ```python
-mcp = FastMCP("A-COP")
+mcp = FastMCP("triPilot")
 
 @mcp.tool(meta={"required_scope": "mcp:read"})
 def get_my_cases(customer_id: str, limit: int = 20) -> list[dict]: ...

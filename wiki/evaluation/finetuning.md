@@ -16,7 +16,7 @@ domain_note: 채택 보류로 결론이 확정된 실험의 기록이다
 
 ## ★ 무엇을 증명하려는 게 아닌가
 
-> **A-COP의 증명 대상은 모델 성능이 아니라 오케스트레이션이다.**
+> **triPilot의 증명 대상은 모델 성능이 아니라 오케스트레이션이다.**
 
 **모델을 교체해도** Case lifecycle·Context Broker·Team routing·approval·idempotency·WAIT/RESUME가 유지되는지가 핵심이다.
 

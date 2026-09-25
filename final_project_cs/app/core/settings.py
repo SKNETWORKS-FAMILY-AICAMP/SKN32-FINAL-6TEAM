@@ -1,4 +1,4 @@
-"""A-COP 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
+"""triPilot 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
 
 규칙 (RULE.md §3.1, §3.2):
   - 하드코딩 금지. API 키·모델명·경로·가드레일 수치를 코드에 직접 쓰지 않는다.
@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     #   **비어 있으면 아무도 못 들어온다**(기본이 닫힘). `python -m scripts.ui_operator` 가 한 줄을 만든다.
     #   원문 비밀번호는 어디에도 두지 않는다. D-CS-007.
     ui_operators: str = ""
+    # ★`[2026-09-24]` 웹(`frontend/apps/web`, 포트 3100)이 이 API 를 부르는 출처. 쉼표로 여럿.
+    #   서버용 scope 키가 아니라 사용자 식별 키(`X-User-Key`)만 받는다(D-020 · 025).
+    web_allowed_origins: str = "http://127.0.0.1:3100,http://localhost:3100"
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
@@ -156,6 +159,8 @@ class Settings(BaseSettings):
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
+    # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
+    google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""

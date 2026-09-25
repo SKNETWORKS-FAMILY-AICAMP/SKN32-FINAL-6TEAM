@@ -28,9 +28,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from .itinerary import Item, StaleItinerary, TripStore
+from .itinerary import Item, TripStore
 from .itinerary_changes import (ItineraryChange, NoChange, next_after, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
+from .pending import PendingStore, apply_or_ask
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -45,6 +46,10 @@ class TripTickResult:
     pinned: list[dict[str, Any]] = field(default_factory=list)
     #: 경로 사건 소스가 **답할 수 없는** 대상(지하철 무정차 등) — 「사건 없음」과 다르다.
     unchecked: list[dict[str, Any]] = field(default_factory=list)
+    #: `[2026-09-24]` 바꾸지 않고 **물었다**(D-020) — 돈이 걸린 일정 · 「먼저 물어봐줘」 · 그 여행의 안전 사건
+    asked: list[dict[str, Any]] = field(default_factory=list)
+    #: 무응답으로 닫은 제안 — ★바꾸지 않았다. 일정은 원래대로 다음으로 진행한다
+    expired: list[dict[str, Any]] = field(default_factory=list)
 
 
 class TripWatcher:
@@ -58,15 +63,21 @@ class TripWatcher:
     def tick(self, lookahead: timedelta = DEFAULT_LOOKAHEAD) -> TripTickResult:
         result = TripTickResult()
         now = self.clock()
+        pending = PendingStore(self.store.tenant_id)
+        with self._connect() as conn, conn.transaction():
+            # ★무응답 — 그 일정이 끝난 제안은 닫는다. **바꾸지 않는다**(D-020)
+            result.expired = [{k: str(v) for k, v in row.items()}
+                              for row in pending.expire(conn, now=now)]
         with self._connect() as conn:
             due = self.store.due(conn, start=now, end=now + lookahead)
             places = self.store.places(conn)
         for trip_id, item in due:
             if item.detail.get("customer_pinned"):
-                # ★고객이 되돌려 고른 항목은 다시 자동으로 바꾸지 않는다. 안 그러면
-                #   되돌림 → 다음 틱 자동 변경 → 되돌림 … 이 끝없이 돈다. 세어서 남긴다.
+                # ★`[2026-09-24]` 고객이 고정한 항목도 **점검은 한다** — 전에는 통째로 건너뛰어서 고정한
+                #   항목에는 안전 알림도 안 나갔다(코덱스 교차검토). 대신 **자동으로 바꾸지는 않는다** —
+                #   판정(`decide`)이 「돈이 걸린·고정한 일정」으로 묻게 한다. 되돌림 → 자동 변경 →
+                #   되돌림 … 의 반복은 그래서 안 생긴다.
                 result.pinned.append({"trip_id": str(trip_id), "item": item.title})
-                continue
             if item.kind == "mobility":
                 result.checked += 1
                 self._check_route(trip_id, item, now, result)
@@ -87,7 +98,7 @@ class TripWatcher:
                 continue
             plan = plan_activity_adjustment(item=item, report=report, places=places,
                                             check=self.check, now=now)
-            self._settle(trip_id, item, plan, result)
+            self._settle(trip_id, item, plan, result, report=report)
         return result
 
     # ── 이동 ───────────────────────────────────────────────────
@@ -116,30 +127,29 @@ class TripWatcher:
                                      events=events, now=now)
         self._settle(trip_id, item, plan, result)
 
-    def _settle(self, trip_id, item: Item, plan, result: TripTickResult) -> None:
+    def _settle(self, trip_id, item: Item, plan, result: TripTickResult,
+                report: dict[str, Any] | None = None) -> None:
         if isinstance(plan, NoChange):
             if plan.status == "unresolved":
                 result.unresolved.append({"trip_id": str(trip_id), "item": item.title,
                                           **plan.detail})
             return
-        self._apply(trip_id, item, plan, result)
+        self._apply(trip_id, item, plan, result, report=report)
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────
-    def _apply(self, trip_id, item: Item, plan: ItineraryChange, result: TripTickResult) -> None:
+    def _apply(self, trip_id, item: Item, plan: ItineraryChange, result: TripTickResult,
+               report: dict[str, Any] | None = None) -> None:
+        # ★`[2026-09-24]` 바꿀지 · 물을지 · 알리기만 할지(D-020). 판정과 쓰기는 `pending.apply_or_ask`
+        #   한 곳에 있다 — 새벽 확인(`dawn_check`)도 같은 문을 쓴다(2026-09-25).
         with self._connect() as conn, conn.transaction():
-            trip, items = self.store.latest(conn, trip_id)
-            if not any(current.item_id == item.item_id for current in items):
-                return   # ★그 사이 다른 쪽이 이 항목을 이미 바꿨다 — 옛 계산을 밀어 넣지 않는다
-            try:
-                version = self.store.append_version(
-                    conn, trip_id=trip_id, base_version=trip["version"],
-                    items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
-            except StaleItinerary:
-                return
-            self.store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                                      payload={**plan.notice, "version": version})
-        result.adjusted.append({"trip_id": str(trip_id), "version": version, **plan.summary,
-                                "notice": plan.notice})
-
+            outcome = apply_or_ask(conn, store=self.store, trip_id=trip_id, item_id=item.item_id,
+                                   plan=plan, report=report)
+        if outcome["status"] == "asked" and not outcome.get("already"):
+            result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
+                                 "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
+                                 "safety": outcome["safety"]})
+        elif outcome["status"] == "adjusted":
+            result.adjusted.append({"trip_id": str(trip_id), "version": outcome["version"], **plan.summary,
+                                    "notice": plan.notice})
 
 __all__ = ["DEFAULT_LOOKAHEAD", "TripTickResult", "TripWatcher"]

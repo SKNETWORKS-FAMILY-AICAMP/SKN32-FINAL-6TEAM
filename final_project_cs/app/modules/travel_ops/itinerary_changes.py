@@ -194,13 +194,15 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
-def _dining_change(meal: Item, best, alternates, notice: dict[str, Any]) -> ItineraryChange:
+def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
+                   reason: str = "customer_report") -> ItineraryChange:
     replacement = meal.replaced_by(
         place=best.place, title=f"{best.name} 식사", starts_at=best.starts_at,
         ends_at=best.ends_at,
-        detail={"other_options": notice["other_options"], "customer_reported": True,
+        detail={"other_options": notice["other_options"],
+                **({"customer_reported": True} if reason == "customer_report" else {}),
                 "alternates": [alternate_record(c) for c in alternates]})
-    return ItineraryChange(reason="customer_report", causes=notice["causes"], notice=notice,
+    return ItineraryChange(reason=reason, causes=notice["causes"], notice=notice,
                            replacements={meal.item_id: replacement}, summary={"to": best.name})
 
 
@@ -276,6 +278,41 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
         cause=cause, after=after,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
     return _dining_change(meal, best, alternates, notice)
+
+
+# ── 새벽 확인 — 그날 그 시각에 안 연다 (D-020, 2026-09-25) ──────────
+def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
+                       meal: Item, source: str, detail: str, checked_at: datetime,
+                       exclude: set[str] = frozenset()) -> Plan:
+    """새벽 확인에서 **계획한 시각에 안 여는** 식당 — 같은 시각에 근처 대체 식당으로 바꾼다.
+
+    ★고객 신고(`plan_closed`)와 다르다 — 그쪽은 고객이 **지금 가게 앞에** 있어 걸어갈 시간만큼 입장을
+      뒤로 민다. 여기는 새벽이라 고객이 아직 나서지 않았다 → **계획한 입장 시각 그대로** 찾는다.
+    ★근거는 바깥 소스의 판정이다(고객 문장이 아니다). 원인에 소스와 확인 시각을 남긴다.
+    """
+    if meal.place is None:
+        return NoChange("no_meal", {"message": "장소가 없는 식사 일정이다"})
+    duration = minutes_between(meal.starts_at, meal.ends_at)
+    following = next((i for i in items if i.seq > meal.seq and i.kind != "mobility"), None)
+    cause = {"category": "place_closed", "type": "closed_on_day", "source": source,
+             "checked_at": checked_at.isoformat(), "detail": detail,
+             "evidence": f"{source} 새벽 확인 — {detail}"}
+    candidates = dining_candidates(
+        original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
+        constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
+        next_start=following.starts_at if following else None, exclude=set(exclude))
+    best, alternates, rejected = choose(candidates)
+    if best is None:
+        return NoChange("unresolved", {"causes": [cause],
+                                       "rejected": {c.name: c.rejected for c in rejected}})
+    payment = (trip.get("constraints") or {}).get("payment")
+    notice = dining_notice(
+        original=meal.place, best=best, alternates=alternates,
+        reason=(f"{meal.place['name']}이(가) {meal.starts_at:%m월 %d일 %H:%M}에 영업하지 않는 것으로 "
+                f"새벽에 확인했습니다({detail})"),
+        cause=cause, after=None,
+        constraint_note="카드 결제가 가능한" if payment == "card" else None)
+    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted")
 
 
 # ── 고객 신고 — 품절(일정은 안 바꾼다) ─────────────────────────
@@ -404,6 +441,6 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
 
 __all__ = ["DINING_RADIUS_M", "ItineraryChange", "NoChange", "Plan", "applied_record",
            "minutes_between", "next_after", "object_particle", "plan_activity_adjustment",
-           "plan_closed", "plan_delay", "plan_nearby_store", "plan_rollback",
+           "plan_closed", "plan_closed_on_day", "plan_delay", "plan_nearby_store", "plan_rollback",
            "plan_route_adjustment", "plan_swap", "planned_option", "route_of", "route_targets",
            "title_for", "with_request"]

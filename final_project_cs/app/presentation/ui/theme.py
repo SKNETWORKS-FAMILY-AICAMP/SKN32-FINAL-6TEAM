@@ -437,9 +437,9 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
     return (
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"<title>{esc(title)} · A-COP</title><style>{CSS}</style></head><body>"
+        f"<title>{esc(title)} · triPilot</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>A-COP<span>운영 콘솔</span></span><nav>{links}</nav>{_who(who)}</div></div>"
+        f"<span class='brand'>triPilot<span>운영 콘솔</span></span><nav>{links}</nav>{_who(who)}</div></div>"
         f"<main class='shell'><h1>{esc(title)}</h1>{lede_html}{body}</main></body></html>")
 
 

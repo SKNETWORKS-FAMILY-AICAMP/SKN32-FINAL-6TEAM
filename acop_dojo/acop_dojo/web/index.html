@@ -10,6 +10,12 @@
 
 .level-panel{margin-bottom:22px;padding:18px 22px}.level-layout{display:flex;align-items:center;gap:20px;flex-wrap:wrap}.level-options{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.level-options button[aria-pressed=true]{background:var(--green);color:white;border-color:var(--green)}.level-panel .hint{max-width:850px}.help-box{border-top:1px solid #53675a;margin-top:16px;padding-top:14px}.help-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.answer .help-actions button{background:transparent;color:var(--lime);border:1px solid #8b9d79;font-weight:normal}.answer .help-actions button:hover:not(:disabled){background:#304b3d}.build-help{margin-top:16px;background:#f0f3e5;border:1px solid #cbd8bb;border-radius:10px;padding:15px}.build-help ol{padding-left:22px;margin:8px 0;font-size:13px}.build-help button{margin-top:10px;width:100%}.help-record{margin-top:7px;color:var(--green);font-size:13px}.console-head .row{flex-wrap:wrap}.terminal{min-height:260px;height:38vh} @media(max-width:480px){.level-panel{padding:16px}.level-options button{flex:1}.help-actions button{flex:1;min-height:44px}.console-head{padding:16px}.answer{padding:16px}.terminal{height:320px}}
 </style>
+<style>
+.layout>*,.console{min-width:0}input[type=number]{width:100%;padding:10px;border:1px solid #bfc9bf;border-radius:7px;background:white;color:var(--ink)}
+.terminal{height:52vh;max-height:780px;line-height:1.85;white-space:pre;overflow-wrap:normal}.terminal.wrap{white-space:pre-wrap;overflow-wrap:anywhere}.terminal mark{background:#dceb9d;color:#182b27;border-radius:3px;font-weight:bold}.terminal .question-line{color:#e4f6ab;font-weight:bold}.terminal .question-heading{color:#a8d8c4}
+.waiting{margin:0;padding:12px 22px;border-top:1px solid #53675a;background:#29453b;color:#e4edcf;font-size:13px}.console-tools{flex-wrap:wrap}.action small{font-family:inherit}.quiz-note{display:grid;gap:8px}.console.reading{position:static}.console.reading .terminal{height:75vh;max-height:none}
+@media(max-width:480px){.terminal{padding:16px;height:440px}.waiting{padding:12px 16px}}
+</style>
 </head>
 <body>
 <a class="skip" href="#output">실행 출력으로 이동</a>
@@ -20,7 +26,7 @@
 <section class="card level-panel" aria-labelledby="level-title">
 <div class="level-layout"><h2 id="level-title">문제 난이도</h2><span id="current-level" class="badge" role="status">연결 확인 중</span></div>
 <div class="level-options" role="group" aria-label="문제 난이도 변경"><button type="button" data-level="쉬움" aria-pressed="false" disabled>쉬움</button><button type="button" data-level="보통" aria-pressed="false" disabled>보통</button><button type="button" data-level="어려움" aria-pressed="false" disabled>어려움</button></div>
-<p class="hint">쉬움은 보기가 있는 문제를 처음부터 4지선다로 풉니다. 보통은 직접 답하다가 보기로 바꿀 수 있습니다. 어려움은 힌트와 보기 전환 없이 도전합니다.</p>
+<p class="hint">쉬움은 보기로 시작하며, 오답 보기를 넓은 범위에서 고릅니다. 보통은 뜻이 가까운 함수 중에서 오답 보기를 고르며, 직접 답하다가 보기로 바꿀 수 있습니다. 어려움은 뜻이 가장 가까운 셋을 오답 보기로 쓰고, 한 번 본 문제는 다시 내지 않습니다. 힌트와 보기 전환도 없습니다.</p>
 <p id="level-note" class="hint" role="status">시작하기 전에 난이도를 선택하세요.</p>
 </section>
 <main class="layout">
@@ -53,7 +59,8 @@
 03  아래 입력창에 한 줄씩 답하세요.
 
 학습이 끝나면 실행 출력에서 결과를 확인하세요.</pre>
-<div class="console-tools"><label><input id="follow" type="checkbox" checked> 새 출력으로 자동 이동</label><div><button id="download" type="button" disabled>출력 저장</button> <button id="stop" type="button" disabled>실행 중단</button></div></div>
+<div class="console-tools"><label><input id="follow" type="checkbox" checked> 새 출력으로 자동 이동</label><label><input id="wrap" type="checkbox"> 긴 줄 접어 보기</label><div><button id="expand" type="button" aria-pressed="false">출력 크게 보기</button> <button id="download" type="button" disabled>출력 저장</button> <button id="stop" type="button" disabled>실행 중단</button></div></div>
+<p id="waiting" class="waiting" role="status" hidden></p>
 <form id="answer-form" class="answer"><label for="answer">답변</label><p id="answer-hint" class="hint">답변하는 학습을 시작하세요. 실행하면 입력창이 열립니다.</p><div class="answer-row"><input id="answer" type="text" autocomplete="off" placeholder="문제를 읽고 한 줄로 답하세요" disabled aria-describedby="answer-hint"><button id="send" type="submit" disabled>답변 전송</button></div>
 <section class="help-box" aria-labelledby="help-title"><h3 id="help-title">막혔을 때</h3>
 <p class="hint">힌트를 보거나 보기로 답하면 학습 기록에 남습니다.</p>
@@ -70,9 +77,12 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const labels={doctor:'환경 점검',status:'현재 상태',tracks:'트랙 목록',scenarios:'시나리오 목록',invariants:'불변식 목록',patches:'패치 목록',report:'보고서',map:'정적 지도 생성',trace:'시나리오 실행',learn:'단계 학습',defect:'결함 복구',boss:'보스전',review:'복습',placement:'사전진단',build_steps:'단계 목록',build_start:'쌓기 작업 준비',build_brief:'단계 설명',build_check:'단계 검사',build_hint:'단계 힌트',level:'난이도 변경'};
-const groups={learn:['placement','learn','trace','defect','boss','review'],build:['build_brief','build_check','build_hint','build_start','build_steps'],tools:['doctor','status','tracks','scenarios','invariants','patches','report','map']};
+labels.quiz='문제 풀기';labels.quiz_pool='문제 대상 수 보기';
+const families=[['caller','누가 부르나'],['callee','무엇을 부르나'],['identify','이름을 가린 코드'],['guard_exc','어떤 예외가 나나'],['guard_cond','검사 조건 채우기'],['trace_next','실행 순서']];
+const activityNotes={quiz:'코드에서 새로 만든 문제',quiz_pool:'유형별로 출제 가능한 대상',placement:'내게 맞는 시작 단계 찾기',learn:'해설부터 예측까지',trace:'실제 실행 흐름 확인',defect:'잘못된 코드 고치기',boss:'배운 내용을 모아 도전',review:'배운 내용 다시 확인'};
+const groups={learn:['quiz','quiz_pool','placement','learn','trace','defect','boss','review'],build:['build_brief','build_check','build_hint','build_start','build_steps'],tools:['doctor','status','tracks','scenarios','invariants','patches','report','map']};
 let state=null,tab='learn',action='learn',online=false,starting=false,posting=false,stopping=false,job=null,pollTimer=null,refreshing=false;
-let selectedStep=null;
+let selectedStep=null,selectedTrack=null;
 const storageKey='acop-dojo-job:'+location.origin;
 function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function feedback(message){$('feedback').textContent=message;$('feedback').hidden=!message;}
@@ -99,6 +109,11 @@ function controls(){
  $('run').textContent=starting?'실행 요청 중…':active?'현재 실행이 끝날 때까지 기다려 주세요':`${labels[action]||action} 실행 →`;
  $('stop').disabled=!active||!online||stopping;$('stop').textContent=stopping?'중단 요청 중…':'실행 중단';
  const canAnswer=active&&job.asks&&online&&!posting&&!job.awaitingOutput;
+ const waiting=active&&job.awaitingOutput;
+ $('waiting').hidden=!waiting;
+ $('waiting').textContent=!online?'연결을 확인하고 있습니다. 다시 연결되면 새 출력을 확인하겠습니다.':posting?'답변을 보내고 있습니다.':job?.inputHelp?'도움을 요청했습니다. 새 출력을 기다리고 있습니다. 두 번째 힌트는 처음에 수십 초 걸릴 수 있습니다.':'답변을 보냈습니다. 새 출력을 기다리고 있습니다.';
+ if(active&&online)$('job-status').textContent=waiting?'새 출력 대기 중':'실행 중';
+ $('send').textContent=waiting?'응답 대기 중…':'답변 전송';
  $('answer').disabled=!canAnswer;$('send').disabled=!canAnswer;
  $('answer-hint').textContent=active&&job.asks?'실행 출력의 현재 질문을 읽고 한 줄씩 답하세요. 질문에 따라 빈 답변도 보낼 수 있습니다.':active?'진행 내용을 실행 출력에서 확인하세요. 답변을 입력할 필요는 없습니다.':job?'실행 출력에서 결과를 확인하세요. 작업이 끝났습니다.':'답변하는 학습을 시작하세요. 실행하면 입력창이 열립니다.';
  $('download').disabled=!job;
@@ -147,7 +162,14 @@ function field(name,title,options){
 function showContext(){
  const box=$('context');if(!box)return;box.replaceChildren();
  const track=state.tracks.find(t=>t.id===$('param-track')?.value),scenario=state.scenarios.find(s=>s.id===$('param-scenario')?.value),step=state.build_steps.find(s=>String(s.index)===$('param-step')?.value);
- if(track){box.append(node('p',track.focus),node('p','담당 · '+track.owner,'hint'));}
+ if(track){selectedTrack=track.id;box.append(node('p',track.focus),node('p','담당 · '+track.owner,'hint'));}
+ if(action==='quiz'){
+  const note=node('div',undefined,'quiz-note');note.append(node('p','선택한 트랙의 코드에서 그때그때 문제를 만듭니다. 문제 수와 유형을 고르고 시작하세요.'),node('p','코드를 읽은 뒤 아래 질문에 답하세요. □□□는 가린 자리입니다. 긴 코드는 옆으로 스크롤하거나 ‘긴 줄 접어 보기’를 켜세요.'));
+  note.append(node('p','출제할 대상이 부족하면 선택한 수보다 적게 나올 수 있습니다. ‘문제 대상 수 보기’에서 유형별 대상 수를 먼저 확인할 수 있습니다.','hint'));
+  box.prepend(note);
+ }
+ if(action==='quiz_pool')box.prepend(node('p','선택한 트랙에서 유형별로 문제를 낼 수 있는 대상이 몇 개인지 확인합니다. 답변은 입력하지 않으셔도 됩니다. 대상 수는 이번에 풀 수 있는 문제 수와 다를 수 있습니다.'));
+ if(action==='placement')box.prepend(node('p','결과를 보고 시작 단계를 추천해 드립니다. 쉬움은 정해진 문제로, 보통·어려움은 1·2번을 코드에서 새로 만든 문제로 풉니다.'));
  if(scenario){box.append(node('p',scenario.objective),node('p',scenario.needs_db?'실행 전에 데이터베이스(DB)를 준비하세요.':'데이터베이스(DB) 없이 실행할 수 있습니다.','hint'));}
  if(step){selectedStep=String(step.index);box.append(node('p',step.claim),node('p','진행 상태 · '+(step.status??'기록 없음'),'hint'));const details=node('details');details.append(node('summary','파일과 테스트'));details.append(node('pre',[...step.files,...step.tests].join('\n'),'raw'));box.append(details);}
  if(action==='build_start')box.append(node('p','먼저 쌓기 작업 폴더를 준비하세요. 준비한 폴더의 코드는 사용하시는 편집기로 작성하세요.'));
@@ -160,7 +182,9 @@ function showContext(){
 function renderConfig(){
  $('params').replaceChildren();
  for(const name of state.actions[action]||[]){
-  if(name==='track')field(name,'학습 트랙',state.tracks.map(t=>[t.id,t.title]));
+  if(name==='track'){const el=field(name,'학습 트랙',state.tracks.map(t=>[t.id,t.title]));if(state.tracks.some(t=>t.id===selectedTrack))el.value=selectedTrack;}
+  else if(name==='count'){const el=field(name,'문제 수 · 1~20개');el.type='number';el.min='1';el.max='20';el.step='1';el.value='5';el.required=true;}
+  else if(name==='family')field(name,'문제 유형',[['','여러 유형 섞어서 풀기'],...families]);
   else if(name==='scenario')field(name,'실행할 시나리오',state.scenarios.map(s=>[s.id,s.title]));
   else if(name==='stage')field(name,'학습 단계',[['0','0 · 해설된 완주'],['1','1 · 실행경로 복원'],['2','2 · 예측과 대조']]);
   else if(name==='step'){const el=field(name,'쌓기 단계',state.build_steps.map(s=>[String(s.index),`${s.index} · ${s.title}`]));if(state.build_steps.some(s=>String(s.index)===selectedStep))el.value=selectedStep;}
@@ -178,7 +202,7 @@ function renderActions(){
  $('panel-hint').textContent={learn:'학습 트랙과 단계를 선택하고 실행하세요.',build:'단계 설명을 읽고 작업 폴더에 코드를 작성한 뒤 검사하세요.',tools:'환경 점검이나 학습 기록 확인을 선택하고 실행하세요.'}[tab];
  const names=(tab==='tools'?Object.keys(state.actions).filter(n=>n!=='level'&&!groups.learn.includes(n)&&!groups.build.includes(n)):groups[tab]).filter(n=>n in state.actions);
  if(!names.includes(action))action=names[0];$('action-count').textContent=names.length+'개 활동';$('actions').replaceChildren();
- for(const name of names){const b=node('button',undefined,'action');b.type='button';b.append(node('strong',labels[name]||name),node('small',name));b.setAttribute('aria-pressed',String(name===action));b.onclick=()=>{action=name;renderActions();};$('actions').append(b);}
+ for(const name of names){const b=node('button',undefined,'action');b.type='button';b.append(node('strong',labels[name]||name));if(activityNotes[name])b.append(node('small',activityNotes[name]));b.setAttribute('aria-pressed',String(name===action));b.onclick=()=>{action=name;renderActions();};$('actions').append(b);}
  $('steps').hidden=tab!=='build';$('steps').replaceChildren();
  if(tab==='build')for(const s of state.build_steps){const b=node('button',undefined,'step');b.type='button';b.dataset.step=String(s.index);b.append(node('b',String(s.index).padStart(2,'0')),node('span',s.title),node('small',s.status??'기록 없음'));b.onclick=()=>{if(!['build_brief','build_check','build_hint'].includes(action)){action='build_brief';renderActions();}$('param-step').value=String(s.index);showContext();};$('steps').append(b);}
  renderConfig();
@@ -196,13 +220,32 @@ async function refresh(){
  try{const previous=JSON.stringify(state?.actions);state=await api('/api/state');if(previous!==JSON.stringify(state.actions))renderActions();renderRecords();showContext();controls();}catch(e){if(e.status)feedback('다시 확인을 눌러 학습 상태를 불러오세요. '+e.message);}finally{refreshing=false;}
 }
 function paintJob(){if(!job)return;$('job-title').textContent=labels[job.action]||job.action;$('job-meta').textContent=`작업 ${job.id} · ${(job.argv||[]).join(' ')}`;$('job-status').textContent=job.done?(job.missing?'학습을 다시 시작하세요':`종료 코드 ${job.returncode===null?'실행 출력을 확인하세요':job.returncode}`):!online?'연결을 확인하세요':job.asks?'실행 중 · 답변 가능':'실행 중';controls();}
+function outputSignature(content){
+ // The server echoes submitted input before the child produces a response.
+ return content.split('\n').filter(line=>!/^> /.test(line)).map(line=>line.replace(/^\s*(?:>\s*)+/, '').trimEnd()).filter(line=>line.trim()).join('\n');
+}
+function renderOutput(content){
+ const output=$('output'),top=output.scrollTop,left=output.scrollLeft,fragment=document.createDocumentFragment();
+ const generated=['quiz','placement'].includes(job?.action);
+ for(const [index,line] of content.split('\n').entries()){
+  if(index)fragment.append(document.createTextNode('\n'));
+  const span=node('span');
+  if(generated&&/^\s*\d+(?:\/\d+|\.)\s*\[/.test(line))span.className='question-heading';
+  else if(generated&&line.includes('(막히면 `힌트`'))span.className='question-line';
+  for(const [i,part] of line.split('□□□').entries()){if(i)span.append(node('mark','□□□'));span.append(document.createTextNode(part));}
+  fragment.append(span);
+ }
+ output.replaceChildren(fragment);output.scrollTop=$('follow').checked?output.scrollHeight:top;output.scrollLeft=left;
+}
 async function poll(){
  if(!job||job.done)return;const id=job.id;
  try{
   // This server uses a bounded deque with a length-based offset. Read its full
   // retained snapshot so polling still works after the deque reaches 4000 lines.
   const data=await api(`/api/jobs/${encodeURIComponent(id)}?offset=0`);if(job.id!==id)return;
-  const content=data.lines.join('\n');if(job.awaitingOutput&&content!==job.inputBaseline){job.awaitingOutput=false;delete job.inputBaseline;}if($('output').textContent!==content){const top=$('output').scrollTop;$('output').textContent=content;$('output').scrollTop=$('follow').checked?$('output').scrollHeight:top;}
+  const content=data.lines.join('\n'),signature=outputSignature(content),baseline=outputSignature(job.inputBaseline||'');
+  if(job.awaitingOutput&&(data.done||(signature&&signature!==baseline&&!baseline.endsWith('\n'+signature)))){job.awaitingOutput=false;delete job.inputBaseline;delete job.inputHelp;feedback('새 출력이 도착했습니다. 내용을 확인하세요.');}
+  if($('output').textContent!==content)renderOutput(content);
   job.done=data.done;job.returncode=data.returncode;if(data.action)job.action=data.action;persist();paintJob();
   if(job.done){feedback('실행 출력에서 결과를 확인하세요. 실행이 끝났습니다.');await refresh();if(job.action==='level'&&job.params?.level&&state?.level!==job.params.level)feedback('원하는 난이도를 다시 선택하세요. 현재 난이도: '+(state?.level??'실행 출력을 확인하세요')+'. 자세한 내용은 실행 출력에서 확인하세요.');}
  }catch(e){if(e.status===404){job.done=true;job.missing=true;persist();paintJob();feedback('남아 있는 실행 출력을 확인한 뒤 학습을 다시 시작하세요.');}else if(e.status)feedback('다시 확인을 눌러 연결한 뒤 실행 출력을 확인하세요. '+e.message);}
@@ -210,7 +253,9 @@ async function poll(){
 }
 $('run-form').onsubmit=async e=>{
  e.preventDefault();if(!state||!online||starting||(job&&!job.done))return;
+ if(!$('run-form').reportValidity())return;
  const params={};for(const name of state.actions[action]){const el=$('param-'+name);params[name]=el.type==='checkbox'?el.checked:el.value;}
+ if(action==='quiz'){params.count=Number(params.count);if(!Number.isInteger(params.count)||params.count<1||params.count>20){feedback('문제 수는 1부터 20까지의 정수로 입력해 주세요.');return;}if(!params.family)delete params.family;}
  if(action==='build_start'&&params.force&&!confirm(`쌓기 작업 폴더를 다시 준비할까요? 직접 작성한 코드도 모두 삭제합니다.\n${state.build_target}\n필요한 코드를 따로 저장했는지 확인한 뒤 진행하세요.`))return;
  await runAction(action,params);
 };
@@ -223,8 +268,8 @@ async function runAction(requested,params){
 };
 async function sendLine(line,help=false){
  if(!job||job.done||!job.asks||!online||posting||job.awaitingOutput)return;
- posting=true;job.awaitingOutput=true;job.inputBaseline=$('output').textContent;persist();controls();
- try{await api(`/api/jobs/${encodeURIComponent(job.id)}/input`,{line});if(!help)$('answer').value='';feedback(help?'실행 출력에서 힌트나 보기를 확인하세요. 도움을 요청했습니다.':'다음 출력을 확인하세요. 답변을 보냈습니다.');}
+ posting=true;job.awaitingOutput=true;job.inputHelp=help;job.inputBaseline=$('output').textContent;persist();controls();
+ try{await api(`/api/jobs/${encodeURIComponent(job.id)}/input`,{line});if(!help)$('answer').value='';feedback(job.awaitingOutput?'요청을 보냈습니다. 새 출력이 도착할 때까지 기다려 주세요.':'새 출력이 도착했습니다. 내용을 확인하세요.');}
  catch(err){if(err.status){job.awaitingOutput=false;delete job.inputBaseline;}feedback(err.status?'현재 질문과 답변을 확인한 뒤 다시 보내세요. '+err.message:'연결한 뒤 실행 출력을 먼저 확인하세요. 답변이 반영되지 않았을 때만 다시 보내세요.');}
  finally{posting=false;persist();controls();if(!help&&!$('answer').disabled)$('answer').focus();}
 }
@@ -236,6 +281,8 @@ document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{if(!b.disabl
 $('stop').onclick=async()=>{if(!job||job.done||!online||stopping)return;stopping=true;controls();try{await api(`/api/jobs/${encodeURIComponent(job.id)}/stop`,{});feedback('실행이 끝날 때까지 기다려 주세요. 중단을 요청했습니다.');}catch(e){feedback('실행이 멈췄는지 확인하세요. 중단 요청에 대한 응답을 받지 못했습니다. '+e.message);}finally{stopping=false;controls();}};
 $('download').onclick=()=>{const url=URL.createObjectURL(new Blob([$('job-meta').textContent+'\n'+$('job-status').textContent+'\n\n'+$('output').textContent],{type:'text/plain;charset=utf-8'}));const a=node('a');a.href=url;a.download=`dojo-${job.id}.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('follow').onchange=()=>{if($('follow').checked)$('output').scrollTop=$('output').scrollHeight;};
+$('wrap').onchange=()=>{$('output').classList.toggle('wrap',$('wrap').checked);};
+$('expand').onclick=()=>{const expanded=document.querySelector('.console').classList.toggle('reading');$('expand').setAttribute('aria-pressed',String(expanded));$('expand').textContent=expanded?'출력 크기 줄이기':'출력 크게 보기';};
 $('refresh').onclick=refresh;
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(!state)return;tab=b.dataset.tab;renderActions();});
 try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');if(saved&&typeof saved.id==='string'&&!saved.done){job=saved;paintJob();$('output').textContent='이전 학습 내용을 불러오고 있습니다.';}}catch{}

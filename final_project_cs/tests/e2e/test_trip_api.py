@@ -141,6 +141,7 @@ def api(monkeypatch):
         cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
+        cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s", "DELETE FROM customers WHERE tenant_id=%s",
                     "DELETE FROM tenants WHERE tenant_id=%s"):

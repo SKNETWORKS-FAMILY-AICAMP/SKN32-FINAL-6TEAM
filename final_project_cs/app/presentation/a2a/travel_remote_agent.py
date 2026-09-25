@@ -10,8 +10,8 @@
   여행에서 같은 모양은 장소·운영 정보다. 그리고 이 일은 우리 DB 를 안 봐도 되므로
   **원격으로 떼기에 실제로 적합하다**(억지로 뗀 것이 아니다).
 
-★**A-COP 본체와 완전히 분리된다.** DB 도 Core 도 모른다. import 하는 것은
-  FastAPI 뿐이다 — 원격이 A-COP 내부를 알면 그건 원격이 아니다.
+★**triPilot 본체와 완전히 분리된다.** DB 도 Core 도 모른다. import 하는 것은
+  FastAPI 뿐이다 — 원격이 triPilot 내부를 알면 그건 원격이 아니다.
   이 파일이 `app/core/` 를 import 하는 순간 분리가 깨진다.
 
 노출하는 것 — 커머스 원격과 같은 다섯 개다. 계약이 같아야 executor 가 그대로 돈다.
@@ -34,7 +34,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 #: 이 원격 팀이 스스로 광고하는 능력.
-#: ★`team_id` 는 A-COP 쪽 Registry 에 등록될 이름과 같아야 한다 — 그래야
+#: ★`team_id` 는 triPilot 쪽 Registry 에 등록될 이름과 같아야 한다 — 그래야
 #:  `capability_resolver` 가 이 원격으로 보낼 수 있다.
 CARD = {
     "name": "Place Verification Remote Team",
@@ -164,7 +164,7 @@ def _find(tasks: dict[str, dict[str, Any]], task_id: str) -> dict[str, Any]:
 
 def _artifact(request_payload: dict[str, Any], *, place_id: str | None = None,
               visit_at: str | None = None) -> dict[str, Any]:
-    """원격이 돌려주는 Artifact — A-COP 의 `TeamResult` 모양으로 맞춘다.
+    """원격이 돌려주는 Artifact — triPilot 의 `TeamResult` 모양으로 맞춘다.
 
     ★**확인 시각을 반드시 싣는다.** 여행 도메인의 규칙이다 — 재조회 시각을 현장
       관찰 시각처럼 표시하면 안 되므로, 원격도 `observed_at` 을 자기가 조회한

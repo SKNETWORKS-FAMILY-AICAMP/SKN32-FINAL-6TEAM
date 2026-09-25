@@ -31,7 +31,7 @@ timeout · tool fixture · prompt registry snapshot
 
 **`prompt registry snapshot`이 특히 중요하다.** 프롬프트가 바뀌면 같은 모델도 다른 답을 낸다. `prompts` 테이블의 `(prompt_key, version)`과 sha256이 이걸 고정한다.
 
-**세 군을 두는 이유**는 "A-COP이 좋다"가 아니라 **"무엇이 개선을 만들었나"**를 보기 위해서다.
+**세 군을 두는 이유**는 "triPilot이 좋다"가 아니라 **"무엇이 개선을 만들었나"**를 보기 위해서다.
 
 - A → B: RAG의 기여
 - B → Proposed: Team 분리·근거 대조·승인 경계의 기여

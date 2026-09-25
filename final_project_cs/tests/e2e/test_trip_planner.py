@@ -163,15 +163,21 @@ def _parts(draft: dict) -> list[Part]:
     return [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
                  starts_at=datetime.fromisoformat(item["starts_at"]),
                  ends_at=datetime.fromisoformat(item["ends_at"]) if item["ends_at"] else None,
-                 place={"name": places[item["place"]]["name"],
-                        "attributes": places[item["place"]]["attributes"]},
-                 route=None, detail=item["detail"])
+                 place=({"name": places[item["place"]]["name"],
+                         "attributes": places[item["place"]]["attributes"]} if item.get("place") else None),
+                 route=draft["routes"].get(item["route"]) if item.get("route") else None,
+                 detail=item["detail"])
             for item in draft["items"]]
+
+
+def _stops(draft: dict) -> list[dict]:
+    """장소 항목만 — 이동 항목(2026-09-24~)은 뺀다."""
+    return [item for item in draft["items"] if item["kind"] != "mobility"]
 
 
 def _indoor_count(draft: dict) -> int:
     places = {place["key"]: place for place in draft["places"]}
-    return sum(1 for item in draft["items"]
+    return sum(1 for item in _stops(draft)
                if places[item["place"]]["attributes"].get("indoor") is True)
 
 
@@ -182,7 +188,8 @@ def test_the_draft_passes_the_very_check_registration_runs(api):
     body = response.json()
     assert body["status"] == "drafted" and body["checks"]["violations"] == []
     draft = body["draft"]
-    assert len(draft["items"]) == 2 * (2 + 2)                      # 2일 × (활동 2 + 식사 2)
+    assert len(_stops(draft)) == 2 * (2 + 2)                       # 2일 × (활동 2 + 식사 2)
+    assert len(draft["items"]) == 2 * (2 + 2) + 2 * 3                # + 하루 장소 넷 사이 이동 셋
     # ★시험이 **직접** 같은 판정기를 돌린다 — 생성기가 스스로 「통과」라고 말한 것을 믿지 않는다.
     assert check_itinerary(_parts(draft), constraints=draft["constraints"],
                            party_size=draft["party_size"]) == []
@@ -328,8 +335,11 @@ def test_with_a_model_the_order_comes_from_the_model(api):
     flipped = body["draft"]
     assert [item["title"] for item in flipped["items"]] != \
         [item["title"] for item in ruled["items"]]                   # 순서가 달라졌다
-    assert [item["starts_at"] for item in flipped["items"]] == \
-        [item["starts_at"] for item in ruled["items"]]               # ★시각은 우리가 채운 그대로
+    # ★시각은 우리가 채운다 — 하루 첫 일정은 같은 시각에 시작하고, 모든 이동은 같은 규칙으로 잡힌다.
+    #   ☆`[2026-09-24]` 앞 판은 「모든 시각이 같다」를 봤다. 이제 이동 시간이 **거리대로** 들어가서
+    #     순서가 바뀌면 사이 시간도 바뀐다 — 그 자체가 맞는 동작이다.
+    assert _stops(flipped)[0]["starts_at"] == _stops(ruled)[0]["starts_at"]
+    _assert_leave_rule(flipped)
 
 
 def test_a_model_that_fails_does_not_stop_us_and_the_note_says_why(api):
@@ -346,7 +356,7 @@ def test_ids_the_model_invents_are_dropped(api):
     body = api["ask"](request_id="p-junk", chat=junk).json()
     titles = {item["title"] for item in body["draft"]["items"]}
     assert "경복궁" not in titles and "없는_식당" not in titles
-    assert len(body["draft"]["items"]) == 8 and body["checks"]["violations"] == []
+    assert len(_stops(body["draft"])) == 8 and body["checks"]["violations"] == []
 
 
 def test_a_model_whose_answers_are_all_unusable_is_reported_as_rules(api):
@@ -450,7 +460,7 @@ def test_the_answer_says_whether_it_read_the_rules_at_all(api):
     assert rag["query"] == "비 오면 어쩌죠"
     assert all(scope.startswith("travel_") for scope in rag["scopes"]), rag["scopes"]
     # ★규정을 0건 읽었어도 초안은 나온다 — 규정은 초안의 성립 조건이 아니다
-    assert body["checks"]["violations"] == [] and len(body["draft"]["items"]) == 8
+    assert body["checks"]["violations"] == [] and len(_stops(body["draft"])) == 8
 
 
 def test_with_no_rules_found_the_prompt_carries_no_policy_section(api):
@@ -486,3 +496,107 @@ def test_rules_that_were_found_reach_both_the_model_and_the_answer(api, monkeypa
     assert body["rag"]["evidence"][0]["source_type"] == "policy"
     assert any("동반자가 있으면 이동 여유를 더 둔다." in seen for seen in chat.seen),         "규정을 찾았는데 모델에게 안 보였다"
     assert any("Operator policy" in seen for seen in chat.seen)
+
+
+# ── ⑦ 이동 — 출발 시각을 거꾸로 잡는다 (2026-09-24 사용자 지시, D-020) ─────────────
+def _assert_leave_rule(draft: dict) -> None:
+    """★출발 = 다음 일정 시작 − 이동 시간 − 여유. 이동 알림은 이 출발 시각에 간다."""
+    from datetime import datetime, timedelta
+
+    from app.modules.travel_ops.planner import MOVE_BUFFER_MIN
+
+    items = draft["items"]
+    moves = [item for item in items if item["kind"] == "mobility"]
+    assert moves
+    for index, item in enumerate(items):
+        if item["kind"] != "mobility":
+            continue
+        before, after = items[index - 1], items[index + 1]
+        leave, arrive = datetime.fromisoformat(item["starts_at"]), datetime.fromisoformat(item["ends_at"])
+        eta = draft["routes"][item["route"]]["options"][0]["eta_min"]
+        assert arrive - leave == timedelta(minutes=eta)                       # 이동 항목 길이 = 이동 시간
+        assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
+        assert leave >= datetime.fromisoformat(before["ends_at"])              # 앞 일정이 끝난 뒤에 나선다
+        assert item["detail"]["planner"]["leave_rule"] == "다음 일정 시작 − 이동 시간 − 여유"
+
+
+def test_every_move_leaves_at_next_start_minus_travel_minus_buffer(api):
+    """★생성기가 짠 여행에도 이동 항목이 있다 — 앞 판은 없어서 **이동 알림이 한 번도 나가지 않았다.**"""
+    body = api["ask"](request_id="p-moves").json()
+    assert body["checks"]["violations"] == []
+    _assert_leave_rule(body["draft"])
+    # 이동은 우리가 모르는 노선을 지어내지 않는다 — 추정 이동 시간만 싣는다
+    for route in body["draft"]["routes"].values():
+        assert route["options"][0]["uses"] == [] and route["options"][0]["eta_min"] >= 1
+
+
+def test_the_registered_plan_announces_the_move_when_it_starts(api):
+    """등록까지 가면 이동 알림이 **출발 시각 그 자체**에 잡힌다 — 「N분 전」이 없다."""
+    from datetime import datetime, timedelta
+
+    from app.modules.travel_ops.itinerary import Item
+    from app.modules.travel_ops.trip_reminders import ReminderRules, plan_reminders
+
+    body = api["ask"](request_id="p-moves-reg", register=True).json()
+    assert body["status"] == "registered"
+    items = [Item(item_id=__import__("uuid").uuid4(), seq=it["seq"], kind=it["kind"], title=it["title"],
+                  place_id=None, starts_at=datetime.fromisoformat(it["starts_at"]),
+                  ends_at=datetime.fromisoformat(it["ends_at"]) if it["ends_at"] else None, detail={})
+             for it in body["draft"]["items"]]
+    move = next(item for item in items if item.kind == "mobility")
+    rules = ReminderRules(eve_hour=None)
+    kinds = lambda at: [r.kind for r in plan_reminders(items, now=at, rules=rules)]  # noqa: E731
+    assert "departure" not in kinds(move.starts_at - timedelta(minutes=1))
+    assert "departure" in kinds(move.starts_at)
+
+
+# ── ⑧ 설문 16번 여유 → 밀도 목표 → 하루 활동 수 (2026-09-24, D-020) ─────────────
+def _survey(pace: str) -> dict:
+    from app.modules.travel_ops.survey import SURVEY_VERSION
+
+    return {"survey": {"version": SURVEY_VERSION, "pace": pace}}
+
+
+def test_pace_decides_how_many_places_a_day_by_measuring_the_day(api):
+    """★곳 수를 표로 박지 않는다 — 하루를 짜 보고 **밀도를 재서** 목표를 넘지 않는 가장 많은 수를 넣는다."""
+    counts = {}
+    for pace in ("relaxed", "packed"):
+        body = api["ask"](request_id=f"p-{pace}", constraints=_survey(pace)).json()
+        assert body["status"] == "drafted", body
+        density = body["planner"]["density"]
+        assert density["target_density"] == {"relaxed": 0.40, "packed": 0.70}[pace]
+        for day in density["days"]:
+            assert day["status"] == "ok", day
+            assert day["actual_density"] <= day["target_density"]
+            # 하나 더 넣은 하루는 **목표를 넘었거나 판정에 걸렸다** — 상한(4곳)이 아니면 「가장 많이」의 근거가 남는다
+            #   (실측: 빡빡한 날 4곳은 밀도 0.599 로 목표 안이었지만 닫는 시각에 걸려 빠졌다)
+            if day["activities"] < min(4, day["candidates"]):
+                bigger = [t for t in day["tried"] if t["activities"] == day["activities"] + 1]
+                assert bigger and (bigger[0]["actual_density"] > day["target_density"]
+                                   or bigger[0]["violations"]), day
+        counts[pace] = [day["activities"] for day in density["days"]]
+        # ★등록이 재는 밀도와 같은 값이다 — 같은 함수(`measure_density`)를 같은 제약으로 부른다
+        assert body["draft"]["constraints"]["density"]["level"] == {"relaxed": "low", "packed": "high"}[pace]
+        _assert_leave_rule(body["draft"])
+    assert sum(counts["packed"]) > sum(counts["relaxed"]), counts
+
+
+def test_without_a_pace_the_day_keeps_the_default_and_says_so(api):
+    body = api["ask"](request_id="p-nopace").json()
+    assert body["planner"]["density"]["target_density"] is None
+    assert "밀도 목표가 없어" in body["planner"]["density"]["note"]
+    assert len(_stops(body["draft"])) == 2 * (2 + 2)
+
+
+def test_a_wrong_survey_is_refused_before_planning(api):
+    response = api["ask"](request_id="p-badsurvey",
+                          constraints={"survey": {"version": "2026-09-24.v1", "pace": "turbo"}})
+    assert response.status_code == 422 and response.json()["error"]["code"] == "invalid_survey"
+
+
+def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
+    body = api["ask"](request_id="p-packed-reg", register=True, constraints=_survey("packed")).json()
+    assert body["status"] == "registered", body
+    planned = {d["date"]: d["actual_density"] for d in body["planner"]["density"]["days"]}
+    registered = {row["date"]: round(row["actual_density"], 3) for row in body["trip"]["density"]}
+    assert registered == planned

@@ -35,7 +35,7 @@ from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -128,6 +128,12 @@ class PlanIn(BaseModel):
             data = dict(data)
             data["register_now"] = data.pop("register")
         return data
+
+
+class ChooseIn(BaseModel):
+    """보류 제안 고르기. `key` 가 없으면(null) **원래 일정을 그대로 둔다**(kept)."""
+    model_config = ConfigDict(extra="forbid")
+    key: str | None = None
 
 
 class ReportIn(BaseModel):
@@ -613,6 +619,173 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if format == "json":
             return JSONResponse(view)
         return HTMLResponse(render_change(view))
+
+    # ── 보류 제안(「먼저 물어봐줘」 · 변경 안 할 일정) — D-020 ─────────────────
+    def _proposal_view(row: dict[str, Any]) -> dict[str, Any]:
+        return {"proposal_id": str(row["proposal_id"]), "item_id": str(row["item_id"]),
+                "base_version": row["base_version"], "reason": row["reason"],
+                "protected_by": row["protected_by"], "safety": row["safety"], "status": row["status"],
+                "expires_at": row["expires_at"].isoformat() if row["expires_at"] else None,
+                "chosen_key": row["chosen_key"], "causes": row["cause_json"],
+                "options": [{"key": o["key"], "rank": o.get("rank"),
+                             "name": o.get("option_label") or o.get("name"),
+                             "starts_at": o.get("starts_at")} for o in (row["options_json"] or [])]}
+
+    def _proposals(tenant: str, trip_id: UUID, customer_id: UUID | None = None) -> dict[str, Any]:
+        from .pending import PendingStore
+
+        with get_connection() as conn:
+            _trip_or_404(conn, TripStore(tenant), trip_id, customer_id)
+            rows = PendingStore(tenant).list(conn, trip_id)
+        return {"trip_id": str(trip_id), "proposals": [_proposal_view(r) for r in rows]}
+
+    def _choose(tenant: str, trip_id: UUID, proposal_id: UUID, key: str | None, by: str,
+                customer_id: UUID | None = None) -> dict[str, Any]:
+        """★한 트랜잭션 — 실패하면 아무것도 안 바뀐다. 먼저 고른 쪽이 이기고 나중 쪽은 409."""
+        from .pending import PendingStore, ProposalRefused, choose
+
+        store = TripStore(tenant)
+        try:
+            with get_connection() as conn, conn.transaction():
+                _trip_or_404(conn, store, trip_id, customer_id)
+                places = {str(p["place_id"]): p for p in store.places(conn)}
+                return choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                              proposal_id=proposal_id, key=key, by=by, places_by_id=places,
+                              check=_check())
+        except ProposalRefused as refused:
+            status = {"not_found": 404, "already_decided": 409, "stale": 409}.get(refused.code, 422)
+            # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
+            raise _error(status, refused.code, "안을 고르지 못했다 — 아무것도 바뀌지 않았다",
+                         detail={k: (v if isinstance(v, (int, float, str, bool, type(None), list, dict))
+                                     else str(v)) for k, v in refused.detail.items()}) from None
+
+    @router.get("/v1/trips/{trip_id}/proposals")
+    def proposals(trip_id: UUID, principal: Principal = Depends(require_scope("trip:read"))):
+        return _proposals(principal.tenant_id, trip_id)
+
+    @router.post("/v1/trips/{trip_id}/proposals/{proposal_id}/choose")
+    def choose_proposal(trip_id: UUID, proposal_id: UUID, request: ChooseIn,
+                        principal: Principal = Depends(require_scope("trip:write"))):
+        return _choose(principal.tenant_id, trip_id, proposal_id, request.key, by=principal.key_id)
+
+    # ── 웹(고객 브라우저) — 사용자 식별 키 `X-User-Key` ────────────────────
+    #   ★서버용 scope 키를 브라우저에 넣지 않는다. 이 키는 **그 사용자 본인의 여행**만 연다(D-020 · 025).
+    def _web_customer(x_user_key: str | None = Header(default=None)) -> tuple[str, UUID]:
+        from .web_session import resolve
+
+        tenant = settings_module.get_settings().tenant_id
+        with get_connection() as conn, conn.transaction():
+            customer = resolve(conn, tenant_id=tenant, raw=x_user_key)
+        if customer is None:
+            raise _error(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
+        return tenant, customer
+
+    @router.post("/v1/web/session", status_code=201)
+    def web_session(http: Request):
+        """첫 방문 — 사용자와 키를 만든다. ★키 원문은 **이번에만** 돌려준다. 사용자에게 보관하게 한다.
+        ★키 없이 열린 유일한 쓰기 경로라 **주소마다 한 시간에 몇 개**로 막는다(`security.web_session_issue_per_hour`)."""
+        from .web_session import issue, issue_wait
+
+        wait = issue_wait(http.client.host if http.client else "unknown")
+        if wait:
+            error = _error(429, "too_many_sessions", "새 키를 너무 많이 받았다 — 잠시 뒤에 다시 하거나 가진 키를 넣는다",
+                           retry_after_seconds=int(wait))
+            error.headers = {"Retry-After": str(int(wait))}
+            raise error
+        tenant = settings_module.get_settings().tenant_id
+        with get_connection() as conn, conn.transaction():
+            customer, raw = issue(conn, tenant_id=tenant)
+        return {"customer_id": str(customer), "user_key": raw,
+                "notice": "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다."}
+
+    @router.post("/v1/web/session/rotate")
+    def web_rotate(who: tuple[str, UUID] = Depends(_web_customer)):
+        """키를 새로 받는다 — **옛 키는 바로 무효.** 키가 샜다고 의심되면 이것으로 끊는다."""
+        from .web_session import rotate
+
+        tenant, customer = who
+        with get_connection() as conn, conn.transaction():
+            raw = rotate(conn, tenant_id=tenant, customer_id=customer)
+        return {"customer_id": str(customer), "user_key": raw,
+                "notice": "새 키예요. 옛 키는 더 이상 쓸 수 없어요 — 따로 잘 보관해 주세요."}
+
+    @router.get("/v1/web/trips")
+    def web_trips(who: tuple[str, UUID] = Depends(_web_customer)):
+        tenant, customer = who
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT trip_id, title, latest_version, created_at FROM trips "
+                        "WHERE tenant_id=%s AND customer_id=%s ORDER BY created_at DESC", (tenant, customer))
+            rows = cur.fetchall()
+        return {"trips": [{"trip_id": str(r[0]), "title": r[1], "version": r[2],
+                           "created_at": r[3].isoformat()} for r in rows]}
+
+    @router.post("/v1/web/trips", status_code=201)
+    def web_create(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
+        """★고객은 **자기 이름으로만** 등록한다 — 몸통에 `customer_id` 를 받지 않는다."""
+        tenant, customer = who
+        if "customer_id" in body:
+            raise _error(422, "customer_id_not_allowed", "웹에서는 customer_id 를 보내지 않는다 — 키가 정한다")
+        try:
+            request = CreateTrip.model_validate({**body, "customer_id": str(customer)})
+        except ValidationError as exc:
+            raise _error(422, "validation_error", "등록 몸통이 계약과 다르다",
+                         problems=[{"field": ".".join(str(x) for x in e["loc"]), "reason": e["msg"]}
+                                   for e in exc.errors()]) from None
+        return _create_trip(tenant, request)
+
+    @router.get("/v1/web/trips/{trip_id}")
+    def web_detail(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+            return _trip_view(conn, store, trip_id)
+
+    @router.get("/v1/web/trips/{trip_id}/proposals")
+    def web_proposals(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        tenant, customer = who
+        return _proposals(tenant, trip_id, customer)
+
+    @router.post("/v1/web/trips/{trip_id}/proposals/{proposal_id}/choose")
+    def web_choose(trip_id: UUID, proposal_id: UUID, request: ChooseIn,
+                   who: tuple[str, UUID] = Depends(_web_customer)):
+        tenant, customer = who
+        return _choose(tenant, trip_id, proposal_id, request.key, by=f"web:{customer}", customer_id=customer)
+
+    @router.post("/v1/web/trips/{trip_id}/messages")
+    def web_message(trip_id: UUID, request: MessageIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """「에이전트에게 변경 요청」 — 자유 문장. 에이전트 API 와 **같은 처리**를 탄다."""
+        from .trip_messages import TripNotFound, handle_trip_message
+
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+        try:
+            return handle_trip_message(
+                tenant=tenant, trip_id=trip_id, request_id=request.request_id, message=request.message,
+                at=_seoul(request.at) or datetime.now(KST), classifier=_lazy("classifier", classifier_factory),
+                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}")
+        except TripNotFound:
+            raise _error(404, "not_found", "resource not found") from None
+
+    @router.get("/v1/web/trips/{trip_id}/notices")
+    def web_notices(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """화면 위쪽 알림 — 그 여행에 나간 알림 전부. `type` 으로 가른다:
+        guidance(하루 시작·다음 일정·이동) · proposal_request(선택 요청) · safety_alert · change_notice."""
+        tenant, customer = who
+        with get_connection() as conn:
+            _trip_or_404(conn, TripStore(tenant), trip_id, customer)
+            with conn.cursor() as cur:
+                cur.execute("SELECT dedupe_key, payload_json, status, available_at FROM outbox "
+                            "WHERE tenant_id=%s AND topic='trip.notice' AND dedupe_key LIKE %s "
+                            "ORDER BY available_at, dedupe_key", (tenant, f"{trip_id}:%"))
+                rows = cur.fetchall()
+        return {"notices": [{"key": key.split(":", 1)[1], "type": payload.get("type") or "change_notice",
+                             "kind": payload.get("kind"), "text": payload.get("text"),
+                             "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
+                             "options": payload.get("options"), "delivery": status,
+                             "at": at.isoformat()} for key, payload, status, at in rows]}
 
     return router
 

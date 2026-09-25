@@ -182,7 +182,7 @@ def _tick_moments(items, rules) -> list[datetime]:
         if rules.eve_hour is not None:
             moments.append(datetime.combine(day - timedelta(days=1), time(rules.eve_hour), tzinfo=KST))
         moments.append(first.starts_at - rules.day_start_lead)
-        moments += [move.starts_at - rules.departure_lead
+        moments += [move.starts_at
                     for move in day_items if move.kind == "mobility"]
     return sorted(moments)
 
@@ -322,7 +322,6 @@ def run(*, days: int, locales: list[str], keep: bool, workdir: Path) -> dict[str
     rules = ReminderRules.from_guardrails()
     out: dict[str, Any] = {"days": days, "locales": list(locales), "tenant": tenant,
                            "rules": {"day_start_lead_min": rules.day_start_lead.total_seconds() / 60,
-                                     "departure_lead_min": rules.departure_lead.total_seconds() / 60,
                                      "eve_hour": rules.eve_hour}}
     try:
         store, trips = _seed(tenant, data, locales=locales, days=days)
