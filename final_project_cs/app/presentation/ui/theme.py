@@ -264,6 +264,22 @@ nav a{color:var(--text-dim);text-decoration:none;padding:.35rem .7rem;border-rad
   font-size:.9rem;font-weight:500}
 nav a:hover{background:var(--surface);color:var(--text)}
 nav a[aria-current=page]{background:var(--accent-weak);color:var(--accent);font-weight:600}
+/* ★`[2026-09-25 사용자 지시]` 좁은 화면에서 메뉴를 **접고 편다.** 상단바는 화면 위에 붙어 있어(sticky)
+   메뉴가 두세 줄로 접히면 그만큼 계속 본문을 가렸다(폭 705px 에서 190px). 넓으면 한 줄 그대로,
+   900px 이하면 「☰ 메뉴」 하나만 두고 눌러야 펼친다. 자바스크립트 없이 체크박스 + 라벨로 연다. */
+.menu{display:contents}
+.menu-toggle{position:absolute;opacity:0;pointer-events:none}
+.menu-btn{display:none;margin-left:auto;cursor:pointer;user-select:none;font-size:.9rem;font-weight:600;
+  padding:.35rem .8rem;border:1px solid var(--line);border-radius:99px;color:var(--text)}
+.menu-toggle:focus-visible+.menu-btn{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:900px){
+  .menu-btn{display:inline-block}
+  .menu{display:none;width:100%;flex-direction:column;gap:.5rem;padding-top:.25rem}
+  .menu-toggle:checked~.menu{display:flex}
+  .menu-toggle:checked+.menu-btn{background:var(--accent-weak);color:var(--accent)}
+  .menu nav{flex-direction:column;align-items:stretch}
+  .menu form{margin-left:0!important}
+}
 h1{font-size:1.5rem;letter-spacing:-.02em;margin:.25rem 0 .35rem}
 h2{font-size:1.03rem;letter-spacing:-.01em;margin:0}
 h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin:1.25rem 0 .5rem}
@@ -439,7 +455,10 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
         f"<title>{esc(title)} · triPilot</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>triPilot<span>운영 콘솔</span></span><nav>{links}</nav>{_who(who)}</div></div>"
+        f"<span class='brand'>triPilot<span>운영 콘솔</span></span>"
+        "<input type='checkbox' id='menu-toggle' class='menu-toggle' aria-label='메뉴 열기·닫기'>"
+        "<label for='menu-toggle' class='menu-btn' aria-hidden='true'>☰ 메뉴</label>"
+        f"<div class='menu'><nav>{links}</nav>{_who(who)}</div></div></div>"
         f"<main class='shell'><h1>{esc(title)}</h1>{lede_html}{body}</main></body></html>")
 
 
