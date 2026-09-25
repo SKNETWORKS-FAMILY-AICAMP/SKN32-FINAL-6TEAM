@@ -195,7 +195,11 @@ class Planner:
         sdate, arrive_by = service_day(arrive_dt)
         nb = None
         if not_before_dt is not None:
-            nd, nm_ = service_day(not_before_dt)
+            # 출발 하한은 분 **올림**(09:47:30 에 끝나면 09:48 부터) — 도착 목표는 내림이라 둘 다 안전 쪽(GPT #3)
+            up = not_before_dt.astimezone(KST)
+            if up.second or up.microsecond:
+                up = up.replace(second=0, microsecond=0) + timedelta(minutes=1)
+            nd, nm_ = service_day(up)
             nb = nm_ + (nd - sdate).days * MIN_DAY
         wlim = self._walk_limit(party)
         buf = self.v.rv("buffer", "by_stage", self.stage)
@@ -248,7 +252,10 @@ class Planner:
                 opts.append({"id": f"opt{c['n']}", "label": label_of(c["legs"]), "eta_min": eta,
                              "uses": uses_of(c["legs"]), "_start": start,
                              "_transfers": c.get("transfers") or 0, "_n": c["n"],
-                             "_margin": margin, "_slack": slack})
+                             "_margin": margin, "_slack": slack,
+                             "_check": {"date": st_date.isoformat(), "legs": c["legs"], "off": off,
+                                        "walk_place_in": wa, "walk_place_out": wb, "walk_stop_in": c["walk_in_min"],
+                                        "walk_stop_out": c["walk_out_min"], "by_station": by_station}})
             if not any(o["id"] != "walk" for o in opts):
                 if r.candidates and n_mode == 0:
                     why = {"code": "no_data", "reason": f"고른 수단({', '.join(sorted(self.modes))}) 안의 후보가 없다"}
@@ -271,12 +278,17 @@ class Planner:
         planned = max(opts, key=lambda o: (o["_start"], -o["_transfers"], -o["eta_min"], -o["_n"]))
         start = planned["_start"]
         end = start + planned["eta_min"]
+        # ★ options 는 **이동 항목 starts_at 에 떠나도 성립하는 후보만** 싣는다(GPT #1). 후보마다 성립하는 마지막 출발이
+        #   다른데 출력 칸은 starts_at 하나라, 더 일찍 떠나야 하는 후보를 같이 실으면 코어가 그 후보로 바꿀 때
+        #   검증한 출발보다 늦게 떠나게 된다. 마지막 성립 출발보다 늦으면 불성립이므로 = 시작 분이 같은 후보(도보는 그 이상).
+        opts = [o for o in opts if o["_start"] >= start]
         if self.trace is not None:
             self.trace.append({"case": case_id, "date": sdate.isoformat(), "arrive_by_min": arrive_by,
                                "planned": planned["id"],
                                "options": [{"id": o["id"], "start_min": o["_start"], "eta_min": o["eta_min"],
                                             "margin_min": o.get("_margin"), "slack_min": o.get("_slack"),
-                                            "transfers": o["_transfers"]} for o in opts]})
+                                            "transfers": o["_transfers"], "check": o.get("_check")}
+                                           for o in opts]})
         route = {"from": a_place["name"], "to": b_place["name"], "planned": planned["id"],
                  "options": [{k: v for k, v in o.items() if not k.startswith("_")} for o in opts]}
         return (route, start, end, sdate), None
@@ -287,7 +299,7 @@ def _key_time(it):
 
 
 def plan(places, items, party_size=None, constraints=None, *, runtime=None, stage="planning",
-         modes=None, trace=None):
+         modes=None, trace=None, routes=None):
     """places·items(·party_size·constraints) → {"items", "routes", "skipped", "basis"}.
 
     items : 입력 항목 중 이동이 아닌 것을 시각 순으로 두고, **장소가 다른 이웃 둘 사이마다** 이동 항목을 끼운다.
@@ -301,6 +313,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
     skipped: 이동 항목을 못 만든 구간 [{from, to, code, reason}] — 그 구간은 **값을 빼고** 낸다(모르면 뺀다).
     modes  : 후보 수단 거르기 — None(기본)이면 전부. 예시 파일은 {"subway", "walk"} 로 뽑았다(노트북 버스 데이터가 옛 판).
     trace  : 리스트를 주면 구간마다 내부 값(시작 분·@·slack·환승)을 적는다 — 코어로는 안 나간다.
+    routes : (선택) 호출 쪽이 이미 가진 routes — 그 키와 입력 항목이 참조하는 route 키는 **새 키로 쓰지 않는다**(GPT #2).
     """
     if runtime is None:
         from .runtime import get_verifier
@@ -321,7 +334,13 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         lo, hi = _parse_dt(a["starts_at"]), _parse_dt(b["starts_at"])
         return [dict(m) for m in moves_in if lo <= _parse_dt(m["starts_at"]) < hi]
 
+    reserved = set(routes or {}) | {str(it["route"]) for it in its if it.get("route")}
     merged, routes, skipped = [], {}, []
+    if not stay:                                   # 이동 항목만 온 입력 — 그대로 돌려준다(GPT #4)
+        merged.extend(dict(m) for m in moves_in)
+    else:                                          # 첫 비이동 항목보다 앞선 입력 이동 항목은 그대로 앞에 둔다(GPT #4)
+        first = _parse_dt(stay[0]["starts_at"])
+        merged.extend(dict(m) for m in moves_in if _parse_dt(m["starts_at"]) < first)
 
     def skip(a, b, entry):
         skipped.append(entry)
@@ -353,7 +372,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         route, start, end, sdate = got
         key = f"{a.get('place')}_to_{b.get('place')}"
         n = 2
-        while key in routes:
+        while key in routes or key in reserved:
             key = f"{a.get('place')}_to_{b.get('place')}_{n}"
             n += 1
         routes[key] = route
@@ -369,9 +388,15 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
                       "decided_at": datetime.now(KST).strftime("%Y-%m-%dT%H:%M:00+09:00")}}
 
 
+def plan_doc(doc, *, runtime, stage="planning", modes=None, trace=None):
+    """CLI 가 읽는 입력 JSON 한 벌 → plan(). 기존 `routes` 도 넘긴다(그 키를 새 키로 안 쓰게 · GPT 2차 #1)."""
+    return plan(doc.get("places") or [], doc.get("items") or [], doc.get("party_size"), doc.get("constraints"),
+                runtime=runtime, stage=stage, modes=modes, trace=trace, routes=doc.get("routes"))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="이동 값 내놓기 — places·items → 이동 항목 + routes (출력 스펙 v1.3)")
-    ap.add_argument("--in", dest="inp", required=True, help="입력 JSON {places, items, party_size?, constraints?}")
+    ap.add_argument("--in", dest="inp", required=True, help="입력 JSON {places, items, party_size?, constraints?, routes?}")
     ap.add_argument("--out", help="출력 JSON 경로(없으면 표준출력)")
     ap.add_argument("--stage", default="planning", choices=("planning", "pre_departure", "in_progress"))
     ap.add_argument("--no-basis", action="store_true", help="basis 를 빼고 낸다(예시 파일을 판 바뀔 때마다 안 흔들리게)")
@@ -382,8 +407,7 @@ def main(argv=None):
     from .runtime import build_verifier
     rt = build_verifier(quiet=True)
     tr = [] if a.trace else None
-    res = plan(doc.get("places") or [], doc.get("items") or [], doc.get("party_size"), doc.get("constraints"),
-               runtime=rt, stage=a.stage, modes=a.modes, trace=tr)
+    res = plan_doc(doc, runtime=rt, stage=a.stage, modes=a.modes, trace=tr)
     if a.trace:
         Path(a.trace).write_text(json.dumps(tr, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if a.no_basis:

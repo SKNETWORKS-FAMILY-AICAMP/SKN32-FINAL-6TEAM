@@ -272,6 +272,145 @@ def test_keep_input_move_when_skipped():
     assert [it.get("route") for it in got["items"] if it["kind"] == "mobility"] == ["g_to_s"]
 
 
+def _recheck(got, tr, doc_items, party_size=None, constraints=None, stage="planning"):
+    """출력 기준으로 다시 본다(GPT 2차 #2) — 출력 options 와 trace 후보 ID 집합이 같고, 출력 eta_min 이 판정기를
+    **따로** 불러 낸 소요(+장소·정류장 도보)와 같고, 도착 목표는 원본 다음 일정 starts_at 에서 가져온다.
+    재판정에는 원래 party·first_visit·stage 를 그대로 넘긴다."""
+    v = _runtime()._v
+    constraints = dict(constraints or {})
+    party = party_of(party_size, constraints)
+    fv = constraints.get("first_visit", True)
+    stays = sorted((x for x in doc_items if x.get("kind") != "mobility"),
+                   key=lambda x: datetime.fromisoformat(x["starts_at"]))
+    n = 0
+    items = got["items"]
+    for i, it in enumerate(items):
+        if it["kind"] != "mobility":
+            continue
+        t = next(x for x in tr if x["route"] == it["route"])
+        out_opts = {o["id"]: o for o in got["routes"][it["route"]]["options"]}
+        assert set(out_opts) == {o["id"] for o in t["options"]}, "출력 options 와 판정한 후보가 다르다"
+        nxt = next(x for x in stays if x["title"] == items[i + 1]["title"])   # 원본 다음 일정
+        sdate = date.fromisoformat(t["date"])
+        d, m = service_day(datetime.fromisoformat(nxt["starts_at"]))
+        arrive_by = m + (d - sdate).days * 1440
+        d, m = service_day(datetime.fromisoformat(it["starts_at"]))
+        start_min = m + (d - sdate).days * 1440
+        for o in t["options"]:
+            eta_out = out_opts[o["id"]]["eta_min"]
+            ck = o.get("check")
+            if ck is None:                          # 도보 — 출발 + 소요 + 버퍼 ≤ 목표
+                assert eta_out == o["eta_min"]
+                assert start_min + eta_out + v.rv("buffer", "by_stage", stage) <= arrive_by
+                continue
+            dep = start_min + ck["walk_place_in"] - ck["off"] + ck["walk_stop_in"]
+            by_station = arrive_by - ck["walk_place_out"] - ck["off"]
+            r = v.verify_case({"id": f"recheck/{it['route']}/{o['id']}", "date": ck["date"], "legs": ck["legs"],
+                               "depart_at": dep, "arrive_by": by_station - ck["walk_stop_out"],
+                               "stage": stage, "party": party, "first_visit": fv, "no_alternatives": True})
+            assert r.out["verdict"] == "feasible" and r.out.get("slack_min", -1) >= 0, \
+                f"{it['route']}/{o['id']} 가 출력 출발 시각에서 성립하지 않는다: {r.out}"
+            eta_indep = (ck["walk_place_in"] + ck["walk_stop_in"] + r.out["eta_min"]
+                         + ck["walk_stop_out"] + ck["walk_place_out"])
+            assert eta_out == eta_indep, f"{it['route']}/{o['id']}: 출력 eta {eta_out} ≠ 따로 잰 {eta_indep}"
+            n += 1
+    return n
+
+
+def test_independent_recheck():
+    """GPT #5 — 출력된 starts_at 에서 판정기를 **따로** 불러 성립을 본다(trace 등식에 기대지 않는다).
+    GPT #1 — options 에 남은 후보 전부가 그 한 출발 시각에서 성립해야 한다. 자정 가까운 경복궁→성수는
+    후보마다 마지막 성립 출발이 다르다(23:42 · 23:32) — 더 일찍 떠나야 하는 후보는 options 에 남으면 안 된다."""
+    _skip_if_no_data()
+    tr = []
+    doc, got = _run(trace=tr)
+    n = _recheck(got, tr, doc["items"], doc.get("party_size"), doc.get("constraints"))
+    tr = []
+    night = _two("2026-09-29T22:30:00+09:00", "2026-09-29T23:30:00+09:00", "2026-09-30T00:30:00+09:00")
+    got = plan(_GS, night, 1, {}, runtime=_runtime(), modes=MODES, trace=tr)
+    n += _recheck(got, tr, night, 1, {})
+    assert n >= 4
+
+
+def test_route_key_reserved():
+    """GPT #2 — 남겨 둔 입력 이동 항목·호출 쪽 routes 의 키를 새 경로가 덮지 않는다."""
+    _skip_if_no_data()
+    items = _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00", "2026-09-29T13:00:00+09:00")
+    items.append({"seq": 9, "kind": "activity", "title": "C", "place": "s",
+                  "starts_at": "2026-09-29T15:00:00+09:00"})
+    items.append({"seq": 10, "kind": "mobility", "title": "옛 이동", "route": "g_to_s",
+                  "starts_at": "2026-09-29T14:00:00+09:00", "ends_at": "2026-09-29T14:10:00+09:00"})
+    got = plan(_GS, items, 1, {}, runtime=_runtime(), modes=MODES, routes={"g_to_s_2": {}})
+    assert "g_to_s" not in got["routes"] and "g_to_s_2" not in got["routes"], list(got["routes"])
+    keys = [it.get("route") for it in got["items"] if it["kind"] == "mobility"]
+    assert "g_to_s" in keys, "같은 장소 사이의 입력 이동 항목은 남는다"
+
+
+def test_recheck_catches_tampering():
+    """_recheck 자신의 실패 장면 — 출력 eta 를 바꾸거나 후보를 끼워 넣으면 잡아야 한다(GPT 2차 #2 재현)."""
+    _skip_if_no_data()
+    import copy
+    tr = []
+    doc, got = _run(trace=tr)
+    key = next(it["route"] for it in got["items"] if it["kind"] == "mobility" and it["route"] != "dinner_to_lotte_mart")
+    for tamper in ("eta", "extra"):
+        g = copy.deepcopy(got)
+        opts = g["routes"][key]["options"]
+        if tamper == "eta":
+            opts[0]["eta_min"] = 999
+        else:
+            opts.append({"id": "fake", "label": "가짜", "eta_min": 1, "uses": []})
+        try:
+            _recheck(g, tr, doc["items"], doc.get("party_size"), doc.get("constraints"))
+        except AssertionError:
+            continue
+        raise AssertionError(f"_recheck 가 {tamper} 변조를 못 잡았다")
+
+
+def test_cli_passes_routes():
+    """GPT 2차 #1 — CLI(plan_doc)도 입력의 기존 routes 키를 새 키로 안 쓴다 · 함수 호출과 결과가 같다."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility_engine.plan import plan_doc
+    doc = {"places": _GS, "items": _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00",
+                                        "2026-09-29T13:00:00+09:00"),
+           "party_size": 1, "constraints": {}, "routes": {"g_to_s": {"from": "옛", "to": "옛", "planned": "x",
+                                                                      "options": []}}}
+    by_cli = plan_doc(doc, runtime=_runtime(), modes=MODES)
+    by_fn = plan(doc["places"], doc["items"], 1, {}, runtime=_runtime(), modes=MODES, routes=doc["routes"])
+    assert "g_to_s" not in by_cli["routes"] and list(by_cli["routes"]) == ["g_to_s_2"], list(by_cli["routes"])
+    for r in (by_cli, by_fn):
+        r.pop("basis")
+    assert by_cli == by_fn
+
+
+def test_not_before_seconds():
+    """GPT #3 — 앞 항목이 09:47:30 에 끝나면 09:47 출발은 겹친다. 하한은 분 올림."""
+    _skip_if_no_data()
+    got = plan(_GS, _two("2026-09-29T09:00:00+09:00", "2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00"),
+               1, {}, runtime=_runtime(), modes=MODES)
+    mob = [it for it in got["items"] if it["kind"] == "mobility"]
+    assert mob, got["skipped"]
+    s = datetime.fromisoformat(mob[0]["starts_at"])
+    end_sec = (s + timedelta(seconds=30)).isoformat()          # 이동 출발 30초 뒤에 앞 항목이 끝나게
+    got = plan(_GS, _two("2026-09-29T09:00:00+09:00", end_sec, "2026-09-29T11:00:00+09:00"),
+               1, {}, runtime=_runtime(), modes=MODES)
+    for it in got["items"]:
+        if it["kind"] == "mobility":
+            assert datetime.fromisoformat(it["starts_at"]) >= datetime.fromisoformat(end_sec), it
+
+
+def test_leading_and_only_moves_kept():
+    """GPT #4 — 첫 비이동 항목보다 앞선 입력 이동 · 이동 항목만 있는 입력은 사라지지 않는다."""
+    _skip_if_no_data()
+    mv = {"seq": 1, "kind": "mobility", "title": "공항 → 호텔", "route": "airport",
+          "starts_at": "2026-09-29T08:00:00+09:00", "ends_at": "2026-09-29T08:50:00+09:00"}
+    act = {"seq": 2, "kind": "activity", "title": "A", "place": "g", "starts_at": "2026-09-29T09:00:00+09:00"}
+    got = plan(_GS, [mv, act], 1, {}, runtime=_runtime(), modes=MODES)
+    assert [it["title"] for it in got["items"]] == ["공항 → 호텔", "A"]
+    got = plan(_GS, [mv], 1, {}, runtime=_runtime(), modes=MODES)
+    assert [it["title"] for it in got["items"]] == ["공항 → 호텔"]
+
+
 if __name__ == "__main__":
     fails, skips, n = 0, 0, 0
     for name, fn in list(globals().items()):
