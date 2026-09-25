@@ -81,6 +81,7 @@ from .paths import REPO_ROOT                                            # noqa: 
 from .line_order import LineOrder                                       # noqa: E402
 from .transfer_walk import TransferWalk                                 # noqa: E402
 from .bus import BusRoutes                                              # noqa: E402
+from .bus_profile import BusSegProfile, worst_not_before_best, board_caps  # noqa: E402
 from .geo import StationCoords, meters                                  # noqa: E402
 from .exits import StationExits                                         # noqa: E402
 from .candidates import CandidateGraph                                  # noqa: E402
@@ -196,6 +197,7 @@ class LegResult:
     walk_min: int = None                     # 구간 안 도보(자전거 — 대여소까지·대여소에서, v0.7). 지하철·버스는 None
     code: str = None                         # 이유 코드(v0.8 · rules judgment.reason_codes). 성립이면 None
     worst: bool = False                      # 최악값 통과에서 만든 구간인가(v0.8)
+    ride_src: str = None                     # 버스 승차 소요의 출처(v0.9) — profile · profile_partial(대체 구간 섞임) · speed(종전 모델)
 
 
 def leg_txt(l):
@@ -251,8 +253,9 @@ class CaseResult:
 # ── 검증기 ────────────────────────────────────────────────────────────────
 class Verifier:
     def __init__(self, tt, lo, rules, holidays, tw=None, bus=None, sc=None, ex=None, car=None,
-                 bk=None, bike_live=None, bike_router=None, cg_data=None):
+                 bk=None, bike_live=None, bike_router=None, cg_data=None, bus_prof=None):
         self.tt, self.lo, self.R, self.tw, self.bus = tt, lo, rules, tw, bus
+        self.bus_prof = bus_prof        # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — None 이면 종전 모델(거리 ÷ 표정속도)
         self.sc = sc
         self.ex = ex            # 역 출구 좌표(OSM · 추정) — 지하철↔버스 환승에만 쓴다 (19번 방)
         self.car = car          # CarService(그래프 + 라우터 + 규칙) — 없으면 택시는 종전대로 근거없음 (21번 방)
@@ -770,10 +773,6 @@ class Verifier:
         model = ("배차 전부(최악)" if worst else "배차 전부(막차 근처)") if full else "배차의 절반"
         ev.append(self._ev_bus(r, f"운행 {fmt_min(r.first_min)}~{fmt_min(r.last_min)} · 배차 {r.term_min}분"))
         ev.append(self._ev_rule("bus.wait_model" if not full else "bus.worst_case", "추정"))
-        if worst:
-            # 승차 소요의 스프레드(p90)는 41 이 닫히기 전엔 근거가 없다 — worst 승차 = best 승차. 지어내지 않는다.
-            warn.append(self.warn_msg("MOB_W_WORST_NO_SPREAD", what=f"버스 {nm} 승차 소요"))
-            ev.append(self._ev_rule("judgment.worst.bus_ride_spread", "근거없음"))
         ev.append(self._ev_rule("bus.ride_model", "추정"))
         # ★ 왕복 노선에서 길 건너 짝을 놓치고 한 바퀴 도는 답이 나오는지 본다
         det = self.rv("bus", "우회_경고")
@@ -785,22 +784,98 @@ class Verifier:
                                           alt_to=alt[1]["station_nm"], alt_span=alt[2]))
                 ev.append(self._ev_rule("bus.우회_경고", "추정"))
 
-        # 3) 승차 소요 = 구간 거리 합 ÷ 표정속도
-        dep = now_min + wait
-        dist = self.bus.distance_m(r.route_id, a["seq"], b["seq"])
-        speed, basis, sgrade, swarn = self.bus_speed(r, day_type)
-        warn += swarn
         ride = arrive = None
-        if dist is None:
-            warn.append(self.warn_msg("MOB_W_BUS_DIST_MISSING", route=nm,
-                                      from_stop=a["station_nm"], to_stop=b["station_nm"]))
-        elif speed:
-            ride = round(dist / 1000 / speed * 60, 1)
+        sgrade = "근거없음"
+        stops = self.bus.stops[r.route_id]
+        dayf = self._bus_day_types(day_type)
+        min_days = self.rv("bus", "구간_프로파일", "min_days") if self.bus_prof is not None else None
+        # 2-1) ★ 41(v0.9 · 적용 GPT 1·2) 승차 시각 상한 — 막차 시각은 **기점 출발**이다. 대기 모델(배차 절반·전부)은
+        #   정책상의 추정이지 「그때까지 못 탄다」는 근거가 아니다. 그래서 막차 추정으로 **새 불가를 만들지 않는다**
+        #   (불가는 위 「요청 시각 > 기점 막차」 규칙만). 대기 모델상 승차가 막차 통과 추정 뒤로 밀리면 막차 통과 추정
+        #   시각에 탄다고 본다 — 통과 추정 = 막차 + 기점→a 구간 누적(best p50 · worst p90 · 요일형이 갈리면 늦은 쪽).
+        dep = self._bus_board(r, a, stops, now_min + wait, "p90" if worst else "p50", dayf, min_days, warn, ev)
+        if dep < now_min + wait:
+            wait, model = dep - now_min, f"막차 통과 추정 {fmt_min(dep)} — 대기 모델 {fmt_min(now_min + wait)} 대신"
+
+        # 3) 승차 소요 — ★ 41(v0.9): 구간 통행시간 프로파일을 **구간 진입 시각대로** 누적한다(best p50 · worst p90).
+        #    프로파일을 못 쓰는 구간(셀 날 수 < min_days · 구간 없음 · 양끝 ID 불일치)만 종전 모델(구간 거리 ÷ 표정속도).
+        #    프로파일 파일이 아예 없으면 종전 모델 그대로 — worst 스프레드는 근거없음(MOB_W_WORST_NO_SPREAD).
+        spd = {}
+
+        def old_min(dist_m):
+            if dist_m is None:
+                return None
+            if "v" not in spd:
+                spd["v"] = self.bus_speed(r, day_type)
+            speed = spd["v"][0]
+            return dist_m / 1000 / speed * 60 if speed else None
+
+        wk, src = None, None
+        if self.bus_prof is not None:
+            q = "p90" if worst else "p50"
+            wk = self.bus_prof.walk(r.route_id, stops, a["seq"], b["seq"], dep, dayf, q, min_days, old_min)
+        if wk is not None and wk.minutes is not None:
+            m = wk.minutes
+            wb, adj = None, False
+            if worst:
+                # ★ 적용 GPT 5 — 시간 칸이 바뀌면 worst(늦게 타서 한산한 칸)가 best 보다 먼저 도착할 수 있다.
+                #   같은 요청 시각의 best 도착보다 이르지 않게 맞춘다(FIFO — 늦게 탄 차가 먼저 닿지 않는다).
+                dep_b = self._bus_board(r, a, stops, now_min + (r.term_min if near_last else math.ceil(r.term_min / 2)),
+                                        "p50", dayf, min_days, [], [])
+                wb = self.bus_prof.walk(r.route_id, stops, a["seq"], b["seq"], dep_b, dayf, "p50", min_days, old_min)
+                if wb.minutes is not None:
+                    m, adj = worst_not_before_best(dep_b, wb.minutes, dep, m)
+                    if adj:
+                        ev.append(self._ev_rule("bus.구간_프로파일.시나리오_도착_역전_보정", "추정"))
+            ride = round(m, 1)
             arrive = dep + math.ceil(ride)
-            ev.append(self._ev_bus(r, f"{a['station_nm']}→{b['station_nm']} {dist:,}m ({span}정거장)"))
-            ev.append(self._ev_rule(f"bus.표정속도 — {basis} {speed} km/h", sgrade))
+            sgrade = "추정"
+            src = "profile" if wk.complete else "profile_partial"
+            if worst and wb is not None and wb.minutes is not None and adj:
+                src = "profile_adjusted"        # 보정분이 섞였다 — p90_eta 에 쓰지 않는다(적용 2차 GPT 10)
+            ev.append(self._ev_bus(r, f"{a['station_nm']}→{b['station_nm']} ({span}정거장)"))
+            ev.append(self._ev_bus_prof(f"{nm} {a['station_nm']}→{b['station_nm']} 구간 {wk.used + wk.half}개 {q} 누적"
+                                        f"(진입 시각대 · {fmt_min(dep)} 승차)" + (f" · 대체 {wk.fb}개" if wk.fb else "")))
+            ev.append(self._ev_rule("bus.구간_프로파일", "추정"))
+            if worst:
+                ev.append(self._ev_rule("judgment.worst.bus_ride_spread", "추정" if wk.used + wk.half else "근거없음"))
+            if wk.fb:
+                warn.append(self.warn_msg("MOB_W_BUS_PROFILE_FALLBACK", route=nm, n=wk.fb, total=wk.total))
+                warn += spd.get("v", (None, None, None, []))[3]
+                if worst:
+                    warn.append(self.warn_msg("MOB_W_WORST_NO_SPREAD", what=f"버스 {nm} 승차 중 대체 구간 {wk.fb}개"))
+            if wk.edge and not any(w["code"] == "MOB_W_BUS_PROFILE_DAYTYPE_EDGE" for w in warn):
+                warn.append(self.warn_msg("MOB_W_BUS_PROFILE_DAYTYPE_EDGE", route=nm))
+        elif wk is not None:
+            # 프로파일도 대체 모델도 못 쓴 구간이 있다 — 승차 소요 근거없음. 그 자리를 말한다(적용 GPT 6).
+            fs = next((x for x in stops if x["seq"] == wk.fail_seq), None)
+            nx = next((x for x in stops if x["seq"] > (wk.fail_seq or 0)), None)
+            warn.append(self.warn_msg("MOB_W_BUS_DIST_MISSING", route=nm,
+                                      from_stop=(fs or a)["station_nm"], to_stop=(nx or b)["station_nm"]))
+            warn += spd.get("v", (None, None, None, []))[3]
+            ev.append(self._ev_rule("bus.구간_프로파일 — 대체 실패", "근거없음"))
         else:
-            ev.append(self._ev_rule("bus.표정속도 — 값 없음", "근거없음"))
+            if worst:
+                # 프로파일 파일이 없다 — worst 승차 = best 승차. 지어내지 않는다.
+                warn.append(self.warn_msg("MOB_W_WORST_NO_SPREAD", what=f"버스 {nm} 승차 소요"))
+                ev.append(self._ev_rule("judgment.worst.bus_ride_spread", "근거없음"))
+            dist = self.bus.distance_m(r.route_id, a["seq"], b["seq"])
+            speed, basis, sgrade, swarn = self.bus_speed(r, day_type)
+            warn += swarn
+            if dist is None:
+                warn.append(self.warn_msg("MOB_W_BUS_DIST_MISSING", route=nm,
+                                          from_stop=a["station_nm"], to_stop=b["station_nm"]))
+            elif speed:
+                ride = round(dist / 1000 / speed * 60, 1)
+                arrive = dep + math.ceil(ride)
+                src = "speed"
+                ev.append(self._ev_bus(r, f"{a['station_nm']}→{b['station_nm']} {dist:,}m ({span}정거장)"))
+                ev.append(self._ev_rule(f"bus.표정속도 — {basis} {speed} km/h", sgrade))
+            else:
+                ev.append(self._ev_rule("bus.표정속도 — 값 없음", "근거없음"))
+        # 공항버스 요금 경고는 승차 소요 모델과 무관하다 — 종전엔 bus_speed(공항 대용) 안에서만 붙었다
+        if r.route_type_nm == "공항" and not any(w["code"] == "MOB_W_AIRPORT_FARE" for w in warn):
+            warn.append(self.warn_msg("MOB_W_AIRPORT_FARE"))
         return LegResult(idx, label, "feasible",
                          f"{fmt_min(dep)} 승차 예상 (대기 {wait}분 — {model})"
                          + ("" if ride is not None else " · 승차 소요 근거없음")
@@ -808,7 +883,8 @@ class Verifier:
                          grade="추정" if ride is not None else "근거없음",
                          depart_min=dep, arrive_min=arrive,
                          wait_min=wait, ride_min=ride, ride_grade=sgrade,
-                         warnings=warn, evidence=ev, worst=worst)
+                         warnings=warn, evidence=ev, worst=worst,
+                         ride_src=src if ride is not None else None)
 
 
     # ── 자전거(따릉이) — 시간표가 없다. 소요만 낸다 (규칙 v0.7 · 22번 방 · rules bike.ddareungi) ──
@@ -1064,6 +1140,63 @@ class Verifier:
     def _ev_bus(self, r, claim):
         return {"source_type": "db", "source_id": self.bus.source_id, "grade": "확정",
                 "observed_at": self.bus.fetched_at, "claim": f"{r.route_nm}({r.route_type_nm}): {claim}"}
+
+    def _ev_bus_prof(self, claim):
+        p = self.bus_prof
+        return {"source_type": "db", "source_id": p.source_id, "grade": "추정",
+                "observed_at": self._iso8((p.dates or [None, None])[-1]), "claim": claim}
+
+    @staticmethod
+    def _iso8(v):
+        """20260913 → '2026-09-13' — 프로파일 메타의 날짜는 정수다. 근거의 observed_at 은 ISO 문자열이다."""
+        v = str(v) if v is not None else None
+        return f"{v[:4]}-{v[4:6]}-{v[6:8]}" if v and len(v) == 8 and v.isdigit() else v
+
+    def _bus_day_types(self, day_type):
+        """구간 프로파일에서 볼 요일형 — 41(v0.9). 운행일 **자정(24:00) 이후** 연장 구간(1440 ≤ 분 < 2880)은 달력상
+        다음 날이라 원천 날짜 기준(달력일/운행일 · 41 GPT 9 보류)에 따라 칸이 달라진다. 두 날 요일형이 다르면 둘 다 본다
+        (고르는 법은 부른 쪽 — 소요·통과 추정 모두 늦은 쪽). 04:00 경계는 요청 시각을 운행일로 올리는 규칙(timeutil)이고
+        여기서는 쓰지 않는다 — 28:10 처럼 04시를 넘긴 연장 구간도 달력상 다음 날이다(적용 GPT 8).
+        48:00(2880) 이상은 판정기가 만들지 않는다(가장 늦은 막차 N61 28:10 + 승차) — 들어오면 같은 규칙으로 본다."""
+        nxt = None
+        if self._case_date is not None:
+            nxt = day_type_of(self._case_date + _timedelta(days=1), self.holidays)
+
+        def f(t):
+            if t >= MIN_DAY and nxt is not None and nxt != day_type:
+                return (day_type, nxt)
+            return (day_type,)
+        return f
+
+    def _bus_board(self, r, a, stops, dep_model, q, dayf, min_days, warn, ev):
+        """승차 시각 — 대기 모델 시각과 막차 통과 추정 중 이른 쪽(41 v0.9 · 적용 GPT 1·2 · 2차 3·7). 새 불가는 만들지 않는다.
+        통과 추정은 bus_profile.board_caps — best(q=p50)는 p50 누적, worst(q=p90)는 max(p90, p50) 누적(상한 역전 방지).
+        기점 승차는 막차 시각 그대로(시간표 확정 · 프로파일 없어도). 중간 정류장에서 사슬이 온전하지 않거나 프로파일이 없으면
+        상한을 두지 않고 MOB_W_BUS_LAST_PASS_UNCHECKED — 그 승차 시각도 막차를 확인한 값이 아니다."""
+        if dep_model <= r.last_min:
+            return dep_model
+        cb, cw = board_caps(self.bus_prof, r.route_id, stops, a["seq"], r.last_min, dayf, min_days)
+        if cb is None:
+            warn.append(self.warn_msg("MOB_W_BUS_LAST_PASS_UNCHECKED", route=r.route_nm, stop=a["station_nm"]))
+            return dep_model
+        origin = a["seq"] == stops[0]["seq"]
+        if not origin and self.bus_prof is not None:
+            f = dayf(r.last_min)
+            if len(f) > 1 and not any(w["code"] == "MOB_W_BUS_PROFILE_DAYTYPE_EDGE" for w in warn):
+                warn.append(self.warn_msg("MOB_W_BUS_PROFILE_DAYTYPE_EDGE", route=r.route_nm))
+        cap = cw if q == "p90" else cb
+        if dep_model <= cap:
+            return dep_model
+        warn.append(self.warn_msg("MOB_W_BUS_BOARD_CAPPED", route=r.route_nm, stop=a["station_nm"],
+                                  model=fmt_min(dep_model), cap=fmt_min(cap), last=fmt_min(r.last_min)))
+        if origin:
+            ev.append(self._ev_bus(r, f"막차 {fmt_min(r.last_min)} 기점 출발 — {a['station_nm']}(기점) 승차 상한"))
+        else:
+            ev.append(self._ev_bus_prof(f"{r.route_nm} 막차 {fmt_min(r.last_min)} 기점 → {a['station_nm']} 통과 추정 "
+                                        f"{fmt_min(cap)} ({'max(p90, p50)' if q == 'p90' else 'p50'} 누적) — "
+                                        f"대기 모델 승차 {fmt_min(dep_model)} 대신"))
+        ev.append(self._ev_rule("bus.구간_프로파일.막차_통과", "확정" if origin else "추정"))
+        return cap
 
 
     # ── 대안 열거(F3) ──────────────────────────────────────────────────
@@ -2044,6 +2177,12 @@ class Verifier:
             return self._seal(res, case, now, arrive_by)
 
         arrive_best, arrive_worst = best["arrive"], worst["arrive"]
+        if arrive_worst < arrive_best:
+            # ★ 41(적용 2차 GPT 5) — 구간 안 보정은 worst 경로의 도착 시각 기준이라, 앞 구간에서 best 가 더 일찍 닿아 혼잡한 칸을
+            #   만나면 worst 가 먼저 도착할 수 있다. 케이스 끝에서 한 번 더 맞춘다(동일 요청의 시나리오 도착 역전 보정).
+            worst = dict(worst, warns=worst["warns"] + [self.warn_msg("MOB_W_WORST_BEFORE_BEST",
+                                                                       best=fmt_min(arrive_best), worst=fmt_min(arrive_worst))])
+            arrive_worst = arrive_best
         margin = (arrive_worst - arrive_best) + buffer_min
         slack = None if arrive_by is None else arrive_by - arrive_best - margin
         ch = merged(best, worst)
@@ -2067,6 +2206,7 @@ class Verifier:
         res.margin_min = margin
         res.eta_min = arrive_best - now
         res.eta_worst_min = arrive_worst - now
+        res.p90_eta_min = self._bus_p90_eta(case, best["legs"], worst["legs"], res.eta_min)
         res.last_feasible_depart_min = lfd
         if res.verdict == "infeasible" and not no_alt:
             # 늦는 구간은 「출발 시각 이동」 대안이 뜻이 없다(더 늦어진다) — 택시만 열어 둔다.
@@ -2074,6 +2214,21 @@ class Verifier:
                 self._pt(case["legs"][0].get("line"), case["legs"][0]["from"]),
                 self._pt(case["legs"][-1].get("line"), case["legs"][-1]["to"]), now)
         return self._seal(res, case, now, arrive_by)
+
+    def _bus_p90_eta(self, case, best_legs, worst_legs, eta_min):
+        """p90_eta_min(v0.9 · 41) — **버스 한 구간짜리 케이스**에서 그 구간이 온전한 프로파일로 셈해졌을 때만
+        = eta_min + (worst 승차 − best 승차). 뜻은 「버스 승차 소요 p90 가산 추정」이다 — 날짜별 시간대 평균의 분위라
+        개별 운행 p90 도 전체 이동 p90 도 아니다(적용 GPT 9). 대기 차이(배차 절반↔전부)는 넣지 않는다."""
+        modes = [leg_mode(l) for l in case.get("legs") or []]
+        if modes != ["bus"]:
+            # 적용 GPT 9 — 환승이 끼면 버스 지연이 다음 편 놓침으로 번지는데 이 산식은 승차 차이만 더한다.
+            #   전체 이동의 p90 이라 부를 수 없으므로 버스 한 구간짜리 케이스에만 낸다.
+            return None
+        bb = [l for l in best_legs if l.ride_src is not None]
+        ww = [l for l in worst_legs if l.ride_src is not None]
+        if not bb or len(bb) != len(ww) or any(l.ride_src != "profile" or l.ride_min is None for l in bb + ww):
+            return None
+        return eta_min + max(0, math.ceil(sum(w.ride_min for w in ww) - sum(b.ride_min for b in bb)))
 
     def _seal(self, res, case, depart_min, arrive_by):
         """밖 판(out)을 붙이고 역산 상한 경고를 단다 — verify_case 의 모든 출구가 여기를 지난다."""
@@ -2213,6 +2368,8 @@ def main():
     ap.add_argument("--bike-live", default="none",
                     help="실시간 거치 조회: none(기본 · 근거없음) · env(SEOUL_OPENAPI_KEY 로 실제 호출) · <픽스처 json 경로>")
     ap.add_argument("--bike-record", help="GraphHopper 실제 응답의 거리·시간 요약을 이 픽스처 파일에 **추가** 기록한다(형상 없음)")
+    ap.add_argument("--bus-profile", help="버스 구간 통행시간 프로파일(v0.9 · 41번 방) · 'none' 이면 종전 모델(거리 ÷ 표정속도). "
+                                         "기본 processed/mobility/bus_seg_profile_v1.jsonl.gz")
     ap.add_argument("--congestion", nargs="*",
                     help="혼잡도 jsonl(v0.8 @ 부품). 기본 processed/mobility/congestion_v1.jsonl + congestion_line9_v1.jsonl · 'none' 이면 안 읽는다")
     ap.add_argument("--rules", default=str(RULES_DIR / "rules_v0.3.json"))
@@ -2354,7 +2511,13 @@ def main():
         print(f"따릉이 대여소 {len(bk.rows):,}곳 · {bk.checked_at} · 라우터 "
               f"{'GraphHopper ' + bike_router.url if (bike_router and bike_router.url) else ('픽스처 ' + str(len(fixture)) + '건' if fixture else '없음(소요 근거없음)')}"
               f" · 실시간 {'env' if args.bike_live == 'env' else ('픽스처' if bike_live else '없음(가용 근거없음)')}")
-    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car, bk, bike_live, bike_router, cg_data)
+    # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — 파일이 없으면 종전 모델(거리 ÷ 표정속도 · worst 스프레드 근거없음)
+    bus_prof = None if args.bus_profile == "none" else BusSegProfile.load(args.bus_profile)
+    if bus_prof is None:
+        print("  ! 버스 구간 프로파일(bus_seg_profile_v1.jsonl.gz)을 못 찾았거나 끔 — 버스 승차는 표정속도 모델로 낸다")
+    else:
+        print(f"버스 구간 프로파일 {len(bus_prof.index):,}구간 · {bus_prof.dates} · {bus_prof.source_id}")
+    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car, bk, bike_live, bike_router, cg_data, bus_prof)
     results, miss, skipped = [], [], []
     for c in cases:
         r = v.verify_case(c)
@@ -2395,6 +2558,13 @@ def main():
                 if mv is None or (lo_ is not None and mv < lo_) or (hi_ is not None and mv > hi_):
                     miss.append((c["id"], f"@ {lo_}~{hi_}분", str(mv)))
                     print(f"  >> MISS @(margin_min) 기대 {lo_}~{hi_} / 실제 {mv}")
+            if "expect_p90_eta" in c:
+                # ★ v0.9(41) — p90_eta_min 은 스프레드 소스가 있을 때만 나온다. null 이면 「없어야 한다」.
+                ep, pv = c["expect_p90_eta"], o.get("p90_eta_min")
+                bad = (pv is not None) if ep is None else (pv is None or pv < ep[0] or pv > ep[1])
+                if bad:
+                    miss.append((c["id"], f"p90_eta {ep}", str(pv)))
+                    print(f"  >> MISS p90_eta_min 기대 {ep} / 실제 {pv}")
             el = c.get("expect_last_depart")
             if el is not None:
                 want = None if el is None else fmt_min(to_service_min(el))

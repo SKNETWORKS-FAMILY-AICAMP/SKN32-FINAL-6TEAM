@@ -36,7 +36,7 @@ def main():
     rules = json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
     holidays = set(json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
     try:
-        from scripts.collect._paths import PROCESSED
+        from app.modules.travel_ops.mobility_engine.paths import PROCESSED   # `scripts` 이름은 팀 것과 겹친다(41)
         sc = StationCoords.load(PROCESSED / "mobility" / "station_coords.json")
         bk = BikeStations.load(PROCESSED / "mobility" / "bike_stations_v1.jsonl")
     except Exception as e:          # noqa: BLE001

@@ -161,7 +161,11 @@
         }
       ],
       "expect": "feasible",
-      "expect_internal": "feasible"
+      "expect_internal": "feasible",
+      "note_v0.9": "(v0.9 · 41 · 2026-09-25) ⚠ 이 케이스는 시간축(운행일·04시 경계) 정규화를 잠그는 것이다 — 성립 유지. 45 가 적은 「승차가 막차 뒤로 나감」은 승차 시각 상한으로 풀었다: 대기 모델 승차가 막차 통과 추정 뒤라 추정 시각에 탄다(MOB_W_BUS_BOARD_CAPPED · 예정 27:32). 처음 판은 불가 after_last 였다 — 적용 GPT 1·2·12 로 기각",
+      "expect_warn_codes": [
+        "MOB_W_BUS_BOARD_CAPPED"
+      ]
     },
     {
       "id": "NIGHT-10",
@@ -194,7 +198,11 @@
         }
       ],
       "expect": "feasible",
-      "expect_internal": "feasible"
+      "expect_internal": "feasible",
+      "note_v0.9": "(v0.9 · 41 · 2026-09-25) ⚠ 이 케이스는 시간축(운행일·04시 경계) 정규화를 잠그는 것이다 — 성립 유지. 45 가 적은 「승차가 막차 뒤로 나감」은 승차 시각 상한으로 풀었다: 대기 모델 승차가 막차 통과 추정 뒤라 추정 시각에 탄다(MOB_W_BUS_BOARD_CAPPED · 예정 28:14). 처음 판은 불가 after_last 였다 — 적용 GPT 1·2·12 로 기각",
+      "expect_warn_codes": [
+        "MOB_W_BUS_BOARD_CAPPED"
+      ]
     },
     {
       "id": "NIGHT-12",
@@ -265,7 +273,11 @@
         }
       ],
       "expect": "feasible",
-      "expect_internal": "feasible"
+      "expect_internal": "feasible",
+      "note_v0.9": "(v0.9 · 41 · 2026-09-25) ⚠ 이 케이스는 시간축(운행일·04시 경계) 정규화를 잠그는 것이다 — 성립 유지. 45 가 적은 「승차가 막차 뒤로 나감」은 승차 시각 상한으로 풀었다: 대기 모델 승차가 막차 통과 추정 뒤라 추정 시각에 탄다(MOB_W_BUS_BOARD_CAPPED · 예정 28:14). 처음 판은 불가 after_last 였다 — 적용 GPT 1·2·12 로 기각",
+      "expect_warn_codes": [
+        "MOB_W_BUS_BOARD_CAPPED"
+      ]
     },
     {
       "id": "NIGHT-16",

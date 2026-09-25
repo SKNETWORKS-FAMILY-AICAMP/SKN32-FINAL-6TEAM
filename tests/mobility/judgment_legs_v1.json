@@ -73,19 +73,20 @@
    "expect": "infeasible",
    "expect_internal": "infeasible",
    "expect_reason": "arrive_late",
-   "expect_arrive": "11:12",
+   "expect_arrive": "11:13",
    "expect_slack_min": [
-    -2,
-    -2
+    -4,
+    -4
    ],
    "expect_margin_min": [
-    15,
-    15
+    16,
+    16
    ],
-   "expect_last_depart": "10:58",
-   "expect_warn_codes": [
+   "expect_last_depart": "10:56",
+   "expect_warn_codes_absent": [
     "MOB_W_WORST_NO_SPREAD"
-   ]
+   ],
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 버스 worst 승차에 p90 스프레드가 생겼다(NO_SPREAD 경고 빠짐) — @ 16 · 여유 -4 · 늦어도 10:56"
   },
   {
    "id": "J-WORST-02",
@@ -109,12 +110,13 @@
    "expect_internal": "infeasible",
    "expect_reason": "after_last",
    "expect_arrive": "25:01",
-   "expect_last_depart": "24:03",
+   "expect_last_depart": "24:02",
    "expect_warn_codes": [
     "MOB_W_BEST_OK_WORST_FAIL"
    ],
-   "expect_relief_contains": "24:03",
-   "expect_reason_contains": "최악값"
+   "expect_relief_contains": "24:02",
+   "expect_reason_contains": "최악값",
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 앞 버스 구간(심야) worst 가 p90 누적이라 1분 당겨졌다"
   },
   {
    "id": "J-WORST-03",
@@ -141,10 +143,11 @@
     25,
     25
    ],
-   "expect_last_depart": "24:03",
+   "expect_last_depart": "24:02",
    "expect_warn_codes_absent": [
     "MOB_W_BEST_OK_WORST_FAIL"
-   ]
+   ],
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) J-WORST-02 와 같음"
   },
   {
    "id": "J-CONG-01",

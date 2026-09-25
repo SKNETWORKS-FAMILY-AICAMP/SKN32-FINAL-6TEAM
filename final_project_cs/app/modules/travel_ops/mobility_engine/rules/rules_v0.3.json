@@ -1,8 +1,8 @@
 {
- "rules_version": "v0.8",
- "effective_date": "2026-09-24",
- "supersedes": "v0.7",
- "source_id": "mobility_rules@v0.8",
+ "rules_version": "v0.9",
+ "effective_date": "2026-09-25",
+ "supersedes": "v0.8",
+ "source_id": "mobility_rules@v0.9",
  "source_id_근거_2026-09-14": "판 번호가 두 군데에 있다 — rules_version 과 이 source_id. 판정 근거(policy Evidence)의 source_id 는 rules_version 이 아니라 **이 값**을 그대로 쓴다(verify_time.py:165 → _ev_rule). 2026-09-14 에 rules_version 만 v0.3.1 로 올리고 이 값을 v0.3 으로 두어, **규칙은 v0.3.1 인데 판정 근거는 v0.3 이라고 기록되는** 상태가 잠시 있었다 (데모 HTML 을 재생성해 근거 표를 눈으로 보고 발견). 두 값은 항상 같은 판을 가리켜야 한다 — check_fold [11] 이 그것을 검사한다. · 2026-09-19 v0.4: 둘을 함께 올렸다(v0.4 / mobility_rules@v0.4). 파일명은 그대로 rules_v0.3.json — 2026-09-14 방침(파일명 유지, 내부 버전만).",
  "author": "서유현 (Mobility 담당)",
  "purpose": "이동 구간의 제약 대조에 쓰는 규칙. Evidence(source_type='policy', source_id=이 파일의 source_id, observed_at=effective_date)로 판정에 붙는다.",
@@ -508,6 +508,49 @@
    "근거": "왕복 노선은 같은 정류장이 두 번 나온다. 2016 은 성수역1번출구(seq 32)와 건대입구역사거리(seq 107)가 **75정거장** 떨어져 있는데, 길 건너 짝(성수역4번출구 103 → 건대입구역6번출구 105)으로 타면 **2정거장**이다. 요청한 정류장 그대로 판정하면 2시간 20분이 나오고 그 값은 틀리지 않지만, 5분이면 되는 경로를 말해 주지 않는 답이다. 순환선에서 겪은 것(왕십리→잠실 73분)과 같은 모양이다.",
    "규칙": "고른 구간이 그 노선 정류장 수의 비율을 넘으면, 양쪽 요청 정류장에서 근접_m 안에 있는 **다른 정류장 짝**으로 훨씬 짧은 구간이 되는지 보고 warnings 에 남긴다. 판정을 바꾸지는 않는다 — 요청한 정류장에서의 판정 자체는 맞기 때문이다.",
    "한계": "정류장 좌표로만 본다. 목적지 좌표가 들어오면 '도착 정류장이 목적지 최근접인가'까지 볼 수 있다(시연 시나리오 v0.1 §6)."
+  },
+  "구간_프로파일": {
+   "설명": "41번 방(2026-09-25). 버스 승차 소요를 구간 통행시간 프로파일로 낸다 — 우리 717노선 연속 정류장 구간 × 요일형(weekday/holiday) × 시간(0~23)의 n·p10·p50·p90(초). 예정(best) = p50 을 **구간 진입 시각대로** 누적 · worst = p90 누적. 못 쓰는 구간만 종전 모델(bus.표정속도 · 거리 ÷ 속도)로 대신한다.",
+   "source": {
+    "value": "processed/mobility/bus_seg_profile_v1.jsonl.gz",
+    "grade": "추정",
+    "근거": "서울시 OA-21217 노선별 정류장 구간별 평균 운행시간(TOPIS BMS · 공공누리 1) 2026-06-01~09-13 100일 · scripts/collect/build_bus_seg_profile_v1.py · 구간 커버 40,776/41,103 · 01A 같은 날 실측과 시간대 중앙 ±1 km/h"
+   },
+   "값의_뜻": {
+    "value": "날짜별 시간대 평균의 분포 — 개별 운행 분위가 아니다",
+    "grade": "확정",
+    "근거": "원천이 하루×시간 평균만 준다. p90 누적을 최악값이라 부르지 않는다(41 GPT 4). 날짜 간 폭은 개별 운행 폭보다 좁다(01A 실측 시간대 내 p90 비 1.148 vs 날짜 간 1.09 · 폴링 오차가 같은 크기라 추정)."
+   },
+   "min_days": {
+    "value": 5,
+    "grade": "추정",
+    "근거": "셀 날 수가 이보다 적으면 그 구간은 프로파일을 쓰지 않고 종전 모델로 대신한다(41 GPT 11 — n=1 이면 p10=p50=p90 이라 폭이 0). 5 가 정확성을 보장하는 값은 아니다 — 100일 중 요일형·시간 한 칸의 최소 표본으로 둔 선이다."
+   },
+   "요일형_갈림": {
+    "value": "both_take_later",
+    "grade": "추정",
+    "근거": "운행일 자정(24:00) 이후 연장 구간(1440 ≤ 분 < 2880)은 달력상 다음 날이다(28:10 처럼 04시를 넘긴 구간 포함). 원천 00~23시가 달력일 기준인지 운행일 기준인지 확인 못 했다(41 GPT 9 보류) — 두 날 요일형이 다르면 두 칸을 다 보고 늦은 쪽(소요 · 막차 통과 모두 승차·도착이 늦어지는 쪽)을 쓴다. 한 칸만 유효하면 「부분」으로 세어 온전한 프로파일로 치지 않는다(적용 GPT 4). MOB_W_BUS_PROFILE_DAYTYPE_EDGE."
+   },
+   "막차_통과": {
+    "value": "board_cap_only",
+    "grade": "추정",
+    "근거": "적용 GPT 1·2(2026-09-25) — 막차 시각은 기점 출발이라 정류장 통과가 따로 있다. 다만 대기 모델(배차 절반·전부)은 정책 추정이지 「그때까지 못 탄다」의 근거가 아니고, 누적 통과 추정도 실제 막차 통과가 아니다. 그래서 **새 불가를 만들지 않는다**(불가는 「요청 시각 > 기점 막차」 종전 규칙만). 대기 모델 승차가 막차 통과 추정(막차 + 기점→승차 정류장 누적 · best p50 · worst p90 · 올림) 뒤면 그 추정 시각에 탄다고 본다(MOB_W_BUS_BOARD_CAPPED). 사슬이 온전하지 않으면 상한 없음 + MOB_W_BUS_LAST_PASS_UNCHECKED. 처음 판(p10 초과 → after_last)은 적용 GPT 대조에서 기각. (적용 2차 GPT 3·7) worst 상한 = max(p90 누적, p50 누적) — 칸마다 p90 ≥ p50 이어도 시간 칸이 바뀌면 누적이 역전될 수 있다. 기점 승차는 막차 시각 그대로(시간표 확정 · 프로파일 없어도 적용 — D7 의 「파일 없으면 종전과 동일」보다 확정 시각을 우선). 중간 정류장에서 프로파일이 없으면 상한 없음 + UNCHECKED."
+   },
+   "정류장_검증": {
+    "value": "ends_and_seq",
+    "grade": "확정",
+    "근거": "적용 GPT 7 — 프로파일 행의 양끝 정류장 ID·도착 순번이 정류장 표(bus_stops_v1)와 다르면 그 구간은 쓰지 않는다(대체 모델). 같은 구간 키가 두 번이면 로드에서 멈춘다. 요청 구간을 끝까지 돌지 못하면 소요를 내지 않는다. (적용 2차 GPT 8·9) 시작 정류장이 표에 없으면 뒤 구간부터 세지 않는다 · 프로파일 행에 양끝 ID·도착 순번이 없거나 칸 값이 유한 양수·p10 ≤ p50 ≤ p90 을 어기면 로드에서 멈춘다 · 48:00 이상에 닿으면 그 승차는 셈하지 않는다."
+   },
+   "시나리오_도착_역전_보정": {
+    "value": "same_request_only",
+    "grade": "추정",
+    "근거": "적용 GPT 5 · 2차 4·5 — 같은 요청 시각에서 worst 도착이 best 도착보다 이르면 맞춘다(구간 안 · 케이스 끝 두 곳 · MOB_W_WORST_BEFORE_BEST). **FIFO 가 아니다** — 요청 시각 t1 < t2 의 도착 단조성은 보장하지 않는다(시간대별 상수 모델의 한계 · 확인 안 한 것). 보정이 들어간 worst 승차는 ride_src=profile_adjusted 로 p90_eta 에 쓰지 않는다."
+   }
+  },
+  "ride_model_v0.9": {
+   "value": "segment_profile_then_speed_table",
+   "grade": "추정",
+   "근거": "값_우선순위: 구간 프로파일(41) > 노선별 실측 표정속도 > 노선유형별 통계 > 근거없음. 구간 단위로 떨어진다(한 승차 안에서 섞일 수 있고 섞이면 MOB_W_BUS_PROFILE_FALLBACK)."
   }
  },
  "congestion": {
@@ -1973,6 +2016,69 @@
    "근거": "judgment.last_feasible_depart.max_probe. 상한에 걸린 None 과 진짜 None 을 구분한다.",
    "site": "verify_time.py — _seal",
    "구현": true
+  },
+  "MOB_W_BUS_PROFILE_FALLBACK": {
+   "class": "data",
+   "to_answer": false,
+   "text": "{route} 승차 {total}구간 중 {n}구간은 통행시간 자료가 모자라 표정속도로 대신 셈했다",
+   "params": [
+    "route",
+    "n",
+    "total"
+   ],
+   "근거": "bus.구간_프로파일.min_days — 셀 날 수 부족·구간 없음. 대체 구간은 스프레드가 없고 거리(sect_dist_m) 결함이 들어올 수 있다(41 GPT 13).",
+   "site": "verify_time.py — verify_leg_bus",
+   "구현": true
+  },
+  "MOB_W_BUS_PROFILE_DAYTYPE_EDGE": {
+   "class": "grade",
+   "to_answer": false,
+   "text": "{route} 승차가 운행일 자정 뒤 연장 구간이고 두 날 요일형이 달라 두 칸 중 늦은 쪽(한쪽이 비면 남은 쪽)을 썼다",
+   "params": [
+    "route"
+   ],
+   "근거": "bus.구간_프로파일.요일형_갈림 — 원천 날짜 기준 미확인(41 GPT 9).",
+   "site": "verify_time.py — verify_leg_bus",
+   "구현": true
+  },
+  "MOB_W_BUS_LAST_PASS_UNCHECKED": {
+   "class": "data",
+   "to_answer": false,
+   "text": "{route} 막차가 {stop} 를 지나는 시각을 추정하지 못해 승차 시각 상한을 두지 않았다",
+   "params": [
+    "route",
+    "stop"
+   ],
+   "근거": "bus.구간_프로파일.막차_통과 — 기점→정류장 사슬이 끊겼다.",
+   "site": "verify_time.py — verify_leg_bus",
+   "구현": true
+  },
+  "MOB_W_BUS_BOARD_CAPPED": {
+   "class": "grade",
+   "to_answer": false,
+   "text": "{route} 대기 모델상 승차는 {model} 이지만 막차({last} 기점)가 {stop} 를 지나는 추정 시각이 {cap} 라 그 시각에 탄다고 보았다",
+   "params": [
+    "route",
+    "stop",
+    "model",
+    "cap",
+    "last"
+   ],
+   "근거": "bus.구간_프로파일.막차_통과 — 추정 상한이지 확인된 통과 시각이 아니다.",
+   "site": "verify_time.py — _bus_board",
+   "구현": true
+  },
+  "MOB_W_WORST_BEFORE_BEST": {
+   "class": "grade",
+   "to_answer": false,
+   "text": "최악 통과 도착({worst})이 예정 도착({best})보다 일러 예정 도착으로 맞췄다(시간대 칸이 바뀌어 늦게 탄 쪽이 한산한 칸을 만났다)",
+   "params": [
+    "best",
+    "worst"
+   ],
+   "근거": "bus.구간_프로파일.시나리오_도착_역전_보정 — 케이스 끝 보정.",
+   "site": "verify_time.py — verify_case",
+   "구현": true
   }
  },
  "candidates": {
@@ -2240,17 +2346,17 @@
     "bus_wait": "배차 전부(bus.worst_case = headway_full). best 는 절반(막차 근처는 전부)",
     "subway_transfer": "앞 구간의 **최악 도착**에서 다음 편을 고른다 — 환승 놓침이 저절로 들어간다",
     "congestion": "매우혼잡(≥100%) + 조건(luggage·infant·elderly)이면 **같은 경로(같은 방향·편성 경로)** 의 다음 편(탐색 창 candidate_scan_min 안 · 도착 가장 이른 편)으로 미룬다(congestion.levels.매우혼잡.action). 순환선에서 반대 방향 한 바퀴 편성을 집지 않는다. 혼잡(80~100)+조건은 경고만, 극심은 경고만",
-    "policy_buffer": "buffer.by_stage(10/15분)를 @ 에 더한다 — 수단 무관(종전 v0.7 과 같은 자리). 41(버스 p90)이 닫히면 버스는 버퍼 대신 p90 스프레드로 바꾼다",
-    "bus_ride_spread": "근거없음 — 41 대기. worst 승차 = best 승차, MOB_W_WORST_NO_SPREAD 로 드러낸다",
+    "policy_buffer": "buffer.by_stage(10/15분)를 @ 에 더한다 — 수단 무관. 41(v0.9) 결정 A ③: 버스도 p90 스프레드 **에 더해** 버퍼를 유지(잠정 · 39 결정 2 의 「교체」를 「합산」으로 정정)",
+    "bus_ride_spread": "41(v0.9) — 구간 p90 누적(진입 시각대). 대체 구간은 worst = best(MOB_W_WORST_NO_SPREAD). 프로파일 파일이 없으면 종전(근거없음)",
     "car_spread": "근거없음 — TOPIS 프로파일은 시간대 평균. worst = best, 같은 경고",
     "bike_spread": "근거없음 — worst = best, 같은 경고"
    },
    "근거": "12번 규칙 15 — 추정 폭은 좁힐 수 있으면 좁히고, 못 좁히는 자리는 최악값을 넓게 잡아 @에 흡수한다. 다만 근거 없는 상수는 넣지 않는다(27번 규칙 14) — 스프레드 소스가 없는 수단은 worst = best 로 두고 경고 코드로 드러낸다."
   },
   "worst_bus_ride_spread": {
-   "value": null,
-   "grade": "근거없음",
-   "근거": "41 버스 구간 통행속도(p10/중앙/p90)가 닫히면 값이 들어온다. 그 전엔 null."
+   "value": "profile_p90_cumsum",
+   "grade": "추정",
+   "근거": "41 결정 A(2026-09-25 본인) ③ — 버스 worst 승차 = 구간 p90 을 진입 시각대로 누적. @ = (worst 도착 − 예정 도착) + 정책 버퍼. 정책 버퍼는 **교체하지 않고 합산**(잠정 유지) — p90 누적만으로는 한산 시간 여유가 2~6분으로 줄어 v0.8 보다 성립이 늘고, 개별 운행 폭을 덮는지 미확인이다. 버퍼를 줄일지는 28 적중률(학습 밖 날짜 · 노선·시간대별)로 본다. 버린 안: ① p90 누적만 · ② 날짜별 누적 p90. (적용 GPT 5) worst 도착이 best 보다 이르면 FIFO 로 맞춘다."
   },
   "worst_car_spread": {
    "value": null,
@@ -2322,5 +2428,14 @@
   "코어로 나가는 값은 출력 스펙 v1.3 대로 기존 칸만(32 가 out 으로 만든다) — eta_min 은 중앙값 · 버퍼 안 섞음 · 새 키 0.",
   "대조(2026-09-24 · 자체 대조 13건 채택 11) — 혼잡 다음 편은 같은 경로만(순환선 @94 결함) · worst 통과가 도착을 못 내면 예정=최악 + 경고 · 자동차·자전거 첫 구간은 역산 없음(라우터 호출 폭주) + 케이스 안 구간 캐시 · 역산 상한 경고(MOB_W_LFD_CAP) · multi 밖 판은 후보 밖 판으로 · multi 도착 목표에 이탈 도보 반영 · worst 실패 대안도 worst 로 · 경고·근거 중복 제거 · 혼잡 warning 액션 구현(MOB_W_CONGESTION_CROWDED) · 다음 편 없음 경고(MOB_W_CONGESTION_NO_NEXT).",
   "GPT 대조(2026-09-24 · 제시 6 · 채택 3 · 기각 2 · 보류 1) 반영 — ①역산으로 성립 출발을 못 찾으면 「N분 당기면 성립」을 말하지 않는다(택시만) ②토요일과 겹친 공휴일의 혼잡도 요일은 sunday(congestion.day_type.공휴일_처리 그대로 · Congestion.day_key(is_holiday)) ③자기점검에 혼잡도 연결(가산 경로가 탐침에서 돈다 · 실행 건수 집계). 보류: 수단 무관 정책 버퍼 vs 스펙 v1.3(41 뒤 32 에서 확정)."
+ ],
+ "changelog_v0.9": [
+  "2026-09-25 · 41번 방(데이터 적용 · 판정기 한 곳). 판정을 바꾸므로 v0.8 → v0.9, source_id mobility_rules@v0.9. 파일명은 유지.",
+  "bus.구간_프로파일 신설 — 버스 승차 = 구간 통행시간 프로파일(OA-21217) 누적 · 예정 p50 · worst p90 · 진입 시각대로 시간 칸 이동 · min_days 5 미만·구간 없음은 종전 표정속도 모델로 대체 · 자정 뒤 연장 구간에서 요일형이 갈리면 늦은 쪽(한쪽 결측은 부분) · 양끝 정류장 ID 검증.",
+  "judgment.worst_bus_ride_spread = profile_p90_cumsum · 정책 버퍼는 교체가 아니라 합산(41 결정 A ③ · 잠정).",
+  "승차 시각 상한(45 넘김) — 대기 모델 승차가 막차 통과 추정(막차 + 기점→승차 정류장 누적 · best p50 · worst p90) 뒤면 추정 시각에 탄다. 새 불가는 만들지 않는다(적용 GPT 1·2 — 처음 판의 p10 초과 → after_last 는 기각).",
+  "p90_eta_min — 버스 한 구간짜리 케이스에서 그 구간이 온전한 프로파일일 때만 = eta_min + (worst 승차 − best 승차). 「버스 승차 소요 p90 가산 추정」(적용 GPT 9).",
+  "경고 4종 신설 — MOB_W_BUS_PROFILE_FALLBACK · MOB_W_BUS_PROFILE_DAYTYPE_EDGE · MOB_W_BUS_LAST_PASS_UNCHECKED · MOB_W_BUS_BOARD_CAPPED.",
+  "2차 GPT 대조 반영 — worst 상한 max(p90, p50) · 기점 상한은 프로파일 없어도 확정 막차 · 시나리오 도착 역전 보정(구간+케이스 · FIFO 아님) · 시작점·식별자·칸 값·48시 검증 · 보정된 worst 는 p90_eta 제외 · 경고 MOB_W_WORST_BEFORE_BEST."
  ]
 }

@@ -53,11 +53,12 @@
    "expect": "feasible",
    "expect_internal": "feasible",
    "expect_margin_min": [
-    15,
-    15
+    17,
+    17
    ],
    "expect_last_depart": "22:04",
-   "expect_arrive": "10:55"
+   "expect_arrive": "10:57",
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 버스 구간 p50 누적 · p90 스프레드 2분"
   },
   {
    "id": "MIX-03",

@@ -413,6 +413,7 @@ def write_report(path, findings, rows, routes, dates, args, elapsed):
                 L.append(f"  - 재현: `--only {f['probe_id']}`")
         if n > args.per_rule:
             L.append(f"\n  … 외 {n - args.per_rule}건 (전체는 JSON 에)")
+    Path(path).parent.mkdir(parents=True, exist_ok=True)      # .metrics/ 가 없는 기기(집 PC · 41)
     Path(path).write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
@@ -469,6 +470,7 @@ def main():
     ap.add_argument("--station-exits")
 
     ap.add_argument("--bike-stations")
+    ap.add_argument("--bus-profile", help="버스 구간 통행시간 프로파일(v0.9 · 41) · 'none' 이면 종전 모델 · 기본 processed")
     ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json"))
     ap.add_argument("--holidays",
                     default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json"))
@@ -506,7 +508,8 @@ def main():
 
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
-        from scripts.collect._paths import PROCESSED
+        # 판정기와 같은 경로 규칙(.env DATA_DIR) — `scripts` 패키지 이름에 기대지 않는다(팀 final_project_cs/scripts 와 이름이 겹친다 · 41)
+        from app.modules.travel_ops.mobility_engine.paths import PROCESSED
         M = PROCESSED / "mobility"
         args.timetable = args.timetable or str(M / "timetable_v1.jsonl")
         args.order = args.order or str(M / "line_station_order_v1.json")
@@ -551,7 +554,11 @@ def main():
     cg_dir = Path(args.timetable).parent
     cg_data = Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
     print(f"혼잡도 {cg_data.rows:,}셀" if cg_data else "혼잡도 없음(가산 근거없음)")
-    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, cg_data=cg_data)
+    # v0.9 — 버스 구간 통행시간 프로파일(41)을 CLI·runtime 과 같은 파일로 연결한다(없으면 버스 승차가 종전 모델로 탐침된다)
+    from app.modules.travel_ops.mobility_engine.bus_profile import BusSegProfile
+    bus_prof = None if args.bus_profile == "none" else BusSegProfile.load(args.bus_profile)
+    print(f"버스 구간 프로파일 {len(bus_prof.index):,}구간" if bus_prof else "버스 구간 프로파일 없음(종전 모델)")
+    v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, cg_data=cg_data, bus_prof=bus_prof)
     v.lfd_enabled = bool(args.lfd)                       # v0.8 — 탐침 수천 건에 역산을 얹으면 수십 배 느려진다
     t0 = time.time()
     rows = []

@@ -27,10 +27,7 @@
    "expect_last_depart": "24:50",
    "expect_alt_min": 1,
    "expect_alt_axis": "수단교체",
-   "expect_alt_arrive": "25:43",
-   "expect_warn_codes": [
-    "MOB_W_BUS_SPEED_PROXY_NIGHT"
-   ],
+   "expect_alt_arrive": "25:38",
    "expect_taxi": {
     "verdict": "feasible",
     "grade": "추정",
@@ -39,7 +36,11 @@
     ],
     "arrive": "25:05",
     "fare_won": 12300
-   }
+   },
+   "expect_warn_codes_absent": [
+    "MOB_W_BUS_SPEED_PROXY_NIGHT"
+   ],
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 심야버스 대안 승차가 간선 대용(15.3 km/h) 대신 구간 프로파일로 셈해져 5분 이르다(25:43 → 25:38). 심야가 간선보다 빠르다는 종전 가정(보수적)이 실제 값으로 바뀐 것"
   },
   {
    "id": "ALT-02",

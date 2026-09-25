@@ -74,7 +74,7 @@ def read_long(raw_dir, S):
     """
     pc = S.groupby(["route_id", "from_id", "to_id"]).sec.transform("size")
     J = S.assign(pair_n=pc)[["route_id", "from_id", "to_id", "from_seq", "sec", "pair_n"]]
-    owner, parts = {}, collections.defaultdict(list)
+    owner = {}
     stat = collections.Counter()
     files = sorted(glob.glob(str(Path(raw_dir) / "tpss_route_section_speedh_*.zip")))
     if not files:

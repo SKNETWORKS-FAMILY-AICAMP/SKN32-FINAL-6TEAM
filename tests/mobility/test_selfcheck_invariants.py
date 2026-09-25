@@ -23,7 +23,12 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from scripts.selfcheck_mobility import check_invariants  # noqa: E402
+# `scripts` 패키지 이름은 팀 final_project_cs/scripts 와 겹쳐 실행 환경에 따라 다른 쪽이 잡힌다(41 · 2026-09-25) — 파일 경로로 올린다
+import importlib.util  # noqa: E402
+_spec = importlib.util.spec_from_file_location("selfcheck_mobility", REPO / "scripts" / "selfcheck_mobility.py")
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+check_invariants = _mod.check_invariants
 
 ARGS = types.SimpleNamespace(
     mono_tol=0, sym_min=10, sym_ratio=0.5, jump_min=60, daytype_min=30,

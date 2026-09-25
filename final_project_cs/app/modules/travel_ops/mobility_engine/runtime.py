@@ -57,6 +57,7 @@ def default_paths():
             "station_coords": p / "station_coords.json",
             "station_exits": p / "station_exits_v1.json",      # 19번 방 — 지하철↔버스 환승(OSM 출구, 추정)
             "bike_stations": p / "bike_stations_v1.jsonl",     # 22번 방 — 따릉이 운영 대여소(없어도 돈다 · 자전거 근거없음)
+            "bus_profile": p / "bus_seg_profile_v1.jsonl.gz",  # 41번 방 — 버스 구간 통행시간(없어도 돈다 · 표정속도 모델)
             "meta": p / "timetable_v1_meta.json",
             "rules": c / "rules_v0.3.json",
             "holidays": c / "holidays_2026_2027.json"}
@@ -87,7 +88,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
         P = dict(P, **{k: Path(v) for k, v in paths.items()})
 
     # station_exits 는 없어도 돈다(역 좌표로 대신) — 단 경고를 찍는다
-    missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations") and not Path(v).exists()]
+    missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations", "bus_profile") and not Path(v).exists()]
     if missing:
         raise RuntimeError(f"판정기 입력이 없다: {missing}")
 
@@ -115,8 +116,10 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
     # 혼잡도(v0.8 · 39번 방 · @ 부품) — 파일이 없으면 가산 없음(근거없음). 판정기 CLI 와 같은 두 파일.
     cg_dir = Path(P["timetable"]).parent
     cg_data = vt.Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
+    # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — 파일이 없으면 종전 모델(거리 ÷ 표정속도)
+    bus_prof = vt.BusSegProfile.load(P["bus_profile"])
     verifier = vt.Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, bike_live=bike_live, bike_router=bike_router,
-                           cg_data=cg_data)
+                           cg_data=cg_data, bus_prof=bus_prof)
 
     # ── 시간표 '판'. meta 의 built_at 이 있으면 그것, 없으면 행의 수집일.
     #    둘은 다른 값이다 — 어느 쪽인지 접두어로 남긴다. 판정 이력이 "어느 판으로 냈는지"를 잃으면 안 된다.

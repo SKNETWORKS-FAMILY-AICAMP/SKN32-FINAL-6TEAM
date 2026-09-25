@@ -159,9 +159,12 @@
    "expect_last_depart": "24:50",
    "expect_relief_contains": "수단 교체",
    "expect_warn_codes": [
-    "MOB_W_AIRPORT_FARE",
+    "MOB_W_AIRPORT_FARE"
+   ],
+   "expect_warn_codes_absent": [
     "MOB_W_BUS_SPEED_PROXY_AIRPORT"
-   ]
+   ],
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 공항버스 승차가 구간 프로파일로 셈해져 공항→간선 대용 속도 경고가 빠졌다. 요금 경고는 모델과 무관하게 남는다"
   },
   {
    "id": "R-WALL-01",
