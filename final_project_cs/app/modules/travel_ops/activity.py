@@ -36,6 +36,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
             "activity.propose_change",     # 대안을 제안한다 (승인 대기)
             "activity.itinerary",          # ★`[2026-09-17]` 여행 일정 관리 — 감시 Case · 품절 · 재요청
+            "activity.itinerary_question", # ★`[2026-09-25]` 규정 질문 — 규정을 읽는다(면제 아님)
         ],
         accepted_case_types=["activity"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 규정은 `read.policy` 도구로 **직접** 읽고(없으면 모름),
@@ -82,7 +83,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
         """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
-        return "activity.itinerary" if ItineraryWork._wants_itinerary(state or {}) else None
+        return ItineraryWork.itinerary_route("activity", state)
 
     async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
         """감시가 연 Case — 그 항목을 **다시 점검**하고, 깨졌으면 대안을 계산해 제안한다."""
@@ -135,7 +136,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
-        if task.capability == self.itinerary_capability:
+        if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
 
         seen: set[str] = set()

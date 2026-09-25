@@ -16,7 +16,7 @@
 
 누가 무엇을 하나:
 
-    공통      change(다른 안으로) · rollback(되돌리기)
+    공통      change(다른 안으로) · rollback(되돌리기) · ★question(규정 질문 — 일정을 안 바꾸고 규정 근거로 답)
     activity  감시 Case(성립 점검 disrupted → 대안) · stock_out(동선 위 매장, 일정 안 바꿈)
     dining    delay(늦음) · closed(휴무)
     mobility  감시 Case(구간 사건 → 경로 재선택)
@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import re
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -59,10 +60,29 @@ class ItineraryWork:
     def itinerary_capability(self) -> str:
         return f"{self.manifest.team_id}.itinerary"
 
+    @property
+    def question_capability(self) -> str:
+        """`[2026-09-25]` 규정 질문 — **규정을 읽는** capability. 면제 목록(`policy_optional_capabilities`)에
+        넣지 않는다 → Controller 가 RAG 를 돌고, 근거가 없으면(degraded) 사람에게 간다."""
+        return f"{self.manifest.team_id}.itinerary_question"
+
     @classmethod
     def _wants_itinerary(cls, state: dict[str, Any]) -> bool:
         ref = (state or {}).get("subject_ref") or {}
         return ref.get("kind") == "trip" and bool(ref.get("id"))
+
+    @classmethod
+    def _wants_question(cls, state: dict[str, Any]) -> bool:
+        """접수 때 **질문**으로 읽힌 여행 Case — 일정 관리(규정 면제)가 아니라 규정 질문으로 보낸다."""
+        report = ((state or {}).get("interpretation") or {}).get("report") or {}
+        return cls._wants_itinerary(state) and report.get("type") == "question"
+
+    @classmethod
+    def itinerary_route(cls, team_id: str, state: dict[str, Any] | None) -> str | None:
+        """여행 Case 의 capability — 질문이면 `.itinerary_question`, 그 밖은 `.itinerary`, 여행이 아니면 None."""
+        if cls._wants_question(state or {}):
+            return f"{team_id}.itinerary_question"
+        return f"{team_id}.itinerary" if cls._wants_itinerary(state or {}) else None
 
     # ── 진입 ────────────────────────────────────────────────────
     async def run_itinerary(self, task: TeamTask) -> TeamResult:
@@ -106,6 +126,8 @@ class ItineraryWork:
                 return self._escalate(task, "report_not_understood", ctx["evidence"],
                                       warnings=[str(report.get("error") or "일정을 바꿀 신고로 읽히지 않는다")])
         ctx["report"] = {**report, **request}
+        if kind == "question":
+            return self._answer_question(task, ctx)
         if kind == "change":
             return self._change(task, ctx)
         if kind == "rollback":
@@ -160,6 +182,37 @@ class ItineraryWork:
                              old_items=old, to_version=int(to_version), message=task.input_text,
                              request_id=task.context.current_state.get("request_id"))
         return self.settle(task, ctx, plan)
+
+    # ── 공통: 규정 질문 (2026-09-25) ────────────────────────────
+    def _answer_question(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """규정 질문 — **일정을 바꾸지 않고** 규정 근거로 답한다.
+
+        ★짚은 일정 항목을 기준으로 `read.policy`(문장 근거)를 읽고, 그 항목에 예약이 있으면
+          `read.booking_terms`(취소 기한·위약금 수치)도 읽는다. 판정 입력은 **예약이 아니라 일정 항목**이다
+          (v11 결정 — `activity.check_cancelable` 은 `read.booking` 을 전제해 무료·무예약 항목에서 「모름」이 된다).
+        ★모델로 문장을 짓지 않는다 — 규정 조각을 **출처와 함께 그대로** 싣는다(근거 없는 문장 금지).
+          규정을 못 찾으면 지어내지 않고 「모름」으로 사람에게 간다.
+        """
+        ref, items, seen = ctx["ref"], ctx["items"], ctx["seen"]
+        item = next((i for i in items if str(i.item_id) == str(ref.get("part_id"))), None) \
+            or mentioned_item(items, task.input_text)
+        query = task.input_text if item is None else f"{item.title} {task.input_text}"
+        chunks = self._read(task, "read.policy", {"query": query}, seen) or []
+        evidence = self._evidence(task, source_id="read.policy", claim="질문에 맞는 여행 규정",
+                                  value=chunks or None, base=ctx["evidence"])
+        if not chunks:
+            return self._unknown(task, "관련 규정", evidence)
+        terms = None
+        if item is not None and item.booking_id and "read.booking_terms" in (task.allowed_tools or []):
+            terms = self._read(task, "read.booking_terms", {"booking_id": str(item.booking_id)}, seen)
+            evidence = self._evidence(task, source_id="read.booking_terms", claim="이 예약의 취소 조건",
+                                      value=terms, base=evidence)
+        answer, sources = question_answer(item, chunks, terms)
+        return self._result(task, outcome="completed", confidence=0.7, evidence=evidence, answer=answer,
+                            next_action=NextAction.RESPOND,
+                            decisions=[{"itinerary": "question_answered", "sources": sources,
+                                        "item": item.title if item else None,
+                                        "booking_terms": bool(terms)}])
 
     # ── 도우미 ──────────────────────────────────────────────────
     def catalog(self, task: TeamTask, ctx: dict[str, Any]) -> list[dict[str, Any]] | None:
@@ -228,4 +281,63 @@ class ItineraryWork:
         return json.loads(json.dumps(value, ensure_ascii=False, default=str))
 
 
-__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork"]
+# ── 규정 질문의 순수 부품 ────────────────────────────────────
+#: 제목에 흔히 붙어 항목을 가리지 못하는 말 — 이것만 겹쳐서는 그 항목으로 보지 않는다
+_GENERIC = frozenset({"식사", "체험", "관람", "일정", "방문", "투어", "이동", "시간", "여행"})
+_MEAL_WORDS = {"아침": (0, 11), "조식": (0, 11), "점심": (11, 15), "저녁": (17, 24), "석식": (17, 24)}
+
+
+def mentioned_item(items: list[Item], text: str) -> Item | None:
+    """질문이 짚은 일정 항목. ①제목·장소 이름의 단어가 문장에 나오면 가장 많이 겹친 것
+    ②「점심·저녁 식당」처럼 끼니 + 식당이면 그 시간대의 식사. 모르면 None(지어내지 않는다)."""
+    text = text or ""
+    best, hits = None, 0
+    for item in items:
+        if item.kind == "mobility":
+            continue
+        name = f"{item.title} {(item.place or {}).get('name', '')}"
+        words = {w for w in re.split(r"[\s·()\[\],./→\-]+", name) if len(w) >= 2 and w not in _GENERIC}
+        count = sum(1 for w in words if w in text)
+        if count > hits:
+            best, hits = item, count
+    if best is not None:
+        return best
+    if any(word in text for word in ("식당", "밥", "음식", "먹")):
+        for word, (start, end) in _MEAL_WORDS.items():
+            if word in text:
+                meals = [i for i in items if i.kind == "dining" and start <= i.starts_at.hour < end]
+                if len(meals) == 1:
+                    return meals[0]
+    return None
+
+
+def _chunk(chunk: Any) -> tuple[str, str, float]:
+    if isinstance(chunk, dict):
+        source = chunk.get("source_id") or f"{chunk.get('document_id')}#c{chunk.get('chunk_no')}"
+        return str(chunk.get("content") or ""), str(source), float(chunk.get("score") or 0)
+    return str(getattr(chunk, "content", "")), str(getattr(chunk, "source_id", "")), float(getattr(chunk, "score", 0))
+
+
+def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] | None,
+                    *, top: int = 2, limit: int = 220) -> tuple[str, list[str]]:
+    """규정 조각(점수 높은 순 `top` 개)을 **출처와 함께 그대로** 싣는 답. (답, 출처 목록)."""
+    ranked = sorted((_chunk(c) for c in chunks), key=lambda c: -c[2])[:top]
+    subject = item.title if item is not None else "문의하신 내용"
+    lines = [f"{subject} — 여행 규정에서 찾은 내용이에요."]
+    for content, source, _ in ranked:
+        excerpt = re.sub(r"\s+", " ", content).strip()
+        excerpt = excerpt if len(excerpt) <= limit else excerpt[:limit].rstrip() + "…"
+        lines.append(f"· {excerpt} (근거 {source})")
+    if terms:
+        deadline = terms.get("cancel_deadline_hours")
+        line = f"이 예약의 취소 기한: 시작 {deadline:g}시간 전까지" if isinstance(deadline, (int, float)) else \
+            "이 예약의 취소 조건이 등록돼 있어요"
+        penalty = terms.get("penalty_by_hours") or {}
+        if penalty:
+            line += " · 위약금 기준 " + ", ".join(f"{k}시간 전부터 {v}" for k, v in penalty.items())
+        lines.append(f"{line} (예약 조건 · {terms.get('matched_scope')} · 출처 {terms.get('source')})")
+    lines.append("일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
+    return "\n".join(lines), [source for _, source, _ in ranked]
+
+
+__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "mentioned_item", "question_answer"]

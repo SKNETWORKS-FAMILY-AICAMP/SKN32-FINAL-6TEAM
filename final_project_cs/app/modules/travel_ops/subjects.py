@@ -97,6 +97,10 @@ def make_subject_interpreter(extractor):
             hint = REPORT_OWNER[kind]
         elif kind in ("change", "rollback"):
             hint = subject_ref.get("part_kind") or subject_ref.get("recent_part_kind")
+        elif kind == "question":
+            # ★질문은 짚은 항목의 팀으로. 모르면 힌트를 내지 않는다 — 분류 접두가 정한다.
+            #   「최근 바뀐 항목」으로 보내지 않는다(질문 대상과 상관없다)
+            hint = subject_ref.get("part_kind")
         else:
             hint = None
         return {"routing_hint": hint, "report": report}

@@ -116,7 +116,8 @@ Dining: "19시 → 20시" 또는 "다른 가게" 후보를 낸다
 
 ```python
 capabilities          = ["dining.check_open", "dining.check_conditions",
-                         "dining.itinerary"]           # [2026-09-17] 여행 일정 관리
+                         "dining.itinerary",           # [2026-09-17] 여행 일정 관리
+                         "dining.itinerary_question"]  # [2026-09-25] 규정 질문 — 면제 아님
 accepted_case_types   = ["dining"]                   # ★객체 종류다. 요청 종류가 아니다
 required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
 policy_optional_capabilities = ["dining.itinerary"]                        # [2026-09-22] 일정 관리만 면제
@@ -128,6 +129,19 @@ knowledge_scope       = ["travel_dining", "travel_cancellation",         # [2026
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "dining.check_open"
 ```
+
+### `[2026-09-25]` 규정 질문 — `dining.itinerary_question`
+
+여행 Case 가운데 접수 때 **질문**(`interpretation.report.type == "question"`)으로 읽힌 것은 `dining.itinerary`(규정 면제)가 아니라
+`dining.itinerary_question` 으로 간다(`ItineraryWork.itinerary_route`). ★**면제 목록에 넣지 않는다** — Controller 가 규정(RAG)을
+돌고, 근거가 없으면 degraded 로 사람에게 간다.
+
+- 짚은 일정 항목(`part_id` → 없으면 제목·장소 이름이 문장에 나오는 항목 → 「점심·저녁 식당」의 끼니)을 기준으로
+  `read.policy`(문장 근거)를 읽고, 그 항목에 예약이 있으면 `read.booking_terms`(취소 기한·위약금 수치)를 읽는다.
+  ★판정 입력은 **예약이 아니라 일정 항목**이다 — `check_cancelable` 을 재사용하지 않는다(`read.booking` 전제라 무료·무예약 항목에서 「모름」).
+- 답은 규정 조각을 **출처와 함께 그대로** 싣는다(모델로 짓지 않는다). **일정은 바꾸지 않는다.**
+- 묻는 꼴(물음표 · 「되나요」「아니에요」 …)은 `closed`·`delay` 로 받지 않는다 — 질문이 일정을 바꾸지 못하게(`trip_intake.py`).
+- 시험 `tests/scenario/test_case_question.py` — 인계(triPilot : RAG, 2026-09-25)의 다섯 문장.
 
 ### `[2026-09-17]` Case 버전의 여행 일정 관리 — `dining.itinerary`
 

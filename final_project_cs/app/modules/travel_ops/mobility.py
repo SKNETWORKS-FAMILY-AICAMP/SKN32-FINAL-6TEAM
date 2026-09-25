@@ -25,7 +25,8 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
         contract_name="a_cop.team_task",
         supported_contract_versions=["1.0"],
         capabilities=["mobility.check_route", "mobility.status", "mobility.exception",
-                      "mobility.itinerary"],   # ★`[2026-09-17]` 여행 일정 관리 — 구간 사건 · 재요청
+                      "mobility.itinerary",    # ★`[2026-09-17]` 여행 일정 관리 — 구간 사건 · 재요청
+                      "mobility.itinerary_question"],   # ★`[2026-09-25]` 규정 질문 — 규정을 읽는다(면제 아님)
         accepted_case_types=["mobility"],
         # ★`[2026-09-17]` `policy` 를 뺐다 — 이 Team 은 정책 문서를 판단에 쓰지 않는다(선언만 있었다).
         # ★`[2026-09-22]` **되돌렸다.** 여행 코퍼스가 생겼다 — 중단·지연 대체(`t_doc_08`),
@@ -52,7 +53,7 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
         # ★`[2026-09-17]` 여행이 정해진 Case 는 일정 관리로 — 문구 판정보다 먼저 본다.
         if ItineraryWork._wants_itinerary(state or {}):
-            return "mobility.itinerary"
+            return ItineraryWork.itinerary_route("mobility", state)
         if intent != "mobility":
             return None
         if any(marker in input_text for marker in MobilityTeam._INCIDENT_MARKERS):
@@ -82,7 +83,7 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
         blocked = self._guard(task)
         if blocked is not None:
             return blocked
-        if task.capability == self.itinerary_capability:
+        if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
 
         seen: set[str] = set()

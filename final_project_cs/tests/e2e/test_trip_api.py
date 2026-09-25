@@ -457,3 +457,13 @@ def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
             cur.execute("DELETE FROM trips WHERE tenant_id=%s", (other,))
             cur.execute("DELETE FROM customers WHERE tenant_id=%s", (other,))
             cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (other,))
+
+
+def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
+    """★`[2026-09-25]` 묻는 꼴이면 「닫혔다」로 받지 않는다 — 모델이 closed 로 뽑아도 질문이고,
+    이 경로(규정 도구 없음)에서는 바꾸지 않고 사람에게 넘긴다. 전에는 대체안 계산으로 갈 수 있었다."""
+    trip_id = _create(api)["trip_id"]
+    said = _say(api, trip_id, "closed", request_id="say-q", text="오늘 저녁 식당 휴무 아니에요?").json()
+    assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
+    assert said["report"] == {"type": "question"}
+    assert _detail(api, trip_id)["version"] == 1

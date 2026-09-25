@@ -101,8 +101,12 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             why = "no_extractor" if chat is None else "not_understood"
         except OllamaError as exc:
             report, why = None, f"extractor_failed: {exc}"[:120]
-        if report is None or report["type"] == "other":
-            reason = why if report is None else "not_a_trip_report"
+        # ★`[2026-09-25]` 질문(`question`)은 이 경로에서 답하지 않는다 — 규정 도구가 없다. 아래 분기의
+        #   「그 밖 = 다른 안으로 바꾸기」로 새지 않게 여기서 막는다. 규정 근거 답은 Case 버전
+        #   (`*.itinerary_question`)이 한다.
+        if report is None or report["type"] in ("other", "question"):
+            reason = why if report is None else ("question_needs_policy_answer" if report["type"] == "question"
+                                                 else "not_a_trip_report")
             move(EventType.ROUTING_FAILED, {"failure_code": reason})
             return view({"status": "escalated", "reason": reason, "report": report})
 
