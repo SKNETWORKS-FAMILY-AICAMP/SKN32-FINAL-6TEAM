@@ -18,6 +18,7 @@ import httpx
 import pytest
 
 from app.infrastructure.db.session import get_connection
+from app.infrastructure.travel.call_budget import CallBudget, google_caps
 from app.infrastructure.travel.google_places import GooglePlaces, verdict_from_details
 from app.modules.travel_ops.case_engine import cleanup_tenant
 from app.modules.travel_ops.dawn_check import DawnCheck
@@ -27,6 +28,16 @@ from .test_case_version_day import SCENARIO, Clock, _at, _seed
 
 KST = ZoneInfo("Asia/Seoul")
 LUNCH = next(p["name"] for p in SCENARIO["places"] if p["key"] == "seongsu_lunch")
+
+
+class _Open:
+    """시험용 — 늘 허락하는 예산(어댑터 모양만 볼 때)."""
+
+    def try_reserve(self, meter):
+        return True
+
+
+OPEN = _Open()
 
 
 def _k(day: str, hhmm: str) -> datetime:
@@ -81,29 +92,78 @@ def test_the_adapter_sends_key_and_field_mask_and_matches_only_nearby():
             {"id": "far", "location": {"latitude": 37.60, "longitude": 127.10}},
             {"id": "near", "location": {"latitude": 37.5444, "longitude": 127.0549}}]})
 
-    places = GooglePlaces(api_key="k", request=request)
+    places = GooglePlaces(api_key="k", budget=OPEN, request=request)
     assert places.find_place_id(name=LUNCH, latitude=37.5443, longitude=127.0548)[0] == "near"
     method, _, headers, body = seen[0]
     assert method == "POST" and headers["X-Goog-Api-Key"] == "k" and "places.id" in headers["X-Goog-FieldMask"]
     assert body["locationBias"]["circle"]["radius"] == 300.0
 
-    nothing = GooglePlaces(api_key="k", request=lambda *a: _response(200, {"places": [
+    nothing = GooglePlaces(api_key="k", budget=OPEN, request=lambda *a: _response(200, {"places": [
         {"id": "far", "location": {"latitude": 37.60, "longitude": 127.10}}]}))
     assert nothing.find_place_id(name=LUNCH, latitude=37.5443, longitude=127.0548) == "unmatched"
 
 
 def test_an_error_body_or_status_is_a_counted_miss_not_a_verdict():
-    broken = GooglePlaces(api_key="k", request=lambda *a: _response(200, {"error": {"code": 403}}))
+    broken = GooglePlaces(api_key="k", budget=OPEN, request=lambda *a: _response(200, {"error": {"code": 403}}))
     assert broken.open_verdict("x", start=_k(WED, "13:00"), end=_k(WED, "14:00")) is None
     assert broken.misses["body_error"] == 1
-    denied = GooglePlaces(api_key="k", request=lambda *a: _response(403, {"message": "no"}))
+    denied = GooglePlaces(api_key="k", budget=OPEN, request=lambda *a: _response(403, {"message": "no"}))
     assert denied.find_place_id(name="x", latitude=37.5, longitude=127.0) is None
     assert denied.misses["http_403"] == 1
 
 
 def test_no_key_no_adapter():
     with pytest.raises(ValueError):
-        GooglePlaces(api_key="")
+        GooglePlaces(api_key="", budget=OPEN)
+
+
+def test_no_budget_no_adapter():
+    """★무료 한도를 무조건 지킨다 — 예산 없이 구글을 부르는 어댑터는 만들어지지 않는다."""
+    with pytest.raises(ValueError):
+        GooglePlaces(api_key="k", budget=None)
+
+
+# ── 호출 예산 (027) ──────────────────────────────────────────────
+@pytest.fixture()
+def budget_meter():
+    meter = "test_meter_" + uuid4().hex[:8]
+    yield meter
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM external_call_budget WHERE meter=%s", (meter,))
+
+
+def test_the_budget_refuses_once_the_cap_is_reached_and_the_call_is_never_made(budget_meter):
+    budget = CallBudget(connection_factory=get_connection, caps={budget_meter: {"month": 100, "day": 2}})
+    assert budget.try_reserve(budget_meter) and budget.try_reserve(budget_meter)
+    assert budget.try_reserve(budget_meter) is False                       # 하루 2건 찼다
+    # ★하루 줄이 차서 거절되면 월 줄도 **올라가지 않는다**(한 트랜잭션)
+    assert budget.used(budget_meter) == {"month": 2, "day": 2}
+
+    calls = []
+    places = GooglePlaces(api_key="k", budget=budget, request=lambda *a: calls.append(a))
+    places._call("GET", "https://x.invalid", "id", budget_meter)
+    assert calls == [] and places.misses["budget_exhausted"] == 1          # ★아예 안 불렀다
+
+
+def test_the_month_cap_holds_across_budget_objects_like_separate_processes(budget_meter):
+    """★프로세스마다 새로 세는 제한기와 달리, DB 예산은 **새 객체(= 새 프로세스)도 같이 센다.**"""
+    caps = {budget_meter: {"month": 3, "day": 10}}
+    used = [CallBudget(connection_factory=get_connection, caps=caps).try_reserve(budget_meter) for _ in range(5)]
+    assert used == [True, True, True, False, False]
+
+
+def test_an_unknown_meter_is_refused():
+    budget = CallBudget(connection_factory=get_connection, caps={})
+    assert budget.try_reserve("anything") is False
+
+
+def test_the_configured_caps_stay_under_the_free_tier():
+    """★월 상한 + 하루 상한 ≤ 무료 한도 — 월 경계 시간대가 어긋나도 넘지 않게(요금표 2026-09-25)."""
+    free = {"google_places_details_enterprise": 1000, "google_places_text_search_pro": 5000}
+    caps = google_caps()
+    assert set(caps) == set(free)
+    for meter, cap in caps.items():
+        assert cap["month"] + cap["day"] <= free[meter] and cap["day"] <= cap["month"] // 31
 
 
 # ── 새벽 작업 ────────────────────────────────────────────────────

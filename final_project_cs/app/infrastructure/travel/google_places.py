@@ -11,6 +11,11 @@
   끈다). `wiki/research/place-api-quota-and-terms.md`.
 ★공통 규율(`base.py`)을 지킨다 — 못 가져오면 `None` + 이유를 센다, HTTP 200 이어도 본문을 본다.
 ★키는 `ACOP_GOOGLE_MAPS_API_KEY`. 비어 있으면 이 어댑터를 **만들지 않는다**(부르는 쪽이 「꺼짐」을 센다).
+★★`[2026-09-25 사용자 지시]` **무료 한도를 무조건 넘지 않는다** — 호출 예산(`call_budget.CallBudget`)이
+  **필수 인자**다. 부르기 전에 DB 에서 월·일 한 칸을 확보하고, 못 하면 부르지 않는다(`budget_exhausted`).
+  요금 등급(`[확인 2026-09-25, 공식 요금표]`): 영업시간 상세 = Place Details **Enterprise**(월 1,000건 무료),
+  장소 찾기(id·좌표) = Text Search **Pro**(월 5,000건 무료). 상세는 **한 번에 한 곳**이다(`places/{id}`).
+`[실측 2026-09-25]` 실제 키로 4건 — 찾기·상세 응답 모양이 이 코드의 가정과 같았다(영업시간 구간에 날짜 포함).
 
 출처: Places API (New) — `POST https://places.googleapis.com/v1/places:searchText`,
 `GET https://places.googleapis.com/v1/places/{id}`, 인증은 `X-Goog-Api-Key`, 받을 칸은 `X-Goog-FieldMask`.
@@ -32,6 +37,8 @@ SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
 DETAIL_URL = "https://places.googleapis.com/v1/places/{place_id}"
 #: 받을 칸 — 적을수록 싸다. 검색은 id·이름·좌표만, 상세는 영업 상태·영업시간만
 SEARCH_FIELDS = "places.id,places.displayName,places.location"
+METER_SEARCH = "google_places_text_search_pro"
+METER_DETAILS = "google_places_details_enterprise"
 DETAIL_FIELDS = "id,businessStatus,currentOpeningHours,regularOpeningHours"
 #: 구글 요일(0=일요일) ↔ 파이썬 요일(0=월요일)
 _GOOGLE_DAY = {6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
@@ -41,13 +48,15 @@ class GooglePlaces(TravelSource):
     name = "google_places"
     cache_ttl_seconds = 0          # ★약관 — 영업시간을 담아 두지 않는다
 
-    def __init__(self, *, api_key: str, match_radius_m: float = 300.0,
+    def __init__(self, *, api_key: str, budget: Any, match_radius_m: float = 300.0,
                  request: Callable[..., httpx.Response] | None = None, **kwargs: Any) -> None:
         kwargs.pop("cache", None)   # ★응답 캐시를 받지 않는다(위 약관)
         super().__init__(**kwargs)
         if not api_key:
             raise ValueError("ACOP_GOOGLE_MAPS_API_KEY 가 비어 있다 — 어댑터를 만들지 않는다")
-        self._key, self.match_radius_m = api_key, float(match_radius_m)
+        if budget is None:
+            raise ValueError("호출 예산 없이 구글을 부르지 않는다 — 무료 한도를 넘을 수 있다")
+        self._key, self.match_radius_m, self._budget = api_key, float(match_radius_m), budget
         # ★시험이 네트워크 없이 돌 수 있게 — (method, url, headers, json) → Response
         self._request = request or self._http_request
 
@@ -59,9 +68,13 @@ class GooglePlaces(TravelSource):
             kwargs["proxy"] = proxy
         return httpx.request(method, url, json=json, **kwargs)
 
-    def _call(self, method: str, url: str, fields: str,
+    def _call(self, method: str, url: str, fields: str, meter: str,
               body: dict[str, Any] | None = None) -> dict[str, Any] | None:
         if not self._allow():
+            return None
+        if not self._budget.try_reserve(meter):
+            # ★무료 한도 보호 — 부르지 않는다. 세고 「모름」으로 넘긴다(부르는 쪽이 fatal 로 센다)
+            self._miss("budget_exhausted", meter)
             return None
         headers = {"X-Goog-Api-Key": self._key, "X-Goog-FieldMask": fields,
                    "Content-Type": "application/json"}
@@ -96,7 +109,7 @@ class GooglePlaces(TravelSource):
 
         ★둘을 가른다 — 못 부른 것은 다음 회차에 다시 부르고, 맞는 곳이 없는 것은 판정으로 남긴다.
         """
-        payload = self._call("POST", SEARCH_URL, SEARCH_FIELDS, {
+        payload = self._call("POST", SEARCH_URL, SEARCH_FIELDS, METER_SEARCH, {
             "textQuery": name, "languageCode": "ko", "maxResultCount": 5,
             "locationBias": {"circle": {"center": {"latitude": latitude, "longitude": longitude},
                                         "radius": self.match_radius_m}}})
@@ -116,7 +129,7 @@ class GooglePlaces(TravelSource):
     # ── 그 시각에 여는가 ──────────────────────────────────────────
     def open_verdict(self, place_id: str, *, start: datetime, end: datetime) -> tuple[str, str] | None:
         """(verdict, 이유 한 줄). 못 불렀으면 `None`. ★영업시간 원문은 돌려주지 않는다(약관)."""
-        payload = self._call("GET", DETAIL_URL.format(place_id=place_id), DETAIL_FIELDS)
+        payload = self._call("GET", DETAIL_URL.format(place_id=place_id), DETAIL_FIELDS, METER_DETAILS)
         if payload is None:
             return None
         return verdict_from_details(payload, start=start, end=end)

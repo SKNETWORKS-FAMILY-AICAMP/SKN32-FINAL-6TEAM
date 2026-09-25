@@ -230,6 +230,14 @@ travel:
     start: "03:00"
     until: "08:00"
     match_radius_m: 300
+  # -- 구글 호출 예산 (2026-09-25 사용자 지시: 무료 한도를 **무조건** 넘지 않는다) --
+  # 무료 한도 `[확인 2026-09-25, 공식 요금표]`: Place Details Enterprise 월 1,000 · Text Search Pro 월 5,000.
+  # ★월 경계 시간대를 구글이 적어 두지 않았다 → UTC 월로 세고 **월 상한 + 하루 상한 ≤ 무료 한도**로 둔다
+  #   (경계가 하루 어긋나 두 달에 걸쳐 세어져도 넘지 않게). 하루 상한 = 월 상한 ÷ 31 (내림).
+  # 실패한 호출도 한 칸으로 센다(보수적). DB(`external_call_budget`, 027)에서 모든 프로세스가 같이 센다.
+  google_budget:
+    google_places_details_enterprise: {month: 950, day: 30}     # 950 + 30 = 980 ≤ 1,000
+    google_places_text_search_pro: {month: 4800, day: 150}      # 4,800 + 150 = 4,950 ≤ 5,000
   density:
     # 여행 일정 점유 연구의 Low 관측치(약 40%)를 기준으로 한 운영 구간.
     # Low는 원문 관측값, 나머지는 Low~High 사이의 단계적 운영 구간이다.
