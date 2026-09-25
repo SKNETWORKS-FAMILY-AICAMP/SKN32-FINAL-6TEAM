@@ -22,6 +22,12 @@
 
 ★요청 id 를 원인 칸에 남긴다 — 같은 신고를 두 번 받아 두 번 고치지 않게
   (`TripStore.version_for_request`).
+
+★`[2026-09-25]` **고객 신고(늦음 · 휴무)도 감시와 같은 판정 문을 지난다**(`pending.decide`, D-020).
+  신고는 「문제가 생겼다」이지 「이 안으로 바꿔 달라」가 아니다 — 어느 안으로 바꿀지는 우리가 고른다.
+  그래서 설문 15번 「먼저 물어봐줘」면 **바꾸지 않고 안 1·2·3을 보이며 묻고**, 「변경 안 할 일정」이
+  걸리면 15번 답과 상관없이 묻는다. 그 밖은 지금처럼 최고 안을 바로 적용한다.
+  ★고객이 **직접 고른 것**(다른 안으로 바꾸기 · 되돌리기)은 판정 문을 지나지 않는다 — 그 자체가 답이다.
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ from uuid import UUID
 from .itinerary import Item, StaleItinerary, TripStore
 from .itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
                                 plan_delay, plan_nearby_store, plan_rollback, plan_swap)
+from .pending import PendingStore, decide, options_from, proposal_notice
 
 
 class TripDesk:
@@ -55,7 +62,7 @@ class TripDesk:
         trip, items, places = self._read(trip_id)
         plan = plan_delay(trip=trip, items=items, places=places, at=at, minutes=minutes,
                           message=message, request_id=request_id)
-        return self._outcome(trip_id, trip["version"], items, plan)
+        return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 요식-P7 — 도착했더니 휴무 ──────────────────────────────
     def report_closed(self, *, trip_id: UUID, at: datetime, message: str,
@@ -64,7 +71,7 @@ class TripDesk:
         trip, items, places = self._read(trip_id)
         plan = plan_closed(trip=trip, items=items, places=places, at=at, message=message,
                            request_id=request_id)
-        return self._outcome(trip_id, trip["version"], items, plan)
+        return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 액-08 — 품절, 근처 다른 곳? ────────────────────────────
     def ask_nearby_store(self, *, trip_id: UUID, at: datetime, products: list[str],
@@ -107,13 +114,57 @@ class TripDesk:
 
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────
     def _outcome(self, trip_id: UUID, base_version: int, items: list[Item],
-                 plan: Plan) -> dict[str, Any]:
+                 plan: Plan, *, gate: bool = False) -> dict[str, Any]:
         if isinstance(plan, NoChange):
             return {"status": plan.status, **plan.detail}
+        if gate:
+            asked = self._ask_instead(trip_id, base_version, plan)
+            if asked is not None:
+                return asked
         outcome = self._write(trip_id, base_version, items, plan)
         if outcome["status"] == "adjusted":
             outcome.update(plan.summary)
         return outcome
+
+    def _ask_instead(self, trip_id: UUID, base_version: int,
+                     plan: ItineraryChange) -> dict[str, Any] | None:
+        """바꿀 항목 중 하나라도 판정이 「바꾸지 말라」면 **바꾸지 않고 묻는다.** None 이면 바꿔도 된다.
+
+        ★감시 경로(`trip_watch._apply`)와 같은 판정·같은 보류 제안·같은 알림이다. 신고는 안전 사건이
+          아니라 `report=None` 이다. 같은 신고가 다시 와도 제안은 하나다(`pending_changes` UNIQUE) —
+          이미 열려 있으면 그것을 돌려준다.
+        """
+        with self._connect() as conn, conn.transaction():
+            trip, items = self.store.latest(conn, trip_id)
+            if trip["version"] != base_version:
+                return None            # 그 사이 바뀌었다 — `_write` 가 `stale` 로 답한다
+            pending = PendingStore(self.store.tenant_id)
+            for item_id in plan.replacements:
+                current = next((i for i in items if i.item_id == item_id), None)
+                if current is None:
+                    continue
+                decision = decide(constraints=trip.get("constraints"), item=current, report=None)
+                if decision.action == "apply":
+                    continue
+                options = options_from(plan, current)
+                proposal_id = pending.open(conn, trip_id=trip_id, item=current, base_version=base_version,
+                                           decision=decision, causes=plan.causes, options=options)
+                if proposal_id is None:        # 이미 물었다 — 다시 알리지 않는다
+                    proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
+                                       if row["item_id"] == current.item_id
+                                       and row["base_version"] == base_version)
+                    return {"status": "asked", "already": True, "proposal_id": str(proposal_id),
+                            "reason": decision.reason, "item": current.title,
+                            "text": f"{current.title} — 이미 여쭤본 일정이에요. 계획서 링크에서 골라 주세요. "
+                                    "답이 없으면 원래 일정을 그대로 둡니다."}
+                notice = proposal_notice(item=current, decision=decision, causes=plan.causes,
+                                         options=options, proposal_id=proposal_id)
+                self.store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
+                                           payload=notice)
+                return {"status": "asked", "already": False, "proposal_id": str(proposal_id),
+                        "reason": decision.reason, "protected_by": decision.protected_by,
+                        "item": current.title, "notice": notice}
+        return None
 
     def _write(self, trip_id: UUID, base_version: int, items: list[Item],
                plan: ItineraryChange) -> dict[str, Any]:

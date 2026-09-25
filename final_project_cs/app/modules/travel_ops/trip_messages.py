@@ -135,7 +135,9 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                 transition_case(conn, tenant_id=tenant, case_id=case_id,
                                 expected_version=case["version"], event_type=event_type,
                                 payload=payload, actor_type="api", actor_id=actor_id)
-        if outcome.get("status") in ("adjusted", "answered", "still_fits"):
+        # ★`asked` — 「먼저 물어봐줘」·「변경 안 할 일정」이라 바꾸지 않고 물었다(D-020). 처리한 것이다 —
+        #   답은 묻는 문장이고, 고객은 계획서 링크·웹에서 고른다. 사람에게 넘길 일이 아니다.
+        if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked"):
             answer = (outcome.get("notice") or {}).get("text") or outcome.get("text") \
                 or outcome.get("status")
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")

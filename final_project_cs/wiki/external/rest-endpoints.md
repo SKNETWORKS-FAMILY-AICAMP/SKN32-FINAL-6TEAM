@@ -320,8 +320,10 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 ## 보류 제안 — `/v1/trips/{trip_id}/proposals*` `[2026-09-24]`
 
 `[실측]` `app/modules/travel_ops/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
-감시가 일정 문제를 찾았는데 **바로 바꾸지 않고 묻는 경우**(설문 15번 「먼저 물어봐줘」, 또는 「변경 안 할 일정」 항목 자체를
-바꿔야 할 때) 이 자리에 제안이 쌓인다.
+감시가 일정 문제를 찾았거나 **고객이 늦음·휴무를 신고했는데**(`[2026-09-25]` `/reports` · `/messages`) **바로 바꾸지 않고
+묻는 경우**(설문 15번 「먼저 물어봐줘」, 또는 「변경 안 할 일정」 항목 자체를 바꿔야 할 때) 이 자리에 제안이 쌓인다.
+그때 신고 응답은 `{"status": "asked", "proposal_id", "reason", "item", "notice"}` 이고 일정은 **바뀌지 않는다.**
+같은 신고가 다시 오면 `"already": true` 로 같은 제안을 돌려준다.
 
 | 경로 | scope | 뜻 |
 |---|---|---|
