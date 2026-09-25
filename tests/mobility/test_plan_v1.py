@@ -13,6 +13,8 @@
 #   C  코어 판정 — 팀 itinerary_checks.check_itinerary 가 위반 0 (등록에서 안 걸린다)
 #   O  (23) options — id 수단 태그 · 이유(축별 사실 · 순위 없음) · walk_m·fare_krw · uses 자가 검사(팀 route_uses)
 #      · 후보별 출발 칸 없음(결정 1 — 더 이른 출발 후보는 봉투 left_out) · 장소 기준 버스 · 환승 칸(표시 · 기본 off)
+#   F  (54) 요금 — 규칙 fare 절만 · 지하철 운임거리 괄호(하한=상한 요금일 때만) · 버스 유형별 단일 · 조조 · 통합환승 합성
+#      · 티머니 실측 태그 대조 · 모르면 뺀다 · 재계획이 대중교통 옵션을 요금으로 안 떨어뜨린다
 import json
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -524,17 +526,21 @@ def test_reasons_unit():
 
 
 def test_walk_m_and_fare():
-    """walk_m = 장소↔역(직선×우회) + 환승 거리표 m · 거리표 밖 환승이면 키를 뺀다 · 요금은 도보 0 만(지하철·버스는 규칙 근거 없음)."""
+    """walk_m = 장소↔역(직선×우회) + 환승 거리표 m · 거리표 밖 환승이면 키를 뺀다 · 요금은 규칙 근거가 있을 때만(54 — 지하철 1,550)."""
     _skip_if_no_data()
     from app.modules.travel_ops.mobility_engine.options import transfer_walk_m
     v = _runtime()._v
     _, got = _run()
     w = got["routes"]["dinner_to_lotte_mart"]["options"][0]
     assert w["id"] == "walk" and w["fare_krw"] == 0 and w["walk_m"] > 0
+    from app.modules.travel_ops.mobility_engine.options import fare_of
     for rr in got["routes"].values():
         for o in rr["options"]:
-            if o["id"] != "walk":
-                assert "fare_krw" not in o, "요금 근거 없는 수단에 fare_krw"
+            if o["id"].startswith("subway"):
+                assert o.get("fare_krw") == 1550, f"도심 10km 안 지하철은 1,550(규칙 fare) — {o}"
+            assert isinstance(o.get("fare_krw", 0), int)
+    assert fare_of(v, [{"line": "09호선", "from": "노량진", "to": "신논현"}], [_FLR("09호선 노량진→신논현", 600)]) is None, \
+        "거리 모르는 노선(9호선)은 요금을 뺀다"
     legs = [{"line": "03호선", "from": "경복궁", "to": "을지로3가"}, {"line": "02호선", "from": "을지로3가", "to": "성수"}]
     d = v.tw.lookup("을지로3가", "03호선", "02호선").distance_m
     assert transfer_walk_m(v, legs) == d
@@ -783,28 +789,38 @@ def test_core_routes_strips_display():
             assert OPTION_KEYS <= set(o) <= OPTION_KEYS | OPTION_OPT
 
 
-def test_replan_fare_limit_locked():
-    """GPT 23 #8 — 알고 뺀 결과를 잠근다: 요금 없는 지하철·버스 옵션은 코어 재계획(route_candidates)에서
-    「요금을 몰라」로 탈락한다. 도보(0원)는 요금으로는 안 떨어진다. 요금 데이터가 들어오면 이 시험을 뒤집는다."""
+def test_replan_fare_known_locked():
+    """54 — GPT 23 #8 잠금을 뒤집었다: 지하철·버스 옵션에 요금이 실려 코어 재계획(route_candidates)이 「요금을 몰라」로
+    떨어뜨리지 않는다. 405 무정차 → 지하철이 대안으로 뽑히고 추가 비용 = 1,550 − 1,500 = 50(티머니 실측 환승 +50 과 같은 값)."""
     _skip_if_no_data()
     from app.modules.travel_ops.replan import choose, route_candidates
     items, got = _ns_it(modes=MODES_ALL)
     route = got["routes"]["ns_to_it"]
+    fares = {o["id"]: o.get("fare_krw") for o in route["options"]}
+    assert fares.get("bus_405") == 1500 and fares.get("subway_1") == 1550, fares
     mob = next(it for it in got["items"] if it["kind"] == "mobility")
     cands = route_candidates(route=route, depart=datetime.fromisoformat(mob["starts_at"]),
                              planned_arrival=datetime.fromisoformat(mob["ends_at"]),
                              next_start=datetime.fromisoformat(items[1]["starts_at"]),
                              events={"버스:405": {"effect": "skip_station", "summary": "405 무정차"}})
     sub = next(c for c in cands if c.key.startswith("subway"))
-    assert any("요금을 몰라" in r for r in sub.rejected), sub.rejected
+    assert not any("요금을 몰라" in r for r in sub.rejected), sub.rejected
+    assert sub.extra_cost_krw == 50, sub.extra_cost_krw
     best, _alts, _rej = choose(cands)
-    assert best is None, "지금은 대안이 전부 떨어진다 — 요금이 들어오면 여기가 바뀐다"
+    assert best is not None and best.key == sub.key, "요금이 들어왔으니 지하철이 대안으로 뽑혀야 한다"
     walk_route = {"from": "a", "to": "b", "planned": "walk",
                   "options": [{"id": "walk", "label": "도보", "eta_min": 5, "walk_m": 300, "fare_krw": 0, "uses": []}]}
     w = route_candidates(route=walk_route, depart=datetime(2026, 9, 29, 10, 0, tzinfo=KST),
                          planned_arrival=datetime(2026, 9, 29, 10, 5, tzinfo=KST),
                          next_start=datetime(2026, 9, 29, 10, 30, tzinfo=KST), events={})
     assert not w[0].rejected, w[0].rejected
+    # 요금을 모르는 옵션은 여전히 떨어진다(키를 빼는 쪽이 맞는지 — 재계획 쪽 규칙은 그대로)
+    unk = dict(route, options=[{k: v for k, v in o.items() if k != "fare_krw"} if o["id"].startswith("subway") else o
+                               for o in route["options"]])
+    c2 = route_candidates(route=unk, depart=datetime.fromisoformat(mob["starts_at"]),
+                          planned_arrival=datetime.fromisoformat(mob["ends_at"]),
+                          next_start=datetime.fromisoformat(items[1]["starts_at"]), events={})
+    assert any("요금을 몰라" in r for c in c2 if c.key.startswith("subway") for r in c.rejected)
 
 
 class _FakeCg:
@@ -874,6 +890,198 @@ def test_bus_cap_zero_keeps_planned():
         R["value"] = old
     r = got["routes"]["ns_to_it"]
     assert r["planned"] == "bus_405" and "bus_405" in {o["id"] for o in r["options"]}, r
+
+
+# ── F 요금(54) ──────────────────────────────────────────────────────────────
+class _FLR:
+    """요금 시험용 구간 결과 — label·depart_min·wait_min 만."""
+    def __init__(self, label, dep, wait=None, ride=None):
+        self.label, self.depart_min, self.wait_min, self.ride_min = label, dep, wait, ride
+        self.arrive_min, self.verdict = None, "feasible"
+
+
+def _rules():
+    from app.modules.travel_ops.mobility_engine.paths import RULES_DIR
+    return json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
+
+
+def test_fare_rules_have_basis():
+    """규칙 fare 절 — 값마다 grade·근거 · 확인 시각·출처 URL · 판정기 버전은 그대로(판정 무변경)."""
+    R = _rules()
+    F = R["fare"]
+    assert R["rules_version"] == "v0.9" and R["source_id"] == "mobility_rules@v0.9", "판정 무변경 — 버전 유지"
+    assert F["확인"]["checked_at"].startswith("2026-09-25") and all(u.startswith("https://") for u in F["확인"]["sources"])
+    n = 0
+    for sec in ("subway", "bus", "transfer"):
+        for k, x in F[sec].items():
+            assert {"value", "grade", "근거"} <= set(x), f"{sec}.{k}"
+            assert x["grade"] in {"확정", "추정", "근거없음"}, f"{sec}.{k}"
+            n += 1
+    assert n >= 14
+
+
+def test_fare_no_hardcode():
+    """하드코딩 금지(27 규칙 14) — options.py 에 요금 숫자가 없다. 규칙 값을 바꾸면 결과가 따라 바뀐다."""
+    import re
+    from app.modules.travel_ops.mobility_engine import options as O
+    src = Path(O.__file__).read_text(encoding="utf-8")
+    assert not re.search(r"\b(1550|1500|1400|1200|2500|3000|10000|5000|8000|50000|390)\b", src), "요금 값이 코드에 있다"
+    F = _rules()["fare"]
+    F["subway"]["base"]["value"]["won"] = 1650
+    assert O.subway_fare_at(F, 5000, 600) == 1650
+
+
+def test_fare_distance_steps():
+    """거리 추가운임 경계 — 10km 까지 기본 · 5km 마다 100(올림) · 50km 넘으면 8km 마다 100 · 조조는 기본운임만 20%."""
+    from app.modules.travel_ops.mobility_engine.options import subway_fare_at
+    F = _rules()["fare"]
+    want = {0: 1550, 10000: 1550, 10001: 1650, 15000: 1650, 15001: 1750, 50000: 2350, 50001: 2450,
+            58000: 2450, 58001: 2550}
+    for m, w in want.items():
+        assert subway_fare_at(F, m, 600) == w, (m, subway_fare_at(F, m, 600), w)
+    assert subway_fare_at(F, 5000, 389) == 1240, "06:29 승차는 조조 20%"
+    assert subway_fare_at(F, 5000, 390) == 1550, "06:30 승차는 조조 아님(「06:30까지」 — 분 단위 390 미만)"
+    assert subway_fare_at(F, 12000, 350) == 1340, "조조는 기본운임에만 — 거리 추가 100 은 그대로"
+
+
+def test_fare_transfer_tmoney():
+    """통합환승 합성 — 티머니 실측 태그(25 · 9/08~10 퇴근): 버스 1,500 → 지하철 +50 · 버스→버스 0.
+    창 초과 · 광역·심야 · 거리 모름 · 6회 승차 → None."""
+    from app.modules.travel_ops.mobility_engine.options import transfer_fare
+    F = _rules()["fare"]
+    bus = lambda typ, m, b, a: {"kind": typ, "base": F["bus"]["by_type"]["value"].get(typ), "m": m, "board": b, "alight": a}
+    sub = lambda m, b, a: {"kind": "subway", "base": F["subway"]["base"]["value"]["won"], "m": m, "board": b, "alight": a}
+    assert transfer_fare(F, [bus("지선", 4000, 1099, 1116), sub(2000, 1119, 1125)]) == 1550, "T10 버스→지하철 +50"
+    assert transfer_fare(F, [bus("간선", 3000, 1162, 1173), bus("지선", 5000, 1176, 1201)]) == 1500, "T07 버스→버스 0"
+    assert transfer_fare(F, [bus("지선", 6000, 600, 620), sub(6000, 630, 650)]) == 1650, "합산 12km → +100"
+    assert transfer_fare(F, [bus("지선", 4000, 600, 620), sub(2000, 651, 660)]) is None, "낮 31분 → 환승 아님(값 안 냄)"
+    assert transfer_fare(F, [bus("지선", 4000, 1300, 1320), sub(2000, 1370, 1380)]) == 1550, "21시 뒤 60분 창"
+    assert transfer_fare(F, [bus("광역", 4000, 600, 620), sub(2000, 630, 640)]) is None, "광역 섞인 환승은 규칙 밖"
+    assert transfer_fare(F, [bus("심야", 4000, 1500, 1520), bus("지선", 2000, 1530, 1540)]) is None
+    assert transfer_fare(F, [bus("지선", None, 600, 620), sub(2000, 630, 640)]) is None, "버스 거리 모름"
+    assert transfer_fare(F, [bus("지선", 30000, 600, 640), bus("간선", 26000, 650, 690)]) == 2500, \
+        "GPT 54 #3 — 환승은 10km 넘으면 끝까지 5km 단계(56km → +1,000 · 지하철 단독 8km 단계 아님)"
+    assert transfer_fare(F, [bus("지선", 100000, 600, 700), bus("간선", 100000, 710, 810)]) == 3000, \
+        "GPT 54 #3 — 개별 요금 합(1,500 + 1,500)을 넘지 않는다"
+    six = [bus("지선", 1000, 600 + 10 * i, 605 + 10 * i) for i in range(6)]
+    assert transfer_fare(F, six[:5]) == 1500 and transfer_fare(F, six) is None, "5회 승차까지"
+
+
+class _FBus:
+    def __init__(self, typ, term):
+        self.route_type_nm, self.term_min = typ, term
+
+
+class _FFareV:
+    """bus_fare 합성용 — R(규칙)·bus.route() 모양만."""
+    def __init__(self, typ, term=10):
+        self.R = _rules()
+        self.bus = self
+        self._r = _FBus(typ, term) if typ else None
+
+    def route(self, name):
+        return self._r
+
+
+def test_fare_bus_single():
+    """버스 한 번 — 유형별 단일요금 · 공항·투어·모르는 노선 → 없음 · 조조는 승차 창 [정류장 도착, +배차] 이 06:30 한쪽일 때만 · 심야 조조 없음."""
+    from app.modules.travel_ops.mobility_engine.options import fare_of
+    leg = [{"mode": "bus", "route": "405", "from": "a", "to": "b"}]
+    lab = "버스 405 a→b"
+    ok = lambda typ, dep, wait=3, term=10: fare_of(_FFareV(typ, term), leg, [_FLR(lab, dep, wait)])
+    assert ok("간선", 600) == 1500 and ok("지선", 600) == 1500 and ok("순환", 600) == 1400
+    assert ok("마을", 600) == 1200 and ok("광역", 600) == 3000 and ok("심야", 100 + 1440) == 2500
+    assert ok("공항", 600) is None and ok("투어", 600) is None and ok(None, 600) is None
+    assert ok("간선", 370, wait=3, term=10) == 1200, "도착 06:07 + 배차 10 < 06:30 → 조조"
+    assert ok("간선", 390, wait=3, term=10) is None, "도착 06:27 — 승차가 06:30 앞뒤 어느 쪽인지 모른다"
+    assert ok("간선", 400, wait=0, term=10) == 1500
+    assert ok("심야", 300, wait=3, term=30) == 2500, "심야는 조조 대상 아님"
+    assert fare_of(_FFareV("간선"), leg, [_FLR("버스 999 a→b", 600, 3)]) is None, "구간 결과가 안 맞으면 모른다"
+
+
+def test_fare_mixed_is_unknown():
+    """버스가 섞인 환승 — 버스 운임거리 근거가 없어(fare.transfer.bus_distance 근거없음) 값을 안 낸다."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility_engine.options import fare_of
+    v = _runtime()._v
+    legs = [{"mode": "bus", "route": "405", "from": "a", "to": "b"}, {"line": "06호선", "from": "삼각지", "to": "이태원"}]
+    lrs = [_FLR("버스 405 a→b", 600, 3), _FLR("06호선 삼각지→이태원", 620)]
+    assert fare_of(v, legs, lrs) is None
+    assert fare_of(v, legs[:1] * 2, lrs[:1] * 2) is None, "버스→버스도 거리 모름"
+
+
+def test_fare_subway_bracket():
+    """지하철 운임거리 괄호 — 카드는 승하차역만 안다 → 최단거리 요금. 하한 = 상한 요금일 때만 값.
+    티머니 T16·T19(남부터미널→남성 1,550) 대조 · 최단보다 긴 후보도 같은 요금 · 거리 모르는 노선은 없음 · 경계에 걸리면 없음."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility_engine import options as O
+    v = _runtime()._v
+    net = O.fare_net(v)
+    f = lambda legs, dep=600: O.fare_of(v, legs, [_FLR(O.leg_txt(x), dep) for x in legs])
+    t16 = [{"line": "03호선", "from": "남부터미널", "to": "고속터미널"}, {"line": "07호선", "from": "고속터미널", "to": "남성"}]
+    assert f(t16, 1332) == 1550, "T16 22:12 남부터미널→남성 태그 1,550"
+    short = [{"line": "03호선", "from": "경복궁", "to": "을지로3가"}, {"line": "02호선", "from": "을지로3가", "to": "성수"}]
+    long_ = [{"line": "03호선", "from": "경복궁", "to": "충무로"}, {"line": "04호선", "from": "충무로", "to": "동대문역사문화공원"},
+             {"line": "02호선", "from": "동대문역사문화공원", "to": "성수"}]
+    assert net.ridden_m(long_) > 10000 >= net.upper_m(long_), "돌아가는 후보도 운임은 최단 기준"
+    assert f(long_) == f(short) == 1550
+    assert net.lower_m(short) <= net.upper_m(short)
+    assert f([{"line": "09호선", "from": "노량진", "to": "신논현"}]) is None, "9호선 거리 없음"
+    lb, ub = net.lower_m([{"line": "05호선", "from": "김포공항", "to": "광화문"}]), net.upper_m([{"line": "05호선", "from": "김포공항", "to": "광화문"}])
+    assert O.subway_fare_at(v.R["fare"], lb, 600) != O.subway_fare_at(v.R["fare"], ub, 600)
+    assert f([{"line": "05호선", "from": "김포공항", "to": "광화문"}]) is None, "괄호가 요금 경계를 가로지르면 뺀다"
+    assert f(short, 350) == 1240, "조조"
+    assert f(short, 395) is None, "GPT 54 #4 — 06:35 열차면 개찰이 06:30 전일 수 있다(창이 가로지름) → 뺀다"
+    assert f(short, 420) == 1550
+    via_sb = [{"line": "02호선", "from": "교대", "to": "강남"}, {"line": "신분당선", "from": "강남", "to": "양재"},
+              {"line": "03호선", "from": "양재", "to": "매봉"}]
+    assert net.ridden_m(via_sb) is None and net.upper_m(via_sb) is not None
+    assert f(via_sb) is None, "GPT 54 #1 — 거리 모르는 노선(신분당선 · 별도운임)을 실제로 타면 다른 경로 상한으로 대신하지 않는다"
+    assert O.fare_of(v, short, None) is None, "첫 승차 시각을 모르면 뺀다(조조를 가를 수 없다)"
+
+
+def test_fare_ub_join_same_name_only():
+    """상한 그래프의 환승은 서울교통공사 환승역거리 표의 쌍만 — 역명·좌표로 이으면 `경의선|양평` 좌표 결함(5호선 좌표)
+    때문에 다른 역(경의중앙 양평 ↔ 5호선 양평)이 이어져 상한이 가짜로 짧아진다(54 발견)."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility_engine import options as O
+    v = _runtime()._v
+    net = O.fare_net(v)
+    a, b = ("경의선", "양평"), ("05호선", "양평")
+    if a in net.lb and b in net.lb:
+        assert b not in net.ub.get(a, {}), "양평(경의중앙) ↔ 양평(5호선) 은 다른 역이다"
+    joined = {(x, y) for x in net.ub for y in net.ub[x] if x[0] != y[0]}
+    pairs = {((r["from_line"], r["station_nm"]), (r["to_line"], r["station_nm"])) for r in v.tw.pairs.values()}
+    assert joined and joined <= pairs | {(y, x) for x, y in pairs}
+
+
+def test_fare_lb_unknown_zero():
+    """GPT 54 #2 — 하한 그래프에서 거리 모르는 간선은 0(좌표 직선은 공표 거리보다 길 수 있어 하한이 아니다 —
+    확정 간선 270개 중 96개가 직선 > 공표). 거리 확정 간선은 공표 값 그대로."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility_engine import options as O
+    v = _runtime()._v
+    net = O.fare_net(v)
+    k = n = 0
+    for ln, doc in v.lo.doc["lines"].items():
+        for e in doc["edges"]:
+            w = net.lb[(ln, e["a"])][(ln, e["b"])]
+            if e.get("distance_m") is None:
+                assert w == 0, (ln, e["a"], e["b"], w)
+                k += 1
+            else:
+                assert w in (0, int(e["distance_m"])), (ln, e["a"], e["b"])
+                n += 1
+    assert k >= 400 and n >= 250
+
+
+def test_fare_early_bird_gate():
+    """GPT 54 #4 — 조조 기준은 개찰 태그. 태그 창 [열차 − 15, 열차] 이 06:30(390) 을 가로지르면 모른다."""
+    from app.modules.travel_ops.mobility_engine.options import early_bird
+    W = _rules()["fare"]["subway"]["early_bird_gate_window"]["value"]
+    assert early_bird(389, 390, W) is True
+    assert early_bird(390, 390, W) is None and early_bird(390 + W - 1, 390, W) is None
+    assert early_bird(390 + W, 390, W) is False
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@
   items[kind=mobility]  seq · kind · title · starts_at · ends_at · route
   routes{<키>}          from · to · planned · options[{id, label, eta_min, walk_m?, fare_krw?, uses}]
                         id 접두 = 수단 태그(subway_ · bus_ · walk · bike) · label = 경로 + 이유(축별 사실 · 순위 없음)
-                        walk_m·fare_krw 는 팀 route_def 기존 칸 — 모르면 키를 뺀다(지하철·버스 요금은 뺀다 · options.py)
+                        walk_m·fare_krw 는 팀 route_def 기존 칸 — 모르면 키를 뺀다(요금은 규칙 fare 절 · options.py · 54)
   그 밖에 봉투에 `skipped`(이동 항목을 못 만든 구간과 이유)·`left_out`(싣지 않은 후보와 이유)·`basis` 를 같이 준다 —
   **코어 몸통에는 `items`·`routes` 두 칸만 옮긴다**(CreateTrip 은 extra=forbid).
 
@@ -50,7 +50,7 @@ from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
-PLAN_VERSION = "plan-v2"
+PLAN_VERSION = "plan-v2.1"   # 54 — 지하철·버스 fare_krw(규칙 fare 절) · 모양 무변경
 
 # ── 시각 ────────────────────────────────────────────────────────────────
 def _parse_dt(v):
@@ -210,7 +210,8 @@ class Planner:
             found.append((da + db, i, {
                 "eta_min": eta, "uses": uses_of(legs), "_legs": legs, "_route": label_of(legs), "_start": start,
                 "_transfers": 0, "_n": 100 + i, "_margin": margin, "_slack": slack,
-                "_walk_min": wi + wo, "_walk_m": (da + db) * self.detour, "_fare": None,
+                "_walk_min": wi + wo, "_walk_m": (da + db) * self.detour,
+                "_fare": O.fare_of(v, legs, r2.legs),
                 "_severe": [], "_covered": False, "_lr": r2.legs, "_day_type": r2.day_type,
                 "_check": {"date": st_date.isoformat(), "legs": legs, "off": off, "walk_place_in": wi,
                            "walk_place_out": wo, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": by_stop}}))
