@@ -235,6 +235,45 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     return {"status": "chosen", "version": version, "summary": plan.summary}
 
 
+def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: ItineraryChange,
+                 report: dict[str, Any] | None = None) -> dict[str, Any]:
+    """★바꾸는 **한 문**(감시 · 새벽 확인) — 판정(`decide`)을 거쳐 새 버전을 쓰거나, 묻는다.
+
+    돌려주는 `status`:
+        adjusted  새 버전과 변경 통지를 썼다(같은 트랜잭션)
+        asked     바꾸지 않고 보류 제안 + 묻는 알림(이미 물은 것이면 `already: True`, 알림은 다시 안 낸다)
+        gone      그 사이 다른 쪽이 이 항목을 바꿨다 — 옛 계산을 밀어 넣지 않는다
+        stale     기준 버전이 움직였다
+    부르는 쪽이 트랜잭션을 연다.
+    """
+    trip, items = store.latest(conn, trip_id)
+    current = next((i for i in items if i.item_id == item_id), None)
+    if current is None:
+        return {"status": "gone"}
+    decision = decide(constraints=trip.get("constraints"), item=current, report=report)
+    if decision.action != "apply":
+        options = options_from(plan, current)
+        pending = PendingStore(store.tenant_id)
+        proposal_id = pending.open(conn, trip_id=trip_id, item=current, base_version=trip["version"],
+                                   decision=decision, causes=plan.causes, options=options)
+        if proposal_id is None:
+            return {"status": "asked", "already": True, "reason": decision.reason, "item": current.title}
+        store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
+                              payload=proposal_notice(item=current, decision=decision, causes=plan.causes,
+                                                      options=options, proposal_id=proposal_id))
+        return {"status": "asked", "already": False, "proposal_id": str(proposal_id),
+                "reason": decision.reason, "safety": decision.safety, "item": current.title}
+    try:
+        version = store.append_version(conn, trip_id=trip_id, base_version=trip["version"],
+                                       items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
+    except StaleItinerary:
+        return {"status": "stale"}
+    store.enqueue_notice(conn, trip_id=trip_id, version=version,
+                         payload={**plan.notice, "version": version,
+                                  "type": "change_notice", "safety": decision.safety})
+    return {"status": "adjusted", "version": version, "safety": decision.safety}
+
+
 def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:
     return Item(item_id=item.item_id, seq=item.seq, kind=item.kind, title=item.title,
                 place_id=item.place_id, starts_at=item.starts_at, ends_at=item.ends_at,
@@ -245,5 +284,6 @@ def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:
                 place=item.place)
 
 
-__all__ = ["Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES", "choose", "decide",
+__all__ = ["Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES", "apply_or_ask", "choose",
+           "decide",
            "is_safety", "options_for", "options_from", "proposal_notice", "protected_reason"]

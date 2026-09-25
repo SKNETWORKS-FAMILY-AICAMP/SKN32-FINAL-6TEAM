@@ -28,10 +28,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from .itinerary import Item, StaleItinerary, TripStore
+from .itinerary import Item, TripStore
 from .itinerary_changes import (ItineraryChange, NoChange, next_after, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
-from .pending import PendingStore, decide, options_from, proposal_notice
+from .pending import PendingStore, apply_or_ask
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -139,39 +139,17 @@ class TripWatcher:
     # ── 적용(버전 + 통지를 한 트랜잭션) ─────────────────────────
     def _apply(self, trip_id, item: Item, plan: ItineraryChange, result: TripTickResult,
                report: dict[str, Any] | None = None) -> None:
+        # ★`[2026-09-24]` 바꿀지 · 물을지 · 알리기만 할지(D-020). 판정과 쓰기는 `pending.apply_or_ask`
+        #   한 곳에 있다 — 새벽 확인(`dawn_check`)도 같은 문을 쓴다(2026-09-25).
         with self._connect() as conn, conn.transaction():
-            trip, items = self.store.latest(conn, trip_id)
-            current = next((i for i in items if i.item_id == item.item_id), None)
-            if current is None:
-                return   # ★그 사이 다른 쪽이 이 항목을 이미 바꿨다 — 옛 계산을 밀어 넣지 않는다
-            # ★`[2026-09-24]` 바꿀지 · 물을지 · 알리기만 할지(D-020). 바꾸는 것은 `apply` 뿐이다.
-            decision = decide(constraints=trip.get("constraints"), item=current, report=report)
-            if decision.action != "apply":
-                options = options_from(plan, current)
-                pending = PendingStore(self.store.tenant_id)
-                proposal_id = pending.open(conn, trip_id=trip_id, item=current,
-                                           base_version=trip["version"], decision=decision,
-                                           causes=plan.causes, options=options)
-                if proposal_id is not None:     # 이미 물은 것이면 다시 묻지 않는다
-                    self.store.enqueue_message(
-                        conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
-                        payload=proposal_notice(item=current, decision=decision, causes=plan.causes,
-                                                options=options, proposal_id=proposal_id))
-                    result.asked.append({"trip_id": str(trip_id), "item": current.title,
-                                         "proposal_id": str(proposal_id), "reason": decision.reason,
-                                         "safety": decision.safety})
-                return
-            try:
-                version = self.store.append_version(
-                    conn, trip_id=trip_id, base_version=trip["version"],
-                    items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
-            except StaleItinerary:
-                return
-            self.store.enqueue_notice(conn, trip_id=trip_id, version=version,
-                                      payload={**plan.notice, "version": version,
-                                               "type": "change_notice", "safety": decision.safety})
-        result.adjusted.append({"trip_id": str(trip_id), "version": version, **plan.summary,
-                                "notice": plan.notice})
-
+            outcome = apply_or_ask(conn, store=self.store, trip_id=trip_id, item_id=item.item_id,
+                                   plan=plan, report=report)
+        if outcome["status"] == "asked" and not outcome.get("already"):
+            result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
+                                 "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
+                                 "safety": outcome["safety"]})
+        elif outcome["status"] == "adjusted":
+            result.adjusted.append({"trip_id": str(trip_id), "version": outcome["version"], **plan.summary,
+                                    "notice": plan.notice})
 
 __all__ = ["DEFAULT_LOOKAHEAD", "TripTickResult", "TripWatcher"]
