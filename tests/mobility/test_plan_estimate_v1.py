@@ -13,6 +13,9 @@
 #      · 공휴일(추석)은 일요일과 같은 판(시간표·혼잡도 요일축) · 일요일엔 출퇴근 주의가 없다
 #      · 버스 범위는 구간 프로파일 p10/p90 · 막차(경로 기준 + 뒤를 잇는 경로 · 버스 막차) · 첫차 · 판정기 상태 무변경
 #      · 토요일 재차율 ≥100 셀은 출퇴근 주의가 아니다
+#   G  GPT 대조 1차(2026-09-25 · 7건) 잠금 — 공유 판정기 무변경(동시 실행 중에도) · 막차 뒤 공백/꼬리 구분 · 1분 경계 ·
+#      섞인 불가 이유는 단정 안 함 · 같은 분 다른 방향 혼잡도 · 버스 출퇴근 주의 평일만 · 창·간격 검증 · 범위 설명
+#      + 기본 수단에서 자전거 라우터 호출 0(노트북 1시간 정지 원인)
 import sys
 from datetime import date
 from pathlib import Path
@@ -21,7 +24,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[1] / "final_project_cs"))
 
 from app.modules.travel_ops.mobility_engine.plan_estimate import (  # noqa: E402
-    Estimator, day_info, estimate, pct, slot_window)
+    Estimator, _cautions, day_info, estimate, pct, slot_window)
 
 HOTEL = {"name": "명동 호텔", "lat": 37.5636, "lon": 126.9826}           # 32 예시와 같은 장소
 SEONGSU = {"name": "성수 쇼룸", "lat": 37.5445, "lon": 127.056}
@@ -222,6 +225,185 @@ def test_verifier_untouched():
     _est(HOTEL, SEONGSU, WEEKDAY, "저녁")
     assert v.lfd_enabled is True
     assert v.verify_case(dict(case)).out == before
+
+
+
+# ── G GPT 대조 1차 잠금 ───────────────────────────────────────────────────
+class _FakeV:
+    R = {"congestion": {"levels": {"혼잡": {"gte": 80}}}}
+
+
+class _FakeEst:
+    v = _FakeV()
+
+    def __init__(self, slow=20):
+        self.slow = slow
+
+    def _bus_slow(self, info, d, tt_day, boards):
+        return self.slow
+
+
+def _row(t, choice=None, by=None, codes=(), **kw):
+    return {"t": t, "choice": choice, "by": by or {}, "codes": list(codes), "near_last": False, **kw}
+
+
+def _night_rows():
+    """주 경로 S 가 22:05 까지 · 22:10 비고 · 22:15 N버스 · 22:20~22:25 비고(창 끝)."""
+    S, N = "지하철 S", "버스 N1"
+    return [_row(1320, S, {S: "ok"}), _row(1325, S, {S: "ok"}), _row(1330, None, {S: "after_last"}, ["after_last"]),
+            _row(1335, N, {S: "after_last", N: "ok"}), _row(1340, None, {S: "after_last"}, ["after_last"]),
+            _row(1345, None, {S: "after_last"}, ["after_last"])], S
+
+
+def test_g2_none_from_tail_and_gaps():
+    """GPT 2 — 중간 공백은 gaps, none_from 은 창 끝까지 이어지는 꼬리만."""
+    rows, S = _night_rows()
+    ok = [x for x in rows if x["choice"]]
+    ok[:] = [x for x in ok if x["choice"] == S] * 2 + [x for x in ok if x["choice"] != S]      # S 가 주 경로
+    probe = lambda r, t: ("feasible", None, "feasible") if t <= 1327 else ("infeasible", "after_last", "infeasible")
+    c = [x for x in _cautions(rows, ok, 10, _FakeEst(), date(2026, 9, 29), "weekday", probe) if x["code"] == "last_service"][0]
+    assert c["gaps"] == [["22:10", "22:10"]], c
+    assert c["none_from"] == "22:20", c
+    assert c["last_ok"] == "22:07" and c["last_ok_sample"] == "22:05", "GPT 3 — 경계는 1분 단위로 다시 판정"
+
+
+def test_g2_gap_only_no_none_from():
+    rows, S = _night_rows()
+    rows[-2] = _row(1340, "버스 N1", {S: "after_last", "버스 N1": "ok"})
+    rows[-1] = _row(1345, "버스 N1", {S: "after_last", "버스 N1": "ok"})
+    ok = [x for x in rows if x["choice"] == S] * 3 + [x for x in rows if x["choice"] and x["choice"] != S]
+    probe = lambda r, t: ("feasible", None, "feasible") if t <= 1325 else ("infeasible", "after_last", "infeasible")
+    c = [x for x in _cautions(rows, ok, 10, _FakeEst(), date(2026, 9, 29), "weekday", probe) if x["code"] == "last_service"][0]
+    assert c["none_from"] is None and c["gaps"] == [["22:10", "22:10"]], c
+    assert "창 끝까지" not in c["text"]
+
+
+def test_g3_mixed_codes_not_asserted():
+    """GPT 3 — 성립 표본이 없어도 이유가 섞였으면 「모두 막차 이후」라 단정하지 않는다."""
+    rows = [_row(1320, codes=["before_first"]), _row(1325, codes=["after_last"])]
+    cs = _cautions(rows, [], 10, _FakeEst(), date(2026, 9, 29), "weekday", None)
+    assert [c["code"] for c in cs] == ["no_service"] and cs[0]["codes"] == {"before_first": 1, "after_last": 1}, cs
+    rows = [_row(1320, codes=["after_last"]), _row(1325, codes=["after_last", "after_last"])]
+    cs = _cautions(rows, [], 10, _FakeEst(), date(2026, 9, 29), "weekday", None)
+    assert cs[0]["code"] == "last_service" and cs[0]["route"] is None
+
+
+def test_g5_bus_peak_weekday_only():
+    """GPT 5 — 버스 출퇴근 주의(bus_peak)도 평일만."""
+    bus = {"route": "421", "route_id": "R", "a": {}, "b": {}, "stops": []}
+    rows = [_row(1020, "버스 421", {"버스 421": "ok"}, _bus=bus, board=1025)]
+    wk = _cautions(rows, rows, 10, _FakeEst(20), date(2026, 9, 29), "weekday", None)
+    hd = _cautions(rows, rows, 10, _FakeEst(20), date(2026, 9, 27), "holiday", None)
+    assert [c["code"] for c in wk] == ["bus_peak"], wk
+    assert not [c for c in hd if c["code"] == "bus_peak"], hd
+
+
+def test_g4_dir_same_minute():
+    """GPT 4 — 같은 분에 U·D 편성이 있으면 도착 분으로 가른다 · 그래도 안 갈리면 방향을 안 정한다(혼잡도 안 봄)."""
+    class Dep:
+        def __init__(self, m, d):
+            self.min, self.dir = m, d
+
+    class P:
+        def __init__(self, path):
+            self.path = path
+
+    class Lo:
+        def travel_min_on_path(self, line, path, to):
+            return {"U": 12, "D": 5}[path]
+
+    class V:
+        lo = Lo()
+
+        def __init__(self, deps):
+            self.deps = deps
+
+        def candidates(self, line, frm, to, day_type):
+            return [(d, P(d.dir), False) for d in self.deps], {}, False
+
+    e = object.__new__(Estimator)
+    e.v = V([Dep(600, "U"), Dep(600, "D")])
+    assert e._dir_of("02호선", "a", "b", "weekday", 600, 605) == "D", "선택 편성(도착 10:05)은 D"
+    assert e._dir_of("02호선", "a", "b", "weekday", 600, 612) == "U"
+    e.v = V([Dep(600, "U"), Dep(600, "D")])
+    Lo.travel_min_on_path = lambda self, line, path, to: 5
+    assert e._dir_of("02호선", "a", "b", "weekday", 600, 605) is None, "도착까지 같으면 방향 미정 — 혼잡도 생략"
+
+
+def test_g6_window_step_validated():
+    _skip_if_no_data()
+    for kw in ({"step": -5}, {"step": 0}):
+        try:
+            Estimator(_runtime()).estimate(HOTEL, SEONGSU, WEEKDAY, "오후", **kw)
+        except ValueError:
+            continue
+        raise AssertionError(f"잘못된 간격이 통과했다 {kw}")
+    for w in ((200, 300), (700, 700), (1600, 1700)):
+        try:
+            Estimator(_runtime()).estimate(HOTEL, SEONGSU, WEEKDAY, "오후", window=w)
+        except ValueError:
+            continue
+        raise AssertionError(f"잘못된 창이 통과했다 {w}")
+
+
+def test_g1_shared_verifier_never_touched():
+    """GPT 1 — 추정 중에도 공유 판정기의 역산 스위치가 한 번도 바뀌지 않는다(다른 스레드에서 지켜본다)."""
+    _skip_if_no_data()
+    import threading
+    rt = _runtime()
+    v = rt._v
+    assert Estimator(rt).v is not v
+    seen, done = set(), threading.Event()
+
+    def run():
+        try:
+            Estimator(rt).estimate(HOTEL, SEONGSU, WEEKDAY, "저녁")
+            Estimator(rt).estimate("서울역", "이태원", WEEKDAY, "저녁")
+        finally:
+            done.set()
+    th = threading.Thread(target=run)
+    th.start()
+    while not done.is_set():
+        seen.add(v.lfd_enabled)
+        done.wait(0.001)
+    th.join()
+    assert seen == {True} and v.lfd_enabled is True, seen
+
+
+def test_g7_basis_wording():
+    _skip_if_no_data()
+    r, _ = _est(HOTEL, SEONGSU, WEEKDAY, "오후")
+    b = r["eta"]["basis"]
+    assert "80% 예측구간" in b and "하한·상한 추정치의 분위" in b, b
+
+
+def test_g8_no_bike_router_calls_by_default():
+    """결정 8 — 기본 수단(지하철·버스·도보)에서는 자전거 후보를 안 만든다 → 라우터가 떠 있어도 경로 탐색 호출 0.
+    (노트북 2026-09-25: GraphHopper 를 켜 둔 채 reg48 가 1시간 넘게 돌았다 — 표본마다 자전거 경로 탐색)"""
+    _skip_if_no_data()
+    rt = _runtime()
+    v = rt._v
+
+    class Spy:
+        url, calls = "spy", 0
+
+        def available(self):
+            return True
+
+        def route(self, *a, **k):
+            Spy.calls += 1
+            return None
+
+    old = v.bike_router
+    v.bike_router = Spy()
+    try:
+        Estimator(rt).estimate(HOTEL, SEONGSU, WEEKDAY, "오후", window=(720, 740))
+        assert Spy.calls == 0, f"기본 수단에서 자전거 경로 탐색 {Spy.calls}회"
+        assert v.bk is not None, "공유 판정기의 대여소 표는 그대로"
+        Estimator(rt, modes=["subway", "bike"]).estimate(HOTEL, SEONGSU, WEEKDAY, "오후", window=(720, 740))
+        assert Spy.calls > 0, "bike 를 달라고 하면 자전거 후보를 본다(시험이 무는지)"
+    finally:
+        v.bike_router = old
 
 
 if __name__ == "__main__":
