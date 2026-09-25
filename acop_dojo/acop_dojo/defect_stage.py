@@ -62,6 +62,29 @@ def new_failures(catalog: dict, failed: list[str]) -> list[str]:
     return sorted(set(failed) - known)
 
 
+def _pick(catalog: dict, options: list[str]) -> str:
+    """결함 하나를 고른다. 보통·어려움은 안 본 결함을 먼저 낸다 — 본 결함은 답을 외워 넘길 수 있다."""
+    everything = distinct(catalog, options) or options
+    if ask.level() == "easy":
+        return random.choice(everything)
+    seen = progress.load().get("defects", {})
+    fresh = [d for d in everything if d not in seen]
+    if not fresh:
+        print(f"이 트랙의 결함 {len(everything)}개를 모두 한 번씩 봤다. 본 결함이 다시 나온다.")
+        return random.choice(everything)
+    print(f"아직 안 본 결함 {len(fresh)}/{len(everything)}개 가운데서 고른다.")
+    return random.choice(fresh)
+
+
+def _mark_seen(defect_id: str, *, fixed: bool | None = None) -> None:
+    """본 결함을 적는다. 고쳤으면 고쳤다고도 적는다(한 번 고친 기록은 지우지 않는다)."""
+    data = progress.load()
+    entry = data.setdefault("defects", {}).setdefault(defect_id, {"seen": 0, "fixed": False})
+    entry["seen"] += 1
+    entry["fixed"] = bool(entry.get("fixed") or fixed)
+    progress.save(data)
+
+
 def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
          track: str = "all") -> int:
     catalog = defects_mod.load_catalog()
@@ -73,7 +96,7 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
         print(f"{track_def.title}에서 출제할 수 있는 결함이 없다.")
         print("결함 카탈로그가 비어 있다면 먼저 `python dojo.py defects --rebuild`를 실행한다.")
         return 1
-    chosen = defect_id or random.choice(distinct(catalog, options))
+    chosen = defect_id or _pick(catalog, options)
     if chosen not in options:
         print(f"{chosen}은 게이트(출제 가능 여부 검사)를 통과하지 못했다. 출제할 수 있는 결함: {', '.join(options)}")
         return 1
@@ -113,6 +136,7 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
             progress.record_stage("3", status="passed" if passed else "partial",
                                   detail={"defect": chosen, "oracle": "pytest",
                                           "remaining": remaining})
+            _mark_seen(chosen, fixed=passed)
             if passed:
                 progress.claim_ability("불변식 복구", evidence=f"defect:{chosen}", confirmed=True)
                 # 같은 규칙을 나중에 다른 코드에서 다시 묻는다.
@@ -166,5 +190,6 @@ def play(target: Path, *, defect_id: str | None = None, fix: Path | None = None,
                                   "explanation": explanation, "grading": "self",
                                   **tally.detail()})
     progress.claim_ability("불변식 설명", evidence=f"defect:{chosen}", confirmed=False)
+    _mark_seen(chosen)
     review.schedule(defect.invariant, source=chosen)
     return 0
