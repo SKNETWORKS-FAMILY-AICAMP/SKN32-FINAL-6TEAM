@@ -1,26 +1,22 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, CircleAlert } from "lucide-react";
-import { Badge, Button, ButtonLink, PageHeading, Panel, QueryState } from "@/components/ui";
+import { ArrowRight, Check } from "lucide-react";
+import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useTrip } from "@/features/trip/use-trip";
 import { tripGateway, tripKey } from "@/lib/gateway";
 import { routes } from "@/lib/routes";
+import { useSettings, useT } from "@/lib/settings";
 import styles from "./verification.module.css";
 
-const stageLabels = {
-  pending: "대기",
-  running: "진행 중",
-  completed: "완료",
-  failed: "중단",
-};
-
 export function VerificationProgress({ tripId }: { tripId: string }) {
+  const t = useT();
+  const { language } = useSettings();
   const tripQuery = useTrip(tripId);
   const queryClient = useQueryClient();
   const retry = useMutation({
-    mutationFn: () => tripGateway.retryVerification(tripId),
-    onSuccess: (trip) => queryClient.setQueryData(tripKey(tripId), trip),
+    mutationFn: () => tripGateway.retryVerification(tripId, language),
+    onSuccess: (trip) => queryClient.setQueryData(tripKey(tripId, language), trip),
   });
   const trip = tripQuery.data;
 
@@ -30,61 +26,42 @@ export function VerificationProgress({ tripId }: { tripId: string }) {
 
   const { verification } = trip;
   const failed = verification.status === "failed";
-  const finished = verification.status === "completed";
-  const needsReview = verification.results.some((result) => result.status === "needs_review");
-  const completedStages = verification.stages.filter((stage) => stage.status === "completed").length;
-  const currentStage = verification.stages.find((stage) => stage.status === "running" || stage.status === "failed");
+  const ready = verification.status === "completed";
+  const current = verification.stages.find((stage) => stage.status === "running" || stage.status === "failed");
   const progress = Math.round(Math.min(100, Math.max(0, verification.progress)));
-  const heading = failed
-    ? "검증이 잠시 중단되었어요"
-    : finished
-      ? needsReview ? "확인이 필요한 항목이 있어요" : "검증 결과가 준비되었어요"
-      : "여행 계획을 확인하고 있어요";
-  const stageHeading = failed
-    ? `${currentStage?.label ?? "일정 검증"} 중단`
-    : finished
-      ? needsReview ? "검증 결과 확인 필요" : "전체 일정 검증 완료"
-      : `${currentStage?.label ?? "여행 계획 확인"} 중`;
+  const stageState = { completed: t("완료", "Done"), running: t("확인 중", "Checking"), failed: t("중단", "Stopped"), pending: t("대기", "Next") };
 
-  return (
-    <div className={styles.progressPage}>
-      <PageHeading eyebrow="CHECKING YOUR PLAN" title={heading} description={trip.title} />
-      <Panel>
-        <div className={styles.progressTop}>
-          <div>
-            <span className={styles.muted}>전체 검증 진행률</span>
-            <h2 className={styles.stageHeading} aria-live="polite" aria-atomic="true">{stageHeading}</h2>
-          </div>
-          <div className={styles.percent}>{progress}<small>%</small></div>
-        </div>
-        <div className={styles.track} role="progressbar" aria-label="전체 검증 진행률" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-valuetext={`${progress}% · ${stageHeading}`}>
-          <div className={styles.trackFill} style={{ width: `${progress}%` }} />
-        </div>
-        <div className={styles.progressMeta}>
-          <span>{verification.stages.length}개 단계 중 {completedStages}개 완료</span>
-          <span>여행 계획 → 장소 → 이동 → 전체 일정</span>
-        </div>
-        <ol className={styles.stageList} aria-label="검증 단계">
-          {verification.stages.map((stage, index) => (
-            <li key={stage.id} className={`${styles.stage} ${stage.status === "running" ? styles.activeStage : ""} ${stage.status === "completed" ? styles.completedStage : ""}`} aria-current={stage.status === "running" ? "step" : undefined}>
-              <span className={styles.stageCircle} aria-hidden="true">{stage.status === "completed" ? <Check size={15} /> : index + 1}</span>
-              <div><h3>{stage.label}</h3><p>{stage.description}</p></div>
-              <span className={styles.stageStatus}>{stageLabels[stage.status]}</span>
-            </li>
-          ))}
-        </ol>
-        {failed && <div className={styles.warning} role="alert"><CircleAlert size={18} aria-hidden="true" /><span>{verification.error || "검증을 완료하지 못했어요. 입력한 계획을 유지한 채 다시 시도할 수 있어요."}</span></div>}
-        {finished && needsReview && <div className={styles.warning}><Badge tone="warning">확인 필요</Badge><span>모든 단계를 처리했지만 검증을 마치지 못한 항목이 있어요. 결과에서 확인해 주세요.</span></div>}
-        {retry.error && <p className={styles.error} role="alert">{retry.error.message}</p>}
-        <div className={styles.progressFooter}>
-          <p>{failed ? "입력한 여행 계획과 확인된 내용은 보존돼요." : finished ? "결과를 확인한 뒤 여행 관리를 시작할 수 있어요." : "검증이 끝나면 결과를 확인할 수 있어요."}</p>
-          {failed ? (
-            <Button type="button" variant="primary" disabled={retry.isPending} onClick={() => retry.mutate()}>{retry.isPending ? "다시 요청하는 중…" : "검증 다시 시도"}</Button>
-          ) : finished ? (
-            <ButtonLink href={routes.results(tripId)} variant="primary">결과 확인 <ArrowRight size={16} aria-hidden="true" /></ButtonLink>
-          ) : <Button type="button" variant="primary" disabled>결과 확인 <ArrowRight size={16} aria-hidden="true" /></Button>}
-        </div>
-      </Panel>
-    </div>
-  );
+  return <>
+    <PageHeading eyebrow="A LITTLE CHECK, A BETTER JOURNEY"
+      title={failed ? t("잠시 쉬어가는 중이에요.", "Let’s try that once more.") : ready ? t("여행 계획을 살펴봤어요.", "Your plan is ready to review.") : t("더 편한 여행을 준비해요.", "Getting your journey ready.")}
+      description={t("계획부터 이동까지, 차근차근 확인하는 과정이에요.", "From your plan to travel details, one step at a time.")} />
+    <Panel>
+      <div className={styles.progressTop}>
+        <div><Eyebrow>{t("여행 계획 확인", "CHECKING YOUR PLAN")}</Eyebrow><h2 aria-live="polite" aria-atomic="true">{ready ? t("결과가 준비되었어요", "Your results are ready") : current?.label}</h2></div>
+        <strong className={styles.percent}>{progress}<small>%</small></strong>
+      </div>
+      <div className={styles.track} role="progressbar" aria-label={t("계획 확인 진행률", "Plan check progress")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+        <div className={styles.trackFill} style={{ width: `${progress}%` }} />
+      </div>
+      <ol className={styles.stageList}>
+        {verification.stages.map((stage, index) => (
+          <li key={stage.id} className={styles.stage} data-status={stage.status} aria-current={stage.status === "running" ? "step" : undefined}>
+            <span className={styles.stageNumber} aria-hidden="true">{stage.status === "completed" ? <Check size={18} strokeWidth={1.6} /> : index + 1}</span>
+            <div><h3>{stage.label}</h3><p>{stage.description}</p></div>
+            <span className={styles.stageState}>{stageState[stage.status]}</span>
+          </li>
+        ))}
+      </ol>
+      {failed && <p className={styles.warning} role="alert">{verification.error}</p>}
+      {retry.error && <p className={styles.error} role="alert">{retry.error.message}</p>}
+      <div className={styles.actions}>
+        <ButtonLink href={`${routes.newTrip}?from=${encodeURIComponent(tripId)}`}>{t("계획 보기", "View plan")}</ButtonLink>
+        {failed
+          ? <Button variant="primary" disabled={retry.isPending} onClick={() => retry.mutate()}>{retry.isPending ? t("다시 요청하는 중…", "Retrying…") : t("다시 시도하기", "Try again")}</Button>
+          : ready
+            ? <ButtonLink href={routes.results(tripId)} variant="primary">{t("결과 확인하기", "View results")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></ButtonLink>
+            : <Button variant="primary" disabled>{t("결과 확인하기", "View results")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>}
+      </div>
+    </Panel>
+  </>;
 }

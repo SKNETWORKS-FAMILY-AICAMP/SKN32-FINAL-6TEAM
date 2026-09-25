@@ -1,3 +1,4 @@
+import type { Language } from "@/lib/i18n";
 import type { Coordinates } from "../map/model";
 
 export type DemoScenario = "success" | "needs-review" | "failed";
@@ -29,11 +30,8 @@ export interface TripStop {
   endTime?: string;
   originalTime?: string;
   title: string;
-  area: string;
-  kind: string;
   booking: "booked" | "none" | "unknown";
   notes: string;
-  movement?: string;
   /** WGS84 coordinates supplied by the backend; missing means no map pin. */
   coordinates?: Coordinates | null;
 }
@@ -48,7 +46,6 @@ export interface TripMessage {
 /** Web view model; not a claim that the existing Case API returns this contract. */
 export interface Trip {
   id: string;
-  title: string;
   source: string;
   startDate: string;
   endDate: string;
@@ -69,10 +66,11 @@ export interface CreateTripInput {
   scenario?: DemoScenario;
 }
 
+/** Every call names the reader's language; generated text comes back in that language. */
 export interface TripGateway {
-  createTrip(input: CreateTripInput): Promise<Trip>;
-  getTrip(tripId: string): Promise<Trip>;
-  retryVerification(tripId: string): Promise<Trip>;
-  startTrip(tripId: string): Promise<Trip>;
-  sendMessage(tripId: string, message: string): Promise<Trip>;
+  createTrip(input: CreateTripInput, language: Language): Promise<Trip>;
+  getTrip(tripId: string, language: Language): Promise<Trip>;
+  retryVerification(tripId: string, language: Language): Promise<Trip>;
+  startTrip(tripId: string, language: Language): Promise<Trip>;
+  sendMessage(tripId: string, message: string, language: Language): Promise<Trip>;
 }

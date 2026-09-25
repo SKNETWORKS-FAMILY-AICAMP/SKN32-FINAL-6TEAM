@@ -6,10 +6,9 @@ export const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value)
 });
 export const timeSchema = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
 export const scenarioSchema = z.enum(["success", "needs-review", "failed"]);
-export const inputSchema = z.object({
-  source: z.string().trim().min(1, "시간과 장소가 있는 여행 계획을 입력해 주세요.").max(12000, "여행 계획은 12,000자 이내로 입력해 주세요."),
-  scenario: scenarioSchema.optional(),
-});
+export const stageIds = ["plan", "places", "conditions", "overall"] as const;
+/** Why a demo result looks the way it does. Text is produced in the reader's language. */
+export const reasonSchema = z.enum(["unverified", "buffer", "booked", "kept"]);
 
 const stopSchema = z.object({
   id: z.string().uuid(),
@@ -18,11 +17,8 @@ const stopSchema = z.object({
   endTime: timeSchema.optional(),
   originalTime: timeSchema.optional(),
   title: z.string().min(1),
-  area: z.string(),
-  kind: z.string(),
   booking: z.enum(["booked", "none", "unknown"]),
   notes: z.string(),
-  movement: z.string().optional(),
   coordinates: z.object({
     lat: z.number().finite().min(-90).max(90),
     lng: z.number().finite().min(-180).max(180),
@@ -30,12 +26,11 @@ const stopSchema = z.object({
 });
 
 export const storedTripSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   scenario: scenarioSchema,
   startedAt: z.number().finite().nonnegative(),
   trip: z.object({
     id: z.string().uuid(),
-    title: z.string().min(1),
     source: z.string().min(1).max(12000),
     startDate: dateSchema,
     endDate: dateSchema,
@@ -45,9 +40,7 @@ export const storedTripSchema = z.object({
       status: z.enum(["running", "completed", "failed"]),
       progress: z.number().min(0).max(100),
       stages: z.array(z.object({
-        id: z.string(),
-        label: z.string(),
-        description: z.string(),
+        id: z.enum(stageIds),
         status: z.enum(["pending", "running", "completed", "failed"]),
       })).length(4),
       results: z.array(z.object({
@@ -58,10 +51,8 @@ export const storedTripSchema = z.object({
         title: z.string(),
         originalValue: z.string(),
         proposedValue: z.string().optional(),
-        reason: z.string(),
-        impact: z.string(),
+        reason: reasonSchema,
       })),
-      error: z.string().optional(),
     }),
     messages: z.array(z.object({
       id: z.string().uuid(),

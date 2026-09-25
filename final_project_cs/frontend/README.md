@@ -1,6 +1,6 @@
 # triPilot 서비스 프론트엔드
 
-사용자 웹·개발팀 콘솔·서비스 관리자 웹을 개발할 공간이다. 전체 담당과 기존 콘솔·평가 코드의 위치는 [UI·검증 작업 안내](https://github.com/roroblack/A-COP/blob/role-ui-eval/UI_EVAL_WORKSPACE.md)를 본다.
+사용자 웹·개발팀 콘솔·서비스 관리자 웹을 개발할 공간이다. 전체 담당과 기존 콘솔·평가 코드의 위치는 [UI·검증 작업 안내](UI_EVAL_WORKSPACE.md)를 본다.
 
 **개발 우선순위(2026-09-14 사용자 결정): 웹 1순위 → Personal Agent / MCP 2순위 → 모바일 앱 3순위 보류.** 웹은 PC·모바일 브라우저를 포함한다. 앱은 배포 시 개발자 등록 문제로 이번 개발·배포 범위에서 제외하며, 프로젝트 종료까지 적용하지 않을 가능성이 높다. 재개 여부·시점은 미정이다.
 
@@ -8,17 +8,17 @@
 
 | 앱 | 위치 | 기술스택 | 상태 |
 |---|---|---|---|
-| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 웹 MVP 1차 5개 화면 구현, 명시적인 데모 어댑터로 실행 |
+| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 2026-09-23 목업 기준 소개·온보딩·5개 화면 구현, 한/영 전환, 명시적인 데모 어댑터로 실행 |
 | 개발팀 콘솔 | [apps/dev-console](apps/dev-console/README.md) | Next.js 16 + React 19 + TypeScript | 팀별·코어 통합 테스트, 사례·A/B 비교, 샘플 어댑터 구현 |
 | 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js + React + TypeScript | 웹 개발 범위. 폴더 준비, 앱 초기화 전 |
 | 모바일 앱 | [apps/mobile](apps/mobile/README.md) | Expo + React Native + TypeScript — 기존 선택 보존 | 3순위 보류. 폴더만 예약, 이번 초기화·개발·배포 제외 |
 
 ## 기존 프로그램과 연결
 
-- 백엔드는 `../final_project_cs/app`에 있다. 프론트가 사용할 API를 통해 연결한다.
-- 기존 개발자 콘솔은 `../final_project_ui`에 있다. 관리자 웹과 콘솔의 목적을 구분하고, 기능을 옮길 때 재사용 범위를 정한다.
+- 백엔드는 `../app`에 있다. 프론트가 사용할 API를 통해 연결한다.
+- 기존 개발자 콘솔은 `../../final_project_ui`에 있다. 관리자 웹과 콘솔의 목적을 구분하고, 기능을 옮길 때 재사용 범위를 정한다.
 - 새 개발팀 콘솔은 `apps/dev-console`에서 별도 실행한다. 개발 포트는 3200이며 기존 Python 콘솔을 변경하거나 이식하지 않았다. [개발 기준](apps/dev-console/DEVELOPMENT.md)과 [연결 계약 협의안](apps/dev-console/API_CONTRACT.md)을 따른다.
-- 평가 프로그램은 `../final_project_cs/eval`에 있다. 화면 코드와 별개로 실행하고 결과를 표시한다.
+- 평가 프로그램은 `../eval`에 있다. 화면 코드와 별개로 실행하고 결과를 표시한다.
 
 ## 앱별 개발 기준
 
