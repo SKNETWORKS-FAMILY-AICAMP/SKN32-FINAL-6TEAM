@@ -5,26 +5,53 @@ import json
 from typing import Any
 from uuid import UUID
 
+import contextvars
+from urllib.parse import quote, urlparse
+
 import httpx
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 import app.core.settings as settings_module
 from app import composition
-from app.core.project_config import ProjectConfigError, load_project_config
+from app.core.project_config import ProjectConfigError
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
 from app.infrastructure.db.session import get_connection
 from app.core.remote_team.executor import LocalTeamExecutor
 from app.infrastructure.rag import retriever as rag_retriever
 from app.presentation.security import _development_key, masked
-from app.presentation.ui import theme
+from app.presentation.ui import auth, theme
 
-router = APIRouter(prefix="/ui", tags=["operations-ui"])
-ops_router = APIRouter(tags=["operations-ui"])
+#: 이 요청의 운영자. 관문(`_require_login`)이 채우고 `_page` 가 머리에 적는다.
+_OPERATOR: contextvars.ContextVar[auth.Operator | None] = contextvars.ContextVar("ui_operator", default=None)
+
+
+async def _require_login(request: Request) -> auth.Operator:
+    """★`[2026-09-23]` **운영 화면 전체의 관문.** 로그인 안 했으면 로그인 화면으로 보낸다.
+
+    전에는 이 화면 전체에 로그인이 없었는데, 승인·바깥함·위임 버튼이 **서버가 scope 키를 스스로
+    만들어** API 를 불렀다 — `/ui` 에 닿기만 하면 인증 없이 승인 권한을 쓰는 구조였다(D-CS-007).
+    ★POST 도 같은 데로 보낸다 — 로그인 안 한 요청의 쓰기는 **아무것도 하지 않는다.**
+    ★`async` 인 이유 — 동기 의존성은 스레드풀에서 돌아 거기서 설정한 `_OPERATOR` 가 요청 처리로
+      **돌아오지 않는다**(실측: 화면 머리에 운영자 이름이 안 나왔다).
+    """
+    operator = auth.read(request.cookies.get(auth.COOKIE))
+    if operator is None:
+        target = request.url.path + (f"?{request.url.query}" if request.url.query else "")
+        raise HTTPException(303, headers={"Location": "/ui/login?next=" + quote(target, safe="")})
+    request.state.operator = operator
+    _OPERATOR.set(operator)
+    return operator
+
+
+router = APIRouter(prefix="/ui", tags=["operations-ui"], dependencies=[Depends(_require_login)])
+ops_router = APIRouter(tags=["operations-ui"], dependencies=[Depends(_require_login)])
 # ★VOC 화면만 따로 뗀다. `voc` 모듈을 끄면 이 라우터를 등록하지 않아 /ui/voc 가
 #   404 가 된다(`docs/handoff/08` §2). 한 라우터에 섞어 두면 끌 방법이 없다.
-voc_router = APIRouter(prefix="/ui", tags=["operations-ui"])
+voc_router = APIRouter(prefix="/ui", tags=["operations-ui"], dependencies=[Depends(_require_login)])
+#: 로그인·로그아웃은 관문 **밖**이다(안에 두면 로그인하러 갈 수가 없다).
+login_router = APIRouter(prefix="/ui", tags=["operations-ui"])
 
 
 #: 지금 화면에 낼 상단 메뉴. `mount_ui()` 가 기동할 때 한 번 정한다.
@@ -57,7 +84,90 @@ def _json(value: Any) -> str:
 
 
 def _page(title: str, body: str, *, current: str = "", lede: str = "") -> HTMLResponse:
-    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_NAV))
+    operator = _OPERATOR.get()
+    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_NAV,
+                                   who=operator.id if operator else ""))
+
+
+def _forbidden(request: Request, scope: str, what: str, back: str) -> HTMLResponse:
+    """★권한이 없으면 **아무것도 하지 않고** 그렇다고 말한다. 조용한 303 으로 삼키지 않는다."""
+    operator: auth.Operator = request.state.operator
+    return HTMLResponse(theme.page("권한 없음", theme.card(
+        f"{_safe(what)} 권한이 없습니다",
+        f"<p>이 동작에는 <code>{_safe(scope)}</code> 가 필요합니다. "
+        f"<b>{_safe(operator.id)}</b> 계정에는 없습니다.</p>"
+        "<p>아무것도 바뀌지 않았습니다.</p>"
+        f"<p><a href='{_safe(back)}'>돌아가기</a></p>", tone="critical"),
+        nav=_NAV, who=operator.id), status_code=403)
+
+
+def _safe_next(value: str | None) -> str:
+    """★로그인 뒤 돌아갈 곳은 **이 앱 안의 `/ui`·`/ops`** 로만. 바깥 주소를 받으면 로그인 화면이
+    피싱 발판이 된다(`?next=https://…`)."""
+    target = (value or "").strip()
+    parsed = urlparse(target)
+    if (parsed.scheme or parsed.netloc or target.startswith("//")
+            or not (target.startswith("/ui") or target.startswith("/ops"))):
+        return "/ui/cases"
+    return target
+
+
+def _login_page(message: str = "", *, next_url: str = "/ui/cases", status: int = 200) -> HTMLResponse:
+    try:
+        configured, broken = bool(auth.operators()), ""
+    except auth.OperatorConfigError as exc:
+        configured, broken = False, str(exc)
+    if broken:
+        note = theme.notice(f"운영자 설정이 잘못됐습니다 — {_safe(broken)}", tone="critical")
+    elif not configured:
+        note = theme.notice("운영자 계정이 하나도 설정되지 않았습니다. 이 화면은 닫혀 있습니다 — "
+                            "python -m scripts.ui_operator 로 계정 한 줄을 만들어 ACOP_UI_OPERATORS 에 "
+                            "넣고 앱을 다시 띄우십시오.", tone="critical")
+    else:
+        note = theme.notice(message, tone="critical") if message else ""
+    form = ("<form method='post' action='/ui/login' class='card'>"
+            f"<input type='hidden' name='next' value='{_safe(next_url)}'>"
+            "<p><label>운영자 id<br><input name='operator_id' autocomplete='username' required></label></p>"
+            "<p><label>비밀번호<br><input name='password' type='password' "
+            "autocomplete='current-password' required></label></p>"
+            "<p><button type='submit'>로그인</button></p></form>")
+    return HTMLResponse(theme.page("로그인", note + form, nav=(),
+                                   lede="운영 화면은 로그인한 운영자만 봅니다."), status_code=status)
+
+
+@login_router.get("/login", response_class=HTMLResponse)
+def login_form(next: str | None = None) -> HTMLResponse:  # noqa: A002 — 쿼리 이름이 next 다
+    return _login_page(next_url=_safe_next(next))
+
+
+@login_router.post("/login")
+async def login(request: Request):
+    form = await request.form()
+    operator_id = str(form.get("operator_id", "")).strip()
+    next_url = _safe_next(str(form.get("next", "")))
+    try:
+        remaining = auth.locked(operator_id)
+        operator = None if remaining else auth.authenticate(operator_id, str(form.get("password", "")))
+    except auth.OperatorConfigError:
+        return _login_page(next_url=next_url, status=503)
+    if remaining:
+        return _login_page(f"로그인 실패가 많아 잠시 막혔습니다 — 약 {int(remaining // 60) + 1}분 뒤 "
+                           "다시 시도하십시오.", next_url=next_url, status=429)
+    if operator is None:
+        # ★없는 id 와 틀린 비밀번호를 같은 문장으로 — 어느 id 가 있는지 알려 주지 않는다
+        return _login_page("id 또는 비밀번호가 맞지 않습니다.", next_url=next_url, status=401)
+    hours = float(settings_module.get_guardrails().get("security.ui_session_hours"))
+    response = RedirectResponse(next_url, status_code=303)
+    response.set_cookie(auth.COOKIE, auth.issue(operator), httponly=True, samesite="strict",
+                        secure=request.url.scheme == "https", path="/", max_age=int(hours * 3600))
+    return response
+
+
+@login_router.post("/logout")
+def logout() -> RedirectResponse:
+    response = RedirectResponse("/ui/login", status_code=303)
+    response.delete_cookie(auth.COOKIE, path="/")
+    return response
 
 
 def _legacy_page(title: str, body: str) -> HTMLResponse:
@@ -500,14 +610,17 @@ def approvals() -> HTMLResponse:
 
 
 @router.post("/approvals/{case_id}/{action_id}")
-async def approve(request: Request, case_id: UUID, action_id: UUID) -> RedirectResponse:
+async def approve(request: Request, case_id: UUID, action_id: UUID):
+    operator: auth.Operator = request.state.operator
+    if not operator.can("action:approve"):
+        return _forbidden(request, "action:approve", "승인", "/ui/approvals")
     form = await request.form()
     decision = str(form.get("decision", "rejected"))
     settings = settings_module.get_settings()
     token = _development_key("action:approve", settings.secret_key)
     transport = httpx.ASGITransport(app=request.app)
     async with httpx.AsyncClient(transport=transport, base_url=str(request.base_url).rstrip("/")) as client:
-        response = await client.post(f"/v1/cases/{case_id}/actions/{action_id}/approve", headers={"Authorization": f"Bearer {token}"}, json={"decision": decision, "approver_id": "ui-operator"})
+        response = await client.post(f"/v1/cases/{case_id}/actions/{action_id}/approve", headers={"Authorization": f"Bearer {token}"}, json={"decision": decision, "approver_id": operator.id})
     # ★두 분기가 같은 응답을 내고 있었다 — 승인이 실패해도 운영자는 목록으로 돌아올 뿐
     #   무엇이 잘못됐는지 알 수 없었다. 승인은 되돌릴 수 없는 행위인데 실패를 삼키면
     #   "눌렀으니 됐겠지" 로 넘어간다 (CLAUDE.md §3 — 조용한 스킵을 만들지 않는다).
@@ -709,24 +822,17 @@ def _confirm_page(customer_id: str, actor_id: str, note: str, detail: dict[str, 
 @router.post("/delegations")
 async def change_delegation(request: Request):
     """맡기기 · 거두기 — 도메인 API 로 보내고 **실패하면 사유를 화면에 띄운다.**"""
-    if not getattr(settings_module.get_settings(), "ui_delegation_write_enabled", False):
-        # ★`[2026-09-22]` `/ui/*` 에는 로그인이 없다 — 인증 없이 닿는 화면에 **서 있는 권한**을
-        #   주는 버튼을 두지 않는다(D-CS-001 이 같은 이유로 Composer 화면을 지웠다).
-        #   켜려면 `ACOP_UI_DELEGATION_WRITE_ENABLED=true`, 그 전에 화면 앞에 인증을 둔다.
-        return _page("위임 처리 막힘", theme.card(
-            "이 화면에서는 위임을 바꿀 수 없습니다",
-            "<p>운영 화면에는 로그인이 없습니다. <b>위임은 한 건 승인이 아니라 서 있는 권한</b>이라 "
-            "인증 없는 화면에서 주고 거두지 않습니다.</p>"
-            "<p>주고 거두기는 scope 가 걸린 <code>POST /v1/delegations/{customer_id}/grant</code>"
-            "·<code>/revoke</code> 로 합니다(<code>delegation:write</code>).</p>"
-            "<p>이 화면에서 굳이 써야 하면 <code>ACOP_UI_DELEGATION_WRITE_ENABLED=true</code> 로 켜되, "
-            "<b>화면 앞에 인증을 먼저 두십시오.</b></p>"
-            "<p><a href='/ui/delegations'>목록으로 돌아가기</a></p>", tone="critical"),
-            current="/ui/delegations")
+    # ★`[2026-09-23]` 전에는 `ui_delegation_write_enabled`(기본 꺼짐)로 막았다 — 이 화면에 로그인이
+    #   없어서였다. 이제 관문이 로그인을 요구하고, 위임을 바꾸려면 **그 운영자에게 `delegation:write`**
+    #   가 있어야 한다. 스위치 대신 권한이 막는다(D-CS-007).
+    operator: auth.Operator = request.state.operator
+    if not operator.can("delegation:write"):
+        return _forbidden(request, "delegation:write", "위임 변경", "/ui/delegations")
     form = await request.form()
     action = str(form.get("action", ""))
     customer_id = str(form.get("customer_id", "")).strip()
-    actor_id = str(form.get("actor_id", "")).strip()
+    # ★누가 했는지는 **로그인한 운영자**다. 입력 칸의 값을 믿으면 남의 이름으로 맡기고 거둘 수 있다.
+    actor_id = operator.id
     note = str(form.get("note", "")).strip()
 
     if action not in ("grant", "revoke"):
@@ -795,6 +901,9 @@ def outbox() -> HTMLResponse:
 
 @router.post("/ops/outbox/{message_id}")
 async def resolve_outbox(request: Request, message_id: UUID):
+    operator: auth.Operator = request.state.operator
+    if not operator.can("action:approve"):
+        return _forbidden(request, "action:approve", "바깥함 해소", "/ops/outbox")
     form = await request.form()
     token = _development_key("action:approve", settings_module.get_settings().secret_key)
     transport = httpx.ASGITransport(app=request.app)
@@ -803,7 +912,7 @@ async def resolve_outbox(request: Request, message_id: UUID):
             f"/v1/outbox/{message_id}/resolve",
             headers={"Authorization": f"Bearer {token}"},
             json={"resolution": str(form.get("resolution", "")), "note": str(form.get("note", "")),
-                  "resolved_by": "ui-operator"},
+                  "resolved_by": operator.id},
         )
     if response.is_error:
         return _page("Outbox 처리 실패", theme.card(

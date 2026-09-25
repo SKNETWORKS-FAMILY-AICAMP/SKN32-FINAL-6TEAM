@@ -1,0 +1,83 @@
+# develop 관문 — 빠르게 도는 것만 둔다(2026-09-23 신설).
+#   린트: 버그만 잡는 최소 규칙(F·E9). 규칙 범위는 루트 ruff.toml 이 정한다.
+#   시험: DB 없이도 대부분 도는 architecture·contract·unit.
+#         contract·unit 중 9개 파일이 DB 를 쓰기 때문에 PostgreSQL 은 띄운다.
+#   통합·e2e·security 와 Docker 빌드는 main 관문(ci-main.yml)에서 본다.
+#   실제 LLM 호출 시험(live)은 pytest.ini 가 기본으로 빼 둔다.
+name: CI (develop)
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+concurrency:
+  group: ci-develop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ruff (F·E9)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # 판을 고정한다 — 새 판이 규칙을 넓히면 관문이 갑자기 붉어진다.
+      - run: pip install ruff==0.16.8
+      - run: ruff check . --output-format=github
+
+  test:
+    name: architecture · contract · unit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # pgvector 확장이 들어 있는 이미지. 기본 postgres 이미지로는 벡터 열을 만들지 못한다.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: acop_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      # 값은 전부 시험용 가짜다. 실제 키·서버 주소는 넣지 않는다.
+      ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/acop_ci
+      ACOP_LLM_PROVIDER: mock
+      ACOP_OPENAI_API_KEY: sk-dummy-for-ci
+      ACOP_LLM_MODEL: gpt-4o-mini
+      ACOP_EMBEDDING_MODEL: text-embedding-3-small
+      ACOP_TENANT_ID: demo
+      ACOP_SECRET_KEY: dummy-secret-key-for-ci-0123456789abcdef
+      ACOP_COMPOSER_JWT_SECRET: dummy-composer-jwt-secret-for-ci-0123456789
+      ACOP_COMPOSER_ISSUER_SECRET: dummy-composer-issuer-secret-for-ci-0123456789
+      # ★acop_composer(설정 변경 관리 채널)의 소스는 final_project_sample/ 에 있고
+      #   requirements.txt 에는 없다. sample 을 pip 로 깔면 sample 의 app 패키지까지 깔려
+      #   cs 의 app 과 이름이 겹치므로, 경로 뒤쪽에 붙여 acop_composer 만 찾게 한다.
+      #   (로컬은 sample 이 편집 모드로 설치돼 있어서 이 문제가 안 드러났다 — 2026-09-24)
+      PYTHONPATH: ${{ github.workspace }}/final_project_sample
+    defaults:
+      run:
+        working-directory: final_project_cs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: final_project_cs/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: DB 스키마 만들기
+        run: python -m app.infrastructure.db.migrate
+      # 새 DB 에는 프롬프트가 없다. 계약 시험이 배포 중인 프롬프트를 확인하므로 먼저 등록한다.
+      - name: 프롬프트 등록
+        run: python -m scripts.register_prompts
+      # ☆2026-09-24 test_deactivating_does_not_erase_history 를 여기서 빼 두었다가 되돌렸다 —
+      #   「DB 에 비활성 프롬프트가 있나」(개발 DB 이력)를 세던 시험을, 시험 안에서 한 판을 올리고
+      #   바꾼 뒤 옛 판이 남는지 보게(롤백되는 트랜잭션 안에서) 고쳤다. 빈 DB 에서도 성립한다.
+      - name: 시험
+        run: >-
+          python -m pytest tests/architecture tests/contract tests/unit -q

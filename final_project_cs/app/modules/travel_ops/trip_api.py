@@ -37,11 +37,10 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from app.core import settings as settings_module
 from app.core.idempotency import idempotency_key
-import json
 
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
@@ -192,6 +191,8 @@ from .change_link import change_token, change_url, change_view, render_change  #
 from .itinerary_checks import Part, check_itinerary, parts_from_items
 from .density import measure_density
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
+from .route_uses import route_problems  # noqa: E402
+from .survey import apply_survey  # noqa: E402
 
 
 # ── 보기 ────────────────────────────────────────────────────────
@@ -343,6 +344,15 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """★등록의 **유일한** 본문이다. `/v1/trips` 도 `/v1/trips/plan?register=true` 도 여기로
         들어온다 — 생성기가 판정을 건너뛰는 길을 만들지 않으려고 하나로 둔다."""
         store = TripStore(tenant)
+        # ★`[2026-09-24]` 여행 시작 설문(`constraints.survey`, D-020). 틀린 모양은 거절하고, 판정에 쓰는
+        #   몫(16번 여유 → 밀도 목표)만 채운다. 사용자가 밀도를 직접 줬으면 그것이 이긴다.
+        try:
+            request = request.model_copy(update={"constraints": apply_survey(
+                request.constraints, (_seoul(it.starts_at).date() for it in request.items))})
+        except ValidationError as exc:
+            raise _error(422, "invalid_survey", "constraints.survey 가 설문 계약과 다르다",
+                         problems=[{"field": ".".join(str(p) for p in e["loc"]), "reason": e["msg"]}
+                                   for e in exc.errors()]) from None
         keys = [p.key for p in request.places]
         if len(set(keys)) != len(keys):
             raise _error(422, "duplicate_place_key", "places[].key must be unique")
@@ -353,6 +363,15 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise _error(422, "unknown_place", f"item {it.seq} refers to unknown place")
             if it.route is not None and it.route not in request.routes:
                 raise _error(422, "unknown_route", f"item {it.seq} refers to unknown route")
+        # ★`[2026-09-23]` `uses` 표기를 **받을 때** 본다. 이 값은 운행·통제 사건과 문자열로
+        #   대조돼서, 표기가 다르면 사건이 있어도 못 잡고 오류도 안 난다 — 전에는 `잠실역`·
+        #   `02호선`·`버스:성수동` 을 그대로 받아 두고 나중에 조용히 놓쳤다. 틀린 값을 **전부**
+        #   이유와 함께 돌려준다. 계약 `wiki/external/rest-endpoints.md` 「options[].uses」 절.
+        bad_uses = route_problems(request.routes)
+        if bad_uses:
+            raise _error(422, "invalid_route_uses",
+                         f"routes 의 uses 표기 {len(bad_uses)}건이 계약과 다르다 — 이대로 받으면 "
+                         "그 구간의 운행·통제 사건을 대조하지 못한다", problems=bad_uses)
         # ★`[2026-09-21]` 받을 때 **코드로 판정**한다(v11 §12 DoD-2). 불가능하면 이유와 완화 조건을
         #   붙여 거절한다(DoD-3) — 전에는 참조·순서만 보고 그대로 받아 감시가 뒤에서 고쳤다.
         violations = check_itinerary(

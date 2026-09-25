@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot · 서울 하루 여행 시연</title>
+<style>
+:root{color-scheme:light;--paper:#f3f5f3;--surface:#fff;--soft:#f6f7f5;--ink:#24392f;--muted:#6d7c73;--line:#dce3dd;--green:#2e6047;--green-soft:#e9f2eb;--warn:#916425;--warn-soft:#fbf3e4;--red:#ae4b3c;--red-soft:#fceeea;--shadow:0 8px 28px #25392f0d;font-family:"Segoe UI","Malgun Gothic",sans-serif;font-size:14px;line-height:1.6;background:var(--paper);color:var(--ink)}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button,a,input,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #77a58a;outline-offset:3px}button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 12px}button:hover:not(:disabled){background:var(--soft)}button.primary{background:var(--green);border-color:var(--green);color:#fff}button.primary:hover:not(:disabled){background:#244e39}button.quiet{background:transparent;border-color:transparent}h1,h2,h3,p{margin:0}h1{font-size:23px;font-weight:600;letter-spacing:-.8px}h2{font-size:17px;font-weight:600}h3{font-size:14px;font-weight:600}strong{font-weight:600}small,.muted{color:var(--muted);font-size:12px}.eyebrow{font-size:10px;letter-spacing:1.4px;font-weight:600;color:var(--muted)}.row{display:flex;align-items:center;gap:10px}.wrap{flex-wrap:wrap}.between{justify-content:space-between}.pill{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 8px;border-radius:5px;font-size:11px;background:var(--soft);border:1px solid var(--line);line-height:1.5}.pill.good{color:var(--green);border-color:#c7dfce;background:var(--green-soft)}.pill.warn{color:var(--warn);border-color:#ead9b9;background:var(--warn-soft)}.pill.bad{color:var(--red);border-color:#efcabe;background:var(--red-soft)}.dot{width:6px;height:6px;border-radius:50%;background:#5b986a;display:inline-block;flex-shrink:0}.hidden,[hidden]{display:none!important}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--line);padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-size:24px;font-weight:650;letter-spacing:-1.1px;display:flex;gap:10px;align-items:center}.brand-mark{width:30px;height:30px;background:var(--green);border-radius:9px;color:#fff;display:grid;place-items:center;font-size:20px}.topnav{display:flex;align-items:center;gap:9px}.topnav .active{background:var(--green-soft);color:var(--green);border-color:transparent}.avatar{width:30px;height:30px;border-radius:50%;background:#ede5db;color:#795e41;display:grid;place-items:center;font-size:11px;font-weight:600}.tripbar{padding:18px 28px;min-height:98px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--surface)}.tripbar h1{margin:2px 0 5px}.tripbar .tagrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.clock{font-size:25px;font-weight:500;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1.2}.clockgroup{text-align:right}.watchbar{min-height:39px;background:#edf3ed;color:#46634d;padding:8px 28px;display:flex;gap:12px;align-items:center;justify-content:space-between;border-block:1px solid #dce7dd;font-size:12px}.watchbar .left{display:flex;align-items:center;gap:8px}.watchbar .scene-caption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+.workspace{display:grid;grid-template-columns:minmax(300px,.93fr) minmax(340px,1.25fr) minmax(340px,1fr);height:calc(100dvh - 290px);min-height:500px;max-height:1100px;background:var(--surface)}.pane{min-width:0;display:flex;flex-direction:column;overflow:hidden}.pane+.pane{border-left:1px solid var(--line)}.panehead{height:63px;flex-shrink:0;padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line)}.panehead .subtitle{font-size:11px;color:var(--muted)}.timeline{padding:16px 18px 24px;overflow:auto;overscroll-behavior:contain;scroll-behavior:smooth;flex:1;scrollbar-width:thin;scrollbar-color:#ced9cf transparent}.stop{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:var(--surface);transition:border-color .2s,box-shadow .2s}.stop.selected{border-color:#83a68d;box-shadow:0 0 0 1px #83a68d}.stop.current{border-left:3px solid var(--green)}.stop.past .stop-head{opacity:.7}.stop-head{display:grid;grid-template-columns:44px minmax(0,1fr) 13px;gap:10px;width:100%;text-align:left;padding:12px;border:0;background:transparent}.stop-head:hover{background:var(--soft)}.stop-head time{font-size:12px;font-variant-numeric:tabular-nums;padding-top:2px;color:var(--muted)}.stop-name{display:block;font-weight:600;font-size:13px;line-height:1.55}.stop-summary{display:block;font-size:11px;color:var(--muted);margin-top:3px}.stop-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chevron{font-size:17px;color:var(--muted)}.stop-details{padding:12px;border-top:1px solid var(--line);font-size:12px;background:#fcfdfb;border-radius:0 0 8px 8px}.stop-details dl{margin:9px 0;display:grid;grid-template-columns:57px minmax(0,1fr);gap:6px 9px}.stop-details dt{color:var(--muted)}.stop-details dd{margin:0;overflow-wrap:anywhere}.before-text{text-decoration:line-through;color:#8a948d}.inline-warning{border-left:2px solid #d6b474;background:var(--warn-soft);padding:8px;margin-top:9px;color:#775a2b;font-size:11px}.transit .stop-head{padding:9px 12px}.transit{border-style:dashed;background:var(--soft)}.trip-end{font-size:11px;color:var(--muted);text-align:center;padding-top:9px}
+.map-wrap{position:relative;flex:1;min-height:350px;overflow:hidden;background:#eef0eb}.map-canvas{position:absolute;inset:0;background:radial-gradient(ellipse at 24% 29%,#e5ebe1 0,transparent 43%),radial-gradient(ellipse at 80% 77%,#e4eae0 0,transparent 36%),#eff1ed}.map-heading{position:absolute;top:22px;left:20px;right:20px;text-align:center;pointer-events:none;color:#8b968c;z-index:1}.map-heading strong{display:block;font-size:20px;font-weight:500}.map-heading small{font-size:11px}.map-overlay-label{position:absolute;left:18px;bottom:18px;right:18px;text-align:center;color:#859084;font-size:10px}.map-pins{position:absolute;inset:70px 16px 57px;transition:transform .25s;transform:scale(var(--zoom,1));transform-origin:center}.pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;border:0;background:transparent;padding:6px;min-height:38px;white-space:nowrap;border-radius:6px;transition:opacity .2s,filter .2s}.pin:hover:not(:disabled){background:#ffffffc9}.pin-circle{width:30px;height:30px;display:grid;place-items:center;background:var(--surface);border:1px solid #afc0af;border-radius:50%;box-shadow:0 2px 7px #24392f17;font-size:12px;font-weight:600;flex-shrink:0}.pin-label{font-size:11px;background:#ffffffdf;border:1px solid #e0e6de;padding:2px 6px;border-radius:4px;color:#536b55;max-width:130px;white-space:normal;text-align:left}.pin.selected .pin-circle{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 0 0 5px #2e604718}.pin.alert .pin-circle{background:var(--warn-soft);color:var(--warn);border-color:#d8bc8e}.pin.selected .pin-label{color:var(--green);font-weight:600}.map-tools{position:absolute;right:15px;bottom:45px;display:grid;gap:4px;z-index:2}.map-tools button{width:34px;height:34px;padding:0;background:var(--surface);font-size:17px}.map-footer{padding:9px 16px;background:var(--surface);border-top:1px solid var(--line);font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px}.map-footer button{font-size:11px;padding:5px 8px}.map-footer a{color:var(--green);text-decoration:none}.map-area-note{position:absolute;top:105px;left:50%;transform:translateX(-50%);background:#fffdf8;padding:6px 10px;color:var(--warn);font-size:11px;border:1px solid #e4d3b4;border-radius:5px;max-width:90%;text-align:center;z-index:3}
+.chat-log{padding:18px;overflow:auto;flex:1;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#ced9cf transparent;scroll-behavior:smooth}.chat-date{text-align:center;font-size:10px;color:#8c998e;margin:0 0 19px}.message{margin-bottom:15px;display:flex;gap:8px;align-items:flex-start;animation:appear .25s ease}.message-icon{background:var(--green);color:#fff;border-radius:7px;width:24px;height:24px;display:grid;place-items:center;flex-shrink:0;font-size:13px}.bubble{padding:12px 13px;background:var(--soft);border:1px solid var(--line);border-radius:0 9px 9px 9px;font-size:13px;white-space:pre-line;overflow-wrap:anywhere}.message .meta{font-size:10px;color:var(--muted);margin:0 0 5px}.message-body{min-width:0;max-width:100%}.message.user{justify-content:flex-end;padding-left:28px}.message.user .bubble{background:var(--green-soft);border-color:#d3e1d5;border-radius:9px 0 9px 9px}.message.user .meta{text-align:right}.message.system{display:block;margin:12px 0;text-align:center}.message.system .bubble{display:inline-block;background:transparent;border:0;color:var(--muted);font-size:11px;padding:3px}.incident-card{border:1px solid #e6d5b8;border-radius:8px;background:#fffdf8;margin-bottom:16px;overflow:hidden;animation:appear .25s ease}.incident-header{padding:14px;border-bottom:1px solid #eee3d2}.incident-header h3{font-size:15px;margin:8px 0 5px}.incident-header p{font-size:12px;color:#756d5e}.incident-body{padding:14px}.reason-list{font-size:12px;display:grid;gap:8px;margin-bottom:14px}.reason-list div{display:flex;gap:8px;align-items:flex-start}.reason-list div:before{content:'·';font-weight:700;color:#a78a52}.full{width:100%}.resolved-card{border:1px solid #cfe0d2;border-radius:7px;padding:13px;background:var(--green-soft);font-size:12px;margin-bottom:16px}.resolved-card h3{margin:6px 0 4px}.resolved-card small{display:block;margin-top:7px}.composer{padding:12px 16px;border-top:1px solid var(--line);background:var(--surface);flex-shrink:0}.quick-prompt{font-size:11px;padding:7px 9px;text-align:left;margin-bottom:9px;max-width:100%;color:var(--green);background:#f5f8f3}.chat-form{display:flex;gap:7px}.chat-form input{min-width:0;flex:1;border:1px solid var(--line);padding:9px 11px;border-radius:7px;background:var(--soft);color:var(--ink);font-size:12px}.chat-form button{padding:8px 12px}.composer-note{font-size:10px;color:#929e94;text-align:center;margin-top:6px}.next-inline{width:100%;margin:3px 0 12px;padding:9px}.day-summary{border:1px solid var(--line);border-radius:8px;padding:15px;margin-bottom:17px}.day-summary h3{margin:5px 0 10px}.day-summary .result-line{font-size:12px;border-top:1px solid var(--line);padding:8px 0}.mobile-tabs{display:none}
+.director{min-height:89px;border-top:1px solid #ccd7ce;background:#f9fbf8;padding:12px 24px;display:flex;align-items:center;gap:17px;justify-content:space-between}.director .director-label{font-size:10px;letter-spacing:1px;color:var(--muted);white-space:nowrap}.director .scene-info{font-size:13px;font-weight:600}.director .scene-picker{max-width:280px;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:7px 9px;color:var(--ink);font-size:12px;width:100%}.director .progress{height:3px;background:#dce5dc;width:100%;border-radius:5px;overflow:hidden;margin-top:7px}.director .progress span{height:100%;display:block;background:var(--green);transition:width .25s}.director-middle{min-width:140px;max-width:310px;flex:1}.director-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.director button{font-size:12px;white-space:nowrap;padding:8px 10px}.director small{font-size:10px}.filming .director,.filming .next-inline{display:none}.filming .workspace{height:calc(100dvh - 201px)}.record-dot{width:6px;height:6px;display:inline-block;border-radius:50%;background:#be5a48}.toast{position:fixed;bottom:106px;left:50%;transform:translateX(-50%);background:#243b30;color:#fff;padding:10px 17px;border-radius:8px;font-size:12px;box-shadow:var(--shadow);z-index:30;max-width:90vw;pointer-events:none}.filming .toast{bottom:20px}.modal-backdrop{position:fixed;inset:0;background:#13241ec2;display:grid;place-items:center;z-index:50;padding:24px}.modal{width:min(670px,100%);max-height:85dvh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:25px;box-shadow:0 24px 100px #071f3040}.modal h2{font-size:21px;margin:8px 0 18px}.modal p{font-size:13px;margin:10px 0}.modal ol,.modal ul{padding-left:22px;font-size:13px}.modal li{margin:8px 0}.modal kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;font-family:inherit;font-size:11px;padding:1px 5px;background:var(--soft)}.modal .history-row{padding:12px 0;border-top:1px solid var(--line)}.modal .history-row p{font-size:12px;margin:3px 0}.modal-footer{border-top:1px solid var(--line);padding-top:15px;margin-top:18px;font-size:11px;color:var(--muted)}.notification-button{position:relative}.notification-count{font-size:10px;color:var(--green);margin-left:5px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@keyframes appear{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+@media(min-width:1650px){.workspace{grid-template-columns:minmax(330px,.85fr) minmax(450px,1.35fr) minmax(390px,1fr)}.timeline,.chat-log{padding:22px 25px}.panehead{padding-inline:25px}.bubble{font-size:14px}.stop-head{padding:14px}.stop-name{font-size:14px}.map-heading{top:30px}}
+@media(max-width:1080px){.workspace{grid-template-columns:minmax(260px,1fr) minmax(260px,1fr) minmax(290px,1.1fr)}.topbar,.tripbar{padding-inline:18px}.watchbar{padding-inline:18px}.panehead{padding-inline:13px}.timeline,.chat-log{padding:12px}.director{padding:10px 14px;gap:10px}.director .director-label{display:none}.director-actions{max-width:450px}.map-pins{inset-inline:5px}.pin-label{max-width:95px;font-size:10px}.pin-circle{width:27px;height:27px}.pin{gap:3px}.stop-head{grid-template-columns:38px minmax(0,1fr) 10px;gap:6px;padding:10px}.topnav button{font-size:12px}.workspace{height:calc(100dvh - 310px)}}
+@media(max-width:850px){.topbar{height:58px;padding-inline:14px}.brand{font-size:21px}.topnav{gap:3px}.topnav .desktop-only,.avatar{display:none}.tripbar{padding:14px;min-height:105px}.tripbar h1{font-size:19px}.tripbar .tagrow .pill{font-size:10px}.clock{font-size:23px}.watchbar{padding:7px 14px;font-size:11px}.watchbar .scene-caption{display:none}.workspace,.filming .workspace{display:block;height:calc(100dvh - 330px);min-height:410px}.pane{display:none;height:100%;border:0!important}.pane[data-active="true"]{display:flex}.map-pins{inset:55px 45px 55px}.pin-label{max-width:160px;font-size:12px}.mobile-tabs{display:flex;justify-content:center;background:var(--surface);border-block:1px solid var(--line);gap:8px;padding:7px}.mobile-tabs button{flex:1;max-width:200px;border:0;padding:8px}.mobile-tabs button[aria-pressed="true"]{background:var(--green-soft);color:var(--green)}.director{flex-wrap:wrap;gap:8px;padding:10px 12px}.director-middle{max-width:none;min-width:130px}.director-actions{max-width:none;justify-content:flex-start}.director .director-status{display:none}.director-actions button{font-size:11px;padding:6px 8px}.filming .workspace{height:calc(100dvh - 262px)}.modal-backdrop{padding:14px}.modal{padding:19px}.toast{bottom:145px}.map-wrap{min-height:280px}}
+@media(max-width:430px){.topnav button{padding:7px}.topbar .brand-mark{display:none}.topnav #recordToggle{font-size:11px}.tripbar .tagrow .secondary{display:none}.tripbar h1{font-size:17px}.clockgroup small{font-size:10px}.watchbar .watch-extra{display:none}.director-actions{width:100%;justify-content:space-between}.director-middle{max-width:100%}.director-actions button{font-size:10px;padding:6px}.map-pins{inset-inline:12px}.pin-label{max-width:105px}.composer{padding:10px}.chat-form input{font-size:16px}.modal h2{font-size:19px}}
+/* Fit the recording viewport while each work area scrolls independently. */
+body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.topbar,.tripbar,.watchbar,.director,.mobile-tabs{flex-shrink:0}
+.workspace,.filming .workspace{flex:1;height:auto;min-height:0;max-height:none}
+.message{animation:none}
+.trip-notice{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60;width:min(480px,calc(100vw - 24px));display:flex;align-items:flex-start;gap:4px;padding:7px;border:1px solid #bcd3c3;border-top:3px solid var(--green);border-radius:12px;background:var(--surface);box-shadow:0 12px 40px #183b2a33;animation:notice-enter .25s ease}.notice-open{flex:1;min-width:0;text-align:left;padding:8px 10px;border:0;background:transparent}.notice-meta{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted)}.notice-meta svg{width:17px;height:17px;color:var(--green);flex-shrink:0}.notice-title{display:block;font-size:14px;margin:5px 0 3px;overflow-wrap:anywhere}.notice-preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:12px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}.notice-link{display:block;margin-top:7px;font-size:12px;font-weight:600;color:var(--green)}.notice-close{flex-shrink:0;width:36px;height:36px;border:0;padding:0;font-size:21px;color:var(--muted);background:transparent}.message:focus-visible{outline:2px solid #77a58a;outline-offset:3px;border-radius:7px}
+@keyframes notice-enter{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(max-width:850px){.map-wrap{min-height:0}.panehead{height:54px}.director{min-height:0}}
+</style>
+<style>
+.topbar .brand{color:var(--ink);text-decoration:none;flex-shrink:0}
+.topnav .header-link{display:inline-flex;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);text-decoration:none}
+.topnav .header-link:hover{background:var(--soft)}
+@media(max-width:850px){.topnav .header-link.desktop-only{display:none}}
+/* Keep the demo workspace aligned with the registered-trip mockup. */
+.review-tools{flex-shrink:0;background:var(--surface)}.reviewbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 26px;background:var(--soft);border-bottom:1px solid var(--line);font-size:12px}.reviewbar small{display:block;font-size:10px;margin-top:3px}.review-context{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--muted)}.screen-flow{display:flex;align-items:center;gap:12px;padding:10px 26px;border-bottom:1px solid var(--line)}.screen-flow>span{font-size:10px;color:var(--muted)}.screen-flow .topnav{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}.screen-flow .topnav button,.screen-flow .header-link{font-size:11px;padding:7px 10px}.screen-flow .avatar{display:grid;width:25px;height:25px}.filming .review-tools{display:none}
+.tripbar{padding:10px 28px;min-height:0;gap:18px}.tripbar>div:first-child{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:3px 16px}.tripbar .eyebrow{grid-column:1/-1;font-size:9px;letter-spacing:1.2px}.tripbar h1{font-size:20px;line-height:1.4;margin:0;word-break:keep-all}.tripbar p{font-size:11px}.clockgroup{flex-shrink:0}.clock{font-size:23px}.clockgroup small{font-size:11px}.watchbar{padding:5px 28px;min-height:30px;background:var(--green-soft);flex-wrap:wrap;font-size:11px}.watchbar .left{flex-wrap:wrap}
+.workspace-days{flex-shrink:0;display:flex;align-items:center;gap:16px;padding:0 28px;border-bottom:1px solid var(--line);background:var(--surface)}.day-tabs{display:flex;flex:1;min-width:0;flex-wrap:wrap;gap:8px;margin:7px 0}.day-tabs button{display:flex;align-items:center;gap:8px;font-size:12px;padding:5px 12px;min-height:34px}.day-tabs button[aria-selected=true]{background:var(--green);color:#fff;border-color:var(--green)}.day-tabs small{font-size:11px;color:inherit;opacity:.85}.edit-itinerary{flex-shrink:0;margin-left:auto;font-size:12px;padding:5px 12px;min-height:34px}
+.workspace{grid-template-columns:minmax(250px,.93fr) minmax(270px,1.25fr) minmax(280px,1fr)}.panehead{padding:10px 20px;height:48px}.panehead h2{font-size:16px}.panehead .subtitle{font-size:11px}.timeline{padding:16px 18px}.stop-head{grid-template-columns:41px minmax(0,1fr) 12px;gap:10px;padding:12px;border-radius:0}.stop-head time{font-size:11px}.stop-name{line-height:1.6}.stop-summary{margin-top:4px}.stop-tags{gap:5px;margin-top:7px}.stop-details{padding:14px}.stop-details dl{grid-template-columns:61px minmax(0,1fr);gap:8px 10px}.leg-hint{margin:0 0 10px;border:1px dashed var(--line);border-radius:6px;background:var(--soft);font-size:11px;color:var(--muted)}.leg-head{display:block;width:100%;border:0;background:transparent;padding:7px 12px;text-align:left;font-size:11px}.leg-hint.selected{border-color:#83a68d}
+.map-canvas{background:radial-gradient(ellipse at 23% 25%,#e3eadd 0,transparent 48%),radial-gradient(ellipse at 78% 70%,#e5eadf 0,transparent 42%),#eff1ed}.map-wrap{min-height:0}.map-heading{top:15px;left:15px;right:15px;color:#6f8070}.map-heading strong{font-size:18px}.map-pins{inset:64px 12px 37px}.pin{display:block;width:32px;height:32px;min-height:32px;padding:0;border-radius:50%}.pin-circle{width:32px;height:32px}.pin .pin-label{position:absolute;left:38px;top:50%;transform:translateY(-50%);font-size:11px;line-height:1.5;max-width:94px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 5px}.pin.label-left .pin-label{left:auto;right:38px}html[lang=en] .pin .pin-label{max-width:94px}.map-tools{right:11px;bottom:35px}.map-tools button{width:31px;height:31px;font-size:16px}.map-overlay-label{bottom:9px;left:10px;right:10px;color:#72806f}.map-area-note{top:55px}
+.map-selection{padding:14px 17px;border-top:1px solid var(--line);font-size:12px;flex-shrink:0}.map-selection h3{margin:4px 0 7px;font-size:14px}.map-selection p{font-size:11px;color:var(--muted);margin:4px 0}.map-selection .row{margin-top:10px;flex-wrap:wrap}.map-selection button{font-size:11px;padding:6px 10px;min-height:33px}
+.bubble{line-height:1.8}.composer{padding:12px 15px}.chat-context{padding:10px 12px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:var(--surface);margin:0 0 15px}.chat-context small{display:block;margin-top:3px;font-size:11px}.chat-prompts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}.chat-prompts button{font-size:11px;padding:6px 8px;min-height:30px;background:#f5f8f3;color:var(--green)}.chat-form button{min-height:40px;font-size:12px}.mobile-tabs{border-bottom:1px solid var(--line);border-top:0;padding:0;gap:0}.mobile-tabs button{max-width:none;border-radius:0;padding:8px 13px;min-height:42px}.mobile-tabs button[aria-pressed=true]{border-bottom:2px solid var(--green)}
+body:not(.filming){overflow:auto}.workspace{min-height:560px}.filming .workspace{min-height:0}
+@media(max-width:1050px){.workspace{grid-template-columns:minmax(240px,1fr) minmax(260px,1fr) minmax(260px,1.1fr)}.panehead{padding-inline:13px}.timeline,.chat-log{padding:12px}.pin .pin-label,.pin.label-left .pin-label{left:50%;right:auto;top:36px;transform:translateX(-50%);max-width:90px;font-size:10px}.composer{padding:11px}}
+@media(max-width:850px){.screen-flow{flex-wrap:wrap;padding:10px 15px;gap:8px}.screen-flow .topnav{flex-basis:100%;justify-content:flex-start;margin:0;gap:5px}.screen-flow .topnav .desktop-only{display:inline-flex}.screen-flow .avatar{display:grid}.reviewbar{padding:10px 15px;flex-wrap:wrap;gap:8px}.tripbar{padding:12px 18px;align-items:center}.tripbar>div:first-child{display:block}.tripbar .eyebrow{margin-bottom:3px}.tripbar h1{font-size:19px}.tripbar p{margin-top:3px}.clock{font-size:22px}.watchbar{padding:6px 18px}.workspace-days{padding:0 18px}.day-tabs button,.edit-itinerary{min-height:40px}.panehead{height:48px}.workspace,.filming .workspace{flex:none;height:630px;min-height:520px}.map-wrap{min-height:300px}body.filming{overflow:auto}.pin .pin-label{font-size:11px;max-width:95px}.chat-form input{font-size:16px}.chat-context{margin:0 0 12px}.composer{padding:12px 15px}}
+@media(max-width:550px){.tripbar{flex-wrap:wrap}.tripbar>div:first-child{flex:1 1 180px}.clockgroup{margin-left:auto}.review-context{flex-wrap:wrap}.watchbar .watch-extra{display:inline}.watchbar .left{gap:5px}}
+</style>
+</head>
+<body class="filming">
+<section class="review-tools" aria-label="목업 검토 도구">
+  <div class="reviewbar"><div><strong>서울 하루 여행 · 시연 목업</strong><small>12개 장면 · 6개 사건 · 시연 데이터</small></div><div class="review-context"><span id="sceneCaption">08:00 하루 일정 안내</span><span class="pill" id="version">일정 v1</span></div></div>
+  <div class="screen-flow"><span>화면 흐름</span><span>일정 · 지도 · 채팅</span><nav class="topnav" aria-label="여행 메뉴">
+    <a class="header-link desktop-only" href="tripilot-intake-wireframe.html">내 여행</a>
+    <button class="active desktop-only" data-action="workspace">일정 · 채팅</button>
+    <button class="notification-button" data-action="history">변경 기록<span id="historyCount" class="notification-count">0</span></button>
+    <button id="recordToggle" data-action="record" aria-pressed="true"><span class="record-dot"></span> 촬영 모드 종료</button>
+    <button class="quiet" data-action="help" aria-label="시연 사용 안내">?</button>
+    <div class="avatar" aria-label="여행자 2명">2인</div>
+  </nav></div>
+</section>
+<header class="topbar">
+  <a class="brand" href="tripilot-intake-wireframe.html" aria-label="triPilot · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>triPilot</a>
+</header>
+<section class="tripbar" aria-label="여행 개요">
+  <div><div class="eyebrow">SEOUL · READY FOR YOUR TRIP</div><h1>서울, 취향을 따라 걷는 하루</h1><p class="muted">2026-09-15 · 서울 · 2명 · 1일 여행</p></div>
+  <div class="clockgroup"><div id="clock" class="clock" role="timer" aria-label="시연 속도에 맞춰 흐르는 서울 현지 시각">08:00:00</div><small>DAY 1 · 서울 시각 (시연)</small></div>
+</section>
+<div class="watchbar"><div class="left"><strong id="watchStatus">여행을 함께 살피고 있어요</strong><span class="watch-extra" id="watchTime">마지막 확인 08:00</span></div><span>2026-09-15부터 · 서울 시각 기준</span></div>
+<div class="workspace-days"><div class="day-tabs" role="tablist" aria-label="여행 일차"><button type="button" id="workspaceDayTab" role="tab" aria-selected="true" aria-controls="workspaceDayPanel">1일차 <small>9.15</small></button></div><button type="button" id="editItineraryButton" class="edit-itinerary">일정 수정</button></div>
+<nav class="mobile-tabs" aria-label="화면 선택"><button data-tab="schedule" aria-pressed="true">일정</button><button data-tab="map" aria-pressed="false">지도</button><button data-tab="chat" aria-pressed="false">채팅</button></nav>
+<main class="workspace" id="workspaceDayPanel" role="tabpanel" aria-labelledby="workspaceDayTab">
+  <section class="pane" id="schedulePane" data-panel="schedule" data-active="true" aria-label="여행 일정">
+    <div class="panehead"><h2>1일차 일정</h2><span class="pill" id="stopCount">7개 항목</span></div><div class="timeline" id="timeline"></div>
+  </section>
+  <section class="pane" id="mapPane" data-panel="map" data-active="false" aria-label="여행 지도">
+    <div class="panehead"><h2>지도</h2><span class="subtitle">서울 · 1일차</span></div>
+    <div class="map-wrap"><div class="map-canvas"></div><div class="map-heading"><strong>서울 · 1일차</strong><small id="mapScope">일정 장소 7곳 · 방문 순서 표시</small></div><div id="mapAlert" class="map-area-note" hidden></div><div class="map-pins" id="mapPins" role="group" aria-label="일정 장소 핀 — 실제 위치가 아닌 시연 배치"></div><div class="map-tools"><button data-action="zoomIn" aria-label="핀 영역 확대">+</button><button data-action="zoomOut" aria-label="핀 영역 축소">−</button><button data-action="zoomReset" aria-label="핀 영역 원래 크기">⌂</button></div><div class="map-overlay-label">위치 개념도 · 실제 지도와 경로가 아닌 시연 배치</div></div>
+    <div class="map-selection" id="mapSelection"></div>
+  </section>
+  <section class="pane" id="chatPane" data-panel="chat" data-active="false" aria-label="여행 채팅">
+    <div class="panehead"><h2>여행 채팅</h2><span class="subtitle">이 여행의 모든 대화</span></div>
+    <div class="chat-log" id="chatLog" role="log" aria-label="여행 대화 이력" aria-live="polite" aria-relevant="additions text"></div>
+    <div class="composer"><div class="chat-prompts"><button data-trip-query="summary">하루 일정 요약</button><button data-trip-query="detail">선택 일정 상세</button><button data-trip-query="booking">예약 일정 확인</button></div><button id="quickPrompt" class="quick-prompt" data-action="quick"></button><form class="chat-form" id="chatForm"><label class="sr-only" for="chatInput">여행 메시지</label><input id="chatInput" autocomplete="off" placeholder="궁금한 점이나 변경 요청을 입력" maxlength="600" required><button class="primary" type="submit">전송</button></form><div class="composer-note">확정 시나리오 기반 시연용 대화</div></div>
+  </section>
+</main>
+<aside class="director" aria-label="발표자 시연 제어">
+  <div class="director-status"><div class="director-label">PRESENTATION CONTROLS</div><div class="scene-info" id="directorStatus">1 / 12 · 하루 일정 안내</div><small>← → 장면 이동 · F 촬영 모드 · Space 자동 재생</small></div>
+  <div class="director-middle"><label class="sr-only" for="scenePicker">시연 장면 바로 이동</label><select class="scene-picker" id="scenePicker"></select><div class="progress"><span id="progressFill"></span></div></div>
+  <div class="director-actions"><button data-action="reset">처음부터</button><button id="prevBtn" data-action="previous">← 이전</button><button id="autoBtn" data-action="auto">자동 재생</button><button id="nextBtn" class="primary" data-action="next">다음 장면 →</button></div>
+</aside>
+<div id="toast" class="toast" role="status" hidden></div>
+<aside id="tripNotice" class="trip-notice" role="status" aria-live="polite" aria-atomic="true" aria-label="여행 알림" hidden>
+  <button class="notice-open" data-action="openNotification" aria-label="알림의 채팅 확인">
+    <span class="notice-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg><span id="noticeMeta"></span></span>
+    <strong id="noticeTitle" class="notice-title"></strong><span id="noticePreview" class="notice-preview"></span><span class="notice-link">채팅 확인 →</span>
+  </button>
+  <button class="notice-close" data-action="dismissNotification" aria-label="알림 닫기">×</button>
+</aside>
+<div id="modalRoot"></div>
+<script src="tripilot-i18n.js"></script>
+<script>
+'use strict';
+// Standalone presentation prototype. Scenario data and responses are simulated.
+// No backend, booking, payment, transport, weather, or inventory service is called.
+const STOPS = [
+ {id:'hotel',time:'09:00',name:'호텔 조식',summary:'친구와 함께 가볍게 아침 식사',kind:'meal',area:'숙소 · 서울역 인근',duration:'09:00–09:40',note:'숙소 이름과 상세 주소는 시연용 설정입니다.',x:24,y:65},
+ {id:'tower',time:'10:00',name:'잠실 스카이타워',summary:'10:00–10:45 · 전망 관람',kind:'activity',area:'잠실 · 타워 건물',duration:'10:00–10:45',note:'전망 관람 후 성수동으로 이동합니다.',x:72,y:76},
+ {id:'toSeongsu',time:'11:00',name:'잠실역 → 성수역',summary:'지하철 2호선으로 이동',kind:'transit',area:'잠실 → 성수',duration:'11:00 출발',note:'이동 수단과 운행 상황을 출발 전에 확인합니다.'},
+ {id:'seongsu',time:'11:00',name:'성수동 쇼핑',summary:'복합문화공간 · 팝업스토어 · 향수·화장품',kind:'activity',area:'성수동 메인거리',duration:'11:00–13:00',note:'메인거리 대형 복합문화공간과 팝업스토어, 향수·화장품 쇼룸을 둘러봅니다.',x:70,y:43},
+ {id:'lunch',time:'13:00',name:'성수 예약 식당',summary:'점심 식사 · 예약 있음',kind:'meal',area:'성수동',duration:'13:00 예정',note:'15:00 브레이크타임 시작. 실제 예약 정보는 연결하지 않았습니다.',x:71,y:56},
+ {id:'toPalace',time:'15:00',name:'성수역 → 경복궁역',summary:'지하철 이동 · 정상 운행',kind:'transit',area:'성수 → 경복궁',duration:'15:00–15:30',note:'성수역 운행 정상화 확인 후 이동하는 장면입니다.'},
+ {id:'palace',time:'15:00',name:'경복궁',summary:'한복 대여 · 궁궐 산책 · 사진',kind:'activity',area:'경복궁 일대',duration:'15:00–17:00',note:'한복 대여 후 17:00까지 탐방과 촬영을 마칩니다.',x:24,y:17},
+ {id:'toStation',time:'17:15',name:'경복궁 → 서울역 일대',summary:'세종대로 직통 버스',kind:'transit',area:'경복궁 → 롯데마트 서울역점 방면',duration:'17:15 출발',note:'서울역 인근에서 저녁 식사 후 마트에 방문합니다.'},
+ {id:'dinner',time:'18:00',name:'서울역 인근 저녁 식당',summary:'저녁 식사 · 예약 없이 방문',kind:'meal',area:'서울역 인근',duration:'18:00 예정',note:'카드로 결제할 수 있는 식당을 선호합니다.',x:22,y:40},
+ {id:'mart',time:'19:30',name:'롯데마트 서울역점',summary:'라면 선물세트 · 스팸 선물세트',kind:'shopping',area:'서울역',duration:'19:30 이후',note:'라면 선물세트와 스팸 선물세트를 쇼핑한 뒤 호텔로 복귀하는 계획입니다.',x:22,y:53}
+];
+const EVENTS = {
+ weather:{code:'액-02',label:'기상 악화 · 1시간 전 감지',stop:'tower',team:'Activity',title:'10:00 전망 관람에 영향을 주는 미세먼지 경보를 감지했어요',text:'09:00, 잠실 스카이타워 방문 예정 시각인 10:00보다 1시간 앞서 해당 지역의 미세먼지 경보를 감지했어요. 오전 야외 전망 데크는 시야 확보가 어려울 것으로 예상돼요.',facts:['09:00 사전 감지 · 10:00 방문 예정까지 1시간 남았어요.','같은 건물 지하 1층 아쿠아리움으로 조정해 다음 일정 시간을 유지해요.'],prompt:'사전 조정된 오전 일정을 확인해줘.',impact:'09:00 사전 조정 · 10:00–10:45 관람 유지 · 11:00 성수동 방면 출발 유지',options:[{id:'aquarium',name:'잠실 스카이타워 아쿠아리움',desc:'같은 건물 지하 1층 실내 관람 · 09:00 사전 조정 반영',facts:['1시간 전 사전 조정','건물 내 실내 활동','10:00–10:45 유지'],choiceText:'아쿠아리움으로 바꿔줘.',patch:{name:'잠실 스카이타워 아쿠아리움',summary:'09:00 사전 조정 · B1 실내 관람',area:'잠실 · 같은 건물 지하 1층',duration:'10:00–10:45',note:'09:00 미세먼지 경보를 감지해 10:00 전망 관람을 사전 조정했어요. 기존 관람 시간과 다음 일정은 유지합니다. 층수와 운영 정보는 첨부 시나리오 기준입니다.'}}],done:'09:00 사전 알림이에요. 오늘 오전 잠실 스카이타워 야외 전망 데크는 미세먼지 경보로 시야 확보가 어려울 것으로 예상되어, 10:00 활동을 같은 건물 지하 1층 아쿠아리움으로 변경했어요.\n\n10:00~10:45 관람과 11:00 성수동 방면 출발은 그대로 유지했어요. 호텔 조식 후에는 사전 조정된 일정에 맞춰 이동하시면 돼요.'},
+ fire:{code:'이동-B1',label:'역 무정차',stop:'toSeongsu',team:'Mobility',title:'성수역에 열차가 정차하지 않아요',text:'성수역 역사 화재로 열차가 성수역을 무정차 통과한다는 안내가 들어왔어요.',facts:['지하철만으로 성수역에 도착하는 경로는 이용할 수 없어요.','건대입구와 뚝섬에서 버스로 연결하는 두 경로를 비교해 주세요.'],prompt:'버스로 연결되는 두 경로를 비교해줘.',impact:'성수동 도착 예정 11:15 · 이후 쇼핑과 점심 일정의 여유 확인',options:[{id:'konkuk',name:'건대입구역에서 버스 연결',desc:'잠실 → 건대입구 → 버스 → 성수동 · 되돌아가지 않는 방향',facts:['도보 약 450m','예상 35–45분','배차에 따라 변동'],choiceText:'되돌아가지 않는 건대입구 쪽으로 갈게.',patch:{name:'잠실 → 건대입구 → 성수동',summary:'2호선 + 버스 · 건대입구에서 하차',duration:'11:00 출발 · 성수동 11:15 도착 장면',note:'하차 후 버스로 연결합니다. 도보 거리·소요 범위는 비교 화면 시연값이며, 시나리오 장면 시각과 실측 경로 계산은 별개입니다.'}},{id:'ttukseom',name:'뚝섬역에서 버스 연결',desc:'잠실 → 뚝섬 → 버스 → 성수동 · 한 정거장 더 이동',facts:['도보 약 350m','예상 35–50분','배차에 따라 변동'],choiceText:'뚝섬에서 버스를 타는 경로로 바꿔줘.',patch:{name:'잠실 → 뚝섬 → 성수동',summary:'2호선 + 버스 · 뚝섬에서 하차',duration:'11:00 출발 · 도착 시각 재확인',note:'버스 배차에 따라 도착 시각이 달라집니다. 비교 수치는 시연값입니다.'}}],done:'일정에 있던 잠실역 → 성수역 이동을 건대입구역에서 하차해 버스로 연결하는 경로로 변경했어요. 성수역 무정차 구간을 피하면서 되돌아가는 이동을 줄일 수 있는 경로예요.\n\n변경된 경로는 일정에서 확인할 수 있어요.'},
+ lunch:{code:'요식-P3',label:'70분 지연',stop:'lunch',team:'Dining',title:'지연된 점심과 이후 일정을 조정하고 있어요',text:'알려주신 지연 시간을 기준으로 점심 식당과 남은 일정을 살펴보고 있어요.',facts:['기존 식당은 15:00 브레이크타임이라 식사 시간이 촉박할 수 있어요.','성수동에서 브레이크타임 없는 식당을 살펴보고 있어요.'],prompt:'브레이크타임 없는 근처 식당을 보여줘.',impact:'점심 14:10 · 경복궁 15:30 예정 · 탐방은 17:00까지 유지',booking:'기존 점심 예약의 변경·취소는 별도 확인이 필요해요.',options:[{id:'lunchA',name:'성수 한식당 A',desc:'한국 식자재로 만든 따뜻한 한 끼 · 시연용 대체 식당',facts:['성수동','브레이크타임 없음','추천 방문 · 미예약'],choiceText:'한식당 A로 바꿔줘.',patch:{name:'성수 한식당 A',time:'14:10',summary:'브레이크타임 없는 대안',duration:'14:10–14:50',note:'추천 방문이며 새 예약이 생기지 않습니다. 원래 점심 예약의 변경·취소는 별도로 확인해야 합니다.'}},{id:'lunchB',name:'성수 식당 B',desc:'가볍게 즐기는 한국식 식사 · 시연용 대체 식당',facts:['성수동','브레이크타임 없음','추천 방문 · 미예약'],choiceText:'점심은 좀 더 가볍게 먹고 싶어. 다른 식당으로 바꿔줘.',reply:'점심 장소를 성수 식당 B로 다시 변경했어요. 가벼운 한국식 식사를 할 수 있고, 브레이크타임이 없어 조정된 점심 일정에 맞출 수 있어요.\n\n이후 경복궁 일정은 그대로 유지했어요.',patch:{name:'성수 식당 B',time:'14:10',summary:'브레이크타임 없는 대안',duration:'14:10–14:50',note:'추천 방문이며 새 예약이 생기지 않습니다. 원래 점심 예약의 변경·취소는 별도로 확인해야 합니다.'}}],done:'기존 점심 식당은 15:00부터 브레이크타임이라 식사 시간이 촉박해질 수 있어요. 점심 장소를 브레이크타임이 없는 성수 한식당 A로 변경했어요.\n\n점심 이후에는 15:00 경복궁 방면 출발, 15:30~17:00 한복 체험과 탐방으로 일정을 조정했어요.'},
+ control:{code:'이동-A6',label:'도로 통제',stop:'toStation',team:'Mobility',title:'세종대로 통제로 버스 이동이 늦어져요',text:'행사로 세종대로 일대 도로가 통제돼, 예정된 버스 경로의 이동 시간이 늘어났어요.',facts:['환승 1회가 필요하지만 지하철이 통제 구간을 피할 수 있어요.','통제 구역에 걸린 도보 구간도 우회하도록 조정해요.'],prompt:'통제 구간을 피해서 지하철로 안내해줘.',impact:'17:15 출발 · 저녁 식사 시각에 큰 지연 없이 도착',uncertain:'택시 등 도로 이용 수단: 통제 구간의 실제 소요 확인 불가 · 추천하지 않음',options:[{id:'subway',name:'지하철 + 통제 구역 우회 도보',desc:'3호선 → 충무로에서 4호선 환승 → 서울역',facts:['환승 1회','통제 도로 회피','도보 우회 포함'],choiceText:'지하철 경로로 변경해줘.',patch:{name:'경복궁 → 충무로 → 서울역',summary:'3호선 → 4호선 · 환승 1회',duration:'17:15 출발 · 저녁 전 도착',note:'통제 구역을 피하는 도보 구간으로 조정합니다. 택시의 통제 구간 소요는 확인 불가이므로 권하지 않습니다.'}}],done:'경복궁 → 서울역 이동을 충무로에서 한 번 환승하는 지하철 경로로 변경했어요. 도보 구간도 통제 구역을 피하도록 조정했어요.\n\n저녁 식사 예정 시각은 그대로 유지했어요.'},
+ dinner:{code:'요식-P7',label:'당일 임시휴무',stop:'dinner',team:'Dining',title:'알려주신 임시휴무에 맞춰 저녁 일정을 조정해요',text:'알려주신 식당의 임시휴무를 반영해 근처 대체 식당을 찾고 있어요.',facts:['도보 8분 거리에 카드 결제가 가능한 대체 식당이 있어요.','18:20쯤 식사를 시작해도 19:30 마트 방문에는 영향이 없어요.'],prompt:'카드 결제가 가능한 근처 식당으로 바꿔줘.',impact:'저녁 18:20 · 롯데마트 19:30 유지',options:[{id:'dinnerA',name:'서울역 한식당 C',desc:'한국식 저녁 메뉴 · 시연용 대체 식당',facts:['도보 8분','카드 결제 가능','18:20 식사 예정'],choiceText:'이 식당으로 갈게.',patch:{name:'서울역 한식당 C',time:'18:20',summary:'대체 저녁 식당 · 카드 결제 가능',duration:'18:20–19:10',note:'예약 없이 방문합니다. 19:30 롯데마트 식료품 쇼핑은 그대로 이어갑니다.'}}],done:'저녁 장소를 서울역 한식당 C로 변경했어요. 원래 방문한 식당에서 도보 8분 거리이고, 카드 결제가 가능한 곳이에요.\n\n저녁 식사는 18:20부터로 조정했고, 19:30 롯데마트 일정은 유지했어요.'},
+ stock:{code:'액-08',label:'인기 상품 품절',stop:'mart',team:'Activity',title:'라면·스팸 선물세트를 취급할 다른 판매점을 찾아요',text:'말씀해 주신 라면 선물세트와 스팸 선물세트의 품절 상황을 기준으로 인근 판매점을 찾아보고 있어요.',facts:['명절 성수기에 품절된 라면·스팸 선물세트의 취급 후보를 안내해요.','취급 가능성과 현재 재고는 다릅니다. 방문 전 재고 확인이 필요해요.'],prompt:'이 근처에 이거 파는 다른 곳 없어?',impact:'롯데마트 방문 유지 · 호텔 복귀 동선에 후보 매장 추가',uncertain:'현재 재고는 확인되지 않아 구매 가능 여부는 방문 전에 확인이 필요해요.',options:[{id:'storeA',name:'귀가 동선의 인근 지점 A',desc:'호텔 복귀 동선의 라면·스팸 선물세트 취급 후보',facts:['호텔 복귀 동선','라면·스팸 선물세트','재고 미확인'],choiceText:'호텔 가는 길의 A 지점을 일정에 추가해줘.',patch:{name:'롯데마트 → 인근 지점 A',summary:'식료품 쇼핑 · 귀가 동선 후보 추가',duration:'19:30 이후',note:'마트 방문 후 인근 지점 A에 들러봅니다. 라면·스팸 선물세트 취급 후보이며 현재 재고는 확인하지 못했습니다. 방문 전 확인이 필요합니다.'}},{id:'storeB',name:'인근 판매점 B',desc:'라면·스팸 선물세트 취급 여부를 문의할 수 있는 후보',facts:['인근 판매점','방문 전 문의','재고 미확인'],choiceText:'인근 판매점 B로 방문 장소를 바꿔줘.',patch:{name:'롯데마트 → 인근 판매점 B',summary:'식료품 쇼핑 · 판매점 후보 추가',duration:'19:30 이후',note:'인근 판매점 B의 라면·스팸 선물세트 취급 여부와 현재 재고는 방문 전 확인이 필요합니다. 구매 가능 여부를 보장하지 않습니다.'}}],done:'라면 선물세트와 스팸 선물세트를 취급할 만한 인근 지점 A를 호텔 복귀 동선에 추가했어요. 롯데마트 방문 이후 들러볼 수 있는 후보 매장이에요.'}
+};
+const SCENES = [
+ {time:'08:00',label:'하루 일정 안내 · 정시 발송',stop:'hotel',intro:'좋은 아침이에요! 오늘 서울 여행 일정을 안내해 드릴게요.\n\n09:00 호텔 조식 → 10:00 잠실 스카이타워 → 11:00 성수동 쇼핑 → 13:00 점심 → 15:00 경복궁 → 18:00 저녁 → 19:30 롯데마트 서울역점 순서예요.\n\n두 분이 좋아하는 향수·화장품과 한국 먹거리를 즐기는 하루로 준비되어 있어요. 일정에 영향을 주는 변동이 확인되면 일정을 조정하고 알려드릴게요.',prompt:'오늘 일정을 확인해줘.'},
+ {time:'09:00',label:'호텔 조식 · 1시간 전 기상 사전 감지',stop:'hotel',event:'weather'},
+ {time:'10:00',label:'아쿠아리움 · 사전 조정 일정',stop:'tower',intro:'10:00 오전 활동은 09:00에 사전 조정된 아쿠아리움 관람 일정이에요. 일정 상세에서 현재 반영된 관람 내용을 확인할 수 있어요.\n\n10:45 관람 종료와 11:00 성수동 방면 출발은 유지돼요.',prompt:'사전 조정된 오전 일정을 확인해줘.'},
+ {time:'11:00',label:'성수역 무정차 · 경로 자동 변경',stop:'toSeongsu',event:'fire'},
+ {time:'11:15',label:'성수동 · 복합문화공간과 쇼핑',stop:'seongsu'},
+ {time:'14:10',label:'점심 · 70분 지연',stop:'lunch',event:'lunch'},
+ {time:'15:00',label:'경복궁 이동 · 예정 시각 안내',stop:'toPalace',intro:'일정상 경복궁으로 이동할 시간이에요. 계획된 이동 구간은 성수역 → 경복궁역이며, 경복궁 일정은 15:30~17:00예요.',prompt:'경복궁 일정에 영향이 없는지 확인해줘.'},
+ {time:'15:30',label:'경복궁 · 한복과 사진',stop:'palace'},
+ {time:'17:15',label:'도로 통제 · 지하철로 변경',stop:'toStation',event:'control'},
+ {time:'18:00',label:'저녁 · 당일 임시휴무',stop:'dinner',event:'dinner'},
+ {time:'19:30',label:'마트 · 품절 상품 대안 요청',stop:'mart',event:'stock'},
+ {time:'20:30',label:'오늘의 변경 내역 안내',stop:'mart',intro:'오늘 일정에 반영된 변경 내역을 안내해 드릴게요.\n\n오전 활동, 성수행 이동 경로, 점심 식당, 서울역행 이동 경로, 저녁 식당과 추가 쇼핑 장소가 변경됐어요. 자세한 내용은 변경 기록에서 확인할 수 있어요.',prompt:'오늘 바뀐 일정을 정리해줘.'}
+];
+const REPORTS = {
+ lunch:{message:'팝업스토어 대기줄이 길어서 일정이 70분 정도 늦어졌어. 점심도 아직 못 먹었는데 뒤에 일정에 차질 없을까?',pattern:/70분|늦|지연|대기줄|기다/,acknowledgement:'알려주신 지연 시간을 기준으로 남은 일정을 확인할게요.'},
+ dinner:{message:'저녁 먹으려고 예정된 식당에 왔는데 “금일 임시휴무”라고 붙어 있어. 다른 식당으로 바꿔줘.',pattern:/휴무|휴업|문.*닫|영업.*안/,acknowledgement:'알려주신 식당을 기준으로, 근처에서 저녁을 먹을 수 있는 곳을 찾아볼게요.'},
+ stock:{message:'롯데마트 서울역점에 왔는데 명절 성수기라 사려던 라면 선물세트랑 스팸 선물세트가 품절이래. 이 근처에 이거 파는 다른 곳 없어?',pattern:/품절|라면|스팸|선물세트|다른 곳|파는|재고/,acknowledgement:'롯데마트 서울역점을 기준으로 라면·스팸 선물세트를 취급할 만한 곳을 찾아볼게요. 호텔로 돌아가는 길에 들를 수 있는 후보를 살펴볼게요.'}
+};
+const $ = selector => document.querySelector(selector);
+const esc = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const badge = (text,tone='') => `<span class="pill ${tone}">${esc(text)}</span>`;
+// Extra requests are bounded presentation examples, not live agent responses.
+EVENTS.weather.options.push({id:'aquariumShort',name:'아쿠아리움 · 짧은 관람과 휴식',desc:'30분 관람 후 15분 휴식 · 같은 건물 안에서 이동',facts:['관람 30분','휴식 15분','다음 일정 유지'],choiceText:'관람을 30분으로 줄이고 쉬는 시간을 넣어줘.',patch:{...EVENTS.weather.options[0].patch,name:'아쿠아리움 · 관람 후 휴식',summary:'30분 관람 + 15분 휴식',duration:'10:00–10:30 관람 · 10:30–10:45 휴식'}});
+EVENTS.control.options.push({id:'subwayRest',name:'지하철 + 도착 후 휴식',desc:'통제 구역을 피하는 지하철 경로 유지 · 서울역 도착 후 휴식',facts:['환승 1회','도착 후 10분 휴식','저녁 시각 유지'],choiceText:'지하철로 이동한 뒤 10분 쉬는 시간을 넣어줘.',patch:{...EVENTS.control.options[0].patch,summary:'3호선 → 4호선 · 도착 후 10분 휴식',note:'통제 구역을 우회한 뒤 서울역에서 10분 쉽니다. 저녁 시각을 유지하는 시연용 조정입니다.'}});
+EVENTS.dinner.options.push({id:'dinnerD',name:'서울역 식당 D',desc:'가벼운 저녁 메뉴 · 시연용 대체 식당',facts:['도보 8분','카드 결제 가능','18:20 식사 예정'],choiceText:'저녁을 가볍게 먹을 수 있는 다른 식당으로 바꿔줘.',patch:{...EVENTS.dinner.options[0].patch,name:'서울역 식당 D',summary:'가벼운 저녁 메뉴 · 카드 결제 가능'}});
+EVENTS.fire.facts[1]='건대입구·뚝섬 버스 연결 경로를 살펴보고, 되돌아가지 않는 건대입구 경로를 일정에 반영해요.';
+const makeEventState = () => Object.fromEntries(Object.keys(EVENTS).map(key=>[key,{phase:'idle',choice:null,applied:false,reported:false,pending:null,revisions:0}]));
+const state = {scene:0,events:makeEventState(),messages:[],changes:[],noticeKey:null,selected:'hotel',expanded:null,tab:'schedule',zoom:1,auto:false,paused:false,filming:true,seconds:8*3600,autoRevisionShown:false};
+let clockFrame=null,clockMotion=null,pausedClock=null,toastTimer=null,modalOpener=null;
+let notificationIndex=null;
+const playbackTasks={auto:null,agent:null,notification:null};
+// Preserve the remaining delay so narration can pause any scheduled demo step.
+function cancelPlaybackTask(kind){clearTimeout(playbackTasks[kind]?.timer);playbackTasks[kind]=null;}
+function suspendPlaybackTask(kind){
+  const task=playbackTasks[kind];if(!task||task.timer===null)return;
+  task.remaining=Math.max(0,task.due-performance.now());clearTimeout(task.timer);task.timer=null;
+}
+function resumePlaybackTask(kind){
+  const task=playbackTasks[kind];
+  if(!task||task.timer!==null||state.paused||(kind==='notification'&&$('#tripNotice').matches(':hover,:focus-within')))return;
+  task.due=performance.now()+task.remaining;
+  task.timer=setTimeout(()=>{
+    if(playbackTasks[kind]!==task)return;
+    task.timer=null;
+    if(state.paused){task.remaining=0;return;}
+    playbackTasks[kind]=null;task.callback();
+  },task.remaining);
+}
+function schedulePlaybackTask(kind,callback,delay){
+  cancelPlaybackTask(kind);playbackTasks[kind]={callback,remaining:delay,due:0,timer:null};resumePlaybackTask(kind);
+}
+const scene = () => SCENES[state.scene];
+const event = () => scene().event?EVENTS[scene().event]:null;
+const eventState = () => scene().event?state.events[scene().event]:null;
+const awaitingReport = key => Boolean(REPORTS[key]&&!state.events[key].reported);
+const history = () => Object.entries(EVENTS).filter(([key])=>state.events[key].applied).map(([key,e])=>({key,event:e,choice:e.options.find(o=>o.id===state.events[key].choice),scene:SCENES.find(s=>s.event===key)}));
+const nextAllowed = () => state.scene<SCENES.length-1&&(!event()||eventState().applied)&&!Object.values(state.events).some(e=>e.pending);
+function stops(){
+  const result=STOPS.map(stop=>({...stop}));
+  for(const item of history())Object.assign(result.find(s=>s.id===item.event.stop),item.choice.patch,{changed:true,change:item.event.label});
+  if(state.events.fire.applied){const target=result.find(s=>s.id==='seongsu');target.time='11:15';target.duration='11:15–13:00';}
+  if(state.events.lunch.applied){const target=result.find(s=>s.id==='palace');target.time='15:30';target.duration='15:30–17:00';}
+  return result;
+}
+const sceneSeconds = index => SCENES[index].time.split(':').reduce((hours,minutes)=>Number(hours)*3600+Number(minutes)*60);
+function clockText(){const seconds=Math.floor(state.seconds);return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');}
+function renderClock(){$('#clock').textContent=clockText();}
+function sampleClock(now=performance.now()){
+  if(!clockMotion)return;
+  const progress=Math.min(1,(now-clockMotion.started)/clockMotion.duration);
+  state.seconds=clockMotion.from+(clockMotion.to-clockMotion.from)*progress;
+  renderClock();
+  if(progress===1)clockMotion=null;
+}
+function stopClock(){sampleClock();cancelAnimationFrame(clockFrame);clockFrame=null;clockMotion=null;}
+function animateClock(target,duration){
+  stopClock();clockMotion={from:state.seconds,to:Math.max(state.seconds,target),started:performance.now(),duration};
+  function tick(now){sampleClock(now);if(clockMotion)clockFrame=requestAnimationFrame(tick);}
+  clockFrame=requestAnimationFrame(tick);
+}
+function say(role,text,time=clockText()){state.messages.push({role,text,time});}
+function nextAlternative(key){const e=EVENTS[key],es=state.events[key];return e.options[(e.options.findIndex(o=>o.id===es.choice)+1)%e.options.length];}
+function currentPrompt(){return awaitingReport(scene().event)?REPORTS[scene().event].message:eventState()?.applied?nextAlternative(scene().event).choiceText:scene().prompt||'현재 일정을 확인해줘.';}
+function addSceneIntro(notify=true){
+  if(awaitingReport(scene().event)||(!scene().intro&&!event()))return;
+  say('system',`DAY 1 · ${scene().time} · ${scene().label}`);
+  if(scene().intro)say('assistant',scene().intro);
+  else say('assistant',event().text);
+  if(notify)showNotification(event()?`${event().label} · 일정 변동 안내`:scene().label);
+}
+function dismissNotification(){
+  cancelPlaybackTask('notification');notificationIndex=null;
+  const notice=$('#tripNotice'),focused=notice.contains(document.activeElement);
+  notice.hidden=true;
+  if(focused)$('[data-action="history"]').focus({preventScroll:true});
+}
+function deferNotificationDismiss(){
+  cancelPlaybackTask('notification');
+  if($('#tripNotice').hidden)return;
+  schedulePlaybackTask('notification',dismissNotification,8000);
+}
+function showNotification(title,preview){
+  notificationIndex=state.messages.length-1;
+  const message=state.messages[notificationIndex];
+  $('#noticeMeta').textContent=`triPilot · ${message.time}`;
+  $('#noticeTitle').textContent=title;
+  $('#noticePreview').textContent=preview||message.text;
+  $('#tripNotice').hidden=false;
+  deferNotificationDismiss();
+}
+function openNotification(){
+  if(notificationIndex===null)return;
+  const index=notificationIndex;
+  pause();closeModal();dismissNotification();switchTab('chat');renderChat(false);
+  requestAnimationFrame(()=>{const message=$(`#message-${index}`);message?.scrollIntoView({block:'start',behavior:'smooth'});message?.focus({preventScroll:true});});
+}
+function toast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>{$('#toast').hidden=true;},2600);}
+function stopTags(stop){
+  const tags=[];
+  if(event()?.stop===stop.id&&!eventState().applied&&!awaitingReport(scene().event))tags.push(badge(event().label,'warn'));
+  if(stop.changed)tags.push(badge('변경 반영','good'));
+  else if(stop.id==='lunch')tags.push(badge('원래 예약 있음'));
+  else if(stop.id==='dinner')tags.push(badge('예약 없이 방문'));
+  if(stop.id==='mart'&&state.events.stock.applied)tags.push(badge('재고 미확인','warn'));
+  return tags.join('');
+}
+function renderTimeline(scroll=false){
+  const items=stops(),currentIndex=items.findIndex(s=>s.id===scene().stop);
+  $('#timeline').innerHTML=items.map((stop,index)=>{
+    const open=state.expanded===stop.id;
+    const original=STOPS.find(s=>s.id===stop.id);
+    if(stop.kind==='transit')return `<article class="leg-hint ${state.selected===stop.id?'selected':''}" data-stop="${stop.id}"><button class="leg-head" id="stop-${stop.id}" data-select-stop="${stop.id}" aria-expanded="${open}" aria-controls="detail-${stop.id}">↓ ${esc(stop.name)} · ${esc(stop.summary)}${stop.changed?' '+stopTags(stop):''}</button><section class="stop-details" id="detail-${stop.id}" aria-labelledby="stop-${stop.id}" ${open?'':'hidden'}><h3>이동 상세</h3><dl><dt>예정 시간</dt><dd>${esc(stop.duration)}</dd><dt>위치</dt><dd>${esc(stop.area)}</dd><dt>안내</dt><dd>${esc(stop.note)}</dd></dl></section></article>`;
+    return `<article class="stop ${stop.kind==='transit'?'transit':''} ${state.selected===stop.id?'selected':''} ${index===currentIndex?'current':index<currentIndex?'past':''}" data-stop="${stop.id}"><button class="stop-head" id="stop-${stop.id}" data-select-stop="${stop.id}" aria-expanded="${open}" aria-controls="detail-${stop.id}"><time>${esc(stop.time)}</time><span><span class="stop-name">${esc(stop.name)}</span><span class="stop-summary">${esc(stop.summary)}</span><span class="stop-tags">${stopTags(stop)}</span></span><span class="chevron" aria-hidden="true">${open?'−':'+'}</span></button><section class="stop-details" id="detail-${stop.id}" aria-labelledby="stop-${stop.id}" ${open?'':'hidden'}><h3>${stop.kind==='transit'?'이동 상세':'장소 상세'}</h3><dl><dt>${stop.kind==='transit'?'구간':'장소'}</dt><dd>${esc(stop.name)}</dd><dt>시간</dt><dd>${esc(stop.duration)}</dd><dt>위치</dt><dd>${esc(stop.area)}</dd>${stop.changed?`<dt>변경 전</dt><dd class="before-text">${esc(original.name)} · ${esc(original.time)}</dd>`:''}<dt>안내</dt><dd>${esc(stop.note)}</dd><dt>정보 기준</dt><dd>확정 시나리오 · 시연용 정보</dd></dl>${stop.id==='lunch'&&state.events.lunch.applied?`<div class="inline-warning">${esc(EVENTS.lunch.booking)}</div>`:''}${stop.id==='mart'&&state.events.stock.applied?`<div class="inline-warning">취급 후보이며 재고는 미확인입니다. 방문 전 확인해 주세요.</div>`:''}</section></article>`;
+  }).join('');
+  $('#stopCount').textContent=`${items.filter(stop=>stop.kind!=='transit').length}개 항목`;
+  $('#version').textContent=`일정 v${state.changes.length+1}`;
+  if(scroll)requestAnimationFrame(()=>{$(`[data-stop="${state.selected}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'});});
+}
+function pinSelection(){return ({toSeongsu:'seongsu',toPalace:'palace',toStation:'dinner'})[state.selected]||state.selected;}
+function renderMap(){
+  const selected=pinSelection(),places=stops().filter(stop=>stop.x!==undefined),selectedStop=places.find(stop=>stop.id===selected);
+  const positions=[[25,84],[75,84],[75,15],[75,42],[25,12],[25,36],[25,60]];
+  $('#mapPins').style.setProperty('--zoom',state.zoom);
+  $('#mapPins').innerHTML=places.map((stop,index)=>`<button type="button" class="pin ${positions[index][0]>60?'label-left ':''}${stop.id===selected?'selected':''} ${event()?.stop===stop.id&&!eventState().applied&&!awaitingReport(scene().event)?'alert':''}" style="--x:${positions[index][0]}%;--y:${positions[index][1]}%" data-pin="${stop.id}" aria-label="${esc(stop.name)} 일정 선택" aria-pressed="${stop.id===selected}"><span class="pin-circle">${index+1}</span><span class="pin-label">${esc(stop.name)}</span></button>`).join('');
+  $('#mapScope').textContent=`일정 장소 ${places.length}곳 · 방문 순서 표시`;
+  $('#mapSelection').innerHTML=`<span class="eyebrow">선택한 장소</span><h3>${esc(selectedStop.name)}</h3><p>${esc(selectedStop.duration)} · ${esc(selectedStop.area)}</p><p>${esc(selectedStop.summary)}</p><div class="row"><button data-action="mapSelected">일정 상세 보기</button><button data-action="askSelected">채팅으로 질문</button></div>`;
+  if($('#chatContext'))$('#chatContext').innerHTML=chatContext();
+  const alert=$('#mapAlert');
+  alert.hidden=!(scene().event==='fire'||scene().event==='control');
+  alert.textContent=scene().event==='fire'?'성수역 무정차 · 버스 연결 경로 확인':scene().event==='control'?'도로 통제 · 지하철 이동으로 우회':'';
+}
+function renderMessage(message,index){
+  if(message.role==='system')return `<div class="message system"><span class="bubble">${esc(message.text)}</span></div>`;
+  return `<div id="message-${index}" tabindex="-1" class="message ${message.role==='user'?'user':''}">${message.role==='assistant'?'<div class="message-icon" aria-hidden="true">t</div>':''}<div class="message-body"><div class="meta">${message.role==='user'?'나':'triPilot'} · ${esc(message.time)}</div><div class="bubble">${esc(message.text)}</div></div></div>`;
+}
+function renderIncident(){
+  const pendingKey=Object.keys(state.events).find(key=>state.events[key].pending);
+  const key=pendingKey||state.noticeKey||scene().event,e=EVENTS[key],es=state.events[key];
+  if(!e)return '';
+  if(awaitingReport(key))return '';
+  if(es.pending)return `<article class="incident-card"><div class="incident-header"><div class="row between">${badge(es.applied?'변경 요청 접수':e.label,'warn')}<span class="muted">${esc(clockText())}</span></div><h3>${esc(es.applied?'요청에 맞춰 일정을 다시 조정하고 있어요':e.title)}</h3><p>${esc(es.pending.request||e.text)}</p></div><div class="incident-body"><div class="row wrap">${badge(es.applied?'요청 접수':REPORTS[key]?'사용자 신고 접수':'감지 완료','good')}${badge(es.phase==='detected'?'대안 탐색 준비':'대안 탐색 중','warn')}${badge('확정 후 알림')}</div><div class="reason-list" style="margin-top:14px">${e.facts.map(f=>`<div>${esc(f)}</div>`).join('')}</div><p class="muted">${es.applied?'변경사항이 적용되면 새 일정을 알려드릴게요.':'에이전트가 적합한 대안을 정해 일정에 반영하고 알려드릴게요.'}</p></div></article>`;
+  if(es.applied){const option=e.options.find(o=>o.id===es.choice);return `<div class="resolved-card">${badge(es.revisions?'요청한 변경을 다시 적용했어요':'일정 확정 · 반영 완료','good')}<h3>${esc(option.name)}</h3><p>${esc(option.desc)}</p><div class="row wrap" style="margin:8px 0">${option.facts.map(f=>badge(f)).join('')}</div><p>${esc(e.impact)}</p><small>현재 일정에 반영되어 있어요. 바꾸고 싶다면 에이전트에게 요청해 주세요.</small>${e.booking?`<small>${esc(e.booking)}</small>`:''}${e.uncertain?`<small>${esc(e.uncertain)}</small>`:''}<button class="full" style="margin-top:12px" data-request-change="${key}">에이전트에게 변경 요청</button></div>`;}
+  return '';
+}
+function summary(){return `<section class="day-summary"><div class="eyebrow">A DAY, KEPT TOGETHER</div><h3>오늘 일정에 반영한 변경 내역</h3>${history().map(item=>`<div class="result-line"><strong>${esc(item.event.label)}</strong><br><span class="muted">${esc(item.choice.name)}</span></div>`).join('')}<div style="margin-top:12px">${badge(`${history().length}개 사건 · 일정 반영 ${state.changes.length}회`,'good')}</div><div class="inline-warning">점심 예약 변경·취소 확인과 대체 판매점 재고 확인은 별도로 필요합니다.</div></section>`;}
+function chatContext(){
+  const places=stops().filter(stop=>stop.kind!=='transit'),selected=places.find(stop=>stop.id===pinSelection());
+  return `<strong>지금 보고 있는 1일차</strong><small>2026-09-15 · ${places.length}개 일정</small><small>선택: ${esc(selected.time+' '+selected.name)}</small>`;
+}
+function renderChat(scroll=true){
+  const log=$('#chatLog'),oldScroll=log.scrollTop;
+  log.innerHTML='<div class="chat-date">서울 여행 · 전체 일차의 대화</div>'+state.messages.map(renderMessage).join('')+'<div class="chat-context" id="chatContext">'+chatContext()+'</div>'+renderIncident()+(state.scene===SCENES.length-1?summary():'')+(nextAllowed()?`<button class="next-inline" data-action="next">${esc(SCENES[state.scene+1].time)} · 다음 장면으로 →</button>`:'');
+  $('#quickPrompt').textContent=currentPrompt();
+  $('#quickPrompt').hidden=Boolean(event()&&!eventState().applied&&!awaitingReport(scene().event))||Object.values(state.events).some(e=>e.pending);
+  if(scroll)requestAnimationFrame(()=>{
+    const card=log.querySelector('.incident-card,.resolved-card,.day-summary');
+    if(card)log.scrollTo({top:Math.max(0,card.getBoundingClientRect().top-log.getBoundingClientRect().top+log.scrollTop-12),behavior:'smooth'});
+    else log.scrollTo({top:log.scrollHeight,behavior:'smooth'});
+  });else log.scrollTop=oldScroll;
+}
+function renderChrome(){
+  renderClock();
+  $('#sceneCaption').textContent=awaitingReport(scene().event)?({lunch:'점심 식사 일정',dinner:'저녁 식사 일정',stock:'식료품 쇼핑 일정'})[scene().event]:scene().label;
+  $('#watchTime').textContent=`마지막 확인 ${scene().time}`;
+  const pending=Object.values(state.events).some(e=>e.pending);
+  $('#watchStatus').textContent=pending?'에이전트가 일정을 조정하고 있어요':state.scene===SCENES.length-1?'오늘의 변경 내역을 안내했어요':eventState()?.applied?'확정된 일정을 보내드렸어요':'여행을 함께 살피고 있어요';
+  $('#historyCount').textContent=state.changes.length;
+  $('#directorStatus').textContent=`${state.scene+1} / ${SCENES.length} · ${scene().label}`;
+  $('#scenePicker').value=String(state.scene);
+  $('#progressFill').style.width=`${(state.scene+1)/SCENES.length*100}%`;
+  $('#nextBtn').disabled=!nextAllowed();
+  $('#nextBtn').textContent=state.scene===SCENES.length-1?'하루 시연 완료':'다음 장면 →';
+  $('#prevBtn').disabled=state.scene===0;
+  $('#autoBtn').textContent=state.paused?'계속 재생':state.auto||playbackTasks.agent?'일시정지':'자동 재생';
+  $('#autoBtn').setAttribute('aria-pressed',String(Boolean(state.auto||playbackTasks.agent)&&!state.paused));
+  document.body.classList.toggle('filming',state.filming);
+  $('#recordToggle').innerHTML=state.filming?'<span class="record-dot"></span> 촬영 모드 종료':'촬영 모드';
+  $('#recordToggle').setAttribute('aria-pressed',String(state.filming));
+  for(const panel of document.querySelectorAll('.pane'))panel.dataset.active=String(panel.dataset.panel===state.tab);
+  for(const tab of document.querySelectorAll('[data-tab]'))tab.setAttribute('aria-pressed',String(tab.dataset.tab===state.tab));
+}
+function render(options={}){renderTimeline(options.focusStop||false);renderMap();renderChat(options.scrollChat!==false);renderChrome();}
+function recordChange(key,option,request='',notify=true){
+  const e=EVENTS[key],es=state.events[key],revision=es.applied;
+  const before=es.choice?e.options.find(o=>o.id===es.choice).name:STOPS.find(s=>s.id===e.stop).name;
+  es.reported=true;es.choice=option.id;es.applied=true;es.phase='applied';es.pending=null;
+  state.noticeKey=key;
+  if(revision)es.revisions++;
+  state.changes.push({key,option:option.id,before,revision,request,time:clockText()});
+  const reply=revision?(option.reply||`요청하신 변경을 다시 적용했어요.\n${option.name}\n${option.desc}\n${e.impact}`):e.done;
+  say('assistant',reply+(e.booking?'\n\n'+e.booking:key==='stock'?'\n\n'+e.uncertain:''));
+  if(notify)showNotification(`${e.label} · ${revision?'요청한 변경 반영':'일정 변경 완료'}`,`${option.name} · ${e.impact}`);
+}
+function startAgent(key,optionId=EVENTS[key].options[0].id,request=''){
+  if(Object.values(state.events).some(e=>e.pending))return;
+  const e=EVENTS[key],es=state.events[key];
+  es.reported=true;es.pending={optionId,request};es.phase=es.applied||REPORTS[key]?'searching':'detected';
+  function complete(){
+    sampleClock();
+    recordChange(key,e.options.find(o=>o.id===optionId),request);
+    state.selected=e.stop;state.expanded=e.stop;
+    render({focusStop:true});scheduleAuto();
+  }
+  function search(){
+    es.phase='searching';
+    schedulePlaybackTask('agent',complete,2500);renderChat();renderChrome();scheduleAuto();
+  }
+  if(es.applied){say('assistant',key==='lunch'&&optionId==='lunchB'?'가벼운 식사를 할 수 있는 곳으로 다시 찾아볼게요.':'변경 요청을 받았어요. 조건에 맞는 대안을 다시 찾아 적용할게요.');search();}
+  else if(REPORTS[key]){say('assistant',REPORTS[key].acknowledgement);search();}
+  else schedulePlaybackTask('agent',search,1800);
+  render();scheduleAuto();
+}
+function enterScene(){state.noticeKey=null;addSceneIntro();if(event()&&!awaitingReport(scene().event))startAgent(scene().event);}
+function advance(fromAuto=false){
+  if(!nextAllowed()){if(state.scene!==SCENES.length-1)toast(awaitingReport(scene().event)?'채팅에 상황을 알려주시면 에이전트가 일정을 조정해요.':'에이전트가 일정 변경을 마치고 있어요. 잠시만 기다려 주세요.');return;}
+  if(!fromAuto)stopAuto();stopClock();state.scene++;state.seconds=sceneSeconds(state.scene);state.selected=scene().stop;state.expanded=null;
+  enterScene();render({focusStop:true});scheduleAuto();
+}
+function pause(){
+  if(state.paused)return;
+  const now=performance.now();sampleClock(now);
+  pausedClock=clockMotion?{target:clockMotion.to,remaining:Math.max(0,clockMotion.duration-(now-clockMotion.started))}:null;
+  stopClock();state.paused=true;
+  for(const kind of Object.keys(playbackTasks))suspendPlaybackTask(kind);
+  renderChrome();
+}
+function resumePlayback(){
+  const motion=pausedClock;pausedClock=null;state.paused=false;
+  if(!state.auto&&!playbackTasks.agent)state.auto=true;
+  for(const kind of Object.keys(playbackTasks))resumePlaybackTask(kind);
+  if(motion)animateClock(motion.target,motion.remaining);
+  else if(state.auto&&!playbackTasks.auto)scheduleAuto();
+  renderChrome();
+}
+function stopAuto(){
+  cancelPlaybackTask('auto');stopClock();pausedClock=null;state.auto=false;state.paused=false;
+  resumePlaybackTask('agent');resumePlaybackTask('notification');renderChrome();
+}
+function jump(index){
+  cancelPlaybackTask('agent');stopAuto();dismissNotification();
+  const remembered=Object.fromEntries(Object.entries(state.events).map(([key,value])=>[key,value.choice]));
+  state.scene=0;state.events=makeEventState();state.messages=[];state.changes=[];state.expanded=null;state.zoom=1;state.autoRevisionShown=false;
+  $('#chatInput').value='';
+  for(let i=0;i<=index;i++){
+    state.scene=i;state.seconds=sceneSeconds(i);addSceneIntro(i===index);
+    if(i<index&&scene().event){
+      const key=scene().event,e=event();
+      if(REPORTS[key]){say('user',REPORTS[key].message);say('assistant',REPORTS[key].acknowledgement);}
+      recordChange(key,e.options[0],REPORTS[key]?.message||'',false);
+      const chosen=e.options.find(o=>o.id===remembered[key]);
+      if(chosen&&chosen.id!==e.options[0].id){say('user',chosen.choiceText);recordChange(key,chosen,chosen.choiceText,false);}
+    }
+  }
+  state.noticeKey=null;
+  if(event()&&!awaitingReport(scene().event))startAgent(scene().event);
+  state.selected=scene().stop;render({focusStop:true});
+}
+function reset(){jump(0);toast('처음 장면으로 돌아왔어요.');}
+function scheduleAuto(){
+  if(state.paused)return;
+  cancelPlaybackTask('auto');
+  if(!state.auto)return;
+  const boundary=state.scene<SCENES.length-1?sceneSeconds(state.scene+1):state.seconds;
+  if(Object.values(state.events).some(e=>e.pending)){
+    const remaining=Math.max(1,playbackTasks.agent.due-performance.now());
+    animateClock(Math.min(boundary-1,state.seconds+remaining/1000),remaining);return;
+  }
+  let action,duration=6500,target=boundary;
+  if(awaitingReport(scene().event)){duration=3000;target=Math.min(boundary-1,state.seconds+3);action=()=>sendMessage(REPORTS[scene().event].message,true);}
+  else if(scene().event==='lunch'&&!state.autoRevisionShown&&!eventState().revisions){
+    duration=4500;target=Math.min(boundary-1,state.seconds+4.5);
+    action=()=>{state.autoRevisionShown=true;sendMessage(EVENTS.lunch.options.find(o=>o.id==='lunchB').choiceText,true);};
+  }else if(nextAllowed())action=()=>advance(true);
+  else{stopAuto();toast('자동 시연을 마쳤어요.');return;}
+  animateClock(target,duration);
+  schedulePlaybackTask('auto',()=>{stopClock();state.seconds=target;renderClock();action();},duration);
+}
+function toggleAuto(){
+  if(state.paused){resumePlayback();return;}
+  if(state.auto||playbackTasks.agent){pause();return;}
+  if(state.scene===SCENES.length-1)jump(0);
+  state.auto=true;renderChrome();scheduleAuto();
+}
+function requestKey(content){
+  const terms={weather:/아쿠아리움|관람|전망|오전/,fire:/건대|뚝섬|버스 연결/,lunch:/점심|성수.*식당/,control:/지하철.*(쉼|쉬|휴식)|충무로|통제/,dinner:/저녁|서울역.*식당/,stock:/판매점|지점|재고|라면|스팸|선물세트/};
+  const named=Object.keys(terms).find(key=>terms[key].test(content));
+  if(named)return named;
+  const selected=Object.keys(EVENTS).find(key=>EVENTS[key].stop===state.selected&&state.events[key].applied);
+  return selected||scene().event;
+}
+function requestedOption(key,content){
+  const e=EVENTS[key];
+  const named=e.options.find(o=>content===o.choiceText);
+  if(named)return named;
+  content=content.split(/말고|대신/).at(-1).trim();
+  if(key==='weather'&&/30분|짧게|휴식|쉬/.test(content))return e.options.find(o=>o.id==='aquariumShort');
+  if(key==='control'&&/10분|휴식|쉬/.test(content))return e.options.find(o=>o.id==='subwayRest');
+  const byName=e.options.find(o=>content.includes(o.name));
+  if(byName)return byName;
+  const aliases={aquariumShort:/30분|짧게|휴식|쉬/,aquarium:/아쿠아리움/,konkuk:/건대/,ttukseom:/뚝섬/,lunchA:/한식당\s*A|식당\s*A/,lunchB:/식당\s*B/,subwayRest:/10분|휴식|쉬/,subway:/지하철/,dinnerA:/식당\s*C/,dinnerD:/식당\s*D|가볍/,storeA:/지점\s*A/,storeB:/판매점\s*B|지점\s*B/};
+  const matched=e.options.find(o=>aliases[o.id]?.test(content));
+  const generic=content.replace(/^(점심|저녁|오전|경로|일정)(을|는|은)?\s*/, '');
+  return matched||(/^(다른 (안|대안|일정|곳|식당|경로)으로 )?(바꿔줘|변경해줘)[.!]?$/.test(generic)||/^(마음에|맘에) 안 들(어|어요)[.!]?$/.test(generic)?nextAlternative(key):null);
+}
+function sendMessage(text,fromAuto=false){
+  const raw=String(text).trim(),content=TripilotI18n.sourceRequest(raw);if(!content)return;if(!fromAuto)stopAuto();
+  say('user',raw);$('#chatInput').value='';
+  const key=requestKey(content),e=EVENTS[key],es=state.events[key];
+  const changing=/바꿔|변경|다른|줄이|줄여|늘려|넣어|추가|갈게|갈래|마음에 안|맘에 안/.test(content);
+  if(Object.values(state.events).some(e=>e.pending))say('assistant','접수한 일정 변경을 처리하고 있어요. 완료 알림 뒤에 추가 요청을 보내 주세요.');
+  else if(awaitingReport(scene().event)&&REPORTS[scene().event].pattern.test(content)){startAgent(scene().event,undefined,content);return;}
+  else if(e&&es.applied&&changing){
+    const option=requestedOption(key,content);
+    if(option&&option.id!==es.choice){startAgent(key,option.id,content);return;}
+    say('assistant',option?'이미 현재 일정에 반영된 내용이에요.':`이 목업에서는 “${nextAlternative(key).choiceText}” 요청을 시연할 수 있어요.`);
+  }else if(state.scene===SCENES.length-1&&!changing)say('assistant',`오늘 ${history().length}개 사건에 대해 ${state.changes.length}번 일정을 반영했어요. 변경 기록에서 자동 반영과 재요청을 확인할 수 있어요. 점심 예약 처리와 판매점 재고 확인은 별도로 필요해요.`);
+  else if(e&&es.applied){const option=e.options.find(o=>o.id===es.choice);say('assistant',`현재 일정에는 ${option.name}이 반영되어 있어요.\n${e.impact}\n${e.booking||e.uncertain||'바꾸고 싶다면 변경할 내용을 말씀해 주세요.'}`);}
+  else if(awaitingReport(scene().event))say('assistant','일정 변경이 필요하다면 어떤 상황인지 알려 주세요. 말씀해 주신 내용을 기준으로 남은 일정을 살펴볼게요.');
+  else say('assistant',scene().intro||`현재 계획된 일정은 ${stops().find(s=>s.id===scene().stop).name}이에요. 상세 내용은 오늘 일정에서 확인할 수 있어요.`);
+  render();scheduleAuto();
+}
+function queryTrip(kind){
+  pause();
+  const places=stops().filter(stop=>stop.kind!=='transit'),selected=places.find(stop=>stop.id===pinSelection());
+  const prompt=kind==='summary'?'1일차 일정 요약해줘.':kind==='booking'?'1일차 예약 일정을 확인해줘.':'1일차 '+selected.name+' 일정을 자세히 알려줘.';
+  const reply=kind==='summary'?places.map(stop=>stop.time+' · '+stop.name).join('\n'):kind==='booking'?'성수 예약 식당 · 원래 예약 있음\n'+EVENTS.lunch.booking:selected.name+'\n'+selected.duration+' · '+selected.area+'\n'+selected.summary+'\n'+selected.note;
+  say('user',TripilotI18n.display(prompt));say('assistant',reply);switchTab('chat');renderChat();
+}
+function selectStop(id,fromPin=false){
+  if(!STOPS.some(s=>s.id===id))return;
+  state.selected=id;state.expanded=fromPin?id:state.expanded===id?null:id;
+  renderTimeline(fromPin);renderMap();
+  if(!fromPin)$(`[data-select-stop="${id}"]`)?.focus({preventScroll:true});
+}
+function showModal(kind){
+  pause();modalOpener=document.activeElement;
+  let content='';
+  if(kind==='history'){
+    content=`<div class="eyebrow">TRIP CHANGE HISTORY</div><h2>오늘의 변경 기록</h2><p class="muted">자동 반영·재요청 ${state.changes.length}건 · 현재 일정 v${state.changes.length+1}</p>${state.changes.length?state.changes.map((item,index)=>{const e=EVENTS[item.key],option=e.options.find(o=>o.id===item.option);return `<article class="history-row"><div class="row between">${badge(item.revision?'사용자 요청 · 재적용':REPORTS[item.key]?'사용자 신고 후 확정':'에이전트 · 자동 확정','good')}<span class="muted">${esc(item.time)} · v${index+2}</span></div><h3 style="margin-top:8px">${esc(option.name)}</h3><p class="muted">${esc(e.label)} · ${esc(e.code)}</p><p><span class="before-text">${esc(item.before)}</span> → ${esc(option.name)}</p>${item.request?`<p>${item.revision?'요청':'신고'}: ${esc(item.request)}</p>`:''}<p>${esc(e.impact)}</p>${e.booking?`<div class="inline-warning">${esc(e.booking)}</div>`:''}${e.uncertain?`<div class="inline-warning">${esc(e.uncertain)}</div>`:''}<button style="margin-top:8px;font-size:11px" data-history-stop="${e.stop}">현재 반영된 일정 보기 →</button></article>`;}).join(''):'<p>아직 반영한 변경이 없어요. 에이전트가 확정한 일정과 이후 변경 요청이 여기에 기록됩니다.</p>'}`;
+  }else{
+    content=`<div class="eyebrow">PRESENTATION GUIDE</div><h2>서울 하루 여행 시연</h2><p><strong>확정_시나리오_액티비티_수정_버전.md</strong>를 반영한 12개 장면과 6개 사건을 바탕으로, 에이전트가 대안을 먼저 확정·적용한 뒤 알리는 서비스 흐름을 체험하는 HTML 목업입니다.</p><ol><li><strong>상단 알림:</strong> 새 안내와 일정 변경은 화면 상단 중앙에도 표시됩니다. “채팅 확인”을 누르면 재생을 멈추고 해당 메시지로 이동합니다. 알림은 약 8초 후 사라지며, × 또는 <kbd>Esc</kbd>로 닫을 수 있습니다.</li><li><strong>수동 시연:</strong> 다음 장면으로 이동하면 감지 → 대안 탐색 → 일정 확정·반영 → 알림이 자동으로 이어집니다. 점심 지연·식당 임시휴무·상품 품절은 여행자가 채팅으로 알린 뒤 탐색·반영을 시작합니다.</li><li><strong>변경 요청:</strong> 확정 알림의 “에이전트에게 변경 요청”을 누르면 입력창에 요청 예시가 들어갑니다. 내용을 전송하거나 채팅 아래 예시를 누르면 다시 탐색하고 변경을 적용합니다. 경로·식당 교체, 짧은 관람·휴식 등 준비된 요청을 시연합니다. 문서의 경로·식당 후보는 기존 데모의 자동 확정 후 재요청 흐름으로 표현합니다.</li><li><strong>자동 재생:</strong> 약 2분 동안 하루를 시연합니다. 08:00 정시 안내 → 09:00 미세먼지 사전 감지·일정 조정 → 10:00 아쿠아리움 관람 일정으로 이어지며 사용자 신고 메시지도 시연합니다. 점심은 신고 후 A 식당으로 확정한 뒤 가벼운 식사를 요청하면 B 식당으로 재적용합니다. 시계는 처리 중에는 실제 경과 시간으로, 다음 장면으로 이동할 때는 빠르게 연속해서 흐릅니다. 일시정지하면 시계·채팅 출력·일정 변경 단계와 알림 표시 시간이 함께 멈춥니다. 다시 재생하면 남은 대기 시간부터 이어집니다.</li><li><strong>영상 촬영:</strong> 기본은 촬영 모드입니다. <kbd>F</kbd>로 발표자 제어 영역을 표시·숨기고, <kbd>Space</kbd>로 자동 재생을 시작·일시정지·재개합니다. 일정 변경 처리 중에도 멈출 수 있으며, 버튼에 포커스가 있어도 작동합니다. 채팅 입력창에서는 띄어쓰기를 유지하므로 입력창 밖을 클릭한 뒤 사용하세요. 실제 녹화는 운영체제나 녹화 도구에서 시작하세요.</li><li><strong>장면 재촬영:</strong> 장면 선택이나 <kbd>←</kbd>로 해당 장면의 시작 시각부터 다시 시연합니다. 앞선 사건은 자동 반영과 기존 변경 요청으로 재구성됩니다. <kbd>→</kbd>는 처리 완료 후 다음 장면으로 이동합니다.</li><li><strong>상세 확인:</strong> 왼쪽 일정이나 가운데 핀에서 상세를 확인하고, 변경 기록에서 자동 확정과 재요청에 따른 버전별 이력을 확인하세요.</li></ol><div class="inline-warning">모든 사건·대화·운영 정보는 시연 데이터입니다. AI·백엔드·예약·교통·날씨·재고 서비스와 연결되지 않습니다. 지도와 핀은 시연 배치이며 실제 Google Maps가 아닙니다.</div><p class="muted">우측 시계는 실제 현재 시간이 아닌 시나리오 속 서울 시각입니다. 08:00은 하루 일정 안내의 고정 발송 시각이며, 09:00은 10:00 활동의 기상 사전 감지·조정 시각, 20:30은 변경 내역 안내를 위한 시연 시각입니다. 실제 위치·탑승·도착·귀가 여부를 감지하지 않습니다. 경로 수치, 익명 식당·판매점, 추가 휴식은 시연용 예시이며 실측 이동 시간으로 계산하지 않았습니다. 일정 확정과 업체 예약 승인은 별개이며, 원래 점심 예약의 취소·변경 및 판매점 재고를 확인 완료로 처리하지 않습니다.</p><p class="muted">오른쪽 위에서 한국어와 영어를 선택할 수 있습니다. 화면과 시연 대화가 함께 전환되며 장면·변경 기록은 유지됩니다.</p><div class="modal-footer">촬영 권장: 1440×900 또는 1920×1080, 브라우저 확대 100%. 새로고침하면 처음부터 시작합니다. 입력한 대화는 현재 탭에서만 유지됩니다.</div>`;
+  }
+  $('#modalRoot').innerHTML=`<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true" aria-label="${kind==='history'?'변경 기록':'시연 안내'}"><div class="row between"><span class="pill">triPilot · DEMO</span><button data-action="closeModal" aria-label="창 닫기">닫기 ×</button></div>${content}</section></div>`;
+  $('#modalRoot [data-action="closeModal"]').focus();
+}
+function closeModal(){if(!$('#modalRoot').hasChildNodes())return;$('#modalRoot').innerHTML='';modalOpener?.focus({preventScroll:true});}
+function switchTab(tab){if(!['schedule','map','chat'].includes(tab))return;state.tab=tab;renderChrome();}
+document.addEventListener('click',e=>{
+  if(e.target.hasAttribute('data-backdrop')){closeModal();return;}
+  const button=e.target.closest('button');if(!button||button.disabled)return;
+  if(button.dataset.selectStop){selectStop(button.dataset.selectStop);return;}
+  if(button.dataset.pin){selectStop(button.dataset.pin,true);return;}
+  if(button.dataset.requestChange){pause();switchTab('chat');$('#chatInput').value=TripilotI18n.display(nextAlternative(button.dataset.requestChange).choiceText);$('#chatInput').focus();return;}
+  if(button.dataset.tab){switchTab(button.dataset.tab);return;}
+  if(button.dataset.tripQuery){queryTrip(button.dataset.tripQuery);return;}
+  if(button.dataset.historyStop){closeModal();state.tab='schedule';selectStop(button.dataset.historyStop,true);renderChrome();return;}
+  const actions={
+    workspace(){switchTab('schedule');},history(){showModal('history');},help(){showModal('help');},closeModal,openNotification,dismissNotification,
+    record(){state.filming=!state.filming;renderChrome();button.blur();},reset,previous(){if(state.scene>0)jump(state.scene-1);},next(){advance();},auto:toggleAuto,
+    quick(){sendMessage(currentPrompt());},
+    zoomIn(){state.zoom=Math.min(1.3,state.zoom+.1);renderMap();},zoomOut(){state.zoom=Math.max(.8,state.zoom-.1);renderMap();},zoomReset(){state.zoom=1;renderMap();},
+    mapSelected(){switchTab('schedule');selectStop(pinSelection(),true);},askSelected(){queryTrip('detail');}
+  };if(actions[button.dataset.action])actions[button.dataset.action]();
+});
+$('#chatForm').addEventListener('submit',e=>{e.preventDefault();sendMessage($('#chatInput').value);});
+$('#scenePicker').innerHTML=SCENES.map((s,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${esc(s.time)} · ${esc(s.label)}</option>`).join('');
+$('#scenePicker').addEventListener('change',e=>jump(Number(e.target.value)));
+for(const type of ['mouseenter','focusin'])$('#tripNotice').addEventListener(type,()=>suspendPlaybackTask('notification'));
+for(const type of ['mouseleave','focusout'])$('#tripNotice').addEventListener(type,()=>resumePlaybackTask('notification'));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('#tripNotice').hidden){e.preventDefault();dismissNotification();return;}
+  if($('#modalRoot').hasChildNodes()){
+    if(e.key==='Escape'){e.preventDefault();closeModal();return;}
+    if(e.key==='Tab'){const focusable=[...$('#modalRoot').querySelectorAll('button,a,input,select')].filter(el=>!el.disabled),first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+    return;
+  }
+  if(e.ctrlKey||e.metaKey||e.altKey||e.repeat||['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)||e.target.isContentEditable)return;
+  if(e.key==='ArrowRight'){e.preventDefault();advance();}
+  else if(e.key==='ArrowLeft'&&state.scene>0){e.preventDefault();jump(state.scene-1);}
+  else if(e.key.toLowerCase()==='f'){e.preventDefault();state.filming=!state.filming;renderChrome();}
+  else if(e.code==='Space'){e.preventDefault();toggleAuto();}
+});
+addSceneIntro();render();
+</script>
+</body>
+</html>

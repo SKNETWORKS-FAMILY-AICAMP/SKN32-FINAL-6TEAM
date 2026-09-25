@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot · 첫 여행 등록 와이어프레임</title>
+<style>
+:root{color-scheme:light;--paper:#f3f5f3;--surface:#fff;--soft:#f6f7f5;--ink:#24392f;--muted:#6d7c73;--line:#dce3dd;--green:#2e6047;--green-soft:#e9f2eb;--warn:#916425;--warn-soft:#fbf3e4;--red:#a44738;font:14px/1.6 "Segoe UI","Malgun Gothic",sans-serif;color:var(--ink);background:var(--paper)}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit;color:inherit}button,a{touch-action:manipulation}button{cursor:pointer}button,.button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border:1px solid var(--line);border-radius:7px;background:var(--surface);text-decoration:none;color:var(--ink);min-height:42px}button:hover,.button:hover{background:var(--soft)}button:disabled{opacity:.45;cursor:not-allowed}button.primary,.button.primary{background:var(--green);border-color:var(--green);color:#fff}.quiet{background:transparent;border-color:transparent}a{color:var(--green)}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #77a58a;outline-offset:3px}input,select,textarea{width:100%;min-width:0;padding:10px 11px;border:1px solid #bac9bf;border-radius:6px;background:var(--surface)}input:read-only{background:var(--soft)}textarea{resize:vertical;min-height:210px;line-height:1.9}input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);flex-shrink:0}input[aria-invalid=true]{border-color:var(--red)}h1,h2,h3,p{margin:0}h1{font-size:27px;line-height:1.4;letter-spacing:-1px;font-weight:600}h2{font-size:18px;font-weight:600}h3{font-size:14px;font-weight:600}strong{font-weight:600}.muted,small{font-size:12px;color:var(--muted)}.eyebrow{font-size:10px;letter-spacing:1.4px;color:var(--muted);margin-bottom:7px}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.pill{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:var(--soft);font-size:11px}.pill.good{background:var(--green-soft);color:var(--green);border-color:#c7dfce}.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:#ead9b9}[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.reviewbar{padding:12px 26px;background:#24392f;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.reviewbar strong{font-size:12px}.reviewbar small{color:#cedad0;font-size:11px}.reviewbar button{font-size:11px;min-height:33px;padding:5px 10px;background:#344a3e;color:#fff;border-color:#597060}.reviewbar .active{background:#eef3ee;color:#24392f}.reviewbar a{color:#e3eee4;font-size:11px}.screen-jumps{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:11px 26px;border-bottom:1px solid var(--line);background:#f0f3ef}.screen-jumps button{min-height:32px;font-size:11px;padding:5px 10px;background:transparent}.screen-jumps button[aria-current=step]{background:var(--surface);border-color:#86a28e;color:var(--green)}.screen-jumps>span{font-size:10px;color:var(--muted);margin-right:6px}.review-notes{padding:14px 26px;border-bottom:1px solid var(--line);background:#fffdf6;font-size:12px}.review-notes summary{cursor:pointer;color:#6c623e}.note-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:16px}.note-grid p{margin-top:6px;color:#736c56}.app{max-width:1500px;margin:auto;min-height:640px;background:var(--surface);container-type:inline-size}.app.phone{max-width:390px;margin:22px auto;border:1px solid #bac9bf;border-radius:14px;overflow:hidden}.topbar{min-height:64px;padding:16px 28px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:9px;font-size:24px;letter-spacing:-1.1px;font-weight:650}.brand-mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--green);color:#fff;font-size:20px}.topnav{display:flex;align-items:center;gap:16px;font-size:12px}.avatar{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#ede5db;color:#795e41}.content{padding:32px 36px 38px}.intro{margin-bottom:27px}.intro p{margin-top:9px;color:var(--muted);font-size:13px}.content.narrow{max-width:1120px;margin:auto}.empty{max-width:1060px;margin:auto;padding:48px 38px 60px}.empty-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:70px;align-items:center;margin:55px 0 35px}.empty h1{font-size:33px;line-height:1.5}.empty p{margin:17px 0 23px;color:var(--muted);max-width:420px}.empty-sketch{padding:24px;border:1px dashed #b8c8bc;border-radius:12px;background:#fafbf9;transform:rotate(2deg)}.sketch-row{display:flex;gap:15px;align-items:center;padding:17px 0;border-bottom:1px solid var(--line)}.sketch-row:last-child{border:0}.sketch-number{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-size:11px}.sketch-line{height:7px;background:#dce5de;border-radius:3px;margin:8px 0;width:130px}.sketch-line.short{width:80px;background:#e9ede7}.empty-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;padding-top:27px;border-top:1px solid var(--line)}.empty-foot span{color:var(--green);font-size:11px}.empty-foot h3{margin:6px 0}.empty-foot p{font-size:12px;margin:0}.steps{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px;font-size:12px;color:var(--muted)}.steps span{display:flex;align-items:center;gap:8px}.steps b{width:25px;height:25px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-weight:500}.steps .current{color:var(--green)}.steps .current b{background:var(--green);color:#fff;border-color:var(--green)}.steps .done b{background:var(--green-soft);border-color:#c7dfce;color:var(--green)}.form-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,.8fr);gap:30px;align-items:start}.card{border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:18px;background:var(--surface)}.card.soft{background:var(--soft)}.card h2{margin-bottom:15px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-bottom:20px}.field{display:block;font-size:12px}.field>span{display:block;margin-bottom:7px}.field.full{grid-column:1/-1}.field .required{color:var(--green);font-size:11px;margin-left:4px}.field small{display:block;margin-top:6px}.source-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.source-label button{min-height:31px;font-size:11px;padding:4px 9px}.help-list{padding:0;list-style:none;margin:0}.help-list li{padding:13px 0;border-bottom:1px solid var(--line);font-size:12px}.help-list li:last-child{border:0}.help-list strong{display:block;margin-bottom:5px}.help-list p{color:var(--muted)}.small-preview{margin-top:20px;padding:16px;border:1px dashed #becbbe;border-radius:7px;font-size:12px;white-space:pre-line;color:#63766a;line-height:2}.footer-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:21px;border-top:1px solid var(--line);margin-top:22px}.error{padding:11px 14px;background:#fceeea;color:var(--red);border-left:3px solid var(--red);font-size:12px;margin:14px 0}.notice{padding:13px 16px;background:var(--green-soft);border-left:3px solid #72947b;font-size:12px;margin:17px 0}.notice.warn{background:var(--warn-soft);border-color:#cfb17a;color:#785724}.processing{max-width:690px;margin:12px auto 30px;text-align:center}.process-mark{margin:30px auto 24px;width:54px;height:54px;border-radius:50%;border:1px solid #b5c9b9;background:var(--green-soft);display:grid;place-items:center;font-size:24px;color:var(--green)}.processing p{margin-top:12px;color:var(--muted)}.process-list{list-style:none;text-align:left;padding:0;margin:30px 0}.process-list li{display:flex;gap:15px;padding:18px;border-bottom:1px solid var(--line)}.process-list .num{flex-shrink:0;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-size:11px}.process-list li.current{background:var(--green-soft)}.process-list p{margin:3px 0 0;font-size:12px}.process-list .current .num{background:var(--green);color:#fff}.original{white-space:pre-wrap;font-size:12px;color:#52665a;line-height:2;overflow-wrap:anywhere}.review-layout{display:grid;grid-template-columns:minmax(240px,.75fr) minmax(0,1.8fr);gap:25px;align-items:start}.review-row{display:grid;grid-template-columns:115px 90px minmax(0,1fr) 125px;gap:9px;padding:13px 0;border-bottom:1px solid var(--line);align-items:end}.review-row .field{font-size:11px}.review-row input,.review-row select{padding:8px;font-size:12px;min-height:39px}.review-row .place{grid-column:auto}.review-row .row-foot{grid-column:1/-1;margin:0;font-size:11px;color:var(--warn)}.review-row.missing{background:#fffbf3;padding-inline:10px}.checkline{display:flex;align-items:flex-start;gap:10px;font-size:12px;margin:17px 0}.checkline input{margin-top:2px}.mini-summary{display:flex;gap:15px;flex-wrap:wrap;padding:13px 0;font-size:12px;border-bottom:1px solid var(--line)}.demo-choice{border:1px dashed #b1beb3;padding:12px 16px;margin:20px 0;font-size:11px;background:#f7f8f5;display:flex;gap:14px;align-items:center;text-align:left}.demo-choice select{max-width:260px;font-size:12px;padding:7px}.result-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,.8fr);gap:27px}.compare{display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:9px;margin:18px 0}.compare>div{padding:16px;background:var(--soft);border:1px solid var(--line);border-radius:7px}.compare>div.after{background:var(--green-soft);border-color:#c7dfce}.compare .time{font-size:22px;margin:5px 0}.compare small{display:block}.result-line{padding:13px 0;border-bottom:1px solid var(--line);font-size:12px;display:flex;justify-content:space-between;gap:16px}.result-line:last-child{border:0}.tripbar{padding:24px 28px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:15px}.tripbar h1{font-size:23px}.watchbar{padding:10px 28px;background:var(--green-soft);border-block:1px solid #dce7dd;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px}.workspace{display:grid;grid-template-columns:minmax(250px,.93fr) minmax(270px,1.25fr) minmax(280px,1fr)}.pane{min-width:0}.pane+.pane{border-left:1px solid var(--line)}.panehead{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}.panehead h2{font-size:17px}.pane-body{padding:18px}.stop{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;font-size:12px;display:flex;align-items:start;gap:12px}.stop time{font-size:11px;min-width:36px;color:var(--muted)}.stop small{display:block;margin-top:4px;font-size:11px}.stop.changed{border-color:#8dab93;background:#f5f9f4}.map-placeholder{min-height:330px;background:#f0f2ed;padding:50px 22px;display:flex;align-items:center;justify-content:center;text-align:center;color:#7c887d}.map-placeholder p{font-size:12px;margin-top:10px}.map-placeholder strong{font-size:19px;font-weight:500}.location-list{padding:18px;font-size:12px;line-height:2.2}.chat-message{padding:15px;background:var(--green-soft);border:1px solid #d2dfd3;border-radius:0 9px 9px 9px;font-size:13px;margin:10px 0 16px;white-space:pre-line}.chat-message p+p{margin-top:13px}.chat-summary{padding:15px;border:1px solid var(--line);border-radius:8px;margin:14px 0;font-size:12px}.chat-summary .row{margin:8px 0}.workspace-foot{padding:18px 28px;border-top:1px solid var(--line);background:var(--soft);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;font-size:12px}.mobile-tabs{display:none}.caption{max-width:1450px;margin:16px auto 23px;text-align:center;font-size:11px;color:var(--muted);padding:0 20px}.resume{margin-top:26px;padding:17px 20px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:15px}.resume p{margin:4px 0;font-size:12px}.success{font-size:12px;color:var(--green);margin-top:10px}
+@container(max-width:850px){.workspace{display:block}.workspace .pane{display:none;border:0}.workspace .pane[data-active=true]{display:block}.mobile-tabs{display:flex;border-bottom:1px solid var(--line)}.mobile-tabs button{flex:1;border:0;border-radius:0}.mobile-tabs button[aria-pressed=true]{border-bottom:2px solid var(--green);background:var(--green-soft);color:var(--green)}.form-grid,.review-layout,.result-grid{grid-template-columns:1fr}.review-layout .source-card{order:2}.empty-body{gap:25px}.content{padding:26px}.workspace-foot{padding:16px 22px}.map-placeholder{min-height:270px}.review-row{grid-template-columns:110px 85px minmax(0,1fr) 120px}}
+@container(max-width:550px){.topbar{padding:14px 18px}.brand{font-size:22px}.topnav .desktop{display:none}.content{padding:24px 18px}.empty{padding:30px 22px}.empty-body{display:block;margin:30px 0}.empty h1{font-size:27px}.empty-sketch{display:none}.empty-foot{grid-template-columns:1fr;gap:18px}.empty-foot p{max-width:none}.steps{gap:9px;font-size:11px}.steps b{width:20px;height:20px}.steps span{gap:5px}.fields{gap:14px 10px}.fields .field:first-child{grid-column:1/-1}h1{font-size:23px}.card{padding:17px}.review-row{grid-template-columns:1fr 1fr}.review-row .place{grid-column:1/-1;grid-row:2}.review-row .booking{grid-column:1/-1}.footer-actions{align-items:stretch;flex-wrap:wrap}.footer-actions .muted{width:100%}.footer-actions button{flex:1}.demo-choice{align-items:start;flex-direction:column}.demo-choice select{max-width:none}.processing h1{font-size:22px}.tripbar{padding:22px 18px;align-items:start;flex-direction:column}.watchbar{padding:11px 18px}.compare{grid-template-columns:1fr 20px 1fr;gap:5px}.compare>div{padding:11px}.resume{flex-direction:column;align-items:start}.source-label{align-items:start}.source-label strong{font-size:13px}}
+.review-row{grid-template-columns:132px 130px minmax(0,1fr) 125px}
+@container(max-width:550px){.review-row{grid-template-columns:1fr 1fr}.review-row input,.review-row select{font-size:14px}}
+@media(max-width:650px){.reviewbar,.screen-jumps,.review-notes{padding:12px 15px}.reviewbar{gap:10px}.note-grid{grid-template-columns:1fr;gap:14px}.app.phone{margin:0 auto;border:0;border-radius:0}.screen-jumps{gap:5px}.screen-jumps>span{width:100%}input,textarea,select{font-size:16px}}
+
+/* Match the scenario's product header. */
+.app{max-width:none}.topbar{height:64px;min-height:64px;padding:0 28px;gap:16px}.brand{color:var(--ink);text-decoration:none;flex-shrink:0}.topnav{gap:9px;font-size:14px}
+.topnav button,.topnav .header-link{padding:8px 12px;min-height:0;line-height:1.6;font-size:14px;border-radius:7px}.topnav .header-link{display:inline-flex;align-items:center;text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.topnav .active{background:var(--green-soft);color:var(--green);border-color:transparent}
+.notification-count{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;margin-left:5px;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:10px}
+.reviewbar{background:var(--soft);color:var(--ink);padding:10px 26px;border-bottom:1px solid var(--line)}.reviewbar small{color:var(--muted)}.reviewbar button{background:var(--surface);border-color:var(--line);color:var(--ink)}.reviewbar button.active{background:var(--green-soft);border-color:#abc2b0}.review-notes{background:var(--soft)}.review-notes summary,.note-grid p{color:var(--muted)}.screen-jumps{background:var(--surface)}.filming .review-tools,.filming .caption{display:none}
+.trip-card{display:block;text-decoration:none;color:var(--ink);border:1px solid #c7d6ca;border-radius:12px;background:var(--surface);padding:23px;box-shadow:0 8px 28px #25392f0d;transition:border-color .15s,box-shadow .15s}.trip-card:hover{border-color:var(--green);box-shadow:0 10px 28px #25392f16}.trip-card h2{font-size:23px;line-height:1.5;letter-spacing:-.5px;margin:15px 0 10px}.trip-card .trip-meta{font-size:12px;color:var(--muted)}.trip-card .route-list{list-style:none;padding:0;margin:20px 0}.trip-card .route-list li{display:flex;gap:14px;padding:8px 0;font-size:12px;border-bottom:1px solid var(--line)}.trip-card .route-list time{font-size:11px;color:var(--muted);min-width:34px}.trip-card .card-link{padding-top:13px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--green);font-weight:600}
+.day-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 16px}.day-tabs button{font-size:12px;gap:9px;padding:8px 13px}.day-tabs button[aria-selected=true]{background:var(--green);color:#fff;border-color:var(--green)}.day-tabs small{font-size:11px;color:inherit;opacity:.85}.day-caption{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:12px 0;font-size:12px}.workspace-days{padding:0 28px;border-bottom:1px solid var(--line)}.workspace-days .day-tabs{margin:14px 0}
+dialog{color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px;max-width:580px;width:calc(100% - 32px);max-height:85dvh}dialog::backdrop{background:#13241ea8}dialog h2{margin:15px 0}dialog p{font-size:13px;margin:12px 0}
+@container(max-width:1080px){.topbar{padding-inline:18px}}
+@container(max-width:1050px){.review-layout{grid-template-columns:1fr}.review-layout .source-card{order:2}}
+@container(max-width:850px){.topbar{height:58px;min-height:58px;padding-inline:14px}.topbar .brand{font-size:21px}.topnav{gap:3px}.topnav .desktop-only,.topbar .avatar{display:none}.topnav button,.topnav .header-link{font-size:12px;padding:7px 9px}}
+@container(max-width:430px){.topnav button{padding:7px}.topbar .brand-mark{display:none}.topnav #recordToggle{font-size:11px}}
+@container(max-width:550px){.empty-body{display:flex;flex-direction:column;align-items:stretch;gap:30px}.trip-card{padding:20px}.trip-card h2{font-size:21px}.workspace-days{padding:0 18px}}
+
+/* Compact overview shared visually with the scenario workspace. */
+.in-workspace .tripbar{padding:10px 28px;min-height:70px;gap:18px}.in-workspace .tripbar>div:first-child{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:3px 16px}.in-workspace .tripbar .eyebrow{grid-column:1/-1;margin-bottom:0;font-size:9px;font-weight:600;letter-spacing:1.2px}.in-workspace .tripbar h1{font-size:20px;line-height:1.4;letter-spacing:-.8px;margin:0;word-break:keep-all}.in-workspace .tripbar p{font-size:11px}.in-workspace .watchbar{padding:5px 28px;min-height:30px;font-size:11px}
+.in-workspace .workspace-days .day-tabs{margin:7px 0}.in-workspace .workspace-days .day-tabs button,.in-workspace .workspace-days .edit-itinerary{font-size:12px;gap:8px;padding:5px 12px;min-height:34px}
+@container(max-width:850px){.in-workspace .tripbar{padding:12px 18px;min-height:0;align-items:center;flex-direction:row}.in-workspace .tripbar>div:first-child{display:block}.in-workspace .tripbar .eyebrow{margin-bottom:3px}.in-workspace .tripbar h1{font-size:19px}.in-workspace .tripbar p{margin-top:3px}.in-workspace .watchbar{padding:6px 18px}.in-workspace .workspace-days{padding:0 18px}.in-workspace .workspace-days .day-tabs button,.in-workspace .workspace-days .edit-itinerary{min-height:40px}}
+
+@media(min-width:851px){.filming .app.in-workspace:not(.phone){height:100dvh;min-height:0;display:flex;flex-direction:column}.filming .in-workspace:not(.phone) .topbar{flex-shrink:0}.filming .in-workspace:not(.phone) #main{flex:1;min-height:0;display:flex;flex-direction:column}.filming .in-workspace:not(.phone) #main>.tripbar,.filming .in-workspace:not(.phone) #main>.watchbar,.filming .in-workspace:not(.phone) #main>.workspace-days{flex-shrink:0}.filming .in-workspace:not(.phone) #workspace-day-panel{flex:1;min-height:0}.filming .in-workspace:not(.phone) .trip-workspace{height:100%;min-height:0;max-height:none}}
+
+/* Registered trip: timetable, selectable location diagram, and chat. */
+.workspace-days{display:flex;align-items:center;gap:16px}
+.workspace-days .day-tabs{flex:1;min-width:0}
+.workspace-days .edit-itinerary{flex-shrink:0;margin-left:auto;font-size:12px;padding:8px 13px}
+.trip-workspace{height:calc(100dvh - 300px);min-height:560px;max-height:1100px;background:var(--surface)}
+.trip-workspace .pane{display:flex;flex-direction:column;overflow:hidden}
+.trip-workspace .panehead{height:48px;min-height:48px;padding:10px 20px}
+.trip-workspace .panehead h2{font-size:16px}.trip-workspace .panehead .muted{font-size:11px}
+.trip-workspace .pane-body{padding:16px 18px;overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:#ced9cf transparent}
+.trip-workspace .stop{display:block;padding:0;background:var(--surface);overflow:hidden}
+.trip-workspace .stop.selected{border-color:#83a68d;box-shadow:0 0 0 1px #83a68d}
+.trip-workspace .stop-head{display:grid;grid-template-columns:41px minmax(0,1fr) 12px;width:100%;border:0;border-radius:0;padding:12px;gap:10px;text-align:left;align-items:start;min-height:0;background:transparent}
+.trip-workspace .stop-head:hover{background:var(--soft)}
+.trip-workspace .stop-head time{padding-top:2px}.stop-name{display:block;font-size:13px;line-height:1.6}.stop-summary{display:block;font-size:11px;color:var(--muted);margin-top:4px}.stop-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.stop-chevron{font-size:17px;color:var(--muted)}
+.trip-workspace .stop-details{border-top:1px solid var(--line);padding:14px;background:#fcfdfb}
+.detail-list{display:grid;grid-template-columns:61px minmax(0,1fr);gap:8px 10px;font-size:12px;margin:13px 0}.detail-list dt{color:var(--muted)}.detail-list dd{margin:0;overflow-wrap:anywhere}
+.detail-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}.detail-actions button{font-size:11px;min-height:34px;padding:6px 9px}
+.detail-note{font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px}
+.leg-hint{margin:0 0 10px;padding:7px 12px;border:1px dashed var(--line);border-radius:6px;background:var(--soft);font-size:11px;color:var(--muted)}
+.trip-workspace .location-pane{background:var(--surface)}
+.location-map{position:relative;flex:1;min-height:285px;background:radial-gradient(ellipse at 23% 25%,#e3eadd 0,transparent 48%),radial-gradient(ellipse at 78% 70%,#e5eadf 0,transparent 42%),#eff1ed;overflow:hidden}
+.location-map .map-heading{position:absolute;top:15px;left:15px;right:15px;text-align:center;color:#6f8070;pointer-events:none}
+.location-map .map-heading strong{display:block;font-size:18px;font-weight:500}.location-map .map-heading small{font-size:11px}
+.location-pins{position:absolute;inset:64px 12px 37px;transform:scale(var(--map-zoom,1));transform-origin:center}
+.location-pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:32px;height:32px;min-height:32px;padding:0;border:1px solid #afc0af;border-radius:50%;background:var(--surface);font-size:12px;font-weight:600;box-shadow:0 2px 7px #24392f17}
+.location-pin.selected{background:var(--green);border-color:var(--green);color:white;box-shadow:0 0 0 5px #2e604718}
+.location-pin .pin-label{position:absolute;left:38px;top:50%;transform:translateY(-50%);font-size:11px;line-height:1.5;font-weight:400;color:#536b55;background:#fffffff0;border:1px solid #dce3d8;border-radius:4px;padding:2px 5px;max-width:94px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.location-pin.label-left .pin-label{left:auto;right:38px}
+.location-pin.selected .pin-label{color:var(--green);font-weight:600;border-color:#99b3a0}
+.map-controls{position:absolute;right:11px;bottom:35px;display:grid;gap:4px}.map-controls button{width:31px;height:31px;min-height:31px;padding:0;font-size:16px;background:var(--surface)}
+.map-caption{position:absolute;bottom:9px;left:10px;right:10px;font-size:10px;text-align:center;color:#72806f}
+.map-selection{padding:14px 17px;border-top:1px solid var(--line);font-size:12px;flex-shrink:0}.map-selection h3{margin:4px 0 7px;font-size:14px}.map-selection p{font-size:11px;color:var(--muted);margin:4px 0}.map-selection .row{margin-top:10px}.map-selection button{font-size:11px;padding:6px 10px;min-height:33px}
+.map-empty{display:grid;place-items:center;height:100%;padding:35px;text-align:center;font-size:12px;color:var(--muted)}
+.chat-log{padding:18px;overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:#ced9cf transparent}
+.chat-date{text-align:center;font-size:10px;color:var(--muted);margin:0 0 18px}
+.trip-message{display:flex;align-items:flex-start;gap:8px;margin-bottom:16px}
+.message-avatar{width:24px;height:24px;flex-shrink:0;display:grid;place-items:center;background:var(--green);color:white;border-radius:7px;font-size:13px}
+.message-body{min-width:0;max-width:100%}.message-meta{font-size:10px;color:var(--muted);margin-bottom:5px}
+.message-bubble{padding:12px 13px;border:1px solid var(--line);border-radius:0 9px 9px 9px;background:var(--soft);font-size:13px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}
+.trip-message.user{justify-content:flex-end;padding-left:24px}.trip-message.user .message-meta{text-align:right}.trip-message.user .message-bubble{background:var(--green-soft);border-color:#d3e1d5;border-radius:9px 0 9px 9px}
+.chat-context{padding:10px 12px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:var(--surface);margin-bottom:15px}.chat-context small{display:block;margin-top:3px;font-size:11px}
+.chat-composer{padding:12px 15px;border-top:1px solid var(--line);background:var(--surface);flex-shrink:0}
+.chat-prompts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}.chat-prompts button{font-size:11px;padding:6px 8px;min-height:30px;background:#f5f8f3;color:var(--green)}
+.trip-chat-form{display:flex;gap:7px}.trip-chat-form input{min-width:0;flex:1;padding:9px 11px;font-size:12px;background:var(--soft)}.trip-chat-form button{padding:8px 12px;min-height:40px;font-size:12px}
+.chat-note{font-size:10px;color:var(--muted);text-align:center;margin-top:7px}.chat-empty-error{font-size:11px;color:var(--red);margin:7px 0 0}
+@container(max-width:1050px){.trip-workspace{grid-template-columns:minmax(240px,1fr) minmax(260px,1fr) minmax(260px,1.1fr)}.trip-workspace .panehead{padding-inline:13px}.trip-workspace .pane-body,.chat-log{padding:12px}.chat-composer{padding:11px}.location-pin .pin-label,.location-pin.label-left .pin-label{left:50%;right:auto;top:36px;transform:translateX(-50%);max-width:90px;font-size:10px}}
+@container(max-width:850px){.trip-workspace{display:block;height:630px;min-height:520px}.trip-workspace .pane{height:100%;display:none}.trip-workspace .pane[data-active=true]{display:flex}.trip-workspace .panehead{height:48px;min-height:48px}.location-map{min-height:300px}.chat-composer{padding:12px 15px}.trip-chat-form input{font-size:16px}.location-pin .pin-label{font-size:11px;max-width:95px}}
+/* Keep the first two screens focused on starting a trip. */
+body.is-entry{background:var(--surface)}
+.is-entry .app{min-height:100dvh}
+.has-review-menu .screen-flow{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;padding:11px 26px;border-bottom:1px solid var(--line)}
+.has-review-menu .screen-jumps{padding:0;border:0}
+.screen-controls .topnav{margin:0;flex-wrap:wrap;gap:7px}
+.screen-controls .topnav .desktop-only{display:inline-flex}
+.screen-controls .topnav button,.screen-controls .topnav .header-link{font-size:11px;padding:5px 10px;min-height:32px}
+.is-home .empty-body{display:flex;justify-content:center;min-height:410px;text-align:center}
+.is-home .empty p{margin:17px auto 23px}
+.is-entry .caption{display:none}
+@container(max-width:650px){.has-review-menu .screen-flow{padding:12px 15px}.is-home .empty-body{min-height:340px;align-items:center}.screen-controls .topnav{gap:5px}}
+/* Keep input actions at the viewport bottom while the editor fills the space above. */
+.is-input .app{display:flex;flex-direction:column;height:100dvh;min-height:0}
+.is-input .app.phone{height:calc(100dvh - 44px)}
+.is-input .review-tools{flex-shrink:0;max-height:30dvh;overflow:auto}
+.is-input .topbar{flex-shrink:0}
+.is-input #main{display:flex;flex:1;min-height:0}
+.is-input .intake-content{display:flex;flex:1;min-width:0;min-height:0;width:100%;margin:0 auto;padding:0 36px}
+.intake-layout{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
+.intake-editor{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;padding-top:32px}
+.intake-editor>.steps,.intake-editor>.intro,.intake-editor>.source-label,.intake-editor>.error{flex-shrink:0}
+.intake-editor textarea{flex:1;min-height:160px;resize:none}
+.intake-actions{flex-shrink:0;margin-top:20px;padding:20px 0 max(20px,env(safe-area-inset-bottom));background:var(--surface)}
+@container(max-width:550px){.is-input .intake-content{padding:0 18px}.intake-editor{padding-top:20px}.intake-editor>.steps,.intake-editor>.intro{margin-bottom:20px}.intake-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px;padding:12px 0 max(12px,env(safe-area-inset-bottom))}.intake-actions .muted{grid-column:1/-1;grid-row:1;text-align:center;width:auto}.intake-actions button{grid-row:2;min-width:0}}
+@media(max-width:650px){.is-input .app.phone{height:100dvh}}
+</style>
+</head>
+<body>
+<div id="app" class="app">
+<div class="review-tools"><header class="reviewbar"><div><strong>첫 여행 등록 · 화면 와이어프레임</strong><br><small>2026-09-14 · 설계 제안 · 분석·검증·저장은 시연</small></div><div class="row"><button id="desktopView" class="active" data-action="desktop" aria-pressed="true">PC 웹</button><button id="mobileView" data-action="mobile" aria-pressed="false">모바일 웹</button></div></header>
+<div class="screen-flow"><nav id="screenJumps" class="screen-jumps" aria-label="검토용 화면 바로가기"></nav><div id="screenControls" class="screen-controls" hidden></div></div>
+<details class="review-notes"><summary>설계 의도 · 화면별 처리 경계</summary><div class="note-grid"><div><strong>등록 전에는 입력에 집중</strong><p>로그인 후 첫 방문(U02)을 가정합니다. U03에서 외부 계획 또는 직접 적은 일정을 받습니다. 지도와 여행 중 알림은 등록 뒤에 나타납니다.</p></div><div><strong>검증 후 관리 시작으로 연결</strong><p>검증 하기를 누르면 입력한 계획의 날짜·시각·장소를 확인하고 관리 시작 화면으로 바로 이동합니다. 중간 분석·내용 확인·첫 검증 화면은 표시하지 않습니다.</p></div><div><strong>한 번 확정한 상태로 첫 진입</strong><p>보존할 예약을 확인한 뒤 최적안 하나를 반영·안내하는 흐름입니다. 검증 실패 시 관리 시작을 막습니다. 첫 진입은 여행 전 상태이며 당일 사건이나 위치를 추정하지 않습니다.</p></div></div></details>
+</div>
+<header id="productHeader" class="topbar">
+  <a class="brand" href="tripilot-intake-wireframe.html" data-action="home" aria-label="triPilot · 내 여행 홈"><span class="brand-mark" aria-hidden="true">t</span>triPilot</a>
+  <nav id="productNav" class="topnav" aria-label="여행 메뉴">
+    <a class="header-link active desktop-only" id="homeNav" href="tripilot-intake-wireframe.html" data-action="home">내 여행</a>
+    <a class="header-link desktop-only" id="workspaceNav" href="tripilot-scenario-demo.html" data-action="workspace">일정 · 채팅</a>
+    <button id="historyButton" data-action="history" disabled>변경 기록<span id="historyCount" class="notification-count">0</span></button>
+    <button id="recordToggle" data-action="record" aria-pressed="false">촬영 모드</button>
+    <button class="quiet" data-action="help" aria-label="시연 사용 안내">?</button>
+    <div class="avatar" aria-label="로그인한 사용자">나</div>
+  </nav>
+</header>
+<span id="headerStatus" class="sr-only"></span>
+  <main id="main"></main>
+</div>
+<p class="caption">클릭형 설계 초안 · 입력은 이 페이지 안에서만 유지 · 새로고침하면 초기화 · 실제 API, 계정 저장, 외부 알림·예약 실행 없음</p>
+<dialog id="infoDialog" aria-labelledby="dialogTitle"><form method="dialog" class="row between"><span class="pill">triPilot · DEMO</span><button aria-label="창 닫기">닫기 ×</button></form><div id="dialogContent"></div></dialog>
+<script src="tripilot-i18n.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+const userContent = (value,example=state.isSample) => '<span'+(example?'':' translate="no"')+'>'+escapeHTML(value)+'</span>';
+const screens = [{id:0,label:'내 여행 목록'},{id:1,label:'계획 입력'},{id:5,label:'관리 시작'},{id:6,label:'첫 진입'}];
+const sample = '1일차 · 2026-09-15\n09:00 호텔 조식\n10:00 잠실 스카이타워 · 10:45 종료\n11:00 성수동 쇼핑 · 향수, K-뷰티\n13:00 성수 예약 식당 · 예약 있음\n15:00 경복궁 · 한복 체험, 17:00 종료\n18:00 서울역 인근 저녁 식당 · 예약 없이 방문\n19:30 롯데마트 서울역점 · 식료품 쇼핑\n\n2일차 · 2026-09-16\n09:00 호텔 조식\n10:00 국립중앙박물관 · 전시 관람\n12:00 이촌동 점심 식당 · 예약 있음\n14:00 이태원 소품숍 · 기념품 구경\n16:00 이촌 한강공원 · 산책\n18:00 용산 저녁 식당 · 예약 없이 방문\n20:00 호텔 복귀 · 짐 정리';
+const state = {screen:0,visited:0,name:'',start:'',end:'',people:'',source:'',preferences:'',rows:[],managementConfirmed:false,result:'adjust',tab:'schedule',isSample:false,applied:false,selectedDate:'',selectedStop:null,expandedStop:null,mapZoom:1,chatMessages:[],chatDraft:''};
+function steps(current){return '<nav class="steps" aria-label="여행 등록 단계">'+['계획 입력','검증','관리 시작'].map((label,index)=>'<span class="'+(index===current?'current':index<current?'done':'')+'" '+(index===current?'aria-current="step"':'')+'><b>'+(index<current?'✓':index+1)+'</b>'+label+'</span>').join('')+'</nav>';}
+function intro(eyebrow,title,description){return '<div class="intro"><div class="eyebrow">'+eyebrow+'</div><h1>'+title+'</h1>'+(description?'<p>'+description+'</p>':'')+'</div>';}
+function footer(back,label,action,disabled=false){return '<div class="footer-actions"><button data-action="'+back+'">← 이전</button><button class="primary" data-action="'+action+'" '+(disabled?'disabled':'')+'>'+label+' →</button></div>';}
+function summary(){return [state.start&&state.end?escapeHTML(state.start)+' ~ '+escapeHTML(state.end):'날짜 확인 필요','서울',state.people?escapeHTML(state.people)+'명':''].filter(Boolean).join(' · ');}
+function fillSample(){Object.assign(state,{name:'서울, 취향을 따라 걷는 이틀',start:'2026-09-15',end:'2026-09-16',people:'2',source:sample,preferences:'향수 · K-뷰티 · 식료품 쇼핑. 각 일차의 점심 예약과 1일차 경복궁 17:00 종료를 유지해 주세요.',isSample:true,managementConfirmed:false,applied:false,selectedDate:'2026-09-15'});}
+function addDays(date,amount){return new Date(Date.parse(date+'T00:00:00Z')+amount*86400000).toISOString().slice(0,10);}
+function dateLabel(date){if(!date)return '날짜 확인 필요';const parts=date.split('-');return Number(parts[1])+'.'+Number(parts[2]);}
+function dayLabel(date){if(!date)return '날짜 확인 필요';const day=Math.round((Date.parse(date)-Date.parse(state.start))/86400000)+1;return date<state.start||date>state.end?'기간 밖':day+'일차';}
+function itineraryDays(){
+  const days=[];
+  if(state.start&&state.end){for(let date=state.start;date<=state.end&&days.length<7;date=addDays(date,1))days.push(date);}
+  return [...new Set([...days,...state.rows.map(row=>row.date)])].sort();
+}
+function dayTabs(context){
+  const days=itineraryDays();
+  if(!days.includes(state.selectedDate))state.selectedDate=days[0]||state.start;
+  return '<div class="day-tabs" role="tablist" aria-label="'+(context==='review'?'확인할 일차':'여행 일차')+'">'+days.map(date=>'<button type="button" role="tab" id="'+context+'-tab-'+(date||'missing')+'" aria-controls="'+context+'-day-panel" aria-selected="'+(state.selectedDate===date)+'" data-date="'+escapeHTML(date)+'">'+dayLabel(date)+' <small>'+dateLabel(date)+'</small></button>').join('')+'</div>';
+}
+function parseRows(){
+  let date='';
+  state.start='';state.end='';
+  state.rows=[];
+  for(const line of state.source.split(/\r?\n/).map(text=>text.trim()).filter(Boolean)){
+    const heading=line.match(/^(?:\[)?(?:(\d+)일차|DAY\s*(\d+))(?:\s|[·:：\]-]|$)/i);
+    if(heading){const explicit=line.match(/\d{4}-\d{2}-\d{2}/);date=explicit?explicit[0]:state.start?addDays(state.start,Number(heading[1]||heading[2])-1):'';if(date&&(!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))date='';if(date&&!state.start)state.start=date;continue;}
+    const match=line.match(/^(\d{1,2}:\d{2})\s+(.+)$/);
+    state.rows.push({id:state.rows.length,date,time:match?match[1].padStart(5,'0'):'',place:match?match[2]:line,booking:/예약 있음|\breserved\b|\bbooked\b/i.test(line)?'booked':/예약 없이|미예약|walk-in|no reservation/i.test(line)||state.isSample?'none':'unknown'});
+  }
+  const dates=state.rows.map(row=>row.date).filter(Boolean).sort();
+  state.start=dates[0]||'';state.end=dates[dates.length-1]||'';
+  state.selectedDate=state.start;
+}
+function go(screen){state.screen=screen;state.visited=Math.max(state.visited,screen);render();if(screen===6)window.scrollTo({top:0,behavior:'instant'});else $('main').scrollIntoView({block:'start',behavior:'instant'});}
+function invalidate(after){state.visited=Math.min(state.visited,after);state.managementConfirmed=false;state.applied=false;renderNavigation();}
+function renderNavigation(){
+  $('screenJumps').innerHTML='<span>화면 흐름</span>'+screens.map(({id,label},index)=>'<button data-screen="'+id+'" aria-current="'+(state.screen===id?'step':'false')+'" '+(id>state.visited||(id===6&&!state.applied)?'disabled':'')+'>'+String(index+1).padStart(2,'0')+' '+label+'</button>').join('');
+}
+function render(){
+  renderNavigation();
+  const home=state.screen===0;
+  const entry=state.screen<=1;
+  document.body.classList.toggle('is-home',home);
+  document.body.classList.toggle('is-entry',entry);
+  document.body.classList.toggle('is-input',state.screen===1);
+  document.body.classList.add('has-review-menu');
+  $('screenControls').hidden=false;
+  $('screenControls').append($('productNav'));
+  $('app').classList.toggle('in-workspace',state.screen===6);
+  $('headerStatus').textContent=state.screen===6?'여행 전 · 관리 시작됨':home?'내 여행':'여행 등록 중';
+  $('homeNav').classList.toggle('active',state.screen!==6);
+  $('workspaceNav').classList.toggle('active',state.screen===6);
+  $('historyButton').disabled=!state.applied;
+  $('historyCount').textContent=state.applied?'1':'0';
+  $('main').innerHTML=({0:emptyScreen,1:inputScreen,5:resultScreen,6:workspaceScreen})[state.screen]();
+}
+function emptyScreen(){return '<div class="empty"><div class="empty-body"><section><div class="eyebrow">YOUR PLAN, OUR CARE</div><h1>여행 계획은 한곳에서,<br>여정은 계속 이어지도록.</h1><p>새로운 여행 계획을 등록하거나,<br>준비된 여행의 일정과 대화를 이어서 확인하세요.</p><button class="primary" data-action="new">+ 첫 여행 등록하기</button></section></div></div>';}
+function inputScreen(){return '<div class="content narrow intake-content"><form id="intakeForm" class="intake-layout"><div class="intake-editor">'+steps(0)+'<div class="intro"><div class="eyebrow">U03 · NEW TRIP</div><h1>준비한 여행 계획을 알려주세요</h1></div><div class="source-label"><label for="planSource"><strong>여행 계획 <span class="required">필수</span></strong></label></div><textarea id="planSource" '+(state.source===sample?'data-i18n-value':'')+' required maxlength="12000" placeholder="일차 제목에 날짜를 적고, 시간과 장소를 나누어 적어주세요.&#10;&#10;1일차 · 2026-09-15&#10;09:00 호텔 조식&#10;13:00 점심 식당 · 예약 있음&#10;&#10;2일차 · 2026-09-16&#10;10:00 박물관 관람">'+escapeHTML(state.source)+'</textarea><p id="inputError" class="error" role="alert" hidden></p></div><div class="footer-actions intake-actions"><button type="button" data-action="home">← 내 여행</button><span class="muted">필수 정보는 날짜 · 여행 계획</span><button type="submit" class="primary">검증 하기 →</button></div></form></div>';}
+function changedRow(){return state.rows.find(row=>row.time==='11:00'&&row.booking==='none')||state.rows.find(row=>row.booking==='none')||null;}
+function proposedTime(row){const [hour,minute]=row.time.split(':').map(Number);const total=hour*60+minute+15;return total<24*60?String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0'):null;}
+function canAdjust(){const row=changedRow();return !!(row&&proposedTime(row));}
+function resultScreen(){const failed=state.result==='failed',adjusted=state.result==='adjust'&&canAdjust(),row=adjusted?changedRow():null;return '<div class="content narrow">'+steps(2)+intro('U05 → U06 · '+(failed?'CHECK INCOMPLETE':'READY TO START'),failed?'검증을 마치지 못했어요':adjusted?'이동 시간을 반영한 일정으로 정리했어요':'입력한 일정으로 시작할 수 있어요','')+(failed?'<div class="card"><h2>이동 정보 확인 실패</h2><p>대체 정보로도 확인을 마치지 못했어요. 완료된 일정으로 안내하지 않으며, 등록 내용은 이 화면에 유지돼요.</p><div class="result-line"><span>계획 내용</span><strong>보존됨</strong></div><div class="result-line"><span>전체 일정 검증</span><strong>미완료</strong></div><div class="result-line"><span>여행 관리</span><strong>시작 전</strong></div><div class="row" style="margin-top:18px"><button class="primary" data-action="check">검증 다시 시도</button><button data-action="review">입력 내용 확인</button><button disabled>여행 관리 시작</button></div></div>':'<div class="result-grid"><section><div class="card"><div class="row between"><h2>첫 검증 결과</h2></div>'+(adjusted?'<h3>'+escapeHTML(row.place)+'</h3><p class="muted">'+dayLabel(row.date)+' · '+dateLabel(row.date)+'</p><div class="compare"><div><small>입력한 시작 시각</small><p class="time">'+escapeHTML(row.time)+'</p><small>앞 일정에서 이동 여유 부족</small></div><span aria-hidden="true">→</span><div class="after"><small>조정된 시작 시각</small><p class="time">'+proposedTime(row)+'</p><small>이동 여유 15분 반영</small></div></div><p class="muted">이동 가능 시간을 확보하도록 미예약 일정의 시작 시각을 옮긴 예시예요. 실제 시간 계산과 전체 재검증은 서버가 수행해야 해요.</p>':'<p>장소·식당·이동과 전체 일정을 확인했고, 원래 계획을 유지한 예시예요.</p>')+'<div class="result-line"><span>예약이 있는 일정</span><strong>'+state.rows.filter(item=>item.booking==='booked').length+'개 유지</strong></div><div class="result-line"><span>업체 예약 변경 · 취소</span><strong>실행 없음</strong></div><div class="result-line"><span>입력한 조건</span><strong>보존하여 검증</strong></div><div class="row" style="margin-top:17px"><button data-action="review">조건 수정 후 다시 검증</button></div></div></section><aside><div class="card"><h2>여행 관리 시작</h2><ul class="help-list"><li><strong>일정에 영향을 주는 변화</strong><p>활동·식당·이동 상황을 살피고 일정 변경을 안내해요.</p></li><li><strong>변경 안내는 일정과 채팅에</strong><p>변경 내역과 이유를 같은 여행에서 확인해요. 원하는 경우 다시 조정 요청할 수 있어요.</p></li><li><strong>예약은 별도 확인</strong><p>업체 예약 변경·결제·취소를 자동 실행하지 않아요.</p></li></ul><label class="checkline"><input id="managementConfirmed" type="checkbox" '+(state.managementConfirmed?'checked':'')+'><span>일정 조정과 안내 범위를 확인했어요.</span></label><button class="primary" style="width:100%" id="startManagement" data-action="start" '+(!state.managementConfirmed?'disabled':'')+'>여행 관리 시작 →</button></div></aside></div>')+'</div>';}
+function displayedTime(row){return state.applied&&state.result==='adjust'&&canAdjust()&&row===changedRow()?proposedTime(row):row.time;}
+const samplePlaces = {
+  '호텔 조식':{label:'호텔',kind:'식사',area:'숙소 내 조식 공간',start:'09:00',end:'09:40',note:'친구와 함께 조식을 먹고 다음 방문을 준비하는 계획이에요. 숙소명과 주소는 아직 입력되지 않았어요.',move:'다음 방문지로 출발 · 교통편 확인'},
+  '잠실 스카이타워':{label:'잠실 전망대',kind:'관람',area:'서울 · 잠실 일대',start:'10:00',end:'10:45',note:'전망 관람 후 성수동으로 이동하는 계획이에요. 야외 데크의 실제 운영 여부는 별도로 확인해야 해요.',move:'잠실 → 성수동 · 지하철 이동 계획'},
+  '성수동 쇼핑':{label:'성수 쇼핑',kind:'쇼핑',area:'서울 · 성수동',start:'11:00',end:'12:30',note:'팝업스토어, 향수와 K-뷰티 쇼핑을 즐겨요. 13:00 점심 예약에 맞춰 쇼핑을 마무리하는 계획이에요.',move:'성수동 내 점심 식당으로 이동'},
+  '성수 예약 식당':{label:'성수 점심',kind:'식사',area:'서울 · 성수동',start:'13:00',end:'14:00',note:'사용자가 예약이 있다고 입력한 점심 일정이에요. 정확한 상호와 예약 번호는 미입력이며, 업체 확인을 완료한 상태는 아니에요.',move:'성수동 → 경복궁 일대 · 지하철 이동 계획'},
+  '경복궁':{label:'경복궁',kind:'체험 · 관람',area:'서울 · 경복궁 일대',start:'15:00',end:'17:00',note:'한복 체험, 궁궐 산책과 사진 촬영을 계획했어요. 입력한 17:00 종료 조건을 유지해요.',move:'경복궁 → 서울역 일대 · 대중교통 이동 계획'},
+  '서울역 인근 저녁 식당':{label:'서울역 저녁',kind:'식사',area:'서울 · 서울역 인근',start:'18:00',end:'19:00',note:'예약 없이 방문하는 저녁 식사 계획이에요. 실제 식당의 상호와 영업 여부는 아직 확인 전이에요.',move:'서울역 인근 → 롯데마트 · 도보 이동 계획'},
+  '롯데마트 서울역점':{label:'서울역 마트',kind:'쇼핑',area:'서울 · 서울역',start:'19:30',end:'20:20',note:'라면세트, 디저트와 식료품을 구입하는 계획이에요. 상품 재고와 구매 가능 여부를 확인한 것은 아니에요.',move:'쇼핑 후 호텔 복귀 · 교통편 확인'},
+  '국립중앙박물관':{label:'박물관',kind:'전시 관람',area:'서울 · 용산구',start:'10:00',end:'11:30',note:'관심 있는 전시를 관람한 뒤 이촌동 점심 일정으로 이어져요. 전시 운영과 입장 조건은 실시간 조회하지 않았어요.',move:'박물관 → 이촌동 · 도보 또는 대중교통 계획'},
+  '이촌동 점심 식당':{label:'이촌 점심',kind:'식사',area:'서울 · 이촌동',start:'12:00',end:'13:00',note:'2일차에 예약이 있다고 입력한 점심 일정이에요. 예약 시각을 보존하며, 업체 확인은 별도예요.',move:'이촌동 → 이태원 · 대중교통 이동 계획'},
+  '이태원 소품숍':{label:'이태원',kind:'쇼핑',area:'서울 · 이태원 일대',start:'14:00',end:'15:00',note:'소품과 기념품을 둘러보는 계획이에요. 특정 매장이나 상품 재고를 확정한 일정은 아니에요.',move:'이태원 → 이촌 한강공원 · 대중교통 이동 계획'},
+  '이촌 한강공원':{label:'한강 산책',kind:'산책',area:'서울 · 이촌 한강공원',start:'16:00',end:'17:00',note:'한강 주변을 산책하는 야외 활동 계획이에요. 실제 날씨와 공원 이용 여건은 별도로 확인해야 해요.',move:'이촌 한강공원 → 용산 · 저녁 식사 이동'},
+  '용산 저녁 식당':{label:'용산 저녁',kind:'식사',area:'서울 · 용산 일대',start:'18:00',end:'19:00',note:'예약 없이 방문할 저녁 식사 계획이에요. 식당의 상호·영업시간은 아직 특정하지 않았어요.',move:'용산 → 호텔 · 복귀 교통편 확인'},
+  '호텔 복귀':{label:'호텔 복귀',kind:'휴식',area:'숙소 · 주소 미입력',start:'20:00',end:'',note:'숙소로 돌아가 짐을 정리하는 계획이에요. 실제 귀가나 도착을 감지했다는 의미는 아니에요.',move:'이날 마지막 일정'}
+};
+function stopTitle(row){return row.place.split(' · ')[0].trim();}
+function stopInfo(row){
+  const title=stopTitle(row),example=state.isSample?samplePlaces[title]:null;
+  return {title,label:example?.label||title,kind:example?.kind||'방문 일정',area:example?.area||'입력 장소 · 상세 위치 미입력',time:displayedTime(row)+(example?.end&&example.start===row.time?'–'+example.end:'')+' (계획)',note:example?.note||row.place,move:example?.move||'이동 수단과 경로는 확인 전이에요.',source:example?'등록 예시 · 운영/이동 정보 실시간 조회 없음':'사용자 입력 · 장소/이동 정보 확인 전'};
+}
+function bookingLabel(row){return row.booking==='booked'?'예약 있음 · 사용자 입력':'예약 없이 방문';}
+function workspaceRows(){return state.rows.filter(row=>row.date===state.selectedDate);}
+function ensureStopSelection(rows){
+  if(!rows.some(row=>row.id===state.selectedStop)){state.selectedStop=rows[0]?.id??null;state.expandedStop=null;}
+}
+function selectedRow(){return workspaceRows().find(row=>row.id===state.selectedStop)||workspaceRows()[0]||null;}
+function nextRow(row){const rows=state.rows.filter(item=>item.date===row.date),index=rows.findIndex(item=>item.id===row.id);return rows[index+1]||null;}
+function stopDetail(row){
+  const info=stopInfo(row),next=nextRow(row),changed=state.applied&&state.result==='adjust'&&row===changedRow();
+  return '<h3>장소 상세</h3><dl class="detail-list"><dt>장소</dt><dd>'+userContent(info.title)+'</dd><dt>날짜</dt><dd>'+dayLabel(row.date)+' · '+escapeHTML(row.date)+'</dd><dt>예정 시간</dt><dd>'+escapeHTML(info.time)+'</dd><dt>위치</dt><dd>'+escapeHTML(info.area)+'</dd><dt>예약 상태</dt><dd>'+escapeHTML(bookingLabel(row))+(row.booking==='booked'?' · 업체 확인 전':'')+'</dd>'+(changed?'<dt>변경 전</dt><dd>'+escapeHTML(row.time)+' → '+escapeHTML(displayedTime(row))+' · 첫 검증 예시</dd>':'')+'<dt>다음 일정</dt><dd>'+(next?escapeHTML(displayedTime(next)+' · '+stopTitle(next)):'이날 마지막 일정')+'</dd><dt>이동 계획</dt><dd>'+escapeHTML(info.move)+'</dd><dt>안내</dt><dd>'+userContent(info.note)+'</dd></dl><div class="detail-actions"><button data-map-stop="'+row.id+'">지도에서 보기</button><button data-ask-stop="'+row.id+'">이 일정 질문하기</button></div><p class="detail-note">'+escapeHTML(info.source)+'</p>';
+}
+function timelineMarkup(rows){
+  return rows.map((row,index)=>{
+    const info=stopInfo(row),open=state.expandedStop===row.id,changed=state.applied&&state.result==='adjust'&&row===changedRow();
+    return '<article class="stop '+(state.selectedStop===row.id?'selected':'')+'" id="trip-stop-'+row.id+'"><button class="stop-head" id="trip-stop-button-'+row.id+'" data-select-stop="'+row.id+'" aria-expanded="'+open+'" aria-controls="trip-stop-detail-'+row.id+'"><time>'+escapeHTML(displayedTime(row))+'</time><span><strong class="stop-name">'+userContent(info.title)+'</strong><span class="stop-summary">'+escapeHTML(info.kind+' · '+info.area)+'</span><span class="stop-tags">'+(row.booking==='booked'?'<span class="pill">예약 있음</span>':'')+(changed?'<span class="pill good">첫 검증에서 조정</span>':'')+'</span></span><span class="stop-chevron" aria-hidden="true">'+(open?'−':'+')+'</span></button><section class="stop-details" id="trip-stop-detail-'+row.id+'" aria-labelledby="trip-stop-button-'+row.id+'" '+(open?'':'hidden')+'>'+stopDetail(row)+'</section></article>'+(index<rows.length-1?'<div class="leg-hint">↓ '+escapeHTML(info.move)+'</div>':'');
+  }).join('')||( '<p class="muted">이 날짜에는 등록한 일정이 없어요.</p>');
+}
+function mapPosition(index,count){
+  const positions=dayLabel(state.selectedDate)==='2일차'?[[26,84],[25,36],[26,60],[74,16],[73,50],[26,12],[71,84]]:[[25,84],[75,84],[75,15],[75,42],[25,12],[25,36],[25,60]];
+  return count<=7?positions[index]:[20+(index%3)*30,12+Math.floor(index/3)*(76/Math.max(1,Math.ceil(count/3)-1))];
+}
+function mapMarkup(rows){
+  const selected=selectedRow(),info=selected?stopInfo(selected):null;
+  return '<div class="location-map"><div class="map-heading"><strong>서울 · '+dayLabel(state.selectedDate)+'</strong><small>일정 장소 '+rows.length+'곳 · 방문 순서 표시</small></div><div class="location-pins" style="--map-zoom:'+state.mapZoom+'" role="group" aria-label="일정 장소 핀 · 시연 배치">'+rows.map((row,index)=>{const point=mapPosition(index,rows.length),meta=stopInfo(row);return '<button class="location-pin '+(point[0]>60?'label-left ':'')+(state.selectedStop===row.id?'selected':'')+'" style="--x:'+point[0]+'%;--y:'+point[1]+'%" data-map-pin="'+row.id+'" aria-label="'+escapeHTML((index+1)+'. '+meta.title+' 지도에서 선택')+'" aria-pressed="'+(state.selectedStop===row.id)+'">'+(index+1)+'<span class="pin-label" aria-hidden="true">'+userContent(meta.label)+'</span></button>';}).join('')+(rows.length?'':'<div class="map-empty">이 날짜에 등록한 장소가 없어요.</div>')+'</div><div class="map-controls"><button data-action="mapZoomIn" aria-label="장소 핀 확대" '+(state.mapZoom>=1.4?'disabled':'')+'>+</button><button data-action="mapZoomOut" aria-label="장소 핀 축소" '+(state.mapZoom<=1?'disabled':'')+'>−</button><button data-action="mapZoomReset" aria-label="장소 핀 원래 크기">⌂</button></div><div class="map-caption">위치 개념도 · 실제 지도와 경로가 아닌 시연 배치</div></div><div class="map-selection">'+(selected?'<span class="eyebrow">선택한 장소</span><h3>'+userContent(info.title)+'</h3><p>'+escapeHTML(info.time)+' · '+escapeHTML(info.area)+'</p><p>'+escapeHTML(bookingLabel(selected))+'</p><div class="row"><button data-action="showOnTimeline">일정 상세 보기</button><button data-ask-stop="'+selected.id+'">채팅으로 질문</button></div>':'<p>일정을 등록하면 선택한 장소의 상세가 표시돼요.</p>')+'</div>';
+}
+function chatMessageMarkup(message,index){
+  return '<div class="trip-message '+(message.role==='user'?'user':'')+'" id="trip-message-'+index+'">'+(message.role==='user'?'':'<span class="message-avatar" aria-hidden="true">t</span>')+'<div class="message-body"><div class="message-meta">'+(message.role==='user'?'나':'triPilot')+' · '+escapeHTML(message.label)+'</div><div class="message-bubble">'+escapeHTML(message.text)+'</div></div></div>';
+}
+function chatMarkup(){
+  const selected=selectedRow(),adjusted=state.applied&&state.result==='adjust'&&canAdjust();
+  const welcome={role:'assistant',label:'최초 등록',text:'여행 계획을 등록했어요.\n\n'+state.start+'부터 '+state.end+'까지, '+(state.people?state.people+'명의 ':'')+'서울 여행이에요. 전체 '+itineraryDays().length+'일에 '+state.rows.length+'개 일정을 확인했어요.\n\n'+(adjusted?dayLabel(changedRow().date)+'의 '+stopTitle(changedRow())+' 시작을 '+displayedTime(changedRow())+'로 조정한 예시예요.':'첫 검증 결과, 입력한 일정을 유지한 예시예요.')+'\n\n궁금한 일정이나 지켜야 할 조건을 아래 채팅창에 입력해 보세요.'};
+  return '<div class="chat-log" id="workspaceChatLog" role="log" aria-live="polite" aria-relevant="additions text" aria-label="여행 대화 이력"><div class="chat-date">서울 여행 · 전체 일차의 대화</div>'+chatMessageMarkup(welcome,'welcome')+'<div class="chat-context"><strong>지금 보고 있는 '+dayLabel(state.selectedDate)+'</strong><small>'+escapeHTML(state.selectedDate)+' · '+workspaceRows().length+'개 일정</small>'+(selected?'<small>선택: '+escapeHTML(displayedTime(selected)+' '+stopTitle(selected))+'</small>':'')+'</div>'+state.chatMessages.map(chatMessageMarkup).join('')+'</div><div class="chat-composer"><div class="chat-prompts"><button data-chat-prompt="summary">하루 일정 요약</button><button data-chat-prompt="detail" '+(!selected?'disabled':'')+'>선택 일정 상세</button><button data-chat-prompt="booking">예약 일정 확인</button></div><form class="trip-chat-form" id="tripChatForm"><label class="sr-only" for="tripChatInput">여행 메시지</label><input id="tripChatInput" autocomplete="off" maxlength="600" required value="'+escapeHTML(state.chatDraft)+'" placeholder="궁금한 점이나 변경 요청을 입력"><button class="primary" type="submit">전송</button></form><p class="chat-empty-error" id="chatInputError" role="alert" hidden></p><div class="chat-note">화면 체험용 응답 · 실제 AI·일정 변경 미연결</div></div>';
+}
+function workspaceScreen(){
+  const tabs=dayTabs('workspace'),rows=workspaceRows();ensureStopSelection(rows);
+  return '<section class="tripbar"><div><div class="eyebrow">SEOUL · READY FOR YOUR TRIP</div><h1>'+userContent(state.name||'나의 서울 여행',!state.name||state.name==='서울, 취향을 따라 걷는 이틀')+'</h1><p class="muted">'+summary()+' · '+itineraryDays().length+'일 여행</p></div></section><div class="watchbar"><strong>여행을 등록했어요 · 시작 대기</strong><span>'+escapeHTML(state.start)+'부터 · 서울 시각 기준</span></div><div class="workspace-days">'+tabs+'<button type="button" id="editItineraryButton" class="edit-itinerary">일정 수정</button></div><nav class="mobile-tabs" aria-label="첫 진입 화면 선택">'+[['schedule','일정'],['map','지도'],['chat','채팅']].map(([id,label])=>'<button data-tab="'+id+'" aria-pressed="'+(state.tab===id)+'">'+label+'</button>').join('')+'</nav><div id="workspace-day-panel" role="tabpanel" aria-labelledby="workspace-tab-'+(state.selectedDate||'missing')+'"><div class="workspace trip-workspace"><section class="pane" data-panel="schedule" data-active="'+(state.tab==='schedule')+'" aria-label="여행 일정"><div class="panehead"><h2>'+dayLabel(state.selectedDate)+' 일정</h2><span class="pill">'+rows.length+'개 항목</span></div><div class="pane-body" id="workspaceTimeline">'+timelineMarkup(rows)+'</div></section><section class="pane location-pane" data-panel="map" data-active="'+(state.tab==='map')+'" aria-label="여행 지도"><div class="panehead"><h2>지도</h2><span class="muted">서울 · '+dayLabel(state.selectedDate)+'</span></div>'+mapMarkup(rows)+'</section><section class="pane" data-panel="chat" data-active="'+(state.tab==='chat')+'" aria-label="여행 채팅"><div class="panehead"><h2>여행 채팅</h2><span class="muted">이 여행의 모든 대화</span></div>'+chatMarkup()+'</section></div></div>';
+}
+function refreshWorkspace(options={}){
+  const timelineScroll=$('workspaceTimeline')?.scrollTop||0,chatScroll=$('workspaceChatLog')?.scrollTop||0;
+  render();
+  if($('workspaceTimeline'))$('workspaceTimeline').scrollTop=timelineScroll;
+  if($('workspaceChatLog'))$('workspaceChatLog').scrollTop=options.scrollChat?$('workspaceChatLog').scrollHeight:chatScroll;
+  if(options.revealStop)$('trip-stop-'+state.selectedStop)?.scrollIntoView({block:'nearest'});
+  if(options.focusInput)$('tripChatInput')?.focus({preventScroll:true});
+}
+function selectWorkspaceStop(id,origin){
+  const row=workspaceRows().find(item=>item.id===id);if(!row)return;
+  state.selectedStop=id;
+  state.expandedStop=origin==='timeline'&&state.expandedStop===id?null:id;
+  if(origin==='schedule')state.tab='schedule';
+  if(origin==='map')state.tab='map';
+  if(origin==='ask'){state.tab='chat';state.chatDraft=TripilotI18n.display(dayLabel(row.date)+' '+stopTitle(row)+' 일정을 자세히 알려줘.');}
+  refreshWorkspace({revealStop:origin==='pin'||origin==='schedule',focusInput:origin==='ask',scrollChat:origin==='ask'});
+  if(origin==='timeline')$('trip-stop-button-'+id)?.focus({preventScroll:true});
+}
+function chatReply(text){
+  const supplied=text;
+  text=TripilotI18n.sourceRequest(text);
+  const dayMatch=text.match(/([1-7])일차/),date=dayMatch?addDays(state.start,Number(dayMatch[1])-1):state.selectedDate,rows=state.rows.filter(row=>row.date===date),label=dayLabel(date);
+  if(!rows.length)return label+'에는 등록된 일정이 없어요. 일정을 입력한 날짜를 선택해 주세요.';
+  const row=rows.find(item=>text.includes(stopTitle(item))||supplied.toLowerCase().includes(TripilotI18n.translate(stopTitle(item)).toLowerCase()))||rows.find(item=>item.id===state.selectedStop)||rows[0],info=stopInfo(row),next=nextRow(row),intent=text.replace(stopTitle(row),'');
+  if(/변경|바꿔|조정|늦|미뤄|취소/.test(intent))return label+'의 요청을 대화에 남겼어요.\n\n이 목업에서는 일정 내용을 조회하는 예시 응답을 제공하며, 실제 일정이나 예약은 변경하지 않아요. 현재 등록된 시간과 예약 상태는 일정 상세에서 확인할 수 있어요.';
+  if(/이동|동선|경로|다음/.test(intent))return label+' · '+info.title+' 다음 이동이에요.\n\n'+(next?displayedTime(next)+' · '+stopTitle(next)+'\n'+info.move:'이날 마지막 일정이에요.')+'\n\n입력 계획과 시연용 안내이며, 실제 노선·소요 시간은 조회하지 않았어요.';
+  if(/상세|자세|선택/.test(intent))return label+' · '+info.title+'\n\n예정 시간: '+info.time+'\n위치: '+info.area+'\n예약: '+bookingLabel(row)+'\n\n'+info.note+'\n\n'+info.source;
+  if(/예약/.test(intent)){const booked=rows.filter(item=>item.booking==='booked');return label+'에 예약이 있다고 입력한 일정은 '+booked.length+'개예요.\n\n'+(booked.map(item=>displayedTime(item)+' · '+stopTitle(item)).join('\n')||'예약 없이 방문하는 일정으로 등록되어 있어요.')+'\n\n사용자가 입력한 상태이며 업체 확인·변경·취소를 실행하지 않았어요.';}
+  if(/요약|일정|하루|계획/.test(intent))return label+' ('+date+')의 일정 '+rows.length+'개를 정리했어요.\n\n'+rows.map(item=>displayedTime(item)+' · '+stopTitle(item)+(item.booking==='booked'?' [예약 있음]':'')).join('\n')+'\n\n시간은 등록된 계획 기준이며 실제 출발·도착을 의미하지 않아요.';
+  return '메시지를 받았어요. 이 목업에서는 일차별 일정 요약, 선택한 장소 상세, 예약 일정과 다음 이동을 확인할 수 있어요.\n\n아래 질문 예시를 선택하거나 “'+label+' 일정 요약해줘”라고 입력해 보세요.';
+}
+function sendTripChat(text){
+  const message=text.trim();if(!message){$('chatInputError').hidden=false;$('chatInputError').textContent='메시지를 입력해 주세요.';return;}
+  const label=dayLabel(state.selectedDate);
+  state.chatMessages.push({role:'user',label,text:message},{role:'assistant',label,text:chatReply(message)});
+  state.chatDraft='';
+  refreshWorkspace({scrollChat:true,focusInput:true});
+}
+function resetTripWorkspace(){state.selectedStop=null;state.expandedStop=null;state.mapZoom=1;state.chatMessages=[];state.chatDraft='';}
+function saveInput(){if(!$('planSource'))return;state.source=TripilotI18n.readValue($('planSource'));state.isSample=state.source===sample;}
+function error(id,message){$(id).hidden=false;$(id).textContent=message;$(id).scrollIntoView({block:'nearest'});}
+document.addEventListener('submit',event=>{
+  if(event.target.id==='tripChatForm'){event.preventDefault();sendTripChat($('tripChatInput').value);return;}
+  if(event.target.id==='intakeForm'){
+    event.preventDefault();saveInput();
+    if(!state.source.trim()){error('inputError','시간과 장소가 있는 여행 계획을 입력해 주세요.');return;}
+    if(state.source.split(/\r?\n/).filter(line=>line.trim()).length>30){error('inputError','이 와이어프레임에서는 한 번에 30줄까지 확인할 수 있어요.');return;}
+    parseRows();
+    if(!state.rows.length){error('inputError','일차 제목 아래에 시간과 장소를 한 줄 이상 입력해 주세요.');return;}
+    if(state.rows.some(row=>!row.date)){error('inputError','일차 제목에 날짜를 YYYY-MM-DD 형식으로 함께 적어 주세요.');return;}
+    const days=(Date.parse(state.end)-Date.parse(state.start))/86400000+1;
+    if(days<1||days>7){error('inputError','종료일은 시작일 이후여야 하며 여행 기간은 최대 7일이에요.');return;}
+    if(state.rows.some(row=>!/^([01]\d|2[0-3]):[0-5]\d$/.test(row.time)||!row.place.trim())){error('inputError','시간과 장소가 있는 여행 계획을 입력해 주세요.');return;}
+    state.managementConfirmed=false;state.applied=false;state.result='adjust';go(5);
+  }
+
+});
+document.addEventListener('input',event=>{const target=event.target;if(target.id==='tripChatInput'){state.chatDraft=target.value;return;}if(target.closest('#intakeForm')){saveInput();invalidate(1);}});
+document.addEventListener('change',event=>{if(event.target.id==='managementConfirmed'){state.managementConfirmed=event.target.checked;$('startManagement').disabled=!event.target.checked;}});
+document.addEventListener('click',event=>{
+  const screen=event.target.closest('[data-screen]');if(screen){const next=Number(screen.dataset.screen);if(next<=state.visited){saveInput();if(next===6&&!state.applied)return;go(next);}return;}
+  const stop=event.target.closest('[data-select-stop]');if(stop){selectWorkspaceStop(Number(stop.dataset.selectStop),'timeline');return;}
+  const pin=event.target.closest('[data-map-pin]');if(pin){selectWorkspaceStop(Number(pin.dataset.mapPin),'pin');return;}
+  const mapStop=event.target.closest('[data-map-stop]');if(mapStop){selectWorkspaceStop(Number(mapStop.dataset.mapStop),'map');return;}
+  const askStop=event.target.closest('[data-ask-stop]');if(askStop){selectWorkspaceStop(Number(askStop.dataset.askStop),'ask');return;}
+  const prompt=event.target.closest('[data-chat-prompt]');if(prompt){const row=selectedRow();const questions={summary:dayLabel(state.selectedDate)+' 일정 요약해줘.',detail:dayLabel(state.selectedDate)+' '+(row?stopTitle(row):'선택한')+' 일정을 자세히 알려줘.',booking:dayLabel(state.selectedDate)+' 예약 일정을 확인해줘.'};sendTripChat(questions[prompt.dataset.chatPrompt]);return;}
+  const day=event.target.closest('[data-date]');if(day){state.selectedDate=day.dataset.date;if(state.screen===6){state.selectedStop=null;state.expandedStop=null;state.mapZoom=1;refreshWorkspace();}else render();return;}
+  const tab=event.target.closest('[data-tab]');if(tab){state.tab=tab.dataset.tab;if(state.screen===6)refreshWorkspace();else render();return;}
+  const button=event.target.closest('[data-action]');if(!button)return;
+  switch(button.dataset.action){
+    case 'desktop':case 'mobile':{const mobile=button.dataset.action==='mobile';$('app').classList.toggle('phone',mobile);$('desktopView').classList.toggle('active',!mobile);$('mobileView').classList.toggle('active',mobile);$('desktopView').setAttribute('aria-pressed',String(!mobile));$('mobileView').setAttribute('aria-pressed',String(mobile));break;}
+    case 'new':go(1);break;
+    case 'home':event.preventDefault();saveInput();go(0);window.scrollTo({top:0,behavior:'instant'});break;
+    case 'sample':fillSample();invalidate(1);render();break;
+    case 'input':go(1);break;
+
+    case 'review':case 'check':invalidate(1);go(1);break;
+
+
+    case 'start':if(state.managementConfirmed&&state.result!=='failed'){if(!state.applied)resetTripWorkspace();state.applied=true;go(6);}break;
+    case 'mapZoomIn':state.mapZoom=Math.min(1.4,Math.round((state.mapZoom+0.2)*10)/10);refreshWorkspace();break;
+    case 'mapZoomOut':state.mapZoom=Math.max(1,Math.round((state.mapZoom-0.2)*10)/10);refreshWorkspace();break;
+    case 'mapZoomReset':state.mapZoom=1;refreshWorkspace();break;
+    case 'showOnTimeline':{const row=selectedRow();if(row)selectWorkspaceStop(row.id,'schedule');break;}
+    case 'showSummary':go(5);break;
+    case 'openTrip':if(state.applied)go(6);break;
+    case 'workspace':if(state.applied){event.preventDefault();go(6);}break;
+    case 'record':{const filming=document.body.classList.toggle('filming');$('recordToggle').textContent=filming?'촬영 모드 종료':'촬영 모드';$('recordToggle').setAttribute('aria-pressed',String(filming));break;}
+    case 'help':showInfo('help');break;
+    case 'history':if(state.applied)showInfo('history');break;
+  }
+});
+function showInfo(kind){
+  $('dialogContent').innerHTML=kind==='history'?'<h2 id="dialogTitle">변경 기록</h2><p><strong>일정 v1 · 최초 등록</strong></p><p>'+summary()+'</p><p>'+(state.result==='adjust'&&canAdjust()?dayLabel(changedRow().date)+' · '+escapeHTML(changedRow().place)+' · '+escapeHTML(changedRow().time)+' → '+proposedTime(changedRow()):'원래 계획 유지')+'</p><p class="muted">첫 검증의 예시 결과입니다. 업체 예약 변경은 실행하지 않았습니다.</p>':'<h2 id="dialogTitle">여행 등록과 시나리오 연결</h2><p>왼쪽 위 triPilot을 누르면 내 여행 화면으로 돌아갑니다. 위쪽 화면 흐름의 일정 · 채팅 메뉴에서 여행을 열 수 있습니다.</p><p>일차별 날짜·시간·장소를 직접 입력한 뒤 검증 하기를 누르면 관리 시작 화면으로 바로 이동합니다. 입력 내용은 이전 화면으로 돌아오거나 언어를 바꿔도 유지됩니다.</p><p>촬영 모드는 화면 검토 도구를 숨깁니다. 실제 분석·지도·예약·저장은 연결되지 않은 목업입니다.</p>';
+  $('infoDialog').showModal();
+}
+document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='f'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,dialog')){event.preventDefault();$('recordToggle').click();}});
+render();
+</script>
+</body>
+</html>

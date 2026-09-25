@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import Field, ValidationError
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -76,7 +76,10 @@ class Settings(BaseSettings):
     #:  ★고객 통지와 **다른 곳으로 보낼 수 있게** 자리를 나눠 둔다 — 운영 알림이 고객 채널로 가면
     #:    고객이 우리 장애를 본다. 실제 주소는 `.env` 에만 적는다.
     ops_alert_webhook_url: str = ""
-    ui_delegation_write_enabled: bool = False
+    # ★`[2026-09-23]` 운영 화면 로그인 계정 — JSON 목록 [{id, password_hash, scopes}].
+    #   **비어 있으면 아무도 못 들어온다**(기본이 닫힘). `python -m scripts.ui_operator` 가 한 줄을 만든다.
+    #   원문 비밀번호는 어디에도 두지 않는다. D-CS-007.
+    ui_operators: str = ""
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0

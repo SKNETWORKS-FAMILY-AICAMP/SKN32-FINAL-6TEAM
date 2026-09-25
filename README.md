@@ -367,7 +367,7 @@ python -m pytest tests/e2e -q
 권장 흐름은 기능 브랜치에서 검증한 뒤 `role-*` 작업 브랜치에 반영하고, 통합 시 `develop`으로 올리는 방식입니다.
 
 ```text
-feature/*  →  role-core1  →  develop  →  release/main
+feature/*  →  role-manager  →  develop  →  release/main
 ```
 
 푸시 전에는 다음을 확인합니다.

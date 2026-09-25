@@ -423,7 +423,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 
 def page(title: str, body: str, *, current: str = "", lede: str = "",
-         nav: tuple[tuple[str, str], ...] | None = None) -> str:
+         nav: tuple[tuple[str, str], ...] | None = None, who: str = "") -> str:
     """Render one operator page.
 
     ★`nav` 를 받는 이유는 꺼진 모듈의 메뉴를 지우기 위해서다. 없는 화면으로
@@ -439,5 +439,16 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
         f"<title>{esc(title)} · A-COP</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>A-COP<span>운영 콘솔</span></span><nav>{links}</nav></div></div>"
+        f"<span class='brand'>A-COP<span>운영 콘솔</span></span><nav>{links}</nav>{_who(who)}</div></div>"
         f"<main class='shell'><h1>{esc(title)}</h1>{lede_html}{body}</main></body></html>")
+
+
+def _who(operator_id: str) -> str:
+    """로그인한 운영자와 로그아웃 버튼. ★로그아웃은 POST 다 — 링크(GET)로 두면 남의 페이지가 끼워 넣은
+    이미지 한 장으로도 로그아웃된다."""
+    if not operator_id:
+        return ""
+    return (f"<form method='post' action='/ui/logout' style='margin-left:auto;display:flex;gap:8px;"
+            f"align-items:center'><span style='font-size:13px;opacity:.8'>{esc(operator_id)}</span>"
+            "<button type='submit' style='font-size:12px'>로그아웃</button></form>")
+

@@ -23,6 +23,7 @@ import random
 from pathlib import Path
 from typing import Any, Callable
 
+from . import ask
 from . import defect_stage
 from . import defects as defects_mod
 from . import progress
@@ -66,17 +67,32 @@ def _missing(data: dict[str, Any]) -> list[str]:
     return missing
 
 
-def _pick(prompt: str, options: list[str]) -> str:
-    print(f"\n  {prompt} 번호로 답한다.")
-    for index, option in enumerate(options, start=1):
-        print(f"    {index}  {option}")
-    raw = input("  > ").strip()
-    return options[int(raw) - 1] if raw.isdigit() and 1 <= int(raw) <= len(options) else ""
+#: 보스전 한 판 동안 받은 도움. 도움을 받고 맞힌 전이는 확정으로 치지 않는다.
+TALLY = ask.Tally()
 
 
-def _yes_no(prompt: str) -> bool:
-    print(f"\n  {prompt} (y/n)")
-    return input("  > ").strip().lower().startswith("y")
+def _pick(prompt: str, options: list[str], *, hints: list[str] | None = None,
+          answer: str | None = None) -> str:
+    index = options.index(answer) if answer in options else None
+    return TALLY.add(ask.choice(prompt, options, hints=hints or [], answer_index=index)).text
+
+
+def _yes_no(prompt: str, *, hints: list[str] | None = None) -> bool:
+    return TALLY.add(ask.yes_no(prompt, hints=hints or [])).text == "y"
+
+
+def _notes() -> dict:
+    import json
+    from .config import data_dir
+    try:
+        return json.loads((data_dir() / "annotations.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _full(label: str) -> str:
+    """`verification.py::f` 를 해설 사전의 키(`app/core/verification.py::f`)로 바꾼다."""
+    return f"app/core/{label}" if not label.startswith("app/") else label
 
 
 def _role_questions(labels: list[str]) -> list[Callable[[], bool]]:
@@ -88,7 +104,10 @@ def _role_questions(labels: list[str]) -> list[Callable[[], bool]]:
             continue
 
         def ask(question: str = question, needle: str = needle, answer: str = answer) -> bool:
-            picked = _pick(f"{question}은?", labels)
+            note = _notes().get(_full(answer), "")
+            picked = _pick(f"{question}은?", labels, answer=answer,
+                           hints=["함수 이름에 하는 일이 드러난다"]
+                                 + ([f"그 함수는 이런 일을 한다 — {note}"] if note else []))
             ok = picked.endswith(f"::{needle}")
             print(f"  {'맞다.' if ok else '아니다.'}  {answer}")
             return ok
@@ -162,8 +181,8 @@ def _outcome_question(target: Path) -> Callable[[], bool] | None:
     except (subprocess.SubprocessError, ValueError, IndexError):
         return None  # 엔진을 못 돌리면 묻지 않는다 — 묻지 않은 것은 분모에 넣지 않는다
 
-    options = ["통과 — 문제 없음", "refund_fee 에서 걸린다",
-               "lesson_id 에서 걸린다", "coupon_code 에서 걸린다"]
+    options = ["검사를 통과한다", "refund_fee 필드에서 거부된다",
+               "lesson_id 필드에서 거부된다", "coupon_code 필드에서 거부된다"]
     fields = {field for field, _ in problems}
     answer = options[0] if not fields else next(
         (o for o in options[1:] if o.split()[0] in fields), None)
@@ -171,16 +190,18 @@ def _outcome_question(target: Path) -> Callable[[], bool] | None:
         return None
 
     def ask() -> bool:
-        print("\n  선언이 또 바뀌었다 — 이번엔 수업 예약이다. 엔진은 그대로다.")
-        print("    references  lesson_id → lessons")
-        print("    quantities  refund_fee ≤ lessons[lesson_id].price_won  (scale 1)")
-        print(f"  상황: {situation}")
-        picked = _pick("엔진은 어떻게 판정하나?", options)
+        print("\n  이번에는 수업 예약 규칙을 선언했다. 검증 엔진은 바꾸지 않았다.")
+        print("    references(참조 규칙)  lesson_id → lessons")
+        print("    quantities(상한 규칙)  refund_fee ≤ lessons[lesson_id].price_won  (scale: 배율 1)")
+        print(f"  검사할 상황: {situation}")
+        picked = _pick("검증 엔진의 판정을 고른다.", options, answer=answer,
+                       hints=["선언에서 어떤 필드를 어느 표와 대조하는지 먼저 확인한다.",
+                               "상황의 값을 선언한 규칙에 하나씩 대조한다."])
         ok = picked == answer
         print(f"  {'맞다.' if ok else '아니다.'}  {answer}.")
         for field, reason in problems:
-            print(f"  엔진이 낸 이유 — {field}: {reason}")
-        print("  답은 사람이 적지 않았다. 방금 이 저장소의 verification.py 를 돌려서 얻었다.")
+            print(f"  검증 엔진의 판단 근거 — {field}: {reason}")
+        print("  이 정답은 방금 이 저장소의 verification.py를 실행해 얻었다.")
         return ok
     return ask
 
@@ -190,10 +211,11 @@ def _layer_question(labels: list[str]) -> Callable[[], bool]:
                   for label in labels)
 
     def ask() -> bool:
-        ok = _yes_no("이 트레이스에 app/modules/ 아래 파일(Team 코드)이 나오나?") == appears
+        ok = _yes_no("이 트레이스(실행 기록)에 app/modules/ 아래의 Team(작업 수행 모듈) 코드가 나오는가?",
+                     hints=["위 목록에서 파일 이름을 확인한다.", "모든 단계가 같은 파일에 있는지 확인한다."]) == appears
         print(f"  {'맞다.' if ok else '아니다.'}  {'나온다.' if appears else '나오지 않는다.'}")
-        print("  12단계 전부가 verification.py 안이다. 검증은 Team 이 아니라 코어가 한다 —")
-        print("  Team 이 낸 제안을 코어가 사실과 대조하고, 틀리면 실행 전에 막는다.")
+        print("  위 실행 지점은 모두 verification.py 안에 있다. 검증은 Team(작업 수행 모듈)이 아니라 코어가 한다.")
+        print("  코어는 Team이 낸 제안을 사실과 대조하고, 틀리면 실행 전에 막는다.")
         return ok
     return ask
 
@@ -208,11 +230,13 @@ def _vocabulary_question(target: Path) -> Callable[[], bool] | None:
     found = [word for word in DOMAIN_WORDS if word in code]
 
     def ask() -> bool:
-        ok = _yes_no("그러면 verification.py 실행부에 order_id 같은 커머스 어휘가 있나?") == bool(found)
+        ok = _yes_no("verification.py 실행부에 order_id 같은 커머스 전용 용어가 있는가?",
+                     hints=["엔진은 대조할 필드를 선언으로 받는다.",
+                             "엔진이 도메인 이름을 직접 알면 다른 도메인에 재사용할 수 없다."]) == bool(found)
         print(f"  {'맞다.' if ok else '아니다.'}  "
               f"{'있다: ' + ', '.join(found) if found else '없다.'}")
-        print("  이게 핵심이다. 엔진은 '어떤 필드를 어느 표와 대조하라'는 선언만 받는다.")
-        print("  여행 선언을 물리면 여행이, 커머스 선언을 물리면 커머스가 돈다.")
+        print("  핵심은 엔진이 '어떤 필드를 어느 표와 대조하라'는 선언만 받는다는 점이다.")
+        print("  여행 규칙을 선언하면 여행을 검증하고, 커머스 규칙을 선언하면 커머스를 검증한다.")
         print("  2026-08-16 이전 엔진은 order_id 를 거부 목록에 박아 두어, 그때 제품이던")
         print("  쇼핑몰의 가장 중요한 식별자가 자동으로 거부됐다.")
         return ok
@@ -224,14 +248,14 @@ def play(target: Path, trace: dict[str, Any], *, fix: Path | None = None,
     data = progress.load()
     missing = _missing(data)
     if missing and not force:
-        print(f"보스전은 0~2단계를 해 보고 3단계를 통과한 뒤에 연다. 남은 것: {', '.join(missing)}")
-        print("그래도 열려면 --force 를 준다.")
+        print(f"보스전을 열려면 0~2단계를 진행하고 3단계를 통과해야 한다. 남은 것: {', '.join(missing)}")
+        print("선행 단계를 건너뛰려면 --force를 사용한다.")
         return 1
 
     labels = _teachable(trace["steps"])
-    print("\n4단계 · 보스전 — 베이스먼트의 검증 엔진")
-    print("여기는 학습 트랙에서 한 번도 지나가지 않은 코드다. 게다가 물린 선언은")
-    print("여행이 아니라 커머스다. 해설은 없다. 배운 규칙을 직접 찾는다.")
+    print("\n4단계 · 보스전 — 베이스먼트(도메인을 모르는 코어)의 검증 엔진")
+    print("학습 트랙에서 다루지 않은 코드에 배운 규칙을 적용한다.")
+    print("여행이 아닌 커머스 규칙을 선언한 검증 엔진을 해설 없이 분석한다.")
     print(SEPARATOR)
     for index, label in enumerate(labels, start=1):
         print(f"  {index:2d}  {label}")
@@ -244,11 +268,11 @@ def play(target: Path, trace: dict[str, Any], *, fix: Path | None = None,
 
     already = {entry.split("::")[-1] for entry in data.get("discovered", [])}
     overlap = [label for label in labels if label.split("::")[-1] in already]
-    print(f"\n  앞 단계에서 이미 지나간 함수가 여기 {len(overlap)}개 다시 나온다.")
+    print(f"\n  앞 단계에서 확인한 함수 중 {len(overlap)}개가 이 실행 경로에도 나온다.")
     for label in overlap:
         print(f"    {label}")
 
-    print(f"\n  전이 문제 {correct}/{total}")
+    print(f"\n  전이(배운 규칙을 새 코드에 적용하기) 문제 정답 수: {correct}/{total}")
     paths = {step["path"] for step in trace["steps"]}
     return _repair(target, correct, total, fix, defect_id, paths)
 
@@ -260,8 +284,8 @@ def _repair(target: Path, correct: int, total: int, fix: Path | None,
     playable = [d.defect_id for d in defects_mod.DEFECTS
                 if d.path in paths and d.defect_id in defect_stage.playable(catalog)]
     if not playable:
-        print(f"\n  {', '.join(sorted(paths))} 에서 게이트를 통과한 결함이 아직 없다.")
-        print("  `acop-dojo defects` 를 돌린 뒤 다시 온다.")
+        print(f"\n  {', '.join(sorted(paths))}에서 게이트(출제 가능 여부 검사)를 통과한 결함이 아직 없다.")
+        print("  먼저 `acop-dojo defects`를 실행한 뒤 다시 시도한다.")
         progress.record_stage("4", status="partial",
                               detail={"transfer_correct": correct, "of": total})
         return 1
@@ -276,19 +300,19 @@ def _repair(target: Path, correct: int, total: int, fix: Path | None,
     patch = defects_mod.PATCH_DIR / f"{chosen}.patch"
 
     print(f"\n{SEPARATOR}")
-    print(f"  마지막이다. 이 엔진에 결함 하나를 심었다: {chosen}")
+    print(f"  마지막 문제다. 이 엔진에 넣은 결함을 고친다: {chosen}")
     with Sandbox(target) as sandbox:
         applied, message = sandbox.apply(patch)
         if not applied:
-            print(f"  결함을 심지 못했다: {message}")
+            print(f"  결함을 적용하지 못했다. 원인: {message}")
             return 1
         print(f"  파일: {defect.path}")
         for nodeid in entry["failed"]:
             print(f"  FAILED  {nodeid}")
         if fix is None:
-            print("\n  고칠 패치를 만들어 다시 부른다:")
+            print("\n  결함을 고치는 패치를 만든 뒤 아래 명령을 실행한다.")
             print("    acop-dojo boss --fix 내패치.patch")
-            print("  힌트는 없다. 깨진 테스트를 읽고 무엇이 규칙인지 먼저 말로 정리한다.")
+            print("  힌트는 제공하지 않는다. 실패한 테스트를 읽고 지켜야 할 규칙을 먼저 정리한다.")
             progress.record_stage("4", status="in_progress",
                                   detail={"transfer_correct": correct, "of": total,
                                           "defect": chosen})
@@ -296,9 +320,9 @@ def _repair(target: Path, correct: int, total: int, fix: Path | None,
 
         ok, message = sandbox.apply(fix)
         if not ok:
-            print(f"  패치가 적용되지 않는다: {message}")
+            print(f"  패치를 적용하지 못했다. 원인: {message}")
             return 1
-        print("\n  전체 테스트를 돌린다")
+        print("\n  전체 테스트를 실행한다.")
         result = sandbox.pytest()
         print(f"  {result.summary}")
         remaining = defect_stage.new_failures(catalog, result.failed)
@@ -306,15 +330,17 @@ def _repair(target: Path, correct: int, total: int, fix: Path | None,
 
     print(SEPARATOR)
     if passed and correct == total:
-        print("  통과. 안 배운 코드에서 규칙을 찾아내고 고쳤다.")
+        print("  통과했다. 학습에서 다루지 않은 코드에 규칙을 적용해 결함을 고쳤다.")
     elif passed:
-        print("  수리는 통과했다. 전이 문제에서 틀린 것은 다시 본다.")
+        print("  결함 수리는 통과했다. 틀린 전이 문제를 다시 확인한다.")
     else:
-        print(f"  아직이다. 남은 실패: {remaining[:4]}")
+        print(f"  아직 통과하지 못했다. 남은 실패: {remaining[:4]}")
     progress.record_stage("4", status="passed" if passed else "partial",
                           detail={"transfer_correct": correct, "of": total,
                                   "defect": chosen, "oracle": "pytest"})
+    # 힌트나 보기를 쓰고 맞힌 전이는 잠정으로 둔다. 전이는 혼자 찾아낸 것만 확정이다.
     progress.claim_ability("안 배운 코드로 전이", evidence=f"boss:{chosen}:{correct}/{total}",
-                           confirmed=passed and correct == total)
+                           confirmed=passed and correct == total and not TALLY.hints
+                           and not TALLY.via_choices)
     review.schedule(defect.invariant, source=chosen)
     return 0 if passed else 1

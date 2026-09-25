@@ -13,6 +13,7 @@ import app.core.settings as settings_module
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops.scenario_mode import SCENES, build_scenario_router
 from app.presentation import security
+from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 from app.presentation.api.app import create_app
 
 
@@ -112,7 +113,7 @@ def test_stopping_removes_the_scenario_tenant(client):
     assert client.get("/scenario/feed").json() == {"active": False}
 
 
-def test_ops_console_reads_the_scenario_tenant(client):
+def test_ops_console_reads_the_scenario_tenant(client, monkeypatch):
     """★운영콘솔 Case 목록은 설정 테넌트만 본다 — 시나리오 판은 스위치 화면이 따로 읽는다."""
     feed = client.post("/scenario/start").json()
     for _ in range(4):                                         # 09:00 … 13:00 고객 차례
@@ -125,6 +126,7 @@ def test_ops_console_reads_the_scenario_tenant(client):
     assert case["status"] == "resolved" and case["subject"] == feed["suggestion"]
     assert case["events"][0] == "created" and case["events"][-1] == "completed"
     assert "routed" in case["events"]
+    login(client, monkeypatch)                                 # 스위치 화면은 /ui — 로그인한 운영자만
     assert "opsPanel" in client.get("/ui/scenario").text
 
 

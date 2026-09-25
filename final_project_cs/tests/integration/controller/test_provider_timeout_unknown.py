@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
 
 from app.infrastructure.db.session import get_connection
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter

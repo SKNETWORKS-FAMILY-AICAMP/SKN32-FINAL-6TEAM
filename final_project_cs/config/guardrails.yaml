@@ -128,6 +128,11 @@ feedback_analytics:
 
 # ── 보안 · scope (v5 §12) ───────────────────────────────────────────
 security:
+  # -- 운영 화면 로그인 (2026-09-23 신설, D-CS-007) --
+  # 출처: 우리가 고른 값이다. 한 근무 교대를 넘기지 않게 8시간, 잠금은 흔한 기본값.
+  ui_session_hours: 8
+  ui_login_max_failures: 5          # 이 횟수를 틀리면
+  ui_login_lock_minutes: 15         # 이만큼 그 id 로 못 들어온다(프로세스 안 - 재기동하면 풀린다)
   scopes:
     - case:read
     - case:write
@@ -196,6 +201,21 @@ evaluation:
 
 # ── 여행 외부 소스 (2026-09-09 신설) ────────────────────────────────
 travel:
+  # -- 여행 시작 설문 (2026-09-24 신설, D-020) --
+  # 16번 「여유」 → 밀도 목표. 값은 아래 density.targets 의 이름이다(low 0.40 · normal 0.55 · high 0.70).
+  # 출처: 회의(2026-09-24) — 널널 40% · 적당 55~60% · 빡빡 70%. 「적당」은 단일값 0.55 로 둔다.
+  survey:
+    pace_to_density_level:
+      relaxed: low
+      moderate: normal
+      packed: high
+  # -- 하루 활동 시간 기본값 (2026-09-24 회의) --
+  # 사용자가 하루 활동 시간을 주지 않았을 때만 쓴다. 출처: 회의에서 정한 값(하루 시작 08:00 · 종료 22:00).
+  # 완충 0 — 밀도 계산이 이동·도착 여유를 따로 더한다. 「절반 숙소 나감 10시」는 뜻이 정해지지 않아 넣지 않았다.
+  day_window:
+    default_start: "08:00"
+    default_end: "22:00"
+    default_buffer_minutes: 0
   density:
     # 여행 일정 점유 연구의 Low 관측치(약 40%)를 기준으로 한 운영 구간.
     # Low는 원문 관측값, 나머지는 Low~High 사이의 단계적 운영 구간이다.
