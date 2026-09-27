@@ -157,6 +157,13 @@ def check_loaded(cur, s: Sheet) -> None:
     s.add(step, rec.get("vegan_curated") == n, "비건 식당 목록",
           f"파일 {n}곳 → 원장 {rec.get('vegan_curated', 0)}곳")
 
+    halal = os.path.join(data, "halal", "할랄식당_검수.csv")
+    with open(halal, encoding="utf-8-sig", newline="") as f:
+        n = sum(1 for r in csv.DictReader(f)
+                if (r.get("판정") or "").strip() == "영업" and (r.get("관리번호") or "").strip())
+    s.add(step, rec.get("halal_curated") == n, "할랄 식당 목록",
+          f"시트의 영업 중인 곳 {n}곳 → 원장 {rec.get('halal_curated', 0)}곳")
+
     cur.execute("SELECT count(*) FROM dining.dn_truth WHERE retired_at IS NULL")
     truth = cur.fetchone()[0]
     n = csv_rows(os.path.join(data, "truth", "대조표100_검수_2026-09-21.csv"))
@@ -190,6 +197,8 @@ def check_loaded(cur, s: Sheet) -> None:
 
 #: 화면에 쓰는 이름 → 원장 속성. ledger.DIETARY 와 같은 값이다.
 CONDITIONS = [("비건·채식", "vegetarian_menu"), ("할랄", "halal")]
+#: 조건마다 그 조건의 식당 목록 출처
+LIST_OF = {"vegetarian_menu": "vegan_curated", "halal": "halal_curated"}
 
 
 def check_dietary(cur, s: Sheet, day: date) -> None:
@@ -201,8 +210,17 @@ def check_dietary(cur, s: Sheet, day: date) -> None:
                        FROM dining.dn_place""", (code, code))
         yes, no, total = cur.fetchone()
         if yes == 0:
-            s.add(step, False, f"{label} 식당이 있다",
-                  f"맞다고 확인된 곳 0곳 — 데이터가 없어 {label} 조건은 전부 「모름」으로 답한다")
+            # 목록은 들어왔는데 사람이 아직 확인하지 않은 것과, 목록조차 없는 것은 다르다.
+            cur.execute("""SELECT count(*) FROM dining.dn_source_record
+                           WHERE source_code = %s""", (LIST_OF.get(code, ""),))
+            listed = cur.fetchone()[0]
+            if listed:
+                s.add(step, None, f"{label} 식당이 있다",
+                      f"목록 {listed}곳은 들어왔고 확인된 곳 0곳 — 검수 시트의 [확인] 칸을 채우면 붙는다."
+                      f" 그 전까지 {label} 조건은 「모름」으로 답한다")
+            else:
+                s.add(step, False, f"{label} 식당이 있다",
+                      f"맞다고 확인된 곳 0곳 — 데이터가 없어 {label} 조건은 전부 「모름」으로 답한다")
             continue
         s.add(step, True, f"{label} 식당이 있다",
               f"맞음 {yes}곳 · 아님 {no}곳 · 모름 {total - yes - no}곳")
