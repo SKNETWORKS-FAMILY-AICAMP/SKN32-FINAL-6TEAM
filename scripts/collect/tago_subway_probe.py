@@ -1,6 +1,6 @@
 # scripts/collect/tago_subway_probe.py — TAGO 지하철정보: 1·4호선·공항철도 시간표 있는지 확인
 import os, json, requests
-from _paths import RAW_MOBILITY
+from _paths import RAW_MOBILITY  # noqa: F401 — import 자체가 .env(load_dotenv)를 읽는다 · 아래 DATA_GO_KR_KEY 가 그 값(56)
 
 KEY = os.environ["DATA_GO_KR_KEY"]
 BASE = "https://apis.data.go.kr/1613000/SubwayInfo"

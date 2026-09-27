@@ -11,7 +11,6 @@
 # 출력: processed/mobility/transfer_walk_v1.json
 import csv, json, re, sys
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 from _paths import RAW_MOBILITY, PROCESSED          # DATA_DIR/travel 기준 (저장소 관례)
 
 KST = timezone(timedelta(hours=9))
@@ -99,7 +98,7 @@ OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-
 
 # ── 리포트 ──
 by_st = sorted(stations.values(), key=lambda r: -r["distance_m"])
-lines = [f"# 환승역 도보 거리표 v1", "",
+lines = ["# 환승역 도보 거리표 v1", "",
          f"소스 {src.name} (기준일자 {basis}) · 생성 {payload['built_at']}",
          f"환승쌍 {len(rows)} · 역 {len(stations)}",
          f"소스 함의 보행속도 중앙 {payload['src_speed_observed']['median']} m/s "

@@ -8,7 +8,7 @@
 각 묶음은 '들어가야 하는 것'과 '거부돼야 하는 것'을 짝으로 넣는다 —
 거부만 보면 컬럼 이름을 잘못 써도 통과한다.
 """
-import argparse, sys, subprocess, json
+import argparse, sys
 
 SCHEMA = "mobility"
 ok = fail = 0

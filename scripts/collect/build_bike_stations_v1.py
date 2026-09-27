@@ -65,8 +65,8 @@ def main():
         f"- 확인 시각: {checked_iso} · source_id `{src_id}`\n"
         f"- 행: **{len(out):,}** (좌표 없음 제외 {bad})\n"
         f"- 운영방식: " + " · ".join(f"{k or '미상(신설)'} {v:,}" for k, v in modes.most_common()) + "\n"
-        f"- 등급: 존재·위치·거치대수 **확정**(마스터=실시간 좌표, 카카오 10/10) · 운영방식·자치구 **추정**(xlsx 26.6월 반기)\n"
-        f"- 실시간 거치 수는 담지 않는다 — 판정 시점에 `bikeList?stationId=` 로 조회만 한다.\n",
+        "- 등급: 존재·위치·거치대수 **확정**(마스터=실시간 좌표, 카카오 10/10) · 운영방식·자치구 **추정**(xlsx 26.6월 반기)\n"
+        "- 실시간 거치 수는 담지 않는다 — 판정 시점에 `bikeList?stationId=` 로 조회만 한다.\n",
         encoding="utf-8", newline="\n")
     print(f"{op} — {len(out):,}행 · {dict(modes)} · 좌표 없음 {bad}")
     print(f"{rep}")

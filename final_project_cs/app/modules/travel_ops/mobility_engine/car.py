@@ -28,7 +28,6 @@ import datetime as dt
 import gzip
 import json
 import math
-import os
 import urllib.error
 import urllib.request
 from collections import defaultdict

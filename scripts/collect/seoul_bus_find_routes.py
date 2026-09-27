@@ -18,7 +18,7 @@
 # 이 스크립트는 processed/ 를 건드리지 않는다. 찾은 노선번호를 기존
 # seoul_bus_collect.py --routes 에 넣어 정식 수집하는 것이 최종 단계다.
 import argparse, json, math, os, re, sys, time
-from datetime import datetime, timezone, timedelta
+from datetime import timezone, timedelta
 
 import requests
 from _paths import RAW_MOBILITY, PROCESSED

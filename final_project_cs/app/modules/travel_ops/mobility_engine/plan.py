@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import copy
 import json
 import math
 import sys
@@ -51,6 +52,14 @@ from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
 PLAN_VERSION = "plan-v2.1"   # 54 — 지하철·버스 fare_krw(규칙 fare 절) · 모양 무변경
+# 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
+#   자전거 후보는 plan() 에서 **실린 적이 없다**: 시간표 없는 수단이라 판정기가 마지막 성립 출발(lfd)을 None 으로 내고
+#   (verify_time._last_feasible_depart), leg() 는 lfd 가 없는 후보를 거른다. 그런데 후보를 만들면서 따릉이 실시간 +
+#   GraphHopper 를 부른다(24 실측 19.8 s 중 18.6 s). 그래서 기본에서 빼고, 뺄 때는 **후보 생성 전에** 끊는다(아래 Planner).
+DEFAULT_MODES = ("subway", "bus", "walk")
+KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike"}
+# ★ 자전거는 modes 에 줘도 **계획 옵션으로 실리지 않는다**(위 이유 · 56 GPT #8) — 후보 판정·외부 호출만 난다.
+#   ◆테마 「자전거」를 살리려면 자전거 후보의 출발 시각 규칙(마지막 성립 출발 대신)을 정해야 한다 — 다음 방 몫.
 
 # ── 시각 ────────────────────────────────────────────────────────────────
 def _parse_dt(v):
@@ -142,9 +151,21 @@ def _is_bus(o):
 class Planner:
     def __init__(self, runtime, *, stage="planning", modes=None, display=False):
         self.rt = runtime
-        self.modes = set(modes) if modes else None       # 후보 수단 거르기(예: {"subway"}) — None 이면 전부
+        # 후보 수단 거르기(예: {"subway"}) — None 이면 DEFAULT_MODES(자전거 뺌 · 56).
+        #   빈 목록·모르는 수단은 거절한다(GPT 56 #9 — 빈 목록이 조용히 기본으로 넓어지지 않게).
+        self.modes = set(DEFAULT_MODES) if modes is None else set(modes)
+        if not self.modes or not self.modes <= KNOWN_MODES:
+            raise ValueError(f"modes 는 {sorted(KNOWN_MODES)} 중 하나 이상 — 받은 값 {sorted(self.modes)}")
         self.trace = None                                 # 시험·대조용 — 리스트를 주면 구간마다 내부 값을 적는다
-        self.v = runtime._v
+        # 56 ① — 판정기 싱글턴을 요청마다 **얕은 복사본**으로 쓴다(48 plan_estimate 와 같은 방식).
+        #   verify_case 가 건마다 재할당하는 상태(_case_date · disr · _leg_cache · lfd_capped)가 복사본에만 남는다 —
+        #   sync 엔드포인트(스레드풀)에서 두 요청이 같은 객체를 동시에 쓰면 섞이던 자리(24 ①).
+        #   시간표·표·캐시(_passes/_origin/_dominant · 후보 그래프)는 공유한다 — 키가 입력 전부라 값이 요청과 무관하다.
+        self.v = copy.copy(runtime._v)
+        # 56 ② — 자전거를 안 볼 때는 복사본에서 따릉이 대여소 표를 뗀다 → verify_multi 가 자전거 후보를 **만들지 않는다**
+        #   (따릉이 실시간·라우터 호출 0). 종전에는 modes 거르기가 후보 생성 뒤(leg() 의 후보 루프)라 빼도 호출이 났다.
+        if "bike" not in self.modes:
+            self.v.bk = None
         self.stage = stage
         self.speed = self.v.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
         self.detour = self.v.R["transfer"]["stop_station_walk"]["detour_factor"]["value"]
@@ -502,7 +523,8 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
     routes: 이번에 만든 이동 항목의 경로 정의만 — **호출 쪽 routes 에 합친다**(update). 통째로 바꾸면
             남겨 둔 입력 이동 항목의 route 키가 사라진다.
     skipped: 이동 항목을 못 만든 구간 [{from, to, code, reason}] — 그 구간은 **값을 빼고** 낸다(모르면 뺀다).
-    modes  : 후보 수단 거르기 — None(기본)이면 전부. 예시 파일은 {"subway", "walk"} 로 뽑았다(노트북 버스 데이터가 옛 판).
+    modes  : 후보 수단 거르기 — None(기본)이면 DEFAULT_MODES(지하철·버스·도보 · 자전거는 "bike" 를 줄 때만 · 56).
+             예시 파일은 {"subway", "walk"} 로 뽑았다(노트북 버스 데이터가 옛 판).
     trace  : 리스트를 주면 구간마다 내부 값(시작 분·@·slack·환승)을 적는다 — 코어로는 안 나간다.
     routes : (선택) 호출 쪽이 이미 가진 routes — 그 키와 입력 항목이 참조하는 route 키는 **새 키로 쓰지 않는다**(GPT #2).
     left_out: (봉투) 만든 구간에서 **싣지 않은 후보**와 이유 {route 키: [{label, code, reason}]} — 코어로 안 나간다.
@@ -598,7 +620,7 @@ def main(argv=None):
     ap.add_argument("--out", help="출력 JSON 경로(없으면 표준출력)")
     ap.add_argument("--stage", default="planning", choices=("planning", "pre_departure", "in_progress"))
     ap.add_argument("--no-basis", action="store_true", help="basis 를 빼고 낸다(예시 파일을 판 바뀔 때마다 안 흔들리게)")
-    ap.add_argument("--modes", nargs="*", help="후보 수단 거르기(subway bus walk bike) — 없으면 전부")
+    ap.add_argument("--modes", nargs="*", help="후보 수단 거르기(subway bus walk bike) — 없으면 subway bus walk(자전거 뺌 · 56)")
     ap.add_argument("--display", action="store_true",
                     help="표시 전용 필드(transfer_car · ◆칸)를 싣는다 — 기본 off, 코어 계약(v1.4) 밖")
     ap.add_argument("--trace", help="구간마다 내부 값(시작 분·@·slack)을 이 JSON 에 적는다 — 대조용")

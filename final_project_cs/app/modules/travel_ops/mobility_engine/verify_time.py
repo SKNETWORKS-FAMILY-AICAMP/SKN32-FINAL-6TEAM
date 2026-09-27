@@ -2348,7 +2348,7 @@ def show(case, res, verbose=False):
                 extra = f" · 승차 {l.ride_min:g}분[{l.ride_grade}] → 도착 {fmt_min(l.arrive_min)}"
             print(f"    - {l.label}: {MARK[l.verdict]} {l.reason}{extra}")
             if l.dropped:
-                print(f"      거른 행: " + ", ".join(f"{k} {v}" for k, v in sorted(l.dropped.items())))
+                print("      거른 행: " + ", ".join(f"{k} {v}" for k, v in sorted(l.dropped.items())))
         for e in res.evidence:
             print(f"      · [{e['grade']}] {e['source_id']} — {e['claim']}")
 

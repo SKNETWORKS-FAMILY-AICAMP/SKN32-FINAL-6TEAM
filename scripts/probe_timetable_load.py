@@ -17,7 +17,6 @@
   · B 가 **1GB 이하**면 상주가 가장 단순하다
   · 둘 다 아니면 **PG 질의(C안)가 유일한 길**이고 저장소 전환이 어댑터의 선행 조건이 된다
 """
-import json
 import sys
 import time
 import tracemalloc

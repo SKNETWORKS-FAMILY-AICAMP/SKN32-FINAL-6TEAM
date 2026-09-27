@@ -8,7 +8,7 @@
 #
 # 시각은 전부 modules/mobility/timeutil.to_min 으로 분 단위 정수로 바꾼다.
 # 이 파일에서 시각 파싱을 따로 하지 않는다 — 자가 둘이 되면 그때부터 어긋난다.
-import argparse, json, re, sqlite3, sys, os, collections
+import argparse, json, re, sqlite3, sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -16,7 +16,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))                 # 저장소 루트
 sys.path.insert(0, str(HERE.parent / "final_project_cs"))   # 판정 패키지
 sys.path.insert(0, str(HERE / "collect"))            # _paths
-from _paths import PROCESSED, RAW_MOBILITY           # noqa: E402
+from _paths import PROCESSED           # noqa: E402
 from app.modules.travel_ops.mobility_engine.timeutil import to_min   # noqa: E402
 
 KST = timezone(timedelta(hours=9))

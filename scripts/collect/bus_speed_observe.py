@@ -315,7 +315,7 @@ for nm, v in sorted(result["routes"].items()):
 
 lines += ["", "## 규칙에 넣을 값", "",
           "```json", json.dumps(ready, ensure_ascii=False, indent=1), "```", "",
-          f"`rules.bus.표정속도.노선별.value` 에 그대로 넣는다 — 판정기가 요일축별로 골라 쓰고,",
+          "`rules.bus.표정속도.노선별.value` 에 그대로 넣는다 — 판정기가 요일축별로 골라 쓰고,",
           f"`통계_금지_노선` 이 자동으로 풀린다. 관측 {args.min_min}분 미만인 요일축은 담지 않았다.", ""]
 lines += ["## 버린 표본", ""] + ([f"- {k}: {v:,}" for k, v in drop.most_common()] or ["- 없음"]) + [
     "", "## 읽는 법", "",

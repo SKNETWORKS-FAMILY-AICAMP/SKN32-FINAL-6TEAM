@@ -17,7 +17,6 @@
 # 출력: processed/mobility/transfer_car_v1.json · transfer_car_v1_report.md
 import csv, json, re, sys, collections, hashlib
 from datetime import datetime, timezone, timedelta
-from pathlib import Path
 from _paths import RAW_MOBILITY, PROCESSED
 
 KST = timezone(timedelta(hours=9))
@@ -546,7 +545,7 @@ OUT.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
 
 # ── 리포트 ─────────────────────────────────────────────────────────
 ops = collections.Counter((r["철도운영기관명"], r["노선명"]) for r in rows)
-L = [f"# 환승 칸 표 v1 (transfer_car_v1)", "",
+L = ["# 환승 칸 표 v1 (transfer_car_v1)", "",
      f"소스 {doc['source']['name']} ({SRC_URL}) · 포털 등록 {SRC_REGISTERED} · 확인 {PORTAL_CHECKED_AT} · "
      f"파일 `{src.name}` md5 `{src_md5}` · 받은 시각 {downloaded_at} · 생성 {now}", "",
      "등급 — 칸 값 **확정(운영기관 공표)** · 방향 환산은 항목별 `map_grade` · 병합 규칙으로 고른 값은 `chosen_by_rule`(정확성 검증 아님) · 표시 전용(판정에 안 씀)", "",

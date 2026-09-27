@@ -13,7 +13,7 @@
 #   3) pip install pyproj   (없으면 좌표계 판별까지만 하고 변환은 건너뛴다)
 #
 # 실행:  python scripts/probe_juso_coord.py [--n 8]
-import argparse, json, math, os, re, sys
+import argparse, json, math, os, sys
 from pathlib import Path
 
 import requests

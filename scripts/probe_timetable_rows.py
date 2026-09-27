@@ -84,7 +84,7 @@ def main():
             frac = len(self_rows) / len(rs)
             print(f"  ★ dest == '{nm}' 인 행 {len(self_rows)}편 ({frac:.0%}) "
                   f"{fmt_min(min(self_rows))}~{fmt_min(max(self_rows))}")
-            print(f"     → 하루 종일 고르게 있으면 **시발 열차**, 막차 근처에만 있으면 **입고 열차**다.")
+            print("     → 하루 종일 고르게 있으면 **시발 열차**, 막차 근처에만 있으면 **입고 열차**다.")
 
         # ★ 역 ID — 같은 역이 승강장별로 다른 ID 로 오는지. 지선 편성이 통째로 비면 여기가 원인이다.
         print("  출발행 source_station_id × 행선지:")

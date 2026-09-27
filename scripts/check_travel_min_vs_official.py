@@ -70,7 +70,7 @@ band = collections.Counter(
 conf = [h for h in hit if h[5] == "확정"]
 confd = [abs(h[4] - h[3]) for h in conf]
 
-L = [f"# 역간 소요 대조 — 우리 계산 vs 서울교통공사 공식", "",
+L = ["# 역간 소요 대조 — 우리 계산 vs 서울교통공사 공식", "",
      f"소스 {src.name} · 생성 {datetime.now(KST).isoformat(timespec='seconds')}",
      f"공식 간선 {len(pairs)} · 우리와 매칭 {len(hit)} · 매칭 실패 {len(miss)}", "",
      "## 오차", "",

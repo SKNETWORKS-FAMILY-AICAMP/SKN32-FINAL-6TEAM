@@ -171,7 +171,7 @@ def probe_places(key, how_many, sample, keys_csv=None, only=None, summary=None):
         time.sleep(0.05)
     n = len(keys)
     found = n - tally.get("미검색", 0)
-    print(f"\n── 숫자만 남긴다 ──")
+    print("\n── 숫자만 남긴다 ──")
     print(f"  조회 {n}역 · 노선 {len({S[k]['line'] for k in keys})}종 · 검색됨 {found} · 미검색 {tally.get('미검색', 0)}")
     for kind in ("일치", "로마자차이", "한글", "의미번역의심"):
         c = tally.get(kind, 0)

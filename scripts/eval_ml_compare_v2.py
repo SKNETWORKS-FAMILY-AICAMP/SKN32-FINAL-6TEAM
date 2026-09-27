@@ -211,7 +211,7 @@ def main():
 
 
 def write_md(path, S):
-    L = [f"# ML 대조 실험 v2 — 한계 셋을 실험으로\n",
+    L = ["# ML 대조 실험 v2 — 한계 셋을 실험으로\n",
          f"탐침 {S['n_probes']:,}건 · 구간 {S['n_routes']}종 · 근거없음 구간 {S['unknown_routes']}종 · A 판정 {S['verdict_dist']}\n",
          "## 1. 탐침 — 구간 단위 GroupKFold 5 × 시드 5 (EXP-11 은 격자탐색 후 시드 5)\n",
          "| 실험 | 정확도 | macro-F1 | 근거없음 재현율 | 근거없음→성립 (시드0) | 근거없음→확정답 | FLIP/폴드 |",

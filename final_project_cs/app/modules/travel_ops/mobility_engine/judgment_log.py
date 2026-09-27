@@ -36,6 +36,7 @@ import json
 import re
 import socket
 import sys
+import threading
 import time
 import uuid
 from contextlib import contextmanager
@@ -462,24 +463,30 @@ class JudgmentLogger:
 def install(verifier_cls, logger):
     """`verifier_cls.verify_case` 를 감싼다(판정기 코드는 그대로). 맨 바깥 호출만 기록한다."""
     orig = verifier_cls.verify_case
-    depth = {"n": 0}
+    # 56 (GPT #1) — 호출 깊이는 **스레드마다**. 공유 dict 였을 때는 A 요청 중에 들어온 B 요청을 중첩으로 오인해
+    #   기록·판정 예외 집계를 빠뜨렸다. 기록(파일 쓰기·카운터)은 잠금 안에서 한 번에.
+    depth = threading.local()
+    lock = threading.Lock()
 
     def wrapped(self, case):
-        top = depth["n"] == 0
-        depth["n"] += 1
+        n = getattr(depth, "n", 0)
+        top = n == 0
+        depth.n = n + 1
         t0 = time.perf_counter()
         try:
             r = orig(self, case)
         except BaseException:
             if top:
-                logger.n_judge_error += 1
+                with lock:
+                    logger.n_judge_error += 1
             raise
         finally:
-            depth["n"] -= 1
+            depth.n -= 1
         if top:
-            logger.record(case, r, latency_ms=(time.perf_counter() - t0) * 1000,
-                          rules_version=self.R.get("rules_version"),
-                          timetable_build=getattr(self.tt, "fetched_at", None))
+            with lock:
+                logger.record(case, r, latency_ms=(time.perf_counter() - t0) * 1000,
+                              rules_version=self.R.get("rules_version"),
+                              timetable_build=getattr(self.tt, "fetched_at", None))
         return r
 
     logger.open()                                   # 기기 표식에 막히면 여기서 끝난다 — 패치 전에

@@ -24,9 +24,8 @@
 """
 from __future__ import annotations
 
-import importlib.util
+import copy
 import json
-import sys
 import threading
 from pathlib import Path
 
@@ -73,7 +72,9 @@ class Runtime:
         self.stats = stats
 
     def verify_case(self, case):
-        return self._v.verify_case(case)
+        # 56 ① — 건마다 얕은 복사본에서 돈다. 판정기가 건마다 재할당하는 상태(_case_date · disr · _leg_cache ·
+        #   lfd_capped)를 여러 스레드가 같은 객체에서 섞지 않게(plan.Planner · plan_estimate 와 같은 방식).
+        return copy.copy(self._v).verify_case(case)
 
 
 def build_verifier(*, paths=None, wanted=None, quiet=False):

@@ -93,7 +93,7 @@ def normalize_window(first_raw, last_raw, base_d):
     base_d: 시간 기준일 'YYYYMMDD'. 정수 분으로 비교한다. 규칙은 파일 머리 주석(45번 방).
     날짜가 {base_d, base_d+1} 밖이면 ValueError — 혼합 캐시를 조용히 정규화하지 않는다.
     """
-    from datetime import date, timedelta
+    from datetime import timedelta
     b = datetime.strptime(base_d, "%Y%m%d").date()
     ok_dates = {b, b + timedelta(days=1)}
 
@@ -318,7 +318,7 @@ def main():
             "\n".join(json.dumps(r, ensure_ascii=False) for r in routes_out) + "\n",
         PROCESSED / "mobility" / f"bus_stops_{suffix}.jsonl":
             "\n".join(json.dumps(s, ensure_ascii=False) for s in stops_out) + "\n",
-        PROCESSED / "mobility" / (f"bus_stop_coords.json" if a.replace_v1 else "bus_stop_coords_v2.json"):
+        PROCESSED / "mobility" / ("bus_stop_coords.json" if a.replace_v1 else "bus_stop_coords_v2.json"):
             json.dumps(coords, ensure_ascii=False, indent=1),
     }
     for p, text in outs.items():

@@ -2,7 +2,7 @@
 # 채점표 전용 — 원본은 walk_courses\seoul_gov\ 에만 둔다(빼려면 폴더째 삭제). 산출 geojson 에 넣지 않는다.
 # SHP 칸은 선 좌표가 아니라 "(유형,점수,minx,miny,maxx,maxy,…,길이(도),SRID,BLOB)" 요약으로 보인다 → 파싱해서 무엇이 있는지 확인.
 # 실행: ..\.venv\Scripts\python scripts\collect\walk07_seoulgov_api.py
-import collections, json, math, os, re, sys, time
+import collections, json, os, sys, time
 from pathlib import Path
 import requests
 

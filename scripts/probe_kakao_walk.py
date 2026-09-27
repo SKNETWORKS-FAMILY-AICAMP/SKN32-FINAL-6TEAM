@@ -128,7 +128,7 @@ for name, sx, sy, ex, ey in TRANSIT:
     if walk_t:
         print(f"     도보 step {walk_d}m / {walk_t}s → {walk_d/walk_t:.2f} m/s  ✔ 도보가 분리된다 = 계수를 여기에만 곱하면 된다")
     else:
-        print(f"     도보 step 이 type 으로 구분되지 않는다 → 접근 도보는 도보 API 로 따로 구하고 나머지는 버퍼로 흡수")
+        print("     도보 step 이 type 으로 구분되지 않는다 → 접근 도보는 도보 API 로 따로 구하고 나머지는 버퍼로 흡수")
     print(f"     {'대기 시간 없음 — 우리 시간표로 채워야 한다' if abs(gap_t) <= 2 else f'차이 {gap_t}s 가 대기일 수 있다 — 확인 필요'}")
     transit.append({"pair": name, "type": pr.get("type"), "totalTime": pr.get("totalTime"),
                     "totalDistance": pr.get("totalDistance"), "transfers": pr.get("transfers"),

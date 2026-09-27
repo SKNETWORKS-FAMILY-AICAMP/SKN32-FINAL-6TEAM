@@ -49,7 +49,7 @@ from app.modules.travel_ops.mobility_engine.bus import BusRoutes                
 from app.modules.travel_ops.mobility_engine.geo import StationCoords                            # noqa: E402
 from app.modules.travel_ops.mobility_engine.exits import StationExits                           # noqa: E402
 from app.modules.travel_ops.mobility_engine.bike import BikeStations                             # noqa: E402
-from app.modules.travel_ops.mobility_engine.timeutil import to_service_min, fmt_min, day_type_of  # noqa: E402
+from app.modules.travel_ops.mobility_engine.timeutil import fmt_min  # noqa: E402
 
 SEV_ORDER = {"critical": 0, "warn": 1, "info": 2}
 
