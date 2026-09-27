@@ -55,8 +55,9 @@ class TourApiPlace(TravelSource):
         self._key = service_key
 
     def _common(self) -> dict[str, Any]:
+        # ★`MobileApp` 은 서비스 고유명 — 운영계정(트래픽 증설) 승인 요건이다(2026-09-27, 옛 값 "acop")
         return {"serviceKey": self._key, "MobileOS": "ETC",
-                "MobileApp": "acop", "_type": "json"}
+                "MobileApp": "triPilot", "_type": "json"}
 
     # ── 찾기 ────────────────────────────────────────────────────
     def find(self, place_name: str, *,

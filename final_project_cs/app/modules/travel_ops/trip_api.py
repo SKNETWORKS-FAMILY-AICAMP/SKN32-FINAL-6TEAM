@@ -250,6 +250,11 @@ def _cause_label(cause: dict[str, Any]) -> str:
     return str(cause.get("kind") or cause.get("type") or cause.get("category") or "")
 
 
+#: ★`[2026-09-27]` 한국관광콘텐츠랩 이용약관 제11조 — 관광공사 값이 나가는 고객 화면에 출처를 적는다.
+#:  이 화면의 장소가 관광공사 자료에서 왔는지 항목마다 가리지 않고 **늘** 붙인다(보수적으로).
+TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2"
+
+
 def _render_plan(view: dict[str, Any]) -> str:
     esc = lambda value: html.escape(str(value or ""))  # noqa: E731
     rows = []
@@ -282,11 +287,14 @@ ul{{list-style:none;padding:0;margin:1rem 0}}
 .badge{{font-size:.72rem;border:1px solid var(--accent);color:var(--accent);border-radius:.3rem;padding:0 .3rem}}
 .others{{color:var(--muted);font-size:.85rem}} h2{{font-size:1rem;margin-top:1.5rem}}
 .hist li{{color:var(--muted);font-size:.85rem;padding:.15rem 0}}
+.credit{{margin-top:2rem;color:var(--muted);font-size:.78rem}} .credit a{{color:inherit}}
 </style></head><body><main>
 <h1>{esc(view['title'])}</h1>
 <div class="meta">일정 버전 {view['version']} · 이 페이지가 최신 일정입니다</div>
 <ul class="plan">{''.join(rows)}</ul>
 <h2>바뀐 기록</h2><ul class="hist">{changes}</ul>
+<footer class="credit">장소 정보 출처 : ⓒ한국관광공사 ·
+<a href="{TOUR_API_POLICY_URL}" rel="noopener" target="_blank">저작권 정책</a></footer>
 </main></body></html>"""
 
 
