@@ -254,7 +254,7 @@ def test_닫힌_곳은_후보에서_빠지고_모르는_곳은_남는다(conn, p
     add_hours(conn, near_closed, 1, [(660, 1320, None)])
     add_closure(conn, near_closed, pattern_kind="weekly", weekday=1)
 
-    near_unknown = place("모르는곳", lat=37.5012, lng=127.0000)  # 규칙 없음
+    place("모르는곳", lat=37.5012, lng=127.0000)  # 규칙 없음
 
     rows = conn.execute(
         "SELECT name_ko, open_state FROM dining.alternative_pool(%s, %s, %s)",

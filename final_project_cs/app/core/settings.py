@@ -136,6 +136,7 @@ class Settings(BaseSettings):
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
+    google_places_api_key: str = ""          # 구글 Places — 가게 place_id 연결(scripts/dining/google_link.py)
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
