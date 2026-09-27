@@ -42,6 +42,11 @@ CONTENT_TYPE_NAMES = {
 }
 
 
+#: 지역 코드(우리가 쓰는 구분값) → 관광공사 조회 조건. `TourApiPlace.region_filter` 참고.
+#: ★서울만 쟀다(2026-09-26). 다른 지역은 재고 나서 더한다 — 추측으로 법정동 코드를 채우지 않는다.
+REGION_FILTERS: dict[str, dict[str, str]] = {"1": {"lDongRegnCd": "11"}}
+
+
 class TourApiPlace(TravelSource):
     name = "tour_api"
 
@@ -197,12 +202,25 @@ class TourApiPlace(TravelSource):
         }, source=self.name)
 
     # ── 지역 단위 수집 (카탈로그 동기화용) ──────────────────────
+    @staticmethod
+    def region_filter(area_code: str) -> dict[str, str]:
+        """지역 수집의 거르는 조건. ★서울은 **법정동 코드**(`lDongRegnCd=11`)로 거른다.
+
+        ★★`[2026-09-26 실측, 같은 키]` `areaBasedList2` 의 서울 전체 건수 —
+          `areaCode=1` 이면 **1,965건**, `lDongRegnCd=11` 이면 **7,996건**. 응답 대부분이 `areacode` 를
+          빈칸으로 주어 지역 코드로 거르면 서울 자료의 약 24.6%만 온다. 그래서 `place_catalog` 에
+          경복궁(관광지 12)·명동난타극장·토속촌삼계탕이 없었다(triPilot : RAG 세션 인계, 이 세션이 다시 쟀다).
+        ★저장하는 구분값(`area_code`)은 그대로다 — 장소를 읽는 쪽(`planner.load_candidates`)이 그 값으로 찾는다.
+        ★표에 없는 지역은 예전처럼 `areaCode` 로 거른다(그 지역은 아직 재지 않았다).
+        """
+        return dict(REGION_FILTERS.get(str(area_code), {"areaCode": str(area_code)}))
+
     def area_page(self, area_code: str, *, page: int, rows: int
                   ) -> dict[str, Any] | None:
         """지역 한 페이지. ★**사용자별이 아니라 지역별로 당긴다** —
         그래야 콜 수가 사용자 수에 비례하지 않는다."""
         body = self._body(f"{BASE_URL}/areaBasedList2", {
-            **self._common(), "areaCode": area_code,
+            **self._common(), **self.region_filter(area_code),
             "numOfRows": str(rows), "pageNo": str(page), "arrange": "C"})
         if body is None:
             return None
@@ -222,7 +240,7 @@ class TourApiPlace(TravelSource):
           `PlaceCatalogSync.audit()` 이 전체 대조로 판정한다.
         """
         body = self._body(f"{BASE_URL}/areaBasedSyncList2", {
-            **self._common(), "areaCode": area_code, "numOfRows": str(rows),
+            **self._common(), **self.region_filter(area_code), "numOfRows": str(rows),
             "pageNo": "1", "modifiedtime": since, "showflag": "1"})
         if body is None:
             return None
