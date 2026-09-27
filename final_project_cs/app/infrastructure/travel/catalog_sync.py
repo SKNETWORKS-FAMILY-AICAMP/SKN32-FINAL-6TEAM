@@ -34,7 +34,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 import logging
 from typing import Any, Callable
 
@@ -81,6 +80,17 @@ class PlaceCatalogSync:
         self.tenant_id, self.page_size = tenant_id, page_size
 
     # ── 진입점 ──────────────────────────────────────────────────
+    @staticmethod
+    def enabled() -> bool:
+        """★`[2026-09-27]` 기본 꺼짐 — 관광공사 콘텐츠랩 저작권 정책 「활용 주의사항」 2 — 「콘텐츠 캐싱(로컬서버 저장방식) 금지」. 관광공사 서면 답을 받기 전까지 장소 목록을 쌓지 않는다(2026-09-27, 코덱스와 논의해 결정)."""
+        from app.core.settings import get_settings
+
+        return bool(getattr(get_settings(), "tour_catalog_enabled", False))
+
+    def _suspended(self, area_code: str, mode: str) -> SyncOutcome:
+        return SyncOutcome(self.source.name, area_code, mode,
+                           note="suspended_legal_review — 수집이 꺼져 있다(ACOP_TOUR_CATALOG_ENABLED)")
+
     def run(self, area_code: str, *, max_pages: int = 5) -> SyncOutcome:
         """한 번 돌린다. **부트스트랩이 안 끝났으면 그것부터.**
 
@@ -88,6 +98,8 @@ class PlaceCatalogSync:
           하나에 수십 초가 걸리므로, 한 실행이 몇 시간씩 물고 있으면 안 된다.
           남은 것은 다음 실행이 이어받는다.
         """
+        if not self.enabled():
+            return self._suspended(area_code, "run")
         state = self._load_state(area_code)
         if not state["bootstrap_done"]:
             return self._bootstrap(area_code, state, max_pages=max_pages)
@@ -162,11 +174,13 @@ class PlaceCatalogSync:
 
     # ── 감사: 전체를 다시 받아 대조한다 ──────────────────────────
     def audit(self, area_code: str, *, max_pages: int = 30) -> SyncOutcome:
-        """전체를 다시 받아 캐시와 대조하고, 델타를 믿을지 정한다.
+        """전체를 다시 받아 캐시와 대조하고, 델타를 믿을지 정한다. ★수집이 꺼져 있으면 아무것도 하지 않는다.
 
         ★델타가 0 이라 했는데 실제로 달라진 게 있으면 **델타가 거짓말하고
           있는 것**이다. 그때 `delta_trusted` 를 내린다.
         """
+        if not self.enabled():
+            return self._suspended(area_code, "audit")
         outcome = SyncOutcome(self.source.name, area_code, "audit")
         seen: dict[str, str] = {}
         page = 1
@@ -230,7 +244,8 @@ class PlaceCatalogSync:
                      row.get("title"), row.get("address"),
                      row.get("latitude"), row.get("longitude"),
                      row.get("source_modified_at"),
-                     json.dumps(row.get("raw") or {}, ensure_ascii=False)))
+                     # ★`[2026-09-27]` 원문 응답은 저장하지 않는다 — 쓰는 칸만 남긴다(허용되더라도 최소로)
+                     "{}"))
                 written += 1
         return written
 

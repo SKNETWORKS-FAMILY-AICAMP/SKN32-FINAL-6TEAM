@@ -49,6 +49,8 @@ REGION_FILTERS: dict[str, dict[str, str]] = {"1": {"lDongRegnCd": "11"}}
 
 class TourApiPlace(TravelSource):
     name = "tour_api"
+    #: ★`[2026-09-27]` 응답을 공용 캐시에 담지 않는다 — 콘텐츠랩 「로컬서버 저장방식 금지」(해석 대기, 보수적으로)
+    cache_ttl_seconds = 0
 
     def __init__(self, *, service_key: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)
