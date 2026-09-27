@@ -27,6 +27,17 @@
       "port": 8042
     },
     {
+      "name": "tripilot-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend/apps/web",
+        "run",
+        "dev"
+      ],
+      "port": 3100
+    },
+    {
       "name": "tripilot",
       "url": "http://tripilot.localhost:8042"
     },
