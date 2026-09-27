@@ -95,8 +95,11 @@ def test_a_photo_plan_is_read_six_of_six_with_every_value_cut_from_the_transcrip
     booking = [i["fields"]["booking_no"]["value"] for i in source["items"] if "booking_no" in i["fields"]]
     assert booking == ["KY-20931"]
     assert source["trip"]["party_size"]["value"] == 4 and source["trip"]["nights"]["value"] == 2
-    assert [(i["day"], i["date"]) for i in source["items"]][:1] == [(1, "--10-15")]
-    assert [(i["day"], i["date"]) for i in source["items"]][3:4] == [(2, "--10-16")]
+    # ★2주차 — 해 없는 「10월 15일」은 오늘(서울) 기준 다가오는 날로 해를 채우고, 확인을 받는다
+    assert [(i["day"], i["date"][4:]) for i in source["items"]][:1] == [(1, "-10-15")]
+    assert [(i["day"], i["date"][4:]) for i in source["items"]][3:4] == [(2, "-10-16")]
+    first_date = source["items"][0]["fields"]["date"]
+    assert first_date["evidence"]["how"] == "year_filled" and first_date["needs_review"]
 
 
 def test_a_chat_style_plan_is_read_into_items(api):
@@ -114,7 +117,10 @@ def test_a_chat_style_plan_is_read_into_items(api):
 def test_an_unclear_hour_is_marked_for_review_and_unread_lines_are_kept(api):
     client = _client()
     view = _send(client, _key(client), text="3시에 남산타워\n저녁은 아무 데나 괜찮아요")
-    assert [r["field"] for r in view["needs_review"]] == ["items[0].starts_at"]
+    fields = [r["field"] for r in view["needs_review"]]
+    assert [f for f in fields if f.endswith("starts_at")] == ["items[0].starts_at"]
+    # ★2주차 — 날짜가 어디에도 없으면 지어내지 않고 첫날 하나만 묻는다. 장소 조회기가 없으면 「못 정함」으로 남는다
+    assert "trip.ask_first_day" in fields and "items[0].date" in fields and "items[0].place" in fields
     lines = view["sources"][0]["lines"]
     assert [line["read"] for line in lines] == [True, False]     # 남은 줄 — 2주차에 LLM 이 위치만 가리킨다
 
@@ -182,3 +188,92 @@ def test_the_kind_comes_from_the_bytes_not_the_name(api, name):
     client = _client(vision)
     view = _send(client, _key(client), files=[(name, PHOTO.read_bytes())])
     assert view["sources"][0]["kind"] == "image" and _items(view) == WANT
+
+
+# ── 2주차: 남은 줄(모델이 가리키기만) → 날짜 → 장소 ───────────────────────────
+CHAT_PLAN = "1일차 2026-10-15\n09:00 경복궁\n점심은 토속촌에서 먹을래\n저녁엔 광장시장 가 보고 싶어"
+
+
+class Labeler:
+    """모델 흉내 — 남은 줄에 위치만 가리킨다. 하나는 일부러 원문을 바꿔 적는다(「토속툰」 — 실측에서 본 모양)."""
+
+    def see(self, prompt, image):          # 사진은 안 쓴다
+        raise AssertionError("사진이 없다")
+
+    def json(self, system, user):
+        assert "3: 점심은 토속촌에서 먹을래" in user and "2: 09:00" not in user   # ★규칙이 읽은 줄은 안 보낸다
+        return {"spans": [{"line": 3, "quote": "점심", "role": "meal"},
+                          {"line": 3, "quote": "토속촌", "role": "place"},
+                          {"line": 4, "quote": "저녁", "role": "time"},
+                          {"line": 4, "quote": "광장시장", "role": "place"},
+                          {"line": 4, "quote": "광장시쟝", "role": "place"}]}
+
+
+class Tour:
+    PLACES = {"경복궁": ("126508", "12", 37.5796, 126.9770), "광장시장": ("264570", "38", 37.5700, 126.9996),
+              "토속촌삼계탕": ("2717339", "39", 37.5778, 126.9716)}
+
+    def __init__(self):
+        self.asked = []
+
+    def find(self, name, area_code=None):
+        self.asked.append((name, area_code))
+        if name not in self.PLACES:
+            return None
+        cid, ctype, lat, lon = self.PLACES[name]
+        return {"matched_title": name, "content_id": cid, "content_type_id": ctype, "latitude": lat,
+                "longitude": lon, "address": "서울특별시 종로구"}
+
+
+class Kakao:
+    def __init__(self):
+        self.asked = []
+
+    def search(self, query, size=5):
+        self.asked.append(query)
+        return [{"id": "1", "name": "토속촌삼계탕", "category": "음식점 > 한식", "category_group": "FD6",
+                 "address": "서울 종로구 자하문로5길 5", "latitude": 37.5778, "longitude": 126.9716}] \
+            if query == "토속촌" else []
+
+
+def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
+    tour, kakao = Tour(), Kakao()
+    client = TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(chat_factory=Labeler, place_factory=lambda: tour,
+                                          kakao_factory=lambda: kakao)]))
+    view = _send(client, _key(client), text=CHAT_PLAN)
+    items = view["sources"][0]["items"]
+    titles = [i["fields"]["title"]["value"] for i in items]
+    assert titles == ["경복궁", "토속촌", "광장시장"]
+    # ★모델이 바꿔 적은 인용(「광장시쟝」)은 원문에 없어 버렸다 — 그 보고가 남는다
+    report = view["sources"][0]["reading"]
+    assert [r["quote"] for r in report["rejected"]] == ["광장시쟝"] and report["accepted"] == 4
+    assert items[1]["fields"]["title"]["method"] == "llm_span"
+    assert items[1]["fields"]["kind"]["value"] == "dining"                   # 「점심」 → 끼니
+    # 날짜 — 본문에 적힌 날짜가 모델이 가리킨 줄까지 이어진다
+    assert [i["date"] for i in items] == ["2026-10-15"] * 3
+    # 장소 — 관광공사(서울 필터) 정확 일치 · 카카오로 이름을 찾아 관광공사에서 다시 확인
+    places = [i["fields"]["place"] for i in items]
+    assert [(p["value"]["name"], p["evidence"]["source"]) for p in places] == [
+        ("경복궁", "tour_api"), ("토속촌삼계탕", "tour_api"), ("광장시장", "tour_api")]
+    assert places[1]["needs_review"] and not places[0]["needs_review"]      # 이름이 원문과 다르다 → 확인
+    assert places[1]["value"]["kind"] == "dining"
+    assert all(area == "1" for _, area in tour.asked)                        # ★서울 밖으로 새지 않는다
+    assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
+
+
+def test_a_model_outage_only_skips_the_pointing_step(api):
+    class Down(Labeler):
+        def json(self, system, user):
+            raise TimeoutError("ollama down")
+
+    client = TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(chat_factory=Down)]))
+    view = _send(client, _key(client), text=CHAT_PLAN)
+    assert view["status"] == "review"
+    items = view["sources"][0]["items"]
+    assert [i["fields"]["title"]["value"] for i in items] == ["경복궁"]    # 규칙이 읽은 것은 그대로
+    assert [line["read"] for line in view["sources"][0]["lines"]] == [True, True, False, False]
+    assert view["sources"][0]["reading"]["error"].startswith("TimeoutError")   # ★장애는 이름으로 남는다

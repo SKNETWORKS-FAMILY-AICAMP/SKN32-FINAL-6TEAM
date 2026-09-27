@@ -362,6 +362,26 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
   역방향 프록시 뒤에서는 모두 같은 주소로 보여 함께 막힌다 — 그때는 원 주소로 세도록 바꿔야 한다.
 - 시험 `tests/e2e/test_web_api.py` 10건.
 
+### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
+
+`[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
+저장 `trip_intakes` · `intake_sources` · `intake_claims`(마이그레이션 028). 설계 `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md`.
+★**모델은 위치만 가리키고 값은 원문과 조회가 낸다.** 값마다 방법(`rule` · `llm_span` · `lookup` · `customer`)과 근거가 붙는다.
+
+| 경로 | 인증 | 뜻 |
+|---|---|---|
+| `POST /v1/web/trip-intakes` | 키 | 폼 — `text`(붙여 넣은 일정 · 채팅처럼 쓴 계획) + `files`(사진 · PDF · docx · xlsx, 종류는 **바이트로** 가린다). 곧바로 `202 {intake_id, status: reading}`, 읽기는 뒤에서 돈다(사진 한 장 ~45~60초) |
+| `GET /v1/web/trip-intakes/{intake_id}` | 키 | 단계 · 원본별 줄 번호 글(`lines[].read` = 읽은 줄) · 항목(`fields` 의 값마다 근거) · `reading`(남은 줄에 모델이 가리킨 결과 — 받은 수 · 버린 인용 · 장애) · `needs_review`. **남의 접수는 404** |
+
+읽는 순서(원본마다): 규칙 → **남은 줄만** 모델에 보내 원문 조각을 인용하게 함(원문에 글자 그대로 없는 인용은 버린다) →
+날짜(적힌 날짜 > 일차 > 상대 날짜, 해가 없으면 다가오는 날 + 확인. 어디에도 없으면 `trip.ask_first_day` — 지어내지 않는다) →
+장소(우리 장소 표 → 자모 오타 → 관광공사 서울 → 카카오로 이름 찾고 관광공사 재확인 → 관광공사에 없으면 카카오 값을 그 항목에만).
+- 모델·관광공사·카카오 중 없는 것은 그 단계만 건너뛴다. 모델 장애는 `reading.error` 에 이름으로 남는다.
+- ★장소 조회가 **막힌 것**(속도 제한 · 시간 초과 · 예산)은 근거의 `blocked` 에 남기고 「없는 곳이라는 뜻이 아니다」라고 적는다.
+- 한도: 파일 5개 · 10MB · 글 20,000자. 관광공사는 몰림 30(`travel.rate_burst_by_source`), 카카오는 호출 예산(`travel.kakao_budget`).
+- 확인 화면 · 등록(`_create_trip`) · 예약 연결 · 계획 요청 → 일정 생성기는 **3주차 몫이라 아직 없다.**
+- 시험 `tests/e2e/test_trip_intake_api.py` 10건 · `tests/unit/travel/test_intake_rules.py` 22건 · `test_intake_resolve.py` 20건(2026-09-27 실행).
+
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 
 `[실측]` `app/modules/travel_ops/delegation_api.py`. 라우터는 도메인 폴더에 있고

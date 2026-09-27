@@ -88,4 +88,12 @@ def google_caps() -> dict[str, dict[str, int]]:
     return {meter: caps_from_free(value) for meter, value in free.items()}
 
 
-__all__ = ["CallBudget", "UNLIMITED", "caps_from_free", "google_caps"]
+def kakao_caps() -> dict[str, dict[str, int]]:
+    """가드레일 `travel.kakao_budget` — 월·하루 상한을 그대로 쓴다(무료 한도가 아니라 우리 상한이다)."""
+    from app.core.settings import get_guardrails
+
+    budget = get_guardrails().get("travel.kakao_budget")
+    return {meter: {"month": int(v["month"]), "day": int(v["day"])} for meter, v in budget.items()}
+
+
+__all__ = ["CallBudget", "UNLIMITED", "caps_from_free", "google_caps", "kakao_caps"]

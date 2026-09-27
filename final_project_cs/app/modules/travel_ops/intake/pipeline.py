@@ -10,13 +10,17 @@
 """
 from __future__ import annotations
 
+from datetime import date, datetime
 import hashlib
 import json
 from typing import Any, Callable
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from .rules import read_plan
 from .sources import UnsupportedSource, sniff, to_text
+
+KST = ZoneInfo("Asia/Seoul")
 
 #: 받는 크기 · 개수 — 우리가 고른 값(설계서 §9 「악성 파일·압축 폭탄」). 넘으면 접수하지 않는다
 MAX_FILES = 5
@@ -73,8 +77,13 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
 
 
 def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blobs: dict[int, bytes],
-            see: Callable[[str, bytes], str] | None) -> str:
-    """뒤에서 한 건을 읽는다. 돌려주는 값은 마지막 상태(review · fatal). `blobs` = {position: 바이트}."""
+            see: Callable[[str, bytes], str] | None, chat: Any = None, tour: Any = None, kakao: Any = None,
+            today: date | None = None) -> str:
+    """뒤에서 한 건을 읽는다. 돌려주는 값은 마지막 상태(review · fatal). `blobs` = {position: 바이트}.
+
+    ★2주차(2026-09-27): 규칙 → 남은 줄은 모델이 **가리키기만**(`chat`) → 날짜 해석 → 장소 찾기(`tour` 관광공사 ·
+      `kakao`). 넣지 않은 것은 건너뛴다 — 그 값은 「확인 필요」로 남고 확인 화면에서 고객이 고친다.
+    """
     try:
         with connect() as conn:
             sources = _sources(conn, tenant_id, intake_id)
@@ -93,20 +102,25 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                                  source["source_id"], tenant_id))
                 source["transcript"] = result.text
         _stage(connect, tenant_id, intake_id, "reading")
+        with connect() as conn:
+            our_places = _our_places(conn, tenant_id)
+        rows_by_source = []
+        for source in sources:
+            rows_by_source.append((source, read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao,
+                                                       our_places=our_places,
+                                                       today=today or datetime.now(KST).date())))
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 "
-                        "AND method='rule'", (tenant_id, intake_id))
-            for source in sources:
-                read = read_plan(source["transcript"] or "")
-                for claim in read.claims:
-                    row = claim.as_dict()
+                        "AND method <> 'customer'", (tenant_id, intake_id))
+            for source, rows in rows_by_source:
+                for row in rows:
                     cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, "
                                 "value_json, method, evidence, needs_review, note) "
                                 "VALUES (%s,%s,1,%s,%s,%s,%s,%s,%s,%s)",
                                 (intake_id, tenant_id, source["source_id"], row["field"],
                                  json.dumps(row["value"], ensure_ascii=False), row["method"],
                                  json.dumps({**row["evidence"], "source_id": str(source["source_id"])},
-                                            ensure_ascii=False), row["needs_review"], row["note"]))
+                                            ensure_ascii=False, default=str), row["needs_review"], row["note"]))
             cur.execute("UPDATE trip_intakes SET status='review', stage='review', updated_at=now() "
                         "WHERE tenant_id=%s AND intake_id=%s", (tenant_id, intake_id))
         return "review"
@@ -144,13 +158,106 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
             "source_id": str(source["source_id"]), "kind": source["kind"], "filename": source["filename"],
             "transcribed": source["transcribed"], "missing": source["missing_json"], "seconds": source["seconds"],
             "lines": [{"no": n, "text": text, "read": n in read_lines} for n, text in enumerate(lines, start=1)],
-            "items": _items(mine), "trip": _trip_fields(mine)})
+            "items": _items(mine), "trip": _trip_fields(mine),
+            # 남은 줄에 모델이 가리킨 결과 — 몇 개 받고 무엇을 버렸나(원문에 없는 인용). 모델을 안 불렀으면 None
+            "reading": next((c["value"] for c in mine if c["field"] == "reading.llm"), None)})
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
             "sources": out_sources,
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
+
+
+# ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
+def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
+                our_places: list[dict[str, Any]] | None = None, today: date) -> list[dict[str, Any]]:
+    """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다."""
+    from .dates import resolve_dates
+    from .llm_spans import label_lines
+    from .places import resolve
+
+    read = read_plan(text)
+    rows = [claim.as_dict() for claim in read.claims]
+    marks = [(c.span.line, c.value if c.field.endswith(".heading") else None,
+              c.value if c.field.endswith(".date") else None) for c in read.claims if c.field.startswith("days[")]
+    items: list[dict[str, Any]] = []
+    for item in read.items:
+        items.append({"line": (item.title or item.booking_no).line if (item.title or item.booking_no) else 0,
+                      "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
+                      "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows)})
+
+    # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
+    if chat is not None and read.unread_lines:
+        try:
+            span_claims, span_items, report = label_lines(read.lines, read.unread_lines, chat)
+        except Exception as exc:                      # noqa: BLE001 — 모델 장애는 기록하고 넘어간다
+            span_claims, span_items, report = [], [], {"error": f"{type(exc).__name__}: {exc}"[:200]}
+        rows.append({"field": "reading.llm", "value": report, "method": "llm_span",
+                     "evidence": {"source": "model", "lines": read.unread_lines}, "needs_review": False,
+                     "note": "남은 줄에 모델이 가리킨 결과(원문에 없는 인용은 버렸다)"})
+        by_line = {c.span.line: c for c in span_claims}
+        for span_item in span_items:
+            index = len(items)
+            day, date_mark = _mark_for(span_item.line, marks)
+            rows.append({"field": f"items[{index}].title", "value": span_item.title.text, "method": "llm_span",
+                         "evidence": {"source": "text", **span_item.title.as_dict()}, "needs_review": True,
+                         "note": "모델이 가리킨 원문 조각"})
+            time_claim = by_line.get(span_item.line)
+            if time_claim is not None:
+                rows.append({**time_claim.as_dict(), "field": f"items[{index}].starts_at"})
+            if span_item.meal:
+                rows.append({"field": f"items[{index}].kind", "value": "dining", "method": "llm_span",
+                             "evidence": {"source": "text", "line": span_item.line}, "needs_review": False,
+                             "note": f"끼니 말({span_item.meal})"})
+            items.append({"line": span_item.line, "day": day, "date": span_item.date or date_mark,
+                          "title": span_item.title.text, "meal": bool(span_item.meal)})
+        if report.get("plan_request"):
+            rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
+                         "evidence": {"source": "text"}, "needs_review": False,
+                         "note": "「일정 짜 줘」— 확인 화면에서 일정 생성기로 넘긴다"})
+
+    # 날짜 — 우선순위대로. 다 없으면 첫날을 묻는다
+    dated, ask = resolve_dates(items, today=today, lines=read.lines)
+    for index, day_date in enumerate(dated):
+        rows.append({"field": f"items[{index}].date", "value": day_date.value, "method": "rule",
+                     "evidence": {"source": "rule", "how": day_date.how, "line": items[index]["line"]},
+                     "needs_review": day_date.needs_review, "note": day_date.note})
+    if ask:
+        rows.append({"field": "trip.ask_first_day", "value": True, "method": "rule",
+                     "evidence": {"source": "rule"}, "needs_review": True,
+                     "note": "날짜가 적혀 있지 않다 — 첫날 날짜 하나만 묻는다"})
+
+    # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
+    for index, item in enumerate(items):
+        if not item["title"]:
+            continue
+        found = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+                        kind_hint="dining" if item["meal"] else None)
+        value = None if found.status != "resolved" else {
+            "name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
+            "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+        rows.append({"field": f"items[{index}].place", "value": value, "method": "lookup",
+                     "evidence": found.evidence(), "needs_review": found.needs_review, "note": found.note})
+    return rows
+
+
+def _mark_for(line: int, marks: list[tuple[int, Any, Any]]) -> tuple[int | None, str | None]:
+    day = date_value = None
+    for mark_line, mark_day, mark_date in sorted(marks, key=lambda m: m[0]):
+        if mark_line > line:
+            break
+        if mark_day is not None:
+            day, date_value = mark_day, None
+        if mark_date is not None:
+            date_value = mark_date
+    return day, date_value
+
+
+def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:
+    with conn.cursor() as cur:
+        cur.execute("SELECT place_id, name, kind, latitude, longitude FROM places WHERE tenant_id=%s", (tenant_id,))
+        return [dict(zip(("place_id", "name", "kind", "latitude", "longitude"), r)) for r in cur.fetchall()]
 
 
 # ── 부품 ─────────────────────────────────────────────────────────
@@ -169,9 +276,12 @@ def _items(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
                                  "note": claim["note"]}
     days = _day_dates(claims)
     for entry in items.values():
-        line = min((f["evidence"].get("line", 0) for f in entry["fields"].values()), default=0)
+        line = min((f["evidence"].get("line") or 0 for f in entry["fields"].values()
+                    if f["evidence"].get("line")), default=0)
         entry["line"] = line
         entry["day"], entry["date"] = _day_for(line, days)
+        if "date" in entry["fields"] and entry["fields"]["date"]["value"]:
+            entry["date"] = entry["fields"]["date"]["value"]        # ★날짜 해석이 정한 값이 이긴다
     return [items[k] for k in sorted(items)]
 
 

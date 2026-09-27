@@ -64,7 +64,8 @@ class TourApiPlace(TravelSource):
     # ── 찾기 ────────────────────────────────────────────────────
     def find(self, place_name: str, *,
              content_type_id: str | None = None,
-             allowed_types: "set[str] | None" = None) -> dict[str, Any] | None:
+             allowed_types: "set[str] | None" = None,
+             area_code: str | None = None) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 애매하면 `None`(모름).
 
         ★`content_type_id` 를 주면 공급자 쪽에서 그 종류로 좁혀 검색한다.
@@ -86,6 +87,10 @@ class TourApiPlace(TravelSource):
 
         params = {**self._common(), "keyword": place_name.strip(),
                   "numOfRows": "20", "pageNo": "1"}
+        if area_code:
+            # ★`[2026-09-27 실측]` 키워드 검색에도 법정동 필터가 먹는다 — 「경복궁」 정확 일치가 필터 없이는
+            #   서울 궁궐(12)·울산 음식점(39) 둘이라 애매 → 모름, `lDongRegnCd=11` 이면 서울 궁궐 하나
+            params.update(self.region_filter(area_code))
         if content_type_id:
             params["contentTypeId"] = content_type_id
 

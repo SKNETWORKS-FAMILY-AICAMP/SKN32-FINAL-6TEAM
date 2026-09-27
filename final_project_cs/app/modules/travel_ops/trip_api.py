@@ -318,7 +318,8 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
 def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
-                      place_factory: Callable[[], Any] | None = None) -> APIRouter:
+                      place_factory: Callable[[], Any] | None = None,
+                      kakao_factory: Callable[[], Any] | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게."""
     router = APIRouter()
     cache: dict[str, Any] = {}
@@ -709,7 +710,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         chat = _lazy("chat", chat_factory)
         background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,
                             blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
-                            see=getattr(chat, "see", None))
+                            see=getattr(chat, "see", None),
+                            chat=chat if hasattr(chat, "json") else None,
+                            tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
