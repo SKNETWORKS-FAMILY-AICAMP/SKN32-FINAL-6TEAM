@@ -96,7 +96,7 @@ AS $fn$
     LIMIT 1
 $fn$;
 
-COMMENT ON FUNCTION dining.live_state IS
+COMMENT ON FUNCTION dining.live_state(uuid, text, boolean) IS
     '없으면 NULL 이다. p_trial 이 참이면 시험 출처까지 본다. 기본은 본 갈래다.';
 
 

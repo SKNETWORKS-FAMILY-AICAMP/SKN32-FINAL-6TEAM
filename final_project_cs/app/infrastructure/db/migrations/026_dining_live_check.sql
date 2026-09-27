@@ -268,5 +268,5 @@ AS $fn$
     LIMIT 1
 $fn$;
 
-COMMENT ON FUNCTION dining.live_state IS
+COMMENT ON FUNCTION dining.live_state(uuid, text) IS
     'NULL 은 확인한 적이 없거나 기한이 지났다는 뜻이며, 닫혔다는 뜻이 아니다.';

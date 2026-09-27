@@ -12,12 +12,16 @@
     4  정답셋과 검수 반영 (truth · operator)
     5  채점하고 결과를 보인다
 
-코어 표가 없어도 된다.
-    022 만 코어 `places` 를 참조한다. 없으면 건너뛴다.
-    매칭기는 코어 DB 에 얹을 때만 필요하고, 원장 자체는 혼자 선다.
+코어도 함께 세운다.
+    요식 표는 코어 `places` 와 이어져야 쓸모가 있다(dn_core_place_link).
+    그래서 먼저 코어 마이그레이션과 여행 시드를 올리고, 그 위에 요식을 얹은 뒤
+    매칭기(022)로 코어 장소와 잇는다. develop CI 가 세우는 순서와 같다.
+    코어 설정값은 CI 와 같은 가짜로 채운다. 이미 환경에 있으면 그 값을 쓴다.
+    코어를 못 세우면 요식만 세우고 연결은 건너뛴다. 원장 자체는 혼자 선다.
 
     python scripts/dining/rebuild.py                 dining_rebuild 에 세운다
     python scripts/dining/rebuild.py --db dining_dev --keep   있는 DB 위에
+    python scripts/dining/rebuild.py --no-core       요식만 세운다
     python scripts/dining/rebuild.py --check         세우지 않고 준비물만 본다
 """
 from __future__ import annotations
@@ -43,6 +47,30 @@ PG_USER = os.environ.get("DINING_DB_USER", "postgres")
 
 #: 코어 `places` 표가 있어야 올라가는 것. 없으면 건너뛴다.
 NEEDS_CORE = {"022_dining_matcher.sql"}
+
+#: 코어를 세울 때 설정이 요구하는 값. develop CI 와 같은 가짜다. 실제 키를 넣지 않는다.
+CORE_ENV = {
+    "ACOP_LLM_PROVIDER": "mock",
+    "ACOP_OPENAI_API_KEY": "sk-dummy-for-rebuild",
+    "ACOP_LLM_MODEL": "gpt-4o-mini",
+    "ACOP_EMBEDDING_MODEL": "text-embedding-3-small",
+    "ACOP_TENANT_ID": "demo",
+    "ACOP_SECRET_KEY": "dummy-secret-key-for-rebuild-0123456789abcdef",
+    "ACOP_COMPOSER_JWT_SECRET": "dummy-composer-jwt-secret-for-rebuild-0123456789",
+    "ACOP_COMPOSER_ISSUER_SECRET": "dummy-composer-issuer-secret-for-rebuild-0123456789",
+}
+
+#: 코어 세우기. 순서가 곧 의존 관계다.
+CORE_STEPS = [
+    ("코어 마이그레이션", "app.infrastructure.db.migrate"),
+    ("여행 시드",         "scripts.seed_travel"),
+]
+
+#: 코어 장소와 잇는다. 후보가 하나일 때만 잇고 여럿이면 ambiguous 로 남긴다(022).
+LINK_SQL = (
+    "SELECT r.result, count(*) FROM (SELECT DISTINCT tenant_id FROM public.places) t, "
+    "LATERAL dining.link_core_places(t.tenant_id, 0.75, 'rebuild', false) r GROUP BY 1"
+)
 
 #: 만드는 것과 넣는 것의 짝. 순서가 곧 의존 관계다.
 LOADS = [
@@ -109,6 +137,23 @@ def run_py(script: str) -> tuple[bool, str]:
     return done.returncode == 0, (done.stdout or "") + (done.stderr or "")
 
 
+def build_core(db: str) -> bool:
+    """코어 마이그레이션과 시드를 올린다. 하나라도 실패하면 False."""
+    env = {**CORE_ENV, **os.environ, "PYTHONIOENCODING": "utf-8",
+           "ACOP_DATABASE_URL": f"postgresql+psycopg://{PG_USER}@127.0.0.1:{PG_PORT}/{db}"}
+    for name, module in CORE_STEPS:
+        done = subprocess.run([sys.executable, "-m", module], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", cwd=ROOT, env=env,
+                              stdin=subprocess.DEVNULL)
+        if done.returncode != 0:
+            say("..", f"{name} 실패 — 코어 없이 요식만 세운다")
+            for line in ((done.stdout or "") + (done.stderr or "")).strip().splitlines()[-3:]:
+                say("  ", line)
+            return False
+        say("OK", name)
+    return True
+
+
 def has_core_places(db: str) -> bool:
     ok, out = run_sql(db, sql="SELECT to_regclass('public.places')")
     return ok and "places" in out
@@ -145,6 +190,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="빈 DB 에서 요식 원장을 세운다.")
     ap.add_argument("--db", default="dining_rebuild")
     ap.add_argument("--keep", action="store_true", help="있는 DB 를 지우지 않는다")
+    ap.add_argument("--no-core", action="store_true", help="코어 없이 요식만 세운다")
     ap.add_argument("--check", action="store_true", help="세우지 않고 준비물만 본다")
     args = ap.parse_args()
 
@@ -169,6 +215,8 @@ def main() -> int:
         run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"', stop_on_error=False)
         say("OK", f"{args.db} 위에 얹는다")
 
+    if not args.no_core:
+        build_core(args.db)
     core = has_core_places(args.db)
     say("OK" if core else "..",
         "코어 places 있음 — 매칭기도 올린다" if core else
@@ -216,6 +264,17 @@ def main() -> int:
                 say("  ", line)
             return 1
         say("OK", name)
+
+    if core:
+        ok, out = run_sql(args.db, sql=LINK_SQL)
+        if not ok:
+            say("!!", "코어 장소 연결 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        counts = [" ".join(l.replace("|", " ").split()) for l in out.splitlines()
+                  if "|" in l and "result" not in l]
+        say("OK", "코어 장소 연결  " + (", ".join(counts) or "이을 후보 없음"))
 
     env = dict(os.environ, PYTHONIOENCODING="utf-8",
                DINING_DSN=f"postgresql://{PG_USER}@localhost:{PG_PORT}/{args.db}")
