@@ -28,6 +28,7 @@ class OllamaChat:
         if not base_url:
             raise OllamaError("Ollama 주소가 비어 있다")
         self.base_url, self.model, self.timeout = base_url.rstrip("/"), model, timeout
+        self._injected = transport is not None      # 시험이 넣은 가짜 — 받아쓰기도 이것을 쓴다
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
                                                                   timeout=self.timeout))
 
@@ -65,6 +66,36 @@ class OllamaChat:
 
     def text(self, system: str, user: str) -> str:
         return self._chat(system, user, json_mode=False)
+
+    def see(self, prompt: str, image: bytes, *, timeout: float = 240.0) -> str:
+        """이미지 한 장을 보고 글로 답한다(비전). `[2026-09-27]` 계획 읽기의 **받아쓰기** 전용.
+
+        ★실측(2026-09-26, triPilot : RAG): 「사진 → 일정 JSON」을 한 번에 시키면 6항목 중 3을 잃었고,
+          「한 줄씩 그대로 받아 적어라」만 시키면 6/6 을 그대로 적었다(쪽당 약 45초). 그래서 구조화를 시키지 않는다.
+        ★실패는 예외(`OllamaError`) — 빈 받아쓰기를 성공처럼 돌려주지 않는다.
+        """
+        import base64
+
+        payload: dict[str, Any] = {
+            "model": self.model, "stream": False, "think": False, "options": {"temperature": 0},
+            "messages": [{"role": "user", "content": prompt,
+                          "images": [base64.b64encode(image).decode("ascii")]}]}
+        try:
+            if self._injected:
+                response = self._post(f"{self.base_url}/api/chat", payload)
+            else:                                       # ★받아쓰기는 쪽당 45초 안팎 — 긴 제한시간
+                response = httpx.post(f"{self.base_url}/api/chat", json=payload, timeout=timeout)
+        except httpx.HTTPError as exc:
+            raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
+        if response.status_code != 200:
+            raise OllamaError(f"Ollama HTTP {response.status_code}: {response.text[:160]}")
+        try:
+            content = response.json()["message"]["content"]
+        except (ValueError, KeyError, TypeError) as exc:
+            raise OllamaError(f"Ollama 응답 모양이 다르다: {response.text[:160]}") from exc
+        if not isinstance(content, str) or not content.strip():
+            raise OllamaError("Ollama 가 빈 받아쓰기를 냈다")
+        return content.strip()
 
 
 def from_settings(settings: Any) -> OllamaChat | None:

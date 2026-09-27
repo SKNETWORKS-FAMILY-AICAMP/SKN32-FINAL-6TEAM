@@ -35,7 +35,8 @@ from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
+from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query,
+                     Request, UploadFile)
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -687,6 +688,41 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if customer is None:
             raise _error(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
         return tenant, customer
+
+    # ── 계획 읽기 (2026-09-27, 설계서 program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md) ──────────────
+    #   ★고객 id 는 키에서 — 몸통으로 받지 않는다(`/v1/web/trips` 와 같은 경계). 읽기는 뒤에서 돈다(사진 한 장 ~45초).
+    @router.post("/v1/web/trip-intakes", status_code=202)
+    async def web_intake(background: BackgroundTasks, text: str = Form(""),
+                         files: list[UploadFile] = File(default_factory=list),
+                         who: tuple[str, UUID] = Depends(_web_customer)):
+        """글(붙여 넣은 일정 · 채팅처럼 쓴 계획)과 파일(사진 · PDF · docx · xlsx)을 받는다. 곧바로 접수 id 를 돌려준다."""
+        from .intake.pipeline import IntakeRejected, open_intake, process
+
+        tenant, customer = who
+        blobs = [(f.filename or "file", await f.read()) for f in files]
+        try:
+            with get_connection() as conn:
+                intake_id = open_intake(conn, tenant_id=tenant, customer_id=customer, text=text, files=blobs)
+        except IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+        offset = 1 if text.strip() else 0
+        chat = _lazy("chat", chat_factory)
+        background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,
+                            blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
+                            see=getattr(chat, "see", None))
+        return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
+
+    @router.get("/v1/web/trip-intakes/{intake_id}")
+    def web_intake_view(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """진행 단계 · 원본별 줄 번호 글 · 읽은 항목(값마다 근거) · 확인 필요. ★남의 접수는 404."""
+        from .intake.pipeline import view
+
+        tenant, customer = who
+        with get_connection() as conn:
+            found = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+        if found is None:
+            raise _error(404, "not_found", "resource not found")
+        return found
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request):
