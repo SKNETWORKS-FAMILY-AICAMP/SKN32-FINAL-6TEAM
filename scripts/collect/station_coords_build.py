@@ -22,6 +22,11 @@
 #   2026-09-13 추가: 약어 정책(Int'l 통일)과 역 단위 일관성(같은 한글 역명은 같은 영문명).
 #   보정한 역은 station_nm_en_grade='추정'. 검사는 scripts/check_station_names.py.
 #
+# ★조인 키 = 노선+역명 (2026-09-27 · 57번 방). 역명만으로 붙이면 동명이역이 섞였다 —
+#   경의선|양평 에 5호선 양평(영등포구 · 53.6 km) 좌표, 경의선|신촌 에 2호선 신촌(702 m) 좌표가 들어갔다.
+#   이제 우리 노선(LINE_NUM) → 원자료 노선명 집합(LINE_SRC)으로 **같은 노선 행 안에서** 역명을 찾고,
+#   그 노선 행이 없을 때만 예전 역명 전체 조인으로 떨어진다(coord_join 에 어느 쪽인지 남긴다).
+#   위 「노선명으로 이으면 절반이 깨진다」는 우리 노선명 = 원자료 노선명 으로 이을 때 얘기다 — 여기선 표로 옮겨 잇는다.
 # ★좌표 보정 (2026-09-21 · 34번 방). 원본 표준데이터 행 자체가 옆 역 좌표를 든 경우가 있다 —
 #   마곡(5호선) 행 = 발산 좌표(7 m) · 이촌(4호선) 행 = 신용산 좌표(14 m). 우리 처리 탓이 아니다.
 #   config/mobility/station_coord_fix.json 으로 덮고 원본은 coord_src_lat/lng 에 남긴다(coord_source=station_coord_fix).
@@ -41,6 +46,8 @@ SOURCE = "kric_station_standard"          # 좌표 출처
 NAME_SOURCE = "seoul_opendata_OA-15442"   # 역명(한글·영문) 출처 — 좌표와 다르다
 FIXES = Path(__file__).resolve().parents[2] / "config" / "mobility" / "station_nm_en_fix.json"
 COORD_FIXES = Path(__file__).resolve().parents[2] / "config" / "mobility" / "station_coord_fix.json"
+# 57번(GPT 3): 역명 폴백은 보정표 「역명폴백허용」 키만 — 노선 안에서 못 찾은 이유가 행 누락·이름 불일치여도 동명이역을 집지 않게
+_FALLBACK_OK = set(json.loads(COORD_FIXES.read_text(encoding="utf-8")).get("역명폴백허용", {})) if COORD_FIXES.exists() else set()
 ADJ_WARN_M = 50        # 다른 역명끼리 이 안이면 원본 좌표 오류 의심 — 9/21 전수: 정상 최근접쌍은 200 m 밖
 
 _fx = json.loads(FIXES.read_text(encoding="utf-8")) if FIXES.exists() else {"치환": {"규칙": []}, "역별": {}}
@@ -117,6 +124,25 @@ KORAIL_SEOUL = {"경부선", "경인선", "경원선", "경의중앙선", "경�
 KORAIL_DROP = {"동해선", "대경선"}          # 부산·대구권
 
 
+# 57번: 우리 노선 → 원자료 노선명(표준데이터 '노선명'). 코레일 구간은 철도 노선명으로 흩어져 있다.
+LINE_SRC = {
+    "01호선": {"1호선", "경부선", "경인선", "경원선", "장항선"},
+    "02호선": {"2호선"}, "03호선": {"3호선", "일산선"}, "04호선": {"4호선", "안산과천선", "진접선"},
+    "05호선": {"5호선"}, "06호선": {"6호선"}, "07호선": {"7호선", "도시철도 7호선"},
+    "08호선": {"8호선", "수도권 광역철도 8호선"},
+    "09호선": {"서울 도시철도 9호선", "수도권 도시철도 9호선"},
+    "수인분당선": {"분당선", "수인선"}, "경의선": {"경의중앙선", "경원선", "중앙선"},
+    "경춘선": {"경춘선"}, "경강선": {"경강선"}, "서해선": {"서해선"}, "공항철도": {"인천국제공항선"},
+    "신분당선": {"신분당선"}, "용인경전철": {"에버라인"}, "의정부경전철": {"의정부"},
+    "우이신설경전철": {"우이신설선"}, "신림선": {"수도권 경량도시철도 신림선"}, "김포도시철도": {"김포도시철도"},
+    "인천선": {"인천지하철 1호선"}, "인천2호선": {"인천지하철 2호선"},
+}
+_SRC2OURS = collections.defaultdict(set)
+for _our, _srcs in LINE_SRC.items():
+    for _s in _srcs:
+        _SRC2OURS[_s].add(_our)
+
+
 def norm(s):
     s = unicodedata.normalize("NFKC", str(s or ""))
     return re.sub(r"[\s·.\-()（）]", "", s)
@@ -188,6 +214,8 @@ print(f"표준데이터 {len(raw)}행 ← {src.name}")
 
 # ── 표준데이터 → 역명별 좌표 ─────────────────────────────────────
 coords_by_name, basis, dropped = {}, set(), collections.Counter()
+exact_by_line, by_line_name = {}, {}   # 57번: (우리 노선, 역명 키) → 원자료 행
+dup_by_line = {}                       # 57번(GPT 4): (노선, 역명) → 모든 행
 exact_by_name = {}   # 34번: '서울역' 이 공항철도 '서울' 행의 파생 키('서울'+'역')에 먼저 잡히지 않도록 원본 이름 그대로인 키를 먼저 본다
 for row in raw:
     nm, line = pick(row, "역사명", "역명"), str(pick(row, "노선명") or "")
@@ -204,11 +232,17 @@ for row in raw:
         dropped[f"코레일 수도권밖:{line}"] += 1; continue
     rec = {"lat": float(lat), "lng": float(lng), "src_name": str(nm), "operator": op, "src_line": line}
     ks = keys_of(nm)
-    for k in dict.fromkeys([norm(nm), norm(base_name(nm))]):   # 원본 역명 그대로(괄호 포함·제외) — '역' 붙이기/떼기 없음
-        if k:
-            exact_by_name.setdefault(k, rec)
+    exs = [k for k in dict.fromkeys([norm(nm), norm(base_name(nm))]) if k]   # 원본 역명 그대로(괄호 포함·제외) — '역' 붙이기/떼기 없음
+    for k in exs:
+        exact_by_name.setdefault(k, rec)
     for k in ks:
         coords_by_name.setdefault(k, rec)
+    for our in _SRC2OURS.get(re.sub(r"\s+", " ", line).strip(), ()):      # 57번: 노선+역명 키
+        for k in exs:
+            exact_by_line.setdefault((our, k), rec)
+            dup_by_line.setdefault((our, k), []).append(rec)              # 57번(GPT 4): 같은 노선 안 중복 행 — 첫 행(파일 순서)을 쓰고 기록
+        for k in ks:
+            by_line_name.setdefault((our, k), rec)
 print(f"수도권 역명 키 {len(coords_by_name)}개 (제외 {sum(dropped.values())}행)")
 
 # ── 우리 역 목록에 붙이기 ───────────────────────────────────────
@@ -216,14 +250,26 @@ stations = json.loads(STATIONS.read_text(encoding="utf-8"))
 fetched = sorted(basis)[-1] if basis else None
 coords, missing = {}, []
 fixed = collections.Counter()
+joins = collections.Counter()   # 57번
+blocked = []                    # 57번: 폴백이 동명이역이라 막은 키 (key, 역명 행 좌표 최대 간격 m)
 for s in stations:
     key = f"{s['LINE_NUM']}|{s['STATION_NM']}"
     _ks = keys_of(s["STATION_NM"])
     _ex = [k for k in dict.fromkeys([norm(s["STATION_NM"]), norm(base_name(s["STATION_NM"]))]) if k]
-    hit = next((exact_by_name[k] for k in _ex if k in exact_by_name), None) \
-        or next((coords_by_name[k] for k in _ks if k in coords_by_name), None)
+    ln = s["LINE_NUM"]
+    hit = next((exact_by_line[(ln, k)] for k in _ex if (ln, k) in exact_by_line), None) \
+        or next((by_line_name[(ln, k)] for k in _ks if (ln, k) in by_line_name), None)
+    join = "노선+역명"
+    if not hit:   # 그 노선 안에서 역명을 못 찾았다 — 역명 전체 조인으로 떨어지되, 동명이역이면 막는다(57번 · GPT 3)
+        why = "노선 행 없음" if ln not in LINE_SRC else "노선 안 역명 불일치"
+        hit = next((exact_by_name[k] for k in _ex if k in exact_by_name), None) \
+            or next((coords_by_name[k] for k in _ks if k in coords_by_name), None)
+        if hit and key not in _FALLBACK_OK:   # 허용 목록 밖 — 같은 역명 다른 역(동명이역) 좌표일 수 있어 안 붙인다
+            blocked.append((key, hit["src_line"])); missing.append(key); continue
+        join = f"역명({why})"
     if not hit:
         missing.append(key); continue
+    joins[join] += 1
     en_src = s.get("STATION_NM_ENG")
     en, en_grade, en_why = fix_en(key, en_src)
     if en_why:
@@ -234,7 +280,7 @@ for s in stations:
                    "station_cd": s["STATION_CD"],
                    "lat": hit["lat"], "lng": hit["lng"], "operator": hit["operator"],
                    "src_name": hit["src_name"], "src_line": hit["src_line"],
-                   "source": SOURCE, "coord_source": SOURCE, "name_source": NAME_SOURCE,
+                   "source": SOURCE, "coord_source": SOURCE, "coord_join": join, "name_source": NAME_SOURCE,
                    "fetched_at": fetched, "fetched_at_precision": "day"}
 
 # ── 좌표 보정 (34번 방) ─────────────────────────────────────────
@@ -278,8 +324,14 @@ lines = ["# 역 좌표표 커버리지", "",
 lines += [f"| {l} | {c}개 — {', '.join(n.split('|')[1] for n in missing if n.startswith(l))[:120]} |"
           for l, c in sorted(by_line.items())]
 lines += ["", "## 읽는 법", "",
-          "- 매핑 키는 **역명**이다. 표준데이터가 코레일 구간을 운영 노선이 아니라 철도 노선명(경부선·경인선·안산과천선 …)으로 불러 노선명으로는 이을 수 없다.",
-          "- 환승역은 물리적으로 같은 위치이므로 노선이 달라도 같은 좌표를 쓴다. 출구별 차이는 링크 조립·도보 개략 용도에서 [추정] 범위 안이다.",
+          "- 매핑 키는 **노선+역명**이다(57번 · 2026-09-27). 표준데이터가 코레일 구간을 철도 노선명(경부선·경인선·안산과천선 …)으로 불러, 우리 노선 → 원자료 노선명 표(`LINE_SRC`)로 옮겨 같은 노선 행 안에서 역명을 찾는다.",
+          f"- 조인 결과: {dict(joins)} — `coord_join` 필드. 「역명(노선 행 없음)」은 원자료에 그 노선 행이 없어 예전처럼 역명 전체에서 찾은 것이다.",
+          f"- 역명 폴백은 보정표 「역명폴백허용」 {len(_FALLBACK_OK)}키만 — 막은 키(좌표 없음으로 둠): " + (", ".join(f"{k}(역명으로는 {sl} 행)" for k, sl in blocked) or "없음"),
+          "- 같은 노선 안 같은 역명 행이 둘 이상이면 **파일 순서 첫 행**을 쓴다 — 좌표가 다른 것: " + (", ".join(
+              f"{o}|{k}({len(v)}행·{round(max(meters(a['lat'], a['lng'], b['lat'], b['lng']) for a in v for b in v))} m)"
+              for (o, k), v in sorted(dup_by_line.items())
+              if len({(r['lat'], r['lng']) for r in v}) > 1) or "없음"),
+          "- 예전(역명만)엔 동명이역이 섞였다 — 경의선 양평·신촌이 5호선·2호선 좌표를 들었다. 환승역은 노선마다 제 행 좌표를 쓴다(수백 m 차이 가능).",
           "- 동명 역(부산 서면·대구 중앙로 …)은 운영기관과 코레일 노선 화이트리스트로 걸렀다.",
           "- **코레일은 역명 끝에 '역'을 붙이고**('용산역', '수원역(분당)') 서울교통공사는 붙이지 않는다('제기동'). '서울역'처럼 '역'이 이름의 일부인 경우도 있어 양쪽을 다 후보 키로 둔다.",
           f"- 제외 내역: {dict(dropped)}",
@@ -301,3 +353,4 @@ lines += ["", "## 읽는 법", "",
 REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"좌표 {len(coords)}/{len(stations)}역 → {OUT}")
 print(f"미확보 {len(missing)}역 · 리포트 → {REPORT}")
+print(f"조인 {dict(joins)} · 폴백 막음 {blocked or '없음'}")
