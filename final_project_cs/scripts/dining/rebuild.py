@@ -55,6 +55,11 @@ LOADS = [
     ("make_vegan_sql.py",     "vegan.sql"),
 ]
 
+#: 적재가 끝난 뒤 가게를 보고 계산하는 것. 영문 SQL 만 둔다 — -c 로 넘긴다.
+AFTER_LOADS = [
+    ("대표 분류", "SELECT dining.refresh_category()"),
+]
+
 
 def say(mark: str, text: str) -> None:
     print(f"  {mark} {text}", flush=True)
@@ -201,6 +206,17 @@ def main() -> int:
                 return 1
             say("OK", f"  {produced} 적재")
 
+    # 034 는 마이그레이션 끝에서 분류를 채우지만, 빈 DB 에서는 그때 가게가 없다.
+    # 적재가 끝난 뒤 한 번 더 불러야 category 가 찬다.
+    for name, sql in AFTER_LOADS:
+        ok, out = run_sql(args.db, sql=sql)
+        if not ok:
+            say("!!", f"{name} 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        say("OK", name)
+
     env = dict(os.environ, PYTHONIOENCODING="utf-8",
                DINING_DSN=f"postgresql://{PG_USER}@localhost:{PG_PORT}/{args.db}")
     done = subprocess.run([sys.executable, os.path.join(HERE, "run_quality.py")],
@@ -216,7 +232,7 @@ def main() -> int:
     print()
     say("OK", f"{time.time() - started:.0f}초 걸렸다")
     print()
-    print(f"  확인기로 보려면:  python scripts/dining/dev_up.py")
+    print("  확인기로 보려면:  python scripts/dining/dev_up.py")
     print(f"  다른 DB 를 보려면 DINING_DB={args.db} 를 함께 준다")
     return 0
 
