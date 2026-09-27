@@ -22,6 +22,7 @@ from typing import Any
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
 from .._base import TravelTeamBase
+from .alternatives import FIELD_PRIORITY, rank_alternatives
 
 
 class ActivityTeam(TravelTeamBase):
@@ -39,7 +40,7 @@ class ActivityTeam(TravelTeamBase):
         accepted_case_types=["activity"],
         required_context=["case_state", "policy", "db_facts", "history"],
         allowed_tools=["read.booking", "read.policy", "read.place", "read.weather",
-                       "read.disaster", "read.place_search"],
+                       "read.disaster", "read.place_search", "read.place_candidates"],
         knowledge_scope=["activity", "cancellation", "refund", "weather", "disaster"],
         max_steps=6,
         active=True,
@@ -166,7 +167,8 @@ class ActivityTeam(TravelTeamBase):
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
                 answer=f"이미 시작됐거나 종료된 활동입니다({-remaining:.1f}시간 경과).",
-                decisions=[{"feasible": False, "reason": "already_started",
+                decisions=[{"feasible": False, "status": self.STATUS_PROBLEM,
+                            "reason": "already_started",
                             "hours_elapsed": round(-remaining, 1)}])
 
         party = booking.get("party_size")
@@ -176,7 +178,8 @@ class ActivityTeam(TravelTeamBase):
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
                 answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
-                decisions=[{"feasible": False, "reason": "party_over_capacity"}])
+                decisions=[{"feasible": False, "status": self.STATUS_PROBLEM,
+                            "reason": "party_over_capacity"}])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
@@ -256,6 +259,7 @@ class ActivityTeam(TravelTeamBase):
         #   `place is None`이면 weekday_match·disaster_blocks와 무관하게 False.
         decisions: dict[str, Any] = {
             "feasible": place is not None and not (weekday_match or disaster_blocks),
+            "status": self._feasibility_status(place, weekday_match, disaster_blocks),
             "place_confirmed": place is not None}
         # ★첫 문장이 뒤의 판정과 어긋나면 안 된다 — 이미 불가를 아는 순간에도
         #   "성립합니다"로 시작하지 않는다.
@@ -321,10 +325,127 @@ class ActivityTeam(TravelTeamBase):
                 "source": disaster.get("source"),
             }
 
+        # ★4단계 — 「문제있음」일 때만 대체 장소를 찾는다(activity.md 개발 순서).
+        #   이미 시작됨·정원 초과는 위에서 먼저 끝나 여기 오지 않는다 — 시각이
+        #   지났거나 인원이 문제면 다른 장소로 풀리지 않는다.
+        if decisions["status"] == self.STATUS_PROBLEM:
+            found, note, advisories, evidence = self._alternatives(
+                task, booking, place, disaster_blocks, evidence, seen)
+            decisions["alternatives"] = found
+            answer += " " + note
+            warnings.extend(advisories)
+
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=answer,
             decisions=[decisions], warnings=warnings)
+
+    # ── 판정 3분기 ─────────────────────────────────────────────
+    #: `decisions["status"]` 값. ★`feasible`(bool)은 「정보부족」과 「문제있음」을
+    #:  둘 다 `False`로 뭉갠다 — 대체 장소 후보(`alternatives.py`)는 **문제있음일
+    #:  때만** 만들어야 해서 둘을 가르는 칸을 따로 둔다(activity.md 개발 순서 2단계).
+    STATUS_PROBLEM = "problem"
+    STATUS_INSUFFICIENT = "insufficient_info"
+    STATUS_OK = "ok"
+
+    @classmethod
+    def _feasibility_status(cls, place: Any, weekday_match: bool | None,
+                            disaster_blocks: bool) -> str:
+        """확인된 막힘이 있으면 문제있음, 장소를 모르면 정보부족, 그 외 문제없음.
+
+        ★막힘이 확인되면 장소 정보가 비어 있어도 문제있음이 먼저다 — 이미 아는
+          불가 사유를 「모름」으로 덮지 않는다. 기상 예보를 못 받은 경우처럼
+          `_unknown()`으로 escalate 되는 갈래는 여기까지 오지 않는다.
+        """
+        if weekday_match or disaster_blocks:
+            return cls.STATUS_PROBLEM
+        if place is None:
+            return cls.STATUS_INSUFFICIENT
+        return cls.STATUS_OK
+
+    # ── 대체 장소 — 4단계 ──────────────────────────────────────
+    #: 설문 선호도가 실리는 `current_state` 키(`"mobility"`·`"activity"`).
+    #:  ★없거나 모르는 값이면 `None` — 이동/활동 중요도를 임의로 가정하지
+    #:  않는다(activity.md 「대안 순위 산출」 선호도 `null` 규칙).
+    _PREFERENCE_KEY = "activity_preference"
+
+    def _alternatives(self, task: TeamTask, booking: dict, place: Any,
+                      disaster_blocks: bool, evidence: list, seen: set[str],
+                      ) -> tuple[dict[str, Any], str, list[str], list]:
+        """후보를 뽑고 **①을 다시 통과시킨다**(v11 §5). `(decision, 안내문, 경고, 근거)`.
+
+        ★재검증은 **도구를 더 부르지 않고** 이미 읽은 값으로 한다 — 예산
+          (`max_steps`)이 후보 풀 조회 한 번까지만 남는다.
+          | ① 항목 | 후보에 대해 |
+          |---|---|
+          | 시각 | 원래 예약과 같은 시각이고 여기 왔으면 아직 안 지났다 → 통과 |
+          | 휴무 요일 | `closed_on`(① 가용성)이 `False`를 준 후보만 통과 |
+          | 재난문자 | `read.disaster`가 좌표를 안 쓰고 전국 목록을 준다
+          |          | (`disaster_msg.near()`) → 원래 장소 판정이 곧 후보 판정 |
+          | 정원·운영시간 | 후보 쪽 값이 없다 → **확인 안 함**, 안내문에 밝힌다 |
+
+        ★재검증을 통과한 후보만 안내문에 싣는다. 휴무를 모르는 후보는
+          `decisions`에만 `revalidated: False`로 남긴다 — 숨기지는 않되
+          고객에게 통지하지 않는다.
+        """
+        if disaster_blocks:
+            # ★전국 목록이라 어느 후보로 옮겨도 같은 위급재난 판정을 받는다.
+            return ({"status": "withheld", "reason": "disaster_blocks"},
+                    "위급재난 문자는 지역 구분 없이 확인되어 대체 장소도 같은 판정을 "
+                    "받으므로 대체 장소를 안내하지 않았습니다.", [], evidence)
+
+        content_id = place.get("source_content_id") if isinstance(place, dict) else None
+        if not content_id:
+            return ({"status": "unknown", "reason": "no_content_id"},
+                    "원래 장소의 식별 정보가 없어 대체 장소를 찾지 못했습니다.",
+                    ["대체 장소를 찾을 원래 장소 식별자(source_content_id)가 없다"],
+                    evidence)
+
+        pool = self._read(task, "read.place_candidates", {"content_id": str(content_id)}, seen)
+        origin = pool.get("origin") if isinstance(pool, dict) else None
+        if not isinstance(origin, dict):
+            return ({"status": "unknown", "reason": "pool_unavailable"},
+                    "대체 장소 후보를 조회하지 못했습니다.",
+                    ["대체 장소 후보 풀을 받지 못했다"], evidence)
+        candidates = [c for c in pool.get("candidates") or [] if isinstance(c, dict)]
+        evidence = self._evidence(task, source_id="read.place_candidates",
+                                  claim="대체 장소 후보 풀", value={
+                                      "origin_contentid": origin.get("contentid"),
+                                      "pool_size": len(candidates),
+                                      "source": pool.get("source"),
+                                      "confirmed_at": pool.get("confirmed_at")},
+                                  base=evidence)
+
+        warnings: list[str] = []
+        preference = task.context.current_state.get(self._PREFERENCE_KEY)
+        if preference is not None and preference not in FIELD_PRIORITY:
+            warnings.append(f"알 수 없는 선호도 값({preference!r})이라 선호도를 반영하지 않았다")
+            preference = None
+
+        ranked = rank_alternatives(origin, candidates, booking["starts_at"],
+                                   preference=preference)
+        for alternative in ranked["alternatives"]:
+            alternative["revalidated"] = alternative["availability"] == "open_weekday"
+        if ranked["dropped_fields"]:
+            warnings.append(f"유사 조건 일부({', '.join(ranked['dropped_fields'])})를 "
+                            f"풀어서 찾은 후보다")
+        decision = {"status": "ranked", **ranked,
+                    "revalidation": {"checked": ["time", "weekday_closure", "disaster"],
+                                     "not_checked": ["capacity", "business_hours"]}}
+
+        passed = [a for a in ranked["alternatives"] if a["revalidated"]]
+        if not passed:
+            note = ("조건에 맞는 대체 장소를 찾지 못했습니다." if not ranked["alternatives"]
+                    else "대체 장소 후보는 있으나 휴무 여부를 확인하지 못해 안내하지 않았습니다.")
+            return decision, note, warnings, evidence
+        def label(a: dict[str, Any]) -> str:
+            km = a["distance_km"]
+            return f"{a['title']}({'거리 모름' if km is None else f'{km}km'})"
+
+        listed = ", ".join(label(a) for a in passed)
+        return (decision,
+                f"대체 장소 후보: {listed}. 후보는 요일 휴무·재난문자만 다시 확인했고 "
+                f"정원·운영시간은 확인하지 않았습니다.", warnings, evidence)
 
     # ── 장소명으로 실내·실외 추정 ──────────────────────────────
     #: ★★`[2026-09-20]` DB가 모를 때(`weather_sensitive IS NULL`)만 쓰는

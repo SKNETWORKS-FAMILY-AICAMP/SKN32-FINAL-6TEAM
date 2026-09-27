@@ -30,8 +30,24 @@ ALLOWED = ActivityTeam.manifest.allowed_tools
 UTC = timezone.utc
 KST = timezone(timedelta(hours=9))
 
-#: 2026-10-03 은 토요일 — 기본 "화요일" 휴무 텍스트와 절대 안 겹친다(flaky 방지).
-DEFAULT_STARTS_AT = datetime(2026, 10, 3, 15, tzinfo=UTC)
+
+def _upcoming(when: datetime) -> datetime:
+    """고정 시각을 **요일·시각은 그대로 둔 채** 주 단위로 미래로 민다.
+
+    ★`[2026-09-26]` 날짜를 그대로 박아 두면 그날이 지나는 순간 `remaining < 0`
+      (「이미 시작됨」)으로 먼저 끝나 운영시간·재난문자 판정까지 가지 못한다 —
+      실제로 2026-09-22 고정값 테스트 6건이 이렇게 깨졌다. 이 파일의 테스트가
+      보는 것은 **요일**(화요일 휴무 대조)이라, 주 단위로만 옮기면 의미가 유지된다.
+      취소 기한(24시간)과도 안 겹치게 최소 이틀 뒤로 잡는다.
+    """
+    floor = datetime.now(UTC) + timedelta(days=2)
+    while when < floor:
+        when += timedelta(weeks=1)
+    return when
+
+
+#: 토요일 — 기본 "화요일" 휴무 텍스트와 절대 안 겹친다(flaky 방지).
+DEFAULT_STARTS_AT = _upcoming(datetime(2026, 10, 3, 15, tzinfo=UTC))
 
 
 def _task():
@@ -127,11 +143,11 @@ async def test_operating_with_empty_fields_does_not_claim_checked():
 
 @pytest.mark.asyncio
 async def test_non_closure_weekday_stays_feasible():
-    """경복궁 · 2026-10-03(토) — 정기휴무 요일(화)이 아니므로 원문은 근거로만."""
+    """경복궁 · 토요일 — 정기휴무 요일(화)이 아니므로 원문은 근거로만."""
     operating = _operating(usetime_text="09:00~18:00",
                            restdate_text="매주 화요일 휴무")
     vals = _values(operating=operating,
-                   starts_at=datetime(2026, 10, 3, 15, tzinfo=KST))
+                   starts_at=_upcoming(datetime(2026, 10, 3, 15, tzinfo=KST)))
     vals["read.place"]["name"] = "경복궁"
 
     result = await ActivityTeam(FakeTools(vals)).execute(_task())
@@ -143,11 +159,11 @@ async def test_non_closure_weekday_stays_feasible():
 
 @pytest.mark.asyncio
 async def test_closure_weekday_marks_infeasible_with_caveat():
-    """경복궁 · 2026-09-22(화) — 정기휴무 요일 일치 → feasible=False + 캐비앗."""
+    """경복궁 · 화요일 — 정기휴무 요일 일치 → feasible=False + 캐비앗."""
     operating = _operating(usetime_text="09:00~18:00",
                            restdate_text="매주 화요일 휴무")
     vals = _values(operating=operating,
-                   starts_at=datetime(2026, 9, 22, 15, tzinfo=KST))
+                   starts_at=_upcoming(datetime(2026, 9, 22, 15, tzinfo=KST)))
     vals["read.place"]["name"] = "경복궁"
 
     result = await ActivityTeam(FakeTools(vals)).execute(_task())
@@ -304,9 +320,10 @@ def _vals_from(act: dict, *, operating=None, disaster=None,
     """customer_travel.json 활동 항목 하나 → FakeTools 입력값.
 
     JSON 이 바뀌면 place·예약 정보(name·lat·lng·starts_at)가 자동 반영된다.
-    operating·disaster 는 테스트별로 주입한다.
+    operating·disaster 는 테스트별로 주입한다. ★JSON 시각은 요일을 유지한 채
+    미래로 민다(`_upcoming`) — JSON 날짜가 지나도 테스트가 안 깨진다.
     """
-    starts_at = datetime.fromisoformat(act["time"])
+    starts_at = _upcoming(datetime.fromisoformat(act["time"]))
     place: dict = {
         "place_id": act["id"],
         "name": act["name"],

@@ -127,6 +127,7 @@ class ReadToolbox:
             "read.booking":  self.booking,
             "read.place":    self.place,
             "read.place_search": self.place_search,
+            "read.place_candidates": self.place_candidates,
             "read.weather":  self.weather,
             "read.disaster": self.disaster,
             "read.route":    self.route,
@@ -266,6 +267,34 @@ class ReadToolbox:
         narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
         return self.travel.place.find(
             name.strip(), content_type_id=narrow, allowed_types=allowed or None)
+
+    def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
+                         **_: Any) -> dict[str, Any] | None:
+        """대체 장소 후보 풀. `[미구현]` — 작업자 A(DB조회)가 채울 자리.
+
+        ★**계약만 먼저 둔다**(Contract-first, wiki/teams/activity.md 「구현
+          현황 — 작업자 B」). Activity Team 이 이 이름으로 부르고, 지금은
+          항상 `None`(모름)이라 Team 은 「후보를 조회하지 못했다」로 답한다.
+
+        인자: `content_id` — 문제있음 판정이 난 원래 장소의 TourAPI
+        `contentid`(`read.place` 의 `source_content_id`). 없으면 `None`.
+
+        반환 모양(행은 CSV·TourAPI 컬럼명 그대로 — `alternatives.py` 가 읽는다)::
+
+            {"origin":     {"contentid", "title", "contenttypeid",
+                            "lclsSystm1", "lclsSystm2", "lclsSystm3",
+                            "sigungucode", "mapx", "mapy",
+                            "closed_days", "business_hours"},
+             "candidates": [<origin 과 같은 모양의 행>, ...],
+             "source": "...", "confirmed_at": "..."}
+
+        ★후보 풀을 유사도 필드로 **미리 좁히지 않는다** — 폴백이 필드를
+          하나씩 풀 수 있어야 한다. 좁힌다면 `lclsSystm1` **또는**
+          `sigungucode` 가 원래 장소와 같은 행까지만(두 선호도의 고정값)
+          좁혀도 결과가 안 바뀐다.
+        ★원래 장소 행(`origin`)을 모르면 `None` — 유사도를 잴 기준이 없다.
+        """
+        return None
 
     def holiday(self, scope: ToolContext, *, on: Any = None,
                 **_: Any) -> dict[str, Any] | None:
