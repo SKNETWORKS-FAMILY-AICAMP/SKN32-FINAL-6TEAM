@@ -909,7 +909,8 @@ def test_fare_rules_have_basis():
     """규칙 fare 절 — 값마다 grade·근거 · 확인 시각·출처 URL · 판정기 버전은 그대로(판정 무변경)."""
     R = _rules()
     F = R["fare"]
-    assert R["rules_version"] == "v0.9" and R["source_id"] == "mobility_rules@v0.9", "판정 무변경 — 버전 유지"
+    # 54 는 판정 무변경이라 v0.9 를 유지했다 · 55(동명이역 · 판정 변경)가 v0.9.1 로 올렸다 — 두 판 번호가 같은 판을 가리키는지만 본다
+    assert R["rules_version"] in ("v0.9", "v0.9.1") and R["source_id"] == f"mobility_rules@{R['rules_version']}", "판 번호 두 곳 일치"
     assert F["확인"]["checked_at"].startswith("2026-09-25") and all(u.startswith("https://") for u in F["확인"]["sources"])
     n = 0
     for sec in ("subway", "bus", "transfer"):

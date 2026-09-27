@@ -258,6 +258,13 @@ class Verifier:
         self.bus_prof = bus_prof        # 버스 구간 통행시간 프로파일(v0.9 · 41번 방) — None 이면 종전 모델(거리 ÷ 표정속도)
         self.sc = sc
         self.ex = ex            # 역 출구 좌표(OSM · 추정) — 지하철↔버스 환승에만 쓴다 (19번 방)
+        # ★ 55 ④ — 동명이역: 좌표표를 이 판정기의 규칙 값으로 물리적 역으로 묶고, 출구표를 그 묶음으로 나눈다
+        if sc is not None and hasattr(sc, "configure"):
+            am = rules["station_names"]["동명이역_좌표차_m"]["value"]
+            if getattr(sc, "ambig_m", None) != am:
+                sc.configure(am)
+        if ex is not None and hasattr(ex, "bind"):
+            ex.bind(sc)
         self.car = car          # CarService(그래프 + 라우터 + 규칙) — 없으면 택시는 종전대로 근거없음 (21번 방)
         self._case_date = None  # verify_case 가 매 건 갈아 끼운다 — 자동차 소요는 날짜(요일형)가 필요하다
         self.bk = bk            # 따릉이 운영 대여소(22번 방) — 없으면 자전거는 근거없음
@@ -899,10 +906,18 @@ class Verifier:
                 return None
             return x["lat"], x["lng"], x.get("name") or f"{x['lat']:.4f},{x['lng']:.4f}"
         if self.sc:
-            p = self.sc.by_name.get(x)
+            p = self.sc.by_name.get(x)                 # 55 ④ — 동명이역은 by_name 에 없다(조용히 한쪽을 집지 않는다)
             if p and p.get("lat") is not None:
                 return p["lat"], p["lng"], f"{x}역"
         return None
+
+    def _ambig_warn(self, station, what):
+        """역명만 받은 자리에서 동명이역이면 경고 하나(55 ④ · MOB_W_STATION_AMBIGUOUS). 아니면 None."""
+        if not isinstance(station, str) or not self.sc or not getattr(self.sc, "is_ambiguous", None) \
+                or not self.sc.is_ambiguous(station):
+            return None
+        return self.warn_msg("MOB_W_STATION_AMBIGUOUS", station=station,
+                             groups=" / ".join(self.sc.ambiguous_lines(station)), what=what)
 
     def _bike_walk(self, lat1, lng1, lat2, lng2):
         """대여소까지 도보 — GraphHopper foot 거리(추정) → 없으면 직선 × 우회계수(추정). (m, 분, 근거 dict)"""
@@ -957,6 +972,10 @@ class Verifier:
         pa, pb = self._bike_point(a_raw), self._bike_point(b_raw)
         if pa is None or pb is None:
             miss = a_nm if pa is None else b_nm
+            amb = self._ambig_warn(miss, "자전거 끝점 좌표")
+            if amb:
+                return LegResult(idx, label, "unknown", f"'{miss}' 은(는) 동명이역 — 역명만으로는 대여소를 찾지 않는다",
+                                 grade="근거없음", code="no_data", relief="장소 좌표나 노선을 같이 준다", warnings=[amb])
             return LegResult(idx, label, "unknown", f"'{miss}' 의 좌표가 없다 — 대여소를 찾을 수 없다", grade="근거없음", code="no_data")
         radius = B["station_walk_m"]["value"]
         st_src = {"source_type": "db", "source_id": self.bk.source_id, "grade": "확정",
@@ -1200,6 +1219,30 @@ class Verifier:
 
 
     # ── 대안 열거(F3) ──────────────────────────────────────────────────
+    def _phys_lines(self, rec):
+        """좌표 레코드의 물리적 역 노선군(55 ④). 동명이역이 아니면 제한 없음(모든 노선)."""
+        if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(rec["station_nm"]):
+            return set(self.sc.group_lines(rec))
+        return self.lines_with(rec["station_nm"])
+
+    def _other_station(self, station, line_a, line_b):
+        """(역명, 노선 a) 와 (역명, 노선 b) 가 이름만 같은 다른 역인가(55 GPT #1). 좌표표가 있으면 물리적 역 묶음으로,
+        없으면 규칙 station_names.환승_제외_역명 으로 본다."""
+        if line_a == line_b:
+            return False
+        if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(station):
+            ra, rb = self.sc.by_key.get(f"{line_a}|{station}"), self.sc.by_key.get(f"{line_b}|{station}")
+            if ra and rb:
+                return self.sc.group_lines(ra) != self.sc.group_lines(rb)
+        return station in self.R["station_names"]["환승_제외_역명"]["value"]
+
+    def _lines_at(self, station, line):
+        """(노선, 역)과 같은 물리적 역에 있는 노선들(55 ④). 동명이역이 아니면 lines_with 그대로."""
+        if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(station):
+            rec = self.sc.by_key.get(f"{line}|{station}")
+            return self.lines_with(station) & (set(self.sc.group_lines(rec)) if rec else {line})
+        return self.lines_with(station)
+
     def lines_with(self, station):
         """그 역이 있는 노선들. 노선 교체 후보를 만들 때 쓴다."""
         if self._lines_of is None:
@@ -1299,11 +1342,15 @@ class Verifier:
                         if sa["station_nm"] == sb["station_nm"]:
                             continue
                         # 접근·이탈 도보는 역 좌표가 아니라 **가장 가까운 출구**까지로 잰다(있을 때)
-                        ea = self.ex.nearest(sa["station_nm"], bx["lat"], bx["lng"]) if self.ex else None
-                        eb = self.ex.nearest(sb["station_nm"], by["lat"], by["lng"]) if self.ex else None
+                        # 55 ④ — 동명이역(신촌)은 레코드의 노선으로 물리적 역을 골라 그 출구만 본다
+                        ea = self.ex.nearest(sa["station_nm"], bx["lat"], bx["lng"], sa.get("line")) if self.ex else None
+                        eb = self.ex.nearest(sb["station_nm"], by["lat"], by["lng"], sb.get("line")) if self.ex else None
                         da2 = round(ea[0]) if ea else round(da)
                         db2 = round(eb[0]) if eb else round(db)
-                        for ln in sorted(self.lines_with(sa["station_nm"]) & self.lines_with(sb["station_nm"])):
+                        # 55 ④ — 노선은 그 물리적 역의 노선군 안에서만(신촌 2호선 근처 정류장에 경의선을 붙이지 않는다)
+                        la = self.lines_with(sa["station_nm"]) & self._phys_lines(sa)
+                        lb = self.lines_with(sb["station_nm"]) & self._phys_lines(sb)
+                        for ln in sorted(la & lb):
                             pairs.append((da2 + db2, ln, sa["station_nm"], sb["station_nm"], da2, db2))
                 for _tot, ln, sa, sb, da, db in sorted(pairs):
                     if len(out) >= maxn:
@@ -1326,7 +1373,8 @@ class Verifier:
 
             # ⓑ 노선 교체 — 같은 두 역을 잇는 다른 노선
             elif axis == "노선교체" and line:
-                for ln in sorted(self.lines_with(a) & self.lines_with(b)):
+                # 55 ④ — 동명이역(양평·신촌)은 같은 물리적 역의 노선만(경의선 양평→공덕을 5호선 양평→공덕으로 바꾸지 않는다)
+                for ln in sorted(self._lines_at(a, line) & self._lines_at(b, line)):
                     if ln == line or len(out) >= maxn:      # 자기_자신_제외
                         continue
                     take(axis, f"{ln} 로 교체", {"line": ln, "from": a, "to": b})
@@ -1483,7 +1531,9 @@ class Verifier:
         c, why = self._car_run(s, e, now_min, taxi)
         if c is None:
             if s is None or e is None:
-                return LegResult(idx, label, "unknown", f"{why} ({a_nm if s is None else b_nm})", grade="근거없음", code="no_data")
+                amb = self._ambig_warn(a_nm if s is None else b_nm, "도로 끝점 좌표")
+                return LegResult(idx, label, "unknown", f"{why} ({a_nm if s is None else b_nm})", grade="근거없음", code="no_data",
+                                 warnings=[amb] if amb else [])
             return LegResult(idx, label, "unknown", f"도로 소요를 낼 수 없다 — {why}", grade="근거없음", code="no_data",
                              warnings=[self.warn_msg("MOB_W_CAR_ROUTER_DOWN", reason=why[:80])])
         ride = round(c["topis_time_s"] / 60, 1)
@@ -1541,7 +1591,7 @@ class Verifier:
                     "evidence": [{"source_type": "policy", "source_id": self.rules_src, "grade": "근거없음",
                                   "observed_at": self.rules_at,
                                   "claim": f"transfer.stop_station_walk — {why} → 도보 0분"}]}
-        near = self.ex.nearest(st_nm, stop["lat"], stop["lng"]) if self.ex else None
+        near = self.ex.nearest(st_nm, stop["lat"], stop["lng"], st_line) if self.ex else None
         if near:
             dist, ex = near
             where = f"{st_nm}역 {ex.get('ref') or '?'}번 출구"
@@ -1595,6 +1645,8 @@ class Verifier:
         ★ tie_band — 도착이 있는 두 후보의 차이가 (불확실성 A + 불확실성 B) 안이면 동급. 이유는 시간 밖 축.
         """
         origin, dest = case["multi"]["from"], case["multi"]["to"]
+        # ★ 55 ④ — 동명이역(양평·신촌)은 역명만으로 물리적 역을 모른다. 노선(from_lines · to_lines)을 같이 받으면 그 역으로 고른다.
+        o_lines, d_lines = case["multi"].get("from_lines"), case["multi"].get("to_lines")
         first_visit = case.get("first_visit", True)
         party = case.get("party", {}) or {}
         C = self.R["candidates"]
@@ -1604,12 +1656,26 @@ class Verifier:
         if now is None:
             raise SystemExit(f"[{case.get('id')}] depart_at 이 없다.")
         warns, ev = [], [self._ev_rule("candidates.기준", "확정")]
+        amb = [(nm, ls) for nm, ls in ((origin, o_lines), (dest, d_lines))
+               if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(nm)
+               and self.sc.resolve(nm, ls) is None]
+        if amb:
+            # 조용히 한쪽을 집지 않는다 — 값을 비우고 경고(55 ④). 노선을 주면 풀린다.
+            warns += [self._ambig_warn(nm, "출발·도착역") for nm, _ in amb]
+            ev.append(self._ev_rule("station_names.동명이역_좌표차_m", "추정"))
+            res = self._finish(case, day_type, [], "unknown",
+                               f"{' · '.join(nm for nm, _ in amb)} 은(는) 이름이 같은 다른 역이 있다 — 노선 없이 역명만으로는 후보를 만들지 않는다",
+                               "근거없음", None, None, "노선(from_lines · to_lines)이나 장소 좌표를 같이 준다", warns, ev)
+            res.code, res.candidates = "no_data", []
+            res.out = self._out(res, case, now, to_service_min(case.get("arrive_by")))
+            return res
         cg = self.candidate_graph(first_visit)
         tlim = self.rv("limits", "transfers", "default")          # 환승 상한 — 판정기와 같은 값(동행별)
         for k in ("infant", "elderly", "fatigue_high"):
             if party.get(k):
                 tlim = min(tlim, self.rv("limits", "transfers", k))
-        gen = cg.candidates(origin, dest, C["기준"]["value"], max_transfers=tlim)
+        gen = cg.candidates(origin, dest, C["기준"]["value"], max_transfers=tlim,
+                            origin_lines=o_lines, dest_lines=d_lines)
         arrive_by = to_service_min(case.get("arrive_by"))
         if not gen:
             res = self._finish(case, day_type, [], "unknown",
@@ -1631,7 +1697,7 @@ class Verifier:
             radius = self.rv("alternatives", "정류장_반경_m")
             excluded = self.rv("bus", "route_type_제외") or []
             wlim = self._walk_limit(party)
-            pa, pb = self.sc.by_name.get(origin), self.sc.by_name.get(dest)
+            pa, pb = self.sc.resolve(origin, o_lines), self.sc.resolve(dest, d_lines)   # 55 ④ — 동명이역은 노선으로
             if pa and pb and pa.get("lat") is not None and pb.get("lat") is not None:
                 for r, x, y, span, da, db in self.bus.routes_between(
                         pa["lat"], pa["lng"], pb["lat"], pb["lng"], radius):
@@ -1646,7 +1712,11 @@ class Verifier:
 
         # 자전거 후보(규칙 v0.7 · 22번 방) — 역 좌표 기준. 판정(대여소·가용·소요)은 verify_leg_bike 가 한다.
         if self.bike_enabled() and self.R["bike"]["ddareungi"]["multi_후보"]["value"] and self.bk and self.sc:
-            keep.append({"criteria": ["자전거"], "legs": [{"mode": "bike", "from": origin, "to": dest}],
+            # 55 ④ — 동명이역 끝점은 역명 대신 고른 물리적 역의 좌표로 넘긴다(자전거는 역명만 받으면 값을 안 낸다)
+            bend = lambda nm, ls: (nm if not self.sc.is_ambiguous(nm) else
+                                   (lambda r: {"lat": r["lat"], "lng": r["lng"], "name": f"{nm}역({r['line']})"}
+                                    if r and r.get("lat") is not None else nm)(self.sc.resolve(nm, ls)))
+            keep.append({"criteria": ["자전거"], "legs": [{"mode": "bike", "from": bend(origin, o_lines), "to": bend(dest, d_lines)}],
                          "est_min": None, "transfers": 0, "walk_min": None, "gen_grade": "추정",
                          "fallback_edges": [], "walk_in": 0, "walk_out": 0})
             ev.append(self._ev_rule("bike.ddareungi.multi_후보", "추정"))
@@ -1776,7 +1846,9 @@ class Verifier:
         res.candidates, res.ties, res.dropped_candidates, res.bus_rejected = out, ties, dropped, bus_rejected
         res.axis_best = axis_best
         if not nf:
-            res.taxi = self._taxi(self._pt(None, origin), self._pt(None, dest), now)
+            ra = self.sc.resolve(origin, o_lines) if self.sc else None     # 55 ④ — 동명이역은 고른 물리적 역 좌표로
+            rb = self.sc.resolve(dest, d_lines) if self.sc else None
+            res.taxi = self._taxi(self._pt(None, ra if ra else origin), self._pt(None, rb if rb else dest), now)
         # v0.8 — 케이스의 밖 판: 성립 후보가 하나라도 있으면 성립. 없으면 후보 코드 중 가장 흔한 것(전부 근거없음이면 no_data).
         res.verdict_best = verdict
         res.buffer_min = self.rv("buffer", "by_stage", case.get("stage", "planning"))
@@ -1795,7 +1867,8 @@ class Verifier:
 
     @staticmethod
     def _shift_out(o, depart_min, walk_in, walk_out):
-        """후보(역→역) 밖 판을 출발지→목적지 기준으로 — 출발은 origin 시각, 도착·최악 도착은 이탈 도보만큼 뒤, 늦어도 출발은 접근 도보만큼 앞."""
+        """후보(역→역) 밖 판을 출발지→목적지 기준으로 — 출발은 origin 시각, 도착·최악 도착은 이탈 도보만큼 뒤,
+        소요(eta · eta_worst · p90_eta)는 접근+이탈 도보만큼 길게, 늦어도 출발은 접근 도보만큼 앞."""
         if not o:
             return o
         o = dict(o)
@@ -1803,7 +1876,9 @@ class Verifier:
         for k in ("arrive_min", "arrive_worst_min"):
             if o.get(k) is not None:
                 o[k] += walk_out
-        for k in ("eta_min", "eta_worst_min"):
+        # ★ 55 ① — p90_eta_min 도 eta 와 같은 축(출발지→목적지)이다. 안 밀면 p90 이 p50 보다 작게 나온다
+        #   (서울역→이태원 421: eta 29 · p90 23 · 48 작업메모 §4). 뜻(41 D5 · 버스 승차 p90 가산)은 그대로, 축만 맞춘다.
+        for k in ("eta_min", "eta_worst_min", "p90_eta_min"):
             if o.get(k) is not None:
                 o[k] += walk_in + walk_out
         if o.get("last_feasible_depart_min") is not None:
@@ -1915,6 +1990,17 @@ class Verifier:
                     walk = ss["walk_min"]
                     dist_txt = (f"({ss['dist_m']:,.0f}m 직선×{ss['factor']:g} = {ss['walk_m']:,.0f}m)"
                                 if ss["dist_m"] is not None else "")
+                elif leg.get("line") and prev_leg.get("line") and self._other_station(st, prev_line, cur_line):
+                    # ★ 55 GPT #1 — 이름만 같은 다른 역(경의선 양평 ↔ 5호선 양평 53.6 km)은 환승이 아니다. 후보 생성기를
+                    #   거치지 않는 legs 입력도 여기서 막는다(종전: 도보 0분 + 길찾기 1분으로 성립).
+                    why = f"{st} 의 {prev_line} 역과 {cur_line} 역은 이름만 같은 다른 역이다 — 갈아탈 수 없다"
+                    tev = [self._ev_rule("station_names.환승_제외_역명", "확정")]
+                    ev += tev
+                    legs.append(LegResult(i, f"환승 {st}", "infeasible", why, grade="확정", evidence=list(tev),
+                                          code="transfer_walk", worst=worst))
+                    return fail("infeasible", why, "transfer_walk",
+                                f"{st} 에서는 갈아타지 않는다 — 실제 환승역을 거치는 경로로 다시 잡는다",
+                                "transfer_walk", i, leg, now)
                 else:
                     # 버스↔버스 환승은 거리표에 없다 — 종전대로 0분·근거없음(MOB_W_TRANSFER_WALK_ZERO). 19번 범위 밖.
                     w = (self.tw.lookup(st, prev_line, cur_line)
@@ -2441,7 +2527,8 @@ def main():
     for c in cases:
         if c.get("multi"):
             cg = CandidateGraph(lo, tw, rules, c.get("first_visit", True))
-            for cand in cg.candidates(c["multi"]["from"], c["multi"]["to"], rules["candidates"]["기준"]["value"]):
+            for cand in cg.candidates(c["multi"]["from"], c["multi"]["to"], rules["candidates"]["기준"]["value"],
+                                      origin_lines=c["multi"].get("from_lines"), dest_lines=c["multi"].get("to_lines")):
                 pre_legs += cand.legs
     all_legs = [l for c in cases for l in c.get("legs") or []] + pre_legs
     wanted = {(l["line"], nm) for l in all_legs if l.get("line") for nm in (l["from"], l["to"])}

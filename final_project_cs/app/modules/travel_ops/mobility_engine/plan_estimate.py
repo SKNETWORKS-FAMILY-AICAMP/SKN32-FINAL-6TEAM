@@ -75,6 +75,7 @@ import sys
 from datetime import date as _date, timedelta
 from pathlib import Path
 
+from .geo import same_station
 from .timeutil import fmt_min, day_type_of, MIN_DAY
 from .verify_time import leg_mode
 
@@ -136,6 +137,16 @@ def slot_window(slot):
 
 
 # ── 본체 ─────────────────────────────────────────────────────────────────
+
+def _multi_of(A, B):
+    """출발지·도착지 점 둘 → verify_multi 의 multi 칸. 동명이역이면 노선군을 같이(55 ④ · plan._multi 와 같은 모양)."""
+    m = {"from": A["station"], "to": B["station"]}
+    if A.get("lines"):
+        m["from_lines"] = list(A["lines"])
+    if B.get("lines"):
+        m["to_lines"] = list(B["lines"])
+    return m
+
 class Estimator:
     def __init__(self, runtime, *, stage="planning", modes=None):
         from .plan import Planner
@@ -157,6 +168,10 @@ class Estimator:
     def _point(self, x, wlim):
         sc = self.v.sc
         if isinstance(x, str):
+            if sc is not None and getattr(sc, "is_ambiguous", None) and sc.is_ambiguous(x):
+                # 55 ④ — 동명이역은 역명만으로 고르지 않는다(양평 = 양평군 · 영등포구)
+                raise ValueError(f"역 이름이 두 역을 가리킨다: {x!r}({' / '.join(sc.ambiguous_lines(x))}) — "
+                                 f"장소 {{name, lat, lon}} 로 준다")
             if sc is None or x not in sc.by_name:
                 raise ValueError(f"역 이름을 모른다: {x!r} — 장소면 {{name, lat, lon}} 로 준다")
             rec = sc.by_name[x]
@@ -170,7 +185,8 @@ class Estimator:
         near = self.P._near_station(p, wlim)
         if near is None:
             return {"name": p.get("name"), "station": None, "walk": None, "place": p}
-        return {"name": p.get("name"), "station": near[0], "walk": self.P._walk(near[1]), "place": p}
+        return {"name": p.get("name"), "station": near[0], "walk": self.P._walk(near[1]), "place": p,
+                "lines": near[2] if len(near) > 2 else None}
 
     def _dayf(self, d, day_type):
         """버스 프로파일 요일형 — 판정기 _bus_day_types 와 같은 규칙(자정 뒤 연장 구간은 다음 날 요일형도 본다)."""
@@ -291,9 +307,11 @@ class Estimator:
             dm = meters(A["place"]["lat"], A["place"]["lon"], B["place"]["lat"], B["place"]["lon"])
             if dm <= wlim:
                 walk_eta = max(1, self.P._walk(dm))
-        transit = A["station"] is not None and B["station"] is not None and A["station"] != B["station"]
+        same = (A["station"] is not None and
+                same_station(A["station"], A.get("lines"), B["station"], B.get("lines")))   # 55 GPT #2 — 물리적 역 기준
+        transit = A["station"] is not None and B["station"] is not None and not same
         if not transit and walk_eta is None:
-            why = ("두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if A["station"] and A["station"] == B["station"]
+            why = ("두 곳의 가장 가까운 역이 같고 도보 상한 밖이다" if same
                    else "도보 상한 안에 지하철역이 없다(" + (A["name"] if A["station"] is None else B["name"]) + ")")
             return {**base, "verdict": "no_data", "reason": why}
 
@@ -310,7 +328,7 @@ class Estimator:
                              "worst": walk_eta, "transfers": 0, "range": "walk"})
             if transit:
                 r = v.verify_case({"id": f"est/{fmt_min(t)}", "date": d.isoformat(), "stage": self.stage,
-                                   "depart_at": t + A["walk"], "multi": {"from": A["station"], "to": B["station"]},
+                                   "depart_at": t + A["walk"], "multi": _multi_of(A, B),
                                    "party": party, "first_visit": first_visit})
                 for c in r.candidates or []:
                     if any(leg_mode(x) not in self.modes for x in c["legs"]):

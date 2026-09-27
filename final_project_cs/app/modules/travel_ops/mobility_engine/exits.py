@@ -29,13 +29,44 @@ class StationExits:
             return None                               # 없으면 호출 쪽이 역 좌표로 대신한다
         return cls(json.loads(p.read_text(encoding="utf-8")))
 
-    def exits_of(self, station_nm):
-        return self.exits.get(station_nm, [])
+    def bind(self, sc):
+        """★ 55 ④ — 출구표는 역명 키라 동명이역(양평 5개 출구가 53 km 에 걸침 · 신촌 10개)이 한 목록이다.
+        좌표표(StationCoords)의 물리적 역 묶음으로 **그 역명의 출구만** 나눠 둔다 — 출구마다 가장 가까운 물리적 역.
+        파일은 안 바꾼다(34·57 산출). 동명이역이 아닌 역명은 종전 그대로."""
+        self._split = {}
+        if sc is None:
+            return self
+        for nm, groups in sc.ambiguous.items():
+            parts = {p["lines"]: [] for p in groups}
+            for e in self.exits.get(nm, []):
+                best = None
+                for p in groups:
+                    for ln in p["lines"]:
+                        v = sc.by_key.get(f"{ln}|{nm}")
+                        if v is None or v.get("lat") is None:
+                            continue
+                        d = meters(e["lat"], e["lng"], v["lat"], v["lng"])
+                        if best is None or d < best[0]:
+                            best = (d, p["lines"])
+                if best is not None:
+                    parts[best[1]].append(e)
+            self._split[nm] = parts
+        return self
 
-    def nearest(self, station_nm, lat, lng):
-        """그 역의 출구 중 (lat, lng) 에 가장 가까운 것. (거리 m, 출구) — 출구가 없으면 None."""
+    def exits_of(self, station_nm, line=None):
+        """그 역의 출구. 동명이역이면 **노선이 있어야** 그 물리적 역의 출구만 — 노선이 없으면 빈 목록(호출 쪽이 역 좌표로)."""
+        parts = getattr(self, "_split", {}).get(station_nm)
+        if parts is None:
+            return self.exits.get(station_nm, [])
+        if not line:
+            return []
+        return next((v for k, v in parts.items() if line in k), [])
+
+    def nearest(self, station_nm, lat, lng, line=None):
+        """그 역의 출구 중 (lat, lng) 에 가장 가까운 것. (거리 m, 출구) — 출구가 없으면 None.
+        동명이역은 노선으로 물리적 역을 고른 뒤 그 출구만 본다(55 ④)."""
         best = None
-        for e in self.exits_of(station_nm):
+        for e in self.exits_of(station_nm, line):
             d = meters(lat, lng, e["lat"], e["lng"])
             if best is None or d < best[0]:
                 best = (d, e)

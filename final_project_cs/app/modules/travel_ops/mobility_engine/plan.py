@@ -47,6 +47,7 @@ from pathlib import Path
 
 from . import options as O
 from .options import line_name, station_name  # noqa: F401 — 32 시험·호출 쪽이 plan 에서 가져간다
+from .geo import same_station
 from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
@@ -157,6 +158,17 @@ def _is_bus(o):
     return bool(o["_legs"]) and all(leg_mode(x) == "bus" for x in o["_legs"])
 
 
+
+def _multi(oa, ob):
+    """장소→역 결과 둘로 verify_multi 의 multi 칸. 동명이역이면 노선군을 같이 싣는다(55 ④)."""
+    m = {"from": oa[0], "to": ob[0]}
+    if len(oa) > 2 and oa[2]:
+        m["from_lines"] = list(oa[2])
+    if len(ob) > 2 and ob[2]:
+        m["to_lines"] = list(ob[2])
+    return m
+
+
 class Planner:
     def __init__(self, runtime, *, stage="planning", modes=None, display=False):
         self.rt = runtime
@@ -193,7 +205,8 @@ class Planner:
 
     def _near_station(self, place, limit_m):
         """장소 → 가장 가까운 역(역 좌표 직선 · 도보 상한 안). 거리는 그 역에서 장소에 가장 가까운 출구까지
-        (출구표가 없으면 역 좌표) — 정류장↔역 환승(19번)과 같은 방식. (역명, 직선 m) 또는 None."""
+        (출구표가 없으면 역 좌표) — 정류장↔역 환승(19번)과 같은 방식. (역명, 직선 m, 노선군) 또는 None.
+        노선군은 **동명이역(양평·신촌)일 때만** 그 물리적 역의 노선 목록(55 ④) — 아니면 None(역명으로 충분)."""
         sc = self.v.sc
         if sc is None:
             return None
@@ -202,11 +215,12 @@ class Planner:
             return None
         d, rec = near[0]
         nm = rec["station_nm"]
+        lines = (sorted(sc.group_lines(rec)) if getattr(sc, "is_ambiguous", None) and sc.is_ambiguous(nm) else None)
         if self.v.ex is not None:
-            e = self.v.ex.nearest(nm, place["lat"], place["lon"])
+            e = self.v.ex.nearest(nm, place["lat"], place["lon"], rec.get("line"))
             if e is not None:
                 d = e[0]
-        return nm, d
+        return nm, d, lines
 
     def _bus_direct(self, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim):
         """장소 → 장소 한 노선 버스 후보. 후보마다 마지막 성립 출발에서 다시 판정해 성립한 것만 — 도보 짧은 순(상한은 leg())."""
@@ -387,7 +401,7 @@ class Planner:
         if oa is None or ob is None:
             why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
                    + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
-        elif oa[0] == ob[0]:
+        elif same_station(oa[0], oa[2], ob[0], ob[2]):          # 55 GPT #2 — 동명이역은 역명이 같아도 다른 역
             why = {"code": "no_data", "reason": f"두 장소의 가장 가까운 역이 같다({oa[0]}) — 도보만 본다"}
         else:
             wa, wb = self._walk(oa[1]), self._walk(ob[1])
@@ -395,7 +409,7 @@ class Planner:
             off = (st_date - sdate).days * MIN_DAY            # 역 운행일 축 → 도착 목표 축 (0 또는 −1440)
             probe = {"id": case_id, "date": st_date.isoformat(), "stage": self.stage,
                      "depart_at": max(SERVICE_DAY_START_MIN, by_station - 180), "arrive_by": by_station,
-                     "multi": {"from": oa[0], "to": ob[0]}, "party": party, "first_visit": first_visit}
+                     "multi": _multi(oa, ob), "party": party, "first_visit": first_visit}
             r = self.v.verify_case(probe)
             n_mode = 0
             for c in r.candidates or []:
@@ -445,7 +459,7 @@ class Planner:
         # ④ 자전거 — modes 에 bike 를 줄 때만 · 장소 좌표 기준 · lfd = 목표 − (eta+@)(58 · _bike_direct)
         bike_opts, bike_why = self._bike_direct(a_place, b_place, sdate, arrive_by, party, first_visit, case_id)
         opts.extend(bike_opts)
-        if oa is not None and ob is not None and oa[0] != ob[0]:
+        if oa is not None and ob is not None and not same_station(oa[0], oa[2], ob[0], ob[2]):
             if not any(o["_legs"] for o in opts):
                 if r.candidates and n_mode == 0 and not bus_opts:
                     why = {"code": "no_data", "reason": f"고른 수단({', '.join(sorted(self.modes))}) 안의 후보가 없다"}
