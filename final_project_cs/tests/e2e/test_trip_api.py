@@ -115,6 +115,9 @@ def api(monkeypatch):
                 return {"type": "closed", "minutes": None, "products": []}
             if "품절" in message:
                 return {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}
+            if "되돌려" in message:
+                import re
+                return {"type": "rollback", "to_version": int(re.findall(r"\d+", message)[0])}
             return {"type": "other"}
 
     client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
@@ -467,3 +470,20 @@ def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
     assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
     assert said["report"] == {"type": "question"}
     assert _detail(api, trip_id)["version"] == 1
+
+
+
+def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
+    """★`[2026-09-26]` 대화로 보낸 「N번 일정으로 되돌려 주세요」 — 전에는 분기가 delay·closed·stock_out·그 밖뿐이라
+    그 밖(= 다른 안으로 바꾸기)으로 떨어졌다(triPilot : RAG 세션이 코드를 읽고 찾았다). 옛 버전으로 돌아가야 한다."""
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1                   # v2 — 감시가 바꿨다
+    before = [(s["seq"], s["place"]) for s in _detail(api, trip_id)["items"]]
+    said = _say(api, trip_id, "rollback", request_id="say-back", text="1번 일정으로 되돌려 주세요").json()
+    assert said["status"] == "rolled_back", said
+    view = _detail(api, trip_id)
+    assert view["version"] == 3 and view["history"][-1]["reason"] == "rollback"
+    with get_connection() as conn:
+        v1 = api["store"].items(conn, trip_id, 1)
+    assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
+    assert [(s["seq"], s["place"]) for s in view["items"]] != before
