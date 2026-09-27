@@ -408,3 +408,25 @@ def test_a_lunch_line_is_placed_at_lunch_even_after_a_later_timed_stop(api):
     filled = [f for f in view["check"]["filled"] if f["field"].endswith("starts_at")]
     assert [(f["field"], f["value"]) for f in filled] == [("items[2].starts_at", "12:00")]
     assert "「점심」" in filled[0]["note"]
+
+
+ALIAS_FIRST = chr(10).join(["1일차 2026-10-15", "09:00 경복궁", "11:00 옛날시장"])
+ALIAS_NEXT = chr(10).join(["1일차 2026-10-16", "10:00 옛날시장"])
+
+
+def test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan(api):
+    """★고객이 고친 (원래 글 → 고친 글)을 별칭으로 쌓는다(030) — 다음 계획의 같은 말은 그 이름으로 다시 찾는다.
+    둘 다 고객 글이다 — 관광공사·카카오 값은 별칭 표에 넣지 않는다."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    first = _send(client, headers, text=ALIAS_FIRST)
+    source = first["sources"][0]["source_id"]
+    assert ("no_place", "items[1].place") in {(p["code"], p["field"]) for p in first["check"]["problems"]}
+    _edit(client, headers, first, {"source_id": source, "field": "items[1].place", "value": {"name": "광장시장"}})
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT phrase, replacement, source FROM place_aliases WHERE tenant_id=%s", (api["tenant"],))
+        assert cur.fetchall() == [("옛날시장", "광장시장", "customer")]
+    again = _send(client, headers, text=ALIAS_NEXT)
+    place = again["sources"][0]["items"][0]["fields"]["place"]
+    assert place["value"]["name"] == "광장시장" and place["needs_review"] is True
+    assert place["evidence"]["tried"][0] == "alias:옛날시장→광장시장"

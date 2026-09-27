@@ -110,10 +110,13 @@ class Tour:
 
 
 class Kakao:
-    def __init__(self, hits):
-        self.hits, self.asked = hits, []
+    def __init__(self, hits, around=None):
+        self.hits, self.around, self.asked, self.near_asked = hits, around or {}, [], []
 
-    def search(self, query, size=5):
+    def search(self, query, size=5, near=None):
+        if near is not None:                       # 앞뒤 일정 근처 거리순 재검색
+            self.near_asked.append((query, near))
+            return self.around.get(query, [])
         self.asked.append(query)
         return self.hits.get(query, [])
 
@@ -232,3 +235,88 @@ def test_a_plan_request_is_caught_by_rule_without_a_model():
         assert PLAN_ASK.search(asked), asked
     for plain in ("일정표 보냈어요", "09:00 경복궁", "계획대로 갈게요", "짜장면 먹어요"):
         assert not PLAN_ASK.search(plain), plain
+
+
+# ── 종류가 맞는 후보 중 앞뒤 일정에 가장 가까운 곳 (설계서 §4-2, 2026-09-28) ────────
+def _at(name, lat, lon, category="", group=""):
+    return {"id": name, "name": name, "category": category, "category_group": group, "address": "서울 마포구",
+            "latitude": lat, "longitude": lon}
+
+
+class GeoTour(Tour):
+    """좌표가 다른 관광공사 흉내 — 앞뒤 일정 좌표를 만든다."""
+
+    COORDS = {"망원한강공원": (37.5552, 126.8950), "여의도한강공원": (37.5284, 126.9326)}
+
+    def find(self, name, area_code=None):
+        self.asked.append((name, area_code))
+        if name not in self.COORDS:
+            return None
+        lat, lon = self.COORDS[name]
+        return {"matched_title": name, "content_id": "c-" + name, "content_type_id": "12",
+                "latitude": lat, "longitude": lon, "address": "서울특별시 마포구"}
+
+
+def test_a_vague_activity_takes_the_candidate_nearest_to_the_neighbouring_stops():
+    from app.modules.travel_ops.intake.pipeline import read_source
+
+    far = _at("잠실카약클럽", 37.5170, 127.0980, "스포츠,레저 > 수상스포츠")
+    near = _at("망원카약", 37.5560, 126.8970, "스포츠,레저 > 수상스포츠")
+    closer = _at("망원한강 카약체험장", 37.5555, 126.8955, "스포츠,레저 > 수상스포츠")
+    kakao = Kakao({"한강 카약": [far, near, _at("한강", 37.52, 126.98)]}, around={"한강 카약": [closer, far]})
+    text = "\n".join(["1일차 2026-10-15", "10:00 망원한강공원", "13:00 한강 카약", "16:00 망원한강공원"])
+    rows = read_source(text, tour=GeoTour({}), kakao=kakao, our_places=[], today=date(2026, 9, 28))
+    place = next(r for r in rows if r["field"] == "items[1].place")
+    # ★앞뒤 일정 가운데에서 거리순으로 다시 찾은 후보가 더해지고, 그중 가장 가까운 곳을 고른다
+    assert place["value"]["name"] == "망원한강 카약체험장" and place["value"]["source"] == "kakao"
+    assert place["needs_review"] is True and "가장 가까운" in place["note"]
+    assert place["evidence"]["chosen_from"] == ["잠실카약클럽", "망원카약", "망원한강 카약체험장"]   # 「한강」 자체는 후보가 아니다
+    assert place["evidence"]["neighbours"] == 2 and len(kakao.near_asked) == 1
+
+
+def test_several_sections_of_a_trail_are_candidates_not_the_first_one():
+    kakao = Kakao({"북한산 둘레길": [_at("북한산둘레길 1구간소나무숲길", 37.64, 127.01),
+                                    _at("북한산둘레길 8구간구름정원길", 37.62, 126.95)]})
+    found = resolve("북한산 둘레길", our_places=[], tour=Tour({}), kakao=kakao)
+    assert found.status == "unresolved" and len(found.candidates) == 2       # ★여러 구간 — 첫 구간을 고르지 않는다
+    one = resolve("북한산 둘레길", our_places=[], tour=Tour({}), kakao=Kakao({"북한산 둘레길": [
+        _at("북한산둘레길 1구간소나무숲길", 37.64, 127.01)]}))
+    assert one.status == "resolved" and one.method == "kakao"                 # 하나뿐이면 그것
+
+
+def test_nearest_without_neighbours_takes_the_first_candidate():
+    from app.modules.travel_ops.intake.places import nearest
+
+    a, b = _at("가", 37.5, 127.0), _at("나", 37.6, 127.1)
+    assert nearest([a, b], [])[0] is a and nearest([a, b], [])[1] is None
+    assert nearest([a, b], [(37.61, 127.1)])[0] is b
+
+
+def test_an_alias_is_looked_up_again_by_its_replacement_and_asks():
+    from app.modules.travel_ops.intake.places import normalize
+
+    tour = Tour({"N서울타워": "12"})
+    found = resolve("남산타워", our_places=[], tour=tour, aliases={normalize("남산타워"): "N서울타워"})
+    assert (found.status, found.name, found.needs_review) == ("resolved", "N서울타워", True)
+    assert found.tried[0] == "alias:남산타워→N서울타워" and "별칭" in found.note
+
+
+def test_a_narrowed_place_wins_over_shops_that_share_the_last_word():
+    """☆2026-09-28 실측 회귀 — 「광장시장 빈대떡」이 카카오의 「순희네빈대떡」이 됐다. 좁힌 「광장시장」이 먼저다."""
+    kakao = Kakao({"광장시장 빈대떡": [_at("순희네빈대떡", 37.57, 127.0, "음식점 > 한식"),
+                                     _at("박가네빈대떡 본점", 37.57, 127.0, "음식점 > 한식")]})
+    found = resolve("광장시장 빈대떡", our_places=[], tour=Tour({"광장시장": "38"}), kakao=kakao)
+    assert (found.status, found.name, found.candidates) == ("resolved", "광장시장", [])
+
+
+def test_a_narrowed_food_line_marks_the_item_as_a_meal():
+    """「광장시장 빈대떡」 — 장소는 광장시장, 항목 종류는 식사(설계서 §4-2). 원문 전체로 찾은 결과가 대부분 음식점이다."""
+    from app.modules.travel_ops.intake.pipeline import read_source
+
+    kakao = Kakao({"광장시장 빈대떡": [_at("순희네빈대떡", 37.57, 127.0, "음식점", "FD6"),
+                                     _at("박가네빈대떡 본점", 37.57, 127.0, "음식점", "FD6")]})
+    rows = read_source(chr(10).join(["1일차 2026-10-15", "13:00 광장시장 빈대떡"]), tour=Tour({"광장시장": "38"}),
+                       kakao=kakao, our_places=[], today=date(2026, 9, 28))
+    fields = {r["field"]: r for r in rows}
+    assert fields["items[0].place"]["value"]["name"] == "광장시장"
+    assert fields["items[0].kind"]["value"] == "dining" and fields["items[0].kind"]["method"] == "lookup"

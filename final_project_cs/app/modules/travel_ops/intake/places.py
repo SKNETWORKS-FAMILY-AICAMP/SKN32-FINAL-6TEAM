@@ -55,6 +55,11 @@ class Resolved:
     note: str | None = None
     tried: list[str] = field(default_factory=list)
     blocked: list[str] = field(default_factory=list)   # 막힌 조회(「소스:사유」) — 없음과 다르다
+    #: 이름이 딱 맞지 않지만 **종류가 맞는** 카카오 후보(「한강 카약」 → 카약 업체들, 「북한산 둘레길」 → 구간들).
+    #: 여기서는 고르지 않는다 — 처리 흐름이 앞뒤 일정에 가장 가까운 하나를 고른다(설계서 §4-2)
+    candidates: list[dict[str, Any]] = field(default_factory=list)
+    #: 항목 종류 단서 — 원문 전체로 찾은 카카오 결과가 대부분 음식점이면 「dining」(「광장시장 빈대떡」 → 광장시장 + 식사)
+    item_kind: str | None = None
 
     def evidence(self) -> dict[str, Any]:
         source = {"places": "places", "typo": "places", "tour_api": "tour_api", "kakao": "kakao"}.get(self.method or "")
@@ -101,9 +106,19 @@ def narrowings(title: str) -> list[str]:
 
 
 def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, kakao: Any = None,
-            kind_hint: str | None = None) -> Resolved:
+            kind_hint: str | None = None, aliases: dict[str, str] | None = None) -> Resolved:
+    # 2 — 별칭(고객이 고친 표현 · 우리가 넣은 기본값). ★값은 고객 글이다 — 바꾼 이름으로 **다시 찾는다**
+    alias = (aliases or {}).get(normalize(title))
+    if alias and normalize(alias) != normalize(title):
+        found = resolve(alias, our_places=our_places, tour=tour, kakao=kakao, kind_hint=kind_hint)
+        found.tried = [f"alias:{title}→{alias}"] + found.tried
+        found.needs_review = True
+        found.note = "; ".join(filter(None, [f"별칭으로 「{alias}」를 찾았다", found.note]))
+        return found
     tried: list[str] = []
     blocked: list[str] = []
+    candidates: list[dict[str, Any]] = []
+    full_hits: list[dict[str, Any]] = []
     by_name = {normalize(p["name"]): p for p in our_places if p.get("name")}
     for query in narrowings(title):
         key = normalize(query)
@@ -126,7 +141,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
         found = _tour(tour, query, blocked)
         tried.append(f"tour_api:{query}")
         if found is not None:
-            return _from_tour(found, query, title, tried)
+            done = _from_tour(found, query, title, tried)
+            done.item_kind = _food_hint(query, title, full_hits)
+            return done
         # 4 — 카카오로 이름 찾기 → 관광공사 재확인 → 없으면 카카오 값(그 여행에만)
         # ★카카오는 **원문 전체**로만 찾는다. 좁힌 이름(뒤 단어를 뗀 것)은 우리 표·관광공사에서만 받는다 —
         #   「한강 카약」을 「한강」으로 좁혀 카카오가 강 자체를 골랐다(2026-09-27 실측). 뗀 말이 활동 자체일 수 있다.
@@ -137,12 +154,18 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                 blocked.append("kakao:" + (max(kakao.misses, key=kakao.misses.get)
                                            if getattr(kakao, "misses", None) else "unavailable"))
                 hits = []
+            full_hits = hits
             if not _HANGUL.search(query):
                 found = _romanized(query, title, hits, tour, tried, blocked)
                 if found is not None:
                     return found
                 continue
             match = _kakao_match(query, hits)
+            if match is None:
+                # ★이름이 특정하지 않는다 — 종류가 맞는 후보를 **남겨 두기만** 하고 좁혀 찾기를 계속한다.
+                #   ☆2026-09-28 실측: 여기서 바로 돌려주니 「광장시장 빈대떡」이 「순희네빈대떡」(원문에 없는 가게)이 됐다 —
+                #   설계서 §4-2 가 막은 바로 그것. 좁힌 이름(「광장시장」)이 먼저이고, 후보는 좁혀도 못 찾을 때만 쓴다
+                candidates = candidates or _kind_hits(query, hits)[:5]
             if match is not None:
                 again = _tour(tour, match["name"], blocked) if match["name"] != query else None
                 if again is not None:
@@ -154,6 +177,9 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
                                 match["latitude"], match["longitude"], needs_review=not exact or query != title,
                                 tried=tried, note=("카카오에서 찾은 곳 — 관광공사에 없어 이 여행에만 싣는다"
                                                    + ("" if exact else f" · 이름이 원문과 달라 확인이 필요하다(「{match['name']}」)")))
+    if candidates:
+        return Resolved("unresolved", tried=tried, needs_review=True, blocked=blocked, candidates=candidates,
+                        note=f"이름이 특정하지 않아 종류가 맞는 {len(candidates)}곳 중 앞뒤 일정에 가까운 곳으로 고른다")
     note = "장소를 정하지 못했다 — 고객이 고친다"
     if blocked:
         note = f"조회가 막혀({', '.join(sorted(set(blocked)))}) 장소를 정하지 못했다 — 없는 곳이라는 뜻이 아니다. 고객이 고친다"
@@ -228,13 +254,57 @@ def _plain(query: str, title: str) -> bool:
 
 
 def _kakao_match(query: str, hits: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """★원문 조각과 **같은 이름**이 먼저, 없으면 원문 조각으로 **시작하는** 이름. 원문에 없는 가게는 고르지 않는다."""
+    """★원문 조각과 **같은 이름**이 먼저, 없으면 원문 조각으로 **시작하는** 이름이 **하나뿐일 때**.
+    원문에 없는 가게는 고르지 않는다. 시작하는 이름이 여럿이면(둘레길 구간들) 고르지 않고 후보로 넘긴다."""
     key = normalize(query)
     exact = [h for h in hits if normalize(h["name"]) == key]
     if exact:
         return exact[0]
     prefix = [h for h in hits if normalize(h["name"]).startswith(key)]
-    return prefix[0] if prefix else None
+    return prefix[0] if len(prefix) == 1 else None
 
 
-__all__ = ["Resolved", "edit_distance", "jamo", "narrowings", "normalize", "resolve"]
+def _food_hint(query: str, title: str, hits: list[dict[str, Any]]) -> str | None:
+    """좁혀서 찾았는데(뗀 말이 있는데) 원문 전체로 찾은 카카오 결과의 과반이 음식점·카페면 항목은 식사다."""
+    if query == title or not hits:
+        return None
+    food = sum(1 for h in hits if h.get("category_group") in ("FD6", "CE7"))
+    return "dining" if food * 2 > len(hits) else None
+
+
+def _kind_hits(query: str, hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """종류가 맞는 후보 — 이름이 원문으로 시작하거나(구간들), 원문의 **마지막 말**(활동 · 종류, 2자 이상)이 이름이나
+    분류에 든 것. 「한강 카약」 → 「○○카약」 업체들, 「북한산 둘레길」 → 「북한산둘레길 n구간」들."""
+    key = normalize(query)
+    words = query.split()
+    last = normalize(words[-1]) if len(words) > 1 else ""
+    out = []
+    for hit in hits:
+        name, category = normalize(hit["name"]), normalize(hit.get("category") or "")
+        if name.startswith(key) or (len(last) >= 2 and (last in name or last in category)):
+            out.append(hit)
+    return out
+
+
+def distance_m(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
+    """두 좌표 사이 거리(미터, 구면 근사)."""
+    import math
+
+    r = 6_371_000
+    p1, p2 = math.radians(a_lat), math.radians(b_lat)
+    dp, dl = p2 - p1, math.radians(b_lon - a_lon)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(h))
+
+
+def nearest(candidates: list[dict[str, Any]], neighbours: list[tuple[float, float]]) -> tuple[dict[str, Any], float | None]:
+    """앞뒤 일정 좌표에 가장 가까운 후보(거리 합이 가장 작은 것). 이웃이 없으면 카카오 첫 후보(관련도 순)."""
+    if not neighbours:
+        return candidates[0], None
+    scored = [(sum(distance_m(c["latitude"], c["longitude"], lat, lon) for lat, lon in neighbours), c)
+              for c in candidates]
+    best = min(scored, key=lambda s: s[0])
+    return best[1], best[0] / len(neighbours)
+
+
+__all__ = ["Resolved", "_kind_hits", "distance_m", "edit_distance", "jamo", "narrowings", "nearest", "normalize", "resolve"]

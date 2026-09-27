@@ -106,10 +106,11 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         _stage(connect, tenant_id, intake_id, "reading")
         with connect() as conn:
             our_places = _our_places(conn, tenant_id)
+            aliases = load_aliases(conn, tenant_id)
         rows_by_source = []
         for source in sources:
             rows_by_source.append((source, read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao,
-                                                       our_places=our_places,
+                                                       our_places=our_places, aliases=aliases,
                                                        today=today or datetime.now(KST).date())))
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 "
@@ -230,7 +231,15 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
             if field_name.endswith(".place") and value is not None:
                 if our_places is None:
                     our_places = _our_places(conn, tenant_id)
+                typed = str(value["name"]).strip()
                 value, evidence, note = _typed_place(value, our_places, tour, kakao)
+                # 원래 읽은 이름 → 고객이 고친 이름을 별칭으로 쌓는다(다음 고객은 안 고쳐도 되게)
+                cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
+                            "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
+                            (tenant_id, intake_id, current, source_id, field_name[:-len("place")] + "title"))
+                was = cur.fetchone()
+                if was and isinstance(was[0], str):
+                    remember_alias(cur, tenant_id, was[0], typed)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
         new = current + 1
         # 앞 판을 그대로 옮기고(만든 순서 유지) 고친 값을 뒤에 얹는다 — 칸마다 마지막 값이 이긴다
@@ -348,11 +357,12 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao):
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
-                our_places: list[dict[str, Any]] | None = None, today: date) -> list[dict[str, Any]]:
+                our_places: list[dict[str, Any]] | None = None, today: date,
+                aliases: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다."""
     from .dates import resolve_dates
     from .llm_spans import label_lines
-    from .places import resolve
+    from .places import _kind_hits, nearest, resolve
 
     read = read_plan(text)
     rows = [claim.as_dict() for claim in read.claims]
@@ -417,17 +427,68 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                      "note": "날짜가 적혀 있지 않다 — 첫날 날짜 하나만 묻는다"})
 
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
+    resolved: dict[int, Any] = {}
     for index, item in enumerate(items):
-        if not item["title"]:
-            continue
-        found = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
-                        kind_hint="dining" if item["meal"] else None)
-        value = None if found.status != "resolved" else {
-            "name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
-            "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+        if item["title"]:
+            resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+                                      kind_hint="dining" if item["meal"] else None, aliases=aliases)
+    for index, found in resolved.items():
+        evidence = found.evidence()
+        value = None
+        note, review = found.note, found.needs_review
+        if found.status == "resolved":
+            value = {"name": found.name, "kind": found.kind, "latitude": found.latitude,
+                     "longitude": found.longitude, "place_id": found.place_id, "content_id": found.content_id,
+                     "source": evidence["source"]}
+        elif found.candidates:
+            # ★설계서 §4-2 — 이름이 특정하지 않으면 종류가 맞는 후보 중 **같은 날 앞뒤 일정에 가장 가까운 곳** 하나.
+            #   선택지를 나열하지 않는다. 고른 이유(거리)를 근거에 남기고 확인을 받는다
+            near = _neighbours(index, items, resolved, dated)
+            pool = list(found.candidates)
+            if near and kakao is not None:
+                # 앞뒤 일정 가운데에서 **거리순**으로 한 번 더 찾는다 — 서울 전역 상위 5곳만으로는 14km 밖을 골랐다(실측)
+                mid = (sum(p[0] for p in near) / len(near), sum(p[1] for p in near) / len(near))
+                around = kakao.search(items[index]["title"], near=mid) or []
+                seen = {c["name"] for c in pool}
+                pool += [h for h in _kind_hits(items[index]["title"], around) if h["name"] not in seen]
+            pick, metres = nearest(pool, near)
+            value = {"name": pick["name"], "kind": "dining" if pick.get("category_group") in ("FD6", "CE7")
+                     else (found.kind or "activity"), "latitude": pick["latitude"], "longitude": pick["longitude"],
+                     "place_id": None, "content_id": None, "source": "kakao"}
+            evidence = {**evidence, "source": "kakao", "method": "kakao_nearest", "name": pick["name"],
+                        "chosen_from": [c["name"] for c in pool],
+                        "neighbours": len(near), "mean_distance_m": round(metres) if metres is not None else None}
+            review = True
+            note = (f"이름이 특정하지 않아 종류가 맞는 {len(pool)}곳 중 "
+                    + (f"앞뒤 일정에 가장 가까운 「{pick['name']}」(평균 {round(metres):,}m)을 골랐다"
+                       if metres is not None else f"앞뒤 일정 좌표가 없어 카카오 첫 후보 「{pick['name']}」을 골랐다")
+                    + " — 이 여행에만 싣는다. 다르면 고쳐 주세요")
         rows.append({"field": f"items[{index}].place", "value": value, "method": "lookup",
-                     "evidence": found.evidence(), "needs_review": found.needs_review, "note": found.note})
+                     "evidence": evidence, "needs_review": review, "note": note})
+        if found.item_kind and not any(r["field"] == f"items[{index}].kind" for r in rows):
+            # 「광장시장 빈대떡」 — 장소는 광장시장, 항목은 식사(설계서 §4-2). 근거는 원문 전체로 찾은 카카오 결과의 종류
+            rows.append({"field": f"items[{index}].kind", "value": found.item_kind, "method": "lookup",
+                         "evidence": {"source": "kakao", "rule": "food_hint", "line": items[index]["line"]},
+                         "needs_review": False, "note": "뗀 말로 찾은 곳이 대부분 음식점이라 식사 일정으로 본다"})
     return rows
+
+
+def _neighbours(index: int, items: list[dict[str, Any]], resolved: dict[int, Any], dated) -> list[tuple[float, float]]:
+    """같은 날(날짜를 모르면 같은 원본)의 바로 앞·뒤 항목 중 좌표를 아는 것."""
+    day = dated[index].value if index < len(dated) else None
+    same = [i for i in range(len(items)) if i != index and (day is None or (i < len(dated) and dated[i].value == day))]
+    near = []
+    for pick in (max([i for i in same if i < index and _coords(resolved.get(i))], default=None),
+                 min([i for i in same if i > index and _coords(resolved.get(i))], default=None)):
+        if pick is not None:
+            near.append(_coords(resolved[pick]))
+    return near
+
+
+def _coords(found) -> tuple[float, float] | None:
+    if found is None or found.status != "resolved" or found.latitude is None or found.longitude is None:
+        return None
+    return float(found.latitude), float(found.longitude)
 
 
 def _mark_for(line: int, marks: list[tuple[int, Any, Any]]) -> tuple[int | None, str | None]:
@@ -440,6 +501,35 @@ def _mark_for(line: int, marks: list[tuple[int, Any, Any]]) -> tuple[int | None,
         if mark_date is not None:
             date_value = mark_date
     return day, date_value
+
+
+#: 우리가 넣은 기본 별칭 — 옛 이름 · 흔한 줄임말(고객 글 → 다시 찾을 이름). 값은 매번 조회한다
+SEED_ALIASES = {"남산타워": "N서울타워", "남산서울타워": "N서울타워", "서울타워": "N서울타워",
+                "롯데타워": "롯데월드타워", "동대문디자인플라자": "DDP"}
+
+
+def load_aliases(conn, tenant_id: str) -> dict[str, str]:
+    """정규화한 원문 → 다시 찾을 이름. 고객이 고친 것이 기본값을 이긴다."""
+    from .places import normalize
+
+    out = {normalize(k): v for k, v in SEED_ALIASES.items()}
+    with conn.cursor() as cur:
+        cur.execute("SELECT phrase_norm, replacement FROM place_aliases WHERE tenant_id=%s", (tenant_id,))
+        out.update(dict(cur.fetchall()))
+    return out
+
+
+def remember_alias(cur, tenant_id: str, phrase: str, replacement: str) -> None:
+    """확인 화면에서 고객이 장소 이름을 고치면 (원래 글 → 고친 글)을 쌓는다. ★둘 다 고객 글이다(약관, 030 머리)."""
+    from .places import normalize
+
+    key = normalize(phrase)
+    if not key or key == normalize(replacement):
+        return
+    cur.execute("INSERT INTO place_aliases (tenant_id, phrase_norm, phrase, replacement, source) "
+                "VALUES (%s,%s,%s,%s,'customer') ON CONFLICT (tenant_id, phrase_norm) DO UPDATE "
+                "SET replacement=EXCLUDED.replacement, source='customer', uses=place_aliases.uses + 1, updated_at=now()",
+                (tenant_id, key, phrase[:120], replacement[:120]))
 
 
 def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:

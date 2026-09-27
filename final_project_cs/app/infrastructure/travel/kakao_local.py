@@ -24,6 +24,8 @@ URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
 #: 서울 사각(경도 최소, 위도 최소, 경도 최대, 위도 최대) — 경기 일부가 들어오므로 주소로 다시 거른다
 SEOUL_RECT = "126.76,37.41,127.19,37.72"
 METER = "kakao_local_keyword"
+#: 가까운 곳 찾기 반경(미터) — 카카오 키워드 검색의 최대값이 20,000 이다. 우리가 고른 값
+NEAR_RADIUS_M = 20000
 
 
 class KakaoLocal(TravelSource):
@@ -42,8 +44,13 @@ class KakaoLocal(TravelSource):
         self._request = request or (lambda url, params, headers: httpx.get(
             url, params=params, headers=headers, timeout=self._timeout))
 
-    def search(self, query: str, *, size: int = 5) -> list[dict[str, Any]] | None:
-        """서울 안의 결과(주소가 「서울」로 시작하는 것)만. 못 불렀으면 `None`, 없으면 `[]`."""
+    def search(self, query: str, *, size: int = 5,
+               near: tuple[float, float] | None = None) -> list[dict[str, Any]] | None:
+        """서울 안의 결과(주소가 「서울」로 시작하는 것)만. 못 불렀으면 `None`, 없으면 `[]`.
+
+        `near=(위도, 경도)` 를 주면 그 점에서 반경 `NEAR_RADIUS_M` 안을 **거리순**으로 찾는다(계획 읽기의 「앞뒤 일정에
+        가장 가까운 곳」). 서울 사각 대신 이 원을 쓰고, 주소로 서울만 거르는 것은 같다.
+        """
         if not query or not query.strip():
             return []
         if not self._allow():
@@ -52,8 +59,13 @@ class KakaoLocal(TravelSource):
             self._miss("budget_exhausted", METER)
             return None
         try:
-            response = self._request(URL, {"query": query.strip(), "rect": SEOUL_RECT, "size": str(size)},
-                                     {"Authorization": f"KakaoAK {self._key}"})
+            params = {"query": query.strip(), "size": str(size)}
+            if near is not None:
+                params.update({"y": f"{near[0]:.6f}", "x": f"{near[1]:.6f}", "radius": str(NEAR_RADIUS_M),
+                               "sort": "distance"})
+            else:
+                params["rect"] = SEOUL_RECT
+            response = self._request(URL, params, {"Authorization": f"KakaoAK {self._key}"})
         except httpx.TimeoutException as exc:
             self._miss("timeout", str(exc))
             return None

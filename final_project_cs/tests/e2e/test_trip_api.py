@@ -146,6 +146,7 @@ def api(monkeypatch):
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s", (tenant,))     # 계획 읽기(028, 원본·값은 따라 지워진다)
+        cur.execute("DELETE FROM place_aliases WHERE tenant_id=%s", (tenant,))    # 고객이 고친 장소 별칭(030)
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s", "DELETE FROM customers WHERE tenant_id=%s",
                     "DELETE FROM tenants WHERE tenant_id=%s"):
