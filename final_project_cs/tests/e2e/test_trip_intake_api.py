@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app.infrastructure.db.session import get_connection
 from app.presentation.api.app import create_app
 from app.modules.travel_ops.trip_api import build_trip_router
 
@@ -277,3 +279,132 @@ def test_a_model_outage_only_skips_the_pointing_step(api):
     assert [i["fields"]["title"]["value"] for i in items] == ["경복궁"]    # 규칙이 읽은 것은 그대로
     assert [line["read"] for line in view["sources"][0]["lines"]] == [True, True, False, False]
     assert view["sources"][0]["reading"]["error"].startswith("TimeoutError")   # ★장애는 이름으로 남는다
+
+
+# ── 3주차: 확인 화면 → 고치기 → 등록 ─────────────────────────────────────
+def _full_client():
+    tour, kakao = Tour(), Kakao()
+    client = TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(chat_factory=Labeler, place_factory=lambda: tour,
+                                          kakao_factory=lambda: kakao)]))
+    return client, tour, kakao
+
+
+def _stored(api, trip):
+    """등록된 항목(내부 모양 — `detail` 포함). 공개 조회는 `detail` 을 싣지 않는다."""
+    from app.modules.travel_ops.itinerary import TripStore
+
+    with get_connection() as conn:
+        return TripStore(api["tenant"]).latest(conn, UUID(trip["trip_id"]))[1]
+
+
+def _edit(client, headers, view, *edits, status=200):
+    response = client.post(f"/v1/web/trip-intakes/{view['intake_id']}/edits", headers=headers,
+                           json={"revision": view["revision"], "edits": list(edits)})
+    assert response.status_code == status, response.text
+    return response.json()
+
+
+def _confirm(client, headers, intake_id, revision, status=200):
+    response = client.post(f"/v1/web/trip-intakes/{intake_id}/confirm", headers=headers, json={"revision": revision})
+    assert response.status_code == status, response.text
+    return response.json()
+
+
+def test_the_confirm_screen_fixes_a_time_and_registers_one_trip(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text=CHAT_PLAN)
+    source = view["sources"][0]["source_id"]
+    # 시각 없는 「점심」은 12:00, 「저녁엔 광장시장」은 18:00 — 원문의 끼니 말로 규칙 배치라고 적힌다
+    assert view["check"]["ready"] is True, view["check"]["problems"]
+    filled = {f["field"]: f["value"] for f in view["check"]["filled"] if f["field"].endswith("starts_at")}
+    # (모델이 가리킨 항목은 규칙이 읽은 항목 뒤에 번호가 붙는다 — 경복궁 0 · 토속촌 1 · 광장시장 2)
+    assert filled == {"items[1].starts_at": "12:00", "items[2].starts_at": "18:00"}
+    # 고객이 광장시장을 저녁으로 고친다 → 새 판
+    fixed = _edit(client, headers, view, {"source_id": source, "field": "items[2].starts_at", "value": "18:30"})
+    assert fixed["revision"] == 2
+    assert [f["field"] for f in fixed["check"]["filled"] if f["field"].endswith("starts_at")] == ["items[1].starts_at"]
+    # ★낡은 판으로 고치거나 등록하면 409 — 다른 탭의 고침을 조용히 덮지 않는다
+    _edit(client, headers, view, {"source_id": source, "field": "items[2].title", "value": "광장시장"}, status=409)
+    stale = _confirm(client, headers, view["intake_id"], 1, status=409)
+    assert stale["error"]["code"] == "stale_revision"
+    done = _confirm(client, headers, view["intake_id"], 2)
+    trip = done["trip"]
+    assert done["status"] == "confirmed" and trip["created"] is True
+    got = [(i["title"], i["starts_at"][11:16], i["kind"]) for i in trip["items"]]
+    assert got == [("경복궁", "09:00", "activity"), ("토속촌", "12:00", "dining"), ("광장시장", "18:30", "activity")]
+    # 근거가 등록까지 따라간다 — 규칙으로 채운 시각 · 모델이 가리킨 원문 · 조회 출처
+    lunch = _stored(api, trip)[1].detail["provenance"]
+    assert lunch["starts_at"]["method"] == "rule" and lunch["title"]["method"] == "llm_span"
+    assert lunch["place"]["method"] == "lookup"
+    # ★관광공사에서 온 장소는 그 여행 전용 행이다(공용 표에 쌓지 않는다)
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FILTER (WHERE trip_scope IS NULL), count(*) FILTER (WHERE trip_scope::text=%s) "
+                    "FROM places WHERE tenant_id=%s", (trip["trip_id"], api["tenant"]))
+        assert cur.fetchone() == (0, 3)
+    # 같은 확인을 한 번 더 눌러도 여행은 하나다
+    again = _confirm(client, headers, view["intake_id"], 2)
+    assert again["trip"]["trip_id"] == trip["trip_id"] and again["trip"]["created"] is False
+    after = client.get(f"/v1/web/trip-intakes/{view['intake_id']}", headers=headers).json()
+    assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
+
+
+def test_a_plan_without_dates_asks_for_the_first_day_before_registering(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text="1일차\n09:00 경복궁\n2일차\n10:00 광장시장")
+    blocked = _confirm(client, headers, view["intake_id"], view["revision"], status=422)
+    assert blocked["error"]["code"] == "intake_incomplete"
+    assert {p["code"] for p in blocked["error"]["problems"]} == {"no_date"}
+    fixed = _edit(client, headers, view, {"field": "trip.first_day", "value": "2026-11-02"})
+    assert fixed["check"]["ready"] is True
+    trip = _confirm(client, headers, view["intake_id"], fixed["revision"])["trip"]
+    assert [i["starts_at"][:16] for i in trip["items"]] == ["2026-11-02T09:00", "2026-11-03T10:00"]
+
+
+def test_an_unfound_place_is_fixed_by_name_or_left_without_a_place(api):
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text="1일차 2026-10-15\n09:00 경복궁\n11:00 동네 산책\n13:00 모르는식당")
+    source = view["sources"][0]["source_id"]
+    problems = {(p["code"], p["field"]) for p in view["check"]["problems"]}
+    assert problems == {("no_place", "items[1].place"), ("no_place", "items[2].place")}
+    # 이름으로 고치면 다시 찾는다. 못 찾는 이름은 받지 않는다(지어내지 않는다)
+    refused = _edit(client, headers, view, {"source_id": source, "field": "items[2].place",
+                                            "value": {"name": "없는가게"}}, status=422)
+    assert refused["error"]["code"] == "place_not_found"
+    fixed = _edit(client, headers, view,
+                  {"source_id": source, "field": "items[2].place", "value": {"name": "광장시장"}},
+                  {"source_id": source, "field": "items[1].place", "value": {"none": True}})
+    assert fixed["check"]["ready"] is True
+    trip = _confirm(client, headers, view["intake_id"], fixed["revision"])["trip"]
+    walk = next(i for i in trip["items"] if i["title"] == "동네 산책")
+    assert walk["place"] is None
+
+
+def test_a_booking_number_is_carried_and_protects_the_item(api):
+    from app.modules.travel_ops.pending import protected_reason
+
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text="1일차 2026-10-15\n19:00 경복궁 · 예약번호 KY-20931")
+    trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
+    items = _stored(api, trip)
+    assert items[0].detail["booking"] == {"booking_no": "KY-20931", "declared_by": "customer_plan"}
+    assert protected_reason(items[0]) == "booked"          # ★바꾸기 전에 묻는다
+
+
+LUNCH_PLAN = "\n".join(["1일차 2026-10-15", "09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 광장시장"])
+
+
+def test_a_lunch_line_is_placed_at_lunch_even_after_a_later_timed_stop(api):
+    """☆2026-09-27 실제 화면: 「점심은 토속촌에서」가 18:00 에 놓였다 — 모델이 가리킨 항목은 번호가 규칙 항목 뒤에
+    붙어서, 번호 순서로 채우면 오후 일정 뒤로 밀린다. 원문 줄 순서 + 원문의 끼니 말로 채운다."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text=LUNCH_PLAN)
+    filled = [f for f in view["check"]["filled"] if f["field"].endswith("starts_at")]
+    assert [(f["field"], f["value"]) for f in filled] == [("items[2].starts_at", "12:00")]
+    assert "「점심」" in filled[0]["note"]

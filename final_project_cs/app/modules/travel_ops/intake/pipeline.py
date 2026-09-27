@@ -13,10 +13,12 @@ from __future__ import annotations
 from datetime import date, datetime
 import hashlib
 import json
+import re
 from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from .assemble import assemble, effective
 from .rules import read_plan
 from .sources import UnsupportedSource, sniff, to_text
 
@@ -28,7 +30,7 @@ MAX_FILE_BYTES = 10 * 1024 * 1024
 MAX_TEXT_CHARS = 20_000
 
 STAGES = {"received": "받았어요", "transcribing": "글자로 옮기는 중", "reading": "규칙으로 읽는 중",
-          "review": "확인해 주세요", "fatal": "읽지 못했어요"}
+          "review": "확인해 주세요", "confirmed": "등록했어요", "fatal": "읽지 못했어요"}
 
 
 class IntakeRejected(ValueError):
@@ -149,6 +151,13 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
                     (tenant_id, intake_id, revision))
         claims = [dict(zip(("source_id", "field", "value", "method", "evidence", "needs_review", "note"), r))
                   for r in cur.fetchall()]
+    # ★고객이 고친 값이 같은 칸의 앞 값을 덮는다 — 화면에는 칸마다 하나만(이전 값은 이전 판에 남아 있다)
+    claims = effective(claims)
+    check = None
+    if status in ("review", "confirmed"):
+        built = assemble(intake_id=str(intake_id), revision=revision, sources=sources, claims=claims)
+        check = {"ready": not built.problems, "problems": [p.as_dict() for p in built.problems],
+                 "filled": built.filled, "items": len(built.body["items"]), "title": built.body["title"]}
     out_sources = []
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -164,9 +173,172 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
     return {"intake_id": str(intake_id), "status": status, "stage": stage, "stage_label": STAGES.get(stage, stage),
             "revision": revision, "fatal": {"code": fatal_code, "detail": fatal_detail} if fatal_code else None,
             "trip_id": str(trip_id) if trip_id else None, "received_at": received_at.isoformat(),
-            "sources": out_sources,
+            "sources": out_sources, "check": check,
             "needs_review": [{"field": c["field"], "value": c["value"], "note": c["note"],
                               "evidence": c["evidence"]} for c in claims if c["needs_review"]]}
+
+
+# ── 고치기 · 등록 준비 (3주차) ───────────────────────────────────────
+#: 고객이 고칠 수 있는 칸. ★값은 서버가 모양을 확인한다 — 받은 글자를 그대로 믿지 않는다
+_ITEM_FIELDS = {"title", "date", "starts_at", "ends_at", "kind", "place", "booking_no", "removed"}
+_TRIP_FIELDS = {"title", "party_size", "first_day"}
+_HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+class IntakeConflict(ValueError):
+    """낡은 확인 화면 — 그 사이 판이 바뀌었거나 아직 등록할 수 없는 상태다."""
+
+    def __init__(self, code: str, message: str, **detail: Any) -> None:
+        super().__init__(message)
+        self.code, self.message, self.detail = code, message, detail
+
+
+def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
+         edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None) -> int:
+    """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
+
+    `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
+    싣는다. `{"none": true}` 는 「장소 없음」(자유시간 · 이름 없는 호텔). 돌려주는 값은 새 판 번호.
+    """
+    if not edits:
+        raise IntakeRejected("no_edits", "고칠 값이 없습니다")
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s "
+                    "FOR UPDATE", (tenant_id, intake_id, customer_id))
+        row = cur.fetchone()
+        if row is None:
+            raise LookupError("intake")
+        status, current = row
+        if status != "review":
+            raise IntakeConflict("intake_not_editable", f"지금은 고칠 수 없습니다(상태 {status})", status=status)
+        if revision != current:
+            raise IntakeConflict("stale_revision", "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요",
+                                 current_revision=current)
+        sources = {str(s["source_id"]) for s in _sources(conn, tenant_id, intake_id)}
+        our_places = None
+        rows = []
+        for entry in edits:
+            source_id, field_name = str(entry.get("source_id") or ""), str(entry.get("field") or "")
+            if field_name.startswith("items[") and source_id not in sources:
+                raise IntakeRejected("unknown_source", f"{field_name}: 이 접수의 원본이 아닙니다")
+            value, evidence, note = _checked(field_name, entry.get("value"))
+            if field_name.endswith(".place") and value is not None:
+                if our_places is None:
+                    our_places = _our_places(conn, tenant_id)
+                value, evidence, note = _typed_place(value, our_places, tour, kakao)
+            rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
+        new = current + 1
+        # 앞 판을 그대로 옮기고(만든 순서 유지) 고친 값을 뒤에 얹는다 — 칸마다 마지막 값이 이긴다
+        cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, method, "
+                    "evidence, needs_review, note, created_at) SELECT intake_id, tenant_id, %s, source_id, field, "
+                    "value_json, method, evidence, needs_review, note, created_at FROM intake_claims "
+                    "WHERE tenant_id=%s AND intake_id=%s AND revision=%s",
+                    (new, tenant_id, intake_id, current))
+        for source_id, field_name, value, evidence, note in rows:
+            cur.execute("INSERT INTO intake_claims (intake_id, tenant_id, revision, source_id, field, value_json, "
+                        "method, evidence, needs_review, note, created_at) "
+                        "VALUES (%s,%s,%s,%s,%s,%s,'customer',%s,false,%s, clock_timestamp())",
+                        (intake_id, tenant_id, new, source_id or None, field_name,
+                         json.dumps(value, ensure_ascii=False), json.dumps(evidence, ensure_ascii=False, default=str),
+                         note))
+        cur.execute("UPDATE trip_intakes SET revision=%s, updated_at=now() WHERE tenant_id=%s AND intake_id=%s",
+                    (new, tenant_id, intake_id))
+    return new
+
+
+def draft(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int):
+    """등록 직전 — (현재 상태, 이미 만든 여행 id, 조립 결과). ★판이 다르면 낡은 화면이라 막는다."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT status, revision, trip_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s "
+                    "AND customer_id=%s", (tenant_id, intake_id, customer_id))
+        row = cur.fetchone()
+        if row is None:
+            raise LookupError("intake")
+        status, current, trip_id = row
+        if status not in ("review", "confirmed"):
+            raise IntakeConflict("intake_not_ready", f"아직 등록할 수 없습니다(상태 {status})", status=status)
+        if revision != current:
+            raise IntakeConflict("stale_revision", "그 사이 다른 화면에서 고쳤습니다 — 새로 불러와 주세요",
+                                 current_revision=current)
+        cur.execute("SELECT source_id, field, value_json, method, evidence, needs_review, note FROM intake_claims "
+                    "WHERE tenant_id=%s AND intake_id=%s AND revision=%s ORDER BY created_at, claim_id",
+                    (tenant_id, intake_id, current))
+        claims = [dict(zip(("source_id", "field", "value", "method", "evidence", "needs_review", "note"), r))
+                  for r in cur.fetchall()]
+    built = assemble(intake_id=str(intake_id), revision=current, sources=_sources(conn, tenant_id, intake_id),
+                     claims=claims)
+    return status, trip_id, built
+
+
+def mark_confirmed(conn, *, tenant_id: str, intake_id: UUID, trip_id: Any) -> None:
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE trip_intakes SET status='confirmed', stage='confirmed', trip_id=%s, updated_at=now() "
+                    "WHERE tenant_id=%s AND intake_id=%s", (trip_id, tenant_id, intake_id))
+
+
+def _checked(field_name: str, value: Any) -> tuple[Any, dict[str, Any], str | None]:
+    """칸 이름과 값의 모양을 확인한다. 돌려주는 것 = (값, 근거, 메모)."""
+    evidence = {"source": "customer"}
+    if field_name.startswith("trip."):
+        name = field_name[5:]
+        if name not in _TRIP_FIELDS:
+            raise IntakeRejected("unknown_field", f"{field_name}: 고칠 수 없는 칸입니다")
+        if name == "party_size":
+            if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 4:
+                raise IntakeRejected("invalid_value", "인원은 1~4명입니다")
+        elif name == "first_day":
+            _iso_date(field_name, value)
+        elif not isinstance(value, str) or not value.strip() or len(value) > 80:
+            raise IntakeRejected("invalid_value", "여행 이름은 1~80자입니다")
+        return value, evidence, None
+    if not field_name.startswith("items[") or "]." not in field_name:
+        raise IntakeRejected("unknown_field", f"{field_name}: 고칠 수 없는 칸입니다")
+    try:
+        index = int(field_name[6:field_name.index("]")])
+    except ValueError:
+        raise IntakeRejected("unknown_field", f"{field_name}: 항목 번호가 숫자가 아닙니다") from None
+    name = field_name[field_name.index("]") + 2:]
+    if index < 0 or index > 500 or name not in _ITEM_FIELDS:
+        raise IntakeRejected("unknown_field", f"{field_name}: 고칠 수 없는 칸입니다")
+    if name in ("starts_at", "ends_at"):
+        if not isinstance(value, str) or not _HHMM.match(value):
+            raise IntakeRejected("invalid_value", f"{field_name}: 시각은 HH:MM 입니다")
+    elif name == "date":
+        _iso_date(field_name, value)
+    elif name == "kind":
+        if value not in ("activity", "dining"):
+            raise IntakeRejected("invalid_value", f"{field_name}: 종류는 activity · dining 입니다")
+    elif name == "removed":
+        if value is not True:
+            raise IntakeRejected("invalid_value", f"{field_name}: 빼려면 true 를 보냅니다")
+    elif name == "place":
+        if isinstance(value, dict) and value.get("none") is True:
+            return None, {"source": "customer", "none": True}, "고객이 「장소 없음」으로 두었다"
+        if not isinstance(value, dict) or not str(value.get("name") or "").strip():
+            raise IntakeRejected("invalid_value", f'{field_name}: 장소는 {{"name": …}} 또는 {{"none": true}} 입니다')
+    elif not isinstance(value, str) or not value.strip() or len(value) > 80:
+        raise IntakeRejected("invalid_value", f"{field_name}: 1~80자 글이어야 합니다")
+    return value, evidence, None
+
+
+def _iso_date(field_name: str, value: Any) -> None:
+    try:
+        date.fromisoformat(str(value))
+    except ValueError:
+        raise IntakeRejected("invalid_value", f"{field_name}: 날짜는 YYYY-MM-DD 입니다") from None
+
+
+def _typed_place(value: dict[str, Any], our_places, tour, kakao):
+    """고객이 적은 장소 이름 → 다시 찾아 **하나**. 못 찾으면 받지 않는다(지어내지 않는다)."""
+    from .places import resolve
+
+    name = str(value["name"]).strip()[:80]
+    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao)
+    if found.status != "resolved":
+        raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
+    resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
+                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+    return resolved, {**found.evidence(), "typed": name}, found.note
 
 
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
@@ -256,7 +428,8 @@ def _mark_for(line: int, marks: list[tuple[int, Any, Any]]) -> tuple[int | None,
 
 def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:
     with conn.cursor() as cur:
-        cur.execute("SELECT place_id, name, kind, latitude, longitude FROM places WHERE tenant_id=%s", (tenant_id,))
+        cur.execute("SELECT place_id, name, kind, latitude, longitude FROM places WHERE tenant_id=%s "
+                    "AND trip_scope IS NULL", (tenant_id,))                # ★공용만 — 다른 여행 전용 행은 안 쓴다
         return [dict(zip(("place_id", "name", "kind", "latitude", "longitude"), r)) for r in cur.fetchall()]
 
 
@@ -334,5 +507,5 @@ def _fatal(connect, tenant_id: str, intake_id: UUID, code: str, detail: str) -> 
                     "updated_at=now() WHERE tenant_id=%s AND intake_id=%s", (code, detail, tenant_id, intake_id))
 
 
-__all__ = ["IntakeRejected", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TEXT_CHARS", "STAGES", "open_intake", "process",
-           "view"]
+__all__ = ["IntakeConflict", "IntakeRejected", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TEXT_CHARS", "STAGES", "draft",
+           "edit", "mark_confirmed", "open_intake", "process", "view"]

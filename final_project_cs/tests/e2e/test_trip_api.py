@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -238,6 +238,51 @@ def test_a_second_trip_reuses_known_places_without_overwriting_them(api):
     assert attributes["district"] == "카탈로그값"                     # ★있던 값은 그대로
     submitted = next(p for p in SCENARIO["places"] if p["name"] == "경복궁")["attributes"]
     assert set(submitted) <= set(attributes)                          # 빈 칸은 채웠다
+
+
+def test_places_from_outside_services_stay_with_their_own_trip(api):
+    """★`[2026-09-27]` 관광공사·카카오에서 받은 장소는 공용 표에 쌓아 다른 고객에게 재사용하지 않는다
+    (콘텐츠랩 「로컬서버 저장 금지」 · 카카오 운영정책 제5조 — 마이그레이션 029). 그 여행 전용 행이 되고,
+    그 여행의 감시·대체 일정에서는 보이고, 공용 목록·다른 여행에서는 안 보인다."""
+    from app.modules.travel_ops.itinerary import TripStore
+    from app.modules.travel_ops.planner import load_candidates
+
+    outside = {"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.5700, "lon": 126.9996,
+               "weather_sensitive": False,
+               "attributes": {"source": "tour_api", "source_content_id": "264570", "district": "종로구"}}
+
+    def body(request_id):
+        base = _body(api["customer"], request_id=request_id)
+        base["places"].append(outside)
+        last = max(it["seq"] for it in base["items"])
+        base["items"].append({"seq": last + 1, "kind": "activity", "title": "광장시장", "place": "market",
+                              "starts_at": _iso("21:00"), "ends_at": _iso("21:40"), "detail": {}})
+        return base
+
+    trips = []
+    for request_id in ("outside-1", "outside-2"):
+        response = api["client"].post("/v1/trips", json=body(request_id), headers=api["auth"]("trip:write"))
+        assert response.status_code == 201, response.text
+        trips.append(response.json()["trip_id"])
+    store = TripStore(api["tenant"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT trip_scope::text FROM places WHERE tenant_id=%s AND name='광장시장' "
+                    "ORDER BY trip_scope", (api["tenant"],))
+        assert sorted(r[0] for r in cur.fetchall()) == sorted(trips)   # ★여행마다 따로 — 재사용하지 않는다
+        shared = [p["name"] for p in store.places(conn)]
+        mine = [p["name"] for p in store.places(conn, UUID(trips[0]))]
+        every = store.places(conn, every_trip=True)
+        _, items = store.latest(conn, UUID(trips[0]))
+        candidates = load_candidates(conn, tenant_id=api["tenant"], kinds=("activity",))
+    assert "광장시장" not in shared and mine.count("광장시장") == 1
+    assert len([p for p in every if p["name"] == "광장시장"]) == 2
+    market = next(item for item in items if item.title == "광장시장")
+    assert market.place is not None and market.place["latitude"] == 37.57        # ★감시가 좌표를 본다
+    assert all(c.name != "광장시장" for c in candidates)                         # ★생성기 후보에도 없다
+    # 공용 장소는 전처럼 하나를 같이 쓴다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope IS NULL", (api["tenant"],))
+        assert cur.fetchone()[0] == len(SCENARIO["places"])
 
 
 def test_create_rejects_unknown_references_and_needs_the_write_scope(api):

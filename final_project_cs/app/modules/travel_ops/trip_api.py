@@ -66,6 +66,11 @@ class PlaceIn(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
+#: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
+#:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
+EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places"})
+
+
 class ItemIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     seq: int
@@ -89,6 +94,25 @@ class CreateTrip(BaseModel):
     places: list[PlaceIn] = Field(default_factory=list)
     items: list[ItemIn] = Field(min_length=1)
     routes: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class IntakeEditOne(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_id: str | None = None      # 항목 칸이면 필수(어느 원본의 몇째 항목인가)
+    field: str = Field(min_length=1)  # 예: items[2].place · items[0].starts_at · trip.first_day
+    value: Any = None
+
+
+class IntakeEditIn(BaseModel):
+    """계획 읽기 확인 화면의 고치기. `revision` = 화면이 보고 있던 판(낡으면 409)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    edits: list[IntakeEditOne] = Field(min_length=1, max_length=50)
+
+
+class IntakeConfirmIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
 
 
 class PlanIn(BaseModel):
@@ -211,7 +235,10 @@ def _item_view(item: Item) -> dict[str, Any]:
             "changed": item.replaces_item_id is not None,
             "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
                               for a in item.detail.get("alternates") or []],
-            "customer_pinned": bool(item.detail.get("customer_pinned"))}
+            "customer_pinned": bool(item.detail.get("customer_pinned")),
+            # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
+            "lat": (item.place or {}).get("latitude"), "lon": (item.place or {}).get("longitude"),
+            "booked": bool(item.booking_id or item.detail.get("booking"))}
 
 
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
@@ -426,6 +453,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def _insert(conn, store: TripStore, request: CreateTrip, key: str, body_sha: str) -> UUID:
         tenant = store.tenant_id
         ids: dict[str, UUID] = {}
+        # ★`[2026-09-27]` 외부 서비스(관광공사 · 카카오 · 구글)에서 온 장소는 **그 여행 전용 행**으로 넣는다
+        #   (마이그레이션 029 · 설계서 §4-5·§4-6). 여행 id 를 미리 정해 장소 행에 적는다.
+        trip_id = uuid4()
         with conn.cursor() as cur:
             cur.execute("SELECT 1 FROM customers WHERE tenant_id=%s AND customer_id=%s",
                         (tenant, request.customer_id))
@@ -437,14 +467,25 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 #     500 이 났다(개발 서버에서 발견. 시험은 여행마다 테넌트를 새로 만들어
                 #     못 잡았다). 보낸 속성은 **빈 칸만 채운다** — 카탈로그 값을 고객 한 명의
                 #     제출이 덮어쓰지 않게(`EXCLUDED || places` 는 오른쪽이 이긴다).
-                cur.execute(
-                    "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
-                    "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
-                    "ON CONFLICT (tenant_id, name, kind) DO UPDATE "
-                    "SET attributes = EXCLUDED.attributes || places.attributes "
-                    "RETURNING place_id",
-                    (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
-                     json.dumps(place.attributes, ensure_ascii=False)))
+                if str(place.attributes.get("source") or "") in EXTERNAL_PLACE_SOURCES:
+                    # ☆같은 여행 안에서 같은 장소를 두 번 적을 수 있다 — 그 여행 행을 다시 쓴다
+                    cur.execute(
+                        "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
+                        "attributes,trip_scope) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
+                        "ON CONFLICT (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL "
+                        "DO UPDATE SET attributes = EXCLUDED.attributes || places.attributes "
+                        "RETURNING place_id",
+                        (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
+                         json.dumps(place.attributes, ensure_ascii=False), trip_id))
+                else:
+                    cur.execute(
+                        "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
+                        "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                        "ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL DO UPDATE "
+                        "SET attributes = EXCLUDED.attributes || places.attributes "
+                        "RETURNING place_id",
+                        (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
+                         json.dumps(place.attributes, ensure_ascii=False)))
                 ids[place.key] = cur.fetchone()[0]
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
@@ -456,7 +497,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         trip_id, version = store.create_trip(
             conn, customer_id=request.customer_id, title=request.title, locale=request.locale,
             party_size=request.party_size, items=items, constraints=request.constraints,
-            request_key=key, request_sha256=body_sha)
+            request_key=key, request_sha256=body_sha, trip_id=trip_id)
         # ★알림 ① 은 **생성도 포함**한다 — 링크가 처음 나가는 자리다(v11 §6-B).
         url = plan_url(tenant, trip_id)
         store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
@@ -658,7 +699,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
-                places = {str(p["place_id"]): p for p in store.places(conn)}
+                places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
                 return choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
                               proposal_id=proposal_id, key=key, by=by, places_by_id=places,
                               check=_check())
@@ -726,6 +767,58 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if found is None:
             raise _error(404, "not_found", "resource not found")
         return found
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/edits")
+    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """확인 화면에서 고친 값 → 새 판. ★낡은 판(다른 탭에서 먼저 고침)은 409 — 조용히 덮지 않는다."""
+        from .intake.pipeline import IntakeConflict, IntakeRejected, edit, view
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
+                     edits=[e.model_dump() for e in request.edits], tour=_lazy("place", place_factory),
+                     kakao=_lazy("kakao", kakao_factory))
+                return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        except IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/confirm")
+    def web_intake_confirm(intake_id: UUID, request: IntakeConfirmIn,
+                           who: tuple[str, UUID] = Depends(_web_customer)):
+        """「등록하고 관리 시작」. ★서버가 **다시 조립하고 다시 판정**한 뒤 `_create_trip` 한 곳으로 등록한다.
+
+        - `request_id` = `intake:{접수}:r{판}` — 탭 두 개에서 같은 확인을 눌러도 여행은 하나다.
+        - 필수값이 비었으면 422 `intake_incomplete` + 문제 목록. 판정기가 막으면 그 422 를 그대로 돌려준다.
+        """
+        from .intake.pipeline import IntakeConflict, draft, mark_confirmed
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                    revision=request.revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        if built.problems:
+            raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
+                         problems=[p.as_dict() for p in built.problems])
+        try:
+            create = CreateTrip.model_validate({**built.body, "customer_id": str(customer)})
+        except ValidationError as exc:
+            raise _error(422, "validation_error", "읽은 값으로 만든 등록 몸통이 계약과 다르다",
+                         problems=[{"field": ".".join(str(x) for x in e["loc"]), "reason": e["msg"]}
+                                   for e in exc.errors()]) from None
+        trip = _create_trip(tenant, create)
+        with get_connection() as conn:
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
+        return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip}
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request):
@@ -808,13 +901,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         store = TripStore(tenant)
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
+        from .itinerary_team import ANSWERS
+
         try:
-            return handle_trip_message(
+            result = handle_trip_message(
                 tenant=tenant, trip_id=trip_id, request_id=request.request_id, message=request.message,
                 at=_seoul(request.at) or datetime.now(KST), classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}")
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
+        # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
+        #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
+        if result.get("status") in ANSWERS:
+            result["answer"] = ANSWERS[result["status"]]
+        return result
 
     @router.get("/v1/web/trips/{trip_id}/notices")
     def web_notices(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):

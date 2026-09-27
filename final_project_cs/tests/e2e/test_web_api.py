@@ -105,6 +105,22 @@ def test_someone_elses_trip_does_not_exist_for_you(api):
     assert mine["trip_id"] == trip_id
 
 
+def test_a_no_change_result_carries_the_same_answer_as_the_conversation_path(api):
+    """★`[2026-09-27]` 웹 채팅이 상태값(`no_meal`)만 받아 원래 이름을 그대로 보였다(실제 화면). 대화 경로와 같은
+    문장표(`itinerary_team.ANSWERS`)의 답을 싣는다 — 웹이 문장을 지어내지 않게. 항목에는 지도 핀 좌표가 붙는다."""
+    from app.modules.travel_ops.itinerary_team import ANSWERS
+
+    me = _session(api)
+    trip = api["client"].post("/v1/web/trips", json=_web_body(api), headers=_h(me["user_key"])).json()
+    said = api["client"].post(f"/v1/web/trips/{trip['trip_id']}/messages", headers=_h(me["user_key"]),
+                              json={"request_id": "late-closed", "message": "식당이 휴무예요",
+                                    "at": "2030-01-01T12:00:00+09:00"}).json()
+    assert said["status"] == "no_meal" and said["answer"] == ANSWERS["no_meal"]
+    placed = [item for item in trip["items"] if item["place"]]
+    assert placed and all(isinstance(item["lat"], float) and isinstance(item["lon"], float) for item in placed)
+    assert all(item["booked"] is False for item in trip["items"])
+
+
 # ── 「먼저 물어봐줘」를 웹에서 고른다 ──────────────────────────────
 def test_the_web_sees_the_question_chooses_and_a_late_click_gets_409(api):
     me = _session(api)

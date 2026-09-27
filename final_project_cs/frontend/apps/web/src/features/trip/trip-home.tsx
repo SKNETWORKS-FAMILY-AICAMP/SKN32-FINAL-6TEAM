@@ -6,7 +6,7 @@ import { ArrowRight, CalendarDays, Check, Leaf, MapPin, MessageCircle, SquarePen
 import { TripMap } from "@/features/map";
 import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
-import { tripGateway } from "@/lib/gateway";
+import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -16,6 +16,9 @@ import styles from "./trip-home.module.css";
 
 type Pane = "schedule" | "map" | "chat";
 const icon = { size: 18, strokeWidth: 1.6, "aria-hidden": true } as const;
+const live = DATA_MODE === "live";
+/** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
+const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
 
 function bookingLabel(stop: TripStop, t: Translate) {
   if (stop.booking === "booked") return t("예약 있음", "Booking noted");
@@ -135,7 +138,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <div><Eyebrow>{t("여행을 함께 살펴볼까요", "YOUR JOURNEY, TOGETHER")}</Eyebrow><h1 id="trip-home-title">{t("나의 여행", "Your trip")}</h1></div>
       <p className={styles.tripmeta}><CalendarDays {...icon} /><span>{days.length > 1 ? `${days[0]} – ${days.at(-1)}` : days[0]}<br />{t(`${days.length}일 · ${trip.stops.length}개 일정`, `${days.length} days · ${trip.stops.length} stops`)}</span></p>
     </section>
-    <div className={styles.watchbar}><strong><Check {...icon} />{t("여행 관리 화면", "Your travel workspace")}</strong><span>{t("입력한 일정으로 둘러보는 데모", "A demo using your itinerary")}</span></div>
+    <div className={styles.watchbar}><strong><Check {...icon} />{t("여행 관리 화면", "Your travel workspace")}</strong><span>{live ? t("등록한 일정을 여행이 끝날 때까지 지켜봐요", "We watch your registered itinerary until the trip ends") : t("입력한 일정으로 둘러보는 데모", "A demo using your itinerary")}</span></div>
     <div className={styles.daybar}>
       <div className={styles.dayTabs} role="group" aria-label={t("여행 일차", "Travel days")}>{days.map((date, index) => (
         <button key={date} type="button" aria-pressed={date === activeDay} onClick={() => { setDay(date); setSelectedId(null); setExpandedId(null); }}>{t(`${index + 1}일차`, `Day ${index + 1}`)}<span>{date.slice(5).replace("-", ".")}</span></button>
@@ -197,7 +200,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       </> : <p className={styles.muted}>{t("일정을 선택하면 상세가 표시돼요.", "Select a stop to see its details.")}</p>}</div>
     </section>
     <section className={`${styles.pane} ${styles.chatPane}`} id="trip-pane-chat" hidden={pane !== "chat"} aria-labelledby="trip-chat-heading">
-      <header className={styles.panehead}><h2 id="trip-chat-heading">{t("여행 채팅", "Travel chat")}</h2><Badge>{t("데모", "Demo")}</Badge></header>
+      <header className={styles.panehead}><h2 id="trip-chat-heading">{t("여행 채팅", "Travel chat")}</h2>{!live && <Badge>{t("데모", "Demo")}</Badge>}</header>
       <div ref={chatLog} className={styles.chatlog} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
         <div className={styles.chatcontext}><strong>{dayText} · {activeDay}</strong><span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
         {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>triPilot</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
@@ -222,9 +225,11 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           {inputError && <p id="trip-chat-error" className={styles.error} role="alert">{inputError}</p>}
         </form>
         {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
-        <p className={styles.chatnote}>{t("등록된 일정에 대한 시연 응답입니다. 실제 일정·예약 변경은 실행되지 않습니다.", "Demo replies use your itinerary. No actual itinerary or booking changes are performed.")}</p>
+        <p className={styles.chatnote}>{live
+          ? t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")
+          : t("등록된 일정에 대한 시연 응답입니다. 실제 일정·예약 변경은 실행되지 않습니다.", "Demo replies use your itinerary. No actual itinerary or booking changes are performed.")}</p>
       </div>
     </section>
-    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}</span><ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink></footer>
+    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}{live && <> · {t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></>}</span><ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink></footer>
   </div>;
 }

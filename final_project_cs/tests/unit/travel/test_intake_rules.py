@@ -52,3 +52,18 @@ def test_arrows_keep_order_without_inventing_times():
 def test_lines_that_rules_cannot_read_are_left_not_refused():
     r = read_plan("09:00 경복궁\n점심은 아무 데나 괜찮아요\n넷이서 가요")
     assert r.unread_lines == [2] and r.party_size == 4
+
+
+
+@pytest.mark.parametrize("text, party", [
+    ("19:00 명동난타극장 예약번호 KY-20931", None),     # ☆실제 화면 — 「00 명」을 0명으로 읽었다
+    ("10:00 인사동 산책", None),
+    ("점심 2인분 포장", None),
+    ("서울 가족여행 (4명)", 4),
+    ("4명이서 가요", 4),
+    ("4인 가족", 4),
+    ("3인가족 여행", 3),
+])
+def test_party_size_is_not_read_from_times_or_place_names(text, party):
+    read = read_plan(text)
+    assert read.party_size == party

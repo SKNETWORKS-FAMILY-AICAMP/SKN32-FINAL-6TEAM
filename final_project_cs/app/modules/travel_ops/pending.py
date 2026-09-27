@@ -52,6 +52,10 @@ def protected_reason(item: Item) -> str | None:
         return "customer_pinned"
     if item.locked:
         return "locked"
+    if item.detail.get("booking"):
+        # ★`[2026-09-27]` 고객 계획에서 읽은 예약번호(`intake/assemble.py`). 업체 확인 전이라 예약 표(`bookings`)에는
+        #   없지만, 돈이 걸렸을 수 있는 일정을 묻지 않고 바꾸지 않는다.
+        return "booked"
     return None
 
 

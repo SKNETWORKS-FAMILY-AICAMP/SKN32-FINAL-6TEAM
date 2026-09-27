@@ -8,6 +8,9 @@
 .inputMeta { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--color-muted); margin-top: 11px; }
 .error, .warning { margin-top: 12px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
 .warning { color: var(--color-warning); border-color: var(--color-warning-border); background: var(--color-warning-soft); }
+.files { margin-top: 14px; display: grid; gap: 8px; font-size: 12px; color: var(--color-muted); }
+.files label { font-weight: 600; color: var(--color-text); }
+.files p { font-size: 11px; }
 .tips h2 { font-size: 18px; line-height: 1.5; letter-spacing: -.65px; margin-bottom: 9px; }
 .tips hr { border: 0; border-top: 1px solid var(--color-border); margin: 21px 0; }
 .preferences p:not(:first-child) { font-size: 11px; color: var(--color-muted); margin: 12px 0 0; }

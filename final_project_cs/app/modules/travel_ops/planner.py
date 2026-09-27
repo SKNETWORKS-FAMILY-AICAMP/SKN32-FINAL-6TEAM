@@ -257,7 +257,7 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
     found: dict[tuple[str, str], Cand] = {}
     with conn.cursor() as cur:
         cur.execute("SELECT place_id, name, kind, latitude, longitude, weather_sensitive, "
-                    "attributes FROM places WHERE tenant_id=%s AND kind = ANY(%s) ORDER BY name",
+                    "attributes FROM places WHERE tenant_id=%s AND trip_scope IS NULL AND kind = ANY(%s) ORDER BY name",
                     (tenant_id, list(kinds)))
         for place_id, name, kind, lat, lon, sensitive, attributes in cur.fetchall():
             if lat is None or lon is None:

@@ -214,3 +214,11 @@ def test_kakao_that_could_not_be_called_is_named():
 
     found = resolve("을지로 노가리골목", our_places=[], tour=Tour({}), kakao=Down({}))
     assert found.blocked == ["kakao:budget_exhausted"]
+
+
+def test_dropping_only_a_what_you_do_word_needs_no_review():
+    """☆2026-09-27 실제 확인 화면 — 「경복궁 관람」까지 「확인 필요」가 붙어 정작 확인할 곳이 묻혔다.
+    뗀 말이 하는 일(관람·산책)뿐이면 확인이 필요 없다. 음식·활동 이름을 떼면 여전히 묻는다."""
+    assert resolve("경복궁 관람", our_places=OURS).needs_review is False
+    assert resolve("북촌한옥마을 산책", our_places=OURS).needs_review is False
+    assert resolve("광장시장 빈대떡", our_places=[], tour=Tour({"광장시장": "38"})).needs_review is True

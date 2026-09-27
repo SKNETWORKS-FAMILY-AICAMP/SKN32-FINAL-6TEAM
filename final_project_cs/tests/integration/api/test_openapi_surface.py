@@ -73,6 +73,9 @@ CONTRACT_V1_PATHS = {
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
     "/v1/web/trip-intakes",
     "/v1/web/trip-intakes/{intake_id}",
+    # 확인 화면 — 고친 값은 새 판(낡은 판은 409), 등록은 `_create_trip` 한 곳(request_id = 접수 + 판)
+    "/v1/web/trip-intakes/{intake_id}/edits",
+    "/v1/web/trip-intakes/{intake_id}/confirm",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.

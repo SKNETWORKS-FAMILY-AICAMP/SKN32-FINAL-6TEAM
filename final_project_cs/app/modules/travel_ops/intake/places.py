@@ -34,6 +34,10 @@ KIND_BY_CONTENT_TYPE = {"39": "dining"}
 #:   없는 것과 못 물어본 것이 같은 말이 되면 고객은 틀린 이유로 고치고, 우리는 한도 부족을 모른다.
 NOT_THERE = {"not_found", "no_exact_title", "ambiguous", "no_coordinates", "no_place_name"}
 _HANGUL = re.compile(r"[가-힣]")
+#: 떼어도 확인이 필요 없는 말 — **무엇을 하는지**만 말하고 다른 곳을 가리키지 않는다(「경복궁 관람」 = 경복궁).
+#: ☆2026-09-27 실제 확인 화면: 이런 항목까지 전부 「확인 필요」가 붙어 정작 확인할 곳이 묻혔다.
+#: ★「빈대떡」(음식 — 가게일 수 있다) · 「카약」(활동 자체 — 다른 업체일 수 있다)은 여기 넣지 않는다.
+PLAIN_TAILS = frozenset({"관람", "산책", "구경", "투어", "방문", "둘러보기", "나들이", "견학", "탐방", "관광"})
 
 
 @dataclass
@@ -108,7 +112,7 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             place = by_name[key]
             return Resolved("resolved", "places", place["name"], query, place.get("kind"), place.get("latitude"),
                             place.get("longitude"), place_id=str(place["place_id"]),
-                            needs_review=query != title, tried=tried + [f"places:{query}"],
+                            needs_review=not _plain(query, title), tried=tried + [f"places:{query}"],
                             note=None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다")
         tried.append(f"places:{query}")
         # 3 — 자모 오타(우리 장소 이름과)
@@ -213,8 +217,14 @@ def _from_tour(found: dict[str, Any], query: str, title: str, tried: list[str], 
                     KIND_BY_CONTENT_TYPE.get(str(found.get("content_type_id")), "activity"),
                     found.get("latitude"), found.get("longitude"), content_id=found.get("content_id"),
                     # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다
-                    needs_review=query != title or (via is not None and normalize(via) != normalize(query)),
+                    needs_review=not _plain(query, title) or (via is not None and normalize(via) != normalize(query)),
                     tried=tried, note=" · ".join(note) or None)
+
+
+def _plain(query: str, title: str) -> bool:
+    """좁히지 않았거나, 뗀 말이 전부 `PLAIN_TAILS` 인가 — 그러면 확인이 필요 없다."""
+    dropped = title.split()[len(query.split()):] if title.startswith(query) else None
+    return query == title or bool(dropped) and all(word in PLAIN_TAILS for word in dropped)
 
 
 def _kakao_match(query: str, hits: list[dict[str, Any]]) -> dict[str, Any] | None:

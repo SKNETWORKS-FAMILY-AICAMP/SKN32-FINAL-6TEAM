@@ -52,7 +52,7 @@ class TripDesk:
     def _read(self, trip_id: UUID):
         with self._connect() as conn:
             trip, items = self.store.latest(conn, trip_id)
-            places = self.store.places(conn)
+            places = self.store.places(conn, trip_id)
         return trip, items, places
 
     # ── 요식-P3 — 늦는다 ────────────────────────────────────────
