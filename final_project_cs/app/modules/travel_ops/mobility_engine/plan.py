@@ -51,15 +51,24 @@ from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
-PLAN_VERSION = "plan-v2.1"   # 54 — 지하철·버스 fare_krw(규칙 fare 절) · 모양 무변경
+PLAN_VERSION = "plan-v2.2"   # 58 — modes 에 bike 를 주면 자전거 후보를 싣는다 · 기본(bike 없음)은 v2.1 과 같다 · 모양 무변경
 # 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
-#   자전거 후보는 plan() 에서 **실린 적이 없다**: 시간표 없는 수단이라 판정기가 마지막 성립 출발(lfd)을 None 으로 내고
-#   (verify_time._last_feasible_depart), leg() 는 lfd 가 없는 후보를 거른다. 그런데 후보를 만들면서 따릉이 실시간 +
-#   GraphHopper 를 부른다(24 실측 19.8 s 중 18.6 s). 그래서 기본에서 빼고, 뺄 때는 **후보 생성 전에** 끊는다(아래 Planner).
+#   뺄 때는 **후보 생성 전에** 끊는다(아래 Planner — 따릉이 실시간·GraphHopper 호출 0).
 DEFAULT_MODES = ("subway", "bus", "walk")
 KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike"}
-# ★ 자전거는 modes 에 줘도 **계획 옵션으로 실리지 않는다**(위 이유 · 56 GPT #8) — 후보 판정·외부 호출만 난다.
-#   ◆테마 「자전거」를 살리려면 자전거 후보의 출발 시각 규칙(마지막 성립 출발 대신)을 정해야 한다 — 다음 방 몫.
+# 58 (2026-09-27 · ◆테마 ① 자전거 살림 · 본인) — 자전거 후보의 출발 시각 규칙(_bike_direct).
+#   판정기는 시간표 없는 수단의 마지막 성립 출발(lfd)을 None 으로 낸다(verify_time._last_feasible_depart — 무수정).
+#   따릉이는 24시간(rules bike.ddareungi.no_timetable · 확정)이라 「마지막 편」이 없고 소요가 출발 시각에 안 달린다 →
+#     lfd = 도착 목표 − (eta + @)      @ = 판정기가 낸 margin_min(자전거는 스프레드 없음 → 단계 정책 버퍼)
+#   그 lfd 에서 판정기로 **다시 봐서** 성립한 것만 싣는다(다른 후보와 같은 확인 · 식 start+eta+@+slack = 목표).
+#   · 장소 좌표 기준(버스 직행 23 결정 4 와 같은 이유 — 역 경유면 장소→역→대여소 이중 도보). 판정기 multi 의 역 기준
+#     자전거 후보는 싣지 않는다.
+#   · 계획 단계(stage=planning)는 따릉이 실시간 거치를 **안 본다** — 지금 거치 대수는 계획한 출발 시각의 값이 아니다.
+#     판정기가 「거치 미상 · 가용 근거없음」 경고로 내고, label 에 「대여 가능 여부는 출발 때 확인」을 붙인다.
+#   · **자전거는 추천하지 않는다**(본인 9/27) — 여행자가 「자전거로 이동한다」고 했을 때만 호출 쪽이 modes=["bike","walk"]
+#     (도보는 짧은 구간용)로 부른다. 지하철·버스와 섞어 주면 계획 수단 규칙(가장 늦게 떠나도 되는 후보)이 그대로라
+#     더 일찍 떠나야 하는 자전거는 봉투 left_out 에 이유만 남는다. 자전거가 안 되는 구간은 skipped + 이유
+#     (대중교통으로 몰래 바꾸지 않는다 — 입력 이동 항목은 그대로 남는다).
 
 # ── 시각 ────────────────────────────────────────────────────────────────
 def _parse_dt(v):
@@ -166,6 +175,8 @@ class Planner:
         #   (따릉이 실시간·라우터 호출 0). 종전에는 modes 거르기가 후보 생성 뒤(leg() 의 후보 루프)라 빼도 호출이 났다.
         if "bike" not in self.modes:
             self.v.bk = None
+        elif stage == "planning":
+            self.v.bike_live = None       # 58 — 계획 단계는 지금 거치 대수를 안 본다(가용 근거없음 · 실시간 호출 0)
         self.stage = stage
         self.speed = self.v.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
         self.detour = self.v.R["transfer"]["stop_station_walk"]["detour_factor"]["value"]
@@ -238,6 +249,65 @@ class Planner:
                            "walk_place_out": wo, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": by_stop}}))
         found.sort(key=lambda t: (t[0], t[1]))
         return [o for _w, _i, o in found]          # 상한은 leg() 가 자격 검사 뒤에 자른다(GPT 23 #2)
+
+    def _bike_direct(self, a_place, b_place, sdate, arrive_by, party, first_visit, case_id):
+        """장소 → 장소 따릉이 후보(58). ([후보], None) 또는 ([], 이유 dict). modes 에 bike 가 없으면 ([], None).
+        ① 출발 시각 없이 한 번 판정해 소요(eta)·@(margin)를 얻는다 → lfd = 도착 목표 − (eta + @)
+        ② lfd 에서 도착 목표를 걸고 다시 판정. **소요·@ 가 ① 과 같을 때만** 싣는다(그때 slack = 0 — 마지막 성립 출발).
+           다르면(실시간 대여소 선택이 바뀐 출발 전·진행 중 단계 등) 새 값으로 lfd 를 한 번 더 셈 — 최대 2회 ·
+           수렴 안 하면 뺀다(GPT 58 #2·#3 — 「24시간」은 운행 근거일 뿐, 소요의 출발 시각 독립은 **같은 소요가 두 번
+           나왔다**는 확인으로만 쓴다).
+        대여소 도보·대여·반납은 판정기 자전거 구간 안에 있다(verify_leg_bike) — 장소 도보를 따로 안 더한다.
+        ★ 한계(확인 안 한 것): lfd < 04:00 은 운행일 축 경계라 안 본다(GPT 58 #4 — 운행 불가가 아니라 표현 축 제한) ·
+          인원수만큼의 대수는 판정기가 안 본다(거치 ≥1 · GPT 58 #6) — label 에 필요 대수만 적는다."""
+        if "bike" not in self.modes:
+            return [], None
+        v = self.v
+        legs = [{"mode": "bike",
+                 "from": {"lat": a_place["lat"], "lng": a_place["lon"], "name": a_place["name"]},
+                 "to": {"lat": b_place["lat"], "lng": b_place["lon"], "name": b_place["name"]}}]
+        base = {"id": f"{case_id}/bike", "date": sdate.isoformat(), "stage": self.stage, "legs": legs,
+                "party": party, "first_visit": first_visit, "no_alternatives": True}
+        r1 = v.verify_case(dict(base, depart_at=arrive_by))
+        o1 = r1.out or {}
+        if o1.get("verdict") != "feasible" or o1.get("eta_min") is None or o1.get("margin_min") is None:
+            return [], {"code": o1.get("code") or "no_data", "reason": "자전거 — " + (o1.get("reason") or r1.reason or "소요를 못 냈다")}
+        prev = (o1["eta_min"], o1["margin_min"])
+        for _ in range(2):
+            lfd = arrive_by - sum(prev)
+            if lfd < SERVICE_DAY_START_MIN:
+                # 04:00 전 출발은 앞 운행일 축이다 — 정수 분으로 넘기면 판정기가 +24h 로 읽는다(leg() 주석). 안 본다.
+                return [], {"code": "no_data", "reason": "자전거 — 출발이 04:00 전(운행일 경계)이라 보지 않는다(표현 축 제한)"}
+            r2 = v.verify_case(dict(base, depart_at=lfd, arrive_by=arrive_by))
+            o2 = r2.out or {}
+            if o2.get("eta_min") is None or o2.get("margin_min") is None:
+                return [], {"code": o2.get("code") or "no_data",
+                            "reason": "자전거 — 역산 출발에서 다시 보니 소요를 못 냈다: " + (o2.get("reason") or r2.reason or "")}
+            got = (o2["eta_min"], o2["margin_min"])
+            if got != prev:
+                prev = got                      # 소요·@ 가 바뀌었다 — 새 값으로 한 번 더(성립 여부는 그 뒤에 본다)
+                continue
+            break
+        else:
+            return [], {"code": "no_data", "reason": "자전거 — 판정마다 소요가 달라 출발 시각을 정하지 못했다"}
+        if o2.get("verdict") != "feasible" or (o2.get("slack_min") or 0) != 0:
+            return [], {"code": o2.get("code") or "no_data",
+                        "reason": "자전거 — 역산 출발에서 다시 보니 성립이 아니다: " + (o2.get("reason") or r2.reason or "")}
+        eta, margin = int(prev[0]), prev[1]
+        if lfd + eta + margin != arrive_by:
+            return [], {"code": "no_data", "reason": "자전거 — 역산 식이 맞지 않는다(내지 않는다)"}
+        walk_min = sum((lr.walk_min or 0) for lr in r2.legs)
+        n = int(party.get("size") or 1)
+        return [{"eta_min": eta, "uses": [], "_legs": legs,
+                 "_route": f"자전거(따릉이) {a_place['name']}→{b_place['name']}"
+                           + (f" · {n}명 — {n}대 필요" if n > 1 else "")
+                           + (" · 대여 가능 여부는 출발 때 확인" if self.stage == "planning" else ""),
+                 "_start": lfd, "_transfers": 0, "_n": 200, "_margin": margin, "_slack": 0,
+                 "_walk_min": walk_min, "_walk_m": None,           # 대여소 도보 m 은 판정기 밖으로 안 나온다 — 키를 뺀다
+                 "_fare": O.fare_of(v, legs, r2.legs), "_severe": [], "_covered": False,
+                 "_lr": r2.legs, "_day_type": r2.day_type,
+                 "_check": {"date": sdate.isoformat(), "legs": legs, "off": 0, "walk_place_in": 0,
+                            "walk_place_out": 0, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": arrive_by}}], None
 
     def _fold_left(self, left):
         """뺀 후보 목록 정리 — 버스 직행은 도보 짧은 순으로 상한(버스_직행_최대)개만 한 줄씩 적고 나머지는 코드별 개수 한 줄로
@@ -329,6 +399,8 @@ class Planner:
             r = self.v.verify_case(probe)
             n_mode = 0
             for c in r.candidates or []:
+                if any(leg_mode(x) == "bike" for x in c["legs"]):
+                    continue          # 판정기 multi 의 자전거 후보는 역 기준 — 장소 기준 ④ 로 따로 본다(58)
                 if self.modes is not None and any(leg_mode(x) not in self.modes for x in c["legs"]):
                     continue
                 n_mode += 1
@@ -370,6 +442,9 @@ class Planner:
         #   도보 상한은 직선 · 버스_직행_최대 · 성립 후보를 도보 짧은 순)으로 장소에서 바로 찾는다. 판정은 판정기가 한다.
         bus_opts = self._bus_direct(a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim)
         opts.extend(bus_opts)
+        # ④ 자전거 — modes 에 bike 를 줄 때만 · 장소 좌표 기준 · lfd = 목표 − (eta+@)(58 · _bike_direct)
+        bike_opts, bike_why = self._bike_direct(a_place, b_place, sdate, arrive_by, party, first_visit, case_id)
+        opts.extend(bike_opts)
         if oa is not None and ob is not None and oa[0] != ob[0]:
             if not any(o["_legs"] for o in opts):
                 if r.candidates and n_mode == 0 and not bus_opts:
@@ -377,6 +452,8 @@ class Planner:
                 else:
                     why = {"code": (r.out or {}).get("code") or "no_data",
                            "reason": (r.out or {}).get("reason") or r.reason}
+        if bike_why is not None and not any(o["_legs"] for o in opts) and not (self.modes & {"subway", "bus"}):
+            why = bike_why            # 자전거(·도보)만 고른 구간 — 자전거가 왜 안 됐는지를 이유로
 
         # uses 자가 검사(41 넘김 · 팀 route_uses.problem) — 불통과 후보는 코어 등록이 통째로 거절하므로 싣지 않는다
         keep = []
@@ -392,6 +469,8 @@ class Planner:
             if left:
                 return None, {"code": "no_data", "reason": left[0]["reason"]}
             return None, why or {"code": "no_data", "reason": "성립하는 후보가 없다"}
+        if bike_why is not None:      # 58 — 자전거를 요청했는데 못 실은 이유를 봉투 left_out 에(코어로는 안 나감)
+            left.append({"_o": {"_legs": []}, "label": "자전거(따릉이)", "code": bike_why["code"], "reason": bike_why["reason"]})
         # 계획 수단 — **가장 늦게 떠나도 되는 후보**(동률은 환승 적은 · 소요 짧은 · 생성 순). 순위가 아니라
         #   「일정대로 움직이게」 하나를 고르는 규칙이다. 나머지는 options 에 순위 없이 남는다.
         #   앞 일정 끝(nb)보다 이른 _start 후보도 **버리지 않고** 공통 출발 재판정까지 둔다(GPT 23 2차 #1) —
@@ -524,12 +603,15 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             남겨 둔 입력 이동 항목의 route 키가 사라진다.
     skipped: 이동 항목을 못 만든 구간 [{from, to, code, reason}] — 그 구간은 **값을 빼고** 낸다(모르면 뺀다).
     modes  : 후보 수단 거르기 — None(기본)이면 DEFAULT_MODES(지하철·버스·도보 · 자전거는 "bike" 를 줄 때만 · 56).
+             bike 를 주면 장소→장소 따릉이 후보를 싣는다(58 · 출발 = 목표 − (eta+@) · 계획 단계는 실시간 거치 안 봄).
+             자전거 테마는 modes=["bike", "walk"] — 여행자가 자전거로 이동한다고 했을 때만(추천하지 않는다 · 58).
              예시 파일은 {"subway", "walk"} 로 뽑았다(노트북 버스 데이터가 옛 판).
     trace  : 리스트를 주면 구간마다 내부 값(시작 분·@·slack·환승)을 적는다 — 코어로는 안 나간다.
     routes : (선택) 호출 쪽이 이미 가진 routes — 그 키와 입력 항목이 참조하는 route 키는 **새 키로 쓰지 않는다**(GPT #2).
     left_out: (봉투) 만든 구간에서 **싣지 않은 후보**와 이유 {route 키: [{label, code, reason}]} — 코어로 안 나간다.
             code `earlier_departure` = 성립하지만 이동 항목 starts_at 보다 먼저 떠나야 한다(후보별 출발 칸 없음 · 23 결정 1)
             · `uses_format` = 팀 route_uses 표기 검사 불통과(코어 등록이 거절한다).
+            · (58) label 「자전거(따릉이)」 = bike 를 요청했지만 못 실은 이유(판정기 code 그대로 · 다른 후보는 실렸을 때).
     display: 표시 전용 필드(◆칸 — transfer_car)를 싣는다. 기본 off(답 전엔 만들어만 둔다 · 스펙 v1.4 밖 새 키).
     """
     if runtime is None:
@@ -620,11 +702,13 @@ def main(argv=None):
     ap.add_argument("--out", help="출력 JSON 경로(없으면 표준출력)")
     ap.add_argument("--stage", default="planning", choices=("planning", "pre_departure", "in_progress"))
     ap.add_argument("--no-basis", action="store_true", help="basis 를 빼고 낸다(예시 파일을 판 바뀔 때마다 안 흔들리게)")
-    ap.add_argument("--modes", nargs="*", help="후보 수단 거르기(subway bus walk bike) — 없으면 subway bus walk(자전거 뺌 · 56)")
+    ap.add_argument("--modes", nargs="*", help="후보 수단 거르기(subway bus walk bike · 콤마도 됨) — 없으면 subway bus walk(자전거 뺌 · 56)")
     ap.add_argument("--display", action="store_true",
                     help="표시 전용 필드(transfer_car · ◆칸)를 싣는다 — 기본 off, 코어 계약(v1.4) 밖")
     ap.add_argument("--trace", help="구간마다 내부 값(시작 분·@·slack)을 이 JSON 에 적는다 — 대조용")
     a = ap.parse_args(argv)
+    if a.modes is not None:           # 58 — `--modes subway,bus,walk,bike` 도 받는다(띄어쓰기와 같다)
+        a.modes = [m for x in a.modes for m in x.split(",") if m]
     doc = json.loads(Path(a.inp).read_text(encoding="utf-8"))
     from .runtime import build_verifier
     rt = build_verifier(quiet=True)

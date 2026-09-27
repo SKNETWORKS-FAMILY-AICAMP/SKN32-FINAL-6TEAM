@@ -9,8 +9,10 @@
 #   U  단위(데이터 없이) — Planner·Runtime 이 싱글턴이 아니라 얕은 복사본으로 판정 · 기본 수단에 자전거 없음 ·
 #      자전거를 안 볼 때 복사본에서만 따릉이 표를 뗀다(싱글턴은 그대로)
 #   B  자전거 — 기본 plan() 은 자전거 구간 판정을 한 번도 부르지 않는다(따릉이 실시간·라우터 호출 0) ·
-#      기본 결과 = 지하철·버스·도보 골든(plan_example_out_all_v1) · 자전거를 켜도 결과가 같다(plan() 은 자전거를 싣지 못한다 —
-#      시간표 없는 수단이라 마지막 성립 출발이 None 이고 leg() 가 그런 후보를 거른다 · 56 발견)
+#      기본 결과 = 지하철·버스·도보 골든(plan_example_out_all_v1) · (58 뒤집음) 지하철·버스와 섞어 bike 를 주면 자전거 후보를
+#      판정은 하되 **추천하지 않는다** — items·routes 는 기본과 같고 구간마다 봉투 left_out 에 자전거 이유가 한 줄(본인 9/27)
+#      · 자전거만 요청하면 옵션이 전부 자전거(출발 = 목표 − (eta+@) · plan._bike_direct)
+#      — 56 때는 「켜도 같음」·「자전거만 = 옵션 0」 으로 잠갔다(시간표 없는 수단은 lfd None 이라 거름)
 #   I  끼어들기 흉내(결정적) — 판정 도중 **다른 요청이 같은 싱글턴에** verify_case 를 부른 모양을 만든다.
 #      ⓐ 싱글턴에 직접 부르면 섞인다(실패 장면 — 시험이 섞임을 잡을 수 있다는 증거)
 #      ⓑ 복사본을 끄면(56 전 모양) plan() 결과가 달라진다 ⓒ 56 판 plan() 은 같다
@@ -40,6 +42,7 @@ from app.modules.travel_ops.mobility_engine.runtime import Runtime  # noqa: E402
 
 IN = HERE / "plan_example_in_v1.json"
 GOLD_ALL = HERE / "plan_example_out_all_v1.json"
+GH_FIX = HERE / "plan_bike_gh_fixture_v1.json"     # 58 — GH 요약 픽스처(집 PC 기록 · 형상 없음) — GH 없는 기기도 같은 값
 MODES_ALL = ["subway", "walk", "bus"]
 THREADS, TOTAL = 8, 80                      # 24 ① 과 같은 규모(8스레드 × 5회 × 복사본 40 + 공유 40 = 80)
 # 다른 요청 — 2호선 운행중단 사건이 붙은 재판정. 도착 목표를 새벽으로 둬 역산 후보가 몇 개 안 되게(시험 시간)
@@ -231,11 +234,13 @@ def test_bike_not_called_by_default():
         d = _doc()
         got = json.loads(_plan(d, rt))
         assert calls["n"] == 0, f"기본 plan() 이 자전거 구간을 {calls['n']}번 판정했다(따릉이 실시간·라우터 호출)"
-        # 자전거를 켜면 판정은 부르지만(후보 생성) 결과는 같다 — HTTP 는 복사본에서 끄고 본다(시험 시간)
+        # 자전거를 켜면 판정을 부르고 자전거 옵션이 실린다(58) — 라우터는 요약 픽스처 · 실시간 없음(복사본에서)
+        from app.modules.travel_ops.mobility_engine.bike import BikeRouter
+        fx = json.loads(GH_FIX.read_text(encoding="utf-8"))
         rt2 = copy.copy(rt)
         rt2._v = copy.copy(rt._v)
         rt2._v.bike_live = None
-        rt2._v.bike_router = None
+        rt2._v.bike_router = BikeRouter(None, fx["routes"], fx.get("pbf_date"))
         with_bike = json.loads(_plan(d, rt2, modes=MODES_ALL + ["bike"]))
         if rt._v.bk is not None:
             assert calls["n"] > 0, "bike 를 주면 자전거 후보를 만든다(따릉이 표가 있는 기기)"
@@ -243,11 +248,16 @@ def test_bike_not_called_by_default():
         V.verify_leg_bike = orig
     want = json.loads(GOLD_ALL.read_text(encoding="utf-8"))
     assert got == want, "기본 결과가 지하철·버스·도보 골든과 다르다 — 기본 수단이 바뀌었나"
-    assert with_bike == got, "자전거를 켜도 plan() 결과는 같아야 한다(자전거 후보는 lfd 가 없어 싣지 못한다 · 56 발견)"
-    # GPT 56 #8 — 자전거만 요청: 계획 옵션 0 (지원 안 함을 잠근다 · 지원하게 되면 이 시험을 뒤집는다)
-    only = json.loads(_plan(d, rt2, modes=["bike"]))
-    assert not any(o["id"].startswith("bike") for r in only["routes"].values() for o in r["options"]), only["routes"]
-    assert only["skipped"], "자전거만 요청하면 이동 구간을 못 만든다 — skipped 에 남아야 한다"
+    if rt._v.bk is not None:
+        # 58 뒤집음 ① — 섞어 주면 자전거는 판정되지만 추천되지 않는다: 몸통(items·routes)은 기본과 같고
+        #   구간마다 left_out 에 자전거 이유(56: 「켜도 결과 전부 같음」 — 자전거가 판정 밖에서 사라졌다)
+        assert (with_bike["items"], with_bike["routes"]) == (got["items"], got["routes"]), "섞어 준 bike 가 계획을 바꿨다"
+        assert with_bike != got, "자전거 이유가 left_out 에 안 남았다(58 이전 모양)"
+        for k in got["routes"]:
+            assert any(e["label"].startswith("자전거(따릉이)") for e in with_bike["left_out"].get(k, [])), (k, with_bike["left_out"].get(k))
+        # 58 뒤집음 ② — 자전거만 요청: 옵션이 전부 자전거(56: 「옵션 0 · skipped」)
+        only = json.loads(_plan(d, rt2, modes=["bike"]))
+        assert only["routes"] and all([o["id"] for o in r["options"]] == ["bike"] for r in only["routes"].values()), only
 
 
 def test_interleave_injection():
