@@ -70,7 +70,17 @@ function replyFor(result: { status?: string; case_status?: string; answer?: stri
 async function read(tripId: string, language: Language): Promise<Trip> {
   const t = translator(language);
   const server = await api<ServerTrip>(`/v1/web/trips/${encodeURIComponent(tripId)}`, language);
-  const stops = server.items.map((item) => stop(item, t));
+  // ★이동 항목(kind mobility — 출발 시각 = 다음 일정 시작 − 이동 − 여유)은 일정 목록에 섞지 않고 **다음 일정의 메모**로
+  //   붙인다. 출발 알림은 서버가 그 시각에 보낸다(D-020). ☆2026-09-28 실제 화면: 「A → B」가 일정처럼 끼어 보였다.
+  const stops: TripStop[] = [];
+  let leave: string | null = null;
+  for (const item of server.items) {
+    if (item.kind === "mobility") { leave = seoul(item.starts_at).time; continue; }
+    const next = stop(item, t);
+    if (leave) next.notes = [t(`${leave} 출발`, `Leave at ${leave}`), next.notes].filter(Boolean).join(" · ");
+    stops.push(next);
+    leave = null;
+  }
   const dates = stops.map((item) => item.date).sort();
   return {
     id: server.trip_id, source: "", startDate: dates[0] ?? "", endDate: dates.at(-1) ?? "", status: "active", stops,

@@ -156,8 +156,10 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
     check = None
     if status in ("review", "confirmed"):
         built = assemble(intake_id=str(intake_id), revision=revision, sources=sources, claims=claims)
-        check = {"ready": not built.problems, "problems": [p.as_dict() for p in built.problems],
-                 "filled": built.filled, "items": len(built.body["items"]), "title": built.body["title"]}
+        check = {"ready": not built.problems and bool(built.body["items"]),
+                 "problems": [p.as_dict() for p in built.problems],
+                 "filled": built.filled, "items": len(built.body["items"]), "title": built.body["title"],
+                 "plan": built.plan}
     out_sources = []
     for source in sources:
         mine = [c for c in claims if c["source_id"] == source["source_id"]]
@@ -183,6 +185,9 @@ def view(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID) -> dict[st
 _ITEM_FIELDS = {"title", "date", "starts_at", "ends_at", "kind", "place", "booking_no", "removed"}
 _TRIP_FIELDS = {"title", "party_size", "first_day"}
 _HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+#: 「일정 짜 줘」 모양 — 일정·코스·계획을 짜/만들어/추천해 달라는 말
+PLAN_ASK = re.compile(r"(일정|코스|계획|동선|여행)\S{0,3}\s*(?:(?:좀|다시|새로)\s*)?(짜|만들어|추천해|세워|잡아)\s*"
+                      r"(줘|주세요|줄래|주실|주라|달라)")
 
 
 class IntakeConflict(ValueError):
@@ -388,6 +393,17 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
             rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
                          "evidence": {"source": "text"}, "needs_review": False,
                          "note": "「일정 짜 줘」— 확인 화면에서 일정 생성기로 넘긴다"})
+
+    # 「일정 짜 줘」 — 모델이 못 가리켜도 규칙으로 잡는다(모델이 꺼져 있어도 요청을 놓치지 않게)
+    if not any(r["field"] == "trip.plan_request" for r in rows):
+        for number, line in enumerate(read.lines, start=1):
+            asked = PLAN_ASK.search(line)
+            if asked:
+                rows.append({"field": "trip.plan_request", "value": True, "method": "rule",
+                             "evidence": {"source": "text", "line": number, "start": asked.start(),
+                                          "end": asked.end(), "text": asked.group(0)},
+                             "needs_review": False, "note": "「일정 짜 줘」 — 확인 화면에서 일정 생성기로 넘긴다"})
+                break
 
     # 날짜 — 우선순위대로. 다 없으면 첫날을 묻는다
     dated, ask = resolve_dates(items, today=today, lines=read.lines)

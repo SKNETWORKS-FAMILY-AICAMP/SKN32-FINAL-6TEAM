@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-reac
 import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import type { Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
-import { confirmIntake, editIntake, getIntake, type IntakeEdit, type IntakeItem, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
+import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./intake-review.module.css";
@@ -80,6 +80,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onSuccess: (view) => queryClient.setQueryData(key, view),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
+  const plan = useMutation({
+    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, input, language),
+    onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
+    onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
+  });
   const confirm = useMutation({
     mutationFn: (revision: number) => confirmIntake(intakeId, revision, language),
     onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
@@ -111,10 +116,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const needsParty = problems.some((problem) => problem.code === "party_size_out_of_range");
   const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
     .find((field) => field?.method !== "customer" && field?.evidence.how === "year_filled");
-  const busy = edit.isPending || confirm.isPending;
+  const busy = edit.isPending || confirm.isPending || plan.isPending;
   const send = (edits: IntakeEdit[]) => edit.mutate({ revision: view.revision, edits });
   const confirmed = view.status === "confirmed";
-  const error = edit.error ?? confirm.error;
+  const error = edit.error ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
 
   return <>
@@ -127,8 +132,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       {needsParty && <Party disabled={busy} onSave={(value) => send([{ field: "trip.party_size", value }])} />}
     </Panel>}
     {yearFilled && <p className={styles.notice} role="note">{t(`해가 적혀 있지 않아 ${String(yearFilled.value).slice(0, 4)}년으로 두었어요. 다르면 항목의 날짜를 고쳐 주세요.`, `No year was written, so we assumed ${String(yearFilled.value).slice(0, 4)}. Fix a stop’s date if that is wrong.`)}</p>}
+    {view.check && !confirmed && (view.check.plan.requested || list.length === 0) &&
+      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy} pending={plan.isPending}
+        onPlan={(input) => plan.mutate({ revision: view.revision, input })} />}
     <div className={styles.list}>{list.map((row) => <ItemCard key={row.key} row={row} yearNote={Boolean(yearFilled)} disabled={busy || confirmed} onEdit={send} />)}</div>
-    {list.length === 0 && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올려 주세요.", "No stops were read. Check the original and upload again.")}</p></Panel>}
+    {list.length === 0 && !view.check?.plan.requested && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올리거나, 위에서 일정을 짜 달라고 해 주세요.", "No stops were read. Check the original and upload again, or ask us above to plan it.")}</p></Panel>}
     <Evidence view={view} />
     {error && <div className={styles.error} role="alert">
       <p>{error.message}</p>
@@ -138,7 +146,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
     <div className={styles.actions}>
       <ButtonLink href={routes.newTrip}><ArrowLeft {...icon} />{t("다시 올리기", "Upload again")}</ButtonLink>
-      <span className={styles.actionNote}>{confirmed ? t("이미 등록했어요.", "Already registered.") : view.check?.ready ? t("등록하면 바로 지켜보기 시작해요.", "We start watching as soon as you register.") : t("위의 확인할 것을 먼저 채워 주세요.", "Fill in the items above first.")}</span>
+      <span className={styles.actionNote}>{confirmed ? t("이미 등록했어요.", "Already registered.") : view.check?.ready ? t("등록하면 바로 지켜보기 시작해요.", "We start watching as soon as you register.") : list.length === 0 ? t("위에서 조건을 고르고 「짜서 등록」을 눌러 주세요.", "Choose the conditions above and press “Plan and register”.") : t("위의 확인할 것을 먼저 채워 주세요.", "Fill in the items above first.")}</span>
       {confirmed && view.trip_id
         ? <ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink>
         : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
@@ -154,6 +162,33 @@ function FirstDay({ disabled, onSave }: { disabled: boolean; onSave: (value: str
     <input id="intake-first-day" type="date" value={value} onChange={(event) => setValue(event.target.value)} disabled={disabled} required />
     <Button type="submit" disabled={disabled || !value}>{t("저장", "Save")}</Button>
   </form>;
+}
+
+/** 「일정 짜 줘」 — 조건을 확인하고 누르면 일정 생성기가 짠 초안을 판정 뒤 등록한다. 누르는 것이 곧 등록이다. */
+function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: IntakePlanBasis; readItems: number; disabled: boolean; pending: boolean; onPlan: (input: IntakePlanInput) => void }) {
+  const t = useT();
+  const [start, setStart] = useState(basis.start_date ?? "");
+  const [days, setDays] = useState(basis.days ?? 0);
+  const [party, setParty] = useState(basis.party_size ?? 0);
+  const ready = Boolean(start) && days >= 1 && party >= 1;
+  return <Panel className={styles.plan} aria-labelledby="intake-plan">
+    <h2 id="intake-plan">{basis.requested ? t("일정을 짜 달라고 하셨어요", "You asked us to plan the trip") : t("읽은 일정이 없어요 — 대신 짜 드릴까요?", "No stops were read — shall we plan one?")}</h2>
+    <p>{t("서울 안에서, 올려 주신 글을 선호로 읽어 하루하루를 짜요. 짠 일정은 판정을 통과해야 등록돼요.", "We plan each day in Seoul, reading your text as preferences. The plan is registered only if it passes our checks.")}
+      {readItems > 0 && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
+    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party }); }}>
+      <label htmlFor="plan-start">{t("첫날", "First day")}</label>
+      <input id="plan-start" type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={disabled} required />
+      <label htmlFor="plan-days">{t("일수", "Days")}</label>
+      <select id="plan-days" value={days} onChange={(event) => setDays(Number(event.target.value))} disabled={disabled}>
+        <option value={0}>{t("고르기", "Choose")}</option>{[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{t(`${n}일`, `${n}`)}</option>)}
+      </select>
+      <label htmlFor="plan-party">{t("인원", "Travelers")}</label>
+      <select id="plan-party" value={party} onChange={(event) => setParty(Number(event.target.value))} disabled={disabled}>
+        <option value={0}>{t("고르기", "Choose")}</option>{[1, 2, 3, 4].map((n) => <option key={n} value={n}>{t(`${n}명`, `${n}`)}</option>)}
+      </select>
+      <Button type="submit" variant="primary" disabled={disabled || !ready}>{pending ? t("짜는 중… (1분쯤)", "Planning… (about a minute)") : t("이 조건으로 짜서 등록", "Plan and register")}</Button>
+    </form>
+  </Panel>;
 }
 
 function Party({ disabled, onSave }: { disabled: boolean; onSave: (value: number) => void }) {

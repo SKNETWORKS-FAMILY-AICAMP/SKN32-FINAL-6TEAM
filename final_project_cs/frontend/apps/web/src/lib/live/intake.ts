@@ -42,9 +42,13 @@ export interface IntakeView {
   fatal: { code: string; detail: string } | null;
   trip_id: string | null;
   sources: IntakeSource[];
-  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string } | null;
+  check: { ready: boolean; problems: IntakeProblem[]; filled: IntakeFilled[]; items: number; title: string; plan: IntakePlanBasis } | null;
   needs_review: { field: string; note: string | null }[];
 }
+
+/** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
+export interface IntakePlanBasis { requested: boolean; start_date: string | null; days: number | null; party_size: number | null; preferences: string }
+export interface IntakePlanInput { start_date: string; days: number; party_size: number }
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
@@ -62,6 +66,12 @@ export function getIntake(intakeId: string, language: Language): Promise<IntakeV
 export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<IntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, edits }),
+  });
+}
+
+export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...input }),
   });
 }
 

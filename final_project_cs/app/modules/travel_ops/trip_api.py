@@ -115,6 +115,15 @@ class IntakeConfirmIn(BaseModel):
     revision: int = Field(ge=1)
 
 
+class IntakePlanIn(BaseModel):
+    """「일정 짜 줘」 — 확인 화면에서 고객이 조건을 확인하고 누른다. ★누르는 것이 곧 등록 요청이다(통지가 나간다)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    start_date: date
+    days: int = Field(ge=1, le=7)
+    party_size: int = Field(ge=1, le=4)
+
+
 class PlanIn(BaseModel):
     """★`[2026-09-22]` **일정 생성 요청** — v11 §4-A(「계획 생성은 우리 일이 아니다」)를 뒤집는
     경로다. 사용자 지시로 만들었고, 계획서는 읽기 전용이라 고치지 않았다. 뒤집는다는 사실과
@@ -819,6 +828,52 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
         return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip}
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/plan")
+    def web_intake_plan(intake_id: UUID, request: IntakePlanIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """「일정 짜 줘」 → 일정 생성기(`planner.plan_trip`) → **판정을 통과한 초안**을 `_create_trip` 한 곳으로 등록.
+
+        - 선호 문장은 고객이 올린 **원문 그대로**다. 읽은 항목(고정 일정)은 일정 생성기가 받지 않는다 — 화면이 그렇게 말한다.
+        - `request_id` = `intake:{접수}:plan:r{판}` — 두 번 눌러도 모델을 다시 부르지 않고 같은 여행을 돌려준다.
+        - 생성기가 못 짜면 422(그 이유와 완화 조건) — 지어낸 일정을 등록하지 않는다.
+        """
+        from . import planner as planner_module
+        from .intake.pipeline import IntakeConflict, draft, mark_confirmed
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                    revision=request.revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        store = TripStore(tenant)
+        request_id = f"intake:{intake_id}:plan:r{request.revision}"
+        key = idempotency_key(tenant_id=tenant, request_id=request_id, action_type="trip.create",
+                              business_subject=str(customer))
+        with get_connection() as conn:
+            existing = store.by_request_key(conn, key)
+            if existing is not None:
+                return {"intake_id": str(intake_id), "status": "confirmed", "trip": {
+                    **_trip_view(conn, store, existing[0]), "created": False}}
+        ask = planner_module.PlanRequest(
+            city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
+            preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko")
+        try:
+            with get_connection() as conn:
+                outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
+                                                   chat=_lazy("chat", chat_factory),
+                                                   tour_api=_lazy("place", place_factory))
+        except planner_module.PlanRefused as refused:
+            raise _error(422, refused.code, refused.message, **refused.detail) from None
+        body = outcome.draft.as_create_body(request_id=request_id, customer_id=customer)
+        trip = _create_trip(tenant, CreateTrip.model_validate(body))
+        with get_connection() as conn:
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
+        return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip,
+                "planner": {"coverage": outcome.coverage, "checks": outcome.checks}}
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request):

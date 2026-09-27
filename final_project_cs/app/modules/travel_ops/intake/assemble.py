@@ -56,6 +56,8 @@ class Assembled:
     body: dict[str, Any]
     problems: list[Problem] = field(default_factory=list)
     filled: list[dict[str, Any]] = field(default_factory=list)     # 규칙으로 채운 칸 — 화면이 배지로 보인다
+    #: 「일정 짜 줘」 — 일정 생성기에 넘길 기본값(화면이 미리 채우고 고객이 고친다). 모르는 값은 None
+    plan: dict[str, Any] = field(default_factory=dict)
 
 
 def effective(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -112,14 +114,15 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     body = {"request_id": f"intake:{intake_id}:r{revision}", "title": _title(trip, sources),
             "locale": "ko", "party_size": _int_value(trip.get("party_size")),
             "places": places, "items": items}
-    if not rows:
+    plan = _plan_basis(trip, rows, sources, first_day)
+    if not rows and not plan["requested"]:
         problems.append(Problem("no_items", "items", "읽은 일정이 없습니다 — 항목을 하나 이상 넣어 주세요"))
     party = body["party_size"]
     if party is not None and not 1 <= party <= MAX_PARTY:
         # ★상품은 최대 4인(루트 CLAUDE.md 「가격 · 비용」). 범위 밖 인원은 계약 오류로 새지 않게 여기서 막는다
         problems.append(Problem("party_size_out_of_range", "trip.party_size",
                                 f"인원이 {party}명으로 읽혔습니다 — 1~{MAX_PARTY}명으로 고쳐 주세요"))
-    return Assembled(body=body, problems=problems, filled=filled)
+    return Assembled(body=body, problems=problems, filled=filled, plan=plan)
 
 
 # ── 항목 하나 ─────────────────────────────────────────────────────
@@ -205,6 +208,23 @@ def _placed(row, previous: str | None) -> tuple[str, str]:
     if previous:
         return _plus(previous, planner.MOVE_BUFFER_MIN), "시각이 없어 앞 일정 뒤에 두었다"
     return planner.DAY_START.strftime("%H:%M"), "시각이 없어 하루 첫 일정 시각에 두었다"
+
+
+# ── 일정 생성 기본값 ─────────────────────────────────────────────
+def _plan_basis(trip, rows, sources, first_day) -> dict[str, Any]:
+    """「일정 짜 줘」의 기본값 — **읽은 값에서만** 낸다. 없으면 None 으로 두고 화면이 묻는다(지어내지 않는다).
+
+    첫날 = 고객이 알려 준 첫날 > 읽은 항목의 가장 이른 날짜. 일수 = 「n박 m일」의 m > 읽은 날짜 수.
+    선호 = 고객이 올린 원문 그대로(일정 생성기가 규정에 붙여 읽는다, `planner.ground_request`).
+    """
+    dates = sorted({r["date"] for r in rows if r["date"]})
+    days = _int_value(trip.get("days")) or (len(dates) or None)
+    text = "\n".join(s.get("transcript") or "" for s in sources).strip()
+    return {"requested": bool((trip.get("plan_request") or {}).get("value")),
+            "start_date": first_day.isoformat() if first_day else (dates[0] if dates else None),
+            "days": days if days is None or 1 <= days <= planner.MAX_DAYS else None,
+            "party_size": _int_value(trip.get("party_size")),
+            "preferences": text[:2000]}
 
 
 # ── 부품 ─────────────────────────────────────────────────────────

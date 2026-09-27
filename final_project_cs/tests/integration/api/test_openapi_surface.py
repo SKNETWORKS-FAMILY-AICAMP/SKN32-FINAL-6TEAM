@@ -76,6 +76,8 @@ CONTRACT_V1_PATHS = {
     # 확인 화면 — 고친 값은 새 판(낡은 판은 409), 등록은 `_create_trip` 한 곳(request_id = 접수 + 판)
     "/v1/web/trip-intakes/{intake_id}/edits",
     "/v1/web/trip-intakes/{intake_id}/confirm",
+    # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
+    "/v1/web/trip-intakes/{intake_id}/plan",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.

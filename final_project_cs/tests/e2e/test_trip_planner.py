@@ -146,7 +146,9 @@ def api(monkeypatch):
            "keys": keys}
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for sql in ("DELETE FROM place_catalog WHERE tenant_id=%s",
+        for sql in ("DELETE FROM trip_intakes WHERE tenant_id=%s",          # 웹 계획 읽기(028) — 원본·값은 따라 지워진다
+                    "DELETE FROM web_user_keys WHERE tenant_id=%s",          # 웹 사용자 키(025)
+                    "DELETE FROM place_catalog WHERE tenant_id=%s",
                     "DELETE FROM itinerary_items WHERE tenant_id=%s",
                     "DELETE FROM itinerary_versions WHERE tenant_id=%s",
                     "DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
@@ -617,3 +619,31 @@ def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
     planned = {d["date"]: d["actual_density"] for d in body["planner"]["density"]["days"]}
     registered = {row["date"]: round(row["actual_density"], 3) for row in body["trip"]["density"]}
     assert registered == planned
+
+
+# ── 계획 읽기에서 「일정 짜 줘」 → 일정 생성기 → 등록 (2026-09-28) ───────────
+def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_once(api):
+    """★모델이 없어도 「일정 짜 줘」를 규칙으로 잡는다. 조건(첫날·일수·인원)을 확인해 누르면 일정 생성기가 짠 초안이
+    **같은 판정**을 지나 `_create_trip` 한 곳으로 등록된다. 두 번 눌러도 여행은 하나다."""
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    accepted = client.post("/v1/web/trip-intakes", headers=key,
+                           data={"text": "\n".join(["서울 2일 일정 짜 줘", "실내 위주로 부탁해요"])})
+    assert accepted.status_code == 202, accepted.text
+    intake_id = accepted.json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    plan = view["check"]["plan"]
+    assert plan["requested"] is True and "실내 위주" in plan["preferences"]
+    assert view["check"]["ready"] is False and view["check"]["problems"] == []      # 읽은 항목 0 — 막는 문제가 아니다
+    body = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
+    assert done.status_code == 200, done.text
+    trip = done.json()["trip"]
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    again = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body).json()
+    assert again["trip"]["trip_id"] == trip["trip_id"] and again["trip"]["created"] is False
+    after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
+    # 상품 범위 밖(8일)은 받지 않는다
+    wide = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**body, "days": 8})
+    assert wide.status_code == 422

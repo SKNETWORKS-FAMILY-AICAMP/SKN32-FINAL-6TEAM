@@ -47,6 +47,15 @@ describe("live trip gateway", () => {
     expect((calls[1].init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
   });
 
+  it("folds move items into the next stop as a departure time instead of listing them as stops", async () => {
+    replies.push({ ...TRIP, items: [TRIP.items[0],
+      { item_id: "m", seq: 2, kind: "mobility", title: "경복궁 → 명동난타극장", place: null, starts_at: "2026-10-16T09:25:00+00:00", ends_at: "2026-10-16T09:50:00+00:00", changed: false, lat: null, lon: null, booked: false },
+      TRIP.items[1]] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops.map((stop) => stop.title)).toEqual(["경복궁 관람", "명동난타극장"]);
+    expect(trip.stops[1].notes.startsWith("18:25 출발")).toBe(true);
+  });
+
   it("shows the server's own answer and falls back to fixed words, never inventing one", async () => {
     replies.push({ status: "no_meal", answer: "그 시각 뒤에는 식사 일정이 없어요." }, TRIP,
       { status: "mystery_status" }, TRIP);

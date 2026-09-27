@@ -222,3 +222,13 @@ def test_dropping_only_a_what_you_do_word_needs_no_review():
     assert resolve("경복궁 관람", our_places=OURS).needs_review is False
     assert resolve("북촌한옥마을 산책", our_places=OURS).needs_review is False
     assert resolve("광장시장 빈대떡", our_places=[], tour=Tour({"광장시장": "38"})).needs_review is True
+
+
+# ── 「일정 짜 줘」 규칙 ───────────────────────────────────────────
+def test_a_plan_request_is_caught_by_rule_without_a_model():
+    from app.modules.travel_ops.intake.pipeline import PLAN_ASK
+
+    for asked in ("서울 2일 일정 짜 줘", "코스 추천해 주세요", "여행 계획 세워줘", "동선 좀 잡아 줄래?", "일정을 만들어 주세요"):
+        assert PLAN_ASK.search(asked), asked
+    for plain in ("일정표 보냈어요", "09:00 경복궁", "계획대로 갈게요", "짜장면 먹어요"):
+        assert not PLAN_ASK.search(plain), plain
