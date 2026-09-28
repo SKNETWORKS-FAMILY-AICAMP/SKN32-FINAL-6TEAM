@@ -1,6 +1,7 @@
 """make_halal_sql 의 「언제 할랄이라고 말하는가」.
 
-웹 근거는 주장이라 속성을 붙이지 않는다. 사람이 채운 [확인] 칸만 본다.
+사람이 채운 [확인] 칸은 등급 표를 따른다. 확인일이 「웹 …」인 행은 운영 결정으로 yes 이되
+상세에 「웹 근거」를 적어 사람 확인과 섞이지 않게 한다.
 """
 from __future__ import annotations
 
@@ -61,6 +62,29 @@ def test_돼지고기가_있으면_등급과_상관없이_no(mh):
 def test_할랄_아님은_no_모름은_붙이지_않는다(mh):
     assert mh.halal_state(row(**{"[확인] 등급": "할랄 아님"}), TODAY)[0] == "no"
     assert mh.halal_state(row(**{"[확인] 등급": "모름"}), TODAY)[0] is None
+
+
+def test_웹_근거는_등급과_상관없이_yes_상세에_웹_근거(mh):
+    for grade in ("KMF 인증 만료", "할랄 표방 (인증 근거 없음)", "모름"):
+        state, detail = mh.halal_state(row(**{"[확인] 등급": grade, "확인일": "웹 2026-09-28"}), TODAY)
+        assert state == "yes" and detail.startswith("웹 근거") and grade in detail
+
+
+def test_웹_근거라도_돼지고기_있음이나_할랄_아님은_no(mh):
+    web = {"확인일": "웹 2026-09-28"}
+    assert mh.halal_state(row(**{"[확인] 등급": "할랄 표방", "[확인] 돼지고기": "있음", **web}), TODAY)[0] == "no"
+    assert mh.halal_state(row(**{"[확인] 등급": "할랄 아님", **web}), TODAY)[0] == "no"
+
+
+def test_웹_근거의_유효기간과_술은_상세에(mh):
+    state, detail = mh.halal_state(row(**{"[확인] 등급": "KMF 인증 만료", "[확인] 인증 유효기간": "2026-04-14 만료",
+                                          "[확인] 술": "안 팖", "확인일": "웹 2026-09-28"}), TODAY)
+    assert state == "yes" and "2026-04-14 만료" in detail and "술 안 팖" in detail
+
+
+def test_사람_확인_행은_웹_규칙을_타지_않는다(mh):
+    # 만료된 인증을 사람이 확인했으면 여전히 붙이지 않는다
+    assert mh.halal_state(row(**{"[확인] 등급": "KMF 인증", "[확인] 인증 유효기간": "2026-04-14"}), TODAY)[0] is None
 
 
 def test_술은_판정에_쓰지_않고_상세에_적는다(mh):

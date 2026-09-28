@@ -15,7 +15,7 @@ INSERT INTO dining.dn_source
     (source_code, display_name, source_kind, storage_mode, production_allowed, note)
 VALUES
     ('halal_curated', '운영자 할랄 식당 목록', 'operator', 'content', true,
-     '후보는 웹에서 모았다. 할랄 여부는 사람이 확인한 행만 속성으로 붙인다')
+     '후보는 웹에서 모았다. 웹 근거 행도 할랄로 넣되 상세에 「웹 근거」를 적는다(2026-09-28 운영 결정)')
 ON CONFLICT (source_code) DO UPDATE
    SET display_name = EXCLUDED.display_name,
        source_kind = EXCLUDED.source_kind,
