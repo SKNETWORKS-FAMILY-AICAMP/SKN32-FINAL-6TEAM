@@ -9,6 +9,16 @@ const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행
 const field = (page: Page) => page.getByRole("textbox", { name: "이메일" });
 const ERROR = "이메일 형식을 확인해 주세요. 예: name@example.com";
 
+/**
+ * 이메일 카드가 다 펼쳐질 때까지(펼침 애니메이션 끝) 기다린다. ★펼친 카드는 **다음 프레임에** 카드 머리로 초점을 주고
+ * Esc 를 듣기 시작한다(`onboarding.tsx`). 그 전에 누른 Tab 은 초점을 도로 빼앗기고 Esc 는 무시된다 — 열림 표시
+ * (`aria-expanded`)만 보고 누르면 느린 CI 에서 실패했다(2026-09-28).
+ */
+async function emailCardOpened(page: Page) {
+  await expect(emailHead(page)).toHaveAttribute("aria-expanded", "true");
+  await page.locator("#card-0").evaluate((card) => Promise.all(card.getAnimations().map((animation) => animation.finished)));
+}
+
 /** Preferences open: skip all six questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
@@ -168,12 +178,13 @@ test("키보드로 열고 입력해 Enter로 계속하며 Esc로 접으면 카�
   await page.goto("/start");
   await emailHead(page).focus();
   await page.keyboard.press("Enter");
-  await expect(emailHead(page)).toHaveAttribute("aria-expanded", "true");
+  await emailCardOpened(page);
   await expect(emailHead(page)).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(emailHead(page)).toHaveAttribute("aria-expanded", "false");
   await expect(emailHead(page)).toBeFocused();
   await page.keyboard.press("Enter");
+  await emailCardOpened(page);
   await page.keyboard.press("Tab");
   await expect(field(page)).toBeFocused();
   await page.keyboard.type("keyboard@example.com");
