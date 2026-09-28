@@ -22,6 +22,7 @@ const unavailableGateway: TripGateway = {
   retryVerification: (_tripId, language) => unavailable(language),
   startTrip: (_tripId, language) => unavailable(language),
   sendMessage: (_tripId, _message, language) => unavailable(language),
+  submitPreferences: (_payload, language) => unavailable(language),
 };
 
 export const tripGateway: TripGateway = DATA_MODE === "demo" ? createDemoGateway() : unavailableGateway;

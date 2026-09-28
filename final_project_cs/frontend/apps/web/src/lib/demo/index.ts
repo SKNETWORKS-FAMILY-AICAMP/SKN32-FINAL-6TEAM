@@ -1,3 +1,4 @@
+import { preferencesPayloadSchema } from "../../features/onboarding/payload";
 import type { Trip, TripGateway, VerificationResult } from "../../features/trip/model";
 import { translator, type Translate } from "../i18n";
 import { demoReply } from "./chat";
@@ -206,6 +207,12 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
         { id: crypto.randomUUID(), role: "assistant", text: demoReply(stored.trip.stops, text, t), createdAt },
       );
       return save(stored, t);
+    },
+    async submitPreferences(payload, language) {
+      const t = translator(language);
+      if (!preferencesPayloadSchema.safeParse(payload).success) throw new GatewayError("INVALID_INPUT", t("여행 취향 답변의 형식이 올바르지 않아 보내지 못했어요.", "Your travel preferences are malformed, so they were not sent."));
+      // The demo only checks the agreed format. Nothing is stored or sent anywhere.
+      await delay(350);
     },
   };
 }

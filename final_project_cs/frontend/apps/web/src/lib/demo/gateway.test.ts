@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { initialAnswers } from "../../features/onboarding/model";
+import { toPayload } from "../../features/onboarding/payload";
 import type { DemoScenario } from "../../features/trip/model";
 import { createDemoGateway, DEMO_STORAGE_PREFIX, DEMO_VERIFICATION_DURATION, SAMPLE_PLANS, type DemoStorage } from "./index";
 
@@ -268,5 +270,12 @@ describe("demo trip gateway", () => {
     expect(await reply("What comes after Lunch in Ichon-dong on 2026-09-16 at 12:00?")).toContain("After Lunch in Ichon-dong: 14:15 · Itaewon gift shops");
     expect(await reply("Show booking notes for 2026-09-15.")).toContain("13:00 · Seongsu restaurant");
     expect(await reply("Please cancel my dinner")).toContain("does not change or cancel");
+  });
+
+  it("accepts preferences in the agreed format and stores nothing, but rejects a malformed payload", async () => {
+    const payload = toPayload(initialAnswers, "ko");
+    await expect(gateway.submitPreferences(payload, "ko")).resolves.toBeUndefined();
+    expect(storage.items.size).toBe(0);
+    await expect(gateway.submitPreferences({ ...payload, answers: { ...payload.answers, themes: [] } }, "ko")).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 });

@@ -28,6 +28,15 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
 
   const heading = (name: string) => page.getByRole("heading", { name, exact: true });
+  await expect(heading("여행 취향 설문을 시작할게요")).toBeVisible();
+  await expect(page.getByText(/추천할 때 참고할 여행 취향 정보를 모아요/)).toBeVisible();
+  await expect(page.getByText(/‘응답하지 않고 넘어가기’를 눌러 건너뛸 수 있어요/)).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "답변한 질문" })).toHaveAttribute("aria-valuenow", "0");
+  await page.getByRole("button", { name: "시작하기" }).click();
+  await expect(heading("어떤 여행을 좋아하세요?")).toBeVisible();
+  await page.getByRole("button", { name: "이전", exact: true }).click();
+  await expect(heading("여행 취향 설문을 시작할게요")).toBeVisible();
+  await page.getByRole("button", { name: "시작하기" }).click();
   await expect(heading("어떤 여행을 좋아하세요?")).toBeVisible();
   const next = page.getByRole("button", { name: "다음", exact: true });
   await expect(next).toBeDisabled();

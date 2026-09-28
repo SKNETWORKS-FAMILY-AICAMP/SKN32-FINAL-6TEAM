@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { initialAnswers, type Answers } from "./model";
+import { initialAnswers, INTRO_STEP, type Answers } from "./model";
 
 export interface OnboardingState {
   /** The full terms were scrolled to the end at least once. */
@@ -16,7 +16,7 @@ export interface OnboardingState {
   activeTripId: string | null;
 }
 
-const initial: OnboardingState = { read: false, agreed: false, open: null, step: 0, complete: false, answers: initialAnswers, activeTripId: null };
+const initial: OnboardingState = { read: false, agreed: false, open: null, step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 
 /** Page-session state only: nothing is written to storage or sent anywhere. */
