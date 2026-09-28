@@ -92,10 +92,13 @@ print("[3] 부분 입력")
 r = ad.run(Task({"mobility": {"date": "2026-09-24"}}))
 chk("legs 없음을 이름까지 말한다", r.get("failure_code", "").startswith("mobility_input_incomplete:legs"), r.get("failure_code"))
 r = ad.run(Task({"mobility": {"date": "2026-09-24", "legs": [{"line": "05호선", "from": "a", "to": "b"}]}}))
-chk("시각이 둘 다 없으면 거부", "depart_at|arrive_by" in r.get("failure_code", ""), r.get("failure_code"))
+chk("시각이 둘 다 없으면 거부", "mobility_input_incomplete:depart_at" in r.get("failure_code", ""), r.get("failure_code"))
 r = ad.run(Task({"mobility": {"date": "2026-09-24", "legs": [{"line": "05호선", "from": "a", "to": "b"}],
                               "arrive_by": "10:30"}}))
-chk("arrive_by 만 있어도 통과", r["outcome"] == "completed", r.get("failure_code"))
+# ☆`[2026-09-29 문제목록 #30]` 앞 판은 「arrive_by 만 있어도 통과」였다 — 변환은 통과하고 판정기가 출발 시각이
+#   없다며 멈췄다(도착 역산 미구현). 이제 변환 단계에서 이유를 달아 거절한다.
+chk("arrive_by 만 있으면 거부(도착 역산 미구현)",
+    r["outcome"] == "escalated" and "depart_at(도착 역산 미구현)" in r.get("failure_code", ""), r.get("failure_code"))
 r = ad.run(Task({"mobility": ["legs"]}))
 chk("dict 가 아니면 malformed", r.get("failure_code") == "mobility_input_malformed")
 

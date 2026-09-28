@@ -20,6 +20,9 @@ VERDICT = {"feasible": "ok", "infeasible": "fail",
 # 계약 decisions[] 는 3종만 쓴다 — 탈락은 fail + 완화 조건으로 접는다(DDL 주석).
 DECISION = {"ok": "ok", "fail": "fail", "rejected_by_limit": "fail", "unknown": "unknown"}
 CONF = {"확정": 0.95, "추정": 0.6, "근거없음": 0.2}
+# ☆`[2026-09-29 문제목록 #18]` 고객에게 가는 answer 문장에는 영어 판정어(ok·fail·unknown)를 쓰지 않는다.
+#   evidence·decisions 의 저장소 어휘(ok/fail)는 그대로 — 저장소 CHECK 가 그 어휘를 받는다.
+SAY = {"ok": "가능", "fail": "불가", "rejected_by_limit": "일행 조건 초과로 제외", "unknown": "판정 불가"}
 SRC_OF = [("timetable_v1", "timetable"), ("tago_subway", "timetable"),
           ("mobility_rules", "rule"), ("transfer_walk", "walk"),
           ("osm_subway_entrance", "walk"), ("station_coords", "walk"),   # 정류장↔역 환승 도보 (v0.4 · 19번 방)
@@ -140,7 +143,8 @@ def fold_case(case, *, task_id, basis, case_id=None):
                              "mode": ((al.get("leg") or {}).get("mode")
                                       or al.get("mode")     # 22번(v0.7): 대안 dict 의 mode(subway/bus/bike)
                                       or ("bus" if "버스" in str(al.get("label")) else "subway")),
-                             "verdict": "ok", "depart_min": al.get("depart_min"),
+                             "verdict": VERDICT.get(al.get("verdict"), "ok"),   # 생성기는 성립한 대안만 싣는다 — 값이 오면 그 값
+                             "depart_min": al.get("depart_min"),
                              "arrive_min": al.get("arrive_min"), "warnings": aw},
                    "confidence": CONF.get(al.get("grade"), 0.2), "observed_at": basis["decided_at"]})
 
@@ -187,12 +191,12 @@ def fold_case(case, *, task_id, basis, case_id=None):
                   "confidence": CONF.get(grade, 0.2), "observed_at": basis["decided_at"]})
 
     # ── answer. to_answer 경고만 문장에 싣는다. 구간마다 [leg_id] 표식(◆10 대비)
-    seen, lines = set(), [f"[{case.get('id')}] 판정 {verdict}({grade}) — {case.get('reason', '')}"]
+    seen, lines = set(), [f"[{case.get('id')}] 판정 {SAY[verdict]}({grade}) — {case.get('reason', '')}"]
     if case.get("relief"):
         lines.append(f"완화 조건: {case['relief']}")
     for i, lg in enumerate(legs, 1):
         lid = _leg_id(lg, i)
-        t = f"[{lid}] {lg.get('label', '')} {VERDICT.get(lg.get('verdict'), 'unknown')}" \
+        t = f"[{lid}] {lg.get('label', '')} {SAY[VERDICT.get(lg.get('verdict'), 'unknown')]}" \
             f"({lg.get('grade')}) — 도착 {_fmt(lg.get('arrive_min'))}"
         lines.append(t)
     if tx.get("verdict") == "feasible":
@@ -204,9 +208,15 @@ def fold_case(case, *, task_id, basis, case_id=None):
             lines.append(f"· {w['text']}")
     answer = "\n".join(lines)[:ANSWER_MAX]
 
-    return {"contract_name": "a_cop.team_result", "contract_version": "1.0",
-            "task_id": task_id, "team_id": "mobility",
-            "outcome": "completed", "next_action": "respond",
-            "confidence": CONF.get(grade, 0.2), "answer": answer,
-            "evidence": ev, "decisions": decisions,
-            "action_proposals": [], "warnings": [f"{w['code']}" for w in warn_all + case_w]}
+    out = {"contract_name": "a_cop.team_result", "contract_version": "1.0",
+           "task_id": task_id, "team_id": "mobility",
+           "outcome": "completed", "next_action": "respond",
+           "confidence": CONF.get(grade, 0.2), "answer": answer,
+           "evidence": ev, "decisions": decisions,
+           "action_proposals": [], "warnings": [f"{w['code']}" for w in warn_all + case_w]}
+    # ☆`[2026-09-29 문제목록 #18]` 판정 불가(근거없음)를 「완료·응답」으로 포장하지 않는다 — 앞 판은 늘 completed 였다.
+    #   근거가 없다는 것은 데이터·소스 결함이다(결정 15) → 오류로 올린다. 근거(evidence)는 그대로 싣는다.
+    if verdict == "unknown":
+        out.update(outcome="escalated", next_action="escalate", confidence=0.0, answer=None,
+                   failure_code="mobility_no_data")
+    return out

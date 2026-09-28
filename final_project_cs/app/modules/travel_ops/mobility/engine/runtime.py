@@ -94,7 +94,9 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
         raise RuntimeError(f"판정기 입력이 없다: {missing}")
 
     rules = json.loads(Path(P["rules"]).read_text(encoding="utf-8"))
-    holidays = set(json.loads(Path(P["holidays"]).read_text(encoding="utf-8"))["holidays"])
+    # ☆#5 — 덮는 해를 아는 달력. 표 밖의 날짜는 평일로 짐작하지 않고 CalendarOutOfRange 로 멈춘다
+    from .timeutil import HolidayCalendar
+    holidays = HolidayCalendar.from_doc(json.loads(Path(P["holidays"]).read_text(encoding="utf-8")))
     lo = vt.LineOrder.load(str(P["order"]))
     tt = vt.Timetable.load(str(P["timetable"]), wanted)
     tw = vt.TransferWalk.load(str(P["transfer_walk"]),

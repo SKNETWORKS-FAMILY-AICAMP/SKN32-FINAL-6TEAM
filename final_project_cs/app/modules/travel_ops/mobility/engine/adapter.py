@@ -95,8 +95,11 @@ def map_task_to_case(task):
     missing = [k for k in REQUIRED if not raw.get(k)]
     if missing:
         return None, f"mobility_input_incomplete:{'+'.join(missing)}"
-    if not raw.get("depart_at") and not raw.get("arrive_by"):
-        return None, "mobility_input_incomplete:depart_at|arrive_by"
+    # ☆`[2026-09-29 문제목록 #30]` 앞 판은 도착 시각만 있어도 통과시켰다 — 판정기는 출발 시각이 없으면 멈춘다
+    #   (도착 역산 미구현). 변환은 성공하고 판정에서 죽는 모양을 만들지 않게 여기서 가른다.
+    if not raw.get("depart_at"):
+        return None, ("mobility_input_incomplete:depart_at(도착 역산 미구현)" if raw.get("arrive_by")
+                      else "mobility_input_incomplete:depart_at")
 
     case = {k: raw[k] for k in CASE_KEYS if k in raw}
     case.setdefault("id", str(_attr(task, "case_id", "case"))[:8])
@@ -165,7 +168,11 @@ class MobilityAdapter:
         if case is None:
             return self._escalate(task, note)
 
-        result = _to_plain(self.verify(case))
+        from . import errors                # 판정기를 import 하지 않는다 — 예외 정의만 따로 둔 모듈
+        try:
+            result = _to_plain(self.verify(case))
+        except errors.CaseInputError as ex:          # 입력이 판정할 수 없는 모양 — 프로세스를 끝내지 않고 올린다(#30·#66)
+            return self._escalate(task, "mobility_input_invalid", str(ex)[:200])
         out = fold.fold_case(result, task_id=str(_attr(task, "task_id")),
                              basis=self._basis_for(case), case_id=str(_attr(task, "case_id", "")))
         if note:

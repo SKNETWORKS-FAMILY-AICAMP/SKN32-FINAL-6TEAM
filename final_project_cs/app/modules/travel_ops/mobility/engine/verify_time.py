@@ -90,7 +90,9 @@ from .congestion import Congestion                                       # noqa:
 from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402
                    party_excluded as bike_party_excluded, fare as bike_fare)
 from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402
-                       fmt_wall, day_type_of, MIN_DAY)
+                       fmt_wall, day_type_of, MIN_DAY, HolidayCalendar)
+
+from .errors import CaseInputError                                       # noqa: E402  #30·#66 — SystemExit 대신
 
 VERDICTS = ("feasible", "infeasible", "rejected_by_limit", "unknown")
 OUT_VERDICTS = ("feasible", "infeasible")          # 밖으로 나가는 판정 둘 (v0.8)
@@ -1016,11 +1018,14 @@ class Verifier:
                 break
             checked += 1
             L = live.get(st["stationId"]) if live else None
-            if L is not None and L["available"] < 1:
+            # ☆`[2026-09-29 문제목록 #9]` 일행 인원만큼 있어야 한다 — 앞 판은 1대만 보고 4인 일행을 태웠다.
+            need = max(1, int((party or {}).get("size") or 1))
+            if L is not None and L["available"] < need:
                 empty.append((st, L))
                 ev.append({"source_type": "db", "source_id": L["source_id"], "grade": "확정",
                            "observed_at": L["checked_at"],
-                           "claim": f"{st['name']}({st['stationId']}) 거치 {L['available']}대 — 빌릴 수 없어 건너뜀"})
+                           "claim": f"{st['name']}({st['stationId']}) 거치 {L['available']}대 — 일행 {need}명이 "
+                                    f"빌릴 수 없어 건너뜀"})
                 continue
             pick, avail = (d, st), L
             if qr is None:
@@ -1035,7 +1040,8 @@ class Verifier:
             if empty:
                 st, L = empty[0]
                 return LegResult(idx, label, "infeasible",
-                                 f"{pa[2]} 근처 대여소 {len(empty)}곳이 조회 시각({L['checked_at']}) 거치 0대다",
+                                 f"{pa[2]} 근처 대여소 {len(empty)}곳이 조회 시각({L['checked_at']}) 거치 대수가 "
+                                 f"일행 {max(1, int((party or {}).get('size') or 1))}명보다 적다",
                                  grade="확정", code="mode_unavailable", relief="몇 분 뒤 다시 조회하거나 다른 수단", warnings=warn, evidence=ev,
                                  dropped={"거치0": len(empty), "LCD전용": len(lcd_skipped)})
             return LegResult(idx, label, "infeasible",
@@ -1659,9 +1665,9 @@ class Verifier:
         C = self.R["candidates"]
         d = _date.fromisoformat(case["date"])
         day_type = day_type_of(d, self.holidays)
-        now = to_service_min(case.get("depart_at"))
+        now = to_service_min(case.get("depart_at"), ceil_seconds=True)   # #12 초는 올린다
         if now is None:
-            raise SystemExit(f"[{case.get('id')}] depart_at 이 없다.")
+            raise CaseInputError(f"[{case.get('id')}] depart_at 이 없다.")
         warns, ev = [], [self._ev_rule("candidates.기준", "확정")]
         amb = [(nm, ls) for nm, ls in ((origin, o_lines), (dest, d_lines))
                if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(nm)
@@ -1927,7 +1933,7 @@ class Verifier:
         for i, leg in enumerate(case["legs"]):
             mode = leg.get("mode", "subway")
             if mode not in ("subway", "bus", "car", "taxi", "bike"):
-                raise SystemExit(f"[{case.get('id')}] 모르는 수단이다: mode={mode}")
+                raise CaseInputError(f"[{case.get('id')}] 모르는 수단이다: mode={mode}")
             if mode in ("car", "taxi"):
                 # 자동차·택시 구간(v0.6). 앞 구간이 있으면 수단 교체 = 환승 1회로 센다. 승차 지점까지의 도보·대기는
                 # 자료가 없어 0분(car.택시_대기 근거없음) — 구간 사유에 적고 요금 경고가 하한이라 말한다.
@@ -2175,14 +2181,14 @@ class Verifier:
         self.disr = case.get("disruptions") or []
         for x in self.disr:
             if x.get("kind") not in self.DISR_KINDS:
-                raise SystemExit(f"[{case.get('id')}] 모르는 이슈 kind 다: {x.get('kind')!r} "
+                raise CaseInputError(f"[{case.get('id')}] 모르는 이슈 kind 다: {x.get('kind')!r} "
                                  f"(쓸 수 있는 것: {', '.join(self.DISR_KINDS)})")
             if x["kind"] == "edge_closed" and len(x.get("between") or []) != 2:
-                raise SystemExit(f"[{case.get('id')}] edge_closed 는 between 에 두 역이 필요하다")
+                raise CaseInputError(f"[{case.get('id')}] edge_closed 는 between 에 두 역이 필요하다")
 
-        now = to_service_min(case.get("depart_at"))
+        now = to_service_min(case.get("depart_at"), ceil_seconds=True)   # #12 초는 올린다
         if now is None:
-            raise SystemExit(f"[{case.get('id')}] depart_at 이 없다. 도착 역산은 아직 미구현이다.")
+            raise CaseInputError(f"[{case.get('id')}] depart_at 이 없다. 도착 역산은 아직 미구현이다.")
         arrive_by = to_service_min(case.get("arrive_by"))
         no_alt = case.get("no_alternatives")
         self._leg_cache = {}
@@ -2500,7 +2506,7 @@ def main():
             raise SystemExit(f"케이스 {args.case} 가 없다")
 
     rules = json.loads(Path(args.rules).read_text(encoding="utf-8"))
-    holidays = set(json.loads(Path(args.holidays).read_text(encoding="utf-8"))["holidays"])
+    holidays = HolidayCalendar.from_doc(json.loads(Path(args.holidays).read_text(encoding="utf-8")))   # #5 덮는 해를 안다
     lo = LineOrder.load(args.order)
     tw = TransferWalk.load(args.transfer_walk,
                            rules["measured_baseline"]["kakao_walk_speed_mps"]["value"])
