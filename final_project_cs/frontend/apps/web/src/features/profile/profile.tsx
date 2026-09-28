@@ -42,9 +42,9 @@ function TokenField({ token }: { token: string | null }) {
   </div>;
 }
 
-function Identity({ profile, children }: { profile: Profile | undefined; children?: ReactNode }) {
-  const t = useT();
-  return <div className={styles.identity}><Avatar size={88} /><p className={styles.name}>{nicknameLabel(profile, t)}</p>{children}</div>;
+/** The default image with the name line under it: text on My page, the nickname field on the edit screen. */
+function Identity({ children }: { children: ReactNode }) {
+  return <div className={styles.identity}><Avatar size={88} />{children}</div>;
 }
 
 /** My page — read only. The nickname and the email are changed on the edit screen. */
@@ -60,11 +60,11 @@ export function MyPage() {
       <ButtonLink href={routes.myPageEdit} variant="quiet">{t("수정", "Edit")}</ButtonLink>
     </div>
     <Panel className={styles.card}>
-      <Identity profile={profile} />
+      {/* The name line under the image is the nickname; there is no second nickname row. */}
+      <Identity><p className={styles.name}>{nicknameLabel(profile, t)}</p></Identity>
       {profile === undefined
         ? <p className={styles.muted} role="status">{t("사용자 정보를 불러오고 있어요.", "Loading your details.")}</p>
         : <dl className={styles.fields}>
-          <div><dt>{t("닉네임", "Nickname")}</dt><dd>{profile.nickname ?? <span className={styles.muted}>{t("아직 발급된 닉네임이 없어요.", "No nickname has been issued yet.")}</span>}</dd></div>
           <div><dt>{t("발급된 토큰", "Issued token")}</dt><dd><TokenField token={profile.token} /></dd></div>
           <div><dt>{t("토큰 복구용 이메일", "Recovery email")}</dt><dd>{profile.email ?? <span className={styles.muted}>{t("등록된 이메일이 없습니다.", "No email registered.")}</span>}</dd></div>
         </dl>}
@@ -103,16 +103,16 @@ function ProfileForm({ profile }: { profile: Profile }) {
   };
 
   return <Panel className={styles.card}>
-    <Identity profile={profile}>
+    {/* The name line itself becomes the nickname field; its placeholder is what My page shows. */}
+    <Identity>
+      <label htmlFor="profile-nickname" className="sr-only">{t("닉네임", "Nickname")}</label>
+      <input id="profile-nickname" className={styles.nameInput} value={draft.nickname} placeholder={nicknameLabel(profile, t)}
+        onChange={edit("nickname")} onBlur={() => setTouched({ ...touched, nickname: true })}
+        autoComplete="nickname" aria-invalid={Boolean(nicknameError)} aria-describedby={nicknameError ? "profile-nickname-error" : undefined} />
+      {nicknameError && <p id="profile-nickname-error" className={styles.failed}>{t("닉네임을 입력해 주세요.", "Enter a nickname.")}</p>}
       <Button disabled aria-describedby="profile-image-note">{t("이미지 변경", "Change image")}</Button>
       <p id="profile-image-note" className={styles.note}>{t("이미지 변경은 준비 중이에요.", "Changing the image is not available yet.")}</p>
     </Identity>
-    <div className={styles.field}>
-      <label htmlFor="profile-nickname">{t("닉네임", "Nickname")}</label>
-      <input id="profile-nickname" value={draft.nickname} onChange={edit("nickname")} onBlur={() => setTouched({ ...touched, nickname: true })}
-        autoComplete="nickname" aria-invalid={Boolean(nicknameError)} aria-describedby={nicknameError ? "profile-nickname-error" : undefined} />
-      {nicknameError && <p id="profile-nickname-error" className={styles.failed}>{t("닉네임을 입력해 주세요.", "Enter a nickname.")}</p>}
-    </div>
     <div className={styles.field}>
       <p className={styles.label}>{t("발급된 토큰", "Issued token")}</p>
       <TokenField token={profile.token} />
