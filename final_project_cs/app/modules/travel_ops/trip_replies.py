@@ -18,6 +18,12 @@ from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
 
+#: 채팅 질문이 찾아보는 여행 규정 갈래. ★`[2026-09-28]` 전에는 일정 생성기의 갈래(`PLAN_SCOPES` — 활동·식사·동행·
+#: 기상)를 그대로 써서 **취소·환급(`travel_cancellation`)과 이동(`travel_mobility`) 규정을 한 번도 찾지 않았다** —
+#: 「취소하면 위약금 있어요?」가 취소 규정을 못 봤다(ui 세션 점검 요청으로 DB 를 세어 찾았다: 12문서 중 4문서가 빠짐)
+QUESTION_SCOPES = ("travel_activity", "travel_dining", "travel_access", "travel_weather",
+                   "travel_cancellation", "travel_mobility")
+
 #: 할 수 있는 일 — 잡담 · 모호한 말 · 못 알아들은 말에 붙인다(지어낸 약속이 아니라 실제로 받는 요청 종류)
 CAN_DO = ("이런 걸 말씀해 주시면 바로 처리해요 — 「○○ 식당이 문을 닫았어요」 · 「30분 늦어요」(일정을 다시 맞춰요) · "
           "「다른 안으로 바꿔 줘」 · 「2번 일정으로 되돌려 줘」 · 「경복궁 몇 시에 가요?」 · 「취소하면 위약금 있어요?」")
@@ -141,5 +147,5 @@ def outcome_reply(status: str | None, outcome: dict[str, Any], message: str) -> 
             "남겨 두었어요. 일정은 바꾸지 않았어요.")
 
 
-__all__ = ["CAN_DO", "OUTCOME_ANSWERS", "item_fact", "not_understood_reply", "other_reply", "outcome_reply",
+__all__ = ["CAN_DO", "OUTCOME_ANSWERS", "QUESTION_SCOPES", "item_fact", "not_understood_reply", "other_reply", "outcome_reply",
            "question_reply", "trip_summary"]

@@ -46,7 +46,7 @@ def _latest_changed_item(store: TripStore, trip_id: UUID):
 
 def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
-                        actor_id: str, policy_search: Any = None) -> dict[str, Any]:
+                        actor_id: str, policy_search: Any = None, place_source: Any = None) -> dict[str, Any]:
     """★`[2026-09-28]` **어떤 결과로 끝나든 `answer`(고객에게 보일 문장)를 싣는다** — `trip_replies.py` 머리.
     질문은 규정 근거로 답하고(`policy_search`, 없으면 못 찾았다고 답한다), 잡담·모호한 말은 할 수 있는 일과
     이 여행의 사실로 답한다. 답은 서버가 가진 사실로만 만든다."""
@@ -61,8 +61,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
     marker = {"trip_message": {"trip_id": str(trip_id), "request_id": request_id}}
     from app.core.settings import get_guardrails
 
-    from . import trip_replies
-    from .planner import PLAN_SCOPES
+    from . import trip_facts, trip_replies
 
     with get_connection() as conn:
         try:
@@ -107,19 +106,32 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         if event is not EventType.CLASSIFIED:
             return view({"status": "escalated", "reason": "classification_failed",
                          "answer": trip_replies.not_understood_reply("classification_failed")})
+        case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
+        team = case_type_of(case.get("issue_code") or "", fallback="trip_desk") or "trip_desk"
+        if team not in REGISTERED_TEAMS:
+            team = "trip_desk"
+        # ★`[2026-09-28]` **이 여행의 사실을 묻는 말**(하루 요약 · 일정 상세 · 다음 일정 · 예약 표시 · 주소 · 운영시간 ·
+        #   이동)은 규정 검색이 아니라 여행 기록으로 답한다(`trip_facts.py`). 추출기(모델) **전에** 규칙으로 가린다 —
+        #   화면 버튼 문장이 모델 판단에 흔들리지 않게. 바꾸는 말이 섞이면 여기서 받지 않는다(아래 신고 경로).
+        fact = trip_facts.fact_question(message)
+        if fact is not None:
+            answer, basis = trip_facts.fact_reply(fact, message=message, items=items, now=at,
+                                                  place_source=place_source)
+            move(EventType.ROUTED, {"owner_team_id": team, "capability": "trip_desk.fact"})
+            move(EventType.COMPLETED, {"answer_ref": f"trip:{trip_id}:fact:{fact}",
+                                       "state_patch": {"answer": answer}})
+            return view({"status": "answered", "reason": "trip_fact_answered",
+                         "report": {"type": "question", "fact": fact}, "answer": answer, "basis": basis})
         try:
             report = extract(message, chat) if chat is not None else None
             why = "no_extractor" if chat is None else "not_understood"
         except OllamaError as exc:
             report, why = None, f"extractor_failed: {exc}"[:120]
         if report is None:
-            move(EventType.ROUTING_FAILED, {"failure_code": why})
-            return view({"status": "escalated", "reason": why, "report": None,
-                         "answer": trip_replies.not_understood_reply(why)})
-        case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-        team = case_type_of(case.get("issue_code") or "", fallback="trip_desk") or "trip_desk"
-        if team not in REGISTERED_TEAMS:
-            team = "trip_desk"
+            answer = trip_replies.not_understood_reply(why)
+            # ★답은 실패 전이에도 Case 에 남긴다(`state_patch`) — 같은 요청이 다시 오면 그 답을 그대로 싣는다
+            move(EventType.ROUTING_FAILED, {"failure_code": why, "state_patch": {"answer": answer}})
+            return view({"status": "escalated", "reason": why, "report": None, "answer": answer})
         # ★`[2026-09-28]` 질문 · 그 밖 — 전에는 답 없이 escalated 로 끝났다(화면이 「담당자에게 넘겼어요」를 채웠다).
         #   질문은 **일정 사실 + 문턱을 넘은 규정 조각**으로 답한다(`*.itinerary_question` 과 같은 `question_answer`).
         #   그 밖(잡담 · 인사 · 모호한 말)은 할 수 있는 일과 이 여행의 사실로 답한다. ★일정은 바꾸지 않는다 —
@@ -128,7 +140,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             if report["type"] == "question":
                 status, answer, basis = trip_replies.question_reply(
                     message=message, items=items, tenant_id=tenant, policy_search=policy_search,
-                    scopes=list(PLAN_SCOPES),
+                    scopes=list(trip_replies.QUESTION_SCOPES),
                     min_score=float(get_guardrails().get("travel.question.min_policy_score")))
                 reason = "question_answered" if status == "answered" else "question_needs_policy_answer"
             else:
@@ -139,7 +151,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                 move(EventType.COMPLETED, {"answer_ref": f"trip:{trip_id}:{report['type']}",
                                            "state_patch": {"answer": answer}})
             else:
-                move(EventType.ROUTING_FAILED, {"failure_code": reason})
+                move(EventType.ROUTING_FAILED, {"failure_code": reason, "state_patch": {"answer": answer}})
             return view({"status": status, "reason": reason, "report": report, "answer": answer,
                          "basis": basis})
 
@@ -189,8 +201,11 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다.
             move2(EventType.COMPLETED, {"answer_ref": ref, "state_patch": {"answer": answer}})
         else:
+            # ★`[2026-09-28]` 답을 남긴다 — 전에는 완료 전이에만 남겨, 「바꿀 것 없음」(`no_meal` 등) 뒤 같은 요청이 오면
+            #   「같은 요청을 이미 받았어요」만 나가고 앞의 답이 빠졌다(시험을 조여서 찾았다)
             move2(EventType.GUARDRAIL_ESCALATED, {"guardrail": "trip_desk",
-                                                  "observed": str(outcome.get("status"))})
+                                                  "observed": str(outcome.get("status")),
+                                                  "state_patch": {"answer": answer}})
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
         return {"case_id": str(case_id), "case_status": str(case["status"]),
                 "classification": {"intent": case.get("intent"),

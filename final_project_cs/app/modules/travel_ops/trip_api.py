@@ -240,6 +240,7 @@ from .density import measure_density
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 from .route_uses import route_problems  # noqa: E402
 from .survey import apply_survey  # noqa: E402
+from .trip_facts import booking_fact  # noqa: E402
 
 
 # ── 보기 ────────────────────────────────────────────────────────
@@ -254,7 +255,8 @@ def _item_view(item: Item) -> dict[str, Any]:
             "customer_pinned": bool(item.detail.get("customer_pinned")),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
             "lat": (item.place or {}).get("latitude"), "lon": (item.place or {}).get("longitude"),
-            "booked": bool(item.booking_id or item.detail.get("booking"))}
+            # ★`[2026-09-28]` 채팅의 예약 답과 같은 판정(`trip_facts.booking_fact`) — 전에는 `detail.reserved` 를 안 봤다
+            "booked": booking_fact(item)[0] == "있음"}
 
 
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
@@ -612,7 +614,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 message=request.message, at=_seoul(request.at) or datetime.now(KST),
                 classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id,
-                policy_search=_lazy("policy", policy_search_factory))
+                policy_search=_lazy("policy", policy_search_factory),
+                place_source=_lazy("place", place_factory))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
 
@@ -993,7 +996,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 tenant=tenant, trip_id=trip_id, request_id=request.request_id, message=request.message,
                 at=_seoul(request.at) or datetime.now(KST), classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}",
-                policy_search=_lazy("policy", policy_search_factory))
+                policy_search=_lazy("policy", policy_search_factory),
+                place_source=_lazy("place", place_factory))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
