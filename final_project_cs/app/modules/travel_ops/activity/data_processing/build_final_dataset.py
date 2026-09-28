@@ -2,14 +2,13 @@
 """Activity 최종 장소 데이터셋: 기존 805건 + 올리브영(매칭 확정분) + 다이소 + 아트박스.
 
 사용:
-    python -m data_processing.build_final_dataset
+    python -m app.modules.travel_ops.activity.data_processing.build_final_dataset
 
 입력:
-    scripts/activities_candidates_seoul_enriched.csv          기존 TourAPI 805건 (값 그대로)
-    data_processing/tourapi_oliveyoung_seoul_enriched.csv     TourAPI 올리브영 371건
-    data_processing/oliveyoung_seoul.csv                      올리브영 매장 CSV 368건 (매칭 기준으로만 쓴다)
-    data_processing/tourapi_daiso_seoul_enriched.csv          TourAPI 다이소 54건
-    data_processing/tourapi_artbox_seoul_enriched.csv         TourAPI 아트박스 24건
+    app/modules/travel_ops/activity/data_processing/tourapi_oliveyoung_seoul_enriched.csv  TourAPI 올리브영 371건
+    app/modules/travel_ops/activity/data_processing/oliveyoung_seoul.csv                   올리브영 매장 CSV 368건 (매칭 기준으로만 쓴다)
+    app/modules/travel_ops/activity/data_processing/tourapi_daiso_seoul_enriched.csv       TourAPI 다이소 54건
+    app/modules/travel_ops/activity/data_processing/tourapi_artbox_seoul_enriched.csv      TourAPI 아트박스 24건
 출력:
     scripts/activity_seoulplace_final.csv                     20컬럼(enriched.csv 와 같은 형식)
 
@@ -31,11 +30,11 @@ import re
 import sys
 from pathlib import Path
 
-from data_processing.fetch_tourapi_details import BASE_COLUMNS
-from data_processing.merge_oliveyoung_activities import oliveyoung_title
+from .fetch_tourapi_details import BASE_COLUMNS
+from .merge_oliveyoung_activities import oliveyoung_title
 
 DATA_DIR = Path(__file__).resolve().parent
-SCRIPTS = DATA_DIR.parent / "scripts"
+SCRIPTS = DATA_DIR.parents[4] / "scripts"
 BASE_CSV = SCRIPTS / "activities_candidates_seoul_enriched.csv"
 TOURAPI_OLIVEYOUNG_CSV = DATA_DIR / "tourapi_oliveyoung_seoul_enriched.csv"
 OLIVEYOUNG_CSV = DATA_DIR / "oliveyoung_seoul.csv"

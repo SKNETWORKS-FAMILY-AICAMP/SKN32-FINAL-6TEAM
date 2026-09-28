@@ -2,13 +2,12 @@
 """Activity 후보 장소 CSV(805건) + 올리브영 매장 CSV(368건) → 통합 CSV 하나.
 
 사용:
-    python -m data_processing.merge_oliveyoung_activities
+    python -m app.modules.travel_ops.activity.data_processing.merge_oliveyoung_activities
 
 입력(둘 다 **읽기만** 한다 — 원본은 고치지 않는다):
-    scripts/activities_candidates_seoul_enriched.csv   TourAPI 기반 805건, 20개 컬럼
-    data_processing/oliveyoung_seoul.csv               올리브영 서울 매장 368건, 10개 컬럼(한글)
+    app/modules/travel_ops/activity/data_processing/oliveyoung_seoul.csv  올리브영 서울 매장 368건, 10개 컬럼(한글)
 출력:
-    data_processing/activities_candidates_seoul_merged.csv  805건 컬럼 + `data_source`
+    app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv  컬럼 + `data_source`
 
 ★통합 규칙(2026-09-26 담당자 결정). 여기 없는 변환은 하지 않는다.
   - 컬럼은 **805건 CSV 기준**이다. 올리브영 전용 컬럼은 만들지 않는다
@@ -36,7 +35,7 @@ import sys
 from pathlib import Path
 
 #: 805건 원본은 `scripts/`(적재기가 쓰는 자리), 작업용 데이터는 이 폴더(`data_processing/`)에 있다.
-SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[5] / "scripts"
 DATA_DIR = Path(__file__).resolve().parent
 ACTIVITY_CSV = SCRIPTS / "activities_candidates_seoul_enriched.csv"
 OLIVEYOUNG_CSV = DATA_DIR / "oliveyoung_seoul.csv"

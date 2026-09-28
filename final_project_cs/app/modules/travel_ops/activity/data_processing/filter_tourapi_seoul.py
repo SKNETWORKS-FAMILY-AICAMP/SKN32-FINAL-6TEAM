@@ -2,8 +2,8 @@
 """TourAPI 검색 응답(JSON)에서 **서울 주소인 행만** 골라 CSV 로 저장한다.
 
 사용:
-    python -m data_processing.filter_tourapi_seoul 응답1.json [응답2.json ...] \
-        --out data_processing/tourapi_oliveyoung_seoul.csv
+    python -m app.modules.travel_ops.activity.data_processing.filter_tourapi_seoul 응답1.json [응답2.json ...] \
+        --out app/modules/travel_ops/activity/data_processing/tourapi_oliveyoung_seoul.csv
 
 입력: 브라우저 등으로 직접 호출해 저장한 `searchKeyword2` 응답 JSON.
       페이지가 여러 개면(totalCount > numOfRows) 페이지별 파일을 모두 넘긴다.
