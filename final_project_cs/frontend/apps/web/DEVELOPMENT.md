@@ -178,3 +178,12 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 실제 연결: `develop` 에서 코어가 접수 흐름의 확인(`/confirm`)·일정 짜기(`/plan`) 요청에 `survey` 칸을 더했고 화면이 싣는다([설문 대응](PREFERENCES_CONTRACT.md) 1절). 이 브랜치의 변환(`toSurvey`)이 그 값을 만든다. 실제 서버로 보낸 확인은 이번에 하지 않았다(데모 등록·단위 시험·가짜 서버 시험까지).
 
 검증(`develop` 병합 뒤): 린트·TypeScript 검사·프로덕션 빌드 통과. Vitest 단위 테스트 89/89(100%, `develop` 시험 포함) — 설문 모델 7건(6문항 순서·이동수단·내국인 문항 없음, 건너뛰기가 제 칸만 지움, 기타 규칙, 분야 순위·해제·재선택, 세부 순위, 완료 조건, 요약 줄)과 변환 5건(모두 건너뜀, 요구 예시와 같은 배열·`mobility`·`preferred_mobility`·`domestic` 없음, 이동 네 코드, `기타` 글 전송·다른 선택지면 안 보냄, 계약 밖 값 거절). Chrome에서 기본 데모 빌드로 실행한 Playwright 시나리오 43/43(100%) — 네이버 SDK 대역 3건은 별도 빌드 전용이라 건너뛰었다. 새 시나리오 8건: 기타 입력(공백 막힘·요약 반영·다른 선택지로 숨김·초안 복귀), 기타 건너뛰기 초기화와 다른 선택지 요약, 6문항·진행률 6, 분야 번호 부여·해제 당김·세부 초기화·다른 분야 보존·재선택 마지막·위치 고정, 세부 번호 규칙·분야 선택 유지·이동 네 항목, 부분 완료 조건과 건너뛰기 초기화, 요약 순서와 이전·다음·카드 접기 뒤 답 유지, PC·375×812·320×640에서 번호가 글자를 덮지 않고 카드 밖으로 넘치지 않음·다음 버튼 도달과 키보드(Space·Tab·Enter)·영어. 기존 시나리오는 6문항 흐름과 건너뛰기 횟수에 맞췄고(넘길 때마다 다음 카드 제목의 초점을 기다린다), 약관 동의 단계는 공용 도우미 `agreeTerms`로 옮겼다. live 시험 28/28(100%) — 공용 도우미 `finishOnboarding`의 건너뛰기 횟수를 7에서 5로 고쳤다(6문항 중 마지막 여유만 답함). 백엔드 게이트(`migrate` → `register_prompts` → `pytest tests/architecture tests/contract tests/unit`) 1612 통과·64 건너뜀. 실서버 시험(`test:real`)은 서버를 띄우지 않아 돌리지 않았다. 개발 서버 375×812에서 기타 입력란, 통합 카드의 분야·세부 번호와 해제 후 당김을 눈으로 확인했다(병합 전 7문항 화면 기준).
+
+## CI 편입 기록
+
+2026-09-28(ST4F-161). 웹 시험이 CI에서 돌지 않았고, 가짜 서버 시험은 서버가 `/v1/web/*`·설문을 바꿔도 통과하므로 두 가지를 더했다. 무엇이 어디서 도는지는 [README](README.md) 「CI」.
+
+- `.github/workflows/ci-web.yml`: 이 폴더가 바뀐 develop·main PR·push에서 `npm ci` → `npm run check` → `test:e2e` → `test:live`. 기존 `ci-develop.yml`·`ci-main.yml`은 건드리지 않았다.
+- `final_project_cs/tests/contract/test_web_client_contract.py`(4건): 웹이 부르는 메서드·경로(13개) ⊆ 서버 도메인 라우트, 설문 판 일치, 설문 칸 ⊆ `TripSurvey` 칸, 설문 값 ⊆ 서버 값.
+
+검증: 계약 시험 4/4 통과. 일부러 어긋나게 한 7가지(서버 경로 이름 바꿈, 웹 메서드 바꿈, 읽지 못하는 호출 모양, 설문 판, 서버가 모르는 칸, 서버가 거절하는 `pace`·분야 값)를 7/7(100%) 실패로 잡았고 각 오류 문구가 어긋난 항목을 가리켰다. ruff 0.16.8(CI와 같은 판) 통과. 백엔드 게이트 1616 통과·64 건너뜀(새 시험 4건 포함). 워크플로 명령을 CI 환경 값(`CI=true`, 데모 값, `TZ=Asia/Seoul`)으로 로컬에서 그대로 돌려 `npm ci` 성공, `check` Vitest 89/89, e2e 43/43(3 건너뜀: 지도 SDK 전용), live 28/28 — 이 PC에는 Playwright용 Chromium이 없어 설치된 Chrome으로 돌렸다(CI는 Chromium을 설치한다). GitHub Actions에서의 실제 실행은 PR에서 확인한다.
