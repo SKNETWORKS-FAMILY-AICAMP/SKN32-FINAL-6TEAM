@@ -150,6 +150,11 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
     await page.getByLabel("닉네임").fill(long);
     await page.getByLabel(/토큰 복구용 이메일/).fill(longEmail);
     await noHorizontalScroll(page);
+    // Phones keep 16px text in fields (no zoom on focus); wider screens keep the design's size.
+    for (const input of [page.getByLabel("닉네임"), page.getByLabel(/토큰 복구용 이메일/)]) {
+      const size = await input.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+      expect(size, `${width}x${height}`).toBeGreaterThanOrEqual(width <= 550 ? 16 : 14);
+    }
   }
 
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
