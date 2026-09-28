@@ -2,6 +2,8 @@
 
 작성일: 2026-09-28 · 상태: 백엔드 설문 계약에 맞춤(TeamFlow `ST4F-156`). 같은 날 앞선 판(`ST4F-155`)의 프론트 자체 형식과 온보딩 끝 별도 전송은 없앴다.
 
+수정: 2026-09-28. 사용자 지시로 설문을 6문항으로 바꿨다 — 독립 이동수단 질문을 빼고(내국인 여부는 `develop` 에서 먼저 뺐다), 두 우선순위 질문을 순위를 매기는 한 카드로 합치고, 여행자 구성 `기타`에 직접 입력을 더했다. 백엔드 계약(판 `2026-09-24.v1`)은 그대로이고 바꾸지 않았다(`party`는 자유 문자열, `priority`는 `list[Area]`, `priority_details`는 `dict[Area, list[str]]` — `role-eval-ui`·`develop` 모두 같음).
+
 **계약의 정본은 백엔드다.** `final_project_cs/app/modules/travel_ops/survey.py`의 `TripSurvey`(판 `2026-09-24.v1`), 결정 `wiki/decisions/D-020-trip-survey-and-ask-first.md`, 계약 문서 `final_project_cs/wiki/external/rest-endpoints.md` 「`constraints.survey`」. 이 문서는 웹 화면의 답이 그 칸으로 어떻게 가는지만 적는다. 프론트의 Zod 거울은 [`src/features/onboarding/payload.ts`](src/features/onboarding/payload.ts)의 `tripSurveySchema`이고, 데모가 서버처럼 거절하게 하려고 둔다. 백엔드가 바뀌면 이쪽을 따라 고친다.
 
 ## 1. 언제 보내나
@@ -18,17 +20,36 @@
 | # | 질문 | 화면 선택 | 백엔드 칸 | 보내는 값 |
 |---|---|---|---|---|
 | 1 | 여행 테마 | 하나 | `theme` | `food` `nature` `culture` `activity` `shopping` `local` |
-| 2 | 여행자 구성 | 하나 | `party` | `alone` `partner` `friends` `family` `other` |
-| 3 | 선호 이동수단 | 여러 개 | `preferred_mobility[]` | `public` `walk` `car` `taxi` |
-| 4 | 가장 중요한 것 | 하나 | `priority[]` | `food` · `activity` · `mobility`(화면의 「이동」) 1개 |
-| 5 | 세부 우선순위 | 영역마다 하나 | `priority_details{food, activity, mobility}` | 영역마다 값 1개짜리 목록 |
-| 6 | 실내·실외 | 식당·액티비티 각 하나 | `indoor_outdoor{dining, activity}` | `indoor` `outdoor` `any` |
-| 7 | 일정이 꼬이면(15번) | 하나 | `on_disruption` | `replace` · `ask_first` |
-| 8 | 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
+| 2 | 여행자 구성 | 하나(`기타`면 직접 입력) | `party` | `alone` `partner` `friends` `family`, 또는 `기타`에 적은 글(앞뒤 공백 제거). `other`라는 글자는 보내지 않는다 |
+| 3 | 여행 우선순위 | 분야와 분야별 세부 항목을 **누른 순서대로** | `priority[]` · `priority_details{…}` | 아래 「우선순위 변환」 |
+| 4 | 실내·실외 | 식당·액티비티 각 하나 | `indoor_outdoor{dining, activity}` | `indoor` `outdoor` `any` |
+| 5 | 일정이 꼬이면(15번) | 하나 | `on_disruption` | `replace` · `ask_first` |
+| 6 | 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
 
 - ★`[2026-09-28 사용자 지시]` **내국인 여부(`domestic`)는 묻지 않는다.** 받아도 반영할 곳이 없어서 뺐다. 백엔드 칸(`TripSurvey.domestic`)은 선택 값이라 안 보내도 된다. 프론트 Zod 거울에는 백엔드와 같게 칸만 남겼고 보내지는 않는다.
-- 백엔드가 **판정에 쓰는 것은 7·8번뿐**이다(위 표 번호는 내국인 문항을 뺀 뒤 기준). 나머지는 받아 두기만 한다(D-020: 「반영했다」고 말하지 않는다).
-- 1·2·3·6번의 세부 값은 D-020이 「담당 팀이 정할 값」으로 두어 백엔드가 문자열로 받는다. 화면 값은 지금 예시다.
+- 백엔드가 **판정에 쓰는 것은 5·6번뿐**이다. 나머지는 받아 두기만 한다(D-020: 「반영했다」고 말하지 않는다).
+- 1·2·3번의 세부 값은 D-020이 「담당 팀이 정할 값」으로 두어 백엔드가 문자열로 받는다. 화면 값은 지금 예시다.
+- `preferred_mobility[]`는 독립 이동수단 질문을 빼서 **보내지 않는다.** 백엔드 칸은 그대로 둔다(빈 목록이 기본값). 이동의 선호는 3번 우선순위의 `mobility` 세부로 받는다.
+- `기타`를 고른 뒤 다른 선택지로 바꾸면 적은 글은 화면에서 숨고 보내지 않는다(다시 `기타`를 고르면 초안이 돌아온다). 건너뛰면 선택과 글을 함께 지운다. 글자 수 제한은 백엔드 계약에 없어 두지 않았다.
+
+### 우선순위 변환
+
+배열 **순서가 곧 순위**다(앞이 더 중요 — 백엔드 주석 「앞이 더 중요하다」와 같다). 화면의 순위 숫자나 한국어 글자는 보내지 않는다.
+
+| 분야(`priority` 값) | 화면 | 세부 항목(`priority_details` 값) |
+|---|---|---|
+| `food` | 음식 | 맛 `taste` · 친절 `kindness` · 청결 `clean` |
+| `activity` | 활동 | 익스트림 `extreme` · 힐링 `healing` · DIY `diy` · 쇼핑 `shopping` |
+| `mobility` | 이동 | 대중교통 `public` · 도보 `walk` · 렌트카 `car` · 택시 `taxi` (이전 화면의 「차」 = `car`, 택시를 더함) |
+
+예: 음식 → 이동을 고르고, 음식은 청결 → 맛, 이동은 택시 → 대중교통 →
+
+```json
+{ "priority": ["food", "mobility"], "priority_details": { "food": ["clean", "taste"], "mobility": ["taxi", "public"] } }
+```
+
+- 해제한 분야는 `priority`에서 빠지고, 그 분야의 세부 답도 지워 `priority_details`에서 빠진다. 해제한 세부 항목도 빠진다.
+- 다음으로 가려면 분야 하나 이상, 고른 분야마다 세부 하나 이상. 고르지 않은 분야는 묻지 않는다. 건너뛰면 두 칸 모두 보내지 않는다.
 - 세부 테마(`theme_details[]`)는 선택지가 정해지지 않아 묻지 않고 보내지 않는다.
 - 이전 화면의 기피 음식·예산·종교·인원 수는 백엔드 설문에 칸이 없어 뺐다(모르는 칸은 422로 거절). 예산(`constraints.budget_krw`)·인원(`party_size`)은 설문이 아닌 등록 요청의 다른 칸이다.
 

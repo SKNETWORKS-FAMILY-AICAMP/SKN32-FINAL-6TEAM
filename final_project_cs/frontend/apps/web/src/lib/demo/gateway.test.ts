@@ -303,7 +303,7 @@ describe("demo trip gateway", () => {
   });
 
   it("registers a trip with its survey but refuses a malformed survey without creating a trip, like the server's 422", async () => {
-    const survey = toSurvey(toggle(initialAnswers, "pace", "relaxed", false));
+    const survey = toSurvey(toggle(initialAnswers, "pace", "relaxed"));
     await expect(gateway.createTrip({ source: SAMPLE, survey }, "ko")).resolves.toMatchObject({ status: "processing" });
     const saved = storage.items.size;
     await expect(gateway.createTrip({ source: SAMPLE, survey: { ...survey, budget: "mid" } as TripSurvey }, "ko")).rejects.toMatchObject({ code: "INVALID_INPUT" });

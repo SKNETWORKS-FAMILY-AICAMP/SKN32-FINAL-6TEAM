@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -9,27 +9,17 @@ const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행
 const field = (page: Page) => page.getByRole("textbox", { name: "이메일" });
 const ERROR = "이메일 형식을 확인해 주세요. 예: name@example.com";
 
-/** Terms card open: read the full terms, agree, go on to the preferences. */
-async function agreeTerms(page: Page) {
-  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
-  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
-  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await reader.getByText(/^\[필수\]/).click();
-  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-}
-
-/** Preferences open: skip all eight questions, then add a plan and start its check. */
+/** Preferences open: skip all six questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
-  // 설문은 8문항이다(내국인 여부 문항을 뺐다). ★카드가 넘어가는 동안의 누름은 화면이 일부러 무시하므로(두 번 넘김 방지),
+  // 설문은 6문항이다(독립 이동수단·내국인 여부 문항을 뺐다). ★카드가 넘어가는 동안의 누름은 화면이 일부러 무시하므로(두 번 넘김 방지),
   //   넘김이 끝나 다음 카드 제목으로 초점이 옮겨진 것을 보고 다음을 누른다 — 안 기다리면 부하가 있을 때 한 번이 사라진다
   //   (2026-09-28 실제로 그랬다). 답한 수는 누른 즉시 바뀌므로 기다리는 신호가 되지 못한다.
-  for (let question = 0; question < 8; question += 1) {
+  for (let question = 0; question < 6; question += 1) {
     await skip.click();
-    if (question < 7) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
+    if (question < 5) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
   }
   await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요.", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();

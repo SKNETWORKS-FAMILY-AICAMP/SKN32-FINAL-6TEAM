@@ -40,7 +40,7 @@ export async function finishOnboarding(page: Page) {
   await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   // ★카드가 넘어가는 동안의 누름은 화면이 무시한다 — 넘김이 끝나 다음 카드 제목으로 초점이 옮겨진 것을 보고 다음을 누른다
-  for (let index = 0; index < 7; index += 1) {
+  for (let index = 0; index < 5; index += 1) {
     await skip.click();
     await expect(page.locator(`#question-title-${index + 1}`)).toBeFocused();
   }
