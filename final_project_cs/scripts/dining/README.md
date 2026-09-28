@@ -16,15 +16,15 @@
 ```
 final_project_cs/
   app/infrastructure/db/migrations/
-    020_dining_schema.sql      테이블 7개와 인덱스, 출처 등록
-    021_dining_core_link.sql   코어 연결 표, 판정 뷰, 판정 함수
-    022_dining_matcher.sql     코어 장소와 원장 장소를 잇는 매칭기
-    023_dining_holiday.sql     명절과 공휴일 경고, 공휴일 달력 표
-    024_dining_links.sql       지도 링크와 전화번호
-    025_dining_attribute.sql   매장 속성. 조건별 판정
-    026_dining_live_check.sql  현장 확인 기록과 물음 만들기
-    027_dining_alternatives.sql 대체 후보 세 축
-    028_dining_quality.sql     정답셋과 품질 측정
+    200_dining_schema.sql      테이블 7개와 인덱스, 출처 등록
+    201_dining_core_link.sql   코어 연결 표, 판정 뷰, 판정 함수
+    202_dining_matcher.sql     코어 장소와 원장 장소를 잇는 매칭기
+    203_dining_holiday.sql     명절과 공휴일 경고, 공휴일 달력 표
+    204_dining_links.sql       지도 링크와 전화번호
+    205_dining_attribute.sql   매장 속성. 조건별 판정
+    206_dining_live_check.sql  현장 확인 기록과 물음 만들기
+    207_dining_alternatives.sql 대체 후보 세 축
+    208_dining_quality.sql     정답셋과 품질 측정
   app/modules/travel_ops/dining/
     __init__.py                DiningTeam 재수출만
     team.py                    DiningTeam 본체
@@ -100,25 +100,25 @@ python scripts/dining/rebuild.py
 ### 1. 스키마
 
 ```
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/020_dining_schema.sql
-psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/021_dining_core_link.sql
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/200_dining_schema.sql
+psql -h 127.0.0.1 -p 5433 -U postgres -d <DB> -v ON_ERROR_STOP=1 -f app/infrastructure/db/migrations/201_dining_core_link.sql
 ```
 
 ```
-psql ... -f app/infrastructure/db/migrations/023_dining_holiday.sql
-psql ... -f app/infrastructure/db/migrations/024_dining_links.sql
+psql ... -f app/infrastructure/db/migrations/203_dining_holiday.sql
+psql ... -f app/infrastructure/db/migrations/204_dining_links.sql
 ```
 
 ```
-psql ... -f app/infrastructure/db/migrations/025_dining_attribute.sql
-psql ... -f app/infrastructure/db/migrations/026_dining_live_check.sql
-psql ... -f app/infrastructure/db/migrations/027_dining_alternatives.sql
-psql ... -f app/infrastructure/db/migrations/028_dining_quality.sql
+psql ... -f app/infrastructure/db/migrations/205_dining_attribute.sql
+psql ... -f app/infrastructure/db/migrations/206_dining_live_check.sql
+psql ... -f app/infrastructure/db/migrations/207_dining_alternatives.sql
+psql ... -f app/infrastructure/db/migrations/208_dining_quality.sql
 ```
 
 `023` 은 달력 표를 만들기만 하고 값은 넣지 않는다. 값은 아래 5번에서 넣는다.
 
-`022_dining_matcher.sql` 은 코어 `places` 표가 있어야 올라간다. 코어 DB 에 얹는 경우에만 돌린다.
+`202_dining_matcher.sql` 은 코어 `places` 표가 있어야 올라간다. 코어 DB 에 얹는 경우에만 돌린다.
 나머지는 순서대로 돌리면 되고, `024` 는 `023` 의 함수를 고쳐 쓰므로 뒤에 와야 한다.
 
 거리 계산 `distance_m` 은 `021` 에 있다. 원래 `022` 에 있었는데, 코어 없이 세우면

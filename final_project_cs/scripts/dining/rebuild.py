@@ -46,7 +46,7 @@ PG_USER = os.environ.get("DINING_DB_USER", "postgres")
 #: 요식 파일인지로 고르면 번호가 늘어도 따라온다.
 
 #: 코어 `places` 표가 있어야 올라가는 것. 없으면 건너뛴다.
-NEEDS_CORE = {"022_dining_matcher.sql"}
+NEEDS_CORE = {"202_dining_matcher.sql"}
 
 #: 코어를 세울 때 설정이 요구하는 값. develop CI 와 같은 가짜다. 실제 키를 넣지 않는다.
 CORE_ENV = {

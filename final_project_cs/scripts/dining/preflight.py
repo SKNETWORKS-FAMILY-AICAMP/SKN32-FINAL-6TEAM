@@ -33,8 +33,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
 MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
 
-#: 요식이 쓰기로 한 구간. 다른 도메인이 여기 들어오면 알려 준다.
-DINING_RANGE = range(20, 30)
+#: 요식이 쓰는 구간. 다른 도메인이 여기 들어오면 알려 준다.
+#: 2026-09-28 에 020~038 을 200~218 로 옮겼다 — develop 이 020~030 을 쓰게 되어 11곳이 겹쳤다.
+#: 옛 파일 머리말·주석의 번호(「027」 등)는 옮기기 전 번호다. 지금 번호는 180 을 더하면 된다.
+DINING_RANGE = range(200, 300)
 TEAM_REF = "app.modules.travel_ops.dining:DiningTeam"
 TOOL_NAME = "read.dining_state"
 
@@ -85,7 +87,7 @@ def check_migrations(rep: Report) -> None:
                        if n in DINING_RANGE for name in names
                        if "dining" not in name)
     if intruders:
-        rep.add(WARN, "요식 구간(020~029)에 다른 도메인이 들어왔다",
+        rep.add(WARN, "요식 구간(200~299)에 다른 도메인이 들어왔다",
                 ", ".join(intruders))
 
     # 반대쪽도 본다. 남이 우리 칸에 들어온 것만 보면 우리가 넘어간 것은 안 보인다.
