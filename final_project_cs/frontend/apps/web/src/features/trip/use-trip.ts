@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useSettings } from "@/lib/settings";
-import { tripGateway, tripKey } from "../../lib/gateway";
+import { tripGateway, tripKey, tripsKey } from "../../lib/gateway";
 
-export { tripKey } from "../../lib/gateway";
+export { tripKey, tripsKey } from "../../lib/gateway";
 
 export function useTrip(tripId: string) {
   const { language } = useSettings();
@@ -15,5 +15,16 @@ export function useTrip(tripId: string) {
     retry: false,
     refetchOnWindowFocus: false,
     refetchInterval: (query) => !query.state.error && query.state.data?.verification.status === "running" ? 800 : false,
+  });
+}
+
+/** This browser's trips, newest first. The home card and "My trips" share this one query. */
+export function useTrips() {
+  const { language } = useSettings();
+  return useQuery({
+    queryKey: [...tripsKey, language],
+    queryFn: () => tripGateway.listTrips(language),
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }

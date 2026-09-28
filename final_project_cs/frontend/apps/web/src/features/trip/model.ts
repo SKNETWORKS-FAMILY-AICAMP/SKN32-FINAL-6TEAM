@@ -62,6 +62,16 @@ export interface Trip {
   messages: TripMessage[];
 }
 
+/** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */
+export interface TripSummary {
+  id: string;
+  title: string;
+  /** When the trip was registered (ISO instant). Null for a demo trip saved before registration time was kept. */
+  createdAt: string | null;
+  /** Itinerary version; above 1 means the itinerary changed after registration. Null where there are no versions (demo). */
+  version: number | null;
+}
+
 export interface CreateTripInput {
   source: string;
   scenario?: DemoScenario;
@@ -72,6 +82,8 @@ export interface CreateTripInput {
 /** Every call names the reader's language; generated text comes back in that language. */
 export interface TripGateway {
   createTrip(input: CreateTripInput, language: Language): Promise<Trip>;
+  /** This browser's trips, newest first. */
+  listTrips(language: Language): Promise<TripSummary[]>;
   getTrip(tripId: string, language: Language): Promise<Trip>;
   retryVerification(tripId: string, language: Language): Promise<Trip>;
   startTrip(tripId: string, language: Language): Promise<Trip>;

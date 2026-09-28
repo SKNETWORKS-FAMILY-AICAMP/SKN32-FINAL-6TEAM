@@ -10,7 +10,7 @@ import { chosenLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
-import { tripKey } from "@/features/trip/use-trip";
+import { tripKey, tripsKey } from "@/features/trip/use-trip";
 import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
 import { submitIntake } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
@@ -60,6 +60,8 @@ export function TripRegistration() {
     mutationFn: () => tripGateway.createTrip({ source: value, scenario, ...(onboarding.complete && { survey: toSurvey(onboarding.answers) }) }, language),
     onSuccess: (trip) => {
       queryClient.setQueryData(tripKey(trip.id, language), trip);
+      // Drop the cached list: the home card and "My trips" read it again instead of showing it without this trip.
+      queryClient.removeQueries({ queryKey: tripsKey });
       router.push(routes.verification(trip.id));
     },
   });
@@ -138,7 +140,7 @@ export function TripRegistration() {
         </aside>
       </div>
       <div className={styles.actions}>
-        <ButtonLink href={routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("홈으로", "Home")}</ButtonLink>
+        <ButtonLink href={routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>

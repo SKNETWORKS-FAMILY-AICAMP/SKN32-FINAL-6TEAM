@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { House, Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
 import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
@@ -27,9 +27,8 @@ export function JourneyShell({ view, title, children }: { view: JourneyView; tit
     <a href="#main-content" className={styles.skip}>{t("본문으로 이동", "Skip to content")}</a>
     <div className={styles.shell} data-view={view}>
       <header className={styles.topbar}>
-        <Link href={routes.start} className={styles.brand} aria-label={t("triPilot 홈으로", "triPilot home")}><span className={styles.mark} aria-hidden="true">t</span>triPilot</Link>
+        <Link href={routes.home} className={styles.brand} aria-label={t("triPilot 홈으로", "triPilot home")}><span className={styles.mark} aria-hidden="true">t</span>triPilot</Link>
         <div className={styles.actions}>
-          <Link href={routes.start} className={styles.homeButton} aria-label={t("홈으로", "Home")}><House size={18} strokeWidth={1.6} aria-hidden="true" /></Link>
           <SettingsMenu />
         </div>
       </header>

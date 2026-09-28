@@ -2,9 +2,11 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { updateSettings, useSettings, useT, type TripNavigation } from "@/lib/settings";
 import { languages } from "@/lib/i18n";
+import { routes } from "@/lib/routes";
 import styles from "./settings-menu.module.css";
 
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
@@ -31,7 +33,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); close(); return; }
     if (event.key !== "Tab" || !panel.current) return;
-    const focusable = [...panel.current.querySelectorAll<HTMLElement>("button, input:checked")];
+    const focusable = [...panel.current.querySelectorAll<HTMLElement>("a[href], button, input:checked")];
     const first = focusable[0], last = focusable.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -45,9 +47,11 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   const drawer = open && <div className={styles.overlay} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
     <div ref={panel} className={styles.panel} id={`${id}-panel`} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onKeyDown={trapFocus}>
       <header className={styles.head}>
-        <div><p className={styles.eyebrow}>SETTINGS</p><h2 id={`${id}-title`}>{t("설정", "Settings")}</h2></div>
-        <button type="button" className={styles.close} onClick={close} aria-label={t("설정 닫기", "Close settings")}><X size={20} aria-hidden="true" /></button>
+        <div><p className={styles.eyebrow}>MENU</p><h2 id={`${id}-title`}>{t("메뉴", "Menu")}</h2></div>
+        <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button>
       </header>
+      {/* Closes the menu on the way, also when the list is already open. */}
+      <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ArrowRight size={18} aria-hidden="true" /></Link>
       <fieldset className={styles.group}>
         <legend>{t("언어", "Language")}</legend>
         <div className={styles.segment}>{languages.map(([value, label]) => (
@@ -65,7 +69,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   </div>;
 
   return <>
-    <button ref={button} type="button" className={`${styles.menuButton} ${className}`} aria-label={t("설정 메뉴", "Settings menu")} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-panel` : undefined} onClick={() => setOpen(true)}>
+    <button ref={button} type="button" className={`${styles.menuButton} ${className}`} aria-label={t("메뉴", "Menu")} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-panel` : undefined} onClick={() => setOpen(true)}>
       <Menu size={20} aria-hidden="true" />
     </button>
     {drawer && createPortal(drawer, root ?? document.body)}
