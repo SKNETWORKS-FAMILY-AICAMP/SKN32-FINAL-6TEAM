@@ -78,6 +78,22 @@ describe("live trip gateway", () => {
     expect(answered.messages.at(-1)?.text).toBe("규정에서 그 내용을 찾지 못했어요.");
   });
 
+  it("carries what the server did and found: history, warnings, pinned stops and the other options it kept", async () => {
+    replies.push({
+      ...TRIP,
+      items: [{ ...TRIP.items[0], customer_pinned: true, other_options: [{ key: "a", name: "대체 식당" }, { key: 1, name: "깨진 것" }] }, TRIP.items[1]],
+      history: [{ version: 2, reason: "closed", at: "2026-10-15T01:30:00+00:00", causes: [{ category: "place", summary: "식당이 문을 닫았어요." }, { kind: "closed" }] }],
+      warnings: [{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }, { code: "no_reason" }],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0]).toMatchObject({ pinned: true, otherOptions: [{ key: "a", name: "대체 식당" }] });
+    expect(trip.stops[1]).toMatchObject({ pinned: false, otherOptions: [] });
+    // Seoul wall clock, and a cause without a sentence still says what kind of thing it was
+    expect(trip.history).toEqual([{ version: 2, reason: "closed", at: "2026-10-15 10:30", causes: ["식당이 문을 닫았어요.", "closed"] }]);
+    // ★a warning without the server's reason is dropped — it is not replaced by a made-up one
+    expect(trip.warnings).toEqual([{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }]);
+  });
+
   it("does not quietly become a new user when the saved key is rejected", async () => {
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
     const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);

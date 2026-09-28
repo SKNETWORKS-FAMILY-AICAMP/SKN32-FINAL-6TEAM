@@ -1,4 +1,4 @@
-import type { Trip, TripGateway, TripMessage, TripStop } from "../../features/trip/model";
+import type { Trip, TripChange, TripGateway, TripMessage, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, LiveError } from "./client";
 
@@ -15,13 +15,20 @@ interface ServerItem {
   lat?: number | null;
   lon?: number | null;
   booked?: boolean;
+  other_options?: { key: string; name: string }[];
+  customer_pinned?: boolean;
 }
-interface ServerTrip { trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string }
+interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
+interface ServerWarning { code?: string; date?: string | null; reason?: string; remedy?: string | null }
+interface ServerTrip {
+  trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
+  history?: ServerHistory[]; warnings?: ServerWarning[];
+}
 
 const MESSAGES_PREFIX = "tripilot.web.live.messages:";
 
 /** Seoul wall-clock date and time of an ISO instant ("2026-10-15", "09:00"). */
-function seoul(iso: string): { date: string; time: string } {
+export function seoul(iso: string): { date: string; time: string } {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
     .formatToParts(new Date(iso));
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
@@ -36,7 +43,26 @@ function stop(item: ServerItem, t: Translate): TripStop {
   return {
     id: item.item_id, date: start.date, time: start.time, endTime: item.ends_at ? seoul(item.ends_at).time : undefined,
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
+    pinned: item.customer_pinned === true,
+    otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
   };
+}
+
+/** A cause in the server's own words: its summary/message when it has one, else what kind of thing it was. */
+function causeText(cause: Record<string, unknown>): string {
+  for (const field of ["summary", "message"]) if (typeof cause[field] === "string" && cause[field]) return cause[field] as string;
+  return ["category", "type", "kind"].map((field) => cause[field]).filter((value): value is string => typeof value === "string").join(" · ");
+}
+
+function change(row: ServerHistory): TripChange {
+  const at = seoul(row.at);
+  return { version: row.version, reason: row.reason, at: `${at.date} ${at.time}`, causes: (row.causes ?? []).map(causeText).filter(Boolean) };
+}
+
+/** ★A warning with no reason is dropped, not invented: without the server's sentence there is nothing true to show. */
+function warning(row: ServerWarning): TripWarning | null {
+  if (typeof row.reason !== "string" || !row.reason) return null;
+  return { code: row.code ?? "", date: row.date ?? null, reason: row.reason, remedy: typeof row.remedy === "string" && row.remedy ? row.remedy : null };
 }
 
 function readMessages(tripId: string): TripMessage[] {
@@ -88,6 +114,8 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     // ★The server judged the plan when it was registered (`_create_trip`): there is no separate check to run here.
     verification: { status: "completed", progress: 100, stages: [], results: [] },
     messages: readMessages(tripId),
+    history: (server.history ?? []).map(change),
+    warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
   };
 }
 

@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
+import { DATA_MODE } from "@/lib/gateway";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { OnboardingIcon } from "./icons";
 import { INTRO_STEP, questions } from "./model";
+import { MyTrips } from "./my-trips";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { TermsCardBody, TermsReader } from "./terms";
@@ -99,6 +101,7 @@ export function Onboarding() {
             <h1>{t("당신의 여행,", "Your next journey.")}<br />{t("취향부터 맞춰요.", "Made more you.")}</h1>
             <p>{t("약관을 확인하고,", "Review the terms,")}<br />{t("좋아하는 것부터 함께 알아볼게요.", "then tell us what you love.")}</p>
           </section>
+          {DATA_MODE === "live" && !expanded && <MyTrips />}
           <div className={styles.stack}>
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
