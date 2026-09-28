@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { noHorizontalScroll, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
 
-test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
+test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 7문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
   await page.goto("/");
   await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 triPilot.");
@@ -56,23 +56,20 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await page.getByRole("button", { name: "가족" }).click();
   await next.click();
 
-  await expect(heading("어떻게 이동하고 싶나요?")).toBeVisible();
-  await page.getByRole("button", { name: "도보", exact: true }).click();
-  await next.click();
+  // No separate transport question any more: nationality comes third.
   await expect(heading("한국 국적이신가요?")).toBeVisible();
   await page.getByRole("button", { name: "외국인", exact: true }).click();
   await skip.click();
-  await expect(progress).toHaveAttribute("aria-valuenow", "4");
+  await expect(progress).toHaveAttribute("aria-valuenow", "3");
   await page.getByRole("button", { name: "이전", exact: true }).click();
   await expect(heading("한국 국적이신가요?")).toBeVisible();
   await expect(page.getByRole("button", { name: "외국인", exact: true })).toHaveAttribute("aria-pressed", "false");
   await expect(next).toBeDisabled();
   await skip.click();
-  await expect(heading("가장 중요한 것은 무엇인가요?")).toBeVisible();
-  await page.getByRole("button", { name: "활동", exact: true }).click();
-  await next.click();
-  await expect(heading("어떤 점을 더 중요하게 보나요?")).toBeVisible();
-  for (const choice of ["맛", "힐링", "도보"]) await page.getByRole("button", { name: choice, exact: true }).click();
+  await expect(heading("어떤 것을 더 중요하게 생각하나요?")).toBeVisible();
+  await page.getByRole("button", { name: /^활동/ }).click();
+  await expect(next).toBeDisabled();
+  await page.getByRole("button", { name: /^힐링/ }).click();
   await next.click();
   await expect(heading("실내와 실외 중 어디가 좋으세요?")).toBeVisible();
   await page.getByRole("button", { name: "실내", exact: true }).first().click();

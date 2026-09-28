@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -9,21 +9,11 @@ const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행
 const field = (page: Page) => page.getByRole("textbox", { name: "이메일" });
 const ERROR = "이메일 형식을 확인해 주세요. 예: name@example.com";
 
-/** Terms card open: read the full terms, agree, go on to the preferences. */
-async function agreeTerms(page: Page) {
-  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
-  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
-  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await reader.getByText(/^\[필수\]/).click();
-  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
-}
-
-/** Preferences open: skip all nine questions, then add a plan and start its check. */
+/** Preferences open: skip all seven questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
-  for (let question = 0; question < 9; question += 1) await skip.click();
+  for (let question = 0; question < 7; question += 1) await skip.click();
   await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요.", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);

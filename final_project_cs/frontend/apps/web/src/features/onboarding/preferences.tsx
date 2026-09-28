@@ -4,16 +4,18 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  answeredCount, chosenLabel, done, INTRO_STEP, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid,
-  type Answers, type ChoiceKey, type ListKey, type Option,
+  answeredCount, areaNames, areas, chosenLabel, detailOptions, done, INTRO_STEP, LAST_STEP, options, partyLabel, priorityLines, questions, skip as skipQuestion,
+  toggle, toggleArea, toggleDetail, unskip, valid, type Answers, type Area, type ChoiceKey, type Option,
 } from "./model";
 import styles from "./onboarding.module.css";
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pad = (value: number) => String(value).padStart(2, "0");
 const titleId = (index: number) => index === INTRO_STEP ? "question-title-intro" : `question-title-${index}`;
+/** Icons of the three priority areas (onboarding line icons). */
+const areaIcons: Record<Area, string> = { food: "food", activity: "activity", mobility: "public" };
 
-/** The survey explanation card, then nine question cards on one track: tap, swipe or use the arrow keys to move. */
+/** The survey explanation card, then the question cards on one track: tap, swipe or use the arrow keys to move. */
 export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirstBack, onComplete, onCollapse, onFeedback, announce }: {
   t: Translate;
   answers: Answers;
@@ -68,7 +70,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     document.getElementById(titleId(next))?.focus({ preventScroll: true });
   }
 
-  const announcement = (index: number) => index === INTRO_STEP ? introTitle : `${index + 1} / ${questions.length}. ${t(questions[index][0], questions[index][1])}`;
+  const announcement = (index: number) => index === INTRO_STEP ? introTitle : `${index + 1} / ${questions.length}. ${t(...questions[index].title)}`;
 
   function change(direction: 1 | -1, fromSwipe = false) {
     if (busy.current) return;
@@ -104,9 +106,10 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     setAnswers(unskip(next, step));
   }
 
-  function select(event: MouseEvent<HTMLButtonElement>, key: ListKey | ChoiceKey, value: string, multiple: boolean) {
-    update(toggle(answers, key, value, multiple));
-    feedback(event.currentTarget, `${key}:${value}`);
+  /** Apply a change made by a control, then give it the usual press feedback. */
+  function press(event: MouseEvent<HTMLButtonElement>, next: Answers, key: string) {
+    update(next);
+    feedback(event.currentTarget, key);
   }
 
   function feedback(control: HTMLButtonElement, key: string) {
@@ -129,31 +132,65 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     advance(1, false, next);
   }
 
-  function chip(key: ListKey | ChoiceKey, option: Option, multiple: boolean, icon: boolean) {
-    const value = answers[key];
-    const selected = Array.isArray(value) ? value.includes(option[0]) : value === option[0];
+  function chip(key: ChoiceKey, option: Option, icon: boolean) {
+    const selected = answers[key] === option[0];
     const feedbackClass = touched.has(`${key}:${option[0]}`) ? styles.selectionFeedback : "";
-    return <button key={option[0]} type="button" className={`${styles.chip} ${selected ? styles.selected : ""} ${feedbackClass}`} aria-pressed={selected} onClick={(event) => select(event, key, option[0], multiple)}>
+    return <button key={option[0]} type="button" className={`${styles.chip} ${selected ? styles.selected : ""} ${feedbackClass}`} aria-pressed={selected} onClick={(event) => press(event, toggle(answers, key, option[0]), `${key}:${option[0]}`)}>
       <span className={styles.optionCheck} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
       {icon && <span className={styles.optionIcon}><OnboardingIcon name={option[0]} size={20} /></span>}
       {t(option[1], option[2])}
     </button>;
   }
 
-  const chips = (key: ListKey | ChoiceKey, multiple = false, grid = false, icon = false) => <div className={`${styles.chips} ${grid ? styles.grid : ""}`} role="group">{options[key].map((option) => chip(key, option, multiple, icon))}</div>;
+  const chips = (key: ChoiceKey, grid = false, icon = false) => <div className={`${styles.chips} ${grid ? styles.grid : ""}`} role="group">{options[key].map((option) => chip(key, option, icon))}</div>;
   const label = (ko: string, en: string) => <p className={styles.groupLabel}>{t(ko, en)}</p>;
+  const rank = (order: number, ko: string, en: string, className: string) => <span className={className}><span aria-hidden="true">{order}</span><span className="sr-only">{t(ko, en)}</span></span>;
+
+  /** `other` opens a field for who it is; the draft stays when another choice is picked, but only `other` sends it. */
+  const party = () => <>
+    {chips("party")}
+    {answers.party === "other" && <div className={styles.otherField}>
+      <label htmlFor="party-other" className={styles.groupLabel}>{t("누구와 함께 여행하는지 알려 주세요.", "Tell us who you’re traveling with.")}</label>
+      <input id="party-other" className={styles.otherInput} value={answers.partyOther} autoComplete="off" placeholder={t("예: 직장 동료", "e.g. coworkers")}
+        onChange={(event) => update({ ...answers, partyOther: event.target.value })} />
+    </div>}
+  </>;
+
+  /**
+   * Three area cards in a fixed order. Tapping an area ranks it (1, 2, 3 in tapping order) and opens its details, which
+   * rank the same way inside the area. Un-picking an area clears and folds its details. Nothing moves on screen.
+   */
+  const priority = () => <div className={styles.areas}>{areas.map((area) => {
+    const order = answers.priority.indexOf(area) + 1;
+    const name = t(...areaNames[area]);
+    return <div key={area} className={`${styles.area} ${order ? styles.areaOn : ""}`}>
+      <button type="button" className={styles.areaHead} aria-pressed={order > 0} aria-expanded={order > 0} aria-controls={`details-${area}`}
+        onClick={(event) => press(event, toggleArea(answers, area), `area:${area}`)}>
+        <span className={styles.areaIcon}><OnboardingIcon name={areaIcons[area]} size={18} /></span>
+        <span className={styles.areaName}>{name}</span>
+        {order > 0 && rank(order, `, ${order}순위`, `, rank ${order}`, styles.rank)}
+      </button>
+      <div id={`details-${area}`} className={styles.areaDetails} role="group" aria-label={t(`${name} 세부 항목`, `${name} details`)} hidden={!order}>
+        {detailOptions[area].map((option) => {
+          const place = answers.details[area].indexOf(option[0]) + 1;
+          return <button key={option[0]} type="button" className={`${styles.chip} ${styles.rankedChip} ${place ? styles.selected : ""}`} aria-pressed={place > 0}
+            onClick={(event) => press(event, toggleDetail(answers, area, option[0]), `${area}:${option[0]}`)}>
+            {t(option[1], option[2])}{place > 0 && rank(place, `, ${place}순위`, `, rank ${place}`, styles.chipRank)}
+          </button>;
+        })}
+      </div>
+    </div>;
+  })}</div>;
 
   function body(index: number): ReactNode {
-    switch (index) {
-      case 0: return chips("theme", false, true, true);
-      case 1: return chips("party");
-      case 2: return chips("transport", true, true, true);
-      case 3: return chips("citizen", false, true);
-      case 4: return chips("priority", false, true, true);
-      case 5: return <>{label("음식", "Food")}{chips("detailFood")}{label("활동", "Activities")}{chips("detailActivity")}{label("이동", "Getting around")}{chips("detailTransport")}</>;
-      case 6: return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
-      case 7: return chips("onDisruption", false, true);
-      default: return chips("pace");
+    switch (questions[index].id) {
+      case "theme": return chips("theme", true, true);
+      case "party": return party();
+      case "citizen": return chips("citizen", true);
+      case "priority": return priority();
+      case "indoor": return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
+      case "onDisruption": return chips("onDisruption", true);
+      case "pace": return chips("pace");
     }
   }
 
@@ -233,10 +270,10 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
           const active = index === step;
           const error = forcedError?.step === index ? forcedError.text : "";
           return <article key={index} className={styles.slide} id={`slide-${index}`} role="group" aria-roledescription={t("슬라이드", "slide")} aria-labelledby={titleId(index)} aria-hidden={!active} inert={!active}>
-            {head(t(stepNames[index][0], stepNames[index][1]))}
+            {head(t(...question.name))}
             <div className={styles.question}>
-              <h2 tabIndex={-1} id={titleId(index)}>{t(question[0], question[1])}</h2>
-              <p className={styles.helper}>{t(question[2], question[3])}</p>
+              <h2 tabIndex={-1} id={titleId(index)}>{t(...question.title)}</h2>
+              <p className={styles.helper}>{t(...question.helper)}</p>
               <div>{body(index)}</div>
               <p className={styles.error} id={`validation-${index}`} role="status">{error}</p>
               <div className={styles.questionNav}>
@@ -264,8 +301,11 @@ export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: {
     <div className={styles.summary}>
       <div><span>{t("선택 언어", "Language")}</span><strong>{t("한국어", "English")}</strong></div>
       <div><span>{t("여행 테마", "Travel theme")}</span><strong>{chosenLabel("theme", answers.theme, t)}</strong></div>
-      <div><span>{t("여행자 구성", "Companions")}</span><strong>{chosenLabel("party", answers.party, t)}</strong></div>
-      <div><span>{t("가장 중요한 것", "Top priority")}</span><strong>{chosenLabel("priority", answers.priority, t)}</strong></div>
+      <div><span>{t("여행자 구성", "Companions")}</span><strong>{partyLabel(answers, t)}</strong></div>
+      {/* In the order they were picked — the same order the survey sends. */}
+      <div><span>{t("여행 우선순위", "Priorities")}</span><strong>{answers.priority.length
+        ? priorityLines(answers, t).map((line) => <span key={line} className={styles.summaryLine}>{line}</span>)
+        : t("미선택", "Not selected")}</strong></div>
     </div>
     <button type="button" className={`${styles.next} ${styles.homeContinue}`} onClick={onJourney}>{hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>
     <button type="button" className={`${styles.next} ${styles.homeContinue} ${styles.editPreferences}`} onClick={onEdit}>{t("여행 취향 수정하기", "Edit your preferences")}<OnboardingIcon name="arrow" size={16} /></button>
