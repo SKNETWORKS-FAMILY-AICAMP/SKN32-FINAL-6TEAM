@@ -134,6 +134,12 @@ class Settings(BaseSettings):
     airport_api_key: str = ""
     #: 외교부 국가·지역별 여행경보 — 해외 확장 시   data.go.kr/data/15076237
     mofa_api_key: str = ""
+    #: 행정안전부 긴급재난문자 — data.go.kr/data/15134001 에 목록만 있고
+    #:  실제 호출은 재난안전데이터 공유플랫폼(safetydata.go.kr)에서 한다.
+    #:  `[미확보 2026-09-20]` 이 키가 공통 키(`data_go_kr_key`)와 같은 계정인지,
+    #:  safetydata.go.kr 에 별도 가입·키 발급이 필요한지 확인 안 됐다 —
+    #:  `app/infrastructure/travel/disaster_msg.py` 참고.
+    disaster_api_key: str = ""
 
     # 정부 교통정보 — ★공공데이터포털 공통 키와 **다른 키**다(각 기관이 따로 발급).
     #: 국토교통부 ITS 국가교통정보센터 — 돌발상황  its.go.kr/opendata
@@ -200,9 +206,10 @@ class Settings(BaseSettings):
     rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
     rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
     #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
+    #                                          ☆안전데이터 공유플랫폼 V2 공통 일일 1,000건과도 일치(2026-09-20 웹조사로 재확인)
     rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
-    rate_kakao_per_day: int = 1000           # 미확인 - 보수적
+    rate_kakao_per_day: int = 1000            # 미확인 - 보수적
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000

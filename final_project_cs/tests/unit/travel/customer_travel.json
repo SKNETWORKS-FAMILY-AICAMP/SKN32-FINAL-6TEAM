@@ -1,0 +1,50 @@
+{
+  "customer_id": "cust_001",
+  "trip_id": "trip_20260922_seoul",
+  "itinerary": [
+    {
+      "id": "act_001",
+      "time": "2026-09-22T10:00:00+09:00",
+      "place": "잠실 스카이타워",
+      "name": "잠실 스카이타워",
+      "address": "서울특별시 송파구 올림픽로 300",
+      "lat": 37.512760,
+      "lng": 127.102450,
+      "tour_api_content_id": null,
+      "disaster_api_content_id": null
+    },
+    {
+      "id": "act_002",
+      "time": "2026-09-22T11:00:00+09:00",
+      "place": "성수동 메인거리",
+      "name": "성수동 복합문화공간",
+      "address": "서울특별시 성동구 성수이로 113",
+      "lat": 37.544580,
+      "lng": 127.055960,
+      "tour_api_content_id": null,
+      "disaster_api_content_id": null
+    },
+    {
+      "id": "act_003",
+      "time": "2026-09-22T15:00:00+09:00",
+      "place": "경복궁",
+      "name": "경복궁",
+      "address": "서울특별시 종로구 사직로 161",
+      "lat": 37.576030,
+      "lng": 126.976721,
+      "tour_api_content_id": "126508",
+      "disaster_api_content_id": null
+    },
+    {
+      "id": "act_004",
+      "time": "2026-09-22T19:30:00+09:00",
+      "place": "롯데마트 서울역점",
+      "name": "롯데마트 서울역점",
+      "address": "서울특별시 중구 한강대로 405",
+      "lat": 37.554960,
+      "lng": 126.972330,
+      "tour_api_content_id": null,
+      "disaster_api_content_id": null
+    }
+  ]
+}
