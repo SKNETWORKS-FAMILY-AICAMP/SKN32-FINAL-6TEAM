@@ -1,5 +1,5 @@
 import type { Language } from "../i18n";
-import { api } from "./client";
+import { api, currentKey } from "./client";
 
 /**
  * The rest of the server's web API: the choices the server is waiting for, the notices it sent,
@@ -73,4 +73,28 @@ export function chooseProposal(tripId: string, proposalId: string, key: string |
   return api(`/v1/web/trips/${encodeURIComponent(tripId)}/proposals/${encodeURIComponent(proposalId)}/choose`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }),
   });
+}
+
+/** What the server said about the chat model (`POST /v1/web/warmup`). `lastAttempt.ok === false` = the model server could not load it. */
+export interface Warmup {
+  status: string;
+  model: string | null;
+  lastAttempt: { ok: boolean; seconds: number | null; at: string | null; reason: string | null } | null;
+  deduped: boolean;
+}
+
+/**
+ * Wake the chat model before the customer asks — a cold model took about 35 s to answer the first message
+ * (2026-09-29, measured). The server does nothing if it is already up and calls it at most once a minute.
+ * ★Never issues a key: without a stored key there is no trip to chat about, and asking would create a user.
+ */
+export async function warmup(language: Language): Promise<Warmup | null> {
+  if (!currentKey()) return null;
+  const body = await api<{ status?: string; model?: string | null; deduped?: boolean;
+    last_attempt?: { ok?: boolean; seconds?: number | null; at?: string | null; reason?: string | null } | null }>("/v1/web/warmup", language, { method: "POST" });
+  const last = body.last_attempt;
+  return {
+    status: body.status ?? "unknown", model: body.model ?? null, deduped: body.deduped === true,
+    lastAttempt: last ? { ok: last.ok === true, seconds: last.seconds ?? null, at: last.at ?? null, reason: last.reason ?? null } : null,
+  };
 }
