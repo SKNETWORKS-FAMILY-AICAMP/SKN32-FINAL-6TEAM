@@ -145,7 +145,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <div className={styles.dayTabs} role="group" aria-label={t("여행 일차", "Travel days")}>{days.map((date, index) => (
         <button key={date} type="button" aria-pressed={date === activeDay} onClick={() => { setDay(date); setSelectedId(null); setExpandedId(null); }}>{t(`${index + 1}일차`, `Day ${index + 1}`)}<span>{date.slice(5).replace("-", ".")}</span></button>
       ))}</div>
-      <ButtonLink href={`${routes.newTrip}?from=${encodeURIComponent(trip.id)}`}><SquarePen {...icon} />{t("일정 수정", "Edit itinerary")}</ButtonLink>
+      <ButtonLink href={live ? routes.newTrip : `${routes.newTrip}?from=${encodeURIComponent(trip.id)}`}><SquarePen {...icon} />{live ? t("새 계획 올리기", "Upload a new plan") : t("일정 수정", "Edit itinerary")}</ButtonLink>
     </div>
     {navigation === "floating"
       ? <nav ref={nav} className={`${styles.floating} ${navOpen ? styles.open : ""}`} aria-label={t("여행 화면", "Travel views")}>
@@ -233,6 +233,6 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           : t("등록된 일정에 대한 시연 응답입니다. 실제 일정·예약 변경은 실행되지 않습니다.", "Demo replies use your itinerary. No actual itinerary or booking changes are performed.")}</p>
       </div>
     </section>
-    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}{live && <> · {t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></>}</span><ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink></footer>
+    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}{live && <> · {t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></>}</span>{!live && <ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink>}</footer>
   </div>;
 }

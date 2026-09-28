@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { House, Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
+import { KeyNotice } from "@/features/account/key-notice";
 import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
@@ -34,6 +35,7 @@ export function JourneyShell({ view, title, children }: { view: JourneyView; tit
         </div>
       </header>
       <main id="main-content" className={styles.main} tabIndex={-1}>
+        {DATA_MODE === "live" && <KeyNotice />}
         {step !== undefined && <RegistrationSteps current={step} />}
         {children}
         <footer className={styles.footer}>

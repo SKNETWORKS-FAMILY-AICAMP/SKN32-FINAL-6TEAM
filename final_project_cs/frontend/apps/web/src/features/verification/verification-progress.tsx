@@ -4,12 +4,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useTrip } from "@/features/trip/use-trip";
-import { tripGateway, tripKey } from "@/lib/gateway";
+import { DATA_MODE, tripGateway, tripKey } from "@/lib/gateway";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { LiveVerificationNote } from "./live-note";
 import styles from "./verification.module.css";
 
 export function VerificationProgress({ tripId }: { tripId: string }) {
+  return DATA_MODE === "live" ? <LiveVerificationNote tripId={tripId} /> : <DemoVerificationProgress tripId={tripId} />;
+}
+
+function DemoVerificationProgress({ tripId }: { tripId: string }) {
   const t = useT();
   const { language } = useSettings();
   const tripQuery = useTrip(tripId);

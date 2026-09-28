@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
+import { KeySettings } from "@/features/account/key-settings";
+import { DATA_MODE } from "@/lib/data-mode";
 import { updateSettings, useSettings, useT, type TripNavigation } from "@/lib/settings";
 import { languages } from "@/lib/i18n";
 import styles from "./settings-menu.module.css";
@@ -31,7 +33,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); close(); return; }
     if (event.key !== "Tab" || !panel.current) return;
-    const focusable = [...panel.current.querySelectorAll<HTMLElement>("button, input:checked")];
+    const focusable = [...panel.current.querySelectorAll<HTMLElement>("button, input:checked, input[type=text]")];
     const first = focusable[0], last = focusable.at(-1);
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -60,6 +62,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <label key={value} className={styles.option}><input type="radio" name={`${id}-navigation`} value={value} checked={navigation === value} onChange={() => updateSettings({ navigation: value })} /><span><strong>{label}</strong><small>{description}</small></span></label>
         ))}
       </fieldset>
+      {DATA_MODE === "live" && <KeySettings />}
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>
     </div>
   </div>;
