@@ -213,9 +213,12 @@ class LineOrder:
         p = self.path(line, origin, d)
         if p is None:
             return Verdict(None, "근거없음", f"{origin}→{d} 경로를 못 찾았다", checked_at=self.built_at)
-        grades = self._edges_of(line, p)
-        weak = [f"{p[i]}–{p[i+1]}({gr})" for i, gr in enumerate(grades) if _base(gr) != "확정"]
         hit = target in p and target != origin
+        # ★ 28 — 등급은 출발~목적지 구간만 본다. 목적지 너머 간선(예: 04호선 오이도행의 안산–신길온천 · 시간표 0행)은
+        #   「열차가 목적지를 지나는가」와 무관하다 — 경로(행선지까지 이어짐)는 위 path() 가 이미 확인했다.
+        seg = p[:p.index(target) + 1] if hit else p
+        grades = self._edges_of(line, seg)
+        weak = [f"{seg[i]}–{seg[i+1]}({gr})" for i, gr in enumerate(grades) if _base(gr) != "확정"]
         # 경로에 근거없음 간선이 끼어 있으면 '지난다'고 단정하지 않는다.
         grade = _worst(grades) if grades else "근거없음"
         if hit and _base(grade) == "근거없음":

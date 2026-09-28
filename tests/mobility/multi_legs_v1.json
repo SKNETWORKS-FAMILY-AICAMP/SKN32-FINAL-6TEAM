@@ -55,16 +55,8 @@
    },
    "expect": "feasible",
    "expect_internal": "feasible",
-   "expect_candidates_min": 2,
-   "expect_tie": true,
-   "expect_tie_axes": [
-    "환승",
-    "도보",
-    "등급"
-   ],
-   "expect_warn_codes": [
-    "MOB_W_TIE_BAND"
-   ],
+   "expect_candidates_min": 3,
+   "expect_tie": false,
    "expect_candidate_legs": {
     "최소환승": [
      [
@@ -80,8 +72,13 @@
     ]
    },
    "expect_candidate_arrive": {
-    "최소환승": "14:54"
-   }
+    "최소환승": "14:48",
+    "최소도보": "14:55"
+   },
+   "note_v28": "28(9/28) 기대 재정의 — 시간표 행선지 채우기(chain_v1)로 07호선 온수행 14:03 이 보이고 passes() 가 04호선 오이도행을 쓰게 되어 최소환승 14:54→14:48 · 최소도보 15:07→14:55 · 버스 105 15:18. 최소도보↔105 차이 23분 > 배차 절반 6분 → 동급 사라짐. 이제 이 케이스는 「후보 셋(지하철 2 + 버스 직행) 성립 · 동급 없음 · 축별 사실 도착 #1 · 환승 #3 · 도보 #2」를 잠근다. 옛 note 의 tie_band 장면은 그 데이터 판에서만 성립했다",
+   "expect_warn_codes_absent": [
+    "MOB_W_TIE_BAND"
+   ]
   },
   {
    "id": "MULTI-03",

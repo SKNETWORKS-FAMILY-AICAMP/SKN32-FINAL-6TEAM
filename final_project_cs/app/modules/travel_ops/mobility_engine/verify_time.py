@@ -111,6 +111,7 @@ class Dep:
     min: int          # 출발 시각(분, 24 시 이상 가능)
     dir: str          # 참고용. 방향의 정본이 아니다
     dest: str         # 행선지 — 방향의 정본
+    inferred: str = None   # 행선지가 원천 값이 아니라 채운 값이면 그 방법(28 · `dest_inferred` · chain_v1). 판정 등급을 추정으로 내린다
 
 
 class Timetable:
@@ -147,7 +148,7 @@ class Timetable:
                     tt.skipped_no_dep += 1
                     continue
                 tt.by_key[(line, nm, r.get("day_type"))].append(
-                    Dep(m, r.get("dir"), r.get("dest_nm")))
+                    Dep(m, r.get("dir"), r.get("dest_nm"), r.get("dest_inferred")))
                 tt.rows += 1
         for v in tt.by_key.values():
             v.sort(key=lambda d: d.min)
@@ -637,7 +638,13 @@ class Verifier:
 
         ev.append(self._ev_tt(line, a, day_type,
                               f"{fmt_min(nxt.min)} 출발 {nxt.dest}행 (그 방향 {len(cands)}편 중, "
-                              f"{fmt_min(after[0][0].min)}~ 안에서 도착이 가장 이른 편)"))
+                              f"{fmt_min(after[0][0].min)}~ 안에서 도착이 가장 이른 편)"
+                              + (f" · 행선지는 원천 빈칸을 열차 잇기로 채운 값({nxt.inferred})" if nxt.inferred else ""),
+                              grade="추정" if nxt.inferred else "확정"))
+        if nxt.inferred:
+            # ★ 28 — 채운 행선지는 추정이다. 「목적지를 지난다」가 그 값에 기대므로 구간 등급도 추정 이하로
+            grade = worst_grade(grade, "추정")
+            warn.append(self.warn_msg("MOB_W_DEST_INFERRED", line=line, station=a, dest=nxt.dest))
         ev.append({"source_type": "db", "source_id": "line_station_order_v1",
                    "grade": verd.grade, "observed_at": self.lo.built_at, "claim": verd.reason})
         if drop.get("종착열차") or drop.get("단축운행") or drop.get("행선지없음"):
@@ -1428,9 +1435,9 @@ class Verifier:
             ts, te = self._pt(line, a), self._pt(line, b)
         return out[:maxn], tried, self._taxi(ts, te, now_min)
 
-    def _ev_tt(self, line, station, day_type, claim):
+    def _ev_tt(self, line, station, day_type, claim, grade="확정"):
         return {"source_type": "db", "source_id": f"timetable_v1@{self.tt.fetched_at}",
-                "grade": "확정", "observed_at": self.tt.fetched_at,
+                "grade": grade, "observed_at": self.tt.fetched_at,
                 "claim": f"{line} {station} {day_type}: {claim}"}
 
     def _ev_rule(self, name, grade):

@@ -2262,6 +2262,19 @@
    "근거": "station_names.동명이역_좌표차_m — 역명만 받은 입력(multi 양끝 · 자전거 끝점 · 택시·자동차 끝점)이 동명이역이면 조용히 한쪽을 집지 않고 값을 비운다(55 ④). 고객이 노선이나 장소를 다시 알려 주면 풀리므로 answer 로 간다.",
    "site": "verify_time.py — verify_multi · verify_leg_bike · _pt",
    "구현": true
+  },
+  "MOB_W_DEST_INFERRED": {
+   "class": "grade",
+   "to_answer": false,
+   "text": "{line} {station} 출발 {dest}행의 행선지는 원천이 비워 준 것을 열차 잇기로 채운 값이다 — 이 구간 등급을 추정으로 내렸다",
+   "params": [
+    "line",
+    "station",
+    "dest"
+   ],
+   "근거": "28 — TAGO 원천이 일부 열차의 dest_nm 을 비워 준다(07호선 평일 25% 등). scripts/collect/fill_timetable_dest_v1.py(chain_v1)가 같은 열차를 다음 역에서 찾아 채우고 dest_inferred 를 붙인다. 판정기는 그 값을 원천과 같게 쓰되 등급만 추정으로 내린다(GPT 9/28 #3).",
+   "site": "verify_time.py — verify_leg 지하철 · _ev_tt grade=추정",
+   "구현": true
   }
  },
  "candidates": {
