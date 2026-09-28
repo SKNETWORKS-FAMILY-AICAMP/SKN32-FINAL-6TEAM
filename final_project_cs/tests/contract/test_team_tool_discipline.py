@@ -51,9 +51,13 @@ def _team_modules() -> list[Path]:
 
 
 def _relative(path: str | Path) -> Path:
-    """절대 경로를 `app/...` 상대 경로로 — 정적 검사가 모은 경로와 같은 모양으로 맞춘다."""
-    parts = Path(path).resolve().parts
-    return Path(*parts[parts.index("app"):])
+    """절대 경로를 `app/...` 상대 경로로 — 정적 검사가 모은 경로와 같은 모양으로 맞춘다.
+
+    ★처음엔 경로 조각에서 첫 `app` 을 찾아 잘랐다. 상위 폴더 이름이 `app` 이면
+      (`/home/app/repo/final_project_cs/app/...`) 엉뚱한 곳에서 잘린다(코덱스 검증 2026-09-28).
+      시험은 `final_project_cs` 에서 돌므로 그 폴더 기준으로 자른다.
+    """
+    return Path(path).resolve().relative_to(Path.cwd().resolve())
 
 
 def _declared_team_files() -> dict[str, Path]:
@@ -78,18 +82,23 @@ def _declared_team_files() -> dict[str, Path]:
 
 
 def _team_package_files() -> list[Path]:
-    """Team 이 폴더로 살면 그 폴더 안 `.py` 전부 — 도우미 파일도 팀 코드다.
+    """팀이 가진 폴더 안 `.py` 전부 — 도우미 파일·엔진도 팀 코드다.
 
     파일 하나로 살 때는 그 파일만 Team 이었다. 폴더로 쪼개면 인프라 호출을
     옆 파일로 옮기기만 해도 규율 검사를 빠져나가므로, 폴더째 검사한다.
-    `travel_ops/` 자체(여러 팀이 함께 쓰는 곳)는 폴더로 치지 않는다.
+
+    팀의 폴더는 둘이다 — `<팀>/`(팀 본체 폴더)와 `<팀>_engine/`(Mobility 방식 엔진).
+    ★처음엔 본체 폴더만 봐서 `mobility_engine/` 이 통째로 빠졌다. 본체가 파일 하나
+      (`mobility.py`)면 부모가 `travel_ops/` 라 엔진까지 건너뛰었다(코덱스 검증 2026-09-28).
+    `travel_ops/` 자체(여러 팀이 함께 쓰는 곳)는 팀 폴더로 치지 않는다.
     """
     out: set[Path] = set()
-    for path in _declared_team_files().values():
-        folder = path.parent
-        if folder.name == "travel_ops" or folder == MODULES_ROOT:
-            continue
-        out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
+    for ref, path in _declared_team_files().items():
+        team_name = ref.split(":")[0].rsplit(".", 1)[-1]           # app.modules.travel_ops.mobility → mobility
+        base = path.parent.parent if path.parent.name == team_name else path.parent
+        for folder in (base / team_name, base / f"{team_name}_engine"):
+            if folder.is_dir() and folder != MODULES_ROOT:
+                out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
     return sorted(out)
 
 
