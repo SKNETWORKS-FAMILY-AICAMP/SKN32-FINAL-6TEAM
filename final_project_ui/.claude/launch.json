@@ -7,6 +7,13 @@
       "runtimeArgs": ["-m", "console.web"],
       "autoPort": true,
       "port": 8060
+    },
+    {
+      "name": "tripilot-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../final_project_cs/frontend/apps/web", "run", "dev"],
+      "port": 3100,
+      "url": "http://127.0.0.1:3100"
     }
   ]
 }

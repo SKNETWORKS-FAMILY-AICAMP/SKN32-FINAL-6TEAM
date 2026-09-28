@@ -29,6 +29,8 @@ export const storedTripSchema = z.object({
   version: z.literal(2),
   scenario: scenarioSchema,
   startedAt: z.number().finite().nonnegative(),
+  /** Registration time. Optional: trips saved in this tab before it was kept have none. */
+  createdAt: z.number().finite().nonnegative().optional(),
   trip: z.object({
     id: z.string().uuid(),
     source: z.string().min(1).max(12000),

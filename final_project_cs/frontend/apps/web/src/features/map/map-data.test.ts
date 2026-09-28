@@ -55,7 +55,7 @@ describe("backend-neutral coordinates", () => {
 
   it("preserves received coordinates through verification, storage reload and management start", async () => {
     const data = new Map<string, string>();
-    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); } };
+    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); }, length: 0, key: () => null };
     let now = 0;
     const gateway = createDemoGateway({ storage, now: () => now });
     const trip = await gateway.createTrip({ source: "1일차 · 2026-10-10\n09:00 장소 · [좌표: 37.5, 127]" }, "ko");

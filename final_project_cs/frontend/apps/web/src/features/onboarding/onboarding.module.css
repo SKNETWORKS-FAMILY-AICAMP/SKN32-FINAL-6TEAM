@@ -22,6 +22,7 @@
 .firstRender .card { animation: arrive .6s both; }
 .firstRender .card:nth-child(1) { animation-delay: .11s; }
 .firstRender .card:nth-child(2) { animation-delay: .22s; }
+.firstRender .card:nth-child(3) { animation-delay: .33s; }
 .cardHead { width: 100%; min-height: 91px; padding: 19px 18px; display: flex; align-items: center; gap: 12px; text-align: left; }
 .cardHead:disabled { opacity: .67; }
 .stepNumber { flex: 0 0 31px; width: 31px; height: 31px; border-radius: 11px; display: grid; place-items: center; background: var(--color-subtle); color: var(--color-muted); font-size: 12px; font-weight: 700; }
@@ -45,8 +46,8 @@
 .card.active > .cardContent { display: flex; flex: 1 0 auto; flex-direction: column; opacity: 1; }
 .card.active .contentInner { flex: 1; display: flex; flex-direction: column; overflow: visible; }
 .card.active .cardPadding { flex: 1; display: flex; flex-direction: column; }
-.card[data-card="1"].active .cardPadding { padding-top: 22px; }
-.card[data-card="1"].active .divider { display: none; }
+.card:is([data-card="0"], [data-card="1"]).active .cardPadding { padding-top: 22px; }
+.card:is([data-card="0"], [data-card="1"]).active .divider { display: none; }
 .card[data-card="2"]:not(.done) .cardPadding { padding: 0; }
 .card[data-card="2"]:not(.done) .divider { display: none; }
 .card[data-card="2"].active:not(.done) > .cardHead { display: none; }
@@ -70,6 +71,20 @@
 .card[data-card="1"].active .draftNote { margin-bottom: 24px; }
 .termsContinue { width: 100%; margin-top: 16px; }
 .card[data-card="1"].active .termsContinue { flex: none; margin-top: auto; min-height: 48px; }
+
+/* Optional recovery email (card 0): not a numbered step. */
+.optional { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; background: var(--color-subtle); color: var(--color-muted); font-size: 10px; font-weight: 650; letter-spacing: 0; vertical-align: 2px; }
+.emailForm { display: flex; flex: 1; flex-direction: column; }
+.emailLabel { font-size: 12px; font-weight: 650; color: var(--color-muted); margin: 6px 0 7px; }
+.emailInput { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
+.emailInput[aria-invalid="true"] { border-color: var(--color-error); }
+.emailHint { font-size: 11px; line-height: 1.7; color: var(--color-muted); margin: 8px 0 0; }
+.emailError { font-size: 12px; line-height: 1.7; color: var(--color-error); margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--color-error-soft); overflow-wrap: anywhere; }
+.emailContinue { width: 100%; min-height: 48px; margin-top: 18px; }
+.card[data-card="0"].active .draftNote { margin-bottom: 24px; }
+/* Like the terms button: `.next` grows (flex: 1), so the expanded card pins it at its own height. */
+.card[data-card="0"].active .emailContinue { flex: none; margin-top: auto; }
+@media (max-width: 550px) { .emailInput { font-size: 16px; } }
 
 .next { flex: 1; min-height: 47px; border-radius: 11px; background: var(--color-primary); color: var(--color-on-primary); font-size: 12px; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .next:disabled { background: var(--color-border); color: var(--color-muted); }

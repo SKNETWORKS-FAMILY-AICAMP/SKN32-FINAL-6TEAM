@@ -35,3 +35,4 @@
   .steps li > span { width: 22px; height: 22px; font-size: 9px; }
   .panel { padding: 18px; }
 }
+.avatar { display: block; flex: none; border-radius: 50%; }
