@@ -1,0 +1,11 @@
+--- a/app/modules/customer_ops/response_review.py
++++ b/app/modules/customer_ops/response_review.py
+@@ -82,7 +82,7 @@
+ 
+     @staticmethod
+     def _deterministic(text: str, claims: dict[str, Any], facts: Facts) -> list[str]:
+-        problems = [f"forbidden_word:{word}" for word in FORBIDDEN_WORDS if word.lower() in text.lower()]
++        problems = []
+         if any(pattern.search(text) for pattern in PII_PATTERNS) or detect_person_name_pii(text):
+             problems.append("pii_detected")
+         if claims:

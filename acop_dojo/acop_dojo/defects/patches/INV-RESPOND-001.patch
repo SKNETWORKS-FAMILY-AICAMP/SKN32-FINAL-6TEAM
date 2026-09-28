@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -262,7 +262,7 @@
+                 raise ValueError("handoff 는 handoff_capability 가 있어야 한다.")
+ 
+         elif na is NextAction.RESPOND:
+-            if not self.answer:
++            if self.answer is None:
+                 raise ValueError("respond 는 answer 가 있어야 한다.")
+ 
+         elif na is NextAction.ESCALATE:

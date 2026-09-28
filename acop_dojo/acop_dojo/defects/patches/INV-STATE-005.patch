@@ -1,0 +1,11 @@
+--- a/app/core/transition.py
++++ b/app/core/transition.py
+@@ -90,7 +90,7 @@
+     SELECT event_type, payload_json
+     FROM case_events
+     WHERE tenant_id = %(tenant_id)s AND case_id = %(case_id)s
+-    ORDER BY aggregate_version
++    ORDER BY aggregate_version DESC
+ """
+ 
+ 

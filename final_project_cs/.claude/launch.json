@@ -1,0 +1,73 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "acop-all",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "& (Join-Path $env:USERPROFILE '.acop-ops\\start-acop.ps1')"
+      ],
+      "port": 8042
+    },
+    {
+      "name": "acop-cs-ui",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.presentation.api.app:app",
+        "--port",
+        "8042",
+        "--reload"
+      ],
+      "port": 8042
+    },
+    {
+      "name": "tripilot-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend/apps/web",
+        "run",
+        "dev"
+      ],
+      "port": 3100
+    },
+    {
+      "name": "tripilot",
+      "url": "http://tripilot.localhost:8042"
+    },
+    {
+      "name": "scenario-console",
+      "url": "http://scenario.localhost:8042"
+    },
+    {
+      "name": "labeling-form",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8071",
+        "--directory",
+        "wiki/records/labeling"
+      ],
+      "port": 8071
+    },
+    {
+      "name": "acop-cs-ui-stable",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.presentation.api.app:app",
+        "--port",
+        "8042"
+      ],
+      "port": 8042
+    }
+  ]
+}

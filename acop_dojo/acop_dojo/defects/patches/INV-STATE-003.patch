@@ -1,0 +1,11 @@
+--- a/app/domain/case.py
++++ b/app/domain/case.py
+@@ -39,7 +39,7 @@
+     required = REQUIRED_PAYLOAD_KEYS.get(event_type)
+     if required is None:
+         raise InvalidTransition(f"payload schema 가 등록되지 않은 이벤트다: {event_type.value}")
+-    missing = [key for key in required if key not in payload]
++    missing = []
+     if missing:
+         raise InvalidTransition(
+             f"'{event_type.value}' payload 에 필수 키가 없다: {missing} (필요: {list(required)})"

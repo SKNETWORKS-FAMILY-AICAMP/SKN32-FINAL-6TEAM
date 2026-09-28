@@ -1,0 +1,11 @@
+--- a/app/core/contracts.py
++++ b/app/core/contracts.py
+@@ -270,7 +270,7 @@
+                 raise ValueError("escalate 는 failure_code 또는 warnings 가 있어야 한다.")
+ 
+         # ★근거 없는 답변 금지 (CLAUDE.md §0.1)
+-        if self.answer and not self.evidence:
++        if self.answer and self.evidence is None:
+             raise ValueError(
+                 "answer 가 있는데 evidence 가 비었다. 근거 없는 확정 답변은 만들지 않는다."
+             )

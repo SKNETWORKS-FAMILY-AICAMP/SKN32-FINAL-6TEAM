@@ -1,0 +1,131 @@
+{
+  "version": "1.0",
+  "tenant_id": "demo",
+  "documents": [
+    {
+      "document_id": "doc_01",
+      "file": "documents/01_billing_monthly-cycle.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_02",
+      "file": "documents/02_billing_annual-renewal.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_03",
+      "file": "documents/03_billing_retry-failure.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_04",
+      "file": "documents/04_billing_tax-invoice.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_05",
+      "file": "documents/05_billing_invoice-delivery.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_06",
+      "file": "documents/06_refund_refund-after-cancel.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_07",
+      "file": "documents/07_refund_refund-window.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_08",
+      "file": "documents/08_refund_partial-proration.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_09",
+      "file": "documents/09_refund_processing-exception.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_10",
+      "file": "documents/10_subscription_cancel.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_11",
+      "file": "documents/11_subscription_plan-change.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_12",
+      "file": "documents/12_subscription_auto-renew.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_13",
+      "file": "documents/13_subscription_trial.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_14",
+      "file": "documents/14_entitlement_plan-matrix.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_15",
+      "file": "documents/15_entitlement_sync-delay.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_16",
+      "file": "documents/16_entitlement_plan-transition.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_17",
+      "file": "documents/17_entitlement_limit-overage.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_18",
+      "file": "documents/18_entitlement_diagnosis.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_19",
+      "file": "documents/19_incident_severity.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_20",
+      "file": "documents/20_incident_entitlement-outage.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_21",
+      "file": "documents/21_incident_compensation.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_22",
+      "file": "documents/22_technical_login-diagnosis.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_23",
+      "file": "documents/23_technical_api-errors.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_24",
+      "file": "documents/24_support_intake-escalation.md",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_25",
+      "file": "documents/25_support_approval-actions.md",
+      "section_count": 12
+    }
+  ]
+}

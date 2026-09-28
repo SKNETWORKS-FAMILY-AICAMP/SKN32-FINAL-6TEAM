@@ -1,0 +1,38 @@
+# 이 저장소의 린트 규칙. 2026-09-23 신설, CI 관문(.github/workflows/ci-*.yml)이 이 파일을 쓴다.
+#
+# ★지금은 **버그만** 막는다. 스타일은 아직 막지 않는다.
+#   2026-09-23 실측(final_project_cs 기준):
+#     ruff 0.16 기본값            875건   ← 첫날 관문으로는 과하다
+#     F·E9 (여기서 고른 범위)       83건 · legacy 제외 시 52건, 41건은 자동수정
+#     E,F,I,W,B,UP               5,754건 ← 그중 줄 길이(E501) 5,053건
+#     I001(import 정렬)            214건 · 전량 자동수정
+#   다음 단계는 I001 을 켜는 것이다. 한 번 `ruff check . --fix` 로 정리한 뒤 select 에 "I" 를 더한다.
+#   줄 길이(E501)는 사실상 전면 재포맷이라, 켤 때는 다른 작업이 몰리지 않는 시점을 골라 한 번에 한다.
+
+# E501 은 아직 select 에 없어 효력이 없다. 켤 때를 대비해 값만 정해 둔다.
+line-length = 120
+
+exclude = [
+    # 옛 판 보존본. 지금 코드와 무관한데 「정의 안 된 이름」 30건이 전부 여기서 나온다
+    # (final_project_cs/legacy/.../team_modules_v1/tests/test_team_scenarios.py).
+    "legacy",
+    # 데이터·작업 폴더. 코드가 아니거나 git 에 올리지 않는 것들.
+    "datasets",
+    # 조직 저장소에 올라가지 않는 폴더 — 로컬 검사 범위를 CI 와 같게 맞춘다.
+    "program",
+    # 얼린 사본. 고치면 백업이 아니게 된다.
+    "_backup",
+    "architecture-images",
+    ".venv",
+    "node_modules",
+]
+
+[lint]
+# F  = 문법·이름 오류, 안 쓰는 import·변수, 중복 정의 — 「버그」에 해당하는 것들
+# E9 = 파싱 실패·들여쓰기 오류 같은 치명적 오류
+select = ["F", "E9"]
+
+[lint.per-file-ignores]
+# pytest 는 다른 파일의 픽스처를 import 한 뒤 같은 이름을 인자로 받는다. 정상 패턴인데
+# ruff 는 재정의(F811)로 본다. 시험 폴더에서만 이 규칙을 끈다.
+"**/tests/**" = ["F811"]

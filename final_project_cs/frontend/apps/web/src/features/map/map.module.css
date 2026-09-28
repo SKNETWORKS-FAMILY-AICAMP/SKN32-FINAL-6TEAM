@@ -1,0 +1,16 @@
+.frame { display: flex; flex-direction: column; flex: 1; min-height: 285px; overflow: hidden; background: var(--color-background); }
+.live { position: relative; flex: 1; min-height: 240px; isolation: isolate; }
+.canvas { width: 100%; height: 100%; position: absolute; inset: 0; color-scheme: light; color: #24392f; }
+.overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; background: var(--color-surface); font-size: 13px; z-index: 2; }
+.overlay p { margin: 0; line-height: 1.7; overflow-wrap: anywhere; }
+.overlay[role="alert"] { color: var(--color-error); }
+.emptyNotice { position: absolute; top: 12px; left: 12px; right: 12px; margin: 0; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-muted); font-size: 12px; text-align: center; pointer-events: none; }
+.caption { flex-shrink: 0; margin: 0; padding: 9px 14px; border-top: 1px solid var(--color-border); font-size: 11px; color: var(--color-muted); line-height: 1.7; }
+.caption span { display: block; }
+.notice { color: var(--color-warning); }
+.unavailable { display: flex; flex: 1; min-height: 240px; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; font-size: 13px; color: var(--color-muted); }
+.unavailable p { margin-bottom: 0; line-height: 1.7; }
+@media (max-width: 850px) {
+  .frame { min-height: 390px; }
+  .live { min-height: 290px; }
+}

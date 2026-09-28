@@ -1,0 +1,11 @@
+.switcher { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0 18px; }
+.flow { display: grid; grid-template-columns: 1fr 18px 1fr 18px 1fr; gap: 12px; align-items: center; }
+.flow section { height: 100%; }
+.flow p { font-size: 13px; }
+.flow span { margin-top: 16px; }
+.muted { color: var(--muted); font-size: 12px; margin-top: 12px; }
+.arrow { width: 18px; color: var(--muted); }
+.details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+.details ol, .details ul { margin: 0; padding-left: 20px; }
+.details li { margin-bottom: 8px; font-size: 13px; }
+@media(max-width: 760px) { .flow, .details { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; } }

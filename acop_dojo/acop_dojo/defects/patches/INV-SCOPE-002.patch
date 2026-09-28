@@ -1,0 +1,11 @@
+--- a/app/presentation/security.py
++++ b/app/presentation/security.py
+@@ -51,7 +51,7 @@
+ 
+     def dependency(authorization: str | None = Header(default=None)) -> Principal:
+         principal = authenticate(authorization)
+-        if scope not in principal.scopes:
++        if scope not in principal.scopes and principal.scopes:
+             raise HTTPException(403, {"error": {"code": "scope_denied", "message": "scope denied"}})
+         return principal
+ 

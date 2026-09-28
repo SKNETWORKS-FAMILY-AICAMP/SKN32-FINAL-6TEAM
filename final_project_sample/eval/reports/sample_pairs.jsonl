@@ -1,0 +1,5 @@
+{"case_id":"s-01","a_success":true,"b_success":false}
+{"case_id":"s-02","a_success":false,"b_success":true}
+{"case_id":"s-03","a_success":true,"b_success":true}
+{"case_id":"s-04","a_success":false,"b_success":false}
+{"case_id":"s-05","a_success":true,"b_success":false}

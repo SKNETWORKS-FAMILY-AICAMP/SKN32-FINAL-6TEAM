@@ -1,0 +1,19 @@
+# Dependencies and generated output
+node_modules/
+.next/
+out/
+.expo/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Local environment files; sanitized examples may be tracked
+.env*
+!.env.example
+!.env.*.example
+
+# Local tooling logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
