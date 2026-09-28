@@ -86,6 +86,8 @@ export interface Trip {
   /** Live only: what the server did to the trip and what it found. Absent in demo. */
   history?: TripChange[];
   warnings?: TripWarning[];
+  /** The server's per-trip plan page (a link that needs no login). */
+  planUrl?: string;
 }
 
 export interface CreateTripInput {

@@ -114,6 +114,7 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     // ★The server judged the plan when it was registered (`_create_trip`): there is no separate check to run here.
     verification: { status: "completed", progress: 100, stages: [], results: [] },
     messages: readMessages(tripId),
+    planUrl: server.plan_url || undefined,
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
   };

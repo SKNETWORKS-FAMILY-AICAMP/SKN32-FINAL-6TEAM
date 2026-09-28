@@ -49,6 +49,7 @@ export function TripAttention({ trip }: { trip: Trip }) {
   const history = trip.history ?? [];
 
   return <div className={styles.wrap}>
+    {trip.planUrl && <p className={styles.plan}><a href={trip.planUrl} target="_blank" rel="noopener noreferrer">{t("여행계획서 열기", "Open your trip plan")}</a><span>{t("로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.", "This link opens without logging in. Anyone who has it can view your plan.")}</span></p>}
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
     {choices.length > 0 && <section className={`${styles.card} ${styles.ask}`} aria-labelledby="trip-choices">

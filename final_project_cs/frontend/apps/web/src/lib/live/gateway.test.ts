@@ -86,6 +86,7 @@ describe("live trip gateway", () => {
       warnings: [{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }, { code: "no_reason" }],
     });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.planUrl).toBe("http://x/plan");
     expect(trip.stops[0]).toMatchObject({ pinned: true, otherOptions: [{ key: "a", name: "대체 식당" }] });
     expect(trip.stops[1]).toMatchObject({ pinned: false, otherOptions: [] });
     // Seoul wall clock, and a cause without a sentence still says what kind of thing it was
