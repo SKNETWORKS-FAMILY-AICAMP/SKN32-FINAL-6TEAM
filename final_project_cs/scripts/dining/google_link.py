@@ -32,7 +32,7 @@
     python scripts/dining/google_link.py --retry                전에 못 붙인 가게도 다시 본다
     python scripts/dining/google_link.py --by 홍길동             entered_by 에 남는 이름(기본 google_link)
 
-키는 ACOP_GOOGLE_PLACES_API_KEY. 접속은 run_check.py 와 같다.
+키는 ACOP_GOOGLE_MAPS_API_KEY. 접속은 run_check.py 와 같다.
 """
 from __future__ import annotations
 
@@ -258,9 +258,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--retry", action="store_true", help="전에 못 붙인 가게도 다시 본다")
     args = ap.parse_args(argv)
 
-    key = os.environ.get("ACOP_GOOGLE_PLACES_API_KEY", "")
+    key = os.environ.get("ACOP_GOOGLE_MAPS_API_KEY", "")
     if not key:
-        print("ACOP_GOOGLE_PLACES_API_KEY 가 비어 있다.", file=sys.stderr)
+        print("ACOP_GOOGLE_MAPS_API_KEY 가 비어 있다.", file=sys.stderr)
         return 2
 
     place_link, run_check = _modules()
