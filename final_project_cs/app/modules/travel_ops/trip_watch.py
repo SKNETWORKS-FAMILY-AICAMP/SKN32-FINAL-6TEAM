@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 from typing import Any, Callable
 
 from .itinerary import Item, TripStore, visible_to
-from .itinerary_changes import (ItineraryChange, NoChange, next_after, plan_activity_adjustment,
+from .itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
 from .pending import PendingStore, apply_or_ask
 
@@ -124,7 +124,7 @@ class TripWatcher:
         with self._connect() as conn:
             _, items = self.store.latest(conn, trip_id)
         plan = plan_route_adjustment(item=item, following=next_after(items, item), route=route,
-                                     events=events, now=now)
+                                     events=events, now=now, previous=place_before(items, item))
         self._settle(trip_id, item, plan, result)
 
     def _settle(self, trip_id, item: Item, plan, result: TripTickResult,

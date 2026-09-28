@@ -87,7 +87,45 @@ def modes_from_survey(constraints: dict[str, Any] | None) -> list[str] | None:
     return sorted(modes | {"walk"}) if modes else None
 
 
-def leg_planner(party_size: int | None, constraints: dict[str, Any] | None):
+def engine_line(name: str) -> str:
+    """uses 노선명 → 계산기(시간표) 노선명. '2호선' → '02호선' · '경의중앙선' → '경의선'(options.line_name 의 반대)."""
+    from .engine.options import LINE_OFFICIAL
+    back = {v: k for k, v in LINE_OFFICIAL.items()}
+    if name in back:
+        return back[name]
+    if name.endswith("호선") and name[:-2].isdigit():
+        return f"{int(name[:-2]):02d}호선"
+    return name
+
+
+def disruptions_from_events(events: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+    """☆`[2026-09-29 문제목록 #39]` 우리 경로 사건(대상 표기 → effect) → 계산기 사고 조건(kind). (옮긴 것, 못 옮긴 대상).
+
+    뜻이 같은 것만 옮긴다 — 이름만 바꾸지 않는다.
+      N호선:역 + skip_station  → station_skip{line, station}   (그 역에 안 선다 — 양쪽 같은 뜻)
+      N호선:*  + line_closed   → line_closed{line}
+      버스:노선 + 운행 중단      → route_closed{route}
+      도로:…   + road_control  → 못 옮김 — 우리 쪽은 「느려진다」, 계산기에는 대중교통이 지나는 도로 정보가 없다
+    못 옮긴 대상은 부르는 쪽이 드러낸다(조용히 버리지 않는다).
+    """
+    out, unmapped = [], []
+    for target, ev in (events or {}).items():
+        head, _, rest = str(target).partition(":")
+        effect = (ev or {}).get("effect")
+        meta = {"note": (ev or {}).get("summary"), "source": (ev or {}).get("source_id") or "trip_watch",
+                "grade": (ev or {}).get("grade", "추정"), "observed_at": (ev or {}).get("observed_at")}
+        if head == "버스" and effect in ("route_closed", "line_closed", "skip_station"):
+            out.append({"kind": "route_closed", "route": rest, **meta})
+        elif head not in ("버스", "도로") and effect == "skip_station" and rest:
+            out.append({"kind": "station_skip", "line": engine_line(head), "station": rest, **meta})
+        elif head not in ("버스", "도로") and effect == "line_closed":
+            out.append({"kind": "line_closed", "line": engine_line(head), **meta})
+        else:
+            unmapped.append(str(target))
+    return out, unmapped
+
+
+def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, disruptions=None):
     """일정 짜기(planner.add_moves)가 부를 **구간 계산기**. 꺼져 있으면 None — 부르는 쪽이 직선 어림값으로 간다.
 
     돌려주는 함수 leg(a_place, b_place, arrive_dt, not_before_dt) → (결과 dict, None) 또는 (None, 이유 dict).
@@ -101,6 +139,8 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None):
     rt = engine_runtime.get_verifier(**_STATE["kw"])
     c = dict(constraints or {})
     planner = Planner(rt, stage="planning", modes=modes_from_survey(c))
+    if disruptions:
+        planner.disruptions = tuple(dict(d) for d in disruptions)     # #38 — 사고를 모든 판정 호출에 싣는다
     party = party_of(party_size, c)
     first_visit = c.get("first_visit", True)
     buffer = rt._v.rv("buffer", "by_stage", "planning")
