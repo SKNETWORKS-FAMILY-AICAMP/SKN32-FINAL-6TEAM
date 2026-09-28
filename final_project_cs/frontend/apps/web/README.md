@@ -91,10 +91,12 @@ $env:REAL_SERVER_E2E="1"; $env:PLAYWRIGHT_CHANNEL="msedge"; npm run test:real
 
 ## 사람 확인(Cloudflare Turnstile)
 
-live 에서 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 를 넣으면 계획 올리기 화면에 사람 확인이 붙는다. 평소엔 보이지 않고 Cloudflare 가 의심할 때만 체크 상자가 뜬다. 받은 확인 표는 계획 올리기 요청(`POST /v1/web/trip-intakes`, multipart)의 `turnstile_token` 칸으로 간다. 확인 표가 오기 전에는 보내지 않고 「사람 확인이 끝나면 보낼 수 있어요」를 보인다. 한 번 보낸 표는 다시 못 쓰므로 실패하면 새 표를 받는다. 값이 비면 꺼지고 지금과 같다.
+live 에서 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 를 넣으면 계획 올리기 화면에 사람 확인이 붙는다. ★새 사용자의 첫 계획 올리기는 표를 **두 번** 받는다 — 먼저 키 발급(`POST /v1/web/session`, JSON `{"turnstile_token"}`)에, 그다음 새 표로 계획 올리기에(표는 한 번만 확인된다). 평소엔 보이지 않고 Cloudflare 가 의심할 때만 체크 상자가 뜬다. 받은 확인 표는 계획 올리기 요청(`POST /v1/web/trip-intakes`, multipart)의 `turnstile_token` 칸으로 간다. 확인 표가 오기 전에는 보내지 않고 「사람 확인이 끝나면 보낼 수 있어요」를 보인다. 한 번 보낸 표는 다시 못 쓰므로 실패하면 새 표를 받는다. 값이 비면 꺼지고 지금과 같다.
 
 - 개발: Cloudflare 공개 시험 키 `1x00000000000000000000AA`(항상 통과). 배포: Cloudflare 에서 사이트를 등록해 받은 사이트 키.
-- ★**서버가 확인 표를 Cloudflare 에 검증(siteverify)해야 막힌다.** 화면만으로는 봇이 위젯을 건너뛰고 바로 보낼 수 있다. 서버 검증은 cs 쪽 계획서로 넘겼다(2026-09-28) — 그 전까지 이 기능은 방어가 아니다.
+- 서버가 확인 표를 Cloudflare 에 검증한다(`ACOP_TURNSTILE_SECRET`, 계약 `final_project_cs/wiki/external/rest-endpoints.md` 「남용 방어」). 비밀키가 없는 개발 서버는 건너뛰고 응답에 `human_check: "skipped"` 를 싣는다. 2026-09-28 Cloudflare 공개 시험 비밀키로 확인: 항상 통과 키 → 키 발급 `human_check: passed` · 계획 읽기까지 통과, 항상 실패 키 → 키 발급 403 `human_check_failed`, 화면은 서버 문장을 보이고 키를 저장하지 않는다.
+- 한도에 걸리면(`429 usage_limit` · `503 service_daily_cap` · `429 too_many_sessions`) 서버 문장 뒤에 「(3시간 20분 뒤에 다시 할 수 있어요.)」처럼 다시 되는 때를 붙인다(`retry_after_seconds` 또는 `Retry-After`).
+- 키 안내에 「여행을 하나도 만들지 않은 키는 7일 뒤 지워져요」를 적는다(서버 빈 키 정리, 기본 7일).
 - live 전체 시험(`npm run test:live`)은 가짜 서버만 쓰므로 이 값을 비워 빌드한다(`tests/live/serve.mjs`).
 
 ## 지도 선택과 백엔드 전달

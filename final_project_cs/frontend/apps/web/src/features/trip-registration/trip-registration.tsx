@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -13,6 +13,7 @@ import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
 import { tripKey, tripsKey } from "@/features/trip/use-trip";
 import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
+import { currentKey, issueKey, LiveError } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -55,6 +56,21 @@ export function TripRegistration() {
   const checking = live && Boolean(TURNSTILE_SITE_KEY);
   const [humanToken, setHumanToken] = useState<string | null>(null);
   const [humanReset, setHumanReset] = useState(0);
+  // Waiting for the next token (a new customer needs two: one for the key, one for the plan).
+  const nextToken = useRef<((token: string) => void) | null>(null);
+  function takeToken(token: string | null) {
+    setHumanToken(token);
+    if (token) { setValidation(""); nextToken.current?.(token); nextToken.current = null; }
+  }
+  /** Spend the current token and wait for a fresh one — a token is checked once only. */
+  function freshToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const timer = window.setTimeout(() => { nextToken.current = null; reject(new LiveError("human_check_timeout", t("사람 확인이 끝나지 않았어요. 다시 눌러 주세요.", "The human check did not finish. Please press again."))); }, 60_000);
+      nextToken.current = (token) => { window.clearTimeout(timer); resolve(token); };
+      setHumanToken(null);
+      setHumanReset((count) => count + 1);
+    });
+  }
   const draft = useQuery({
     queryKey: ["registration-draft", from],
     queryFn: async () => {
@@ -78,7 +94,14 @@ export function TripRegistration() {
   });
   // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   const intake = useMutation({
-    mutationFn: () => submitIntake(value, files, language, humanToken),
+    mutationFn: async () => {
+      // ★A new customer's key is issued here, with its own human check (the sign-up door), then the plan goes with a fresh token.
+      if (checking && !currentKey()) {
+        await issueKey(language, humanToken);
+        return submitIntake(value, files, language, await freshToken());
+      }
+      return submitIntake(value, files, language, humanToken);
+    },
     onSuccess: (result) => router.push(routes.intake(result.intake_id)),
     // The token was spent on this attempt; ask for a fresh one before the next.
     onError: () => { if (checking) setHumanReset((count) => count + 1); },
@@ -128,7 +151,7 @@ export function TripRegistration() {
               onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
             {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
           </div>}
-          {checking && <HumanCheck onToken={(token) => { setHumanToken(token); if (token) setValidation(""); }} resetKey={humanReset} />}
+          {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </Panel>
