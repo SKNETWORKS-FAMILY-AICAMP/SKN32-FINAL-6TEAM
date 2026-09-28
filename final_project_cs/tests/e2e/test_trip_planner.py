@@ -146,7 +146,9 @@ def api(monkeypatch):
            "keys": keys}
 
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for sql in ("DELETE FROM place_catalog WHERE tenant_id=%s",
+        for sql in ("DELETE FROM trip_intakes WHERE tenant_id=%s",          # 웹 계획 읽기(028) — 원본·값은 따라 지워진다
+                    "DELETE FROM web_user_keys WHERE tenant_id=%s",          # 웹 사용자 키(025)
+                    "DELETE FROM place_catalog WHERE tenant_id=%s",
                     "DELETE FROM itinerary_items WHERE tenant_id=%s",
                     "DELETE FROM itinerary_versions WHERE tenant_id=%s",
                     "DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
@@ -417,8 +419,29 @@ class StubTour:
              "address": "서울특별시 종로구 아무길 2", "latitude": 37.5757, "longitude": 126.9781}]}
 
 
-def test_tour_api_is_called_only_when_the_catalog_is_empty(api):
-    """★바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
+def _cache_one_row(api):
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO place_catalog (tenant_id,source,content_id,content_type_id,area_code,"
+            "title,address,latitude,longitude) VALUES (%s,'tour_api','800001','14','1',"
+            "'캐시된 미술관','서울특별시 종로구 캐시길 1',37.5759,126.9787)", (api["tenant"],))
+
+
+def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api):
+    """★`[2026-09-27]` 관광공사 장소 목록은 **기본 꺼짐**(콘텐츠랩 「로컬서버 저장방식 금지」 해석 대기).
+    표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받아 그 요청 안에서만 쓴다."""
+    _cache_one_row(api)
+    tour = StubTour()
+    body = api["ask"](request_id="p-off", tour=tour).json()
+    assert tour.calls == 1 and body["calls"]["tour_api"] == 1
+    assert "place_catalog" not in body["candidates"]["by_source"]
+
+
+def test_tour_api_is_called_only_when_the_catalog_is_empty(api, monkeypatch):
+    """★(목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
+    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+
+    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: True))
     tour = StubTour()
     body = api["ask"](request_id="p-tour", tour=tour).json()
     assert tour.calls == 1 and body["calls"]["tour_api"] == 1
@@ -426,11 +449,7 @@ def test_tour_api_is_called_only_when_the_catalog_is_empty(api):
     assert body["candidates"]["pool"] == len(ACTIVITIES) + len(DINING) + 2
 
     # ★카탈로그에 한 행이라도 있으면 바깥에 나가지 않는다.
-    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        cur.execute(
-            "INSERT INTO place_catalog (tenant_id,source,content_id,content_type_id,area_code,"
-            "title,address,latitude,longitude) VALUES (%s,'tour_api','800001','14','1',"
-            "'캐시된 미술관','서울특별시 종로구 캐시길 1',37.5759,126.9787)", (api["tenant"],))
+    _cache_one_row(api)
     cached = StubTour()
     again = api["ask"](request_id="p-tour-2", tour=cached).json()
     assert cached.calls == 0 and again["calls"]["tour_api"] == 0
@@ -600,3 +619,31 @@ def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
     planned = {d["date"]: d["actual_density"] for d in body["planner"]["density"]["days"]}
     registered = {row["date"]: round(row["actual_density"], 3) for row in body["trip"]["density"]}
     assert registered == planned
+
+
+# ── 계획 읽기에서 「일정 짜 줘」 → 일정 생성기 → 등록 (2026-09-28) ───────────
+def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_once(api):
+    """★모델이 없어도 「일정 짜 줘」를 규칙으로 잡는다. 조건(첫날·일수·인원)을 확인해 누르면 일정 생성기가 짠 초안이
+    **같은 판정**을 지나 `_create_trip` 한 곳으로 등록된다. 두 번 눌러도 여행은 하나다."""
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    accepted = client.post("/v1/web/trip-intakes", headers=key,
+                           data={"text": "\n".join(["서울 2일 일정 짜 줘", "실내 위주로 부탁해요"])})
+    assert accepted.status_code == 202, accepted.text
+    intake_id = accepted.json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    plan = view["check"]["plan"]
+    assert plan["requested"] is True and "실내 위주" in plan["preferences"]
+    assert view["check"]["ready"] is False and view["check"]["problems"] == []      # 읽은 항목 0 — 막는 문제가 아니다
+    body = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
+    assert done.status_code == 200, done.text
+    trip = done.json()["trip"]
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    again = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body).json()
+    assert again["trip"]["trip_id"] == trip["trip_id"] and again["trip"]["created"] is False
+    after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
+    # 상품 범위 밖(8일)은 받지 않는다
+    wide = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**body, "days": 8})
+    assert wide.status_code == 422

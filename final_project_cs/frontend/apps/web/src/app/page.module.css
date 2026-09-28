@@ -1,5 +1,0 @@
-.landing { max-width: 1060px; min-height: calc(100svh - 101px); margin: auto; padding: 80px 38px; display: flex; align-items: center; justify-content: center; text-align: center; }
-.eyebrow { color: var(--color-muted); letter-spacing: 1.4px; font-size: 11px; margin-bottom: 7px; }
-.landing h1 { font-size: 33px; line-height: 1.5; }
-.description { margin: 17px auto 23px; color: var(--color-muted); max-width: 420px; }
-@media (max-width: 550px) { .landing { padding: 55px 22px; min-height: calc(100svh - 115px); } .landing h1 { font-size: 27px; } }

@@ -100,6 +100,11 @@ def _place(row: tuple) -> dict[str, Any]:
     return {**attributes, **place, "attributes": attributes}
 
 
+def visible_to(places: list[dict[str, Any]], trip_id: Any) -> list[dict[str, Any]]:
+    """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용."""
+    return [p for p in places if p.get("trip_scope") in (None, str(trip_id))]
+
+
 class TripStore:
     def __init__(self, tenant_id: str) -> None:
         self.tenant_id = tenant_id
@@ -109,12 +114,15 @@ class TripStore:
                     party_size: int | None, items: list[Item],
                     constraints: dict[str, Any] | None = None,
                     request_key: str | None = None,
-                    request_sha256: str | None = None) -> tuple[UUID, int]:
+                    request_sha256: str | None = None,
+                    trip_id: UUID | None = None) -> tuple[UUID, int]:
+        """★`trip_id` 를 미리 정해 넘길 수 있다 — 그 여행 전용 장소 행을 여행보다 먼저 넣을 때(029)."""
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO trips (tenant_id, customer_id, title, locale, party_size, constraints, "
-                "request_key, request_sha256) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING trip_id",
-                (self.tenant_id, customer_id, title, locale, party_size,
+                "INSERT INTO trips (trip_id, tenant_id, customer_id, title, locale, party_size, constraints, "
+                "request_key, request_sha256) VALUES (COALESCE(%s, gen_random_uuid()),%s,%s,%s,%s,%s,%s,%s,%s) "
+                "RETURNING trip_id",
+                (trip_id, self.tenant_id, customer_id, title, locale, party_size,
                  json.dumps(constraints or {}, ensure_ascii=False), request_key, request_sha256))
             trip_id = cur.fetchone()[0]
         version = self.append_version(conn, trip_id=trip_id, base_version=0, items=items,
@@ -203,11 +211,23 @@ class TripStore:
             row = cur.fetchone()
         return row[0] if row else None
 
-    def places(self, conn) -> list[dict[str, Any]]:
+    def places(self, conn, trip_id: UUID | None = None, *, every_trip: bool = False) -> list[dict[str, Any]]:
+        """장소 목록. ★`[2026-09-27]` 외부 서비스에서 온 장소는 **그 여행 전용 행**이다(`trip_scope`, 마이그레이션 029).
+
+        - `trip_id` 없음 → 공용 행만(일정 생성기 후보 · 에이전트 도구의 장소 목록)
+        - `trip_id` 있음 → 공용 + 그 여행 전용
+        - `every_trip=True` → 전부(여러 여행을 한꺼번에 도는 감시). 여행마다 `visible_to` 로 거른다
+        ★다른 여행의 전용 행을 대체 후보로 쓰면 외부 값을 다른 고객에게 재사용하는 것이다(약관 — 마이그레이션 029 머리).
+        """
+        where, params = "", [self.tenant_id]
+        if not every_trip:
+            where = " AND (trip_scope IS NULL OR trip_scope = %s)" if trip_id else " AND trip_scope IS NULL"
+            params += [trip_id] if trip_id else []
         with conn.cursor() as cur:
-            cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + " FROM places WHERE tenant_id=%s",
-                        (self.tenant_id,))
-            return [_place(row) for row in cur.fetchall()]
+            cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + ", trip_scope FROM places WHERE tenant_id=%s"
+                        + where, params)
+            return [{**_place(row[:-1]), "trip_scope": str(row[-1]) if row[-1] else None}
+                    for row in cur.fetchall()]
 
     # ── 쓰기 ────────────────────────────────────────────────────
     def append_version(self, conn, *, trip_id: UUID, base_version: int, items: list[Item],

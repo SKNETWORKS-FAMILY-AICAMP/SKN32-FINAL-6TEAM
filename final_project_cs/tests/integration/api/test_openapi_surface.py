@@ -69,6 +69,15 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/proposals/{proposal_id}/choose",
     "/v1/web/trips/{trip_id}/messages",
     "/v1/web/trips/{trip_id}/notices",
+    # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
+    #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
+    "/v1/web/trip-intakes",
+    "/v1/web/trip-intakes/{intake_id}",
+    # 확인 화면 — 고친 값은 새 판(낡은 판은 409), 등록은 `_create_trip` 한 곳(request_id = 접수 + 판)
+    "/v1/web/trip-intakes/{intake_id}/edits",
+    "/v1/web/trip-intakes/{intake_id}/confirm",
+    # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
+    "/v1/web/trip-intakes/{intake_id}/plan",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.

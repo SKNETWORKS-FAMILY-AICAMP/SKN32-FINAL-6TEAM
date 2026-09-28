@@ -160,6 +160,10 @@ class Settings(BaseSettings):
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
+    # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
+    #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
+    #   전까지 쌓지도 읽지도 않는다. 장소는 필요할 때 실시간으로 조회한다(`TourApiPlace.find`·`area_page`).
+    tour_catalog_enabled: bool = False
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.

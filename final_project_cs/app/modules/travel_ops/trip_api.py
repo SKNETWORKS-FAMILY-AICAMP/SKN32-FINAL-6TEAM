@@ -35,7 +35,8 @@ from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
+from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query,
+                     Request, UploadFile)
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
@@ -65,6 +66,11 @@ class PlaceIn(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
+#: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
+#:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
+EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places"})
+
+
 class ItemIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     seq: int
@@ -88,6 +94,34 @@ class CreateTrip(BaseModel):
     places: list[PlaceIn] = Field(default_factory=list)
     items: list[ItemIn] = Field(min_length=1)
     routes: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
+class IntakeEditOne(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source_id: str | None = None      # 항목 칸이면 필수(어느 원본의 몇째 항목인가)
+    field: str = Field(min_length=1)  # 예: items[2].place · items[0].starts_at · trip.first_day
+    value: Any = None
+
+
+class IntakeEditIn(BaseModel):
+    """계획 읽기 확인 화면의 고치기. `revision` = 화면이 보고 있던 판(낡으면 409)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    edits: list[IntakeEditOne] = Field(min_length=1, max_length=50)
+
+
+class IntakeConfirmIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+
+
+class IntakePlanIn(BaseModel):
+    """「일정 짜 줘」 — 확인 화면에서 고객이 조건을 확인하고 누른다. ★누르는 것이 곧 등록 요청이다(통지가 나간다)."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+    start_date: date
+    days: int = Field(ge=1, le=7)
+    party_size: int = Field(ge=1, le=4)
 
 
 class PlanIn(BaseModel):
@@ -210,7 +244,10 @@ def _item_view(item: Item) -> dict[str, Any]:
             "changed": item.replaces_item_id is not None,
             "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
                               for a in item.detail.get("alternates") or []],
-            "customer_pinned": bool(item.detail.get("customer_pinned"))}
+            "customer_pinned": bool(item.detail.get("customer_pinned")),
+            # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
+            "lat": (item.place or {}).get("latitude"), "lon": (item.place or {}).get("longitude"),
+            "booked": bool(item.booking_id or item.detail.get("booking"))}
 
 
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
@@ -250,6 +287,11 @@ def _cause_label(cause: dict[str, Any]) -> str:
     return str(cause.get("kind") or cause.get("type") or cause.get("category") or "")
 
 
+#: ★`[2026-09-27]` 한국관광콘텐츠랩 이용약관 제11조 — 관광공사 값이 나가는 고객 화면에 출처를 적는다.
+#:  이 화면의 장소가 관광공사 자료에서 왔는지 항목마다 가리지 않고 **늘** 붙인다(보수적으로).
+TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2"
+
+
 def _render_plan(view: dict[str, Any]) -> str:
     esc = lambda value: html.escape(str(value or ""))  # noqa: E731
     rows = []
@@ -282,11 +324,14 @@ ul{{list-style:none;padding:0;margin:1rem 0}}
 .badge{{font-size:.72rem;border:1px solid var(--accent);color:var(--accent);border-radius:.3rem;padding:0 .3rem}}
 .others{{color:var(--muted);font-size:.85rem}} h2{{font-size:1rem;margin-top:1.5rem}}
 .hist li{{color:var(--muted);font-size:.85rem;padding:.15rem 0}}
+.credit{{margin-top:2rem;color:var(--muted);font-size:.78rem}} .credit a{{color:inherit}}
 </style></head><body><main>
 <h1>{esc(view['title'])}</h1>
 <div class="meta">일정 버전 {view['version']} · 이 페이지가 최신 일정입니다</div>
 <ul class="plan">{''.join(rows)}</ul>
 <h2>바뀐 기록</h2><ul class="hist">{changes}</ul>
+<footer class="credit">장소 정보 출처 : ⓒ한국관광공사 ·
+<a href="{TOUR_API_POLICY_URL}" rel="noopener" target="_blank">저작권 정책</a></footer>
 </main></body></html>"""
 
 
@@ -309,7 +354,8 @@ def _outcome(outcome: dict[str, Any]) -> dict[str, Any]:
 def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
-                      place_factory: Callable[[], Any] | None = None) -> APIRouter:
+                      place_factory: Callable[[], Any] | None = None,
+                      kakao_factory: Callable[[], Any] | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게."""
     router = APIRouter()
     cache: dict[str, Any] = {}
@@ -416,6 +462,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     def _insert(conn, store: TripStore, request: CreateTrip, key: str, body_sha: str) -> UUID:
         tenant = store.tenant_id
         ids: dict[str, UUID] = {}
+        # ★`[2026-09-27]` 외부 서비스(관광공사 · 카카오 · 구글)에서 온 장소는 **그 여행 전용 행**으로 넣는다
+        #   (마이그레이션 029 · 설계서 §4-5·§4-6). 여행 id 를 미리 정해 장소 행에 적는다.
+        trip_id = uuid4()
         with conn.cursor() as cur:
             cur.execute("SELECT 1 FROM customers WHERE tenant_id=%s AND customer_id=%s",
                         (tenant, request.customer_id))
@@ -427,14 +476,25 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 #     500 이 났다(개발 서버에서 발견. 시험은 여행마다 테넌트를 새로 만들어
                 #     못 잡았다). 보낸 속성은 **빈 칸만 채운다** — 카탈로그 값을 고객 한 명의
                 #     제출이 덮어쓰지 않게(`EXCLUDED || places` 는 오른쪽이 이긴다).
-                cur.execute(
-                    "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
-                    "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
-                    "ON CONFLICT (tenant_id, name, kind) DO UPDATE "
-                    "SET attributes = EXCLUDED.attributes || places.attributes "
-                    "RETURNING place_id",
-                    (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
-                     json.dumps(place.attributes, ensure_ascii=False)))
+                if str(place.attributes.get("source") or "") in EXTERNAL_PLACE_SOURCES:
+                    # ☆같은 여행 안에서 같은 장소를 두 번 적을 수 있다 — 그 여행 행을 다시 쓴다
+                    cur.execute(
+                        "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
+                        "attributes,trip_scope) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
+                        "ON CONFLICT (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL "
+                        "DO UPDATE SET attributes = EXCLUDED.attributes || places.attributes "
+                        "RETURNING place_id",
+                        (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
+                         json.dumps(place.attributes, ensure_ascii=False), trip_id))
+                else:
+                    cur.execute(
+                        "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
+                        "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
+                        "ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL DO UPDATE "
+                        "SET attributes = EXCLUDED.attributes || places.attributes "
+                        "RETURNING place_id",
+                        (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
+                         json.dumps(place.attributes, ensure_ascii=False)))
                 ids[place.key] = cur.fetchone()[0]
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
@@ -446,7 +506,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         trip_id, version = store.create_trip(
             conn, customer_id=request.customer_id, title=request.title, locale=request.locale,
             party_size=request.party_size, items=items, constraints=request.constraints,
-            request_key=key, request_sha256=body_sha)
+            request_key=key, request_sha256=body_sha, trip_id=trip_id)
         # ★알림 ① 은 **생성도 포함**한다 — 링크가 처음 나가는 자리다(v11 §6-B).
         url = plan_url(tenant, trip_id)
         store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
@@ -648,7 +708,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
-                places = {str(p["place_id"]): p for p in store.places(conn)}
+                places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
                 return choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
                               proposal_id=proposal_id, key=key, by=by, places_by_id=places,
                               check=_check())
@@ -679,6 +739,141 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if customer is None:
             raise _error(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
         return tenant, customer
+
+    # ── 계획 읽기 (2026-09-27, 설계서 program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md) ──────────────
+    #   ★고객 id 는 키에서 — 몸통으로 받지 않는다(`/v1/web/trips` 와 같은 경계). 읽기는 뒤에서 돈다(사진 한 장 ~45초).
+    @router.post("/v1/web/trip-intakes", status_code=202)
+    async def web_intake(background: BackgroundTasks, text: str = Form(""),
+                         files: list[UploadFile] = File(default_factory=list),
+                         who: tuple[str, UUID] = Depends(_web_customer)):
+        """글(붙여 넣은 일정 · 채팅처럼 쓴 계획)과 파일(사진 · PDF · docx · xlsx)을 받는다. 곧바로 접수 id 를 돌려준다."""
+        from .intake.pipeline import IntakeRejected, open_intake, process
+
+        tenant, customer = who
+        blobs = [(f.filename or "file", await f.read()) for f in files]
+        try:
+            with get_connection() as conn:
+                intake_id = open_intake(conn, tenant_id=tenant, customer_id=customer, text=text, files=blobs)
+        except IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+        offset = 1 if text.strip() else 0
+        chat = _lazy("chat", chat_factory)
+        background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,
+                            blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
+                            see=getattr(chat, "see", None),
+                            chat=chat if hasattr(chat, "json") else None,
+                            tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory))
+        return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
+
+    @router.get("/v1/web/trip-intakes/{intake_id}")
+    def web_intake_view(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """진행 단계 · 원본별 줄 번호 글 · 읽은 항목(값마다 근거) · 확인 필요. ★남의 접수는 404."""
+        from .intake.pipeline import view
+
+        tenant, customer = who
+        with get_connection() as conn:
+            found = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+        if found is None:
+            raise _error(404, "not_found", "resource not found")
+        return found
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/edits")
+    def web_intake_edit(intake_id: UUID, request: IntakeEditIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """확인 화면에서 고친 값 → 새 판. ★낡은 판(다른 탭에서 먼저 고침)은 409 — 조용히 덮지 않는다."""
+        from .intake.pipeline import IntakeConflict, IntakeRejected, edit, view
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
+                     edits=[e.model_dump() for e in request.edits], tour=_lazy("place", place_factory),
+                     kakao=_lazy("kakao", kakao_factory))
+                return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        except IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/confirm")
+    def web_intake_confirm(intake_id: UUID, request: IntakeConfirmIn,
+                           who: tuple[str, UUID] = Depends(_web_customer)):
+        """「등록하고 관리 시작」. ★서버가 **다시 조립하고 다시 판정**한 뒤 `_create_trip` 한 곳으로 등록한다.
+
+        - `request_id` = `intake:{접수}:r{판}` — 탭 두 개에서 같은 확인을 눌러도 여행은 하나다.
+        - 필수값이 비었으면 422 `intake_incomplete` + 문제 목록. 판정기가 막으면 그 422 를 그대로 돌려준다.
+        """
+        from .intake.pipeline import IntakeConflict, draft, mark_confirmed
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                    revision=request.revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        if built.problems:
+            raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
+                         problems=[p.as_dict() for p in built.problems])
+        try:
+            create = CreateTrip.model_validate({**built.body, "customer_id": str(customer)})
+        except ValidationError as exc:
+            raise _error(422, "validation_error", "읽은 값으로 만든 등록 몸통이 계약과 다르다",
+                         problems=[{"field": ".".join(str(x) for x in e["loc"]), "reason": e["msg"]}
+                                   for e in exc.errors()]) from None
+        trip = _create_trip(tenant, create)
+        with get_connection() as conn:
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
+        return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip}
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/plan")
+    def web_intake_plan(intake_id: UUID, request: IntakePlanIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """「일정 짜 줘」 → 일정 생성기(`planner.plan_trip`) → **판정을 통과한 초안**을 `_create_trip` 한 곳으로 등록.
+
+        - 선호 문장은 고객이 올린 **원문 그대로**다. 읽은 항목(고정 일정)은 일정 생성기가 받지 않는다 — 화면이 그렇게 말한다.
+        - `request_id` = `intake:{접수}:plan:r{판}` — 두 번 눌러도 모델을 다시 부르지 않고 같은 여행을 돌려준다.
+        - 생성기가 못 짜면 422(그 이유와 완화 조건) — 지어낸 일정을 등록하지 않는다.
+        """
+        from . import planner as planner_module
+        from .intake.pipeline import IntakeConflict, draft, mark_confirmed
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                _, _, built = draft(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                    revision=request.revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        store = TripStore(tenant)
+        request_id = f"intake:{intake_id}:plan:r{request.revision}"
+        key = idempotency_key(tenant_id=tenant, request_id=request_id, action_type="trip.create",
+                              business_subject=str(customer))
+        with get_connection() as conn:
+            existing = store.by_request_key(conn, key)
+            if existing is not None:
+                return {"intake_id": str(intake_id), "status": "confirmed", "trip": {
+                    **_trip_view(conn, store, existing[0]), "created": False}}
+        ask = planner_module.PlanRequest(
+            city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
+            preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko")
+        try:
+            with get_connection() as conn:
+                outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
+                                                   chat=_lazy("chat", chat_factory),
+                                                   tour_api=_lazy("place", place_factory))
+        except planner_module.PlanRefused as refused:
+            raise _error(422, refused.code, refused.message, **refused.detail) from None
+        body = outcome.draft.as_create_body(request_id=request_id, customer_id=customer)
+        trip = _create_trip(tenant, CreateTrip.model_validate(body))
+        with get_connection() as conn:
+            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
+        return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip,
+                "planner": {"coverage": outcome.coverage, "checks": outcome.checks}}
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request):
@@ -761,13 +956,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         store = TripStore(tenant)
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
+        from .itinerary_team import ANSWERS
+
         try:
-            return handle_trip_message(
+            result = handle_trip_message(
                 tenant=tenant, trip_id=trip_id, request_id=request.request_id, message=request.message,
                 at=_seoul(request.at) or datetime.now(KST), classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}")
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
+        # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
+        #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
+        if result.get("status") in ANSWERS:
+            result["answer"] = ANSWERS[result["status"]]
+        return result
 
     @router.get("/v1/web/trips/{trip_id}/notices")
     def web_notices(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):

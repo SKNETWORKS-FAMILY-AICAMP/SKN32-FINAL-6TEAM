@@ -107,7 +107,7 @@ class ItineraryApply:
         except (KeyError, TypeError, ValueError) as exc:
             raise ActionRejected(f"itinerary.apply arguments are malformed: {exc}") from exc
 
-        known_places = {str(place["place_id"]) for place in store.places(conn)}
+        known_places = {str(place["place_id"]) for place in store.places(conn, trip_id)}
         unknown = sorted({str(item.place_id) for item in new_items
                           if item.place_id is not None and str(item.place_id) not in known_places})
         if unknown:

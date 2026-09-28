@@ -101,8 +101,12 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             why = "no_extractor" if chat is None else "not_understood"
         except OllamaError as exc:
             report, why = None, f"extractor_failed: {exc}"[:120]
-        if report is None or report["type"] == "other":
-            reason = why if report is None else "not_a_trip_report"
+        # ★`[2026-09-25]` 질문(`question`)은 이 경로에서 답하지 않는다 — 규정 도구가 없다. 아래 분기의
+        #   「그 밖 = 다른 안으로 바꾸기」로 새지 않게 여기서 막는다. 규정 근거 답은 Case 버전
+        #   (`*.itinerary_question`)이 한다.
+        if report is None or report["type"] in ("other", "question"):
+            reason = why if report is None else ("question_needs_policy_answer" if report["type"] == "question"
+                                                 else "not_a_trip_report")
             move(EventType.ROUTING_FAILED, {"failure_code": reason})
             return view({"status": "escalated", "reason": reason, "report": report})
 
@@ -122,12 +126,24 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
     elif report["type"] == "stock_out":
         outcome = desk.ask_nearby_store(trip_id=trip_id, at=at, products=report["products"],
                                         message=message, request_id=request_id)
-    else:                                            # change — 재요청
+    elif report["type"] == "rollback":
+        # ★`[2026-09-26]` 전에는 이 분기가 없어 「N번 일정으로 되돌려 주세요」가 아래 「다른 안으로 바꾸기」로
+        #   떨어졌다 — 되돌리는 대신 **다른 장소로 바꿨다**(시험으로 확인, triPilot : RAG 세션이 코드를 읽고 찾았다).
+        #   기준 버전은 지금 최신 — 그 사이 바뀌었으면 되돌리기가 `stale` 로 답한다.
+        with get_connection() as conn:
+            current, _ = store.latest(conn, trip_id)
+        outcome = desk.rollback(trip_id=trip_id, base_version=current["version"],
+                                to_version=int(report["to_version"]), message=message,
+                                request_id=request_id)
+    elif report["type"] == "change":                 # 재요청 — 들고 있던 「다른 안」으로
         current, target = _latest_changed_item(store, trip_id)
         outcome = ({"status": "no_alternate"} if target is None else
                    desk.swap_alternate(trip_id=trip_id, item_id=target.item_id,
                                        base_version=current["version"], message=message,
                                        request_id=request_id))
+    else:
+        # ★모르는 종류는 어떤 처리로도 떨어뜨리지 않는다 — 사람에게
+        outcome = {"status": f"unhandled_{report['type']}"}
     with get_connection() as conn:
         def move2(event_type, payload):
             case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -137,7 +153,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                 payload=payload, actor_type="api", actor_id=actor_id)
         # ★`asked` — 「먼저 물어봐줘」·「변경 안 할 일정」이라 바꾸지 않고 물었다(D-020). 처리한 것이다 —
         #   답은 묻는 문장이고, 고객은 계획서 링크·웹에서 고른다. 사람에게 넘길 일이 아니다.
-        if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked"):
+        if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked", "rolled_back"):
             answer = (outcome.get("notice") or {}).get("text") or outcome.get("text") \
                 or outcome.get("status")
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")

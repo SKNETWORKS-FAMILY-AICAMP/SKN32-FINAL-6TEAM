@@ -273,7 +273,7 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 수단 | 형식 | 예 |
 |---|---|---|
 | 지하철 | `<노선명>:<역명>` | `2호선:잠실` · `3호선:경복궁` · `4호선:서울역` · `경의중앙선:용산` · `공항철도:홍대입구` |
-| 버스 | `버스:<노선번호>` | `버스:2224` · `버스:N26` |
+| 버스 | `버스:<노선명>` — **서울시 노선 API 의 노선명 그대로** | `버스:2224` · `버스:N26` · `버스:01A` · `버스:110A고려대` · `버스:청계A01` · `버스:서대문02대` · `버스:서울01출근` |
 | 도로 | `도로:<도로명 전체>` | `도로:세종대로` · `도로:올림픽대로` |
 | 도보 | 따로 적지 않는다 — 지나는 큰길을 `도로:` 로 | `도로:세종대로` |
 
@@ -285,7 +285,10 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
   갈아탄 역은 **두 노선으로 각각** 적는다 — 어느 노선의 무정차든 환승이 깨진다
   (`2호선:을지로3가` · `3호선:을지로3가`).
 
-**버스** — 노선번호를 적는다. 정류장 이름·동네 이름(`버스:성수동`)은 쓰지 않는다. 우회·결행 정보는
+**버스** — 노선명을 적는다(서울시 노선 API 의 노선명 그대로 — 끝의 A/B, A/B + 지명, 지역명 + A번호·대/소, 출근·퇴근 전용 포함).
+정류장 이름·동네 이름(`버스:성수동`)은 쓰지 않는다. `[2026-09-28]` 전에는 A/B·A번호·대/소·출퇴근 모양을 몰라 실제 노선 59개를
+거절했다(Mobility 쪽 보고) — 거절된 버스 후보가 오류 없이 빠진 채 와서 남산 순환 01A·01B 가 대안에서 조용히 사라졌다.
+시험 `tests/unit/travel/test_route_uses_bus.py`. 우회·결행 정보는
 노선 단위로 나온다. 버스 구간이 지나는 주요 도로도 `도로:` 로 **함께** 적는다 — 도로 통제는 버스도 막는다.
 
 **도로** — 경찰청 UTIC 돌발정보의 도로명을 **전체 이름**으로 적는다. `[실측]` 대조가 **포함 여부**다 —
@@ -361,6 +364,46 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
   넘으면 `429 too_many_sessions` + `Retry-After`. 이미 가진 키로 하는 일은 막지 않는다. ★프로세스 안에서 세고,
   역방향 프록시 뒤에서는 모두 같은 주소로 보여 함께 막힌다 — 그때는 원 주소로 세도록 바꿔야 한다.
 - 시험 `tests/e2e/test_web_api.py` 10건.
+
+### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
+
+`[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
+저장 `trip_intakes` · `intake_sources` · `intake_claims`(마이그레이션 028). 설계 `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md`.
+★**모델은 위치만 가리키고 값은 원문과 조회가 낸다.** 값마다 방법(`rule` · `llm_span` · `lookup` · `customer`)과 근거가 붙는다.
+
+| 경로 | 인증 | 뜻 |
+|---|---|---|
+| `POST /v1/web/trip-intakes` | 키 | 폼 — `text`(붙여 넣은 일정 · 채팅처럼 쓴 계획) + `files`(사진 · PDF · docx · xlsx, 종류는 **바이트로** 가린다). 곧바로 `202 {intake_id, status: reading}`, 읽기는 뒤에서 돈다(사진 한 장 ~45~60초) |
+| `GET /v1/web/trip-intakes/{intake_id}` | 키 | 단계 · 원본별 줄 번호 글(`lines[].read` = 읽은 줄) · 항목(`fields` 의 값마다 근거) · `reading`(남은 줄에 모델이 가리킨 결과 — 받은 수 · 버린 인용 · 장애) · `needs_review`. **남의 접수는 404** |
+| `POST /v1/web/trip-intakes/{intake_id}/edits` | 키 | 확인 화면에서 고친 값 `{revision, edits:[{source_id, field, value}]}` → **새 판**(앞 판의 값은 남는다). 칸: `items[n].title·date·starts_at·ends_at·kind·place·booking_no·removed` · `trip.title·party_size·first_day`. 장소는 `{"name":…}` 로 받아 **다시 찾고**(못 찾으면 422 `place_not_found`), `{"none": true}` 는 「장소 없음」. 낡은 판은 **409 `stale_revision`** |
+| `POST /v1/web/trip-intakes/{intake_id}/confirm` | 키 | 「등록하고 관리 시작」 `{revision}`. 서버가 **다시 조립·판정**한 뒤 `_create_trip` 한 곳으로 등록 — `request_id = intake:{접수}:r{판}` 이라 두 번 눌러도 여행은 하나. 막으면 422 `intake_incomplete`(문제 목록) · 판정기의 422 그대로 |
+| `POST /v1/web/trip-intakes/{intake_id}/plan` | 키 | 「일정 짜 줘」 `{revision, start_date, days(1~7), party_size(1~4)}` — 원문 그대로를 선호로 일정 생성기(`planner.plan_trip`)가 짜고, **같은 판정**을 지난 초안을 `_create_trip` 으로 등록. `request_id = intake:{접수}:plan:r{판}` — 다시 눌러도 모델을 안 부르고 같은 여행. 못 짜면 422(이유·완화 조건). ★읽은 항목(고정 일정)은 생성기가 받지 않는다 — 화면이 그렇게 말한다 |
+
+읽는 순서(원본마다): 규칙 → **남은 줄만** 모델에 보내 원문 조각을 인용하게 함(원문에 글자 그대로 없는 인용은 버린다) →
+날짜(적힌 날짜 > 일차 > 상대 날짜, 해가 없으면 다가오는 날 + 확인. 어디에도 없으면 `trip.ask_first_day` — 지어내지 않는다) →
+장소(별칭 → 우리 장소 표 → 자모 오타 → 관광공사 서울 → 카카오로 이름 찾고 관광공사 재확인 → 관광공사에 없으면 카카오 값을 그 항목에만
+→ 이름이 특정하지 않으면(「한강 카약」·「북한산 둘레길」) **종류가 맞는 후보 중 같은 날 앞뒤 일정에 가장 가까운 곳** — 카카오 근처 거리순 재검색 포함, 확인 필요).
+★후보는 원문을 좁혀 찾기가 모두 실패한 뒤에만 쓴다 — 「광장시장 빈대떡」은 광장시장 + 항목 종류 식사(가게를 지어내지 않는다).
+확인 화면에서 장소 이름을 고치면 별칭(`place_aliases`, 030)이 쌓여 다음 계획의 같은 말은 그 이름으로 다시 찾는다.
+- 모델·관광공사·카카오 중 없는 것은 그 단계만 건너뛴다. 모델 장애는 `reading.error` 에 이름으로 남는다.
+- ★장소 조회가 **막힌 것**(속도 제한 · 시간 초과 · 예산)은 근거의 `blocked` 에 남기고 「없는 곳이라는 뜻이 아니다」라고 적는다.
+- 한도: 파일 5개 · 10MB · 글 20,000자. 관광공사는 몰림 30(`travel.rate_burst_by_source`), 카카오는 호출 예산(`travel.kakao_budget`).
+
+- `GET` 응답의 `check` = `{ready, problems, filled, items, title}` — 등록을 막는 문제(`no_title` · `no_date` · `no_place` ·
+  `booking_without_time` · `party_size_out_of_range` · `no_items`)와 **규칙으로 채운 칸**(시각이 없으면 원문의 「아침·점심·저녁」,
+  아니면 앞 일정 뒤 · 끝이 없으면 활동 90분·식사 60분). 조립은 `app/modules/travel_ops/intake/assemble.py`.
+- 등록된 항목의 `detail.provenance` 에 칸마다 방법과 근거가 따라간다. 예약번호는 `detail.booking` —
+  **예약 표(`bookings`)는 만들지 않는다**(업체 확인 전 번호를 「확정 예약」으로 적지 않는다). 대신 보호 사유 `booked` 라
+  **바꾸기 전에 묻는다**(`pending.protected_reason`).
+- 조회로 정한 장소(관광공사·카카오)는 **그 여행 전용 장소 행**으로 등록된다(마이그레이션 029, [migrations.md](../data/migrations.md)).
+- 웹 앱의 확인 화면 `frontend/apps/web/src/features/intake-review/` 이 이 경로를 쓴다(`NEXT_PUBLIC_DATA_MODE=live`).
+- 「일정 짜 줘」는 모델이 가리키거나, 모델이 없어도 **규칙**(`intake/pipeline.PLAN_ASK` — 일정·코스·계획·동선 + 짜·만들어·추천해·세워·잡아 + 줘)으로 잡는다.
+  `check.plan` = `{requested, start_date, days, party_size, preferences}` — **읽은 값에서만** 채우고 모르면 null(화면이 묻는다).
+- 시험 `tests/e2e/test_trip_intake_api.py` 15건 · `tests/unit/travel/test_intake_rules.py` 22건 · `test_intake_resolve.py` 22건 · `tests/e2e/test_trip_planner.py` 의 계획 읽기 1건(2026-09-28 실행).
+
+**여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
+`detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
+대화 경로와 **같은 문장표**(`itinerary_team.ANSWERS`)의 `answer` 가 실린다 — 웹이 문장을 지어내지 않게.
 
 ## 위임 — `/v1/delegations/*` `[2026-09-22]`
 

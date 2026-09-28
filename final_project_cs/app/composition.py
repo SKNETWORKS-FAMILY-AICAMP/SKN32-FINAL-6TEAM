@@ -315,8 +315,21 @@ def build_domain_routers() -> list:
 
         return build_travel_sources(get_settings()).place
 
+    def kakao_factory():
+        # ★계획 읽기의 **장소 이름 찾기** 전용(`intake/places.py`). 키가 없으면 None — 그 단계만 건너뛴다.
+        #   호출 예산이 필수다(무료 한도 초과 사용은 약관 위반) — `travel.kakao_budget`.
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
+        from app.infrastructure.travel.kakao_local import KakaoLocal
+
+        key = get_settings().kakao_rest_api_key
+        if not key:
+            return None
+        return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
+
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
-                              chat_factory=chat_factory, place_factory=place_factory),
+                              chat_factory=chat_factory, place_factory=place_factory,
+                              kakao_factory=kakao_factory),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),

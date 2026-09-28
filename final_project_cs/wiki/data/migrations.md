@@ -104,6 +104,34 @@ outbox          UNIQUE (tenant_id, topic, dedupe_key)
 
 → [../actions/idempotency.md](../actions/idempotency.md)
 
+### `places` 의 유일성이 둘로 갈렸다 `[2026-09-27 · 029]`
+
+`[실측]` `029_trip_scoped_places.sql` 이 `places_tenant_id_name_kind_key` 를 지우고 **부분 유일 색인 둘**로 바꿨다
+(`acop_cs` 의 `pg_indexes` 로 확인).
+
+```sql
+places_shared_name_kind_uq  UNIQUE (tenant_id, name, kind)             WHERE trip_scope IS NULL
+places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE trip_scope IS NOT NULL
+```
+
+- **왜.** 관광공사 콘텐츠랩 「로컬서버 저장 금지」·카카오 운영정책 제5조 — 외부 서비스에서 받은 장소 값을 공용 표에 쌓아
+  다른 고객에게 재사용하지 않는다. 그런데 감시·대체 일정은 항목의 `place_id` 로 `places` 를 읽는다(15개 파일 48곳) —
+  그래서 행은 만들되 **그 여행 전용**(`trip_scope` = 여행 id)으로 둔다.
+- **누가 그렇게 넣나.** `places[].attributes.source` 가 `tour_api`·`kakao`·`google_places` 인 등록(`trip_api.EXTERNAL_PLACE_SOURCES`).
+  일정 생성기의 관광공사 후보와 계획 읽기의 조회 결과가 여기에 든다.
+- **누가 무엇을 보나.** `TripStore.places()` — 인자 없으면 공용만(일정 생성기 후보 · 에이전트 도구), `trip_id` 를 주면
+  공용 + 그 여행 전용, 여러 여행을 도는 감시는 `every_trip=True` 로 읽고 여행마다 `visible_to` 로 거른다.
+- ★`ON CONFLICT` 는 부분 색인의 조건까지 적어야 맞는다 — `ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL`.
+- `[미확보]` 여행이 끝난 뒤 전용 행을 지우는 일은 아직 없다(설계서 §4-5 3번 「여행이 끝나면 지운다」). 그 전 공용 행 5개에
+  관광공사 출처 칸이 남아 있는 것도 그대로다.
+
+### 장소 별칭 `place_aliases` `[2026-09-28 · 030]`
+
+`[실측]` `030_place_aliases.sql` — (테넌트, 정규화한 원문) → 다시 찾을 이름. 계획 읽기 장소 찾기의 2단계(설계서 §4-1).
+★**고객이 쓴 글 → 고객이 고친 글만** 담는다(둘 다 고객 글) — 관광공사·카카오가 준 이름·좌표는 담지 않는다(약관). 별칭은 다시 찾을 이름일
+뿐이고 값은 매번 조회한다. 확인 화면에서 장소 이름을 고치면 쌓이고(`intake.pipeline.remember_alias`), 기본값은 코드의
+`SEED_ALIASES`(남산타워 → N서울타워 등)다 — 고객이 고친 것이 이긴다.
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.

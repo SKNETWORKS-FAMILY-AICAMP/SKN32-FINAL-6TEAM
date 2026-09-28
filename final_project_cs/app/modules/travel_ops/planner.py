@@ -257,7 +257,7 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
     found: dict[tuple[str, str], Cand] = {}
     with conn.cursor() as cur:
         cur.execute("SELECT place_id, name, kind, latitude, longitude, weather_sensitive, "
-                    "attributes FROM places WHERE tenant_id=%s AND kind = ANY(%s) ORDER BY name",
+                    "attributes FROM places WHERE tenant_id=%s AND trip_scope IS NULL AND kind = ANY(%s) ORDER BY name",
                     (tenant_id, list(kinds)))
         for place_id, name, kind, lat, lon, sensitive, attributes in cur.fetchall():
             if lat is None or lon is None:
@@ -270,6 +270,12 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
                                        origin="places", weather_sensitive=bool(sensitive),
                                        rank_hint=0)
         wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds]
+        from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+
+        if not PlaceCatalogSync.enabled():
+            # ★`[2026-09-27]` 관광공사 장소 목록을 읽지 않는다(약관 해석 대기 — 기본 꺼짐). 후보가 모자라면
+            #   `fill_from_tour_api` 가 **실시간으로** 받아 이 요청 안에서만 쓴다(저장하지 않는다)
+            return list(found.values())
         cur.execute(
             "SELECT content_id, content_type_id, title, address, latitude, longitude "
             "FROM place_catalog WHERE tenant_id=%s AND source='tour_api' "

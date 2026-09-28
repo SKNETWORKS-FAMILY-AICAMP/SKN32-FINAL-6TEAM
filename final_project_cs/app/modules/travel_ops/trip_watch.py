@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from .itinerary import Item, TripStore
+from .itinerary import Item, TripStore, visible_to
 from .itinerary_changes import (ItineraryChange, NoChange, next_after, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
 from .pending import PendingStore, apply_or_ask
@@ -70,7 +70,7 @@ class TripWatcher:
                               for row in pending.expire(conn, now=now)]
         with self._connect() as conn:
             due = self.store.due(conn, start=now, end=now + lookahead)
-            places = self.store.places(conn)
+            places = self.store.places(conn, every_trip=True)
         for trip_id, item in due:
             if item.detail.get("customer_pinned"):
                 # ★`[2026-09-24]` 고객이 고정한 항목도 **점검은 한다** — 전에는 통째로 건너뛰어서 고정한
@@ -96,7 +96,7 @@ class TripWatcher:
             if item.kind != "activity":
                 result.unhandled.append(entry)
                 continue
-            plan = plan_activity_adjustment(item=item, report=report, places=places,
+            plan = plan_activity_adjustment(item=item, report=report, places=visible_to(places, trip_id),
                                             check=self.check, now=now)
             self._settle(trip_id, item, plan, result, report=report)
         return result

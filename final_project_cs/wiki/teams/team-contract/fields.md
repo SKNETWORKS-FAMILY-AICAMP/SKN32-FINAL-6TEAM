@@ -177,6 +177,7 @@ Controller가 allowlist·scope·승인·idempotency를 검증한다.
 |---|---|
 | `activity.check_cancelable` · `check_feasible` | **필요하다.** 취소 기한·위약금·기상 사유 판정이 규정 해석이다 |
 | `activity.itinerary` (감시가 연 일정 관리) | **아니다.** 예보·운행·영업 같은 **실시간 사실**로 판단한다 |
+| `*.itinerary_question` (여행 Case 의 규정 질문, `[2026-09-25]`) | **필요하다.** 「비 오면 취소돼요?」는 규정 해석이다 — 면제 목록에 넣지 않는다 |
 
 한 Team 이 둘을 다 갖고 있어서, `policy` 를 선언하면 일정 관리까지 정책 0건에 막히고
 빼면 취소 판정이 근거 없이 답하게 된다. 2026-09-17 에는 **빼는 쪽**을 골랐고(코퍼스에

@@ -28,7 +28,7 @@ from datetime import datetime, time, timedelta
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
-from .itinerary import Item, TripStore
+from .itinerary import Item, TripStore, visible_to
 from .itinerary_changes import NoChange, plan_closed_on_day
 from .pending import apply_or_ask
 
@@ -91,12 +91,12 @@ class DawnCheck:
             meals = [(trip_id, item) for trip_id, item in self.store.due(conn, start=now, end=day_end)
                      if item.kind == "dining" and item.place is not None]
             done = self._checked_items(conn, day)
-            places = self.store.places(conn)
+            places = self.store.places(conn, every_trip=True)
         for trip_id, meal in meals:
             if meal.item_id in done:
                 continue
             try:
-                self._check(trip_id, meal, day, places, result)
+                self._check(trip_id, meal, day, visible_to(places, trip_id), result)
             except _Retry:
                 result.fatal.append({"trip_id": str(trip_id), "item": meal.title, "failed": "stale"})
         return result
