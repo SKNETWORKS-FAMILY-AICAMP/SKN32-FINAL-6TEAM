@@ -746,10 +746,27 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 
 | 항목 | 이유 |
 |---|---|
-| `read.place_candidates` 실구현 | 작업자 A(DB조회) 몫이다. 위 계약대로 `place_catalog`에서 읽으면 된다. 붙기 전까지 이 경로는 항상 `pool_unavailable`이다 |
+| ~~`read.place_candidates` 실구현~~ | **닫힘 — `[구현 2026-09-28]`** `db_search/place_candidates.py`로 실구현됨 → [아래 절](#read_place_candidates-실구현--db_search-구현-2026-09-28) |
 | `sigungucode`·`closed_days`의 카탈로그 출처 | `place_catalog`에 구조화 컬럼이 없다(아래 「걸리는 것」). 실구현 때 `raw_json`을 풀어 행에 싣거나 컬럼으로 승격해야 한다 |
 | 재난문자 지역 관련성 | 역지오코딩으로 `rgnNm`을 거르게 되면, 「위급재난 → 후보 전부 `withheld`」 규칙을 다시 봐야 한다. 그때는 다른 지역 후보가 통과할 수 있다 |
 | `activity_preference`를 채우는 설문 경로 | 설문 자체가 아직 없다 |
+
+#### `read.place_candidates` 실구현 — `db_search` `[구현 2026-09-28]`
+
+★위 표의 `read.place_candidates` 실구현이 **닫혔다.** `app/modules/travel_ops/activity/db_search/place_candidates.py` — `place_catalog`에서 원래 장소 행(`origin`)과 후보 풀(`candidates`)을 조회해 `alternatives.py`가 읽는 CSV 컬럼 모양으로 돌려준다. `app/tools/read_tools.py`의 `place_candidates()`가 이 함수를 부른다(계약만 있던 스텁 → 실제 조회로 교체).
+
+| | |
+|---|---|
+| 좁히는 기준 | `lclsSystm1` **또는** `sigungucode`가 원래 장소와 같은 행까지만(계약대로, 더 좁히지 않는다) |
+| 좌표 | 적재 때 NULL로 넣은 좌표를 `raw_json` 원본 자리표시값으로 되살리지 않는다 |
+| `confirmed_at` | 풀에 든 행 중 가장 오래된 `fetched_at` |
+| 테넌트 격리 | `WHERE tenant_id=%s`로 확인(`test_unknown_origin_and_other_tenant_are_unknown`) |
+
+테스트는 `tests/unit/travel/test_db_search_place_candidates.py`(7건, 가짜 DB — API 키·네트워크 없이 검증) + `tests/integration/db/test_place_candidates_db.py`(4건, 실 PostgreSQL) — 11건 모두 통과. `demo` 테넌트에 이미 적재된 실데이터로 창경궁(126511) 후보 조회까지 확인됨(`test_loaded_demo_data_finds_alternatives_for_changgyeonggung`).
+
+★**처음엔 `db_search/`가 저장소 최상단에 있었다** — `app/modules/travel_ops/activity/db_search/`로 옮겼다(2026-09-28, `data_processing`과 같은 이유: Activity 전용 코드를 Activity 모듈 아래 모아 둔다). 옮기면서 참조 4곳(`read_tools.py` 두 곳, `db_search/__init__.py` 자기 import, 테스트 2개)의 `from db_search.place_candidates import ...`를 `from app.modules.travel_ops.activity.db_search.place_candidates import ...`로 바꿨다. 이동 후에도 25개 테스트(단위 11 + `test_activity_alternatives_wiring.py` 14) 전부 통과 확인.
+
+★**로컬 PostgreSQL은 재부팅하면 꺼진다.** Windows 서비스가 아니라 conda(`pgv`) 환경 프로세스다([로컬 셋업](../operations/local-setup.md) 참고) — 통합 테스트 4건은 DB가 안 떠 있으면 실패가 아니라 **스킵**된다(단위 테스트 7건은 DB 없이도 통과). `pg_ctl start`로 다시 띄우면 된다.
 
 ## ★ 두 번 다시 이렇게 부르지 않는다
 
@@ -805,6 +822,10 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~`activity.propose_change`의 라우팅 미도달~~ | **닫힘 — `[구현 2026-09-21]`** `select_capability`에 `intent="adjust_reject"` → `activity.propose_change` 분기 추가. 테스트 2건(`test_activity_submit_itinerary.py`) |
 | 대안 생성 규칙의 `business_hours`·`closed_days`·`sigungucode` 소스 | `[미확보 2026-09-24]` 세 필드 모두 `place_catalog` 구조화 컬럼이 아니다(`raw_json`뿐이거나 아예 안 실림) — [대안 생성 규칙 절](#대안-생성-규칙--사용자-제공-2026-09-24) 참고. 카탈로그 컬럼 승격이 먼저 필요할 수 있다. `[2026-09-26]` `alternatives.py`는 CSV 컬럼명을 그대로 받는 순수 함수라, 승격 전에도 CSV나 `raw_json`을 풀어 넘기면 돈다 — 출처 결정이 구현을 막지는 않는다 |
 | ~~`weather_sensitive`가 실 데이터에서 검증 불가~~ | **완화 — `[구현 2026-09-20]`** `_weather_sensitive_from_title()`로 이름 단서 추정(추정 사실은 항상 공개). **완전히 닫힌 건 아니다** — 키워드에 안 걸리는 장소(예: "경복궁")는 여전히 `None`이고, 근본 원인(프로덕션에 `places` 쓰기 경로 자체가 없음)은 그대로다 → [`weather_sensitive` 절](#weather_sensitive--db가-모르면-장소명으로-추정한다) |
+| ~~`read.place_candidates` 실구현~~ | **닫힘 — `[구현 2026-09-28]`** `db_search/place_candidates.py`로 실구현, `app/modules/travel_ops/activity/db_search/`에 있다 → [실구현 절](#read_place_candidates-실구현--db_search-구현-2026-09-28) |
+| 무신사·다이소·아트박스를 최종 후보 CSV에 병합 | `[미확보 2026-09-28]` `02_musinsa_seoul_all_branches.csv`(원본 매장 리스트)가 있지만 TourAPI 매칭·enrich를 거치지 않았고, 최종 병합본(`activities_candidates_seoul_merged.csv`)에도 아직 없다. 다이소·아트박스는 TourAPI enrich(`tourapi_{daiso,artbox}_seoul_enriched.csv`)까지는 끝났지만 `merge_oliveyoung_activities.py`가 올리브영만 병합하도록 짜여 있어 이 둘을 병합하는 코드가 아직 없다 |
+| `build_final_dataset.py` | **삭제됨 — `[결정 2026-09-28]`** 필요 입력(`scripts/activities_candidates_seoul_enriched.csv` 805건 베이스, `tourapi_oliveyoung_seoul_enriched.csv`)이 리팩터로 없어지거나 애초에 만들어진 적이 없어 실행 불가 상태였다. 올리브영 368건 전량을 태그만 붙여 병합하는 `merge_oliveyoung_activities.py` 방식을 그대로 쓰기로 하고 삭제했다. **추가 DB 적재 코드가 필요해지면 그때 새로 만든다** |
+| `scripts/load_place_catalog_csv.py` | **복원됨 — `[실측 2026-09-28]`** 리팩터 커밋(`58a03c8`, "낡은 파일 — 새 적재 코드로 대체 예정")에서 삭제됐다가, 대체 코드가 실제로는 아직 없어서(`db_search`는 조회 전용이지 적재가 아니다) 로컬에 복원했다. `data_source` 필터(`--source tour_api`/`oliveyoung`으로 병합 CSV의 출처만 골라 넣는 기능) 포함. **팀 공유 전 확인 필요** — 담당자가 별도로 대체 코드를 작업 중인지 확인 안 됨 |
 
 ## 세션 리포트 (2026-09-20)
 

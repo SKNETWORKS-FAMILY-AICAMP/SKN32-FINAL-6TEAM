@@ -86,10 +86,13 @@ async def _run(values, state=None):
 # 계약
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_tool_is_declared_and_its_stub_answers_unknown():
-    """★Contract-first — 선언은 됐고 실구현 전까지는 항상 「모름」이다."""
+def test_the_tool_is_declared_and_answers_unknown_without_an_origin():
+    """★선언돼 있고, 원래 장소 식별자가 없으면 DB 를 열지 않고 「모름」이다.
+
+    실제 DB 조회는 `tests/unit/travel/test_db_search_place_candidates.py` 가 본다.
+    """
     assert "read.place_candidates" in ALLOWED
-    assert ReadToolbox(lambda: None).place_candidates(None, content_id="126508") is None
+    assert ReadToolbox(lambda: None).place_candidates(None, content_id=None) is None
 
 
 # ══════════════════════════════════════════════════════════════════

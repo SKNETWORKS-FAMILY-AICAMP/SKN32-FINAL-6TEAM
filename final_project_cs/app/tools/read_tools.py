@@ -270,11 +270,11 @@ class ReadToolbox:
 
     def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
                          **_: Any) -> dict[str, Any] | None:
-        """대체 장소 후보 풀. `[미구현]` — 작업자 A(DB조회)가 채울 자리.
+        """대체 장소 후보 풀. `place_catalog`(TourAPI 적재분)를 읽는다.
 
-        ★**계약만 먼저 둔다**(Contract-first, wiki/teams/activity.md 「구현
-          현황 — 작업자 B」). Activity Team 이 이 이름으로 부르고, 지금은
-          항상 `None`(모름)이라 Team 은 「후보를 조회하지 못했다」로 답한다.
+        ★실제 조회는 `app/modules/travel_ops/activity/db_search/place_candidates.py` 가 한다 — 여기는 테넌트
+          범위를 넘겨 부르는 얇은 연결이다. 원래 장소가 카탈로그에 없으면
+          `None`(모름)이고 Team 은 「후보를 조회하지 못했다」로 답한다.
 
         인자: `content_id` — 문제있음 판정이 난 원래 장소의 TourAPI
         `contentid`(`read.place` 의 `source_content_id`). 없으면 `None`.
@@ -294,7 +294,11 @@ class ReadToolbox:
           좁혀도 결과가 안 바뀐다.
         ★원래 장소 행(`origin`)을 모르면 `None` — 유사도를 잴 기준이 없다.
         """
-        return None
+        if not content_id:
+            return None      # ★어느 장소인지 모르면 조회하지 않는다
+        from app.modules.travel_ops.activity.db_search.place_candidates import find_place_candidates
+
+        return find_place_candidates(self.connection_factory, scope.tenant_id, content_id)
 
     def holiday(self, scope: ToolContext, *, on: Any = None,
                 **_: Any) -> dict[str, Any] | None:

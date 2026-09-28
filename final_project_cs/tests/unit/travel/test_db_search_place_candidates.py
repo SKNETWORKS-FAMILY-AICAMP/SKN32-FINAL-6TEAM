@@ -1,0 +1,123 @@
+# -*- coding: utf-8 -*-
+"""`app/modules/travel_ops/activity/db_search/place_candidates.py` — `read.place_candidates` 의 DB 조회.
+
+가짜 연결로 SQL 인자와 행 → 계약 모양 변환을 본다(실 DB 없이).
+"""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from app.tools.read_tools import ReadToolbox, ToolContext
+from app.modules.travel_ops.activity.db_search.place_candidates import ORIGIN_SQL, POOL_SQL, find_place_candidates
+
+UTC = timezone.utc
+OLD = datetime(2026, 9, 20, tzinfo=UTC)
+NEW = datetime(2026, 9, 28, tzinfo=UTC)
+
+
+def _record(cid, *, title, l1="HS", sgg="23", lon=126.98, lat=37.58,
+            closed="연중무휴", fetched=NEW):
+    raw = {"contentid": cid, "title": title, "lclsSystm1": l1, "lclsSystm2": l1 + "01",
+           "lclsSystm3": l1 + "010100", "sigungucode": sgg,
+           "mapx": "117.99", "mapy": "19.69",        # ★원본 좌표 — 쓰지 않아야 한다
+           "closed_days": closed, "business_hours": "09:00~18:00"}
+    return (cid, "12", title, lat, lon, l1, raw, fetched)
+
+
+class FakeCursor:
+    def __init__(self, conn):
+        self.conn = conn
+        self._result: list = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def execute(self, sql, params):
+        self.conn.executed.append((sql, params))
+        self._result = self.conn.origin if sql == ORIGIN_SQL else self.conn.pool
+
+    def fetchone(self):
+        return self._result[0] if self._result else None
+
+    def fetchall(self):
+        return list(self._result)
+
+
+class FakeConnection:
+    def __init__(self, origin, pool):
+        self.origin, self.pool = origin, pool
+        self.executed: list = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def cursor(self):
+        return FakeCursor(self)
+
+
+ORIGIN = _record("126511", title="창경궁", closed="매주 월요일", fetched=OLD)
+NEAR = _record("c1", title="성균관 명륜당")
+NO_COORD = _record("c2", title="좌표 없음", lon=None, lat=None)
+
+
+def test_returns_origin_and_candidates_in_the_csv_shape():
+    conn = FakeConnection([ORIGIN], [NEAR, NO_COORD])
+    pool = find_place_candidates(lambda: conn, "t1", "126511")
+
+    assert pool["origin"]["contentid"] == "126511"
+    assert pool["origin"]["closed_days"] == "매주 월요일"
+    assert [c["contentid"] for c in pool["candidates"]] == ["c1", "c2"]
+    first = pool["candidates"][0]
+    assert first == {"contentid": "c1", "title": "성균관 명륜당", "contenttypeid": "12",
+                     "lclsSystm1": "HS", "lclsSystm2": "HS01", "lclsSystm3": "HS010100",
+                     "sigungucode": "23", "mapx": "126.98", "mapy": "37.58",
+                     "closed_days": "연중무휴", "business_hours": "09:00~18:00"}
+    assert pool["source"] == "place_catalog:tour_api"
+
+
+def test_nulled_coordinates_stay_unknown():
+    """★적재 때 NULL 로 넣은 좌표를 raw_json 원본(자리표시값)으로 되살리지 않는다."""
+    conn = FakeConnection([ORIGIN], [NO_COORD])
+    candidate = find_place_candidates(lambda: conn, "t1", "126511")["candidates"][0]
+    assert candidate["mapx"] is None and candidate["mapy"] is None
+
+
+def test_confirmed_at_is_the_oldest_fetch():
+    conn = FakeConnection([ORIGIN], [NEAR])
+    assert find_place_candidates(lambda: conn, "t1", "126511")["confirmed_at"] == OLD.isoformat()
+
+
+def test_pool_is_narrowed_by_large_class_or_sigungu_of_the_origin():
+    conn = FakeConnection([ORIGIN], [])
+    find_place_candidates(lambda: conn, "t1", "126511")
+    (sql1, p1), (sql2, p2) = conn.executed
+    assert (sql1, p1) == (ORIGIN_SQL, ("t1", "tour_api", "126511"))
+    assert sql2 == POOL_SQL
+    assert p2 == ("t1", "tour_api", "126511", "HS", "23")
+
+
+def test_unknown_origin_is_unknown():
+    conn = FakeConnection([], [NEAR])
+    assert find_place_candidates(lambda: conn, "t1", "999") is None
+    assert len(conn.executed) == 1      # ★후보는 읽지 않는다
+
+
+def test_no_content_id_does_not_open_a_connection():
+    def boom():
+        raise AssertionError("열면 안 된다")
+    assert find_place_candidates(boom, "t1", "  ") is None
+
+
+def test_read_tool_passes_the_tenant_scope():
+    conn = FakeConnection([ORIGIN], [NEAR])
+    scope = ToolContext("tenant-x", uuid4(), uuid4(), ["activity"])
+    pool = ReadToolbox(lambda: conn).place_candidates(scope, content_id="126511")
+    assert pool["origin"]["contentid"] == "126511"
+    assert conn.executed[0][1][0] == "tenant-x"
