@@ -1,0 +1,74 @@
+{
+ "case_id": "text_pdf-08",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (1명)",
+  "DAY 1 2026-10-17",
+  "09:30 남산골한옥마을",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 롯데월드",
+  "",
+  "DAY 2 2026-10-18",
+  "09:30 여의도한강공원",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 동대문디자인플라자"
+ ],
+ "items": [
+  {
+   "date": "2026-10-17",
+   "start": "09:30",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-17",
+   "start": "15:00",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "09:30",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "15:00",
+   "title": "동대문디자인플라자",
+   "place": "동대문디자인플라자",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

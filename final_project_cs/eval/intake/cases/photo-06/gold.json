@@ -1,0 +1,45 @@
+{
+ "case_id": "photo-06",
+ "format": "photo",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (1명)",
+  "1일차 2026-10-15",
+  "09:30 창경궁",
+  "12:30 명동교자 점심",
+  "15:00 창덕궁 후원 · 예약번호 KY-48802"
+ ],
+ "items": [
+  {
+   "date": "2026-10-15",
+   "start": "09:30",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "15:00",
+   "title": "창덕궁 후원",
+   "place": "창덕궁",
+   "kind": "activity",
+   "booking_no": "KY-48802"
+  }
+ ]
+}

@@ -21,6 +21,8 @@ from typing import Any
 
 RELATIVE = {"오늘": 0, "내일": 1, "모레": 2, "글피": 3}
 _RELATIVE = re.compile(r"(오늘|내일|모레|글피)")
+#: 일차 머리줄 — 상대 날짜를 찾으러 올라갈 때 여기서 멈춘다(`rules.DAY_HEADING` 과 같은 모양의 앞머리)
+_HEADING = re.compile(r"^\s*(?:\d+\s*일\s*차|DAY\s*\d+|첫째\s*날|둘째\s*날|셋째\s*날)", re.IGNORECASE)
 
 
 @dataclass
@@ -99,10 +101,19 @@ def _fill_year(month_day: str, today: date) -> date:
 
 
 def _relative_on_line(lines: list[str], line_no: int | None) -> tuple[str, int] | None:
+    """그 줄에 상대 날짜가 있으면 그것, 없으면 **그 줄이 속한 일차 머리줄**(「1일차 · 내일」)에서 찾는다.
+    ☆2026-09-28 평가셋: 「내일」이 머리줄에만 있어 그날 항목 셋의 날짜를 못 정했다."""
     if not line_no or line_no > len(lines):
         return None
     match = _RELATIVE.search(lines[line_no - 1])
-    return (match.group(1), RELATIVE[match.group(1)]) if match else None
+    if match:
+        return match.group(1), RELATIVE[match.group(1)]
+    for back in range(line_no - 1, 0, -1):
+        text = lines[back - 1]
+        if _HEADING.match(text):
+            found = _RELATIVE.search(text)
+            return (found.group(1), RELATIVE[found.group(1)]) if found else None
+    return None
 
 
 __all__ = ["DayDate", "RELATIVE", "resolve_dates"]

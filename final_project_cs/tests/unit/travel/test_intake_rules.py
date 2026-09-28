@@ -67,3 +67,25 @@ def test_lines_that_rules_cannot_read_are_left_not_refused():
 def test_party_size_is_not_read_from_times_or_place_names(text, party):
     read = read_plan(text)
     assert read.party_size == party
+
+
+# ── 2026-09-28 평가셋에서 찾은 셋 ───────────────────────────────────
+def test_a_short_line_between_timed_stops_is_an_untimed_item():
+    r = read_plan(chr(10).join(["DAY 1 2026-10-27", "09:30 여의도한강공원", "광장시장 빈대떡", "15:00 경복궁 관람"]))
+    assert [(i.start, i.title.text) for i in r.items] == [("09:30", "여의도한강공원"), ("15:00", "경복궁 관람"),
+                                                         (None, "광장시장 빈대떡")]
+    assert r.items[2].date == "2026-10-27" and r.unread_lines == []
+
+
+def test_a_sentence_between_stops_is_left_for_the_model():
+    r = read_plan(chr(10).join(["09:00 경복궁", "점심은 토속촌에서 먹을래", "15:00 인사동"]))
+    assert [i.title.text for i in r.items] == ["경복궁", "인사동"] and r.unread_lines == [2]
+
+
+def test_a_table_row_with_an_empty_time_cell_is_an_item_not_a_heading():
+    text = chr(10).join(["일차 | 날짜 | 시각 | 일정 | 메모", "1일차 | 2026-10-10 | 09:30 | 국립중앙박물관 관람",
+                         "1일차 | 2026-10-10 | 광장시장 빈대떡", "1일차 | 2026-10-10 | 15:00 | 국립민속박물관"])
+    r = read_plan(text)
+    assert [(i.start, i.title.text, i.date) for i in r.items] == [
+        ("09:30", "국립중앙박물관 관람", "2026-10-10"), (None, "광장시장 빈대떡", "2026-10-10"),
+        ("15:00", "국립민속박물관", "2026-10-10")]

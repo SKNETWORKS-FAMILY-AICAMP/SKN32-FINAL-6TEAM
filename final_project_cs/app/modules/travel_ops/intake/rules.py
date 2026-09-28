@@ -208,13 +208,104 @@ def read_plan(text: str) -> ReadResult:
                 date = None                     # 새 날인데 날짜가 없다 — 앞 날짜를 끌어 쓰지 않는다
             result.read_lines.add(number)
             if not times:
+                # ★표 행 — 「1일차 | 2026-10-10 | 광장시장 빈대떡」(시각 칸이 빈 행). 머리줄·날짜 뒤에 제목이 더 있으면
+                #   시각 없는 항목이다. ☆2026-09-28 평가셋: 이 행이 머리줄로 흡수돼 항목이 통째로 사라졌다
+                rest = _table_rest(line, heading, date_match)
+                if rest is not None:
+                    _untimed_item(result, number, line, rest, day, date, note="표에서 시각 칸이 비어 있다")
                 continue
         if times:
             _time_items(result, number, line, times, day, date)
             continue
         if ARROW.search(line) and len(ARROW.split(line.strip())) >= 2:
             _arrow_items(result, number, line, day, date)
+    _sandwiched(result)
     return result
+
+
+#: 문장으로 끝나는 줄 — 끼인 줄 규칙이 받지 않는다(모델에게 넘긴다). 「점심은 토속촌에서 먹을래」
+_SENTENCE_END = re.compile(r"(요|다|래|자|까|죠|게|어|아|지|네|[?!.~])\s*$")
+_PARTICLE = re.compile(r"(은|는|을|를|에서|으로|에게|한테)\s")
+
+
+def _table_rest(line: str, heading, date_match) -> tuple[int, int] | None:
+    """표 행에서 머리줄·날짜 칸을 뺀 나머지 제목의 (시작, 끝). 표 행이 아니거나 남는 글이 없으면 None."""
+    if " | " not in line:
+        return None
+    cells, at = [], 0
+    for cell in line.split("|"):
+        start = line.index(cell, at)
+        at = start + len(cell)
+        stripped = cell.strip()
+        if not stripped:
+            continue
+        s = start + cell.index(stripped)
+        e = s + len(stripped)
+        covered = any(m and m.start() <= s and e <= m.end() + 1 for m in (heading, date_match))
+        if not covered:
+            cells.append((s, e))
+    if not cells:
+        return None
+    s, e = cells[0]
+    return (s, e) if re.search(r"[가-힣A-Za-z]", line[s:e]) else None
+
+
+def _untimed_item(result: ReadResult, number: int, line: str, span: tuple[int, int], day, date, *, note: str) -> None:
+    s, e = _narrow(line, span[0], span[1])
+    meal = _MEAL_SUFFIX.search(line[s:e])
+    position = len(result.items)
+    if meal and meal.start() > 0:
+        m0, m1 = s + meal.start("meal"), s + meal.end("meal")
+        result.claims.append(Claim(f"items[{position}].kind", "dining", Span(number, m0, m1, line[m0:m1]),
+                                   note="이름 뒤의 끼니 말"))
+        e = s + meal.start()
+    if e <= s:
+        return
+    item = ReadItem(day, date, None, None, Span(number, s, e, line[s:e]))
+    result.items.append(item)
+    result.claims.append(Claim(f"items[{position}].title", line[s:e], item.title, note=note))
+    booking = BOOKING_NO.search(line)
+    if booking:
+        b0, b1 = booking.start("no"), booking.end("no")
+        item.booking_no = Span(number, b0, b1, line[b0:b1])
+        result.claims.append(Claim(f"items[{position}].booking_no", line[b0:b1], item.booking_no))
+    result.read_lines.add(number)
+
+
+def _sandwiched(result: ReadResult) -> None:
+    """못 읽은 짧은 줄의 **앞뒤가 모두 읽은 일정 줄**이면 시각 없는 항목이다(「09:30 경복궁 / 광장시장 빈대떡 /
+    15:00 인사동」). 문장(「~해요」)·조사가 붙은 말은 받지 않는다 — 그런 줄은 모델이 가리킨다.
+    ☆2026-09-28 평가셋: 시각 없는 줄을 모델이 가리키지 않아 항목이 빠졌다(글자 PDF)."""
+    item_lines = {it.title.line for it in result.items if it.title}
+    heading_lines = {c.span.line for c in result.claims if c.field.startswith("days[")}
+    nonblank = [n for n, line in enumerate(result.lines, start=1) if line.strip()]
+    marks: list[tuple[int, int | None, str | None]] = []
+    for claim in result.claims:
+        if claim.field.startswith("days[") and claim.field.endswith(".heading"):
+            marks.append((claim.span.line, claim.value, None))
+        elif claim.field.startswith("days[") and claim.field.endswith(".date"):
+            marks.append((claim.span.line, None, claim.value))
+    for i, number in enumerate(nonblank):
+        if number in result.read_lines:
+            continue
+        line = result.lines[number - 1].strip()
+        before = nonblank[i - 1] if i > 0 else None
+        after = nonblank[i + 1] if i + 1 < len(nonblank) else None
+        if before not in item_lines or not (after in item_lines or after in heading_lines or after is None):
+            continue
+        if len(line) > 30 or _SENTENCE_END.search(line) or _PARTICLE.search(line + " ") or not re.search(r"[가-힣A-Za-z]", line):
+            continue
+        day = date = None
+        for mark_line, mark_day, mark_date in sorted(marks, key=lambda m: m[0]):
+            if mark_line > number:
+                break
+            if mark_day is not None:
+                day, date = mark_day, None
+            if mark_date is not None:
+                date = mark_date
+        raw = result.lines[number - 1]
+        start = raw.index(line)
+        _untimed_item(result, number, raw, (start, start + len(line)), day, date, note="시각이 없는 줄 — 앞뒤 일정 사이")
 
 
 def _trip_level(result: ReadResult, number: int, line: str) -> bool:

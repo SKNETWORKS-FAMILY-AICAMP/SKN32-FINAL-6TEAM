@@ -8,6 +8,7 @@
 .plan { margin-bottom: 16px; border-color: var(--color-primary); }
 .plan h2 { font-size: 15px; margin-bottom: 6px; }
 .plan p { font-size: 12px; line-height: 1.8; color: var(--color-muted); margin-bottom: 10px; }
+.keep { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 10px; }
 .plan strong { color: var(--color-warning); font-weight: 600; }
 .notice { margin-bottom: 12px; padding: 11px 14px; border-radius: 12px; background: var(--color-soft); color: var(--color-primary); font-size: 12px; line-height: 1.8; }
 .item[data-problem="true"] { border-color: var(--color-warning-border); }

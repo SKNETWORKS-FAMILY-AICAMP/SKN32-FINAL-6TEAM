@@ -1,0 +1,74 @@
+{
+ "case_id": "photo-03",
+ "format": "photo",
+ "defect": "typo",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (1명)",
+  "1일차 2026-10-26",
+  "09:30 청계천 산책",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 경복굼 관람",
+  "",
+  "2일차 2026-10-27",
+  "09:30 덕수궁 돌담길 산책",
+  "12:30 망원시장 칼국수",
+  "15:00 국립중앙박물관 관람"
+ ],
+ "items": [
+  {
+   "date": "2026-10-26",
+   "start": "09:30",
+   "title": "청계천 산책",
+   "place": "청계천",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-26",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-26",
+   "start": "15:00",
+   "title": "경복굼 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "09:30",
+   "title": "덕수궁 돌담길 산책",
+   "place": "덕수궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "15:00",
+   "title": "국립중앙박물관 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

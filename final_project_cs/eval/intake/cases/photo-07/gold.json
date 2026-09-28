@@ -1,0 +1,103 @@
+{
+ "case_id": "photo-07",
+ "format": "photo",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 3일 여행 (3명)",
+  "1일차 · 10월 9일",
+  "09:30 명동난타극장",
+  "12:30 망원시장 칼국수",
+  "15:00 창덕궁 후원",
+  "",
+  "2일차 · 10월 10일",
+  "09:30 인사동 구경",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 롯데월드",
+  "",
+  "3일차 · 10월 11일",
+  "09:30 북촌한옥마을 산책",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 남산골한옥마을"
+ ],
+ "items": [
+  {
+   "date": "2026-10-09",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-09",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-09",
+   "start": "15:00",
+   "title": "창덕궁 후원",
+   "place": "창덕궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "09:30",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "15:00",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-11",
+   "start": "09:30",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-11",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-11",
+   "start": "15:00",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

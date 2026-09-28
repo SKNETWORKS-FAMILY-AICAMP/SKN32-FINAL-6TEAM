@@ -1,0 +1,45 @@
+{
+ "case_id": "paste-04",
+ "format": "paste",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (3명)\n1일차 · 10월 29일\n09:30 남산골한옥마을\n12:30 광장시장 빈대떡\n15:00 인사동 구경"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (3명)",
+  "1일차 · 10월 29일",
+  "09:30 남산골한옥마을",
+  "12:30 광장시장 빈대떡",
+  "15:00 인사동 구경"
+ ],
+ "items": [
+  {
+   "date": "2026-10-29",
+   "start": "09:30",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-29",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-29",
+   "start": "15:00",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

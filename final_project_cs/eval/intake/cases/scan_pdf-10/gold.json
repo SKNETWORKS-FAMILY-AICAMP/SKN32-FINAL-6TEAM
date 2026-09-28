@@ -1,0 +1,45 @@
+{
+ "case_id": "scan_pdf-10",
+ "format": "scan_pdf",
+ "defect": null,
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "scan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (2명)",
+  "1일차 · 11월 9일",
+  "09:30 국립민속박물관",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 명동난타극장"
+ ],
+ "items": [
+  {
+   "date": "2026-11-09",
+   "start": "09:30",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-09",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-09",
+   "start": "15:00",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

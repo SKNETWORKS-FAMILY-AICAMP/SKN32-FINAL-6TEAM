@@ -1,0 +1,45 @@
+{
+ "case_id": "paste-09",
+ "format": "paste",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "서울 1일 여행 (1명)\n1일차 2026-11-06\n09:30 여의도한강공원\n12:30 명동교자 점심\n15:00 인사동 구경"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (1명)",
+  "1일차 2026-11-06",
+  "09:30 여의도한강공원",
+  "12:30 명동교자 점심",
+  "15:00 인사동 구경"
+ ],
+ "items": [
+  {
+   "date": "2026-11-06",
+   "start": "09:30",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "15:00",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

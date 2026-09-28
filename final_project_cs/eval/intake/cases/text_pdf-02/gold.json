@@ -1,0 +1,74 @@
+{
+ "case_id": "text_pdf-02",
+ "format": "text_pdf",
+ "defect": "no_time",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (1명)",
+  "DAY 1 2026-10-27",
+  "09:30 여의도한강공원",
+  "광장시장 빈대떡",
+  "15:00 경복궁 관람",
+  "",
+  "DAY 2 2026-10-28",
+  "09:30 명동난타극장",
+  "12:30 망원시장 칼국수",
+  "15:00 N서울타워"
+ ],
+ "items": [
+  {
+   "date": "2026-10-27",
+   "start": "09:30",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": null,
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-28",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-28",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-28",
+   "start": "15:00",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

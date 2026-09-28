@@ -1,0 +1,74 @@
+{
+ "case_id": "text_pdf-03",
+ "format": "text_pdf",
+ "defect": "typo",
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (4명)",
+  "1일차 2026-10-15",
+  "09:30 경복굼 관람",
+  "12:30 광장시장 빈대떡",
+  "15:00 롯데월드",
+  "",
+  "2일차 2026-10-16",
+  "09:30 명동난타극장",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 인사동 구경 · 예약번호 KY-62764"
+ ],
+ "items": [
+  {
+   "date": "2026-10-15",
+   "start": "09:30",
+   "title": "경복굼 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-15",
+   "start": "15:00",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-16",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-16",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-16",
+   "start": "15:00",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": "KY-62764"
+  }
+ ]
+}

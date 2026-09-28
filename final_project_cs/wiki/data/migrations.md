@@ -122,7 +122,7 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 - **누가 무엇을 보나.** `TripStore.places()` — 인자 없으면 공용만(일정 생성기 후보 · 에이전트 도구), `trip_id` 를 주면
   공용 + 그 여행 전용, 여러 여행을 도는 감시는 `every_trip=True` 로 읽고 여행마다 `visible_to` 로 거른다.
 - ★`ON CONFLICT` 는 부분 색인의 조건까지 적어야 맞는다 — `ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL`.
-- `[미확보]` 여행이 끝난 뒤 전용 행을 지우는 일은 아직 없다(설계서 §4-5 3번 「여행이 끝나면 지운다」). 그 전 공용 행 5개에
+- `[2026-09-28]` 끝난 여행의 전용 행은 되잡기 `trip_places` 가 비운다(좌표·외부 식별자, 이름은 남긴다 — 설계서 §4-5 3번). 그 전 공용 행 5개에
   관광공사 출처 칸이 남아 있는 것도 그대로다.
 
 ### 장소 별칭 `place_aliases` `[2026-09-28 · 030]`

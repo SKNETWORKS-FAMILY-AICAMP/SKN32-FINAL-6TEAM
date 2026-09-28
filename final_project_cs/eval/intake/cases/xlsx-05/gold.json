@@ -1,0 +1,98 @@
+{
+ "case_id": "xlsx-05",
+ "format": "xlsx",
+ "defect": null,
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-11-10 | 09:30 | 익선동 한옥거리 | ",
+  "1일차 | 2026-11-10 | 12:30 | 광장시장 빈대떡 | ",
+  "1일차 | 2026-11-10 | 15:00 | N서울타워 | ",
+  "2일차 | 2026-11-11 | 09:30 | 여의도한강공원 | ",
+  "2일차 | 2026-11-11 | 12:30 | 명동교자 | ",
+  "2일차 | 2026-11-11 | 15:00 | 국립중앙박물관 관람 | ",
+  "3일차 | 2026-11-12 | 09:30 | 서울숲 산책 | ",
+  "3일차 | 2026-11-12 | 12:30 | 토속촌삼계탕 | ",
+  "3일차 | 2026-11-12 | 15:00 | 남산골한옥마을 | "
+ ],
+ "items": [
+  {
+   "date": "2026-11-10",
+   "start": "09:30",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "15:00",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "09:30",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "15:00",
+   "title": "국립중앙박물관 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "09:30",
+   "title": "서울숲 산책",
+   "place": "서울숲",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "15:00",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+ "case_id": "mixed-01",
+ "format": "mixed",
+ "defect": "relative_date",
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 4명이서 서울 가요\n1일차 · 내일\n09:30 서울숲 산책\n12:30 진옥화할매원조닭한마리 점심\n15:00 국립민속박물관"
+  }
+ ],
+ "lines": [
+  "안녕하세요 4명이서 서울 가요",
+  "1일차 · 내일",
+  "09:30 서울숲 산책",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 국립민속박물관",
+  "서울 1일 여행 (4명)"
+ ],
+ "items": [
+  {
+   "date": "2026-10-02",
+   "start": "09:30",
+   "title": "서울숲 산책",
+   "place": "서울숲",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "15:00",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}
