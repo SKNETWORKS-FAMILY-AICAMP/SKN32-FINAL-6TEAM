@@ -71,9 +71,7 @@ export const questions = [
   ["종교적 고려가 필요한가요?", "Any religious considerations?", "여행에 반영하고 싶을 때만 알려 주세요.", "Share only if you’d like this considered."],
 ] as const;
 
-export const FOOD_STEP = 2;
 export const LAST_STEP = questions.length - 1;
-export const isOptional = (index: number) => index === FOOD_STEP || index === LAST_STEP;
 
 export function valid(index: number, a: Answers): boolean {
   switch (index) {

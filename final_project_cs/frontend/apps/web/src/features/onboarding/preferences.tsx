@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  answeredCount, chosenLabel, count, done, isOptional, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid, validationHint,
+  answeredCount, chosenLabel, count, done, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid, validationHint,
   type Answers, type ChoiceKey, type CountKey, type ListKey, type Option,
 } from "./model";
 import styles from "./onboarding.module.css";
@@ -232,7 +232,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
             </div>
             <div className={styles.question}>
               <h2 tabIndex={-1} id={`question-title-${index}`}>{t(question[0], question[1])}</h2>
-              <p className={styles.helper}>{t(question[2], question[3])}{isOptional(index) && <span className={styles.optional}>{t("선택", "Optional")}</span>}</p>
+              <p className={styles.helper}>{t(question[2], question[3])}</p>
               <div>{body(index)}</div>
               <p className={styles.error} id={`validation-${index}`} role="status">{error}</p>
               <div className={styles.questionNav}>

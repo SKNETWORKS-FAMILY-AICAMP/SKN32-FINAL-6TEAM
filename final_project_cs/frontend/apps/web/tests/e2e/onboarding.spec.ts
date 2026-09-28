@@ -47,6 +47,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   const progress = page.getByRole("progressbar", { name: "답변한 질문" });
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   await expect(heading("피하고 싶은 음식이 있나요?")).toBeVisible();
+  await expect(page.getByText("선택", { exact: true })).toHaveCount(0);
   await expect(next).toBeDisabled();
   await skip.click();
   await expect(progress).toHaveAttribute("aria-valuenow", "3");

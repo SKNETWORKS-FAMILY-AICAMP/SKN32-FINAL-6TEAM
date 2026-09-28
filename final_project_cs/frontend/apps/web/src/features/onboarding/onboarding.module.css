@@ -97,7 +97,6 @@
 .question h2 { font-size: 21px; font-weight: 700; line-height: 1.45; letter-spacing: -.9px; margin: 0 0 7px; }
 .question h2:focus { outline: none; }
 .helper { font-size: 12px; line-height: 1.7; color: var(--color-muted); margin: 0 0 14px; }
-.optional { display: inline-block; background: var(--color-soft); color: var(--color-primary); padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-size: 10px; }
 .question .questionNav { margin-top: auto; padding-top: 12px; }
 .groupLabel { font-size: 11px; line-height: 1.6; font-weight: 650; color: var(--color-muted); margin: 13px 0 7px; }
 .groupLabel:first-child { margin-top: 0; }
