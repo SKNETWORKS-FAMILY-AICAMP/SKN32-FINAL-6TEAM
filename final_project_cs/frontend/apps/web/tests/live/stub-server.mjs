@@ -202,6 +202,8 @@ createServer(async (request, response) => {
   }
 
   // ── plan intake ──────────────────────────────────────────────────
+  // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
+  if (request.method === "POST" && path === "/v1/web/warmup") return json(response, 200, { status: "warm", model: "stub-model", last_attempt: null }, origin);
   if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(1), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {

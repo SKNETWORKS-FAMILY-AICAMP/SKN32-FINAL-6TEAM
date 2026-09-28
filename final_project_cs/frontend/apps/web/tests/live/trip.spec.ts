@@ -185,3 +185,20 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   }
   expect(problems).toEqual([]);
 });
+
+test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page);
+  await page.goto(`/trips/${TRIP_ID}`);
+  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect.poll(async () => (await server.received("POST", "/v1/web/warmup")).length).toBe(1);
+  expect((await server.received("POST", "/v1/web/warmup"))[0].key).toBe("acop_u_known");
+
+  await server.reset();
+  const fresh = await page.context().browser()!.newContext();
+  const other = await fresh.newPage();
+  await other.goto("http://127.0.0.1:3102/");
+  await other.waitForTimeout(1500);
+  expect(await server.received("POST", "/v1/web/warmup")).toHaveLength(0);
+  await fresh.close();
+});

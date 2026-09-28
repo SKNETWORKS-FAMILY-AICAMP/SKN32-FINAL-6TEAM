@@ -8,6 +8,7 @@ import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
+import { warmup } from "@/lib/live/extras";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { TripAttention } from "./trip-attention";
@@ -73,6 +74,12 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       if (variables.clearDraft) setDraft("");
     },
   });
+
+  // ★Live: wake the chat model as the trip opens, so the first question does not wait for it to load (~35 s cold).
+  //   Best effort — the trip screen does not depend on it, and a failed chat reports itself.
+  useEffect(() => {
+    if (live) warmup(language).catch(() => { /* the chat reports its own failure */ });
+  }, [trip.id, language]);
 
   useEffect(() => {
     if (chatLog.current) chatLog.current.scrollTop = chatLog.current.scrollHeight;

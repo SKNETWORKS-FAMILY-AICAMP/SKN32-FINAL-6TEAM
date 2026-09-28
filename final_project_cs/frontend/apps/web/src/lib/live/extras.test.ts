@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveError } from "./client";
-import { chooseProposal, getNotices, getProposals } from "./extras";
+import { chooseProposal, getNotices, getProposals, warmup } from "./extras";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -27,6 +27,21 @@ describe("the rest of the server's web API", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+
+  it("wakes the model with the stored key and reads what the server said, including a failed load", async () => {
+    stub({ "tripilot.web.user-key.v1": "acop_u_mine" });
+    replies.push(json({ status: "warming", model: "gemma4:12b", last_attempt: { ok: false, seconds: 28.4, at: "2026-09-29T10:00:00+09:00", reason: "out of memory" }, deduped: true }));
+    expect(await warmup("ko")).toEqual({ status: "warming", model: "gemma4:12b", deduped: true, lastAttempt: { ok: false, seconds: 28.4, at: "2026-09-29T10:00:00+09:00", reason: "out of memory" } });
+    expect(calls[0].url).toMatch(/\/v1\/web\/warmup$/);
+    expect(calls[0].init.method).toBe("POST");
+    expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
+  });
+
+  it("does not wake anything — nor create a user — when this browser has no key", async () => {
+    stub({});
+    expect(await warmup("ko")).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
 
   it("reads the choices the server is waiting for and drops options that have no name", async () => {
     stub({ "tripilot.web.user-key.v1": "k" });
