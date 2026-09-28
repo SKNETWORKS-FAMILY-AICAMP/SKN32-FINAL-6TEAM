@@ -11,7 +11,11 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace as NS
 
-REPO = Path(__file__).resolve().parents[5]
+# ☆`[2026-09-29 문제목록 #56]` 저장소 맨 위를 parents[5] 로 세면 시험 폴더·스크립트 폴더를 옮길 때 엉뚱한 곳을 본다 —
+#   mobility_scripts/ 가 있는 조상을 위로 찾는다. 없으면 건너뛰지 않고 이유를 말하며 멈춘다(조용한 스킵 금지)
+REPO = next((p for p in Path(__file__).resolve().parents if (p / "mobility_scripts").is_dir()), None)
+if REPO is None:
+    raise RuntimeError(f"mobility_scripts/ 를 못 찾았다(시작: {Path(__file__).resolve()}) — 저장소 맨 위에 있어야 한다")
 for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))

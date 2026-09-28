@@ -73,3 +73,14 @@ def load_cli_env():
     if os.environ.get("DATA_DIR"):
         _layout(os.environ["DATA_DIR"], "cli_env")
     return SOURCE
+
+
+def cli_processed():
+    """명령줄 도구·점검 스크립트용 — 아무도 자료 폴더를 정하지 않았으면(출처 "unset") `.env` 를 읽고 PROCESSED 를 준다.
+
+    ☆`[2026-09-29 문제목록 #48 뒤따름]` import 때 .env 를 안 읽게 바꾼 뒤, `from ...paths import PROCESSED` 를 바로 쓰던
+    점검 스크립트(자전거 단위·28번 지나감·행선지 채우기·지표·자기점검)가 있을 리 없는 `/data` 를 보고
+    「입력이 없다」로 멈췄다. 서버가 켜거나 끈 뒤(출처 settings·disabled)에는 건드리지 않는다."""
+    if SOURCE == "unset":
+        load_cli_env()
+    return PROCESSED
