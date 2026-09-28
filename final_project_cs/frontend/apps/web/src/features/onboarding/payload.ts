@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { valid, type Answers } from "./model";
+import { isAnswered, type Answers, type QuestionId } from "./model";
 
 /**
  * The backend trip survey, `constraints.survey` on trip registration. The backend is the
@@ -26,23 +26,22 @@ export const tripSurveySchema = z.strictObject({
 });
 export type TripSurvey = z.infer<typeof tripSurveySchema>;
 
-/** Our “Getting around” option is the backend's `mobility` area. */
-const toArea = (code: string) => code === "transport" ? "mobility" : code;
-
 /**
  * Build the survey from the answers. A skipped question sends no field, so the backend
  * applies its own default (on_disruption → replace; pace → no density target; the rest empty).
+ * `preferred_mobility` is no longer asked, so it is not sent; the backend field stays as it is.
  */
 export function toSurvey(a: Answers): TripSurvey {
+  const has = (id: QuestionId) => isAnswered(id, a);
   return tripSurveySchema.parse({
     version: SURVEY_VERSION,
-    ...(valid(0, a) && { theme: a.theme }),
-    ...(valid(1, a) && { party: a.party }),
-    ...(valid(2, a) && { preferred_mobility: a.transport }),
-    ...(valid(3, a) && { priority: [toArea(a.priority)] }),
-    ...(valid(4, a) && { priority_details: { food: [a.detailFood], activity: [a.detailActivity], mobility: [a.detailTransport] } }),
-    ...(valid(5, a) && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),
-    ...(valid(6, a) && { on_disruption: a.onDisruption }),
-    ...(valid(7, a) && { pace: a.pace }),
+    ...(has("theme") && { theme: a.theme }),
+    // `party` is a free string on the backend: `other` sends what was typed, trimmed.
+    ...(has("party") && { party: a.party === "other" ? a.partyOther.trim() : a.party }),
+    // Array order is the ranking. Areas not picked (and their details) are left out.
+    ...(has("priority") && { priority: a.priority, priority_details: Object.fromEntries(a.priority.map((area) => [area, a.details[area]])) }),
+    ...(has("indoor") && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),
+    ...(has("onDisruption") && { on_disruption: a.onDisruption }),
+    ...(has("pace") && { pace: a.pace }),
   });
 }

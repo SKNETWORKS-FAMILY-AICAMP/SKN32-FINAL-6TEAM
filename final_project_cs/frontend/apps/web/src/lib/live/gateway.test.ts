@@ -61,6 +61,10 @@ describe("live trip gateway", () => {
     expect((calls.at(-1)!.init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
   });
 
+  it("offers no trip delete: the server has no delete call, so the list must not pretend one happened", () => {
+    expect(createLiveGateway().deleteTrip).toBeUndefined();
+  });
+
   it("folds move items into the next stop as a departure time instead of listing them as stops", async () => {
     replies.push({ ...TRIP, items: [TRIP.items[0],
       { item_id: "m", seq: 2, kind: "mobility", title: "경복궁 → 명동난타극장", place: null, starts_at: "2026-10-16T09:25:00+00:00", ends_at: "2026-10-16T09:50:00+00:00", changed: false, lat: null, lon: null, booked: false },

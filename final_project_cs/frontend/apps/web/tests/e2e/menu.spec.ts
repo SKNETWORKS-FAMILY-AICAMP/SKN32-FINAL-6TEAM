@@ -46,6 +46,7 @@ test("메뉴는 프로필·여행 목록·언어·플로팅 스위치 순서이�
   await expect(open).toBeFocused();
 
   await open.click();
+  await expect(profile).toBeFocused();   // 메뉴가 열려 초점을 받은 뒤에 Tab 을 누른다(위와 같다)
   await page.keyboard.press("Tab");
   await expect(trips).toBeFocused();
   await page.keyboard.press("Enter");
