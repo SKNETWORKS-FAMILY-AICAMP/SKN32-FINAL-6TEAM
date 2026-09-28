@@ -19,6 +19,7 @@ import collections
 import heapq
 import json
 import math
+import threading
 import weakref
 from pathlib import Path
 
@@ -237,14 +238,18 @@ class FareNet:
 
 
 _NETS = weakref.WeakKeyDictionary()
+_NETS_LOCK = threading.Lock()      # ☆`[2026-09-29 문제목록 #33]` 요청 스레드가 동시에 처음 부르면 요금망을 두 번 만들었다
 
 
 def fare_net(v):
     """판정기(LineOrder)마다 한 번 만든다 — 판정기는 무수정(속성을 달지 않는다)."""
     net = _NETS.get(v.lo)
     if net is None:
-        net = FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]})
-        _NETS[v.lo] = net
+        with _NETS_LOCK:
+            net = _NETS.get(v.lo)
+            if net is None:
+                net = FareNet(v.lo, v.sc, v.tw, {"연결_반경_m": _fare(v)["subway"]["하한_연결_반경_m"]["value"]})
+                _NETS[v.lo] = net
     return net
 
 
