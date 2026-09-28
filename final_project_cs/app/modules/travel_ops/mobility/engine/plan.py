@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """이동 값 내놓기 — 32번 방(2026-09-25). 팀장이 꽂을 수 있는 **함수 하나 + CLI**.
 
-    from app.modules.travel_ops.mobility_engine.plan import plan
+    from app.modules.travel_ops.mobility.engine.plan import plan
     out = plan(places, items, party_size=2, constraints={"first_visit": True})
     body["items"] = out["items"]                                     # CreateTrip 의 기존 칸 그대로
     body["routes"] = {**body.get("routes", {}), **out["routes"]}     # 합친다(남겨 둔 입력 이동 항목의 route 보존)
 
-    python -m app.modules.travel_ops.mobility_engine.plan --in trip_in.json --out trip_out.json
+    python -m app.modules.travel_ops.mobility.engine.plan --in trip_in.json --out trip_out.json
 
 입력 = CreateTrip 의 기존 칸(`places[]`·`items[]`·`party_size`·`constraints`) — 새 칸 없음.
 출력 = 출력 스펙 v1.4 의 기존 칸만 — 새 키 0. (23번 방 · 2026-09-25 · plan-v2)

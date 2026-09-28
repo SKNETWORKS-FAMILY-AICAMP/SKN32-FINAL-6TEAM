@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """판정기를 프로세스당 하나 세운다. 이동 모듈을 부르는 쪽(`plan()` · 코어 배선)의 유일한 무거운 자리.
 
-  from app.modules.travel_ops.mobility_engine.runtime import build_verifier
+  from app.modules.travel_ops.mobility.engine.runtime import build_verifier
   v = build_verifier()          # 한 번. 약 33초 · 상주 약 91MB
 
 왜 전부 올리나 (2026-09-14 실측, `mobility_scripts/probe_timetable_load.py`)

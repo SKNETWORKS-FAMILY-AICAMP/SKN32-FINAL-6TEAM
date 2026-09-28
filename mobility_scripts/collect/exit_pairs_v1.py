@@ -27,7 +27,7 @@ KST = timezone(timedelta(hours=9))
 OUT_DIR = PROCESSED / "mobility"
 
 
-def meters(lat1, lng1, lat2, lng2):          # mobility_engine/geo.py 와 같은 평면 근사
+def meters(lat1, lng1, lat2, lng2):          # mobility/engine/geo.py 와 같은 평면 근사
     dy = (lat2 - lat1) * 111_320
     dx = (lng2 - lng1) * 111_320 * math.cos(math.radians((lat1 + lat2) / 2))
     return math.hypot(dx, dy)

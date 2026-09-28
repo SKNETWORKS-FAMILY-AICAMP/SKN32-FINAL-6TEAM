@@ -36,7 +36,7 @@ for _p in (REPO / "final_project_cs", REPO):
 
 def _default_paths():
     try:
-        from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+        from app.modules.travel_ops.mobility.engine.paths import PROCESSED
     except Exception:                                   # dotenv 없는 환경 — 인자로 넘긴다
         return {}
     gt = PROCESSED / "mobility" / "ground_truth"

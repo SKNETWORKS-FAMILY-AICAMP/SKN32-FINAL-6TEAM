@@ -101,7 +101,7 @@ ck(not V.is_valid(_r), "거부 — 규칙 used 에 중첩 객체")
 print("[10] 경고 어휘 — rules_v0.3.json `warnings` 절")
 import re as _re
 RULES = os.path.join(D, "..", "..", "..", "final_project_cs", "app", "modules",
-                     "travel_ops", "mobility_engine", "rules", "rules_v0.3.json")   # 31번 방 — 규칙표가 패키지로 갔다
+                     "travel_ops", "mobility", "engine", "rules", "rules_v0.3.json")   # 31번 방 — 규칙표가 패키지로 갔다
 if not os.path.exists(RULES):
     RULES = os.path.join(D, "rules_v0.3.json")   # 대화방에서 단독으로 돌릴 때
 try:

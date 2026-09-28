@@ -1,16 +1,17 @@
 # PR 노트 — 이동·동선 모듈(`role-mobility` → `develop`) v1
 
-2026-09-28 · 서유현(Mobility) · 기준 `origin/develop` `45bfb7a`(merge 반영 완료 · 충돌 0) · 팀장 커밋 `3c73687`(시험 이동) 포함
+2026-09-28 · 서유현(Mobility) · 기준 `origin/develop` `45bfb7a`(merge 반영 완료 · 충돌 0 · 9/28 저녁 재확인 「Already up to date」) · 팀장 커밋 `3c73687`(시험 이동) 포함 · **v1.1: 엔진을 팀 폴더 `travel_ops/mobility/engine/` 안으로**(팀장 요청 「세 팀 같은 모양」)
 
 ## 1. 한 줄
 
-이동 모듈은 **값을 내는 함수 하나**(`plan()`)와 그 판정기다. 코어(팀장) 배선은 `docs/mobility/2026-09-25_Mobility_호출안내_v2.md` 대로 부르면 되고, **팀 파일 수정은 0** 이다(보호 경로 검사 `git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/scripts scripts/README.md scripts/build_competitor_doc.py final_project_cs/app/modules/travel_ops/mobility final_project_cs/app/modules/travel_ops/route_uses.py final_project_cs/config` → 차이 0).
+이동 모듈은 **값을 내는 함수 하나**(`plan()`)와 그 판정기다. 코어(팀장) 배선은 `docs/mobility/2026-09-25_Mobility_호출안내_v2.md` 대로 부르면 되고, **팀 파일 수정은 0** 이다(보호 경로 검사 `git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/scripts scripts/README.md scripts/build_competitor_doc.py final_project_cs/app/modules/travel_ops/mobility/__init__.py final_project_cs/app/modules/travel_ops/mobility/team.py final_project_cs/app/modules/travel_ops/route_uses.py final_project_cs/config` → 차이 0).
 
 ## 2. 어디에 무엇이 있나 (`code-layout.md` 9/28 기준)
 
 | 자리 | 내용 |
 |---|---|
-| `final_project_cs/app/modules/travel_ops/mobility_engine/` | 판정 엔진(`verify_time.py`) · 계획 `plan.py`(`plan()` · CLI) · 후보·요금·규칙(`rules/rules_v0.3.json` — 내부 버전 v0.9.1). 팀 폴더 `travel_ops/mobility/`(팀장 `team.py`)와 **다른 이름** — 허용 방식 「파일+엔진」 |
+| `final_project_cs/app/modules/travel_ops/mobility/` | **팀장 폴더 그대로**(`__init__.py` 다시 내보내기 · `team.py` 본체 · 둘 다 무수정) — 허용 방식 「폴더」. 등록 문자열 `app.modules.travel_ops.mobility:MobilityTeam` 불변 |
+| `final_project_cs/app/modules/travel_ops/mobility/engine/` | 우리 판정 엔진(`verify_time.py`) · 계획 `plan.py`(`plan()` · CLI) · 후보·요금·규칙(`rules/rules_v0.3.json` — 내부 버전 v0.9.1). **팀 폴더의 하위 패키지**(`__init__.py` 문구 「하위 폴더를 더 두는 것도 자유」) · 옛 자리 `travel_ops/mobility_engine/` 는 없어짐 · `team.py` 는 엔진을 import 하지 않는다(배선은 코어 몫) |
 | `final_project_cs/tests/unit/travel/mobility/` | pytest 시험 10파일 + 회귀 케이스 JSON 14묶음(팀장이 9/28 `tests/mobility/` 에서 옮김 · **CI 가 돈다**) |
 | `mobility_scripts/` | 수집·빌드·자기점검·지표 스크립트(**이번 PR 에서 루트 `scripts/` 에서 옮김** — §4) · `mobility_checks/` = 기기 자료가 있어야 도는 점검·계약 검사·픽스처 생성기(팀장이 `scripts/mobility_checks/` 에 두었던 것을 같은 이유로 여기로) |
 | `docs/mobility/` · `config/mobility/` · `sql/mobility*` | 설계·호출 안내·규칙 보조표·DB 스키마(참고용) |
@@ -30,14 +31,16 @@
 - 9/20 첫 커밋에 잘못 들어간 파일 5개 제거(루트 `__init__.py` · 빈 `modules/` 패키지 · 옛 메모 md 2) · `.env.teamflow.example` 은 develop 판으로 되돌림.
 - 골든 1곳 교체: 팀 `route_uses.py` 가 버스 노선명 검사를 넓혀(`01A`·`702A` 등 59노선 수용) 예시 출력의 **요약 한 줄**만 바뀜(`before_prev_end 41 · uses_format 2` → `before_prev_end 43`) · 이동 항목·경로 값 동일 · 새 uses 전부 팀 검사 통과.
 - 엔진 5파일은 주석의 경로 문자열만.
+- **(v1.1 · 9/28 저녁) `mobility_engine/` → `mobility/engine/`** — 팀장 요청(세 팀이 `travel_ops/<팀>/` 폴더 한 곳에서 같은 모양으로). 23파일 `git mv`(rename 100%·유사도 유지) + 경로 문자열 치환 **160곳/50파일**(엔진 7 · 시험 12 · `mobility_scripts/` 28 · docs 3 — import · `-m` 명령 · `Path` 조각 · 주석) + 엔진 안 실제 코드 2줄: `options.py` `from ..route_uses` → `from ...route_uses`(한 칸 깊어짐), `paths.py` `.git` 없는 배포본 fallback `parents[5]` → `[6]`(정상 경로는 `.git` 앵커라 무관). 팀 파일 수정 **0**. `test_team_tool_discipline` 가 훑는 엔진 파일 21 은 자리만 바뀌고 그대로 검사된다(41 passed). 실행 명령은 `app.modules.travel_ops.mobility.engine.<모듈>` 로 바뀜(§6).
 
-## 5. 숫자(기기 노트북 `playdata` · 2026-09-28 · GraphHopper 없음 · 새 자리 기준)
+## 5. 숫자(기기 노트북 `playdata` · 2026-09-28 · GraphHopper 없음 · `mobility/engine/` 자리에서 재측정)
 
 - 판정 회귀 **14묶음 171건 어긋남 0**(라우터 없는 기기라 alt 4건 SKIP — 종전과 같음)
-- pytest(cs) 133 / 데이터 없음 73+60skip · 팀 배치 검사 `test_team_layout`·`test_team_tool_discipline` **41 passed**(우리 `mobility_engine/` 포함)
+- pytest(cs) 133 / 데이터 없음 73+60skip · 팀 배치 검사 `test_team_layout`·`test_team_tool_discipline` **41 passed**(우리 `mobility/engine/` 21파일 포함)
 - 계약·점검 스크립트: 어댑터 30 · 런타임 26 · fold 0실패 · 자기점검 불변식 13 · bike 0실패 · passes 6 · 규칙표 통과
 - 자기점검 탐침 **15,792**(불가 6,155 · 성립 8,089 · 판단불가 1,269 · 상한 279) · 치명 0
 - `ruff check .`(develop CI 관문 F·E9) **0건**
+- `plan()` 예시 골든 2파일 재생성 → 이관 전과 **SAME** · `final_project_cs` 만 sys.path 에 두고 `import app.modules.travel_ops.mobility` · `…mobility.engine.runtime` 통과 · 데이터 없는 기기에서 `build_verifier()` 는 종전대로 `RuntimeError: 판정기 입력이 없다` 로 안내
 
 ## 6. 기기에서 회귀를 다시 돌리는 법
 
@@ -47,13 +50,13 @@ cd C:\...\SKN32-FINAL-6TEAM
 cd final_project_cs; python -m pytest tests/unit/travel/mobility -q; cd ..
 # 판정 회귀 한 묶음 (데이터 필요)
 $env:PYTHONPATH = "final_project_cs"
-python -m app.modules.travel_ops.mobility_engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/real_legs_v1.json --check-expect
+python -m app.modules.travel_ops.mobility.engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/real_legs_v1.json --check-expect
 # 자기점검 (데이터 필요 · 느림)
 python -m mobility_scripts.selfcheck_mobility --seeds "final_project_cs/tests/unit/travel/mobility/*_legs_v1.json"
 # 팀 파일을 건드리지 않았는지
-git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/scripts scripts/README.md scripts/build_competitor_doc.py final_project_cs/app/modules/travel_ops/mobility final_project_cs/app/modules/travel_ops/route_uses.py final_project_cs/config
+git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/scripts scripts/README.md scripts/build_competitor_doc.py final_project_cs/app/modules/travel_ops/mobility/__init__.py final_project_cs/app/modules/travel_ops/mobility/team.py final_project_cs/app/modules/travel_ops/route_uses.py final_project_cs/config
 ```
-전체 묶음은 `scratch\_67\run67.ps1`·`s10_merge2_run.ps1`(git 밖 · 담당자 기기).
+전체 묶음은 `scratch\_69\s4_fix_run.ps1`(git 밖 · 담당자 기기 · (3)~(11) 구간).
 
 ## 7. 알려진 한계(밝혀 둔다)
 
@@ -67,4 +70,4 @@ git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/sc
 
 ## 8. 코어 쪽에 이미 보낸 것
 
-`팀장전달_모음.md`(12항목 · 통지 7 · 질문 2 · 제안 3) — 이 PR 과 별도. 코어 계약에 **새 키 0**(기존 칸 `starts_at`·`ends_at`·`eta_min`·`uses`·`label`·`planned` 만). 이 PR 로 새로 알릴 것 한 줄: `scripts/mobility_checks/` → `mobility_scripts/mobility_checks/`(루트 `scripts` 는 팀 것만 · `code-layout.md` 의 예시 경로와 다름).
+`팀장전달_모음.md`(12항목 · 통지 7 · 질문 2 · 제안 3) — 이 PR 과 별도. 코어 계약에 **새 키 0**(기존 칸 `starts_at`·`ends_at`·`eta_min`·`uses`·`label`·`planned` 만). 이 PR 로 새로 알릴 것 둘: ① `scripts/mobility_checks/` → `mobility_scripts/mobility_checks/`(루트 `scripts` 는 팀 것만 · `code-layout.md` 의 예시 경로와 다름) ② 엔진이 `mobility_engine/` 에서 `mobility/engine/` 으로 들어갔다 — `code-layout.md` 의 「파일 + 엔진 `mobility.py` + `mobility_engine/`」 예시 줄은 이제 실물이 없다(폴더 방식 하나로 통일).

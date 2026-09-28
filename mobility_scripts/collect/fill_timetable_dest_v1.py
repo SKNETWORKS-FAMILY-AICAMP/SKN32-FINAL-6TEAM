@@ -149,7 +149,7 @@ def chain(g, rows, start_row, mask_named=False):
 
 
 def main():
-    from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
     M = PROCESSED / "mobility"
     ap = argparse.ArgumentParser(description="시간표 행선지 빈칸 채우기(열차 잇기)")
     ap.add_argument("--timetable", default=str(M / "timetable_v1.jsonl"))

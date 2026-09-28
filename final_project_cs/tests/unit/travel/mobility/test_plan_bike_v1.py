@@ -26,8 +26,8 @@ from types import SimpleNamespace as NS
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
-from app.modules.travel_ops.mobility_engine.plan import Planner, plan  # noqa: E402
-from app.modules.travel_ops.mobility_engine.runtime import Runtime  # noqa: E402
+from app.modules.travel_ops.mobility.engine.plan import Planner, plan  # noqa: E402
+from app.modules.travel_ops.mobility.engine.runtime import Runtime  # noqa: E402
 
 IN = HERE / "plan_example_in_v1.json"
 GOLD_BIKE = HERE / "plan_example_out_bike_v1.json"
@@ -229,7 +229,7 @@ def _skip(msg):
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility_engine.runtime import build_verifier
+        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:
@@ -239,7 +239,7 @@ def _runtime():
 
 def fixture_runtime(rt):
     """GH 대신 요약 픽스처 · 실시간 없음 — 싱글턴은 안 건드린다(복사본)."""
-    from app.modules.travel_ops.mobility_engine.bike import BikeRouter
+    from app.modules.travel_ops.mobility.engine.bike import BikeRouter
     fx = json.loads(GH_FIX.read_text(encoding="utf-8"))
     r2 = copy.copy(rt)
     r2._v = copy.copy(rt._v)

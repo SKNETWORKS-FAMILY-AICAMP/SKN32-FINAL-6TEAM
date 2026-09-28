@@ -29,7 +29,7 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility_engine.paths import PROCESSED, RAW_MOBILITY   # noqa: E402
+from app.modules.travel_ops.mobility.engine.paths import PROCESSED, RAW_MOBILITY   # noqa: E402
 
 GT = PROCESSED / "mobility" / "ground_truth"
 TAGS = RAW_MOBILITY / "ground_truth" / "tmoney_tags_202609.csv"

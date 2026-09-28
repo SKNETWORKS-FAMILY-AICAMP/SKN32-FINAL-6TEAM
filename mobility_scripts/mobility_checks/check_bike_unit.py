@@ -18,9 +18,9 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility_engine.verify_time import Verifier      # noqa: E402
-from app.modules.travel_ops.mobility_engine.geo import StationCoords        # noqa: E402
-from app.modules.travel_ops.mobility_engine.bike import (BikeStations, BikeLive,  # noqa: E402
+from app.modules.travel_ops.mobility.engine.verify_time import Verifier      # noqa: E402
+from app.modules.travel_ops.mobility.engine.geo import StationCoords        # noqa: E402
+from app.modules.travel_ops.mobility.engine.bike import (BikeStations, BikeLive,  # noqa: E402
                                                         BikeRouter, fare)
 
 fails = []
@@ -33,10 +33,10 @@ def ck(cond, msg):
 
 
 def main():
-    rules = json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
-    holidays = set(json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
+    rules = json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "rules_v0.3.json").read_text(encoding="utf-8"))
+    holidays = set(json.loads((REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "holidays_2026_2027.json").read_text(encoding="utf-8"))["holidays"])
     try:
-        from app.modules.travel_ops.mobility_engine.paths import PROCESSED   # 엔진 paths 로 읽는다(41 · 67 뒤 mobility_scripts 로도 되지만 엔진 값이 정본)
+        from app.modules.travel_ops.mobility.engine.paths import PROCESSED   # 엔진 paths 로 읽는다(41 · 67 뒤 mobility_scripts 로도 되지만 엔진 값이 정본)
         sc = StationCoords.load(PROCESSED / "mobility" / "station_coords.json")
         bk = BikeStations.load(PROCESSED / "mobility" / "bike_stations_v1.jsonl")
     except Exception as e:          # noqa: BLE001
@@ -112,7 +112,7 @@ def main():
 
 
 def test_bike_unit():          # 67: pytest 수집용 — 좌표표·대여소 표(실데이터)가 있어야 돈다 · 없는 기기는 SKIP
-    from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
     need = [PROCESSED / "mobility" / "station_coords.json", PROCESSED / "mobility" / "bike_stations_v1.jsonl"]
     if not all(p.exists() for p in need):
         import pytest

@@ -1,5 +1,5 @@
 {
- "note": "프로파일 없이 도는 판정기의 버스 승차 상한 회귀 v1 (2026-09-25 · 41 적용 · 2차 GPT 7). --bus-profile none 으로 돌린다. 실행: python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/bus_noprof_legs_v1.json --bus-profile none --check-expect",
+ "note": "프로파일 없이 도는 판정기의 버스 승차 상한 회귀 v1 (2026-09-25 · 41 적용 · 2차 GPT 7). --bus-profile none 으로 돌린다. 실행: python -m app.modules.travel_ops.mobility.engine.verify_time --cases tests/mobility/bus_noprof_legs_v1.json --bus-profile none --check-expect",
  "built_at": "2026-09-25",
  "cases": [
   {

@@ -42,14 +42,14 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility_engine.verify_time import Timetable, Verifier                       # noqa: E402
-from app.modules.travel_ops.mobility_engine.line_order import LineOrder                         # noqa: E402
-from app.modules.travel_ops.mobility_engine.transfer_walk import TransferWalk                   # noqa: E402
-from app.modules.travel_ops.mobility_engine.bus import BusRoutes                                # noqa: E402
-from app.modules.travel_ops.mobility_engine.geo import StationCoords                            # noqa: E402
-from app.modules.travel_ops.mobility_engine.exits import StationExits                           # noqa: E402
-from app.modules.travel_ops.mobility_engine.bike import BikeStations                             # noqa: E402
-from app.modules.travel_ops.mobility_engine.timeutil import fmt_min  # noqa: E402
+from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier                       # noqa: E402
+from app.modules.travel_ops.mobility.engine.line_order import LineOrder                         # noqa: E402
+from app.modules.travel_ops.mobility.engine.transfer_walk import TransferWalk                   # noqa: E402
+from app.modules.travel_ops.mobility.engine.bus import BusRoutes                                # noqa: E402
+from app.modules.travel_ops.mobility.engine.geo import StationCoords                            # noqa: E402
+from app.modules.travel_ops.mobility.engine.exits import StationExits                           # noqa: E402
+from app.modules.travel_ops.mobility.engine.bike import BikeStations                             # noqa: E402
+from app.modules.travel_ops.mobility.engine.timeutil import fmt_min  # noqa: E402
 
 SEV_ORDER = {"critical": 0, "warn": 1, "info": 2}
 
@@ -471,9 +471,9 @@ def main():
 
     ap.add_argument("--bike-stations")
     ap.add_argument("--bus-profile", help="버스 구간 통행시간 프로파일(v0.9 · 41) · 'none' 이면 종전 모델 · 기본 processed")
-    ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "rules_v0.3.json"))
+    ap.add_argument("--rules", default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "rules_v0.3.json"))
     ap.add_argument("--holidays",
-                    default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine" / "rules" / "holidays_2026_2027.json"))
+                    default=str(REPO / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine" / "rules" / "holidays_2026_2027.json"))
     ap.add_argument("--base-date", default="2026-09-14", help="요일 대표일을 여기서부터 고른다")
     ap.add_argument("--step", type=int, default=30, help="출발 시각 간격(분)")
     ap.add_argument("--from-min", type=int, default=5 * 60)
@@ -509,7 +509,7 @@ def main():
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
         # 판정기와 같은 경로 규칙(.env DATA_DIR) — `scripts` 패키지 이름에 기대지 않는다(팀 final_project_cs/scripts 와 이름이 겹친다 · 41)
-        from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+        from app.modules.travel_ops.mobility.engine.paths import PROCESSED
         M = PROCESSED / "mobility"
         args.timetable = args.timetable or str(M / "timetable_v1.jsonl")
         args.order = args.order or str(M / "line_station_order_v1.json")
@@ -550,12 +550,12 @@ def main():
     print(f"시간표 {tt.rows:,}행 · 역 {len(tt.stations)} · 수집 {tt.fetched_at}")
 
     # v0.8 — 혼잡도(@ 부품)를 CLI·runtime 과 같은 두 파일로 연결한다(GPT 대조 2026-09-24 #3 — 없으면 혼잡 가산 경로가 탐침에서 안 돈다)
-    from app.modules.travel_ops.mobility_engine.congestion import Congestion
+    from app.modules.travel_ops.mobility.engine.congestion import Congestion
     cg_dir = Path(args.timetable).parent
     cg_data = Congestion.load([cg_dir / "congestion_v1.jsonl", cg_dir / "congestion_line9_v1.jsonl"], wanted)
     print(f"혼잡도 {cg_data.rows:,}셀" if cg_data else "혼잡도 없음(가산 근거없음)")
     # v0.9 — 버스 구간 통행시간 프로파일(41)을 CLI·runtime 과 같은 파일로 연결한다(없으면 버스 승차가 종전 모델로 탐침된다)
-    from app.modules.travel_ops.mobility_engine.bus_profile import BusSegProfile
+    from app.modules.travel_ops.mobility.engine.bus_profile import BusSegProfile
     bus_prof = None if args.bus_profile == "none" else BusSegProfile.load(args.bus_profile)
     print(f"버스 구간 프로파일 {len(bus_prof.index):,}구간" if bus_prof else "버스 구간 프로파일 없음(종전 모델)")
     v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, bk=bk, cg_data=cg_data, bus_prof=bus_prof)

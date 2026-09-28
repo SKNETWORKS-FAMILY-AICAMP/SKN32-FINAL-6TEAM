@@ -24,8 +24,8 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility_engine import verify_time as vt          # noqa: E402
-from app.modules.travel_ops.mobility_engine.judgment_log import JudgmentLogger, install, DeviceMismatch   # noqa: E402
+from app.modules.travel_ops.mobility.engine import verify_time as vt          # noqa: E402
+from app.modules.travel_ops.mobility.engine.judgment_log import JudgmentLogger, install, DeviceMismatch   # noqa: E402
 
 TARGETS = ("verify_time", "selfcheck")
 

@@ -260,7 +260,7 @@ def main():
     if a.log:
         log = Path(a.log)
     else:
-        from app.modules.travel_ops.mobility_engine.judgment_log import default_log_dir, LOG_NAME
+        from app.modules.travel_ops.mobility.engine.judgment_log import default_log_dir, LOG_NAME
         log = default_log_dir() / LOG_NAME
     rows = pick_runs(load(log), a.run)
     if a.source:

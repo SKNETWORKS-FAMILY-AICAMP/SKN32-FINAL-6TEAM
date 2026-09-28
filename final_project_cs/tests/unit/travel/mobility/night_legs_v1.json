@@ -1,5 +1,5 @@
 {
-  "note": "심야 N노선 회귀 v1 (2026-09-24 · 45번 방 · GPT 대조 반영). 717노선 정규화 결함 셋(N26 첫차 자정 · 심야A21 막차 같은 날 · 8772 첫차=막차=자정)과 service_days · 운행일 경계(04:00)를 잠근다. 실행: python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/night_legs_v1.json --check-expect",
+  "note": "심야 N노선 회귀 v1 (2026-09-24 · 45번 방 · GPT 대조 반영). 717노선 정규화 결함 셋(N26 첫차 자정 · 심야A21 막차 같은 날 · 8772 첫차=막차=자정)과 service_days · 운행일 경계(04:00)를 잠근다. 실행: python -m app.modules.travel_ops.mobility.engine.verify_time --cases tests/mobility/night_legs_v1.json --check-expect",
   "built_at": "2026-09-24",
   "계약": "case.date 는 **운행일**이다. depart_at 이 04:00 전이면 그 운행일의 연장(달력상 다음 날 새벽)으로 +24h 한다(timeutil.to_service_min). 요일형(day_type)은 운행일로 정한다. 그래서 「운행일 토 00:30」은 달력상 일요일 00:30 이다.",
   "주의": [

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """계획용 이동 추정(P1) — 48번 방(2026-09-25).
 
-    from app.modules.travel_ops.mobility_engine.plan_estimate import estimate
+    from app.modules.travel_ops.mobility.engine.plan_estimate import estimate
     r = estimate("명동", {"name": "성수 쇼룸", "lat": 37.5445, "lon": 127.056}, "2026-09-29", "오전")
 
-    python -m app.modules.travel_ops.mobility_engine.plan_estimate --from 명동 --to "성수 쇼룸@37.5445,127.056" \\
+    python -m app.modules.travel_ops.mobility.engine.plan_estimate --from 명동 --to "성수 쇼룸@37.5445,127.056" \\
         --date 2026-09-29 --slot 오전
 
 입력: 출발지·도착지(역명 또는 {name, lat, lon}) · 날짜(**운행일** — 45 계약) · 시간대(오전/오후/저녁/밤)

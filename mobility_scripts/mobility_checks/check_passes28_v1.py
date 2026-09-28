@@ -16,7 +16,7 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility_engine.line_order import LineOrder   # noqa: E402
+from app.modules.travel_ops.mobility.engine.line_order import LineOrder   # noqa: E402
 
 CASES = [
     # (이름, (노선, 출발, 행선지, 목적지), 기대 value, 기대 등급 또는 None)
@@ -43,7 +43,7 @@ def main():
 
 
 def test_passes28():          # 67: pytest 수집용 — 실데이터(line_station_order) 시험 · 없는 기기는 SKIP
-    from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
     if not (PROCESSED / "mobility" / "line_station_order_v1.json").exists():
         import pytest
         pytest.skip("data not present (DATA_DIR/travel/processed/mobility/line_station_order_v1.json)")

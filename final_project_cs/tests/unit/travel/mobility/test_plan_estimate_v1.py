@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
-from app.modules.travel_ops.mobility_engine.plan_estimate import (  # noqa: E402
+from app.modules.travel_ops.mobility.engine.plan_estimate import (  # noqa: E402
     Estimator, _cautions, day_info, estimate, pct, slot_window)
 
 HOTEL = {"name": "명동 호텔", "lat": 37.5636, "lon": 126.9826}           # 32 예시와 같은 장소
@@ -41,7 +41,7 @@ class _Skip(Exception):
 def _runtime():
     global _RT
     if _RT is None:
-        from app.modules.travel_ops.mobility_engine.runtime import build_verifier
+        from app.modules.travel_ops.mobility.engine.runtime import build_verifier
         try:
             _RT = build_verifier(quiet=True)
         except RuntimeError as e:          # 시간표가 없는 기기 — 데이터 축은 SKIP

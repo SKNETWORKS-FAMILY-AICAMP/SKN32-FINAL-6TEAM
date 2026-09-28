@@ -21,9 +21,9 @@ from pathlib import Path
 import importlib.util
 
 # 엔진 패키지만 따로 올린다 — `app.modules.travel_ops` 로 import 하면 travel_ops/__init__.py 가
-# 여섯 팀 모듈(openai 등)을 먼저 불러온다(mobility_engine/__init__.py 에 적힌 대가). 분석 스크립트라
+# 여섯 팀 모듈(openai 등)을 먼저 불러온다(mobility/engine/__init__.py 에 적힌 대가). 분석 스크립트라
 # 팀 의존 없이 엔진만 읽는다. 엔진 코드는 그대로다(상대 import 만 쓰는 자기완결 패키지).
-_ENGINE = Path(__file__).resolve().parents[1] / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility_engine"
+_ENGINE = Path(__file__).resolve().parents[1] / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine"
 _spec = importlib.util.spec_from_file_location("mobility_engine", _ENGINE / "__init__.py",
                                                submodule_search_locations=[str(_ENGINE)])
 _pkg = importlib.util.module_from_spec(_spec)

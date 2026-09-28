@@ -21,8 +21,8 @@ def _repo_root() -> Path:
     for p in here.parents:
         if (p / ".git").exists():
             return p
-    # .git 이 없는 배포본 — 패키지에서 다섯 칸 위가 저장소 루트다
-    return here.parents[5]
+    # .git 이 없는 배포본 — 패키지에서 여섯 칸 위가 저장소 루트다(69: mobility/engine/ 로 한 칸 더 깊이)
+    return here.parents[6]
 
 
 REPO_ROOT = _repo_root()

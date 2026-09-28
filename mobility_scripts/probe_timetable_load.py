@@ -31,7 +31,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 import importlib.util                                    # noqa: E402
 spec = importlib.util.spec_from_file_location(
     "vt", REPO / "final_project_cs" / "app" / "modules" / "travel_ops"
-         / "mobility_engine" / "verify_time.py")
+         / "mobility" / "engine" / "verify_time.py")
 vt = importlib.util.module_from_spec(spec)
 sys.modules["vt"] = vt
 spec.loader.exec_module(vt)
