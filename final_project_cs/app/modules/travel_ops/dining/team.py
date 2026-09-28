@@ -11,11 +11,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
+from app.core.contracts import (NextAction, TeamManifest, TeamResult, TeamTask,
+                                ToolNotAllowed)
 
 from .._base import TravelTeamBase
 from ..itinerary_changes import plan_closed, plan_delay
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from .ledger import merge_state
 
 
 class DiningTeam(ItineraryWork, TravelTeamBase):
@@ -36,7 +38,10 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         required_context=["case_state", "policy", "db_facts", "history"],
         policy_optional_capabilities=["dining.itinerary"],
         # ★`[2026-09-25]` `read.booking_terms` — 규정 질문에서 식당 예약이 있으면 취소 조건 수치를 댄다
-        allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms", *ITINERARY_TOOLS],
+        # ★`read.dining_state` — 요식 원장에 「그 시각에 여는가」를 묻는다. 코어에 등록되지 않았으면
+        #   `ToolNotAllowed` 가 나고, 그때는 원장 없이 예전처럼 답한다 — 등록 전에 이 Team 이 죽으면 안 된다.
+        allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms",
+                       "read.dining_state", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
         #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
         knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
@@ -96,6 +101,15 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         if place is None:
             return self._unknown(task, "장소·영업 정보", evidence)
 
+        # ★예약 시각으로 요식 원장에 다시 묻는다. `read.place` 가 시각을 받지
+        #   않아서 그 칸만으로는 「12시 예약」과 「22시 예약」을 가를 수 없다.
+        state = self._dining_state(task, booking, seen)
+        if state is not None:
+            evidence = self._evidence(task, source_id="read.dining_state",
+                                      claim="요식 원장의 그 시각 판정",
+                                      value=state, base=evidence)
+            place = merge_state(place, state)
+
         # ★확인 시각이 없으면 "확인했다" 고 말하지 않는다.
         confirmed_at = place.get("confirmed_at")
         if confirmed_at is None:
@@ -108,15 +122,48 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         if open_at_slot is None:
             return self._unknown(task, "그 시각의 영업 여부", evidence)
 
+        # ★원장이 「확인이 필요하다」고 하면 그 말을 답에 붙인다. 판정은 바꾸지
+        #   않는다 — 명절 영업시간은 어떤 자료에도 없어서 추정이고, 추정으로
+        #   일정을 바꾸지는 않되 확인할 곳은 알려 준다.
+        extra = place.get("dining") or {}
+        warnings = ["제공자 예정 정보이지 현장 확인이 아니다"]
+        if extra.get("needs_holiday_check"):
+            warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있다")
+        if extra.get("needs_check"):
+            warnings.append("영업 종료가 임박해 마지막 주문을 확인해야 한다")
+
+        decided: dict[str, Any] = {"open_at_slot": open_at_slot,
+                                   "confirmed_at": str(confirmed_at)}
+        if place.get("dining_source"):
+            decided["source"] = place["dining_source"]
+        if extra.get("holiday_context"):
+            decided["holiday_context"] = extra["holiday_context"]
+
         return self._result(
             task, outcome="completed", confidence=0.9, evidence=evidence,
             next_action=NextAction.RESPOND,
             answer=(f"일정 시각에 영업합니다(확인 시각 {confirmed_at})."
                     if open_at_slot else
                     f"일정 시각에는 영업하지 않습니다(확인 시각 {confirmed_at})."),
-            decisions=[{"open_at_slot": open_at_slot,
-                        "confirmed_at": str(confirmed_at)}],
-            warnings=["제공자 예정 정보이지 현장 확인이 아니다"])
+            decisions=[decided],
+            warnings=warnings)
+
+    def _dining_state(self, task: TeamTask, booking: dict, seen: set[str]) -> Any:
+        """요식 원장에 예약 시각을 넣어 묻는다.
+
+        ★도구가 아직 코어에 등록되지 않았으면 `ToolNotAllowed` 가 난다.
+          그때는 조용히 비운다. 원장이 붙기 전이라고 이 Team 이 죽으면
+          지금 돌아가던 것까지 멈춘다 — 더해 주는 것이지 없으면 못 도는 것이 아니다.
+        """
+        starts_at = booking.get("starts_at")
+        place_id = booking.get("place_id")
+        if starts_at is None or place_id is None:
+            return None
+        try:
+            return self._read(task, "read.dining_state",
+                              {"place_id": str(place_id), "at": str(starts_at)}, seen)
+        except ToolNotAllowed:
+            return None
 
     def _conditions(self, task: TeamTask, place: dict, evidence: list) -> TeamResult:
         """동행 조건 — 아이 동반 · 할랄 · 채식. ★모르는 조건은 「모름」으로 둔다."""
