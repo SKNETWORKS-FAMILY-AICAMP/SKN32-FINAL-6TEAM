@@ -1,0 +1,24 @@
+/* Only the two navigation previews opt in to these rules. */
+/* A filtered ancestor anchors fixed children to the full page instead of the viewport. */
+html[data-trip-navigation] .phone.journey-shell[data-view="trip"]{
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+html[data-trip-navigation] .journey-shell .j-workspace{padding-bottom:104px}
+html[data-trip-navigation] .journey-shell .j-workspace-grid{grid-template-columns:minmax(0,1fr)}
+html[data-trip-navigation] .journey-shell .j-pane[data-active="false"]{display:none}
+html[data-trip-navigation] .journey-shell .j-mobile-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:0}
+html[data-trip-navigation] .journey-shell .j-mobile-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:8px 5px;background:transparent;border-radius:14px;font-size:11px;color:var(--muted)}
+html[data-trip-navigation] .journey-shell .j-mobile-tabs button[aria-pressed="true"]{background:white;color:var(--green);box-shadow:0 2px 8px #24392f0c}
+html[data-trip-navigation="fixed"] .journey-shell .j-mobile-tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;padding:10px 16px max(12px,env(safe-area-inset-bottom));border-top:1px solid #dce3dd;border-radius:0;background:#f4f7f1f5;box-shadow:0 -6px 24px #24392f09;backdrop-filter:blur(16px)}
+.journey-shell .j-floating-nav{position:fixed;left:18px;right:auto;bottom:max(20px,env(safe-area-inset-bottom));z-index:30;display:flex;align-items:center;width:58px;height:58px;padding:4px;border:1px solid #d2dfd2;border-radius:999px;background:#e9eee6f5;box-shadow:0 8px 28px #24392f24;backdrop-filter:blur(16px);transition:width .3s cubic-bezier(.22,.8,.2,1);overflow:hidden}
+.journey-shell .j-floating-nav.is-open{width:calc(100% - 36px);max-width:380px}
+.journey-shell .j-nav-toggle{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:50%;background:var(--green);color:white;box-shadow:0 3px 9px #24392f14}
+.journey-shell .j-floating-nav.is-open .j-nav-toggle{display:none}
+.journey-shell .j-nav-toggle svg{width:21px;height:21px}
+.journey-shell .j-floating-menu{flex:1;min-width:0;visibility:hidden;opacity:0;transition:opacity .18s}
+.journey-shell .is-open .j-floating-menu{visibility:visible;opacity:1}
+html[data-trip-navigation="floating"] .journey-shell .j-mobile-tabs{padding:0;background:none;border-radius:999px}
+html[data-trip-navigation="floating"] .journey-shell .j-mobile-tabs button{flex-direction:column;gap:2px;border-radius:999px;min-height:46px;font-size:9px;white-space:nowrap}
+html[data-trip-navigation="floating"] .journey-shell .j-mobile-tabs .j-icon{width:16px;height:16px}
+@media(prefers-reduced-motion:reduce){.journey-shell .j-floating-nav,.journey-shell .j-floating-menu{transition:none}}

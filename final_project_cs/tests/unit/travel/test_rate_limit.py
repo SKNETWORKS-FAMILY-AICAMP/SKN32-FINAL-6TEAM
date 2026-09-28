@@ -185,6 +185,49 @@ def test_the_xml_path_is_gated_too():
     assert probe.misses["rate_limited"] == 1
 
 
+# ── 몰림(burst) ─────────────────────────────────────────────────
+def _burst_limiter(per_day: int, burst: int, *, max_wait: float = 0.0):
+    clock = _Clock()
+    return RateLimiter(intervals={"src": interval_for(per_day, burst=burst)},
+                       bursts={"src": burst}, max_wait_seconds=max_wait,
+                       clock=clock, sleep=clock.sleep), clock
+
+
+def test_a_burst_lets_a_tick_check_several_items_back_to_back():
+    """☆2026-09-14 — 고정 간격이면 한 틱의 둘째 항목부터 거부돼 치명이 났다(실측)."""
+    limiter, clock = _burst_limiter(1_000, burst=3)
+    for _ in range(3):
+        limiter.acquire("src")
+    assert clock.slept == []
+    with pytest.raises(RateLimited):
+        limiter.acquire("src")                     # ★넷째는 여전히 막는다
+
+
+def test_a_used_burst_refills_one_slot_per_interval():
+    limiter, clock = _burst_limiter(1_000, burst=3)
+    for _ in range(3):
+        limiter.acquire("src")
+    clock.advance(interval_for(1_000, burst=3))    # 한 자리 찬다
+    limiter.acquire("src")
+    with pytest.raises(RateLimited):
+        limiter.acquire("src")
+
+
+@pytest.mark.parametrize("per_day,burst", [(500, 10), (1_000, 10), (10_000, 10), (1_000, 1)])
+def test_burst_plus_a_day_of_refills_never_exceeds_the_quota(per_day, burst):
+    """★★몰림을 받아도 하루 합계는 한도 안 — 몰림만큼 보충을 줄인다.
+
+    몰림으로 **더** 나가는 수(burst − 1) + 하루 보충 = 한도. 첫 호출 한 번은 고정 간격
+    (burst=1) 때도 공짜였던 몫이라 셈이 같다.
+    """
+    extra = burst - 1
+    assert extra + SECONDS_PER_DAY / interval_for(per_day, burst=burst) == pytest.approx(per_day)
+
+
+def test_burst_one_behaves_exactly_like_the_fixed_interval():
+    assert interval_for(1_000, burst=1) == interval_for(1_000)
+
+
 # ── 설정과 어댑터 이름이 맞는가 ─────────────────────────────────
 def test_every_configured_source_name_matches_a_real_adapter():
     """★★이름이 하나라도 어긋나면 그 소스만 **조용히 제한 없이** 나간다.

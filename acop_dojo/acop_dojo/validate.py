@@ -6,10 +6,12 @@
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 from . import defects as defects_mod
+from .config import data_dir
 from .sandbox import Sandbox
 
 
@@ -27,13 +29,35 @@ def validate_all(target: Path, *, verbose: bool = True,
         if verbose:
             print("기준선을 확인한다 (결함 없는 상태에서 전부 통과해야 한다)")
         baseline = sandbox.pytest()
+        if baseline.returncode == 124:
+            # 기준선이 끝나지 않으면 무엇이 새 실패인지 알 수 없다. 여기서 멈춘다.
+            print(f"  ✗ 기준선이 {baseline.summary}. 결함 판정을 시작하지 않는다.")
+            print("    대상 저장소에서 끝나지 않는 테스트를 먼저 찾는다 — pytest -v 로 마지막 줄을 본다.")
+            report["baseline"] = {"summary": baseline.summary, "failed": []}
+            return report
         sandbox.sweep()
         report["baseline"] = {"summary": baseline.summary, "failed": baseline.failed}
-        if baseline.failed:
-            print(f"  ✗ 기준선이 이미 깨져 있다: {baseline.failed}")
-            return report
+        # ★기준선의 실패는 결함 판정에서 뺀다. 공유 저장소는 다른 작업 때문에 늘 몇 건이
+        #   깨져 있을 수 있고, 사본에는 .git 이 없어 git 을 묻는 테스트는 원래 실패한다.
+        #   예전에는 여기서 멈추고 빈 결과를 돌려줘 카탈로그가 통째로 지워졌다.
+        #   대가 — 기준선에서 이미 깨진 테스트가 지키는 규칙은 이번 판정에서 보이지 않는다.
+        known_broken = set(baseline.failed)
+        # ★미리 알고 있는 환경 의존 실패(data/known_baseline.json)와 그 밖의 것을 가른다.
+        #   그 밖의 것도 판정에서는 빼지만 게이트는 실패로 끝낸다 — 다른 작업이 깨뜨린
+        #   무결성 검사를 '환경 탓' 으로 묻어 두지 않으려고.
+        prefixes = [e["prefix"] for e in json.loads(
+            (data_dir() / "known_baseline.json").read_text(encoding="utf-8"))["entries"]]
+        unexpected = sorted(n for n in known_broken if not n.startswith(tuple(prefixes)))
+        report["unexpected_baseline"] = unexpected
         if verbose:
-            print(f"  ✓ {baseline.summary}")
+            if known_broken:
+                print(f"  ! 결함 없이도 {len(known_broken)}건이 실패한다 — 판정에서 뺀다")
+                for nodeid in sorted(known_broken):
+                    mark = "✗ 모르는 실패" if nodeid in unexpected else "  알려진 실패"
+                    print(f"    {mark}  {nodeid}")
+                print(f"    {baseline.summary}")
+            else:
+                print(f"  ✓ {baseline.summary}")
 
         selected = [d for d in defects_mod.DEFECTS
                     if only is None or d.defect_id in only]
@@ -62,18 +86,19 @@ def validate_all(target: Path, *, verbose: bool = True,
 
             result = sandbox.pytest()
             sandbox.sweep()
-            entry["failed"] = result.failed
+            new_failures = sorted(set(result.failed) - known_broken)
+            entry["failed"] = new_failures
             entry["summary"] = result.summary
-            entry["gates"]["kills_tests"] = bool(result.failed)
+            entry["gates"]["kills_tests"] = bool(new_failures)
             entry["gates"]["not_collection_error"] = not any(
-                nodeid.endswith(".py") for nodeid in result.failed)
+                nodeid.endswith(".py") for nodeid in new_failures)
             if verbose:
-                mark = "✓" if result.failed else "✗"
+                mark = "✓" if new_failures else "✗"
                 print(f"  {mark} {result.summary}")
-                for nodeid in result.failed[:6]:
+                for nodeid in new_failures[:6]:
                     print(f"      {nodeid}")
-                if len(result.failed) > 6:
-                    print(f"      … 외 {len(result.failed) - 6}개")
+                if len(new_failures) > 6:
+                    print(f"      … 외 {len(new_failures) - 6}개")
 
             reverted, message = sandbox.apply(patch, reverse=True)
             after = (sandbox.root / defect.path).read_bytes()
@@ -122,7 +147,7 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
       이미 만들어 둔 patch 가 **아직 쓸 수 있는가**의 문제다.
     """
     report: dict[str, Any] = {"ok": [], "anchor_broken": [], "apply_broken": [],
-                              "drift": [], "missing": []}
+                              "drift": [], "missing": [], "source_missing": []}
     with Sandbox(target) as sandbox:
         assert sandbox.root is not None
         for defect in defects_mod.DEFECTS:
@@ -130,6 +155,11 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
             source = sandbox.root / defect.path
             if not patch.exists():
                 report["missing"].append(defect.defect_id)
+                continue
+            # 겨누는 파일 자체가 없으면 앵커를 볼 수도 없다. 죽지 말고 보고한다 —
+            # 도메인이 바뀌어 Team 코드가 통째로 지워졌을 때 실제로 여기서 죽었다.
+            if not source.exists():
+                report["source_missing"].append((defect.defect_id, defect.path))
                 continue
             with source.open(encoding="utf-8", newline="") as handle:
                 original = handle.read()
@@ -169,6 +199,8 @@ def check_patches(target: Path, *, verbose: bool = True) -> dict[str, Any]:
             print(f"  ✗ patch 가 낡았다        {defect_id}  (context 가 밀렸다 — 재생성하면 된다)")
         for defect_id in report["drift"]:
             print(f"  ~ 생성 결과와 다르다     {defect_id}  (붙기는 하지만 재생성하면 달라진다)")
+        for defect_id, path in report["source_missing"]:
+            print(f"  ✗ 겨누는 파일이 없다     {defect_id}  ({path} — 지워졌거나 옮겨졌다)")
         for defect_id in report["missing"]:
             print(f"  ✗ patch 파일이 없다      {defect_id}")
     return report

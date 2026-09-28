@@ -3,12 +3,14 @@
  "_check": "python dojo.py invariants",
  "entries": {
   "R-ANSWER-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-COMMERCE-004"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "답변은 근거와 일치해야 한다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-AUTH-01": {
    "defects": [
@@ -39,6 +41,7 @@
     "INV-CLASSIFY-001",
     "INV-VOC-001"
    ],
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "분류가 실패하면 조용히 넘기지 않는다 — 빠진 필드도 틀린 라벨도 거부",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -74,6 +77,7 @@
     "INV-DEGRADED-001",
     "INV-VOC-002"
    ],
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "신호 없는 축소는 폴백이다 — degraded 면 omissions 를 남기고 확정 답변을 만들지 않는다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -88,7 +92,9 @@
   },
   "R-EVID-02": {
    "defects": [
-    "INV-EVIDENCE-002",
+    "INV-EVIDENCE-002"
+   ],
+   "parked_defects": [
     "INV-COMMERCE-002"
    ],
    "rule": "든 근거는 ContextPack 에 실재해야 하고 제안에도 붙어야 한다",
@@ -152,13 +158,15 @@
    "status": "active"
   },
   "R-REVIEW-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-TEAM-002",
     "INV-REVIEW-002"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "생성된 답변은 금지어·PII·사실을 검사한 뒤 내보낸다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-SCOPE-01": {
    "defects": [
@@ -219,17 +227,20 @@
    "status": "active"
   },
   "R-TEAM-01": {
-   "defects": [
+   "defects": [],
+   "parked_defects": [
     "INV-TEAM-001"
    ],
+   "reason": "커머스 중지(2026-09-14) — 도메인이 여행으로 바뀌어 겨누던 커머스 Team 코드(app/modules/customer_ops/*.py)가 저장소에서 나갔다",
    "rule": "Team 은 정책 값을 그대로 쓴다 — 자기 판단으로 바꾸지 않는다",
    "source": "acop_dojo 카탈로그에서 도출",
-   "status": "active"
+   "status": "parked"
   },
   "R-TEAM-02": {
    "defects": [
     "INV-COMMERCE-005"
    ],
+   "note": "2026-09-21 중지 해제 — 겨누던 코드 조각이 여행 Team(app/modules/travel_ops/)에 그대로 남아 있어 경로만 옮겼다. 규칙은 도메인이 바뀌어도 같다.",
    "rule": "Team 은 자기 manifest 에 없는 capability 를 받으면 거부한다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
@@ -244,10 +255,13 @@
   },
   "R-UNKNOWN-01": {
    "defects": [
-    "INV-OUTBOX-002",
+    "INV-OUTBOX-002"
+   ],
+   "note": "2026-09-14 문장 교체. 옛 문장 '값을 모르면 비워 둔다' 는 v11 결정 15(대체 소스로 값을 내고, 대체도 실패하면 치명)가 뒤집었다. 결정 15 의 대체 소스 사슬·치명 판정은 cs 의 app/infrastructure/travel/(weather_chain·air_quality·disruptions)에 있다 — 여행 도메인 인프라라 이 코어 규칙의 결함으로는 세지 않는다. '서버를 끈다' 부분은 weather_chain.py 머리말이 감시 쪽 몫이고 아직 없다고 적는다. ☆처음엔 'cs 에 경로가 아직 없다' 로 적었다 — codex 검수 문장을 코드로 확인하지 않고 옮긴 오류다.",
+   "parked_defects": [
     "INV-COMMERCE-003"
    ],
-   "rule": "값을 모르면 비워 둔다 — 추정으로 채우거나 확정 답변으로 만들지 않는다",
+   "rule": "모르는 값을 추정값으로 채우지 않는다 — 그럴듯한 가짜 값('unknown' tenant 등)이 데이터가 된다",
    "source": "acop_dojo 카탈로그에서 도출",
    "status": "active"
   },

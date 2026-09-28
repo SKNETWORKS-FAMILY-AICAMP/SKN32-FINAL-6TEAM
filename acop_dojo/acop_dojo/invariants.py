@@ -10,16 +10,84 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from . import defects as defects_mod
-from .config import data_dir
+from .config import data_dir, target_root
 
 REGISTRY_PATH = data_dir() / "invariants.json"
 
 
 def load() -> dict[str, Any]:
     return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))["entries"]
+
+
+# ── 정본 원장과의 대조 ─────────────────────────────────────────────────────────
+# ★원장이 둘이다. cs 의 `wiki/quality/invariants.md`(INV-CS-*)가 정본이고, 이 파일의
+#  R-* 는 도장이 결함을 묶으려고 만든 것이다. 둘을 사람이 문장끼리 짝지으면 해석이
+#  섞인다 — 그래서 **실행 증거로** 잇는다. 정본 규칙마다 판정 테스트가 적혀 있고,
+#  도장 결함마다 실제로 깨뜨린 테스트가 카탈로그에 있다. 겹치면 그 결함이 그 규칙을 어긴다.
+#  대가 — 정본의 판정 테스트가 아닌 다른 테스트로만 잡히는 결함은 이어지지 않는다.
+_CANON_ROW = re.compile(
+    r"^\|\s*`(INV-CS-[A-Z]+-\d+)`\s*\|\s*(.+?)\s*\|\s*(automated|manual|review)\s*\|\s*(.+?)\s*\|\s*$")
+
+
+def canonical() -> dict[str, dict[str, Any]]:
+    """정본 원장의 표를 읽는다. 표 밖의 서술은 읽지 않는다.
+
+    실행 위치가 `::test_x` 로 시작하면 바로 위 행과 같은 파일이다 — 문서가 그렇게 줄여 쓴다.
+    """
+    path = target_root() / "wiki" / "quality" / "invariants.md"
+    if not path.exists():
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    last_file = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        matched = _CANON_ROW.match(line)
+        if not matched:
+            continue
+        canon_id, rule, kind, where = matched.groups()
+        test = None
+        if kind == "automated":
+            where = where.strip().strip("`")
+            if where.startswith("::") and last_file:
+                where = last_file + where
+            last_file = where.split("::")[0]
+            test = where
+        rows.setdefault(canon_id, {"rule": rule, "kind": kind, "test": test})
+    return rows
+
+
+def canonical_links(catalog: dict[str, Any]) -> dict[str, list[str]]:
+    """정본 ID → 그 판정 테스트를 실제로 깨뜨린 도장 결함."""
+    entries = catalog.get("entries", {})
+    links: dict[str, list[str]] = {}
+    for canon_id, row in canonical().items():
+        test = row["test"]
+        if not test:
+            continue
+        hit = sorted(d for d, e in entries.items()
+                     if any(n == test or n.startswith(test + "[") for n in e.get("failed", [])))
+        if hit:
+            links[canon_id] = hit
+    return links
+
+
+def canonical_summary(separator: str) -> None:
+    rows = canonical()
+    if not rows:
+        print("정본 원장(wiki/quality/invariants.md)을 찾지 못해 대조하지 않았다.")
+        return
+    automated = [c for c, r in rows.items() if r["kind"] == "automated"]
+    links = canonical_links(defects_mod.load_catalog())
+    print("")
+    print(f"정본 원장 대조 — INV-CS-* {len(rows)}개 · 자동 판정 {len(automated)}개")
+    print(separator)
+    print(f"  도장 결함이 판정 테스트를 실제로 깨뜨리는 정본 규칙 "
+          f"{len(links)}/{len(automated)} = {len(links) * 100 // max(len(automated), 1)}%")
+    for canon_id in sorted(links):
+        print(f"    {canon_id:<16} ← {', '.join(links[canon_id])}")
 
 
 def check() -> dict[str, Any]:
@@ -46,6 +114,13 @@ def check() -> dict[str, Any]:
             seen[defect_id] = rule_id
         if status == "active" and not [d for d in ids if d not in excluded]:
             problems["no_defect"].append((rule_id, entry["rule"], entry.get("source", "")))
+
+    # 중지한 결함 참조도 본다. 되살릴 때 오타 난 id 가 조용히 사라지면 안 된다.
+    parked = {d.defect_id for d in defects_mod.PARKED}
+    for rule_id, entry in sorted(entries.items()):
+        for defect_id in entry.get("parked_defects", []):
+            if defect_id not in parked:
+                problems["unknown_defect"].append((rule_id, defect_id))
 
     problems["orphan_defect"] = sorted(known - set(seen))
     return {"entries": entries, "problems": problems,
@@ -89,4 +164,7 @@ def report(outcome: dict[str, Any], *, separator: str) -> int:
         print("결함이 테스트에 안 잡히면 그게 바로 메워야 할 자리다.")
     else:
         print("원장과 카탈로그가 맞는다.")
+    # 대조는 정보다. 정본 규칙에 도장 결함이 없는 것은 도장의 결함 목록 문제가 아니라
+    # 아직 안 만든 가설이라 실패로 치지 않는다.
+    canonical_summary(separator)
     return 1 if total else 0

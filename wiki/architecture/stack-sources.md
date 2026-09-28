@@ -1,6 +1,6 @@
 ---
 type: reference
-title: A-COP 기술 스택 공식 문서
+title: triPilot 기술 스택 공식 문서
 description: 활용 기술의 공식 URL과 HTTP 200 확인 결과 및 링크 제외 사유를 정리한다.
 status: draft
 tags: [architecture, api, documentation]
@@ -9,7 +9,7 @@ domain: neutral
 
 ## 결론
 
-`[실측]` 아래 18개 공식 URL은 `2026-08-17`에 `curl`로 요청해 모두 HTTP `200`을 확인했다. RAG·GraphRAG 등 5개 항목에는 공식 사이트가 없거나 A-COP 내부 설계·구성요소이므로 링크를 걸지 않았다.
+`[실측]` 아래 18개 공식 URL은 `2026-08-17`에 `curl`로 요청해 모두 HTTP `200`을 확인했다. RAG·GraphRAG 등 5개 항목에는 공식 사이트가 없거나 triPilot 내부 설계·구성요소이므로 링크를 걸지 않았다.
 
 ## 공식 문서
 
@@ -42,7 +42,7 @@ domain: neutral
 | 항목 | 이유 |
 |---|---|
 | RAG · GraphRAG | `[실측]` 특정 제품이 아니라 검색 증강 방식의 이름이므로 공식 사이트가 없다. |
-| API Key + Scope | `[실측]` A-COP Gateway의 권한 설계이며 외부 표준이 아니다. |
+| API Key + Scope | `[실측]` triPilot Gateway의 권한 설계이며 외부 표준이 아니다. |
 | golden / holdout harness | `[실측]` 내부 평가 하네스다. **두 저장소에 각각 있다** — `final_project_cs/eval/` · `final_project_sample/eval/` |
 | bootstrap · McNemar | `[실측]` 통계 검정 방법이며 제품이 아니다. |
 | Registry · Adapter | `[실측]` 내부 설계의 구성요소 이름이며 **v7 §21 에서 왔다**(현재 기준선은 v11 — 그 절을 v11 이 승계했다) 계약을 따른다. |

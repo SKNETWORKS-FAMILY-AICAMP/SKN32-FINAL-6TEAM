@@ -37,6 +37,8 @@ TRAVEL_OPS_POLICY = VerificationPolicy(
     references={
         "booking_id": "bookings",
         "supplier_booking_id": "supplier_bookings",
+        # ★`[결정 2026-09-17]` Case 버전의 일정 적용(`itinerary.apply`) — 이 고객의 여행이어야 한다.
+        "trip_id": "trips",
     },
     quantities=(
         # ★인원은 정원을 넘을 수 없다. 금액 전용 규칙이 아니다.
@@ -71,6 +73,9 @@ TRAVEL_OPS_POLICY = VerificationPolicy(
                               #   승인자가 사람 눈으로 본다
         "penalty_rate",       # 규정에서 읽은 위약율 (표시)
         "policy_ref",         # 근거 문서 참조 (표시)
+        # ★`[결정 2026-09-17]` `itinerary.apply` 가 싣는 값. **대조는 적용기가 적용 순간에 한다**
+        #   (`itinerary_actions.py` — 기준 버전 · 항목 실재 · 장소 실재). 여기서 모양만 허락한다.
+        "base_version", "causes", "notice", "summary", "replacements", "full_items",
     }),
 )
 
@@ -91,6 +96,9 @@ FACT_QUERIES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
      "WHERE sb.tenant_id=%s AND b.customer_id=%s",
      ("supplier_booking_id", "booking_id", "supplier", "supplier_ref",
       "status", "confirmed_at")),
+    ("trips",
+     "SELECT trip_id, status, latest_version FROM trips WHERE tenant_id=%s AND customer_id=%s",
+     ("trip_id", "status", "latest_version")),
 )
 
 __all__ = ["FACT_QUERIES", "TRAVEL_OPS_POLICY"]

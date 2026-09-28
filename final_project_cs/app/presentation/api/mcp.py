@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("A-COP")
+mcp = FastMCP("triPilot")
 
 @mcp.tool(meta={"required_scope": "mcp:read"})
 def get_my_cases(customer_id: str, limit: int = 20) -> list[dict]:

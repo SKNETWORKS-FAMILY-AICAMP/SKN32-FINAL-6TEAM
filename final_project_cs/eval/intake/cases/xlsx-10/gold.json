@@ -1,0 +1,44 @@
+{
+ "case_id": "xlsx-10",
+ "format": "xlsx",
+ "defect": null,
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-10-27 | 09:30 | 롯데월드 | ",
+  "1일차 | 2026-10-27 | 12:30 | 명동교자 | ",
+  "1일차 | 2026-10-27 | 15:00 | 경복궁 관람 | "
+ ],
+ "items": [
+  {
+   "date": "2026-10-27",
+   "start": "09:30",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-27",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

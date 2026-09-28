@@ -114,3 +114,35 @@ def owns(track: Track, path: str) -> bool:
     if not track.owns:
         return True
     return any(path.startswith(prefix) for prefix in track.owns)
+
+# ★2026-09-14 커머스 중지 — 팀 모듈 트랙 셋은 지워진 커머스 Team 코드를 가리킨다.
+#  학습 게임은 도메인이 바뀌어도 승계되는 베이스먼트에 집중한다(v11 §0-2).
+#  여행 Team 코드가 안정되면 그때 여행 트랙을 새로 짠다. 지우지 않고 목록에서만 뺀다.
+import dataclasses as _dataclasses  # noqa: E402
+
+PARKED_TRACK_IDS = frozenset({"team-voc", "team-review", "team-commerce"})
+assert PARKED_TRACK_IDS <= set(TRACKS), PARKED_TRACK_IDS - set(TRACKS)
+PARKED_TRACKS = {k: TRACKS.pop(k) for k in list(TRACKS) if k in PARKED_TRACK_IDS}
+TRACKS["all"] = _dataclasses.replace(
+    TRACKS["all"], scenarios=("status-inquiry-untouched-v1", "eval-defense-blocks-attacks-v1",
+                              "fallback-chain-says-so-v1"))
+TRACKS["core1"] = _dataclasses.replace(
+    TRACKS["core1"],
+    scenarios=("status-inquiry-untouched-v1", "checkpoint-not-projection-v1",
+               "case-reducer-versions-v1", "outbox-tenant-guard-v1",
+               "registry-default-capability-v1"))
+# ★2026-09-21 여행 Team 트랙을 연다. 커머스 트랙 셋은 중지된 채로 둔다.
+#  좁게 시작한다 — 결함 넷(경로를 여행으로 옮긴 것)과 시나리오 하나.
+#  여행 Team 코드는 자주 바뀐다. patches(4초) 가 밀린 것을 잡는다.
+TRACKS["team-travel"] = Track(
+    track_id="team-travel",
+    title="Team — 여행 (Activity · Dining · Mobility)",
+    owner_hint="팀 모듈",
+    owns=("app/modules/travel_ops/",),
+    scenarios=("travel-team-keeps-every-evidence-v1",),
+    focus="읽은 것마다 근거가 쌓인다. 분류가 실패하면 조용히 넘기지 않는다",
+)
+TRACKS["core2"] = _dataclasses.replace(
+    TRACKS["core2"],
+    scenarios=("api-idempotent-create-v1", "remote-team-failure-escalates-v1",
+               "audit-pii-redacted-v1", "tenant-scope-query-v1"))

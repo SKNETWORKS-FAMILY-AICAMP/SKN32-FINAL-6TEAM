@@ -45,7 +45,13 @@ class LodgingTeam(_LockedBookingTeam):
         supported_contract_versions=["1.0"],
         capabilities=["lodging.status"],
         accepted_case_types=["lodging"],
-        required_context=["case_state", "policy", "db_facts", "history"],
+        # ★`[2026-09-22]` `policy` 를 뺐다. 이 Team 은 정책을 **읽을 도구조차 없다**
+        #   (`allowed_tools` 에 `read.policy` 가 없다). 그런데 필수로 선언해 둬서
+        #   Controller 가 RAG 를 돌았고, `lodging`/`flight` scope 에는 문서가 0건이라
+        #   검색 0건 → `degraded=True` → `_guard` 가 곧바로 escalated 였다.
+        #   즉 「잠긴 예약입니다」라는 한 줄을 답하는 팀의 **모든 Case 가 사람에게** 갔다.
+        #   문서를 만들어 붙이는 대신 선언을 지운다 — 쓰지 않는 근거를 필수로 두는 것이 틀렸다.
+        required_context=["case_state", "db_facts", "history"],
         allowed_tools=["read.booking"],
         knowledge_scope=["lodging"],
         max_steps=2,
@@ -63,7 +69,13 @@ class FlightTeam(_LockedBookingTeam):
         supported_contract_versions=["1.0"],
         capabilities=["flight.status"],
         accepted_case_types=["flight"],
-        required_context=["case_state", "policy", "db_facts", "history"],
+        # ★`[2026-09-22]` `policy` 를 뺐다. 이 Team 은 정책을 **읽을 도구조차 없다**
+        #   (`allowed_tools` 에 `read.policy` 가 없다). 그런데 필수로 선언해 둬서
+        #   Controller 가 RAG 를 돌았고, `lodging`/`flight` scope 에는 문서가 0건이라
+        #   검색 0건 → `degraded=True` → `_guard` 가 곧바로 escalated 였다.
+        #   즉 「잠긴 예약입니다」라는 한 줄을 답하는 팀의 **모든 Case 가 사람에게** 갔다.
+        #   문서를 만들어 붙이는 대신 선언을 지운다 — 쓰지 않는 근거를 필수로 두는 것이 틀렸다.
+        required_context=["case_state", "db_facts", "history"],
         allowed_tools=["read.booking"],
         knowledge_scope=["flight"],
         max_steps=2,

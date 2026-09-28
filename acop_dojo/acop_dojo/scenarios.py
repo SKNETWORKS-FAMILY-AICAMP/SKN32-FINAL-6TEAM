@@ -123,3 +123,166 @@ def get(scenario_id: str) -> Scenario:
     except KeyError:
         known = ", ".join(SCENARIOS)
         raise SystemExit(f"모르는 시나리오다: {scenario_id}\n아는 것: {known}") from None
+
+# ★2026-09-14 커머스 중지 — 이 시나리오들이 가리키던 테스트가 저장소에서 나갔다.
+#  지우지 않는다. 정의는 위에 그대로 있고, 이 집합에서 빼면 되살아난다.
+PARKED_SCENARIO_IDS = frozenset({
+    "shipping-status-resolved-v1", "voc-batch-tenant-scoped-v1", "review-pii-escalates-v1",
+    "procurement-policy-evidence-v1", "voc-degraded-escalates-v1",
+    "fulfillment-lost-shipment-approval-v1", "catalog-compliance-escalates-v1",
+    "return-refund-no-side-effect-v1",
+})
+PARKED_SCENARIOS = {k: v for k, v in SCENARIOS.items() if k in PARKED_SCENARIO_IDS}
+# 오타 난 id 를 조용히 넘기지 않는다 — 중지했다고 믿는 시나리오가 살아 있게 된다.
+assert PARKED_SCENARIO_IDS <= set(SCENARIOS), PARKED_SCENARIO_IDS - set(SCENARIOS)
+for _scenario_id in PARKED_SCENARIO_IDS:
+    SCENARIOS.pop(_scenario_id)
+
+# ★베이스먼트 시나리오. 도메인이 바뀌어도 승계되는 코어(v11 §0-2)만 돈다 —
+#  Team 은 테스트용 가짜(FakeTeam)라 여행 Team 이 바뀌어도 이 경로는 그대로다.
+SCENARIOS["status-inquiry-untouched-v1"] = Scenario(
+    scenario_id="status-inquiry-untouched-v1",
+    title="조회형 문의 하나가 도메인 데이터를 건드리지 않고 끝난다",
+    nodeid=(
+        "tests/integration/controller/test_controller_integration.py"
+        "::test_e2e_status_inquiry_does_not_touch_the_booking"
+    ),
+    objective=(
+        "Case 가 만들어지고 라우팅되고 Team 이 읽기만 한 뒤 닫히는 코어 전 구간을 본다. "
+        "Team 은 가짜라 도메인이 무엇이든 같은 경로다. 조회는 제안을 내지 않는다."
+    ),
+    needs_db=True,
+)
+SCENARIOS["checkpoint-not-projection-v1"] = Scenario(
+    scenario_id="checkpoint-not-projection-v1",
+    title="실행 스냅샷은 업무 상태가 아니다",
+    nodeid=(
+        "tests/integration/controller/test_controller_integration.py"
+        "::test_run_persists_fixed_graph_revision_and_checkpoint_is_not_projection_state"
+    ),
+    objective="checkpoint 를 고쳐도 Case 가 안 바뀐다 — 권위 있는 상태는 customer_cases 하나다.",
+    needs_db=True,
+)
+SCENARIOS["engine-serves-another-domain-v1"] = Scenario(
+    scenario_id="engine-serves-another-domain-v1",
+    title="같은 검증 엔진이 다른 도메인을 한 줄도 안 고치고 돌린다",
+    nodeid=(
+        "tests/architecture/test_engine_serves_another_domain.py"
+        "::test_refund_over_the_order_total_is_rejected"
+    ),
+    objective=(
+        "보스전용. 코어는 도메인을 모른다는 주장의 유일한 대조군이다. "
+        "선언만 갈아 끼우고 app/core/verification.py 는 그대로 쓴다."
+    ),
+    needs_db=False,
+)
+# ★2026-09-14 codex-alt 검수 — 승계 목록(v11 §0-2) 중 바깥함·Registry·TeamExecutorPort 가
+#  학습 시나리오에 없었다. 셋 다 도메인 어휘 없이 도는 테스트를 골랐다.
+SCENARIOS["outbox-tenant-guard-v1"] = Scenario(
+    scenario_id="outbox-tenant-guard-v1",
+    title="바깥함은 tenant 를 모르는 메시지를 내보내지 않는다",
+    nodeid=(
+        "tests/integration/messaging/test_outbox_tenant_guard.py"
+        "::test_publishing_without_any_tenant_is_rejected"
+    ),
+    objective=(
+        "메시지는 되돌릴 수 없다. tenant 가 비면 'unknown' 같은 임시값으로 채우지 않고 "
+        "발행을 거절한다 — 모르는 값을 지어내면 오류가 데이터가 된다."
+    ),
+    needs_db=True,
+)
+SCENARIOS["registry-default-capability-v1"] = Scenario(
+    scenario_id="registry-default-capability-v1",
+    title="Registry 는 맞는 기능이 없을 때 선언된 기본값으로 간다",
+    nodeid=(
+        "tests/unit/core/test_registry_capability_default.py"
+        "::test_unmatched_intent_falls_back_to_declared_default_capability"
+    ),
+    objective=(
+        "Core 는 Team 내부를 모른다. TeamManifest 선언만 보고 기능을 고르고, "
+        "요청 종류와 맞는 것이 없으면 Team 이 선언한 default_capability 를 쓴다."
+    ),
+    needs_db=False,
+)
+SCENARIOS["remote-team-failure-escalates-v1"] = Scenario(
+    scenario_id="remote-team-failure-escalates-v1",
+    title="원격 Team 이 실패하면 실패로 매핑되고 사람에게 넘어간다",
+    nodeid=(
+        "tests/integration/a2a/test_travel_remote_round_trip.py"
+        "::test_remote_failure_maps_to_escalate"
+    ),
+    objective=(
+        "TeamExecutorPort 뒤에 로컬 대신 A2A 원격이 붙어도 Core 가 받는 것은 같은 TeamResult 다. "
+        "원격이 못 하면 성공으로 추정하지 않고 escalate 로 돌려준다."
+    ),
+    needs_db=False,
+)
+# ★2026-09-14 승계 목록의 남은 빈 행 둘 — 감사·tenant 격리, 평가 하네스.
+#  RLS 는 tests/ 에서 'rls|RLS|row level' 로 찾았고 안 나왔다(다른 이름의 검사는 놓칠 수 있다).
+SCENARIOS["audit-pii-redacted-v1"] = Scenario(
+    scenario_id="audit-pii-redacted-v1",
+    title="PII 는 DB·API·감사 기록 어디에도 원문으로 남지 않는다",
+    nodeid=(
+        "tests/security/test_pii_redaction_runtime.py"
+        "::test_case_message_is_redacted_in_db_api_and_audit"
+    ),
+    objective=(
+        "DB 에만 가리고 감사 기록에 원문이 남는 실수를 한 번에 막는다. 원문은 저장 전에 가려지고, "
+        "LLM 과 감사 기록에는 가린 것만 간다(정본 INV-CS-SEC-004)."
+    ),
+    needs_db=True,
+)
+SCENARIOS["tenant-scope-query-v1"] = Scenario(
+    scenario_id="tenant-scope-query-v1",
+    title="고객을 지정하지 않은 조회도 tenant 밖으로 나가지 않는다",
+    nodeid=(
+        "tests/security/test_query_scope.py"
+        "::test_case_list_without_customer_stays_inside_the_tenant"
+    ),
+    objective=(
+        "조건 없는 조회는 그 자체가 보안 결함이다. customer 를 비워도 tenant 조건은 빠지지 않는다"
+        "(정본 INV-CS-SEC-006)."
+    ),
+    needs_db=True,
+)
+SCENARIOS["eval-defense-blocks-attacks-v1"] = Scenario(
+    scenario_id="eval-defense-blocks-attacks-v1",
+    title="방어 지표는 fixture 의 정답을 세지 않고 실제 방어를 돌려 잰다",
+    nodeid="tests/unit/eval/test_defense_metrics.py::test_attack_fixtures_are_all_blocked",
+    objective=(
+        "평가 하네스가 공격 fixture 마다 코어 검증 엔진을 실제로 돌려 막혔는지 센다. "
+        "정답과 판정을 같은 파일에서 읽으면 무엇을 재도 100% 가 나온다 — 처음 구현이 그랬다."
+    ),
+    needs_db=False,
+)
+# ★v11 결정 15 — 모르는 값을 만들지 않는다. 사슬 자체는 여행 인프라에 있지만 구조는 도메인이 없다
+#  (소스 목록을 받아 차례로 묻는다). ☆처음엔 "cs 에 경로가 없다" 고 믿었다 — 확인 안 한 오류였다.
+SCENARIOS["fallback-chain-says-so-v1"] = Scenario(
+    scenario_id="fallback-chain-says-so-v1",
+    title="1차 소스가 못 주면 대체 소스가 답하고, 넘어간 사실을 숨기지 않는다",
+    nodeid=(
+        "tests/unit/travel/test_kma_weather.py"
+        "::test_when_the_primary_fails_the_fallback_answers_and_says_so"
+    ),
+    objective=(
+        "값을 모른다고 비워 두지도, 지어내지도 않는다 — 다음 소스에 묻는다. 누가 답했는지는 source 에, "
+        "대체로 넘어간 사실은 fell_back_from 에 남는다. 전부 실패하면 all_failed 로 센다(치명)."
+    ),
+    needs_db=False,
+)
+
+# ★2026-09-21 여행 Team 트랙의 첫 시나리오. 커머스 Team 이 나가고 처음으로 도메인 Team 을 다시 다룬다.
+#  고른 기준 — DB·네트워크를 안 쓰고, 실제로 났던 결함의 회귀 테스트다.
+SCENARIOS["travel-team-keeps-every-evidence-v1"] = Scenario(
+    scenario_id="travel-team-keeps-every-evidence-v1",
+    title="도구를 여럿 부른 Team 은 근거를 전부 남긴다",
+    nodeid=(
+        "tests/unit/travel/test_evidence_accumulates.py"
+        "::test_activity_keeps_every_source_it_read"
+    ),
+    objective=(
+        "근거 없는 문장은 답변에 넣지 않는다 — 그러려면 읽은 것마다 근거가 쌓여야 한다. "
+        "2026-09-09 에는 두 번째 도구 호출이 첫 번째 근거를 덮어써, 넷을 읽은 Case 의 근거가 하나만 남았다."
+    ),
+    needs_db=False,
+)

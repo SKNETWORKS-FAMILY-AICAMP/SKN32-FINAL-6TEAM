@@ -71,6 +71,9 @@ ISSUE_CODES = frozenset({
     # 예약 인계 — 우리 기록과 공급자 원장의 대조
     "booking_mismatch", "booking_change_request",
     "booking_cancel_request", "booking_other",
+    # ★`[2026-09-22]` 자동 실행을 되돌려 달라는 요청(v11 §12 DoD-21). 되돌림은 보상 거래라
+    #   실패할 수 있고, 실패하면 사람에게 간다 — 그 경로가 이 코드로 들어온다
+    "booking_revert_request",
     # 등록만 — 잠긴 예약
     "lodging_other", "flight_other",
     # 어디에도 안 붙는 것. ★접두가 없으므로 라우팅은 실패하고 escalate 된다.
@@ -124,11 +127,33 @@ def _openai_llm(text: str) -> dict[str, Any]:
         raise ClassificationFailed(f"LLM classification failed: {exc}") from exc
 
 
+def _ollama_llm(text: str) -> dict[str, Any]:
+    """로컬 Ollama(Gemma 4)로 분류한다 — `ACOP_OLLAMA_BASE_URL` 이 있을 때.
+
+    ★2026-09-14 OpenAI 크레딧 소진(429 실측)으로 붙였다. 같은 프롬프트·같은 검증을 쓴다 —
+      제공자만 바뀌고 라벨 규칙은 그대로다.
+    """
+    from app.infrastructure.ollama_chat import OllamaError, from_settings
+
+    chat = from_settings(get_settings())
+    if chat is None:
+        raise ClassificationFailed("Ollama base url is missing")
+    try:
+        return chat.json(_SYSTEM_PROMPT, text)
+    except OllamaError as exc:
+        raise ClassificationFailed(f"Ollama classification failed: {exc}") from exc
+
+
+def _default_llm() -> LLM:
+    """설정이 고른 제공자 — Ollama 주소가 있으면 Ollama, 없으면 OpenAI."""
+    return _ollama_llm if (get_settings().ollama_base_url or "").strip() else _openai_llm
+
+
 def classify(text: str, llm: LLM | None = None) -> Classification:
     """주입 가능한 LLM 으로 분류한다. 불완전한 출력은 **크게** 실패한다."""
     if not isinstance(text, str) or not text.strip():
         raise ClassificationFailed("feedback text is empty")
-    provider: LLM = llm or _openai_llm
+    provider: LLM = llm or _default_llm()
     try:
         raw = provider(masked(text))
     except ClassificationFailed:

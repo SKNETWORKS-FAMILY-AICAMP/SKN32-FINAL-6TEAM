@@ -4,7 +4,6 @@
 """
 from __future__ import annotations
 
-import json
 import sys
 
 from acop_dojo.tracer import canonical_json, run_in_process

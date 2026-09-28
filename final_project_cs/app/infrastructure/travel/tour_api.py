@@ -34,6 +34,7 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .base import TravelSource
@@ -59,22 +60,43 @@ LARGE_CLASS_NAMES = {
 }
 
 
+def _bare(title: str) -> str:
+    """괄호 병기 · 공백을 뺀 이름(정확 일치 비교용)."""
+    return re.sub(r"\s+", "", re.sub(r"[(\[（【].*?[)\]）】]", "", title)).lower()
+
+#: 관광 타입. v11 §5 의 Activity 범위(A01 자연·A02 인문·A03 레포츠·A04 쇼핑)와
+#: 대응한다. 39(음식점)는 Dining 쪽이고 32(숙박)는 Lodging 쪽이다.
+CONTENT_TYPE_NAMES = {
+    "12": "관광지", "14": "문화시설", "15": "행사·공연·축제", "25": "여행코스",
+    "28": "레포츠", "32": "숙박", "38": "쇼핑", "39": "음식점",
+}
+
+
+#: 지역 코드(우리가 쓰는 구분값) → 관광공사 조회 조건. `TourApiPlace.region_filter` 참고.
+#: ★서울만 쟀다(2026-09-26). 다른 지역은 재고 나서 더한다 — 추측으로 법정동 코드를 채우지 않는다.
+REGION_FILTERS: dict[str, dict[str, str]] = {"1": {"lDongRegnCd": "11"}}
+
+
 class TourApiPlace(TravelSource):
     name = "tour_api"
+    #: ★`[2026-09-27]` 응답을 공용 캐시에 담지 않는다 — 콘텐츠랩 「로컬서버 저장방식 금지」(해석 대기, 보수적으로)
+    cache_ttl_seconds = 0
 
     def __init__(self, *, service_key: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._key = service_key
 
     def _common(self) -> dict[str, Any]:
+        # ★`MobileApp` 은 서비스 고유명 — 운영계정(트래픽 증설) 승인 요건이다(2026-09-27, 옛 값 "acop")
         return {"serviceKey": self._key, "MobileOS": "ETC",
-                "MobileApp": "acop", "_type": "json"}
+                "MobileApp": "triPilot", "_type": "json"}
 
     # ── 찾기 ────────────────────────────────────────────────────
     def find(self, place_name: str, *,
              content_type_id: str | None = None,
              allowed_types: "set[str] | None" = None,
-             allowed_large_classes: "set[str] | None" = None) -> dict[str, Any] | None:
+             allowed_large_classes: "set[str] | None" = None,
+             area_code: str | None = None) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 애매하면 `None`(모름).
 
         ★`content_type_id` 를 주면 공급자 쪽에서 그 종류로 좁혀 검색한다.
@@ -94,6 +116,10 @@ class TourApiPlace(TravelSource):
 
         params = {**self._common(), "keyword": place_name.strip(),
                   "numOfRows": "20", "pageNo": "1"}
+        if area_code:
+            # ★`[2026-09-27 실측]` 키워드 검색에도 법정동 필터가 먹는다 — 「경복궁」 정확 일치가 필터 없이는
+            #   서울 궁궐(12)·울산 음식점(39) 둘이라 애매 → 모름, `lDongRegnCd=11` 이면 서울 궁궐 하나
+            params.update(self.region_filter(area_code))
         if content_type_id:
             params["contentTypeId"] = content_type_id
 
@@ -108,6 +134,11 @@ class TourApiPlace(TravelSource):
         #   「경복궁」 검색에 「경복궁 별빛야행」이 섞인다.
         wanted = place_name.strip()
         exact = [row for row in rows if str(row.get("title", "")).strip() == wanted]
+        if not exact:
+            # ★괄호 병기는 같은 이름으로 본다 — 「동대문디자인플라자」 = 「동대문디자인플라자(DDP)」(2026-09-28 평가셋 9건).
+            #   부분일치는 여전히 받지 않는다(「경복궁」 ≠ 「경복궁 별빛야행」)
+            bare = _bare(wanted)
+            exact = [row for row in rows if _bare(str(row.get("title", ""))) == bare]
         if allowed_types:
             # 구분류(contenttypeid) 필터 — 하위호환.
             exact = [row for row in exact
@@ -220,12 +251,25 @@ class TourApiPlace(TravelSource):
         }, source=self.name)
 
     # ── 지역 단위 수집 (카탈로그 동기화용) ──────────────────────
+    @staticmethod
+    def region_filter(area_code: str) -> dict[str, str]:
+        """지역 수집의 거르는 조건. ★서울은 **법정동 코드**(`lDongRegnCd=11`)로 거른다.
+
+        ★★`[2026-09-26 실측, 같은 키]` `areaBasedList2` 의 서울 전체 건수 —
+          `areaCode=1` 이면 **1,965건**, `lDongRegnCd=11` 이면 **7,996건**. 응답 대부분이 `areacode` 를
+          빈칸으로 주어 지역 코드로 거르면 서울 자료의 약 24.6%만 온다. 그래서 `place_catalog` 에
+          경복궁(관광지 12)·명동난타극장·토속촌삼계탕이 없었다(triPilot : RAG 세션 인계, 이 세션이 다시 쟀다).
+        ★저장하는 구분값(`area_code`)은 그대로다 — 장소를 읽는 쪽(`planner.load_candidates`)이 그 값으로 찾는다.
+        ★표에 없는 지역은 예전처럼 `areaCode` 로 거른다(그 지역은 아직 재지 않았다).
+        """
+        return dict(REGION_FILTERS.get(str(area_code), {"areaCode": str(area_code)}))
+
     def area_page(self, area_code: str, *, page: int, rows: int
                   ) -> dict[str, Any] | None:
         """지역 한 페이지. ★**사용자별이 아니라 지역별로 당긴다** —
         그래야 콜 수가 사용자 수에 비례하지 않는다."""
         body = self._body(f"{BASE_URL}/areaBasedList2", {
-            **self._common(), "areaCode": area_code,
+            **self._common(), **self.region_filter(area_code),
             "numOfRows": str(rows), "pageNo": str(page), "arrange": "C"})
         if body is None:
             return None
@@ -245,7 +289,7 @@ class TourApiPlace(TravelSource):
           `PlaceCatalogSync.audit()` 이 전체 대조로 판정한다.
         """
         body = self._body(f"{BASE_URL}/areaBasedSyncList2", {
-            **self._common(), "areaCode": area_code, "numOfRows": str(rows),
+            **self._common(), **self.region_filter(area_code), "numOfRows": str(rows),
             "pageNo": "1", "modifiedtime": since, "showflag": "1"})
         if body is None:
             return None

@@ -1,7 +1,7 @@
 ---
 type: concept
 title: 시스템 경계
-description: 누가 A-COP과 대화하는가. 외부 행위자와 진입 경로 3종
+description: 누가 triPilot과 대화하는가. 외부 행위자와 진입 경로 3종
 status: draft
 tags: [architecture, security]
 owners: [human:미배정]

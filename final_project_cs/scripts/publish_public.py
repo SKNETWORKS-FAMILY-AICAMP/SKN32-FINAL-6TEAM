@@ -113,7 +113,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--push", action="store_true", help="origin/main 으로 푸시")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--message", default="A-COP: AI 연동형 고객운영 플랫폼")
+    parser.add_argument("--message", default="triPilot: AI 연동형 고객운영 플랫폼")
     args = parser.parse_args()
 
     if run("status", "--porcelain").strip():

@@ -1,11 +1,11 @@
---- a/app/modules/customer_ops/voc_store_manager.py
-+++ b/app/modules/customer_ops/voc_store_manager.py
-@@ -41,7 +41,7 @@
-         return evidence
- 
-     async def execute(self, task: TeamTask) -> TeamResult:
+--- a/app/modules/travel_ops/_base.py
++++ b/app/modules/travel_ops/_base.py
+@@ -60,8 +60,6 @@
+                                 handoff_capability=task.capability)
+         if task.capability not in self.manifest.capabilities:
+             return self._escalate(task, "unsupported_capability")
 -        if task.context.degraded:
-+        if not task.context.degraded:
-             return TeamResult(
-                 task_id=task.task_id, run_id=task.run_id, team_id=self.manifest.team_id,
-                 outcome="escalated", confidence=0.0, next_action=NextAction.ESCALATE,
+-            return self._escalate(task, "degraded_context")
+         return None
+ 
+     # ── 도구 ────────────────────────────────────────────────────

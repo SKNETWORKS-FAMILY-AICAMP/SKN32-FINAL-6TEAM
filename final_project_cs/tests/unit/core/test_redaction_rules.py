@@ -61,3 +61,32 @@ def test_mask_json_leaves_non_strings_alone() -> None:
     assert mask_json({"n": 12000, "ok": True, "none": None}) == {
         "n": 12000, "ok": True, "none": None
     }
+
+
+# ── UUID 는 가리지 않는다 (2026-09-18) ────────────────────────────
+def test_a_uuid_with_a_digit_only_group_is_not_masked_as_a_phone_number() -> None:
+    """☆실제 결함: `…d588-1234-4253-…` 이 전화번호 규칙에 걸려 Case 상태의 trip_id 가 망가졌다."""
+    from app.core.redaction import masked
+
+    trip_id = "7da9d588-1234-4253-8b0c-8d09d778ce69"
+    assert masked(trip_id) == trip_id
+    assert mask_json({"subject_ref": {"id": trip_id}}) == {"subject_ref": {"id": trip_id}}
+    # 같은 문장 안의 진짜 전화번호·카드번호는 그대로 가린다
+    assert masked(f"{trip_id} 010-1234-5678") == f"{trip_id} 010-****-5678"
+    assert masked(f"카드 1234-5678-9012-3456 {trip_id}") == f"카드 **** **** **** 3456 {trip_id}"
+
+
+def test_every_random_uuid_survives_masking() -> None:
+    """무작위라 가끔만 걸렸다 — 많이 뽑아 본다."""
+    from uuid import uuid4
+
+    from app.core.redaction import masked
+
+    ids = [str(uuid4()) for _ in range(5000)]
+    assert [i for i in ids if masked(i) != i] == []
+
+
+def test_a_placeholder_lookalike_in_user_text_does_not_crash() -> None:
+    from app.core.redaction import masked
+
+    assert masked("a\x007\x00b 010-1234-5678") == "a\x007\x00b 010-****-5678"

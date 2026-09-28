@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>triPilot · 모바일 목업 비교</title>
+  <style>
+    :root{font-family:"Segoe UI","Malgun Gothic",sans-serif;color:#24392f;background:#edf1ea;--scale:.8;--frame-width:312px;--frame-height:675.2px}
+    *{box-sizing:border-box}body{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible{outline:3px solid #6f9f7d;outline-offset:3px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 28px;border-bottom:1px solid #d7e1d5;background:#f7f9f3}
+    .heading{display:flex;align-items:center;gap:14px}.brand{display:flex;align-items:center;gap:7px;font-size:22px;font-weight:750;letter-spacing:-.8px}.brand-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#2e6047;color:white;font-size:27px;padding-bottom:4px}.heading h1{font-size:15px;margin:0;border-left:1px solid #d3dfd3;padding-left:14px;font-weight:600}.subtitle{font-size:12px;color:#6d7c73;margin:9px 0 0;line-height:1.7}.scale-note{font-size:11px;color:#6d7c73;text-align:right;line-height:1.8;white-space:nowrap}
+    .board{padding:22px 24px 24px;overflow-x:auto;scrollbar-color:#bdd3bf transparent;scrollbar-width:thin}
+    .panels{display:flex;justify-content:center;gap:18px;min-width:max-content}
+    .panel{width:var(--frame-width);flex:0 0 var(--frame-width)}
+    .panel-heading{height:75px;padding:0 3px}.panel-title{display:flex;align-items:center;gap:7px;margin:0;font-size:14px;font-weight:700;white-space:nowrap}.number{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#dfeadd;color:#2e6047;font-size:10px}.panel-description{font-size:11px;color:#6d7c73;margin:7px 0 8px;white-space:nowrap}
+    .panel-actions{display:flex;gap:14px;align-items:center}.panel-actions button,.panel-actions a{border:0;background:none;padding:0;font-size:10px;line-height:1.8;color:#456b51}.panel-actions button:hover,.panel-actions a:hover{text-decoration:underline;text-underline-offset:3px}
+    .screen{width:var(--frame-width);height:var(--frame-height);border-radius:calc(30px * var(--scale));overflow:hidden;background:#f7f9f3;box-shadow:0 10px 32px #24392f12;outline:1px solid #d6e0d3}
+    iframe{display:block;border:0;width:390px;height:844px;transform:scale(var(--scale));transform-origin:top left;background:#f7f9f3}
+    .footer{font-size:11px;line-height:1.8;color:#6d7c73;padding:0 28px 18px;text-align:center}
+    @media(max-width:650px){.toolbar{padding:16px 20px;align-items:flex-start}.heading{gap:9px}.heading h1{font-size:12px;padding-left:9px}.brand{font-size:18px}.scale-note{display:none}.board{padding-left:16px;padding-right:16px}.panels{justify-content:flex-start}.footer{text-align:left}}
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div><div class="heading"><div class="brand"><span class="brand-icon" aria-hidden="true">t</span>triPilot</div><h1>모바일 목업 비교</h1></div><p class="subtitle">네 가지 버전을 각각 진행하며 비교하세요. 언어 선택·약관 동의·입력한 일정은 화면마다 독립적으로 유지됩니다.</p></div>
+    <div class="scale-note">모바일 기준 390 × 844<br><span id="scale-label">화면 크기에 맞춰 자동 배치</span></div>
+  </header>
+  <main class="board" aria-label="독립적으로 작동하는 모바일 목업 네 개">
+    <div class="panels">
+      <section class="panel" aria-labelledby="title-original">
+        <header class="panel-heading"><h2 class="panel-title" id="title-original"><span class="number">01</span>A안 · 기본 카드</h2><p class="panel-description">소개 + 카드가 아래로 펼쳐지는 구성</p><div class="panel-actions"><button type="button" data-reset="original" aria-label="A안 화면 처음부터 다시 시작">↻ 다시 시작</button><a href="tripilot-intro-start.html">단독으로 보기 →</a></div></header>
+        <div class="screen"><iframe id="original" src="tripilot-intro-start.html" title="A안 기본 카드 목업"></iframe></div>
+      </section>
+      <section class="panel" aria-labelledby="title-cards">
+        <header class="panel-heading"><h2 class="panel-title" id="title-cards"><span class="number">02</span>B안 · 카드 바로 시작</h2><p class="panel-description">소개 마지막 화면에서 온보딩 카드 표시</p><div class="panel-actions"><button type="button" data-reset="cards" aria-label="B안 화면 처음부터 다시 시작">↻ 다시 시작</button><a href="tripilot-intro-cards.html">단독으로 보기 →</a></div></header>
+        <div class="screen"><iframe id="cards" src="tripilot-intro-cards.html" title="B안 카드 바로 시작 목업"></iframe></div>
+      </section>
+      <section class="panel" aria-labelledby="title-fixed">
+        <header class="panel-heading"><h2 class="panel-title" id="title-fixed"><span class="number">03</span>하단 고정 네비게이션</h2><p class="panel-description">일정 등록 후 메뉴가 항상 하단에 표시</p><div class="panel-actions"><button type="button" data-reset="fixed" aria-label="하단 고정형 화면 처음부터 다시 시작">↻ 다시 시작</button><a href="tripilot-intro-nav-fixed.html">단독으로 보기 →</a></div></header>
+        <div class="screen"><iframe id="fixed" src="tripilot-intro-nav-fixed.html" title="하단 고정 네비게이션 목업"></iframe></div>
+      </section>
+      <section class="panel" aria-labelledby="title-floating">
+        <header class="panel-heading"><h2 class="panel-title" id="title-floating"><span class="number">04</span>플로팅 네비게이션</h2><p class="panel-description">왼쪽 원형 버튼에서 오른쪽으로 확장</p><div class="panel-actions"><button type="button" data-reset="floating" aria-label="플로팅형 화면 처음부터 다시 시작">↻ 다시 시작</button><a href="tripilot-intro-nav-floating.html">단독으로 보기 →</a></div></header>
+        <div class="screen"><iframe id="floating" src="tripilot-intro-nav-floating.html" title="플로팅 네비게이션 목업"></iframe></div>
+      </section>
+    </div>
+  </main>
+  <footer class="footer">각 화면 안에서 스크롤할 수 있습니다. ‘다시 시작’은 해당 화면의 입력만 초기화합니다. 창이 좁으면 비교 영역을 좌우로 스크롤하세요.</footer>
+  <script>
+    (()=>{
+      'use strict';
+      function fit(){
+        const board=document.querySelector('.board');
+        const style=getComputedStyle(board);
+        const width=board.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+        const top=document.querySelector('.toolbar').offsetHeight;
+        const availableHeight=innerHeight-top-75-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom)-document.querySelector('.footer').offsetHeight-4;
+        const scale=Math.max(.6,Math.min(1,(width-18*3)/(390*4),availableHeight/844));
+        document.documentElement.style.setProperty('--scale',scale);
+        document.documentElement.style.setProperty('--frame-width',`${390*scale}px`);
+        document.documentElement.style.setProperty('--frame-height',`${844*scale}px`);
+        document.querySelector('#scale-label').textContent=`표시 배율 ${Math.round(scale*100)}% · 각 화면 독립 실행`;
+      }
+      document.querySelectorAll('[data-reset]').forEach(button=>button.addEventListener('click',()=>{
+        const frame=document.getElementById(button.dataset.reset);
+        frame.src=frame.getAttribute('src');
+      }));
+      addEventListener('resize',fit);
+      fit();
+      document.fonts.ready.then(fit);
+    })();
+  </script>
+</body>
+</html>

@@ -54,7 +54,7 @@ ALLOWED = {
     # PII 마스킹 패턴. 결제 식별자 모양을 알아야 가릴 수 있다 —
     # 도메인 로직이 아니라 **보안 규칙**이다.
     "app/core/redaction.py",
-    # 원격 Agent 데모. A-COP 본체가 아니라 **왕복 검증용 상대역**이며,
+    # 원격 Agent 데모. triPilot 본체가 아니라 **왕복 검증용 상대역**이며,
     # 도메인을 바꾸면 이 파일도 같이 갈아 끼운다.
     "app/presentation/a2a/travel_remote_agent.py",
     # Composer 쓰기채널의 KNOWN_IMPLEMENTATION_REFS allowlist(2026-08-24,

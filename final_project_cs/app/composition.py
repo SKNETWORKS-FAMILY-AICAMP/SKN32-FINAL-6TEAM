@@ -70,8 +70,10 @@ def build_classifier(*, config: ProjectConfig | None = None):
     from app.core.settings import get_settings
 
     config = config or load_project_config()
-    if not get_settings().openai_api_key:
-        raise RuntimeError("OpenAI API key is missing")
+    settings = get_settings()
+    # ★제공자는 둘 중 하나면 된다 — OpenAI 키, 또는 로컬 Ollama 주소(2026-09-14, 크레딧 소진).
+    if not settings.openai_api_key and not (settings.ollama_base_url or "").strip():
+        raise RuntimeError("LLM provider is missing — set ACOP_OPENAI_API_KEY or ACOP_OLLAMA_BASE_URL")
 
     def classify(message: str) -> dict[str, str]:
         result = feedback.classify(masked(message))
@@ -147,6 +149,25 @@ def _instantiate_team(implementation: type, tools: ReadToolbox, llm: Any | None)
         raise CompositionError(f"cannot instantiate Team implementation {implementation}: {exc}") from exc
 
 
+def build_report_extractor():
+    """고객 문장에서 여행 신고(늦음·휴무·품절·재요청)를 뽑는 함수 — Case 버전 Team 의 `read.customer_report`.
+
+    ★`[2026-09-17]` 이 자리가 비어 있었다. 시험과 시나리오 모드는 조립기(`case_engine`)에 직접
+      넣어서 돌았고, **운영 조립(`build_registry`)만 안 넣어** 실제 `/v1/cases` 로 온 여행 신고가
+      Team 에서 「신고 내용 모름」으로 사람에게 갈 자리였다.
+    ★Ollama(Gemma 4)가 설정돼 있을 때만 만든다. 없으면 `None` — Team 은 지어내지 않고 escalate 한다.
+      만드는 것 자체는 I/O 가 없다(부를 때 나간다).
+    """
+    from app.infrastructure.ollama_chat import from_settings
+
+    chat = from_settings(get_settings())
+    if chat is None:
+        return None
+    from app.modules.travel_ops.trip_intake import extract
+
+    return lambda text: extract(text, chat)
+
+
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
@@ -160,7 +181,8 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         from app.infrastructure.travel import build_travel_sources
 
         tools = ReadToolbox(get_connection, policy_search=search_policy,
-                            travel=build_travel_sources(get_settings()))
+                            travel=build_travel_sources(get_settings()),
+                            report_extractor=build_report_extractor())
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -218,7 +240,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
                      broker: Any | None = None, tools: ReadToolbox | None = None,
                      llm: Any | None = None, policy_search_fn=search_policy,
                      config_path: str | Path | None = None,
-                     config: ProjectConfig | None = None) -> Controller:
+                     config: ProjectConfig | None = None,
+                     action_handlers: Any | None = None) -> Controller:
     """Assemble the application Controller and inject every concrete adapter.
 
     ★`config` 를 주면 **그 선언 그대로** 조립한다(2026-09-06, reload 계약).
@@ -251,7 +274,103 @@ def build_controller(*, registry: TeamRegistry | None = None,
         verification_policy=verification_policy,
         fact_queries=fact_queries,
         response_review=config.response_review,
+        action_handlers=action_handlers if action_handlers is not None else build_action_handlers(),
     )
+
+
+def build_domain_routers() -> list:
+    """도메인이 여는 HTTP 표면 — 여행 API · 위임 · 시나리오 모드.
+
+    `[정정 2026-09-22]` 이 줄은 「여행 API 하나」라고 적혀 있었다. 시나리오 라우터가
+    늘어난 뒤에도 안 고쳐져 있었고, 여기에 위임까지 더해 셋이 됐다.
+
+    ★presentation 은 도메인을 import 하지 못한다(INV-CS-ARCH-001). 그래서 조립이
+      만들어 `create_app()` 에 넣는다. 점검기는 **처음 쓸 때** 조립한다 — 기동이
+      바깥 소스(기상·교통·대기) 조립을 기다리지 않게.
+    """
+    from app.modules.travel_ops.trip_api import build_trip_router
+
+    def check_factory():
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.base import build_travel_sources
+        from app.infrastructure.travel.disruptions import DisruptionCheck
+
+        return DisruptionCheck(build_travel_sources(get_settings())).check
+
+    def chat_factory():
+        # ★자유 문장에서 신고를 뽑는 LLM — 로컬 Ollama(Gemma 4). 없으면 None → 추출 없이 escalate.
+        from app.core.settings import get_settings
+        from app.infrastructure.ollama_chat import from_settings
+
+        return from_settings(get_settings())
+
+    from app.modules.travel_ops.delegation_api import build_delegation_router
+    from app.modules.travel_ops.scenario_mode import build_scenario_router
+
+    def place_factory():
+        # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
+        #   실제로 불린다. 키가 없으면 `None` 이고 그러면 그 경로가 아예 안 열린다.
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.base import build_travel_sources
+
+        return build_travel_sources(get_settings()).place
+
+    def kakao_factory():
+        # ★계획 읽기의 **장소 이름 찾기** 전용(`intake/places.py`). 키가 없으면 None — 그 단계만 건너뛴다.
+        #   호출 예산이 필수다(무료 한도 초과 사용은 약관 위반) — `travel.kakao_budget`.
+        from app.core.settings import get_settings
+        from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
+        from app.infrastructure.travel.kakao_local import KakaoLocal
+
+        key = get_settings().kakao_rest_api_key
+        if not key:
+            return None
+        return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
+
+    return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
+                              chat_factory=chat_factory, place_factory=place_factory,
+                              kakao_factory=kakao_factory),
+            # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
+            #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
+            build_delegation_router(),
+            # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
+            build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
+
+
+def build_subject_resolver():
+    """Case 가 가리키는 대상을 확인하는 도메인 확인기(`[결정 2026-09-17]`).
+
+    ★선언이 없으면 `None` — 그 조립에서 `subject_ref` 를 보내면 422 다(조용히 무시하지 않는다).
+    """
+    try:
+        from app.modules.travel_ops.subjects import resolve_subject
+    except ImportError:
+        return None
+    return resolve_subject
+
+
+def build_subject_interpreter():
+    """`[2026-09-17]` 대상이 정해진 고객 Case 의 문장 해석기. 선언이 없으면 `None`."""
+    try:
+        from app.modules.travel_ops.subjects import make_subject_interpreter
+    except ImportError:
+        return None
+    return make_subject_interpreter(build_report_extractor())
+
+
+def build_action_handlers():
+    """제안의 도메인 적용기 — 승인 없이 적용되는 것(`[결정 2026-09-17]`)과 승인 뒤 실행되는 것(`[2026-09-18]`).
+
+    ★선언이 없으면 빈 표 — 승인 없는 제안은 전부 escalated 로 간다.
+    """
+    from app.core.actions import ActionHandlers
+    try:
+        from app.modules.travel_ops.booking_actions import APPROVED_HANDLERS
+        from app.modules.travel_ops.itinerary_actions import ACTION_HANDLERS
+    except ImportError:
+        return ActionHandlers()
+    # ★`[2026-09-18]` 승인된 예약 제안의 적용기도 싣는다(`auto_apply=False` — 승인 없이는 안 돈다).
+    return ActionHandlers([*ACTION_HANDLERS, *APPROVED_HANDLERS])
 
 
 def build_verification(*, config=None):
@@ -274,5 +393,5 @@ def build_verification(*, config=None):
     return TRAVEL_OPS_POLICY, FACT_QUERIES
 
 
-__all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller",
+__all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller", "build_report_extractor",
            "build_graph_store", "build_registry", "build_team_executor"]

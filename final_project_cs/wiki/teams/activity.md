@@ -10,6 +10,8 @@ domain: travel
 
 # Activity Team
 
+`[2026-09-28]` **코드 위치가 다시 폴더 안으로 바뀌었다** — 본체는 `app/modules/travel_ops/activity/team.py`, `__init__.py`는 재수출만 한다. 두는 규칙은 [code-layout.md](code-layout.md). 아래에 날짜와 함께 적힌 `activity.py`·`activity/__init__.py` 경로·줄 번호는 각각 그때 기록이다.
+
 `[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다. `[정정 2026-09-24]` **이 경로는 낡았다.** commit `1bc9d51`(`refactor(activity): travel_ops/activity/ 패키지로 분리`)로 `app/modules/travel_ops/activity.py`는 `app/modules/travel_ops/activity/__init__.py`(패키지, 621줄)로 쪼개졌다. 이 문서 안의 `activity.py:NN` 인용을 전부 이 경로·라인 번호로 갱신했다.
 
 근거는 계획서 v11 §5. 여행 도메인 판올림(2026-09-08)으로 생긴 Team이다.
@@ -472,19 +474,56 @@ Activity: "10/03 15시 → 10/04 10시" 후보를 낸다
 capabilities          = ["activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
                          "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
                          "activity.propose_change",     # 대안을 제안한다 (승인 대기)
-                         "activity.submit_itinerary"]   # ★[2026-09-20] 신규 일정 제출 (승인 대기)
+                         "activity.itinerary",          # [2026-09-17] 여행 일정 관리
+                         "activity.itinerary_question"]  # [2026-09-25] 규정 질문 — 면제 아님
 accepted_case_types   = ["activity"]                    # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "policy", "db_facts", "history"]
-allowed_tools         = ["read.booking", "read.policy", "read.place", "read.weather",
-                         "read.disaster", "read.place_search"]  # ★[2026-09-20] read.place_search 추가
-knowledge_scope       = ["activity", "cancellation", "refund", "weather", "disaster"]
-max_steps             = 6
+required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
+policy_optional_capabilities = ["activity.itinerary"]                      # [2026-09-22] 일정 관리만 면제
+allowed_tools         = ["read.booking", "read.booking_terms",  # [2026-09-23] 수치는 여기서 온다
+                         "read.policy",                        #   문장 근거만 댄다
+                         "read.place", "read.disruptions",
+                         "read.itinerary", "read.itinerary_version", "read.place_catalog",
+                         "read.customer_report"]
+knowledge_scope       = ["travel_activity", "travel_weather",            # [2026-09-22] 여행 scope 로 교체
+                         "travel_cancellation", "travel_access"]           #   앞 값의 `refund` 는 쇼핑몰 scope 였다
+max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "activity.check_feasible"
 ```
 
-★`[구현 2026-09-20]` `select_capability(intent, input_text)`도 추가됐다(`registry.py`의 기존 훅) — `intent="itinerary_submit"`이면 `activity.submit_itinerary`를 고른다. 이 manifest 테이블 자체는 안 바뀌지만 실제로 **어느 capability가 선택되는지**는 이 훅이 먼저 결정한다 → [일정 제출 절](#일정-제출--예약-없이-시작하는-capability)
+★`[2026-09-23]` **취소 기한·위약금율은 `read.booking_terms` 가 댄다** — `read.policy` 가 아니다.
+전에는 RAG 청크에서 꺼내려 해서 두 값이 **언제나 `None`** 이었고, 「지금 취소하면 얼마인가」가
+한 번도 답해진 적이 없다. 수치는 표 `cancellation_terms`(예약 → 공급자 → 종류 순으로 찾는다),
+문장 근거는 그대로 RAG. 결정 [D-CS-006](../decisions/D-CS-006-cancellation-terms-are-structured.md) ·
+실측 [2026-09-23_취소조건_구조화_실측.md](../records/evidence/2026-09-23_취소조건_구조화_실측.md).
 
-★`[실측 2026-09-20]` `allowed_tools`·`knowledge_scope`에 `read.disaster`/`disaster`를 추가했다 — 아래 「걸리는 것」에 있던 "manifest가 신규 연동과 어긋난다"는 미확보 중 재난문자 쪽은 이걸로 닫혔다. `weather` scope 처리(날씨 조회가 판정 범위 밖으로 빠진 것과 manifest가 안 맞는 문제)는 아직 안 건드렸다.
+
+### `[2026-09-25]` 규정 질문 — `activity.itinerary_question`
+
+여행 Case 가운데 접수 때 **질문**(`interpretation.report.type == "question"`)으로 읽힌 것은 `activity.itinerary`(규정 면제)가 아니라
+`activity.itinerary_question` 으로 간다(`ItineraryWork.itinerary_route`). ★**면제 목록에 넣지 않는다** — Controller 가 규정(RAG)을
+돌고, 근거가 없으면 degraded 로 사람에게 간다.
+
+- 짚은 일정 항목(`part_id` → 없으면 제목·장소 이름이 문장에 나오는 항목 → 「점심·저녁 식당」의 끼니)을 기준으로
+  `read.policy`(문장 근거)를 읽고, 그 항목에 예약이 있으면 `read.booking_terms`(취소 기한·위약금 수치)를 읽는다.
+  ★판정 입력은 **예약이 아니라 일정 항목**이다 — `check_cancelable` 을 재사용하지 않는다(`read.booking` 전제라 무료·무예약 항목에서 「모름」).
+- 답은 규정 조각을 **출처와 함께 그대로** 싣는다(모델로 짓지 않는다). **일정은 바꾸지 않는다.**
+- 묻는 꼴(물음표 · 「되나요」「아니에요」 …)은 `closed`·`delay` 로 받지 않는다 — 질문이 일정을 바꾸지 못하게(`trip_intake.py`).
+- 시험 `tests/scenario/test_case_question.py` — 인계(triPilot : RAG, 2026-09-25)의 다섯 문장.
+
+### `[2026-09-17]` Case 버전의 여행 일정 관리 — `activity.itinerary`
+
+여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)면 `select_capability(intent, input_text, state)` 가 고른다. **감시 Case**(`trigger_source=schedule`)는 그 항목을 `read.disruptions` 로 다시 점검해 `disrupted` 면 대안 하나를 제안하고(액-02), **품절 문의**는 동선 위 매장을 답하며 일정은 안 바꾼다 — 재고는 `[미확인]`(액-08). **재요청**(다른 안 · 되돌리기)도 받는다.
+계산은 시나리오용 버전과 같은 `itinerary_changes.py`, 쓰기는 `itinerary.apply` 제안 → 코어가 Case 완료와 한 트랜잭션으로 적용·통지([../actions/approval.md](../actions/approval.md)). `policy` 를 `required_context` 에서 뺐고(정책 0건이 degraded 를 만든다) `max_steps` 는 후보 재점검 때문에 12. 대조 시험 `tests/scenario/test_case_version_day.py`.
+
+★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
+
+★★`[병합 보류 2026-09-28]` **위 manifest는 develop 쪽(일정관리 계열)만 반영했다.** `role-activity`
+  쪽에서 독립적으로 만든 재난문자 판정·날씨민감도 추정·대체 장소 후보(`db_search` 포함)·
+  일정제출(`activity.submit_itinerary`)은 지금 이 코드에 없다 — `role-activity` 브랜치 커밋
+  `2af524a`에 온전히 남아 있다. develop의 `read.disruptions`/`ItineraryWork` 구조와 겹치지
+  않는지 실제 작성자와 같이 확인한 뒤 다시 합친다. `app/infrastructure/travel/base.py`의
+  `TravelSources.disaster` 주석에도 같은 메모를 남겨 뒀다(`read.disaster`가 `.near()`를
+  부르는데 지금 조립되는 `DisasterMsgApi`/`Csv`엔 그 메서드가 없다 — 아직 안 씀).
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.
 
@@ -610,6 +649,8 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 `[실측]` 보낼 자리는 이미 있다 — 같은 파일의 `_unknown()` 이 "값이 없는 게 아니라 모르는 상태"를 escalate 로 보낸다.
 
 `[정정 2026-09-10]` 이는 현재 코드의 관찰이며, 필요한 값을 모를 때의 현행 사양은 대체 소스로 값을 내고 대체까지 실패하면 서버를 끄되 근거 없는 문장은 만들지 않는 것이다(v11 §0-4 결정 15).
+
+`[정정 2026-09-21]` 그 「서버를 끈다」가 어디서 멈추는가는 층마다 다르다 — 기동 조립 실패는 기동 거부, Case 실행 중 실패는 서버를 내리지 않고 사람 인계(`fatal_source_failure`), 배치 스위퍼는 exit 1. 코드가 이미 그렇게 동작한다([D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md)). 아래 escalate 는 그 층의 구현이며 미구현 표시가 아니다.
 
 **코드 수정은 담당 세션 몫이다.** 이 문서는 어긋남만 적는다.
 

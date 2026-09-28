@@ -4,11 +4,13 @@ import hashlib
 import hmac
 from dataclasses import dataclass
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Header, HTTPException
+
+# ★다시 내보내는 import 다 — 이 모듈을 거쳐 가져다 쓰는 곳이 있다.
+#   여기서 직접 쓰지 않아 안 쓰는 import 로 보이지만 지우면 그쪽이 깨진다.
+from app.core.redaction import mask_json, masked  # noqa: F401
 
 from app.core.settings import get_guardrails, get_settings
-from app.core.redaction import masked
-from app.core.redaction import mask_json
 
 
 @dataclass(frozen=True)

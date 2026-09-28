@@ -63,6 +63,16 @@ class Sandbox:
         self.root = Path(self._tmp) / self.target.name
         shutil.copytree(self.target, self.root,
                         ignore=_ignore_factory(self.target.resolve()), symlinks=False)
+        # ★사본에 빈 git 저장소를 만든다. 원본의 .git 은 복사하지 않는다(무겁고, 사본에서
+        #   커밋이 섞일 수 있다). 그런데 .git 이 아예 없으면 `git check-ignore` 를 부르는
+        #   테스트가 사본에서만 실패해 기준선을 깬다 — 2026-09-14 test_api_key_file 이 그랬다.
+        #   반대 방향 검사(템플릿이 무시되지 않는가)는 오히려 '저장소 아님' 오류로 우연히 통과했다.
+        #   빈 저장소 하나로 둘 다 원본과 같게 돈다. git apply 도 그대로 된다(실측).
+        subprocess.run(["git", "init", "-q"], cwd=self.root, capture_output=True, check=False)
+        # ★색인에도 올린다(커밋은 안 한다). `git ls-files` 로 추적 파일을 훑는 검사가 있어서,
+        #   빈 저장소면 "추적 파일을 하나도 못 읽었다" 로 사본에서만 실패한다(2026-09-21 실측).
+        subprocess.run(["git", "-c", "core.autocrlf=false", "add", "-A"],
+                       cwd=self.root, capture_output=True, check=False)
         return self
 
     def __exit__(self, *exc: object) -> None:
@@ -91,22 +101,32 @@ class Sandbox:
         if reverse:
             args.append("-R")
         args.append(str(patch.resolve()))
-        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True, check=False)
-        return proc.returncode == 0, (proc.stderr or proc.stdout).strip()
+        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", check=False)
+        return proc.returncode == 0, (proc.stderr or proc.stdout or "").strip()
 
     def check(self, patch: Path) -> tuple[bool, str]:
         proc = subprocess.run(
             ["git", "-c", "core.autocrlf=false", "apply", "-p1", "--unsafe-paths",
              "--check", str(patch.resolve())],
-            cwd=self.root, capture_output=True, text=True, check=False)
-        return proc.returncode == 0, (proc.stderr or proc.stdout).strip()
+            cwd=self.root, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            check=False)
+        return proc.returncode == 0, (proc.stderr or proc.stdout or "").strip()
 
     def pytest(self, selection: list[str] | None = None, *, timeout: int = 900) -> RunResult:
+        # ★-rfE — 실패(F)와 오류(E)를 둘 다 요약에 올린다. 예전엔 -rf 라 fixture·setup 오류가
+        #   목록에 안 나와 판정에서 통째로 빠졌다(2026-09-14 게이트에서 한 회차 94건, 다른 회차 119건).
         args = [sys.executable, "-m", "pytest", "-q", "--no-header", "-p", "no:cacheprovider",
-                "--tb=no", "-rf"]
+                "--tb=no", "-rfE"]
         args.extend(selection or [])
-        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
-                              timeout=timeout, check=False)
+        try:
+            proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", timeout=timeout, check=False)
+        except subprocess.TimeoutExpired:
+            # ★시간 초과를 예외로 터뜨리면 게이트가 통째로 죽는다(2026-09-21 cs 기준선에서 실제로 죽었다).
+            #   결과로 말한다. 무엇을 돌리다 멈췄는지는 selection 이 들고 있다.
+            return RunResult(124, sorted(selection or []),
+                             f"{timeout}초 안에 끝나지 않았다 — 판정하지 못했다", "")
         failed = []
         for line in proc.stdout.splitlines():
             if line.startswith("FAILED ") or line.startswith("ERROR "):

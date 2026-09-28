@@ -35,6 +35,10 @@ STATE_TONE: dict[str, str] = {
     "resolved": "done", "delivered": "done", "succeeded": "done", "approved": "done",
     # 아직 / 중단
     "new": "idle", "cancelled": "idle", "pending": "idle",
+    # ★위임(2026-09-22). **살아 있는 위임은 "문이 열려 있다"** 는 뜻이라 운영자가 알고
+    #   있어야 한다 — 알람(critical)은 아니지만 회색(idle)도 아니다. 거둔 것은 닫힌
+    #   상태이므로 조용한 색이 맞다. 색은 장식이 아니라 분류다.
+    "live": "warn", "revoked": "idle", "absent": "idle",
 }
 
 
@@ -211,7 +215,13 @@ NAV = (
     #   메뉴에 있어야 한다고 전제하고 쓴 것이다. `final_project_sample` 에는
     #   처음부터 있었다(`TENANT_NAV`). 이식하며 빠진 것으로 보인다.
     ("/ops/outbox", "Outbox unknown"),
+    # ★2026-09-22 추가. 위임은 **승인 뒤 자동 실행을 여는 둘째 문**이고, 그 문을 주고
+    #   거두는 자리가 이 제품에 없어 운영자가 손으로 SQL 을 쳐야 했다.
+    #   거두기가 화면에 없으면 「언제든 철회할 수 있다」가 말뿐이 된다.
+    ("/ui/delegations", "Delegations"),
     ("/ui/voc", "VOC"),
+    # ★2026-09-14 시나리오 모드 스위치 — 확정 시나리오 하루를 실제 시스템으로 돌리는 시연.
+    ("/ui/scenario", "Scenario"),
     ("/ui/admin", "Admin"),
 )
 
@@ -243,7 +253,7 @@ body{margin:0;background:var(--bg);color:var(--text);
    새 합성 레이어를 만들고, 그 아래 요소의 hover 하이라이트가 **어긋난 위치에 칠해진다.**
    운영 콘솔에서 마우스가 가리키는 곳과 강조되는 곳이 다르면 오조작으로 이어진다.
    불투명 배경으로 바꿔 그 원인을 없앤다 — 흐림 효과보다 정확도가 먼저다. */
-.topbar{position:sticky;top:0;z-index:5;background:var(--bg);
+.topbar{position:static;background:var(--bg);
   border-bottom:1px solid var(--line);margin-bottom:1.75rem}
 .topbar__in{max-width:1180px;margin:0 auto;padding:.7rem 1.25rem;display:flex;
   align-items:center;gap:1.25rem;flex-wrap:wrap}
@@ -254,6 +264,28 @@ nav a{color:var(--text-dim);text-decoration:none;padding:.35rem .7rem;border-rad
   font-size:.9rem;font-weight:500}
 nav a:hover{background:var(--surface);color:var(--text)}
 nav a[aria-current=page]{background:var(--accent-weak);color:var(--accent);font-weight:600}
+/* ★`[2026-09-25 사용자 지시]` **화면에 떠 있는 것은 플로팅 메뉴 하나뿐이다.**
+   전에는 상단바가 화면 위에 붙어(sticky) 좁은 화면에서 메뉴가 두세 줄로 접히면 계속 본문을 가렸다
+   (폭 705px 에서 190px). 이제 상단바는 본문과 함께 스크롤되고, 900px 이하에서는 오른쪽 아래의
+   「☰」 버튼 하나만 늘 떠 있다. 누르면 그 위에 메뉴 패널이 뜨고 다시 누르면 닫힌다.
+   넓은 화면은 상단바에 한 줄로 두고 떠 있는 것이 없다. 자바스크립트 없이 체크박스 + 라벨로 연다.
+   (위 backdrop-filter 주석의 hover 어긋남은 반투명·합성 레이어 때문이라 불투명 패널로 피한다.) */
+.menu{display:contents}
+.menu-toggle{position:absolute;opacity:0;pointer-events:none}
+.menu-btn{display:none;cursor:pointer;user-select:none}
+.menu-toggle:focus-visible+.menu-btn{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:900px){
+  .menu-btn{display:flex;align-items:center;justify-content:center;position:fixed;right:16px;bottom:16px;
+    z-index:20;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:1.35rem;font-weight:700;box-shadow:0 6px 18px rgba(16,24,40,.25)}
+  .menu{display:none;position:fixed;right:16px;bottom:80px;z-index:20;width:min(280px,calc(100vw - 32px));
+    max-height:70vh;overflow:auto;flex-direction:column;gap:.5rem;padding:.6rem;background:var(--bg);
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(16,24,40,.22)}
+  .menu-toggle:checked~.menu{display:flex}
+  .menu-toggle:checked+.menu-btn{background:var(--text);color:var(--bg)}
+  .menu nav{flex-direction:column;align-items:stretch}
+  .menu form{margin-left:0!important;padding:.25rem .7rem .15rem;border-top:1px solid var(--line)}
+}
 h1{font-size:1.5rem;letter-spacing:-.02em;margin:.25rem 0 .35rem}
 h2{font-size:1.03rem;letter-spacing:-.01em;margin:0}
 h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin:1.25rem 0 .5rem}
@@ -413,7 +445,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 
 def page(title: str, body: str, *, current: str = "", lede: str = "",
-         nav: tuple[tuple[str, str], ...] | None = None) -> str:
+         nav: tuple[tuple[str, str], ...] | None = None, who: str = "") -> str:
     """Render one operator page.
 
     ★`nav` 를 받는 이유는 꺼진 모듈의 메뉴를 지우기 위해서다. 없는 화면으로
@@ -427,7 +459,21 @@ def page(title: str, body: str, *, current: str = "", lede: str = "",
     return (
         "<!doctype html><html lang='ko'><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width,initial-scale=1'>"
-        f"<title>{esc(title)} · A-COP</title><style>{CSS}</style></head><body>"
+        f"<title>{esc(title)} · triPilot</title><style>{CSS}</style></head><body>"
         f"<div class='topbar'><div class='topbar__in'>"
-        f"<span class='brand'>A-COP<span>운영 콘솔</span></span><nav>{links}</nav></div></div>"
+        f"<span class='brand'>triPilot<span>운영 콘솔</span></span>"
+        "<input type='checkbox' id='menu-toggle' class='menu-toggle' aria-label='메뉴 열기·닫기'>"
+        "<label for='menu-toggle' class='menu-btn' aria-hidden='true' title='메뉴'>☰</label>"
+        f"<div class='menu'><nav>{links}</nav>{_who(who)}</div></div></div>"
         f"<main class='shell'><h1>{esc(title)}</h1>{lede_html}{body}</main></body></html>")
+
+
+def _who(operator_id: str) -> str:
+    """로그인한 운영자와 로그아웃 버튼. ★로그아웃은 POST 다 — 링크(GET)로 두면 남의 페이지가 끼워 넣은
+    이미지 한 장으로도 로그아웃된다."""
+    if not operator_id:
+        return ""
+    return (f"<form method='post' action='/ui/logout' style='margin-left:auto;display:flex;gap:8px;"
+            f"align-items:center'><span style='font-size:13px;opacity:.8'>{esc(operator_id)}</span>"
+            "<button type='submit' style='font-size:12px'>로그아웃</button></form>")
+

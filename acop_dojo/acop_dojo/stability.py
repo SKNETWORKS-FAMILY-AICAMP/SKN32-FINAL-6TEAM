@@ -25,7 +25,7 @@ def check(target: Path, *, repeats: int = 3, verbose: bool = True) -> dict[str, 
 
     with Sandbox(target) as sandbox:
         for defect_id in playable:
-            defect = defects_mod.by_id(defect_id)
+            _defect = defects_mod.by_id(defect_id)
             patch = defects_mod.PATCH_DIR / f"{defect_id}.patch"
             expected = sorted(catalog["entries"][defect_id]["failed"])
             applied, message = sandbox.apply(patch)

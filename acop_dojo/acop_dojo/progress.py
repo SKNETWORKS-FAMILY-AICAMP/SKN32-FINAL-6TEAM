@@ -32,7 +32,38 @@ def load() -> dict[str, Any]:
         return json.loads(json.dumps(EMPTY))
     for key, value in EMPTY.items():
         data.setdefault(key, json.loads(json.dumps(value)))
+    _park_commerce(data)
     return data
+
+
+#: 도메인 전환으로 등록에서 빠진 커머스 Team 코드
+_COMMERCE_CODE = "app/modules/customer_ops/"
+
+
+def _park_commerce(data: dict[str, Any]) -> None:
+    """2026-09-14 커머스 중지. 중지한 결함·지워진 코드로 얻은 기록을 `archived` 로 옮긴다.
+
+    지우지 않는다 — 한 일은 한 일이다. 다만 그대로 두면 옛 커머스 보스를 깬 기록이
+    베이스먼트 보스전 통과처럼, 지워진 Team 함수가 '본 적 있음' 으로 지도에 남는다
+    (codex-alt 지적). 몇 번 불러도 결과가 같다.
+    """
+    from .defects import PARKED
+
+    parked = {d.defect_id for d in PARKED}
+    archived = data.setdefault("archived", {})
+    stage4 = data["stages"].get("4")
+    if stage4 and stage4.get("defect") in parked:
+        archived.setdefault("stages", {})["4"] = data["stages"].pop("4")
+    for name, ability in list(data["abilities"].items()):
+        if any(defect_id in str(ability.get("evidence", "")) for defect_id in parked):
+            archived.setdefault("abilities", {})[name] = data["abilities"].pop(name)
+    gone = [s for s in data["discovered"] if _COMMERCE_CODE in s]
+    if gone:
+        archived["discovered"] = sorted(set(archived.get("discovered", [])) | set(gone))
+        data["discovered"] = [s for s in data["discovered"] if _COMMERCE_CODE not in s]
+    for concept, entry in list(data.get("reviews", {}).items()):
+        if entry.get("source") in parked:
+            archived.setdefault("reviews", {})[concept] = data["reviews"].pop(concept)
 
 
 def save(data: dict[str, Any]) -> Path:

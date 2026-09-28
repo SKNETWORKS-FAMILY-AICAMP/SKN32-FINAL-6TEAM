@@ -173,5 +173,11 @@ class TravelTeamBase:
                 tenant_id=task.context.tenant_id, request_id=request_id,
                 action_type=action_type, business_subject=subject),
             approval_required=True, risk_level=risk,
-            rationale_evidence_ids=[item.evidence_id for item in evidence],
+            # ★`[2026-09-17]` Context 묶음에 **실제로 들어 있는** 근거만 든다. 도구 근거
+            #   (`tool:<팀>:<도구>`)까지 들었더니 Controller 대조가 「ContextPack 에 없는 근거」로
+            #   여행 승인 제안을 **전부** 막았다 — 대조는 위조할 수 없는 쪽(ContextPack)만 센다.
+            #   도구 근거는 결과의 근거로 남고, 인자의 사실(예약 id 등)은 대조 선언이 DB 에서
+            #   다시 확인한다. 경위: wiki/records/reports/debugs/2026-09-17_1450_여행_승인제안이_근거대조에서_전부_막힌다.md
+            rationale_evidence_ids=[item.evidence_id for item in evidence
+                                    if item.evidence_id in {pack.evidence_id for pack in task.context.evidence}],
         )

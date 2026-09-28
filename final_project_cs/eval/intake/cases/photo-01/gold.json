@@ -1,0 +1,74 @@
+{
+ "case_id": "photo-01",
+ "format": "photo",
+ "defect": "relative_date",
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (4명)",
+  "1일차 · 내일",
+  "09:30 북촌한옥마을 산책",
+  "12:30 광장시장 빈대떡",
+  "15:00 여의도한강공원",
+  "",
+  "2일차 · 10월 3일",
+  "09:30 동대문디자인플라자",
+  "12:30 명동교자 점심",
+  "15:00 익선동 한옥거리"
+ ],
+ "items": [
+  {
+   "date": "2026-10-02",
+   "start": "09:30",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "15:00",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "09:30",
+   "title": "동대문디자인플라자",
+   "place": "동대문디자인플라자",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "15:00",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

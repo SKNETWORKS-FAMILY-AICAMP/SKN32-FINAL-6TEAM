@@ -34,6 +34,7 @@ Team이 직접 읽으면 컨텍스트가 무한정 커진다. 그러면 두 가�
 1. [context-broker.md](context-broker.md) — `required_context` → `ContextPack`
 2. [context-budget.md](context-budget.md) — 예산과 절단 규칙
 3. [rag-retrieval.md](rag-retrieval.md) — 지식 검색
+3-1. [travel-corpus.md](travel-corpus.md) — 여행 코퍼스가 담는 것·안 담는 것 `[2026-09-22]`
 4. [memory.md](memory.md) — 이력
 5. [graph-retrieval.md](graph-retrieval.md) — Case·Issue·Policy·Team·Action 관계 탐색
 
@@ -44,6 +45,7 @@ Team이 직접 읽으면 컨텍스트가 무한정 커진다. 그러면 두 가�
 | [context-broker.md](context-broker.md) | 무엇을 어떤 순서로 모으는가 |
 | [context-budget.md](context-budget.md) | 예산을 넘으면 무엇을 자르는가 |
 | [rag-retrieval.md](rag-retrieval.md) | 지식 문서를 어떻게 찾는가 |
+| [travel-corpus.md](travel-corpus.md) | **여행 정책 코퍼스**가 무엇을 담고 무엇을 안 담는가. 12문서·130청크 |
 | [memory.md](memory.md) | 과거 이력을 어떻게 쓰는가 |
 | [graph-retrieval.md](graph-retrieval.md) | 이슈·정책·Team·제안 사이를 어떻게 잇는가. **두 축은 문자열 일치·실적 기준이라 약하다** |
 

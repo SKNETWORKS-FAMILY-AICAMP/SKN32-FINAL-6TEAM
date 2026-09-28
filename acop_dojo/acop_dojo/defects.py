@@ -156,6 +156,11 @@ def by_id(defect_id: str) -> Defect:
     for defect in DEFECTS:
         if defect.defect_id == defect_id:
             return defect
+    # 중지한 결함도 찾아 준다. 진행 기록·복습 예약에 옛 id 가 남아 있으면
+    # 여기서 SystemExit 가 나 `review` 가 통째로 죽는다. 문제로 내는지는 playable 이 따로 가른다.
+    for defect in PARKED:
+        if defect.defect_id == defect_id:
+            return defect
     known = ", ".join(d.defect_id for d in DEFECTS)
     raise SystemExit(f"모르는 결함이다: {defect_id}\n아는 것: {known}")
 
@@ -228,3 +233,22 @@ DEFECTS.extend(MORE2)
 DEFECTS.extend(MORE3)
 DEFECTS.extend(MORE4)
 DEFECTS.extend(MORE5)
+
+# ★2026-09-14 커머스 중지. 도메인이 여행으로 바뀌어 커머스 Team 코드가 저장소에서 나갔다
+#  (app/modules/customer_ops/*.py 삭제). 이 결함들이 겨누던 파일이 없으므로 걸 수 없다.
+#  지우지 않는다 — 정의는 각 파일에 그대로 있고, 이 집합에서 빼면 되살아난다.
+#  학습 게임은 도메인이 바뀌어도 승계되는 베이스먼트(코어)에 집중한다(v11 §0-2).
+PARKED_COMMERCE = frozenset({
+    "INV-TEAM-001",
+    "INV-TEAM-002",
+    
+    
+    "INV-REVIEW-002",
+    "INV-COMMERCE-002",
+    "INV-COMMERCE-003",
+    "INV-COMMERCE-004",
+    
+    
+})
+PARKED = [d for d in DEFECTS if d.defect_id in PARKED_COMMERCE]
+DEFECTS[:] = [d for d in DEFECTS if d.defect_id not in PARKED_COMMERCE]

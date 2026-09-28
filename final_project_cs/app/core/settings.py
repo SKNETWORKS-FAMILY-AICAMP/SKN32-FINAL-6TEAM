@@ -1,4 +1,4 @@
-"""A-COP 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
+"""triPilot 설정 — .env + config/guardrails.yaml 의 유일한 진입점.
 
 규칙 (RULE.md §3.1, §3.2):
   - 하드코딩 금지. API 키·모델명·경로·가드레일 수치를 코드에 직접 쓰지 않는다.
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import Field, ValidationError
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -52,6 +52,40 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_seed: int = 7
     local_ft_base_url: str = ""
+    #: Ollama(로컬 LLM 서버) 주소 — 채우면 분류·추출·번역을 **Ollama 로** 한다. 비우면 OpenAI.
+    #:  ★2026-09-14 OpenAI 크레딧 소진(429 실측) — Gemma 4 를 포트포워딩으로 붙여 쓴다.
+    #:  ★OpenAI 호환 경로(`/v1`)는 쓰지 않는다 — 생각(thinking)이 본문에 섞여 나왔다(실측).
+    #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
+    #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
+    ollama_base_url: str = ""
+    #: 시나리오 모드(운영콘솔 스위치로 확정 시나리오 하루를 실제 시스템으로 돌리는 시연 기능).
+    #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
+    scenario_mode_enabled: bool = False
+    ollama_model: str = "gemma4:12b"
+    #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
+    #:  ★`[2026-09-22]` 크레딧 없이 돌릴 길을 **명시적으로** 둔다. 조용한 폴백이 아니다 —
+    #:    고른 쪽의 벡터가 없으면 검색이 예외를 낸다(RULE.md §3.2 「신호 없는 축소 금지」).
+    #:  ★모델을 바꾸면 차원이 바뀐다(OpenAI 1536 · bge-m3 1024). 그래서 **칸을 따로** 두고
+    #:    둘을 공존시킨다(CLAUDE.md §1 「덮어쓰지 않고 공존시킨다」).
+    #: 운영 화면(`/ui/delegations`)에서 **위임을 주고 거둘 수 있나**. 기본은 꺼짐.
+    #:  ★`[2026-09-22]` `/ui/*` 에는 **로그인이 없다**. 2026-08-18 에 같은 이유로 Composer 화면을
+    #:    이 앱에서 **삭제**했다(D-CS-001) — 인증 없이 닿는 화면에 권한 있는 조작을 두지 않는다.
+    #:    위임은 「한 건 승인」이 아니라 **서 있는 권한**이라 그 기준이 더 강하게 걸린다.
+    #:    화면은 기본적으로 **읽기 전용**이고, 주고 거두는 것은 scope 가 걸린 REST 로 한다.
+    #: 상시 작업이 연속 실패했을 때 운영자에게 알릴 곳. 비우면 `discord_webhook_url` 을 쓴다.
+    #:  ★고객 통지와 **다른 곳으로 보낼 수 있게** 자리를 나눠 둔다 — 운영 알림이 고객 채널로 가면
+    #:    고객이 우리 장애를 본다. 실제 주소는 `.env` 에만 적는다.
+    ops_alert_webhook_url: str = ""
+    # ★`[2026-09-23]` 운영 화면 로그인 계정 — JSON 목록 [{id, password_hash, scopes}].
+    #   **비어 있으면 아무도 못 들어온다**(기본이 닫힘). `python -m scripts.ui_operator` 가 한 줄을 만든다.
+    #   원문 비밀번호는 어디에도 두지 않는다. D-CS-007.
+    ui_operators: str = ""
+    # ★`[2026-09-24]` 웹(`frontend/apps/web`, 포트 3100)이 이 API 를 부르는 출처. 쉼표로 여럿.
+    #   서버용 scope 키가 아니라 사용자 식별 키(`X-User-Key`)만 받는다(D-020 · 025).
+    web_allowed_origins: str = "http://127.0.0.1:3100,http://localhost:3100"
+    embedding_provider: str = "openai"
+    ollama_embedding_model: str = "bge-m3:latest"
+    ollama_timeout_seconds: float = 60.0
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.
@@ -71,6 +105,12 @@ class Settings(BaseSettings):
     kma_api_key: str = ""
     #: 기상청 기상특보 — ★지속관리 루프의 트리거    data.go.kr/data/15000415
     kma_warning_api_key: str = ""
+    #: 기상청 지진정보 — 최근 지진(규모·진앙)          data.go.kr/data/15000420
+    #:  ★조회는 오늘 기준 3일 전까지(2026-09-14 실측). 비우면 공통 키를 쓴다.
+    kma_earthquake_api_key: str = ""
+    #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
+    #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
+    disaster_msg_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
@@ -101,9 +141,48 @@ class Settings(BaseSettings):
     #:  `app/infrastructure/travel/disaster_msg.py` 참고.
     disaster_api_key: str = ""
 
+    # 정부 교통정보 — ★공공데이터포털 공통 키와 **다른 키**다(각 기관이 따로 발급).
+    #: 국토교통부 ITS 국가교통정보센터 — 돌발상황  its.go.kr/opendata
+    #:  ★2026-09-14 발급·실호출 확인. 고속도로·국도만이 아니라 **시내 도로(시군도)도
+    #:    온다**(서울 122건 중 시군도 10·국도 6·지방도 2). 공공데이터포털 15040465 는
+    #:    LINK 형이라 키가 ITS 에서 나온다.
+    its_api_key: str = ""
+    #: 경찰청 UTIC 도시교통정보센터 — 도로위험상황예보·돌발(행사·집회 포함)  utic.go.kr
+    #:  ★**등록한 IP 에서만** 호출된다. 키가 **둘**이다 — 키마다 등록 IP 가 다르다(2026-09-14 발급).
+    #:    key 1 = 바로 부르는 자리의 IP   key 2 = 고정 IP 경유 서버의 IP
+    #:    ★실제 IP·서버 주소는 공용 파일에 적지 않는다 — `.env.apikeys` 에만.
+    #:  ☆처음엔 `.env.apikeys` 에 같은 이름을 두 줄 적었는데, 그러면 **뒤의 것만** 읽힌다.
+    utic_api_key_1: str = ""
+    utic_api_key_2: str = ""
+    #: ★IP 에 묶인 API 를 **고정 IP 서버를 거쳐** 부른다(2026-09-14). UTIC 는 등록한 IP 에서만
+    #:  된다 — 개발 장소가 바뀌어도 되게 서버로 나간다. SSH SOCKS 터널을 열고 이 값을
+    #:  `socks5://127.0.0.1:<포트>` 로 둔다. 비우면 경유 안 함. ★서버 주소는 공용에 적지 않는다.
+    outbound_proxy_url: str = ""
+    #: 경유시킬 소스 이름(쉼표). ★기본은 IP 에 묶인 것만 — 전부 경유시키면 터널이 끊길 때
+    #:  모든 소스가 한꺼번에 실패해 치명이 된다. `*` 는 전부.
+    outbound_proxy_sources: str = "utic"
+
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
+    # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
+    # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
+    #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
+    #   전까지 쌓지도 읽지도 않는다. 장소는 필요할 때 실시간으로 조회한다(`TourApiPlace.find`·`area_page`).
+    tour_catalog_enabled: bool = False
+    google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
+    #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
+    #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
+    discord_webhook_url: str = ""
+    #: 알림 문구틀의 언어별 생성 캐시 파일(저장소 기준 상대 경로, `var/` 는 커밋되지 않는다).
+    #:  ★배달 루프는 `--once` 로도 돌아 프로세스가 매번 죽는다 — 파일로 남겨야 다음 실행이
+    #:  이어 쓴다. 담기는 것은 **틀**뿐이고 시각·장소·금액 같은 값은 들어가지 않는다
+    #:  (`app/infrastructure/notify/phrase.py`). 비우면 그 프로세스 안에서만 재사용한다.
+    notice_phrasebook_path: str = "var/notice_phrasebook.json"
+    #: 여행계획서 링크의 앞부분(v11 §1 접점 ②). 알림에 **누를 수 있는 주소**로 싣는다.
+    #:  ★비밀이 아니다 — 링크의 보호는 여행별 토큰(HMAC)이 맡는다.
+    #:  기본값은 로컬 개발 서버(`.claude/launch.json` 의 `acop-cs-ui`, 8042).
+    public_base_url: str = "http://127.0.0.1:8042"
 
     # 호출 속도 제한 (2026-09-10 신설)
     # 하루 한도를 하루에 걸쳐 쓴다.  최소 간격(초) = 86400 / 하루 한도
@@ -122,12 +201,31 @@ class Settings(BaseSettings):
     rate_kma_per_day: int = 1000             # 미확인 - 보수적
     rate_airport_per_day: int = 1000         # 미확인 - 보수적
     rate_mofa_per_day: int = 1000            # 미확인 - 보수적
+    rate_its_per_day: int = 1000             # 미확인 - 보수적(ITS 공개 한도 못 찾음)
+    rate_kma_earthquake_per_day: int = 1000  # 미확인 - 보수적(지진정보 상세 한도 안 봄)
+    rate_open_meteo_air_per_day: int = 2000  # 미확인 - 보수적(Open-Meteo 한도를 API 끼리 나눠 쓰는지 안 봄)
+    rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
+    #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
+    #                                          ☆안전데이터 공유플랫폼 V2 공통 일일 1,000건과도 일치(2026-09-20 웹조사로 재확인)
+    rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
     rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
     rate_kakao_per_day: int = 1000            # 미확인 - 보수적
-    rate_disaster_msg_per_day: int = 1000     # 확인: 안전데이터 공유플랫폼 V2 공통 일일 1,000건(2026-09-20 웹조사)
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
+
+    # 유료 전환 가능 소스 (2026-09-15 결정) — 무료 한도의 **절반**만 쓴다(여유 2배).
+    #  ★Google 은 하루가 아니라 **월** 무료 한도다. 하루로 나눌 때 31일로 나눈다 —
+    #    짧은 달 기준으로 나누면 31일 달에 넘친다.
+    #  ★어댑터는 아직 없다. 이름을 먼저 잡아 두는 것은 붙이는 날 제한이 조용히 빠지지
+    #    않게 하려는 것이다(`test_every_configured_source_name_matches_a_real_adapter`).
+    #  확인: Google Maps Platform 가격표·필드표 (2026-09-15 조회)
+    #    Place Details — 영업시간(currentOpeningHours·regularOpeningHours)을 요청하면
+    #      **Enterprise** 등급. 무료 월 1,000건, 초과 $20/1,000 → 1,000 / 31 / 2 = 16
+    #    Compute Routes — 교통 반영(TRAFFIC_AWARE)은 **Pro** 등급. 무료 월 5,000건,
+    #      초과 $10/1,000 → 5,000 / 31 / 2 = 80.  TRANSIT 모드의 등급은 문서에 없다(미확인)
+    rate_google_places_per_day: int = 16
+    rate_google_routes_per_day: int = 80
 
     #: 간격이 안 찼을 때 기다려 볼 최대 시간(초). 고객 요청이 여기서 멈춘다.
     #:  넘으면 기다리지 않고 거부하고, Team 은 「모름」으로 넘어간다.
@@ -150,10 +248,24 @@ class Settings(BaseSettings):
             "tago": self.rate_tago_per_day,
             "airport": self.rate_airport_per_day,
             "mofa": self.rate_mofa_per_day,
+            "its": self.rate_its_per_day,
+            "kma_earthquake": self.rate_kma_earthquake_per_day,
+            "open_meteo_air": self.rate_open_meteo_air_per_day,
+            "disaster_msg": self.rate_disaster_msg_per_day,
+            "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
             "kakao": self.rate_kakao_per_day,
-            "disaster_msg": self.rate_disaster_msg_per_day,
+            "google_places": self.rate_google_places_per_day,
+            "google_routes": self.rate_google_routes_per_day,
         }
+
+    def utic_key(self, *, proxied: bool) -> str:
+        """UTIC 호출에 쓸 키 — **나가는 IP 에 등록된 키**를 고른다.
+
+        서버를 거쳐 나가면 key 2, 바로 나가면 key 1.
+        ★다른 쪽 키로 대신하지 않는다 — 등록 IP 가 달라 어차피 거절된다. 비었으면 빈 문자열.
+        """
+        return (self.utic_api_key_2 if proxied else self.utic_api_key_1).strip()
 
     def public_data_key(self, override: str = "") -> str:
         """공공데이터포털 서비스 하나가 쓸 키. 둘 다 비었으면 빈 문자열.

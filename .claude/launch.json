@@ -2,9 +2,29 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "acop-dojo",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "dojo.py",
+        "serve",
+        "--port",
+        "8765",
+        "--no-open"
+      ],
+      "port": 8765
+    },
+    {
       "name": "arch-compare",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8792", "--bind", "127.0.0.1", "--directory", "C:/Users/PLAYDA~1/AppData/Local/Temp/claude/C--Users-playdata2-Documents-final-workspace/d8388501-1531-4806-8746-0afa129e32b9/scratchpad"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8792",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "C:/Users/PLAYDA~1/AppData/Local/Temp/claude/C--Users-playdata2-Documents-final-workspace/d8388501-1531-4806-8746-0afa129e32b9/scratchpad"
+      ],
       "port": 8792
     }
   ]

@@ -1,0 +1,56 @@
+/* Shared scenery for the two standalone onboarding previews. */
+body { isolation: isolate; background: #f4f6f0; }
+.onboarding-scene {
+  --scene-x: 0px;
+  --scene-y: 0px;
+  --scene-progress: 0px;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f4f6f0;
+  contain: strict;
+}
+.scene-camera {
+  position: absolute;
+  inset: -20px;
+  transform: translate3d(calc(var(--scene-x) + var(--scene-progress)), var(--scene-y), 0) scale(1.025);
+  transition: transform .65s cubic-bezier(.22,.8,.25,1);
+}
+.scene-layer { position: absolute; inset: 0; opacity: 0; transform: scale(1.025); transition: opacity 1s ease, transform 1.4s ease; }
+.scene-layer.is-active.is-loaded { opacity: 1; transform: scale(1); }
+.scene-layer img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
+.scene-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #f9faf659 0%, #f9faf608 50%, #eaf0e31a 100%);
+}
+.scene-light {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(ellipse at 76% 75%, #fffdf5c7, transparent 58%);
+}
+.phone {
+  background: #f7f9f3c9;
+  border-color: #ffffffc7;
+  box-shadow: 0 24px 80px #24392f14;
+}
+.intro { text-shadow: 0 1px 10px #ffffffe6; }
+.top-note, .intro p, .bottom-note { color: #506659; }
+.card, .question-slide { background: #fffffff5; }
+.card.active { box-shadow: 0 8px 26px #24392f0c; }
+.bottom-note { text-shadow: 0 1px 8px #ffffff; }
+@media (max-width: 450px) {
+  .phone { background: #f7f9f366; }
+  .scene-camera { inset: -16px; }
+  .scene-layer img { object-position: 36% bottom; }
+  .scene-layer[data-scene="river"] img { object-position: 23% bottom; }
+  .scene-layer[data-scene="journey"] img { object-position: 65% bottom; }
+  .scene-veil { background: linear-gradient(180deg, #fbfcf4b3 0%, #f9faf54d 48%, #f4f7ec33 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-camera, .scene-layer { transform: none; transition: none; }
+  .scene-light { display: none; }
+}

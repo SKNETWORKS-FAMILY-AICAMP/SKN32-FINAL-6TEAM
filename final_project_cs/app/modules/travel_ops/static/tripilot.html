@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot · 서울 하루 여행</title>
+<!-- 실제 지도 — OpenStreetMap 타일 + Leaflet(키 없음). 못 불러오면 좌표 약도로 대신 그린다. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!--
+  triPilot 사용자 화면 — 팀 시안(team_branch/sw/tripilot-scenario-demo.html)의 모양을 그대로 쓰고,
+  데이터와 동작은 전부 시나리오 모드 API(/scenario/*)에서 받는다.
+  ★시안은 사건·대화·대안을 코드에 박아 둔 목업이었다. 여기서는 일정·통지·Case·재요청이
+    실제 시스템(감시 루프·여행 창구·Gemma 4 분류/추출)이 만든 것이다. 사건만 재생 입력이다.
+-->
+<style>
+:root{color-scheme:light;--paper:#f3f5f3;--surface:#fff;--soft:#f6f7f5;--ink:#24392f;--muted:#6d7c73;--line:#dce3dd;--green:#2e6047;--green-soft:#e9f2eb;--warn:#916425;--warn-soft:#fbf3e4;--red:#ae4b3c;--red-soft:#fceeea;--shadow:0 8px 28px #25392f0d;font-family:"Segoe UI","Malgun Gothic",sans-serif;font-size:14px;line-height:1.6;background:var(--paper);color:var(--ink)}
+*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #77a58a;outline-offset:3px}button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:8px 12px}button:hover:not(:disabled){background:var(--soft)}button.primary{background:var(--green);border-color:var(--green);color:#fff}button.primary:hover:not(:disabled){background:#244e39}button.quiet{background:transparent;border-color:transparent}h1,h2,h3,p{margin:0}h1{font-size:23px;font-weight:600;letter-spacing:-.8px}h2{font-size:17px;font-weight:600}h3{font-size:14px;font-weight:600}small,.muted{color:var(--muted);font-size:12px}.eyebrow{font-size:10px;letter-spacing:1.4px;font-weight:600;color:var(--muted)}.row{display:flex;align-items:center;gap:10px}.wrap{flex-wrap:wrap}.between{justify-content:space-between}.pill{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:3px 8px;border-radius:5px;font-size:11px;background:var(--soft);border:1px solid var(--line);line-height:1.5}.pill.good{color:var(--green);border-color:#c7dfce;background:var(--green-soft)}.pill.warn{color:var(--warn);border-color:#ead9b9;background:var(--warn-soft)}.pill.bad{color:var(--red);border-color:#efcabe;background:var(--red-soft)}.dot{width:6px;height:6px;border-radius:50%;background:#5b986a;display:inline-block;flex-shrink:0}[hidden]{display:none!important}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--line);padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-size:24px;font-weight:650;letter-spacing:-1.1px;display:flex;gap:10px;align-items:center}.brand-mark{width:30px;height:30px;background:var(--green);border-radius:9px;color:#fff;display:grid;place-items:center;font-size:20px}.topnav{display:flex;align-items:center;gap:9px}.topnav .active{background:var(--green-soft);color:var(--green);border-color:transparent}.avatar{width:30px;height:30px;border-radius:50%;background:#ede5db;color:#795e41;display:grid;place-items:center;font-size:11px;font-weight:600}.tripbar{padding:18px 28px;min-height:98px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--surface)}.tripbar h1{margin:2px 0 5px}.tagrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.clock{font-size:25px;font-weight:500;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1.2}.clockgroup{text-align:right}.watchbar{min-height:39px;background:#edf3ed;color:#46634d;padding:8px 28px;display:flex;gap:12px;align-items:center;justify-content:space-between;border-block:1px solid #dce7dd;font-size:12px}.watchbar .left{display:flex;align-items:center;gap:8px}.scene-caption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+.workspace{display:grid;grid-template-columns:minmax(300px,.93fr) minmax(340px,1.25fr) minmax(340px,1fr);background:var(--surface)}.pane{min-width:0;display:flex;flex-direction:column;overflow:hidden}.pane+.pane{border-left:1px solid var(--line)}.panehead{height:63px;flex-shrink:0;padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line)}.subtitle{font-size:11px;color:var(--muted)}.timeline{padding:16px 18px 24px;overflow:auto;flex:1;scrollbar-width:thin}.stop{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:var(--surface)}.stop.selected{border-color:#83a68d;box-shadow:0 0 0 1px #83a68d}.stop.current{border-left:3px solid var(--green)}.stop.past .stop-head{opacity:.7}.stop-head{display:grid;grid-template-columns:44px minmax(0,1fr) 13px;gap:10px;width:100%;text-align:left;padding:12px;border:0;background:transparent}.stop-head time{font-size:12px;font-variant-numeric:tabular-nums;padding-top:2px;color:var(--muted)}.stop-name{display:block;font-weight:600;font-size:13px}.stop-summary{display:block;font-size:11px;color:var(--muted);margin-top:3px}.stop-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.chevron{font-size:17px;color:var(--muted)}.stop-details{padding:12px;border-top:1px solid var(--line);font-size:12px;background:#fcfdfb;border-radius:0 0 8px 8px}.stop-details dl{margin:9px 0;display:grid;grid-template-columns:57px minmax(0,1fr);gap:6px 9px}.stop-details dt{color:var(--muted)}.stop-details dd{margin:0;overflow-wrap:anywhere}.before-text{text-decoration:line-through;color:#8a948d}.alt-list{display:grid;gap:6px;margin-top:8px}.alt-list button{font-size:11px;padding:6px 9px;text-align:left}.transit{border-style:dashed;background:var(--soft)}.transit .stop-head{padding:9px 12px}.trip-end{font-size:11px;color:var(--muted);text-align:center;padding-top:9px}
+.map-wrap{position:relative;flex:1;min-height:320px;overflow:hidden;background:#eef0eb}.map-canvas{position:absolute;inset:0;background:radial-gradient(ellipse at 24% 29%,#e5ebe1 0,transparent 43%),radial-gradient(ellipse at 80% 77%,#e4eae0 0,transparent 36%),#eff1ed}.map-heading{position:absolute;top:18px;left:20px;right:20px;text-align:center;pointer-events:none;color:#8b968c;z-index:1}.map-heading strong{display:block;font-size:17px;font-weight:500}.map-heading small{font-size:11px}.map-pins{position:absolute;inset:70px 26px 50px;transform:scale(var(--zoom,1));transform-origin:center;transition:transform .25s}.pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;border:0;background:transparent;padding:6px;white-space:nowrap;border-radius:6px}.pin-circle{width:30px;height:30px;display:grid;place-items:center;background:var(--surface);border:1px solid #afc0af;border-radius:50%;box-shadow:0 2px 7px #24392f17;font-size:12px;font-weight:600;flex-shrink:0}.pin-label{font-size:11px;background:#ffffffdf;border:1px solid #e0e6de;padding:2px 6px;border-radius:4px;color:#536b55;max-width:140px;white-space:normal;text-align:left}.pin.selected .pin-circle{background:var(--green);color:#fff;border-color:var(--green)}.pin.changed .pin-circle{border-color:#d8bc8e;background:var(--warn-soft);color:var(--warn)}.map-tools{position:absolute;right:15px;bottom:42px;display:grid;gap:4px;z-index:2}.map-tools button{width:34px;height:34px;padding:0;font-size:17px}.map-footer{padding:9px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.chat-log{padding:18px;overflow:auto;flex:1;scrollbar-width:thin}.chat-date{text-align:center;font-size:10px;color:#8c998e;margin:0 0 19px}.message{margin-bottom:15px;display:flex;gap:8px;align-items:flex-start}.message-icon{background:var(--green);color:#fff;border-radius:7px;width:24px;height:24px;display:grid;place-items:center;flex-shrink:0;font-size:13px}.bubble{padding:12px 13px;background:var(--soft);border:1px solid var(--line);border-radius:0 9px 9px 9px;font-size:13px;white-space:pre-line;overflow-wrap:anywhere}.message .meta{font-size:10px;color:var(--muted);margin:0 0 5px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}.message-body{min-width:0;max-width:100%}.message.user{justify-content:flex-end;padding-left:28px}.message.user .bubble{background:var(--green-soft);border-color:#d3e1d5;border-radius:9px 0 9px 9px}.message.user .meta{justify-content:flex-end}.message.system{display:block;margin:12px 0;text-align:center}.message.system .bubble{display:inline-block;background:transparent;border:0;color:var(--muted);font-size:11px;padding:3px}.case-line{font-size:10px;color:var(--muted);margin-top:5px}.typing{font-size:12px;color:var(--muted);padding:6px 0 12px 32px}.composer{padding:12px 16px;border-top:1px solid var(--line);background:var(--surface);flex-shrink:0}.quick-prompt{font-size:11px;padding:7px 9px;text-align:left;margin-bottom:9px;max-width:100%;color:var(--green);background:#f5f8f3}.chat-form{display:flex;gap:7px}.chat-form input{min-width:0;flex:1;border:1px solid var(--line);padding:9px 11px;border-radius:7px;background:var(--soft);color:var(--ink);font-size:12px}.composer-note{font-size:10px;color:#929e94;text-align:center;margin-top:6px}.mobile-tabs{display:none}
+.director{min-height:80px;border-top:1px solid #ccd7ce;background:#f9fbf8;padding:12px 24px;display:flex;align-items:center;gap:17px;justify-content:space-between}.director-label{font-size:10px;letter-spacing:1px;color:var(--muted)}.scene-info{font-size:13px;font-weight:600}.progress{height:3px;background:#dce5dc;width:100%;border-radius:5px;overflow:hidden;margin-top:7px}.progress span{height:100%;display:block;background:var(--green);transition:width .25s}.director-middle{min-width:160px;max-width:360px;flex:1;font-size:12px}.director-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.director button{font-size:12px;white-space:nowrap;padding:8px 10px}.filming .director{display:none}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#243b30;color:#fff;padding:10px 17px;border-radius:8px;font-size:12px;z-index:30;max-width:90vw;pointer-events:none}.modal-backdrop{position:fixed;inset:0;background:#13241ec2;display:grid;place-items:center;z-index:50;padding:24px}.modal{width:min(670px,100%);max-height:85dvh;overflow:auto;background:var(--surface);border-radius:14px;padding:25px}.modal h2{font-size:21px;margin:8px 0 14px}.modal p,.modal li{font-size:13px;margin:8px 0}.history-row{padding:12px 0;border-top:1px solid var(--line)}.notification-count{font-size:10px;color:var(--green);margin-left:5px}
+.trip-notice{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:60;width:min(480px,calc(100vw - 24px));display:flex;align-items:flex-start;gap:4px;padding:7px;border:1px solid #bcd3c3;border-top:3px solid var(--green);border-radius:12px;background:var(--surface);box-shadow:0 12px 40px #183b2a33}.notice-open{flex:1;min-width:0;text-align:left;padding:8px 10px;border:0;background:transparent}.notice-meta{font-size:11px;color:var(--muted)}.notice-title{display:block;font-size:14px;margin:5px 0 3px}.notice-preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:12px;color:var(--muted)}.notice-link{display:block;margin-top:7px;font-size:12px;font-weight:600;color:var(--green)}.notice-close{width:36px;height:36px;border:0;padding:0;font-size:21px;color:var(--muted);background:transparent}
+.lf-pin{width:30px;height:30px;display:grid;place-items:center;background:#fff;border:2px solid #5f8a6c;border-radius:50%;box-shadow:0 2px 7px #24392f40;font:600 12px "Segoe UI","Malgun Gothic",sans-serif;color:#24392f}.lf-pin.chg{background:#fbf3e4;border-color:#c79a4b;color:#916425}.lf-pin.sel{background:#2e6047;border-color:#2e6047;color:#fff;box-shadow:0 0 0 6px #2e604733}.leaflet-container{font:inherit}
+.off{position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;z-index:40;padding:24px}.off-card{max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center}.off-card p{margin:12px 0;color:var(--muted)}
+body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}.topbar,.tripbar,.watchbar,.director,.mobile-tabs{flex-shrink:0}.workspace{flex:1;min-height:0}
+@media(max-width:850px){.topbar{padding-inline:14px}.tripbar{padding:14px}.watchbar{padding:7px 14px}.scene-caption{display:none}.workspace{display:block}.pane{display:none;height:100%;border:0!important}.pane[data-active="true"]{display:flex}.mobile-tabs{display:flex;justify-content:center;background:var(--surface);border-block:1px solid var(--line);gap:8px;padding:7px}.mobile-tabs button{flex:1;max-width:200px;border:0;padding:8px}.mobile-tabs button[aria-pressed="true"]{background:var(--green-soft);color:var(--green)}.director{flex-wrap:wrap;padding:10px 12px}.topnav .desktop-only,.avatar{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">t</span>triPilot</div>
+  <nav class="topnav" aria-label="여행 메뉴">
+    <button class="active desktop-only" data-action="workspace">일정 · 채팅</button>
+    <button data-action="history">변경 기록<span id="historyCount" class="notification-count">0</span></button>
+    <button id="recordToggle" data-action="record">촬영 모드</button>
+    <button class="quiet" data-action="help" aria-label="안내">?</button>
+    <div class="avatar" id="partyAvatar">2인</div>
+  </nav>
+</header>
+<section class="tripbar" aria-label="여행 개요">
+  <div><div class="eyebrow">SEOUL · ONE DAY TOGETHER</div><h1 id="tripTitle">서울 하루</h1>
+    <div class="tagrow"><span class="pill good" id="partyPill">함께 · 2명</span><span class="pill">쇼핑 &amp; 식도락</span><span class="pill" id="localePill">언어 zh-TW</span><span class="pill warn">실제 구동 · 사건은 재생 입력</span></div></div>
+  <div class="clockgroup"><div id="clock" class="clock" role="timer">--:--</div><small>DAY 1 · 서울 시각 (시나리오 시계)</small></div>
+</section>
+<div class="watchbar"><div class="left"><span class="dot"></span><strong id="watchStatus">여행을 함께 살피고 있어요</strong><span id="watchTime"></span></div><div class="scene-caption" id="sceneCaption"></div><span class="pill" id="versionTop">일정 v1</span></div>
+<main class="workspace">
+  <section class="pane" data-panel="schedule" data-active="true" aria-label="오늘 일정">
+    <div class="panehead"><h2>오늘 일정</h2><span class="pill" id="version">일정 v1</span></div><div class="timeline" id="timeline"></div>
+  </section>
+  <section class="pane" data-panel="map" data-active="false" aria-label="지도">
+    <div class="panehead"><h2>지도</h2><span class="subtitle" id="mapScope"></span></div>
+    <div class="map-wrap"><div id="realMap" style="position:absolute;inset:0;z-index:0"></div><div id="pseudoMap" hidden><div class="map-canvas"></div><div class="map-heading"><strong>일정 장소</strong><small>지도를 불러오지 못해 좌표 약도로 보여요</small></div><div class="map-pins" id="mapPins"></div><div class="map-tools"><button data-action="zoomIn" aria-label="확대">+</button><button data-action="zoomOut" aria-label="축소">−</button><button data-action="zoomReset" aria-label="원래 크기">⌂</button></div></div></div>
+    <div class="map-footer" id="mapFooter">지도 © OpenStreetMap 기여자 · 핀은 장소의 실제 위도·경도 · 노란 핀은 바뀐 장소 · 점선은 오늘 동선</div>
+  </section>
+  <section class="pane" data-panel="chat" data-active="false" aria-label="여행 채팅">
+    <div class="panehead"><div class="row"><h2>여행 채팅</h2><span class="dot"></span></div><span class="subtitle">통지 · 신고 · 재요청이 모두 여기로</span></div>
+    <div class="chat-log" id="chatLog" aria-live="polite"></div>
+    <div class="composer"><button id="quickPrompt" class="quick-prompt" data-action="quick" hidden></button>
+      <form class="chat-form" id="chatForm"><label for="chatInput" hidden>메시지</label><input id="chatInput" autocomplete="off" placeholder="상황이나 변경 요청을 입력 (예: 70분 늦을 것 같아요)" maxlength="600" required><button class="primary" type="submit" id="sendBtn">전송</button></form>
+      <div class="composer-note">보낸 문장은 Gemma 4 가 분류·추출하고 Case 로 남아요</div></div>
+  </section>
+</main>
+<nav class="mobile-tabs"><button data-tab="schedule" aria-pressed="true">일정</button><button data-tab="map" aria-pressed="false">지도</button><button data-tab="chat" aria-pressed="false">채팅</button></nav>
+<aside class="director" aria-label="시연 제어">
+  <div><div class="director-label">SCENARIO MODE · 실제 구동</div><div class="scene-info" id="directorStatus"></div><small>→ 다음 장면 · F 촬영 모드 · Space 자동 진행</small></div>
+  <div class="director-middle"><div id="nextLabel" class="muted"></div><div class="progress"><span id="progressFill"></span></div></div>
+  <div class="director-actions"><button data-action="restart">처음부터</button><button id="autoBtn" data-action="auto">자동 진행</button><button id="nextBtn" class="primary" data-action="next">다음 장면 →</button></div>
+</aside>
+<div id="toast" class="toast" role="status" hidden></div>
+<aside id="tripNotice" class="trip-notice" role="status" hidden>
+  <button class="notice-open" data-action="openNotice"><span class="notice-meta" id="noticeMeta"></span><strong id="noticeTitle" class="notice-title"></strong><span id="noticePreview" class="notice-preview"></span><span class="notice-link">채팅 확인 →</span></button>
+  <button class="notice-close" data-action="closeNotice" aria-label="알림 닫기">×</button>
+</aside>
+<div id="modalRoot"></div>
+<div class="off" id="offScreen" hidden><div class="off-card"><div class="brand" style="justify-content:center"><span class="brand-mark">t</span>triPilot</div><p>시나리오 모드가 꺼져 있어요.<br>운영콘솔 <strong>Scenario</strong> 화면에서 켜거나, 여기서 바로 시작할 수 있어요.</p><div class="row" style="justify-content:center"><button class="primary" data-action="restart">시나리오 시작</button><a href="/ui/scenario" style="font-size:12px;color:var(--green)">운영콘솔 열기</a></div></div></div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const badge = (t, tone='') => `<span class="pill ${tone}">${esc(t)}</span>`;
+const state = {feed: null, busy: false, selected: null, expanded: null, zoom: 1, tab: 'schedule', auto: false, filming: false, seenChat: 0, notice: null};
+let autoTimer = null, toastTimer = null, noticeTimer = null;
+
+async function api(path, body) {
+  const init = body === undefined ? {} : {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)};
+  const r = await fetch(path, init);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+  return j;
+}
+function toast(t) { clearTimeout(toastTimer); $('#toast').textContent = t; $('#toast').hidden = false; toastTimer = setTimeout(() => $('#toast').hidden = true, 2800); }
+
+async function act(fn, pending) {
+  if (state.busy) return;
+  state.busy = true; renderChrome(); if (pending) renderChat(pending);
+  try { state.feed = await fn(); render(); announce(); }
+  catch (e) { toast('처리하지 못했어요: ' + e.message); }
+  finally { state.busy = false; renderChrome(); scheduleAuto(); }
+}
+const load = () => act(() => api('/scenario/feed'));
+const next = () => act(() => api('/scenario/next', {}));
+const restart = () => { state.seenChat = 0; act(() => api('/scenario/start', {})); };
+const send = text => { $('#chatInput').value = ''; act(() => api('/scenario/message', {message: text}), text); };
+const swap = (itemId, choice) => act(() => api('/scenario/alternate', {item_id: itemId, choice}));
+
+function announce() {
+  const chat = state.feed?.chat || [];
+  const fresh = chat.slice(state.seenChat).filter(m => m.role === 'assistant');
+  state.seenChat = chat.length;
+  const last = fresh.at(-1);
+  if (!last) return;
+  const kinds = {day_start: '하루 일정 안내', departure: '출발 안내', summary: '오늘의 변경 내역', answer: '답변', escalated: '상담원 인계'};
+  const title = kinds[last.kind] || (last.version ? `일정 변경 · 일정 v${last.version}` : '여행 알림');
+  $('#noticeMeta').textContent = `triPilot · ${last.time}`; $('#noticeTitle').textContent = title;
+  $('#noticePreview').textContent = last.text; $('#tripNotice').hidden = false;
+  clearTimeout(noticeTimer); noticeTimer = setTimeout(() => $('#tripNotice').hidden = true, 8000);
+}
+
+function stopTags(item) {
+  const t = [];
+  if (item.changed) t.push(badge('변경 반영', 'good'));
+  if (item.customer_pinned) t.push(badge('고객이 되돌림'));
+  if (item.other_options.length) t.push(badge(`다른 안 ${item.other_options.length}`));
+  if (item.current) t.push(badge('지금', 'warn'));
+  return t.join('');
+}
+function renderTimeline() {
+  const f = state.feed;
+  $('#timeline').innerHTML = f.items.map(item => {
+    const open = state.expanded === item.item_id, transit = item.kind === 'mobility';
+    const alts = item.other_options.map(o => `<button data-swap="${esc(item.item_id)}" data-choice="${esc(o.key)}">↺ ${esc(o.name)} 로 바꾸기</button>`).join('');
+    return `<article class="stop ${transit ? 'transit' : ''} ${state.selected === item.item_id ? 'selected' : ''} ${item.current ? 'current' : item.past ? 'past' : ''}">
+      <button class="stop-head" data-stop="${esc(item.item_id)}" aria-expanded="${open}"><time>${esc(item.starts_at)}</time><span><span class="stop-name">${esc(item.title)}</span><span class="stop-summary">${esc(item.starts_at)}–${esc(item.ends_at)}${item.place ? ' · ' + esc(item.place) : ''}</span><span class="stop-tags">${stopTags(item)}</span></span><span class="chevron">${open ? '−' : '+'}</span></button>
+      <section class="stop-details" ${open ? '' : 'hidden'}><h3>${transit ? '이동 상세' : '장소 상세'}</h3><dl><dt>${transit ? '구간' : '장소'}</dt><dd>${esc(item.title)}</dd><dt>시간</dt><dd>${esc(item.starts_at)}–${esc(item.ends_at)}</dd>${item.before ? `<dt>변경 전</dt><dd class="before-text">${esc(item.before)}</dd>` : ''}<dt>정보 기준</dt><dd>실제 계산 · 사건은 재생 입력</dd></dl>${alts ? `<div class="muted">마음에 안 들면 다른 안으로 바꿀 수 있어요</div><div class="alt-list">${alts}</div>` : ''}</section></article>`;
+  }).join('') + '<div class="trip-end">식료품 쇼핑 후 호텔 복귀</div>';
+}
+function renderMap() {
+  if (!window.L) { $('#realMap').hidden = true; $('#pseudoMap').hidden = false; $('#mapFooter').textContent = '지도 라이브러리를 불러오지 못해 좌표 약도로 보여요'; return renderPseudoMap(); }
+  const stops = state.feed.items.filter(i => i.latitude != null && i.kind !== 'mobility');
+  if (!state.map) {
+    state.map = L.map('realMap', {zoomControl: true, attributionControl: true});
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(state.map);
+    state.layer = L.layerGroup().addTo(state.map);
+    state.fitted = false;
+  }
+  state.layer.clearLayers();
+  const sel = state.feed.items.find(i => i.item_id === state.selected);
+  const seen = new Map();
+  stops.forEach(p => { if (!seen.has(p.place)) seen.set(p.place, {...p, n: seen.size + 1}); });
+  L.polyline(stops.map(p => [p.latitude, p.longitude]), {color: '#2e6047', weight: 3, opacity: .55, dashArray: '6 8'}).addTo(state.layer);
+  for (const p of seen.values()) {
+    const tone = sel && sel.place === p.place ? 'sel' : p.changed ? 'chg' : '';
+    const icon = L.divIcon({className: '', iconSize: [30, 30], iconAnchor: [15, 15],
+      html: `<div class="lf-pin ${tone}">${p.n}</div>`});
+    L.marker([p.latitude, p.longitude], {icon, title: p.place}).addTo(state.layer)
+      .bindTooltip(`${esc(p.starts_at)} ${esc(p.place)}${p.changed ? ' · 변경 반영' : ''}`, {direction: 'top', offset: [0, -14]})
+      .on('click', () => { state.selected = p.item_id; state.expanded = p.item_id; renderTimeline(); renderMap(); });
+  }
+  const pts = [...seen.values()].map(p => [p.latitude, p.longitude]);
+  if (pts.length && !state.fitted) { state.map.fitBounds(pts, {padding: [36, 36]}); state.fitted = true; }
+  if (sel && sel.latitude != null) state.map.panTo([sel.latitude, sel.longitude], {animate: true});
+  $('#mapScope').textContent = `서울 · 장소 ${seen.size}곳 · OpenStreetMap`;
+  setTimeout(() => state.map.invalidateSize(), 60);
+}
+function renderPseudoMap() {
+  const pts = state.feed.items.filter(i => i.latitude != null && i.kind !== 'mobility');
+  const uniq = [...new Map(pts.map(p => [p.place, p])).values()];
+  const lats = uniq.map(p => p.latitude), lons = uniq.map(p => p.longitude);
+  const [a, b, c, d] = [Math.min(...lats), Math.max(...lats), Math.min(...lons), Math.max(...lons)];
+  const sel = state.feed.items.find(i => i.item_id === state.selected);
+  $('#mapPins').style.setProperty('--zoom', state.zoom);
+  $('#mapPins').innerHTML = uniq.map((p, i) => {
+    const x = d > c ? (p.longitude - c) / (d - c) * 84 + 8 : 50, y = b > a ? (b - p.latitude) / (b - a) * 84 + 8 : 50;
+    return `<button class="pin ${sel && sel.place === p.place ? 'selected' : ''} ${p.changed ? 'changed' : ''}" style="--x:${x}%;--y:${y}%" data-stop="${esc(p.item_id)}"><span class="pin-circle">${i + 1}</span><span class="pin-label">${esc(p.place)}</span></button>`;
+  }).join('');
+  $('#mapScope').textContent = `서울 · 장소 ${uniq.length}곳`;
+}
+function messageHtml(m, i) {
+  if (m.role === 'system') return `<div class="message system"><span class="bubble">${esc(m.text)}</span></div>`;
+  const tags = [];
+  if (m.replay) tags.push(badge('재생 사건', 'warn'));
+  if (m.version) tags.push(badge(`일정 v${m.version}`, 'good'));
+  if (m.kind === 'escalated') tags.push(badge('상담원 인계', 'bad'));
+  const cls = m.classification ? `<div class="case-line">Case ${esc(m.case_status || '')} · ${esc(m.classification.intent || '')}/${esc(m.classification.issue_code || '')}${m.report ? ' · 추출 ' + esc(JSON.stringify(m.report)) : ''}</div>` : '';
+  const who = m.role === 'user' ? '나' : 'triPilot';
+  return `<div class="message ${m.role === 'user' ? 'user' : ''}" id="m-${i}" tabindex="-1">${m.role === 'assistant' ? '<div class="message-icon">t</div>' : ''}<div class="message-body"><div class="meta">${who} · ${esc(m.time)} ${tags.join('')}</div><div class="bubble">${esc(m.text)}</div>${cls}</div></div>`;
+}
+function renderChat(pendingUserText) {
+  const log = $('#chatLog');
+  let html = '<div class="chat-date">친구와 함께하는 서울 여행 · DAY 1</div>' + (state.feed?.chat || []).map(messageHtml).join('');
+  if (pendingUserText) html += messageHtml({role: 'user', text: pendingUserText, time: state.feed?.clock}, -1) + '<div class="typing">triPilot 이 일정을 확인하고 있어요 · Gemma 4 분류·추출 → 여행 창구…</div>';
+  log.innerHTML = html; log.scrollTop = log.scrollHeight;
+}
+function renderChrome() {
+  const f = state.feed;
+  // ★꺼진 판({active:false})에는 장면이 없다. 여기서 던지면 act() 가 busy 를 풀지 못해
+  //   꺼진 화면의 「시나리오 시작」이 영원히 안 눌렸다(2026-09-15, 녹화 중 발견).
+  if (!f || !f.active) return;
+  const scene = f.scenes[f.scene] || {}, nextScene = f.scenes[f.scene + 1];
+  $('#clock').textContent = f.clock; $('#tripTitle').textContent = f.title;
+  $('#partyPill').textContent = `친구와 함께 · ${f.party_size}명`; $('#partyAvatar').textContent = `${f.party_size}인`;
+  $('#localePill').textContent = `고객 언어 ${f.locale}`;
+  $('#version').textContent = $('#versionTop').textContent = `일정 v${f.version}`;
+  $('#historyCount').textContent = Math.max(0, f.version - 1);
+  $('#sceneCaption').textContent = `${scene.time || ''} ${scene.label || ''}${scene.code ? ' · ' + scene.code : ''}`;
+  $('#watchTime').textContent = `마지막 확인 ${f.clock}`;
+  $('#watchStatus').textContent = state.busy ? '에이전트가 일정을 확인하고 있어요' : f.awaiting_customer ? '채팅으로 상황을 알려주시면 바로 조정해요' : '여행을 함께 살피고 있어요';
+  $('#directorStatus').textContent = `${f.scene + 1} / ${f.scenes.length} · ${scene.label || ''}`;
+  $('#nextLabel').textContent = nextScene ? `다음: ${nextScene.time} ${nextScene.label}` : '하루 시연 완료';
+  $('#progressFill').style.width = `${(f.scene + 1) / f.scenes.length * 100}%`;
+  $('#nextBtn').disabled = state.busy || !nextScene; $('#sendBtn').disabled = state.busy;
+  $('#autoBtn').textContent = state.auto ? '일시정지' : '자동 진행';
+  const qp = $('#quickPrompt'); qp.hidden = !f.suggestion || state.busy; qp.textContent = f.suggestion || '';
+  document.body.classList.toggle('filming', state.filming);
+  $('#recordToggle').textContent = state.filming ? '촬영 모드 종료' : '촬영 모드';
+  for (const p of document.querySelectorAll('.pane')) p.dataset.active = String(p.dataset.panel === state.tab);
+  if (state.map) setTimeout(() => state.map.invalidateSize(), 60);   // ★칸이 다시 보이면 지도 크기를 다시 잰다
+  for (const t of document.querySelectorAll('[data-tab]')) t.setAttribute('aria-pressed', String(t.dataset.tab === state.tab));
+}
+function render() {
+  const f = state.feed;
+  $('#offScreen').hidden = Boolean(f && f.active);
+  if (!f || !f.active) return;
+  if (!state.selected || !f.items.some(i => i.item_id === state.selected)) state.selected = (f.items.find(i => i.current) || f.items[0]).item_id;
+  renderTimeline(); renderMap(); renderChat(); renderChrome();
+}
+function showModal(kind) {
+  const f = state.feed;
+  const body = kind === 'history'
+    ? `<div class="eyebrow">TRIP CHANGE HISTORY</div><h2>변경 기록</h2><p class="muted">일정 버전은 쌓이기만 해요(되돌림도 새 버전). 현재 v${f.version}</p>` + f.history.map(h => `<div class="history-row"><div class="row between">${badge('v' + h.version, 'good')}<span class="muted">${esc(h.reason)}</span></div><p>${esc(h.causes.join(' · ') || '—')}</p></div>`).join('')
+    : `<div class="eyebrow">SCENARIO MODE</div><h2>실제 구동 시연</h2><ol><li>장면을 넘기면 재생 시계가 그 시각으로 가고, <strong>감시 루프</strong>가 실제로 점검해 일정을 바꾸고 알려요(액-02 · 이동-B1 · 이동-A6).</li><li>고객 장면(요식-P3 · 요식-P7 · 액-08)은 채팅으로 상황을 보내면 <strong>Gemma 4</strong>가 분류·추출하고 <strong>Case</strong>가 열려 여행 창구가 처리해요.</li><li>바뀐 항목의 「다른 안」을 누르거나 “다른 안으로 바꿔줘”라고 보내면 <strong>재요청</strong>으로 교체돼요.</li></ol><p class="muted">사건(화재·통제·휴무·경보)은 사후에 정한 재생 입력이라 통지에 [재생]이 붙어요. 대안 선택·문구·버전·Case 는 실제 코드가 만든 것이에요.</p>`;
+  $('#modalRoot').innerHTML = `<div class="modal-backdrop" data-backdrop><section class="modal" role="dialog" aria-modal="true"><div class="row between"><span class="pill">triPilot</span><button data-action="closeModal">닫기 ×</button></div>${body}</section></div>`;
+}
+function scheduleAuto() {
+  clearTimeout(autoTimer);
+  if (!state.auto || state.busy || !state.feed?.active) return;
+  const f = state.feed;
+  if (f.awaiting_customer) autoTimer = setTimeout(() => send(f.suggestion), 2500);
+  else if (f.scene < f.scenes.length - 1) autoTimer = setTimeout(next, 4000);
+  else { state.auto = false; renderChrome(); toast('하루 시연을 마쳤어요.'); }
+}
+document.addEventListener('click', e => {
+  if (e.target.hasAttribute('data-backdrop')) { $('#modalRoot').innerHTML = ''; return; }
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.swap) { swap(b.dataset.swap, b.dataset.choice); return; }
+  if (b.dataset.stop) { const id = b.dataset.stop; state.expanded = state.selected === id && state.expanded === id ? null : id; state.selected = id; renderTimeline(); renderMap(); return; }
+  if (b.dataset.tab) { state.tab = b.dataset.tab; renderChrome(); return; }
+  const actions = {
+    next, restart, auto() { state.auto = !state.auto; renderChrome(); scheduleAuto(); },
+    quick() { send(state.feed.suggestion); }, history() { showModal('history'); }, help() { showModal('help'); },
+    closeModal() { $('#modalRoot').innerHTML = ''; }, workspace() { state.tab = 'schedule'; renderChrome(); },
+    record() { state.filming = !state.filming; renderChrome(); },
+    openNotice() { $('#tripNotice').hidden = true; state.tab = 'chat'; renderChrome(); $('#chatLog').scrollTop = $('#chatLog').scrollHeight; },
+    closeNotice() { $('#tripNotice').hidden = true; },
+    zoomIn() { state.zoom = Math.min(1.3, state.zoom + .1); renderMap(); }, zoomOut() { state.zoom = Math.max(.8, state.zoom - .1); renderMap(); }, zoomReset() { state.zoom = 1; renderMap(); }
+  };
+  if (actions[b.dataset.action]) actions[b.dataset.action]();
+});
+$('#chatForm').addEventListener('submit', e => { e.preventDefault(); const t = $('#chatInput').value.trim(); if (t) send(t); });
+document.addEventListener('keydown', e => {
+  if (['INPUT', 'TEXTAREA'].includes(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape') { $('#modalRoot').innerHTML = ''; $('#tripNotice').hidden = true; }
+  else if (e.key === 'ArrowRight' && !$('#nextBtn').disabled) { e.preventDefault(); next(); }
+  else if (e.key.toLowerCase() === 'f') { state.filming = !state.filming; renderChrome(); }
+  else if (e.code === 'Space' && e.target.tagName !== 'BUTTON') { e.preventDefault(); state.auto = !state.auto; renderChrome(); scheduleAuto(); }
+});
+load().then(() => { state.seenChat = state.feed?.chat?.length || 0; });
+</script>
+</body>
+</html>

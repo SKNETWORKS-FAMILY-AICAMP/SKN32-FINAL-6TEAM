@@ -16,6 +16,14 @@
   모자라면 **거부하고 「모름」으로 넘긴다** — 그편이 정직하다. 거부는
   `rate_limited` 로 **세어서** 남는다(조용한 스킵 금지, `CLAUDE.md` §3).
 
+★★**몰림은 받는다 — `burst`**(2026-09-14). 고정 간격만 두면 감시 루프 한 틱이 항목
+  여럿을 연달아 점검할 때 **둘째 항목부터 거부**된다(실측: 특보 8.5초·교통 86초·
+  대기질 168초 남음 → 「모름」 → 결정 15 의 치명). 그래서 토큰 버킷으로 바꿨다 —
+  `burst` 번까지는 바로 나가고, 빈 자리는 간격마다 하나씩 찬다.
+  하루 합계는 여전히 한도 안이다: `interval_for(한도, burst)` 가 간격을
+  `86400 / (한도 − (burst − 1))` 로 잡아 **burst + 하루 보충분 = 한도** 가 된다.
+  `burst=1` 이면 전과 똑같이 동작한다.
+
 ★프로세스 안에서만 센다. 여러 프로세스가 같은 키를 쓰면 합계가 한도를
   넘을 수 있다 — 그때는 중앙 카운터가 필요하고, 그건 아직 없다.
   **이 한계를 알고 쓴다.**
@@ -37,11 +45,16 @@ SECONDS_PER_DAY = 86_400
 DEFAULT_MAX_WAIT_SECONDS = 5.0
 
 
-def interval_for(calls_per_day: int | float) -> float:
-    """하루 한도 → 호출 사이 최소 간격(초). 0 이하면 제한 없음(0.0)."""
+def interval_for(calls_per_day: int | float, burst: int = 1) -> float:
+    """하루 한도 → 빈 자리가 하나 차는 간격(초). 0 이하면 제한 없음(0.0).
+
+    ★`burst` 만큼 처음에 몰려 나갈 수 있으니 그만큼 보충을 줄인다 — 그래야
+      몰림 + 하루 보충이 한도를 안 넘는다. `burst=1` 이면 `86400 / 한도` 그대로다.
+    """
     if not calls_per_day or calls_per_day <= 0:
         return 0.0
-    return SECONDS_PER_DAY / float(calls_per_day)
+    refills = max(1.0, float(calls_per_day) - (max(1, int(burst)) - 1))
+    return SECONDS_PER_DAY / refills
 
 
 class RateLimited(RuntimeError):
@@ -59,39 +72,47 @@ class RateLimited(RuntimeError):
 class RateLimiter:
     """소스 이름 → 마지막 호출 시각. 스레드 안전하다."""
 
-    #: 소스 이름 → 최소 간격(초)
+    #: 소스 이름 → 빈 자리가 하나 차는 간격(초)
     intervals: dict[str, float] = field(default_factory=dict)
     max_wait_seconds: float = DEFAULT_MAX_WAIT_SECONDS
+    #: 소스 이름 → 한 번에 몰려 나갈 수 있는 수. 없으면 1(고정 간격과 같다).
+    bursts: dict[str, int] = field(default_factory=dict)
     #: ★시험이 실제로 자지 않도록 시계와 잠을 주입한다.
     clock: Callable[[], float] = time.monotonic
     sleep: Callable[[float], None] = time.sleep
 
     _last: dict[str, float] = field(default_factory=dict, init=False)
+    _tokens: dict[str, float] = field(default_factory=dict, init=False)
     _lock: threading.Lock = field(default_factory=threading.Lock, init=False)
     #: 거부 횟수 — 세지 않으면 한도에 눌리고 있다는 걸 아무도 모른다.
     refusals: dict[str, int] = field(default_factory=dict, init=False)
 
     def acquire(self, source: str) -> None:
-        """호출 직전에 부른다. 간격이 찼으면 바로, 아니면 잠깐 기다리거나 거부."""
+        """호출 직전에 부른다. 빈 자리가 있으면 바로, 아니면 잠깐 기다리거나 거부."""
         interval = self.intervals.get(source, 0.0)
         if interval <= 0:
             return
+        burst = float(max(1, int(self.bursts.get(source, 1))))
 
         with self._lock:
             now = self.clock()
             last = self._last.get(source)
-            if last is not None:
-                remaining = interval - (now - last)
-                if remaining > 0:
-                    if remaining > self.max_wait_seconds:
-                        self.refusals[source] = self.refusals.get(source, 0) + 1
-                        logger.warning("rate limit refused: %s (%.1fs 남음)",
-                                       source, remaining)
-                        raise RateLimited(source, remaining)
-                    self.sleep(remaining)
-                    now = self.clock()
+            tokens = burst if last is None else min(
+                burst, self._tokens.get(source, 0.0) + (now - last) / interval)
+            if tokens < 1.0:
+                remaining = (1.0 - tokens) * interval
+                if remaining > self.max_wait_seconds:
+                    # ★거부는 상태를 바꾸지 않는다 — 나가지 않은 호출이다.
+                    self.refusals[source] = self.refusals.get(source, 0) + 1
+                    logger.warning("rate limit refused: %s (%.1fs 남음)",
+                                   source, remaining)
+                    raise RateLimited(source, remaining)
+                self.sleep(remaining)
+                now = self.clock()
+                tokens = 1.0
             # ★기다린 뒤의 시각으로 찍는다. 기다리기 전 시각으로 찍으면
             #   간격이 조금씩 짧아져 결국 한도를 넘는다.
+            self._tokens[source] = tokens - 1.0
             self._last[source] = now
 
     def snapshot(self) -> dict[str, dict[str, float]]:
@@ -100,7 +121,9 @@ class RateLimiter:
             return {
                 name: {
                     "interval_seconds": round(interval, 2),
-                    "calls_per_day": (round(SECONDS_PER_DAY / interval, 1)
+                    "burst": max(1, int(self.bursts.get(name, 1))),
+                    "calls_per_day": (round(SECONDS_PER_DAY / interval
+                                            + max(1, int(self.bursts.get(name, 1))) - 1, 1)
                                       if interval > 0 else 0),
                     "refusals": self.refusals.get(name, 0),
                 }
