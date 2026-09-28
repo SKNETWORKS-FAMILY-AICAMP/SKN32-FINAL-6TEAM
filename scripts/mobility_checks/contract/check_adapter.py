@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """어댑터 점검 — 계약 객체 없이, 가짜 판정기로 돈다.
 
-  python tests/mobility/contract/check_adapter.py
+  python scripts/mobility_checks/contract/check_adapter.py
 
 ★ 경로를 박지 않는다. 이 파일 위치에서 저장소 뿌리를 거슬러 올라가 final_project_cs/app/modules/travel_ops/mobility_engine 를 찾는다.
   (2026-09-14: 컨테이너 절대경로가 박혀 있어 노트북에서 FileNotFoundError 가 났다.)

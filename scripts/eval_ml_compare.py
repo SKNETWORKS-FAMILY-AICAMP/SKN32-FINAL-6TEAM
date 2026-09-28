@@ -17,7 +17,7 @@
 같은 구간이 학습·시험에 같이 들어가면 외우기 시험이 된다.
 
 사용:
-  python scripts/eval_ml_compare.py --seeds "tests/mobility/*.json" --step 30 --reg "tests/mobility/*.json"
+  python scripts/eval_ml_compare.py --seeds "final_project_cs/tests/unit/travel/mobility/*.json" --step 30 --reg "final_project_cs/tests/unit/travel/mobility/*.json"
   (결과는 $DATA_DIR/travel/processed/mobility/ml_compare/ 에 쓴다)
 """
 import argparse, collections, json, math, sys, time, pickle

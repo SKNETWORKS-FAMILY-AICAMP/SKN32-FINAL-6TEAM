@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """택시 요금 산식 · 요일형 — modules/mobility/car.py 단위 검사 (21번 방 · 2026-09-20).
 
-  python tests/mobility/test_car_fare.py
+  python final_project_cs/tests/unit/travel/mobility/test_car_fare.py
 
 ① 규칙 파일 taxi.fare.검산_예시 8건을 car.taxi_fare 로 다시 낸다 — scripts/rules_check.py 의 사본과 같은 답이어야 한다
    (두 구현이 갈리면 여기서 난다).
@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO / "final_project_cs"))
 from app.modules.travel_ops.mobility_engine.car import (taxi_fare, taxi_rate,  # noqa: E402
                                                         daytype_kr, CarService)
@@ -76,4 +76,13 @@ chk("서울역 밖", not svc.in_airport_box((126.9707, 37.5547)))
 chk("김포공항 밖", not svc.in_airport_box((126.8010, 37.5586)))
 
 print(f"\n통과 {ok} · 실패 {fail}")
-sys.exit(1 if fail else 0)
+if __name__ == "__main__":
+    sys.exit(1 if fail else 0)
+
+
+def test_every_check_passes():
+    """pytest 입구 (2026-09-28) — 위 검사는 이 파일을 불러올 때 이미 돈다. 실패가 0 이어야 한다.
+
+    자세한 줄별 결과는 `python final_project_cs/tests/unit/travel/mobility/test_car_fare.py` 로 본다.
+    """
+    assert fail == 0, f"실패 {fail}"

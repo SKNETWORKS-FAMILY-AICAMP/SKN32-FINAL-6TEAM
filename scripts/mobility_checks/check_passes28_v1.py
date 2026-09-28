@@ -6,7 +6,7 @@
 신길온천 시간표 0행) 때문에 「남태령을 지난다」도 못 믿었다 → 오이도행 전부 버림.
 잠그는 것: ① 목적지 너머 근거없음은 무시 ② 목적지 앞에 근거없음이 끼면 여전히 근거없음(None) ③ 지나지 않는 것은 False.
 
-  python tests/mobility/test_passes28_v1.py      (저장소 루트 · PYTHONPATH=final_project_cs)
+  python scripts/mobility_checks/check_passes28_v1.py      (저장소 루트 · PYTHONPATH=final_project_cs)
 """
 import sys
 from pathlib import Path

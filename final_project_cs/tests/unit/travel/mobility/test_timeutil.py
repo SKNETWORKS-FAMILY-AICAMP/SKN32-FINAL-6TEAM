@@ -1,11 +1,11 @@
-# tests/mobility/test_timeutil.py — 시각 자(尺) 단위테스트
-# 실행: 저장소 루트에서  python tests/mobility/test_timeutil.py
+# final_project_cs/tests/unit/travel/mobility/test_timeutil.py — 시각 자(尺) 단위테스트
+# 실행: 저장소 루트에서  python final_project_cs/tests/unit/travel/mobility/test_timeutil.py
 # 실패하면 종료코드 1. 여기서 막히면 판정기 전체가 틀린다.
 import sys
 from pathlib import Path
 from datetime import date
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "final_project_cs"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "final_project_cs"))
 from app.modules.travel_ops.mobility_engine.timeutil import (to_min, to_service_min, fmt_min, fmt_wall,
                                        normalize_raw, day_type_of, is_next_day)
 
@@ -69,4 +69,13 @@ bad = [c for c in CASES if not c[0]]
 for ok, note, got, want in CASES:
     print(("  OK  " if ok else "  FAIL") + f" {note}" + ("" if ok else f"  → {got!r} (기대 {want!r})"))
 print(f"\n{len(CASES) - len(bad)}/{len(CASES)} 통과")
-sys.exit(1 if bad else 0)
+if __name__ == "__main__":
+    sys.exit(1 if bad else 0)
+
+
+def test_every_check_passes():
+    """pytest 입구 (2026-09-28) — 위 검사는 이 파일을 불러올 때 이미 돈다. 실패가 0 이어야 한다.
+
+    자세한 줄별 결과는 `python final_project_cs/tests/unit/travel/mobility/test_timeutil.py` 로 본다.
+    """
+    assert not bad, f"실패 {bad}"

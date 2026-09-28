@@ -16,7 +16,7 @@
   3단 등급(확정/추정/근거없음)만 쓴다 — 「추정(약함)」은 등급이 아니라 경고로 드러낸다(스키마 grade enum 3종).
 
 택시 요금 — rules taxi.fare 산식 그대로(15번 방). scripts/rules_check.py 의 taxi_fare 와 같은 식이고
-  규칙 파일의 검산_예시 8건이 둘의 공통 정답이다(tests/mobility/car_legs_v1.json 이 이 모듈로 다시 검산한다).
+  규칙 파일의 검산_예시 8건이 둘의 공통 정답이다(final_project_cs/tests/unit/travel/mobility/car_legs_v1.json 이 이 모듈로 다시 검산한다).
   병산: 프로파일 속도가 전환속도(15.72 km/h) 미만인 edge 는 시간요금(slow_s), 이상인 edge 는 거리요금(distance_m − slow_m).
   정차·신호 대기·호출료는 없다 → 요금은 **하한**.
   시계외 할증은 서울 경계 폴리곤이 없어 판정하지 않는다(out_of_city=None → 미적용, 하한 방향).

@@ -5,8 +5,8 @@
 # 판정 코드는 한 줄도 건드리지 않는다 — 회귀 85건이 그대로 유효하다.
 #
 # 쓰는 법 (경로 인자는 verify_time.py 와 같다):
-#   python scripts/demo_render.py --cases tests/mobility/issue_legs_v1.json --out demo.html
-#   python scripts/demo_render.py --cases tests/mobility/issue_legs_v1.json --only ISSUE-01,ISSUE-02,ISSUE-03 --out demo.html
+#   python scripts/demo_render.py --cases final_project_cs/tests/unit/travel/mobility/issue_legs_v1.json --out demo.html
+#   python scripts/demo_render.py --cases final_project_cs/tests/unit/travel/mobility/issue_legs_v1.json --only ISSUE-01,ISSUE-02,ISSUE-03 --out demo.html
 #
 # 경로를 안 주면 verify_time.py 가 .env 의 DATA_DIR 을 쓴다.
 # ★ Windows: 자식 출력을 파이프로 받으므로 PYTHONIOENCODING=utf-8 을 넣어 준다 — 없으면 cp949 로 죽는다.

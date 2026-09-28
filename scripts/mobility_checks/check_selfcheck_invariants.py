@@ -14,7 +14,7 @@ selfcheck_mobility.py 는 "이상이 0건"을 자주 낸다. 그게 정말 깨�
   ⑦ 특정 역 판단불가 편중           → INV-UNKNOWN
   ⑧ 정상 데이터 → 아무것도 울지 않아야 한다 (오탐 확인)
 
-실행: python tests/mobility/test_selfcheck_invariants.py
+실행: python scripts/mobility_checks/check_selfcheck_invariants.py
 """
 import sys, types
 from pathlib import Path

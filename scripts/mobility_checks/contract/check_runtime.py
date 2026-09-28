@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """전 구간 점검 — 실제 데이터로 어댑터를 끝까지 돌린다.
 
-  python tests/mobility/contract/check_runtime.py
+  python scripts/mobility_checks/contract/check_runtime.py
 
 check_adapter.py 는 **가짜 판정기**로 분기를 본다. 이 파일은 **진짜 시간표 46만 행**을 올려
 TeamTask 모양 → 판정 → 접기까지 한 번에 돈다. 약 33초 걸린다(전부 상주).

@@ -1,11 +1,11 @@
-# tests/mobility/test_bus_window_norm.py — 45번 방 · 버스 운행 구간 정규화(normalize_window) 단위 시험
-# 실행: python tests/mobility/test_bus_window_norm.py      (pytest 로도 돈다)
+# final_project_cs/tests/unit/travel/mobility/test_bus_window_norm.py — 45번 방 · 버스 운행 구간 정규화(normalize_window) 단위 시험
+# 실행: python final_project_cs/tests/unit/travel/mobility/test_bus_window_norm.py      (pytest 로도 돈다)
 # 판정 회귀(night_legs_v1.json)가 못 보는 것을 잠근다 — A21 보정 결과 자체(판정은 service_days=None 에서 먼저 끊긴다),
 # 혼합 캐시 중단, 24시 넘은 역전, 기준일보다 이른 날짜.
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts" / "collect"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "scripts" / "collect"))
 from build_bus_all_v1 import normalize_window  # noqa: E402
 
 B = "20260910"
