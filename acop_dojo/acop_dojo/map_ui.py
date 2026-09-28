@@ -92,7 +92,7 @@ def render(target: Path, trace: dict | None, progress: dict, track: Any = None,
 PAGE = r'''<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>A-COP 학습 지도</title>
+<title>triPilot 학습 지도</title>
 <style>
 :root{color-scheme:light;--bg:#f4f5f2;--paper:#fff;--ink:#20332f;--mut:#596963;--line:#dce3dd;--accent:#116652;--soft:#e9f3ed;--amber:#a95216}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif}
@@ -106,7 +106,7 @@ nav{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:24px}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style></head><body>
 <a class="skip" href="#main">내용으로 이동</a>
-<div class="shell"><header class="top"><div class="brand"><span class="mark" aria-hidden="true">⌘</span><h1>A-COP 학습 지도</h1></div><div class="stamp">생성 시점의 기록<br><span id="generated"></span></div></header>
+<div class="shell"><header class="top"><div class="brand"><span class="mark" aria-hidden="true">⌘</span><h1>triPilot 학습 지도</h1></div><div class="stamp">생성 시점의 기록<br><span id="generated"></span></div></header>
 <nav aria-label="학습 화면"><button data-view="map" aria-pressed="true">실행 지도</button><button data-view="build" aria-pressed="false">처음부터 쌓기</button><button data-view="records" aria-pressed="false">진행 기록</button></nav>
 <main id="main"><section id="view-map" aria-label="실행 지도">
 <div class="card"><div class="controls"><label>학습 트랙<select id="track"></select></label><label>시나리오<select id="scenario"></select></label></div><div class="context"><span id="scenario-id" class="mono"></span><span id="trace-status" class="tag"></span></div><p id="objective" class="muted"></p></div>

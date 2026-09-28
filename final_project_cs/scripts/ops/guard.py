@@ -180,10 +180,10 @@ def send_alert(job: str, kind: str, *, streak: int, detail: str = "") -> str:
     if not url:
         return "보낼 곳이 없다(ACOP_DISCORD_WEBHOOK_URL 이 비어 있다) — 알리지 않았다"
     if kind == "failing":
-        text = (f"[A-COP 운영] **{job}** 가 {streak}회 연속 실패했습니다.\n"
+        text = (f"[triPilot 운영] **{job}** 가 {streak}회 연속 실패했습니다.\n"
                 f"{detail[:300]}\n확인: `python -m scripts.ops.healthcheck`")
     else:
-        text = f"[A-COP 운영] **{job}** 가 다시 정상으로 돌아왔습니다."
+        text = f"[triPilot 운영] **{job}** 가 다시 정상으로 돌아왔습니다."
     try:
         import httpx
 

@@ -1,10 +1,12 @@
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import composition
 from app.application.runtime import ControllerProxy, RuntimeComposition
 from app.core.project_config import config_revision
+from app.core.settings import get_settings
 from app.presentation.api.cases import build_router
 from app.presentation.api.outbox import build_router as build_outbox_router
 from app.presentation.api.introspection import router as introspection_router
@@ -36,7 +38,13 @@ def create_app(controller=None, classifier=None, *,
         active_config = composition.load_project_config()
         built_revision = config_revision(active_config)
         controller = composition.build_controller(config=active_config)
-    app = FastAPI(title="A-COP S-API")
+    app = FastAPI(title="triPilot S-API")
+    # ★`[2026-09-24]` 웹(`frontend/apps/web`)이 다른 출처(포트 3100)에서 부른다(D-020). 허용하는 헤더는
+    #   사용자 식별 키(`X-User-Key`)와 Content-Type 뿐 — 서버용 `Authorization` 은 브라우저에서 받지 않는다.
+    origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]
+    if origins:
+        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"],
+                           allow_headers=["X-User-Key", "Content-Type"], allow_credentials=False)
     runtime = RuntimeComposition(controller, built_revision)
     app.state.runtime = runtime
     # ★router 는 프록시를 붙잡는다 — reload 로 갈아 끼워도 옛 Controller 를

@@ -12,6 +12,7 @@ import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
 import { tripKey } from "@/features/trip/use-trip";
 import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
+import { submitIntake } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./trip-registration.module.css";
@@ -41,6 +42,8 @@ export function TripRegistration() {
   const [scenario, setScenario] = useState<DemoScenario>("success");
   const [validation, setValidation] = useState("");
   const [draftWarning, setDraftWarning] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const live = DATA_MODE === "live";
   const draft = useQuery({
     queryKey: ["registration-draft", from],
     queryFn: async () => {
@@ -60,6 +63,12 @@ export function TripRegistration() {
       router.push(routes.verification(trip.id));
     },
   });
+  // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
+  const intake = useMutation({
+    mutationFn: () => submitIntake(value, files, language),
+    onSuccess: (result) => router.push(routes.intake(result.intake_id)),
+  });
+  const pending = create.isPending || intake.isPending;
 
   function updateSource(next: string) {
     setSource({ origin: from, value: next });
@@ -67,20 +76,21 @@ export function TripRegistration() {
     if (from) queryClient.setQueryData(["registration-draft", null], next);
     setValidation("");
     create.reset();
+    intake.reset();
     try { sessionStorage.setItem(draftKey, next); setDraftWarning(""); }
     catch { setDraftWarning(t("임시 저장을 사용할 수 없어요. 이 화면을 닫으면 입력 내용이 사라질 수 있어요.", "Drafts cannot be saved here. Closing this page may lose your input.")); }
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (create.isPending) return;
-    if (!value.trim()) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
+    if (pending) return;
+    if (!value.trim() && !(live && files.length)) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
     setValidation("");
-    create.mutate();
+    if (live) intake.mutate(); else create.mutate();
   }
 
   if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
-  const error = validation || create.error?.message;
+  const error = validation || create.error?.message || intake.error?.message;
   const demo = DATA_MODE === "demo";
 
   return <>
@@ -91,11 +101,17 @@ export function TripRegistration() {
         <Panel className={styles.editor}>
           <div className={styles.labelRow}>
             <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-            {demo && <Button variant="quiet" className={styles.sample} onClick={() => updateSource(SAMPLE_PLANS[language])} disabled={create.isPending}>{t("예시 불러오기", "Load example")}</Button>}
+            {demo && <Button variant="quiet" className={styles.sample} onClick={() => updateSource(SAMPLE_PLANS[language])} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>}
           </div>
-          <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={create.isPending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
+          <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
             placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
           <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
+          {live && <div className={styles.files}>
+            <label htmlFor="plan-files">{t("사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)", "You can also upload a photo, PDF, Word or Excel plan (up to 5 files, 10MB each)")}</label>
+            <input id="plan-files" type="file" multiple accept="image/*,.pdf,.docx,.xlsx,.txt" disabled={pending}
+              onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
+            {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
+          </div>}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </Panel>
@@ -112,7 +128,7 @@ export function TripRegistration() {
           {demo && <details className={styles.demoOptions}>
             <summary>{t("데모 체험 옵션", "Preview options")}</summary>
             <label htmlFor="demo-scenario">{t("검증 결과 시나리오", "Verification scenario")}</label>
-            <select id="demo-scenario" value={scenario} disabled={create.isPending} onChange={(event) => setScenario(event.target.value as DemoScenario)}>
+            <select id="demo-scenario" value={scenario} disabled={pending} onChange={(event) => setScenario(event.target.value as DemoScenario)}>
               <option value="success">{t("검증 완료", "Completed")}</option>
               <option value="needs-review">{t("확인이 필요한 항목", "Items needing review")}</option>
               <option value="failed">{t("검증 중단 후 재시도", "Failure and retry")}</option>
@@ -124,7 +140,7 @@ export function TripRegistration() {
       <div className={styles.actions}>
         <ButtonLink href={routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("홈으로", "Home")}</ButtonLink>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
-        <Button variant="primary" type="submit" disabled={create.isPending}>{create.isPending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
+        <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>
     </form>
   </>;

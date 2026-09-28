@@ -238,7 +238,7 @@ font_run(r, size=24, bold=True)
 
 p = doc.add_paragraph()
 p.paragraph_format.space_after = Pt(12)
-r = p.add_run("서비스별 기능과 공식 근거 링크를 정리하고 triPilot A-COP의 차별점을 실무 관점에서 압축한 자료입니다. 조사 기준일은 2026년 9월 11일입니다.")
+r = p.add_run("서비스별 기능과 공식 근거 링크를 정리하고 triPilot triPilot의 차별점을 실무 관점에서 압축한 자료입니다. 조사 기준일은 2026년 9월 11일입니다.")
 font_run(r, size=10)
 
 add_heading(doc, "핵심 차별점 세 가지", 1)

@@ -382,9 +382,11 @@ def build_travel_sources(settings: Any) -> TravelSources:
     burst = max(1, int(guardrails.get("travel.rate_burst") or 1))
     limits = (settings.source_rate_limits()
               if hasattr(settings, "source_rate_limits") else {})
+    by_source = guardrails.get("travel.rate_burst_by_source") or {}
+    bursts = {name: max(1, int(by_source.get(name) or burst)) for name in limits}
     limiter = RateLimiter(
-        intervals={name: interval_for(per_day, burst=burst) for name, per_day in limits.items()},
-        bursts={name: burst for name in limits},
+        intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
+        bursts=bursts,
         max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
     cache = ResponseCache(ttl_seconds=float(guardrails.get("travel.source_cache_seconds") or 0))
 

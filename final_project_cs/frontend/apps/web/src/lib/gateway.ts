@@ -1,5 +1,6 @@
 import type { TripGateway } from "../features/trip/model";
 import { createDemoGateway } from "./demo";
+import { createLiveGateway } from "./live/gateway";
 import { GatewayError } from "./demo/errors";
 import { DATA_MODE } from "./data-mode";
 import { translator, type Language } from "./i18n";
@@ -24,5 +25,6 @@ const unavailableGateway: TripGateway = {
   sendMessage: (_tripId, _message, language) => unavailable(language),
 };
 
-export const tripGateway: TripGateway = DATA_MODE === "demo" ? createDemoGateway() : unavailableGateway;
+// `live` talks to the triPilot server (`NEXT_PUBLIC_API_BASE`, `/v1/web/*`) with a per-user key.
+export const tripGateway: TripGateway = DATA_MODE === "demo" ? createDemoGateway() : DATA_MODE === "live" ? createLiveGateway() : unavailableGateway;
 export const tripKey = (tripId: string, language: Language) => ["trip", tripId, language] as const;

@@ -101,15 +101,17 @@ class Sandbox:
         if reverse:
             args.append("-R")
         args.append(str(patch.resolve()))
-        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True, check=False)
-        return proc.returncode == 0, (proc.stderr or proc.stdout).strip()
+        proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", check=False)
+        return proc.returncode == 0, (proc.stderr or proc.stdout or "").strip()
 
     def check(self, patch: Path) -> tuple[bool, str]:
         proc = subprocess.run(
             ["git", "-c", "core.autocrlf=false", "apply", "-p1", "--unsafe-paths",
              "--check", str(patch.resolve())],
-            cwd=self.root, capture_output=True, text=True, check=False)
-        return proc.returncode == 0, (proc.stderr or proc.stdout).strip()
+            cwd=self.root, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            check=False)
+        return proc.returncode == 0, (proc.stderr or proc.stdout or "").strip()
 
     def pytest(self, selection: list[str] | None = None, *, timeout: int = 900) -> RunResult:
         # ★-rfE — 실패(F)와 오류(E)를 둘 다 요약에 올린다. 예전엔 -rf 라 fixture·setup 오류가
@@ -119,7 +121,7 @@ class Sandbox:
         args.extend(selection or [])
         try:
             proc = subprocess.run(args, cwd=self.root, capture_output=True, text=True,
-                                  timeout=timeout, check=False)
+                                  encoding="utf-8", errors="replace", timeout=timeout, check=False)
         except subprocess.TimeoutExpired:
             # ★시간 초과를 예외로 터뜨리면 게이트가 통째로 죽는다(2026-09-21 cs 기준선에서 실제로 죽었다).
             #   결과로 말한다. 무엇을 돌리다 멈췄는지는 selection 이 들고 있다.
