@@ -26,7 +26,7 @@
 자정 넘김 미정규화는 INV-MIDNIGHT·INV-MONO, 행선지 필드 역전은 INV-SYM.
 
 사용:
-  python mobility_scripts/selfcheck_mobility.py --seeds tests/mobility/real_legs_v1.json \\
+  python mobility_scripts/selfcheck_mobility.py --seeds final_project_cs/tests/unit/travel/mobility/real_legs_v1.json \\
       --timetable <...> --order <...> --transfer-walk <...> \\
       --bus-route <...> --bus-stops <...> --station-coords <...> \\
       --step 30 --out selfcheck_report.md --json selfcheck.json
@@ -93,7 +93,7 @@ def pick_dates(holidays, base):
 
 
 def expand_seeds(paths):
-    """`tests/mobility/*.json` 같은 와일드카드를 직접 편다.
+    """`final_project_cs/tests/unit/travel/mobility/*.json` 같은 와일드카드를 직접 편다.
 
     PowerShell 은 인자의 `*` 를 확장해 주지 않는다(bash 와 다른 점이다).
     쉘에 맡기면 Windows 에서만 OSError 22 로 죽는다.

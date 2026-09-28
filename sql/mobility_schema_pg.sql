@@ -377,7 +377,7 @@ CREATE TABLE IF NOT EXISTS mobility.mob_verdict_evidence (
 --    단독 PK 로 두면 두 번째 Case 의 적재가 PK 충돌로 터진다. evidence_id 는 한 결과(TeamResult) 안에서만
 --    유일하면 되고, 길게 만들면 answer·evidence 예산에 불리하다.
 --    ※ SQLite 판에서는 패치(mobility_evidence_pk_patch_20260913.sql)로 고쳤다. 이 이식본은 처음부터 복합키다.
---  ★ value_json 은 tests/mobility/contract/mob_evidence_value_v1.schema.json 로 검증한 뒤 적재한다.
+--  ★ value_json 은 mobility_scripts/mobility_checks/contract/mob_evidence_value_v1.schema.json 로 검증한 뒤 적재한다.
 --    저장하는 kind 는 timetable·rule·walk·bus·issue·prev_verdict 여섯. verdict·run·alt 는 저장하지 않고
 --    mob_leg_verdict 행에서 접을 때 생성한다(접기 설계 v1 §15).
 --    ※ PG 에는 JSON Schema 제약이 없다. 검증은 적재기가 계속 한다 — jsonb 로 바뀌었다고 검증이 생기지 않는다.

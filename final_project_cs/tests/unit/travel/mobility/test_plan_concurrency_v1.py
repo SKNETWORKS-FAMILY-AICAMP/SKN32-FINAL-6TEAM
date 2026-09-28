@@ -1,8 +1,8 @@
-# tests/mobility/test_plan_concurrency_v1.py — 56번 방 · 판정기 동시성(①) + 자전거 호출 끊기(②) 회귀
+# final_project_cs/tests/unit/travel/mobility/test_plan_concurrency_v1.py — 56번 방 · 판정기 동시성(①) + 자전거 호출 끊기(②) 회귀
 # 실행: 저장소 루트에서
 #   $env:PYTHONPATH = "final_project_cs"
-#   python tests/mobility/test_plan_concurrency_v1.py      # 단위 + (시간표가 있으면) 데이터 축
-#   python -m pytest tests/mobility/test_plan_concurrency_v1.py
+#   python final_project_cs/tests/unit/travel/mobility/test_plan_concurrency_v1.py      # 단위 + (시간표가 있으면) 데이터 축
+#   python -m pytest tests/unit/travel/mobility/test_plan_concurrency_v1.py
 # 실패하면 종료코드 1.
 #
 # 축
@@ -33,7 +33,7 @@ from pathlib import Path
 from types import SimpleNamespace as NS
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[1] / "final_project_cs"))
+sys.path.insert(0, str(HERE.parents[3]))
 
 from app.modules.travel_ops.mobility_engine import plan as plan_mod  # noqa: E402
 from app.modules.travel_ops.mobility_engine import judgment_log as jl  # noqa: E402

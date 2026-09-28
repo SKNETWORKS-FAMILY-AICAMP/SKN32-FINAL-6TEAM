@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS mob_verdict_evidence (
 --  ★ PK 가 복합키인 이유(2026-09-13). evidence_id 'mob:L3:timetable:1' 은 **Case 가 달라도 같은 문자열**이다.
 --    단독 PK 로 두면 두 번째 Case 의 적재가 PK 충돌로 터진다. evidence_id 는 한 결과(TeamResult) 안에서만
 --    유일하면 되고(계약 검증기가 보는 범위가 그것이다), 길게 만들면 answer·evidence 예산에 불리하다.
---  ★ value_json 은 tests/mobility/contract/mob_evidence_value_v1.schema.json 로 검증한 뒤 적재한다.
+--  ★ value_json 은 mobility_scripts/mobility_checks/contract/mob_evidence_value_v1.schema.json 로 검증한 뒤 적재한다.
 --    저장하는 kind 는 timetable·rule·walk·bus·issue·prev_verdict 여섯. verdict·run·alt 는 저장하지 않고
 --    mob_leg_verdict 행에서 접을 때 생성한다(접기 설계 v1 §15).
 --  ★★ source_type 의 CHECK 가 이 스키마에서 가장 중요한 한 줄이다.

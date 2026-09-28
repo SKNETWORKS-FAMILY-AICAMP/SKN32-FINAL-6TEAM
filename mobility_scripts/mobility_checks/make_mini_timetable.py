@@ -1,6 +1,6 @@
-# tests/mobility/make_mini_timetable.py — 축소 시간표 생성 (판정 로직 확인용)
-# 실행: 저장소 루트에서  python tests/mobility/make_mini_timetable.py
-# 출력: tests/mobility/mini_timetable_v2.jsonl  (timetable_v1.jsonl 과 같은 스키마)
+# mobility_scripts/mobility_checks/make_mini_timetable.py — 축소 시간표 생성 (판정 로직 확인용)
+# 실행: 저장소 루트에서  python mobility_scripts/mobility_checks/make_mini_timetable.py
+# 출력: final_project_cs/tests/unit/travel/mobility/mini_timetable_v2.jsonl  (timetable_v1.jsonl 과 같은 스키마)
 #
 # ★★ 여기 시각은 가짜다. 실제 운행 시각이 아니다. 실제 판정은 반드시 processed 의
 #    timetable_v1.jsonl 로 다시 돌린다.
@@ -25,7 +25,7 @@ sys.path.insert(0, str(REPO / "final_project_cs"))
 from app.modules.travel_ops.mobility_engine.line_order import LineOrder  # noqa: E402
 from app.modules.travel_ops.mobility_engine.timeutil import fmt_min      # noqa: E402
 
-OUT = Path(__file__).resolve().parent / "mini_timetable_v2.jsonl"
+OUT = REPO / "final_project_cs" / "tests" / "unit" / "travel" / "mobility" / "mini_timetable_v2.jsonl"
 FETCHED = "2026-09-09"
 
 

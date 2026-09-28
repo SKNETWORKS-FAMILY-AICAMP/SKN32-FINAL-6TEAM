@@ -8,7 +8,7 @@
   ③ fare(): 65분 → 초과 5분 200원 · 74분 → 초과 14분 → 3단위 600원
   ④ 실시간 0대 → 다음 대여소 · 전부 0 → 불가
   ⑤ 규칙을 끄면(enabled=false) 근거없음 — 켜기 전 상태가 이것이었다
-실행: python tests/mobility/test_bike_unit.py
+실행: python mobility_scripts/mobility_checks/check_bike_unit.py
 """
 import json, sys, copy
 from pathlib import Path

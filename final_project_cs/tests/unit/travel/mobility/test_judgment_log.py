@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""판정 로그·지표 시험 (40번 방). 저장소 루트에서:  python tests/mobility/test_judgment_log.py
+"""판정 로그·지표 시험 (40번 방). 저장소 루트에서:  python final_project_cs/tests/unit/travel/mobility/test_judgment_log.py
 
 판정기·자료 없이 돈다(가짜 결과 객체). 실제 회귀 연결은 mobility_scripts/judgment_log_run.py 로 확인한다.
 """
@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace as NS
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[5]
 for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
@@ -325,11 +325,13 @@ check("latest 는 run_id 문자열이 아니라 시각으로 고른다", {r["run
 
 bad = [n for n, ok in checks if not ok]
 print(f"\n판정 로그 시험 {len(checks) - len(bad)}/{len(checks)}" + (f" — 실패 {bad}" if bad else ""))
-
-
-def test_judgment_log():          # 67: pytest 수집용 — 56 이 적은 「pytest 로 돌리면 rc=3」의 원인이 모듈 최상위 sys.exit 였다
-    assert not bad, bad
-
-
 if __name__ == "__main__":
     sys.exit(1 if bad else 0)
+
+
+def test_every_check_passes():
+    """pytest 입구 (2026-09-28) — 위 검사는 이 파일을 불러올 때 이미 돈다. 실패가 0 이어야 한다.
+
+    자세한 줄별 결과는 `python final_project_cs/tests/unit/travel/mobility/test_judgment_log.py` 로 본다.
+    """
+    assert not bad, f"실패 {bad}"

@@ -7,7 +7,7 @@ accuracy · macro/weighted 평균. `.to_markdown()` 으로 바로 표.
 
 0 으로 나누는 칸(예측 0건 · 실제 0건)은 표에 **—** 로 보인다(None). 단 **F1 과 macro/weighted 평균은 그 칸을 0 으로 센다** —
 sklearn(zero_division=0)과 같은 값이다. 평균에서 빼면 「불가를 한 번도 안 내는 판정기」의 macro 가 부풀려진다(자체 대조 #1).
-tests/mobility/test_judgment_log.py 가 sklearn 과 칸·평균을 대조한다.
+final_project_cs/tests/unit/travel/mobility/test_judgment_log.py 가 sklearn 과 칸·평균을 대조한다.
 28(평가 지표)·eval_ml_compare 가 같이 쓴다.
 """
 from __future__ import annotations

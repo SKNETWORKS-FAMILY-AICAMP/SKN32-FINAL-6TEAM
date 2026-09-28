@@ -6,7 +6,7 @@ v1(eval_ml_compare.py) 결론: 시간표를 안 보는 분류기는 근거없음
 v1 §5 가 적어 둔 한계:  ① 근거없음이 한 구간(9999)뿐  ② 하이퍼파라미터 안 찾음  ③ 「모른다」를 낼 구조가 없음.
 
 v2 는 셋을 각각 실험으로 바꾼다.
-  EXP-08  근거없음 구간을 9종으로 늘린다 (tests/mobility/ml/unknown_seeds_v1.json) — v1 특징 그대로
+  EXP-08  근거없음 구간을 9종으로 늘린다 (final_project_cs/tests/unit/travel/mobility/ml/unknown_seeds_v1.json) — v1 특징 그대로
   EXP-09  + 「소스 존재」 특징 6개 (역이 좌표표에 있나 · 버스 노선이 수집됐나 …) — 시간표 값은 여전히 안 본다
   EXP-10  + class_weight=balanced (근거없음 4% 불균형 보정)
   EXP-11  + HGB 하이퍼파라미터 격자 탐색 (GroupKFold 안에서)
@@ -109,8 +109,8 @@ def agg(lst):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--seeds", nargs="+", default=["tests/mobility/*.json", "tests/mobility/ml/unknown_seeds_v1.json"])
-    ap.add_argument("--reg", nargs="+", default=["tests/mobility/*.json"])
+    ap.add_argument("--seeds", nargs="+", default=["final_project_cs/tests/unit/travel/mobility/*.json", "final_project_cs/tests/unit/travel/mobility/ml/unknown_seeds_v1.json"])
+    ap.add_argument("--reg", nargs="+", default=["final_project_cs/tests/unit/travel/mobility/*.json"])
     ap.add_argument("--step", type=int, default=30)
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seeds-rng", type=int, nargs="+", default=[0, 1, 2, 3, 4])

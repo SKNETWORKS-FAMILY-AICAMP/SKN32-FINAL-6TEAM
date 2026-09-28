@@ -16,7 +16,7 @@ CREATE TABLE mob_verdict_evidence (
     source_type         TEXT    NOT NULL CHECK (source_type IN ('db','policy','case_event')),
     source_id           TEXT    NOT NULL,          -- 'tago_subway@2026-09-09' · 'mobility_rules@v0.3'
     claim               TEXT    NOT NULL,
-    value_json          TEXT,                      -- ★ tests/mobility/contract/mob_evidence_value_v1.schema.json 로 검증 후 적재
+    value_json          TEXT,                      -- ★ mobility_scripts/mobility_checks/contract/mob_evidence_value_v1.schema.json 로 검증 후 적재
     confidence          REAL    CHECK (confidence IS NULL OR (confidence >= 0 AND confidence <= 1)),
     observed_at         TEXT    NOT NULL,          -- 시간표는 수집일, 규칙은 개정일
     PRIMARY KEY (verdict_id, evidence_id)

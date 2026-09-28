@@ -1,11 +1,11 @@
-# tests/mobility/test_bus_profile_unit.py — 41 적용(v0.9) 버스 구간 프로파일 단위 시험 (합성 자료 · pytest 없이도 돈다)
-# 실행(저장소 루트):  python tests/mobility/test_bus_profile_unit.py
+# final_project_cs/tests/unit/travel/mobility/test_bus_profile_unit.py — 41 적용(v0.9) 버스 구간 프로파일 단위 시험 (합성 자료 · pytest 없이도 돈다)
+# 실행(저장소 루트):  python final_project_cs/tests/unit/travel/mobility/test_bus_profile_unit.py
 # 적용 GPT 대조 12 — 실제 자료로 만들기 어려운 반례를 합성 프로파일로 잠근다:
 #   진입 시각대 · 요일형 한쪽 결측(부분) · 양끝 ID 불일치 · 중복 키 · 구간 끊김 · 대체 실패 · 시간 경계 역전 · min_days
 import gzip, json, sys, tempfile
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[5]
 for _p in (REPO / "final_project_cs",):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))

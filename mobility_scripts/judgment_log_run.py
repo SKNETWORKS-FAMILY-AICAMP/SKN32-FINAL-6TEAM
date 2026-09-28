@@ -7,11 +7,11 @@
 
   # 회귀 한 묶음 (저장소 루트, PYTHONPATH=final_project_cs)
   python mobility_scripts/judgment_log_run.py --bundle judgment -- verify_time \\
-      --cases tests/mobility/judgment_legs_v1.json --check-expect --gh-url none --allow-router-down
+      --cases final_project_cs/tests/unit/travel/mobility/judgment_legs_v1.json --check-expect --gh-url none --allow-router-down
 
   # 자기점검 (◆1 = 자기점검까지 · 탐침 9,776줄)
   python mobility_scripts/judgment_log_run.py --source selfcheck --bundle selfcheck -- selfcheck \\
-      --seeds tests/mobility/*_legs_v1.json
+      --seeds final_project_cs/tests/unit/travel/mobility/*_legs_v1.json
 
 로그 자리: 기본 `DATA_DIR/travel/processed/mobility/logs/` — 한 기기 전용(DEVICE.txt).
 """

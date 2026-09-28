@@ -1,8 +1,8 @@
-# tests/mobility/test_plan_estimate_v1.py — 48번 방 · 계획용 이동 추정(P1) 시험
+# final_project_cs/tests/unit/travel/mobility/test_plan_estimate_v1.py — 48번 방 · 계획용 이동 추정(P1) 시험
 # 실행: 저장소 루트에서
 #   $env:PYTHONPATH = "final_project_cs"
-#   python tests/mobility/test_plan_estimate_v1.py      # 단위 + (시간표가 있으면) 데이터 축
-#   python -m pytest tests/mobility/test_plan_estimate_v1.py
+#   python final_project_cs/tests/unit/travel/mobility/test_plan_estimate_v1.py      # 단위 + (시간표가 있으면) 데이터 축
+#   python -m pytest tests/unit/travel/mobility/test_plan_estimate_v1.py
 # 실패하면 종료코드 1.
 #
 # 축
@@ -21,7 +21,7 @@ from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[1] / "final_project_cs"))
+sys.path.insert(0, str(HERE.parents[3]))
 
 from app.modules.travel_ops.mobility_engine.plan_estimate import (  # noqa: E402
     Estimator, _cautions, day_info, estimate, pct, slot_window)

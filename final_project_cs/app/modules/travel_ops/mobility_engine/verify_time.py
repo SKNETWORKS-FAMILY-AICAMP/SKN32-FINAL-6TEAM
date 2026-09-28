@@ -3,8 +3,8 @@
 # "그 구간 이동이 그 시각에 성립하는가" 를 코드가 판정한다. 이 모듈의 본체다.
 # 실행: 저장소 루트에서
 #   $env:PYTHONPATH="final_project_cs"    (한 셸에 한 번)
-#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/synthetic_legs_v1.json --check-expect
-#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases tests/mobility/synthetic_legs_v1.json --case LT-03 --verbose
+#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/synthetic_legs_v1.json --check-expect
+#   python -m app.modules.travel_ops.mobility_engine.verify_time --cases final_project_cs/tests/unit/travel/mobility/synthetic_legs_v1.json --case LT-03 --verbose
 #   python -m app.modules.travel_ops.mobility_engine.verify_time --cases ... --timetable <경로> --json out.json
 #
 # v1 과 달라진 것 (2026-09-10)
