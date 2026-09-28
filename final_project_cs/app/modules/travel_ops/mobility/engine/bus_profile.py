@@ -175,6 +175,12 @@ class BusSegProfile:
         if not reached:          # 정류장 표에 b 까지의 연속 구간이 없다 — 요청 구간을 다 돌지 못했다(적용 GPT 7)
             w.fail_seq = b_seq
             return w
+        # ☆`[2026-09-29 문제목록 #16]` 범위 검사는 구간에 **들어갈 때만** 했다 — 마지막 구간이 47:59 에 들어가
+        #   48:01 에 끝나도 out_of_range 없이 소요를 냈다. 끝난 시각도 같은 상한으로 본다.
+        if t > 2 * 1440:
+            w.out_of_range = True
+            w.fail_seq = b_seq
+            return w
         w.minutes = t - depart_min
         return w
 

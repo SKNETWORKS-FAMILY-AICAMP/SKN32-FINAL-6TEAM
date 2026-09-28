@@ -150,6 +150,12 @@ def party_of(party_size, constraints):
         p["size"] = int(party_size)
     if c.get("mobility_ease") == "needs_rest":
         p["fatigue_high"] = True
+    # ☆`[2026-09-29 문제목록 #9]` 설문(constraints.survey)에서 판정에 쓸 수 있는 값을 옮긴다.
+    #   domestic(내국인 여부) → foreign. 없으면 넣지 않는다 — 판정기 기본값(외국인 안내를 붙인다)이 그대로 쓰인다.
+    #   party(여행자 구성)는 자유 문장이라 나이·유아를 **짐작해 뽑지 않는다**(지어내지 않는다).
+    survey = c.get("survey") or {}
+    if isinstance(survey, dict) and survey.get("domestic") is not None:
+        p["foreign"] = not bool(survey["domestic"])
     return p
 
 
