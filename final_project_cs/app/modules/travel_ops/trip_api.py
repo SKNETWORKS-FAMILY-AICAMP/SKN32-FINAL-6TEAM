@@ -26,7 +26,7 @@
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import hashlib
 import hmac
 import html
@@ -122,6 +122,8 @@ class IntakePlanIn(BaseModel):
     start_date: date
     days: int = Field(ge=1, le=7)
     party_size: int = Field(ge=1, le=4)
+    #: 읽은 일정(고객이 이미 정한 것)은 그대로 두고 빈 곳만 채운다. 끄면 읽은 일정 없이 새로 짠다
+    keep_read_items: bool = True
 
 
 class PlanIn(BaseModel):
@@ -861,19 +863,36 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
             preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko")
+        keep = request.keep_read_items and bool(built.body["items"])
+        if keep:
+            # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다
+            span = {(request.start_date + timedelta(days=i)).isoformat() for i in range(request.days)}
+            outside = [it["title"] for it in built.body["items"] if it["starts_at"][:10] not in span]
+            if outside:
+                raise _error(422, "read_items_outside_days",
+                             "읽은 일정 중 고른 날짜 밖의 것이 있다 — 첫날·일수를 맞추거나 「새로 짜기」로 하세요",
+                             items=outside)
         try:
             with get_connection() as conn:
-                outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
-                                                   chat=_lazy("chat", chat_factory),
-                                                   tour_api=_lazy("place", place_factory))
+                outcome = planner_module.plan_trip(
+                    conn=conn, tenant_id=tenant, request=ask, chat=_lazy("chat", chat_factory),
+                    tour_api=_lazy("place", place_factory),
+                    exclude_names=[p["name"] for p in built.body["places"]] if keep else ())
         except planner_module.PlanRefused as refused:
             raise _error(422, refused.code, refused.message, **refused.detail) from None
-        body = outcome.draft.as_create_body(request_id=request_id, customer_id=customer)
+        draft, merged = outcome.draft, []
+        if keep:
+            fixed_places = [{**p, "key": f"fixed-{p['key']}"} for p in built.body["places"]]
+            fixed_items = [{**it, "place": f"fixed-{it['place']}" if it.get("place") else None}
+                           for it in built.body["items"]]
+            draft, merged = planner_module.plan_around(outcome, fixed_items=fixed_items, fixed_places=fixed_places)
+        body = draft.as_create_body(request_id=request_id, customer_id=customer)
         trip = _create_trip(tenant, CreateTrip.model_validate(body))
         with get_connection() as conn:
             mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
         return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip,
-                "planner": {"coverage": outcome.coverage, "checks": outcome.checks}}
+                "planner": {"coverage": outcome.coverage, "checks": outcome.checks,
+                            "kept_read_items": keep, "merge": merged}}
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request):

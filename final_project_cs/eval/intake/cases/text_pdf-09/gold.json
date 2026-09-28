@@ -1,0 +1,45 @@
+{
+ "case_id": "text_pdf-09",
+ "format": "text_pdf",
+ "defect": null,
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 1일 여행 (2명)",
+  "1일차 2026-10-18",
+  "09:30 국립민속박물관",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 롯데월드"
+ ],
+ "items": [
+  {
+   "date": "2026-10-18",
+   "start": "09:30",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "15:00",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

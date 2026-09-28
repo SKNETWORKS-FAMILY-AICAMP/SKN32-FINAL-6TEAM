@@ -896,8 +896,12 @@ def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str,
 
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None,
-              search: Callable[..., Any] | None = None) -> PlanOutcome:
-    """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`."""
+              search: Callable[..., Any] | None = None,
+              exclude_names: Iterable[str] = ()) -> PlanOutcome:
+    """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
+
+    `exclude_names` — 후보에서 뺄 장소 이름(고객이 이미 정한 일정의 장소 — 같은 곳을 두 번 넣지 않게, `plan_around`).
+    """
     request.validate()
     # ★`[2026-09-24]` 설문(`constraints.survey`)을 **등록과 같은 함수로** 먼저 적용한다 — 16번 여유가
     #   밀도 목표가 되고, 생성기는 그 목표에 맞춰 하루 활동 수를 정한다(`fit_day`). 등록이 다시 적용해도
@@ -925,6 +929,9 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     if tour_api is not None and not any(cand.origin != "places" for cand in pool):
         # ★카탈로그가 비었을 때만 바깥에 나간다. 하루 한도가 있다.
         pool, calls["tour_api"] = fill_from_tour_api(pool, source=tour_api)
+    skip = {_bare_name(name) for name in exclude_names}
+    if skip:
+        pool = [cand for cand in pool if _bare_name(cand.name) not in skip]
 
     ranked = rank_candidates(pool, pref)
     activities = [cand for cand in ranked if cand.kind == "activity"]
@@ -1066,6 +1073,99 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                     "by_source": _count_by(chosen.values(), "origin")},
         checks={"rounds": rounds, "repairs": fixed, "violations": []},
         coverage=_coverage(items, chosen), calls=calls, rag=rag)
+
+
+# ── 고객이 정한 일정은 그대로 두고 빈 곳만 채운다 (2026-09-28, 계획 읽기 「일정 짜 줘」) ─────────
+#: 고정 일정 앞뒤로 비워 두는 시간(분) — 짠 항목이 이 안에 걸리면 뺀다. 우리가 고른 값
+FIXED_MARGIN_MIN = 30
+#: 고정 식사와 이만큼 가까운 짠 식사는 뺀다(점심을 두 번 먹지 않게). 우리가 고른 값
+FIXED_MEAL_GAP_MIN = 150
+
+
+def _bare_name(name: str) -> str:
+    import re as _re
+
+    return _re.sub(r"\s+", "", _re.sub(r"[(\[（【].*?[)\]）】]", "", name or "")).lower()
+
+
+def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
+                fixed_places: list[dict[str, Any]]) -> tuple[PlanDraft, list[str]]:
+    """생성기 초안에 **고객이 정한 일정**을 끼운다. (새 초안, 한 일).
+
+    ★고정 일정은 **옮기지도 바꾸지도 않는다.** 짠 항목만 뺀다:
+      ① 고정 일정과 시간이 겹치거나 앞뒤 `FIXED_MARGIN_MIN` 안에 걸린 것
+      ② 같은 날 고정 식사와 `FIXED_MEAL_GAP_MIN` 안의 짠 식사
+      ③ 이동 항목을 다시 넣을 때 고정 일정이 **밀리게 되면**, 그 고정 일정 바로 앞의 짠 항목
+    ★일정 생성기 안쪽(고치기·밀기)에 고정 항목을 넣지 않는다 — 고치는 단계가 고정 항목을 옮길 수 있다.
+    ★등록은 `_create_trip` 의 같은 판정기를 다시 지난다 — 여기서 통과시켰다고 건너뛰지 않는다.
+    """
+    draft = outcome.draft
+    places: dict[str, Cand] = {}
+    for place in draft.places:
+        places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
+                                    dict(place.get("attributes") or {}), "draft",
+                                    bool(place.get("weather_sensitive")))
+    for place in fixed_places:
+        places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
+                                    dict(place.get("attributes") or {}), "customer",
+                                    bool(place.get("weather_sensitive")))
+    fixed = []
+    for item in fixed_items:
+        starts = datetime.fromisoformat(item["starts_at"]) if isinstance(item["starts_at"], str) else item["starts_at"]
+        ends = item.get("ends_at")
+        ends = datetime.fromisoformat(ends) if isinstance(ends, str) else ends
+        detail = dict(item.get("detail") or {})
+        detail["planner"] = {**(detail.get("planner") or {}), "day": starts.date().isoformat(), "fixed": True}
+        fixed.append({**item, "starts_at": starts, "ends_at": ends, "detail": detail})
+    planned = [dict(item) for item in draft.items if item["kind"] != "mobility"]
+    done: list[str] = []
+    margin, meal_gap = timedelta(minutes=FIXED_MARGIN_MIN), timedelta(minutes=FIXED_MEAL_GAP_MIN)
+
+    def clashes(item) -> str | None:
+        start, end = item["starts_at"], item["ends_at"] or item["starts_at"]
+        for f in fixed:
+            f_end = f["ends_at"] or f["starts_at"]
+            if start < f_end + margin and f["starts_at"] - margin < end:
+                return f"「{f['title']}」 시간과 겹친다"
+            if item["kind"] == "dining" and f["kind"] == "dining" and \
+                    abs(item["starts_at"] - f["starts_at"]) < meal_gap:
+                return f"같은 때 식사 「{f['title']}」가 이미 있다"
+        return None
+
+    kept = []
+    for item in planned:
+        why = clashes(item)
+        if why:
+            done.append(f"뺐다 {item['title']} — {why}")
+        else:
+            kept.append(item)
+    combined = kept + fixed
+    for _ in range(len(kept) + 1):
+        trial, routes, _moved = add_moves(copy.deepcopy(combined), places)
+        by_title = {(it["title"], it["detail"].get("planner", {}).get("day")): it for it in trial if it["kind"] != "mobility"}
+        pushed = [f for f in fixed
+                  if by_title.get((f["title"], f["detail"]["planner"]["day"]), {}).get("starts_at") != f["starts_at"]]
+        if not pushed:
+            items = trial
+            break
+        victim_fixed = pushed[0]
+        same_day = sorted((it for it in combined if it["detail"].get("planner", {}).get("day")
+                           == victim_fixed["detail"]["planner"]["day"]), key=lambda it: it["starts_at"])
+        before = [it for it in same_day if it["starts_at"] < victim_fixed["starts_at"]
+                  and not it["detail"]["planner"].get("fixed")]
+        if not before:
+            items = trial                        # 고정 일정끼리 붙어 있다 — 고객의 계획이다. 판정기가 본다
+            done.append(f"「{victim_fixed['title']}」 앞 이동 자리가 모자라지만 고정 일정끼리라 그대로 두었다")
+            break
+        drop = before[-1]
+        combined = [it for it in combined if it is not drop]
+        done.append(f"뺐다 {drop['title']} — 「{victim_fixed['title']}」까지 이동할 자리가 모자라다")
+    else:
+        items, routes = trial, routes
+    used = {it["place"] for it in items if it.get("place")}
+    new_places = [p for p in draft.places if p["key"] in used] + [p for p in fixed_places if p["key"] in used]
+    return (PlanDraft(title=draft.title, locale=draft.locale, party_size=draft.party_size,
+                      constraints=draft.constraints, places=new_places, items=items, routes=routes), done)
 
 
 def _refuse_overflow(items: list[dict[str, Any]], *, rounds: int, fixed: list[str], why: str) -> None:

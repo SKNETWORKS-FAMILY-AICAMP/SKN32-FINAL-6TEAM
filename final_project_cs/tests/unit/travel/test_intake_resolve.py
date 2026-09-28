@@ -320,3 +320,44 @@ def test_a_narrowed_food_line_marks_the_item_as_a_meal():
     fields = {r["field"]: r for r in rows}
     assert fields["items[0].place"]["value"]["name"] == "광장시장"
     assert fields["items[0].kind"]["value"] == "dining" and fields["items[0].kind"]["method"] == "lookup"
+
+
+def test_a_relative_word_on_the_day_heading_dates_the_items_under_it():
+    lines = ["1일차 · 내일", "09:30 창경궁", "12:30 명동교자 점심"]
+    dated, ask = resolve_dates([{"day": 1, "date": None, "line": 2}, {"day": 1, "date": None, "line": 3}],
+                               today=TODAY, lines=lines)
+    assert [d.value for d in dated] == ["2026-09-28", "2026-09-28"] and ask is False
+
+
+def test_tour_api_takes_a_title_with_a_bracketed_alias_as_the_same_name():
+    from app.infrastructure.travel.tour_api import _bare
+
+    assert _bare("동대문디자인플라자(DDP)") == _bare("동대문디자인플라자")
+    assert _bare("경복궁 별빛야행") != _bare("경복궁")
+
+
+# ── 받아쓰기 일시 오류는 한 번만 다시 부른다 (2026-09-28 평가셋) ─────────────────
+def test_a_transient_vision_error_is_retried_once_and_only_once():
+    import pytest
+
+    from app.infrastructure.ollama_chat import OllamaError
+    from app.modules.travel_ops.intake.sources import _see_once_more
+
+    calls = []
+
+    def flaky(errors):
+        def see(prompt, image):
+            calls.append(1)
+            if errors:
+                raise errors.pop(0)
+            return "09:00 경복궁"
+        return see
+
+    assert _see_once_more(flaky([OllamaError("Ollama HTTP 500: model runner")]))("p", b"") == "09:00 경복궁"
+    assert _see_once_more(flaky([OllamaError("Ollama 가 빈 받아쓰기를 냈다")]))("p", b"") == "09:00 경복궁"
+    with pytest.raises(OllamaError):                      # 두 번째도 실패하면 그대로 올린다
+        _see_once_more(flaky([OllamaError("Ollama HTTP 503"), OllamaError("Ollama HTTP 503")]))("p", b"")
+    calls.clear()
+    with pytest.raises(OllamaError):                      # 일시 오류가 아닌 것은 다시 부르지 않는다
+        _see_once_more(flaky([OllamaError("Ollama HTTP 404: model not found")]))("p", b"")
+    assert len(calls) == 1

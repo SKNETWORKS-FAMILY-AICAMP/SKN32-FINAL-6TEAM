@@ -48,7 +48,7 @@ export interface IntakeView {
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
 export interface IntakePlanBasis { requested: boolean; start_date: string | null; days: number | null; party_size: number | null; preferences: string }
-export interface IntakePlanInput { start_date: string; days: number; party_size: number }
+export interface IntakePlanInput { start_date: string; days: number; party_size: number; keep_read_items: boolean }
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 

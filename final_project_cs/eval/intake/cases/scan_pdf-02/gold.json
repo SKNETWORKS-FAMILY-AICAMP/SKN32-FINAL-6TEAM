@@ -1,0 +1,103 @@
+{
+ "case_id": "scan_pdf-02",
+ "format": "scan_pdf",
+ "defect": "no_time",
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "scan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 3일 여행 (2명)",
+  "DAY 1 2026-10-08",
+  "09:30 전쟁기념관",
+  "진옥화할매원조닭한마리 점심",
+  "15:00 덕수궁 돌담길 산책",
+  "",
+  "DAY 2 2026-10-09",
+  "09:30 국립민속박물관",
+  "12:30 명동교자 점심",
+  "15:00 명동난타극장",
+  "",
+  "DAY 3 2026-10-10",
+  "09:30 경복궁 관람",
+  "12:30 망원시장 칼국수",
+  "15:00 창경궁"
+ ],
+ "items": [
+  {
+   "date": "2026-10-08",
+   "start": "09:30",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-08",
+   "start": null,
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-08",
+   "start": "15:00",
+   "title": "덕수궁 돌담길 산책",
+   "place": "덕수궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-09",
+   "start": "09:30",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-09",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-09",
+   "start": "15:00",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "09:30",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-10",
+   "start": "15:00",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

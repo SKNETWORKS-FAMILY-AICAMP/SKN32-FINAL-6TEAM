@@ -647,3 +647,48 @@ def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_on
     # 상품 범위 밖(8일)은 받지 않는다
     wide = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**body, "days": 8})
     assert wide.status_code == 422
+
+
+def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):
+    """★`[2026-09-28]` 「읽은 일정은 그대로 두고 나머지만 짜 줘」 — 고정 일정은 옮기지도 바꾸지도 않는다(`plan_around`).
+    짠 항목은 고정 일정 앞뒤 30분에 걸리지 않고, 같은 장소를 두 번 넣지 않는다. 등록은 같은 판정기를 지난다."""
+    from datetime import datetime
+
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    text = chr(10).join(["서울 2일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert view["check"]["plan"]["requested"] is True and view["check"]["items"] == 1
+    base = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    # 날짜 밖이면(읽은 일정이 10-05 인데 10-06 부터 짜 달라면) 조용히 버리지 않고 거절한다
+    outside = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                          json={**base, "start_date": "2026-10-06", "days": 1})
+    assert outside.status_code == 422 and outside.json()["error"]["code"] == "read_items_outside_days"
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=base)
+    assert done.status_code == 200, done.text
+    body = done.json()
+    assert body["planner"]["kept_read_items"] is True
+    stops = [i for i in body["trip"]["items"] if i["kind"] != "mobility"]
+    fixed = [i for i in stops if i["title"] == "하늘 박물관"]
+    assert len(fixed) == 1 and fixed[0]["starts_at"][11:16] == "13:00"          # ★그대로, 한 번만
+    pinned_start = datetime.fromisoformat(fixed[0]["starts_at"])
+    pinned_end = datetime.fromisoformat(fixed[0]["ends_at"])
+    for other in stops:
+        if other is fixed[0] or other["starts_at"][:10] != "2026-10-05":
+            continue
+        start, end = datetime.fromisoformat(other["starts_at"]), datetime.fromisoformat(other["ends_at"] or other["starts_at"])
+        assert end <= pinned_start or start >= pinned_end, other                # 겹치지 않는다
+    assert {i["starts_at"][:10] for i in stops} == {"2026-10-05", "2026-10-06"}
+
+
+def test_a_fresh_plan_ignores_the_read_items_when_asked(api):
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    text = chr(10).join(["서울 1일 일정 짜 줘", "1일차 2026-10-05", "13:00 하늘 박물관"])
+    intake_id = client.post("/v1/web/trip-intakes", headers=key, data={"text": text}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                       json={"revision": view["revision"], "start_date": START.isoformat(), "days": 1,
+                             "party_size": 2, "keep_read_items": False}).json()
+    assert done["planner"]["kept_read_items"] is False and done["planner"]["merge"] == []
