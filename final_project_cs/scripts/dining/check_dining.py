@@ -159,8 +159,12 @@ def check_loaded(cur, s: Sheet) -> None:
 
     halal = os.path.join(data, "halal", "할랄식당_검수.csv")
     with open(halal, encoding="utf-8-sig", newline="") as f:
+        # make_halal_sql 과 같은 기준: 영업 · 좌표 있음 · 관리번호 또는 원장 「없음(운영자 확인)」
         n = sum(1 for r in csv.DictReader(f)
-                if (r.get("판정") or "").strip() == "영업" and (r.get("관리번호") or "").strip())
+                if (r.get("판정") or "").strip() == "영업"
+                and (r.get("위도") or "").strip() and (r.get("경도") or "").strip()
+                and ((r.get("관리번호") or "").strip()
+                     or (r.get("원장") or "").strip().startswith("없음")))
     s.add(step, rec.get("halal_curated") == n, "할랄 식당 목록",
           f"시트의 영업 중인 곳 {n}곳 → 원장 {rec.get('halal_curated', 0)}곳")
 
