@@ -39,6 +39,13 @@ export async function registerExampleTrip(page: Page) {
   return { source, tripId: new URL(page.url()).pathname.split("/")[2] };
 }
 
+/** In the open menu, unfolds the language card and picks a language by its own name. */
+export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
+  const dialog = page.getByRole("dialog", { name: menu });
+  await dialog.getByRole("button", { name: /LANGUAGE/ }).click();
+  await dialog.getByRole("button", { name: language, exact: true }).click();
+}
+
 export async function noHorizontalScroll(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }

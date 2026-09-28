@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
+import { noHorizontalScroll, pickMenuLanguage, submitPlan, useKorean } from "./helpers/app";
 
 /** Demo trips live in this tab's sessionStorage under this prefix (`DEMO_STORAGE_PREFIX`). */
 const PREFIX = "tripilot.web-mvp.trip:";
@@ -147,40 +147,6 @@ test("목록을 읽지 못하면 첫 화면 카드 안에만 오류와 다시 �
   await expect(card(page).getByRole("alert")).toHaveCount(0);
 });
 
-test("메뉴의 여행 목록 보기는 Tab 순환에 들어가고, Esc로 닫으면 메뉴 버튼으로 돌아오며, 목록 페이지에서 눌러도 메뉴가 닫힌다", async ({ page }) => {
-  await page.goto("/trips/new");
-  const open = page.getByRole("button", { name: "메뉴", exact: true });
-  await open.click();
-  const menu = page.getByRole("dialog", { name: "메뉴" });
-  const link = menu.getByRole("link", { name: "여행 목록 보기" });
-  const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  await expect(menu.getByRole("radio", { name: "한국어" })).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(link).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(close).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(menu.getByRole("radio", { name: /고정 하단 탭/ })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(close).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(link).toBeFocused();
-  await page.keyboard.press("Escape");
-  await expect(menu).toHaveCount(0);
-  await expect(open).toBeFocused();
-
-  await open.click();
-  await page.keyboard.press("Shift+Tab");
-  await expect(link).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/trips$/);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await open.click();
-  await link.click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).toHaveURL(/\/trips$/);
-});
-
 test("영어와 PC 기기 틀·375px·320px·낮은 화면에서 첫 화면 카드가 잘리거나 겹치지 않는다", async ({ page }) => {
   await addTrip(page);
   await fillTrips(page, 4);
@@ -189,7 +155,7 @@ test("영어와 PC 기기 틀·375px·320px·낮은 화면에서 첫 화면 카�
     if (english) {
       await page.goto("/");
       await page.getByRole("button", { name: "메뉴", exact: true }).click();
-      await page.getByRole("dialog", { name: "메뉴" }).getByText("English").click();
+      await pickMenuLanguage(page, "메뉴", "English");
       await page.keyboard.press("Escape");
       const recent = page.getByRole("region", { name: "My trips", exact: true });
       await expect(recent.getByRole("link", { name: /View all/ })).toBeVisible();

@@ -3,12 +3,12 @@
 import Image, { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
-import { Check, ChevronDown, Globe } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { LanguagePicker } from "@/components/ui/language-picker";
 import { RecentTrips } from "@/features/trip/trip-list";
-import { languages, type Language } from "@/lib/i18n";
+import type { Language } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
-import { updateSettings, useSettings } from "@/lib/settings";
+import { useSettings } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import styles from "./intro.module.css";
 
@@ -84,8 +84,6 @@ export function Intro() {
   const [shown, setShown] = useState<boolean[]>([true, false, false]);
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [languageOpen, setLanguageOpen] = useState(false);
-  const languageButton = useRef<HTMLButtonElement>(null);
   const slides = useRef<HTMLDivElement>(null);
   const [slide, setSlide] = useState(0);
   const drag = useRef<{ x: number; left: number; from: number } | null>(null);
@@ -142,16 +140,6 @@ export function Intro() {
     setCurrent(0);
     setShown([false, false, false]);
     requestAnimationFrame(() => setShown([true, false, false]));
-  }
-
-  function closeLanguage() {
-    setLanguageOpen(false);
-    languageButton.current?.focus({ preventScroll: true });
-  }
-
-  function chooseLanguage(value: Language) {
-    updateSettings({ language: value });
-    closeLanguage();
   }
 
   const slideItems = () => [...(slides.current?.children ?? [])] as HTMLElement[];
@@ -219,20 +207,7 @@ export function Intro() {
           <h1 id="intro-title" className={styles.title}><Reveal key={language} text={text.intro} mode="char" /></h1>
           <p className={styles.description} data-fx="up" style={delay(.5)}><Lines text={text.introDescription} /></p>
         </div>
-        <div className={`${styles.language} ${languageOpen ? styles.languageOpen : ""}`} data-fx="up" style={delay(.65)} onKeyDown={(event) => { if (event.key === "Escape" && languageOpen) closeLanguage(); }}>
-          <button ref={languageButton} type="button" className={styles.languageToggle} aria-expanded={languageOpen} aria-controls="intro-languages" onClick={() => setLanguageOpen((open) => !open)}>
-            <Globe size={18} aria-hidden="true" />
-            <span><small>LANGUAGE · <span lang="ko">언어</span></small><strong>{languages.find(([value]) => value === language)?.[1]}</strong></span>
-            <ChevronDown size={18} aria-hidden="true" className={styles.chevron} />
-          </button>
-          <div id="intro-languages" className={styles.languageList} inert={!languageOpen}>
-            <div>{languages.map(([value, label]) => (
-              <button key={value} type="button" lang={value} className={styles.languageOption} aria-pressed={language === value} onClick={() => chooseLanguage(value)}>
-                {label}{language === value && <Check size={16} aria-hidden="true" />}
-              </button>
-            ))}</div>
-          </div>
-        </div>
+        <LanguagePicker className={styles.language} caption={<>LANGUAGE · <span lang="ko">언어</span></>} data-fx="up" style={delay(.65)} />
         <div className={styles.trips} data-fx="up" style={delay(.75)}><RecentTrips /></div>
         <div className={styles.badge} data-fx="scale" style={delay(.8)}><small>A LITTLE MORE YOU</small><strong>{text.badge}</strong></div>
         {controls(1)}
