@@ -9,6 +9,7 @@ const paths: Record<string, string> = {
   down: "m4 6 4 4 4-4",
   arrow: "M3 8h10M9 4l4 4-4 4",
   lock: "M5 7V5a3 3 0 0 1 6 0v2M5 7h6a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z",
+  mail: "M3 4h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm-1 1 6 4.5L14 5",
   leaf: "M13 2C5 1 1 5 3 11c5 4 10 0 10-9ZM2 14l8-9",
   food: "M4 2v5m-2-5v3c0 3 4 3 4 0V2M4 8v6M11 2v12M11 2c-3 1-4 6 0 6",
   nature: "m1 13 5-9 4 9H1Zm7 0 4-6 3 6H8ZM12 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z",

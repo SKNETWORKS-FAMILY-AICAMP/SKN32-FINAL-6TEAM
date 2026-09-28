@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { checkDraft } from "./model";
+import { checkDraft, recoveryEmailProblem } from "./model";
+
+describe("recovery email rule (My page and onboarding)", () => {
+  it("treats blank and spaces-only as not entered", () => {
+    expect(recoveryEmailProblem("")).toBeUndefined();
+    expect(recoveryEmailProblem("   ")).toBeUndefined();
+  });
+
+  it("trims only the ends and accepts any provider", () => {
+    for (const email of [" name@example.com ", "name@example.com", "Name.Tag+1@example.co.kr", "traveler@sub.domain.travel"]) {
+      expect(recoveryEmailProblem(email), email).toBeUndefined();
+    }
+  });
+
+  it("rejects spaces inside and malformed addresses, not only a missing @", () => {
+    for (const email of ["name example@site.com", "name@exa mple.com", "name@", "@example.com", "name@example", "name@@example.com", "name.example.com"]) {
+      expect(recoveryEmailProblem(email), email).toBe("format");
+    }
+  });
+});
 
 describe("profile draft check", () => {
   it("requires a nickname that is not only spaces", () => {
