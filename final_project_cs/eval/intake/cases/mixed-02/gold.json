@@ -1,0 +1,46 @@
+{
+ "case_id": "mixed-02",
+ "format": "mixed",
+ "defect": "no_time",
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 2명이서 서울 가요\nDAY 1 2026-11-09\n09:30 북촌한옥마을 산책 · 예약번호 KY-59496\n광장시장 빈대떡\n15:00 전쟁기념관"
+  }
+ ],
+ "lines": [
+  "안녕하세요 2명이서 서울 가요",
+  "DAY 1 2026-11-09",
+  "09:30 북촌한옥마을 산책 · 예약번호 KY-59496",
+  "광장시장 빈대떡",
+  "15:00 전쟁기념관",
+  "서울 1일 여행 (2명)"
+ ],
+ "items": [
+  {
+   "date": "2026-11-09",
+   "start": "09:30",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": "KY-59496"
+  },
+  {
+   "date": "2026-11-09",
+   "start": null,
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-09",
+   "start": "15:00",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

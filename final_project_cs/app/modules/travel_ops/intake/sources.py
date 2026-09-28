@@ -174,7 +174,23 @@ def _pdf(data: bytes, *, see, check_halves: bool) -> SourceText:
     return SourceText("pdf", "\n".join(parts), pages=len(document), transcribed_pages=transcribed, missing=missing)
 
 
+def _see_once_more(see):
+    """받아쓰기 호출을 **한 번만** 다시 한다 — 모델 서버의 일시 오류(HTTP 5xx · 빈 받아쓰기)만.
+    ★읽기 전용 호출이라 다시 불러도 부작용이 없다. 두 번째도 실패하면 그대로 올린다(성공으로 추정하지 않는다).
+    ☆2026-09-28 평가셋 60건: 일시 오류 3건(HTTP 500 1 · 빈 받아쓰기 2)이 사례를 통째로 잃게 했다(항목 21개)."""
+    def call(prompt, image):
+        try:
+            return see(prompt, image)
+        except Exception as exc:                  # noqa: BLE001 — 아래에서 고른 것만 다시 부른다
+            text = str(exc)
+            if "빈 받아쓰기" not in text and "HTTP 5" not in text:
+                raise
+            return see(prompt, image)
+    return call
+
+
 def _transcribe(image: bytes, *, see, check_halves: bool) -> tuple[str, list[dict[str, Any]]]:
+    see = _see_once_more(see)
     full = see(TRANSCRIBE_PROMPT, image)
     if not check_halves:
         return full, []

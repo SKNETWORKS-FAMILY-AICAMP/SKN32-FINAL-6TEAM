@@ -1,5 +1,6 @@
 import type { Language } from "@/lib/i18n";
 import type { Coordinates } from "../map/model";
+import type { TripSurvey } from "../onboarding/payload";
 
 export type DemoScenario = "success" | "needs-review" | "failed";
 export type StageStatus = "pending" | "running" | "completed" | "failed";
@@ -64,6 +65,8 @@ export interface Trip {
 export interface CreateTripInput {
   source: string;
   scenario?: DemoScenario;
+  /** Onboarding answers, sent as the backend's `constraints.survey`. Absent when onboarding was not finished. */
+  survey?: TripSurvey;
 }
 
 /** Every call names the reader's language; generated text comes back in that language. */

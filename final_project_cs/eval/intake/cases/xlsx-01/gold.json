@@ -1,0 +1,44 @@
+{
+ "case_id": "xlsx-01",
+ "format": "xlsx",
+ "defect": "relative_date",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 내일 | 09:30 | 인사동 구경 | ",
+  "1일차 | 내일 | 12:30 | 진옥화할매원조닭한마리 | ",
+  "1일차 | 내일 | 15:00 | 경복궁 관람 | "
+ ],
+ "items": [
+  {
+   "date": "2026-10-02",
+   "start": "09:30",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

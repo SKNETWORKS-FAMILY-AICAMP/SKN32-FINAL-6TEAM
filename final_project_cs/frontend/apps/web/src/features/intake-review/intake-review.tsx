@@ -170,12 +170,15 @@ function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: Int
   const [start, setStart] = useState(basis.start_date ?? "");
   const [days, setDays] = useState(basis.days ?? 0);
   const [party, setParty] = useState(basis.party_size ?? 0);
+  const [keep, setKeep] = useState(readItems > 0);
   const ready = Boolean(start) && days >= 1 && party >= 1;
   return <Panel className={styles.plan} aria-labelledby="intake-plan">
     <h2 id="intake-plan">{basis.requested ? t("일정을 짜 달라고 하셨어요", "You asked us to plan the trip") : t("읽은 일정이 없어요 — 대신 짜 드릴까요?", "No stops were read — shall we plan one?")}</h2>
     <p>{t("서울 안에서, 올려 주신 글을 선호로 읽어 하루하루를 짜요. 짠 일정은 판정을 통과해야 등록돼요.", "We plan each day in Seoul, reading your text as preferences. The plan is registered only if it passes our checks.")}
-      {readItems > 0 && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
-    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party }); }}>
+      {readItems > 0 && !keep && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
+    {readItems > 0 && <label className={styles.keep}><input type="checkbox" checked={keep} onChange={(event) => setKeep(event.target.checked)} disabled={disabled} />
+      {t(`읽은 일정 ${readItems}개는 그대로 두고 빈 시간만 채우기`, `Keep the ${readItems} stops read above and fill only the gaps`)}</label>}
+    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party, keep_read_items: keep }); }}>
       <label htmlFor="plan-start">{t("첫날", "First day")}</label>
       <input id="plan-start" type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={disabled} required />
       <label htmlFor="plan-days">{t("일수", "Days")}</label>

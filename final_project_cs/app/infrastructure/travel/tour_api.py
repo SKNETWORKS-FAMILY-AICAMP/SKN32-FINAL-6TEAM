@@ -28,11 +28,17 @@
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .base import TravelSource
 
 BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
+
+
+def _bare(title: str) -> str:
+    """괄호 병기 · 공백을 뺀 이름(정확 일치 비교용)."""
+    return re.sub(r"\s+", "", re.sub(r"[(\[（【].*?[)\]）】]", "", title)).lower()
 
 #: 관광 타입. v11 §5 의 Activity 범위(A01 자연·A02 인문·A03 레포츠·A04 쇼핑)와
 #: 대응한다. 39(음식점)는 Dining 쪽이고 32(숙박)는 Lodging 쪽이다.
@@ -105,6 +111,11 @@ class TourApiPlace(TravelSource):
         #   「경복궁」 검색에 「경복궁 별빛야행」이 섞인다.
         wanted = place_name.strip()
         exact = [row for row in rows if str(row.get("title", "")).strip() == wanted]
+        if not exact:
+            # ★괄호 병기는 같은 이름으로 본다 — 「동대문디자인플라자」 = 「동대문디자인플라자(DDP)」(2026-09-28 평가셋 9건).
+            #   부분일치는 여전히 받지 않는다(「경복궁」 ≠ 「경복궁 별빛야행」)
+            bare = _bare(wanted)
+            exact = [row for row in rows if _bare(str(row.get("title", ""))) == bare]
         if allowed_types:
             # ★우리가 다루는 종류 밖은 뺀다. 「경복궁」의 울산 음식점(39)이
             #   activity 후보에서 이걸로 빠진다.
