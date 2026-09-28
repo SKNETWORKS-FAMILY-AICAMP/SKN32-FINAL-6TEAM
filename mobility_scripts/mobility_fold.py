@@ -17,7 +17,9 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "final_project_cs"))
 from app.modules.travel_ops.mobility.engine.fold import fold_case  # noqa: E402
 
-SCHEMA = REPO / "tests" / "mobility" / "contract" / "mob_evidence_value_v1.schema.json"
+# ☆`[2026-09-29 문제목록 #67]` 옛 자리(tests/mobility/contract · scripts/mobility_metrics.py)를 가리켜 기본 경로가 깨져 있었다 —
+#   시험·점검이 mobility_scripts/mobility_checks/contract 와 mobility_scripts/ 로 옮겨 간 뒤 고치지 않았다
+SCHEMA = REPO / "mobility_scripts" / "mobility_checks" / "contract" / "mob_evidence_value_v1.schema.json"
 METRICS = REPO / ".metrics"
 
 
@@ -64,7 +66,7 @@ def main():
     if not a.src:
         if not METRICS.exists() or not list(METRICS.glob("*_result.json")):
             print("판정 결과가 없다 — mobility_metrics.py 를 먼저 돌린다")
-            subprocess.run([sys.executable, str(REPO / "scripts" / "mobility_metrics.py")],
+            subprocess.run([sys.executable, str(REPO / "mobility_scripts" / "mobility_metrics.py")],
                            check=False)
         a.src = [str(p) for p in sorted(METRICS.glob("*_result.json"))]
     cases = []
