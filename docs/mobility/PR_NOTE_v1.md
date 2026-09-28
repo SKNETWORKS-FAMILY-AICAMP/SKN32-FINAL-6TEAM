@@ -31,7 +31,7 @@
 - 9/20 첫 커밋에 잘못 들어간 파일 5개 제거(루트 `__init__.py` · 빈 `modules/` 패키지 · 옛 메모 md 2) · `.env.teamflow.example` 은 develop 판으로 되돌림.
 - 골든 1곳 교체: 팀 `route_uses.py` 가 버스 노선명 검사를 넓혀(`01A`·`702A` 등 59노선 수용) 예시 출력의 **요약 한 줄**만 바뀜(`before_prev_end 41 · uses_format 2` → `before_prev_end 43`) · 이동 항목·경로 값 동일 · 새 uses 전부 팀 검사 통과.
 - 엔진 5파일은 주석의 경로 문자열만.
-- **(v1.1 · 9/28 저녁) `mobility_engine/` → `mobility/engine/`** — 팀장 요청(세 팀이 `travel_ops/<팀>/` 폴더 한 곳에서 같은 모양으로). 23파일 `git mv`(rename 100%·유사도 유지) + 경로 문자열 치환 **160곳/50파일**(엔진 7 · 시험 12 · `mobility_scripts/` 28 · docs 3 — import · `-m` 명령 · `Path` 조각 · 주석) + 엔진 안 실제 코드 2줄: `options.py` `from ..route_uses` → `from ...route_uses`(한 칸 깊어짐), `paths.py` `.git` 없는 배포본 fallback `parents[5]` → `[6]`(정상 경로는 `.git` 앵커라 무관). 팀 파일 수정 **0**. `test_team_tool_discipline` 가 훑는 엔진 파일 21 은 자리만 바뀌고 그대로 검사된다(41 passed). 실행 명령은 `app.modules.travel_ops.mobility.engine.<모듈>` 로 바뀜(§6).
+- **(v1.1 · 9/28 저녁) `mobility_engine/` → `mobility/engine/`** — 팀장 요청(세 팀이 `travel_ops/<팀>/` 폴더 한 곳에서 같은 모양으로). 23파일 `git mv`(rename 100%·유사도 유지) + 경로 문자열 치환 **160곳/50파일**(엔진 7 · 시험 12 · `mobility_scripts/` 28 · docs 3 — import · `-m` 명령 · `Path` 조각 · 주석) + 엔진 안 실제 코드 2줄: `options.py` `from ..route_uses` → `from ...route_uses`(한 칸 깊어짐), `paths.py` `.git` 없는 배포본 fallback `parents[5]` → `[6]`(정상 경로는 `.git` 앵커라 무관). 팀 파일 수정 **0**. `test_team_tool_discipline`(금지 import 이름의 AST 검사 — `app.infrastructure`·`psycopg`·`openai`·`app.presentation`·`app.application`)가 훑는 엔진 파일 21 은 자리만 바뀌고 그대로 통과한다(41 passed). 이 검사는 import 이름만 보므로 「인프라 접근 0」의 증명이 아니다 — 엔진의 바깥 접점은 `paths.py` 의 `.env` 읽기(`dotenv`)와 `options.py` 의 팀 공용 `route_uses` 뿐이다. 이관 전후 23쌍은 `scratch\_69\verify_69_pairs.py` 로 「승인한 치환 + 코드 2줄 + 독스트링」 외 바이트 차이 0 을 확인. 실행 명령은 `app.modules.travel_ops.mobility.engine.<모듈>` 로 바뀜(§6).
 
 ## 5. 숫자(기기 노트북 `playdata` · 2026-09-28 · GraphHopper 없음 · `mobility/engine/` 자리에서 재측정)
 
@@ -67,6 +67,9 @@ git diff --exit-code origin/develop -- .env.teamflow.example final_project_cs/sc
 - GraphHopper(자동차·자전거 라우터)는 기기별 로컬 — 없는 기기는 해당 판정이 근거없음으로 나온다.
 - `requirements-mobility.txt` 는 **수집·분석 스크립트용 별도 환경**이다 — 팀 `final_project_cs/requirements.txt` 와 고정 버전이 다르다(numpy 2.2.1↔1.26.4 · scipy · scikit-learn · `pywin32`). 팀 env 에 같이 설치하지 않는다. 엔진·시험은 팀 requirements 만으로 돈다.
 - `pytest tests/unit/travel` 전체는 팀 `test_planner.py` 가 CI 환경변수(`ACOP_*`) 없이는 수집 단계에서 멈춘다 — 우리 폴더만 돌릴 때는 무관.
+- **엔진 import 순서**(9/28 이관 뒤): `app.modules.travel_ops.mobility.engine.*` 를 부르면 팀장 `mobility/__init__.py` → `team.py` → 코어 계약이 먼저 올라온다(옛 자리도 `travel_ops/__init__.py` 가 여섯 팀을 먼저 불렀으니 「팀 venv 필요」 조건은 같다). `team.py` 가 나중에 엔진을 import 하게 배선할 때는 새 프로세스에서 「engine 먼저 · team 먼저 · 코어 먼저」 세 순서를 한 번씩 돌려 순환이 없는지 본다(GPT 대조).
+- **축소 배포**(`final_project_cs` 내용만 복사 · `.git` 없음): `paths.py` 는 `.git` 앵커 → 없으면 `parents[6]`(= 전체 저장소 배치의 루트). 컨테이너에 `.env` 를 그 자리에 둘 수 없으면 **환경변수 `DATA_DIR` 주입이 계약**이다(`load_dotenv` 는 이미 있는 환경변수를 덮지 않는다). Docker 관문(main)은 이 PR 범위 밖.
+- `mobility_scripts/budget_probe_measure_v1.py` 는 엔진을 별칭 패키지(`mobility_engine`)로 파일째 든다 — `car`·`paths` 까지만 되고(`options` 는 팀 공용 `route_uses` 상대 import 때문에 불가) 정식 경로와 한 프로세스에서 섞지 않는다.
 
 ## 8. 코어 쪽에 이미 보낸 것
 

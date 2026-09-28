@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """이동·동선 판정 엔진 — 자기완결 패키지.
 
-안에서는 상대 import 만 쓴다. 밖으로 나가는 의존은 하나뿐이다:
-`paths.py` 가 저장소 루트의 `.env` 에서 `DATA_DIR` 을 읽는다(파일 읽기지 import 가 아니다).
+안에서는 상대 import 만 쓴다. 밖으로 나가는 의존은 둘이다(69 GPT 대조 #2 정정 — 종전 「하나뿐」은 거짓):
+  ① `paths.py` 가 저장소 루트의 `.env` 에서 `DATA_DIR` 을 읽는다(파일 읽기지 import 가 아니다 · 환경변수가 있으면 그게 우선).
+  ② `options.py` 가 팀 공용 `travel_ops/route_uses.py` 를 `from ...route_uses` 로 든다(후보 uses 형식 검사 · 팀장 소유).
 그래서 이 패키지는 `final_project_cs/` 만 sys.path 에 있으면 돈다 —
-저장소 루트가 sys.path 에 없어도 된다.
+저장소 루트가 sys.path 에 없어도 된다. 별칭 패키지로 파일째 드는 방식(`budget_probe_measure_v1.py`)은
+② 때문에 `options`·`plan` 까지는 못 든다(`car`·`paths` 만) — 정식 경로와 별칭을 한 프로세스에서 섞지 않는다.
 
 ★ 31번 방 2차(2026-09-21) — app/infrastructure/travel/mobility → app/modules/travel_ops/mobility/engine.
   infrastructure/travel 은 여러 팀이 같이 쓰는 바깥 피드(캐시·호출 제한·주기 폴링) 층이라

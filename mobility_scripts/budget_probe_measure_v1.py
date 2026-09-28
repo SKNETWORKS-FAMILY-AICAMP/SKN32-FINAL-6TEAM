@@ -23,6 +23,9 @@ import importlib.util
 # 엔진 패키지만 따로 올린다 — `app.modules.travel_ops` 로 import 하면 travel_ops/__init__.py 가
 # 여섯 팀 모듈(openai 등)을 먼저 불러온다(mobility/engine/__init__.py 에 적힌 대가). 분석 스크립트라
 # 팀 의존 없이 엔진만 읽는다. 엔진 코드는 그대로다(상대 import 만 쓰는 자기완결 패키지).
+# ★ 69(2026-09-28) 이 별칭 로드는 `car`·`paths` 까지만 된다 — `options`(→ `...route_uses` 팀 공용)·`plan` 은
+#   「beyond top-level package」로 실패한다. 같은 프로세스에서 정식 경로(`app.modules.travel_ops.mobility.engine`)와
+#   이 별칭을 섞으면 모듈·클래스가 두 벌이 되므로 섞지 않는다(GPT 대조 #7).
 _ENGINE = Path(__file__).resolve().parents[1] / "final_project_cs" / "app" / "modules" / "travel_ops" / "mobility" / "engine"
 _spec = importlib.util.spec_from_file_location("mobility_engine", _ENGINE / "__init__.py",
                                                submodule_search_locations=[str(_ENGINE)])
