@@ -9,6 +9,14 @@
   포장       가능 111, 불가 1, 언급 없음 88
 
 언급이 없는 것을 가능으로 바꾸지 않는다. unknown 으로 둔다.
+
+아이 동반(kids_allowed)은 따로 본다(kids_state).
+  관광공사에는 「아이 동반 가능」 칸이 없다. kidsfacility 는 「어린이 놀이방이 있는가」다.
+  989곳 중 1 이 4곳, 0 이 985곳이다(2026-09-28).
+    1  놀이방이 있다 → 아이와 가도 된다. yes
+    0  놀이방이 없다 → 아이를 받지 않는다는 뜻이 아니다. 행을 만들지 않는다(모름)
+  메뉴에 「아동 요금」이 있으면 아이를 받는 집이다. yes
+  「노키즈」가 적혀 있으면 no. 지금 원문에는 한 곳도 없다.
 「가능(일부 메뉴)」처럼 단서가 붙은 것은 limited 로 두고 원문을 함께 남긴다.
 
 사용법:  python scripts/dining/make_attribute_sql.py
@@ -65,6 +73,24 @@ def classify(text: str) -> tuple[str, str | None]:
     return "unknown", text
 
 
+RE_NO_KIDS = re.compile(r"노\s*키즈")
+RE_KIDS_PRICE = re.compile(r"(아동|어린이|키즈)\s*(이용\s*)?(가격|요금|메뉴)")
+
+
+def kids_state(row: dict) -> tuple[str, str | None, str]:
+    """(값 상태, 상세, 근거 원문). 근거가 없으면 unknown — 놀이방이 없다는 것은 근거가 아니다."""
+    for field in ("infocenterfood", "restdatefood", "treatmenu", "firstmenu", "opentimefood"):
+        text = norm(row.get(field))
+        if RE_NO_KIDS.search(text):
+            return "no", "노키즈", text[:300]
+    if str(row.get("kidsfacility") or "").strip() == "1":
+        return "yes", "어린이 놀이방", "kidsfacility=1"
+    menu = norm(row.get("treatmenu"))
+    if RE_KIDS_PRICE.search(menu):
+        return "yes", "아동 요금이 있다", menu[:300]
+    return "unknown", None, ""
+
+
 def q(value) -> str:
     if value is None or value == "":
         return "NULL"
@@ -80,7 +106,7 @@ def main() -> None:
              "-- 같은 적재를 다시 돌려도 쌓이지 않게 이 출처의 것을 먼저 비운다.",
              f"DELETE FROM dining.dn_attribute WHERE source_code = '{SOURCE}';", ""]
 
-    stat: dict[str, Counter] = {code: Counter() for code in FIELDS.values()}
+    stat: dict[str, Counter] = {code: Counter() for code in [*FIELDS.values(), "kids_allowed"]}
     values = []
 
     for row in rows:
@@ -98,6 +124,14 @@ def main() -> None:
             values.append(
                 f"    ('{attr_id}', '{place_uid}', '{SOURCE}', '{record_id}', "
                 f"'{code}', '{state}', {q(detail)}, {q(text[:300])}, 'regex', 0.9, '{VALID_FROM}')")
+
+        state, detail, text = kids_state(row)
+        stat["kids_allowed"][state] += 1
+        if state != "unknown":
+            attr_id = str(uuid.uuid5(NS, f"attr:tourapi:{cid}:kids_allowed"))
+            values.append(
+                f"    ('{attr_id}', '{place_uid}', '{SOURCE}', '{record_id}', "
+                f"'kids_allowed', '{state}', {q(detail)}, {q(text)}, 'regex', 0.9, '{VALID_FROM}')")
 
     lines.append("INSERT INTO dining.dn_attribute "
                  "(attr_id, place_uid, source_code, record_id, attr_code, value_state, "
