@@ -17,6 +17,7 @@ export const tripSurveySchema = z.strictObject({
   theme: z.string().optional(),
   party: z.string().optional(),
   preferred_mobility: z.array(z.string()).optional(),
+  /** The server still accepts it, but the web no longer asks (nothing uses it), so it is never sent. */
   domestic: z.boolean().optional(),
   priority: z.array(area).optional(),
   priority_details: z.partialRecord(area, z.array(z.string())).optional(),
@@ -37,7 +38,6 @@ export function toSurvey(a: Answers): TripSurvey {
     ...(has("theme") && { theme: a.theme }),
     // `party` is a free string on the backend: `other` sends what was typed, trimmed.
     ...(has("party") && { party: a.party === "other" ? a.partyOther.trim() : a.party }),
-    ...(has("citizen") && { domestic: a.citizen === "domestic" }),
     // Array order is the ranking. Areas not picked (and their details) are left out.
     ...(has("priority") && { priority: a.priority, priority_details: Object.fromEntries(a.priority.map((area) => [area, a.details[area]])) }),
     ...(has("indoor") && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),

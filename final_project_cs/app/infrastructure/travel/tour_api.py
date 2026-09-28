@@ -13,6 +13,12 @@
       restdate "매주 화요일. 단 정기휴일이 공휴일·대체공휴일과 겹치면 개방하며,
                 그 다음의 첫 번째 비공휴일이 정기휴일임"
 
+실측(2026-09-21, 실 키로) — ACOP_TOUR_API_KEY 검증. 4/4 live 테스트 통과:
+  [1] find("경복궁", allowed_types={12,14,28}) → content_id=126508, lat=37.5760, lon=126.9767
+  [2] operating(126508, 12) → usetime/restdate 원문 정상 반환, parsed=False
+  [3] by_content_id(126508, 12) → matched_title=경복궁, address=서울특별시 종로구 사직로 161
+  [4] find("듣도보도못한곳XYZ") → None (not_found 미스 정상 기록)
+
 ★★**`usetime`·`restdate` 를 파싱해 boolean 으로 만들지 않는다.**
   둘 다 **자연어**다. 위 `restdate` 하나만 봐도 「매주 화요일 휴무 / 단 공휴일과
   겹치면 개방 / 그 다음 첫 비공휴일이 휴무」라는 3중 조건이다. 이걸 규칙으로
@@ -21,6 +27,11 @@
   그래서 이 어댑터는 **원문을 그대로 싣고 `parsed=False` 를 밝힌다.**
   Team 은 원문을 근거로 전하고, 확정 판정이 필요하면 사람에게 넘긴다
   (`CLAUDE.md` §0.1 — 근거를 못 대면 확정 답변을 만들지 않는다).
+
+  ★`[2026-09-28 사용자 결정]` **일정 생성기는 이 원문을 요일별 시각으로 옮겨 쓴다**(`modules/travel_ops/place_hours.py`).
+  실제 일정 38항목 중 영업시간을 아는 항목이 0개라, 「일~목 휴무」인 곳이 월요일에 들어갔다. 이 어댑터는 여전히
+  원문만 준다 — 옮기는 쪽이 위험을 줄인다: 단순한 원문만 규칙으로, 나머지는 **원문에 글자 그대로 있는 인용**이
+  붙은 것만 받고, 계절이 다르면 가장 짧은 시간대, 공휴일 조건은 펴지 않고, **최종 판정은 당일 새벽 구글 확인**이 한다.
 
 ★**동명이인이 실재한다.** 「경복궁」이 서울 궁궐(12)·**울산 음식점**(39)·
   야간행사(15) 셋으로 나온다. 이름만으로 하나를 고르면 **울산 음식점 좌표로
@@ -34,6 +45,24 @@ from typing import Any
 from .base import TravelSource
 
 BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
+
+#: 신분류체계 대분류(lclsSystm1) → 이름. 한국관광공사 2023년 개편.
+#: 실측(2026-09-21): searchKeyword2 응답에서 직접 확인한 코드.
+#: Activity 담당(wiki/teams/activity.md §범위): NA·HS·VE·LS·EX·SH.
+#: 대분류 10종 중 9종 확인 — 나머지 1종은 아직 미관측.
+LARGE_CLASS_NAMES = {
+    # ── Activity 담당 ──────────────────────────────────────
+    "NA": "자연관광",    # 산·하천·해양·생태·자연공원
+    "HS": "역사관광",    # 역사유적지·유물·종교성지·안보관광지 (경복궁=HS01)
+    "VE": "문화관광",    # 랜드마크·테마파크·공연·전시·박물관·미술관
+    "LS": "레저스포츠",  # 골프·스키·수상레저·항공레저
+    "EX": "체험관광",    # 전통·공예·농산어촌체험·템플스테이·웰니스
+    "SH": "쇼핑",        # 대형마트(SH03) 포함
+    # ── Activity 미담당 ────────────────────────────────────
+    "FD": "음식",        # 음식점·식도락
+    "AC": "숙박",        # 호텔·리조트·펜션·캠핑
+    "EV": "행사·이벤트", # 축제·공연·전시 행사 (contenttypeid=15)
+}
 
 
 def _bare(title: str) -> str:
@@ -71,18 +100,17 @@ class TourApiPlace(TravelSource):
     def find(self, place_name: str, *,
              content_type_id: str | None = None,
              allowed_types: "set[str] | None" = None,
+             allowed_large_classes: "set[str] | None" = None,
              area_code: str | None = None) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 애매하면 `None`(모름).
 
         ★`content_type_id` 를 주면 공급자 쪽에서 그 종류로 좁혀 검색한다.
-        ★`allowed_types` 는 **받아 온 뒤 걸러 낼** 종류들이다.
+        ★`allowed_types` 는 **받아 온 뒤 걸러 낼** 구분류(contenttypeid) 집합이다.
+        ★`allowed_large_classes` 는 **신분류체계 대분류(lclsSystm1)** 로 걸러 낼
+          집합이다(2026-09-21 개편). `watch.py.KIND_TO_LARGE_CLASSES` 가 이걸 쓴다.
 
-          둘을 나눈 이유(2026-09-10). 우리 `activity` 는 관광타입 하나가
-          아니다 — 계획서 v11 §5 의 Activity 는 자연·인문·레포츠·쇼핑을 다
-          포함해서 **12·14·28·38 에 걸친다.** 공급자 파라미터는 한 번에 한
-          종류만 받으므로, 여러 종류를 허용하려면 **넓게 받아 좁게 거른다.**
-          처음엔 `activity → 12` 하나로 잡았다가 레포츠·문화시설 장소가
-          전부 「못 찾음」이 됐다.
+          서버 파라미터는 여전히 contenttypeid 한 종류만 받는다 — lclsSystm1 로
+          서버 필터링이 되는지 미확인. 따라서 넓게 받아 클라이언트에서 좁힌다.
         """
         if not self._key:
             self._miss("no_service_key")
@@ -117,10 +145,14 @@ class TourApiPlace(TravelSource):
             bare = _bare(wanted)
             exact = [row for row in rows if _bare(str(row.get("title", ""))) == bare]
         if allowed_types:
-            # ★우리가 다루는 종류 밖은 뺀다. 「경복궁」의 울산 음식점(39)이
-            #   activity 후보에서 이걸로 빠진다.
+            # 구분류(contenttypeid) 필터 — 하위호환.
             exact = [row for row in exact
                      if str(row.get("contenttypeid") or "") in allowed_types]
+        if allowed_large_classes:
+            # ★신분류체계 대분류(lclsSystm1) 필터 — 같은 contenttypeid=12라도
+            #   HS(역사관광)·NA(자연관광)·VE(문화관광)를 정확히 구분한다.
+            exact = [row for row in exact
+                     if str(row.get("lclsSystm1") or "") in allowed_large_classes]
         if not exact:
             self._miss("no_exact_title", f"{wanted}: {len(rows)}건 중 정확일치 0")
             return None
@@ -136,10 +168,12 @@ class TourApiPlace(TravelSource):
             return None
 
         content_type = str(row.get("contenttypeid") or "")
+        large_class = str(row.get("lclsSystm1") or "")
         return self.stamp({
             "content_id": str(row.get("contentid") or ""),
             "content_type_id": content_type,
-            "content_type_name": CONTENT_TYPE_NAMES.get(content_type),
+            "large_class_code": large_class or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
             "latitude": latitude,
             "longitude": longitude,
@@ -209,11 +243,12 @@ class TourApiPlace(TravelSource):
             return None
 
         row = rows[0]
+        large_class = str(row.get("lclsSystm1") or "")
         return self.stamp({
             "content_id": content_id,
             "content_type_id": str(row.get("contenttypeid") or content_type_id),
-            "content_type_name": CONTENT_TYPE_NAMES.get(
-                str(row.get("contenttypeid") or content_type_id)),
+            "large_class_code": large_class or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(large_class),
             "matched_title": str(row.get("title") or ""),
             "latitude": self._number(row, "mapy"),
             "longitude": self._number(row, "mapx"),
@@ -284,6 +319,10 @@ class TourApiPlace(TravelSource):
             "title": str(row.get("title") or "").strip(),
             "address": str(row.get("addr1") or "").strip() or None,
             "latitude": number("mapy"), "longitude": number("mapx"),
+            "large_class_code": str(row.get("lclsSystm1") or "") or None,
+            "large_class_name": LARGE_CLASS_NAMES.get(str(row.get("lclsSystm1") or "")),
+            "lclsSystm2": str(row.get("lclsSystm2") or "") or None,
+            "lclsSystm3": str(row.get("lclsSystm3") or "") or None,
             # ★공급자가 말한 수정 시각. 우리가 받은 시각과 섞지 않는다.
             "source_modified_at": str(row.get("modifiedtime") or "") or None,
             "raw": row,
@@ -347,4 +386,4 @@ class TourApiPlace(TravelSource):
         return TravelSource._body_error(payload)
 
 
-__all__ = ["BASE_URL", "CONTENT_TYPE_NAMES", "TourApiPlace"]
+__all__ = ["BASE_URL", "LARGE_CLASS_NAMES", "TourApiPlace"]

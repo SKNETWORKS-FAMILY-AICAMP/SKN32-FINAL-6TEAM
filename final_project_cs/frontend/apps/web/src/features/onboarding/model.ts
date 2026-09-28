@@ -14,7 +14,6 @@ export interface Answers {
   party: string;
   /** Typed for `party: other`. Kept while another choice is picked, so choosing `other` again brings it back; sent only with `other`. */
   partyOther: string;
-  citizen: string;
   /** Areas in the order they were picked: the order is the ranking. */
   priority: Area[];
   /** Each area's details in the order they were picked, ranked the same way and kept per area. */
@@ -28,19 +27,18 @@ export interface Answers {
 }
 
 export const initialAnswers: Answers = {
-  theme: "", party: "", partyOther: "", citizen: "", priority: [], details: { food: [], activity: [], mobility: [] },
+  theme: "", party: "", partyOther: "", priority: [], details: { food: [], activity: [], mobility: [] },
   indoorDining: "", indoorActivity: "", onDisruption: "", pace: "", skipped: [],
 };
 
 export type Option = readonly [value: string, ko: string, en: string];
-export type ChoiceKey = "theme" | "party" | "citizen" | "indoorDining" | "indoorActivity" | "onDisruption" | "pace";
+export type ChoiceKey = "theme" | "party" | "indoorDining" | "indoorActivity" | "onDisruption" | "pace";
 
 const indoorOutdoor: readonly Option[] = [["indoor", "실내", "Indoors"], ["outdoor", "실외", "Outdoors"], ["any", "상관없음", "Either is fine"]];
 
 export const options: Record<ChoiceKey, readonly Option[]> = {
   theme: [["food", "맛집 탐방", "Food discoveries"], ["nature", "자연과 힐링", "Nature & rest"], ["culture", "문화와 역사", "Culture & history"], ["activity", "액티비티", "Adventure"], ["shopping", "쇼핑", "Shopping"], ["local", "로컬 일상", "Local life"]],
   party: [["alone", "혼자", "Solo"], ["partner", "연인", "Partner"], ["friends", "친구", "Friends"], ["family", "가족", "Family"], ["other", "기타", "Other"]],
-  citizen: [["domestic", "내국인", "Korean national"], ["foreign", "외국인", "Foreign national"]],
   indoorDining: indoorOutdoor,
   indoorActivity: indoorOutdoor,
   onDisruption: [["replace", "비슷한 곳으로 바꿔줘", "Swap in something similar"], ["ask_first", "먼저 물어봐줘", "Ask me first"]],
@@ -56,7 +54,7 @@ export const detailOptions: Record<Area, readonly Option[]> = {
   mobility: [["public", "대중교통", "Public transit"], ["walk", "도보", "Walking"], ["car", "렌트카", "Rental car"], ["taxi", "택시", "Taxi"]],
 };
 
-export type QuestionId = "theme" | "party" | "citizen" | "priority" | "indoor" | "onDisruption" | "pace";
+export type QuestionId = "theme" | "party" | "priority" | "indoor" | "onDisruption" | "pace";
 type Pair = readonly [ko: string, en: string];
 
 interface Question {
@@ -71,8 +69,9 @@ interface Question {
 }
 
 /**
- * The seven questions, in order. Everything about a question — its fields, its check and its text — is in its one
- * entry, and the survey is built by `id`, so no position is shared by two questions.
+ * The six questions, in order. Everything about a question — its fields, its check and its text — is in its one
+ * entry, and the survey is built by `id`, so no position is shared by two questions. Nationality is not asked
+ * (nothing uses it; the backend's `domestic` stays optional).
  */
 export const questions: readonly Question[] = [
   {
@@ -83,10 +82,6 @@ export const questions: readonly Question[] = [
     id: "party", name: ["여행자 구성", "Your companions"], fields: ["party", "partyOther"],
     answered: (a) => Boolean(a.party) && (a.party !== "other" || Boolean(a.partyOther.trim())),
     title: ["누구와 함께 떠나나요?", "Who’s coming along?"], helper: ["함께 떠나는 사람을 하나 골라 주세요.", "Choose who you’re traveling with."],
-  },
-  {
-    id: "citizen", name: ["내국인 여부", "Nationality"], fields: ["citizen"], answered: (a) => Boolean(a.citizen),
-    title: ["한국 국적이신가요?", "Are you a Korean national?"], helper: ["여행에 필요한 안내를 맞춰 드릴게요.", "This helps tailor the travel information."],
   },
   {
     id: "priority", name: ["여행 우선순위", "Your priorities"], fields: ["priority", "details"],

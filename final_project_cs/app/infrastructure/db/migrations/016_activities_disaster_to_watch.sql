@@ -1,0 +1,26 @@
+-- 016 — 재난문자 관련성을 watch_observations로 옮긴다 (2026-09-20)
+--
+-- ★왜. `activities.disaster_api_content_id`는 정적 FK 한 칸이라 "지금 가장
+--   최근에 본 재난문자 하나"만 담을 수 있다. 재난문자 관련성은 TourAPI 신원
+--   (015 의 `place_id`)과 달리 **한 번 해소하면 끝나는 값이 아니다** — 활동
+--   시작 3시간 전부터 5분 간격으로 다시 본다(wiki/teams/activity.md 「조회
+--   시점·재검토 주기」). 발령→격상→해제처럼 여러 번 바뀔 수 있는 값을 정적
+--   칸 하나로 덮어쓰면 이전에 뭘 봤는지가 사라진다.
+--
+-- ★`watch_observations`(012)가 정확히 이 모양이다 — 주기적 관측을 append로
+--   쌓고, `fingerprint`로 실질 변화만 `watch_changes`에 남긴다. TourAPI·장소
+--   감시가 `target_kind='place'`로 이미 이 인프라를 쓴다. 재난문자도 같은
+--   메커니즘을 재사용한다 — 감시 방식을 두 개로 쪼개지 않는다.
+--
+-- ★`target_kind='activity'`인 이유. 재난 관련성은 "장소"가 아니라 "이 활동이
+--   예정된 시각(3시간 이내)"에 달려 있다 — 장소 감시와는 다른 대상 축이다.
+--   `target_id = activities.id::text`, `source = 'disaster_api'`.
+--
+-- ★FK를 걸지 않는다. `watch_observations.payload`는 jsonb이고, TourAPI 관측도
+--   `place_catalog`에 FK를 걸지 않는 것과 같은 패턴이다 — 원본 대조가 필요하면
+--   payload 안의 `SN`으로 `disaster` 테이블을 조회한다.
+--
+-- `[미확보]` `due_activities()`(watch.py 의 `due_places()`에 대응하는 함수)는
+--   아직 없다 — 이 마이그레이션은 스키마만 정리하고, 감시 루프 배선은 범위 밖이다.
+
+ALTER TABLE activities DROP COLUMN IF EXISTS disaster_api_content_id;

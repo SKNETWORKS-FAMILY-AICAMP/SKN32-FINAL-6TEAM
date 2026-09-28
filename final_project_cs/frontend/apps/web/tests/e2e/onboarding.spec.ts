@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { noHorizontalScroll, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
 
-test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 7문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
+test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
   await page.goto("/");
   await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 triPilot.");
@@ -56,17 +56,17 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 7문항을 �
   await page.getByRole("button", { name: "가족" }).click();
   await next.click();
 
-  // No separate transport question any more: nationality comes third.
-  await expect(heading("한국 국적이신가요?")).toBeVisible();
-  await page.getByRole("button", { name: "외국인", exact: true }).click();
+  // No separate transport or nationality question: the priorities card comes third.
+  await expect(heading("어떤 것을 더 중요하게 생각하나요?")).toBeVisible();
+  await page.getByRole("button", { name: /^활동/ }).click();
+  await page.getByRole("button", { name: /^힐링/ }).click();
+  // Skipping clears the answer but still counts toward progress; going back shows it cleared.
   await skip.click();
   await expect(progress).toHaveAttribute("aria-valuenow", "3");
   await page.getByRole("button", { name: "이전", exact: true }).click();
-  await expect(heading("한국 국적이신가요?")).toBeVisible();
-  await expect(page.getByRole("button", { name: "외국인", exact: true })).toHaveAttribute("aria-pressed", "false");
-  await expect(next).toBeDisabled();
-  await skip.click();
   await expect(heading("어떤 것을 더 중요하게 생각하나요?")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^활동/ })).toHaveAttribute("aria-pressed", "false");
+  await expect(next).toBeDisabled();
   await page.getByRole("button", { name: /^활동/ }).click();
   await expect(next).toBeDisabled();
   await page.getByRole("button", { name: /^힐링/ }).click();

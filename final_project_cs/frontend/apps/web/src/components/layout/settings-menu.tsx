@@ -4,9 +4,11 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Key
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, Menu, X } from "lucide-react";
+import { KeySettings } from "@/features/account/key-settings";
 import { Avatar } from "@/components/ui";
 import { LanguagePicker } from "@/components/ui/language-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
+import { DATA_MODE } from "@/lib/data-mode";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
 import styles from "./settings-menu.module.css";
@@ -68,6 +70,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
             onChange={(event) => updateSettings({ navigation: event.target.checked ? "floating" : "fixed" })} />
         </label>
       </div>
+      {DATA_MODE === "live" && <KeySettings />}
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>
     </div>
   </div>;

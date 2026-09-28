@@ -97,20 +97,34 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
 
 
 def _place_violations(part: Part) -> list[Violation]:
+    from .place_hours import hours_on
+
     attributes = dict((part.place or {}).get("attributes") or {})
-    hours, brk = attributes.get("hours"), attributes.get("break")
+    brk = attributes.get("break")
     found: list[Violation] = []
-    if isinstance(hours, (list, tuple)) and len(hours) == 2:
-        opens, closes = _clock(hours[0]), _clock(hours[1])
-        end = part.ends_at or part.starts_at
-        if opens and part.starts_at.time() < opens:
+    # ★`[2026-09-28]` 그날의 영업시간 — 요일별 칸(`hours_week`, 관광공사 원문을 옮긴 것)이 먼저, 없으면 하루 한 칸
+    #   (`hours`). 전에는 하루 한 칸만 봐서 **쉬는 요일**을 몰랐다(월요일 휴무인 곳이 월요일에 들어갔다)
+    today = hours_on(attributes, part.starts_at.date())
+    end = part.ends_at or part.starts_at
+    if today == "closed":
+        found.append(Violation("closed_day", (part.seq,),
+                               f"{part.title}: {part.starts_at:%m월 %d일}은 쉬는 날이다",
+                               "그날 여는 다른 곳으로 바꾼다"))
+    elif today is not None:
+        opens, closes = today.opens.strftime("%H:%M"), today.closes.strftime("%H:%M")
+        if part.starts_at.time() < today.opens:
             found.append(Violation("before_opening", (part.seq,),
-                                   f"{part.title}: {_hm(part.starts_at)} 시작인데 {hours[0]} 에 연다",
-                                   f"{hours[0]} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다"))
-        if closes and end.time() > closes:
+                                   f"{part.title}: {_hm(part.starts_at)} 시작인데 {opens} 에 연다",
+                                   f"{opens} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다"))
+        if end.time() > today.closes:
             found.append(Violation("after_closing", (part.seq,),
-                                   f"{part.title}: {_hm(end)} 까지인데 {hours[1]} 에 닫는다",
-                                   f"{hours[1]} 이전에 끝나게 줄이거나 앞당긴다"))
+                                   f"{part.title}: {_hm(end)} 까지인데 {closes} 에 닫는다",
+                                   f"{closes} 이전에 끝나게 줄이거나 앞당긴다"))
+        if today.last_entry and part.starts_at.time() > today.last_entry:
+            last = today.last_entry.strftime("%H:%M")
+            found.append(Violation("after_last_entry", (part.seq,),
+                                   f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
+                                   f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
     if isinstance(brk, (list, tuple)) and len(brk) == 2:
         starts, ends = _clock(brk[0]), _clock(brk[1])
         end = part.ends_at or part.starts_at

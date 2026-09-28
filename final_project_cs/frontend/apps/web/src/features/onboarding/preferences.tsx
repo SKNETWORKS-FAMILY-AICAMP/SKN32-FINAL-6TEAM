@@ -186,7 +186,6 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     switch (questions[index].id) {
       case "theme": return chips("theme", true, true);
       case "party": return party();
-      case "citizen": return chips("citizen", true);
       case "priority": return priority();
       case "indoor": return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
       case "onDisruption": return chips("onDisruption", true);

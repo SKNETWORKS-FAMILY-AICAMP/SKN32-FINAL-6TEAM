@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Leaf } from "lucide-react";
 import { RegistrationSteps } from "@/components/ui";
+import { KeyNotice } from "@/features/account/key-notice";
 import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
@@ -33,13 +34,16 @@ export function JourneyShell({ view, title, children }: { view: JourneyView; tit
         </div>
       </header>
       <main id="main-content" className={styles.main} tabIndex={-1}>
+        {DATA_MODE === "live" && <KeyNotice />}
         {step !== undefined && <RegistrationSteps current={step} />}
         {children}
         <footer className={styles.footer}>
           <span><Leaf size={18} strokeWidth={1.6} aria-hidden="true" />{t("당신의 취향대로, 더 편안하게.", "More you. A little more at ease.")}</span>
           <p>{DATA_MODE === "demo"
             ? t("데모 · 검증과 채팅은 시연 응답이며 실제 서비스에 연결되지 않아요.", "Demo · Checks and chat use demo responses, without a live service connection.")
-            : t("실제 여행 API 연결이 필요합니다. 현재 모드에서는 데모 데이터를 사용하지 않습니다.", "A live travel API connection is required. Demo data is not used in this mode.")}</p>
+            : DATA_MODE === "live"
+              ? t("서버에 연결된 화면이에요. 일정과 답은 서버가 낸 결과만 보여 드려요.", "Connected to the server. Itineraries and answers shown here come from the server only.")
+              : t("실제 여행 API 연결이 필요합니다. 현재 모드에서는 데모 데이터를 사용하지 않습니다.", "A live travel API connection is required. Demo data is not used in this mode.")}</p>
         </footer>
       </main>
     </div>

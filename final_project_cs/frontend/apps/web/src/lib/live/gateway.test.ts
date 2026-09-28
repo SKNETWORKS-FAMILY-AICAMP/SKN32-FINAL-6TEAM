@@ -81,6 +81,34 @@ describe("live trip gateway", () => {
     expect(second.messages.at(-1)?.text).toContain("mystery_status");
   });
 
+  it("never fills in its own “passed to a person” sentence: an escalated result without an answer shows its status, one with an answer shows the server's words", async () => {
+    replies.push({ status: "escalated", reason: "not_understood" }, TRIP,
+      { status: "escalated", reason: "question_needs_policy_answer", answer: "규정에서 그 내용을 찾지 못했어요." }, TRIP);
+    const gateway = createLiveGateway();
+    const bare = await gateway.sendMessage(TRIP.trip_id, "???", "ko");
+    expect(bare.messages.at(-1)?.text).not.toContain("담당자");
+    expect(bare.messages.at(-1)?.text).toContain("escalated");
+    const answered = await gateway.sendMessage(TRIP.trip_id, "위약금이 있나요?", "ko");
+    expect(answered.messages.at(-1)?.text).toBe("규정에서 그 내용을 찾지 못했어요.");
+  });
+
+  it("carries what the server did and found: history, warnings, pinned stops and the other options it kept", async () => {
+    replies.push({
+      ...TRIP,
+      items: [{ ...TRIP.items[0], customer_pinned: true, other_options: [{ key: "a", name: "대체 식당" }, { key: 1, name: "깨진 것" }] }, TRIP.items[1]],
+      history: [{ version: 2, reason: "closed", at: "2026-10-15T01:30:00+00:00", causes: [{ category: "place", summary: "식당이 문을 닫았어요." }, { kind: "closed" }] }],
+      warnings: [{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }, { code: "no_reason" }],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.planUrl).toBe("http://x/plan");
+    expect(trip.stops[0]).toMatchObject({ pinned: true, otherOptions: [{ key: "a", name: "대체 식당" }] });
+    expect(trip.stops[1]).toMatchObject({ pinned: false, otherOptions: [] });
+    // Seoul wall clock, and a cause without a sentence still says what kind of thing it was
+    expect(trip.history).toEqual([{ version: 2, reason: "closed", at: "2026-10-15 10:30", causes: ["식당이 문을 닫았어요.", "closed"] }]);
+    // ★a warning without the server's reason is dropped — it is not replaced by a made-up one
+    expect(trip.warnings).toEqual([{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }]);
+  });
+
   it("does not quietly become a new user when the saved key is rejected", async () => {
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
     const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);

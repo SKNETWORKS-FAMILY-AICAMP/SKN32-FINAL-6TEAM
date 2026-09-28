@@ -80,11 +80,11 @@ def _on(moment: datetime, hhmm: str) -> datetime:
 
 
 def open_during(place: dict[str, Any], start: datetime, end: datetime | None) -> bool | None:
-    """영업시간 안인가. ★영업시간을 모르면 `None` — 「연다」로 읽지 않는다."""
-    hours = (place.get("attributes") or {}).get("hours")
-    if not hours or len(hours) != 2:
-        return None
-    return _on(start, hours[0]) <= start and (end or start) <= _on(start, hours[1])
+    """영업시간 안인가. ★영업시간을 모르면 `None` — 「연다」로 읽지 않는다.
+    ★`[2026-09-28]` 그날의 영업시간(`place_hours.hours_on` — 요일별 칸이 먼저, 쉬는 날이면 False)."""
+    from .place_hours import fits
+
+    return fits(place.get("attributes") or {}, start, end or start)
 
 
 def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple[bool | None, str]:

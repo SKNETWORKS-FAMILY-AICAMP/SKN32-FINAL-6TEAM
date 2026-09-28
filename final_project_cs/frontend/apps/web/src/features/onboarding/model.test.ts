@@ -7,16 +7,17 @@ import {
 const ko = translator("ko");
 /** Every question answered, with a picked "other" draft kept aside. */
 const full: Answers = {
-  ...initialAnswers, theme: "food", party: "family", partyOther: "직장 동료", citizen: "foreign", priority: ["food", "mobility"],
+  ...initialAnswers, theme: "food", party: "family", partyOther: "직장 동료", priority: ["food", "mobility"],
   details: { food: ["clean", "taste"], activity: [], mobility: ["taxi"] }, indoorDining: "indoor", indoorActivity: "any", onDisruption: "ask_first", pace: "relaxed",
 };
 
 describe("onboarding preferences", () => {
-  it("asks seven questions in order, without the separate transport question", () => {
-    expect(questions.map((question) => question.id)).toEqual(["theme", "party", "citizen", "priority", "indoor", "onDisruption", "pace"]);
+  it("asks six questions in order, without the separate transport or nationality question", () => {
+    expect(questions.map((question) => question.id)).toEqual(["theme", "party", "priority", "indoor", "onDisruption", "pace"]);
     expect(questions.map((question) => question.title[0])).not.toContain("어떻게 이동하고 싶나요?");
-    expect(questions[3].title[0]).toBe("어떤 것을 더 중요하게 생각하나요?");
-    expect(questions[3].helper[0]).toBe("중요한 순서대로 분야와 세부 항목을 선택해 주세요.");
+    expect(questions.map((question) => question.title[0])).not.toContain("한국 국적이신가요?");
+    expect(questions[2].title[0]).toBe("어떤 것을 더 중요하게 생각하나요?");
+    expect(questions[2].helper[0]).toBe("중요한 순서대로 분야와 세부 항목을 선택해 주세요.");
     expect(questions.every((_, index) => valid(index, full))).toBe(true);
   });
 
@@ -74,13 +75,13 @@ describe("onboarding preferences", () => {
 
   it("priorities are answered with at least one area and at least one detail in every picked area", () => {
     const food = toggleArea(initialAnswers, "food");
-    expect(valid(3, initialAnswers)).toBe(false);
-    expect(valid(3, food)).toBe(false);
-    expect(valid(3, toggleDetail(food, "food", "taste"))).toBe(true);
+    expect(valid(2, initialAnswers)).toBe(false);
+    expect(valid(2, food)).toBe(false);
+    expect(valid(2, toggleDetail(food, "food", "taste"))).toBe(true);
     const both = toggleArea(toggleDetail(food, "food", "taste"), "mobility");
-    expect(valid(3, both)).toBe(false);
-    expect(valid(3, toggleDetail(both, "mobility", "car"))).toBe(true);
-    expect(skip(both, 3)).toMatchObject({ priority: [], details: { food: [], activity: [], mobility: [] } });
+    expect(valid(2, both)).toBe(false);
+    expect(valid(2, toggleDetail(both, "mobility", "car"))).toBe(true);
+    expect(skip(both, 2)).toMatchObject({ priority: [], details: { food: [], activity: [], mobility: [] } });
   });
 
   it("the summary lines follow the picking order and name mobility's four details", () => {

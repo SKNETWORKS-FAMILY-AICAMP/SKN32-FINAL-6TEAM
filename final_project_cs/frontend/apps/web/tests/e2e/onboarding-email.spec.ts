@@ -9,11 +9,18 @@ const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행
 const field = (page: Page) => page.getByRole("textbox", { name: "이메일" });
 const ERROR = "이메일 형식을 확인해 주세요. 예: name@example.com";
 
-/** Preferences open: skip all seven questions, then add a plan and start its check. */
+/** Preferences open: skip all six questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
+  await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
-  for (let question = 0; question < 7; question += 1) await skip.click();
+  // 설문은 6문항이다(독립 이동수단·내국인 여부 문항을 뺐다). ★카드가 넘어가는 동안의 누름은 화면이 일부러 무시하므로(두 번 넘김 방지),
+  //   넘김이 끝나 다음 카드 제목으로 초점이 옮겨진 것을 보고 다음을 누른다 — 안 기다리면 부하가 있을 때 한 번이 사라진다
+  //   (2026-09-28 실제로 그랬다). 답한 수는 누른 즉시 바뀌므로 기다리는 신호가 되지 못한다.
+  for (let question = 0; question < 6; question += 1) {
+    await skip.click();
+    if (question < 5) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
+  }
   await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요.", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
@@ -139,6 +146,7 @@ test("카드를 오가도 초안이 남고, 저장되지 않는다고 안내하�
   await page.getByRole("button", { name: "계속" }).click();
   await agreeTerms(page);
   await page.getByRole("button", { name: "시작하기" }).click();
+  await expect(page.locator("#question-title-0")).toBeFocused();   // 「시작하기」의 넘김이 끝나야 다음 누름을 받는다
   await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();
   await page.keyboard.press("Escape");
   await emailHead(page).click();

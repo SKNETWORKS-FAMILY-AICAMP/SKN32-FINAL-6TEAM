@@ -17,6 +17,10 @@ export class LiveError extends Error {
  */
 export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8042").replace(/\/$/, "");
 const KEY_STORAGE = "tripilot.web.user-key.v1";
+/** Set when a key was just issued: the screen shows it once so the customer can keep a copy (D-020, D-021 §4). */
+const NOTICE_STORAGE = "tripilot.web.user-key.notice.v1";
+/** Fired on this page whenever the key or its notice changes, so the screen re-reads them. */
+export const KEY_CHANGED_EVENT = "tripilot:key-changed";
 
 let pendingKey: Promise<string> | null = null;
 
@@ -28,6 +32,32 @@ function storedKey(): string | null {
 function storeKey(key: string) {
   try { window.localStorage.setItem(KEY_STORAGE, key); }
   catch { /* private window: the key lives only for this page */ }
+  announceKeyChange();
+}
+
+function announceKeyChange() {
+  try { window.dispatchEvent(new Event(KEY_CHANGED_EVENT)); } catch { /* not in a browser */ }
+}
+
+/** The server's own sentence about the new key (`notice`), kept until the customer says they saved it. */
+function setKeyNotice(notice: string | null) {
+  try { window.localStorage.setItem(NOTICE_STORAGE, JSON.stringify({ notice })); } catch { /* ignore */ }
+  announceKeyChange();
+}
+
+/** A key was issued or rotated and the customer has not yet said they kept a copy. `notice` is the server's sentence (may be absent). */
+export function pendingKeyNotice(): { notice: string | null } | null {
+  try {
+    const raw = window.localStorage.getItem(NOTICE_STORAGE);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { notice?: unknown };
+    return { notice: typeof parsed.notice === "string" ? parsed.notice : null };
+  } catch { return null; }
+}
+
+export function dismissKeyNotice() {
+  try { window.localStorage.removeItem(NOTICE_STORAGE); } catch { /* ignore */ }
+  announceKeyChange();
 }
 
 /** The user key, issued on first use. Concurrent first calls share one issue request. */
@@ -36,8 +66,9 @@ export async function userKey(language: Language): Promise<string> {
   if (existing) return existing;
   pendingKey ??= (async () => {
     const response = await send(`${API_BASE}/v1/web/session`, { method: "POST" }, language);
-    const body = await response.json() as { user_key: string };
+    const body = await response.json() as { user_key: string; notice?: string };
     storeKey(body.user_key);
+    setKeyNotice(body.notice ?? null);
     return body.user_key;
   })().finally(() => { pendingKey = null; });
   return pendingKey;
@@ -83,4 +114,26 @@ export async function api<T>(path: string, language: Language, init: RequestInit
     try { window.localStorage.removeItem(KEY_STORAGE); } catch { /* ignore */ }
     throw new LiveError("key_rejected", t("저장된 사용자 키가 더 이상 맞지 않아요. 다음 요청부터 새 키로 시작해요 — 이전 여행은 따로 보관한 키로만 열 수 있어요.", "Your saved user key is no longer valid. The next request starts with a new key — earlier trips open only with the key you kept."));
   }
+}
+
+/**
+ * Use a key the customer already has (another device, or one they kept). It is checked against the server first —
+ * a key the server does not know is refused and the stored one is left as it was.
+ */
+export async function adoptKey(raw: string, language: Language): Promise<void> {
+  const key = raw.trim();
+  if (!key) throw new LiveError("empty_key", translator(language)("키를 입력해 주세요.", "Enter a key."));
+  await send(`${API_BASE}/v1/web/trips`, { headers: { "X-User-Key": key } }, language);
+  storeKey(key);
+  dismissKeyNotice();
+}
+
+/**
+ * Ask the server for a new key (`POST /v1/web/session/rotate`). ★The old key stops working at once, so the new one is
+ * stored and shown immediately for the customer to keep.
+ */
+export async function rotateKey(language: Language): Promise<void> {
+  const body = await api<{ user_key: string; notice?: string }>("/v1/web/session/rotate", language, { method: "POST" });
+  storeKey(body.user_key);
+  setKeyNotice(body.notice ?? null);
 }
