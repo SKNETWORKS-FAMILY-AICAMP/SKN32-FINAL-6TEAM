@@ -22,7 +22,13 @@ const draftKey = "tripilot.web.registration-draft.v1";
 function Preferences() {
   const t = useT();
   const [{ complete, answers }] = useOnboarding();
-  if (!complete) return null;
+  // ★Answers live in page memory only (nothing is stored), so a reload or a direct visit has none. Say so instead of
+  //   registering without them in silence (found 2026-09-28: registered trips had no survey after a reload).
+  if (!complete) return <><div className={styles.preferences}>
+    <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
+    <p>{t("취향 설문 답이 없어서 이번 등록에는 취향이 반영되지 않아요. 설문 답은 이 화면에서만 기억해서 새로고침하면 사라져요.", "No preference answers here, so this registration goes without them. Answers are kept on this screen only and are lost on reload.")}</p>
+    <p><ButtonLink href={routes.start}>{t("취향 설정하기", "Set my preferences")}</ButtonLink></p>
+  </div><hr /></>;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
   return <><div className={styles.preferences}>
     <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
