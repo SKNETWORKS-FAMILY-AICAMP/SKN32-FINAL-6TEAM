@@ -69,4 +69,11 @@ bad = [c for c in CASES if not c[0]]
 for ok, note, got, want in CASES:
     print(("  OK  " if ok else "  FAIL") + f" {note}" + ("" if ok else f"  → {got!r} (기대 {want!r})"))
 print(f"\n{len(CASES) - len(bad)}/{len(CASES)} 통과")
-sys.exit(1 if bad else 0)
+
+
+def test_timeutil():          # 67: pytest 수집용 — 모듈 최상위 sys.exit 는 수집 오류였다
+    assert not bad, bad
+
+
+if __name__ == "__main__":
+    sys.exit(1 if bad else 0)

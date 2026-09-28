@@ -23,12 +23,9 @@ REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-# `scripts` 패키지 이름은 팀 final_project_cs/scripts 와 겹쳐 실행 환경에 따라 다른 쪽이 잡힌다(41 · 2026-09-25) — 파일 경로로 올린다
-import importlib.util  # noqa: E402
-_spec = importlib.util.spec_from_file_location("selfcheck_mobility", REPO / "scripts" / "selfcheck_mobility.py")
-_mod = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_mod)
-check_invariants = _mod.check_invariants
+# 67: 우리 스크립트 패키지를 `mobility_scripts` 로 옮겨 팀 `scripts`(final_project_cs/scripts)와 이름이 안 겹친다 —
+#     41 때의 spec_from_file_location 우회를 걷어내고 보통 import 로 올린다
+from mobility_scripts.selfcheck_mobility import check_invariants  # noqa: E402
 
 ARGS = types.SimpleNamespace(
     mono_tol=0, sym_min=10, sym_ratio=0.5, jump_min=60, daytype_min=30,
@@ -142,8 +139,12 @@ def main():
         print(f"{mark} {name:<22} 기대 {sorted(expect) or '없음'} / 실제 {sorted(got) or '없음'}")
     print("─" * 60)
     print(f"{len(CASES)}건 중 {len(CASES) - bad}건 통과")
-    sys.exit(1 if bad else 0)
+    return 1 if bad else 0
+
+
+def test_selfcheck_invariants():          # 67: pytest 수집용 · 합성 자료만 — 실데이터 불필요
+    assert main() == 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """데이터 경로 — `.env` 의 DATA_DIR 하나가 값의 정본이다.
 
-수집 쪽 `scripts/collect/_paths.py` 와 **같은 규칙**을 쓴다. 규칙이 두 군데 적혀 있는데,
+수집 쪽 `mobility_scripts/collect/_paths.py` 와 **같은 규칙**을 쓴다. 규칙이 두 군데 적혀 있는데,
 값의 출처는 여전히 `.env` 하나다. 접는 자리는 배선 때다(그때 `ACOP_DATA_DIR` 로
-팀 Settings 에 정식 필드를 만들지 같이 정한다).  → `scripts/collect/_paths.py`
+팀 Settings 에 정식 필드를 만들지 같이 정한다).  → `mobility_scripts/collect/_paths.py`
 
 _paths.py 와 다른 점 둘
   · **폴더를 만들지 않는다.** 판정 엔진이 import 만으로 빈 폴더를 만드는 건 맞지 않는다

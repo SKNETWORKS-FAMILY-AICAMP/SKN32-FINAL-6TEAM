@@ -117,7 +117,7 @@ def main():
     if a.order:
         lo = LineOrder.load(a.order)
     else:
-        from scripts.collect._paths import PROCESSED
+        from mobility_scripts.collect._paths import PROCESSED
         lo = LineOrder.load(PROCESSED / "mobility" / "line_station_order_v1.json")
 
     rows, seen = [], set()

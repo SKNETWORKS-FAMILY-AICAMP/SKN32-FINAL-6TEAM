@@ -193,7 +193,7 @@
       {
         "label": "그 밖 버스 직행 43개",
         "code": "bus_more",
-        "reason": "도보 긴 쪽 — before_prev_end 41 · uses_format 2"
+        "reason": "도보 긴 쪽 — before_prev_end 43"
       }
     ]
   }

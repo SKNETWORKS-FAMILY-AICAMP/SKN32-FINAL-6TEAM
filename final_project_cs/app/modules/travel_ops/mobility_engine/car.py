@@ -15,7 +15,7 @@
   근거없음, 아니면 추정. class/default 비율이 경계값을 넘으면 경고 MOB_W_CAR_SPEED_CLASS / MOB_W_CAR_SPEED_DEFAULT.
   3단 등급(확정/추정/근거없음)만 쓴다 — 「추정(약함)」은 등급이 아니라 경고로 드러낸다(스키마 grade enum 3종).
 
-택시 요금 — rules taxi.fare 산식 그대로(15번 방). scripts/rules_check.py 의 taxi_fare 와 같은 식이고
+택시 요금 — rules taxi.fare 산식 그대로(15번 방). mobility_scripts/rules_check.py 의 taxi_fare 와 같은 식이고
   규칙 파일의 검산_예시 8건이 둘의 공통 정답이다(tests/mobility/car_legs_v1.json 이 이 모듈로 다시 검산한다).
   병산: 프로파일 속도가 전환속도(15.72 km/h) 미만인 edge 는 시간요금(slow_s), 이상인 edge 는 거리요금(distance_m − slow_m).
   정차·신호 대기·호출료는 없다 → 요금은 **하한**.

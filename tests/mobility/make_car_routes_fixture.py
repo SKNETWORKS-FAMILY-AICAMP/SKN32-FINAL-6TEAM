@@ -28,7 +28,7 @@ ap.add_argument("--graph-dir")
 ap.add_argument("--out", default=str(REPO / "tests" / "mobility" / "car_routes_fixture_v1.json"))
 a = ap.parse_args()
 if a.graph_dir is None:
-    from scripts.collect._paths import PROCESSED
+    from mobility_scripts.collect._paths import PROCESSED
     a.graph_dir = PROCESSED / "mobility" / "graph"
 seed = json.loads((Path(a.graph_dir) / "test_route_teheran_up.json").read_text(encoding="utf-8"))
 P = seed["paths"][0]

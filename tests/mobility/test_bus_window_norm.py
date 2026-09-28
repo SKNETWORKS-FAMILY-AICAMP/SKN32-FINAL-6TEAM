@@ -5,7 +5,7 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts" / "collect"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "mobility_scripts" / "collect"))
 from build_bus_all_v1 import normalize_window  # noqa: E402
 
 B = "20260910"

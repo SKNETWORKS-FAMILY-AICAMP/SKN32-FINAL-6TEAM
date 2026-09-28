@@ -4,7 +4,7 @@
   from app.modules.travel_ops.mobility_engine.runtime import build_verifier
   v = build_verifier()          # 한 번. 약 33초 · 상주 약 91MB
 
-왜 전부 올리나 (2026-09-14 실측, `scripts/probe_timetable_load.py`)
+왜 전부 올리나 (2026-09-14 실측, `mobility_scripts/probe_timetable_load.py`)
   Timetable.load(path, wanted) 의 wanted 는 **케이스 파일에서 뽑은 (노선,역) 집합**이다.
   배치에는 맞지만 서버는 요청마다 어느 역이 올지 미리 모른다. 셋을 재 봤다.
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """판정 로그·지표 시험 (40번 방). 저장소 루트에서:  python tests/mobility/test_judgment_log.py
 
-판정기·자료 없이 돈다(가짜 결과 객체). 실제 회귀 연결은 scripts/judgment_log_run.py 로 확인한다.
+판정기·자료 없이 돈다(가짜 결과 객체). 실제 회귀 연결은 mobility_scripts/judgment_log_run.py 로 확인한다.
 """
 import io
 import json
@@ -17,8 +17,8 @@ for _p in (REPO / "final_project_cs", REPO):
         sys.path.insert(0, str(_p))
 
 from app.modules.travel_ops.mobility_engine import judgment_log as jl                 # noqa: E402
-from scripts.classification_metrics import classify_report, binary_report, misclassified_catalog   # noqa: E402
-from scripts import judgment_metrics_report as rep                                     # noqa: E402
+from mobility_scripts.classification_metrics import classify_report, binary_report, misclassified_catalog   # noqa: E402
+from mobility_scripts import judgment_metrics_report as rep                                     # noqa: E402
 
 FIELDS = {"case_id", "ts", "run_id", "source", "bundle", "synthetic", "input", "verdict", "reason", "eta",
           "slack_min", "margin_min", "depart_min", "arrive_min", "verdict_internal", "grade", "grade_counts",
@@ -325,4 +325,11 @@ check("latest 는 run_id 문자열이 아니라 시각으로 고른다", {r["run
 
 bad = [n for n, ok in checks if not ok]
 print(f"\n판정 로그 시험 {len(checks) - len(bad)}/{len(checks)}" + (f" — 실패 {bad}" if bad else ""))
-sys.exit(1 if bad else 0)
+
+
+def test_judgment_log():          # 67: pytest 수집용 — 56 이 적은 「pytest 로 돌리면 rc=3」의 원인이 모듈 최상위 sys.exit 였다
+    assert not bad, bad
+
+
+if __name__ == "__main__":
+    sys.exit(1 if bad else 0)

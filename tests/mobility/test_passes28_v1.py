@@ -42,5 +42,13 @@ def main():
     return 1 if bad else 0
 
 
+def test_passes28():          # 67: pytest 수집용 — 실데이터(line_station_order) 시험 · 없는 기기는 SKIP
+    from app.modules.travel_ops.mobility_engine.paths import PROCESSED
+    if not (PROCESSED / "mobility" / "line_station_order_v1.json").exists():
+        import pytest
+        pytest.skip("data not present (DATA_DIR/travel/processed/mobility/line_station_order_v1.json)")
+    assert main() == 0
+
+
 if __name__ == "__main__":
     sys.exit(main())
