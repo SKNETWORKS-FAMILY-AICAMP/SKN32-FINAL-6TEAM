@@ -57,13 +57,13 @@ def core_open(place: dict[str, Any] | None, start: datetime,
     attrs = (place or {}).get("attributes") or {}
     hours = attrs.get("hours")
     if not hours or len(hours) != 2:
-        return None, "영업시간 자료가 없다"
+        return None, "영업시간 정보가 없어요"
     end = end or start
     if not (_on(start, hours[0]) <= start and end <= _on(start, hours[1])):
-        return False, f"영업시간 {hours[0]}–{hours[1]} 밖이다"
+        return False, f"영업시간 {hours[0]}–{hours[1]} 밖이에요"
     rest = attrs.get("break")
     if rest and len(rest) == 2 and _on(start, rest[0]) < end and start < _on(start, rest[1]):
-        return False, f"브레이크타임 {rest[0]}–{rest[1]}에 걸린다"
+        return False, f"브레이크타임 {rest[0]}–{rest[1]}에 걸려요"
     return True, f"영업시간 {hours[0]}–{hours[1]}"
 
 
@@ -101,16 +101,16 @@ def check_meal(conn, tenant_id: str, item: Any) -> dict[str, Any]:
     if state and state.get("linked") and state.get("open_at_slot") is not None:
         out["source"] = "dining_ledger"
         if state["open_at_slot"] is False:
-            out["status"], out["reason"] = "closed", "그 시각에 영업하지 않는다(요식 원장)"
+            out["status"], out["reason"] = "closed", "그 시각에 영업하지 않아요"
             place_uid = _resolve(conn, tenant_id, place_id)
             if place_uid:
                 out["alternatives"] = _alternatives(conn, place_uid, item.starts_at, item.ends_at)
         elif state.get("needs_check") or state.get("needs_holiday_check"):
             out["status"] = "check"
-            out["reason"] = ("명절이라 영업 여부를 확인해야 한다" if state.get("needs_holiday_check")
-                             else "마감이 가까운데 마지막 주문 시각을 모른다")
+            out["reason"] = ("명절이라 영업하는지 확인이 필요해요" if state.get("needs_holiday_check")
+                             else "마감이 가까워 마지막 주문 시각을 확인해 주세요")
         else:
-            out["status"], out["reason"] = "open", "영업 중(요식 원장)"
+            out["status"], out["reason"] = "open", "영업 중이에요"
         return out
 
     opened, why = core_open(item.place, item.starts_at, item.ends_at)
@@ -121,7 +121,7 @@ def check_meal(conn, tenant_id: str, item: Any) -> dict[str, Any]:
         return out
 
     out["source"] = "dining_ledger" if state and state.get("linked") else None
-    out["reason"] = "영업 자료가 없어 확인하지 못했다 — 닫혔다는 뜻은 아니다"
+    out["reason"] = "영업 정보가 없어 확인하지 못했어요. 문을 닫았다는 뜻은 아니에요"
     return out
 
 
@@ -143,7 +143,7 @@ def meal_lines(checks: list[dict[str, Any]]) -> str:
     """안내에 붙일 줄. 식당 항목이 없으면 빈 문자열."""
     if not checks:
         return ""
-    lines = ["", "식당 점검"]
+    lines = ["", "", "식당 점검"]
     for c in checks:
         line = f"· {_hm(c['starts_at'])} {c['title']} — {_MARK[c['status']]}"
         if c["status"] != "open" and c["reason"]:
