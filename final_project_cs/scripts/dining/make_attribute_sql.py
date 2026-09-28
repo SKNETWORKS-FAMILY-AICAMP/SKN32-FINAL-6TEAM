@@ -17,6 +17,12 @@
     0  놀이방이 없다 → 아이를 받지 않는다는 뜻이 아니다. 행을 만들지 않는다(모름)
   메뉴에 「아동 요금」이 있으면 아이를 받는 집이다. yes
   「노키즈」가 적혀 있으면 no. 지금 원문에는 한 곳도 없다.
+
+  노키즈존 검수 시트(data/dining/kids/노키즈존_검수.csv)에서 사람이 확인한 행이 원문보다 앞선다.
+    [확인] 아이 동반  가능 → yes · 노키즈 → no · 일부 → limited(조건을 상세에) · 모름·빈칸 → 넣지 않음
+    확인일이 적힌 행만 넣는다. 원문 판정이 있던 가게는 시트 판정으로 바꾼다.
+  노키즈존을 한꺼번에 알 수 있는 공개 자료는 없다(2026-09-28 조사). 가게마다 네이버·캐치테이블의
+  편의시설에서 사람이 본다. 노키즈존이 몰린 동네(성수·이태원·한남·압구정·청담·신사·홍대권) 218곳이 시트에 있다.
 「가능(일부 메뉴)」처럼 단서가 붙은 것은 limited 로 두고 원문을 함께 남긴다.
 
 사용법:  python scripts/dining/make_attribute_sql.py
@@ -91,6 +97,26 @@ def kids_state(row: dict) -> tuple[str, str | None, str]:
     return "unknown", None, ""
 
 
+KIDS_SHEET = os.path.join(DATA, "kids", "노키즈존_검수.csv")
+KIDS_STATE = {"가능": "yes", "노키즈": "no", "일부": "limited"}
+
+
+def kids_sheet(path: str = KIDS_SHEET) -> dict[str, tuple[str, str | None, str]]:
+    """검수 시트에서 사람이 확인한 행. place_uid → (값 상태, 상세, 확인일)."""
+    import csv
+    if not os.path.exists(path):
+        return {}
+    out = {}
+    for row in csv.DictReader(open(path, encoding="utf-8-sig")):
+        state = KIDS_STATE.get((row.get("[확인] 아이 동반") or "").strip())
+        checked = (row.get("확인일") or "").strip()
+        if (row.get("번호") or "").strip() == "예시" or not state or not checked:
+            continue
+        detail = (row.get("[확인] 조건") or "").strip() or None
+        out[row["place_uid"].strip()] = (state, detail, checked)
+    return out
+
+
 def q(value) -> str:
     if value is None or value == "":
         return "NULL"
@@ -106,6 +132,7 @@ def main() -> None:
              "-- 같은 적재를 다시 돌려도 쌓이지 않게 이 출처의 것을 먼저 비운다.",
              f"DELETE FROM dining.dn_attribute WHERE source_code = '{SOURCE}';", ""]
 
+    sheet = kids_sheet()
     stat: dict[str, Counter] = {code: Counter() for code in [*FIELDS.values(), "kids_allowed"]}
     values = []
 
@@ -125,6 +152,15 @@ def main() -> None:
                 f"    ('{attr_id}', '{place_uid}', '{SOURCE}', '{record_id}', "
                 f"'{code}', '{state}', {q(detail)}, {q(text[:300])}, 'regex', 0.9, '{VALID_FROM}')")
 
+        if place_uid in sheet:
+            state, detail, checked = sheet.pop(place_uid)
+            stat["kids_allowed"][state] += 1
+            attr_id = str(uuid.uuid5(NS, f"attr:tourapi:{cid}:kids_allowed"))
+            values.append(
+                f"    ('{attr_id}', '{place_uid}', '{SOURCE}', '{record_id}', "
+                f"'kids_allowed', '{state}', {q(detail)}, {q('노키즈존 검수 ' + checked)}, 'manual', 1.0, "
+                f"'{VALID_FROM}')")
+            continue
         state, detail, text = kids_state(row)
         stat["kids_allowed"][state] += 1
         if state != "unknown":

@@ -35,3 +35,17 @@ def test_아동_요금이_있으면_yes(ma):
 
 def test_노키즈가_적혀_있으면_놀이방보다_먼저_no(ma):
     assert ma.kids_state({"kidsfacility": "1", "infocenterfood": "노키즈존 운영"})[0] == "no"
+
+
+def test_검수_시트는_확인일이_있는_행만(ma, tmp_path):
+    path = tmp_path / "kids.csv"
+    path.write_text(
+        "번호,place_uid,상호,[확인] 아이 동반,[확인] 조건,확인일\n"
+        "예시,,(적는 법),가능 / 노키즈 / 일부 / 모름,,2026-09-28\n"
+        "1,u1,가,노키즈,13세 미만 불가,2026-09-28\n"
+        "2,u2,나,일부,디너만 노키즈,2026-09-28\n"
+        "3,u3,다,노키즈,,\n"
+        "4,u4,라,모름,,2026-09-28\n", encoding="utf-8-sig")
+    got = ma.kids_sheet(str(path))
+    assert got == {"u1": ("no", "13세 미만 불가", "2026-09-28"),
+                   "u2": ("limited", "디너만 노키즈", "2026-09-28")}
