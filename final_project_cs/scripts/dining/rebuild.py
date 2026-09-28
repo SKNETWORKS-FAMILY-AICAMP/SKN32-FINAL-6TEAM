@@ -82,6 +82,7 @@ LOADS = [
     ("make_operator_sql.py",  "operator.sql"),
     ("make_vegan_sql.py",     "vegan.sql"),
     ("make_halal_sql.py",     "halal.sql"),
+    ("make_michelin_sql.py",  "michelin.sql"),
 ]
 
 #: 적재가 끝난 뒤 가게를 보고 계산하는 것. 영문 SQL 만 둔다 — -c 로 넘긴다.

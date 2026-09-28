@@ -168,6 +168,13 @@ def check_loaded(cur, s: Sheet) -> None:
     s.add(step, rec.get("halal_curated") == n, "할랄 식당 목록",
           f"시트의 영업 중인 곳 {n}곳 → 원장 {rec.get('halal_curated', 0)}곳")
 
+    n = csv_rows(os.path.join(data, "michelin", "미쉐린_서울_2026.csv"))
+    cur.execute("SELECT count(*) FROM dining.dn_attribute "
+                "WHERE attr_code = 'michelin' AND retired_at IS NULL")
+    got = cur.fetchone()[0]
+    s.add(step, got > 0, "미쉐린 가이드",
+          f"가이드 서울 {n}곳 중 우리 원장에 있는 {got}곳에 등급을 붙였다")
+
     cur.execute("SELECT count(*) FROM dining.dn_truth WHERE retired_at IS NULL")
     truth = cur.fetchone()[0]
     n = csv_rows(os.path.join(data, "truth", "대조표100_검수_2026-09-21.csv"))
