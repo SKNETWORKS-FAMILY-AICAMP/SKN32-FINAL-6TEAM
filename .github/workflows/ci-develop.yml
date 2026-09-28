@@ -44,6 +44,9 @@ jobs:
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s --health-timeout 5s --health-retries 20
     env:
+      # ★서버 시각을 한국 시간으로(2026-09-28). GitHub 러너는 UTC 인데, 시각을 현지 시간으로 다루는
+      #   코드·시험이 9시간씩 밀려 main 관문에서 43건이 깨졌다(경복궁 09:00 → 00:00). 로컬(KST)과 맞춘다.
+      TZ: Asia/Seoul
       # 값은 전부 시험용 가짜다. 실제 키·서버 주소는 넣지 않는다.
       ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/acop_ci
       ACOP_LLM_PROVIDER: mock

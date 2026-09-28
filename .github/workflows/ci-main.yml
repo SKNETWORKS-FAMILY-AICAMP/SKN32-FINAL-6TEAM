@@ -39,6 +39,8 @@ jobs:
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s --health-timeout 5s --health-retries 20
     env:
+      # 서버 시각을 한국 시간으로 — 이유는 ci-develop.yml 의 같은 줄 참고.
+      TZ: Asia/Seoul
       # 값은 전부 시험용 가짜다. 실제 키·서버 주소는 넣지 않는다.
       ACOP_DATABASE_URL: postgresql+psycopg://postgres:postgres@127.0.0.1:5432/acop_ci
       ACOP_LLM_PROVIDER: mock
