@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
 import { mapConfiguration } from "@/features/map/config";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
@@ -50,6 +51,10 @@ export function TripRegistration() {
   const [draftWarning, setDraftWarning] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const live = DATA_MODE === "live";
+  // ★Human check (Turnstile) — only in live mode and only when a site key is set. A token is good for one send.
+  const checking = live && Boolean(TURNSTILE_SITE_KEY);
+  const [humanToken, setHumanToken] = useState<string | null>(null);
+  const [humanReset, setHumanReset] = useState(0);
   const draft = useQuery({
     queryKey: ["registration-draft", from],
     queryFn: async () => {
@@ -73,8 +78,10 @@ export function TripRegistration() {
   });
   // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   const intake = useMutation({
-    mutationFn: () => submitIntake(value, files, language),
+    mutationFn: () => submitIntake(value, files, language, humanToken),
     onSuccess: (result) => router.push(routes.intake(result.intake_id)),
+    // The token was spent on this attempt; ask for a fresh one before the next.
+    onError: () => { if (checking) setHumanReset((count) => count + 1); },
   });
   const pending = create.isPending || intake.isPending;
 
@@ -93,6 +100,7 @@ export function TripRegistration() {
     event.preventDefault();
     if (pending) return;
     if (!value.trim() && !(live && files.length)) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
+    if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     if (live) intake.mutate(); else create.mutate();
   }
@@ -120,6 +128,7 @@ export function TripRegistration() {
               onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
             {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
           </div>}
+          {checking && <HumanCheck onToken={(token) => { setHumanToken(token); if (token) setValidation(""); }} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </Panel>

@@ -44,61 +44,71 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
   await fresh.close();
 });
 
-test("메뉴에서 다른 기기의 키를 넣으면: 틀린 키는 서버 문장으로 거절되고 저장된 키는 그대로, 아는 키는 바뀐다", async ({ page, request }) => {
+test("마이페이지에서 다른 기기의 토큰을 넣으면: 틀린 토큰은 서버 문장으로 거절되고 저장된 키는 그대로, 아는 토큰은 바뀌고 토큰 칸도 바로 바뀐다", async ({ page, request }) => {
   const server = stub(request);
   await start(page, null);                      // 이 기기에는 키가 없다
-  await page.goto("/start");
-  await page.getByRole("button", { name: "메뉴" }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByText("내 사용자 키")).toBeVisible();
-  await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);   // 키가 없으면 재발급 단추도 없다
+  await page.goto("/mypage");
+  const manage = page.getByRole("group", { name: "토큰 관리" });
+  await expect(manage).toBeVisible();
+  await expect(manage.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);   // 키가 없으면 재발급 단추도 없다
+  await expect(page.getByText("발급된 토큰이 없어요.")).toBeVisible();
 
-  await dialog.getByLabel("이미 가진 키로 열기").fill("acop_u_wrong");
-  await dialog.getByRole("button", { name: "이 키로 열기" }).click();
-  await expect(dialog.getByRole("alert")).toHaveText("사용자 키가 없거나 맞지 않는다");
+  await manage.getByLabel("다른 기기의 토큰으로 열기").fill("acop_u_wrong");
+  await manage.getByRole("button", { name: "이 토큰으로 열기" }).click();
+  await expect(manage.getByRole("alert")).toHaveText("사용자 키가 없거나 맞지 않는다");
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE)).toBeNull();
 
-  await dialog.getByLabel("이미 가진 키로 열기").fill("  acop_u_known  ");
-  await dialog.getByRole("button", { name: "이 키로 열기" }).click();
-  await expect(dialog.getByRole("status")).toContainText("이 키로 바꿨어요");
+  await manage.getByLabel("다른 기기의 토큰으로 열기").fill("  acop_u_known  ");
+  await manage.getByRole("button", { name: "이 토큰으로 열기" }).click();
+  await expect(manage.getByRole("status")).toContainText("이 토큰으로 바꿨어요");
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE)).toBe("acop_u_known");
-  const checks = await server.received("GET", "/v1/web/trips");
-  // 틀린 키 → 아는 키 순서로 서버에 물었고, 그 뒤 목록을 다시 읽는다면 모두 새 키로
-  const askedWith = checks.map((entry) => entry.key);
+  // 같은 화면의 토큰 칸이 새로고침 없이 새 토큰을 보인다(전에는 다른 탭에서 바뀔 때만 다시 읽었다)
+  await expect(page.getByText("발급된 토큰이 없어요.")).toHaveCount(0);
+  await page.getByRole("button", { name: "보기", exact: true }).click();
+  await expect(page.getByText("acop_u_known", { exact: true })).toBeVisible();
+  const askedWith = (await server.received("GET", "/v1/web/trips")).map((entry) => entry.key);
   expect(askedWith.slice(0, 2)).toEqual(["acop_u_wrong", "acop_u_known"]);
   expect(askedWith.slice(2).every((key) => key === "acop_u_known")).toBe(true);
 });
 
-test("키 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 키가 저장되고 한 번 보인다", async ({ page, request }) => {
+test("메뉴에는 토큰 화면이 없고 마이페이지로 가는 길만 있다", async ({ page }) => {
+  await start(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "메뉴", exact: true }).first().click();
+  const dialog = page.getByRole("dialog", { name: "메뉴" });
+  await expect(dialog.getByRole("link", { name: /마이페이지/ })).toBeVisible();
+  await expect(dialog.getByRole("group", { name: "토큰 관리" })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);
+});
+
+test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 화면 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
   const server = stub(request);
   await start(page);
-  await page.goto("/start");
-  await page.getByRole("button", { name: "메뉴" }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("button", { name: /다시 발급받기/ }).click();
-  await expect(dialog).toContainText("옛 키는 바로 쓸 수 없게 돼요");
-  await dialog.getByRole("button", { name: "취소" }).click();
-  await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toBeVisible();
+  await page.goto("/mypage");
+  const manage = page.getByRole("group", { name: "토큰 관리" });
+  await manage.getByRole("button", { name: /다시 발급받기/ }).click();
+  await expect(manage).toContainText("옛 토큰은 바로 쓸 수 없게 돼요");
+  await manage.getByRole("button", { name: "취소" }).click();
+  await expect(manage.getByRole("button", { name: /다시 발급받기/ })).toBeVisible();
   expect(await server.received("POST", "/rotate")).toHaveLength(0);
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE)).toBe("acop_u_known");
 
-  await dialog.getByRole("button", { name: /다시 발급받기/ }).click();
-  await dialog.getByRole("button", { name: "키 다시 발급" }).click();
-  await expect(dialog.getByRole("status").filter({ hasText: "새 키를 받았어요" })).toBeVisible();
-  // 메뉴를 연 그 자리에서 새 키가 바로 보인다(첫 화면·온보딩 틀에는 화면 위 안내가 없다)
-  const inMenu = dialog.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(inMenu.getByRole("textbox")).toHaveValue(/^acop_u_rotated_/);
+  await manage.getByRole("button", { name: /다시 발급받기/ }).click();
+  await manage.getByRole("button", { name: "토큰 다시 발급" }).click();
+  await expect(manage.getByRole("status").filter({ hasText: "새 토큰을 받았어요" })).toBeVisible();
   const rotated = await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE);
   expect(rotated).toMatch(/^acop_u_rotated_/);
   expect((await server.received("POST", "/rotate"))[0].key).toBe("acop_u_known");   // 옛 키로 요청했다
 
-  // 여행 화면에서 새 키가 한 번 보인다. 그 사이 옛 키는 서버에서 무효다.
-  await page.goto(`/trips/${TRIP_ID}`);
+  // 같은 화면 맨 위에 새 토큰 안내가 한 번 뜬다(안내는 화면에 하나만)
   const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
+  await expect(notice).toHaveCount(1);
   await expect(notice).toContainText("새 키예요. 옛 키는 더 이상 쓸 수 없어요");
   await expect(notice.getByRole("textbox")).toHaveValue(rotated!);
   await notice.getByRole("button", { name: "따로 보관했어요" }).click();
   await expect(notice).toHaveCount(0);
+  await page.goto(`/trips/${TRIP_ID}`);
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
 
 test("키가 거절되면(서버가 모르는 키) 조용히 새 사용자가 되지 않고 알린다", async ({ page }) => {

@@ -30,7 +30,7 @@ const DEFAULTS = {
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
-  // make one read fail with a 500: "trips" | "proposals" | "notices" | "" (none)
+  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "" (none)
   fail: "",
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
   edits: "ok",
@@ -210,6 +210,7 @@ createServer(async (request, response) => {
   }
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     if (path.endsWith("/plan") && scenario.planDelay) await new Promise((resolve) => setTimeout(resolve, scenario.planDelay));
+    if (path.endsWith("/confirm") && broken("confirm")) return;
     confirmed = true;
     scenario = { ...scenario, trips: "one" };
     return json(response, 200, { status: "confirmed", trip: { trip_id: TRIP_ID } }, origin);

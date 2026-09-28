@@ -164,3 +164,17 @@ test("일정 짜기가 오래 걸리는 동안(실제 서버는 운영시간을 
   await expect(busy).toBeDisabled();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
 });
+
+test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화면 안으로 들어와 보이고, 확인 화면에 그대로 남는다", async ({ page, request }) => {
+  await stub(request).scenario({ fail: "confirm" });
+  await page.setViewportSize({ width: 1280, height: 600 });         // 목록이 길어 오류 칸이 화면 아래에 있는 상황
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  const alert = page.getByRole("alert").filter({ hasText: "서버 오류" });
+  await expect(alert).toBeInViewport();
+  await expect(page).toHaveURL(/\/intakes\//);
+});

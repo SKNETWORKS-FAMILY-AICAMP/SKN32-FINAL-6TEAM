@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
@@ -146,11 +146,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     <div className={styles.list}>{list.map((row) => <ItemCard key={row.key} row={row} yearNote={Boolean(yearFilled)} disabled={busy || confirmed} onEdit={send} />)}</div>
     {list.length === 0 && !view.check?.plan.requested && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올리거나, 위에서 일정을 짜 달라고 해 주세요.", "No stops were read. Check the original and upload again, or ask us above to plan it.")}</p></Panel>}
     <Evidence view={view} />
-    {error && <div className={styles.error} role="alert">
+    {error && <ErrorNotice error={error}>
       <p>{error.message}</p>
       {refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}
       {refusal?.violations && <ul>{refusal.violations.map((violation) => <li key={violation.reason}>{violation.reason}</li>)}</ul>}
-    </div>}
+    </ErrorNotice>}
     <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
     <div className={styles.actions}>
       <ButtonLink href={routes.newTrip}><ArrowLeft {...icon} />{t("다시 올리기", "Upload again")}</ButtonLink>
@@ -160,6 +160,17 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
     </div>
   </>;
+}
+
+/**
+ * The failure of the last action. ★It sits under the item list while the buttons stay in the bar at the bottom, so a
+ * long plan hid it — pressing 「등록하고 관리 시작」 then looked like nothing happened (found 2026-09-28 on the real
+ * server). Each new failure is brought into view.
+ */
+function ErrorNotice({ error, children }: { error: Error; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { box.current?.scrollIntoView({ block: "center", behavior: "smooth" }); }, [error]);
+  return <div ref={box} className={styles.error} role="alert">{children}</div>;
 }
 
 function FirstDay({ disabled, onSave }: { disabled: boolean; onSave: (value: string) => void }) {
