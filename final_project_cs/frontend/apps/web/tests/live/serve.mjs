@@ -9,6 +9,8 @@ const env = {
   NEXT_PUBLIC_MAP_PROVIDER: "demo",
   NEXT_PUBLIC_GOOGLE_MAP_API_KEY: "",
   NEXT_PUBLIC_GOOGLE_MAP_ID: "",
+  // The human check calls Cloudflare; these tests stay on the stand-in server, so it is off here (a dev .env.local may set it).
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
   NEXT_DIST_DIR: ".next-live",
 };
 const shell = process.platform === "win32";
