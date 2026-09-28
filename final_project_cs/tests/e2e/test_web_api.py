@@ -188,3 +188,104 @@ def _first_key(api) -> str:
 
     with get_connection() as conn, conn.transaction():
         return rotate(conn, tenant_id=api["tenant"], customer_id=customer)
+
+
+# ── 채팅은 늘 답한다 (2026-09-28, ui 세션 인계 · 사용자 지시) ───────────────────
+class _Chunk:
+    def __init__(self, content, source_id, score):
+        self.content, self.source_id, self.score = content, source_id, score
+
+
+class _Talk:
+    """추출기 흉내 — 문장에 맞는 신고 종류를 낸다."""
+
+    def json(self, system, message):
+        if "늦을" in message:
+            return {"type": "delay", "minutes": 30, "products": []}
+        if "?" in message or "요?" in message:
+            return {"type": "question"}
+        return {"type": "other"}
+
+
+def _chat_client(api, search=None):
+    from fastapi.testclient import TestClient
+
+    from app.modules.travel_ops.trip_api import build_trip_router
+    from app.presentation.api.app import create_app
+
+    def classify(message):
+        if "늦을" in message:
+            return {"intent": "incident_report", "issue_code": "dining_hours", "sentiment": "negative"}
+        return {"intent": "confirm_request", "issue_code": "other", "sentiment": "neutral"}
+
+    return TestClient(create_app(
+        classifier=lambda _m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
+        domain_routers=[build_trip_router(classifier_factory=lambda: classify, chat_factory=_Talk,
+                                          policy_search_factory=(lambda: search) if search else None)]))
+
+
+def _say(client, key, trip_id, text, request_id):
+    response = client.post(f"/v1/web/trips/{trip_id}/messages", headers=_h(key),
+                           json={"request_id": request_id, "message": text, "at": "2030-01-01T09:00:00+09:00"})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body.get("answer"), body                       # ★어떤 결과든 답 문장이 있다
+    assert "담당자에게 넘겼어요" not in body["answer"]      # ★무엇을 확인하는지 말한다
+    return body
+
+
+def test_a_policy_question_is_answered_with_the_policy_excerpt_and_its_source(api):
+    found = []
+
+    def search(**kwargs):
+        found.append(kwargs)
+        return [_Chunk("예약 취소는 시작 24시간 전까지 수수료가 없다.", "t_doc_01#c3", 0.71),
+                _Chunk("관련 없는 조각", "t_doc_09#c1", 0.31)]
+
+    me = _session(api)
+    client = _chat_client(api, search)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-1"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "취소하면 위약금 있어요?", "ask-1")
+    assert body["status"] == "answered" and body["case_status"] == "resolved"
+    assert "24시간 전까지" in body["answer"] and "근거 t_doc_01#c3" in body["answer"]
+    assert "관련 없는 조각" not in body["answer"]          # ★문턱(0.55) 아래 조각은 싣지 않는다
+    assert found and found[0]["allowed_scopes"]
+
+
+def test_a_question_with_no_matching_policy_says_so_instead_of_guessing(api):
+    me = _session(api)
+    client = _chat_client(api, lambda **_k: [_Chunk("엉뚱한 조각", "t_doc_05#c2", 0.40)])
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-2"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "반려견도 데려가도 돼요?", "ask-2")
+    assert body["status"] == "escalated" and "찾지 못했어요" in body["answer"] and "엉뚱한" not in body["answer"]
+
+
+def test_a_question_about_a_stop_is_answered_from_the_itinerary_even_without_rules(api):
+    me = _session(api)
+    client = _chat_client(api)                            # 규정 검색 없음
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-3"), headers=_h(me["user_key"])).json()
+    stop = next(i for i in trip["items"] if i["kind"] != "mobility")
+    body = _say(client, me["user_key"], trip["trip_id"], f"{stop['title']} 몇 시에 가요?", "ask-3")
+    assert body["status"] == "answered" and stop["title"] in body["answer"] and stop["starts_at"][11:16] in body["answer"]
+
+
+def test_small_talk_gets_what_we_can_do_and_the_trip_facts(api):
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-4"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "안녕하세요", "hi-1")
+    assert body["status"] == "answered" and body["case_status"] == "resolved"
+    assert "이 여행은" in body["answer"] and "늦어요" in body["answer"]
+
+
+def test_a_change_request_still_answers_with_what_happened(api):
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-5"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1")
+    assert body["status"] in ("adjusted", "no_meal", "still_fits", "asked")      # 무엇이든 — 답은 있다
+    again = _say(client, me["user_key"], trip["trip_id"], "식당에 30분 늦을 것 같아요", "late-1")
+    assert again["status"] == "duplicate" and again["answer"].startswith("같은 요청을 이미 받았어요")
+    # 원문에 없는 값(분 수)은 받지 않는다 — 그래도 못 알아들었다는 **답**이 나간다
+    vague = _say(client, me["user_key"], trip["trip_id"], "식당에 늦을 것 같아요", "late-2")
+    assert vague["status"] == "escalated" and "알아듣지 못해" in vague["answer"]

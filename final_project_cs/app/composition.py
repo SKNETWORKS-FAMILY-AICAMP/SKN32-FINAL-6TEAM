@@ -329,7 +329,9 @@ def build_domain_routers() -> list:
 
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
                               chat_factory=chat_factory, place_factory=place_factory,
-                              kakao_factory=kakao_factory),
+                              kakao_factory=kakao_factory,
+                              # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
+                              policy_search_factory=lambda: search_policy),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),

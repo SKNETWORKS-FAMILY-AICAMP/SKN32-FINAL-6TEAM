@@ -103,6 +103,11 @@ def api(monkeypatch):
     test_settings = original.model_copy(update={"tenant_id": tenant})
     monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
     monkeypatch.setattr(security, "get_settings", lambda: test_settings)
+    # ★웹 키 발급 한도(주소당 시간당 20)는 프로세스 전역이다 — 시험마다 비운다(`test_web_api.py` 와 같다).
+    #   안 비우면 파일 전체를 돌릴 때만 뒤쪽 시험이 발급을 거절당한다(2026-09-28 실측)
+    from app.modules.travel_ops import web_session
+
+    monkeypatch.setattr(web_session, "_issued", {})
     customer = uuid4()
     keys = {"activity": set(), "dining": set()}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -621,6 +626,72 @@ def test_a_packed_plan_registers_and_the_trip_measures_the_same_density(api):
     assert registered == planned
 
 
+# ── ⑨ 하루는 08:00 아침 식사로 연다 (2026-09-28, D-020 「하루 시작 08:00」) ─────────────
+def _add_breakfast_places(api, rows) -> None:
+    import json
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        for name, lat, lon, attributes in rows:
+            cur.execute("INSERT INTO places (tenant_id,name,kind,latitude,longitude,attributes) "
+                        "VALUES (%s,%s,'dining',%s,%s,%s)",
+                        (api["tenant"], name, lat, lon, json.dumps(attributes, ensure_ascii=False)))
+
+
+def _clock(item: dict) -> str:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    return datetime.fromisoformat(item["starts_at"]).astimezone(ZoneInfo("Asia/Seoul")).strftime("%H:%M")
+
+
+def test_each_day_opens_with_breakfast_at_eight_and_the_first_activity_after_it(api):
+    """★전에는 08~09시를 식사 자리로 비워 두고 아침을 짜는 코드가 없었다(화면에서 찾음). 이제 날마다
+    08:00 에 아침(60분)을 두고 첫 활동은 그 뒤 — 아침 식당은 **08:00 에 연다고 알려진 곳**이다."""
+    _add_breakfast_places(api, [
+        ("새벽 죽집", 37.5757, 126.9790, {"district": "종로구", "indoor": True,
+                                          "hours": ["07:00", "15:00"], "price_krw": 8000}),
+        ("아침 토스트", 37.5753, 126.9781, {"district": "종로구", "indoor": True,
+                                            "hours": ["07:30", "14:00"], "price_krw": 5000}),
+    ])
+    body = api["ask"](request_id="p-breakfast").json()
+    assert body["status"] == "drafted" and body["checks"]["violations"] == [], body
+    draft = body["draft"]
+    assert check_itinerary(_parts(draft), constraints=draft["constraints"],
+                           party_size=draft["party_size"]) == []
+    for day in (START.isoformat(), START.replace(day=START.day + 1).isoformat()):
+        stops = [i for i in _stops(draft) if i["detail"]["planner"]["day"] == day]
+        first = stops[0]
+        assert first["kind"] == "dining" and first["detail"]["planner"]["meal"] == "breakfast", stops
+        assert _clock(first) == "08:00" and first["detail"]["planner"]["hours_known"] is True
+        assert first["title"] in ("새벽 죽집", "아침 토스트")
+        # 첫 활동은 아침이 끝난 뒤 — 09:00 이후(아침 60분 + 이동)
+        assert _clock(stops[1]) >= "09:00" and stops[1]["kind"] == "activity", stops
+        # 아침 뒤 첫 식사는 점심 칸(점심 하한) — 아침을 점심으로 세지 않는다
+        lunch = [i for i in stops[1:] if i["kind"] == "dining"][0]
+        assert _clock(lunch) >= "11:00", lunch
+    assert len({i["title"] for i in _stops(draft) if i["detail"]["planner"].get("meal") == "breakfast"}) == 2
+    assert [d["hours_known"] for d in body["planner"]["breakfast"]["days"]] == [True, True]
+
+
+def test_a_place_known_to_open_after_eight_is_never_breakfast_and_a_short_day_says_so(api):
+    """★시험 식당은 전부 11:00 에 연다 — 그런 곳을 아침에 넣지 않는다. 넣을 곳이 없으면 아침을 빼고 **적는다**."""
+    body = api["ask"](request_id="p-nobreakfast").json()
+    assert body["status"] == "drafted", body
+    assert not [i for i in _stops(body["draft"]) if i["detail"]["planner"].get("meal") == "breakfast"]
+    days = body["planner"]["breakfast"]["days"]
+    assert len(days) == 2 and all(d["place"] is None and "모자라" in d["note"] for d in days), days
+
+
+def test_breakfast_can_be_switched_off(api):
+    _add_breakfast_places(api, [("새벽 죽집", 37.5757, 126.9790, {"district": "종로구", "indoor": True,
+                                                                  "hours": ["07:00", "15:00"]})])
+    response = api["ask"](request_id="p-breakfast-off", constraints={"breakfast": False})
+    body = response.json()
+    assert body["status"] == "drafted", body
+    assert body["planner"]["breakfast"] == {"wanted": False, "days": []}
+    assert _clock(_stops(body["draft"])[0]) == "09:00"
+
+
 # ── 계획 읽기에서 「일정 짜 줘」 → 일정 생성기 → 등록 (2026-09-28) ───────────
 def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_once(api):
     """★모델이 없어도 「일정 짜 줘」를 규칙으로 잡는다. 조건(첫날·일수·인원)을 확인해 누르면 일정 생성기가 짠 초안이
@@ -692,3 +763,33 @@ def test_a_fresh_plan_ignores_the_read_items_when_asked(api):
                        json={"revision": view["revision"], "start_date": START.isoformat(), "days": 1,
                              "party_size": 2, "keep_read_items": False}).json()
     assert done["planner"]["kept_read_items"] is False and done["planner"]["merge"] == []
+
+
+def _stored_constraints(api, trip_id: str) -> dict:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT constraints FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip_id))
+        return cur.fetchone()[0]
+
+
+def test_the_survey_sent_with_plan_me_a_trip_decides_the_pace_and_stays_on_the_trip(api):
+    """★`[2026-09-28]` ui 세션 인계 — 웹의 등록 흐름(계획 읽기)에 설문을 실을 곳이 없었다. `/plan` 의 `survey` 는
+    일정 생성기가 먼저 적용하고(16번 여유 → 밀도 목표) 여행에 그대로 남는다(15번은 감시가 읽는다)."""
+    from app.modules.travel_ops.survey import SURVEY_VERSION
+
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    intake_id = client.post("/v1/web/trip-intakes", headers=key,
+                            data={"text": "서울 2일 일정 짜 줘"}).json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    base = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    bad = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key,
+                      json={**base, "survey": {"version": SURVEY_VERSION, "pace": "turbo"}})
+    assert bad.status_code == 422 and bad.json()["error"]["code"] == "invalid_survey", bad.text
+    survey = {"version": SURVEY_VERSION, "pace": "packed", "on_disruption": "ask_first", "party": "friends"}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**base, "survey": survey})
+    assert done.status_code == 200, done.text
+    stored = _stored_constraints(api, done.json()["trip"]["trip_id"])
+    assert stored["survey"]["pace"] == "packed" and stored["survey"]["on_disruption"] == "ask_first"
+    assert stored["survey"]["party"] == "friends"
+    assert stored["density"]["level"] == "high"                  # 16번 → 밀도 목표
+

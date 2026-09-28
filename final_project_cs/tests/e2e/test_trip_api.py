@@ -511,11 +511,14 @@ def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
 
 def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
     """★`[2026-09-25]` 묻는 꼴이면 「닫혔다」로 받지 않는다 — 모델이 closed 로 뽑아도 질문이고,
-    이 경로(규정 도구 없음)에서는 바꾸지 않고 사람에게 넘긴다. 전에는 대체안 계산으로 갈 수 있었다."""
+    일정은 바꾸지 않는다. 전에는 대체안 계산으로 갈 수 있었다.
+    ★`[2026-09-28]` 전에는 답 없이 escalated 로 끝났다 — 이제 **짚은 일정의 사실로 답하고**, 규정을 찾아볼 수
+    없으면(이 앱은 규정 검색을 안 물렸다) 그렇다고 같이 말한다(`trip_replies.question_reply`)."""
     trip_id = _create(api)["trip_id"]
     said = _say(api, trip_id, "closed", request_id="say-q", text="오늘 저녁 식당 휴무 아니에요?").json()
-    assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
+    assert said["status"] == "answered" and said["reason"] == "question_answered", said
     assert said["report"] == {"type": "question"}
+    assert "저녁" in said["answer"] and "규정을 찾아볼 수 없어서" in said["answer"], said["answer"]
     assert _detail(api, trip_id)["version"] == 1
 
 

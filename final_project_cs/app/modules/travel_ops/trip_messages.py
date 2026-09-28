@@ -46,7 +46,10 @@ def _latest_changed_item(store: TripStore, trip_id: UUID):
 
 def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message: str,
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
-                        actor_id: str) -> dict[str, Any]:
+                        actor_id: str, policy_search: Any = None) -> dict[str, Any]:
+    """★`[2026-09-28]` **어떤 결과로 끝나든 `answer`(고객에게 보일 문장)를 싣는다** — `trip_replies.py` 머리.
+    질문은 규정 근거로 답하고(`policy_search`, 없으면 못 찾았다고 답한다), 잡담·모호한 말은 할 수 있는 일과
+    이 여행의 사실로 답한다. 답은 서버가 가진 사실로만 만든다."""
     from app.application.classification import classify_case
     from app.application.routing import case_type_of
     from app.core.transition import transition_case
@@ -56,9 +59,14 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
 
     store = TripStore(tenant)
     marker = {"trip_message": {"trip_id": str(trip_id), "request_id": request_id}}
+    from app.core.settings import get_guardrails
+
+    from . import trip_replies
+    from .planner import PLAN_SCOPES
+
     with get_connection() as conn:
         try:
-            trip, _ = store.latest(conn, trip_id)
+            trip, items = store.latest(conn, trip_id)
         except KeyError:
             raise TripNotFound(str(trip_id)) from None
         with conn.cursor() as cur:
@@ -67,8 +75,10 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
             existing = cur.fetchone()
         if existing:
             case = repository.get_case(conn, tenant_id=tenant, case_id=existing[0])
+            before = (case.get("state_json") or {}).get("answer")
             return {"status": "duplicate", "case_id": str(existing[0]),
-                    "case_status": str(case["status"])}
+                    "case_status": str(case["status"]),
+                    "answer": f"같은 요청을 이미 받았어요.{chr(10) + str(before) if before else ''}"}
         with conn.transaction():
             case_id = repository.create_case(conn, tenant_id=tenant,
                                              customer_id=trip["customer_id"],
@@ -95,26 +105,45 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                        "issue_code": case.get("issue_code")}, **extra}
 
         if event is not EventType.CLASSIFIED:
-            return view({"status": "escalated", "reason": "classification_failed"})
+            return view({"status": "escalated", "reason": "classification_failed",
+                         "answer": trip_replies.not_understood_reply("classification_failed")})
         try:
             report = extract(message, chat) if chat is not None else None
             why = "no_extractor" if chat is None else "not_understood"
         except OllamaError as exc:
             report, why = None, f"extractor_failed: {exc}"[:120]
-        # ★`[2026-09-25]` 질문(`question`)은 이 경로에서 답하지 않는다 — 규정 도구가 없다. 아래 분기의
-        #   「그 밖 = 다른 안으로 바꾸기」로 새지 않게 여기서 막는다. 규정 근거 답은 Case 버전
-        #   (`*.itinerary_question`)이 한다.
-        if report is None or report["type"] in ("other", "question"):
-            reason = why if report is None else ("question_needs_policy_answer" if report["type"] == "question"
-                                                 else "not_a_trip_report")
-            move(EventType.ROUTING_FAILED, {"failure_code": reason})
-            return view({"status": "escalated", "reason": reason, "report": report})
-
+        if report is None:
+            move(EventType.ROUTING_FAILED, {"failure_code": why})
+            return view({"status": "escalated", "reason": why, "report": None,
+                         "answer": trip_replies.not_understood_reply(why)})
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
-        # ★분류가 `other` 여도(실측: 품절 문장) 처리는 추출값으로 간다 — 담당은 여행 창구로 적는다.
         team = case_type_of(case.get("issue_code") or "", fallback="trip_desk") or "trip_desk"
         if team not in REGISTERED_TEAMS:
             team = "trip_desk"
+        # ★`[2026-09-28]` 질문 · 그 밖 — 전에는 답 없이 escalated 로 끝났다(화면이 「담당자에게 넘겼어요」를 채웠다).
+        #   질문은 **일정 사실 + 문턱을 넘은 규정 조각**으로 답한다(`*.itinerary_question` 과 같은 `question_answer`).
+        #   그 밖(잡담 · 인사 · 모호한 말)은 할 수 있는 일과 이 여행의 사실로 답한다. ★일정은 바꾸지 않는다 —
+        #   아래 「그 밖 = 다른 안으로 바꾸기」로 새지 않게 여기서 끝낸다.
+        if report["type"] in ("question", "other"):
+            if report["type"] == "question":
+                status, answer, basis = trip_replies.question_reply(
+                    message=message, items=items, tenant_id=tenant, policy_search=policy_search,
+                    scopes=list(PLAN_SCOPES),
+                    min_score=float(get_guardrails().get("travel.question.min_policy_score")))
+                reason = "question_answered" if status == "answered" else "question_needs_policy_answer"
+            else:
+                status, answer, basis = "answered", trip_replies.other_reply(items, at), {}
+                reason = "not_a_trip_report"
+            if status == "answered":
+                move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{report['type']}"})
+                move(EventType.COMPLETED, {"answer_ref": f"trip:{trip_id}:{report['type']}",
+                                           "state_patch": {"answer": answer}})
+            else:
+                move(EventType.ROUTING_FAILED, {"failure_code": reason})
+            return view({"status": status, "reason": reason, "report": report, "answer": answer,
+                         "basis": basis})
+
+        # ★분류가 `other` 여도(실측: 품절 문장) 처리는 추출값으로 간다 — 담당은 여행 창구로 적는다.
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{report['type']}"})
 
     if report["type"] == "delay":
@@ -153,9 +182,8 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                 payload=payload, actor_type="api", actor_id=actor_id)
         # ★`asked` — 「먼저 물어봐줘」·「변경 안 할 일정」이라 바꾸지 않고 물었다(D-020). 처리한 것이다 —
         #   답은 묻는 문장이고, 고객은 계획서 링크·웹에서 고른다. 사람에게 넘길 일이 아니다.
+        answer = trip_replies.outcome_reply(outcome.get("status"), outcome, message)
         if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked", "rolled_back"):
-            answer = (outcome.get("notice") or {}).get("text") or outcome.get("text") \
-                or outcome.get("status")
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
                                          else str(outcome.get("status")))
             # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다.
@@ -167,7 +195,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         return {"case_id": str(case_id), "case_status": str(case["status"]),
                 "classification": {"intent": case.get("intent"),
                                    "issue_code": case.get("issue_code")},
-                "status": outcome.get("status"), "report": report, "outcome": outcome}
+                "status": outcome.get("status"), "report": report, "outcome": outcome, "answer": answer}
 
 
 __all__ = ["TripNotFound", "handle_trip_message"]
