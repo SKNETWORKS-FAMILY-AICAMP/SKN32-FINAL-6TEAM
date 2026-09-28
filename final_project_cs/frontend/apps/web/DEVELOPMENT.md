@@ -187,3 +187,5 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - `final_project_cs/tests/contract/test_web_client_contract.py`(4건): 웹이 부르는 메서드·경로(13개) ⊆ 서버 도메인 라우트, 설문 판 일치, 설문 칸 ⊆ `TripSurvey` 칸, 설문 값 ⊆ 서버 값.
 
 검증: 계약 시험 4/4 통과. 일부러 어긋나게 한 7가지(서버 경로 이름 바꿈, 웹 메서드 바꿈, 읽지 못하는 호출 모양, 설문 판, 서버가 모르는 칸, 서버가 거절하는 `pace`·분야 값)를 7/7(100%) 실패로 잡았고 각 오류 문구가 어긋난 항목을 가리켰다. ruff 0.16.8(CI와 같은 판) 통과. 백엔드 게이트 1616 통과·64 건너뜀(새 시험 4건 포함). 워크플로 명령을 CI 환경 값(`CI=true`, 데모 값, `TZ=Asia/Seoul`)으로 로컬에서 그대로 돌려 `npm ci` 성공, `check` Vitest 89/89, e2e 43/43(3 건너뜀: 지도 SDK 전용), live 28/28 — 이 PC에는 Playwright용 Chromium이 없어 설치된 Chrome으로 돌렸다(CI는 Chromium을 설치한다). GitHub Actions에서의 실제 실행은 PR에서 확인한다.
+
+첫 CI 실행(PR #9)에서 데모 e2e 46건 중 1건이 실패했다. `onboarding.spec.ts` 첫 시험이 카드 제목이 「보이는지」만 보고 다음 단추를 눌렀는데, 제목은 넘김 중에도 보여서 느린 CI에서는 넘김이 끝나기 전에 누르게 되고 화면이 그 누름을 무시했다(마지막 `넘어가기` → 요약이 안 뜸). 다른 시험처럼 넘김이 끝나 그 카드 제목으로 초점이 옮겨진 것을 기다리게 고쳤다(카드 전환 10곳). 고친 시험 10회 반복 10/10, 데모 e2e 43/43(3 건너뜀).
