@@ -13,7 +13,7 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 const pad = (value: number) => String(value).padStart(2, "0");
 const titleId = (index: number) => index === INTRO_STEP ? "question-title-intro" : `question-title-${index}`;
 
-/** The survey explanation card, then nine question cards on one track: tap, swipe or use the arrow keys to move. */
+/** The survey explanation card, then eight question cards on one track: tap, swipe or use the arrow keys to move. */
 export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirstBack, onComplete, onCollapse, onFeedback, announce }: {
   t: Translate;
   answers: Answers;
@@ -148,11 +148,10 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
       case 0: return chips("theme", false, true, true);
       case 1: return chips("party");
       case 2: return chips("transport", true, true, true);
-      case 3: return chips("citizen", false, true);
-      case 4: return chips("priority", false, true, true);
-      case 5: return <>{label("음식", "Food")}{chips("detailFood")}{label("활동", "Activities")}{chips("detailActivity")}{label("이동", "Getting around")}{chips("detailTransport")}</>;
-      case 6: return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
-      case 7: return chips("onDisruption", false, true);
+      case 3: return chips("priority", false, true, true);
+      case 4: return <>{label("음식", "Food")}{chips("detailFood")}{label("활동", "Activities")}{chips("detailActivity")}{label("이동", "Getting around")}{chips("detailTransport")}</>;
+      case 5: return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
+      case 6: return chips("onDisruption", false, true);
       default: return chips("pace");
     }
   }

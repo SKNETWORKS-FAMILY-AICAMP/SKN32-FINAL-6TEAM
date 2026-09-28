@@ -1,0 +1,164 @@
+import { expect, test } from "@playwright/test";
+import { finishOnboarding, start, stub, TRIP_ID } from "./helpers";
+
+const PLAN = "10/1 09:00 경복궁 관람";
+
+test.beforeEach(async ({ request }) => { await stub(request).reset(); });
+
+test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 보이며, 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
+  const server = stub(request);
+  await server.scenario({ trips: "none" });
+  await start(page, null);
+
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
+
+  // 읽는 중 → 확인 화면. 서버가 읽은 항목이 그대로 보인다.
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await expect(page.getByText("10/1 09:00 경복궁 관람").first()).toBeVisible();
+
+  // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
+  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("다시 보여 드리지 않아요");
+  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
+  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
+  await expect(notice).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+
+  // 서버가 실제로 받은 것: 계획 글은 접수 때, 확인은 등록할 때. 설문을 안 마쳤으니 설문 칸은 아예 없다.
+  const [intake] = await server.received("POST", "/v1/web/trip-intakes");
+  expect(String(intake.body?.multipart)).toContain(PLAN);
+  const [confirm] = await server.received("POST", "/confirm");
+  expect(confirm.body).toEqual({ revision: 1 });
+  expect(confirm.key).toBe("acop_u_stub_1");
+});
+
+test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실려 가고, 계획 글은 그보다 먼저 별도로 간다", async ({ page, request }) => {
+  const server = stub(request);
+  await server.scenario({ trips: "none" });
+  await start(page, "acop_u_known");
+
+  await finishOnboarding(page);
+  await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+
+  // 접수까지는 설문이 안 간다 — 서버가 받는 것은 계획 글뿐이다.
+  const beforeConfirm = await server.log();
+  expect(beforeConfirm.some((entry) => entry.path.endsWith("/confirm"))).toBe(false);
+  const [intake] = await server.received("POST", "/v1/web/trip-intakes");
+  expect(String(intake.body?.multipart)).not.toContain("survey");
+
+  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  const [confirm] = await server.received("POST", "/confirm");
+  expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
+});
+
+test("설문을 마친 뒤 새로고침하면 답이 사라져, 등록은 되지만 설문 칸은 서버로 가지 않는다(알려진 한계)", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page, "acop_u_known");
+  await finishOnboarding(page);
+  await page.goto("/trips/new");                 // 새로고침과 같다: 페이지 메모리가 비었다
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  const [confirm] = await server.received("POST", "/confirm");
+  expect(confirm.body).toEqual({ revision: 1 });
+});
+
+test("일정을 못 읽으면 일정 짜기 칸이 나오고, 확인한 조건이 일정 짜기 요청으로 간다", async ({ page, request }) => {
+  const server = stub(request);
+  await server.scenario({ intake: "empty_plan" });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill("서울 이틀 조용한 곳으로 짜 주세요");
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+
+  await expect(page.getByRole("heading", { name: "일정을 짜 달라고 하셨어요" })).toBeVisible();
+  await expect(page.getByLabel("첫날")).toHaveValue("2026-10-01");
+  await expect(page.getByLabel("일수")).toHaveValue("2");
+  await expect(page.getByLabel("인원")).toHaveValue("2");
+  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
+
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  const [plan] = await server.received("POST", "/plan");
+  expect(plan.body).toEqual({ revision: 1, start_date: "2026-10-01", days: 2, party_size: 2, keep_read_items: false });
+});
+
+test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+
+  await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
+  await page.getByRole("button", { name: "찾기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  const [edit] = await server.received("POST", "/edits");
+  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].place", value: { name: "창덕궁" } }] });
+});
+
+test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 올리는 길을 준다", async ({ page, request }) => {
+  await stub(request).scenario({ intake: "fatal" });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill("???");
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "이 계획을 읽지 못했어요" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "사진에서 글자를 찾지 못했어요" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "다시 올리기" })).toHaveAttribute("href", "/trips/new");
+});
+
+test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revision) 화면은 최신 상태를 다시 읽고 깨지지 않는다", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await server.scenario({ edits: "stale" });
+  const before = (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length;
+  await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
+  await page.getByRole("button", { name: "찾기" }).click();
+  await expect.poll(async () => (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length).toBeGreaterThan(before);
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+});
+
+test("새 키 발급이 한도에 걸리면(429) 서버 문장 그대로 알리고 계획 입력은 지켜진다", async ({ page, request }) => {
+  await stub(request).scenario({ session: "limited" });
+  await start(page, null);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByText("새 키를 너무 많이 받았다")).toBeVisible();
+  await expect(page.getByLabel("나의 여행 계획")).toHaveValue(PLAN);
+});
+
+test("일정 짜기가 오래 걸리는 동안(실제 서버는 운영시간을 읽느라 1분쯤) 단추가 잠기고 「짜는 중」이 보이며, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
+  const server = stub(request);
+  await server.scenario({ intake: "empty_plan", planDelay: 3000 });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill("서울 이틀");
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
+  const busy = page.getByRole("button", { name: /짜는 중/ });
+  await expect(busy).toBeVisible();
+  await expect(busy).toBeDisabled();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
+});

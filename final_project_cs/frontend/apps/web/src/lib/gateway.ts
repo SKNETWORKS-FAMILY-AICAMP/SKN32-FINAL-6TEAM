@@ -19,6 +19,7 @@ function unavailable(language: Language): Promise<never> {
 
 const unavailableGateway: TripGateway = {
   createTrip: (_input, language) => unavailable(language),
+  listTrips: (language) => unavailable(language),
   getTrip: (_tripId, language) => unavailable(language),
   retryVerification: (_tripId, language) => unavailable(language),
   startTrip: (_tripId, language) => unavailable(language),
@@ -28,3 +29,5 @@ const unavailableGateway: TripGateway = {
 // `live` talks to the triPilot server (`NEXT_PUBLIC_API_BASE`, `/v1/web/*`) with a per-user key.
 export const tripGateway: TripGateway = DATA_MODE === "demo" ? createDemoGateway() : DATA_MODE === "live" ? createLiveGateway() : unavailableGateway;
 export const tripKey = (tripId: string, language: Language) => ["trip", tripId, language] as const;
+/** Prefix of the trip list query in every language; removed after a registration so the list is read again. */
+export const tripsKey = ["trips"] as const;

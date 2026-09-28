@@ -35,6 +35,29 @@ export interface TripStop {
   notes: string;
   /** WGS84 coordinates supplied by the backend; missing means no map pin. */
   coordinates?: Coordinates | null;
+  /** The customer fixed this stop — the server does not move it on its own. */
+  pinned?: boolean;
+  /** Other options the server kept for this stop (best one is already applied). Shown as information. */
+  otherOptions?: TripOption[];
+}
+
+export interface TripOption { key: string; name: string }
+
+/** One saved version of the trip (server `history`): why it changed and what caused it, in the server's words. */
+export interface TripChange {
+  version: number;
+  reason: string;
+  /** Seoul wall clock, "2026-09-28 12:23". */
+  at: string;
+  causes: string[];
+}
+
+/** A finding the server made about the plan (server `warnings`), with what to do about it when it says so. */
+export interface TripWarning {
+  code: string;
+  date: string | null;
+  reason: string;
+  remedy: string | null;
 }
 
 export interface TripMessage {
@@ -60,6 +83,21 @@ export interface Trip {
     error?: string;
   };
   messages: TripMessage[];
+  /** Live only: what the server did to the trip and what it found. Absent in demo. */
+  history?: TripChange[];
+  warnings?: TripWarning[];
+  /** The server's per-trip plan page (a link that needs no login). */
+  planUrl?: string;
+}
+
+/** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */
+export interface TripSummary {
+  id: string;
+  title: string;
+  /** When the trip was registered (ISO instant). Null for a demo trip saved before registration time was kept. */
+  createdAt: string | null;
+  /** Itinerary version; above 1 means the itinerary changed after registration. Null where there are no versions (demo). */
+  version: number | null;
 }
 
 export interface CreateTripInput {
@@ -72,6 +110,8 @@ export interface CreateTripInput {
 /** Every call names the reader's language; generated text comes back in that language. */
 export interface TripGateway {
   createTrip(input: CreateTripInput, language: Language): Promise<Trip>;
+  /** This browser's trips, newest first. */
+  listTrips(language: Language): Promise<TripSummary[]>;
   getTrip(tripId: string, language: Language): Promise<Trip>;
   retryVerification(tripId: string, language: Language): Promise<Trip>;
   startTrip(tripId: string, language: Language): Promise<Trip>;

@@ -10,15 +10,16 @@ describe("trip survey (backend constraints.survey)", () => {
 
   it("maps each answer to its backend field", () => {
     const answers = {
-      ...initialAnswers, theme: "food", party: "family", transport: ["public", "walk"], citizen: "foreign", priority: "transport",
+      ...initialAnswers, theme: "food", party: "family", transport: ["public", "walk"], priority: "transport",
       detailFood: "taste", detailActivity: "healing", detailTransport: "walk", indoorDining: "indoor", indoorActivity: "any", onDisruption: "ask_first", pace: "relaxed",
     };
     expect(toSurvey(answers)).toEqual({
-      version: SURVEY_VERSION, theme: "food", party: "family", preferred_mobility: ["public", "walk"], domestic: false, priority: ["mobility"],
+      version: SURVEY_VERSION, theme: "food", party: "family", preferred_mobility: ["public", "walk"], priority: ["mobility"],
       priority_details: { food: ["taste"], activity: ["healing"], mobility: ["walk"] }, indoor_outdoor: { dining: "indoor", activity: "any" },
       on_disruption: "ask_first", pace: "relaxed",
     });
-    expect(toSurvey({ ...answers, citizen: "domestic" }).domestic).toBe(true);
+    // The nationality question was removed (nothing uses it): the survey never carries `domestic`.
+    expect(toSurvey(answers)).not.toHaveProperty("domestic");
   });
 
   it("rejects what the backend rejects: unknown fields, values outside the contract and another version", () => {
