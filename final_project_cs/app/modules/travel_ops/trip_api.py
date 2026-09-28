@@ -517,6 +517,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             conn, customer_id=request.customer_id, title=request.title, locale=request.locale,
             party_size=request.party_size, items=items, constraints=request.constraints,
             request_key=key, request_sha256=body_sha, trip_id=trip_id)
+        # ★`[2026-09-28]` 이 여행 전용 식당을 요식 원장과 잇는다 — 안 이으면 영업·라스트오더 판정과 대체 추천을 못 받는다.
+        #   잇기가 실패해도 등록은 막지 않는다(`link_trip` 이 세이브포인트로 되돌린다)
+        from .dining.ledger import link_trip
+
+        link_trip(conn, tenant, trip_id)
         # ★알림 ① 은 **생성도 포함**한다 — 링크가 처음 나가는 자리다(v11 §6-B).
         url = plan_url(tenant, trip_id)
         store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={

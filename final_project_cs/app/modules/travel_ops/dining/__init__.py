@@ -15,6 +15,10 @@
   폴더를 먼저 불러와 `dining.py` 를 조용히 무시한다 — 고쳐도 반영이 안 된다.
   `tests/contract/test_team_layout.py` 가 이 경우를 막는다.
   엔진을 따로 두려면 `dining_engine/` 처럼 다른 이름의 폴더를 쓴다(Mobility 방식).
+
+★요식은 원장 함수(`ledger.py` · `tick.py` · `sweep.py`)를 옆 파일로 둔다. 본체를 여기 두지 않는
+  까닭은 하나 더 있다 — 옆 파일만 열어도 패키지 초기화가 돌아 Team 의존 사슬
+  (`_base` → `read_tools` → `rag.retriever` → `openai`)이 따라오기 때문에, 원장 시험은 파일 경로로 읽는다.
 """
 from .team import DiningTeam
 

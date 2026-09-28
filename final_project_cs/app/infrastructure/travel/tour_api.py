@@ -60,8 +60,9 @@ REGION_FILTERS: dict[str, dict[str, str]] = {"1": {"lDongRegnCd": "11"}}
 
 class TourApiPlace(TravelSource):
     name = "tour_api"
-    #: ★`[2026-09-27]` 응답을 공용 캐시에 담지 않는다 — 콘텐츠랩 「로컬서버 저장방식 금지」(해석 대기, 보수적으로)
-    cache_ttl_seconds = 0
+    #: ☆`[2026-09-27]` 응답 캐시를 0 으로 막았다가 `[2026-09-28]` 되돌렸다 — 보존 시간은 가드레일
+    #:  `travel.tour_api_cache_seconds` 가 정한다(`base.py`). 근거는 `settings.tour_catalog_enabled` 주석
+    cache_ttl_seconds = None
 
     def __init__(self, *, service_key: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)

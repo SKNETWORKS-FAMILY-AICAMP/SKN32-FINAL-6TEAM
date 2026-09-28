@@ -49,8 +49,12 @@ class CaseEngine:
         self.tenant_id, self.clock, self.classifier = tenant_id, clock, classifier
         self.interpreter = make_subject_interpreter(report_extractor)
         self.store = TripStore(tenant_id)
+        # ★`[2026-09-28 사용자 지시]` 시나리오 모드는 **대본대로만 도는 데모 모드**다 — 실제 요식 원장(DB 의 식당 표)을
+        #   섞지 않는다. 원장을 섞자 대본의 대체 식당(「성수 브런치 식당」) 대신 원장 후보(「성수 국수 식당」)가 골라져
+        #   시나리오 시험 3건이 깨졌다.
+        #   Case 엔진은 시나리오 모드에서만 쓴다 — 늘 끈다
         tools = ReadToolbox(get_connection, policy_search=policy_search, travel=None, check=check,
-                            route_events=route_events, report_extractor=report_extractor)
+                            route_events=route_events, report_extractor=report_extractor, dining_ledger=False)
         config = load_project_config()
         registry = composition.build_registry(tools=tools, llm=None, config=config)
         self.controller = composition.build_controller(registry=registry, llm=None, config=config,

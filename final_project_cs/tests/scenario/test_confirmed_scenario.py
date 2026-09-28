@@ -89,7 +89,7 @@ def world():
     check = DisruptionCheck(sources, limits=lambda: (60, 30)).check
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
                           routes=SCENARIO["routes"], route_events=ReplayRouteEvents(timeline))
-    desk = TripDesk(store=store, connection_factory=get_connection)
+    desk = TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)   # 시나리오 모드와 같게
     yield {"tenant": tenant, "store": store, "trip_id": trip_id, "clock": clock,
            "watcher": watcher, "desk": desk}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

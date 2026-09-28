@@ -285,8 +285,8 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
         from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
         if not PlaceCatalogSync.enabled():
-            # ★`[2026-09-27]` 관광공사 장소 목록을 읽지 않는다(약관 해석 대기 — 기본 꺼짐). 후보가 모자라면
-            #   `fill_from_tour_api` 가 **실시간으로** 받아 이 요청 안에서만 쓴다(저장하지 않는다)
+            # ★스위치를 끈 때만 여기로 온다(기본 켜짐 — `[2026-09-28]` 되돌림). 후보가 모자라면
+            #   `fill_from_tour_api` 가 **실시간으로** 받아 이 요청 안에서만 쓴다
             return list(found.values())
         cur.execute(
             "SELECT content_id, content_type_id, title, address, latitude, longitude "

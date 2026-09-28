@@ -160,10 +160,13 @@ class Settings(BaseSettings):
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
-    # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
-    #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
-    #   전까지 쌓지도 읽지도 않는다. 장소는 필요할 때 실시간으로 조회한다(`TourApiPlace.find`·`area_page`).
-    tour_catalog_enabled: bool = False
+    # ★관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 켜짐**(`[2026-09-28]` 사용자 결정으로 되돌림).
+    #   ☆`[2026-09-27]` 콘텐츠랩 저작권 정책의 한 줄 「콘텐츠 캐싱(로컬서버 저장방식) 금지」를 「아무것도 저장 금지」로
+    #     넓게 읽어 끄고 8,015행을 지웠다. 약관(구속력 있는 계약)에는 저장 금지가 없고(제10조 유·무료 활용 · 제3조
+    #     파일 내려받기 제공), 저작권법 제93조는 DB 의 「전부·상당 부분」만 막으며 사실(소재)엔 미치지 않고,
+    #     공공데이터법 제3조④는 영리 이용 제한까지 금지한다. 게다가 학업용이다. 사진·소개글은 저장하지 않는다.
+    #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
+    tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.

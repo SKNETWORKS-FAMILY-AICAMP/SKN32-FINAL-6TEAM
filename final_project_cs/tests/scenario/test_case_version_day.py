@@ -123,7 +123,7 @@ def trip_world():
     yield {"tenant": tenant, "store": store, "trip_id": trip_id, "customer": customer, "clock": clock,
            "watcher": TripWatcher(store=store, check=check, connection_factory=get_connection, clock=clock,
                                   route_events=route_events),
-           "desk": TripDesk(store=store, connection_factory=get_connection)}
+           "desk": TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)}
     cleanup_tenant(tenant)
 
 

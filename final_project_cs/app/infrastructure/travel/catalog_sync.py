@@ -34,6 +34,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import logging
 from typing import Any, Callable
 
@@ -82,10 +83,11 @@ class PlaceCatalogSync:
     # ── 진입점 ──────────────────────────────────────────────────
     @staticmethod
     def enabled() -> bool:
-        """★`[2026-09-27]` 기본 꺼짐 — 관광공사 콘텐츠랩 저작권 정책 「활용 주의사항」 2 — 「콘텐츠 캐싱(로컬서버 저장방식) 금지」. 관광공사 서면 답을 받기 전까지 장소 목록을 쌓지 않는다(2026-09-27, 코덱스와 논의해 결정)."""
+        """★기본 켜짐(`[2026-09-28]` 되돌림). 끄는 스위치는 남긴다(`ACOP_TOUR_CATALOG_ENABLED=false`).
+        ☆`[2026-09-27]` 저작권 정책 한 줄을 넓게 읽어 껐었다 — 근거는 `settings.tour_catalog_enabled` 주석."""
         from app.core.settings import get_settings
 
-        return bool(getattr(get_settings(), "tour_catalog_enabled", False))
+        return bool(getattr(get_settings(), "tour_catalog_enabled", True))
 
     def _suspended(self, area_code: str, mode: str) -> SyncOutcome:
         return SyncOutcome(self.source.name, area_code, mode,
@@ -244,8 +246,8 @@ class PlaceCatalogSync:
                      row.get("title"), row.get("address"),
                      row.get("latitude"), row.get("longitude"),
                      row.get("source_modified_at"),
-                     # ★`[2026-09-27]` 원문 응답은 저장하지 않는다 — 쓰는 칸만 남긴다(허용되더라도 최소로)
-                     "{}"))
+                     # ☆`[2026-09-27]` 원문을 비웠다가 `[2026-09-28]` 되돌렸다 — 목록 응답은 사실 정보(이름·주소·좌표·분류)다
+                     json.dumps(row.get("raw") or {}, ensure_ascii=False)))
                 written += 1
         return written
 

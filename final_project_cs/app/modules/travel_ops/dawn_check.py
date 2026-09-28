@@ -150,9 +150,15 @@ class DawnCheck:
                                                    detail=detail, checked_at=checked_at,
                                                    exclude=self._closed_places(conn, day))
             else:
+                from .dining.ledger import DbLedgerView
+                from .replan import ORDER_MARGIN_MIN
+
+                # ★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다(없으면 장소 목록 — 예전 그대로)
                 plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
                                           detail=detail, checked_at=checked_at,
-                                          exclude=self._closed_places(conn, day))
+                                          exclude=self._closed_places(conn, day),
+                                          ledger=DbLedgerView(self._connect, self.store.tenant_id,
+                                                              ORDER_MARGIN_MIN))
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})

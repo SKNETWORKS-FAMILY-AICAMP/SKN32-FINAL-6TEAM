@@ -432,9 +432,12 @@ def _cache_one_row(api):
             "'캐시된 미술관','서울특별시 종로구 캐시길 1',37.5759,126.9787)", (api["tenant"],))
 
 
-def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api):
-    """★`[2026-09-27]` 관광공사 장소 목록은 **기본 꺼짐**(콘텐츠랩 「로컬서버 저장방식 금지」 해석 대기).
-    표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받아 그 요청 안에서만 쓴다."""
+def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api, monkeypatch):
+    """스위치를 끄면(`ACOP_TOUR_CATALOG_ENABLED=false`) 표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받는다.
+    ★`[2026-09-28]` 기본은 켜짐으로 되돌렸다 — 끄는 길이 여전히 도는지만 본다."""
+    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+
+    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: False))
     _cache_one_row(api)
     tour = StubTour()
     body = api["ask"](request_id="p-off", tour=tour).json()
@@ -443,10 +446,10 @@ def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(a
 
 
 def test_tour_api_is_called_only_when_the_catalog_is_empty(api, monkeypatch):
-    """★(목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
+    """★(기본 — 목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
     from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
-    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: True))
+    assert PlaceCatalogSync.enabled() is True       # ★기본값이 켜짐이다(2026-09-28)
     tour = StubTour()
     body = api["ask"](request_id="p-tour", tour=tour).json()
     assert tour.calls == 1 and body["calls"]["tour_api"] == 1

@@ -15,8 +15,26 @@
 
 ★우리가 고른 값(측정 아님) — 코드 상수로 모아 둔다:
     WALK_M_PER_MIN        80   도보 분당 거리
-    ORDER_MARGIN_MIN      20   라스트오더 전에 확보해야 할 주문 여유
+    ORDER_MARGIN_MIN      20   라스트오더 전에 확보해야 할 주문 여유 — ★**탈락** 조건
     SEATING_BUFFER_MIN    10   도착해 자리 잡는 데 드는 시간
+
+★`[2026-09-28]` 라스트오더는 **두 값**이다(사용자 결정 — 경고는 60분, 탈락은 20분).
+    ORDER_MARGIN_MIN      20   라스트오더를 **알 때** — 도착 + 20분이 라스트오더를 넘으면 탈락
+                               (브레이크 앞 라스트오더에만 걸던 것을 영업 종료 앞 라스트오더에도 건다)
+    LAST_ORDER_WARN_MIN   60   라스트오더를 **모를 때** — 식사가 끝나는 시각이 영업 종료(또는 브레이크 시작)
+                               60분 안이면 **경고만** 한다. 모르는 값으로 후보를 버리지 않는다.
+                               요식 원장의 같은 규칙과 같은 값이다(`201_dining_core_link.sql` `needs_last_order_check`).
+                               ★실측(2026-09-28 재계산, `scripts/dining/parse_hours.py` 현재판): 관광공사 음식점 원문
+                               989곳 중 라스트오더를 적은 481곳 — 종료와 라스트오더 간격 중앙값 50분, 60분 이내
+                               413/481 = 85.9%. 요식 문서의 「77곳 · 85.7%」는 09-21 옛 파서 값이라 지금은 재현되지 않는다.
+
+★`[2026-09-28]` **식당은 가격으로 탈락시키지도 줄 세우지도 않는다**(사용자 결정 — 식당 가격은 정확히 매기기
+  어렵다). 전에는 가격을 모르면 「추가 비용을 계산할 수 없다」로 **탈락**이라 가격 칸이 빈 식당이 전부 빠졌다.
+  식당끼리는 도보 거리(③ 원래 시각과의 차이)로 가른다.
+
+★`[2026-09-28]` **요식 원장은 후보를 내고, 고르는 것은 여기다**(사용자 결정). 원장(`dining/ledger.py`)이
+  축마다 하나씩(덜 밀리는 곳 · 비슷한 곳 · 가까운 곳) 준 곳을 후보로 삼아 위 규칙으로 **하나**를 고르고,
+  나머지는 「다른 안」이 된다. 원장이 말할 수 없으면(표 없음 · 짝 없음 · 후보 없음) 예전처럼 장소 목록에서 찾는다.
 """
 from __future__ import annotations
 
@@ -27,6 +45,9 @@ from typing import Any, Callable
 
 WALK_M_PER_MIN = 80
 ORDER_MARGIN_MIN = 20
+LAST_ORDER_WARN_MIN = 60
+#: 시연용 순위가 없는 후보(= 실제 장소 전부)의 값 — 대본 장소의 순위(1, 2 …)보다 뒤다
+SCENARIO_PRIORITY_NONE = 1_000
 SEATING_BUFFER_MIN = 10
 
 
@@ -44,10 +65,24 @@ class Candidate:
     walk_min: int | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    #: ★탈락은 아니지만 고객이 확인해야 할 것(라스트오더를 모르는데 마감이 가깝다 등). 통지에 싣는다
+    warnings: list[str] = field(default_factory=list)
+    #: 요식 원장이 낸 후보면 그 축(`axis` · `axis_label`). 원장 밖 후보는 None
+    axis: dict[str, Any] | None = None
+    #: 영업 판정을 어디서 가져왔나 — `dining_ledger` · `core_place`. 틀렸을 때 어디를 고칠지 알게 남긴다
+    judged_by: str | None = None
 
     def rank(self) -> tuple:
-        return (self.changed_items, self.extra_cost_krw or 0, self.shift_minutes,
-                0 if self.reversible_internally else 1, self.key)
+        # ★`[2026-09-28]` 도보 분(③ 원래 시각과의 차이)과 경고 유무를 더했다. 활동·경로 후보는 `walk_min` 이
+        #   None · 경고 없음이라 **예전 순서 그대로**다. 식당은 가격을 안 쓰므로 전에는 사실상 후보 id 순이었다
+        # ★`[2026-09-28 사용자 지시]` 맨 앞은 **시연용 순위**(`scenario_priority`)다 — 시나리오 모드는 대본대로 도는
+        #   데모 모드라, 실서비스 규칙이 바뀌어도(식당 가격을 순위에서 뺐다) 대본이 고른 곳이 골라져야 한다. 전에는
+        #   가격으로 「성수 브런치 식당」을 골랐는데 가격을 빼자 이름순으로 「국수 식당」이 골라져 시나리오 시험 4건이
+        #   깨졌다. 이 값은 대본 장소에만 있고 **탈락하지 않은 후보 사이에서만** 쓰인다 — 실제 장소는 모두 같은 값이다
+        priority = ((self.place or {}).get("attributes") or {}).get("scenario_priority")
+        return (priority if isinstance(priority, int) else SCENARIO_PRIORITY_NONE,
+                self.changed_items, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
+                0 if self.reversible_internally else 1, 1 if self.warnings else 0, self.key)
 
     @property
     def name(self) -> str:
@@ -107,7 +142,42 @@ def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple
                            f"{left}분 — 주문 가능한 시간이 촉박하다")
         if arrival < rest_start < end:
             return False, f"{rest[0]} 브레이크타임에 걸린다"
+    # ★`[2026-09-28]` 영업 종료 앞 라스트오더도 **알면** 같은 20분을 건다(전에는 브레이크 앞에만 걸었다)
+    from .place_hours import hours_on
+
+    day = hours_on(attributes, arrival.date())
+    if not isinstance(day, str) and day is not None and day.last_entry is not None:
+        last_order = arrival.replace(hour=day.last_entry.hour, minute=day.last_entry.minute,
+                                     second=0, microsecond=0)
+        if arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
+            left = max(0, int((last_order - arrival).total_seconds() // 60))
+            return False, (f"라스트오더({_hm(last_order)})까지 {left}분 — "
+                           f"주문 여유 {ORDER_MARGIN_MIN}분이 안 된다")
     return True, ""
+
+
+def dining_warnings(place: dict[str, Any], arrival: datetime, minutes: int) -> list[str]:
+    """★탈락은 아니지만 알려야 할 것 — 라스트오더를 **모르는데** 식사가 마감 60분 안에 끝난다. `[2026-09-28]`
+
+    요식 원장의 `needs_last_order_check`(P-02)와 같은 규칙이다. 원장에 짝이 없는 식당도 같은 경고를 받게
+    코어 영업시간으로 한 번 더 둔다. 라스트오더를 알면 경고하지 않는다 — 그때는 `dining_fits` 가 20분으로 판정했다.
+    """
+    from .place_hours import hours_on
+
+    end = arrival + timedelta(minutes=minutes)
+    attributes = place.get("attributes") or {}
+    out: list[str] = []
+    rest = attributes.get("break")
+    if rest and attributes.get("last_order_before_break_min") is None:
+        rest_start = _on(arrival, rest[0])
+        if arrival < rest_start and end <= rest_start <= end + timedelta(minutes=LAST_ORDER_WARN_MIN):
+            out.append(f"{rest[0]} 브레이크타임 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
+    day = hours_on(attributes, arrival.date())
+    if not isinstance(day, str) and day is not None and day.last_entry is None:
+        closes = arrival.replace(hour=day.closes.hour, minute=day.closes.minute, second=0, microsecond=0)
+        if end <= closes <= end + timedelta(minutes=LAST_ORDER_WARN_MIN):
+            out.append(f"{_hm(closes)} 마감 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
+    return out
 
 
 #: 이 사건 종류는 **실내로 옮기면 원인이 사라진다** — 대안을 실내에서 찾는다.
@@ -149,33 +219,56 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
 def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                       arrival: datetime, minutes: int, constraints: dict[str, Any],
                       radius_m: int, next_start: datetime | None,
-                      exclude: set[str] = frozenset()) -> list[Candidate]:
-    """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2)."""
-    base_price = (original.get("attributes") or {}).get("price_krw")
+                      exclude: set[str] = frozenset(), ledger: Any | None = None,
+                      pool: dict[str, dict[str, Any]] | None = None) -> list[Candidate]:
+    """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2).
+
+    ★`[2026-09-28]` 가격은 보지 않는다 — 탈락에도 순위에도(맨 위 머리말).
+    ★`pool` 이 있으면 **요식 원장이 낸 후보만** 본다(`{place_id: 축}`). 원장은 반경 사다리(500→1000→2000m)를
+      스스로 정하므로 여기 `radius_m` 을 다시 걸지 않는다. 영업 판정도 원장(`ledger.state`)에 먼저 묻고,
+      원장이 모른다고 하면 코어 영업시간으로 본다. `judged_by` 에 어디서 판정했는지 남긴다.
+    """
     need_payment = constraints.get("payment")
+    end_of = lambda start: start + timedelta(minutes=minutes)  # noqa: E731
     out = []
     for place in places:
         if place["place_id"] == original["place_id"] or place["place_id"] in exclude:
             continue
         if place.get("kind") != "dining" or place.get("latitude") is None:
             continue
+        if pool is not None and str(place["place_id"]) not in pool:
+            continue
         meters = distance_m(original, place)
-        if meters > radius_m:
+        if pool is None and meters > radius_m:
             continue
         walk = walk_minutes(meters)
         attributes = place.get("attributes") or {}
         candidate = Candidate(key=str(place["place_id"]), place=place, changed_items=1,
-                              extra_cost_krw=None, shift_minutes=0, walk_min=walk)
-        price = attributes.get("price_krw")
-        if price is None or base_price is None:
-            candidate.rejected.append("가격을 몰라 추가 비용을 계산할 수 없다")
-        else:
-            candidate.extra_cost_krw = max(0, int(price) - int(base_price))
+                              extra_cost_krw=None, shift_minutes=0, walk_min=walk,
+                              axis=(pool or {}).get(str(place["place_id"])))
         if need_payment and need_payment not in (attributes.get("payment") or []):
             candidate.rejected.append(f"결제 조건({need_payment}) 불충족")
-        fits, why = dining_fits(place, arrival, minutes)
-        if fits is not True:
-            candidate.rejected.append(why)
+        state = ledger.state(str(place["place_id"]), arrival, end_of(arrival)) \
+            if ledger is not None and pool is not None else None
+        if state and state.get("available") and state.get("linked") \
+                and state.get("open_at_slot") is not None:
+            candidate.judged_by = "dining_ledger"
+            if state["open_at_slot"] is False:
+                candidate.rejected.append("그 시각 영업하지 않는다(요식 원장)")
+            elif state.get("order_ok") is False:
+                candidate.rejected.append(f"라스트오더까지 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다(요식 원장)")
+            else:
+                if state.get("needs_check"):
+                    candidate.warnings.append("마감 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
+                if state.get("needs_holiday_check"):
+                    candidate.warnings.append("명절·공휴일이라 영업시간이 다를 수 있어요")
+        else:
+            candidate.judged_by = "core_place"
+            fits, why = dining_fits(place, arrival, minutes)
+            if fits is not True:
+                candidate.rejected.append(why)
+            else:
+                candidate.warnings += dining_warnings(place, arrival, minutes)
         candidate.starts_at = arrival
         candidate.ends_at = arrival + timedelta(minutes=minutes)
         if next_start is not None and candidate.ends_at > next_start:
@@ -306,7 +399,11 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "option_label": (candidate.option or {}).get("label") if candidate.option else None,
             "starts_at": candidate.starts_at.isoformat() if candidate.starts_at else None,
             "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
-            "walk_min": candidate.walk_min}
+            "walk_min": candidate.walk_min,
+            # ★`[2026-09-28]` 화면은 key·name 만 읽고 나머지는 무시한다(UI 조사) — 더해도 깨지지 않는다
+            **({"warnings": list(candidate.warnings)} if candidate.warnings else {}),
+            **({"axis": candidate.axis} if candidate.axis else {}),
+            **({"judged_by": candidate.judged_by} if candidate.judged_by else {})}
 
 
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:
@@ -370,6 +467,9 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
     parts = [f"{reason}.",
              f"도보 {best.walk_min}분 거리{', ' + constraint_note if constraint_note else ''}"
              f" {best.name}(으)로 안내합니다({_hm(best.starts_at)} 입장)."]
+    if best.warnings:
+        # ★`[2026-09-28]` 라스트오더를 모르는데 마감이 가깝다 등 — 바꾸기는 하되 확인할 것을 알린다
+        parts.append(" ".join(f"{w}." for w in best.warnings))
     if alternates:
         parts.append("다른 안: " + ", ".join(f"{c.name}(도보 {c.walk_min}분)"
                                             for c in alternates) + ".")
@@ -377,9 +477,11 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
         parts.append(f"이후 {after} 일정에는 영향이 없습니다.")
     return _notice(" ".join(parts), causes=[cause], alternates=alternates, replay=False,
                    changed={"from": original["name"], "to": best.name,
-                            "at": best.starts_at.isoformat()})
+                            "at": best.starts_at.isoformat()},
+                   **({"warnings": list(best.warnings)} if best.warnings else {}),
+                   **({"judged_by": best.judged_by} if best.judged_by else {}))
 
 
 __all__ = ["Candidate", "activity_candidates", "alternate_record", "change_notice", "choose", "dining_candidates",
-           "dining_fits", "dining_notice", "distance_m", "open_during", "route_candidates",
+           "dining_fits", "dining_notice", "dining_warnings", "distance_m", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]
