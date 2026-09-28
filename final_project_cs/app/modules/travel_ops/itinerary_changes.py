@@ -51,7 +51,92 @@ class ItineraryChange:
     def new_items(self, current: list[Item]) -> list[Item]:
         if self.full_items is not None:
             return list(self.full_items)
-        return [self.replacements.get(item.item_id, item) for item in current]
+        out = [self.replacements.get(item.item_id, item) for item in current]
+        return refresh_moves_around(current, out, self.replacements)
+
+
+def _leg_place(item: Item) -> dict[str, Any] | None:
+    p = item.place or {}
+    if p.get("latitude") is None or p.get("longitude") is None:
+        return None
+    return {"key": str(p.get("place_id") or item.place_id), "name": p.get("name") or item.title,
+            "lat": float(p["latitude"]), "lon": float(p["longitude"])}
+
+
+def refresh_moves_around(before: list[Item], after: list[Item], replacements: dict[UUID, Item]) -> list[Item]:
+    """☆`[2026-09-29 이동 계산기 문제목록 #44]` 장소가 바뀐 항목의 **바로 앞뒤 이동**을 새 장소 기준으로 다시 만든다.
+
+    앞 판은 장소 항목만 바꾸고 이동 항목은 옛 장소로 가는 경로(탈 노선 uses · 소요)를 그대로 둬, 식당을 바꿨는데
+    출발 안내가 옛 경로로 나갔다. 이동 계산기가 켜져 있으면 시간표로 다시 판정하고(출발·도착·경로), 못 하면
+    옛 노선 정보를 떼고 직선 어림값 경로(추정 · uses 없음)로 바꾼다 — 옛 경로를 새 장소의 경로처럼 두지 않는다.
+    시각은 계산기가 채울 때만 바꾼다(어림값으로 일정을 옮기지 않는다).
+    """
+    from .replan import distance_m, walk_minutes
+    olds = {i.item_id: i for i in before}
+    # 「그대로 둘 거리」 = 이동 계산기의 도보 상한(guardrails mobility.limits.walk_m.default) — 새 장소가 옛 장소에서
+    #   걸어갈 수 있는 거리면 같은 역을 쓸 수 있어 옛 경로가 여전히 맞다. 새 수치를 따로 만들지 않는다.
+    from .mobility.engine.guardrails import GuardrailMissing, lookup
+    try:
+        keep_m = float(lookup("mobility.limits.walk_m.default"))
+    except GuardrailMissing:
+        keep_m = 0.0                                     # 못 읽으면 늘 다시 만든다(보수적)
+
+    def moved_far(old_id: UUID, new: Item) -> bool:
+        """새 장소가 옛 장소에서 도보 상한 밖인가 — 걸어갈 거리(같은 역 권역)면 옛 경로가 여전히 맞다.
+        (시나리오: 잠실 스카이타워 → 90 m 옆 아쿠아리움, 성수 점심 → 450 m 옆 브런치 — 경로를 지우면 안 된다)"""
+        a, b = _leg_place(olds[old_id]) if old_id in olds else None, _leg_place(new)
+        if a is None or b is None:
+            return True
+        return distance_m({"latitude": a["lat"], "longitude": a["lon"]},
+                          {"latitude": b["lat"], "longitude": b["lon"]}) > keep_m
+
+    changed = {old_id for old_id, new in replacements.items()
+               if new.kind != "mobility" and old_id in olds and olds[old_id].place_id != new.place_id
+               and moved_far(old_id, new)}
+    if not changed:
+        return after
+    seq_sorted = sorted(after, key=lambda i: i.seq)
+    new_ids = {replacements[i].item_id for i in changed}
+    targets: set[int] = set()
+    for k, it in enumerate(seq_sorted):
+        if it.item_id in new_ids:
+            for j in (k - 1, k + 1):
+                if 0 <= j < len(seq_sorted) and seq_sorted[j].kind == "mobility":
+                    targets.add(j)
+    if not targets:
+        return after
+    from .mobility.wiring import leg_planner
+    engine = leg_planner(None, {})
+    fresh: dict[UUID, Item] = {}
+    for j in sorted(targets):
+        move = seq_sorted[j]
+        prev = next((i for i in reversed(seq_sorted[:j]) if i.kind != "mobility"), None)
+        nxt = next((i for i in seq_sorted[j + 1:] if i.kind != "mobility"), None)
+        a, b = (_leg_place(prev) if prev else None), (_leg_place(nxt) if nxt else None)
+        if a is None or b is None:
+            continue
+        got = None
+        if engine is not None:
+            got, _why = engine(a, b, nxt.starts_at, prev.ends_at or prev.starts_at)
+        if got is not None:
+            detail = {**move.detail, "route_def": got["route"], "refreshed_for": "place_changed"}
+            detail.pop("route", None)
+            detail.pop("option", None)
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}",
+                                                   starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+        else:
+            # 일정 짜기의 어림 규칙(planner._transfer_minutes)과 같다 — 도보 환산이 상한을 넘으면 상한 · 「대중교통 권장」
+            from .planner import TRANSFER_MAX_MIN
+            m = walk_minutes(distance_m({"latitude": a["lat"], "longitude": a["lon"]},
+                                        {"latitude": b["lat"], "longitude": b["lon"]}))
+            label = "도보 기준 [추정]" if m <= TRANSFER_MAX_MIN else "대중교통 권장 [추정]"
+            route = {"from": a["name"], "to": b["name"], "planned": "estimate",
+                     "options": [{"id": "estimate", "label": label, "eta_min": min(m, TRANSFER_MAX_MIN), "uses": []}]}
+            detail = {**move.detail, "route_def": route, "refreshed_for": "place_changed"}
+            detail.pop("route", None)
+            detail.pop("option", None)
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}", detail=detail)
+    return [fresh.get(i.item_id, i) for i in after]
 
 
 @dataclass

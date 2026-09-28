@@ -60,6 +60,11 @@ def configure(data_dir, source="settings"):
     _layout(data_dir, source)
 
 
+def disable():
+    """서버가 계산기를 끈다(설정 mobility_data_dir 비움). 이 뒤로는 명령줄 관례(.env)로도 켜지지 않는다."""
+    _layout(UNSET_DIR, "disabled")
+
+
 def load_cli_env():
     """명령줄 도구·시험 전용 — 저장소 맨 위 `.env` 를 읽고(dotenv) DATA_DIR 이 있으면 그 자리로.
     서버는 이것을 부르지 않는다(configure 로 설정 값을 넘긴다). 이미 환경변수가 있으면 그것이 이긴다(dotenv 규칙)."""

@@ -104,6 +104,10 @@ class ItineraryApply:
                 if missing:
                     raise ActionRejected(f"items not in the current itinerary: {missing}")
                 new_items = [replacements.get(item.item_id, item) for item in current]
+                # ☆`[2026-09-29 이동 계산기 문제목록 #44]` 여행 버전(ItineraryChange.new_items)과 같게 — 장소가 멀리 바뀐
+                #   항목의 바로 앞뒤 이동을 새 장소 기준으로 다시 만든다(두 경로의 결과가 갈리지 않게)
+                from .itinerary_changes import refresh_moves_around
+                new_items = refresh_moves_around(current, new_items, replacements)
         except (KeyError, TypeError, ValueError) as exc:
             raise ActionRejected(f"itinerary.apply arguments are malformed: {exc}") from exc
 
