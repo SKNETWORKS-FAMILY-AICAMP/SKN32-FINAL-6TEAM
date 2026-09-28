@@ -302,3 +302,28 @@ def test_unmatched_and_failed_calls_are_counted_not_called_open(world):
     with get_connection() as conn, conn.cursor() as cur:        # ★못 부른 것은 기록하지 않는다 → 다시 부른다
         cur.execute("SELECT count(*) FROM place_open_checks WHERE tenant_id=%s", (world["tenant"],))
         assert cur.fetchone()[0] == 0
+
+
+SKY = next(p["name"] for p in SCENARIO["places"] if p["key"] == "seoul_sky")
+
+
+def test_an_activity_closed_today_is_replaced_with_one_open_at_that_time(world):
+    """★`[2026-09-28]` 활동도 새벽에 본다(사용자 결정 — 계획은 관광공사 원문을 옮긴 영업시간으로, 최종 판정은 구글).
+    ☆전에는 식당만 봐서 쉬는 날에 들어간 활동을 당일까지 몰랐다. 닫혔으면 **같은 시각에 연다고 아는** 근처 활동으로 바꾼다."""
+    result = _dawn(world, FakeSource(closed={SKY})).tick()
+    assert [c["place"] for c in result.closed] == [SKY], result.counts()
+    assert len(result.adjusted) == 1 and result.fatal == [] and result.unresolved == []
+    _, items = _latest(world)
+    morning = next(i for i in items if i.kind == "activity" and i.starts_at == _at("10:00"))
+    assert morning.place["name"] != SKY and morning.starts_at == _at("10:00")      # ★계획한 시각 그대로
+    hours = morning.place["attributes"]["hours"]
+    assert hours[0] <= "10:00" and "10:45" <= hours[1]                              # 그 시각에 연다고 아는 곳
+
+
+def test_an_activity_with_nothing_open_nearby_is_left_for_a_person_not_swapped_blindly(world):
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE places SET attributes = attributes - 'hours' "
+                    "WHERE tenant_id=%s AND kind='activity' AND name <> %s", (world["tenant"], SKY))
+    result = _dawn(world, FakeSource(closed={SKY})).tick()
+    assert result.adjusted == [] and [u["place"] for u in result.unresolved] == [SKY], result.counts()
+    assert _latest(world)[0]["version"] == 1

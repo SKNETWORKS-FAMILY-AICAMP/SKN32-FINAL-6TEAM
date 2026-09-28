@@ -135,8 +135,19 @@ def booking_fact(item: Any) -> tuple[str, str]:
     return "기록 없음", "예약 기록 없음(받은 예약 정보가 없어요)"
 
 
-def _stored_hours(place: dict[str, Any]) -> str | None:
+def _stored_hours(place: dict[str, Any], day: date | None = None) -> str | None:
+    """저장된 영업시간 — 날짜를 주면 그날 것(요일별 칸이 먼저, `place_hours.hours_on`)."""
+    from .place_hours import hours_on
+
     attributes = place.get("attributes") or {}
+    today = hours_on(attributes, day) if day is not None else None
+    if today == "closed":
+        return f"{_day_label(day)}은 쉬는 날"
+    if today is not None:
+        text = f"{today.opens:%H:%M}~{today.closes:%H:%M}"
+        if today.last_entry:
+            text += f" (입장·주문 마감 {today.last_entry:%H:%M})"
+        return text
     hours = attributes.get("hours")
     if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
         return None
@@ -355,7 +366,7 @@ def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
             lines.append(f"{name} 운영시간(관광공사 안내 원문): {_clean(lookup['hours_text'])}")
         if lookup.get("rest_text"):
             lines.append(f"쉬는 날(원문): {_clean(lookup['rest_text'])}")
-    stored = _stored_hours(item.place or {})
+    stored = _stored_hours(item.place or {}, _local(item.starts_at).date())
     if stored:
         lines.append(f"{name} 영업시간(저장된 값): {stored}")
     if not lines:

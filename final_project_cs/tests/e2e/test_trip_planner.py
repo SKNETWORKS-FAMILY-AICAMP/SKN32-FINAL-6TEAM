@@ -793,3 +793,45 @@ def test_the_survey_sent_with_plan_me_a_trip_decides_the_pace_and_stays_on_the_t
     assert stored["survey"]["party"] == "friends"
     assert stored["density"]["level"] == "high"                  # 16번 → 밀도 목표
 
+
+
+# ── 영업시간 — 관광공사 원문을 읽어 쉬는 날에 넣지 않는다 (2026-09-28, 사용자 결정 「원문을 구조화한다」) ──────
+class HoursTour(StubTour):
+    """운영시간 원문도 주는 흉내. ★「가든 공원」은 월요일에 쉰다 — 시작일(10-05)이 월요일이다."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.asked: list[str] = []
+
+    def operating(self, content_id: str, content_type_id: str):
+        self.asked.append(content_id)
+        if content_id == "800001":
+            return {"usetime_text": "09:00~18:00", "restdate_text": "매주 월요일"}
+        return None
+
+
+def test_a_place_that_rests_on_the_day_is_read_from_its_text_and_swapped_out(api):
+    """☆실제 일정에서 「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00 에 들어갔다 — 영업시간을 몰라 판정이 안 봤다.
+    이제 고른 장소의 운영시간 원문을 읽어 요일별로 채우고, 쉬는 날이면 판정(`closed_day`)이 그 장소를 바꾼다."""
+    from app.modules.travel_ops import planner as planner_module
+
+    planner_module._HOURS_CACHE.clear()
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        # 활동은 전부 영업시간을 모르게 한다(실제 데이터처럼) — 그러면 이름순으로 「가든 공원」이 첫날 먼저 뽑힌다
+        cur.execute("UPDATE places SET attributes = attributes - 'hours' WHERE tenant_id=%s AND kind='activity'",
+                    (api["tenant"],))
+        cur.execute("UPDATE places SET attributes = attributes || "
+                    "'{\"source_content_id\": \"800001\", \"source_content_type_id\": \"12\"}'::jsonb "
+                    "WHERE tenant_id=%s AND name='가든 공원'", (api["tenant"],))
+    tour = HoursTour()
+    body = api["ask"](tour=tour, request_id="p-rest-day").json()
+    assert body["status"] == "drafted" and body["checks"]["violations"] == [], body
+    draft = body["draft"]
+    monday = [i["title"] for i in _stops(draft) if i["detail"]["planner"]["day"] == START.isoformat()]
+    assert "가든 공원" not in monday, monday
+    assert "800001" in tour.asked
+    hours = body["planner"]["hours"]
+    assert hours["read"] >= 1 and hours["by_rule"] >= 1, hours
+    assert any(r.startswith("closed_day") for r in body["checks"]["repairs"]), body["checks"]
+    # 등록 판정기도 같은 칸을 본다 — 초안을 그대로 등록해도 통과한다
+    assert check_itinerary(_parts(draft), constraints=draft["constraints"], party_size=draft["party_size"]) == []

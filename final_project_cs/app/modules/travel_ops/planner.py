@@ -44,6 +44,8 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from .density import measure_density
+from .place_hours import DayHours, hours_on, knows_hours
+from .place_hours import fits as hours_fit
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
 
@@ -372,7 +374,7 @@ def rank_candidates(candidates: Iterable[Cand], pref: Preference) -> list[Cand]:
             fit = 0
         # ★**아는 값이 많은 장소가 먼저다** — 영업시간을 알면 판정이 실제로 그 칸을 본다.
         #   종류 우선순위(`rank_hint`)보다 앞에 둔다: 판정 가능한 초안이 예쁜 초안보다 낫다.
-        known = 0 if "hours" in cand.attributes else 1
+        known = 0 if knows_hours(cand.attributes) else 1
         ranked.append(((fit, known, cand.rank_hint, cand.name), cand))
     ranked.sort(key=lambda pair: pair[0])
     return [cand for _, cand in ranked]
@@ -609,15 +611,13 @@ def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str, str]:
 
 
 def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, datetime]:
-    """여는 시각 전이면 여는 시각으로 **민다.** 모르면 그대로 둔다(모름은 판정 대상이 아니다)."""
-    hours = cand.attributes.get("hours")
+    """여는 시각 전이면 여는 시각으로 **민다.** 모르면 그대로 둔다(모름은 판정 대상이 아니다).
+    ★그날의 영업시간(`hours_on` — 요일별 칸이 먼저). 쉬는 날이면 그대로 두고 판정(`closed_day`)이 장소를 바꾼다."""
+    today = hours_on(cand.attributes, start.date())
     end = start + timedelta(minutes=minutes)
-    if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
+    if not isinstance(today, DayHours):
         return start, end
-    try:
-        opens = time(*map(int, str(hours[0]).split(":")))
-    except (TypeError, ValueError):
-        return start, end
+    opens = today.opens
     if start.time() < opens:
         start = _at(start.date(), opens)
         end = start + timedelta(minutes=minutes)
@@ -816,13 +816,9 @@ def _shift(items: list[dict[str, Any]], from_seq: int, minutes: int) -> None:
 
 
 def _covers(cand: Cand, item: dict[str, Any]) -> bool:
-    """영업시간을 모르거나, 그 칸(시작~끝)을 영업시간이 덮는다."""
-    hours = _opens(cand)
-    if hours is None:
-        return True
-    start = item["starts_at"].astimezone(KST).time()
-    end = (item["ends_at"] or item["starts_at"]).astimezone(KST).time()
-    return hours[0] <= start and end <= hours[1]
+    """영업시간을 모르거나, 그 칸(시작~끝)을 그날의 영업시간이 덮는다(쉬는 날이면 아니다)."""
+    start = item["starts_at"].astimezone(KST)
+    return hours_fit(cand.attributes, start, (item["ends_at"] or item["starts_at"]).astimezone(KST)) is not False
 
 
 def _swap_place(item: dict[str, Any], spares: list[Cand], used: set[str],
@@ -861,11 +857,22 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
         elif code == "no_transfer_time" and len(seqs) == 2 and seqs[1] in by_seq:
             _shift(items, seqs[1], TRANSFER_UNKNOWN_MIN)
             done.append(f"{code}({seqs[1]}): 이동 여유 {TRANSFER_UNKNOWN_MIN}분을 넣었다")
+        elif (code in ("closed_day", "after_last_entry")
+              or (code == "before_opening" and seqs[0] in by_seq
+                  and by_seq[seqs[0]]["detail"].get("planner", {}).get("meal") == "breakfast")) and seqs[0] in by_seq:
+            # ★`[2026-09-28]` 쉬는 날 · 입장 마감 뒤 — 시각을 밀어서는 못 푼다. 그날 그 칸에 여는 곳으로 바꾼다.
+            #   아침 식사가 여는 시각 전이면 밀지 않고 바꾼다 — 밀면 점심과 겹친다
+            item = by_seq[seqs[0]]
+            swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
+            if swapped is None:
+                return done
+            done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그날 그 시각에 연다)")
         elif code in ("before_opening", "break_time") and seqs[0] in by_seq:
             item = by_seq[seqs[0]]
             attributes = places[item["place"]].attributes
-            target = (attributes.get("hours") or ["", ""])[0] if code == "before_opening" \
-                else (attributes.get("break") or ["", ""])[1]
+            today = hours_on(attributes, item["starts_at"].astimezone(KST).date())
+            target = (today.opens.strftime("%H:%M") if isinstance(today, DayHours) else "") \
+                if code == "before_opening" else (attributes.get("break") or ["", ""])[1]
             try:
                 clock = time(*map(int, str(target).split(":")))
             except (TypeError, ValueError):
@@ -958,12 +965,107 @@ class PlanOutcome:
                 "coverage": self.coverage, "calls": self.calls, "rag": self.rag}
 
 
+#: 식별자 없는 장소를 이름으로 찾을 때 같은 곳으로 보는 거리. ★우리가 고른 값 — 구글 새벽 확인의 기본(300m)보다
+#: 넓게 둔 것은 관광공사 좌표가 건물 입구가 아니라 부지 중심인 곳(궁궐·공원)이 있어서다
+HOURS_MATCH_RADIUS_M = 500
+#: 같은 관광공사 장소를 계획마다 다시 읽지 않는다(프로세스 안, 6시간). 값은 원문을 옮긴 것이고 새벽 확인이 최종 판정한다
+_HOURS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_HOURS_CACHE_SECONDS = 6 * 3600
+
+
+def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime) -> dict[str, Any]:
+    """★`[2026-09-28]` 고른 장소의 영업시간을 **관광공사 원문에서** 읽어 요일별로 채운다(`place_hours.read_hours`).
+
+    ☆왜 — 실제 일정 38항목 중 영업시간을 아는 항목이 0개였다. 판정기는 모르는 영업시간을 보지 않아서
+      「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00 에 들어갔다(사용자 결정: 원문을 구조화한다).
+    ★한 번 읽은 장소는 `hours_read` 를 남겨 같은 계획 안에서 다시 부르지 않는다. 못 읽으면 모름 그대로다.
+    """
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .place_hours import read_hours
+
+    can_find = hasattr(source, "find")
+    todo = [cand for cand in cands
+            if not knows_hours(cand.attributes) and "hours_read" not in cand.attributes
+            and (cand.attributes.get("source_content_id") or (can_find and cand.lat is not None))]
+    stats: dict[str, Any] = {"asked": len(todo), "read": 0, "by_rule": 0, "by_model": 0, "unknown": 0,
+                             "failed": []}
+    if not todo or source is None or not hasattr(source, "operating"):
+        if todo:
+            stats["failed"].append("관광공사 조회가 연결돼 있지 않다")
+            stats["unknown"] = len(todo)
+        return stats
+
+    def one(cand: Cand) -> dict[str, Any]:
+        content_id = str(cand.attributes.get("source_content_id") or "")
+        type_id = str(cand.attributes.get("source_content_type_id") or "")
+        key = content_id or f"name:{cand.kind}:{cand.name}"
+        cached = _HOURS_CACHE.get(key)
+        if cached and _time.time() - cached[0] < _HOURS_CACHE_SECONDS:
+            return cached[1]
+        matched = None
+        if not content_id:
+            # ★관광공사 식별자가 없는 장소(공용 장소 행) — **같은 이름 · 같은 종류**로 찾고, 좌표가
+            #   `HOURS_MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
+            wanted = {code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind == cand.kind}
+            found = source.find(cand.name, allowed_types=wanted, area_code=SEOUL_AREA_CODE)
+            meters = (distance_m({"latitude": cand.lat, "longitude": cand.lon},
+                                 {"latitude": found["latitude"], "longitude": found["longitude"]})
+                      if found else None)
+            if found is None or meters is None or meters > HOURS_MATCH_RADIUS_M:
+                why = ("관광공사에서 같은 이름·종류를 하나로 찾지 못했다" if found is None
+                       else f"같은 이름이 {round(meters)}m 떨어져 있어 같은 곳으로 보지 않았다")
+                result = {"week": {}, "record": {"source": "tour_api", "method": "none",
+                                                 "read_at": now.isoformat(), "dropped": [why]}}
+                _HOURS_CACHE[key] = (_time.time(), result)
+                return result
+            content_id, type_id = str(found["content_id"]), str(found["content_type_id"])
+            matched = {"content_id": content_id, "distance_m": round(meters)}
+        intro = source.operating(content_id, type_id)
+        if not intro:
+            found = {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                            "dropped": ["운영시간 원문을 받지 못했다"]}}
+        else:
+            read = read_hours(intro.get("usetime_text"), intro.get("restdate_text"), chat)
+            found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
+        if matched:
+            found["record"]["matched_by_name"] = matched
+        _HOURS_CACHE[key] = (_time.time(), found)
+        return found
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(lambda cand: (cand, _safe(one, cand)), todo))
+    for cand, found in results:
+        if isinstance(found, Exception):
+            stats["failed"].append(f"{cand.name}: {type(found).__name__}")
+            cand.attributes["hours_read"] = {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                             "dropped": [f"조회 오류 {type(found).__name__}"]}
+            stats["unknown"] += 1
+            continue
+        cand.attributes["hours_read"] = found["record"]
+        if found["week"]:
+            cand.attributes["hours_week"] = found["week"]
+            stats["read"] += 1
+            stats["by_rule" if found["record"]["method"] == "rule" else "by_model"] += 1
+        else:
+            stats["unknown"] += 1
+    return stats
+
+
+def _safe(fn: Callable[[Cand], Any], cand: Cand) -> Any:
+    try:
+        return fn(cand)
+    except Exception as exc:                              # noqa: BLE001 — 장소 하나의 실패가 계획을 멈추지 않는다(모름으로 둔다)
+        return exc
+
+
 def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str, Any]:
     """★**판정이 실제로 본 칸이 몇이나 되는지** 분자/분모로 적는다. 모르는 칸은 통과가 아니라
     「판정하지 않음」이고, 그 사실을 숨기면 초안이 실제보다 안전해 보인다."""
     items = [item for item in items if item.get("place")]      # 이동 항목은 장소 칸이 없다
     total = len(items)
-    with_hours = sum(1 for item in items if "hours" in places[item["place"]].attributes)
+    with_hours = sum(1 for item in items if knows_hours(places[item["place"]].attributes))
     with_price = sum(1 for item in items if "price_krw" in places[item["place"]].attributes)
     with_district = sum(1 for item in items if places[item["place"]].district)
     return {"items": total,
@@ -1106,6 +1208,9 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
 
     spares = [cand for cand in ranked if cand.key not in used]
     rounds, fixed = 0, []
+    # ★`[2026-09-28]` 판정 전에 고른 장소의 영업시간을 관광공사 원문에서 채운다 — 판정기가 실제로 그 칸을 보게
+    now = datetime.now(KST)
+    hours_stats = enrich_hours(chosen.values(), source=tour_api, chat=chat, now=now)
     violations = _check(items, chosen, request)
     while violations and rounds < MAX_REPAIR_ROUNDS:
         rounds += 1
@@ -1117,6 +1222,12 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
         fixed += applied
         if not applied:
             break
+        # 바꿔 넣은 장소도 읽는다 — 그곳도 그날 쉴 수 있다
+        more = enrich_hours([chosen[item["place"]] for item in items if item.get("place")],
+                            source=tour_api, chat=chat, now=now)
+        for key in ("asked", "read", "by_rule", "by_model", "unknown"):
+            hours_stats[key] += more[key]
+        hours_stats["failed"] += more["failed"]
         violations = _check(items, chosen, request)
     if violations:
         raise PlanRefused(
@@ -1164,6 +1275,8 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                  "from_model": from_model,
                  "items": sum(1 for item in items if item.get("place")),
                  "preference": pref.as_dict(),
+                 # ★영업시간 — 관광공사 원문에서 몇 곳을 읽었나(규칙 · 모델), 못 읽은 곳은 모름 그대로(새벽 확인이 본다)
+                 "hours": hours_stats,
                  # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
                  "breakfast": {"wanted": want_breakfast, "days": breakfasts},
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다

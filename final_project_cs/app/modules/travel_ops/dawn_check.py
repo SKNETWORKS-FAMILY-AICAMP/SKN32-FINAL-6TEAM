@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""새벽 3시 식당 영업 확인 — 그날 식사 일정이 **계획한 시각에 여는지** 구글 장소로 본다. `[2026-09-25]` D-020
+"""새벽 3시 영업 확인 — 그날 식사·활동 일정이 **계획한 시각에 여는지** 구글 장소로 본다. `[2026-09-25]` D-020
+
+★`[2026-09-28]` 활동도 본다(사용자 결정). 계획은 관광공사 운영시간 원문을 옮긴 값(`place_hours.py`)으로 짜고,
+  **최종 판정은 여기서 구글이** 한다. 활동이 닫혔으면 `plan_activity_closed_on_day` 가 같은 시각 근처 활동으로 바꾼다.
 
 ★팀 결정(2026-09-24)
   - 식당은 **새벽 3시에만** 확인한다(첫 심야버스 03:30 기준). 그 뒤로는 따로 부르지 않는다 —
@@ -29,7 +32,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from .itinerary import Item, TripStore, visible_to
-from .itinerary_changes import NoChange, plan_closed_on_day
+from .itinerary_changes import NoChange, plan_activity_closed_on_day, plan_closed_on_day
 from .pending import apply_or_ask
 
 KST = ZoneInfo("Asia/Seoul")
@@ -88,8 +91,10 @@ class DawnCheck:
         day = now.date()
         day_end = datetime.combine(day + timedelta(days=1), time(0), tzinfo=KST)
         with self._connect() as conn:
+            # ★`[2026-09-28]` 활동도 본다(사용자 결정 — 영업시간은 관광공사 원문을 옮겨 계획하고 **최종 판정은
+            #   새벽 구글 확인**). 전에는 식당만 봐서, 쉬는 날에 들어간 활동을 당일까지 아무도 몰랐다
             meals = [(trip_id, item) for trip_id, item in self.store.due(conn, start=now, end=day_end)
-                     if item.kind == "dining" and item.place is not None]
+                     if item.kind in ("dining", "activity") and item.place is not None]
             done = self._checked_items(conn, day)
             places = self.store.places(conn, every_trip=True)
         for trip_id, meal in meals:
@@ -140,9 +145,14 @@ class DawnCheck:
         checked_at = self.clock()
         with self._connect() as conn, conn.transaction():
             trip, items = self.store.latest(conn, trip_id)
-            plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
-                                      detail=detail, checked_at=checked_at,
-                                      exclude=self._closed_places(conn, day))
+            if meal.kind == "activity":
+                plan = plan_activity_closed_on_day(items=items, places=places, item=meal, source=PROVIDER,
+                                                   detail=detail, checked_at=checked_at,
+                                                   exclude=self._closed_places(conn, day))
+            else:
+                plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
+                                          detail=detail, checked_at=checked_at,
+                                          exclude=self._closed_places(conn, day))
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})
