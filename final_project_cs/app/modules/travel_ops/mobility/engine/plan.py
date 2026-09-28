@@ -783,6 +783,8 @@ def plan_doc(doc, *, runtime, stage="planning", modes=None, trace=None, display=
 
 
 def main(argv=None):
+    from . import paths as _paths_cli
+    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
     ap = argparse.ArgumentParser(description="이동 값 내놓기 — places·items → 이동 항목 + routes (출력 스펙 v1.3)")
     ap.add_argument("--in", dest="inp", required=True, help="입력 JSON {places, items, party_size?, constraints?, routes?}")
     ap.add_argument("--out", help="출력 JSON 경로(없으면 표준출력)")

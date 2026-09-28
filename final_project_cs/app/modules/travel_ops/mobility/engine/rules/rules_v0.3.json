@@ -259,22 +259,25 @@
   "설명": "지연 흡수용 정책 여유. 소요시간이 아니라 '성립'과 '안전하게 성립'의 차이다. 경로 API는 이 값을 주지 않는다.",
   "by_stage": {
    "planning": {
-    "value": 10,
+    "value": null,
     "unit": "min",
     "grade": "추정",
-    "근거": "계획 단계는 나중에 고칠 수 있으므로 기본값."
+    "근거": "계획 단계는 나중에 고칠 수 있으므로 기본값.",
+    "value_from": "guardrails:mobility.buffer.by_stage.planning"
    },
    "pre_departure": {
-    "value": 10,
+    "value": null,
     "unit": "min",
     "grade": "추정",
-    "근거": "계획 단계와 같다."
+    "근거": "계획 단계와 같다.",
+    "value_from": "guardrails:mobility.buffer.by_stage.pre_departure"
    },
    "in_progress": {
-    "value": 15,
+    "value": null,
     "unit": "min",
     "grade": "추정",
-    "근거": "진행 중에는 되돌릴 시간이 없다. 실패 비용이 커서 더 보수적으로 본다."
+    "근거": "진행 중에는 되돌릴 시간이 없다. 실패 비용이 커서 더 보수적으로 본다.",
+    "value_from": "guardrails:mobility.buffer.by_stage.in_progress"
    }
   },
   "근거_공통": "시간표 오차 1~2분에 승하차 혼잡·신호 대기를 더한 값. 합성 여행 20~30건으로 조정한다."
@@ -283,36 +286,42 @@
   "설명": "성립하더라도 이 여행자에게 무리인 경로를 탈락시키는 상한. 소요시간 축과 별개의 축이며, 경로 API는 '가능하다'만 말하고 '이 일행에게 무리다'를 말하지 않는다.",
   "transfers": {
    "default": {
-    "value": 2,
+    "value": null,
     "grade": "추정",
-    "근거": "환승 3회 이상은 초행 외국인에게 실패 지점이 너무 많다."
+    "근거": "환승 3회 이상은 초행 외국인에게 실패 지점이 너무 많다.",
+    "value_from": "guardrails:mobility.limits.transfers.default"
    },
    "infant": {
-    "value": 1,
+    "value": null,
     "grade": "추정",
-    "근거": "유아 동반은 환승마다 엘리베이터 탐색이 붙는다."
+    "근거": "유아 동반은 환승마다 엘리베이터 탐색이 붙는다.",
+    "value_from": "guardrails:mobility.limits.transfers.infant"
    },
    "fatigue_high": {
-    "value": 1,
+    "value": null,
     "grade": "추정",
-    "근거": "피로도 높음."
+    "근거": "피로도 높음.",
+    "value_from": "guardrails:mobility.limits.transfers.fatigue_high"
    },
    "elderly": {
-    "value": 1,
+    "value": null,
     "grade": "추정",
-    "근거": "교통약자 동행."
+    "근거": "교통약자 동행.",
+    "value_from": "guardrails:mobility.limits.transfers.elderly"
    }
   },
   "walk_m": {
    "default": {
-    "value": 1200,
+    "value": null,
     "grade": "추정",
-    "근거": "카카오 기준 1.04 m/s로 약 19분. 성인 도보 상한."
+    "근거": "카카오 기준 1.04 m/s로 약 19분. 성인 도보 상한.",
+    "value_from": "guardrails:mobility.limits.walk_m.default"
    },
    "infant_or_luggage": {
-    "value": 800,
+    "value": null,
     "grade": "추정",
-    "근거": "0.7~0.87 m/s로 약 15~19분. 유아·캐리어 동반의 실질 상한."
+    "근거": "0.7~0.87 m/s로 약 15~19분. 유아·캐리어 동반의 실질 상한.",
+    "value_from": "guardrails:mobility.limits.walk_m.infant_or_luggage"
    }
   },
   "초과시_처리": "성립(feasible)으로 판정하되 후보에서 탈락시키고, decisions에 탈락 사유를 남긴다. '불가'와 구분한다."
@@ -691,14 +700,16 @@
  },
  "staleness": {
   "timetable_warn_days": {
-   "value": 30,
+   "value": null,
    "grade": "추정",
-   "근거": "시간표 fetched_at이 30일을 넘으면 warnings에 남긴다. 판정 불가가 아니라 재수집 트리거다."
+   "근거": "시간표 fetched_at이 30일을 넘으면 warnings에 남긴다. 판정 불가가 아니라 재수집 트리거다.",
+   "value_from": "guardrails:mobility.staleness.timetable_warn_days"
   },
   "walk_speed_recheck_days": {
-   "value": 90,
+   "value": null,
    "grade": "추정",
-   "근거": "카카오가 보행 속도 가정을 바꾸면 계수 전체가 틀어진다. 분기마다 probe_kakao_walk.py를 다시 돌린다."
+   "근거": "카카오가 보행 속도 가정을 바꾸면 계수 전체가 틀어진다. 분기마다 probe_kakao_walk.py를 다시 돌린다.",
+   "value_from": "guardrails:mobility.staleness.walk_speed_recheck_days"
   }
  },
  "mvp_scope": {

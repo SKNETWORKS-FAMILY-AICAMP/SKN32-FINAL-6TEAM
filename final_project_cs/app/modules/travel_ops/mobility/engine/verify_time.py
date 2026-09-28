@@ -303,6 +303,11 @@ class Verifier:
         n = self.R
         for k in path:
             n = n[k]
+        # ☆`[2026-09-29 문제목록 #49]` 정책 수치는 팀 guardrails.yaml 이 정본이다 — 규칙 칸에는 value_from 만 있다.
+        #   값이 비고 가리키는 곳이 있으면 거기서 읽는다(없으면 GuardrailMissing — 조용히 기본값을 쓰지 않는다).
+        if n.get("value") is None and isinstance(n.get("value_from"), str):
+            from .guardrails import lookup
+            return lookup(n["value_from"])
         return n["value"]
 
     # ── 경고 어휘 (rules warnings 절) ─────────────────────────────────
@@ -2518,6 +2523,8 @@ def show(case, res, verbose=False):
 
 
 def main():
+    from . import paths as _paths_cli
+    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
     ap = argparse.ArgumentParser(description="이동 모듈 시각 검증기 v2 (지하철)")
     ap.add_argument("--cases", required=True)
     ap.add_argument("--timetable")
