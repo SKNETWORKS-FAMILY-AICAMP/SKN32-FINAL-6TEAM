@@ -18,6 +18,8 @@
 .field label small { font-weight: 500; }
 .field input { width: 100%; min-width: 0; min-height: 46px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
 .field input[aria-invalid="true"] { border-color: var(--color-error-border); }
+/* Keep the app-wide 16px on phones (globals.css), so focusing the field does not zoom the page. */
+@media (max-width: 550px) { .field input { font-size: 16px; } }
 .token { min-width: 0; }
 .tokenValue { min-height: 44px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.7; letter-spacing: .5px; overflow-wrap: anywhere; word-break: break-all; }
 .tokenActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
