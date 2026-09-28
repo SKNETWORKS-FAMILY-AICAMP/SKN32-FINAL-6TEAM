@@ -181,7 +181,9 @@ def test_51_scrub_hides_pii_and_single_coords(raw, hidden):
     assert scan_blocked(raw), "검사도 잡는다"
 
 
-@pytest.mark.parametrize("plain", ["2호선 강남 10:00 출발", "버스 7022 23:10", "요금 1,400원", "tago_subway@2026-09-09"])
+@pytest.mark.parametrize("plain", ["2호선 강남 10:00 출발", "버스 7022 23:10", "요금 1,400원", "tago_subway@2026-09-09",
+                                   # 실행 번호 — 새벽 2시대 + 무작위 뒷자리가 숫자 넷이면 서울 번호 모양이 됐다(시험이 흔들린 원인)
+                                   "20260929T024107-1234ab", "20260929T031500-5678cd"])
 def test_51_scrub_leaves_ordinary_text(plain):
     from app.modules.travel_ops.mobility.engine.judgment_log import scan_blocked, scrub_text
     assert scrub_text(plain) == plain and not scan_blocked(plain)

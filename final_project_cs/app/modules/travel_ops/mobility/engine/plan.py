@@ -202,6 +202,16 @@ class Planner:
         self.display = display
         self._tc = O.TransferCar.load() if display else None
 
+    #: ☆`[2026-09-29 문제목록 #38]` 사고 조건 — plan(disruptions=…) 로 받는다. 판정기 어휘(kind: line_closed ·
+    #:   station_skip · edge_closed · route_closed)로 준다. 앞 판은 plan() 에 사고 입력이 없어 사고를 반영한 후보를
+    #:   다시 만들 수 없었다. 모든 판정 호출에 같은 조건이 실린다.
+    disruptions = ()
+
+    def _vc(self, case):
+        if self.disruptions:
+            case = dict(case, disruptions=list(self.disruptions))
+        return self.v.verify_case(case)
+
     def _walk_limit(self, party):
         return self.v._walk_limit(party)
 
@@ -228,7 +238,7 @@ class Planner:
                 d = e[0]
         return nm, d, lines
 
-    def _bus_direct(self, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim):
+    def _bus_direct(self, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim, left=None):
         """장소 → 장소 한 노선 버스 후보. 후보마다 마지막 성립 출발에서 다시 판정해 성립한 것만 — 도보 짧은 순(상한은 leg())."""
         v = self.v
         if v.bus is None or (self.modes is not None and "bus" not in self.modes):
@@ -246,18 +256,27 @@ class Planner:
             off = (st_date - sdate).days * MIN_DAY
             base = {"id": f"{case_id}/bus{i}", "date": st_date.isoformat(), "stage": self.stage, "legs": legs,
                     "arrive_by": by_stop, "party": party, "first_visit": first_visit, "no_alternatives": True}
-            r1 = v.verify_case(dict(base, depart_at=max(SERVICE_DAY_START_MIN, by_stop - 180)))
+            r1 = self._vc(dict(base, depart_at=max(SERVICE_DAY_START_MIN, by_stop - 180)))
             lfd = (r1.out or {}).get("last_feasible_depart_min")
+            # ☆#29 — 판정한 뒤 버리는 버스 직행도 이유를 남긴다(정류장 반경·유형·도보 상한으로 거른 것은 후보가 아니라 안 남긴다)
+            ref = {"_legs": legs, "_walk_m": (da + db) * self.detour, "_n": 100 + i, "_route": label_of(legs)}
+
+            def drop(code, reason):
+                if left is not None:
+                    left.append({"_o": ref, "label": ref["_route"], "code": code, "reason": reason})
             if lfd is None:
+                drop("no_last_departure", "마지막 성립 출발을 역산하지 못했다 — " + ((r1.out or {}).get("reason") or r1.reason or ""))
                 continue
-            r2 = v.verify_case(dict(base, depart_at=lfd))
+            r2 = self._vc(dict(base, depart_at=lfd))
             o2 = r2.out or {}
             if o2.get("verdict") != "feasible" or o2.get("eta_min") is None or (o2.get("slack_min") or 0) < 0:
+                drop("not_confirmed", "역산 출발로 다시 판정하니 성립이 아니다 — " + (o2.get("reason") or r2.reason or ""))
                 continue
             eta = int(wi + o2["eta_min"] + wo)
             start = lfd - wi + off
             margin, slack = o2.get("margin_min") or 0, o2.get("slack_min") or 0
             if start + eta + margin + slack != arrive_by:
+                drop("formula_mismatch", f"출발+소요+여유+남는 시간이 도착 목표 {arrive_by} 와 맞지 않는다")
                 continue
             found.append((da + db, i, {
                 "eta_min": eta, "uses": uses_of(legs), "_legs": legs, "_route": label_of(legs), "_start": start,
@@ -288,7 +307,7 @@ class Planner:
                  "to": {"lat": b_place["lat"], "lng": b_place["lon"], "name": b_place["name"]}}]
         base = {"id": f"{case_id}/bike", "date": sdate.isoformat(), "stage": self.stage, "legs": legs,
                 "party": party, "first_visit": first_visit, "no_alternatives": True}
-        r1 = v.verify_case(dict(base, depart_at=arrive_by))
+        r1 = self._vc(dict(base, depart_at=arrive_by))
         o1 = r1.out or {}
         if o1.get("verdict") != "feasible" or o1.get("eta_min") is None or o1.get("margin_min") is None:
             return [], {"code": o1.get("code") or "no_data", "reason": "자전거 — " + (o1.get("reason") or r1.reason or "소요를 못 냈다")}
@@ -298,7 +317,7 @@ class Planner:
             if lfd < SERVICE_DAY_START_MIN:
                 # 04:00 전 출발은 앞 운행일 축이다 — 정수 분으로 넘기면 판정기가 +24h 로 읽는다(leg() 주석). 안 본다.
                 return [], {"code": "no_data", "reason": "자전거 — 출발이 04:00 전(운행일 경계)이라 보지 않는다(표현 축 제한)"}
-            r2 = v.verify_case(dict(base, depart_at=lfd, arrive_by=arrive_by))
+            r2 = self._vc(dict(base, depart_at=lfd, arrive_by=arrive_by))
             o2 = r2.out or {}
             if o2.get("eta_min") is None or o2.get("margin_min") is None:
                 return [], {"code": o2.get("code") or "no_data",
@@ -350,7 +369,7 @@ class Planner:
         if ck is None:
             return None, "infeasible"
         dep = start + ck["walk_place_in"] - ck["off"] + ck["walk_stop_in"]
-        r = self.v.verify_case({"id": f"{case_id}/at{start}", "date": ck["date"], "stage": self.stage,
+        r = self._vc({"id": f"{case_id}/at{start}", "date": ck["date"], "stage": self.stage,
                                 "legs": ck["legs"], "depart_at": dep,
                                 "arrive_by": ck["by_station"] - ck["walk_stop_out"],
                                 "party": party, "first_visit": first_visit, "no_alternatives": True})
@@ -416,7 +435,7 @@ class Planner:
             probe = {"id": case_id, "date": st_date.isoformat(), "stage": self.stage,
                      "depart_at": max(SERVICE_DAY_START_MIN, by_station - 180), "arrive_by": by_station,
                      "multi": _multi(oa, ob), "party": party, "first_visit": first_visit}
-            r = self.v.verify_case(probe)
+            r = self._vc(probe)
             n_mode = 0
             for c in r.candidates or []:
                 if any(leg_mode(x) == "bike" for x in c["legs"]):
@@ -428,19 +447,28 @@ class Planner:
                     continue          # 버스 직행은 ③ 에서 **장소 기준**으로 다시 찾는다(역 경유 이중 도보를 없앤다 · 23 결정 4)
                 lfd = (c.get("out") or {}).get("last_feasible_depart_min")
                 sub_by = by_station - c["walk_out_min"]
+                # ☆`[2026-09-29 문제목록 #29]` 여기서부터 버리는 후보는 이유를 봉투 left_out 에 남긴다 — 앞 판은 조용히 continue 했다
+                ref = {"_legs": c["legs"], "_walk_m": None, "_n": c["n"], "_route": label_of(c["legs"])}
                 if lfd is None or sub_by < SERVICE_DAY_START_MIN:
+                    left.append({"_o": ref, "label": ref["_route"], "code": "no_last_departure",
+                                 "reason": ("마지막 성립 출발을 역산하지 못했다 — " + (c.get("reason") or "")) if lfd is None
+                                 else "역 도착 목표가 04:00 전(운행일 경계)이라 보지 않는다"})
                     continue
                 sub = {"id": f"{case_id}/{c['n']}", "date": st_date.isoformat(), "stage": self.stage,
                        "legs": c["legs"], "depart_at": lfd + c["walk_in_min"], "arrive_by": sub_by,
                        "party": party, "first_visit": first_visit, "no_alternatives": True}
-                r2 = self.v.verify_case(sub)
+                r2 = self._vc(sub)
                 o2 = r2.out or {}
                 if o2.get("verdict") != "feasible" or o2.get("eta_min") is None or (o2.get("slack_min") or 0) < 0:
+                    left.append({"_o": ref, "label": ref["_route"], "code": "not_confirmed",
+                                 "reason": "역산 출발로 다시 판정하니 성립이 아니다 — " + (o2.get("reason") or r2.reason or "")})
                     continue          # 역산 시각으로 다시 봐도 성립이 아니면 싣지 않는다(모르면 뺀다)
                 eta = int(wa + c["walk_in_min"] + o2["eta_min"] + c["walk_out_min"] + wb)
                 start = lfd - wa + off
                 margin, slack = o2.get("margin_min") or 0, o2.get("slack_min") or 0
                 if start + eta + margin + slack != arrive_by:
+                    left.append({"_o": ref, "label": ref["_route"], "code": "formula_mismatch",
+                                 "reason": f"출발 {start} + 소요 {eta} + 여유 {margin} + 남는 {slack} ≠ 도착 목표 {arrive_by} — 축이 어긋나 싣지 않는다"})
                     continue          # 식이 안 맞으면 어딘가 축이 어긋난 것 — 내지 않는다(늦은 출발을 조용히 내지 않게)
                 # 도보 m — 장소↔역(직선×우회) + 환승 거리표 m. 모르는 조각(거리표 밖 환승 · 자전거 대여소 도보)이 있으면 None
                 inner = O.transfer_walk_m(self.v, c["legs"])
@@ -460,7 +488,7 @@ class Planner:
         # ③ 버스 직행 — **장소 좌표 기준**(23 결정 4). 판정기 verify_multi 의 버스 후보는 역 좌표 기준이라
         #   장소→역→정류장 이중 도보가 붙었다(32 자체 대조 #4 보류). 같은 규칙(정류장_반경_m · route_type_제외 ·
         #   도보 상한은 직선 · 버스_직행_최대 · 성립 후보를 도보 짧은 순)으로 장소에서 바로 찾는다. 판정은 판정기가 한다.
-        bus_opts = self._bus_direct(a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim)
+        bus_opts = self._bus_direct(a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim, left)
         opts.extend(bus_opts)
         # ④ 자전거 — modes 에 bike 를 줄 때만 · 장소 좌표 기준 · lfd = 목표 − (eta+@)(58 · _bike_direct)
         bike_opts, bike_why = self._bike_direct(a_place, b_place, sdate, arrive_by, party, first_visit, case_id)
@@ -486,9 +514,12 @@ class Planner:
                 keep.append(o)
         opts = keep
         if not opts:
-            if left:
-                return None, {"code": "no_data", "reason": left[0]["reason"]}
-            return None, why or {"code": "no_data", "reason": "성립하는 후보가 없다"}
+            # #29 — 뺀 후보가 이유와 함께 skipped 항목에 실린다(코어로는 안 나간다). 대표 이유는 종전대로:
+            #   표기 불통과만 있으면 그 이유, 아니면 판정기 이유(why)
+            uf = [e for e in left if e["code"] == "uses_format"]
+            base = ({"code": "no_data", "reason": uf[0]["reason"]} if uf
+                    else why or {"code": "no_data", "reason": "성립하는 후보가 없다"})
+            return None, dict(base, left_out=self._fold_left(left)) if left else base
         if bike_why is not None:      # 58 — 자전거를 요청했는데 못 실은 이유를 봉투 left_out 에(코어로는 안 나감)
             left.append({"_o": {"_legs": []}, "label": "자전거(따릉이)", "code": bike_why["code"], "reason": bike_why["reason"]})
         # 계획 수단 — **가장 늦게 떠나도 되는 후보**(동률은 환승 적은 · 소요 짧은 · 생성 순). 순위가 아니라
@@ -571,6 +602,12 @@ class Planner:
                 o["walk_m"] = int(round(o["_walk_m"]))
             if o["_fare"] is not None:
                 o["fare_krw"] = int(o["_fare"])
+            elif o["_legs"] and o.get("_lr") is not None:
+                # ☆#20 — 버스가 섞인 환승은 합성 요금 근거가 없다 → 확정 규칙(탈것별 요금의 합 상한)으로 상한을 싣고 밝힌다
+                up = O.fare_upper_of(self.v, o["_legs"], o["_lr"])
+                if up is not None:
+                    o["fare_krw"] = int(up)
+                    o["label"] = o["label"] + " · 요금은 환승 할인 전 상한"
             if self.display and o["_legs"]:
                 tc = O.transfer_cars(self.v, self._tc, o["_legs"], o.get("_lr"), o.get("_day_type"))
                 if tc:
@@ -610,7 +647,7 @@ def _key_time(it):
 
 
 def plan(places, items, party_size=None, constraints=None, *, runtime=None, stage="planning",
-         modes=None, trace=None, routes=None, display=False):
+         modes=None, trace=None, routes=None, display=False, disruptions=None):
     """places·items(·party_size·constraints) → {"items", "routes", "skipped", "basis"}.
 
     items : 입력 항목 중 이동이 아닌 것을 시각 순으로 두고, **장소가 다른 이웃 둘 사이마다** 이동 항목을 끼운다.
@@ -639,6 +676,14 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         runtime = get_verifier(quiet=True)
     P = Planner(runtime, stage=stage, modes=modes, display=display)
     P.trace = trace
+    if disruptions:
+        from .errors import CaseInputError
+        from .verify_time import Verifier
+        bad = [d for d in disruptions if (d or {}).get("kind") not in Verifier.DISR_KINDS]
+        if bad:
+            raise CaseInputError(f"모르는 사고 kind: {[(d or {}).get('kind') for d in bad]} "
+                                 f"(쓸 수 있는 것: {', '.join(Verifier.DISR_KINDS)})")
+        P.disruptions = tuple(dict(d) for d in disruptions)
     constraints = dict(constraints or {})
     party = party_of(party_size, constraints)
     first_visit = constraints.get("first_visit", True)
@@ -654,16 +699,24 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         return [dict(m) for m in moves_in if lo <= _parse_dt(m["starts_at"]) < hi]
 
     reserved = set(routes or {}) | {str(it["route"]) for it in its if it.get("route")}
-    merged, routes, skipped, left_out = [], {}, [], {}
+    merged, routes, skipped, left_out, not_linked = [], {}, [], {}, []
     if not stay:                                   # 이동 항목만 온 입력 — 그대로 돌려준다(GPT #4)
         merged.extend(dict(m) for m in moves_in)
     else:                                          # 첫 비이동 항목보다 앞선 입력 이동 항목은 그대로 앞에 둔다(GPT #4)
         first = _parse_dt(stay[0]["starts_at"])
         merged.extend(dict(m) for m in moves_in if _parse_dt(m["starts_at"]) < first)
 
+    kept_unverified = []
+
     def skip(a, b, entry):
+        # ☆`[2026-09-29 문제목록 #26]` 못 채운 구간의 입력 이동 항목을 남길 때 **검증 안 됐다는 것을 드러낸다** — 앞 판은
+        #   조용히 남겨, 호출 안내대로 items·routes 만 옮기면 검증 안 된 경로가 우리 값처럼 등록됐다.
+        kept = moves_between(a, b)
+        entry = dict(entry, kept_input_moves=len(kept))
         skipped.append(entry)
-        merged.extend(moves_between(a, b))
+        kept_unverified.extend({"title": m.get("title"), "route": m.get("route"), "starts_at": m.get("starts_at"),
+                                "why": entry.get("code")} for m in kept)
+        merged.extend(kept)
 
     for i, a in enumerate(stay):
         merged.append(dict(a))
@@ -671,6 +724,13 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             merged.extend(dict(m) for m in moves_in if _parse_dt(m["starts_at"]) >= _parse_dt(a["starts_at"]))
             break
         b = stay[i + 1]
+        # ☆`[2026-09-29 문제목록 #45]` 운행일이 바뀌는 두 항목(1일차 저녁 → 2일차 아침) 사이는 잇지 않는다 — 그 사이에
+        #   숙소로 가지만 숙소 위치를 모른다. 앞 판은 날짜를 가리지 않아 전날 마지막 장소 → 다음 날 첫 장소 이동을 만들었다.
+        if service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
+            not_linked.append({"from": a.get("title"), "to": b.get("title"), "code": "day_boundary",
+                               "reason": "운행일이 바뀐다 — 사이에 숙소로 가지만 숙소 위치를 모른다"})
+            merged.extend(moves_between(a, b))
+            continue
         pa, pb = pl.get(a.get("place")), pl.get(b.get("place"))
         if pa is None or pb is None:
             skip(a, b, {"from": a.get("title"), "to": b.get("title"), "code": "no_data",
@@ -699,11 +759,17 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             left_out[key] = left
         if trace is not None and trace:
             trace[-1]["route"] = key
-        merged.append({"seq": 0, "kind": "mobility", "title": f"{pa['name']} → {pb['name']}",
-                       "starts_at": iso_of(sdate, start), "ends_at": iso_of(sdate, end), "route": key})
+        new = {"seq": 0, "kind": "mobility", "title": f"{pa['name']} → {pb['name']}",
+               "starts_at": iso_of(sdate, start), "ends_at": iso_of(sdate, end), "route": key}
+        # ☆`[2026-09-29 문제목록 #45]` 입력 이동 항목을 우리 값으로 바꿀 때 그 항목의 다른 칸(detail·id 등)을 잃지 않는다
+        olds = moves_between(a, b)
+        if olds:
+            new = {**{k: v for k, v in olds[0].items() if k not in new}, **new}
+        merged.append(new)
     for n, it in enumerate(merged, 1):
         it["seq"] = n
     return {"items": merged, "routes": routes, "skipped": skipped, "left_out": left_out,
+            "not_linked": not_linked, "kept_unverified": kept_unverified,
             "basis": {"timetable_built_at": runtime.timetable_built_at, "rules_version": runtime.rules_version,
                       "plan_version": PLAN_VERSION,
                       "decided_at": datetime.now(KST).strftime("%Y-%m-%dT%H:%M:00+09:00")}}
