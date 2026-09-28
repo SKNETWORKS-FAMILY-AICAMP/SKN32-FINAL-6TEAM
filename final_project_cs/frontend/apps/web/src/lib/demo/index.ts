@@ -13,6 +13,8 @@ export const DEMO_VERIFICATION_DURATION = 6000;
 export interface DemoStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  readonly length: number;
+  key(index: number): string | null;
 }
 
 interface DemoGatewayOptions {
@@ -162,7 +164,24 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
         verification: { status: "running", progress: 0, stages: stages(0), results: [] },
         messages: [],
       };
-      return save({ version: 2, scenario: scenario.data, startedAt: now(), trip }, t);
+      const at = now();
+      return save({ version: 2, scenario: scenario.data, startedAt: at, createdAt: at, trip }, t);
+    },
+    async listTrips(language) {
+      const t = translator(language);
+      const store = storage(t);
+      const ids: string[] = [];
+      try {
+        for (let index = 0; index < store.length; index += 1) {
+          const key = store.key(index);
+          if (key?.startsWith(DEMO_STORAGE_PREFIX)) ids.push(key.slice(DEMO_STORAGE_PREFIX.length));
+        }
+      } catch { throw storageError(t); }
+      // A demo trip has no title of its own, so its dates name it. Trips without a registration time sort last.
+      return ids.map((id) => read(id, t)).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0)).map(({ createdAt, trip }) => {
+        const dates = trip.startDate === trip.endDate ? trip.startDate : `${trip.startDate} – ${trip.endDate}`;
+        return { id: trip.id, title: t(`${dates} 여행`, `Trip · ${dates}`), createdAt: createdAt === undefined ? null : new Date(createdAt).toISOString(), version: null };
+      });
     },
     async getTrip(tripId, language) {
       const t = translator(language);

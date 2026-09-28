@@ -1,6 +1,7 @@
 export const routes = {
   home: "/",
   start: "/start",
+  trips: "/trips",
   newTrip: "/trips/new",
   intake: (id: string) => `/intakes/${encodeURIComponent(id)}`,
   trip: (id: string) => `/trips/${encodeURIComponent(id)}`,

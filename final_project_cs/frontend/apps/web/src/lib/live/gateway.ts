@@ -1,6 +1,6 @@
 import type { Trip, TripChange, TripGateway, TripMessage, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
-import { api, LiveError } from "./client";
+import { api, currentKey, LiveError } from "./client";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
@@ -24,6 +24,8 @@ interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
 }
+/** One row of `GET /v1/web/trips`. */
+interface ServerTripRow { trip_id: string; title: string; version: number; created_at: string }
 
 const MESSAGES_PREFIX = "tripilot.web.live.messages:";
 
@@ -125,6 +127,13 @@ export function createLiveGateway(): TripGateway {
   return {
     createTrip: (_input, language) => Promise.reject(new LiveError("use_intake", translator(language)(
       "실제 연결에서는 계획 읽기 화면으로 등록해요.", "In live mode, plans are registered through the reading screen."))),
+    async listTrips(language) {
+      // ★No stored key means this browser has registered nothing. Asking would issue a key — a new server user — only to
+      //   list nothing, so we do not ask.
+      if (!currentKey()) return [];
+      const { trips } = await api<{ trips: ServerTripRow[] }>("/v1/web/trips", language);
+      return trips.map((row) => ({ id: row.trip_id, title: row.title, createdAt: row.created_at, version: row.version }));
+    },
     getTrip: read,
     retryVerification: read,
     startTrip: read,

@@ -47,6 +47,20 @@ describe("live trip gateway", () => {
     expect((calls[1].init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
   });
 
+  it("lists nothing without asking the server when this browser has no user key", async () => {
+    expect(await createLiveGateway().listTrips("ko")).toEqual([]);
+    expect(calls).toHaveLength(0);                                 // ★no key issued — viewing the list creates no user
+  });
+
+  it("lists the server's trips with the stored user key", async () => {
+    const gateway = createLiveGateway();
+    await gateway.getTrip(TRIP.trip_id, "ko");                     // issues and stores the key
+    replies.push({ trips: [{ trip_id: TRIP.trip_id, title: "서울 가족여행", version: 3, created_at: "2026-09-28T03:12:00+00:00" }] });
+    expect(await gateway.listTrips("ko")).toEqual([{ id: TRIP.trip_id, title: "서울 가족여행", createdAt: "2026-09-28T03:12:00+00:00", version: 3 }]);
+    expect(calls.at(-1)!.url).toMatch(/\/v1\/web\/trips$/);
+    expect((calls.at(-1)!.init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
+  });
+
   it("folds move items into the next stop as a departure time instead of listing them as stops", async () => {
     replies.push({ ...TRIP, items: [TRIP.items[0],
       { item_id: "m", seq: 2, kind: "mobility", title: "경복궁 → 명동난타극장", place: null, starts_at: "2026-10-16T09:25:00+00:00", ends_at: "2026-10-16T09:50:00+00:00", changed: false, lat: null, lon: null, booked: false },

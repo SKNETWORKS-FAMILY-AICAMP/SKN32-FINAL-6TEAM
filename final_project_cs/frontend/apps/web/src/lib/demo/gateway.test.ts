@@ -6,7 +6,10 @@ import { createDemoGateway, DEMO_STORAGE_PREFIX, DEMO_VERIFICATION_DURATION, SAM
 
 function memoryStorage(): DemoStorage & { items: Map<string, string> } {
   const items = new Map<string, string>();
-  return { items, getItem: (key) => items.get(key) ?? null, setItem: (key, value) => { items.set(key, value); } };
+  return {
+    items, getItem: (key) => items.get(key) ?? null, setItem: (key, value) => { items.set(key, value); },
+    get length() { return items.size; }, key: (index) => [...items.keys()][index] ?? null,
+  };
 }
 
 describe("demo trip gateway", () => {
@@ -51,8 +54,35 @@ describe("demo trip gateway", () => {
   it("reports unavailable or full browser storage", async () => {
     const unavailable = createDemoGateway({ storage: () => { throw new Error("denied"); } });
     await expect(unavailable.createTrip({ source: SAMPLE }, "ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
-    const full = createDemoGateway({ storage: { getItem: () => null, setItem: () => { throw new Error("quota"); } } });
+    const full = createDemoGateway({ storage: { getItem: () => null, setItem: () => { throw new Error("quota"); }, length: 0, key: () => null } });
     await expect(full.createTrip({ source: SAMPLE }, "ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
+    await expect(unavailable.listTrips("ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
+  });
+
+  it("lists this tab's trips newest first, named by their dates, ignoring other storage", async () => {
+    expect(await gateway.listTrips("ko")).toEqual([]);
+    const first = await gateway.createTrip({ source: SAMPLE }, "ko");
+    clock += 60_000;
+    const second = await gateway.createTrip({ source: "2026-10-01\n09:00 경복궁" }, "ko");
+    storage.setItem("tripilot.web-mvp.draft", "작성 중인 글");
+    const trips = await gateway.listTrips("ko");
+    expect(trips.map((trip) => trip.id)).toEqual([second.id, first.id]);
+    expect(trips[0]).toEqual({ id: second.id, title: "2026-10-01 여행", createdAt: new Date(clock).toISOString(), version: null });
+    expect(trips[1].title).toBe("2026-09-15 – 2026-09-16 여행");
+    expect((await gateway.listTrips("en"))[1].title).toBe("Trip · 2026-09-15 – 2026-09-16");
+  });
+
+  it("lists a trip saved before registration time was kept last, with no time, and reports a corrupt one", async () => {
+    const older = await gateway.createTrip({ source: SAMPLE }, "ko");
+    const key = DEMO_STORAGE_PREFIX + older.id;
+    const stored = JSON.parse(storage.getItem(key)!);
+    delete stored.createdAt;
+    storage.setItem(key, JSON.stringify(stored));
+    const newer = await gateway.createTrip({ source: SAMPLE }, "ko");
+    const trips = await gateway.listTrips("ko");
+    expect(trips.map((trip) => [trip.id, trip.createdAt === null])).toEqual([[newer.id, false], [older.id, true]]);
+    storage.setItem(key, "{broken");
+    await expect(gateway.listTrips("ko")).rejects.toMatchObject({ code: "CORRUPT_STORAGE" });
   });
 
   it("rejects completed storage with empty or missing verification results", async () => {

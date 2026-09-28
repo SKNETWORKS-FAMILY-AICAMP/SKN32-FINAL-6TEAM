@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
+import { RecentTrips } from "@/features/trip/trip-list";
 import { languages, type Language } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { updateSettings, useSettings } from "@/lib/settings";
@@ -204,7 +205,8 @@ export function Intro() {
 
   const controls = (next: number): ReactNode => <div className={styles.controls} data-fx="fade" style={delay(1.1)}>
     <div className={styles.scrollCue}>{next === 1 && <span className={styles.scrollHint}>{text.scrollHint}</span>}<button type="button" className={styles.down} onClick={() => go(next)} aria-label={text.next}><span aria-hidden="true">↓</span></button></div>
-    <button type="button" className={styles.skip} onClick={() => go(2)}>{text.skip}<span aria-hidden="true"> ↗</span></button>
+    {/* The first page offers only the way down; skipping the introduction starts from the second page. */}
+    {next !== 1 && <button type="button" className={styles.skip} onClick={() => go(2)}>{text.skip}<span aria-hidden="true"> ↗</span></button>}
   </div>;
   const page = (index: number) => `${styles.page} ${shown[index] && !(replaying && index === current) ? styles.in : ""}`;
 
@@ -231,6 +233,7 @@ export function Intro() {
             ))}</div>
           </div>
         </div>
+        <div className={styles.trips} data-fx="up" style={delay(.75)}><RecentTrips /></div>
         <div className={styles.badge} data-fx="scale" style={delay(.8)}><small>A LITTLE MORE YOU</small><strong>{text.badge}</strong></div>
         {controls(1)}
       </section>

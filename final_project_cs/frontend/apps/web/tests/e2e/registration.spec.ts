@@ -15,7 +15,7 @@ test("빈 입력과 잘못된 날짜를 안내하고 작성 중인 계획을 오
   await expect(page).toHaveURL(/\/trips\/new$/);
   const valid = "1일차 · 2026-10-03\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음";
   await plan.fill(valid);
-  await page.locator("form").getByRole("link", { name: "홈으로" }).click();
+  await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
   await expect(page).toHaveURL(/\/start$/);
   await page.goBack();
   await expect(plan).toHaveValue(valid);
@@ -32,7 +32,7 @@ test("320px에서 등록과 결과를 읽을 수 있고 관리 시작 전 여행
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/");
   await noHorizontalScroll(page);
-  await page.getByRole("button", { name: /소개 건너뛰기/ }).first().click();
+  await page.getByRole("button", { name: "3. 일정 시작" }).click();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
   await expect(page).toHaveURL(/\/start$/);
   await noHorizontalScroll(page);
