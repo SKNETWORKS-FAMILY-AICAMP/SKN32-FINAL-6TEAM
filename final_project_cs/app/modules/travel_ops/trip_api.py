@@ -480,7 +480,15 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         (tenant, request.customer_id))
             if cur.fetchone() is None:
                 raise _error(404, "not_found", "customer not found")
+            from .dining.ledger import ledger_place_for
+
             for place in request.places:
+                # ★`[2026-09-28]` 식당은 요식 목록이 기준이다 — 코어로 올린 요식 식당과 이름·150m 로 같으면 **그 행을 쓴다**
+                #   (관광공사·카카오에서 찾은 식당이어도). 전에는 여행마다 전용 사본을 만들어 같은 식당이 여러 행이 됐다
+                ledger_place = ledger_place_for(conn, tenant, place.name, place.kind, place.lat, place.lon)
+                if ledger_place is not None:
+                    ids[place.key] = ledger_place
+                    continue
                 # ★장소는 테넌트 안에서 (이름, 종류)로 하나다(UNIQUE). 이미 있으면 **그것을 쓴다.**
                 #   ☆2026-09-14 — 처음엔 무조건 INSERT 해서, 두 번째 여행이 경복궁을 적자
                 #     500 이 났다(개발 서버에서 발견. 시험은 여행마다 테넌트를 새로 만들어
@@ -500,7 +508,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                     cur.execute(
                         "INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,"
                         "attributes) VALUES (%s,%s,%s,%s,%s,%s,%s) "
-                        "ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL DO UPDATE "
+                        "ON CONFLICT (tenant_id, name, kind) WHERE trip_scope IS NULL "
+                        # ★`[2026-09-28]` 요식 식당 행은 이 유일 조건 밖이다(마이그레이션 222) — 충돌 대상을 맞춘다
+                        "AND source_name IS DISTINCT FROM 'dining_ledger' DO UPDATE "
                         "SET attributes = EXCLUDED.attributes || places.attributes "
                         "RETURNING place_id",
                         (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,

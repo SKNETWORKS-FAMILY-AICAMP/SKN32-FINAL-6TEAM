@@ -120,6 +120,11 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     candidates: list[dict[str, Any]] = []
     full_hits: list[dict[str, Any]] = []
     by_name = {normalize(p["name"]): p for p in our_places if p.get("name")}
+    # ★`[2026-09-28]` 요식 식당이 공용 장소가 되면서 같은 이름 지점이 여럿일 수 있다 — 고른 뒤 「확인 필요」로 남긴다
+    seen: dict[str, int] = {}
+    for p in our_places:
+        if p.get("name"):
+            seen[normalize(p["name"])] = seen.get(normalize(p["name"]), 0) + 1
     for query in narrowings(title):
         key = normalize(query)
         # 1 — 우리 장소 표 정확 일치
@@ -127,8 +132,12 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             place = by_name[key]
             return Resolved("resolved", "places", place["name"], query, place.get("kind"), place.get("latitude"),
                             place.get("longitude"), place_id=str(place["place_id"]),
-                            needs_review=not _plain(query, title), tried=tried + [f"places:{query}"],
-                            note=None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다")
+                            needs_review=not _plain(query, title) or seen.get(key, 0) > 1,
+                            tried=tried + [f"places:{query}"],
+                            note="; ".join(filter(None, [
+                                None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다",
+                                f"같은 이름이 {seen[key]}곳 — 어느 지점인지 확인해 주세요" if seen.get(key, 0) > 1 else None]))
+                            or None)
         tried.append(f"places:{query}")
         # 3 — 자모 오타(우리 장소 이름과)
         best = _typo(key, by_name)

@@ -237,6 +237,32 @@ def alternatives_for(conn, tenant_id: str, core_place_id: str | None, at: Any = 
             "reason": None if out else "원장 후보 중 짝이 있는 곳이 없다"}
 
 
+#: 여행 등록 때 고객이 적은 식당을 요식 식당과 같은 곳으로 보는 거리. 221 promote_to_core 의 재사용 거리와 같다
+SAME_PLACE_M = 150
+
+
+def ledger_place_for(conn, tenant_id: str, name: str, kind: str,
+                     lat: float | None, lon: float | None) -> Any | None:
+    """고객이 적은 식당 → 코어로 올린 요식 식당의 장소 번호. 하나로 정해질 때만. `[2026-09-28 cs]`
+
+    ★여행 등록은 식당을 이름·좌표로 넘긴다. 요식 식당은 이름 유일 조건 밖이라(마이그레이션 222) 그대로 넣으면
+      같은 이름의 행이 하나 더 생긴다. 그래서 먼저 찾는다 — 이름(공백·기호를 뗀 비교)이 같고 `SAME_PLACE_M` 안.
+    ★둘 이상이면(같은 이름 지점이 가까이) 고르지 않는다 — None 이면 예전처럼 새 행을 만든다.
+    """
+    if kind != "dining" or lat is None or lon is None or not ledger_ready(conn):
+        return None
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT place_id FROM places WHERE tenant_id=%s AND trip_scope IS NULL "
+            "AND source_name='dining_ledger' AND kind='dining' "
+            "AND dining.norm_name(name) = dining.norm_name(%s) "
+            "AND latitude IS NOT NULL AND longitude IS NOT NULL "
+            "AND dining.distance_m(latitude, longitude, %s, %s) <= %s LIMIT 2",
+            (tenant_id, name, lat, lon, SAME_PLACE_M))
+        rows = cur.fetchall()
+    return rows[0][0] if len(rows) == 1 else None          # 다른 장소 번호와 같은 형식(UUID)
+
+
 def link_trip(conn, tenant_id: str, trip_id: Any) -> dict[str, int] | None:
     """새 여행의 전용 식당을 원장과 잇는다(마이그레이션 221 `link_trip_places`). `[2026-09-28 cs]`
 

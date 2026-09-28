@@ -361,3 +361,14 @@ def test_a_transient_vision_error_is_retried_once_and_only_once():
     with pytest.raises(OllamaError):                      # 일시 오류가 아닌 것은 다시 부르지 않는다
         _see_once_more(flaky([OllamaError("Ollama HTTP 404: model not found")]))("p", b"")
     assert len(calls) == 1
+
+
+def test_같은_이름_지점이_여럿이면_골라도_확인이_필요하다():
+    """★`[2026-09-28]` 요식 식당이 공용 장소가 되며 같은 이름 지점이 생겼다 — 한 곳을 고르되 확인 화면에서 묻는다."""
+    branches = [{"place_id": "a", "name": "명동교자", "kind": "dining", "latitude": 37.56, "longitude": 126.98},
+                {"place_id": "b", "name": "명동교자", "kind": "dining", "latitude": 37.57, "longitude": 126.99}]
+    found = resolve("명동교자", our_places=branches)
+    assert found.place_id in {"a", "b"}
+    assert found.needs_review is True and "같은 이름이 2곳" in (found.note or "")
+    single = resolve("명동교자", our_places=branches[:1])
+    assert single.needs_review is False

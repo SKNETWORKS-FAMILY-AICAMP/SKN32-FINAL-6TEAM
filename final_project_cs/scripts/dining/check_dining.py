@@ -43,7 +43,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
 sys.path.insert(0, ROOT)
 
-DSN = os.environ.get("DINING_DSN", "postgresql://postgres@localhost:5433/dining_rebuild")
+sys.path.insert(0, HERE)
+import core_db  # noqa: E402  ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+DSN = core_db.dsn()
 KST = timezone(timedelta(hours=9))
 SAVE = os.path.join(ROOT, "data", "dining", "_build", "점검표.md")
 

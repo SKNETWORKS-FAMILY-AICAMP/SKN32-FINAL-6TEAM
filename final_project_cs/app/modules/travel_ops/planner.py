@@ -282,6 +282,11 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
                                        origin="places", weather_sensitive=bool(sensitive),
                                        rank_hint=0)
         wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds]
+        if any(cand.attributes.get("source") == "dining_ledger" for cand in found.values()):
+            # ★`[2026-09-28]` 식당은 요식 목록이 기준이다(요식 데이터 코어 통합 — 마이그레이션 221·222). 관광공사 목록의
+            #   음식점 1,591곳 중 980곳이 요식과 같은 식당이라, 같이 넣으면 한 식당이 후보에 두 번 나온다.
+            #   요식에서 올린 식당이 있을 때만 뺀다 — 시험 테넌트처럼 요식 식당이 없으면 예전 그대로다
+            wanted_types = [code for code in wanted_types if KIND_BY_CONTENT_TYPE[code] != "dining"]
         from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
         if not PlaceCatalogSync.enabled():
