@@ -8,9 +8,10 @@
 """
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
-from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
+from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from .._base import TravelTeamBase
 from ..itinerary_changes import (NoChange, next_after, plan_route_adjustment, route_of,
@@ -85,6 +86,11 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
             return blocked
         if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
+        # ☆`[2026-09-29 이동 계산기 문제목록 #34·#35]` 구조화된 구간 입력(current_state.mobility — 날짜·출발 시각·구간)이
+        #   오면 이동 계산기(시간표 판정)로 답한다. 앞 판은 계산기를 부르지 않았고, 아래 조회 도구(read.route·read.transit)는
+        #   비어 있어 이 갈래가 늘 「모름」이었다. 구조화 입력이 없으면 종전대로 — 자연어에서 구간을 짐작하지 않는다.
+        if (task.context.current_state or {}).get("mobility") is not None:
+            return self._from_engine(task)
 
         seen: set[str] = set()
         route = self._read(task, "read.route", {"case_id": str(task.case_id)}, seen)
@@ -117,3 +123,35 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
             decisions=[{"fits": fits, "need_minutes": need, "gap_minutes": have,
                         "last_departure_ok": last_ok}],
             warnings=[] if last_ok is not False else ["막차 시각을 넘긴다"])
+
+    # ── 이동 계산기 판정 → 계약(TeamResult) — `[2026-09-29 이동 계산기 문제목록 #34·#35]` ─────────────
+    def _from_engine(self, task: TeamTask) -> TeamResult:
+        """계산기 어댑터(engine/adapter.py)가 준 dict 를 계약으로 옮긴다. 어댑터는 계약 타입을 모르게 짜여 있다.
+
+        ★꺼져 있으면(설정 mobility_data_dir 비움) 오류로 올린다 — 지어낸 답도, 「모름」 답도 내지 않는다.
+        ★근거의 observed_at 은 계산기가 「built:…」·「fetched:…」 접두를 붙여 준다 — 접두를 떼어 시각으로 읽는다.
+          못 읽으면 판정 시각(decided_at)으로 두고 claim 에 원래 값을 남긴다(시각을 지어내지 않는다).
+        """
+        from . import wiring
+        out = wiring.team_result(task)
+        if out is None:
+            return self._escalate(task, "mobility_engine_disabled",
+                                  warnings=[f"이동 계산기 상태: {wiring.mode()}"])
+        decided = datetime.now().astimezone()
+        evidence = []
+        for e in out.get("evidence") or []:
+            raw = str(e.get("observed_at") or "")
+            stamp = raw.split(":", 1)[1] if raw.split(":", 1)[0] in ("built", "fetched") else raw
+            try:
+                at = datetime.fromisoformat(stamp)
+                claim = e.get("claim", "")
+            except ValueError:
+                at, claim = decided, f"{e.get('claim', '')} (자료 시각 표기: {raw or '없음'})"
+            evidence.append(Evidence(evidence_id=e["evidence_id"], source_type=e["source_type"],
+                                     source_id=e["source_id"], claim=claim, value=e.get("value"),
+                                     confidence=e.get("confidence", 0.2), observed_at=at))
+        return self._result(task, outcome=out["outcome"], confidence=out.get("confidence", 0.0),
+                            answer=out.get("answer"), evidence=evidence,
+                            decisions=out.get("decisions") or [], action_proposals=[],
+                            next_action=NextAction(out["next_action"]),
+                            failure_code=out.get("failure_code"), warnings=out.get("warnings") or [])

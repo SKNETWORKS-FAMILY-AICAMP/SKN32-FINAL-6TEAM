@@ -106,6 +106,8 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
     from . import paths as _paths
     if data_dir:
         _paths.configure(data_dir)
+    elif _paths.SOURCE == "disabled":
+        raise RuntimeError("이동 계산기가 꺼져 있다(서버 설정 mobility_data_dir 비움) — 판정기를 올리지 않는다")
     elif _paths.SOURCE == "unset":
         _paths.load_cli_env()               # 명령줄·시험 — 서버는 기동 때 configure 로 정한다
     if guardrails_path:
