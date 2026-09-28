@@ -70,7 +70,10 @@ test("키 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 �
 
   await dialog.getByRole("button", { name: /다시 발급받기/ }).click();
   await dialog.getByRole("button", { name: "키 다시 발급" }).click();
-  await expect(dialog.getByRole("status")).toContainText("새 키를 받았어요");
+  await expect(dialog.getByRole("status").filter({ hasText: "새 키를 받았어요" })).toBeVisible();
+  // 메뉴를 연 그 자리에서 새 키가 바로 보인다(첫 화면·온보딩 틀에는 화면 위 안내가 없다)
+  const inMenu = dialog.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
+  await expect(inMenu.getByRole("textbox")).toHaveValue(/^acop_u_rotated_/);
   const rotated = await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE);
   expect(rotated).toMatch(/^acop_u_rotated_/);
   expect((await server.received("POST", "/rotate"))[0].key).toBe("acop_u_known");   // 옛 키로 요청했다

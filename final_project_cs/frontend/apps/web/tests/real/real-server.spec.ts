@@ -16,7 +16,8 @@ test.describe.configure({ mode: "serial" });
 let sharedKey: string | null = null;
 
 async function uploadAndOpenReview(page: Page, text: string) {
-  await page.goto("/trips/new");
+  // ★설문 답은 화면 메모리에만 있다 — 주소를 새로 열면 사라진다. 이미 등록 화면이면(설문 뒤 단추로 왔으면) 다시 열지 않는다.
+  if (!page.url().endsWith("/trips/new")) await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(text);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
@@ -29,6 +30,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await start(page, null);                               // 이 브라우저에는 키가 없다 = 첫 방문
   await finishOnboarding(page);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
+  await expect(page).toHaveURL(/\/trips\/new$/);
   await uploadAndOpenReview(page, PLAN);
 
   // 서버가 읽은 항목이 확인 화면에 나온다
@@ -53,7 +55,12 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   sharedKey = await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"));
   expect(sharedKey).toMatch(/^acop_u_/);
 
+  // 설문을 마쳤으니 등록 확인 요청에 설문이 실려 가야 한다(서버가 저장하는지는 DB 로 따로 본다)
+  const confirmSent = page.waitForRequest((request) => request.url().endsWith("/confirm") && request.method() === "POST");
   await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  const confirmBody = (await confirmSent).postDataJSON() as { survey?: { version?: string } };
+  console.log("REAL_CONFIRM_SURVEY", JSON.stringify(confirmBody.survey ?? null));
+  expect(confirmBody.survey?.version).toBe("2026-09-24.v1");
   await expect(page).toHaveURL(/\/trips\/[0-9a-f-]{36}$/, { timeout: 120_000 });
   const tripId = page.url().split("/").pop();
   console.log("REAL_TRIP_ID", tripId);

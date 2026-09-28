@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { KeyRound } from "lucide-react";
 import { Button, Panel } from "@/components/ui";
 import { currentKey, dismissKeyNotice, KEY_CHANGED_EVENT, pendingKeyNotice } from "@/lib/live/client";
@@ -15,6 +15,8 @@ export function KeyNotice() {
   const t = useT();
   const [state, setState] = useState<{ key: string; notice: string | null } | null>(null);
   const [copy, setCopy] = useState<"failed" | "done" | null>(null);
+  // The page and the menu can both show it at once, so the heading id must be unique.
+  const titleId = useId();
 
   useEffect(() => {
     const read = () => {
@@ -34,8 +36,8 @@ export function KeyNotice() {
     catch { setCopy("failed"); }
   }
 
-  return <Panel className={styles.notice} role="status" aria-labelledby="user-key-title">
-    <h2 id="user-key-title"><KeyRound size={18} strokeWidth={1.6} aria-hidden="true" />{t("내 여행 열쇠를 따로 보관해 주세요", "Keep your trip key somewhere safe")}</h2>
+  return <Panel className={styles.notice} role="status" aria-labelledby={titleId}>
+    <h2 id={titleId}><KeyRound size={18} strokeWidth={1.6} aria-hidden="true" />{t("내 여행 열쇠를 따로 보관해 주세요", "Keep your trip key somewhere safe")}</h2>
     <p>{state.notice ?? t("이 키가 있어야 다른 기기에서 내 여행을 다시 열 수 있어요.", "You need this key to open your trips again on another device.")}</p>
     <input className={styles.keybox} readOnly value={state.key} aria-label={t("내 사용자 키", "Your user key")} onFocus={(event) => event.currentTarget.select()} />
     <div className={styles.actions}>

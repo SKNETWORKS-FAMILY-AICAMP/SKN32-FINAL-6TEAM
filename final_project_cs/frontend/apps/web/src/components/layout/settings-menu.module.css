@@ -2,6 +2,8 @@
 .menuButton:hover { border-color: var(--color-primary); }
 .overlay { position: fixed; inset: 0; z-index: 50; background: #24392f33; display: flex; justify-content: flex-end; pointer-events: auto; animation: fade .2s ease both; }
 .panel { width: min(320px, 86%); height: 100%; overflow-y: auto; overscroll-behavior: contain; background: var(--color-paper); border-left: 1px solid #ffffff; box-shadow: -12px 0 40px #24392f1c; padding: 20px 20px 24px; display: flex; flex-direction: column; gap: 22px; animation: slide .32s cubic-bezier(.22, .8, .2, 1) both; }
+/* Rows keep their height and the panel scrolls: a flex child may shrink, and the board clips (overflow: hidden), so a long menu (the new-key notice) cut the language row and hid the floating switch. */
+.panel > * { flex-shrink: 0; }
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .head h2 { font-size: 20px; line-height: 1.4; letter-spacing: -.6px; }
 .eyebrow { font-size: 9px; letter-spacing: 1.6px; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }

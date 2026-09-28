@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
 import { adoptKey, currentKey, KEY_CHANGED_EVENT, LiveError, rotateKey } from "@/lib/live/client";
 import { useSettings, useT } from "@/lib/settings";
+import { KeyNotice } from "./key-notice";
 import styles from "./account.module.css";
 
 /**
@@ -20,6 +21,9 @@ export function KeySettings() {
   const [confirming, setConfirming] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  // ★The new key is shown right here, in the menu where it was replaced. The intro and onboarding frame has no
+  //   page notice, so "copy it from the notice at the top" pointed at nothing there (found 2026-09-28 on the real server).
+  const [rotated, setRotated] = useState(false);
 
   useEffect(() => {
     const read = () => setHasKey(Boolean(currentKey()));
@@ -50,7 +54,8 @@ export function KeySettings() {
     try {
       await rotateKey(language);
       setConfirming(false);
-      setMessage({ ok: true, text: t("새 키를 받았어요. 화면 위쪽 안내에서 복사해 따로 보관해 주세요.", "You have a new key. Copy it from the notice at the top and keep it safe.") });
+      setRotated(true);
+      setMessage({ ok: true, text: t("새 키를 받았어요. 아래 안내에서 복사해 따로 보관해 주세요.", "You have a new key. Copy it from the notice below and keep it safe.") });
       void queryClient.invalidateQueries();
     } catch (error) {
       setMessage({ ok: false, text: reason(error) });
@@ -77,5 +82,6 @@ export function KeySettings() {
         : <Button disabled={busy} onClick={() => setConfirming(true)}>{t("키가 샜어요 — 다시 발급받기", "My key leaked — replace it")}</Button>}
     </div>}
     {message && <p className={message.ok ? styles.ok : styles.error} role={message.ok ? "status" : "alert"}>{message.text}</p>}
+    {rotated && <KeyNotice />}
   </fieldset>;
 }
