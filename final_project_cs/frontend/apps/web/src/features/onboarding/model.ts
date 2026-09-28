@@ -11,7 +11,6 @@ export interface Answers {
   diet: string[];
   foodReligion: string[];
   foodNone: boolean;
-  foodSkip: boolean;
   transport: string[];
   budget: string;
   budgetCustom: string;
@@ -21,13 +20,21 @@ export interface Answers {
   detailActivity: string;
   detailTransport: string;
   religion: string;
+  /** Questions skipped without an answer. They still count toward progress. */
+  skipped: number[];
 }
 
 export const initialAnswers: Answers = {
   themes: [], companions: [], adults: 1, children: 0, infants: 0, allergies: [], diet: [], foodReligion: [],
-  foodNone: false, foodSkip: false, transport: [], budget: "", budgetCustom: "", citizen: "", priority: "",
-  detailFood: "", detailActivity: "", detailTransport: "", religion: "",
+  foodNone: false, transport: [], budget: "", budgetCustom: "", citizen: "", priority: "",
+  detailFood: "", detailActivity: "", detailTransport: "", religion: "", skipped: [],
 };
+
+/** The answer fields each question owns, in question order. */
+const questionFields: readonly (readonly (keyof Answers)[])[] = [
+  ["themes"], ["companions", "adults", "children", "infants"], ["allergies", "diet", "foodReligion", "foodNone"], ["transport"],
+  ["budget", "budgetCustom"], ["citizen"], ["priority"], ["detailFood", "detailActivity", "detailTransport"], ["religion"],
+];
 
 export type Option = readonly [value: string, ko: string, en: string];
 export type ListKey = "themes" | "companions" | "allergies" | "diet" | "foodReligion" | "transport";
@@ -72,13 +79,13 @@ export function valid(index: number, a: Answers): boolean {
   switch (index) {
     case 0: return a.themes.length > 0;
     case 1: return a.companions.length > 0 && a.adults >= 1 && (a.companions.includes("alone") ? a.adults === 1 && a.children === 0 && a.infants === 0 : a.adults + a.children + a.infants >= 2);
-    case 2: return true;
+    case 2: return a.foodNone || a.allergies.length > 0 || a.diet.length > 0 || a.foodReligion.length > 0;
     case 3: return a.transport.length > 0;
     case 4: return Boolean(a.budget) && (a.budget !== "custom" || (Number.isFinite(Number(a.budgetCustom)) && Number(a.budgetCustom) > 0));
     case 5: return Boolean(a.citizen);
     case 6: return Boolean(a.priority);
     case 7: return Boolean(a.detailFood && a.detailActivity && a.detailTransport);
-    case 8: return true;
+    case 8: return Boolean(a.religion);
     default: return false;
   }
 }
@@ -88,13 +95,21 @@ export function validationHint(index: number, a: Answers, t: Translate): string 
   return "";
 }
 
+/** A question is done once it is answered or skipped. */
+export const done = (index: number, a: Answers) => valid(index, a) || a.skipped.includes(index);
+
 export function answeredCount(a: Answers): number {
-  return questions.filter((_, index) => {
-    if (index === FOOD_STEP) return a.foodNone || a.allergies.length || a.diet.length || a.foodReligion.length;
-    if (index === LAST_STEP) return Boolean(a.religion);
-    return valid(index, a);
-  }).length;
+  return questions.filter((_, index) => done(index, a)).length;
 }
+
+/** Clear a question's answer and mark it skipped. */
+export function skip(a: Answers, index: number): Answers {
+  const cleared = Object.fromEntries(questionFields[index].map((field) => [field, initialAnswers[field]]));
+  return { ...a, ...cleared, skipped: a.skipped.includes(index) ? a.skipped : [...a.skipped, index] };
+}
+
+/** Answering a skipped question takes the skip back. */
+export const unskip = (a: Answers, index: number): Answers => ({ ...a, skipped: a.skipped.filter((item) => item !== index) });
 
 export function chosenLabel(key: ListKey | ChoiceKey, value: string, t: Translate) {
   const option = options[key].find((item) => item[0] === value);
@@ -116,7 +131,7 @@ export function toggle(a: Answers, key: ListKey | ChoiceKey, value: string, mult
   }
   const list = key as ListKey;
   const next = { ...a, [list]: a[list].includes(value) ? a[list].filter((item) => item !== value) : [...a[list], value] };
-  return list === "allergies" || list === "diet" || list === "foodReligion" ? { ...next, foodNone: false, foodSkip: false } : next;
+  return list === "allergies" || list === "diet" || list === "foodReligion" ? { ...next, foodNone: false } : next;
 }
 
 export function count(a: Answers, key: CountKey, delta: number): Answers {

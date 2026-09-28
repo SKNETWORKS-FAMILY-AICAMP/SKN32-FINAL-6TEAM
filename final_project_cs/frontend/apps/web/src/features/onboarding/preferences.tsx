@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  answeredCount, chosenLabel, count, FOOD_STEP, isOptional, LAST_STEP, options, questions, stepNames, toggle, valid, validationHint,
+  answeredCount, chosenLabel, count, done, isOptional, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid, validationHint,
   type Answers, type ChoiceKey, type CountKey, type ListKey, type Option,
 } from "./model";
 import styles from "./onboarding.module.css";
@@ -72,9 +72,14 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
       return;
     }
     if (direction < 0 && step === 0) { if (!fromSwipe) onFirstBack(); position(); return; }
+    advance(direction, fromSwipe, answers);
+  }
+
+  /** Move one card, or finish on the last card once every question is answered or skipped. */
+  function advance(direction: 1 | -1, fromSwipe: boolean, current: Answers) {
     if (direction > 0 && step === LAST_STEP) {
       if (fromSwipe) { position(); return; }
-      const missing = questions.findIndex((_, index) => !valid(index, answers));
+      const missing = questions.findIndex((_, index) => !done(index, current));
       if (missing >= 0) { setStep(missing); onFeedback(); announce(`${missing + 1} / ${questions.length}. ${t(questions[missing][0], questions[missing][1])}`); return; }
       onComplete();
       return;
@@ -90,7 +95,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
 
   function update(next: Answers) {
     setForcedError(null);
-    setAnswers(next);
+    setAnswers(unskip(next, step));
   }
 
   function select(event: MouseEvent<HTMLButtonElement>, key: ListKey | ChoiceKey, value: string, multiple: boolean) {
@@ -111,9 +116,11 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
   }
 
   function skip(index: number) {
-    if (index === FOOD_STEP) update({ ...answers, allergies: [], diet: [], foodReligion: [], foodNone: false, foodSkip: true });
-    else update({ ...answers, religion: "" });
-    change(1);
+    if (busy.current) return;
+    const next = skipQuestion(answers, index);
+    setForcedError(null);
+    setAnswers(next);
+    advance(1, false, next);
   }
 
   function chip(key: ListKey | ChoiceKey, option: Option, multiple: boolean, icon: boolean) {
@@ -148,7 +155,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
         {label("종교상 피하는 음식", "Religious food restrictions")}{chips("foodReligion", true)}
         <div className={`${styles.chips} ${styles.noneRow}`}>
           <button type="button" className={`${styles.chip} ${answers.foodNone ? styles.selected : ""} ${touched.has("food-none") ? styles.selectionFeedback : ""}`} aria-pressed={answers.foodNone} onClick={(event) => {
-            update(answers.foodNone ? { ...answers, foodNone: false, foodSkip: false } : { ...answers, foodNone: true, foodSkip: false, allergies: [], diet: [], foodReligion: [] });
+            update(answers.foodNone ? { ...answers, foodNone: false } : { ...answers, foodNone: true, allergies: [], diet: [], foodReligion: [] });
             feedback(event.currentTarget, "food-none");
           }}><span className={styles.optionCheck} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>{t("해당 없음", "None apply")}</button>
         </div>
@@ -232,7 +239,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
                 <button type="button" className={styles.previous} onClick={() => change(-1)}>{t("이전", "Back")}</button>
                 <button type="button" className={styles.next} disabled={!valid(index, answers)} onClick={() => change(1)}>{index === LAST_STEP ? t("설정 완료", "Finish setup") : t("다음", "Next")}<OnboardingIcon name="arrow" size={15} /></button>
               </div>
-              {isOptional(index) && <button type="button" className={styles.skip} onClick={() => skip(index)}>{t("응답하지 않고 넘어가기", "Skip this question")}</button>}
+              <button type="button" className={styles.skip} onClick={() => skip(index)}>{t("응답하지 않고 넘어가기", "Skip this question")}</button>
             </div>
           </article>;
         })}
@@ -252,8 +259,8 @@ export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: {
     <p>{t("나를 닮은 여행의 첫걸음.", "A first step toward a trip that feels like you.")}<br />{t("언제든 답변을 다시 바꿀 수 있어요.", "You can change your answers anytime.")}</p>
     <div className={styles.summary}>
       <div><span>{t("선택 언어", "Language")}</span><strong>{t("한국어", "English")}</strong></div>
-      <div><span>{t("여행 테마", "Travel themes")}</span><strong>{answers.themes.map((value) => chosenLabel("themes", value, t)).join(" · ")}</strong></div>
-      <div><span>{t("함께하는 인원", "Travelers")}</span><strong>{answers.adults + answers.children + answers.infants}{t("명", " people")}</strong></div>
+      <div><span>{t("여행 테마", "Travel themes")}</span><strong>{answers.themes.map((value) => chosenLabel("themes", value, t)).join(" · ") || t("미선택", "Not selected")}</strong></div>
+      <div><span>{t("함께하는 인원", "Travelers")}</span><strong>{answers.companions.length ? <>{answers.adults + answers.children + answers.infants}{t("명", " people")}</> : t("미선택", "Not selected")}</strong></div>
       <div><span>{t("가장 중요한 것", "Top priority")}</span><strong>{chosenLabel("priority", answers.priority, t)}</strong></div>
     </div>
     <button type="button" className={`${styles.next} ${styles.homeContinue}`} onClick={onJourney}>{hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>

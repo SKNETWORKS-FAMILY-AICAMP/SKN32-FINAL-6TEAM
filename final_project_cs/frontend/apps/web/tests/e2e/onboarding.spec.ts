@@ -44,18 +44,35 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await page.getByRole("button", { name: "어린이 인원 늘리기" }).click();
   await next.click();
 
+  const progress = page.getByRole("progressbar", { name: "답변한 질문" });
+  const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   await expect(heading("피하고 싶은 음식이 있나요?")).toBeVisible();
-  await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();
-  for (const [question, choice] of [["어떻게 이동하고 싶나요?", "도보"], ["여행 예산은 얼마인가요?", "30–60만 원"], ["한국 국적이신가요?", "외국인"], ["가장 중요한 것은 무엇인가요?", "활동"]]) {
+  await expect(next).toBeDisabled();
+  await skip.click();
+  await expect(progress).toHaveAttribute("aria-valuenow", "3");
+  for (const [question, choice] of [["어떻게 이동하고 싶나요?", "도보"], ["여행 예산은 얼마인가요?", "30–60만 원"]]) {
     await expect(heading(question)).toBeVisible();
     await page.getByRole("button", { name: choice, exact: true }).click();
     await next.click();
   }
+  await expect(heading("한국 국적이신가요?")).toBeVisible();
+  await page.getByRole("button", { name: "외국인", exact: true }).click();
+  await skip.click();
+  await expect(progress).toHaveAttribute("aria-valuenow", "6");
+  await page.getByRole("button", { name: "이전", exact: true }).click();
+  await expect(heading("한국 국적이신가요?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "외국인", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect(next).toBeDisabled();
+  await skip.click();
+  await expect(heading("가장 중요한 것은 무엇인가요?")).toBeVisible();
+  await page.getByRole("button", { name: "활동", exact: true }).click();
+  await next.click();
   await expect(heading("어떤 점을 더 중요하게 보나요?")).toBeVisible();
   for (const choice of ["맛", "힐링", "도보"]) await page.getByRole("button", { name: choice, exact: true }).click();
   await next.click();
   await expect(heading("종교적 고려가 필요한가요?")).toBeVisible();
-  await page.getByRole("button", { name: "설정 완료" }).click();
+  await expect(page.getByRole("button", { name: "설정 완료" })).toBeDisabled();
+  await skip.click();
 
   await expect(heading("여행 취향을 모두 알아봤어요.")).toBeVisible();
   await expect(page.getByText("맛집 탐방", { exact: true })).toBeVisible();

@@ -24,7 +24,7 @@ function Preferences() {
   const people = answers.adults + answers.children + answers.infants;
   return <><div className={styles.preferences}>
     <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <div className={styles.tags}>{answers.themes.map((value) => <span key={value} className={styles.pill}>{labels[value]}</span>)}<span className={styles.pill}>{people}{t("명과 함께", " travelers")}</span></div>
+    <div className={styles.tags}>{answers.themes.map((value) => <span key={value} className={styles.pill}>{labels[value]}</span>)}{answers.companions.length > 0 && <span className={styles.pill}>{people}{t("명과 함께", " travelers")}</span>}</div>
     <p>{t("홈에서 고른 취향을 이 여행과 함께 이어가요.", "The preferences you chose stay with this journey.")}</p>
   </div><hr /></>;
 }
