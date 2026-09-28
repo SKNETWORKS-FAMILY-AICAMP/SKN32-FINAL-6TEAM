@@ -119,3 +119,53 @@ def test_20_mixed_bus_transfer_gets_sum_of_single_upper_bound():
     assert O.fare_of(v, legs, lr) is None, "합성 요금은 여전히 근거가 없다(버스 운임거리)"
     assert O.fare_upper_of(v, legs, lr) == 1500 + 1200, "간선 1,500 + 마을 1,200 = 상한 2,700"
     assert O.fare_upper_of(v, legs[:1], lr[:1]) is None, "버스가 안 섞인(한 번) 경로는 fare_of 의 몫"
+
+
+# ── #13 장소 사이 도보 — 보행망 라우터가 있으면 실제 길, 「길 없음」이면 후보에서 뺀다 ─────────
+class _FootRouter:
+    def __init__(self, result=None, error=None):
+        self.result, self.error, self.calls = result, error, []
+        self.last_error = None
+
+    def available(self):
+        return True
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        self.calls.append(profile)
+        self.last_error = self.error
+        return self.result
+
+
+def _walk_leg(router):
+    from datetime import datetime, timedelta, timezone
+    rt = _rt()
+    rt._v.bike_router = router
+    planner = P.Planner(rt, modes=["walk"])
+    kst = timezone(timedelta(hours=9))
+    return planner.leg(PLACES[0], PLACES[1], datetime(2026, 10, 5, 12, 0, tzinfo=kst), {}, True, "P1_to_P2")
+
+
+def test_13_walk_uses_network_distance_when_router_answers():
+    r = _FootRouter({"distance_m": 900.0, "time_s": 700, "basis": "graphhopper", "source_id": "x"})
+    got, why = _walk_leg(r)
+    assert r.calls == ["foot"]
+    route = got[0]
+    walk = next(o for o in route["options"] if o["id"] == "walk")
+    speed = RULES["measured_baseline"]["kakao_walk_speed_mps"]["value"]
+    import math
+    assert walk["walk_m"] == 900 and walk["eta_min"] == math.ceil(900 / speed / 60), walk
+
+
+def test_13_no_walk_path_drops_walk_with_reason():
+    got, why = _walk_leg(_FootRouter(None, {"kind": "no_path"}))
+    assert got is None
+    assert "no_walk_path" in [e["code"] for e in why.get("left_out", [])], why
+
+
+def test_13_router_down_falls_back_to_straight_line_estimate():
+    from app.modules.travel_ops.mobility.engine.geo import meters
+    got, why = _walk_leg(_FootRouter(None, {"kind": "router_down", "error": "x"}))
+    walk = next(o for o in got[0]["options"] if o["id"] == "walk")
+    straight = meters(PLACES[0]["lat"], PLACES[0]["lon"], PLACES[1]["lat"], PLACES[1]["lon"])
+    detour = RULES["transfer"]["stop_station_walk"]["detour_factor"]["value"]
+    assert walk["walk_m"] == int(round(straight * detour)), "라우터가 못 닿은 것은 길이 없다는 근거가 아니다"

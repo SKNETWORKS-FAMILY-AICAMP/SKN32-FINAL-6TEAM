@@ -219,6 +219,21 @@ class Planner:
         """장소 도보 분 = 직선 × 우회계수 ÷ 1.04 m/s (rules transfer.stop_station_walk — 정류장↔역과 같은 식)."""
         return math.ceil(straight_m * self.detour / self.speed / 60) if straight_m else 0
 
+    def _walk_net(self, a_place, b_place, straight_m):
+        """장소↔장소 도보 거리(m) — 보행망 라우터 foot 거리 → 없으면 직선 × 우회계수. (거리, 길 없음 여부).
+
+        「길 없음」은 라우터가 **경로가 없다**고 답했을 때만이다. 라우터가 없거나 못 닿으면(no_router·router_down·
+        router_error·bad_response) 길이 없다는 근거가 아니다 — 직선 식으로 낸다(verify_time._bike_walk 와 같은 규칙)."""
+        br = getattr(self.v, "bike_router", None)
+        if br is not None and br.available():
+            prof = ((self.v.R.get("bike") or {}).get("ddareungi") or {}).get("ride", {}).get("walk_profile", "foot")
+            r = br.route(prof, a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
+            if r:
+                return float(r["distance_m"]), False
+            if (br.last_error or {}).get("kind") == "no_path":
+                return None, True
+        return straight_m * self.detour, False
+
     def _near_station(self, place, limit_m):
         """장소 → 가장 가까운 역(역 좌표 직선 · 도보 상한 안). 거리는 그 역에서 장소에 가장 가까운 출구까지
         (출구표가 없으면 역 좌표) — 정류장↔역 환승(19번)과 같은 방식. (역명, 직선 m, 노선군) 또는 None.
@@ -414,11 +429,19 @@ class Planner:
         # ① 도보 직행 — 두 장소 직선이 도보 상한 안이면 후보. 여유는 정책 버퍼(수단 무관 · 39 결정 2).
         direct = meters(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
         if direct <= wlim and (self.modes is None or "walk" in self.modes):
-            eta = max(1, self._walk(direct))
-            opts.append({"eta_min": eta, "uses": [], "_legs": [], "_route": "도보",
-                         "_start": arrive_by - eta - buf, "_transfers": 0, "_n": 0,
-                         "_margin": buf, "_slack": 0, "_walk_min": eta,
-                         "_walk_m": direct * self.detour, "_fare": 0, "_severe": [], "_covered": False})
+            # ☆`[2026-09-29 문제목록 #13]` 앞 판은 직선 × 우회계수만 봐서 하천·철도 건너편 두 점도 「걸어서 n분」이었다.
+            #   보행망 라우터(GraphHopper foot — 자전거와 같은 서버)가 있으면 그 거리를 쓰고, 라우터가 「길 없음」이라
+            #   하면 도보 후보를 싣지 않는다. 라우터가 없거나 닿지 않으면 종전 식(직선 × 계수)으로 낸다(대체 소스).
+            wm, no_path = self._walk_net(a_place, b_place, direct)
+            if no_path:
+                left.append({"_o": {"_legs": []}, "label": "도보", "code": "no_walk_path",
+                             "reason": "보행망에 두 장소를 잇는 길이 없다(직선으로는 도보 상한 안)"})
+            else:
+                eta = max(1, math.ceil(wm / self.speed / 60))
+                opts.append({"eta_min": eta, "uses": [], "_legs": [], "_route": "도보",
+                             "_start": arrive_by - eta - buf, "_transfers": 0, "_n": 0,
+                             "_margin": buf, "_slack": 0, "_walk_min": eta,
+                             "_walk_m": wm, "_fare": 0, "_severe": [], "_covered": False})
 
         # ② 대중교통 — 가까운 역끼리 다목적 후보(판정기 verify_multi) → 후보마다 마지막 성립 출발로 다시 판정
         oa, ob = self._near_station(a_place, wlim), self._near_station(b_place, wlim)
