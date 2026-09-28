@@ -24,9 +24,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from _paths import RAW_MOBILITY, PROCESSED, REPO_ROOT
+    from _paths import RAW_MOBILITY, PROCESSED, REPO_ROOT, ensure_dirs
 except Exception:  # 클라우드 시험용
     RAW_MOBILITY = PROCESSED = REPO_ROOT = None
+
+    def ensure_dirs():
+        pass
 
 HOURS = [f"운행시간_{h:02d}시" for h in range(24)]
 HEADER = ["기준_날짜", "노선_ID", "출발_정류장_ID", "도착_정류장_ID", "운행시간", *HOURS,
@@ -223,6 +226,7 @@ def main():
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    ensure_dirs()                              # 70: 쓰기 직전
     with gzip.open(out, "wt", encoding="utf-8") as f:
         meta = {"_meta": True, **rep, "unit": "sec", "value": "날짜별 시간대 평균 운행시간의 p10/p50/p90 (개별 운행 분위 아님)",
                 "day_type_rule": "weekday = 평일·공휴일 아님 · holiday = 토·일·공휴일 (timeutil 과 같은 자)",

@@ -4,7 +4,8 @@
 # 호출 ≈ 빈 조합 수(수도권만, 토요일 02 제외 시 약 500). 결과: 행이 오면 jsonl 에 추가, 안 오면 tago_empty_confirmed.json 에 기록.
 import os, json, time, requests
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY
+from _paths import RAW_MOBILITY, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["DATA_GO_KR_KEY"]
 BASE = "https://apis.data.go.kr/1613000/SubwayInfo"

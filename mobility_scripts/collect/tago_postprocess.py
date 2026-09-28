@@ -6,7 +6,8 @@
 # fetched_at 은 행 단위 실제 호출 시각이 없으므로 "수집일" 정밀도다(precision=day). Evidence.observed_at 에 그대로 쓴다.
 import sys, json, argparse
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 SOURCE = "data.go.kr/1613000/SubwayInfo"

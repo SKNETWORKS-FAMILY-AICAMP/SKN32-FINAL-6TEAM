@@ -19,7 +19,8 @@
 #   하나로 자동 선택하지 않는다(route_base_shared=true). 고르기는 경유 정류장으로, 못 고르면 근거없음.
 import json, re, collections
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 SRC = RAW_MOBILITY / "incheon_airport_bus.json"

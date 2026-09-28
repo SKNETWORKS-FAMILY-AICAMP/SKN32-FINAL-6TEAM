@@ -21,7 +21,7 @@
 import argparse, csv, json, math, sys, collections
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from _paths import PROCESSED
+from _paths import PROCESSED, ensure_dirs
 
 KST = timezone(timedelta(hours=9))
 OUT_DIR = PROCESSED / "mobility"
@@ -158,6 +158,7 @@ def main():
                      "station_exit": len({(r["station_nm"], r["exit_ref"]) for r in rows}),
                      "poi_no_station": len(no_station), "stations_no_exit": sorted(no_exit)},
            "poi_no_station": no_station, "pairs": rows}
+    ensure_dirs()                              # 70: 쓰기 직전
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / f"{a.out_prefix}.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
 

@@ -38,7 +38,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paths import RAW_MOBILITY, PROCESSED                      # noqa: E402
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs         # noqa: E402
 
 ROUTE_TYPE = {"1": "공항", "2": "마을", "3": "간선", "4": "지선", "5": "순환",
               "6": "광역", "7": "인천", "8": "경기", "9": "폐지", "10": "투어", "15": "심야"}
@@ -313,6 +313,7 @@ def main():
         print("[5] --dry-run — 아무것도 쓰지 않았다")
         return
 
+    ensure_dirs()                              # 70: 쓰기 직전에만 폴더를 만든다(--dry-run·--help 는 안 만든다)
     outs = {
         PROCESSED / "mobility" / f"bus_route_{suffix}.jsonl":
             "\n".join(json.dumps(r, ensure_ascii=False) for r in routes_out) + "\n",

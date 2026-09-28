@@ -7,7 +7,8 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paths import RAW_MOBILITY  # noqa: E402
+from _paths import RAW_MOBILITY, ensure_dirs  # noqa: E402
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 K = urllib.parse.unquote(os.environ["DATA_GO_KR_KEY"])
 URL = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2"

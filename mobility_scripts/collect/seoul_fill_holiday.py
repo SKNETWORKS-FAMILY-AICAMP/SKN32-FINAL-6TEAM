@@ -1,6 +1,7 @@
 # mobility_scripts/collect/seoul_fill_holiday.py — 2·7호선 휴일 시간표를 열린데이터광장에서 보충
 import os, json, time, requests
-from _paths import RAW_MOBILITY
+from _paths import RAW_MOBILITY, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["SEOUL_OPENAPI_KEY"]
 BASE = f"http://openapi.seoul.go.kr:8088/{KEY}/json"

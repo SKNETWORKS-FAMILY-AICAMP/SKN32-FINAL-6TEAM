@@ -21,7 +21,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 import requests
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 BASE = "http://ws.bus.go.kr/api/rest/busRouteInfo"

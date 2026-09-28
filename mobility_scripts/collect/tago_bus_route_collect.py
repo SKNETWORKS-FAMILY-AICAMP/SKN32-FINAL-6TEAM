@@ -14,7 +14,8 @@
 import os, json, time, argparse
 import requests
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY
+from _paths import RAW_MOBILITY, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["DATA_GO_KR_KEY"]
 BASE = "https://apis.data.go.kr/1613000/BusRouteInfoInqireService"

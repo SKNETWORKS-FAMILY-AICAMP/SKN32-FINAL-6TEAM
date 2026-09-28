@@ -7,7 +7,8 @@
 # 한계: 인천공항 출·도착 노선만. 김포공항은 별도(§ 소싱 문서 3-5).
 import os, json, time, requests
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY
+from _paths import RAW_MOBILITY, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KEY = os.environ["DATA_GO_KR_KEY"]
 URL = "https://apis.data.go.kr/B551177/BusInformation/getBusInfo"

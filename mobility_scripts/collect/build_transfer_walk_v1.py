@@ -11,7 +11,8 @@
 # 출력: processed/mobility/transfer_walk_v1.json
 import csv, json, re, sys
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED          # DATA_DIR/travel 기준 (저장소 관례)
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs          # DATA_DIR/travel 기준 (저장소 관례)
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 RAW = RAW_MOBILITY

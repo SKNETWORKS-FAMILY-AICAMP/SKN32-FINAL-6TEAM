@@ -23,7 +23,8 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
     if not (a.src and a.out):
-        from mobility_scripts.collect._paths import RAW_MOBILITY, PROCESSED
+        from mobility_scripts.collect._paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+        ensure_dirs()                          # 70: 기본 산출 자리를 쓸 때만 폴더를 만든다
         if not a.src:
             hits = sorted((RAW_MOBILITY / "bike" / "_check").glob("bike_station_active_*.json"))
             if not hits:

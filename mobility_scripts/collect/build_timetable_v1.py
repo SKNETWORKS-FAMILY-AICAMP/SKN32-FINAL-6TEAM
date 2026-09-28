@@ -5,7 +5,8 @@
 # 이 스크립트가 tago_postprocess.py 를 대체한다. API 호출 없음.
 import json, re, argparse, collections
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 OUT_DIR = PROCESSED / "mobility"

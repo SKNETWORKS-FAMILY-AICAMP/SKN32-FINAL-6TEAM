@@ -24,7 +24,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "collect"))
-from _paths import RAW_MOBILITY, PROCESSED          # noqa: E402
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs          # noqa: E402
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 MOB = PROCESSED / "mobility"

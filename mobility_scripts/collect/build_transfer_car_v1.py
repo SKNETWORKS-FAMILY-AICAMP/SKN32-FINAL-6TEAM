@@ -17,7 +17,8 @@
 # 출력: processed/mobility/transfer_car_v1.json · transfer_car_v1_report.md
 import csv, json, re, sys, collections, hashlib
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 KST = timezone(timedelta(hours=9))
 RAW = RAW_MOBILITY / "car_position"

@@ -8,7 +8,8 @@ from urllib.parse import unquote, urljoin
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paths import RAW_MOBILITY  # noqa: E402
+from _paths import RAW_MOBILITY, ensure_dirs  # noqa: E402
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 OUT = RAW_MOBILITY / "walk_courses" / "seoul_dulle"
 OUT.mkdir(parents=True, exist_ok=True)

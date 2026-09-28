@@ -12,7 +12,8 @@ from shapely.geometry import shape
 from shapely.ops import linemerge, transform, unary_union
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _paths import RAW_MOBILITY  # noqa: E402
+from _paths import RAW_MOBILITY, ensure_dirs  # noqa: E402
+ensure_dirs()                                  # 70: 이 스크립트는 쓴다 — 산출 폴더를 여기서 만든다
 
 D = RAW_MOBILITY / "walk_courses"
 GH = "http://localhost:8989"

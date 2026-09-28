@@ -39,7 +39,7 @@
 #   2호선 시청→사당(비인접)은 0.72, 시청→을지로입구는 1.00 으로 갈린다.
 import json, re, csv, io, collections, bisect, argparse, statistics
 from datetime import datetime, timezone, timedelta
-from _paths import RAW_MOBILITY, PROCESSED
+from _paths import RAW_MOBILITY, PROCESSED, ensure_dirs
 
 KST = timezone(timedelta(hours=9))
 OUT_DIR = PROCESSED / "mobility"
@@ -541,6 +541,7 @@ def main():
         "warnings": warn,
         "lines": lines_out,
     }
+    ensure_dirs()                              # 70: 쓰기 직전
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
 

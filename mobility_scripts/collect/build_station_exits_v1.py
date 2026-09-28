@@ -15,7 +15,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
-from mobility_scripts.collect._paths import RAW_MOBILITY, PROCESSED   # noqa: E402
+from mobility_scripts.collect._paths import RAW_MOBILITY, PROCESSED, ensure_dirs   # noqa: E402
 
 RADIUS_M = 300
 KST = timezone(timedelta(hours=9))
@@ -96,6 +96,8 @@ def main():
         "exits": dict(sorted(attrib.items())),
     }
     dst = PROCESSED / "mobility" / "station_exits_v1.json"
+    ensure_dirs()                              # 70: 쓰기 직전
+    dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"출구 노드 {len(nodes):,} → 귀속 {sum(stats[k] for k in stats if k != '역_300m_밖'):,} "
           f"({dict(stats)}) · 역명 {len(by_name)} 중 출구 있음 {covered} → {dst}")
