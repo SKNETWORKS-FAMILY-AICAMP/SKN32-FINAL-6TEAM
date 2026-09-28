@@ -20,9 +20,9 @@ from typing import Any
 
 from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 
-from ._base import TravelTeamBase
-from .itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
-from .itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from .._base import TravelTeamBase
+from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
+from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
 
 class ActivityTeam(ItineraryWork, TravelTeamBase):

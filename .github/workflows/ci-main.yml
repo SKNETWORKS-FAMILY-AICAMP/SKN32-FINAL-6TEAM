@@ -81,6 +81,11 @@ jobs:
         run: >-
           python -m pytest -q
           --ignore=tests/integration/rag
+      # 팀이 저장소 맨 위 tests/<팀>/ 에 둔 시험 — 이유는 ci-develop.yml 의 같은 단계 참고.
+      - name: 팀 시험 (저장소 맨 위 tests/)
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -d tests ]; then python -m pytest tests -q || test $? -eq 5; else echo "tests/ 없음 — 건너뜀"; fi
 
   docker:
     name: Docker 빌드

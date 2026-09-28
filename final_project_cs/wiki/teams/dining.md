@@ -10,6 +10,8 @@ domain: travel
 
 # Dining Team
 
+`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/dining/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `dining.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
+
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/dining.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 일정은 v11 §9-B 4주차.

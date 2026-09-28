@@ -50,7 +50,51 @@ def _team_modules() -> list[Path]:
     return found
 
 
+def _relative(path: str | Path) -> Path:
+    """절대 경로를 `app/...` 상대 경로로 — 정적 검사가 모은 경로와 같은 모양으로 맞춘다."""
+    parts = Path(path).resolve().parts
+    return Path(*parts[parts.index("app"):])
+
+
+def _declared_team_files() -> dict[str, Path]:
+    """등록 문자열이 가리키는 클래스가 **실제로 정의된 파일**.
+
+    ★2026-09-28 — 전에는 `app.modules.travel_ops.activity` 를 `activity.py` 로
+      바꿔 찾았다. Team 을 폴더(`activity/team.py` 나 `activity/__init__.py`)로
+      옮기면 그 파일이 없어 이 검사가 실패했다. 파일 하나든 폴더든 같은 등록
+      문자열로 부르므로, 경로를 짐작하지 않고 클래스를 불러와 정의된 곳을 묻는다.
+    """
+    import importlib
+    import inspect
+
+    from app.core.project_config import load_project_config
+
+    files = {}
+    for team in load_project_config().teams:
+        module_name, _, class_name = team.implementation_ref.partition(":")
+        cls = getattr(importlib.import_module(module_name), class_name)
+        files[team.implementation_ref] = _relative(inspect.getsourcefile(cls))
+    return files
+
+
+def _team_package_files() -> list[Path]:
+    """Team 이 폴더로 살면 그 폴더 안 `.py` 전부 — 도우미 파일도 팀 코드다.
+
+    파일 하나로 살 때는 그 파일만 Team 이었다. 폴더로 쪼개면 인프라 호출을
+    옆 파일로 옮기기만 해도 규율 검사를 빠져나가므로, 폴더째 검사한다.
+    `travel_ops/` 자체(여러 팀이 함께 쓰는 곳)는 폴더로 치지 않는다.
+    """
+    out: set[Path] = set()
+    for path in _declared_team_files().values():
+        folder = path.parent
+        if folder.name == "travel_ops" or folder == MODULES_ROOT:
+            continue
+        out.update(p for p in folder.rglob("*.py") if "__pycache__" not in p.parts)
+    return sorted(out)
+
+
 TEAM_MODULES = _team_modules()
+TEAM_FILES = sorted(set(TEAM_MODULES) | set(_team_package_files()))
 
 
 def test_team_modules_are_actually_found():
@@ -61,12 +105,7 @@ def test_team_modules_are_actually_found():
       담는 순간(`locked_bookings.py` 의 Lodging·Flight) 숫자가 어긋난다.
       숫자를 고치면 다음에 또 어긋나므로, **등록이 가리키는 파일**과 대조한다.
     """
-    from app.core.project_config import load_project_config
-
-    declared = {
-        Path(*team.implementation_ref.split(":")[0].split(".")).with_suffix(".py")
-        for team in load_project_config().teams
-    }
+    declared = set(_declared_team_files().values())
     found = set(TEAM_MODULES)
     missing = sorted(str(p) for p in declared - found)
     assert declared, "config/project.yaml 에 Team 선언이 없다."
@@ -77,7 +116,7 @@ def test_team_modules_are_actually_found():
         f"못 찾으면 아래 규율 검사가 그 팀을 **건너뛴다.**")
 
 
-@pytest.mark.parametrize("path", TEAM_MODULES, ids=lambda p: p.stem)
+@pytest.mark.parametrize("path", TEAM_FILES, ids=lambda p: "/".join(p.parts[-2:]))
 def test_team_does_not_import_infrastructure_directly(path: Path):
     """Team 은 인프라·프레임워크를 직접 import 하지 않는다(정적 검사)."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
