@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { noHorizontalScroll, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
+import { noHorizontalScroll, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
 
-test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
+test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 8문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
   await page.goto("/");
   await expect(page.locator("#intro-title")).toHaveText("계획부터 여행까지,당신 곁의 triPilot.");
@@ -42,7 +42,8 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   const progress = page.getByRole("progressbar", { name: "답변한 질문" });
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   await expect(next).toBeDisabled();
-  await expect(page.getByText("선택", { exact: true })).toHaveCount(0);
+  // No `optional` mark on the preference cards (the recovery email card above carries its own).
+  await expect(page.locator("#card-2").getByText("선택", { exact: true })).toHaveCount(0);
   // One theme only (backend `theme` is a single value): a second choice replaces the first.
   await page.getByRole("button", { name: "자연과 힐링" }).click();
   await page.getByRole("button", { name: "맛집 탐방" }).click();
@@ -58,18 +59,16 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await expect(heading("어떻게 이동하고 싶나요?")).toBeVisible();
   await page.getByRole("button", { name: "도보", exact: true }).click();
   await next.click();
-  await expect(heading("한국 국적이신가요?")).toBeVisible();
-  await page.getByRole("button", { name: "외국인", exact: true }).click();
+  // Skipping clears the answer but still counts toward progress; going back shows it cleared.
+  await expect(heading("가장 중요한 것은 무엇인가요?")).toBeVisible();
+  await page.getByRole("button", { name: "활동", exact: true }).click();
   await skip.click();
   await expect(progress).toHaveAttribute("aria-valuenow", "4");
   await page.getByRole("button", { name: "이전", exact: true }).click();
-  await expect(heading("한국 국적이신가요?")).toBeVisible();
-  await expect(page.getByRole("button", { name: "외국인", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect(heading("가장 중요한 것은 무엇인가요?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "활동", exact: true })).toHaveAttribute("aria-pressed", "false");
   await expect(next).toBeDisabled();
   await skip.click();
-  await expect(heading("가장 중요한 것은 무엇인가요?")).toBeVisible();
-  await page.getByRole("button", { name: "활동", exact: true }).click();
-  await next.click();
   await expect(heading("어떤 점을 더 중요하게 보나요?")).toBeVisible();
   for (const choice of ["맛", "힐링", "도보"]) await page.getByRole("button", { name: choice, exact: true }).click();
   await next.click();
@@ -93,7 +92,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();
   await expect(page.getByText("가족", { exact: true })).toBeVisible();
 
-  await page.getByRole("banner").getByRole("link", { name: "홈으로", exact: true }).click();
+  await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
   await expect(page).toHaveURL(/\/start$/);
   await expect(heading("여행 취향을 모두 알아봤어요.")).toBeVisible();
 
@@ -103,24 +102,23 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   await submitPlan(page);
 });
 
-test("설정 메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로고침 후에도 유지된다", async ({ page }) => {
+test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로고침 후에도 유지된다", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("#intro-title")).toContainText("From plans to memories");
   await noHorizontalScroll(page);
 
-  const menu = page.getByRole("button", { name: "Settings menu" });
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
   await menu.click();
-  const settings = page.getByRole("dialog", { name: "Settings" });
-  await settings.getByText("한국어").click();
+  await pickMenuLanguage(page, "Menu", "한국어");
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await expect(page).toHaveTitle("triPilot · 당신다운 여행의 시작");
-  await page.getByRole("dialog", { name: "설정" }).getByText("플로팅 버튼").click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "플로팅 버튼 사용" }).check();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "설정 메뉴" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeFocused();
 
   await page.reload();
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");

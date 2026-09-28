@@ -31,6 +31,10 @@ from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, al
 
 #: 대안 식당을 찾는 반경(미터). ★우리가 고른 값이다 — 도보 약 9분.
 DINING_RADIUS_M = 700
+#: 새벽에 닫힌 것을 확인한 활동의 대체를 찾는 거리. ★우리가 고른 값(2026-09-28) — 기상 대체(600m, 같은 건물·근처
+#: 실내로 피한다)보다 넓다. 원인이 날씨가 아니라 「그날 안 연다」라 근처 실내일 필요가 없고, 대체 후보는 **그날 그 시각에
+#: 연다고 아는 곳**만 남아 좁은 반경이면 거의 비었다
+ACTIVITY_CLOSED_RADIUS_M = 1500
 
 
 @dataclass
@@ -313,6 +317,44 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
         cause=cause, after=None,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
     return _dining_change(meal, best, alternates, notice, reason="auto_adjusted")
+
+
+def plan_activity_closed_on_day(*, items: list[Item], places: list[dict[str, Any]], item: Item, source: str,
+                                detail: str, checked_at: datetime, exclude: set[str] = frozenset()) -> Plan:
+    """★`[2026-09-28]` 새벽 확인에서 **그날 안 여는** 활동 — 같은 시각에 근처에서 **그 시각에 연다고 아는** 활동으로.
+
+    ☆왜 — 새벽 확인이 식당만 봤다. 영업시간을 모르는 활동이 쉬는 날에 들어가도 당일까지 아무도 몰랐다
+      (「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00). 사용자 결정: 최종 판정은 당일 새벽 구글 확인이 한다.
+    ★가격을 모르는 후보도 받는다(결정 15 — 불확실해도 하나를 고른다). 기상 대체(`plan_activity_adjustment`)는
+      추가 비용을 계산하려고 가격 모름을 탈락시키지만, 여기서 그러면 관광공사 장소가 전부 빠진다(가격 칸이 없다).
+      **그 시각 영업**은 그대로 요구한다 — 닫힌 곳을 닫힌 곳으로 바꾸지 않는다.
+    """
+    if item.place is None:
+        return NoChange("no_place", {"message": "장소가 없는 활동이다"})
+    cause = {"category": "place_closed", "type": "closed_on_day", "source": source,
+             "checked_at": checked_at.isoformat(), "detail": detail,
+             "evidence": f"{source} 새벽 확인 — {detail}"}
+    candidates = [c for c in activity_candidates(original=item.place, places=places, start=item.starts_at,
+                                                 end=item.ends_at, causes=[cause],
+                                                 radius_m=ACTIVITY_CLOSED_RADIUS_M)
+                  if str(c.place["place_id"]) not in {str(x) for x in exclude}]
+    for candidate in candidates:
+        candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
+    best, alternates, rejected = choose(candidates)
+    if best is None:
+        return NoChange("unresolved", {"causes": [cause],
+                                       "rejected": {c.name: c.rejected for c in rejected}})
+    notice = change_notice(original=item.place, replacement=best.place, start=item.starts_at,
+                           causes=[cause], alternates=alternates, replay=False)
+    notice["text"] = (f"{item.place['name']}이(가) {item.starts_at:%m월 %d일 %H:%M}에 운영하지 않는 것으로 새벽에 "
+                      f"확인했습니다({detail}). 같은 시각 {best.place['name']}(으)로 바꿨습니다.")
+    replacement = item.replaced_by(
+        place=best.place, title=title_for(item, best.place["name"]),
+        detail={"auto_adjusted_at": checked_at.isoformat(), "other_options": notice["other_options"],
+                "alternates": [alternate_record(c) for c in alternates]})
+    return ItineraryChange(reason="auto_adjusted", causes=[cause], notice=notice,
+                           replacements={item.item_id: replacement},
+                           summary={"from": item.place["name"], "to": best.place["name"]})
 
 
 # ── 고객 신고 — 품절(일정은 안 바꾼다) ─────────────────────────

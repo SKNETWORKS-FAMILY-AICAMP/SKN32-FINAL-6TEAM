@@ -11,7 +11,7 @@
 | 데이터 모드 | 동작 |
 |---|---|
 | `demo` | `tripSurveySchema`로 검사하고, 틀리면 여행을 만들지 않고 `INVALID_INPUT`(서버의 `422 invalid_survey`에 해당). 설문은 저장하지 않는다 |
-| 실제 연결 | 이 브랜치에는 실제 게이트웨이가 없다. `develop`의 실제 게이트웨이(role-manager, `lib/live/`)는 계획 글 접수 흐름(`/v1/web/trip-intakes`)으로 등록하는데, 그 확인 단계(`IntakeConfirmIn`)는 판 번호만 받고 모르는 칸을 거절해 **설문을 실을 곳이 없다.** 같은 몸통을 받는 `POST /v1/web/trips`는 설문을 받는다. 접수 흐름에 설문 칸을 더하는 일은 백엔드(role-manager)와 합의한다 |
+| 실제 연결 | 계획 글 접수 흐름(`/v1/web/trip-intakes`)의 확인(`/confirm`)·일정 짜기(`/plan`) 요청 몸통에 `survey`(선택)로 싣는다(`2026-09-28` cs 세션이 `IntakeConfirmIn`·`IntakePlanIn`에 칸을 더했다). 온보딩을 마치지 않았으면 칸을 아예 보내지 않는다. 틀린 설문은 서버가 422 `invalid_survey`로 거절한다 |
 
 ## 2. 질문과 칸
 
@@ -20,14 +20,14 @@
 | 1 | 여행 테마 | 하나 | `theme` | `food` `nature` `culture` `activity` `shopping` `local` |
 | 2 | 여행자 구성 | 하나 | `party` | `alone` `partner` `friends` `family` `other` |
 | 3 | 선호 이동수단 | 여러 개 | `preferred_mobility[]` | `public` `walk` `car` `taxi` |
-| 4 | 내국인 여부 | 하나 | `domestic` | `true`(내국인) · `false`(외국인) |
-| 5 | 가장 중요한 것 | 하나 | `priority[]` | `food` · `activity` · `mobility`(화면의 「이동」) 1개 |
-| 6 | 세부 우선순위 | 영역마다 하나 | `priority_details{food, activity, mobility}` | 영역마다 값 1개짜리 목록 |
-| 7 | 실내·실외 | 식당·액티비티 각 하나 | `indoor_outdoor{dining, activity}` | `indoor` `outdoor` `any` |
-| 8 | 일정이 꼬이면(15번) | 하나 | `on_disruption` | `replace` · `ask_first` |
-| 9 | 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
+| 4 | 가장 중요한 것 | 하나 | `priority[]` | `food` · `activity` · `mobility`(화면의 「이동」) 1개 |
+| 5 | 세부 우선순위 | 영역마다 하나 | `priority_details{food, activity, mobility}` | 영역마다 값 1개짜리 목록 |
+| 6 | 실내·실외 | 식당·액티비티 각 하나 | `indoor_outdoor{dining, activity}` | `indoor` `outdoor` `any` |
+| 7 | 일정이 꼬이면(15번) | 하나 | `on_disruption` | `replace` · `ask_first` |
+| 8 | 여유(16번) | 하나 | `pace` | `relaxed` · `moderate` · `packed` |
 
-- 백엔드가 **판정에 쓰는 것은 8·9번뿐**이다. 나머지는 받아 두기만 한다(D-020: 「반영했다」고 말하지 않는다).
+- ★`[2026-09-28 사용자 지시]` **내국인 여부(`domestic`)는 묻지 않는다.** 받아도 반영할 곳이 없어서 뺐다. 백엔드 칸(`TripSurvey.domestic`)은 선택 값이라 안 보내도 된다. 프론트 Zod 거울에는 백엔드와 같게 칸만 남겼고 보내지는 않는다.
+- 백엔드가 **판정에 쓰는 것은 7·8번뿐**이다(위 표 번호는 내국인 문항을 뺀 뒤 기준). 나머지는 받아 두기만 한다(D-020: 「반영했다」고 말하지 않는다).
 - 1·2·3·6번의 세부 값은 D-020이 「담당 팀이 정할 값」으로 두어 백엔드가 문자열로 받는다. 화면 값은 지금 예시다.
 - 세부 테마(`theme_details[]`)는 선택지가 정해지지 않아 묻지 않고 보내지 않는다.
 - 이전 화면의 기피 음식·예산·종교·인원 수는 백엔드 설문에 칸이 없어 뺐다(모르는 칸은 422로 거절). 예산(`constraints.budget_krw`)·인원(`party_size`)은 설문이 아닌 등록 요청의 다른 칸이다.
@@ -40,6 +40,6 @@
 
 ## 4. 남은 것
 
-- 접수 흐름(`/v1/web/trip-intakes`)에 설문 칸 추가 — 백엔드(role-manager)와 합의.
+- ~~접수 흐름에 설문 칸 추가~~ — `2026-09-28` 서버가 `/confirm`·`/plan`에 `survey`를 받도록 고쳤고 화면이 보낸다. 남은 것은 아래 둘이다.
 - 세부 테마 선택지, 세부 우선순위 값 — 담당 팀이 정한다.
 - 약관(목업)은 온보딩 답을 「현재 페이지 상태로 유지」한다고 적고 있다. 등록 때 서버로 보내므로 수집 항목·목적·보관을 약관에 반영해야 한다.

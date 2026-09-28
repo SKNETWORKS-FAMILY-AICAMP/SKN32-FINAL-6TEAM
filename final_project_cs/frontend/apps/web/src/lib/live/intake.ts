@@ -1,3 +1,4 @@
+import type { TripSurvey } from "@/features/onboarding/payload";
 import type { Language } from "../i18n";
 import { api } from "./client";
 
@@ -48,7 +49,8 @@ export interface IntakeView {
 
 /** 「일정 짜 줘」 기본값 — 읽은 값에서만 나온다. 모르면 null(화면이 묻는다). */
 export interface IntakePlanBasis { requested: boolean; start_date: string | null; days: number | null; party_size: number | null; preferences: string }
-export interface IntakePlanInput { start_date: string; days: number; party_size: number; keep_read_items: boolean }
+/** `survey` rides along only when the customer finished the onboarding questions (server `TripSurvey`, optional). */
+export interface IntakePlanInput { start_date: string; days: number; party_size: number; keep_read_items: boolean; survey?: TripSurvey }
 
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
@@ -75,8 +77,8 @@ export function planIntake(intakeId: string, revision: number, input: IntakePlan
   });
 }
 
-export function confirmIntake(intakeId: string, revision: number, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/confirm`, language, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision }),
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...(survey && { survey }) }),
   });
 }

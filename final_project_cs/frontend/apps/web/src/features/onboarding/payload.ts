@@ -17,6 +17,7 @@ export const tripSurveySchema = z.strictObject({
   theme: z.string().optional(),
   party: z.string().optional(),
   preferred_mobility: z.array(z.string()).optional(),
+  /** The server still accepts it, but the web no longer asks (nothing uses it), so it is never sent. */
   domestic: z.boolean().optional(),
   priority: z.array(area).optional(),
   priority_details: z.partialRecord(area, z.array(z.string())).optional(),
@@ -38,11 +39,10 @@ export function toSurvey(a: Answers): TripSurvey {
     ...(valid(0, a) && { theme: a.theme }),
     ...(valid(1, a) && { party: a.party }),
     ...(valid(2, a) && { preferred_mobility: a.transport }),
-    ...(valid(3, a) && { domestic: a.citizen === "domestic" }),
-    ...(valid(4, a) && { priority: [toArea(a.priority)] }),
-    ...(valid(5, a) && { priority_details: { food: [a.detailFood], activity: [a.detailActivity], mobility: [a.detailTransport] } }),
-    ...(valid(6, a) && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),
-    ...(valid(7, a) && { on_disruption: a.onDisruption }),
-    ...(valid(8, a) && { pace: a.pace }),
+    ...(valid(3, a) && { priority: [toArea(a.priority)] }),
+    ...(valid(4, a) && { priority_details: { food: [a.detailFood], activity: [a.detailActivity], mobility: [a.detailTransport] } }),
+    ...(valid(5, a) && { indoor_outdoor: { dining: a.indoorDining, activity: a.indoorActivity } }),
+    ...(valid(6, a) && { on_disruption: a.onDisruption }),
+    ...(valid(7, a) && { pace: a.pace }),
   });
 }

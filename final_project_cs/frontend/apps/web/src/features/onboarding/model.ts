@@ -8,7 +8,6 @@ export interface Answers {
   theme: string;
   party: string;
   transport: string[];
-  citizen: string;
   priority: string;
   detailFood: string;
   detailActivity: string;
@@ -22,19 +21,19 @@ export interface Answers {
 }
 
 export const initialAnswers: Answers = {
-  theme: "", party: "", transport: [], citizen: "", priority: "", detailFood: "", detailActivity: "", detailTransport: "",
+  theme: "", party: "", transport: [], priority: "", detailFood: "", detailActivity: "", detailTransport: "",
   indoorDining: "", indoorActivity: "", onDisruption: "", pace: "", skipped: [],
 };
 
 /** The answer fields each question owns, in question order. */
 const questionFields: readonly (readonly (keyof Answers)[])[] = [
-  ["theme"], ["party"], ["transport"], ["citizen"], ["priority"], ["detailFood", "detailActivity", "detailTransport"],
+  ["theme"], ["party"], ["transport"], ["priority"], ["detailFood", "detailActivity", "detailTransport"],
   ["indoorDining", "indoorActivity"], ["onDisruption"], ["pace"],
 ];
 
 export type Option = readonly [value: string, ko: string, en: string];
 export type ListKey = "transport";
-export type ChoiceKey = "theme" | "party" | "citizen" | "priority" | "detailFood" | "detailActivity" | "detailTransport" | "indoorDining" | "indoorActivity" | "onDisruption" | "pace";
+export type ChoiceKey = "theme" | "party" | "priority" | "detailFood" | "detailActivity" | "detailTransport" | "indoorDining" | "indoorActivity" | "onDisruption" | "pace";
 
 const indoorOutdoor: readonly Option[] = [["indoor", "실내", "Indoors"], ["outdoor", "실외", "Outdoors"], ["any", "상관없음", "Either is fine"]];
 
@@ -42,7 +41,6 @@ export const options: Record<ListKey | ChoiceKey, readonly Option[]> = {
   theme: [["food", "맛집 탐방", "Food discoveries"], ["nature", "자연과 힐링", "Nature & rest"], ["culture", "문화와 역사", "Culture & history"], ["activity", "액티비티", "Adventure"], ["shopping", "쇼핑", "Shopping"], ["local", "로컬 일상", "Local life"]],
   party: [["alone", "혼자", "Solo"], ["partner", "연인", "Partner"], ["friends", "친구", "Friends"], ["family", "가족", "Family"], ["other", "기타", "Other"]],
   transport: [["public", "대중교통", "Public transit"], ["walk", "도보", "Walking"], ["car", "렌터카", "Rental car"], ["taxi", "택시", "Taxi"]],
-  citizen: [["domestic", "내국인", "Korean national"], ["foreign", "외국인", "Foreign national"]],
   priority: [["food", "음식", "Food"], ["activity", "활동", "Activities"], ["transport", "이동", "Getting around"]],
   detailFood: [["taste", "맛", "Taste"], ["kindness", "친절", "Kindness"], ["clean", "청결", "Cleanliness"]],
   detailActivity: [["extreme", "익스트림", "Extreme"], ["healing", "힐링", "Relaxation"], ["diy", "DIY", "DIY"], ["shopping", "쇼핑", "Shopping"]],
@@ -53,13 +51,12 @@ export const options: Record<ListKey | ChoiceKey, readonly Option[]> = {
   pace: [["relaxed", "여유롭게", "Relaxed"], ["moderate", "적당히", "Balanced"], ["packed", "꽉 차게", "Packed"]],
 };
 
-export const stepNames = [["여행 테마", "Travel theme"], ["여행자 구성", "Your companions"], ["선호 이동수단", "Transport"], ["내국인 여부", "Nationality"], ["여행 우선순위", "Your priority"], ["세부 우선순위", "The finer details"], ["실내·실외", "Indoors or out"], ["일정 변경 방식", "When plans change"], ["여행 여유", "Your pace"]] as const;
+export const stepNames = [["여행 테마", "Travel theme"], ["여행자 구성", "Your companions"], ["선호 이동수단", "Transport"], ["여행 우선순위", "Your priority"], ["세부 우선순위", "The finer details"], ["실내·실외", "Indoors or out"], ["일정 변경 방식", "When plans change"], ["여행 여유", "Your pace"]] as const;
 
 export const questions = [
   ["어떤 여행을 좋아하세요?", "What’s your kind of trip?", "가장 마음에 드는 테마 하나를 골라 주세요.", "Choose the one theme that suits you best."],
   ["누구와 함께 떠나나요?", "Who’s coming along?", "함께 떠나는 사람을 하나 골라 주세요.", "Choose who you’re traveling with."],
   ["어떻게 이동하고 싶나요?", "How will you get around?", "편한 이동수단을 모두 골라 주세요.", "Choose all the ways you enjoy getting around."],
-  ["한국 국적이신가요?", "Are you a Korean national?", "여행에 필요한 안내를 맞춰 드릴게요.", "This helps tailor the travel information."],
   ["가장 중요한 것은 무엇인가요?", "What matters most to you?", "여행에서 중요한 한 가지를 골라 주세요.", "Choose the one thing that matters most."],
   ["어떤 점을 더 중요하게 보나요?", "It’s all in the details.", "음식 · 활동 · 이동에서 각각 하나씩 골라 주세요.", "Choose one preference in each category."],
   ["실내와 실외 중 어디가 좋으세요?", "Indoors or outdoors?", "식당과 액티비티에서 각각 하나씩 골라 주세요.", "Choose one for dining and one for activities."],
@@ -76,12 +73,11 @@ export function valid(index: number, a: Answers): boolean {
     case 0: return Boolean(a.theme);
     case 1: return Boolean(a.party);
     case 2: return a.transport.length > 0;
-    case 3: return Boolean(a.citizen);
-    case 4: return Boolean(a.priority);
-    case 5: return Boolean(a.detailFood && a.detailActivity && a.detailTransport);
-    case 6: return Boolean(a.indoorDining && a.indoorActivity);
-    case 7: return Boolean(a.onDisruption);
-    case 8: return Boolean(a.pace);
+    case 3: return Boolean(a.priority);
+    case 4: return Boolean(a.detailFood && a.detailActivity && a.detailTransport);
+    case 5: return Boolean(a.indoorDining && a.indoorActivity);
+    case 6: return Boolean(a.onDisruption);
+    case 7: return Boolean(a.pace);
     default: return false;
   }
 }

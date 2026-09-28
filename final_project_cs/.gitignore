@@ -39,3 +39,6 @@ var/
 
 # test용
 .*/
+
+# graphify 지식그래프 산출물 (생성물, 용량 큼)
+graphify-out/
