@@ -35,3 +35,35 @@ def test_목록은_가이드_서울_180곳(mm):
     rows = list(csv.DictReader(open(mm.LIST, encoding="utf-8")))
     assert len(rows) == 180
     assert {r["등급"] for r in rows} == {"3스타", "2스타", "1스타", "빕 구르망", "셀렉티드"}
+
+
+def test_요리_종류로_대표_분류(mm):
+    assert mm.category_of("냉면") == "한식"
+    assert mm.category_of("한식 컨템퍼러리") == "한식"
+    assert mm.category_of("재패니즈 컨템퍼러리") == "일식"
+    assert mm.category_of("비건, 중식") == "중식"
+    assert mm.category_of("프렌치") == "양식"
+    assert mm.category_of("타이") == "기타"
+
+
+def test_전화는_원장_표기로(mm):
+    assert mm.phone_of("+82 2-2230-3367") == "02-2230-3367"
+    assert mm.phone_of("+82 10-7286-9914") == "010-7286-9914"
+    assert mm.phone_of(None) is None
+
+
+def test_편의시설은_표시가_있는_것만_속성으로(mm):
+    got = mm.facts_attributes({"편의시설": ["발렛파킹", "현금만 가능"], "가족": True})
+    assert ("card_payment", "no", "현금만 가능") in got
+    assert ("parking", "limited", "발렛파킹만") in got
+    assert any(code == "kids_allowed" and state == "yes" for code, state, _ in got)
+    assert mm.facts_attributes({"편의시설": ["에어컨"], "가족": None}) == []
+
+
+def test_모은_가게는_목록의_나머지_145곳(mm):
+    import csv
+    import json
+    facts = [json.loads(line) for line in open(mm.FACTS, encoding="utf-8")]
+    names = {r["상호"] for r in csv.DictReader(open(mm.LIST, encoding="utf-8"))}
+    assert len(facts) == 145 and {f["상호"] for f in facts} <= names
+    assert all(f["위도"] and f["경도"] and f["주소"] for f in facts)

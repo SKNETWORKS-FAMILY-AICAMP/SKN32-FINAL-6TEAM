@@ -239,9 +239,15 @@ def parse_extra_closure(cell: str) -> tuple[str, list[dict]]:
     return "present", rules
 
 
-def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str) -> tuple[list[str], dict]:
-    """검수 시트 → 영업·휴무 규칙 SQL. 두 번째 값은 센 수."""
-    load_id = str(uuid.uuid5(NS, "load:vegan-hours:operator_check"))
+def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str, *, tag: str = "vegan",
+              scope: str = "서울 비건 식당 영업시간 검수",
+              folder: str = "vegan") -> tuple[list[str], dict]:
+    """검수 시트 → 영업·휴무 규칙 SQL. 두 번째 값은 센 수.
+
+    같은 형식의 시트(미쉐린 등)도 이것으로 넣는다. tag 로 id 와 적재 묶음을 가른다 —
+    한 시트를 다시 넣을 때 다른 시트의 규칙을 지우지 않게.
+    """
+    load_id = str(uuid.uuid5(NS, f"load:{tag}-hours:operator_check"))
     body = [
         "-- 검수 시트가 바뀌면 바뀐 대로 따라가야 한다. 이 적재가 만든 것만 지우고 다시 넣는다.",
         f"DELETE FROM dining.dn_hours_rule   WHERE record_id IN (SELECT record_id FROM dining.dn_source_record WHERE load_id = '{load_id}');",
@@ -260,7 +266,7 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str) -> tuple
         days = [parse_day(row[d]) for d in DAYS]
         extra_state, extra_rules = parse_extra_closure(row["정기휴무 외"])
 
-        rec_id = str(uuid.uuid5(NS, f"record:vegan-hours:{label}:{checked}"))
+        rec_id = str(uuid.uuid5(NS, f"record:{tag}-hours:{label}:{checked}"))
         raw = {k: row[k] for k in DAYS + ["라스트오더", "정기휴무 외", "확인일", "메모"]}
         body.append(
             "INSERT INTO dining.dn_source_record (record_id, load_id, source_code, external_id, "
@@ -280,13 +286,13 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str) -> tuple
                     f"WHERE place_uid = '{place_uid}' AND rule_kind = 'weekly' AND weekday = {weekday} "
                     "AND source_code <> 'operator_check' AND retired_at IS NULL;")
                 n["물러난 관광공사 규칙"] += 1
-            rule_id = str(uuid.uuid5(NS, f"rule:vegan-hours:{label}:{weekday}"))
+            rule_id = str(uuid.uuid5(NS, f"rule:{tag}-hours:{label}:{weekday}"))
             brk = ("present" if len(spans) > 1 else "none") if coverage == "intervals" else "unknown"
             body.append(
                 "INSERT INTO dining.dn_hours_rule (rule_id, place_uid, source_code, record_id, rule_kind, "
                 "weekday, coverage, break_state, source_text, extract_method, rules_version, valid_from) "
                 f"VALUES ('{rule_id}', '{place_uid}', 'operator_check', '{rec_id}', 'weekly', {weekday}, "
-                f"'{coverage}', '{brk}', {q(text[:900])}, 'manual', 'vegan-sheet-v1', '{checked}');")
+                f"'{coverage}', '{brk}', {q(text[:900])}, 'manual', '{tag}-sheet-v1', '{checked}');")
             n["영업 규칙"] += 1
             if coverage != "intervals":
                 continue
@@ -309,7 +315,7 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str) -> tuple
         for idx, c in enumerate(closures, 1):
             nth = c.get("nth")
             nth_sql = ("ARRAY[" + ",".join(map(str, nth)) + "]::smallint[]") if nth else "NULL"
-            closure_id = str(uuid.uuid5(NS, f"closure:vegan-hours:{label}:{idx}"))
+            closure_id = str(uuid.uuid5(NS, f"closure:{tag}-hours:{label}:{idx}"))
             body.append(
                 "INSERT INTO dining.dn_closure_rule (closure_id, place_uid, source_code, record_id, "
                 "pattern_kind, weekday, nth, holiday_name, holiday_scope, closed_date, source_text, "
@@ -337,9 +343,9 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str) -> tuple
             " retired_at = NULL;")
 
     head = ("INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
-            f"row_count, raw_uri, status) VALUES ('{load_id}', 'operator_check', now(), 'vegan-sheet-v1', "
-            f"'서울 비건 식당 영업시간 검수', {n['식당']}, "
-            f"{q('data/dining/vegan/' + os.path.basename(sheet))}, 'loaded')"
+            f"row_count, raw_uri, status) VALUES ('{load_id}', 'operator_check', now(), '{tag}-sheet-v1', "
+            f"{q(scope)}, {n['식당']}, "
+            f"{q(f'data/dining/{folder}/' + os.path.basename(sheet))}, 'loaded')"
             " ON CONFLICT (load_id) DO UPDATE SET row_count = EXCLUDED.row_count, fetched_at = now();")
     # load_meta 가 먼저 있어야 source_record 가 붙는다. DELETE 보다 앞에 둔다.
     return [head] + body, n
