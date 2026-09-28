@@ -199,3 +199,6 @@ _50/
 _40/
 # 파이참 작업 공간. 사람마다 다르다.
 .idea/
+
+docs/mobility/*.docx
+docs/mobility/*.png
