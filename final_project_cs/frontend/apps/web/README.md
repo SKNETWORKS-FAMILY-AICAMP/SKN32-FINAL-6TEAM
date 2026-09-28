@@ -82,6 +82,13 @@ $env:REAL_SERVER_E2E="1"; $env:PLAYWRIGHT_CHANNEL="msedge"; npm run test:real
 
 가짜 서버 없이 **실제 서버**(`NEXT_PUBLIC_API_BASE`)와 `npm run dev`(3100, live 모드)에 붙어 첫 방문 → 설문 → 계획 접수·읽기 → 확인·등록 → 여행 화면 → 채팅 4문답 → 구글 지도까지, 그리고 일정 짜기(08:00 아침 식사로 시작)를 끝까지 눌러 본다. ★부작용이 있어 `REAL_SERVER_E2E=1` 이 없으면 시작하지 않는다 — 등록마다 **디스코드 통지가 팀 채널로 나가고**, 장소 조회·모델 호출이 쓰이며, 시험 고객과 여행이 DB 에 남는다. 서버는 **한 주소에서 한 시간에 새 키 20개**까지만 내주므로(429 `too_many_sessions`) 시험은 순서대로 돌며 첫 시험의 키를 이어 쓴다. 관광공사 조회가 한도에 걸리면(`tour_api: rate_limited`) 일정 짜기가 422 로 거절되니 1분쯤 뒤 다시 돌린다.
 
+## CI
+
+`[2026-09-28]` 두 곳에서 돈다(ST4F-161).
+
+- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check` → `test:e2e`(데모) → `test:live`(가짜 서버)를 돌린다. CI에는 `.env.local`이 없어 `NEXT_PUBLIC_DATA_MODE=demo`·`NEXT_PUBLIC_MAP_PROVIDER=demo`를 워크플로에 적었다. 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다.
+- **계약 시험** `final_project_cs/tests/contract/test_web_client_contract.py`: 기존 develop 관문(pytest)에서 돈다. `src/lib/live/`가 부르는 메서드·경로가 서버 라우트에 모두 있는지, `payload.ts`의 설문 판·칸·값을 서버 `TripSurvey`가 받는지 본다. 서버가 `/v1/web/*`나 설문을 바꿔 웹이 깨지는 것을 가짜 서버 시험은 못 잡기 때문에 둔다. 웹에서 서버를 부르는 새 모양(`api(`·`send(` 밖)을 쓰면 이 시험이 「읽지 못한 호출」로 실패하니 시험의 `_CALL`을 함께 고친다.
+
 ## 지도 선택과 백엔드 전달
 
 `.env.local`의 `NEXT_PUBLIC_MAP_PROVIDER`를 `naver` 또는 `google`로 지정하고 해당 서비스의 웹용 인증 정보를 설정한다. 개발 서버 재시작/배포 재빌드 후 선택한 지도를 사용한다. 두 지도는 같은 일정 ID·좌표·방문 시간을 받으며 기존 일정 선택 동작을 공유한다.
