@@ -1,3 +1,4 @@
+import { tripSurveySchema } from "../../features/onboarding/payload";
 import type { Trip, TripGateway, VerificationResult } from "../../features/trip/model";
 import { translator, type Translate } from "../i18n";
 import { demoReply } from "./chat";
@@ -148,6 +149,8 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
       if (source.length > 12000) throw new GatewayError("INVALID_INPUT", t("여행 계획은 12,000자 이내로 입력해 주세요.", "Keep your travel plan within 12,000 characters."));
       const scenario = scenarioSchema.safeParse(input.scenario ?? "success");
       if (!scenario.success) throw new GatewayError("INVALID_INPUT", t("지원하지 않는 시연 검증 결과예요.", "Unsupported preview verification scenario."));
+      // Like the server's 422 invalid_survey: a malformed survey creates no trip. The demo does not store it.
+      if (input.survey !== undefined && !tripSurveySchema.safeParse(input.survey).success) throw new GatewayError("INVALID_INPUT", t("여행 취향 설문의 형식이 올바르지 않아 여행을 등록하지 못했어요.", "Your travel preferences are malformed, so the trip was not added."));
       const stops = parseDemoPlan(source, t);
       const trip: StoredTrip["trip"] = {
         id: crypto.randomUUID(),

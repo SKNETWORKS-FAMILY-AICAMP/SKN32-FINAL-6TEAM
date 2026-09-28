@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Key
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { updateSettings, useSettings, useT, type TripNavigation } from "@/lib/settings";
-import type { Language } from "@/lib/i18n";
+import { languages } from "@/lib/i18n";
 import styles from "./settings-menu.module.css";
 
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
@@ -37,7 +37,6 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
   }
 
-  const languages: [Language, string][] = [["en", "English"], ["ko", "한국어"]];
   const navigations: [TripNavigation, string, string][] = [
     ["fixed", t("고정 하단 탭", "Fixed tabs"), t("화면 아래에 탭이 항상 보여요.", "Tabs stay at the bottom of the screen.")],
     ["floating", t("플로팅 버튼", "Floating button"), t("왼쪽 아래 버튼을 누르면 탭이 펼쳐져요.", "Tap the button at the bottom left to open the tabs.")],

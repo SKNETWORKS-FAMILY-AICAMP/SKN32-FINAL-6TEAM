@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
 import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
+import { toSurvey } from "@/features/onboarding/payload";
 import type { Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
@@ -67,6 +69,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const { language } = useSettings();
   const router = useRouter();
   const queryClient = useQueryClient();
+  // The onboarding answers go to the server with the registration — only when the customer finished them.
+  const [onboarding] = useOnboarding();
+  const survey = onboarding.complete ? toSurvey(onboarding.answers) : undefined;
   const key = ["intake", intakeId, language] as const;
   const query = useQuery({
     queryKey: key,
@@ -81,12 +86,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   const plan = useMutation({
-    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, input, language),
+    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, { ...input, ...(survey && { survey }) }, language),
     onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   const confirm = useMutation({
-    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language),
+    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
     onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });

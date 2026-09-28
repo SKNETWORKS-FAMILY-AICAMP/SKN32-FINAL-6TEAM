@@ -8,7 +8,7 @@ import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { OnboardingIcon } from "./icons";
-import { questions } from "./model";
+import { INTRO_STEP, questions } from "./model";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { TermsCardBody, TermsReader } from "./terms";
@@ -91,7 +91,7 @@ export function Onboarding() {
 
   return <DeviceFrame headerInert={termsOpen}>
     <div className={styles.setup} data-terms={termsOpen}>
-      <Scene stage={sceneStage} step={state.step} totalSteps={questions.length} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
+      <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
         <main id="main-content" className={`${styles.phone} ${firstRender ? styles.firstRender : ""}`}>
           <section className={styles.intro} inert={expanded}>
@@ -108,7 +108,7 @@ export function Onboarding() {
               state.complete
                 ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(state.activeTripId)}
                   onJourney={() => router.push(state.activeTripId ? routes.trip(state.activeTripId) : routes.newTrip)}
-                  onEdit={() => setState((current) => ({ ...current, complete: false, step: 0, open: 2 }))} />
+                  onEdit={() => setState((current) => ({ ...current, complete: false, step: INTRO_STEP, open: 2 }))} />
                 : state.open === 2 && <QuestionCarousel t={t} answers={state.answers} step={state.step}
                   setAnswers={(answers) => setState((current) => ({ ...current, answers }))}
                   setStep={(step) => setState((current) => ({ ...current, step }))}

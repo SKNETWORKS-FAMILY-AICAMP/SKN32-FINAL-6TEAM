@@ -6,7 +6,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { mapConfiguration } from "@/features/map/config";
+import { chosenLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
+import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
 import { tripKey } from "@/features/trip/use-trip";
 import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
@@ -22,10 +24,9 @@ function Preferences() {
   const [{ complete, answers }] = useOnboarding();
   if (!complete) return null;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
-  const people = answers.adults + answers.children + answers.infants;
   return <><div className={styles.preferences}>
     <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <div className={styles.tags}>{answers.themes.map((value) => <span key={value} className={styles.pill}>{labels[value]}</span>)}<span className={styles.pill}>{people}{t("명과 함께", " travelers")}</span></div>
+    <div className={styles.tags}>{answers.theme && <span className={styles.pill}>{labels[answers.theme]}</span>}{answers.party && <span className={styles.pill}>{chosenLabel("party", answers.party, t)}</span>}</div>
     <p>{t("홈에서 고른 취향을 이 여행과 함께 이어가요.", "The preferences you chose stay with this journey.")}</p>
   </div><hr /></>;
 }
@@ -33,6 +34,7 @@ function Preferences() {
 export function TripRegistration() {
   const t = useT();
   const { language } = useSettings();
+  const [onboarding] = useOnboarding();
   const from = useSearchParams().get("from");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -54,7 +56,8 @@ export function TripRegistration() {
   });
   const value = source?.origin === from ? source.value : draft.data ?? "";
   const create = useMutation({
-    mutationFn: () => tripGateway.createTrip({ source: value, scenario }, language),
+    // The survey rides with the registration (backend `constraints.survey`), only once onboarding is finished.
+    mutationFn: () => tripGateway.createTrip({ source: value, scenario, ...(onboarding.complete && { survey: toSurvey(onboarding.answers) }) }, language),
     onSuccess: (trip) => {
       queryClient.setQueryData(tripKey(trip.id, language), trip);
       router.push(routes.verification(trip.id));

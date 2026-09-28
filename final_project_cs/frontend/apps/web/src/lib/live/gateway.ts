@@ -52,6 +52,8 @@ function writeMessages(tripId: string, messages: TripMessage[]) {
 /**
  * What the server did with a message, in fixed words. The server returns a status, not a sentence;
  * we do not invent an answer — an unknown status is shown by its own name.
+ * ★`[2026-09-28]` The server now puts an `answer` on every result (chat always answers), so the screen must not
+ *   fill in its own “we passed it to a person” line for `escalated`: that branch was removed on purpose.
  */
 function replyFor(result: { status?: string; case_status?: string; answer?: string }, t: Translate): string {
   if (result.answer) return result.answer;           // the server's own customer sentence (`itinerary_team.ANSWERS`)
@@ -61,7 +63,6 @@ function replyFor(result: { status?: string; case_status?: string; answer?: stri
     case "rolled_back": return t("이전 일정으로 되돌렸어요.", "Your itinerary was rolled back.");
     case "kept": return t("일정은 그대로 두었어요.", "Your itinerary was kept as it is.");
     case "no_alternate": return t("바꿀 만한 다른 안을 찾지 못해 일정은 그대로예요. 담당자가 확인해요.", "No suitable alternative was found, so nothing changed. A person will review it.");
-    case "escalated": return t("자동으로 처리할 수 없어 담당자에게 넘겼어요.", "This could not be handled automatically and was passed to a person.");
     case "duplicate": return t("같은 요청을 이미 받았어요.", "We already received this request.");
     default: return t(`요청을 받았어요 (상태: ${result.status ?? result.case_status ?? "?"}).`, `Request received (status: ${result.status ?? result.case_status ?? "?"}).`);
   }

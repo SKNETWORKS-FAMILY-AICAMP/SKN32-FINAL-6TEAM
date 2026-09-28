@@ -97,13 +97,13 @@
 .question h2 { font-size: 21px; font-weight: 700; line-height: 1.45; letter-spacing: -.9px; margin: 0 0 7px; }
 .question h2:focus { outline: none; }
 .helper { font-size: 12px; line-height: 1.7; color: var(--color-muted); margin: 0 0 14px; }
-.optional { display: inline-block; background: var(--color-soft); color: var(--color-primary); padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-size: 10px; }
+.introList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.introList li { background: var(--color-subtle); border-radius: 11px; padding: 12px 14px; font-size: 12px; line-height: 1.7; }
 .question .questionNav { margin-top: auto; padding-top: 12px; }
 .groupLabel { font-size: 11px; line-height: 1.6; font-weight: 650; color: var(--color-muted); margin: 13px 0 7px; }
 .groupLabel:first-child { margin-top: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips.grid { display: grid; grid-template-columns: 1fr 1fr; }
-.noneRow { margin-top: 17px; }
 .chip { position: relative; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 11px; min-height: 46px; padding: 11px 30px 11px 13px; font-size: 12px; font-weight: 500; line-height: 1.4; text-align: center; transition: transform .14s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .chip:hover { border-color: var(--color-primary); }
 .chip.selected { background: var(--color-soft); border-color: var(--color-primary); color: var(--color-primary); font-weight: 650; }
@@ -117,18 +117,6 @@
 .selectionFeedback.selected { animation: selectionTint .22s ease-out both; }
 .selectionFeedback:not(.selected) { animation: deselectionTint .22s ease-out both; }
 .selectionFeedback .drawnCheck path { animation: drawCheck .2s ease-out both; }
-.field { display: block; font-size: 11px; font-weight: 600; margin: 11px 0 0; color: var(--color-muted); }
-.field input { display: block; width: 100%; min-width: 0; min-height: 46px; color: var(--color-text); border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); padding: 11px 10px; margin-top: 7px; font-size: 12px; }
-.budgetRow { display: flex; align-items: center; justify-content: space-between; font-size: 10px; letter-spacing: .3px; font-weight: 650; margin: 0 0 11px; color: var(--color-primary); }
-.counterList { border: 1px solid var(--color-border); border-radius: 12px; padding: 0 12px; margin-top: 12px; }
-.counterRow { display: flex; align-items: center; justify-content: space-between; min-height: 55px; border-bottom: 1px solid var(--color-border); }
-.counterRow:last-child { border-bottom: 0; }
-.counterLabel { font-size: 12px; font-weight: 600; }
-.counterCaption { display: block; color: var(--color-muted); font-size: 10px; font-weight: 400; margin-top: 3px; }
-.counter { display: flex; align-items: center; gap: 4px; }
-.counter button { height: 44px; width: 44px; color: var(--color-primary); font-size: 21px; border-radius: 9px; }
-.counter button:disabled { color: var(--color-border); }
-.counter output { min-width: 19px; text-align: center; font-size: 13px; font-weight: 650; }
 .carouselFooter { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 12px; background: #fff; }
 .dots { display: flex; align-items: center; justify-content: center; gap: 6px; height: 18px; }
 .dot { width: 4px; height: 4px; background: var(--color-border); border-radius: 99px; transition: width .36s cubic-bezier(.22, .8, .25, 1.06), background .24s; }
