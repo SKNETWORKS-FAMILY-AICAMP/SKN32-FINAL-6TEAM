@@ -96,7 +96,7 @@ live 에서 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 를 넣으면 계획 올리기 화�
 - 개발: Cloudflare 공개 시험 키 `1x00000000000000000000AA`(항상 통과). 배포: Cloudflare 에서 사이트를 등록해 받은 사이트 키.
 - 서버가 확인 표를 Cloudflare 에 검증한다(`ACOP_TURNSTILE_SECRET`, 계약 `final_project_cs/wiki/external/rest-endpoints.md` 「남용 방어」). 비밀키가 없는 개발 서버는 건너뛰고 응답에 `human_check: "skipped"` 를 싣는다. 2026-09-28 Cloudflare 공개 시험 비밀키로 확인: 항상 통과 키 → 키 발급 `human_check: passed` · 계획 읽기까지 통과, 항상 실패 키 → 키 발급 403 `human_check_failed`, 화면은 서버 문장을 보이고 키를 저장하지 않는다.
 - 한도에 걸리면(`429 usage_limit` · `503 service_daily_cap` · `429 too_many_sessions`) 서버 문장 뒤에 「(3시간 20분 뒤에 다시 할 수 있어요.)」처럼 다시 되는 때를 붙인다(`retry_after_seconds` 또는 `Retry-After`).
-- 키 안내에 「여행을 하나도 만들지 않은 키는 7일 뒤 지워져요」를 적는다(서버 빈 키 정리, 기본 7일).
+- 빈 키 정리 문구는 **넣지 않는다**(2026-09-29 사용자 결정 — 키는 그 사용자를 알아보는 유일한 식별 토큰이라 지우면 사람이 사라진다. 서버도 정리를 기본 꺼짐으로 바꿨다).
 - live 전체 시험(`npm run test:live`)은 가짜 서버만 쓰므로 이 값을 비워 빌드한다(`tests/live/serve.mjs`).
 
 ## 지도 선택과 백엔드 전달

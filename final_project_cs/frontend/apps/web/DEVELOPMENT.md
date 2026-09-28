@@ -171,6 +171,8 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 2026-09-28. 서버 남용 방어(cs, 계약 `wiki/external/rest-endpoints.md` 「남용 방어」)에 화면을 맞췄다. ① 새 사용자의 첫 계획 올리기는 사람 확인 표를 두 번 받아 키 발급(JSON `turnstile_token`)과 계획 읽기(폼 칸)에 하나씩 싣는다 — 표는 한 번만 확인되기 때문이다. ② 한도 초과 응답에 다시 되는 때를 붙인다. ③ 키 안내에 빈 키 7일 정리 문구. 실측: Cloudflare 공개 시험 비밀키로 서버를 잠깐 띄워 통과 키 7/7(키 발급 `passed`), 실패 키는 키 발급 403·서버 문장 표시·키 저장 안 함을 확인하고 비밀키 없이 되돌렸다. ☆같은 날 등록이 500 이었던 것은 마이그레이션 222(장소 중복 규칙)가 DB 에 들어간 뒤에도 8042 가 옛 코드로 돌았기 때문이다 — 마이그레이션을 적용하면 떠 있는 서버도 다시 띄운다.
 
+2026-09-29. 사용자 결정으로 빈 키 정리를 끄고(서버 `web_guard.idle_key_cleanup_enabled=false`), 키 안내의 「여행을 만들지 않은 키는 7일 뒤 지워져요」 문구를 걷었다. 키는 그 사용자를 알아보는 유일한 식별 토큰이라 지우면 그 사람이 사라진다. 켤지·다른 방식으로 할지는 다시 정한다.
+
 ## 취향 설문 6문항 기록
 
 2026-09-28. 사용자 지시로 취향 설문을 바꿨다. 백엔드 계약(`TripSurvey` 판 `2026-09-24.v1`)은 `role-eval-ui`·`develop` 모두 같고 바꾸지 않았다 — `party`는 자유 문자열, `priority`는 `list[Area]`, `priority_details`는 `dict[Area, list[str]]`. 칸 대응은 [설문 대응](PREFERENCES_CONTRACT.md).
