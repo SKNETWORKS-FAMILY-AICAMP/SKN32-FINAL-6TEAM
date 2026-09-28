@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 
 from app.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfig, load_project_config
-from app.presentation.ui.routes import configure_nav, ops_router, router, voc_router
+from app.presentation.ui.routes import configure_nav, login_router, ops_router, router, voc_router
 
 #: 로컬 이름 → 첫 화면. `http://<이름>.localhost:8042` 로 열면 그 화면으로 간다(개발 미리보기용).
 HOST_LANDINGS = {"tripilot": "/tripilot", "scenario": "/ui/scenario"}
@@ -31,6 +31,8 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
         config = load_project_config(selected)
     landing: str | None = None
     if config.module_enabled("ops_ui"):
+        # ★로그인 경로는 관문 밖이다 — 먼저 붙인다(D-CS-007)
+        app.include_router(login_router)
         app.include_router(router)
         app.include_router(ops_router)
         landing = "/ui/cases"

@@ -1,0 +1,47 @@
+.waiting { display: grid; gap: 12px; justify-items: start; }
+.waiting h1 { font-size: 22px; letter-spacing: -.6px; }
+.waiting p { color: var(--color-muted); font-size: 13px; line-height: 1.8; }
+.problems { border-color: var(--color-warning-border); background: var(--color-warning-soft); margin-bottom: 16px; }
+.problems h2 { font-size: 15px; margin-bottom: 8px; color: var(--color-warning); }
+.problems ul, .error ul { margin: 0 0 8px; padding-left: 18px; font-size: 12px; line-height: 1.9; }
+.list { display: grid; gap: 12px; }
+.plan { margin-bottom: 16px; border-color: var(--color-primary); }
+.plan h2 { font-size: 15px; margin-bottom: 6px; }
+.plan p { font-size: 12px; line-height: 1.8; color: var(--color-muted); margin-bottom: 10px; }
+.keep { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 10px; }
+.plan strong { color: var(--color-warning); font-weight: 600; }
+.notice { margin-bottom: 12px; padding: 11px 14px; border-radius: 12px; background: var(--color-soft); color: var(--color-primary); font-size: 12px; line-height: 1.8; }
+.item[data-problem="true"] { border-color: var(--color-warning-border); }
+.itemHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.itemHead h2 { font-size: 17px; letter-spacing: -.4px; margin-top: 2px; }
+.when { font-size: 12px; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.problem { margin-top: 10px; font-size: 12px; color: var(--color-warning); }
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 12px 0; font-size: 12px; line-height: 1.8; }
+.facts dt { display: inline-flex; align-items: center; gap: 5px; color: var(--color-muted); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.note { display: block; font-size: 11px; color: var(--color-muted); }
+.quote { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; background: var(--color-subtle); border-radius: 8px; padding: 4px 8px; }
+.editRow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--color-border); padding-top: 12px; }
+.inline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.inline label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+.inline input { min-height: 40px; border: 1px solid var(--color-border); border-radius: 10px; padding: 6px 10px; background: #fff; color: var(--color-text); font-size: 13px; min-width: 0; }
+.inline input:not([type]) { width: 180px; }
+.inline select { min-height: 40px; border: 1px solid var(--color-border); border-radius: 10px; padding: 6px 10px; background: #fff; color: var(--color-text); }
+.evidence { margin-top: 18px; font-size: 12px; color: var(--color-muted); }
+.evidence summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }
+.lines { margin: 6px 0 12px; padding: 0; list-style: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.9; }
+.lines li { display: flex; gap: 10px; }
+.lines li[data-read="false"] { color: var(--color-warning); }
+.lines li span { min-width: 2.5em; text-align: right; color: var(--color-muted); }
+.error { margin-top: 14px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 12px; line-height: 1.8; }
+.credit { margin-top: 14px; font-size: 11px; color: var(--color-muted); }
+.credit a { color: inherit; text-decoration: underline; }
+.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 18px 0; border-top: 1px solid var(--color-border); background: #f7f9f3f5; backdrop-filter: blur(12px); }
+.actionNote { font-size: 11px; line-height: 1.7; color: var(--color-muted); max-width: 410px; }
+@media (max-width: 768px) {
+  .actions { flex-wrap: wrap; gap: 10px; padding: 15px 0; }
+  .actionNote { display: none; }
+  .actions > * { flex: 1; }
+  .inline input:not([type]) { width: 100%; flex: 1 1 140px; }
+}

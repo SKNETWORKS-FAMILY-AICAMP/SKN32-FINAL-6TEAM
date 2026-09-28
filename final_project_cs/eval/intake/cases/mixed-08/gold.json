@@ -1,0 +1,46 @@
+{
+ "case_id": "mixed-08",
+ "format": "mixed",
+ "defect": null,
+ "party": 2,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 2명이서 서울 가요\nDAY 1 2026-11-04\n09:30 롯데월드\n12:30 진옥화할매원조닭한마리 점심\n15:00 덕수궁 돌담길 산책"
+  }
+ ],
+ "lines": [
+  "안녕하세요 2명이서 서울 가요",
+  "DAY 1 2026-11-04",
+  "09:30 롯데월드",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 덕수궁 돌담길 산책",
+  "서울 1일 여행 (2명)"
+ ],
+ "items": [
+  {
+   "date": "2026-11-04",
+   "start": "09:30",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-04",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-04",
+   "start": "15:00",
+   "title": "덕수궁 돌담길 산책",
+   "place": "덕수궁",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

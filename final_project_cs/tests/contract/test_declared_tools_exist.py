@@ -28,7 +28,7 @@ def _implemented_tools() -> set[str]:
     ★목록을 손으로 적지 않는다 — 적으면 그 목록이 또 갈라진다.
       실제 디스패치 표를 그대로 읽는다.
     """
-    toolbox = ReadToolbox(lambda: None)
+    _toolbox = ReadToolbox(lambda: None)
     # `call()` 안의 functions 표를 그대로 얻으려고 한 번 호출해 본다.
     # 권한 검사에서 걸리게 두고, 그 전에 표를 만들 수는 없으므로
     # 알려진 두 갈래(여행/커머스)를 합친다.

@@ -13,12 +13,12 @@ domain: neutral
 `[실측]`·`[외부]` 근거는 각 문서에
 
 1. 사람이 문의 1건 처리하는 데 **4,100~4,846원**이 든다. 급여는 그중 67%뿐이고 나머지는 보험·퇴직금·좌석·이직·관리다.
-2. A-COP을 넣으면 건당 **1,132원**이 된다. 그중 LLM 비용은 **3.03원**, 전체의 0.27%다.
+2. triPilot을 넣으면 건당 **1,132원**이 된다. 그중 LLM 비용은 **3.03원**, 전체의 0.27%다.
 3. **비용의 99.7%는 여전히 사람이다**(쇼핑몰 B2B 모델 — 건당 1,132원 중 LLM 3.03원). ★`[2026-09-10]` **여행 판에는 이 분모가 없다** — 판매가 여행팀당 이용권 **49,000원**이고 기계 원가는 **여행 1건 3~37원** `[추정]`(v11 §11-A). LLM 단가를 깎는 최적화는 의미가 없고, **사람 시간을 줄이거나 오류를 줄이는 것**만 의미가 있다.
 
 ## 읽기 순서
 
-1. [unit-economics.md](unit-economics.md) — 사람 vs A-COP 건당 비교
+1. [unit-economics.md](unit-economics.md) — 사람 vs triPilot 건당 비교
 2. [infrastructure-cost.md](infrastructure-cost.md) — API·GPU·전기·트래픽
 3. [market.md](market.md) — 시장 규모
 4. [pricing.md](pricing.md) — 가격안 3개
@@ -27,7 +27,7 @@ domain: neutral
 
 | 문서 | 답하는 질문 |
 |---|---|
-| [unit-economics.md](unit-economics.md) | 상담원을 쓸 때와 A-COP을 쓸 때 건당 얼마인가 |
+| [unit-economics.md](unit-economics.md) | 상담원을 쓸 때와 triPilot을 쓸 때 건당 얼마인가 |
 | [infrastructure-cost.md](infrastructure-cost.md) | API·GPU 중 뭘 쓰고 얼마 드는가 |
 | [market.md](market.md) | 시장이 얼마나 큰가 |
 | [pricing.md](pricing.md) | 우리가 얼마를 받아야 하는가 |

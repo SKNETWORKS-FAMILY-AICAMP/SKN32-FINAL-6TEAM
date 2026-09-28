@@ -1050,7 +1050,7 @@ def create_app() -> FastAPI:
                 + "<div class='card'><h2>실행 이력</h2>" + run_history + "</div>"
                 + f"<div class='card'><h2>연결</h2>{connections}</div>"
                 + f"<p><a href='/composer?path={qs(str(target))}'>구성 조립(Composer) →</a>"
-                + f" &nbsp;·&nbsp; <a href='/'>← 프로젝트 목록</a></p>")
+                + " &nbsp;·&nbsp; <a href='/'>← 프로젝트 목록</a></p>")
         return page(found.name, body, lede=str(target), path=str(target), current="/project")
 
     @app.get("/run", response_class=HTMLResponse)

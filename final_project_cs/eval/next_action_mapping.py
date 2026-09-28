@@ -58,7 +58,6 @@ ACTION_MAP = {
     "verify_events_and_escalate": "escalate",
     "record_feedback_and_mark_degraded": "respond",
     "check_price_table_and_events": "call_tool",
-    "check_latest_event_and_wait": "wait_for_input",
     "check_entitlement_and_escalate": "escalate",
     "request_trace_and_diagnose": "wait_for_input",
 }

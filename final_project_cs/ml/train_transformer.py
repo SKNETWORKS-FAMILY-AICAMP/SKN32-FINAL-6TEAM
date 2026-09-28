@@ -85,7 +85,7 @@ def predict(model, loader):
     model.eval()
     probs = []
     for batch in loader:
-        labels = batch.pop("labels")
+        _labels = batch.pop("labels")
         logits = model(**batch).logits
         probs.append(torch.softmax(logits, dim=-1).cpu().numpy())
     return np.concatenate(probs)

@@ -14,7 +14,7 @@ domain: neutral
 
 `app/core/` (평면)
 
-**A-COP에서 side effect가 일어나는 유일한 곳이다.** Team은 여기에 제안만 하고 실행은 Core가 한다.
+**triPilot에서 side effect가 일어나는 유일한 곳이다.** Team은 여기에 제안만 하고 실행은 Core가 한다.
 
 ## 왜 분리했는가
 

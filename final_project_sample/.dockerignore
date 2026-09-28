@@ -1,0 +1,8 @@
+examples/
+tests/
+docs/
+.git/
+.pytest_cache/
+.pytest-tmp/
+*.py[cod]
+__pycache__/

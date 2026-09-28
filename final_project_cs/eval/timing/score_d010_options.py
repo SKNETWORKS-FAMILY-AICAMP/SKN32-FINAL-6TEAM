@@ -51,21 +51,21 @@ def main() -> int:
 
     # ① 기권을 벌점에서 뺀다 — 승인 대기를 분모에서 제외
     p1 = sum(1 for r in others if current(r["judge"]))
-    print(f"\n① 기권을 분모에서 뺀다")
+    print("\n① 기권을 분모에서 뺀다")
     print(f"   {p1}/{len(others)} = {p1/len(others)*100:.1f}%"
           f"   (현행 {total_pass/len(rows)*100:.1f}% 에서 +{p1/len(others)*100-total_pass/len(rows)*100:.1f}%p)")
     print(f"   ★승인 대기 {len(wa)}건이 통째로 안 세어진다."
           f" 전체의 {len(wa)/len(rows)*100:.0f}% 다")
 
     # ② 그대로 둔다
-    print(f"\n② 그대로 둔다")
+    print("\n② 그대로 둔다")
     print(f"   {total_pass}/{len(rows)} = {total_pass/len(rows)*100:.1f}%")
     wa_pass = sum(1 for r in wa if current(r["judge"]))
     print(f"   ★승인 대기 {len(wa)}건 중 {wa_pass}건만 통과."
           f" 설계대로 동작한 것이 {len(wa)-wa_pass}건 벌점")
 
     # ③ 지표를 둘로 나눈다
-    print(f"\n③ 지표를 둘로 나눈다")
+    print("\n③ 지표를 둘로 나눈다")
     #: 답을 낸 것의 정확도
     ans = [r for r in rows if (r.get("prediction") or {}).get("answer")]
     ans_pass = sum(1 for r in ans if current(r["judge"]))
@@ -75,7 +75,7 @@ def main() -> int:
     ev = [r for r in wa if ((r.get("prediction") or {}).get("policy_evidence") or [])]
     print(f"   안전 기권률 {len(ev)}/{len(wa)} = {len(ev)/len(wa)*100:.1f}%"
           f"   (기권 중 근거를 붙인 것)")
-    print(f"   ★두 숫자가 다른 것을 잰다. 합치면 안 되는 이유다")
+    print("   ★두 숫자가 다른 것을 잰다. 합치면 안 되는 이유다")
 
     print("\n" + "=" * 62)
     print("판단에 필요한 사실")

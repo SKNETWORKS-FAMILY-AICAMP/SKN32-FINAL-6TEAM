@@ -21,12 +21,12 @@ from app import composition
 from app.application.case_intake import open_case
 from app.application.controller import Controller
 from app.core.context import PolicyChunk
-from app.core.contracts import InvalidTransition
 from app.core.registry import TeamRegistry
 from app.core.transition import transition_case
 from app.domain.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
+from app.modules.travel_ops import delegation
 from app.modules.travel_ops.booking_handoff import BookingHandoffTeam
 from app.modules.travel_ops.case_engine import cleanup_tenant
 from app.modules.travel_ops.verification_policy import FACT_QUERIES, TRAVEL_OPS_POLICY
@@ -53,10 +53,17 @@ def world():
                     (tenant, customer, "BK-1", "activity", "confirmed", datetime.now(UTC) + timedelta(days=5),
                      2, 4, 5000000))
         booking = cur.fetchone()[0]
-        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status) "
-                    "VALUES (%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-1", "confirmed"))
+        # ★`[2026-09-22]` 등급을 **적어서** 넣는다(마이그레이션 017). 기본값은 `real` 이라
+        #   안 적으면 자동 실행 분기가 안 열린다 — 여기 공급자는 이름 그대로 시연용 Mock 이다.
+        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status,tier) "
+                    "VALUES (%s,%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-1", "confirmed", "simulated"))
+        # ★`[2026-09-22]` **위임을 적어서** 넣는다(마이그레이션 019). 행이 없으면 위임이 없고
+        #   자동 실행 분기가 안 열린다 — 017 의 `tier` 와 같은 방향이다(잊음의 대가가 돈인
+        #   쪽으로 기울이지 않는다). 위임 범위 자체는 `test_delegation_scope.py` 가 본다.
+        delegation.grant(conn, tenant_id=tenant, customer_id=customer, by="fixture")
     yield tenant, customer, booking
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM delegations WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM outbox WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM supplier_bookings WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM bookings WHERE tenant_id=%s", (tenant,))
@@ -130,10 +137,79 @@ def test_an_approved_cancel_is_executed_once_against_the_mock_supplier(world):
     assert ours == theirs == "cancelled"
     assert actions == [("booking.cancel", "succeeded", "mock-supplier:mock:SUP-1:cancelled")]
     assert [kind for kind, _ in events][-3:] == ["approved", "resumed", "completed"]
-    # 같은 Case 를 다시 돌려도 두 번 실행하지 않는다 — 끝난 Case 는 상태기계가 막는다
-    with pytest.raises(InvalidTransition):
-        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    # 같은 Case 를 다시 돌려도 두 번 실행하지 않는다 — `[2026-09-20]` Team 을 아예 안 부른다
+    # (전에는 부른 뒤 결과를 쓸 때 상태기계가 `InvalidTransition` 으로 막았다)
+    again = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    assert again["skipped"] == "not_runnable" and again["status"] == "resolved"
     assert _state(tenant, case_id, booking)[3] == actions
+
+
+def _set_tier(booking, tier):
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE supplier_bookings SET tier=%s WHERE booking_id=%s", (tier, booking))
+
+
+# invariant: DoD-14
+def test_an_approved_cancel_on_a_real_supplier_never_touches_the_ledger(world):
+    """★v11 §12 DoD-14 — **승인이 나도** 실제 공급자 원장은 자동으로 바뀌지 않는다.
+
+    승인은 "이 변경을 해도 된다" 이지 "실제 업체에 직접 질러도 된다" 가 아니다(v11 §4-C).
+    등급이 `real` 이면 원장도 우리 예약도 **그대로**이고 Case 가 사람에게 간다.
+    """
+    tenant, customer, booking = world
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    _approve(tenant, case_id)
+    _set_tier(booking, "real")                       # 승인 **뒤에** 실제 공급자로 밝혀져도 막힌다
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_rejected", events[-1]
+    assert ours == theirs == "confirmed"             # ★한 글자도 안 바뀌었다
+    assert actions == [("booking.cancel", "failed", None)]
+
+
+# invariant: DoD-15
+def test_a_supplier_row_without_a_tier_is_treated_as_real(world):
+    """★기본값이 안전한 쪽이라는 것을 **DB 에 대고** 잰다 — 등급을 잊은 행은 자동 실행 대상이 아니다."""
+    tenant, customer, booking = world
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM supplier_bookings WHERE booking_id=%s", (booking,))
+        # tier 를 적지 않는다 — 마이그레이션 017 의 기본값이 무엇인지 그대로 드러난다
+        cur.execute("INSERT INTO supplier_bookings (tenant_id,booking_id,supplier,supplier_ref,status) "
+                    "VALUES (%s,%s,%s,%s,%s)", (tenant, booking, "mock", "SUP-9", "confirmed"))
+        cur.execute("SELECT tier FROM supplier_bookings WHERE booking_id=%s", (booking,))
+        assert cur.fetchone()[0] == "real"
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    _approve(tenant, case_id)
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_rejected", events[-1]
+    assert ours == theirs == "confirmed"
+    assert actions == [("booking.cancel", "failed", None)]
+
+
+# invariant: DoD-15
+def test_the_ledger_only_moves_for_the_simulated_tier(world):
+    """★같은 조립·같은 승인에서 **등급만** 바꿔 두 결과를 나란히 본다.
+
+    한쪽만 보면 "원래 안 바뀌는 건지, 등급 때문에 안 바뀐 건지" 를 구분하지 못한다.
+    """
+    tenant, customer, booking = world
+    outcomes = {}
+    for index, tier in enumerate(("real", "simulated")):
+        _set_tier(booking, tier)
+        controller = _controller()
+        case_id = _open(tenant, customer, "booking_cancel_request", request_id=f"req-tier-{index}")
+        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+        _approve(tenant, case_id)
+        asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+        case, ours, theirs, actions, _ = _state(tenant, case_id, booking)
+        outcomes[tier] = (str(case["status"]), ours, theirs, actions[0][1])
+    assert outcomes["real"] == ("escalated", "confirmed", "confirmed", "failed")
+    assert outcomes["simulated"] == ("resolved", "cancelled", "cancelled", "succeeded")
 
 
 def test_an_approved_change_is_handed_off_not_invented(world):
@@ -222,3 +298,42 @@ def test_two_proposals_for_two_bookings_in_one_case_both_survive(world):
     assert str(case["status"]) == "waiting_approval", events[-1]
     assert len(case["state_json"]["action_ids"]) == 2 and len(set(case["state_json"]["action_ids"])) == 2
     assert sorted(a[1] for a in actions) == ["pending_approval", "pending_approval"]
+
+
+def test_a_case_that_waits_for_approval_is_not_run_again_by_the_sweeper(world):
+    """되잡기 작업이 같은 Case 를 또 집어도 Team 을 다시 부르지 않는다 — 기다림을 푸는 것은 승인이다."""
+    tenant, customer, booking = world
+    controller = _controller()
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    before = _state(tenant, case_id, booking)[4]
+    again = asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    assert again["skipped"] == "not_runnable" and again["status"] == "waiting_approval"
+    assert _state(tenant, case_id, booking)[4] == before          # 이벤트가 하나도 안 늘었다
+
+
+class TwoBookingsNoHandler(TwoBookings):
+    """적용기가 없는 조립에서는 키의 대상이 Case id 라 둘째 제안이 같은 키가 된다."""
+
+
+def test_a_second_proposal_that_would_be_swallowed_goes_to_a_human(world):
+    """★조용히 사라지게 두지 않는다 — 같은 키에 다른 인자면 `action_key_collision`."""
+    from app.core.actions import ActionHandlers
+
+    tenant, customer, booking = world
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO bookings (tenant_id,customer_id,booking_no,kind,status,starts_at,party_size,"
+                    "capacity,amount_cents) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING booking_id",
+                    (tenant, customer, "BK-3", "dining", "confirmed", datetime.now(UTC) + timedelta(days=6),
+                     2, 4, 3000000))
+        second = cur.fetchone()[0]
+    team = TwoBookingsNoHandler(ReadToolbox(get_connection, policy_search=_policy))
+    team.second = str(second)
+    controller = Controller(TeamRegistry([team]), policy_search=_policy, connection_factory=get_connection,
+                            repository=repository, verification_policy=TRAVEL_OPS_POLICY,
+                            fact_queries=FACT_QUERIES, action_handlers=ActionHandlers())
+    case_id = _open(tenant, customer, "booking_cancel_request")
+    asyncio.run(controller.run_case(tenant_id=tenant, case_id=case_id))
+    case, ours, theirs, actions, events = _state(tenant, case_id, booking)
+    assert str(case["status"]) == "escalated" and events[-1][1]["guardrail"] == "action_key_collision", events[-1]
+    assert ours == theirs == "confirmed"

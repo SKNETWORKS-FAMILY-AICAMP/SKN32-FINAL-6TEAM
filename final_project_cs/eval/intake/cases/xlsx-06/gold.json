@@ -1,0 +1,98 @@
+{
+ "case_id": "xlsx-06",
+ "format": "xlsx",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-11-10 | 09:30 | 남산골한옥마을 | ",
+  "1일차 | 2026-11-10 | 12:30 | 토속촌삼계탕 | ",
+  "1일차 | 2026-11-10 | 15:00 | 경복궁 관람 | ",
+  "2일차 | 2026-11-11 | 09:30 | 전쟁기념관 | ",
+  "2일차 | 2026-11-11 | 12:30 | 망원시장 칼국수 | ",
+  "2일차 | 2026-11-11 | 15:00 | 북촌한옥마을 산책 | ",
+  "3일차 | 2026-11-12 | 09:30 | 국립중앙박물관 관람 | ",
+  "3일차 | 2026-11-12 | 12:30 | 광장시장 빈대떡 | ",
+  "3일차 | 2026-11-12 | 15:00 | 국립민속박물관 | "
+ ],
+ "items": [
+  {
+   "date": "2026-11-10",
+   "start": "09:30",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "15:00",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "09:30",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "15:00",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "09:30",
+   "title": "국립중앙박물관 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-12",
+   "start": "15:00",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

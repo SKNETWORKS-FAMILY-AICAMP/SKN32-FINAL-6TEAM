@@ -1,0 +1,108 @@
+{
+ "case_id": "mixed-10",
+ "format": "mixed",
+ "defect": null,
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 1명이서 서울 가요\n1일차 · 10월 18일\n09:30 남산골한옥마을\n12:30 토속촌삼계탕 점심\n15:00 창덕궁 후원"
+  },
+  {
+   "kind": "file",
+   "name": "rest.jpg"
+  }
+ ],
+ "lines": [
+  "안녕하세요 1명이서 서울 가요",
+  "1일차 · 10월 18일",
+  "09:30 남산골한옥마을",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 창덕궁 후원",
+  "서울 3일 여행 (1명)",
+  "",
+  "2일차 · 10월 19일",
+  "09:30 명동난타극장",
+  "12:30 명동교자 점심",
+  "15:00 익선동 한옥거리",
+  "",
+  "3일차 · 10월 20일",
+  "09:30 덕수궁 돌담길 산책",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 전쟁기념관"
+ ],
+ "items": [
+  {
+   "date": "2026-10-18",
+   "start": "09:30",
+   "title": "남산골한옥마을",
+   "place": "남산골한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-18",
+   "start": "15:00",
+   "title": "창덕궁 후원",
+   "place": "창덕궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-19",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-19",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-19",
+   "start": "15:00",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "09:30",
+   "title": "덕수궁 돌담길 산책",
+   "place": "덕수궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-20",
+   "start": "15:00",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

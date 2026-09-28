@@ -18,7 +18,12 @@ SYSTEM = ("You translate a customer notice written in Korean into the language "
           "given by the BCP-47 tag. Output ONLY the translation. Keep every number, time "
           "(e.g. 14:10), amount, version number, reservation id and bracketed tag such as "
           "[재생] exactly as written. Keep proper nouns (place, station, road names) in their "
-          "original form and you may add a translation in parentheses.")
+          "original form and you may add a translation in parentheses. "
+          # ★`{leave}` 같은 자리는 **값이 들어갈 칸**이다(`phrase.py`). 옮기지도, 개수를
+          #   바꾸지도 않는다 — 하나라도 사라지면 그 번역은 버린다(`PhraseSlotsLost`).
+          "A placeholder written as {name} in curly braces is a slot for a value: copy it "
+          "verbatim, keep the same number of occurrences, and never translate the word inside "
+          "the braces.")
 
 
 class TranslationRejected(RuntimeError):

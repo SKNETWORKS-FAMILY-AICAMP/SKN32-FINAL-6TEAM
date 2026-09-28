@@ -10,6 +10,8 @@ domain: travel
 
 # Mobility Team
 
+`[2026-09-28]` **코드 위치가 폴더로 바뀌었다** — `app/modules/travel_ops/mobility/`(본체 `team.py`). 아래에 날짜와 함께 적힌 `mobility.py` 경로·줄 번호는 그때 기록이다. 두는 규칙은 [code-layout.md](code-layout.md).
+
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
@@ -29,6 +31,8 @@ domain: travel
 | 환승·막차 데이터 | **`None`** |
 
 ~~★**「모름」으로 끝나는 것이 폴백보다 낫다**(v11 §4-D). 값이 없으면 없다고 돌려주고, 추정으로 채우지 않는다.~~ `[정정 2026-09-10]` 필요한 값마다 대체 소스를 두어 1차 실패 시 대체로 값을 내고 대체까지 실패하면 치명 결함으로 서버를 끄며, 후보의 값이 불확실해도 하나를 골라 선택지를 나열하지 않되 근거 없는 문장 금지는 그대로 지킨다(v11 §0-4 결정 15). 현재 None 반환과 아래 `_unknown()`의 escalate는 코드 관찰이며 이 현행 사양을 구현한 해결책이 아니다. 다만 **문서가 판정을 현재 동작처럼 적으면 안 된다.**
+
+`[정정 2026-09-21]` 그 「서버를 끈다」가 어디서 멈추는가는 층마다 다르다 — 기동 조립 실패는 기동 거부, Case 실행 중 실패는 서버를 내리지 않고 사람 인계(`fatal_source_failure`), 배치 스위퍼는 exit 1. 코드가 이미 그렇게 동작한다([D-018](../../../wiki/decisions/D-018-decision15-stop-paths.md)). 아래 escalate 는 그 층의 구현이며 미구현 표시가 아니다.
 
 `[실측]` `select_capability()` 가 `intent == "mobility"` 만 본다 — 라우팅이 두 축이 됐으므로 그 분기도 같이 봐야 한다(코드 담당 몫).
 
@@ -88,16 +92,32 @@ Mobility: "오후 순서를 B→A→C 로 바꾸면 이동 40분이 줄어든다
 
 ```python
 capabilities          = ["mobility.check_route", "mobility.status", "mobility.exception",
-                         "mobility.itinerary"]         # [2026-09-17] 여행 일정 관리
+                         "mobility.itinerary",         # [2026-09-17] 여행 일정 관리
+                         "mobility.itinerary_question"]  # [2026-09-25] 규정 질문 — 면제 아님
 accepted_case_types   = ["mobility"]                 # ★객체 종류다. 요청 종류가 아니다
-required_context      = ["case_state", "db_facts", "history"]            # [2026-09-17] policy 뺌
+required_context      = ["case_state", "policy", "db_facts", "history"]  # [2026-09-22] policy 되돌림
+policy_optional_capabilities = ["mobility.itinerary"]                      # [2026-09-22] 일정 관리만 면제
 allowed_tools         = ["read.route", "read.transit", "read.policy", "read.route_events",
                          "read.itinerary", "read.itinerary_version", "read.place_catalog",
                          "read.customer_report"]
-knowledge_scope       = ["mobility", "transit", "route_exception"]
+knowledge_scope       = ["travel_mobility", "travel_weather",            # [2026-09-22] 여행 scope 로 교체
+                         "travel_cancellation"]                            #   `transit`·`route_exception` 은 문서 0건이라 뺐다
 max_steps             = 12                                                 # [2026-09-17] 6 → 12
 default_capability    = "mobility.check_route"
 ```
+
+### `[2026-09-25]` 규정 질문 — `mobility.itinerary_question`
+
+여행 Case 가운데 접수 때 **질문**(`interpretation.report.type == "question"`)으로 읽힌 것은 `mobility.itinerary`(규정 면제)가 아니라
+`mobility.itinerary_question` 으로 간다(`ItineraryWork.itinerary_route`). ★**면제 목록에 넣지 않는다** — Controller 가 규정(RAG)을
+돌고, 근거가 없으면 degraded 로 사람에게 간다.
+
+- 짚은 일정 항목(`part_id` → 없으면 제목·장소 이름이 문장에 나오는 항목 → 「점심·저녁 식당」의 끼니)을 기준으로
+  `read.policy`(문장 근거)를 읽고, 그 항목에 예약이 있으면 `read.booking_terms`(취소 기한·위약금 수치)를 읽는다.
+  ★판정 입력은 **예약이 아니라 일정 항목**이다 — `check_cancelable` 을 재사용하지 않는다(`read.booking` 전제라 무료·무예약 항목에서 「모름」).
+- 답은 규정 조각을 **출처와 함께 그대로** 싣는다(모델로 짓지 않는다). **일정은 바꾸지 않는다.**
+- 묻는 꼴(물음표 · 「되나요」「아니에요」 …)은 `closed`·`delay` 로 받지 않는다 — 질문이 일정을 바꾸지 못하게(`trip_intake.py`).
+- 시험 `tests/scenario/test_case_question.py` — 인계(triPilot : RAG, 2026-09-25)의 다섯 문장.
 
 ### `[2026-09-17]` Case 버전의 여행 일정 관리 — `mobility.itinerary`
 
@@ -109,6 +129,10 @@ default_capability    = "mobility.check_route"
 - 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.
 - `required_context` 에서 `policy` 를 뺐다 — 선언에 두면 정책 검색 0건이 Case 전체를 degraded 로 만든다. `max_steps` 는 대안 후보마다 재점검하느라 12 로 올렸다.
+
+★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
+
+★**여유 시간 계산은 여전히 코드가 한다**(`have >= need`). 코퍼스가 대는 것은 「누구 사정으로 보나」와 「어디까지 말하나」다.
 - 하루 전체 대조: `tests/scenario/test_case_version_day.py` — 같은 재생 입력에서 두 버전의 버전 수·마지막 항목·통지 문구가 같다.
 
 ★**`accepted_case_types` 가 「객체 종류」다.** 이 문서는 한때 `itinerary_submitted`·`incident_reported` 같은 **요청 종류**를 적어 뒀다. **축이 틀렸다.** v11 §5-B — 라우팅은 두 축이고 Team 을 고르는 것은 `case_type`(객체 종류, `issue_code` 접두에서 뽑는다)이다. 요청 종류는 `intent` 쪽이다.

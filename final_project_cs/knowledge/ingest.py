@@ -60,9 +60,22 @@ def _parse_document(path: Path, manifest_entry: dict[str, Any]) -> Document:
     return Document(manifest_entry, frontmatter, sections)
 
 
-def load_corpus() -> list[Document]:
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    base = MANIFEST_PATH.parent
+def load_corpus(manifest_path: Path | None = None) -> list[Document]:
+    """manifest 하나를 읽어 문서·섹션으로 쪼갠다.
+
+    ★`[2026-09-22]` 인자를 받게 했다 — 코퍼스가 둘이 됐기 때문이다(쇼핑몰
+      `knowledge/manifest.json` · 여행 `knowledge/travel/manifest.json`).
+      **기본값은 예전 그대로**라 이 파일의 다른 호출부는 안 바뀐다.
+
+    ★**청크 경계 규칙은 이 함수 하나가 정한다**(`_parse_document`) — `## ` 로
+      시작하는 줄 하나가 청크 하나이고, 그 경계는 다음 `## ` 직전까지다.
+      제목은 본문에 넣지 않고 `metadata_json.section_title` 로 따로 싣는다.
+      적재 스크립트가 여럿이어도 쪼개는 코드는 여기 하나뿐이어야 한다 —
+      둘이 되면 같은 문서가 스크립트마다 다른 청크로 들어간다.
+    """
+    manifest_path = manifest_path or MANIFEST_PATH
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    base = manifest_path.parent
     tenant_id = manifest["tenant_id"]
     return [
         _parse_document(base / entry["file"], {**entry, "tenant_id": tenant_id})

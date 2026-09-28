@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from uuid import uuid4
+from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 import pytest
 from fastapi.testclient import TestClient
@@ -47,7 +48,9 @@ def ui_fixture(monkeypatch):
                         (action_id, tenant, case_id, Json({"amount": 100, "risk_level": "high", "evidence": evidence}), "idem-" + str(action_id)))
 
     try:
-        yield {"client": TestClient(ui_app), "tenant": tenant, "case_id": case_id, "evidence_action": evidence_action, "empty_action": empty_action}
+        client = TestClient(ui_app)
+        login(client, monkeypatch)
+        yield {"client": client, "tenant": tenant, "case_id": case_id, "evidence_action": evidence_action, "empty_action": empty_action}
     finally:
         with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
             cur.execute("DELETE FROM action_approvals WHERE action_id IN (SELECT action_id FROM action_requests WHERE tenant_id=%s)", (tenant,))

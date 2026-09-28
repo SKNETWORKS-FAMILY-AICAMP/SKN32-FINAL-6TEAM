@@ -185,7 +185,8 @@ def code_revision(target: Path) -> str:
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
-            cwd=target, capture_output=True, text=True, timeout=20, check=False,
+            cwd=target, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=20, check=False,
         )
         return "git:" + out.stdout.strip() if out.returncode == 0 else "git:unknown"
     except Exception:
@@ -257,7 +258,8 @@ def capture(nodeid: str, *, target: Path, out_path: Path) -> dict[str, Any]:
     env["PYTHONIOENCODING"] = "utf-8"
     proc = subprocess.run(
         [sys.executable, "-m", "acop_dojo._runner", nodeid, str(out_path)],
-        cwd=target, env=env, capture_output=True, text=True, timeout=600, check=False,
+        cwd=target, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=600, check=False,
     )
     if proc.returncode != 0 or not out_path.exists():
         raise RuntimeError(

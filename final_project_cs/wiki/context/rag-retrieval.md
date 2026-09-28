@@ -5,8 +5,8 @@ description: 정책·FAQ 문서를 찾아 ContextPack에 넣는다. tenant와 sc
 status: draft
 tags: [data, security]
 owners: [human:미배정]
-domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 6(RAG 코퍼스 25문서 전부 쇼핑몰) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: mixed
+domain_note: '[2026-09-22] 코퍼스가 둘이 됐다 — 쇼핑몰 25문서(기록)와 여행 12문서(운영)가 같은 테넌트에 공존하고 scope 로 갈린다. 여행 쪽은 context/travel-corpus.md 가 정본이다'
 ---
 
 # RAG 검색
@@ -38,27 +38,30 @@ def search_policy(
 
 Team manifest의 `knowledge_scope`가 검색 범위를 정한다.
 
-`[실측 2026-09-10 작업 트리]` 예: Activity Team(`app/modules/travel_ops/activity.py:40`)
+`[실측 2026-09-22 작업 트리]` 예: Activity Team(`app/modules/travel_ops/activity.py`)
 
 ```python
-knowledge_scope = ["activity", "cancellation", "refund", "weather"]
+knowledge_scope = ["travel_activity", "travel_weather", "travel_cancellation", "travel_access"]
 ```
 
-여행 Team 여섯의 `knowledge_scope` — Booking Handoff `booking`·`cancellation`·`penalty`·`supplier` · Dining `dining`·`opening_hours`·`dietary` · Mobility `mobility`·`transit`·`route_exception` · Lodging `lodging` · Flight `flight`. `[실측 git]` 이 코드는 아직 커밋되지 않았다.
+★`[2026-09-22 정정]` 여행 Team 의 scope 에 **`travel_` 접두**가 붙었다. 앞 값들(`activity`·`cancellation`·`refund`·`weather` · `booking`·`penalty`·`supplier` · `opening_hours`·`dietary` · `transit`·`route_exception` · `lodging` · `flight`)은 **한 개를 빼고 전부 문서 0건**이었고, 예외인 `refund` 는 하필 **쇼핑몰 코퍼스에 실재하는 scope** 라 여행 질의가 쇼핑몰 환불 문서를 근거로 집어 왔다(되돌려 실측: top-8 중 7건). 지금 값 — Activity `travel_activity`·`travel_weather`·`travel_cancellation`·`travel_access` · Dining `travel_dining`·`travel_cancellation`·`travel_access` · Mobility `travel_mobility`·`travel_weather`·`travel_cancellation` · Booking Handoff `travel_cancellation`·`travel_activity`·`travel_dining` · Lodging/Flight 는 `policy` 선언 자체를 뺐다.
 
-★**도구 권한(`allowed_tools`)과 검색 범위(`knowledge_scope`)는 다른 축이다.** `[정정 2026-09-10]` 이 자리는 「Response Review Team 은 `read.policy` 만 갖는다. 주문 문서를 못 본다」였다 — 퇴역 Team 이고, `read.policy` 는 **도구 권한**이라 어떤 문서를 검색하나는 정하지 않는다. 그건 `knowledge_scope` 가 정한다. ★**코퍼스가 아직 쇼핑몰 문서라는 것(아래)과 검색 코드·Team 이 쇼핑몰이라는 것은 다르다** — 검색 코드는 도메인을 모르고 Team 은 여행으로 바뀌었다. 바뀌지 않은 것은 코퍼스다.
+★**도구 권한(`allowed_tools`)과 검색 범위(`knowledge_scope`)는 다른 축이다.** `[정정 2026-09-10]` 이 자리는 「Response Review Team 은 `read.policy` 만 갖는다. 주문 문서를 못 본다」였다 — 퇴역 Team 이고, `read.policy` 는 **도구 권한**이라 어떤 문서를 검색하나는 정하지 않는다. 그건 `knowledge_scope` 가 정한다. ★`[2026-09-22 정정]` 이 자리는 「바뀌지 않은 것은 코퍼스다」였다 — **이제 바뀌었다.** 여행 코퍼스 12문서·130청크가 들어갔고 여행 Team 넷이 그것을 본다. 검색 코드는 여전히 도메인을 모른다.
 
 ## 코퍼스
 
-`[실측]` 2026-08-17 기준
+`[실측 2026-09-22]` **코퍼스가 둘이다.** 같은 테넌트(`demo`)에 공존하고 `scope` 로만 갈린다.
 
-| | 값 |
-|---|---|
-| 문서 | 25건 |
-| 청크 | **306** |
-| 차원 | 1536 (`text-embedding-3-small`) |
+| | 쇼핑몰 (2026-08-17) | 여행 (2026-09-22) |
+|---|---:|---:|
+| 문서 | 25 | **12** |
+| 청크 | **306** | **130** |
+| 1536칸 (`text-embedding-3-small`) | 306 | **0** |
+| 1024칸 (`bge-m3`, 로컬) | 306 | **130** |
 
 DB 직접 조회로 확인한 값이다. **문서에 적힌 수가 아니라 DB를 세어 갱신한다.**
+
+★여행 130청크에는 **OpenAI 벡터가 없다**(크레딧 없음). 그래서 `ACOP_EMBEDDING_PROVIDER=openai` 로 되돌리면 여행 scope 검색이 **예외로 죽는다** — 조용히 0건이 되지 않게 `search_policy` 가 직접 검사한다. 여행 코퍼스가 무엇을 담고 무엇을 안 담는지는 → [travel-corpus.md](travel-corpus.md)
 
 ## ★ 코퍼스 게이트
 
@@ -72,6 +75,8 @@ DB 직접 조회로 확인한 값이다. **문서에 적힌 수가 아니라 DB�
 | 중복률 | **가장 어려운 것이 길이가 아니라 중복이다** |
 | 제목 점유율 | 마감 3섹션이 25문서에 같은 제목이면 상한에 걸린다 |
 | 조사 오류 | 한국어 문법 |
+
+★`[2026-09-22]` 게이트가 **컬렉션마다 따로** 돈다(쇼핑몰·여행). 섞어서 재면 쇼핑몰 코퍼스가 2026-08-17 에 받은 판정이 여행 문서가 늘 때마다 달라진다. 여행 쪽 건수 기준은 `config/guardrails.yaml` 의 `rag.travel.*` 이고 내용 기준(길이·중복·조사·수치)은 **같은 상수**를 쓴다. 두 코퍼스의 scope 이름이 겹치지 않는지도 여기서 센다.
 
 `[실측]` 게이트 자체의 결함도 2건 나왔다. 조사 검사기가 `초과`·`결과` 같은 받침 없는 한자어를 오탐했고, 제목 점유율 상한에 걸릴 뻔해 문서군별 제목을 4종으로 교대시켰다.
 
@@ -163,6 +168,7 @@ omissions 에 무엇이 빠졌는지 기록
 
 - [context-broker.md](context-broker.md) — 검색 결과를 조립하는 쪽
 - [context-budget.md](context-budget.md) — `policy_rag` 예산
+- [travel-corpus.md](travel-corpus.md) — **여행 코퍼스**가 담는 것과 안 담는 것
 - [memory.md](memory.md) — 다른 입력원
 - [../data/tenancy.md](../data/tenancy.md) — 격리
 - [../teams/team-contract/index.md](../teams/team-contract/index.md) — `knowledge_scope`

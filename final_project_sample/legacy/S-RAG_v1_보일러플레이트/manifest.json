@@ -1,0 +1,281 @@
+{
+  "tenant_id": "demo",
+  "corpus_version": "1.0",
+  "documents": [
+    {
+      "document_id": "doc_01",
+      "file": "documents/01_billing_billing-cycle.md",
+      "title": "결제 주기와 청구 시점",
+      "scope": "billing",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/billing/billing-cycle",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_02",
+      "file": "documents/02_billing_billing-retry.md",
+      "title": "결제 실패 재시도와 이용 제한",
+      "scope": "billing",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/billing/billing-retry",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_03",
+      "file": "documents/03_billing_billing-tax.md",
+      "title": "세금과 부가가치세 처리",
+      "scope": "billing",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/billing/billing-tax",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_04",
+      "file": "documents/04_billing_billing-invoice.md",
+      "title": "청구서 발행과 조회",
+      "scope": "billing",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/billing/billing-invoice",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_05",
+      "file": "documents/05_billing_billing-payment-method.md",
+      "title": "결제수단 변경과 결제 확인",
+      "scope": "billing",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/billing/billing-payment-method",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_06",
+      "file": "documents/06_refund_refund-after-cancel.md",
+      "title": "해지 후 추가 결제 환불",
+      "scope": "refund",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/refund/refund-after-cancel",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_07",
+      "file": "documents/07_refund_refund-deadline.md",
+      "title": "환불 기준일과 요청 기한",
+      "scope": "refund",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/refund/refund-deadline",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_08",
+      "file": "documents/08_refund_refund-proration.md",
+      "title": "부분환불과 일할계산",
+      "scope": "refund",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/refund/refund-proration",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_09",
+      "file": "documents/09_refund_refund-processing.md",
+      "title": "환불 처리기간과 예외",
+      "scope": "refund",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/refund/refund-processing",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_10",
+      "file": "documents/10_subscription_subscription-cancel.md",
+      "title": "구독 해지 절차와 효력",
+      "scope": "subscription",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/subscription/subscription-cancel",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_11",
+      "file": "documents/11_subscription_subscription-change.md",
+      "title": "플랜 업그레이드와 다운그레이드",
+      "scope": "subscription",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/subscription/subscription-change",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_12",
+      "file": "documents/12_subscription_subscription-renewal.md",
+      "title": "자동갱신 관리",
+      "scope": "subscription",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/subscription/subscription-renewal",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_13",
+      "file": "documents/13_subscription_subscription-trial.md",
+      "title": "체험판 종료와 유료 전환",
+      "scope": "subscription",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/subscription/subscription-trial",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_14",
+      "file": "documents/14_entitlement_entitlement-matrix.md",
+      "title": "Nimbus 플랜별 권한 표",
+      "scope": "entitlement",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/entitlement/entitlement-matrix",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_15",
+      "file": "documents/15_entitlement_entitlement-sync.md",
+      "title": "권한 동기화 주기와 지연",
+      "scope": "entitlement",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/entitlement/entitlement-sync",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_16",
+      "file": "documents/16_entitlement_entitlement-free-pro.md",
+      "title": "Free와 Pro 전환 권한 반영",
+      "scope": "entitlement",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/entitlement/entitlement-free-pro",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_17",
+      "file": "documents/17_entitlement_entitlement-limits.md",
+      "title": "권한 한도 초과 시 동작",
+      "scope": "entitlement",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/entitlement/entitlement-limits",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_18",
+      "file": "documents/18_entitlement_entitlement-diagnosis.md",
+      "title": "권한 불일치 진단 절차",
+      "scope": "entitlement",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/entitlement/entitlement-diagnosis",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_19",
+      "file": "documents/19_incident_incident-severity.md",
+      "title": "장애 등급과 우선순위",
+      "scope": "incident",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/incident/incident-severity",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_20",
+      "file": "documents/20_incident_incident-entitlement.md",
+      "title": "권한 동기화 장애 대응",
+      "scope": "incident",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/incident/incident-entitlement",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_21",
+      "file": "documents/21_incident_incident-communication.md",
+      "title": "장애 안내와 보상 기준",
+      "scope": "incident",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/incident/incident-communication",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_22",
+      "file": "documents/22_technical_technical-login.md",
+      "title": "계정과 로그인 문제 진단",
+      "scope": "technical",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/technical/technical-login",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_23",
+      "file": "documents/23_technical_technical-api-errors.md",
+      "title": "Nimbus API 오류코드",
+      "scope": "technical",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/technical/technical-api-errors",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_24",
+      "file": "documents/24_support_support-escalation.md",
+      "title": "문의 접수와 에스컬레이션",
+      "scope": "support",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/support/support-escalation",
+      "section_count": 12
+    },
+    {
+      "document_id": "doc_25",
+      "file": "documents/25_support_support-approval.md",
+      "title": "승인 필요 작업 목록",
+      "scope": "support",
+      "version": "1.0",
+      "pii_class": "none",
+      "effective_from": "2026-01-01",
+      "source_uri": "internal://nimbus/policy/support/support-approval",
+      "section_count": 12
+    }
+  ]
+}

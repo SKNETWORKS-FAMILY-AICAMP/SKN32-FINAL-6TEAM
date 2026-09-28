@@ -1,0 +1,108 @@
+{
+ "case_id": "mixed-06",
+ "format": "mixed",
+ "defect": null,
+ "party": 4,
+ "inputs": [
+  {
+   "kind": "text",
+   "text": "안녕하세요 4명이서 서울 가요\n1일차 2026-11-09\n09:30 전쟁기념관\n12:30 광장시장 빈대떡\n15:00 청계천 산책"
+  },
+  {
+   "kind": "file",
+   "name": "rest.jpg"
+  }
+ ],
+ "lines": [
+  "안녕하세요 4명이서 서울 가요",
+  "1일차 2026-11-09",
+  "09:30 전쟁기념관",
+  "12:30 광장시장 빈대떡",
+  "15:00 청계천 산책",
+  "서울 3일 여행 (4명)",
+  "",
+  "2일차 2026-11-10",
+  "09:30 경복궁 관람",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 국립민속박물관",
+  "",
+  "3일차 2026-11-11",
+  "09:30 인사동 구경",
+  "12:30 명동교자 점심",
+  "15:00 여의도한강공원"
+ ],
+ "items": [
+  {
+   "date": "2026-11-09",
+   "start": "09:30",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-09",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-09",
+   "start": "15:00",
+   "title": "청계천 산책",
+   "place": "청계천",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "09:30",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-10",
+   "start": "15:00",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "09:30",
+   "title": "인사동 구경",
+   "place": "인사동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-11",
+   "start": "15:00",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

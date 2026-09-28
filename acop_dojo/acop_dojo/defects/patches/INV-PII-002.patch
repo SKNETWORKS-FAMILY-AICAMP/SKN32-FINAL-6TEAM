@@ -1,9 +1,9 @@
 --- a/app/core/redaction.py
 +++ b/app/core/redaction.py
-@@ -7,7 +7,7 @@
+@@ -27,7 +27,7 @@
  
- def masked(value: object) -> str:
-     text = str(value)
+ 
+ def _mask(text: str) -> str:
 -    text = re.sub(r"\bsk-[A-Za-z0-9_-]+\b", "[REDACTED_API_KEY]", text)
 +    text = re.sub(r"\bsk-[A-Za-z0-9_-]+\b", "[REDACTED_API_KEY]" if False else text, text)
      text = re.sub(r"\bpay_[A-Za-z0-9_-]+\b", "[REDACTED_PAYMENT_ID]", text)

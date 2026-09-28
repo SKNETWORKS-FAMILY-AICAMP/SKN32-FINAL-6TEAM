@@ -11,10 +11,7 @@ from uuid import UUID, uuid4
 
 import psycopg
 from psycopg import Connection
-from psycopg.types.json import Json
 
-from app.core.contracts import CaseStatus, StateConflict
-from app.infrastructure.db import repository
 
 
 class ActiveRunError(RuntimeError):

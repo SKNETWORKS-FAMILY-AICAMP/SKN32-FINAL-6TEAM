@@ -4,7 +4,7 @@ import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
-from app.core.contracts import Evidence, NextAction, TeamResult, TeamTask
+from app.core.contracts import NextAction, TeamResult, TeamTask
 
 
 class A2ATeamExecutor:

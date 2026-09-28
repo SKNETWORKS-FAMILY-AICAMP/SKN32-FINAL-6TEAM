@@ -42,7 +42,7 @@ $data = "C:\Users\playdata2\Documents\llm_workspace\_unified_mall_3\data\pgdata"
 
 | 알아야 할 것 | |
 |---|---|
-| **데이터 디렉터리가 저장소 밖이다** | `_unified_mall_3/data/pgdata`. `acop`은 그 클러스터 안에 있고 **`insurance_*`·`mall_vec` 등 옆 프로젝트 DB와 같은 서버**다. 이 서버를 내리면 옆 프로젝트도 멈춘다. A-COP은 `acop`만 쓴다 |
+| **데이터 디렉터리가 저장소 밖이다** | `_unified_mall_3/data/pgdata`. `acop`은 그 클러스터 안에 있고 **`insurance_*`·`mall_vec` 등 옆 프로젝트 DB와 같은 서버**다. 이 서버를 내리면 옆 프로젝트도 멈춘다. triPilot은 `acop`만 쓴다 |
 | 비정상 종료 후 | 기동 때 자동 복구가 돈다(`automatic recovery in progress … redo done`). fsync에 **40초 이상** 걸릴 수 있으니 `pg_ctl start`가 느려도 기다린다 |
 | 기동 후 | **건수를 대조하고 작업을 재개한다.** `knowledge_documents=25 · knowledge_chunks=306`(cs `CLAUDE.md` §5). 원본 매뉴얼의 `payments=30·knowledge_chunks=300`은 옛 도메인 값이라 지금과 다르다 |
 | extension | `vector`·`pgcrypto`는 **마이그레이션이 만든다.** `CREATE EXTENSION`을 손으로 치지 않는다 — 마이그레이션이 유일한 경로여야 재현된다 |
@@ -120,6 +120,17 @@ python -m pip install -r requirements.txt
 ```
 
 `[실측]` 2026-08-12 확인 — `pydantic 2.13.4` · `psycopg 3.3.4` · `tiktoken`.
+
+★`[2026-09-24]` **`acop_composer` 는 `requirements.txt` 로 안 깔린다.** `app/composer_host.py`(관리용 빌드
+`app.entrypoint:app` 과 그 시험)가 import 하는데, 소스는 `final_project_sample/acop_composer/` 에 있다.
+★`pip install -e final_project_sample` 로 깔지 않는다 — sample 의 `app` 패키지까지 깔려 cs 의 `app` 과 겹친다.
+CI 와 같은 방식으로 **경로만 붙인다** — `final_project_cs` 폴더에서 실행한다(현재 폴더가 경로의 맨 앞이라 cs 의 `app` 이 이긴다):
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path ..\final_project_sample).Path
+```
+
+`[실측]` 이 PC 는 sample 이 편집 모드로 깔려 있어 이 문제가 안 드러났다 — 깨끗한 환경(CI)에서 처음 드러났다.
 
 **`faster-whisper` 가 `onnxruntime` 미설치를 경고하는데 이 프로젝트와 무관한 옆 프로젝트 의존성이다.** 무시한다.
 
