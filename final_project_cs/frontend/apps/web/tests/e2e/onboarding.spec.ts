@@ -42,7 +42,8 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 �
   const progress = page.getByRole("progressbar", { name: "답변한 질문" });
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   await expect(next).toBeDisabled();
-  await expect(page.getByText("선택", { exact: true })).toHaveCount(0);
+  // No `optional` mark on the preference cards (the recovery email card above carries its own).
+  await expect(page.locator("#card-2").getByText("선택", { exact: true })).toHaveCount(0);
   // One theme only (backend `theme` is a single value): a second choice replaces the first.
   await page.getByRole("button", { name: "자연과 힐링" }).click();
   await page.getByRole("button", { name: "맛집 탐방" }).click();
