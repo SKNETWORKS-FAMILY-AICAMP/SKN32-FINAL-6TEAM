@@ -14,7 +14,7 @@ from typing import Any
 from app.core.contracts import Evidence, NextAction, TeamManifest, TeamResult, TeamTask
 
 from .._base import TravelTeamBase
-from ..itinerary_changes import (NoChange, next_after, plan_route_adjustment, route_of,
+from ..itinerary_changes import (NoChange, next_after, place_before, plan_route_adjustment, route_of,
                                 route_targets)
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
 
@@ -77,7 +77,8 @@ class MobilityTeam(ItineraryWork, TravelTeamBase):
             # ★사건을 못 읽었다 — 「사건 없음」으로 넘기지 않는다(결정 15 의 치명).
             return self._escalate(task, "fatal_source_failure", ctx["evidence"])
         plan = plan_route_adjustment(item=item, following=next_after(ctx["items"], item), route=route,
-                                     events=view["events"], now=ctx["at"])
+                                     events=view["events"], now=ctx["at"],
+                                     previous=place_before(ctx["items"], item))   # #38·#39 계산기 재탐색의 출발지
         return self.settle(task, ctx, plan)
 
     async def execute(self, task: TeamTask) -> TeamResult:

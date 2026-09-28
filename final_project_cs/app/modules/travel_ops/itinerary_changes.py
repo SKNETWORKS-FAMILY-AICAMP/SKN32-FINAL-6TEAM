@@ -204,6 +204,12 @@ def next_after(items: list[Item], item: Item) -> Item | None:
     return min(later, key=lambda other: other.seq) if later else None
 
 
+def place_before(items: list[Item], item: Item) -> Item | None:
+    """이 항목 앞의 **장소 항목**(이동 아님) — 경로를 다시 찾을 때 출발지(#38·#39)."""
+    earlier = [other for other in items if other.seq < item.seq and other.kind != "mobility"]
+    return max(earlier, key=lambda other: other.seq) if earlier else None
+
+
 # ── 감시 — 활동 ────────────────────────────────────────────────
 def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list[dict[str, Any]],
                              check: Callable[..., dict[str, Any]], now: datetime) -> Plan:
@@ -248,8 +254,12 @@ def planned_option(item: Item, route: dict[str, Any]) -> tuple[str, dict[str, An
 
 
 def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str, Any],
-                          events: dict[str, Any], now: datetime) -> Plan:
-    """계획한 수단이 쓰는 구간에 사건이 걸렸으면 경로를 다시 고른다. 안 걸렸으면 `clear`."""
+                          events: dict[str, Any], now: datetime, previous: Item | None = None) -> Plan:
+    """계획한 수단이 쓰는 구간에 사건이 걸렸으면 경로를 다시 고른다. 안 걸렸으면 `clear`.
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #38·#39]` 저장된 후보가 모두 막히면(unresolved) 이동 계산기가 켜져 있고 앞뒤
+      장소를 알 때 **사고를 반영해 새 경로를 찾는다**(사건 → 계산기 사고 조건 변환은 뜻이 같은 것만 — wiring).
+      출발은 지금·앞 일정 끝 중 늦은 쪽 이후. 옮기지 못한 사건(도로 통제)은 결과에 이름으로 남긴다."""
     chosen, planned = planned_option(item, route)
     hit = {target: events[target] for target in planned.get("uses", []) if target in events}
     if not hit:
@@ -262,6 +272,10 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
         next_start=following.starts_at if following else None, events=events)
     best, alternates, rejected = choose(candidates)
     if best is None:
+        rerouted = _engine_reroute(item=item, previous=previous, following=following, events=events, now=now,
+                                   causes=causes, rejected=rejected, planned=planned)
+        if rerouted is not None:
+            return rerouted
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)
@@ -280,6 +294,45 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
                            replacements={item.item_id: replacement},
                            summary={"from": planned.get("label"),
                                     "to": (best.option or {}).get("label")})
+
+
+def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None, events: dict[str, Any],
+                    now: datetime, causes: list[dict[str, Any]], rejected: list, planned: dict[str, Any]
+                    ) -> ItineraryChange | None:
+    """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
+    if previous is None or following is None:
+        return None
+    from .mobility import wiring
+    from .replan import Candidate
+    a, b = _leg_place(previous), _leg_place(following)
+    if a is None or b is None:
+        return None
+    disruptions, unmapped = wiring.disruptions_from_events(events)
+    leg = wiring.leg_planner(None, {}, disruptions=disruptions)
+    if leg is None:
+        return None
+    start_floor = max(now, previous.ends_at or previous.starts_at)
+    got, _why = leg(a, b, following.starts_at, start_floor)
+    if got is None:
+        return None
+    new_route = got["route"]
+    option = next(o for o in new_route["options"] if o["id"] == new_route["planned"])
+    best = Candidate(key=option["id"], place=None, changed_items=1, extra_cost_krw=None,
+                     shift_minutes=max(0, int((got["ends_at"] - (item.ends_at or item.starts_at)).total_seconds() // 60)),
+                     option=dict(option), starts_at=got["starts_at"], ends_at=got["ends_at"])
+    notice = route_notice(route=new_route, planned=planned, best=best, alternates=[], rejected=rejected,
+                          causes=causes, planned_arrival=item.ends_at or item.starts_at,
+                          next_title=following.title, replay=False)
+    detail = {**item.detail, "route_def": new_route, "option": best.key, "auto_adjusted_at": now.isoformat(),
+              "other_options": notice["other_options"], "alternates": [],
+              "rerouted_by": "mobility_engine", **({"unmapped_events": unmapped} if unmapped else {})}
+    detail.pop("route", None)                    # 새 경로 정의를 들고 간다 — 옛 routes 키를 가리키지 않는다
+    replacement = item.replaced_by(place=None, title=f"{a['name']} → {b['name']} · {option.get('label')}",
+                                   starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+    return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
+                           replacements={item.item_id: replacement},
+                           summary={"from": planned.get("label"), "to": option.get("label"),
+                                    "rerouted_by": "mobility_engine"})
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
