@@ -202,6 +202,7 @@ def main() -> int:
         return 0
 
     started = time.time()
+    os.makedirs(BUILD, exist_ok=True)     # 새로 받은 저장소에는 _build 가 없다
 
     if not args.keep:
         # 지우고 다시 만든다. 남은 것 위에 얹으면 「처음부터」가 아니다.

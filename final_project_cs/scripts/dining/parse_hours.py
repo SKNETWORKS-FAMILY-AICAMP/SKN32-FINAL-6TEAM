@@ -429,6 +429,7 @@ def main() -> None:
             "notes": hnotes + cnotes,
         })
 
+    os.makedirs(OUT, exist_ok=True)      # 생성물 폴더는 저장소에 없다(.gitignore) — 새로 받으면 비어 있다
     out = os.path.join(OUT, "parsed_hours.json")
     json.dump(results, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
