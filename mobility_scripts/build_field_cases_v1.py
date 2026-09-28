@@ -29,7 +29,11 @@ for _p in (REPO / "final_project_cs", REPO):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from app.modules.travel_ops.mobility.engine.paths import PROCESSED, RAW_MOBILITY   # noqa: E402
+from app.modules.travel_ops.mobility.engine import paths as _paths   # noqa: E402
+
+# ☆`[2026-09-29 문제목록 #48]` 엔진 paths 가 import 때 .env 를 읽지 않게 됐다 — 명령줄은 여기서 부른다
+_paths.load_cli_env()
+PROCESSED, RAW_MOBILITY = _paths.PROCESSED, _paths.RAW_MOBILITY
 
 GT = PROCESSED / "mobility" / "ground_truth"
 TAGS = RAW_MOBILITY / "ground_truth" / "tmoney_tags_202609.csv"

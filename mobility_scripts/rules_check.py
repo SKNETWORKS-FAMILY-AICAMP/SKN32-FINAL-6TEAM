@@ -22,6 +22,14 @@ def find_rules():
 
 RULES = find_rules()
 R = json.loads(RULES.read_text(encoding="utf-8"))
+# ☆`[2026-09-29 문제목록 #49]` 여유·상한·노후 기준은 팀 guardrails.yaml 이 정본이다 — 규칙 칸의 value_from 을 채워 읽는다
+_g = RULES.resolve().parents[1] / "guardrails.py"
+if _g.exists():
+    import importlib.util
+    _spec = importlib.util.spec_from_file_location("_mobility_guardrails", _g)
+    _mod = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_mod)
+    R = _mod.resolve(R)
 print(f"규칙 {R['rules_version']} (개정일 {R['effective_date']}, source_id {R['source_id']})\n")
 
 # ── ① 구조 검사 ───────────────────────────────────────────────────
