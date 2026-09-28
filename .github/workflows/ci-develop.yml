@@ -81,3 +81,10 @@ jobs:
       - name: 시험
         run: >-
           python -m pytest tests/architecture tests/contract tests/unit -q
+      # ★팀이 시험을 저장소 맨 위 tests/<팀>/ 에 두는 방식(Mobility 방식)도 돌린다(2026-09-28).
+      #   입구 설정은 tests/conftest.py — 직접 실행하는 스크립트 방식 파일은 모으지 않고 목록만 보인다.
+      #   시험이 하나도 없으면 pytest 는 5 로 끝나므로 그 경우만 통과로 본다.
+      - name: 팀 시험 (저장소 맨 위 tests/)
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -d tests ]; then python -m pytest tests -q || test $? -eq 5; else echo "tests/ 없음 — 건너뜀"; fi

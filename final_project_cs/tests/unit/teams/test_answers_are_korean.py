@@ -64,14 +64,20 @@ def _answer_literals(path: Path) -> list[tuple[int, str]]:
     return found
 
 
+# ★2026-09-28 — 팀이 폴더(`activity/team.py`)로 옮겨 가도 따라가게 하위 폴더까지 훑는다.
+#   전에는 `glob("*.py")` 한 층만 봐서, 폴더로 옮긴 팀의 답변이 검사에서 통째로 빠졌다.
+#   팀 폴더의 `__init__.py` 는 본체를 담을 수 있어(본체를 거기 쓰는 방식도 허용) 뺀 대상이
+#   `travel_ops/__init__.py` 하나뿐이다.
 TEAM_FILES = sorted(
-    p for p in TEAM_DIR.glob("*.py")
-    if p.name not in {"__init__.py"} and not p.name.endswith("_policy.py")
+    p for p in TEAM_DIR.rglob("*.py")
+    if "__pycache__" not in p.parts
+    and p != TEAM_DIR / "__init__.py"
+    and not p.name.endswith("_policy.py")
 )
 
 
 # invariant 성격 — 팀이 늘어나도 자동으로 포함된다.
-@pytest.mark.parametrize("path", TEAM_FILES, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", TEAM_FILES, ids=lambda p: p.relative_to(TEAM_DIR).as_posix())
 def test_customer_facing_answers_are_written_in_korean(path: Path):
     offenders = []
     for lineno, text in _answer_literals(path):
