@@ -90,7 +90,7 @@ function replyFor(result: { status?: string; case_status?: string; answer?: stri
     case "asked": return t("바꾸기 전에 확인이 필요해요. 여행계획서에서 안을 골라 주세요.", "We need your choice before changing anything. Pick an option on your plan page.");
     case "rolled_back": return t("이전 일정으로 되돌렸어요.", "Your itinerary was rolled back.");
     case "kept": return t("일정은 그대로 두었어요.", "Your itinerary was kept as it is.");
-    case "no_alternate": return t("바꿀 만한 다른 안을 찾지 못해 일정은 그대로예요. 담당자가 확인해요.", "No suitable alternative was found, so nothing changed. A person will review it.");
+    case "no_alternate": return t("바꿀 만한 다른 안을 찾지 못해 일정은 그대로예요.", "No suitable alternative was found, so nothing changed.");
     case "duplicate": return t("같은 요청을 이미 받았어요.", "We already received this request.");
     default: return t(`요청을 받았어요 (상태: ${result.status ?? result.case_status ?? "?"}).`, `Request received (status: ${result.status ?? result.case_status ?? "?"}).`);
   }
