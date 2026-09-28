@@ -19,11 +19,11 @@ async function agreeTerms(page: Page) {
   await page.getByRole("button", { name: "동의하고 다음으로" }).click();
 }
 
-/** Preferences open: skip all nine questions, then add a plan and start its check. */
+/** Preferences open: skip all eight questions, then add a plan and start its check. */
 async function skipPreferencesAndRegister(page: Page) {
   await page.getByRole("button", { name: "시작하기" }).click();
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
-  for (let question = 0; question < 9; question += 1) await skip.click();
+  for (let question = 0; question < 8; question += 1) await skip.click();   // 설문은 8문항이다(내국인 여부 문항을 뺐다)
   await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요.", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);

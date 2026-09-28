@@ -91,10 +91,12 @@ test("키가 거절되면(서버가 모르는 키) 조용히 새 사용자가 �
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE)).toBeNull();
 });
 
-test("내 여행 목록을 읽지 못해도(서버 500) 시작 화면은 그대로 쓸 수 있고, 목록을 못 읽었다고 알린다(여행이 없다는 말이 아니다)", async ({ page, request }) => {
+test("내 여행 목록을 읽지 못해도(서버 500) 첫 화면은 그대로 쓸 수 있고, 못 읽었다고 알린다(여행이 없다는 말이 아니다)", async ({ page, request }) => {
   await stub(request).scenario({ fail: "trips" });
   await start(page);
-  await page.goto("/start");
-  await expect(page.getByRole("alert").filter({ hasText: "내 여행 목록을 읽지 못했어요" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /약관 동의/ })).toBeVisible();
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "내 여행", exact: true });
+  await expect(card.getByRole("alert")).toBeVisible();
+  await expect(card.getByRole("button", { name: "다시 불러오기" })).toBeVisible();
+  await expect(card).not.toContainText("아직 등록한 여행이 없어요");
 });
