@@ -13,9 +13,13 @@ export const DEMO_VERIFICATION_DURATION = 6000;
 export interface DemoStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
   readonly length: number;
   key(index: number): string | null;
 }
+
+/** A trip ID is a UUID; anything else never reaches the storage keys. */
+const tripIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface DemoGatewayOptions {
   storage?: DemoStorage | (() => DemoStorage);
@@ -101,7 +105,7 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
   }
 
   function read(tripId: string, t: Translate): StoredTrip {
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tripId)) throw notFound(t);
+    if (!tripIdPattern.test(tripId)) throw notFound(t);
     let raw: string | null;
     try { raw = storage(t).getItem(DEMO_STORAGE_PREFIX + tripId); }
     catch (error) { throw error instanceof GatewayError ? error : storageError(t); }
@@ -228,6 +232,16 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
         { id: crypto.randomUUID(), role: "assistant", text: demoReply(stored.trip.stops, text, t), createdAt },
       );
       return save(stored, t);
+    },
+    /** Removes only this trip's record — its itinerary, check and chat. Settings, onboarding and other trips stay. */
+    async deleteTrip(tripId, language) {
+      const t = translator(language);
+      if (!tripIdPattern.test(tripId)) throw notFound(t);
+      const store = storage(t);
+      try {
+        if (store.getItem(DEMO_STORAGE_PREFIX + tripId) === null) throw notFound(t);
+        store.removeItem(DEMO_STORAGE_PREFIX + tripId);
+      } catch (error) { throw error instanceof GatewayError ? error : storageError(t); }
     },
   };
 }
