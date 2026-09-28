@@ -371,6 +371,38 @@ def fare_of(v, legs, legs_result):
     return None                         # 버스 섞인 환승 — fare.transfer.bus_distance 근거없음
 
 
+def fare_upper_of(v, legs, legs_result):
+    """버스가 섞인 환승의 **요금 상한**(1인) — 규칙 fare.transfer.cap = sum_of_single(확정): 통합요금은 탈것마다 따로 낸
+    요금의 합을 넘지 않는다. 합성 요금(fare_of)은 버스 운임거리 근거가 없어 못 내지만(fare.transfer.bus_distance),
+    탈것별 단일 요금은 근거가 있다 — 지하철 묶음(개찰 안 환승)은 subway_fare, 버스는 bus_fare.
+
+    ☆`[2026-09-29 문제목록 #20]` 앞 판은 이 경로의 요금 칸을 비웠다 → 우리 재계획이 「요금 미상」으로 후보를 떨어뜨렸다.
+      상한은 지어낸 값이 아니라 확정 규칙에서 나온 값이다. 부르는 쪽은 「상한」이라고 밝힌다. 한 조각이라도 모르면 None."""
+    ms = [leg_mode(x) for x in legs]
+    if "bus" not in ms or len(ms) < 2 or set(ms) - {"bus", "subway"}:
+        return None                                         # 버스가 섞인 환승이 아니다 — fare_of 의 몫이거나 규칙 밖
+    rides = ride_results(legs, legs_result)
+    if rides is None:
+        return None
+    groups = []                                             # (수단, [leg], [결과]) — 연속 지하철은 한 묶음
+    for leg, lr in zip(legs, rides):
+        m = leg_mode(leg)
+        if m == "subway" and groups and groups[-1][0] == "subway":
+            groups[-1][1].append(leg)
+            groups[-1][2].append(lr)
+        else:
+            groups.append((m, [leg], [lr]))
+    if not any(m == "bus" for m, _l, _r in groups):
+        return None                                         # 버스가 안 섞였다 — 이 함수의 몫이 아니다
+    total = 0
+    for m, gl, gr in groups:
+        f = subway_fare(v, gl, gr) if m == "subway" else bus_fare(v, gl, gr) if m == "bus" else None
+        if f is None:
+            return None
+        total += f
+    return total
+
+
 # ── 혼잡(33 · @ 부품의 경고를 이유로 옮긴다) ─────────────────────────────────
 def severe_hits(warnings):
     """판정기 경고 중 극심 혼잡(MOB_W_CONGESTION_SEVERE) — [문구]. 판정기가 이미 낸 사실만 옮긴다."""
