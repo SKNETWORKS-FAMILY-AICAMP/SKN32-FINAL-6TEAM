@@ -103,3 +103,56 @@ test("설정 메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 �
   await expect(chatToggle).toBeFocused();
   await noHorizontalScroll(page);
 });
+
+test("소개 첫 화면의 언어 카드로 언어를 고르면 카드가 접히고, 이용 방법 캡처를 마우스로 끌거나 버튼으로 넘겨 볼 수 있다", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  const card = page.getByRole("button", { name: /LANGUAGE/ });
+  await expect(card).toHaveAttribute("aria-expanded", "false");
+  await card.click();
+  await expect(card).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: "한국어", exact: true }).click();
+  await expect(card).toHaveAttribute("aria-expanded", "false");
+  await expect(card).toBeFocused();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
+  await page.reload();
+  await expect(page.getByRole("button", { name: /LANGUAGE/ })).toContainText("한국어");
+
+  await page.getByRole("button", { name: "다음 화면" }).first().click();
+  const guide = page.getByRole("region", { name: "triPilot 이용 방법" });
+  const firstShot = guide.getByRole("group", { name: "1 / 4" }).getByRole("img");
+  await expect(firstShot).toHaveAccessibleName("앱 화면: 나의 여행 취향 알려주기");
+  await expect.poll(() => firstShot.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+
+  const track = guide.getByRole("group", { name: "1 / 4" }).locator("..");
+  // Measure only after the page has finished snapping to the second screen.
+  await expect.poll(() => page.locator("main").evaluate((main) => Math.abs(main.scrollTop - (main.children[1] as HTMLElement).offsetTop))).toBeLessThan(2);
+  const dragBy = async (distance: number) => {
+    const box = (await track.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + distance, box.y + box.height / 2, { steps: 8 });
+    await page.mouse.up();
+  };
+  const offsetFromCard = (index: number) => track.evaluate((element, card) => {
+    const cards = [...element.children] as HTMLElement[];
+    return Math.abs(element.scrollLeft - (cards[card].offsetLeft - cards[0].offsetLeft));
+  }, index);
+  await dragBy(-150);
+  await expect(guide.getByText("2 / 4", { exact: true })).toBeVisible();
+  await expect.poll(() => offsetFromCard(1)).toBeLessThan(2);
+  await dragBy(-20);
+  await expect.poll(() => offsetFromCard(1)).toBeLessThan(2);
+  await dragBy(200);
+  await expect(guide.getByText("1 / 4", { exact: true })).toBeVisible();
+  await expect.poll(() => offsetFromCard(0)).toBeLessThan(2);
+
+  const next = guide.getByRole("button", { name: "다음 단계" });
+  for (const step of [2, 3, 4]) {
+    await next.click();
+    await expect(guide.getByText(`${step} / 4`, { exact: true })).toBeVisible();
+  }
+  await expect(next).toHaveAttribute("aria-disabled", "true");
+  await noHorizontalScroll(page);
+});
