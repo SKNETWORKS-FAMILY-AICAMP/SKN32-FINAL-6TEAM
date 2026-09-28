@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { noHorizontalScroll, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
+import { noHorizontalScroll, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
 
 test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 9문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
@@ -112,12 +112,11 @@ test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로�
 
   const menu = page.getByRole("button", { name: "Menu", exact: true });
   await menu.click();
-  const settings = page.getByRole("dialog", { name: "Menu" });
-  await settings.getByText("한국어").click();
+  await pickMenuLanguage(page, "Menu", "한국어");
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await expect(page).toHaveTitle("triPilot · 당신다운 여행의 시작");
-  await page.getByRole("dialog", { name: "메뉴" }).getByText("플로팅 버튼").click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "플로팅 버튼 사용" }).check();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "메뉴", exact: true })).toBeFocused();

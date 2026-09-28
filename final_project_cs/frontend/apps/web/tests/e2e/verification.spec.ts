@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openCompletedResults, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { openCompletedResults, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -99,7 +99,7 @@ test("결과 화면에서 언어를 바꾸면 같은 결과가 영어로 다시 
   await submitPlan(page);
   await openCompletedResults(page);
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await page.getByRole("dialog", { name: "메뉴" }).getByText("English").click();
+  await pickMenuLanguage(page, "메뉴", "English");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "You’re ready for your journey.", exact: true })).toBeVisible();
   const shopping = page.locator("details").filter({ has: page.getByText("성수동 쇼핑", { exact: true }) });

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
@@ -23,6 +24,11 @@ export function Panel({ children, className = "", ...props }: ComponentProps<"se
 
 export function Badge({ children, tone = "success", className = "" }: { children: ReactNode; tone?: "success" | "warning"; className?: string }) {
   return <span className={`${styles.badge} ${styles[tone]} ${className}`}>{children}</span>;
+}
+
+/** The one default profile image, shared by the menu and My page. Changing it is not offered yet. */
+export function Avatar({ size, className = "" }: { size: number; className?: string }) {
+  return <Image src="/images/tripilot-avatar-default.svg" alt="" width={size} height={size} unoptimized className={`${styles.avatar} ${className}`} />;
 }
 
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {

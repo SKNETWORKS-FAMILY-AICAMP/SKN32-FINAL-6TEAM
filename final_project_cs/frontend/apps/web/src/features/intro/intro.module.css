@@ -15,21 +15,8 @@
 .badge { margin-top: auto; margin-bottom: 6px; align-self: flex-start; max-width: 100%; background: #fffffff0; border: 1px solid #fff; padding: 15px 17px; border-radius: 15px; box-shadow: 0 8px 30px #24392f0b; }
 .badge small { font-size: 9px; color: var(--color-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
 .badge strong { font-size: 13px; font-weight: 600; }
+/* The card around the shared language picker (`components/ui/language-picker`). */
 .language { z-index: 1; margin: 16px 0 10px; background: #fffffff0; border: 1px solid #fff; border-radius: 15px; box-shadow: 0 8px 30px #24392f0b; }
-.languageToggle { width: 100%; min-height: 54px; display: flex; align-items: center; gap: 12px; padding: 9px 15px; text-align: left; color: var(--color-primary); }
-.languageToggle > span { flex: 1; display: grid; gap: 2px; }
-.languageToggle small { font-size: 9px; letter-spacing: 1.5px; }
-.languageToggle strong { font-size: 14px; font-weight: 650; color: var(--color-text); }
-.chevron { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
-.languageOpen .chevron { transform: rotate(180deg); }
-/* The option list grows downward from the card by animating its row from 0fr to 1fr. */
-.languageList { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1); }
-.languageOpen .languageList { grid-template-rows: 1fr; }
-.languageList > div { min-height: 0; overflow: hidden; display: grid; gap: 6px; padding: 0 12px; }
-.languageOption { min-height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 11px; background: #fff; font-size: 14px; }
-.languageOption:first-child { margin-top: 6px; }
-.languageOption:last-child { margin-bottom: 12px; }
-.languageOption[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-soft); color: var(--color-primary); font-weight: 650; }
 .guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 20px; }
 /* Slides bleed to the frame edges so the next card peeks in from the right. */
 .slides { flex: 1; min-height: 0; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 27px; margin: 0 -27px; padding: 2px 27px 8px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
