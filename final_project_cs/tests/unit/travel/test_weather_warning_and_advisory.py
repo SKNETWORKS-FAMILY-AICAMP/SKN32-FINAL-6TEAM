@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from app.core.context import PolicyChunk
-from app.core.contracts import ContextPack, NextAction, ToolNotAllowed
+from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.travel.base import TravelSources
 from app.infrastructure.travel.kma_warning import KmaWarningSource, parse_status
 from app.infrastructure.travel.mofa import MofaTravelAlarm
