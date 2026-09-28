@@ -1,4 +1,8 @@
-﻿alembic==1.14.0
+﻿# ☆`[2026-09-29 이동 계산기 문제목록 #64]` 이 목록은 **이동 담당 자료 기기(수집·가공·학습) 전용** pip freeze 다.
+#   팀 서버·팀 venv 에 설치하지 않는다 — numpy(2.2.1 ↔ 팀 1.26.4)·scikit-learn(1.6.1 ↔ 팀 1.5.2) 등 버전이 팀 목록과 다르다.
+#   서비스에 들어가는 계산기(final_project_cs/app/modules/travel_ops/mobility/engine/)가 쓰는 바깥 패키지는
+#   python-dotenv · PyYAML · numpy 셋뿐이고 모두 final_project_cs/requirements.txt 에 있다(팀 목록 판으로 시험 통과 · 2026-09-29).
+alembic==1.14.0
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
