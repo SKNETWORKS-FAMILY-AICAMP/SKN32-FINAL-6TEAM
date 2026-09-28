@@ -79,6 +79,17 @@ def test_48_fresh_import_is_unset_and_leaves_environ_alone():
     assert out.stdout.split() == ["unset", "True"], out.stderr
 
 
+def test_48_cli_processed_reads_env_only_when_nobody_configured(tmp_path):
+    """점검 스크립트 길 — 아무도 안 정했으면 DATA_DIR 을 따르고, 서버가 끈 뒤에는 새지 않는다."""
+    env = dict(os.environ, DATA_DIR=str(tmp_path))
+    code = ("import app.modules.travel_ops.mobility.engine.paths as p; a = p.cli_processed(); s1 = p.SOURCE; "
+            "p.disable(); b = p.cli_processed(); print(a, s1, b, p.SOURCE, sep='|')")
+    out = subprocess.run([sys.executable, "-B", "-c", code], cwd=CS_ROOT, env=env, capture_output=True, text=True)
+    a, s1, b, s2 = out.stdout.strip().split("|")
+    assert Path(a) == tmp_path / "travel" / "processed" and s1 == "cli_env", out.stderr
+    assert Path(b) == paths.UNSET_DIR / "travel" / "processed" and s2 == "disabled"
+
+
 def test_48_configure_refuses_empty_and_sets_source(mini):
     with pytest.raises(ValueError):
         paths.configure("")
