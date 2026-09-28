@@ -6,6 +6,10 @@
 .card { display: grid; gap: 22px; }
 .identity { display: grid; justify-items: center; gap: 10px; text-align: center; }
 .name { max-width: 100%; font-size: 18px; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
+/* The edit screen's name line: the same place and weight as `.name`, as a field. */
+.nameInput { width: min(100%, 260px); min-height: 46px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 17px; font-weight: 700; letter-spacing: -.3px; text-align: center; }
+.nameInput::placeholder { color: var(--color-muted); font-weight: 600; }
+.nameInput[aria-invalid="true"] { border-color: var(--color-error-border); }
 .fields { display: grid; gap: 18px; margin: 0; }
 .fields > div { display: grid; gap: 6px; min-width: 0; }
 .fields dt, .label, .field label { font-size: 12px; font-weight: 650; color: var(--color-muted); }

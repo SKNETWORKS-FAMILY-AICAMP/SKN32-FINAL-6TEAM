@@ -22,7 +22,9 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
-  await expect(page.getByText("아직 발급된 닉네임이 없어요.", { exact: true })).toBeVisible();
+  await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
+  // The name line under the image is the only nickname: no second 「닉네임」 row.
+  await expect(page.locator("#main-content dt")).toHaveText(["발급된 토큰", "토큰 복구용 이메일"]);
   await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
   await expect(page.getByText(MASK)).toBeVisible();
   await expect(page.getByText(TOKEN)).toHaveCount(0);
@@ -42,6 +44,11 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
 
   const nickname = page.getByLabel("닉네임");
   await expect(nickname).toHaveValue("");
+  // The name line itself is the field: under the image, above the token, showing what My page shows.
+  await expect(nickname).toHaveAttribute("placeholder", "닉네임 미발급");
+  const [imageTop, fieldTop, tokenTop] = await Promise.all([page.locator("#main-content img").first(), nickname, page.getByText("발급된 토큰", { exact: true })]
+    .map(async (item) => (await item.boundingBox())!.y));
+  expect(imageTop < fieldTop && fieldTop < tokenTop).toBe(true);
   await nickname.fill("여행자");
   await nickname.fill("   ");
   await expect(page.getByText("닉네임을 입력해 주세요.", { exact: true })).toBeVisible();
@@ -62,7 +69,7 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
 
   await page.getByRole("link", { name: "취소", exact: true }).click();
   await expect(page).toHaveURL(/\/mypage$/);
-  await expect(page.getByText("아직 발급된 닉네임이 없어요.", { exact: true })).toBeVisible();
+  await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ })).toContainText("닉네임 미발급");
   await page.keyboard.press("Escape");
