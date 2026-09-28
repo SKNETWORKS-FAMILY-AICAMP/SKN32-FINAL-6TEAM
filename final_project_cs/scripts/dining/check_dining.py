@@ -245,8 +245,8 @@ def check_dietary(cur, s: Sheet, day: date) -> None:
                        FROM dining.suggest_alternatives(%s, %s, NULL, %s)
                        WHERE place_uid IS NOT NULL""", (uid, at(day, 12 * 60), [code]))
         alts = cur.fetchall()
-        # 대안 후보는 「아니라고 확인된 곳」만 뺀다(027). 그래서 모르는 곳이 섞일 수 있다.
-        # 조건이 식이 제한이면 모르는 곳을 권하는 것은 위험하므로 따로 드러낸다.
+        # 식이 조건은 맞다고 확인된 곳만 대안으로 낸다(219). 모르는 곳이 섞이면 실패.
+        # 대안이 0곳이면 통과 — 없는 것을 지어내지 않는다(안내는 「근처에 확인된 … 없어요」).
         wrong, unknown = [], []
         for _, auid, aname in alts:
             cur.execute("SELECT dining.meets_condition(%s, %s)", (auid, code))
@@ -255,11 +255,11 @@ def check_dietary(cur, s: Sheet, day: date) -> None:
                 wrong.append(aname)
             elif meets is None:
                 unknown.append(aname)
-        s.add(step, bool(alts) and not wrong, f"{label} 조건으로 찾은 대안에 「아닌 곳」이 없다",
+        s.add(step, not wrong, f"{label} 조건으로 찾은 대안에 「아닌 곳」이 없다",
               f"{name} 대안 → " + (", ".join(a[2] for a in alts) or "없음")
               + (f" · 아닌 곳: {', '.join(wrong)}" if wrong else ""))
-        s.add(step, bool(alts) and not unknown, f"{label} 조건으로 찾은 대안이 {label}로 확인된 곳이다",
-              "모두 확인된 곳" if not unknown else
+        s.add(step, not unknown, f"{label} 조건으로 찾은 대안이 {label}로 확인된 곳이다",
+              ("모두 확인된 곳" if alts else "근처에 확인된 곳이 없어 대안 0곳") if not unknown else
               f"확인 안 된 곳이 섞였다: {', '.join(unknown)} — 조건을 모르는 곳도 대안으로 낸다")
 
 
