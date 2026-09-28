@@ -1,52 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { count, initialAnswers, questions, skip, toggle } from "./model";
-import { preferencesPayloadSchema, questionKeys, skipDefaults, toPayload, UNSELECTED } from "./payload";
+import { initialAnswers, questions, skip, toggle } from "./model";
+import { SURVEY_VERSION, toSurvey, tripSurveySchema } from "./payload";
 
-describe("preferences payload", () => {
-  it("sends every skipped question as its default and lists it as skipped", () => {
+describe("trip survey (backend constraints.survey)", () => {
+  it("sends only the version when every question is skipped, so the backend applies its own defaults", () => {
     const allSkipped = questions.reduce((answers, _, index) => skip(answers, index), initialAnswers);
-    const payload = toPayload(allSkipped, "ko");
-    expect(payload.answers).toEqual(skipDefaults);
-    expect(Object.values(payload.answers).every((value) => value === UNSELECTED)).toBe(true);
-    expect(payload.skipped).toEqual([...questionKeys]);
-    expect(preferencesPayloadSchema.safeParse(payload).success).toBe(true);
+    expect(toSurvey(allSkipped)).toEqual({ version: SURVEY_VERSION });
   });
 
-  it("sends answers as option codes, with numbers for headcount and a custom budget", () => {
-    let answers = toggle(initialAnswers, "themes", "food", true);
-    answers = count(toggle(answers, "companions", "family", true), "children", 1);
-    answers = { ...answers, foodNone: true };
-    answers = toggle(answers, "transport", "walk", true);
-    answers = { ...toggle(answers, "budget", "custom", false), budgetCustom: "800000" };
-    answers = toggle(answers, "citizen", "foreign", false);
-    answers = toggle(answers, "priority", "activity", false);
-    answers = { ...answers, detailFood: "taste", detailActivity: "healing", detailTransport: "walk" };
-    answers = skip(toggle(answers, "religion", "none", false), 8);
-
-    const payload = toPayload(answers, "en");
-    expect(payload).toEqual({
-      version: 1,
-      language: "en",
-      answers: {
-        themes: ["food"],
-        companions: { types: ["family"], adults: 2, children: 1, infants: 0 },
-        food: { none: true, allergies: [], diet: [], religious: [] },
-        transport: ["walk"],
-        budget: { range: "custom", amountKrw: 800000 },
-        nationality: "foreign",
-        priority: "activity",
-        detailPriority: { food: "taste", activity: "healing", transport: "walk" },
-        religion: UNSELECTED,
-      },
-      skipped: ["religion"],
+  it("maps each answer to its backend field", () => {
+    const answers = {
+      ...initialAnswers, theme: "food", party: "family", transport: ["public", "walk"], citizen: "foreign", priority: "transport",
+      detailFood: "taste", detailActivity: "healing", detailTransport: "walk", indoorDining: "indoor", indoorActivity: "any", onDisruption: "ask_first", pace: "relaxed",
+    };
+    expect(toSurvey(answers)).toEqual({
+      version: SURVEY_VERSION, theme: "food", party: "family", preferred_mobility: ["public", "walk"], domestic: false, priority: ["mobility"],
+      priority_details: { food: ["taste"], activity: ["healing"], mobility: ["walk"] }, indoor_outdoor: { dining: "indoor", activity: "any" },
+      on_disruption: "ask_first", pace: "relaxed",
     });
-    expect(preferencesPayloadSchema.safeParse(payload).success).toBe(true);
+    expect(toSurvey({ ...answers, citizen: "domestic" }).domestic).toBe(true);
   });
 
-  it("treats “Prefer not to say” as an answer, not a skip, and rejects labels in place of codes", () => {
-    const payload = toPayload(toggle(initialAnswers, "religion", "skip", false), "ko");
-    expect(payload.answers.religion).toBe("skip");
-    expect(payload.skipped).not.toContain("religion");
-    expect(preferencesPayloadSchema.safeParse({ ...payload, answers: { ...payload.answers, themes: ["맛집 탐방"] } }).success).toBe(false);
+  it("rejects what the backend rejects: unknown fields, values outside the contract and another version", () => {
+    const survey = toSurvey(toggle(initialAnswers, "pace", "packed", false));
+    expect(tripSurveySchema.safeParse(survey).success).toBe(true);
+    expect(tripSurveySchema.safeParse({ ...survey, budget: "mid" }).success).toBe(false);
+    expect(tripSurveySchema.safeParse({ ...survey, pace: "unselected" }).success).toBe(false);
+    expect(tripSurveySchema.safeParse({ ...survey, version: "1" }).success).toBe(false);
   });
 });

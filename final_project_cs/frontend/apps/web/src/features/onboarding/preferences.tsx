@@ -4,8 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import {
-  answeredCount, chosenLabel, count, done, INTRO_STEP, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid, validationHint,
-  type Answers, type ChoiceKey, type CountKey, type ListKey, type Option,
+  answeredCount, chosenLabel, done, INTRO_STEP, LAST_STEP, options, questions, skip as skipQuestion, stepNames, toggle, unskip, valid,
+  type Answers, type ChoiceKey, type ListKey, type Option,
 } from "./model";
 import styles from "./onboarding.module.css";
 
@@ -73,7 +73,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
   function change(direction: 1 | -1, fromSwipe = false) {
     if (busy.current) return;
     if (direction > 0 && step !== INTRO_STEP && !valid(step, answers)) {
-      setForcedError({ step, text: validationHint(step, answers, t) || t("이 카드의 선택을 마치면 다음으로 이동할 수 있어요.", "Complete this card before moving forward.") });
+      setForcedError({ step, text: t("이 카드의 선택을 마치면 다음으로 이동할 수 있어요.", "Complete this card before moving forward.") });
       position();
       return;
     }
@@ -142,40 +142,18 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
 
   const chips = (key: ListKey | ChoiceKey, multiple = false, grid = false, icon = false) => <div className={`${styles.chips} ${grid ? styles.grid : ""}`} role="group">{options[key].map((option) => chip(key, option, multiple, icon))}</div>;
   const label = (ko: string, en: string) => <p className={styles.groupLabel}>{t(ko, en)}</p>;
-  const counter = (key: CountKey, ko: string, en: string, captionKo: string, captionEn: string, min: number) => <div className={styles.counterRow}>
-    <span className={styles.counterLabel}>{t(ko, en)}<span className={styles.counterCaption}>{t(captionKo, captionEn)}</span></span>
-    <div className={styles.counter}>
-      <button type="button" aria-label={t(`${ko} 인원 줄이기`, `Fewer ${en.toLowerCase()}`)} disabled={answers[key] <= min} onClick={() => { update(count(answers, key, -1)); onFeedback(); }}>−</button>
-      <output aria-label={t(`${ko} 인원`, `${en} count`)}>{answers[key]}</output>
-      <button type="button" aria-label={t(`${ko} 인원 늘리기`, `More ${en.toLowerCase()}`)} disabled={answers[key] >= 20} onClick={() => { update(count(answers, key, 1)); onFeedback(); }}>+</button>
-    </div>
-  </div>;
 
   function body(index: number): ReactNode {
     switch (index) {
-      case 0: return chips("themes", true, true, true);
-      case 1: return <>{chips("companions", true)}<div className={styles.counterList}>{counter("adults", "성인", "Adults", "만 13세 이상", "Ages 13+", 1)}{counter("children", "어린이", "Children", "만 2–12세", "Ages 2–12", 0)}{counter("infants", "유아", "Infants", "만 2세 미만", "Under 2", 0)}</div></>;
-      case 2: return <>
-        {label("알레르기", "Allergies")}{chips("allergies", true)}
-        {label("식단", "Diet")}{chips("diet", true)}
-        {label("종교상 피하는 음식", "Religious food restrictions")}{chips("foodReligion", true)}
-        <div className={`${styles.chips} ${styles.noneRow}`}>
-          <button type="button" className={`${styles.chip} ${answers.foodNone ? styles.selected : ""} ${touched.has("food-none") ? styles.selectionFeedback : ""}`} aria-pressed={answers.foodNone} onClick={(event) => {
-            update(answers.foodNone ? { ...answers, foodNone: false } : { ...answers, foodNone: true, allergies: [], diet: [], foodReligion: [] });
-            feedback(event.currentTarget, "food-none");
-          }}><span className={styles.optionCheck} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>{t("해당 없음", "None apply")}</button>
-        </div>
-      </>;
-      case 3: return chips("transport", true, true, true);
-      case 4: return <>
-        <div className={styles.budgetRow}><span>{t("전체 여행 · 1인", "Entire trip · per person")}</span><span>₩ KRW</span></div>
-        {chips("budget", false, true)}
-        {answers.budget === "custom" && <label className={styles.field}>{t("예산 입력 (원)", "Budget amount (KRW)")}<input type="number" min={1} inputMode="numeric" value={answers.budgetCustom} placeholder={t("예: 800000", "e.g. 800000")} onChange={(event) => update({ ...answers, budgetCustom: event.target.value })} /></label>}
-      </>;
-      case 5: return chips("citizen", false, true);
-      case 6: return chips("priority", false, true, true);
-      case 7: return <>{label("음식", "Food")}{chips("detailFood")}{label("활동", "Activities")}{chips("detailActivity")}{label("이동", "Getting around")}{chips("detailTransport")}</>;
-      default: return chips("religion", false, true);
+      case 0: return chips("theme", false, true, true);
+      case 1: return chips("party");
+      case 2: return chips("transport", true, true, true);
+      case 3: return chips("citizen", false, true);
+      case 4: return chips("priority", false, true, true);
+      case 5: return <>{label("음식", "Food")}{chips("detailFood")}{label("활동", "Activities")}{chips("detailActivity")}{label("이동", "Getting around")}{chips("detailTransport")}</>;
+      case 6: return <>{label("식당", "Dining")}{chips("indoorDining")}{label("액티비티", "Activities")}{chips("indoorActivity")}</>;
+      case 7: return chips("onDisruption", false, true);
+      default: return chips("pace");
     }
   }
 
@@ -253,7 +231,7 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
         </article>
         {questions.map((question, index) => {
           const active = index === step;
-          const error = forcedError?.step === index ? forcedError.text : validationHint(index, answers, t);
+          const error = forcedError?.step === index ? forcedError.text : "";
           return <article key={index} className={styles.slide} id={`slide-${index}`} role="group" aria-roledescription={t("슬라이드", "slide")} aria-labelledby={titleId(index)} aria-hidden={!active} inert={!active}>
             {head(t(stepNames[index][0], stepNames[index][1]))}
             <div className={styles.question}>
@@ -278,19 +256,18 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
   </>;
 }
 
-export function PreferencesSummary({ t, answers, hasTrip, sending, error, onJourney, onEdit }: { t: Translate; answers: Answers; hasTrip: boolean; sending: boolean; error: string; onJourney: () => void; onEdit: () => void }) {
+export function PreferencesSummary({ t, answers, hasTrip, onJourney, onEdit }: { t: Translate; answers: Answers; hasTrip: boolean; onJourney: () => void; onEdit: () => void }) {
   return <div className={styles.success}>
     <div className={`${styles.successSymbol} ${styles.completionMotion}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></div>
     <h2>{t("여행 취향을 모두 알아봤어요.", "Your preferences are all set.")}</h2>
     <p>{t("나를 닮은 여행의 첫걸음.", "A first step toward a trip that feels like you.")}<br />{t("언제든 답변을 다시 바꿀 수 있어요.", "You can change your answers anytime.")}</p>
     <div className={styles.summary}>
       <div><span>{t("선택 언어", "Language")}</span><strong>{t("한국어", "English")}</strong></div>
-      <div><span>{t("여행 테마", "Travel themes")}</span><strong>{answers.themes.map((value) => chosenLabel("themes", value, t)).join(" · ") || t("미선택", "Not selected")}</strong></div>
-      <div><span>{t("함께하는 인원", "Travelers")}</span><strong>{answers.companions.length ? <>{answers.adults + answers.children + answers.infants}{t("명", " people")}</> : t("미선택", "Not selected")}</strong></div>
+      <div><span>{t("여행 테마", "Travel theme")}</span><strong>{chosenLabel("theme", answers.theme, t)}</strong></div>
+      <div><span>{t("여행자 구성", "Companions")}</span><strong>{chosenLabel("party", answers.party, t)}</strong></div>
       <div><span>{t("가장 중요한 것", "Top priority")}</span><strong>{chosenLabel("priority", answers.priority, t)}</strong></div>
     </div>
-    <button type="button" className={`${styles.next} ${styles.homeContinue}`} disabled={sending} onClick={onJourney}>{sending ? t("취향을 보내는 중…", "Sending your preferences…") : hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>
-    {error && <p className={styles.error} role="alert">{error}</p>}
+    <button type="button" className={`${styles.next} ${styles.homeContinue}`} onClick={onJourney}>{hasTrip ? t("내 여행 이어보기", "Continue my trip") : t("여행 계획 등록하기", "Add my travel plan")}<OnboardingIcon name="arrow" size={16} /></button>
     <button type="button" className={`${styles.next} ${styles.homeContinue} ${styles.editPreferences}`} onClick={onEdit}>{t("여행 취향 수정하기", "Edit your preferences")}<OnboardingIcon name="arrow" size={16} /></button>
     <p className={styles.prototypeNote}>{t("데모 화면이에요. 답변은 이 페이지에서만 유지돼요.", "Demo preview. Answers stay in this page only.")}</p>
   </div>;

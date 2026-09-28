@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { initialAnswers } from "../../features/onboarding/model";
-import { toPayload } from "../../features/onboarding/payload";
+import { initialAnswers, toggle } from "../../features/onboarding/model";
+import { toSurvey, type TripSurvey } from "../../features/onboarding/payload";
 import type { DemoScenario } from "../../features/trip/model";
 import { createDemoGateway, DEMO_STORAGE_PREFIX, DEMO_VERIFICATION_DURATION, SAMPLE_PLANS, type DemoStorage } from "./index";
 
@@ -272,10 +272,11 @@ describe("demo trip gateway", () => {
     expect(await reply("Please cancel my dinner")).toContain("does not change or cancel");
   });
 
-  it("accepts preferences in the agreed format and stores nothing, but rejects a malformed payload", async () => {
-    const payload = toPayload(initialAnswers, "ko");
-    await expect(gateway.submitPreferences(payload, "ko")).resolves.toBeUndefined();
-    expect(storage.items.size).toBe(0);
-    await expect(gateway.submitPreferences({ ...payload, answers: { ...payload.answers, themes: [] } }, "ko")).rejects.toMatchObject({ code: "INVALID_INPUT" });
+  it("registers a trip with its survey but refuses a malformed survey without creating a trip, like the server's 422", async () => {
+    const survey = toSurvey(toggle(initialAnswers, "pace", "relaxed", false));
+    await expect(gateway.createTrip({ source: SAMPLE, survey }, "ko")).resolves.toMatchObject({ status: "processing" });
+    const saved = storage.items.size;
+    await expect(gateway.createTrip({ source: SAMPLE, survey: { ...survey, budget: "mid" } as TripSurvey }, "ko")).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect(storage.items.size).toBe(saved);
   });
 });
