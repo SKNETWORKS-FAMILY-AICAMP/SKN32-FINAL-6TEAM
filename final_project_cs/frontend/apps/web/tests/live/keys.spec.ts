@@ -3,39 +3,38 @@ import { KEY_STORAGE, start, stub, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ request }) => { await stub(request).reset(); });
 
-test("내 여행이 있으면 시작 화면 맨 위에 「내 여행 이어보기」가 뜨고 그 여행으로 간다", async ({ page }) => {
+test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 그 여행으로 간다", async ({ page }) => {
   await start(page);
-  await page.goto("/start");
-  const card = page.getByRole("region", { name: "내 여행 이어보기" });
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "내 여행", exact: true });
   await expect(card).toBeVisible();
   await expect(card).toContainText("내 여행");
   await card.getByRole("link").click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
 });
 
-test("여행이 없거나 키가 없으면 그 카드를 그리지 않고, 키가 없으면 목록을 묻느라 새 사용자를 만들지도 않는다", async ({ page, request }) => {
+test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 키가 없으면 목록을 묻느라 새 사용자를 만들지도 않는다", async ({ page, request }) => {
   const server = stub(request);
   await server.scenario({ trips: "none" });
   await start(page);
-  await page.goto("/start");
-  await expect(page.getByRole("heading", { name: "당신의 여행," })).toBeVisible();
-  await expect(page.getByRole("region", { name: "내 여행 이어보기" })).toHaveCount(0);
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "내 여행", exact: true })).toContainText("아직 등록한 여행이 없어요.");
 
   await server.reset();
   const fresh = await page.context().browser()!.newContext();
   const first = await fresh.newPage();
-  await first.goto("http://127.0.0.1:3102/start");
-  await expect(first.getByRole("heading", { name: /당신의 여행|Your next journey/ })).toBeVisible();
+  await first.goto("http://127.0.0.1:3102/");
+  await expect(first.getByRole("region", { name: /내 여행|My trips/, exact: false }).first()).toBeVisible();
   const issued = (await server.log()).filter((entry) => entry.path.endsWith("/v1/web/session"));
   expect(issued).toHaveLength(0);
   await fresh.close();
 });
 
-test("설정 메뉴에서 다른 기기의 키를 넣으면: 틀린 키는 서버 문장으로 거절되고 저장된 키는 그대로, 아는 키는 바뀐다", async ({ page, request }) => {
+test("메뉴에서 다른 기기의 키를 넣으면: 틀린 키는 서버 문장으로 거절되고 저장된 키는 그대로, 아는 키는 바뀐다", async ({ page, request }) => {
   const server = stub(request);
   await start(page, null);                      // 이 기기에는 키가 없다
   await page.goto("/start");
-  await page.getByRole("button", { name: "설정 메뉴" }).click();
+  await page.getByRole("button", { name: "메뉴" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("내 사용자 키")).toBeVisible();
   await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);   // 키가 없으면 재발급 단추도 없다
@@ -50,7 +49,7 @@ test("설정 메뉴에서 다른 기기의 키를 넣으면: 틀린 키는 서�
   await expect(dialog.getByRole("status")).toContainText("이 키로 바꿨어요");
   expect(await page.evaluate((key) => localStorage.getItem(key), KEY_STORAGE)).toBe("acop_u_known");
   const checks = await server.received("GET", "/v1/web/trips");
-  // 틀린 키 → 아는 키 순서로 서버에 물었고, 그 뒤 시작 화면이 새 키의 「내 여행」을 다시 읽는다(모두 새 키로)
+  // 틀린 키 → 아는 키 순서로 서버에 물었고, 그 뒤 목록을 다시 읽는다면 모두 새 키로
   const askedWith = checks.map((entry) => entry.key);
   expect(askedWith.slice(0, 2)).toEqual(["acop_u_wrong", "acop_u_known"]);
   expect(askedWith.slice(2).every((key) => key === "acop_u_known")).toBe(true);
@@ -60,7 +59,7 @@ test("키 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 �
   const server = stub(request);
   await start(page);
   await page.goto("/start");
-  await page.getByRole("button", { name: "설정 메뉴" }).click();
+  await page.getByRole("button", { name: "메뉴" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: /다시 발급받기/ }).click();
   await expect(dialog).toContainText("옛 키는 바로 쓸 수 없게 돼요");

@@ -1,22 +1,10 @@
 import type { Language } from "../i18n";
-import { api, currentKey } from "./client";
+import { api } from "./client";
 
 /**
- * The rest of the server's web API: my trips, the choices the server is waiting for, the notices it sent,
+ * The rest of the server's web API: the choices the server is waiting for, the notices it sent,
  * and choosing. Everything here is what the server says — the screen adds no sentence of its own.
  */
-
-export interface TripSummary { tripId: string; title: string; version: number; createdAt: string }
-
-/**
- * The customer's trips, newest first (`GET /v1/web/trips`).
- * ★No stored key means no trips — and asking must not issue a new user just to find that out.
- */
-export async function listTrips(language: Language): Promise<TripSummary[]> {
-  if (!currentKey()) return [];
-  const body = await api<{ trips?: { trip_id: string; title: string; version: number; created_at: string }[] }>("/v1/web/trips", language);
-  return (body.trips ?? []).map((row) => ({ tripId: row.trip_id, title: row.title, version: row.version, createdAt: row.created_at }));
-}
 
 export interface ProposalOption { key: string; rank: number | null; name: string; startsAt: string | null }
 

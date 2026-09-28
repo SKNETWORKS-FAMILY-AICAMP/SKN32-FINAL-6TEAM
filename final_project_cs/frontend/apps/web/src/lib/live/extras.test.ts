@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveError } from "./client";
-import { chooseProposal, getNotices, getProposals, listTrips } from "./extras";
+import { chooseProposal, getNotices, getProposals } from "./extras";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -27,20 +27,6 @@ describe("the rest of the server's web API", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-
-  it("lists my trips with the stored key", async () => {
-    stub({ "tripilot.web.user-key.v1": "acop_u_mine" });
-    replies.push(json({ trips: [{ trip_id: "t1", title: "내 여행", version: 2, created_at: "2026-09-28T12:23:57+09:00" }] }));
-    expect(await listTrips("ko")).toEqual([{ tripId: "t1", title: "내 여행", version: 2, createdAt: "2026-09-28T12:23:57+09:00" }]);
-    expect(calls).toHaveLength(1);
-    expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
-  });
-
-  it("with no stored key there are no trips — and no new user is issued just to ask", async () => {
-    stub({});
-    expect(await listTrips("ko")).toEqual([]);
-    expect(calls).toHaveLength(0);
-  });
 
   it("reads the choices the server is waiting for and drops options that have no name", async () => {
     stub({ "tripilot.web.user-key.v1": "k" });

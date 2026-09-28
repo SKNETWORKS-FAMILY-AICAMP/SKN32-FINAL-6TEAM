@@ -69,9 +69,9 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(notices).toContainText("여행 일정이 준비되었습니다");
   await expect(page.getByRole("link", { name: "여행계획서 열기" })).toHaveAttribute("href", /\/plan\/[0-9a-f-]{36}\?t=/);
 
-  // 내 여행 이어보기: 같은 브라우저(같은 키)로 시작 화면에 돌아오면 방금 만든 여행이 있다
-  await page.goto("/start");
-  await expect(page.getByRole("region", { name: "내 여행 이어보기" })).toBeVisible();
+  // 내 여행: 같은 브라우저(같은 키)로 첫 화면에 돌아오면 방금 만든 여행이 카드에 있다
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "내 여행", exact: true }).getByRole("link").first()).toBeVisible();
   await page.goto(`/trips/${tripId}`);
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
 

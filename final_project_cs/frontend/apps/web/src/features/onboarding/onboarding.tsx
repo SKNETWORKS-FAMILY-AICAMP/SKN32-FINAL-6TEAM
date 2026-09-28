@@ -4,14 +4,12 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
-import { DATA_MODE } from "@/lib/gateway";
 import { recoveryEmailProblem } from "@/features/profile/model";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { OnboardingIcon } from "./icons";
 import { INTRO_STEP, questions } from "./model";
-import { MyTrips } from "./my-trips";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
 import { RecoveryEmailBody } from "./recovery-email";
@@ -139,7 +137,6 @@ export function Onboarding() {
             <h1>{t("당신의 여행,", "Your next journey.")}<br />{t("취향부터 맞춰요.", "Made more you.")}</h1>
             <p>{t("약관을 확인하고,", "Review the terms,")}<br />{t("좋아하는 것부터 함께 알아볼게요.", "then tell us what you love.")}</p>
           </section>
-          {DATA_MODE === "live" && !expanded && <MyTrips />}
           <div className={styles.stack}>
             {card(0, false,
               cardHead(0, t("복구용 이메일", "Recovery email"), state.email.trim() ? t("입력했어요 · 서버에는 아직 저장하지 않아요", "Entered · not saved to the server yet") : t("입력하지 않아도 시작할 수 있어요.", "You can start without it."), false, false,
