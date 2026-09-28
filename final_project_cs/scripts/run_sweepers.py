@@ -2,7 +2,12 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_reminders 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders 중 하나만 돌린다.
+
+★`trip_dawn` 은 **새벽 식당 영업 확인**이다(`[2026-09-25]`, D-020). 03:00~08:00 창 안에서만 구글 장소로
+  그날 식사 일정이 계획한 시각에 여는지 보고, 안 열면 같은 판정 문으로 바꾸거나 묻는다. 항목·날짜마다
+  한 번만 부른다. ★키(`ACOP_GOOGLE_MAPS_API_KEY`)가 비어 있으면 `disabled` 로 답한다. 하루 시작 알림
+  **앞에** 돈다 — 새벽에 고친 것을 하루 시작 알림이 싣는다.
 
 ★`trip_reminders` 는 **일정 안내**(v11 §6-B ②하루 시작 · ③항목 출발)다(`[2026-09-18]`).
   Case 를 만들지 않고 LLM 을 부르지 않는다. 최신 일정 버전을 읽어 때가 된 안내를 바깥함에
@@ -92,10 +97,40 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
         result["trip"] = _run_trip_watch(tenant_id)
     if only in (None, "trip_cases"):
         result["trip_cases"] = _run_trip_watch_cases(tenant_id)
+    # ★새벽 식당 확인 — 창(03:00~08:00) 밖이면 아무것도 안 부른다. 하루 시작 알림보다 **먼저** 돈다
+    if only in (None, "trip_dawn"):
+        result["trip_dawn"] = _run_trip_dawn(tenant_id)
     # ★감시 **뒤에** 돈다 — 변경 통지가 먼저 나가고, 안내는 바뀐 최신 일정으로 계산된다(v11 §6-B).
     if only in (None, "trip_reminders"):
         result["trip_reminders"] = _run_trip_reminders(tenant_id)
     return result
+
+
+def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.core.settings import get_guardrails
+    from app.infrastructure.travel.google_places import GooglePlaces
+    from app.modules.travel_ops.dawn_check import DawnCheck
+    from app.modules.travel_ops.itinerary import TripStore
+
+    from app.infrastructure.travel.base import build_travel_sources
+
+    settings = get_settings()
+    key = settings.google_maps_api_key
+    # ★하루 호출 상한(`ACOP_RATE_GOOGLE_PLACES_PER_DAY`)을 **같은 제한기**로 건다 — 넘으면 부르지 않고
+    #   `rate_limited` 로 세며, 그 항목은 `fatal` 로 남아 창 안에서 다시 시도된다(요금이 새지 않게).
+    from app.infrastructure.travel.call_budget import CallBudget, google_caps
+
+    # ★무료 한도 보호 — DB 예산(027)을 **반드시** 건다. 프로세스 안 제한기는 매분 새로 차서 못 지킨다
+    budget = CallBudget(connection_factory=get_connection, caps=google_caps())
+    source = (GooglePlaces(api_key=key, budget=budget, limiter=build_travel_sources(settings).limiter,
+                           match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
+              if key else None)
+    outcome = DawnCheck(store=TripStore(tenant_id), connection_factory=get_connection,
+                        clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source).tick()
+    return outcome.counts()
 
 
 def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
@@ -202,7 +237,8 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_reminders"),
+    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_dawn",
+                                           "trip_reminders"),
                         default=None)
     args = parser.parse_args()
 

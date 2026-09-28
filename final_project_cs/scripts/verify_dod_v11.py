@@ -289,7 +289,7 @@ def main() -> int:
     items = [item for item in ITEMS if item.mvp] if args.mvp else list(ITEMS)
     scope = "MVP 18항목" if args.mvp else "전체 26항목"
     print("=" * 78)
-    print(f"A-COP DoD 검증 — 기준선 v11 §12 · {scope} (판정: 자동 20 · 아키텍처 4 · 측정 2)")
+    print(f"triPilot DoD 검증 — 기준선 v11 §12 · {scope} (판정: 자동 20 · 아키텍처 4 · 측정 2)")
     print("=" * 78)
 
     if args.list:

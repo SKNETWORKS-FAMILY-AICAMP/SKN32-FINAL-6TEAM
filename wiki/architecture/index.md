@@ -23,6 +23,7 @@ domain: travel
 7. [tech-stack.md](tech-stack.md) — 쓰는 것과 미룬 것
 8. [notifications.md](notifications.md) — **알림 두 종류와 확인할 수 있는 것**
 9. [diagrams.md](diagrams.md) — 다이어그램 8종과 근거
+10. [paper-basis.md](paper-basis.md) — **논문 근거와 인용할 수 있는 문장**
 
 ## 각 문서
 
@@ -36,6 +37,7 @@ domain: travel
 | [tech-stack.md](tech-stack.md) | 무엇으로 만드나 | Docker 전제를 넣으면 이 기계에서 안 돈다 |
 | [notifications.md](notifications.md) | **알림이 닿았는지 어떻게 아나** | 안내를 Case 로 만들면 원가가 안내 수에 붙는다 |
 | [diagrams.md](diagrams.md) | 어떤 그림이 있고 근거가 어디인가 | 계약이 바뀌면 조용히 낡는다 |
+| [paper-basis.md](paper-basis.md) | **어떤 논문을 무엇의 근거로 쓸 수 있나** | 없는 문장을 논문 인용으로 적으면 심사에서 바로 걸린다 |
 | [repository-map.md](repository-map.md) | 어느 저장소가 무엇을 소유하는가 | 소유가 겹치면 이중 장부 |
 
 ## 핵심 판정 기준 하나
@@ -49,7 +51,7 @@ domain: travel
 `[실측]` v11 §5·§6.
 
 ```text
-              A-COP Runtime (Core)  ← 도메인을 모른다
+              triPilot Runtime (Core)  ← 도메인을 모른다
    Case · Controller · Registry · Port · 승인 경계 · 감사 · 평가
                         │
         ┌───────────────┴───────────────┐

@@ -31,7 +31,9 @@ ACTOR = "case_engine"
 
 
 def _no_policy(*_: Any, **__: Any) -> list[Any]:
-    """일정 관리 Team 은 정책 근거를 선언하지 않는다 — 불리면 안 되는 자리라 빈 값이 아니라 실패로."""
+    """일정 관리(`*.itinerary`)는 규정을 면제받는다 — 불리면 안 되는 자리라 빈 값이 아니라 실패로.
+    ★`[2026-09-25]` 규정 질문(`*.itinerary_question`)은 규정을 **읽는다** — 그 경로를 돌리려면
+      `policy_search` 를 넣는다. 안 넣으면 검색 실패 → degraded → 사람에게(지어내지 않는다)."""
     raise RuntimeError("policy search is not wired in the itinerary case engine")
 
 
@@ -39,19 +41,20 @@ class CaseEngine:
     def __init__(self, *, tenant_id: str, check: Callable[..., dict[str, Any]], route_events: Any,
                  classifier: Callable[[str], dict[str, str]] | None,
                  report_extractor: Callable[[str], dict[str, Any] | None] | None,
-                 clock: Callable[[], datetime], routes: dict[str, Any] | None = None) -> None:
+                 clock: Callable[[], datetime], routes: dict[str, Any] | None = None,
+                 policy_search: Callable[..., list[Any]] = _no_policy) -> None:
         from app import composition
         from app.core.project_config import load_project_config
 
         self.tenant_id, self.clock, self.classifier = tenant_id, clock, classifier
         self.interpreter = make_subject_interpreter(report_extractor)
         self.store = TripStore(tenant_id)
-        tools = ReadToolbox(get_connection, policy_search=_no_policy, travel=None, check=check,
+        tools = ReadToolbox(get_connection, policy_search=policy_search, travel=None, check=check,
                             route_events=route_events, report_extractor=report_extractor)
         config = load_project_config()
         registry = composition.build_registry(tools=tools, llm=None, config=config)
         self.controller = composition.build_controller(registry=registry, llm=None, config=config,
-                                                       policy_search_fn=_no_policy)
+                                                       policy_search_fn=policy_search)
         self.opener = TripWatchCaseOpener(store=self.store, check=check, connection_factory=get_connection,
                                           clock=clock, repository=repository, run_case=self.run,
                                           route_events=route_events, routes=routes)

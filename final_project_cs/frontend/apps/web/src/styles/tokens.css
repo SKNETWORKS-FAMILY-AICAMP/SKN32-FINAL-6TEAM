@@ -1,3 +1,4 @@
+/* Palette of the 2026-09-23 journey mockup. The mockup defines a light scheme only. */
 :root {
   color-scheme: light;
   --color-text: #24392f;
@@ -5,32 +6,17 @@
   --color-border: #dce3dd;
   --color-surface: #ffffff;
   --color-background: #f3f5f3;
+  --color-paper: #f7f9f3;
   --color-primary: #2e6047;
+  --color-primary-hover: #254f3a;
   --color-on-primary: #ffffff;
   --color-soft: #e9f2eb;
   --color-subtle: #f6f7f5;
-  --color-warning: #916425;
-  --color-warning-soft: #fbf3e4;
-  --color-error: #a44738;
-  --color-error-soft: #fceeea;
-  --radius-card: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --color-text: #e1eae4;
-    --color-muted: #a7b8ae;
-    --color-border: #3c4c43;
-    --color-surface: #1c2520;
-    --color-background: #171d1b;
-    --color-primary: #b5d6bf;
-    --color-on-primary: #1e3529;
-    --color-soft: #293d30;
-    --color-subtle: #242f28;
-    --color-warning: #ebc784;
-    --color-warning-soft: #3c3524;
-    --color-error: #f5b0a9;
-    --color-error-soft: #3d2827;
-  }
+  --color-warning: #82693e;
+  --color-warning-soft: #faf6ec;
+  --color-warning-border: #e5d9c1;
+  --color-error: #965640;
+  --color-error-soft: #fdf3ed;
+  --color-error-border: #ecd2c7;
+  --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
 }

@@ -107,7 +107,8 @@ python -m scripts.run_sweepers --interval 60
 | 이름 | 하는 일 |
 |---|---|
 | `trip_cases` | ★기본 감시. 곧 시작할 일정 항목을 점검하고 깨졌으면 **시스템 Case** 를 열어 Team 이 고친다(Case 버전) |
-| `trip_reminders` | 일정 안내 — 하루 시작(첫 항목 60분 전 · 전날 20시)과 출발(이동 항목 15분 전). Case 를 안 만든다. 값은 가드레일 `travel.reminders.*` |
+| `trip_dawn` | `[2026-09-25]` 새벽 식당 영업 확인 — 03:00~08:00 창에서만 그날 식사 일정이 계획한 시각에 여는지 구글 장소로 본다. 항목·날짜마다 한 번. 키(`ACOP_GOOGLE_MAPS_API_KEY`)가 없으면 `disabled`. 값은 가드레일 `travel.dawn_check.*` (D-020) |
+| `trip_reminders` | 일정 안내 — `[2026-09-24]` 하루 시작(없으면 08:00) → 다음 일정(각 일정 시작) → 이동(**이동 항목이 시작하는 그 시각**). 전날 안내는 껐다. Case 를 안 만든다. 값은 가드레일 `travel.reminders.*` |
 | `trip` | 시나리오용 여행 버전의 감시. `--only trip` 으로만 돈다 — `trip_cases` 와 함께 돌리지 않는다 |
 
 `fatal`(경로·점검 소스가 대체까지 실패)이 0 이 아니면 `--once` 는 exit 1 이다.

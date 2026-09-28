@@ -9,7 +9,16 @@
     stock_out  상품 이름이 하나 이상 있어야 하고, 각 이름이 **고객 문장에 실제로 나와야** 한다
     rollback   되돌릴 일정 버전 번호가 있어야 하고 그 숫자가 **문장에 나와야** 한다(`[2026-09-17]` —
                실제 Gemma 가 「6번 일정으로 되돌려 주세요」를 `change` 로 뽑았다. 종류가 없었다)
+    question   `[2026-09-25]` 규정·조건·가능 여부를 **묻는다**(「비 오면 취소돼요?」「아이 데려가도 되나요」).
+               일정을 바꾸지 않고 규정 근거로 답한다(`*.itinerary_question`)
     other      여행 창구가 받지 않는다
+
+★★`[2026-09-25]` **묻는 꼴이면 상태 신고로 받지 않는다.** 모델이 `closed`·`delay`·`other` 로 뽑아도
+  문장이 질문(물음표 · 「되나요」「아니에요」「있나요」 …)이면 `question` 으로 바꾼다. 실측(triPilot : RAG
+  세션, 2026-09-25): 「내일 경복궁 휴관 아니에요?」가 `closed` 로 읽혀 **대체안 계산으로 갈 수 있었고**,
+  「비 오면 카약 취소돼요? 위약금 있어요?」「저녁 식당에 아이 데려가도 되나요」는 `other` → 사람이었다.
+  `change`·`rollback`·`stock_out` 은 그대로 둔다 — 「다른 걸로 바꿔줄 수 있어요?」는 묻는 꼴의 **요청**이고
+  품절 신고는 원래 「다른 데 없어?」라고 묻는다.
   규칙에 안 맞으면 `None` — 추측으로 채워 일정을 바꾸지 않는다(CLAUDE.md §0.1).
 ★분·상품 이름이 문장에 없는데 모델이 만들어 내는 경우를 막으려고, 분 숫자도 문장에
   나오는지 본다.
@@ -26,13 +35,29 @@ SYSTEM = (
     "'stock_out' (items they wanted are sold out and they ask where else to buy), "
     "'change' (they ask to switch a plan we already changed to a different option, e.g. "
     "'다른 식당으로 바꿔줘', '다른 걸로 해줘'), 'rollback' (they ask to go back to an earlier "
-    "version of the itinerary by its number, e.g. '6번 일정으로 되돌려 주세요'), or 'other'.\n"
+    "version of the itinerary by its number, e.g. '6번 일정으로 되돌려 주세요'), "
+    "'question' (they ASK about rules, conditions or whether something is possible, open or "
+    "cancellable, e.g. '비 오면 취소돼요? 위약금 있어요?', '아이 데려가도 되나요', '내일 휴관 아니에요?'), "
+    "or 'other'.\n"
+    "A question is NEVER 'closed' or 'delay' — use those only when they REPORT a fact that already "
+    "happened ('오늘 임시휴무래요', '70분 늦을 것 같아요').\n"
     "minutes: integer minutes of delay if stated, else null.\n"
     "to_version: integer itinerary version to go back to if stated, else null.\n"
     "products: list of product names they could not buy, copied from the message, else []."
 )
 
-TYPES = frozenset({"delay", "closed", "stock_out", "change", "rollback", "other"})
+TYPES = frozenset({"delay", "closed", "stock_out", "change", "rollback", "question", "other"})
+
+#: 묻는 꼴 — 물음표, 또는 묻는 어미. ★상태 신고(`closed`·`delay`)와 `other` 를 `question` 으로 돌리는 데만 쓴다
+_QUESTION = re.compile(r"[?？]|(나요|가요|까요|인가|되나|돼요\?|아니에요|아닌가|아니죠|있나|없나|있을까|"
+                       r"없을까|어때|어떡|어떻게|궁금|되는지|인지|는지)")
+
+#: 묻는 꼴이면 받지 않는 종류 — 일정을 **바꾸는** 신고이거나, 답할 길이 없던 것
+_REPORTS_THAT_A_QUESTION_IS_NOT = frozenset({"closed", "delay", "other"})
+
+
+def looks_like_question(message: str) -> bool:
+    return bool(_QUESTION.search(message or ""))
 
 
 def validate(raw: Any, message: str) -> dict[str, Any] | None:
@@ -40,6 +65,9 @@ def validate(raw: Any, message: str) -> dict[str, Any] | None:
     if not isinstance(raw, dict) or raw.get("type") not in TYPES:
         return None
     kind = raw["type"]
+    if kind == "question" or (kind in _REPORTS_THAT_A_QUESTION_IS_NOT and looks_like_question(message)):
+        # ★묻는 꼴이면 「닫혔다」·「늦는다」로 받지 않는다 — 질문이 일정을 바꾸지 못하게
+        return {"type": "question"}
     if kind == "other":
         return {"type": "other"}
     if kind == "delay":
@@ -79,4 +107,4 @@ def extract(message: str, chat: Any) -> dict[str, Any] | None:
     return validate(chat.json(SYSTEM, message), message)
 
 
-__all__ = ["SYSTEM", "TYPES", "extract", "validate"]
+__all__ = ["SYSTEM", "TYPES", "extract", "looks_like_question", "validate"]

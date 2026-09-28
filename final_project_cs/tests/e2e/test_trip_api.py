@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -115,6 +115,9 @@ def api(monkeypatch):
                 return {"type": "closed", "minutes": None, "products": []}
             if "품절" in message:
                 return {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}
+            if "되돌려" in message:
+                import re
+                return {"type": "rollback", "to_version": int(re.findall(r"\d+", message)[0])}
             return {"type": "other"}
 
     client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
@@ -141,6 +144,9 @@ def api(monkeypatch):
         cur.execute("DELETE FROM action_requests WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
+        cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
+        cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s", (tenant,))     # 계획 읽기(028, 원본·값은 따라 지워진다)
+        cur.execute("DELETE FROM place_aliases WHERE tenant_id=%s", (tenant,))    # 고객이 고친 장소 별칭(030)
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s", "DELETE FROM customers WHERE tenant_id=%s",
                     "DELETE FROM tenants WHERE tenant_id=%s"):
@@ -233,6 +239,51 @@ def test_a_second_trip_reuses_known_places_without_overwriting_them(api):
     assert attributes["district"] == "카탈로그값"                     # ★있던 값은 그대로
     submitted = next(p for p in SCENARIO["places"] if p["name"] == "경복궁")["attributes"]
     assert set(submitted) <= set(attributes)                          # 빈 칸은 채웠다
+
+
+def test_places_from_outside_services_stay_with_their_own_trip(api):
+    """★`[2026-09-27]` 관광공사·카카오에서 받은 장소는 공용 표에 쌓아 다른 고객에게 재사용하지 않는다
+    (콘텐츠랩 「로컬서버 저장 금지」 · 카카오 운영정책 제5조 — 마이그레이션 029). 그 여행 전용 행이 되고,
+    그 여행의 감시·대체 일정에서는 보이고, 공용 목록·다른 여행에서는 안 보인다."""
+    from app.modules.travel_ops.itinerary import TripStore
+    from app.modules.travel_ops.planner import load_candidates
+
+    outside = {"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.5700, "lon": 126.9996,
+               "weather_sensitive": False,
+               "attributes": {"source": "tour_api", "source_content_id": "264570", "district": "종로구"}}
+
+    def body(request_id):
+        base = _body(api["customer"], request_id=request_id)
+        base["places"].append(outside)
+        last = max(it["seq"] for it in base["items"])
+        base["items"].append({"seq": last + 1, "kind": "activity", "title": "광장시장", "place": "market",
+                              "starts_at": _iso("21:00"), "ends_at": _iso("21:40"), "detail": {}})
+        return base
+
+    trips = []
+    for request_id in ("outside-1", "outside-2"):
+        response = api["client"].post("/v1/trips", json=body(request_id), headers=api["auth"]("trip:write"))
+        assert response.status_code == 201, response.text
+        trips.append(response.json()["trip_id"])
+    store = TripStore(api["tenant"])
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT trip_scope::text FROM places WHERE tenant_id=%s AND name='광장시장' "
+                    "ORDER BY trip_scope", (api["tenant"],))
+        assert sorted(r[0] for r in cur.fetchall()) == sorted(trips)   # ★여행마다 따로 — 재사용하지 않는다
+        shared = [p["name"] for p in store.places(conn)]
+        mine = [p["name"] for p in store.places(conn, UUID(trips[0]))]
+        every = store.places(conn, every_trip=True)
+        _, items = store.latest(conn, UUID(trips[0]))
+        candidates = load_candidates(conn, tenant_id=api["tenant"], kinds=("activity",))
+    assert "광장시장" not in shared and mine.count("광장시장") == 1
+    assert len([p for p in every if p["name"] == "광장시장"]) == 2
+    market = next(item for item in items if item.title == "광장시장")
+    assert market.place is not None and market.place["latitude"] == 37.57        # ★감시가 좌표를 본다
+    assert all(c.name != "광장시장" for c in candidates)                         # ★생성기 후보에도 없다
+    # 공용 장소는 전처럼 하나를 같이 쓴다
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope IS NULL", (api["tenant"],))
+        assert cur.fetchone()[0] == len(SCENARIO["places"])
 
 
 def test_create_rejects_unknown_references_and_needs_the_write_scope(api):
@@ -456,3 +507,30 @@ def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
             cur.execute("DELETE FROM trips WHERE tenant_id=%s", (other,))
             cur.execute("DELETE FROM customers WHERE tenant_id=%s", (other,))
             cur.execute("DELETE FROM tenants WHERE tenant_id=%s", (other,))
+
+
+def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
+    """★`[2026-09-25]` 묻는 꼴이면 「닫혔다」로 받지 않는다 — 모델이 closed 로 뽑아도 질문이고,
+    이 경로(규정 도구 없음)에서는 바꾸지 않고 사람에게 넘긴다. 전에는 대체안 계산으로 갈 수 있었다."""
+    trip_id = _create(api)["trip_id"]
+    said = _say(api, trip_id, "closed", request_id="say-q", text="오늘 저녁 식당 휴무 아니에요?").json()
+    assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
+    assert said["report"] == {"type": "question"}
+    assert _detail(api, trip_id)["version"] == 1
+
+
+
+def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
+    """★`[2026-09-26]` 대화로 보낸 「N번 일정으로 되돌려 주세요」 — 전에는 분기가 delay·closed·stock_out·그 밖뿐이라
+    그 밖(= 다른 안으로 바꾸기)으로 떨어졌다(triPilot : RAG 세션이 코드를 읽고 찾았다). 옛 버전으로 돌아가야 한다."""
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1                   # v2 — 감시가 바꿨다
+    before = [(s["seq"], s["place"]) for s in _detail(api, trip_id)["items"]]
+    said = _say(api, trip_id, "rollback", request_id="say-back", text="1번 일정으로 되돌려 주세요").json()
+    assert said["status"] == "rolled_back", said
+    view = _detail(api, trip_id)
+    assert view["version"] == 3 and view["history"][-1]["reason"] == "rollback"
+    with get_connection() as conn:
+        v1 = api["store"].items(conn, trip_id, 1)
+    assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
+    assert [(s["seq"], s["place"]) for s in view["items"]] != before

@@ -72,3 +72,26 @@ def test_the_interpreter_picks_the_team_from_the_report_not_the_classifier():
     structured = interpret(text="화면에서 다른 안 선택",
                            subject_ref={**ref, "part_kind": "dining", "request": {"type": "change", "at": "x"}})
     assert structured == {"routing_hint": "dining", "report": {"type": "change"}} and len(calls) == before
+
+
+# ── 질문 (2026-09-25) ───────────────────────────────────────────
+@pytest.mark.parametrize("raw, message", [
+    ({"type": "closed"}, "내일 경복궁 휴관 아니에요?"),                 # ★질문이 「닫혔다」로 둔갑하던 것
+    ({"type": "other"}, "비 오면 오후 한강 카약 취소돼요? 위약금 있어요?"),
+    ({"type": "other"}, "저녁 식당에 아이 데려가도 되나요"),
+    ({"type": "delay", "minutes": 70}, "70분 늦을 것 같은데 괜찮을까요?"),
+    ({"type": "question"}, "여기 몇 시에 닫아요?"),
+])
+def test_a_question_is_never_taken_as_a_report_that_changes_the_plan(raw, message):
+    assert validate(raw, message) == {"type": "question"}
+
+
+@pytest.mark.parametrize("raw, message, expected", [
+    ({"type": "delay", "minutes": 70}, "점심 식당 70분 늦을 것 같아요", {"type": "delay", "minutes": 70}),
+    ({"type": "closed"}, CLOSED, {"type": "closed"}),
+    ({"type": "change"}, "다른 식당으로 바꿔줄 수 있어요?", {"type": "change"}),   # 묻는 꼴의 **요청**
+    ({"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}, STOCK,
+     {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}),        # 품절은 원래 묻는다
+])
+def test_reports_and_requests_stay_what_they_were(raw, message, expected):
+    assert validate(raw, message) == expected

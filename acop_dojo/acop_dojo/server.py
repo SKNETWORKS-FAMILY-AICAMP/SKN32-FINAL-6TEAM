@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import threading
@@ -45,6 +46,8 @@ ACTIONS: dict[str, dict[str, Any]] = {
     "boss": {"argv": ["boss"], "params": ["fix", "force"], "asks": True},
     "review": {"argv": ["review"], "params": [], "asks": True},
     "placement": {"argv": ["placement"], "params": ["track"], "asks": True},
+    "quiz": {"argv": ["quiz"], "params": ["track", "count", "family"], "asks": True},
+    "quiz_pool": {"argv": ["quiz", "pool"], "params": ["track"]},
     "build_steps": {"argv": ["build", "steps"], "params": []},
     "build_start": {"argv": ["build", "start"], "params": ["force"]},
     "build_brief": {"argv": ["build", "brief"], "params": ["step"]},
@@ -110,6 +113,16 @@ def _validate(action: str, params: dict[str, Any]) -> list[str]:
             if str(value) not in ask.LEVELS and str(value) not in ask.NAMES:
                 raise ValueError(f"모르는 난이도다: {value}")
             argv.append(str(value))
+        elif name == "count":
+            count = int(value)
+            if not 1 <= count <= 20:
+                raise ValueError(f"문제 수는 1~20 이다: {value}")
+            argv += ["--count", str(count)]
+        elif name == "family":
+            from . import quiz
+            if str(value) not in quiz.FAMILIES:
+                raise ValueError(f"모르는 문제 유형이다: {value}")
+            argv += ["--family", str(value)]
         elif name == "force":
             argv.append("--force")
         elif name == "fix":
@@ -124,9 +137,11 @@ def start(action: str, params: dict[str, Any]) -> Job:
     if action not in ACTIONS:
         raise ValueError(f"모르는 동작이다: {action}")
     argv = _validate(action, params)
+    # 서버를 어떻게 띄웠든(터미널·실행 파일·앱 미리보기) 작업은 UTF-8 로 읽고 쓴다.
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     process = subprocess.Popen(
         [sys.executable, "-u", str(WORKSPACE_ROOT / "dojo.py"), *argv],
-        cwd=WORKSPACE_ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        cwd=WORKSPACE_ROOT, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1)
     job = Job(job_id=uuid.uuid4().hex[:12], action=action, argv=argv, process=process)
     with _LOCK:
@@ -140,9 +155,12 @@ def send_input(job_id: str, line: str) -> None:
     job = JOBS[job_id]
     if job.done or job.process.stdin is None:
         raise ValueError("이미 끝난 작업이다")
-    job.process.stdin.write(line.rstrip("\n") + "\n")
+    # 한 번에 답 하나. \r 이나 줄바꿈이 섞이면 빈 답이 하나 더 들어가 다음 문제가 오답 처리된다.
+    clean = " ".join(line.replace("\r", "").split("\n")).rstrip()
+    # 메아리를 먼저 적는다. 쓰고 나서 적으면 자식의 다음 질문이 메아리보다 앞에 찍힐 수 있다.
+    job.lines.append(f"> {clean}")
+    job.process.stdin.write(clean + "\n")
     job.process.stdin.flush()
-    job.lines.append(f"> {line}")
 
 
 def state() -> dict[str, Any]:

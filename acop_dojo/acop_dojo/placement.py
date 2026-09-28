@@ -9,10 +9,12 @@
 """
 from __future__ import annotations
 
+import random
 from typing import Any
 
 from . import ask
 from . import defect_stage
+from . import quiz
 from . import defects as defects_mod
 from . import progress
 from . import tracks as tracks_mod
@@ -50,33 +52,17 @@ def run(track_id: str, trace: dict[str, Any]) -> int:
     score = 0
     tally = ask.Tally()
 
-    names = ["apply_event", "create_case", "fold_events", "transition_case"]
-    first = tally.add(ask.free(
-        "1. 이 저장소에서 Case의 상태를 바꾸는 함수 이름을 쓴다.",
-        hints=["코어(core: 핵심 규칙을 담는 영역) 층에 있다.", "파일은 app/core/transition.py다.", "이름은 transition으로 시작한다."],
-        fallback=(names, names.index("transition_case"))))
-    ok = "transition_case" in first.text.lower().replace(" ", "")
-    score += ok
-    print(f"  {'맞다.' if ok else '아니다.'}  transition_case (app/core/transition.py)")
-
-    options = _first_symbols(trace)
-    # 정답이 늘 첫 보기에 있던 것을 고친다(2026-09-23). 보기를 정렬해 자리를 가린다.
-    right = options[0]
-    shown = sorted(options)
-    second = tally.add(ask.choice(
-        "2. 이 트랙의 대표 시나리오에서 가장 먼저 호출되는 함수를 고른다.", shown,
-        answer_index=shown.index(right),
-        hints=[f"{ask.layer_of(right.split('::')[0])}의 함수다"]))
-    picked = second.text
-    ok = picked == right
-    score += ok
-    print(f"  {'맞다.' if ok else '아니다.'}  {right}")
+    if ask.level() == "easy":
+        score += _fixed_questions(tally, trace)
+    else:
+        score += _generated_questions(tally, track_id)
 
     catalog = defects_mod.load_catalog()
     mine = [d for d in defect_stage.playable(catalog)
             if tracks_mod.owns(track, defects_mod.by_id(d).path)]
     if mine:
-        chosen = mine[0]
+        # 쉬움은 늘 같은 결함, 보통·어려움은 이 트랙의 결함 가운데 하나를 그때그때 고른다
+        chosen = mine[0] if ask.level() == "easy" else random.choice(mine)
         entry = catalog["entries"][chosen]
         print("")
         print("  3. 규칙 하나를 깨뜨리자 아래 테스트가 실패했다.")
@@ -111,3 +97,49 @@ def run(track_id: str, trace: dict[str, Any]) -> int:
     print("")
     print("  이 결과는 시작 단계 제안이다. 원하는 단계가 있으면 직접 열 수 있다.")
     return 0
+
+
+def _fixed_questions(tally: ask.Tally, trace: dict[str, Any]) -> int:
+    """쉬움 — 늘 같은 두 문제. 처음 보는 사람이 방향을 잡는 용도다."""
+    score = 0
+    names = ["apply_event", "create_case", "fold_events", "transition_case"]
+    first = tally.add(ask.free(
+        "1. 이 저장소에서 Case의 상태를 바꾸는 함수 이름을 쓴다.",
+        hints=["코어(core: 핵심 규칙을 담는 영역) 층에 있다.", "파일은 app/core/transition.py다.", "이름은 transition으로 시작한다."],
+        fallback=(names, names.index("transition_case"))))
+    ok = "transition_case" in first.text.lower().replace(" ", "")
+    score += ok
+    print(f"  {'맞다.' if ok else '아니다.'}  transition_case (app/core/transition.py)")
+
+    options = _first_symbols(trace)
+    # 정답이 늘 첫 보기에 있던 것을 고친다(2026-09-23). 보기를 정렬해 자리를 가린다.
+    right = options[0]
+    shown = sorted(options)
+    second = tally.add(ask.choice(
+        "2. 이 트랙의 대표 시나리오에서 가장 먼저 호출되는 함수를 고른다.", shown,
+        answer_index=shown.index(right),
+        hints=[f"{ask.layer_of(right.split('::')[0])}의 함수다"]))
+    picked = second.text
+    ok = picked == right
+    score += ok
+    print(f"  {'맞다.' if ok else '아니다.'}  {right}")
+    return score
+
+
+def _generated_questions(tally: ask.Tally, track_id: str) -> int:
+    """보통·어려움 — 코드 전체에서 그때그때 만든 두 문제(이름 가린 코드 · 실행 순서).
+
+    고정 문제는 몇 번 풀면 외운다. 어려움에서는 한 번 본 문제를 다시 내지 않는다.
+    """
+    m = quiz.material(track_id=track_id)
+    questions = quiz.draw(m, 2, families=["identify", "trace_next"])
+    if len(questions) < 2:
+        seen = set(progress.load().get("quiz", {}).get("seen", [])) | {q.fingerprint for q in questions}
+        questions += quiz.draw(m, 2 - len(questions), families=["caller", "callee"], seen=seen)
+    results = []
+    for number, q in enumerate(questions, 1):
+        ok, answer = quiz.pose(q, f"{number}. ")
+        tally.add(answer)
+        results.append((q, ok, answer))
+    quiz.record(results, m.level)
+    return sum(ok for _, ok, _ in results)

@@ -320,7 +320,7 @@ def main() -> int:
     else:
         width = max(len(r["항목"]) for r in RESULTS)
         print("=" * 100)
-        print(f"A-COP 상시 실행 점검 — {datetime.now().astimezone().isoformat(timespec='seconds')}")
+        print(f"triPilot 상시 실행 점검 — {datetime.now().astimezone().isoformat(timespec='seconds')}")
         print("=" * 100)
         for r in RESULTS:
             print(f"[{r['판정']:<4}] {r['항목'].ljust(width)}  {r['내용']}")

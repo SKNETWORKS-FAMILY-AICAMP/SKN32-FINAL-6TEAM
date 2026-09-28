@@ -9,7 +9,7 @@
 Node.js 22와 npm을 사용한다. Windows PowerShell 기준:
 
 ```powershell
-cd D:\FinalProject\Dev\A-COP\frontend\apps\dev-console
+cd D:\FinalProject\Dev\SKN32-FINAL-6TEAM\final_project_cs\frontend\apps\dev-console
 npm ci
 Copy-Item .env.example .env.local
 npm run dev

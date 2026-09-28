@@ -166,6 +166,7 @@ def _outcome_question(target: Path) -> Callable[[], bool] | None:
     선언과 값을 매번 새로 만든다 — 배운 규칙을 새 입력에 적용해야 맞힌다.
     """
     import json
+    import os
     import subprocess
     import sys
 
@@ -176,7 +177,8 @@ def _outcome_question(target: Path) -> Callable[[], bool] | None:
         run = subprocess.run([sys.executable, "-c", _ENGINE_PROBE,
                               json.dumps(spec, ensure_ascii=False)],
                              cwd=target, capture_output=True, text=True, encoding="utf-8",
-                             timeout=60, check=True)
+                             errors="replace", timeout=60, check=True,
+                             env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
         problems = json.loads(run.stdout.strip().splitlines()[-1])
     except (subprocess.SubprocessError, ValueError, IndexError):
         return None  # 엔진을 못 돌리면 묻지 않는다 — 묻지 않은 것은 분모에 넣지 않는다
