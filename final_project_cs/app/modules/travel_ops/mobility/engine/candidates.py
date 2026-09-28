@@ -74,6 +74,11 @@ class CandidateGraph:
             w = self.tw.lookup(station, from_line, to_line)
             if w is not None and w.min is not None:
                 return w.min
+            # ☆`[2026-09-29 문제목록 #8]` 거리표에 없는 환승은 판정기와 **같은 대체 출처**(측정 분포 상위 10%)를 쓴다.
+            #   앞 판은 근거없음 고정값(3분 · 대형역 2분)을 써서 생성기와 판정기가 다른 값을 봤다.
+            nf = self.tw.network_fallback()
+            if nf is not None:
+                return nf.min
         return self.large_add if station in self.large else self.walk_unknown
 
     def transfer_cost(self, station, from_line, to_line):

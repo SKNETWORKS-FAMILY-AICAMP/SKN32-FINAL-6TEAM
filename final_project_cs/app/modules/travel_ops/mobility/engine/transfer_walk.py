@@ -10,10 +10,18 @@
 # ★ 소스의 `src_min` 은 쓰지 않는다. 보행속도 1.2 m/s 기준으로 계산된 남의 값이다.
 #   우리 기준선은 실측 1.04 m/s 이므로 **거리만 받아서 우리가 환산한다.**
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_SPEED_MPS = 1.04          # rules.measured_baseline.kakao_walk_speed_mps
+FALLBACK_QUANTILE = 0.9           # 거리표에 없는 환승의 대체값 — 측정된 환승 거리 분포의 상위 10%(보수적)
+
+
+def ceil1(x):
+    """소수 첫째 자리 **올림**. ☆`[2026-09-29 문제목록 #2]` 앞 판은 round(…, 1) 뒤 math.ceil 을 해
+    61초(1.017분) → 1.0 → 1분으로 시간이 줄었다. 먼저 올리면 1.1 → 2분이다."""
+    return math.ceil(x * 10 - 1e-9) / 10
 
 
 @dataclass
@@ -46,7 +54,26 @@ class TransferWalk:
         return cls(json.loads(p.read_text(encoding="utf-8")), speed_mps)
 
     def _min(self, distance_m):
-        return round(distance_m / self.speed / 60, 1)
+        return ceil1(distance_m / self.speed / 60)
+
+    def network_fallback(self):
+        """거리표에 없는 환승의 **대체 출처** — 측정된 환승 거리(쌍) 분포의 상위 10% 값.
+
+        ☆`[2026-09-29 문제목록 #1]` 앞 판은 거리표에 없으면 0분(큰 역만 +2분)으로 채우고 성립시켰다 —
+          모르는 값을 지어낸 것이다(결정 15). 이 값은 지어낸 수가 아니라 같은 거리표의 실측 분포에서 나온다.
+          쌍이 하나도 없으면 None — 부르는 쪽이 근거없음(판정 불가)으로 올린다.
+        """
+        if getattr(self, "_nf", False) is not False:
+            return self._nf                                  # 거리표는 적재 뒤 바뀌지 않는다 — 한 번만 센다
+        ds = sorted(r["distance_m"] for r in self.pairs.values() if r.get("distance_m") is not None)
+        if not ds:
+            self._nf = None
+            return None
+        d = ds[min(len(ds) - 1, math.ceil(FALLBACK_QUANTILE * len(ds)) - 1)]
+        self._nf = Walk(self._min(d), "추정", "network_p90",
+                        f"환승 거리표에 없는 환승 — 측정된 {len(ds)}쌍의 상위 10% 거리 {d:g}m 로 보수적으로 잡았다",
+                        d, self.built_at)
+        return self._nf
 
     def lookup(self, station, from_line, to_line):
         """(역, 타던 노선, 갈아탈 노선) → 도보 분. 못 찾으면 사다리를 내려간다."""
