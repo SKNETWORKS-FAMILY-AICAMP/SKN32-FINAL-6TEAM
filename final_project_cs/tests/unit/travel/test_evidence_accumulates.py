@@ -45,14 +45,12 @@ async def test_activity_keeps_every_source_it_read():
                                      content="취소·환급은 업체 조건을 따른다.")],
         "read.place": {"place_id": "p1", "weather_sensitive": True,
                        "latitude": 37.5, "longitude": 127.0},
-        "read.disruptions": {"verdict": "clear", "disruptions": [], "advisories": [],
-                             "failed_categories": [], "not_connected": [],
-                             "checks": [{"category": "forecast", "status": "ok", "value": {
-                                 "matched_hour": "2026-09-10T14:00",
-                                 "precipitation_probability": 10, "wind_speed_kmh": 5.0}}]},
+        "read.weather": {"matched_hour": "2026-09-10T14:00",
+                         "precipitation_probability": 10, "wind_speed_kmh": 5.0,
+                         "source": "open_meteo", "confirmed_at": "2026-09-09T12:00:00+00:00"},
     })).execute(request)
 
-    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.disruptions"]
+    assert _sources(result) == ["read.booking", "read.policy", "read.place", "read.weather"]
 
 
 @pytest.mark.asyncio

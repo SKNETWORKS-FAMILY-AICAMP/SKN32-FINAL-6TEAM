@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""4단계 대체 장소를 `check_feasible`에 연결한 경로 — `read.place_candidates` 계약.
+"""check_feasible wiring — read.weather / read.disaster 계약.
 
-wiki/teams/activity.md 「구현 현황 — 작업자 B」 「아직 안 한 것」:
-  - Team(`execute()`)에 연결 — 후보 풀 조회 도구는 계약(`read.place_candidates`)만
-    먼저 두고, 실제 DB 조회는 작업자 A 몫이다. 여기서는 FakeTools 로 넣는다.
-  - 고른 후보의 ① 재검증(v11 §5) — 도구를 더 부르지 않고 이미 읽은 값으로 한다.
+[2026-09-28 역복원]
+  구: read.place_candidates 배선 + 3분기 status(problem/insufficient_info/ok) 검증
+  신: read.disruptions 단일 도구 (develop 병합 — 일시)
+  복원: read.weather + read.disaster 개별 도구로 복원 (role-activity 아키텍처)
+
+  장소 후보 DB 조회는 tests/unit/travel/test_db_search_place_candidates.py 담당.
 """
 from __future__ import annotations
 
@@ -13,72 +15,41 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.modules.travel_ops.activity import ActivityTeam
-from app.tools.read_tools import ReadToolbox
 
 from .helpers import FakeTools, pack, task
 
 UTC = timezone.utc
 ALLOWED = ActivityTeam.manifest.allowed_tools
 
-
-def _upcoming(when: datetime) -> datetime:
-    """요일·시각은 그대로 두고 주 단위로 미래로 민다(취소 기한과 안 겹치게 이틀 뒤부터)."""
-    floor = datetime.now(UTC) + timedelta(days=2)
-    while when < floor:
-        when += timedelta(weeks=1)
-    return when
+_DISASTER_CRITICAL = {
+    "messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "지진"}],
+    "confirmed_at": "2026-09-28T10:00:00+00:00",
+    "source": "disaster_api",
+}
 
 
-TUESDAY = _upcoming(datetime(2026, 9, 22, 6, tzinfo=UTC))    # 화요일 15시 KST
-SATURDAY = _upcoming(datetime(2026, 10, 3, 6, tzinfo=UTC))
-
-
-def _row(cid, *, title, x, y, closed="연중무휴", l1="HS", sgg="23"):
-    return {"contentid": cid, "title": title, "contenttypeid": "12",
-            "lclsSystm1": l1, "lclsSystm2": "HS01", "lclsSystm3": "HS010100",
-            "sigungucode": sgg, "mapx": str(x), "mapy": str(y),
-            "closed_days": closed, "business_hours": "09:00~18:00"}
-
-
-ORIGIN = _row("126508", title="경복궁", x=126.9770, y=37.5796, closed="매주 화요일")
-NEAR = _row("c1", title="가까운 곳", x=126.9800, y=37.5800)
-FAR = _row("c2", title="먼 곳", x=127.0500, y=37.6000)
-CLOSED_TUE = _row("c3", title="화요일 휴무", x=126.9771, y=37.5797, closed="매주 화요일")
-UNKNOWN = _row("c4", title="휴무 모름", x=126.9772, y=37.5797, closed="홈페이지 참조")
-
-
-def _pool(*candidates, origin=ORIGIN):
-    return {"origin": origin, "candidates": list(candidates),
-            "source": "place_catalog", "confirmed_at": "2026-09-26T00:00:00+00:00"}
-
-
-def _values(*, starts_at=TUESDAY, pool=None, disaster=None, content_id="126508",
-            weather_sensitive=False):
-    place = {"place_id": "p1", "name": "경복궁", "weather_sensitive": weather_sensitive,
-             "latitude": 37.5796, "longitude": 126.9770,
-             "source_content_id": content_id, "source_content_type_id": "12",
-             "operating": {"usetime_text": "09:00~18:00", "restdate_text": "매주 화요일 휴무",
-                           "source": "tour_api", "confirmed_at": "2026-09-20T12:00:00+00:00"}}
+def _values(*, starts_at=None, disaster=None, place=True, party=2, capacity=4):
+    starts_at = starts_at or datetime.now(UTC) + timedelta(days=30)
+    place_val = ({"place_id": "p1", "weather_sensitive": False,
+                  "latitude": 37.5796, "longitude": 126.9770} if place else None)
     return {
         "read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": starts_at,
-                         "party_size": 2, "capacity": 4},
+                         "party_size": party, "capacity": capacity},
         "read.policy": [{"cancel_deadline_hours": 24}],
-        "read.place": place,
-        "read.weather": {"matched_hour": "15:00", "precipitation_probability": 10,
-                         "wind_speed_kmh": 5, "source": "kma", "confirmed_at": "x"},
+        "read.place": place_val,
+        "read.weather": None,
         "read.disaster": disaster,
-        "read.place_candidates": pool,
     }
 
 
-def _task(state=None):
+def _task():
     return task("activity", "activity.check_feasible",
-                pack("activity", scope=["activity"], state=state), ALLOWED)
+                pack("activity", scope=["activity"]), ALLOWED)
 
 
-async def _run(values, state=None):
+async def _run(values):
     tools = FakeTools(values)
-    result = await ActivityTeam(tools).execute(_task(state))
+    result = await ActivityTeam(tools).execute(_task())
     return result, [name for name, _ in tools.calls]
 
 
@@ -86,155 +57,70 @@ async def _run(values, state=None):
 # 계약
 # ══════════════════════════════════════════════════════════════════
 
-def test_the_tool_is_declared_and_answers_unknown_without_an_origin():
-    """★선언돼 있고, 원래 장소 식별자가 없으면 DB 를 열지 않고 「모름」이다.
+def test_disruptions_is_in_allowed_tools():
+    """read.disruptions는 handle_trigger에서 사용 — manifest에 선언돼 있어야 한다."""
+    assert "read.disruptions" in ALLOWED
 
-    실제 DB 조회는 `tests/unit/travel/test_db_search_place_candidates.py` 가 본다.
-    """
-    assert "read.place_candidates" in ALLOWED
-    assert ReadToolbox(lambda: None).place_candidates(None, content_id=None) is None
+
+def test_weather_and_disaster_are_in_allowed_tools():
+    """read.weather / read.disaster — _check_feasible이 쓰는 두 도구."""
+    assert "read.weather" in ALLOWED
+    assert "read.disaster" in ALLOWED
 
 
 # ══════════════════════════════════════════════════════════════════
-# 문제있음일 때만 찾는다
+# check_feasible 배선
 # ══════════════════════════════════════════════════════════════════
 
 @pytest.mark.asyncio
-async def test_closure_problem_ranks_alternatives_and_lists_them():
-    result, calls = await _run(_values(pool=_pool(FAR, NEAR)))
-
-    decision = result.decisions[0]
-    assert decision["status"] == "problem"
-    assert calls[-1] == "read.place_candidates"
-    found = decision["alternatives"]
-    assert found["status"] == "ranked"
-    assert [a["contentid"] for a in found["alternatives"]] == ["c1", "c2"]
-    assert all(a["revalidated"] for a in found["alternatives"])
-    assert "대체 장소 후보: 가까운 곳(" in result.answer
-    assert "정원·운영시간은 확인하지 않았습니다" in result.answer
-    assert "tool:activity:read.place_candidates" in [e.evidence_id for e in result.evidence]
+async def test_ok_report_returns_feasible_true():
+    result, _ = await _run(_values())
+    assert result.decisions[0]["feasible"] is True
 
 
 @pytest.mark.asyncio
-async def test_the_pool_lookup_is_keyed_by_the_origin_content_id():
-    tools = FakeTools(_values(pool=_pool(NEAR)))
-    await ActivityTeam(tools).execute(_task())
-    assert ("read.place_candidates", {"content_id": "126508"}) in tools.calls
+async def test_critical_disaster_returns_feasible_false():
+    result, _ = await _run(_values(disaster=_DISASTER_CRITICAL))
+    d = result.decisions[0]
+    assert d["feasible"] is False
+    assert d["disaster"]["blocks"] is True
 
 
 @pytest.mark.asyncio
-async def test_ok_does_not_look_for_alternatives():
-    result, calls = await _run(_values(starts_at=SATURDAY, pool=_pool(NEAR)))
-    assert result.decisions[0]["status"] == "ok"
-    assert "read.place_candidates" not in calls
-    assert "alternatives" not in result.decisions[0]
-
-
-@pytest.mark.asyncio
-async def test_insufficient_info_does_not_look_for_alternatives():
-    values = _values(pool=_pool(NEAR))
-    values["read.place"] = None
-    result, calls = await _run(values)
-    assert result.decisions[0]["status"] == "insufficient_info"
+async def test_disrupted_does_not_call_place_candidates():
+    """후보 풀 조회는 check_feasible 범위 밖 — 재난 상황에서도 부르지 않는다."""
+    _, calls = await _run(_values(disaster=_DISASTER_CRITICAL))
     assert "read.place_candidates" not in calls
 
 
-# ══════════════════════════════════════════════════════════════════
-# 모름은 모름으로
-# ══════════════════════════════════════════════════════════════════
-
 @pytest.mark.asyncio
-async def test_unimplemented_pool_says_it_could_not_look():
-    """★지금 실제 도구가 이 갈래다 — 「대안 없음」이 아니라 「조회 못 함」."""
-    result, _ = await _run(_values(pool=None))
-    found = result.decisions[0]["alternatives"]
-    assert found == {"status": "unknown", "reason": "pool_unavailable"}
-    assert "조회하지 못했습니다" in result.answer
-    assert "대체 장소 후보 풀을 받지 못했다" in result.warnings
-    assert result.decisions[0]["feasible"] is False      # 판정은 그대로
+async def test_place_none_returns_infeasible():
+    """장소를 모르면 feasible=False + place_confirmed=False — 성립을 단정하지 않는다."""
+    result, calls = await _run(_values(place=False))
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["place_confirmed"] is False
+    assert "read.disruptions" not in calls
 
 
 @pytest.mark.asyncio
-async def test_no_content_id_skips_the_lookup():
-    result, calls = await _run(_values(pool=_pool(NEAR), content_id=None))
-    assert "read.place_candidates" not in calls
-    assert result.decisions[0]["alternatives"]["reason"] == "no_content_id"
-
-
-@pytest.mark.asyncio
-async def test_empty_match_is_not_confused_with_unknown():
-    other = _row("c9", title="다른 갈래", x=126.98, y=37.58, l1="NA", sgg="99")
-    result, _ = await _run(_values(pool=_pool(other)))
-    found = result.decisions[0]["alternatives"]
-    assert found["status"] == "ranked" and found["alternatives"] == []
-    assert "조건에 맞는 대체 장소를 찾지 못했습니다" in result.answer
-
-
-# ══════════════════════════════════════════════════════════════════
-# ① 재검증 (v11 §5)
-# ══════════════════════════════════════════════════════════════════
-
-@pytest.mark.asyncio
-async def test_candidate_closed_on_the_same_weekday_is_dropped():
-    result, _ = await _run(_values(pool=_pool(CLOSED_TUE, FAR)))
-    ids = [a["contentid"] for a in result.decisions[0]["alternatives"]["alternatives"]]
-    assert ids == ["c2"]
-
-
-@pytest.mark.asyncio
-async def test_unconfirmed_candidate_is_kept_but_not_announced():
-    """★휴무를 모르는 후보는 decisions 에 남기되 고객 안내문에는 싣지 않는다."""
-    result, _ = await _run(_values(pool=_pool(UNKNOWN)))
-    [only] = result.decisions[0]["alternatives"]["alternatives"]
-    assert only["contentid"] == "c4" and only["revalidated"] is False
-    assert "휴무 모름" not in result.answer
-    assert "휴무 여부를 확인하지 못해 안내하지 않았습니다" in result.answer
-
-
-@pytest.mark.asyncio
-async def test_disaster_block_withholds_alternatives_without_a_lookup():
-    """★재난문자는 전국 목록이라(`disaster_msg.near()`가 좌표를 안 쓴다)
-    어느 후보로 옮겨도 같은 판정이다 — 후보 풀을 부르지도 않는다."""
-    disaster = {"messages": [{"SN": "1", "EMRG_STEP_NM": "위급재난", "DST_SE_NM": "지진"}],
-                "source": "safetydata", "confirmed_at": "x"}
-    result, calls = await _run(_values(starts_at=SATURDAY, pool=_pool(NEAR),
-                                       disaster=disaster))
-    assert result.decisions[0]["status"] == "problem"
-    assert result.decisions[0]["alternatives"] == {"status": "withheld",
-                                                   "reason": "disaster_blocks"}
-    assert "read.place_candidates" not in calls
-
-
-# ══════════════════════════════════════════════════════════════════
-# 선호도
-# ══════════════════════════════════════════════════════════════════
-
-@pytest.mark.asyncio
-async def test_preference_is_read_from_current_state():
-    other_type = {**NEAR, "contenttypeid": "14"}
-    result, _ = await _run(_values(pool=_pool(other_type)),
-                           state={"activity_preference": "activity"})
-    found = result.decisions[0]["alternatives"]
-    assert found["preference"] == "activity"
-    assert found["dropped_fields"] == ["contenttypeid"]
-    assert any("contenttypeid" in w for w in result.warnings)
-
-
-@pytest.mark.asyncio
-async def test_unknown_preference_is_not_guessed():
-    result, _ = await _run(_values(pool=_pool(NEAR)),
-                           state={"activity_preference": "cheap"})
-    assert result.decisions[0]["alternatives"]["preference"] is None
-    assert any("알 수 없는 선호도" in w for w in result.warnings)
+async def test_capacity_check_happens_before_place_lookup():
+    """정원 초과는 read.place 없이 즉시 반환 — 불필요한 도구 호출 없다."""
+    result, calls = await _run(_values(party=5, capacity=4))
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["reason"] == "party_over_capacity"
+    assert "read.place" not in calls
 
 
 # ══════════════════════════════════════════════════════════════════
 # 예산
 # ══════════════════════════════════════════════════════════════════
 
+def test_max_steps_is_twelve():
+    assert ActivityTeam.manifest.max_steps == 12
+
+
 @pytest.mark.asyncio
-async def test_longest_path_fits_the_tool_budget():
-    """예약·규정·장소·기상·재난·후보 = 6 = `max_steps`. 넘치면 ToolBudgetExceeded."""
-    result, calls = await _run(_values(pool=_pool(NEAR), weather_sensitive=True))
-    assert len(calls) == ActivityTeam.manifest.max_steps == 6
-    assert result.decisions[0]["alternatives"]["status"] == "ranked"
+async def test_ok_path_tool_calls_are_within_budget():
+    """정상 경로 도구 호출 수 ≤ max_steps."""
+    _, calls = await _run(_values())
+    assert len(calls) <= ActivityTeam.manifest.max_steps

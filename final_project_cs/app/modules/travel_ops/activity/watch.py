@@ -258,16 +258,14 @@ class TravelWatcher:
     def tick_activities(self, limit: int = DEFAULT_BATCH) -> TickResult:
         """활동 시작 3시간 이내인 것을 `limit`개만 본다. 재난문자 관련성을 본다.
 
-        ★`self.sources.disaster`는 아직 구현체가 없다(재난문자API 클라이언트
-          코드 0줄 — wiki/teams/activity.md 「TourAPI · 재난문자API 연동」).
-          `tick_places`가 `self.sources.place`에 duck-typed로 의존하는 것과
-          같은 방식으로, 여기서는 기대하는 인터페이스만 정한다:
+        ★`[2026-09-28 병합 후속]` `DisasterMsgApi`/`DisasterMsgCsv`(`disaster_msg.py`)가
+          실구현체로 붙는다. `.near()` 래퍼가 `.active()`에 위임하고 아래 모양으로 답한다:
 
               source.name                                    -> str
               source.near(lat, lng, *, within: datetime)      -> dict | None
-                  {"messages": [{"SN": ..., "EMRG_STEP_NM": ..., ...}, ...]}
+                  {"for_region": [{"serial": ..., "step": ..., ...}, ...]}
 
-          실제 클라이언트가 생기면 이 인터페이스만 맞추면 붙는다.
+          ★`serial` = 구 `SN`, `step` = 구 `EMRG_STEP_NM` — `active()` 판정 출력 필드명.
         """
         result = TickResult()
         source = getattr(self.sources, "disaster", None)
@@ -292,8 +290,8 @@ class TravelWatcher:
             #   안전안내→위급재난 같은 단계 변경도 변화로 잡는다.
             watched = {
                 "active": sorted(
-                    f"{m.get('SN')}:{m.get('EMRG_STEP_NM')}"
-                    for m in found.get("messages", [])),
+                    f"{m.get('serial')}:{m.get('step')}"
+                    for m in found.get("for_region", [])),
             }
             # `[미확보]` 이 활동에 걸린 예약을 찾아 `affected_bookings`에 채우는
             #   일은 아직 안 한다 — 무예약 활동은 애초에 예약이 없고, 예약이
