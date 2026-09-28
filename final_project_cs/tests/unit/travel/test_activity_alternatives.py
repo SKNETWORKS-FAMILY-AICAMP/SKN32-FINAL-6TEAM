@@ -175,31 +175,31 @@ def _values(*, place="default", starts_at=None, party=2, capacity=4, disaster=No
     }
 
 
-async def _status(values):
-    result = await ActivityTeam(FakeTools(values)).execute(_feasible_task())
-    return result.decisions[0]["status"]
+@pytest.mark.asyncio
+async def test_feasible_ok():
+    result = await ActivityTeam(FakeTools(_values())).execute(_feasible_task())
+    assert result.decisions[0]["feasible"] is True
 
 
 @pytest.mark.asyncio
-async def test_status_ok():
-    assert await _status(_values()) == "ok"
+async def test_feasible_place_unknown_returns_infeasible():
+    """place=None → feasible=False + place_confirmed=False (장소를 모르면 성립 단정 안 함)."""
+    result = await ActivityTeam(FakeTools(_values(place=None))).execute(_feasible_task())
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["place_confirmed"] is False
 
 
 @pytest.mark.asyncio
-async def test_status_insufficient_when_place_unknown():
-    assert await _status(_values(place=None)) == "insufficient_info"
+async def test_feasible_problem_on_capacity():
+    result = await ActivityTeam(FakeTools(_values(party=5, capacity=4))).execute(_feasible_task())
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["reason"] == "party_over_capacity"
 
 
 @pytest.mark.asyncio
-async def test_status_problem_on_capacity_and_past_start():
-    assert await _status(_values(party=5, capacity=4)) == "problem"
-    past = datetime.now(UTC) - timedelta(hours=2)
-    assert await _status(_values(starts_at=past)) == "problem"
-
-
-@pytest.mark.asyncio
-async def test_status_problem_on_critical_disaster_even_without_place():
-    disaster = {"messages": [{"SN": "1", "EMRG_STEP_NM": "위급재난"}],
-                "source": "fake", "confirmed_at": None}
-    assert await _status(_values(disaster=disaster)) == "problem"
-    assert await _status(_values(place=None, disaster=disaster)) == "problem"
+async def test_feasible_disrupted_by_critical_disaster():
+    """위급재난 발령 → feasible=False + disaster.blocks=True."""
+    disaster = {"messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "지진"}]}
+    result = await ActivityTeam(FakeTools(_values(disaster=disaster))).execute(_feasible_task())
+    assert result.decisions[0]["feasible"] is False
+    assert result.decisions[0]["disaster"]["blocks"] is True

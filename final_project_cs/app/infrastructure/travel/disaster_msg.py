@@ -170,6 +170,19 @@ class DisasterMsgCsv:
                                        window_start=window_start, at=at)
         return {**base, "for_region": messages, "unclassified": unclassified}
 
+    def near(self, latitude: float, longitude: float,  # noqa: ARG002
+             at: Any = None, *, within: Any = None) -> dict[str, Any] | None:
+        """read_tools / watch.py 호환 래퍼 — 이 API 는 좌표가 아닌 지역명으로 거른다.
+
+        ★`latitude`·`longitude` 는 무시한다. 재난문자 수신지역이 좌표가 아닌
+          행정구역 문자열이라 역지오코딩 없이는 좌표로 거를 수 없다(2026-09-14 설계).
+          `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return self.active(region="서울", at=effective_at)
+
 
 #: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
 #:    `{"header":{"resultCode":"00","resultMsg":"NORMAL SERVICE"},"numOfRows":…,"pageNo":…,
@@ -254,6 +267,19 @@ class DisasterMsgApi(TravelSource):
                            "window": {"from": window_start.isoformat(), "to": until.isoformat()},
                            "for_region": messages, "unclassified": unclassified},
                           source=self.name)
+
+    def near(self, latitude: float, longitude: float,  # noqa: ARG002
+             at: Any = None, *, within: Any = None) -> dict[str, Any] | None:
+        """read_tools / watch.py 호환 래퍼 — 이 API 는 좌표가 아닌 지역명으로 거른다.
+
+        ★`latitude`·`longitude` 는 무시한다. 재난문자 수신지역이 좌표가 아닌
+          행정구역 문자열이라 역지오코딩 없이는 좌표로 거를 수 없다(2026-09-14 설계).
+          `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        """
+        effective_at = within or at or datetime.now(KST)
+        if not isinstance(effective_at, datetime):
+            effective_at = datetime.now(KST)
+        return self.active(region="서울", at=effective_at)
 
 
 __all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",
