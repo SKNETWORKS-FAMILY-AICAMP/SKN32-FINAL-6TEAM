@@ -31,7 +31,7 @@ async function skipPreferencesAndRegister(page: Page) {
     await skip.click();
     if (question < 5) await expect(page.locator(`#question-title-${question + 1}`)).toBeFocused();
   }
-  await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요.", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await page.getByRole("button", { name: "예시 불러오기" }).click();

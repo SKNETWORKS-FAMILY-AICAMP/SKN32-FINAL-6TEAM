@@ -46,5 +46,5 @@ export async function finishOnboarding(page: Page) {
   }
   await page.getByRole("button", { name: "여유롭게" }).click();
   await page.getByRole("button", { name: "설정 완료" }).click();
-  await expect(page.getByRole("heading", { name: "여행 취향을 모두 알아봤어요." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료" })).toBeVisible();
 }
