@@ -161,11 +161,22 @@
 .successSymbol .drawnCheck { width: 30px; height: 30px; }
 .success h2 { font-size: 21px; line-height: 1.5; margin: 0 0 10px; letter-spacing: -.7px; }
 .success > p { font-size: 12px; color: var(--color-muted); line-height: 1.9; margin: 0 0 22px; }
-.summary { background: var(--color-subtle); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 19px; }
-.summary > div { display: flex; justify-content: space-between; gap: 15px; font-size: 11px; line-height: 1.7; margin: 5px 0; }
-.summary span { color: var(--color-muted); }
-.summary strong { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+/* Finished-survey cards bleed to the card edges so the next one peeks in, like the intro's how-it-works cards. Both stretch to the taller one, so the buttons below stay put. */
+.summaryCarousel { text-align: left; margin-bottom: 19px; }
+.summarySlides { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 18px; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
+.summarySlides::-webkit-scrollbar { display: none; }
+.summaryDragging { scroll-snap-type: none; cursor: grabbing; }
+.summaryCard { flex: 0 0 82%; scroll-snap-align: start; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.summaryCard h3 { font-size: 13px; margin: 0 0 4px; letter-spacing: -.3px; color: var(--color-primary); }
+.summary > div { padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.6; }
+.summary > div:first-child { border-top: 0; }
+.summary > div > span { display: block; font-size: 10px; color: var(--color-muted); margin-bottom: 2px; }
+.summary strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
 .summaryLine { display: block; }
+.summaryNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.summaryNav button { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: #fff; color: var(--color-primary); font-size: 16px; }
+.summaryNav button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.summaryNav p { font-size: 11px; color: var(--color-muted); text-align: center; font-variant-numeric: tabular-nums; }
 .homeContinue { width: 100%; min-height: 48px; margin: 0 0 12px; }
 .editPreferences { background: #fff; color: var(--color-primary); border: 1px solid var(--color-border); }
 .prototypeNote { font-size: 10px; color: var(--color-muted); line-height: 1.7; margin: 15px 0 0; }

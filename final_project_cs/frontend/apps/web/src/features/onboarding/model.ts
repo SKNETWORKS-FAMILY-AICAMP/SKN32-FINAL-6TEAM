@@ -145,6 +145,22 @@ export function priorityLines(a: Answers, t: Translate): string[] {
   return a.priority.map((area, index) => `${index + 1}. ${t(...areaNames[area])} — ${a.details[area].map((value) => detail(area, value)).join(" → ")}`);
 }
 
+/**
+ * One question's answer in words for the finished-survey cards, one string per line. A skipped question says so
+ * instead of showing a choice; `상관없음` is a real answer and shows as picked.
+ */
+export function answerLines(id: QuestionId, a: Answers, t: Translate): string[] {
+  if (a.skipped.includes(questions.findIndex((question) => question.id === id))) return [t("응답하지 않음", "Not answered")];
+  switch (id) {
+    case "theme": return [chosenLabel("theme", a.theme, t)];
+    case "party": return [partyLabel(a, t)];
+    case "priority": return a.priority.length ? priorityLines(a, t) : [t("미선택", "Not selected")];
+    case "indoor": return [`${t("식당", "Dining")} · ${chosenLabel("indoorDining", a.indoorDining, t)}`, `${t("액티비티", "Activities")} · ${chosenLabel("indoorActivity", a.indoorActivity, t)}`];
+    case "onDisruption": return [chosenLabel("onDisruption", a.onDisruption, t)];
+    case "pace": return [chosenLabel("pace", a.pace, t)];
+  }
+}
+
 /** Tap a single-choice chip: it toggles on and off. */
 export function toggle(a: Answers, key: ChoiceKey, value: string): Answers {
   return { ...a, [key]: a[key] === value ? "" : value };

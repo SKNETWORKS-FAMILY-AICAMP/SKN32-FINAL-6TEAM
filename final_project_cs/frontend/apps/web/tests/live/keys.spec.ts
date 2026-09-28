@@ -13,6 +13,20 @@ test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 �
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
 });
 
+test("실제 연결의 내 여행 목록은 삭제를 흉내 내지 않는다: 선택 삭제·휴지통이 꺼져 있고 이유를 알리며, 서버에 삭제를 요청하지 않는다", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page);
+  await page.goto("/trips");
+  const row = page.locator("#main-content li");
+  await expect(row).toHaveCount(1);
+  await expect(page.getByText("실제 연결에서 여행 삭제는 아직 지원하지 않아요.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "선택 삭제" })).toBeDisabled();
+  await expect(row.getByRole("button", { name: /삭제$/ })).toBeDisabled();
+  await row.getByRole("link").click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  expect((await server.log()).filter((entry) => entry.method === "DELETE")).toHaveLength(0);
+});
+
 test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 키가 없으면 목록을 묻느라 새 사용자를 만들지도 않는다", async ({ page, request }) => {
   const server = stub(request);
   await server.scenario({ trips: "none" });

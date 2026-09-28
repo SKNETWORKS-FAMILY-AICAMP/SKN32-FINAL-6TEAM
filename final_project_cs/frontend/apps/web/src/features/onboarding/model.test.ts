@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { translator } from "@/lib/i18n";
 import {
-  answeredCount, done, initialAnswers, partyLabel, priorityLines, questions, skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
+  answeredCount, answerLines, done, initialAnswers, partyLabel, priorityLines, questions, skip, toggle, toggleArea, toggleDetail, unskip, valid, type Answers,
 } from "./model";
 
 const ko = translator("ko");
@@ -90,5 +90,27 @@ describe("onboarding preferences", () => {
     a = toggleDetail(toggleDetail(a, "food", "clean"), "food", "taste");
     expect(priorityLines(a, ko)).toEqual(["1. 이동 — 택시 → 대중교통 → 도보 → 렌트카", "2. 음식 — 청결 → 맛"]);
     expect(priorityLines(a, translator("en"))[0]).toBe("1. Getting around — Taxi → Public transit → Walking → Rental car");
+  });
+
+  it("the finished-survey cards word every answer, keep `상관없음` as an answer, and say `응답하지 않음` only for skipped questions", () => {
+    const lines = (a: Answers) => questions.map((question) => answerLines(question.id, a, ko));
+    // `full` picked family after typing an "other" draft: the draft is not shown.
+    expect(lines(full)).toEqual([["맛집 탐방"], ["가족"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["식당 · 실내", "액티비티 · 상관없음"], ["먼저 물어봐줘"], ["여유롭게"]]);
+    expect(lines(skip(skip(full, 1), 3))).toEqual([["맛집 탐방"], ["응답하지 않음"], ["1. 음식 — 청결 → 맛", "2. 이동 — 택시"], ["응답하지 않음"], ["먼저 물어봐줘"], ["여유롭게"]]);
+    const none = questions.reduce((a, _, index) => skip(a, index), initialAnswers);
+    expect(lines(none)).toEqual(questions.map(() => ["응답하지 않음"]));
+    expect(answerLines("indoor", full, translator("en"))).toEqual(["Dining · Indoors", "Activities · Either is fine"]);
+  });
+
+  it("the finished-survey cards show every area and every detail picked, in picking order, with a long typed companion in full", () => {
+    let a: Answers = { ...full, party: "other", partyOther: "  대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리  ", priority: [], details: { food: [], activity: [], mobility: [] } };
+    for (const area of ["activity", "food", "mobility"] as const) a = toggleArea(a, area);
+    for (const value of ["shopping", "diy", "healing", "extreme"]) a = toggleDetail(a, "activity", value);
+    for (const value of ["kindness", "taste", "clean"]) a = toggleDetail(a, "food", value);
+    for (const value of ["walk", "car", "taxi", "public"]) a = toggleDetail(a, "mobility", value);
+    expect(answerLines("party", a, ko)).toEqual(["대학 동기 여섯 명과 그 가족들, 그리고 반려견 두 마리"]);
+    expect(answerLines("priority", a, ko)).toEqual([
+      "1. 활동 — 쇼핑 → DIY → 힐링 → 익스트림", "2. 음식 — 친절 → 맛 → 청결", "3. 이동 — 도보 → 렌트카 → 택시 → 대중교통",
+    ]);
   });
 });

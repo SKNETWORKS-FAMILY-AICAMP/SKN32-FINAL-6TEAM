@@ -96,7 +96,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(page.getByRole("button", { name: "설정 완료" })).toBeDisabled();
   await skip.click();
 
-  await expect(heading("여행 취향을 모두 알아봤어요.")).toBeVisible();
+  await expect(heading("여행 취향 설정 완료")).toBeVisible();
   await expect(page.getByText("맛집 탐방", { exact: true })).toBeVisible();
   await expect(page.getByText("가족", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
@@ -106,7 +106,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
 
   await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
   await expect(page).toHaveURL(/\/start$/);
-  await expect(heading("여행 취향을 모두 알아봤어요.")).toBeVisible();
+  await expect(heading("여행 취향 설정 완료")).toBeVisible();
 
   // The finished survey rides with the trip registration; the demo refuses a survey the backend would reject.
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
