@@ -184,3 +184,28 @@ def test_32_get_verifier_reloads_when_source_changes(mini, monkeypatch):
     second = RT.get_verifier()
     assert second is not first, "시간표 파일이 바뀌면 다시 올린다"
     monkeypatch.setattr(RT, "_SINGLETON", None)
+
+
+# ── #63 시험용 축소 시간표를 압축해 둔다 — 로더가 .gz 도 읽는다 ─────────────
+def test_63_timetable_loads_gzip_same_as_plain(tmp_path):
+    import gzip
+    from app.modules.travel_ops.mobility.engine.verify_time import Timetable
+    rows = [{"line": "01호선", "station_nm": "A", "day_type": "weekday", "dep_time": "09:00:00", "dir": "down",
+             "dest_nm": "D", "fetched_at": "2026-09-09"},
+            {"line": "01호선", "station_nm": "B", "day_type": "weekday", "dep_time": None, "dir": "down",
+             "dest_nm": "D", "fetched_at": "2026-09-09"}]
+    text = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    (tmp_path / "t.jsonl").write_text(text, encoding="utf-8")
+    with gzip.open(tmp_path / "t.jsonl.gz", "wt", encoding="utf-8") as f:
+        f.write(text)
+    a, b = Timetable.load(tmp_path / "t.jsonl"), Timetable.load(tmp_path / "t.jsonl.gz")
+    assert (a.rows, a.skipped_no_dep, a.stations, dict(a.by_key)) == (b.rows, b.skipped_no_dep, b.stations, dict(b.by_key))
+    assert b.rows == 1 and b.skipped_no_dep == 1
+
+
+def test_63_committed_mini_timetable_is_gzip_and_readable():
+    from app.modules.travel_ops.mobility.engine.verify_time import Timetable
+    here = Path(__file__).resolve().parent
+    assert not (here / "mini_timetable_v2.jsonl").exists(), "평문 20MB 판은 압축본으로 바뀌었다"
+    tt = Timetable.load(here / "mini_timetable_v2.jsonl.gz", wanted={("05호선", "여의도")})
+    assert tt.rows > 0 and tt.fetched_at == "2026-09-09"

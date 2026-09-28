@@ -1,6 +1,8 @@
 # mobility_scripts/mobility_checks/make_mini_timetable.py — 축소 시간표 생성 (판정 로직 확인용)
 # 실행: 저장소 루트에서  python mobility_scripts/mobility_checks/make_mini_timetable.py
-# 출력: final_project_cs/tests/unit/travel/mobility/mini_timetable_v2.jsonl  (timetable_v1.jsonl 과 같은 스키마)
+# 출력: final_project_cs/tests/unit/travel/mobility/mini_timetable_v2.jsonl.gz  (timetable_v1.jsonl 과 같은 스키마)
+#   ☆`[2026-09-29 문제목록 #63]` 평문 20MB 가 시험 폴더의 98% 였다 — gzip 으로 쓴다(판정기 Timetable.load 가 .gz 를 읽는다).
+#   --out 이 .gz 로 안 끝나면 예전처럼 평문으로 쓴다. 압축은 mtime=0 이라 같은 입력이면 같은 바이트다.
 #
 # ★★ 여기 시각은 가짜다. 실제 운행 시각이 아니다. 실제 판정은 반드시 processed 의
 #    timetable_v1.jsonl 로 다시 돌린다.
@@ -17,7 +19,7 @@
 #
 # 역 순서·소요시간은 **실제** line_station_order_v1.json 에서 가져온다. 역명과 순서까지
 # 지어내면 LineOrder 조회가 통째로 헛돈다.
-import json, sys, argparse, collections
+import json, sys, argparse, collections, gzip, io
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -25,7 +27,7 @@ sys.path.insert(0, str(REPO / "final_project_cs"))
 from app.modules.travel_ops.mobility.engine.line_order import LineOrder  # noqa: E402
 from app.modules.travel_ops.mobility.engine.timeutil import fmt_min      # noqa: E402
 
-OUT = REPO / "final_project_cs" / "tests" / "unit" / "travel" / "mobility" / "mini_timetable_v2.jsonl"
+OUT = REPO / "final_project_cs" / "tests" / "unit" / "travel" / "mobility" / "mini_timetable_v2.jsonl.gz"
 FETCHED = "2026-09-09"
 
 
@@ -160,9 +162,13 @@ def main():
         emit(e["line"], e["station"], e["day"],
              M(e["dep"]) if e["dep"] else None, e["dest"], e["dir"])
 
-    with open(a.out, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    text = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    if a.out.endswith(".gz"):
+        with open(a.out, "wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz:
+            gz.write(text.encode("utf-8"))
+    else:
+        with io.open(a.out, "w", encoding="utf-8") as f:
+            f.write(text)
 
     # 심어 둔 성질이 실제로 파일에 있는지 확인한다. 없으면 이 파일은 장식이다.
     over24 = [r for r in rows if r["dep_time"] and int(r["dep_time"][:2]) >= 24]

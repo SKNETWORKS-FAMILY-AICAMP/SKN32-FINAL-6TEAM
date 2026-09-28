@@ -67,7 +67,7 @@
 #   rejected_by_limit 성립하지만 동행 상한 초과로 탈락
 #   unknown           근거 없음
 #   ※ 탈락과 불가를 구분하는 게 핵심이다. 탈락은 "되지만 이 일행에게 무리", 불가는 "안 된다".
-import argparse, json, math, os, sys, difflib, collections
+import argparse, json, math, os, sys, difflib, collections, gzip
 from dataclasses import dataclass, field
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta
 from pathlib import Path
@@ -133,7 +133,9 @@ class Timetable:
     @classmethod
     def load(cls, path, wanted=None):
         tt = cls()
-        with open(path, encoding="utf-8") as f:
+        # ☆`[2026-09-29 문제목록 #63]` .gz 도 읽는다 — 시험용 축소 시간표(20MB)를 압축해 두었다(98% 줄어든다)
+        opener = gzip.open if str(path).endswith(".gz") else open
+        with opener(path, "rt", encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
                 if not raw:
