@@ -113,3 +113,22 @@ def test_안내_줄(sw):
     assert "13:00 점심 — 영업 확인" in text and "18:00 저녁 — 영업 안 함 (휴무)" in text
     assert "대안: 대안집" in text and "바꿀지" in text
     assert sw.meal_lines([]) == ""
+
+
+def test_식이_조건은_대안_찾기에_넘긴다(sw, monkeypatch):
+    ledger_says(sw, monkeypatch, linked=True, open_at_slot=False)
+    seen = {}
+    monkeypatch.setattr(sw, "_alternatives", lambda *a: seen.setdefault("conds", a[-1]) and ["할랄집"])
+    got = sw.sweep_day(None, "t", [Item("저녁", at("18:00"))], day=DAY, now=at("09:00"),
+                       conds=["halal"])
+    assert seen["conds"] == ["halal"] and got[0]["alternatives"] == ["할랄집"]
+
+
+def test_확인된_식이_대안이_없으면_없다고_말한다(sw, monkeypatch):
+    ledger_says(sw, monkeypatch, linked=True, open_at_slot=False)
+    monkeypatch.setattr(sw, "_alternatives", lambda *a, **k: [])
+    c = sw.check_meal(None, "t", Item("저녁", at("18:00")), ["halal"])
+    assert c["no_alternative"] == "근처에 확인된 할랄 식당이 없어요"
+    assert "근처에 확인된 할랄 식당이 없어요" in sw.meal_lines([c])
+    # 식이 조건이 없으면 그런 말을 하지 않는다
+    assert sw.check_meal(None, "t", Item("저녁", at("18:00")))["no_alternative"] is None

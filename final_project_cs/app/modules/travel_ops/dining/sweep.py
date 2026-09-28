@@ -40,6 +40,9 @@ MEAL_KINDS = frozenset({"dining"})
 #: 대안은 몇 곳까지 적는가. 안내는 짧아야 한다 — 고르는 것은 사람이다.
 ALTERNATIVES = 2
 
+#: 식이 조건 이름. 대안이 없을 때 말에 쓴다. 조건은 여행자 선호도 조사에서 온다.
+DIET_LABEL = {"vegetarian_menu": "비건·채식", "halal": "할랄"}
+
 
 def _hm(moment: datetime | None) -> str:
     return moment.astimezone(KST).strftime("%H:%M") if moment else "?"
@@ -68,11 +71,12 @@ def core_open(place: dict[str, Any] | None, start: datetime,
 
 
 def _alternatives(conn, place_uid: str, starts_at: datetime,
-                  ends_at: datetime | None) -> list[str]:
-    """원장의 대안 후보(027). 이름만 — 축(가까운 곳 · 비슷한 곳)마다 한 곳."""
+                  ends_at: datetime | None, conds: list[str]) -> list[str]:
+    """원장의 대안 후보(207). 이름만 — 축(가까운 곳 · 비슷한 곳)마다 한 곳.
+    식이 조건이 있으면 맞다고 확인된 곳만 나온다(219)."""
     with conn.cursor() as cur:
-        cur.execute("SELECT name_ko FROM dining.suggest_alternatives(%s, %s, %s) "
-                    "WHERE place_uid IS NOT NULL", (place_uid, starts_at, ends_at))
+        cur.execute("SELECT name_ko FROM dining.suggest_alternatives(%s, %s, %s, %s) "
+                    "WHERE place_uid IS NOT NULL", (place_uid, starts_at, ends_at, conds))
         names = [row[0] for row in cur.fetchall()]
     seen: list[str] = []
     for name in names:
@@ -89,12 +93,15 @@ def _resolve(conn, tenant_id: str, core_place_id: str) -> str | None:
     return str(row[0]) if row else None
 
 
-def check_meal(conn, tenant_id: str, item: Any) -> dict[str, Any]:
-    """식당 항목 하나. 돌려주는 것: 무엇이라고 판정했고, 왜, 어디서 왔는지."""
+def check_meal(conn, tenant_id: str, item: Any,
+               conds: Iterable[str] = ()) -> dict[str, Any]:
+    """식당 항목 하나. 돌려주는 것: 무엇이라고 판정했고, 왜, 어디서 왔는지.
+    conds 는 여행자의 식이 조건(예: ["halal"]). 대안을 고를 때만 쓴다."""
+    conds = list(conds)
     out: dict[str, Any] = {
         "item_id": str(getattr(item, "item_id", "")), "title": item.title,
         "starts_at": item.starts_at, "status": "unknown", "reason": None,
-        "source": None, "alternatives": []}
+        "source": None, "alternatives": [], "no_alternative": None}
     place_id = str(item.place_id) if item.place_id else None
 
     state = dining_state(conn, tenant_id, place_id, item.starts_at, item.ends_at) if place_id else None
@@ -104,7 +111,11 @@ def check_meal(conn, tenant_id: str, item: Any) -> dict[str, Any]:
             out["status"], out["reason"] = "closed", "그 시각에 영업하지 않아요"
             place_uid = _resolve(conn, tenant_id, place_id)
             if place_uid:
-                out["alternatives"] = _alternatives(conn, place_uid, item.starts_at, item.ends_at)
+                out["alternatives"] = _alternatives(conn, place_uid, item.starts_at,
+                                                    item.ends_at, conds)
+                diet = [DIET_LABEL[c] for c in conds if c in DIET_LABEL]
+                if not out["alternatives"] and diet:
+                    out["no_alternative"] = f"근처에 확인된 {'·'.join(diet)} 식당이 없어요"
         elif state.get("needs_check") or state.get("needs_holiday_check"):
             out["status"] = "check"
             out["reason"] = ("명절이라 영업하는지 확인이 필요해요" if state.get("needs_holiday_check")
@@ -126,14 +137,15 @@ def check_meal(conn, tenant_id: str, item: Any) -> dict[str, Any]:
 
 
 def sweep_day(conn, tenant_id: str, items: Iterable[Any], *, day: date,
-              now: datetime) -> list[dict[str, Any]]:
+              now: datetime, conds: Iterable[str] = ()) -> list[dict[str, Any]]:
     """그날 식당 항목 중 아직 시작하지 않은 것을 모두 본다. 시각 순."""
     meals = sorted((i for i in items
                     if i.kind in MEAL_KINDS
                     and i.starts_at.astimezone(KST).date() == day
                     and i.starts_at > now),
                    key=lambda i: i.starts_at)
-    return [check_meal(conn, tenant_id, item) for item in meals]
+    conds = list(conds)
+    return [check_meal(conn, tenant_id, item, conds) for item in meals]
 
 
 _MARK = {"open": "영업 확인", "closed": "영업 안 함", "check": "확인 필요", "unknown": "확인 못 함"}
@@ -150,6 +162,8 @@ def meal_lines(checks: list[dict[str, Any]]) -> str:
             line += f" ({c['reason']})"
         if c["alternatives"]:
             line += f"\n  대안: {', '.join(c['alternatives'])}"
+        elif c.get("no_alternative"):
+            line += f"\n  {c['no_alternative']}"
         lines.append(line)
     if any(c["status"] == "closed" for c in checks):
         lines.append("영업하지 않는 식당은 대안으로 바꿀지 알려 주세요.")
