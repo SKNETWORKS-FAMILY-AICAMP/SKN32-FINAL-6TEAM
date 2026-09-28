@@ -39,8 +39,6 @@ export function KeyNotice() {
   return <Panel className={styles.notice} role="status" aria-labelledby={titleId}>
     <h2 id={titleId}><KeyRound size={18} strokeWidth={1.6} aria-hidden="true" />{t("내 여행 열쇠를 따로 보관해 주세요", "Keep your trip key somewhere safe")}</h2>
     <p>{state.notice ?? t("이 키가 있어야 다른 기기에서 내 여행을 다시 열 수 있어요.", "You need this key to open your trips again on another device.")}</p>
-    {/* ★The server removes a key that made no trip within `web_guard.idle_key_days` (default 7; abuse plan 2026-09-28). */}
-    <p className={styles.note}>{t("여행을 하나도 만들지 않은 키는 7일 뒤 지워져요.", "A key that has made no trip is removed after 7 days.")}</p>
     <input className={styles.keybox} readOnly value={state.key} aria-label={t("내 사용자 키", "Your user key")} onFocus={(event) => event.currentTarget.select()} />
     <div className={styles.actions}>
       <Button onClick={() => void copyKey()}>{copy === "done" ? t("복사했어요", "Copied") : t("키 복사", "Copy key")}</Button>
