@@ -24,7 +24,7 @@ SATURDAY = datetime(2026, 10, 3, 10, tzinfo=UTC)
 
 CSV_PATH = (Path(__file__).resolve().parents[3]
             / "app" / "modules" / "travel_ops" / "activity" / "data_processing"
-            / "activities_candidates_seoul_merged.csv")
+            / "activity_total_data.csv")
 
 
 def _place(cid, *, l1="HS", l2="HS01", l3="HS010100", ctype="12", sgg="23",

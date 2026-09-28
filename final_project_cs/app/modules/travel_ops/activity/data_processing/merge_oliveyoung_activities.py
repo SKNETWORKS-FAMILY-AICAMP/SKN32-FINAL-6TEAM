@@ -7,7 +7,7 @@
 입력(둘 다 **읽기만** 한다 — 원본은 고치지 않는다):
     app/modules/travel_ops/activity/data_processing/oliveyoung_seoul.csv  올리브영 서울 매장 368건, 10개 컬럼(한글)
 출력:
-    app/modules/travel_ops/activity/data_processing/activities_candidates_seoul_merged.csv  컬럼 + `data_source`
+    app/modules/travel_ops/activity/data_processing/activity_total_data.csv  컬럼 + `data_source`
 
 ★통합 규칙(2026-09-26 담당자 결정). 여기 없는 변환은 하지 않는다.
   - 컬럼은 **805건 CSV 기준**이다. 올리브영 전용 컬럼은 만들지 않는다
@@ -39,7 +39,7 @@ SCRIPTS = Path(__file__).resolve().parents[5] / "scripts"
 DATA_DIR = Path(__file__).resolve().parent
 ACTIVITY_CSV = SCRIPTS / "activities_candidates_seoul_enriched.csv"
 OLIVEYOUNG_CSV = DATA_DIR / "oliveyoung_seoul.csv"
-MERGED_CSV = DATA_DIR / "activities_candidates_seoul_merged.csv"
+MERGED_CSV = DATA_DIR / "activity_total_data.csv"
 
 #: 올리브영 요일별 영업시간 컬럼과, 합칠 때 앞에 붙일 요일 이름. ★순서가 곧 출력 순서이고
 #: "연속 요일" 판단 기준이다 — 평일 다음이 금, 그다음이 토·일·휴일이다.
