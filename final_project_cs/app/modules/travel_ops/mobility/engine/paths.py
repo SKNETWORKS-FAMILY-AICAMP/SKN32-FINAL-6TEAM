@@ -18,6 +18,13 @@ _paths.py 와 다른 점 둘
 
 ★ 다른 모듈은 `from .paths import PROCESSED` 를 **함수 안에서** 한다 — configure() 뒤의 값을 본다.
   모듈 맨 위에서 값을 복사해 두면 configure() 가 안 먹는다.
+
+☆`[2026-09-29 75번 방 · 데이터를 저장소 안 datasets/ 로]` 자료 폴더 모양이 둘이 됐다.
+    · 종전  DATA_DIR/travel/processed/mobility/…            (드라이브 동기화 폴더 · `.env` DATA_DIR)
+    · 저장소 <repo>/datasets/mobility/processed/mobility/…   (팀장 폴더 배정 9/29 · 서버 뜰 때까지 임시 · `git add -f` 로 추적)
+  준 경로의 마지막 폴더 이름이 `processed` 이면 그 자리를 PROCESSED 로 본다(끝에 travel/processed 를 붙이지 않는다).
+  명령줄·시험에서 DATA_DIR 이 없으면 저장소 안 폴더에 시간표가 있을 때만 그것을 쓴다(출처 "repo_datasets") —
+  서버는 여전히 configure(settings.mobility_data_dir) 뿐이다(#48 그대로 · `.env` 에 ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed).
 """
 import os
 from pathlib import Path
@@ -34,6 +41,7 @@ def _repo_root() -> Path:
 
 REPO_ROOT = _repo_root()
 RULES_DIR = Path(__file__).resolve().parent / "rules"
+REPO_DATASETS = REPO_ROOT / "datasets" / "mobility" / "processed"   # 75: 저장소 안 자료 폴더(팀장 배정) — PROCESSED 자리
 UNSET_DIR = Path("/data")          # 설정하지 않았을 때의 자리 — 있을 리 없는 경로라 적재가 멈춘다
 
 SOURCE = "unset"
@@ -43,10 +51,17 @@ DATA_DIR = TRAVEL = RAW_MOBILITY = RAW_BLOG = PROCESSED = None
 def _layout(data_dir, source):
     global SOURCE, DATA_DIR, TRAVEL, RAW_MOBILITY, RAW_BLOG, PROCESSED
     DATA_DIR = Path(data_dir)
-    TRAVEL = DATA_DIR / "travel"
-    RAW_MOBILITY = TRAVEL / "raw" / "mobility"
-    RAW_BLOG = TRAVEL / "raw" / "blog"
-    PROCESSED = TRAVEL / "processed"
+    if DATA_DIR.name == "processed":
+        # 75: 「processed 폴더」를 바로 받았다(저장소 datasets/mobility/processed 등) — 그 자리가 PROCESSED
+        PROCESSED = DATA_DIR
+        TRAVEL = DATA_DIR.parent
+        RAW_MOBILITY = TRAVEL / "raw"
+        RAW_BLOG = TRAVEL / "raw" / "blog"
+    else:
+        TRAVEL = DATA_DIR / "travel"
+        RAW_MOBILITY = TRAVEL / "raw" / "mobility"
+        RAW_BLOG = TRAVEL / "raw" / "blog"
+        PROCESSED = TRAVEL / "processed"
     SOURCE = source
 
 
@@ -72,6 +87,8 @@ def load_cli_env():
     load_dotenv(REPO_ROOT / ".env")
     if os.environ.get("DATA_DIR"):
         _layout(os.environ["DATA_DIR"], "cli_env")
+    elif (REPO_DATASETS / "mobility" / "timetable_v1.jsonl").exists():
+        _layout(REPO_DATASETS, "repo_datasets")     # 75: DATA_DIR 없으면 저장소 안 자료(pull 만 하면 시험이 돈다)
     return SOURCE
 
 

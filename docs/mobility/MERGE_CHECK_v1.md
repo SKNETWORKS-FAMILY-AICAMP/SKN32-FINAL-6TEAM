@@ -30,15 +30,18 @@ python -m pytest tests/unit/travel/mobility -m "mobility_full and not live" -q  
 
 - 게이트 205 = 데이터 없이 도는 단위 183(팀장 `test_review_fixes_*`·`test_check_scripts` 포함) + **회귀 게이트 21**(주요 기능마다 1건) + 목록 정합성 1. 전체층 173 = 회귀 나머지 150 + 실데이터 단위 23(`plan_concurrency`·`plan_estimate`·`plan_bike` 의 DATA_DIR 축). **회귀 171 = 21 + 150** — 잠그는 것은 줄이지 않았고 층만 나눴다.
 - **§2-1 알려진 빨강(2026-09-29 · develop `747dc79` merge 직후 · 데이터 있는 기기만)**: `test_plan_v1` 6(`test_golden`·`test_golden_all_modes`·`test_0400_boundary`·`test_no_per_option_departure`·`test_recheck_at_offsets`·`test_replan_fare_known_locked`) + 전체층 3(`test_golden_bike`·`test_bike_not_called_by_default`·`test_night_last_service`) + 회귀 3케이스(`MIX-06`·`MULTI-06`·`NIGHT-10`) — 팀장 `plan.py`·판정 변경(#1~#65)에 우리 잠금·골든이 아직 안 맞춘 것(73 검수 회신 · 후속 방에서 기대 갱신). 데이터 없는 CI 에는 안 걸린다. 이 목록 밖의 빨강이 새로 나오면 그게 진짜 회귀다.
-- **`skipped` 는 빨강이 아니다** — 「data not present」·「시간표 없음(DATA_DIR)」이면 데이터가 없어서 건너뛴 것. 데이터 없는 PC 에서는 회귀 20건이 전부 skip 이고 그게 정상이다.
+- **`skipped` 는 빨강이 아니다** — 「data not present」·「시간표 없음(DATA_DIR)」이면 데이터가 없어서 건너뛴 것. **9/29 부터 데이터가 저장소 안(`datasets/mobility/processed/`)에 있으므로 pull 한 기기에서는 회귀 게이트가 skip 되지 않는다**(§3) — skip 이 나오면 pull 이 안 됐거나 `.env` 의 `DATA_DIR` 이 엉뚱한 곳을 가리키는 것.
 - **`deselected` 는 전체층이 기본 실행에서 빠진 것**(conftest.py). 빨강·노랑 어느 쪽도 아니다.
 - 건수·시간은 노트북(`playdata` · Python 3.11 · develop `747dc79` merge 커밋 `37000a9`) 실측 2026-09-29 15:31.
 
-## 3. 데이터 받는 법 (회귀를 실제로 돌리고 싶을 때만 · 없어도 게이트는 초록)
+## 3. 데이터 받는 법 — **pull 만 하면 된다**(2026-09-29 · 75번 방 · 팀장 폴더 배정)
 
-1. 드라이브의 `mobility_processed_<날짜>.zip`(약 250 MB · 이동 담당이 올림)을 받아 `C:\final_project\data\travel\processed\mobility\` 에 푼다(폴더 구조 그대로).
-2. 저장소 루트 `.env` 에 한 줄: `DATA_DIR=C:\final_project\data`
-3. `python -c "from app.modules.travel_ops.mobility.engine.runtime import build_verifier; build_verifier()"` — 「`[mobility] 시간표 …행`」이 찍히면 됨. `RuntimeError: 판정기 입력이 없다: [...]` 면 목록의 파일이 그 폴더에 없는 것.
+판정기 입력 18파일(148 MB)이 저장소 **`datasets/mobility/processed/mobility/`** 에 들어 있다(서버가 자기 자료 폴더를 갖기 전까지 임시 · `git add -f` 추적 · 전부 공공데이터). `.env` 에 `DATA_DIR` 이 없으면 명령줄·pytest 는 이 폴더를 자동으로 쓴다 → 회귀 게이트 21건이 skip 없이 돈다.
+
+- 확인: `cd final_project_cs; python -c "from app.modules.travel_ops.mobility.engine.runtime import build_verifier; build_verifier()"` — 「`[mobility] 시간표 444,915행 …`」이 찍히면 됨(출처 `repo_datasets`).
+- 서버로 켤 때: 저장소 루트 `.env` 에 `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`(팀 `.env.example` 항목).
+- 드라이브 정본(`DATA_DIR=C:\final_project\data` · `travel/processed/mobility/`)을 쓰던 기기는 그대로 — `.env` 의 `DATA_DIR` 이 있으면 그쪽이 이긴다.
+- 파일 설명·sha256: `datasets/mobility/REPORT.md` · `docs/mobility/DATA_IN_GIT_v1.md` · `MANIFEST_git_v1.json`.
 
 ## 4. 빨강이면 어디를 보나
 

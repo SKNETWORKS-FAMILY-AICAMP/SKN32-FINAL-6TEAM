@@ -1,14 +1,16 @@
 # 이동 모듈 — git 에 올리는 데이터 (DATA_IN_GIT v1)
 
 75번 방 · 2026-09-29 · 인벤토리 확인 시각 **2026-09-29 12:03 (노트북 playdata)** · 줄인 판 생성 12:05
-정본 `C:\final_project\data\travel\processed\mobility\` (무변경) → 줄인 판 `processed\mobility_git\` (새 폴더 · 커밋은 73 뒤)
+정본 `C:\final_project\data\travel\processed\mobility\` (무변경) → 줄인 판 **저장소 `datasets/mobility/processed/mobility/`**(9/29 재개 · 팀장 폴더 배정)
 
-> **팀장 확인 상태** — 답 없음 → **기본안으로 진행하고 표시**(75 첫 메시지):
-> ⓑ 폴더 위치 = `final_project_cs/data/mobility/` (기본안 · 팀장 #24 `mobility_data_dir` 기본값이 될 자리) ◆
-> ⓒ `.gz` = 마지막 수단 — 줄인 뒤에도 50 MB 넘는 **시간표 하나만** `.gz` 후보 ◆(판정기 loader 의 `.gz` 읽기는 73 뒤 팀장 판(#63)으로 확인)
-> ⓐ 상한은 팀장에게 묻지 않는다 — 우리 기준: 파일당 50 MB 미만(GitHub 경고선 · 100 MB 거부선)
+> **팀장 답(9/29 · 본인 전언)** — ⓑ 폴더 = **`datasets/mobility/processed/`**(팀장이 만든 팀별 데이터셋 폴더 · 커밋 `4f6297e`) · 「서버가 뜰 때까지 임시 · develop 까지 올려라」.
+> 팀 `.gitignore` 는 `datasets/**/processed/**` 를 막지만 손대지 않고 **`git add -f`** 로 추적한다(폴더 README 「이동 팀 예외」 절 · 전부 공공데이터 · 개인정보 0).
+> ⓒ `.gz` 는 안 씀 — 시간표 텍스트 75.1 MB 그대로(GitHub 경고선 50 MB 는 넘고 거부선 100 MB 는 아래 · 판정기 `open()` · gz 전환은 78 ⑦ loader 뒤).
+> ⓐ 상한은 묻지 않음 — 우리 기준 파일당 100 MB 아래 · 총 148 MB.
 
 ## 0. 요약
+
+검증(9/29 재개 · 노트북 · 팀장 판 `c45593a` 위): 줄인 판을 `DATA_DIR` 로 잡고 회귀 게이트·전체층·CLI 171 을 돌려 정본과 같은 값 — 결과는 §7.
 
 | | 값 |
 |---|---|
@@ -44,7 +46,7 @@
 
 ## 2. 분류 A(그대로) · B(줄여서) — 파일별 문서
 
-공통: 경로 = 정본 `processed\mobility\<파일>` → git `final_project_cs/data/mobility/<파일>` (기본안 ◆). 재생성 스크립트는 `mobility_scripts/collect/…`(저장소 루트 `mobility_scripts/`). 갱신법은 「원자료 다시 받기 → 스크립트 → 정본에 쓰기 → `reduce_75.py` 로 줄인 판 → MANIFEST 갱신 → 회귀 171」. 등급은 파일 안 `grade` 칸·`_report.md` 기준.
+공통: 경로 = 정본 `processed\mobility\<파일>` → git `datasets/mobility/processed/mobility/<파일>`(`mobility/` 하위는 엔진 경로 규칙 `PROCESSED / "mobility"` 때문). 재생성 스크립트는 `mobility_scripts/collect/…`(저장소 루트 `mobility_scripts/`). 갱신법은 「원자료 다시 받기 → 스크립트 → 정본에 쓰기 → `reduce_75.py` 로 줄인 판 → MANIFEST 갱신 → 회귀 171」. 등급은 파일 안 `grade` 칸·`_report.md` 기준.
 
 ### B-1 `timetable_v1.jsonl` — 지하철 시간표 (유일하게 줄인 파일)
 
@@ -140,13 +142,17 @@
 - 열 제거는 **시간표만** — 근거는 §2 B-1 (`Timetable.load` 가 읽는 8열). 다른 파일은 loader 가 행 dict 를 통째로 들거나 50 MB 아래라 손대지 않았다.
 - **행 삭제 0** — 출발없음 18,411행(`dep_time` null · loader 가 `skipped_no_dep` 로 세고 `stations` 집합에는 넣는다 → 빼면 `has_station()`·stats 가 달라질 수 있음)은 후보로만 둔다(`reduce_75.py --drop-no-dep` · 기본 off · 회귀 171 로 확인 뒤).
 - 9호선 급행 4,104행(loader 가 버림)도 같은 이유로 안 뺐다.
-- `.gz` 는 시간표만 옆에 생성. **판정기 `Timetable.load` 는 `open()` 만 쓴다(gzip 아님)** → `.gz` 를 올리면 loader 수정 또는 팀장 판 #63 확인이 필요 · 텍스트 75 MB 를 올리면 GitHub 경고(50 MB)만 뜨고 거부(100 MB)는 아님 → **73 뒤 결정** ◆
+- `.gz` 는 저장소에 넣지 않았다(판정기 `Timetable.load` 가 `open()` · 78 ⑦ loader 뒤 전환 가능 · `reduce_75.py --gz` 로 옆에 만들 수 있음 · 1.8 MB). 텍스트 75 MB 는 GitHub 경고(50 MB)만 · 거부(100 MB) 아님.
 - 중복 v2 3개 · 아무도 안 읽는 파일 · 스크립트만 읽는 파일 · 개인 실측 · 그래프 캐시 · 중간 산출 → `DATA_NOT_IN_GIT.md`
 
-## 5. 받는 법 (커밋 전 임시 · 커밋 뒤 이 절을 고친다)
+## 5. 받는 법 — pull 만 하면 된다
 
-지금은 드라이브 zip(`mobility_processed_<날짜>.zip`) + `.env` `DATA_DIR`(`MERGE_CHECK_v1.md` §3). 커밋 뒤에는 `final_project_cs/data/mobility/`(◆) 가 그 자리를 대신한다 — `paths.PROCESSED` 기본값을 그쪽으로 돌리는 한 줄은 73 뒤 팀장 판에 맞춰(엔진 코드는 이 방에서 안 건드림).
+`datasets/mobility/processed/mobility/` 가 저장소에 있다. `engine/paths.py`(75 수정): 준 경로의 마지막 폴더가 `processed` 면 그 자리를 PROCESSED 로 · 명령줄·시험은 `.env` `DATA_DIR` 이 없으면 저장소 폴더를 자동(출처 `repo_datasets`) · 서버는 `.env` `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`. 드라이브 정본을 쓰던 기기는 `DATA_DIR` 이 이긴다. 자세한 절차 `MERGE_CHECK_v1.md` §3.
 
 ## 6. MANIFEST
 
-`processed\mobility_git\MANIFEST_git_v1.json` — 파일마다 `path` `class` `source_raw` `regen_script` `read_by` `src_bytes` `src_sha256` `bytes` `sha256` `rows` `gz{path bytes sha256 reason}` `checked_at` + `totals` + 시간표 `reduce{rows_in rows_out rows_no_dep columns_kept columns_dropped columns_seen}`. 검증(75 · 클라우드): `.gz` 풀어 463,326행 · 텍스트 sha256 = MANIFEST `sha256` 일치 · 8열 전 행 동일 · 출발없음 18,411 · `chain_v1` 20,548.
+`datasets/mobility/processed/mobility/MANIFEST_git_v1.json` — 파일마다 `path` `class` `source_raw` `regen_script` `read_by` `src_bytes` `src_sha256` `bytes` `sha256` `rows` `gz{path bytes sha256 reason}` `checked_at` + `totals` + 시간표 `reduce{rows_in rows_out rows_no_dep columns_kept columns_dropped columns_seen}`. 검증(75 · 클라우드): `.gz` 풀어 463,326행 · 텍스트 sha256 = MANIFEST `sha256` 일치 · 8열 전 행 동일 · 출발없음 18,411 · `chain_v1` 20,548.
+
+## 7. 줄인 판 검증(9/29 · 노트북)
+
+(재개 방에서 채움 — 게이트 pytest 건수 · 전체층 · 회귀 171 어긋남 · 정본 판과 대조)
