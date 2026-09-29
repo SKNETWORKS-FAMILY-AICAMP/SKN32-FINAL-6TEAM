@@ -8,6 +8,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   description: "Add your travel plan, review the check results and follow your itinerary.",
   robots: { index: false, follow: false },
+  // Without an icon every page asks for /favicon.ico and gets a 404, which shows up as a console error on all screens.
+  icons: { icon: "/images/tripilot-traveler-icon.svg" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -27,6 +27,7 @@ domain: travel
 | [team-contract.md](team-contract/index.md) | `TeamTask` / `TeamResult` 모양 | `app/core/contracts.py` |
 | [team-boundary.md](team-boundary.md) | Team이 하면 안 되는 것 셋 | — |
 | [code-layout.md](code-layout.md) | `[2026-09-28]` 팀 코드·시험을 어디에 두나 — 파일·폴더·파일+엔진 | `app/modules/travel_ops/<팀>/` |
+| [folder-change-notice.md](folder-change-notice.md) | `[2026-09-28]` 팀원 안내문 — 폴더 구조가 바뀌었다, 브랜치별로 할 일 | — |
 | [build-order.md](build-order.md) | 어느 순서로 만드나 | — |
 | [common-utils.md](common-utils.md) | 공통 뼈대 — `[2026-09-10]` `travel_ops/_base.py` 가 생겼다(설계 대조 전) | `app/modules/travel_ops/_base.py` |
 | [team-registry.md](team-registry.md) | capability → Team 해석 | `app/core/registry.py` |

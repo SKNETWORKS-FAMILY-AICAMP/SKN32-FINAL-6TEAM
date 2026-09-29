@@ -8,10 +8,11 @@ import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } fr
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import type { VerificationResult } from "@/features/trip/model";
 import { useTrip } from "@/features/trip/use-trip";
-import { tripGateway, tripKey } from "@/lib/gateway";
+import { DATA_MODE, tripGateway, tripKey } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { LiveVerificationNote } from "./live-note";
 import styles from "./verification.module.css";
 
 function ResultItem({ result, t }: { result: VerificationResult; t: Translate }) {
@@ -38,7 +39,12 @@ function ResultItem({ result, t }: { result: VerificationResult; t: Translate })
   </details>;
 }
 
+/** Live has no separate verification step (the server judged the plan at registration): a note instead of made-up zeros. */
 export function VerificationResults({ tripId }: { tripId: string }) {
+  return DATA_MODE === "live" ? <LiveVerificationNote tripId={tripId} /> : <DemoVerificationResults tripId={tripId} />;
+}
+
+function DemoVerificationResults({ tripId }: { tripId: string }) {
   const t = useT();
   const { language } = useSettings();
   const tripQuery = useTrip(tripId);
