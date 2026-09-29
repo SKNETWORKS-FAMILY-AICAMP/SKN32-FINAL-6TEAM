@@ -151,6 +151,15 @@ describe("live trip gateway", () => {
     expect(trip.stops[0].mapUrl).toBe("https://www.google.com/maps/search/?api=1&query=%EA%B2%BD%EB%B3%B5%EA%B6%81");
     expect(trip.stops[1].mapUrl).toBeUndefined();                       // ★not a map link — no button at all
     expect(trip.dayRoutes).toEqual({ "2026-10-15": ["https://www.google.com/maps/dir/?api=1&origin=a&destination=b"] });
+    expect(trip.legs).toEqual({});
+
+    replies.push({ ...TRIP, map: { days: [{ date: "2026-10-15", legs: [
+      { from_item_id: "a", to_item_id: "b", url: "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit" },
+      { from_item_id: "b", to_item_id: "c", url: "http://www.google.com/maps/dir/" },            // not https — dropped
+      { from_item_id: "c", url: "https://www.google.com/maps/dir/?api=1&origin=c&destination=d" },  // no destination stop — dropped
+    ] }] } });
+    const withLegs = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(withLegs.legs).toEqual({ "a>b": "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit" });
   });
 
   it("sends the stop the customer picked as item_id, and nothing when none was picked", async () => {

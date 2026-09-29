@@ -41,6 +41,6 @@ export function TripMap(props: TripMapProps) {
 
 function providerName(provider: "naver" | "osm" | "google", google: GoogleDecision) {
   if (provider === "naver") return "네이버지도";
-  if (provider === "osm" || google === "free") return "OpenStreetMap";
+  if (provider === "osm" || google === "free" || google === "free-setting") return "OpenStreetMap";
   return "Google Maps";
 }

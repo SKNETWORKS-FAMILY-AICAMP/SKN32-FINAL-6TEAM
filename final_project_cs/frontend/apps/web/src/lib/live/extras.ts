@@ -102,6 +102,10 @@ export async function warmup(language: Language): Promise<Warmup | null> {
 /** The server's answer to "may this screen load Google Maps once?" (`POST /v1/web/map-load`). */
 export interface MapLoad {
   allowed: boolean;
+  /** Which map the operator set (`web.map_provider`, changed from the developer console). Unknown when the server did not say. */
+  provider: "osm" | "google" | null;
+  /** Why Google was refused: the operator chose the free map (`setting`), the cap was reached (`cap`), or no answer (`error`). */
+  reason: "setting" | "cap" | "error" | null;
   used: { day: number | null; month: number | null };
   cap: { day: number | null; month: number | null };
 }
@@ -112,13 +116,18 @@ export interface MapLoad {
  * the free map instead of calling Google unchecked.
  */
 export async function mapLoad(language: Language): Promise<MapLoad> {
-  const denied: MapLoad = { allowed: false, used: { day: null, month: null }, cap: { day: null, month: null } };
+  const denied: MapLoad = { allowed: false, provider: null, reason: "error", used: { day: null, month: null }, cap: { day: null, month: null } };
   if (!currentKey()) return denied;
   try {
-    const body = await api<{ allowed?: unknown; used?: { day?: number; month?: number }; cap?: { day?: number; month?: number } }>(
+    const body = await api<{ allowed?: unknown; provider?: unknown; reason?: unknown; used?: { day?: number; month?: number }; cap?: { day?: number; month?: number } }>(
       "/v1/web/map-load", language, { method: "POST" });
+    const provider = body.provider === "osm" || body.provider === "google" ? body.provider : null;
+    const allowed = body.allowed === true && provider !== "osm";
     return {
-      allowed: body.allowed === true,
+      allowed,
+      provider,
+      // ★An older server says only `allowed`; a refusal without a reason is treated as the cap (the one refusal it knew).
+      reason: allowed ? null : body.reason === "setting" || provider === "osm" ? "setting" : "cap",
       used: { day: body.used?.day ?? null, month: body.used?.month ?? null },
       cap: { day: body.cap?.day ?? null, month: body.cap?.month ?? null },
     };

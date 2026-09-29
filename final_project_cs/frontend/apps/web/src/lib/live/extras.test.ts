@@ -40,17 +40,21 @@ describe("the rest of the server's web API", () => {
   it("asks the server before a Google map load and reads its count; any failure means not allowed", async () => {
     stub({ "tripilot.web.user-key.v1": "acop_u_mine" });
     replies.push(json({ provider: "google", allowed: true, meter: "google_maps_dynamic_maps", used: { day: 3, month: 40 }, cap: { day: 312, month: 9688 }, fallback: null }));
-    expect(await mapLoad("ko")).toEqual({ allowed: true, used: { day: 3, month: 40 }, cap: { day: 312, month: 9688 } });
+    expect(await mapLoad("ko")).toEqual({ allowed: true, provider: "google", reason: null, used: { day: 3, month: 40 }, cap: { day: 312, month: 9688 } });
     expect(calls[0].url).toMatch(/\/v1\/web\/map-load$/);
     expect(calls[0].init.method).toBe("POST");
     expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
 
     replies.push(json({ allowed: false, used: { day: 312, month: 900 }, cap: { day: 312, month: 9688 }, fallback: "free_map" }));
-    expect((await mapLoad("ko")).allowed).toBe(false);
+    expect(await mapLoad("ko")).toMatchObject({ allowed: false, reason: "cap" });     // an older server: a refusal was the cap
+    replies.push(json({ provider: "osm", allowed: false, reason: "setting" }));
+    expect(await mapLoad("ko")).toMatchObject({ allowed: false, provider: "osm", reason: "setting" });
+    replies.push(json({ provider: "osm", allowed: true }));                          // ★the setting wins over a stray allowed
+    expect(await mapLoad("ko")).toMatchObject({ allowed: false, reason: "setting" });
     replies.push(json({ allowed: "yes" }));                       // ★anything but true is not permission
     expect((await mapLoad("ko")).allowed).toBe(false);
     replies.push(json({ error: { code: "unauthorized" } }, 401));
-    expect((await mapLoad("ko")).allowed).toBe(false);
+    expect(await mapLoad("ko")).toMatchObject({ allowed: false, reason: "error" });
   });
 
   it("never asks — and never allows Google — when this browser has no key", async () => {

@@ -214,7 +214,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
               </div>
             </div>}
           </article>
-          {index < stops.length - 1 && <p className={styles.movement}><ArrowRight size={13} strokeWidth={1.6} aria-hidden="true" />{t("다음 일정으로", "Next stop")}</p>}
+          {index < stops.length - 1 && <p className={styles.movement}><ArrowRight size={13} strokeWidth={1.6} aria-hidden="true" />{t("다음 일정으로", "Next stop")}
+            {next && trip.legs?.[`${stop.id}>${next.id}`] && <> · <a href={trip.legs[`${stop.id}>${next.id}`]} target="_blank" rel="noopener noreferrer">{t("지도 앱에서 길찾기", "Directions in maps app")}</a></>}</p>}
         </div>;
       })}
       {!stops.length && <p className={styles.empty}>{t("이 날짜에는 등록한 일정이 없어요.", "There are no stops for this date.")}</p>}</div>

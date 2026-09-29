@@ -109,6 +109,8 @@ export interface Trip {
   planUrl?: string;
   /** Live only: the day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
   dayRoutes?: Record<string, string[]>;
+  /** Live only: directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
+  legs?: Record<string, string>;
 }
 
 /** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */

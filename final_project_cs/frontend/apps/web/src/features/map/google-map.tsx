@@ -10,15 +10,16 @@ import { OsmMap } from "./osm-map";
 import { createGoogleAdapter } from "./providers/google";
 import styles from "./map.module.css";
 
-export type GoogleDecision = "checking" | "google" | "free";
+/** `free-setting`: the operator chose the free map — nothing went wrong, so the screen says nothing about it. */
+export type GoogleDecision = "checking" | "google" | "free" | "free-setting";
 
 /**
  * ★One question for one map, even when React mounts it twice in a row (development StrictMode mounts, unmounts and
  *   mounts again). Without this the dev server spent two counted loads per map (measured 2026-09-29: map-load ×2).
  *   A question asked less than 2 s ago is shared; a later mount is a new map and asks again.
  */
-let recent: { at: number; answer: Promise<{ allowed: boolean }> } | null = null;
-function askOnce(language: Parameters<typeof mapLoad>[0]): Promise<{ allowed: boolean }> {
+let recent: { at: number; answer: Promise<{ allowed: boolean; reason?: string | null }> } | null = null;
+function askOnce(language: Parameters<typeof mapLoad>[0]): Promise<{ allowed: boolean; reason?: string | null }> {
   const now = Date.now();
   if (!recent || now - recent.at > 2000) recent = { at: now, answer: mapLoad(language) };
   return recent.answer;
@@ -38,10 +39,10 @@ export function GoogleMap({ apiKey, mapId, tileUrl, onDecided, ...props }: MapVi
   useEffect(() => {
     let cancelled = false;
     // Demo data has no server to ask, so Google is never loaded there.
-    const ask = DATA_MODE === "live" ? askOnce(language) : Promise.resolve({ allowed: false });
+    const ask = DATA_MODE === "live" ? askOnce(language) : Promise.resolve({ allowed: false, reason: "setting" });
     void ask.then((answer) => {
       if (cancelled) return;
-      const next = answer.allowed ? "google" : "free";
+      const next: GoogleDecision = answer.allowed ? "google" : answer.reason === "setting" ? "free-setting" : "free";
       setDecision(next);
       onDecided?.(next);
     });
@@ -52,6 +53,6 @@ export function GoogleMap({ apiKey, mapId, tileUrl, onDecided, ...props }: MapVi
 
   if (!apiKey.trim() || !mapId.trim()) return <MapUnavailable message="Google Maps 연결 설정이 필요해요." />;
   if (decision === "checking") return <div className={styles.live} role="status" aria-busy="true"><div className={styles.overlay}>지도를 불러오고 있어요…</div></div>;
-  if (decision === "free") return <OsmMap {...props} tileUrl={tileUrl} />;
+  if (decision === "free" || decision === "free-setting") return <OsmMap {...props} tileUrl={tileUrl} />;
   return <LiveMap {...props} adapter={adapter} name="Google" />;
 }

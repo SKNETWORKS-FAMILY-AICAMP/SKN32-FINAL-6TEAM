@@ -35,7 +35,7 @@ interface ServerWarning { code?: string; date?: string | null; reason?: string; 
 interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
-  map?: { days?: { date?: string; app_route_urls?: unknown[] }[] } | null;
+  map?: { days?: { date?: string; app_route_urls?: unknown[]; legs?: { from_item_id?: unknown; to_item_id?: unknown; url?: unknown }[] }[] } | null;
 }
 
 /** ★Only Google Maps links are opened from the screen — anything else from the server is not shown as a map link. */
@@ -170,6 +170,10 @@ async function read(tripId: string, language: Language): Promise<Trip> {
       const urls = (day.app_route_urls ?? []).map(mapLink).filter((url): url is string => !!url);
       return typeof day.date === "string" && urls.length ? [[day.date, urls]] : [];
     })),
+    legs: Object.fromEntries((server.map?.days ?? []).flatMap((day) => (day.legs ?? []).flatMap((leg) => {
+      const url = mapLink(leg?.url);
+      return url && typeof leg.from_item_id === "string" && typeof leg.to_item_id === "string" ? [[`${leg.from_item_id}>${leg.to_item_id}`, url]] : [];
+    }))),
   };
 }
 

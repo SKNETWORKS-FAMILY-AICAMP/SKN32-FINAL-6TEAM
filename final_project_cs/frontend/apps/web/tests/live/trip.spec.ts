@@ -17,6 +17,9 @@ test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력�
   const schedule = page.locator("#trip-pane-schedule");
   await expect(schedule.getByText("아침 식당")).toBeVisible();
   await expect(schedule.getByText("11:10 출발").first()).toBeHidden();                // 이동은 다음 일정 메모로 접힌다
+  // 구간 길찾기 — 서버가 준 구간(아침 → 경복궁)에만 링크가 있고, 링크가 없는 구간에는 없다
+  await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveCount(1);
+  await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveAttribute("href", "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit");
 
   // 고정한 일정 표시와 서버가 남겨 둔 다른 안
   await expect(page.locator("#stop-button-i-b").getByText("고정한 일정")).toBeVisible();
