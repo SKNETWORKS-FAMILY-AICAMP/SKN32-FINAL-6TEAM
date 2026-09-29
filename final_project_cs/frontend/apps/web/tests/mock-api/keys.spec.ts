@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { KEY_STORAGE, start, stub, TRIP_ID } from "./helpers";
+import { KEY_STORAGE, start, mockServer, TRIP_ID } from "./helpers";
 
-test.beforeEach(async ({ request }) => { await stub(request).reset(); });
+test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 그 여행으로 간다", async ({ page }) => {
   await start(page);
@@ -14,7 +14,7 @@ test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 �
 });
 
 test("실제 연결의 내 여행 목록은 삭제를 흉내 내지 않는다: 선택 삭제·휴지통이 꺼져 있고 이유를 알리며, 서버에 삭제를 요청하지 않는다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page);
   await page.goto("/trips");
   const row = page.locator("#main-content li");
@@ -28,7 +28,7 @@ test("실제 연결의 내 여행 목록은 삭제를 흉내 내지 않는다: �
 });
 
 test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 키가 없으면 목록을 묻느라 새 사용자를 만들지도 않는다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page);
   await page.goto("/");
@@ -45,7 +45,7 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
 });
 
 test("마이페이지에서 다른 기기의 토큰을 넣으면: 틀린 토큰은 서버 문장으로 거절되고 저장된 키는 그대로, 아는 토큰은 바뀌고 토큰 칸도 바로 바뀐다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page, null);                      // 이 기기에는 키가 없다
   await page.goto("/mypage");
   const manage = page.getByRole("group", { name: "토큰 관리" });
@@ -82,7 +82,7 @@ test("메뉴에는 토큰 화면이 없고 마이페이지로 가는 길만 있�
 });
 
 test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 화면 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page);
   await page.goto("/mypage");
   const manage = page.getByRole("group", { name: "토큰 관리" });
@@ -119,7 +119,7 @@ test("키가 거절되면(서버가 모르는 키) 조용히 새 사용자가 �
 });
 
 test("내 여행 목록을 읽지 못해도(서버 500) 첫 화면은 그대로 쓸 수 있고, 못 읽었다고 알린다(여행이 없다는 말이 아니다)", async ({ page, request }) => {
-  await stub(request).scenario({ fail: "trips" });
+  await mockServer(request).scenario({ fail: "trips" });
   await start(page);
   await page.goto("/");
   const card = page.getByRole("region", { name: "내 여행", exact: true });

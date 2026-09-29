@@ -19,13 +19,20 @@ Next.js 16 App Router + React 19 + TypeScript로 구현한 웹 MVP 1차다. 로�
 
 Node.js 22와 npm을 사용한다. 이 폴더에서 실행한다.
 
+★**웹은 실제 서버로 돈다.** 먼저 triPilot 서버(고객용 8042)를 띄운다(`final_project_cs` README 의 실행 절). 그다음 이 폴더에서:
+
 ```powershell
 npm ci
 Copy-Item .env.example .env.local
 npm run dev
 ```
 
-[개발 서버](http://127.0.0.1:3100)를 연다. `.env.local`이 이미 있으면 덮어쓰지 말고 필요한 값을 확인한다. 로컬 예시는 `NEXT_PUBLIC_DATA_MODE=demo`를 명시한다. 프로덕션 빌드에서 이 설정을 생략하면 데이터 연결 오류를 표시하며 데모로 자동 전환하지 않는다.
+[개발 서버](http://127.0.0.1:3100)를 연다. 예시 설정은 `NEXT_PUBLIC_DATA_MODE=live`(실제 서버 `NEXT_PUBLIC_API_BASE=http://127.0.0.1:8042`) · `NEXT_PUBLIC_MAP_PROVIDER=osm`(무료 지도, 키 없음)이다.
+- `.env.local`이 이미 있으면 덮어쓰지 말고 **`NEXT_PUBLIC_DATA_MODE=live` 인지** 확인한다. ☆2026-09-29 팀원 실행에서 화면이 데모로 떴다 — 옛 예시가 `demo` 였고, 설정이 없으면 개발 모드 기본값도 데모였다. 지금은 설정이 없으면 데모로 떨어지지 않고 「실제 서버 연결이 설정되지 않았어요」라고 말한다.
+- `NEXT_PUBLIC_*` 값은 바꾼 뒤 **`npm run dev` 를 다시 켜야** 반영된다.
+- 서버 주소를 바꾸면 서버의 `ACOP_WEB_ALLOWED_ORIGINS` 에 웹 주소(기본 `http://127.0.0.1:3100`·`http://localhost:3100`)가 있어야 한다. 없으면 브라우저가 서버 응답을 막는다.
+- 확인: 화면 위쪽에 데모 안내가 없고, 여행 채팅 제목 옆에 「데모」 표시가 없으면 실제 서버로 도는 것이다.
+- `demo` 는 디자인 팀 화면 시험(`test:e2e`)용 브라우저 안 모방 데이터다. 앱 실행에 쓰지 않는다.
 
 ```powershell
 npm run check
@@ -70,10 +77,10 @@ npm run test:e2e
 ## live 전체 시험
 
 ```powershell
-npm run test:live
+npm run test:mock
 ```
 
-서버 계약(`/v1/web/*`)을 그대로 흉내 낸 **가짜 서버**(`tests/live/stub-server.mjs`)를 띄우고, live 모드로 빌드한 화면을 실제 브라우저로 끝까지 눌러 본다(첫 방문 → 키 발급 안내 → 계획 접수 → 확인 → 등록 → 여행 화면 → 선택·채팅·키 화면, 그리고 서버 500·409·429·연결 불가·읽기 실패). ★실서버 대신 가짜 서버를 쓰는 이유: 실서버에서 등록·확인을 누르면 **디스코드 통지가 팀 채널로 나가고** 서버에 데이터가 남는다. 화면이 서버로 실제 무엇을 보냈는지(설문·request_id·key 값)는 가짜 서버가 받은 요청 기록으로 검사한다. 별도 빌드 폴더(`.next-live`)를 쓰므로 돌아가는 개발 서버와 부딪히지 않는다. 설치된 브라우저 버전이 다르면 `PLAYWRIGHT_CHANNEL=msedge` 를 붙인다.
+서버 계약(`/v1/web/*`)을 그대로 흉내 낸 **테스트용 모방 서버**(실제 서버 아님)(`tests/mock-api/test-mock-server.mjs`)를 띄우고, live 모드로 빌드한 화면을 실제 브라우저로 끝까지 눌러 본다(첫 방문 → 키 발급 안내 → 계획 접수 → 확인 → 등록 → 여행 화면 → 선택·채팅·키 화면, 그리고 서버 500·409·429·연결 불가·읽기 실패). ★실서버 대신 테스트용 모방 서버를 쓰는 이유: 실서버에서 등록·확인을 누르면 **디스코드 통지가 팀 채널로 나가고** 서버에 데이터가 남는다. 화면이 서버로 실제 무엇을 보냈는지(설문·request_id·key 값)는 모방 서버가 받은 요청 기록으로 검사한다. 별도 빌드 폴더(`.next-mock`)를 쓰므로 돌아가는 개발 서버와 부딪히지 않는다. 설치된 브라우저 버전이 다르면 `PLAYWRIGHT_CHANNEL=msedge` 를 붙인다.
 
 ## 실서버 종단 시험
 
@@ -81,14 +88,14 @@ npm run test:live
 $env:REAL_SERVER_E2E="1"; $env:PLAYWRIGHT_CHANNEL="msedge"; npm run test:real
 ```
 
-가짜 서버 없이 **실제 서버**(`NEXT_PUBLIC_API_BASE`)와 `npm run dev`(3100, live 모드)에 붙어 첫 방문 → 설문 → 계획 접수·읽기 → 확인·등록 → 여행 화면 → 채팅 4문답 → 구글 지도까지, 그리고 일정 짜기(08:00 아침 식사로 시작)를 끝까지 눌러 본다. ★부작용이 있어 `REAL_SERVER_E2E=1` 이 없으면 시작하지 않는다 — 등록마다 **디스코드 통지가 팀 채널로 나가고**, 장소 조회·모델 호출이 쓰이며, 시험 고객과 여행이 DB 에 남는다. 서버는 **한 주소에서 한 시간에 새 키 20개**까지만 내주므로(429 `too_many_sessions`) 시험은 순서대로 돌며 첫 시험의 키를 이어 쓴다. 관광공사 조회가 한도에 걸리면(`tour_api: rate_limited`) 일정 짜기가 422 로 거절되니 1분쯤 뒤 다시 돌린다.
+모방 서버 없이 **실제 서버**(`NEXT_PUBLIC_API_BASE`)와 `npm run dev`(3100, live 모드)에 붙어 첫 방문 → 설문 → 계획 접수·읽기 → 확인·등록 → 여행 화면 → 채팅 4문답 → 구글 지도까지, 그리고 일정 짜기(08:00 아침 식사로 시작)를 끝까지 눌러 본다. ★부작용이 있어 `REAL_SERVER_E2E=1` 이 없으면 시작하지 않는다 — 등록마다 **디스코드 통지가 팀 채널로 나가고**, 장소 조회·모델 호출이 쓰이며, 시험 고객과 여행이 DB 에 남는다. 서버는 **한 주소에서 한 시간에 새 키 20개**까지만 내주므로(429 `too_many_sessions`) 시험은 순서대로 돌며 첫 시험의 키를 이어 쓴다. 관광공사 조회가 한도에 걸리면(`tour_api: rate_limited`) 일정 짜기가 422 로 거절되니 1분쯤 뒤 다시 돌린다.
 
 ## CI
 
 `[2026-09-28]` 두 곳에서 돈다(ST4F-161).
 
-- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check` → `test:e2e`(데모) → `test:live`(가짜 서버)를 돌린다. CI에는 `.env.local`이 없어 `NEXT_PUBLIC_DATA_MODE=demo`·`NEXT_PUBLIC_MAP_PROVIDER=demo`를 워크플로에 적었다. 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다.
-- **계약 시험** `final_project_cs/tests/contract/test_web_client_contract.py`: 기존 develop 관문(pytest)에서 돈다. `src/lib/live/`가 부르는 메서드·경로가 서버 라우트에 모두 있는지, `payload.ts`의 설문 판·칸·값을 서버 `TripSurvey`가 받는지 본다. 서버가 `/v1/web/*`나 설문을 바꿔 웹이 깨지는 것을 가짜 서버 시험은 못 잡기 때문에 둔다. 웹에서 서버를 부르는 새 모양(`api(`·`send(` 밖)을 쓰면 이 시험이 「읽지 못한 호출」로 실패하니 시험의 `_CALL`을 함께 고친다.
+- **웹 관문** [`.github/workflows/ci-web.yml`](../../../../.github/workflows/ci-web.yml): 이 폴더가 바뀐 develop·main PR과 push에서 `npm ci` → `npm run check` → `test:e2e`(데모) → `test:mock`(테스트용 모방 서버, 실제 서버 아님)를 돌린다. CI에는 `.env.local`이 없어 `NEXT_PUBLIC_DATA_MODE=demo`·`NEXT_PUBLIC_MAP_PROVIDER=demo`를 워크플로에 적었다. 서버 없이 도는 시험이라 다른 폴더의 변경에는 돌지 않는다. `test:real`은 부작용 때문에 넣지 않았다.
+- **계약 시험** `final_project_cs/tests/contract/test_web_client_contract.py`: 기존 develop 관문(pytest)에서 돈다. `src/lib/live/`가 부르는 메서드·경로가 서버 라우트에 모두 있는지, `payload.ts`의 설문 판·칸·값을 서버 `TripSurvey`가 받는지 본다. 서버가 `/v1/web/*`나 설문을 바꿔 웹이 깨지는 것을 모방 서버 시험은 못 잡기 때문에 둔다. 웹에서 서버를 부르는 새 모양(`api(`·`send(` 밖)을 쓰면 이 시험이 「읽지 못한 호출」로 실패하니 시험의 `_CALL`을 함께 고친다.
 
 ## 사람 확인(Cloudflare Turnstile)
 
@@ -98,7 +105,7 @@ live 에서 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` 를 넣으면 계획 올리기 화�
 - 서버가 확인 표를 Cloudflare 에 검증한다(`ACOP_TURNSTILE_SECRET`, 계약 `final_project_cs/wiki/external/rest-endpoints.md` 「남용 방어」). 비밀키가 없는 개발 서버는 건너뛰고 응답에 `human_check: "skipped"` 를 싣는다. 2026-09-28 Cloudflare 공개 시험 비밀키로 확인: 항상 통과 키 → 키 발급 `human_check: passed` · 계획 읽기까지 통과, 항상 실패 키 → 키 발급 403 `human_check_failed`, 화면은 서버 문장을 보이고 키를 저장하지 않는다.
 - 한도에 걸리면(`429 usage_limit` · `503 service_daily_cap` · `429 too_many_sessions`) 서버 문장 뒤에 「(3시간 20분 뒤에 다시 할 수 있어요.)」처럼 다시 되는 때를 붙인다(`retry_after_seconds` 또는 `Retry-After`).
 - 빈 키 정리 문구는 **넣지 않는다**(2026-09-29 사용자 결정 — 키는 그 사용자를 알아보는 유일한 식별 토큰이라 지우면 사람이 사라진다. 서버도 정리를 기본 꺼짐으로 바꿨다).
-- live 전체 시험(`npm run test:live`)은 가짜 서버만 쓰므로 이 값을 비워 빌드한다(`tests/live/serve.mjs`).
+- live 전체 시험(`npm run test:mock`)은 테스트용 모방 서버만 쓰므로 이 값을 비워 빌드한다(`tests/mock-api/serve.mjs`).
 
 ## 지도 선택과 백엔드 전달
 

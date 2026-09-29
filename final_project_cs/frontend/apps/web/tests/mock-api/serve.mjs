@@ -1,4 +1,4 @@
-// Builds the web app in live mode against the stand-in server and serves it, for the live end-to-end tests.
+// Builds the web app in live mode against the test mock server (not the real server) and serves it, for the live end-to-end tests.
 // A separate build folder keeps this out of the way of a running dev server (`.next`).
 import { spawn, spawnSync } from "node:child_process";
 
@@ -9,9 +9,9 @@ const env = {
   NEXT_PUBLIC_MAP_PROVIDER: "demo",
   NEXT_PUBLIC_GOOGLE_MAP_API_KEY: "",
   NEXT_PUBLIC_GOOGLE_MAP_ID: "",
-  // The human check calls Cloudflare; these tests stay on the stand-in server, so it is off here (a dev .env.local may set it).
+  // The human check calls Cloudflare; these tests stay on the test mock server, so it is off here (a dev .env.local may set it).
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
-  NEXT_DIST_DIR: ".next-live",
+  NEXT_DIST_DIR: ".next-mock",
 };
 const shell = process.platform === "win32";
 

@@ -1,6 +1,7 @@
-// A stand-in for the triPilot server's web API (`/v1/web/*`), for testing the live screens end to end.
+// 테스트용 모방 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
-// ★Why a stand-in: registering on the real server sends a notice to the team's chat channel and leaves data behind.
+// ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
 //   This server answers with the same shapes (read from `final_project_cs/app/modules/travel_ops/trip_api.py`) and
 //   keeps every request it received, so a test can check what the screen actually sent.
 //
@@ -17,7 +18,8 @@ const INTAKE_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const DEFAULTS = {
   // "one" = the customer already has a trip, "none" = first visit
   trips: "one",
-  // proposals the server is waiting on: "open" | "none"
+  // proposals the server is waiting on: "open" | "consent" (indoor unknown — asks "change it?" with no options yet)
+  //   | "consent_options" (after "change": the same proposal now holds options) | "none"
   proposals: "none",
   // answer to choosing a proposal: "ok" | "conflict"
   choose: "ok",
@@ -36,6 +38,8 @@ const DEFAULTS = {
   edits: "ok",
   // "limited": too many new keys from this address (429 too_many_sessions)
   session: "ok",
+  // an automatic change the customer can undo: "none" | "open" (latest change notice carries an undo) | "stale" (undo is refused: 409)
+  undo: "none",
   // "missing": there is no such trip
   trip: "ok",
   // how long planning takes to answer, in ms (the real server reads opening hours: up to about a minute)
@@ -49,8 +53,12 @@ let polls;
 let confirmed;
 let keys;
 
+/** The conversation record the server keeps (`GET /v1/web/trips/{id}/chat`), oldest first. */
+let turns = [];
+
 function reset() {
   scenario = { ...DEFAULTS };
+  turns = [];
   log = [];
   sessions = 0;
   polls = 0;
@@ -85,6 +93,14 @@ function tripView() {
 }
 
 function proposals() {
+  if (scenario.proposals === "consent" || scenario.proposals === "consent_options") {
+    const filled = scenario.proposals === "consent_options";
+    return { trip_id: TRIP_ID, proposals: [{
+      proposal_id: "p-1", item_id: "i-b", base_version: 1, reason: filled ? "indoor_unknown_options" : "indoor_unknown", protected_by: null,
+      safety: false, status: "open", expires_at: at(23), chosen_key: null, causes: [],
+      options: filled ? [{ key: "o-9", rank: 1, name: "실내 박물관", starts_at: at(9, 30) }] : [],
+    }] };
+  }
   if (scenario.proposals !== "open") return { trip_id: TRIP_ID, proposals: [] };
   return {
     trip_id: TRIP_ID,
@@ -100,6 +116,8 @@ function notices() {
   if (scenario.notices !== "some") return { notices: [] };
   const out = [{ key: "n-1", type: "change_notice", kind: null, text: "여행 일정이 준비되었습니다 — 내 여행.", version: 1, proposal_id: null, options: null, delivery: "sent", at: at(7) },
     { key: "n-2", type: "guidance", kind: "day_start", text: "오늘 첫 일정은 08:00 아침 식당이에요.", version: 1, proposal_id: null, options: null, delivery: "sent", at: at(7, 30) }];
+  if (scenario.undo !== "none") out.push({ key: "n-4", type: "change_notice", kind: null, text: "비 소식이 있어 09:30 경복궁 관람을 실내 박물관으로 바꿨어요.", version: 1, proposal_id: null, options: null, delivery: "sent", at: at(9),
+    rollback: { base_version: 1, to_version: 0, request_id: "rollback:v1->v0", label: "되돌리기", path: "/rollback" } });
   if (scenario.proposals === "open") out.push({ key: "n-3", type: "proposal_request", kind: null, text: "점심 식당이 문을 닫았어요. 대체 식당을 골라 주세요.", version: 2, proposal_id: "p-1", options: [], delivery: "sent", at: at(11, 41) });
   return { notices: out };
 }
@@ -192,17 +210,33 @@ createServer(async (request, response) => {
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
   if (path === `/v1/web/trips/${TRIP_ID}/notices` && request.method === "GET") return broken("notices") || json(response, 200, notices(), origin);
+  if (path === `/v1/web/trips/${TRIP_ID}/rollback` && request.method === "POST") {
+    if (scenario.undo === "stale") return json(response, 409, { error: { code: "stale_itinerary", message: "일정이 그 사이 바뀌었다" } }, origin);
+    scenario = { ...scenario, undo: "none" };
+    return json(response, 200, { status: "rolled_back", answer: "09:30 일정을 원래대로(경복궁 관람) 되돌렸어요." }, origin);
+  }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals/p-1/choose` && request.method === "POST") {
     if (scenario.choose === "conflict") return json(response, 409, { error: { code: "already_decided", message: "안을 고르지 못했다 — 아무것도 바뀌지 않았다", detail: { status: "kept" } } }, origin);
     const body = JSON.parse(raw || "{}");
+    if (scenario.proposals === "consent" && body.key === "change") {
+      // the server computes other places only now, into the same proposal — or finds none and keeps the plan
+      if (scenario.choose === "no_alternate") { scenario = { ...scenario, proposals: "none" }; return json(response, 200, { status: "no_alternate" }, origin); }
+      scenario = { ...scenario, proposals: "consent_options" };
+      return json(response, 200, { status: "options" }, origin);
+    }
     scenario = { ...scenario, proposals: "none" };
     return json(response, 200, body.key === null ? { status: "kept" } : { status: "adjusted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
     const body = JSON.parse(raw || "{}");
     if (scenario.chat === "escalated_bare") return json(response, 200, { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null }, origin);
-    return json(response, 200, { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer: `서버 답: ${body.message}` }, origin);
+    const answer = `서버 답: ${body.message}`;
+    // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
+    turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
+      { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });
+    return json(response, 200, { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer }, origin);
   }
+  if (path === `/v1/web/trips/${TRIP_ID}/chat` && request.method === "GET") return json(response, 200, { trip_id: TRIP_ID, turns: turns.slice(-40) }, origin);
 
   // ── plan intake ──────────────────────────────────────────────────
   // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
@@ -223,7 +257,7 @@ createServer(async (request, response) => {
 
   return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
  } catch (error) {
-  // a bug in this stand-in must show up as a failing request, not as a dead server that fails every later test
+  // a bug in this test mock server must show up as a failing request, not as a dead server that fails every later test
   if (!response.headersSent) json(response, 500, { error: { code: "stub_error", message: String(error) } }, "*");
   console.error(error);
  }

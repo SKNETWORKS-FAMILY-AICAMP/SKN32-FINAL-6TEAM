@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { finishOnboarding, start, stub, TRIP_ID } from "./helpers";
+import { finishOnboarding, start, mockServer, TRIP_ID } from "./helpers";
 
 const PLAN = "10/1 09:00 경복궁 관람";
 
-test.beforeEach(async ({ request }) => { await stub(request).reset(); });
+test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
 test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 보이며, 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
 
@@ -43,7 +43,7 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
 });
 
 test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실려 가고, 계획 글은 그보다 먼저 별도로 간다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, "acop_u_known");
 
@@ -67,7 +67,7 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 });
 
 test("설문을 마친 뒤 새로고침하면 답이 사라져, 등록 화면이 그 사실을 알리고, 등록은 되지만 설문 칸은 서버로 가지 않는다(알려진 한계)", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page, "acop_u_known");
   await finishOnboarding(page);
   await page.goto("/trips/new");                 // 새로고침과 같다: 페이지 메모리가 비었다
@@ -82,7 +82,7 @@ test("설문을 마친 뒤 새로고침하면 답이 사라져, 등록 화면이
 });
 
 test("일정을 못 읽으면 일정 짜기 칸이 나오고, 확인한 조건이 일정 짜기 요청으로 간다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ intake: "empty_plan" });
   await start(page);
   await page.goto("/trips/new");
@@ -101,7 +101,7 @@ test("일정을 못 읽으면 일정 짜기 칸이 나오고, 확인한 조건�
 });
 
 test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -116,7 +116,7 @@ test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", a
 });
 
 test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 올리는 길을 준다", async ({ page, request }) => {
-  await stub(request).scenario({ intake: "fatal" });
+  await mockServer(request).scenario({ intake: "fatal" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("???");
@@ -127,7 +127,7 @@ test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 
 });
 
 test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revision) 화면은 최신 상태를 다시 읽고 깨지지 않는다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -142,7 +142,7 @@ test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revi
 });
 
 test("새 키 발급이 한도에 걸리면(429) 서버 문장 그대로 알리고 계획 입력은 지켜진다", async ({ page, request }) => {
-  await stub(request).scenario({ session: "limited" });
+  await mockServer(request).scenario({ session: "limited" });
   await start(page, null);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -152,7 +152,7 @@ test("새 키 발급이 한도에 걸리면(429) 서버 문장 그대로 알리�
 });
 
 test("일정 짜기가 오래 걸리는 동안(실제 서버는 운영시간을 읽느라 1분쯤) 단추가 잠기고 「짜는 중」이 보이며, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ intake: "empty_plan", planDelay: 3000 });
   await start(page);
   await page.goto("/trips/new");
@@ -166,7 +166,7 @@ test("일정 짜기가 오래 걸리는 동안(실제 서버는 운영시간을 
 });
 
 test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화면 안으로 들어와 보이고, 확인 화면에 그대로 남는다", async ({ page, request }) => {
-  await stub(request).scenario({ fail: "confirm" });
+  await mockServer(request).scenario({ fail: "confirm" });
   await page.setViewportSize({ width: 1280, height: 600 });         // 목록이 길어 오류 칸이 화면 아래에 있는 상황
   await start(page);
   await page.goto("/trips/new");

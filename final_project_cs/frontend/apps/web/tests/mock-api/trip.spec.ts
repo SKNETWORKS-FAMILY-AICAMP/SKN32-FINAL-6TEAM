@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { start, stub, TRIP_ID } from "./helpers";
+import { start, mockServer, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => {
-  await stub(request).reset();
+  await mockServer(request).reset();
   await start(page);
 });
 
@@ -62,14 +62,14 @@ test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력�
 });
 
 test("경고와 알림이 없으면 그 칸을 그리지 않는다(빈 칸이나 0을 지어내지 않는다)", async ({ page, request }) => {
-  await stub(request).scenario({ warnings: "none", notices: "none" });
+  await mockServer(request).scenario({ warnings: "none", notices: "none" });
   await openTrip(page);
   await expect(page.getByRole("heading", { name: "살펴볼 점" })).toHaveCount(0);
   await expect(page.locator("details").filter({ hasText: "받은 알림" })).toHaveCount(0);
 });
 
 test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가 뜨고, 고르면 그 안의 key 가 서버로 가고 칸이 사라진다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
   const ask = page.getByRole("region", { name: /선택이 필요해요/ });
@@ -82,10 +82,54 @@ test("서버가 기다리는 선택이 있으면 「선택이 필요해요」가
   const [choose] = await server.received("POST", "/choose");
   expect(choose.body).toEqual({ key: "o-1" });
   await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
+  await expect(page.getByText("고르신 곳으로 일정을 바꿨어요.")).toBeVisible();          // 칸이 사라져도 결과는 말한다
+});
+
+test("실내·야외를 모르는 일정의 「바꿀까요?」: 「바꿔 줘」가 key change 를 보내고, 서버가 채운 다른 곳을 다시 읽어 보인다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ proposals: "consent" });
+  await openTrip(page);
+  const ask = page.getByRole("region", { name: /선택이 필요해요/ });
+  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toBeVisible();
+  await ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/choose")).length).toBe(1);
+  expect((await server.received("POST", "/choose"))[0].body).toEqual({ key: "change" });
+  await expect(ask.getByRole("button", { name: /실내 박물관/ })).toBeVisible();              // 같은 제안을 다시 읽었다
+  await expect(ask.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" })).toHaveCount(0);  // 선택지가 생기면 물음은 사라진다
+  await expect(page.getByText("다른 곳을 찾았어요 — 위에서 골라 주세요.")).toBeVisible();
+});
+
+test("「바꿔 줘」에 다른 곳이 없으면 원래 일정을 그대로 둔다고 알린다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ proposals: "consent", choose: "no_alternate" });
+  await openTrip(page);
+  await page.getByRole("button", { name: "바꿔 줘 — 다른 곳 보기" }).click();
+  await expect(page.getByText("바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다.")).toBeVisible();
+});
+
+test("자동으로 바꾼 일정은 「되돌리기」로 서버가 준 값 그대로 되돌리고, 서버의 답을 보인다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ undo: "open" });
+  await openTrip(page);
+  const card = page.getByRole("region", { name: "자동으로 바꾼 일정" });
+  await expect(card).toContainText("비 소식이 있어 09:30 경복궁 관람을 실내 박물관으로 바꿨어요.");
+  await card.getByRole("button", { name: "되돌리기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/rollback")).length).toBe(1);
+  expect((await server.received("POST", "/rollback"))[0].body).toEqual({ request_id: "rollback:v1->v0", base_version: 1, to_version: 0 });
+  await expect(page.getByText("09:30 일정을 원래대로(경복궁 관람) 되돌렸어요.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "자동으로 바꾼 일정" })).toHaveCount(0);   // 되돌린 뒤엔 칸이 없다
+});
+
+test("그 사이 일정이 또 바뀌어 되돌리기가 거절되면(409) 아무것도 안 바뀌었다고 알린다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ undo: "stale" });
+  await openTrip(page);
+  await page.getByRole("region", { name: "자동으로 바꾼 일정" }).getByRole("button", { name: "되돌리기" }).click();
+  await expect(page.getByText("그 사이 일정이 다시 바뀌어 되돌리지 않았어요. 지금 상태를 다시 불러왔어요.")).toBeVisible();
 });
 
 test("「지금 일정 그대로 두기」는 key 를 null 로 보낸다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   await openTrip(page);
   await page.getByRole("button", { name: "지금 일정 그대로 두기" }).click();
@@ -94,7 +138,7 @@ test("「지금 일정 그대로 두기」는 key 를 null 로 보낸다", async
 });
 
 test("이미 정해진 선택(409)은 「아무것도 바뀌지 않았다」고 알리고 서버 상태를 다시 읽는다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ proposals: "open", choose: "conflict" });
   await openTrip(page);
   await page.getByRole("button", { name: /대체 식당 B/ }).click();
@@ -113,7 +157,7 @@ test("지도 탭은 서버 좌표가 있는 일정만 방문 순서로 그린다
 });
 
 test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 서버로 가고, 서버 답이 그대로 보인다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await openTrip(page);
   await page.getByRole("button", { name: "채팅", exact: true }).click();
   const chat = page.locator("#trip-pane-chat");
@@ -141,10 +185,17 @@ test("채팅: 빠른 질문 세 개와 일정 상세가 화면 문장 그대로 
   // 요청마다 다른 request_id — 서버가 「같은 요청」으로 착각하지 않는다
   const ids = (await server.received("POST", "/messages")).map((entry) => entry.body?.request_id);
   expect(new Set(ids).size).toBe(4);
+  // ★서버가 대화를 기록하고 화면이 그 기록을 읽어도 답은 한 번씩만 보인다(기록 시각이 받은 시각보다 이르다) —
+  //   2026-09-29 실서버에서 모든 답이 두 번 보였다. 새로고침 뒤에도 같다.
+  const answers = async () => chat.locator("article[data-role=assistant] p:nth-child(2)").allInnerTexts();
+  expect((await answers()).filter((text) => text.startsWith("서버 답:"))).toHaveLength(4);
+  await page.reload();
+  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  await expect.poll(async () => (await answers()).filter((text) => text.startsWith("서버 답:")).length).toBe(4);
 });
 
 test("직접 쓴 질문도 보내고, 옛 서버처럼 answer 없이 escalated 만 오면 화면이 「담당자에게 넘겼어요」를 지어내지 않는다", async ({ page, request }) => {
-  await stub(request).scenario({ chat: "escalated_bare" });
+  await mockServer(request).scenario({ chat: "escalated_bare" });
   await openTrip(page);
   await page.getByRole("button", { name: "채팅", exact: true }).click();
   const chat = page.locator("#trip-pane-chat");
@@ -165,7 +216,7 @@ test("검증 결과·진행 주소로 들어가면 지어낸 0 대신 「검증 
 });
 
 test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 뜨고, 읽지 못했다고 알린다", async ({ page, request }) => {
-  await stub(request).scenario({ fail: "proposals" });
+  await mockServer(request).scenario({ fail: "proposals" });
   await openTrip(page);
   await expect(page.getByRole("alert").filter({ hasText: "선택과 알림을 읽지 못했어요" })).toBeVisible();
   await expect(page.locator("#trip-pane-schedule").getByText("경복궁 관람")).toBeVisible();
@@ -173,7 +224,7 @@ test("선택·알림을 읽지 못해도(서버 500) 여행 화면은 그대로 
 });
 
 test("없는 여행 주소는 빈 화면이 아니라 이유와 다시 시도 단추를 보인다", async ({ page, request }) => {
-  await stub(request).scenario({ trip: "missing" });
+  await mockServer(request).scenario({ trip: "missing" });
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(page.getByRole("button", { name: "다시 불러오기" })).toBeVisible();
   await expect(page.locator("main")).not.toBeEmpty();
@@ -187,7 +238,7 @@ test("서버에 연결이 안 되면 그 사실을 말하고, 화면은 비지 �
 });
 
 test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외)", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await server.scenario({ proposals: "open" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
@@ -202,7 +253,7 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
 });
 
 test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
-  const server = stub(request);
+  const server = mockServer(request);
   await start(page);
   await page.goto(`/trips/${TRIP_ID}`);
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();

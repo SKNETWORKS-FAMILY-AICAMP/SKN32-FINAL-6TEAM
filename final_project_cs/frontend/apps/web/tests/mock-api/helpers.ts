@@ -6,8 +6,8 @@ export const KEY_STORAGE = "tripilot.web.user-key.v1";
 
 export interface LoggedRequest { method: string; path: string; key: string | null; body: Record<string, unknown> | null }
 
-/** Talks to the stand-in server's test control (never part of the real API). */
-export function stub(request: APIRequestContext) {
+/** Talks to the test mock server's test control (never part of the real API). */
+export function mockServer(request: APIRequestContext) {
   return {
     reset: async () => { await request.post(`${STUB}/__test/reset`); },
     scenario: async (change: Record<string, unknown>) => { await request.post(`${STUB}/__test/scenario`, { data: change }); },
@@ -19,7 +19,7 @@ export function stub(request: APIRequestContext) {
   };
 }
 
-/** Korean UI, and a stored user key the stand-in server knows (unless `key` is null: a first visit). */
+/** Korean UI, and a stored user key the test mock server knows (unless `key` is null: a first visit). */
 export async function start(page: Page, key: string | null = "acop_u_known") {
   await page.addInitScript(([storageKey, value]) => {
     if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed" }));

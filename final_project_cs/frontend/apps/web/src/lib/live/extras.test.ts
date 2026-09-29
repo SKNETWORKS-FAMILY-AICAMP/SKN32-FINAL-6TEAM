@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveError } from "./client";
-import { chooseProposal, getNotices, getProposals, mapLoad, warmup } from "./extras";
+import { chooseProposal, getNotices, getProposals, mapLoad, undoChange, warmup } from "./extras";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -74,17 +74,37 @@ describe("the rest of the server's web API", () => {
     replies.push(json({ trip_id: "t1", proposals: [{
       proposal_id: "p1", item_id: "i1", base_version: 3, reason: "closed", protected_by: null, safety: false, status: "open",
       expires_at: "2026-09-29T00:00:00+09:00", chosen_key: null, causes: [],
-      options: [{ key: "a", rank: 1, name: "대체 식당", starts_at: "2026-09-28T12:30:00+09:00" }, { key: "b", rank: 2, name: null, starts_at: null }],
+      options: [{ key: "a", rank: 1, name: "대체 식당", starts_at: "2026-09-28T12:30:00+09:00", note: "09:00으로 늦추면" }, { key: "b", rank: 2, name: null, starts_at: null },
+        { key: "c", rank: 3, name: "근처 식당", starts_at: null, note: "  " }],
     }] }));
     const [proposal] = await getProposals("t1", "ko");
     expect(proposal).toMatchObject({ id: "p1", itemId: "i1", baseVersion: 3, status: "open", safety: false });
-    expect(proposal.options.map((option) => option.key)).toEqual(["a"]);
+    expect(proposal.options.map((option) => option.key)).toEqual(["a", "c"]);
+    // how an option bends the request, in the server's words — an empty note is no note
+    expect(proposal.options.map((option) => option.note)).toEqual(["09:00으로 늦추면", null]);
   });
 
   it("reads the notices with the server's own sentence and links a proposal request to its proposal", async () => {
     stub({ "tripilot.web.user-key.v1": "k" });
     replies.push(json({ notices: [{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposal_id: "p1", options: [], delivery: "sent", at: "2026-09-28T12:30:00+09:00" }] }));
-    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00" }]);
+    expect(await getNotices("t1", "ko")).toEqual([{ key: "n1", type: "proposal_request", kind: null, text: "식당이 문을 닫았어요. 하나 골라 주세요.", version: 3, proposalId: "p1", delivery: "sent", at: "2026-09-28T12:30:00+09:00", rollback: null }]);
+  });
+
+  it("reads the undo an automatic change carries and sends it back as the server gave it", async () => {
+    stub({ "tripilot.web.user-key.v1": "k" });
+    replies.push(json({ notices: [
+      { key: "n1", type: "change_notice", text: "비가 와서 실내로 바꿨어요.", version: 3, delivery: "sent", at: "2026-09-28T12:30:00+09:00",
+        rollback: { base_version: 3, to_version: 2, request_id: "rollback:v3->v2", label: "되돌리기", path: "/rollback" } },
+      { key: "n2", type: "change_notice", text: "x", version: 2, delivery: "sent", at: "2026-09-28T11:30:00+09:00", rollback: { base_version: "3" } },   // malformed — no button
+    ] }));
+    const [withUndo, broken] = await getNotices("t1", "ko");
+    expect(withUndo.rollback).toEqual({ baseVersion: 3, toVersion: 2, requestId: "rollback:v3->v2" });
+    expect(broken.rollback).toBeNull();
+    replies.push(json({ status: "rolled_back", answer: "되돌렸어요." }));
+    await undoChange("t1", withUndo.rollback!, "ko");
+    const call = calls.at(-1)!;
+    expect(call.url).toMatch(/\/v1\/web\/trips\/t1\/rollback$/);
+    expect(JSON.parse(String(call.init.body))).toEqual({ request_id: "rollback:v3->v2", base_version: 3, to_version: 2 });
   });
 
   it("chooses an option by its key, and null keeps the plan", async () => {

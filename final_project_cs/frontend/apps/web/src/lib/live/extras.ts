@@ -6,7 +6,12 @@ import { api, currentKey } from "./client";
  * and choosing. Everything here is what the server says — the screen adds no sentence of its own.
  */
 
-export interface ProposalOption { key: string; rank: number | null; name: string; startsAt: string | null }
+/** `note` — how this option bends what the customer asked for (「09:00으로 늦추면」 · 「다음 일정(경복궁) 근처」), in the server's words. */
+export interface ProposalOption {
+  key: string; rank: number | null; name: string; startsAt: string | null; note: string | null;
+  /** What the server could not confirm about this option (「그 시각 영업을 확인할 수 없다」), in its own words. */
+  warnings: string[];
+}
 
 /** A change the server would like the customer to decide (`GET /v1/web/trips/{id}/proposals`). */
 export interface Proposal {
@@ -22,7 +27,7 @@ export interface Proposal {
 
 interface ServerProposal {
   proposal_id: string; item_id: string; base_version: number; reason: string; status: string; safety?: unknown;
-  expires_at?: string | null; options?: { key: string; rank?: number | null; name?: string | null; starts_at?: string | null }[];
+  expires_at?: string | null; options?: { key: string; rank?: number | null; name?: string | null; starts_at?: string | null; note?: string | null; warnings?: unknown[] | null }[];
 }
 
 export async function getProposals(tripId: string, language: Language): Promise<Proposal[]> {
@@ -33,6 +38,8 @@ export async function getProposals(tripId: string, language: Language): Promise<
     // ★An option without a name is dropped: there is nothing true to show for it.
     options: (row.options ?? []).filter((option) => option.name).map((option) => ({
       key: option.key, rank: option.rank ?? null, name: option.name as string, startsAt: option.starts_at ?? null,
+      note: typeof option.note === "string" && option.note.trim() ? option.note.trim() : null,
+      warnings: (option.warnings ?? []).filter((warning): warning is string => typeof warning === "string" && warning.trim() !== ""),
     })),
   }));
 }
@@ -49,11 +56,20 @@ export interface Notice {
   proposalId: string | null;
   delivery: string;
   at: string;
+  /** An automatic change the customer can undo from this notice (the server attaches it only when it changed the plan on its own). */
+  rollback: { baseVersion: number; toVersion: number; requestId: string } | null;
 }
 
 interface ServerNotice {
   key: string; type?: string | null; kind?: string | null; text?: string | null; version?: number | null;
   proposal_id?: string | null; delivery: string; at: string;
+  rollback?: { base_version?: unknown; to_version?: unknown; request_id?: unknown } | null;
+}
+
+function rollbackOf(raw: ServerNotice["rollback"]): Notice["rollback"] {
+  if (!raw || typeof raw !== "object") return null;
+  const { base_version: base, to_version: to, request_id: id } = raw;
+  return typeof base === "number" && typeof to === "number" && typeof id === "string" && id ? { baseVersion: base, toVersion: to, requestId: id } : null;
 }
 
 export async function getNotices(tripId: string, language: Language): Promise<Notice[]> {
@@ -61,6 +77,7 @@ export async function getNotices(tripId: string, language: Language): Promise<No
   return (body.notices ?? []).map((row) => ({
     key: row.key, type: row.type ?? "change_notice", kind: row.kind ?? null, text: row.text ?? null,
     version: row.version ?? null, proposalId: row.proposal_id ?? null, delivery: row.delivery, at: row.at,
+    rollback: rollbackOf(row.rollback),
   }));
 }
 
@@ -134,4 +151,15 @@ export async function mapLoad(language: Language): Promise<MapLoad> {
   } catch {
     return denied;
   }
+}
+
+/**
+ * Undo an automatic change (`POST /v1/web/trips/{id}/rollback`). The server answers 409 when the trip has already moved
+ * to another version — that comes back as a `LiveError`; nothing changed. The same `requestId` sent twice is one undo.
+ */
+export function undoChange(tripId: string, rollback: NonNullable<Notice["rollback"]>, language: Language): Promise<{ status?: string; answer?: string }> {
+  return api(`/v1/web/trips/${encodeURIComponent(tripId)}/rollback`, language, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request_id: rollback.requestId, base_version: rollback.baseVersion, to_version: rollback.toVersion }),
+  });
 }

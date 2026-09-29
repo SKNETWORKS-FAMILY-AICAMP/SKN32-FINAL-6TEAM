@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .next-live/
+.next-mock/
 out/
 coverage/
 playwright-report/
