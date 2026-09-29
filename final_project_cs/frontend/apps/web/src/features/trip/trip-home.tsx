@@ -89,7 +89,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const selected = stops.find((stop) => stop.id === selectedId) ?? stops[0];
   const diagram = mapConfiguration.provider === "demo";
   const message = useMutation({
-    mutationFn: ({ text }: { text: string; clearDraft: boolean }) => tripGateway.sendMessage(trip.id, text, language),
+    // ★Only a stop the customer actually picked goes to the server (`item_id`) — the first stop shown by default is not a choice.
+    mutationFn: ({ text, itemId }: { text: string; clearDraft: boolean; itemId?: string | null }) => tripGateway.sendMessage(trip.id, text, language, itemId),
     onSuccess: (updated, variables) => {
       queryClient.setQueryData(tripKey(trip.id, language), updated);
       if (variables.clearDraft) setDraft("");
@@ -132,7 +133,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     focus(navigation === "floating" ? "trip-nav-toggle" : `trip-pane-button-${next}`);
   }
 
-  function ask(text: string, clearDraft = false) {
+  function ask(text: string, clearDraft = false, pickedId: string | null = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null) {
     if (message.isPending) return;
     const trimmed = text.trim();
     if (!trimmed) {
@@ -142,10 +143,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     }
     setInputError("");
     setPane("chat");
-    message.mutate({ text: trimmed, clearDraft });
+    message.mutate({ text: trimmed, clearDraft, itemId: pickedId });
   }
 
-  const askAbout = (stop: TripStop) => { choose(stop); ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`)); };
+  const askAbout = (stop: TripStop) => { choose(stop); ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`), false, stop.id); };
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

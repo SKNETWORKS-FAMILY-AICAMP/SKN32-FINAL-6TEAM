@@ -22,7 +22,7 @@ interface ServerItem {
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
   address?: string | null; phone?: string | null; category?: string | null;
-  hours?: { day?: string; open?: string; close?: string }[] | null; hours_text?: string | null;
+  hours?: { day?: string; open?: string; close?: string; last_order?: string | null }[] | null; hours_text?: string | null;
   tags?: string[] | null; michelin?: { level?: string; year?: number } | null; source_note?: string | null;
 }
 interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
@@ -54,17 +54,18 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
-    placeInfo: placeInfo(item.place_info),
+    placeInfo: placeInfo(item.place_info, t),
   };
 }
 
 const text = (value: unknown): string | undefined => (typeof value === "string" && value.trim() ? value.trim() : undefined);
 
 /** The server's place facts, keeping only what it actually sent — an empty field is left out, not shown as "unknown". */
-export function placeInfo(raw: ServerPlaceInfo | null | undefined): TripStop["placeInfo"] {
+export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
   if (!raw || typeof raw !== "object") return null;
   const hours = Array.isArray(raw.hours)
-    ? raw.hours.map((rule) => [text(rule?.day), text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined].filter(Boolean).join(" ")).filter(Boolean)
+    ? raw.hours.map((rule) => [text(rule?.day), text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
+      text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined].filter(Boolean).join(" ")).filter(Boolean)
     : [];
   if (!hours.length && text(raw.hours_text)) hours.push(text(raw.hours_text) as string);
   const level = text(raw.michelin?.level);
@@ -165,12 +166,12 @@ export function createLiveGateway(): TripGateway {
     getTrip: read,
     retryVerification: read,
     startTrip: read,
-    async sendMessage(tripId, message, language) {
+    async sendMessage(tripId, message, language, itemId) {
       const t = translator(language);
       const now = new Date().toISOString();
       const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       const result = await api<{ status?: string; case_status?: string; answer?: string }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
       });
       const log = [...readMessages(tripId),
         { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },

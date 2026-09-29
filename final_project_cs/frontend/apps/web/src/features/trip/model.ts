@@ -130,7 +130,8 @@ export interface TripGateway {
   getTrip(tripId: string, language: Language): Promise<Trip>;
   retryVerification(tripId: string, language: Language): Promise<Trip>;
   startTrip(tripId: string, language: Language): Promise<Trip>;
-  sendMessage(tripId: string, message: string, language: Language): Promise<Trip>;
+  /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
+  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null): Promise<Trip>;
   /**
    * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
    * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.

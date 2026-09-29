@@ -117,16 +117,26 @@ describe("live trip gateway", () => {
     replies.push({
       ...TRIP,
       items: [
-        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "11:30", close: "21:00" }, { day: "화" }],
+        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "11:30", close: "21:00", last_order: "20:30" }, { day: "화" }],
           tags: ["michelin_selected", "card_payment", 3], michelin: { level: "셀렉티드", year: 2026 }, source_note: "" } },
         { ...TRIP.items[1], place_info: { address: "", hours: null, tags: [] } },
       ],
     });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
-    expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00", "화"],
+    expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00 (주문 마감 20:30)", "화"],
       tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
     // ★nothing real was sent — no block at all, not a row of "unknown"
     expect(trip.stops[1].placeInfo).toBeNull();
+  });
+
+  it("sends the stop the customer picked as item_id, and nothing when none was picked", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "adjusted", answer: "바꿨어요." }, TRIP, { status: "answered", answer: "네." }, TRIP);
+    await gateway.sendMessage(TRIP.trip_id, "다른 데로 바꿔 줘", "ko", "b");
+    await gateway.sendMessage(TRIP.trip_id, "하루 요약", "ko");
+    const bodies = calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)));
+    expect(bodies[0]).toMatchObject({ message: "다른 데로 바꿔 줘", item_id: "b" });
+    expect(bodies[1]).not.toHaveProperty("item_id");
   });
 
   it("does not quietly become a new user when the saved key is rejected", async () => {
