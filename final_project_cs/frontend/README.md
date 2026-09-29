@@ -1,5 +1,7 @@
 # triPilot 서비스 프론트엔드
 
+최신 확인: 2026-09-29 · `develop` `fc1ac0a`. 사용자 웹의 현재 구현을 갱신했다.
+
 사용자 웹·개발팀 콘솔·서비스 관리자 웹을 개발할 공간이다. 전체 담당과 기존 콘솔·평가 코드의 위치는 [UI·검증 작업 안내](UI_EVAL_WORKSPACE.md)를 본다.
 
 **개발 우선순위(2026-09-14 사용자 결정): 웹 1순위 → Personal Agent / MCP 2순위 → 모바일 앱 3순위 보류.** 웹은 PC·모바일 브라우저를 포함한다. 앱은 배포 시 개발자 등록 문제로 이번 개발·배포 범위에서 제외하며, 프로젝트 종료까지 적용하지 않을 가능성이 높다. 재개 여부·시점은 미정이다.
@@ -8,21 +10,23 @@
 
 | 앱 | 위치 | 기술스택 | 상태 |
 |---|---|---|---|
-| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 2026-09-23 목업 기준 소개·온보딩·5개 화면 구현, 한/영 전환, 명시적인 데모 어댑터로 실행 |
+| 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 소개·온보딩·접수 확인·여행·목록·마이페이지 구현. demo와 실제 `/v1/web/*` 연결 분리; 저장·삭제 등 제한은 앱 README 참조 |
 | 개발팀 콘솔 | [apps/dev-console](apps/dev-console/README.md) | Next.js 16 + React 19 + TypeScript | 팀별·코어 통합 테스트, 사례·A/B 비교, 샘플 어댑터 구현 |
 | 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js + React + TypeScript | 웹 개발 범위. 폴더 준비, 앱 초기화 전 |
 | 모바일 앱 | [apps/mobile](apps/mobile/README.md) | Expo + React Native + TypeScript — 기존 선택 보존 | 3순위 보류. 폴더만 예약, 이번 초기화·개발·배포 제외 |
 
+API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](../wiki/external/web-screen-api.md)를 따른다.
+
 ## 기존 프로그램과 연결
 
 - 백엔드는 `../app`에 있다. 프론트가 사용할 API를 통해 연결한다.
-- 기존 개발자 콘솔은 `../../final_project_ui`에 있다. 관리자 웹과 콘솔의 목적을 구분하고, 기능을 옮길 때 재사용 범위를 정한다.
+- 기존 개발자 콘솔은 `../../final_project_ui`(저장소 루트의 `final_project_ui`)에 있다. 관리자 웹과 콘솔의 목적을 구분하고, 기능을 옮길 때 재사용 범위를 정한다.
 - 새 개발팀 콘솔은 `apps/dev-console`에서 별도 실행한다. 개발 포트는 3200이며 기존 Python 콘솔을 변경하거나 이식하지 않았다. [개발 기준](apps/dev-console/DEVELOPMENT.md)과 [연결 계약 협의안](apps/dev-console/API_CONTRACT.md)을 따른다.
 - 평가 프로그램은 `../eval`에 있다. 화면 코드와 별개로 실행하고 결과를 표시한다.
 
 ## 앱별 개발 기준
 
-사용자 웹은 Node.js 22·npm, 개발 포트 3100을 사용한다. CSS Modules·공통 토큰·재사용 UI·기능 모듈·데이터 어댑터로 구성하며, [개발 기준](apps/web/DEVELOPMENT.md)과 [실행 안내](apps/web/README.md)를 따른다. 로그인·회원가입·서비스 결제는 웹 MVP 1차에 포함하지 않는다. 실제 여행 API 연동은 아직 완료하지 않았다.
+사용자 웹은 Node.js 22·npm, 개발 포트 3100을 사용한다. CSS Modules·공통 토큰·재사용 UI·기능 모듈·데이터 어댑터로 구성하며, [개발 기준](apps/web/DEVELOPMENT.md)과 [실행 안내](apps/web/README.md)를 따른다. 로그인·회원가입·서비스 결제는 웹 MVP 1차에 포함하지 않는다. 사용자 키·접수·여행 조회·채팅·제안 선택·알림은 연결돼 있다. live 여행 삭제·프로필 저장·선택 언어 전달은 미연결이다. 채팅 warmup은 `fc1ac0a`에서 서버 경로가 추가됐으며 실제 통합 검증은 별도다. 앱 문서의 구현 상태와 운영 검증을 구분한다.
 
 관리자 웹 초기화 시 다음을 정한다. 모바일 앱은 보류 상태다.
 

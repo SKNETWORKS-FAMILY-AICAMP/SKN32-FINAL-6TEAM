@@ -1,269 +1,65 @@
 ---
 type: contract
 title: REST API
-description: 엔드포인트 5개와 헬스체크. 쓰기는 여기로만 간다
+description: Case・여행・고객 웹 REST 진입점과 인증 구분, API 명세 및 검증 경로를 안내한다
 status: draft
+owners: [human:최연우]
 tags: [api, contract]
-owners: [human:미배정]
-domain: commerce
-domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — 라우트 25개 중 trip 0개) 미완. 문서는 코드를 정확히 적고 있다. 코드가 옮겨지면 이 문서도 같이 옮긴다 — program/plan/A-COP_여행전환_현황_2026-09-09.md
+domain: travel
 ---
 
 # REST API
 
-`app/presentation/api/cases.py`
+`[실측]` 2026-09-29 · `develop` `fc1ac0a` 코드 기준. REST에는 Case뿐 아니라 여행·위임·고객 웹 API가 있다. **요청·응답 필드의 정본은 [rest-endpoints.md](rest-endpoints.md)**이며, 이 문서는 진입점과 경계를 안내한다. 화면의 요구·사용 API·연결 상태는 [화면별 연동 문서](web-screen-api.md)에 둔다.
 
-**쓰기는 REST로만 간다.** MCP는 read-only다.
+이전 문서의 “여행 API 0개”, “전체 경로 5개”는 현재 API 전체를 설명하지 않는다. 옛 Case 검증 경위는 Git 이력과 아래 기록 링크로 확인한다.
 
-## 엔드포인트
+## 진입점과 명세
 
-`[실측]`
-
-| 메서드 | 경로 | 무엇 |
+| 대상 | 경로·의미 | 상세 |
 |---|---|---|
-| `POST` | `/v1/cases` | Case 생성 (문의 접수) |
-| `GET` | `/v1/cases` | Case 목록 |
-| `GET` | `/v1/cases/{case_id}` | Case 상세 |
-| `POST` | `/v1/cases/{case_id}/messages` | 추가 메시지 |
-| `POST` | `/v1/cases/{case_id}/actions/{action_id}/approve` | **승인** |
-| `POST` | `/v1/outbox/{message_id}/resolve` | `unknown` 발행 건을 사람이 정리했다고 **기록만** 한다 (2026-08-24 추가) |
+| Case | `/v1/cases*` — 문의·조회·추가 메시지·제안 승인 | [필드 계약](rest-endpoints.md), [Case 라우터](../../app/presentation/api/cases.py) |
+| outbox | `/v1/outbox/{message_id}/resolve` — 불명확한 배달 결과를 사람이 확인한 근거 기록 | [필드 계약](rest-endpoints.md), [outbox](../actions/outbox.md) |
+| 여행·계획 | `/v1/trips*` — 등록·생성·조회·신고·상담·제안·되돌리기 | [여행 계약](rest-endpoints.md), [여행 라우터](../../app/modules/travel_ops/trip_api.py) |
+| 고객 웹 | `/v1/web/*` — 사용자 키·내 여행·상담·선택·알림·모델 예열 | [웹 계약](rest-endpoints.md#web-api) |
+| 계획 접수 | `/v1/web/trip-intakes*` — 자료 읽기·수정·확인·계획 생성 | [접수 계약](rest-endpoints.md#intake-api) |
+| 위임 | `/v1/delegations*` — 권한 조회·부여·철회 | [필드 계약](rest-endpoints.md) |
 
-`+ /health`
+위 표는 경로 묶음의 안내이며 엔드포인트 수나 전체 운영 API 목록이 아니다. `/health`, `/introspection`, `/admin/reload`, 토큰 링크·운영 UI의 경로도 별도로 존재한다. 관리용 Composer 라우터는 관리 빌드에서만 주입된다.
 
-`[실측]` 경로 5개 · operation 6개다. 마지막 줄이 2026-08-24에 늘어난 것이고, 그때 테스트의 계약 목록(`CONTRACT_V1_PATHS`)도 함께 갱신됐다. → [rest-endpoints.md](rest-endpoints.md)
+## 인증과 책임 경계
 
-**MVP 5개가 상한이 아니다.** 필요하면 늘리되 scope와 테스트를 함께 만든다.
+- 서버·외부 에이전트 API는 Bearer 키와 경로별 scope를 사용한다. [인증 경계](auth-boundary.md)를 확인한다.
+- **고객 웹은 `X-User-Key`를 사용한다.** 키 발급 외 웹 경로는 `_web_customer`를 거치며, 여행·접수는 해당 고객의 자료만 연다. 서버용 scope 키를 브라우저에 넣지 않는다.
+- 제안 승인·선택과 업무 실행의 조건은 해당 계약을 따른다. HTTP 요청 성공만으로 외부 예약 변경이나 배달 성공까지 확정하지 않는다.
+- CORS의 출처·메서드·헤더는 [앱 조립](../../app/presentation/api/app.py)이 정한다. 새 API의 메서드를 추가할 때 브라우저 호출 가능 여부도 함께 확인한다.
 
-### ★ [2026-09-03] 계약 문서가 반대로 적고 있다
+## 계약을 추가하거나 바꿀 때
 
-`[실측]` `wiki/records/handoff/03_REST_MCP_인터페이스.md` §1-0 은 이렇게 적었다.
+[갱신 담당과 작업 순서](../../RULE.md#351-웹-api와-화면별-연동-문서-갱신)를 따른다. 요청·응답·오류·인증·멱등성·소유권을 API 명세에 반영한 다음 구현과 계약 검사를 맞춘다. 화면 문서에는 사용 관계와 진행 상태를 갱신한다.
 
-> `/v1/` 아래에 **6번째 경로가 생기면 그것은 위반이다** — `tests/integration/api/test_openapi_surface.py` 가 검사한다.
+문서에만 있는 제안과 서버에 구현된 경로를 구분한다. 신규 요구는 화면 문서의 `협의 필요`에 남기고, 양측의 확인 근거 없이 확정 계약으로 승격하지 않는다.
 
-**테스트를 열어 보니 반대다.**
+## 검증 범위
 
-```python
-def test_new_paths_are_allowed_but_must_be_scoped()
-def test_v1_surface_is_documented_when_it_grows()
-```
-
-**이름이 `new_paths_are_allowed` 다.** 검사하는 건 **"늘어나도 되는데 scope 가 있어야 한다"**이지 "늘면 안 된다"가 아니다.
-
-| | 무엇을 말하나 |
-|---|---|
-| 계약 문서 §1-0 | 6번째는 위반 |
-| **테스트 · 이 wiki · [dod.md](../../../wiki/delivery/dod.md) 13번** | **늘려도 된다. scope 와 테스트를 같이 만들면** |
-
-**셋 중 하나만 낡았다.** → 계약 문서를 고쳐야 한다.
-
-`[실측]` **이미 한 번 늘었다.** 2026-08-24 `/v1/outbox/{message_id}/resolve`가 추가돼 지금 `/v1/*`은 경로 5개·operation 6개다. "아직 아무도 안 걸렸다"가 아니라 **계약 목록을 같이 갱신했기 때문에** 안 걸린 것이다 — 테스트 파일 머리에 규칙이 적혀 있다.
-
-> 계약에 적힌 경로는 **전부 있어야 한다**(누락은 여전히 결함). 새 경로는 막지 않는다. 대신 **품질 조건**을 검사한다.
-
-`[실측]` 2026-09-06 테스트를 읽다 둘을 봤다. `test_v1_surface_is_documented_when_it_grows`는 docstring이 "실패시키지 않는다"인데 코드는 `assert extra == []`다 — **실제 동작은 "계약 목록 갱신 없이 늘리면 실패"**이고, 그게 맞는 쪽이다. 그리고 `test_new_paths_are_allowed_but_must_be_scoped`는 루프 안에서 `unscoped`에 아무것도 넣지 않아 **항상 통과한다** — scope 강제는 그 아래 `test_write_endpoints_require_a_scope_dependency`가 라우트 의존성으로 실제 검사한다. → [../quality/blind-spots.md](../quality/blind-spots.md)
-
-## 승인은 REST 전용
-
-**승인 엔드포인트(`POST /v1/cases/{case_id}/actions/{action_id}/approve`)가 유일한 승인 경로다.** MCP에는 없다. `[정정 2026-09-10]` 「마지막 엔드포인트」로 적었는데 표의 마지막은 이제 바깥함 정리(`/v1/outbox/{message_id}/resolve`)다.
-
-승인자는 `action:approve` scope가 있어야 한다. → [../actions/approval.md](../actions/approval.md)
-
-`[실측]` **승인 엔드포인트가 읽기 권한으로 열리는 결함**을 dojo가 심어 봤고 테스트 11건이 잡았다.
-
-## Case 생성 시 인라인 분류
-
-`POST /v1/cases`가 감성·의도·이슈 분류를 함께 한다. **선택 기능이 아니다.**
-
-```
-분류 성공 → routing
-분류 실패 → classification_failed 이벤트 + escalated
-```
-
-**조용히 넘어가지 않는다.** `INV-CS-RT-017`
-
-`[실측]` 이 경로에서 실제 결함이 있었다. `feedback.py::INTENTS`가 옛 구독 어휘(`billing`/`technical`)로 남아 있어 **쇼핑몰 Case가 전부 분류 실패로 떨어졌을 것**이다. 재발 방지로 `INTENTS ⊇ 모든 Team.accepted_case_types` 불변조건 테스트가 추가됐다.
-
-### ★ [2026-09-06] 이 결함이 왜 운영 경로였는가, 그리고 어떻게 다시 안 나게 했는가
-
-`[실측]` [PROD-CLASSIFIER-DOMAIN-MISMATCH](../records/evidence/PROD-CLASSIFIER-DOMAIN-MISMATCH_수정.md). `INTENTS`는 VOC 분석 전용 상수가 아니다.
-
-```
-create_app()  →  composition.build_classifier()  →  feedback.classify(masked(message))
-                 (classifier 인자가 없으면 기본값)      ↑ 여기서 INTENTS 로 검증
-```
-
-**이게 `/v1/cases`로 들어오는 모든 신규 Case의 실제 분류 경로다.** LLM이 정직하게 `shipping`을 돌려주면 옛 집합 밖이라 `ClassificationFailed` — 안전하게 `escalated`로 가긴 하지만 정상 라우팅은 하나도 안 됐을 것이다.
-
-`[미확보]` **얼마나 오래 있었는지는 모른다.** 이 파일을 건드린 커밋이 최초 도메인 전환 하나뿐이라 커밋 이력으로 특정이 안 된다.
-
-`[실측 2026-09-10]` 옛 재발 방지 테스트(`test_feedback_intent_alignment.py`)는 **삭제됐다.** 대신 `tests/unit/core/test_commit_phase_mapping.py::test_every_declared_prefix_is_reachable` 가 등록표를 읽어 검사한다(DoD-23). `[미확보]` 그 테스트는 있지만 **[invariants.md](../quality/invariants.md) 카탈로그에 ID가 없다.** "INTENTS ⊇ 모든 Team의 `accepted_case_types`"는 라우팅이 성립하는 조건이라 불변식으로 올릴 만하다.
-
-### 실제 API 경로를 진짜로 도는 e2e 테스트
-
-`[실측]` [LIVE-CLASSIFIER-E2E](../records/evidence/LIVE-CLASSIFIER-E2E_검증.md). 위 수정 직후엔 Claude가 터미널에서 한 번 수동 확인한 것뿐이었다. 그걸 재실행 가능한 테스트로 바꿨다 — `tests/live/test_feedback_classifier_live_e2e.py`(`-m live`, 실 OpenAI 호출).
-
-★**[2026-09-10] 이 증거는 쇼핑몰 시절 것이다.** `[실측 2026-09-10 작업 트리]` 지금 classifier 가 허용하는 intent 는 `itinerary_submit`·`incident_report`·`confirm_request`·`adjust_reject`·`other` 다 — **쇼핑몰 입력을 넣으면 이제 분류 실패로 간다.** 그리고 `[미확보]` 그 live 테스트 자체가 아직 `shipping` 을 기대하므로 **코드와 테스트가 갈라져 있다**(코드 담당 몫).
-
-**증명하는 것**(그때) — 운영 `POST /v1/cases`에 실 한국어 쇼핑몰 메시지를 보내면, 실제로 주입되는 그 classifier가 `intent="shipping"`을 돌려주고 `INTENTS` 검증을 통과해 `CLASSIFIED` 이벤트가 기록된다.
-
-**만들다 계약의 오해가 둘 드러났다.**
-
-| 오해 | 실제 |
-|---|---|
-| `create_app(controller=None)`이면 Controller가 안 돈다 | **항상 진짜 Controller가 만들어진다.** classifier를 밖에서 주입하지 않으면 기본 classifier의 `__module__`이 `app.composition`이라 `runtime_controller`가 진짜로 잡힌다 — 이 테스트는 분류뿐 아니라 **Team 실행까지 전부 탄다** |
-| 최종 상태가 `escalated`가 아니어야 통과 | 합성 고객이라 주문 데이터가 없으니 Team이 정상적으로 escalate할 수 있다. **분류 성공 여부만** 보도록 좁혔다 — `case_events`의 `CLASSIFIED`를 직접 조회 |
-
-첫 실행이 "실패"했는데 **분류 자체는 완벽했다** — 틀린 건 테스트의 단언 범위였다.
-
-`[실측]` **teardown이 `agent_runs`·`team_tasks`·`llm_calls`를 안 지워 FK 위반으로 정리 자체가 실패했고, 첫 실행분 tenant 하나가 DB에 영구히 남았다.** Controller가 실제로 도니 그 행들이 생기는데 계약에 없었다. 손으로 같은 FK 순서로 지웠고, 정리 순서를 고쳤다. **"실행되지 않는다"는 가정이 틀리면 정리 계획도 같이 틀린다.**
-
-## Composer API는 별개다
-
-```
-/composer/*    prefix="/composer", tags=["composer-write"]
-```
-
-**제작 단계 도구다.** 인증된 경로로만 제공한다.
-
-★**[실측 2026-09-07] 고객 릴리즈 앱에는 이 경로가 아예 없다.** 커밋 `f2319aa`(v9 §8-D) 뒤로
-`create_app()`은 라우터를 **주입받을 때만** 붙인다(`composer_write_router` · `composer_auth_router`,
-기본값 `None`). 고객이 받는 `app.presentation.api.app:app`은 아무것도 주지 않으므로 `/composer/*`가
-**존재하지 않는다** — 인증으로 막는 게 아니라 라우트 자체가 없다.
-
-붙는 것은 관리용 빌드(`app/entrypoint.py`)뿐이고, 그때만 `acop_composer` 패키지의 라우터를
-주입한다. 구현은 이 저장소에 없다(`app/composer_host.py`가 어댑터만 갖는다).
-경계는 `tests/architecture/test_composer_stays_out_of_this_repo.py`가 지킨다.
-
-`[실측]` `/ui/composer`는 2026-08-18에 **폐기**됐다. 인증 없이 고객 접근이 가능한 앱에 물려 있던 것을 실측으로 확인하고 삭제했다.
-
-## 인증
-
-모든 요청이 Agent Gateway를 거친다. **Trust Boundary다.**
-
-| 불변식 | 무엇 |
-|---|---|
-| `INV-CS-SEC-001` | 유효하지 않은 토큰은 인증되지 않는다 |
-| `INV-CS-SEC-002` | scope 없는 principal은 거부된다 |
-| `INV-CS-SEC-003` | 다른 scope를 가진 principal도 거부된다 |
-
-`[실측]` **인증 전 요청이 500을 내던 결함**이 있었다. `os.getenv`로 설정을 읽어서였다. 지금은 고쳐졌다.
-
-→ [auth-boundary.md](auth-boundary.md)
-
-## 조회 격리
-
-목록·상세 조회는 tenant와 customer를 벗어나지 않는다.
-
-| 불변식 | 실행 위치 |
-|---|---|
-| `INV-CS-SEC-005` | `tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant` |
-| `INV-CS-SEC-006` | `tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant` |
-
-**남의 Case를 요청하면 404다.** 403이 아니다 — 존재 여부를 알려주지 않는다.
-
-## idempotency
-
-`POST` 계열은 전부 idempotency key를 거친다.
-
-**동일 요청 10회 → `action_requests` 1행.** DoD 항목이다.
-
-→ [../actions/idempotency.md](../actions/idempotency.md)
-
-## 감사
-
-`[실측]` **승인 감사 기록이 대기 큐에 유령 항목으로 남는 결함**이 있었다. 브라우저로 승인 버튼을 여러 번 눌러 발견했다.
-
-```
-tests/integration/api/test_approval_audit_row_excluded_from_queue.py
-tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
-```
-
-**테스트만으로는 안 잡혔다.** UI를 실제로 열어야 나온 결함이다.
-
----
-
-# 계약 원문에서 보강 (2026-09-03)
-
-`[실측]` `wiki/records/handoff/` 계약 문서와 절 단위로 대조해 **빠져 있던 필드·제약·숫자**를 채웠다. 대조 결과는 [반영률 실측](../../../wiki/governance/migration-scope/coverage.md).
-
-## `/v1/*` 표면 상한과 scope
-
-`[실측]` 계약 문서(`wiki/records/handoff/03` §1-0)는 "외부 AI용 `/v1/*` endpoint는 정확히 5개, 여섯 번째 경로가 생기면 계약 위반"이라고 적는다. **이 문장은 낡았다** — 위 [2026-09-03 절](#-2026-09-03-계약-문서가-반대로-적고-있다)이 밝힌 대로 v7에서 "5는 상한이 아니다"로 바뀌었고, 실제로 2026-08-24에 여섯 번째 operation이 추가됐다. 아래 표가 지금 코드의 계약 집합이다.
-
-| 메서드 | 경로 | 필수 scope |
+| 근거 | 확인하는 것 | 한계 |
 |---|---|---|
-| `POST` | `/v1/cases` | `case:write` |
-| `GET` | `/v1/cases` | `case:read` |
-| `GET` | `/v1/cases/{case_id}` | `case:read` |
-| `POST` | `/v1/cases/{case_id}/messages` | `case:write` |
-| `POST` | `/v1/cases/{case_id}/actions/{action_id}/approve` | `action:approve` |
-| `POST` | `/v1/outbox/{message_id}/resolve` | `action:approve` |
+| [앱 조립](../../app/presentation/api/app.py)·[composition](../../app/composition.py) | 실제로 포함할 라우터와 경계 | 소스 존재만으로 실행 성공을 증명하지 않음 |
+| [웹 계약 검사](../../tests/contract/test_web_client_contract.py) | 웹 호출 경로·메서드, 설문 판·필드·선택지와 서버의 일치 | DB·외부 모델·브라우저를 통합 실행하지 않음 |
+| [OpenAPI 표면 검사](../../tests/integration/api/test_openapi_surface.py) | 계약 경로 존재, 추가 경로의 목록 반영, 쓰기 인증 의존성 | `CONTRACT_V1_PATHS`도 구현 변경과 함께 갱신해야 함 |
+| [웹 API 검사](../../tests/e2e/test_web_api.py)·[접수 API 검사](../../tests/e2e/test_trip_intake_api.py) | 해당 환경의 API 동작 | 실행 조건과 실제 결과를 별도로 기록해야 함 |
 
-다음 경로는 5개를 셀 때 제외한다.
+`[실측]` `fc1ac0a`에는 예열 라우트가 있지만 OpenAPI 검사의 `CONTRACT_V1_PATHS`에는 `/v1/web/warmup`이 없다. [검사 목록 누락 기록](../records/reports/debugs/2026-09-29_1436_예열API_검사목록_누락.md)을 참고한다. 이 문서 변경으로 코드나 검사 목록을 수정하지 않았다.
 
-| 경로 | 성격 |
-|---|---|
-| `/health` | 상태 확인 |
-| `/ui/*` | 운영 화면 |
-| `/openapi.json`, `/docs`, `/redoc` | FastAPI 기본 제공 |
+`[미확보]` 이번 작업의 Python 계약 검사는 환경 문제로 수집·실행하지 못했다. [검증 기록](../records/evidence/2026-09-29_1436_웹API_협업문서_정리.md)에 시도한 명령과 출력을 남긴다. 코드 대조를 테스트 통과로 기록하지 않는다.
 
-`/ui/*`는 쓰기를 직접 수행하지 않는다. 승인은 `/v1/cases/{case_id}/actions/{action_id}/approve`를 호출한다.
+## 관계와 과거 근거
 
-근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:18-45`
-
-## 엔드포인트별 상세 계약
-
-**필드·제약·상태 전이는 [rest-endpoints.md](rest-endpoints.md) 에 있다.** operation 여섯(경로 다섯)을 각각 다룬다.
-
-## 오류 응답 계약
-
-`[실측]`
-
-| HTTP | 조건 | `error.code` |
-|---:|---|---|
-| `422` | 스키마 위반(요청 몸통 검증 실패) | `validation_error` — `[정정 2026-09-10]` 400 `contract_violation` 으로 적혀 있었다. 검증 실패는 422 로 나간다(`app/presentation/api/app.py:95-97`). 400 `contract_violation` 은 승인 결정 값이 `approved`/`rejected` 가 아닐 때 쓴다(`cases.py:210`) |
-| `401` | API key 없음 또는 무효 | `unauthenticated` |
-| `403` | scope 부족 또는 ownership 불일치 | `scope_denied` |
-| `404` | 존재하지 않거나 볼 권한이 없는 리소스 | `not_found` |
-| `409` | optimistic concurrency 충돌 | `state_conflict` |
-| `422` | 허용되지 않은 상태 전이 | `invalid_transition` |
-| `429` | 일일 비용 또는 호출 상한 | `guardrail_exceeded` |
-
-오류 body에 stack trace·SQL·내부 경로를 넣지 않는다.
-
-근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:101-114`
-
-## 인증 형식
-
-`[실측]`
-
-| 항목 | 계약 |
-|---|---|
-| MVP 인증 | hashed API key + scope |
-| Header | `Authorization: Bearer <api_key>` |
-| OAuth2/OIDC | Phase 2; MVP에서 구현하지 않음 |
-| scope 검증 | scope × endpoint 전체 unauthorized matrix 테스트 |
-
-근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:116-121`
-
-## OpenAPI 일치 조건
-
-`[실측]` `/openapi.json`의 `/v1/*` 경로 집합은 테스트의 `CONTRACT_V1_PATHS`(경로 5개, outbox resolve 포함)와 **정확히 일치해야 한다** — 계약에 있는데 없으면 실패, 계약 목록에 없는 게 있어도 실패. 늘릴 땐 계약 문서·이 목록·scope 의존성을 같이 만든다.
-
-근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:150-153`
-
-## `GET /introspection`
-
-`ops:introspect` scope 로 보호되는 read-only API 다. **무엇이 조립돼 있나를 보여주고 얼마나 돌고 있나는 안 보여준다.**
-
-→ [introspection.md](introspection.md)
-
-## 관계
-
-- [travel-density.md](travel-density.md) — 여행 등록·조회 응답의 밀도 측정과 경고(선택 확장 1.1)
-
-- [mcp-tools.md](mcp-tools.md) — 읽기 전용 경로
-- [a2a-protocol.md](a2a-protocol.md) — 업무 위임 경로
-- [auth-boundary.md](auth-boundary.md) — 인증·scope·PII
-- [../actions/approval.md](../actions/approval.md) — 승인
-- [../runtime/case-lifecycle.md](../runtime/case-lifecycle.md) — Case 상태
+- [화면별 연동 문서](web-screen-api.md) — 화면 설명·사용 API·협의 항목·연결 상태
+- [API 명세](rest-endpoints.md) — 요청·응답·제약의 정본
+- [인증 경계](auth-boundary.md) — 인증·권한·격리
+- [승인](../actions/approval.md) · [Case 상태](../runtime/case-lifecycle.md) — 상태 변경의 조건
+- [introspection](introspection.md) — 현재 조립 정보
+- [MCP](mcp-tools.md) · [A2A](a2a-protocol.md) — 별도 접점의 계약
+- [옛 REST·MCP 계약](../records/handoff/03_REST_MCP_인터페이스.md) — 동결된 기록. 현재 명세로 갱신하지 않음
+- [테스트 사각지대](../quality/blind-spots.md) — 옛 계약·검사 불일치의 조사 근거
