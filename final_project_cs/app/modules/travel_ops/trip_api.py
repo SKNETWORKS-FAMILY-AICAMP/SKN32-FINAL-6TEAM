@@ -1024,6 +1024,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "options": payload.get("options"), "delivery": status,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
+    @router.post("/v1/web/warmup")
+    def web_warmup(background: BackgroundTasks, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-29]` 모델 예열 — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다).
+        이미 올라가 있으면 아무것도 안 하고, 1분 안 되풀이는 한 번으로 줄인다(`model_warmup.py`).
+
+        ★develop 판은 **남용 방어 없이** 잇는다(`count=lambda: None`) — 웹 남용 방어(`web_guard`)가 아직 develop 에 없다.
+          남용 방어는 사용자 결정(2026-09-28)으로 어차피 꺼져 있어 달라지는 것은 「사용량 기록이 안 남는다」 하나다.
+          전체 동기화 때 role-manager 판(`count=lambda: _count("warmup", ...)`)으로 덮는다."""
+        from . import model_warmup
+
+        return model_warmup.warmup(
+            _lazy("chat", chat_factory), count=lambda: None, defer=background.add_task,
+            dedupe_seconds=float(settings_module.get_guardrails().get("web_guard.warmup.dedupe_seconds")))
+
     return router
 
 

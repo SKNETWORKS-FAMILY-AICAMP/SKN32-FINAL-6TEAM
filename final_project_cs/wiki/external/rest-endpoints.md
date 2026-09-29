@@ -1,8 +1,9 @@
 ---
 type: contract
 title: 엔드포인트별 요청·응답 계약
-description: Case 다섯 경로 + outbox 해소 + 여행 API 다섯 경로의 필드·제약·상태 전이. rest-api.md 가 300줄을 넘어 떼어 냈다
+description: Case·outbox·여행·고객 웹·계획 접수·위임 API의 요청·응답과 제약을 관리한다
 status: draft
+owners: [human:최연우]
 tags: [api, contract]
 domain: travel
 domain_note: "[2026-09-14] 여행 API 가 생겼다(`/v1/trips/*` 다섯 + `/plan/{trip_id}`). ★[2026-09-22] **일정 생성** `POST /v1/trips/plan` 이 늘었다 — **v11 §4-A(「계획 생성은 우리 일이 아니다」)를 뒤집는 경로**이며 사용자 지시로 만들었다(리포트 `../records/reports/2026-09-22_2205_일정생성기_v11-4A를_뒤집는다.md`). [2026-09-22] 토큰 링크가 하나 늘었다 — `/booking-change/{booking_id}`(업체 예약 변경 링크, DoD-16·17). [2026-09-22] 위임을 주고 거두는 `/v1/delegations/*` 넷이 늘었다(DoD-18·19) — 전에는 모듈 함수뿐이라 운영자가 손으로 SQL 을 쳐야 했다. Case 경로의 예시 값(배송·환불)은 커머스 시절 그대로다 — 필드 계약은 도메인과 무관해 유효하다"
@@ -10,7 +11,7 @@ domain_note: "[2026-09-14] 여행 API 가 생겼다(`/v1/trips/*` 다섯 + `/pla
 
 # 엔드포인트별 요청·응답 계약
 
-`[실측]` [rest-api.md](rest-api.md) 에서 분리했다. **경로 다섯 개의 필드 단위 계약이다.**
+`[실측]` [REST 개요](rest-api.md)에서 연결하는 API 명세다. 웹 관련 절은 2026-09-29 `develop` `fc1ac0a`의 라우트·호출부와 대조했다. 다른 절의 날짜는 각 절의 확인 시점을 따른다. 화면의 요구·사용 관계·연결 상태는 [화면별 연동 문서](web-screen-api.md)에 적고, 갱신 책임은 [RULE.md §3.5.1](../../RULE.md#351-웹-api와-화면별-연동-문서-갱신)을 따른다. 이 개정은 실제 서버 검증이나 담당자 간 신규 계약 합의를 뜻하지 않는다.
 
 ## `POST /v1/cases` 요청·응답 필드
 
@@ -242,8 +243,10 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 시각 | 시간대 없이 오면 서울 시각(대상 도시가 서울 하나, v11 §1) |
 | 링크 토큰 | 틀리면 `404`(있는지도 말하지 않는다). 응답에 `customer_id` 를 싣지 않는다 |
 
-`[미구현]` 고객 **자유 문장** → Case → 분류 → 여기로 잇는 배선(지금 신고는 구조화된 몸통) ·
-계획서의 고객 언어 생성(결정 14, 지금은 한국어 원문).
+`[정정 2026-09-29]` 자유 문장 → Case 생성·전이 경로는 `trip_messages.handle_trip_message`에 구현돼 있고 `/v1/trips/{trip_id}/messages`와 웹 상담이 이를 부른다.
+`[미구현]` 고객 웹이 선택한 언어를 접수·생성에 전달하는 계약은 없다. [협의 항목](web-screen-api.md#협의가-필요한-항목)을 따른다.
+
+<a id="trip-survey"></a>
 
 ### `constraints.survey` — 여행 시작 설문 `[2026-09-24]`
 
@@ -253,9 +256,12 @@ Case 버전만으로 여행 일정을 관리하려면 Case 가 「어느 여행�
 | 칸 | 모양 | 판정에 |
 |---|---|---|
 | `version` | `"2026-09-24.v1"` (필수) | — |
-| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. `ask_first` 흐름은 다음 작업 |
+| `on_disruption` | `replace`(기본) · `ask_first` | ★**쓴다** — 15번. 보류 제안 조회·선택 API가 구현돼 있음(아래 보류 제안 절) |
 | `pace` | `relaxed` · `moderate` · `packed` | ★**쓴다** — 16번 → 밀도 목표 0.40 · 0.55 · 0.70 |
-| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | **받기만 한다** — 세부 값은 담당 팀이 정한다. 반영했다고 말하지 않는다 |
+| `theme` · `party` · `preferred_mobility[]` · `domestic` · `priority[]`(`food`·`activity`·`mobility`) · `priority_details{영역: [..]}` · `indoor_outdoor{dining·activity: indoor·outdoor·any}` · `theme_details[]` | 문자열·목록 | 필드별 소비 경로는 아래 설명을 따른다. 저장됐다는 이유로 모든 선호가 계획에 반영됐다고 표시하지 않는다 |
+
+- `[실측 2026-09-29]` 이동 계산기 연결에서 `priority_details.mobility`와 `preferred_mobility`를 수단 집합으로 바꾼다([wiring.py](../../app/modules/travel_ops/mobility/wiring.py)). 도보는 포함하며, 변환 가능한 값이 없으면 계산기 기본 수단을 쓴다. 선호 순위를 그대로 최적화한다는 뜻은 아니다.
+- `[실측 2026-09-29]` `domestic`이 주어지면 [이동 계획기](../../app/modules/travel_ops/mobility/engine/plan.py)의 동행 조건 `foreign`에 대응한다. 현재 웹은 `domestic`·`preferred_mobility`를 직접 보내지 않는다. 다른 설문 필드의 계획 반영 여부는 소비 코드가 확인되기 전까지 미확인으로 둔다.
 
 - 모르는 칸·틀린 값 → **`422 invalid_survey`** + `problems[]`(field·reason). 여행이 **안 생긴다.**
 - `pace` 가 있고 사용자가 `density` 를 **안 줬으면**: 여행 날짜마다 하루 활동 시간 **08:00~22:00**(팀 기본값, `travel.day_window`)으로
@@ -341,6 +347,8 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
   거절 상세는 `error.detail` 아래에 있다. ★거절되면 **아무것도 바뀌지 않는다**(한 트랜잭션).
 - 답이 없으면 그 일정이 끝날 때 `expired` — **원래 일정대로 간다.**
 
+<a id="web-api"></a>
+
 ## 웹(고객 브라우저) — `/v1/web/*` `[2026-09-24]`
 
 `[실측]` `app/modules/travel_ops/trip_api.py` · 키 `app/modules/travel_ops/web_session.py` · 저장 `web_user_keys`(마이그레이션 025).
@@ -353,19 +361,43 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | `GET /v1/web/trips` | 키 | 내 여행 목록 |
 | `POST /v1/web/trips` | 키 | 등록 — `/v1/trips` 와 같은 몸통에서 **`customer_id` 를 빼고** 보낸다(보내면 `422 customer_id_not_allowed`, 키가 정한다) |
 | `GET /v1/web/trips/{trip_id}` | 키 | 여행 조회 |
-| `GET /v1/web/trips/{trip_id}/proposals` · `POST …/{proposal_id}/choose` | 키 | 위 보류 제안과 같은 규칙 |
-| `POST /v1/web/trips/{trip_id}/messages` | 키 | 「에이전트에게 변경 요청」 — 자유 문장. `/v1/trips/{id}/messages` 와 같은 처리 (★`[2026-09-28]` 둘 다 **시나리오용 여행 버전**(`handle_trip_message`)이다 — `/v1/cases` 의 Case 버전과 답 코드가 두 벌이다. Case 버전으로 합칠 계획: `records/reports/2026-09-28_웹채팅이_시나리오용_여행버전을_탄다_리포트.md`) · ★`[2026-09-28]` **응답에 늘 `answer`(고객에게 보일 문장)가 있다** — 질문은 이 여행 일정의 사실 + 문턱(`travel.question.min_policy_score`)을 넘은 규정 조각(출처와 함께)으로 답하고 (`status: answered`, `reason: question_answered`, 근거 `basis{item, policy_hits, sources}`), 찾지 못하면 무엇을 못 찾았는지 말하고 사람 확인으로 남긴다(`escalated`, `question_needs_policy_answer`). 잡담·모호한 말(`other`)은 할 수 있는 요청과 이 여행의 사실로 답한다(`answered`, `not_a_trip_report`). ★**이 여행의 사실을 묻는 말**(하루 요약 · 일정 상세 · 다음 일정 · 예약 표시 · 주소 · 운영시간 · 이동 — 화면 빠른 질문 문장 포함)은 규정 검색 없이 **여행 기록으로** 답한다(`answered`, `reason: trip_fact_answered`, `report: {type: question, fact: day|detail|next|booking|address|hours|move}`, `basis: {kind, writer: "template", day, item, lookups}`) — 모델 추출 전에 규칙으로 가리고, 바꾸는 말(바꿔·늦어·되돌려·닫았어요 …)이 섞이면 받지 않는다. 주소·운영시간은 저장하지 않고 물을 때 관광공사 상세를 읽어 **원문 그대로** 싣는다(6시간 캐시, 못 읽으면 `lookups.failed` 와 「모르겠어요」). 예약은 `booking_id`·`detail.booking`·`detail.reserved` 가 있으면 「있음」, 없으면 「예약 기록 없음」(안 했다는 뜻이 아니다). 규정 질문의 검색 갈래에 `travel_cancellation`·`travel_mobility` 를 더했다(전에는 빠져 있었다). 못 알아들은 말·분류 실패도 그 이유와 할 수 있는 요청을 싣는다. 중복 요청은 앞 답을 다시 싣는다. **어느 경우에도 일정은 바꾸지 않는다**(변경은 늦음·휴무·되돌리기 등 신고만) |
+| `GET /v1/web/trips/{trip_id}/proposals` · `POST /v1/web/trips/{trip_id}/proposals/{proposal_id}/choose` | 키 | 위 보류 제안과 같은 규칙. 선택 요청 `{key}`에서 `null`은 현재 일정 유지 |
+| `POST /v1/web/trips/{trip_id}/messages` | 키 | 자유 문장 `{request_id, message, at?}`. [trip_messages.py](../../app/modules/travel_ops/trip_messages.py)의 `handle_trip_message`를 호출해 Case 생성·상태 전이를 기록한다. 응답에는 처리 상태·Case 식별자와 고객 답변 등이 실리며, 중복 요청은 기존 Case 결과를 돌려준다. 표시된 상태의 뜻은 응답을 확인하고 판단한다 |
 | `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice` |
+| `POST /v1/web/warmup` | 키 | 대화 모델 예열. 요청 몸통 없음. 응답·제약은 [예열 계약](#web-warmup) |
 
 - 키는 헤더 **`X-User-Key`** 로 보낸다. 형식 `acop_u_…`. 없거나 틀리거나 거둔 키는 모두 `401`(어느 쪽인지 말하지 않는다).
 - **남의 여행은 `404`** — 있는지도 말하지 않는다. 서버용 scope 키로는 웹 경로가 열리지 않는다(`401`).
 - 서버는 키 원문을 저장하지 않는다(SHA-256 만). 웹은 키를 브라우저 저장소에 두고, 사용자에게 **따로 보관하라고 한 번 보여 준다.**
   브라우저 저장소는 그 페이지의 모든 스크립트가 읽을 수 있으므로 **새는 것을 전제로** 두고, 새면 `rotate` 로 끊는다.
-- 브라우저 출처는 설정 `ACOP_WEB_ALLOWED_ORIGINS`(쉼표로 여럿, 기본 `http://127.0.0.1:3100,http://localhost:3100`)만 받는다.
+- 브라우저 출처는 설정 `ACOP_WEB_ALLOWED_ORIGINS`(쉼표로 여럿, 기본 `http://127.0.0.1:3100,http://localhost:3100`)만 받는다. 현재 CORS 허용 메서드는 `GET`·`POST`, 헤더는 `X-User-Key`·`Content-Type`이다([앱 조립](../../app/presentation/api/app.py)). 삭제 API를 추가하면 CORS도 함께 검토한다.
 - 키 없이 열린 `POST /v1/web/session` 은 **주소마다 한 시간에 20개**까지(`security.web_session_issue_per_hour`).
   넘으면 `429 too_many_sessions` + `Retry-After`. 이미 가진 키로 하는 일은 막지 않는다. ★프로세스 안에서 세고,
   역방향 프록시 뒤에서는 모두 같은 주소로 보여 함께 막힌다 — 그때는 원 주소로 세도록 바꿔야 한다.
-- 시험 `tests/e2e/test_web_api.py` 10건.
+- 시험 `tests/e2e/test_web_api.py` 10건(기존 문서에 기록된 수치, 이번 개정에서 재실행하지 않음).
+- `[실측 2026-09-29]` 키 발급은 `201 {customer_id, user_key, notice}`, 키 재발급은 `200`으로 같은 필드 구조를 반환한다. 목록은 `{trips: [{trip_id, title, version, created_at}]}`이며 여행 날짜·진행 상태·미확인 제안 수는 이 응답에 없다.
+- `[실측 2026-09-29]` 현재 화면의 등록은 접수/확인/생성 API를 사용한다. 직접 등록 `POST /v1/web/trips`가 존재하는 것과 화면이 사용하는 것을 구분한다.
+- `[실측 2026-09-29]` 이 기준의 키 발급·접수 라우트에는 Turnstile 토큰 검증이 연결돼 있지 않다. 프론트에 선택 토큰 전송 코드가 있다는 이유로 서버 검증 완료로 표시하지 않는다.
+- `[미구현]` 웹 여행 삭제·프로필 저장·이메일로 키 복구·접수/생성의 선택 언어 입력은 이 라우터에 없다. 필요한 계약은 [화면별 협의 항목](web-screen-api.md#협의가-필요한-항목)에서 확인하며 새 URL을 임의로 확정하지 않는다.
+
+<a id="web-warmup"></a>
+
+### 대화 모델 예열 — `POST /v1/web/warmup`
+
+`[실측]` 2026-09-29 `fc1ac0a`에 라우트가 추가됐다. 구현은 [trip_api.py](../../app/modules/travel_ops/trip_api.py)와 [model_warmup.py](../../app/modules/travel_ops/model_warmup.py). 앞선 커밋에서 경로가 없었던 상태와 구분한다.
+
+| 항목 | 계약·현재 구현 |
+|---|---|
+| 인증·입력 | `X-User-Key` 필수, 요청 몸통 없음. 키가 없거나 거절되면 공통 `401 unauthenticated` |
+| 응답 | `200` · `status: warm / warming / unavailable`, `model: string / null`, `last_attempt: object / null` |
+| 선택 필드 | 중복 억제 시 `deduped: true`, 모델 연결이 없으면 `reason`. 마지막 예열 시도에는 `ok`, `seconds`, `at`, 실패 시 `reason`이 실림. 적재 상태 조회 장애의 `status_error`만 있거나 추가될 수도 있음 |
+| 비동기 처리 | `warming`은 시작/대기 상태이며 모델 준비 성공을 뜻하지 않음. 마지막 완료 시도의 결과는 후속 응답에서 확인 |
+| 재호출 억제 | 이미 적재됐으면 `warm`. 프로세스 내 시작 시각으로 `web_guard.warmup.dedupe_seconds` 동안 재시작 억제. 다중 프로세스 공통 제한은 아님 |
+| 기준 커밋의 한계 | `count=lambda: None`으로 연결돼 예열 사용량 집계·남용 한도는 적용하지 않음. 사용자 키 인증과 예열 중복 억제는 있음 |
+| 프론트 사용 | [여행 화면](../../frontend/apps/web/src/features/trip/trip-home.tsx)이 [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts)를 통해 호출. 키가 없으면 호출하지 않음. 응답·예열 오류 안내는 현재 화면에 표시하지 않음 |
+
+
+<a id="intake-api"></a>
 
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
