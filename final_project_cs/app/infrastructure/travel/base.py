@@ -106,6 +106,8 @@ class TravelSource:
             return True
         except RateLimited as exc:
             self._miss("rate_limited", f"{exc.wait_seconds:.1f}s remaining")
+            # ★`[2026-09-28]` 얼마나 기다리면 되는지 남긴다 — 위에서 「잠시 뒤 다시」를 초 단위로 말할 수 있게
+            self.last_wait_seconds = exc.wait_seconds
             return False
 
     def _miss(self, reason: str, detail: str = "") -> None:
@@ -545,6 +547,10 @@ def build_travel_sources(settings: Any) -> TravelSources:
         from .tour_api import TourApiPlace
         sources.place = TourApiPlace(
             service_key=_public_data_key(settings, "tour_api_key"), limiter=limiter, cache=cache)
+        # ★`[2026-09-28]` 장소 정보(좌표·주소·운영시간 원문)는 자주 안 바뀐다 — 이 소스만 길게 재사용한다.
+        #   하루 한도(1000, 89초에 하나 보충)를 계획 읽기 · 일정 짜기 · 채팅 조회가 나눠 써서, 같은 장소를
+        #   되풀이해 묻는 시험 몇 번에 막혔다(`tour_api:rate_limited`, ui 세션 실서버 시험). 프로세스 메모리에만 둔다
+        sources.place.cache_ttl_seconds = float(guardrails.get("travel.tour_api_cache_seconds") or 0) or None
 
     if not getattr(settings, "odsay_api_key", ""):
         sources.unavailable["transit"] = (

@@ -37,7 +37,7 @@ from uuid import UUID
 
 from .itinerary import Item, StaleItinerary, TripStore
 from .itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
-                                plan_delay, plan_nearby_store, plan_rollback, plan_swap)
+                                plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from .pending import PendingStore, decide, options_from, proposal_notice
 
 
@@ -107,6 +107,16 @@ class TripDesk:
                          check=self._check)
         return self._outcome(trip_id, base_version, items, plan)
 
+    def fresh_alternate(self, *, trip_id: UUID, item_id: UUID, base_version: int,
+                        message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-09-29]` 들고 있던 「다른 안」이 없으면 **지금 찾아서** 바꾼다(`plan_fresh_alternate`).
+        고객이 직접 달라고 한 것이라 판정 문(`gate`)을 지나지 않는다 — `swap_alternate` 와 같다."""
+        trip, items, places = self._read(trip_id)
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
+                                    places=places, item_id=item_id, message=message, request_id=request_id,
+                                    ledger=self._ledger())
+        return self._outcome(trip_id, base_version, items, plan)
+
     # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────
     def rollback(self, *, trip_id: UUID, base_version: int, to_version: int,
                  message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
@@ -115,7 +125,12 @@ class TripDesk:
             trip, items = self.store.latest(conn, trip_id)
             old = (self.store.items(conn, trip_id, to_version)
                    if trip["version"] == base_version and 1 <= to_version < trip["version"] else [])
-        plan = plan_rollback(trip_version=trip["version"], base_version=base_version,
+            history = self.store.versions(conn, trip_id)
+        # ★`[2026-09-29]` 방금 한 것이 되돌림이고 그보다 뒤 판으로 가면 「다시 적용」이다(「이전에 변경요청 한거 다시 진행해줘」)
+        last = history[-1] if history else {}
+        undone_to = next((c.get("to_version") for c in (last.get("causes") or []) if c.get("to_version")), None)
+        redo = last.get("reason") == "rollback" and undone_to is not None and to_version > int(undone_to)
+        plan = plan_rollback(trip_version=trip["version"], base_version=base_version, redo=redo,
                              current_items=items, old_items=old, to_version=to_version,
                              message=message, request_id=request_id)
         if isinstance(plan, NoChange):

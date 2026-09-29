@@ -354,7 +354,8 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | `POST /v1/web/trips` | 키 | 등록 — `/v1/trips` 와 같은 몸통에서 **`customer_id` 를 빼고** 보낸다(보내면 `422 customer_id_not_allowed`, 키가 정한다) |
 | `GET /v1/web/trips/{trip_id}` | 키 | 여행 조회 |
 | `GET /v1/web/trips/{trip_id}/proposals` · `POST …/{proposal_id}/choose` | 키 | 위 보류 제안과 같은 규칙 |
-| `POST /v1/web/trips/{trip_id}/messages` | 키 | 「에이전트에게 변경 요청」 — 자유 문장. `/v1/trips/{id}/messages` 와 같은 처리 (★`[2026-09-28]` 둘 다 **시나리오용 여행 버전**(`handle_trip_message`)이다 — `/v1/cases` 의 Case 버전과 답 코드가 두 벌이다. Case 버전으로 합칠 계획: `records/reports/2026-09-28_웹채팅이_시나리오용_여행버전을_탄다_리포트.md`) · ★`[2026-09-28]` **응답에 늘 `answer`(고객에게 보일 문장)가 있다** — 질문은 이 여행 일정의 사실 + 문턱(`travel.question.min_policy_score`)을 넘은 규정 조각(출처와 함께)으로 답하고 (`status: answered`, `reason: question_answered`, 근거 `basis{item, policy_hits, sources}`), 찾지 못하면 무엇을 못 찾았는지 말하고 사람 확인으로 남긴다(`escalated`, `question_needs_policy_answer`). 잡담·모호한 말(`other`)은 할 수 있는 요청과 이 여행의 사실로 답한다(`answered`, `not_a_trip_report`). ★**이 여행의 사실을 묻는 말**(하루 요약 · 일정 상세 · 다음 일정 · 예약 표시 · 주소 · 운영시간 · 이동 — 화면 빠른 질문 문장 포함)은 규정 검색 없이 **여행 기록으로** 답한다(`answered`, `reason: trip_fact_answered`, `report: {type: question, fact: day|detail|next|booking|address|hours|move}`, `basis: {kind, writer: "template", day, item, lookups}`) — 모델 추출 전에 규칙으로 가리고, 바꾸는 말(바꿔·늦어·되돌려·닫았어요 …)이 섞이면 받지 않는다. 주소·운영시간은 저장하지 않고 물을 때 관광공사 상세를 읽어 **원문 그대로** 싣는다(6시간 캐시, 못 읽으면 `lookups.failed` 와 「모르겠어요」). 예약은 `booking_id`·`detail.booking`·`detail.reserved` 가 있으면 「있음」, 없으면 「예약 기록 없음」(안 했다는 뜻이 아니다). 규정 질문의 검색 갈래에 `travel_cancellation`·`travel_mobility` 를 더했다(전에는 빠져 있었다). 못 알아들은 말·분류 실패도 그 이유와 할 수 있는 요청을 싣는다. 중복 요청은 앞 답을 다시 싣는다. **어느 경우에도 일정은 바꾸지 않는다**(변경은 늦음·휴무·되돌리기 등 신고만) |
+| `POST /v1/web/trips/{trip_id}/messages` | 키 | 「에이전트에게 변경 요청」 — 자유 문장. `/v1/trips/{id}/messages` 와 같은 처리 (★`[2026-09-28]` 둘 다 **시나리오용 여행 버전**(`handle_trip_message`)이다 — `/v1/cases` 의 Case 버전과 답 코드가 두 벌이다. Case 버전으로 합칠 계획: `records/reports/2026-09-28_웹채팅이_시나리오용_여행버전을_탄다_리포트.md`) · ★`[2026-09-28]` **응답에 늘 `answer`(고객에게 보일 문장)가 있다** — 질문은 이 여행 일정의 사실 + 문턱(`travel.question.min_policy_score`)을 넘은 규정 조각(출처와 함께)으로 답하고 (`status: answered`, `reason: question_answered`, 근거 `basis{item, policy_hits, sources}`), ★`[2026-09-28 사용자 결정]` 규정 조각 **원문은 싣지 않고** 그 절에 써 둔 **고객용 문장**(`customer_answers`)만 싣는다. 찾지 못하면 무엇을 못 찾았는지 말하고 이 여행의 사실과 할 수 있는 요청으로 답한다(`answered`, `basis.unmatched: true`) — **사람 대기로 남기지 않는다**(사람 대기 `escalated` 는 규정 검색이 없거나 오류일 때만, `question_needs_policy_answer`). 잡담·모호한 말(`other`)은 할 수 있는 요청과 이 여행의 사실로 답한다(`answered`, `not_a_trip_report`). ★**이 여행의 사실을 묻는 말**(하루 요약 · 일정 상세 · 다음 일정 · 예약 표시 · 주소 · 운영시간 · 이동 — 화면 빠른 질문 문장 포함)은 규정 검색 없이 **여행 기록으로** 답한다(`answered`, `reason: trip_fact_answered`, `report: {type: question, fact: day|detail|next|booking|address|hours|move}`, `basis: {kind, writer: "template", day, item, lookups}`) — 모델 추출 전에 규칙으로 가리고, 바꾸는 말(바꿔·늦어·되돌려·닫았어요 …)이 섞이면 받지 않는다. ★`[2026-09-29]` **분류(모델)가 실패해도 이 답은 나간다** — `status: answered` · `reason: trip_fact_answered` · `classification_failed: true` · `case_status: escalated`(분류 실패는 그대로 기록, 모델 장애를 운영이 본다). ★웹 입구는 **분류를 기다리지 않는다** — 사실 질문이면 곧바로 답하고 `classification_pending: true`, 분류·담당·완료 기록은 응답 뒤에서 한다(식은 모델에서 34초 → 규칙 답만). 답은 Case 기록에 처음부터 실려 같은 요청을 다시 보내면 그 답이 나간다. 에이전트 입구(`/v1/trips/{id}/messages`)는 지금처럼 분류까지 기다린다. 전에는 잠든 원격 모델의 느린 첫 호출로 분류가 실패하면 「하루 요약」까지 「분류하지 못했어요」로 끝났다. 주소·운영시간은 저장하지 않고 물을 때 관광공사 상세를 읽어 **원문 그대로** 싣는다(6시간 캐시, 못 읽으면 `lookups.failed` 와 「모르겠어요」). 예약은 `booking_id`·`detail.booking`·`detail.reserved` 가 있으면 「있음」, 없으면 「예약 기록 없음」(안 했다는 뜻이 아니다). 규정 질문의 검색 갈래에 `travel_cancellation`·`travel_mobility` 를 더했다(전에는 빠져 있었다). 못 알아들은 말·분류 실패도 그 이유와 할 수 있는 요청을 싣는다. 중복 요청은 앞 답을 다시 싣는다. **어느 경우에도 일정은 바꾸지 않는다**(변경은 늦음·휴무·되돌리기 등 신고만) |
+| `POST /v1/web/warmup` | 키 | ★`[2026-09-29]` **모델 예열** — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다). 몸통 없음. 응답 `{status: "warm" \| "warming" \| "unavailable", model, last_attempt: null \| {ok, seconds, at, reason?}, deduped?}` — 이미 올라가 있으면 `warm`(아무것도 안 함), 1분(`web_guard.warmup.dedupe_seconds`) 안 되풀이는 `warming` + `deduped: true`(다시 안 부름), 그 밖엔 응답 뒤 한 토큰 생성으로 깨우고 `warming`. **`last_attempt.ok=false` 면 모델 서버가 못 올린 것**(`reason` 에 서버가 준 이유 — 예: GPU 메모리 부족). 실제로 부를 때만 남용 방어 `warmup` 으로 센다(한도가 켜져 있으면 429/503) |
 | `GET /v1/web/trips/{trip_id}/notices` | 키 | 나간 알림 전부. `type` = `guidance`(하루 시작·다음 일정·이동) · `proposal_request` · `safety_alert` · `change_notice` |
 
 - 키는 헤더 **`X-User-Key`** 로 보낸다. 형식 `acop_u_…`. 없거나 틀리거나 거둔 키는 모두 `401`(어느 쪽인지 말하지 않는다).
@@ -362,9 +363,64 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 서버는 키 원문을 저장하지 않는다(SHA-256 만). 웹은 키를 브라우저 저장소에 두고, 사용자에게 **따로 보관하라고 한 번 보여 준다.**
   브라우저 저장소는 그 페이지의 모든 스크립트가 읽을 수 있으므로 **새는 것을 전제로** 두고, 새면 `rotate` 로 끊는다.
 - 브라우저 출처는 설정 `ACOP_WEB_ALLOWED_ORIGINS`(쉼표로 여럿, 기본 `http://127.0.0.1:3100,http://localhost:3100`)만 받는다.
-- 키 없이 열린 `POST /v1/web/session` 은 **주소마다 한 시간에 20개**까지(`security.web_session_issue_per_hour`).
-  넘으면 `429 too_many_sessions` + `Retry-After`. 이미 가진 키로 하는 일은 막지 않는다. ★프로세스 안에서 세고,
-  역방향 프록시 뒤에서는 모두 같은 주소로 보여 함께 막힌다 — 그때는 원 주소로 세도록 바꿔야 한다.
+- 키 없이 열린 `POST /v1/web/session` 은 **주소마다 한 시간에 20개**까지(`security.web_session_issue_per_hour`,
+  운영 API 로 바꿀 수 있다 — 아래). 넘으면 `429 too_many_sessions` + `Retry-After`(다음 정시까지 초). 이미 가진 키로 하는 일은 막지 않는다.
+  ★`[2026-09-28]` **DB 에서 센다**(`web_usage`, 마이그레이션 031) — 재시작·여러 프로세스에도 이어진다. 주소는 원문이 아니라
+  `HMAC(서버 비밀키, 날짜|주소)` 로만 남고 48시간 뒤 지운다. 역방향 프록시 뒤라면 설정 `ACOP_TRUSTED_PROXIES`(쉼표)에 적힌
+  주소에서 온 요청만 `X-Forwarded-For` 의 원 주소를 믿는다(비어 있으면 연결 주소).
+
+### 남용 방어 — 횟수 제한 · 사람 확인 · 빈 키 정리 `[2026-09-28]`
+
+`[실측]` `app/modules/travel_ops/web_guard.py` · `web_limits_api.py` · `app/infrastructure/turnstile.py` · 저장 `web_usage` ·
+`runtime_limits` · `runtime_limit_events`(마이그레이션 031). 계획 `records/plans/2026-09-28_2130_웹_남용방어_실행계획.md`.
+
+**비싼 작업 횟수 제한.** 대상 — `POST /v1/web/trip-intakes`(`intake`) · `…/{id}/plan`(`plan`) · `…/{id}/confirm`(`confirm`) ·
+`POST /v1/web/trips`(`trip_create`) · `POST /v1/web/trips/{id}/messages`(`message`). 키(사용자)당 · 주소당 · 서비스 전체의 **하루**(KST) 횟수.
+- ★**기본 꺼짐**(`web_guard.limits_enabled: false` — 개발 단계, 사용자 결정 2026-09-28). 꺼져 있어도 **세기는 한다**(운영 API 의 오늘 사용량).
+- 켜지면 입력 검사를 통과한 뒤 · 일을 시작하기 전에 한 칸을 확보한다. 일이 실패해도 한 번으로 센다.
+- 키·주소 한도 → `429 usage_limit` + `Retry-After`(다음 KST 자정까지 초), 본문 `{limit: per_key|per_ip, action, used, cap, retry_after_seconds}`.
+- 서비스 전체 한도 → `503 service_daily_cap` + `Retry-After`. 사용자 잘못이 아니라 가른다.
+- 제안 기본값과 산정 근거는 `config/guardrails.yaml` `web_guard.limits` 주석(전부 `[추정]`).
+
+**사람 확인(Cloudflare Turnstile).** `POST /v1/web/session`(헤더 `X-Turnstile-Token` 또는 JSON `{"turnstile_token"}`) ·
+`POST /v1/web/trip-intakes`(폼 칸 `turnstile_token`). 서버가 `siteverify` 에 비밀키·토큰·원 주소를 보내 확인한다.
+- 설정 `ACOP_TURNSTILE_SECRET` 이 있으면 **늘 확인한다.** 토큰이 없거나 실패 → `403 human_check_failed`(`reasons` = Cloudflare `error-codes`).
+  Cloudflare 에 닿지 못하면 → `503 human_check_unavailable`(통과시키지 않는다). `ACOP_TURNSTILE_HOSTNAMES`(쉼표)를 두면 `hostname` 도 본다.
+- 비밀키가 없으면: `ACOP_TURNSTILE_REQUIRED=true` 또는 `ACOP_ENV=prod` 면 **서버가 뜨지 않는다**. 아니면(개발) 확인을 건너뛰고
+  응답에 `human_check: "skipped"` 를 싣는다. 확인했으면 `human_check: "passed"`.
+- 개발 시험 키(Cloudflare 공개, `[확인 2026-09-28]` developers.cloudflare.com/turnstile/troubleshooting/testing): 비밀키
+  `1x0000000000000000000000000000000AA` 항상 통과 · `2x0000000000000000000000000000000AA` 항상 실패 ·
+  `3x0000000000000000000000000000000AA` 「이미 쓴 토큰」. 시험 사이트키는 토큰 `XXXX.DUMMY.TOKEN.XXXX` 를 낸다.
+  토큰은 5분 유효 · 한 번만 확인된다 · 최대 2,048자.
+
+**빈 키 정리 — ★기본 꺼짐.** `[사용자 결정 2026-09-29]` 키는 그 사용자를 알아보는 유일한 수단이라 지우지 않는다 — 켤지·다른 방식으로 할지는 다시 정한다(`web.idle_key_cleanup_enabled`, 켜기 전까지 아무 키도 안 지운다). 켜면: 발급 뒤 `web_guard.idle_key_days`(기본 7일)가 지나도록 **여행이 0건**이고 진행 중인 계획 읽기도 없는 사용자 키를
+되잡기 작업(`python -m scripts.run_sweepers --only web_guard`)이 지운다 — 그 사용자를 가리키는 다른 행이 없으면 사용자 행도 지운다.
+지운 수 · 남긴 수를 센다. 같은 단계가 48시간 지난 주소 줄과 35일 지난 사용량 줄도 지운다.
+
+**운영 API — 제한값 보기·바꾸기.** ★`[2026-09-29]` **운영 앱**(127.0.0.1:8070, [D-CS-008](../decisions/D-CS-008-ops-console-separate-app.md))에 있다 — 고객 API 앱(8042)에는 없다(404). 바꾼 값은 DB 라 고객 앱이 30초 안에 읽는다. scope `limits:read`(보기) · `limits:write`(바꾸기). ★scope 키를 브라우저에 두지 않는다 —
+운영자 로그인을 확인한 **콘솔 서버**가 부르고 `actor`(운영자 id)를 싣는다. API 는 그 값을 믿는다(한계 — 감사 줄에 키 id 도 남긴다).
+
+```
+GET   /admin/limits                      scope limits:read
+  200 {"revision": 3, "applies_within_seconds": 30,
+       "limits": [{"name": "web.intake.per_key_day", "label": "…", "unit": "회", "type": "int",
+                   "value": 4, "default": 4, "min": 1, "max": 100000,
+                   "source": "default"|"override", "updated_at": null|"…", "updated_by": null|"…"}, …],
+       "usage_today": {"day": "2026-09-28", "all": {"intake": 3, "plan": 1, …}}}   // 키·주소별은 싣지 않는다
+
+PATCH /admin/limits                      scope limits:write
+  요청 {"expected_revision": 3, "actor": "운영자 id", "reason": "…(필수)",
+        "changes": {"web.limits_enabled": true, "web.plan.per_key_day": null}}      // null = 기본값으로
+  200 GET 과 같은 모양(revision + 1)
+  409 stale_revision {current_revision} · 422 unknown_limit | out_of_range | wrong_type | reason_required | actor_required
+  401/403 scope
+
+GET   /admin/limits/events?limit=50      scope limits:read
+  200 {"events": [{"at", "revision", "actor", "key_id", "name", "old", "new", "reason"}, …]}   // 새것부터
+```
+- 이름: `web.limits_enabled` · `web.<intake|plan|confirm|trip_create|message|warmup>.<per_key_day|per_ip_day|service_day>` ·
+  `web.session.per_ip_hour` · `web.idle_key_days` · `web.idle_key_cleanup_enabled`. 기본값·범위는 가드레일, 바꾼 값은 `runtime_limits`.
+- 바꾼 값은 각 프로세스가 최대 30초 캐시해 늦게 반영된다(`applies_within_seconds`). 감사 줄(`runtime_limit_events`)은 고치지도 지우지도 못한다(트리거).
 - 시험 `tests/e2e/test_web_api.py` 10건.
 
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
@@ -403,6 +459,28 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
   `check.plan` = `{requested, start_date, days, party_size, preferences}` — **읽은 값에서만** 채우고 모르면 null(화면이 묻는다).
 - 시험 `tests/e2e/test_trip_intake_api.py` 15건 · `tests/unit/travel/test_intake_rules.py` 22건 · `test_intake_resolve.py` 22건 · `tests/e2e/test_trip_planner.py` 의 계획 읽기 1건(2026-09-28 실행).
 
+**여행 조회 항목의 장소 정보** `[2026-09-29 사용자 지적]` — `items[].place_info`(이동 항목은 null):
+`{address, phone, category, hours: [{day: "월", weekday: 1, open: "HH:MM", close: "HH:MM", last_order: "HH:MM"|null}] | null,
+hours_source: [원장 출처 코드] | null, tags: ["card_payment","michelin","parking","takeout","vegetarian_menu","kids_allowed","halal",…],
+michelin: {level, year} | null, source: "dining_ledger" | "tour_api" | "places" | …, source_note: "ⓒ한국관광공사" · "미쉐린 가이드 서울" | null,
+hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표로 펴지 않은 조건 원문] | null}`(뒤 두 칸은 원장 밖 장소만).
+★`[2026-09-29]` **원장 밖 장소(활동 등)** — 주소는 관광공사 목록(`place_catalog`, 식별자 → 같은 이름·500m), 운영시간은 관광공사 원문을 요일별로 옮긴 값
+(`hours[]` 에 `closed: true|false` · `last_entry`(입장 마감) — 활동은 `last_order` 가 늘 null), 전화는 관광공사 문의처. 1분 작업(`run_sweepers` 의 `place_facts`)이
+진행 중인 여행에 새로 들어온 장소를 한 번 읽어 적는다 — 등록 직후 1~2분은 주소만 보일 수 있다.
+★**요식 원장이 먼저**(장소 속성 `dining_place_uid` 또는 원장의 코어 연결), 없으면 코어 장소 속성(주소 정도). 모르는 값은 null — 「없다」로 읽지 않는다.
+`tags` 는 원장 속성 코드 그대로다(값이 「yes」인 것). 코드 `app/modules/travel_ops/place_info.py`. 채팅의 주소·운영시간 답도 원장을 먼저 읽는다
+(원장에 없는 값만 관광공사) — 답에 「요식 원장」·「관광공사 안내 원문」으로 어디서 온 값인지 적는다.
+
+**지도 조합** `[2026-09-29 사용자 결정]` — 고객 **자기 지도 앱으로 여는 링크**(구글 지도 링크, **API 키 없음** — 공식 문서). 장소 항목 `items[].map_url` = 그 장소(주소를 알면 「이름 주소」, 모르면 좌표) · 이동 항목 `items[].map_url` = 앞 장소 → 다음 장소 **대중교통 길찾기**. `map.days[] = {date, stops[{number, item_id, name, lat, lon, map_url}], legs[{from_item_id, to_item_id, from, to, url}]}` — `stops[].number` 는 화면의 무료 지도가 찍는 번호. ☆처음엔 하루 경로 링크(들를 곳 여러 개)와 구글 퍼가기 경로 지도도 실었으나 **한국에서는 구글이 자동차·도보 길찾기를 주지 않고 대중교통은 들를 곳을 받지 않아** 둘 다 경로를 못 그렸다(ui 세션 실측) — 뺐다. 코드 `trip_api.map_view`.
+
+**구글 지도 불러오기 허락** `[2026-09-29 사용자 지시]` — `POST /v1/web/map-load`(사용자 키). 화면이 구글 지도를 부르기 **전에** 한 번 묻는다. 답 `{provider: "google", allowed, meter: "google_maps_dynamic_maps", used: {day, month}, cap: {day, month}, fallback: null | "free_map"}`. `allowed: false` 면 구글을 부르지 않고 무료 지도로 보인다. 한도는 다른 구글 요금 단위와 같은 규칙(하루 = 무료 월 10,000 ÷ 32 = 312, 월 = 9,688)이고 DB(`external_call_budget`)에서 모든 프로세스가 같이 센다. ☆전에는 브라우저가 구글을 직접 불러 한도 장치 밖이었다. 코드 `trip_api.web_map_load`.
+
+**채팅 「다른 데로 바꿔 줘」** `[2026-09-29 사용자 지적]` — 몸통에 선택 칸 **`item_id`**(화면에서 고른 일정). 어느 항목인가:
+★**문장이 분명히 말하면 문장이 먼저**(`[2026-09-29 ui 세션 지적]`) — 문장의 번호(「2번」 = 식사·활동을 시각 순으로 센 차례) → 이름 → 끼니(「점심」 — 그 시간대 식사) → `item_id` → 들고 있던 「다른 안」이 있는 항목 → 다음 일정. 예: 경복궁을 눌러 둔 채 「점심 식당 바꿔 줘」면 점심이 바뀐다.
+그 항목에 들고 있던 안이 있으면 그것으로(`swap_alternate`), **없으면 그 자리에서 찾는다**(`plan_fresh_alternate` — 식사는 요식 원장 후보 먼저 ·
+같은 시각 · 동선 · 동행 조건, 활동은 그 시각 영업하는 근처). 바꾸면 `adjusted`, 나머지 후보는 「다른 안」(`other_options`)으로 남는다.
+`no_alternate` 는 후보를 **실제로 다 뒤져도** 없을 때만(`reason` · `rejected`).
+
 **여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
 `detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
 대화 경로와 **같은 문장표**(`itinerary_team.ANSWERS`)의 `answer` 가 실린다 — 웹이 문장을 지어내지 않게.
@@ -433,7 +511,7 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 | 한계 값 | 만들지 않고 **읽어서 이름표만 붙인다**(`limits[].label`·`value`). 정본은 `config/guardrails.yaml` `travel.delegation`(RULE.md §3.1). 화면이 여행 어휘를 모르고도 그릴 수 있게 하려는 것이다 |
 | ★이력 | 주기·거두기가 `delegation_events`(마이그레이션 [021](../../app/infrastructure/db/migrations/021_delegation_audit_trail.sql))에 **덧붙는다**. `delegations` 한 행은 다시 주기가 덮으므로 그것만으로는 「누가 거뒀나」가 사라진다 |
 
-운영 화면은 `/ui/delegations` 다 — 이 경로를 **같은 프로세스 안에서** 불러 서버에서 그린다.
+운영 화면은 `/ui/delegations` 다 — ★`[2026-09-29]` **운영 앱**(별도 프로세스, [D-CS-008](../decisions/D-CS-008-ops-console-separate-app.md))이 이 경로를 **실제 HTTP** 로 불러(`ACOP_OPS_API_BASE_URL` · 키 `ACOP_OPS_API_KEYS`) 서버에서 그린다. 전에는 같은 프로세스 안에서 불렀다.
 
 시험: [`tests/integration/api/test_delegation_api.py`](../../tests/integration/api/test_delegation_api.py)(12) ·
 [`tests/integration/api/test_ui_delegation_screen.py`](../../tests/integration/api/test_ui_delegation_screen.py)(8).

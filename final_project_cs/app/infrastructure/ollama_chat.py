@@ -24,10 +24,13 @@ class OllamaError(RuntimeError):
 
 class OllamaChat:
     def __init__(self, *, base_url: str, model: str, timeout: float = 60.0,
-                 transport: Callable[..., httpx.Response] | None = None) -> None:
+                 transport: Callable[..., httpx.Response] | None = None, keep_alive: str = "") -> None:
         if not base_url:
             raise OllamaError("Ollama 주소가 비어 있다")
         self.base_url, self.model, self.timeout = base_url.rstrip("/"), model, timeout
+        #: ★`[2026-09-29]` 모델을 메모리에 붙잡아 둘 시간(Ollama `keep_alive`, 예 "30m"). 비우면 Ollama 기본(5분) —
+        #:  5분 안 쓰이면 내려가서 다음 첫 호출이 30초 가까이 걸렸다(ui 세션 실측 29.8초). 원격 GPU 메모리를 그만큼 잡는다
+        self.keep_alive = keep_alive
         self._injected = transport is not None      # 시험이 넣은 가짜 — 받아쓰기도 이것을 쓴다
         self._post = transport or (lambda url, payload: httpx.post(url, json=payload,
                                                                   timeout=self.timeout))
@@ -40,6 +43,8 @@ class OllamaChat:
                          {"role": "user", "content": user}]}
         if json_mode:
             payload["format"] = "json"
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
         try:
             response = self._post(f"{self.base_url}/api/chat", payload)
         except httpx.HTTPError as exc:
@@ -67,6 +72,30 @@ class OllamaChat:
     def text(self, system: str, user: str) -> str:
         return self._chat(system, user, json_mode=False)
 
+    # ── 예열 `[2026-09-29]` — 식은 모델의 첫 호출이 30초 넘게 걸렸다(ui 세션 실측). 화면이 채팅을 열 때 미리 깨운다 ──
+    def loaded(self, *, timeout: float = 5.0) -> bool:
+        """이 모델이 지금 메모리에 올라가 있나(`/api/ps`). 못 물으면 `OllamaError`."""
+        try:
+            response = httpx.get(f"{self.base_url}/api/ps", timeout=timeout)
+            models = response.json().get("models") or []
+        except (httpx.HTTPError, ValueError) as exc:
+            raise OllamaError(f"Ollama 상태 조회 실패: {type(exc).__name__}: {exc}") from exc
+        return any(m.get("name") == self.model or m.get("model") == self.model for m in models)
+
+    def warm(self) -> None:
+        """아주 짧은 생성 한 번(한 토큰)으로 모델을 올린다. 실패하면 `OllamaError`(모델 서버가 준 이유 그대로)."""
+        payload: dict[str, Any] = {"model": self.model, "stream": False, "think": False,
+                                   "options": {"temperature": 0, "num_predict": 1},
+                                   "messages": [{"role": "user", "content": "."}]}
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
+        try:
+            response = self._post(f"{self.base_url}/api/chat", payload)
+        except httpx.HTTPError as exc:
+            raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
+        if response.status_code != 200:
+            raise OllamaError(f"Ollama HTTP {response.status_code}: {response.text[:200]}")
+
     def see(self, prompt: str, image: bytes, *, timeout: float = 240.0) -> str:
         """이미지 한 장을 보고 글로 답한다(비전). `[2026-09-27]` 계획 읽기의 **받아쓰기** 전용.
 
@@ -80,6 +109,8 @@ class OllamaChat:
             "model": self.model, "stream": False, "think": False, "options": {"temperature": 0},
             "messages": [{"role": "user", "content": prompt,
                           "images": [base64.b64encode(image).decode("ascii")]}]}
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
         try:
             if self._injected:
                 response = self._post(f"{self.base_url}/api/chat", payload)
@@ -104,7 +135,8 @@ def from_settings(settings: Any) -> OllamaChat | None:
     if not base:
         return None
     return OllamaChat(base_url=base, model=getattr(settings, "ollama_model", "gemma4:12b"),
-                      timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)))
+                      timeout=float(getattr(settings, "ollama_timeout_seconds", 60.0)),
+                      keep_alive=str(getattr(settings, "ollama_keep_alive", "") or ""))
 
 
 __all__ = ["OllamaChat", "OllamaError", "from_settings"]

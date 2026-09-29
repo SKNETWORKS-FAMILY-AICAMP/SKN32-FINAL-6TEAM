@@ -14,7 +14,7 @@ from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops.scenario_mode import SCENES, build_scenario_router
 from app.presentation import security
 from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
-from app.presentation.api.app import create_app
+from app.ops_entrypoint import create_ops_app
 
 
 def _classifier(message):
@@ -40,10 +40,9 @@ def _client(monkeypatch, enabled=True):
     settings = original.model_copy(update={"scenario_mode_enabled": enabled})
     monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
     monkeypatch.setattr(security, "get_settings", lambda: settings)
-    return TestClient(create_app(
-        classifier=lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
-        domain_routers=[build_scenario_router(classifier_factory=lambda: _classifier,
-                                              chat_factory=_Chat)]))
+    # ★`[2026-09-29]` 시나리오 모드(입구 · 시연 화면 · 스위치 화면)는 **운영 앱**에 함께 있다 — 한 판을 프로세스 메모리에 든다
+    return TestClient(create_ops_app(routers=[build_scenario_router(classifier_factory=lambda: _classifier,
+                                                                    chat_factory=_Chat)]))
 
 
 @pytest.fixture()
@@ -160,10 +159,8 @@ def case_client(monkeypatch):
     settings = original.model_copy(update={"scenario_mode_enabled": True})
     monkeypatch.setattr(settings_module, "get_settings", lambda: settings)
     monkeypatch.setattr(security, "get_settings", lambda: settings)
-    client = TestClient(create_app(
-        classifier=lambda m: {"intent": "other", "issue_code": "other", "sentiment": "neutral"},
-        domain_routers=[build_scenario_router(classifier_factory=lambda: _case_classifier,
-                                              chat_factory=_Chat)]))
+    client = TestClient(create_ops_app(routers=[build_scenario_router(classifier_factory=lambda: _case_classifier,
+                                                                      chat_factory=_Chat)]))
     yield client
     client.post("/scenario/stop")
 

@@ -132,6 +132,15 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 뿐이고 값은 매번 조회한다. 확인 화면에서 장소 이름을 고치면 쌓이고(`intake.pipeline.remember_alias`), 기본값은 코드의
 `SEED_ALIASES`(남산타워 → N서울타워 등)다 — 고객이 고친 것이 이긴다.
 
+### 웹 남용 방어 `web_usage` · `runtime_limits` · `runtime_limit_events` `[2026-09-28 · 031]`
+
+`[실측]` `031_web_guard.sql` — 웹의 비싼 작업(계획 읽기 · 일정 짜기 · 확인 · 여행 만들기 · 채팅)과 키 발급을 **DB 에서 모든 프로세스가 같이** 센다
+(`web_usage`, 027 `external_call_budget` 과 같은 방식). 주소는 원문이 아니라 `HMAC(서버 비밀키, 날짜|주소)` 만 남고 48시간 뒤 지운다.
+운영자가 바꾼 제한값은 `runtime_limits`, 판 번호는 `runtime_limit_state`, 바꾼 기록은 `runtime_limit_events`(**트리거로 고치기·지우기 금지**).
+기본값·범위는 가드레일 `web_guard` 가 정본이다. 코드 `app/modules/travel_ops/web_guard.py` · `web_limits_api.py`.
+★적용: 전체 실행기(`app/infrastructure/db/migrate.py`)가 아니라 이 파일만 적용했다(2026-09-28) — 폴더에 다른 세션의 작업 중
+마이그레이션(200번대 요식)이 함께 있어 전체를 돌리면 그것까지 적용된다.
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.

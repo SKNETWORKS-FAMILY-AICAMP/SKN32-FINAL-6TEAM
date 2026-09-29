@@ -336,6 +336,18 @@ def test_tour_api_takes_a_title_with_a_bracketed_alias_as_the_same_name():
     assert _bare("경복궁 별빛야행") != _bare("경복궁")
 
 
+def test_tour_api_takes_a_conjoined_title_as_the_first_name_only():
+    """★`[2026-09-28]` 관광공사의 창덕궁은 「창덕궁과 후원 [유네스코 세계유산]」 — 「창덕궁」이 정확일치 0 이라 등록이
+    「창덕궁 종합관람지원센터」로 갔다(ui 세션 실서버 시험). 과·와·및 병칭만 받고 다른 꼴은 여전히 다른 곳이다."""
+    from app.infrastructure.travel.tour_api import _bare, _joined
+
+    assert _joined("창덕궁과 후원 [유네스코 세계유산]", _bare("창덕궁"))
+    assert not _joined("창덕궁 낙선재", _bare("창덕궁"))
+    assert not _joined("창덕궁 달빛기행", _bare("창덕궁"))
+    assert not _joined("창덕궁과", _bare("창덕궁"))
+    assert not _joined("후원과 창덕궁", _bare("창덕궁"))
+
+
 # ── 받아쓰기 일시 오류는 한 번만 다시 부른다 (2026-09-28 평가셋) ─────────────────
 def test_a_transient_vision_error_is_retried_once_and_only_once():
     import pytest

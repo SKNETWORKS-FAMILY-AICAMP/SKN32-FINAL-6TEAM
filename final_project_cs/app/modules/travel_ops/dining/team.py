@@ -17,7 +17,7 @@ from app.core.contracts import (NextAction, TeamManifest, TeamResult, TeamTask,
 from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
 
 from .._base import TravelTeamBase
-from ..itinerary_changes import plan_closed, plan_delay
+from ..itinerary_changes import NoChange, plan_closed, plan_delay, plan_dining_disrupted
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from ..replan import ORDER_MARGIN_MIN
 from .ledger import merge_state
@@ -78,8 +78,10 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         # ★`[2026-09-25]` `read.booking_terms` — 규정 질문에서 식당 예약이 있으면 취소 조건 수치를 댄다
         # ★`read.dining_state` — 요식 원장에 「그 시각에 여는가」를 묻는다. 코어에 등록되지 않았으면
         #   `ToolNotAllowed` 가 나고, 그때는 원장 없이 예전처럼 답한다 — 등록 전에 이 Team 이 죽으면 안 된다.
+        # ★`[2026-09-29]` `read.disruptions` — 낮 감시 Case(재난문자 · 통제 · 지진)를 받아 **다시 점검**하고,
+        #   대체 후보도 같은 점검으로 거른다(`handle_trigger`)
         allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms",
-                       "read.dining_state", "read.dining_alternatives", *ITINERARY_TOOLS],
+                       "read.dining_state", "read.dining_alternatives", "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
         #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
         knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
@@ -93,6 +95,40 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
         """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
         return ItineraryWork.itinerary_route("dining", state)
+
+    async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """★`[2026-09-29]` 낮 감시가 연 Case — 그 식사 항목을 **다시 점검**하고, 깨졌으면 근처 식당으로 바꾼다.
+        ☆전에는 이 메서드가 없어 감시가 식사 항목을 `unhandled` 로 세기만 했다(`trip_watch_cases.py`)."""
+        trigger = task.context.current_state.get("trigger") or {}
+        item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
+        if item is None:
+            return self.settle(task, ctx, NoChange("gone"))
+        if item.kind != "dining" or item.place is None:
+            return self._escalate(task, "target_kind_mismatch", ctx["evidence"])
+        report = self._read(task, "read.disruptions", self.check_arguments(item.place, item.starts_at),
+                            ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.disruptions", claim="성립 점검",
+                                         value=report, base=ctx["evidence"])
+        if report is None or report.get("verdict") == "fatal":
+            # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
+            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
+        if report.get("verdict") != "disrupted":
+            return self.settle(task, ctx, NoChange("clear"))
+        places = self.catalog(task, ctx)
+        if places is None:
+            return self._unknown(task, "장소 목록", ctx["evidence"])
+        check = self.recheck(task, ctx)
+
+        def safe_check(**kwargs) -> dict[str, Any]:
+            # ★예산이 바닥나면 그 후보는 「안 봤다」 — 고르지 않는다(점검 안 한 곳을 괜찮다고 하지 않는다)
+            try:
+                return check(**kwargs)
+            except ToolLedgerView._SKIP:
+                return {"verdict": "not_checked"}
+
+        plan = plan_dining_disrupted(trip=ctx["trip"], items=ctx["items"], places=places, meal=item,
+                                     report=report, check=safe_check, ledger=ToolLedgerView(self, task, ctx))
+        return self.settle(task, ctx, plan)
 
     async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
         if kind not in ("delay", "closed"):

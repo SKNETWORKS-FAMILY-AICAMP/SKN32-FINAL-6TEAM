@@ -23,6 +23,17 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-29 — 운영자 콘솔을 별도 앱으로(1단계) · 사실 질문은 분류를 기다리지 않는다
+
+운영 화면·관리 API·시나리오 모드를 고객 API 앱에서 빼 운영 앱(127.0.0.1:8070)으로 옮겼다 — [D-CS-008](decisions/D-CS-008-ops-console-separate-app.md).
+웹 채팅의 사실 질문은 분류(모델)를 응답 뒤로 미루고, `POST /v1/web/warmup` 으로 모델을 미리 깨운다. [리포트](records/reports/2026-09-29_0300_운영자콘솔_분리_모델지연_리포트.md).
+
+## 2026-09-28 — 웹 남용 방어(횟수 제한 · 사람 확인 · 빈 키 정리 · 운영 API)
+
+비싼 웹 작업 횟수를 DB 에서 세고(기본 꺼짐 — 개발 단계), 키 발급 한도를 DB 로 옮기고, Cloudflare Turnstile 서버 확인과 빈 키 정리,
+제한값을 바꾸는 운영 API(`/admin/limits`, scope `limits:read`·`limits:write`)를 더했다. 계약 [external/rest-endpoints.md](external/rest-endpoints.md) 「남용 방어」 ·
+[계획](records/plans/2026-09-28_2130_웹_남용방어_실행계획.md) · [리포트](records/reports/2026-09-28_2330_웹_남용방어_구현_리포트.md).
+
 ## 2026-09-23 — 이동 수단 `uses` 표기를 계약으로
 
 일정 등록 몸통 `routes{<키>}.options[].uses` 의 표기를 정했다(`external/rest-endpoints.md`) — 지하철 `N호선:역명`(「역」·괄호 병기 뺌, 서울역 예외) · 버스 `버스:<노선번호>` · 도로 `도로:<UTIC 도로명 전체>` · 도보는 지나는 큰길을 `도로:` 로. 감시가 이 값을 문자열로 대조하므로 표기가 다르면 사건을 조용히 놓친다. 시나리오 JSON 의 어긋난 표기와 등록 시 형식 검사 부재는 `[미반영]` 으로 남겼다. [리포트](records/reports/2026-09-23_1817_경로_uses_표기_계약.md).

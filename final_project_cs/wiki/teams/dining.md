@@ -156,7 +156,9 @@ default_capability    = "dining.check_open"
 
 - **늦음**(`delay`) — 다음 식사가 늦은 도착 시각에 성립하는지 보고, 안 되면 대체 식당을 제안한다(요식-P3).
 - **당일 휴무**(`closed`) — 걸어갈 수 있는 대체 식당을 제안한다(요식-P7).
-- **재요청** — 다른 안으로(`change`) · 되돌리기(`rollback`).
+- **재요청** — 다른 안으로(`change`) · 되돌리기(`rollback`). `[2026-09-29]` 들고 있던 다른 안이 없으면 **그 자리에서 찾는다**(`plan_fresh_alternate`).
+- ★`[2026-09-29]` **낮 감시 Case**(`handle_trigger`) — 감시(1분마다 · 90분 앞)의 성립 점검이 식사 항목을 `disrupted` 로 보면(재난문자 중 화재·통제처럼 모든 장소에 걸리는 것 · 지진 · 도로 통제) `dining_other` Case 가 열리고, 이 Team 이 **다시 점검**한 뒤 **계획한 시각 그대로** 700m 안의 식당으로 바꾼다(`plan_dining_disrupted`, 원장 후보 먼저). 후보도 같은 점검을 다시 통과해야 한다 — 재난문자는 구 단위라 같은 구의 옆집도 걸린다. 순위 순으로 3곳(`DINING_RECHECK_LIMIT`)까지 보고, 못 본 곳은 고르지 않는다. 바꿀 곳이 없으면 바꾸지 않는다(escalated). ☆전에는 감시가 식사 항목을 `unhandled` 로 세기만 했다. 시험 `tests/scenario/test_case_watch_dining.py`.
+- ★**낮의 임시휴무는 시스템이 찾아야 한다 — 구현 대상**(`[결정 2026-09-29 사용자]`, [../decisions/D-CS-009-daytime-closure-detection.md](../decisions/D-CS-009-daytime-closure-detection.md)). 09-24 팀 결정(새벽 3시 구글 확인 한 번 + 고객 신고)을 바꾼다. **지금 코드는 아직 전 결정 그대로다** — 방문 60·20분 전 조회(`dining/tick.py`)는 만들어 두었지만 깨우는 쪽과 읽는 쪽이 없다.
 
 - 계산은 `app/modules/travel_ops/itinerary_changes.py` — 시나리오용 버전과 **같은 함수**다(문구·판단이 갈리지 않는다).
 - 쓰지 않는다. 새 일정 버전을 `itinerary.apply` 제안(승인 불요 · 위험 낮음)으로 내고, 코어가 Case 완료와 한 트랜잭션으로 적용·통지한다 → [../actions/approval.md](../actions/approval.md) 「승인 없이 적용되는 제안」.

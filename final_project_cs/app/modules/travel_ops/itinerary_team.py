@@ -190,7 +190,7 @@ class ItineraryWork:
         ★짚은 일정 항목을 기준으로 `read.policy`(문장 근거)를 읽고, 그 항목에 예약이 있으면
           `read.booking_terms`(취소 기한·위약금 수치)도 읽는다. 판정 입력은 **예약이 아니라 일정 항목**이다
           (v11 결정 — `activity.check_cancelable` 은 `read.booking` 을 전제해 무료·무예약 항목에서 「모름」이 된다).
-        ★모델로 문장을 짓지 않는다 — 규정 조각을 **출처와 함께 그대로** 싣는다(근거 없는 문장 금지).
+        ★모델로 문장을 짓지 않는다 — 규정 절에 써 둔 **고객용 문장**을 출처와 함께 싣는다(근거 없는 문장 금지).
           규정을 못 찾으면 지어내지 않고 「모름」으로 사람에게 간다.
         """
         ref, items, seen = ctx["ref"], ctx["items"], ctx["seen"]
@@ -208,6 +208,8 @@ class ItineraryWork:
             evidence = self._evidence(task, source_id="read.booking_terms", claim="이 예약의 취소 조건",
                                       value=terms, base=evidence)
         answer, sources = question_answer(item, chunks, terms)
+        if answer is None:                     # 걸린 절이 모두 내부 절차 — 고객에게 보일 규정 문장이 없다
+            return self._unknown(task, "관련 규정", evidence)
         return self._result(task, outcome="completed", confidence=0.7, evidence=evidence, answer=answer,
                             next_action=NextAction.RESPOND,
                             decisions=[{"itinerary": "question_answered", "sources": sources,
@@ -318,16 +320,52 @@ def _chunk(chunk: Any) -> tuple[str, str, float]:
     return str(getattr(chunk, "content", "")), str(getattr(chunk, "source_id", "")), float(getattr(chunk, "score", 0))
 
 
+_LINES: dict[str, str] | None = None
+
+
+def customer_lines() -> dict[str, str]:
+    """규정 절(`t_doc_02#c5`) → **고객에게 하는 말** 한 줄. 규정 문서 머리(`customer_answers`)에서 읽는다.
+
+    ★`[2026-09-28 사용자 결정]` 규정 문서 12개는 **직원에게 쓴 글**이다(「여기에 위약금 문장을 붙이면 없는 비용을
+      만들어 말하는 것이 되고…」). 전에는 그 조각을 그대로 붙여 직원용 문장이 고객 답에 나갔다(ui 세션 실서버 시험).
+      이제 조각 원문은 싣지 않고 **그 절에 써 둔 고객용 문장만** 싣는다. 문장이 없는 절(내부 절차)은 싣지 않는다.
+    ★문서 본문을 바꾸지 않아 청크·임베딩은 그대로다. 문장과 규정이 한 파일에 있어 규정을 고치면 같이 고친다."""
+    global _LINES
+    if _LINES is None:
+        from pathlib import Path
+
+        from knowledge.ingest import load_corpus
+
+        manifest = Path(__file__).resolve().parents[3] / "knowledge" / "travel" / "manifest.json"
+        found: dict[str, str] = {}
+        for document in load_corpus(manifest):
+            answers = document.frontmatter.get("customer_answers") or {}
+            for section in document.sections:
+                line = answers.get(section.title)
+                if line and str(line).strip():
+                    found[f"{document.frontmatter['document_id']}#c{section.number}"] = str(line).strip()
+        _LINES = found
+    return _LINES
+
+
 def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] | None,
-                    *, top: int = 2, limit: int = 220) -> tuple[str, list[str]]:
-    """규정 조각(점수 높은 순 `top` 개)을 **출처와 함께 그대로** 싣는 답. (답, 출처 목록)."""
-    ranked = sorted((_chunk(c) for c in chunks), key=lambda c: -c[2])[:top]
+                    *, top: int = 2) -> tuple[str | None, list[str]]:
+    """규정 절의 **고객용 문장**(점수 높은 순 `top` 개)을 출처와 함께 싣는 답. (답, 출처 목록).
+    ★고객용 문장이 있는 절이 하나도 없고 예약 조건도 없으면 `(None, [])` — 부르는 쪽이 「규정 못 찾음」으로 다룬다."""
+    by_source = customer_lines()
+    ranked: list[tuple[str, str]] = []
+    for _, source, _ in sorted((_chunk(c) for c in chunks), key=lambda c: -c[2]):
+        line = by_source.get(source)
+        if line and all(line != shown for shown, _ in ranked):
+            ranked.append((line, source))
+        if len(ranked) >= top:
+            break
+    if not ranked and not terms:
+        return None, []
     subject = item.title if item is not None else "문의하신 내용"
     lines = [f"{subject} — 여행 규정에서 찾은 내용이에요."]
-    for content, source, _ in ranked:
-        excerpt = re.sub(r"\s+", " ", content).strip()
-        excerpt = excerpt if len(excerpt) <= limit else excerpt[:limit].rstrip() + "…"
-        lines.append(f"· {excerpt} (근거 {source})")
+    for line, source in ranked:
+        lines.append(f"· {line} (근거 {source})")
     if terms:
         deadline = terms.get("cancel_deadline_hours")
         line = f"이 예약의 취소 기한: 시작 {deadline:g}시간 전까지" if isinstance(deadline, (int, float)) else \
@@ -337,7 +375,7 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
             line += " · 위약금 기준 " + ", ".join(f"{k}시간 전부터 {v}" for k, v in penalty.items())
         lines.append(f"{line} (예약 조건 · {terms.get('matched_scope')} · 출처 {terms.get('source')})")
     lines.append("일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
-    return "\n".join(lines), [source for _, source, _ in ranked]
+    return "\n".join(lines), [source for _, source in ranked]
 
 
-__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "mentioned_item", "question_answer"]
+__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]

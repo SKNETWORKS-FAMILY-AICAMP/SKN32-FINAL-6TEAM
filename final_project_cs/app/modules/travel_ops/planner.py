@@ -44,7 +44,7 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from .density import measure_density
-from .place_hours import DayHours, hours_on, knows_hours
+from .place_hours import DayHours, find_tour_id, hours_on, knows_hours
 from .place_hours import fits as hours_fit
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
@@ -1020,9 +1020,6 @@ class PlanOutcome:
                 "coverage": self.coverage, "calls": self.calls, "rag": self.rag}
 
 
-#: 식별자 없는 장소를 이름으로 찾을 때 같은 곳으로 보는 거리. ★우리가 고른 값 — 구글 새벽 확인의 기본(300m)보다
-#: 넓게 둔 것은 관광공사 좌표가 건물 입구가 아니라 부지 중심인 곳(궁궐·공원)이 있어서다
-HOURS_MATCH_RADIUS_M = 500
 #: 같은 관광공사 장소를 계획마다 다시 읽지 않는다(프로세스 안, 6시간). 값은 원문을 옮긴 것이고 새벽 확인이 최종 판정한다
 _HOURS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _HOURS_CACHE_SECONDS = 6 * 3600
@@ -1063,24 +1060,21 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
         if not content_id:
             # ★관광공사 식별자가 없는 장소(공용 장소 행) — **같은 이름 · 같은 종류**로 찾고, 좌표가
             #   `HOURS_MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
-            wanted = {code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind == cand.kind}
-            found = source.find(cand.name, allowed_types=wanted, area_code=SEOUL_AREA_CODE)
-            meters = (distance_m({"latitude": cand.lat, "longitude": cand.lon},
-                                 {"latitude": found["latitude"], "longitude": found["longitude"]})
-                      if found else None)
-            if found is None or meters is None or meters > HOURS_MATCH_RADIUS_M:
-                why = ("관광공사에서 같은 이름·종류를 하나로 찾지 못했다" if found is None
-                       else f"같은 이름이 {round(meters)}m 떨어져 있어 같은 곳으로 보지 않았다")
+            ids, why, meters = find_tour_id(name=cand.name, kind=cand.kind, latitude=cand.lat,
+                                            longitude=cand.lon, source=source)
+            if ids is None:
                 result = {"week": {}, "record": {"source": "tour_api", "method": "none",
                                                  "read_at": now.isoformat(), "dropped": [why]}}
-                _HOURS_CACHE[key] = (_time.time(), result)
+                if meters is not None:
+                    _HOURS_CACHE[key] = (_time.time(), result)     # 거리로 아니라고 본 것만 굳힌다(찾기 실패는 다시)
                 return result
-            content_id, type_id = str(found["content_id"]), str(found["content_type_id"])
-            matched = {"content_id": content_id, "distance_m": round(meters)}
+            content_id, type_id = ids
+            matched = {"content_id": content_id, "distance_m": meters}
         intro = source.operating(content_id, type_id)
         if not intro:
-            found = {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
-                                            "dropped": ["운영시간 원문을 받지 못했다"]}}
+            # ★못 받은 것은 캐시하지 않는다 — 속도 한도로 못 받았을 수 있다(6시간 「모름」으로 굳으면 안 된다)
+            return {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                           "dropped": ["운영시간 원문을 받지 못했다"]}}
         else:
             read = read_hours(intro.get("usetime_text"), intro.get("restdate_text"), chat)
             found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
@@ -1130,7 +1124,35 @@ def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str,
                      f"`check_itinerary` 가 보지 않는다(모름은 위반이 아니다)")}
 
 
+def _rate_limited(source: Any) -> int:
+    return int(getattr(source, "misses", {}).get("rate_limited", 0)) if source is not None else 0
+
+
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
+              tour_api: Any | None = None, search: Callable[..., Any] | None = None,
+              exclude_names: Iterable[str] = ()) -> PlanOutcome:
+    """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
+
+    ★`[2026-09-28]` 이 요청 중에 관광공사 조회가 **속도 한도**에 걸렸고 그래서 못 짰으면, 조건 문제처럼 보이는
+      거절(「후보 부족」 등) 대신 `source_busy`(몇 초 뒤 다시)로 바꿔 올린다 — 실서버에서 「후보 부족」 422 가 나고
+      1분 뒤 다시 누르니 됐다(ui 세션 실측). 원래 거절은 `underlying` 에 그대로 싣는다.
+    """
+    import math
+
+    limited = _rate_limited(tour_api)
+    try:
+        return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
+                          search=search, exclude_names=exclude_names)
+    except PlanRefused as refused:
+        if _rate_limited(tour_api) <= limited:
+            raise
+        wait = max(1, math.ceil(float(getattr(tour_api, "last_wait_seconds", 60) or 60)))
+        raise PlanRefused("source_busy",
+                          f"관광공사 조회가 속도 한도에 걸려 후보를 다 받지 못했다 — {wait}초 뒤 다시 시도하면 된다",
+                          retry_after_seconds=wait, source="tour_api", underlying=refused.as_dict()) from None
+
+
+def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None,
               search: Callable[..., Any] | None = None,
               exclude_names: Iterable[str] = ()) -> PlanOutcome:

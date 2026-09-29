@@ -204,6 +204,10 @@ def applied_record(item: Item) -> dict[str, Any]:
 
 
 def title_for(item: Item, name: str) -> str:
+    # ★`[2026-09-29 ui 세션 지적]` 원래 제목 모양을 따른다 — 일정 짜기는 가게 이름만 쓰는데(「일품당프리미엄」) 바꾼 항목만
+    #   「광화문 세종클럽 식사」라 한 여행 안에서 모양이 갈렸다. 원래 제목이 장소 이름 그대로면 새 이름만 쓴다
+    if item.kind in ("activity", "dining") and item.title.strip() == str((item.place or {}).get("name") or "").strip():
+        return name
     if item.kind == "activity":
         return f"{name} 관람"
     if item.kind == "dining":
@@ -273,7 +277,7 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
                            start=item.starts_at, causes=causes,
                            alternates=alternates, replay=replay)
     replacement = item.replaced_by(
-        place=best.place, title=f"{best.place['name']} 관람",
+        place=best.place, title=title_for(item, best.place["name"]),
         detail={"auto_adjusted_at": now.isoformat(),
                 "other_options": notice["other_options"],
                 "alternates": [alternate_record(c) for c in alternates]})
@@ -426,7 +430,7 @@ def _choose_dining(make: Callable[[dict[str, dict[str, Any]] | None], list],
 def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
                    reason: str = "customer_report", source: str = "places") -> ItineraryChange:
     replacement = meal.replaced_by(
-        place=best.place, title=f"{best.name} 식사", starts_at=best.starts_at,
+        place=best.place, title=title_for(meal, best.name), starts_at=best.starts_at,
         ends_at=best.ends_at,
         detail={"other_options": notice["other_options"],
                 **({"customer_reported": True} if reason == "customer_report" else {}),
@@ -856,7 +860,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
               "changed": {"from": current.place["name"], "to": name, "at": starts.isoformat()},
               "other_options": others, "replay": False}
     replacement = current.replaced_by(
-        place=best.place, title=title_for(current, name) if current.kind == "activity" else f"{name} 식사",
+        place=best.place, title=title_for(current, name),
         detail={"customer_requested": True, "other_options": others, "candidates_from": found_in,
                 **({"warnings": list(best.warnings)} if getattr(best, "warnings", None) else {}),
                 "alternates": [alternate_record(c) for c in alternates] + [applied_record(current)]},
@@ -867,9 +871,19 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
 
 
 # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────────
+def _slot(item: Item, first_day: Any) -> str:
+    """고객 말로 그 항목의 자리 — 「1일차 저녁」 · 「2일차 10:00 경복궁 자리」."""
+    day = (item.starts_at.date() - first_day).days + 1
+    hour = item.starts_at.hour
+    if item.kind == "dining":
+        meal = "아침" if hour < 11 else "점심" if hour < 16 else "저녁"
+        return f"{day}일차 {meal}"
+    return f"{day}일차 {item.starts_at:%H:%M} 일정"
+
+
 def plan_rollback(*, trip_version: int, base_version: int, current_items: list[Item],
                   old_items: list[Item], to_version: int, message: str | None,
-                  request_id: str | None) -> Plan:
+                  request_id: str | None, redo: bool = False) -> Plan:
     """옛 버전의 항목을 **새 버전으로 다시 쓴다**(append-only — 옛 버전을 지우지 않는다).
 
     ★되살린 항목은 `customer_pinned` 로 표시한다. 감시 루프가 다음 틱에 같은 원인으로
@@ -887,9 +901,24 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
             restored.append(item.title)
     cause = with_request({"category": "customer_request", "type": "rollback",
                           "to_version": to_version, "message": message}, request_id)
-    text = f"요청하신 대로 일정을 버전 {to_version} 상태로 되돌렸습니다."
-    if restored:
-        text += " 되돌린 항목: " + ", ".join(restored) + "."
+    # ★`[2026-09-29 ui 세션 지적]` 고객 말로 쓴다 — 「버전 1」·이동 항목 제목(「경복궁 → 일품당프리미엄」)을 싣지 않고,
+    #   장소가 바뀐 항목만 「자리: 전 → 후」로. 앞서 되돌린 것을 다시 적용하는 경우(`redo`)는 「다시 적용했어요」
+    old_ids = {i.item_id for i in old_items}
+    leaving = {i.seq: i for i in current_items if i.item_id not in old_ids and i.kind != "mobility" and i.place}
+    first_day = min((i.starts_at for i in [*current_items, *old_items]), default=None)
+    pairs = []
+    for item in old_items:
+        if item.item_id in current_ids or item.kind == "mobility" or not item.place:
+            continue
+        now = leaving.get(item.seq)
+        if now is not None and first_day is not None:
+            pairs.append((_slot(item, first_day.date()), now.place["name"], item.place["name"]))
+    if redo:
+        text = ("요청하신 변경을 다시 적용했어요 — " + " · ".join(f"{slot} {a} → {b}" for slot, a, b in pairs) + "."
+                if pairs else "요청하신 변경을 다시 적용했어요.")
+    else:
+        text = (" · ".join(f"{slot}{object_particle(slot)} {a}에서 {b}(으)로" for slot, a, b in pairs) + " 되돌렸어요."
+                if pairs else "일정을 바꾸기 전 상태로 되돌렸어요.")
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"rollback_to": to_version, "restored": restored},
               "other_options": [], "replay": False}

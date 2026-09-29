@@ -90,6 +90,13 @@ _SYSTEM_PROMPT = (
     "You classify a traveller's message for a travel customer-operations system. "
     "Return JSON with exactly these keys: sentiment, intent, issue_code, severity.\n"
     "intent is the KIND OF REQUEST, one of: " + ", ".join(sorted(INTENTS)) + ".\n"
+    # ★`[2026-09-29]` 뜻과 예를 붙였다 — 모델이 intent 칸에 issue_code(`booking_revert_request`)를 넣어 「되돌려」가
+    #   분류 실패로 끝났다(ui 세션 실서버 · 재현 3/3). intent 는 위 다섯 글자 중 하나뿐이다.
+    "intent meanings: itinerary_submit = sends or registers a plan; incident_report = something went wrong "
+    "(late, closed, sold out, weather); confirm_request = asks a question or asks to check something; "
+    "adjust_reject = wants a change, another option, or to undo/revert a change "
+    "(e.g. '다른 데로 바꿔 줘', '원래대로 돌려 줘', '이전 식당으로 되돌려'); other = none of these. "
+    "Never put an issue_code value in intent.\n"
     "issue_code names the OBJECT and the situation; its prefix decides which team "
     "handles the case, so pick the prefix that matches what the message is about "
     "(activity_/dining_/mobility_/booking_/lodging_/flight_). "
@@ -156,6 +163,11 @@ def classify(text: str, llm: LLM | None = None) -> Classification:
     provider: LLM = llm or _default_llm()
     try:
         raw = provider(masked(text))
+        # ★`[2026-09-29]` 목록 밖 intent 는 **한 번만** 다시 묻는다 — 무엇이 틀렸는지 알려 주고. 그래도 틀리면 아래에서
+        #   실패한다(지어내서 맞추지 않는다). ☆「금용문 이전 식당으로 다시 되돌려」가 분류 실패 한 번으로 끝났다(ui 세션 지적)
+        if isinstance(raw, dict) and raw.get("intent") not in INTENTS:
+            raw = provider(masked(text) + f"\n\n(Your previous intent '{raw.get('intent')}' is not allowed. "
+                           f"intent must be exactly one of: {', '.join(sorted(INTENTS))}.)")
     except ClassificationFailed:
         raise
     except Exception as exc:

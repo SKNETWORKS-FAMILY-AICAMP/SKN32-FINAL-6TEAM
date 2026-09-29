@@ -17,7 +17,7 @@
   같은 사건이 남아 있어도 같은 Case 로 모인다. 고친 뒤에는 항목 id 가 바뀌므로 새 항목이
   또 깨지면 새 Case 가 열린다(맞는 동작이다).
 
-★`fatal`(결정 15 — 대체 소스까지 실패)·`unhandled`(식사 항목의 시스템 감지 소스 없음)·
+★`fatal`(결정 15 — 대체 소스까지 실패)·`unhandled`(식사·활동·이동 밖의 항목)·
   `unchecked`(경로 소스가 답할 수 없는 대상)는 시나리오 버전과 같게 **센다.**
 """
 from __future__ import annotations
@@ -93,10 +93,16 @@ class TripWatchCaseOpener:
             if verdict == "fatal":
                 result.fatal.append(entry)
                 continue
+            causes = report.get("disruptions", [])
+            if item.kind == "dining":
+                # ★`[2026-09-29]` 식사 항목도 연다 — 식당 Team 이 다시 점검하고 근처 식당으로 바꾼다(`handle_trigger`).
+                #   ☆전에는 `unhandled` 로 세기만 해서, 같은 재난문자에 걸린 활동은 바뀌고 옆 식당은 그대로였다.
+                self._open(trip_id, item, now, result, opened, causes=causes,
+                           issue_code="dining_other", detected="place")
+                continue
             if item.kind != "activity":
                 result.unhandled.append(entry)
                 continue
-            causes = report.get("disruptions", [])
             weather = any(cause.get("category") in WEATHER_LIKE for cause in causes)
             self._open(trip_id, item, now, result, opened, causes=causes,
                        issue_code="activity_weather_risk" if weather else "activity_other",

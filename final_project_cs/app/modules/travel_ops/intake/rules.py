@@ -214,6 +214,14 @@ def read_plan(text: str) -> ReadResult:
                 if rest is not None:
                     _untimed_item(result, number, line, rest, day, date, note="표에서 시각 칸이 비어 있다")
                 continue
+        if date_match and times and not heading:
+            # ★`[2026-09-28]` 줄마다 날짜를 쓴 글 — 「2026-10-05 09:00 경복궁 관람」. 전에는 날짜를 머리줄(시각 없는 줄)
+            #   에서만 받아 이 날짜를 버렸고 항목 날짜가 「모름」이 됐다(ui 세션 실서버 시험). 이 줄부터 그 날짜다
+            date = date_value
+            result.claims.append(Claim(f"days[{day or '?'}].date", date_value,
+                                       Span(number, date_match.start(), date_match.end(), date_match.group(0)),
+                                       needs_review=date_value.startswith("--"),
+                                       note="해가 적혀 있지 않다" if date_value.startswith("--") else None))
         if times:
             _time_items(result, number, line, times, day, date)
             continue

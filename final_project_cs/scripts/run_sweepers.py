@@ -2,7 +2,7 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders | trip_places 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders | place_facts | trip_places | web_guard 중 하나만 돌린다.
 
 ★`trip_dawn` 은 **새벽 식당 영업 확인**이다(`[2026-09-25]`, D-020). 03:00~08:00 창 안에서만 구글 장소로
   그날 식사 일정이 계획한 시각에 여는지 보고, 안 열면 같은 판정 문으로 바꾸거나 묻는다. 항목·날짜마다
@@ -103,10 +103,38 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     # ★감시 **뒤에** 돈다 — 변경 통지가 먼저 나가고, 안내는 바뀐 최신 일정으로 계산된다(v11 §6-B).
     if only in (None, "trip_reminders"):
         result["trip_reminders"] = _run_trip_reminders(tenant_id)
+    # ★`[2026-09-29]` 여행에 새로 들어온 장소의 운영시간 · 문의 전화를 관광공사에서 한 번 읽어 적는다(`place_info.py`)
+    #   — 일정 상세에 보이고 판정기 · 새벽 확인이 쓴다. 새 장소만 읽으므로 평소에는 0건이다
+    if only in (None, "place_facts"):
+        result["place_facts"] = _run_place_facts(tenant_id)
     # ★끝난 여행의 전용 장소 행(029)에서 외부 서비스 값(좌표·식별자)을 비운다 — 약관, `trip_places.py` 머리
     if only in (None, "trip_places"):
         result["trip_places"] = _run_trip_places(tenant_id)
+    # ★`[2026-09-28]` 웹 남용 방어 — 여행을 하나도 안 만든 사용자 키 정리 + 오래된 사용량 줄(주소 해시 48시간) 삭제
+    if only in (None, "web_guard"):
+        result["web_guard"] = _run_web_guard(tenant_id)
     return result
+
+
+def _run_place_facts(tenant_id: str) -> dict[str, object]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.infrastructure.ollama_chat import from_settings
+    from app.infrastructure.travel.base import build_travel_sources
+    from app.modules.travel_ops.place_info import fill_missing_facts
+
+    settings = get_settings()
+    with get_connection() as conn:
+        return fill_missing_facts(conn, tenant_id, source=build_travel_sources(settings).place,
+                                  chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")))
+
+
+def _run_web_guard(tenant_id: str) -> dict[str, object]:
+    from app.modules.travel_ops.web_guard import cleanup_idle_keys, prune_usage
+
+    with get_connection() as conn:
+        return {**prune_usage(conn, tenant_id), "idle_keys": cleanup_idle_keys(conn, tenant_id)}
 
 
 def _run_trip_places(tenant_id: str) -> dict[str, object]:
@@ -252,8 +280,8 @@ def main() -> int:
     parser.add_argument("--once", action="store_true", default=True)
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
-    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_dawn",
-                                           "trip_reminders", "trip_places"),
+    parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_dawn", "place_facts",
+                                           "trip_reminders", "trip_places", "web_guard"),
                         default=None)
     args = parser.parse_args()
 

@@ -45,3 +45,16 @@ def test_unusable_answers_raise(kwargs):
 def test_an_empty_base_url_is_refused():
     with pytest.raises(OllamaError):
         OllamaChat(base_url="", model="m")
+
+
+def test_keep_alive_is_sent_only_when_set():
+    """★`[2026-09-29]` 잠든 모델의 첫 호출이 30초 가까이 걸렸다(ui 세션 실측) — 붙잡아 둘 시간을 설정으로 싣는다.
+    비우면 싣지 않는다(Ollama 기본 5분 — 원격 GPU 메모리를 더 잡지 않는다)."""
+    chat, seen = _chat(body={"message": {"content": "{}"}})
+    chat.json("sys", "user")
+    assert "keep_alive" not in seen["payload"]
+    chat.keep_alive = "30m"
+    chat.json("sys", "user")
+    assert seen["payload"]["keep_alive"] == "30m"
+    chat.see("읽어 주세요", b"\x89PNG")
+    assert seen["payload"]["keep_alive"] == "30m"

@@ -261,6 +261,9 @@ def test_unread_lines_are_pointed_at_by_the_model_and_places_are_looked_up(api):
         ("경복궁", "tour_api"), ("토속촌삼계탕", "tour_api"), ("광장시장", "tour_api")]
     assert places[1]["needs_review"] and not places[0]["needs_review"]      # 이름이 원문과 다르다 → 확인
     assert places[1]["value"]["kind"] == "dining"
+    # ★`[2026-09-28]` 종류 번호도 싣는다 — 없으면 운영시간 조회가 「필수 값 없음」으로 실패했다(ui 세션 실서버 시험)
+    assert [(p["value"]["content_id"], p["value"]["content_type_id"]) for p in places] == [
+        ("126508", "12"), ("2717339", "39"), ("264570", "38")]
     assert all(area == "1" for _, area in tour.asked)                        # ★서울 밖으로 새지 않는다
     assert kakao.asked == ["토속촌"]                                           # 카카오는 관광공사에 없을 때만
 
@@ -451,3 +454,17 @@ def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
                     (api["tenant"], done.json()["trip"]["trip_id"]))
         assert cur.fetchone()[0]["survey"]["on_disruption"] == "ask_first"
 
+
+
+def test_a_plan_with_the_date_on_every_line_registers_on_those_days(api):
+    """★`[2026-09-28]` 줄마다 날짜를 쓴 글 — 날짜가 「모름」이 되고 제목이 날짜가 되던 것(ui 세션 실서버 시험)."""
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text="2026-10-15 09:00 경복궁\n2026-10-15 13:00 광장시장\n2026-10-16 10:00 경복궁")
+    assert view["check"]["ready"] is True, view["check"]["problems"]
+    trip = _confirm(client, headers, view["intake_id"], view["revision"])["trip"]
+    assert [i["starts_at"][:16] for i in trip["items"] if i["kind"] != "mobility"] == [
+        "2026-10-15T09:00", "2026-10-15T13:00", "2026-10-16T10:00"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT title FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip["trip_id"]))
+        assert cur.fetchone()[0] == "내 여행"

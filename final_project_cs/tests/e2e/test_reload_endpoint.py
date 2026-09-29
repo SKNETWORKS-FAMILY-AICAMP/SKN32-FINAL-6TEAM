@@ -25,7 +25,8 @@ _CLASSIFIER = lambda _text: {"intent": "billing", "issue_code": "x", "sentiment"
 
 @pytest.fixture()
 def client() -> TestClient:
-    return TestClient(create_app(classifier=_CLASSIFIER))
+    # ★`[2026-09-29]` 재기동 없는 반영은 관리용 빌드에만 있다(`management=True`) — 고객 릴리즈에는 없다(아래 시험)
+    return TestClient(create_app(classifier=_CLASSIFIER, management=True))
 
 
 def _auth(scope: str) -> dict[str, str]:
@@ -118,3 +119,10 @@ def test_requests_keep_working_after_a_reload(client):
     assert client.post("/admin/reload", headers=_auth("ops:reload")).status_code == 200
     assert client.get("/health").status_code == 200
     assert client.get("/introspection", headers=_auth("ops:introspect")).status_code == 200
+
+
+def test_the_customer_release_build_has_no_reload_route():
+    """★`[2026-09-29 사용자 지시]` 관리 경로는 고객 앱에 없다 — 권한이 없어서가 아니라 **경로가 없어서** 404."""
+    client = TestClient(create_app(classifier=_CLASSIFIER))
+    assert client.post("/admin/reload").status_code == 404
+

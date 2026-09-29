@@ -351,7 +351,8 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao):
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
-                "place_id": found.place_id, "content_id": found.content_id, "source": found.evidence()["source"]}
+                "place_id": found.place_id, "content_id": found.content_id,
+                "content_type_id": found.content_type_id, "source": found.evidence()["source"]}
     return resolved, {**found.evidence(), "typed": name}, found.note
 
 
@@ -439,6 +440,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
         if found.status == "resolved":
             value = {"name": found.name, "kind": found.kind, "latitude": found.latitude,
                      "longitude": found.longitude, "place_id": found.place_id, "content_id": found.content_id,
+                     "content_type_id": found.content_type_id,
                      "source": evidence["source"]}
         elif found.candidates:
             # ★설계서 §4-2 — 이름이 특정하지 않으면 종류가 맞는 후보 중 **같은 날 앞뒤 일정에 가장 가까운 곳** 하나.

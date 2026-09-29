@@ -117,7 +117,8 @@ def api(monkeypatch):
                 return {"type": "stock_out", "products": ["라면 선물세트", "스팸 선물세트"]}
             if "되돌려" in message:
                 import re
-                return {"type": "rollback", "to_version": int(re.findall(r"\d+", message)[0])}
+                numbers = re.findall(r"\d+", message)
+                return {"type": "rollback", "to_version": int(numbers[0]) if numbers else None}
             return {"type": "other"}
 
     client = TestClient(create_app(classifier=classifier, domain_routers=[build_trip_router(
@@ -145,6 +146,8 @@ def api(monkeypatch):
         cur.execute("DELETE FROM case_events WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM customer_cases WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s", (tenant,))     # 웹 사용자 키(025)
+        for table in ("web_usage", "runtime_limits", "runtime_limit_state"):   # 웹 남용 방어(031)
+            cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (tenant,))
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s", (tenant,))     # 계획 읽기(028, 원본·값은 따라 지워진다)
         cur.execute("DELETE FROM place_aliases WHERE tenant_id=%s", (tenant,))    # 고객이 고친 장소 별칭(030)
         for sql in ("DELETE FROM outbox WHERE tenant_id=%s", "DELETE FROM trips WHERE tenant_id=%s",
@@ -537,6 +540,29 @@ def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
         v1 = api["store"].items(conn, trip_id, 1)
     assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
     assert [(s["seq"], s["place"]) for s in view["items"]] != before
+
+
+def test_a_rollback_without_a_number_undoes_the_latest_change(api):
+    """`[2026-09-29 사용자 지적 · ui 세션 전달]` 「원래대로 되돌려」 · 「○○ 이전 식당으로 되돌려」 — 번호가 없으면 서버가
+    그 항목(또는 가장 최근)의 변경 직전으로 정한다. 전에는 「알아듣지 못했어요」로 끝났다."""
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1                   # v2 — 감시가 바꿨다
+    said = _say(api, trip_id, "rollback", request_id="say-back-0", text="원래대로 되돌려 주세요").json()
+    assert said["status"] == "rolled_back", said
+    view = _detail(api, trip_id)
+    with get_connection() as conn:
+        v1 = api["store"].items(conn, trip_id, 1)
+    assert view["version"] == 3
+    assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
+
+
+def test_a_rollback_of_an_unchanged_item_says_so_instead_of_undoing_something_else(api):
+    trip_id = _create(api)["trip_id"]
+    assert len(api["tick"]("09:00").adjusted) == 1
+    first = _detail(api, trip_id)["items"][0]["place"]
+    said = _say(api, trip_id, "rollback", request_id="say-back-1", text=f"{first} 되돌려 주세요").json()
+    assert said["status"] == "ask_rollback" and "되돌릴 변경이 없어요" in said["answer"], said
+    assert _detail(api, trip_id)["version"] == 2                      # 아무것도 되돌리지 않았다
 
 
 def test_places_of_an_ended_trip_lose_outside_values_but_keep_their_name(api):

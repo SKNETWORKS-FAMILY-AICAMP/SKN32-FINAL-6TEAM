@@ -280,11 +280,21 @@ def _day_for(line, marks) -> tuple[int | None, str | None]:
 def _title(trip: dict[str, dict[str, Any]], sources: list[dict[str, Any]]) -> str:
     if trip.get("title") and str(trip["title"]["value"] or "").strip():
         return str(trip["title"]["value"]).strip()[:80]
+    from .rules import TIME, _date_in
+
     for source in sources:
         for line in (source.get("transcript") or "").splitlines():
             text = line.strip()
-            if text and not _DAY_HEADING.match(text) and not re.match(r"^\d{1,2}[:시]", text):
-                return text[:80]
+            if not text or _DAY_HEADING.match(text) or re.match(r"^\d{1,2}[:시]", text):
+                continue
+            # ★`[2026-09-28]` 날짜로 시작하고 뒤에 날짜 말고 쓴 것이 없거나 시각이 오면 제목이 아니다 —
+            #   「2026-10-05」·「10월 5일 (월)」·「2026-10-05 09:00 경복궁」이 제목이 됐다(ui 세션 실서버 시험)
+            _, found = _date_in(text)
+            if found is not None and found.start() == 0:
+                rest = re.sub(r"^[\s·,()（）월화수목금토일요]*", "", text[found.end():])
+                if not rest or TIME.match(rest):
+                    continue
+            return text[:80]
     return "내 여행"
 
 
