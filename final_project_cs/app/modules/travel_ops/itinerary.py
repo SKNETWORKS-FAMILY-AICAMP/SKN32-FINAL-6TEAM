@@ -134,6 +134,60 @@ def fill_weather_sensitive(conn, tenant_id: str) -> int:
         return cur.rowcount
 
 
+def weather_from_class(lcls1: str | None, lcls2: str | None) -> bool | None:
+    """`weather_case_sql` 과 같은 규칙의 파이썬 판. 모르면 None."""
+    if lcls1 in WEATHER_BY_LARGE_CLASS:
+        return WEATHER_BY_LARGE_CLASS[lcls1]
+    return WEATHER_BY_MIDDLE_CLASS.get(lcls2 or "")
+
+
+#: 대체 활동 후보로 쓰지 않는 관광공사 대분류 — 음식(FD)·숙박(AC)
+_NOT_ACTIVITY = ("FD", "AC")
+
+
+def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[str, Any], radius_m: int,
+                            exclude_names: set[str], limit: int = 200) -> list[dict[str, Any]]:
+    """★`[2026-09-29]` 관광공사 장소 목록에서 **가까운 활동 후보** — 아직 우리 장소가 아니다(가상 행).
+
+    ☆왜 — 비 올 때 대체 후보가 등록된 장소(공용 소수 + 이 여행 것)에서만 나와, 경복궁 600m 안 후보가 0이었다(브라우저 시험).
+    ★`place_id` 는 (테넌트·여행·관광공사 id) 로 정해지는 UUID 다 — 고객이 고르면 **그때** 이 id 로 그 여행 전용 행을
+      등록한다(`TripStore.add_catalog_place`). 미리 등록하지 않는다(코덱스 합의 — 고아 행을 만들지 않는다).
+    ★영업시간·가격은 목록에 없다 — 모른다. 제안(고객이 고른다)에만 경고와 함께 쓰고 자동 적용에는 쓰지 않는다.
+    ★이미 우리 장소에 같은 이름이 있으면 뺀다(`exclude_names`) — 같은 곳을 두 행으로 만들지 않는다.
+    """
+    import math
+    from uuid import NAMESPACE_URL, uuid5
+
+    lat, lon = near.get("latitude"), near.get("longitude")
+    if lat is None or lon is None:
+        return []
+    dlat = radius_m / 111_000
+    dlon = radius_m / (111_000 * max(0.1, math.cos(math.radians(float(lat)))))
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT content_id, content_type_id, title, latitude, longitude, raw_json->>'lclsSystm1', "
+            "raw_json->>'lclsSystm2', raw_json->>'lclsSystm3', raw_json->>'sigungucode' FROM place_catalog "
+            "WHERE tenant_id=%s AND source='tour_api' AND latitude BETWEEN %s AND %s "
+            "AND longitude BETWEEN %s AND %s AND COALESCE(raw_json->>'lclsSystm1','') <> ALL(%s) "
+            "ORDER BY content_id LIMIT %s",
+            (tenant_id, float(lat) - dlat, float(lat) + dlat, float(lon) - dlon, float(lon) + dlon,
+             list(_NOT_ACTIVITY), limit))
+        rows = cur.fetchall()
+    out = []
+    for content_id, type_id, title, plat, plon, l1, l2, l3, sgg in rows:
+        if not title or title in exclude_names or plat is None or plon is None:
+            continue
+        pid = uuid5(NAMESPACE_URL, f"tripilot:catalog:{tenant_id}:{trip_id}:tour_api:{content_id}")
+        out.append({"place_id": str(pid), "name": title, "kind": "activity",
+                    "latitude": float(plat), "longitude": float(plon),
+                    "weather_sensitive": weather_from_class(l1, l2),
+                    "attributes": {"source": "tour_api", "source_content_id": str(content_id),
+                                   **({"source_content_type_id": str(type_id)} if type_id else {}),
+                                   "catalog_pending": True},
+                    "catalog_class": _catalog_class((l1, l2, l3, sgg)), "trip_scope": str(trip_id)})
+    return out
+
+
 def _catalog_class(values: tuple) -> dict[str, str] | None:
     """관광공사 분류 네 값 → `{"lcls1", "lcls2", "lcls3", "sigungu"}`. 넷 다 없으면 None(모름)."""
     keys = ("lcls1", "lcls2", "lcls3", "sigungu")
@@ -253,6 +307,28 @@ class TripStore:
                         (self.tenant_id, trip_id, json.dumps([{"request_id": request_id}])))
             row = cur.fetchone()
         return row[0] if row else None
+
+    def add_catalog_place(self, conn, trip_id: UUID, place: dict[str, Any]) -> dict[str, Any]:
+        """★`[2026-09-29]` 고객이 고른 관광공사 목록 후보를 **그 여행 전용 장소**로 등록한다(`catalog_activity_places`).
+
+        id 는 후보에 이미 정해져 있다(같은 곳을 두 번 골라도 한 행). 같은 여행에 같은 이름·종류 행이 이미 있으면
+        (다른 경로로 먼저 들어왔으면) 그 행을 돌려준다 — 부르는 쪽은 돌려받은 `place_id` 를 쓴다.
+        """
+        attributes = {k: v for k, v in dict(place.get("attributes") or {}).items() if k != "catalog_pending"}
+        with conn.cursor() as cur:
+            cur.execute("SELECT place_id FROM places WHERE tenant_id=%s AND trip_scope=%s AND name=%s AND kind=%s",
+                        (self.tenant_id, trip_id, place["name"], place["kind"]))
+            row = cur.fetchone()
+            if row is None:
+                cur.execute(
+                    "INSERT INTO places (place_id, tenant_id, name, kind, latitude, longitude, weather_sensitive, "
+                    "attributes, trip_scope) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+                    "ON CONFLICT (place_id) DO NOTHING RETURNING place_id",
+                    (UUID(str(place["place_id"])), self.tenant_id, place["name"], place["kind"],
+                     place["latitude"], place["longitude"], place.get("weather_sensitive"),
+                     json.dumps(attributes, ensure_ascii=False), trip_id))
+                row = cur.fetchone() or (UUID(str(place["place_id"])),)
+        return {**place, "place_id": str(row[0]), "attributes": attributes}
 
     def places(self, conn, trip_id: UUID | None = None, *, every_trip: bool = False) -> list[dict[str, Any]]:
         """장소 목록. ★`[2026-09-27]` 외부 서비스에서 온 장소는 **그 여행 전용 행**이다(`trip_scope`, 마이그레이션 029).

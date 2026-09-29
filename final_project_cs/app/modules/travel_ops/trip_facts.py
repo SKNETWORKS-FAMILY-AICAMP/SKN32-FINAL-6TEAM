@@ -286,10 +286,15 @@ def _clean(text: str | None) -> str | None:
 
 # ── 답 ───────────────────────────────────────────────────────────
 def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
-               place_source: Any = None) -> tuple[str, dict[str, Any]]:
+               place_source: Any = None, item: Any = None) -> tuple[str, dict[str, Any]]:
     """(답, 근거). 근거에는 무엇을 보고 답했는지(`kind` · `item` · `day` · `lookups`)와 **문장을 누가 썼는지**
-    (`writer: "template"`)를 싣는다."""
-    day, item = target(items, message, now)
+    (`writer: "template"`)를 싣는다.
+
+    `item` — ★`[2026-09-29]` 결정 단위가 고른 대상(서버가 id 로 확인한 항목). 주면 문장 낱말로 다시 찾지 않는다."""
+    if item is not None:
+        day = _local(item.starts_at).date()
+    else:
+        day, item = target(items, message, now)
     basis: dict[str, Any] = {"kind": kind, "writer": "template", "day": day.isoformat() if day else None,
                              "item": item.title if item else None, "lookups": None}
     stops = _stops(items)
@@ -320,8 +325,16 @@ def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
             basis["item"] = f"{pair[0].title} → {pair[1].title}"
             return _pair_move_answer(items, *pair), basis
         return _move_answer(items, item), basis
+    if kind == "time":
+        end = f"~{_hm(item.ends_at)}" if item.ends_at else ""
+        return f"{item.title} — {_day_label(_local(item.starts_at).date())} {_hm(item.starts_at)}{end}.", basis
     lookup = look_up_place(item.place, place_source) if item.place else None
     basis["lookups"] = lookup
+    if kind == "phone":
+        name = (item.place or {}).get("name") or item.title
+        if lookup and lookup.get("phone"):
+            return f"{name} 전화번호는 {lookup['phone']}(출처 {lookup['source']}).", basis
+        return f"{name}의 전화번호는 모르겠어요{_lookup_note(lookup)}.", basis
     if kind == "address":
         return _address_answer(item, lookup), basis
     if kind == "hours":

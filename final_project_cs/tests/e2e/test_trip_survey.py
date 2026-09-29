@@ -29,7 +29,11 @@ def _stored_constraints(trip_id: str) -> dict:
 
 def _with(api, request_id: str, **constraints):
     body = _body(api["customer"], request_id=request_id)
-    body["constraints"] = {**copy.deepcopy(body["constraints"]), **constraints}
+    base = copy.deepcopy(body["constraints"])
+    # ★`[2026-09-29]` 시연 시나리오 조건에는 「자동을 직접 고른 고객」 설문이 들어 있다 — 이 파일은 설문을 스스로 정한다
+    base.pop("survey", None)
+    base.pop("survey_answered", None)
+    body["constraints"] = {**base, **constraints}
     body["constraints"].pop("density", None)
     return body
 

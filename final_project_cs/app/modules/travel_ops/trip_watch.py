@@ -31,7 +31,7 @@ from typing import Any, Callable
 from .itinerary import Item, TripStore, visible_to
 from .itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
-from .pending import PendingStore, apply_or_ask, ask_consent, needs_consent
+from .pending import PendingStore, apply_or_ask, ask_consent, needs_consent, weather_only
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -98,12 +98,16 @@ class TripWatcher:
                 continue
             # ★`[2026-09-29]` 실내·야외를 모르는 곳에 날씨 사건만 — 대체안을 **계산하지 않고** 「바꿀까요?」만 묻는다
             #   (대체안 계산은 후보마다 바깥 점검을 부른다. 사용자 결정). 「바꿔 줘」면 그때 계산한다(`pending.choose`)
-            if needs_consent(report):
+            #   `[2026-09-29 오후]` 아는 곳이라도 고객이 설문에서 **직접** 자동을 고르지 않았으면 먼저 묻는다(제안이 기본)
+            with self._connect() as conn:
+                constraints = self.store.latest(conn, trip_id)[0].get("constraints")
+            if needs_consent(report, constraints):
                 with self._connect() as conn, conn.transaction():
                     trip, _ = self.store.latest(conn, trip_id)
                     outcome = ask_consent(conn, store=self.store, trip_id=trip_id, item=item,
                                           base_version=trip["version"],
-                                          causes=report.get("disruptions") or [])
+                                          causes=report.get("disruptions") or [],
+                                          indoor_unknown=bool(report.get("indoor_unknown")))
                 if not outcome.get("already"):
                     result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
                                          "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
@@ -114,6 +118,19 @@ class TripWatcher:
             from .activity.similarity import score as similarity
             plan = plan_activity_adjustment(item=item, report=report, places=visible_to(places, trip_id),
                                             check=self.check, now=now, similarity=similarity)
+            if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
+                # ★`[2026-09-29]` 자동으로 못 찾았으면 조용히 끝내지 않는다 — 「바꿀까요?」로 넘겨, 「바꿔 줘」면 관광공사
+                #   목록까지 뒤진다(`pending._consented`). 전에는 `unresolved` 목록에만 남고 고객은 아무 말도 못 들었다
+                with self._connect() as conn, conn.transaction():
+                    trip, _ = self.store.latest(conn, trip_id)
+                    outcome = ask_consent(conn, store=self.store, trip_id=trip_id, item=item,
+                                          base_version=trip["version"], causes=report.get("disruptions") or [],
+                                          indoor_unknown=bool(report.get("indoor_unknown")))
+                if not outcome.get("already"):
+                    result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
+                                         "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
+                                         "safety": False})
+                continue
             self._settle(trip_id, item, plan, result, report=report)
         return result
 

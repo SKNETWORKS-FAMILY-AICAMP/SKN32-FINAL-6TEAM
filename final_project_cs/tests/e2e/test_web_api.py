@@ -140,6 +140,16 @@ def test_a_no_change_result_carries_the_same_answer_as_the_conversation_path(api
     assert {item["title"] for item in trip["items"] if item["booked"]} == {"성수 점심 식사(예약)"}
 
 
+@pytest.fixture()
+def dev_mode(monkeypatch):
+    """★`[2026-09-29 사용자 지시]` 근거(`basis`)·해석 결과(`decision`)는 개발 모드(`web.dev_mode = on`)일 때만 웹에 실린다 —
+    그 칸을 읽는 시험은 개발 모드를 켜고 본다."""
+    from app.modules.travel_ops import web_guard
+
+    real = web_guard.values
+    monkeypatch.setattr(web_guard, "values", lambda tenant: {**real(tenant), "web.dev_mode": "on"})
+
+
 # ── 「먼저 물어봐줘」를 웹에서 고른다 ──────────────────────────────
 def test_the_web_sees_the_question_chooses_and_a_late_click_gets_409(api):
     me = _session(api)
@@ -147,6 +157,13 @@ def test_the_web_sees_the_question_chooses_and_a_late_click_gets_409(api):
     trip_id = api["client"].post("/v1/web/trips", json=body, headers=_h(me["user_key"])).json()["trip_id"]
     api["tick"]("09:00")                                          # 바꾸지 않고 묻는다
 
+    # ★`[2026-09-29]` 활동 날씨 대체는 먼저 「바꿀까요?」(안 없음) — 웹이 「바꿔 줘」(key "change")를 보내면 그때 계산한다
+    [asked] = api["client"].get(f"/v1/web/trips/{trip_id}/proposals",
+                                headers=_h(me["user_key"])).json()["proposals"]
+    assert asked["reason"] == "indoor_unknown" and asked["options"] == []
+    said = api["client"].post(f"/v1/web/trips/{trip_id}/proposals/{asked['proposal_id']}/choose",
+                              json={"key": "change"}, headers=_h(me["user_key"]))
+    assert said.status_code == 200 and said.json()["status"] == "options", said.text
     [proposal] = api["client"].get(f"/v1/web/trips/{trip_id}/proposals",
                                    headers=_h(me["user_key"])).json()["proposals"]
     assert proposal["status"] == "open" and proposal["options"][0]["rank"] == 1
@@ -273,9 +290,30 @@ def test_a_policy_question_is_answered_with_the_customer_line_of_that_rule_not_t
     trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-1"), headers=_h(me["user_key"])).json()
     body = _say(client, me["user_key"], trip["trip_id"], "취소하면 위약금 있어요?", "ask-1")
     assert body["status"] == "answered" and body["case_status"] == "resolved"
-    assert customer_lines()["t_doc_02#c5"] in body["answer"] and "근거 t_doc_02#c5" in body["answer"]
+    assert customer_lines()["t_doc_02#c5"] in body["answer"]
+    # ★`[2026-09-29 사용자 지시]` 근거 id 는 고객 문장에 없다 — 개발 모드(`web.dev_mode`)일 때만 `basis` 칸으로, 기록에는 늘
+    assert "t_doc_" not in body["answer"] and "근거" not in body["answer"]
+    assert "basis" not in body and "basis_sources" not in body and "decision" not in body        # 개발 모드가 아니다
     assert "직원용 원문" not in body["answer"] and "관련 없는 조각" not in body["answer"]
     assert found and found[0]["allowed_scopes"]
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT state_json->'basis'->'sources' FROM customer_cases WHERE case_id=%s", (body["case_id"],))
+        assert cur.fetchone()[0] == ["t_doc_02#c5"]
+
+
+def test_the_basis_is_shown_only_in_dev_mode(api, monkeypatch):
+    from app.modules.travel_ops import web_guard
+
+    def search(**kwargs):
+        return [_Chunk("직원용 원문", "t_doc_02#c5", 0.71)]
+
+    real = web_guard.values
+    monkeypatch.setattr(web_guard, "values", lambda tenant: {**real(tenant), "web.dev_mode": "on"})
+    me = _session(api)
+    client = _chat_client(api, search)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-dev"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "취소하면 위약금 있어요?", "ask-dev")
+    assert body["basis_sources"] == [{"source": "t_doc_02#c5"}] and "t_doc_" not in body["answer"]
 
 
 def test_a_rule_section_with_no_customer_line_is_not_shown_and_counts_as_not_found(api):
@@ -360,7 +398,7 @@ QUICK = {
 
 
 @pytest.mark.parametrize("kind", sorted(QUICK))
-def test_the_screens_quick_questions_are_answered_from_the_trip_itself(api, kind):
+def test_the_screens_quick_questions_are_answered_from_the_trip_itself(dev_mode, api, kind):
     searched = []
     client = _chat_client(api, search=lambda **k: searched.append(k) or [])
     me = _session(api)
@@ -413,7 +451,7 @@ class _TourStub:
         return {"usetime_text": "10:30~22:00<br>(입장마감 21:00)", "restdate_text": "연중무휴", "info_phone": None}
 
 
-def test_address_and_opening_hours_come_from_the_tourism_record_as_written(api):
+def test_address_and_opening_hours_come_from_the_tourism_record_as_written(dev_mode, api):
     """★주소·운영시간은 저장하지 않는다(약관) — 물으면 관광공사 상세를 그때 읽어 **원문 그대로** 싣는다."""
     from app.modules.travel_ops import trip_facts
 

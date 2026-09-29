@@ -115,7 +115,63 @@ class TripDesk:
         plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
                                     places=places, item_id=item_id, message=message, request_id=request_id,
                                     ledger=self._ledger())
+        if isinstance(plan, NoChange) and plan.status == "relaxed":
+            return self._ask_relaxed(trip_id, item_id, plan)
         return self._outcome(trip_id, base_version, items, plan)
+
+    def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
+                             message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-09-29]` 결정 단위의 「후보만 알아봐 줘 · 추천해 줘」 — **바꾸지 않고** 후보를 계산해 고르게 한다.
+        계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로."""
+        trip, items, places = self._read(trip_id)
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
+                                    places=places, item_id=item_id, message=message, request_id=request_id,
+                                    ledger=self._ledger())
+        if isinstance(plan, NoChange):
+            if plan.status == "relaxed":
+                return self._ask_relaxed(trip_id, item_id, plan)
+            return {"status": plan.status, **plan.detail}
+        current = next(i for i in items if i.item_id == item_id)
+        options = [{**o, "note": None} for o in options_from(plan, current)]
+        listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}"
+                            + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "") for o in options[:3])
+        text = (f"{current.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. "
+                "고르지 않으시면 원래 일정을 그대로 둡니다.")
+        return self._ask_options(trip_id, item_id, reason="requested_options", text=text, options=options,
+                                 causes=plan.causes, extra={"summary": plan.summary})
+
+    def _ask_options(self, trip_id: UUID, item_id: UUID, *, reason: str, text: str, options: list[dict[str, Any]],
+                     causes: list[dict[str, Any]], extra: dict[str, Any] | None = None) -> dict[str, Any]:
+        """고를 안을 보류 제안(「선택이 필요해요」)으로 연다 — 조건 풀기와 후보 알아보기가 같이 쓴다."""
+        from .pending import Decision
+
+        with self._connect() as conn, conn.transaction():
+            trip, items = self.store.latest(conn, trip_id)
+            current = next((i for i in items if i.item_id == item_id), None)
+            if current is None:
+                return {"status": "gone"}
+            proposal_id = PendingStore(self.store.tenant_id).open(
+                conn, trip_id=trip_id, item=current, base_version=trip["version"],
+                decision=Decision("ask", reason, None, False), causes=causes, options=options)
+            if proposal_id is None:
+                return {"status": "asked", "already": True, "text": text}
+            self.store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}", payload={
+                "type": "proposal_request", "text": text, "language": "ko", "causes": causes,
+                "proposal_id": str(proposal_id), "item_id": str(item_id), "reason": reason, "protected_by": None,
+                "options": [{"key": o["key"], "rank": o["rank"], "name": o.get("option_label") or o["name"],
+                             "starts_at": o.get("starts_at"), "note": o.get("note")} for o in options],
+                "replay": False})
+        return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "text": text,
+                "options": options, **(extra or {})}
+
+    def _ask_relaxed(self, trip_id: UUID, item_id: UUID, plan: NoChange) -> dict[str, Any]:
+        """★`[2026-09-29 사용자 지적]` 조건을 푼 안(시각 늦추기 · 다음 일정 근처)은 **묻는다** — 「선택이 필요해요」 제안으로 보내고,
+        고르면 기존 「다른 안으로」(`pending.choose` → `plan_swap`)로 적용한다. 답이 없으면 원래 일정 그대로."""
+        options = [{**o, "rank": n} for n, o in enumerate(plan.detail["options"], start=1)]
+        return self._ask_options(trip_id, item_id, reason="relaxed", text=plan.detail["text"], options=options,
+                                 causes=plan.detail.get("causes") or [],
+                                 extra={"reason": plan.detail.get("reason"), "radius_m": plan.detail.get("radius_m"),
+                                        "seen": plan.detail.get("seen")})
 
     # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────
     def rollback(self, *, trip_id: UUID, base_version: int, to_version: int,

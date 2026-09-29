@@ -129,6 +129,7 @@ def cleanup_tenant(tenant_id: str) -> None:
                     #   빠뜨리면 FK 가 `customers` 삭제를 막아 이 함수가 통째로 실패한다.
                     "DELETE FROM delegation_events WHERE tenant_id=%s",
                     "DELETE FROM delegations WHERE tenant_id=%s",
+                    "DELETE FROM trip_chat_turns WHERE tenant_id=%s",
                     "DELETE FROM trips WHERE tenant_id=%s",
                     "DELETE FROM places WHERE tenant_id=%s",
                     "DELETE FROM customers WHERE tenant_id=%s",

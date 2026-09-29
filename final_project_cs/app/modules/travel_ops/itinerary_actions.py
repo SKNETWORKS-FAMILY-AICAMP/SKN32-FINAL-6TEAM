@@ -64,10 +64,11 @@ def change_arguments(*, trip_id: UUID | str, base_version: int, change: Itinerar
 
 
 def consent_arguments(*, trip_id: UUID | str, base_version: int, item_id: UUID | str,
-                      causes: list[dict[str, Any]]) -> dict[str, Any]:
-    """★`[2026-09-29]` 「바꿀까요?」만 묻는 제안 인자 — 대체안이 없다(아직 계산하지 않았다). Team 이 부른다."""
+                      causes: list[dict[str, Any]], indoor_unknown: bool = True) -> dict[str, Any]:
+    """★`[2026-09-29]` 「바꿀까요?」만 묻는 제안 인자 — 대체안이 없다(아직 계산하지 않았다). Team 이 부른다.
+    `indoor_unknown` — 실내·야외를 몰라서 묻는가(알림 문구가 갈린다). 아는 곳이면 「제안이 기본」이라 묻는 것이다."""
     return _plain({"trip_id": str(trip_id), "base_version": int(base_version), "reason": "indoor_unknown",
-                   "causes": causes, "consent": {"item_id": str(item_id)}})
+                   "causes": causes, "consent": {"item_id": str(item_id), "indoor_unknown": bool(indoor_unknown)}})
 
 
 class ItineraryApply:
@@ -144,8 +145,13 @@ class ItineraryApply:
         #   그 자리를 지나지 않아 링크 없이 나갔다 — 화면에서 통지를 열어 보고 찾았다.
         from .plan_link import plan_url
 
+        # ★`[2026-09-29]` 우리가 **자동으로** 바꾼 것(고객이 고른 것이 아닌)에는 되돌리기를 싣는다 — 화면이 버튼을 띄운다
+        from .pending import rollback_offer
+
+        offer = ({} if str(arguments["reason"]) in CHOSEN_BY_CUSTOMER
+                 else {"rollback": rollback_offer(version=version, previous=base)})
         payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
-                          **dict(arguments.get("notice") or {}), "version": version})
+                          **dict(arguments.get("notice") or {}), "version": version, **offer})
         return AppliedAction(
             result_ref=f"trip:{trip_id}:v{version}",
             summary=_plain({"trip_id": str(trip_id), "version": version,
@@ -213,7 +219,9 @@ def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
     outbox = [] if already else [OutboxMessage(
         topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
         payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
-                        **consent_notice(item=item, causes=causes, proposal_id=proposal_id)}))]
+                        **consent_notice(item=item, causes=causes, proposal_id=proposal_id,
+                                         indoor_unknown=bool((arguments.get("consent") or {}).get(
+                                             "indoor_unknown", True)))}))]
     return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{proposal_id}", summary=summary, outbox=outbox)
 
 

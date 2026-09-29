@@ -79,3 +79,56 @@ def test_saying_no_names_the_time_the_distance_and_the_main_reason():
     assert isinstance(plan, NoChange) and plan.status == "no_alternate"
     assert "08:00" in plan.detail["text"] and "3km" in plan.detail["text"], plan.detail
     assert "살펴본 1곳 중 1곳은" in plan.detail["text"] and plan.detail["radius_m"] == 3000
+
+
+def test_an_activity_is_not_replaced_by_the_same_site_under_another_name():
+    """`[2026-09-29 ui 세션 지적]` 「건청궁 대신 경복궁」 — 건청궁은 경복궁 안 전각이라 사실상 같은 곳이다."""
+    from app.modules.travel_ops.itinerary_changes import same_site
+
+    gyeongbok = {"name": "경복궁", "latitude": 37.576, "longitude": 126.9767, "attributes": {}}
+    geoncheong = {"name": "건청궁", "latitude": 37.57608, "longitude": 126.97674,
+                  "attributes": {"address": "서울특별시 종로구 사직로 161 (세종로)"}}
+    garden = {"name": "창덕궁과 후원 [유네스코 세계유산]", "latitude": 37.57765, "longitude": 126.99023, "attributes": {}}
+    tree = {"name": "창덕궁 다래나무", "latitude": 37.58645, "longitude": 126.98923, "attributes": {}}
+    market = {"name": "광장시장", "latitude": 37.5700, "longitude": 126.9996, "attributes": {}}
+    assert same_site(gyeongbok, geoncheong) and same_site(garden, tree)
+    assert not same_site(gyeongbok, market) and not same_site(garden, gyeongbok)
+
+    home = _place("건청궁", "activity", 37.57608, 126.97674)
+    inside = _place("경복궁", "activity", 37.5760, 126.9767)
+    other = _place("국립민속박물관", "activity", 37.5815, 126.9790)
+    plan = _plan(_item(home, 10), [home, inside, other])
+    assert not isinstance(plan, NoChange), plan
+    assert plan.summary["to"] == "국립민속박물관" and "경복궁" not in plan.notice["other_options"]
+
+
+def _at(place, day_hour, seq):
+    item = _item(place, day_hour)
+    return replace(item, seq=seq, title=place["name"])
+
+
+def test_when_nothing_opens_at_that_time_it_offers_a_later_time_instead_of_a_dead_end():
+    """`[2026-09-29 사용자 지적]` 「08:00에 여는 식당이 없어요」로 끝내지 않는다 — 늦추면 되는 안을 계산해 **묻는다**."""
+    home = _place("원래 식당", "dining", 37.5700, 126.9800)
+    nine = _place("9시에 여는 식당", "dining", 37.5705, 126.9805, hours=("09:00", "22:00"))
+    breakfast = _at(home, 8, 1)
+    palace = _at(_place("경복궁", "activity", 37.5760, 126.9767), 11, 2)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[breakfast, palace],
+                                places=[home, nine], item_id=breakfast.item_id, message="다른 데로 바꿔 줘",
+                                request_id="r")
+    assert isinstance(plan, NoChange) and plan.status == "relaxed", plan
+    first = plan.detail["options"][0]
+    assert (first["name"], first["relaxed"], first["starts_at"][11:16]) == ("9시에 여는 식당", "time", "09:00")
+    assert "09:00으로 늦추면 9시에 여는 식당" in plan.detail["text"] and "답이 없으면 원래 일정을 그대로" in plan.detail["text"]
+
+
+def test_a_place_near_the_next_stop_is_offered_when_moving_the_time_does_not_help():
+    home = _place("원래 식당", "dining", 37.5000, 126.9000)
+    near_next = _place("경복궁 옆 식당", "dining", 37.5765, 126.9770, hours=("07:00", "22:00"))
+    breakfast = _at(home, 8, 1)
+    palace = _at(_place("경복궁", "activity", 37.5760, 126.9767), 10, 2)         # 원래 식당 둘레(8km 밖)엔 늦춰도 없다
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[breakfast, palace],
+                                places=[home, near_next], item_id=breakfast.item_id, message="다른 데로 바꿔 줘",
+                                request_id="r")
+    assert isinstance(plan, NoChange) and plan.status == "relaxed", plan
+    assert [(o["name"], o["relaxed"]) for o in plan.detail["options"]] == [("경복궁 옆 식당", "near_next")]

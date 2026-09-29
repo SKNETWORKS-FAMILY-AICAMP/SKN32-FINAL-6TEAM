@@ -475,11 +475,16 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 
 **구글 지도 불러오기 허락** `[2026-09-29 사용자 지시]` — `POST /v1/web/map-load`(사용자 키). 화면이 구글 지도를 부르기 **전에** 한 번 묻는다. 답 `{provider: "google", allowed, meter: "google_maps_dynamic_maps", used: {day, month}, cap: {day, month}, fallback: null | "free_map"}`. `allowed: false` 면 구글을 부르지 않고 무료 지도로 보인다. 한도는 다른 구글 요금 단위와 같은 규칙(하루 = 무료 월 10,000 ÷ 32 = 312, 월 = 9,688)이고 DB(`external_call_budget`)에서 모든 프로세스가 같이 센다. ☆전에는 브라우저가 구글을 직접 불러 한도 장치 밖이었다. 코드 `trip_api.web_map_load`.
 
+**채팅 결정 단위** `[2026-09-29 사용자 지시 · Codex 3회 합의]` — `POST /v1/web/trips/{id}/messages` · `/v1/trips/{id}/messages` 는 이제 **여행 상태(일정 · 변경 이력 · 서버에 저장한 최근 대화 · 화면 선택)를 보며 모델 한 번**으로 할 일과 대상을 고른다(옛 분류기 · 추출기 · 낱말 규칙 대신). 응답에 `decision = {action, item, item_id, change, fact, minutes, choices, seconds}` · `reason = "decision_<action>"`. action: apply_change · propose_alternatives(바꾸지 않고 후보를 「선택이 필요해요」로 — 보류 제안 이유 `requested_options`) · rollback · redo · answer_fact · ask_policy · report_delay · report_closed · clarify · other. ★이해하지 못하면 `status: "clarify"` + `choices: [{label, message}]`(「다음 중 하나인가요?」 — `message` 를 그대로 보내면 한 번에 알아듣는 문장, 버튼용) — 사용자 제안. 「1번」으로 답해도 앞 대화로 풀린다. 뒤에 다른 변경이 있는 옛 변경을 되돌리면 한 번 묻고(`ask_rollback`), 「네」면 되돌린다. 모델 실패 · 목록 밖 id 는 **바꾸지 않고** `escalated`(`reason: decision_failed`) — 옛 경로로 넘기지 않는다. 켜기/끄기: 운영 설정 `chat.decision_mode`(off · shadow · on, 기본 on — `PATCH /admin/limits`, 30초 안 반영). 대화 기록 `GET /v1/web/trips/{id}/chat?limit=40`(사용자 키) · `GET /v1/trips/{id}/chat`(trip:read) → `{turns: [{role: customer|assistant, text, case_id, at}]}` — 고객 문장은 가린 값. 코드 `decision_unit.py` · `trip_messages._run_decision` · `chat_log.py`(034). 재생 시험 `eval/decision_unit/`.
+
+**근거 표시 · 개발 모드** `[2026-09-29 사용자 지시]` — 고객 문장(`answer`)에는 **늘** 내부 근거 id(t_doc_… · #c… · 예약 조건 scope)를 싣지 않는다 (사실 답의 「출처 요식 원장 · 미쉐린 가이드 서울」 같은 출처 **이름**과 ⓒ한국관광공사 표시는 고객용이라 남는다). 근거는 Case 기록(`state_json.basis` · `trip_outcome.basis`)에 늘 남는다. 웹 메시지 응답의 `basis`(원래 모양) · `basis_sources: [{source}]` · `decision` 은 운영 설정 `web.dev_mode`(off · on, 기본 off)가 on 일 때만 실린다.
+
 **채팅 「다른 데로 바꿔 줘」** `[2026-09-29 사용자 지적]` — 몸통에 선택 칸 **`item_id`**(화면에서 고른 일정). 어느 항목인가:
 ★**문장이 분명히 말하면 문장이 먼저**(`[2026-09-29 ui 세션 지적]`) — 문장의 번호(「2번」 = 식사·활동을 시각 순으로 센 차례) → 이름 → 끼니(「점심」 — 그 시간대 식사) → `item_id` → 들고 있던 「다른 안」이 있는 항목 → 다음 일정. 예: 경복궁을 눌러 둔 채 「점심 식당 바꿔 줘」면 점심이 바뀐다.
 그 항목에 들고 있던 안이 있으면 그것으로(`swap_alternate`), **없으면 그 자리에서 찾는다**(`plan_fresh_alternate` — 식사는 요식 원장 후보 먼저 ·
 같은 시각 · 동선 · 동행 조건, 활동은 그 시각 영업하는 근처). 바꾸면 `adjusted`, 나머지 후보는 「다른 안」(`other_options`)으로 남는다.
 `no_alternate` 는 후보를 **실제로 다 뒤져도** 없을 때만(`reason` · `rejected`).
+★`[2026-09-29 사용자 지적]` 같은 조건으로 0곳이면 반경을 넓히고(식사 700m→1.5km→3km · 활동 1.5km→3km), 그래도 0곳이면 **조건을 풀어** 되는 안을 계산한다 — ①시각을 30·60·90·120분 늦추기(다음 일정과 안 겹치게) ②다음 일정 근처 같은 시각. 있으면 **바로 바꾸지 않고 묻는다** — `status: "asked"`, 「선택이 필요해요」 제안(보류 제안 이유 `relaxed`, 알림 `proposal_request` 의 `options[].note` = 「09:00으로 늦추면」 · 「다음 일정(경복궁) 근처」). 고르면 `…/proposals/{id}/choose` 로 그 시각 · 그 장소가 적용된다. 정말 어떤 조건을 풀어도 없을 때만 `no_alternate` + 이유(「(그 안에 후보 장소가 하나도 없어요)」 · 「(살펴본 N곳 중 M곳은 「이유」)」, 기록 `trip_outcome.seen`). 종류 넓히기(아침 카페 등)는 아직 없다.
 
 **여행 조회 항목에 더한 칸** `[2026-09-27]` — `lat`·`lon`(그 고객 자신의 여행 장소 좌표, 웹 지도 핀) · `booked`(예약 표 연결 또는
 `detail.booking`). **웹 메시지 응답**에는 「바꾸지 않아도 되는 결과」(`no_meal` · `still_fits` · `no_alternate` · `clear` · `gone`)일 때
