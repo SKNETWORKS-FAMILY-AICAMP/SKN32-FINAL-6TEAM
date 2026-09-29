@@ -32,6 +32,14 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace as NS
 
+# ★ 71번 방(2026-09-29) — 전체층 마커. 실데이터 축은 기본 `pytest` 에서 빠지고 `-m mobility_full` 로 돈다
+#   (conftest.py). 스크립트로 직접 돌릴 때는 pytest 가 없어도 되게 감싼다.
+try:
+    import pytest
+    _full = pytest.mark.mobility_full          # 실데이터(DATA_DIR)를 읽는 시험에만 붙인다 — 합성 단위는 게이트에 남는다
+except ImportError:     # pragma: no cover
+    _full = lambda f: f                        # noqa: E731
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
@@ -70,6 +78,7 @@ def _fake_runtime():
     return Runtime(v, timetable_built_at="t", rules_version="r", stats={}), v, seen
 
 
+@_full
 def test_default_modes_no_bike():
     assert set(DEFAULT_MODES) == {"subway", "bus", "walk"}, "56 결정 — 기본은 지하철·버스·도보 · 자전거는 요청 시만"
     rt, v, _ = _fake_runtime()
@@ -83,6 +92,7 @@ def test_default_modes_no_bike():
     assert Planner(rt, modes=["subway"]).v.bk is None
 
 
+@_full
 def test_modes_contract():
     """GPT 56 #9 — None 만 기본 · 빈 목록·모르는 수단은 거절(조용히 넓히지 않는다)."""
     rt, _v, _ = _fake_runtime()
@@ -155,6 +165,7 @@ def test_log_depth_per_thread():
     assert sorted(lg.rows) == ["a", "b"], f"겹친 최상위 호출 기록 {lg.rows} — 깊이가 스레드 사이에 샜다"
 
 
+@_full
 def test_runtime_verify_case_copies():
     rt, v, seen = _fake_runtime()
     assert rt.verify_case({"id": "a", "date": "2026-09-29"}) == "a"
@@ -218,6 +229,7 @@ def _singleton_clean(rt, before):
     return now[0] == before[0] and now[1] is before[1] and now[2] is before[2] and now[3] == before[3]
 
 
+@_full
 def test_bike_not_called_by_default():
     """B — 기본 plan() 은 자전거 구간 판정을 부르지 않는다. 실패 장면: 56 전에는 기본(=전부)이 자전거 후보마다 불렀다."""
     _need_data()
@@ -260,6 +272,7 @@ def test_bike_not_called_by_default():
         assert only["routes"] and all([o["id"] for o in r["options"]] == ["bike"] for r in only["routes"].values()), only
 
 
+@_full
 def test_interleave_injection():
     """I — 판정 도중 다른 요청이 같은 싱글턴에 끼어든 모양(결정적). ⓐ 싱글턴 직접 = 섞임(실패 장면) ⓑ 복사본 끔 = 섞임 ⓒ 56 = 같음."""
     _need_data()
@@ -314,6 +327,7 @@ def test_interleave_injection():
         rt._v._case_date, rt._v.disr, rt._v._leg_cache, rt._v.lfd_capped = before
 
 
+@_full
 def test_threads_8x80():
     """T — 24 ① 과 같은 조건 + first_visit=False · 스레드 8 × 80건 · **캐시가 빈 새 Runtime 에서 스레드부터**(GPT 56 #3)
     · 기준은 다른 Runtime 의 순차 결과 · 끝나고 새 Runtime 싱글턴 건별 상태가 그대로 · 경쟁 뒤 순차 재실행도 같다."""
