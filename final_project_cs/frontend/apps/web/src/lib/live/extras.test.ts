@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveError } from "./client";
-import { chooseProposal, getNotices, getProposals, warmup } from "./extras";
+import { chooseProposal, getNotices, getProposals, mapLoad, warmup } from "./extras";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -35,6 +35,28 @@ describe("the rest of the server's web API", () => {
     expect(calls[0].url).toMatch(/\/v1\/web\/warmup$/);
     expect(calls[0].init.method).toBe("POST");
     expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
+  });
+
+  it("asks the server before a Google map load and reads its count; any failure means not allowed", async () => {
+    stub({ "tripilot.web.user-key.v1": "acop_u_mine" });
+    replies.push(json({ provider: "google", allowed: true, meter: "google_maps_dynamic_maps", used: { day: 3, month: 40 }, cap: { day: 312, month: 9688 }, fallback: null }));
+    expect(await mapLoad("ko")).toEqual({ allowed: true, used: { day: 3, month: 40 }, cap: { day: 312, month: 9688 } });
+    expect(calls[0].url).toMatch(/\/v1\/web\/map-load$/);
+    expect(calls[0].init.method).toBe("POST");
+    expect(new Headers(calls[0].init.headers).get("X-User-Key")).toBe("acop_u_mine");
+
+    replies.push(json({ allowed: false, used: { day: 312, month: 900 }, cap: { day: 312, month: 9688 }, fallback: "free_map" }));
+    expect((await mapLoad("ko")).allowed).toBe(false);
+    replies.push(json({ allowed: "yes" }));                       // ★anything but true is not permission
+    expect((await mapLoad("ko")).allowed).toBe(false);
+    replies.push(json({ error: { code: "unauthorized" } }, 401));
+    expect((await mapLoad("ko")).allowed).toBe(false);
+  });
+
+  it("never asks — and never allows Google — when this browser has no key", async () => {
+    stub({});
+    expect((await mapLoad("ko")).allowed).toBe(false);
+    expect(calls).toHaveLength(0);
   });
 
   it("does not wake anything — nor create a user — when this browser has no key", async () => {

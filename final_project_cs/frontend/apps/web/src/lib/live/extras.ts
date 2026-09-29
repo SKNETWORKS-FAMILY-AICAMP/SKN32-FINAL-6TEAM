@@ -98,3 +98,31 @@ export async function warmup(language: Language): Promise<Warmup | null> {
     lastAttempt: last ? { ok: last.ok === true, seconds: last.seconds ?? null, at: last.at ?? null, reason: last.reason ?? null } : null,
   };
 }
+
+/** The server's answer to "may this screen load Google Maps once?" (`POST /v1/web/map-load`). */
+export interface MapLoad {
+  allowed: boolean;
+  used: { day: number | null; month: number | null };
+  cap: { day: number | null; month: number | null };
+}
+
+/**
+ * ★Ask before every Google map load — Google bills each load, and the server counts them for all users together
+ * (cap 312/day, 9,688/month, 2026-09-29). No key, no answer, or any failure means "not allowed": the screen shows
+ * the free map instead of calling Google unchecked.
+ */
+export async function mapLoad(language: Language): Promise<MapLoad> {
+  const denied: MapLoad = { allowed: false, used: { day: null, month: null }, cap: { day: null, month: null } };
+  if (!currentKey()) return denied;
+  try {
+    const body = await api<{ allowed?: unknown; used?: { day?: number; month?: number }; cap?: { day?: number; month?: number } }>(
+      "/v1/web/map-load", language, { method: "POST" });
+    return {
+      allowed: body.allowed === true,
+      used: { day: body.used?.day ?? null, month: body.used?.month ?? null },
+      cap: { day: body.cap?.day ?? null, month: body.cap?.month ?? null },
+    };
+  } catch {
+    return denied;
+  }
+}
