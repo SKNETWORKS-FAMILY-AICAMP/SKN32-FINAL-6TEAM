@@ -1,0 +1,6 @@
+[12:46] 서버가 한가해짐
+hf-local:kakaocorp/kanana-2-3b-instruct 0.39s/q errors=0
+[12:48] Muse 짧은 확인
+plain 118.6 초 | 내용 '' | 생각 '' | 토큰 3 | 정답 기대 7
+think_false 42.9 초 | 내용 '' | 생각 '' | 토큰 3 | 정답 기대 7
+[12:51] P10DONE

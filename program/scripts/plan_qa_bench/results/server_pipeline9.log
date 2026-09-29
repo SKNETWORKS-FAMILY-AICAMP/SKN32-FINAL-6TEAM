@@ -1,0 +1,9 @@
+[12:21] KaLM-Embedding/KaLM-Reranker-V1-Large-R2
+KaLM-Embedding/KaLM-Reranker-V1-Large-R2 OK 298s
+[12:26] zeroentropy/zerank-2-reranker
+zeroentropy/zerank-2-reranker OK 603s
+[12:37] Qwen/Qwen3-Reranker-8B
+Qwen/Qwen3-Reranker-8B FAIL OutOfMemoryError('CUDA out of memory. Tried to allocate 848.00 MiB. GPU 0 has a total capacity of 15.57 GiB of which 756.19 MiB is free. Including non-PyTorch memory, this process has 14.83 GiB memory in use. Of the allocated memory 13.95 GiB is allocated by PyTorch, and 786.34 MiB is reserved by Py
+[12:44] Qwen/Qwen3-VL-Reranker-8B
+Qwen/Qwen3-VL-Reranker-8B FAIL TypeError("LogitScore.__init__() missing 1 required positional argument: 'true_token_id'")
+[12:46] P9DONE
