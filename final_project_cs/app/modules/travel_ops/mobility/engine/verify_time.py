@@ -81,7 +81,7 @@ from .paths import REPO_ROOT                                            # noqa: 
 from .line_order import LineOrder                                       # noqa: E402
 from .transfer_walk import TransferWalk, ceil1                          # noqa: E402
 from .bus import BusRoutes                                              # noqa: E402
-from .bus_profile import BusSegProfile, worst_not_before_best, board_caps  # noqa: E402
+from .bus_profile import BusSegProfile, worst_not_before_best, board_caps, last_pass_early  # noqa: E402
 from .geo import StationCoords, meters                                  # noqa: E402
 from .exits import StationExits                                         # noqa: E402
 from .candidates import CandidateGraph                                  # noqa: E402
@@ -794,13 +794,14 @@ class Verifier:
             stops0 = self.bus.stops[r.route_id]
             if a["seq"] != stops0[0]["seq"]:
                 md0 = self.rv("bus", "구간_프로파일", "min_days") if self.bus_prof is not None else None
-                cb0, cw0 = board_caps(self.bus_prof, r.route_id, stops0, a["seq"], r.last_min,
-                                      self._bus_day_types(day_type), md0)
-                cap0 = cw0 if worst else cb0
+                # ☆`[73 후속 · v0.9.2]` 비교 시각은 **빠른 쪽**(p10 이하 · last_pass_early). 팀장 판은 worst 에 p90(늦은 쪽)을
+                #   썼다 — 「아직 탈 수 있나」는 버스가 일찍 지나갈 위험이 핵심이라 늦은 추정은 낙관이다. best·worst 같은 값.
+                cap0 = last_pass_early(self.bus_prof, r.route_id, stops0, a["seq"], r.last_min,
+                                       self._bus_day_types(day_type), md0)
                 if cap0 is not None and cap0 > r.last_min:
                     last_pass = cap0
                     ev.append(self._ev_bus_prof(f"{nm} 막차 {fmt_min(r.last_min)} 기점 → {a['station_nm']} 통과 추정 "
-                                                f"{fmt_min(cap0)} — 요청 {fmt_min(now_min)} 과 비교"))
+                                                f"{fmt_min(cap0)}(빠른 쪽 · min(p10, p50) 누적) — 요청 {fmt_min(now_min)} 과 비교"))
                 elif cap0 is None:
                     warn.append(self.warn_msg("MOB_W_BUS_LAST_PASS_UNCHECKED", route=nm, stop=a["station_nm"]))
         if now_min > last_pass:
@@ -813,9 +814,14 @@ class Verifier:
                     f"(전날 막차 {fmt_min(r.last_min)} 는 이미 지났다)",
                     grade="확정", code="before_first", relief=f"{gap}분 뒤 첫차 {fmt_min(r.first_min)} 를 기다리면 성립",
                     warnings=warn, evidence=[self._ev_bus(r, "운행 구간")])
+            passed = (f" — 기점 출발 막차가 {a['station_nm']} 를 지나는 추정 시각(빠른 쪽) {fmt_min(last_pass)} 도 지났다"
+                      if last_pass > r.last_min else "")
+            # GPT 대조(78 Q2) — 중간 정류장에서의 막차 이후는 통과 추정(또는 기점 막차로 보수 대체)에 기댄 모델 판단이다.
+            #   「막차가 이미 지났다」는 확정 사실처럼 내지 않는다 — 기점 승차만 확정.
+            origin_board = a["seq"] == self.bus.stops[r.route_id][0]["seq"]
             return LegResult(idx, label, "infeasible",
-                             f"{fmt_min(now_min)} 은 {nm} 막차({fmt_min(r.last_min)}) 이후다",
-                             grade="확정", code="after_last", relief="수단 교체(지하철·택시)", warnings=warn,
+                             f"{fmt_min(now_min)} 은 {nm} 막차({fmt_min(r.last_min)}) 이후다{passed}",
+                             grade="확정" if origin_board else "추정", code="after_last", relief="수단 교체(지하철·택시)", warnings=warn,
                              evidence=[self._ev_bus(r, "운행 구간")])
 
         # 2) 대기 — 추정이다. 막차 근처는 배차 전부로 잡는다(놓치면 되돌릴 수 없다)
@@ -1138,11 +1144,8 @@ class Verifier:
                 warn.append(self.warn_msg("MOB_W_BIKE_OVERTIME", ride_min=f"{ride:g}",
                                           warn_min=B["fare"]["overtime_warn_min"]["value"]))
                 ev.append(self._ev_rule("bike.ddareungi.fare.overtime_warn_min", "추정"))
-        if party.get("foreign", True):
-            g = B["foreigner_guide"]["value"]
-            warn.append(self.warn_msg("MOB_W_BIKE_FOREIGNER_GUIDE", la=g[0], lb=g[1], lc=g[2]))
-            ev.append({"source_type": "policy", "source_id": B["foreigner_guide"]["source_id"], "grade": "확정",
-                       "observed_at": self.R["bike"]["effective_date"], "claim": "외국인 비회원 이용 가능 — 앱 Foreigner · 해외카드/DSP · 이메일 대여번호"})
+        # ☆`[73 후속 · v0.9.2 · 본인 9/29]` 따릉이 외국인 이용 안내(MOB_W_BIKE_FOREIGNER_GUIDE)를 붙이지 않는다 — 자전거는
+        #   요청했을 때만 싣고 자전거 따로 안내는 하지 않는다. 앞 판은 설문이 없으면 foreign 기본 True 로 내국인에게도 붙였다.
 
         total = wmin_in + rent + (math.ceil(ride) if ride is not None else 0) + rent + wmin_out
         arrive = now_min + total if ride is not None else None
@@ -1705,6 +1708,78 @@ class Verifier:
                 "dist_m": dist, "walk_m": walk_m, "factor": factor, "reason": None, "relief": None,
                 "warnings": [], "evidence": [src, rule_ev]}
 
+    def _bus_bus_walk(self, prev_leg, leg, party):
+        """버스 ↔ 버스 환승 도보와 근접 상한. rules.transfer.bus_bus_walk(v0.9.2 · 73 후속).
+
+        정류장은 **이름이 아니라 노선 안 행**(bus.segment 가 방향·순번으로 고른 행 · station_id)으로 맞춘다 —
+        같은 이름의 맞은편 정류장을 0 m 로 합치지 않는다.
+          · 같은 station_id  → 같은 정류장 · 도보 0분 · 확정
+          · 다른 station_id  → 두 정류장 좌표 직선 × 우회계수 ÷ 1.04 m/s · 추정 (지하철↔버스와 같은 식 · 같은 값)
+          · 근접 상한         → 직선이 limits.walk_m 초과면 불가 · 상한 ±boundary_m 안이면 근거없음
+          · 행·좌표 없음      → 근거없음(no_data) · MOB_W_TRANSFER_COORD_MISSING
+        ★ 옛 규칙 254(0분·근거없음)도, 팀장 #1 대체값(지하철 거리표 상위 10%)도 쓰지 않는다 — 지하철 분포는 버스 근거가 아니다.
+        """
+        S = self.R["transfer"]["stop_station_walk"]          # 값은 지하철↔버스와 같다(bus_bus_walk.값_출처)
+        factor = S["detour_factor"]["value"]
+        margin = S["boundary_m"]["value"]
+        speed = self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
+        wlim = self._walk_limit(party)
+        a = self._bus_stop_row(prev_leg, "to")               # 앞 버스 하차 정류장(방향·순번으로 고른 행)
+        b = self._bus_stop_row(leg, "from")                  # 뒤 버스 승차 정류장
+        a_nm = a["station_nm"] if a else prev_leg.get("to")
+        b_nm = b["station_nm"] if b else leg.get("from")
+        ra, rb = prev_leg.get("route"), leg.get("route")
+        label = f"환승 정류장 {a_nm}(버스{ra}) ↔ {b_nm}(버스{rb})"
+        rule_ev = self._ev_rule("transfer.bus_bus_walk", "추정")
+        if a is not None and b is not None and a.get("station_id") and a.get("station_id") == b.get("station_id"):
+            # GPT 대조(78 Q1) — 같은 ID 는 좌표와 무관한 근거다(좌표 검사보다 먼저). 뜻은 「정류장 간 이동 0 m」 —
+            #   하차·승차 준비는 0 으로 보지 않는다(길찾기 가산은 부르는 쪽이 따로 더한다).
+            src = {"source_type": "db", "source_id": getattr(self.bus, "source_id", None) or "bus_stops_v1",
+                   "grade": "확정", "observed_at": a.get("fetched_at") or b.get("fetched_at"),
+                   "claim": f"같은 정류장 {a_nm}(ID {a['station_id']}) — 정류장 간 이동 0m"}
+            return {"verdict": "feasible", "label": label, "walk_min": 0, "grade": "확정",
+                    "dist_m": 0.0, "walk_m": 0.0, "factor": factor, "reason": None, "relief": None,
+                    "warnings": [], "evidence": [src, dict(rule_ev, grade="확정")]}
+
+        def _ok(r):
+            try:
+                return r is not None and all(math.isfinite(float(r.get(k))) for k in ("lat", "lng"))
+            except (TypeError, ValueError):
+                return False
+        if not (_ok(a) and _ok(b)):
+            why = ("정류장 행을 못 찾았다(노선·정류장·방향)" if a is None or b is None else "정류장 좌표가 없다")
+            return {"verdict": "unknown", "label": label, "walk_min": None, "grade": "근거없음",
+                    "dist_m": None, "walk_m": None, "factor": factor, "reason": f"{label} — {why}",
+                    "relief": "노선·정류장을 확인한다",
+                    "warnings": [self.warn_msg("MOB_W_TRANSFER_COORD_MISSING", reason=why)],
+                    "evidence": [dict(rule_ev, grade="근거없음",
+                                      claim=f"transfer.bus_bus_walk — {why} → 판정하지 않음")]}
+        src = {"source_type": "db", "source_id": getattr(self.bus, "source_id", None) or "bus_stops_v1",
+               "grade": "추정", "observed_at": a.get("fetched_at") or b.get("fetched_at")}
+        dist = meters(a["lat"], a["lng"], b["lat"], b["lng"])
+        walk_m = dist * factor
+        walk_min = ceil1(walk_m / speed / 60)
+        src["claim"] = (f"정류장 {a_nm}(ID {a.get('station_id')} · {a.get('direction') or '?'} 방향) ↔ "
+                        f"{b_nm}(ID {b.get('station_id')} · {b.get('direction') or '?'} 방향) 직선 {dist:,.0f}m")
+        if abs(dist - wlim) <= margin:
+            why = (f"{label} 직선 {dist:,.0f}m 가 도보 상한 {wlim:,}m 의 ±{margin}m 안이다 — "
+                   f"정류장 좌표 오차가 판정을 뒤집을 수 있어 판정하지 않는다")
+            return {"verdict": "unknown", "label": label, "walk_min": walk_min, "grade": "근거없음",
+                    "dist_m": dist, "walk_m": walk_m, "factor": factor, "reason": why,
+                    "relief": "정류장을 실제 위치로 다시 확인한다",
+                    "warnings": [self.warn_msg("MOB_W_TRANSFER_NEAR_WALK_LIMIT", stop=a_nm,
+                                               station=b_nm, dist_m=round(dist), limit_m=wlim)],
+                    "evidence": [dict(src, grade="근거없음"), rule_ev]}
+        if dist > wlim:
+            why = f"{label} 직선 {dist:,.0f}m — 도보 상한 {wlim:,}m 를 넘어 환승할 수 없다"
+            return {"verdict": "infeasible", "label": label, "walk_min": walk_min, "grade": "추정",
+                    "dist_m": dist, "walk_m": walk_m, "factor": factor, "reason": why,
+                    "relief": f"{a_nm} 에서 가까운 정류장을 지나는 다른 노선으로 다시 잡는다",
+                    "warnings": [], "evidence": [src, rule_ev]}
+        return {"verdict": "feasible", "label": label, "walk_min": walk_min, "grade": "추정",
+                "dist_m": dist, "walk_m": walk_m, "factor": factor, "reason": None, "relief": None,
+                "warnings": [], "evidence": [src, rule_ev]}
+
     # ── 다목적 후보 (규칙 v0.5 · 20번 방) ────────────────────────────────
     MULTI_STRIP = ("multi", "expect", "expect_candidates_min", "expect_criteria", "expect_candidate_legs",
                    "expect_candidate_arrive", "expect_tie", "expect_tie_axes", "expect_feasible_max",
@@ -2050,11 +2125,40 @@ class Verifier:
                 prev_leg = case["legs"][i - 1]
                 mixed = (mode == "bus") != (prev_leg.get("mode", "subway") == "bus")
                 label, w, tg, twarn = f"환승 {st}", None, "추정", []
+                if mode == "bus" and not with_bike and self.bus is not None and self._bus_stop_row(leg, "from") is None:
+                    # ☆`[73 후속 · 탐침 전이표]` 뒤 버스 구간의 정류장 행을 못 찾으면(그 방향으로 안 감 · 수집 밖 노선) 환승 좌표도
+                    #   없다. 팀장 #1 뒤로 여기서 「좌표 없음 → 근거없음」으로 먼저 멈춰, 알 수 있는 버스 구간 불가(no_service ·
+                    #   그 방향 운행 없음)가 근거없음으로 바뀌었다(탐침 443건 · 역방향 탐침). 버스 구간을 먼저 판정해 그 이유를 낸다.
+                    #   버스 구간이 성립하면(행이 없는데 성립할 일은 없다) 아래 환승 분기가 종전대로 좌표 없음을 낸다.
+                    r0 = self.verify_leg_bus(i, leg, now, day_type, worst=worst)
+                    # GPT 대조(78 Q3) — 시각과 무관한 이유(방향 없음 no_service · 수집 밖·식별 불가 no_data)만 여기서 낸다.
+                    #   첫차·막차·도착 목표는 환승 도보를 더한 뒤에 봐야 하므로, 다른 코드가 나오면 아래 환승 분기로 간다.
+                    if r0.verdict != "feasible" and r0.code in ("no_service", "no_data"):
+                        r0.worst = worst
+                        legs.append(r0)
+                        warns += r0.warnings
+                        ev += r0.evidence
+                        return fail(r0.verdict, r0.reason, r0.code or OUT_OF[r0.verdict][1], r0.relief, "leg", i, leg, now)
                 if with_bike:
                     # ★ 자전거와의 환승(v0.7 · 22번 방). 대여소까지·대여소에서의 도보는 **자전거 구간 안에서** 잰다
                     #   (verify_leg_bike → LegResult.walk_min) — 여기서 또 더하면 이중 계산이다. 길찾기 가산만 붙인다.
                     label, walk, tev = f"환승 {st} ↔ 자전거", 0, []
                     dist_txt = "(대여소까지 도보는 자전거 구간 안에서 잰다)"
+                elif mode == "bus" and prev_leg.get("mode") == "bus":
+                    # ★ 버스↔버스 환승(v0.9.2 · 73 후속) — 정류장 행(ID·방향·순번) 좌표로 잰다(_bus_bus_walk).
+                    #   팀장 #1 뒤로 여기가 지하철 거리표 상위 10% 대체값을 탔다 — 지하철 분포는 버스 근거가 아니다.
+                    bb = self._bus_bus_walk(prev_leg, leg, party)
+                    label, tg, twarn, tev = bb["label"], bb["grade"], bb["warnings"], bb["evidence"]
+                    if bb["verdict"] != "feasible":
+                        warns += twarn
+                        ev += tev
+                        code = "transfer_walk" if bb["verdict"] == "infeasible" else "no_data"
+                        legs.append(LegResult(i, label, bb["verdict"], bb["reason"],
+                                              grade=tg, warnings=twarn, evidence=list(tev), code=code, worst=worst))
+                        return fail(bb["verdict"], bb["reason"], code, bb["relief"], "transfer_walk", i, leg, now)
+                    walk = bb["walk_min"]
+                    dist_txt = (f"({bb['dist_m']:,.0f}m 직선×{bb['factor']:g} = {bb['walk_m']:,.0f}m)"
+                                if bb["dist_m"] else "(같은 정류장)")
                 elif mixed:
                     # ★ 지하철↔버스 환승 (규칙 v0.4 · 19번 방 · rules.transfer.stop_station_walk).
                     #   v0.3.1 까지는 tw.lookup 이 지하철↔지하철만 타서 **도보 0분 + 길찾기 1분**으로
@@ -2084,7 +2188,7 @@ class Verifier:
                                 f"{st} 에서는 갈아타지 않는다 — 실제 환승역을 거치는 경로로 다시 잡는다",
                                 "transfer_walk", i, leg, now)
                 else:
-                    # 버스↔버스 환승은 거리표에 없다 — 종전대로 0분·근거없음(MOB_W_TRANSFER_WALK_ZERO). 19번 범위 밖.
+                    # 지하철↔지하철(버스↔버스는 위 분기 · v0.9.2). 거리표 → 없으면 같은 거리표 상위 10%(팀장 #1).
                     w = (self.tw.lookup(st, prev_line, cur_line)
                          if self.tw and leg.get("line") and not prev_line.startswith("버스") else None)
                     if w is not None and w.min is not None:
@@ -2185,6 +2289,7 @@ class Verifier:
             # 시간표가 없는 수단은 「마지막 편」이 없다 — 역산할 후보 목록이 없고, 분 단위로 훑으면 라우터를 수백 번 부른다. None.
             return None
         hi = arrive_by
+        unverified_top = None                   # 73 후속 — 막차 통과를 확인 못 한 버스 상한(여기에 걸린 역산값은 비운다)
         lim, _ = self._party_limit(party)
         if mode == "subway":
             cands, _, _ = self.candidates(first["line"], first["from"], first["to"], day_type)
@@ -2194,6 +2299,23 @@ class Verifier:
             if mode == "bus" and self.bus is not None:
                 r = self.bus.route(str(first["route"]))
                 top = r.last_min if (r is not None and r.last_min is not None) else None
+                # ☆`[73 후속 · v0.9.2 · GPT Q3]` 상한은 판정과 **같은 모델** — 승차 정류장의 막차 통과 추정(빠른 쪽).
+                #   기점이면 기점 막차. 중간 정류장에서 추정을 못 내면(UNCHECKED) 판정처럼 기점 막차를 보수적 상한으로 두되,
+                #   역산 결과가 **그 상한에 걸린 값**이면 비운다(unverified_top) — 기점 막차를 그 정류장 시각처럼 내보이지 않는다
+                #   (팀장 판은 기점 27:25 를 내고 27:26 요청을 성립시켰다 · NIGHT-10). 다른 구간(지하철 막차 등)에 걸린 값은 낸다.
+                if top is not None:
+                    a = self._bus_stop_row(first, "from")
+                    stops0 = self.bus.stops.get(r.route_id) if a is not None else None
+                    if a is not None and stops0 and a["seq"] != stops0[0]["seq"]:
+                        md0 = self.rv("bus", "구간_프로파일", "min_days") if self.bus_prof is not None else None
+                        early = last_pass_early(self.bus_prof, r.route_id, stops0, a["seq"], r.last_min,
+                                                self._bus_day_types(day_type), md0)
+                        if early is None:
+                            unverified_top = top
+                        else:
+                            top = early
+                    elif a is None or not stops0:
+                        unverified_top = top
                 hi = top if hi is None else (min(hi, top) if top is not None else hi)
                 if r is not None and r.first_min is not None:
                     lo = r.first_min
@@ -2210,6 +2332,8 @@ class Verifier:
                 continue
             if arrive_by is not None and w["arrive"] + buffer_min > arrive_by:
                 continue
+            if unverified_top is not None and t >= unverified_top:
+                return None                     # 확인 못 한 막차 상한에 걸린 값 — 「늦어도」를 비운다(73 후속 · GPT Q3)
             return t
         return None
 
@@ -2544,8 +2668,8 @@ def build_verifier_for_cases(args, cases):
     """
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
-        from .paths import PROCESSED
-        args.timetable = args.timetable or str(PROCESSED / "mobility" / "timetable_v1.jsonl")
+        from .paths import PROCESSED, timetable_file
+        args.timetable = args.timetable or str(timetable_file(PROCESSED / "mobility"))   # 73 후속 3-4: gz 우선
         args.order = args.order or str(PROCESSED / "mobility" / "line_station_order_v1.json")
         args.transfer_walk = args.transfer_walk or str(PROCESSED / "mobility" / "transfer_walk_v1.json")
         args.bus_route = args.bus_route or str(PROCESSED / "mobility" / "bus_route_v1.jsonl")

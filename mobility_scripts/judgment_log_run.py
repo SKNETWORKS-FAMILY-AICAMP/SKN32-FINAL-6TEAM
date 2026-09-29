@@ -13,7 +13,10 @@
   python mobility_scripts/judgment_log_run.py --source selfcheck --bundle selfcheck -- selfcheck \\
       --seeds final_project_cs/tests/unit/travel/mobility/*_legs_v1.json
 
-로그 자리: 기본 `DATA_DIR/travel/processed/mobility/logs/` — 한 기기 전용(DEVICE.txt).
+로그 자리: 기본 `<PROCESSED>/mobility/logs/` — 한 기기 전용(DEVICE.txt). PROCESSED 는 진입점에서 먼저 정한다
+(`.env` DATA_DIR → 없으면 저장소 datasets/mobility/processed). 자료 폴더를 못 정하면 로그를 쓰지 않고 멈춘다(73 후속).
+★ `--log-dir` 을 주면 그 자리에 쓴다 — 자료 폴더 출처(unset/disabled) 검사를 **의도적으로** 건너뛴다(명시한 자리는 사람이 고른 것).
+  판정 자체는 대상 스크립트가 자료 폴더를 다시 찾으므로, 자료가 없으면 대상이 「입력 없음」으로 멈춘다.
 """
 import argparse
 import sys
@@ -56,6 +59,16 @@ def main(argv=None):
                 bundle = Path(targs[j + 1]).stem.replace("_legs_v1", "")
             elif t.startswith("--cases="):
                 bundle = Path(t.split("=", 1)[1]).stem.replace("_legs_v1", "")
+    # ☆`[73 후속 · 3-5]` 로그 폴더를 정하기 **전에** 자료 폴더를 정한다(`.env` DATA_DIR · 없으면 저장소 datasets).
+    #   앞 판은 #48(엔진 import 때 .env 를 안 읽음) 뒤로 자리표시 `/data` 를 보고 `C:\data\…\logs` 에 썼다(73 실행).
+    #   자료 폴더를 못 정했거나(unset) 계산기가 꺼졌으면(disabled) **로그를 쓰지 않는다** — --log-dir 을 주면 그 자리에 쓴다.
+    from app.modules.travel_ops.mobility.engine import paths as _paths
+    if _paths.SOURCE == "unset":
+        _paths.load_cli_env()
+    if not a.log_dir and _paths.SOURCE in ("unset", "disabled"):
+        print(f"판정 로그를 안 켰다(판정도 안 돌렸다) — 자료 폴더를 정하지 못했다(출처 {_paths.SOURCE}). "
+              f"`.env` 의 DATA_DIR 을 확인하거나 --log-dir 을 준다", file=sys.stderr)
+        return 2
     lg = JudgmentLogger(a.log_dir, source=a.source, bundle=bundle, synthetic=a.synthetic, run_id=a.run_id,
                         dump=not a.no_dump, allow_other_device=a.log_allow_other_device)
     if target == "verify_time":

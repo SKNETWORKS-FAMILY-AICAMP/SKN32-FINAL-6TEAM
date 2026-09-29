@@ -87,9 +87,16 @@ def load_cli_env():
     load_dotenv(REPO_ROOT / ".env")
     if os.environ.get("DATA_DIR"):
         _layout(os.environ["DATA_DIR"], "cli_env")
-    elif (REPO_DATASETS / "mobility" / "timetable_v1.jsonl").exists():
+    elif timetable_file(REPO_DATASETS / "mobility").exists():
         _layout(REPO_DATASETS, "repo_datasets")     # 75: DATA_DIR 없으면 저장소 안 자료(pull 만 하면 시험이 돈다)
     return SOURCE
+
+
+def timetable_file(mob_dir):
+    """실 시간표 파일 — `timetable_v1.jsonl.gz` 가 있으면 그것, 없으면 `timetable_v1.jsonl`(73 후속 · 3-4).
+    판정기(Timetable.load)는 확장자로 gzip 여부를 정한다. 둘 다 없으면 텍스트 경로(없는 파일)를 돌려 적재가 멈추게 한다."""
+    gz = Path(mob_dir) / "timetable_v1.jsonl.gz"
+    return gz if gz.exists() else Path(mob_dir) / "timetable_v1.jsonl"
 
 
 def cli_processed():
