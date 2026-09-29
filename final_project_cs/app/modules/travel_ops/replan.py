@@ -71,6 +71,10 @@ class Candidate:
     axis: dict[str, Any] | None = None
     #: 영업 판정을 어디서 가져왔나 — `dining_ledger` · `core_place`. 틀렸을 때 어디를 고칠지 알게 남긴다
     judged_by: str | None = None
+    #: ★`[2026-09-29]` 활동 후보만 채운다 — 원래 장소와 비슷한 정도(클수록 비슷)와 직선거리(m).
+    #:  식당·경로 후보는 둘 다 0 이라 순서가 예전 그대로다(`rank` 맨 뒤, `key` 바로 앞)
+    similarity: int = 0
+    distance_m: float = 0.0
 
     def rank(self) -> tuple:
         # ★`[2026-09-28]` 도보 분(③ 원래 시각과의 차이)과 경고 유무를 더했다. 활동·경로 후보는 `walk_min` 이
@@ -83,9 +87,13 @@ class Candidate:
         # ☆`[2026-09-29 이동 계산기 문제목록 #22]` 경로 후보의 요금 모름은 0원(가장 쌈)이 아니라 **아는 후보 뒤** —
         #   경로 후보(option)에만 건다. 식당·활동은 종전 순서 그대로다
         fare_unknown = 1 if (self.option is not None and self.extra_cost_krw is None) else 0
+        # ★`[2026-09-29]` 활동 후보는 전에 추가 비용이 같으면 **장소 id 순**이었다(거리도 종류도 안 봤다).
+        #   이제 비용·변동 다음에 「비슷한 곳(관광공사 분류·구) → 가까운 곳」이다. 비슷한 정도가 거리보다 앞이라
+        #   600m 안에서 더 먼 곳이 골라질 수 있다 — 대체 활동은 먼저 같은 종류여야 한다(코덱스 합의, 활동 PR #6 규칙)
         return (priority if isinstance(priority, int) else SCENARIO_PRIORITY_NONE,
                 self.changed_items, fare_unknown, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
-                0 if self.reversible_internally else 1, 1 if self.warnings else 0, self.key)
+                0 if self.reversible_internally else 1, 1 if self.warnings else 0,
+                -self.similarity, round(self.distance_m), self.key)
 
     @property
     def name(self) -> str:
@@ -190,8 +198,13 @@ WEATHER_LIKE = frozenset({"air_quality", "weather_warning", "forecast"})
 # ── 후보: 활동 ─────────────────────────────────────────────────
 def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                         start: datetime, end: datetime | None, causes: list[dict[str, Any]],
-                        radius_m: int = 600) -> list[Candidate]:
-    """깨진 활동의 대안 후보. ★원인이 날씨·대기질이면 **실내**에서만 찾는다."""
+                        radius_m: int = 600,
+                        similarity: Callable[[Any, Any], int] | None = None) -> list[Candidate]:
+    """깨진 활동의 대안 후보. ★원인이 날씨·대기질이면 **실내**에서만 찾는다.
+
+    `similarity(원래 장소의 분류, 후보의 분류) -> int` 는 활동 팀이 넘긴다(`activity/similarity.py`).
+    ★순위에만 쓴다 — 후보를 거르지 않는다. 없으면 0(예전 순서).
+    """
     indoor_only = any(cause.get("category") in WEATHER_LIKE for cause in causes)
     base_price = (original.get("attributes") or {}).get("price_krw")
     out = []
@@ -204,7 +217,10 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
         if indoor_only and not attributes.get("indoor"):
             continue
         candidate = Candidate(key=str(place["place_id"]), place=place, changed_items=1,
-                              extra_cost_krw=None, shift_minutes=0)
+                              extra_cost_krw=None, shift_minutes=0,
+                              distance_m=distance_m(original, place))
+        if similarity is not None:
+            candidate.similarity = similarity(original.get("catalog_class"), place.get("catalog_class"))
         price = attributes.get("price_krw")
         if price is None or base_price is None:
             candidate.rejected.append("가격을 몰라 추가 비용을 계산할 수 없다")

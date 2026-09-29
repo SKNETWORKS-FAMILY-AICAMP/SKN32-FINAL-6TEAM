@@ -100,6 +100,13 @@ def _place(row: tuple) -> dict[str, Any]:
     return {**attributes, **place, "attributes": attributes}
 
 
+def _catalog_class(values: tuple) -> dict[str, str] | None:
+    """관광공사 분류 네 값 → `{"lcls1", "lcls2", "lcls3", "sigungu"}`. 넷 다 없으면 None(모름)."""
+    keys = ("lcls1", "lcls2", "lcls3", "sigungu")
+    found = {key: str(value) for key, value in zip(keys, values) if value}
+    return found or None
+
+
 def visible_to(places: list[dict[str, Any]], trip_id: Any) -> list[dict[str, Any]]:
     """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용."""
     return [p for p in places if p.get("trip_scope") in (None, str(trip_id))]
@@ -221,12 +228,22 @@ class TripStore:
         """
         where, params = "", [self.tenant_id]
         if not every_trip:
-            where = " AND (trip_scope IS NULL OR trip_scope = %s)" if trip_id else " AND trip_scope IS NULL"
+            where = " AND (p.trip_scope IS NULL OR p.trip_scope = %s)" if trip_id else " AND p.trip_scope IS NULL"
             params += [trip_id] if trip_id else []
+        # ★`[2026-09-29]` 관광공사 분류(신분류 대·중·소 · 시군구)를 장소 목록에서 이어 붙인다 — 대체 활동을
+        #   「비슷한 곳」부터 고르는 재료다(`activity/similarity.py`). 장소가 관광공사 id 를 모르거나 목록에 없으면
+        #   `catalog_class=None`(모름) — 지어내지 않는다. 카탈로그는 (tenant, source, content_id) UNIQUE 라 행이 늘지 않는다.
         with conn.cursor() as cur:
-            cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + ", trip_scope FROM places WHERE tenant_id=%s"
-                        + where, params)
-            return [{**_place(row[:-1]), "trip_scope": str(row[-1]) if row[-1] else None}
+            cur.execute("SELECT " + ", ".join("p." + column for column in PLACE_COLUMNS)
+                        + ", p.trip_scope, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2',"
+                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode'"
+                        " FROM places p LEFT JOIN place_catalog pc ON pc.tenant_id = p.tenant_id"
+                        " AND pc.source = 'tour_api'"
+                        " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"
+                        " WHERE p.tenant_id=%s" + where, params)
+            width = len(PLACE_COLUMNS)
+            return [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
+                     "catalog_class": _catalog_class(row[width + 1:])}
                     for row in cur.fetchall()]
 
     # ── 쓰기 ────────────────────────────────────────────────────

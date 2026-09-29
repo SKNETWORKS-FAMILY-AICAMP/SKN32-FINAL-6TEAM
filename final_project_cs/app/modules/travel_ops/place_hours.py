@@ -78,7 +78,18 @@ def knows_hours(attributes: Mapping[str, Any] | None) -> bool:
 
 
 def fits(attributes: Mapping[str, Any] | None, start: datetime, end: datetime) -> bool | None:
-    """그 칸(시작~끝)에 열려 있나. 모르면 `None`."""
+    """그 칸(시작~끝)에 열려 있나. 모르면 `None`.
+
+    ★`[2026-09-29]` 영업시간은 **현지(서울) 시각**이다 — 시간대가 붙은 시각은 서울 시각으로 바꿔 본다.
+      전에는 그대로 `.time()` 을 봐서, 같은 순간이 UTC 로 들어오면(DB 세션 시간대가 UTC 인 서버 등)
+      서울 14:00 이 05:00 으로 읽혀 「영업 전」이 됐다(실행 확인). 일정 짜기(`planner.py`)는 이미 바꿔 본다.
+      활동 팀 PR #6 전수검수에서 같은 종류의 결함(휴무 요일이 시간대에 따라 뒤집힘)을 보다 찾았다.
+    """
+    from zoneinfo import ZoneInfo
+
+    seoul = ZoneInfo("Asia/Seoul")
+    start = start.astimezone(seoul) if start.tzinfo else start
+    end = end.astimezone(seoul) if end.tzinfo else end
     found = hours_on(attributes, start.date())
     if found is None:
         return None
