@@ -13,7 +13,7 @@
 
 ★데이터: 실데이터 묶음은 `DATA_DIR/travel/processed/mobility/` 가 있어야 한다(git 밖 · 드라이브 zip). 없으면
   **skip(사유 "data not present")** — 코드가 깨진 게 아니라 데이터가 없는 것. 합성 묶음(`synthetic`)은 시간표만
-  저장소 안 `mini_timetable_v2.jsonl` 로 바꾸고 역 순서표·환승표는 여전히 DATA_DIR 에서 읽는다(0단계 문서 §5).
+  저장소 안 `mini_timetable_v2.jsonl.gz` 로 바꾸고 역 순서표·환승표는 여전히 DATA_DIR 에서 읽는다(0단계 문서 §5).
   수집(collection) 단계에서는 DATA_DIR 을 건드리지 않는다(27번 규칙 26) — 데이터 없는 CI 에서 수집 오류 0.
 
 ★라우터(GraphHopper)는 **항상 끈다**(`gh_url="none"`) — 기기에 라우터가 있어도 안 잡는다(재현성). alt 묶음의 `expect_taxi` 4건은
@@ -40,7 +40,7 @@ sys.path.insert(0, str(HERE.parents[3]))          # final_project_cs — 다른 
 
 # ── 14묶음 — 파일 + CLI 인자(scratch\_69\s7_resolve_run.ps1 (8) 구간과 같은 조합) ──────────────
 BUNDLES = {
-    "synthetic":   {"file": "synthetic_legs_v1.json", "timetable": "mini_timetable_v2.jsonl"},
+    "synthetic":   {"file": "synthetic_legs_v1.json", "timetable": "mini_timetable_v2.jsonl.gz"},   # #63(9/29) 압축 판 · Timetable.load 가 .gz 읽음
     "real":        {"file": "real_legs_v1.json"},
     "issue":       {"file": "issue_legs_v1.json"},
     "alt":         {"file": "alt_legs_v1.json", "allow_router_down": True},
@@ -85,8 +85,10 @@ LOAD_KEYS = ("timetable", "gh_url", "bike_fixture", "bus_profile")
 
 
 def _processed():
-    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
-    return PROCESSED / "mobility"
+    # #48(9/29 · 팀장): paths 는 import 때 .env 를 안 읽는다 — 시험은 cli_processed() 로 저장소 맨 위 .env 의 DATA_DIR 을 받는다
+    #   (환경변수 DATA_DIR 이 있으면 그것이 이김 · 서버가 configure/disable 한 뒤에는 건드리지 않음).
+    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    return cli_processed() / "mobility"
 
 
 def _skip_if_missing(bundle):

@@ -46,6 +46,9 @@ class BusRoutes:
             v.sort(key=lambda s: s["seq"])
         self.fetched_at = routes[0].get("fetched_at") if routes else None
         self.source_id = routes[0].get("source_id") if routes else "seoul_bus_route"
+        # ☆`[2026-09-29 문제목록 #15]` 이 파일이 운행 요일 칸(service_days)을 쓰는 판인가. 한 노선이라도 칸이 있으면
+        #   칸이 빠진 노선은 「매일」이 아니라 「모름」이다. 칸이 아예 없는 옛 판만 종전대로 매일로 보고 경고를 붙인다.
+        self.has_service_days = any("service_days" in r for r in routes)
 
     @classmethod
     def load(cls, route_path=None, stop_path=None):

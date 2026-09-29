@@ -166,8 +166,13 @@ def departure_phrase(move: Item, following: Item | None, how: dict[str, Any] | N
         values |= {"next_at": _hm(following.starts_at), "next_title": following.title}
     if how:
         eta = " · 약 {eta_min}분" if how.get("eta_min") is not None else ""
-        template += f"\n가는 방법: {{how}}{eta} (경로 확인 {{checked}})"
-        values |= {"how": how["label"], "eta_min": how.get("eta_min"), "checked": _hm(how["checked_at"])}
+        values |= {"how": how["label"], "eta_min": how.get("eta_min")}
+        if how.get("checked_at") is not None:
+            template += f"\n가는 방법: {{how}}{eta} (경로 확인 {{checked}})"
+            values["checked"] = _hm(how["checked_at"])
+        else:
+            # ☆`[2026-09-29 이동 계산기 문제목록 #37]` 확인하지 않은 경로에 「경로 확인 ○○:○○」을 붙이지 않는다
+            template += f"\n가는 방법: {{how}}{eta}"
     return Phrase(template, values)
 
 
@@ -213,6 +218,9 @@ class ReminderTickResult:
     held: list[dict[str, Any]] = field(default_factory=list)
     fatal: list[dict[str, Any]] = field(default_factory=list)
     no_route: int = 0
+    #: ☆`[2026-09-29 이동 계산기 문제목록 #37]` 계획 경로에 사건 소스가 확인하지 못하는 노선(지하철·버스 등)이 있어
+    #:  「경로 확인」 없이 보낸 출발 안내. 그 노선의 사고 출처(#36)가 생기면 0 이 되어야 한다.
+    unchecked: list[dict[str, Any]] = field(default_factory=list)
 
 
 class TripReminders:
@@ -294,13 +302,19 @@ class TripReminders:
             return None
         if status == "no_route":
             result.no_route += 1
+        if status == "unchecked":
+            result.unchecked.append(entry)
         return {**base, **notice_fields(phrase), "item_id": str(reminder.move.item_id)}
 
 
 def build_departure(move: Item, items: list[Item], *, route_events: Any, routes: dict[str, Any] | None,
                     now: datetime) -> tuple[str, Phrase | None]:
     """출발 안내 문구(틀+원값)와 상태 — `ok` · `no_route`(경로 정의·소스 없음, 어디로·언제만) ·
-    `held`(계획한 수단에 사건 — 감시가 고칠 일) · `fatal`(경로 사건을 못 읽음, 결정 15)."""
+    `held`(계획한 수단에 사건 — 감시가 고칠 일) · `fatal`(경로 사건을 못 읽음, 결정 15) ·
+    `unchecked`(계획한 수단 중 사건 소스가 **확인하지 못하는** 대상이 있다 — 「경로 확인」 없이 보낸다).
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #37]` 앞 판은 사건 소스가 지하철·버스를 `unsupported` 로 돌려주는데도
+      `affecting()` 의 빈 결과를 「사건 없음」으로 읽어 「경로 확인 ○○:○○」을 붙였다 — 지하철이 멈춰도 확인한 것처럼 안내했다."""
     following = next((i for i in sorted(items, key=lambda i: i.seq) if i.seq > move.seq), None)
     route = route_of(move, routes)
     if not route or route_events is None:
@@ -313,9 +327,11 @@ def build_departure(move: Item, items: list[Item], *, route_events: Any, routes:
         return "fatal", None
     if any(target in events for target in planned.get("uses", [])):
         return "held", None
+    unsupported_of = getattr(route_events, "unsupported", None)
+    blind = unsupported_of(list(planned.get("uses", []))) if callable(unsupported_of) else []
     how = {"label": planned.get("label") or planned.get("id"), "eta_min": planned.get("eta_min"),
-           "checked_at": now}
-    return "ok", departure_phrase(move, following, how)
+           "checked_at": None if blind else now}
+    return ("unchecked" if blind else "ok"), departure_phrase(move, following, how)
 
 
 __all__ = ["Reminder", "ReminderRules", "ReminderTickResult", "TripReminders", "build_departure",

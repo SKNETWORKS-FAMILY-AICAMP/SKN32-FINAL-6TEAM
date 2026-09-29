@@ -544,6 +544,8 @@ def _parse_point(s):
 
 
 def main(argv=None):
+    from . import paths as _paths_cli
+    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
     ap = argparse.ArgumentParser(description="계획용 이동 추정(P1) — 날짜 유형 · 소요 p10/중앙값/p90 · 출퇴근·막차 주의")
     ap.add_argument("--from", dest="frm", required=True, help="역명 또는 '이름@lat,lon'")
     ap.add_argument("--to", required=True, help="역명 또는 '이름@lat,lon'")

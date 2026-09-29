@@ -34,44 +34,67 @@ def to_min(t):
     초는 버린다(내림). 시간표의 초는 판정에 쓰지 않고 버퍼가 흡수한다.
     '000000'·'0' 은 '출발 없음'이지 0 시가 아니므로 None 이다 — 시·종착역의 표기다.
     """
-    if t is None or t is False:
-        return None
-    if isinstance(t, bool):
-        return None
-    if isinstance(t, int):
-        return t
-    if isinstance(t, float):
-        return int(t)
-    s = str(t).strip()
-    if not s:
-        return None
-    m = _HHMM_RE.match(s)
-    if m:
-        h, mi = int(m.group(1)), int(m.group(2))
-    else:
-        d = re.sub(r"\D", "", s)
-        if len(d) not in (4, 6):
-            return None
-        if int(d) == 0:               # '000000' = 출발 없음(시·종착역)
-            return None
-        h, mi = int(d[:2]), int(d[2:4])
-    if mi > 59:
-        return None
-    v = h * 60 + mi
-    if v > SERVICE_DAY_MAX_MIN:       # 31:00 같은 값은 표기 오류로 본다
-        return None
+    v, _sec = _parse(t)
     return v
 
 
-def to_service_min(t):
+def to_min_ceil(t):
+    """**사람이 준 출발 시각** → 분. 초가 있으면 **다음 분으로 올린다**.
+
+    ☆`[2026-09-29 문제목록 #12]` to_min 은 초를 버린다 — 시간표에는 맞지만 요청 시각에 쓰면
+      10:00:59 에 떠나는 사람이 이미 떠난 10:00 열차를 탄다고 판정됐다. 출발은 늦게 잡는 쪽이 안전하다.
+    """
+    v, sec = _parse(t)
+    if v is None:
+        return None
+    return v + 1 if sec else v
+
+
+def _parse(t):
+    """(분, 초) — 값이 아니면 (None, 0).
+
+    ☆`[2026-09-29 문제목록 #17]` 앞 판은 음수 분(-1 → -1)과 '10:00:99'(초 99 → 600)를 그대로 받았다.
+      시각이 아닌 값은 None 이다.
+    """
+    if t is None or t is False or isinstance(t, bool):
+        return None, 0
+    if isinstance(t, int):
+        return (t, 0) if t >= 0 else (None, 0)
+    if isinstance(t, float):
+        return (int(t), 0) if t >= 0 else (None, 0)
+    s = str(t).strip()
+    if not s:
+        return None, 0
+    m = _HHMM_RE.match(s)
+    if m:
+        h, mi, sec = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
+    else:
+        d = re.sub(r"\D", "", s)
+        if len(d) not in (4, 6):
+            return None, 0
+        if int(d) == 0:               # '000000' = 출발 없음(시·종착역)
+            return None, 0
+        h, mi, sec = int(d[:2]), int(d[2:4]), int(d[4:6] or 0)
+    if mi > 59 or sec > 59:
+        return None, 0
+    v = h * 60 + mi
+    if v > SERVICE_DAY_MAX_MIN:       # 31:00 같은 값은 표기 오류로 본다
+        return None, 0
+    return v, sec
+
+
+def to_service_min(t, ceil_seconds=False):
     """**사람이 준 시각**을 운행일 축으로. '00:30' → 1470(=24:30).
 
     시간표는 이미 정규화돼 있지만 요청 시각·도착 필요 시각은 벽시계 표기로 온다.
     같은 자를 안 쓰면 '00:30 까지 도착' 이 시간표의 24:50 열차보다 이르게 정렬돼
     막차 판정이 통째로 뒤집힌다.
     04 시 이전만 올린다 — 06:00 을 30:00 으로 올리지 않는다.
+
+    ceil_seconds=True 이면 초를 다음 분으로 올린다 — **출발 시각**에 쓴다(#12).
+    도착 기한(arrive_by)은 내림이 안전한 쪽이라 기본값(내림)을 쓴다.
     """
-    v = to_min(t)
+    v = to_min_ceil(t) if ceil_seconds else to_min(t)
     if v is None:
         return None
     if v < SERVICE_DAY_START_MIN:
@@ -118,13 +141,41 @@ def normalize_raw(t):
     return v
 
 
+class CalendarOutOfRange(ValueError):
+    """공휴일 표가 덮지 않는 해의 날짜 — 평일·휴일을 **짐작하지 않는다**(결정 15: 대체 출처가 없으면 치명)."""
+
+
+class HolidayCalendar(set):
+    """공휴일 날짜 집합 + **이 표가 덮는 해**. set 처럼 `in` 으로 쓴다.
+
+    ☆`[2026-09-29 문제목록 #5]` 앞 판은 표(2026·2027) 밖의 2028-03-01(삼일절)을 평일로 판정했다.
+      덮는 해를 알면 day_type_of 가 그 밖의 날짜를 거절한다. 덮는 해를 모르는 옛 집합(set)은 종전대로 본다.
+    """
+
+    def __init__(self, days=(), years=()):
+        super().__init__(days)
+        self.years = frozenset(int(y) for y in years)
+
+    @classmethod
+    def from_doc(cls, doc):
+        days = doc["holidays"]
+        years = doc.get("years") or sorted({int(k[:4]) for k in days})
+        return cls(days, years)
+
+
 def day_type_of(d, holidays):
     """date → 시간표 요일축. holiday_collect.py 의 day_type_of 와 같은 규칙이다.
 
-    d: datetime.date · holidays: {'2026-10-03', ...}
+    d: datetime.date · holidays: HolidayCalendar(덮는 해를 안다) 또는 {'2026-10-03', ...}
     반환: 'weekday' / 'holiday'
     ※ 신정지선 토요일 예외는 규칙(rules)의 몫이라 여기서 다루지 않는다.
+    ★ 표가 덮지 않는 해면 CalendarOutOfRange — 주말은 표 없이도 휴일이지만, 평일 공휴일을 놓치므로
+      주말도 같이 거절한다(판정 하나만 되고 옆 날짜가 안 되는 모양을 만들지 않는다).
     """
+    years = getattr(holidays, "years", None)
+    if years and d.year not in years:
+        raise CalendarOutOfRange(f"공휴일 표가 {d.year}년을 덮지 않는다(덮는 해 {sorted(years)}) — "
+                                 f"{d.isoformat()} 의 요일축을 정할 수 없다")
     if d.weekday() >= 5 or d.isoformat() in holidays:
         return "holiday"
     return "weekday"
