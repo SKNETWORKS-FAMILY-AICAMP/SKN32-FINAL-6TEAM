@@ -44,7 +44,7 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from .density import measure_density
-from .place_hours import DayHours, hours_on, knows_hours
+from .place_hours import DayHours, find_tour_id, hours_on, knows_hours
 from .place_hours import fits as hours_fit
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
@@ -169,7 +169,7 @@ class Cand:
     lon: float | None
     attributes: dict[str, Any]
     origin: str                     # places | place_catalog | tour_api
-    weather_sensitive: bool = False
+    weather_sensitive: bool | None = None     # ★`[2026-09-29]` None = 모름(야외 아님이 아니다)
     rank_hint: int = 9
 
     @property
@@ -190,11 +190,9 @@ class Cand:
         `attributes` 안에 싣는다(모델 칸을 늘리지 않는다)."""
         return {"key": self.key, "name": self.name, "kind": self.kind,
                 "lat": self.lat, "lon": self.lon,
-                # ★`PlaceIn.weather_sensitive` 는 bool 이라 「모름」을 못 담는다. 아는 장소의
-                #   값만 True 로 올리고, 모르는 곳은 기본값 False 가 들어간다 — 우리가 「야외가
-                #   아니다」라고 **단정한 것이 아니다**. DB 칸은 NULL 을 받으므로 이 한계는
-                #   계약 쪽에 있다(리포트 「못 하는 것」에 적었다).
-                "weather_sensitive": bool(self.weather_sensitive),
+                # ★`[2026-09-29]` 모르면 None 을 그대로 싣는다 — 전에는 `PlaceIn.weather_sensitive` 가 bool 이라
+                #   모르는 곳이 False(「야외 아님」)로 들어갔다. 이제 계약이 None 을 받는다(`trip_api.PlaceIn`).
+                "weather_sensitive": self.weather_sensitive,
                 "attributes": dict(self.attributes)}
 
     def for_check(self) -> dict[str, Any]:
@@ -279,14 +277,19 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
             attributes = dict(attributes or {})
             found[(name, kind)] = Cand(key=f"db_{place_id}", name=name, kind=kind,
                                        lat=lat, lon=lon, attributes=attributes,
-                                       origin="places", weather_sensitive=bool(sensitive),
+                                       origin="places", weather_sensitive=sensitive,
                                        rank_hint=0)
         wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds]
+        if any(cand.attributes.get("source") == "dining_ledger" for cand in found.values()):
+            # ★`[2026-09-28]` 식당은 요식 목록이 기준이다(요식 데이터 코어 통합 — 마이그레이션 221·222). 관광공사 목록의
+            #   음식점 1,591곳 중 980곳이 요식과 같은 식당이라, 같이 넣으면 한 식당이 후보에 두 번 나온다.
+            #   요식에서 올린 식당이 있을 때만 뺀다 — 시험 테넌트처럼 요식 식당이 없으면 예전 그대로다
+            wanted_types = [code for code in wanted_types if KIND_BY_CONTENT_TYPE[code] != "dining"]
         from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
         if not PlaceCatalogSync.enabled():
-            # ★`[2026-09-27]` 관광공사 장소 목록을 읽지 않는다(약관 해석 대기 — 기본 꺼짐). 후보가 모자라면
-            #   `fill_from_tour_api` 가 **실시간으로** 받아 이 요청 안에서만 쓴다(저장하지 않는다)
+            # ★스위치를 끈 때만 여기로 온다(기본 켜짐 — `[2026-09-28]` 되돌림). 후보가 모자라면
+            #   `fill_from_tour_api` 가 **실시간으로** 받아 이 요청 안에서만 쓴다
             return list(found.values())
         cur.execute(
             "SELECT content_id, content_type_id, title, address, latitude, longitude "
@@ -683,7 +686,42 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
 
 
 # ── 이동 항목 — 출발 시각을 거꾸로 잡는다 ────────────────────────
-def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
+def _shift_from(items: list[dict[str, Any]], pivot: datetime, day: str, minutes: int) -> None:
+    """그날 pivot 이후(포함) 항목을 minutes 만큼 뒤로 — ★번호가 아니라 **시각**으로 민다."""
+    for later in items:
+        if _planned_day(later) == day and later["starts_at"] >= pivot:
+            later["starts_at"] += timedelta(minutes=minutes)
+            if later["ends_at"]:
+                later["ends_at"] += timedelta(minutes=minutes)
+
+
+def _engine_move(engine: Any, previous: dict[str, Any], item: dict[str, Any], a: Cand, b: Cand,
+                 items: list[dict[str, Any]], notes: list[str]) -> dict[str, Any] | None:
+    """이동 계산기(시간표 판정)로 이 구간을 채운다. 못 채우면 None — 부르는 쪽이 직선 어림값으로 간다.
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#42]` 앞 일정이 끝난 뒤 떠나서는 못 맞추면(arrive_late) 계산기는 구간을
+      비운다 — 일정을 미는 것은 우리 몫이다. 앞 일정 끝을 풀고 한 번 더 계산해 모자란 분만큼 그날 뒤 일정을 밀고,
+      민 시각으로 **다시 판정한다**(추정으로 맞추지 않는다). 그래도 안 되면 None.
+    """
+    import math                                  # 머리 import 줄은 다른 작업이 고치는 자리라 여기서 부른다
+
+    end = previous["ends_at"] or previous["starts_at"]
+    got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None and (why or {}).get("code") == "arrive_late":
+        free, _ = engine(a.as_place(), b.as_place(), item["starts_at"], None)
+        if free is not None and free["starts_at"] < end:
+            short = math.ceil((end - free["starts_at"]).total_seconds() / 60)
+            _shift_from(items, item["starts_at"], _planned_day(item), short)
+            notes.append(f"move({item['seq']}): 시간표로 이동 {free['eta_min']}분 — 앞 일정이 끝난 뒤 떠나면 늦어 "
+                         f"{item['title']} 부터 {short}분 뒤로 밀고 다시 판정했다")
+            got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None:
+        notes.append(f"move({item['seq']}): 이동 계산기로 못 채움 — {(why or {}).get('reason') or (why or {}).get('code')}"
+                     " → 직선 어림값 [추정]")
+    return got
+
+
+def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand], *, engine: Any = None
               ) -> tuple[list[dict[str, Any]], dict[str, Any], list[str]]:
     """같은 날 이어지는 두 장소 사이에 **이동 항목**을 넣는다. (항목들, routes, 민 내역).
 
@@ -694,6 +732,9 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
       **그날 안에서 뒤로 민다** — 민 내역을 돌려준다. 하루 마감을 넘기는지는 부르는 쪽이 본다.
     ★이동 시간은 `_transfer_minutes` 의 **추정**이다. 경로 정의의 `uses` 는 비워 둔다 — 어떤 노선을
       타는지 우리가 모르기 때문이다(지어내지 않는다). 그래서 감시는 이 구간의 노선 사건을 보지 않는다.
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#43]` `engine`(mobility/wiring.leg_planner)을 주면 **시간표 판정**으로
+      채운다 — 출발·도착·경로 후보(탈 노선 uses 포함)·밀도 칸. 계산기가 못 채운 구간만 위 추정을 대체값으로 쓰고
+      민 내역(notes)에 남긴다(조용히 빠지지 않는다). 하루 밀도 맞추기처럼 여러 번 시험하는 호출은 engine 없이 부른다.
     """
     ordered = sorted(items, key=lambda it: (_planned_day(it), it["starts_at"], it["seq"]))
     out: list[dict[str, Any]] = []
@@ -702,6 +743,18 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
     for index, item in enumerate(ordered):
         previous = ordered[index - 1] if index else None
         if previous is not None and _planned_day(previous) == _planned_day(item):
+            got = (_engine_move(engine, previous, item, places[previous["place"]], places[item["place"]], items, notes)
+                   if engine is not None else None)
+            if got is not None:
+                key = f"move-{len(routes) + 1}"
+                routes[key] = got["route"]
+                out.append({"seq": 0, "kind": "mobility", "title": f"{previous['title']} → {item['title']}",
+                            "place": None, "route": key, "starts_at": got["starts_at"], "ends_at": got["ends_at"],
+                            "detail": {"planner": {"day": _planned_day(item), "transfer_basis": "시간표 판정(이동 계산기)",
+                                                   "travel_min": got["eta_min"],
+                                                   "leave_rule": "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)"}}})
+                out.append(item)
+                continue
             travel, basis, label = _transfer_minutes(places[previous["place"]], places[item["place"]])
             need = travel + MOVE_BUFFER_MIN
             end = previous["ends_at"] or previous["starts_at"]
@@ -965,9 +1018,6 @@ class PlanOutcome:
                 "coverage": self.coverage, "calls": self.calls, "rag": self.rag}
 
 
-#: 식별자 없는 장소를 이름으로 찾을 때 같은 곳으로 보는 거리. ★우리가 고른 값 — 구글 새벽 확인의 기본(300m)보다
-#: 넓게 둔 것은 관광공사 좌표가 건물 입구가 아니라 부지 중심인 곳(궁궐·공원)이 있어서다
-HOURS_MATCH_RADIUS_M = 500
 #: 같은 관광공사 장소를 계획마다 다시 읽지 않는다(프로세스 안, 6시간). 값은 원문을 옮긴 것이고 새벽 확인이 최종 판정한다
 _HOURS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
 _HOURS_CACHE_SECONDS = 6 * 3600
@@ -1008,24 +1058,21 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
         if not content_id:
             # ★관광공사 식별자가 없는 장소(공용 장소 행) — **같은 이름 · 같은 종류**로 찾고, 좌표가
             #   `HOURS_MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
-            wanted = {code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind == cand.kind}
-            found = source.find(cand.name, allowed_types=wanted, area_code=SEOUL_AREA_CODE)
-            meters = (distance_m({"latitude": cand.lat, "longitude": cand.lon},
-                                 {"latitude": found["latitude"], "longitude": found["longitude"]})
-                      if found else None)
-            if found is None or meters is None or meters > HOURS_MATCH_RADIUS_M:
-                why = ("관광공사에서 같은 이름·종류를 하나로 찾지 못했다" if found is None
-                       else f"같은 이름이 {round(meters)}m 떨어져 있어 같은 곳으로 보지 않았다")
+            ids, why, meters = find_tour_id(name=cand.name, kind=cand.kind, latitude=cand.lat,
+                                            longitude=cand.lon, source=source)
+            if ids is None:
                 result = {"week": {}, "record": {"source": "tour_api", "method": "none",
                                                  "read_at": now.isoformat(), "dropped": [why]}}
-                _HOURS_CACHE[key] = (_time.time(), result)
+                if meters is not None:
+                    _HOURS_CACHE[key] = (_time.time(), result)     # 거리로 아니라고 본 것만 굳힌다(찾기 실패는 다시)
                 return result
-            content_id, type_id = str(found["content_id"]), str(found["content_type_id"])
-            matched = {"content_id": content_id, "distance_m": round(meters)}
+            content_id, type_id = ids
+            matched = {"content_id": content_id, "distance_m": meters}
         intro = source.operating(content_id, type_id)
         if not intro:
-            found = {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
-                                            "dropped": ["운영시간 원문을 받지 못했다"]}}
+            # ★못 받은 것은 캐시하지 않는다 — 속도 한도로 못 받았을 수 있다(6시간 「모름」으로 굳으면 안 된다)
+            return {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                           "dropped": ["운영시간 원문을 받지 못했다"]}}
         else:
             read = read_hours(intro.get("usetime_text"), intro.get("restdate_text"), chat)
             found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
@@ -1075,7 +1122,35 @@ def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str,
                      f"`check_itinerary` 가 보지 않는다(모름은 위반이 아니다)")}
 
 
+def _rate_limited(source: Any) -> int:
+    return int(getattr(source, "misses", {}).get("rate_limited", 0)) if source is not None else 0
+
+
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
+              tour_api: Any | None = None, search: Callable[..., Any] | None = None,
+              exclude_names: Iterable[str] = ()) -> PlanOutcome:
+    """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
+
+    ★`[2026-09-28]` 이 요청 중에 관광공사 조회가 **속도 한도**에 걸렸고 그래서 못 짰으면, 조건 문제처럼 보이는
+      거절(「후보 부족」 등) 대신 `source_busy`(몇 초 뒤 다시)로 바꿔 올린다 — 실서버에서 「후보 부족」 422 가 나고
+      1분 뒤 다시 누르니 됐다(ui 세션 실측). 원래 거절은 `underlying` 에 그대로 싣는다.
+    """
+    import math
+
+    limited = _rate_limited(tour_api)
+    try:
+        return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
+                          search=search, exclude_names=exclude_names)
+    except PlanRefused as refused:
+        if _rate_limited(tour_api) <= limited:
+            raise
+        wait = max(1, math.ceil(float(getattr(tour_api, "last_wait_seconds", 60) or 60)))
+        raise PlanRefused("source_busy",
+                          f"관광공사 조회가 속도 한도에 걸려 후보를 다 받지 못했다 — {wait}초 뒤 다시 시도하면 된다",
+                          retry_after_seconds=wait, source="tour_api", underlying=refused.as_dict()) from None
+
+
+def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None,
               search: Callable[..., Any] | None = None,
               exclude_names: Iterable[str] = ()) -> PlanOutcome:
@@ -1240,7 +1315,10 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니")
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
-    items, routes, moved = add_moves(items, chosen)
+    # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
+    from .mobility.wiring import leg_planner
+    items, routes, moved = add_moves(items, chosen,
+                                     engine=leg_planner(request.party_size, dict(request.constraints)))
     fixed += moved
     violations = _check(items, chosen, request, routes)
     if violations:
@@ -1320,11 +1398,11 @@ def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
     for place in draft.places:
         places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
                                     dict(place.get("attributes") or {}), "draft",
-                                    bool(place.get("weather_sensitive")))
+                                    place.get("weather_sensitive"))
     for place in fixed_places:
         places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
                                     dict(place.get("attributes") or {}), "customer",
-                                    bool(place.get("weather_sensitive")))
+                                    place.get("weather_sensitive"))
     fixed = []
     for item in fixed_items:
         starts = datetime.fromisoformat(item["starts_at"]) if isinstance(item["starts_at"], str) else item["starts_at"]

@@ -69,6 +69,13 @@ ODSAY_TOKENS = ("subPath", "sectionTime", "mapObj", "loadLane", "passStopList", 
 COORD_KEYS = frozenset({"lat", "lng", "lon", "latitude", "longitude", "x", "y", "coord", "coords",
                         "gps", "live_pos", "accuracy_m", "origin_source", "geometry", "points", "pts"})
 _COORD_RE = re.compile(r"\b3[3-8]\.\d+[\s,;/]+12[4-9]\.\d+\b|\b12[4-9]\.\d+[\s,;/]+3[3-8]\.\d+\b")
+# ☆`[2026-09-29 문제목록 #51]` 앞 판은 좌표 **쌍**만 가렸다 — 「lat=37.5」 같은 이름 붙은 좌표 하나,
+#   이메일·전화번호는 기록에 그대로 남았다. 셋 다 가리고, 검사(scan_blocked)도 잡는다.
+_LABELED_COORD_RE = re.compile(r"\b(?:lat|lng|lon|latitude|longitude)\s*[=:]\s*-?\d{1,3}(?:\.\d+)?", re.I)
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+#   ★ 앞뒤가 영문자·숫자에 붙은 숫자열은 전화번호로 보지 않는다 — 실행 번호 「20260929T024107-1234ab」의
+#     「024107-1234」가 새벽 2시대에 서울 번호(02) 모양이 되어 기록이 차단됐다(무작위 뒷자리에 따라 가끔 — 시험이 흔들렸다).
+_PHONE_RE = re.compile(r"(?<![0-9A-Za-z])(?:\+?82[-\s.]?|0)(?:1[016789]|2|[3-6][1-5])[-\s.]?\d{3,4}[-\s.]?\d{4}(?![0-9A-Za-z])")
 
 EXT_CALL_KEYS = ("api", "n", "ok", "fail", "latency_ms")
 _CODE_RE = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
@@ -99,14 +106,22 @@ def scan_blocked(obj, path="$"):
     elif isinstance(obj, str):
         if any(t in obj for t in ODSAY_TOKENS):
             hits.append(f"odsay_text:{path}")
-        if _COORD_RE.search(obj):
+        if _COORD_RE.search(obj) or _LABELED_COORD_RE.search(obj):
             hits.append(f"coord_text:{path}")
+        if _EMAIL_RE.search(obj) or _PHONE_RE.search(obj):
+            hits.append(f"pii_text:{path}")
     return hits
 
 
 def scrub_text(s):
-    """덤프용 — 문자열 안 좌표쌍을 가린다(자전거 구간 표기 `lat,lng` 가 사유 문장에 섞일 수 있다)."""
-    return _COORD_RE.sub("<좌표>", s) if isinstance(s, str) else s
+    """덤프용 — 문자열 안 좌표(쌍·이름 붙은 하나)·이메일·전화번호를 가린다(#51).
+    자전거 구간 표기 `lat,lng` 가 사유 문장에 섞일 수 있다."""
+    if not isinstance(s, str):
+        return s
+    s = _COORD_RE.sub("<좌표>", s)
+    s = _LABELED_COORD_RE.sub("<좌표>", s)
+    s = _EMAIL_RE.sub("<이메일>", s)
+    return _PHONE_RE.sub("<전화>", s)
 
 
 def scrub(obj):

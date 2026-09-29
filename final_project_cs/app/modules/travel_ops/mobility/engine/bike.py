@@ -51,7 +51,14 @@ class BikeStations:
 
 
 class BikeLive:
-    """bikeList stationId 단건 조회. get() 은 {'available': int, 'checked_at': str, 'source_id': str} 또는 None(조회 못 함)."""
+    """bikeList stationId 단건 조회. get() 은 {'available': int, 'checked_at': str, 'source_id': str} 또는 None(조회 못 함).
+
+    ☆`[2026-09-29 문제목록 #28]` 조회 못 한 **까닭**을 `last_error` 에 남긴다 — no_key · network · http · bad_response ·
+      not_found. 앞 판은 모든 예외를 삼켜 키 오류와 통신 실패를 가를 수 없었다. 통신·응답 외의 예외(코드 결함)는 삼키지 않는다.
+    ☆`[2026-09-29 문제목록 #50]` 제공처(서울 열린데이터광장 8088)가 **http 만 받는다** — https 세 표기
+      (8088·443·포트 생략)가 모두 연결되지 않았다(2026-09-29 실측). 그래서 키를 담은 주소를 **오류 메시지·기록에
+      싣지 않는다**(last_error 에는 종류와 상태 코드만). 전송 구간 노출은 제공처 제약으로 남는다.
+    """
     URL = "http://openapi.seoul.go.kr:8088/{key}/json/bikeList/1/5/{sid}"
 
     def __init__(self, fixture=None, key=None, timeout=5.0):
@@ -59,6 +66,7 @@ class BikeLive:
         self.key = key
         self.timeout = timeout
         self.calls = 0
+        self.last_error = None          # 마지막 조회 실패의 종류(#28) — 키가 든 주소는 싣지 않는다(#50)
 
     @classmethod
     def from_env(cls):
@@ -78,24 +86,40 @@ class BikeLive:
                 return None
             at = self.fixture.get("checked_at") or "fixture"
             return {"available": int(n), "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
+        self.last_error = None
         if not self.key:
+            self.last_error = {"kind": "no_key"}
             return None
+        import urllib.error
+        import urllib.request
         try:
-            import urllib.request
             self.calls += 1
             with urllib.request.urlopen(self.URL.format(key=self.key, sid=station_id), timeout=self.timeout) as f:
                 doc = json.loads(f.read().decode("utf-8"))
-        except Exception:
+        except urllib.error.HTTPError as ex:           # URLError 보다 먼저 — HTTPError 는 URLError 의 자식이다
+            self.last_error = {"kind": "http", "status": ex.code}
             return None
+        except (urllib.error.URLError, TimeoutError, OSError) as ex:
+            self.last_error = {"kind": "network", "error": type(ex).__name__}
+            return None
+        except (ValueError, UnicodeDecodeError) as ex:   # JSON 이 아니다
+            self.last_error = {"kind": "bad_response", "error": type(ex).__name__}
+            return None
+        result = (doc.get("rentBikeStatus") or {}).get("RESULT") or doc.get("RESULT") or {}
         rows = ((doc.get("rentBikeStatus") or {}).get("row")) or []
         row = next((r for r in rows if r.get("stationId") == station_id), None)
         if row is None:
+            # 인증 오류(INFO-100 등)와 「그 대여소 없음」을 가른다 — 응답의 결과 코드만 남긴다
+            code = result.get("CODE")
+            self.last_error = {"kind": "not_found" if code in (None, "INFO-000", "INFO-200") else "api_error",
+                               "code": code}
             return None
         at = _dt.datetime.now().astimezone().isoformat(timespec="minutes")
         # ★ 원 응답(doc·row)은 여기서 버린다. 남기는 것은 개수와 시각뿐.
         try:
             n = int(row.get("parkingBikeTotCnt"))
         except (TypeError, ValueError):
+            self.last_error = {"kind": "bad_response", "error": "parkingBikeTotCnt"}
             return None
         return {"available": n, "checked_at": at, "source_id": f"seoul_bikeList@{at}"}
 
@@ -116,6 +140,7 @@ class BikeRouter:
         self.pbf_date = pbf_date or "unknown"
         self.record = record
         self.calls = 0
+        self.last_error = None          # 마지막 경로 조회 실패의 종류(#28)
 
     @staticmethod
     def key(profile, lat1, lng1, lat2, lng2):
@@ -138,19 +163,37 @@ class BikeRouter:
             v = self.fixture[k]
             return {"distance_m": v["distance_m"], "time_s": v["time_s"], "basis": "fixture",
                     "source_id": v.get("source_id") or self.source_id}
+        self.last_error = None
         if self.router is None:
+            self.last_error = {"kind": "no_router"}
             return None
+        from .car import RouterDown
         try:
             self.calls += 1
             doc = self.router.route((lng1, lat1), (lng2, lat2), profile=profile)   # car.py 와 같은 (lng, lat) 순서
-        except Exception:                      # RouterDown 포함 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+        except RouterDown as ex:               # 라우터에 못 닿음 — 자전거는 소요 근거없음으로 낸다(죽지 않는다)
+            self.last_error = {"kind": "router_down", "error": str(ex)[:120]}
+            return None
+        except (OSError, ValueError) as ex:    # 통신·응답 해석 실패. 그 밖의 예외(코드 결함)는 삼키지 않는다(#28)
+            self.last_error = {"kind": "router_error", "error": type(ex).__name__}
             return None
         paths = (doc or {}).get("paths") or []
         if not paths:
+            self.last_error = {"kind": "no_path"}
             return None
         p = paths[0]
-        out = {"distance_m": round(float(p.get("distance", 0)), 1),
-               "time_s": int(round(float(p.get("time", 0)) / 1000)), "basis": "graphhopper",
+        # ☆`[2026-09-29 문제목록 #10]` 거리·시간이 빠진 응답을 0 으로 채우지 않는다 — 앞 판은 {"paths":[{}]} 를
+        #   「0 m · 0 초 경로」로 만들었다. 빠졌으면 근거없음이다.
+        try:
+            dist, tms = float(p["distance"]), float(p["time"])
+        except (KeyError, TypeError, ValueError):
+            self.last_error = {"kind": "bad_response", "error": "distance/time 없음"}
+            return None
+        if dist < 0 or tms < 0:
+            self.last_error = {"kind": "bad_response", "error": "음수 거리·시간"}
+            return None
+        out = {"distance_m": round(dist, 1),
+               "time_s": int(round(tms / 1000)), "basis": "graphhopper",
                "source_id": self.source_id}
         if self.record is not None:
             self.record[k] = {"distance_m": out["distance_m"], "time_s": out["time_s"],

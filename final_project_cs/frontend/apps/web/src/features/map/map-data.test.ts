@@ -13,7 +13,19 @@ describe("map provider selection", () => {
     expect(resolveMapConfiguration({})).toEqual({ provider: "demo" });
     expect(resolveMapConfiguration({ provider: "demo", googleApiKey: "unused" })).toEqual({ provider: "demo" });
     expect(resolveMapConfiguration({ provider: "naver", naverClientId: " web-id " })).toEqual({ provider: "naver", clientId: "web-id" });
-    expect(resolveMapConfiguration({ provider: "google", googleApiKey: "web-key", googleMapId: "map-id" })).toEqual({ provider: "google", apiKey: "web-key", mapId: "map-id" });
+    expect(resolveMapConfiguration({ provider: "google", googleApiKey: "web-key", googleMapId: "map-id" }))
+      .toEqual({ provider: "google", apiKey: "web-key", mapId: "map-id", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" });
+    expect(resolveMapConfiguration({ provider: "osm" })).toEqual({ provider: "osm", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" });
+    expect(resolveMapConfiguration({ provider: "osm", osmTileUrl: " https://tiles.example.org/{z}/{x}/{y}.png " }))
+      .toEqual({ provider: "osm", tileUrl: "https://tiles.example.org/{z}/{x}/{y}.png" });
+  });
+
+  it.each([
+    "http://tile.openstreetmap.org/{z}/{x}/{y}.png",   // ★the OSM tile policy forbids http
+    "https://tile.openstreetmap.org/tiles.png",        // no {z}/{x}/{y}: every tile would be the same image
+  ])("refuses a free-map tile address that breaks the tile policy or cannot draw a map: %s", (osmTileUrl) => {
+    expect(resolveMapConfiguration({ provider: "osm", osmTileUrl }).provider).toBe("unavailable");
+    expect(resolveMapConfiguration({ provider: "google", googleApiKey: "k", googleMapId: "m", osmTileUrl }).provider).toBe("unavailable");
   });
 
   it.each([
@@ -55,7 +67,7 @@ describe("backend-neutral coordinates", () => {
 
   it("preserves received coordinates through verification, storage reload and management start", async () => {
     const data = new Map<string, string>();
-    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); }, length: 0, key: () => null };
+    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); }, removeItem: (key: string) => { data.delete(key); }, length: 0, key: () => null };
     let now = 0;
     const gateway = createDemoGateway({ storage, now: () => now });
     const trip = await gateway.createTrip({ source: "1일차 · 2026-10-10\n09:00 장소 · [좌표: 37.5, 127]" }, "ko");

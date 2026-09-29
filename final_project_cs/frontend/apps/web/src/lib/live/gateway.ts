@@ -17,12 +17,30 @@ interface ServerItem {
   booked?: boolean;
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
+  place_info?: ServerPlaceInfo | null;
+  map_url?: string | null;
+}
+/** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
+interface ServerPlaceInfo {
+  address?: string | null; phone?: string | null; category?: string | null;
+  hours?: { day?: string; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
+  /** Opening-hours text as the source wrote it (places outside the dining ledger). */
+  hours_text?: string[] | string | null;
+  /** Conditions the server could not turn into a weekly table, in the source's words. */
+  hours_conditions?: string[] | null;
+  tags?: string[] | null; michelin?: { level?: string; year?: number } | null; source_note?: string | null;
 }
 interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
 interface ServerWarning { code?: string; date?: string | null; reason?: string; remedy?: string | null }
 interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
+  map?: { days?: { date?: string; app_route_urls?: unknown[]; legs?: { from_item_id?: unknown; to_item_id?: unknown; url?: unknown }[] }[] } | null;
+}
+
+/** ★Only Google Maps links are opened from the screen — anything else from the server is not shown as a map link. */
+function mapLink(value: unknown): string | undefined {
+  return typeof value === "string" && value.startsWith("https://www.google.com/maps/") ? value : undefined;
 }
 /** One row of `GET /v1/web/trips`. */
 interface ServerTripRow { trip_id: string; title: string; version: number; created_at: string }
@@ -47,7 +65,36 @@ function stop(item: ServerItem, t: Translate): TripStop {
     title: item.title, booking: item.booked ? "booked" : "unknown", notes, coordinates,
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
+    placeInfo: placeInfo(item.place_info, t),
+    mapUrl: mapLink(item.map_url),
   };
+}
+
+const text = (value: unknown): string | undefined => (typeof value === "string" && value.trim() ? value.trim() : undefined);
+
+/** The server's place facts, keeping only what it actually sent — an empty field is left out, not shown as "unknown". */
+export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
+  if (!raw || typeof raw !== "object") return null;
+  const hours = Array.isArray(raw.hours)
+    ? raw.hours.map((rule) => [text(rule?.day),
+      rule?.closed === true ? t("휴무", "Closed") : text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
+      rule?.closed !== true && text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined,
+      rule?.closed !== true && text(rule?.last_entry) ? t(`(입장 마감 ${rule.last_entry})`, `(last entry ${rule.last_entry})`) : undefined,
+    ].filter(Boolean).join(" ")).filter(Boolean)
+    : [];
+  const lines = (value: unknown): string[] =>
+    (Array.isArray(value) ? value : [value]).map(text).filter((line): line is string => !!line);
+  // ★With a weekly table the source text only adds its conditions; without one, the source text is the hours.
+  const hoursNotes = hours.length ? lines(raw.hours_conditions) : [...lines(raw.hours_text), ...lines(raw.hours_conditions)];
+  const level = text(raw.michelin?.level);
+  const info = {
+    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, hoursNotes: [...new Set(hoursNotes)],
+    tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string" && !!tag) : [],
+    michelin: level ? { level, year: typeof raw.michelin?.year === "number" ? raw.michelin.year : undefined } : null,
+    sourceNote: text(raw.source_note),
+  };
+  const empty = !info.address && !info.phone && !info.category && !hours.length && !info.hoursNotes.length && !info.tags.length && !info.michelin;
+  return empty ? null : info;
 }
 
 /** A cause in the server's own words: its summary/message when it has one, else what kind of thing it was. */
@@ -90,7 +137,7 @@ function replyFor(result: { status?: string; case_status?: string; answer?: stri
     case "asked": return t("바꾸기 전에 확인이 필요해요. 여행계획서에서 안을 골라 주세요.", "We need your choice before changing anything. Pick an option on your plan page.");
     case "rolled_back": return t("이전 일정으로 되돌렸어요.", "Your itinerary was rolled back.");
     case "kept": return t("일정은 그대로 두었어요.", "Your itinerary was kept as it is.");
-    case "no_alternate": return t("바꿀 만한 다른 안을 찾지 못해 일정은 그대로예요. 담당자가 확인해요.", "No suitable alternative was found, so nothing changed. A person will review it.");
+    case "no_alternate": return t("바꿀 만한 다른 안을 찾지 못해 일정은 그대로예요.", "No suitable alternative was found, so nothing changed.");
     case "duplicate": return t("같은 요청을 이미 받았어요.", "We already received this request.");
     default: return t(`요청을 받았어요 (상태: ${result.status ?? result.case_status ?? "?"}).`, `Request received (status: ${result.status ?? result.case_status ?? "?"}).`);
   }
@@ -119,6 +166,14 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     planUrl: server.plan_url || undefined,
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
+    dayRoutes: Object.fromEntries((server.map?.days ?? []).flatMap((day) => {
+      const urls = (day.app_route_urls ?? []).map(mapLink).filter((url): url is string => !!url);
+      return typeof day.date === "string" && urls.length ? [[day.date, urls]] : [];
+    })),
+    legs: Object.fromEntries((server.map?.days ?? []).flatMap((day) => (day.legs ?? []).flatMap((leg) => {
+      const url = mapLink(leg?.url);
+      return url && typeof leg.from_item_id === "string" && typeof leg.to_item_id === "string" ? [[`${leg.from_item_id}>${leg.to_item_id}`, url]] : [];
+    }))),
   };
 }
 
@@ -137,12 +192,12 @@ export function createLiveGateway(): TripGateway {
     getTrip: read,
     retryVerification: read,
     startTrip: read,
-    async sendMessage(tripId, message, language) {
+    async sendMessage(tripId, message, language, itemId) {
       const t = translator(language);
       const now = new Date().toISOString();
       const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       const result = await api<{ status?: string; case_status?: string; answer?: string }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
       });
       const log = [...readMessages(tripId),
         { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },

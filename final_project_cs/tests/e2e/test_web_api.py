@@ -10,6 +10,8 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import copy
 
 import pytest
@@ -21,11 +23,26 @@ from .test_trip_api import DAY, SCENARIO, _body, api  # noqa: F401 — 픽스처
 
 
 @pytest.fixture(autouse=True)
-def _fresh_issue_counter(monkeypatch):
-    """발급 속도 제한은 프로세스 안에서 센다 — 시험끼리 수가 쌓여 뒤 시험이 429 를 맞지 않게 비운다."""
-    from app.modules.travel_ops import web_session
+def _fresh_limit_cache():
+    """제한값은 프로세스가 잠깐 캐시한다(`web_guard.values`) — 시험끼리 섞이지 않게 비운다.
+    ★사용량은 DB(`web_usage`)에서 **테넌트별로** 센다 — 시험마다 새 테넌트라 쌓이지 않는다."""
+    from app.modules.travel_ops import web_guard
 
-    monkeypatch.setattr(web_session, "_issued", {})
+    web_guard.clear_cache()
+    yield
+    web_guard.clear_cache()
+
+
+def _override(api, name, value):
+    """운영자가 바꾼 값처럼 넣는다(`runtime_limits`) — 운영 API 를 거치지 않는 짧은 길."""
+    from psycopg.types.json import Json
+
+    from app.modules.travel_ops import web_guard
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO runtime_limits (tenant_id, name, value, updated_by) VALUES (%s,%s,%s,'test') "
+                    "ON CONFLICT (tenant_id, name) DO UPDATE SET value=EXCLUDED.value", (api["tenant"], name, Json(value)))
+    web_guard.clear_cache()
 
 
 def _session(api) -> dict:
@@ -171,9 +188,7 @@ def test_only_the_web_origin_may_call_from_a_browser(api):
 
 def test_one_address_cannot_mint_users_without_end(api, monkeypatch):
     """★키 없이 열린 발급 경로 — 한 주소에서 한 시간에 정한 수까지만. 넘으면 429 + Retry-After."""
-    from app.modules.travel_ops import web_session
-
-    monkeypatch.setattr(web_session, "_issue_limit", lambda: (2, 3600.0))
+    _override(api, "web.session.per_ip_hour", 2)
     assert [api["client"].post("/v1/web/session").status_code for _ in range(2)] == [201, 201]
     third = api["client"].post("/v1/web/session")
     assert third.status_code == 429 and third.json()["error"]["code"] == "too_many_sessions"
@@ -204,18 +219,22 @@ class _Talk:
     def json(self, system, message):
         if "늦을" in message:
             return {"type": "delay", "minutes": 30, "products": []}
+        if "바꿔" in message:
+            return {"type": "change", "minutes": None, "products": []}
         if "?" in message or "요?" in message:
             return {"type": "question"}
         return {"type": "other"}
 
 
-def _chat_client(api, search=None, place=None):
+def _chat_client(api, search=None, place=None, classifier_down=False):
     from fastapi.testclient import TestClient
 
     from app.modules.travel_ops.trip_api import build_trip_router
     from app.presentation.api.app import create_app
 
     def classify(message):
+        if classifier_down:
+            raise TimeoutError("model is waking up")          # 원격 모델이 잠들어 첫 호출이 시간 초과
         if "늦을" in message:
             return {"intent": "incident_report", "issue_code": "dining_hours", "sentiment": "negative"}
         return {"intent": "confirm_request", "issue_code": "other", "sentiment": "neutral"}
@@ -237,12 +256,16 @@ def _say(client, key, trip_id, text, request_id):
     return body
 
 
-def test_a_policy_question_is_answered_with_the_policy_excerpt_and_its_source(api):
+def test_a_policy_question_is_answered_with_the_customer_line_of_that_rule_not_the_staff_text(api):
+    """★`[2026-09-28 사용자 결정]` 규정 문서는 직원에게 쓴 글이다 — 조각 원문이 아니라 그 절의 **고객용 문장**을 싣는다
+    (ui 세션 실서버 시험: 「여기에 위약금 문장을 붙이면 없는 비용을 만들어 말하는 것」이 고객 답에 나갔다)."""
+    from app.modules.travel_ops.itinerary_team import customer_lines
+
     found = []
 
     def search(**kwargs):
         found.append(kwargs)
-        return [_Chunk("예약 취소는 시작 24시간 전까지 수수료가 없다.", "t_doc_01#c3", 0.71),
+        return [_Chunk("직원용 원문 — 여기에 위약금 문장을 붙이면 없는 비용을 만든다.", "t_doc_02#c5", 0.71),
                 _Chunk("관련 없는 조각", "t_doc_09#c1", 0.31)]
 
     me = _session(api)
@@ -250,9 +273,25 @@ def test_a_policy_question_is_answered_with_the_policy_excerpt_and_its_source(ap
     trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-1"), headers=_h(me["user_key"])).json()
     body = _say(client, me["user_key"], trip["trip_id"], "취소하면 위약금 있어요?", "ask-1")
     assert body["status"] == "answered" and body["case_status"] == "resolved"
-    assert "24시간 전까지" in body["answer"] and "근거 t_doc_01#c3" in body["answer"]
-    assert "관련 없는 조각" not in body["answer"]          # ★문턱(0.55) 아래 조각은 싣지 않는다
+    assert customer_lines()["t_doc_02#c5"] in body["answer"] and "근거 t_doc_02#c5" in body["answer"]
+    assert "직원용 원문" not in body["answer"] and "관련 없는 조각" not in body["answer"]
     assert found and found[0]["allowed_scopes"]
+
+
+def test_a_rule_section_with_no_customer_line_is_not_shown_and_counts_as_not_found(api):
+    """내부 절차 절(고객용 문장 없음)만 걸리면 규정을 못 찾은 것이다 — 원문을 대신 싣지 않는다."""
+    from knowledge.ingest import load_corpus
+
+    from app.modules.travel_ops.itinerary_team import customer_lines
+
+    manifest = Path(__file__).resolve().parents[2] / "knowledge" / "travel" / "manifest.json"
+    internal = next(f"{d.frontmatter['document_id']}#c{s.number}" for d in load_corpus(manifest)
+                    for s in d.sections if f"{d.frontmatter['document_id']}#c{s.number}" not in customer_lines())
+    me = _session(api)
+    client = _chat_client(api, lambda **_k: [_Chunk("내부 절차 원문", internal, 0.90)])
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-6"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "반려견도 데려가도 돼요?", "ask-6")
+    assert body["status"] == "answered" and "찾지 못해서" in body["answer"] and "내부 절차 원문" not in body["answer"]
 
 
 def test_a_question_with_no_matching_policy_says_so_instead_of_guessing(api):
@@ -260,7 +299,11 @@ def test_a_question_with_no_matching_policy_says_so_instead_of_guessing(api):
     client = _chat_client(api, lambda **_k: [_Chunk("엉뚱한 조각", "t_doc_05#c2", 0.40)])
     trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-2"), headers=_h(me["user_key"])).json()
     body = _say(client, me["user_key"], trip["trip_id"], "반려견도 데려가도 돼요?", "ask-2")
-    assert body["status"] == "escalated" and "찾지 못했어요" in body["answer"] and "엉뚱한" not in body["answer"]
+    # ★`[2026-09-28 사용자 결정]` 사람 대기로 남기지 않는다(사람이 보는 것은 버그·오류 리포트뿐) — 못 찾았다고 말하고
+    #   이 여행의 사실과 할 수 있는 일로 답한다(ui 세션 실서버 시험: 「비트코인 시세」가 사람 대기로 끝났다)
+    assert body["status"] == "answered" and body["case_status"] == "resolved", body
+    assert "찾지 못해서" in body["answer"] and "엉뚱한" not in body["answer"]
+    assert "이 여행은" in body["answer"] and "늦어요" in body["answer"] and "사람이 확인" not in body["answer"]
 
 
 def test_a_question_about_a_stop_is_answered_from_the_itinerary_even_without_rules(api):
@@ -340,7 +383,7 @@ CUSTOMER_FACTS = [
                                    "다음 일정(저녁 식사 18:00)으로", "17:15 출발"]),
     ("경복궁 몇 시에 가요?", "detail", ["경복궁 한복 탐방", "15:30~17:00", "종로구", "3,000원"]),
     ("저녁 식당 주소 알려 주세요", "address", ["서울역 저녁 식당(시나리오)", "주소는 모르겠어요",
-                                            "관광공사 식별자가 없는 장소", "중구"]),
+                                            "관광공사 조회가 연결돼 있지 않음", "중구"]),
 ]
 
 
@@ -408,3 +451,157 @@ def test_the_web_trip_marks_a_reserved_stop_as_booked(api):
     booked = {i["title"]: i["booked"] for i in items if i["kind"] != "mobility"}
     assert booked["성수 점심 식사(예약)"] is True and booked["호텔 조식"] is False
 
+
+class _NamedTour(_TourStub):
+    """식별자 없는 장소를 이름으로 찾는 흉내 — 좌표는 시나리오 장소와 같은 자리(또는 멀리)."""
+
+    def __init__(self, far=False):
+        super().__init__()
+        self.far = far
+
+    def find(self, name, allowed_types=None, area_code=None):
+        place = next(p for p in SCENARIO["places"] if p["name"] == name)
+        return {"content_id": "126508", "content_type_id": "12", "matched_title": name,
+                "latitude": place["lat"] + (0.05 if self.far else 0.0), "longitude": place["lon"]}
+
+
+def test_a_stop_without_a_tourism_id_is_found_by_name_and_place_before_answering(api):
+    """★`[2026-09-28]` 고객 글의 이름으로 붙은 장소(공용 장소 행)는 관광공사 식별자가 없어 주소·운영시간이 늘 「모름」이었다
+    (ui 세션 실서버 시험 — 「경복궁」). 같은 이름·종류로 찾고 **좌표가 500m 안일 때만** 같은 곳으로 본다."""
+    from app.modules.travel_ops import trip_facts
+
+    for far, expected in ((False, "서울특별시 송파구 올림픽로 300"), (True, "떨어져 있어 같은 곳으로 보지 않았다")):
+        trip_facts._CACHE.clear()
+        client = _chat_client(api, place=_NamedTour(far=far))
+        me = _session(api)
+        trip_id = client.post("/v1/web/trips", json=_web_body(api, request_id=f"named-{far}"),
+                              headers=_h(me["user_key"])).json()["trip_id"]
+        said = _say(client, me["user_key"], trip_id, "경복궁 주소 알려 주세요", f"addr-{far}")
+        assert expected in said["answer"], said["answer"]
+
+
+def test_the_issue_limit_can_be_switched_off_for_development_only(api, monkeypatch):
+    """★`[2026-09-28]` 화면 시험이 한 주소에서 새 사용자를 계속 만들다 429 에 걸렸다(ui 세션). 개발용 스위치 — 기본은 꺼짐."""
+    import app.core.settings as settings_module
+
+    _override(api, "web.session.per_ip_hour", 1)
+    assert api["client"].post("/v1/web/session").status_code == 201
+    assert api["client"].post("/v1/web/session").status_code == 429              # 한도만큼 받았다
+    unlimited = settings_module.get_settings().model_copy(update={"web_session_issue_unlimited": True})
+    monkeypatch.setattr(settings_module, "get_settings", lambda: unlimited)
+    assert api["client"].post("/v1/web/session").status_code == 201
+    assert settings_module.Settings.model_fields["web_session_issue_unlimited"].default is False
+
+
+def test_asking_for_another_place_finds_one_on_the_spot(api):
+    """★`[2026-09-29 사용자 지적]` 「다른 데로 바꿔 줘」에 들고 있던 대안이 없으면 **그 자리에서 찾는다** — 전에는 감시가 한 번
+    고친 항목만 봐서 막 만든 일정은 늘 「바꿀 수 있는 다른 안이 없어요」였다(ui 세션 전달). 나머지 후보는 「다른 안」으로 남는다."""
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-7"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "점심 식당 다른 데로 바꿔 줘", "swap-1")
+    assert body["status"] == "adjusted" and body["case_status"] == "resolved", body
+    assert "성수 점심 식당 대신" in body["answer"] and "다른 안:" in body["answer"], body["answer"]
+    lunch = _lunch(client, me, trip)
+    assert lunch["title"] != "성수 점심 식당 식사" and lunch["title"].endswith("식사")
+    # 다시 달라고 하면 이번에는 들고 있던 「다른 안」으로(원래 곳도 다른 안에 남아 있다)
+    again = _say(client, me["user_key"], trip["trip_id"], "점심 식당 다른 데로 바꿔 줘", "swap-2")
+    assert again["status"] == "adjusted", again
+    assert _lunch(client, me, trip)["title"] not in (lunch["title"],)
+
+
+def test_the_selected_item_on_screen_is_the_one_that_changes(api):
+    """화면에서 고른 일정(`item_id`)이 문장보다 앞선다 — 「다른 데로 바꿔 줘」만 보내도 그 항목이 바뀐다."""
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-8"), headers=_h(me["user_key"])).json()
+    lunch = _lunch(client, me, trip)
+    response = client.post(f"/v1/web/trips/{trip['trip_id']}/messages", headers=_h(me["user_key"]),
+                           json={"request_id": "sel-1", "message": "다른 데로 바꿔 줘", "item_id": lunch["item_id"],
+                                 "at": "2030-01-01T09:00:00+09:00"})
+    body = response.json()
+    assert body["status"] == "adjusted" and "성수 점심 식당 대신" in body["answer"], body
+
+
+def test_a_sentence_that_names_the_meal_wins_over_the_selected_item(api):
+    """`[2026-09-29 ui 세션 지적]` 활동을 눌러 둔 채 「점심 식당 바꿔 줘」라고 쓰면 **점심**이 바뀐다 — 문장이 대상을
+    분명히 말하면 문장이 이기고, 말하지 않을 때만 화면에서 고른 일정을 쓴다."""
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="q-9"), headers=_h(me["user_key"])).json()
+    view = client.get(f"/v1/web/trips/{trip['trip_id']}", headers=_h(me["user_key"])).json()
+    activity = next(i for i in view["items"] if i["kind"] == "activity")
+    response = client.post(f"/v1/web/trips/{trip['trip_id']}/messages", headers=_h(me["user_key"]),
+                           json={"request_id": "sel-2", "message": "점심 식당 바꿔 줘", "item_id": activity["item_id"],
+                                 "at": "2030-01-01T09:00:00+09:00"})
+    body = response.json()
+    assert body["status"] == "adjusted" and "성수 점심 식당 대신" in body["answer"], body
+
+
+def _lunch(client, me, trip) -> dict:
+    view = client.get(f"/v1/web/trips/{trip['trip_id']}", headers=_h(me["user_key"])).json()
+    return next(i for i in view["items"] if i["kind"] == "dining" and 11 <= int(i["starts_at"][11:13]) < 15)
+
+
+def test_a_fact_question_is_answered_even_when_the_classifier_times_out(api):
+    """★`[2026-09-29]` 원격 모델이 잠들어 분류가 시간 초과로 실패하면 화면의 「하루 요약」까지 「분류하지 못했어요」로
+    끝났다(ui 세션 실서버 시험). 사실 질문은 모델 없이 기록으로 답한다 — 분류 실패는 **그대로 기록**한다(Case escalated)."""
+    me = _session(api)
+    client = _chat_client(api, classifier_down=True)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="down-1"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "하루 일정 요약해 주세요", "down-sum")
+    assert body["status"] == "answered" and body["reason"] == "trip_fact_answered", body
+    # ★`[2026-09-29]` 웹은 분류를 기다리지 않고 답한다(모델이 식어 있으면 34초 걸렸다) — 분류는 응답 뒤에서 돈다
+    assert body["classification_pending"] is True
+    assert "일정은" in body["answer"] and "분류하지 못해" not in body["answer"]
+    with get_connection() as conn, conn.cursor() as cur:                                   # 응답 뒤 분류가 돌았다
+        cur.execute("SELECT status FROM customer_cases WHERE tenant_id=%s AND case_id=%s", (api["tenant"], body["case_id"]))
+        assert cur.fetchone()[0] == "escalated"                                             # 모델 장애는 기록에 남는다
+    again = _say(client, me["user_key"], trip["trip_id"], "하루 일정 요약해 주세요", "down-sum")
+    assert again["status"] == "duplicate" and body["answer"] in again["answer"]           # 답이 기록에 남았다
+    other = _say(client, me["user_key"], trip["trip_id"], "파이썬 코드 짜줘", "down-other")
+    assert other["status"] == "escalated" and "분류하지 못해" in other["answer"]          # 사실 질문이 아니면 전과 같다
+
+
+def test_a_fact_question_answers_before_classification_and_the_case_still_completes(api):
+    """★`[2026-09-29]` 분류가 되면 응답 뒤에서 담당·완료까지 기록된다(웹 · 모델 정상)."""
+    me = _session(api)
+    client = _chat_client(api)
+    trip = client.post("/v1/web/trips", json=_web_body(api, request_id="defer-1"), headers=_h(me["user_key"])).json()
+    body = _say(client, me["user_key"], trip["trip_id"], "하루 일정 요약해 주세요", "defer-sum")
+    assert body["status"] == "answered" and body["classification_pending"] is True
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT status, state_json->>'answer' FROM customer_cases WHERE tenant_id=%s AND case_id=%s",
+                    (api["tenant"], body["case_id"]))
+        status, stored = cur.fetchone()
+    assert status == "resolved" and stored == body["answer"]
+
+
+
+def test_the_google_map_is_loaded_only_while_the_budget_allows(api, monkeypatch):
+    """`[2026-09-29 사용자 지시]` 구글 지도도 무료 한도 안에서만 — 화면이 부르기 전에 묻고, 한도가 차면 무료 지도로.
+    ★실제 사용량 줄을 건드리지 않게 2099년 날짜로 세고 끝나면 지운다."""
+    from datetime import UTC, datetime
+
+    from app.infrastructure.travel.call_budget import CallBudget
+    from app.modules.travel_ops import trip_api
+
+    far = lambda: datetime(2099, 1, 2, tzinfo=UTC)
+    monkeypatch.setattr(trip_api, "map_budget", lambda: CallBudget(
+        connection_factory=get_connection, caps={trip_api.MAP_METER: {"month": 5, "day": 2}}, clock=far))
+    from app.modules.travel_ops import web_guard
+
+    me = _session(api)
+    try:
+        assert api["client"].post("/v1/web/map-load").status_code == 401                      # 키 없이는 안 된다
+        # ★`[2026-09-29 사용자 결정]` 기본은 무료 지도 — 구글 한도를 세지 않는다
+        first = api["client"].post("/v1/web/map-load", headers=_h(me["user_key"])).json()
+        assert (first["provider"], first["allowed"], first["reason"]) == ("osm", False, "setting")
+        monkeypatch.setattr(web_guard, "values", lambda tenant: {"web.map_provider": "google"})
+        answers = [api["client"].post("/v1/web/map-load", headers=_h(me["user_key"])).json() for _ in range(3)]
+        assert [a["allowed"] for a in answers] == [True, True, False]                         # 하루 2건
+        assert answers[-1]["reason"] == "cap" and answers[-1]["fallback"] == "free_map"
+        assert answers[-1]["used"] == {"month": 2, "day": 2}                                  # 무료 지도일 때는 안 셌다
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM external_call_budget WHERE meter=%s AND period LIKE %s", (trip_api.MAP_METER, "%2099%"))

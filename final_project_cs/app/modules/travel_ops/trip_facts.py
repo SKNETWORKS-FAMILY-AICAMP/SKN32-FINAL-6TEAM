@@ -201,32 +201,73 @@ _CACHE_SECONDS = 6 * 3600
 
 
 def look_up_place(place: dict[str, Any] | None, source: Any) -> dict[str, Any]:
-    """주소 · 운영시간 · 휴무 **원문**. 못 가져오면 `failed` 에 이유를 적는다(조용히 비우지 않는다)."""
+    """주소 · 운영시간 · 휴무 **원문**. 못 가져오면 `failed` 에 이유를 적는다(조용히 비우지 않는다).
+
+    ★`[2026-09-29 사용자 결정]` **구글은 부르지 않는다** — 구글 호출은 새벽 3시 확인 창(`dawn_check`)에 몰아서만 한다.
+      요식 원장 · 관광공사가 모두 모르는 값(예: 무구옥 운영시간)을 어떻게 메울지는 팀이 정한다(wiki D-CS-010).
+    """
     out: dict[str, Any] = {"address": None, "hours_text": None, "rest_text": None, "phone": None,
                            "source": None, "failed": []}
+    from .place_hours import find_tour_id
+
+    # ★`[2026-09-29 사용자 지적]` **요식 원장을 먼저** 읽는다 — 원장에 주소가 있는 식당(무구옥 등)도 관광공사에서 이름으로
+    #   다시 찾기만 해서 「주소: 모름」이었다(ui 세션 전달). 원장에 없는 값(영업시간 등)만 아래 관광공사에서 찾는다
+    uid = (((place or {}).get("attributes") or {}).get("dining_place_uid") or "").strip()
+    if uid:
+        try:
+            from app.infrastructure.db.session import get_connection
+
+            from .place_info import ledger_info
+
+            with get_connection() as conn:
+                info = ledger_info(conn, uid)
+        except Exception as exc:                              # noqa: BLE001 — 원장을 못 읽어도 관광공사로 간다(이유는 남긴다)
+            info = None
+            out["failed"].append(f"요식 원장 조회 오류 {type(exc).__name__}")
+        if info:
+            out["address"], out["phone"] = info.get("address"), info.get("phone")
+            if info.get("hours"):
+                out["hours_text"] = " · ".join(
+                    f"{h['day']} {h['open']}~{h['close']}" + (f"(라스트오더 {h['last_order']})" if h.get("last_order") else "")
+                    for h in info["hours"])
+                out["hours_label"] = "요식 원장"
+            out["source"] = "요식 원장" + (f" · {info['source_note']}" if info.get("source_note") else "")
+            if out["address"] and out["hours_text"]:
+                return out
+
     attributes = (place or {}).get("attributes") or {}
     content_id = str(attributes.get("source_content_id") or "")
     type_id = str(attributes.get("source_content_type_id") or "")
-    if not content_id:
-        out["failed"].append("관광공사 식별자가 없는 장소")
-        return out
     if source is None or not hasattr(source, "operating"):
         out["failed"].append("관광공사 조회가 연결돼 있지 않음")
         return out
+    if not content_id or not type_id:
+        # ★종류 번호 없이 식별자만 있으면 운영시간 조회(`detailIntro2`)가 「필수 값 없음」으로 실패한다 — 계획 읽기가
+        #   종류 번호를 저장하지 않던 때 등록한 장소가 그렇다(ui 세션 실서버 시험 「창덕궁」). 이름·좌표로 다시 찾는다
+        # ★`[2026-09-28]` 식별자 없는 장소(공용 장소 행 · 고객 글의 이름으로 붙은 곳)는 같은 이름·종류 + 좌표 500m 로 찾는다.
+        #   전에는 「관광공사 식별자가 없는 장소」로 끝나 등록된 「경복궁」의 주소·운영시간이 모름이었다(ui 세션 실측)
+        ids, why, _ = find_tour_id(name=str((place or {}).get("name") or ""), kind=str((place or {}).get("kind") or ""),
+                                   latitude=(place or {}).get("latitude"), longitude=(place or {}).get("longitude"),
+                                   source=source)
+        if ids is None:
+            out["failed"].append(why)
+            return out
+        content_id, type_id = ids
     cached = _CACHE.get(content_id)
-    if cached and _time.time() - cached[0] < _CACHE_SECONDS:
-        return dict(cached[1])
-    out["source"] = "관광공사"
+    if cached and _time.time() - cached[0] < _CACHE_SECONDS and not (out["address"] or out["hours_text"]):
+        return dict(cached[1])                                # ★원장 값을 읽었으면 캐시가 덮지 않게 아래서 합친다
+    out["source"] = "관광공사" if not out["source"] else out["source"] + " · 관광공사"
     try:
-        common = source.by_content_id(content_id, type_id)
-        if common and common.get("address"):
-            out["address"] = common["address"]
-        else:
-            out["failed"].append("주소 조회 결과 없음")
+        if not out["address"]:
+            common = source.by_content_id(content_id, type_id)
+            if common and common.get("address"):
+                out["address"] = common["address"]
+            else:
+                out["failed"].append("주소 조회 결과 없음")
         intro = source.operating(content_id, type_id)
         if intro:
             out["hours_text"], out["rest_text"] = intro.get("usetime_text"), intro.get("restdate_text")
-            out["phone"] = intro.get("info_phone")
+            out["phone"] = out["phone"] or intro.get("info_phone")
         else:
             out["failed"].append("운영시간 조회 결과 없음")
     except Exception as exc:                                  # noqa: BLE001 — 조회 실패도 답에 그대로 말한다
@@ -274,6 +315,10 @@ def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
         return (f"어느 일정을 물으신 건지 찾지 못했어요. 일정 이름이나 시각을 같이 적어 주세요.\n"
                 f"이 여행의 일정 — {titles}{' …' if len(stops) > 8 else ''}"), basis
     if kind == "move":
+        pair = _asked_pair(stops, message)
+        if pair is not None:
+            basis["item"] = f"{pair[0].title} → {pair[1].title}"
+            return _pair_move_answer(items, *pair), basis
         return _move_answer(items, item), basis
     lookup = look_up_place(item.place, place_source) if item.place else None
     basis["lookups"] = lookup
@@ -343,6 +388,46 @@ def _move_answer(items: list[Any], item: Any) -> str:
     return "\n".join(lines)
 
 
+def _asked_pair(stops: list[Any], message: str) -> tuple[Any, Any] | None:
+    """「A에서 B까지 어떻게 가요?」 — (출발 항목, 도착 항목). 둘 다 일정에서 찾을 때만.
+    ★`[2026-09-28]` 전에는 이름이 먼저 나온 A 하나만 짚어 **A 의 다음 일정** 기준으로 답했다 — 물은 도착지 B 를
+      안 읽었다(ui 세션 실서버 시험 「경복궁에서 창덕궁까지」 → 북촌손만두 기준 답)."""
+    from .itinerary_team import mentioned_item
+
+    head, found, tail = (message or "").partition("에서")
+    if not found:
+        return None
+    start, end = mentioned_item(stops, head), mentioned_item(stops, tail)
+    if start is None or end is None or start.item_id == end.item_id:
+        return None
+    return start, end
+
+
+def _pair_move_answer(items: list[Any], start: Any, end: Any) -> str:
+    """두 일정 사이 이동. 일정에 그 구간 이동 항목이 있으면 그것, 없으면 **좌표로 추정**하고 [추정]이라 적는다
+    (값을 모른다고 끝내지 않는다 — 계획기 `_transfer_minutes` 와 같은 식이다)."""
+    from types import SimpleNamespace
+
+    from .planner import _transfer_minutes
+
+    head = f"{start.title}({_hm(start.starts_at)}) → {end.title}({_hm(end.starts_at)}) 이동이에요."
+    _, after = _neighbours(items, start)
+    move = _move_between(items, start, end) if after is not None and after.item_id == end.item_id else None
+    if move is not None:
+        return f"{head}\n· 일정의 이동: {_move_line(move)}"
+
+    def spot(item: Any) -> SimpleNamespace:
+        place = item.place or {}
+        return SimpleNamespace(lat=place.get("latitude"), lon=place.get("longitude"))
+
+    minutes, basis, how = _transfer_minutes(spot(start), spot(end))
+    lines = [head, f"· {how} · 약 {minutes}분 ({basis})",
+             "  일정에 이 두 곳 사이의 이동 항목이 없어서 두 장소의 거리로 계산했어요. 실제 경로는 조회하지 않았어요."]
+    if end.starts_at < start.starts_at:
+        lines.append(f"· 일정 순서로는 {end.title}({_hm(end.starts_at)}) 쪽이 먼저예요.")
+    return "\n".join(lines)
+
+
 def _lookup_note(lookup: dict[str, Any] | None) -> str:
     if not lookup or not lookup.get("failed"):
         return ""
@@ -363,7 +448,8 @@ def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
     lines = []
     if lookup and (lookup.get("hours_text") or lookup.get("rest_text")):
         if lookup.get("hours_text"):
-            lines.append(f"{name} 운영시간(관광공사 안내 원문): {_clean(lookup['hours_text'])}")
+            label = lookup.get("hours_label") or "관광공사 안내 원문"
+            lines.append(f"{name} 운영시간({label}): {_clean(lookup['hours_text'])}")
         if lookup.get("rest_text"):
             lines.append(f"쉬는 날(원문): {_clean(lookup['rest_text'])}")
     stored = _stored_hours(item.place or {}, _local(item.starts_at).date())

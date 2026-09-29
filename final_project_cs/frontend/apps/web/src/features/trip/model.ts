@@ -39,9 +39,28 @@ export interface TripStop {
   pinned?: boolean;
   /** Other options the server kept for this stop (best one is already applied). Shown as information. */
   otherOptions?: TripOption[];
+  /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
+  mapUrl?: string;
+  /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
+  placeInfo?: PlaceInfo | null;
 }
 
 export interface TripOption { key: string; name: string }
+
+export interface PlaceInfo {
+  address?: string;
+  phone?: string;
+  category?: string;
+  /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
+  hours: string[];
+  /** Hours the source gave only as text, or conditions the weekly table cannot hold ("공휴일 휴무"). */
+  hoursNotes: string[];
+  /** Facility badges as the server named them ("card_payment", "parking", …). */
+  tags: string[];
+  michelin?: { level: string; year?: number } | null;
+  /** Credit line the source asks for (e.g. "ⓒ한국관광공사"). */
+  sourceNote?: string;
+}
 
 /** One saved version of the trip (server `history`): why it changed and what caused it, in the server's words. */
 export interface TripChange {
@@ -88,6 +107,10 @@ export interface Trip {
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
+  /** Live only: the day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
+  dayRoutes?: Record<string, string[]>;
+  /** Live only: directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
+  legs?: Record<string, string>;
 }
 
 /** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */
@@ -115,5 +138,11 @@ export interface TripGateway {
   getTrip(tripId: string, language: Language): Promise<Trip>;
   retryVerification(tripId: string, language: Language): Promise<Trip>;
   startTrip(tripId: string, language: Language): Promise<Trip>;
-  sendMessage(tripId: string, message: string, language: Language): Promise<Trip>;
+  /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
+  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null): Promise<Trip>;
+  /**
+   * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
+   * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.
+   */
+  deleteTrip?(tripId: string, language: Language): Promise<void>;
 }

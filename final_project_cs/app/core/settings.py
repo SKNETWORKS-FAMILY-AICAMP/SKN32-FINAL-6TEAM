@@ -83,9 +83,36 @@ class Settings(BaseSettings):
     # ★`[2026-09-24]` 웹(`frontend/apps/web`, 포트 3100)이 이 API 를 부르는 출처. 쉼표로 여럿.
     #   서버용 scope 키가 아니라 사용자 식별 키(`X-User-Key`)만 받는다(D-020 · 025).
     web_allowed_origins: str = "http://127.0.0.1:3100,http://localhost:3100"
+    #: ★`[2026-09-28]` **개발용** — 웹 사용자 키 발급 한도(`security.web_session_issue_per_hour`)를 끈다.
+    #:  화면 시험이 한 주소에서 새 사용자를 계속 만들다 429 에 걸렸다(ui 세션). 기본은 꺼짐(한도 적용) —
+    #:  로컬 `.env` 에서만 켠다(`ACOP_WEB_SESSION_ISSUE_UNLIMITED=true`). 숫자는 가드레일 그대로다.
+    web_session_issue_unlimited: bool = False
+    #: ★`[2026-09-28]` 사람 확인(Cloudflare Turnstile) 비밀키 — 있으면 키 발급·계획 읽기에서 **늘 확인**한다(`web_guard.py`).
+    #:  개발 시험 키 `1x0000000000000000000000000000000AA`(항상 통과) · `2x…AA`(항상 실패) — Cloudflare 공개 값.
+    #:  실제 비밀키는 `.env` 에만 둔다. 비어 있으면 확인을 건너뛰고 응답에 `human_check: skipped` 를 싣는다(개발).
+    turnstile_secret: str = ""
+    #: 비밀키 없이는 **서버를 켜지 않는다**. `env=prod` 면 이 값과 무관하게 켜진 것으로 본다(운영에서 모르게 꺼지지 않게).
+    turnstile_required: bool = False
+    #: 쉼표로 여럿 — 있으면 Cloudflare 가 돌려준 `hostname` 이 이 중 하나여야 통과
+    turnstile_hostnames: str = ""
+    #: 역방향 프록시 주소(쉼표). 이 주소에서 온 요청만 `X-Forwarded-For` 의 원 주소를 믿는다. 비어 있으면 연결 주소
+    trusted_proxies: str = ""
+    # ── 운영 앱(운영자 콘솔) — 고객 API 앱과 다른 프로세스 · 다른 포트 `[2026-09-29]` 사용자 지시 ──
+    #: 운영 앱 포트. 127.0.0.1 에만 묶는다(`app/ops_entrypoint.py`). 지금 쓰는 번호(3100·3102·3200·3300·8041·8042·8044·8060)와 겹치지 않게
+    ops_port: int = 8070
+    #: 운영 화면이 부르는 **고객 API** 주소(승인 · 위임 · 바깥함). 같은 프로세스 안 호출을 없앴다 — 실제 HTTP 로 부른다
+    ops_api_base_url: str = "http://127.0.0.1:8042"
+    #: 운영 앱이 고객 API 를 부를 scope 키 — JSON `{"action:approve": "…", "delegation:read": "…", "delegation:write": "…"}`.
+    #:  ★운영 앱 서버의 비밀(`.env`)에만 둔다. 전에는 화면이 서버 비밀키로 **스스로 만들어** 썼다(D-CS-007) — 이제 만들지 않는다
+    ops_api_keys: str = ""
+    #: 운영 화면의 조회 전용 DB 주소(읽기 전용 계정). 비우면 본 DB 주소(개발)
+    ops_read_database_url: str = ""
     embedding_provider: str = "openai"
     ollama_embedding_model: str = "bge-m3:latest"
     ollama_timeout_seconds: float = 60.0
+    #: ★`[2026-09-29]` 모델을 붙잡아 둘 시간(Ollama `keep_alive`, 예 `30m` · `2h`). 비우면 Ollama 기본(5분).
+    #:  길게 두면 잠든 모델의 느린 첫 호출(ui 세션 실측 29.8초)이 줄지만 원격 GPU 메모리를 그만큼 잡는다 — 값은 운영이 정한다
+    ollama_keep_alive: str = ""
 
     # ── 여행 외부 소스 ─────────────────────────────────────────
     # ★기본값이 빈 문자열이다 = **그 소스를 안 붙인다.** 가짜로 채우지 않는다.
@@ -160,11 +187,23 @@ class Settings(BaseSettings):
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
-    # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
-    #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
-    #   전까지 쌓지도 읽지도 않는다. 장소는 필요할 때 실시간으로 조회한다(`TourApiPlace.find`·`area_page`).
-    tour_catalog_enabled: bool = False
+    # ★관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 켜짐**(`[2026-09-28]` 사용자 결정으로 되돌림).
+    #   ☆`[2026-09-27]` 콘텐츠랩 저작권 정책의 한 줄 「콘텐츠 캐싱(로컬서버 저장방식) 금지」를 「아무것도 저장 금지」로
+    #     넓게 읽어 끄고 8,015행을 지웠다. 약관(구속력 있는 계약)에는 저장 금지가 없고(제10조 유·무료 활용 · 제3조
+    #     파일 내려받기 제공), 저작권법 제93조는 DB 의 「전부·상당 부분」만 막으며 사실(소재)엔 미치지 않고,
+    #     공공데이터법 제3조④는 영리 이용 제한까지 금지한다. 게다가 학업용이다. 사진·소개글은 저장하지 않는다.
+    #   근거 정리: `../program/plan/A-COP_고객계획_읽기_설계_2026-09-26.md` §4-6 「2026-09-28 재판단」.
+    tour_catalog_enabled: bool = True
     google_maps_api_key: str = ""            # 구글 Maps Platform(Places) console.cloud.google.com
+    # ── 이동 계산기(app/modules/travel_ops/mobility/engine) — `[2026-09-29 이동 계산기 문제목록 #48]` ──
+    #   계산기가 저장소 맨 위 `.env` 를 import 때 직접 읽던 것을 여기로 모은다. 서버는 기동 때 이 값을 계산기에 넘긴다.
+    #: 시간표·역 순서·환승 거리 등 가공 자료가 있는 폴더(이동 담당의 DATA_DIR · git 밖 · 약 195MB).
+    #:  비우면 이동 계산기를 쓰지 않는다(연결부가 대체 경로로 간다). 실제 경로는 `.env` 에만 적는다.
+    mobility_data_dir: str = ""
+    #: 자전거·도보 경로 서버(GraphHopper) 주소. 비우면 자전거 소요는 근거없음으로 낸다. 실제 주소는 `.env` 에만.
+    mobility_gh_url: str = ""
+    #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
+    seoul_openapi_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""

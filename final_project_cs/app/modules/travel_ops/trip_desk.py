@@ -37,14 +37,18 @@ from uuid import UUID
 
 from .itinerary import Item, StaleItinerary, TripStore
 from .itinerary_changes import (DINING_RADIUS_M, ItineraryChange, NoChange, Plan, plan_closed,
-                                plan_delay, plan_nearby_store, plan_rollback, plan_swap)
+                                plan_delay, plan_fresh_alternate, plan_nearby_store, plan_rollback, plan_swap)
 from .pending import PendingStore, decide, options_from, proposal_notice
 
 
 class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
-                 check: Callable[..., dict[str, Any]] | None = None) -> None:
+                 check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True) -> None:
         self.store, self._connect = store, connection_factory
+        #: 요식 원장을 쓰나 — ★`[2026-09-28 사용자 지시]` 시나리오 모드는 **대본대로만 도는 데모 모드**다 — 실제 요식 원장(DB 의 식당 표)을
+        #:  섞지 않는다. 원장을 섞자 대본의 대체 식당(「성수 브런치 식당」) 대신 원장 후보(「성수 국수 식당」)가 골라져
+        #:  시나리오 시험 3건이 깨졌다.
+        self._use_ledger = dining_ledger
         # ★다른 안으로 바꿀 때 활동이면 **그 시각에 다시 점검**한다 — 계산한 뒤로 시간이
         #   흘렀다. 점검기가 없으면(재생 시험 일부) 점검 없이 바꾼다고 결과에 적는다.
         self._check = check
@@ -55,13 +59,23 @@ class TripDesk:
             places = self.store.places(conn, trip_id)
         return trip, items, places
 
+    def _ledger(self):
+        """★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다 — 표가 없는 DB 면 원장이 「물을 수 없음」으로 답하고
+        계산은 장소 목록으로 돌아간다(`dining.ledger.alternatives_for`)."""
+        if not self._use_ledger:
+            return None
+        from .dining.ledger import DbLedgerView
+        from .replan import ORDER_MARGIN_MIN
+
+        return DbLedgerView(self._connect, self.store.tenant_id, ORDER_MARGIN_MIN)
+
     # ── 요식-P3 — 늦는다 ────────────────────────────────────────
     def report_delay(self, *, trip_id: UUID, at: datetime, minutes: int,
                      message: str, request_id: str | None = None) -> dict[str, Any]:
         """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
         trip, items, places = self._read(trip_id)
         plan = plan_delay(trip=trip, items=items, places=places, at=at, minutes=minutes,
-                          message=message, request_id=request_id)
+                          message=message, request_id=request_id, ledger=self._ledger())
         return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 요식-P7 — 도착했더니 휴무 ──────────────────────────────
@@ -70,7 +84,7 @@ class TripDesk:
         """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
         trip, items, places = self._read(trip_id)
         plan = plan_closed(trip=trip, items=items, places=places, at=at, message=message,
-                           request_id=request_id)
+                           request_id=request_id, ledger=self._ledger())
         return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 액-08 — 품절, 근처 다른 곳? ────────────────────────────
@@ -93,6 +107,16 @@ class TripDesk:
                          check=self._check)
         return self._outcome(trip_id, base_version, items, plan)
 
+    def fresh_alternate(self, *, trip_id: UUID, item_id: UUID, base_version: int,
+                        message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-09-29]` 들고 있던 「다른 안」이 없으면 **지금 찾아서** 바꾼다(`plan_fresh_alternate`).
+        고객이 직접 달라고 한 것이라 판정 문(`gate`)을 지나지 않는다 — `swap_alternate` 와 같다."""
+        trip, items, places = self._read(trip_id)
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
+                                    places=places, item_id=item_id, message=message, request_id=request_id,
+                                    ledger=self._ledger())
+        return self._outcome(trip_id, base_version, items, plan)
+
     # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────
     def rollback(self, *, trip_id: UUID, base_version: int, to_version: int,
                  message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
@@ -101,7 +125,12 @@ class TripDesk:
             trip, items = self.store.latest(conn, trip_id)
             old = (self.store.items(conn, trip_id, to_version)
                    if trip["version"] == base_version and 1 <= to_version < trip["version"] else [])
-        plan = plan_rollback(trip_version=trip["version"], base_version=base_version,
+            history = self.store.versions(conn, trip_id)
+        # ★`[2026-09-29]` 방금 한 것이 되돌림이고 그보다 뒤 판으로 가면 「다시 적용」이다(「이전에 변경요청 한거 다시 진행해줘」)
+        last = history[-1] if history else {}
+        undone_to = next((c.get("to_version") for c in (last.get("causes") or []) if c.get("to_version")), None)
+        redo = last.get("reason") == "rollback" and undone_to is not None and to_version > int(undone_to)
+        plan = plan_rollback(trip_version=trip["version"], base_version=base_version, redo=redo,
                              current_items=items, old_items=old, to_version=to_version,
                              message=message, request_id=request_id)
         if isinstance(plan, NoChange):

@@ -34,8 +34,8 @@ SYSTEM = (
     "type: 'delay' (they will be late), 'closed' (the place they are at is closed today), "
     "'stock_out' (items they wanted are sold out and they ask where else to buy), "
     "'change' (they ask to switch a plan we already changed to a different option, e.g. "
-    "'다른 식당으로 바꿔줘', '다른 걸로 해줘'), 'rollback' (they ask to go back to an earlier "
-    "version of the itinerary by its number, e.g. '6번 일정으로 되돌려 주세요'), "
+    "'다른 식당으로 바꿔줘', '다른 걸로 해줘'), 'rollback' (they ask to go back / undo a change, with or "
+    "without a version number, e.g. '6번 일정으로 되돌려 주세요', '원래대로 돌려 줘', '금용문 이전 식당으로 되돌려'), "
     "'question' (they ASK about rules, conditions or whether something is possible, open or "
     "cancellable, e.g. '비 오면 취소돼요? 위약금 있어요?', '아이 데려가도 되나요', '내일 휴관 아니에요?'), "
     "or 'other'.\n"
@@ -82,13 +82,14 @@ def validate(raw: Any, message: str) -> dict[str, Any] | None:
     if kind == "closed":
         return {"type": "closed"}
     if kind == "rollback":
+        # ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 번호 없는 되돌리기(「원래대로」 · 「이전 식당으로」)도 받는다 —
+        #   전에는 번호가 문장에 없으면 None 이라 「알아듣지 못했어요」로 끝났다. 번호는 모델이 만들지 않는다:
+        #   문장에 있는 번호만 쓰고, 없으면 `to_version = None` — 서버가 그 항목의 최근 변경을 찾아 직전으로 정한다
         version = raw.get("to_version")
         if isinstance(version, str) and version.strip().isdigit():
             version = int(version)
-        if not isinstance(version, int) or version < 1:
-            return None
-        if str(version) not in re.findall(r"\d+", message):
-            return None                      # ★문장에 없는 버전 번호를 만들어 냈다
+        if not isinstance(version, int) or version < 1 or str(version) not in re.findall(r"\d+", message):
+            version = None                   # ★문장에 없는 번호는 버린다(지어낸 번호)
         return {"type": "rollback", "to_version": version}
     if kind == "change":
         # ★재요청(v11 §1) — 무엇으로 바꿀지는 우리가 들고 있던 「다른 안」에서 고른다.

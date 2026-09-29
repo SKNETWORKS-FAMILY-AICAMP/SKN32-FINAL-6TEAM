@@ -81,6 +81,9 @@ class ReadToolbox:
     route_events: Any | None = None
     #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
     report_extractor: Callable[[str], dict[str, Any] | None] | None = None
+    #: 요식 원장(`read.dining_state` · `read.dining_alternatives`)을 쓰나. ★`[2026-09-28 사용자 지시]` 시나리오 모드는
+    #:  대본대로만 도는 데모 모드라 끈다(`CaseEngine`) — 끄면 두 도구가 「원장 없음」으로 답하고 계산은 장소 목록으로 간다
+    dining_ledger: bool = True
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -141,6 +144,8 @@ class ReadToolbox:
             # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
             #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
             "read.dining_state": self.dining_state,
+            # ★`[2026-09-28 cs]` 요식 원장의 대체 후보(축마다 하나). 고르지 않는다 — 고르기는 `replan.choose`
+            "read.dining_alternatives": self.dining_alternatives,
             "read.weather":  self.weather,
             "read.route":    self.route,
             "read.transit":  self.transit,
@@ -252,8 +257,23 @@ class ReadToolbox:
             (scope.tenant_id, place_id), self._PLACE_COLUMNS)
         return self._fill_coordinates(row)
 
+    def dining_alternatives(self, scope: ToolContext, *, place_id: str | None = None,
+                            at: Any = None, until: Any = None, conds: list[str] | None = None,
+                            next_lat: float | None = None, next_lng: float | None = None,
+                            **_: Any) -> dict[str, Any]:
+        """요식 원장의 대체 후보 — 코어 장소 id 로. 짝 없는 후보는 빼고 `unlinked` 로 센다.
+
+        ★요식 표가 없는 DB 면 `available=False` 로 답한다(죽지 않는다) — 부르는 쪽은 장소 목록에서 찾는다.
+        """
+        if not self.dining_ledger:
+            return {"available": False, "candidates": [], "why": "요식 원장을 쓰지 않는 조립(시나리오 모드)"}
+        from app.modules.travel_ops.dining.ledger import alternatives_for
+        with self.connection_factory() as conn:
+            return alternatives_for(conn, scope.tenant_id, place_id, at, until, conds, next_lat, next_lng)
+
     def dining_state(self, scope: ToolContext, *, place_id: str | None = None,
-                     at: Any = None, until: Any = None, **_: Any) -> dict[str, Any] | None:
+                     at: Any = None, until: Any = None, order_margin_min: int | None = None,
+                     **_: Any) -> dict[str, Any] | None:
         """그 시각 그 장소의 요식 판정. 없으면 `None`(모름).
 
         ★`read.place` 와 달리 **시각을 받는다.** `places.open_at_slot` 은 칸
@@ -265,9 +285,12 @@ class ReadToolbox:
         ★`open_at_slot` 이 NULL 이면 **모름**이다. 받는 쪽이 「아니다」로 읽으면
           안 된다 — 그 구분은 Team 이 한다.
         """
+        if not self.dining_ledger:
+            return None
         from app.modules.travel_ops.dining.ledger import dining_state
         with self.connection_factory() as conn:
-            return dining_state(conn, scope.tenant_id, place_id, at, until)
+            return dining_state(conn, scope.tenant_id, place_id, at, until,
+                                order_margin_min=order_margin_min)
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
@@ -432,8 +455,10 @@ class ReadToolbox:
           감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
         ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
         """
+        # ★`[2026-09-29]` 모름(`None`)을 「야외 아님」으로 바꾸지 않는다 — 점검이 모름을 따로 다룬다(`indoor_unknown`)
         place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
-                 "weather_sensitive": bool(weather_sensitive), "district": district}
+                 "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
+                 "district": district}
         if self.check is not None:
             return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
         if self.travel is None:

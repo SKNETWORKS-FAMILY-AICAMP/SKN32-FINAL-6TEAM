@@ -100,6 +100,47 @@ def _place(row: tuple) -> dict[str, Any]:
     return {**attributes, **place, "attributes": attributes}
 
 
+#: ★`[2026-09-29]` 관광공사 신분류에서 **실내·야외가 확실한 것만**(True = 야외). 대분류 NA(자연)는 통째로 야외,
+#:  VE(문화시설)는 **중분류로만** 가른다 — 처음엔 VE 를 통째로 실내로 뒀다가 낙산공원(VE03)이 「야외 아님」이 됐다
+#:  (브라우저 시험에서 발견). 로컬 카탈로그를 중분류별로 뽑아 확인한 갈래:
+#:    야외  VE01 동상·기념물 · VE03 공원·광장 · VE04 둘레길
+#:    실내  VE06 공연장 · VE07 전시관·갤러리·박물관 · VE09 문화원·도서관
+#:  섞인 갈래(VE02 테마파크 — 아쿠아리움과 공원 · VE10 체육시설 · 역사 HS · 쇼핑 SH …)는 넣지 않는다 —
+#:  분류만으로 정하면 멀쩡한 일정이 바뀐다(코덱스 합의). 남은 모름은 날씨 사건 때 **먼저 묻는다**(`pending.needs_consent`)
+WEATHER_BY_LARGE_CLASS = {"NA": True}
+WEATHER_BY_MIDDLE_CLASS = {"VE01": True, "VE03": True, "VE04": True,
+                           "VE06": False, "VE07": False, "VE09": False}
+
+
+def weather_case_sql() -> str:
+    """분류 → 실내·야외 CASE 식(모르면 NULL). 값은 이 모듈의 상수뿐이다 — 바깥 입력을 끼우지 않는다."""
+    large = " ".join(f"WHEN pc.raw_json->>'lclsSystm1' = '{code}' THEN {str(value).lower()}"
+                     for code, value in WEATHER_BY_LARGE_CLASS.items())
+    middle = " ".join(f"WHEN pc.raw_json->>'lclsSystm2' = '{code}' THEN {str(value).lower()}"
+                      for code, value in WEATHER_BY_MIDDLE_CLASS.items())
+    return f"CASE {large} {middle} END"
+
+
+def fill_weather_sensitive(conn, tenant_id: str) -> int:
+    """실내·야외를 **모르는**(NULL) 장소를 확실한 관광공사 분류로 채운다. 채운 행 수. ★아는 값은 건드리지 않는다."""
+    case = weather_case_sql()
+    with conn.cursor() as cur:
+        cur.execute(
+            f"UPDATE places p SET weather_sensitive = {case} "
+            "FROM place_catalog pc WHERE p.tenant_id = %s AND p.weather_sensitive IS NULL "
+            "AND pc.tenant_id = p.tenant_id AND pc.source = 'tour_api' "
+            "AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id') "
+            f"AND ({case}) IS NOT NULL", (tenant_id,))
+        return cur.rowcount
+
+
+def _catalog_class(values: tuple) -> dict[str, str] | None:
+    """관광공사 분류 네 값 → `{"lcls1", "lcls2", "lcls3", "sigungu"}`. 넷 다 없으면 None(모름)."""
+    keys = ("lcls1", "lcls2", "lcls3", "sigungu")
+    found = {key: str(value) for key, value in zip(keys, values) if value}
+    return found or None
+
+
 def visible_to(places: list[dict[str, Any]], trip_id: Any) -> list[dict[str, Any]]:
     """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용."""
     return [p for p in places if p.get("trip_scope") in (None, str(trip_id))]
@@ -117,6 +158,8 @@ class TripStore:
                     request_sha256: str | None = None,
                     trip_id: UUID | None = None) -> tuple[UUID, int]:
         """★`trip_id` 를 미리 정해 넘길 수 있다 — 그 여행 전용 장소 행을 여행보다 먼저 넣을 때(029)."""
+        # ★`[2026-09-29]` 방금 넣은 장소의 실내·야외 모름을 확실한 분류로 먼저 채운다(같은 트랜잭션)
+        fill_weather_sensitive(conn, self.tenant_id)
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO trips (trip_id, tenant_id, customer_id, title, locale, party_size, constraints, "
@@ -221,12 +264,22 @@ class TripStore:
         """
         where, params = "", [self.tenant_id]
         if not every_trip:
-            where = " AND (trip_scope IS NULL OR trip_scope = %s)" if trip_id else " AND trip_scope IS NULL"
+            where = " AND (p.trip_scope IS NULL OR p.trip_scope = %s)" if trip_id else " AND p.trip_scope IS NULL"
             params += [trip_id] if trip_id else []
+        # ★`[2026-09-29]` 관광공사 분류(신분류 대·중·소 · 시군구)를 장소 목록에서 이어 붙인다 — 대체 활동을
+        #   「비슷한 곳」부터 고르는 재료다(`activity/similarity.py`). 장소가 관광공사 id 를 모르거나 목록에 없으면
+        #   `catalog_class=None`(모름) — 지어내지 않는다. 카탈로그는 (tenant, source, content_id) UNIQUE 라 행이 늘지 않는다.
         with conn.cursor() as cur:
-            cur.execute("SELECT " + ", ".join(PLACE_COLUMNS) + ", trip_scope FROM places WHERE tenant_id=%s"
-                        + where, params)
-            return [{**_place(row[:-1]), "trip_scope": str(row[-1]) if row[-1] else None}
+            cur.execute("SELECT " + ", ".join("p." + column for column in PLACE_COLUMNS)
+                        + ", p.trip_scope, pc.raw_json->>'lclsSystm1', pc.raw_json->>'lclsSystm2',"
+                        " pc.raw_json->>'lclsSystm3', pc.raw_json->>'sigungucode'"
+                        " FROM places p LEFT JOIN place_catalog pc ON pc.tenant_id = p.tenant_id"
+                        " AND pc.source = 'tour_api'"
+                        " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"
+                        " WHERE p.tenant_id=%s" + where, params)
+            width = len(PLACE_COLUMNS)
+            return [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
+                     "catalog_class": _catalog_class(row[width + 1:])}
                     for row in cur.fetchall()]
 
     # ── 쓰기 ────────────────────────────────────────────────────

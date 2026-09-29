@@ -76,7 +76,7 @@
 .optional { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; background: var(--color-subtle); color: var(--color-muted); font-size: 10px; font-weight: 650; letter-spacing: 0; vertical-align: 2px; }
 .emailForm { display: flex; flex: 1; flex-direction: column; }
 .emailLabel { font-size: 12px; font-weight: 650; color: var(--color-muted); margin: 6px 0 7px; }
-.emailInput { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
+.emailInput, .otherInput { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
 .emailInput[aria-invalid="true"] { border-color: var(--color-error); }
 .emailHint { font-size: 11px; line-height: 1.7; color: var(--color-muted); margin: 8px 0 0; }
 .emailError { font-size: 12px; line-height: 1.7; color: var(--color-error); margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--color-error-soft); overflow-wrap: anywhere; }
@@ -84,7 +84,7 @@
 .card[data-card="0"].active .draftNote { margin-bottom: 24px; }
 /* Like the terms button: `.next` grows (flex: 1), so the expanded card pins it at its own height. */
 .card[data-card="0"].active .emailContinue { flex: none; margin-top: auto; }
-@media (max-width: 550px) { .emailInput { font-size: 16px; } }
+@media (max-width: 550px) { .emailInput, .otherInput { font-size: 16px; } }
 
 .next { flex: 1; min-height: 47px; border-radius: 11px; background: var(--color-primary); color: var(--color-on-primary); font-size: 12px; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .next:disabled { background: var(--color-border); color: var(--color-muted); }
@@ -125,6 +125,24 @@
 .chips.grid .chip { min-height: 55px; }
 .chip:active:not(:disabled), .next:active:not(:disabled), .previous:active:not(:disabled) { transform: scale(.97); }
 .optionIcon { display: block; height: 23px; margin-bottom: 5px; color: var(--color-primary); }
+/* Companions: the field under the chips when `other` is picked. */
+.otherField { margin-top: 14px; }
+.otherField .groupLabel { display: block; margin: 0 0 7px; }
+/* Priorities: three area cards in a fixed order; the picking order shows as numbers on the right. */
+.areas { display: grid; gap: 10px; }
+.area { border: 1px solid var(--color-border); border-radius: 13px; background: var(--color-surface); overflow: hidden; transition: border-color .2s; }
+.areaOn { border-color: var(--color-primary); }
+.areaHead { width: 100%; min-height: 50px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; text-align: left; font-size: 13px; font-weight: 650; transition: background .2s; }
+.areaOn .areaHead { background: var(--color-soft); color: var(--color-primary); }
+.areaIcon { display: grid; flex: none; color: var(--color-primary); }
+.areaName { flex: 1; min-width: 0; }
+.rank, .chipRank { display: grid; place-items: center; flex: none; border-radius: 99px; background: var(--color-primary); color: var(--color-on-primary); font-weight: 700; font-variant-numeric: tabular-nums; }
+.rank { min-width: 24px; height: 24px; padding: 0 6px; font-size: 12px; }
+.areaDetails { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px; }
+.areaDetails[hidden] { display: none; }
+/* The number sits in the chip's right padding, so it never covers the words. */
+.rankedChip { min-height: 42px; padding-right: 32px; }
+.chipRank { position: absolute; top: 50%; right: 8px; min-width: 19px; height: 19px; padding: 0 5px; transform: translateY(-50%); font-size: 11px; }
 .optionCheck { position: absolute; right: 9px; top: 50%; width: 13px; height: 13px; transform: translateY(-50%); opacity: 0; pointer-events: none; }
 .chip.selected .optionCheck { opacity: 1; }
 .drawnCheck { display: block; width: 100%; height: 100%; }
@@ -143,10 +161,22 @@
 .successSymbol .drawnCheck { width: 30px; height: 30px; }
 .success h2 { font-size: 21px; line-height: 1.5; margin: 0 0 10px; letter-spacing: -.7px; }
 .success > p { font-size: 12px; color: var(--color-muted); line-height: 1.9; margin: 0 0 22px; }
-.summary { background: var(--color-subtle); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 19px; }
-.summary > div { display: flex; justify-content: space-between; gap: 15px; font-size: 11px; line-height: 1.7; margin: 5px 0; }
-.summary span { color: var(--color-muted); }
-.summary strong { font-weight: 600; text-align: right; }
+/* Finished-survey cards bleed to the card edges so the next one peeks in, like the intro's how-it-works cards. Both stretch to the taller one, so the buttons below stay put. */
+.summaryCarousel { text-align: left; margin-bottom: 19px; }
+.summarySlides { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 18px; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
+.summarySlides::-webkit-scrollbar { display: none; }
+.summaryDragging { scroll-snap-type: none; cursor: grabbing; }
+.summaryCard { flex: 0 0 82%; scroll-snap-align: start; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.summaryCard h3 { font-size: 13px; margin: 0 0 4px; letter-spacing: -.3px; color: var(--color-primary); }
+.summary > div { padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.6; }
+.summary > div:first-child { border-top: 0; }
+.summary > div > span { display: block; font-size: 10px; color: var(--color-muted); margin-bottom: 2px; }
+.summary strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.summaryLine { display: block; }
+.summaryNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.summaryNav button { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: #fff; color: var(--color-primary); font-size: 16px; }
+.summaryNav button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.summaryNav p { font-size: 11px; color: var(--color-muted); text-align: center; font-variant-numeric: tabular-nums; }
 .homeContinue { width: 100%; min-height: 48px; margin: 0 0 12px; }
 .editPreferences { background: #fff; color: var(--color-primary); border: 1px solid var(--color-border); }
 .prototypeNote { font-size: 10px; color: var(--color-muted); line-height: 1.7; margin: 15px 0 0; }

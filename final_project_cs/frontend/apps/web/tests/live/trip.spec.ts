@@ -17,12 +17,27 @@ test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력�
   const schedule = page.locator("#trip-pane-schedule");
   await expect(schedule.getByText("아침 식당")).toBeVisible();
   await expect(schedule.getByText("11:10 출발").first()).toBeHidden();                // 이동은 다음 일정 메모로 접힌다
+  // 구간 길찾기 — 서버가 준 구간(아침 → 경복궁)에만 링크가 있고, 링크가 없는 구간에는 없다
+  await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveCount(1);
+  await expect(schedule.getByRole("link", { name: "지도 앱에서 길찾기" })).toHaveAttribute("href", "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit");
 
   // 고정한 일정 표시와 서버가 남겨 둔 다른 안
   await expect(page.locator("#stop-button-i-b").getByText("고정한 일정")).toBeVisible();
   await page.locator("#stop-button-i-b").click();
   await expect(page.locator("#stop-detail-i-b")).toContainText("다른 안");
   await expect(page.locator("#stop-detail-i-b")).toContainText("창덕궁");
+  await expect(page.locator("#stop-detail-i-b")).not.toContainText("주소");           // 서버가 장소 사실을 안 보냈으면 줄 자체가 없다
+  await expect(page.locator("#stop-detail-i-b").getByRole("button", { name: "이 일정 질문하기" })).toBeVisible();   // 상세가 열려 있는데
+  await expect(page.locator("#stop-detail-i-b").getByRole("link", { name: "지도 앱으로 열기" })).toHaveCount(0);  // 지도 링크가 없으면 단추도 없다
+
+  // 서버가 보낸 장소 사실(요식 원장) — 주소·전화·분류·영업시간·미쉐린·편의
+  await page.locator("#stop-button-i-a").click();
+  const detail = page.locator("#stop-detail-i-a");
+  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(detail).toContainText(text);
+  await expect(detail).not.toContainText("michelin_selected");
+  // 지도 앱으로 열기 — 서버가 준 구글 지도 링크를 새 창으로(서버가 링크를 안 준 일정에는 단추가 없다)
+  await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("href", "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8");
+  await expect(detail.getByRole("link", { name: "지도 앱으로 열기" })).toHaveAttribute("target", "_blank");
 
   // 서버가 찾은 것·보낸 것·바꾼 것
   await expect(page.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();
@@ -184,4 +199,21 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
     await page.waitForTimeout(500);
   }
   expect(problems).toEqual([]);
+});
+
+test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하고(사용자 키로), 키가 없는 첫 화면에서는 청하지 않는다", async ({ page, request }) => {
+  const server = stub(request);
+  await start(page);
+  await page.goto(`/trips/${TRIP_ID}`);
+  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  await expect.poll(async () => (await server.received("POST", "/v1/web/warmup")).length).toBe(1);
+  expect((await server.received("POST", "/v1/web/warmup"))[0].key).toBe("acop_u_known");
+
+  await server.reset();
+  const fresh = await page.context().browser()!.newContext();
+  const other = await fresh.newPage();
+  await other.goto("http://127.0.0.1:3102/");
+  await other.waitForTimeout(1500);
+  expect(await server.received("POST", "/v1/web/warmup")).toHaveLength(0);
+  await fresh.close();
 });

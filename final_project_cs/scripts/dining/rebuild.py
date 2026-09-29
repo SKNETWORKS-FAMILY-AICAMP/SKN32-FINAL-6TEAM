@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
 import subprocess
 import sys
 import time
@@ -41,12 +42,15 @@ BUILD = os.path.join(ROOT, "data", "dining", "_build")
 
 PG_PORT = int(os.environ.get("DINING_PG_PORT", "5433"))
 PG_USER = os.environ.get("DINING_DB_USER", "postgres")
+#: ★`[2026-09-28 cs]` 코어 DB 에 적재할 때 쓰는 계정 — dining 칸만 쓰고 코어는 places 넣기·고치기까지(마이그레이션 223).
+#:  코드 실수가 있어도 DB 가 코어 데이터를 지키게 한다
+LOADER_USER = os.environ.get("DINING_LOADER_USER", "dining_loader")
 
 #: 번호로 고르지 않는다. 030 을 더했을 때 02* 패턴이 못 잡아 적재가 깨졌다.
 #: 요식 파일인지로 고르면 번호가 늘어도 따라온다.
 
 #: 코어 `places` 표가 있어야 올라가는 것. 없으면 건너뛴다.
-NEEDS_CORE = {"202_dining_matcher.sql"}
+NEEDS_CORE = {"202_dining_matcher.sql", "221_dining_core_promote.sql", "222_dining_core_sync.sql"}
 
 #: 코어를 세울 때 설정이 요구하는 값. develop CI 와 같은 가짜다. 실제 키를 넣지 않는다.
 CORE_ENV = {
@@ -67,10 +71,26 @@ CORE_STEPS = [
 ]
 
 #: 코어 장소와 잇는다. 후보가 하나일 때만 잇고 여럿이면 ambiguous 로 남긴다(022).
-LINK_SQL = (
-    "SELECT r.result, count(*) FROM (SELECT DISTINCT tenant_id FROM public.places) t, "
-    "LATERAL dining.link_core_places(t.tenant_id, 0.75, 'rebuild', false) r GROUP BY 1"
-)
+def link_sql(tenant: str) -> str:
+    """★`[2026-09-28 cs]` 운영 테넌트만 잇는다 — 올리기(`promote_sql`)와 범위를 맞춘다. 전에는 `places` 의 모든 테넌트였다
+    (운영 DB 의 시험 테넌트까지 짝 표가 늘었다 — 코덱스 구현 검토)."""
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", tenant or ""):
+        raise SystemExit(f"운영 테넌트 이름이 이상하다: {tenant!r}")
+    return f"SELECT result, count(*) FROM dining.link_core_places('{tenant}', 0.75, 'rebuild', false) GROUP BY 1"
+
+
+def promote_sql(tenant: str) -> str:
+    """★`[2026-09-28 cs]` 짝 없는 원장 식당을 코어 공용 장소로 올린다(221) — **운영 테넌트 하나에만.**
+
+    ☆처음엔 `places` 의 모든 테넌트에 올렸다. 운영 DB 에는 시험 테넌트가 9개 있어 다시 적재할 때마다
+      1,209곳이 테넌트마다 복제될 뻔했다(코덱스 교차검증이 테넌트 정책을 물어 찾았다).
+    """
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", tenant or ""):
+        raise SystemExit(f"운영 테넌트 이름이 이상하다: {tenant!r}")
+    # ★올린 뒤 요식 원본으로 다시 쓴다(222 sync_core_places) — 이름·좌표·영업시간·식사 조건·폐업
+    return (f"SELECT result, n FROM dining.promote_to_core('{tenant}', 'rebuild') "
+            f"UNION ALL SELECT result, n FROM dining.sync_core_places('{tenant}')")
+
 
 #: 만드는 것과 넣는 것의 짝. 순서가 곧 의존 관계다.
 LOADS = [
@@ -161,6 +181,42 @@ def has_core_places(db: str) -> bool:
     return ok and "places" in out
 
 
+#: 이 도구가 새로 만든 DB 에 붙이는 표시. 이 표시가 있는 DB 만 지우고 다시 만들 수 있다
+DISPOSABLE = "dining_rebuild:disposable"
+
+
+def _yes(ok: bool, out: str) -> bool:
+    return ok and any(line.strip() == "t" for line in out.splitlines())
+
+
+def holds_live_core(db: str) -> bool:
+    """★`[2026-09-28 cs]` 지키는 DB 인가. 지키면 **지우지도 코어 시드를 다시 넣지도 않고**, 적재 전용 계정으로 돈다.
+
+    요식 표가 코어 DB(`acop_cs`)로 들어왔다. 이 도구의 기본 동작은 「DB 를 지우고 새로 만들기」라서,
+    대상을 코어 DB 로 주고 `--keep` 을 빠뜨리면 여행·고객·일정이 통째로 사라진다.
+    ☆처음엔 「여행 행이 있나」만 봤다 — 여행이 비었거나 검사가 실패하면 지우는 쪽으로 갔다(코덱스 구현 검토).
+      그래서 반대로 판정한다: **이 도구가 만든 일회용 DB(`DISPOSABLE` 표시)만 지울 수 있고**, 코어 표가 있는
+      나머지는 다 지킨다. 확인하다 실패해도 지킨다. 없는 DB 는 지킬 것이 없다.
+    """
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", db or ""):
+        return True
+    ok, out = run_sql("postgres", sql=f"SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '{db}')",
+                      stop_on_error=False)
+    if not ok:
+        return True
+    if not _yes(ok, out):
+        return False
+    ok, out = run_sql(db, sql=f"SELECT coalesce(shobj_description(oid, 'pg_database'), '') = '{DISPOSABLE}' "
+                              "FROM pg_database WHERE datname = current_database()", stop_on_error=False)
+    if not ok:
+        return True
+    if _yes(ok, out):
+        return False
+    ok, out = run_sql(db, sql="SELECT to_regclass('public.places') IS NOT NULL "
+                              "OR to_regclass('public.trips') IS NOT NULL", stop_on_error=False)
+    return (not ok) or _yes(ok, out)
+
+
 def check() -> bool:
     ready = True
     if PSQL is None:
@@ -190,11 +246,17 @@ def check() -> bool:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="빈 DB 에서 요식 원장을 세운다.")
-    ap.add_argument("--db", default="dining_rebuild")
+    ap.add_argument("--db", default=None,
+                    help="기본은 코어 DB(`core_db.py`). 코어 여행 데이터가 있으면 --keep 이 있어야 한다")
     ap.add_argument("--keep", action="store_true", help="있는 DB 를 지우지 않는다")
     ap.add_argument("--no-core", action="store_true", help="코어 없이 요식만 세운다")
     ap.add_argument("--check", action="store_true", help="세우지 않고 준비물만 본다")
     args = ap.parse_args()
+    if args.db is None:
+        sys.path.insert(0, HERE)
+        import core_db  # ★`[2026-09-28 cs]` 기본은 코어 DB
+
+        args.db = core_db.db_name()
 
     print("요식 원장 세우기")
     if not check():
@@ -205,6 +267,17 @@ def main() -> int:
     started = time.time()
     os.makedirs(BUILD, exist_ok=True)     # 새로 받은 저장소에는 _build 가 없다
 
+    if holds_live_core(args.db):
+        # ★코어 DB 다 — 지우지 않고, 코어 시드도 다시 넣지 않는다. 요식 칸만 다시 채운다.
+        if not args.keep:
+            say("!!", f"{args.db} 는 지키는 DB 다(코어 표가 있고 이 도구가 만든 일회용 DB 가 아니다). "
+                     "지우지 않는다 — 요식만 다시 채우려면 --keep 을 준다")
+            return 1
+        args.no_core = True
+        global PG_USER
+        PG_USER = LOADER_USER
+        say("OK", f"{args.db} 는 코어 DB 다 — 코어는 건드리지 않고 요식만 얹는다(계정 {LOADER_USER})")
+
     if not args.keep:
         # 지우고 다시 만든다. 남은 것 위에 얹으면 「처음부터」가 아니다.
         ok, out = run_sql("postgres", sql=f'DROP DATABASE IF EXISTS "{args.db}"')
@@ -213,6 +286,8 @@ def main() -> int:
             say("  ", out.strip().splitlines()[0] if out.strip() else "")
             return 1
         run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"')
+        # ★일회용 표시 — 이 표시가 있어야 다음에 지우고 다시 만들 수 있다(`holds_live_core`)
+        run_sql("postgres", sql=f"COMMENT ON DATABASE \"{args.db}\" IS '{DISPOSABLE}'")
         say("OK", f"{args.db} 새로 만들었다")
     else:
         run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"', stop_on_error=False)
@@ -226,6 +301,15 @@ def main() -> int:
         "코어 places 없음 — 022 매칭기는 건너뛴다")
 
     for path in sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql"))):
+        if PG_USER == LOADER_USER:
+            # ★코어 DB 의 요식 표는 코어 마이그레이션(`python -m app.infrastructure.db.migrate`)이 올린다 — 이 계정은
+            #   표·함수를 만들거나 바꿀 수 없다(223). 표가 없으면 먼저 코어 마이그레이션을 돌리라고 멈춘다
+            ok, out = run_sql(args.db, sql="SELECT to_regclass('dining.dn_place') IS NOT NULL")
+            if not (ok and any(line.strip() == "t" for line in out.splitlines())):
+                say("!!", "요식 표가 없다 — 먼저 python -m app.infrastructure.db.migrate 를 돌린다")
+                return 1
+            say("OK", "요식 표는 코어 마이그레이션이 올렸다 — 여기서는 데이터만 채운다")
+            break
         name = os.path.basename(path)
         if name in NEEDS_CORE and not core:
             say("..", f"{name} 건너뜀")
@@ -269,7 +353,10 @@ def main() -> int:
         say("OK", name)
 
     if core:
-        ok, out = run_sql(args.db, sql=LINK_SQL)
+        sys.path.insert(0, HERE)
+        import core_db
+
+        ok, out = run_sql(args.db, sql=link_sql(core_db.operating_tenant()))
         if not ok:
             say("!!", "코어 장소 연결 실패")
             for line in out.strip().splitlines()[:6]:
@@ -278,6 +365,15 @@ def main() -> int:
         counts = [" ".join(l.replace("|", " ").split()) for l in out.splitlines()
                   if "|" in l and "result" not in l]
         say("OK", "코어 장소 연결  " + (", ".join(counts) or "이을 후보 없음"))
+        ok, out = run_sql(args.db, sql=promote_sql(core_db.operating_tenant()))
+        if not ok:
+            say("!!", "원장 식당을 코어로 올리기 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        counts = [" ".join(l.replace("|", " ").split()) for l in out.splitlines()
+                  if "|" in l and "result" not in l]
+        say("OK", "원장 식당 코어로 올림  " + (", ".join(counts) or "올릴 곳 없음"))
 
     env = dict(os.environ, PYTHONIOENCODING="utf-8",
                DINING_DSN=f"postgresql://{PG_USER}@localhost:{PG_PORT}/{args.db}")

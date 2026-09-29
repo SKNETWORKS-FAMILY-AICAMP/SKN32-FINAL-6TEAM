@@ -69,6 +69,8 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/proposals/{proposal_id}/choose",
     "/v1/web/trips/{trip_id}/messages",
     "/v1/web/trips/{trip_id}/notices",
+    # ★2026-09-29 모델 예열 — 화면이 채팅을 열 때 부른다(사용자 식별 키). `wiki/external/rest-endpoints.md` 웹 표
+    "/v1/web/warmup",
     # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
     "/v1/web/trip-intakes",

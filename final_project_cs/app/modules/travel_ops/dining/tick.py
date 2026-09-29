@@ -45,6 +45,16 @@
     사용자의 주의를 쓰는 일이라 가장 좁게 잡는다는 기준을 따른 것이다.
     이 선택은 바꿀 수 있다. 바꾸려면 record_notice 부르는 줄을 부르는 쪽으로
     옮기면 된다.
+
+★`[2026-09-28 cs]` 바꿨다(사용자 결정) — **둘 다 막는다.** `on_notice` 를 주면 dn_notice 에 적는 것과
+    부르는 쪽이 알림함(outbox)에 넣는 것이 **한 트랜잭션**이다. 알림함은 실패하면 다시 보내고(배달 일꾼)
+    같은 키는 두 번 안 들어간다(outbox UNIQUE). 넣다 실패하면 기록도 되돌려 다음 틱에 다시 말한다.
+    `on_notice` 가 없으면 예전 그대로(적고 곧바로 commit, 보내는 것은 부르는 쪽).
+★`[2026-09-28 cs]` 항목에 여행을 실을 수 있다 — `(place_uid, 방문 시각, {"tenant_id", "trip_id", "item_id"})`.
+    그러면 「이미 말했다」를 그 여행 안에서만 본다(마이그레이션 220). 전에는 두 여행자가 같은 식당·시각이면
+    뒤 사람은 알림을 못 받았다.
+★`[2026-09-28 cs]` **깨우는 쪽은 아직 없다.** 팀 결정(2026-09-24)이 「식당은 새벽 3시에만 확인하고 당일 문제는
+    고객 신고로 받는다」라서 방문 60·20분 전 조회를 일정에 걸지 않았다. 켜려면 그 결정부터 바꾼다.
 """
 from __future__ import annotations
 
@@ -64,8 +74,10 @@ SAY_AT = {
 
 _STATES = ("yes", "no", "unknown")
 
-Item = tuple[str, datetime]
+Item = tuple  # (place_uid, 방문 시각) 또는 (place_uid, 방문 시각, 여행 범위 dict)
 Fetch = Callable[[str, str, str], "tuple[str, dict[str, dict[str, Any]]]"]
+#: 알림함에 넣는 쪽. 같은 연결(같은 트랜잭션)을 받는다. 실패하면 예외를 던진다 — 그러면 기록도 되돌린다
+OnNotice = Callable[[Any, dict[str, Any]], None]
 
 
 def _clean(one: Any) -> tuple[str, int | None, str | None]:
@@ -95,9 +107,12 @@ def _topics_to_ask(cur, place_uid: str) -> list[str]:
 
 def tick_one(conn, now: datetime, place_uid: str, starts_at: datetime, *,
              fetch: Fetch | None = None, trial: bool = False,
-             source: str = "catchtable_trial") -> dict[str, Any]:
+             source: str = "catchtable_trial", scope: dict[str, Any] | None = None,
+             on_notice: OnNotice | None = None) -> dict[str, Any]:
     """식당 하나. 돌려주는 것은 무엇을 했고 왜 했는지다. 안 했을 때도 이유가 있다."""
-    out: dict[str, Any] = {"place_uid": place_uid, "starts_at": starts_at,
+    scope = scope or {}
+    tenant_id, trip_id = scope.get("tenant_id"), scope.get("trip_id")
+    out: dict[str, Any] = {"place_uid": place_uid, "starts_at": starts_at, "scope": scope or None,
                            "window": None, "asked": [], "recorded": [],
                            "notice": None, "reason": None}
     with conn.cursor() as cur:
@@ -147,8 +162,12 @@ def tick_one(conn, now: datetime, place_uid: str, starts_at: datetime, *,
             conn.commit()
 
         # ── 말하기 ────────────────────────────────────────────
-        cur.execute("SELECT dining.notice_decision(%s, %s, %s)",
-                    (place_uid, starts_at, trial))
+        if scope:
+            cur.execute("SELECT dining.notice_decision(%s, %s, %s, %s, %s)",
+                        (place_uid, starts_at, trial, tenant_id, trip_id))
+        else:
+            cur.execute("SELECT dining.notice_decision(%s, %s, %s)",
+                        (place_uid, starts_at, trial))
         decision = cur.fetchone()[0] or {}
         out["reason"] = decision.get("reason")
         if not decision.get("send"):
@@ -159,24 +178,42 @@ def tick_one(conn, now: datetime, place_uid: str, starts_at: datetime, *,
             out["reason"] = f"{kind} 은 {window} 에 말하지 않는다"
             return out
 
-        cur.execute("SELECT dining.record_notice(%s, %s, %s, %s, %s)",
-                    (place_uid, starts_at, kind, decision["body"],
-                     decision.get("based_on")))
+        if scope:
+            cur.execute("SELECT dining.record_notice(%s, %s, %s, %s, %s, %s, %s)",
+                        (place_uid, starts_at, kind, decision["body"],
+                         decision.get("based_on"), tenant_id, trip_id))
+        else:
+            cur.execute("SELECT dining.record_notice(%s, %s, %s, %s, %s)",
+                        (place_uid, starts_at, kind, decision["body"],
+                         decision.get("based_on")))
         notice_id = cur.fetchone()[0]
-        conn.commit()
         if notice_id is None:
             # 같은 틱이 겹쳐 돌아 다른 쪽이 먼저 적었다. 두 번 보내지 않는다.
+            conn.commit()
             out["reason"] = "이미 말했다"
             return out
 
-        out["notice"] = {"notice_id": str(notice_id), "place_uid": place_uid,
-                         "starts_at": starts_at, "kind": kind,
-                         "body": decision["body"], "window": window}
+        notice = {"notice_id": str(notice_id), "place_uid": place_uid,
+                  "starts_at": starts_at, "kind": kind,
+                  "body": decision["body"], "window": window, **({"scope": scope} if scope else {})}
+        if on_notice is not None:
+            # ★기록과 알림함 넣기를 한 트랜잭션으로(2026-09-28 cs). 넣다 실패하면 기록도 되돌린다 —
+            #   그래야 다음 틱이 「이미 말했다」에 막히지 않고 다시 말한다.
+            try:
+                on_notice(conn, notice)
+            except Exception as exc:               # noqa: BLE001
+                conn.rollback()
+                out["reason"] = "알림함에 넣지 못해 기록도 되돌렸다 — 다음 틱에 다시 말한다"
+                out["error"] = str(exc)[:200]
+                return out
+        conn.commit()
+        out["notice"] = notice
     return out
 
 
 def tick_once(conn, now: datetime, items: Iterable[Item], *,
-              fetch: Fetch | None = None, trial: bool = False) -> list[dict[str, Any]]:
+              fetch: Fetch | None = None, trial: bool = False,
+              on_notice: OnNotice | None = None) -> list[dict[str, Any]]:
     """틱 한 번. 방문이 다가온 식당마다 tick_one 을 부른다.
 
     items 는 (place_uid, 방문 시각) 목록이다. 부르는 쪽이 일정에서 꺼내 준다.
@@ -186,5 +223,24 @@ def tick_once(conn, now: datetime, items: Iterable[Item], *,
     trial 이 거짓이면 캐치테이블에서 온 값으로는 말하지 않는다. 본 갈래의
     판정은 시험 출처를 보지 않기 때문이다. 시연에서만 참으로 준다.
     """
-    return [tick_one(conn, now, uid, at, fetch=fetch, trial=trial)
-            for uid, at in items]
+    return [tick_one(conn, now, item[0], item[1], fetch=fetch, trial=trial,
+                     scope=item[2] if len(item) > 2 else None, on_notice=on_notice)
+            for item in items]
+
+
+def outbox_notice(store) -> OnNotice:
+    """`on_notice` 의 코어 쪽 — 여행 알림함(`trip.notice`)에 넣는다. 키는 `{trip_id}:dining:{item_id}:{kind}`.
+
+    ★`store` 는 코어 `TripStore` 다. 이 파일은 코어를 import 하지 않는다 — 부르는 쪽이 넘긴다.
+    ★범위(scope)가 없는 알림은 넣을 곳이 없다 — 예외를 던져 기록을 되돌린다(조용히 버리지 않는다).
+    """
+    def put(conn, notice: dict[str, Any]) -> None:
+        scope = notice.get("scope") or {}
+        if not scope.get("trip_id"):
+            raise ValueError("여행이 없는 알림은 알림함에 넣을 수 없다")
+        store.enqueue_message(
+            conn, trip_id=scope["trip_id"],
+            key=f"dining:{scope.get('item_id') or notice['place_uid']}:{notice['kind']}",
+            payload={"text": notice["body"], "kind": f"dining_{notice['kind']}", "type": "guidance",
+                     "source": "dining_tick", "window": notice["window"]})
+    return put

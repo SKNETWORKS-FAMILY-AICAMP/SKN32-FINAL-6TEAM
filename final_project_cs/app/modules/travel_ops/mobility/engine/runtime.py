@@ -65,11 +65,28 @@ def default_paths():
 class Runtime:
     """판정기 하나 + 어댑터가 basis 로 쓸 출처 값."""
 
-    def __init__(self, verifier, *, timetable_built_at, rules_version, stats):
+    def __init__(self, verifier, *, timetable_built_at, rules_version, stats, source_mtimes=None, build_kw=None):
         self._v = verifier
         self.timetable_built_at = timetable_built_at
         self.rules_version = rules_version
         self.stats = stats
+        # ☆`[2026-09-29 문제목록 #32]` 적재한 파일의 수정 시각 — get_verifier 가 바뀐 것을 알아채 다시 올린다
+        self.source_mtimes = dict(source_mtimes or {})
+        self.build_kw = dict(build_kw or {})
+
+    @property
+    def timetable_stale(self):
+        return bool(self.stats.get("timetable_stale"))
+
+    def changed_sources(self):
+        """적재 뒤 바뀐(또는 사라진) 입력 파일 이름들."""
+        out = []
+        for k, (path, mt) in self.source_mtimes.items():
+            p = Path(path)
+            now = p.stat().st_mtime if p.exists() else None
+            if now != mt:
+                out.append(k)
+        return out
 
     def verify_case(self, case):
         # 56 ① — 건마다 얕은 복사본에서 돈다. 판정기가 건마다 재할당하는 상태(_case_date · disr · _leg_cache ·
@@ -77,12 +94,25 @@ class Runtime:
         return copy.copy(self._v).verify_case(case)
 
 
-def build_verifier(*, paths=None, wanted=None, quiet=False):
+def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_url=None, seoul_key=None,
+                   guardrails_path=None):
     """전부 올려 Runtime 을 만든다. 약 33초.
 
     paths  : 경로 일부만 바꿔 끼울 수 있다(시험용)
     wanted : None 이면 전부. 배치에서만 집합을 준다
+    ☆`[2026-09-29 문제목록 #48]` 서버는 설정 값을 넘긴다 — data_dir(자료 폴더) · gh_url(자전거 라우터, "" 이면 끔) ·
+      seoul_key(따릉이 실시간, "" 이면 끔) · guardrails_path(정책 수치 파일). None 이면 명령줄 관례(환경변수·.env)를 쓴다.
     """
+    from . import paths as _paths
+    if data_dir:
+        _paths.configure(data_dir)
+    elif _paths.SOURCE == "disabled":
+        raise RuntimeError("이동 계산기가 꺼져 있다(서버 설정 mobility_data_dir 비움) — 판정기를 올리지 않는다")
+    elif _paths.SOURCE == "unset":
+        _paths.load_cli_env()               # 명령줄·시험 — 서버는 기동 때 configure 로 정한다
+    if guardrails_path:
+        from .guardrails import use
+        use(guardrails_path)
     vt = _load_verify_time()
     P = default_paths()
     if paths:
@@ -91,10 +121,21 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
     # station_exits 는 없어도 돈다(역 좌표로 대신) — 단 경고를 찍는다
     missing = [k for k, v in P.items() if k not in ("meta", "station_exits", "bike_stations", "bus_profile") and not Path(v).exists()]
     if missing:
-        raise RuntimeError(f"판정기 입력이 없다: {missing}")
+        # #24 — 어디를 봤는지 같이 말한다(자료 폴더 · 그 값이 어디서 왔나). 배포 확인은 datacheck.py
+        raise RuntimeError(f"판정기 입력이 없다: {missing} (자료 폴더 {_paths.DATA_DIR} · 출처 {_paths.SOURCE}) — "
+                           f"python -m app.modules.travel_ops.mobility.engine.datacheck 로 확인")
+    if not paths:
+        from .datacheck import check as _datacheck
+        dc = _datacheck(verify_hash=False)       # 판 명세가 있으면 크기까지 맞춘다(해시는 기동 확인이 본다)
+        if dc["mismatched"]:
+            raise RuntimeError(f"이동 자료가 판 명세와 다르다: {dc['mismatched']} (명세 {dc['manifest']})")
 
     rules = json.loads(Path(P["rules"]).read_text(encoding="utf-8"))
-    holidays = set(json.loads(Path(P["holidays"]).read_text(encoding="utf-8"))["holidays"])
+    from .guardrails import resolve as _resolve_guardrails
+    rules = _resolve_guardrails(rules)       # #49 — 정책 수치(value_from)를 guardrails.yaml 에서 채운다
+    # ☆#5 — 덮는 해를 아는 달력. 표 밖의 날짜는 평일로 짐작하지 않고 CalendarOutOfRange 로 멈춘다
+    from .timeutil import HolidayCalendar
+    holidays = HolidayCalendar.from_doc(json.loads(Path(P["holidays"]).read_text(encoding="utf-8")))
     lo = vt.LineOrder.load(str(P["order"]))
     tt = vt.Timetable.load(str(P["timetable"]), wanted)
     tw = vt.TransferWalk.load(str(P["transfer_walk"]),
@@ -105,9 +146,10 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
     # 따릉이(v0.7 · 22번 방). 실시간 조회는 .env SEOUL_OPENAPI_KEY, 라우터는 .env MOBILITY_GH_URL(21번과 같은 주소) — 둘 다 없으면 근거없음으로 낸다.
     bk = vt.BikeStations.load(str(P["bike_stations"]))
     import os
-    bike_live = vt.BikeLive.from_env()
+    # #48 — 서버는 설정 값(seoul_key)을 넘긴다. "" 는 끔, None 은 명령줄 관례(환경변수)
+    bike_live = (vt.BikeLive(key=seoul_key) if seoul_key else None) if seoul_key is not None else vt.BikeLive.from_env()
     # 라우터는 21번 car.py 의 make_router 로 — 23 이 CarService 를 끼울 때 같은 객체를 나눠 쓴다.
-    gh = os.environ.get("MOBILITY_GH_URL") or ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value")
+    gh = (gh_url if gh_url is not None else os.environ.get("MOBILITY_GH_URL"))         or (None if gh_url == "" else ((rules.get("car") or {}).get("graphhopper") or {}).get("url", {}).get("value"))
     bike_router = None
     if gh and str(gh).startswith("http"):
         from .car import make_router
@@ -133,6 +175,21 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
             built = None
     built_at = f"built:{built}" if built else f"fetched:{tt.fetched_at}"
 
+    # ☆`[2026-09-29 문제목록 #32]` 시간표가 오래됐는지 — 기준(일)은 guardrails mobility.staleness.timetable_warn_days.
+    #   앞 판은 규칙에 기준만 있고 코드가 보지 않았다. 판정 불가가 아니라 재수집 신호다 — 경고로 싣는다.
+    age_days, stale = None, False
+    stamp = built or tt.fetched_at
+    if stamp:
+        from datetime import datetime, timezone
+        try:
+            t0 = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+            if t0.tzinfo is None:
+                t0 = t0.replace(tzinfo=timezone.utc)
+            age_days = (datetime.now(timezone.utc) - t0).days
+            stale = age_days > rules["staleness"]["timetable_warn_days"]["value"]
+        except ValueError:
+            age_days, stale = None, True     # 시각을 못 읽으면 오래된 것으로 본다(모르는 채 신선하다고 하지 않는다)
+
     stats = {"timetable_rows": tt.rows, "timetable_stations": len(tt.stations),
              "skipped_no_dep": tt.skipped_no_dep,
              "bus_routes": len(bus.by_id) if bus else 0,
@@ -140,7 +197,8 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
              "station_coords": len(sc.by_key) if sc else 0,
              "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0,
              "bike_stations": len(bk.rows) if bk else 0,
-             "bike_live": bool(bike_live), "bike_router": bool(bike_router)}
+             "bike_live": bool(bike_live), "bike_router": bool(bike_router),
+             "timetable_age_days": age_days, "timetable_stale": stale, "data_dir_source": _paths.SOURCE}
     if not quiet:
         # ★ 출발없음을 같이 찍는다(2026-09-14). 수집 행 수(463,326)와 올라간 행 수가 달라서,
         #   이 줄만 보면 "46만이라더니 44만이네"가 된다. 차이는 출발 시각이 '000000'(출발 없음)인 행이다.
@@ -157,15 +215,28 @@ def build_verifier(*, paths=None, wanted=None, quiet=False):
         print(f"[mobility] 따릉이 {len(bk.rows):,}곳 · 실시간 {'on' if bike_live else 'off(근거없음)'} · "
               f"라우터 {'on' if bike_router else 'off(소요 근거없음)'}")
 
+    if stale and not quiet:
+        print(f"[mobility] ! 시간표가 {age_days}일 전 판이다(기준 {rules['staleness']['timetable_warn_days']['value']}일) — 재수집이 필요하다")
+    mtimes = {k: (str(v), Path(v).stat().st_mtime) for k, v in P.items() if Path(v).exists()}
     return Runtime(verifier, timetable_built_at=built_at,
-                   rules_version=rules["rules_version"], stats=stats)
+                   rules_version=rules["rules_version"], stats=stats, source_mtimes=mtimes,
+                   build_kw={"paths": paths, "wanted": wanted, "quiet": True, "data_dir": data_dir,
+                             "gh_url": gh_url, "seoul_key": seoul_key, "guardrails_path": guardrails_path})
 
 
 def get_verifier(**kw):
-    """프로세스당 하나. 여러 번 불러도 한 번만 올린다."""
+    """프로세스당 하나. 여러 번 불러도 한 번만 올린다.
+
+    ☆`[2026-09-29 문제목록 #32]` 적재한 입력 파일이 바뀌었으면 **다시 올린다**(앞 판은 첫 판을 끝까지 썼다).
+      다시 올리는 동안 다른 요청은 옛 판을 쓴다 — 새 판이 다 올라간 뒤에만 바꾼다. 실패하면 옛 판을 두고 예외를 올린다.
+    """
     global _SINGLETON
     if _SINGLETON is None:
         with _LOCK:
             if _SINGLETON is None:
                 _SINGLETON = build_verifier(**kw)
+    elif _SINGLETON.changed_sources():
+        with _LOCK:
+            if _SINGLETON.changed_sources():
+                _SINGLETON = build_verifier(**(_SINGLETON.build_kw or kw))
     return _SINGLETON

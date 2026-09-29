@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Check, Leaf, MapPin, MessageCircle, SquarePen, Send, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ExternalLink, Leaf, MapPin, MessageCircle, Navigation, SquarePen, Send, ShieldCheck } from "lucide-react";
 import { TripMap } from "@/features/map";
 import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
+import { warmup } from "@/lib/live/extras";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { TripAttention } from "./trip-attention";
@@ -20,6 +21,28 @@ const icon = { size: 18, strokeWidth: 1.6, "aria-hidden": true } as const;
 const live = DATA_MODE === "live";
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
+
+/** 요식 원장 속성 이름 → 화면 말. 모르는 이름은 서버가 보낸 그대로 보인다(숨기지 않는다). */
+const TAG_LABELS: Record<string, [string, string]> = {
+  card_payment: ["카드 결제", "Cards accepted"], parking: ["주차", "Parking"], takeout: ["포장", "Takeout"],
+  vegetarian_menu: ["채식 메뉴", "Vegetarian menu"], kids_allowed: ["아이 동반", "Kids welcome"], halal: ["할랄", "Halal"],
+};
+
+function placeRows(stop: TripStop, t: Translate) {
+  const info = stop.placeInfo;
+  if (!info) return null;
+  const tags = info.tags.filter((tag) => !tag.startsWith("michelin")).map((tag) => (TAG_LABELS[tag] ? t(...TAG_LABELS[tag]) : tag));
+  return <>
+    {info.category && <><dt>{t("분류", "Type")}</dt><dd>{info.category}</dd></>}
+    {info.address && <><dt>{t("주소", "Address")}</dt><dd>{info.address}</dd></>}
+    {info.phone && <><dt>{t("전화", "Phone")}</dt><dd><a href={`tel:${info.phone.replace(/[^\d+]/g, "")}`}>{info.phone}</a></dd></>}
+    {info.hours.length > 0 && <><dt>{t("영업시간", "Hours")}</dt><dd>{info.hours.join(" · ")}</dd></>}
+    {info.hoursNotes.length > 0 && <><dt>{info.hours.length ? t("운영 안내", "Hours notes") : t("영업시간", "Hours")}</dt><dd>{info.hoursNotes.join(" · ")}</dd></>}
+    {info.michelin && <><dt>{t("미쉐린", "Michelin")}</dt><dd>{info.michelin.level}{info.michelin.year ? ` (${info.michelin.year})` : ""}</dd></>}
+    {tags.length > 0 && <><dt>{t("편의", "Amenities")}</dt><dd>{tags.join(" · ")}</dd></>}
+    {info.sourceNote && <><dt>{t("출처", "Source")}</dt><dd>{info.sourceNote}</dd></>}
+  </>;
+}
 
 function bookingLabel(stop: TripStop, t: Translate) {
   if (stop.booking === "booked") return t("예약 있음", "Booking noted");
@@ -67,12 +90,19 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const selected = stops.find((stop) => stop.id === selectedId) ?? stops[0];
   const diagram = mapConfiguration.provider === "demo";
   const message = useMutation({
-    mutationFn: ({ text }: { text: string; clearDraft: boolean }) => tripGateway.sendMessage(trip.id, text, language),
+    // ★Only a stop the customer actually picked goes to the server (`item_id`) — the first stop shown by default is not a choice.
+    mutationFn: ({ text, itemId }: { text: string; clearDraft: boolean; itemId?: string | null }) => tripGateway.sendMessage(trip.id, text, language, itemId),
     onSuccess: (updated, variables) => {
       queryClient.setQueryData(tripKey(trip.id, language), updated);
       if (variables.clearDraft) setDraft("");
     },
   });
+
+  // ★Live: wake the chat model as the trip opens, so the first question does not wait for it to load (~35 s cold).
+  //   Best effort — the trip screen does not depend on it, and a failed chat reports itself.
+  useEffect(() => {
+    if (live) warmup(language).catch(() => { /* the chat reports its own failure */ });
+  }, [trip.id, language]);
 
   useEffect(() => {
     if (chatLog.current) chatLog.current.scrollTop = chatLog.current.scrollHeight;
@@ -104,7 +134,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     focus(navigation === "floating" ? "trip-nav-toggle" : `trip-pane-button-${next}`);
   }
 
-  function ask(text: string, clearDraft = false) {
+  function ask(text: string, clearDraft = false, pickedId: string | null = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null) {
     if (message.isPending) return;
     const trimmed = text.trim();
     if (!trimmed) {
@@ -114,10 +144,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     }
     setInputError("");
     setPane("chat");
-    message.mutate({ text: trimmed, clearDraft });
+    message.mutate({ text: trimmed, clearDraft, itemId: pickedId });
   }
 
-  const askAbout = (stop: TripStop) => { choose(stop); ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`)); };
+  const askAbout = (stop: TripStop) => { choose(stop); ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`), false, stop.id); };
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -170,6 +200,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
               <dl className={styles.details}>
                 <dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
                 <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd>
+                {placeRows(stop, t)}
                 <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
                 {stop.originalTime && stop.originalTime !== stop.time && <><dt>{t("시간 조정", "Time adjustment")}</dt><dd>{stop.originalTime} → {stop.time}</dd></>}
                 <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
@@ -179,10 +210,12 @@ function TripWorkspace({ trip }: { trip: Trip }) {
               <div className={styles.detailActions}>
                 <Button onClick={() => { choose(stop); setPane("map"); focus(`map-point-${stop.id}`); }}><MapPin {...icon} />{diagram ? t("방문 순서 보기", "Show visit order") : t("지도에서 보기", "Show on map")}</Button>
                 <Button disabled={message.isPending} onClick={() => askAbout(stop)}><MessageCircle {...icon} />{t("이 일정 질문하기", "Ask about this stop")}</Button>
+                {stop.mapUrl && <ButtonLink href={stop.mapUrl} target="_blank" rel="noopener noreferrer"><ExternalLink {...icon} />{t("지도 앱으로 열기", "Open in maps app")}</ButtonLink>}
               </div>
             </div>}
           </article>
-          {index < stops.length - 1 && <p className={styles.movement}><ArrowRight size={13} strokeWidth={1.6} aria-hidden="true" />{t("다음 일정으로", "Next stop")}</p>}
+          {index < stops.length - 1 && <p className={styles.movement}><ArrowRight size={13} strokeWidth={1.6} aria-hidden="true" />{t("다음 일정으로", "Next stop")}
+            {next && trip.legs?.[`${stop.id}>${next.id}`] && <> · <a href={trip.legs[`${stop.id}>${next.id}`]} target="_blank" rel="noopener noreferrer">{t("지도 앱에서 길찾기", "Directions in maps app")}</a></>}</p>}
         </div>;
       })}
       {!stops.length && <p className={styles.empty}>{t("이 날짜에는 등록한 일정이 없어요.", "There are no stops for this date.")}</p>}</div>
@@ -191,6 +224,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <header className={styles.panehead}><h2 id="trip-map-heading">{diagram ? t("방문 순서 개념도", "Visit order diagram") : t("지도", "Map")}</h2><span className={styles.muted}>{dayText}</span></header>
       <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} />
       {diagram && <p className={styles.chatnote}>{t("번호는 방문 순서입니다. 실제 위치·거리·이동 경로를 표시하지 않습니다.", "Numbers show visit order, not actual locations, distances, or routes.")}</p>}
+      {(trip.dayRoutes?.[activeDay] ?? []).length > 0 && <div className={styles.detailActions}>{(trip.dayRoutes?.[activeDay] ?? []).map((url, index, all) =>
+        <ButtonLink key={url} href={url} target="_blank" rel="noopener noreferrer"><Navigation {...icon} />{all.length > 1
+          ? t(`하루 경로 지도 앱으로 열기 ${index + 1}/${all.length}`, `Open day route in maps app ${index + 1}/${all.length}`)
+          : t("하루 경로 지도 앱으로 열기", "Open day route in maps app")}</ButtonLink>)}</div>}
       <div className={styles.mapSelection}>{selected ? <>
         <Eyebrow>{t("선택한 일정", "SELECTED STOP")}</Eyebrow>
         <h3>{selected.title}</h3>

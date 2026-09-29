@@ -16,17 +16,17 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
 from app.presentation.api.app import app
-from tests.ui_login import login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
+from tests.ops_app import ops_client
+from tests.ui_login import csrf, login  # 운영 화면은 로그인한 운영자만 본다(D-CS-007)
 
 
 def test_failed_approval_shows_the_reason_instead_of_a_silent_redirect(monkeypatch):
-    client = TestClient(app)
+    # ★`[2026-09-29]` 운영 화면은 운영 앱이고, 승인은 고객 API 앱을 HTTP 로 부른다
+    client = ops_client(monkeypatch, customer_app=app)
     login(client, monkeypatch)
     # 존재하지 않는 case/action → 하위 API 가 404 를 낸다
-    response = client.post(f"/ui/approvals/{uuid4()}/{uuid4()}", data={"decision": "approved"},
+    response = client.post(f"/ui/approvals/{uuid4()}/{uuid4()}", data={"decision": "approved", "csrf": csrf(client)},
                            follow_redirects=False)
 
     # ★조용한 303 이면 안 된다

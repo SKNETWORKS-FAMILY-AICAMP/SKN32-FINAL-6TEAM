@@ -183,6 +183,12 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         tools = ReadToolbox(get_connection, policy_search=search_policy,
                             travel=build_travel_sources(get_settings()),
                             report_extractor=build_report_extractor())
+        # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
+        #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
+        #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
+        from app.modules.travel_ops.mobility import wiring as mobility_wiring
+
+        mobility_wiring.configure_from_settings(get_settings())
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -279,7 +285,8 @@ def build_controller(*, registry: TeamRegistry | None = None,
 
 
 def build_domain_routers() -> list:
-    """도메인이 여는 HTTP 표면 — 여행 API · 위임 · 시나리오 모드.
+    """**고객 API 앱**이 여는 도메인 HTTP 표면 — 여행 API · 위임. ★`[2026-09-29]` 시나리오 모드 · 웹 제한값 운영 API 는
+    운영 앱으로 옮겼다(`build_ops_routers`).
 
     `[정정 2026-09-22]` 이 줄은 「여행 API 하나」라고 적혀 있었다. 시나리오 라우터가
     늘어난 뒤에도 안 고쳐져 있었고, 여기에 위임까지 더해 셋이 됐다.
@@ -305,7 +312,6 @@ def build_domain_routers() -> list:
         return from_settings(get_settings())
 
     from app.modules.travel_ops.delegation_api import build_delegation_router
-    from app.modules.travel_ops.scenario_mode import build_scenario_router
 
     def place_factory():
         # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
@@ -334,8 +340,27 @@ def build_domain_routers() -> list:
                               policy_search_factory=lambda: search_policy),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
-            build_delegation_router(),
-            # ★시나리오 모드 — 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404 다.
+            build_delegation_router()]
+
+
+def build_ops_routers() -> list:
+    """**운영 앱**(`app/ops_entrypoint.py`)이 여는 도메인 경로 — 웹 제한값 운영 API · 시나리오 모드. `[2026-09-29]`
+
+    ★고객 API 앱(8042)에는 없다(사용자 지시 — 운영 경로는 외부에서 닿지 못하게 다른 프로세스 · 127.0.0.1).
+    ★시나리오 모드는 한 판을 **프로세스 메모리**에 들고 있어 스위치 화면(`/ui/scenario`)·시연 화면(`/tripilot`)·
+      시나리오 입구(`/scenario/*`)가 **같은 프로세스**에 있어야 한다 — 셋 다 운영 앱으로 함께 옮겼다. 시나리오 모드는
+      대본대로 도는 데모 모드다(사용자 결정 2026-09-28). 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404.
+    """
+    from app.modules.travel_ops.scenario_mode import build_scenario_router
+    from app.modules.travel_ops.web_limits_api import build_limits_router
+
+    def chat_factory():
+        from app.core.settings import get_settings
+        from app.infrastructure.ollama_chat import from_settings
+
+        return from_settings(get_settings())
+
+    return [build_limits_router(),
             build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
 
 

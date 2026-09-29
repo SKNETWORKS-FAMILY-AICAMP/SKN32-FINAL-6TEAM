@@ -29,6 +29,9 @@ domain: neutral
 | [D-CS-003](D-CS-003-composer-scope.md) | **Composer 범위 — 세 층** | draft | Composer·UI |
 | [D-CS-004](D-CS-004-composer-boundary.md) | 모듈 **6종**·Port 3종·Core 9종 경계 `[정정 2026-09-10]` 7종이었다 — `composer_ui` 가 빠졌다 | draft | Composer |
 | [D-CS-007](D-CS-007-ui-operator-login.md) | **운영 화면은 로그인한 운영자만** — 화면이 scope 키를 스스로 만들어 `/ui` 에 닿으면 누구나 승인할 수 있었다. 운영자 계정·서명 쿠키·scope 검사, 승인자를 실제 운영자 id 로 | draft | 인증 경계 |
+| [D-CS-008](D-CS-008-ops-console-separate-app.md) | **운영자 콘솔은 다른 프로세스·127.0.0.1 만**(1단계) — 운영 화면·관리 API·시나리오를 고객 API 앱에서 빼 운영 앱(8070)으로. 고객 API 는 실제 HTTP·키는 운영 앱 설정에만·폼 위조 방지. 2단계(다른 기계) 전엔 「물리 분리 완료」 아님 | accepted | 인증 경계 |
+| [D-CS-010](D-CS-010-google-calls-in-dawn-batch-only.md) | **구글 API 는 새벽 3시 확인 창에 몰아서만** `[2026-09-29 사용자]` — 채팅에서 바로 부르지 않는다. 비는 값(원장·관광공사가 모르는 영업시간)을 메울 방법은 팀이 정한다 | accepted | 외부 소스 · 비용 |
+| [D-CS-009](D-CS-009-daytime-closure-detection.md) | **낮에 생기는 임시휴무는 시스템이 찾는다 — 구현 대상** `[2026-09-29 사용자]` — 새벽 확인 한 번 + 고객 신고(09-24 팀 결정)에서 방문 전 시스템 확인·대체로. 확인 소스·횟수는 구현 때 비용 상한 안에서 | accepted | 감시 |
 | [D-CS-006](D-CS-006-cancellation-terms-are-structured.md) | **취소 기한·위약금율은 구조화된 표에서 읽는다** — RAG 청크에서 꺼내려던 경로가 구조상 언제나 `None` 이었다. 수치는 `cancellation_terms`(예약→공급자→종류), 문장 근거는 `read.policy` | draft | RAG · 판정 |
 | [D-CS-005](D-CS-005-odsay-not-used.md) | **ODsay 를 쓰지 않는다** — 약관이 결과 데이터 저장·가공을 사전 동의 없이 금지하고 무료 한도가 30회/일. 이동 시간은 일정이 들고 오는 경로 정의로 간다 | draft | 외부 소스 |
 

@@ -14,10 +14,48 @@ from typing import Any
 from app.core.contracts import (NextAction, TeamManifest, TeamResult, TeamTask,
                                 ToolNotAllowed)
 
+from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
+
 from .._base import TravelTeamBase
-from ..itinerary_changes import plan_closed, plan_delay
+from ..itinerary_changes import NoChange, plan_closed, plan_delay, plan_dining_disrupted
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from ..replan import ORDER_MARGIN_MIN
 from .ledger import merge_state
+
+
+class ToolLedgerView:
+    """요식 원장을 **읽기 도구로** 묻는 쪽 — `itinerary_changes.ledger_pool` 이 부르는 모양. `[2026-09-28 cs]`
+
+    ★Team 은 DB 연결이 없다. 시나리오 버전(`ledger.DbLedgerView`)과 같은 두 질문을 도구로 한다.
+    ★원장에 못 물으면(도구 미등록 · 예산 소진 · 같은 질문 반복) **None** — 그때 계산은 장소 목록으로 돌아간다.
+      원장은 더해 주는 것이지 없으면 못 도는 것이 아니다. 예산(`max_steps`)이 원장 때문에 일정 판단을 막지 않게 한다.
+    """
+
+    _SKIP = (ToolNotAllowed, ToolBudgetExceeded, ToolLoopExceeded)
+
+    def __init__(self, team: "DiningTeam", task: TeamTask, ctx: dict[str, Any]) -> None:
+        self.team, self.task, self.ctx = team, task, ctx
+
+    def _ask(self, name: str, arguments: dict[str, Any]) -> Any:
+        try:
+            got = self.team._read(self.task, name, arguments, self.ctx["seen"])
+        except self._SKIP:
+            return None
+        self.ctx["evidence"] = self.team._evidence(self.task, source_id=name, claim="요식 원장",
+                                                   value=got, base=self.ctx["evidence"])
+        return got
+
+    def alternatives(self, meal_place, starts_at, ends_at, next_place, conds):
+        got = self._ask("read.dining_alternatives", {
+            "place_id": str(meal_place.get("place_id")), "at": str(starts_at),
+            "until": str(ends_at) if ends_at else None, "conds": list(conds),
+            "next_lat": (next_place or {}).get("latitude"), "next_lng": (next_place or {}).get("longitude")})
+        return (got or {}).get("candidates") or []
+
+    def state(self, place_id, starts_at, ends_at):
+        return self._ask("read.dining_state", {"place_id": str(place_id), "at": str(starts_at),
+                                                "until": str(ends_at) if ends_at else None,
+                                                "order_margin_min": ORDER_MARGIN_MIN})
 
 
 class DiningTeam(ItineraryWork, TravelTeamBase):
@@ -40,8 +78,10 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         # ★`[2026-09-25]` `read.booking_terms` — 규정 질문에서 식당 예약이 있으면 취소 조건 수치를 댄다
         # ★`read.dining_state` — 요식 원장에 「그 시각에 여는가」를 묻는다. 코어에 등록되지 않았으면
         #   `ToolNotAllowed` 가 나고, 그때는 원장 없이 예전처럼 답한다 — 등록 전에 이 Team 이 죽으면 안 된다.
+        # ★`[2026-09-29]` `read.disruptions` — 낮 감시 Case(재난문자 · 통제 · 지진)를 받아 **다시 점검**하고,
+        #   대체 후보도 같은 점검으로 거른다(`handle_trigger`)
         allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms",
-                       "read.dining_state", *ITINERARY_TOOLS],
+                       "read.dining_state", "read.dining_alternatives", "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
         #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
         knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
@@ -56,6 +96,40 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
         return ItineraryWork.itinerary_route("dining", state)
 
+    async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
+        """★`[2026-09-29]` 낮 감시가 연 Case — 그 식사 항목을 **다시 점검**하고, 깨졌으면 근처 식당으로 바꾼다.
+        ☆전에는 이 메서드가 없어 감시가 식사 항목을 `unhandled` 로 세기만 했다(`trip_watch_cases.py`)."""
+        trigger = task.context.current_state.get("trigger") or {}
+        item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
+        if item is None:
+            return self.settle(task, ctx, NoChange("gone"))
+        if item.kind != "dining" or item.place is None:
+            return self._escalate(task, "target_kind_mismatch", ctx["evidence"])
+        report = self._read(task, "read.disruptions", self.check_arguments(item.place, item.starts_at),
+                            ctx["seen"])
+        ctx["evidence"] = self._evidence(task, source_id="read.disruptions", claim="성립 점검",
+                                         value=report, base=ctx["evidence"])
+        if report is None or report.get("verdict") == "fatal":
+            # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
+            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
+        if report.get("verdict") != "disrupted":
+            return self.settle(task, ctx, NoChange("clear"))
+        places = self.catalog(task, ctx)
+        if places is None:
+            return self._unknown(task, "장소 목록", ctx["evidence"])
+        check = self.recheck(task, ctx)
+
+        def safe_check(**kwargs) -> dict[str, Any]:
+            # ★예산이 바닥나면 그 후보는 「안 봤다」 — 고르지 않는다(점검 안 한 곳을 괜찮다고 하지 않는다)
+            try:
+                return check(**kwargs)
+            except ToolLedgerView._SKIP:
+                return {"verdict": "not_checked"}
+
+        plan = plan_dining_disrupted(trip=ctx["trip"], items=ctx["items"], places=places, meal=item,
+                                     report=report, check=safe_check, ledger=ToolLedgerView(self, task, ctx))
+        return self.settle(task, ctx, plan)
+
     async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
         if kind not in ("delay", "closed"):
             return await super().handle_report(task, kind, ctx)
@@ -63,15 +137,18 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         if places is None:
             return self._unknown(task, "장소 목록", ctx["evidence"])
         request_id = task.context.current_state.get("request_id")
+        # ★`[2026-09-28 cs]` 대체 식당 후보는 요식 원장이 내고 고르기는 계산이 한다(사용자 결정)
+        ledger = ToolLedgerView(self, task, ctx)
         if kind == "delay":
             minutes = ctx["report"].get("minutes")
             if not minutes:
                 return self._unknown(task, "늦는 시간", ctx["evidence"])
             plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
-                              minutes=int(minutes), message=task.input_text, request_id=request_id)
+                              minutes=int(minutes), message=task.input_text, request_id=request_id,
+                              ledger=ledger)
         else:
             plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
-                               message=task.input_text, request_id=request_id)
+                               message=task.input_text, request_id=request_id, ledger=ledger)
         return self.settle(task, ctx, plan)
 
     async def execute(self, task: TeamTask) -> TeamResult:
@@ -127,6 +204,9 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         #   일정을 바꾸지는 않되 확인할 곳은 알려 준다.
         extra = place.get("dining") or {}
         warnings = ["제공자 예정 정보이지 현장 확인이 아니다"]
+        if state is not None and state.get("available") is False:
+            # ★`[2026-09-28 cs]` 요식 표가 없는 DB — 원장 없이 코어 영업 정보로 답했다는 것을 숨기지 않는다
+            warnings.append("요식 원장이 이 DB 에 없어 기본 장소 영업 정보로 판단했다")
         if extra.get("needs_holiday_check"):
             warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있다")
         if extra.get("needs_check"):

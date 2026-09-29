@@ -51,6 +51,9 @@ class Resolved:
     longitude: float | None = None
     place_id: str | None = None         # 우리 장소 표의 id(1·3단계)
     content_id: str | None = None       # 관광공사 id
+    #: 관광공사 종류 번호(12 관광지 · 39 음식점 …). ★`[2026-09-28]` 운영시간 조회(`detailIntro2`)의 필수 값이다 —
+    #: 전에는 싣지 않아 계획 읽기로 등록한 장소의 운영시간 조회가 늘 「필수 값 없음」 오류였다(ui 세션 실서버 시험)
+    content_type_id: str | None = None
     needs_review: bool = False
     note: str | None = None
     tried: list[str] = field(default_factory=list)
@@ -120,6 +123,11 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
     candidates: list[dict[str, Any]] = []
     full_hits: list[dict[str, Any]] = []
     by_name = {normalize(p["name"]): p for p in our_places if p.get("name")}
+    # ★`[2026-09-28]` 요식 식당이 공용 장소가 되면서 같은 이름 지점이 여럿일 수 있다 — 고른 뒤 「확인 필요」로 남긴다
+    seen: dict[str, int] = {}
+    for p in our_places:
+        if p.get("name"):
+            seen[normalize(p["name"])] = seen.get(normalize(p["name"]), 0) + 1
     for query in narrowings(title):
         key = normalize(query)
         # 1 — 우리 장소 표 정확 일치
@@ -127,8 +135,12 @@ def resolve(title: str, *, our_places: list[dict[str, Any]], tour: Any = None, k
             place = by_name[key]
             return Resolved("resolved", "places", place["name"], query, place.get("kind"), place.get("latitude"),
                             place.get("longitude"), place_id=str(place["place_id"]),
-                            needs_review=not _plain(query, title), tried=tried + [f"places:{query}"],
-                            note=None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다")
+                            needs_review=not _plain(query, title) or seen.get(key, 0) > 1,
+                            tried=tried + [f"places:{query}"],
+                            note="; ".join(filter(None, [
+                                None if query == title else f"원문 「{title}」에서 「{query}」로 좁혔다",
+                                f"같은 이름이 {seen[key]}곳 — 어느 지점인지 확인해 주세요" if seen.get(key, 0) > 1 else None]))
+                            or None)
         tried.append(f"places:{query}")
         # 3 — 자모 오타(우리 장소 이름과)
         best = _typo(key, by_name)
@@ -242,6 +254,7 @@ def _from_tour(found: dict[str, Any], query: str, title: str, tried: list[str], 
     return Resolved("resolved", "tour_api", found.get("matched_title"), query,
                     KIND_BY_CONTENT_TYPE.get(str(found.get("content_type_id")), "activity"),
                     found.get("latitude"), found.get("longitude"), content_id=found.get("content_id"),
+                    content_type_id=str(found["content_type_id"]) if found.get("content_type_id") else None,
                     # ★카카오로 찾은 이름이 원문과 다르면(「토속촌」 → 「토속촌삼계탕」) 확인을 받는다
                     needs_review=not _plain(query, title) or (via is not None and normalize(via) != normalize(query)),
                     tried=tried, note=" · ".join(note) or None)

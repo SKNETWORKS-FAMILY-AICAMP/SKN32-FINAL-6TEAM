@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
 import { mapConfiguration } from "@/features/map/config";
-import { chosenLabel } from "@/features/onboarding/model";
+import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
 import { tripKey, tripsKey } from "@/features/trip/use-trip";
 import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
+import { currentKey, issueKey, LiveError } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -22,11 +24,17 @@ const draftKey = "tripilot.web.registration-draft.v1";
 function Preferences() {
   const t = useT();
   const [{ complete, answers }] = useOnboarding();
-  if (!complete) return null;
+  // ★Answers live in page memory only (nothing is stored), so a reload or a direct visit has none. Say so instead of
+  //   registering without them in silence (found 2026-09-28: registered trips had no survey after a reload).
+  if (!complete) return <><div className={styles.preferences}>
+    <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
+    <p>{t("취향 설문 답이 없어서 이번 등록에는 취향이 반영되지 않아요. 설문 답은 이 화면에서만 기억해서 새로고침하면 사라져요.", "No preference answers here, so this registration goes without them. Answers are kept on this screen only and are lost on reload.")}</p>
+    <p><ButtonLink href={routes.start}>{t("취향 설정하기", "Set my preferences")}</ButtonLink></p>
+  </div><hr /></>;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
   return <><div className={styles.preferences}>
     <Eyebrow>{t("함께 고른 여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <div className={styles.tags}>{answers.theme && <span className={styles.pill}>{labels[answers.theme]}</span>}{answers.party && <span className={styles.pill}>{chosenLabel("party", answers.party, t)}</span>}</div>
+    <div className={styles.tags}>{answers.theme && <span className={styles.pill}>{labels[answers.theme]}</span>}{answers.party && <span className={styles.pill}>{partyLabel(answers, t)}</span>}</div>
     <p>{t("홈에서 고른 취향을 이 여행과 함께 이어가요.", "The preferences you chose stay with this journey.")}</p>
   </div><hr /></>;
 }
@@ -44,6 +52,25 @@ export function TripRegistration() {
   const [draftWarning, setDraftWarning] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const live = DATA_MODE === "live";
+  // ★Human check (Turnstile) — only in live mode and only when a site key is set. A token is good for one send.
+  const checking = live && Boolean(TURNSTILE_SITE_KEY);
+  const [humanToken, setHumanToken] = useState<string | null>(null);
+  const [humanReset, setHumanReset] = useState(0);
+  // Waiting for the next token (a new customer needs two: one for the key, one for the plan).
+  const nextToken = useRef<((token: string) => void) | null>(null);
+  function takeToken(token: string | null) {
+    setHumanToken(token);
+    if (token) { setValidation(""); nextToken.current?.(token); nextToken.current = null; }
+  }
+  /** Spend the current token and wait for a fresh one — a token is checked once only. */
+  function freshToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const timer = window.setTimeout(() => { nextToken.current = null; reject(new LiveError("human_check_timeout", t("사람 확인이 끝나지 않았어요. 다시 눌러 주세요.", "The human check did not finish. Please press again."))); }, 60_000);
+      nextToken.current = (token) => { window.clearTimeout(timer); resolve(token); };
+      setHumanToken(null);
+      setHumanReset((count) => count + 1);
+    });
+  }
   const draft = useQuery({
     queryKey: ["registration-draft", from],
     queryFn: async () => {
@@ -67,8 +94,17 @@ export function TripRegistration() {
   });
   // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   const intake = useMutation({
-    mutationFn: () => submitIntake(value, files, language),
+    mutationFn: async () => {
+      // ★A new customer's key is issued here, with its own human check (the sign-up door), then the plan goes with a fresh token.
+      if (checking && !currentKey()) {
+        await issueKey(language, humanToken);
+        return submitIntake(value, files, language, await freshToken());
+      }
+      return submitIntake(value, files, language, humanToken);
+    },
     onSuccess: (result) => router.push(routes.intake(result.intake_id)),
+    // The token was spent on this attempt; ask for a fresh one before the next.
+    onError: () => { if (checking) setHumanReset((count) => count + 1); },
   });
   const pending = create.isPending || intake.isPending;
 
@@ -87,6 +123,7 @@ export function TripRegistration() {
     event.preventDefault();
     if (pending) return;
     if (!value.trim() && !(live && files.length)) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
+    if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     if (live) intake.mutate(); else create.mutate();
   }
@@ -114,6 +151,7 @@ export function TripRegistration() {
               onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
             {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
           </div>}
+          {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
         </Panel>

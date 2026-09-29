@@ -102,7 +102,9 @@ class ScenarioSession:
         self.watcher = TripWatcher(store=self.store, check=check, connection_factory=get_connection,
                                    clock=self.clock, routes=None,
                                    route_events=ReplayRouteEvents(self.timeline))
-        self.desk = TripDesk(store=self.store, connection_factory=get_connection, check=check)
+        # ★대본대로만 도는 데모 모드 — 실제 요식 원장을 섞지 않는다(`TripDesk.dining_ledger`)
+        self.desk = TripDesk(store=self.store, connection_factory=get_connection, check=check,
+                             dining_ledger=False)
         self.engine = engine
         self.case_engine = None
         if engine == "case":

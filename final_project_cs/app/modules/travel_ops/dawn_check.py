@@ -7,6 +7,8 @@
 ★팀 결정(2026-09-24)
   - 식당은 **새벽 3시에만** 확인한다(첫 심야버스 03:30 기준). 그 뒤로는 따로 부르지 않는다 —
     당일 문제는 **고객 신고**로 받는다. 기상·교통의 3분 감시는 그대로 돈다(다른 소스).
+  ★`[2026-09-29 사용자 결정]` **낮의 임시휴무는 시스템이 찾도록 구현한다** — 위 「당일은 고객 신고로」를 바꾼다
+    (wiki `decisions/D-CS-009-daytime-closure-detection.md`). 아직 구현 전이다.
   - 새벽에 모은 문제는 **하루 시작 알림**에 실린다 — 그 알림이 「어제 이후 바뀐 일정」·「답을 기다리는
     일정」을 센다(`trip_reminders.day_phrase`). 그래서 이 작업은 하루 시작 알림(기본 08:00) **전에** 끝난다.
 
@@ -150,9 +152,15 @@ class DawnCheck:
                                                    detail=detail, checked_at=checked_at,
                                                    exclude=self._closed_places(conn, day))
             else:
+                from .dining.ledger import DbLedgerView
+                from .replan import ORDER_MARGIN_MIN
+
+                # ★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다(없으면 장소 목록 — 예전 그대로)
                 plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
                                           detail=detail, checked_at=checked_at,
-                                          exclude=self._closed_places(conn, day))
+                                          exclude=self._closed_places(conn, day),
+                                          ledger=DbLedgerView(self._connect, self.store.tenant_id,
+                                                              ORDER_MARGIN_MIN))
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})

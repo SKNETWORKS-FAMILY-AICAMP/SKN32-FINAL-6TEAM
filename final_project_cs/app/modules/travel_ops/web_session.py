@@ -14,11 +14,8 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-import threading
-import time
 from uuid import UUID
 
-from app.core import settings as settings_module
 
 PREFIX = "acop_u_"
 
@@ -65,29 +62,8 @@ def rotate(conn, *, tenant_id: str, customer_id: UUID) -> str:
     return raw
 
 
-# ── 발급 속도 제한 (프로세스 안) ──────────────────────────────────
-#   ★발급 경로만 키 없이 열려 있다 — 한 주소에서 사용자를 찍어 내지 못하게 센다.
-_issued: dict[str, list[float]] = {}
-_issued_lock = threading.Lock()
+# ★`[2026-09-28]` 발급 속도 제한은 `web_guard.count_session` 으로 옮겼다 — 전에는 여기서 **프로세스 메모리**로 세서
+#   재시작하면 풀리고 프로세스마다 따로 셌다. 이제 DB(`web_usage`, 031)에서 모든 프로세스가 같이 센다.
 
 
-def _issue_limit() -> tuple[int, float]:
-    guard = settings_module.get_guardrails()
-    return int(guard.get("security.web_session_issue_per_hour")), 3600.0
-
-
-def issue_wait(client: str, now: float | None = None) -> float:
-    """이 주소가 지금 새 키를 받을 수 있으면 0 을 돌려주고 한 번으로 센다. 막히면 **기다릴 초**."""
-    now = time.time() if now is None else now
-    limit, window = _issue_limit()
-    with _issued_lock:
-        recent = [t for t in _issued.get(client, []) if now - t < window]
-        if len(recent) >= limit:
-            _issued[client] = recent
-            return max(1.0, window - (now - recent[0]))
-        recent.append(now)
-        _issued[client] = recent
-    return 0.0
-
-
-__all__ = ["PREFIX", "issue", "issue_wait", "resolve", "rotate"]
+__all__ = ["PREFIX", "issue", "resolve", "rotate"]

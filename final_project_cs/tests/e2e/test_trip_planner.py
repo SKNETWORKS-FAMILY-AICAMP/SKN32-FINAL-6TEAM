@@ -103,11 +103,8 @@ def api(monkeypatch):
     test_settings = original.model_copy(update={"tenant_id": tenant})
     monkeypatch.setattr(settings_module, "get_settings", lambda: test_settings)
     monkeypatch.setattr(security, "get_settings", lambda: test_settings)
-    # ★웹 키 발급 한도(주소당 시간당 20)는 프로세스 전역이다 — 시험마다 비운다(`test_web_api.py` 와 같다).
-    #   안 비우면 파일 전체를 돌릴 때만 뒤쪽 시험이 발급을 거절당한다(2026-09-28 실측)
-    from app.modules.travel_ops import web_session
-
-    monkeypatch.setattr(web_session, "_issued", {})
+    # ★웹 키 발급 한도(주소당 시간당 20)는 DB(`web_usage`, 031)에서 **테넌트별로** 센다 — 시험마다 새 테넌트라 쌓이지 않는다.
+    #   (전에는 프로세스 전역이라 시험마다 비워야 했다 — 2026-09-28 실측)
     customer = uuid4()
     keys = {"activity": set(), "dining": set()}
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
@@ -153,6 +150,7 @@ def api(monkeypatch):
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         for sql in ("DELETE FROM trip_intakes WHERE tenant_id=%s",          # 웹 계획 읽기(028) — 원본·값은 따라 지워진다
                     "DELETE FROM web_user_keys WHERE tenant_id=%s",          # 웹 사용자 키(025)
+                    "DELETE FROM web_usage WHERE tenant_id=%s",              # 웹 남용 방어 사용량(031)
                     "DELETE FROM place_catalog WHERE tenant_id=%s",
                     "DELETE FROM itinerary_items WHERE tenant_id=%s",
                     "DELETE FROM itinerary_versions WHERE tenant_id=%s",
@@ -432,9 +430,12 @@ def _cache_one_row(api):
             "'캐시된 미술관','서울특별시 종로구 캐시길 1',37.5759,126.9787)", (api["tenant"],))
 
 
-def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api):
-    """★`[2026-09-27]` 관광공사 장소 목록은 **기본 꺼짐**(콘텐츠랩 「로컬서버 저장방식 금지」 해석 대기).
-    표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받아 그 요청 안에서만 쓴다."""
+def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(api, monkeypatch):
+    """스위치를 끄면(`ACOP_TOUR_CATALOG_ENABLED=false`) 표에 행이 남아 있어도 읽지 않고, 후보는 실시간으로 받는다.
+    ★`[2026-09-28]` 기본은 켜짐으로 되돌렸다 — 끄는 길이 여전히 도는지만 본다."""
+    from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
+
+    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: False))
     _cache_one_row(api)
     tour = StubTour()
     body = api["ask"](request_id="p-off", tour=tour).json()
@@ -443,10 +444,10 @@ def test_while_the_catalog_is_switched_off_it_is_not_read_and_places_come_live(a
 
 
 def test_tour_api_is_called_only_when_the_catalog_is_empty(api, monkeypatch):
-    """★(목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
+    """★(기본 — 목록이 켜져 있을 때) 바깥 소스는 **캐시가 비었을 때만** 나간다. 부른 횟수를 결과가 센다."""
     from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
-    monkeypatch.setattr(PlaceCatalogSync, "enabled", staticmethod(lambda: True))
+    assert PlaceCatalogSync.enabled() is True       # ★기본값이 켜짐이다(2026-09-28)
     tour = StubTour()
     body = api["ask"](request_id="p-tour", tour=tour).json()
     assert tour.calls == 1 and body["calls"]["tour_api"] == 1
@@ -835,3 +836,31 @@ def test_a_place_that_rests_on_the_day_is_read_from_its_text_and_swapped_out(api
     assert any(r.startswith("closed_day") for r in body["checks"]["repairs"]), body["checks"]
     # 등록 판정기도 같은 칸을 본다 — 초안을 그대로 등록해도 통과한다
     assert check_itinerary(_parts(draft), constraints=draft["constraints"], party_size=draft["party_size"]) == []
+
+
+class BusyTour(StubTour):
+    """관광공사가 속도 한도에 걸린 흉내 — 실제 소스처럼 `misses["rate_limited"]` 를 세고 기다릴 초를 남긴다."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        from collections import Counter
+
+        self.misses = Counter()
+        self.last_wait_seconds = 57.3
+
+    def area_page(self, area_code: str, *, page: int, rows: int):
+        self.calls += 1
+        self.misses["rate_limited"] += 1
+        return None
+
+
+def test_a_refusal_caused_by_the_tourism_rate_limit_says_try_again_in_seconds(api):
+    """★`[2026-09-28]` 관광공사가 한도에 걸려 후보를 못 받아 「후보 부족」 422 가 났고, 1분 뒤 다시 누르니 됐다(ui 세션 실측).
+    조건 문제가 아니라 **잠시 뒤 다시**다 — 503 + `Retry-After`, 원래 거절은 `underlying` 에."""
+    response = api["ask"](tour=BusyTour(), request_id="p-busy", days=4)
+    assert response.status_code == 503, response.text
+    assert response.headers["Retry-After"] == "58"
+    error = response.json()["error"]
+    assert error["code"] == "source_busy" and error["retry_after_seconds"] == 58
+    assert error["underlying"]["code"] == "not_enough_candidates"
+    # 한도에 안 걸렸으면 그대로 422 다(위 `test_too_few_candidates_are_refused_with_numbers_not_shrunk`)

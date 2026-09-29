@@ -72,8 +72,11 @@ def trip_summary(items: list[Any], now: datetime) -> str:
 
 def question_reply(*, message: str, items: list[Any], tenant_id: str,
                    policy_search: Callable[..., list[Any]] | None, scopes: list[str],
-                   min_score: float) -> tuple[str, str, dict[str, Any]]:
-    """질문 → (상태, 답, 근거). 상태 `answered`(규정을 찾음) · `escalated`(규정을 못 찾아 사람이 확인).
+                   min_score: float, now: datetime | None = None) -> tuple[str, str, dict[str, Any]]:
+    """질문 → (상태, 답, 근거). 상태 `answered` · `escalated`(**규정 검색이 없거나 오류** — 시스템 결함일 때만).
+
+    ★`[2026-09-28 사용자 결정]` 규정·일정 어디에도 안 걸리는 질문(「비트코인 시세」「대한민국 수도」)을 사람 대기로
+      남기지 않는다 — 사람이 확인하는 것은 버그·오류 리포트뿐이다. 못 찾았다고 말하고 할 수 있는 일로 답한다.
 
     ★짚은 일정이 있으면 그 일정의 사실을 먼저 싣는다(「몇 시에 가요?」는 그것으로 답이 된다).
     ★규정은 문턱을 넘은 조각만 — 관련 없는 조각을 답처럼 싣지 않는다(문턱 근거는 가드레일 주석).
@@ -89,7 +92,7 @@ def question_reply(*, message: str, items: list[Any], tenant_id: str,
             return "answered", (f"{fact}\n지금은 여행 규정을 찾아볼 수 없어서 규정에 관한 답은 드리지 못했어요. "
                                 "일정은 바꾸지 않았어요."), {**evidence, "policy": "unavailable"}
         return "escalated", ("지금은 여행 규정을 찾아볼 수 없어서 이 질문에 답하지 못했어요. "
-                             "사람이 규정을 확인하도록 남겨 두었어요. 일정은 바꾸지 않았어요."), \
+                             "잠시 뒤 다시 물어봐 주세요. 일정은 바꾸지 않았어요."), \
             {**evidence, "policy": "unavailable"}
     query = message if item is None else f"{item.title} {message}"
     try:
@@ -97,21 +100,23 @@ def question_reply(*, message: str, items: list[Any], tenant_id: str,
     except Exception as exc:                          # noqa: BLE001 — 검색 실패도 답에 그대로 말한다
         lines = [fact] if fact else []
         lines.append("여행 규정을 찾다가 오류가 나서 규정에 관한 답은 드리지 못했어요. "
-                     "규정 부분은 사람이 확인하도록 남겨 두었어요. 일정은 바꾸지 않았어요.")
+                     "잠시 뒤 다시 물어봐 주세요. 일정은 바꾸지 않았어요.")
         return "escalated", "\n".join(lines), {**evidence, "policy": f"error: {type(exc).__name__}"}
     good = [c for c in chunks if float(getattr(c, "score", 0) if not isinstance(c, dict) else c.get("score", 0))
             >= min_score]
     evidence["policy_hits"] = len(good)
-    if good:
-        answer, sources = question_answer(item, good, None)
+    answer, sources = question_answer(item, good, None) if good else (None, [])
+    if answer is not None:
         evidence["sources"] = sources
         return "answered", (f"{fact}\n{answer}" if fact else answer), evidence
     if item is not None:
         # 일정 사실은 있다 — 그것이 답이 되는 질문(시각·장소)일 수 있다. 규정은 못 찾았다고 같이 말한다
         return "answered", (f"{fact}\n여행 규정에서 이 질문에 맞는 내용은 찾지 못했어요. "
                             "더 궁금하신 점을 조금 더 자세히 적어 주세요. 일정은 바꾸지 않았어요."), evidence
-    return "escalated", ("여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못했어요. 지어내서 답하지 않고, "
-                         "사람이 확인하도록 남겨 두었어요. 일정의 어느 항목에 대한 질문인지 적어 주시면 바로 찾아볼게요."), evidence
+    summary = trip_summary(items, now) if now is not None else None
+    return "answered", "\n".join(filter(None, (
+        "여행 규정과 이 여행의 일정에서 이 질문에 맞는 내용을 찾지 못해서 지어내 답하지 않았어요.", summary, CAN_DO))), \
+        {**evidence, "unmatched": True}
 
 
 def other_reply(items: list[Any], now: datetime) -> str:
@@ -143,8 +148,10 @@ def outcome_reply(status: str | None, outcome: dict[str, Any], message: str) -> 
                 "answered": "답을 드렸어요."}[status]
     short = message.strip().replace("\n", " ")
     short = short if len(short) <= 40 else short[:40] + "…"
-    return (f"「{short}」 — 자동으로 처리하지 못한 요청이라(처리 결과: {status or '없음'}) 사람이 일정을 확인하도록 "
-            "남겨 두었어요. 일정은 바꾸지 않았어요.")
+    # ★`[2026-09-29]` 「사람이 확인하도록 남겨 두었어요」를 뺐다 — 사람 대기 답은 쓰지 않는다(사용자 결정 · 사람 몫은 버그·오류
+    #   리포트뿐). 무슨 일이 있었는지와 할 수 있는 요청을 말한다. 기록(Case)에는 처리 결과가 그대로 남는다
+    return (f"「{short}」 — 이 요청은 지금 처리할 수 없는 종류라 일정은 바꾸지 않았어요(처리 결과: {status or '없음'}). "
+            + CAN_DO)
 
 
 __all__ = ["CAN_DO", "OUTCOME_ANSWERS", "QUESTION_SCOPES", "item_fact", "not_understood_reply", "other_reply", "outcome_reply",

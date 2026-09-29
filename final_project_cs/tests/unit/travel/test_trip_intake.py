@@ -47,8 +47,9 @@ def test_extract_uses_the_chat_and_validates():
 def test_rollback_needs_a_version_number_that_is_in_the_sentence():
     from app.modules.travel_ops.trip_intake import validate
     assert validate({"type": "rollback", "to_version": 6}, "6번 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": 6}
-    assert validate({"type": "rollback", "to_version": 4}, "6번 일정으로 되돌려 주세요") is None   # 지어낸 번호
-    assert validate({"type": "rollback", "to_version": None}, "예전 일정으로 되돌려 주세요") is None
+    # ★`[2026-09-29]` 지어낸 번호는 버리고 번호 없는 되돌리기로 — 번호는 서버가 그 항목의 최근 변경에서 정한다
+    assert validate({"type": "rollback", "to_version": 4}, "6번 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": None}
+    assert validate({"type": "rollback", "to_version": None}, "예전 일정으로 되돌려 주세요") == {"type": "rollback", "to_version": None}
 
 
 def test_the_interpreter_picks_the_team_from_the_report_not_the_classifier():

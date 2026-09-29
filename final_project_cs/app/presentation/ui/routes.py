@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import hmac
 import html
 import json
+import re
+import secrets
 from typing import Any
 from uuid import UUID
 
@@ -17,14 +20,30 @@ from app import composition
 from app.core.project_config import ProjectConfigError
 from app.infrastructure.llm.openai import OpenAITeamLLM
 from app.infrastructure.messaging.outbox import OutboxBrokerAdapter
-from app.infrastructure.db.session import get_connection
+from app.infrastructure.db.session import get_ops_read_connection as get_connection
 from app.core.remote_team.executor import LocalTeamExecutor
 from app.infrastructure.rag import retriever as rag_retriever
-from app.presentation.security import _development_key, masked
+from app.presentation.security import masked
 from app.presentation.ui import auth, theme
 
 #: 이 요청의 운영자. 관문(`_require_login`)이 채우고 `_page` 가 머리에 적는다.
 _OPERATOR: contextvars.ContextVar[auth.Operator | None] = contextvars.ContextVar("ui_operator", default=None)
+#: 이 요청의 폼 위조 방지 토큰. 관문이 채우고 `_page` 가 모든 POST 폼에 숨은 칸으로 넣는다. `[2026-09-29]`
+_CSRF: contextvars.ContextVar[str | None] = contextvars.ContextVar("ui_csrf", default=None)
+_POST_FORM = re.compile(r"(<form\b[^>]*\bmethod=['\"]post['\"][^>]*>)", re.IGNORECASE)
+
+
+def _with_csrf(page_html: str, token: str | None) -> str:
+    """모든 POST 폼(로그아웃 포함)에 숨은 칸 `csrf` 를 넣는다 — 폼마다 손으로 넣다 빠뜨리지 않게 한 곳에서."""
+    if not token:
+        return page_html
+    return _POST_FORM.sub(lambda m: m.group(1) + f"<input type='hidden' name='csrf' value='{html.escape(token)}'>",
+                          page_html)
+
+
+def _csrf_refused() -> HTTPException:
+    return HTTPException(403, {"error": {"code": "csrf_failed",
+                                         "message": "폼 확인값이 맞지 않는다 — 화면을 다시 열고 누른다. 아무것도 바뀌지 않았다"}})
 
 
 async def _require_login(request: Request) -> auth.Operator:
@@ -40,8 +59,16 @@ async def _require_login(request: Request) -> auth.Operator:
     if operator is None:
         target = request.url.path + (f"?{request.url.query}" if request.url.query else "")
         raise HTTPException(303, headers={"Location": "/ui/login?next=" + quote(target, safe="")})
+    token = auth.csrf_for(request.cookies.get(auth.COOKIE) or "")
+    if request.method == "POST":
+        # ★`[2026-09-29]` 쓰기는 폼 위조 방지 토큰이 맞을 때만 — 다른 사이트가 운영자 브라우저로 승인을 누르게 하지 못하게
+        #   (전에는 SameSite 쿠키에만 기댔다 · 운영자 콘솔 분리 Codex 합의 보강). 폼은 한 번 읽으면 끝에서 다시 읽힌다(캐시)
+        form = await request.form()
+        if not hmac.compare_digest(str(form.get("csrf", "")), token):
+            raise _csrf_refused()
     request.state.operator = operator
     _OPERATOR.set(operator)
+    _CSRF.set(token)
     return operator
 
 
@@ -85,20 +112,20 @@ def _json(value: Any) -> str:
 
 def _page(title: str, body: str, *, current: str = "", lede: str = "") -> HTMLResponse:
     operator = _OPERATOR.get()
-    return HTMLResponse(theme.page(title, body, current=current, lede=lede, nav=_NAV,
-                                   who=operator.id if operator else ""))
+    return HTMLResponse(_with_csrf(theme.page(title, body, current=current, lede=lede, nav=_NAV,
+                                              who=operator.id if operator else ""), _CSRF.get()))
 
 
 def _forbidden(request: Request, scope: str, what: str, back: str) -> HTMLResponse:
     """★권한이 없으면 **아무것도 하지 않고** 그렇다고 말한다. 조용한 303 으로 삼키지 않는다."""
     operator: auth.Operator = request.state.operator
-    return HTMLResponse(theme.page("권한 없음", theme.card(
+    return HTMLResponse(_with_csrf(theme.page("권한 없음", theme.card(
         f"{_safe(what)} 권한이 없습니다",
         f"<p>이 동작에는 <code>{_safe(scope)}</code> 가 필요합니다. "
         f"<b>{_safe(operator.id)}</b> 계정에는 없습니다.</p>"
         "<p>아무것도 바뀌지 않았습니다.</p>"
         f"<p><a href='{_safe(back)}'>돌아가기</a></p>", tone="critical"),
-        nav=_NAV, who=operator.id), status_code=403)
+        nav=_NAV, who=operator.id), _CSRF.get()), status_code=403)
 
 
 def _safe_next(value: str | None) -> str:
@@ -112,7 +139,8 @@ def _safe_next(value: str | None) -> str:
     return target
 
 
-def _login_page(message: str = "", *, next_url: str = "/ui/cases", status: int = 200) -> HTMLResponse:
+def _login_page(message: str = "", *, next_url: str = "/ui/cases", status: int = 200,
+                csrf: str | None = None) -> HTMLResponse:
     try:
         configured, broken = bool(auth.operators()), ""
     except auth.OperatorConfigError as exc:
@@ -125,14 +153,19 @@ def _login_page(message: str = "", *, next_url: str = "/ui/cases", status: int =
                             "넣고 앱을 다시 띄우십시오.", tone="critical")
     else:
         note = theme.notice(message, tone="critical") if message else ""
+    csrf = csrf or secrets.token_urlsafe(24)
     form = ("<form method='post' action='/ui/login' class='card'>"
+            f"<input type='hidden' name='csrf' value='{_safe(csrf)}'>"
             f"<input type='hidden' name='next' value='{_safe(next_url)}'>"
             "<p><label>운영자 id<br><input name='operator_id' autocomplete='username' required></label></p>"
             "<p><label>비밀번호<br><input name='password' type='password' "
             "autocomplete='current-password' required></label></p>"
             "<p><button type='submit'>로그인</button></p></form>")
-    return HTMLResponse(theme.page("로그인", note + form, nav=(),
-                                   lede="운영 화면은 로그인한 운영자만 봅니다."), status_code=status)
+    response = HTMLResponse(theme.page("로그인", note + form, nav=(),
+                                       lede="운영 화면은 로그인한 운영자만 봅니다."), status_code=status)
+    # ★로그인 전 폼 위조 방지 — 폼의 숨은 칸과 이 쿠키가 같아야 로그인을 받는다(이중 제출, 2026-09-29)
+    response.set_cookie(auth.CSRF_COOKIE, csrf, httponly=True, samesite="strict", path="/ui/login")
+    return response
 
 
 @login_router.get("/login", response_class=HTMLResponse)
@@ -145,6 +178,10 @@ async def login(request: Request):
     form = await request.form()
     operator_id = str(form.get("operator_id", "")).strip()
     next_url = _safe_next(str(form.get("next", "")))
+    expected = request.cookies.get(auth.CSRF_COOKIE) or ""
+    if not expected or not hmac.compare_digest(str(form.get("csrf", "")), expected):
+        return _login_page("화면을 다시 열고 로그인하십시오(폼 확인값이 맞지 않습니다).", next_url=next_url,
+                           status=403)
     try:
         remaining = auth.locked(operator_id)
         operator = None if remaining else auth.authenticate(operator_id, str(form.get("password", "")))
@@ -616,11 +653,8 @@ async def approve(request: Request, case_id: UUID, action_id: UUID):
         return _forbidden(request, "action:approve", "승인", "/ui/approvals")
     form = await request.form()
     decision = str(form.get("decision", "rejected"))
-    settings = settings_module.get_settings()
-    token = _development_key("action:approve", settings.secret_key)
-    transport = httpx.ASGITransport(app=request.app)
-    async with httpx.AsyncClient(transport=transport, base_url=str(request.base_url).rstrip("/")) as client:
-        response = await client.post(f"/v1/cases/{case_id}/actions/{action_id}/approve", headers={"Authorization": f"Bearer {token}"}, json={"decision": decision, "approver_id": operator.id})
+    response = await _call_api(request, "POST", f"/v1/cases/{case_id}/actions/{action_id}/approve",
+                               scope="action:approve", payload={"decision": decision, "approver_id": operator.id})
     # ★두 분기가 같은 응답을 내고 있었다 — 승인이 실패해도 운영자는 목록으로 돌아올 뿐
     #   무엇이 잘못됐는지 알 수 없었다. 승인은 되돌릴 수 없는 행위인데 실패를 삼키면
     #   "눌렀으니 됐겠지" 로 넘어간다 (CLAUDE.md §3 — 조용한 스킵을 만들지 않는다).
@@ -643,16 +677,51 @@ async def approve(request: Request, case_id: UUID, action_id: UUID):
 #   그 상태를 시험이 못 본다.
 _DELEGATION_PATH = "/v1/delegations"
 
+#: 시험이 고객 API 앱을 이 자리에 끼운다. 실제 운영에서는 비어 있어 **진짜 HTTP** 로 간다.
+API_TRANSPORT: httpx.AsyncBaseTransport | None = None
+
+
+def _api_key(scope: str) -> str | None:
+    """운영 앱의 scope 키 — 설정 `ACOP_OPS_API_KEYS`(JSON)에서만 읽는다. ★스스로 만들지 않는다."""
+    raw = (getattr(settings_module.get_settings(), "ops_api_keys", "") or "").strip()
+    try:
+        keys = json.loads(raw) if raw else {}
+    except ValueError:
+        return None
+    key = keys.get(scope) if isinstance(keys, dict) else None
+    return str(key) if key else None
+
+
+def _problem(status: int, code: str, message: str) -> httpx.Response:
+    """부르지 못한 이유를 응답 모양으로 — 화면의 실패 경로가 그대로 그린다(조용히 삼키지 않는다)."""
+    return httpx.Response(status, json={"error": {"code": code, "message": message}})
+
 
 async def _call_api(request: Request, method: str, path: str, *, scope: str,
                     payload: dict[str, Any] | None = None) -> httpx.Response:
-    """같은 앱의 API 를 부른다. 승인 화면이 이미 쓰는 길(ASGI transport)과 같다."""
-    token = _development_key(scope, settings_module.get_settings().secret_key)
-    transport = httpx.ASGITransport(app=request.app)
-    async with httpx.AsyncClient(transport=transport,
-                                 base_url=str(request.base_url).rstrip("/")) as client:
-        return await client.request(method, path, headers={"Authorization": f"Bearer {token}"},
-                                    json=payload)
+    """**고객 API** 를 실제 HTTP 로 부른다(`ACOP_OPS_API_BASE_URL`). `[2026-09-29]` 운영자 콘솔 분리
+
+    ★전에는 같은 프로세스 안에서(`ASGITransport(app=request.app)`) 서버 비밀키로 scope 키를 **만들어** 불렀다 —
+      운영 화면이 고객 앱 안에 붙어 있어야만 되는 구조였다. 이제 운영 앱은 다른 프로세스라 실제로 부르고,
+      키는 운영 앱 설정에만 둔다(`ACOP_OPS_API_KEYS`).
+    ★시간 초과는 **결과를 모른다**는 뜻이다 — 다시 누르기 전에 목록에서 상태를 보라고 적는다. 스스로 다시 부르지 않는다.
+      같은 승인을 두 번 보내도 두 번 실행되지 않는다(상태기계가 둘째를 거부한다).
+    """
+    token = _api_key(scope)
+    if token is None:
+        return _problem(503, "ops_api_key_missing",
+                        f"운영 앱에 {scope} 키가 설정되지 않았다(ACOP_OPS_API_KEYS) — 아무것도 보내지 않았다")
+    settings = settings_module.get_settings()
+    timeout = float(settings_module.get_guardrails().get("security.ops_api_timeout_seconds"))
+    try:
+        async with httpx.AsyncClient(transport=API_TRANSPORT, base_url=settings.ops_api_base_url.rstrip("/"),
+                                     timeout=timeout) as client:
+            return await client.request(method, path, headers={"Authorization": f"Bearer {token}"}, json=payload)
+    except httpx.TimeoutException:
+        return _problem(504, "ops_api_timeout", "고객 API 가 제때 답하지 않았다 — 처리됐는지 모른다. "
+                                                "다시 누르기 전에 목록에서 지금 상태를 확인한다")
+    except httpx.HTTPError as exc:
+        return _problem(502, "ops_api_unreachable", f"고객 API 에 닿지 못했다 — 아무것도 바뀌지 않았다 ({type(exc).__name__})")
 
 
 def _failure_page(title: str, headline: str, response: httpx.Response, back: str) -> HTMLResponse:
@@ -905,15 +974,9 @@ async def resolve_outbox(request: Request, message_id: UUID):
     if not operator.can("action:approve"):
         return _forbidden(request, "action:approve", "바깥함 해소", "/ops/outbox")
     form = await request.form()
-    token = _development_key("action:approve", settings_module.get_settings().secret_key)
-    transport = httpx.ASGITransport(app=request.app)
-    async with httpx.AsyncClient(transport=transport, base_url=str(request.base_url).rstrip("/")) as client:
-        response = await client.post(
-            f"/v1/outbox/{message_id}/resolve",
-            headers={"Authorization": f"Bearer {token}"},
-            json={"resolution": str(form.get("resolution", "")), "note": str(form.get("note", "")),
-                  "resolved_by": operator.id},
-        )
+    response = await _call_api(request, "POST", f"/v1/outbox/{message_id}/resolve", scope="action:approve",
+                               payload={"resolution": str(form.get("resolution", "")),
+                                        "note": str(form.get("note", "")), "resolved_by": operator.id})
     if response.is_error:
         return _page("Outbox 처리 실패", theme.card(
             "처리되지 않았습니다", f"<p>HTTP {response.status_code}</p><pre>{_safe(response.text[:400])}</pre>"),

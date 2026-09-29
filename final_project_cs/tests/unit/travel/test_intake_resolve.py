@@ -336,6 +336,18 @@ def test_tour_api_takes_a_title_with_a_bracketed_alias_as_the_same_name():
     assert _bare("경복궁 별빛야행") != _bare("경복궁")
 
 
+def test_tour_api_takes_a_conjoined_title_as_the_first_name_only():
+    """★`[2026-09-28]` 관광공사의 창덕궁은 「창덕궁과 후원 [유네스코 세계유산]」 — 「창덕궁」이 정확일치 0 이라 등록이
+    「창덕궁 종합관람지원센터」로 갔다(ui 세션 실서버 시험). 과·와·및 병칭만 받고 다른 꼴은 여전히 다른 곳이다."""
+    from app.infrastructure.travel.tour_api import _bare, _joined
+
+    assert _joined("창덕궁과 후원 [유네스코 세계유산]", _bare("창덕궁"))
+    assert not _joined("창덕궁 낙선재", _bare("창덕궁"))
+    assert not _joined("창덕궁 달빛기행", _bare("창덕궁"))
+    assert not _joined("창덕궁과", _bare("창덕궁"))
+    assert not _joined("후원과 창덕궁", _bare("창덕궁"))
+
+
 # ── 받아쓰기 일시 오류는 한 번만 다시 부른다 (2026-09-28 평가셋) ─────────────────
 def test_a_transient_vision_error_is_retried_once_and_only_once():
     import pytest
@@ -361,3 +373,14 @@ def test_a_transient_vision_error_is_retried_once_and_only_once():
     with pytest.raises(OllamaError):                      # 일시 오류가 아닌 것은 다시 부르지 않는다
         _see_once_more(flaky([OllamaError("Ollama HTTP 404: model not found")]))("p", b"")
     assert len(calls) == 1
+
+
+def test_같은_이름_지점이_여럿이면_골라도_확인이_필요하다():
+    """★`[2026-09-28]` 요식 식당이 공용 장소가 되며 같은 이름 지점이 생겼다 — 한 곳을 고르되 확인 화면에서 묻는다."""
+    branches = [{"place_id": "a", "name": "명동교자", "kind": "dining", "latitude": 37.56, "longitude": 126.98},
+                {"place_id": "b", "name": "명동교자", "kind": "dining", "latitude": 37.57, "longitude": 126.99}]
+    found = resolve("명동교자", our_places=branches)
+    assert found.place_id in {"a", "b"}
+    assert found.needs_review is True and "같은 이름이 2곳" in (found.note or "")
+    single = resolve("명동교자", our_places=branches[:1])
+    assert single.needs_review is False

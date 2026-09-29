@@ -159,12 +159,10 @@ def check_db(rep: Report) -> None:
         rep.add(WARN, "psycopg 가 없어 DB 를 보지 못했다")
         return
 
-    dsn = os.environ.get("DINING_DSN")
-    if not dsn:
-        port = os.environ.get("DINING_PG_PORT", "5433")
-        user = os.environ.get("DINING_DB_USER", "postgres")
-        db = os.environ.get("DINING_DB", "dining_dev")
-        dsn = f"postgresql://{user}@localhost:{port}/{db}"
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import core_db  # ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+    dsn = core_db.dsn()
     try:
         conn = psycopg.connect(dsn, connect_timeout=5)
     except Exception as exc:                            # noqa: BLE001

@@ -1,0 +1,10 @@
+g-order-04 | order.create | 아직 출고 전이라 배송지를 바꾸고 싶어요. 주문 전체를 취소하지 않고 주소만 수정할 수 있나요?
+g-order-06 | order.create | 주문 수량 하나만 줄이고 나머지 상품은 그대로 받고 싶습니다.
+g-order-09 | order.create | 주문 일부 상품만 취소하고 싶은데 전체 주문이 취소될까 봐 걱정됩니다.
+g-shipping-01 | shipment.status | 배송완료라고 뜨는데 현관과 경비실 어디에도 물건이 없습니다. 조사해 주세요.
+g-shipping-08 | shipment.exception | 출고 후에 이사한 주소로 보내 달라고 요청할 수 있을까요?
+g-shipping-13 | shipment.status | 제주 지역으로 보내는 주문인데 일반 배송보다 얼마나 더 걸리는지 알고 싶습니다.
+g-return-04 | refund.calculate | 마음이 바뀌어서 반품하려고 합니다. 반품 배송비는 누가 부담하나요?
+g-return-11 | return.request | 같은 주문에서 이미 한 개를 반품했습니다. 이번에는 남은 수량만 반품하고 싶어요.
+g-exchange-05 | return.request | 교환 신청 후 재고가 없다는 연락을 받았습니다. 대체 옵션을 고를 수 있나요?
+g-exchange-09 | refund.calculate | 단종된 상품이라 교환이 어렵다고 합니다. 환불 금액은 어떻게 정해지나요?

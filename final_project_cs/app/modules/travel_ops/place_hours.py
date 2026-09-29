@@ -78,7 +78,18 @@ def knows_hours(attributes: Mapping[str, Any] | None) -> bool:
 
 
 def fits(attributes: Mapping[str, Any] | None, start: datetime, end: datetime) -> bool | None:
-    """그 칸(시작~끝)에 열려 있나. 모르면 `None`."""
+    """그 칸(시작~끝)에 열려 있나. 모르면 `None`.
+
+    ★`[2026-09-29]` 영업시간은 **현지(서울) 시각**이다 — 시간대가 붙은 시각은 서울 시각으로 바꿔 본다.
+      전에는 그대로 `.time()` 을 봐서, 같은 순간이 UTC 로 들어오면(DB 세션 시간대가 UTC 인 서버 등)
+      서울 14:00 이 05:00 으로 읽혀 「영업 전」이 됐다(실행 확인). 일정 짜기(`planner.py`)는 이미 바꿔 본다.
+      활동 팀 PR #6 전수검수에서 같은 종류의 결함(휴무 요일이 시간대에 따라 뒤집힘)을 보다 찾았다.
+    """
+    from zoneinfo import ZoneInfo
+
+    seoul = ZoneInfo("Asia/Seoul")
+    start = start.astimezone(seoul) if start.tzinfo else start
+    end = end.astimezone(seoul) if end.tzinfo else end
     found = hours_on(attributes, start.date())
     if found is None:
         return None
@@ -117,6 +128,8 @@ _RANGE = re.compile(r"(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})")
 _LAST = re.compile(r"(?:입장\s*마감|입장마감|마감)\s*[:：]?\s*(\d{1,2}):(\d{2})")
 _WEEKLY = re.compile(r"^매주\s*([월화수목금토일](?:요일)?(?:\s*[,·/~]\s*[월화수목금토일](?:요일)?)*)\s*(?:휴무|휴관|정기휴무|정기휴관)?\.?$")
 _NONE = ("연중무휴", "없음", "휴무없음", "무휴")
+#: 조건 원문 앞머리의 「매주 X요일」 — 뒤에 예외(「(단, 공휴일이면 …)」)가 붙어도 앞은 매주 쉬는 요일이다
+_WEEKLY_HEAD = re.compile(r"^매주\s*[월화수목금토일](?:요일)?(?:\s*[,·/~]\s*[월화수목금토일](?:요일)?)*")
 
 
 def _hm(hour: str, minute: str) -> str:
@@ -228,6 +241,12 @@ def read_by_model(usetime: str | None, restdate: str | None, chat: Any) -> Hours
     for text in raw.get("conditions") or []:
         if _norm(str(text)) in haystack:
             read.conditions.append(str(text))
+            # ★`[2026-09-29]` 「매주 월요일 (단, 공휴일이 월요일인 경우 그 다음날 휴무)」처럼 **매주 쉬는 요일에 공휴일
+            #   예외가 붙은** 원문을 모델이 통째로 조건에 넣으면, 그 요일이 「연다」로 남았다(실측 — 창덕궁 다래나무의
+            #   요일표에 월요일 09:00~17:30). 앞의 「매주 X요일」은 매주 쉬는 날이다 — 쉬는 날로 두고 예외는 조건에 남긴다.
+            weekly = _WEEKLY_HEAD.match(str(text).strip())
+            if weekly and days_in(weekly.group(0)):
+                closed |= days_in(weekly.group(0))
     week: dict[str, Any] = {}
     for day in DAYS:
         if day in closed:
@@ -262,5 +281,36 @@ def read_hours(usetime: str | None, restdate: str | None, chat: Any = None) -> H
         return HoursRead(method="none", dropped=[f"모델 호출 실패 {type(exc).__name__}"])
 
 
-__all__ = ["DAYS", "DayHours", "HoursRead", "clean", "days_in", "fits", "hours_on", "knows_hours",
+#: 식별자 없는 장소를 이름으로 찾을 때 같은 곳으로 보는 거리. ★우리가 고른 값 — 구글 새벽 확인의 기본(300m)보다
+#: 넓게 둔 것은 관광공사 좌표가 건물 입구가 아니라 부지 중심인 곳(궁궐·공원)이 있어서다
+MATCH_RADIUS_M = 500
+
+
+def find_tour_id(*, name: str, kind: str, latitude: float | None, longitude: float | None,
+                 source: Any) -> tuple[tuple[str, str] | None, str | None, int | None]:
+    """관광공사 식별자가 없는 장소(공용 장소 행 · 고객 글의 이름) → (content_id, content_type_id).
+
+    ★**같은 이름 · 같은 종류**로 찾고(`TourApiPlace.find` — 정확히 같은 이름 하나일 때만), 좌표가
+      `MATCH_RADIUS_M` 안일 때만 같은 곳으로 본다(동명이인 — 「경복궁」 울산 음식점, `tour_api.py` 머리).
+    돌려주는 것: (식별자 또는 None, 못 찾은 이유 또는 None, 거리 m 또는 None)."""
+    from .planner import KIND_BY_CONTENT_TYPE, SEOUL_AREA_CODE
+    from .replan import distance_m
+
+    if source is None or not hasattr(source, "find"):
+        return None, "관광공사 조회가 연결돼 있지 않다", None
+    if latitude is None or longitude is None:
+        return None, "좌표가 없어 같은 곳인지 가릴 수 없다", None
+    wanted = {code for code, k in KIND_BY_CONTENT_TYPE.items() if k == kind}
+    found = source.find(name, allowed_types=wanted, area_code=SEOUL_AREA_CODE)
+    if found is None:
+        return None, "관광공사에서 같은 이름·종류를 하나로 찾지 못했다", None
+    meters = round(distance_m({"latitude": latitude, "longitude": longitude},
+                              {"latitude": found["latitude"], "longitude": found["longitude"]}))
+    if meters > MATCH_RADIUS_M:
+        return None, f"같은 이름이 {meters}m 떨어져 있어 같은 곳으로 보지 않았다", meters
+    return (str(found["content_id"]), str(found["content_type_id"])), None, meters
+
+
+__all__ = ["DAYS", "MATCH_RADIUS_M", "DayHours", "HoursRead", "clean", "days_in", "find_tour_id", "fits", "hours_on",
+           "knows_hours",
            "read_by_model", "read_by_rule", "read_hours"]

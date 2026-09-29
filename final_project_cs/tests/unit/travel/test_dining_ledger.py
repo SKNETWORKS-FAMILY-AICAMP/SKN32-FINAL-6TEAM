@@ -40,10 +40,14 @@ class FakeCursor:
 
     def execute(self, sql, params=None):
         self.asked.append(sql)
-        if "dn_core_place_link" in sql:
+        if "to_regclass" in sql:                          # 요식 표가 이 DB 에 있나
+            self._row = (self.plan.get("ready", True),)
+        elif "dn_core_place_link" in sql:
             self._row = self.plan.get("link")
         elif "core_place_state" in sql:
             self._row = self.plan.get("state")
+        elif "dining.open_at_slot" in sql:                # 주문 여유(도착 + n분) 재판정
+            self._row = (self.plan.get("order_ok", True),)
         elif "meets_condition" in sql:
             code = params[1]
             self._row = (self.plan.get("conditions", {}).get(code),)
@@ -114,7 +118,29 @@ def test_안_이어진_장소도_같은_칸을_갖는다():
                             "2026-09-22 12:00+09:00")
     b = ledger.dining_state(linked(OPEN_STATE), "demo", CORE_ID,
                             "2026-09-22 12:00+09:00")
-    assert set(a) == set(b)
+    c = ledger.dining_state(FakeConn({"ready": False}), "demo", CORE_ID,
+                            "2026-09-22 12:00+09:00")
+    assert set(a) - {"reason"} == set(b) == set(c) - {"reason"}
+
+
+# ── 요식 표가 없는 DB (2026-09-28 cs) ─────────────────────────
+
+def test_요식_표가_없으면_죽지_않고_물을_수_없다고_답한다():
+    """★공용 개발 DB 에 마이그레이션 200~219 가 없을 때 `UndefinedTable` 로 Team 이 죽었다."""
+    conn = FakeConn({"ready": False})
+    got = ledger.dining_state(conn, "demo", CORE_ID, "2026-09-22 12:00+09:00")
+    assert got["available"] is False and got["linked"] is False
+    assert got["open_at_slot"] is None                  # 「영업 안 함」이 아니라 모름
+    assert "마이그레이션" in got["reason"]
+    assert all("dn_core_place_link" not in sql or "to_regclass" in sql
+               for sql in conn.cursor_obj.asked)        # 원장 표를 건드리지 않았다
+
+
+def test_주문_여유는_연_곳에만_묻는다():
+    """도착 + 20분이 라스트오더 안인지 — 원장이 「연다」고 한 곳에만 더 묻는다."""
+    got = ledger.dining_state(linked(OPEN_STATE), "demo", CORE_ID,
+                              "2026-09-22 12:00+09:00", order_margin_min=20)
+    assert got["order_ok"] is True       # 가짜 커서는 open_at_slot 을 state 첫 칸으로 답한다
 
 
 # ── 판정 ────────────────────────────────────────────────────
@@ -223,3 +249,51 @@ def test_시각_표기를_읽는다(text, expect_hour):
 def test_시간대가_없으면_한국_시각으로_본다():
     got = ledger._as_datetime("2026-09-22 12:00")
     assert got.utcoffset() == timedelta(hours=9)
+
+
+# ── 새 여행의 식당 잇기 (2026-09-28 cs) ────────────────────────
+
+class _TxConn(FakeConn):
+    """세이브포인트를 흉내 낸다. `boom` 이면 잇기 조회가 터진다."""
+
+    def __init__(self, plan: dict, boom: bool = False):
+        super().__init__(plan)
+        self.boom, self.rolled_back = boom, False
+        outer = self
+
+        class _Tx:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, *_):
+                outer.rolled_back = exc_type is not None
+                return False
+        self._tx = _Tx()
+
+    def transaction(self):
+        return self._tx
+
+
+def test_새_여행_식당을_잇는다():
+    conn = _TxConn({"ready": True})
+    conn.cursor_obj.fetchall = lambda: [("linked", 3), ("ambiguous", 0)]
+    orig = conn.cursor_obj.execute
+    conn.cursor_obj.execute = lambda sql, params=None: None if "link_trip_places" in sql else orig(sql, params)
+    assert ledger.link_trip(conn, "demo", "t1") == {"linked": 3, "ambiguous": 0}
+
+
+def test_잇기가_터져도_여행_등록을_막지_않는다():
+    conn = _TxConn({"ready": True})
+    orig = conn.cursor_obj.execute
+
+    def execute(sql, params=None):
+        if "link_trip_places" in sql:
+            raise RuntimeError("잠금 충돌")
+        return orig(sql, params)
+    conn.cursor_obj.execute = execute
+    assert ledger.link_trip(conn, "demo", "t1") is None
+    assert conn.rolled_back is True                      # 세이브포인트만 되돌렸다
+
+
+def test_요식_표가_없으면_잇지_않는다():
+    assert ledger.link_trip(_TxConn({"ready": False}), "demo", "t1") is None

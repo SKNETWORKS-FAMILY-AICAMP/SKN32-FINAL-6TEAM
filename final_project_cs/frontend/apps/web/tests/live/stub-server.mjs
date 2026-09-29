@@ -30,7 +30,7 @@ const DEFAULTS = {
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
-  // make one read fail with a 500: "trips" | "proposals" | "notices" | "" (none)
+  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "" (none)
   fail: "",
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
   edits: "ok",
@@ -65,7 +65,9 @@ function tripView() {
   return {
     trip_id: TRIP_ID, customer_id: "cust-1", title: "내 여행", locale: "ko", party_size: 2, version: scenario.proposals === "open" ? 2 : 1,
     items: [
-      { item_id: "i-a", seq: 1, kind: "dining", title: "아침 식당", place: "아침 식당", starts_at: at(8), ends_at: at(9), changed: false, other_options: [], customer_pinned: false, lat: 37.575, lon: 126.98, booked: false },
+      { item_id: "i-a", seq: 1, kind: "dining", title: "아침 식당", place: "아침 식당", starts_at: at(8), ends_at: at(9), changed: false, other_options: [], customer_pinned: false, lat: 37.575, lon: 126.98, booked: false,
+        map_url: "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8",
+        place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "08:00", close: "21:00" }], tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 } } },
       { item_id: "i-b", seq: 2, kind: "activity", title: "경복궁 관람", place: "경복궁", starts_at: at(9, 30), ends_at: at(11), changed: false, other_options: [{ key: "alt-1", name: "창덕궁" }], customer_pinned: true, lat: 37.5796, lon: 126.977, booked: true },
       { item_id: "i-m", seq: 3, kind: "mobility", title: "경복궁 관람 → 점심 식당", place: null, starts_at: at(11, 10), ends_at: at(11, 30), changed: false, other_options: [], customer_pinned: false, lat: null, lon: null, booked: false },
       { item_id: "i-c", seq: 4, kind: "dining", title: "점심 식당", place: "점심 식당", starts_at: at(12), ends_at: at(13), changed: false, other_options: [], customer_pinned: false, lat: 37.57, lon: 126.99, booked: false },
@@ -76,6 +78,7 @@ function tripView() {
       ...(scenario.proposals === "open" ? [{ version: 2, reason: "closed", causes: [{ category: "place", summary: "점심 식당이 문을 닫았어요." }], at: at(11, 40) }] : []),
     ],
     plan_url: `http://127.0.0.1:${PORT}/plan/${TRIP_ID}?t=stub`,
+    map: { days: [{ date: "2026-10-15", legs: [{ from_item_id: "i-a", to_item_id: "i-b", url: "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit" }] }] },
     density: [],
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
   };
@@ -202,6 +205,8 @@ createServer(async (request, response) => {
   }
 
   // ── plan intake ──────────────────────────────────────────────────
+  // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
+  if (request.method === "POST" && path === "/v1/web/warmup") return json(response, 200, { status: "warm", model: "stub-model", last_attempt: null }, origin);
   if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(1), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
@@ -210,6 +215,7 @@ createServer(async (request, response) => {
   }
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     if (path.endsWith("/plan") && scenario.planDelay) await new Promise((resolve) => setTimeout(resolve, scenario.planDelay));
+    if (path.endsWith("/confirm") && broken("confirm")) return;
     confirmed = true;
     scenario = { ...scenario, trips: "one" };
     return json(response, 200, { status: "confirmed", trip: { trip_id: TRIP_ID } }, origin);

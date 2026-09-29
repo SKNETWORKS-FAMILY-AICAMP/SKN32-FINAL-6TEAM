@@ -76,6 +76,9 @@ TRAVEL_OPS_POLICY = VerificationPolicy(
         # ★`[결정 2026-09-17]` `itinerary.apply` 가 싣는 값. **대조는 적용기가 적용 순간에 한다**
         #   (`itinerary_actions.py` — 기준 버전 · 항목 실재 · 장소 실재). 여기서 모양만 허락한다.
         "base_version", "causes", "notice", "summary", "replacements", "full_items",
+        # ★`[2026-09-29]` 「바꿀까요?」만 묻는 제안(`itinerary_actions.consent_arguments`) — 항목 id 하나.
+        #   적용기가 그 항목이 지금 일정에 있는지 보고, 없으면 거절한다. 일정은 바꾸지 않는다
+        "consent",
     }),
 )
 

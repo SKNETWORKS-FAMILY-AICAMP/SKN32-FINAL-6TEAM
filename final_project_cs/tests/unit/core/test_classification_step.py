@@ -88,6 +88,18 @@ def test_a_raising_classifier_is_recorded_not_propagated(recorded):
     assert call["payload"] == {"failure_code": FAILURE_CODE}
 
 
+def test_the_failure_reason_is_logged_without_the_customer_text(recorded, caplog):
+    """★`[2026-09-29]` 처리된 실패라 서버 로그에 이유가 없어, 실서버의 분류 실패가 모델 시간 초과인지 메모리·DB 문제인지
+    가릴 수 없었다(ui 세션 로그 확인). 이유(예외 종류·짧은 설명)만 남기고 고객 원문은 싣지 않는다."""
+    def explode(text):
+        raise TimeoutError("provider timeout")
+
+    with caplog.at_level("WARNING", logger="app.application.classification"):
+        _run(recorded, explode)
+    assert "classification failed" in caplog.text and "TimeoutError" in caplog.text and "provider timeout" in caplog.text
+    assert "환불 문의" not in caplog.text
+
+
 def test_no_classifier_is_also_a_failure(recorded):
     event, call, _ = _run(recorded, None)
 

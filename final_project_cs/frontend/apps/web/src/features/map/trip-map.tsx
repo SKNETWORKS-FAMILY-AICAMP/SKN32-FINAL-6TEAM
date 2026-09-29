@@ -2,11 +2,13 @@
 
 import type { TripStop } from "../trip/model";
 import { mapConfiguration } from "./config";
+import { useState } from "react";
 import { DemoMap } from "./demo-map";
-import { GoogleMap } from "./google-map";
+import { GoogleMap, type GoogleDecision } from "./google-map";
 import { MapUnavailable } from "./live-map";
 import { toMapPoints } from "./map-points";
 import { NaverMap } from "./naver-map";
+import { OsmMap } from "./osm-map";
 import styles from "./map.module.css";
 
 export interface TripMapProps {
@@ -17,6 +19,7 @@ export interface TripMapProps {
 }
 
 export function TripMap(props: TripMapProps) {
+  const [google, setGoogle] = useState<GoogleDecision>("checking");
   if (mapConfiguration.provider === "demo") return <DemoMap {...props} />;
   if (mapConfiguration.provider === "unavailable") return <MapUnavailable message={mapConfiguration.message} />;
   const points = toMapPoints(props.stops);
@@ -24,13 +27,20 @@ export function TripMap(props: TripMapProps) {
   const selectedMissing = props.selectedId && props.stops.some((stop) => stop.id === props.selectedId) && !points.some((point) => point.id === props.selectedId);
   const viewProps = { points, selectedId: props.selectedId, onSelect: props.onSelect };
   return <div className={styles.frame}>
-    {mapConfiguration.provider === "naver"
-      ? <NaverMap {...viewProps} clientId={mapConfiguration.clientId} />
-      : <GoogleMap {...viewProps} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} />}
+    {mapConfiguration.provider === "naver" ? <NaverMap {...viewProps} clientId={mapConfiguration.clientId} />
+      : mapConfiguration.provider === "osm" ? <OsmMap {...viewProps} tileUrl={mapConfiguration.tileUrl} />
+      : <GoogleMap {...viewProps} apiKey={mapConfiguration.apiKey} mapId={mapConfiguration.mapId} tileUrl={mapConfiguration.tileUrl} onDecided={setGoogle} />}
     <p className={styles.caption}>
-      <span>{mapConfiguration.provider === "naver" ? "네이버지도" : "Google Maps"} · {props.dayNumber}일차 · {points.length}개 장소 표시</span>
+      <span>{providerName(mapConfiguration.provider, google)} · {props.dayNumber}일차 · {points.length}개 장소 표시</span>
+      {mapConfiguration.provider === "google" && google === "free" && <span className={styles.notice}>구글 지도 사용 한도에 닿았거나 확인하지 못해 무료 지도(OpenStreetMap)로 보여 드려요.</span>}
       {missing > 0 && <span className={styles.notice}>좌표가 없는 {missing}개 일정은 핀으로 표시하지 않았어요.</span>}
       {selectedMissing && <span className={styles.notice}>선택한 일정의 위치 정보가 없어요.</span>}
     </p>
   </div>;
+}
+
+function providerName(provider: "naver" | "osm" | "google", google: GoogleDecision) {
+  if (provider === "naver") return "네이버지도";
+  if (provider === "osm" || google === "free" || google === "free-setting") return "OpenStreetMap";
+  return "Google Maps";
 }

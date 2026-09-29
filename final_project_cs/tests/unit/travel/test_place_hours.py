@@ -74,6 +74,17 @@ def test_seasons_become_the_shortest_window_and_holiday_rules_stay_as_text():
     assert read.conditions and read.dropped == []
 
 
+def test_a_weekly_rest_day_with_a_holiday_exception_is_still_closed_that_day():
+    """`[2026-09-29]` 모델이 「매주 월요일 (단, 공휴일이 월요일인 경우 그 다음날 휴무)」를 통째로 조건에 넣었고, 월요일이
+    「연다」로 남았다(창덕궁 다래나무 실측). 앞의 「매주 월요일」은 매주 쉬는 날이다 — 예외만 조건으로 남는다."""
+    rest = "매주 월요일 (단, 공휴일이 월요일인 경우 그 다음날 휴무)"
+    model = _Model({"open": [{"days": [], "open": "09:00", "close": "17:30", "quote": "09:00~17:30"}],
+                    "closed": [], "conditions": [rest]})
+    read = read_hours("[11월~1월]- 09:00~17:30", rest, chat=model)
+    assert read.week["mon"] == "closed" and read.week["tue"]["open"] == "09:00"
+    assert read.conditions == [rest]
+
+
 def test_what_is_not_in_the_text_is_dropped_not_believed():
     model = _Model({
         "open": [{"days": [], "open": "08:00", "close": "22:00", "quote": "08:00~22:00"},         # 원문에 없는 인용

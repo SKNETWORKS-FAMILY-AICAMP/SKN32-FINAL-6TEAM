@@ -47,7 +47,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ml import artifact_dir  # noqa: E402
 
-DSN = os.environ.get("DINING_DSN", "postgresql://postgres@localhost:5433/dining_rebuild")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "dining"))
+import core_db  # noqa: E402  ★`[2026-09-28 cs]` 기본은 코어 DB(`core_db.py`)
+
+DSN = core_db.dsn()
 BASE_MODEL = "intfloat/multilingual-e5-small"
 SEED = 42
 TEST_SHARE = 0.2
