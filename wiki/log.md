@@ -20,6 +20,12 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-30 — 운영 앱 CI와 develop 공유 PR
+
+[실측] admin 전용 CI를 추가하고 [PR #17](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM/pull/17)을 열었다. Ubuntu·Chromium에서 admin 시험 41/41(100%)과 HTML 일치 검사를 통과했고 기존 develop CI도 성공했다. 실제 API 연결과 분리한 [검증 결과](../final_project_cs/wiki/records/reports/2026-09-30_0017_admin_CI와_develop_공유.md)를 기록했다. 최종 병합 상태는 PR에서 확인한다.
+
+---
+
 ## 2026-09-29 — 운영 앱 공유와 API 협의 진입점
 
 [실측] admin 화면·HTML·조사 자료를 확인한 뒤 백엔드와 API 계약을 먼저 맞추도록 [운영 앱 API 협의](../final_project_cs/wiki/external/admin-screen-api.md)를 추가하고 External 인덱스·앱 README·목업 안내에서 연결했다. 현재는 계약 미합의·live 미구현·통합 미검증이다. [공유 준비와 검증](../final_project_cs/wiki/records/reports/2026-09-29_2352_admin_공유와_API협의_진입점.md).
