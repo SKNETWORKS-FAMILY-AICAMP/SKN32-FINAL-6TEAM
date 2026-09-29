@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
 
 from app.modules.travel_ops.mobility import wiring
 from app.modules.travel_ops.planner import Cand, add_moves

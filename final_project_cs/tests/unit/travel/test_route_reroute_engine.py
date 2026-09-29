@@ -2,7 +2,7 @@
 """사고를 계산기 조건으로 옮기고, 저장된 대안이 다 막히면 계산기로 새 경로 — 이동 계산기 문제목록(2026-09-29) #38·#39."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from app.modules.travel_ops.itinerary import Item
