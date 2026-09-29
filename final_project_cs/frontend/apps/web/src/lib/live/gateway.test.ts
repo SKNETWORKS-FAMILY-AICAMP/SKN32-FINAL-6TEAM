@@ -124,9 +124,21 @@ describe("live trip gateway", () => {
     });
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
     expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00 (주문 마감 20:30)", "화"],
-      tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
+      hoursNotes: [], tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
     // ★nothing real was sent — no block at all, not a row of "unknown"
     expect(trip.stops[1].placeInfo).toBeNull();
+  });
+
+  it("shows closed days, last entry, and the source's hours text for places outside the dining ledger", async () => {
+    replies.push({ ...TRIP, items: [
+      { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 사직로 161 (세종로)", hours: [{ day: "월", closed: true, open: "09:00", close: "18:00" }, { day: "화", open: "09:00", close: "18:00", last_entry: "17:00", closed: false }],
+        hours_text: ["09:00~18:00", "매주 화요일 휴무"], hours_conditions: ["공휴일은 개방"], tags: [], source_note: "ⓒ한국관광공사" } },
+      { ...TRIP.items[1], place_info: { hours: null, hours_text: ["09:00~18:00", "매주 화요일 휴무"], hours_conditions: ["매주 화요일 휴무"], tags: [] } },
+    ] });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].placeInfo).toMatchObject({ hours: ["월 휴무", "화 09:00–18:00 (입장 마감 17:00)"], hoursNotes: ["공휴일은 개방"], sourceNote: "ⓒ한국관광공사" });
+    // no weekly table: the source text is the hours (a repeated line is shown once)
+    expect(trip.stops[1].placeInfo).toMatchObject({ hours: [], hoursNotes: ["09:00~18:00", "매주 화요일 휴무"] });
   });
 
   it("sends the stop the customer picked as item_id, and nothing when none was picked", async () => {

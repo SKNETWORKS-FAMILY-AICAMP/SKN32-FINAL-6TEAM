@@ -22,7 +22,11 @@ interface ServerItem {
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
   address?: string | null; phone?: string | null; category?: string | null;
-  hours?: { day?: string; open?: string; close?: string; last_order?: string | null }[] | null; hours_text?: string | null;
+  hours?: { day?: string; open?: string; close?: string; closed?: boolean; last_order?: string | null; last_entry?: string | null }[] | null;
+  /** Opening-hours text as the source wrote it (places outside the dining ledger). */
+  hours_text?: string[] | string | null;
+  /** Conditions the server could not turn into a weekly table, in the source's words. */
+  hours_conditions?: string[] | null;
   tags?: string[] | null; michelin?: { level?: string; year?: number } | null; source_note?: string | null;
 }
 interface ServerHistory { version: number; reason: string; at: string; causes?: Record<string, unknown>[] }
@@ -64,18 +68,24 @@ const text = (value: unknown): string | undefined => (typeof value === "string" 
 export function placeInfo(raw: ServerPlaceInfo | null | undefined, t: Translate = translator("ko")): TripStop["placeInfo"] {
   if (!raw || typeof raw !== "object") return null;
   const hours = Array.isArray(raw.hours)
-    ? raw.hours.map((rule) => [text(rule?.day), text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
-      text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined].filter(Boolean).join(" ")).filter(Boolean)
+    ? raw.hours.map((rule) => [text(rule?.day),
+      rule?.closed === true ? t("휴무", "Closed") : text(rule?.open) && text(rule?.close) ? `${rule.open}–${rule.close}` : undefined,
+      rule?.closed !== true && text(rule?.last_order) ? t(`(주문 마감 ${rule.last_order})`, `(last order ${rule.last_order})`) : undefined,
+      rule?.closed !== true && text(rule?.last_entry) ? t(`(입장 마감 ${rule.last_entry})`, `(last entry ${rule.last_entry})`) : undefined,
+    ].filter(Boolean).join(" ")).filter(Boolean)
     : [];
-  if (!hours.length && text(raw.hours_text)) hours.push(text(raw.hours_text) as string);
+  const lines = (value: unknown): string[] =>
+    (Array.isArray(value) ? value : [value]).map(text).filter((line): line is string => !!line);
+  // ★With a weekly table the source text only adds its conditions; without one, the source text is the hours.
+  const hoursNotes = hours.length ? lines(raw.hours_conditions) : [...lines(raw.hours_text), ...lines(raw.hours_conditions)];
   const level = text(raw.michelin?.level);
   const info = {
-    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours,
+    address: text(raw.address), phone: text(raw.phone), category: text(raw.category), hours, hoursNotes: [...new Set(hoursNotes)],
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string" && !!tag) : [],
     michelin: level ? { level, year: typeof raw.michelin?.year === "number" ? raw.michelin.year : undefined } : null,
     sourceNote: text(raw.source_note),
   };
-  const empty = !info.address && !info.phone && !info.category && !hours.length && !info.tags.length && !info.michelin;
+  const empty = !info.address && !info.phone && !info.category && !hours.length && !info.hoursNotes.length && !info.tags.length && !info.michelin;
   return empty ? null : info;
 }
 

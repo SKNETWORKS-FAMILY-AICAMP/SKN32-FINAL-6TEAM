@@ -51,6 +51,8 @@ export interface PlaceInfo {
   category?: string;
   /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
   hours: string[];
+  /** Hours the source gave only as text, or conditions the weekly table cannot hold ("공휴일 휴무"). */
+  hoursNotes: string[];
   /** Facility badges as the server named them ("card_payment", "parking", …). */
   tags: string[];
   michelin?: { level: string; year?: number } | null;

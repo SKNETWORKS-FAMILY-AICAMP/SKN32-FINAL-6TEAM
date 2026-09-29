@@ -37,6 +37,7 @@ function placeRows(stop: TripStop, t: Translate) {
     {info.address && <><dt>{t("주소", "Address")}</dt><dd>{info.address}</dd></>}
     {info.phone && <><dt>{t("전화", "Phone")}</dt><dd><a href={`tel:${info.phone.replace(/[^\d+]/g, "")}`}>{info.phone}</a></dd></>}
     {info.hours.length > 0 && <><dt>{t("영업시간", "Hours")}</dt><dd>{info.hours.join(" · ")}</dd></>}
+    {info.hoursNotes.length > 0 && <><dt>{info.hours.length ? t("운영 안내", "Hours notes") : t("영업시간", "Hours")}</dt><dd>{info.hoursNotes.join(" · ")}</dd></>}
     {info.michelin && <><dt>{t("미쉐린", "Michelin")}</dt><dd>{info.michelin.level}{info.michelin.year ? ` (${info.michelin.year})` : ""}</dd></>}
     {tags.length > 0 && <><dt>{t("편의", "Amenities")}</dt><dd>{tags.join(" · ")}</dd></>}
     {info.sourceNote && <><dt>{t("출처", "Source")}</dt><dd>{info.sourceNote}</dd></>}
