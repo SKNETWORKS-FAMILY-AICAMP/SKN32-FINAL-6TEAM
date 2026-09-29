@@ -6,6 +6,8 @@
 
 수정일: 2026-09-23. A-COP 저장소 루트의 `frontend/`와 이 문서를 SKN32-FINAL-6TEAM 저장소의 `final_project_cs/frontend/`로 옮기고 경로를 새 위치 기준으로 고쳤다. 「브랜치와 담당」·「변경을 주고받는 방법」의 브랜치 정보도 이 저장소 기준으로 바꿨다.
 
+API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](../wiki/external/web-screen-api.md)를 따른다.
+
 ## 2026-09-21 개발팀 콘솔 구현 현황
 
 사용자 지시에 따라 [새 개발팀 콘솔](apps/dev-console/README.md)을 별도 Next.js 앱으로 추가했다. 팀별 테스트·코어 통합 테스트·실행 상세·사례 및 A/B 비교·연결 안내를 제공한다. 현재 브라우저 세션의 샘플 데이터로 동작하며 실제 코어 API·에이전트·모델 연결은 완료하지 않았다. [개발 기준](apps/dev-console/DEVELOPMENT.md)과 [연동 협의안](apps/dev-console/API_CONTRACT.md)을 따른다. 기존 `final_project_ui`와 서비스 관리자 웹은 그대로 둔다.
@@ -15,9 +17,9 @@
 - 검증: 린트·타입 검사·프로덕션 빌드 통과. 단위 검사 42/42(100%), 브라우저 시나리오 7/7(100%). PC·모바일·밝은/어두운 화면도 확인했다.
 - 후속 작업: 코어의 테스트 API·단계 기록 계약 확정, 실제 데이터 어댑터와 각 팀 연결, 공용 기록 보존·접근 제어 검증.
 
-## 2026-09-21 사용자 웹 구현 현황
+## 2026-09-29 사용자 웹 구현 현황
 
-[사용자 웹](apps/web/README.md)에 실행 가능한 Next.js 16·React 19·TypeScript 앱과 검증 명령을 추가했다. 웹 MVP 1차는 로그인·회원가입·서비스 결제 없는 랜딩·계획 등록·검증 중·검증 결과·여행 홈의 5개 화면이다. 기존 목업을 기준으로 재사용 UI·기능 모듈·데이터 어댑터를 분리했다. 현재 명시적인 데모 모드이며 실제 여행 API·에이전트 연동은 후속 작업이다. [현재 개발 기준](apps/web/DEVELOPMENT.md)을 따른다. 아래 준비 상태는 2026-09-13 시점의 기록이다.
+[사용자 웹](apps/web/README.md)은 `develop` `fc1ac0a` 기준으로 소개·온보딩·등록·계획 읽기 확인·여행·목록·마이페이지를 제공한다. demo와 실제 `/v1/web/*` 연결을 분리한다. live 사용자 키 발급/가져오기/재발급, 접수 확인/등록/일정 생성, 여행 조회·상담·제안 선택·알림이 구현돼 있다. live 삭제·프로필 저장·선택 언어 전달은 미연결이다. warmup 서버 경로는 `fc1ac0a`에서 추가됐으며 실제 통합 검증은 별도다. 전체 운영 연동 완료를 뜻하지 않는다. [개발 기준](apps/web/DEVELOPMENT.md)과 [구현 현황](apps/web/IMPLEMENTATION_SUMMARY.md)을 따른다.
 
 ## 브랜치와 담당
 
@@ -38,16 +40,16 @@
 
 ## 작업 위치
 
-| 작업 | 위치 | 이번 준비 상태 |
+| 작업 | 위치 | 현재 상태 |
 |---|---|---|
-| 사용자 웹 | [final_project_cs/frontend/apps/web](apps/web/README.md) | 1순위. Next.js·React·TypeScript 앱용 폴더와 안내, 단일 HTML 시연 목업 |
+| 사용자 웹 | [final_project_cs/frontend/apps/web](apps/web/README.md) | 1순위. Next.js·React·TypeScript 앱, demo/live 연결. 디자인 목업은 앱의 `mockups/`에 보존 |
 | 서비스 관리자 웹 | [final_project_cs/frontend/apps/admin](apps/admin/README.md) | 웹 개발 범위. Next.js·React·TypeScript 앱용 폴더와 안내 |
 | 모바일 앱 | [final_project_cs/frontend/apps/mobile](apps/mobile/README.md) | 3순위 보류. Expo·React Native·TypeScript 구상과 예약 폴더 보존 |
 | 개발자 콘솔 | [final_project_ui](../../final_project_ui/README.md) | 기존 Python 콘솔 유지 |
 | 평가 프로그램 | [final_project_cs/eval](../eval/) | 기존 평가 코드 유지 |
 | 백엔드 | [final_project_cs/app](../app/) | 기존 코드와 위치 유지 |
 
-Next.js 웹 앱은 아직 초기화하지 않았다. `package.json`, 패키지 잠금 파일, 화면 코드와 실행 명령은 웹 초기화 단계에서 추가한다. 단일 HTML 목업은 별도 시연 자료이며, 폴더나 목업이 있다는 사실을 실제 앱 구현이나 API 연동 완료로 해석하지 않는다. 모바일 앱 초기화는 현재 계획에 포함하지 않는다.
+Next.js 사용자 웹은 초기화·구현돼 있고 `package.json`·잠금 파일·검증 명령이 있다. 단일 HTML 목업은 별도 시연/디자인 자료다. 관리자 웹은 초기화 전, 모바일 앱은 보류다. 새 개발팀 콘솔은 `apps/dev-console`의 별도 앱이며 위 09-21 결과는 당시 검증 기록이다.
 
 ## 작업 경계
 
@@ -71,6 +73,8 @@ Next.js 웹 앱은 아직 초기화하지 않았다. `package.json`, 패키지 �
 
 시작 브랜치가 최종 PR 대상까지 자동으로 정하지는 않는다. PR 대상은 팀이 정한 통합 브랜치를 따른다. 공유한 브랜치 이력을 임의로 강제 갱신하지 않는다.
 
-## 준비 완료 범위
+## 최초 준비 기록 (2026-09-13~23)
+
+현재 구현 범위는 위 09-29 현황을 따른다. 다음은 작업 공간 준비 당시 기록이다.
 
 브랜치 생성과 전환, 프론트 작업 폴더, 담당·작업 경계 안내, 프론트 산출물 제외 규칙을 마련했다. 기존 백엔드·개발자 콘솔·평가 코드는 수정하지 않았다.
