@@ -16,13 +16,13 @@
 | `mobility_scripts/` | 수집·빌드·자기점검·지표 스크립트(**이번 PR 에서 루트 `scripts/` 에서 옮김** — §4) · `mobility_checks/` = 기기 자료가 있어야 도는 점검·계약 검사·픽스처 생성기(팀장이 `scripts/mobility_checks/` 에 두었던 것을 같은 이유로 여기로) |
 | `docs/mobility/` · `config/mobility/` · `sql/mobility*` | 설계·호출 안내·규칙 보조표·DB 스키마(참고용) |
 
-## 3. 데이터는 git 밖이다
+## 3. 데이터 — 저장소 안 `datasets/mobility/processed/`(2026-09-29 · 75 · 팀장 폴더 배정)
 
-시간표·역 좌표·버스 프로파일 같은 원자료·가공물은 **드라이브(`DATA_DIR/travel/…`)** 에 있고 저장소에는 없다(`.env` 의 `DATA_DIR` 하나로 위치를 잡는다). 그래서
+판정기 입력 18파일(148 MB · 시간표는 판정기가 읽는 8열만 · 전부 공공데이터 · 개인정보 0)을 `datasets/mobility/processed/mobility/` 에 두었다 — 서버가 자기 자료 폴더를 갖기 전까지 임시. 팀 `.gitignore`(`datasets/**/processed/**`)는 손대지 않고 `git add -f` 로 추적했다. 설명은 `datasets/mobility/REPORT.md` · `docs/mobility/DATA_IN_GIT_v1.md`, 안 올린 것(원자료 1.7 GB · 개인 실측 · 라우터 그래프 1.2 GB · 로그)은 `DATA_NOT_IN_GIT.md`.
 
-- **CI·데이터 없는 기기**: `cd final_project_cs; python -m pytest tests/unit/travel/mobility -q` → 실데이터 시험은 `skip`(사유 「시간표 없음(DATA_DIR)」), 합성 픽스처 시험만 돈다 — **73 passed · 60 skipped · error 0**.
-- 데이터 있는 기기: **133 passed**.
-- `.env` 가 없어도 import·`plan()` 은 돈다(라우터 주소는 규칙 파일 기본값 · 외부 키 없으면 그 기능만 근거없음/꺼짐). 단 `mobility_scripts/check_travel_min_vs_official.py` 하나는 `.env` 를 직접 읽는다(pytest 범위 밖 조사 스크립트).
+- `engine/paths.py`: 준 경로의 마지막 폴더가 `processed` 면 그 자리를 자료 폴더로 본다 · 명령줄·시험은 `DATA_DIR` 이 없으면 저장소 폴더를 자동으로 쓴다(출처 `repo_datasets`). 서버 설정(`mobility_data_dir` · #48)은 그대로 — `.env` 에 `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`.
+- **CI·pull 한 기기**: `cd final_project_cs; python -m pytest tests/unit/travel/mobility -q` → 회귀 게이트 21건이 **skip 없이** 돈다.
+- 드라이브 정본(`DATA_DIR/travel/processed/mobility/`)을 쓰던 기기는 그대로(`.env` 의 `DATA_DIR` 이 이긴다).
 
 ## 4. 이번 PR 에서 구조만 바꾼 것 — 판정 규칙·출력 무변경
 

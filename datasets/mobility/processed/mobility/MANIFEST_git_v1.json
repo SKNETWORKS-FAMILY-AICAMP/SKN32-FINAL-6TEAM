@@ -1,0 +1,380 @@
+{
+ "manifest_version": "git_v1",
+ "generated_at": "2026-09-29T16:49:54+09:00",
+ "room": 75,
+ "src_dir": "C:\\final_project\\data\\travel\\processed\\mobility",
+ "dst_dir": "C:\\final_project\\SKN32-FINAL-6TEAM\\datasets\\mobility\\processed\\mobility",
+ "rule": {
+  "columns_only_verified_by_loader": true,
+  "row_deletion": "forbidden (drop_no_dep=False)",
+  "gz_threshold_bytes": 52428800,
+  "gz_policy": "last resort — only files still > 50 MB after column reduction; .gz written beside, text kept"
+ },
+ "totals": {
+  "src_bytes": 273646920,
+  "dst_bytes_text": 155174344,
+  "dst_bytes_if_gz_used_where_made": 155174344
+ },
+ "files": [
+  {
+   "path": "timetable_v1.jsonl",
+   "class": "B(열 제거)",
+   "source_raw": "서울 열린데이터광장 OA-101(seoul_timetable_*.jsonl) + 국토부 TAGO(tago_timetable.jsonl) · raw\\mobility\\",
+   "regen_script": "collect/build_timetable_v1.py → collect/fill_timetable_dest_v1.py(28 · dest_inferred)",
+   "read_by": "engine/verify_time.py Timetable.load · runtime.py",
+   "src_bytes": 197220171,
+   "src_sha256": "17df6fd238cf4df94d4ded9ea35d1a8367c7cfefba8c263dfa9c73d968daf2f0",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "reduce": {
+    "rows_in": 463326,
+    "rows_out": 463326,
+    "rows_no_dep": 18411,
+    "rows_dropped_no_dep": 0,
+    "columns_kept": [
+     "line",
+     "station_nm",
+     "day_type",
+     "dep_time",
+     "dir",
+     "dest_nm",
+     "dest_inferred",
+     "fetched_at"
+    ],
+    "columns_dropped": [
+     "arr_time",
+     "dest_basis",
+     "dest_hops",
+     "express",
+     "fetched_at_precision",
+     "orig_nm",
+     "source",
+     "source_station_id",
+     "station_cd",
+     "station_key",
+     "station_nm_en",
+     "train_no"
+    ],
+    "columns_seen": {
+     "station_key": 463326,
+     "station_cd": 463326,
+     "station_nm": 463326,
+     "station_nm_en": 463326,
+     "line": 463326,
+     "dir": 463326,
+     "day_type": 463326,
+     "dep_time": 463326,
+     "arr_time": 463326,
+     "dest_nm": 463326,
+     "orig_nm": 463326,
+     "train_no": 463326,
+     "express": 463326,
+     "source": 463326,
+     "source_station_id": 463326,
+     "fetched_at": 463326,
+     "fetched_at_precision": 463326,
+     "dest_inferred": 20548,
+     "dest_basis": 20548,
+     "dest_hops": 20548
+    }
+   },
+   "bytes": 78747595,
+   "sha256": "63a5b503dfe0d129e4a69993a9003669f3bf35ba8c833a55aa790d63db6478d0",
+   "rows": 463326,
+   "gz": null,
+   "over_50mb": true
+  },
+  {
+   "path": "timetable_v1_meta.json",
+   "class": "A(그대로)",
+   "source_raw": "build_timetable_v1.py 가 시간표와 같이 씀",
+   "regen_script": "collect/build_timetable_v1.py",
+   "read_by": "engine/runtime.py(built_at)",
+   "src_bytes": 7538,
+   "src_sha256": "7ac1d66a32c7dd284506ac84d14fa28a692e3578fcaf36980b59b10aaff4509b",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 7538,
+   "sha256": "7ac1d66a32c7dd284506ac84d14fa28a692e3578fcaf36980b59b10aaff4509b",
+   "gz": null
+  },
+  {
+   "path": "line_station_order_v1.json",
+   "class": "A(그대로)",
+   "source_raw": "국가철도공단 표준데이터 FR_CODE + 시간표 관측 + 서울교통공사 역간거리 CSV(54)",
+   "regen_script": "collect/build_line_station_order_v1.py",
+   "read_by": "engine/line_order.py · candidates.py",
+   "src_bytes": 779829,
+   "src_sha256": "80c972642600ccfac07e333cbd1b7689922d8bfb1748121be8b9fe32843f32fa",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 779829,
+   "sha256": "80c972642600ccfac07e333cbd1b7689922d8bfb1748121be8b9fe32843f32fa",
+   "gz": null
+  },
+  {
+   "path": "transfer_walk_v1.json",
+   "class": "A(그대로)",
+   "source_raw": "서울교통공사_환승역거리 소요시간 정보_20251231.csv",
+   "regen_script": "collect/build_transfer_walk_v1.py",
+   "read_by": "engine/transfer_walk.py",
+   "src_bytes": 59351,
+   "src_sha256": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 59351,
+   "sha256": "03a13259fc182df08eff16eccdc2add597b6012d7aaf160b38596f0708fc3f43",
+   "gz": null
+  },
+  {
+   "path": "bus_route_v1.jsonl",
+   "class": "A(그대로)",
+   "source_raw": "서울시 버스 정보 API(seoul_bus_all_routes.json · 캐시)",
+   "regen_script": "collect/build_bus_all_v1.py(45 재생성)",
+   "read_by": "engine/bus.py",
+   "src_bytes": 481262,
+   "src_sha256": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 481262,
+   "sha256": "d28639a576d304b0392d174ecd96d3e039abe206d941d00878ee13609c509014",
+   "rows": 717,
+   "gz": null
+  },
+  {
+   "path": "bus_stops_v1.jsonl",
+   "class": "A(그대로)",
+   "source_raw": "서울시 버스 정보 API(seoul_bus_all_stops.json · 캐시)",
+   "regen_script": "collect/build_bus_all_v1.py",
+   "read_by": "engine/bus.py · geo.py",
+   "src_bytes": 16353165,
+   "src_sha256": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 16353165,
+   "sha256": "cc16af573be46100c4ee255e268428f412d57d660c974acb90e21fc8c1f7afb0",
+   "rows": 41820,
+   "gz": null
+  },
+  {
+   "path": "station_coords.json",
+   "class": "A(그대로)",
+   "source_raw": "국가철도공단 전체_도시철도역사정보_20260630.xlsx + OA-15442 stations_all.json + config/mobility/station_coord_fix.json",
+   "regen_script": "collect/station_coords_build.py(57)",
+   "read_by": "engine/geo.py",
+   "src_bytes": 540865,
+   "src_sha256": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 540865,
+   "sha256": "a6e2fefa5612dafa5ba61973340e226cd11124a7e41d33d7d1733684bcb8754d",
+   "gz": null
+  },
+  {
+   "path": "station_exits_v1.json",
+   "class": "A(그대로)",
+   "source_raw": "OSM 지하철 출구(raw\\mobility\\osm\\osm_subway_entrances_sudogwon_raw.json)",
+   "regen_script": "collect/build_station_exits_v1.py",
+   "read_by": "engine/exits.py",
+   "src_bytes": 824121,
+   "src_sha256": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 824121,
+   "sha256": "dfbf2fad06176aa8918ee722dde98de94863f538b02145486a6ad0866f781669",
+   "gz": null
+  },
+  {
+   "path": "bike_stations_v1.jsonl",
+   "class": "A(그대로)",
+   "source_raw": "서울 OA-21235 master + OA-15493 bikeList + OA-13252 xlsx(raw\\mobility\\bike\\)",
+   "regen_script": "collect/build_bike_stations_v1.py",
+   "read_by": "engine/bike.py",
+   "src_bytes": 819655,
+   "src_sha256": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 819655,
+   "sha256": "8752290317c8700ad1d2a99cfe4f21fca9dea4e01ecab717972aad21603af6d7",
+   "rows": 2734,
+   "gz": null
+  },
+  {
+   "path": "bus_seg_profile_v1.jsonl.gz",
+   "class": "A(그대로)",
+   "source_raw": "서울 OA-21217 노선별 구간 운행시간 zip 9(raw\\mobility\\bus_speed\\ · 8.7M 행)",
+   "regen_script": "collect/build_bus_seg_profile_v1.py",
+   "read_by": "engine/bus_profile.py",
+   "src_bytes": 9632707,
+   "src_sha256": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 9632707,
+   "sha256": "b2000c11503010c9b1a66b4c02eb0237374a09c9563f75b83ab67b231b28a074",
+   "rows": 40777,
+   "gz": null
+  },
+  {
+   "path": "congestion_v1.jsonl",
+   "class": "A(그대로)",
+   "source_raw": "서울교통공사_지하철혼잡도정보_20260630.csv",
+   "regen_script": "collect/congestion_build.py",
+   "read_by": "engine/congestion.py",
+   "src_bytes": 33747283,
+   "src_sha256": "e1e92ebb954b2900482b9f5a2ccdf91df386059577ff006ddb421972f9add07b",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 33747283,
+   "sha256": "e1e92ebb954b2900482b9f5a2ccdf91df386059577ff006ddb421972f9add07b",
+   "rows": 65169,
+   "gz": null
+  },
+  {
+   "path": "congestion_line9_v1.jsonl",
+   "class": "A(그대로)",
+   "source_raw": "서울 OA-22197 9호선 혼잡도 xlsx(raw\\mobility\\congestion_line9\\)",
+   "regen_script": "collect/congestion_build.py --line9 (25)",
+   "read_by": "engine/congestion.py",
+   "src_bytes": 3191819,
+   "src_sha256": "9d9e331c467f71bb5b7c5f8c54e1cc578b24cb020dc3f010c19786f0595eb7db",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 3191819,
+   "sha256": "9d9e331c467f71bb5b7c5f8c54e1cc578b24cb020dc3f010c19786f0595eb7db",
+   "rows": 8208,
+   "gz": null
+  },
+  {
+   "path": "transfer_car_v1.json",
+   "class": "A(그대로)",
+   "source_raw": "국토부 15151816 + 서울교통공사 15098252(raw\\mobility\\car_position\\)",
+   "regen_script": "collect/build_transfer_car_v1.py(46)",
+   "read_by": "engine/options.py TransferCar(display off)",
+   "src_bytes": 1012504,
+   "src_sha256": "aa8231deed22b4c3c70676d052e0d58e5f1cb598fbde37220ddd14941524f726",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 1012504,
+   "sha256": "aa8231deed22b4c3c70676d052e0d58e5f1cb598fbde37220ddd14941524f726",
+   "gz": null
+  },
+  {
+   "path": "graph/topis_class_factor_v1.json",
+   "class": "A(그대로)",
+   "source_raw": "TOPIS 속도 xlsx(raw\\mobility\\topis\\)",
+   "regen_script": "graph/_build/03b_profile_test.py(18)",
+   "read_by": "engine/car.py CarGraph",
+   "src_bytes": 8106,
+   "src_sha256": "6e3ad6265b8616d370d8cdfede7e87643124fd14d027a657e57ded4b433614b7",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 8106,
+   "sha256": "6e3ad6265b8616d370d8cdfede7e87643124fd14d027a657e57ded4b433614b7",
+   "gz": null
+  },
+  {
+   "path": "graph/topis_link_profile_v1.jsonl.gz",
+   "class": "A(그대로)",
+   "source_raw": "TOPIS 속도 xlsx 2025-09~2026-05",
+   "regen_script": "graph/_build/03b_profile_test.py(18)",
+   "read_by": "engine/car.py CarGraph",
+   "src_bytes": 5237865,
+   "src_sha256": "99d29b178761bddc6b942a8a23570d3619f87b109a284f54fd5cbc13043078fb",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 5237865,
+   "sha256": "99d29b178761bddc6b942a8a23570d3619f87b109a284f54fd5cbc13043078fb",
+   "rows": 365798,
+   "gz": null
+  },
+  {
+   "path": "graph/osm_way_seg_topis_link_v1.csv",
+   "class": "A(그대로)",
+   "source_raw": "OSM pbf + TOPIS 링크 형상 매칭",
+   "regen_script": "graph/_build/02b_match.py(18)",
+   "read_by": "engine/car.py CarGraph",
+   "src_bytes": 1985451,
+   "src_sha256": "8c97f28c93f31dbbdfbb1899e9873cfc40957166332483134b6c551141127437",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 1985451,
+   "sha256": "8c97f28c93f31dbbdfbb1899e9873cfc40957166332483134b6c551141127437",
+   "rows": 67458,
+   "gz": null
+  },
+  {
+   "path": "graph/osm_way_geom_v1.csv",
+   "class": "A(그대로)",
+   "source_raw": "OSM pbf",
+   "regen_script": "graph/_build/01_geom.py(18)",
+   "read_by": "engine/car.py CarGraph",
+   "src_bytes": 1737047,
+   "src_sha256": "2da3fb6afee27eb7ebc0f7595a84a5b969fe2bebd618c460c7928cef03759b4f",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 1737047,
+   "sha256": "2da3fb6afee27eb7ebc0f7595a84a5b969fe2bebd618c460c7928cef03759b4f",
+   "rows": 8664,
+   "gz": null
+  },
+  {
+   "path": "graph/daytype_calendar_v1.csv",
+   "class": "A(그대로)",
+   "source_raw": "holidays KR + 정정(34)",
+   "regen_script": "graph/_build/03b_profile_test.py(18)",
+   "read_by": "engine/car.py CarGraph",
+   "src_bytes": 8181,
+   "src_sha256": "527da3e44064bfe156fc3ea96f711bf67f85f3e5d9212567def1b423fbbcd5e1",
+   "checked_at": "2026-09-29T16:49:54+09:00",
+   "bytes": 8181,
+   "sha256": "527da3e44064bfe156fc3ea96f711bf67f85f3e5d9212567def1b423fbbcd5e1",
+   "rows": 365,
+   "gz": null
+  }
+ ],
+ "reports": [
+  {
+   "path": "timetable_v1_coverage.md",
+   "bytes": 3678,
+   "sha256": "6c069b1ecd80c752b892a905716d5d42f5ac647e06d3af9cf045f24546055f61"
+  },
+  {
+   "path": "timetable_v1_destfill_report.md",
+   "bytes": 4769,
+   "sha256": "df3f8e79b19920eb02d2f11d27d75e505cc9aeb3c89262a5101a6b143c38b13c"
+  },
+  {
+   "path": "line_station_order_v1_report.md",
+   "bytes": 4158,
+   "sha256": "a4f02208afe09ae0f4fbace35d4f229ff015b937524c12b1da617b775f19a676"
+  },
+  {
+   "path": "transfer_walk_v1_report.md",
+   "bytes": 2133,
+   "sha256": "26bc013f51ec9b93397d7f5316c2fbbd4b15e4003a1cb18ea42f8457f5db4be7"
+  },
+  {
+   "path": "bus_route_v1_report.md",
+   "bytes": 2439,
+   "sha256": "70d4c899e7980800887efbb63706508c579bb969aa1c676ee9a98b907962e246"
+  },
+  {
+   "path": "station_coords_report.md",
+   "bytes": 3226,
+   "sha256": "d2ba0b691d5bfead1fcb70334885535a6713da562bb51004d577ae6c1a681fbf"
+  },
+  {
+   "path": "bike_stations_v1_report.md",
+   "bytes": 646,
+   "sha256": "04c15da7c475e04fde9f1b4fd16e41ce63b372002197cfeaff5c430af84fbdd2"
+  },
+  {
+   "path": "bus_seg_profile_v1_report.md",
+   "bytes": 1614,
+   "sha256": "a9d39f27f93f91939fa2c11a66a842c06c364d67c4df3c6ba2966243ab10d7d5"
+  },
+  {
+   "path": "congestion_v1_report.md",
+   "bytes": 2022,
+   "sha256": "abff7673d2b37d01422366971c38558c9f85441312d89f8205f30a51a90ef0fa"
+  },
+  {
+   "path": "congestion_line9_v1_report.md",
+   "bytes": 3733,
+   "sha256": "bee2c8a3cd1cdbadd69d7370788a6218c8d9fa7d9dc4c8114f7a8e47f321403d"
+  },
+  {
+   "path": "transfer_car_v1_report.md",
+   "bytes": 7470,
+   "sha256": "d4acf51cd1b8ca24b4c133d9408abcd0e39a3790edde665f7a44a8f0d294df46"
+  },
+  {
+   "path": "graph/README.md",
+   "bytes": 5581,
+   "sha256": "2594940e9c783eabd03f73ede81eb01e5d0d88580777e59bc5a21318f7b6e202"
+  }
+ ]
+}

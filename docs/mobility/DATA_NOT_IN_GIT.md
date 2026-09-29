@@ -1,5 +1,7 @@
 # 이동 모듈 — git 에 올리지 않는 데이터 (DATA_NOT_IN_GIT)
 
+> **팀원은 pull 만 하면 된다** — 판정기 입력 18파일은 저장소 `datasets/mobility/processed/mobility/` 에 있다(9/29). 이 문서는 팀원 할 일 목록이 아니라 「그 18파일이 어디서 어떻게 나왔나 · 저장소에 없는 것은 어디 있나」의 **기록**이다. 재생성은 데이터가 바뀔 때 이동 담당이 한다.
+
 75번 방 · 2026-09-29 · 인벤토리 확인 시각 2026-09-29 12:03(노트북 playdata)
 드라이브 위치: `data\travel\` 동기화 폴더(노트북 `C:\final_project\data\travel\` · 집 PC 같은 구조 · 백업 zip `C:\final_project\_backup\`) · 드라이브 zip 이름은 영어로.
 

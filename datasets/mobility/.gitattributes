@@ -1,0 +1,5 @@
+# 이동 데이터(75) — 줄바꿈 변환 금지(sha256 이 MANIFEST 와 같아야 한다) · 큰 표는 diff 안 만듦
+processed/** -text
+processed/**/*.jsonl -diff
+processed/**/*.gz binary
+processed/**/*.csv -diff

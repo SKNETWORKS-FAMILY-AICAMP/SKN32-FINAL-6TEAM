@@ -1,0 +1,2389 @@
+{
+ "schema": "transfer_walk_v1",
+ "built_at": "2026-09-10T12:30:26+09:00",
+ "source": "seoul_metro_transfer_distance",
+ "source_file": "서울교통공사_환승역거리 소요시간 정보_20251231.csv",
+ "data_basis_date": "2025-12-31",
+ "license": "공공누리 제1유형(출처표시) — 저장·변경 가능",
+ "grade": {
+  "distance_m": "확정 — 소스 기록 그대로",
+  "walk_min": "추정 — 거리 ÷ 우리 실측 보행속도 1.04 m/s. 소스의 시간(1.2 m/s 기준)은 쓰지 않는다"
+ },
+ "src_speed_observed": {
+  "median": 1.2,
+  "min": 0.433,
+  "max": 1.231,
+  "note": "거리÷소스시간. 1.2 근처면 소스가 1.2 m/s 로 계산한 것이 맞다"
+ },
+ "coverage": {
+  "pairs": 145,
+  "stations": 74,
+  "note": "서울교통공사 관할 환승만. 코레일·공항철도끼리의 환승은 없다 → 그 구간은 근거없음"
+ },
+ "usage": "판정기는 (역, 타던 노선, 갈아탈 노선)으로 pairs 를 찾는다. 없으면 stations 의 그 역 최대값(보수적), 그것도 없으면 환승 도보를 '근거없음'으로 두고 warnings 에 남긴다.",
+ "pairs": {
+  "서울역|01호선|04호선": {
+   "station_nm": "서울역",
+   "from_line": "01호선",
+   "to_line": "04호선",
+   "distance_m": 159.0,
+   "walk_min": 2.5,
+   "src_min": 2.2,
+   "src_speed_mps": 1.2
+  },
+  "서울역|04호선|01호선": {
+   "station_nm": "서울역",
+   "from_line": "04호선",
+   "to_line": "01호선",
+   "distance_m": 159.0,
+   "walk_min": 2.5,
+   "src_min": 2.2,
+   "src_speed_mps": 1.2
+  },
+  "서울역|01호선|공항철도": {
+   "station_nm": "서울역",
+   "from_line": "01호선",
+   "to_line": "공항철도",
+   "distance_m": 309.0,
+   "walk_min": 5.0,
+   "src_min": 4.3,
+   "src_speed_mps": 1.2
+  },
+  "서울역|공항철도|01호선": {
+   "station_nm": "서울역",
+   "from_line": "공항철도",
+   "to_line": "01호선",
+   "distance_m": 309.0,
+   "walk_min": 5.0,
+   "src_min": 4.3,
+   "src_speed_mps": 1.2
+  },
+  "서울역|01호선|경의선": {
+   "station_nm": "서울역",
+   "from_line": "01호선",
+   "to_line": "경의선",
+   "distance_m": 164.0,
+   "walk_min": 2.6,
+   "src_min": 2.3,
+   "src_speed_mps": 1.2
+  },
+  "서울역|경의선|01호선": {
+   "station_nm": "서울역",
+   "from_line": "경의선",
+   "to_line": "01호선",
+   "distance_m": 164.0,
+   "walk_min": 2.6,
+   "src_min": 2.3,
+   "src_speed_mps": 1.2
+  },
+  "서울역|01호선|GTX-A": {
+   "station_nm": "서울역",
+   "from_line": "01호선",
+   "to_line": "GTX-A",
+   "distance_m": 172.0,
+   "walk_min": 2.8,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "서울역|GTX-A|01호선": {
+   "station_nm": "서울역",
+   "from_line": "GTX-A",
+   "to_line": "01호선",
+   "distance_m": 172.0,
+   "walk_min": 2.8,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "시청|01호선|02호선": {
+   "station_nm": "시청",
+   "from_line": "01호선",
+   "to_line": "02호선",
+   "distance_m": 101.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "시청|02호선|01호선": {
+   "station_nm": "시청",
+   "from_line": "02호선",
+   "to_line": "01호선",
+   "distance_m": 101.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|01호선|03호선": {
+   "station_nm": "종로3가",
+   "from_line": "01호선",
+   "to_line": "03호선",
+   "distance_m": 118.0,
+   "walk_min": 1.9,
+   "src_min": 1.6,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|03호선|01호선": {
+   "station_nm": "종로3가",
+   "from_line": "03호선",
+   "to_line": "01호선",
+   "distance_m": 118.0,
+   "walk_min": 1.9,
+   "src_min": 1.6,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|01호선|05호선": {
+   "station_nm": "종로3가",
+   "from_line": "01호선",
+   "to_line": "05호선",
+   "distance_m": 312.0,
+   "walk_min": 5.0,
+   "src_min": 4.3,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|05호선|01호선": {
+   "station_nm": "종로3가",
+   "from_line": "05호선",
+   "to_line": "01호선",
+   "distance_m": 312.0,
+   "walk_min": 5.0,
+   "src_min": 4.3,
+   "src_speed_mps": 1.2
+  },
+  "동대문|01호선|04호선": {
+   "station_nm": "동대문",
+   "from_line": "01호선",
+   "to_line": "04호선",
+   "distance_m": 194.0,
+   "walk_min": 3.1,
+   "src_min": 2.7,
+   "src_speed_mps": 1.2
+  },
+  "동대문|04호선|01호선": {
+   "station_nm": "동대문",
+   "from_line": "04호선",
+   "to_line": "01호선",
+   "distance_m": 194.0,
+   "walk_min": 3.1,
+   "src_min": 2.7,
+   "src_speed_mps": 1.2
+  },
+  "동묘앞|01호선|06호선": {
+   "station_nm": "동묘앞",
+   "from_line": "01호선",
+   "to_line": "06호선",
+   "distance_m": 96.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "동묘앞|06호선|01호선": {
+   "station_nm": "동묘앞",
+   "from_line": "06호선",
+   "to_line": "01호선",
+   "distance_m": 96.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "신설동|01호선|02호선": {
+   "station_nm": "신설동",
+   "from_line": "01호선",
+   "to_line": "02호선",
+   "distance_m": 159.0,
+   "walk_min": 2.5,
+   "src_min": 2.2,
+   "src_speed_mps": 1.2
+  },
+  "신설동|02호선|01호선": {
+   "station_nm": "신설동",
+   "from_line": "02호선",
+   "to_line": "01호선",
+   "distance_m": 159.0,
+   "walk_min": 2.5,
+   "src_min": 2.2,
+   "src_speed_mps": 1.2
+  },
+  "신설동|01호선|우이신설경전철": {
+   "station_nm": "신설동",
+   "from_line": "01호선",
+   "to_line": "우이신설경전철",
+   "distance_m": 129.0,
+   "walk_min": 2.1,
+   "src_min": 1.8,
+   "src_speed_mps": 1.2
+  },
+  "신설동|우이신설경전철|01호선": {
+   "station_nm": "신설동",
+   "from_line": "우이신설경전철",
+   "to_line": "01호선",
+   "distance_m": 129.0,
+   "walk_min": 2.1,
+   "src_min": 1.8,
+   "src_speed_mps": 1.2
+  },
+  "청량리|01호선|경의선": {
+   "station_nm": "청량리",
+   "from_line": "01호선",
+   "to_line": "경의선",
+   "distance_m": 165.0,
+   "walk_min": 2.6,
+   "src_min": 2.3,
+   "src_speed_mps": 1.2
+  },
+  "청량리|경의선|01호선": {
+   "station_nm": "청량리",
+   "from_line": "경의선",
+   "to_line": "01호선",
+   "distance_m": 165.0,
+   "walk_min": 2.6,
+   "src_min": 2.3,
+   "src_speed_mps": 1.2
+  },
+  "청량리|01호선|경춘선": {
+   "station_nm": "청량리",
+   "from_line": "01호선",
+   "to_line": "경춘선",
+   "distance_m": 203.0,
+   "walk_min": 3.3,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "청량리|경춘선|01호선": {
+   "station_nm": "청량리",
+   "from_line": "경춘선",
+   "to_line": "01호선",
+   "distance_m": 203.0,
+   "walk_min": 3.3,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "청량리|01호선|수인분당선": {
+   "station_nm": "청량리",
+   "from_line": "01호선",
+   "to_line": "수인분당선",
+   "distance_m": 180.0,
+   "walk_min": 2.9,
+   "src_min": 2.5,
+   "src_speed_mps": 1.2
+  },
+  "청량리|수인분당선|01호선": {
+   "station_nm": "청량리",
+   "from_line": "수인분당선",
+   "to_line": "01호선",
+   "distance_m": 180.0,
+   "walk_min": 2.9,
+   "src_min": 2.5,
+   "src_speed_mps": 1.2
+  },
+  "을지로3가|02호선|03호선": {
+   "station_nm": "을지로3가",
+   "from_line": "02호선",
+   "to_line": "03호선",
+   "distance_m": 149.0,
+   "walk_min": 2.4,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "을지로3가|03호선|02호선": {
+   "station_nm": "을지로3가",
+   "from_line": "03호선",
+   "to_line": "02호선",
+   "distance_m": 149.0,
+   "walk_min": 2.4,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "을지로4가|02호선|05호선": {
+   "station_nm": "을지로4가",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "을지로4가|05호선|02호선": {
+   "station_nm": "을지로4가",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|02호선|04호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "02호선",
+   "to_line": "04호선",
+   "distance_m": 45.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|04호선|02호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "04호선",
+   "to_line": "02호선",
+   "distance_m": 45.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|02호선|05호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 234.0,
+   "walk_min": 3.8,
+   "src_min": 3.2,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|05호선|02호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 234.0,
+   "walk_min": 3.8,
+   "src_min": 3.2,
+   "src_speed_mps": 1.2
+  },
+  "신당|02호선|06호선": {
+   "station_nm": "신당",
+   "from_line": "02호선",
+   "to_line": "06호선",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "신당|06호선|02호선": {
+   "station_nm": "신당",
+   "from_line": "06호선",
+   "to_line": "02호선",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|02호선|수인분당선": {
+   "station_nm": "왕십리",
+   "from_line": "02호선",
+   "to_line": "수인분당선",
+   "distance_m": 99.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|수인분당선|02호선": {
+   "station_nm": "왕십리",
+   "from_line": "수인분당선",
+   "to_line": "02호선",
+   "distance_m": 99.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|02호선|05호선": {
+   "station_nm": "왕십리",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 86.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|05호선|02호선": {
+   "station_nm": "왕십리",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 86.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|02호선|경의선": {
+   "station_nm": "왕십리",
+   "from_line": "02호선",
+   "to_line": "경의선",
+   "distance_m": 50.0,
+   "walk_min": 0.8,
+   "src_min": 0.7,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|경의선|02호선": {
+   "station_nm": "왕십리",
+   "from_line": "경의선",
+   "to_line": "02호선",
+   "distance_m": 50.0,
+   "walk_min": 0.8,
+   "src_min": 0.7,
+   "src_speed_mps": 1.2
+  },
+  "성수|02호선|02호선": {
+   "station_nm": "성수",
+   "from_line": "02호선",
+   "to_line": "02호선",
+   "distance_m": 23.0,
+   "walk_min": 0.4,
+   "src_min": 0.3,
+   "src_speed_mps": 1.2
+  },
+  "건대입구|02호선|07호선": {
+   "station_nm": "건대입구",
+   "from_line": "02호선",
+   "to_line": "07호선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "건대입구|07호선|02호선": {
+   "station_nm": "건대입구",
+   "from_line": "07호선",
+   "to_line": "02호선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "잠실|02호선|08호선": {
+   "station_nm": "잠실",
+   "from_line": "02호선",
+   "to_line": "08호선",
+   "distance_m": 190.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "잠실|08호선|02호선": {
+   "station_nm": "잠실",
+   "from_line": "08호선",
+   "to_line": "02호선",
+   "distance_m": 190.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "종합운동장|02호선|09호선": {
+   "station_nm": "종합운동장",
+   "from_line": "02호선",
+   "to_line": "09호선",
+   "distance_m": 94.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "종합운동장|09호선|02호선": {
+   "station_nm": "종합운동장",
+   "from_line": "09호선",
+   "to_line": "02호선",
+   "distance_m": 94.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "선릉|02호선|수인분당선": {
+   "station_nm": "선릉",
+   "from_line": "02호선",
+   "to_line": "수인분당선",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "선릉|수인분당선|02호선": {
+   "station_nm": "선릉",
+   "from_line": "수인분당선",
+   "to_line": "02호선",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "강남|02호선|신분당선": {
+   "station_nm": "강남",
+   "from_line": "02호선",
+   "to_line": "신분당선",
+   "distance_m": 214.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "강남|신분당선|02호선": {
+   "station_nm": "강남",
+   "from_line": "신분당선",
+   "to_line": "02호선",
+   "distance_m": 214.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "교대|02호선|03호선": {
+   "station_nm": "교대",
+   "from_line": "02호선",
+   "to_line": "03호선",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "교대|03호선|02호선": {
+   "station_nm": "교대",
+   "from_line": "03호선",
+   "to_line": "02호선",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "사당|02호선|04호선": {
+   "station_nm": "사당",
+   "from_line": "02호선",
+   "to_line": "04호선",
+   "distance_m": 74.0,
+   "walk_min": 1.2,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "사당|04호선|02호선": {
+   "station_nm": "사당",
+   "from_line": "04호선",
+   "to_line": "02호선",
+   "distance_m": 74.0,
+   "walk_min": 1.2,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "신림|02호선|신림선": {
+   "station_nm": "신림",
+   "from_line": "02호선",
+   "to_line": "신림선",
+   "distance_m": 88.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "신림|신림선|02호선": {
+   "station_nm": "신림",
+   "from_line": "신림선",
+   "to_line": "02호선",
+   "distance_m": 88.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "대림|02호선|07호선": {
+   "station_nm": "대림",
+   "from_line": "02호선",
+   "to_line": "07호선",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "대림|07호선|02호선": {
+   "station_nm": "대림",
+   "from_line": "07호선",
+   "to_line": "02호선",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "신도림|02호선|01호선": {
+   "station_nm": "신도림",
+   "from_line": "02호선",
+   "to_line": "01호선",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "신도림|01호선|02호선": {
+   "station_nm": "신도림",
+   "from_line": "01호선",
+   "to_line": "02호선",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "신도림|02호선|02호선": {
+   "station_nm": "신도림",
+   "from_line": "02호선",
+   "to_line": "02호선",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "영등포구청|02호선|05호선": {
+   "station_nm": "영등포구청",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "영등포구청|05호선|02호선": {
+   "station_nm": "영등포구청",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "당산|02호선|09호선": {
+   "station_nm": "당산",
+   "from_line": "02호선",
+   "to_line": "09호선",
+   "distance_m": 105.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "당산|09호선|02호선": {
+   "station_nm": "당산",
+   "from_line": "09호선",
+   "to_line": "02호선",
+   "distance_m": 105.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "합정|02호선|06호선": {
+   "station_nm": "합정",
+   "from_line": "02호선",
+   "to_line": "06호선",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "합정|06호선|02호선": {
+   "station_nm": "합정",
+   "from_line": "06호선",
+   "to_line": "02호선",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "홍대입구|02호선|공항철도": {
+   "station_nm": "홍대입구",
+   "from_line": "02호선",
+   "to_line": "공항철도",
+   "distance_m": 355.0,
+   "walk_min": 5.7,
+   "src_min": 4.9,
+   "src_speed_mps": 1.2
+  },
+  "홍대입구|공항철도|02호선": {
+   "station_nm": "홍대입구",
+   "from_line": "공항철도",
+   "to_line": "02호선",
+   "distance_m": 355.0,
+   "walk_min": 5.7,
+   "src_min": 4.9,
+   "src_speed_mps": 1.2
+  },
+  "홍대입구|02호선|경의선": {
+   "station_nm": "홍대입구",
+   "from_line": "02호선",
+   "to_line": "경의선",
+   "distance_m": 305.0,
+   "walk_min": 4.9,
+   "src_min": 4.2,
+   "src_speed_mps": 1.2
+  },
+  "홍대입구|경의선|02호선": {
+   "station_nm": "홍대입구",
+   "from_line": "경의선",
+   "to_line": "02호선",
+   "distance_m": 305.0,
+   "walk_min": 4.9,
+   "src_min": 4.2,
+   "src_speed_mps": 1.2
+  },
+  "충정로|02호선|05호선": {
+   "station_nm": "충정로",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 212.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "충정로|05호선|02호선": {
+   "station_nm": "충정로",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 212.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "신설동|02호선|우이신설경전철": {
+   "station_nm": "신설동",
+   "from_line": "02호선",
+   "to_line": "우이신설경전철",
+   "distance_m": 273.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "신설동|우이신설경전철|02호선": {
+   "station_nm": "신설동",
+   "from_line": "우이신설경전철",
+   "to_line": "02호선",
+   "distance_m": 273.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|03호선|05호선": {
+   "station_nm": "종로3가",
+   "from_line": "03호선",
+   "to_line": "05호선",
+   "distance_m": 117.0,
+   "walk_min": 1.9,
+   "src_min": 1.6,
+   "src_speed_mps": 1.2
+  },
+  "종로3가|05호선|03호선": {
+   "station_nm": "종로3가",
+   "from_line": "05호선",
+   "to_line": "03호선",
+   "distance_m": 117.0,
+   "walk_min": 1.9,
+   "src_min": 1.6,
+   "src_speed_mps": 1.2
+  },
+  "양재|03호선|신분당선": {
+   "station_nm": "양재",
+   "from_line": "03호선",
+   "to_line": "신분당선",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "양재|신분당선|03호선": {
+   "station_nm": "양재",
+   "from_line": "신분당선",
+   "to_line": "03호선",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "연신내|03호선|06호선": {
+   "station_nm": "연신내",
+   "from_line": "03호선",
+   "to_line": "06호선",
+   "distance_m": 181.0,
+   "walk_min": 2.9,
+   "src_min": 2.5,
+   "src_speed_mps": 1.2
+  },
+  "연신내|06호선|03호선": {
+   "station_nm": "연신내",
+   "from_line": "06호선",
+   "to_line": "03호선",
+   "distance_m": 181.0,
+   "walk_min": 2.9,
+   "src_min": 2.5,
+   "src_speed_mps": 1.2
+  },
+  "연신내|03호선|GTX-A": {
+   "station_nm": "연신내",
+   "from_line": "03호선",
+   "to_line": "GTX-A",
+   "distance_m": 241.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "연신내|GTX-A|03호선": {
+   "station_nm": "연신내",
+   "from_line": "GTX-A",
+   "to_line": "03호선",
+   "distance_m": 241.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "불광|03호선|06호선": {
+   "station_nm": "불광",
+   "from_line": "03호선",
+   "to_line": "06호선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "불광|06호선|03호선": {
+   "station_nm": "불광",
+   "from_line": "06호선",
+   "to_line": "03호선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "충무로|03호선|04호선": {
+   "station_nm": "충무로",
+   "from_line": "03호선",
+   "to_line": "04호선",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "충무로|04호선|03호선": {
+   "station_nm": "충무로",
+   "from_line": "04호선",
+   "to_line": "03호선",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "약수|03호선|06호선": {
+   "station_nm": "약수",
+   "from_line": "03호선",
+   "to_line": "06호선",
+   "distance_m": 130.0,
+   "walk_min": 2.1,
+   "src_min": 1.8,
+   "src_speed_mps": 1.2
+  },
+  "약수|06호선|03호선": {
+   "station_nm": "약수",
+   "from_line": "06호선",
+   "to_line": "03호선",
+   "distance_m": 130.0,
+   "walk_min": 2.1,
+   "src_min": 1.8,
+   "src_speed_mps": 1.2
+  },
+  "옥수|03호선|경의선": {
+   "station_nm": "옥수",
+   "from_line": "03호선",
+   "to_line": "경의선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "옥수|경의선|03호선": {
+   "station_nm": "옥수",
+   "from_line": "경의선",
+   "to_line": "03호선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "신사|03호선|신분당선": {
+   "station_nm": "신사",
+   "from_line": "03호선",
+   "to_line": "신분당선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "신사|신분당선|03호선": {
+   "station_nm": "신사",
+   "from_line": "신분당선",
+   "to_line": "03호선",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|03호선|07호선": {
+   "station_nm": "고속터미널",
+   "from_line": "03호선",
+   "to_line": "07호선",
+   "distance_m": 169.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|07호선|03호선": {
+   "station_nm": "고속터미널",
+   "from_line": "07호선",
+   "to_line": "03호선",
+   "distance_m": 169.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|03호선|09호선": {
+   "station_nm": "고속터미널",
+   "from_line": "03호선",
+   "to_line": "09호선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|09호선|03호선": {
+   "station_nm": "고속터미널",
+   "from_line": "09호선",
+   "to_line": "03호선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "도곡|03호선|수인분당선": {
+   "station_nm": "도곡",
+   "from_line": "03호선",
+   "to_line": "수인분당선",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "도곡|수인분당선|03호선": {
+   "station_nm": "도곡",
+   "from_line": "수인분당선",
+   "to_line": "03호선",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "수서|03호선|국철": {
+   "station_nm": "수서",
+   "from_line": "03호선",
+   "to_line": "국철",
+   "distance_m": 92.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "수서|국철|03호선": {
+   "station_nm": "수서",
+   "from_line": "국철",
+   "to_line": "03호선",
+   "distance_m": 92.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "수서|03호선|GTX-A": {
+   "station_nm": "수서",
+   "from_line": "03호선",
+   "to_line": "GTX-A",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "수서|GTX-A|03호선": {
+   "station_nm": "수서",
+   "from_line": "GTX-A",
+   "to_line": "03호선",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "가락시장|03호선|08호선": {
+   "station_nm": "가락시장",
+   "from_line": "03호선",
+   "to_line": "08호선",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "src_min": 0.5,
+   "src_speed_mps": 1.2
+  },
+  "가락시장|08호선|03호선": {
+   "station_nm": "가락시장",
+   "from_line": "08호선",
+   "to_line": "03호선",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "src_min": 0.5,
+   "src_speed_mps": 1.2
+  },
+  "오금|03호선|05호선": {
+   "station_nm": "오금",
+   "from_line": "03호선",
+   "to_line": "05호선",
+   "distance_m": 65.0,
+   "walk_min": 1.0,
+   "src_min": 0.9,
+   "src_speed_mps": 1.2
+  },
+  "오금|05호선|03호선": {
+   "station_nm": "오금",
+   "from_line": "05호선",
+   "to_line": "03호선",
+   "distance_m": 65.0,
+   "walk_min": 1.0,
+   "src_min": 0.9,
+   "src_speed_mps": 1.2
+  },
+  "서울역|04호선|공항철도": {
+   "station_nm": "서울역",
+   "from_line": "04호선",
+   "to_line": "공항철도",
+   "distance_m": 224.0,
+   "walk_min": 3.6,
+   "src_min": 3.1,
+   "src_speed_mps": 1.2
+  },
+  "서울역|공항철도|04호선": {
+   "station_nm": "서울역",
+   "from_line": "공항철도",
+   "to_line": "04호선",
+   "distance_m": 224.0,
+   "walk_min": 3.6,
+   "src_min": 3.1,
+   "src_speed_mps": 1.2
+  },
+  "서울역|04호선|경의선": {
+   "station_nm": "서울역",
+   "from_line": "04호선",
+   "to_line": "경의선",
+   "distance_m": 323.0,
+   "walk_min": 5.2,
+   "src_min": 4.5,
+   "src_speed_mps": 1.2
+  },
+  "서울역|경의선|04호선": {
+   "station_nm": "서울역",
+   "from_line": "경의선",
+   "to_line": "04호선",
+   "distance_m": 323.0,
+   "walk_min": 5.2,
+   "src_min": 4.5,
+   "src_speed_mps": 1.2
+  },
+  "서울역|04호선|GTX-A": {
+   "station_nm": "서울역",
+   "from_line": "04호선",
+   "to_line": "GTX-A",
+   "distance_m": 264.0,
+   "walk_min": 4.2,
+   "src_min": 3.7,
+   "src_speed_mps": 1.2
+  },
+  "서울역|GTX-A|04호선": {
+   "station_nm": "서울역",
+   "from_line": "GTX-A",
+   "to_line": "04호선",
+   "distance_m": 264.0,
+   "walk_min": 4.2,
+   "src_min": 3.7,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|04호선|05호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "04호선",
+   "to_line": "05호선",
+   "distance_m": 107.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "동대문역사문화공원|05호선|04호선": {
+   "station_nm": "동대문역사문화공원",
+   "from_line": "05호선",
+   "to_line": "04호선",
+   "distance_m": 107.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "노원|04호선|07호선": {
+   "station_nm": "노원",
+   "from_line": "04호선",
+   "to_line": "07호선",
+   "distance_m": 278.0,
+   "walk_min": 4.5,
+   "src_min": 3.9,
+   "src_speed_mps": 1.2
+  },
+  "노원|07호선|04호선": {
+   "station_nm": "노원",
+   "from_line": "07호선",
+   "to_line": "04호선",
+   "distance_m": 278.0,
+   "walk_min": 4.5,
+   "src_min": 3.9,
+   "src_speed_mps": 1.2
+  },
+  "창동|04호선|01호선": {
+   "station_nm": "창동",
+   "from_line": "04호선",
+   "to_line": "01호선",
+   "distance_m": 84.0,
+   "walk_min": 1.3,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "창동|01호선|04호선": {
+   "station_nm": "창동",
+   "from_line": "01호선",
+   "to_line": "04호선",
+   "distance_m": 84.0,
+   "walk_min": 1.3,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "성신여대입구|04호선|우이신설경전철": {
+   "station_nm": "성신여대입구",
+   "from_line": "04호선",
+   "to_line": "우이신설경전철",
+   "distance_m": 7.0,
+   "walk_min": 0.1,
+   "src_min": 0.1,
+   "src_speed_mps": 1.2
+  },
+  "성신여대입구|우이신설경전철|04호선": {
+   "station_nm": "성신여대입구",
+   "from_line": "우이신설경전철",
+   "to_line": "04호선",
+   "distance_m": 7.0,
+   "walk_min": 0.1,
+   "src_min": 0.1,
+   "src_speed_mps": 1.2
+  },
+  "이촌|04호선|경의선": {
+   "station_nm": "이촌",
+   "from_line": "04호선",
+   "to_line": "경의선",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "이촌|경의선|04호선": {
+   "station_nm": "이촌",
+   "from_line": "경의선",
+   "to_line": "04호선",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "삼각지|04호선|06호선": {
+   "station_nm": "삼각지",
+   "from_line": "04호선",
+   "to_line": "06호선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "삼각지|06호선|04호선": {
+   "station_nm": "삼각지",
+   "from_line": "06호선",
+   "to_line": "04호선",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "동작|04호선|09호선": {
+   "station_nm": "동작",
+   "from_line": "04호선",
+   "to_line": "09호선",
+   "distance_m": 245.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "동작|09호선|04호선": {
+   "station_nm": "동작",
+   "from_line": "09호선",
+   "to_line": "04호선",
+   "distance_m": 245.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "총신대입구|04호선|07호선": {
+   "station_nm": "총신대입구",
+   "from_line": "04호선",
+   "to_line": "07호선",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "총신대입구|07호선|04호선": {
+   "station_nm": "총신대입구",
+   "from_line": "07호선",
+   "to_line": "04호선",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|05호선|공항철도": {
+   "station_nm": "김포공항",
+   "from_line": "05호선",
+   "to_line": "공항철도",
+   "distance_m": 122.0,
+   "walk_min": 2.0,
+   "src_min": 4.7,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|공항철도|05호선": {
+   "station_nm": "김포공항",
+   "from_line": "공항철도",
+   "to_line": "05호선",
+   "distance_m": 122.0,
+   "walk_min": 2.0,
+   "src_min": 4.7,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|05호선|09호선": {
+   "station_nm": "김포공항",
+   "from_line": "05호선",
+   "to_line": "09호선",
+   "distance_m": 106.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|09호선|05호선": {
+   "station_nm": "김포공항",
+   "from_line": "09호선",
+   "to_line": "05호선",
+   "distance_m": 106.0,
+   "walk_min": 1.7,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|05호선|김포도시철도": {
+   "station_nm": "김포공항",
+   "from_line": "05호선",
+   "to_line": "김포도시철도",
+   "distance_m": 200.0,
+   "walk_min": 3.2,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|김포도시철도|05호선": {
+   "station_nm": "김포공항",
+   "from_line": "김포도시철도",
+   "to_line": "05호선",
+   "distance_m": 200.0,
+   "walk_min": 3.2,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|05호선|서해선": {
+   "station_nm": "김포공항",
+   "from_line": "05호선",
+   "to_line": "서해선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "김포공항|서해선|05호선": {
+   "station_nm": "김포공항",
+   "from_line": "서해선",
+   "to_line": "05호선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "까치산|05호선|02호선": {
+   "station_nm": "까치산",
+   "from_line": "05호선",
+   "to_line": "02호선",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "까치산|02호선|05호선": {
+   "station_nm": "까치산",
+   "from_line": "02호선",
+   "to_line": "05호선",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "신길|05호선|01호선": {
+   "station_nm": "신길",
+   "from_line": "05호선",
+   "to_line": "01호선",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "신길|01호선|05호선": {
+   "station_nm": "신길",
+   "from_line": "01호선",
+   "to_line": "05호선",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "여의도|05호선|09호선": {
+   "station_nm": "여의도",
+   "from_line": "05호선",
+   "to_line": "09호선",
+   "distance_m": 68.0,
+   "walk_min": 1.1,
+   "src_min": 0.9,
+   "src_speed_mps": 1.2
+  },
+  "여의도|09호선|05호선": {
+   "station_nm": "여의도",
+   "from_line": "09호선",
+   "to_line": "05호선",
+   "distance_m": 68.0,
+   "walk_min": 1.1,
+   "src_min": 0.9,
+   "src_speed_mps": 1.2
+  },
+  "공덕|05호선|06호선": {
+   "station_nm": "공덕",
+   "from_line": "05호선",
+   "to_line": "06호선",
+   "distance_m": 73.0,
+   "walk_min": 1.2,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "공덕|06호선|05호선": {
+   "station_nm": "공덕",
+   "from_line": "06호선",
+   "to_line": "05호선",
+   "distance_m": 73.0,
+   "walk_min": 1.2,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "공덕|05호선|공항철도": {
+   "station_nm": "공덕",
+   "from_line": "05호선",
+   "to_line": "공항철도",
+   "distance_m": 275.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "공덕|공항철도|05호선": {
+   "station_nm": "공덕",
+   "from_line": "공항철도",
+   "to_line": "05호선",
+   "distance_m": 275.0,
+   "walk_min": 4.4,
+   "src_min": 3.8,
+   "src_speed_mps": 1.2
+  },
+  "공덕|05호선|경의선": {
+   "station_nm": "공덕",
+   "from_line": "05호선",
+   "to_line": "경의선",
+   "distance_m": 214.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "공덕|경의선|05호선": {
+   "station_nm": "공덕",
+   "from_line": "경의선",
+   "to_line": "05호선",
+   "distance_m": 214.0,
+   "walk_min": 3.4,
+   "src_min": 3.0,
+   "src_speed_mps": 1.2
+  },
+  "청구|05호선|06호선": {
+   "station_nm": "청구",
+   "from_line": "05호선",
+   "to_line": "06호선",
+   "distance_m": 104.0,
+   "walk_min": 1.7,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "청구|06호선|05호선": {
+   "station_nm": "청구",
+   "from_line": "06호선",
+   "to_line": "05호선",
+   "distance_m": 104.0,
+   "walk_min": 1.7,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|05호선|경의선": {
+   "station_nm": "왕십리",
+   "from_line": "05호선",
+   "to_line": "경의선",
+   "distance_m": 198.0,
+   "walk_min": 3.2,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|경의선|05호선": {
+   "station_nm": "왕십리",
+   "from_line": "경의선",
+   "to_line": "05호선",
+   "distance_m": 198.0,
+   "walk_min": 3.2,
+   "src_min": 2.8,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|05호선|수인분당선": {
+   "station_nm": "왕십리",
+   "from_line": "05호선",
+   "to_line": "수인분당선",
+   "distance_m": 244.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "왕십리|수인분당선|05호선": {
+   "station_nm": "왕십리",
+   "from_line": "수인분당선",
+   "to_line": "05호선",
+   "distance_m": 244.0,
+   "walk_min": 3.9,
+   "src_min": 3.4,
+   "src_speed_mps": 1.2
+  },
+  "군자|05호선|07호선": {
+   "station_nm": "군자",
+   "from_line": "05호선",
+   "to_line": "07호선",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "군자|07호선|05호선": {
+   "station_nm": "군자",
+   "from_line": "07호선",
+   "to_line": "05호선",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "천호|05호선|08호선": {
+   "station_nm": "천호",
+   "from_line": "05호선",
+   "to_line": "08호선",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "src_min": 0.5,
+   "src_speed_mps": 1.2
+  },
+  "천호|08호선|05호선": {
+   "station_nm": "천호",
+   "from_line": "08호선",
+   "to_line": "05호선",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "src_min": 0.5,
+   "src_speed_mps": 1.2
+  },
+  "강동|05호선|05호선": {
+   "station_nm": "강동",
+   "from_line": "05호선",
+   "to_line": "05호선",
+   "distance_m": 19.0,
+   "walk_min": 0.3,
+   "src_min": 0.3,
+   "src_speed_mps": 1.2
+  },
+  "올림픽공원|05호선|09호선": {
+   "station_nm": "올림픽공원",
+   "from_line": "05호선",
+   "to_line": "09호선",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "올림픽공원|09호선|05호선": {
+   "station_nm": "올림픽공원",
+   "from_line": "09호선",
+   "to_line": "05호선",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "src_min": 1.3,
+   "src_speed_mps": 1.2
+  },
+  "신내|06호선|경춘선": {
+   "station_nm": "신내",
+   "from_line": "06호선",
+   "to_line": "경춘선",
+   "distance_m": 50.0,
+   "walk_min": 0.8,
+   "src_min": 0.7,
+   "src_speed_mps": 1.2
+  },
+  "신내|경춘선|06호선": {
+   "station_nm": "신내",
+   "from_line": "경춘선",
+   "to_line": "06호선",
+   "distance_m": 50.0,
+   "walk_min": 0.8,
+   "src_min": 0.7,
+   "src_speed_mps": 1.2
+  },
+  "태릉입구|06호선|07호선": {
+   "station_nm": "태릉입구",
+   "from_line": "06호선",
+   "to_line": "07호선",
+   "distance_m": 46.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "태릉입구|07호선|06호선": {
+   "station_nm": "태릉입구",
+   "from_line": "07호선",
+   "to_line": "06호선",
+   "distance_m": 46.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "석계|06호선|경원선": {
+   "station_nm": "석계",
+   "from_line": "06호선",
+   "to_line": "경원선",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "src_min": 1.7,
+   "src_speed_mps": 1.2
+  },
+  "석계|경원선|06호선": {
+   "station_nm": "석계",
+   "from_line": "경원선",
+   "to_line": "06호선",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "src_min": 1.7,
+   "src_speed_mps": 1.2
+  },
+  "보문|06호선|우이신설경전철": {
+   "station_nm": "보문",
+   "from_line": "06호선",
+   "to_line": "우이신설경전철",
+   "distance_m": 87.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "보문|우이신설경전철|06호선": {
+   "station_nm": "보문",
+   "from_line": "우이신설경전철",
+   "to_line": "06호선",
+   "distance_m": 87.0,
+   "walk_min": 1.4,
+   "src_min": 1.2,
+   "src_speed_mps": 1.2
+  },
+  "효창공원앞|06호선|경의선": {
+   "station_nm": "효창공원앞",
+   "from_line": "06호선",
+   "to_line": "경의선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "효창공원앞|경의선|06호선": {
+   "station_nm": "효창공원앞",
+   "from_line": "경의선",
+   "to_line": "06호선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "공덕|06호선|공항철도": {
+   "station_nm": "공덕",
+   "from_line": "06호선",
+   "to_line": "공항철도",
+   "distance_m": 265.0,
+   "walk_min": 4.2,
+   "src_min": 3.7,
+   "src_speed_mps": 1.2
+  },
+  "공덕|공항철도|06호선": {
+   "station_nm": "공덕",
+   "from_line": "공항철도",
+   "to_line": "06호선",
+   "distance_m": 265.0,
+   "walk_min": 4.2,
+   "src_min": 3.7,
+   "src_speed_mps": 1.2
+  },
+  "공덕|06호선|경의선": {
+   "station_nm": "공덕",
+   "from_line": "06호선",
+   "to_line": "경의선",
+   "distance_m": 152.0,
+   "walk_min": 2.4,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "공덕|경의선|06호선": {
+   "station_nm": "공덕",
+   "from_line": "경의선",
+   "to_line": "06호선",
+   "distance_m": 152.0,
+   "walk_min": 2.4,
+   "src_min": 2.1,
+   "src_speed_mps": 1.2
+  },
+  "디지털미디어시티|06호선|경의선": {
+   "station_nm": "디지털미디어시티",
+   "from_line": "06호선",
+   "to_line": "경의선",
+   "distance_m": 55.0,
+   "walk_min": 0.9,
+   "src_min": 0.8,
+   "src_speed_mps": 1.2
+  },
+  "디지털미디어시티|경의선|06호선": {
+   "station_nm": "디지털미디어시티",
+   "from_line": "경의선",
+   "to_line": "06호선",
+   "distance_m": 55.0,
+   "walk_min": 0.9,
+   "src_min": 0.8,
+   "src_speed_mps": 1.2
+  },
+  "디지털미디어시티|06호선|공항철도": {
+   "station_nm": "디지털미디어시티",
+   "from_line": "06호선",
+   "to_line": "공항철도",
+   "distance_m": 186.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "디지털미디어시티|공항철도|06호선": {
+   "station_nm": "디지털미디어시티",
+   "from_line": "공항철도",
+   "to_line": "06호선",
+   "distance_m": 186.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "연신내|06호선|GTX-A": {
+   "station_nm": "연신내",
+   "from_line": "06호선",
+   "to_line": "GTX-A",
+   "distance_m": 187.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "연신내|GTX-A|06호선": {
+   "station_nm": "연신내",
+   "from_line": "GTX-A",
+   "to_line": "06호선",
+   "distance_m": 187.0,
+   "walk_min": 3.0,
+   "src_min": 2.6,
+   "src_speed_mps": 1.2
+  },
+  "도봉산|07호선|01호선": {
+   "station_nm": "도봉산",
+   "from_line": "07호선",
+   "to_line": "01호선",
+   "distance_m": 44.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "도봉산|01호선|07호선": {
+   "station_nm": "도봉산",
+   "from_line": "01호선",
+   "to_line": "07호선",
+   "distance_m": 44.0,
+   "walk_min": 0.7,
+   "src_min": 0.6,
+   "src_speed_mps": 1.2
+  },
+  "상봉|07호선|경의선": {
+   "station_nm": "상봉",
+   "from_line": "07호선",
+   "to_line": "경의선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "상봉|경의선|07호선": {
+   "station_nm": "상봉",
+   "from_line": "경의선",
+   "to_line": "07호선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "상봉|07호선|경춘선": {
+   "station_nm": "상봉",
+   "from_line": "07호선",
+   "to_line": "경춘선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "상봉|경춘선|07호선": {
+   "station_nm": "상봉",
+   "from_line": "경춘선",
+   "to_line": "07호선",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "강남구청|07호선|수인분당선": {
+   "station_nm": "강남구청",
+   "from_line": "07호선",
+   "to_line": "수인분당선",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "src_min": 1.7,
+   "src_speed_mps": 1.2
+  },
+  "강남구청|수인분당선|07호선": {
+   "station_nm": "강남구청",
+   "from_line": "수인분당선",
+   "to_line": "07호선",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "src_min": 1.7,
+   "src_speed_mps": 1.2
+  },
+  "논현|07호선|신분당선": {
+   "station_nm": "논현",
+   "from_line": "07호선",
+   "to_line": "신분당선",
+   "distance_m": 80.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "논현|신분당선|07호선": {
+   "station_nm": "논현",
+   "from_line": "신분당선",
+   "to_line": "07호선",
+   "distance_m": 80.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|07호선|09호선": {
+   "station_nm": "고속터미널",
+   "from_line": "07호선",
+   "to_line": "09호선",
+   "distance_m": 314.0,
+   "walk_min": 5.0,
+   "src_min": 4.4,
+   "src_speed_mps": 1.2
+  },
+  "고속터미널|09호선|07호선": {
+   "station_nm": "고속터미널",
+   "from_line": "09호선",
+   "to_line": "07호선",
+   "distance_m": 314.0,
+   "walk_min": 5.0,
+   "src_min": 4.4,
+   "src_speed_mps": 1.2
+  },
+  "이수|07호선|04호선": {
+   "station_nm": "이수",
+   "from_line": "07호선",
+   "to_line": "04호선",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "이수|04호선|07호선": {
+   "station_nm": "이수",
+   "from_line": "04호선",
+   "to_line": "07호선",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "src_min": 2.4,
+   "src_speed_mps": 1.2
+  },
+  "보라매|07호선|신림선": {
+   "station_nm": "보라매",
+   "from_line": "07호선",
+   "to_line": "신림선",
+   "distance_m": 71.0,
+   "walk_min": 1.1,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "보라매|신림선|07호선": {
+   "station_nm": "보라매",
+   "from_line": "신림선",
+   "to_line": "07호선",
+   "distance_m": 71.0,
+   "walk_min": 1.1,
+   "src_min": 1.0,
+   "src_speed_mps": 1.2
+  },
+  "가산디지털단지|07호선|01호선": {
+   "station_nm": "가산디지털단지",
+   "from_line": "07호선",
+   "to_line": "01호선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "가산디지털단지|01호선|07호선": {
+   "station_nm": "가산디지털단지",
+   "from_line": "01호선",
+   "to_line": "07호선",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "src_min": 1.5,
+   "src_speed_mps": 1.2
+  },
+  "온수|07호선|01호선": {
+   "station_nm": "온수",
+   "from_line": "07호선",
+   "to_line": "01호선",
+   "distance_m": 102.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "온수|01호선|07호선": {
+   "station_nm": "온수",
+   "from_line": "01호선",
+   "to_line": "07호선",
+   "distance_m": 102.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "석촌|08호선|09호선": {
+   "station_nm": "석촌",
+   "from_line": "08호선",
+   "to_line": "09호선",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "석촌|09호선|08호선": {
+   "station_nm": "석촌",
+   "from_line": "09호선",
+   "to_line": "08호선",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "src_min": 1.1,
+   "src_speed_mps": 1.2
+  },
+  "복정|08호선|수인분당선": {
+   "station_nm": "복정",
+   "from_line": "08호선",
+   "to_line": "수인분당선",
+   "distance_m": 16.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "복정|수인분당선|08호선": {
+   "station_nm": "복정",
+   "from_line": "수인분당선",
+   "to_line": "08호선",
+   "distance_m": 16.0,
+   "walk_min": 0.3,
+   "src_min": 0.2,
+   "src_speed_mps": 1.2
+  },
+  "모란|08호선|수인분당선": {
+   "station_nm": "모란",
+   "from_line": "08호선",
+   "to_line": "수인분당선",
+   "distance_m": 99.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  },
+  "모란|수인분당선|08호선": {
+   "station_nm": "모란",
+   "from_line": "수인분당선",
+   "to_line": "08호선",
+   "distance_m": 99.0,
+   "walk_min": 1.6,
+   "src_min": 1.4,
+   "src_speed_mps": 1.2
+  }
+ },
+ "stations": {
+  "서울역": {
+   "station_nm": "서울역",
+   "distance_m": 323.0,
+   "walk_min": 5.2,
+   "worst_pair": "04호선↔경의선"
+  },
+  "시청": {
+   "station_nm": "시청",
+   "distance_m": 101.0,
+   "walk_min": 1.6,
+   "worst_pair": "01호선↔02호선"
+  },
+  "종로3가": {
+   "station_nm": "종로3가",
+   "distance_m": 312.0,
+   "walk_min": 5.0,
+   "worst_pair": "01호선↔05호선"
+  },
+  "동대문": {
+   "station_nm": "동대문",
+   "distance_m": 194.0,
+   "walk_min": 3.1,
+   "worst_pair": "01호선↔04호선"
+  },
+  "동묘앞": {
+   "station_nm": "동묘앞",
+   "distance_m": 96.0,
+   "walk_min": 1.5,
+   "worst_pair": "01호선↔06호선"
+  },
+  "신설동": {
+   "station_nm": "신설동",
+   "distance_m": 273.0,
+   "walk_min": 4.4,
+   "worst_pair": "02호선↔우이신설경전철"
+  },
+  "청량리": {
+   "station_nm": "청량리",
+   "distance_m": 203.0,
+   "walk_min": 3.3,
+   "worst_pair": "01호선↔경춘선"
+  },
+  "을지로3가": {
+   "station_nm": "을지로3가",
+   "distance_m": 149.0,
+   "walk_min": 2.4,
+   "worst_pair": "02호선↔03호선"
+  },
+  "을지로4가": {
+   "station_nm": "을지로4가",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "worst_pair": "02호선↔05호선"
+  },
+  "동대문역사문화공원": {
+   "station_nm": "동대문역사문화공원",
+   "distance_m": 234.0,
+   "walk_min": 3.8,
+   "worst_pair": "02호선↔05호선"
+  },
+  "신당": {
+   "station_nm": "신당",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "worst_pair": "02호선↔06호선"
+  },
+  "왕십리": {
+   "station_nm": "왕십리",
+   "distance_m": 244.0,
+   "walk_min": 3.9,
+   "worst_pair": "05호선↔수인분당선"
+  },
+  "성수": {
+   "station_nm": "성수",
+   "distance_m": 23.0,
+   "walk_min": 0.4,
+   "worst_pair": "02호선↔02호선"
+  },
+  "건대입구": {
+   "station_nm": "건대입구",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "worst_pair": "02호선↔07호선"
+  },
+  "잠실": {
+   "station_nm": "잠실",
+   "distance_m": 190.0,
+   "walk_min": 3.0,
+   "worst_pair": "02호선↔08호선"
+  },
+  "종합운동장": {
+   "station_nm": "종합운동장",
+   "distance_m": 94.0,
+   "walk_min": 1.5,
+   "worst_pair": "02호선↔09호선"
+  },
+  "선릉": {
+   "station_nm": "선릉",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "worst_pair": "02호선↔수인분당선"
+  },
+  "강남": {
+   "station_nm": "강남",
+   "distance_m": 214.0,
+   "walk_min": 3.4,
+   "worst_pair": "02호선↔신분당선"
+  },
+  "교대": {
+   "station_nm": "교대",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "worst_pair": "02호선↔03호선"
+  },
+  "사당": {
+   "station_nm": "사당",
+   "distance_m": 74.0,
+   "walk_min": 1.2,
+   "worst_pair": "02호선↔04호선"
+  },
+  "신림": {
+   "station_nm": "신림",
+   "distance_m": 88.0,
+   "walk_min": 1.4,
+   "worst_pair": "02호선↔신림선"
+  },
+  "대림": {
+   "station_nm": "대림",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "worst_pair": "02호선↔07호선"
+  },
+  "신도림": {
+   "station_nm": "신도림",
+   "distance_m": 81.0,
+   "walk_min": 1.3,
+   "worst_pair": "02호선↔01호선"
+  },
+  "영등포구청": {
+   "station_nm": "영등포구청",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "worst_pair": "02호선↔05호선"
+  },
+  "당산": {
+   "station_nm": "당산",
+   "distance_m": 105.0,
+   "walk_min": 1.7,
+   "worst_pair": "02호선↔09호선"
+  },
+  "합정": {
+   "station_nm": "합정",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "worst_pair": "02호선↔06호선"
+  },
+  "홍대입구": {
+   "station_nm": "홍대입구",
+   "distance_m": 355.0,
+   "walk_min": 5.7,
+   "worst_pair": "02호선↔공항철도"
+  },
+  "충정로": {
+   "station_nm": "충정로",
+   "distance_m": 212.0,
+   "walk_min": 3.4,
+   "worst_pair": "02호선↔05호선"
+  },
+  "양재": {
+   "station_nm": "양재",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "worst_pair": "03호선↔신분당선"
+  },
+  "연신내": {
+   "station_nm": "연신내",
+   "distance_m": 241.0,
+   "walk_min": 3.9,
+   "worst_pair": "03호선↔GTX-A"
+  },
+  "불광": {
+   "station_nm": "불광",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "worst_pair": "03호선↔06호선"
+  },
+  "충무로": {
+   "station_nm": "충무로",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "worst_pair": "03호선↔04호선"
+  },
+  "약수": {
+   "station_nm": "약수",
+   "distance_m": 130.0,
+   "walk_min": 2.1,
+   "worst_pair": "03호선↔06호선"
+  },
+  "옥수": {
+   "station_nm": "옥수",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "worst_pair": "03호선↔경의선"
+  },
+  "신사": {
+   "station_nm": "신사",
+   "distance_m": 77.0,
+   "walk_min": 1.2,
+   "worst_pair": "03호선↔신분당선"
+  },
+  "고속터미널": {
+   "station_nm": "고속터미널",
+   "distance_m": 314.0,
+   "walk_min": 5.0,
+   "worst_pair": "07호선↔09호선"
+  },
+  "도곡": {
+   "station_nm": "도곡",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "worst_pair": "03호선↔수인분당선"
+  },
+  "수서": {
+   "station_nm": "수서",
+   "distance_m": 276.0,
+   "walk_min": 4.4,
+   "worst_pair": "03호선↔GTX-A"
+  },
+  "가락시장": {
+   "station_nm": "가락시장",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "worst_pair": "03호선↔08호선"
+  },
+  "오금": {
+   "station_nm": "오금",
+   "distance_m": 65.0,
+   "walk_min": 1.0,
+   "worst_pair": "03호선↔05호선"
+  },
+  "노원": {
+   "station_nm": "노원",
+   "distance_m": 278.0,
+   "walk_min": 4.5,
+   "worst_pair": "04호선↔07호선"
+  },
+  "창동": {
+   "station_nm": "창동",
+   "distance_m": 84.0,
+   "walk_min": 1.3,
+   "worst_pair": "04호선↔01호선"
+  },
+  "성신여대입구": {
+   "station_nm": "성신여대입구",
+   "distance_m": 7.0,
+   "walk_min": 0.1,
+   "worst_pair": "04호선↔우이신설경전철"
+  },
+  "이촌": {
+   "station_nm": "이촌",
+   "distance_m": 78.0,
+   "walk_min": 1.2,
+   "worst_pair": "04호선↔경의선"
+  },
+  "삼각지": {
+   "station_nm": "삼각지",
+   "distance_m": 155.0,
+   "walk_min": 2.5,
+   "worst_pair": "04호선↔06호선"
+  },
+  "동작": {
+   "station_nm": "동작",
+   "distance_m": 245.0,
+   "walk_min": 3.9,
+   "worst_pair": "04호선↔09호선"
+  },
+  "총신대입구": {
+   "station_nm": "총신대입구",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "worst_pair": "04호선↔07호선"
+  },
+  "김포공항": {
+   "station_nm": "김포공항",
+   "distance_m": 200.0,
+   "walk_min": 3.2,
+   "worst_pair": "05호선↔김포도시철도"
+  },
+  "까치산": {
+   "station_nm": "까치산",
+   "distance_m": 17.0,
+   "walk_min": 0.3,
+   "worst_pair": "05호선↔02호선"
+  },
+  "신길": {
+   "station_nm": "신길",
+   "distance_m": 242.0,
+   "walk_min": 3.9,
+   "worst_pair": "05호선↔01호선"
+  },
+  "여의도": {
+   "station_nm": "여의도",
+   "distance_m": 68.0,
+   "walk_min": 1.1,
+   "worst_pair": "05호선↔09호선"
+  },
+  "공덕": {
+   "station_nm": "공덕",
+   "distance_m": 275.0,
+   "walk_min": 4.4,
+   "worst_pair": "05호선↔공항철도"
+  },
+  "청구": {
+   "station_nm": "청구",
+   "distance_m": 104.0,
+   "walk_min": 1.7,
+   "worst_pair": "05호선↔06호선"
+  },
+  "군자": {
+   "station_nm": "군자",
+   "distance_m": 75.0,
+   "walk_min": 1.2,
+   "worst_pair": "05호선↔07호선"
+  },
+  "천호": {
+   "station_nm": "천호",
+   "distance_m": 35.0,
+   "walk_min": 0.6,
+   "worst_pair": "05호선↔08호선"
+  },
+  "강동": {
+   "station_nm": "강동",
+   "distance_m": 19.0,
+   "walk_min": 0.3,
+   "worst_pair": "05호선↔05호선"
+  },
+  "올림픽공원": {
+   "station_nm": "올림픽공원",
+   "distance_m": 93.0,
+   "walk_min": 1.5,
+   "worst_pair": "05호선↔09호선"
+  },
+  "신내": {
+   "station_nm": "신내",
+   "distance_m": 50.0,
+   "walk_min": 0.8,
+   "worst_pair": "06호선↔경춘선"
+  },
+  "태릉입구": {
+   "station_nm": "태릉입구",
+   "distance_m": 46.0,
+   "walk_min": 0.7,
+   "worst_pair": "06호선↔07호선"
+  },
+  "석계": {
+   "station_nm": "석계",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "worst_pair": "06호선↔경원선"
+  },
+  "보문": {
+   "station_nm": "보문",
+   "distance_m": 87.0,
+   "walk_min": 1.4,
+   "worst_pair": "06호선↔우이신설경전철"
+  },
+  "효창공원앞": {
+   "station_nm": "효창공원앞",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "worst_pair": "06호선↔경의선"
+  },
+  "디지털미디어시티": {
+   "station_nm": "디지털미디어시티",
+   "distance_m": 186.0,
+   "walk_min": 3.0,
+   "worst_pair": "06호선↔공항철도"
+  },
+  "도봉산": {
+   "station_nm": "도봉산",
+   "distance_m": 44.0,
+   "walk_min": 0.7,
+   "worst_pair": "07호선↔01호선"
+  },
+  "상봉": {
+   "station_nm": "상봉",
+   "distance_m": 100.0,
+   "walk_min": 1.6,
+   "worst_pair": "07호선↔경의선"
+  },
+  "강남구청": {
+   "station_nm": "강남구청",
+   "distance_m": 125.0,
+   "walk_min": 2.0,
+   "worst_pair": "07호선↔수인분당선"
+  },
+  "논현": {
+   "station_nm": "논현",
+   "distance_m": 80.0,
+   "walk_min": 1.3,
+   "worst_pair": "07호선↔신분당선"
+  },
+  "이수": {
+   "station_nm": "이수",
+   "distance_m": 171.0,
+   "walk_min": 2.7,
+   "worst_pair": "07호선↔04호선"
+  },
+  "보라매": {
+   "station_nm": "보라매",
+   "distance_m": 71.0,
+   "walk_min": 1.1,
+   "worst_pair": "07호선↔신림선"
+  },
+  "가산디지털단지": {
+   "station_nm": "가산디지털단지",
+   "distance_m": 110.0,
+   "walk_min": 1.8,
+   "worst_pair": "07호선↔01호선"
+  },
+  "온수": {
+   "station_nm": "온수",
+   "distance_m": 102.0,
+   "walk_min": 1.6,
+   "worst_pair": "07호선↔01호선"
+  },
+  "석촌": {
+   "station_nm": "석촌",
+   "distance_m": 82.0,
+   "walk_min": 1.3,
+   "worst_pair": "08호선↔09호선"
+  },
+  "복정": {
+   "station_nm": "복정",
+   "distance_m": 16.0,
+   "walk_min": 0.3,
+   "worst_pair": "08호선↔수인분당선"
+  },
+  "모란": {
+   "station_nm": "모란",
+   "distance_m": 99.0,
+   "walk_min": 1.6,
+   "worst_pair": "08호선↔수인분당선"
+  }
+ }
+}
