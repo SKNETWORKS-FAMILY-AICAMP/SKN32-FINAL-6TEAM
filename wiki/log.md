@@ -20,6 +20,12 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-30 — 웹 예열 API의 계약 시험 목록 정정
+
+[실측] 구현·명세에 있는 `/v1/web/warmup`을 OpenAPI 시험의 계약 목록에 추가했다. 수정 전 실패를 재현하고 수정 후 API·웹 클라이언트 계약 검사 11/11(100%)를 통과했다. [원인·검증과 웹 live CI 범위](../final_project_cs/wiki/records/reports/debugs/2026-09-30_0044_warmup_API_계약시험_누락.md). 웹의 `test:live`는 모의 API를 사용하며 실제 백엔드 통합과 구분한다.
+
+---
+
 ## 2026-09-30 — 운영 앱 CI와 develop 공유 PR
 
 [실측] admin 전용 CI를 추가하고 [PR #17](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN32-FINAL-6TEAM/pull/17)을 열었다. Ubuntu·Chromium에서 admin 시험 41/41(100%)과 HTML 일치 검사를 통과했고 기존 develop CI도 성공했다. 실제 API 연결과 분리한 [검증 결과](../final_project_cs/wiki/records/reports/2026-09-30_0017_admin_CI와_develop_공유.md)를 기록했다. 최종 병합 상태는 PR에서 확인한다.
