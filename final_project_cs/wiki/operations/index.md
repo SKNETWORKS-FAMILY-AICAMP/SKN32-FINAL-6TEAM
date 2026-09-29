@@ -56,7 +56,7 @@ GPU 메모리가 초과되면 Linux는 즉시 OOM으로 죽는데 **Windows는 s
 
 ### 12GB VRAM 한계
 
-`[실측]` x600 (RTX 4070 SUPER 12GB)에서 `Qwen2.5-3B` 학습이 3번 막혔다.
+`[실측]` 모델 서버 (RTX 4070 SUPER 12GB)에서 `Qwen2.5-3B` 학습이 3번 막혔다.
 
 | 시도 | max_length | 결과 |
 |---|---|---|
