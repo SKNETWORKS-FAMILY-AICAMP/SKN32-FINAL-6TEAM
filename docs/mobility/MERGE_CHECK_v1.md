@@ -24,14 +24,15 @@ python -m pytest tests/unit/travel/mobility -m "mobility_full and not live" -q  
 
 | 실행 | 데이터 없음(팀원 PC · CI) | 데이터 있음(`DATA_DIR`) | 시간(노트북 실측 9/29) |
 |---|---|---|---|
-| **게이트** `pytest tests/unit/travel/mobility -q` | **70 passed · 62 skipped · 173 deselected** | **132 passed · 173 deselected** | 없음 8초 · 있음 **2분 19초** |
-| 전체층 `-m "mobility_full and not live"` | 4 passed · 169 skipped · 132 deselected | **173 passed · 132 deselected** | 있음 11분 17초 |
-| 팀 배치 검사 | 53 passed(9/29 develop `882a19b` 기준 · 파일이 늘면 커진다) | 같음 | 5초 |
+| **게이트** `pytest tests/unit/travel/mobility -q` | **142 passed · 63 skipped · 173 deselected** | **205 passed · 173 deselected**(develop `747dc79` merge 직후엔 이 중 `test_plan_v1` 6이 빨강 — §2-1) | 없음 20초 · 있음 **2분 32초** |
+| 전체층 `-m "mobility_full and not live"` | 4 passed · 169 skipped · 205 deselected | **173 passed · 205 deselected**(merge 직후 6 빨강 — §2-1) | 있음 7분 28초 |
+| 팀 배치 검사 | 57 passed(9/29 develop `747dc79` 기준 · 파일이 늘면 커진다) | 같음 | 3초 |
 
-- 게이트 132 = 데이터 없이 도는 단위 110 + **회귀 게이트 21**(주요 기능마다 1건) + 목록 정합성 1. 전체층 173 = 회귀 나머지 150 + 실데이터 단위 23(`plan_concurrency`·`plan_estimate`·`plan_bike` 의 DATA_DIR 축). **회귀 171 = 21 + 150** — 잠그는 것은 줄이지 않았고 층만 나눴다.
+- 게이트 205 = 데이터 없이 도는 단위 183(팀장 `test_review_fixes_*`·`test_check_scripts` 포함) + **회귀 게이트 21**(주요 기능마다 1건) + 목록 정합성 1. 전체층 173 = 회귀 나머지 150 + 실데이터 단위 23(`plan_concurrency`·`plan_estimate`·`plan_bike` 의 DATA_DIR 축). **회귀 171 = 21 + 150** — 잠그는 것은 줄이지 않았고 층만 나눴다.
+- **§2-1 알려진 빨강(2026-09-29 · develop `747dc79` merge 직후 · 데이터 있는 기기만)**: `test_plan_v1` 6(`test_golden`·`test_golden_all_modes`·`test_0400_boundary`·`test_no_per_option_departure`·`test_recheck_at_offsets`·`test_replan_fare_known_locked`) + 전체층 3(`test_golden_bike`·`test_bike_not_called_by_default`·`test_night_last_service`) + 회귀 3케이스(`MIX-06`·`MULTI-06`·`NIGHT-10`) — 팀장 `plan.py`·판정 변경(#1~#65)에 우리 잠금·골든이 아직 안 맞춘 것(73 검수 회신 · 후속 방에서 기대 갱신). 데이터 없는 CI 에는 안 걸린다. 이 목록 밖의 빨강이 새로 나오면 그게 진짜 회귀다.
 - **`skipped` 는 빨강이 아니다** — 「data not present」·「시간표 없음(DATA_DIR)」이면 데이터가 없어서 건너뛴 것. 데이터 없는 PC 에서는 회귀 20건이 전부 skip 이고 그게 정상이다.
 - **`deselected` 는 전체층이 기본 실행에서 빠진 것**(conftest.py). 빨강·노랑 어느 쪽도 아니다.
-- 건수는 클라우드·노트북 동일. 시간은 노트북(`playdata` · Python 3.11 · develop `882a19b`) 기준 2026-09-29(GPT 대조 반영 뒤 p3 재실측).
+- 건수·시간은 노트북(`playdata` · Python 3.11 · develop `747dc79` merge 커밋 `37000a9`) 실측 2026-09-29 15:31.
 
 ## 3. 데이터 받는 법 (회귀를 실제로 돌리고 싶을 때만 · 없어도 게이트는 초록)
 
