@@ -1,6 +1,6 @@
 # 운영자 콘솔 개발 기준
 
-작성/확인: 2026-09-29 · Codex · 기준 `role-eval-ui` `38cd59d` + 이번 변경 · TeamFlow `ST4F-176`.
+작성: 2026-09-29 · CI 확인: 2026-09-30 · Codex · 구현 기준 `1317a74` + CI 추가 · TeamFlow `ST4F-176`.
 
 이번 구현은 [SCREEN_PLAN.md](SCREEN_PLAN.md) §5의 화면 단계다. 운영 API·인증 연결 완료를 의미하지 않는다. [실행 안내](README.md)에서 설정과 검증 명령을 확인한다.
 
@@ -38,7 +38,9 @@
 
 브라우저 시험은 별도 demo 빌드 후 `npm run test:e2e`로 실행한다. HTML도 먼저 재생성한다. 모드 누락 브라우저 시험은 `.next-unconfigured`에 따로 빌드한다. 브라우저 결과 폴더도 `test-results/e2e`·`test-results/unconfigured`로 분리한다. 시험 중인 빌드를 덮어쓰지 않는다.
 
-이번 작업의 실제 결과와 명령·출력은 [작업 리포트](../../../wiki/records/reports/2026-09-29_2313_admin_프론트와_HTML_시나리오.md)와 연결된 evidence에 기록한다. 실제 백엔드 통합·팀원 검토·배포는 미실시다.
+GitHub의 [CI (admin)](../../../../.github/workflows/ci-admin.yml)은 demo를 명시한 `check` 빌드를 그대로 E2E에서 사용한다. `export:html` 실행 후 저장된 HTML과 차이가 있으면 실패하여 앱과 시연 파일의 차이를 방지한다. `test:unconfigured`는 환경변수를 빈 값으로 덮어쓰고 별도 빌드하므로 CI의 demo 설정과 분리된다. 실제 백엔드나 비밀 키는 사용하지 않는다.
+
+최초 구현의 실제 결과와 명령·출력은 [작업 리포트](../../../wiki/records/reports/2026-09-29_2313_admin_프론트와_HTML_시나리오.md)와 연결된 evidence에 기록한다. 실제 백엔드 통합·팀원 검토·배포는 미실시다.
 
 ## 참고
 

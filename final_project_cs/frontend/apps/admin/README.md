@@ -43,7 +43,9 @@ npm run test:e2e               # 3301 · 앱 + file:// 오프라인 시나리오
 npm run test:unconfigured      # 3302 · 미설정 모드 별도 빌드/브라우저 시험
 ```
 
-설치된 Chrome으로 시험하려면 `$env:PLAYWRIGHT_CHANNEL='chrome'`를 설정한다. 이 작업의 실제 검증 브라우저는 Chrome이다. `npm run build`는 현재 설정을 사용하며, 데모를 자동으로 켜지 않는다. 단일 HTML은 `export:html` 명령 자체가 명시적인 데모 생성 요청이다. 소스를 바꿨으면 다시 생성해야 한다.
+설치된 Chrome으로 시험하려면 `$env:PLAYWRIGHT_CHANNEL='chrome'`를 설정한다. 최초 로컬 검증은 Chrome으로 수행했다. `npm run build`는 현재 설정을 사용하며, 데모를 자동으로 켜지 않는다. 단일 HTML은 `export:html` 명령 자체가 명시적인 데모 생성 요청이다. 소스를 바꿨으면 다시 생성해야 한다.
+
+[CI (admin)](../../../../.github/workflows/ci-admin.yml)은 admin 파일 또는 해당 workflow를 바꾸는 `develop`·`main` 대상 PR과 두 브랜치의 push에서 실행된다. Ubuntu·Node.js 22·Chromium에서 demo 설정의 `check`, HTML 재생성과 저장 파일 일치 검사, 앱/오프라인 HTML E2E, 미설정 모드 시험을 실행한다. 실패한 브라우저 증거는 7일간 보관한다. API 계약·live 연결을 추가할 때는 이 CI에 관련 시험을 확장하며, 현재 CI 통과는 실제 백엔드 통합을 의미하지 않는다.
 
 ## 구현 범위와 다음 단계
 
