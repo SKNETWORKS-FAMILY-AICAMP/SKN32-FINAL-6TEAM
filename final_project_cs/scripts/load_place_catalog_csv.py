@@ -3,8 +3,9 @@
 
 대상 CSV:
     app/modules/travel_ops/activity/data_processing/activity_total_data.csv
-    — 서울 Activity 후보 1,173건(TourAPI 805 + 올리브영 368). `data_source` 컬럼이
-      있으면 **`--source` 와 같은 행만** 넣는다(기본 tour_api → 805건).
+    — 서울 Activity 후보(TourAPI + 올리브영·다이소·아트박스·무신사). **`--source` 와 같은 출처의 행만**
+      넣는다(기본 tour_api). 출처는 `data_source` 열이 있으면 그것으로, 없으면 `contentid` 로 가른다
+      (숫자 = TourAPI, OY/DS/AB/MS 접두어 = 올리브영/다이소/아트박스/무신사).
       FD(음식)·AC(숙박)·EV(행사·이벤트)는 Activity 담당 범위 밖이므로 --exclude-codes로 제외한다.
     ※이전판(`scripts/activities_candidates_seoul_enriched.csv`, `data_source` 컬럼 없음)은
       2026-09-28 리팩터에서 삭제됐다 — 지금은 위 병합 CSV 하나만 쓴다.
@@ -81,6 +82,17 @@ def to_row(src: dict[str, str], *, area_code: str, csv_name: str) -> dict[str, A
     }
 
 
+#: 브랜드 행의 contentid 접두어 → 출처. TourAPI contentid 는 숫자뿐이라 서로 겹치지 않는다.
+_ID_PREFIX_SOURCE = {"OY": "oliveyoung", "DS": "daiso", "AB": "artbox", "MS": "musinsa"}
+
+
+def _origin_from_id(content_id: str | None) -> str:
+    cid = (content_id or "").strip()
+    if not cid:
+        return ""
+    return "tour_api" if cid.isdigit() else _ID_PREFIX_SOURCE.get(cid[:2], "")
+
+
 def read_rows(path: Path, *, area_code: str,
               exclude_codes: set[str] | None = None,
               data_source: str | None = None) -> tuple[list[dict[str, Any]], Counter]:
@@ -91,7 +103,8 @@ def read_rows(path: Path, *, area_code: str,
         for src in csv.DictReader(fh):
             # ★병합 CSV 는 출처가 섞여 있다. 다른 출처 행을 `--source` 로 넣으면
             #   (예: 올리브영 OY… 를 tour_api 로) 카탈로그 동기화와 신원이 엉킨다.
-            origin = (src.get("data_source") or "").strip()
+            # `data_source` 열이 없는 CSV 는 contentid 로 출처를 가른다(TourAPI 는 숫자, 브랜드 행은 접두어).
+            origin = (src.get("data_source") or _origin_from_id(src.get("contentid"))).strip()
             if data_source and origin and origin != data_source:
                 stats["skipped_other_source"] += 1
                 continue
