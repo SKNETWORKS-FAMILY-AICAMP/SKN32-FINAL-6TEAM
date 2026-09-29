@@ -96,8 +96,11 @@ class TripWatcher:
             if item.kind != "activity":
                 result.unhandled.append(entry)
                 continue
+            # ★`[2026-09-29]` 대체 활동은 「비슷한 곳 → 가까운 곳」 순(설문 없이 기본 선호). Case 경로는
+            #   `ActivityTeam.handle_trigger` 가 설문 선호까지 넘긴다
+            from .activity.similarity import score as similarity
             plan = plan_activity_adjustment(item=item, report=report, places=visible_to(places, trip_id),
-                                            check=self.check, now=now)
+                                            check=self.check, now=now, similarity=similarity)
             self._settle(trip_id, item, plan, result, report=report)
         return result
 
