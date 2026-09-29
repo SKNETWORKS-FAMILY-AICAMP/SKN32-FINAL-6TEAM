@@ -80,6 +80,53 @@ def decide(*, constraints: dict[str, Any] | None, item: Item,
     return Decision("apply", None, None, safety)
 
 
+#: 실내로 옮기면 원인이 사라지는 사건 — 실내·야외를 모를 때 **먼저 묻는** 대상(`replan.WEATHER_LIKE` 와 같은 뜻)
+WEATHER_ONLY = frozenset({"forecast", "weather_warning", "air_quality"})
+#: 「바꿀까요?」에 「바꿔 줘」로 답하는 키 — 이 키로 고르면 **그때** 대체안을 계산한다
+CONSENT_KEY = "change"
+CONSENT_REASON = "indoor_unknown"
+
+
+def needs_consent(report: dict[str, Any] | None) -> bool:
+    """★`[2026-09-29]` 실내·야외를 모르는 장소에 **날씨 사건만** 걸렸다 — 대체안을 계산하지 말고 먼저 묻는다.
+
+    사용자 결정: 모르는 일정이면 우천 상황을 알리고 「바꿀까요?」만 묻는다. 「바꿔 줘」라고 하면 **그때** 대체안을
+    계산해 보인다(대체안 계산은 후보마다 바깥 점검을 불러 비용이 든다). 안전 사건(지진·재난문자·기상 「경보」)이
+    섞이면 이 길이 아니다 — 지금 규칙(`decide`)이 먼저다. 날씨 밖 사건(교통 통제 등)은 실내외와 상관없어 그대로 간다.
+    """
+    report = report or {}
+    if not report.get("indoor_unknown") or is_safety(report):
+        return False
+    categories = {event.get("category") for event in report.get("disruptions") or []}
+    return bool(categories) and categories <= WEATHER_ONLY
+
+
+def consent_notice(*, item: Item, causes: list[dict[str, Any]], proposal_id: UUID) -> dict[str, Any]:
+    """「바꿀까요?」 알림. ★대체안이 없다(아직 계산하지 않았다). 무응답의 결과를 **반드시** 적는다."""
+    text = (f"{item.title} — {_cause_text(causes)}. 이 장소가 실내인지 확인하지 못했어요. "
+            f"일정을 바꿀까요? 「바꿔 줘」를 누르면 그때 다른 곳을 찾아 보여 드려요. "
+            f"답이 없으면 원래 일정을 그대로 둡니다.")
+    return {"type": "proposal_request", "text": text, "language": "ko", "causes": causes,
+            "proposal_id": str(proposal_id), "item_id": str(item.item_id), "reason": CONSENT_REASON,
+            "protected_by": None, "consent": True, "consent_key": CONSENT_KEY, "options": [],
+            "replay": False}
+
+
+def ask_consent(conn, *, store: TripStore, trip_id: UUID, item: Item, base_version: int,
+                causes: list[dict[str, Any]]) -> dict[str, Any]:
+    """「바꿀까요?」 보류 제안을 연다(안 없이). 이미 물었으면 다시 알리지 않는다. 부르는 쪽이 트랜잭션을 연다."""
+    pending = PendingStore(store.tenant_id)
+    decision = Decision("ask", CONSENT_REASON, None, False)
+    proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base_version,
+                               decision=decision, causes=causes, options=[])
+    if proposal_id is None:
+        return {"status": "asked", "already": True, "reason": CONSENT_REASON, "item": item.title}
+    store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
+                          payload=consent_notice(item=item, causes=causes, proposal_id=proposal_id))
+    return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "reason": CONSENT_REASON,
+            "safety": False, "item": item.title}
+
+
 def options_from(plan: ItineraryChange, item: Item) -> list[dict[str, Any]]:
     """계산된 안을 **적용에 필요한 값 그대로** 1위부터 적는다(다시 계산하지 않게)."""
     best = plan.replacements.get(item.item_id)
@@ -180,6 +227,17 @@ class PendingStore:
                         (status, key, by, version, self.tenant_id, proposal_id))
             return cur.rowcount == 1
 
+    def set_options(self, conn, proposal_id: UUID, *, options: list[dict[str, Any]], reason: str) -> bool:
+        """★`[2026-09-29]` 「바꿀까요?」에 「바꿔 줘」 — 같은 제안에 **그때 계산한 안**을 채운다. `open` 인 것만.
+
+        새 제안을 따로 열지 않는다 — 같은 항목·같은 기준 버전은 제안 하나다(`open` 의 UNIQUE)."""
+        with conn.cursor() as cur:
+            cur.execute("UPDATE pending_changes SET options_json=%s, reason=%s "
+                        "WHERE tenant_id=%s AND proposal_id=%s AND status='open'",
+                        (json.dumps(options, ensure_ascii=False, default=str), reason,
+                         self.tenant_id, proposal_id))
+            return cur.rowcount == 1
+
     def expire(self, conn, *, now: datetime) -> list[dict[str, Any]]:
         """무응답 — 그 일정이 끝난 제안을 닫는다. ★바꾸지 않는다. 닫은 것을 돌려준다(조용히 닫지 않는다)."""
         with conn.cursor() as cur:
@@ -219,6 +277,11 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     if current is None or trip["version"] != proposal["base_version"]:
         raise ProposalRefused("stale", {"version": trip["version"],
                                         "base_version": proposal["base_version"]})
+    if proposal["reason"] == CONSENT_REASON:
+        if key != CONSENT_KEY:
+            raise ProposalRefused("unknown_option", {"expected": CONSENT_KEY})
+        return _consented(conn, store=store, pending=pending, trip_id=trip_id, proposal=proposal,
+                          current=current, items=items, places_by_id=places_by_id, check=check)
     # ★기존 경로를 그대로 탄다 — 보관한 안을 「다른 안」 자리에 놓고 고른다
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,
@@ -237,6 +300,45 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
                                   "proposal_id": str(proposal_id)})
     pending.close(conn, proposal_id, status="chosen", key=key, by=by, version=version)
     return {"status": "chosen", "version": version, "summary": plan.summary}
+
+
+def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID, proposal: dict[str, Any],
+               current: Item, items: list[Item], places_by_id: dict[str, dict[str, Any]],
+               check: Callable[..., dict[str, Any]] | None) -> dict[str, Any]:
+    """「바꿔 줘」 — **이제** 대체안을 계산해 같은 제안에 안 1·2·3을 채우고 다시 묻는다. 일정은 아직 안 바꾼다.
+
+    ★계산은 감시와 같은 것(`plan_activity_adjustment` — 실내 후보 · 그 시각 영업 · 후보마다 재점검 · 비슷한 곳 순).
+    ★점검기가 없으면(`check=None`) 계산하지 않는다 — 재점검 없이 고른 곳을 내밀지 않는다.
+    """
+    from .activity.similarity import preference_of, score
+    from .itinerary_changes import plan_activity_adjustment
+
+    causes = list(proposal["cause_json"] or [])
+    if check is None or current.kind != "activity" or current.place is None:
+        pending.close(conn, proposal["proposal_id"], status="kept", by="system:no_check")
+        return {"status": "no_alternate", "reason": "대체안을 계산할 수 없는 일정이에요"}
+    from datetime import datetime as _dt
+    from functools import partial
+    from zoneinfo import ZoneInfo
+
+    trip = store.latest(conn, trip_id)[0]
+    plan = plan_activity_adjustment(
+        item=current, report={"disruptions": causes}, places=list(places_by_id.values()), check=check,
+        now=_dt.now(ZoneInfo("Asia/Seoul")), items=items,
+        similarity=partial(score, preference=preference_of(trip.get("constraints"))))
+    if isinstance(plan, NoChange):
+        pending.close(conn, proposal["proposal_id"], status="kept", by="system:no_alternate")
+        return {"status": "no_alternate", "reason": "바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다",
+                "detail": plan.detail}
+    options = options_from(plan, current)
+    pending.set_options(conn, proposal["proposal_id"], options=options, reason=f"{CONSENT_REASON}_options")
+    decision = Decision("ask", f"{CONSENT_REASON}_options", None, False)
+    store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal['proposal_id']}:options",
+                          payload=proposal_notice(item=current, decision=decision, causes=causes,
+                                                  options=options, proposal_id=proposal["proposal_id"]))
+    return {"status": "options", "proposal_id": str(proposal["proposal_id"]),
+            "options": [{"key": o["key"], "rank": o["rank"], "name": o.get("option_label") or o["name"],
+                         "starts_at": o.get("starts_at")} for o in options[:3]]}
 
 
 def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: ItineraryChange,
@@ -288,6 +390,6 @@ def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:
                 place=item.place)
 
 
-__all__ = ["Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES", "apply_or_ask", "choose",
-           "decide",
-           "is_safety", "options_for", "options_from", "proposal_notice", "protected_reason"]
+__all__ = ["CONSENT_KEY", "CONSENT_REASON", "Decision", "PendingStore", "ProposalRefused", "SAFETY_CATEGORIES",
+           "apply_or_ask", "ask_consent", "choose", "consent_notice", "decide",
+           "is_safety", "needs_consent", "options_for", "options_from", "proposal_notice", "protected_reason"]

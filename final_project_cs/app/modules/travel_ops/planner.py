@@ -169,7 +169,7 @@ class Cand:
     lon: float | None
     attributes: dict[str, Any]
     origin: str                     # places | place_catalog | tour_api
-    weather_sensitive: bool = False
+    weather_sensitive: bool | None = None     # ★`[2026-09-29]` None = 모름(야외 아님이 아니다)
     rank_hint: int = 9
 
     @property
@@ -190,11 +190,9 @@ class Cand:
         `attributes` 안에 싣는다(모델 칸을 늘리지 않는다)."""
         return {"key": self.key, "name": self.name, "kind": self.kind,
                 "lat": self.lat, "lon": self.lon,
-                # ★`PlaceIn.weather_sensitive` 는 bool 이라 「모름」을 못 담는다. 아는 장소의
-                #   값만 True 로 올리고, 모르는 곳은 기본값 False 가 들어간다 — 우리가 「야외가
-                #   아니다」라고 **단정한 것이 아니다**. DB 칸은 NULL 을 받으므로 이 한계는
-                #   계약 쪽에 있다(리포트 「못 하는 것」에 적었다).
-                "weather_sensitive": bool(self.weather_sensitive),
+                # ★`[2026-09-29]` 모르면 None 을 그대로 싣는다 — 전에는 `PlaceIn.weather_sensitive` 가 bool 이라
+                #   모르는 곳이 False(「야외 아님」)로 들어갔다. 이제 계약이 None 을 받는다(`trip_api.PlaceIn`).
+                "weather_sensitive": self.weather_sensitive,
                 "attributes": dict(self.attributes)}
 
     def for_check(self) -> dict[str, Any]:
@@ -279,7 +277,7 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
             attributes = dict(attributes or {})
             found[(name, kind)] = Cand(key=f"db_{place_id}", name=name, kind=kind,
                                        lat=lat, lon=lon, attributes=attributes,
-                                       origin="places", weather_sensitive=bool(sensitive),
+                                       origin="places", weather_sensitive=sensitive,
                                        rank_hint=0)
         wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds]
         if any(cand.attributes.get("source") == "dining_ledger" for cand in found.values()):
@@ -1400,11 +1398,11 @@ def plan_around(outcome: PlanOutcome, *, fixed_items: list[dict[str, Any]],
     for place in draft.places:
         places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
                                     dict(place.get("attributes") or {}), "draft",
-                                    bool(place.get("weather_sensitive")))
+                                    place.get("weather_sensitive"))
     for place in fixed_places:
         places[place["key"]] = Cand(place["key"], place["name"], place["kind"], place.get("lat"), place.get("lon"),
                                     dict(place.get("attributes") or {}), "customer",
-                                    bool(place.get("weather_sensitive")))
+                                    place.get("weather_sensitive"))
     fixed = []
     for item in fixed_items:
         starts = datetime.fromisoformat(item["starts_at"]) if isinstance(item["starts_at"], str) else item["starts_at"]

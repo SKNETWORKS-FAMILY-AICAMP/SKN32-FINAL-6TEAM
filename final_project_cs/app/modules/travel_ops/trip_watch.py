@@ -31,7 +31,7 @@ from typing import Any, Callable
 from .itinerary import Item, TripStore, visible_to
 from .itinerary_changes import (ItineraryChange, NoChange, next_after, place_before, plan_activity_adjustment,
                                 plan_route_adjustment, planned_option, route_of, route_targets)
-from .pending import PendingStore, apply_or_ask
+from .pending import PendingStore, apply_or_ask, ask_consent, needs_consent
 
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 
@@ -95,6 +95,19 @@ class TripWatcher:
                 continue
             if item.kind != "activity":
                 result.unhandled.append(entry)
+                continue
+            # ★`[2026-09-29]` 실내·야외를 모르는 곳에 날씨 사건만 — 대체안을 **계산하지 않고** 「바꿀까요?」만 묻는다
+            #   (대체안 계산은 후보마다 바깥 점검을 부른다. 사용자 결정). 「바꿔 줘」면 그때 계산한다(`pending.choose`)
+            if needs_consent(report):
+                with self._connect() as conn, conn.transaction():
+                    trip, _ = self.store.latest(conn, trip_id)
+                    outcome = ask_consent(conn, store=self.store, trip_id=trip_id, item=item,
+                                          base_version=trip["version"],
+                                          causes=report.get("disruptions") or [])
+                if not outcome.get("already"):
+                    result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
+                                         "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
+                                         "safety": False})
                 continue
             # ★`[2026-09-29]` 대체 활동은 「비슷한 곳 → 가까운 곳」 순(설문 없이 기본 선호). Case 경로는
             #   `ActivityTeam.handle_trigger` 가 설문 선호까지 넘긴다

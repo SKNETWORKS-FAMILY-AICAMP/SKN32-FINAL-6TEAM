@@ -62,7 +62,8 @@ class PlaceIn(BaseModel):
     kind: str = Field(min_length=1)
     lat: float
     lon: float
-    weather_sensitive: bool = False
+    #: ★`[2026-09-29]` None = 모름. 전에는 bool 기본 False 라 모르는 곳이 「야외 아님」으로 저장됐다(경희궁·둘레길)
+    weather_sensitive: bool | None = None
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 

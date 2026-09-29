@@ -94,7 +94,11 @@ class DisruptionCheck:
 
     def check(self, *, place: dict[str, Any], starts_at: datetime | None,
               region: str = "서울") -> dict[str, Any]:
-        sensitive = bool(place.get("weather_sensitive"))
+        # ★`[2026-09-29]` 실내·야외를 **모르면**(`None`) 야외처럼 날씨를 본다 — 전에는 `bool(None)` 이 「야외 아님」이 되어
+        #   경희궁·둘레길 같은 곳에 비가 와도 아무 말이 없었다. 대신 `indoor_unknown` 을 붙여, 날씨 사건만 걸리면
+        #   바꾸지 않고 **먼저 묻게** 한다(`pending.needs_consent` · 사용자 결정 · 코덱스 합의). 모름을 야외로 **확정**하지 않는다
+        indoor_unknown = place.get("weather_sensitive") is None
+        sensitive = True if indoor_unknown else bool(place.get("weather_sensitive"))
         jobs: dict[str, Callable[[], dict[str, Any]]] = {
             "forecast": lambda: self._forecast(place, starts_at, sensitive),
             "weather_warning": lambda: self._warning(region, sensitive),
@@ -126,6 +130,7 @@ class DisruptionCheck:
             "starts_at": starts_at.isoformat() if isinstance(starts_at, datetime) else None,
             "region": region,
             "checked_at": datetime.now(UTC).isoformat(),
+            "indoor_unknown": indoor_unknown,
         }
 
     # ── 항목별 ──────────────────────────────────────────────────

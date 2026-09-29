@@ -214,7 +214,9 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
         if place.get("latitude") is None or distance_m(original, place) > radius_m:
             continue
         attributes = place.get("attributes") or {}
-        if indoor_only and not attributes.get("indoor"):
+        # ★`[2026-09-29]` 「실내」는 출처가 적은 `indoor` 이거나, 날씨 영향이 **없다고 아는** 곳(`weather_sensitive is False`).
+        #   모름(`None`)은 실내로 치지 않는다 — 비를 피하려고 고른 곳이 또 야외일 수 있다
+        if indoor_only and not (attributes.get("indoor") or place.get("weather_sensitive") is False):
             continue
         candidate = Candidate(key=str(place["place_id"]), place=place, changed_items=1,
                               extra_cost_krw=None, shift_minutes=0,

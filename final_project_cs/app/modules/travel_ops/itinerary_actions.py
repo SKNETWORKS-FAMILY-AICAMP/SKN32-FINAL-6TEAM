@@ -63,6 +63,13 @@ def change_arguments(*, trip_id: UUID | str, base_version: int, change: Itinerar
     return _plain(arguments)
 
 
+def consent_arguments(*, trip_id: UUID | str, base_version: int, item_id: UUID | str,
+                      causes: list[dict[str, Any]]) -> dict[str, Any]:
+    """★`[2026-09-29]` 「바꿀까요?」만 묻는 제안 인자 — 대체안이 없다(아직 계산하지 않았다). Team 이 부른다."""
+    return _plain({"trip_id": str(trip_id), "base_version": int(base_version), "reason": "indoor_unknown",
+                   "causes": causes, "consent": {"item_id": str(item_id)}})
+
+
 class ItineraryApply:
     action_type = ACTION_TYPE
     auto_apply = True
@@ -90,6 +97,9 @@ class ItineraryApply:
             raise ActionRejected("trip not found")        # ★남의 여행 — 있는지도 말하지 않는다
         if trip["version"] != base:
             raise ActionConflict(f"trip {trip_id} moved from v{base} to v{trip['version']}")
+        if arguments.get("consent"):
+            return _ask_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base,
+                                current=current, arguments=arguments)
 
         try:
             if arguments.get("full_items") is not None:
@@ -179,6 +189,34 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
     return None
 
 
+def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
+                 current: list[Item], arguments: Mapping[str, Any]) -> AppliedAction:
+    """「바꿀까요?」 보류 제안을 열고 묻는 알림을 바깥함에 싣는다. **일정은 안 바꾼다.**"""
+    from .pending import CONSENT_REASON, Decision, consent_notice
+    from .plan_link import plan_url
+
+    causes = list(arguments.get("causes") or [])
+    wanted = str((arguments.get("consent") or {}).get("item_id"))
+    item = next((i for i in current if str(i.item_id) == wanted), None)
+    if item is None:
+        raise ActionRejected(f"consent item not in the current itinerary: {wanted}")
+    pending = PendingStore(tenant_id)
+    proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base,
+                               decision=Decision("ask", CONSENT_REASON, None, False), causes=causes, options=[])
+    already = proposal_id is None
+    if already:                                   # 이미 물었다 — 다시 알리지 않는다
+        proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
+                           if row["item_id"] == item.item_id and row["base_version"] == base)
+    summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id), "version": base,
+                      "proposal_id": str(proposal_id), "item": item.title, "reason": CONSENT_REASON,
+                      "protected_by": None, "safety": False})
+    outbox = [] if already else [OutboxMessage(
+        topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
+        payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+                        **consent_notice(item=item, causes=causes, proposal_id=proposal_id)}))]
+    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{proposal_id}", summary=summary, outbox=outbox)
+
+
 ACTION_HANDLERS = (ItineraryApply(),)
 
-__all__ = ["ACTION_HANDLERS", "ACTION_TYPE", "ItineraryApply", "change_arguments"]
+__all__ = ["ACTION_HANDLERS", "ACTION_TYPE", "ItineraryApply", "change_arguments", "consent_arguments"]

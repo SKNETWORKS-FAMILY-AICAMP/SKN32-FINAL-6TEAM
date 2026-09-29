@@ -19,11 +19,15 @@ from datetime import UTC, datetime
 from functools import partial
 from typing import Any
 
-from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
+from app.core.contracts import ActionProposal, NextAction, TeamManifest, TeamResult, TeamTask
+from app.core.idempotency import idempotency_key
 
 from .._base import TravelTeamBase
+from ..itinerary_actions import ACTION_TYPE as ITINERARY_APPLY
+from ..itinerary_actions import consent_arguments
 from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from ..pending import needs_consent
 from .similarity import preference_of, score
 
 
@@ -104,6 +108,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._escalate(task, "fatal_source_failure", ctx["evidence"])
         if report.get("verdict") != "disrupted":
             return self.settle(task, ctx, NoChange("clear"))
+        if needs_consent(report):
+            return self._ask_consent(task, ctx, item, report)
         places = self.catalog(task, ctx)
         if places is None:
             return self._unknown(task, "장소 목록", ctx["evidence"])
@@ -113,6 +119,29 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                                         check=self.recheck(task, ctx), now=ctx["at"], items=ctx["items"],
                                         similarity=partial(score, preference=preference))
         return self.settle(task, ctx, plan)
+
+    def _ask_consent(self, task: TeamTask, ctx: dict[str, Any], item: Any, report: dict[str, Any]) -> TeamResult:
+        """★`[2026-09-29]` 실내·야외를 모르는 활동에 날씨 사건만 — 대체안을 **계산하지 않고** 「바꿀까요?」만 묻는다.
+
+        대체안 계산은 후보마다 바깥 점검을 불러 비용이 든다. 고객이 「바꿔 줘」라고 하면 그때 계산한다
+        (`pending.choose` → `_consented`). 사용자 결정 2026-09-29 · 코덱스 합의(모름이면 묻는다).
+        """
+        trip = ctx["trip"]
+        causes = list(report.get("disruptions") or [])
+        arguments = consent_arguments(trip_id=trip["trip_id"], base_version=trip["version"],
+                                      item_id=item.item_id, causes=causes)
+        proposal = ActionProposal(
+            action_type=ITINERARY_APPLY, arguments=arguments,
+            idempotency_key=idempotency_key(
+                tenant_id=task.context.tenant_id,
+                request_id=str(task.context.current_state.get("request_id") or task.case_id),
+                action_type=ITINERARY_APPLY, business_subject=f"{trip['trip_id']}:v{trip['version']}"),
+            # ★일정을 바꾸지 않는다 — 묻는 제안만 연다. 승인 대기 없이 적용기가 바로 연다
+            approval_required=False, risk_level="low", rationale_evidence_ids=[])
+        return self._result(task, outcome="completed", confidence=0.9, evidence=ctx["evidence"],
+                            answer=f"{item.title} — 이 장소가 실내인지 확인하지 못해 바꿀지 먼저 여쭙니다.",
+                            next_action=NextAction.RESPOND, action_proposals=[proposal],
+                            decisions=[{"itinerary": "consent_requested", "item_id": str(item.item_id)}])
 
     async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
         if kind != "stock_out":

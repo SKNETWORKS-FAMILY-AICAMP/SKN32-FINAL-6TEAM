@@ -455,8 +455,10 @@ class ReadToolbox:
           감시 루프도 같은 판정을 쓴다 — 문의 때와 감시 때 기준이 갈리지 않게.
         ★소스 묶음이 주입되지 않았으면 `None` — 바깥으로 나가지 않는다.
         """
+        # ★`[2026-09-29]` 모름(`None`)을 「야외 아님」으로 바꾸지 않는다 — 점검이 모름을 따로 다룬다(`indoor_unknown`)
         place = {"place_id": place_id, "latitude": latitude, "longitude": longitude,
-                 "weather_sensitive": bool(weather_sensitive), "district": district}
+                 "weather_sensitive": None if weather_sensitive is None else bool(weather_sensitive),
+                 "district": district}
         if self.check is not None:
             return self.check(place=place, starts_at=_as_datetime(starts_at), region=str(region))
         if self.travel is None:

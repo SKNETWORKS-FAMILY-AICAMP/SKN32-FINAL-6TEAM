@@ -235,9 +235,11 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
         attributes["source"] = source
         if source in _SOURCE_ATTRS and place.get("content_id"):
             attributes[_SOURCE_ATTRS[source]] = str(place["content_id"])
+            if place.get("content_type_id"):
+                attributes["source_content_type_id"] = str(place["content_type_id"])
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
-            "weather_sensitive": False, "attributes": attributes}
+            "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)
 
 
 def _provenance(fields: dict[str, dict[str, Any]]) -> dict[str, Any]:
