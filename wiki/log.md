@@ -20,6 +20,30 @@ domain_note: 작업 로그다. 무엇을 했는지의 기록이라 도메인이 
 
 ---
 
+## 2026-09-29 — 운영 앱 공유와 API 협의 진입점
+
+[실측] admin 화면·HTML·조사 자료를 확인한 뒤 백엔드와 API 계약을 먼저 맞추도록 [운영 앱 API 협의](../final_project_cs/wiki/external/admin-screen-api.md)를 추가하고 External 인덱스·앱 README·목업 안내에서 연결했다. 현재는 계약 미합의·live 미구현·통합 미검증이다. [공유 준비와 검증](../final_project_cs/wiki/records/reports/2026-09-29_2352_admin_공유와_API협의_진입점.md).
+
+---
+
+## 2026-09-29 — role-manager 운영 백엔드와 admin 연동 사전 확인
+
+[실측: 코드 조사] 원격 `role-manager`를 fetch하여 최신 `5d7a364`의 운영 기능을 현재 admin과 대조했다. 기존 API 재사용 범위, 필요한 추가 조회·운영 기능, Google 지도 예산 계측과 승인 사유 저장의 차이를 [조사 리포트](../final_project_cs/wiki/records/reports/2026-09-29_2340_role-manager_운영백엔드_admin_연동확인.md)에 기록했다. 서버 실행·API 연결·발주는 하지 않았다.
+
+---
+
+## 2026-09-29 — 운영자 콘솔 프론트와 단일 HTML 시나리오
+
+[실측] 운영 화면 11개와 오프라인 단일 HTML 시나리오를 같은 React 소스로 구현했다. 단위·브라우저·미설정 시험 41/41(100%) 통과. 실제 운영 API·인증·DB는 연결 전이다. [실행과 시연](../final_project_cs/frontend/apps/admin/README.md) · [작업 리포트](../final_project_cs/wiki/records/reports/2026-09-29_2313_admin_프론트와_HTML_시나리오.md).
+
+---
+
+## 2026-09-29 — role-eval-ui를 최신 develop에 맞췄다
+
+[실측] `role-eval-ui`에 `develop`의 9개 커밋을 fast-forward로 반영해 `38cd59d`로 맞췄고 기존 로컬 수정을 보존했다. 사용자 후속 요청으로 원격 role-eval-ui push까지 완료했다. 브랜치 동기화와 실행 검증 결과를 구분해 [작업 리포트](../final_project_cs/wiki/records/reports/2026-09-29_2114_role-eval-ui_develop_최신화.md)에 기록했다.
+
+---
+
 ## 2026-09-22 (2) — 무장애 API 가 열렸고, 할랄 원천을 관광공사에서 무료로 찾았다
 
 | 문서 | 무엇이 바뀌었나 |
