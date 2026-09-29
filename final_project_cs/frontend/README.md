@@ -12,10 +12,10 @@
 |---|---|---|---|
 | 사용자 웹 | [apps/web](apps/web/README.md) | Next.js 16 + React 19 + TypeScript | 소개·온보딩·접수 확인·여행·목록·마이페이지 구현. demo와 실제 `/v1/web/*` 연결 분리; 저장·삭제 등 제한은 앱 README 참조 |
 | 개발팀 콘솔 | [apps/dev-console](apps/dev-console/README.md) | Next.js 16 + React 19 + TypeScript | 팀별·코어 통합 테스트, 사례·A/B 비교, 샘플 어댑터 구현 |
-| 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js + React + TypeScript | 웹 개발 범위. 폴더 준비, 앱 초기화 전 |
+| 관리자 웹 | [apps/admin](apps/admin/README.md) | Next.js 16 + React 19 + TypeScript | 운영 화면 11개와 명시적 데모 어댑터, 단일 HTML 시나리오 구현. 실제 API·인증은 연결 전 |
 | 모바일 앱 | [apps/mobile](apps/mobile/README.md) | Expo + React Native + TypeScript — 기존 선택 보존 | 3순위 보류. 폴더만 예약, 이번 초기화·개발·배포 제외 |
 
-API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](../wiki/external/web-screen-api.md)를 따른다.
+API 명세·화면별 협의와 연결 상태는 [사용자 웹 연동](../wiki/external/web-screen-api.md)과 [운영 앱 API 협의](../wiki/external/admin-screen-api.md)에서 앱별로 확인한다.
 
 ## 기존 프로그램과 연결
 
@@ -28,7 +28,9 @@ API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](.
 
 사용자 웹은 Node.js 22·npm, 개발 포트 3100을 사용한다. CSS Modules·공통 토큰·재사용 UI·기능 모듈·데이터 어댑터로 구성하며, [개발 기준](apps/web/DEVELOPMENT.md)과 [실행 안내](apps/web/README.md)를 따른다. 로그인·회원가입·서비스 결제는 웹 MVP 1차에 포함하지 않는다. 사용자 키·접수·여행 조회·채팅·제안 선택·알림은 연결돼 있다. live 여행 삭제·프로필 저장·선택 언어 전달은 미연결이다. 채팅 warmup은 `fc1ac0a`에서 서버 경로가 추가됐으며 실제 통합 검증은 별도다. 앱 문서의 구현 상태와 운영 검증을 구분한다.
 
-관리자 웹 초기화 시 다음을 정한다. 모바일 앱은 보류 상태다.
+관리자 웹은 개발 3300·브라우저 시험 3301(미설정 시험 3302), Node.js 22·npm으로 실행한다. 데이터 모드를 명시해야 하며 실제 API·인증 연결은 별도다. [실행 안내와 단일 HTML 시나리오](apps/admin/README.md), [개발 기준](apps/admin/DEVELOPMENT.md)을 따른다. 모바일 앱은 보류 상태다.
+
+다음은 신규 앱 초기화 때 확인할 항목이다.
 
 1. 패키지 관리자·지원 Node.js 버전·프레임워크 버전과 잠금 파일.
 2. 웹·관리자의 개발 포트와 API 주소·인증 연결 방법.

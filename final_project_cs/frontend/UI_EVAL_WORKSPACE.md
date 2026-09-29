@@ -6,7 +6,7 @@
 
 수정일: 2026-09-23. A-COP 저장소 루트의 `frontend/`와 이 문서를 SKN32-FINAL-6TEAM 저장소의 `final_project_cs/frontend/`로 옮기고 경로를 새 위치 기준으로 고쳤다. 「브랜치와 담당」·「변경을 주고받는 방법」의 브랜치 정보도 이 저장소 기준으로 바꿨다.
 
-API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](../wiki/external/web-screen-api.md)를 따른다.
+API 명세·화면별 협의와 연결 상태는 [사용자 웹 연동](../wiki/external/web-screen-api.md)과 [운영 앱 API 협의](../wiki/external/admin-screen-api.md)에서 앱별로 확인한다.
 
 ## 2026-09-21 개발팀 콘솔 구현 현황
 
@@ -43,13 +43,13 @@ API 명세·화면별 협의와 공동 연결 상태는 [공유 연동 문서](.
 | 작업 | 위치 | 현재 상태 |
 |---|---|---|
 | 사용자 웹 | [final_project_cs/frontend/apps/web](apps/web/README.md) | 1순위. Next.js·React·TypeScript 앱, demo/live 연결. 디자인 목업은 앱의 `mockups/`에 보존 |
-| 서비스 관리자 웹 | [final_project_cs/frontend/apps/admin](apps/admin/README.md) | 웹 개발 범위. Next.js·React·TypeScript 앱용 폴더와 안내 |
+| 서비스 관리자 웹 | [final_project_cs/frontend/apps/admin](apps/admin/README.md) | 운영 화면 11개·명시적 데모 어댑터·단일 HTML 시나리오 구현. 실제 운영 연결 전 |
 | 모바일 앱 | [final_project_cs/frontend/apps/mobile](apps/mobile/README.md) | 3순위 보류. Expo·React Native·TypeScript 구상과 예약 폴더 보존 |
 | 개발자 콘솔 | [final_project_ui](../../final_project_ui/README.md) | 기존 Python 콘솔 유지 |
 | 평가 프로그램 | [final_project_cs/eval](../eval/) | 기존 평가 코드 유지 |
 | 백엔드 | [final_project_cs/app](../app/) | 기존 코드와 위치 유지 |
 
-Next.js 사용자 웹은 초기화·구현돼 있고 `package.json`·잠금 파일·검증 명령이 있다. 단일 HTML 목업은 별도 시연/디자인 자료다. 관리자 웹은 초기화 전, 모바일 앱은 보류다. 새 개발팀 콘솔은 `apps/dev-console`의 별도 앱이며 위 09-21 결과는 당시 검증 기록이다.
+Next.js 사용자 웹과 관리자 웹은 `package.json`·잠금 파일·검증 명령이 있다. 관리자 웹은 프론트엔드 데모 단계이며 [단일 HTML 시나리오](apps/admin/mockups/admin-scenario.html)는 같은 앱 소스로 생성한다. 모바일 앱은 보류다. 새 개발팀 콘솔은 `apps/dev-console`의 별도 앱이며 위 09-21 결과는 당시 검증 기록이다.
 
 ## 작업 경계
 

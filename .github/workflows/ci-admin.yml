@@ -1,0 +1,60 @@
+name: CI (admin)
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/admin/**"
+      - ".github/workflows/ci-admin.yml"
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - "final_project_cs/frontend/apps/admin/**"
+      - ".github/workflows/ci-admin.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  admin:
+    name: admin (check · html · e2e · unconfigured)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_ADMIN_DATA_MODE: demo
+      PLAYWRIGHT_CHANNEL: chromium
+      TZ: Asia/Seoul
+    defaults:
+      run:
+        working-directory: final_project_cs/frontend/apps/admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: final_project_cs/frontend/apps/admin/package-lock.json
+      - run: npm ci
+      - name: lint/type/unit/demo build
+        run: npm run check
+      - name: Regenerate standalone HTML and check committed output
+        run: |
+          npm run export:html
+          git diff --exit-code --stat -- mockups/admin-scenario.html
+      - run: npx playwright install --with-deps chromium
+      - name: Demo app and offline HTML scenarios
+        run: npm run test:e2e
+      - name: Reject unconfigured data mode
+        run: npm run test:unconfigured
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-browser-failure-${{ github.run_attempt }}
+          path: final_project_cs/frontend/apps/admin/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
