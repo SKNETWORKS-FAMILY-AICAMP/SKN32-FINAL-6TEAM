@@ -182,26 +182,26 @@ async def test_closure_weekday_marks_infeasible_with_caveat():
 
 DISASTER_EMPTY = {
     "confirmed_at": "2026-09-21T10:00:00+00:00",
-    "messages": [],
+    "for_region": [],
     "source": "data_go_kr",
 }
 
 DISASTER_NON_CRITICAL = {
     "confirmed_at": "2026-09-21T10:00:00+00:00",
-    "messages": [
-        {"SN": "1001", "EMRG_STEP_NM": "안전안내", "DST_SE_NM": "기타재난",
-         "RCPTN_RGN_NM": "서울특별시 종로구", "CRT_DT": "20260921100000",
-         "MSG_CN": "[안전안내] 기상 특보 예상. 외출 시 주의하세요."},
+    "for_region": [
+        {"serial": "1001", "step": "안전안내", "kind": "기타재난",
+         "regions": ["서울특별시 종로구"], "text": "[안전안내] 기상 특보 예상. 외출 시 주의하세요.",
+         "weather": False},
     ],
     "source": "data_go_kr",
 }
 
 DISASTER_CRITICAL = {
     "confirmed_at": "2026-09-21T10:00:00+00:00",
-    "messages": [
-        {"SN": "2001", "EMRG_STEP_NM": "위급재난", "DST_SE_NM": "홍수",
-         "RCPTN_RGN_NM": "서울특별시 종로구", "CRT_DT": "20260921100000",
-         "MSG_CN": "[위급재난] 종로구 일대 홍수 위험. 즉시 대피하세요."},
+    "for_region": [
+        {"serial": "2001", "step": "위급재난", "kind": "홍수",
+         "regions": ["서울특별시 종로구"], "text": "[위급재난] 종로구 일대 홍수 위험. 즉시 대피하세요.",
+         "weather": True},
     ],
     "source": "data_go_kr",
 }
@@ -239,7 +239,7 @@ async def test_non_critical_grade_does_not_block():
 
     assert result.decisions[0]["feasible"] is True
     assert result.decisions[0]["disaster"]["blocks"] is False
-    assert f"재난문자 {len(DISASTER_NON_CRITICAL['messages'])}건" in result.answer
+    assert f"재난문자 {len(DISASTER_NON_CRITICAL['for_region'])}건" in result.answer
     assert "판정에 영향을 주는 등급은 아닙니다" in result.answer
     assert not any("지역·주제 관련성" in w for w in result.warnings)
 
@@ -351,10 +351,10 @@ def _vals_from(act: dict, *, operating=None, disaster=None,
 #: 비위급(안전안내) — feasible 을 바꾸지 않는다
 CUSTOMER_SAFE_DISASTER = {
     "confirmed_at": "2026-09-22T01:00:00+00:00",
-    "messages": [
-        {"SN": "8001", "EMRG_STEP_NM": "안전안내", "DST_SE_NM": "기상특보",
-         "RCPTN_RGN_NM": "서울특별시 성동구", "CRT_DT": "20260922010000",
-         "MSG_CN": "[안전안내] 오전 중 강풍 특보. 외출 시 주의하세요."},
+    "for_region": [
+        {"serial": "8001", "step": "안전안내", "kind": "기상특보",
+         "regions": ["서울특별시 성동구"], "text": "[안전안내] 오전 중 강풍 특보. 외출 시 주의하세요.",
+         "weather": True},
     ],
     "source": "data_go_kr",
 }
@@ -362,10 +362,10 @@ CUSTOMER_SAFE_DISASTER = {
 #: 위급재난 — feasible=False 로 만든다
 CUSTOMER_CRITICAL_DISASTER = {
     "confirmed_at": "2026-09-22T10:30:00+00:00",
-    "messages": [
-        {"SN": "9001", "EMRG_STEP_NM": "위급재난", "DST_SE_NM": "홍수",
-         "RCPTN_RGN_NM": "서울특별시 중구", "CRT_DT": "20260922103000",
-         "MSG_CN": "[위급재난] 중구 일대 침수 위험. 즉시 대피하세요."},
+    "for_region": [
+        {"serial": "9001", "step": "위급재난", "kind": "홍수",
+         "regions": ["서울특별시 중구"], "text": "[위급재난] 중구 일대 침수 위험. 즉시 대피하세요.",
+         "weather": True},
     ],
     "source": "data_go_kr",
 }

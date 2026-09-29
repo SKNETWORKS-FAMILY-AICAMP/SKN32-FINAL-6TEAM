@@ -199,7 +199,7 @@ async def test_feasible_problem_on_capacity():
 @pytest.mark.asyncio
 async def test_feasible_disrupted_by_critical_disaster():
     """위급재난 발령 → feasible=False + disaster.blocks=True."""
-    disaster = {"messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "지진"}]}
+    disaster = {"for_region": [{"step": "위급재난", "kind": "지진"}]}
     result = await ActivityTeam(FakeTools(_values(disaster=disaster))).execute(_feasible_task())
     assert result.decisions[0]["feasible"] is False
     assert result.decisions[0]["disaster"]["blocks"] is True

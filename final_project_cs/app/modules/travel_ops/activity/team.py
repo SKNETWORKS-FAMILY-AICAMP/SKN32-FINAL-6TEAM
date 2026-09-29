@@ -350,8 +350,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         if disaster is not None:
             evidence = self._evidence(task, source_id="read.disaster",
                                       claim="재난문자", value=disaster, base=evidence)
-            messages = disaster.get("messages") or []
-            blocks = any(m.get("EMRG_STEP_NM") == "위급재난" for m in messages)
+            messages = disaster.get("for_region") or []
+            blocks = any(m.get("step") == "위급재난" for m in messages)
             decisions["disaster"] = {
                 "messages": messages,
                 "blocks": blocks,
@@ -360,15 +360,15 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             }
             if blocks:
                 kinds = ", ".join(
-                    m.get("DST_SE_NM", "") for m in messages
-                    if m.get("EMRG_STEP_NM") == "위급재난")
+                    m.get("kind", "") for m in messages
+                    if m.get("step") == "위급재난")
                 decisions["feasible"] = False
                 answer_parts.append(
                     f"위급재난({kinds})이 발령 중이라 이 일정은 성립하지 않습니다. "
                     f"지역·주제가 이 활동과 관련 없을 수 있습니다.")
                 warnings.append("재난문자 위급재난 등급 확인 — 지역·주제 관련성은 확인하지 않았다")
             elif messages:
-                grade = messages[0].get("EMRG_STEP_NM", "")
+                grade = messages[0].get("step", "")
                 answer_parts.append(
                     f"재난문자 {len(messages)}건 확인됨({grade}). 판정에 영향을 주는 등급은 아닙니다.")
             else:
