@@ -165,13 +165,13 @@ print(st.mean(r['cost_usd'] for r in rows), st.mean(r['input_tokens'] for r in r
 
 **AWS가 RunPod보다 약 3배 비싸다.**
 
-팀은 이미 RunPod을 써 본 적이 있다. `datasets/mt/olist_reviews_mt_bench`에서 x600(4070 SUPER 12GB)이 막힌 모델들을 **RunPod의 RTX A4500 20GB · 시스템 RAM 251GB** 노드에서 재시도해 통과시켰다. `[실측]` 그 리포트의 결론이 지금 논의와 같다 — **"x600에서 포기로 결론 낸 원인은 Windows·좁은 VRAM이라는 특정 환경 때문이었다."**
+팀은 이미 RunPod을 써 본 적이 있다. `datasets/mt/olist_reviews_mt_bench`에서 모델 서버(4070 SUPER 12GB)이 막힌 모델들을 **RunPod의 RTX A4500 20GB · 시스템 RAM 251GB** 노드에서 재시도해 통과시켰다. `[실측]` 그 리포트의 결론이 지금 논의와 같다 — **"모델 서버에서 포기로 결론 낸 원인은 Windows·좁은 VRAM이라는 특정 환경 때문이었다."**
 
 즉 임대 GPU는 **12GB 천장을 넘는 수단으로는 이미 검증됐고**, 상시 운영 원가로는 불리하다(아래 손익분기).
 
 #### ★ 우리 실제 장비는 RTX 4070 SUPER 12GB다
 
-일반 시세로 4090을 가정하면 안 된다. **팀의 최고 사양 GPU는 x600 머신의 RTX 4070 SUPER 12GB(레퍼런스, Windows)**이고, 이 제약이 이미 이 프로젝트를 여러 번 막았다. 저장소에 기록이 남아 있다. `[실측]`
+일반 시세로 4090을 가정하면 안 된다. **팀의 최고 사양 GPU는 모델 서버 머신의 RTX 4070 SUPER 12GB(레퍼런스, Windows)**이고, 이 제약이 이미 이 프로젝트를 여러 번 막았다. 저장소에 기록이 남아 있다. `[실측]`
 
 | 시도 | 설정 | 결과 |
 |---|---|---|
@@ -590,7 +590,7 @@ v8 §1-1은 "제공 방식과 가격 정책은 아직 정하지 않았다"이다
 ### 내부 실측 (장비 제약)
 
 - [`final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md`](../../final_project_cs/wiki/records/plans/2026-08-30_DoD28-FT-RAG통합_설계.md) §6.2~6.3 — 12GB OOM 3회 기록, WDDM 느린 실패
-- [`final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md`](../../final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md) — x600 RTX 4070 SUPER 12GB, Qwen2.5-3B bf16 + LoRA
+- [`final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md`](../../final_project_cs/wiki/records/evidence/DoD-28_파인튜닝_방어지표.md) — 모델 서버 RTX 4070 SUPER 12GB, Qwen2.5-3B bf16 + LoRA
 - [`final_project_cs/eval/finetune/train.py`](../../final_project_cs/eval/finetune/train.py) — batch=1, grad_accum=8, max_length 기본 512
 - [`datasets/mt/olist_reviews_mt_bench/REPORT.md`](../../datasets/mt/olist_reviews_mt_bench/REPORT.md) — RunPod A4500 20GB로 12GB 한계 우회한 기록
 - [`test_workspace/gPUteer/gputeer_master_plan_FINAL.md`](../../../test_workspace/gPUteer/gputeer_master_plan_FINAL.md) — 사설 GPU 풀 정의, §3.2 "메모리를 합치는 기술이 아님"

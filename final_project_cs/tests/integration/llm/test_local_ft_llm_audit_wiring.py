@@ -49,7 +49,7 @@ async def test_complete_records_prompt_and_run(monkeypatch):
     recorded = {}
     monkeypatch.setattr("app.infrastructure.llm.local_ft.record_llm_call", lambda conn, **kwargs: recorded.update(kwargs))
 
-    result = await LocalFTTeamLLM(base_url="http://x600:8100", connection_factory=lambda: next(connections)).complete(
+    result = await LocalFTTeamLLM(base_url="http://ft-model.test:8100", connection_factory=lambda: next(connections)).complete(
         "response.generate", "draft text", {}, run_id=run_id)
 
     assert result == {"final_response_text": "ok"}
@@ -71,7 +71,7 @@ async def test_missing_active_prompt_fails_before_http_call(monkeypatch):
 
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: _RealAsyncClient(transport=httpx.MockTransport(handler), timeout=kw.get("timeout")))
     with pytest.raises(RuntimeError, match="no active prompt"):
-        await LocalFTTeamLLM(base_url="http://x600:8100", connection_factory=lambda: conn).complete("missing", "", {})
+        await LocalFTTeamLLM(base_url="http://ft-model.test:8100", connection_factory=lambda: conn).complete("missing", "", {})
     assert not called
 
 
@@ -85,7 +85,7 @@ async def test_unparseable_server_output_raises(monkeypatch):
 
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: _RealAsyncClient(transport=httpx.MockTransport(handler), timeout=kw.get("timeout")))
     with pytest.raises(RuntimeError, match="unparseable"):
-        await LocalFTTeamLLM(base_url="http://x600:8100", connection_factory=lambda: conn).complete("response.generate", "", {})
+        await LocalFTTeamLLM(base_url="http://ft-model.test:8100", connection_factory=lambda: conn).complete("response.generate", "", {})
 
 
 @pytest.mark.asyncio
@@ -94,5 +94,5 @@ async def test_none_connection_factory_skips_audit(monkeypatch):
         return httpx.Response(200, json={"text": '{"ok": true}'})
 
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: _RealAsyncClient(transport=httpx.MockTransport(handler), timeout=kw.get("timeout")))
-    result = await LocalFTTeamLLM(base_url="http://x600:8100").complete("legacy", "", {})
+    result = await LocalFTTeamLLM(base_url="http://ft-model.test:8100").complete("legacy", "", {})
     assert result == {"ok": True}

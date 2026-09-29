@@ -120,7 +120,7 @@
     132줄
 25. [datasets REPORT] datasets\mt\olist_reviews_mt_bench\REPORT.md
     제목: 번역 모델 15종 벤치마크 — Olist 리뷰 PT→EN / PT→KO
-    첫줄: 2026-08-20. x600 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
+    첫줄: 2026-08-20. 모델 서버 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
     소제목: 출처·라이선스 / 방법론 / 결과 1 — PT → EN (완료) / 결과 2 — PT → KO (완료, 2026-08-20) / 결과 3 — EN → KO (신규 축, 2026-08-21 
     257줄
 26. [datasets REPORT] datasets\voc\ecmc_dispute_casebook_2024\REPORT.md

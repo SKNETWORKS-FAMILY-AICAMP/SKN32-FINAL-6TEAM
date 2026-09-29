@@ -2,7 +2,7 @@
 
 DoD-28(v7 §27 항목 28)이 요구하는 마지막 조각인 파인튜닝 1차(공개데이터)·
 2차(알파 대체 데이터)·`Proposed` vs `Proposed+FT` golden+holdout 비교평가를
-x600 GPU 서버에서 전부 실행했다. **결과: 이번 파인튜닝은 채택하지
+모델 서버 GPU 서버에서 전부 실행했다. **결과: 이번 파인튜닝은 채택하지
 않는다.** 원인은 명확하고 설계상 당연한 귀결이지, 버그가 아니다.
 
 ## 요약
@@ -93,7 +93,7 @@ garbage_collection_threshold:0.8` + `max_length` 768→512로 activation
 ## 재현 명령
 
 ```powershell
-# x600 GPU 서버, venv312 (Python 3.12.13)
+# 모델 서버 GPU 서버, venv312 (Python 3.12.13)
 E:\dod28_ft\venv312\Scripts\python.exe -u E:\dod28_ft\train.py --stage 1 --data E:\dod28_ft\sft_stage1.jsonl --base Qwen/Qwen2.5-3B-Instruct --out E:\dod28_ft\ckpt_stage1
 E:\dod28_ft\venv312\Scripts\python.exe -u E:\dod28_ft\train.py --stage 2 --data E:\dod28_ft\sft_stage2.jsonl --base E:\dod28_ft\ckpt_stage1 --out E:\dod28_ft\ckpt_stage2
 E:\dod28_ft\venv312\Scripts\python.exe -u E:\dod28_ft\predict.py --adapter E:\dod28_ft\ckpt_stage2 --golden E:\dod28_ft\golden.jsonl --out E:\dod28_ft\ft_predictions.jsonl

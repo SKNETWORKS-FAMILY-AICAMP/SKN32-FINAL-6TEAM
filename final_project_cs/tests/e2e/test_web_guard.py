@@ -417,7 +417,7 @@ def test_the_browser_may_send_the_human_check_header_and_read_retry_after(api):
 
 # ── 모델 예열 ────────────────────────────────────────────────────
 class _Model:
-    """자동 시험 안에서만 쓰는 모델 자리 — 올라가 있는지 · 깨우기가 되는지를 정해 둔다(실서버는 x600 의 gemma4 를 부른다)."""
+    """자동 시험 안에서만 쓰는 모델 자리 — 올라가 있는지 · 깨우기가 되는지를 정해 둔다(실서버는 모델 서버 의 gemma4 를 부른다)."""
 
     model = "gemma4:12b"
 

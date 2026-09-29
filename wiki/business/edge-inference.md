@@ -13,7 +13,7 @@ domain: neutral
 
 ## 왜 폰인가
 
-`[실측]` **x600 의 4070 SUPER 를 SSH(세션 0)로는 못 잰다.** 2.25GB 로 막힌다. **세션 1 로는 12GB 전부 확인했다** — [gpu-limits.md](gpu-limits.md). 이 문서는 그 사이에 잴 수 있는 데서 먼저 잰 기록이다.
+`[실측]` **모델 서버 의 4070 SUPER 를 SSH(세션 0)로는 못 잰다.** 2.25GB 로 막힌다. **세션 1 로는 12GB 전부 확인했다** — [gpu-limits.md](gpu-limits.md). 이 문서는 그 사이에 잴 수 있는 데서 먼저 잰 기록이다.
 
 ## 결과
 
@@ -93,6 +93,6 @@ ggml-hex: HTP0 failed to open session : error 0x80000406
 
 ## 관계
 
-- [gpu-limits.md](gpu-limits.md) — 왜 x600 을 못 쟀나
+- [gpu-limits.md](gpu-limits.md) — 왜 모델 서버 을 못 쟀나
 - [../evaluation/model-selection.md](../evaluation/model-selection.md) — 후보 기준
 - [infrastructure-cost.md](infrastructure-cost.md) — API 쪽 실측

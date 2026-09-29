@@ -86,7 +86,7 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 ## 3. ★ 우리 장비의 한계
 
-`[실측]` 팀 최고 사양은 x600 의 **RTX 4070 SUPER 12GB(Windows)** 다. **일반 시세로 4090 을 가정하면 안 된다.**
+`[실측]` 팀 최고 사양은 모델 서버 의 **RTX 4070 SUPER 12GB(Windows)** 다. **일반 시세로 4090 을 가정하면 안 된다.**
 
 이 제약이 이미 여러 번 막았고, **오늘 실측에서 카탈로그 12GB 와 실제로 쓸 수 있는 양이 다르다는 게 나왔다.**
 
@@ -103,7 +103,7 @@ python -c "import json,statistics as st; rows=[json.loads(l) for l in open('eval
 
 **AWS가 RunPod보다 약 3배 비싸다.**
 
-`[실측]` 팀은 이미 RunPod을 써 봤다. x600이 막힌 모델들을 **RTX A4500 20GB** 노드에서 통과시켰고, 그 리포트 결론이 지금과 같다 — 원인은 모델이 아니라 Windows·좁은 VRAM이라는 환경이었다.
+`[실측]` 팀은 이미 RunPod을 써 봤다. 모델 서버가 막힌 모델들을 **RTX A4500 20GB** 노드에서 통과시켰고, 그 리포트 결론이 지금과 같다 — 원인은 모델이 아니라 Windows·좁은 VRAM이라는 환경이었다.
 
 ### 온프레미스 `[추정]`
 

@@ -1,7 +1,7 @@
 ---
 type: dataset
 title: 번역 모델 15종 벤치마크 — Olist 리뷰 PT→EN / PT→KO
-description: x600 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
+description: 모델 서버 (RTX 4070 SUPER 12GB)에서 Ollama + GGUF Q4_K_M 양자화로 실행.
 status: draft
 tags: [testing]
 domain: neutral
@@ -46,6 +46,6 @@ domain_note: 이관 전 스테이징 사본이다. 원문을 형식만 바꿔 �
 - `processed/leaderboard_result_ko.json` — KO 결과 표 원본 데이터 (GGUF 기준)
 - `processed/leaderboard_result_extra_en_ko.json` / `leaderboard_result_extra_pt_ko.json` — 신규 축 결과 표 원본 데이터
 - `processed/leaderboard_result_broken3_pt_en.json` — 공식 체크포인트 재검증 BLEU/chrF 원본 데이터
-- `scripts/` — 샘플 생성·실행·채점 스크립트 전체 (재실행 가능, 정본). `mt_bench_runner_extra.py`/`mt_bench_runner_single.py`는 x600(Windows) 확장 시도 스크립트, `gpu_runner_t5_ct2.py`/`gpu_runner_broken3.py`는 2026-08-24 별도 GPU 서버(Linux) 재검증 스크립트
+- `scripts/` — 샘플 생성·실행·채점 스크립트 전체 (재실행 가능, 정본). `mt_bench_runner_extra.py`/`mt_bench_runner_single.py`는 모델 서버(Windows) 확장 시도 스크립트, `gpu_runner_t5_ct2.py`/`gpu_runner_broken3.py`는 2026-08-24 별도 GPU 서버(Linux) 재검증 스크립트
 - `legacy/` — 다른 세션이 만든 구버전(14종 기준, 결과 없음). 참고용, 정본 아님 — `legacy/README.md` 참조
 - `preprocess_stats.json` — 정렬 검증·샘플링 통계

@@ -115,11 +115,11 @@
 | 1. 현재 아키텍처 | 일부 | `evaluation/finetuning.md`, `teams/response-review.md` 등에 일부가 있으나 9개 구성요소·파일/줄·인터페이스·배선 지점 전체 표가 없다 |
 | 2. 설계 | 일부 | 재학습 원칙과 결과는 있으나 서빙·backend·배선 상세가 대부분 빠졌다 |
 | 2.1 재학습 (stage 3) — 실제 Team 입출력 형태로 | 일부 | 입력과 실제 호출 shape의 차이는 있으나 stage3 JSON 계약, 22건 재구성 방법과 부분집합 조건이 없다 |
-| 2.2 서빙 — x600에 최소 추론 서버 | 누락 | FastAPI `/complete`, 모델 1회 로드, SSH `8100` 포트포워딩, 운영 배포 제외가 없다 |
+| 2.2 서빙 — 모델 서버에 최소 추론 서버 | 누락 | FastAPI `/complete`, 모델 1회 로드, SSH `8100` 포트포워딩, 운영 배포 제외가 없다 |
 | 2.3 `LocalFTTeamLLM` — 같은 인터페이스로 새 backend | 누락 | 클래스 계약, prompts 조회, HTTP 호출, `provider="local_ft"` 감사 기록, 동일 반환 shape가 없다 |
 | 2.4 배선 — 설정으로 전환 가능하게 | 누락 | settings·composition·eval runner의 `local_ft` 분기 설계가 없다 |
 | 2.5 검증 순서 | 일부 | `evaluation/finetuning.md`에 동일 golden/holdout 비교 원칙은 있으나 세 arm, 27.8% 기준, holdout 1회 규칙의 구체 순서가 없다 |
-| 3. 미확인/리스크 | 일부 | prompt 등록 결함과 소표본 위험은 반영됐으나 x600 네트워크·인증 범위가 없다 |
+| 3. 미확인/리스크 | 일부 | prompt 등록 결함과 소표본 위험은 반영됐으나 모델 서버 네트워크·인증 범위가 없다 |
 | 4. 이번 세션에서 하지 않는 것 | 누락 | 설계 당시 별도 작업으로 남긴 범위와 이후 뒤집혔다는 기록이 없다 |
 | 5. 실행 결과 — 배선은 성공, 모델은 채택 불가 | 반영 | `D-CS-002`, `evaluation/finetuning.md` |
 | 5.0 전제조건 결함 발견·수정 | 반영 | `teams/response-review.md`, `evaluation/finetuning.md` — 미등록 prompt, 재현 오류, 비활성화로 은폐, 수정 내용 |
@@ -128,7 +128,7 @@
 | 5.3 모델 품질 — 채택 불가 | 일부 | 9건·0%와 채택 불가 결론은 있으나 loss 1.652, token accuracy 0.6656, JSON 0/3 비교표가 없다 |
 | 5.4 판단 — 지금 채택하지 않는다 | 반영 | `D-CS-002` — 하이퍼파라미터 기각, 운영 transcript 또는 더 큰 case 집합이라는 두 경로 |
 | 5.5 데이터 12건으로 늘려 재학습 | 일부 | `D-CS-002`에 12건 이력만 있고 16건 train 12/test 4, loss 1.475, accuracy 0.7054, JSON 0/4 재검증 결과가 없다 |
-| 5.6 산출물 | 누락 | 신규 코드·테스트 10건·데이터셋·비교 파일·x600 체크포인트 목록이 없다 |
+| 5.6 산출물 | 누락 | 신규 코드·테스트 10건·데이터셋·비교 파일·모델 서버 체크포인트 목록이 없다 |
 | 6. 데이터 84건 확충·근본 버그 2건·v6 첫 출력 | 반영 | `D-CS-002`, `evaluation/finetuning.md`, `business/gpu-limits.md` |
 | 6.1 실주문 데이터로 68건 추가 확보 | 반영 | `D-CS-002` — 84건과 실주문 68건 추가 |
 | 6.2 근본 버그 2건 | 일부 | Context Broker 우회와 evidence 중복은 `operations/troubleshooting.md`에 있으나 `serve.py` 입력 절삭·`max_length` 버그가 없다 |

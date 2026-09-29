@@ -16,7 +16,7 @@
 108	dataset	report	이관	제목이 "작업 리포트". 전체가 시점 기록	commerce/coupang_order_history/REPORT.md
 104	dataset	dataset	분할	기판정. 출처·선택이유 + "전처리 결과 (2026-09-01)"	voc/aihub_102_smb_order_qa/REPORT.md
 91	dataset	dataset	분할	출처·받은것·선택이유 + "★2026-08-28 갱신"	voc/aihub_30716_callcenter_qa/REPORT.md
-90	dataset	report	이관	제목이 "전처리 리포트 (x600, 2026-08-20)". 전체가 report	voc/naver_shopping_sentiment/REPORT.md
+90	dataset	report	이관	제목이 "전처리 리포트 (모델 서버, 2026-08-20)". 전체가 report	voc/naver_shopping_sentiment/REPORT.md
 87	dataset	dataset	분할	출처·선택이유 + "전처리 결과 (2026-09-01)"	voc/aihub_71603_aspect_sentiment/REPORT.md
 87	dataset	dataset	분할	동	voc/aihub_71844_llm_instruction_tuning/REPORT.md
 77	dataset	dataset	이관	후보 카탈로그. "다음 단계(미실행)" 한 절뿐	voc/sources_catalog/REPORT.md
