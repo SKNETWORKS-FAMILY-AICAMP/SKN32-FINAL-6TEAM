@@ -70,45 +70,50 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
     출발 안내가 옛 경로로 나갔다. 이동 계산기가 켜져 있으면 시간표로 다시 판정하고(출발·도착·경로), 못 하면
     옛 노선 정보를 떼고 직선 어림값 경로(추정 · uses 없음)로 바꾼다 — 옛 경로를 새 장소의 경로처럼 두지 않는다.
     시각은 계산기가 채울 때만 바꾼다(어림값으로 일정을 옮기지 않는다).
+
+    ☆`[2026-09-29 오후 — 실서버 결함]` 앞 판은 새 장소가 옛 장소에서 **걸어갈 거리 안이면 이동을 통째로 건너뛰어**
+      제목·목적지가 옛 장소로 남았다(여행 f81afc61… — 일품당프리미엄 → 7 m 옆 금용문으로 바꿨는데 이동 제목이
+      「… → 일품당프리미엄」, 출발 알림도 옛 이름). v11 §6-C 재계획 2번(영향 범위는 깨진 항목의 앞뒤 이동까지) ·
+      4번(이동은 고른 조합에 맞춰 새로 만들고 옛 경로를 재사용하지 않는다)에 따라 **거리와 상관없이 늘 새 판**을 만든다.
+        · 계산기가 켜져 있으면 가까워도 새 장소로 다시 판정한다
+        · 계산기가 꺼져 있거나 못 찾을 때 — 걸어갈 거리 안이면 탈 노선(uses)·소요·시각은 둔다(같은 역 권역이라
+          여전히 맞다 · 시나리오의 90 m·450 m 교체). 제목·목적지 이름은 새 장소로 바꾸고, 옛 경로를 둔 것을
+          `route_basis: "kept_nearby"` 로 드러낸다. 멀면 종전대로 어림값.
     """
     from .replan import distance_m, walk_minutes
     olds = {i.item_id: i for i in before}
-    # 「그대로 둘 거리」 = 이동 계산기의 도보 상한(guardrails mobility.limits.walk_m.default) — 새 장소가 옛 장소에서
-    #   걸어갈 수 있는 거리면 같은 역을 쓸 수 있어 옛 경로가 여전히 맞다. 새 수치를 따로 만들지 않는다.
+    # 「옛 경로를 둘 수 있는 거리」 = 이동 계산기의 도보 상한(guardrails mobility.limits.walk_m.default) — 새 수치를 만들지 않는다
     from .mobility.engine.guardrails import GuardrailMissing, lookup
     try:
         keep_m = float(lookup("mobility.limits.walk_m.default"))
     except GuardrailMissing:
-        keep_m = 0.0                                     # 못 읽으면 늘 다시 만든다(보수적)
+        keep_m = 0.0                                     # 못 읽으면 늘 어림값으로(보수적)
 
     def moved_far(old_id: UUID, new: Item) -> bool:
-        """새 장소가 옛 장소에서 도보 상한 밖인가 — 걸어갈 거리(같은 역 권역)면 옛 경로가 여전히 맞다.
-        (시나리오: 잠실 스카이타워 → 90 m 옆 아쿠아리움, 성수 점심 → 450 m 옆 브런치 — 경로를 지우면 안 된다)"""
         a, b = _leg_place(olds[old_id]) if old_id in olds else None, _leg_place(new)
         if a is None or b is None:
             return True
         return distance_m({"latitude": a["lat"], "longitude": a["lon"]},
                           {"latitude": b["lat"], "longitude": b["lon"]}) > keep_m
 
-    changed = {old_id for old_id, new in replacements.items()
-               if new.kind != "mobility" and old_id in olds and olds[old_id].place_id != new.place_id
-               and moved_far(old_id, new)}
+    changed = {old_id: moved_far(old_id, new) for old_id, new in replacements.items()
+               if new.kind != "mobility" and old_id in olds and olds[old_id].place_id != new.place_id}
     if not changed:
         return after
     seq_sorted = sorted(after, key=lambda i: i.seq)
-    new_ids = {replacements[i].item_id for i in changed}
-    targets: set[int] = set()
+    far_of_new = {replacements[i].item_id: far for i, far in changed.items()}
+    targets: dict[int, bool] = {}                      # 이동 자리 → 옆의 바뀐 장소 중 하나라도 멀리 갔나
     for k, it in enumerate(seq_sorted):
-        if it.item_id in new_ids:
+        if it.item_id in far_of_new:
             for j in (k - 1, k + 1):
                 if 0 <= j < len(seq_sorted) and seq_sorted[j].kind == "mobility":
-                    targets.add(j)
+                    targets[j] = targets.get(j, False) or far_of_new[it.item_id]
     if not targets:
         return after
     from .mobility.wiring import leg_planner
     engine = leg_planner(None, {})
     fresh: dict[UUID, Item] = {}
-    for j in sorted(targets):
+    for j, far in sorted(targets.items()):
         move = seq_sorted[j]
         prev = next((i for i in reversed(seq_sorted[:j]) if i.kind != "mobility"), None)
         nxt = next((i for i in seq_sorted[j + 1:] if i.kind != "mobility"), None)
@@ -119,11 +124,20 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
         if engine is not None:
             got, _why = engine(a, b, nxt.starts_at, prev.ends_at or prev.starts_at)
         if got is not None:
-            detail = {**move.detail, "route_def": got["route"], "refreshed_for": "place_changed"}
+            detail = {**move.detail, "route_def": got["route"], "refreshed_for": "place_changed",
+                      "route_basis": "rejudged"}
             detail.pop("route", None)
             detail.pop("option", None)
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}",
                                                    starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+        elif not far:
+            # 걸어갈 거리 안 — 탈 노선·소요·시각은 두고 이름만 새 장소로(옛 이름이 출발 알림에 나가지 않게)
+            suffix = f" · {move.title.split(' · ', 1)[1]}" if " · " in move.title else ""
+            detail = {**move.detail, "refreshed_for": "place_changed", "route_basis": "kept_nearby"}
+            if isinstance(detail.get("route_def"), dict):
+                detail["route_def"] = {**detail["route_def"], "from": a["name"], "to": b["name"]}
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}{suffix}",
+                                                   detail=detail)
         else:
             # 일정 짜기의 어림 규칙(planner._transfer_minutes)과 같다 — 도보 환산이 상한을 넘으면 상한 · 「대중교통 권장」
             from .planner import TRANSFER_MAX_MIN
@@ -132,7 +146,7 @@ def refresh_moves_around(before: list[Item], after: list[Item], replacements: di
             label = "도보 기준 [추정]" if m <= TRANSFER_MAX_MIN else "대중교통 권장 [추정]"
             route = {"from": a["name"], "to": b["name"], "planned": "estimate",
                      "options": [{"id": "estimate", "label": label, "eta_min": min(m, TRANSFER_MAX_MIN), "uses": []}]}
-            detail = {**move.detail, "route_def": route, "refreshed_for": "place_changed"}
+            detail = {**move.detail, "route_def": route, "refreshed_for": "place_changed", "route_basis": "estimate"}
             detail.pop("route", None)
             detail.pop("option", None)
             fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}", detail=detail)
