@@ -12,6 +12,7 @@ import { undoChange, warmup } from "@/lib/live/extras";
 import { LiveError } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { LinkedText } from "./linked-text";
 import { TripAttention } from "./trip-attention";
 import { tripKey, useTrip } from "./use-trip";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
@@ -260,14 +261,16 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <div ref={chatLog} className={styles.chatlog} role="log" aria-label={t("여행 대화 이력", "Travel conversation")} aria-live="polite" aria-relevant="additions text" aria-busy={message.isPending}>
         <div className={styles.chatcontext}><strong>{dayText} · {activeDay}</strong><span>{selected ? t(`선택: ${selected.title}`, `Selected: ${selected.title}`) : t("선택한 일정이 없어요.", "No stop selected.")}</span></div>
         {trip.messages.length === 0 && <article className={styles.message} data-role="assistant"><p className={styles.messageMeta}>triPilot</p><p className={styles.bubble}>{t("등록한 일정에서 궁금한 내용을 골라 주세요. 하루 요약, 선택한 장소와 다음 일정을 함께 살펴볼 수 있어요.", "Explore your saved itinerary. Ask for a day summary, details of your selected stop, or what comes next.")}</p></article>}
-        {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.text}</p>
+        {trip.messages.map((item, index) => <article key={item.id} className={styles.message} data-role={item.role}><p className={styles.messageMeta}>{item.role === "user" ? t("나", "You") : "triPilot"}</p><p className={styles.bubble}>{item.role === "assistant" ? <LinkedText text={item.text} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /> : item.text}</p>
+          {item.more && <details className={styles.more}><summary>{t("더 보기", "More")}</summary><p><LinkedText text={item.more} mapLabel={t("지도 앱으로 열기", "Open in maps app")} /></p></details>}
           {item.basis && item.basis.length > 0 && <p className={styles.devBasis}>{t("개발 모드 · 근거 ", "Dev mode · basis ")}{item.basis.join(", ")}</p>}
           {/* ★A change made from chat can be undone while it is still the plan's latest version. */}
           {item.changedTo !== undefined && item.changedTo === trip.version && <div className={styles.choices}>
             <Button variant="quiet" disabled={undo.isPending} onClick={() => undo.mutate(item.changedTo as number)}>{undo.isPending ? t("되돌리는 중…", "Undoing…") : t("되돌리기", "Undo")}</Button>
             <span className={styles.undoHint}>{t("바꾼 일정이 마음에 안 드시면 되돌릴 수 있어요.", "Not what you wanted? You can undo this change.")}</span></div>}
           {/* ★Only the latest answer's choices can be picked — an older question is no longer open. */}
-          {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>{item.choices.map((choice) =>
+          {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>
+            {item.choicesTitle && <span className={styles.choicesTitle}>{item.choicesTitle}</span>}{item.choices.map((choice) =>
             <Button key={choice.message} variant="quiet" disabled={message.isPending} onClick={() => ask(choice.message)}>{choice.label}</Button>)}</div>}</article>)}
         {undo.error && <p className={styles.error} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
           ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요.", "The plan changed again meanwhile, so nothing was undone.") : undo.error.message}</p>}

@@ -132,7 +132,8 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
     const kept = role === "assistant" ? extras.get(turn.text as string) : undefined;
     return { id: `chat-${turn.case_id ?? "x"}-${index}`, role, text: turn.text as string, createdAt: turn.at ?? "",
       ...(kept?.choices ? { choices: kept.choices } : {}), ...(kept?.basis ? { basis: kept.basis } : {}),
-      ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}) };
+      ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
+      ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}) };
   });
   // ★The record can lag the reply this tab just got (the server may finish writing it after answering). What this tab
   //   sent or received after the record's last turn is kept at the end — never dropped, never shown twice.
@@ -249,7 +250,7 @@ export function createLiveGateway(): TripGateway {
       const now = new Date().toISOString();
       const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       const result = await api<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
-        outcome?: { status?: string; version?: unknown } | null }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
+        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
       });
       const log = [...readMessages(tripId),
@@ -257,6 +258,8 @@ export function createLiveGateway(): TripGateway {
         { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
           ...(basisOf(result.basis_sources).length ? { basis: basisOf(result.basis_sources) } : {}),
           ...(choicesOf(result.choices).length ? { choices: choicesOf(result.choices) } : {}),
+          ...(typeof result.choices_title === "string" && result.choices_title.trim() ? { choicesTitle: result.choices_title.trim() } : {}),
+          ...(typeof result.more === "string" && result.more.trim() ? { more: result.more.trim() } : {}),
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];

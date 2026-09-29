@@ -89,6 +89,10 @@ export interface TripMessage {
   basis?: string[];
   /** The server did not understand and asks 「다음 중 하나인가요?」: each choice's `message` is a sentence it will understand. */
   choices?: { label: string; message: string }[];
+  /** The server's heading for `choices` — 「혹시 이런 뜻이었나요?」 when it answered and offers other readings. */
+  choicesTitle?: string;
+  /** The rest of a long answer, folded under 「더 보기」 (the answer itself keeps only the core). */
+  more?: string;
   /** This answer changed the plan to `version`: an 「되돌리기」 button can take it back to `version - 1` while it is still the latest. */
   changedTo?: number;
 }

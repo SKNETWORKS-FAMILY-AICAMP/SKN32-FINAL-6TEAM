@@ -194,6 +194,15 @@ describe("live trip gateway", () => {
     expect(calls.filter((call) => call.url.endsWith("/v1/web/session"))).toHaveLength(1);   // ★no second key issued behind the user's back
   });
 
+  it("keeps the folded rest of an answer and the 「혹시 이런 뜻이었나요?」 readings the server offers with it", async () => {
+    const more = ["· 운영시간 원문: 10:00~18:30", "· 쉬는 날: 월요일"].join("\n");
+    replies.push({ status: "answered", answer: "세종이야기 — 서울특별시 종로구 세종대로 지하175", more,
+      choices_title: "혹시 이런 뜻이었나요?", choices: [{ label: "세종이야기 운영시간", message: "세종이야기 몇 시까지 해?" }] }, TRIP);
+    const trip = await createLiveGateway().sendMessage(TRIP.trip_id, "그건 어딧는거야", "ko");
+    expect(trip.messages.at(-1)).toMatchObject({ more, choicesTitle: "혹시 이런 뜻이었나요?",
+      choices: [{ label: "세종이야기 운영시간", message: "세종이야기 몇 시까지 해?" }] });
+  });
+
   it("shows the conversation from the server's record, keeping this tab's choices on the latest answer", async () => {
     const gateway = createLiveGateway();
     const question = ["다음 중 하나인가요?", "1) 1일차 저녁 식당 바꾸기", "2) 1일차 저녁 식당 알아보기"].join("\n");
