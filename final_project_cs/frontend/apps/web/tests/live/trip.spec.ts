@@ -23,6 +23,13 @@ test("여행 화면은 서버가 준 일정·고정·다른 안·알림·이력�
   await page.locator("#stop-button-i-b").click();
   await expect(page.locator("#stop-detail-i-b")).toContainText("다른 안");
   await expect(page.locator("#stop-detail-i-b")).toContainText("창덕궁");
+  await expect(page.locator("#stop-detail-i-b")).not.toContainText("주소");           // 서버가 장소 사실을 안 보냈으면 줄 자체가 없다
+
+  // 서버가 보낸 장소 사실(요식 원장) — 주소·전화·분류·영업시간·미쉐린·편의
+  await page.locator("#stop-button-i-a").click();
+  const detail = page.locator("#stop-detail-i-a");
+  for (const text of ["서울특별시 종로구 율곡로1길 7", "02-000-0000", "한식", "월 08:00–21:00", "셀렉티드 (2026)", "카드 결제"]) await expect(detail).toContainText(text);
+  await expect(detail).not.toContainText("michelin_selected");
 
   // 서버가 찾은 것·보낸 것·바꾼 것
   await expect(page.getByRole("heading", { name: "살펴볼 점" })).toBeVisible();

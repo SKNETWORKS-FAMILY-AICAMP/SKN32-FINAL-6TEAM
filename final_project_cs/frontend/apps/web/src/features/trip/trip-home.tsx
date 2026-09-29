@@ -22,6 +22,27 @@ const live = DATA_MODE === "live";
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다. */
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
 
+/** 요식 원장 속성 이름 → 화면 말. 모르는 이름은 서버가 보낸 그대로 보인다(숨기지 않는다). */
+const TAG_LABELS: Record<string, [string, string]> = {
+  card_payment: ["카드 결제", "Cards accepted"], parking: ["주차", "Parking"], takeout: ["포장", "Takeout"],
+  vegetarian_menu: ["채식 메뉴", "Vegetarian menu"], kids_allowed: ["아이 동반", "Kids welcome"], halal: ["할랄", "Halal"],
+};
+
+function placeRows(stop: TripStop, t: Translate) {
+  const info = stop.placeInfo;
+  if (!info) return null;
+  const tags = info.tags.filter((tag) => !tag.startsWith("michelin")).map((tag) => (TAG_LABELS[tag] ? t(...TAG_LABELS[tag]) : tag));
+  return <>
+    {info.category && <><dt>{t("분류", "Type")}</dt><dd>{info.category}</dd></>}
+    {info.address && <><dt>{t("주소", "Address")}</dt><dd>{info.address}</dd></>}
+    {info.phone && <><dt>{t("전화", "Phone")}</dt><dd><a href={`tel:${info.phone.replace(/[^\d+]/g, "")}`}>{info.phone}</a></dd></>}
+    {info.hours.length > 0 && <><dt>{t("영업시간", "Hours")}</dt><dd>{info.hours.join(" · ")}</dd></>}
+    {info.michelin && <><dt>{t("미쉐린", "Michelin")}</dt><dd>{info.michelin.level}{info.michelin.year ? ` (${info.michelin.year})` : ""}</dd></>}
+    {tags.length > 0 && <><dt>{t("편의", "Amenities")}</dt><dd>{tags.join(" · ")}</dd></>}
+    {info.sourceNote && <><dt>{t("출처", "Source")}</dt><dd>{info.sourceNote}</dd></>}
+  </>;
+}
+
 function bookingLabel(stop: TripStop, t: Translate) {
   if (stop.booking === "booked") return t("예약 있음", "Booking noted");
   if (stop.booking === "none") return t("예약 없음", "No booking noted");
@@ -177,6 +198,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
               <dl className={styles.details}>
                 <dt>{t("날짜", "Date")}</dt><dd>{stop.date}</dd>
                 <dt>{t("예정 시간", "Planned time")}</dt><dd>{stop.time}</dd>
+                {placeRows(stop, t)}
                 <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
                 {stop.originalTime && stop.originalTime !== stop.time && <><dt>{t("시간 조정", "Time adjustment")}</dt><dd>{stop.originalTime} → {stop.time}</dd></>}
                 <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>

@@ -39,9 +39,24 @@ export interface TripStop {
   pinned?: boolean;
   /** Other options the server kept for this stop (best one is already applied). Shown as information. */
   otherOptions?: TripOption[];
+  /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
+  placeInfo?: PlaceInfo | null;
 }
 
 export interface TripOption { key: string; name: string }
+
+export interface PlaceInfo {
+  address?: string;
+  phone?: string;
+  category?: string;
+  /** Opening hours in the server's words, one line per rule ("월 11:00–21:00"). */
+  hours: string[];
+  /** Facility badges as the server named them ("card_payment", "parking", …). */
+  tags: string[];
+  michelin?: { level: string; year?: number } | null;
+  /** Credit line the source asks for (e.g. "ⓒ한국관광공사"). */
+  sourceNote?: string;
+}
 
 /** One saved version of the trip (server `history`): why it changed and what caused it, in the server's words. */
 export interface TripChange {

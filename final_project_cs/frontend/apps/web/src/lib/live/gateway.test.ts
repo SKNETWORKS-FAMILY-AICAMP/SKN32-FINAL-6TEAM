@@ -113,6 +113,22 @@ describe("live trip gateway", () => {
     expect(trip.warnings).toEqual([{ code: "density_exceeded", date: "2026-10-15", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }]);
   });
 
+  it("carries the place facts the server sent (dining ledger) and leaves out what it did not", async () => {
+    replies.push({
+      ...TRIP,
+      items: [
+        { ...TRIP.items[0], place_info: { address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: [{ day: "월", open: "11:30", close: "21:00" }, { day: "화" }],
+          tags: ["michelin_selected", "card_payment", 3], michelin: { level: "셀렉티드", year: 2026 }, source_note: "" } },
+        { ...TRIP.items[1], place_info: { address: "", hours: null, tags: [] } },
+      ],
+    });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].placeInfo).toEqual({ address: "서울특별시 종로구 율곡로1길 7", phone: "02-000-0000", category: "한식", hours: ["월 11:30–21:00", "화"],
+      tags: ["michelin_selected", "card_payment"], michelin: { level: "셀렉티드", year: 2026 }, sourceNote: undefined });
+    // ★nothing real was sent — no block at all, not a row of "unknown"
+    expect(trip.stops[1].placeInfo).toBeNull();
+  });
+
   it("does not quietly become a new user when the saved key is rejected", async () => {
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
     const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);
