@@ -1,8 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { useSettings } from "@/lib/settings";
 import { tripGateway, tripKey, tripsKey } from "../../lib/gateway";
+import { deleteTrips } from "./delete-trips";
 
 export { tripKey, tripsKey } from "../../lib/gateway";
 
@@ -27,4 +29,15 @@ export function useTrips() {
     retry: false,
     refetchOnWindowFocus: false,
   });
+}
+
+/** `deleteTrips` for this screen: a deleted trip also stops being the onboarding's active trip. Null where the gateway cannot delete (live). */
+export function useDeleteTrips() {
+  const queryClient = useQueryClient();
+  const { language } = useSettings();
+  const [, setOnboarding] = useOnboarding();
+  if (!tripGateway.deleteTrip) return null;
+  const remove = tripGateway.deleteTrip;
+  return (ids: readonly string[]) => deleteTrips(ids, (id) => remove(id, language), queryClient, (deleted) =>
+    setOnboarding((current) => current.activeTripId && deleted.includes(current.activeTripId) ? { ...current, activeTripId: null } : current));
 }

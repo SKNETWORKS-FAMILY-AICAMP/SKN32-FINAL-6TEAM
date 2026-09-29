@@ -30,6 +30,8 @@ CASES = [
 
 
 def main():
+    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    cli_processed()                   # #48 뒤 — import 로는 .env 를 안 읽는다. LineOrder.load() 가 이 자리를 본다
     lo = LineOrder.load()
     bad = 0
     for name, args, want_v, want_g in CASES:
@@ -43,7 +45,8 @@ def main():
 
 
 def test_passes28():          # 67: pytest 수집용 — 실데이터(line_station_order) 시험 · 없는 기기는 SKIP
-    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
+    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    PROCESSED = cli_processed()
     if not (PROCESSED / "mobility" / "line_station_order_v1.json").exists():
         import pytest
         pytest.skip("data not present (DATA_DIR/travel/processed/mobility/line_station_order_v1.json)")

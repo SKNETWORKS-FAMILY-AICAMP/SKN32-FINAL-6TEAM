@@ -27,3 +27,5 @@
 .note { font-size: 11px; line-height: 1.7; color: var(--color-muted); }
 .failed { font-size: 12px; line-height: 1.7; color: var(--color-error); }
 .muted { color: var(--color-muted); }
+/* The token management card sits under the profile card on My page. */
+.card + .card { margin-top: 16px; }

@@ -4,6 +4,8 @@ import { useState, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
+import { KeySettings } from "@/features/account/key-settings";
+import { DATA_MODE } from "@/lib/data-mode";
 import { nicknameLabel, useProfile, type Profile } from "@/lib/profile";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
@@ -69,6 +71,8 @@ export function MyPage() {
           <div><dt>{t("토큰 복구용 이메일", "Recovery email")}</dt><dd>{profile.email ?? <span className={styles.muted}>{t("등록된 이메일이 없습니다.", "No email registered.")}</span>}</dd></div>
         </dl>}
     </Panel>
+    {/* ★Everything about the token lives on this page (2026-09-28 user): see it here, open another device's token, or replace a leaked one. */}
+    {DATA_MODE === "live" && <Panel className={styles.card}><KeySettings /></Panel>}
   </>;
 }
 

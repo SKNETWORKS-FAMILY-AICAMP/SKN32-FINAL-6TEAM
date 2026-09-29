@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { Translate } from "./i18n";
-import { currentKey } from "./live/client";
+import { currentKey, KEY_CHANGED_EVENT } from "./live/client";
 
 /**
  * What the menu and My page show about the user. Checked 2026-09-28 against every branch: the server has no
@@ -16,9 +16,11 @@ export interface Profile {
   token: string | null;
 }
 
+/** Another tab changing the key fires `storage`; this tab adopting or replacing one fires `KEY_CHANGED_EVENT`. */
 function subscribe(onChange: () => void) {
   addEventListener("storage", onChange);
-  return () => removeEventListener("storage", onChange);
+  addEventListener(KEY_CHANGED_EVENT, onChange);
+  return () => { removeEventListener("storage", onChange); removeEventListener(KEY_CHANGED_EVENT, onChange); };
 }
 
 /** Undefined until the page has read this browser (server render and hydration), then the profile. */

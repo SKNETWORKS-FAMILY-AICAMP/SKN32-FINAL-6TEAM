@@ -683,7 +683,42 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
 
 
 # ── 이동 항목 — 출발 시각을 거꾸로 잡는다 ────────────────────────
-def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
+def _shift_from(items: list[dict[str, Any]], pivot: datetime, day: str, minutes: int) -> None:
+    """그날 pivot 이후(포함) 항목을 minutes 만큼 뒤로 — ★번호가 아니라 **시각**으로 민다."""
+    for later in items:
+        if _planned_day(later) == day and later["starts_at"] >= pivot:
+            later["starts_at"] += timedelta(minutes=minutes)
+            if later["ends_at"]:
+                later["ends_at"] += timedelta(minutes=minutes)
+
+
+def _engine_move(engine: Any, previous: dict[str, Any], item: dict[str, Any], a: Cand, b: Cand,
+                 items: list[dict[str, Any]], notes: list[str]) -> dict[str, Any] | None:
+    """이동 계산기(시간표 판정)로 이 구간을 채운다. 못 채우면 None — 부르는 쪽이 직선 어림값으로 간다.
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#42]` 앞 일정이 끝난 뒤 떠나서는 못 맞추면(arrive_late) 계산기는 구간을
+      비운다 — 일정을 미는 것은 우리 몫이다. 앞 일정 끝을 풀고 한 번 더 계산해 모자란 분만큼 그날 뒤 일정을 밀고,
+      민 시각으로 **다시 판정한다**(추정으로 맞추지 않는다). 그래도 안 되면 None.
+    """
+    import math                                  # 머리 import 줄은 다른 작업이 고치는 자리라 여기서 부른다
+
+    end = previous["ends_at"] or previous["starts_at"]
+    got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None and (why or {}).get("code") == "arrive_late":
+        free, _ = engine(a.as_place(), b.as_place(), item["starts_at"], None)
+        if free is not None and free["starts_at"] < end:
+            short = math.ceil((end - free["starts_at"]).total_seconds() / 60)
+            _shift_from(items, item["starts_at"], _planned_day(item), short)
+            notes.append(f"move({item['seq']}): 시간표로 이동 {free['eta_min']}분 — 앞 일정이 끝난 뒤 떠나면 늦어 "
+                         f"{item['title']} 부터 {short}분 뒤로 밀고 다시 판정했다")
+            got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None:
+        notes.append(f"move({item['seq']}): 이동 계산기로 못 채움 — {(why or {}).get('reason') or (why or {}).get('code')}"
+                     " → 직선 어림값 [추정]")
+    return got
+
+
+def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand], *, engine: Any = None
               ) -> tuple[list[dict[str, Any]], dict[str, Any], list[str]]:
     """같은 날 이어지는 두 장소 사이에 **이동 항목**을 넣는다. (항목들, routes, 민 내역).
 
@@ -694,6 +729,9 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
       **그날 안에서 뒤로 민다** — 민 내역을 돌려준다. 하루 마감을 넘기는지는 부르는 쪽이 본다.
     ★이동 시간은 `_transfer_minutes` 의 **추정**이다. 경로 정의의 `uses` 는 비워 둔다 — 어떤 노선을
       타는지 우리가 모르기 때문이다(지어내지 않는다). 그래서 감시는 이 구간의 노선 사건을 보지 않는다.
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#43]` `engine`(mobility/wiring.leg_planner)을 주면 **시간표 판정**으로
+      채운다 — 출발·도착·경로 후보(탈 노선 uses 포함)·밀도 칸. 계산기가 못 채운 구간만 위 추정을 대체값으로 쓰고
+      민 내역(notes)에 남긴다(조용히 빠지지 않는다). 하루 밀도 맞추기처럼 여러 번 시험하는 호출은 engine 없이 부른다.
     """
     ordered = sorted(items, key=lambda it: (_planned_day(it), it["starts_at"], it["seq"]))
     out: list[dict[str, Any]] = []
@@ -702,6 +740,18 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
     for index, item in enumerate(ordered):
         previous = ordered[index - 1] if index else None
         if previous is not None and _planned_day(previous) == _planned_day(item):
+            got = (_engine_move(engine, previous, item, places[previous["place"]], places[item["place"]], items, notes)
+                   if engine is not None else None)
+            if got is not None:
+                key = f"move-{len(routes) + 1}"
+                routes[key] = got["route"]
+                out.append({"seq": 0, "kind": "mobility", "title": f"{previous['title']} → {item['title']}",
+                            "place": None, "route": key, "starts_at": got["starts_at"], "ends_at": got["ends_at"],
+                            "detail": {"planner": {"day": _planned_day(item), "transfer_basis": "시간표 판정(이동 계산기)",
+                                                   "travel_min": got["eta_min"],
+                                                   "leave_rule": "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)"}}})
+                out.append(item)
+                continue
             travel, basis, label = _transfer_minutes(places[previous["place"]], places[item["place"]])
             need = travel + MOVE_BUFFER_MIN
             end = previous["ends_at"] or previous["starts_at"]
@@ -1240,7 +1290,10 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니")
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
-    items, routes, moved = add_moves(items, chosen)
+    # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
+    from .mobility.wiring import leg_planner
+    items, routes, moved = add_moves(items, chosen,
+                                     engine=leg_planner(request.party_size, dict(request.constraints)))
     fixed += moved
     violations = _check(items, chosen, request, routes)
     if violations:
