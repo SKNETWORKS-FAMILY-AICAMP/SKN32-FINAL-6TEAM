@@ -39,6 +39,8 @@ export interface TripStop {
   pinned?: boolean;
   /** Other options the server kept for this stop (best one is already applied). Shown as information. */
   otherOptions?: TripOption[];
+  /** Opens this place in the customer's own map app (Google Maps link from the server; no API key, no billing). */
+  mapUrl?: string;
   /** What the server knows about the place (address, phone, hours, badges). Missing fields are not shown. */
   placeInfo?: PlaceInfo | null;
 }
@@ -105,6 +107,8 @@ export interface Trip {
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
+  /** Live only: the day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
+  dayRoutes?: Record<string, string[]>;
 }
 
 /** One row of "My trips" — only what the server list (`GET /v1/web/trips`) gives: no trip dates, status or open proposals. */

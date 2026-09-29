@@ -141,6 +141,18 @@ describe("live trip gateway", () => {
     expect(trip.stops[1].placeInfo).toMatchObject({ hours: [], hoursNotes: ["09:00~18:00", "매주 화요일 휴무"] });
   });
 
+  it("keeps only Google Maps links for the map app: each stop and each day's route", async () => {
+    replies.push({ ...TRIP,
+      items: [{ ...TRIP.items[0], map_url: "https://www.google.com/maps/search/?api=1&query=%EA%B2%BD%EB%B3%B5%EA%B6%81" },
+        { ...TRIP.items[1], map_url: "javascript:alert(1)" }],
+      map: { days: [{ date: "2026-10-15", app_route_urls: ["https://www.google.com/maps/dir/?api=1&origin=a&destination=b", "https://evil.example/x"] },
+        { date: "2026-10-16", app_route_urls: [] }] } });
+    const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
+    expect(trip.stops[0].mapUrl).toBe("https://www.google.com/maps/search/?api=1&query=%EA%B2%BD%EB%B3%B5%EA%B6%81");
+    expect(trip.stops[1].mapUrl).toBeUndefined();                       // ★not a map link — no button at all
+    expect(trip.dayRoutes).toEqual({ "2026-10-15": ["https://www.google.com/maps/dir/?api=1&origin=a&destination=b"] });
+  });
+
   it("sends the stop the customer picked as item_id, and nothing when none was picked", async () => {
     const gateway = createLiveGateway();
     replies.push({ status: "adjusted", answer: "바꿨어요." }, TRIP, { status: "answered", answer: "네." }, TRIP);

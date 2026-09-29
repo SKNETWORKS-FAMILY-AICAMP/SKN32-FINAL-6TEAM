@@ -18,6 +18,7 @@ interface ServerItem {
   other_options?: { key: string; name: string }[];
   customer_pinned?: boolean;
   place_info?: ServerPlaceInfo | null;
+  map_url?: string | null;
 }
 /** ★`[2026-09-29]` 서버에 요청한 모양(요식 원장·관광공사에서 읽은 장소 사실). 서버가 아직 안 보내면 상세에 안 나온다. */
 interface ServerPlaceInfo {
@@ -34,6 +35,12 @@ interface ServerWarning { code?: string; date?: string | null; reason?: string; 
 interface ServerTrip {
   trip_id: string; title: string; version: number; items: ServerItem[]; plan_url: string;
   history?: ServerHistory[]; warnings?: ServerWarning[];
+  map?: { days?: { date?: string; app_route_urls?: unknown[] }[] } | null;
+}
+
+/** ★Only Google Maps links are opened from the screen — anything else from the server is not shown as a map link. */
+function mapLink(value: unknown): string | undefined {
+  return typeof value === "string" && value.startsWith("https://www.google.com/maps/") ? value : undefined;
 }
 /** One row of `GET /v1/web/trips`. */
 interface ServerTripRow { trip_id: string; title: string; version: number; created_at: string }
@@ -59,6 +66,7 @@ function stop(item: ServerItem, t: Translate): TripStop {
     pinned: item.customer_pinned === true,
     otherOptions: (item.other_options ?? []).filter((option) => typeof option?.key === "string" && typeof option?.name === "string"),
     placeInfo: placeInfo(item.place_info, t),
+    mapUrl: mapLink(item.map_url),
   };
 }
 
@@ -158,6 +166,10 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     planUrl: server.plan_url || undefined,
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
+    dayRoutes: Object.fromEntries((server.map?.days ?? []).flatMap((day) => {
+      const urls = (day.app_route_urls ?? []).map(mapLink).filter((url): url is string => !!url);
+      return typeof day.date === "string" && urls.length ? [[day.date, urls]] : [];
+    })),
   };
 }
 

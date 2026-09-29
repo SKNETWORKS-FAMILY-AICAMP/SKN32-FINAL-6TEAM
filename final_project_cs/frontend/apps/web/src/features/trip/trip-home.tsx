@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Check, Leaf, MapPin, MessageCircle, SquarePen, Send, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ExternalLink, Leaf, MapPin, MessageCircle, Navigation, SquarePen, Send, ShieldCheck } from "lucide-react";
 import { TripMap } from "@/features/map";
 import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
@@ -210,6 +210,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
               <div className={styles.detailActions}>
                 <Button onClick={() => { choose(stop); setPane("map"); focus(`map-point-${stop.id}`); }}><MapPin {...icon} />{diagram ? t("방문 순서 보기", "Show visit order") : t("지도에서 보기", "Show on map")}</Button>
                 <Button disabled={message.isPending} onClick={() => askAbout(stop)}><MessageCircle {...icon} />{t("이 일정 질문하기", "Ask about this stop")}</Button>
+                {stop.mapUrl && <ButtonLink href={stop.mapUrl} target="_blank" rel="noopener noreferrer"><ExternalLink {...icon} />{t("지도 앱으로 열기", "Open in maps app")}</ButtonLink>}
               </div>
             </div>}
           </article>
@@ -222,6 +223,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <header className={styles.panehead}><h2 id="trip-map-heading">{diagram ? t("방문 순서 개념도", "Visit order diagram") : t("지도", "Map")}</h2><span className={styles.muted}>{dayText}</span></header>
       <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} />
       {diagram && <p className={styles.chatnote}>{t("번호는 방문 순서입니다. 실제 위치·거리·이동 경로를 표시하지 않습니다.", "Numbers show visit order, not actual locations, distances, or routes.")}</p>}
+      {(trip.dayRoutes?.[activeDay] ?? []).length > 0 && <div className={styles.detailActions}>{(trip.dayRoutes?.[activeDay] ?? []).map((url, index, all) =>
+        <ButtonLink key={url} href={url} target="_blank" rel="noopener noreferrer"><Navigation {...icon} />{all.length > 1
+          ? t(`하루 경로 지도 앱으로 열기 ${index + 1}/${all.length}`, `Open day route in maps app ${index + 1}/${all.length}`)
+          : t("하루 경로 지도 앱으로 열기", "Open day route in maps app")}</ButtonLink>)}</div>}
       <div className={styles.mapSelection}>{selected ? <>
         <Eyebrow>{t("선택한 일정", "SELECTED STOP")}</Eyebrow>
         <h3>{selected.title}</h3>
