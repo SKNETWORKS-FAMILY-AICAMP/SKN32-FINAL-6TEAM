@@ -135,9 +135,11 @@ def main() -> None:
         row = [""] * len(head)
         for c in ("contentid", "contenttypeid", "title", "addr1", "addr2", "mapx", "mapy", "firstimage",
                   "cpyrhtDivCd", "lclsSystm1", "lclsSystm2", "lclsSystm3"):
-            row[I[c]] = r.get(c, "") or ""
+            if c in I:                      # 삭제된 열(firstimage 등)은 건너뛴다
+                row[I[c]] = r.get(c, "") or ""
         row[I["sigungucode"]] = code.get(gu_of(r["addr1"]), "")
-        row[I["data_source"]] = "tour_api"
+        if "data_source" in I:
+            row[I["data_source"]] = "tour_api"
         new_rows.append(row)
     with CSV_PATH.open("w", encoding="utf-8-sig", newline="") as f:
         csv.writer(f, lineterminator="\r\n").writerows([head, *cur, *new_rows])
