@@ -2524,40 +2524,24 @@ def show(case, res, verbose=False):
             print(f"      · [{e['grade']}] {e['source_id']} — {e['claim']}")
 
 
-def main():
-    from . import paths as _paths_cli
-    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
-    ap = argparse.ArgumentParser(description="이동 모듈 시각 검증기 v2 (지하철)")
-    ap.add_argument("--cases", required=True)
-    ap.add_argument("--timetable")
-    ap.add_argument("--order")
-    ap.add_argument("--transfer-walk")
-    ap.add_argument("--bus-route")
-    ap.add_argument("--bus-stops")
-    ap.add_argument("--station-coords")
-    ap.add_argument("--station-exits")
-    ap.add_argument("--bike-stations", help="따릉이 운영 대여소 jsonl (v0.7 · 22번 방). 없으면 자전거는 근거없음")
-    ap.add_argument("--bike-fixture", help="GraphHopper 거리·시간 요약 픽스처 json — 서버 없이 회귀를 돌릴 때")
-    ap.add_argument("--bike-live", default="none",
-                    help="실시간 거치 조회: none(기본 · 근거없음) · env(SEOUL_OPENAPI_KEY 로 실제 호출) · <픽스처 json 경로>")
-    ap.add_argument("--bike-record", help="GraphHopper 실제 응답의 거리·시간 요약을 이 픽스처 파일에 **추가** 기록한다(형상 없음)")
-    ap.add_argument("--bus-profile", help="버스 구간 통행시간 프로파일(v0.9 · 41번 방) · 'none' 이면 종전 모델(거리 ÷ 표정속도). "
-                                         "기본 processed/mobility/bus_seg_profile_v1.jsonl.gz")
-    ap.add_argument("--congestion", nargs="*",
-                    help="혼잡도 jsonl(v0.8 @ 부품). 기본 processed/mobility/congestion_v1.jsonl + congestion_line9_v1.jsonl · 'none' 이면 안 읽는다")
-    ap.add_argument("--rules", default=str(RULES_DIR / "rules_v0.3.json"))
-    ap.add_argument("--holidays", default=str(RULES_DIR / "holidays_2026_2027.json"))
-    ap.add_argument("--case", help="이 id 만 돌린다")
-    ap.add_argument("--graph-dir", help="도로망 그래프 자료 폴더(기본 processed/mobility/graph)")
-    ap.add_argument("--gh-url", help="GraphHopper 주소 · 'none' · 'fixture:<합성경로 파일>' "
-                                     "(기본: 환경변수 MOBILITY_GH_URL → rules car.graphhopper.url)")
-    ap.add_argument("--allow-router-down", action="store_true",
-                    help="라우터에 못 닿아 택시가 근거없음이면 expect_taxi 축을 MISS 대신 SKIP 으로 센다(클라우드 실행용)")
-    ap.add_argument("--check-expect", action="store_true", help="expect 와 대조하고 MISS 면 종료코드 1")
-    ap.add_argument("--verbose", "-v", action="store_true")
-    ap.add_argument("--json", help="판정 결과를 이 경로에 저장")
-    args = ap.parse_args()
+def load_cases(path, only=None):
+    """케이스 파일(JSON) → cases 목록. only 를 주면 그 id 하나만."""
+    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    cases = doc["cases"] if isinstance(doc, dict) else doc
+    if only:
+        cases = [c for c in cases if c.get("id") == only]
+        if not cases:
+            raise SystemExit(f"케이스 {only} 가 없다")
+    return cases
 
+
+def build_verifier_for_cases(args, cases):
+    """CLI 인자(argparse Namespace 또는 같은 속성을 가진 객체) + 케이스 목록 → (Verifier, ctx).
+
+    71번 방(2026-09-29): main() 안에 있던 데이터 올리기 블록을 그대로 옮겼다 — pytest 회귀
+    (tests/unit/travel/mobility/test_regression_cases.py)가 CLI 와 **같은 적재**를 쓰기 위해서다.
+    판정 경로·출력은 바뀌지 않았다. ctx = {record, bike_router, bike_live, rules} (main 의 끝맺음용).
+    """
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
         from .paths import PROCESSED
@@ -2572,12 +2556,6 @@ def main():
         from .paths import PROCESSED
         args.bike_stations = str(PROCESSED / "mobility" / "bike_stations_v1.jsonl")
 
-    doc = json.loads(Path(args.cases).read_text(encoding="utf-8"))
-    cases = doc["cases"] if isinstance(doc, dict) else doc
-    if args.case:
-        cases = [c for c in cases if c.get("id") == args.case]
-        if not cases:
-            raise SystemExit(f"케이스 {args.case} 가 없다")
 
     rules = json.loads(Path(args.rules).read_text(encoding="utf-8"))
     holidays = HolidayCalendar.from_doc(json.loads(Path(args.holidays).read_text(encoding="utf-8")))   # #5 덮는 해를 안다
@@ -2692,249 +2670,303 @@ def main():
     else:
         print(f"버스 구간 프로파일 {len(bus_prof.index):,}구간 · {bus_prof.dates} · {bus_prof.source_id}")
     v = Verifier(tt, lo, rules, holidays, tw, bus, sc, ex, car, bk, bike_live, bike_router, cg_data, bus_prof)
+    return v, {"record": record, "bike_router": bike_router, "bike_live": bike_live, "rules": rules}
+
+
+def check_expect(c, r, allow_router_down=False):
+    """케이스 c 의 expect 칸과 결과 r 을 대조한다 → (miss, skipped).
+
+    71번 방(2026-09-29): main() 의 `--check-expect` 블록을 그대로 옮겼다(비교 칸·문구 동일).
+    pytest 회귀와 CLI 가 같은 함수를 쓴다 — 대조 규칙이 두 군데 생기지 않게.
+    miss 항목 = (case_id, 기대, 실제) · skipped 항목 = (case_id, 축 이름).
+    """
+    miss, skipped = [], []
+    # ★ 판정값만 대조하면 부족하다. 2026-09-10 의 순환선 버그는 판정이 계속 '성립'이었고
+    #   **도착 시각만** 73.3분으로 틀려 있었다. expect_arrive 가 그걸 잡는다.
+    # ★ v0.8 — `expect` 는 **밖 판정 둘**(feasible/infeasible)이다. 옛 4값 기대는 `expect_internal` 로 옮긴다.
+    #   옛 파일의 `expect: unknown|rejected_by_limit` 은 어휘 밖이라 MISS 다 — 그게 재정의 전 「전부 MISS 장면」이다.
+    o = r.out or {}
+    if c.get("expect"):
+        if c["expect"] not in OUT_VERDICTS:
+            miss.append((c["id"], f"expect '{c['expect']}' (어휘 밖 — 밖 판정은 {'/'.join(OUT_VERDICTS)})", o.get("verdict")))
+            print(f"  >> MISS expect '{c['expect']}' 은 v0.8 어휘 밖이다 — expect_internal 로 옮긴다")
+        elif c["expect"] != o.get("verdict"):
+            miss.append((c["id"], f"밖 {OUT_MARK[c['expect']]}", f"밖 {OUT_MARK.get(o.get('verdict'), '없음')} ({o.get('code')})"))
+            print(f"  >> MISS 밖 판정 기대 {OUT_MARK[c['expect']]} / 실제 {OUT_MARK.get(o.get('verdict'), '없음')} ({o.get('code')})")
+    ei = c.get("expect_internal")
+    if ei and ei != r.verdict:
+        miss.append((c["id"], f"내부 {MARK[ei]}", f"내부 {MARK[r.verdict]}"))
+        print(f"  >> MISS 내부 판정 기대 {MARK[ei]} / 실제 {MARK[r.verdict]}")
+    er = c.get("expect_reason")
+    if er is not None and o.get("code") != er:
+        miss.append((c["id"], f"이유 {er}", str(o.get("code"))))
+        print(f"  >> MISS 이유 코드 기대 {er} / 실제 {o.get('code')}")
+    es = c.get("expect_slack_min")
+    if es is not None:
+        lo_, hi_ = es
+        sv = o.get("slack_min")
+        if sv is None or (lo_ is not None and sv < lo_) or (hi_ is not None and sv > hi_):
+            miss.append((c["id"], f"여유 {lo_}~{hi_}분", str(sv)))
+            print(f"  >> MISS 여유(slack_min) 기대 {lo_}~{hi_} / 실제 {sv}")
+    em = c.get("expect_margin_min")
+    if em is not None:
+        lo_, hi_ = em
+        mv = o.get("margin_min")
+        if mv is None or (lo_ is not None and mv < lo_) or (hi_ is not None and mv > hi_):
+            miss.append((c["id"], f"@ {lo_}~{hi_}분", str(mv)))
+            print(f"  >> MISS @(margin_min) 기대 {lo_}~{hi_} / 실제 {mv}")
+    if "expect_p90_eta" in c:
+        # ★ v0.9(41) — p90_eta_min 은 스프레드 소스가 있을 때만 나온다. null 이면 「없어야 한다」.
+        ep, pv = c["expect_p90_eta"], o.get("p90_eta_min")
+        bad = (pv is not None) if ep is None else (pv is None or pv < ep[0] or pv > ep[1])
+        if bad:
+            miss.append((c["id"], f"p90_eta {ep}", str(pv)))
+            print(f"  >> MISS p90_eta_min 기대 {ep} / 실제 {pv}")
+    el = c.get("expect_last_depart")
+    if el is not None:
+        want = None if el is None else fmt_min(to_service_min(el))
+        got = fmt_min(o["last_feasible_depart_min"]) if o.get("last_feasible_depart_min") is not None else None
+        if want != got:
+            miss.append((c["id"], f"늦어도 출발 {el}", str(got)))
+            print(f"  >> MISS 마지막 성립 출발 기대 {el} / 실제 {got}")
+    if "expect_last_depart_none" in c and c["expect_last_depart_none"] and o.get("last_feasible_depart_min") is not None:
+        miss.append((c["id"], "늦어도 출발 없음", fmt_min(o["last_feasible_depart_min"])))
+        print(f"  >> MISS 마지막 성립 출발이 없어야 하는데 {fmt_min(o['last_feasible_depart_min'])}")
+    # ★ 완화 조건도 대조한다. 2026-09-10 에 24:50 요청이 '불가' 는 맞는데 완화 조건이
+    #   "286분 뒤 첫차를 기다리면 성립" 으로 나간 적이 있다(막차를 4분 놓친 것인데).
+    #   판정값만 보는 대조는 그걸 통과시켰다.
+    am = c.get("expect_alt_min")
+    if am is not None and len(r.alternatives) < am:
+        miss.append((c["id"], f"대안 {am}개 이상", f"{len(r.alternatives)}개"))
+        print(f"  >> MISS 대안 {am}개 이상 기대 / 실제 {len(r.alternatives)}개")
+    # ★ 2026-09-14 신설 — 「없어야 한다」를 말할 축이 하나도 없었다.
+    #   expect_alt_min/axis/arrive/warn_codes 는 전부 **있어야 한다**만 본다. 그래서
+    #   `expect_alt_min: 0` 으로 잠근 척한 케이스 셋(ISSUE-06·ALT-03·ALT-04)은
+    #   len < 0 이 영원히 거짓이라 **한 번도 검사된 적이 없다.**
+    #   실제로 그 구멍으로 TOUR12 가 ISSUE-01 의 대안에 들어왔고 회귀 85건은 전부 통과했다.
+    ax = c.get("expect_alt_max")
+    if ax is not None and len(r.alternatives) > ax:
+        got = [x["label"] for x in r.alternatives]
+        miss.append((c["id"], f"대안 {ax}개 이하", f"{len(r.alternatives)}개: {got}"))
+        print(f"  >> MISS 대안 {ax}개 이하 기대 / 실제 {len(r.alternatives)}개 — {got}")
+    # ★ 수단별 대안 상한(2026-09-20 · 22번 방). 자전거 후보가 생기면서 「대안 0」 잠금(ISSUE-06·ALT-03)이
+    #   자전거 하나로 풀린다 — 자전거는 지하철 이슈를 상속하지 않으므로 나오는 게 맞다. 잠금을 수단별로 옮긴다.
+    axm = c.get("expect_alt_max_by_mode") or {}
+    for md, mx in axm.items():
+        got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
+        if len(got) > mx:
+            miss.append((c["id"], f"{md} 대안 {mx}개 이하", f"{len(got)}개: {got}"))
+            print(f"  >> MISS {md} 대안 {mx}개 이하 기대 / 실제 {len(got)}개 — {got}")
+    amn = c.get("expect_alt_min_by_mode") or {}
+    for md, mn in amn.items():
+        got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
+        if len(got) < mn:
+            miss.append((c["id"], f"{md} 대안 {mn}개 이상", f"{len(got)}개"))
+            print(f"  >> MISS {md} 대안 {mn}개 이상 기대 / 실제 {len(got)}개")
+    aar = c.get("expect_alt_arrive")
+    if aar:
+        got = [fmt_min(x["arrive_min"]) for x in r.alternatives]
+        if fmt_min(to_service_min(aar)) not in got:
+            miss.append((c["id"], f"대안 도착 {aar}", str(got)))
+            print(f"  >> MISS 대안 도착 {aar} 가 없다 — 실제 {got}")
+    aa = c.get("expect_alt_axis")
+    if aa and aa not in [x["axis"] for x in r.alternatives]:
+        miss.append((c["id"], f"대안 축 '{aa}'", str([x["axis"] for x in r.alternatives])))
+        print(f"  >> MISS 대안 축 '{aa}' 가 없다")
+    want = c.get("expect_relief_contains")
+    if want and want not in (r.relief or ""):
+        miss.append((c["id"], f"완화 조건에 '{want}'", f"'{r.relief}'"))
+        print(f"  >> MISS 완화 조건에 '{want}' 가 없다 — 실제: {r.relief}")
+    # ★ 경고 축(2026-09-13). 문장이 아니라 **코드**로 건다 — 문구를 다듬어도 회귀가 안 깨진다.
+    #   케이스 경고와 대안 경고를 합쳐서 본다(공항 요금처럼 대안에만 붙는 것이 있다).
+    wc = c.get("expect_warn_codes")
+    if wc:
+        got = {w["code"] for w in (r.warnings or [])}
+        for al in (r.alternatives or []):
+            got |= {w["code"] for w in (al.get("warnings") or [])}
+        lack = [x for x in wc if x not in got]
+        if lack:
+            miss.append((c["id"], f"경고 {lack}", str(sorted(got))))
+            print(f"  >> MISS 경고 {lack} 가 없다 — 실제 {sorted(got)}")
+    # ★ 「없어야 한다」 경고 축 + 사유 문구 축(2026-09-20 · 22번 방). 외국인 안내가 foreign=false 에 붙으면 잡는다.
+    wa = c.get("expect_warn_codes_absent")
+    if wa:
+        got = {w["code"] for w in (r.warnings or [])}
+        for al in (r.alternatives or []):
+            got |= {w["code"] for w in (al.get("warnings") or [])}
+        bad = [x for x in wa if x in got]
+        if bad:
+            miss.append((c["id"], f"경고 {bad} 없음", str(sorted(got))))
+            print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다 — 실제 {sorted(got)}")
+    rc = c.get("expect_reason_contains")
+    if rc:
+        blob = " | ".join([r.reason or ""] + [(l.reason or "") for l in (r.legs or [])])
+        if rc not in blob:
+            miss.append((c["id"], f"사유에 '{rc}'", blob[:160]))
+            print(f"  >> MISS 사유에 '{rc}' 가 없다 — 실제: {blob[:160]}")
+    ea = to_service_min(c.get("expect_arrive")) if c.get("expect_arrive") else None
+    if ea is not None and ea != r.arrive_min:
+        miss.append((c["id"], f"도착 {fmt_min(ea)}", f"도착 {fmt_min(r.arrive_min)}"))
+        print(f"  >> MISS 도착 기대 {fmt_min(ea)} / 판정 {fmt_min(r.arrive_min)}")
+    # ★ 다목적 후보 축(2026-09-20 · 20번 방). 후보 수·기준·구간열·기준별 도착·동급·성립 상한·노선별 불가.
+    #   「있어야 한다」와 「없어야 한다」를 둘 다 둔다(expect_tie: false · expect_feasible_max · expect_no_line_feasible).
+    cs = r.candidates or []
+    cm = c.get("expect_candidates_min")
+    if cm is not None and len(cs) < cm:
+        miss.append((c["id"], f"후보 {cm}개 이상", f"{len(cs)}개"))
+        print(f"  >> MISS 후보 {cm}개 이상 기대 / 실제 {len(cs)}개")
+    for cr in c.get("expect_criteria") or []:
+        if not any(cr in x["criteria"] for x in cs):
+            miss.append((c["id"], f"기준 '{cr}' 후보", str([x["criteria"] for x in cs])))
+            print(f"  >> MISS 기준 '{cr}' 을 단 후보가 없다")
+    for cr, legs in (c.get("expect_candidate_legs") or {}).items():
+        want = [tuple(x) for x in legs]
+        got = [[("자전거" if l.get("mode") == "bike" else l.get("line") or f"버스{l.get('route')}",
+                 l["from"], l["to"]) for l in x["legs"]]
+               for x in cs if cr in x["criteria"]]
+        if not any([tuple(g) for g in gl] == want for gl in got):
+            miss.append((c["id"], f"{cr} 구간열 {want}", str(got)))
+            print(f"  >> MISS {cr} 구간열 기대 {want} / 실제 {got}")
+    for cr, at in (c.get("expect_candidate_arrive") or {}).items():
+        got = [fmt_min(x["arrive_min"]) for x in cs if cr in x["criteria"]]
+        if fmt_min(to_service_min(at)) not in got:
+            miss.append((c["id"], f"{cr} 도착 {at}", str(got)))
+            print(f"  >> MISS {cr} 도착 기대 {at} / 실제 {got}")
+    et = c.get("expect_tie")
+    if et is not None and bool(r.ties) != et:
+        miss.append((c["id"], f"동급 {'있음' if et else '없음'}", f"{len(r.ties or [])}쌍"))
+        print(f"  >> MISS 동급 {'있음' if et else '없음'} 기대 / 실제 {len(r.ties or [])}쌍")
+    for ax in c.get("expect_tie_axes") or []:
+        if not any(ax in t["axes"] for t in (r.ties or [])):
+            miss.append((c["id"], f"동급 이유 축 '{ax}'", str([list(t['axes']) for t in (r.ties or [])])))
+            print(f"  >> MISS 동급 이유 축 '{ax}' 가 없다")
+    fm = c.get("expect_feasible_max")
+    nf = sum(1 for x in cs if x["verdict"] == "feasible")
+    if fm is not None and nf > fm:
+        miss.append((c["id"], f"성립 후보 {fm}개 이하", f"{nf}개"))
+        print(f"  >> MISS 성립 후보 {fm}개 이하 기대 / 실제 {nf}개")
+    nl = c.get("expect_no_line_feasible")
+    if nl:
+        bad = [x["label"] for x in cs if x["verdict"] == "feasible"
+               and any(l.get("line") == nl for l in x["legs"])]
+        if bad:
+            miss.append((c["id"], f"{nl} 후보 성립 없음", str(bad)))
+            print(f"  >> MISS {nl} 을 쓰는 후보가 성립했다 — {bad}")
+    # ★ 등급 · 경고 부재 · 자동차 구간 축(2026-09-20 · 21번 방).
+    #   expect_warn_absent 는 「없어야 한다」 축 — 골목 100% 구간에 class 경고가 섞이면 안 된다(CAR-06).
+    eg = c.get("expect_grade")
+    if eg and r.grade != eg:
+        miss.append((c["id"], f"등급 {eg}", r.grade))
+        print(f"  >> MISS 등급 기대 {eg} / 판정 {r.grade}")
+    wa = c.get("expect_warn_absent")
+    if wa:
+        got = {w["code"] for w in (r.warnings or [])}
+        for al in (r.alternatives or []):
+            got |= {w["code"] for w in (al.get("warnings") or [])}
+        bad = [x for x in wa if x in got]
+        if bad:
+            miss.append((c["id"], f"경고 없음 {wa}", f"있음 {bad}"))
+            print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다")
+    etl = c.get("expect_taxi_leg")
+    if etl:
+        cl = next((l.car for l in r.legs if getattr(l, "car", None)), None) or {}
+        cov = cl.get("coverage_pct") or {}
+        checks = [("fare_won", cl.get("fare_won"), lambda a, b: a == b),
+                  ("night_rate", cl.get("night_rate"), lambda a, b: a == b),
+                  ("slow_s", cl.get("slow_s"), lambda a, b: a == b),
+                  ("day_type", cl.get("day_type"), lambda a, b: a == b),
+                  ("coverage_class_pct_min", cov.get("class"), lambda a, b: a is not None and a >= b),
+                  ("coverage_default_pct_min", cov.get("default"), lambda a, b: a is not None and a >= b),
+                  ("coverage_default_pct_max", cov.get("default"), lambda a, b: a is not None and a <= b)]
+        for k, gotv, fn in checks:
+            if k in etl and not fn(gotv, etl[k]):
+                miss.append((c["id"], f"자동차 구간 {k} {etl[k]}", str(gotv)))
+                print(f"  >> MISS 자동차 구간 {k} 기대 {etl[k]} / 실제 {gotv}")
+    # ★ 택시 대안 축(2026-09-20 · 21번 방). verdict · arrive · fare_won(정확) · fare_min/max_won(범위) · warn_codes.
+    #   라우터 없이 돌리면 택시가 근거없음이라 전부 MISS 다 — 그게 맞다. --allow-router-down 을 주면
+    #   **SKIP 으로 세어 보이게** 통과시킨다(조용히 통과가 아니다). expect_taxi: {"verdict": "unknown"} 는
+    #   라우터 유무와 무관하게 「택시도 못 낸다」를 잠근다.
+    et = c.get("expect_taxi")
+    if et is not None:
+        tx = r.taxi or {}
+        down = (tx.get("verdict") == "unknown"
+                and any(w["code"] == "MOB_W_CAR_ROUTER_DOWN" for w in (tx.get("warnings") or [])))
+        if down and allow_router_down and et.get("verdict") != "unknown":
+            skipped.append((c["id"], "expect_taxi"))
+            print("  >> SKIP expect_taxi — 라우터 없음(--allow-router-down)")
+        else:
+            tmiss = []
+            if not tx:
+                tmiss.append(("택시 대안", "없음"))
+            if et.get("verdict") and tx.get("verdict") != et["verdict"]:
+                tmiss.append((f"택시 {MARK[et['verdict']]}", MARK.get(tx.get("verdict"), "없음")))
+            if et.get("arrive") and fmt_min(to_service_min(et["arrive"])) != fmt_min(tx.get("arrive_min")):
+                tmiss.append((f"택시 도착 {et['arrive']}", fmt_min(tx.get("arrive_min"))))
+            fw = tx.get("fare_won")
+            if et.get("fare_won") is not None and fw != et["fare_won"]:
+                tmiss.append((f"택시 요금 {et['fare_won']:,}", str(fw)))
+            if et.get("fare_min_won") is not None and (fw is None or fw < et["fare_min_won"]):
+                tmiss.append((f"택시 요금 ≥ {et['fare_min_won']:,}", str(fw)))
+            if et.get("fare_max_won") is not None and (fw is None or fw > et["fare_max_won"]):
+                tmiss.append((f"택시 요금 ≤ {et['fare_max_won']:,}", str(fw)))
+            if et.get("grade") and tx.get("grade") != et["grade"]:
+                tmiss.append((f"택시 등급 {et['grade']}", str(tx.get("grade"))))
+            got_w = {w["code"] for w in (tx.get("warnings") or [])}
+            lack = [x for x in (et.get("warn_codes") or []) if x not in got_w]
+            if lack:
+                tmiss.append((f"택시 경고 {lack}", str(sorted(got_w))))
+            for e_, g_ in tmiss:
+                miss.append((c["id"], e_, g_))
+                print(f"  >> MISS {e_} 기대 / 실제 {g_}")
+    return miss, skipped
+
+
+def main():
+    from . import paths as _paths_cli
+    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
+    ap = argparse.ArgumentParser(description="이동 모듈 시각 검증기 v2 (지하철)")
+    ap.add_argument("--cases", required=True)
+    ap.add_argument("--timetable")
+    ap.add_argument("--order")
+    ap.add_argument("--transfer-walk")
+    ap.add_argument("--bus-route")
+    ap.add_argument("--bus-stops")
+    ap.add_argument("--station-coords")
+    ap.add_argument("--station-exits")
+    ap.add_argument("--bike-stations", help="따릉이 운영 대여소 jsonl (v0.7 · 22번 방). 없으면 자전거는 근거없음")
+    ap.add_argument("--bike-fixture", help="GraphHopper 거리·시간 요약 픽스처 json — 서버 없이 회귀를 돌릴 때")
+    ap.add_argument("--bike-live", default="none",
+                    help="실시간 거치 조회: none(기본 · 근거없음) · env(SEOUL_OPENAPI_KEY 로 실제 호출) · <픽스처 json 경로>")
+    ap.add_argument("--bike-record", help="GraphHopper 실제 응답의 거리·시간 요약을 이 픽스처 파일에 **추가** 기록한다(형상 없음)")
+    ap.add_argument("--bus-profile", help="버스 구간 통행시간 프로파일(v0.9 · 41번 방) · 'none' 이면 종전 모델(거리 ÷ 표정속도). "
+                                         "기본 processed/mobility/bus_seg_profile_v1.jsonl.gz")
+    ap.add_argument("--congestion", nargs="*",
+                    help="혼잡도 jsonl(v0.8 @ 부품). 기본 processed/mobility/congestion_v1.jsonl + congestion_line9_v1.jsonl · 'none' 이면 안 읽는다")
+    ap.add_argument("--rules", default=str(RULES_DIR / "rules_v0.3.json"))
+    ap.add_argument("--holidays", default=str(RULES_DIR / "holidays_2026_2027.json"))
+    ap.add_argument("--case", help="이 id 만 돌린다")
+    ap.add_argument("--graph-dir", help="도로망 그래프 자료 폴더(기본 processed/mobility/graph)")
+    ap.add_argument("--gh-url", help="GraphHopper 주소 · 'none' · 'fixture:<합성경로 파일>' "
+                                     "(기본: 환경변수 MOBILITY_GH_URL → rules car.graphhopper.url)")
+    ap.add_argument("--allow-router-down", action="store_true",
+                    help="라우터에 못 닿아 택시가 근거없음이면 expect_taxi 축을 MISS 대신 SKIP 으로 센다(클라우드 실행용)")
+    ap.add_argument("--check-expect", action="store_true", help="expect 와 대조하고 MISS 면 종료코드 1")
+    ap.add_argument("--verbose", "-v", action="store_true")
+    ap.add_argument("--json", help="판정 결과를 이 경로에 저장")
+    args = ap.parse_args()
+
+    cases = load_cases(args.cases, args.case)
+    v, ctx = build_verifier_for_cases(args, cases)
+    record, bike_router, bike_live, rules = ctx["record"], ctx["bike_router"], ctx["bike_live"], ctx["rules"]
     results, miss, skipped = [], [], []
     for c in cases:
         r = v.verify_case(c)
         results.append(r)
         show(c, r, args.verbose)
         if args.check_expect:
-            # ★ 판정값만 대조하면 부족하다. 2026-09-10 의 순환선 버그는 판정이 계속 '성립'이었고
-            #   **도착 시각만** 73.3분으로 틀려 있었다. expect_arrive 가 그걸 잡는다.
-            # ★ v0.8 — `expect` 는 **밖 판정 둘**(feasible/infeasible)이다. 옛 4값 기대는 `expect_internal` 로 옮긴다.
-            #   옛 파일의 `expect: unknown|rejected_by_limit` 은 어휘 밖이라 MISS 다 — 그게 재정의 전 「전부 MISS 장면」이다.
-            o = r.out or {}
-            if c.get("expect"):
-                if c["expect"] not in OUT_VERDICTS:
-                    miss.append((c["id"], f"expect '{c['expect']}' (어휘 밖 — 밖 판정은 {'/'.join(OUT_VERDICTS)})", o.get("verdict")))
-                    print(f"  >> MISS expect '{c['expect']}' 은 v0.8 어휘 밖이다 — expect_internal 로 옮긴다")
-                elif c["expect"] != o.get("verdict"):
-                    miss.append((c["id"], f"밖 {OUT_MARK[c['expect']]}", f"밖 {OUT_MARK.get(o.get('verdict'), '없음')} ({o.get('code')})"))
-                    print(f"  >> MISS 밖 판정 기대 {OUT_MARK[c['expect']]} / 실제 {OUT_MARK.get(o.get('verdict'), '없음')} ({o.get('code')})")
-            ei = c.get("expect_internal")
-            if ei and ei != r.verdict:
-                miss.append((c["id"], f"내부 {MARK[ei]}", f"내부 {MARK[r.verdict]}"))
-                print(f"  >> MISS 내부 판정 기대 {MARK[ei]} / 실제 {MARK[r.verdict]}")
-            er = c.get("expect_reason")
-            if er is not None and o.get("code") != er:
-                miss.append((c["id"], f"이유 {er}", str(o.get("code"))))
-                print(f"  >> MISS 이유 코드 기대 {er} / 실제 {o.get('code')}")
-            es = c.get("expect_slack_min")
-            if es is not None:
-                lo_, hi_ = es
-                sv = o.get("slack_min")
-                if sv is None or (lo_ is not None and sv < lo_) or (hi_ is not None and sv > hi_):
-                    miss.append((c["id"], f"여유 {lo_}~{hi_}분", str(sv)))
-                    print(f"  >> MISS 여유(slack_min) 기대 {lo_}~{hi_} / 실제 {sv}")
-            em = c.get("expect_margin_min")
-            if em is not None:
-                lo_, hi_ = em
-                mv = o.get("margin_min")
-                if mv is None or (lo_ is not None and mv < lo_) or (hi_ is not None and mv > hi_):
-                    miss.append((c["id"], f"@ {lo_}~{hi_}분", str(mv)))
-                    print(f"  >> MISS @(margin_min) 기대 {lo_}~{hi_} / 실제 {mv}")
-            if "expect_p90_eta" in c:
-                # ★ v0.9(41) — p90_eta_min 은 스프레드 소스가 있을 때만 나온다. null 이면 「없어야 한다」.
-                ep, pv = c["expect_p90_eta"], o.get("p90_eta_min")
-                bad = (pv is not None) if ep is None else (pv is None or pv < ep[0] or pv > ep[1])
-                if bad:
-                    miss.append((c["id"], f"p90_eta {ep}", str(pv)))
-                    print(f"  >> MISS p90_eta_min 기대 {ep} / 실제 {pv}")
-            el = c.get("expect_last_depart")
-            if el is not None:
-                want = None if el is None else fmt_min(to_service_min(el))
-                got = fmt_min(o["last_feasible_depart_min"]) if o.get("last_feasible_depart_min") is not None else None
-                if want != got:
-                    miss.append((c["id"], f"늦어도 출발 {el}", str(got)))
-                    print(f"  >> MISS 마지막 성립 출발 기대 {el} / 실제 {got}")
-            if "expect_last_depart_none" in c and c["expect_last_depart_none"] and o.get("last_feasible_depart_min") is not None:
-                miss.append((c["id"], "늦어도 출발 없음", fmt_min(o["last_feasible_depart_min"])))
-                print(f"  >> MISS 마지막 성립 출발이 없어야 하는데 {fmt_min(o['last_feasible_depart_min'])}")
-            # ★ 완화 조건도 대조한다. 2026-09-10 에 24:50 요청이 '불가' 는 맞는데 완화 조건이
-            #   "286분 뒤 첫차를 기다리면 성립" 으로 나간 적이 있다(막차를 4분 놓친 것인데).
-            #   판정값만 보는 대조는 그걸 통과시켰다.
-            am = c.get("expect_alt_min")
-            if am is not None and len(r.alternatives) < am:
-                miss.append((c["id"], f"대안 {am}개 이상", f"{len(r.alternatives)}개"))
-                print(f"  >> MISS 대안 {am}개 이상 기대 / 실제 {len(r.alternatives)}개")
-            # ★ 2026-09-14 신설 — 「없어야 한다」를 말할 축이 하나도 없었다.
-            #   expect_alt_min/axis/arrive/warn_codes 는 전부 **있어야 한다**만 본다. 그래서
-            #   `expect_alt_min: 0` 으로 잠근 척한 케이스 셋(ISSUE-06·ALT-03·ALT-04)은
-            #   len < 0 이 영원히 거짓이라 **한 번도 검사된 적이 없다.**
-            #   실제로 그 구멍으로 TOUR12 가 ISSUE-01 의 대안에 들어왔고 회귀 85건은 전부 통과했다.
-            ax = c.get("expect_alt_max")
-            if ax is not None and len(r.alternatives) > ax:
-                got = [x["label"] for x in r.alternatives]
-                miss.append((c["id"], f"대안 {ax}개 이하", f"{len(r.alternatives)}개: {got}"))
-                print(f"  >> MISS 대안 {ax}개 이하 기대 / 실제 {len(r.alternatives)}개 — {got}")
-            # ★ 수단별 대안 상한(2026-09-20 · 22번 방). 자전거 후보가 생기면서 「대안 0」 잠금(ISSUE-06·ALT-03)이
-            #   자전거 하나로 풀린다 — 자전거는 지하철 이슈를 상속하지 않으므로 나오는 게 맞다. 잠금을 수단별로 옮긴다.
-            axm = c.get("expect_alt_max_by_mode") or {}
-            for md, mx in axm.items():
-                got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
-                if len(got) > mx:
-                    miss.append((c["id"], f"{md} 대안 {mx}개 이하", f"{len(got)}개: {got}"))
-                    print(f"  >> MISS {md} 대안 {mx}개 이하 기대 / 실제 {len(got)}개 — {got}")
-            amn = c.get("expect_alt_min_by_mode") or {}
-            for md, mn in amn.items():
-                got = [x["label"] for x in r.alternatives if x.get("mode", "subway") == md]
-                if len(got) < mn:
-                    miss.append((c["id"], f"{md} 대안 {mn}개 이상", f"{len(got)}개"))
-                    print(f"  >> MISS {md} 대안 {mn}개 이상 기대 / 실제 {len(got)}개")
-            aar = c.get("expect_alt_arrive")
-            if aar:
-                got = [fmt_min(x["arrive_min"]) for x in r.alternatives]
-                if fmt_min(to_service_min(aar)) not in got:
-                    miss.append((c["id"], f"대안 도착 {aar}", str(got)))
-                    print(f"  >> MISS 대안 도착 {aar} 가 없다 — 실제 {got}")
-            aa = c.get("expect_alt_axis")
-            if aa and aa not in [x["axis"] for x in r.alternatives]:
-                miss.append((c["id"], f"대안 축 '{aa}'", str([x["axis"] for x in r.alternatives])))
-                print(f"  >> MISS 대안 축 '{aa}' 가 없다")
-            want = c.get("expect_relief_contains")
-            if want and want not in (r.relief or ""):
-                miss.append((c["id"], f"완화 조건에 '{want}'", f"'{r.relief}'"))
-                print(f"  >> MISS 완화 조건에 '{want}' 가 없다 — 실제: {r.relief}")
-            # ★ 경고 축(2026-09-13). 문장이 아니라 **코드**로 건다 — 문구를 다듬어도 회귀가 안 깨진다.
-            #   케이스 경고와 대안 경고를 합쳐서 본다(공항 요금처럼 대안에만 붙는 것이 있다).
-            wc = c.get("expect_warn_codes")
-            if wc:
-                got = {w["code"] for w in (r.warnings or [])}
-                for al in (r.alternatives or []):
-                    got |= {w["code"] for w in (al.get("warnings") or [])}
-                lack = [x for x in wc if x not in got]
-                if lack:
-                    miss.append((c["id"], f"경고 {lack}", str(sorted(got))))
-                    print(f"  >> MISS 경고 {lack} 가 없다 — 실제 {sorted(got)}")
-            # ★ 「없어야 한다」 경고 축 + 사유 문구 축(2026-09-20 · 22번 방). 외국인 안내가 foreign=false 에 붙으면 잡는다.
-            wa = c.get("expect_warn_codes_absent")
-            if wa:
-                got = {w["code"] for w in (r.warnings or [])}
-                for al in (r.alternatives or []):
-                    got |= {w["code"] for w in (al.get("warnings") or [])}
-                bad = [x for x in wa if x in got]
-                if bad:
-                    miss.append((c["id"], f"경고 {bad} 없음", str(sorted(got))))
-                    print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다 — 실제 {sorted(got)}")
-            rc = c.get("expect_reason_contains")
-            if rc:
-                blob = " | ".join([r.reason or ""] + [(l.reason or "") for l in (r.legs or [])])
-                if rc not in blob:
-                    miss.append((c["id"], f"사유에 '{rc}'", blob[:160]))
-                    print(f"  >> MISS 사유에 '{rc}' 가 없다 — 실제: {blob[:160]}")
-            ea = to_service_min(c.get("expect_arrive")) if c.get("expect_arrive") else None
-            if ea is not None and ea != r.arrive_min:
-                miss.append((c["id"], f"도착 {fmt_min(ea)}", f"도착 {fmt_min(r.arrive_min)}"))
-                print(f"  >> MISS 도착 기대 {fmt_min(ea)} / 판정 {fmt_min(r.arrive_min)}")
-            # ★ 다목적 후보 축(2026-09-20 · 20번 방). 후보 수·기준·구간열·기준별 도착·동급·성립 상한·노선별 불가.
-            #   「있어야 한다」와 「없어야 한다」를 둘 다 둔다(expect_tie: false · expect_feasible_max · expect_no_line_feasible).
-            cs = r.candidates or []
-            cm = c.get("expect_candidates_min")
-            if cm is not None and len(cs) < cm:
-                miss.append((c["id"], f"후보 {cm}개 이상", f"{len(cs)}개"))
-                print(f"  >> MISS 후보 {cm}개 이상 기대 / 실제 {len(cs)}개")
-            for cr in c.get("expect_criteria") or []:
-                if not any(cr in x["criteria"] for x in cs):
-                    miss.append((c["id"], f"기준 '{cr}' 후보", str([x["criteria"] for x in cs])))
-                    print(f"  >> MISS 기준 '{cr}' 을 단 후보가 없다")
-            for cr, legs in (c.get("expect_candidate_legs") or {}).items():
-                want = [tuple(x) for x in legs]
-                got = [[("자전거" if l.get("mode") == "bike" else l.get("line") or f"버스{l.get('route')}",
-                         l["from"], l["to"]) for l in x["legs"]]
-                       for x in cs if cr in x["criteria"]]
-                if not any([tuple(g) for g in gl] == want for gl in got):
-                    miss.append((c["id"], f"{cr} 구간열 {want}", str(got)))
-                    print(f"  >> MISS {cr} 구간열 기대 {want} / 실제 {got}")
-            for cr, at in (c.get("expect_candidate_arrive") or {}).items():
-                got = [fmt_min(x["arrive_min"]) for x in cs if cr in x["criteria"]]
-                if fmt_min(to_service_min(at)) not in got:
-                    miss.append((c["id"], f"{cr} 도착 {at}", str(got)))
-                    print(f"  >> MISS {cr} 도착 기대 {at} / 실제 {got}")
-            et = c.get("expect_tie")
-            if et is not None and bool(r.ties) != et:
-                miss.append((c["id"], f"동급 {'있음' if et else '없음'}", f"{len(r.ties or [])}쌍"))
-                print(f"  >> MISS 동급 {'있음' if et else '없음'} 기대 / 실제 {len(r.ties or [])}쌍")
-            for ax in c.get("expect_tie_axes") or []:
-                if not any(ax in t["axes"] for t in (r.ties or [])):
-                    miss.append((c["id"], f"동급 이유 축 '{ax}'", str([list(t['axes']) for t in (r.ties or [])])))
-                    print(f"  >> MISS 동급 이유 축 '{ax}' 가 없다")
-            fm = c.get("expect_feasible_max")
-            nf = sum(1 for x in cs if x["verdict"] == "feasible")
-            if fm is not None and nf > fm:
-                miss.append((c["id"], f"성립 후보 {fm}개 이하", f"{nf}개"))
-                print(f"  >> MISS 성립 후보 {fm}개 이하 기대 / 실제 {nf}개")
-            nl = c.get("expect_no_line_feasible")
-            if nl:
-                bad = [x["label"] for x in cs if x["verdict"] == "feasible"
-                       and any(l.get("line") == nl for l in x["legs"])]
-                if bad:
-                    miss.append((c["id"], f"{nl} 후보 성립 없음", str(bad)))
-                    print(f"  >> MISS {nl} 을 쓰는 후보가 성립했다 — {bad}")
-            # ★ 등급 · 경고 부재 · 자동차 구간 축(2026-09-20 · 21번 방).
-            #   expect_warn_absent 는 「없어야 한다」 축 — 골목 100% 구간에 class 경고가 섞이면 안 된다(CAR-06).
-            eg = c.get("expect_grade")
-            if eg and r.grade != eg:
-                miss.append((c["id"], f"등급 {eg}", r.grade))
-                print(f"  >> MISS 등급 기대 {eg} / 판정 {r.grade}")
-            wa = c.get("expect_warn_absent")
-            if wa:
-                got = {w["code"] for w in (r.warnings or [])}
-                for al in (r.alternatives or []):
-                    got |= {w["code"] for w in (al.get("warnings") or [])}
-                bad = [x for x in wa if x in got]
-                if bad:
-                    miss.append((c["id"], f"경고 없음 {wa}", f"있음 {bad}"))
-                    print(f"  >> MISS 경고 {bad} 가 없어야 하는데 있다")
-            etl = c.get("expect_taxi_leg")
-            if etl:
-                cl = next((l.car for l in r.legs if getattr(l, "car", None)), None) or {}
-                cov = cl.get("coverage_pct") or {}
-                checks = [("fare_won", cl.get("fare_won"), lambda a, b: a == b),
-                          ("night_rate", cl.get("night_rate"), lambda a, b: a == b),
-                          ("slow_s", cl.get("slow_s"), lambda a, b: a == b),
-                          ("day_type", cl.get("day_type"), lambda a, b: a == b),
-                          ("coverage_class_pct_min", cov.get("class"), lambda a, b: a is not None and a >= b),
-                          ("coverage_default_pct_min", cov.get("default"), lambda a, b: a is not None and a >= b),
-                          ("coverage_default_pct_max", cov.get("default"), lambda a, b: a is not None and a <= b)]
-                for k, gotv, fn in checks:
-                    if k in etl and not fn(gotv, etl[k]):
-                        miss.append((c["id"], f"자동차 구간 {k} {etl[k]}", str(gotv)))
-                        print(f"  >> MISS 자동차 구간 {k} 기대 {etl[k]} / 실제 {gotv}")
-            # ★ 택시 대안 축(2026-09-20 · 21번 방). verdict · arrive · fare_won(정확) · fare_min/max_won(범위) · warn_codes.
-            #   라우터 없이 돌리면 택시가 근거없음이라 전부 MISS 다 — 그게 맞다. --allow-router-down 을 주면
-            #   **SKIP 으로 세어 보이게** 통과시킨다(조용히 통과가 아니다). expect_taxi: {"verdict": "unknown"} 는
-            #   라우터 유무와 무관하게 「택시도 못 낸다」를 잠근다.
-            et = c.get("expect_taxi")
-            if et is not None:
-                tx = r.taxi or {}
-                down = (tx.get("verdict") == "unknown"
-                        and any(w["code"] == "MOB_W_CAR_ROUTER_DOWN" for w in (tx.get("warnings") or [])))
-                if down and args.allow_router_down and et.get("verdict") != "unknown":
-                    skipped.append((c["id"], "expect_taxi"))
-                    print("  >> SKIP expect_taxi — 라우터 없음(--allow-router-down)")
-                else:
-                    tmiss = []
-                    if not tx:
-                        tmiss.append(("택시 대안", "없음"))
-                    if et.get("verdict") and tx.get("verdict") != et["verdict"]:
-                        tmiss.append((f"택시 {MARK[et['verdict']]}", MARK.get(tx.get("verdict"), "없음")))
-                    if et.get("arrive") and fmt_min(to_service_min(et["arrive"])) != fmt_min(tx.get("arrive_min")):
-                        tmiss.append((f"택시 도착 {et['arrive']}", fmt_min(tx.get("arrive_min"))))
-                    fw = tx.get("fare_won")
-                    if et.get("fare_won") is not None and fw != et["fare_won"]:
-                        tmiss.append((f"택시 요금 {et['fare_won']:,}", str(fw)))
-                    if et.get("fare_min_won") is not None and (fw is None or fw < et["fare_min_won"]):
-                        tmiss.append((f"택시 요금 ≥ {et['fare_min_won']:,}", str(fw)))
-                    if et.get("fare_max_won") is not None and (fw is None or fw > et["fare_max_won"]):
-                        tmiss.append((f"택시 요금 ≤ {et['fare_max_won']:,}", str(fw)))
-                    if et.get("grade") and tx.get("grade") != et["grade"]:
-                        tmiss.append((f"택시 등급 {et['grade']}", str(tx.get("grade"))))
-                    got_w = {w["code"] for w in (tx.get("warnings") or [])}
-                    lack = [x for x in (et.get("warn_codes") or []) if x not in got_w]
-                    if lack:
-                        tmiss.append((f"택시 경고 {lack}", str(sorted(got_w))))
-                    for e_, g_ in tmiss:
-                        miss.append((c["id"], e_, g_))
-                        print(f"  >> MISS {e_} 기대 / 실제 {g_}")
+            m_, s_ = check_expect(c, r, args.allow_router_down)
+            miss += m_
+            skipped += s_
 
     tally = collections.Counter(r.verdict for r in results)
     otally = collections.Counter((r.out or {}).get("verdict") for r in results)
