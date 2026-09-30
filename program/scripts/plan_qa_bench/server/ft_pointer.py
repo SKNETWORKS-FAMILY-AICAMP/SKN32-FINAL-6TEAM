@@ -13,6 +13,9 @@ epochs = int(sys.argv[3]) if len(sys.argv) > 3 else 1
 lr = float(sys.argv[4]) if len(sys.argv) > 4 else 2e-4
 rank = int(sys.argv[5]) if len(sys.argv) > 5 else 16
 data = json.load(open(os.environ.get('SFT', 'pointer_sft.json'), encoding='utf-8'))      # SFT=pointer_sft_v2.json 로 2판 자료
+LIM = int(os.environ.get('LIMIT', '0'))           # 속도 측정용: 학습 문제 수 제한
+if LIM:
+    data['train'] = data['train'][:LIM]
 tok = AutoTokenizer.from_pretrained(base)
 tok.padding_side = 'left'
 if tok.pad_token is None:
@@ -69,8 +72,11 @@ for ep in range(epochs):
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step(); sched.step(); opt.zero_grad()
         step += 1
-        if step % 10 == 0:
+        if step % 10 == 0 or LIM:
             print(f'step {step}/{steps} loss {tot:.4f} {time.time() - t0:.0f}s', flush=True)
+if os.environ.get('SKIP_EVAL'):
+    print('속도 측정만 하고 종료', f'{time.time() - t0:.0f}s', flush=True)
+    sys.exit(0)
 model.eval()
 model.gradient_checkpointing_disable()
 model.config.use_cache = True
