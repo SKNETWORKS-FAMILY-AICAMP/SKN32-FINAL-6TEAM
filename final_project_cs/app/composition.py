@@ -180,9 +180,11 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
         from app.infrastructure.travel import build_travel_sources
 
+        sources = build_travel_sources(get_settings())
         tools = ReadToolbox(get_connection, policy_search=search_policy,
-                            travel=build_travel_sources(get_settings()),
-                            report_extractor=build_report_extractor())
+                            travel=sources,
+                            report_extractor=build_report_extractor(),
+                            google_places=build_google_places(limiter=sources.limiter))
         # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
         #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
         #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
@@ -220,6 +222,23 @@ def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None 
     if transport is None or capability_resolver is None:
         raise CompositionError("port team_executor=a2a requires injected transport and capability_resolver")
     return A2ATeamExecutor(transport, capability_resolver)
+
+
+def build_google_places(*, limiter: Any = None) -> Any:
+    """구글 장소 어댑터 — 키가 없으면 `None`(부르는 쪽이 「모름」으로 넘어간다).
+
+    ★`[2026-09-30 사용자 결정]` 식당 가격 조회(`price`)는 하루 상한 없이 부르고, 월 무료 한도를 넘는
+      첫 호출에 운영자에게 알린다(`google_over_free_alert`). 영업시간 조회는 지금처럼 DB 예산 안에서만 부른다.
+    """
+    key = getattr(get_settings(), "google_maps_api_key", "")
+    if not key:
+        return None
+    from app.infrastructure.notify.ops_alert import google_over_free_alert
+    from app.infrastructure.travel.call_budget import CallBudget, google_caps
+    from app.infrastructure.travel.google_places import GooglePlaces
+
+    return GooglePlaces(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=google_caps()),
+                        limiter=limiter, on_over_free=google_over_free_alert)
 
 
 def build_graph_store(*, connection: Any, tenant_id: str,
@@ -402,4 +421,4 @@ def build_verification(*, config=None):
 
 
 __all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller", "build_report_extractor",
-           "build_graph_store", "build_registry", "build_team_executor"]
+           "build_google_places", "build_graph_store", "build_registry", "build_team_executor"]

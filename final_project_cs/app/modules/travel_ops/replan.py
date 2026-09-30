@@ -28,6 +28,9 @@ from typing import Any, Callable
 WALK_M_PER_MIN = 80
 ORDER_MARGIN_MIN = 20
 SEATING_BUFFER_MIN = 10
+#: 가격대를 물어볼 후보 수(원래 식당 제외). ★가격대 조회는 한 곳에 한 번 — 가까운 곳부터 이만큼만 묻는다
+PRICE_LOOKUP_LIMIT = 8
+_PRICE_RANK = {"higher": 1, "unknown": 2}
 
 
 @dataclass
@@ -44,12 +47,20 @@ class Candidate:
     walk_min: int | None = None
     starts_at: datetime | None = None
     ends_at: datetime | None = None
+    #: ★`[2026-09-30]` 식당 후보의 가격 비교 — `won`(우리 원 단위 가격으로 잼) · `same_or_lower` · `higher` ·
+    #:  `unknown`. 구글 가격은 **비교 결과만** 여기 남긴다. 원값은 들고 있지 않는다(약관 — 저장 금지).
+    #:  식당 밖 후보는 `None` — 순위에 영향이 없다.
+    price_compare: str | None = None
+    #: 구글로 잰 근거 — `range`(1인당 가격 범위, 원) · `level`(가격대 0~4). 모르면 None
+    price_basis: str | None = None
 
     def rank(self) -> tuple:
         # ☆`[2026-09-29 이동 계산기 문제목록 #22]` 경로 후보의 요금 모름은 0원(가장 쌈)이 아니라 **아는 후보 뒤** —
         #   경로 후보(option)에만 건다. 식당·활동은 종전 순서 그대로다
         fare_unknown = 1 if (self.option is not None and self.extra_cost_krw is None) else 0
-        return (self.changed_items, fare_unknown, self.extra_cost_krw or 0, self.shift_minutes,
+        # ☆`[2026-09-30]` 식당 — 같거나 싼 가격대 → 비싼 가격대 → 모름. 모름은 탈락이 아니라 맨 뒤다
+        price_rank = _PRICE_RANK.get(self.price_compare or "", 0)
+        return (self.changed_items, fare_unknown, price_rank, self.extra_cost_krw or 0, self.shift_minutes,
                 0 if self.reversible_internally else 1, self.key)
 
     @property
@@ -153,7 +164,11 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                       arrival: datetime, minutes: int, constraints: dict[str, Any],
                       radius_m: int, next_start: datetime | None,
                       exclude: set[str] = frozenset()) -> list[Candidate]:
-    """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2)."""
+    """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2).
+
+    ★`[2026-09-30]` 가격을 모른다고 떨어뜨리지 않는다 — 실제 식당 자료에는 원 단위 가격이 없어 후보가 전부
+      빠졌다. 모르면 `price_compare="unknown"` 으로 맨 뒤에 세우고, 구글 가격은 `apply_google_prices` 가 채운다.
+    """
     base_price = (original.get("attributes") or {}).get("price_krw")
     need_payment = constraints.get("payment")
     out = []
@@ -171,9 +186,10 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                               extra_cost_krw=None, shift_minutes=0, walk_min=walk)
         price = attributes.get("price_krw")
         if price is None or base_price is None:
-            candidate.rejected.append("가격을 몰라 추가 비용을 계산할 수 없다")
+            candidate.price_compare = "unknown"
         else:
             candidate.extra_cost_krw = max(0, int(price) - int(base_price))
+            candidate.price_compare = "won"
         if need_payment and need_payment not in (attributes.get("payment") or []):
             candidate.rejected.append(f"결제 조건({need_payment}) 불충족")
         fits, why = dining_fits(place, arrival, minutes)
@@ -265,6 +281,54 @@ def store_candidates(*, here: dict[str, Any], home: dict[str, Any], places: list
     return out
 
 
+GooglePrice = dict[str, int | None]      # {"level": 0~4, "low": 원, "high": 원} — 모르는 칸은 None
+
+
+def apply_google_prices(candidates: list[Candidate], *, original: dict[str, Any],
+                        lookup: Callable[[list[dict[str, Any]]], dict[str, GooglePrice | None] | None],
+                        limit: int = PRICE_LOOKUP_LIMIT) -> None:
+    """식당 후보에 구글 가격 비교를 붙인다 — 원래 식당보다 **같거나 싼가 · 비싼가 · 모름**.
+
+    ★`[2026-09-30 사용자 결정]` 우리 원 단위 가격이 없는 후보만, 탈락하지 않은 것 중 **가까운 `limit` 곳**과
+      원래 식당을 한 번에 묻는다(`lookup` — 장소 목록 → {place_id: 구글 가격 또는 None}).
+    ★잴 수 있는 것부터: 양쪽에 **가격 범위**(1인당, 원)가 있으면 범위 가운데 값의 차로 잰다 — 차액을
+      `extra_cost_krw` 에 두어 같은 쪽 안에서 덜 비싼 곳이 먼저 온다. 없으면 **가격대**(0~4, 원 기준 비공개)로.
+    ★받은 값은 **비교에만 쓰고 버린다**(구글 약관 — 저장 금지). 후보에는 비교 결과와 근거 종류만 남는다.
+    ★조회가 실패하거나 원래 식당의 가격을 모르면 전부 「모름」 — 순서는 그대로다.
+    """
+    targets = [c for c in candidates if not c.rejected and c.place and c.price_compare != "won"]
+    if not targets:
+        return
+    targets.sort(key=lambda c: (c.walk_min if c.walk_min is not None else math.inf, c.key))
+    targets = targets[:limit]
+    for candidate in targets:
+        candidate.price_compare = "unknown"
+    prices = lookup([original] + [c.place for c in targets]) or {}
+    base = prices.get(str(original.get("place_id")))
+    if not base:
+        return
+    for candidate in targets:
+        mine = prices.get(str(candidate.place["place_id"]))
+        if not mine:
+            continue
+        base_mid, mine_mid = _range_middle(base), _range_middle(mine)
+        if base_mid is not None and mine_mid is not None:
+            difference = mine_mid - base_mid
+            candidate.price_compare = "same_or_lower" if difference <= 0 else "higher"
+            candidate.price_basis, candidate.extra_cost_krw = "range", max(0, round(difference))
+        elif base.get("level") is not None and mine.get("level") is not None:
+            candidate.price_compare = "same_or_lower" if mine["level"] <= base["level"] else "higher"
+            candidate.price_basis = "level"
+
+
+def _range_middle(price: GooglePrice) -> float | None:
+    """범위 가운데 값. ★상한이 없으면(「10만 원 이상」) 하한을 쓴다 — 더 비쌀 수 있지만 더 싸지는 않다."""
+    low, high = price.get("low"), price.get("high")
+    if low is None:
+        return None
+    return float(low) if high is None else (low + high) / 2
+
+
 def choose(candidates: list[Candidate],
            recheck: Callable[[Candidate], dict[str, Any]] | None = None) -> tuple[
                Candidate | None, list[Candidate], list[Candidate]]:
@@ -313,7 +377,9 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "option_label": (candidate.option or {}).get("label") if candidate.option else None,
             "starts_at": candidate.starts_at.isoformat() if candidate.starts_at else None,
             "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
-            "walk_min": candidate.walk_min}
+            "walk_min": candidate.walk_min,
+            # ★`[2026-09-30]` 원래 식당과의 가격 비교 결과만(구글 금액은 싣지 않는다 — 저장 금지). 식당 밖은 None
+            "price_compare": candidate.price_compare}
 
 
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:
@@ -382,11 +448,16 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
                                             for c in alternates) + ".")
     if after:
         parts.append(f"이후 {after} 일정에는 영향이 없습니다.")
+    if best.price_basis == "range":
+        # ★구글 가격으로 골랐으면 추정이라고 밝힌다. 금액은 적지 않는다 — 통지는 저장되고 구글 값은 저장 금지다
+        parts.append("가격은 구글 지도에 올라온 1인당 가격 범위로 비교한 추정이에요.")
+    elif best.price_basis == "level":
+        parts.append("가격대는 구글 기준 추정이에요.")
     return _notice(" ".join(parts), causes=[cause], alternates=alternates, replay=False,
                    changed={"from": original["name"], "to": best.name,
                             "at": best.starts_at.isoformat()})
 
 
-__all__ = ["Candidate", "activity_candidates", "alternate_record", "change_notice", "choose", "dining_candidates",
+__all__ = ["Candidate", "PRICE_LOOKUP_LIMIT", "activity_candidates", "alternate_record", "apply_google_prices", "change_notice", "choose", "dining_candidates",
            "dining_fits", "dining_notice", "distance_m", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]

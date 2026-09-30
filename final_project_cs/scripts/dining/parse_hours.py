@@ -21,9 +21,11 @@ from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
-DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
-OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
+DATA = DINING_DATA     # 원본 데이터
+OUT = os.path.join(DINING_DATA, "_build")  # 생성물
 
 ALL_DAYS = (1, 2, 3, 4, 5, 6, 7)
 WEEKDAYS = (1, 2, 3, 4, 5)

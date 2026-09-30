@@ -26,8 +26,12 @@ from uuid import UUID
 
 from .itinerary import Item
 from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record,
-                     change_notice, choose, dining_candidates, dining_fits, dining_notice,
+                     apply_google_prices, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      route_candidates, route_notice, store_candidates)
+
+#: 식당 가격 조회 — 장소 목록 → {place_id: 구글 가격 또는 None}. ★`[2026-09-30]` 대안을 세우는 순간에만 부르고
+#:  값은 버린다(`replan.apply_google_prices`). 없으면 구글 가격 없이 예전처럼 세운다.
+PriceLookup = Callable[[list[dict[str, Any]]], "dict[str, dict[str, int | None] | None] | None"]
 
 #: 대안 식당을 찾는 반경(미터). ★우리가 고른 값이다 — 도보 약 9분.
 DINING_RADIUS_M = 700
@@ -357,13 +361,18 @@ def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
         ends_at=best.ends_at,
         detail={"other_options": notice["other_options"],
                 **({"customer_reported": True} if reason == "customer_report" else {}),
+                **({"price_compare": best.price_compare} if best.price_compare else {}),
                 "alternates": [alternate_record(c) for c in alternates]})
+    # ★가격은 비교 결과만(`won` · `same_or_lower` · `higher` · `unknown`) — 구글 가격대 원값은 남기지 않는다
+    summary = {"to": best.name, **({"price": best.price_compare} if best.price_compare else {}),
+               **({"price_basis": best.price_basis} if best.price_basis else {})}
     return ItineraryChange(reason=reason, causes=notice["causes"], notice=notice,
-                           replacements={meal.item_id: replacement}, summary={"to": best.name})
+                           replacements={meal.item_id: replacement}, summary=summary)
 
 
 def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
-               at: datetime, minutes: int, message: str, request_id: str | None) -> Plan:
+               at: datetime, minutes: int, message: str, request_id: str | None,
+               price_lookup: PriceLookup | None = None) -> Plan:
     """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
     meal = next((i for i in items if i.kind == "dining" and i.starts_at >= at), None)
     if meal is None or meal.place is None:
@@ -380,6 +389,8 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
         original=meal.place, places=places, arrival=arrival, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
         next_start=following.starts_at if following else None)
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"reason": why,
@@ -392,7 +403,8 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
 
 
 def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
-                at: datetime, message: str, request_id: str | None) -> Plan:
+                at: datetime, message: str, request_id: str | None,
+                price_lookup: PriceLookup | None = None) -> Plan:
     """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
     meal = next((i for i in items if i.kind == "dining"
                  and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
@@ -420,6 +432,8 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
             original=meal.place, places=[place], arrival=arrival, minutes=duration,
             constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
             next_start=following.starts_at if following else None)
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"rejected": {c.name: c.rejected for c in rejected}})
@@ -439,7 +453,7 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
 # ── 새벽 확인 — 그날 그 시각에 안 연다 (D-020, 2026-09-25) ──────────
 def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                        meal: Item, source: str, detail: str, checked_at: datetime,
-                       exclude: set[str] = frozenset()) -> Plan:
+                       exclude: set[str] = frozenset(), price_lookup: PriceLookup | None = None) -> Plan:
     """새벽 확인에서 **계획한 시각에 안 여는** 식당 — 같은 시각에 근처 대체 식당으로 바꾼다.
 
     ★고객 신고(`plan_closed`)와 다르다 — 그쪽은 고객이 **지금 가게 앞에** 있어 걸어갈 시간만큼 입장을
@@ -457,6 +471,8 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
         original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
         next_start=following.starts_at if following else None, exclude=set(exclude))
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
     best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"causes": [cause],

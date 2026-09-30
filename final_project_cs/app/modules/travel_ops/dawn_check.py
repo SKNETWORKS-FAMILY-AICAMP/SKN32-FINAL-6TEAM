@@ -152,7 +152,8 @@ class DawnCheck:
             else:
                 plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
                                           detail=detail, checked_at=checked_at,
-                                          exclude=self._closed_places(conn, day))
+                                          exclude=self._closed_places(conn, day),
+                                          price_lookup=self._price_lookup())
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})
@@ -191,6 +192,16 @@ class DawnCheck:
             cur.execute("SELECT DISTINCT place_id FROM place_open_checks WHERE tenant_id=%s AND day=%s "
                         "AND verdict='closed'", (self.store.tenant_id, day))
             return {row[0] for row in cur.fetchall()}
+
+    def _price_lookup(self):
+        """대체 식당의 구글 가격(`[2026-09-30]`). 소스가 가격을 못 주면 `None` — 구글 가격 없이 세운다.
+        ★값은 비교에만 쓰고 버린다(구글 약관). 짝 표에 없는 식당은 「모름」이다."""
+        if not hasattr(self.source, "price"):
+            return None
+        from app.infrastructure.travel.google_places import prices_for
+
+        return lambda places: prices_for(self._connect, self.store.tenant_id, self.source,
+                                         [str(p["place_id"]) for p in places])
 
     def _provider_id(self, conn, place_id) -> str | None:
         with conn.cursor() as cur:

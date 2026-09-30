@@ -1,7 +1,7 @@
 """운영자가 모은 할랄 식당 검수 시트를 원장에 넣는 SQL 로 바꾼다.
 
 무엇을 읽는가.
-    data/dining/halal/할랄식당_검수.csv
+    datasets/dining/processed/halal/할랄식당_검수.csv
     판정이 「영업」이고 좌표가 있고, 인허가 관리번호가 있거나 원장이 「없음(운영자 확인)」인 행만
     가게로 넣는다. 확인 필요 · 폐업 기록만 · 원장에 없음 · 제외 는 넣지 않는다(개수만 알린다).
 
@@ -33,7 +33,7 @@
     새로 만들지 않고 그 가게에 붙인다. 같은 가게가 두 행이 되면 판정이 둘로 갈린다.
 
 사용법:  python scripts/dining/make_halal_sql.py [--dry] [--sheet 시트.csv] [--out 출력.sql] [--today 2026-09-28]
-출력:    data/dining/_build/halal.sql
+출력:    datasets/dining/processed/_build/halal.sql
 """
 from __future__ import annotations
 
@@ -48,9 +48,11 @@ from datetime import date
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-SHEET = os.path.join(ROOT, "data", "dining", "halal", "할랄식당_검수.csv")
-OUT = os.path.join(ROOT, "data", "dining", "_build")
+SHEET = os.path.join(DINING_DATA, "halal", "할랄식당_검수.csv")
+OUT = os.path.join(DINING_DATA, "_build")
 
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000003")
 LIST_SOURCE = "halal_curated"
@@ -227,10 +229,10 @@ def main() -> None:
         "INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
         "row_count, raw_uri, status) VALUES "
         f"('{load_list}', '{LIST_SOURCE}', '{LOADED} 12:00+09', 'halal-sheet-v1', '서울 할랄 식당 검수 시트', "
-        f"{taken}, 'data/dining/halal/{os.path.basename(sheet)}', 'loaded')"
+        f"{taken}, 'datasets/dining/processed/halal/{os.path.basename(sheet)}', 'loaded')"
         + "".join(
             f", ('{lid}', '{src}', '{LOADED} 12:00+09', 'halal-sheet-v1', '할랄 목록의 영업 근거', "
-            f"{ev_count[src]}, 'data/dining/halal/{os.path.basename(sheet)}', 'loaded')"
+            f"{ev_count[src]}, 'datasets/dining/processed/halal/{os.path.basename(sheet)}', 'loaded')"
             for src, lid in load_ev.items())
         + " ON CONFLICT (load_id) DO NOTHING;", ""]
     sql = "\n".join(head + body + ["", "COMMIT;", ""])

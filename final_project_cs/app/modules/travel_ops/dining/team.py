@@ -40,8 +40,9 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         # ★`[2026-09-25]` `read.booking_terms` — 규정 질문에서 식당 예약이 있으면 취소 조건 수치를 댄다
         # ★`read.dining_state` — 요식 원장에 「그 시각에 여는가」를 묻는다. 코어에 등록되지 않았으면
         #   `ToolNotAllowed` 가 나고, 그때는 원장 없이 예전처럼 답한다 — 등록 전에 이 Team 이 죽으면 안 된다.
+        # ★`[2026-09-30]` `read.place_price` — 대체 식당을 세울 때 구글 가격(1인당 범위 · 가격대)을 묻는다. 없으면 없이 세운다
         allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms",
-                       "read.dining_state", *ITINERARY_TOOLS],
+                       "read.dining_state", "read.place_price", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
         #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
         knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
@@ -63,16 +64,33 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         if places is None:
             return self._unknown(task, "장소 목록", ctx["evidence"])
         request_id = task.context.current_state.get("request_id")
+        prices = self._price_lookup(task, ctx)
         if kind == "delay":
             minutes = ctx["report"].get("minutes")
             if not minutes:
                 return self._unknown(task, "늦는 시간", ctx["evidence"])
             plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
-                              minutes=int(minutes), message=task.input_text, request_id=request_id)
+                              minutes=int(minutes), message=task.input_text, request_id=request_id,
+                              price_lookup=prices)
         else:
             plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
-                               message=task.input_text, request_id=request_id)
+                               message=task.input_text, request_id=request_id, price_lookup=prices)
         return self.settle(task, ctx, plan)
+
+    def _price_lookup(self, task: TeamTask, ctx: dict[str, Any]):
+        """대체 식당의 구글 가격을 묻는 함수(`read.place_price`). ★한 번에 한 번만 부른다(도구 호출 하나).
+
+        ★도구가 없거나(`ToolNotAllowed`) 못 불렀으면 `None` — 구글 가격 없이 예전처럼 세운다.
+          가격대는 더해 주는 것이지 없으면 못 도는 것이 아니다(`_dining_state` 와 같다).
+        ★받은 값을 근거(`evidence`)에 싣지 않는다 — 구글 약관상 저장 금지라 결정 기록엔 비교 결과만 남는다.
+        """
+        def lookup(places: list[dict[str, Any]]) -> dict[str, Any] | None:
+            try:
+                return self._read(task, "read.place_price",
+                                  {"place_ids": [str(p["place_id"]) for p in places]}, ctx["seen"])
+            except ToolNotAllowed:
+                return None
+        return lookup
 
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)

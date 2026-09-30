@@ -81,6 +81,8 @@ class ReadToolbox:
     route_events: Any | None = None
     #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
     report_extractor: Callable[[str], dict[str, Any] | None] | None = None
+    #: ★`[2026-09-30]` 구글 장소(`GooglePlaces`) — 식당 가격(`read.place_price`)만 쓴다. 없으면 「모름」.
+    google_places: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -143,6 +145,8 @@ class ReadToolbox:
             # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
             #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
             "read.dining_state": self.dining_state,
+            # ★`[2026-09-30]` 식당 가격(구글 1인당 범위 · 가격대) — 대안을 세울 때만. 값은 비교에만 쓰고 버린다(구글 약관)
+            "read.place_price": self.place_price,
             "read.weather":  self.weather,
             "read.disaster": self.disaster,
             "read.route":    self.route,
@@ -298,6 +302,19 @@ class ReadToolbox:
         from app.modules.travel_ops.dining.ledger import dining_state
         with self.connection_factory() as conn:
             return dining_state(conn, scope.tenant_id, place_id, at, until)
+
+    def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
+                    **_: Any) -> dict[str, dict[str, int | None] | None] | None:
+        """장소들의 구글 가격 {place_id: {"level", "low", "high"} 또는 None}. 구글이 꺼져 있으면 `None`(모름).
+
+        ★`[2026-09-30 사용자 결정]` 하루 상한 없이 부르고, 월 무료 한도를 넘으면 운영자에게 알린다
+          (`GooglePlaces.price`). ★돌려준 값을 근거·기록에 그대로 싣지 않는다 — 비교 결과만 남긴다.
+        """
+        if self.google_places is None or not place_ids:
+            return None
+        from app.infrastructure.travel.google_places import prices_for
+
+        return prices_for(self.connection_factory, scope.tenant_id, self.google_places, list(place_ids))
 
     def _fill_coordinates(self, row: dict[str, Any] | None) -> dict[str, Any] | None:
         """좌표가 비었으면 국가유산청에서 채운다. ★**어디서 왔는지 남긴다.**
