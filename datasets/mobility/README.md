@@ -31,20 +31,23 @@ Mobility(이동) 팀이 쓰는 데이터를 모으는 자리다(2026-09-29 신�
 
 ## 이동(Mobility) 팀 — 이 폴더를 실제로 어떻게 쓰나 (2026-09-29 · 75번 방)
 
-**판정기가 읽는 가공 데이터 18파일(148 MB)을 `processed/mobility/` 에 두고 git 에 올린다** — 팀장 배정(9/29 · 「서버가 뜰 때까지 임시 · develop 까지」).
+**판정기·라우터가 읽는 가공 데이터 21파일(89 MB · 9/30)을 `processed/mobility/` 에 두고 git 에 올린다** — 팀장 배정(9/29 · 「서버가 뜰 때까지 임시 · develop 까지」).
 위 규칙과 어긋나는 점은 하나뿐이고 근거는 이렇다.
 
-- 전부 **공공데이터**(서울 열린데이터광장 · 국토교통부 TAGO · 국가철도공단 · 서울교통공사 · OSM) — 개인정보·키·사용자 입력 **없음**. 원자료·개인 실측(담당자 출퇴근 기록·티머니 태그)은 여기 없고 드라이브에만(`docs/mobility/DATA_NOT_IN_GIT.md`).
+- 전부 **공공데이터**(서울 열린데이터광장 · 국토교통부 TAGO · 국가철도공단 · 서울교통공사 · OSM) — 개인정보·키·사용자 입력 **없음**. 원자료·개인 실측(담당자 출퇴근 기록·티머니 태그)은 여기 없고 드라이브에만(`DATA_NOT_IN_GIT.md`).
 - 팀 `.gitignore` 는 손대지 않았다. `processed/**` 가 막혀 있으므로 **`git add -f`** 로 추적한다 — 한번 추적된 파일은 이후 변경도 보통 `git add` 로 잡힌다. **새 파일**을 더할 때만 다시 `-f`.
 - 서버(`app.core.settings.mobility_data_dir`)가 자기 자료 폴더를 갖게 되면 이 폴더의 데이터는 지운다(히스토리엔 남는다 — 그래서 첫 커밋을 줄인 판 148 MB 로 작게 했다).
 
 | 자리 | 무엇 | git |
 |---|---|---|
-| `processed/mobility/` | 판정기 입력 18파일(시간표는 판정기가 읽는 8열만 · 나머지 정본 그대로) + 파일별 `_report.md` 12 + `MANIFEST_git_v1.json`(sha256·행수·원자료·확인 시각) | **올림(`-f`)** |
-| `processed/mobility/graph/` | 택시·자동차 소요 계산 자료 5파일(라우터 GraphHopper 는 별도 · 없으면 근거없음) | 올림 |
+| `processed/mobility/` | 판정기 입력 21파일(시간표는 판정기가 읽는 8열만 · **`.gz`** · 나머지 정본 그대로) + 파일별 `_report.md` 12 + `MANIFEST_git_v1.json`(sha256·md5·행수·원자료·확인 시각) | **올림(`-f`)** |
+| `processed/mobility/graph/` | 택시·자동차 소요 계산 자료 5파일(TOPIS 속도 프로파일 등) | 올림 |
+| `processed/mobility/road_graph_v1/` | 서울(+인접·공항) 차도·자전거 그래프(노드 280,065 · 간선 375,651 · 15.96 MB gz · OSM ODbL) — 서버 없는 파이썬 라우터 입력(9/30 추가) | 올림 |
 | `processed/inventory_75.json` · `size_table_75.md` | 정본 폴더 인벤토리(88파일 열·행·sha) · 전/후 크기표 | 안 올림(ignore) |
 | `raw/` | 비움 — 원자료 1.7 GB 는 드라이브 `data\travel\raw\mobility\` | 안 올림 |
-| `scripts/` | `inventory_75.py`(인벤토리) · `reduce_75.py`(정본 → 이 폴더 줄인 판 + MANIFEST) · 수집·가공 본체는 저장소 루트 `mobility_scripts/collect/`(`scripts/README.md`) | 올림 |
-| `REPORT.md` | 데이터 설명(팀장 양식) · 상세는 `docs/mobility/DATA_IN_GIT_v1.md` | 올림 |
+| `scripts/` | `inventory_75.py`(인벤토리) · `reduce_75.py`(정본 → 이 폴더 줄인 판 + MANIFEST · 기본이 gz·행 삭제 채택안 · **파일을 더할 때는 이 스크립트의 `FILES` 표에 한 줄** — 지금 조사 중인 데이터도 같은 길) · 갱신용 수집·전처리 32개(82 · 파일표·갱신 순서는 `scripts/README.md`) | 올림 |
+| `REPORT.md` | 데이터 설명(팀장 양식) | 올림 |
+| `DATA_IN_GIT.md` | 올린 21파일 상세 — 읽는 코드 · 열 뜻 · 한 행 예시 · 원자료 · 생성 스크립트 · 등급 · 줄인 방법 · 검증 | 올림 |
+| `DATA_NOT_IN_GIT.md` | 안 올린 것 — 원자료 · 개인 실측 · 라우터 캐시 · 로그 · 줄인 판에서 뺀 열·행 · 이유 · 드라이브 위치 | 올림 |
 
 **읽는 코드**: `final_project_cs/app/modules/travel_ops/mobility/engine/paths.py` — 명령줄·시험은 `.env` 의 `DATA_DIR` 이 없으면 이 폴더(`datasets/mobility/processed`)를 자동으로 쓴다(pull 만 하면 `pytest tests/unit/travel/mobility` 회귀 게이트가 skip 없이 돈다). 서버는 `.env` 에 `ACOP_MOBILITY_DATA_DIR=datasets/mobility/processed`(마지막 폴더 이름이 `processed` 면 그 자리를 그대로 자료 폴더로 본다).
