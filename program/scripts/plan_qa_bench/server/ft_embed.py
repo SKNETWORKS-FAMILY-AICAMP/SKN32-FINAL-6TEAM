@@ -14,7 +14,7 @@ lr = float(sys.argv[3]) if len(sys.argv) > 3 else 1e-4
 rank = int(sys.argv[4]) if len(sys.argv) > 4 else 16
 name = os.environ.get('BASE', 'Qwen/Qwen3-Embedding-0.6B')
 TASK = '고객이 여행 일정에 대해 묻는 질문이 주어지면, 그 질문이 가리키는 일정 항목을 찾는다'
-data = json.load(open('train_pairs.json', encoding='utf-8'))
+data = json.load(open(os.environ.get('TRAIN', 'train_pairs.json'), encoding='utf-8'))      # TRAIN=train_pairs_v2.json 로 2판 자료
 pairs = json.load(open('pairs.json', encoding='utf-8'))
 tok = AutoTokenizer.from_pretrained(name, padding_side='left')
 model = AutoModel.from_pretrained(name, torch_dtype=torch.float32).cuda()

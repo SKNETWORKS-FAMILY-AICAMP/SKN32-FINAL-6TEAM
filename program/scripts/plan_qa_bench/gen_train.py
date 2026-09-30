@@ -8,18 +8,24 @@
 import glob, json, os, random, sys
 from datetime import date, timedelta
 
-SRC = sys.argv[1]
+SRC = sys.argv[1]                       # 자료 폴더(쉼표로 여러 개 가능 — 첫 폴더의 oos.json 을 쓴다)
+OUTNAME = os.environ.get('OUT', 'train_pairs.json')
 HERE = os.path.dirname(os.path.abspath(__file__))
 rnd = random.Random(20260930)
 places = []
-for f in sorted(glob.glob(os.path.join(SRC, 'places_*.json'))):
-    places += json.load(open(f, encoding='utf-8'))['places']
-oos = [x['q'] for x in json.load(open(os.path.join(SRC, 'oos.json'), encoding='utf-8'))['queries']]
+for _d in SRC.split(','):
+    for f in sorted(glob.glob(os.path.join(_d, 'places_*.json'))):
+        places += json.load(open(f, encoding='utf-8'))['places']
+oos = [x['q'] for x in json.load(open(os.path.join(SRC.split(',')[0], 'oos.json'), encoding='utf-8'))['queries']]
 W = '월화수목금토일'
 EXCL = ['경복궁', '창덕궁', '덕수궁', '종묘', '서울역', '우래옥', '삼청동수제비', '서울공예박물관', '어니언', '청계천', '광장시장', '국립민속박물관',
         '토속촌', '통인시장', '블루보틀', '광화문광장', '하동관', '리움', '전쟁기념관', '이문설농탕', '국립중앙박물관', '명동교자', '남대문시장', '서울로7017',
         '여의도한강공원', '성수동카페거리', '서울숲', '뚝섬한강공원', '연남동', '홍대걷고싶은거리', '발우공양', '교보문고', '태극당', '인사동쌈지길', '북촌한옥마을',
-        '에그슬럿', 'L7명동', '스테이서촌', '서울역사박물관']
+        '에그슬럿', 'L7명동', '스테이서촌', '서울역사박물관',
+        # mix5(새 독립 세트) 장소 — 학습에서 제외
+        '미진', '청와대', '국립고궁박물관', '국립한글박물관', '을지면옥', '국립극장', '테라로사', '마로니에공원', '대학로곱창골목', '합정역', '절두산', '진주집', '상상마당',
+        '앤트러사이트', '경의선책거리', '마포소금구이', '신라스테이', '용산역', '용산가족공원', '부대찌개골목', '디뮤지엄', '파르나스', '삼원가든', '양재시민의숲', '서래마을',
+        '롯데월드몰', '이화벽화마을', '익선동', '북촌손만두', '효자베이커리', '광화문집', '서울역사편찬원', '센터커피서울숲']
 seen, clean = set(), []
 for p in places:
     n = p['name'].replace(' ', '')
@@ -115,6 +121,6 @@ def build(pool, oos_list, n_itin, gid0):
 
 train, g = build(tr_places, oos_tr, 60, 0)
 val, _ = build(val_places, oos_val, 12, g)
-json.dump({'train': train, 'val': val}, open(os.path.join(HERE, 'fixtures', 'train_pairs.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump({'train': train, 'val': val}, open(os.path.join(HERE, 'fixtures', OUTNAME), 'w', encoding='utf-8'), ensure_ascii=False)
 print('학습 쌍', len(train), '(정답', sum(x['label'] for x in train), ') · 검증 쌍', len(val), '(정답', sum(x['label'] for x in val), ')')
 print('학습 문제', len({x['g'] for x in train}), '· 검증 문제', len({x['g'] for x in val}))
