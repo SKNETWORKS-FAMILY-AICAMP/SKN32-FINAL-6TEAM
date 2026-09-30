@@ -1,8 +1,8 @@
 """빈칸 검수 시트에서 사람이 확인한 영업시간 · 전화 · 좌표를 원장에 넣는다.
 
-    python scripts/dining/make_gap_sql.py      → data/dining/_build/gaps.sql
+    python scripts/dining/make_gap_sql.py      → datasets/dining/processed/_build/gaps.sql
 
-시트는 data/dining/gaps/빈칸_검수_*.csv (가장 최근 것). 원장에서 영업시간 · 전화 · 좌표가
+시트는 datasets/dining/processed/gaps/빈칸_검수_*.csv (가장 최근 것). 원장에서 영업시간 · 전화 · 좌표가
 빈 가게를 뽑아 카카오맵으로 초안을 채운 것이다. 초안만으로는 넣지 않는다.
 확인일이 적힌 행만 넣는다(다른 검수 시트와 같은 규칙).
 
@@ -21,9 +21,11 @@ import importlib.util
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-SHEETS = os.path.join(ROOT, "data", "dining", "gaps", "빈칸_검수_*.csv")
-OUT = os.path.join(ROOT, "data", "dining", "_build", "gaps.sql")
+SHEETS = os.path.join(DINING_DATA, "gaps", "빈칸_검수_*.csv")
+OUT = os.path.join(DINING_DATA, "_build", "gaps.sql")
 
 
 def q(s: str) -> str:

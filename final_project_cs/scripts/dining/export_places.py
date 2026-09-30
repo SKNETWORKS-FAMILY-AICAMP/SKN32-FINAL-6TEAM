@@ -1,6 +1,6 @@
 """요식 원장의 가게 전체를 CSV 한 장으로 뽑는다. 팀원이 DB 없이 보거나 시험 데이터로 쓸 때.
 
-    python scripts/dining/export_places.py            → data/dining/export/요식_원장_가게.csv
+    python scripts/dining/export_places.py            → datasets/dining/processed/export/요식_원장_가게.csv
 
 원장이 원본이다. 이 파일은 사본이며 rebuild.py 를 다시 돌리면 다시 뽑는다.
 비건 · 할랄 · 아이 동반은 사람이 확인한 값만 「예/아니오」, 나머지는 빈칸(모름)이다.
@@ -13,7 +13,9 @@ import os
 import psycopg
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "data", "dining", "export", "요식_원장_가게.csv")
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
+OUT = os.path.join(DINING_DATA, "export", "요식_원장_가게.csv")
 DSN = os.environ.get("DINING_DSN", "postgresql://postgres@localhost:5433/dining_rebuild")
 
 SQL = """

@@ -1,8 +1,8 @@
 """폐업 대조 시트에서 사람이 확인한 폐업 · 이전을 원장에 반영한다.
 
-    python scripts/dining/make_closure_sql.py      → data/dining/_build/closure.sql
+    python scripts/dining/make_closure_sql.py      → datasets/dining/processed/_build/closure.sql
 
-시트는 data/dining/closure/폐업대조_*.csv (가장 최근 것). 인허가 자료(일반음식점, 정상영업)와
+시트는 datasets/dining/processed/closure/폐업대조_*.csv (가장 최근 것). 인허가 자료(일반음식점, 정상영업)와
 원장을 대조하고 카카오맵으로 다시 본 결과다. 대조만으로는 넣지 않는다.
 확인일이 적힌 행만 넣는다(다른 검수 시트와 같은 규칙).
 
@@ -30,9 +30,11 @@ import os
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-SHEETS = os.path.join(ROOT, "data", "dining", "closure", "폐업대조_*.csv")
-OUT = os.path.join(ROOT, "data", "dining", "_build", "closure.sql")
+SHEETS = os.path.join(DINING_DATA, "closure", "폐업대조_*.csv")
+OUT = os.path.join(DINING_DATA, "_build", "closure.sql")
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000007")
 SOURCE = "localdata_food"          # 지점 추가의 근거: 지방행정 인허가(일반음식점)
 CHECKED = "2026-09-28"
@@ -48,7 +50,7 @@ def build(sheet: str) -> tuple[list[str], dict[str, int]]:
              "INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
              f"row_count, raw_uri, status) VALUES ('{load_id}', '{SOURCE}', '{CHECKED} 12:00+09', "
              f"'closure-check', '폐업 대조로 찾은 지점', 0, "
-             f"{q('data/dining/closure/' + os.path.basename(sheet))}, 'loaded') "
+             f"{q('datasets/dining/processed/closure/' + os.path.basename(sheet))}, 'loaded') "
              "ON CONFLICT (load_id) DO NOTHING;"]
     cats: list[str] = []
     n = {"폐업": 0, "이전": 0, "주소 보완": 0, "상호 변경": 0, "지점 추가": 0, "중복": 0, "건너뜀": 0}

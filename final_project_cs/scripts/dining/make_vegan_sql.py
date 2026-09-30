@@ -1,7 +1,7 @@
 """운영자가 고른 비건 식당 목록을 원장에 넣는 SQL 로 바꾼다.
 
 무엇을 넣는가.
-    data/dining/vegan/ 의 두 파일을 읽는다.
+    datasets/dining/processed/vegan/ 의 두 파일을 읽는다.
       비건식당_*.csv       식당 목록. 상호·자치구·주소·네이버 플레이스 ID·좌표
       비건식당_근거_*.csv   식당마다 영업을 무엇으로 확인했는가. 인허가 관리번호 또는 운영자 확인
 
@@ -32,7 +32,7 @@
     dn_closure_coverage 에 쓰므로 030 마이그레이션이 먼저 있어야 한다.
 
 사용법:  python scripts/dining/make_vegan_sql.py [--dry] [--sheet 시트.csv] [--out 출력.sql]
-출력:    data/dining/_build/vegan.sql
+출력:    datasets/dining/processed/_build/vegan.sql
 """
 from __future__ import annotations
 
@@ -45,9 +45,11 @@ import uuid
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-DATA = os.path.join(ROOT, "data", "dining", "vegan")
-OUT = os.path.join(ROOT, "data", "dining", "_build")
+DATA = os.path.join(DINING_DATA, "vegan")
+OUT = os.path.join(DINING_DATA, "_build")
 LIST = os.path.join(DATA, "비건식당_2026-09-23.csv")
 EVIDENCE = os.path.join(DATA, "비건식당_근거_2026-09-23.csv")
 
@@ -385,7 +387,7 @@ def hours_sql(place_of: dict[str, str], existing: set[str], sheet: str, *, tag: 
     head = ("INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
             f"row_count, raw_uri, status) VALUES ('{load_id}', 'operator_check', now(), '{tag}-sheet-v1', "
             f"{q(scope)}, {n['식당']}, "
-            f"{q(f'data/dining/{folder}/' + os.path.basename(sheet))}, 'loaded')"
+            f"{q(f'datasets/dining/processed/{folder}/' + os.path.basename(sheet))}, 'loaded')"
             " ON CONFLICT (load_id) DO UPDATE SET row_count = EXCLUDED.row_count, fetched_at = now();")
     # load_meta 가 먼저 있어야 source_record 가 붙는다. DELETE 보다 앞에 둔다.
     return [head] + body, n
@@ -469,7 +471,7 @@ def main() -> None:
             "INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, "
             "scope, row_count, raw_uri, status) VALUES ("
             f"'{load_id}', '{source}', '{CHECKED} 12:00+09', 'vegan-list-v1', '서울 비건 식당 목록', "
-            f"{by_source[source]}, {q('data/dining/vegan/' + os.path.basename(LIST))}, 'loaded')"
+            f"{by_source[source]}, {q('datasets/dining/processed/vegan/' + os.path.basename(LIST))}, 'loaded')"
             " ON CONFLICT (load_id) DO NOTHING;")
     sheet = arg("--sheet", SHEET)
     hours, counted = hours_sql(place_of, set(EXISTING.values()), sheet)

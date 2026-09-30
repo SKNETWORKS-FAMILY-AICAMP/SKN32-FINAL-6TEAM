@@ -1,6 +1,6 @@
 """요식 원장의 모든 칸을 가게 한 줄로 펼쳐 CSV 한 장으로 뽑는다. 눈으로 보고 검수할 때.
 
-    python scripts/dining/export_full.py        → data/dining/export/요식_원장_전체.csv
+    python scripts/dining/export_full.py        → datasets/dining/processed/export/요식_원장_전체.csv
 
 요식_원장_가게.csv 는 팀원이 시험에 쓰는 요약본이다. 이 파일은 원장 표 여러 개를 가게마다 합친다.
     가게(dn_place)의 모든 칸
@@ -19,7 +19,9 @@ from collections import defaultdict
 import psycopg
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "..", "data", "dining", "export", "요식_원장_전체.csv")
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
+OUT = os.path.join(DINING_DATA, "export", "요식_원장_전체.csv")
 DSN = os.environ.get("DINING_DSN", "postgresql://postgres@localhost:5433/dining_rebuild")
 DAYS = "월화수목금토일"
 ATTRS = ["card_payment", "parking", "takeout", "vegetarian_menu", "halal", "kids_allowed", "michelin"]

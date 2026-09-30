@@ -33,7 +33,7 @@
     python scripts/dining/google_link.py --by 홍길동             entered_by 에 남는 이름(기본 google_link)
     python scripts/dining/google_link.py --to-sql               구글_연결.csv → 적재 SQL(키 없이, rebuild 가 부른다)
 
-붙인 것은 DB 와 data/dining/google/구글_연결.csv 에 함께 남는다. rebuild 는 DB 를 새로 만들므로
+붙인 것은 DB 와 datasets/dining/processed/google/구글_연결.csv 에 함께 남는다. rebuild 는 DB 를 새로 만들므로
 CSV 가 원본이다. 열어 보고 맞으면 CSV 의 확인자 · 확인일을 채운다 → 다시 세우면 valid.
 
 키는 ACOP_GOOGLE_MAPS_API_KEY. 접속은 run_check.py 와 같다.
@@ -54,6 +54,8 @@ from datetime import date
 from typing import Any, Callable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 
 if hasattr(sys.stdout, "reconfigure"):      # 시험에서 불러올 때는 없다
     sys.stdout.reconfigure(encoding="utf-8")
@@ -69,12 +71,12 @@ MAX_DISTANCE_M = 150
 #: 찾을 때 이 반경 안을 먼저 본다. 판정 거리보다 넓게 잡아 후보를 놓치지 않는다.
 BIAS_RADIUS_M = 500
 #: 못 붙인 가게. 우리 uid 와 우리 판정만 적는다. 구글이 돌려준 내용은 적지 않는다.
-MISSES = os.path.join(HERE, "..", "..", "data", "dining", "_build", "google_link_misses.json")
+MISSES = os.path.join(DINING_DATA, "_build", "google_link_misses.json")
 #: 붙인 연결의 원본. DB 는 rebuild 때 지워지므로 여기에 남기고 --to-sql 로 다시 넣는다.
 #: place_id 와 링크만 적는다(약관). 사람이 열어 보고 맞으면 확인자 · 확인일을 적는다 → valid.
-LINKS = os.path.join(HERE, "..", "..", "data", "dining", "google", "구글_연결.csv")
+LINKS = os.path.join(DINING_DATA, "google", "구글_연결.csv")
 LINK_HEAD = ["place_uid", "상호", "place_id", "url", "판정 근거", "붙인 날", "확인자", "확인일", "메모"]
-LINKS_SQL = os.path.join(HERE, "..", "..", "data", "dining", "_build", "google_links.sql")
+LINKS_SQL = os.path.join(DINING_DATA, "_build", "google_links.sql")
 DEFAULT_LIMIT = int(os.environ.get("ACOP_RATE_GOOGLE_PLACES_PER_DAY", "16"))
 
 

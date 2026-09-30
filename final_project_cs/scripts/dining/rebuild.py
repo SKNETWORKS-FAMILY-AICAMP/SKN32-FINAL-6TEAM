@@ -43,9 +43,11 @@ import time
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
 MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
-BUILD = os.path.join(ROOT, "data", "dining", "_build")
+BUILD = os.path.join(DINING_DATA, "_build")
 
 PG_PORT = int(os.environ.get("DINING_PG_PORT", "5433"))
 PG_USER = os.environ.get("DINING_DB_USER", "postgres")
@@ -187,12 +189,14 @@ def check() -> bool:
         if not os.path.isfile(path):
             say("!!", f"없는 스크립트 {script}")
             ready = False
-    data = os.path.join(ROOT, "data", "dining")
+    data = DINING_DATA
     for name in ("tourapi_음식점_소개정보.json", "tourapi_서울_음식점_목록.json",
                  "holidays_2026_2027.json"):
         if not os.path.isfile(os.path.join(data, name)):
             say("!!", f"없는 원본 {name}")
             ready = False
+    if not ready:
+        say("  ", f"데이터는 git 에 없다. 팀 드라이브에서 받아 {data} 에 둔다(datasets/dining/REPORT.md)")
     if os.path.isfile(os.path.join(data, "truth", "대조표100_검수_2026-09-21.csv")):
         say("OK", "검수 대조표 있음")
     else:
