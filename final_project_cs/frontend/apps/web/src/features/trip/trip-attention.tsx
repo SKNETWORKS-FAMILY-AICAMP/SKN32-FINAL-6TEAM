@@ -10,6 +10,7 @@ import { openChoices, recentNotices, undoableChange } from "./attention";
 import type { Trip } from "./model";
 import { tripKey } from "./use-trip";
 import { noticesKey, proposalsKey, useNotices, useProposals } from "./use-trip-extras";
+import { useTripEvents } from "./use-trip-events";
 import styles from "./trip-attention.module.css";
 
 const NOTICE_LABEL: Record<string, [string, string]> = {
@@ -33,6 +34,8 @@ export function TripAttention({ trip }: { trip: Trip }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
+  // The server's "this trip changed" bell keeps the plan, notices and choices current while this screen is open.
+  useTripEvents(trip.id);
   const proposals = useProposals(trip.id);
   const notices = useNotices(trip.id);
   const choices = openChoices(proposals.data ?? [], notices.data ?? [], trip.stops);

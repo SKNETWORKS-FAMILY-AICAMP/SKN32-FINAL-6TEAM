@@ -12,6 +12,10 @@ export function mockServer(request: APIRequestContext) {
     reset: async () => { await request.post(`${STUB}/__test/reset`); },
     scenario: async (change: Record<string, unknown>) => { await request.post(`${STUB}/__test/scenario`, { data: change }); },
     log: async (): Promise<LoggedRequest[]> => (await request.get(`${STUB}/__test/log`)).json(),
+    /** Ring the "this trip changed" bell on every open stream; returns how many streams were open. */
+    ring: async (kinds?: string[]): Promise<number> => (await (await request.post(`${STUB}/__test/ring`, { data: kinds ? { kinds } : {} })).json()).rang,
+    /** Close every open bell stream, as a dropped connection would. */
+    hangup: async (): Promise<number> => (await (await request.post(`${STUB}/__test/hangup`)).json()).closed,
     /** Requests received for a path (matched by suffix), oldest first. */
     async received(method: string, suffix: string): Promise<LoggedRequest[]> {
       return (await this.log()).filter((entry) => entry.method === method && entry.path.endsWith(suffix));
