@@ -24,6 +24,10 @@ from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 from .._base import TravelTeamBase
 from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
+from .csv_places import weather_sensitive_from_lclssystm2 as _ws_from_lclssystm2
+
+_csv_lookup = _CsvPlaceLookup()
 
 
 class ActivityTeam(ItineraryWork, TravelTeamBase):
@@ -377,6 +381,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         # ── ③ 기상 ─────────────────────────────────────────────
         weather_sensitive = place.get(self._WEATHER_SENSITIVE_KEY)
         guessed_from_title = False
+        guessed_from_category = False
         if weather_sensitive is None:
             title = place.get("name") if isinstance(place, dict) else None
             weather_sensitive = self._weather_sensitive_from_title(title)
@@ -387,6 +392,21 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                     claim="장소명 기반 실내외 추정",
                     value={"title": title, "result": weather_sensitive},
                     base=evidence)
+        if weather_sensitive is None:
+            content_id = place.get("source_content_id") if isinstance(place, dict) else None
+            if content_id:
+                csv_row = _csv_lookup.find_by_content_id(str(content_id))
+                if csv_row is not None:
+                    lclssystm2 = csv_row.get("lclsSystm2")
+                    ws = _ws_from_lclssystm2(lclssystm2)
+                    if ws is not None:
+                        weather_sensitive = ws
+                        guessed_from_category = True
+                        evidence = self._evidence(
+                            task, source_id="activity.weather_sensitive_from_lclssystm2",
+                            claim="분류 유형 기반 실내외 추정",
+                            value={"lclsSystm2": lclssystm2, "result": ws},
+                            base=evidence)
 
         if weather_sensitive is True:
             forecast = self._read(task, "read.weather",
@@ -410,6 +430,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                     w_dec["weather_sensitive_guessed_from_title"] = True
                     warnings.append(
                         "장소명으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
+                elif guessed_from_category:
+                    w_dec["weather_sensitive_guessed_from_category"] = True
+                    warnings.append(
+                        "분류 유형(lclsSystm2)으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
                 decisions["weather"] = w_dec
 
         return self._result(
