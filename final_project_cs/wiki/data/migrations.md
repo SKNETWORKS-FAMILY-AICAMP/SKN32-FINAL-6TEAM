@@ -153,6 +153,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `036_catalog_hours.sql` — 새벽 작업(`catalog_hours.prefill`, `run_sweepers --only catalog_hours`)이 관광공사 목록(`place_catalog`)의 활동 운영시간을 읽어 두는 표. 키 (tenant_id, source, content_id). 칸: 요일별 운영시간 `hours_week` · 읽은 방법 `hours_read` · 원문 `hours_origin`(이용시간 · 쉬는 날) · 문의 전화 · 읽을 때의 목록 수정 시각 `source_modified_at`(목록 값과 다르면 다시 읽는다) · `read_at`. 사실 정보만 적는다(사진 · 소개글 없음 — 2026-09-28 사용자 결정). 활동 「다른 데로 바꿔」는 요청 자리에서 관광공사를 부르지 않고 이 표를 읽는다(`catalog_pool`). ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
 
+### 바깥함 알림 앞부분 검색 인덱스 `[2026-09-30 · 037]`
+
+`[실측]` `037_outbox_notice_prefix_idx.sql` — 바깥함 `(tenant_id, topic, dedupe_key text_pattern_ops)` 인덱스 추가. 알림 조회(`dedupe_key LIKE '<여행 id>:%'`)가 기존 유일 인덱스로는 앞부분 검색을 못 써 바깥함 전체를 훑었다(543행에서 Seq Scan). 변경 초인종(`trip_events.py`)이 연결마다 2초 간격으로 읽어 바깥함이 커지면 부담이 된다. 인덱스를 강제로 켜 확인했다: `Index Scan using outbox_notice_prefix_idx`. 추가만 하고 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.

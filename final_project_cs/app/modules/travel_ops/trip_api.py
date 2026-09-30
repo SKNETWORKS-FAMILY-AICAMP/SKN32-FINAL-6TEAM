@@ -1271,6 +1271,44 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 "used": budget.used(MAP_METER), "cap": budget.caps.get(MAP_METER),
                 "fallback": None if allowed else "free_map"}
 
+    @router.get("/v1/web/trips/{trip_id}/events")
+    async def web_trip_events(trip_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-30 사용자 승인 — ui 세션 전달]` **변경 초인종** — 이 여행이 바뀌었다는 신호만 흘린다(`text/event-stream`).
+
+        `event: ready` `{trip_id, version}` 한 번 → 바뀔 때마다 `event: trip.changed` `{trip_id, kinds, version}`
+        (`kinds` = itinerary · notice · proposal 중 웹이 다시 읽을 것의 힌트) · 조용하면 20초마다 `: ping`. 내용 · 사용자 키는 싣지 않는다.
+        웹은 받으면 지금 있는 조회로 다시 읽는다. 놓친 신호를 되풀이하지 않는다 — 재연결하면 전부 다시 읽는다.
+        남의 여행 · 없는 여행은 다른 조회와 같은 404, 사용자당 열린 연결이 상한이면 429. 한 연결은 `max_seconds` 뒤에 닫힌다.
+        """
+        from starlette.concurrency import run_in_threadpool
+        from starlette.responses import StreamingResponse
+
+        from . import trip_events
+
+        tenant, customer = who
+
+        def check() -> None:
+            with get_connection() as conn:
+                _trip_or_404(conn, TripStore(tenant), trip_id, customer)
+
+        await run_in_threadpool(check)
+        cfg = trip_events.limits()
+        if not trip_events.acquire(tenant, customer, cap=int(cfg["max_per_user"])):
+            error = _error(429, "too_many_streams", "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다")
+            error.headers = {"Retry-After": "5"}
+            raise error
+
+        async def flow():
+            try:
+                async for chunk in trip_events.stream(tenant_id=tenant, trip_id=trip_id, connect=get_connection,
+                                                      is_disconnected=http.is_disconnected, cfg=cfg):
+                    yield chunk
+            finally:
+                trip_events.release(tenant, customer)      # ★끊겨도 상한이 새지 않게
+
+        return StreamingResponse(flow(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     @router.get("/v1/web/trips/{trip_id}/notices")
     def web_notices(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
         """화면 위쪽 알림 — 그 여행에 나간 알림 전부. `type` 으로 가른다:
