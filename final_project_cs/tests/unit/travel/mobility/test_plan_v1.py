@@ -247,17 +247,117 @@ def _two(t0, t1, t2):
 
 
 def test_0400_boundary():
-    """자체 대조 #1 — 도착 목표 04:00 에서 역 도보를 빼면 전 운행일(27:5x)이다. 정수 분을 그대로 넘기면
-    판정기가 240 미만을 +24h 로 읽어 그날 밤 막차(20시간 뒤)를 내던 결함. 이제는 목표보다 늦은 출발이 나오면 안 된다."""
+    """자체 대조 #1 — 도착 목표가 운행일 끝(03:59)이면 역 도보를 빼도 같은 운행일(27:5x)이다. 정수 분을 그대로 넘기면
+    판정기가 240 미만을 +24h 로 읽어 그날 밤 막차(20시간 뒤)를 내던 결함. 이제는 목표보다 늦은 출발이 나오면 안 된다.
+    ☆ 73 후속(팀장 #45 · 본인 9/29 「팀장 판대로」): 04:00 **정각**은 다음 운행일 아침이라 잇지 않는다
+    (test_0400_two_sides). 같은 것을 03:59 로 옮겨 잠근다."""
     _skip_if_no_data()
-    got = plan(_GS, _two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T04:00:00+09:00"),
+    got = plan(_GS, _two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T03:59:00+09:00"),
                1, {}, runtime=_runtime(), modes=MODES)
     mob = [it for it in got["items"] if it["kind"] == "mobility"]
     assert len(mob) == 1, got["skipped"]
     s, e = datetime.fromisoformat(mob[0]["starts_at"]), datetime.fromisoformat(mob[0]["ends_at"])
-    assert datetime(2026, 9, 28, 23, 0, tzinfo=KST) <= s < e <= datetime(2026, 9, 29, 4, 0, tzinfo=KST), \
+    assert datetime(2026, 9, 28, 23, 0, tzinfo=KST) <= s < e <= datetime(2026, 9, 29, 3, 59, tzinfo=KST), \
         f"전 운행일 막차(24:xx)로 가야 한다 — 받은 값 {mob[0]}"
     assert any(it["kind"] == "mobility" for it in got["items"]) or got["skipped"]
+
+
+def test_0400_two_sides():
+    """73 후속(GPT Q5 · 팀장 #45 · 본인 9/29) — 운행일 경계 **양쪽을 다** 케이스로 둔다.
+    03:59:59 도착 목표 = 전날 운행일(27:59) → 잇는다. 04:00:00 = 다음 운행일 아침 → 잇지 않고(not_linked · day_boundary)
+    그 사이 입력 이동은 **보존하되 검증 안 됨(kept_unverified · why=day_boundary)** 으로 드러낸다."""
+    _skip_if_no_data()
+    mv = {"seq": 3, "kind": "mobility", "title": "택시", "route": "taxi_g_s",
+          "starts_at": "2026-09-29T03:30:00+09:00", "ends_at": "2026-09-29T03:50:00+09:00"}
+    a = _two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T03:59:59+09:00")
+    got = plan(_GS, a, 1, {}, runtime=_runtime(), modes=MODES)
+    assert not got["not_linked"], got["not_linked"]
+    assert [it for it in got["items"] if it["kind"] == "mobility"] or got["skipped"], "03:59:59 는 같은 운행일 — 잇는다"
+    b = _two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T04:00:00+09:00") + [dict(mv)]
+    got = plan(_GS, b, 1, {}, runtime=_runtime(), modes=MODES)
+    assert [x["code"] for x in got["not_linked"]] == ["day_boundary"], got["not_linked"]
+    assert not got["routes"] and not got["skipped"]
+    assert [it.get("route") for it in got["items"] if it["kind"] == "mobility"] == ["taxi_g_s"], "입력 이동은 보존"
+    assert [(k["route"], k["why"]) for k in got["kept_unverified"]] == [("taxi_g_s", "day_boundary")], got["kept_unverified"]
+
+
+def test_same_place_kept_unverified():
+    """73 후속 3-10 — 같은 장소 두 항목 사이의 입력 이동도 잇지 않고 남긴 것이다 → kept_unverified(why=same_place)."""
+    items = [{"seq": 1, "kind": "activity", "title": "A", "place": "g", "starts_at": "2026-09-29T10:00:00+09:00",
+              "ends_at": "2026-09-29T11:00:00+09:00"},
+             {"seq": 2, "kind": "mobility", "title": "산책", "route": "walk_gg",
+              "starts_at": "2026-09-29T11:00:00+09:00", "ends_at": "2026-09-29T11:10:00+09:00"},
+             {"seq": 3, "kind": "activity", "title": "B", "place": "g", "starts_at": "2026-09-29T11:30:00+09:00"}]
+    _skip_if_no_data()
+    got = plan(_GS, items, 1, {}, runtime=_runtime(), modes=MODES)
+    assert [(k["route"], k["why"]) for k in got["kept_unverified"]] == [("walk_gg", "same_place")]
+    assert [it.get("route") for it in got["items"] if it["kind"] == "mobility"] == ["walk_gg"]
+
+
+def test_envelope_references():
+    """73 후속(GPT Q5) — 봉투 참조 관계 계약. items ↔ routes ↔ skipped ↔ kept_unverified ↔ left_out ↔ not_linked.
+    · 우리가 만든 이동(route ∈ routes)은 routes 에 정확히 한 번씩 · routes 에 걸리지 않은 키가 없다
+    · 검증 안 된 입력 이동은 routes 를 가리키지 않는다(검증 완료로 보이지 않는다) · kept_unverified 수 = skipped 의
+      kept_input_moves 합 + 잇지 않고 남긴 것(day_boundary · same_place) · left_out 키 ⊆ routes 키"""
+    _skip_if_no_data()
+    base = _two("2026-09-29T10:00:00+09:00", "2026-09-29T11:00:00+09:00", "2026-09-29T13:00:00+09:00")
+    tight = [dict(base[0]), dict(base[1], starts_at="2026-09-29T11:10:00+09:00", ends_at="2026-09-29T12:00:00+09:00"),
+             {"seq": 3, "kind": "activity", "title": "C", "place": "g", "starts_at": "2026-09-29T15:00:00+09:00",
+              "ends_at": "2026-09-29T16:00:00+09:00"},
+             {"seq": 4, "kind": "activity", "title": "D", "place": "s", "starts_at": "2026-09-30T09:00:00+09:00"},
+             {"seq": 5, "kind": "mobility", "title": "택시1", "route": "taxi_1",
+              "starts_at": "2026-09-29T11:00:00+09:00", "ends_at": "2026-09-29T11:10:00+09:00"},
+             {"seq": 6, "kind": "mobility", "title": "택시2", "route": "taxi_2",
+              "starts_at": "2026-09-29T20:00:00+09:00", "ends_at": "2026-09-29T20:30:00+09:00"},
+             {"seq": 7, "kind": "mobility", "title": "공항버스", "route": "air_0",
+              "starts_at": "2026-09-29T08:00:00+09:00", "ends_at": "2026-09-29T09:30:00+09:00"},
+             {"seq": 8, "kind": "mobility", "title": "귀가", "route": "home_9",
+              "starts_at": "2026-09-30T11:00:00+09:00", "ends_at": "2026-09-30T11:30:00+09:00"}]
+    got = plan(_GS, tight, 1, {}, runtime=_runtime(), modes=MODES)
+    mob = [it for it in got["items"] if it["kind"] == "mobility"]
+    ours = [it for it in mob if it.get("route") in got["routes"]]
+    assert sorted(it["route"] for it in ours) == sorted(got["routes"]), "routes 키 = 우리 이동 항목의 route (정확히 한 번씩)"
+    unv = {(k["route"], k["starts_at"]) for k in got["kept_unverified"]}
+    for it in mob:
+        if (it.get("route"), it["starts_at"]) in unv:
+            assert it["route"] not in got["routes"], f"검증 안 된 이동이 우리 route 를 가리킨다: {it}"
+    n_skip = sum(x.get("kept_input_moves", 0) for x in got["skipped"])
+    n_kept = sum(1 for k in got["kept_unverified"]
+                 if k["why"] in ("day_boundary", "same_place", "before_first_stay", "after_last_stay", "no_stay"))
+    assert len(got["kept_unverified"]) == n_skip + n_kept, (got["skipped"], got["kept_unverified"])
+    # GPT 대조(78 Q5) — 개수만이 아니라 **항목 대응**: 우리 route 가 아닌 출력 이동 = kept_unverified (중복·누락 없음)
+    theirs = sorted((it.get("route"), it["starts_at"]) for it in mob if it.get("route") not in got["routes"])
+    assert theirs == sorted((k["route"], k["starts_at"]) for k in got["kept_unverified"]), (theirs, got["kept_unverified"])
+    assert set(got["left_out"]) <= set(got["routes"]), "left_out 은 routes 의 구간에만"
+    assert {x["code"] for x in got["not_linked"]} <= {"day_boundary"}
+    assert {(k["route"], k["why"]) for k in got["kept_unverified"]} >= {("air_0", "before_first_stay"), ("home_9", "after_last_stay")}
+    assert {k["route"] for k in got["kept_unverified"]} == {"taxi_1", "taxi_2", "air_0", "home_9"}, got["kept_unverified"]
+
+
+def test_recheck_carries_context(monkeypatch):
+    """73 후속(GPT Q5) — 첫 판정과 재판정(_recheck_at · 공통 출발)이 같은 문맥을 싣는다: 인원·피로(환승 상한)·국적·초행·stage.
+    판정기로 가는 모든 케이스를 잡아 본다."""
+    _skip_if_no_data()
+    from app.modules.travel_ops.mobility.engine import plan as P
+    seen = []
+    orig = P.Planner._vc
+
+    def rec(self, case):
+        seen.append(case)
+        return orig(self, case)
+    monkeypatch.setattr(P.Planner, "_vc", rec)
+    c = {"first_visit": False, "mobility_ease": "needs_rest", "survey": {"domestic": True}}
+    items = [{"seq": 1, "kind": "activity", "title": "A", "place": "ns",
+              "starts_at": "2026-09-29T11:00:00+09:00", "ends_at": "2026-09-29T12:00:00+09:00"},
+             {"seq": 2, "kind": "activity", "title": "B", "place": "it", "starts_at": "2026-09-29T15:00:00+09:00"}]
+    got = plan(_NT, items, 3, c, runtime=_runtime(), modes=MODES_ALL, stage="planning")   # _ns_it — 버스 계획 · 지하철 재판정
+    assert got["routes"], got["skipped"]
+    assert any("/at" in str(x.get("id")) for x in seen), "재판정(_recheck_at)이 한 번은 돌아야 이 시험이 뜻이 있다"
+    want = {"size": 3, "fatigue_high": True, "foreign": False}
+    for x in seen:
+        assert x.get("party") == want, (x.get("id"), x.get("party"))
+        assert x.get("first_visit") is False, x.get("id")
+        assert x.get("stage") == "planning", x.get("id")
 
 
 def test_not_before_prev_end():
@@ -561,9 +661,7 @@ def test_no_per_option_departure():
     assert not labels & {x["label"] for x in lo}, "뺀 후보가 options 에 남았다"
     starts = {o["start_min"] for o in tr[0]["options"] if o["id"] != "walk"}
     assert len(starts) == 1, f"options 의 출발이 여럿이다: {starts}"
-    # ☆`[2026-09-29 이동 계산기 문제목록 #26·#45]` 봉투 칸 둘이 늘었다 — not_linked(운행일이 바뀌어 잇지 않은 곳) ·
-    #   kept_unverified(못 채워 옛 이동을 둔 곳, 검증 안 됨). 둘 다 몸통(CreateTrip 칸)이 아니라 봉투에만 있다
-    assert set(got) == {"items", "routes", "skipped", "left_out", "basis", "not_linked", "kept_unverified"}
+    assert set(got) == {"items", "routes", "skipped", "left_out", "not_linked", "kept_unverified", "basis"}   # 팀장 #26·#45
 
 
 def test_bus_from_place_recheck():
@@ -816,19 +914,19 @@ def test_replan_fare_known_locked():
                          planned_arrival=datetime(2026, 9, 29, 10, 5, tzinfo=KST),
                          next_start=datetime(2026, 9, 29, 10, 30, tzinfo=KST), events={})
     assert not w[0].rejected, w[0].rejected
-    # ☆`[2026-09-29 이동 계산기 문제목록 #22·#23]` 요금을 모르는 옵션은 **탈락시키지 않는다** — 앞 판은 탈락시켜 버스를 섞어
-    #   갈아타는 대안(요금 칸이 없다)이 사고 때 전부 떨어졌다. 추가 비용은 모름(None)이고, 순위에서 요금 아는 후보 뒤에 선다
+    # ☆ 73 후속(2026-09-29 · 팀장 #22 · 본인 결정 「팀장 판대로」 — 54 결정 뒤집힘): 요금을 모르는 옵션은 **떨어지지 않고**
+    #   요금을 아는 후보 **뒤**에 선다(Candidate.rank). 앞 판 단정(「요금을 몰라」 탈락)을 새 규칙으로 바꿔 잠근다.
     unk = dict(route, options=[{k: v for k, v in o.items() if k != "fare_krw"} if o["id"].startswith("subway") else o
                                for o in route["options"]])
     c2 = route_candidates(route=unk, depart=datetime.fromisoformat(mob["starts_at"]),
                           planned_arrival=datetime.fromisoformat(mob["ends_at"]),
                           next_start=datetime.fromisoformat(items[1]["starts_at"]), events={})
-    unk_sub = [c for c in c2 if c.key.startswith("subway")]
-    assert unk_sub and not any("요금을 몰라" in r for c in unk_sub for r in c.rejected), "요금 모름은 탈락 사유가 아니다"
-    assert all(c.extra_cost_krw is None for c in unk_sub), "모르는 요금을 0원으로 지어내지 않는다(#23)"
-    known = [c for c in c2 if c.extra_cost_krw is not None and not c.rejected]
-    assert known, "요금을 아는 후보가 하나는 남아 있어야 순위를 비교할 수 있다"
-    assert min(c.rank() for c in known) < min(c.rank() for c in unk_sub), "요금 모르는 후보는 아는 후보 뒤에 선다"
+    s2 = [c for c in c2 if c.key.startswith("subway")]
+    assert s2 and not any("요금을 몰라" in r for c in s2 for r in c.rejected), [c.rejected for c in s2]
+    assert all(c.extra_cost_krw is None for c in s2), "모르는 요금을 0 으로 지어내지 않는다(#23)"
+    known = [c for c in c2 if not c.rejected and c.extra_cost_krw is not None]
+    assert all(k.rank() < u.rank() for k in known for u in s2 if k.changed_items == u.changed_items), \
+        "요금 모르는 후보는 아는 후보 뒤"
 
 
 class _FakeCg:
@@ -865,12 +963,13 @@ def test_congestion_checked_needs_cell():
 
 
 def test_recheck_at_offsets():
-    """GPT 23 2차 #3 — 재판정 성공 분기의 축 변환: 04:00 목표(역 도착이 전 운행일로 넘어감 · off −1440)와 자정 넘김.
+    """GPT 23 2차 #3 — 재판정 성공 분기의 축 변환: 03:59 목표(역 도착이 전 운행일로 넘어감 · off −1440)와 자정 넘김.
+    ☆ 73 후속 — 04:00 정각은 팀장 #45 뒤 새 운행일이라 이동을 안 만든다(trace 빔 · tr[0] IndexError) → 03:59 로.
     trace 의 후보를 그 출발에서 _recheck_at 으로 다시 보면 같은 출발·같은 eta 가 나와야 한다."""
     _skip_if_no_data()
     from app.modules.travel_ops.mobility.engine import plan as P
     rt = _runtime()
-    for items in (_two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T04:00:00+09:00"),
+    for items in (_two("2026-09-28T22:00:00+09:00", "2026-09-28T23:00:00+09:00", "2026-09-29T03:59:00+09:00"),
                   _two("2026-09-29T22:30:00+09:00", "2026-09-29T23:30:00+09:00", "2026-09-30T00:30:00+09:00")):
         tr = []
         plan(_GS, items, 1, {}, runtime=rt, modes=MODES, trace=tr)
@@ -883,7 +982,9 @@ def test_recheck_at_offsets():
             got, why = pl._recheck_at(o, x["start_min"], t["arrive_by_min"], {"size": 1}, True, "off")
             assert got is not None, (why, x)
             assert got["_start"] == x["start_min"] and got["eta_min"] == x["eta_min"], (got["eta_min"], x)
-        assert any(x["check"] and x["check"]["off"] == -1440 for x in t["options"]) or items[1]["starts_at"].endswith("00:30:00+09:00")
+        # ☆ 73 후속 — 앞 판은 04:00 목표로 「역 도착이 전 운행일로 넘어가는」 off −1440 분기를 잠갔다. 팀장 #45 뒤 두 항목이
+        #   같은 운행일일 때만 잇는데, 04:00 뒤 목표에서 도보를 빼 전 운행일로 넘어가는 시각(04:0x 이전)엔 첫차가 없어 성립
+        #   후보가 생기지 않는다 — 그 분기는 plan() 으로는 닿지 않는다. 재판정 동치(위 두 단정)만 잠근다.
 
 
 def test_bus_cap_zero_keeps_planned():
@@ -918,7 +1019,7 @@ def test_fare_rules_have_basis():
     R = _rules()
     F = R["fare"]
     # 54 는 판정 무변경이라 v0.9 를 유지했다 · 55(동명이역 · 판정 변경)가 v0.9.1 로 올렸다 — 두 판 번호가 같은 판을 가리키는지만 본다
-    assert R["rules_version"] in ("v0.9", "v0.9.1") and R["source_id"] == f"mobility_rules@{R['rules_version']}", "판 번호 두 곳 일치"
+    assert R["rules_version"] in ("v0.9", "v0.9.1", "v0.9.2") and R["source_id"] == f"mobility_rules@{R['rules_version']}", "판 번호 두 곳 일치"
     assert F["확인"]["checked_at"].startswith("2026-09-25") and all(u.startswith("https://") for u in F["확인"]["sources"])
     n = 0
     for sec in ("subway", "bus", "transfer"):

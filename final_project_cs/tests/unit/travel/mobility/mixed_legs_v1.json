@@ -29,8 +29,9 @@
     16,
     16
    ],
-   "expect_last_depart": "22:20",
-   "expect_arrive": "11:31"
+   "expect_last_depart": "22:56",
+   "expect_arrive": "11:31",
+   "_78": "2026-09-29 73 후속(v0.9.2 · GPT Q3): 첫 구간 버스의 「늦어도」 상한 = 승차 정류장 막차 통과 추정(빠른 쪽 · min(p10,p50) 누적) — 판정(팀장 #3 · 우리 p10)과 같은 모델. 기점 막차를 중간 정류장 시각처럼 쓰던 값에서 갱신"
   },
   {
    "id": "MIX-02",
@@ -56,9 +57,10 @@
     17,
     17
    ],
-   "expect_last_depart": "22:04",
+   "expect_last_depart": "22:45",
    "expect_arrive": "10:57",
-   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 버스 구간 p50 누적 · p90 스프레드 2분"
+   "note_v0.9": "(v0.9 · 41 · 2026-09-25) 버스 구간 p50 누적 · p90 스프레드 2분",
+   "_78": "2026-09-29 73 후속(v0.9.2 · GPT Q3): 첫 구간 버스의 「늦어도」 상한 = 승차 정류장 막차 통과 추정(빠른 쪽 · min(p10,p50) 누적) — 판정(팀장 #3 · 우리 p10)과 같은 모델. 기점 막차를 중간 정류장 시각처럼 쓰던 값에서 갱신"
   },
   {
    "id": "MIX-03",
@@ -151,7 +153,7 @@
   {
    "id": "MIX-06",
    "selfcheck": false,
-   "note": "좌표 없음 — 수집 밖 노선(1150, 경기 버스)으로 갈아타면 정류장 좌표를 낼 수 없다. 환승 도보 0분·근거없음(MOB_W_TRANSFER_COORD_MISSING)으로 드러내고, 이어서 버스 구간 자체가 수집 범위 밖(MOB_W_BUS_ROUTE_NOT_COLLECTED)이라 근거없음",
+   "note": "수집 밖 노선(1150, 경기 버스)으로 갈아타기 — 버스 구간 자체가 수집 범위 밖(MOB_W_BUS_ROUTE_NOT_COLLECTED)이라 근거없음. 정류장 행이 없으니 환승 좌표도 없지만, 원인은 버스 구간이므로 버스 구간을 먼저 판정해 그 이유를 낸다",
    "date": "2026-09-11",
    "depart_at": "11:00",
    "legs": [
@@ -172,9 +174,38 @@
    "expect_reason": "no_data",
    "expect_last_depart_none": true,
    "expect_warn_codes": [
-    "MOB_W_TRANSFER_COORD_MISSING",
     "MOB_W_BUS_ROUTE_NOT_COLLECTED"
+   ],
+   "_78": "2026-09-29 73 후속: 팀장 #1 뒤 환승 자리에서 먼저 멈춰(COORD_MISSING) 원인이 가려졌다 — 탐침 전이표에서 같은 모양이 역방향 버스 443건(no_service → no_data)으로 나와, 버스 정류장 행이 없으면 버스 구간을 먼저 판정하게 고쳤다. 판정(근거없음)은 같다",
+   "expect_warn_codes_absent": [
+    "MOB_W_TRANSFER_COORD_MISSING"
    ]
+  },
+  {
+   "id": "MIX-07",
+   "note": "지하철→버스, 버스가 그 방향으로 안 간다 — 02호선 뚝섬→성수 → 2016 성수역1번출구→건대입구역1번출구(2016 은 건대입구→성수 방향만 이 두 정류장을 지난다). 버스 구간 불가(no_service)가 이유다 — 환승 좌표 없음(근거없음)으로 가리지 않는다",
+   "date": "2026-09-11",
+   "depart_at": "11:00",
+   "legs": [
+    {
+     "line": "02호선",
+     "from": "뚝섬",
+     "to": "성수"
+    },
+    {
+     "mode": "bus",
+     "route": "2016",
+     "from": "성수역1번출구",
+     "to": "건대입구역1번출구"
+    }
+   ],
+   "expect": "infeasible",
+   "expect_internal": "infeasible",
+   "expect_reason": "no_service",
+   "expect_warn_codes_absent": [
+    "MOB_W_TRANSFER_COORD_MISSING"
+   ],
+   "_78": "2026-09-29 73 후속 신설 — 탐침 전이표 443건(역방향 버스 no_service → no_data)을 케이스로 잠근다"
   }
  ],
  "note_v0.8": "2026-09-24 · 39번 방 — 기대값 재정의. expect = 밖 판정 둘(feasible/infeasible) · expect_internal = 옛 4값(내부 판정) · expect_reason = 이유 코드 · expect_slack_min/expect_margin_min = [하한, 상한] · expect_last_depart = 마지막 성립 출발(worst 역산 · 없으면 expect_last_depart_none). 옛 expect 값은 expect_internal 로 옮겼다 — 값을 바꾼 것이 아니라 축을 나눈 것이다."

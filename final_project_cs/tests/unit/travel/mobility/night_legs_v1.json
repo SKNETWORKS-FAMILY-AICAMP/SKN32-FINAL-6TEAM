@@ -169,7 +169,7 @@
     },
     {
       "id": "NIGHT-10",
-      "note": "N26 막차 +1분(=27:26)",
+      "note": "N26 막차(27:25 기점) +1분 = 27:26 개화산역2번출구 — 중간 정류장이라 막차 통과 추정(빠른 쪽) 27:28 전 → 성립 · 늦어도 27:28",
       "date": "2026-10-14",
       "depart_at": "03:26",
       "legs": [
@@ -180,9 +180,29 @@
           "to": "한서고등학교.방화사거리"
         }
       ],
+      "expect": "feasible",
+      "expect_internal": "feasible",
+      "expect_last_depart": "27:28",
+      "_78": "2026-09-29 73 후속: 팀장 #3(중간 정류장은 통과 추정과 비교) 방향 수용 · 비교 시각은 빠른 쪽(p10 이하 · v0.9.2) — 팀장 판 p90 통과 27:30 대신 27:28. 반대편은 NIGHT-10B(27:29 불가)"
+    },
+    {
+      "id": "NIGHT-10B",
+      "note": "N26 개화산역2번출구 27:29 — 막차 통과 추정(빠른 쪽) 27:28 뒤 → 불가 after_last · 늦어도 27:28",
+      "date": "2026-10-14",
+      "depart_at": "03:29",
+      "legs": [
+        {
+          "mode": "bus",
+          "route": "N26",
+          "from": "개화산역2번출구",
+          "to": "한서고등학교.방화사거리"
+        }
+      ],
       "expect": "infeasible",
       "expect_internal": "infeasible",
-      "expect_reason": "after_last"
+      "expect_reason": "after_last",
+      "expect_last_depart": "27:28",
+      "_78": "2026-09-29 73 후속 신설 — NIGHT-10 의 반대편(통과 추정 빠른 쪽 경계 +1분)"
     },
     {
       "id": "NIGHT-11",

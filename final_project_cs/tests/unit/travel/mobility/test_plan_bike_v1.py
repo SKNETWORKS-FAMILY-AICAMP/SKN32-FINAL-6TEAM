@@ -23,6 +23,14 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace as NS
 
+# ★ 71번 방(2026-09-29) — 전체층 마커. 실데이터 축은 기본 `pytest` 에서 빠지고 `-m mobility_full` 로 돈다
+#   (conftest.py). 스크립트로 직접 돌릴 때는 pytest 가 없어도 되게 감싼다.
+try:
+    import pytest
+    _full = pytest.mark.mobility_full          # 실데이터(DATA_DIR)를 읽는 시험에만 붙인다 — 합성 단위는 게이트에 남는다
+except ImportError:     # pragma: no cover
+    _full = lambda f: f                        # noqa: E731
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
@@ -201,6 +209,7 @@ def test_bike_stage_buffer_and_prev_end_exact():
     assert "출발 때 확인" not in got[0]["options"][0]["label"], got[0]["options"][0]["label"]
 
 
+@_full
 def test_bike_party_size_label():
     """GPT 58 #6 — 판정기는 거치 ≥1 만 본다(인원수 대수 미확인) — label 에 필요 대수를 적는다."""
     rt, _v, _ = _fake()
@@ -267,6 +276,7 @@ def _run(rt, modes):
     return out
 
 
+@_full
 def test_golden_bike():
     """G — 자전거 테마 예시(bike+walk)가 골든과 같다 · 자전거가 한 구간 이상 계획 수단 · 옵션 키는 계약 칸뿐
     · 못 만든 구간은 이유가 「자전거 — …」(대중교통으로 바꾸지 않는다)."""
@@ -282,6 +292,7 @@ def test_golden_bike():
         assert set(o) <= {"id", "label", "eta_min", "fare_krw", "uses"} and o["uses"] == [], o
 
 
+@_full
 def test_bike_only_request():
     """자전거만 요청하면 옵션은 전부 자전거 · 계획 수단 bike · **이동 끝 + 계획 버퍼 = 다음 일정 시작**(slack 0 — 마지막
     성립 출발) · 이동 시작 ≥ 앞 일정 끝 (GPT 58 #8 — 설명만 있고 검사가 없던 것)."""

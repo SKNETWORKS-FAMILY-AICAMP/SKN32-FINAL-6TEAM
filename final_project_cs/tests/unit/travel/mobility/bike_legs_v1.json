@@ -36,9 +36,12 @@
     "bike": 1
    },
    "expect_warn_codes": [
-    "MOB_W_BIKE_FOREIGNER_GUIDE",
     "MOB_W_BIKE_LCD_SKIPPED"
-   ]
+   ],
+   "expect_warn_codes_absent": [
+    "MOB_W_BIKE_FOREIGNER_GUIDE"
+   ],
+   "_78": "2026-09-29 73 후속: 따릉이 외국인 안내를 붙이지 않는다(본인 · 자전거 따로 안내 안 함) — 기대 경고에서 빼고 「없어야」로 잠금"
   },
   {
    "id": "BIKE-02",
@@ -62,9 +65,12 @@
    "expect_last_depart_none": true,
    "expect_warn_codes": [
     "MOB_W_BIKE_LIVE_UNKNOWN",
-    "MOB_W_BIKE_FOREIGNER_GUIDE",
     "MOB_W_BIKE_LCD_SKIPPED"
-   ]
+   ],
+   "expect_warn_codes_absent": [
+    "MOB_W_BIKE_FOREIGNER_GUIDE"
+   ],
+   "_78": "2026-09-29 73 후속: 따릉이 외국인 안내를 붙이지 않는다(본인 · 자전거 따로 안내 안 함) — 기대 경고에서 빼고 「없어야」로 잠금"
   },
   {
    "id": "BIKE-03",
@@ -92,12 +98,11 @@
     10
    ],
    "expect_last_depart_none": true,
-   "expect_warn_codes": [
+   "expect_warn_codes_absent": [
+    "MOB_W_BIKE_LIVE_UNKNOWN",
     "MOB_W_BIKE_FOREIGNER_GUIDE"
    ],
-   "expect_warn_codes_absent": [
-    "MOB_W_BIKE_LIVE_UNKNOWN"
-   ]
+   "_78": "2026-09-29 73 후속: 따릉이 외국인 안내를 붙이지 않는다(본인 · 자전거 따로 안내 안 함) — 기대 경고에서 빼고 「없어야」로 잠금"
   },
   {
    "id": "BIKE-04",
@@ -153,10 +158,11 @@
     10
    ],
    "expect_last_depart_none": true,
-   "expect_warn_codes": [
+   "expect_reason_contains": "잠실 자전거 수리센터 앞",
+   "expect_warn_codes_absent": [
     "MOB_W_BIKE_FOREIGNER_GUIDE"
    ],
-   "expect_reason_contains": "잠실 자전거 수리센터 앞"
+   "_78": "2026-09-29 73 후속: 따릉이 외국인 안내를 붙이지 않는다(본인 · 자전거 따로 안내 안 함) — 기대 경고에서 빼고 「없어야」로 잠금"
   },
   {
    "id": "BIKE-06",
@@ -349,9 +355,10 @@
     10
    ],
    "expect_last_depart": "24:50",
-   "expect_warn_codes": [
+   "expect_warn_codes_absent": [
     "MOB_W_BIKE_FOREIGNER_GUIDE"
-   ]
+   ],
+   "_78": "2026-09-29 73 후속: 따릉이 외국인 안내를 붙이지 않는다(본인 · 자전거 따로 안내 안 함) — 기대 경고에서 빼고 「없어야」로 잠금"
   },
   {
    "id": "BIKE-13",

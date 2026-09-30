@@ -349,8 +349,13 @@ def build_dump(record, case, result):
 
 # ── 기록기 ───────────────────────────────────────────────────────────────
 def default_log_dir():
-    from .paths import PROCESSED
-    return PROCESSED / "mobility" / "logs"
+    """기본 로그 자리 `<PROCESSED>/mobility/logs`. ☆`[73 후속 · 3-5]` 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data)
+    계산기가 꺼졌으면(disabled) 자리를 만들지 않는다 — 엉뚱한 드라이브 루트(C:\data)에 쓰던 것을 막는다. 명시한 log_dir 은 그대로."""
+    from . import paths as _paths
+    if _paths.SOURCE in ("unset", "disabled"):
+        raise RuntimeError(f"판정 로그 자리를 정할 수 없다 — 자료 폴더 출처 {_paths.SOURCE}(자리표시 {_paths.PROCESSED}). "
+                           f"load_cli_env()/configure() 뒤에 만들거나 log_dir 을 준다")
+    return _paths.PROCESSED / "mobility" / "logs"
 
 
 class DeviceMismatch(RuntimeError):

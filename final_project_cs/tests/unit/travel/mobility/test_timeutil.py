@@ -65,6 +65,20 @@ eq(day_type_of(date(2026, 9, 12), H), "holiday", "토요일")
 eq(day_type_of(date(2026, 9, 13), H), "holiday", "일요일")
 eq(day_type_of(date(2026, 10, 9), H), "holiday", "한글날(금)")
 
+# ── 초 올림과 운행일 경계 (73 후속 · 팀장 #12 뒤따름 · GPT Q4 B-5) ──
+#   운행일을 올림 **전** 값으로 정하고 그 다음에 올린다. 앞 판은 03:59:01~59 를 그날 04:00(240)으로 읽었다(24시간 어긋남).
+eq(to_service_min("03:59:00", ceil_seconds=True), 1679, "03:59:00 → 전날 27:59")
+eq(to_service_min("03:59:01", ceil_seconds=True), 1680, "03:59:01 → 올림 뒤에도 전날 28:00 (240 아님)")
+eq(to_service_min("03:59:59", ceil_seconds=True), 1680, "03:59:59 → 전날 28:00")
+eq(to_service_min("27:59:59", ceil_seconds=True), 1680, "27:59:59 = 03:59:59 (같은 값)")
+eq(to_service_min("04:00:00", ceil_seconds=True), 240, "04:00:00 정각은 그날 운행일(팀장 #45)")
+eq(to_service_min("04:00:01", ceil_seconds=True), 241, "04:00:01 → 04:01")
+eq(to_service_min("30:00:00", ceil_seconds=True), 1800, "30:00:00 은 허용 최대")
+eq(to_service_min("30:00:01", ceil_seconds=True), None, "30:00:01 은 올리면 1801 — 허용 최대 밖이라 시각 아님")
+eq(to_service_min("30:00:01"), 1800, "내림(도착 기한)은 30:00 그대로")
+eq(to_service_min("23:59:59", ceil_seconds=True), 1440, "23:59:59 → 24:00")
+eq(to_service_min("03:59:59"), 1679, "내림은 초를 버린다")
+
 bad = [c for c in CASES if not c[0]]
 for ok, note, got, want in CASES:
     print(("  OK  " if ok else "  FAIL") + f" {note}" + ("" if ok else f"  → {got!r} (기대 {want!r})"))

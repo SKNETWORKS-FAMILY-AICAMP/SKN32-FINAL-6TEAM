@@ -1,8 +1,8 @@
 {
- "rules_version": "v0.9.1",
- "effective_date": "2026-09-28",
- "supersedes": "v0.9",
- "source_id": "mobility_rules@v0.9.1",
+ "rules_version": "v0.9.2",
+ "effective_date": "2026-09-29",
+ "supersedes": "v0.9.1",
+ "source_id": "mobility_rules@v0.9.2",
  "source_id_근거_2026-09-14": "판 번호가 두 군데에 있다 — rules_version 과 이 source_id. 판정 근거(policy Evidence)의 source_id 는 rules_version 이 아니라 **이 값**을 그대로 쓴다(verify_time.py:165 → _ev_rule). 2026-09-14 에 rules_version 만 v0.3.1 로 올리고 이 값을 v0.3 으로 두어, **규칙은 v0.3.1 인데 판정 근거는 v0.3 이라고 기록되는** 상태가 잠시 있었다 (데모 HTML 을 재생성해 근거 표를 눈으로 보고 발견). 두 값은 항상 같은 판을 가리켜야 한다 — check_fold [11] 이 그것을 검사한다. · 2026-09-19 v0.4: 둘을 함께 올렸다(v0.4 / mobility_rules@v0.4). 파일명은 그대로 rules_v0.3.json — 2026-09-14 방침(파일명 유지, 내부 버전만).",
  "author": "서유현 (Mobility 담당)",
  "purpose": "이동 구간의 제약 대조에 쓰는 규칙. Evidence(source_type='policy', source_id=이 파일의 source_id, observed_at=effective_date)로 판정에 붙는다.",
@@ -247,12 +247,40 @@
     "근거": "13번 §4 — '값 20 m 오차는 상한 판정을 뒤집지 않음. 판정을 뒤집는 경계값(상한 ±20 m)이면 근거없음으로 내린다'. 눈검수에서 출구 핀이 배지와 20 m 안에서 어긋난 건(광운대)이 있었다. |직선 − 상한| ≤ 20 m 면 verdict=unknown + MOB_W_TRANSFER_NEAR_WALK_LIMIT."
    },
    "좌표_없음": {
-    "value": "도보 0분 · 근거없음",
+    "value": "판정하지 않음(unknown · no_data)",
     "grade": "근거없음",
-    "근거": "수집 밖 노선·정류장이면 거리를 낼 수 없다. 종전 fallback(0분)과 같은 값이되 MOB_W_TRANSFER_COORD_MISSING 으로 드러낸다 — 조용히 0분을 넣지 않는다."
+    "근거": "2026-09-29 팀장 문제목록 #1 — 앞 판은 도보 0분·성립이었다(모르는 값을 0 으로 지어냄). 좌표가 없으면 거리를 낼 대체 출처가 없다 → MOB_W_TRANSFER_COORD_MISSING 과 함께 판정하지 않는다. (v0.9.2 에 문구만 코드에 맞춤)"
    },
-   "버스↔버스": "범위 밖. 종전대로 0분·근거없음(MOB_W_TRANSFER_WALK_ZERO). 같은 정류장 환승은 0 이 맞고 다른 정류장 환승은 틀린다 — 다음 코드 방.",
+   "버스↔버스": "v0.9.2 부터 transfer.bus_bus_walk(정류장 행 좌표 · 같은 식).",
    "적용_방향": "지하철→버스: 앞 구간 도착역 ↔ 뒤 구간 승차 정류장. 버스→지하철: 앞 구간 하차 정류장 ↔ 뒤 구간 출발역."
+  },
+  "bus_bus_walk": {
+   "설명": "버스↔버스 환승(73 후속 · 2026-09-29 · v0.9.2). 앞 버스 하차 정류장 ↔ 뒤 버스 승차 정류장. 정류장은 **이름이 아니라 노선 안 행**(bus.segment 가 방향·순번으로 고른 행의 station_id·좌표)으로 맞춘다 — 같은 이름의 맞은편 정류장을 0 m 로 합치지 않는다.",
+   "source": "processed/mobility/bus_stops_v1.jsonl (lat/lng · station_id · direction · seq)",
+   "grade": "추정",
+   "같은_정류장": {
+    "value": "같은 station_id → 정류장 간 이동 0 m · 확정(좌표 검사보다 먼저 · 한쪽 좌표가 비어도)",
+    "grade": "확정",
+    "근거": "같은 물리 정류장이다. 뜻은 정류장 간 이동 거리 0 — 하차·승차 준비는 0 으로 보지 않는다(길찾기 가산 wayfinding_addition_min 은 따로 더한다). GPT 대조 78 Q1."
+   },
+   "다른_정류장": {
+    "value": "직선 × stop_station_walk.detour_factor ÷ measured_baseline.kakao_walk_speed_mps ÷ 60(소수 첫째 자리 올림) · 추정",
+    "grade": "추정",
+    "근거": "지하철↔버스 환승과 같은 식·같은 값(값_출처). 정류장 좌표 둘 다 bus_stops_v1(결손 0)."
+   },
+   "limit": {
+    "value": "limits.walk_m (직선) · 초과 → infeasible(transfer_walk) · 상한 ±stop_station_walk.boundary_m 안 → unknown + MOB_W_TRANSFER_NEAR_WALK_LIMIT",
+    "grade": "추정",
+    "근거": "지하철↔버스(stop_station_walk.limit)와 같은 기준 — 상한은 직선거리로 비교하고 경계 ±boundary_m 는 좌표 오차가 판정을 뒤집을 수 있어 근거없음으로 낸다."
+   },
+   "좌표_없음": {
+    "value": "정류장 행을 못 찾거나 lat·lng 가 유한한 수가 아니면 판정하지 않음(unknown · no_data) + MOB_W_TRANSFER_COORD_MISSING",
+    "grade": "근거없음",
+    "근거": "정류장 행을 못 찾으면 거리를 낼 대체 출처가 없다 — 지어내지 않는다(팀장 #1 과 같은 원칙). 단 뒤 버스 구간 행이 없으면 그 버스 구간을 먼저 판정해 원인(그 방향 운행 없음 · 수집 밖 노선)을 낸다(changelog_v0.9.2 ②-b)."
+   },
+   "값_출처": "detour_factor·boundary_m 은 stop_station_walk 의 값을 그대로 쓴다(새 수치 없음).",
+   "근거": "73 검수회신 3-1 · GPT Q4 B-2 — 옛 규칙(0분·근거없음 · MOB_W_TRANSFER_WALK_ZERO)은 다른 정류장 환승에서 낙관이고, 팀장 #1 뒤로 이 자리가 지하철 거리표 상위 10% 대체값(MOB_W_TRANSFER_WALK_NETWORK_P90)을 탔다 — 지하철 분포는 버스 근거가 아니다. 본인 9/29: 같은 정류장 환승도 있지만 거리가 꽤 먼 경우도 있다.",
+   "더_볼_것": "우회계수 1.4 는 역 출구↔정류장 표본 값이다 — 맞은편·중앙차로·횡단시설 우회·횡단보도 대기는 보장하지 않는다(따로 검증). 도보 상한은 직선거리 비교(실제 보행거리 상한과 뜻이 다르다 · stop_station_walk.limit 과 같은 방식)."
   }
  },
  "buffer": {
@@ -554,6 +582,12 @@
     "value": "same_request_only",
     "grade": "추정",
     "근거": "적용 GPT 5 · 2차 4·5 — 같은 요청 시각에서 worst 도착이 best 도착보다 이르면 맞춘다(구간 안 · 케이스 끝 두 곳 · MOB_W_WORST_BEFORE_BEST). **FIFO 가 아니다** — 요청 시각 t1 < t2 의 도착 단조성은 보장하지 않는다(시간대별 상수 모델의 한계 · 확인 안 한 것). 보정이 들어간 worst 승차는 ride_src=profile_adjusted 로 p90_eta 에 쓰지 않는다."
+   },
+   "막차_통과_비교": {
+    "value": "early_pass",
+    "grade": "추정",
+    "근거": "2026-09-29 팀장 문제목록 #3 이 「요청 시각 > 기점 막차」 거절을 중간 정류장에서는 막차의 그 정류장 통과 추정과 비교하도록 바꿨다(board_caps · worst 는 p90). 73 후속(v0.9.2 · GPT Q3): 「막차를 아직 탈 수 있나」는 버스가 **일찍** 지나갈 위험이 핵심이라 비교 시각은 빠른 쪽 — 막차 + min(p10 누적, p50 누적) 내림 · 요일형이 갈리면 빠른 쪽(bus_profile.last_pass_early). best·worst 같은 값. 기점은 기점 막차(확정). 추정을 못 내면 기점 막차 그대로(보수적) + MOB_W_BUS_LAST_PASS_UNCHECKED. 승차 시각 상한(막차_통과 board_cap_only)은 그대로(늦은 쪽).",
+    "뜻의_한계": "min(p10 누적, p50 누적)은 「날짜별 시간대 평균」 분위를 구간마다 누적한 두 추정 중 빠른 값이다 — 개별 운행의 이른 통과 한계도, 「막차를 놓칠 확률 10% 이하」도 아니다. 여유를 몇 분 더 빼야 하는지는 모름(고정 여유로 최악값 근거가 생기지 않는다) — 개별 운행 통과 실측으로 보정할 일. 그래서 중간 정류장의 막차 이후 불가는 **추정 등급**으로 낸다(기점 승차만 확정). GPT 대조 78 Q2."
    }
   },
   "ride_model_v0.9": {
@@ -745,7 +779,7 @@
    "holiday": "토요일 · 일요일 · 공휴일"
   },
   "holiday_source": {
-   "value": "config/mobility/holidays_2026_2027.json",
+   "value": "final_project_cs/app/modules/travel_ops/mobility/engine/rules/holidays_2026_2027.json",
    "grade": "확정",
    "근거": "한국천문연구원 특일 정보(관보 고시 기준). 임시공휴일·대체공휴일 포함. 2026~2027 46일."
   },
@@ -1958,9 +1992,9 @@
    "params": [
     "reason"
    ],
-   "근거": "대형역이 아니면 0분이다. 낙관적 방향이라 등급을 근거없음으로 내린다. v0.4(2026-09-19)부터 지하철↔버스 환승은 여기로 오지 않는다(stop_station_walk) — 남는 건 거리표 밖 지하철↔지하철과 버스↔버스뿐.",
+   "근거": "대형역이 아니면 0분이다. 낙관적 방향이라 등급을 근거없음으로 내린다. v0.4(2026-09-19)부터 지하철↔버스 환승은 여기로 오지 않는다(stop_station_walk) — 남는 건 거리표 밖 지하철↔지하철과 버스↔버스뿐. ☆ v0.9.2 — 버스↔버스는 transfer.bus_bus_walk 로 간다. 지하철↔지하철 거리표 밖은 팀장 #1 뒤 MOB_W_TRANSFER_WALK_NETWORK_P90. 이 코드를 내는 자리는 이제 없다.",
    "site": "verify_time.py:829",
-   "구현": true
+   "구현": false
   },
   "MOB_W_NO_TRAVEL_MIN": {
    "class": "data",
@@ -2005,11 +2039,11 @@
   "MOB_W_TRANSFER_COORD_MISSING": {
    "class": "grade",
    "to_answer": false,
-   "text": "{reason} — 정류장↔역 환승 도보를 낼 수 없어 판정하지 않는다",
+   "text": "{reason} — 환승 도보를 낼 수 없어 판정하지 않는다",
    "params": [
     "reason"
    ],
-   "근거": "지하철↔버스 환승인데 정류장·역 좌표를 못 찾았다(수집 밖 노선 등). 낙관적 방향이라 등급을 근거없음으로 내린다(rules transfer.stop_station_walk.좌표_없음).",
+   "근거": "지하철↔버스 환승인데 정류장·역 좌표를 못 찾았다(수집 밖 노선 등). 낙관적 방향이라 등급을 근거없음으로 내린다(rules transfer.stop_station_walk.좌표_없음). ☆ v0.9.2 — 버스↔버스 정류장 행·좌표를 못 찾을 때도 이 코드.",
    "site": "verify_time.py — _stop_station_walk",
    "구현": true
   },
@@ -2108,9 +2142,9 @@
     "lb",
     "lc"
    ],
-   "근거": "bike.ddareungi.foreigner_guide 3줄. 앱·결제 수단이 없으면 못 빌리므로 고객의 다음 선택을 바꾼다 — answer 로 간다.",
+   "근거": "bike.ddareungi.foreigner_guide 3줄. 앱·결제 수단이 없으면 못 빌리므로 고객의 다음 선택을 바꾼다 — answer 로 간다. ☆ v0.9.2(본인 9/29) — 붙이지 않는다(bike.ddareungi.foreigner_guide.사용).",
    "site": "verify_time.py — verify_leg_bike",
-   "구현": true
+   "구현": false
   },
   "MOB_W_BIKE_LIVE_UNKNOWN": {
    "class": "data",
@@ -2277,7 +2311,7 @@
     "route",
     "stop"
    ],
-   "근거": "bus.구간_프로파일.막차_통과 — 기점→정류장 사슬이 끊겼다.",
+   "근거": "bus.구간_프로파일.막차_통과 — 기점→정류장 사슬이 끊겼다. ☆ v0.9.2 — 막차 통과 비교(빠른 쪽)를 못 낼 때도 이 코드 · 첫 구간 버스의 「늦어도」는 비운다.",
    "site": "verify_time.py — verify_leg_bus",
    "구현": true
   },
@@ -2569,7 +2603,12 @@
     ],
     "grade": "확정",
     "근거": "bikeseoul.com 이용안내 「외국관광객」 원문 요지(2026-09-19). 해외카드 결제가 실제로 되는지는 결제해 보지 않았다 — 안 된다는 보고가 오면 Discover Seoul Pass 우선으로 바꾼다(17번 되돌리는 조건).",
-    "source_id": "bikeseoul_foreigner_guide@2026-09-19"
+    "source_id": "bikeseoul_foreigner_guide@2026-09-19",
+    "사용": {
+     "value": "붙이지 않음(v0.9.2)",
+     "grade": "확정",
+     "근거": "본인 9/29 — 자전거는 요청했을 때만 싣고 자전거 따로 안내는 하지 않는다. 앞 판은 설문이 없으면 foreign 기본 True 로 내국인에게도 붙였다(73 검수회신 3-10). 문구는 남겨 둔다."
+    }
    },
    "multi_후보": {
     "value": true,
@@ -2650,7 +2689,13 @@
     "grade": "추정",
     "근거": "첫 구간이 지하철이면 편성 목록(막차부터), 버스·자동차·자전거면 상한(도착 목표·막차)에서 1분씩 내려온다. 600회면 10시간 폭 — 그 이상은 상한이 잘못 잡힌 것이다."
    },
-   "근거": "12번 규칙 14 — 막차는 등급이 아니라 값이다. 여유가 버퍼 아래면 마지막 성립 출발 시각을 넘겨 앞단이 당기고, 0 아래면 택시. **코어 계약으로는 안 낸다**(출력 스펙 v1.1 · 본인 9/23 — 32 가 items[]·routes{} 를 만들 때 뺀다). 판정기 안에서 성립·막차 판단과 relief 문장에 쓰고, out(32 의 입력)에는 싣는다. 첫 구간이 자동차·택시·자전거면 시간표가 없어 「마지막 편」이 없다 → None."
+   "근거": "12번 규칙 14 — 막차는 등급이 아니라 값이다. 여유가 버퍼 아래면 마지막 성립 출발 시각을 넘겨 앞단이 당기고, 0 아래면 택시. **코어 계약으로는 안 낸다**(출력 스펙 v1.1 · 본인 9/23 — 32 가 items[]·routes{} 를 만들 때 뺀다). 판정기 안에서 성립·막차 판단과 relief 문장에 쓰고, out(32 의 입력)에는 싣는다. 첫 구간이 자동차·택시·자전거면 시간표가 없어 「마지막 편」이 없다 → None.",
+   "첫_구간_버스": {
+    "value": "상한 = 승차 정류장 막차 통과 추정(빠른 쪽 · 막차_통과_비교와 같은 모델) · 기점이면 기점 막차 · 중간 정류장에서 추정을 못 내면 None",
+    "grade": "추정",
+    "근거": "73 후속 · GPT Q3 — 팀장 판은 기점 막차(27:25)를 그대로 상한으로 둬 27:26 요청이 성립인데 「늦어도 27:25」가 나왔다(NIGHT-10). 같은 모델로 역산하고, 모르면 비운다.",
+    "뜻": "역산값은 「판정기 모델 안에서의 마지막 성립 출발」이다 — 중간 정류장에서는 통과 추정(빠른 쪽) 또는 보수 대체(기점 막차)에 기댄 값이라 실제 마지막 성립 출발과 다를 수 있다(보수 쪽). 코어 계약으로는 안 나간다(내부값). GPT 대조 78 Q2."
+   }
   },
   "reason_codes": {
    "value": {
@@ -2716,5 +2761,17 @@
   "station_names 절 신설 — 동명이역_좌표차_m 500(물리적 역 묶기) · 환승_제외_역명 [양평, 신촌](후보 생성기가 같은 역명 갈아타기로 잇지 않는다 · 이촌 유지).",
   "역명만 받는 곳(multi 양끝 · 자전거 끝점 · _pt 노선 없음 · 계획의 장소→역)이 동명이역이면 노선으로 고르고, 못 고르면 값을 비우고 경고 MOB_W_STATION_AMBIGUOUS. 출구표는 물리적 역 단위로 나눠 찾는다.",
   "verify_multi 후보 밖 판의 p90_eta_min 을 eta 와 같이 접근·이탈 도보만큼 민다(뜻 불변 · 41 D5 · 48 발견)."
+ ],
+ "changelog_v0.9.2": [
+  "2026-09-29 · 73 후속(팀장 수정본 develop 747dc79~38cd59d 위에서 우리 엔진만). 판정을 바꾸므로 v0.9.1 → v0.9.2, source_id mobility_rules@v0.9.2. 파일명은 유지. 코어 계약 칸 무변경.",
+  "팀장 수정 중 판정 규칙을 바꾼 것을 이 판에 적는다(값은 팀장 판 그대로): #1 거리표 밖 지하철↔지하철 환승 = 같은 거리표 측정 분포 상위 10%(추정 · MOB_W_TRANSFER_WALK_NETWORK_P90 · 거리표 없으면 no_data) · 정류장↔역 좌표 없음 = 판정 안 함(MOB_W_TRANSFER_COORD_MISSING) · #3 중간 정류장 막차 = 기점 막차 대신 그 정류장 통과 추정과 비교 · #6 매우혼잡 + 조건 일행인데 다음 편이 없으면 추정으로 내리고 알림(MOB_W_CONGESTION_NO_NEXT_BOARD) · #15 버스 운행 요일 칸이 빠진 노선 = no_data(옛 판만 매일 · MOB_W_BUS_SERVICE_DAYS_ASSUMED) · 휴일 표정속도 없으면 평일 대체(MOB_W_BUS_SPEED_WEEKDAY_FOR_HOLIDAY).",
+  "경고: 팀장 판이 넣은 4종(TRANSFER_WALK_NETWORK_P90 · CONGESTION_NO_NEXT_BOARD · BUS_SERVICE_DAYS_ASSUMED · BUS_SPEED_WEEKDAY_FOR_HOLIDAY)을 합쳐 warnings 절 53종. 이번 판은 새 코드를 만들지 않는다(버스↔버스는 기존 COORD_MISSING · NEAR_WALK_LIMIT 을 쓴다). 구현 false 로 돌린 것 2 — BIKE_FOREIGNER_GUIDE(본인 · 안내 안 함) · TRANSFER_WALK_ZERO(내는 자리 없음).",
+  "우리 수정 ① transfer.bus_bus_walk 신설 — 버스↔버스 환승 도보를 정류장 행(ID·방향·순번) 좌표 직선×1.4÷1.04 m/s 로(같은 ID 0 m 확정) · 도보 상한 · 경계 ±20 m 근거없음 · 행·좌표 없으면 no_data. 옛 0분도, 팀장 #1 대체값(지하철 분포)도 아니다.",
+  "우리 수정 ② bus.구간_프로파일.막차_통과_비교 = 빠른 쪽(막차 + min(p10, p50) 누적 내림) — 팀장 #3 의 worst p90 비교는 일찍 지나갈 위험을 놓친다(GPT Q3). judgment.last_feasible_depart.첫_구간_버스 — 상한을 같은 모델로, 모르면 비움.",
+  "우리 수정 ②-b 환승 앞에서 뒤 버스 구간의 정류장 행을 못 찾으면(그 방향으로 안 감 · 수집 밖 노선) 버스 구간을 먼저 판정해 그 이유를 낸다 — 팀장 #1 뒤 환승 「좌표 없음 → 근거없음」이 먼저 멈춰, 알 수 있는 no_service 가 근거없음으로 바뀌었다(탐침 전이표: 역방향 버스 443건 infeasible/no_service → unknown/no_data). 「모르면 모른다」는 그대로, 「아는 것을 모른다고 하지 않는다」. MIX-07 로 잠금 · MIX-06 기대 경고는 BUS_ROUTE_NOT_COLLECTED 로 되돌아감.",
+  "우리 수정 ③ 운행일 경계 먼저·초 올림 나중(timeutil.to_service_min) — 03:59:01~59 가 그날 04:00(240)으로 읽히던 것 → 전날 28:00(1680). 올림 뒤 30:00 초과(30:00:01)는 시각 아님. 규칙 값 변화 없음(day_type 04:00 경계 그대로)이나 판정이 바뀌어 여기 적는다.",
+  "우리 수정 ④ 따릉이 외국인 안내(MOB_W_BIKE_FOREIGNER_GUIDE)를 붙이지 않는다(본인 9/29 · 자전거는 요청 시만 · 따로 안내 안 함). 앞 판은 설문 없으면 foreign 기본 True.",
+  "판정 밖(규칙 값 무관): 실 시간표 .gz 우선 읽기 · 판정 로그 진입점이 자료 폴더를 먼저 정하고 못 정하면 로그를 안 씀 · plan 의 day_boundary·same_place 로 남긴 입력 이동도 kept_unverified · plan_estimate 대표 경로 동급 띠(5%) 안이면 짧은 쪽.",
+  "GPT 대조(78 · 채택 9 · 기록 5 · 기각 0): ① 같은 station_id 를 좌표 검사보다 먼저(한쪽 좌표 없어도 0 m 확정) · lat·lng 유한성 검사 · 0 m 는 「정류장 간 이동」만 ② 중간 정류장 막차 이후 불가를 추정 등급으로(기점만 확정) · p10 의 뜻 한계를 규칙에 적음 ③ 환승 앞 버스 구간 선판정은 시각 무관 이유(no_service · no_data)만 — 첫차·막차·도착 목표는 환승 도보를 더한 뒤 ④ plan_estimate 대표 경로 — 통상 중앙값(statistics.median) · 띠 내림(표본 20 미만 0) ⑤ 체류 항목 밖 입력 이동(첫 체류 전 · 마지막 체류 뒤 · 이동만 온 입력)도 kept_unverified(before_first_stay · after_last_stay · no_stay) · 봉투 시험에 항목 대응 ⑥ judgment_log_run --log-dir 은 출처 검사를 의도적으로 건너뜀(문서화)."
  ]
 }
