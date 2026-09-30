@@ -2,8 +2,6 @@
 """CsvPlaceLookup.find() — 지역명 포함 검색 (이름+지역 분리 전략 ③)."""
 from __future__ import annotations
 
-import pytest
-
 from app.modules.travel_ops.activity.csv_places import CsvPlaceLookup
 
 _csv = CsvPlaceLookup()
