@@ -28,7 +28,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-[개발 서버](http://127.0.0.1:3100)를 연다. `.env.local`이 이미 있으면 덮어쓰지 말고 필요한 값을 확인한다. 로컬 예시는 `NEXT_PUBLIC_DATA_MODE=demo`를 명시한다. 프로덕션 빌드에서 이 설정을 생략하면 데이터 연결 오류를 표시하며 데모로 자동 전환하지 않는다.
+[개발 서버](http://127.0.0.1:3100)를 연다. `.env.local`이 이미 있으면 덮어쓰지 말고 필요한 값을 확인한다. 로컬 예시는 `NEXT_PUBLIC_DATA_MODE=live`를 명시한다(2026-09-29부터 live 기준 개발) — `NEXT_PUBLIC_API_BASE`의 triPilot 서버가 떠 있어야 하며, 서버 없이 시연 데이터로 보려면 `demo`로 바꾼다. 프로덕션 빌드에서 이 설정을 생략하면 데이터 연결 오류를 표시하며 데모로 자동 전환하지 않는다.
 
 ```powershell
 npm run check
