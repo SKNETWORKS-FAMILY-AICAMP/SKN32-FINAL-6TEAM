@@ -148,6 +148,24 @@ def chain(g, rows, start_row, mask_named=False):
             return None, "고리", hops
 
 
+def _guard_targets(a):
+    """82 GPT 2 — 첫 쓰기(--dry-run 도 보고서를 쓴다) 전에 멈출 조건.
+    ① 저장소 안 datasets/(git 데이터) 를 고치게 되는 경우 — 엔진의 읽기용 기본값(출처 repo_datasets)을 쓰기에 쓰지 않는다
+    ② .env 에 DATA_DIR 이 없는데 --timetable 도 안 준 경우(해석된 기본 자리가 정본이라는 보장이 없다)
+    ③ 옆에 timetable_v1.jsonl.gz 가 있는 경우 — 엔진은 .gz 를 먼저 읽으므로 .jsonl 을 고쳐도 판정에 안 들어간다"""
+    from app.modules.travel_ops.mobility.engine import paths as _p
+    ds = (_p.REPO_ROOT / "datasets").resolve()
+    tt = Path(a.timetable).resolve()
+    outs = [Path(a.report).resolve()] + ([] if a.dry_run else [tt, Path(a.backup_dir).resolve(), tt.with_name("timetable_v1_meta.json")])
+    bad = [str(x) for x in outs if x.is_relative_to(ds)]
+    if bad:
+        sys.exit("저장소 안 datasets/ 를 고치게 된다 — .env 에 정본 DATA_DIR 을 적거나 경로를 직접 준다(쓰기 전 멈춤): " + " · ".join(bad))
+    if _p.SOURCE != "cli_env" and not any(x.startswith("--timetable") for x in sys.argv):
+        sys.exit(f"자료 폴더 출처가 {_p.SOURCE} 다 — .env 에 DATA_DIR 을 적거나 --timetable 등 경로를 직접 준다(쓰기 전 멈춤)")
+    if tt.with_name(tt.name + ".gz").exists():
+        sys.exit(f"{tt.name}.gz 가 옆에 있다 — 엔진은 .gz 를 먼저 읽으므로 비압축 판만 고치면 판정에 안 들어간다(정본은 비압축 하나로 둔다)")
+
+
 def main():
     from app.modules.travel_ops.mobility.engine.paths import cli_processed
     PROCESSED = cli_processed()       # #48 뒤 — import 로는 .env 를 안 읽는다
@@ -159,6 +177,7 @@ def main():
     ap.add_argument("--backup-dir", default=str(PROCESSED.parents[2] / "_backup"))
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
+    _guard_targets(a)
 
     order, alias = load_order(a.order)
     raw = Path(a.timetable).read_text(encoding="utf-8").splitlines()

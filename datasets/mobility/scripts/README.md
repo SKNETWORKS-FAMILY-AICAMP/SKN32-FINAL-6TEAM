@@ -5,8 +5,10 @@
 
 - 실행은 **저장소 루트에서** `python datasets/mobility/scripts/<이름>.py` (하위 폴더 없음 · 서로 `_paths.py` 를 옆에서 부른다).
 - 산출은 **정본** `DATA_DIR\travel\processed\mobility\`(드라이브 동기화 폴더 · `.env` 의 `DATA_DIR`) — git 폴더에 바로 쓰지 않는다.
-  git 에 올리는 줄인 판은 마지막에 `reduce_75.py` 가 정본에서 만든다. **`.env` 에 `DATA_DIR` 을 꼭 둔다**
-  (`fill_timetable_dest_v1.py` 는 엔진 경로 규칙을 따르므로 `DATA_DIR` 이 없으면 저장소 안 폴더를 고친다).
+  git 에 올리는 줄인 판은 마지막에 `reduce_75.py` 가 정본에서 만든다. **`.env` 에 `DATA_DIR` 을 꼭 둔다** — 없거나 저장소 안
+  `datasets/` 를 가리키면 쓰는 스크립트는 첫 쓰기 전에 멈춘다(`_paths.ensure_dirs` · `fill_timetable_dest_v1.py` 는 옆에 `.gz` 가 있어도 멈춘다).
+  상대경로 `DATA_DIR` 은 저장소 루트 기준으로 푼다.
+- `graph_` 5개는 예외 — 작업 폴더를 cwd 로 두고 돌린다(각 파일 머리말). 최상위에서 바로 읽고 쓰므로 import 하거나 `--help` 로 점검하지 않는다.
 - 키는 `.env` 에만: `DATA_GO_KR_KEY`(공공데이터포털 — TAGO · 서울 버스 · 천문연 특일) · `SEOUL_OPENAPI_KEY`(서울 열린데이터광장).
 - 패키지: 이동 자료 기기 목록 `final_project_cs/requirements-mobility.txt`(팀 서버 목록과 판이 달라 **따로 만든 가상환경**에 깐다 · 팀장 9/30 정리) — `graph_03b_profile.py` 만 쓰는 `holidays` 는 그때 따로.
 
