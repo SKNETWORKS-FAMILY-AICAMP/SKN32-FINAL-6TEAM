@@ -1,8 +1,114 @@
 # -*- coding: utf-8 -*-
-# 서버 · 시험 목록은 저장소 맨 위 requirements/ 로 옮겼다(2026-09-30). 이 파일은 그 목록을 가리키기만 한다.
-#   CI(.github/workflows/ci-develop.yml · ci-main.yml)와 문서(`cd final_project_cs` 뒤 `pip install -r requirements.txt`)가 이 경로를 쓰므로 남겨 두었다.
-#   판(버전)은 여기서 고치지 않는다 — ../requirements/base.txt(서버) · ../requirements/dev.txt(시험·린트)에서 고친다.
-#   전체 구성 설명은 저장소 맨 위 requirements.txt 머리를 본다.
+# ════════════════════════════════════════════════════════════════════════════
+# triPilot(A-COPilot) 의존성 — final_project_cs (서버 + 시험·린트)
+# ════════════════════════════════════════════════════════════════════════════
+# 설치 (Python 3.12 · 이 폴더에서):
+#     python -m pip install -r requirements.txt
+# CI(.github/workflows/ci-develop.yml · ci-main.yml)도 이 파일을 그대로 깔아 시험한다.
+# 판은 로컬에서 확인한 것으로 고정한다(RULE.md §1.2) — 새 패키지를 더하거나 판을 바꾸면 시험을 돌려 본 뒤 여기서 고친다.
+#
+# 이 파일의 구획 — 절 제목(══)으로 나눠 두었다:
+#   [1] 서버 실행        필수. 쓰임새별로 웹·DB·LLM·MCP·수치·유틸·파일 읽기 묶음
+#   [2] 시험 · 린트      필수(코드를 고치고 확인할 때). CI 도 깐다
+#   [3] 선택 도구        # 을 지워야 깔린다 — 브라우저 자동 조작(playwright)
+#   [4] 로컬 분류 모델   # 을 지워야 깔린다 — torch·transformers. 용량이 크다
+#   [5] 선언만 있는 것   코드는 안 쓴다(제거 후보). 지금은 그대로 깔린다
+#
+# 이 폴더의 다른 파일
+#   requirements-mobility.txt   이동 담당 자료 기기(수집·가공·학습) 전용 pip freeze.
+#       ★같은 환경에 깔지 않는다 — 같은 이름의 패키지가 판이 다르다:
+#             패키지        이 파일(서버)   requirements-mobility.txt
+#             numpy         1.26.4         2.2.1
+#             scipy         1.13.1         1.15.1
+#             scikit-learn  1.5.2          1.6.1
+#             alembic       1.18.4         1.14.0
+#       서비스에 들어가는 이동 계산기(app/modules/travel_ops/mobility/engine/)는 python-dotenv · PyYAML · numpy 셋뿐이고 모두 여기 있다.
+#       이동 자료 스크립트는 pandas · shapely · pyproj 도 import 하지만 그 파일에 판이 없다 — 이동 담당이 확인해 채운다.
+#       새 가상환경에서 따로 깐다:  python -m pip install -r requirements-mobility.txt
+#   ../final_project_ui/requirements.txt       사용자 콘솔 전용(fastapi · uvicorn · psycopg 는 이 파일에 모두 있다). acop-composer-ui 는 경로로 깐다 — 그 파일 머리 참고
+#   ../final_project_sample/requirements.txt   참고 구현체 + Docker 빌드용(Docker 가 그 폴더 안만 본다). 판이 조금 다르다
+#
+# ★acop_composer(설정 변경 관리 채널)는 pip 로 안 깔린다 — 소스가 ../final_project_sample/acop_composer/ 에 있다.
+#   이 폴더에서 실행할 때 PYTHONPATH 에 ../final_project_sample 을 붙인다(이유: wiki/operations/local-setup.md).
+#   PowerShell:   $env:PYTHONPATH = (Resolve-Path ..\final_project_sample).Path
+#
+# ★이 파일 첫 줄의 `# -*- coding: utf-8 -*-` 은 지우지 않는다 — 한국어 Windows(cp949)의 pip 은 이 표시가 없으면 한글 주석을 못 읽고
+#   UnicodeDecodeError 로 설치가 시작도 못 한다. 새 requirements 파일을 만들 때도 첫 줄에 넣는다.
+# ★2026-09-24 정정(옛 기록): 다섯 줄이 실제 설치판과 달라 깨끗한 환경에서는 설치 자체가 실패했다(pytest 7.4.4 ↔ pytest-asyncio 0.25.2).
+#   시험 1,427건이 통과한 환경의 실제 판으로 바로잡았다.
+#
+# 각 줄 끝 주석 = 이 패키지를 코드 어디서 쓰는지. 저장소 전체의 import 를 훑어(2026-09-30) 확인했다.
 
--r ../requirements/base.txt
--r ../requirements/dev.txt
+# ══ [1] 서버 실행 ═══════════════════════════════════════════════════════════
+
+# ── 웹 · 계약 ────────────────────────────────────────────────
+fastapi==0.116.1                # HTTP 서버 — 에이전트 API · 웹 API · 운영 화면 · 사용자 콘솔(final_project_ui)
+uvicorn[standard]==0.35.0       # 서버를 띄우는 실행기(ASGI). [standard] = 자동 재시작·빠른 파서
+pydantic==2.13.4                # 요청·응답·계약 모델(app/core/contracts.py)
+pydantic-settings==2.10.1       # 환경변수 → 설정(app/core/settings.py)
+python-multipart==0.0.20        # 파일 올리기 폼(고객 계획 접수 · 콘솔 폼)
+PyYAML==6.0.2                   # config/*.yaml 읽기 · 설정 저장소(app/core/settings.py · project_config.py · composer_stores.py)
+PyJWT==2.13.0                   # 설정 변경 관리 채널 acop_composer(final_project_sample 의 소스를 경로로 붙여 쓴다)의 토큰(auth.py).
+                                #   mcp 가 끌고 오기도 하지만 직접 쓰므로 적어 둔다
+
+# ── DB (PostgreSQL + pgvector) ───────────────────────────────
+psycopg[binary]==3.3.4          # PostgreSQL 연결(v3). [binary] = 컴파일 없이 설치
+pgvector==0.5.0                 # 벡터 열 · 검색(app/infrastructure/rag)
+
+# ── LLM ──────────────────────────────────────────────────────
+openai==2.44.0                  # LLM · 임베딩 호출(어댑터 openai). 못 쓰는 환경이면 mock 어댑터로 돈다
+tiktoken==0.13.0                # ★ContextPack 토큰은 추정이 아니라 실측이다
+
+# ── MCP (read-only 3 tool) ───────────────────────────────────
+mcp[cli]==1.28.1                # 읽기 전용 도구 세 개를 밖에 여는 MCP 서버(app/presentation/api/mcp.py)
+
+# ── 수치 · 평가 통계 ─────────────────────────────────────────
+numpy==1.26.4                   # 이동 계산기(travel_ops/mobility/engine)가 서버 실행에도 쓴다 + 평가 통계
+scipy==1.13.1                   # McNemar exact 검정(eval/stats)
+scikit-learn==1.5.2             # 평가 일치도(eval/stats) · 학습 스크립트(ml/)
+
+# ── 설정 · 유틸 ──────────────────────────────────────────────
+python-dotenv==1.1.1            # .env 읽기(이동 계산기 자료 위치 등)
+httpx==0.28.1                   # 외부 데이터 어댑터 · A2A HTTP · 시험용 클라이언트
+socksio==1.0.0                  # httpx SOCKS 프록시 — 고정 IP 서버 경유(ACOP_OUTBOUND_PROXY_URL)
+
+# ── 고객 계획 읽기 — 올린 파일을 글자로 (app/modules/travel_ops/intake/sources.py) ──
+# ★2026-09-28 추가: 함수 안에서만 import 해서 로컬(따로 설치돼 있음)에서는 안 드러났고,
+#   main CI 가 처음 돌며 No module named 'PIL'·'docx' 로 드러났다. 판은 로컬 설치판.
+python-docx==1.2.0              # .docx
+openpyxl==3.1.5                 # .xlsx
+PyMuPDF==1.28.0                 # .pdf (import fitz)
+Pillow==11.0.0                  # 사진
+
+# ══ [2] 시험 · 린트 ═════════════════════════════════════════════════════════
+# 서버를 띄우는 데는 필요 없고, 코드를 고치고 확인할 때 쓴다. (시험이 쓰는 httpx · jsonschema · PyJWT 는 위 [1] 과 그 하위 의존성에 이미 있다.)
+pytest==8.4.2                   # 시험 실행기. architecture · contract · unit · integration · e2e · scenario · security
+                                #   ★서버 옛 목록은 8.3.4, 이동 담당·UI·참고 구현체는 8.4.2 였다 — 8.4.2 로 맞췄다(2026-09-30)
+pytest-asyncio==0.25.2          # async 시험. ★pytest>=8.2 를 요구한다 — 7.4.4 로 두면 깨끗한 환경에서 설치가 실패한다(2026-09-24 CI 에서 드러남)
+ruff==0.16.8                    # 린트(버그만 잡는 최소 규칙 F·E9 — 규칙 범위는 루트 ruff.toml). ★CI 는 ruff 를 따로 `pip install ruff==0.16.8` 로 깐다 —
+                                #   판을 바꾸면 ci-develop.yml · ci-main.yml 도 같이 고친다(새 판이 규칙을 넓히면 관문이 갑자기 붉어진다)
+
+# ══ [3] 선택 도구 — 필요할 때만 # 을 지운다 ═════════════════════════════════
+# playwright==1.59.0            # 브라우저 자동 조작 — 화면 캡처(scripts/capture_ui_screenshots.py) · 요식 자료 수집(scripts/dining/catchtable_auto.py)
+#                               #   ★깐 뒤 브라우저를 한 번 내려받는다:  python -m playwright install chromium
+#                               #   (웹 프런트엔드 frontend/apps/web 의 화면 시험은 npm 의 Playwright 를 따로 쓴다 — 이것과 무관)
+
+# ══ [4] 로컬 분류 모델 · 요식 유사도 — 학습·평가하거나 학습한 모델을 서버에서 불러 쓸 때만 # 을 지운다 ══════
+# 용량이 크다(torch). 서버·시험·CI 에는 필요 없다. scikit-learn · numpy 는 위 [1] 에 이미 있다.
+# 쓰는 곳: app/infrastructure/ml/labels.py(학습한 분류 모델을 불러 (라벨, 확신도)를 낸다 — 적재를 처음 부를 때까지 미뤄서 이 패키지가 없어도 서버는 뜬다)
+#          ml/*.py(학습 · 평가 · 요식 유사도)
+# ★CPU 만 있는 기기라면 아래 줄의 # 도 지워 CPU 판을 받는다(용량이 훨씬 작다):
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# joblib==1.4.2                 # 학습한 기준선 모델(model.joblib) 저장·불러오기
+# torch==2.12.0                 # 파인튜닝 인코더 학습·추론  (개발 PC 는 CPU 판 2.12.0+cpu)
+# transformers==5.13.0          # 파인튜닝 인코더(config.json 폴더) 불러오기
+
+# ══ [5] 선언만 있고 지금 코드는 쓰지 않는 것 (제거 후보 — 지우기 전에 팀에서 정한다) ═══════
+# 2026-09-30 저장소 전체의 파이썬 import 와 설정 파일을 훑어 0곳임을 확인했다(README 「기술 스택」 주석과 같은 사실).
+#   DB 는 psycopg 로 직접 쓰고(app/core/transition.py), 마이그레이션은 SQL 파일을 그대로 실행한다(db/migrate.py).
+#   흐름은 자체 Controller 와 Case 상태기계가 정한다(LangGraph 는 쓰지 않는다 — 계획서 v11).
+#   지울 때는 시험을 돌려 확인한다.
+sqlalchemy==2.0.41
+alembic==1.18.4
+langgraph==1.2.8
+langchain-core==1.4.9

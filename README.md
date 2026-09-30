@@ -158,7 +158,7 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
-> `requirements/base.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
+> `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
 
 ## 로컬 실행
 
@@ -166,26 +166,14 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 
 ### 1. Python 환경과 의존성
 
-저장소 맨 위 폴더에서 한 번에 설치합니다(서버 + 시험·린트). 이어지는 명령은 `final_project_cs` 폴더에서 실행합니다.
-
 ```powershell
+cd final_project_cs
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-cd final_project_cs
 ```
 
-목록은 [`requirements/`](requirements/)에 나뉘어 있고, 저장소 맨 위 [`requirements.txt`](requirements.txt) 머리에 구성이 설명돼 있습니다.
-
-| 파일 | 내용 | 설치 |
-|---|---|---|
-| `requirements/base.txt` | 서버 실행에 쓰는 것(웹·DB·LLM·MCP·파일 읽기·평가 통계). CI가 이 판으로 시험합니다 | 위 명령에 포함 |
-| `requirements/dev.txt` | 시험(pytest)·린트(ruff) | 위 명령에 포함 |
-| `requirements/tools.txt` | 선택 — 브라우저 자동 조작(playwright) | `python -m pip install -r requirements/tools.txt` |
-| `requirements/ml.txt` | 선택 — 로컬 분류 모델·요식 유사도(torch·transformers, 용량이 큼) | `python -m pip install -r requirements/ml.txt` |
-| `requirements/mobility-data.txt` | 이동 자료 수집·가공 기기 전용. numpy 등 판이 서버와 달라 **같은 환경에 깔지 않습니다** | 새 가상환경에서 따로 |
-
-`final_project_cs` 폴더에서 `python -m pip install -r requirements.txt`를 실행해도 같은 목록이 설치됩니다(그 파일이 위 목록을 가리킵니다). 사용자 콘솔(`final_project_ui`)의 추가 설치는 그 폴더의 `requirements.txt` 머리를 봅니다.
+`requirements.txt`는 서버·시험/린트·선택 도구·로컬 분류 모델 구획으로 나뉘어 있고, 머리 주석에 설명이 있습니다. 이동 자료 기기 전용 `requirements-mobility.txt`는 numpy 등 판이 서버와 달라 **같은 환경에 깔지 않습니다**(새 가상환경에서 따로).
 
 ### 2. 환경변수
 
