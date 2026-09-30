@@ -20,7 +20,10 @@ def load(job):
     return st['qs'], st['items'], J(R(f'llm_tasks_out_{job}.json'))
 
 
-def run_one(i, cfg, qs, items, out):
+LAST = {}   # 마지막 호출의 근거(자리표·조건·후보 수) — 감사·재현용 기록에 쓴다
+
+
+def run_one(i, cfg, qs, items, out, latweave=False):
     q = qs[i]['q']
     a = analyze(q)
     tt = a['tt']
@@ -34,7 +37,16 @@ def run_one(i, cfg, qs, items, out):
         anchor = out[cfg[1]]['anchor_excl'][i] if a['negation'] else out[cfg[1]]['anchor_tt'][i]
     slots = {k: rs[k] for k in ('day', 'pos', 'kind', 'meal', 'rel', 'kw', 'nextday')}
     slots['anchor'] = anchor
-    r = resolve(items, slots)
+    r = resolve(items, slots, latweave)
+    LAST.clear()
+    LAST.update({'slots': slots, 'why': r[2] if len(r) > 2 else None})
+    if r[0] == 'clarify':                    # 후보 2~5개 — 짚기 전문가가 그 안에서 고르면 그 답, 후보 밖이거나 못 고르면 모델이 찍지 않고 되묻는다
+        calls.append(('point', cfg[2]))
+        pp = out[cfg[2]]['point'][i]
+        if pp in r[1]:
+            LAST['why'] += f' — 후보 안에서 짚기 전문가가 {pp} 선택'
+            return pp, calls, 'struct+point'
+        return r, calls, 'clarify'
     if r[0] == 'item':
         return r[1], calls, 'struct'
     if r[0] == 'none':
