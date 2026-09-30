@@ -47,7 +47,11 @@ def to_min_ceil(t):
     v, sec = _parse(t)
     if v is None:
         return None
-    return v + 1 if sec else v
+    if sec:
+        v += 1
+        if v > SERVICE_DAY_MAX_MIN:     # 30:00:01 → 1801 은 허용 최대(30:00) 밖 — 시각이 아니다(73 후속)
+            return None
+    return v
 
 
 def _parse(t):
@@ -94,11 +98,18 @@ def to_service_min(t, ceil_seconds=False):
     ceil_seconds=True 이면 초를 다음 분으로 올린다 — **출발 시각**에 쓴다(#12).
     도착 기한(arrive_by)은 내림이 안전한 쪽이라 기본값(내림)을 쓴다.
     """
-    v = to_min_ceil(t) if ceil_seconds else to_min(t)
+    # ☆`[2026-09-29 73 후속 · 팀장 #12 뒤따름]` 운행일을 **올림 전 값**으로 먼저 정하고, 그 다음에 초를 올린다.
+    #   앞 판(to_min_ceil 먼저)은 03:59:01~59 가 240(그날 04:00)이 됐다 — 맞는 값은 1680(전날 28:00) · 24시간 어긋남.
+    #   올린 뒤 30:00 을 넘으면(30:00:01 → 1801) 시각이 아니다(None) — _parse 의 범위 검사를 올림 뒤에도 한 번 더.
+    v, sec = _parse(t)
     if v is None:
         return None
     if v < SERVICE_DAY_START_MIN:
         v += MIN_DAY
+    if ceil_seconds and sec:
+        v += 1
+        if v > SERVICE_DAY_MAX_MIN:
+            return None
     return v
 
 

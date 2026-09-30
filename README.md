@@ -154,8 +154,8 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
 | Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
 | 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
-| 평가 | NumPy 2.2.1, SciPy 1.15.1, scikit-learn 1.6.1 |
-| 품질 | pytest 7.4.4, pytest-asyncio 0.25.2, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 평가 | NumPy 1.26.4, SciPy 1.13.1, scikit-learn 1.5.2 |
+| 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
 > `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
@@ -172,6 +172,8 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
+
+`requirements.txt`는 서버·시험/린트·선택 도구·로컬 분류 모델 구획으로 나뉘어 있고, 머리 주석에 설명이 있습니다. 이동 자료 기기 전용 `requirements-mobility.txt`는 numpy 등 판이 서버와 달라 **같은 환경에 깔지 않습니다**(새 가상환경에서 따로).
 
 ### 2. 환경변수
 
