@@ -186,7 +186,7 @@ API 는 scope 키로, **운영 화면은 운영자 로그인으로** 들어온�
 | 세션 | 서명 쿠키(HMAC · 8시간 · HttpOnly · SameSite=Strict). 권한을 줄이면 **다음 요청부터** 반영 |
 | 쓰기 | 승인·바깥함 해소 `action:approve` · 위임 `delegation:write`. 없으면 403, 아무것도 안 바뀐다 |
 | 기록 | 승인자·처리자·위임 행위자 = **로그인한 운영자 id** |
-| 막지 않는 것 | `/scenario/*`(시연 — `/ui` 밖) · CSRF 토큰(SameSite 에 기댐) · 잠금은 프로세스 안 |
+| 막지 않는 것 | CSRF 토큰(SameSite 에 기댐) · 잠금은 프로세스 안 (`/scenario/*` 시연 입구는 `[2026-09-30]` 운영 앱에서 뗐다 — D-CS-008) |
 
 결정 [D-CS-007](../decisions/D-CS-007-ui-operator-login.md) · 실측 [2026-09-23_운영화면_로그인.md](../records/evidence/2026-09-23_운영화면_로그인.md)
 

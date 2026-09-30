@@ -28,7 +28,7 @@ domain: travel
 | 운영 → 고객 API | **실제 HTTP**(`ACOP_OPS_API_BASE_URL`, 기본 `http://127.0.0.1:8042`). scope 키는 운영 앱 설정 `ACOP_OPS_API_KEYS` 에만 — **스스로 만들지 않는다**. 시간 초과는 「결과 모름」으로 적고 스스로 다시 부르지 않는다(15초, `security.ops_api_timeout_seconds`). 승인은 고객 API 가 멱등 키로 묶어 두 번 눌러도 한 건 |
 | DB 직접 읽기 | 운영 화면의 조회(표 7개)는 **읽기 전용 연결**(`ACOP_OPS_READ_DATABASE_URL` — 계정 만드는 법 `scripts/sql/ops_readonly_role.sql`, 비우면 본 주소). 다음 단계는 API 로 옮기기 |
 | 웹 제한값 운영 API | `/admin/limits*` 는 운영 앱. 값은 DB(`runtime_limits`)라 고객 앱이 30초 안에 읽는다 |
-| 시나리오 모드 | 스위치(`/ui/scenario`)·시연 화면(`/tripilot`)·입구(`/scenario/*`)가 한 판을 **프로세스 메모리**에 든다 — 셋 다 운영 앱으로 **함께** 옮겼다(나누면 깨진다). 시나리오 모드는 데모 모드다(사용자 결정 2026-09-28) |
+| 시나리오 모드 | ★`[2026-09-30 사용자 지시]` **운영 앱에서 뗐다** — 압축 보관 `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(스위치 `/ui/scenario` · 시연 화면 `/tripilot` · 입구 `/scenario/*` · 본체 · 시험, 복원 방법은 그 안의 README.md). 실서비스 운영 화면과 데모가 같은 프로세스에 있으면 안 된다. 다시 쓸 때는 운영 앱에 되붙이지 말고 별도 데모 앱으로. 대본 데이터(`scenarios/seoul_day_taiwan_friends.json`)는 시험 · 스크립트가 경로로 직접 읽어 그대로 둔다. (앞 판: 셋을 한 프로세스에 함께 뒀다 — 사용자 결정 2026-09-28) |
 | 폼 위조 방지 | 운영 화면의 모든 POST 폼에 확인값(`csrf`) — 로그인 뒤는 로그인 쿠키 서명값, 로그인 폼은 이중 제출 쿠키. 전에는 `SameSite` 쿠키에만 기댔다 |
 
 ## 아직 아닌 것 — 2단계 전에는 「물리 분리 완료」라고 쓰지 않는다
@@ -45,14 +45,14 @@ domain: travel
 그 뒤 읽기 전용 계정을 적용한다. 그보다 앞서 **운영자 신원 위조**를 막는다 — 고객 API 는 scope 키만 보고 승인자 이름을 요청 본문
 (`approver_id`)에서 그대로 받는다(`cases.py:72·201·238·261·263`). 권고 순서:
 1. 운영 앱이 로그인 운영자를 **서명한 짧은 증명**으로 보내고 고객 API 가 확인해 승인자·처리자를 거기서 꺼낸다
-2. 시나리오 데모를 운영 앱에서 별도 데모 앱(127.0.0.1)으로 뗀다
+2. 시나리오 데모를 운영 앱에서 뗀다 — ★`[2026-09-30 완료]` 별도 앱으로 세우는 대신 **압축 보관**으로 뗐다(위 표)
 3. 제한값 저장은 그 3개 표에만 쓰는 좁은 DB 계정 — ★Codex 는 고객 API 로 옮기자 했으나 사용자 지시(관리 API 는 고객 앱에서 뺀다)와 부딪혀 기각
 4. 운영 화면 조회에 읽기 전용 계정(지금 보류)
 5. 2단계: 앞단 인증 · 조회를 API 로
 
 ## 시험
 
-- `tests/architecture/test_ops_app_is_separate.py`(23): 고객 앱 경로 0 · 404 · 운영 앱이 고객 앱을 import 안 함 · 키를 만들지 않음 · 바깥 요청 403 · 바깥 주소 띄우기 거부 · 포트.
+- `tests/architecture/test_ops_app_is_separate.py`: 고객 앱 경로 0 · 404 · 운영 앱이 고객 앱을 import 안 함 · 키를 만들지 않음 · 바깥 요청 403 · 바깥 주소 띄우기 거부 · 포트 · ★`[2026-09-30]` 운영 앱에도 시연 경로(`/ui/scenario` · `/scenario/*` · `/tripilot`)가 없다.
 - `tests/e2e/test_ops_app_two_processes.py`(3): 고객 API 앱을 **다른 프로세스로 띄우고** 운영 앱이 HTTP 로 승인 · 위임 조회 · 폼 확인값 없으면 403·기록 0 · 키 없으면 보내지 않음.
 
 관련: [D-CS-007](D-CS-007-ui-operator-login.md)(운영 화면 로그인) · [D-CS-001](D-CS-001-composer-ui-removal.md)(Composer 화면 제거와 같은 방향).

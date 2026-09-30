@@ -220,8 +220,6 @@ NAV = (
     #   거두기가 화면에 없으면 「언제든 철회할 수 있다」가 말뿐이 된다.
     ("/ui/delegations", "Delegations"),
     ("/ui/voc", "VOC"),
-    # ★2026-09-14 시나리오 모드 스위치 — 확정 시나리오 하루를 실제 시스템으로 돌리는 시연.
-    ("/ui/scenario", "Scenario"),
     ("/ui/admin", "Admin"),
 )
 

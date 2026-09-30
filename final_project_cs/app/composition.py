@@ -344,24 +344,15 @@ def build_domain_routers() -> list:
 
 
 def build_ops_routers() -> list:
-    """**운영 앱**(`app/ops_entrypoint.py`)이 여는 도메인 경로 — 웹 제한값 운영 API · 시나리오 모드. `[2026-09-29]`
+    """**운영 앱**(`app/ops_entrypoint.py`)이 여는 도메인 경로 — 웹 제한값 운영 API. `[2026-09-29]`
 
     ★고객 API 앱(8042)에는 없다(사용자 지시 — 운영 경로는 외부에서 닿지 못하게 다른 프로세스 · 127.0.0.1).
-    ★시나리오 모드는 한 판을 **프로세스 메모리**에 들고 있어 스위치 화면(`/ui/scenario`)·시연 화면(`/tripilot`)·
-      시나리오 입구(`/scenario/*`)가 **같은 프로세스**에 있어야 한다 — 셋 다 운영 앱으로 함께 옮겼다. 시나리오 모드는
-      대본대로 도는 데모 모드다(사용자 결정 2026-09-28). 설정 `scenario_mode_enabled` 가 꺼져 있으면 모든 경로가 404.
+    ★`[2026-09-30 사용자 지시]` **시나리오(시연) 모드는 운영 앱에서 뗐다** — 실서비스 운영 화면과 데모가 같은 프로세스에 있으면
+      안 된다. 압축 보관: `legacy/scenario_mode/scenario_mode_2026-09-30.zip`(복원 방법은 그 안의 README.md).
     """
-    from app.modules.travel_ops.scenario_mode import build_scenario_router
     from app.modules.travel_ops.web_limits_api import build_limits_router
 
-    def chat_factory():
-        from app.core.settings import get_settings
-        from app.infrastructure.ollama_chat import from_settings
-
-        return from_settings(get_settings())
-
-    return [build_limits_router(),
-            build_scenario_router(classifier_factory=build_classifier, chat_factory=chat_factory)]
+    return [build_limits_router()]
 
 
 def build_subject_resolver():
