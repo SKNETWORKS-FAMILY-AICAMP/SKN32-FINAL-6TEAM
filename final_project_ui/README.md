@@ -79,6 +79,27 @@ Composer 화면 위쪽에 "빠른 토글" 카드가 뜰 때가 있습니다. 아
 필드명·경로가 최종 계약과 다를 수 있습니다 — 대상이 실제로 이 계약을 내놓으면
 `CONSOLE_CONTRACT_VERSIONS`에 그 버전 문자열을 추가해야 카드가 뜹니다.
 
+## 실행 중 설정 — 웹 지도 종류(구글 ↔ 무료 지도) 바꾸기
+
+`[2026-09-29 사용자 지시]` 「개발자 앱에서 구글 ↔ 무료 지도(OSM)로 바꿀 수 있게 옵션으로 만들어 둔다. 화면은 없고 기능만.」
+구현: [`console/runtime_settings.py`](console/runtime_settings.py). 명령줄로 쓴다:
+
+```powershell
+python -m console.runtime_settings map-provider                                   # 지금 값 보기
+python -m console.runtime_settings map-provider google --reason "구글 지도 시험"   # 바꾸기
+python -m console.runtime_settings map-provider default --reason "기본값으로"       # 대상 기본값으로
+python -m console.runtime_settings dev-mode on --reason "근거 확인"                 # 개발 모드 켜기
+python -m console.runtime_settings dev-mode off --reason "시연 전"                  # 끄기(기본)
+```
+
+- **개발 모드**(`web.dev_mode`, `[2026-09-29 사용자 지시]`): 켜면 고객 채팅 답 아래에 그 답의 근거(규정 절 id, 예 `t_doc_07#c5`)가 작게 보인다. 끄면(기본) 고객은 근거 id 를 못 본다 — 근거는 대상의 Case 기록에는 늘 남는다.
+
+- 대상의 운영 설정 API(`GET·PATCH /admin/limits`, 설정 이름 `web.map_provider`)를 부른다. 검증·저장·감사 기록은 대상이 한다 — §0.3 의 반영(`/admin/reload`) 호출과 같은 성격의 예외다. 대상 파일·DB·파이썬은 건드리지 않는다.
+- 환경변수: `CONSOLE_LIMITS_URL`(대상의 `/admin/limits` 전체 주소) · `CONSOLE_LIMITS_READ_TOKEN`(scope `limits:read`) · `CONSOLE_LIMITS_WRITE_TOKEN`(scope `limits:write`) · `CONSOLE_ACTOR`(누가 바꾸나, 없으면 로그인 사용자 이름). 보기·바꾸기 열쇠를 나눈다.
+- 그 사이 다른 운영자가 바꿨으면 「다른 운영자가 먼저 바꿈」으로 끝난다(덮어쓰지 않는다). 모르는 지도 이름은 보내지 않는다.
+- 웹은 지도를 열 때마다 서버(`POST /v1/web/map-load`)에 묻고 그 답의 `provider` 를 따른다. 그래서 다시 빌드하지 않아도 바뀐다(웹 빌드 설정이 `google` 이고 구글 키가 있을 때).
+- `[대기]` 대상 쪽 설정 이름·주소·scope 는 cs 세션이 구현 중이다. 구현되면 실서버로 확인한다.
+
 ## 대기 중인 일 — 조립 정보(`/introspection`)를 운영 앱으로 옮기기
 
 `[계획 2026-09-29 · 대기]` 사용자 지시: 계획만 잡아 두고, **운영 앱이 준비되면** 옮긴다. 지금은 하지 않는다.

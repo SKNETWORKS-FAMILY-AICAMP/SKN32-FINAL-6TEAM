@@ -43,8 +43,11 @@ from .pending import PendingStore, decide, options_from, proposal_notice
 
 class TripDesk:
     def __init__(self, *, store: TripStore, connection_factory: Callable[[], Any],
-                 check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True) -> None:
+                 check: Callable[..., dict[str, Any]] | None = None, dining_ledger: bool = True,
+                 catalog_pool: bool = False) -> None:
         self.store, self._connect = store, connection_factory
+        #: ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록(DB)에서 넓히나(`catalog_pool`). 끄면(시나리오 · 시험 일부) 장소 표만 본다
+        self._catalog_pool = catalog_pool
         #: 요식 원장을 쓰나 — ★`[2026-09-28 사용자 지시]` 시나리오 모드는 **대본대로만 도는 데모 모드**다 — 실제 요식 원장(DB 의 식당 표)을
         #:  섞지 않는다. 원장을 섞자 대본의 대체 식당(「성수 브런치 식당」) 대신 원장 후보(「성수 국수 식당」)가 골라져
         #:  시나리오 시험 3건이 깨졌다.
@@ -58,6 +61,27 @@ class TripDesk:
             trip, items = self.store.latest(conn, trip_id)
             places = self.store.places(conn, trip_id)
         return trip, items, places
+
+    def _widen_activities(self, trip_id: UUID, item_id: UUID) -> dict[str, Any] | None:
+        """★`[2026-09-29 ui 세션 지적 · 사용자 요구]` 활동이면 대체 후보를 **관광공사 목록**에서 넓힌다 — 일정 짜기와 같은 원천
+        (`catalog_pool`). ☆전에는 장소 표의 활동(서울 전체 12곳)만 봐서 「3km 안에 없어요(살펴본 2곳)」로 끝났다.
+        ★`[2026-09-29 사용자 지시]` 바깥(관광공사)을 부르지 않는다 — 운영시간은 새벽 작업이 DB 에 읽어 둔 것만 쓴다."""
+        if not self._catalog_pool:
+            return None
+        from zoneinfo import ZoneInfo
+
+        from .catalog_pool import widen_activity_pool
+        from .itinerary_changes import RELAX_WIDE_M
+
+        with self._connect() as conn:
+            _, items = self.store.latest(conn, trip_id)
+            current = next((i for i in items if i.item_id == item_id), None)
+            if current is None or current.kind != "activity" or not current.place:
+                return None
+            known = {str(p.get("name")) for p in self.store.places(conn, trip_id)}
+            return widen_activity_pool(conn, tenant_id=self.store.tenant_id, trip_id=trip_id, place=current.place,
+                                       known_names=known, radius_m=RELAX_WIDE_M,
+                                       now=datetime.now(ZoneInfo("Asia/Seoul")))
 
     def _ledger(self):
         """★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다 — 표가 없는 DB 면 원장이 「물을 수 없음」으로 답하고
@@ -111,11 +135,85 @@ class TripDesk:
                         message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
         """★`[2026-09-29]` 들고 있던 「다른 안」이 없으면 **지금 찾아서** 바꾼다(`plan_fresh_alternate`).
         고객이 직접 달라고 한 것이라 판정 문(`gate`)을 지나지 않는다 — `swap_alternate` 와 같다."""
+        self._widen_activities(trip_id, item_id)
         trip, items, places = self._read(trip_id)
         plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
                                     places=places, item_id=item_id, message=message, request_id=request_id,
                                     ledger=self._ledger())
-        return self._outcome(trip_id, base_version, items, plan)
+        if isinstance(plan, NoChange) and plan.status == "relaxed":
+            return self._ask_relaxed(trip_id, item_id, plan)
+        outcome = self._outcome(trip_id, base_version, items, plan)
+        more = outcome.pop("more_options", None) if outcome.get("status") == "adjusted" else None
+        if more:
+            # ★`[2026-09-29 사용자 제안 — ui 세션 전달]` 바꾼 항목에 「다른 곳이 좋으면 고르세요」 제안을 연다 — 고르면 그 안으로
+            #   (`pending.choose` → `plan_swap`), 답이 없으면 지금 것을 그대로 둔다. 웹의 「선택이 필요해요」 칸이 그대로 보인다
+            new_item = plan.replacements[item_id]
+            asked = self._ask_options(trip_id, new_item.item_id, reason="other_options",
+                                      text=outcome["notice"]["text"],
+                                      options=[{**o, "rank": n} for n, o in enumerate(more, start=1)],
+                                      causes=list(plan.causes))
+            outcome.update({"proposal_id": asked.get("proposal_id"), "options": asked.get("options")})
+        return outcome
+
+    def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
+                             message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
+        """★`[2026-09-29]` 결정 단위의 「후보만 알아봐 줘 · 추천해 줘」 — **바꾸지 않고** 후보를 계산해 고르게 한다.
+        계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로."""
+        self._widen_activities(trip_id, item_id)
+        trip, items, places = self._read(trip_id)
+        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
+                                    places=places, item_id=item_id, message=message, request_id=request_id,
+                                    ledger=self._ledger())
+        if isinstance(plan, NoChange):
+            if plan.status == "relaxed":
+                return self._ask_relaxed(trip_id, item_id, plan)
+            return {"status": plan.status, **plan.detail}
+        current = next(i for i in items if i.item_id == item_id)
+        # ★`[2026-09-29 ui 세션 지적]` 원래 곳은 후보가 아니다 — 계산은 되돌리기용으로 원래 곳을 「다른 안」 끝에 넣어 두는데
+        #   (`applied_record`), 고를 안으로 보이면 「금용문 대신 … 3) 금용문」이 됐다
+        here = str((current.place or {}).get("place_id"))
+        options = [{**o, "note": None} for o in options_from(plan, current)
+                   if str(o.get("place_id") or "") != here and str(o.get("key")) != here]
+        options = [{**o, "rank": n} for n, o in enumerate(options, start=1)]
+        listed = " · ".join(f"{o['rank']}) {o.get('option_label') or o['name']}"
+                            + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "") for o in options[:3])
+        text = (f"{current.title} 대신 갈 수 있는 곳이에요 — {listed}. 고르시면 바꿀게요. "
+                "고르지 않으시면 원래 일정을 그대로 둡니다.")
+        return self._ask_options(trip_id, item_id, reason="requested_options", text=text, options=options,
+                                 causes=plan.causes, extra={"summary": plan.summary})
+
+    def _ask_options(self, trip_id: UUID, item_id: UUID, *, reason: str, text: str, options: list[dict[str, Any]],
+                     causes: list[dict[str, Any]], extra: dict[str, Any] | None = None) -> dict[str, Any]:
+        """고를 안을 보류 제안(「선택이 필요해요」)으로 연다 — 조건 풀기와 후보 알아보기가 같이 쓴다."""
+        from .pending import Decision
+
+        with self._connect() as conn, conn.transaction():
+            trip, items = self.store.latest(conn, trip_id)
+            current = next((i for i in items if i.item_id == item_id), None)
+            if current is None:
+                return {"status": "gone"}
+            proposal_id = PendingStore(self.store.tenant_id).open(
+                conn, trip_id=trip_id, item=current, base_version=trip["version"],
+                decision=Decision("ask", reason, None, False), causes=causes, options=options)
+            if proposal_id is None:
+                return {"status": "asked", "already": True, "text": text}
+            self.store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}", payload={
+                "type": "proposal_request", "text": text, "language": "ko", "causes": causes,
+                "proposal_id": str(proposal_id), "item_id": str(item_id), "reason": reason, "protected_by": None,
+                "options": [{"key": o["key"], "rank": o["rank"], "name": o.get("option_label") or o["name"],
+                             "starts_at": o.get("starts_at"), "note": o.get("note")} for o in options],
+                "replay": False})
+        return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "text": text,
+                "options": options, **(extra or {})}
+
+    def _ask_relaxed(self, trip_id: UUID, item_id: UUID, plan: NoChange) -> dict[str, Any]:
+        """★`[2026-09-29 사용자 지적]` 조건을 푼 안(시각 늦추기 · 다음 일정 근처)은 **묻는다** — 「선택이 필요해요」 제안으로 보내고,
+        고르면 기존 「다른 안으로」(`pending.choose` → `plan_swap`)로 적용한다. 답이 없으면 원래 일정 그대로."""
+        options = [{**o, "rank": n} for n, o in enumerate(plan.detail["options"], start=1)]
+        return self._ask_options(trip_id, item_id, reason="relaxed", text=plan.detail["text"], options=options,
+                                 causes=plan.detail.get("causes") or [],
+                                 extra={"reason": plan.detail.get("reason"), "radius_m": plan.detail.get("radius_m"),
+                                        "seen": plan.detail.get("seen")})
 
     # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────
     def rollback(self, *, trip_id: UUID, base_version: int, to_version: int,

@@ -219,7 +219,10 @@ class ItineraryWork:
     # ── 도우미 ──────────────────────────────────────────────────
     def catalog(self, task: TeamTask, ctx: dict[str, Any]) -> list[dict[str, Any]] | None:
         if "places" not in ctx:
-            ctx["places"] = self._read(task, "read.place_catalog", {}, ctx["seen"])
+            # ★`[2026-09-29]` 여행 id 를 넘긴다 — 그 여행 전용 장소 행과, 대본 여행이면 시연 장소까지 본다(`TripStore.places`)
+            trip = ctx.get("trip") or {}
+            ctx["places"] = self._read(task, "read.place_catalog",
+                                       {"trip_id": str(trip["trip_id"])} if trip.get("trip_id") else {}, ctx["seen"])
             ctx["evidence"] = self._evidence(task, source_id="read.place_catalog", claim="대안 후보 장소",
                                              value=ctx["places"], base=ctx["evidence"])
         return ctx["places"]
@@ -364,8 +367,10 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
         return None, []
     subject = item.title if item is not None else "문의하신 내용"
     lines = [f"{subject} — 여행 규정에서 찾은 내용이에요."]
-    for line, source in ranked:
-        lines.append(f"· {line} (근거 {source})")
+    # ★`[2026-09-29 사용자 지시]` 근거 id(t_doc_… · #c…)·예약 조건 scope 는 **고객 문장에 싣지 않는다** — 관리자(개발 모드)만 본다.
+    #   근거는 버리지 않는다 — 돌려주는 출처 목록이 Case 기록에 남고, 웹은 `web.dev_mode` 가 켜졌을 때만 `basis` 칸으로 받는다
+    for line, _source in ranked:
+        lines.append(f"· {line}")
     if terms:
         deadline = terms.get("cancel_deadline_hours")
         line = f"이 예약의 취소 기한: 시작 {deadline:g}시간 전까지" if isinstance(deadline, (int, float)) else \
@@ -373,9 +378,12 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
         penalty = terms.get("penalty_by_hours") or {}
         if penalty:
             line += " · 위약금 기준 " + ", ".join(f"{k}시간 전부터 {v}" for k, v in penalty.items())
-        lines.append(f"{line} (예약 조건 · {terms.get('matched_scope')} · 출처 {terms.get('source')})")
+        lines.append(line)
     lines.append("일정은 바꾸지 않았어요. 바꾸고 싶으시면 말씀해 주세요.")
-    return "\n".join(lines), [source for _, source in ranked]
+    sources = [source for _, source in ranked]
+    if terms:
+        sources.append(f"booking_terms:{terms.get('matched_scope')}:{terms.get('source')}")
+    return "\n".join(lines), sources
 
 
 __all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]

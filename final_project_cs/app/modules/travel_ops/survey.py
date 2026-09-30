@@ -71,8 +71,14 @@ def apply_survey(constraints: Mapping[str, Any], item_days: Iterable[date]) -> d
     out = dict(constraints)
     if "survey" not in out:
         return out
-    survey = TripSurvey.model_validate(out["survey"])
+    raw = dict(out["survey"] or {})
+    survey = TripSurvey.model_validate(raw)
     out["survey"] = survey.model_dump(mode="json")
+    # ★`[2026-09-29]` **직접 답한 문항**을 따로 남긴다 — 저장본은 기본값까지 채워져(on_disruption 기본 replace),
+    #   「비슷한 곳으로 바꿔줘」를 고른 것과 문항을 건너뛴 것이 구별되지 않았다. 자동 변경은 직접 고른 경우에만 한다
+    #   (`auto_on_disruption` · 사용자 지시 2026-09-29 · 코덱스 합의). 이미 있는 값은 덮지 않는다(합친다)
+    answered = {key for key, value in raw.items() if key != "version" and value is not None}
+    out["survey_answered"] = sorted(answered | set(out.get("survey_answered") or []))
     if survey.pace is None:
         return out
 
@@ -108,4 +114,13 @@ def on_disruption(constraints: Mapping[str, Any] | None) -> str:
     return str(survey.get("on_disruption") or "replace")
 
 
-__all__ = ["SURVEY_VERSION", "TripSurvey", "apply_survey", "on_disruption"]
+def auto_on_disruption(constraints: Mapping[str, Any] | None) -> bool:
+    """★`[2026-09-29]` 고객이 설문에서 **직접** 「비슷한 곳으로 바꿔줘」를 골랐나. 그때만 대체안을 자동으로 적용한다.
+
+    설문이 없거나, 그 문항을 건너뛰었거나(저장본에 기본값 replace 만 있다), 답한 기록이 없는 옛 저장본이면 False —
+    **제안으로** 보낸다(먼저 「바꿀까요?」). 옛 저장본의 replace 는 직접 고른 것인지 증명할 수 없다(코덱스 합의)."""
+    answered = set((constraints or {}).get("survey_answered") or [])
+    return "on_disruption" in answered and on_disruption(constraints) == "replace"
+
+
+__all__ = ["SURVEY_VERSION", "TripSurvey", "apply_survey", "auto_on_disruption", "on_disruption"]

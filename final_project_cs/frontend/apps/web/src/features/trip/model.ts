@@ -84,6 +84,17 @@ export interface TripMessage {
   role: "assistant" | "user";
   text: string;
   createdAt: string;
+  /** Development mode only: which rule sections the answer came from (「t_doc_07#c5」). The server sends it only when an
+   *  operator turned on `web.dev_mode`; customers never see it. */
+  basis?: string[];
+  /** The server did not understand and asks 「다음 중 하나인가요?」: each choice's `message` is a sentence it will understand. */
+  choices?: { label: string; message: string }[];
+  /** The server's heading for `choices` — 「혹시 이런 뜻이었나요?」 when it answered and offers other readings. */
+  choicesTitle?: string;
+  /** The rest of a long answer, folded under 「더 보기」 (the answer itself keeps only the core). */
+  more?: string;
+  /** This answer changed the plan to `version`: an 「되돌리기」 button can take it back to `version - 1` while it is still the latest. */
+  changedTo?: number;
 }
 
 /** Web view model; not a claim that the existing Case API returns this contract. */
@@ -107,6 +118,8 @@ export interface Trip {
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
+  /** Live only: the itinerary version on the server now (an undo is offered only for the change that made it). */
+  version?: number;
   /** Live only: the day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
   dayRoutes?: Record<string, string[]>;
   /** Live only: directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */

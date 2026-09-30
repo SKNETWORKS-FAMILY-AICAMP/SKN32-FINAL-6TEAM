@@ -78,3 +78,18 @@ def test_35_without_structured_input_keeps_old_path():
     result = asyncio.run(MobilityTeam(tools).execute(_mobility_task({})))
     assert [c[0] for c in tools.calls] == ["read.route"], "구조화 입력이 없으면 자연어에서 구간을 짐작하지 않는다(종전 길)"
     assert result.outcome != "completed"
+
+
+def test_out_of_calendar_date_is_a_no_data_result_not_a_crash(tmp_path, monkeypatch):
+    """☆`[2026-09-29 자료 폴더를 켜자 시험이 잡음]` 공휴일 표(2026~2027)가 덮지 않는 해의 여행이면 계산기는 평일·휴일을 짐작하지 않고
+    멈춘다(#5). 그 오류가 장소 교체·일정 짜기 전체를 터뜨리면 안 된다 — 「계산기가 못 채움」(None + 이유)으로 돌려 어림값으로 간다."""
+    from datetime import datetime, timedelta, timezone
+
+    _write_mini_data(tmp_path)
+    wiring.configure(data_dir=str(tmp_path), preload=True, verify_hash=False)
+    leg = wiring.leg_planner(None, {})
+    kst = timezone(timedelta(hours=9))
+    a = {"key": "a", "name": "가", "lat": 37.5001, "lon": 127.0}          # 작은 자료의 A 역 옆
+    b = {"key": "b", "name": "나", "lat": 37.5301, "lon": 127.0}          # D 역 옆
+    got, why = leg(a, b, datetime(2030, 1, 1, 12, 0, tzinfo=kst), None)
+    assert got is None and why["code"] == "no_data" and "2030" in why["reason"], (got, why)

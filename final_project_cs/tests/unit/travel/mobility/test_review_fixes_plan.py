@@ -40,6 +40,19 @@ def test_45_no_move_across_service_days():
     assert out["not_linked"] and out["not_linked"][0]["code"] == "day_boundary"
 
 
+def test_45_a_move_that_ends_just_before_04_00_is_the_same_service_day():
+    """다음 항목이 04:00 정각에 시작해도(새벽 비행기 등) 이동은 그 전에 끝나 앞 항목과 같은 운행일이다 — 막지 않는다.
+    ☆실제 시간표 시험(test_0400_boundary)이 잡은 회귀: 시작 시각으로 재면 23:00 → 04:00 이동을 통째로 막았다."""
+    items = [_item("저녁", "P1", "2026-10-05T22:00:00+09:00", "2026-10-05T23:00:00+09:00"),
+             _item("새벽", "P2", "2026-10-06T04:00:00+09:00", "2026-10-06T05:00:00+09:00")]
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    assert not [n for n in out["not_linked"] if n["code"] == "day_boundary"], out["not_linked"]
+    assert [it for it in out["items"] if it["kind"] == "mobility"], "두 장소가 300 m 라 도보 이동이 만들어진다"
+    # 다음 날 아침 09:00 에 시작하면 이동이 04:00 을 넘겨 다음 운행일 — 여전히 안 잇는다
+    items[1] = _item("새벽", "P2", "2026-10-06T09:00:00+09:00", "2026-10-06T10:00:00+09:00")
+    assert P.plan(PLACES, items, 2, {}, runtime=_rt())["not_linked"][0]["code"] == "day_boundary"
+
+
 def test_45_same_day_move_is_made_and_keeps_input_detail():
     items = [_item("A", "P1", "2026-10-05T10:00:00+09:00", "2026-10-05T11:00:00+09:00"),
              _item("이동", None, "2026-10-05T11:05:00+09:00", "2026-10-05T11:20:00+09:00", kind="mobility",

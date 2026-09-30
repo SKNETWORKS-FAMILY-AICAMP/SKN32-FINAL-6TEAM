@@ -141,6 +141,18 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 ★적용: 전체 실행기(`app/infrastructure/db/migrate.py`)가 아니라 이 파일만 적용했다(2026-09-28) — 폴더에 다른 세션의 작업 중
 마이그레이션(200번대 요식)이 함께 있어 전체를 돌리면 그것까지 적용된다.
 
+### 보류 제안 이유 `relaxed` `[2026-09-29 · 033]`
+
+`[실측]` `033_pending_relaxed.sql` — `pending_changes.reason` 제약에 `relaxed`(조건을 풀어 찾은 안 — 시각 늦추기 · 다음 일정 근처)를 더한다. 「다른 데로 바꿔 줘」가 같은 조건으로 0곳일 때 되는 안을 **묻는** 제안이다(`itinerary_changes.relaxed_options` · `trip_desk._ask_relaxed`). 옛 제약을 지우고 넓혀 다시 거는 방식이라 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
+
+### 보류 제안 이유 `other_options` `[2026-09-29 · 035]`
+
+`[실측]` `035_pending_other_options.sql` — `pending_changes.reason` 제약에 `other_options`(바꾼 뒤에도 고를 수 있는 다른 안)를 더한다. 「다른 데로 바꿔 줘」로 한 곳으로 **바꾼 뒤** 조건을 다 통과한 나머지 · 모자라면 조건을 푼 안을 셋까지 같은 항목의 제안으로 연다 — 고르면 그 안으로(`plan_swap`), 답이 없으면 바꾼 것을 그대로 둔다(`itinerary_changes.plan_fresh_alternate` · `trip_desk.fresh_alternate`). 옛 제약을 지우고 넓혀 다시 거는 방식이라 다시 돌려도 안전하다. (034 가 `requested_options` 를 더했다 — 이 절 위에 따로 적지 않았다.) ★적용: 이 파일만 적용했다(2026-09-29, 제약 조회로 확인) — 031 과 같은 이유.
+
+### 관광공사 목록 운영시간 `catalog_hours` `[2026-09-29 · 036]`
+
+`[실측]` `036_catalog_hours.sql` — 새벽 작업(`catalog_hours.prefill`, `run_sweepers --only catalog_hours`)이 관광공사 목록(`place_catalog`)의 활동 운영시간을 읽어 두는 표. 키 (tenant_id, source, content_id). 칸: 요일별 운영시간 `hours_week` · 읽은 방법 `hours_read` · 원문 `hours_origin`(이용시간 · 쉬는 날) · 문의 전화 · 읽을 때의 목록 수정 시각 `source_modified_at`(목록 값과 다르면 다시 읽는다) · `read_at`. 사실 정보만 적는다(사진 · 소개글 없음 — 2026-09-28 사용자 결정). 활동 「다른 데로 바꿔」는 요청 자리에서 관광공사를 부르지 않고 이 표를 읽는다(`catalog_pool`). ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.

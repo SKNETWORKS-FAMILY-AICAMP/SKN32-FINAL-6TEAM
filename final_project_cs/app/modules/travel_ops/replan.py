@@ -199,7 +199,8 @@ WEATHER_LIKE = frozenset({"air_quality", "weather_warning", "forecast"})
 def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                         start: datetime, end: datetime | None, causes: list[dict[str, Any]],
                         radius_m: int = 600,
-                        similarity: Callable[[Any, Any], int] | None = None) -> list[Candidate]:
+                        similarity: Callable[[Any, Any], int] | None = None,
+                        proposal: bool = False) -> list[Candidate]:
     """깨진 활동의 대안 후보. ★원인이 날씨·대기질이면 **실내**에서만 찾는다.
 
     `similarity(원래 장소의 분류, 후보의 분류) -> int` 는 활동 팀이 넘긴다(`activity/similarity.py`).
@@ -225,13 +226,16 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
             candidate.similarity = similarity(original.get("catalog_class"), place.get("catalog_class"))
         price = attributes.get("price_krw")
         if price is None or base_price is None:
-            candidate.rejected.append("가격을 몰라 추가 비용을 계산할 수 없다")
+            # ★`[2026-09-29]` 가격 모름은 **경고**다(탈락이 아니다) — 실제 장소는 대부분 가격이 없어 자동 대체가 늘 실패했다.
+            #   새벽 확인의 대체(`plan_activity_closed_on_day`)와 같은 규칙. 경고가 있으면 순위는 뒤로 간다(`Candidate.rank`)
+            candidate.warnings.append("가격을 몰라 추가 비용을 계산할 수 없다")
         else:
             candidate.extra_cost_krw = max(0, int(price) - int(base_price))
         opened = open_during(place, start, end)
-        if opened is not True:
-            candidate.rejected.append("그 시각 영업을 확인할 수 없다" if opened is None
-                                      else "그 시각 영업하지 않는다")
+        if opened is False:
+            candidate.rejected.append("그 시각 영업하지 않는다")
+        elif opened is None:
+            (candidate.warnings if proposal else candidate.rejected).append("그 시각 영업을 확인할 수 없다")
         out.append(candidate)
     return out
 
@@ -377,9 +381,14 @@ def store_candidates(*, here: dict[str, Any], home: dict[str, Any], places: list
 
 
 def choose(candidates: list[Candidate],
-           recheck: Callable[[Candidate], dict[str, Any]] | None = None) -> tuple[
+           recheck: Callable[[Candidate], dict[str, Any]] | None = None,
+           distinct: Callable[[Candidate, Candidate], bool] | None = None) -> tuple[
                Candidate | None, list[Candidate], list[Candidate]]:
-    """(최선, 재요청용 둘, 탈락). ★재검증은 **탈락을 통과한 것에만** 돌린다."""
+    """(최선, 재요청용 둘, 탈락). ★재검증은 **탈락을 통과한 것에만** 돌린다.
+
+    `distinct(a, b)` — 둘이 **같은 곳**이면 참(활동 — `itinerary_changes.same_site`). ★`[2026-09-29 ui 세션 지적]`
+      「K-컬처 스크린(대한민국역사박물관)」과 「대한민국역사박물관」(같은 주소 · 6m)이 바뀐 곳과 다른 안에 함께 나왔다 —
+      순위가 앞선 하나만 남긴다(뒤의 것은 탈락이 아니라 그냥 빠진다)."""
     survivors, rejected = [], []
     for candidate in candidates:
         if not candidate.rejected and recheck is not None:
@@ -389,6 +398,12 @@ def choose(candidates: list[Candidate],
                 candidate.rejected.append(f"재검증 불통과: {report.get('verdict')}")
         (rejected if candidate.rejected else survivors).append(candidate)
     survivors.sort(key=Candidate.rank)
+    if distinct is not None:
+        kept: list[Candidate] = []
+        for candidate in survivors:
+            if not any(distinct(candidate, other) for other in kept):
+                kept.append(candidate)
+        survivors = kept
     if not survivors:
         return None, [], rejected
     return survivors[0], survivors[1:3], rejected
@@ -428,7 +443,11 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             # ★`[2026-09-28]` 화면은 key·name 만 읽고 나머지는 무시한다(UI 조사) — 더해도 깨지지 않는다
             **({"warnings": list(candidate.warnings)} if candidate.warnings else {}),
             **({"axis": candidate.axis} if candidate.axis else {}),
-            **({"judged_by": candidate.judged_by} if candidate.judged_by else {})}
+            **({"judged_by": candidate.judged_by} if candidate.judged_by else {}),
+            # ★`[2026-09-29]` 관광공사 목록에서 온 후보 — 아직 우리 장소가 아니다. 고객이 고르면 그때 이 값으로 그 여행
+            #   전용 장소를 등록한다(`TripStore.add_catalog_place` · pending.choose). 미리 등록하지 않는다(코덱스 합의)
+            **({"catalog_place": candidate.place} if candidate.place
+               and (candidate.place.get("attributes") or {}).get("catalog_pending") else {})}
 
 
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:

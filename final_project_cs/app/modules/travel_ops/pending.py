@@ -87,23 +87,42 @@ CONSENT_KEY = "change"
 CONSENT_REASON = "indoor_unknown"
 
 
-def needs_consent(report: dict[str, Any] | None) -> bool:
-    """★`[2026-09-29]` 실내·야외를 모르는 장소에 **날씨 사건만** 걸렸다 — 대체안을 계산하지 말고 먼저 묻는다.
-
-    사용자 결정: 모르는 일정이면 우천 상황을 알리고 「바꿀까요?」만 묻는다. 「바꿔 줘」라고 하면 **그때** 대체안을
-    계산해 보인다(대체안 계산은 후보마다 바깥 점검을 불러 비용이 든다). 안전 사건(지진·재난문자·기상 「경보」)이
-    섞이면 이 길이 아니다 — 지금 규칙(`decide`)이 먼저다. 날씨 밖 사건(교통 통제 등)은 실내외와 상관없어 그대로 간다.
-    """
+def weather_only(report: dict[str, Any] | None) -> bool:
+    """안전 사건 없이 **날씨 사건만** 걸렸나(예보·특보·대기질) — 실내로 옮기면 원인이 사라지는 경우."""
     report = report or {}
-    if not report.get("indoor_unknown") or is_safety(report):
+    if is_safety(report):
         return False
     categories = {event.get("category") for event in report.get("disruptions") or []}
     return bool(categories) and categories <= WEATHER_ONLY
 
 
-def consent_notice(*, item: Item, causes: list[dict[str, Any]], proposal_id: UUID) -> dict[str, Any]:
+def needs_consent(report: dict[str, Any] | None, constraints: dict[str, Any] | None = None) -> bool:
+    """★`[2026-09-29]` 활동에 **날씨 사건만** 걸렸다 — 대체안을 계산하지 말고 먼저 「바꿀까요?」를 묻는가.
+
+    사용자 결정(2026-09-29 두 번):
+      ① 실내·야외를 **모르면** 설문과 상관없이 먼저 묻는다.
+      ② 아는 곳이라도 비 올 때 대체안은 **제안**으로 나간다 — 고객이 설문에서 **직접** 「비슷한 곳으로 바꿔줘」를
+         고른 경우만(`survey.auto_on_disruption`) 자동으로 바꾸고 되돌리기를 보인다.
+    「바꿔 줘」라고 하면 **그때** 대체안을 계산해 보인다(대체안 계산은 후보마다 바깥 점검을 불러 비용이 든다).
+    안전 사건(지진·재난문자·기상 「경보」)이 섞이면 이 길이 아니다 — 지금 규칙(`decide`)이 먼저다.
+    날씨 밖 사건(교통 통제 등)은 실내외와 상관없어 그대로 간다.
+    `constraints` 를 안 주면 ①만 본다(옛 호출과 같다).
+    """
+    from .survey import auto_on_disruption
+
+    report = report or {}
+    if not weather_only(report):
+        return False
+    if report.get("indoor_unknown"):
+        return True
+    return constraints is not None and not auto_on_disruption(constraints)
+
+
+def consent_notice(*, item: Item, causes: list[dict[str, Any]], proposal_id: UUID,
+                   indoor_unknown: bool = True) -> dict[str, Any]:
     """「바꿀까요?」 알림. ★대체안이 없다(아직 계산하지 않았다). 무응답의 결과를 **반드시** 적는다."""
-    text = (f"{item.title} — {_cause_text(causes)}. 이 장소가 실내인지 확인하지 못했어요. "
+    why = " 이 장소가 실내인지 확인하지 못했어요." if indoor_unknown else ""
+    text = (f"{item.title} — {_cause_text(causes)}.{why} "
             f"일정을 바꿀까요? 「바꿔 줘」를 누르면 그때 다른 곳을 찾아 보여 드려요. "
             f"답이 없으면 원래 일정을 그대로 둡니다.")
     return {"type": "proposal_request", "text": text, "language": "ko", "causes": causes,
@@ -113,7 +132,7 @@ def consent_notice(*, item: Item, causes: list[dict[str, Any]], proposal_id: UUI
 
 
 def ask_consent(conn, *, store: TripStore, trip_id: UUID, item: Item, base_version: int,
-                causes: list[dict[str, Any]]) -> dict[str, Any]:
+                causes: list[dict[str, Any]], indoor_unknown: bool = True) -> dict[str, Any]:
     """「바꿀까요?」 보류 제안을 연다(안 없이). 이미 물었으면 다시 알리지 않는다. 부르는 쪽이 트랜잭션을 연다."""
     pending = PendingStore(store.tenant_id)
     decision = Decision("ask", CONSENT_REASON, None, False)
@@ -122,7 +141,8 @@ def ask_consent(conn, *, store: TripStore, trip_id: UUID, item: Item, base_versi
     if proposal_id is None:
         return {"status": "asked", "already": True, "reason": CONSENT_REASON, "item": item.title}
     store.enqueue_message(conn, trip_id=trip_id, key=f"proposal:{proposal_id}",
-                          payload=consent_notice(item=item, causes=causes, proposal_id=proposal_id))
+                          payload=consent_notice(item=item, causes=causes, proposal_id=proposal_id,
+                                                 indoor_unknown=indoor_unknown))
     return {"status": "asked", "already": False, "proposal_id": str(proposal_id), "reason": CONSENT_REASON,
             "safety": False, "item": item.title}
 
@@ -135,7 +155,10 @@ def options_from(plan: ItineraryChange, item: Item) -> list[dict[str, Any]]:
 
 def options_for(best: Item) -> list[dict[str, Any]]:
     """최고 안(바꿔 넣을 항목) 하나와 그것이 들고 있는 「다른 안」을 1위부터."""
-    ranked = [applied_record(best)] + list(best.detail.get("alternates") or [])
+    first = applied_record(best)
+    if best.place and (best.place.get("attributes") or {}).get("catalog_pending"):
+        first["catalog_place"] = best.place      # ★1위도 관광공사 목록 후보면 고를 때 등록할 원본을 싣는다
+    ranked = [first] + list(best.detail.get("alternates") or [])
     return [{**record, "rank": rank} for rank, record in enumerate(ranked, start=1)]
 
 
@@ -282,6 +305,11 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
             raise ProposalRefused("unknown_option", {"expected": CONSENT_KEY})
         return _consented(conn, store=store, pending=pending, trip_id=trip_id, proposal=proposal,
                           current=current, items=items, places_by_id=places_by_id, check=check)
+    # ★`[2026-09-29]` 고른 안이 관광공사 목록 후보면 **지금** 그 여행 전용 장소로 등록한다(같은 트랜잭션 — 실패하면 되돌아간다)
+    picked = next((o for o in options if o.get("key") == key), None)
+    if picked is not None and picked.get("catalog_place"):
+        added = store.add_catalog_place(conn, trip_id, picked["catalog_place"])
+        places_by_id = {**places_by_id, str(picked["place_id"]): added}
     # ★기존 경로를 그대로 탄다 — 보관한 안을 「다른 안」 자리에 놓고 고른다
     probe = [i if i.item_id != current.item_id else _with_alternates(i, options) for i in items]
     plan = plan_swap(trip_version=trip["version"], base_version=proposal["base_version"], items=probe,
@@ -321,11 +349,24 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
     from functools import partial
     from zoneinfo import ZoneInfo
 
+    from .itinerary import catalog_activity_places
+
     trip = store.latest(conn, trip_id)[0]
-    plan = plan_activity_adjustment(
-        item=current, report={"disruptions": causes}, places=list(places_by_id.values()), check=check,
-        now=_dt.now(ZoneInfo("Asia/Seoul")), items=items,
-        similarity=partial(score, preference=preference_of(trip.get("constraints"))))
+    registered = list(places_by_id.values())
+    names = {str(p.get("name")) for p in registered}
+    plan = NoChange("unresolved", {})
+    # ★`[2026-09-29]` 등록된 장소 + **관광공사 목록**(가상 행 — 고르면 그때 등록). 재점검은 앞 순위 6곳만(바깥 호출 비용).
+    #   600m 에서 못 찾으면 1.5km 까지 넓힌다(채팅 「다른 곳으로 바꿔 줘」와 같은 생각)
+    for radius in (600, 1500):
+        pool = registered + catalog_activity_places(conn, store.tenant_id, trip_id, near=current.place,
+                                                    radius_m=radius, exclude_names=names)
+        plan = plan_activity_adjustment(
+            item=current, report={"disruptions": causes}, places=pool, check=check,
+            now=_dt.now(ZoneInfo("Asia/Seoul")), items=items,
+            similarity=partial(score, preference=preference_of(trip.get("constraints"))),
+            proposal=True, limit=6, radius_m=radius)
+        if not isinstance(plan, NoChange):
+            break
     if isinstance(plan, NoChange):
         pending.close(conn, proposal["proposal_id"], status="kept", by="system:no_alternate")
         return {"status": "no_alternate", "reason": "바꿀 수 있는 다른 곳을 찾지 못했어요 — 원래 일정을 그대로 둡니다",
@@ -374,10 +415,20 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
                                        items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
     except StaleItinerary:
         return {"status": "stale"}
+    # ★`[2026-09-29]` 자동으로 바꿨으면 **되돌리기**를 싣는다 — 화면이 버튼을 띄우고 `POST /v1/web/trips/{id}/rollback`
+    #   (base_version = 이 판, to_version = 바꾸기 전 판)으로 돌린다. 사용자 지시: 자동이면 안내 + 되돌리기 버튼
     store.enqueue_notice(conn, trip_id=trip_id, version=version,
                          payload={**plan.notice, "version": version,
-                                  "type": "change_notice", "safety": decision.safety})
+                                  "type": "change_notice", "safety": decision.safety,
+                                  "rollback": rollback_offer(version=version, previous=trip["version"])})
     return {"status": "adjusted", "version": version, "safety": decision.safety}
+
+
+def rollback_offer(*, version: int, previous: int) -> dict[str, Any]:
+    """변경 알림에 싣는 「되돌리기」 — 버튼이 부를 값. `request_id` 는 같은 버튼을 두 번 눌러도 한 번만 되게."""
+    return {"base_version": int(version), "to_version": int(previous),
+            "request_id": f"rollback:v{int(version)}->v{int(previous)}",
+            "label": "되돌리기", "path": "/rollback"}
 
 
 def _with_alternates(item: Item, options: list[dict[str, Any]]) -> Item:

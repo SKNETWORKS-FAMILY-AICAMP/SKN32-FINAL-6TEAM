@@ -19,7 +19,8 @@ import pytest
 
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops.itinerary import Item
-from app.modules.travel_ops.pending import PendingStore, ProposalRefused, choose, decide, is_safety
+from app.modules.travel_ops.pending import (CONSENT_KEY, CONSENT_REASON, PendingStore, ProposalRefused, choose, decide,
+                                            is_safety)
 from app.modules.travel_ops.survey import SURVEY_VERSION
 
 from .test_trip_api import SCENARIO, _create, _detail, _slot, api  # noqa: F401 — 픽스처를 그대로 쓴다
@@ -38,12 +39,25 @@ def _proposals(api, trip_id):
         return PendingStore(api["tenant"]).list(conn, trip_id)
 
 
-def _choose(api, trip_id, proposal_id, key, by="web"):
+def _choose(api, trip_id, proposal_id, key, by="web", check=None):
     store = api["store"]
     with get_connection() as conn, conn.transaction():
-        places = {str(p["place_id"]): p for p in store.places(conn)}
+        # 실서비스 고르기(`trip_api._choose`)와 같이 그 여행이 볼 수 있는 장소 — 대본 여행이면 시연 장소도
+        places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
         return choose(conn=conn, store=store, pending=PendingStore(api["tenant"]), trip_id=trip_id,
-                      proposal_id=proposal_id, key=key, by=by, places_by_id=places, check=None)
+                      proposal_id=proposal_id, key=key, by=by, places_by_id=places, check=check)
+
+
+def _say_change(api, trip_id):
+    """★`[2026-09-29]` 활동 날씨 대체는 먼저 「바꿀까요?」(안 없음) — 「바꿔 줘」로 답해야 그때 안 1·2·3이 채워진다.
+    (대체안 계산은 후보마다 바깥 점검을 불러 비용이 들어 동의 뒤로 미뤘다 · 사용자 결정 · pending.needs_consent)"""
+    [asked] = _proposals(api, trip_id)
+    assert asked["reason"] == CONSENT_REASON and asked["options_json"] == []
+    shown = _choose(api, trip_id, asked["proposal_id"], CONSENT_KEY,
+                    check=lambda **_: {"verdict": "clear", "disruptions": []})
+    assert shown["status"] == "options"
+    [proposal] = _proposals(api, trip_id)
+    return proposal
 
 
 # ── 「먼저 물어봐줘」 ─────────────────────────────────────────────
@@ -52,10 +66,10 @@ def test_ask_first_does_not_change_the_day_and_asks_instead(api):
     trip_id = _ask_first(api)
     tick = api["tick"]("09:00")
     assert tick.adjusted == [] and len(tick.asked) == 1
-    assert tick.asked[0]["reason"] == "ask_first" and tick.asked[0]["safety"] is False
+    assert tick.asked[0]["reason"] == CONSENT_REASON and tick.asked[0]["safety"] is False
     assert _detail(api, trip_id)["version"] == 1                   # 일정은 그대로
 
-    [proposal] = _proposals(api, trip_id)
+    proposal = _say_change(api, trip_id)
     assert proposal["status"] == "open" and proposal["options_json"][0]["rank"] == 1
     assert proposal["options_json"][0]["name"] == "아쿠아리움"      # 1위는 바꿨을 때와 같은 안
     notice = api["notices"]()[-1][1]
@@ -75,7 +89,7 @@ def test_the_watcher_does_not_ask_the_same_thing_every_three_minutes(api):
 def test_choosing_an_option_applies_it_and_closes_the_question(api):
     trip_id = _ask_first(api)
     api["tick"]("09:00")
-    [proposal] = _proposals(api, trip_id)
+    proposal = _say_change(api, trip_id)
     first = proposal["options_json"][0]["key"]
 
     outcome = _choose(api, trip_id, proposal["proposal_id"], first, by="web:guest")
@@ -116,7 +130,7 @@ def test_a_stale_choice_is_refused(api):
     """고객이 본 뒤로 일정이 바뀌었으면 고르지 못한다 — 보지 않은 일정 위에 얹지 않는다."""
     trip_id = _ask_first(api)
     api["tick"]("09:00")
-    [proposal] = _proposals(api, trip_id)
+    proposal = _say_change(api, trip_id)
     store = api["store"]
     with get_connection() as conn, conn.transaction():
         trip, items = store.latest(conn, trip_id)

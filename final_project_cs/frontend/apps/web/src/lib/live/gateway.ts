@@ -114,6 +114,46 @@ function warning(row: ServerWarning): TripWarning | null {
   return { code: row.code ?? "", date: row.date ?? null, reason: row.reason, remedy: typeof row.remedy === "string" && row.remedy ? row.remedy : null };
 }
 
+interface ServerTurn { role?: string; text?: string; case_id?: string | null; at?: string }
+
+/**
+ * ★`[2026-09-29]` The conversation is the server's record (`GET /v1/web/trips/{id}/chat`) — it follows the customer to
+ * another tab or device. This tab's own copy only adds what the record does not keep (the last answer's choices and,
+ * in development mode, its basis). If the record cannot be read, this tab's copy is shown.
+ */
+async function conversation(tripId: string, language: Language): Promise<TripMessage[]> {
+  const local = readMessages(tripId);
+  let turns: ServerTurn[];
+  try { turns = (await api<{ turns?: ServerTurn[] }>(`/v1/web/trips/${encodeURIComponent(tripId)}/chat?limit=40`, language)).turns ?? []; }
+  catch { return local; }
+  const extras = new Map(local.filter((message) => message.role === "assistant").map((message) => [message.text, message]));
+  const recorded = turns.filter((turn) => typeof turn.text === "string" && turn.text).map((turn, index) => {
+    const role = turn.role === "customer" ? "user" as const : "assistant" as const;
+    const kept = role === "assistant" ? extras.get(turn.text as string) : undefined;
+    return { id: `chat-${turn.case_id ?? "x"}-${index}`, role, text: turn.text as string, createdAt: turn.at ?? "",
+      ...(kept?.choices ? { choices: kept.choices } : {}), ...(kept?.basis ? { basis: kept.basis } : {}),
+      ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
+      ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}) };
+  });
+  // ★The record can lag the reply this tab just got (the server may finish writing it after answering). What this tab
+  //   sent or received after the record's last turn is kept at the end — never dropped, never shown twice.
+  //   ☆2026-09-29 real server: right after sending, the latest answer vanished and an older one showed in its place.
+  // ★Matched by content, not by clock: the record's time is when the server wrote the answer, which can be a moment
+  //   *before* this tab received it — a time rule showed every answer twice (2026-09-29 real server, user report).
+  //   A question and its answer from this tab are added only when the answer is not in the record yet.
+  const answered = new Set(recorded.filter((message) => message.role === "assistant").map((message) => message.text));
+  const tail: TripMessage[] = [];
+  for (let index = 0; index < local.length; index += 1) {
+    const message = local[index];
+    const reply = message.role === "user" ? local[index + 1] : undefined;
+    if (message.role === "user" && reply?.role === "assistant") {
+      if (!answered.has(reply.text)) tail.push(message, reply);
+      index += 1;
+    } else if (message.role === "assistant" && !answered.has(message.text)) tail.push(message);
+  }
+  return [...recorded, ...tail];
+}
+
 function readMessages(tripId: string): TripMessage[] {
   try { return JSON.parse(window.sessionStorage.getItem(MESSAGES_PREFIX + tripId) ?? "[]") as TripMessage[]; }
   catch { return []; }
@@ -130,6 +170,18 @@ function writeMessages(tripId: string, messages: TripMessage[]) {
  * ★`[2026-09-28]` The server now puts an `answer` on every result (chat always answers), so the screen must not
  *   fill in its own “we passed it to a person” line for `escalated`: that branch was removed on purpose.
  */
+/** Rule sections behind an answer (`basis_sources`) — present only in development mode (`web.dev_mode`); a string or `{source}` each. */
+function basisOf(raw: unknown[] | null | undefined): string[] {
+  return (raw ?? []).map((entry) => (typeof entry === "string" ? entry : typeof (entry as { source?: unknown })?.source === "string" ? (entry as { source: string }).source : ""))
+    .filter((source) => source.trim() !== "");
+}
+
+/** 「다음 중 하나인가요?」 — only choices with a sentence to send are kept. */
+function choicesOf(raw: { label?: unknown; message?: unknown }[] | null | undefined): { label: string; message: string }[] {
+  return (raw ?? []).flatMap((choice) => typeof choice?.message === "string" && choice.message.trim()
+    ? [{ label: typeof choice.label === "string" && choice.label.trim() ? choice.label : choice.message, message: choice.message }] : []);
+}
+
 function replyFor(result: { status?: string; case_status?: string; answer?: string }, t: Translate): string {
   if (result.answer) return result.answer;           // the server's own customer sentence (`itinerary_team.ANSWERS`)
   switch (result.status) {
@@ -162,8 +214,9 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     id: server.trip_id, source: "", startDate: dates[0] ?? "", endDate: dates.at(-1) ?? "", status: "active", stops,
     // ★The server judged the plan when it was registered (`_create_trip`): there is no separate check to run here.
     verification: { status: "completed", progress: 100, stages: [], results: [] },
-    messages: readMessages(tripId),
+    messages: await conversation(tripId, language),
     planUrl: server.plan_url || undefined,
+    version: typeof server.version === "number" ? server.version : undefined,
     history: (server.history ?? []).map(change),
     warnings: (server.warnings ?? []).map(warning).filter((item): item is TripWarning => item !== null),
     dayRoutes: Object.fromEntries((server.map?.days ?? []).flatMap((day) => {
@@ -196,12 +249,20 @@ export function createLiveGateway(): TripGateway {
       const t = translator(language);
       const now = new Date().toISOString();
       const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
-      const result = await api<{ status?: string; case_status?: string; answer?: string }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
+      const result = await api<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
+        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
       });
       const log = [...readMessages(tripId),
         { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
-        { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString() }];
+        { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
+          ...(basisOf(result.basis_sources).length ? { basis: basisOf(result.basis_sources) } : {}),
+          ...(choicesOf(result.choices).length ? { choices: choicesOf(result.choices) } : {}),
+          ...(typeof result.choices_title === "string" && result.choices_title.trim() ? { choicesTitle: result.choices_title.trim() } : {}),
+          ...(typeof result.more === "string" && result.more.trim() ? { more: result.more.trim() } : {}),
+          // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
+          ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
+            ? { changedTo: result.outcome.version } : {}) }];
       writeMessages(tripId, log);
       return read(tripId, language);
     },

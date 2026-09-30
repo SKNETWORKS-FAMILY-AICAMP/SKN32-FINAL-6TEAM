@@ -12,7 +12,7 @@ import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import type { DemoScenario } from "@/features/trip/model";
 import { tripKey, tripsKey } from "@/features/trip/use-trip";
-import { DATA_MODE, SAMPLE_PLANS, tripGateway } from "@/lib/gateway";
+import { DATA_MODE, loadSamplePlans, tripGateway } from "@/lib/gateway";
 import { currentKey, issueKey, LiveError } from "@/lib/live/client";
 import { submitIntake } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
@@ -140,7 +140,7 @@ export function TripRegistration() {
         <Panel className={styles.editor}>
           <div className={styles.labelRow}>
             <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-            {demo && <Button variant="quiet" className={styles.sample} onClick={() => updateSource(SAMPLE_PLANS[language])} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>}
+            {demo && <Button variant="quiet" className={styles.sample} onClick={() => void loadSamplePlans().then((plans) => updateSource(plans[language]))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>}
           </div>
           <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
             placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />

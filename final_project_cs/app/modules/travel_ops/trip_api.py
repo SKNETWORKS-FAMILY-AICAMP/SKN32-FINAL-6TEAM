@@ -31,6 +31,7 @@ import hashlib
 import hmac
 import html
 import json
+import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -500,7 +501,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _lazy("check", check_factory)
 
     def _desk(store: TripStore) -> TripDesk:
-        return TripDesk(store=store, connection_factory=get_connection, check=_check())
+        # ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록에서 넓힐 때 운영시간을 읽는다(`catalog_pool`) — 부를 때만 만든다
+        return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True)
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -743,7 +745,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         store = TripStore(principal.tenant_id)
         try:
-            return handle_trip_message(
+            result = handle_trip_message(
                 tenant=principal.tenant_id, trip_id=trip_id, request_id=request.request_id,
                 message=request.message, at=_seoul(request.at) or datetime.now(KST),
                 classifier=_lazy("classifier", classifier_factory),
@@ -752,6 +754,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 place_source=_lazy("place", place_factory), selected_item_id=request.item_id)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
+        _log_turn(principal.tenant_id, trip_id, request.message, result)
+        result.pop("answer_web", None)          # 웹 전용 판 — 에이전트는 목록이 든 문장(`answer`)을 읽는다
+        return result
 
     @router.post("/v1/trips/{trip_id}/items/{item_id}/alternate")
     def alternate(trip_id: UUID, item_id: UUID, request: AlternateIn,
@@ -835,7 +840,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 "chosen_key": row["chosen_key"], "causes": row["cause_json"],
                 "options": [{"key": o["key"], "rank": o.get("rank"),
                              "name": o.get("option_label") or o.get("name"),
-                             "starts_at": o.get("starts_at")} for o in (row["options_json"] or [])]}
+                             "starts_at": o.get("starts_at"),
+                             # ★`[2026-09-29 ui 세션 지적]` 조건 풀기 안의 설명(「08:30으로 늦추면」 · 「다음 일정(…) 근처」)
+                             "note": o.get("note"),
+                             # ★`[2026-09-29]` 관광공사 목록 후보처럼 영업시간·가격을 모르는 안은 경고를 같이 보인다
+                             "warnings": list(o.get("warnings") or [])} for o in (row["options_json"] or [])]}
 
     def _proposals(tenant: str, trip_id: UUID, customer_id: UUID | None = None) -> dict[str, Any]:
         from .pending import PendingStore
@@ -1127,6 +1136,21 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         tenant, customer = who
         return _choose(tenant, trip_id, proposal_id, request.key, by=f"web:{customer}", customer_id=customer)
 
+    @router.post("/v1/web/trips/{trip_id}/rollback")
+    def web_rollback(trip_id: UUID, request: RollbackIn, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-29]` 웹 「되돌리기」 버튼 — 자동으로 바꾼 일정(설문에서 자동을 고른 고객)을 옛 판으로.
+        에이전트 입구(`/v1/trips/{id}/rollback`)와 같은 계산(`TripDesk.rollback`). ★그 사용자 본인의 여행만."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+        duplicate = _already(store, trip_id, request.request_id)
+        if duplicate:
+            return duplicate
+        return _outcome(_desk(store).rollback(
+            trip_id=trip_id, base_version=request.base_version, to_version=request.to_version,
+            message=request.message, request_id=request.request_id))
+
     @router.post("/v1/web/trips/{trip_id}/messages")
     def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1155,7 +1179,58 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
         if not result.get("answer") and result.get("status") in ANSWERS:
             result["answer"] = ANSWERS[result["status"]]
-        return result
+        _log_turn(tenant, trip_id, request.message, result)      # 대화 기록은 목록이 든 문장 그대로(글만 읽는 쪽)
+        if result.get("answer_web"):
+            result["answer"] = result["answer_web"]
+        result.pop("answer_web", None)
+        return _web_view(tenant, result)
+
+    def _web_view(tenant: str, result: dict[str, Any]) -> dict[str, Any]:
+        """★`[2026-09-29 사용자 지시]` 근거(`basis` — 원래 모양 그대로)와 해석 결과(`decision`)는 **개발 모드**
+        (`web.dev_mode = on`)일 때만 싣는다. 근거 목록은 `basis_sources: [{source}]` — 규정 조각 id(t_doc_… · #c…) ·
+        예약 조건 · 사실 답의 조회 출처. 끄면 세 칸을 뺀다. 고객 문장(`answer`)에는 늘 근거 id 가 없다."""
+        from . import web_guard
+
+        if web_guard.values(tenant).get("web.dev_mode") != "on":
+            return {k: v for k, v in result.items() if k not in ("basis", "decision", "basis_sources")}
+        basis = result.get("basis") or {}
+        sources = list(basis.get("sources") or []) if isinstance(basis, dict) else []
+        lookup = (basis.get("lookups") or {}) if isinstance(basis, dict) else {}
+        if isinstance(lookup, dict) and lookup.get("source"):
+            sources.append(str(lookup["source"]))
+        return {**result, "basis_sources": [{"source": s} for s in sources]}
+
+    def _log_turn(tenant: str, trip_id: UUID, message: str, result: dict[str, Any]) -> None:
+        """★`[2026-09-29]` 대화 기록(034) — 결정 단위가 앞 대화로 「그 식당」「거기」를 푼다. 같은 요청의 되풀이는 적지 않는다."""
+        from . import chat_log
+
+        if result.get("status") == "duplicate":
+            return
+        with get_connection() as conn:
+            chat_log.record(conn, tenant_id=tenant, trip_id=trip_id, customer_text=message,
+                            answer=result.get("answer"), case_id=result.get("case_id"))
+
+    @router.get("/v1/web/trips/{trip_id}/chat")
+    def web_chat(trip_id: UUID, limit: int = Query(40, ge=1, le=200),
+                 who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-29]` 이 여행의 대화 기록(오래된 것부터) — 웹이 다른 기기에서도 이어 보게. 고객 문장은 가린 값이다."""
+        from . import chat_log
+
+        tenant, customer = who
+        with get_connection() as conn:
+            _trip_or_404(conn, TripStore(tenant), trip_id, customer)
+            return {"trip_id": str(trip_id), "turns": chat_log.recent(conn, tenant_id=tenant, trip_id=trip_id,
+                                                                     limit=limit)}
+
+    @router.get("/v1/trips/{trip_id}/chat")
+    def agent_chat(trip_id: UUID, limit: int = Query(40, ge=1, le=200), customer_id: UUID | None = Query(None),
+                   principal: Principal = Depends(require_scope("trip:read"))):
+        from . import chat_log
+
+        with get_connection() as conn:
+            _trip_or_404(conn, TripStore(principal.tenant_id), trip_id, customer_id)
+            return {"trip_id": str(trip_id), "turns": chat_log.recent(conn, tenant_id=principal.tenant_id,
+                                                                     trip_id=trip_id, limit=limit)}
 
     @router.post("/v1/web/warmup")
     def web_warmup(http: Request, background: BackgroundTasks, who: tuple[str, UUID] = Depends(_web_customer)):
@@ -1209,6 +1284,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "kind": payload.get("kind"), "text": payload.get("text"),
                              "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
                              "options": payload.get("options"), "delivery": status,
+                             # ★`[2026-09-29]` 자동 변경의 되돌리기 · 「바꿀까요?」 표시 — 화면이 버튼을 그린다(ui 세션 요청)
+                             "rollback": payload.get("rollback"), "consent": bool(payload.get("consent")),
+                             "consent_key": payload.get("consent_key"),
                              "at": at.isoformat()} for key, payload, status, at in rows]}
 
     return router

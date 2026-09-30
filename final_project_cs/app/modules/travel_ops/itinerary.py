@@ -134,6 +134,60 @@ def fill_weather_sensitive(conn, tenant_id: str) -> int:
         return cur.rowcount
 
 
+def weather_from_class(lcls1: str | None, lcls2: str | None) -> bool | None:
+    """`weather_case_sql` 과 같은 규칙의 파이썬 판. 모르면 None."""
+    if lcls1 in WEATHER_BY_LARGE_CLASS:
+        return WEATHER_BY_LARGE_CLASS[lcls1]
+    return WEATHER_BY_MIDDLE_CLASS.get(lcls2 or "")
+
+
+#: 대체 활동 후보로 쓰지 않는 관광공사 대분류 — 음식(FD)·숙박(AC)
+_NOT_ACTIVITY = ("FD", "AC")
+
+
+def catalog_activity_places(conn, tenant_id: str, trip_id: UUID, *, near: dict[str, Any], radius_m: int,
+                            exclude_names: set[str], limit: int = 200) -> list[dict[str, Any]]:
+    """★`[2026-09-29]` 관광공사 장소 목록에서 **가까운 활동 후보** — 아직 우리 장소가 아니다(가상 행).
+
+    ☆왜 — 비 올 때 대체 후보가 등록된 장소(공용 소수 + 이 여행 것)에서만 나와, 경복궁 600m 안 후보가 0이었다(브라우저 시험).
+    ★`place_id` 는 (테넌트·여행·관광공사 id) 로 정해지는 UUID 다 — 고객이 고르면 **그때** 이 id 로 그 여행 전용 행을
+      등록한다(`TripStore.add_catalog_place`). 미리 등록하지 않는다(코덱스 합의 — 고아 행을 만들지 않는다).
+    ★영업시간·가격은 목록에 없다 — 모른다. 제안(고객이 고른다)에만 경고와 함께 쓰고 자동 적용에는 쓰지 않는다.
+    ★이미 우리 장소에 같은 이름이 있으면 뺀다(`exclude_names`) — 같은 곳을 두 행으로 만들지 않는다.
+    """
+    import math
+    from uuid import NAMESPACE_URL, uuid5
+
+    lat, lon = near.get("latitude"), near.get("longitude")
+    if lat is None or lon is None:
+        return []
+    dlat = radius_m / 111_000
+    dlon = radius_m / (111_000 * max(0.1, math.cos(math.radians(float(lat)))))
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT content_id, content_type_id, title, latitude, longitude, raw_json->>'lclsSystm1', "
+            "raw_json->>'lclsSystm2', raw_json->>'lclsSystm3', raw_json->>'sigungucode' FROM place_catalog "
+            "WHERE tenant_id=%s AND source='tour_api' AND latitude BETWEEN %s AND %s "
+            "AND longitude BETWEEN %s AND %s AND COALESCE(raw_json->>'lclsSystm1','') <> ALL(%s) "
+            "ORDER BY content_id LIMIT %s",
+            (tenant_id, float(lat) - dlat, float(lat) + dlat, float(lon) - dlon, float(lon) + dlon,
+             list(_NOT_ACTIVITY), limit))
+        rows = cur.fetchall()
+    out = []
+    for content_id, type_id, title, plat, plon, l1, l2, l3, sgg in rows:
+        if not title or title in exclude_names or plat is None or plon is None:
+            continue
+        pid = uuid5(NAMESPACE_URL, f"tripilot:catalog:{tenant_id}:{trip_id}:tour_api:{content_id}")
+        out.append({"place_id": str(pid), "name": title, "kind": "activity",
+                    "latitude": float(plat), "longitude": float(plon),
+                    "weather_sensitive": weather_from_class(l1, l2),
+                    "attributes": {"source": "tour_api", "source_content_id": str(content_id),
+                                   **({"source_content_type_id": str(type_id)} if type_id else {}),
+                                   "catalog_pending": True},
+                    "catalog_class": _catalog_class((l1, l2, l3, sgg)), "trip_scope": str(trip_id)})
+    return out
+
+
 def _catalog_class(values: tuple) -> dict[str, str] | None:
     """관광공사 분류 네 값 → `{"lcls1", "lcls2", "lcls3", "sigungu"}`. 넷 다 없으면 None(모름)."""
     keys = ("lcls1", "lcls2", "lcls3", "sigungu")
@@ -141,9 +195,30 @@ def _catalog_class(values: tuple) -> dict[str, str] | None:
     return found or None
 
 
+#: 시연 대본 장소 표시 — 장소 `attributes.scenario_seed`. ★`[2026-09-29 ui 세션 지적]` 대본 여행을 실서비스 테넌트에
+#:  등록하자 대본의 가짜 지점(「명동 대형마트(시나리오 지점)」 · 「잠실 스카이타워」)이 공용 장소 행으로 남아, 실제 고객의
+#:  「다른 데로 바꿔」와 일정 짜기에 뽑혔다. 실서비스 테넌트(`settings.tenant_id`)에서는 **대본 여행**(처음 등록한 판이
+#:  시연 장소를 쓴 여행)과 **그 장소를 이미 일정에 넣은 여행**에만 보인다 — 다른 고객 여행의 후보·일정 짜기에는 안 나온다.
+#:  시나리오 모드(`scenario-live-*`)와 시험 테넌트는 그대로 쓴다.
+SCENARIO_SEED = "scenario_seed"
+_SEED = "COALESCE((q.attributes->>'scenario_seed')::boolean, false)"
+#: 대본 여행 id — 처음 등록한 판(1판)이 시연 장소를 쓴 여행. ★일정 짜기가 넣은 항목(`detail.planner`)은 치지 않는다 —
+#:  ☆`[2026-09-29 ui 세션]` 일정 짜기가 시연 장소(「롯데마트 서울역점」)를 넣은 고객 여행이 대본 여행으로 잡혀 시연 장소가 다시 열렸다
+_SCENARIO_TRIPS = ("SELECT DISTINCT ii.trip_id FROM itinerary_items ii JOIN places q ON q.place_id = ii.place_id"
+                   " WHERE ii.tenant_id = %s AND ii.version = 1 AND NOT (ii.detail ? 'planner') AND " + _SEED)
+
+
+def hides_scenario_places(tenant_id: str) -> bool:
+    from app.core.settings import get_settings
+
+    return tenant_id == get_settings().tenant_id
+
+
 def visible_to(places: list[dict[str, Any]], trip_id: Any) -> list[dict[str, Any]]:
-    """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용."""
-    return [p for p in places if p.get("trip_scope") in (None, str(trip_id))]
+    """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용.
+    ★시연 장소(`SCENARIO_SEED`)는 `seed_trips` 에 든 여행에만(`TripStore.places` 가 붙인다)."""
+    return [p for p in places if p.get("trip_scope") in (None, str(trip_id))
+            and ("seed_trips" not in p or str(trip_id) in p["seed_trips"])]
 
 
 class TripStore:
@@ -254,6 +329,28 @@ class TripStore:
             row = cur.fetchone()
         return row[0] if row else None
 
+    def add_catalog_place(self, conn, trip_id: UUID, place: dict[str, Any]) -> dict[str, Any]:
+        """★`[2026-09-29]` 고객이 고른 관광공사 목록 후보를 **그 여행 전용 장소**로 등록한다(`catalog_activity_places`).
+
+        id 는 후보에 이미 정해져 있다(같은 곳을 두 번 골라도 한 행). 같은 여행에 같은 이름·종류 행이 이미 있으면
+        (다른 경로로 먼저 들어왔으면) 그 행을 돌려준다 — 부르는 쪽은 돌려받은 `place_id` 를 쓴다.
+        """
+        attributes = {k: v for k, v in dict(place.get("attributes") or {}).items() if k != "catalog_pending"}
+        with conn.cursor() as cur:
+            cur.execute("SELECT place_id FROM places WHERE tenant_id=%s AND trip_scope=%s AND name=%s AND kind=%s",
+                        (self.tenant_id, trip_id, place["name"], place["kind"]))
+            row = cur.fetchone()
+            if row is None:
+                cur.execute(
+                    "INSERT INTO places (place_id, tenant_id, name, kind, latitude, longitude, weather_sensitive, "
+                    "attributes, trip_scope) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+                    "ON CONFLICT (place_id) DO NOTHING RETURNING place_id",
+                    (UUID(str(place["place_id"])), self.tenant_id, place["name"], place["kind"],
+                     place["latitude"], place["longitude"], place.get("weather_sensitive"),
+                     json.dumps(attributes, ensure_ascii=False), trip_id))
+                row = cur.fetchone() or (UUID(str(place["place_id"])),)
+        return {**place, "place_id": str(row[0]), "attributes": attributes}
+
     def places(self, conn, trip_id: UUID | None = None, *, every_trip: bool = False) -> list[dict[str, Any]]:
         """장소 목록. ★`[2026-09-27]` 외부 서비스에서 온 장소는 **그 여행 전용 행**이다(`trip_scope`, 마이그레이션 029).
 
@@ -266,6 +363,16 @@ class TripStore:
         if not every_trip:
             where = " AND (p.trip_scope IS NULL OR p.trip_scope = %s)" if trip_id else " AND p.trip_scope IS NULL"
             params += [trip_id] if trip_id else []
+        hide = hides_scenario_places(self.tenant_id)
+        if hide and not every_trip:
+            # ★시연 대본 장소는 대본 여행 · 이미 그 장소를 일정에 넣은 여행에만(`SCENARIO_SEED`)
+            where += " AND (COALESCE((p.attributes->>'scenario_seed')::boolean, false) = false"
+            if trip_id:
+                where += (" OR %s IN (" + _SCENARIO_TRIPS + ")"
+                          " OR p.place_id IN (SELECT ii.place_id FROM itinerary_items ii"
+                          " WHERE ii.tenant_id = p.tenant_id AND ii.trip_id = %s AND ii.place_id IS NOT NULL)")
+                params += [trip_id, self.tenant_id, trip_id]
+            where += ")"
         # ★`[2026-09-29]` 관광공사 분류(신분류 대·중·소 · 시군구)를 장소 목록에서 이어 붙인다 — 대체 활동을
         #   「비슷한 곳」부터 고르는 재료다(`activity/similarity.py`). 장소가 관광공사 id 를 모르거나 목록에 없으면
         #   `catalog_class=None`(모름) — 지어내지 않는다. 카탈로그는 (tenant, source, content_id) UNIQUE 라 행이 늘지 않는다.
@@ -278,9 +385,22 @@ class TripStore:
                         " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"
                         " WHERE p.tenant_id=%s" + where, params)
             width = len(PLACE_COLUMNS)
-            return [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
+            rows = [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
                      "catalog_class": _catalog_class(row[width + 1:])}
                     for row in cur.fetchall()]
+            if hide and every_trip:
+                # 여러 여행을 한꺼번에 볼 때 — 시연 장소마다 볼 수 있는 여행을 붙인다(`visible_to` 가 거른다)
+                cur.execute(_SCENARIO_TRIPS, (self.tenant_id,))
+                seeded = {str(r[0]) for r in cur.fetchall()}
+                cur.execute("SELECT DISTINCT place_id::text, trip_id::text FROM itinerary_items"
+                            " WHERE tenant_id = %s AND place_id IS NOT NULL", (self.tenant_id,))
+                using: dict[str, set[str]] = {}
+                for place_id, trip in cur.fetchall():
+                    using.setdefault(place_id, set()).add(trip)
+                for row in rows:
+                    if (row.get("attributes") or {}).get(SCENARIO_SEED):
+                        row["seed_trips"] = seeded | using.get(row["place_id"], set())
+            return rows
 
     # ── 쓰기 ────────────────────────────────────────────────────
     def append_version(self, conn, *, trip_id: UUID, base_version: int, items: list[Item],

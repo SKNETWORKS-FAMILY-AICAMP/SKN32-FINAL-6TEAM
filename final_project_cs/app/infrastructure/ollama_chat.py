@@ -72,6 +72,29 @@ class OllamaChat:
     def text(self, system: str, user: str) -> str:
         return self._chat(system, user, json_mode=False)
 
+    def structured(self, system: str, user: str, schema: dict[str, Any], *, num_predict: int = 160) -> dict[str, Any]:
+        """★`[2026-09-29]` 결정 단위 — Ollama `format` 에 **JSON 스키마**를 준다(enum 밖 값을 못 낸다). `think:false` ·
+        temperature 0 · 짧은 답(`num_predict`). 실측(화면 세션, gemma4:12b): 25문장 중 24 맞음, 2.0~3.2초."""
+        payload: dict[str, Any] = {
+            "model": self.model, "stream": False, "think": False, "format": schema,
+            "options": {"temperature": 0, "num_predict": int(num_predict)},
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if self.keep_alive:
+            payload["keep_alive"] = self.keep_alive
+        try:
+            response = self._post(f"{self.base_url}/api/chat", payload)
+        except httpx.HTTPError as exc:
+            raise OllamaError(f"Ollama 호출 실패: {type(exc).__name__}: {exc}") from exc
+        if response.status_code != 200:
+            raise OllamaError(f"Ollama HTTP {response.status_code}: {response.text[:160]}")
+        try:
+            value = json.loads(response.json()["message"]["content"])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise OllamaError(f"구조화 답이 JSON 이 아니다: {response.text[:160]}") from exc
+        if not isinstance(value, dict):
+            raise OllamaError("구조화 답이 JSON 객체가 아니다")
+        return value
+
     # ── 예열 `[2026-09-29]` — 식은 모델의 첫 호출이 30초 넘게 걸렸다(ui 세션 실측). 화면이 채팅을 열 때 미리 깨운다 ──
     def loaded(self, *, timeout: float = 5.0) -> bool:
         """이 모델이 지금 메모리에 올라가 있나(`/api/ps`). 못 물으면 `OllamaError`."""

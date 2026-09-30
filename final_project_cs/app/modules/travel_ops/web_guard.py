@@ -72,6 +72,13 @@ class LimitSpec:
                 **({"choices": list(self.choices)} if self.choices else {})}
 
 
+def _mode_text(raw: Any) -> str:
+    """YAML 이 참/거짓으로 읽은 on/off 를 글자로(따옴표를 빠뜨려도 꺼지지 않게)."""
+    if isinstance(raw, bool):
+        return "on" if raw else "off"
+    return str(raw or "off")
+
+
 def specs() -> dict[str, LimitSpec]:
     """바꿀 수 있는 이름 전부 — 가드레일에서 만든다(목록에 없는 이름은 받지 않는다)."""
     guard = get_guardrails()
@@ -98,6 +105,12 @@ def specs() -> dict[str, LimitSpec]:
     choices = tuple(guard.get("web_guard.map_provider.choices"))
     out["web.map_provider"] = LimitSpec("web.map_provider", "화면 지도 종류", "", "choice",
                                         str(guard.get("web_guard.map_provider.default")), choices=choices)
+    # ★`[2026-09-29 사용자 지시]` 개발 모드 — 켜면 웹 채팅 응답에 근거(`basis`)를 싣는다. 고객 문장에는 늘 싣지 않는다
+    out["web.dev_mode"] = LimitSpec("web.dev_mode", "개발 모드(근거 보이기)", "", "choice", "off", choices=("off", "on"))
+    # ★`[2026-09-29 Codex 3회차 합의]` 채팅 결정 단위 — 재기동 없이 끄고 켠다(오변경이 보이면 곧바로 shadow 로)
+    out["chat.decision_mode"] = LimitSpec("chat.decision_mode", "채팅 해석 방식(결정 단위)", "", "choice",
+                                          _mode_text(guard.get("travel.decision_unit.mode")),
+                                          choices=("off", "shadow", "on"))
     return out
 
 

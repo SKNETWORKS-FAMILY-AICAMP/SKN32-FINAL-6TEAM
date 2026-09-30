@@ -286,10 +286,15 @@ def _clean(text: str | None) -> str | None:
 
 # ── 답 ───────────────────────────────────────────────────────────
 def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
-               place_source: Any = None) -> tuple[str, dict[str, Any]]:
+               place_source: Any = None, item: Any = None) -> tuple[str, dict[str, Any]]:
     """(답, 근거). 근거에는 무엇을 보고 답했는지(`kind` · `item` · `day` · `lookups`)와 **문장을 누가 썼는지**
-    (`writer: "template"`)를 싣는다."""
-    day, item = target(items, message, now)
+    (`writer: "template"`)를 싣는다.
+
+    `item` — ★`[2026-09-29]` 결정 단위가 고른 대상(서버가 id 로 확인한 항목). 주면 문장 낱말로 다시 찾지 않는다."""
+    if item is not None:
+        day = _local(item.starts_at).date()
+    else:
+        day, item = target(items, message, now)
     basis: dict[str, Any] = {"kind": kind, "writer": "template", "day": day.isoformat() if day else None,
                              "item": item.title if item else None, "lookups": None}
     stops = _stops(items)
@@ -320,8 +325,16 @@ def fact_reply(kind: str, *, message: str, items: list[Any], now: datetime,
             basis["item"] = f"{pair[0].title} → {pair[1].title}"
             return _pair_move_answer(items, *pair), basis
         return _move_answer(items, item), basis
+    if kind == "time":
+        end = f"~{_hm(item.ends_at)}" if item.ends_at else ""
+        return f"{item.title} — {_day_label(_local(item.starts_at).date())} {_hm(item.starts_at)}{end}.", basis
     lookup = look_up_place(item.place, place_source) if item.place else None
     basis["lookups"] = lookup
+    if kind == "phone":
+        name = (item.place or {}).get("name") or item.title
+        if lookup and lookup.get("phone"):
+            return f"{name} 전화번호는 {lookup['phone']}(출처 {lookup['source']}).", basis
+        return f"{name}의 전화번호는 모르겠어요{_lookup_note(lookup)}.", basis
     if kind == "address":
         return _address_answer(item, lookup), basis
     if kind == "hours":
@@ -434,13 +447,31 @@ def _lookup_note(lookup: dict[str, Any] | None) -> str:
     return " — " + ", ".join(lookup["failed"])
 
 
+def map_link(name: str | None, address: str | None, latitude: Any, longitude: Any) -> str | None:
+    """지도 앱으로 여는 링크 — 화면의 `items[].map_url` 과 같은 모양(이름 + 주소, 모르면 좌표). 구글 API 호출이 아니다(링크만)."""
+    from urllib.parse import urlencode
+
+    if name and address:
+        query = f"{name} {address}"
+    elif latitude is not None and longitude is not None:
+        query = f"{latitude},{longitude}"
+    else:
+        return None
+    return "https://www.google.com/maps/search/?" + urlencode({"api": 1, "query": query})
+
+
 def _address_answer(item: Any, lookup: dict[str, Any] | None) -> str:
+    """★`[2026-09-29 ui 세션 요청]` 「어디 있어」 — 주소 한 줄 + **지도 앱으로 열기 링크**. 전체 설명은 하지 않는다."""
     place = item.place or {}
-    if lookup and lookup.get("address"):
-        return f"{place.get('name') or item.title} 주소는 {_is(lookup['address'])}(출처 {lookup['source']})."
+    name = place.get("name") or item.title
+    address = lookup.get("address") if lookup else None
+    link = map_link(name, address, place.get("latitude"), place.get("longitude"))
+    tail = f"\n지도에서 보기: {link}" if link else ""
+    if address:
+        return f"{name} 주소는 {_is(address)}(출처 {lookup['source']}).{tail}"
     district = place.get("district")
-    return (f"{place.get('name') or item.title}의 주소는 모르겠어요{_lookup_note(lookup)}."
-            + (f" 저장된 값으로는 {district}에 있어요." if district else ""))
+    return (f"{name}의 주소는 모르겠어요{_lookup_note(lookup)}."
+            + (f" 저장된 값으로는 {district}에 있어요." if district else "") + tail)
 
 
 def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
@@ -460,41 +491,58 @@ def _hours_answer(item: Any, lookup: dict[str, Any] | None) -> str:
     return "\n".join(lines)
 
 
+#: 전체 설명 답에서 핵심과 「더 보기」를 가르는 줄 — 결정 경로는 이 줄로 나눠 `more` 칸에 따로 싣는다(`trip_messages`)
+MORE_MARK = "\n\n— 더 보기 —\n"
+
+
 def _detail_answer(items: list[Any], item: Any, lookup: dict[str, Any] | None) -> str:
+    """★`[2026-09-29 ui 세션 요청]` 전반을 물었을 때도 **핵심만 먼저** — 무엇 · 어디 · 오늘 몇 시에 여나 · 다음 일정.
+    나머지(주소 원문 · 운영시간 원문 · 가격 · 결제 · 예약 · 오는 길)는 `MORE_MARK` 뒤에 둔다.
+    ☆전에는 열 줄 넘게 한 번에 나가 「어디 있어」에도 이것이 나갔다(질문 종류를 잘못 고른 것과 겹쳤다)."""
     place = item.place or {}
     attributes = place.get("attributes") or {}
     end = f"~{_hm(item.ends_at)}" if item.ends_at else ""
-    lines = [f"{item.title} 일정이에요 — {_day_label(_local(item.starts_at).date())} {_hm(item.starts_at)}{end}"
-             f" · {KIND_LABEL.get(item.kind, item.kind)}"]
+    core = [f"{item.title} 일정이에요 — {_day_label(_local(item.starts_at).date())} {_hm(item.starts_at)}{end}"
+            f" · {KIND_LABEL.get(item.kind, item.kind)}"]
+    more: list[str] = []
+    before, after = _neighbours(items, item)
     if place:
-        where = " · ".join(x for x in (place.get("name"), place.get("district")) if x)
-        lines.append(f"· 장소: {where}")
-        if lookup and lookup.get("address"):
-            lines.append(f"· 주소: {lookup['address']} (출처 {lookup['source']})")
+        address = lookup.get("address") if lookup else None
+        where = " · ".join(x for x in (place.get("name"), address or place.get("district")) if x)
+        core.append(f"· 어디: {where}")
+        link = map_link(place.get("name"), address, place.get("latitude"), place.get("longitude"))
+        if link:
+            core.append(f"· 지도: {link}")
+        stored = _stored_hours(place, _local(item.starts_at).date())
+        if stored:
+            core.append(f"· 그날 영업: {stored}")
+        if address:
+            more.append(f"· 주소 출처: {lookup['source']}")
         else:
-            lines.append(f"· 주소: 모름{_lookup_note(lookup)}")
-        hours = _hours_answer(item, lookup)
-        lines += [f"· {line}" for line in hours.splitlines()]
+            more.append(f"· 주소: 모름{_lookup_note(lookup)}")
+        if lookup and (lookup.get("hours_text") or lookup.get("rest_text")):
+            more += [f"· {line}" for line in _hours_answer(item, lookup).splitlines()]
+        elif not stored:
+            more.append(f"· 운영시간: 모름{_lookup_note(lookup)}")
         if attributes.get("price_krw") is not None:
-            lines.append(f"· 가격(저장된 값): {int(attributes['price_krw']):,}원")
+            more.append(f"· 가격(저장된 값): {int(attributes['price_krw']):,}원")
         if attributes.get("payment"):
             labels = {"card": "카드", "cash": "현금"}
-            lines.append(f"· 결제(저장된 값): {', '.join(labels.get(p, p) for p in attributes['payment'])}")
+            more.append(f"· 결제(저장된 값): {', '.join(labels.get(p, p) for p in attributes['payment'])}")
     else:
-        lines.append("· 장소: 이 일정에는 장소가 연결돼 있지 않아요.")
-    lines.append(f"· 예약: {booking_fact(item)[1]}")
-    before, after = _neighbours(items, item)
-    come = _move_between(items, before, item) if before else None
-    if come:
-        lines.append(f"· 오는 길: {_move_line(come)}")
+        core.append("· 장소: 이 일정에는 장소가 연결돼 있지 않아요.")
     if after:
         go = _move_between(items, item, after)
-        lines.append(f"· 다음 일정: {_day_label(_local(after.starts_at).date())} {_stop_line(after)}"
-                     + (f" — 이동 {_move_line(go)}" if go else ""))
+        core.append(f"· 다음 일정: {_day_label(_local(after.starts_at).date())} {_stop_line(after)}"
+                    + (f" — 이동 {_move_line(go)}" if go else ""))
     else:
-        lines.append("· 다음 일정: 없어요(이 일정이 마지막이에요).")
-    return "\n".join(lines)
+        core.append("· 다음 일정: 없어요(이 일정이 마지막이에요).")
+    more.append(f"· 예약: {booking_fact(item)[1]}")
+    come = _move_between(items, before, item) if before else None
+    if come:
+        more.append(f"· 오는 길: {_move_line(come)}")
+    return "\n".join(core) + (MORE_MARK + "\n".join(more) if more else "")
 
 
-__all__ = ["KIND_LABEL", "booking_fact", "fact_question", "fact_reply", "look_up_place", "target"]
+__all__ = ["KIND_LABEL", "MORE_MARK", "booking_fact", "map_link", "fact_question", "fact_reply", "look_up_place", "target"]
 

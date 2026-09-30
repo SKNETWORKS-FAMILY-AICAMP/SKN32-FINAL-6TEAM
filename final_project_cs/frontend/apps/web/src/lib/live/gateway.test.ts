@@ -18,14 +18,18 @@ const TRIP = {
 describe("live trip gateway", () => {
   let calls: { url: string; init: RequestInit }[];
   let replies: unknown[];
+  /** The server's conversation record (`GET …/chat`); `null` = that call fails, so the tab's own copy is shown. */
+  let chat: unknown[] | null;
 
   beforeEach(() => {
     calls = [];
     replies = [];
+    chat = null;
     vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
     vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
       calls.push({ url, init });
       if (url.endsWith("/v1/web/session")) return new Response(JSON.stringify({ user_key: "acop_u_test" }), { status: 201 });
+      if (url.includes("/chat?")) return chat === null ? new Response("{}", { status: 404 }) : new Response(JSON.stringify({ turns: chat }), { status: 200 });
       const next = replies.shift();
       return next instanceof Response ? next : new Response(JSON.stringify(next ?? TRIP), { status: 200 });
     });
@@ -162,6 +166,16 @@ describe("live trip gateway", () => {
     expect(withLegs.legs).toEqual({ "a>b": "https://www.google.com/maps/dir/?api=1&origin=a&destination=b&travelmode=transit" });
   });
 
+  it("keeps the rule sections behind an answer only when the server sends them (development mode)", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "answered", answer: "비 오면 취소돼요.", basis: { writer: "rules" }, basis_sources: ["t_doc_07#c5", { source: "t_doc_06#c2" }, 3] }, TRIP,
+      { status: "answered", answer: "네." }, TRIP);
+    const dev = await gateway.sendMessage(TRIP.trip_id, "비 오면?", "ko");
+    expect(dev.messages.at(-1)).toMatchObject({ text: "비 오면 취소돼요.", basis: ["t_doc_07#c5", "t_doc_06#c2"] });
+    const customer = await gateway.sendMessage(TRIP.trip_id, "또?", "ko");
+    expect(customer.messages.at(-1)).not.toHaveProperty("basis");        // ★no field — nothing is shown to the customer
+  });
+
   it("sends the stop the customer picked as item_id, and nothing when none was picked", async () => {
     const gateway = createLiveGateway();
     replies.push({ status: "adjusted", answer: "바꿨어요." }, TRIP, { status: "answered", answer: "네." }, TRIP);
@@ -178,5 +192,40 @@ describe("live trip gateway", () => {
     expect(failure).toBeInstanceOf(LiveError);
     expect((failure as LiveError).code).toBe("key_rejected");
     expect(calls.filter((call) => call.url.endsWith("/v1/web/session"))).toHaveLength(1);   // ★no second key issued behind the user's back
+  });
+
+  it("keeps the folded rest of an answer and the 「혹시 이런 뜻이었나요?」 readings the server offers with it", async () => {
+    const more = ["· 운영시간 원문: 10:00~18:30", "· 쉬는 날: 월요일"].join("\n");
+    replies.push({ status: "answered", answer: "세종이야기 — 서울특별시 종로구 세종대로 지하175", more,
+      choices_title: "혹시 이런 뜻이었나요?", choices: [{ label: "세종이야기 운영시간", message: "세종이야기 몇 시까지 해?" }] }, TRIP);
+    const trip = await createLiveGateway().sendMessage(TRIP.trip_id, "그건 어딧는거야", "ko");
+    expect(trip.messages.at(-1)).toMatchObject({ more, choicesTitle: "혹시 이런 뜻이었나요?",
+      choices: [{ label: "세종이야기 운영시간", message: "세종이야기 몇 시까지 해?" }] });
+  });
+
+  it("shows the conversation from the server's record, keeping this tab's choices on the latest answer", async () => {
+    const gateway = createLiveGateway();
+    const question = ["다음 중 하나인가요?", "1) 1일차 저녁 식당 바꾸기", "2) 1일차 저녁 식당 알아보기"].join("\n");
+    replies.push({ status: "clarify", answer: question,
+      choices: [{ label: "1일차 저녁 식당 바꾸기", message: "1일차 저녁 식당 바꿔 줘" }, { label: "빈 것" }] }, TRIP);
+    const asked = await gateway.sendMessage(TRIP.trip_id, "저녁", "ko");
+    expect(asked.messages.at(-1)?.choices).toEqual([{ label: "1일차 저녁 식당 바꾸기", message: "1일차 저녁 식당 바꿔 줘" }]);
+    // another device: the server's record is the conversation; this tab adds the choices to the same answer
+    // (the record's times are after this tab's messages: the record has caught up with everything this tab saw)
+    chat = [{ role: "customer", text: "저녁", case_id: "c1", at: "2999-01-01T00:00:00+09:00" },
+      { role: "assistant", text: question, case_id: "c1", at: "2999-01-01T00:00:01+09:00" }];
+    const trip = await gateway.getTrip(TRIP.trip_id, "ko");
+    expect(trip.messages.map((message) => [message.role, message.text.split("\n")[0]])).toEqual([["user", "저녁"], ["assistant", "다음 중 하나인가요?"]]);
+    expect(trip.messages[1].choices?.[0].message).toBe("1일차 저녁 식당 바꿔 줘");
+    // the record lags: what this tab just said and heard (after the record's last turn) stays at the end, once
+    chat = [{ role: "customer", text: "저녁", case_id: "c1", at: "2020-01-01T10:00:00+09:00" }];
+    const lagging = await gateway.getTrip(TRIP.trip_id, "ko");
+    expect(lagging.messages.map((message) => message.role)).toEqual(["user", "user", "assistant"]);
+    expect(lagging.messages.at(-1)?.text).toBe(question);
+    chat = [{ role: "customer", text: "저녁", case_id: "c1", at: "2026-09-29T10:00:00+09:00" },
+      { role: "assistant", text: question, case_id: "c1", at: "2999-01-01T00:00:00+09:00" }];
+    // a fresh browser: the record alone, no choices to invent
+    window.sessionStorage.removeItem(`tripilot.web.live.messages:${TRIP.trip_id}`);
+    expect((await gateway.getTrip(TRIP.trip_id, "ko")).messages[1]).not.toHaveProperty("choices");
   });
 });

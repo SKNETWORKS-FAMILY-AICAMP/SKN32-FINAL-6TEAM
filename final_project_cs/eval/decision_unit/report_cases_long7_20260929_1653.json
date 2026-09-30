@@ -1,0 +1,868 @@
+{
+ "summary": {
+  "cases": 34,
+  "good": 33,
+  "accuracy": 0.971,
+  "wrong_target_changes": 0,
+  "clarify_with_right_choice": 0,
+  "unnecessary_clarify": 0,
+  "p50": 2.2,
+  "p95": 4.45,
+  "p99": 6.48,
+  "max": 6.48
+ },
+ "rows": [
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "3일차 점심 식당 바꿔 줘",
+   "action": "apply_change",
+   "item": "i15",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i15",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.88
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "5일차 저녁 다른 데 알아봐 줘",
+   "action": "propose_alternatives",
+   "item": "i29",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i29",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.44
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "마지막 날 첫 활동 바꿔",
+   "action": "apply_change",
+   "item": "i38",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i38",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.38
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "둘째 날 두 번째 활동 다른 걸로",
+   "action": "apply_change",
+   "item": "i10",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i10",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": false,
+   "wrong_target_change": false,
+   "seconds": 2.45
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "4일차 아침 뭐야?",
+   "action": "answer_fact",
+   "item": "i19",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i19",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.03
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "창덕궁 몇 시에 가?",
+   "action": "answer_fact",
+   "item": "i20",
+   "change": null,
+   "fact": "time",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i20",
+    "change": "none",
+    "fact": "time",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.03
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "명동교자 전화번호 알려줘",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": "phone",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "c2",
+    "fact": "phone",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.17
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "국립중앙박물관 운영시간",
+   "action": "answer_fact",
+   "item": "i26",
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i26",
+    "change": "none",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.03
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "63빌딩 아쿠아리움 주소 알려줘",
+   "action": "answer_fact",
+   "item": "i34",
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i34",
+    "change": "none",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.08
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "명동교자 원래 식당으로 되돌려",
+   "action": "rollback",
+   "item": null,
+   "change": "c2",
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i9",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.22
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "방금 자동으로 바뀐 저녁 원래대로",
+   "action": "rollback",
+   "item": null,
+   "change": "c3",
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i29",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.09
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "6일차 일정 요약해 줘",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "day",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "day",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.23
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "서울숲 다음 일정 뭐야",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "next",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i16",
+    "change": "none",
+    "fact": "next",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.06
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "경복궁에서 토속촌까지 어떻게 가?",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "move",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i3",
+    "change": "none",
+    "fact": "move",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.12
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "예약된 거 있어?",
+   "action": "answer_fact",
+   "item": null,
+   "change": null,
+   "fact": "booking",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "none",
+    "change": "none",
+    "fact": "booking",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.19
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "1시간 늦을 것 같아요",
+   "action": "report_delay",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_delay",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.5
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "금돼지식당 오늘 휴무래",
+   "action": "report_closed",
+   "item": "i17",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_closed",
+    "item": "i17",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.11
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "전쟁기념관 문 닫았대요",
+   "action": "report_closed",
+   "item": "i28",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "report_closed",
+    "item": "i28",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.09
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "비 오면 한강공원 일정 취소돼요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "ask_policy",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.0
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "아이랑 같이 가도 돼요?",
+   "action": "ask_policy",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "ask_policy",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.22
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "바꿔",
+   "action": "clarify",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "rollback",
+      "i29"
+     ],
+     [
+      "apply_change",
+      "none"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 4.48
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "이거 말고",
+   "action": "clarify",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "c3",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i29"
+     ],
+     [
+      "propose_alternatives",
+      "i29"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 4.45
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "고마워요!",
+   "action": "other",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "other",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.2
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": "i22",
+   "message": "저녁 식당 바꿔 줘",
+   "action": [
+    "apply_change",
+    "clarify"
+   ],
+   "item": "i23",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "clarify",
+    "item": "none",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": [
+     [
+      "apply_change",
+      "i5"
+     ],
+     [
+      "apply_change",
+      "i11"
+     ],
+     [
+      "apply_change",
+      "i17"
+     ]
+    ]
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 6.48
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": "i34",
+   "message": "이거 다른 데로 바꿔 줘",
+   "action": "apply_change",
+   "item": "i34",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i34",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 3.2
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": "i41",
+   "message": "이 식당 세부정보",
+   "action": "answer_fact",
+   "item": "i41",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i41",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.34
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "첫날 저녁 식당 어떤 곳이야?",
+   "action": "answer_fact",
+   "item": "i5",
+   "change": null,
+   "fact": "detail",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i5",
+    "change": "none",
+    "fact": "detail",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.14
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "7일차 마지막 일정 바꿔",
+   "action": "apply_change",
+   "item": "i42",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i42",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.25
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "셋째 날 세 번째 식당 바꿔",
+   "action": "apply_change",
+   "item": "i17",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i17",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.33
+  },
+  {
+   "trip": "long7",
+   "history": [],
+   "selected": null,
+   "message": "한강 달빛무지개분수 말고 다른 거 추천해줘",
+   "action": "propose_alternatives",
+   "item": "i12",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "propose_alternatives",
+    "item": "i12",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.33
+  },
+  {
+   "trip": "long7",
+   "history": [
+    [
+     "고객",
+     "명동교자 알려줘"
+    ],
+    [
+     "triPilot",
+     "명동교자 · 11월 3일 12:00"
+    ]
+   ],
+   "selected": null,
+   "message": "거기 몇 시까지 해?",
+   "action": "answer_fact",
+   "item": "i9",
+   "change": null,
+   "fact": "hours",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i9",
+    "change": "c2",
+    "fact": "hours",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.11
+  },
+  {
+   "trip": "long7",
+   "history": [
+    [
+     "고객",
+     "더현대 서울 몇 시에 가?"
+    ],
+    [
+     "triPilot",
+     "더현대 서울 — 11월 7일 10:00"
+    ]
+   ],
+   "selected": null,
+   "message": "거기 말고 다른 데로 바꿔줘",
+   "action": "apply_change",
+   "item": "i32",
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "apply_change",
+    "item": "i32",
+    "change": "none",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.16
+  },
+  {
+   "trip": "long7",
+   "history": [
+    [
+     "고객",
+     "5일차 저녁 식당 알려줘"
+    ],
+    [
+     "triPilot",
+     "한남 스테이크 · 11월 6일 18:00"
+    ]
+   ],
+   "selected": null,
+   "message": "그 식당 주소는?",
+   "action": "answer_fact",
+   "item": "i29",
+   "change": null,
+   "fact": "address",
+   "label_by": "claude",
+   "got": {
+    "action": "answer_fact",
+    "item": "i29",
+    "change": "c3",
+    "fact": "address",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.2
+  },
+  {
+   "trip": "long7",
+   "history": [
+    [
+     "고객",
+     "4일차 점심 바꿔 줘"
+    ],
+    [
+     "triPilot",
+     "요청하신 대로 황생가칼국수 대신 ○○(으)로 바꿨습니다"
+    ]
+   ],
+   "selected": null,
+   "message": "아니 그거 다시 원래대로 해",
+   "action": "rollback",
+   "item": null,
+   "change": null,
+   "fact": null,
+   "label_by": "claude",
+   "got": {
+    "action": "rollback",
+    "item": "i21",
+    "change": "c2",
+    "fact": "none",
+    "error": null,
+    "choices": []
+   },
+   "clarify_with_right_choice": false,
+   "good": true,
+   "wrong_target_change": false,
+   "seconds": 2.14
+  }
+ ]
+}
