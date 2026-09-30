@@ -113,6 +113,9 @@ class IntakeEditIn(BaseModel):
 class IntakeConfirmIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     revision: int = Field(ge=1)
+    #: ★`[2026-09-28]` 여행 시작 설문(`TripSurvey`, 판 `2026-09-24.v1`) — 선택. 등록 몸통의 `constraints.survey` 로
+    #:  실어 `_create_trip` 이 검사한다(틀리면 422 `invalid_survey`). 전에는 이 흐름에 설문을 실을 곳이 없었다
+    survey: dict[str, Any] | None = None
 
 
 class IntakePlanIn(BaseModel):
@@ -124,6 +127,8 @@ class IntakePlanIn(BaseModel):
     party_size: int = Field(ge=1, le=4)
     #: 읽은 일정(고객이 이미 정한 것)은 그대로 두고 빈 곳만 채운다. 끄면 읽은 일정 없이 새로 짠다
     keep_read_items: bool = True
+    #: ★`[2026-09-28]` 여행 시작 설문 — 선택. 일정 생성기가 먼저 적용하고(16번 여유 → 하루 곳 수) 등록에도 실린다
+    survey: dict[str, Any] | None = None
 
 
 class PlanIn(BaseModel):
@@ -235,6 +240,7 @@ from .density import measure_density
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 from .route_uses import route_problems  # noqa: E402
 from .survey import apply_survey  # noqa: E402
+from .trip_facts import booking_fact  # noqa: E402
 
 
 # ── 보기 ────────────────────────────────────────────────────────
@@ -249,7 +255,8 @@ def _item_view(item: Item) -> dict[str, Any]:
             "customer_pinned": bool(item.detail.get("customer_pinned")),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
             "lat": (item.place or {}).get("latitude"), "lon": (item.place or {}).get("longitude"),
-            "booked": bool(item.booking_id or item.detail.get("booking"))}
+            # ★`[2026-09-28]` 채팅의 예약 답과 같은 판정(`trip_facts.booking_fact`) — 전에는 `detail.reserved` 를 안 봤다
+            "booked": booking_fact(item)[0] == "있음"}
 
 
 _CAUSE_FIELDS = ("category", "type", "kind", "summary", "message", "to_version", "mode")
@@ -357,7 +364,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                       classifier_factory: Callable[[], Any] | None = None,
                       chat_factory: Callable[[], Any] | None = None,
                       place_factory: Callable[[], Any] | None = None,
-                      kakao_factory: Callable[[], Any] | None = None) -> APIRouter:
+                      kakao_factory: Callable[[], Any] | None = None,
+                      policy_search_factory: Callable[[], Any] | None = None) -> APIRouter:
     """★점검기·분류기·추출용 LLM 은 **처음 쓸 때** 만든다 — 앱 기동이 기다리지 않게."""
     router = APIRouter()
     cache: dict[str, Any] = {}
@@ -605,7 +613,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 tenant=principal.tenant_id, trip_id=trip_id, request_id=request.request_id,
                 message=request.message, at=_seoul(request.at) or datetime.now(KST),
                 classifier=_lazy("classifier", classifier_factory),
-                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id)
+                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id,
+                policy_search=_lazy("policy", policy_search_factory),
+                place_source=_lazy("place", place_factory))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
 
@@ -820,8 +830,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         if built.problems:
             raise _error(422, "intake_incomplete", "등록 전에 채워야 할 값이 있습니다",
                          problems=[p.as_dict() for p in built.problems])
+        body = {**built.body, "customer_id": str(customer)}
+        if request.survey is not None:
+            body["constraints"] = {**body.get("constraints", {}), "survey": request.survey}
         try:
-            create = CreateTrip.model_validate({**built.body, "customer_id": str(customer)})
+            create = CreateTrip.model_validate(body)
         except ValidationError as exc:
             raise _error(422, "validation_error", "읽은 값으로 만든 등록 몸통이 계약과 다르다",
                          problems=[{"field": ".".join(str(x) for x in e["loc"]), "reason": e["msg"]}
@@ -862,7 +875,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                     **_trip_view(conn, store, existing[0]), "created": False}}
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
-            preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko")
+            preferences=str(built.plan.get("preferences") or ""), title=built.body["title"], locale="ko",
+            constraints={"survey": request.survey} if request.survey is not None else {})
         keep = request.keep_read_items and bool(built.body["items"])
         if keep:
             # ★읽은 일정이 요청한 날짜 밖이면 끼울 수 없다 — 조용히 버리지 않고 거절한다
@@ -981,12 +995,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             result = handle_trip_message(
                 tenant=tenant, trip_id=trip_id, request_id=request.request_id, message=request.message,
                 at=_seoul(request.at) or datetime.now(KST), classifier=_lazy("classifier", classifier_factory),
-                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}")
+                chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=f"web:{customer}",
+                policy_search=_lazy("policy", policy_search_factory),
+                place_source=_lazy("place", place_factory))
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
         #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
-        if result.get("status") in ANSWERS:
+        if not result.get("answer") and result.get("status") in ANSWERS:
             result["answer"] = ANSWERS[result["status"]]
         return result
 
@@ -1007,6 +1023,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
                              "options": payload.get("options"), "delivery": status,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
+
+    @router.post("/v1/web/warmup")
+    def web_warmup(background: BackgroundTasks, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-29]` 모델 예열 — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다).
+        이미 올라가 있으면 아무것도 안 하고, 1분 안 되풀이는 한 번으로 줄인다(`model_warmup.py`).
+
+        ★develop 판은 **남용 방어 없이** 잇는다(`count=lambda: None`) — 웹 남용 방어(`web_guard`)가 아직 develop 에 없다.
+          남용 방어는 사용자 결정(2026-09-28)으로 어차피 꺼져 있어 달라지는 것은 「사용량 기록이 안 남는다」 하나다.
+          전체 동기화 때 role-manager 판(`count=lambda: _count("warmup", ...)`)으로 덮는다."""
+        from . import model_warmup
+
+        return model_warmup.warmup(
+            _lazy("chat", chat_factory), count=lambda: None, defer=background.add_task,
+            dedupe_seconds=float(settings_module.get_guardrails().get("web_guard.warmup.dedupe_seconds")))
 
     return router
 

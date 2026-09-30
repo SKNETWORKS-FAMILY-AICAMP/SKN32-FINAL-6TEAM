@@ -430,3 +430,24 @@ def test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan(api):
     place = again["sources"][0]["items"][0]["fields"]["place"]
     assert place["value"]["name"] == "광장시장" and place["needs_review"] is True
     assert place["evidence"]["tried"][0] == "alias:옛날시장→광장시장"
+
+
+def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
+    """★`[2026-09-28]` 「등록하고 관리 시작」에도 설문을 싣는다 — `/v1/web/trips` 와 같은 검사(`_create_trip`)."""
+    from app.modules.travel_ops.survey import SURVEY_VERSION
+
+    client, _, _ = _full_client()
+    headers = _key(client)
+    view = _send(client, headers, text=CHAT_PLAN)
+    url = f"/v1/web/trip-intakes/{view['intake_id']}/confirm"
+    bad = client.post(url, headers=headers, json={"revision": view["revision"],
+                                                  "survey": {"version": SURVEY_VERSION, "unknown": 1}})
+    assert bad.status_code == 422 and bad.json()["error"]["code"] == "invalid_survey", bad.text
+    done = client.post(url, headers=headers, json={"revision": view["revision"],
+                                                   "survey": {"version": SURVEY_VERSION, "on_disruption": "ask_first"}})
+    assert done.status_code == 200, done.text
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT constraints FROM trips WHERE tenant_id=%s AND trip_id=%s",
+                    (api["tenant"], done.json()["trip"]["trip_id"]))
+        assert cur.fetchone()[0]["survey"]["on_disruption"] == "ask_first"
+

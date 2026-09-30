@@ -31,6 +31,10 @@ from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, al
 
 #: 대안 식당을 찾는 반경(미터). ★우리가 고른 값이다 — 도보 약 9분.
 DINING_RADIUS_M = 700
+#: 새벽에 닫힌 것을 확인한 활동의 대체를 찾는 거리. ★우리가 고른 값(2026-09-28) — 기상 대체(600m, 같은 건물·근처
+#: 실내로 피한다)보다 넓다. 원인이 날씨가 아니라 「그날 안 연다」라 근처 실내일 필요가 없고, 대체 후보는 **그날 그 시각에
+#: 연다고 아는 곳**만 남아 좁은 반경이면 거의 비었다
+ACTIVITY_CLOSED_RADIUS_M = 1500
 
 
 @dataclass
@@ -47,7 +51,106 @@ class ItineraryChange:
     def new_items(self, current: list[Item]) -> list[Item]:
         if self.full_items is not None:
             return list(self.full_items)
-        return [self.replacements.get(item.item_id, item) for item in current]
+        out = [self.replacements.get(item.item_id, item) for item in current]
+        return refresh_moves_around(current, out, self.replacements)
+
+
+def _leg_place(item: Item) -> dict[str, Any] | None:
+    p = item.place or {}
+    if p.get("latitude") is None or p.get("longitude") is None:
+        return None
+    return {"key": str(p.get("place_id") or item.place_id), "name": p.get("name") or item.title,
+            "lat": float(p["latitude"]), "lon": float(p["longitude"])}
+
+
+def refresh_moves_around(before: list[Item], after: list[Item], replacements: dict[UUID, Item]) -> list[Item]:
+    """☆`[2026-09-29 이동 계산기 문제목록 #44]` 장소가 바뀐 항목의 **바로 앞뒤 이동**을 새 장소 기준으로 다시 만든다.
+
+    앞 판은 장소 항목만 바꾸고 이동 항목은 옛 장소로 가는 경로(탈 노선 uses · 소요)를 그대로 둬, 식당을 바꿨는데
+    출발 안내가 옛 경로로 나갔다. 이동 계산기가 켜져 있으면 시간표로 다시 판정하고(출발·도착·경로), 못 하면
+    옛 노선 정보를 떼고 직선 어림값 경로(추정 · uses 없음)로 바꾼다 — 옛 경로를 새 장소의 경로처럼 두지 않는다.
+    시각은 계산기가 채울 때만 바꾼다(어림값으로 일정을 옮기지 않는다).
+
+    ☆`[2026-09-29 오후 — 실서버 결함]` 앞 판은 새 장소가 옛 장소에서 **걸어갈 거리 안이면 이동을 통째로 건너뛰어**
+      제목·목적지가 옛 장소로 남았다(여행 f81afc61… — 일품당프리미엄 → 7 m 옆 금용문으로 바꿨는데 이동 제목이
+      「… → 일품당프리미엄」, 출발 알림도 옛 이름). v11 §6-C 재계획 2번(영향 범위는 깨진 항목의 앞뒤 이동까지) ·
+      4번(이동은 고른 조합에 맞춰 새로 만들고 옛 경로를 재사용하지 않는다)에 따라 **거리와 상관없이 늘 새 판**을 만든다.
+        · 계산기가 켜져 있으면 가까워도 새 장소로 다시 판정한다
+        · 계산기가 꺼져 있거나 못 찾을 때 — 걸어갈 거리 안이면 탈 노선(uses)·소요·시각은 둔다(같은 역 권역이라
+          여전히 맞다 · 시나리오의 90 m·450 m 교체). 제목·목적지 이름은 새 장소로 바꾸고, 옛 경로를 둔 것을
+          `route_basis: "kept_nearby"` 로 드러낸다. 멀면 종전대로 어림값.
+    """
+    from .replan import distance_m, walk_minutes
+    olds = {i.item_id: i for i in before}
+    # 「옛 경로를 둘 수 있는 거리」 = 이동 계산기의 도보 상한(guardrails mobility.limits.walk_m.default) — 새 수치를 만들지 않는다
+    from .mobility.engine.guardrails import GuardrailMissing, lookup
+    try:
+        keep_m = float(lookup("mobility.limits.walk_m.default"))
+    except GuardrailMissing:
+        keep_m = 0.0                                     # 못 읽으면 늘 어림값으로(보수적)
+
+    def moved_far(old_id: UUID, new: Item) -> bool:
+        a, b = _leg_place(olds[old_id]) if old_id in olds else None, _leg_place(new)
+        if a is None or b is None:
+            return True
+        return distance_m({"latitude": a["lat"], "longitude": a["lon"]},
+                          {"latitude": b["lat"], "longitude": b["lon"]}) > keep_m
+
+    changed = {old_id: moved_far(old_id, new) for old_id, new in replacements.items()
+               if new.kind != "mobility" and old_id in olds and olds[old_id].place_id != new.place_id}
+    if not changed:
+        return after
+    seq_sorted = sorted(after, key=lambda i: i.seq)
+    far_of_new = {replacements[i].item_id: far for i, far in changed.items()}
+    targets: dict[int, bool] = {}                      # 이동 자리 → 옆의 바뀐 장소 중 하나라도 멀리 갔나
+    for k, it in enumerate(seq_sorted):
+        if it.item_id in far_of_new:
+            for j in (k - 1, k + 1):
+                if 0 <= j < len(seq_sorted) and seq_sorted[j].kind == "mobility":
+                    targets[j] = targets.get(j, False) or far_of_new[it.item_id]
+    if not targets:
+        return after
+    from .mobility.wiring import leg_planner
+    engine = leg_planner(None, {})
+    fresh: dict[UUID, Item] = {}
+    for j, far in sorted(targets.items()):
+        move = seq_sorted[j]
+        prev = next((i for i in reversed(seq_sorted[:j]) if i.kind != "mobility"), None)
+        nxt = next((i for i in seq_sorted[j + 1:] if i.kind != "mobility"), None)
+        a, b = (_leg_place(prev) if prev else None), (_leg_place(nxt) if nxt else None)
+        if a is None or b is None:
+            continue
+        got = None
+        if engine is not None:
+            got, _why = engine(a, b, nxt.starts_at, prev.ends_at or prev.starts_at)
+        if got is not None:
+            detail = {**move.detail, "route_def": got["route"], "refreshed_for": "place_changed",
+                      "route_basis": "rejudged"}
+            detail.pop("route", None)
+            detail.pop("option", None)
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}",
+                                                   starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+        elif not far:
+            # 걸어갈 거리 안 — 탈 노선·소요·시각은 두고 이름만 새 장소로(옛 이름이 출발 알림에 나가지 않게)
+            suffix = f" · {move.title.split(' · ', 1)[1]}" if " · " in move.title else ""
+            detail = {**move.detail, "refreshed_for": "place_changed", "route_basis": "kept_nearby"}
+            if isinstance(detail.get("route_def"), dict):
+                detail["route_def"] = {**detail["route_def"], "from": a["name"], "to": b["name"]}
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}{suffix}",
+                                                   detail=detail)
+        else:
+            # 일정 짜기의 어림 규칙(planner._transfer_minutes)과 같다 — 도보 환산이 상한을 넘으면 상한 · 「대중교통 권장」
+            from .planner import TRANSFER_MAX_MIN
+            m = walk_minutes(distance_m({"latitude": a["lat"], "longitude": a["lon"]},
+                                        {"latitude": b["lat"], "longitude": b["lon"]}))
+            label = "도보 기준 [추정]" if m <= TRANSFER_MAX_MIN else "대중교통 권장 [추정]"
+            route = {"from": a["name"], "to": b["name"], "planned": "estimate",
+                     "options": [{"id": "estimate", "label": label, "eta_min": min(m, TRANSFER_MAX_MIN), "uses": []}]}
+            detail = {**move.detail, "route_def": route, "refreshed_for": "place_changed", "route_basis": "estimate"}
+            detail.pop("route", None)
+            detail.pop("option", None)
+            fresh[move.item_id] = move.replaced_by(place=None, title=f"{a['name']} → {b['name']}", detail=detail)
+    return [fresh.get(i.item_id, i) for i in after]
 
 
 @dataclass
@@ -115,6 +218,12 @@ def next_after(items: list[Item], item: Item) -> Item | None:
     return min(later, key=lambda other: other.seq) if later else None
 
 
+def place_before(items: list[Item], item: Item) -> Item | None:
+    """이 항목 앞의 **장소 항목**(이동 아님) — 경로를 다시 찾을 때 출발지(#38·#39)."""
+    earlier = [other for other in items if other.seq < item.seq and other.kind != "mobility"]
+    return max(earlier, key=lambda other: other.seq) if earlier else None
+
+
 # ── 감시 — 활동 ────────────────────────────────────────────────
 def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list[dict[str, Any]],
                              check: Callable[..., dict[str, Any]], now: datetime) -> Plan:
@@ -159,8 +268,12 @@ def planned_option(item: Item, route: dict[str, Any]) -> tuple[str, dict[str, An
 
 
 def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str, Any],
-                          events: dict[str, Any], now: datetime) -> Plan:
-    """계획한 수단이 쓰는 구간에 사건이 걸렸으면 경로를 다시 고른다. 안 걸렸으면 `clear`."""
+                          events: dict[str, Any], now: datetime, previous: Item | None = None) -> Plan:
+    """계획한 수단이 쓰는 구간에 사건이 걸렸으면 경로를 다시 고른다. 안 걸렸으면 `clear`.
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #38·#39]` 저장된 후보가 모두 막히면(unresolved) 이동 계산기가 켜져 있고 앞뒤
+      장소를 알 때 **사고를 반영해 새 경로를 찾는다**(사건 → 계산기 사고 조건 변환은 뜻이 같은 것만 — wiring).
+      출발은 지금·앞 일정 끝 중 늦은 쪽 이후. 옮기지 못한 사건(도로 통제)은 결과에 이름으로 남긴다."""
     chosen, planned = planned_option(item, route)
     hit = {target: events[target] for target in planned.get("uses", []) if target in events}
     if not hit:
@@ -173,6 +286,10 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
         next_start=following.starts_at if following else None, events=events)
     best, alternates, rejected = choose(candidates)
     if best is None:
+        rerouted = _engine_reroute(item=item, previous=previous, following=following, events=events, now=now,
+                                   causes=causes, rejected=rejected, planned=planned)
+        if rerouted is not None:
+            return rerouted
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)
@@ -191,6 +308,45 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
                            replacements={item.item_id: replacement},
                            summary={"from": planned.get("label"),
                                     "to": (best.option or {}).get("label")})
+
+
+def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None, events: dict[str, Any],
+                    now: datetime, causes: list[dict[str, Any]], rejected: list, planned: dict[str, Any]
+                    ) -> ItineraryChange | None:
+    """저장된 후보가 다 막혔을 때 이동 계산기로 사고를 피하는 새 경로를 찾는다. 못 찾으면 None(종전 unresolved)."""
+    if previous is None or following is None:
+        return None
+    from .mobility import wiring
+    from .replan import Candidate
+    a, b = _leg_place(previous), _leg_place(following)
+    if a is None or b is None:
+        return None
+    disruptions, unmapped = wiring.disruptions_from_events(events)
+    leg = wiring.leg_planner(None, {}, disruptions=disruptions)
+    if leg is None:
+        return None
+    start_floor = max(now, previous.ends_at or previous.starts_at)
+    got, _why = leg(a, b, following.starts_at, start_floor)
+    if got is None:
+        return None
+    new_route = got["route"]
+    option = next(o for o in new_route["options"] if o["id"] == new_route["planned"])
+    best = Candidate(key=option["id"], place=None, changed_items=1, extra_cost_krw=None,
+                     shift_minutes=max(0, int((got["ends_at"] - (item.ends_at or item.starts_at)).total_seconds() // 60)),
+                     option=dict(option), starts_at=got["starts_at"], ends_at=got["ends_at"])
+    notice = route_notice(route=new_route, planned=planned, best=best, alternates=[], rejected=rejected,
+                          causes=causes, planned_arrival=item.ends_at or item.starts_at,
+                          next_title=following.title, replay=False)
+    detail = {**item.detail, "route_def": new_route, "option": best.key, "auto_adjusted_at": now.isoformat(),
+              "other_options": notice["other_options"], "alternates": [],
+              "rerouted_by": "mobility_engine", **({"unmapped_events": unmapped} if unmapped else {})}
+    detail.pop("route", None)                    # 새 경로 정의를 들고 간다 — 옛 routes 키를 가리키지 않는다
+    replacement = item.replaced_by(place=None, title=f"{a['name']} → {b['name']} · {option.get('label')}",
+                                   starts_at=got["starts_at"], ends_at=got["ends_at"], detail=detail)
+    return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
+                           replacements={item.item_id: replacement},
+                           summary={"from": planned.get("label"), "to": option.get("label"),
+                                    "rerouted_by": "mobility_engine"})
 
 
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
@@ -313,6 +469,44 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
         cause=cause, after=None,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
     return _dining_change(meal, best, alternates, notice, reason="auto_adjusted")
+
+
+def plan_activity_closed_on_day(*, items: list[Item], places: list[dict[str, Any]], item: Item, source: str,
+                                detail: str, checked_at: datetime, exclude: set[str] = frozenset()) -> Plan:
+    """★`[2026-09-28]` 새벽 확인에서 **그날 안 여는** 활동 — 같은 시각에 근처에서 **그 시각에 연다고 아는** 활동으로.
+
+    ☆왜 — 새벽 확인이 식당만 봤다. 영업시간을 모르는 활동이 쉬는 날에 들어가도 당일까지 아무도 몰랐다
+      (「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00). 사용자 결정: 최종 판정은 당일 새벽 구글 확인이 한다.
+    ★가격을 모르는 후보도 받는다(결정 15 — 불확실해도 하나를 고른다). 기상 대체(`plan_activity_adjustment`)는
+      추가 비용을 계산하려고 가격 모름을 탈락시키지만, 여기서 그러면 관광공사 장소가 전부 빠진다(가격 칸이 없다).
+      **그 시각 영업**은 그대로 요구한다 — 닫힌 곳을 닫힌 곳으로 바꾸지 않는다.
+    """
+    if item.place is None:
+        return NoChange("no_place", {"message": "장소가 없는 활동이다"})
+    cause = {"category": "place_closed", "type": "closed_on_day", "source": source,
+             "checked_at": checked_at.isoformat(), "detail": detail,
+             "evidence": f"{source} 새벽 확인 — {detail}"}
+    candidates = [c for c in activity_candidates(original=item.place, places=places, start=item.starts_at,
+                                                 end=item.ends_at, causes=[cause],
+                                                 radius_m=ACTIVITY_CLOSED_RADIUS_M)
+                  if str(c.place["place_id"]) not in {str(x) for x in exclude}]
+    for candidate in candidates:
+        candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
+    best, alternates, rejected = choose(candidates)
+    if best is None:
+        return NoChange("unresolved", {"causes": [cause],
+                                       "rejected": {c.name: c.rejected for c in rejected}})
+    notice = change_notice(original=item.place, replacement=best.place, start=item.starts_at,
+                           causes=[cause], alternates=alternates, replay=False)
+    notice["text"] = (f"{item.place['name']}이(가) {item.starts_at:%m월 %d일 %H:%M}에 운영하지 않는 것으로 새벽에 "
+                      f"확인했습니다({detail}). 같은 시각 {best.place['name']}(으)로 바꿨습니다.")
+    replacement = item.replaced_by(
+        place=best.place, title=title_for(item, best.place["name"]),
+        detail={"auto_adjusted_at": checked_at.isoformat(), "other_options": notice["other_options"],
+                "alternates": [alternate_record(c) for c in alternates]})
+    return ItineraryChange(reason="auto_adjusted", causes=[cause], notice=notice,
+                           replacements={item.item_id: replacement},
+                           summary={"from": item.place["name"], "to": best.place["name"]})
 
 
 # ── 고객 신고 — 품절(일정은 안 바꾼다) ─────────────────────────

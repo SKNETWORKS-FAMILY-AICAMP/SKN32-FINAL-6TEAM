@@ -145,6 +145,27 @@ def test_a_disrupted_route_is_held_for_the_watch_then_the_new_move_is_announced(
     assert "가는 방법:" in text and "2호선 잠실→성수 직통" not in text
 
 
+class _RoadsOnly:
+    """UTIC 사건 소스와 같은 모양 — 도로만 답하고 지하철·버스는 `unsupported` 로 드러낸다."""
+
+    def unsupported(self, targets):
+        return [t for t in targets if not t.startswith("도로:")]
+
+    def affecting(self, targets):
+        return {}
+
+
+def test_a_route_the_source_cannot_check_is_not_announced_as_checked(world):
+    """★`[2026-09-29 이동 계산기 문제목록 #37]` 사건 소스가 확인하지 못하는 노선(2호선)을 「경로 확인 10:50」으로
+    안내하지 않는다 — 가는 방법·소요만 보내고, 확인 못 한 안내로 센다."""
+    world["clock"].now = _at("10:50")
+    outcome = _reminders(world, route_events=_RoadsOnly()).tick()
+    assert _kinds_sent(outcome) == ["departure"] and len(outcome.unchecked) == 1 and outcome.fatal == []
+    text = next(p for k, p in _notices(world) if k.startswith("departure:"))["text"]
+    assert "가는 방법: 2호선 잠실→성수 직통 · 약 13분" in text
+    assert "경로 확인" not in text, "확인하지 않은 경로를 확인했다고 말하지 않는다"
+
+
 def test_without_a_route_source_where_and_when_still_go(world):
     world["clock"].now = _at("10:50")
     outcome = _reminders(world, route_events=None).tick()

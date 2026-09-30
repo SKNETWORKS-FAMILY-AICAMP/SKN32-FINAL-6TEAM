@@ -8,8 +8,6 @@
 .brand { display: flex; align-items: center; gap: 9px; min-height: 44px; font-size: 21px; font-weight: 750; letter-spacing: -.7px; color: var(--color-text); text-decoration: none; }
 .mark { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 9px; background: var(--color-primary); color: var(--color-on-primary); font-size: 26px; line-height: 1; padding-bottom: 4px; }
 .actions { display: flex; align-items: center; gap: 8px; }
-.homeButton { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-border); border-radius: 11px; color: var(--color-muted); }
-.homeButton:hover { color: var(--color-primary); border-color: var(--color-primary); }
 .main { padding: 28px 36px 0; }
 .main:focus { outline: none; }
 .footer { border-top: 1px solid #dce3ddaa; padding: 17px 0 20px; margin-top: 26px; font-size: 10px; color: var(--color-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }

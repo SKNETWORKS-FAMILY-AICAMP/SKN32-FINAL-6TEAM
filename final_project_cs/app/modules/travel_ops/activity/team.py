@@ -15,6 +15,7 @@
 """
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -35,6 +36,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             "activity.check_cancelable",   # 지금 취소할 수 있나 · 위약금은 얼마인가
             "activity.check_feasible",     # 이 시각에 이 활동이 성립하나
             "activity.propose_change",     # 대안을 제안한다 (승인 대기)
+            "activity.submit_itinerary",   # ★`[2026-09-20]` 고객 직접 일정 제출 — 예약 없이 장소·시각만
             "activity.itinerary",          # ★`[2026-09-17]` 여행 일정 관리 — 감시 Case · 품절 · 재요청
             "activity.itinerary_question", # ★`[2026-09-25]` 규정 질문 — 규정을 읽는다(면제 아님)
         ],
@@ -54,6 +56,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
+                       "read.weather", "read.disaster", "read.place_search",
                        "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -83,6 +86,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
         """★여행이 정해진 Case 는 일정 관리로 — 그 밖은 기본 동작에 맡긴다."""
+        if intent == "itinerary_submit":
+            return "activity.submit_itinerary"
+        if intent == "adjust_reject":
+            return "activity.propose_change"
         return ItineraryWork.itinerary_route("activity", state)
 
     async def handle_trigger(self, task: TeamTask, ctx: dict[str, Any]) -> TeamResult:
@@ -139,6 +146,9 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         if task.capability in (self.itinerary_capability, self.question_capability):
             return await self.run_itinerary(task)
 
+        if task.capability == "activity.submit_itinerary":
+            return self._submit_itinerary(task)
+
         seen: set[str] = set()
         booking = self._read(task, "read.booking", {"case_id": str(task.case_id)}, seen)
         policy = self._read(task, "read.policy", {"query": task.input_text}, seen)
@@ -169,6 +179,48 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         if task.capability == "activity.check_feasible":
             return self._check_feasible(task, booking, policy, remaining, evidence, seen)
         return self._propose_change(task, booking, evidence)
+
+    # ── ② 일정 제출 — 예약 없이 장소·시각으로 ───────────────────
+    def _submit_itinerary(self, task: TeamTask) -> TeamResult:
+        """★예약 없는 일정 제출. read.booking을 부르지 않는다."""
+        state = task.context.current_state
+        place_name = state.get("requested_place_name")
+        activity_time = state.get("requested_activity_time")
+
+        # ★검색이 비어도 고객이 요청한 값 자체가 근거로 남아야 한다.
+        evidence = self._evidence(task, source_id="case.current_state",
+                                  claim="고객 요청 장소·시각",
+                                  value={"requested_place_name": place_name,
+                                         "requested_activity_time": activity_time})
+        if not place_name:
+            return self._unknown(task, "요청 장소명", evidence)
+        if not isinstance(activity_time, datetime):
+            return self._unknown(task, "요청 시각", evidence)
+
+        seen: set[str] = set()
+        found = self._read(task, "read.place_search", {"name": place_name}, seen)
+        if found is not None:
+            evidence = self._evidence(task, source_id="read.place_search",
+                                      claim="장소 검색 결과", value=found, base=evidence)
+
+        if found is None:
+            return self._result(
+                task, outcome="completed", confidence=0.5, evidence=evidence,
+                next_action=NextAction.WAIT_FOR_INPUT,
+                answer=f"'{place_name}'을(를) 찾지 못했습니다. 좀 더 정확한 장소 이름을 알려주시겠어요?",
+                required_input_schema={"type": "object",
+                                       "properties": {"place_hint": {"type": "string"}},
+                                       "required": ["place_hint"]})
+
+        proposal = self._proposal(task, "activity.submit",
+                                  arguments={"content_id": found["content_id"],
+                                             "activity_time": activity_time.isoformat()},
+                                  evidence=evidence, risk="low")
+        return self._result(
+            task, outcome="completed", confidence=0.9, evidence=evidence,
+            next_action=NextAction.WAIT_FOR_APPROVAL,
+            action_proposals=[proposal],
+            answer=f"{found.get('matched_title', place_name)} 일정 제출 제안을 만들었습니다. 확인 후 승인해 주세요.")
 
     # ── ① 검증 — 계산으로만 ────────────────────────────────────
     def _check_cancelable(self, task: TeamTask, booking: dict, terms: Any,
@@ -218,8 +270,17 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             decisions=[{"cancelable": True, "hours_remaining": round(remaining, 1),
                         "penalty_rate": penalty}])
 
-    def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,
+    def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,  # noqa: ARG002
                         remaining: float, evidence: list, seen: set[str]) -> TeamResult:
+        # ★결함 2 수정(2026-09-21): 이미 시작된 예약은 성립 판정 없이 즉시 반환.
+        if remaining < 0:
+            return self._result(
+                task, outcome="completed", confidence=1.0, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer=f"이미 시작됐거나 종료된 활동입니다 — {-remaining:.1f}시간 전에 시작됐습니다.",
+                decisions=[{"feasible": False, "reason": "already_started",
+                            "hours_elapsed": round(-remaining, 1)}])
+
         party = booking.get("party_size")
         capacity = booking.get("capacity")
         if party is not None and capacity is not None and party > capacity:
@@ -233,79 +294,162 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         evidence = self._evidence(task, source_id="read.place",
                                   claim="장소·운영 정보", value=place, base=evidence)
 
-        # ★성립 점검은 **한 번**이다(`read.disruptions`). 예보·특보·(붙는 대로)
-        #   재난문자·대기질을 도구가 한꺼번에 본다. 무엇을 볼지(실내면 예보 안 봄)는
-        #   점검이 장소 속성으로 정한다 — Team 이 소스 조합을 들고 있지 않는다.
-        report: dict[str, Any] | None = None
-        if isinstance(place, dict):
-            report = self._read(task, "read.disruptions", {
-                "place_id": booking.get("place_id"),
-                "latitude": place.get("latitude"),
-                "longitude": place.get("longitude"),
-                "weather_sensitive": bool(place.get(self._WEATHER_SENSITIVE_KEY)),
-                "region": self._REGION,
-                # ★구를 알면 넘긴다 — 강남 도로 통제로 종로 일정을 바꾸지 않게.
-                "district": place.get("district"),
-                "starts_at": booking.get("starts_at"),
-            }, seen)
-            evidence = self._evidence(task, source_id="read.disruptions",
-                                      claim="일정 성립 점검", value=report, base=evidence)
-            # ★결정 15 — 항목 하나라도 1차·대체 소스까지 못 가져오면 **치명**이다.
-            #   조회 실패를 일정 변경 사유로 쓰지 않는다(멀쩡한 일정이 바뀐다).
-            if report is None or report.get("verdict") == "fatal":
-                failed = (report or {}).get("failed_categories") or ["성립 점검 전체"]
-                return self._escalate(task, "fatal_source_failure", evidence, warnings=[
-                    f"값을 끝까지 못 가져온 항목: {', '.join(failed)} — 대체 소스까지 "
-                    f"실패했다(결정 15: 치명). 모르는 채로 성립이라고 답하지 않는다"])
-            # ★이상이 **하나라도** 있으면 일정 변경 대상이다.
-            if report.get("verdict") == "disrupted":
-                kinds = ", ".join(str(d.get("kind")) for d in report.get("disruptions", []))
-                return self._propose_change(
-                    task, booking, evidence,
-                    reason=f"일정 성립 점검 이상 — {kinds}",
-                    answer=(f"현재 {self._REGION}에 {kinds}가 발효 중이라 이 일정은 "
-                            f"바꿔야 합니다. 변경 제안을 만들었고 승인 뒤에 진행됩니다."),
-                    decisions={"feasible": False, "reason": "disrupted",
-                               "disruptions": report.get("disruptions", [])})
-
-        forecast = self._checked_value(report, "forecast")
-        warnings = [] if place is not None else ["장소·운영 정보를 확인하지 못했다"]
-        decisions: dict[str, Any] = {"feasible": True,
-                                     "place_confirmed": place is not None}
-        if report is not None:
-            decisions["not_connected"] = report.get("not_connected", [])
-        answer = f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."
+        # ★결함 1 수정(2026-09-21): 장소를 모르면 성립을 단정하지 않는다.
         if place is None:
-            answer += " 운영 정보는 확인되지 않아 그 부분은 판정하지 않았습니다."
-        if forecast is not None:
-            note, advisories = self._weather_note(forecast)
-            answer += " " + note
-            warnings.extend(advisories)
-            decisions["weather"] = {
-                "matched_hour": forecast.get("matched_hour"),
-                "precipitation_probability": forecast.get("precipitation_probability"),
-                "wind_speed_kmh": forecast.get("wind_speed_kmh"),
-                "source": forecast.get("source"),
-                "fell_back_from": forecast.get("fell_back_from", []),
-                "confirmed_at": forecast.get("confirmed_at"),
+            return self._result(
+                task, outcome="completed", confidence=0.5, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer="장소·운영 정보가 확인되지 않아 판정하지 않았습니다.",
+                decisions=[{"feasible": False, "place_confirmed": False}],
+                warnings=["장소·운영 정보를 확인하지 못했다"])
+
+        decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True}
+        warnings: list[str] = []
+        answer_parts: list[str] = [f"확인한 범위에서는 성립합니다(시작까지 {remaining:.1f}시간)."]
+
+        # ── ① 운영시간 ─────────────────────────────────────────
+        operating = place.get("operating") if isinstance(place, dict) else None
+        if operating is not None:
+            usetime = operating.get("usetime_text")
+            restdate = operating.get("restdate_text")
+            wm = self._weekday_closure_match(restdate, booking.get("starts_at"))
+            decisions["operating"] = {
+                "usetime_text": usetime,
+                "restdate_text": restdate,
+                "weekday_match": wm,
+                "source": operating.get("source"),
+                "confirmed_at": operating.get("confirmed_at"),
             }
+            evidence = self._evidence(task, source_id="read.place.operating",
+                                      claim="운영시간 원문", value=operating, base=evidence)
+            if not usetime and not restdate:
+                answer_parts.append("운영시간 정보를 받지 못해 판정에 넣지 않았습니다.")
+            elif wm is True:
+                decisions["feasible"] = False
+                answer_parts.append(
+                    f"다만 정기휴무 요일({restdate})에 해당합니다."
+                    " 공휴일과 겹치는 경우 등 예외가 있을 수 있습니다.")
+                warnings.append("운영시간 정기휴무 요일 일치 — 예외 조건은 반영하지 않았다")
+            else:
+                parts = []
+                if usetime:
+                    parts.append(f"운영시간 {usetime}")
+                if restdate:
+                    parts.append(f"휴무 {restdate}")
+                if parts:
+                    answer_parts.append(
+                        f"TourAPI 기준 {' / '.join(parts)}. 원문 그대로이며 자동 해석하지 않았습니다.")
+                warnings.append("TourAPI 운영시간 원문은 자동 판정에 쓰지 않았다 — 원문으로 전달")
+
+        # ── ② 재난문자 ─────────────────────────────────────────
+        lat = place.get("latitude") if isinstance(place, dict) else None
+        lng = place.get("longitude") if isinstance(place, dict) else None
+        disaster = self._read(task, "read.disaster",
+                              {"latitude": lat, "longitude": lng,
+                               "starts_at": booking.get("starts_at")}, seen)
+        if disaster is not None:
+            evidence = self._evidence(task, source_id="read.disaster",
+                                      claim="재난문자", value=disaster, base=evidence)
+            messages = disaster.get("messages") or []
+            blocks = any(m.get("EMRG_STEP_NM") == "위급재난" for m in messages)
+            decisions["disaster"] = {
+                "messages": messages,
+                "blocks": blocks,
+                "confirmed_at": disaster.get("confirmed_at"),
+                "source": disaster.get("source"),
+            }
+            if blocks:
+                kinds = ", ".join(
+                    m.get("DST_SE_NM", "") for m in messages
+                    if m.get("EMRG_STEP_NM") == "위급재난")
+                decisions["feasible"] = False
+                answer_parts.append(
+                    f"위급재난({kinds})이 발령 중이라 이 일정은 성립하지 않습니다. "
+                    f"지역·주제가 이 활동과 관련 없을 수 있습니다.")
+                warnings.append("재난문자 위급재난 등급 확인 — 지역·주제 관련성은 확인하지 않았다")
+            elif messages:
+                grade = messages[0].get("EMRG_STEP_NM", "")
+                answer_parts.append(
+                    f"재난문자 {len(messages)}건 확인됨({grade}). 판정에 영향을 주는 등급은 아닙니다.")
+            else:
+                answer_parts.append("확인 범위 내 재난문자는 없습니다.")
+
+        # ── ③ 기상 ─────────────────────────────────────────────
+        weather_sensitive = place.get(self._WEATHER_SENSITIVE_KEY)
+        guessed_from_title = False
+        if weather_sensitive is None:
+            title = place.get("name") if isinstance(place, dict) else None
+            weather_sensitive = self._weather_sensitive_from_title(title)
+            if weather_sensitive is not None:
+                guessed_from_title = True
+                evidence = self._evidence(
+                    task, source_id="activity.weather_sensitive_from_title",
+                    claim="장소명 기반 실내외 추정",
+                    value={"title": title, "result": weather_sensitive},
+                    base=evidence)
+
+        if weather_sensitive is True:
+            forecast = self._read(task, "read.weather",
+                                  {"latitude": lat, "longitude": lng,
+                                   "starts_at": booking.get("starts_at")}, seen)
+            if forecast is not None:
+                evidence = self._evidence(task, source_id="read.weather",
+                                          claim="기상 예보", value=forecast, base=evidence)
+                note, advisories = self._weather_note(forecast)
+                answer_parts.append(note)
+                warnings.extend(advisories)
+                w_dec: dict[str, Any] = {
+                    "matched_hour": forecast.get("matched_hour"),
+                    "precipitation_probability": forecast.get("precipitation_probability"),
+                    "wind_speed_kmh": forecast.get("wind_speed_kmh"),
+                    "source": forecast.get("source"),
+                    "fell_back_from": forecast.get("fell_back_from", []),
+                    "confirmed_at": forecast.get("confirmed_at"),
+                }
+                if guessed_from_title:
+                    w_dec["weather_sensitive_guessed_from_title"] = True
+                    warnings.append(
+                        "장소명으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
+                decisions["weather"] = w_dec
 
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=evidence,
-            next_action=NextAction.RESPOND, answer=answer,
+            next_action=NextAction.RESPOND, answer=" ".join(answer_parts),
             decisions=[decisions], warnings=warnings)
 
     # ── 성립 점검 부품 ────────────────────────────────────────
-    #: 점검할 지역. ★v11 §1 — 대상 도시는 서울 하나다.
-    _REGION = "서울"
 
     @staticmethod
-    def _checked_value(report: dict[str, Any] | None, category: str) -> dict[str, Any] | None:
-        """점검 결과에서 한 항목의 값을 꺼낸다. 해당 없음·미연결이면 `None`."""
-        for check in (report or {}).get("checks", []):
-            if check.get("category") == category and check.get("status") == "ok":
-                return check.get("value")
+    def _weather_sensitive_from_title(title: str | None) -> bool | None:
+        """장소명 단서로 실내외 여부를 근사 추정한다. 단서 없거나 상충하면 `None`."""
+        if not title:
+            return None
+        _OUTDOOR = ("공원", "옥상", "광장", "거리", "운동장", "야외", "노천", "숲")
+        _INDOOR = ("실내", "지하", "전시실", "전시관", "전시홀", "컨벤션", "홀", "B1", "B2", "B3")
+        outdoor = any(kw in title for kw in _OUTDOOR)
+        indoor = any(kw in title for kw in _INDOOR)
+        if outdoor and indoor:
+            return None
+        if outdoor:
+            return True
+        if indoor:
+            return False
         return None
+
+    @staticmethod
+    def _weekday_closure_match(restdate_text: str | None, starts_at: Any) -> bool | None:
+        """"매주 X 휴무" 패턴이 starts_at 요일과 일치하면 True, 패턴 없으면 False, 텍스트 없으면 None."""
+        if restdate_text is None:
+            return None
+        _KO_DAYS = {"월요일": 0, "화요일": 1, "수요일": 2, "목요일": 3,
+                    "금요일": 4, "토요일": 5, "일요일": 6}
+        day_names = re.findall(r"매주\s+(\S+?)\s*(?:휴무|휴관)", restdate_text)
+        if not day_names:
+            return False
+        if not isinstance(starts_at, datetime):
+            return None
+        weekday = starts_at.weekday()
+        return any(_KO_DAYS.get(d) == weekday for d in day_names)
 
     # ── 기상 문구 ──────────────────────────────────────────────
     @staticmethod

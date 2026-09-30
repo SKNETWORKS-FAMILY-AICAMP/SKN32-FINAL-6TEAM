@@ -18,6 +18,12 @@ domain: neutral
 
 **Agent Gateway가 유일한 진입점이다.** 여기를 통과한 것만 내부로 간다.
 
+## 고객 웹의 인증 경계
+
+`[실측]` 2026-09-29 `fc1ac0a`. 고객 웹 `/v1/web/*`는 아래 서버용 Bearer/scope 키 대신 **`X-User-Key`**로 고객을 식별한다. 키 발급은 무인증이며, 나머지 웹 경로는 `_web_customer`가 키를 확인한다. 여행·접수 조회는 그 고객의 자료로 제한한다. 실제 계약은 [웹 API 명세](rest-endpoints.md#web-api)를 따른다.
+
+브라우저에 서버용 scope 키를 넣지 않는다. CORS의 허용 출처·메서드·헤더와 키 거절 처리는 [앱 조립](../../app/presentation/api/app.py)·[웹 라우터](../../app/modules/travel_ops/trip_api.py)를 함께 확인한다. 아래 Bearer/scope 설명을 고객 웹의 인증 방식으로 복사하지 않는다.
+
 ## 세 겹
 
 ```text

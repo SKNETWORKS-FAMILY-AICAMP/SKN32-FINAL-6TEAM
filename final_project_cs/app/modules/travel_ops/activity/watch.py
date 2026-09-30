@@ -132,15 +132,55 @@ class TravelWatcher:
                        "bookings", "last_seen")
             return [dict(zip(columns, row)) for row in cur.fetchall()]
 
-    #: 우리 장소 종류 -> 공급자 관광타입들. ★**하나가 아니다.**
-    #:  계획서 v11 §5 의 Activity 는 자연·인문·레포츠·쇼핑을 다 포함해서
-    #:  관광지(12)·문화시설(14)·레포츠(28)·쇼핑(38)에 걸친다.
-    #:  처음엔 `activity → 12` 하나로 잡았다가 레포츠·문화시설 장소가 전부
-    #:  「못 찾음」이 됐다(2026-09-10). 모르는 종류는 힌트 없이 찾는다.
-    KIND_TO_CONTENT_TYPES = {
-        "activity": {"12", "14", "28", "38"},
-        "dining": {"39"},
-        "lodging": {"32"},
+    def due_activities(self, limit: int = DEFAULT_BATCH) -> list[dict[str, Any]]:
+        """가장 오래전에 본 활동부터. ★한 번도 안 본 것이 먼저 온다.
+
+        ★**활동 시작 3시간 이내인 것만** 본다(wiki/teams/activity.md 「조회
+          시점·재검토 주기」의 결정 그대로). 「가까운 일정만 재검토한다」는
+          `due_places`의 원칙(다가오는 예약만)과 같은 이유이고, 재난문자는
+          거기서 한 번 더 좁힌다 — 하루 내내 모든 활동을 5분마다 볼 수는 없다.
+
+        ★**`place_id`가 해소된 활동만** 본다. 재난문자는 지역(좌표) 기준으로
+          찾는데, `place_id IS NULL`(015 — 아직 `places`로 안 해소됨)이면
+          어느 지역을 볼지 모른다. 이것도 「모름」이지 「재난 없음」이 아니라서
+          여기서 조용히 걸러진다 — `tick_activities`가 `unknown`으로 센다.
+        """
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT a.id::text, a.name, a.activity_time,
+                       p.latitude, p.longitude,
+                       max(o.observed_at) AS last_seen
+                  FROM activities a
+                  JOIN places p ON p.place_id = a.place_id
+                  LEFT JOIN watch_observations o
+                         ON o.tenant_id = a.tenant_id
+                        AND o.target_kind = 'activity'
+                        AND o.target_id = a.id::text
+                 WHERE a.tenant_id = %s
+                   AND a.activity_time > now()
+                   AND a.activity_time <= now() + interval '3 hours'
+                 GROUP BY a.id, a.name, a.activity_time, p.latitude, p.longitude
+                 -- ★NULLS FIRST: 한 번도 안 본 것을 맨 앞에 둔다
+                 ORDER BY max(o.observed_at) ASC NULLS FIRST
+                 LIMIT %s
+                """, (self.tenant_id, limit))
+            columns = ("activity_id", "name", "activity_time", "latitude", "longitude",
+                       "last_seen")
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+
+    #: 우리 장소 종류 → 신분류체계 대분류(lclsSystm1) 집합.
+    #:  `tour_api.find(allowed_large_classes=...)` 클라이언트 필터로 쓴다.
+    #:
+    #:  [2026-09-21 개편] 구분류(contenttypeid) 기반 KIND_TO_CONTENT_TYPES를
+    #:  신분류체계로 교체. contenttypeid=12(관광지) 하나가 HS·NA·VE에 걸치므로
+    #:  구분류로는 「경복궁(HS)」과 「한라산(NA)」을 구분하지 못했다.
+    #:
+    #:  Activity 담당: NA·HS·VE·LS·EX·SH (wiki/teams/activity.md §범위)
+    KIND_TO_LARGE_CLASSES = {
+        "activity": {"NA", "HS", "VE", "LS", "EX", "SH"},
+        "dining": {"FD"},
+        "lodging": {"AC"},
         "flight": set(),
     }
 
@@ -161,11 +201,11 @@ class TravelWatcher:
             return source.by_content_id(
                 str(content_id), str(target.get("content_type_id") or ""))
 
-        allowed = self.KIND_TO_CONTENT_TYPES.get(str(target.get("kind") or ""))
-        # ★한 종류만이면 공급자 쪽에서 좁혀 받고, 여럿이면 넓게 받아 거른다.
-        narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
-        found = source.find(str(target["name"]), content_type_id=narrow,
-                            allowed_types=allowed or None)
+        allowed = self.KIND_TO_LARGE_CLASSES.get(str(target.get("kind") or ""))
+        # ★신분류체계(lclsSystm1) 클라이언트 필터. 서버는 넓게 받는다 —
+        #   lclsSystm1으로 서버 필터링이 되는지 미확인.
+        found = source.find(str(target["name"]),
+                            allowed_large_classes=allowed or None)
         if found is not None:
             self._remember_identity(target["place_id"], source.name, found)
         return found
@@ -205,11 +245,60 @@ class TravelWatcher:
                 "longitude": found.get("longitude"),
                 "address": found.get("address"),
                 "content_type_id": found.get("content_type_id"),
+                "large_class_code": found.get("large_class_code"),
             }
             change = self._record(
                 kind="place", target_id=str(target["place_id"]),
                 source=source.name, watched=watched, payload=found,
                 bookings=[b for b in (target.get("bookings") or []) if b])
+            if change is not None:
+                result.changes.append(change)
+        return result
+
+    def tick_activities(self, limit: int = DEFAULT_BATCH) -> TickResult:
+        """활동 시작 3시간 이내인 것을 `limit`개만 본다. 재난문자 관련성을 본다.
+
+        ★`[2026-09-28 병합 후속]` `DisasterMsgApi`/`DisasterMsgCsv`(`disaster_msg.py`)가
+          실구현체로 붙는다. `.near()` 래퍼가 `.active()`에 위임하고 아래 모양으로 답한다:
+
+              source.name                                    -> str
+              source.near(lat, lng, *, within: datetime)      -> dict | None
+                  {"for_region": [{"serial": ..., "step": ..., ...}, ...]}
+
+          ★`serial` = 구 `SN`, `step` = 구 `EMRG_STEP_NM` — `active()` 판정 출력 필드명.
+        """
+        result = TickResult()
+        source = getattr(self.sources, "disaster", None)
+        if source is None:
+            result.note = "재난문자 소스가 안 붙어 있다(키 없음). 감시할 수 없다"
+            return result
+
+        for target in self.due_activities(limit):
+            result.checked += 1
+            lat, lng = target.get("latitude"), target.get("longitude")
+            if lat is None or lng is None:
+                # ★장소는 해소됐지만 좌표가 없다 — 모름이지 재난 없음이 아니다.
+                result.unknown += 1
+                continue
+            found = source.near(float(lat), float(lng), within=target["activity_time"])
+            if found is None:
+                # ★소스가 「모름」을 줬다(속도 제한 등). 재난 없음으로 넘기지 않는다.
+                result.unknown += 1
+                continue
+
+            # ★지문은 메시지 신원+긴급단계만 본다. 발령·해제뿐 아니라
+            #   안전안내→위급재난 같은 단계 변경도 변화로 잡는다.
+            watched = {
+                "active": sorted(
+                    f"{m.get('serial')}:{m.get('step')}"
+                    for m in found.get("for_region", [])),
+            }
+            # `[미확보]` 이 활동에 걸린 예약을 찾아 `affected_bookings`에 채우는
+            #   일은 아직 안 한다 — 무예약 활동은 애초에 예약이 없고, 예약이
+            #   있는 경우의 조회 방법(장소·시각으로 역추적)은 정해지지 않았다.
+            change = self._record(
+                kind="activity", target_id=str(target["activity_id"]),
+                source=source.name, watched=watched, payload=found, bookings=[])
             if change is not None:
                 result.changes.append(change)
         return result

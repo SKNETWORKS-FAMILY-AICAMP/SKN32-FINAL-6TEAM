@@ -183,6 +183,12 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         tools = ReadToolbox(get_connection, policy_search=search_policy,
                             travel=build_travel_sources(get_settings()),
                             report_extractor=build_report_extractor())
+        # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
+        #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
+        #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
+        from app.modules.travel_ops.mobility import wiring as mobility_wiring
+
+        mobility_wiring.configure_from_settings(get_settings())
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -329,7 +335,9 @@ def build_domain_routers() -> list:
 
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
                               chat_factory=chat_factory, place_factory=place_factory,
-                              kakao_factory=kakao_factory),
+                              kakao_factory=kakao_factory,
+                              # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
+                              policy_search_factory=lambda: search_policy),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),

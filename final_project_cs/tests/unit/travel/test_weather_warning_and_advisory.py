@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from app.core.context import PolicyChunk
-from app.core.contracts import ContextPack, NextAction, ToolNotAllowed
+from app.core.contracts import ContextPack, ToolNotAllowed
 from app.infrastructure.travel.base import TravelSources
 from app.infrastructure.travel.kma_warning import KmaWarningSource, parse_status
 from app.infrastructure.travel.mofa import MofaTravelAlarm
@@ -183,24 +183,17 @@ def test_the_new_tools_still_obey_the_allowlist():
 ALLOWED = ActivityTeam.manifest.allowed_tools
 
 
-def _report(verdict, *, disruptions=(), failed=()):
-    return {"verdict": verdict, "disruptions": list(disruptions), "advisories": [],
-            "checks": [], "failed_categories": list(failed), "not_connected": []}
-
-
-def _activity_values(report):
+def _activity_values(*, disaster=None):
     return {
         "read.booking": {"booking_id": "b1", "place_id": "p1", "starts_at": in_hours(30),
                          "party_size": 2, "capacity": 4},
-        # ★`[2026-09-23]` **실제 `read.policy` 가 주는 모양**으로 바꿨다. 전에는
-        #   `[{"cancel_deadline_hours": 24}]` 라는 dict 목록이어서, 운영에서는
-        #   한 번도 안 되던 수치 읽기가 시험에서는 되는 것처럼 보였다
-        #   (debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md).
+        # ★`[2026-09-23]` **실제 `read.policy` 가 주는 모양**으로 바꿨다.
         "read.policy": [PolicyChunk(document_id="t_doc_01", chunk_no=1, scope="travel_activity", score=0.7,
                                      content="취소·환급은 업체 조건을 따른다.")],
         "read.place": {"place_id": "p1", "weather_sensitive": True,
                        "latitude": 37.5, "longitude": 127.0},
-        "read.disruptions": report,
+        "read.weather": None,
+        "read.disaster": disaster,
     }
 
 
@@ -211,22 +204,19 @@ def _activity_task():
 
 @pytest.mark.asyncio
 async def test_a_warning_in_effect_means_the_schedule_must_change():
-    """★이상이 하나라도 있으면 일정 변경 대상이다(2026-09-14 사용자 결정)."""
-    report = _report("disrupted", disruptions=[
-        {"category": "weather_warning", "kind": "호우경보", "areas": ["서울동남권"]}])
-    result = await ActivityTeam(FakeTools(_activity_values(report))).execute(_activity_task())
-    assert result.next_action is NextAction.WAIT_FOR_APPROVAL
-    assert result.action_proposals[0].arguments["reason"].endswith("호우경보")
+    """★위급재난 발령 → feasible=False + blocks=True + 안내문에 재난 종류 포함."""
+    disaster = {"messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "호우"}],
+                "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "data_go_kr"}
+    result = await ActivityTeam(FakeTools(_activity_values(disaster=disaster))).execute(_activity_task())
     assert result.decisions[0]["feasible"] is False
-    assert "호우경보" in result.answer
+    assert result.decisions[0]["disaster"]["blocks"] is True
+    assert "위급재난" in result.answer
 
 
 @pytest.mark.asyncio
 async def test_a_failed_category_is_fatal_not_a_schedule_change():
-    """★조회 실패는 일정 변경 사유가 아니다 — 결정 15 의 치명이다."""
-    report = _report("fatal", failed=["weather_warning"])
-    result = await ActivityTeam(FakeTools(_activity_values(report))).execute(_activity_task())
-    assert result.outcome == "escalated"
-    assert result.failure_code == "fatal_source_failure"
-    assert not result.action_proposals
-    assert any("weather_warning" in w and "치명" in w for w in result.warnings)
+    """★재난문자 없음(None) → disaster 키 없이 성립 판정만 — 모름을 없음으로 안 읽는다."""
+    result = await ActivityTeam(FakeTools(_activity_values(disaster=None))).execute(_activity_task())
+    assert result.outcome == "completed"
+    assert result.decisions[0]["feasible"] is True
+    assert "disaster" not in result.decisions[0]

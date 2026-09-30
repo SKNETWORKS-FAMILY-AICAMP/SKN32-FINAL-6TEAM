@@ -46,7 +46,10 @@ class Candidate:
     ends_at: datetime | None = None
 
     def rank(self) -> tuple:
-        return (self.changed_items, self.extra_cost_krw or 0, self.shift_minutes,
+        # ☆`[2026-09-29 이동 계산기 문제목록 #22]` 경로 후보의 요금 모름은 0원(가장 쌈)이 아니라 **아는 후보 뒤** —
+        #   경로 후보(option)에만 건다. 식당·활동은 종전 순서 그대로다
+        fare_unknown = 1 if (self.option is not None and self.extra_cost_krw is None) else 0
+        return (self.changed_items, fare_unknown, self.extra_cost_krw or 0, self.shift_minutes,
                 0 if self.reversible_internally else 1, self.key)
 
     @property
@@ -80,11 +83,11 @@ def _on(moment: datetime, hhmm: str) -> datetime:
 
 
 def open_during(place: dict[str, Any], start: datetime, end: datetime | None) -> bool | None:
-    """영업시간 안인가. ★영업시간을 모르면 `None` — 「연다」로 읽지 않는다."""
-    hours = (place.get("attributes") or {}).get("hours")
-    if not hours or len(hours) != 2:
-        return None
-    return _on(start, hours[0]) <= start and (end or start) <= _on(start, hours[1])
+    """영업시간 안인가. ★영업시간을 모르면 `None` — 「연다」로 읽지 않는다.
+    ★`[2026-09-28]` 그날의 영업시간(`place_hours.hours_on` — 요일별 칸이 먼저, 쉬는 날이면 False)."""
+    from .place_hours import fits
+
+    return fits(place.get("attributes") or {}, start, end or start)
 
 
 def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple[bool | None, str]:
@@ -195,7 +198,9 @@ def route_candidates(*, route: dict[str, Any], depart: datetime, planned_arrival
                                 값이 없으면(택시 등) **소요 산출 불가 — 탈락**
     """
     options = {option["id"]: option for option in route.get("options", [])}
-    planned_fare = (options.get(route.get("planned")) or {}).get("fare_krw") or 0
+    # ☆`[2026-09-29 이동 계산기 문제목록 #23]` 원래 계획의 요금을 모르면 0원으로 두지 않는다 — 앞 판은 0 으로 두어
+    #   대안 요금 전체가 「추가 비용」으로 잡혔다. 모르면 추가 비용을 모름(None)으로 둔다(지어내지 않는다).
+    planned_fare = (options.get(route.get("planned")) or {}).get("fare_krw")
     out = []
     for option in options.values():
         eta = option.get("eta_min")
@@ -222,9 +227,11 @@ def route_candidates(*, route: dict[str, Any], depart: datetime, planned_arrival
             if next_start is not None and arrival > next_start:
                 candidate.rejected.append(f"다음 일정({_hm(next_start)})에 늦는다 — 도착 {_hm(arrival)}")
         fare = option.get("fare_krw")
-        candidate.extra_cost_krw = None if fare is None else max(0, int(fare) - int(planned_fare))
-        if fare is None and not candidate.rejected:
-            candidate.rejected.append("요금을 몰라 추가 비용을 계산할 수 없다")
+        candidate.extra_cost_krw = (None if fare is None or planned_fare is None
+                                    else max(0, int(fare) - int(planned_fare)))
+        # ☆`[2026-09-29 이동 계산기 문제목록 #22]` 요금을 모른다고 **탈락시키지 않는다** — 앞 판은 탈락시켜 버스를 섞어
+        #   갈아타는 대안(요금 칸이 없다)이 사고 때 전부 떨어졌다. 식당 가격과 같은 방향(2026-09-28 사용자 결정)이다.
+        #   대신 순위에서 요금을 아는 후보보다 뒤에 선다(Candidate.rank — 경로 후보만).
         out.append(candidate)
     return out
 

@@ -6,7 +6,10 @@ import { createDemoGateway, DEMO_STORAGE_PREFIX, DEMO_VERIFICATION_DURATION, SAM
 
 function memoryStorage(): DemoStorage & { items: Map<string, string> } {
   const items = new Map<string, string>();
-  return { items, getItem: (key) => items.get(key) ?? null, setItem: (key, value) => { items.set(key, value); } };
+  return {
+    items, getItem: (key) => items.get(key) ?? null, setItem: (key, value) => { items.set(key, value); }, removeItem: (key) => { items.delete(key); },
+    get length() { return items.size; }, key: (index) => [...items.keys()][index] ?? null,
+  };
 }
 
 describe("demo trip gateway", () => {
@@ -51,8 +54,70 @@ describe("demo trip gateway", () => {
   it("reports unavailable or full browser storage", async () => {
     const unavailable = createDemoGateway({ storage: () => { throw new Error("denied"); } });
     await expect(unavailable.createTrip({ source: SAMPLE }, "ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
-    const full = createDemoGateway({ storage: { getItem: () => null, setItem: () => { throw new Error("quota"); } } });
+    const full = createDemoGateway({ storage: { getItem: () => null, setItem: () => { throw new Error("quota"); }, removeItem: () => {}, length: 0, key: () => null } });
     await expect(full.createTrip({ source: SAMPLE }, "ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
+    await expect(unavailable.listTrips("ko")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE" });
+  });
+
+  it("lists this tab's trips newest first, named by their dates, ignoring other storage", async () => {
+    expect(await gateway.listTrips("ko")).toEqual([]);
+    const first = await gateway.createTrip({ source: SAMPLE }, "ko");
+    clock += 60_000;
+    const second = await gateway.createTrip({ source: "2026-10-01\n09:00 경복궁" }, "ko");
+    storage.setItem("tripilot.web-mvp.draft", "작성 중인 글");
+    const trips = await gateway.listTrips("ko");
+    expect(trips.map((trip) => trip.id)).toEqual([second.id, first.id]);
+    expect(trips[0]).toEqual({ id: second.id, title: "2026-10-01 여행", createdAt: new Date(clock).toISOString(), version: null });
+    expect(trips[1].title).toBe("2026-09-15 – 2026-09-16 여행");
+    expect((await gateway.listTrips("en"))[1].title).toBe("Trip · 2026-09-15 – 2026-09-16");
+  });
+
+  it("lists a trip saved before registration time was kept last, with no time, and reports a corrupt one", async () => {
+    const older = await gateway.createTrip({ source: SAMPLE }, "ko");
+    const key = DEMO_STORAGE_PREFIX + older.id;
+    const stored = JSON.parse(storage.getItem(key)!);
+    delete stored.createdAt;
+    storage.setItem(key, JSON.stringify(stored));
+    const newer = await gateway.createTrip({ source: SAMPLE }, "ko");
+    const trips = await gateway.listTrips("ko");
+    expect(trips.map((trip) => [trip.id, trip.createdAt === null])).toEqual([[newer.id, false], [older.id, true]]);
+    storage.setItem(key, "{broken");
+    await expect(gateway.listTrips("ko")).rejects.toMatchObject({ code: "CORRUPT_STORAGE" });
+  });
+
+  it("deletes only the trip asked for — by ID, beside a trip with the same title — and keeps every other stored item", async () => {
+    const first = await gateway.createTrip({ source: SAMPLE }, "ko");
+    const twin = await gateway.createTrip({ source: SAMPLE }, "ko");
+    storage.setItem("tripilot.web-mvp.draft", "작성 중인 글");
+    const titles = (await gateway.listTrips("ko")).map((trip) => trip.title);
+    expect(titles[0]).toBe(titles[1]);
+    await expect(gateway.deleteTrip!(first.id, "ko")).resolves.toBeUndefined();
+    expect((await gateway.listTrips("ko")).map((trip) => trip.id)).toEqual([twin.id]);
+    await expect(gateway.getTrip(first.id, "en")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect([...storage.items.keys()].sort()).toEqual([DEMO_STORAGE_PREFIX + twin.id, "tripilot.web-mvp.draft"].sort());
+  });
+
+  it("refuses a missing or malformed ID and reports a storage failure, leaving the trip in place", async () => {
+    const trip = await gateway.createTrip({ source: SAMPLE }, "ko");
+    await expect(gateway.deleteTrip!(crypto.randomUUID(), "ko")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(gateway.deleteTrip!("../../tripilot.web.settings.v1", "ko")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    const locked = createDemoGateway({ storage: { getItem: (key) => storage.getItem(key), setItem: () => {}, removeItem: () => { throw new Error("denied"); }, length: 0, key: () => null } });
+    await expect(locked.deleteTrip!(trip.id, "en")).rejects.toMatchObject({ code: "STORAGE_UNAVAILABLE", message: expect.stringContaining("could not be saved or loaded") });
+    expect(storage.getItem(DEMO_STORAGE_PREFIX + trip.id)).not.toBeNull();
+    await gateway.deleteTrip!(trip.id, "ko");
+    await expect(gateway.deleteTrip!(trip.id, "ko")).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("a deleted trip is not written back by a check still running or by a chat reply that was waiting", async () => {
+    const running = await gateway.createTrip({ source: SAMPLE }, "ko");
+    clock += DEMO_VERIFICATION_DURATION / 2;
+    await gateway.deleteTrip!(running.id, "ko");
+    await expect(gateway.getTrip(running.id, "ko")).rejects.toMatchObject({ code: "NOT_FOUND" });
+    const active = await activeTrip();
+    const reply = gateway.sendMessage(active.id, "예약 목록", "ko");   // waits before it reads the trip again
+    await gateway.deleteTrip!(active.id, "ko");
+    await expect(reply).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(storage.items.size).toBe(0);
   });
 
   it("rejects completed storage with empty or missing verification results", async () => {
@@ -273,7 +338,7 @@ describe("demo trip gateway", () => {
   });
 
   it("registers a trip with its survey but refuses a malformed survey without creating a trip, like the server's 422", async () => {
-    const survey = toSurvey(toggle(initialAnswers, "pace", "relaxed", false));
+    const survey = toSurvey(toggle(initialAnswers, "pace", "relaxed"));
     await expect(gateway.createTrip({ source: SAMPLE, survey }, "ko")).resolves.toMatchObject({ status: "processing" });
     const saved = storage.items.size;
     await expect(gateway.createTrip({ source: SAMPLE, survey: { ...survey, budget: "mid" } as TripSurvey }, "ko")).rejects.toMatchObject({ code: "INVALID_INPUT" });

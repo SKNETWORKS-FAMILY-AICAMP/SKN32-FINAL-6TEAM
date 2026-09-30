@@ -44,6 +44,8 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 from .density import measure_density
+from .place_hours import DayHours, hours_on, knows_hours
+from .place_hours import fits as hours_fit
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
 
@@ -62,7 +64,17 @@ def _day_window() -> tuple[time, time]:
     return time(start_h + 1, start_m), time(end_h, end_m)
 
 
+def _day_open() -> time:
+    from app.core.settings import get_guardrails
+
+    start_h, start_m = (int(x) for x in str(get_guardrails().get("travel.day_window.default_start")).split(":"))
+    return time(start_h, start_m)
+
+
 DAY_START, DAY_END = _day_window()   #: 하루 첫 활동 · 마지막 일정이 끝나야 하는 시각
+#: ★`[2026-09-28]` 하루 여는 시각 = **아침 식사 시각**(팀 결정 D-020 「하루 시작 08:00 — 평균 일정 시작 9시보다 식사 1시간 앞」).
+#:  전에는 이 한 시간을 식사 자리로 비워 두고 **아침을 짜는 코드가 없어** 08~09시가 비었다(사용자가 실제 화면에서 찾았다)
+BREAKFAST_AT = _day_open()
 ACTIVITY_MIN = 90                #: 활동 한 건에 두는 시간
 MEAL_MIN = 60                    #: 식사 한 건에 두는 시간
 LUNCH_FROM = time(12, 0)
@@ -362,7 +374,7 @@ def rank_candidates(candidates: Iterable[Cand], pref: Preference) -> list[Cand]:
             fit = 0
         # ★**아는 값이 많은 장소가 먼저다** — 영업시간을 알면 판정이 실제로 그 칸을 본다.
         #   종류 우선순위(`rank_hint`)보다 앞에 둔다: 판정 가능한 초안이 예쁜 초안보다 낫다.
-        known = 0 if "hours" in cand.attributes else 1
+        known = 0 if knows_hours(cand.attributes) else 1
         ranked.append(((fit, known, cand.rank_hint, cand.name), cand))
     ranked.sort(key=lambda pair: pair[0])
     return [cand for _, cand in ranked]
@@ -399,6 +411,46 @@ def pick_day_pools(activities: list[Cand], dining: list[Cand], days: int
         near = _near_dining(dining, day_acts[:ACTIVITIES_PER_DAY], district)
         pools.append((day_acts, near))
     return pools
+
+
+def _opens(cand: Cand) -> tuple[time, time] | None:
+    hours = cand.attributes.get("hours")
+    if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
+        return None
+    try:
+        return time(*map(int, str(hours[0]).split(":"))), time(*map(int, str(hours[1]).split(":")))
+    except (TypeError, ValueError):
+        return None
+
+
+def breakfast_pool(dining: list[Cand]) -> list[Cand]:
+    """아침 식사 후보 — ①`BREAKFAST_AT` 에 연다고 **알려진** 곳 ②영업시간을 모르는 곳. 그 시각 뒤에 연다고
+    알려진 곳은 넣지 않는다. ★모르는 곳은 점심·저녁과 같은 규칙으로 받되(모름은 위반이 아니다, `check_itinerary`)
+    그날 새벽 식당 영업 확인(`dawn_check`, 03:00)이 실제로 여는지 본다 — 닫혀 있으면 그 경로가 다시 짠다."""
+    known, unknown = [], []
+    end = (datetime.combine(date(2000, 1, 1), BREAKFAST_AT) + timedelta(minutes=MEAL_MIN)).time()
+    for cand in dining:
+        hours = _opens(cand)
+        if hours is None:
+            unknown.append(cand)
+        elif hours[0] <= BREAKFAST_AT and end <= hours[1]:
+            known.append(cand)
+    return known + unknown
+
+
+def _pick_breakfast(pool: list[Cand], used: set[str], anchor: Cand | None) -> Cand | None:
+    """아직 안 쓴 후보 중 — 영업시간을 아는 곳이 먼저, 그 안에서 첫 활동에 가까운 곳."""
+    free = [cand for cand in pool if cand.key not in used]
+    if not free:
+        return None
+    tier = [cand for cand in free if _opens(cand) is not None] or free
+    if anchor is None or anchor.lat is None:
+        return tier[0]
+    placed = [cand for cand in tier if cand.lat is not None and cand.lon is not None]
+    if not placed:
+        return tier[0]
+    return min(placed, key=lambda c: distance_m({"latitude": c.lat, "longitude": c.lon},
+                                                     {"latitude": anchor.lat, "longitude": anchor.lon}))
 
 
 def _near_dining(dining: list[Cand], anchors: list[Cand], district: str | None) -> list[Cand]:
@@ -559,15 +611,13 @@ def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str, str]:
 
 
 def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, datetime]:
-    """여는 시각 전이면 여는 시각으로 **민다.** 모르면 그대로 둔다(모름은 판정 대상이 아니다)."""
-    hours = cand.attributes.get("hours")
+    """여는 시각 전이면 여는 시각으로 **민다.** 모르면 그대로 둔다(모름은 판정 대상이 아니다).
+    ★그날의 영업시간(`hours_on` — 요일별 칸이 먼저). 쉬는 날이면 그대로 두고 판정(`closed_day`)이 장소를 바꾼다."""
+    today = hours_on(cand.attributes, start.date())
     end = start + timedelta(minutes=minutes)
-    if not (isinstance(hours, (list, tuple)) and len(hours) == 2):
+    if not isinstance(today, DayHours):
         return start, end
-    try:
-        opens = time(*map(int, str(hours[0]).split(":")))
-    except (TypeError, ValueError):
-        return start, end
+    opens = today.opens
     if start.time() < opens:
         start = _at(start.date(), opens)
         end = start + timedelta(minutes=minutes)
@@ -577,9 +627,11 @@ def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, da
     return start, end
 
 
-def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from: int
-              ) -> list[dict[str, Any]]:
-    """활동·식사를 하루에 늘어놓는다. **시각은 전부 여기서 나온다 — 모델이 아니다.**"""
+def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from: int,
+              breakfast: Cand | None = None) -> list[dict[str, Any]]:
+    """활동·식사를 하루에 늘어놓는다. **시각은 전부 여기서 나온다 — 모델이 아니다.**
+
+    ★`breakfast` 가 있으면 하루 여는 시각(`BREAKFAST_AT`, 08:00)에 아침 식사를 두고 첫 활동은 그 뒤(이동 + 여유)."""
     plan: list[tuple[Cand, str, int]] = []
     if activities:
         plan.append((activities[0], "activity", ACTIVITY_MIN))
@@ -595,6 +647,18 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
     items: list[dict[str, Any]] = []
     cursor = _at(day, DAY_START)
     previous: Cand | None = None
+    if breakfast is not None:
+        start = _at(day, BREAKFAST_AT)
+        end = start + timedelta(minutes=MEAL_MIN)
+        items.append({"seq": seq_from, "kind": "dining", "title": breakfast.name, "place": breakfast.key,
+                      "starts_at": start, "ends_at": end,
+                      "detail": {"planner": {"origin": breakfast.origin, "transfer_basis": "하루 시작",
+                                             "district": breakfast.district, "day": day.isoformat(),
+                                             "meal": "breakfast",
+                                             # ★영업시간을 모르면 그날 새벽 확인(dawn_check)이 본다 — 그 사실을 적어 둔다
+                                             "hours_known": _opens(breakfast) is not None}}})
+        cursor, previous = end, breakfast
+        seq_from += 1
     for index, (cand, kind, minutes) in enumerate(plan):
         basis = "하루 시작"
         if previous is not None:
@@ -602,7 +666,10 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
             travel, basis, _ = _transfer_minutes(previous, cand)
             cursor = cursor + timedelta(minutes=travel + MOVE_BUFFER_MIN)
         if kind == "dining":
-            floor = LUNCH_FROM if not any(it["kind"] == "dining" for it in items) else DINNER_FROM
+            # ★아침은 세지 않는다 — 아침 뒤 첫 식사가 점심이다
+            lunch_done = any(it["kind"] == "dining" and it["detail"]["planner"].get("meal") != "breakfast"
+                             for it in items)
+            floor = LUNCH_FROM if not lunch_done else DINNER_FROM
             cursor = max(cursor, _at(day, floor))
         start, end = _place_slot(cand, cursor, minutes)
         items.append({"seq": seq_from + index, "kind": kind, "title": cand.name,
@@ -616,7 +683,42 @@ def build_day(day: date, activities: list[Cand], dining: list[Cand], *, seq_from
 
 
 # ── 이동 항목 — 출발 시각을 거꾸로 잡는다 ────────────────────────
-def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
+def _shift_from(items: list[dict[str, Any]], pivot: datetime, day: str, minutes: int) -> None:
+    """그날 pivot 이후(포함) 항목을 minutes 만큼 뒤로 — ★번호가 아니라 **시각**으로 민다."""
+    for later in items:
+        if _planned_day(later) == day and later["starts_at"] >= pivot:
+            later["starts_at"] += timedelta(minutes=minutes)
+            if later["ends_at"]:
+                later["ends_at"] += timedelta(minutes=minutes)
+
+
+def _engine_move(engine: Any, previous: dict[str, Any], item: dict[str, Any], a: Cand, b: Cand,
+                 items: list[dict[str, Any]], notes: list[str]) -> dict[str, Any] | None:
+    """이동 계산기(시간표 판정)로 이 구간을 채운다. 못 채우면 None — 부르는 쪽이 직선 어림값으로 간다.
+
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#42]` 앞 일정이 끝난 뒤 떠나서는 못 맞추면(arrive_late) 계산기는 구간을
+      비운다 — 일정을 미는 것은 우리 몫이다. 앞 일정 끝을 풀고 한 번 더 계산해 모자란 분만큼 그날 뒤 일정을 밀고,
+      민 시각으로 **다시 판정한다**(추정으로 맞추지 않는다). 그래도 안 되면 None.
+    """
+    import math                                  # 머리 import 줄은 다른 작업이 고치는 자리라 여기서 부른다
+
+    end = previous["ends_at"] or previous["starts_at"]
+    got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None and (why or {}).get("code") == "arrive_late":
+        free, _ = engine(a.as_place(), b.as_place(), item["starts_at"], None)
+        if free is not None and free["starts_at"] < end:
+            short = math.ceil((end - free["starts_at"]).total_seconds() / 60)
+            _shift_from(items, item["starts_at"], _planned_day(item), short)
+            notes.append(f"move({item['seq']}): 시간표로 이동 {free['eta_min']}분 — 앞 일정이 끝난 뒤 떠나면 늦어 "
+                         f"{item['title']} 부터 {short}분 뒤로 밀고 다시 판정했다")
+            got, why = engine(a.as_place(), b.as_place(), item["starts_at"], end)
+    if got is None:
+        notes.append(f"move({item['seq']}): 이동 계산기로 못 채움 — {(why or {}).get('reason') or (why or {}).get('code')}"
+                     " → 직선 어림값 [추정]")
+    return got
+
+
+def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand], *, engine: Any = None
               ) -> tuple[list[dict[str, Any]], dict[str, Any], list[str]]:
     """같은 날 이어지는 두 장소 사이에 **이동 항목**을 넣는다. (항목들, routes, 민 내역).
 
@@ -627,6 +729,9 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
       **그날 안에서 뒤로 민다** — 민 내역을 돌려준다. 하루 마감을 넘기는지는 부르는 쪽이 본다.
     ★이동 시간은 `_transfer_minutes` 의 **추정**이다. 경로 정의의 `uses` 는 비워 둔다 — 어떤 노선을
       타는지 우리가 모르기 때문이다(지어내지 않는다). 그래서 감시는 이 구간의 노선 사건을 보지 않는다.
+    ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#43]` `engine`(mobility/wiring.leg_planner)을 주면 **시간표 판정**으로
+      채운다 — 출발·도착·경로 후보(탈 노선 uses 포함)·밀도 칸. 계산기가 못 채운 구간만 위 추정을 대체값으로 쓰고
+      민 내역(notes)에 남긴다(조용히 빠지지 않는다). 하루 밀도 맞추기처럼 여러 번 시험하는 호출은 engine 없이 부른다.
     """
     ordered = sorted(items, key=lambda it: (_planned_day(it), it["starts_at"], it["seq"]))
     out: list[dict[str, Any]] = []
@@ -635,6 +740,18 @@ def add_moves(items: list[dict[str, Any]], places: Mapping[str, Cand]
     for index, item in enumerate(ordered):
         previous = ordered[index - 1] if index else None
         if previous is not None and _planned_day(previous) == _planned_day(item):
+            got = (_engine_move(engine, previous, item, places[previous["place"]], places[item["place"]], items, notes)
+                   if engine is not None else None)
+            if got is not None:
+                key = f"move-{len(routes) + 1}"
+                routes[key] = got["route"]
+                out.append({"seq": 0, "kind": "mobility", "title": f"{previous['title']} → {item['title']}",
+                            "place": None, "route": key, "starts_at": got["starts_at"], "ends_at": got["ends_at"],
+                            "detail": {"planner": {"day": _planned_day(item), "transfer_basis": "시간표 판정(이동 계산기)",
+                                                   "travel_min": got["eta_min"],
+                                                   "leave_rule": "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)"}}})
+                out.append(item)
+                continue
             travel, basis, label = _transfer_minutes(places[previous["place"]], places[item["place"]])
             need = travel + MOVE_BUFFER_MIN
             end = previous["ends_at"] or previous["starts_at"]
@@ -693,7 +810,8 @@ def _parts_of(items: list[dict[str, Any]], places: Mapping[str, Cand],
 
 
 def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Mapping[str, Cand],
-            constraints: Mapping[str, Any], seq_from: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+            constraints: Mapping[str, Any], seq_from: int,
+            breakfast: Cand | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """★밀도 목표 안에서 **활동을 가장 많이** 넣은 하루. (항목들, 잰 결과).
 
     곳 수를 표로 박지 않는다 — 활동 n 곳으로 하루를 **실제로 짜고**(이동 항목 포함) `measure_density` 로
@@ -704,13 +822,13 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
     top = min(MAX_ACTIVITIES_PER_DAY, len(activities))
     tried: list[dict[str, Any]] = []
     for count in range(top, MIN_ACTIVITIES_PER_DAY - 1, -1):
-        items = build_day(day, activities[:count], dining, seq_from=seq_from)
+        items = build_day(day, activities[:count], dining, seq_from=seq_from, breakfast=breakfast)
         trial, routes, _ = add_moves(copy.deepcopy(items), places)
         measured = measure_density(_parts_of(trial, places, routes), constraints)
         entry = next((row for row in measured["density"] if row["date"] == day.isoformat()), None)
         if entry is None or entry["status"] == "unmeasurable":
             fallback = min(ACTIVITIES_PER_DAY, len(activities))
-            return (build_day(day, activities[:fallback], dining, seq_from=seq_from),
+            return (build_day(day, activities[:fallback], dining, seq_from=seq_from, breakfast=breakfast),
                     {"date": day.isoformat(), "activities": fallback, "status": "unmeasurable",
                      "reasons": (entry or {}).get("reasons") or ["그날 하루 창이 없다"],
                      "note": f"밀도를 잴 수 없어 기본 {fallback}곳으로 짰다"})
@@ -725,7 +843,7 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
                            "target_density": entry["target_density"],
                            "actual_density": round(entry["actual_density"], 3), "tried": tried}
     # ★하한으로도 목표를 넘는다 — 빈 하루를 내지 않고 하한으로 짜고 넘는다고 적는다(밀도는 관측값, D-019)
-    items = build_day(day, activities[:MIN_ACTIVITIES_PER_DAY], dining, seq_from=seq_from)
+    items = build_day(day, activities[:MIN_ACTIVITIES_PER_DAY], dining, seq_from=seq_from, breakfast=breakfast)
     return items, {"date": day.isoformat(), "activities": MIN_ACTIVITIES_PER_DAY, "status": "exceeded",
                    "target_density": tried[-1:] and entry["target_density"], "tried": tried,
                    "note": f"활동 {MIN_ACTIVITIES_PER_DAY}곳으로도 목표를 넘는다 — 식사·이동만으로 찬다"}
@@ -745,6 +863,12 @@ def _shift(items: list[dict[str, Any]], from_seq: int, minutes: int) -> None:
             item["starts_at"] += timedelta(minutes=minutes)
             if item["ends_at"]:
                 item["ends_at"] += timedelta(minutes=minutes)
+
+
+def _covers(cand: Cand, item: dict[str, Any]) -> bool:
+    """영업시간을 모르거나, 그 칸(시작~끝)을 그날의 영업시간이 덮는다(쉬는 날이면 아니다)."""
+    start = item["starts_at"].astimezone(KST)
+    return hours_fit(cand.attributes, start, (item["ends_at"] or item["starts_at"]).astimezone(KST)) is not False
 
 
 def _swap_place(item: dict[str, Any], spares: list[Cand], used: set[str],
@@ -783,11 +907,22 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
         elif code == "no_transfer_time" and len(seqs) == 2 and seqs[1] in by_seq:
             _shift(items, seqs[1], TRANSFER_UNKNOWN_MIN)
             done.append(f"{code}({seqs[1]}): 이동 여유 {TRANSFER_UNKNOWN_MIN}분을 넣었다")
+        elif (code in ("closed_day", "after_last_entry")
+              or (code == "before_opening" and seqs[0] in by_seq
+                  and by_seq[seqs[0]]["detail"].get("planner", {}).get("meal") == "breakfast")) and seqs[0] in by_seq:
+            # ★`[2026-09-28]` 쉬는 날 · 입장 마감 뒤 — 시각을 밀어서는 못 푼다. 그날 그 칸에 여는 곳으로 바꾼다.
+            #   아침 식사가 여는 시각 전이면 밀지 않고 바꾼다 — 밀면 점심과 겹친다
+            item = by_seq[seqs[0]]
+            swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
+            if swapped is None:
+                return done
+            done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그날 그 시각에 연다)")
         elif code in ("before_opening", "break_time") and seqs[0] in by_seq:
             item = by_seq[seqs[0]]
             attributes = places[item["place"]].attributes
-            target = (attributes.get("hours") or ["", ""])[0] if code == "before_opening" \
-                else (attributes.get("break") or ["", ""])[1]
+            today = hours_on(attributes, item["starts_at"].astimezone(KST).date())
+            target = (today.opens.strftime("%H:%M") if isinstance(today, DayHours) else "") \
+                if code == "before_opening" else (attributes.get("break") or ["", ""])[1]
             try:
                 clock = time(*map(int, str(target).split(":")))
             except (TypeError, ValueError):
@@ -800,8 +935,9 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             done.append(f"{code}({seqs[0]}): {target} 뒤로 {minutes}분 밀었다")
         elif code == "after_closing" and seqs[0] in by_seq:
             item = by_seq[seqs[0]]
-            swapped = _swap_place(item, spares, used,
-                                  lambda cand: "hours" not in cand.attributes, places)
+            # ★`[2026-09-28]` 전에는 **영업시간을 모르는 후보만** 받았다 — 그 시각에 연다고 알려진 식당이 남아 있어도
+            #   못 바꿔 초안이 거부됐다(아침 전용 식당이 저녁 칸에 걸린 시험에서 드러남). 그 칸을 덮는 곳도 받는다
+            swapped = _swap_place(item, spares, used, lambda cand: _covers(cand, item), places)
             if swapped is None:
                 return done
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(닫는 시각을 넘었다)")
@@ -879,12 +1015,107 @@ class PlanOutcome:
                 "coverage": self.coverage, "calls": self.calls, "rag": self.rag}
 
 
+#: 식별자 없는 장소를 이름으로 찾을 때 같은 곳으로 보는 거리. ★우리가 고른 값 — 구글 새벽 확인의 기본(300m)보다
+#: 넓게 둔 것은 관광공사 좌표가 건물 입구가 아니라 부지 중심인 곳(궁궐·공원)이 있어서다
+HOURS_MATCH_RADIUS_M = 500
+#: 같은 관광공사 장소를 계획마다 다시 읽지 않는다(프로세스 안, 6시간). 값은 원문을 옮긴 것이고 새벽 확인이 최종 판정한다
+_HOURS_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_HOURS_CACHE_SECONDS = 6 * 3600
+
+
+def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime) -> dict[str, Any]:
+    """★`[2026-09-28]` 고른 장소의 영업시간을 **관광공사 원문에서** 읽어 요일별로 채운다(`place_hours.read_hours`).
+
+    ☆왜 — 실제 일정 38항목 중 영업시간을 아는 항목이 0개였다. 판정기는 모르는 영업시간을 보지 않아서
+      「13:00~17:00 · 일~목 휴무」인 곳이 월요일 09:00 에 들어갔다(사용자 결정: 원문을 구조화한다).
+    ★한 번 읽은 장소는 `hours_read` 를 남겨 같은 계획 안에서 다시 부르지 않는다. 못 읽으면 모름 그대로다.
+    """
+    import time as _time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from .place_hours import read_hours
+
+    can_find = hasattr(source, "find")
+    todo = [cand for cand in cands
+            if not knows_hours(cand.attributes) and "hours_read" not in cand.attributes
+            and (cand.attributes.get("source_content_id") or (can_find and cand.lat is not None))]
+    stats: dict[str, Any] = {"asked": len(todo), "read": 0, "by_rule": 0, "by_model": 0, "unknown": 0,
+                             "failed": []}
+    if not todo or source is None or not hasattr(source, "operating"):
+        if todo:
+            stats["failed"].append("관광공사 조회가 연결돼 있지 않다")
+            stats["unknown"] = len(todo)
+        return stats
+
+    def one(cand: Cand) -> dict[str, Any]:
+        content_id = str(cand.attributes.get("source_content_id") or "")
+        type_id = str(cand.attributes.get("source_content_type_id") or "")
+        key = content_id or f"name:{cand.kind}:{cand.name}"
+        cached = _HOURS_CACHE.get(key)
+        if cached and _time.time() - cached[0] < _HOURS_CACHE_SECONDS:
+            return cached[1]
+        matched = None
+        if not content_id:
+            # ★관광공사 식별자가 없는 장소(공용 장소 행) — **같은 이름 · 같은 종류**로 찾고, 좌표가
+            #   `HOURS_MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
+            wanted = {code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind == cand.kind}
+            found = source.find(cand.name, allowed_types=wanted, area_code=SEOUL_AREA_CODE)
+            meters = (distance_m({"latitude": cand.lat, "longitude": cand.lon},
+                                 {"latitude": found["latitude"], "longitude": found["longitude"]})
+                      if found else None)
+            if found is None or meters is None or meters > HOURS_MATCH_RADIUS_M:
+                why = ("관광공사에서 같은 이름·종류를 하나로 찾지 못했다" if found is None
+                       else f"같은 이름이 {round(meters)}m 떨어져 있어 같은 곳으로 보지 않았다")
+                result = {"week": {}, "record": {"source": "tour_api", "method": "none",
+                                                 "read_at": now.isoformat(), "dropped": [why]}}
+                _HOURS_CACHE[key] = (_time.time(), result)
+                return result
+            content_id, type_id = str(found["content_id"]), str(found["content_type_id"])
+            matched = {"content_id": content_id, "distance_m": round(meters)}
+        intro = source.operating(content_id, type_id)
+        if not intro:
+            found = {"week": {}, "record": {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                            "dropped": ["운영시간 원문을 받지 못했다"]}}
+        else:
+            read = read_hours(intro.get("usetime_text"), intro.get("restdate_text"), chat)
+            found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
+        if matched:
+            found["record"]["matched_by_name"] = matched
+        _HOURS_CACHE[key] = (_time.time(), found)
+        return found
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(lambda cand: (cand, _safe(one, cand)), todo))
+    for cand, found in results:
+        if isinstance(found, Exception):
+            stats["failed"].append(f"{cand.name}: {type(found).__name__}")
+            cand.attributes["hours_read"] = {"source": "tour_api", "method": "none", "read_at": now.isoformat(),
+                                             "dropped": [f"조회 오류 {type(found).__name__}"]}
+            stats["unknown"] += 1
+            continue
+        cand.attributes["hours_read"] = found["record"]
+        if found["week"]:
+            cand.attributes["hours_week"] = found["week"]
+            stats["read"] += 1
+            stats["by_rule" if found["record"]["method"] == "rule" else "by_model"] += 1
+        else:
+            stats["unknown"] += 1
+    return stats
+
+
+def _safe(fn: Callable[[Cand], Any], cand: Cand) -> Any:
+    try:
+        return fn(cand)
+    except Exception as exc:                              # noqa: BLE001 — 장소 하나의 실패가 계획을 멈추지 않는다(모름으로 둔다)
+        return exc
+
+
 def _coverage(items: list[dict[str, Any]], places: dict[str, Cand]) -> dict[str, Any]:
     """★**판정이 실제로 본 칸이 몇이나 되는지** 분자/분모로 적는다. 모르는 칸은 통과가 아니라
     「판정하지 않음」이고, 그 사실을 숨기면 초안이 실제보다 안전해 보인다."""
     items = [item for item in items if item.get("place")]      # 이동 항목은 장소 칸이 없다
     total = len(items)
-    with_hours = sum(1 for item in items if "hours" in places[item["place"]].attributes)
+    with_hours = sum(1 for item in items if knows_hours(places[item["place"]].attributes))
     with_price = sum(1 for item in items if "price_krw" in places[item["place"]].attributes)
     with_district = sum(1 for item in items if places[item["place"]].district)
     return {"items": total,
@@ -951,7 +1182,17 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     mode, note = "rules", "모델을 쓰지 않았다"
     if chat is not None:
         mode, note = "llm", ""
-    pools = pick_day_pools(activities, dining, request.days)
+    # ★`[2026-09-28]` 아침 식사 — 제약 `breakfast: false` 면 짜지 않는다. 후보가 모자라면 그날은 빼고 **적는다**.
+    #   ★아침에 쓸 곳을 **먼저 떼어 둔다** — 안 그러면 점심·저녁이 아침에 여는 몇 안 되는 곳을 먼저 가져가
+    #   아침이 비고, 아침 전용 식당(07~15시)이 저녁 칸에 걸린다(시험으로 드러남). 점심·저녁 몫(`need_din`)은
+    #   건드리지 않는다 — 남는 식당만큼만 뗀다.
+    want_breakfast = request.constraints.get("breakfast", True) is not False
+    morning = breakfast_pool(dining) if want_breakfast else []
+    reserve = morning[:max(0, min(request.days, len(dining) - need_din))]
+    held = {cand.key for cand in reserve}
+    meal_dining = [cand for cand in dining if cand.key not in held]
+    breakfasts: list[dict[str, Any]] = []
+    pools = pick_day_pools(activities, meal_dining, request.days)
 
     items: list[dict[str, Any]] = []
     chosen: dict[str, Cand] = {}
@@ -963,7 +1204,7 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
         # ★**같은 곳을 이틀 넣지 않는다.** 하루치 후보에서 이미 쓴 것을 빼고, 모자라면 전체
         #   순위에서 아직 안 쓴 것으로 채운다.
         day_acts = _available(day_acts, activities, used, per_day)
-        day_dine = _available(day_dine, dining, used, DINING_PER_DAY)
+        day_dine = _available(day_dine, meal_dining, used, DINING_PER_DAY)
         day = request.start_date + timedelta(days=index)
         picks = {"activities": [], "dining": []}
         if chat is not None:
@@ -978,13 +1219,25 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                 chat = None
         day_act = _merge(picks["activities"], day_acts, per_day)
         day_din = _merge(picks["dining"], day_dine, DINING_PER_DAY)
+        breakfast = None
+        if want_breakfast:
+            taken = used | {cand.key for cand in day_din}
+            anchor = day_act[0] if day_act else None
+            breakfast = _pick_breakfast(reserve, taken, anchor) or _pick_breakfast(morning, taken, anchor)
+            breakfasts.append({"date": day.isoformat(), "place": breakfast.name if breakfast else None,
+                               "hours_known": (_opens(breakfast) is not None) if breakfast else None,
+                               "note": None if breakfast else "아침 식사 후보가 모자라 이날은 넣지 않았다"})
+        extra = [breakfast] if breakfast else []
         if target is not None:
-            day_items, fit = fit_day(day, day_act, day_din, places={c.key: c for c in day_act + day_din},
-                                     constraints=request.constraints, seq_from=len(items) + 1)
+            day_items, fit = fit_day(day, day_act, day_din,
+                                     places={c.key: c for c in day_act + day_din + extra},
+                                     constraints=request.constraints, seq_from=len(items) + 1,
+                                     breakfast=breakfast)
             day_act = day_act[:fit["activities"]]
             fits.append(fit)
         else:
-            day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1)
+            day_items = build_day(day, day_act, day_din, seq_from=len(items) + 1, breakfast=breakfast)
+        day_din = extra + day_din
         from_model += sum(1 for cand in day_act if cand.key in picks["activities"])
         from_model += sum(1 for cand in day_din if cand.key in picks["dining"])
         # ★실제로 넣은 것만 「썼다」로 센다 — 목표 때문에 빠진 후보는 다른 날이 쓸 수 있다
@@ -1005,6 +1258,9 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
 
     spares = [cand for cand in ranked if cand.key not in used]
     rounds, fixed = 0, []
+    # ★`[2026-09-28]` 판정 전에 고른 장소의 영업시간을 관광공사 원문에서 채운다 — 판정기가 실제로 그 칸을 보게
+    now = datetime.now(KST)
+    hours_stats = enrich_hours(chosen.values(), source=tour_api, chat=chat, now=now)
     violations = _check(items, chosen, request)
     while violations and rounds < MAX_REPAIR_ROUNDS:
         rounds += 1
@@ -1016,6 +1272,12 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
         fixed += applied
         if not applied:
             break
+        # 바꿔 넣은 장소도 읽는다 — 그곳도 그날 쉴 수 있다
+        more = enrich_hours([chosen[item["place"]] for item in items if item.get("place")],
+                            source=tour_api, chat=chat, now=now)
+        for key in ("asked", "read", "by_rule", "by_model", "unknown"):
+            hours_stats[key] += more[key]
+        hours_stats["failed"] += more["failed"]
         violations = _check(items, chosen, request)
     if violations:
         raise PlanRefused(
@@ -1028,7 +1290,10 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="고치다 보니")
     # ★이동 항목을 넣고(출발 = 다음 일정 시작 − 이동 − 여유) **같은 판정기로 한 번 더** 본다 —
     #   자리가 모자라 민 항목이 영업시간을 넘길 수 있다. 여기서 걸리면 고친 척하지 않고 거절한다.
-    items, routes, moved = add_moves(items, chosen)
+    # ☆`[2026-09-29 이동 계산기 문제목록 #27·#34·#46]` 최종 이동은 이동 계산기(시간표 판정)로 — 꺼져 있으면 None(어림값)
+    from .mobility.wiring import leg_planner
+    items, routes, moved = add_moves(items, chosen,
+                                     engine=leg_planner(request.party_size, dict(request.constraints)))
     fixed += moved
     violations = _check(items, chosen, request, routes)
     if violations:
@@ -1063,6 +1328,10 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
                  "from_model": from_model,
                  "items": sum(1 for item in items if item.get("place")),
                  "preference": pref.as_dict(),
+                 # ★영업시간 — 관광공사 원문에서 몇 곳을 읽었나(규칙 · 모델), 못 읽은 곳은 모름 그대로(새벽 확인이 본다)
+                 "hours": hours_stats,
+                 # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
+                 "breakfast": {"wanted": want_breakfast, "days": breakfasts},
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다
                  "density": ({"target_density": target, "days": fits} if target is not None else
                              {"target_density": None,
