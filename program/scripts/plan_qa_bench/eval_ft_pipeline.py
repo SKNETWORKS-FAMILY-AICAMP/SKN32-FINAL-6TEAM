@@ -24,6 +24,7 @@ DATA = {j: load(j) for j in ('heavy', 'mix4')}
 G = {'heavy': json.load(open(os.path.join(HERE, 'results', 'llm_heavy_out.json'), encoding='utf-8')),
      'mix4': json.load(open(os.path.join(HERE, 'results', 'llm_mix4_out.json'), encoding='utf-8'))}
 REG = ('gemma4:e4b', 'gemma4:e4b', 'gemma4:12b')
+FB = os.environ.get('FALLBACK', 'gemma4:12b')      # 확신도가 애매하거나 앞 대화가 있을 때 부르는 LLM (기본 12B, FALLBACK=gemma4:e4b 로 12B 를 뺀 판)
 
 
 def top(job, kind, i):
@@ -34,7 +35,8 @@ def top(job, kind, i):
     return k, d[k]
 
 
-def run(job, i, lo, hi, tau_a=0.5):
+def run(job, i, lo, hi, tau_a=None):
+    tau_a = tau_a if tau_a is not None else (0.4 if ('emb' in FT or 'Embedding' in FT or 'WeMM' in FT) else 0.5)
     qs, items, out = DATA[job]
     x = qs[i]
     a = analyze(x['q'])
@@ -53,7 +55,7 @@ def run(job, i, lo, hi, tau_a=0.5):
         return r[1], False
     if r[0] == 'none':
         return None, False
-    llm = G[job]['gemma4:12b']['picks'][i]
+    llm = G[job][FB]['picks'][i]
     if x['history']:
         return llm, True                    # 앞 대화는 FT 가 못 읽는다 → LLM
     k, p = top(job, 'tt', i)
@@ -80,9 +82,12 @@ qh = DATA['heavy'][0]
 dev = [i for i, x in enumerate(qh) if x['split'] == 'dev']
 held = [i for i, x in enumerate(qh) if x['split'] == 'held']
 mix = list(range(len(DATA['mix4'][0])))
-grid = [(lo, hi) for lo in (0.02, 0.05, 0.1, 0.2, 0.3, 0.5) for hi in (0.5, 0.7, 0.8, 0.9, 0.95, 0.99) if lo < hi]
+if 'emb' in FT or 'Embedding' in FT or 'WeMM' in FT:      # 코사인 유사도 척도
+    grid = [(lo, hi) for lo in (0.15, 0.25, 0.3, 0.35, 0.4, 0.45) for hi in (0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75) if lo < hi]
+else:
+    grid = [(lo, hi) for lo in (0.02, 0.05, 0.1, 0.2, 0.3, 0.5) for hi in (0.5, 0.7, 0.8, 0.9, 0.95, 0.99) if lo < hi]
 best = max(grid, key=lambda g: (evaluate('heavy', dev, *g)[0] - 2 * evaluate('heavy', dev, *g)[1] - 0.05 * evaluate('heavy', dev, *g)[3], -g[0]))
-print(f'## {FT} — 개발용(heavy dev 44)으로 고른 문턱 lo={best[0]} hi={best[1]}')
+print(f'## {FT} · 넘김 모델 {FB} — 개발용(heavy dev 44)으로 고른 문턱 lo={best[0]} hi={best[1]}')
 print(f"{'':<34}{'정답':>10}{'엉뚱':>5}{'못찾음':>6}{'LLM 호출 문제':>14}")
 for job, idx, lab in (('heavy', held, 'heavy 판정 88'), ('mix4', mix, 'mix4 88(처음 보는 세트)')):
     r = evaluate(job, idx, *best)
