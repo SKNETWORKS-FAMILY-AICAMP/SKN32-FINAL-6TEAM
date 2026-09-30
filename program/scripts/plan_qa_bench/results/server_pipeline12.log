@@ -1,0 +1,5 @@
+[01:12] qwen_vl_utils 설치
+[01:12] WeMM 임베딩 다시
+tencent/WeMM-Embedding-2B OK 69s
+tencent/WeMM-Embedding-4B FAIL OutOfMemoryError('CUDA out of memory. Tried to allocate 32.00 MiB. GPU 0 has a total capacity of 15.57 GiB of which 14.25 MiB is free. Including non-PyTorch memory, this process has 15.55 GiB memory in use. Of the allocated memory 15.33 GiB is allocated by PyTorch, and 112.64 MiB is reserved by PyTo
+[01:14] P12DONE
