@@ -10,7 +10,7 @@ from slot_lookup import resolve
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 R = lambda *a: os.path.join(HERE, 'results', *a)
-args = [a for a in sys.argv[1:] if not a.startswith('--')]
+args = [a for k, a in enumerate(sys.argv[1:]) if not a.startswith('--') and not (k > 0 and sys.argv[k] == '--md')]
 KEY = args[0] if args else 'ft/emb_e16c'
 F_HM = args[1] if len(args) > 1 else R('ft_e16c_scores.json')
 F_M5 = args[2] if len(args) > 2 else R('ft_e16c_mix5_scores.json')
