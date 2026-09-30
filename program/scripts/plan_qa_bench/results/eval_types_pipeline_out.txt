@@ -1,0 +1,15 @@
+## 유형별 정답 수(유형당 24문제) — 26B 직접 대 각 구성의 종단
+| 유형 | 직접:gemma4:26b | 종단:gemma4:e4b | 종단:ftp_z2_gemma_e2b | 종단:ftp_z2_trida4b | 종단:gemma4:12b |
+|---|---:|---:|---:|---:|---:|
+| context_pronoun | 24 | 21 | 21 | 19 | 24 |
+| duplicate_place | 24 | 23 | 22 | 23 | 23 |
+| confusable_name | 24 | 24 | 24 | 24 | 24 |
+| compound_intent | 15 | 21 | 21 | 23 | 23 |
+| negation | 23 | 22 | 21 | 22 | 22 |
+| typo_slang | 24 | 22 | 22 | 22 | 22 |
+| out_of_scope | 21 | 22 | 22 | 21 | 21 |
+| nameless_description | 23 | 22 | 20 | 19 | 21 |
+| ordinal_relative | 21 | 23 | 24 | 23 | 23 |
+| change_request | 24 | 23 | 24 | 23 | 23 |
+| absent_but_plausible | 24 | 22 | 22 | 23 | 23 |
+| **합계** | **247** | **245** | **243** | **242** | **249** |
