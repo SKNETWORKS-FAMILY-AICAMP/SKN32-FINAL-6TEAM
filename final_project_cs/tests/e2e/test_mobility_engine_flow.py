@@ -185,3 +185,80 @@ def test_swapping_a_registered_place_rejudges_the_moves_around_it_with_the_real_
         assert move.detail["planner"]["transfer_basis"] == "시간표 판정(이동 계산기)"
         assert "잠실 새 식당" in move.title or "잠실 새 식당" == move.detail["route_def"]["from"], move.title
     assert any(o["uses"] for m in around for o in m.detail["route_def"]["options"]), "먼 곳이라 지하철·버스 노선이 실린다"
+
+
+def _registered_moves(flow, request_id):
+    """계획 → 등록 → 저장소에서 다시 읽은 항목. 이동 항목은 경로 정의(route_def)를 들고 있다."""
+    import uuid
+
+    from app.modules.travel_ops.itinerary import TripStore
+
+    draft = flow["ask"](date(2026, 10, 5), request_id=request_id).json()["draft"]
+    created = flow["client"].post("/v1/trips", headers=flow["auth"]("trip:write"),
+                                  json={"request_id": request_id + "-reg", "customer_id": str(flow["customer"]), **draft})
+    assert created.status_code == 201, created.text
+    with get_connection() as conn:
+        _, items = TripStore(flow["tenant"]).latest(conn, uuid.UUID(created.json()["trip_id"]))
+    return sorted(items, key=lambda i: i.seq)
+
+
+def test_after_an_incident_a_blocked_route_is_replaced_from_the_real_timetable(flow):
+    """저장된 대안이 다 막히면 이동 계산기가 사고를 반영해 새 경로를 찾는다(#38·#39) - 실제 시간표로.
+    지하철 경로의 환승역이 무정차라는 사건을 넣고, 그 역을 빼고도 갈 수 있는 새 경로가 실려야 한다."""
+    from datetime import timedelta
+
+    from app.modules.travel_ops.itinerary_changes import (ItineraryChange, next_after, place_before,
+                                                          plan_route_adjustment, route_of)
+
+    items = _registered_moves(flow, "mf-inc")
+    found = None
+    for move in (i for i in items if i.kind == "mobility"):
+        route = route_of(move)
+        planned = next((o for o in route["options"] if o["id"] == route["planned"]), None)
+        stations = [u for u in (planned or {}).get("uses", []) if not u.startswith("버스:") and ":" in u]
+        if len(stations) >= 2:
+            found = (move, route, planned, stations)
+            break
+    assert found, "지하철 경로가 한 구간은 있어야 한다"
+    move, route, planned, stations = found
+    blocked = stations[len(stations) // 2]                                   # 가운데 역 - 환승역이거나 지나는 역
+    only_planned = {**route, "options": [planned]}                            # 대안이 하나뿐이라 막히면 저장된 후보가 모두 막힌다
+    events = {blocked: {"effect": "skip_station", "summary": f"{blocked} 무정차"}}
+    plan = plan_route_adjustment(item=move, following=next_after(items, move), route=only_planned, events=events,
+                                 now=move.starts_at - timedelta(minutes=30), previous=place_before(items, move))
+    assert isinstance(plan, ItineraryChange), (blocked, plan)
+    assert plan.summary["rerouted_by"] == "mobility_engine"
+    new = next(iter(plan.replacements.values()))
+    new_route = new.detail["route_def"]
+    new_planned = next(o for o in new_route["options"] if o["id"] == new_route["planned"])
+    assert blocked not in new_planned["uses"], "막힌 역을 다시 지나가면 안 된다"
+    assert new.detail["planner"]["transfer_basis"] == "시간표 판정(이동 계산기)"
+
+
+def test_the_mobility_team_answers_a_structured_route_question_on_the_real_timetable(flow):
+    """이동 에이전트(MobilityTeam)가 구조화 입력(current_state.mobility)을 받으면 실제 시간표로 답한다(#34·#35)."""
+    import asyncio
+
+    from app.modules.travel_ops.mobility.team import MobilityTeam
+    from tests.unit.travel.helpers import FakeTools, pack, task
+
+    allowed = list(MobilityTeam.manifest.allowed_tools)
+    state = {"mobility": {"date": "2026-10-07", "depart_at": "10:00",
+                          "legs": [{"line": "02호선", "from": "을지로입구", "to": "성수"}]}}
+    tools = FakeTools({})
+    result = asyncio.run(MobilityTeam(tools).execute(
+        task("mobility", "mobility.check_route", pack("mobility", state=state), allowed, input_text="을지로입구에서 성수 가는 길")))
+    assert result.outcome == "completed", (result.outcome, result.answer, result.failure_code)
+    assert result.answer and result.evidence and all(e.observed_at is not None for e in result.evidence)
+    assert tools.calls == [], "조회 도구(read.route - 비어 있음)를 거치지 않고 계산기로 답한다"
+    # 계산기가 꺼져 있으면 지어낸 답이 아니라 오류로 올린다 - 같은 입력, 켜져 있을 때와 다른 결과
+    from app.modules.travel_ops.mobility import wiring
+    saved = dict(wiring._STATE)
+    try:
+        wiring._STATE["mode"] = "disabled"
+        off = asyncio.run(MobilityTeam(FakeTools({})).execute(
+            task("mobility", "mobility.check_route", pack("mobility", state=state), allowed, input_text="을지로입구에서 성수 가는 길")))
+        assert off.outcome == "escalated" and off.failure_code == "mobility_engine_disabled"
+    finally:
+        wiring._STATE.clear()
+        wiring._STATE.update(saved)
