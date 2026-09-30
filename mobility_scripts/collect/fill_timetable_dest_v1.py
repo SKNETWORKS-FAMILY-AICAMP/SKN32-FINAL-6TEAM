@@ -149,7 +149,8 @@ def chain(g, rows, start_row, mask_named=False):
 
 
 def main():
-    from app.modules.travel_ops.mobility.engine.paths import PROCESSED
+    from app.modules.travel_ops.mobility.engine.paths import cli_processed
+    PROCESSED = cli_processed()       # #48 뒤 — import 로는 .env 를 안 읽는다
     M = PROCESSED / "mobility"
     ap = argparse.ArgumentParser(description="시간표 행선지 빈칸 채우기(열차 잇기)")
     ap.add_argument("--timetable", default=str(M / "timetable_v1.jsonl"))

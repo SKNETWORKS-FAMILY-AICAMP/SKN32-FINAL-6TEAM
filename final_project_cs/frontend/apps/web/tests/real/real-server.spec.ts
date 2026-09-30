@@ -15,10 +15,19 @@ const READING = 240_000;
 test.describe.configure({ mode: "serial" });
 let sharedKey: string | null = null;
 
+/** 사람 확인(Turnstile)이 켜져 있으면 확인 표가 올 때까지 기다린다 — 표 없이 누르면 화면이 보내지 않는다. 꺼져 있으면 바로 끝난다. */
+async function waitForHumanCheck(page: Page) {
+  await page.waitForFunction(() => {
+    if (!document.getElementById("cf-turnstile-api")) return true;
+    return Boolean((document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement | null)?.value);
+  }, null, { timeout: 60_000 });
+}
+
 async function uploadAndOpenReview(page: Page, text: string) {
   // ★설문 답은 화면 메모리에만 있다 — 주소를 새로 열면 사라진다. 이미 등록 화면이면(설문 뒤 단추로 왔으면) 다시 열지 않는다.
   if (!page.url().endsWith("/trips/new")) await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(text);
+  await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
   // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「등록하고 관리 시작」 또는 일정 짜기 칸이 나온다.
@@ -130,6 +139,7 @@ test("같은 사용자의 두 번째 여행: 일정을 못 읽는 글이면 일�
   await start(page, sharedKey);                          // 앞 시험이 받은 키가 있으면 이어 쓰고, 이 시험만 따로 돌리면 새 키를 받는다
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill("서울에서 이틀, 조용하고 걷기 좋은 곳 위주로 일정을 짜 주세요");
+  await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
 

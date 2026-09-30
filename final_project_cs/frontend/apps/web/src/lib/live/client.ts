@@ -1,4 +1,4 @@
-import { translator, type Language } from "../i18n";
+import { translator, type Language, type Translate } from "../i18n";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
 export class LiveError extends Error {
@@ -64,8 +64,21 @@ export function dismissKeyNotice() {
 export async function userKey(language: Language): Promise<string> {
   const existing = storedKey();
   if (existing) return existing;
+  return issueKey(language);
+}
+
+/**
+ * Issue a new key now. `humanToken` is the Turnstile token when the human check is on — key issuance is where a
+ * sign-up flood comes in, so the server checks it there (`{"turnstile_token"}`, D-021 · abuse plan 2026-09-28).
+ */
+export async function issueKey(language: Language, humanToken?: string | null): Promise<string> {
   pendingKey ??= (async () => {
-    const response = await send(`${API_BASE}/v1/web/session`, { method: "POST" }, language);
+    // ★Keep `method` inside the call — the server contract test (tests/contract/test_web_client_contract.py) reads
+    //   it from there and counts a call it cannot read as GET.
+    const response = await send(`${API_BASE}/v1/web/session`, {
+      method: "POST",
+      ...(humanToken ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turnstile_token: humanToken }) } : {}),
+    }, language);
     const body = await response.json() as { user_key: string; notice?: string };
     storeKey(body.user_key);
     setKeyNotice(body.notice ?? null);
@@ -93,7 +106,22 @@ async function send(url: string, init: RequestInit, language: Language): Promise
     if (body.error?.message) message = body.error.message;
     detail = body.error;
   } catch { /* not JSON */ }
+  // ★A limit says when it opens again (`Retry-After`, or `retry_after_seconds` in the body) — say it, so the
+  //   customer is not left guessing whether to press again.
+  if (["usage_limit", "service_daily_cap", "too_many_sessions"].includes(code)) {
+    const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
+    if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
+  }
   throw new LiveError(code, message, detail);
+}
+
+/** 「3시간 20분 뒤에 다시 할 수 있어요」 — whole minutes, rounded up. */
+export function waitText(seconds: number, t: Translate): string {
+  const minutes = Math.max(1, Math.ceil(seconds / 60));
+  const hours = Math.floor(minutes / 60), rest = minutes % 60;
+  const ko = hours ? `${hours}시간${rest ? ` ${rest}분` : ""}` : `${rest}분`;
+  const en = hours ? `${hours} h${rest ? ` ${rest} min` : ""}` : `${rest} min`;
+  return t(`(${ko} 뒤에 다시 할 수 있어요.)`, `(You can try again in ${en}.)`);
 }
 
 /**

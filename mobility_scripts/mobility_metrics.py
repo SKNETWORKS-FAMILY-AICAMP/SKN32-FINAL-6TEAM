@@ -36,7 +36,8 @@ for _p in (REPO / "final_project_cs", REPO):
 
 def _default_paths():
     try:
-        from app.modules.travel_ops.mobility.engine.paths import PROCESSED
+        from app.modules.travel_ops.mobility.engine.paths import cli_processed
+        PROCESSED = cli_processed()   # #48 뒤 — import 로는 .env 를 안 읽는다
     except Exception:                                   # dotenv 없는 환경 — 인자로 넘긴다
         return {}
     gt = PROCESSED / "mobility" / "ground_truth"

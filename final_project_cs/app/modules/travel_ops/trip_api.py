@@ -46,8 +46,38 @@ from app.core.idempotency import idempotency_key
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
 
+from .activity.csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .itinerary import Item, TripStore
 from .trip_desk import TripDesk
+
+# CSV 로드는 서버 기동 시 한 번만 — intake rate limit 폴백용
+_csv_places = _CsvPlaceLookup()
+
+
+class _CsvFallbackTour:
+    """real tour_api가 rate_limited일 때 CSV로 폴백하는 래퍼.
+
+    _tour()가 tour.misses["rate_limited"] 증가를 감지해 blocked 목록에 올리므로,
+    CSV에서 찾았을 때는 misses에 rate_limited를 쌓지 않는다.
+    """
+
+    def __init__(self, real: Any, csv_lookup: _CsvPlaceLookup) -> None:
+        self._real = real
+        self._csv = csv_lookup
+        self.misses: dict[str, int] = {}
+
+    def find(self, place_name: str, *, area_code: str | None = None, **kw: Any) -> dict[str, Any] | None:
+        real_misses_before = (getattr(self._real, "misses", None) or {}).get("rate_limited", 0) if self._real else 0
+        result = self._real.find(place_name, area_code=area_code, **kw) if self._real else None
+        real_misses_after = (getattr(self._real, "misses", None) or {}).get("rate_limited", 0) if self._real else 0
+
+        was_rate_limited = (real_misses_after > real_misses_before) or (self._real is None)
+        if result is None and was_rate_limited:
+            csv_result = self._csv.find(place_name)
+            if csv_result is not None:
+                return csv_result
+            self.misses["rate_limited"] = self.misses.get("rate_limited", 0) + 1
+        return result
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
 KST = ZoneInfo("Asia/Seoul")
@@ -774,7 +804,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
                             see=getattr(chat, "see", None),
                             chat=chat if hasattr(chat, "json") else None,
-                            tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory))
+                            tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
+                            kakao=_lazy("kakao", kakao_factory))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
@@ -798,7 +829,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
-                     edits=[e.model_dump() for e in request.edits], tour=_lazy("place", place_factory),
+                     edits=[e.model_dump() for e in request.edits],
+                     tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
                      kakao=_lazy("kakao", kakao_factory))
                 return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         except LookupError:
@@ -1023,6 +1055,20 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                              "version": payload.get("version"), "proposal_id": payload.get("proposal_id"),
                              "options": payload.get("options"), "delivery": status,
                              "at": at.isoformat()} for key, payload, status, at in rows]}
+
+    @router.post("/v1/web/warmup")
+    def web_warmup(background: BackgroundTasks, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-29]` 모델 예열 — 화면이 여행·채팅 칸을 열 때 부른다(식은 모델의 첫 채팅이 34초 걸렸다).
+        이미 올라가 있으면 아무것도 안 하고, 1분 안 되풀이는 한 번으로 줄인다(`model_warmup.py`).
+
+        ★develop 판은 **남용 방어 없이** 잇는다(`count=lambda: None`) — 웹 남용 방어(`web_guard`)가 아직 develop 에 없다.
+          남용 방어는 사용자 결정(2026-09-28)으로 어차피 꺼져 있어 달라지는 것은 「사용량 기록이 안 남는다」 하나다.
+          전체 동기화 때 role-manager 판(`count=lambda: _count("warmup", ...)`)으로 덮는다."""
+        from . import model_warmup
+
+        return model_warmup.warmup(
+            _lazy("chat", chat_factory), count=lambda: None, defer=background.add_task,
+            dedupe_seconds=float(settings_module.get_guardrails().get("web_guard.warmup.dedupe_seconds")))
 
     return router
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { adoptKey, currentKey, dismissKeyNotice, LiveError, pendingKeyNotice, rotateKey, userKey } from "./client";
+import { adoptKey, api, currentKey, dismissKeyNotice, issueKey, LiveError, pendingKeyNotice, rotateKey, userKey, waitText } from "./client";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -35,6 +35,33 @@ describe("the user key the browser keeps", () => {
     expect(events).toBeGreaterThan(0);
     dismissKeyNotice();
     expect(pendingKeyNotice()).toBeNull();
+  });
+
+  it("issues a key with the human-check token in the JSON body, and without a body when there is no token", async () => {
+    stub();
+    replies.push(json({ user_key: "acop_u_checked", human_check: "passed" }, 201));
+    expect(await issueKey("ko", "XXXX.DUMMY.TOKEN.XXXX")).toBe("acop_u_checked");
+    expect(calls[0].url).toMatch(/\/v1\/web\/session$/);
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ turnstile_token: "XXXX.DUMMY.TOKEN.XXXX" });
+    stub();
+    replies.push(json({ user_key: "acop_u_plain" }, 201));
+    await issueKey("ko");
+    expect(calls[1].init.body).toBeUndefined();
+  });
+
+  it("adds when a limit opens again to the server's sentence (body seconds first, else Retry-After)", async () => {
+    stub({ [KEY]: "acop_u_mine" });
+    replies.push(json({ error: { code: "usage_limit", message: "오늘 계획 읽기 횟수를 다 썼다", limit: "per_key", action: "intake", used: 4, cap: 4, retry_after_seconds: 12_000 } }, 429));
+    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "usage_limit", message: "오늘 계획 읽기 횟수를 다 썼다 (3시간 20분 뒤에 다시 할 수 있어요.)" });
+    replies.push(new Response(JSON.stringify({ error: { code: "service_daily_cap", message: "오늘은 더 받지 않는다" } }), { status: 503, headers: { "Retry-After": "90" } }));
+    await expect(api("/v1/web/trip-intakes", "ko", { method: "POST" })).rejects.toMatchObject({ code: "service_daily_cap", message: "오늘은 더 받지 않는다 (2분 뒤에 다시 할 수 있어요.)" });
+  });
+
+  it("writes the wait in whole minutes, rounded up", () => {
+    const t = (ko: string) => ko;
+    expect(waitText(30, t)).toBe("(1분 뒤에 다시 할 수 있어요.)");
+    expect(waitText(3600, t)).toBe("(1시간 뒤에 다시 할 수 있어요.)");
+    expect(waitText(3661, t)).toBe("(1시간 2분 뒤에 다시 할 수 있어요.)");
   });
 
   it("does not ask for a new key when one is stored, and shows nothing", async () => {

@@ -205,7 +205,7 @@ def _activity_task():
 @pytest.mark.asyncio
 async def test_a_warning_in_effect_means_the_schedule_must_change():
     """★위급재난 발령 → feasible=False + blocks=True + 안내문에 재난 종류 포함."""
-    disaster = {"messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "호우"}],
+    disaster = {"for_region": [{"step": "위급재난", "kind": "호우"}],
                 "confirmed_at": "2026-09-28T10:00:00+00:00", "source": "data_go_kr"}
     result = await ActivityTeam(FakeTools(_activity_values(disaster=disaster))).execute(_activity_task())
     assert result.decisions[0]["feasible"] is False

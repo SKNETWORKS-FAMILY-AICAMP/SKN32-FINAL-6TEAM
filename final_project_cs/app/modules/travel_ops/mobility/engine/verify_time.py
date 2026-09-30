@@ -67,7 +67,7 @@
 #   rejected_by_limit 성립하지만 동행 상한 초과로 탈락
 #   unknown           근거 없음
 #   ※ 탈락과 불가를 구분하는 게 핵심이다. 탈락은 "되지만 이 일행에게 무리", 불가는 "안 된다".
-import argparse, json, math, os, sys, difflib, collections
+import argparse, json, math, os, sys, difflib, collections, gzip
 from dataclasses import dataclass, field
 from datetime import date as _date, datetime as _datetime, timedelta as _timedelta
 from pathlib import Path
@@ -79,7 +79,7 @@ RULES_DIR = PKG / "rules"
 
 from .paths import REPO_ROOT                                            # noqa: E402
 from .line_order import LineOrder                                       # noqa: E402
-from .transfer_walk import TransferWalk                                 # noqa: E402
+from .transfer_walk import TransferWalk, ceil1                          # noqa: E402
 from .bus import BusRoutes                                              # noqa: E402
 from .bus_profile import BusSegProfile, worst_not_before_best, board_caps  # noqa: E402
 from .geo import StationCoords, meters                                  # noqa: E402
@@ -90,7 +90,9 @@ from .congestion import Congestion                                       # noqa:
 from .bike import (BikeStations, BikeLive, BikeRouter,                  # noqa: E402
                    party_excluded as bike_party_excluded, fare as bike_fare)
 from .timeutil import (to_min, to_service_min, fmt_min,                 # noqa: E402
-                       fmt_wall, day_type_of, MIN_DAY)
+                       fmt_wall, day_type_of, MIN_DAY, HolidayCalendar)
+
+from .errors import CaseInputError                                       # noqa: E402  #30·#66 — SystemExit 대신
 
 VERDICTS = ("feasible", "infeasible", "rejected_by_limit", "unknown")
 OUT_VERDICTS = ("feasible", "infeasible")          # 밖으로 나가는 판정 둘 (v0.8)
@@ -131,7 +133,9 @@ class Timetable:
     @classmethod
     def load(cls, path, wanted=None):
         tt = cls()
-        with open(path, encoding="utf-8") as f:
+        # ☆`[2026-09-29 문제목록 #63]` .gz 도 읽는다 — 시험용 축소 시간표(20MB)를 압축해 두었다(98% 줄어든다)
+        opener = gzip.open if str(path).endswith(".gz") else open
+        with opener(path, "rt", encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
                 if not raw:
@@ -287,9 +291,13 @@ class Verifier:
         self._leg_cache = {}    # (v0.8) 케이스 안 자동차·자전거 구간 결과 캐시 — verify_case 가 매 건 비운다
         self.lfd_capped = False # (v0.8) 마지막 성립 출발 역산이 상한(max_probe)에 걸렸다
 
+    _CG_LOCK = __import__("threading").Lock()   # #33 — 요청별 얕은 복사본이 _cg 를 공유한다. 처음 만들 때만 잠근다
+
     def candidate_graph(self, first_visit=True):
         if first_visit not in self._cg:
-            self._cg[first_visit] = CandidateGraph(self.lo, self.tw, self.R, first_visit)
+            with self._CG_LOCK:
+                if first_visit not in self._cg:
+                    self._cg[first_visit] = CandidateGraph(self.lo, self.tw, self.R, first_visit)
         return self._cg[first_visit]
 
     # 규칙 값 꺼내기 — 값이 없으면 죽는다. 조용히 기본값을 쓰지 않는다.
@@ -297,6 +305,11 @@ class Verifier:
         n = self.R
         for k in path:
             n = n[k]
+        # ☆`[2026-09-29 문제목록 #49]` 정책 수치는 팀 guardrails.yaml 이 정본이다 — 규칙 칸에는 value_from 만 있다.
+        #   값이 비고 가리키는 곳이 있으면 거기서 읽는다(없으면 GuardrailMissing — 조용히 기본값을 쓰지 않는다).
+        if n.get("value") is None and isinstance(n.get("value_from"), str):
+            from .guardrails import lookup
+            return lookup(n["value_from"])
         return n["value"]
 
     # ── 경고 어휘 (rules warnings 절) ─────────────────────────────────
@@ -543,16 +556,19 @@ class Verifier:
         # 2) 첫차 이전 · 막차 이후
         after = [(d, v) for d, v, _f in cands if d.min >= now_min]
         if not after:
-            roll = self._rollover_relief(now_min, first)
+            # ☆`[2026-09-29 문제목록 #4]` 새벽(24 시 이상) 요청의 「첫차를 기다리면 성립」은 **다음 운행일**의 첫차다.
+            #   앞 판은 그날(전날 운행일) 요일형의 첫차를 썼다 — 평일 다음 날이 공휴일이면 휴일 시간표의 첫차여야 한다.
+            nd_type, nd_first = self._next_day_first(line, a, b, day_type, first) if now_min >= MIN_DAY else (day_type, first)
+            roll = self._rollover_relief(now_min, nd_first)
             if roll:
                 wall, gap = roll
                 return LegResult(
                     idx, label, "infeasible",
-                    f"{fmt_wall(now_min)} 은 {line} {a} 의 {day_type} 첫차({fmt_min(first)}) 이전이다 "
+                    f"{fmt_wall(now_min)} 은 {line} {a} 의 {nd_type} 첫차({fmt_min(nd_first)}) 이전이다 "
                     f"(전날 막차 {fmt_min(last)} 는 이미 지났다)",
                     grade="확정", dropped=dict(drop), code="before_first",
-                    relief=f"{gap}분 뒤 첫차 {fmt_min(first)} 를 기다리면 성립",
-                    evidence=[self._ev_tt(line, a, day_type, f"그 방향 첫 출발 {fmt_min(first)}")])
+                    relief=f"{gap}분 뒤 첫차 {fmt_min(nd_first)} 를 기다리면 성립",
+                    evidence=[self._ev_tt(line, a, nd_type, f"그 방향 첫 출발 {fmt_min(nd_first)}")])
             return LegResult(
                 idx, label, "infeasible",
                 f"{fmt_min(now_min)} 이후 {b} 까지 가는 열차가 없다 "
@@ -620,6 +636,10 @@ class Verifier:
                 ev.append(self._ev_rule("congestion.levels.매우혼잡", "추정"))
                 if nxt2 is None:
                     warn.append(self.warn_msg("MOB_W_CONGESTION_NO_NEXT", line=line, station=a, pct=cval))
+                    # ☆`[2026-09-29 문제목록 #6]` 앞 판은 여기서 원래 편을 그대로 「성립(확정)」으로 두었다. 다음 편이 없으면
+                    #   조건 있는 일행(짐·유아·어르신)이 이 편을 못 탈 수 있다 — 등급을 추정으로 내리고 고객 문장에 싣는다.
+                    grade = worst_grade(grade, "추정")
+                    warn.append(self.warn_msg("MOB_W_CONGESTION_NO_NEXT_BOARD", line=line, station=a, pct=cval))
                 else:
                     extra = nxt2[3] - arrive if arrive is not None else nxt2[0].min - nxt.min
                     warn.append(self.warn_msg("MOB_W_CONGESTION_EXTRA_WAIT", line=line, station=a, pct=cval, extra=extra))
@@ -731,7 +751,14 @@ class Verifier:
         #    필드가 없는 옛 파일은 종전 동작(매일). 미상·모르는 값은 판정하지 않는다 — 틀린 「성립」보다 no_data.
         #    'weekday' 같은 요일 분기는 두지 않는다 — case["date"] 는 **운행일**이고(04:00 전 시각은 그 운행일의 연장),
         #    「월~금」과 「공휴일 제외 평일」의 구분 근거도 아직 없다. 쓰는 노선이 생기면 그때 의미부터 정한다.
-        sd = r.raw.get("service_days", "daily") if r.raw else "daily"
+        # ☆`[2026-09-29 문제목록 #15]` 칸이 빠진 노선을 무조건 「매일」로 보지 않는다 — 칸을 쓰는 판에서 빠졌으면 모름(None).
+        if r.raw and "service_days" in r.raw:
+            sd = r.raw["service_days"]
+        elif getattr(self.bus, "has_service_days", False):
+            sd = None
+        else:
+            sd = "daily"
+            warn.append(self.warn_msg("MOB_W_BUS_SERVICE_DAYS_ASSUMED", route=nm))
         if sd != "daily":
             why = (r.raw.get("service_days_basis") or "근거 없음") if sd is None else f"알 수 없는 service_days 값 {sd!r}"
             return LegResult(idx, label, "unknown", f"{nm} 의 운행 요일을 모른다 — {why}",
@@ -759,7 +786,24 @@ class Verifier:
                              f"{fmt_min(now_min)} 은 {nm} 첫차({fmt_min(r.first_min)}) 이전이다",
                              grade="확정", code="before_first", relief=f"출발을 {fmt_min(r.first_min)} 로 미루면 성립",
                              warnings=warn, evidence=[self._ev_bus(r, "운행 구간")])
+        # ☆`[2026-09-29 문제목록 #3]` 막차 시각은 **기점 출발**이다. 앞 판은 중간 정류장에서도 기점 막차로 거절했다 —
+        #   23:00 기점 막차가 23:20 에 지나는 정류장에서 23:10 요청을 「막차 이후」로 막았다. 막차의 그 정류장 통과 추정
+        #   (board_caps — 아래 승차 상한과 같은 값)이 있으면 그것과 비교한다. 추정을 못 내면 기점 막차 그대로(보수적) + 경고.
+        last_pass = r.last_min
         if now_min > r.last_min:
+            stops0 = self.bus.stops[r.route_id]
+            if a["seq"] != stops0[0]["seq"]:
+                md0 = self.rv("bus", "구간_프로파일", "min_days") if self.bus_prof is not None else None
+                cb0, cw0 = board_caps(self.bus_prof, r.route_id, stops0, a["seq"], r.last_min,
+                                      self._bus_day_types(day_type), md0)
+                cap0 = cw0 if worst else cb0
+                if cap0 is not None and cap0 > r.last_min:
+                    last_pass = cap0
+                    ev.append(self._ev_bus_prof(f"{nm} 막차 {fmt_min(r.last_min)} 기점 → {a['station_nm']} 통과 추정 "
+                                                f"{fmt_min(cap0)} — 요청 {fmt_min(now_min)} 과 비교"))
+                elif cap0 is None:
+                    warn.append(self.warn_msg("MOB_W_BUS_LAST_PASS_UNCHECKED", route=nm, stop=a["station_nm"]))
+        if now_min > last_pass:
             roll = self._rollover_relief(now_min, r.first_min)
             if roll:
                 wall, gap = roll
@@ -780,7 +824,7 @@ class Verifier:
                              f"{nm} 의 배차가 0이다 — 배차 0분이 아니라 배차 개념 없음(예약제·출퇴근 전용)",
                              grade="근거없음", code="no_data", warnings=warn,
                              evidence=[self._ev_rule("bus.배차_0", "근거없음")])
-        near_last = now_min >= r.last_min - self.rv("bus", "막차근처_기준_분")
+        near_last = now_min >= last_pass - self.rv("bus", "막차근처_기준_분")   # #3 그 정류장 통과 추정 기준
         # ★ v0.8 — worst 통과는 언제나 배차 전부(rules bus.worst_case). best 는 종전대로 절반(막차 근처는 전부).
         full = near_last or worst
         wait = r.term_min if full else math.ceil(r.term_min / 2)
@@ -880,7 +924,7 @@ class Verifier:
                 warn.append(self.warn_msg("MOB_W_BUS_DIST_MISSING", route=nm,
                                           from_stop=a["station_nm"], to_stop=b["station_nm"]))
             elif speed:
-                ride = round(dist / 1000 / speed * 60, 1)
+                ride = ceil1(dist / 1000 / speed * 60)          # #2 올림
                 arrive = dep + math.ceil(ride)
                 src = "speed"
                 ev.append(self._ev_bus(r, f"{a['station_nm']}→{b['station_nm']} {dist:,}m ({span}정거장)"))
@@ -1016,11 +1060,14 @@ class Verifier:
                 break
             checked += 1
             L = live.get(st["stationId"]) if live else None
-            if L is not None and L["available"] < 1:
+            # ☆`[2026-09-29 문제목록 #9]` 일행 인원만큼 있어야 한다 — 앞 판은 1대만 보고 4인 일행을 태웠다.
+            need = max(1, int((party or {}).get("size") or 1))
+            if L is not None and L["available"] < need:
                 empty.append((st, L))
                 ev.append({"source_type": "db", "source_id": L["source_id"], "grade": "확정",
                            "observed_at": L["checked_at"],
-                           "claim": f"{st['name']}({st['stationId']}) 거치 {L['available']}대 — 빌릴 수 없어 건너뜀"})
+                           "claim": f"{st['name']}({st['stationId']}) 거치 {L['available']}대 — 일행 {need}명이 "
+                                    f"빌릴 수 없어 건너뜀"})
                 continue
             pick, avail = (d, st), L
             if qr is None:
@@ -1035,7 +1082,8 @@ class Verifier:
             if empty:
                 st, L = empty[0]
                 return LegResult(idx, label, "infeasible",
-                                 f"{pa[2]} 근처 대여소 {len(empty)}곳이 조회 시각({L['checked_at']}) 거치 0대다",
+                                 f"{pa[2]} 근처 대여소 {len(empty)}곳이 조회 시각({L['checked_at']}) 거치 대수가 "
+                                 f"일행 {max(1, int((party or {}).get('size') or 1))}명보다 적다",
                                  grade="확정", code="mode_unavailable", relief="몇 분 뒤 다시 조회하거나 다른 수단", warnings=warn, evidence=ev,
                                  dropped={"거치0": len(empty), "LCD전용": len(lcd_skipped)})
             return LegResult(idx, label, "infeasible",
@@ -1069,7 +1117,7 @@ class Verifier:
         r = (self.bike_router.route(B["ride"]["profile"], sa["lat"], sa["lon"], sb["lat"], sb["lon"])
              if self.bike_router and self.bike_router.available() else None)
         if r:
-            ride = round(r["time_s"] / 60, 1)
+            ride = ceil1(r["time_s"] / 60)                  # #2 올림
             ride_grade = "추정"
             ev.append({"source_type": "db", "source_id": r["source_id"], "grade": "추정", "observed_at": None,
                        "claim": f"{sa['name']} → {sb['name']} bike 프로파일 {r['distance_m']/1000:.2f}km · "
@@ -1110,6 +1158,17 @@ class Verifier:
         res.walk_min = wmin_in + wmin_out
         return res
 
+    def _next_day_first(self, line, a, b, day_type, first):
+        """다음 운행일의 (요일형, 그 방향 첫 출발). 요일형이 같으면 오늘 값 그대로(#4).
+        다음 날 시간표에 목적지까지 가는 열차가 없으면 (요일형, None) — 「첫차를 기다리면」을 만들지 않는다."""
+        if self._case_date is None:
+            return day_type, first
+        nd = day_type_of(self._case_date + _timedelta(days=1), self.holidays)
+        if nd == day_type:
+            return day_type, first
+        c2, _drop, _o = self.candidates(line, a, b, nd)
+        return nd, (c2[0][0].min if c2 else None)
+
     def _rollover_relief(self, now_min, first_min):
         """운행일 연장 시각(24 시 이상)이 실은 **그날 아침 첫차 이전**인 경우.
 
@@ -1140,10 +1199,14 @@ class Verifier:
         """
         S = self.R["bus"]["표정속도"]
         per = (S.get("노선별", {}).get("value") or {}).get(r.route_nm)
+        pw = []
         if isinstance(per, dict):
+            # ☆`[2026-09-29 문제목록 #15]` 휴일 값이 없으면 평일 값으로 **대신한다는 것을 드러낸다**(조용히 바꾸지 않는다)
+            if per.get(day_type) is None and day_type != "weekday" and per.get("weekday"):
+                pw.append(self.warn_msg("MOB_W_BUS_SPEED_WEEKDAY_FOR_HOLIDAY", route=r.route_nm, day_type=day_type))
             per = per.get(day_type) or per.get("weekday")
         if per:
-            return per, "노선별 실측", "추정", []
+            return per, "노선별 실측" + (" (평일 값으로 대신)" if pw else ""), "추정", pw
         if r.route_nm in (S.get("통계_금지_노선", {}).get("value") or []):
             return None, None, "근거없음", [
                 self.warn_msg("MOB_W_BUS_SPEED_BLOCKED_ROUTE", route=r.route_nm)]
@@ -1520,7 +1583,7 @@ class Verifier:
             return dict(base, verdict="unknown", grade="근거없음",
                         reason=f"소요 판단 불가 — {why}",
                         warnings=[self.warn_msg("MOB_W_CAR_ROUTER_DOWN", reason=why[:80])])
-        ride = round(c["topis_time_s"] / 60, 1)
+        ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         return dict(base, verdict="feasible", grade=c["grade"],
                     reason=f"{c['distance_m']/1000:.1f} km · 소요 {ride:g}분 · 요금 하한 {c['fare_won']:,}원({c['fare_kind']})",
@@ -1543,7 +1606,7 @@ class Verifier:
                                  warnings=[amb] if amb else [])
             return LegResult(idx, label, "unknown", f"도로 소요를 낼 수 없다 — {why}", grade="근거없음", code="no_data",
                              warnings=[self.warn_msg("MOB_W_CAR_ROUTER_DOWN", reason=why[:80])])
-        ride = round(c["topis_time_s"] / 60, 1)
+        ride = ceil1(c["topis_time_s"] / 60)                # #2 올림
         arr = int(now_min) + math.ceil(ride)
         reason = (f"{fmt_min(now_min)} 출발 · {c['distance_m']/1000:.1f} km · 소요 {ride:g}분"
                   + (f" · 요금 하한 {c['fare_won']:,}원({c['fare_kind']}) · 대기 0분(근거없음)" if taxi else ""))
@@ -1592,12 +1655,15 @@ class Verifier:
         if stop is None or stop.get("lat") is None or pt is None:
             why = ("정류장 좌표가 없다" if stop is None or stop.get("lat") is None
                    else f"{st_line} {st_nm} 역 좌표가 없다")
-            return {"verdict": "feasible", "label": label, "walk_min": 0, "grade": "근거없음",
-                    "dist_m": None, "walk_m": None, "factor": factor, "reason": why, "relief": None,
+            # ☆`[2026-09-29 문제목록 #1]` 앞 판은 여기서 도보 0분·성립을 냈다 — 모르는 값을 0 으로 지어낸 것이다.
+            #   좌표가 없으면 거리를 낼 대체 출처도 없다 → 판정하지 않는다(no_data). 부르는 쪽이 대체·치명을 정한다.
+            return {"verdict": "unknown", "label": label, "walk_min": None, "grade": "근거없음",
+                    "dist_m": None, "walk_m": None, "factor": factor, "reason": f"{label} — {why}",
+                    "relief": "정류장·역 좌표를 확인한다",
                     "warnings": [self.warn_msg("MOB_W_TRANSFER_COORD_MISSING", reason=why)],
                     "evidence": [{"source_type": "policy", "source_id": self.rules_src, "grade": "근거없음",
                                   "observed_at": self.rules_at,
-                                  "claim": f"transfer.stop_station_walk — {why} → 도보 0분"}]}
+                                  "claim": f"transfer.stop_station_walk — {why} → 판정하지 않음"}]}
         near = self.ex.nearest(st_nm, stop["lat"], stop["lng"], st_line) if self.ex else None
         if near:
             dist, ex = near
@@ -1611,7 +1677,7 @@ class Verifier:
                    "observed_at": self.sc.built_at,
                    "claim": f"정류장 {stop_nm} ↔ {st_nm} 역 좌표 직선 {dist:,.0f}m (OSM 출구 없음)"}
         walk_m = dist * factor
-        walk_min = round(walk_m / speed / 60, 1)
+        walk_min = ceil1(walk_m / speed / 60)               # #2 올림
         rule_ev = self._ev_rule("transfer.stop_station_walk", "추정")
 
         # 근접 상한 — 직선거리로 본다
@@ -1659,9 +1725,9 @@ class Verifier:
         C = self.R["candidates"]
         d = _date.fromisoformat(case["date"])
         day_type = day_type_of(d, self.holidays)
-        now = to_service_min(case.get("depart_at"))
+        now = to_service_min(case.get("depart_at"), ceil_seconds=True)   # #12 초는 올린다
         if now is None:
-            raise SystemExit(f"[{case.get('id')}] depart_at 이 없다.")
+            raise CaseInputError(f"[{case.get('id')}] depart_at 이 없다.")
         warns, ev = [], [self._ev_rule("candidates.기준", "확정")]
         amb = [(nm, ls) for nm, ls in ((origin, o_lines), (dest, d_lines))
                if self.sc and getattr(self.sc, "is_ambiguous", None) and self.sc.is_ambiguous(nm)
@@ -1684,14 +1750,9 @@ class Verifier:
         gen = cg.candidates(origin, dest, C["기준"]["value"], max_transfers=tlim,
                             origin_lines=o_lines, dest_lines=d_lines)
         arrive_by = to_service_min(case.get("arrive_by"))
-        if not gen:
-            res = self._finish(case, day_type, [], "unknown",
-                               f"{origin}→{dest} 를 잇는 지하철 후보를 역 순서에서 만들지 못했다",
-                               "근거없음", None, None, None, warns, ev)
-            res.code, res.candidates = "no_data", []
-            res.out = self._out(res, case, now, arrive_by)
-            return res
-
+        # ☆`[2026-09-29 문제목록 #7]` 앞 판은 지하철 후보가 없으면 여기서 「근거없음」으로 끝냈다 — 버스 직행·자전거
+        #   후보를 만들기 전이라 버스로만 가는 구간이 데이터 없음이 됐다. 지하철 후보가 없어도 아래로 내려가고,
+        #   **어떤 수단의 후보도 없을 때만** 끝낸다.
         keep, dropped = [], []
         ev.append(self._ev_rule("candidates.허용_소요_배수", "추정"))
         for c in gen:
@@ -1727,6 +1788,14 @@ class Verifier:
                          "est_min": None, "transfers": 0, "walk_min": None, "gen_grade": "추정",
                          "fallback_edges": [], "walk_in": 0, "walk_out": 0})
             ev.append(self._ev_rule("bike.ddareungi.multi_후보", "추정"))
+
+        if not keep:
+            res = self._finish(case, day_type, [], "unknown",
+                               f"{origin}→{dest} 를 잇는 후보(지하철·버스 직행·자전거)를 만들지 못했다",
+                               "근거없음", None, None, None, warns, ev)
+            res.code, res.candidates = "no_data", []
+            res.out = self._out(res, case, now, arrive_by)
+            return res
 
         # 후보마다 같은 판정기 — 대안 열거는 끈다(후보끼리가 이미 대안이다)
         speed = self.R["measured_baseline"]["kakao_walk_speed_mps"]["value"]
@@ -1916,7 +1985,6 @@ class Verifier:
         arrive_by = to_service_min(case.get("arrive_by"))
         legs, warns, ev = [], [], []
         transfers = 0
-        large = set(self.R["transfer"]["large_station_addition_min"]["stations"])
         prev_line = None
 
         def fail(verdict, reason, code, relief, kind, i, leg, at):
@@ -1927,7 +1995,7 @@ class Verifier:
         for i, leg in enumerate(case["legs"]):
             mode = leg.get("mode", "subway")
             if mode not in ("subway", "bus", "car", "taxi", "bike"):
-                raise SystemExit(f"[{case.get('id')}] 모르는 수단이다: mode={mode}")
+                raise CaseInputError(f"[{case.get('id')}] 모르는 수단이다: mode={mode}")
             if mode in ("car", "taxi"):
                 # 자동차·택시 구간(v0.6). 앞 구간이 있으면 수단 교체 = 환승 1회로 센다. 승차 지점까지의 도보·대기는
                 # 자료가 없어 0분(car.택시_대기 근거없음) — 구간 사유에 적고 요금 경고가 하한이라 말한다.
@@ -1950,6 +2018,13 @@ class Verifier:
                 continue
             if prev_line is not None:
                 transfers += 1
+                # ☆`[2026-09-29 문제목록 #11]` 지하철끼리 이을 때 앞 구간 도착역 = 뒤 구간 출발역이어야 한다. 앞 판은 검사하지
+                #   않아 A→B 다음 C→D 를 「C 환승 · 도보 0분」으로 성립시켰다. 후보 생성기는 이어진 구간만 만든다 — 직접
+                #   부른 입력의 결함이므로 판정하지 않고 입력 오류로 돌려준다.
+                prev0 = case["legs"][i - 1]
+                if leg_mode(prev0) == "subway" and mode == "subway" and prev0.get("to") != leg.get("from"):
+                    raise CaseInputError(f"[{case.get('id')}] 구간이 이어지지 않는다 — "
+                                         f"{leg_txt(prev0)} 다음 {leg_txt(leg)}")
                 st = leg.get("from")
                 st = st.get("name") if isinstance(st, dict) else st      # 자전거 구간은 좌표 dict 일 수 있다
                 prev_mode = leg_mode(case["legs"][i - 1])
@@ -2020,17 +2095,21 @@ class Verifier:
                             twarn.append(self.warn_msg("MOB_W_TRANSFER_WALK_STATION_MAX",
                                                        reason=w.reason))
                     else:
-                        fb = self.rv("transfer", "large_station_addition_min")
-                        walk = fb if st in large else 0
-                        tg = "근거없음"
+                        # ☆`[2026-09-29 문제목록 #1]` 앞 판은 여기서 0분(대형역 +2분)으로 채우고 성립시켰다.
+                        #   대체 출처 = 같은 거리표의 측정 분포 상위 10%(tw.network_fallback). 거리표가 없으면 판정 불가.
                         why = w.reason if w is not None else "환승 거리표를 읽지 못했다"
-                        twarn.append(
-                            self.warn_msg("MOB_W_TRANSFER_WALK_FALLBACK", reason=why, fallback_min=fb)
-                            if st in large else
-                            self.warn_msg("MOB_W_TRANSFER_WALK_ZERO", reason=why))
-                        tev = {"source_type": "policy", "source_id": self.rules_src,
-                               "grade": "근거없음", "observed_at": self.rules_at,
-                               "claim": "transfer.walk_distance 조회 실패 → fallback"}
+                        nf = self.tw.network_fallback() if self.tw else None
+                        if nf is None:
+                            why = f"{label} — {why} · 대체할 거리표도 없다"
+                            legs.append(LegResult(i, label, "unknown", why, grade="근거없음", code="no_data",
+                                                  worst=worst))
+                            return fail("unknown", why, "no_data", "환승 거리표를 확인한다", "transfer_walk", i, leg, now)
+                        w = nf
+                        walk = nf.min
+                        tg = "추정"
+                        twarn.append(self.warn_msg("MOB_W_TRANSFER_WALK_NETWORK_P90", reason=f"{why} — {nf.reason}"))
+                        tev = {"source_type": "db", "source_id": "transfer_walk_v1", "grade": "추정",
+                               "observed_at": nf.checked_at, "claim": nf.reason}
                     dist_txt = f"({w.distance_m:g}m)" if w and w.distance_m else ""
                     tev = [tev]
                 add = math.ceil(walk + wf + int(leg.get("walk_min", 0)))
@@ -2067,11 +2146,10 @@ class Verifier:
                           if tail else
                           f"{r.label} 의 승차 소요를 낼 수 없어 이후 구간의 시각을 이어 갈 수 없다 "
                           f"(그 구간 편성은 있다: {fmt_min(r.depart_min)} 출발)")
-                if not tail:
-                    return fail("unknown", reason, "no_data", None, "leg", i, leg, now)
-                return {"ok": True, "verdict": "feasible", "code": None, "reason": reason, "relief": None,
-                        "legs": legs, "warns": warns, "ev": ev, "arrive": None, "transfers": transfers,
-                        "fail_idx": None, "fail_leg": None, "fail_now": None, "fail_kind": None, "no_arrive": True}
+                # ☆`[2026-09-29 문제목록 #65]` 앞 판은 마지막 구간이고 도착 기한이 없으면 도착 시각 없이 「성립」을 냈다.
+                #   소요를 모르는 것은 데이터 결함이다(결정 15) — 끝 구간이어도 판정 불가로 올린다.
+                #   (일정 계산 plan() 은 늘 도착 기한을 주므로 원래도 이 길을 타지 않았다 — 직접 부른 경우만 바뀐다)
+                return fail("unknown", reason, "no_data", None, "leg", i, leg, now)
             if worst and mode == "bike":
                 warns.append(self.warn_msg("MOB_W_WORST_NO_SPREAD", what=f"{r.label} 소요"))
             now = r.arrive_min
@@ -2175,14 +2253,14 @@ class Verifier:
         self.disr = case.get("disruptions") or []
         for x in self.disr:
             if x.get("kind") not in self.DISR_KINDS:
-                raise SystemExit(f"[{case.get('id')}] 모르는 이슈 kind 다: {x.get('kind')!r} "
+                raise CaseInputError(f"[{case.get('id')}] 모르는 이슈 kind 다: {x.get('kind')!r} "
                                  f"(쓸 수 있는 것: {', '.join(self.DISR_KINDS)})")
             if x["kind"] == "edge_closed" and len(x.get("between") or []) != 2:
-                raise SystemExit(f"[{case.get('id')}] edge_closed 는 between 에 두 역이 필요하다")
+                raise CaseInputError(f"[{case.get('id')}] edge_closed 는 between 에 두 역이 필요하다")
 
-        now = to_service_min(case.get("depart_at"))
+        now = to_service_min(case.get("depart_at"), ceil_seconds=True)   # #12 초는 올린다
         if now is None:
-            raise SystemExit(f"[{case.get('id')}] depart_at 이 없다. 도착 역산은 아직 미구현이다.")
+            raise CaseInputError(f"[{case.get('id')}] depart_at 이 없다. 도착 역산은 아직 미구현이다.")
         arrive_by = to_service_min(case.get("arrive_by"))
         no_alt = case.get("no_alternatives")
         self._leg_cache = {}
@@ -2447,6 +2525,8 @@ def show(case, res, verbose=False):
 
 
 def main():
+    from . import paths as _paths_cli
+    _paths_cli.load_cli_env()           # #48 — 명령줄은 저장소 맨 위 .env 의 DATA_DIR 을 쓴다(서버는 configure)
     ap = argparse.ArgumentParser(description="이동 모듈 시각 검증기 v2 (지하철)")
     ap.add_argument("--cases", required=True)
     ap.add_argument("--timetable")
@@ -2500,7 +2580,7 @@ def main():
             raise SystemExit(f"케이스 {args.case} 가 없다")
 
     rules = json.loads(Path(args.rules).read_text(encoding="utf-8"))
-    holidays = set(json.loads(Path(args.holidays).read_text(encoding="utf-8"))["holidays"])
+    holidays = HolidayCalendar.from_doc(json.loads(Path(args.holidays).read_text(encoding="utf-8")))   # #5 덮는 해를 안다
     lo = LineOrder.load(args.order)
     tw = TransferWalk.load(args.transfer_walk,
                            rules["measured_baseline"]["kakao_walk_speed_mps"]["value"])

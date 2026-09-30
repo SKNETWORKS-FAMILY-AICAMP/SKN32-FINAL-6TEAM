@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SURVEY_VERSION } from "@/features/onboarding/payload";
-import { confirmIntake, planIntake } from "./intake";
+import { confirmIntake, planIntake, submitIntake } from "./intake";
 
 function memory() {
   const items = new Map<string, string>();
@@ -38,5 +38,32 @@ describe("live intake requests carry the onboarding survey", () => {
   it("sends the survey with /plan next to the plan conditions", async () => {
     await planIntake("i1", 2, { start_date: "2026-10-01", days: 2, party_size: 1, keep_read_items: true, survey: SURVEY }, "ko");
     expect(bodies).toEqual([{ revision: 2, start_date: "2026-10-01", days: 2, party_size: 1, keep_read_items: true, survey: SURVEY }]);
+  });
+});
+
+describe("plan submission carries the human-check token", () => {
+  let forms: FormData[];
+
+  beforeEach(() => {
+    forms = [];
+    vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
+    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+      if (url.endsWith("/v1/web/session")) return new Response(JSON.stringify({ user_key: "acop_u_test" }), { status: 201 });
+      forms.push(init.body as FormData);
+      return new Response(JSON.stringify({ intake_id: "i1" }), { status: 202 });
+    });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("adds turnstile_token next to the plan text when the check gave one", async () => {
+    await submitIntake("09:00 경복궁", [], "ko", "tok-123");
+    expect(forms[0].get("text")).toBe("09:00 경복궁");
+    expect(forms[0].get("turnstile_token")).toBe("tok-123");
+  });
+
+  it("sends no token field at all when the check is off", async () => {
+    await submitIntake("09:00 경복궁", [], "ko");
+    await submitIntake("09:00 경복궁", [], "ko", null);
+    expect(forms.map((form) => form.has("turnstile_token"))).toEqual([false, false]);
   });
 });
