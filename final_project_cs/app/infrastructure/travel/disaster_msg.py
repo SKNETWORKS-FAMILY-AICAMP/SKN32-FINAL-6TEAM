@@ -62,6 +62,45 @@ REGION_NAMES = {"서울": "서울특별시"}
 #: 그 시각 **이전 몇 시간** 안에 온 문자를 본다. ★우리가 고른 값이다(측정 아님).
 DEFAULT_LOOKBACK_HOURS = 6
 
+# 서울 25개 자치구 대략적 경계(EPSG:4326) — 위경도 → 구 이름 변환용.
+# ★재난문자 수신지역 문자열("서울특별시 송파구 신천동")에서 구 이름("송파구")으로 좁힌다.
+_SEOUL_GU_BOUNDS: list[tuple[str, float, float, float, float]] = [
+    # (구이름, lat_min, lat_max, lon_min, lon_max)
+    ("강남구",   37.4950, 37.5430, 127.0250, 127.1170),
+    ("강동구",   37.5230, 37.5640, 127.1070, 127.1850),
+    ("강북구",   37.6100, 37.6700, 127.0050, 127.0630),
+    ("강서구",   37.5190, 37.5760, 126.7980, 126.8860),
+    ("관악구",   37.4470, 37.4970, 126.9070, 126.9850),
+    ("광진구",   37.5360, 37.5630, 127.0640, 127.1230),
+    ("구로구",   37.4850, 37.5270, 126.8360, 126.9200),
+    ("금천구",   37.4470, 37.4840, 126.8770, 126.9370),
+    ("노원구",   37.6170, 37.6860, 127.0580, 127.1150),
+    ("도봉구",   37.6470, 37.7150, 127.0160, 127.0720),
+    ("동대문구", 37.5610, 37.5960, 127.0150, 127.0630),
+    ("동작구",   37.4870, 37.5290, 126.9330, 126.9980),
+    ("마포구",   37.5360, 37.5750, 126.8830, 126.9680),
+    ("서대문구", 37.5580, 37.6040, 126.9070, 126.9740),
+    ("서초구",   37.4730, 37.5270, 126.9930, 127.0730),
+    ("성동구",   37.5390, 37.5760, 127.0200, 127.0730),
+    ("성북구",   37.5800, 37.6300, 126.9830, 127.0370),
+    ("송파구",   37.4730, 37.5400, 127.0850, 127.1910),
+    ("양천구",   37.5150, 37.5570, 126.8470, 126.9140),
+    ("영등포구", 37.5040, 37.5380, 126.8840, 126.9510),
+    ("용산구",   37.5180, 37.5530, 126.9580, 127.0120),
+    ("은평구",   37.5910, 37.6420, 126.8820, 126.9570),
+    ("종로구",   37.5650, 37.6200, 126.9520, 127.0190),
+    ("중구",     37.5520, 37.5760, 126.9800, 127.0240),
+    ("중랑구",   37.5840, 37.6260, 127.0580, 127.1180),
+]
+
+
+def _lat_lon_to_gu(latitude: float, longitude: float) -> str | None:
+    """위경도 → 서울 자치구 이름. 서울 밖이거나 특정 불가이면 None(시 전체로 조회)."""
+    for name, lat_min, lat_max, lon_min, lon_max in _SEOUL_GU_BOUNDS:
+        if lat_min <= latitude <= lat_max and lon_min <= longitude <= lon_max:
+            return name
+    return None
+
 
 def _regions(text: str) -> list[str]:
     return [part.strip() for part in str(text or "").split(",") if part.strip()]
@@ -170,18 +209,18 @@ class DisasterMsgCsv:
                                        window_start=window_start, at=at)
         return {**base, "for_region": messages, "unclassified": unclassified}
 
-    def near(self, latitude: float, longitude: float,  # noqa: ARG002
+    def near(self, latitude: float, longitude: float,
              at: Any = None, *, within: Any = None) -> dict[str, Any] | None:
-        """read_tools / watch.py 호환 래퍼 — 이 API 는 좌표가 아닌 지역명으로 거른다.
+        """read_tools / watch.py 호환 래퍼 — 좌표로 자치구를 특정해 조회한다.
 
-        ★`latitude`·`longitude` 는 무시한다. 재난문자 수신지역이 좌표가 아닌
-          행정구역 문자열이라 역지오코딩 없이는 좌표로 거를 수 없다(2026-09-14 설계).
-          `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        서울 밖이거나 구를 특정할 수 없으면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)
         if not isinstance(effective_at, datetime):
             effective_at = datetime.now(KST)
-        return self.active(region="서울", at=effective_at)
+        district = _lat_lon_to_gu(latitude, longitude)
+        return self.active(region="서울", district=district, at=effective_at)
 
 
 #: 재난안전데이터공유플랫폼 긴급재난문자 — 2026-09-14 실키로 실호출 확인:
@@ -268,18 +307,18 @@ class DisasterMsgApi(TravelSource):
                            "for_region": messages, "unclassified": unclassified},
                           source=self.name)
 
-    def near(self, latitude: float, longitude: float,  # noqa: ARG002
+    def near(self, latitude: float, longitude: float,
              at: Any = None, *, within: Any = None) -> dict[str, Any] | None:
-        """read_tools / watch.py 호환 래퍼 — 이 API 는 좌표가 아닌 지역명으로 거른다.
+        """read_tools / watch.py 호환 래퍼 — 좌표로 자치구를 특정해 조회한다.
 
-        ★`latitude`·`longitude` 는 무시한다. 재난문자 수신지역이 좌표가 아닌
-          행정구역 문자열이라 역지오코딩 없이는 좌표로 거를 수 없다(2026-09-14 설계).
-          `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        `watch.py` 가 `within=`, `read_tools.py` 가 `at=` 으로 부른다 — 둘 다 받는다.
+        서울 밖이거나 구를 특정할 수 없으면 시 전체로 조회한다.
         """
         effective_at = within or at or datetime.now(KST)
         if not isinstance(effective_at, datetime):
             effective_at = datetime.now(KST)
-        return self.active(region="서울", at=effective_at)
+        district = _lat_lon_to_gu(latitude, longitude)
+        return self.active(region="서울", district=district, at=effective_at)
 
 
 __all__ = ["API_ENDPOINT", "DEFAULT_SAMPLE_PATH", "DISRUPTIVE_KINDS", "DisasterMsgApi",

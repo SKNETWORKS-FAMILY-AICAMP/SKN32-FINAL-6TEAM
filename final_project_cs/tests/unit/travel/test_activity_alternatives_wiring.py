@@ -22,7 +22,7 @@ UTC = timezone.utc
 ALLOWED = ActivityTeam.manifest.allowed_tools
 
 _DISASTER_CRITICAL = {
-    "messages": [{"EMRG_STEP_NM": "위급재난", "DST_SE_NM": "지진"}],
+    "for_region": [{"step": "위급재난", "kind": "지진"}],
     "confirmed_at": "2026-09-28T10:00:00+00:00",
     "source": "disaster_api",
 }
