@@ -5,7 +5,7 @@
   데이터 없이 도는 단위 + 회귀 게이트(주요 기능 21건 · regression_gate_v1.json). 노트북 2분 19초(데이터 있음). CI 도 이것.
 ★**우리 전체** — `pytest tests/unit/travel/mobility -m "mobility_full and not live" -q`(GPT 대조 ②: `-m` 을 주면 팀
   pytest.ini 의 `not live` 가 대체되므로 같이 적는다 · 지금 live 마커가 붙은 우리 시험은 없다).
-  실데이터 회귀 나머지(171 − 21 = 150) + 실데이터 단위 23(plan_concurrency · plan_estimate · plan_bike 의 DATA_DIR 축).
+  실데이터 회귀 나머지(177 − 21 = 156 · 78) + 실데이터 단위 29(plan_concurrency · plan_estimate · plan_bike 의 DATA_DIR 축 · 78 bus_bus_walk 6).
   방을 닫을 때 우리가 돌린다. 잠그는 것은 줄이지 않았다 — 층만 나눴다.
 
 마커 등록과 기본 실행에서의 제외를 **이 폴더 안에서만** 한다 — 팀 pytest.ini 는 만지지 않는다.

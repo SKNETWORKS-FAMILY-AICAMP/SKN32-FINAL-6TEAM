@@ -94,7 +94,8 @@ def main():
     r = run(20 * 60, {A["stationId"]: 0, nxt["stationId"]: 2})
     ck(r.verdict == "feasible" and nxt["name"] in r.reason, f"첫 대여소 0대 → 다음({nxt['name']})으로 — {r.reason[:60]}")
     r = run(20 * 60, {A["stationId"]: 0, nxt["stationId"]: 0})
-    ck(r.verdict == "infeasible" and "0대" in r.reason, f"전부 0대 → 불가 — {r.reason}")
+    # 73 후속(팀장 #9) — 이유 문구가 「0대」에서 「거치 대수가 일행 N명보다 적다」로 바뀌었다(판정은 같다)
+    ck(r.verdict == "infeasible" and "거치 대수가" in r.reason, f"전부 0대 → 불가 — {r.reason}")
 
     print("[5] 규칙을 끄면 근거없음")
     R2 = copy.deepcopy(rules)

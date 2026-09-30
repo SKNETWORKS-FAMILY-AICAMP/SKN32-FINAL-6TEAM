@@ -509,10 +509,10 @@ def main():
     if not all((args.timetable, args.order, args.transfer_walk, args.bus_route,
                 args.bus_stops, args.station_coords, args.station_exits)):
         # 판정기와 같은 경로 규칙(.env DATA_DIR) — `scripts` 패키지 이름에 기대지 않는다(팀 final_project_cs/scripts 와 이름이 겹친다 · 41)
-        from app.modules.travel_ops.mobility.engine.paths import cli_processed
+        from app.modules.travel_ops.mobility.engine.paths import cli_processed, timetable_file
         PROCESSED = cli_processed()   # #48 뒤 — import 로는 .env 를 안 읽는다
         M = PROCESSED / "mobility"
-        args.timetable = args.timetable or str(M / "timetable_v1.jsonl")
+        args.timetable = args.timetable or str(timetable_file(M))   # 73 후속 3-4: gz 우선
         args.order = args.order or str(M / "line_station_order_v1.json")
         args.transfer_walk = args.transfer_walk or str(M / "transfer_walk_v1.json")
         args.bus_route = args.bus_route or str(M / "bus_route_v1.jsonl")

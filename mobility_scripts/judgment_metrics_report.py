@@ -261,6 +261,8 @@ def main():
         log = Path(a.log)
     else:
         from app.modules.travel_ops.mobility.engine.judgment_log import default_log_dir, LOG_NAME
+        from app.modules.travel_ops.mobility.engine.paths import cli_processed
+        cli_processed()                     # 73 후속 3-5 — 자료 폴더를 먼저 정한다(#48 뒤 자리표시 /data 를 읽지 않게)
         log = default_log_dir() / LOG_NAME
     rows = pick_runs(load(log), a.run)
     if a.source:

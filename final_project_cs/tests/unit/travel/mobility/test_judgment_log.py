@@ -339,3 +339,32 @@ def test_every_check_passes():
     자세한 줄별 결과는 `python final_project_cs/tests/unit/travel/mobility/test_judgment_log.py` 로 본다.
     """
     assert not bad, f"실패 {bad}"
+
+
+def test_default_log_dir_needs_data_dir(monkeypatch, tmp_path):
+    """73 후속 3-5 — 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data) 계산기가 꺼졌으면(disabled) 기본 로그 자리를
+    만들지 않는다. 앞 판은 #48 뒤 `/data`(Windows 에선 C:\\data)에 로그를 썼다. 명시한 log_dir 은 그대로 쓴다."""
+    from app.modules.travel_ops.mobility.engine import paths as P
+    import pytest
+    for src in ("unset", "disabled"):
+        monkeypatch.setattr(P, "SOURCE", src)
+        with pytest.raises(RuntimeError):
+            jl.default_log_dir()
+        with pytest.raises(RuntimeError):
+            jl.JudgmentLogger(None, device="x", stream=io.StringIO())
+        assert jl.JudgmentLogger(tmp_path, device="x", stream=io.StringIO()).dir == tmp_path
+    monkeypatch.setattr(P, "SOURCE", "cli_env")
+    monkeypatch.setattr(P, "PROCESSED", tmp_path / "processed")
+    assert jl.default_log_dir() == tmp_path / "processed" / "mobility" / "logs"
+
+
+def test_log_run_entry_sets_data_dir_first(monkeypatch, capsys):
+    """73 후속 3-5 — judgment_log_run 진입점은 로그 자리를 정하기 **전에** 자료 폴더를 정한다(load_cli_env).
+    못 정하면(unset) 로그도 판정도 안 돌리고 2 로 끝난다 — `C:\\data\\…\\logs` 가 생기지 않는다."""
+    from mobility_scripts import judgment_log_run as R
+    from app.modules.travel_ops.mobility.engine import paths as P
+    monkeypatch.setattr(P, "SOURCE", "unset")
+    monkeypatch.setattr(P, "load_cli_env", lambda: "unset")     # .env·저장소 자료 모두 없는 기기
+    code = R.main(["--", "verify_time", "--cases", "x.json"])
+    assert code == 2
+    assert "자료 폴더를 정하지 못했다" in capsys.readouterr().err

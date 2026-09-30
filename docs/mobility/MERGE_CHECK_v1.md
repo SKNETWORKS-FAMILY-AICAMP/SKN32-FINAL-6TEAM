@@ -24,12 +24,12 @@ python -m pytest tests/unit/travel/mobility -m "mobility_full and not live" -q  
 
 | 실행 | 데이터 없음(팀원 PC · CI) | 데이터 있음(`DATA_DIR`) | 시간(노트북 실측 9/29) |
 |---|---|---|---|
-| **게이트** `pytest tests/unit/travel/mobility -q` | **142 passed · 63 skipped · 173 deselected** | **205 passed · 173 deselected**(develop `747dc79` merge 직후엔 이 중 `test_plan_v1` 6이 빨강 — §2-1) | 없음 20초 · 있음 **2분 32초** |
-| 전체층 `-m "mobility_full and not live"` | 4 passed · 169 skipped · 205 deselected | **173 passed · 205 deselected**(merge 직후 6 빨강 — §2-1) | 있음 7분 28초 |
+| **게이트** `pytest tests/unit/travel/mobility -q` | **144 passed · 67 skipped · 179 deselected** | **211 passed · 179 deselected**(78 뒤 · 알려진 빨강 0) | 없음 20초 · 있음 **2분 32초**(71 측정) |
+| 전체층 `-m "mobility_full and not live"` | 4 passed · 181 skipped · 211 deselected | **185 passed · 211 deselected**(78 뒤) | 있음 7분 28초(71 측정) |
 | 팀 배치 검사 | 57 passed(9/29 develop `747dc79` 기준 · 파일이 늘면 커진다) | 같음 | 3초 |
 
-- 게이트 205 = 데이터 없이 도는 단위 183(팀장 `test_review_fixes_*`·`test_check_scripts` 포함) + **회귀 게이트 21**(주요 기능마다 1건) + 목록 정합성 1. 전체층 173 = 회귀 나머지 150 + 실데이터 단위 23(`plan_concurrency`·`plan_estimate`·`plan_bike` 의 DATA_DIR 축). **회귀 171 = 21 + 150** — 잠그는 것은 줄이지 않았고 층만 나눴다.
-- **§2-1 알려진 빨강(2026-09-29 · develop `747dc79` merge 직후 · 데이터 있는 기기만)**: `test_plan_v1` 6(`test_golden`·`test_golden_all_modes`·`test_0400_boundary`·`test_no_per_option_departure`·`test_recheck_at_offsets`·`test_replan_fare_known_locked`) + 전체층 3(`test_golden_bike`·`test_bike_not_called_by_default`·`test_night_last_service`) + 회귀 3케이스(`MIX-06`·`MULTI-06`·`NIGHT-10`) — 팀장 `plan.py`·판정 변경(#1~#65)에 우리 잠금·골든이 아직 안 맞춘 것(73 검수 회신 · 후속 방에서 기대 갱신). 데이터 없는 CI 에는 안 걸린다. 이 목록 밖의 빨강이 새로 나오면 그게 진짜 회귀다.
+- 게이트 211 = 데이터 없이 도는 단위 189(팀장 `test_review_fixes_*`·`test_check_scripts` 포함 · 78 에서 봉투 참조·04:00 양쪽·재판정 문맥·로그 진입점 등 +6) + **회귀 게이트 21**(주요 기능마다 1건) + 목록 정합성 1. 전체층 185 = 회귀 나머지 156 + 실데이터 단위 29(`plan_concurrency`·`plan_estimate`·`plan_bike` 의 DATA_DIR 축 · 78 `test_bus_bus_walk_v1` 6). **회귀 177 = 21 + 156**(78 에서 171 + 새 6: 버스↔버스 환승 BB-01~04 · 막차 통과 반대편 NIGHT-10B · 역방향 버스 MIX-07) — 잠그는 것은 줄이지 않았고 층만 나눴다.
+- **§2-1 알려진 빨강 — 없음**(2026-09-29 · 78 「73 후속」에서 정리). 747dc79 merge 직후 데이터 있는 기기에서 보이던 빨강(`test_plan_v1` 6 · 전체층 3 · 회귀 3케이스 `MIX-06`·`MULTI-06`·`NIGHT-10`)은 기대·골든을 팀장 판에 맞추고 우리 엔진 수정(규칙 v0.9.2)과 함께 잠갔다. 이제 빨강이 나오면 그게 진짜 회귀다.
 - **`skipped` 는 빨강이 아니다** — 「data not present」·「시간표 없음(DATA_DIR)」이면 데이터가 없어서 건너뛴 것. **9/29 부터 데이터가 저장소 안(`datasets/mobility/processed/`)에 있으므로 pull 한 기기에서는 회귀 게이트가 skip 되지 않는다**(§3) — skip 이 나오면 pull 이 안 됐거나 `.env` 의 `DATA_DIR` 이 엉뚱한 곳을 가리키는 것.
 - **`deselected` 는 전체층이 기본 실행에서 빠진 것**(conftest.py). 빨강·노랑 어느 쪽도 아니다.
 - 건수·시간은 노트북(`playdata` · Python 3.11 · develop `747dc79` merge 커밋 `37000a9`) 실측 2026-09-29 15:31.
@@ -48,7 +48,7 @@ python -m pytest tests/unit/travel/mobility -m "mobility_full and not live" -q  
 | 빨강이 난 시험 | 이건 무엇이 깨진 것 | 먼저 볼 것 |
 |---|---|---|
 | **`test_regression_cases.py::test_gate[<id>]`** | 실패 메시지 첫 줄에 **`[기능] … — 깨지면: …`** 가 찍힌다. 그 기능이 죽었다는 뜻 | 메시지의 `MISS 기대 X → 실제 Y` 칸(판정? 도착 시각? 경고?) → `REGRESSION_EXPLAINED_v1.md` §7 순서. 한 건만 다시: `python -m pytest tests/unit/travel/mobility/test_regression_cases.py -k <id> -q`(전체층 케이스는 `-m mobility_full` 을 같이 — 없으면 deselect 돼 「no tests ran」) |
-| `test_regression_cases.py::test_gate_list_is_consistent` | 게이트 목록(`regression_gate_v1.json`)이 케이스 파일과 안 맞거나, 케이스 id 가 겹치거나, 합이 171 이 아니다 | 케이스를 더하거나 뺐으면 `test_regression_cases.py` 의 `N_ALL`·`N_GATE` 와 목록을 같이 고친다 |
+| `test_regression_cases.py::test_gate_list_is_consistent` | 게이트 목록(`regression_gate_v1.json`)이 케이스 파일과 안 맞거나, 케이스 id 가 겹치거나, 합이 `N_ALL`(78 기준 177) 이 아니다 | 케이스를 더하거나 뺐으면 `test_regression_cases.py` 의 `N_ALL`·`N_GATE` 와 목록을 같이 고친다 |
 | `test_plan_v1.py::test_golden` · `test_golden_all_modes` | **코어로 나가는 `plan()` 출력**이 골든과 다르다 — 이동 항목·`routes` 의 시각·후보가 움직였다 | `plan.py`·`options.py` 를 만졌나 → 아니면 판정기 값이 바뀐 것(회귀 게이트도 같이 빨강일 가능성). 의도한 변경이면 골든 재생성: `python -m app.modules.travel_ops.mobility.engine.plan --in tests/unit/travel/mobility/plan_example_in_v1.json --no-basis --modes subway walk bus --out tests/unit/travel/mobility/plan_example_out_all_v1.json`(`subway walk` 판도) |
 | `test_plan_v1.py::` 그 밖 | `plan()` 계약(기존 칸만 · 새 키 0 · `uses` 자가 검사 · 요금 · `left_out`) | `plan.py` · 팀 `route_uses.py`(표기 정규식이 바뀌면 `test_uses_self_check` 가 운다) |
 | `test_verify55_v1.py::` | 동명이역(양평·신촌) · 환승 제외 · p90 도보 밀기 | `geo.py`·`candidates.py`·`verify_time._shift_out` |

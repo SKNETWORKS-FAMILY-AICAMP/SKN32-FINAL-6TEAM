@@ -151,7 +151,8 @@ def party_of(party_size, constraints):
     if c.get("mobility_ease") == "needs_rest":
         p["fatigue_high"] = True
     # ☆`[2026-09-29 문제목록 #9]` 설문(constraints.survey)에서 판정에 쓸 수 있는 값을 옮긴다.
-    #   domestic(내국인 여부) → foreign. 없으면 넣지 않는다 — 판정기 기본값(외국인 안내를 붙인다)이 그대로 쓰인다.
+    #   domestic(내국인 여부) → foreign. 없으면 넣지 않는다. (73 후속 · v0.9.2 — 판정기는 이제 foreign 으로 외국인 안내를
+    #   붙이지 않는다 · 본인 9/29 「자전거 따로 안내 안 함」. 값은 판정 로그 문맥으로만 실린다)
     #   party(여행자 구성)는 자유 문장이라 나이·유아를 **짐작해 뽑지 않는다**(지어내지 않는다).
     survey = c.get("survey") or {}
     if isinstance(survey, dict) and survey.get("domestic") is not None:
@@ -723,13 +724,20 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
 
     reserved = set(routes or {}) | {str(it["route"]) for it in its if it.get("route")}
     merged, routes, skipped, left_out, not_linked = [], {}, [], {}, []
+    kept_unverified = []
+
+    def unverified(ms, why):
+        # 73 후속(GPT 대조 78 Q5) — 체류 항목 사이가 아니어서 우리가 판정하지 않은 입력 이동도 「검증 안 됨」으로 드러낸다
+        ms = [dict(m) for m in ms]
+        kept_unverified.extend({"title": m.get("title"), "route": m.get("route"), "starts_at": m.get("starts_at"),
+                                "why": why} for m in ms)
+        merged.extend(ms)
+
     if not stay:                                   # 이동 항목만 온 입력 — 그대로 돌려준다(GPT #4)
-        merged.extend(dict(m) for m in moves_in)
+        unverified(moves_in, "no_stay")
     else:                                          # 첫 비이동 항목보다 앞선 입력 이동 항목은 그대로 앞에 둔다(GPT #4)
         first = _parse_dt(stay[0]["starts_at"])
-        merged.extend(dict(m) for m in moves_in if _parse_dt(m["starts_at"]) < first)
-
-    kept_unverified = []
+        unverified([m for m in moves_in if _parse_dt(m["starts_at"]) < first], "before_first_stay")
 
     def skip(a, b, entry):
         # ☆`[2026-09-29 문제목록 #26]` 못 채운 구간의 입력 이동 항목을 남길 때 **검증 안 됐다는 것을 드러낸다** — 앞 판은
@@ -741,10 +749,18 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
                                 "why": entry.get("code")} for m in kept)
         merged.extend(kept)
 
+    def keep_as_is(a, b, why):
+        # ☆`[73 후속 · 3-10]` 운행일 경계(day_boundary)·같은 장소(same_place)로 **잇지 않고** 남긴 입력 이동도 검증 안 된 것이다 —
+        #   앞 판은 skip() 을 거치지 않아 kept_unverified 에 안 실렸다(items 만 옮기면 우리 값처럼 보인다).
+        kept = moves_between(a, b)
+        kept_unverified.extend({"title": m.get("title"), "route": m.get("route"), "starts_at": m.get("starts_at"),
+                                "why": why} for m in kept)
+        merged.extend(kept)
+
     for i, a in enumerate(stay):
         merged.append(dict(a))
         if i + 1 >= len(stay):
-            merged.extend(dict(m) for m in moves_in if _parse_dt(m["starts_at"]) >= _parse_dt(a["starts_at"]))
+            unverified([m for m in moves_in if _parse_dt(m["starts_at"]) >= _parse_dt(a["starts_at"])], "after_last_stay")
             break
         b = stay[i + 1]
         # ☆`[2026-09-29 문제목록 #45]` 운행일이 바뀌는 두 항목(1일차 저녁 → 2일차 아침) 사이는 잇지 않는다 — 그 사이에
@@ -752,7 +768,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         if service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
             not_linked.append({"from": a.get("title"), "to": b.get("title"), "code": "day_boundary",
                                "reason": "운행일이 바뀐다 — 사이에 숙소로 가지만 숙소 위치를 모른다"})
-            merged.extend(moves_between(a, b))
+            keep_as_is(a, b, "day_boundary")
             continue
         pa, pb = pl.get(a.get("place")), pl.get(b.get("place"))
         if pa is None or pb is None:
@@ -760,7 +776,7 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
                         "reason": "장소가 없는 항목이다 — 어디서 떠나는지(어디로 가는지) 모른다"})
             continue
         if a.get("place") == b.get("place"):
-            merged.extend(moves_between(a, b))
+            keep_as_is(a, b, "same_place")
             continue
         if pa.get("lat") is None or pb.get("lat") is None:
             skip(a, b, {"from": pa["name"], "to": pb["name"], "code": "no_data", "reason": "좌표가 없다"})

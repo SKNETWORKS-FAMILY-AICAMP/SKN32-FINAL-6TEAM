@@ -48,7 +48,9 @@ def default_paths():
     from .paths import PROCESSED                            # noqa: E402
     p = PROCESSED / "mobility"
     c = PKG / "rules"
-    return {"timetable": p / "timetable_v1.jsonl",
+    # ☆`[73 후속 · 3-4]` 실 시간표는 gz 가 있으면 그것(75 데이터 git · 75 MB → 1.8 MB) · 없으면 텍스트. 판정기는 확장자로 연다.
+    from .paths import timetable_file                        # noqa: E402
+    return {"timetable": timetable_file(p),
             "order": p / "line_station_order_v1.json",
             "transfer_walk": p / "transfer_walk_v1.json",
             "bus_route": p / "bus_route_v1.jsonl",
