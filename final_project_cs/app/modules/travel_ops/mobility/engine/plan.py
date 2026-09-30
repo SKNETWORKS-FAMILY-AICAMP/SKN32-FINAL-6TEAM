@@ -57,6 +57,15 @@ PLAN_VERSION = "plan-v2.2"   # 58 — modes 에 bike 를 주면 자전거 후보
 #   뺄 때는 **후보 생성 전에** 끊는다(아래 Planner — 따릉이 실시간·GraphHopper 호출 0).
 DEFAULT_MODES = ("subway", "bus", "walk")
 KNOWN_MODES = frozenset(DEFAULT_MODES) | {"bike"}
+#: ☆`[2026-09-30 83 E1 · 85]` 장소마다 볼 역 개수 — 규칙 candidates.장소_역_후보_최대 **변경안** 값(27 규칙 32: 규칙 파일은
+#:   모아서 한 번에 고친다). 규칙에 들어가면 규칙 값이 이긴다(Planner._station_k).
+STATION_K_PROPOSED = 3
+#: 역 짝을 어디까지 보나 — "first_feasible"(가까운 짝부터 · 대중교통 후보가 성립한 짝에서 멈춤) / "all"(짝 전부)
+STATION_PAIR_MODE = "first_feasible"
+#: 도보 상한 안 역이 모두 사고로 막혔을 때 이유 코드
+STATION_BLOCKED_CODE = "no_service"
+#: 역 짝 순번별 후보 번호(_n) 간격 — 동률 깨기 순서만(가까운 짝 우선). 식별은 _key 가 한다
+PAIR_N_STEP = 1000
 # 58 (2026-09-27 · ◆테마 ① 자전거 살림 · 본인) — 자전거 후보의 출발 시각 규칙(_bike_direct).
 #   판정기는 시간표 없는 수단의 마지막 성립 출발(lfd)을 None 으로 낸다(verify_time._last_feasible_depart — 무수정).
 #   따릉이는 24시간(rules bike.ddareungi.no_timetable · 확정)이라 「마지막 편」이 없고 소요가 출발 시각에 안 달린다 →
@@ -235,24 +244,62 @@ class Planner:
                 return None, True
         return straight_m * self.detour, False
 
-    def _near_station(self, place, limit_m):
-        """장소 → 가장 가까운 역(역 좌표 직선 · 도보 상한 안). 거리는 그 역에서 장소에 가장 가까운 출구까지
-        (출구표가 없으면 역 좌표) — 정류장↔역 환승(19번)과 같은 방식. (역명, 직선 m, 노선군) 또는 None.
-        노선군은 **동명이역(양평·신촌)일 때만** 그 물리적 역의 노선 목록(55 ④) — 아니면 None(역명으로 충분)."""
+    def _blocked_station(self, rec):
+        """사고 조건(self.disruptions)으로 **그 물리적 역의 모든 노선**이 서지 않거나 운행하지 않으면 True.
+        노선 하나만 막힌 환승역(예: 2호선만 무정차인 건대입구)은 막힌 역이 아니다 — 판정기가 그 노선만 뺀다."""
+        if not self.disruptions:
+            return False
+        lines = set(self.v.sc.group_lines(rec)) - {None}
+        if not lines:
+            return False
+        nm = rec["station_nm"]
+        dead = set()
+        for d in self.disruptions:
+            k = d.get("kind")
+            if k == "line_closed" and d.get("line") in lines:
+                dead.add(d["line"])
+            elif k == "station_skip" and d.get("station") == nm and d.get("line") in lines:
+                dead.add(d["line"])
+        return dead >= lines
+
+    def _near_stations(self, place, limit_m, k=None):
+        """장소 → 도보 상한 안 역 **역 좌표 기준 가까운 순 최대 k 개**(E1 · 문제목록 #38). 사고로 막힌 역(_blocked_station)은 뺀다.
+        순서·상한은 역 좌표 직선 거리로 정하고(앞 판 near[0] 과 같은 기준), 돌려주는 거리 값은 그 역에서 장소에 가장
+        가까운 출구까지(출구표가 없으면 역 좌표) — 정류장↔역 환승(19번)과 같은 방식. 그래서 목록이 출구 거리순은 아닐 수 있다.
+        [(역명, 직선 m, 노선군)]. 노선군은 **동명이역(양평·신촌)일 때만** 그 물리적 역의 노선 목록(55 ④) — 아니면 None.
+        ☆`[2026-09-30 83 E1]` 앞 판은 가장 가까운 역 하나(near[0])만 봐서 그 역이 무정차면 다음 역을 안 봤다."""
         sc = self.v.sc
         if sc is None:
-            return None
-        near = sc.stations_near(place["lat"], place["lon"], limit_m)
-        if not near:
-            return None
-        d, rec = near[0]
-        nm = rec["station_nm"]
-        lines = (sorted(sc.group_lines(rec)) if getattr(sc, "is_ambiguous", None) and sc.is_ambiguous(nm) else None)
-        if self.v.ex is not None:
-            e = self.v.ex.nearest(nm, place["lat"], place["lon"], rec.get("line"))
-            if e is not None:
-                d = e[0]
-        return nm, d, lines
+            return []
+        k = self._station_k() if k is None else k
+        out = []
+        for d, rec in sc.stations_near(place["lat"], place["lon"], limit_m):
+            if self._blocked_station(rec):
+                continue
+            nm = rec["station_nm"]
+            lines = (sorted(sc.group_lines(rec)) if getattr(sc, "is_ambiguous", None) and sc.is_ambiguous(nm) else None)
+            if self.v.ex is not None:
+                e = self.v.ex.nearest(nm, place["lat"], place["lon"], rec.get("line"))
+                if e is not None:
+                    d = e[0]
+            out.append((nm, d, lines))
+            if len(out) >= k:
+                break
+        return out
+
+    def _near_station(self, place, limit_m):
+        """장소 → 가장 가까운 (막히지 않은) 역 하나. (역명, 직선 m, 노선군) 또는 None — plan_estimate·시험이 쓴다."""
+        near = self._near_stations(place, limit_m, 1)
+        return near[0] if near else None
+
+    def _station_k(self):
+        """장소마다 볼 역 개수 상한 — 규칙 candidates.장소_역_후보_최대. ★규칙 파일 수정은 모아서 한 번에(27 규칙 32) —
+        그 전까지는 변경안 값(STATION_K_PROPOSED)을 쓴다. 규칙에 들어가면 규칙 값이 이긴다."""
+        n = (self.v.R.get("candidates") or {}).get("장소_역_후보_최대")
+        k = n["value"] if n and n.get("value") is not None else STATION_K_PROPOSED
+        if isinstance(k, bool) or not isinstance(k, int) or k < 1:
+            raise ValueError(f"candidates.장소_역_후보_최대 는 1 이상 정수 — 받은 값 {k!r}")    # GPT 85 #5
+        return k
 
     def _bus_direct(self, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim, left=None):
         """장소 → 장소 한 노선 버스 후보. 후보마다 마지막 성립 출발에서 다시 판정해 성립한 것만 — 도보 짧은 순(상한은 leg())."""
@@ -275,7 +322,8 @@ class Planner:
             r1 = self._vc(dict(base, depart_at=max(SERVICE_DAY_START_MIN, by_stop - 180)))
             lfd = (r1.out or {}).get("last_feasible_depart_min")
             # ☆#29 — 판정한 뒤 버리는 버스 직행도 이유를 남긴다(정류장 반경·유형·도보 상한으로 거른 것은 후보가 아니라 안 남긴다)
-            ref = {"_legs": legs, "_walk_m": (da + db) * self.detour, "_n": 100 + i, "_route": label_of(legs)}
+            ref = {"_legs": legs, "_walk_m": (da + db) * self.detour, "_n": 100 + i, "_key": ("bus", 0, i),
+                   "_route": label_of(legs)}
 
             def drop(code, reason):
                 if left is not None:
@@ -296,7 +344,7 @@ class Planner:
                 continue
             found.append((da + db, i, {
                 "eta_min": eta, "uses": uses_of(legs), "_legs": legs, "_route": label_of(legs), "_start": start,
-                "_transfers": 0, "_n": 100 + i, "_margin": margin, "_slack": slack,
+                "_transfers": 0, "_n": 100 + i, "_key": ("bus", 0, i), "_margin": margin, "_slack": slack,
                 "_walk_min": wi + wo, "_walk_m": (da + db) * self.detour,
                 "_fare": O.fare_of(v, legs, r2.legs),
                 "_severe": [], "_covered": False, "_lr": r2.legs, "_day_type": r2.day_type,
@@ -357,7 +405,7 @@ class Planner:
                  "_route": f"자전거(따릉이) {a_place['name']}→{b_place['name']}"
                            + (f" · {n}명 — {n}대 필요" if n > 1 else "")
                            + (" · 대여 가능 여부는 출발 때 확인" if self.stage == "planning" else ""),
-                 "_start": lfd, "_transfers": 0, "_n": 200, "_margin": margin, "_slack": 0,
+                 "_start": lfd, "_transfers": 0, "_n": 200, "_key": ("bike", 0, 0), "_margin": margin, "_slack": 0,
                  "_walk_min": walk_min, "_walk_m": None,           # 대여소 도보 m 은 판정기 밖으로 안 나온다 — 키를 뺀다
                  "_fare": O.fare_of(v, legs, r2.legs), "_severe": [], "_covered": False,
                  "_lr": r2.legs, "_day_type": r2.day_type,
@@ -404,6 +452,88 @@ class Planner:
                  _covered=O.congestion_checked(self.v, ck["legs"], r.legs, sd, r.day_type))
         return n, None
 
+    def _pair_settles(self, got, nb, arrive_by, party, first_visit, case_id):
+        """역 짝 탐색을 여기서 멈춰도 되나 — 이 짝의 후보 중 **실을 수 있는 것**(uses 표기 검사 통과 · GPT 85 #2)이
+        앞 일정 끝(nb) 뒤에 떠나도 되거나(_start ≥ nb), nb 에서 다시 판정해 살아나면(_recheck_at · 뒤 선택 로직과 같은
+        기준) 멈춘다. 그래서 첫 짝으로 답이 나오던 구간은 앞 판과 같은 짝·같은 선택이다.
+        ★ 멈춘 뒤 고르는 계획 수단은 **본 짝들 중** 가장 늦게 떠나도 되는 후보다 — 모든 역 짝의 최적은 아니다(성능 정책)."""
+        ok = [o for o in got if not O.uses_problems(o["uses"])]
+        if not ok:
+            return False
+        if nb is None or any(o["_start"] >= nb for o in ok):
+            return True
+        return any(self._recheck_at(o, nb, arrive_by, party, first_visit, case_id)[0] is not None for o in ok)
+
+    def _any_station_near(self, place, limit_m):
+        sc = self.v.sc
+        return bool(sc is not None and sc.stations_near(place["lat"], place["lon"], limit_m))
+
+    def _transit_pair(self, oa, ob, pi, arrive_dt, sdate, arrive_by, party, first_visit, case_id, left):
+        """역 짝 하나(oa → ob)의 대중교통 후보. (성립 후보들, 판정기 답, 고른 수단 안 후보 수).
+        pi = 짝 순번 — 0 은 앞 판과 같은 번호(_n)·case id. _n 은 계획 수단 동률 깨기(순서)에만 쓰고, 후보 식별(재판정
+        되돌림)은 _key = ("rail", pi, 판정기 후보 번호) 로 한다(GPT 85 #4 — 번호 영역 겹침에 기대지 않는다)."""
+        opts = []
+        tag = case_id if pi == 0 else f"{case_id}~{pi}"
+        nbase = PAIR_N_STEP * pi
+        wa, wb = self._walk(oa[1]), self._walk(ob[1])
+        st_date, by_station = service_day(arrive_dt - timedelta(minutes=wb))
+        off = (st_date - sdate).days * MIN_DAY            # 역 운행일 축 → 도착 목표 축 (0 또는 −1440)
+        probe = {"id": tag, "date": st_date.isoformat(), "stage": self.stage,
+                 "depart_at": max(SERVICE_DAY_START_MIN, by_station - 180), "arrive_by": by_station,
+                 "multi": _multi(oa, ob), "party": party, "first_visit": first_visit}
+        r = self._vc(probe)
+        n_mode = 0
+        for c in r.candidates or []:
+            if any(leg_mode(x) == "bike" for x in c["legs"]):
+                continue          # 판정기 multi 의 자전거 후보는 역 기준 — 장소 기준 ④ 로 따로 본다(58)
+            if self.modes is not None and any(leg_mode(x) not in self.modes for x in c["legs"]):
+                continue
+            n_mode += 1
+            if any(leg_mode(x) == "bus" for x in c["legs"]):
+                continue          # 버스 직행은 ③ 에서 **장소 기준**으로 다시 찾는다(역 경유 이중 도보를 없앤다 · 23 결정 4)
+            lfd = (c.get("out") or {}).get("last_feasible_depart_min")
+            sub_by = by_station - c["walk_out_min"]
+            # ☆`[2026-09-29 문제목록 #29]` 여기서부터 버리는 후보는 이유를 봉투 left_out 에 남긴다 — 앞 판은 조용히 continue 했다
+            ref = {"_legs": c["legs"], "_walk_m": None, "_n": nbase + c["n"], "_key": ("rail", pi, c["n"]),
+                   "_route": label_of(c["legs"])}
+            if lfd is None or sub_by < SERVICE_DAY_START_MIN:
+                left.append({"_o": ref, "label": ref["_route"], "code": "no_last_departure",
+                             "reason": ("마지막 성립 출발을 역산하지 못했다 — " + (c.get("reason") or "")) if lfd is None
+                             else "역 도착 목표가 04:00 전(운행일 경계)이라 보지 않는다"})
+                continue
+            sub = {"id": f"{tag}/{c['n']}", "date": st_date.isoformat(), "stage": self.stage,
+                   "legs": c["legs"], "depart_at": lfd + c["walk_in_min"], "arrive_by": sub_by,
+                   "party": party, "first_visit": first_visit, "no_alternatives": True}
+            r2 = self._vc(sub)
+            o2 = r2.out or {}
+            if o2.get("verdict") != "feasible" or o2.get("eta_min") is None or (o2.get("slack_min") or 0) < 0:
+                left.append({"_o": ref, "label": ref["_route"], "code": "not_confirmed",
+                             "reason": "역산 출발로 다시 판정하니 성립이 아니다 — " + (o2.get("reason") or r2.reason or "")})
+                continue          # 역산 시각으로 다시 봐도 성립이 아니면 싣지 않는다(모르면 뺀다)
+            eta = int(wa + c["walk_in_min"] + o2["eta_min"] + c["walk_out_min"] + wb)
+            start = lfd - wa + off
+            margin, slack = o2.get("margin_min") or 0, o2.get("slack_min") or 0
+            if start + eta + margin + slack != arrive_by:
+                left.append({"_o": ref, "label": ref["_route"], "code": "formula_mismatch",
+                             "reason": f"출발 {start} + 소요 {eta} + 여유 {margin} + 남는 {slack} ≠ 도착 목표 {arrive_by} — 축이 어긋나 싣지 않는다"})
+                continue          # 식이 안 맞으면 어딘가 축이 어긋난 것 — 내지 않는다(늦은 출발을 조용히 내지 않게)
+            # 도보 m — 장소↔역(직선×우회) + 환승 거리표 m. 모르는 조각(거리표 밖 환승 · 자전거 대여소 도보)이 있으면 None
+            inner = O.transfer_walk_m(self.v, c["legs"])
+            walk_m = None if inner is None else (oa[1] + ob[1]) * self.detour + inner
+            opts.append({"eta_min": eta, "uses": uses_of(c["legs"]), "_legs": c["legs"],
+                         "_route": label_of(c["legs"]), "_start": start,
+                         "_transfers": c.get("transfers") or 0, "_n": nbase + c["n"], "_key": ("rail", pi, c["n"]),
+                         "_margin": margin, "_slack": slack,
+                         "_walk_min": wa + wb + (c.get("walk_min") or 0), "_walk_m": walk_m,
+                         "_fare": O.fare_of(self.v, c["legs"], r2.legs),
+                         "_severe": O.severe_hits(r2.warnings),
+                         "_covered": O.congestion_checked(self.v, c["legs"], r2.legs, st_date, r2.day_type),
+                         "_lr": r2.legs, "_day_type": r2.day_type,
+                         "_check": {"date": st_date.isoformat(), "legs": c["legs"], "off": off,
+                                    "walk_place_in": wa, "walk_place_out": wb, "walk_stop_in": c["walk_in_min"],
+                                    "walk_stop_out": c["walk_out_min"], "by_station": by_station}})
+        return opts, r, n_mode
+
     def leg(self, a_place, b_place, arrive_dt, party, first_visit, case_id, not_before_dt=None):
         """장소 a → 장소 b, 도착 목표 arrive_dt. ((route_def, 시작 분, 끝 분, 운행일, 뺀 후보), None) 또는 (None, 이유 dict).
 
@@ -440,75 +570,43 @@ class Planner:
             else:
                 eta = max(1, math.ceil(wm / self.speed / 60))
                 opts.append({"eta_min": eta, "uses": [], "_legs": [], "_route": "도보",
-                             "_start": arrive_by - eta - buf, "_transfers": 0, "_n": 0,
+                             "_start": arrive_by - eta - buf, "_transfers": 0, "_n": 0, "_key": ("walk", 0, 0),
                              "_margin": buf, "_slack": 0, "_walk_min": eta,
                              "_walk_m": wm, "_fare": 0, "_severe": [], "_covered": False})
 
-        # ② 대중교통 — 가까운 역끼리 다목적 후보(판정기 verify_multi) → 후보마다 마지막 성립 출발로 다시 판정
-        oa, ob = self._near_station(a_place, wlim), self._near_station(b_place, wlim)
-        why = None
+        # ② 대중교통 — 장소마다 도보 상한 안 역 **가까운 순 여럿**(막힌 역 뺌 · E1) → 역 짝마다 다목적 후보(판정기
+        #   verify_multi) → 후보마다 마지막 성립 출발로 다시 판정. 짝은 가까운 짝부터 보고, **실을 수 있는 대중교통 후보가
+        #   앞 일정 끝 뒤에 떠날 수 있는 짝에서 멈춘다**(_pair_settles · STATION_PAIR_MODE) — 그런 짝이 첫 짝이면 앞 판과
+        #   같다. ★같은 역 조기 종료(아래)는 앞 판 정책 그대로 — 막힌 역을 뺀 뒤 양쪽 첫 역이 같아도 도보만 본다(사각지대 ·
+        #   85 닫힘 전달에 적음).
+        sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+        oa, ob = (sa[0] if sa else None), (sb[0] if sb else None)
+        why, r, n_mode, pairs = None, None, 0, []
         if oa is None or ob is None:
-            why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
-                   + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
+            blocked = [p["name"] for p, s_ in ((a_place, sa), (b_place, sb))
+                       if not s_ and self.disruptions and self._any_station_near(p, wlim)]
+            if blocked:
+                why = {"code": STATION_BLOCKED_CODE,
+                       "reason": f"도보 상한 안 역이 모두 사고로 막혔다({', '.join(blocked)})"}
+            else:
+                why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
+                       + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
         elif same_station(oa[0], oa[2], ob[0], ob[2]):          # 55 GPT #2 — 동명이역은 역명이 같아도 다른 역
             why = {"code": "no_data", "reason": f"두 장소의 가장 가까운 역이 같다({oa[0]}) — 도보만 본다"}
         else:
-            wa, wb = self._walk(oa[1]), self._walk(ob[1])
-            st_date, by_station = service_day(arrive_dt - timedelta(minutes=wb))
-            off = (st_date - sdate).days * MIN_DAY            # 역 운행일 축 → 도착 목표 축 (0 또는 −1440)
-            probe = {"id": case_id, "date": st_date.isoformat(), "stage": self.stage,
-                     "depart_at": max(SERVICE_DAY_START_MIN, by_station - 180), "arrive_by": by_station,
-                     "multi": _multi(oa, ob), "party": party, "first_visit": first_visit}
-            r = self._vc(probe)
-            n_mode = 0
-            for c in r.candidates or []:
-                if any(leg_mode(x) == "bike" for x in c["legs"]):
-                    continue          # 판정기 multi 의 자전거 후보는 역 기준 — 장소 기준 ④ 로 따로 본다(58)
-                if self.modes is not None and any(leg_mode(x) not in self.modes for x in c["legs"]):
-                    continue
-                n_mode += 1
-                if any(leg_mode(x) == "bus" for x in c["legs"]):
-                    continue          # 버스 직행은 ③ 에서 **장소 기준**으로 다시 찾는다(역 경유 이중 도보를 없앤다 · 23 결정 4)
-                lfd = (c.get("out") or {}).get("last_feasible_depart_min")
-                sub_by = by_station - c["walk_out_min"]
-                # ☆`[2026-09-29 문제목록 #29]` 여기서부터 버리는 후보는 이유를 봉투 left_out 에 남긴다 — 앞 판은 조용히 continue 했다
-                ref = {"_legs": c["legs"], "_walk_m": None, "_n": c["n"], "_route": label_of(c["legs"])}
-                if lfd is None or sub_by < SERVICE_DAY_START_MIN:
-                    left.append({"_o": ref, "label": ref["_route"], "code": "no_last_departure",
-                                 "reason": ("마지막 성립 출발을 역산하지 못했다 — " + (c.get("reason") or "")) if lfd is None
-                                 else "역 도착 목표가 04:00 전(운행일 경계)이라 보지 않는다"})
-                    continue
-                sub = {"id": f"{case_id}/{c['n']}", "date": st_date.isoformat(), "stage": self.stage,
-                       "legs": c["legs"], "depart_at": lfd + c["walk_in_min"], "arrive_by": sub_by,
-                       "party": party, "first_visit": first_visit, "no_alternatives": True}
-                r2 = self._vc(sub)
-                o2 = r2.out or {}
-                if o2.get("verdict") != "feasible" or o2.get("eta_min") is None or (o2.get("slack_min") or 0) < 0:
-                    left.append({"_o": ref, "label": ref["_route"], "code": "not_confirmed",
-                                 "reason": "역산 출발로 다시 판정하니 성립이 아니다 — " + (o2.get("reason") or r2.reason or "")})
-                    continue          # 역산 시각으로 다시 봐도 성립이 아니면 싣지 않는다(모르면 뺀다)
-                eta = int(wa + c["walk_in_min"] + o2["eta_min"] + c["walk_out_min"] + wb)
-                start = lfd - wa + off
-                margin, slack = o2.get("margin_min") or 0, o2.get("slack_min") or 0
-                if start + eta + margin + slack != arrive_by:
-                    left.append({"_o": ref, "label": ref["_route"], "code": "formula_mismatch",
-                                 "reason": f"출발 {start} + 소요 {eta} + 여유 {margin} + 남는 {slack} ≠ 도착 목표 {arrive_by} — 축이 어긋나 싣지 않는다"})
-                    continue          # 식이 안 맞으면 어딘가 축이 어긋난 것 — 내지 않는다(늦은 출발을 조용히 내지 않게)
-                # 도보 m — 장소↔역(직선×우회) + 환승 거리표 m. 모르는 조각(거리표 밖 환승 · 자전거 대여소 도보)이 있으면 None
-                inner = O.transfer_walk_m(self.v, c["legs"])
-                walk_m = None if inner is None else (oa[1] + ob[1]) * self.detour + inner
-                opts.append({"eta_min": eta, "uses": uses_of(c["legs"]), "_legs": c["legs"],
-                             "_route": label_of(c["legs"]), "_start": start,
-                             "_transfers": c.get("transfers") or 0, "_n": c["n"],
-                             "_margin": margin, "_slack": slack,
-                             "_walk_min": wa + wb + (c.get("walk_min") or 0), "_walk_m": walk_m,
-                             "_fare": O.fare_of(self.v, c["legs"], r2.legs),
-                             "_severe": O.severe_hits(r2.warnings),
-                             "_covered": O.congestion_checked(self.v, c["legs"], r2.legs, st_date, r2.day_type),
-                             "_lr": r2.legs, "_day_type": r2.day_type,
-                             "_check": {"date": st_date.isoformat(), "legs": c["legs"], "off": off,
-                                        "walk_place_in": wa, "walk_place_out": wb, "walk_stop_in": c["walk_in_min"],
-                                        "walk_stop_out": c["walk_out_min"], "by_station": by_station}})
+            pairs = [(ia, ib, x, y) for ia, x in enumerate(sa) for ib, y in enumerate(sb)
+                     if not same_station(x[0], x[2], y[0], y[2])]
+            pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0) 이 늘 먼저 — 앞 판과 같은 첫 짝
+        visited = []
+        for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
+            got, r_, nm_ = self._transit_pair(xa, xb, pi, arrive_dt, sdate, arrive_by, party, first_visit, case_id, left)
+            if r is None:
+                r = r_                                             # 대표 이유의 바탕은 가장 가까운 짝의 판정기 답(앞 판과 같다)
+            visited.append(f"{xa[0]}→{xb[0]}")
+            n_mode += nm_
+            opts.extend(got)
+            if STATION_PAIR_MODE == "first_feasible" and self._pair_settles(got, nb, arrive_by, party, first_visit, case_id):
+                break
         # ③ 버스 직행 — **장소 좌표 기준**(23 결정 4). 판정기 verify_multi 의 버스 후보는 역 좌표 기준이라
         #   장소→역→정류장 이중 도보가 붙었다(32 자체 대조 #4 보류). 같은 규칙(정류장_반경_m · route_type_제외 ·
         #   도보 상한은 직선 · 버스_직행_최대 · 성립 후보를 도보 짧은 순)으로 장소에서 바로 찾는다. 판정은 판정기가 한다.
@@ -517,13 +615,17 @@ class Planner:
         # ④ 자전거 — modes 에 bike 를 줄 때만 · 장소 좌표 기준 · lfd = 목표 − (eta+@)(58 · _bike_direct)
         bike_opts, bike_why = self._bike_direct(a_place, b_place, sdate, arrive_by, party, first_visit, case_id)
         opts.extend(bike_opts)
-        if oa is not None and ob is not None and not same_station(oa[0], oa[2], ob[0], ob[2]):
+        if pairs:
             if not any(o["_legs"] for o in opts):
                 if r.candidates and n_mode == 0 and not bus_opts:
                     why = {"code": "no_data", "reason": f"고른 수단({', '.join(sorted(self.modes))}) 안의 후보가 없다"}
                 else:
                     why = {"code": (r.out or {}).get("code") or "no_data",
                            "reason": (r.out or {}).get("reason") or r.reason}
+                    if len(visited) > 1:
+                        # GPT 85 #3 — 첫 짝의 이유를 전체 원인으로 일반화하지 않는다. 본 짝을 밝히고 첫 짝 이유는 그 짝 이름을 붙여
+                        why["reason"] = (f"검토한 역 짝 {len(visited)}개({' · '.join(visited)} · 장소마다 가까운 역 최대 "
+                                         f"{self._station_k()}개)에서 성립 후보 없음 — {visited[0]}: {why['reason']}")
         if bike_why is not None and not any(o["_legs"] for o in opts) and not (self.modes & {"subway", "bus"}):
             why = bike_why            # 자전거(·도보)만 고른 구간 — 자전거가 왜 안 됐는지를 이유로
 
@@ -567,8 +669,8 @@ class Planner:
                 return None, {"code": "arrive_late",
                               "reason": f"앞 항목이 끝난 뒤({not_before_dt.astimezone(KST):%H:%M}) 떠나서는 "
                                         f"{arrive_dt.astimezone(KST):%H:%M} 도착에 맞는 후보가 없다"}
-            back = {g["_n"]: g for g in revived}
-            opts = [back.get(o["_n"], o) for o in opts]
+            back = {g["_key"]: g for g in revived}          # 식별은 _key(종류·짝·번호) — _n 은 동률 깨기용(GPT 85 #4)
+            opts = [back.get(o["_key"], o) for o in opts]
             planned = max(revived, key=rank)
         start = planned["_start"]
         end = start + planned["eta_min"]
