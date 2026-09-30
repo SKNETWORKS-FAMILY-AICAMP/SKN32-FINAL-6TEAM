@@ -19,6 +19,39 @@ _CSV_PATH = Path(__file__).parent / "data_processing" / "activity_total_data.csv
 _BRANCH = re.compile(r"\s*(본점|직영점|\S+점)$")
 _COMPOUND_SEP = re.compile(r"[&·,+]")
 
+# lclsSystm2 코드 → 실내외 추정 (신분류체계 정의서 기준)
+# 야외(True): 자연·역사유적·수상/항공레저·농산어촌체험·도시공원·골목길/둘레길
+_OUTDOOR_LCLSSYSTM2 = frozenset({
+    "EX03",                                    # 농·산·어촌 체험
+    "HS01", "HS02", "HS03", "HS04",            # 역사유적지·유물·종교성지·안보
+    "LS02", "LS03",                            # 수상·항공 레저스포츠
+    "NA01", "NA02", "NA03", "NA04", "NA05",    # 자연관광 전체
+    "VE03", "VE04",                            # 도시공원·골목길/문화거리/둘레길
+})
+# 실내(False): 쇼핑·공연시설·전시시설·교육시설·웰니스·공예체험
+_INDOOR_LCLSSYSTM2 = frozenset({
+    "EX02", "EX05",                            # 공예체험, 웰니스(온천/스파/찜질방)
+    "SH01", "SH02", "SH04", "SH05",           # 백화점·쇼핑몰·면세점·전문매장
+    "SH06", "SH07",                            # 시장·기타쇼핑
+    "VE06", "VE07", "VE08", "VE09", "VE12",   # 공연장·전시관·연회장·교육시설·기타
+})
+# 혼합(None): EV(이벤트), LS01·04(육상/복합레저), EX01·04·06·07,
+#             VE01·02·05·10(랜드마크/테마파크/복합/스포츠시설) 등
+
+
+def weather_sensitive_from_lclssystm2(code: str | None) -> bool | None:
+    """lclsSystm2 분류 코드로 실외(True) / 실내(False) 여부를 추정한다.
+    코드가 없거나 혼재 유형이면 None을 반환한다.
+    """
+    if not code:
+        return None
+    upper = code.upper()
+    if upper in _OUTDOOR_LCLSSYSTM2:
+        return True
+    if upper in _INDOOR_LCLSSYSTM2:
+        return False
+    return None
+
 
 def _normalize(text: str) -> str:
     """places.py normalize()와 동일 — 동작을 반드시 맞춰야 한다."""
@@ -45,6 +78,7 @@ class CsvPlaceLookup:
         self.misses: dict[str, int] = {}
         self._rows: list[dict[str, str]] = []
         self._by_norm: dict[str, dict[str, str]] = {}
+        self._by_content_id: dict[str, dict[str, str]] = {}
         self._load(csv_path)
 
     def _load(self, path: Path) -> None:
@@ -66,6 +100,9 @@ class CsvPlaceLookup:
                     first_key = _normalize(first)
                     if first_key and first_key not in self._by_norm:
                         self._by_norm[first_key] = row
+                content_id = str(row.get("contentid") or "").strip()
+                if content_id and content_id not in self._by_content_id:
+                    self._by_content_id[content_id] = row
 
     def find(self, place_name: str, *, area_code: str | None = None, **_kwargs: Any) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 없으면 None."""
@@ -111,3 +148,9 @@ class CsvPlaceLookup:
             "longitude": lon,
             "address": addr,
         }
+
+    def find_by_content_id(self, content_id: str) -> dict[str, str] | None:
+        """contentid로 CSV 원본 행을 반환한다. 없으면 None."""
+        if not content_id:
+            return None
+        return self._by_content_id.get(str(content_id).strip())
