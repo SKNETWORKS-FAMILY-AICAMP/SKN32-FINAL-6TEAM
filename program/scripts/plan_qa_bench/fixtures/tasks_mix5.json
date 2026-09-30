@@ -1,0 +1,938 @@
+{
+ "today": "2026-10-30",
+ "items": [
+  {
+   "id": 1,
+   "date": "2026-11-02",
+   "start": "10:10",
+   "kind": "mobility",
+   "title": "김포공항역에서 지하철 이동",
+   "place": "김포공항역"
+  },
+  {
+   "id": 2,
+   "date": "2026-11-02",
+   "start": "11:30",
+   "kind": "lodging",
+   "title": "호텔 체크인",
+   "place": "신라스테이 광화문"
+  },
+  {
+   "id": 3,
+   "date": "2026-11-02",
+   "start": "12:30",
+   "kind": "dining",
+   "title": "미진에서 메밀국수 점심",
+   "place": "미진"
+  },
+  {
+   "id": 4,
+   "date": "2026-11-02",
+   "start": "14:30",
+   "kind": "activity",
+   "title": "청와대 관람",
+   "place": "청와대"
+  },
+  {
+   "id": 5,
+   "date": "2026-11-02",
+   "start": "16:30",
+   "kind": "activity",
+   "title": "국립고궁박물관 관람",
+   "place": "국립고궁박물관"
+  },
+  {
+   "id": 6,
+   "date": "2026-11-02",
+   "start": "18:30",
+   "kind": "dining",
+   "title": "광화문집 저녁",
+   "place": "광화문집"
+  },
+  {
+   "id": 7,
+   "date": "2026-11-03",
+   "start": "09:30",
+   "kind": "activity",
+   "title": "국립한글박물관 관람",
+   "place": "국립한글박물관"
+  },
+  {
+   "id": 8,
+   "date": "2026-11-03",
+   "start": "12:00",
+   "kind": "dining",
+   "title": "을지면옥 냉면 점심",
+   "place": "을지면옥"
+  },
+  {
+   "id": 9,
+   "date": "2026-11-03",
+   "start": "14:00",
+   "kind": "activity",
+   "title": "국립극장 공연",
+   "place": "국립극장"
+  },
+  {
+   "id": 10,
+   "date": "2026-11-03",
+   "start": "16:00",
+   "kind": "dining",
+   "title": "남산 카페",
+   "place": "테라로사 포스코센터점"
+  },
+  {
+   "id": 11,
+   "date": "2026-11-03",
+   "start": "18:00",
+   "kind": "activity",
+   "title": "마로니에공원 산책",
+   "place": "마로니에공원"
+  },
+  {
+   "id": 12,
+   "date": "2026-11-03",
+   "start": "19:30",
+   "kind": "dining",
+   "title": "대학로 곱창 저녁",
+   "place": "대학로 곱창골목"
+  },
+  {
+   "id": 13,
+   "date": "2026-11-04",
+   "start": "09:30",
+   "kind": "mobility",
+   "title": "지하철로 합정역 이동",
+   "place": "합정역"
+  },
+  {
+   "id": 14,
+   "date": "2026-11-04",
+   "start": "10:30",
+   "kind": "activity",
+   "title": "절두산 순교성지 산책",
+   "place": "절두산순교성지"
+  },
+  {
+   "id": 15,
+   "date": "2026-11-04",
+   "start": "12:30",
+   "kind": "dining",
+   "title": "진주집 콩국수 점심",
+   "place": "진주집"
+  },
+  {
+   "id": 16,
+   "date": "2026-11-04",
+   "start": "14:30",
+   "kind": "activity",
+   "title": "상상마당 전시 보기",
+   "place": "KT&G 상상마당"
+  },
+  {
+   "id": 17,
+   "date": "2026-11-04",
+   "start": "16:30",
+   "kind": "dining",
+   "title": "연희동 카페",
+   "place": "앤트러사이트 연희점"
+  },
+  {
+   "id": 18,
+   "date": "2026-11-04",
+   "start": "18:00",
+   "kind": "activity",
+   "title": "경의선 책거리 산책",
+   "place": "경의선책거리"
+  },
+  {
+   "id": 19,
+   "date": "2026-11-04",
+   "start": "19:30",
+   "kind": "dining",
+   "title": "마포 소금구이 저녁",
+   "place": "마포 소금구이 골목"
+  },
+  {
+   "id": 20,
+   "date": "2026-11-05",
+   "start": "09:00",
+   "kind": "lodging",
+   "title": "호텔 체크아웃",
+   "place": "신라스테이 광화문"
+  },
+  {
+   "id": 21,
+   "date": "2026-11-05",
+   "start": "09:40",
+   "kind": "mobility",
+   "title": "택시로 용산역 이동",
+   "place": "용산역"
+  },
+  {
+   "id": 22,
+   "date": "2026-11-05",
+   "start": "10:30",
+   "kind": "activity",
+   "title": "용산가족공원 산책",
+   "place": "용산가족공원"
+  },
+  {
+   "id": 23,
+   "date": "2026-11-05",
+   "start": "12:30",
+   "kind": "dining",
+   "title": "부대찌개 점심",
+   "place": "용산 부대찌개골목"
+  },
+  {
+   "id": 24,
+   "date": "2026-11-05",
+   "start": "14:30",
+   "kind": "activity",
+   "title": "디뮤지엄 전시",
+   "place": "디뮤지엄"
+  },
+  {
+   "id": 25,
+   "date": "2026-11-05",
+   "start": "17:00",
+   "kind": "lodging",
+   "title": "호텔 체크인",
+   "place": "그랜드 인터컨티넨탈 서울 파르나스"
+  },
+  {
+   "id": 26,
+   "date": "2026-11-05",
+   "start": "19:00",
+   "kind": "dining",
+   "title": "삼원가든 한우 저녁",
+   "place": "삼원가든"
+  },
+  {
+   "id": 27,
+   "date": "2026-11-06",
+   "start": "09:00",
+   "kind": "activity",
+   "title": "양재시민의숲 산책",
+   "place": "양재시민의숲"
+  },
+  {
+   "id": 28,
+   "date": "2026-11-06",
+   "start": "11:30",
+   "kind": "dining",
+   "title": "서래마을 브런치",
+   "place": "서래마을 브런치카페"
+  },
+  {
+   "id": 29,
+   "date": "2026-11-06",
+   "start": "13:30",
+   "kind": "activity",
+   "title": "서래마을 골목 산책",
+   "place": "서래마을"
+  },
+  {
+   "id": 30,
+   "date": "2026-11-06",
+   "start": "15:30",
+   "kind": "activity",
+   "title": "롯데월드몰 쇼핑",
+   "place": "롯데월드몰"
+  },
+  {
+   "id": 31,
+   "date": "2026-11-06",
+   "start": "18:00",
+   "kind": "dining",
+   "title": "푸드홀에서 저녁",
+   "place": "롯데월드몰"
+  },
+  {
+   "id": 32,
+   "date": "2026-11-07",
+   "start": "09:00",
+   "kind": "lodging",
+   "title": "호텔 체크아웃",
+   "place": "그랜드 인터컨티넨탈 서울 파르나스"
+  },
+  {
+   "id": 33,
+   "date": "2026-11-07",
+   "start": "10:30",
+   "kind": "activity",
+   "title": "이화벽화마을 산책",
+   "place": "이화벽화마을"
+  },
+  {
+   "id": 34,
+   "date": "2026-11-07",
+   "start": "12:00",
+   "kind": "activity",
+   "title": "익선동 한옥거리 구경",
+   "place": "익선동 한옥거리"
+  },
+  {
+   "id": 35,
+   "date": "2026-11-07",
+   "start": "13:00",
+   "kind": "dining",
+   "title": "북촌손만두 점심",
+   "place": "북촌손만두"
+  },
+  {
+   "id": 36,
+   "date": "2026-11-07",
+   "start": "15:00",
+   "kind": "activity",
+   "title": "마로니에공원 마지막 산책",
+   "place": "마로니에공원"
+  },
+  {
+   "id": 37,
+   "date": "2026-11-07",
+   "start": "16:30",
+   "kind": "dining",
+   "title": "효자베이커리 간식",
+   "place": "효자베이커리"
+  },
+  {
+   "id": 38,
+   "date": "2026-11-07",
+   "start": "19:00",
+   "kind": "mobility",
+   "title": "공항철도로 인천공항 이동",
+   "place": "서울역"
+  }
+ ],
+ "qs": [
+  {
+   "full": "거기 줄 길어?",
+   "tt": "거기 줄 길어?",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "첫날 점심 어디야"
+    },
+    {
+     "role": "service",
+     "text": "12시 30분 미진 메밀국수예요"
+    }
+   ]
+  },
+  {
+   "full": "뒤에 거 시간 바꿔줘",
+   "tt": "뒤에 거 시간 바꿔줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "수요일 오전 뭐 있어"
+    },
+    {
+     "role": "service",
+     "text": "합정역 이동, 절두산 순교성지 산책이에요"
+    }
+   ]
+  },
+  {
+   "full": "새로 가는 호텔 조식 되나?",
+   "tt": "새로 가는 호텔 조식 되나?",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "목요일 숙소 알려줘"
+    },
+    {
+     "role": "service",
+     "text": "오전 9시 신라스테이 체크아웃, 17시 파르나스 체크인이에요"
+    }
+   ]
+  },
+  {
+   "full": "그 집 예약 필요해?",
+   "tt": "그 집 예약 필요해?",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "금요일 저녁 뭐야"
+    },
+    {
+     "role": "service",
+     "text": "롯데월드몰 푸드홀 저녁(18시)이에요"
+    }
+   ]
+  },
+  {
+   "full": "가운데 거 취소해줘",
+   "tt": "가운데 거 취소해줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "화요일 오후 일정"
+    },
+    {
+     "role": "service",
+     "text": "국립극장 공연(14시), 테라로사 카페(16시), 마로니에공원 산책(18시)이에요"
+    }
+   ]
+  },
+  {
+   "full": "그거 30분 당겨줘",
+   "tt": "그거 30분 당겨줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "토요일 마지막 일정 뭐야"
+    },
+    {
+     "role": "service",
+     "text": "19시 서울역에서 공항철도로 인천공항 이동이에요"
+    }
+   ]
+  },
+  {
+   "full": "거기서 그 다음 일정은?",
+   "tt": "거기서 그 다음 일정은?",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "청와대 몇 시야"
+    },
+    {
+     "role": "service",
+     "text": "첫날 14시 30분이에요"
+    }
+   ]
+  },
+  {
+   "full": "산책 쪽만 빼줘",
+   "tt": "산책 쪽만 빼줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "서래마을 일정 알려줘"
+    },
+    {
+     "role": "service",
+     "text": "금요일 브런치(11시 30분)와 산책(13시 30분) 두 개예요"
+    }
+   ]
+  },
+  {
+   "full": "화요일 마로니에공원 몇 시야",
+   "tt": "화요일 마로니에공원 몇 시야",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "토요일 마로니에공원 취소",
+   "tt": "토요일 마로니에공원 취소",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "서래마을 브런치 시간",
+   "tt": "서래마을 브런치 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "서래마을 산책 몇 시",
+   "tt": "서래마을 산책 몇 시",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "롯데월드몰 쇼핑 시간",
+   "tt": "롯데월드몰 쇼핑 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "롯데월드몰 저녁 예약했어?",
+   "tt": "롯데월드몰 저녁 예약했어?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "신라스테이 체크아웃 시간",
+   "tt": "신라스테이 체크아웃 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "파르나스 체크인 몇 시야",
+   "tt": "파르나스 체크인 몇 시야",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "국립고궁박물관 관람 시간",
+   "tt": "국립고궁박물관 관람 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "국립한글박물관 몇 시",
+   "tt": "국립한글박물관 몇 시",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "국립극장 공연 시간",
+   "tt": "국립극장 공연 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "미진 예약했어?",
+   "tt": "미진 예약했어?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "을지면옥 시간",
+   "tt": "을지면옥 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "절두산 몇시에 가",
+   "tt": "절두산 몇시에 가",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "경의선책거리 시간",
+   "tt": "경의선책거리 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "국립현대미술관은 언제 가?",
+   "tt": "국립현대미술관은 언제 가?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "청와대 취소하고 고궁박물관 시간 알려줘",
+   "tt": "청와대",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "을지면옥 예약하고 국립극장 몇 시인지도",
+   "tt": "을지면옥",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "디뮤지엄 시간 옮기고 용산가족공원 취소해줘",
+   "tt": "디뮤지엄 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "양재시민의숲 몇 시야? 그리고 서래마을은?",
+   "tt": "양재시민의숲 몇 시야",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "진주집 빼고 상상마당 한 시간 당겨줘",
+   "tt": "진주집",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "미진 취소, 청와대는 그대로",
+   "tt": "미진 취소",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "효자베이커리 시간 알려주고 북촌손만두도",
+   "tt": "효자베이커리 시간",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "합정역 이동 미루고 절두산도 빼줘",
+   "tt": "합정역 이동",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "청와대 말고 국립고궁박물관 시간",
+   "tt": "국립고궁박물관 시간",
+   "excl": "청와대",
+   "history": []
+  },
+  {
+   "full": "미진 말고 그 다음 일정 시간",
+   "tt": "그 다음 일정 시간",
+   "excl": "미진",
+   "history": []
+  },
+  {
+   "full": "국립극장 말고 그 전 일정",
+   "tt": "그 전 일정",
+   "excl": "국립극장",
+   "history": []
+  },
+  {
+   "full": "이화벽화마을 말고 익선동 취소",
+   "tt": "익선동 취소",
+   "excl": "이화벽화마을",
+   "history": []
+  },
+  {
+   "full": "월요일 청와대 말고 저녁 시간",
+   "tt": "저녁 시간",
+   "excl": "월요일 청와대",
+   "history": []
+  },
+  {
+   "full": "화요일 국립극장 말고 첫 일정",
+   "tt": "첫 일정",
+   "excl": "화요일 국립극장",
+   "history": []
+  },
+  {
+   "full": "마로니에공원 화요일 말고 토요일 거 시간",
+   "tt": "토요일 거 시간",
+   "excl": "마로니에공원 화요일",
+   "history": []
+  },
+  {
+   "full": "북촌손만두 말고 효자베이커리 시간",
+   "tt": "효자베이커리 시간",
+   "excl": "북촌손만두",
+   "history": []
+  },
+  {
+   "full": "청와대 몇시얌",
+   "tt": "청와대 몇시얌",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "고궁박물관 몇시임?",
+   "tt": "고궁박물관 몇시임?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "한글박물관 몇싱",
+   "tt": "한글박물관 몇싱",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "을지면옥 시간ㅇㅇ",
+   "tt": "을지면옥 시간ㅇㅇ",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "양제시민의숲 몇시욤",
+   "tt": "양제시민의숲 몇시욤",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "상상마당 몇시양",
+   "tt": "상상마당 몇시양",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "이화벽화마을 시간임?",
+   "tt": "이화벽화마을 시간임?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "북촌만두 취소ㅠㅠ",
+   "tt": "북촌만두 취소ㅠㅠ",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "지금 몇 도야?",
+   "tt": "지금 몇 도야?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "ㅎㅎㅎㅎ",
+   "tt": "ㅎㅎㅎㅎ",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "이더리움 시세 알려줘",
+   "tt": "이더리움 시세 알려줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "파이썬 리스트 정렬 코드",
+   "tt": "파이썬 리스트 정렬 코드",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "너 누가 만들었어",
+   "tt": "너 누가 만들었어",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "서울에서 자전거 빌리는 법",
+   "tt": "서울에서 자전거 빌리는 법",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "고생하셨어요 감사합니다",
+   "tt": "고생하셨어요 감사합니다",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "청와대 시간"
+    },
+    {
+     "role": "service",
+     "text": "14시 30분이에요"
+    }
+   ]
+  },
+  {
+   "full": "취소 수수료 얼마야?",
+   "tt": "취소 수수료 얼마야?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "메밀국수 먹는 첫날 점심",
+   "tt": "메밀국수 먹는 첫날 점심",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "냉면집 화요일 점심",
+   "tt": "냉면집 화요일 점심",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "옛 대통령 관저 구경",
+   "tt": "옛 대통령 관저 구경",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "한글 전시 보는 곳",
+   "tt": "한글 전시 보는 곳",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "공연 보는 날 오후",
+   "tt": "공연 보는 날 오후",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "벽화 골목 걷는 거",
+   "tt": "벽화 골목 걷는 거",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "빵집에서 간식",
+   "tt": "빵집에서 간식",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "책방 골목 산책",
+   "tt": "책방 골목 산책",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "화요일 첫 식사",
+   "tt": "화요일 첫 식사",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "목요일 마지막 일정",
+   "tt": "목요일 마지막 일정",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "이틀째 세번째",
+   "tt": "이틀째 세번째",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "금요일 두번째 활동",
+   "tt": "금요일 두번째 활동",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "청와대 바로 다음",
+   "tt": "청와대 바로 다음",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "을지면옥 끝나고 뭐 해?",
+   "tt": "을지면옥 끝나고 뭐 해?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "마지막 날 첫 일정",
+   "tt": "마지막 날 첫 일정",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "여행 마지막 식사",
+   "tt": "여행 마지막 식사",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "청와대 30분 미뤄줘",
+   "tt": "청와대 30분 미뤄줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "이화벽화마을 빼줘",
+   "tt": "이화벽화마을 빼줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "디뮤지엄 취소할게요",
+   "tt": "디뮤지엄 취소할게요",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "국립극장 한 시간 당겨줘",
+   "tt": "국립극장 한 시간 당겨줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "일정 좀 옮겨줘",
+   "tt": "일정 좀 옮겨줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "그 시간 미뤄주세요",
+   "tt": "그 시간 미뤄주세요",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "그거 취소해줘",
+   "tt": "그거 취소해줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "삼원가든 몇 시야"
+    },
+    {
+     "role": "service",
+     "text": "목요일 19시예요"
+    }
+   ]
+  },
+  {
+   "full": "삭제해줘",
+   "tt": "삭제해줘",
+   "excl": null,
+   "history": [
+    {
+     "role": "customer",
+     "text": "절두산 시간"
+    },
+    {
+     "role": "service",
+     "text": "수요일 10시 30분이에요"
+    }
+   ]
+  },
+  {
+   "full": "N서울타워 전망대 몇 시",
+   "tt": "N서울타워 전망대 몇 시",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "이태원 클럽 언제 가",
+   "tt": "이태원 클럽 언제 가",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "강남역 지하상가 몇 시",
+   "tt": "강남역 지하상가 몇 시",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "어린이대공원 몇 시야",
+   "tt": "어린이대공원 몇 시야",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "경복궁 언제 가?",
+   "tt": "경복궁 언제 가?",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "북촌한옥마을 시간 알려줘",
+   "tt": "북촌한옥마을 시간 알려줘",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "코엑스 별마당 몇 시야",
+   "tt": "코엑스 별마당 몇 시야",
+   "excl": null,
+   "history": []
+  },
+  {
+   "full": "서울숲 몇 시에 가",
+   "tt": "서울숲 몇 시에 가",
+   "excl": null,
+   "history": []
+  }
+ ]
+}

@@ -110,4 +110,12 @@ qv, dv = batched([qtext(q) for q in qs]), batched(ds)
 qi, di = {q: i for i, q in enumerate(qs)}, {d: i for i, d in enumerate(ds)}
 sc = [float((qv[qi[p['q']]] * dv[di[p['doc']]]).sum()) for p in pairs]
 json.dump({f'ft/emb_{tag}': sc}, open(f'ft_{tag}_scores.json', 'w'))
+model.save_pretrained(f'ft_{tag}_adapter')          # 새 세트(mix5)를 같은 모델로 잴 수 있게 가중치 저장
+if os.path.exists('pairs_mix5.json'):
+    p5 = json.load(open('pairs_mix5.json', encoding='utf-8'))
+    q5, d5 = sorted({p['q'] for p in p5}), sorted({p['doc'] for p in p5})
+    qv5, dv5 = batched([qtext(q) for q in q5]), batched(d5)
+    i5, j5 = {q: i for i, q in enumerate(q5)}, {d: i for i, d in enumerate(d5)}
+    json.dump({f'ft/emb_{tag}': [float((qv5[i5[p['q']]] * dv5[j5[p['doc']]]).sum()) for p in p5]}, open(f'ft_{tag}_mix5_scores.json', 'w'))
+    print('mix5 쌍 점수 저장', len(p5))
 print('heavy·mix4 쌍 점수 저장', len(sc), f'{time.time() - t0:.0f}s')
