@@ -17,6 +17,7 @@ from typing import Any
 
 _CSV_PATH = Path(__file__).parent / "data_processing" / "activity_total_data.csv"
 _BRANCH = re.compile(r"\s*(본점|직영점|\S+점)$")
+_COMPOUND_SEP = re.compile(r"[&·,+]")
 
 
 def _normalize(text: str) -> str:
@@ -58,6 +59,13 @@ class CsvPlaceLookup:
                 key = _normalize(title)
                 if key not in self._by_norm:
                     self._by_norm[key] = row
+                # 복합명("A&B", "A·B") → 첫 부분도 별도 키로 등록
+                # 예) "롯데월드타워&롯데월드몰" → "롯데월드타워"도 검색 가능
+                if _COMPOUND_SEP.search(title):
+                    first = _COMPOUND_SEP.split(title)[0].strip()
+                    first_key = _normalize(first)
+                    if first_key and first_key not in self._by_norm:
+                        self._by_norm[first_key] = row
 
     def find(self, place_name: str, *, area_code: str | None = None, **_kwargs: Any) -> dict[str, Any] | None:
         """이름으로 장소 하나를 찾는다. 없으면 None."""
@@ -70,14 +78,13 @@ class CsvPlaceLookup:
         # ① 정확 일치
         row = self._by_norm.get(key)
 
-        # ② 접두사 일치 — 단독 1건만(ambiguous 방지)
+        # ② 접두사 일치 — 여러 개면 정규화 제목이 가장 짧은 것(쿼리에 가장 가까운 것)
         if row is None:
             prefix = [r for r in self._rows if _normalize(r.get("title", "")).startswith(key)]
             if len(prefix) == 1:
                 row = prefix[0]
             elif len(prefix) > 1:
-                self.misses["ambiguous"] = self.misses.get("ambiguous", 0) + 1
-                return None
+                row = min(prefix, key=lambda r: len(_normalize(r.get("title", ""))))
 
         if row is None:
             self.misses["not_found"] = self.misses.get("not_found", 0) + 1

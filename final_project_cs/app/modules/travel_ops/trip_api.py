@@ -55,10 +55,11 @@ _csv_places = _CsvPlaceLookup()
 
 
 class _CsvFallbackTour:
-    """real tour_api가 rate_limited일 때 CSV로 폴백하는 래퍼.
+    """CSV 전용 장소 조회 — CSV에 없으면 None(not_found).
 
-    _tour()가 tour.misses["rate_limited"] 증가를 감지해 blocked 목록에 올리므로,
-    CSV에서 찾았을 때는 misses에 rate_limited를 쌓지 않는다.
+    activity_total_data.csv(1,586개 서울 액티비티)만 사용한다.
+    외부 API(tour_api · kakao)를 호출하지 않으므로 rate limit · 403 오류가 없다.
+    CSV에 없는 장소는 not_found로 처리한다.
     """
 
     def __init__(self, real: Any, csv_lookup: _CsvPlaceLookup) -> None:
@@ -67,16 +68,9 @@ class _CsvFallbackTour:
         self.misses: dict[str, int] = {}
 
     def find(self, place_name: str, *, area_code: str | None = None, **kw: Any) -> dict[str, Any] | None:
-        real_misses_before = (getattr(self._real, "misses", None) or {}).get("rate_limited", 0) if self._real else 0
-        result = self._real.find(place_name, area_code=area_code, **kw) if self._real else None
-        real_misses_after = (getattr(self._real, "misses", None) or {}).get("rate_limited", 0) if self._real else 0
-
-        was_rate_limited = (real_misses_after > real_misses_before) or (self._real is None)
-        if result is None and was_rate_limited:
-            csv_result = self._csv.find(place_name)
-            if csv_result is not None:
-                return csv_result
-            self.misses["rate_limited"] = self.misses.get("rate_limited", 0) + 1
+        result = self._csv.find(place_name)
+        if result is None:
+            self.misses["not_found"] = self.misses.get("not_found", 0) + 1
         return result
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
