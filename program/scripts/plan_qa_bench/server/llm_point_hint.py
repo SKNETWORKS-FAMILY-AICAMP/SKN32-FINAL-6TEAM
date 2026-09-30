@@ -3,7 +3,7 @@
 #  MODE=restrict : 일정에 상위 5개 항목만 싣는다(입력 토큰 약 1/8) — 재현율 상한이 있다(Codex 가 지적한 C안)
 #  힌트 파일 hints_<JOB>.json = {"top": [[id…5개], …문제 순서]} (로컬에서 학습 임베딩 점수로 만든다)
 #  사용: MODE=hint JOB=mix5 python3 llm_point_hint.py 모델...   → llm_<JOB>_<MODE>_out.json
-import json, os, sys, time, urllib.request
+import json, math, os, sys, time, urllib.request
 from datetime import date
 
 JOB = os.environ.get('JOB', 'heavy')
@@ -23,7 +23,8 @@ def lab(i):
     return f"{i['id']}. {days.index(i['date']) + 1}일차 {d.month}/{d.day}({W[d.weekday()]}) {i['start']} [{i['kind']}] {i['title']} @ {i['place']}"
 
 
-OUTF = f'llm_{JOB}_{MODE}_out.json'
+LP = os.environ.get('LP') == '1'            # LP=1: 답 토큰 확률(확신도)도 저장 — 파일 이름에 _lp 가 붙는다
+OUTF = f'llm_{JOB}_{MODE}{"_lp" if LP else ""}_out.json'
 out = json.load(open(OUTF)) if os.path.exists(OUTF) else {}
 
 
@@ -39,7 +40,7 @@ def post(b):
 
 
 for model in models:
-    picks, errs, t0 = [], 0, time.time()
+    picks, confs, errs, t0 = [], [], 0, time.time()
     for qi, x in enumerate(job['qs']):
         top = [t for t in hints[qi] if t in ids]
         if MODE == 'restrict':
@@ -55,14 +56,28 @@ for model in models:
             hist = '앞 대화:\n' + '\n'.join(f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']) + '\n\n'
         text = (f"오늘은 {job['today']} 이다. {head}\n{plan}{note}\n\n{hist}고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라. "
                 "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null.")
-        r = post({'model': model, 'stream': False, 'format': S, 'think': False, 'options': {'temperature': 0}, 'messages': [{'role': 'user', 'content': text}]})
+        body = {'model': model, 'stream': False, 'format': S, 'think': False, 'options': {'temperature': 0}, 'messages': [{'role': 'user', 'content': text}]}
+        if LP:
+            body.update({'logprobs': True, 'top_logprobs': 3})
+        r = post(body)
         errs += 'error' in r
         try:
             v = json.loads(r['message']['content']).get('item')
         except Exception:  # noqa: BLE001
             v = None
         picks.append(v if v in ids else None)
-    out[model] = {'picks': picks, '_errors': errs, '_sec_per_q': (time.time() - t0) / len(job['qs'])}
+        if LP:
+            toks = r.get('logprobs') or []
+            joined = ''.join(t.get('token', '') for t in toks)
+            k = joined.find(':')
+            acc, lp = '', 0.0
+            for t in toks:
+                piece = t.get('token', '')
+                if k >= 0 and len(acc) > k and '}' not in piece and piece.strip():
+                    lp += t.get('logprob', 0.0)
+                acc += piece
+            confs.append(math.exp(lp) if toks else None)
+    out[model] = {'picks': picks, 'conf': confs, '_errors': errs, '_sec_per_q': (time.time() - t0) / len(job['qs'])}
     json.dump(out, open(OUTF + '.tmp', 'w'), ensure_ascii=False)
     os.replace(OUTF + '.tmp', OUTF)
     print(MODE, JOB, model, f"{out[model]['_sec_per_q']:.2f}s/q errors={errs}", flush=True)

@@ -27,6 +27,9 @@ model = get_peft_model(model, LoraConfig(r=rank, lora_alpha=2 * rank, lora_dropo
 print('학습 가능 파라미터', sum(p.numel() for p in model.parameters() if p.requires_grad), flush=True)
 
 
+ZS = (chr(10) * 2 + '답은 JSON 한 줄로만: {"item": 번호} 또는 {"item": null}') if epochs == 0 else ''   # 제로샷(학습 없음)에만 형식 지시를 붙인다
+
+
 def chat(text):
     msgs = [{'role': 'user', 'content': text}]
     try:
@@ -86,12 +89,14 @@ model.config.use_cache = True
 def answer(texts, bs=6):
     outs = []
     for k in range(0, len(texts), bs):
-        enc = tok([chat(t) for t in texts[k:k + bs]], return_tensors='pt', padding=True, add_special_tokens=False).to('cuda')
+        enc = tok([chat(t + ZS) for t in texts[k:k + bs]], return_tensors='pt', padding=True, add_special_tokens=False).to('cuda')
         with torch.autocast('cuda', dtype=torch.bfloat16):
             g = model.generate(**enc, max_new_tokens=14, do_sample=False, pad_token_id=tok.pad_token_id)
         for row in g:
             s = tok.decode(row[enc['input_ids'].shape[1]:], skip_special_tokens=True)
             m = re.search(r'"item"\s*:\s*(null|\d+)', s)
+            if not m and epochs == 0:                 # 제로샷은 형식이 흐트러질 수 있다 — 첫 정수 또는 null 을 읽는다
+                m = re.search(r'(null|\d+)', s)
             outs.append(None if (not m or m.group(1) == 'null') else int(m.group(1)))
     return outs
 
