@@ -915,6 +915,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 intake_id = open_intake(conn, tenant_id=tenant, customer_id=customer, text=text, files=blobs)
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+        if not text.strip() and not blobs:
+            # ★`[2026-09-30 사용자 결정]` 빈 접수는 읽을 것이 없다 — 뒤에서 읽지 않고 곧바로 확인 화면(`review`)이다
+            return {"intake_id": str(intake_id), "status": "review", "stage": "review", "human_check": human}
         offset = 1 if text.strip() else 0
         chat = _lazy("chat", chat_factory)
         background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,

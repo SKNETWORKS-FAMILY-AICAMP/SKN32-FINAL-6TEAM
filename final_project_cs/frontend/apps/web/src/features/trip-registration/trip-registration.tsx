@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, Paperclip, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
 import { mapConfiguration } from "@/features/map/config";
@@ -122,7 +122,9 @@ export function TripRegistration() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    if (!value.trim() && !(live && files.length)) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
+    // ★`[2026-09-30 사용자 결정]` Live: an empty plan is not an error — it goes on to the next page, where the server
+    //   offers 「대신 짜 드릴까요?」 (first day · days · travelers → plan and register). The demo still needs a plan to read.
+    if (!live && !value.trim()) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     if (live) intake.mutate(); else create.mutate();
@@ -145,12 +147,112 @@ export function TripRegistration() {
           <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
             placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
           <div className={styles.inputMeta}><span id="plan-format">{t("날짜 · 시간 · 장소를 함께 적어 주세요.", "Include dates, times, and places.")}</span><span>{value.length.toLocaleString()} / 12,000</span></div>
-          {live && <div className={styles.files}>
-            <label htmlFor="plan-files">{t("사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)", "You can also upload a photo, PDF, Word or Excel plan (up to 5 files, 10MB each)")}</label>
-            <input id="plan-files" type="file" multiple accept="image/*,.pdf,.docx,.xlsx,.txt" disabled={pending}
-              onChange={(event) => { setFiles(Array.from(event.target.files ?? []).slice(0, 5)); setValidation(""); intake.reset(); }} />
-            {files.length > 0 && <p>{files.map((file) => file.name).join(" · ")}</p>}
-          </div>}
+          {/* 2026-09-30: file picker designed by Codex astra — the native input stays (hidden) for keyboard and screen readers. */}
+          {live && (
+            <div className={`${styles.files} ${styles.filePanel}`}>
+              <div className={styles.filePicker}>
+                <input
+                  className={styles.fileInput}
+                  id="plan-files"
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.docx,.xlsx,.txt"
+                  disabled={pending}
+                  aria-describedby="plan-files-help plan-files-status"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      if (!event.repeat) event.currentTarget.click();
+                    }
+                  }}
+                  onChange={(event) => {
+                    const selected = Array.from(event.currentTarget.files ?? []);
+                    if (selected.length === 0) return;
+
+                    setFiles(selected.slice(0, 5));
+                    setValidation("");
+                    intake.reset();
+
+                    // 같은 파일도 다시 선택할 수 있도록 초기화합니다.
+                    // 제출할 파일은 기존 files state에 보관됩니다.
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <label className={styles.fileTrigger} htmlFor="plan-files">
+                  <Paperclip size={18} aria-hidden="true" />
+                  <span>
+                    {pending
+                      ? t("처리 중…", "Processing…")
+                      : t("파일 선택", "Choose files")}
+                  </span>
+                </label>
+              </div>
+
+              <p id="plan-files-help" className={styles.fileHelp}>
+                {t(
+                  "사진 · PDF · 워드 · 엑셀로 된 계획도 올릴 수 있어요 (최대 5개, 한 개 10MB)",
+                  "You can also upload a photo, PDF, Word or Excel plan (up to 5 files, 10MB each)",
+                )}
+              </p>
+
+              <p
+                id="plan-files-status"
+                className={styles.fileStatus}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {t(`${files.length} / 5개 선택됨`, `${files.length} / 5 files selected`)}
+              </p>
+
+              {files.length > 0 && (
+                <ul
+                  className={`${styles.fileList}${pending ? ` ${styles.fileListBusy}` : ""}`}
+                  aria-label={t("선택한 파일", "Selected files")}
+                >
+                  {files.map((file, index) => (
+                    <li
+                      className={styles.fileChip}
+                      key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
+                    >
+                      <FileText
+                        className={styles.fileIcon}
+                        size={18}
+                        aria-hidden="true"
+                      />
+
+                      <div className={styles.fileDetails}>
+                        <span className={styles.fileName}>{file.name}</span>
+                        <span className={styles.fileSize}>
+                          {file.size < 1024
+                            ? `${file.size} B`
+                            : file.size < 1024 * 1024
+                              ? `${Math.ceil(file.size / 1024)} KB`
+                              : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
+                        </span>
+                      </div>
+
+                      <button
+                        className={styles.fileRemove}
+                        type="button"
+                        disabled={pending}
+                        aria-label={t(`${file.name} 빼기`, `Remove ${file.name}`)}
+                        onClick={() => {
+                          setFiles((current) =>
+                            current.filter((_, fileIndex) => fileIndex !== index),
+                          );
+                          setValidation("");
+                          intake.reset();
+                        }}
+                      >
+                        <X size={16} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}

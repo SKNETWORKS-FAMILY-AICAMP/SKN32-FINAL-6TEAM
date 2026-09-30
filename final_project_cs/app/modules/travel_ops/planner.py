@@ -1121,8 +1121,8 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
             found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
         if matched:
             found["record"]["matched_by_name"] = matched
-        # ★`[2026-09-29]` 모델을 못 불러 못 읽은 것(시간 예산 초과 · 모델 꺼짐 · 모델 없이 규칙만 읽은 요청)은 캐시하지 않는다 —
-        #   6시간 「모름」으로 굳으면 뒤에서 모델로 읽는 일(`catalog_pool._read_later`)이 캐시만 보고 끝난다
+        # ★`[2026-09-29]` 모델을 못 불러 못 읽은 것(모델 꺼짐 · 모델 호출 실패)은 캐시하지 않는다 —
+        #   6시간 「모름」으로 굳으면 모델이 돌아온 뒤에도 그 장소가 계속 모름으로 남는다
         if not any(str(d).startswith(("모델 호출 실패", "모델이 연결돼 있지 않다"))
                    for d in found["record"].get("dropped") or []):
             _HOURS_CACHE[key] = (_time.time(), found)

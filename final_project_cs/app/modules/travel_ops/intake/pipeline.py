@@ -44,7 +44,14 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
     """접수 한 건. `files` = [(파일 이름, 바이트)]. ★종류는 첫 바이트로 — 모르는 형식은 여기서 거절한다."""
     text = (text or "").strip()
     if not text and not files:
-        raise IntakeRejected("empty_intake", "글이나 파일을 하나 이상 보내 주세요")
+        # ★`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 「계획 확인하기」를 눌러도 **다음 화면으로 넘어간다** —
+        #   읽을 것이 없으니 곧바로 확인 화면 상태(`review`)로 만든다. 그 화면에 「읽은 일정이 없어요 — 대신 짜 드릴까요?」 짜기 칸이
+        #   이미 있다. 「짜 달라는 요청」 표시(`trip.plan_request`)는 넣지 않는다 — 고객이 그 칸에서 직접 고른다.
+        #   ☆전에는 422 `empty_intake` 로 거절했다. 사람 확인 · 남용 방어 한도는 부르는 쪽이 그대로 적용한다(빈 접수도 한 건).
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, stage) VALUES (%s,%s,'review','review') "
+                        "RETURNING intake_id", (tenant_id, customer_id))
+            return cur.fetchone()[0]
     if len(text) > MAX_TEXT_CHARS:
         raise IntakeRejected("text_too_long", f"글은 {MAX_TEXT_CHARS:,}자까지 받아요")
     if len(files) > MAX_FILES:

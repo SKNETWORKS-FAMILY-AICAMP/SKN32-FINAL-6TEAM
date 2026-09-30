@@ -165,8 +165,6 @@ def test_unknown_files_are_refused_at_the_door_and_photos_need_a_reader(api):
     refused = client.post("/v1/web/trip-intakes", headers=headers,
                           files=[("files", ("x.bin", b"\x00\x01\x02binary", "application/octet-stream"))])
     assert refused.status_code == 422 and refused.json()["error"]["code"] == "unsupported_format"
-    empty = client.post("/v1/web/trip-intakes", headers=headers, data={"text": "  "})
-    assert empty.status_code == 422 and empty.json()["error"]["code"] == "empty_intake"
     # 받아쓰기 모델이 없으면 사진은 「읽지 못함」— 지어내지 않는다
     view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
     assert view["status"] == "fatal" and view["fatal"]["code"] == "unsupported_format", view
@@ -468,3 +466,17 @@ def test_a_plan_with_the_date_on_every_line_registers_on_those_days(api):
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT title FROM trips WHERE tenant_id=%s AND trip_id=%s", (api["tenant"], trip["trip_id"]))
         assert cur.fetchone()[0] == "내 여행"
+
+
+def test_an_empty_intake_goes_straight_to_the_review_screen_where_the_plan_box_is(api):
+    """`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 접수해도 거절하지 않는다 — 읽을 것 없이 곧바로 확인 화면 상태다.
+    「짜 달라는 요청」 표시는 없다(고객이 그 화면의 짜기 칸에서 직접 고른다). 거기서 `/plan` 으로 짜서 등록까지 간다."""
+    client = _client()
+    headers = _key(client)
+    sent = client.post("/v1/web/trip-intakes", headers=headers, data={"text": "  "})
+    assert sent.status_code == 202, sent.text
+    assert sent.json()["status"] == "review" and sent.json()["stage"] == "review"
+    view = client.get(f"/v1/web/trip-intakes/{sent.json()['intake_id']}", headers=headers).json()
+    assert view["status"] == "review" and view["sources"] == [] and view["needs_review"] == []
+    assert view["check"]["plan"]["requested"] is False                    # 요청 표시를 지어내지 않는다
+    assert view["check"]["ready"] is False and view["check"]["items"] == 0    # 읽은 일정이 없어 그대로는 등록할 수 없다

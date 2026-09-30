@@ -542,7 +542,9 @@ def _assert_leave_rule(draft: dict) -> None:
         assert arrive - leave == timedelta(minutes=eta)                       # 이동 항목 길이 = 이동 시간
         assert datetime.fromisoformat(after["starts_at"]) - arrive == timedelta(minutes=MOVE_BUFFER_MIN)
         assert leave >= datetime.fromisoformat(before["ends_at"])              # 앞 일정이 끝난 뒤에 나선다
-        assert item["detail"]["planner"]["leave_rule"] == "다음 일정 시작 − 이동 시간 − 여유"
+        # 이동 계산기가 켜져 있으면 여유를 계산기 정책 버퍼로 두고 그렇게 적는다(planner.add_moves) — 같은 규칙, 문구만 다르다
+        assert item["detail"]["planner"]["leave_rule"] in ("다음 일정 시작 − 이동 시간 − 여유",
+                                                           "다음 일정 시작 − 이동 시간 − 여유(계산기 정책 버퍼)")
 
 
 def test_every_move_leaves_at_next_start_minus_travel_minus_buffer(api):
@@ -719,6 +721,26 @@ def test_a_plan_request_read_from_the_customer_text_is_planned_and_registered_on
     # 상품 범위 밖(8일)은 받지 않는다
     wide = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json={**body, "days": 8})
     assert wide.status_code == 422
+
+
+def test_an_empty_intake_is_planned_from_the_review_screen_and_registered(api):
+    """`[2026-09-30 사용자 결정 — ui 세션 전달]` 입력칸을 비운 채 접수 → 곧바로 확인 화면 상태 → 그 화면의 짜기 칸(`/plan`)으로 짜서
+    등록. 「짜 달라는 요청」 표시는 없다(고객이 짜기 칸에서 직접 고른다) — 그래도 짜서 등록할 수 있다."""
+    client = api["client"]
+    key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}
+    accepted = client.post("/v1/web/trip-intakes", headers=key, data={"text": ""})
+    assert accepted.status_code == 202, accepted.text
+    assert accepted.json()["status"] == "review"
+    intake_id = accepted.json()["intake_id"]
+    view = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert view["check"]["plan"]["requested"] is False and view["check"]["items"] == 0
+    body = {"revision": view["revision"], "start_date": START.isoformat(), "days": 2, "party_size": 2}
+    done = client.post(f"/v1/web/trip-intakes/{intake_id}/plan", headers=key, json=body)
+    assert done.status_code == 200, done.text
+    trip = done.json()["trip"]
+    assert trip["created"] is True and {i["starts_at"][:10] for i in trip["items"]} == {"2026-10-05", "2026-10-06"}
+    after = client.get(f"/v1/web/trip-intakes/{intake_id}", headers=key).json()
+    assert after["status"] == "confirmed" and after["trip_id"] == trip["trip_id"]
 
 
 def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):

@@ -100,6 +100,42 @@ test("일정을 못 읽으면 일정 짜기 칸이 나오고, 확인한 조건�
   expect(plan.body).toEqual({ revision: 1, start_date: "2026-10-01", days: 2, party_size: 2, keep_read_items: false });
 });
 
+test("계획을 비워 두고 「계획 확인하기」를 누르면 오류 없이 다음 화면(대신 짜 드릴까요?)으로 넘어간다", async ({ page, request }) => {
+  // ★2026-09-30 사용자 결정 — 빈 계획은 오류가 아니라 짜기로 이어진다. 서버는 빈 접수를 「짜 달라는 요청」으로 받는다.
+  const server = mockServer(request);
+  await server.scenario({ intake: "empty_plan" });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "일정을 짜 달라고 하셨어요" })).toBeVisible();
+  await expect(page.locator("#main-content").getByText("시간과 장소가 있는 여행 계획을 입력해 주세요.")).toHaveCount(0);
+  const [sent] = await server.received("POST", "/v1/web/trip-intakes");
+  // 가짜 문장을 넣지 않는다 — 여러 부분 양식의 text 칸이 비어 있다
+  expect(String(sent.body?.multipart)).toMatch(new RegExp(String.raw`name="text"\r\n\r\n\r\n--`));
+});
+
+test("파일 칸: 고른 파일이 이름·크기 칩으로 보이고, 빼기로 뺄 수 있으며, 남은 파일만 서버로 간다", async ({ page, request }) => {
+  // 2026-09-30: 브라우저 기본 「파일 선택」 모양을 앱 디자인으로 바꿨다(코덱스 아스트라 설계). 숨긴 input 은 그대로 쓴다.
+  const server = mockServer(request);
+  await start(page);
+  await page.goto("/trips/new");
+  await expect(page.getByText("0 / 5개 선택됨")).toBeVisible();
+  await page.locator("#plan-files").setInputFiles([
+    { name: "계획표.pdf", mimeType: "application/pdf", buffer: Buffer.from("p".repeat(2048)) },
+    { name: "지운다.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from("x") },
+  ]);
+  await expect(page.getByText("2 / 5개 선택됨")).toBeVisible();
+  await expect(page.getByText("계획표.pdf")).toBeVisible();
+  await expect(page.getByText("2 KB")).toBeVisible();
+  await page.getByRole("button", { name: "지운다.xlsx 빼기" }).click();
+  await expect(page.getByText("1 / 5개 선택됨")).toBeVisible();
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect.poll(async () => (await server.received("POST", "/v1/web/trip-intakes")).length).toBe(1);
+  const [sent] = await server.received("POST", "/v1/web/trip-intakes");
+  expect(String(sent.body?.multipart)).toContain('filename="계획표.pdf"');
+  expect(String(sent.body?.multipart)).not.toContain("지운다.xlsx");
+});
+
 test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
