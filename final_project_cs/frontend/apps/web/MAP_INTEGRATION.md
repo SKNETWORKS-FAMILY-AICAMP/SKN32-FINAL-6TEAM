@@ -1,8 +1,10 @@
 # 지도 연동 · 백엔드 전달 계약
 
+최신 확인: 2026-09-29 · SKN32 `develop` `fc1ac0a` 코드 기준. 화면별 요구·사용 API·협의와 연결 상태는 [공유 연동 문서](../../../wiki/external/web-screen-api.md)에서 관리한다.
+
 작성일: 2026-09-21. 웹 MVP 1차의 여행 홈에 적용한다. 지도 표시와 핀 선택은 프론트가 담당하고, 장소 식별·좌표 확정·방문 시간·이동 경로 계산은 백엔드/에이전트가 담당한다.
 
-이 문서의 데이터 계약은 **현재 프론트가 받을 수 있는 형식과 백엔드 합의 제안**이다. 여행 조회 엔드포인트·접근 토큰·실제 에이전트 연동이 이미 구현되어 있다는 뜻은 아니다. 기존 전체 앱·웹 기획은 유지한다.
+현재 지도 표시 모델과 실제 API 변환을 구분한다. live 여행 조회·사용자 키 연결은 구현돼 있다. §4·§5의 남은 제안은 기존 미합의 항목을 보존한 것이며, 이번 개정에서 새 경로 계약을 설계하지 않는다.
 
 ## 1. 지도 교체 방법
 
@@ -41,11 +43,11 @@ NEXT_PUBLIC_MAP_PROVIDER=demo
 
 `NEXT_PUBLIC_*`는 브라우저에 공개되는 값이다. 허용 사이트가 제한된 웹용 키/Client ID만 사용한다. Naver Client Secret, 서버용 지오코딩·경로 API 키, 여행 접근 비밀 토큰을 여기에 넣지 않는다. 실제 키를 문서나 소스에 커밋하지 않는다.
 
-## 2. 백엔드에서 받아야 하는 최소 데이터
+## 2. 현재 API 응답과 프론트 표시 데이터
 
-여행 조회 결과의 `stops`가 일정 목록과 지도의 공통 원본이다. 지도 전용으로 장소를 다시 추측하거나 채팅 답변에서 좌표를 추출하지 않는다. 실제 API 어댑터가 응답을 `Trip`/`TripStop`으로 변환하고, 지도는 선택한 날짜의 일정에서 핀 데이터를 만든다.
+live는 `X-User-Key`로 `GET /v1/web/trips/{trip_id}`를 조회한다. 서버 응답은 `trip_id`·`items[]`이고, `src/lib/live/gateway.ts`가 이를 프론트 `Trip.id`·`stops[]`로 변환한다. `item_id`→`id`, `lat/lon`→`coordinates.lat/lng`, ISO `starts_at/ends_at`→서울 시각 `date/time/endTime`이다. `kind=mobility` 항목은 핀에서 빼고 다음 일정 메모에 출발 시각을 붙인다. 아래 표의 `stops`는 서버의 원본 JSON 필드가 아닌 **프론트 표시 모델**이다. 변환 후 `stops`가 일정 목록과 지도의 공통 원본이다. 지도 전용으로 장소를 다시 추측하거나 채팅 답변에서 좌표를 추출하지 않는다. 실제 API 어댑터가 응답을 `Trip`/`TripStop`으로 변환하고, 지도는 선택한 날짜의 일정에서 핀 데이터를 만든다.
 
-| 필드 | 지도 표시 기준 | 백엔드 전달 규칙 |
+| 프론트 표시 필드 | 지도 표시 기준 | 표시 모델 규칙 |
 |---|---|---|
 | `Trip.id` | 여행 구분 | 조회·채팅·갱신에서 동일한 여행 ID 사용 |
 | `stops[].id` | 일정과 핀 선택 연결 | 여행 내 유일하고 갱신 후에도 안정적인 일정 ID. 장소명을 ID로 사용하지 않음 |
@@ -61,7 +63,7 @@ NEXT_PUBLIC_MAP_PROVIDER=demo
 
 위도/경도 위치가 뒤바뀌지 않도록 배열 대신 이름 있는 `{ "lat": ..., "lng": ... }` 형식을 사용한다. 지도 제공자의 좌표 객체나 Place ID 자체를 공통 좌표 필드에 넣지 않는다. 현재 MVP 날짜·시간은 서울 현지 시간(`Asia/Seoul`)으로 해석한다. `Trip.timeZone` 필드는 아직 없으며 다른 시간대·자정 통과·절대 타임스탬프 지원은 별도 계약으로 확정한다.
 
-다음은 **형식을 설명하기 위한 가상 일정**이다. 현재 `Trip` 응답 전체가 아닌 `id`와 `stops` 부분이며, `area`, `kind`, `booking`, `notes`는 기존 일정 상세에 필요한 필드다. 실제 엔드포인트 경로와 응답 래퍼는 미확정이다.
+다음은 **프론트 표시 모델을 설명하기 위한 가상 일정**이다. 전체 `Trip`이 아닌 `id`·`stops` 발췌이며 서버 응답 예제가 아니다. 현재 `TripStop`에는 `area`·`kind`·`movement` 필드가 없다.
 
 ```json
 {
@@ -73,8 +75,6 @@ NEXT_PUBLIC_MAP_PROVIDER=demo
       "time": "10:00",
       "endTime": "11:00",
       "title": "좌표 확인용 장소 A",
-      "area": "서울",
-      "kind": "관광",
       "booking": "none",
       "notes": "형식 설명을 위한 가상 일정",
       "coordinates": { "lat": 37.5665, "lng": 126.978 }
@@ -84,8 +84,6 @@ NEXT_PUBLIC_MAP_PROVIDER=demo
       "date": "2026-10-10",
       "time": "12:00",
       "title": "좌표 확인용 장소 B",
-      "area": "서울",
-      "kind": "식사",
       "booking": "none",
       "notes": "형식 설명을 위한 가상 일정",
       "coordinates": { "lat": 37.57, "lng": 126.985 }
@@ -118,7 +116,7 @@ import { NaverMap, GoogleMap } from "@/features/map";
 
 ## 4. 이동 수단·경로는 별도 계약
 
-현재 구현 범위는 **실제 지도 바탕과 일정 핀**이다. `TripStop.movement`는 기존 선택적 안내 문자열이고, 구조화된 이동 구간·경로 선·실시간 교통은 이번 지도 어댑터의 입력이나 구현에 포함하지 않는다. 다음은 백엔드와 후속 합의할 권장 항목이다.
+현재 구현 범위는 **실제 지도 바탕과 일정 핀**이다. 이전 문서의 `TripStop.movement`는 현재 타입에 없다. live는 이동 출발 시각을 다음 일정의 `notes`에 붙이며, 구조화된 이동 구간·경로 선·실시간 교통은 이번 지도 어댑터의 입력이나 구현에 포함하지 않는다. 다음 표는 기존 후속 제안으로, 현재 제공되는 웹 DTO가 아니다.
 
 | 권장 항목 | 전달 목적 |
 |---|---|
@@ -136,15 +134,15 @@ import { NaverMap, GoogleMap } from "@/features/map";
 
 ## 5. 백엔드와 추가로 확정할 항목
 
-1. 여행 조회·변경 API 경로, 로그인 없는 여행별 접근 권한·토큰 만료, 오류 응답.
+1. 조회·메시지·제안 선택 경로와 사용자 키는 이미 연결돼 있다(`src/lib/live/`). 서버가 주는 `plan_url`은 별도 여행 계획서 링크이며 웹 앱의 사용자 키와 구분한다. 기존 제안 중 미확정 세부를 새 합의로 확정하지 않는다.
 2. 좌표 확정의 책임·출처·실패 처리. 프론트의 누락 안내는 데이터 파이프라인의 검증 완료 판정을 대신하지 않는다.
-3. 일정 변경의 버전/이벤트 순서. `revision` 또는 동등한 순서 계약으로 늦게 온 응답이 최신 지도를 되돌리지 않게 한다. 현재 `Trip`에는 이 필드가 없다.
+3. 일정 변경의 버전/이벤트 순서. `revision` 또는 동등한 순서 계약으로 늦게 온 응답이 최신 지도를 되돌리지 않게 한다. 서버 여행 응답의 `version`·이력과 접수의 `revision`은 존재하지만, 현재 프론트 `Trip`에는 최상위 버전 필드가 없다.
 4. `timeZone`, 자정 통과, 시간 오프셋 표현. 현재 서울 MVP의 날짜·시각 문자열과 변환 규칙을 먼저 맞춘다.
 5. 이동 구간 DTO와 geometry, 경로 조회 API·사용 조건. 현재 지도 핀 계약과 구분해 추가한다.
 
 ## 6. 키 연결 후 확인 방법
 
-기본 예시 계획은 좌표를 자동 생성하지 않는다. 따라서 실제 지도를 선택해도 좌표가 없는 기존 여행에는 핀이 생기지 않으며 누락 안내가 나타난다. 실제 API 연결 전 수동 확인이 필요하면 **데모 모드에서만** 일정 줄에 다음과 같이 좌표를 명시할 수 있다.
+기본 예시 계획은 좌표를 자동 생성하지 않는다. 따라서 실제 지도를 선택해도 좌표가 없는 기존 여행에는 핀이 생기지 않으며 누락 안내가 나타난다. 서버 없이 수동 확인이 필요하면 **데모 모드에서만** 일정 줄에 다음과 같이 좌표를 명시할 수 있다.
 
 ```text
 2026-10-10
@@ -152,11 +150,11 @@ import { NaverMap, GoogleMap } from "@/features/map";
 12:00 좌표 확인용 장소 B [좌표: 37.5700, 126.9850]
 ```
 
-이는 지도 UI 확인용 명시 입력이며 장소 검색·자연어 지오코딩 기능이 아니다. 실제 에이전트는 검증한 좌표를 API의 `coordinates`로 전달해야 한다.
+이는 지도 UI 확인용 명시 입력이며 장소 검색·자연어 지오코딩 기능이 아니다. live에서는 서버 `items[].lat/lon`이 어댑터를 거쳐 `coordinates`가 된다.
 
 키를 설정한 뒤 위 계획을 등록하고 검증 완료 → 여행 관리 시작 → 지도에서 다음을 확인한다: 바탕 지도와 두 핀, 일차 전환, 일정↔핀 선택, 이름·시간 일치, 모바일 탭 전환 후 지도 크기. 키 누락·잘못된 키·허용 도메인 불일치·네트워크 실패에서는 오류가 보이고 데모 지도로 바뀌지 않아야 한다.
 
-코드·SDK 대역 테스트와 실제 제공자 인증 검증은 별개다. **실제 발급 키가 제공되지 않아 운영 키 인증·지도 타일·과금 프로젝트 설정을 포함한 실서비스 연결은 아직 확인하지 않았다.** 키 설정 후 네이버·Google 각각에서 위 확인을 수행한다.
+코드·SDK 대역 테스트와 실제 제공자 인증 검증은 별개다. 이번 2026-09-29 문서 개정에서는 실제 제공자 인증·지도 타일·과금 프로젝트 설정을 재검증하지 않았다. 아래 09-21 결과는 당시 SDK 대역 검사 기록이며 운영 연결 증거가 아니다. 키 설정 후 네이버·Google 각각에서 위 확인을 수행한다.
 
 ## 7. 자동 검증 실행
 
@@ -165,6 +163,7 @@ import { NaverMap, GoogleMap } from "@/features/map";
 PowerShell에서 다음 명령으로 공급자별 빌드와 브라우저 검사를 수행한다. 아래 값은 테스트 전용 가짜 키이며 실제 SDK 요청은 Playwright가 가로채어 대역으로 응답한다. 설치한 Chrome을 사용한다.
 
 ```powershell
+$env:NEXT_PUBLIC_DATA_MODE="demo"
 $env:NEXT_PUBLIC_MAP_PROVIDER="naver"
 $env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID="test-naver-key"
 $env:MAP_TEST_PROVIDER="naver"
@@ -180,7 +179,7 @@ npm run build
 npx playwright test tests/e2e/maps.spec.ts
 
 # 테스트용 셸 환경을 지우고 .env.local 기준으로 다시 빌드한다.
-Remove-Item Env:NEXT_PUBLIC_MAP_PROVIDER, Env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID, Env:NEXT_PUBLIC_GOOGLE_MAP_API_KEY, Env:NEXT_PUBLIC_GOOGLE_MAP_ID, Env:MAP_TEST_PROVIDER, Env:PLAYWRIGHT_CHANNEL -ErrorAction SilentlyContinue
+Remove-Item Env:NEXT_PUBLIC_DATA_MODE, Env:NEXT_PUBLIC_MAP_PROVIDER, Env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID, Env:NEXT_PUBLIC_GOOGLE_MAP_API_KEY, Env:NEXT_PUBLIC_GOOGLE_MAP_ID, Env:MAP_TEST_PROVIDER, Env:PLAYWRIGHT_CHANNEL -ErrorAction SilentlyContinue
 npm run build
 ```
 

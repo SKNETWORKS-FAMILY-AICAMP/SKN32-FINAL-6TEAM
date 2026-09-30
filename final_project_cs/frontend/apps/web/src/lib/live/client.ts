@@ -73,10 +73,12 @@ export async function userKey(language: Language): Promise<string> {
  */
 export async function issueKey(language: Language, humanToken?: string | null): Promise<string> {
   pendingKey ??= (async () => {
-    const init: RequestInit = humanToken
-      ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turnstile_token: humanToken }) }
-      : { method: "POST" };
-    const response = await send(`${API_BASE}/v1/web/session`, init, language);
+    // ★Keep `method` inside the call — the server contract test (tests/contract/test_web_client_contract.py) reads
+    //   it from there and counts a call it cannot read as GET.
+    const response = await send(`${API_BASE}/v1/web/session`, {
+      method: "POST",
+      ...(humanToken ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turnstile_token: humanToken }) } : {}),
+    }, language);
     const body = await response.json() as { user_key: string; notice?: string };
     storeKey(body.user_key);
     setKeyNotice(body.notice ?? null);
