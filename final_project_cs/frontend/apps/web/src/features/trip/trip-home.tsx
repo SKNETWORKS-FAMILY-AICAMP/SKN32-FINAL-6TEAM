@@ -16,7 +16,7 @@ import { LinkedText } from "./linked-text";
 import { TripAttention } from "./trip-attention";
 import { tripKey, useTrip } from "./use-trip";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
-import type { Trip, TripStop } from "./model";
+import type { Trip, TripMessage, TripStop } from "./model";
 import styles from "./trip-home.module.css";
 
 type Pane = "schedule" | "map" | "chat";
@@ -56,7 +56,9 @@ function bookingLabel(stop: TripStop, t: Translate) {
 export function TripHome({ tripId }: { tripId: string }) {
   const t = useT();
   const query = useTrip(tripId);
-  if (query.isPending || query.error || !query.data) {
+  // ★A failed re-read keeps the plan already on screen (react-query keeps the last data). Only a trip that never
+  //   loaded shows the error page — the change bell re-reads often, and a brief outage must not blank the trip.
+  if (query.isPending || !query.data) {
     return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
   }
   const trip = query.data;
@@ -92,9 +94,18 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const stops = trip.stops.filter((stop) => stop.date === activeDay);
   const selected = stops.find((stop) => stop.id === selectedId) ?? stops[0];
   const diagram = mapConfiguration.provider === "demo";
+  // The server answered but the plan did not re-read (Q-05): the reply is shown, and the plan is read again until it loads.
+  const [rereading, setRereading] = useState(false);
   const message = useMutation({
     // ★Only a stop the customer actually picked goes to the server (`item_id`) — the first stop shown by default is not a choice.
-    mutationFn: ({ text, itemId }: { text: string; clearDraft: boolean; itemId?: string | null }) => tripGateway.sendMessage(trip.id, text, language, itemId),
+    mutationFn: async ({ text, itemId }: { text: string; clearDraft: boolean; itemId?: string | null }) => {
+      try { return await tripGateway.sendMessage(trip.id, text, language, itemId); }
+      catch (error) {
+        if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
+        setRereading(true);
+        return { ...trip, messages: [...trip.messages, ...((error.detail as { sent?: TripMessage[] } | undefined)?.sent ?? [])] };
+      }
+    },
     onSuccess: (updated, variables) => {
       queryClient.setQueryData(tripKey(trip.id, language), updated);
       if (variables.clearDraft) setDraft("");
@@ -114,6 +125,22 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       void queryClient.invalidateQueries({ queryKey: noticesKey(trip.id, language) });
     },
   });
+
+  useEffect(() => {
+    if (!rereading) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const again = async () => {
+      try {
+        await queryClient.refetchQueries({ queryKey: tripKey(trip.id, language) }, { throwOnError: true });
+        if (!stopped) setRereading(false);
+      } catch {
+        if (!stopped) timer = setTimeout(again, 5_000);
+      }
+    };
+    timer = setTimeout(again, 2_000);
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [rereading, trip.id, language, queryClient]);
 
   // ★Live: wake the chat model as the trip opens, so the first question does not wait for it to load (~35 s cold).
   //   Best effort — the trip screen does not depend on it, and a failed chat reports itself.
@@ -294,6 +321,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <Button type="submit" variant="primary" disabled={message.isPending} aria-label={t("메시지 전송", "Send message")}><Send {...icon} /><span className={styles.sendText}>{t("전송", "Send")}</span></Button>
           {inputError && <p id="trip-chat-error" className={styles.error} role="alert">{inputError}</p>}
         </form>
+        {rereading && !message.isPending && <p className={styles.chatNote} role="status">{t("답은 받았어요. 최신 일정을 다시 불러오지 못해 잠시 뒤 다시 읽고 있어요.", "The reply arrived. The latest plan did not load, so it is being read again shortly.")}</p>}
         {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
         <p className={styles.chatnote}>{live
           ? t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")

@@ -34,7 +34,7 @@ const DEFAULTS = {
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
-  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "" (none)
+  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "messages" | "" (none)
   fail: "",
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
   edits: "ok",
@@ -48,7 +48,12 @@ const DEFAULTS = {
   planDelay: 0,
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
+  // how many times the trip itself fails to load (500) right after the server answered a chat message
+  rereadFails: 0,
 };
+
+/** Trip loads still to fail after a chat answer (see `rereadFails`). */
+let tripFailures = 0;
 
 /** Open bell streams. The real server keeps no record of who received a bell — neither does this one. */
 const bells = new Set();
@@ -65,6 +70,7 @@ let turns = [];
 
 function reset() {
   scenario = { ...DEFAULTS };
+  tripFailures = 0;
   turns = [];
   log = [];
   sessions = 0;
@@ -223,6 +229,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   if (path === `/v1/web/trips/${TRIP_ID}` && request.method === "GET") {
     if (scenario.trip === "missing") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+    if (tripFailures > 0) { tripFailures -= 1; return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin); }
     return json(response, 200, tripView(), origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
@@ -257,9 +264,11 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return json(response, 200, body.key === null ? { status: "kept" } : { status: "adjusted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
+    if (broken("messages")) return;
     const body = JSON.parse(raw || "{}");
     if (scenario.chat === "escalated_bare") return json(response, 200, { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null }, origin);
     const answer = `서버 답: ${body.message}`;
+    tripFailures = scenario.rereadFails;
     // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
     turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
       { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });
