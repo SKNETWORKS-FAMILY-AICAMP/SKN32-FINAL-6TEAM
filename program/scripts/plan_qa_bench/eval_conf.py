@@ -1,6 +1,6 @@
 # 확신도 기권 채점 — 넘김 모델의 답에 붙은 확신도(자기 토큰 확률, 올라마 logprobs 또는 HF generate 점수)가 τc 미만이면 「없음」으로 처리한다.
 #  투표·합의·상위 모델 호출은 없다. 앞단·구조·문턱(lo, hi) 탐색은 eval_night.py 코드를 그대로 쓰고, τc 는 (lo, hi) 와 함께 heavy 개발용 44문제로 고른다.
-#  확신도 출처: 올라마 gemma4:e4b → llm_<세트>_lp_out.json · 「hint_gemma4:e4b」 → llm_<세트>_hint_lp_out.json · 「ftp_<이름>」 → ft_pointer_<이름>_<세트>.json 의 conf
+#  확신도 출처: 올라마 gemma4:<태그>(e4b·e4b-it-qat …) → llm_<세트>_lp_out.json · 「hint_gemma4:e4b」 → llm_<세트>_hint_lp_out.json · 「ftp_<이름>」 → ft_pointer_<이름>_<세트>.json 의 conf
 # 사용: python eval_conf.py [넘김 모델 이름 ...]   (기본: gemma4:e4b hint_gemma4:e4b 와 conf 가 있는 ftp_ 모델 전부)
 import contextlib, glob, io, json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,7 @@ SETS, G, run = ns['SETS'], ns['G'], ns['run']
 
 
 def load_conf(job, name):
-    if name == 'gemma4:e4b':
+    if name.startswith('gemma4:'):
         f = R(f'llm_{job}_lp_out.json')
         d = json.load(open(f, encoding='utf-8')).get(name) if os.path.exists(f) else None
     elif name.startswith('hint_'):
@@ -35,7 +35,7 @@ def load_conf(job, name):
 
 
 if not names:
-    cand = ['gemma4:e4b', 'hint_gemma4:e4b'] + ['ftp_' + os.path.basename(f)[len('ft_pointer_'):-len('_heavy.json')] for f in sorted(glob.glob(R('ft_pointer_*_heavy.json')))]
+    cand = ['gemma4:e4b', 'gemma4:e4b-it-qat', 'hint_gemma4:e4b'] + ['ftp_' + os.path.basename(f)[len('ft_pointer_'):-len('_heavy.json')] for f in sorted(glob.glob(R('ft_pointer_*_heavy.json')))]
     names = [n for n in cand if all(load_conf(j, n) for j in SETS)]
 IDX = {'heavy': [i for i, x in enumerate(SETS['heavy']['qs']) if x['split'] == 'held'], 'mix4': list(range(88)), 'mix5': list(range(88))}
 DEV = [i for i, x in enumerate(SETS['heavy']['qs']) if x['split'] == 'dev']
