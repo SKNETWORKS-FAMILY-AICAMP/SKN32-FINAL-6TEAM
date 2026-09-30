@@ -54,24 +54,91 @@ from .trip_desk import TripDesk
 _csv_places = _CsvPlaceLookup()
 
 
+class _PlaceCtx:
+    """요청 단위 장소 좌표 힌트 — 확정된 장소들의 일정 시각·좌표를 저장하고,
+    현재 항목 일정 시각에 가장 가까운 장소 좌표를 반환한다."""
+
+    def __init__(self) -> None:
+        self._entries: list[tuple[str | None, float, float]] = []  # (ISO datetime, lat, lon)
+        self.current_datetime: str | None = None  # "YYYY-MM-DDTHH:MM" 또는 "YYYY-MM-DD"
+
+    def add(self, lat: float, lon: float) -> None:
+        self._entries.append((self.current_datetime, lat, lon))
+
+    def get_near(self) -> tuple[float, float] | None:
+        if not self._entries:
+            return None
+        if self.current_datetime is None or len(self._entries) == 1:
+            return (self._entries[-1][1], self._entries[-1][2])
+        try:
+            cur = datetime.fromisoformat(self.current_datetime)
+        except ValueError:
+            return (self._entries[-1][1], self._entries[-1][2])
+
+        def _diff(dt_str: str | None) -> timedelta:
+            if not dt_str:
+                return timedelta(days=999999)
+            try:
+                return abs(datetime.fromisoformat(dt_str) - cur)
+            except ValueError:
+                return timedelta(days=999999)
+
+        # 일정 시각 차이 최소, 동점이면 나중에 추가된 것(직전 항목 우선)
+        best = min(range(len(self._entries)), key=lambda i: (_diff(self._entries[i][0]), -i))
+        return (self._entries[best][1], self._entries[best][2])
+
+
 class _CsvFallbackTour:
     """CSV 전용 장소 조회 — CSV에 없으면 None(not_found).
 
     activity_total_data.csv(1,586개 서울 액티비티)만 사용한다.
     외부 API(tour_api · kakao)를 호출하지 않으므로 rate limit · 403 오류가 없다.
     CSV에 없는 장소는 not_found로 처리한다.
+    ctx 가 있으면 확정 좌표를 다음 조회의 near 힌트로 넘긴다.
     """
 
-    def __init__(self, real: Any, csv_lookup: _CsvPlaceLookup) -> None:
+    def __init__(self, real: Any, csv_lookup: _CsvPlaceLookup,
+                 ctx: _PlaceCtx | None = None) -> None:
         self._real = real
         self._csv = csv_lookup
+        self._ctx = ctx
         self.misses: dict[str, int] = {}
+        self.had_deferred: bool = False
+
+    def set_current_date(self, date_str: str | None) -> None:
+        if self._ctx is not None:
+            self._ctx.current_datetime = date_str
 
     def find(self, place_name: str, *, area_code: str | None = None, **kw: Any) -> dict[str, Any] | None:
-        result = self._csv.find(place_name)
+        near = self._ctx.get_near() if self._ctx else None
+        before = self._csv.misses.get("deferred_no_near", 0)
+        result = self._csv.find(place_name, near=near)
         if result is None:
-            self.misses["not_found"] = self.misses.get("not_found", 0) + 1
+            if self._csv.misses.get("deferred_no_near", 0) > before:
+                self.had_deferred = True
+            else:
+                self.misses["not_found"] = self.misses.get("not_found", 0) + 1
+            return None
+        if self._ctx is not None:
+            try:
+                self._ctx.add(float(result["latitude"]), float(result["longitude"]))
+            except (KeyError, TypeError, ValueError):
+                pass
         return result
+
+
+class _KakaoNearHint:
+    """Kakao 검색에 확정된 장소 좌표를 near 힌트로 자동 주입하는 래퍼."""
+
+    def __init__(self, kakao: Any, ctx: _PlaceCtx) -> None:
+        self._kakao = kakao
+        self._ctx = ctx
+
+    def search(self, query: str, *, near: tuple[float, float] | None = None, **kw: Any) -> Any:
+        return self._kakao.search(query, near=near or self._ctx.get_near(), **kw)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._kakao, name)
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
 KST = ZoneInfo("Asia/Seoul")
@@ -794,12 +861,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(422, exc.code, exc.message) from None
         offset = 1 if text.strip() else 0
         chat = _lazy("chat", chat_factory)
+        _ctx = _PlaceCtx()
+        _kakao_raw = _lazy("kakao", kakao_factory)
         background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,
                             blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
                             see=getattr(chat, "see", None),
                             chat=chat if hasattr(chat, "json") else None,
-                            tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
-                            kakao=_lazy("kakao", kakao_factory))
+                            tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places, _ctx),
+                            kakao=_KakaoNearHint(_kakao_raw, _ctx) if _kakao_raw is not None else None)
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
@@ -821,11 +890,13 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         tenant, customer = who
         try:
+            _ctx = _PlaceCtx()
+            _kakao_raw = _lazy("kakao", kakao_factory)
             with get_connection() as conn:
                 edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
                      edits=[e.model_dump() for e in request.edits],
-                     tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
-                     kakao=_lazy("kakao", kakao_factory))
+                     tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places, _ctx),
+                     kakao=_KakaoNearHint(_kakao_raw, _ctx) if _kakao_raw is not None else None)
                 return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None

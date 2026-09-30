@@ -78,6 +78,7 @@ class CsvPlaceLookup:
         self.misses: dict[str, int] = {}
         self._rows: list[dict[str, str]] = []
         self._by_norm: dict[str, dict[str, str]] = {}
+        self._by_base: dict[str, list[dict[str, str]]] = {}
         self._by_content_id: dict[str, dict[str, str]] = {}
         self._load(csv_path)
 
@@ -93,6 +94,7 @@ class CsvPlaceLookup:
                 key = _normalize(title)
                 if key not in self._by_norm:
                     self._by_norm[key] = row
+                self._by_base.setdefault(key, []).append(row)
                 # 복합명("A&B", "A·B") → 첫 부분도 별도 키로 등록
                 # 예) "롯데월드타워&롯데월드몰" → "롯데월드타워"도 검색 가능
                 if _COMPOUND_SEP.search(title):
@@ -104,24 +106,84 @@ class CsvPlaceLookup:
                 if content_id and content_id not in self._by_content_id:
                     self._by_content_id[content_id] = row
 
-    def find(self, place_name: str, *, area_code: str | None = None, **_kwargs: Any) -> dict[str, Any] | None:
-        """이름으로 장소 하나를 찾는다. 없으면 None."""
+    def find(self, place_name: str, *, area_code: str | None = None,
+             near: tuple[float, float] | None = None, **_kwargs: Any) -> dict[str, Any] | None:
+        """이름으로 장소 하나를 찾는다. 없으면 None.
+
+        near=(위도, 경도) 를 주면 접두사 다중 일치 시 해당 좌표에 가장 가까운 것을 고른다.
+        """
         if not place_name or not place_name.strip():
             self.misses["no_place_name"] = self.misses.get("no_place_name", 0) + 1
             return None
 
         key = _normalize(place_name.strip())
 
-        # ① 정확 일치
-        row = self._by_norm.get(key)
+        # ① 정확 일치 — near 있으면 가장 가까운 것, near 없고 후보가 여럿이면 미룬다
+        same_key = self._by_base.get(key, [])
+        if not same_key:
+            row = None
+        elif len(same_key) == 1:
+            row = same_key[0]
+        elif near is not None:
+            def _dist_exact(r: dict[str, str]) -> float:
+                lat = _to_float(r.get("mapy"))
+                lon = _to_float(r.get("mapx"))
+                if lat is None or lon is None:
+                    return float("inf")
+                return (lat - near[0]) ** 2 + (lon - near[1]) ** 2
+            row = min(same_key, key=_dist_exact)
+        else:
+            # 후보가 여럿인데 near 없음 → 임의 선택 대신 미룸(파이프라인이 재시도)
+            self.misses["deferred_no_near"] = self.misses.get("deferred_no_near", 0) + 1
+            return None
 
-        # ② 접두사 일치 — 여러 개면 정규화 제목이 가장 짧은 것(쿼리에 가장 가까운 것)
+        # ② 접두사 일치 — near 좌표가 있으면 가장 가까운 것,
+        #    near 없고 후보가 여럿이면 미룬다(strategy ① 와 동일 원칙)
         if row is None:
             prefix = [r for r in self._rows if _normalize(r.get("title", "")).startswith(key)]
             if len(prefix) == 1:
                 row = prefix[0]
             elif len(prefix) > 1:
-                row = min(prefix, key=lambda r: len(_normalize(r.get("title", ""))))
+                if near is not None:
+                    def _dist(r: dict[str, str]) -> float:
+                        lat = _to_float(r.get("mapy"))
+                        lon = _to_float(r.get("mapx"))
+                        if lat is None or lon is None:
+                            return float("inf")
+                        return (lat - near[0]) ** 2 + (lon - near[1]) ** 2
+                    row = min(prefix, key=_dist)
+                else:
+                    self.misses["deferred_no_near"] = self.misses.get("deferred_no_near", 0) + 1
+                    return None
+
+        # ③ 이름+지역 분리 — "다이소 용산" → 기본명 "다이소"로 풀을 만들고
+        #    나머지 토큰("용산")이 제목·주소에 포함된 것만 추린다.
+        #    branch 정규화로 사라진 위치 정보를 원문 title/addr1 로 복원한다.
+        if row is None and " " in place_name.strip():
+            orig_words = place_name.strip().split()
+            for split_at in range(len(orig_words) - 1, 0, -1):
+                base_key = _normalize(" ".join(orig_words[:split_at]))
+                location = " ".join(orig_words[split_at:]).lower()
+                pool = [r for r in self._rows
+                        if _normalize(r.get("title", "")).startswith(base_key)]
+                with_loc = [r for r in pool
+                            if location in (r.get("title") or "").lower()
+                            or location in (r.get("addr1") or "").lower()]
+                if not with_loc:
+                    continue
+                if len(with_loc) == 1:
+                    row = with_loc[0]
+                elif near is not None:
+                    def _dist_loc(r: dict[str, str]) -> float:
+                        lat = _to_float(r.get("mapy"))
+                        lon = _to_float(r.get("mapx"))
+                        if lat is None or lon is None:
+                            return float("inf")
+                        return (lat - near[0]) ** 2 + (lon - near[1]) ** 2
+                    row = min(with_loc, key=_dist_loc)
+                else:
+                    row = with_loc[0]
+                break
 
         if row is None:
             self.misses["not_found"] = self.misses.get("not_found", 0) + 1
