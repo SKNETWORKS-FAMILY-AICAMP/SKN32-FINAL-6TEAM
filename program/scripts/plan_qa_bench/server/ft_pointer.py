@@ -2,7 +2,7 @@
 #  학습: pointer_sft.json(gen_pointer_sft.py). 손실은 답 토큰({"item": …}+종료)에만. 학습률·에폭·rank 는 인자. 검증은 학습에서 뺀 장소.
 #  평가: 프롬프트는 llm_point_heavy.py 와 같다. 결과 ft_pointer_<이름>_<세트>.json = {'picks': [문제별 항목 번호|null]}
 # 사용: python ft_pointer.py <모델> <이름> [에폭=1] [학습률=2e-4] [rank=16]
-import json, os, re, sys, time
+import json, math, os, re, sys, time
 from datetime import date
 import torch
 from peft import LoraConfig, get_peft_model
@@ -85,19 +85,37 @@ model.gradient_checkpointing_disable()
 model.config.use_cache = True
 
 
+LASTCONF = []
+
+
 @torch.no_grad()
 def answer(texts, bs=6):
+    global LASTCONF
     outs = []
+    confs = []
     for k in range(0, len(texts), bs):
         enc = tok([chat(t + ZS) for t in texts[k:k + bs]], return_tensors='pt', padding=True, add_special_tokens=False).to('cuda')
         with torch.autocast('cuda', dtype=torch.bfloat16):
-            g = model.generate(**enc, max_new_tokens=14, do_sample=False, pad_token_id=tok.pad_token_id)
-        for row in g:
-            s = tok.decode(row[enc['input_ids'].shape[1]:], skip_special_tokens=True)
+            g = model.generate(**enc, max_new_tokens=14, do_sample=False, pad_token_id=tok.pad_token_id, output_scores=True, return_dict_in_generate=True)
+        for b, row in enumerate(g.sequences):
+            gen = row[enc['input_ids'].shape[1]:]
+            s = tok.decode(gen, skip_special_tokens=True)
+            try:                                   # 답 토큰(숫자·null)의 확률 곱 = 확신도(자기 토큰 확률, 투표 아님). 실패해도 본 결과는 그대로
+                lp = 0.0
+                for t, tid in enumerate(gen.tolist()):
+                    if t >= len(g.scores):
+                        break
+                    piece = tok.decode([tid]).strip()
+                    if piece and (piece.isdigit() or piece in ('null', 'nu', 'll')):
+                        lp += torch.log_softmax(g.scores[t][b].float(), -1)[tid].item()
+                confs.append(math.exp(lp) if lp != 0.0 else None)
+            except Exception:
+                confs.append(None)
             m = re.search(r'"item"\s*:\s*(null|\d+)', s)
             if not m and epochs == 0:                 # 제로샷은 형식이 흐트러질 수 있다 — 첫 정수 또는 null 을 읽는다
                 m = re.search(r'(null|\d+)', s)
             outs.append(None if (not m or m.group(1) == 'null') else int(m.group(1)))
+    LASTCONF = confs
     return outs
 
 
@@ -114,15 +132,19 @@ for which in ('heavy', 'mix4', 'mix5'):
     plan = '\n'.join(f"{i['id']}. {days.index(i['date']) + 1}일차 {date.fromisoformat(i['date']).month}/{date.fromisoformat(i['date']).day}({W[date.fromisoformat(i['date']).weekday()]}) {i['start']} [{i['kind']}] {i['title']} @ {i['place']}" for i in items)
     ids = {i['id'] for i in items}
     texts = []
-    for x in st['qs']:
+    hints = json.load(open(f'hints_{which}.json', encoding='utf-8'))['top'] if os.environ.get('HINTS') == '1' else None   # HINTS=1: 앞단 상위 5개 후보를 힌트로 덧붙인다(올라마 힌트 방식과 같은 문구)
+    for qi, x in enumerate(st['qs']):
+        note = ''
+        if hints is not None:
+            note = chr(10) * 2 + '검색 전문가가 이 질문과 가장 비슷하다고 본 항목(유사도 순): ' + ', '.join(str(t) for t in hints[qi]) + chr(10) + '(검색은 틀릴 수 있다. 일정과 질문을 직접 대조해 판단하라.)'
         hist = ''
         if x.get('history'):
             hist = '앞 대화:\n' + '\n'.join(f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']) + '\n\n'
         texts.append("오늘은 {today} 이다. 고객의 여행 일정(번호. 일차 날짜 시각 [종류] 제목 @ 장소):\n{plan}\n\n{hist}고객 질문: {q}\n\n"
                      "이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라. 질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null."
-                     .replace('{today}', st['today']).replace('{plan}', plan).replace('{hist}', hist).replace('{q}', x['q']))
+                     .replace('{today}', st['today']).replace('{plan}', plan + note).replace('{hist}', hist).replace('{q}', x['q']))
     picks = [p if p in ids else None for p in answer(texts)]
-    json.dump({'picks': picks}, open(f'ft_pointer_{tag}_{which}.json', 'w'))
+    json.dump({'picks': picks, 'conf': LASTCONF}, open(f'ft_pointer_{tag}_{which}.json', 'w'))
     idx = [i for i, x in enumerate(st['qs']) if which != 'heavy' or x.get('split') == 'held']
     ok = sum(picks[i] == st['qs'][i]['gold'] for i in idx)
     res[which] = f"{ok}/{len(idx)}"
