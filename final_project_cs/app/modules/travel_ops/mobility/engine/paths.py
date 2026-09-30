@@ -9,7 +9,7 @@
       판정 회귀·자기점검·pytest 가 지금처럼 돈다. `runtime.build_verifier` 는 아무도 설정하지 않았을 때만 이것을 부른다.
   아무 것도 안 했으면 출처는 "unset" 이고 경로는 존재하지 않는 `/data` 다 — 적재가 「판정기 입력이 없다」로 멈춘다.
 
-수집 쪽 `mobility_scripts/collect/_paths.py` 와 같은 폴더 규칙(DATA_DIR/travel/raw·processed)을 쓴다.
+수집 쪽 `datasets/mobility/scripts/_paths.py` 와 같은 폴더 규칙(DATA_DIR/travel/raw·processed)을 쓴다.
 
 _paths.py 와 다른 점 둘
   · **폴더를 만들지 않는다.** 판정 엔진이 import 만으로 빈 폴더를 만드는 건 맞지 않는다
