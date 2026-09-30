@@ -1,4 +1,4 @@
-# final_project_cs/tests/unit/travel/mobility/build_bus_all_v1.py
+# datasets/mobility/scripts/build_bus_all_v1.py
 # 서울 시내버스 21노선 → **717노선 전수**. API 호출 0회.
 #
 # 왜 호출이 0인가: seoul_bus_find_routes.py 의 --enumerate / --fetch-stops 가 이미
@@ -8,9 +8,9 @@
 # 하루 쿼터 1,000 을 넘는다. **이미 받은 것을 쓰는 게 맞다.**
 #
 # 실행:
-#   python final_project_cs/tests/unit/travel/mobility/build_bus_all_v1.py                 # 만들어 보고 *_v2 로 쓴다(기본)
-#   python final_project_cs/tests/unit/travel/mobility/build_bus_all_v1.py --dry-run       # 쓰지 않고 숫자만 본다
-#   python final_project_cs/tests/unit/travel/mobility/build_bus_all_v1.py --replace-v1    # v1 을 덮어쓴다(되돌릴 수 없다)
+#   python datasets/mobility/scripts/build_bus_all_v1.py                 # 만들어 보고 *_v2 로 쓴다(기본)
+#   python datasets/mobility/scripts/build_bus_all_v1.py --dry-run       # 쓰지 않고 숫자만 본다
+#   python datasets/mobility/scripts/build_bus_all_v1.py --replace-v1    # v1 을 덮어쓴다(되돌릴 수 없다)
 #
 # ★ 정규화 규칙은 seoul_bus_collect.py 를 **그대로** 옮겼다. 한 줄도 바꾸지 않는다 —
 #   바꾸면 기존 21노선의 값이 달라지고, 그러면 회귀가 왜 움직였는지 구분이 안 된다.
