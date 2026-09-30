@@ -31,6 +31,10 @@ for j in SETS:
                 G[j][m] = v['picks']
     if os.path.exists(R(f'gepa_e4b_{j}.json')):
         G[j]['gepa_e4b'] = J(R(f'gepa_e4b_{j}.json'))['picks']
+    for md in ('hint', 'restrict'):      # 앞단 상위 5개 후보를 힌트로 주거나(hint) 일정에 그 5개만 싣는(restrict) 방식의 올라마 답
+        if os.path.exists(R(f'llm_{j}_{md}_out.json')):
+            for m, v in J(R(f'llm_{j}_{md}_out.json')).items():
+                G[j][f'{md}_{m}'] = v['picks']
     for f in glob.glob(R(f'ft_pointer_*_{j}.json')):
         tag = os.path.basename(f)[len('ft_pointer_'):-len(f'_{j}.json')]
         G[j]['ftp_' + tag] = J(f)['picks']
