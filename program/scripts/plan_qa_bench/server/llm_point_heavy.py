@@ -11,7 +11,9 @@ nohist, usepool = '--nohist' in args, '--pool' in args
 PROTO = '--proto' in args   # 문제 정의(먼저 말한 항목이 정답·지시어는 앞 대화로 품)를 질의문에 명시
 RULE = '한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
 models = [a for a in args if not a.startswith('--')]
-job = json.load(open('heavy.json', encoding='utf-8'))['sets']['heavy']
+JOB = os.environ.get('JOB', 'heavy')     # 세트 이름(heavy·mix4 …): <JOB>.json 을 읽고 llm_<JOB>_out.json 에 쓴다
+job = json.load(open(f'{JOB}.json', encoding='utf-8'))['sets'][JOB]
+OUTF = f'llm_{JOB}_out.json'
 W = '월화수목금토일'
 S = {'type': 'object', 'properties': {'item': {'type': ['integer', 'null']}}, 'required': ['item']}
 items_all = sorted(job['items'], key=lambda i: (i['date'], i['start']))
@@ -35,7 +37,7 @@ def post(b):
             time.sleep(5)
 
 
-out = json.load(open('llm_heavy_out.json')) if os.path.exists('llm_heavy_out.json') and os.path.getsize('llm_heavy_out.json') else {}
+out = json.load(open(OUTF)) if os.path.exists(OUTF) and os.path.getsize(OUTF) else {}
 for model in models:
     picks, errors, t0 = [], 0, time.time()
     for x in job['qs']:
@@ -58,7 +60,7 @@ for model in models:
         picks.append(v if v in ids_all else None)
     key = model + ('#nohist' if nohist else '') + ('#pool' if usepool else '') + ('#proto' if PROTO else '')
     out[key] = {'picks': picks, '_sec_per_q': (time.time() - t0) / len(job['qs']), '_errors': errors}
-    tmp = 'llm_heavy_out.json.tmp'
+    tmp = OUTF + '.tmp'
     json.dump(out, open(tmp, 'w'), ensure_ascii=False)
-    os.replace(tmp, 'llm_heavy_out.json')
+    os.replace(tmp, OUTF)
     print(key, f"{out[key]['_sec_per_q']:.2f}s/q errors={errors}", flush=True)

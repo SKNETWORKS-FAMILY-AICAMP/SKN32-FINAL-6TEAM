@@ -1,0 +1,22 @@
+## heavy — dev 44 · held 88   (역할 순서: gate · anchor · point)
+  e4b/e4b/e4b    dev 34/44 · held 66/88=75% 엉뚱 1 못 찾음 21 · 평균 약 2.4초/질문(추정) · 처리 {'point': 41, 'verify': 22, 'struct': 16, 'gate': 9}
+  e4b/e4b/12b    dev 44/44 · held 84/88=95% 엉뚱 1 못 찾음 3 · 평균 약 2.9초/질문(추정) · 처리 {'point': 59, 'verify': 4, 'struct': 16, 'gate': 9}
+  e4b/12b/e4b    dev 33/44 · held 65/88=74% 엉뚱 2 못 찾음 21 · 평균 약 2.5초/질문(추정) · 처리 {'point': 41, 'verify': 22, 'struct': 16, 'gate': 9}
+  e4b/12b/12b    dev 43/44 · held 83/88=94% 엉뚱 2 못 찾음 3 · 평균 약 2.9초/질문(추정) · 처리 {'point': 59, 'verify': 4, 'struct': 16, 'gate': 9}
+  12b/e4b/e4b    dev 34/44 · held 66/88=75% 엉뚱 1 못 찾음 21 · 평균 약 2.8초/질문(추정) · 처리 {'point': 43, 'verify': 22, 'struct': 16, 'gate': 7}
+  12b/e4b/12b    dev 44/44 · held 84/88=95% 엉뚱 1 못 찾음 3 · 평균 약 3.3초/질문(추정) · 처리 {'point': 60, 'verify': 5, 'struct': 16, 'gate': 7}
+  12b/12b/e4b    dev 33/44 · held 65/88=74% 엉뚱 2 못 찾음 21 · 평균 약 2.8초/질문(추정) · 처리 {'point': 43, 'verify': 22, 'struct': 16, 'gate': 7}
+  12b/12b/12b    dev 43/44 · held 83/88=94% 엉뚱 2 못 찾음 3 · 평균 약 3.3초/질문(추정) · 처리 {'point': 60, 'verify': 5, 'struct': 16, 'gate': 7}
+
+개발용 정확도로 고른 배치: e4b/e4b/12b → 판정 84/88
+  context_pronoun        7/8
+  duplicate_place        8/8
+  confusable_name        7/8
+  compound_intent        8/8
+  negation               8/8
+  typo_slang             8/8
+  out_of_scope           8/8
+  nameless_description   7/8
+  ordinal_relative       8/8
+  change_request         7/8
+  absent_but_plausible   8/8

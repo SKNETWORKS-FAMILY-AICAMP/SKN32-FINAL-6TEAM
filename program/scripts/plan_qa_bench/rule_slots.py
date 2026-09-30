@@ -80,7 +80,7 @@ def rule_slots(q, items):
     # ---- 끼니·종류
     if re.search(r'아침', s):
         out['meal'] = 'breakfast'
-    elif re.search(r'점심|브런치|런치', s):
+    elif re.search(r'점심|브런치|런치|(?<![가-힣])낮', s):
         out['meal'] = 'lunch'
     elif re.search(r'저녁|디너|야식', s):
         out['meal'] = 'dinner'
@@ -89,7 +89,7 @@ def rule_slots(q, items):
     elif re.search(r'체크\s?인', s):
         out['kind'], out['kw'] = 'lodging', '체크인'
     elif re.search(r'숙소|호텔', s):
-        out['kind'] = 'lodging'
+        out['kind'], out['kw'] = 'lodging', '체크인'   # 「두번째 호텔」= 두 번째로 묵는 곳 = 체크인 항목
     elif re.search(r'식사|식당|먹|밥|카페|간식', s):
         out['kind'] = 'dining'
     elif re.search(r'이동|지하철|공항철도|이동수단', s):
@@ -97,7 +97,8 @@ def rule_slots(q, items):
     elif re.search(r'활동|관광|관람|산책|구경', s):
         out['kind'] = 'activity'
 
-    # ---- 앞뒤
+    # ---- 앞뒤 (「한 시간 뒤로」「30분 전에」 같은 시간 이동 표현은 순서·위치가 아니므로 뺀다)
+    s = re.sub(r'(?:\d+\s?(?:분|시간)|한\s?시간|반\s?시간|두\s?시간|세\s?시간)\s*(?:뒤|후|전|앞)', ' ', s)
     if re.search(r'(?<![가-힣])(?:바로\s*)?(?:앞|직전)(?![가-힣])|가기\s?전|하기\s?전|(?<![가-힣])전(?:에|의|\s|$)', s):
         out['rel'] = 'prev'
     if re.search(r'다음|(?<![가-힣])뒤|끝나고|끝나면|끝난\s?뒤|이후|후에', s):
