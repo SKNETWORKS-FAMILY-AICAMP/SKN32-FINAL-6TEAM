@@ -2,7 +2,7 @@
 
 이 폴더(`tests/unit/travel/mobility/`)의 회귀 시험 설명이다. 케이스 파일 `*_legs_v1.json` 과 `test_regression_cases.py` 를 읽는 법 · 깨졌을 때 읽는 순서.
 
-> **지금 숫자(2026-09-30)**: 회귀 케이스 **177** · 팀원 게이트 `pytest tests/unit/travel/mobility -q` **211** · 전체층 `-m "mobility_full and not live"` **185**. 아래 본문은 9/28 판(회귀 171) 기준으로 적었고 구조는 같다 — 늘어난 6건은 같은 묶음에 더해진 케이스다.
+> **지금 숫자(2026-09-30)**: 회귀 케이스 **177** · 팀원 게이트 `pytest tests/unit/travel/mobility -q` **231** · 전체층 `-m "mobility_full and not live"` **188**(85 · 사고 대안 역 `test_station_fallback_v1.py` 게이트 20 + 전체층 3). 아래 본문은 9/28 판(회귀 171) 기준으로 적었고 구조는 같다 — 늘어난 6건은 같은 묶음에 더해진 케이스다.
 
 (원래 제목: 이동 모듈 회귀 171 — 무엇을 넣고, 무엇을 기대하고, 무엇을 비교하나 (v1 · 2026-09-28 · 71번 방 · §8 은 9/29))
 
