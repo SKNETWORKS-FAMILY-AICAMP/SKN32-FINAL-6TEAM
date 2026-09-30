@@ -165,6 +165,7 @@ class Settings(BaseSettings):
     # 민간 — ★공공데이터포털 키와 **다른 키**다. 공통 키가 대신하지 않는다.
     odsay_api_key: str = ""                  # ODsay 대중교통 길찾기 lab.odsay.com
     kakao_rest_api_key: str = ""             # 카카오 지도 — 주소→좌표 developers.kakao.com
+    vworld_api_key: str = ""                 # 브이월드 지오코더 — 주소→좌표(장소 데이터 좌표 보완) vworld.kr
     # ★`[2026-09-24]` 자리만 만들었다 — 새벽 3시 하루 점검에 쓴다(D-020). 비어 있으면 부르지 않는다.
     # ★`[2026-09-27]` 관광공사 장소 목록(`place_catalog`) 수집·사용 스위치 — **기본 꺼짐.**
     #   콘텐츠랩 저작권 정책의 「콘텐츠 캐싱(로컬서버 저장방식) 금지」 해석을 관광공사에 묻는 중이라, 답을 받기
