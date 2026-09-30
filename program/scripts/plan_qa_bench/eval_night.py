@@ -35,6 +35,9 @@ for j in SETS:
         if os.path.exists(R(f'llm_{j}_{md}_out.json')):
             for m, v in J(R(f'llm_{j}_{md}_out.json')).items():
                 G[j][f'{md}_{m}'] = v['picks']
+    if os.path.exists(R(f'llm_{j}_var_out.json')):      # 질의문·디코딩 변형(llm_point_var.py): 키 <모델>|sfx[|nofmt]
+        for m, v in J(R(f'llm_{j}_var_out.json')).items():
+            G[j][f'var_{m}'] = v['picks']
     for f in glob.glob(R(f'ft_pointer_*_{j}.json')):
         tag = os.path.basename(f)[len('ft_pointer_'):-len(f'_{j}.json')]
         G[j]['ftp_' + tag] = J(f)['picks']
