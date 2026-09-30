@@ -110,3 +110,9 @@ def test_startup_announces_engine_state_once(tmp_path, caplog, monkeypatch):
     assert sum("이동 계산기 꺼짐" in m for m in lines) == 1, lines
     on = [m for m in lines if "이동 계산기 켜짐" in m]
     assert len(on) == 1 and "시간표 판" in on[0] and "적재" in on[0], lines
+    # 윈도 cp949 콘솔은 긴 줄표(U+2014)를 못 옮겨 글자 그대로 깨져 나온다 — 콘솔에 나가는 줄에는 쓰지 않는다
+    for line in lines:
+        line.encode("cp949")
+    with pytest.raises(wiring.MobilityUnavailable) as broken:
+        wiring.configure(data_dir=str(tmp_path / "없는폴더"), verify_hash=False)
+    str(broken.value).encode("cp949")

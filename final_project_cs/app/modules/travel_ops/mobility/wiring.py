@@ -30,6 +30,7 @@ _STATE: dict[str, Any] = {"mode": "unconfigured", "kw": None, "datacheck": None}
 
 
 #: ★서버 콘솔이 실제로 보여 주는 로거를 쓴다 — 앱 로거(`__name__`)는 INFO 가 콘솔에 안 나와 「적재가 됐는지」 운영에서 보이지 않았다
+# ★이 로거로 찍는 글에는 「—」(U+2014)를 쓰지 않는다 — 윈도 cp949 콘솔이 못 옮겨 글자 그대로 깨져 나온다(화면 세션이 실콘솔에서 확인)
 _SERVER_LOG = logging.getLogger("uvicorn.error")
 _ANNOUNCED: set[tuple] = set()
 
@@ -52,7 +53,7 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
     if not data_dir:
         paths.disable()
         _STATE.update(mode="disabled", kw=None, datacheck=None)
-        _announce(("disabled",), "이동 계산기 꺼짐 — 설정 mobility_data_dir 가 비어 있다(일정 짜기·재경로는 직선 어림값)")
+        _announce(("disabled",), "이동 계산기 꺼짐 - 설정 mobility_data_dir 가 비어 있다(일정 짜기·재경로는 직선 어림값)")
         return {"mode": "disabled"}
     paths.configure(data_dir)
     if guardrails_path:
@@ -60,7 +61,7 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
     dc = datacheck.check(verify_hash=verify_hash)
     if not dc["ok"]:
         _STATE.update(mode="broken", kw=None, datacheck=dc)
-        raise MobilityUnavailable(f"이동 자료 확인 실패 — 서버를 띄우지 않는다(결정 15): 없음 {dc['missing']} · "
+        raise MobilityUnavailable(f"이동 자료 확인 실패 - 서버를 띄우지 않는다(결정 15): 없음 {dc['missing']} · "
                                   f"다름 {dc['mismatched']} · 자료 폴더 {dc['data_dir']}")
     kw = {"quiet": True, "data_dir": data_dir, "gh_url": gh_url or "", "seoul_key": seoul_key or "",
           "guardrails_path": str(guardrails_path) if guardrails_path else None}
@@ -69,7 +70,7 @@ def configure(*, data_dir: str | None, gh_url: str = "", seoul_key: str = "",
         started = time.monotonic()
         rt = engine_runtime.get_verifier(**kw)
         _announce(("enabled", str(paths.DATA_DIR)),
-                  "이동 계산기 켜짐 — 자료 %s(출처 %s) · 명세 %s · 시간표 판 %s%s · 적재 %.1f초",
+                  "이동 계산기 켜짐 - 자료 %s(출처 %s) · 명세 %s · 시간표 판 %s%s · 적재 %.1f초",
                   paths.DATA_DIR, paths.SOURCE, Path(dc["manifest"]).name if dc.get("manifest") else "없음",
                   getattr(rt, "timetable_built_at", "?"), " · ★오래됨" if getattr(rt, "timetable_stale", False) else "",
                   time.monotonic() - started)
