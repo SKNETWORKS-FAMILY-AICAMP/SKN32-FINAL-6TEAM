@@ -31,6 +31,7 @@ import hashlib
 import hmac
 import html
 import json
+import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -500,7 +501,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _lazy("check", check_factory)
 
     def _desk(store: TripStore) -> TripDesk:
-        return TripDesk(store=store, connection_factory=get_connection, check=_check())
+        # ★`[2026-09-29]` 활동 대체 후보를 관광공사 목록에서 넓힐 때 운영시간을 읽는다(`catalog_pool`) — 부를 때만 만든다
+        return TripDesk(store=store, connection_factory=get_connection, check=_check(), catalog_pool=True)
 
     def _trip_or_404(conn, store: TripStore, trip_id: UUID, customer_id: UUID | None = None):
         try:
@@ -753,6 +755,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         _log_turn(principal.tenant_id, trip_id, request.message, result)
+        result.pop("answer_web", None)          # 웹 전용 판 — 에이전트는 목록이 든 문장(`answer`)을 읽는다
         return result
 
     @router.post("/v1/trips/{trip_id}/items/{item_id}/alternate")
@@ -1176,7 +1179,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         #   (`itinerary_team.ANSWERS`)를 웹에도 싣는다. 웹이 문장을 따로 지어내지 않게.
         if not result.get("answer") and result.get("status") in ANSWERS:
             result["answer"] = ANSWERS[result["status"]]
-        _log_turn(tenant, trip_id, request.message, result)
+        _log_turn(tenant, trip_id, request.message, result)      # 대화 기록은 목록이 든 문장 그대로(글만 읽는 쪽)
+        if result.get("answer_web"):
+            result["answer"] = result["answer_web"]
+        result.pop("answer_web", None)
         return _web_view(tenant, result)
 
     def _web_view(tenant: str, result: dict[str, Any]) -> dict[str, Any]:

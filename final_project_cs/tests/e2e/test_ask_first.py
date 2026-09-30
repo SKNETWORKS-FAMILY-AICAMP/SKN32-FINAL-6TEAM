@@ -42,7 +42,8 @@ def _proposals(api, trip_id):
 def _choose(api, trip_id, proposal_id, key, by="web", check=None):
     store = api["store"]
     with get_connection() as conn, conn.transaction():
-        places = {str(p["place_id"]): p for p in store.places(conn)}
+        # 실서비스 고르기(`trip_api._choose`)와 같이 그 여행이 볼 수 있는 장소 — 대본 여행이면 시연 장소도
+        places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
         return choose(conn=conn, store=store, pending=PendingStore(api["tenant"]), trip_id=trip_id,
                       proposal_id=proposal_id, key=key, by=by, places_by_id=places, check=check)
 

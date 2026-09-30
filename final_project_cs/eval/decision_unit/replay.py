@@ -56,7 +56,7 @@ def load_trips(path: Path) -> dict:
 def run(cases_path: Path, trips_path: Path) -> dict:
     from app.core.settings import get_settings
     from app.infrastructure.ollama_chat import from_settings
-    from app.modules.travel_ops.decision_unit import DecisionFailed, decide, stops_of
+    from app.modules.travel_ops.decision_unit import DecisionFailed, decide, fact_first, stops_of
 
     chat = from_settings(get_settings())
     trips = load_trips(trips_path)
@@ -74,6 +74,8 @@ def run(cases_path: Path, trips_path: Path) -> dict:
         try:
             got = decide(chat, stops=stops, changes=changes, history=history, selected_item_id=selected,
                          message=case["message"])
+            # ★`[2026-09-29]` 서버가 실제로 하는 것으로 잰다 — 후보가 모두 사실 질문인 되묻기는 첫 후보로 먼저 답한다(`fact_first`)
+            got = fact_first(got)
             action, item = got.action, alias_of.get(getattr(got.item, "item_id", None), "none")
             change, fact = (got.change.alias if got.change else "none"), got.fact
             choices = [(c["action"], alias_of.get(getattr(c["item"], "item_id", None), "none")) for c in got.choices]
@@ -107,6 +109,10 @@ def run(cases_path: Path, trips_path: Path) -> dict:
                "clarify_with_right_choice": sum(r["clarify_with_right_choice"] for r in rows),
                "unnecessary_clarify": sum(1 for r in rows if r["got"]["action"] == "clarify"
                                           and "clarify" not in (r["action"] if isinstance(r["action"], list) else [r["action"]])),
+               # ★`[2026-09-29 ui 세션 요청]` 질문 종류(fact)만 따로 — 할 일·대상이 맞아도 「어디 있어」에 전체 설명을 내면 틀린 답이다.
+               #   분모 = 기대 fact 가 적힌 문장, 분자 = 모델이 고른 fact 가 기대와 같은 것
+               "fact_labeled": sum(1 for r in rows if r.get("fact")),
+               "fact_correct": sum(1 for r in rows if r.get("fact") and r["got"]["fact"] == r["fact"]),
                "p50": round(statistics.median(secs), 2) if secs else None, "p95": round(p(0.95), 2) if secs else None,
                "p99": round(p(0.99), 2) if secs else None, "max": round(max(secs), 2) if secs else None}
     return {"summary": summary, "rows": rows}

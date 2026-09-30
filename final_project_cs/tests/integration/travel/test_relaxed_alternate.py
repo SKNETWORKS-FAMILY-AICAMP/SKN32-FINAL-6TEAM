@@ -75,3 +75,54 @@ def test_asking_for_another_breakfast_offers_a_later_time_and_choosing_applies_i
         assert move.ends_at <= next(i for i in after if i.kind == "activity").starts_at
     finally:
         cleanup_tenant(tenant)
+
+
+def test_after_a_change_the_other_options_are_offered_and_choosing_one_applies_it():
+    """☆`[2026-09-29 사용자 제안 — ui 세션 전달]` 조건을 다 통과한 곳이 한 곳뿐이면 「다른 안」 없이 끝났다(아침 장군숯불족발 →
+    먹고을 한 곳). 바꾼 뒤에도 조건을 푼 안까지 셋을 모아 같은 항목에 「다른 곳이 좋으면 고르세요」 제안(`other_options`)을 연다."""
+    tenant = "relax_" + uuid4().hex[:8]
+    try:
+        with get_connection() as conn:
+            with conn.transaction(), conn.cursor() as cur:
+                cur.execute("INSERT INTO tenants (tenant_id,name) VALUES (%s,'other options')", (tenant,))
+                cur.execute("INSERT INTO customers (tenant_id,external_id) VALUES (%s,'c') RETURNING customer_id", (tenant,))
+                customer = cur.fetchone()[0]
+                ids = {}
+                for key, name, kind, lat, lon, hours in (
+                        ("home", "원래 아침집", "dining", 37.5700, 126.9800, ["07:00", "10:00"]),
+                        ("early", "7시에 여는 집", "dining", 37.5703, 126.9803, ["07:00", "15:00"]),
+                        ("nine", "9시에 여는 집", "dining", 37.5705, 126.9805, ["09:00", "22:00"]),
+                        ("palace", "경복궁", "activity", 37.5760, 126.9767, ["09:00", "18:00"])):
+                    cur.execute("INSERT INTO places (tenant_id,name,kind,latitude,longitude,weather_sensitive,attributes) "
+                                "VALUES (%s,%s,%s,%s,%s,false,%s) RETURNING place_id",
+                                (tenant, name, kind, lat, lon, json.dumps({"hours": hours, "payment": ["card"]})))
+                    ids[key] = cur.fetchone()[0]
+            store = TripStore(tenant)
+            items = [Item(item_id=uuid4(), seq=1, kind="dining", title="원래 아침집", place_id=ids["home"],
+                          starts_at=_at(8), ends_at=_at(9), detail={}),
+                     Item(item_id=uuid4(), seq=2, kind="activity", title="경복궁", place_id=ids["palace"],
+                          starts_at=_at(11), ends_at=_at(12), detail={})]
+            with conn.transaction():
+                trip_id, _ = store.create_trip(conn, customer_id=customer, title="t", locale="ko", party_size=2,
+                                               items=items, constraints={})
+        desk = TripDesk(store=store, connection_factory=get_connection, dining_ledger=False)
+        done = desk.fresh_alternate(trip_id=trip_id, item_id=items[0].item_id, base_version=1,
+                                    message="아침 다른 데로 바꿔", request_id="r1")
+        assert done["status"] == "adjusted" and done["to"] == "7시에 여는 집", done
+        assert "다른 안: 1) 09:00으로 늦추면 9시에 여는 집" in done["notice"]["text"], done["notice"]["text"]
+        assert done["radius_m"] and done["seen"] >= 1 and "rejected" in done          # 왜 이것뿐인지 남긴다
+        with get_connection() as conn:
+            open_ = PendingStore(tenant).list(conn, trip_id, only_open=True)
+            assert [p["reason"] for p in open_] == ["other_options"], open_
+            assert [o["name"] for o in open_[0]["options_json"]] == ["9시에 여는 집"]
+            places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
+            with conn.transaction():
+                chosen = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                                proposal_id=open_[0]["proposal_id"], key=open_[0]["options_json"][0]["key"], by="c",
+                                places_by_id=places, check=None)
+            assert chosen["status"] == "chosen"
+            _, after = store.latest(conn, trip_id)
+        breakfast = next(i for i in after if i.kind == "dining")
+        assert (breakfast.place["name"], breakfast.starts_at.astimezone(KST).strftime("%H:%M")) == ("9시에 여는 집", "09:00")
+    finally:
+        cleanup_tenant(tenant)

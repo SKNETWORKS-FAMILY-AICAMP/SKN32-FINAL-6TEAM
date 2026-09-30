@@ -78,7 +78,7 @@ def test_saying_no_names_the_time_the_distance_and_the_main_reason():
     plan = _plan(_item(home, 8), [home, closed])
     assert isinstance(plan, NoChange) and plan.status == "no_alternate"
     assert "08:00" in plan.detail["text"] and "3km" in plan.detail["text"], plan.detail
-    assert "살펴본 1곳 중 1곳은" in plan.detail["text"] and plan.detail["radius_m"] == 3000
+    assert "살펴본 곳: 아침엔 닫는 식당 — 그 시각 영업하지 않는다" in plan.detail["text"] and plan.detail["radius_m"] == 3000
 
 
 def test_an_activity_is_not_replaced_by_the_same_site_under_another_name():
@@ -132,3 +132,46 @@ def test_a_place_near_the_next_stop_is_offered_when_moving_the_time_does_not_hel
                                 request_id="r")
     assert isinstance(plan, NoChange) and plan.status == "relaxed", plan
     assert [(o["name"], o["relaxed"]) for o in plan.detail["options"]] == [("경복궁 옆 식당", "near_next")]
+
+
+def _activity(name, lat, lon, address=None):
+    place = _place(name, "activity", lat, lon)
+    place["weather_sensitive"] = False
+    if address:
+        place["attributes"]["address"] = address
+    return place
+
+
+def test_the_same_building_is_not_offered_twice_nor_again_next_to_the_trip():
+    """☆`[2026-09-29 ui 세션 지적]` 「K-컬처 스크린(대한민국역사박물관)」과 「대한민국역사박물관」(같은 주소 · 6m)이 바뀐 곳과
+    다른 안에 함께 나왔고, 경복궁을 바꾼 뒤 건청궁(경복궁 안)을 바꾸자 이미 든 박물관과 같은 건물이 다시 나왔다."""
+    home = _activity("원래 공원", 37.5700, 126.9800)
+    screen = _activity("K-컬처 스크린(대한민국역사박물관)", 37.5705, 126.9805, "서울특별시 종로구 세종대로 198 (세종로)")
+    museum = _activity("대한민국역사박물관", 37.57051, 126.98051, "서울특별시 종로구 세종대로 198 (세종로)")
+    other = _activity("다른 미술관", 37.5720, 126.9830)
+    plan = _plan(_item(home, 10), [home, screen, museum, other])
+    assert not isinstance(plan, NoChange), plan
+    shown = [plan.summary["to"], *plan.notice["other_options"]]
+    assert shown.count("대한민국역사박물관") + shown.count("K-컬처 스크린(대한민국역사박물관)") == 1, shown
+    assert "다른 미술관" in shown
+    # 일정의 다른 활동이 그 박물관이면 같은 건물은 후보가 아니다
+    later = replace(_item(museum, 14), seq=2)
+    first = _item(home, 10)
+    plan = plan_fresh_alternate(trip={"constraints": {}}, trip_version=1, base_version=1, items=[first, later],
+                                places=[home, screen, museum, other], item_id=first.item_id,
+                                message="다른 데로 바꿔 줘", request_id="r2")
+    assert not isinstance(plan, NoChange) and plan.summary["to"] == "다른 미술관", plan
+    assert "K-컬처 스크린(대한민국역사박물관)" not in plan.notice["other_options"]
+
+
+def test_the_planner_keeps_one_of_the_same_site():
+    """☆`[2026-09-29 ui 세션 지적]` 일정 짜기가 경복궁(10:10)과 건청궁(13:15, 경복궁 안 · 10m)을 같은 날 따로 넣었다."""
+    from app.modules.travel_ops.planner import Cand, distinct_sites
+
+    def cand(name, lat, lon):
+        return Cand(key=name, name=name, kind="activity", lat=lat, lon=lon, attributes={}, origin="places")
+
+    kept = distinct_sites([cand("경복궁", 37.5760, 126.9767), cand("건청궁", 37.57608, 126.97674),
+                           cand("국립고궁박물관", 37.57659, 126.97497), cand("창덕궁과 후원", 37.5794, 126.9910),
+                           cand("창덕궁 다래나무", 37.5830, 126.9920)])
+    assert [c.name for c in kept] == ["경복궁", "국립고궁박물관", "창덕궁과 후원"]

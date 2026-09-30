@@ -46,6 +46,7 @@ from pydantic import ValidationError
 from .density import measure_density
 from .place_hours import DayHours, find_tour_id, hours_on, knows_hours
 from .place_hours import fits as hours_fit
+from .itinerary import hides_scenario_places
 from .itinerary_checks import Part, Violation, check_itinerary
 from .replan import distance_m, walk_minutes
 
@@ -275,6 +276,9 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
                 #   받고, 여기서 0 이나 서울시청 좌표로 채우면 그게 지어낸 값이다.
                 continue
             attributes = dict(attributes or {})
+            if attributes.get("scenario_seed") and hides_scenario_places(tenant_id):
+                # ★`[2026-09-29 ui 세션 지적]` 시연 대본 장소는 실제 고객 일정에 넣지 않는다(`itinerary.SCENARIO_SEED`)
+                continue
             found[(name, kind)] = Cand(key=f"db_{place_id}", name=name, kind=kind,
                                        lat=lat, lon=lon, attributes=attributes,
                                        origin="places", weather_sensitive=sensitive,
@@ -388,6 +392,21 @@ def _by_district(candidates: list[Cand]) -> dict[str, list[Cand]]:
     for cand in candidates:
         groups.setdefault(cand.district or "", []).append(cand)
     return groups
+
+
+def distinct_sites(activities: list[Cand]) -> list[Cand]:
+    """활동 후보에서 **같은 곳**(`itinerary_changes.same_site` — 같은 주소 · 30m 안 · 이름 첫 낱말 같고 1.5km 안)은
+    순위가 앞선 하나만 남긴다. ★`[2026-09-29 ui 세션 지적]` 한 여행에 경복궁(10:10)과 건청궁(13:15, 경복궁 안)을 따로 넣었다.
+    식당은 보지 않는다 — 같은 건물에 다른 가게가 흔하다."""
+    from .itinerary_changes import SiteIndex
+
+    index, kept = SiteIndex(), []
+    for cand in activities:
+        place = {"name": cand.name, "latitude": cand.lat, "longitude": cand.lon, "attributes": cand.attributes}
+        if not index.seen(place):
+            index.add(place)
+            kept.append(cand)
+    return kept
 
 
 def pick_day_pools(activities: list[Cand], dining: list[Cand], days: int
@@ -852,6 +871,30 @@ def fit_day(day: date, activities: list[Cand], dining: list[Cand], *, places: Ma
                    "note": f"활동 {MIN_ACTIVITIES_PER_DAY}곳으로도 목표를 넘는다 — 식사·이동만으로 찬다"}
 
 
+def _remeasure_density_after_moves(fits: list[dict[str, Any]], items: list[dict[str, Any]],
+                                   places: Mapping[str, Cand], routes: Mapping[str, Any],
+                                   constraints: Mapping[str, Any]) -> None:
+    """☆`[2026-09-29 이동 계산기를 켜자 시험이 잡음]` 하루를 맞추는 반복(`fit_day`)은 이동을 **어림값**으로 넣고 잰다 — 후보마다
+    계산기를 부르면 너무 느리다. 그런데 최종 이동은 계산기(시간표 판정)로 다시 채워 이동 길이가 달라진다. 그러면 계획이 말한 밀도와
+    등록이 재는 밀도(`measure_density` — 같은 함수)가 어긋난다(0.487 ≠ 0.501). 최종 일정으로 다시 재서 그 값을 싣고,
+    어림값으로 잰 값은 `estimated_density` 로 남긴다 — 못 맞춘 것을 맞췄다고 하지 않는다. 이동 계산기가 꺼져 있으면 값이 같아 바뀌지 않는다."""
+    if not fits:
+        return
+    measured = measure_density(_parts_of(items, places, routes), constraints)
+    by_date = {row["date"]: row for row in measured["density"]}
+    for fit in fits:
+        row = by_date.get(fit.get("date"))
+        if row is None or row["status"] == "unmeasurable" or fit.get("actual_density") is None:
+            continue
+        after = round(row["actual_density"], 3)
+        if after == fit["actual_density"]:
+            continue
+        fit["estimated_density"] = fit["actual_density"]
+        fit["actual_density"] = after
+        fit["density_basis"] = "이동을 넣은 뒤 다시 쟀다(이동 계산기 판정) — 하루를 맞출 때는 이동을 어림값으로 넣었다"
+        fit["status_after_moves"] = row["status"]
+
+
 # ── 고쳐서 다시 판정한다 ─────────────────────────────────────────
 def _planned_day(item: dict[str, Any]) -> str:
     return str(((item.get("detail") or {}).get("planner") or {}).get("day") or "")
@@ -1078,7 +1121,11 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
             found = {"week": read.week, "record": read.as_record(source="tour_api", read_at=now.isoformat())}
         if matched:
             found["record"]["matched_by_name"] = matched
-        _HOURS_CACHE[key] = (_time.time(), found)
+        # ★`[2026-09-29]` 모델을 못 불러 못 읽은 것(시간 예산 초과 · 모델 꺼짐 · 모델 없이 규칙만 읽은 요청)은 캐시하지 않는다 —
+        #   6시간 「모름」으로 굳으면 뒤에서 모델로 읽는 일(`catalog_pool._read_later`)이 캐시만 보고 끝난다
+        if not any(str(d).startswith(("모델 호출 실패", "모델이 연결돼 있지 않다"))
+                   for d in found["record"].get("dropped") or []):
+            _HOURS_CACHE[key] = (_time.time(), found)
         return found
 
     with ThreadPoolExecutor(max_workers=4) as pool:
@@ -1190,7 +1237,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         pool = [cand for cand in pool if _bare_name(cand.name) not in skip]
 
     ranked = rank_candidates(pool, pref)
-    activities = [cand for cand in ranked if cand.kind == "activity"]
+    activities = distinct_sites([cand for cand in ranked if cand.kind == "activity"])
     dining = [cand for cand in ranked if cand.kind == "dining"]
     need_act, need_din = floor_per_day * request.days, DINING_PER_DAY * request.days
     if len(activities) < need_act or len(dining) < need_din:
@@ -1330,6 +1377,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
             repair_rounds=rounds, repairs_applied=fixed,
             remedy="하루 항목을 줄이거나 가까운 장소로 바꾼다")
     _refuse_overflow(items, rounds=rounds, fixed=fixed, why="이동 시간을 넣고 나니")
+    _remeasure_density_after_moves(fits, items, chosen, routes, request.constraints)
 
     draft = PlanDraft(
         title=request.title or f"서울 {request.days}일 여행 ({request.start_date.isoformat()})",

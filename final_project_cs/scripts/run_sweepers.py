@@ -2,7 +2,11 @@
 
     --once      한 번 돌고 끝난다(cron·수동 실행용). 기본값이다.
     --interval  N 초마다 되돌린다(상주 실행용).
-    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders | place_facts | trip_places | web_guard 중 하나만 돌린다.
+    --only      classifying | routing | trip | trip_cases | trip_dawn | trip_reminders | place_facts | catalog_hours | trip_places | web_guard 중 하나만 돌린다.
+
+★`catalog_hours` 는 **관광공사 목록 운영시간 새벽 읽기**다(`[2026-09-29 사용자 지시]`, 마이그레이션 036). 03:00~08:00 창 안에서
+  처음 보는 곳 · 목록 수정 시각이 바뀐 곳만 한 번에 10곳, 하룻밤 600곳까지 읽어 `catalog_hours` 에 적는다. 활동 「다른 데로 바꿔」는
+  요청 자리에서 관광공사를 부르지 않고 이 표만 읽는다(`catalog_pool`).
 
 ★`trip_dawn` 은 **새벽 식당 영업 확인**이다(`[2026-09-25]`, D-020). 03:00~08:00 창 안에서만 구글 장소로
   그날 식사 일정이 계획한 시각에 여는지 보고, 안 열면 같은 판정 문으로 바꾸거나 묻는다. 항목·날짜마다
@@ -107,6 +111,9 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     #   — 일정 상세에 보이고 판정기 · 새벽 확인이 쓴다. 새 장소만 읽으므로 평소에는 0건이다
     if only in (None, "place_facts"):
         result["place_facts"] = _run_place_facts(tenant_id)
+    if only in (None, "catalog_hours"):
+        # ★`[2026-09-29 사용자 지시]` 관광공사 목록 운영시간 새벽 읽기 — 창(03:00~08:00) 밖이면 아무것도 안 한다
+        result["catalog_hours"] = _run_catalog_hours(tenant_id)
     # ★끝난 여행의 전용 장소 행(029)에서 외부 서비스 값(좌표·식별자)을 비운다 — 약관, `trip_places.py` 머리
     if only in (None, "trip_places"):
         result["trip_places"] = _run_trip_places(tenant_id)
@@ -128,6 +135,26 @@ def _run_place_facts(tenant_id: str) -> dict[str, object]:
     with get_connection() as conn:
         return fill_missing_facts(conn, tenant_id, source=build_travel_sources(settings).place,
                                   chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")))
+
+
+def _run_catalog_hours(tenant_id: str) -> dict[str, object]:
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from app.core.settings import get_guardrails
+    from app.infrastructure.ollama_chat import from_settings
+    from app.infrastructure.travel.base import build_travel_sources
+    from app.modules.travel_ops.catalog_hours import prefill
+
+    settings, guard = get_settings(), get_guardrails()
+    with get_connection() as conn:
+        return prefill(conn, tenant_id=tenant_id, source=build_travel_sources(settings).place,
+                       chat=from_settings(settings), now=datetime.now(ZoneInfo("Asia/Seoul")),
+                       start=str(guard.get("travel.catalog_hours.start")),
+                       until=str(guard.get("travel.catalog_hours.until")),
+                       per_night=int(guard.get("travel.catalog_hours.per_night")),
+                       per_tick=int(guard.get("travel.catalog_hours.per_tick")),
+                       retry_days=int(guard.get("travel.catalog_hours.retry_days")))
 
 
 def _run_web_guard(tenant_id: str) -> dict[str, object]:
@@ -281,6 +308,7 @@ def main() -> int:
     parser.add_argument("--interval", type=int, default=None,
                         help="N 초마다 반복한다. 주면 --once 를 덮는다")
     parser.add_argument("--only", choices=("classifying", "routing", "trip", "trip_cases", "trip_dawn", "place_facts",
+                                           "catalog_hours",
                                            "trip_reminders", "trip_places", "web_guard"),
                         default=None)
     args = parser.parse_args()

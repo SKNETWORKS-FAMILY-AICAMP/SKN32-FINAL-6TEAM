@@ -27,3 +27,4 @@
 {"trip": "e71ee6ab", "history": [], "selected": null, "message": "이전에 변경요청 한거 다시 진행해줘봐", "action": "redo", "item": null, "change": null, "fact": null, "label_by": "claude 표기(ui 세션 기대와 같게)"}
 {"trip": "e71ee6ab", "history": [], "selected": null, "message": "첫날 아침 일정 바꿔", "action": "apply_change", "item": "i1", "change": null, "fact": null, "label_by": "claude 표기(ui 세션 기대와 같게)"}
 {"trip": "e71ee6ab", "history": [], "selected": null, "message": "저녁 식당 변경해", "action": "apply_change", "item": "i5", "change": null, "fact": null, "label_by": "claude 표기(ui 세션 기대와 같게)"}
+{"trip": "e71ee6ab", "history": [["고객", "원래대로 돌려 줘"], ["triPilot", "2일차 아침을 먹고을전주콩나물국밥 묵동본점에서 [백년가게] 장군숯불족발(으)로 되돌렸어요."]], "selected": null, "message": "바꿔", "action": "clarify", "item": null, "change": null, "fact": null, "label_by": "claude — ui 세션 실서버(2026-09-29): 되돌린 뒤 대상 없는 「바꿔」에 모델이 rollback 을 골랐다"}

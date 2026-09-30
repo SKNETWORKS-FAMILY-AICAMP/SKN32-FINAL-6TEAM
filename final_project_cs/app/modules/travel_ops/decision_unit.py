@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -36,7 +36,13 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
 - propose_alternatives: 바꾸지 말고 후보만 알아봐 달라(「알아봐 줘」「추천」「뭐 있어」「어디가 좋아」).
 - rollback: 앞서 바뀐 것을 원래대로 되돌려 달라(「원래대로」「되돌려」「이전 걸로」). target_change 에 되돌릴 변경 id — 문장이 어느 변경인지 말하지 않으면 (가장 최근) 표시가 붙은 변경.
 - redo: 되돌렸던 변경을 다시 적용해 달라(「다시 진행」「다시 바꿔」). target_change 에 다시 적용할 변경 id.
-- answer_fact: 이 여행의 사실을 묻는다 — fact 에 무엇을: detail(장소 전반 — 「알려줘」「세부정보」「어떤 곳이야」) · address · phone · hours(운영시간·몇 시까지) · time(몇 시에 가나) · next(다음 일정) · booking(예약) · day(하루 일정·요약) · move(이동·가는 길).
+- answer_fact: 이 여행의 사실을 묻는다 — fact 에 **물은 것 하나**를 고른다(가장 좁은 칸):
+  address(위치 — 「어디 있어」「어딨어」「어디야」「어디쯤」「위치」「주소」) · phone(전화·연락처) ·
+  hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·
+  booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·
+  detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).
+  애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.
+  이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.
 - ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).
 - report_delay: 늦는다고 알린다 — minutes 에 문장에 적힌 분(없으면 0).
 - report_closed: 장소가 닫았다고 알린다.
@@ -166,7 +172,11 @@ def _prompt(stops: list[Stop], changes: list[Change], history: list[dict[str, An
             message: str) -> str:
     lines = item_lines(stops, selected)
     change_lines = [f"{c.alias} | 대상 {next((s.alias for s in stops if s.item.item_id == c.target_item_id), 'none')}"
-                    f" | {c.line}" + (" (가장 최근)" if c is changes[-1] else "") for c in changes]
+                    f" | {c.line}" + (" (가장 최근)" if c is changes[-1] else "")
+                    # ★`[2026-09-29 ui 세션 지적]` 그 변경의 결과가 지금 일정에 없으면(이미 되돌렸거나 다시 바뀜) 적는다 —
+                    #   모델이 이미 되돌린 변경을 또 되돌리려 했다
+                    + (" (지금 일정에 없음 — 이미 되돌렸거나 다시 바뀜)" if c.target_item_id is None else "")
+                    for c in changes]
     from .chat_log import TURN_CHARS
 
     talk = "\n".join(f"{'고객' if t['role'] == 'customer' else 'triPilot'}: {t['text'][:TURN_CHARS]}"
@@ -244,6 +254,42 @@ _FACT_KO = {"detail": "자세히", "address": "주소", "phone": "전화번호",
             "next": "다음 일정", "booking": "예약", "day": "하루 일정", "move": "가는 길"}
 
 
+#: 사실 답 뒤에 「혹시 이런 뜻이었나요?」로 붙이는 가까운 질문 종류 — ★우리가 고른 짝(2026-09-29 사용자 제안). 앞의 것부터
+NEAR_FACTS = {"address": ("move", "detail", "hours"), "hours": ("time", "detail", "address"),
+              "detail": ("address", "hours", "next"), "phone": ("address", "detail"), "time": ("hours", "detail"),
+              "next": ("day", "detail"), "day": ("next", "booking"), "booking": ("detail", "day"),
+              "move": ("address", "time")}
+
+
+def fact_first(decision: Decision) -> Decision:
+    """★`[2026-09-29 사용자 지시]` 되묻는 대신 **먼저 답한다** — 모델이 되묻기를 골랐어도 후보가 **모두 사실 질문**이면
+    (「2026-09-30 예약 표시를 알려 주세요」가 두 일정 중 어느 것인지 되물었다) 첫 후보로 답하고 나머지는 「혹시 이런 뜻이었나요?」로
+    붙인다. 사실 답은 일정을 바꾸지 않아 잘못 짚어도 잃는 것이 없다. **바꾸기 · 되돌리기는 지금처럼 묻는다**(잘못 짚으면 일정이 바뀐다)."""
+    choices = decision.choices
+    if decision.action != "clarify" or not choices or any(c["action"] != "answer_fact" for c in choices):
+        return decision
+    first = choices[0]
+    return replace(decision, action="answer_fact", item=first["item"], change=None,
+                   fact=first["fact"] if first["fact"] != "none" else "detail", choices=choices[1:])
+
+
+def maybe_meant(decision: Decision, fact: str, first: datetime | None, limit: int = 3) -> list[dict[str, str]]:
+    """사실 답에 붙일 「혹시 이런 뜻이었나요?」 — 모델이 낸 다른 해석 먼저, 모자라면 같은 일정의 가까운 질문 종류. 버튼 모양."""
+    options = [c for c in decision.choices if c["action"] == "answer_fact"]
+    options += [{"action": "answer_fact", "item": decision.item, "change": None, "fact": near}
+                for near in NEAR_FACTS.get(fact, ())]
+    out: list[dict[str, str]] = []
+    for option in options:
+        if option["item"] is decision.item and option["fact"] == fact:
+            continue
+        text = choice_message(option, first)
+        if text and all(text != c["message"] for c in out):
+            out.append({"label": text, "message": text})
+        if len(out) >= limit:
+            break
+    return out
+
+
 def choice_message(choice: dict[str, Any], first: datetime | None) -> str | None:
     """해석 후보 → **그대로 보내면 한 번에 알아듣는 문장**(웹 버튼 · 「1번」 답의 뜻). 만들 수 없으면 None."""
     item, change, action = choice.get("item"), choice.get("change"), choice["action"]
@@ -289,5 +335,5 @@ def labels(decision: Decision) -> dict[str, str]:
     return {"intent": intent, "issue_code": code, "sentiment": sentiment}
 
 
-__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "Stop", "SYSTEM", "changes_of", "choice_message",
+__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "NEAR_FACTS", "fact_first", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
            "decide", "item_lines", "labels", "stops_of"]

@@ -381,9 +381,14 @@ def store_candidates(*, here: dict[str, Any], home: dict[str, Any], places: list
 
 
 def choose(candidates: list[Candidate],
-           recheck: Callable[[Candidate], dict[str, Any]] | None = None) -> tuple[
+           recheck: Callable[[Candidate], dict[str, Any]] | None = None,
+           distinct: Callable[[Candidate, Candidate], bool] | None = None) -> tuple[
                Candidate | None, list[Candidate], list[Candidate]]:
-    """(최선, 재요청용 둘, 탈락). ★재검증은 **탈락을 통과한 것에만** 돌린다."""
+    """(최선, 재요청용 둘, 탈락). ★재검증은 **탈락을 통과한 것에만** 돌린다.
+
+    `distinct(a, b)` — 둘이 **같은 곳**이면 참(활동 — `itinerary_changes.same_site`). ★`[2026-09-29 ui 세션 지적]`
+      「K-컬처 스크린(대한민국역사박물관)」과 「대한민국역사박물관」(같은 주소 · 6m)이 바뀐 곳과 다른 안에 함께 나왔다 —
+      순위가 앞선 하나만 남긴다(뒤의 것은 탈락이 아니라 그냥 빠진다)."""
     survivors, rejected = [], []
     for candidate in candidates:
         if not candidate.rejected and recheck is not None:
@@ -393,6 +398,12 @@ def choose(candidates: list[Candidate],
                 candidate.rejected.append(f"재검증 불통과: {report.get('verdict')}")
         (rejected if candidate.rejected else survivors).append(candidate)
     survivors.sort(key=Candidate.rank)
+    if distinct is not None:
+        kept: list[Candidate] = []
+        for candidate in survivors:
+            if not any(distinct(candidate, other) for other in kept):
+                kept.append(candidate)
+        survivors = kept
     if not survivors:
         return None, [], rejected
     return survivors[0], survivors[1:3], rejected

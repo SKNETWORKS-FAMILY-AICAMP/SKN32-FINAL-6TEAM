@@ -195,9 +195,30 @@ def _catalog_class(values: tuple) -> dict[str, str] | None:
     return found or None
 
 
+#: 시연 대본 장소 표시 — 장소 `attributes.scenario_seed`. ★`[2026-09-29 ui 세션 지적]` 대본 여행을 실서비스 테넌트에
+#:  등록하자 대본의 가짜 지점(「명동 대형마트(시나리오 지점)」 · 「잠실 스카이타워」)이 공용 장소 행으로 남아, 실제 고객의
+#:  「다른 데로 바꿔」와 일정 짜기에 뽑혔다. 실서비스 테넌트(`settings.tenant_id`)에서는 **대본 여행**(처음 등록한 판이
+#:  시연 장소를 쓴 여행)과 **그 장소를 이미 일정에 넣은 여행**에만 보인다 — 다른 고객 여행의 후보·일정 짜기에는 안 나온다.
+#:  시나리오 모드(`scenario-live-*`)와 시험 테넌트는 그대로 쓴다.
+SCENARIO_SEED = "scenario_seed"
+_SEED = "COALESCE((q.attributes->>'scenario_seed')::boolean, false)"
+#: 대본 여행 id — 처음 등록한 판(1판)이 시연 장소를 쓴 여행. ★일정 짜기가 넣은 항목(`detail.planner`)은 치지 않는다 —
+#:  ☆`[2026-09-29 ui 세션]` 일정 짜기가 시연 장소(「롯데마트 서울역점」)를 넣은 고객 여행이 대본 여행으로 잡혀 시연 장소가 다시 열렸다
+_SCENARIO_TRIPS = ("SELECT DISTINCT ii.trip_id FROM itinerary_items ii JOIN places q ON q.place_id = ii.place_id"
+                   " WHERE ii.tenant_id = %s AND ii.version = 1 AND NOT (ii.detail ? 'planner') AND " + _SEED)
+
+
+def hides_scenario_places(tenant_id: str) -> bool:
+    from app.core.settings import get_settings
+
+    return tenant_id == get_settings().tenant_id
+
+
 def visible_to(places: list[dict[str, Any]], trip_id: Any) -> list[dict[str, Any]]:
-    """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용."""
-    return [p for p in places if p.get("trip_scope") in (None, str(trip_id))]
+    """`places(every_trip=True)` 에서 한 여행이 볼 수 있는 것 — 공용 + 그 여행 전용.
+    ★시연 장소(`SCENARIO_SEED`)는 `seed_trips` 에 든 여행에만(`TripStore.places` 가 붙인다)."""
+    return [p for p in places if p.get("trip_scope") in (None, str(trip_id))
+            and ("seed_trips" not in p or str(trip_id) in p["seed_trips"])]
 
 
 class TripStore:
@@ -342,6 +363,16 @@ class TripStore:
         if not every_trip:
             where = " AND (p.trip_scope IS NULL OR p.trip_scope = %s)" if trip_id else " AND p.trip_scope IS NULL"
             params += [trip_id] if trip_id else []
+        hide = hides_scenario_places(self.tenant_id)
+        if hide and not every_trip:
+            # ★시연 대본 장소는 대본 여행 · 이미 그 장소를 일정에 넣은 여행에만(`SCENARIO_SEED`)
+            where += " AND (COALESCE((p.attributes->>'scenario_seed')::boolean, false) = false"
+            if trip_id:
+                where += (" OR %s IN (" + _SCENARIO_TRIPS + ")"
+                          " OR p.place_id IN (SELECT ii.place_id FROM itinerary_items ii"
+                          " WHERE ii.tenant_id = p.tenant_id AND ii.trip_id = %s AND ii.place_id IS NOT NULL)")
+                params += [trip_id, self.tenant_id, trip_id]
+            where += ")"
         # ★`[2026-09-29]` 관광공사 분류(신분류 대·중·소 · 시군구)를 장소 목록에서 이어 붙인다 — 대체 활동을
         #   「비슷한 곳」부터 고르는 재료다(`activity/similarity.py`). 장소가 관광공사 id 를 모르거나 목록에 없으면
         #   `catalog_class=None`(모름) — 지어내지 않는다. 카탈로그는 (tenant, source, content_id) UNIQUE 라 행이 늘지 않는다.
@@ -354,9 +385,22 @@ class TripStore:
                         " AND pc.content_id = COALESCE(p.source_content_id, p.attributes->>'source_content_id')"
                         " WHERE p.tenant_id=%s" + where, params)
             width = len(PLACE_COLUMNS)
-            return [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
+            rows = [{**_place(row[:width]), "trip_scope": str(row[width]) if row[width] else None,
                      "catalog_class": _catalog_class(row[width + 1:])}
                     for row in cur.fetchall()]
+            if hide and every_trip:
+                # 여러 여행을 한꺼번에 볼 때 — 시연 장소마다 볼 수 있는 여행을 붙인다(`visible_to` 가 거른다)
+                cur.execute(_SCENARIO_TRIPS, (self.tenant_id,))
+                seeded = {str(r[0]) for r in cur.fetchall()}
+                cur.execute("SELECT DISTINCT place_id::text, trip_id::text FROM itinerary_items"
+                            " WHERE tenant_id = %s AND place_id IS NOT NULL", (self.tenant_id,))
+                using: dict[str, set[str]] = {}
+                for place_id, trip in cur.fetchall():
+                    using.setdefault(place_id, set()).add(trip)
+                for row in rows:
+                    if (row.get("attributes") or {}).get(SCENARIO_SEED):
+                        row["seed_trips"] = seeded | using.get(row["place_id"], set())
+            return rows
 
     # ── 쓰기 ────────────────────────────────────────────────────
     def append_version(self, conn, *, trip_id: UUID, base_version: int, items: list[Item],

@@ -219,7 +219,10 @@ class ItineraryWork:
     # ── 도우미 ──────────────────────────────────────────────────
     def catalog(self, task: TeamTask, ctx: dict[str, Any]) -> list[dict[str, Any]] | None:
         if "places" not in ctx:
-            ctx["places"] = self._read(task, "read.place_catalog", {}, ctx["seen"])
+            # ★`[2026-09-29]` 여행 id 를 넘긴다 — 그 여행 전용 장소 행과, 대본 여행이면 시연 장소까지 본다(`TripStore.places`)
+            trip = ctx.get("trip") or {}
+            ctx["places"] = self._read(task, "read.place_catalog",
+                                       {"trip_id": str(trip["trip_id"])} if trip.get("trip_id") else {}, ctx["seen"])
             ctx["evidence"] = self._evidence(task, source_id="read.place_catalog", claim="대안 후보 장소",
                                              value=ctx["places"], base=ctx["evidence"])
         return ctx["places"]

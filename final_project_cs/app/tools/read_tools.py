@@ -409,11 +409,22 @@ class ReadToolbox:
         return {"trip_id": str(trip_id), "version": wanted,
                 "items": [item_to_dict(item) for item in items]}
 
-    def place_catalog(self, scope: ToolContext, **_: Any) -> list[dict[str, Any]] | None:
-        """이 테넌트의 장소 목록 — 대안 후보를 고르는 재료. ★빈 목록은 「장소가 없다」는 아는 사실이다."""
+    def place_catalog(self, scope: ToolContext, *, trip_id: str | None = None, **_: Any) -> list[dict[str, Any]] | None:
+        """이 테넌트의 장소 목록 — 대안 후보를 고르는 재료. ★빈 목록은 「장소가 없다」는 아는 사실이다.
+
+        ★`[2026-09-29]` `trip_id` 를 주면 그 여행이 볼 수 있는 것(공용 + 그 여행 전용 · 대본 여행이면 시연 장소)이다.
+          남의 여행이면 `None`(다른 도구와 같다)."""
         store = self._trip_store(scope)
         with self.connection_factory() as conn:
-            return store.places(conn)
+            if trip_id is None:
+                return store.places(conn)
+            try:
+                trip, _ = store.latest(conn, UUID(str(trip_id)))
+            except (KeyError, ValueError):
+                return None
+            if str(trip["customer_id"]) != str(scope.customer_id):
+                return None
+            return store.places(conn, UUID(str(trip_id)))
 
     def route_events_for(self, scope: ToolContext, *, targets: list[str] | None = None,
                          **_: Any) -> dict[str, Any] | None:

@@ -575,7 +575,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from app.infrastructure.db import repository
 
     from . import trip_facts, trip_replies
-    from .decision_unit import labels
+    from .decision_unit import fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -596,6 +596,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         answer = ("지금 요청을 해석하지 못했어요(해석 모델 응답 오류) — 일정은 바꾸지 않았어요. 잠시 뒤 다시 말씀해 주세요.")
         return view({"status": "escalated", "reason": "decision_failed", "failure": failure, "answer": answer})
 
+    decision = fact_first(decision)      # 사실 질문이면 되묻지 않고 먼저 답한다(사용자 지시 2026-09-29)
     event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
                           classifier=lambda _text: labels(decision), actor_id=actor_id)
     if event is not EventType.CLASSIFIED:
@@ -615,16 +616,25 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     outcome: dict[str, Any]
 
     if action == "clarify":
-        outcome = _clarify_with_choices(decision, items)
+        outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
     elif action == "other":
         outcome = {"status": "answered", "text": trip_replies.other_reply(items, at)}
     elif action == "answer_fact":
         kind = decision.fact if decision.fact != "none" else "detail"
         text, basis = trip_facts.fact_reply(kind, message=message, items=items, now=at, place_source=place_source,
                                             item=item)
+        # ★`[2026-09-29 ui 세션 요청]` 전체 설명은 핵심만 답으로, 나머지는 `more`(화면의 「더 보기」)로 나눈다
+        text, _, more = text.partition(trip_facts.MORE_MARK)
         if kind == "detail" and item is not None and item.place:
-            text += _place_extras(conn, tenant, item.place)
-        outcome = {"status": "answered", "text": text}
+            more += _place_extras(conn, tenant, item.place)
+        # ★`[2026-09-29 사용자 지시]` 답하면서 「혹시 이런 뜻이었나요?」 — 다른 해석 · 가까운 질문을 버튼으로(`choices`)
+        first = min((i.starts_at for i in items if i.kind != "mobility"), default=None)
+        meant = maybe_meant(decision, kind, first)
+        plain = text                  # 웹은 목록을 버튼(`choices`)으로 그린다 — 문장에서는 뺀 판(`answer_web`)
+        if meant:
+            text += "\n\n혹시 이런 뜻이었나요? " +" · ".join(f"{n}) {c['label']}" for n, c in enumerate(meant, start=1))
+        outcome = {"status": "answered", "text": text, **({"more": more.strip()} if more.strip() else {}),
+                   **({"choices": meant, "choices_title": "혹시 이런 뜻이었나요?", "text_web": plain} if meant else {})}
     elif action == "ask_policy":
         status, text, basis = trip_replies.question_reply(
             message=message, items=items, tenant_id=tenant, policy_search=policy_search,
@@ -648,6 +658,9 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         change = decision.change
         if explicit:
             to_version, ask = int(explicit.group(1)), None
+        elif change is not None and change.target_item_id is None:
+            # ★`[2026-09-29 ui 세션 지적]` 결과가 지금 일정에 없는 변경(이미 되돌렸거나 다시 바뀜)은 되돌리지 않는다 — 되묻는다
+            to_version, ask = None, None
         elif change is not None and change.version != latest and not _confirmed_rollback(conn, tenant, trip_id, change):
             # ★뒤에 다른 변경이 있으면 한 번 묻는다 — 고객이 「네」로 답하면(앞 대화에 이 질문이 있으면) 그때 되돌린다
             to_version, ask = None, (f"그 변경({change.line}) 뒤에 다른 변경이 {latest - change.version}번 더 있었어요. "
@@ -662,9 +675,13 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         else:
             to_version, ask = _rollback_target(store, trip_id, now_items, message, selected, at, target=item,
                                                use_rules=False)
-        outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
-                   desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
-                                 request_id=request_id))
+        if to_version is None and ask is None:
+            outcome = _clarify_with_choices(decision, items, at=at, selected=selected,
+                                            lead="그 변경은 지금 일정에 이미 없어요(되돌렸거나 다시 바뀌었어요).")
+        else:
+            outcome = ({"status": "ask_rollback", "text": ask} if to_version is None else
+                       desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
+                                     request_id=request_id))
     elif action == "redo":
         change = decision.change
         undone = history[-1] if history and history[-1]["reason"] == "rollback" else None
@@ -711,6 +728,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
                                              "state_patch": {"answer": answer, "trip_outcome": kept}})
     return view({"status": status, "reason": f"decision_{action}", "decision": decision.record(),
                  "outcome": outcome, "answer": answer, **({"choices": outcome["choices"]} if outcome.get("choices") else {}),
+                 **({"more": outcome["more"]} if outcome.get("more") else {}),
+                 **({"choices_title": outcome["choices_title"]} if outcome.get("choices_title") else {}),
+                 # ★`[2026-09-29 ui 세션 요청]` 웹은 목록을 버튼으로 또 그려 두 번 보였다 — 웹 입구는 이 판을 `answer` 로 쓴다
+                 **({"answer_web": outcome["text_web"]} if outcome.get("text_web") else {}),
                  **({"basis": basis} if basis else {})})
 
 
@@ -723,7 +744,8 @@ def _confirmed_rollback(conn, tenant: str, trip_id: UUID, change: Any) -> bool:
     return bool(last and last["text"].startswith(f"그 변경({change.line})") and "되돌릴까요" in last["text"])
 
 
-def _clarify_with_choices(decision: Any, items: list[Any]) -> dict[str, Any]:
+def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = None, *,
+                          at: datetime | None = None, selected: UUID | None = None) -> dict[str, Any]:
     """★`[2026-09-29 사용자 제안]` 이해하지 못했으면 **이해한 범위 안에서** 「다음 중 하나인가요?」 — 번호 목록과 버튼용 문장.
     고객이 「1번」이라고 답하면 결정 단위가 앞 대화(이 목록)로 푼다. 후보가 없으면 되묻는 한 문장."""
     from .decision_unit import choice_message
@@ -735,10 +757,23 @@ def _clarify_with_choices(decision: Any, items: list[Any]) -> dict[str, Any]:
         if text and all(text != c["message"] for c in choices):
             choices.append({"label": text, "message": text})
     if not choices:
-        return {"status": "clarify", "text": decision.question or _CLARIFY}
+        # ★`[2026-09-29 ui 세션 지적 · 사용자 제안]` 모델이 해석 후보를 못 냈어도 **고를 수 있는 것**을 보인다 —
+        #   화면에서 고른 일정 → 지금부터 가까운 식사 · 활동(없으면 앞에서부터) 셋을 「다른 곳으로 바꿔 줘」로
+        stops = sorted((i for i in items if i.kind in ("dining", "activity") and i.place), key=lambda i: (i.starts_at, i.seq))
+        picked = [i for i in stops if selected is not None and i.item_id == selected]
+        ahead = [i for i in stops if at is None or i.starts_at >= at] or stops
+        for item in picked + [i for i in ahead if i not in picked]:
+            text = choice_message({"action": "apply_change", "item": item, "change": None, "fact": "none"}, first)
+            if text and all(text != c["message"] for c in choices):
+                choices.append({"label": text, "message": text})
+            if len(choices) >= 3:
+                break
+    if not choices:
+        return {"status": "clarify", "text": " ".join(x for x in (lead, decision.question or _CLARIFY) if x)}
     listed = "\n".join(f"{n}) {c['label']}" for n, c in enumerate(choices, start=1))
-    return {"status": "clarify", "choices": choices,
-            "text": f"말씀을 정확히 알아듣지 못했어요. 다음 중 하나인가요?\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
+    head = lead or "말씀을 정확히 알아듣지 못했어요."
+    return {"status": "clarify", "choices": choices, "text_web": f"{head} 다음 중 하나인가요?",
+            "text":f"{head} 다음 중 하나인가요?\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
 
 
 _TAG_KO = {"card_payment": "카드 결제", "parking": "주차", "takeout": "포장", "vegetarian_menu": "채식 메뉴",
