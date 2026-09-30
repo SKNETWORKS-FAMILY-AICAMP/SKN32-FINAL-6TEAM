@@ -1,0 +1,14 @@
+## 최종 판정: mix5(다른 일정 · 처음 보는 88문제) — 앞단 ft/emb_e16c
+  구조 + 넘김 gemma4:e4b   (문턱 lo=0.25 hi=0.6, heavy 개발용으로 선택): 정답 83/88=94% · 엉뚱 3 · 못 찾음 2 · 넘김 호출 26/88=30%
+    유형별: {'context_pronoun': 6, 'duplicate_place': 8, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 8, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 7}
+  구조 + 넘김 gemma4:e2b   (문턱 lo=0.35 hi=0.6, heavy 개발용으로 선택): 정답 79/88=90% · 엉뚱 5 · 못 찾음 4 · 넘김 호출 20/88=23%
+    유형별: {'context_pronoun': 6, 'duplicate_place': 8, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 4, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 7}
+  구조 + 넘김 gemma4:12b   (문턱 lo=0.25 hi=0.6, heavy 개발용으로 선택): 정답 85/88=97% · 엉뚱 2 · 못 찾음 1 · 넘김 호출 26/88=30%
+    유형별: {'context_pronoun': 8, 'duplicate_place': 8, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 7, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 8}
+  구조 + 넘김 gemma4:26b   (문턱 lo=0.25 hi=0.6, heavy 개발용으로 선택): 정답 85/88=97% · 엉뚱 2 · 못 찾음 1 · 넘김 호출 26/88=30%
+    유형별: {'context_pronoun': 8, 'duplicate_place': 8, 'confusable_name': 8, 'compound_intent': 8, 'negation': 7, 'typo_slang': 8, 'out_of_scope': 7, 'nameless_description': 7, 'ordinal_relative': 8, 'change_request': 8, 'absent_but_plausible': 8}
+  비교(직접 짚기, 일정 전체 제시):
+    gemma4:26b   정답 81/88=92% · 엉뚱 7 · 못 찾음 0
+    gemma4:12b   정답 78/88=89% · 엉뚱 10 · 못 찾음 0
+    gemma4:e4b   정답 71/88=81% · 엉뚱 16 · 못 찾음 1
+    gemma4:e2b   정답 64/88=73% · 엉뚱 24 · 못 찾음 0

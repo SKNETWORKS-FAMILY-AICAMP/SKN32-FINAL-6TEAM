@@ -7,6 +7,7 @@ from datetime import date
 
 model, tpl_file, which = sys.argv[1:4]
 nfail = int(sys.argv[sys.argv.index('--fails') + 1]) if '--fails' in sys.argv else 12
+DUMP = sys.argv[sys.argv.index('--dump') + 1] if '--dump' in sys.argv else None      # 세트의 모든 문제에 대한 답을 저장(종단 채점용)
 tpl = json.load(open(tpl_file, encoding='utf-8'))['template']
 W = '월화수목금토일'
 ITEM = {'type': 'object', 'properties': {'item': {'type': ['integer', 'null']}}, 'required': ['item']}
@@ -22,7 +23,7 @@ def load_set():
         rows = rows[:cut] if which == 'old_train' else rows[cut:]
         return [(st, x) for st, x in rows]
     job = json.load(open(f'{which}.json', encoding='utf-8'))['sets'][which]
-    return [(job, x) for x in job['qs'] if which != 'heavy' or x.get('split') == 'held']
+    return [(job, x) for x in job['qs'] if which != 'heavy' or x.get('split') == 'held' or DUMP]
 
 
 def plan_of(st):
@@ -49,15 +50,18 @@ def ask(text):
 rows = load_set()
 ok = bad = miss = errs = 0
 fails = []
+preds_all = []
 t0 = time.time()
 for st, x in rows:
     plan, ids = plan_of(st)
     hist = ''
     if x.get('history'):
         hist = '앞 대화:\n' + '\n'.join(f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']) + '\n\n'
-    pred, e = ask(tpl.format(today=st['today'], plan=plan, hist=hist, q=x['q']))
+    text = tpl.replace('{today}', st['today']).replace('{plan}', plan).replace('{hist}', hist).replace('{q}', x['q'])   # format() 은 프롬프트 속 {"item"} 중괄호에서 오류가 나서 치환으로 바꿈
+    pred, e = ask(text)
     errs += e
     pred = pred if pred in ids else None
+    preds_all.append(pred)
     g = x['gold']
     ok += (pred == g)
     bad += (pred is not None and pred != g)
@@ -65,4 +69,6 @@ for st, x in rows:
     if pred != g:
         fails.append({'q': x['q'], 'gold': g, 'pred': pred, 'type': x.get('type')})
 random.Random(3).shuffle(fails)
+if DUMP:
+    json.dump({'picks': preds_all}, open(DUMP, 'w'))
 print(json.dumps({'n': len(rows), 'ok': ok, 'bad': bad, 'miss': miss, 'errors': errs, 'acc': ok / len(rows), 'sec': time.time() - t0, 'fails': fails[:nfail]}, ensure_ascii=False))

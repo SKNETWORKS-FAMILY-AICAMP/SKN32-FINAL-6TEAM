@@ -20,9 +20,24 @@ pairs = json.load(open(os.path.join(HERE, 'fixtures', 'pairs_experts.json'), enc
 S = defaultdict(dict)
 for p, v in zip(pairs, scores[FT]):
     S[(p['set'], p['qi'])][p['item']] = v
-DATA = {j: load(j) for j in ('heavy', 'mix4')}
-G = {'heavy': json.load(open(os.path.join(HERE, 'results', 'llm_heavy_out.json'), encoding='utf-8')),
-     'mix4': json.load(open(os.path.join(HERE, 'results', 'llm_mix4_out.json'), encoding='utf-8'))}
+JOBS = os.environ.get('JOBS', 'heavy,mix4').split(',')
+
+
+def _load(j):
+    try:
+        return load(j)
+    except FileNotFoundError:            # 새 세트(mix5)는 기존 구조 비교용 전문가 호출 결과가 없다
+        st = json.load(open(os.path.join(HERE, 'fixtures', f'{j}.json'), encoding='utf-8'))['sets'][j]
+        return st['qs'], st['items'], None
+
+
+DATA = {j: _load(j) for j in JOBS}
+G = {j: json.load(open(os.path.join(HERE, 'results', f'llm_{j}_out.json'), encoding='utf-8')) for j in JOBS}
+for _j in list(G):        # GEPA식으로 최적화한 E4B 프롬프트의 답(서버 eval_prompt --dump 결과)을 넘김 모델 「gepa_e4b」 로 쓸 수 있게 한다
+    _f = os.path.join(HERE, 'results', f'gepa_e4b_{_j}.json')
+    if os.path.exists(_f):
+        G[_j]['gepa_e4b'] = json.load(open(_f, encoding='utf-8'))
+
 REG = ('gemma4:e4b', 'gemma4:e4b', 'gemma4:12b')
 FB = os.environ.get('FALLBACK', 'gemma4:12b')      # 확신도가 애매하거나 앞 대화가 있을 때 부르는 LLM (기본 12B, FALLBACK=gemma4:e4b 로 12B 를 뺀 판)
 
