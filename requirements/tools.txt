@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+# ════════════════════════════════════════════════════════════════════════════
+# [선택] 개발 보조 도구 — 서버·시험에는 필요 없다
+# ════════════════════════════════════════════════════════════════════════════
+# 필요할 때만 깐다:   python -m pip install -r requirements/tools.txt
+
+playwright==1.59.0              # 브라우저 자동 조작 — 화면 캡처(final_project_cs/scripts/capture_ui_screenshots.py) ·
+                                #   요식 자료 수집(final_project_cs/scripts/dining/catchtable_auto.py)
+#   ★깐 뒤 브라우저를 한 번 내려받는다:   python -m playwright install chromium
+#   ★웹 프런트엔드(final_project_cs/frontend/apps/web)의 화면 시험은 npm 의 Playwright 를 따로 쓴다(package.json) — 이 파일과 무관하다

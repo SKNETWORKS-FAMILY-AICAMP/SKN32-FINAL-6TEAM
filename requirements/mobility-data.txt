@@ -1,0 +1,46 @@
+# -*- coding: utf-8 -*-
+# ════════════════════════════════════════════════════════════════════════════
+# [별도 환경] 이동 자료 수집·가공·학습 기기 전용 — 서버 환경(base.txt)과 같은 환경에 깔지 않는다
+# ════════════════════════════════════════════════════════════════════════════
+# 대상: 이동 담당의 자료 작업 — 수집·가공 스크립트(mobility_scripts/ — 지금은 role-manager 브랜치에 있다 · datasets/mobility/scripts/)와
+#       이동 계산기의 점검·학습 도구(final_project_cs/tests/unit/travel/mobility/ 의 스크립트).
+# ★서비스에 들어가는 이동 계산기(final_project_cs/app/modules/travel_ops/mobility/engine/)는 이 목록이 필요 없다.
+#   계산기가 쓰는 바깥 패키지는 python-dotenv · PyYAML · numpy 셋뿐이고 모두 base.txt 에 있다(팀 목록 판으로 시험 통과 · 2026-09-29).
+#
+# ★왜 따로 두나 — 같은 이름의 패키지가 판이 다르다. 한 환경에 함께 깔면 한쪽이 깨진다:
+#       패키지          서버(base.txt)   이동 자료 기기(이 파일)
+#       numpy           1.26.4          2.2.1
+#       scipy           1.13.1          1.15.1    (scikit-learn 이 끌고 온다)
+#       scikit-learn    1.5.2           1.6.1
+#       alembic         1.18.4          1.14.0    (아래 lock 에만 있다 — 코드는 쓰지 않는다)
+#   그래서 새 가상환경을 만들어 여기만 깐다:
+#       py -3.12 -m venv .venv-mobility
+#       .\.venv-mobility\Scripts\Activate.ps1
+#       python -m pip install -r requirements/mobility-data.txt
+#
+# 두 파일의 관계
+#   이 파일                          직접 쓰는 패키지만 — 읽기 쉬운 목록. 판은 아래 lock 에서 가져왔다.
+#   requirements/mobility-data.lock.txt   이동 담당 자료 기기의 원본 pip freeze(옛 requirements-mobility.txt, 103줄). 똑같이 재현하려면 이쪽을 깐다:
+#                                         python -m pip install -r requirements/mobility-data.lock.txt
+#
+# ★2026-09-30 정리: 스크립트의 import 를 훑어 직접 쓰는 것을 골랐다. 판은 lock 에 있는 것만 적었고, lock 에 없는 것은 아래에 주석으로 남겼다.
+#   이동 담당이 확인해 채운다.
+
+requests==2.34.2                # 공공데이터·외부 API 수집(mobility_scripts/collect — 30개 파일)
+python-dotenv==1.1.1            # .env 에서 자료 폴더 위치·키 읽기(수집 스크립트 · datasets/mobility/scripts/reduce_75.py)
+numpy==2.2.1                    # 가공·학습 수치 계산
+scikit-learn==1.6.1             # 학습·비교(mobility_scripts/eval_ml_compare.py 등)
+scipy==1.15.1                   # scikit-learn 이 끌고 오는 것 — 이동 기기의 판(lock)으로 고정한다(안 고정하면 최신판이 잡혀 기기마다 달라진다)
+openpyxl==3.1.5                 # 역 좌표·시간표 엑셀 읽기(collect/station_coords_build.py)
+osmium==4.3.1                   # OSM(.pbf) 읽기 — 도보·자전거 경로망(collect/walk03_*.py)
+jsonschema==4.26.0              # 이동 계산기 입출력 계약 점검(mobility_checks/contract/check_fold.py)
+openai==2.44.0                  # 모델로 주장 추출·해석 점검(collect/extract_claims_v0.py · tests/unit/travel/mobility/selfcheck_mobility.py)
+google-genai==2.22.0            # 같은 용도의 Gemini 호출(collect/extract_claims_v0.py — import google.genai)
+psycopg[binary]==3.3.4          # DB 스키마 점검(mobility_scripts/check_pg_schema.py)
+pytest==8.4.2                   # 점검 스크립트(mobility_checks)
+
+# ── lock 에 없어 판을 확정하지 못한 것 (스크립트는 import 한다) ──────────────────
+#   [미확인] 이동 담당이 쓰는 판을 확인해 위로 옮긴다. 판을 지어내지 않는다.
+# pandas          # collect/build_bus_seg_profile_v1.py
+# shapely         # collect/walk03_tour_c0115_seoul.py 등 4개 파일 — 좌표·도형 계산
+# pyproj          # collect/walk06_gh_overlap.py 등 3개 파일 — 좌표계 변환(없어도 도는 곳: try 안에서 부른다)
