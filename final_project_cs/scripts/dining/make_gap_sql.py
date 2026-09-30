@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
     os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-SHEETS = os.path.join(DINING_DATA, "gaps", "빈칸_검수_*.csv")
+SHEETS = os.path.join(DINING_DATA, "gaps", "빈칸_검수_[0-9]*.csv")   # 날짜 파일만. 분류 사본은 뺀다
 OUT = os.path.join(DINING_DATA, "_build", "gaps.sql")
 
 

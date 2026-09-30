@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
     os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-SHEETS = os.path.join(DINING_DATA, "closure", "폐업대조_*.csv")
+SHEETS = os.path.join(DINING_DATA, "closure", "폐업대조_[0-9]*.csv")   # 날짜 파일만
 OUT = os.path.join(DINING_DATA, "_build", "closure.sql")
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000007")
 SOURCE = "localdata_food"          # 지점 추가의 근거: 지방행정 인허가(일반음식점)
