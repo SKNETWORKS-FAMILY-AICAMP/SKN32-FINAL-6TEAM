@@ -37,7 +37,7 @@
 1. 원자료 받기 — 위 표의 수집(API) 또는 수동 다운로드를 `DATA_DIR\travel\raw\mobility\` 에.
 2. 전처리 — 의존 순서: **시간표 → 노선 역순서 → 역 좌표 → 출구·혼잡도·환승 도보** / **버스 노선 → 버스 구간 프로파일** / 따릉이 · graph · 도로망은 따로.
 3. `python datasets/mobility/scripts/consistency_check.py` — 새 결함이 없는지.
-4. `python datasets/mobility/scripts/reduce_75.py` — 정본 → git 줄인 판 + MANIFEST(sha256·행수).
+4. `python datasets/mobility/scripts/reduce_75.py --src <DATA_DIR>\travel\processed\mobility --clean` — 정본 → git 줄인 판 + MANIFEST(sha256·md5·행수) · 기본이 9/30 채택안(시간표 `.gz` · 출발없음·9호선 급행 행 제외) · `--src` 가 저장소 안이면 멈춘다.
 5. 회귀: `pytest final_project_cs/tests/unit/travel/mobility` 게이트 + 전체층(`-m "mobility_full and not live"`) — 판정이 바뀌었으면 기대값을 사유와 함께 고친다.
 6. 새 파일은 `git add -f`(팀 `.gitignore` 가 `processed/**` 를 막는다 · 추적 중인 파일은 보통 `git add`).
 
