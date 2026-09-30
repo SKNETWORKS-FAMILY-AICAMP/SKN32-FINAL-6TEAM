@@ -779,7 +779,7 @@
    "holiday": "토요일 · 일요일 · 공휴일"
   },
   "holiday_source": {
-   "value": "config/mobility/holidays_2026_2027.json",
+   "value": "final_project_cs/app/modules/travel_ops/mobility/engine/rules/holidays_2026_2027.json",
    "grade": "확정",
    "근거": "한국천문연구원 특일 정보(관보 고시 기준). 임시공휴일·대체공휴일 포함. 2026~2027 46일."
   },
