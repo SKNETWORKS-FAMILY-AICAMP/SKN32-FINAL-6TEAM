@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from .engine import datacheck, paths
+from .engine.timeutil import CalendarOutOfRange
 from .engine import guardrails as engine_guardrails
 from .engine import runtime as engine_runtime
 
@@ -149,9 +150,15 @@ def leg_planner(party_size: int | None, constraints: dict[str, Any] | None, *, d
     def leg(a_place, b_place, arrive_dt, not_before_dt=None):
         counter["n"] += 1
         planner.trace = []
-        got, why = planner.leg(a_place, b_place, arrive_dt, party, first_visit,
-                               case_id=f"{a_place.get('key')}_to_{b_place.get('key')}_{counter['n']}",
-                               not_before_dt=not_before_dt)
+        try:
+            got, why = planner.leg(a_place, b_place, arrive_dt, party, first_visit,
+                                   case_id=f"{a_place.get('key')}_to_{b_place.get('key')}_{counter['n']}",
+                                   not_before_dt=not_before_dt)
+        except CalendarOutOfRange as ex:
+            # ☆`[2026-09-29 자료 폴더를 켜자 시험이 잡음]` 공휴일 표가 덮지 않는 해(2028~)의 여행이면 계산기는 평일·휴일을 짐작하지
+            #   않고 멈춘다(#5). 그 오류를 위로 올리면 장소 교체·일정 짜기 전체가 터진다 — 「계산기가 못 채움」으로 돌려 부르는 쪽이
+            #   종전 대체 소스(어림값)로 가게 한다. 이유는 남는다(조용히 삼키지 않는다)
+            return None, {"code": "no_data", "reason": f"계산기가 그 날짜를 판정하지 못한다 — {ex}"}
         if got is None:
             return None, why
         route, start, end, sdate, left = got

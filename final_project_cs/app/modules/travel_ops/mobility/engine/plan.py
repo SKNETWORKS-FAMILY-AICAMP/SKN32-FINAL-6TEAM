@@ -749,7 +749,11 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
         b = stay[i + 1]
         # ☆`[2026-09-29 문제목록 #45]` 운행일이 바뀌는 두 항목(1일차 저녁 → 2일차 아침) 사이는 잇지 않는다 — 그 사이에
         #   숙소로 가지만 숙소 위치를 모른다. 앞 판은 날짜를 가리지 않아 전날 마지막 장소 → 다음 날 첫 장소 이동을 만들었다.
-        if service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0] != service_day(_parse_dt(b["starts_at"]))[0]:
+        #   ☆`[2026-09-29 실제 시간표 시험이 잡음]` 다음 항목의 **시작 시각이 아니라 도착 마감 1분 전**이 속한 운행일로 본다 —
+        #   04:00 정각에 시작하는 항목(새벽 비행기 등)은 시작이 다음 운행일이지만 이동은 그 전(03:5x)에 끝나 앞 항목과 같은 운행일이다.
+        #   시작 시각으로 재면 23:00 → 04:00 이동을 통째로 막았다(test_0400_boundary · test_recheck_at_offsets 가 실패)
+        if (service_day(_parse_dt(a.get("ends_at") or a["starts_at"]))[0]
+                != service_day(_parse_dt(b["starts_at"]) - timedelta(minutes=1))[0]):
             not_linked.append({"from": a.get("title"), "to": b.get("title"), "code": "day_boundary",
                                "reason": "운행일이 바뀐다 — 사이에 숙소로 가지만 숙소 위치를 모른다"})
             merged.extend(moves_between(a, b))

@@ -184,10 +184,16 @@ def test_bus_range_profile():
 
 def test_night_last_service():
     _skip_if_no_data()
-    r, _ = _est(HOTEL, SEONGSU, WEEKDAY, "밤")
-    ls = [c for c in r["cautions"] if c["code"] == "last_service"]
-    assert ls and ls[0]["route"].startswith("02호선"), r["cautions"]
-    assert ls[0]["carried_by"] and all(k.startswith("버스 N") for k in ls[0]["carried_by"]), "지하철 뒤를 심야버스가 잇는다"
+    r, sm = _est(HOTEL, SEONGSU, WEEKDAY, "밤")
+    # ☆`[2026-09-29 이동 계산기 문제목록 #3]` 앞 판은 버스 중간 정류장에도 **출발지 막차**(N62 03:10)를 적용해 03:40 부터 심야버스를
+    #   「불가」로 봐, 창 안에서 지하철 막차 뒤 「끊김」(last_service · carried_by N버스)이 났다. 이제는 그 정류장을 막차가 실제로 지나는
+    #   시각을 추정해 비교한다(N62 는 정류장 45/167 번째 — 출발지 막차 뒤 약 45분 = 03:55). 그래서 지하철 막차 뒤 심야버스가
+    #   **창 끝(04:00)까지** 잇고, 창 안에서는 서비스가 끊기지 않는다(원본 엔진은 같은 자료로 위 옛 결과를 냈다)
+    ch = [(x["t"], x["choice"]) for x in sm]
+    first_bus = next(t for t, c in ch if c and c.startswith("버스 N"))
+    assert first_bus >= 24 * 60, f"지하철 막차 뒤에야 심야버스로 바뀐다: {first_bus}"
+    assert all(c and c.startswith("버스 N") for t, c in ch if t >= first_bus), "지하철 뒤를 심야버스가 창 끝까지 잇는다"
+    assert not [c for c in r["cautions"] if c["code"] == "last_service"], r["cautions"]
     b, _ = _est("서울역", "이태원", WEEKDAY, "밤", modes=["bus"])
     ls = [c for c in b["cautions"] if c["code"] == "last_service"]
     assert ls and ls[0]["route"].startswith("버스 ") and ls[0]["none_from"], \

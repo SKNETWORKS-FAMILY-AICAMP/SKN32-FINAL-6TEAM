@@ -561,7 +561,9 @@ def test_no_per_option_departure():
     assert not labels & {x["label"] for x in lo}, "뺀 후보가 options 에 남았다"
     starts = {o["start_min"] for o in tr[0]["options"] if o["id"] != "walk"}
     assert len(starts) == 1, f"options 의 출발이 여럿이다: {starts}"
-    assert set(got) == {"items", "routes", "skipped", "left_out", "basis"}
+    # ☆`[2026-09-29 이동 계산기 문제목록 #26·#45]` 봉투 칸 둘이 늘었다 — not_linked(운행일이 바뀌어 잇지 않은 곳) ·
+    #   kept_unverified(못 채워 옛 이동을 둔 곳, 검증 안 됨). 둘 다 몸통(CreateTrip 칸)이 아니라 봉투에만 있다
+    assert set(got) == {"items", "routes", "skipped", "left_out", "basis", "not_linked", "kept_unverified"}
 
 
 def test_bus_from_place_recheck():
@@ -814,13 +816,19 @@ def test_replan_fare_known_locked():
                          planned_arrival=datetime(2026, 9, 29, 10, 5, tzinfo=KST),
                          next_start=datetime(2026, 9, 29, 10, 30, tzinfo=KST), events={})
     assert not w[0].rejected, w[0].rejected
-    # 요금을 모르는 옵션은 여전히 떨어진다(키를 빼는 쪽이 맞는지 — 재계획 쪽 규칙은 그대로)
+    # ☆`[2026-09-29 이동 계산기 문제목록 #22·#23]` 요금을 모르는 옵션은 **탈락시키지 않는다** — 앞 판은 탈락시켜 버스를 섞어
+    #   갈아타는 대안(요금 칸이 없다)이 사고 때 전부 떨어졌다. 추가 비용은 모름(None)이고, 순위에서 요금 아는 후보 뒤에 선다
     unk = dict(route, options=[{k: v for k, v in o.items() if k != "fare_krw"} if o["id"].startswith("subway") else o
                                for o in route["options"]])
     c2 = route_candidates(route=unk, depart=datetime.fromisoformat(mob["starts_at"]),
                           planned_arrival=datetime.fromisoformat(mob["ends_at"]),
                           next_start=datetime.fromisoformat(items[1]["starts_at"]), events={})
-    assert any("요금을 몰라" in r for c in c2 if c.key.startswith("subway") for r in c.rejected)
+    unk_sub = [c for c in c2 if c.key.startswith("subway")]
+    assert unk_sub and not any("요금을 몰라" in r for c in unk_sub for r in c.rejected), "요금 모름은 탈락 사유가 아니다"
+    assert all(c.extra_cost_krw is None for c in unk_sub), "모르는 요금을 0원으로 지어내지 않는다(#23)"
+    known = [c for c in c2 if c.extra_cost_krw is not None and not c.rejected]
+    assert known, "요금을 아는 후보가 하나는 남아 있어야 순위를 비교할 수 있다"
+    assert min(c.rank() for c in known) < min(c.rank() for c in unk_sub), "요금 모르는 후보는 아는 후보 뒤에 선다"
 
 
 class _FakeCg:
