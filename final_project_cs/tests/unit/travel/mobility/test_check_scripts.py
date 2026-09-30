@@ -16,15 +16,15 @@ from pathlib import Path
 
 import pytest
 
-# 저장소 맨 위(mobility_scripts/ 가 있는 조상)를 위로 찾는다 — #56 과 같은 규칙. 없으면 멈춘다(조용한 스킵 금지)
-REPO = next((p for p in Path(__file__).resolve().parents if (p / "mobility_scripts").is_dir()), None)
+# 저장소 맨 위(final_project_cs/ 가 있는 조상)를 위로 찾는다 — #56 과 같은 규칙. 없으면 멈춘다(조용한 스킵 금지)
+REPO = next((p for p in Path(__file__).resolve().parents if (p / "final_project_cs" / "app").is_dir()), None)
 if REPO is None:
-    raise RuntimeError(f"mobility_scripts/ 를 못 찾았다(시작: {Path(__file__).resolve()})")
-CHECKS = REPO / "mobility_scripts" / "mobility_checks"
+    raise RuntimeError(f"final_project_cs/ 를 못 찾았다(시작: {Path(__file__).resolve()})")
+CHECKS = Path(__file__).resolve().parent   # 81: 점검 스크립트는 이 시험과 같은 폴더
 
 NO_DATA = [
-    ("contract/check_adapter.py", "합계"),            # 가짜 판정기로 어댑터 분기 30가지
-    ("contract/check_fold.py", "실패 0 건"),           # 결과 접기 산출물 스키마 + 구조 보장
+    ("check_adapter.py", "합계"),            # 가짜 판정기로 어댑터 분기 30가지
+    ("check_fold.py", "실패 0 건"),           # 결과 접기 산출물 스키마 + 구조 보장
     ("check_selfcheck_invariants.py", "통과"),         # 자기점검 불변식 13가지
 ]
 
@@ -55,5 +55,5 @@ def test_check_runtime_on_real_timetable():
         paths._layout(before[1], before[0])       # 이 시험이 다른 시험의 자료 폴더 상태를 바꾸지 않게
     if processed == UNSET_DIR / "travel" / "processed" or not (processed / "mobility" / "timetable_v1.jsonl").exists():
         pytest.skip("시간표 없음(DATA_DIR/travel/processed/mobility/timetable_v1.jsonl) — 자료 기기에서만 돈다(문제목록 #54)")
-    out = _run("contract/check_runtime.py", timeout=900)
+    out = _run("check_runtime.py", timeout=900)
     assert out.returncode == 0, (out.stdout + out.stderr)[-2000:]
