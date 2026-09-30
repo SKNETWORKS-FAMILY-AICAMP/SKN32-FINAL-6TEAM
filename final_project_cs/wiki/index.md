@@ -180,3 +180,5 @@ applied_at         2026-08-18T13:13:26Z
 | `handoff/` · `history/` · `plans/` · `vision/` 등 | 동결된 기록. 현재 계약·계획·결정은 wiki 본문 |
 
 규칙은 허브 [governance/work-loop.md](../../wiki/governance/work-loop.md) 2026-09-08 절. 검사기는 `records/`를 면제한다.
+
+- 2026-09-30 사용자 웹: [1분 폴링·채팅 오류 안내 합의 반영](records/reports/2026-09-30_1231_알림폴링_채팅안내_합의반영.md) · [검증 근거](records/evidence/2026-09-30_1231_알림폴링_채팅안내_검증.md). 현재 연결 상태는 [화면별 API 문서](external/web-screen-api.md)를 따른다.

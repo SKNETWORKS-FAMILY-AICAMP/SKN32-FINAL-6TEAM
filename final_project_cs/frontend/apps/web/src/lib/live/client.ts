@@ -2,7 +2,7 @@ import { translator, type Language, type Translate } from "../i18n";
 
 /** A refusal from the live server — its own code (`stale_revision`, `intake_incomplete` …) and body. */
 export class LiveError extends Error {
-  constructor(public readonly code: string, message: string, public readonly detail?: unknown) {
+  constructor(public readonly code: string, message: string, public readonly detail?: unknown, public readonly status?: number) {
     super(message);
     this.name = "LiveError";
   }
@@ -23,16 +23,28 @@ const NOTICE_STORAGE = "tripilot.web.user-key.notice.v1";
 export const KEY_CHANGED_EVENT = "tripilot:key-changed";
 
 let pendingKey: Promise<string> | null = null;
+let pageKey: string | null = null;
+let temporaryKey = false;
+let pageNotice: { notice: string | null } | null = null;
+let temporaryNotice = false;
 
 function storedKey(): string | null {
-  try { return window.localStorage.getItem(KEY_STORAGE); }
-  catch { return null; }
+  if (temporaryKey) return pageKey;
+  try { pageKey = window.localStorage.getItem(KEY_STORAGE); }
+  catch { temporaryKey = true; }
+  return pageKey;
 }
 
 function storeKey(key: string) {
-  try { window.localStorage.setItem(KEY_STORAGE, key); }
-  catch { /* private window: the key lives only for this page */ }
+  pageKey = key;
+  try { window.localStorage.setItem(KEY_STORAGE, key); temporaryKey = false; }
+  catch { temporaryKey = true; }
   announceKeyChange();
+}
+
+/** 저장소를 사용할 수 없으면 현재 페이지에서만 키를 유지하고 화면에 알린다. */
+export function isKeyTemporary(): boolean {
+  return temporaryKey;
 }
 
 function announceKeyChange() {
@@ -41,22 +53,27 @@ function announceKeyChange() {
 
 /** The server's own sentence about the new key (`notice`), kept until the customer says they saved it. */
 function setKeyNotice(notice: string | null) {
-  try { window.localStorage.setItem(NOTICE_STORAGE, JSON.stringify({ notice })); } catch { /* ignore */ }
+  pageNotice = { notice };
+  try { window.localStorage.setItem(NOTICE_STORAGE, JSON.stringify(pageNotice)); temporaryNotice = false; }
+  catch { temporaryNotice = true; }
   announceKeyChange();
 }
 
 /** A key was issued or rotated and the customer has not yet said they kept a copy. `notice` is the server's sentence (may be absent). */
 export function pendingKeyNotice(): { notice: string | null } | null {
+  if (temporaryNotice) return pageNotice;
   try {
     const raw = window.localStorage.getItem(NOTICE_STORAGE);
-    if (!raw) return null;
+    if (!raw) return pageNotice = null;
     const parsed = JSON.parse(raw) as { notice?: unknown };
-    return { notice: typeof parsed.notice === "string" ? parsed.notice : null };
-  } catch { return null; }
+    return pageNotice = { notice: typeof parsed.notice === "string" ? parsed.notice : null };
+  } catch { temporaryNotice = true; return pageNotice; }
 }
 
 export function dismissKeyNotice() {
-  try { window.localStorage.removeItem(NOTICE_STORAGE); } catch { /* ignore */ }
+  pageNotice = null;
+  try { window.localStorage.removeItem(NOTICE_STORAGE); temporaryNotice = false; }
+  catch { temporaryNotice = true; }
   announceKeyChange();
 }
 
@@ -112,7 +129,7 @@ async function send(url: string, init: RequestInit, language: Language): Promise
     const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
     if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
   }
-  throw new LiveError(code, message, detail);
+  throw new LiveError(code, message, detail, response.status);
 }
 
 /** 「3시간 20분 뒤에 다시 할 수 있어요」 — whole minutes, rounded up. */
@@ -136,10 +153,19 @@ export async function api<T>(path: string, language: Language, init: RequestInit
   const key = await userKey(language);
   try {
     const response = await send(`${API_BASE}${path}`, { ...init, headers: { ...(init.headers ?? {}), "X-User-Key": key } }, language);
-    return await response.json() as T;
+    const body = await response.json() as T;
+    // 이전 사용자의 늦은 응답이 키 전환 뒤의 캐시나 수정 결과에 섞이지 않게 한다.
+    if (currentKey() !== key) throw new LiveError("key_changed", t("사용자 키가 바뀌었어요. 현재 키로 다시 불러와 주세요.", "Your user key changed. Reload with the current key."));
+    return body;
   } catch (error) {
     if (!(error instanceof LiveError) || error.code !== "unauthenticated") throw error;
-    try { window.localStorage.removeItem(KEY_STORAGE); } catch { /* ignore */ }
+    // 이전 키의 늦은 401 응답으로 새로 가져온 키까지 지우지 않는다.
+    if (currentKey() === key) {
+      pageKey = null;
+      try { window.localStorage.removeItem(KEY_STORAGE); temporaryKey = false; }
+      catch { temporaryKey = true; }
+      dismissKeyNotice();
+    }
     throw new LiveError("key_rejected", t("저장된 사용자 키가 더 이상 맞지 않아요. 다음 요청부터 새 키로 시작해요 — 이전 여행은 따로 보관한 키로만 열 수 있어요.", "Your saved user key is no longer valid. The next request starts with a new key — earlier trips open only with the key you kept."));
   }
 }
@@ -153,7 +179,8 @@ export async function adoptKey(raw: string, language: Language): Promise<void> {
   if (!key) throw new LiveError("empty_key", translator(language)("키를 입력해 주세요.", "Enter a key."));
   await send(`${API_BASE}/v1/web/trips`, { headers: { "X-User-Key": key } }, language);
   storeKey(key);
-  dismissKeyNotice();
+  if (isKeyTemporary()) setKeyNotice(null);
+  else dismissKeyNotice();
 }
 
 /**

@@ -103,4 +103,74 @@ describe("the user key the browser keeps", () => {
     expect(currentKey()).toBe("acop_u_rotated");
     expect(pendingKeyNotice()).toEqual({ notice: "새 키예요. 옛 키는 더 이상 쓸 수 없어요." });
   });
+
+  it("저장소가 전부 막혀도 동시·후속 요청은 한 번 발급한 키를 쓰고 안내를 유지한다", async () => {
+    vi.resetModules();
+    const client = await import("./client");
+    const denied = () => { throw new Error("storage denied"); };
+    vi.stubGlobal("window", { localStorage: { getItem: denied, setItem: denied, removeItem: denied }, dispatchEvent: () => true });
+    replies.push(json({ user_key: "acop_u_page", notice: "보관해 주세요" }, 201), json({}), json({}), json({}));
+    await Promise.all([client.api("/v1/web/trips", "ko"), client.api("/v1/web/trips", "ko")]);
+    await client.api("/v1/web/trips", "ko");
+    expect(calls.filter((call) => call.url.endsWith("/session"))).toHaveLength(1);
+    expect(calls.slice(1).map((call) => new Headers(call.init.headers).get("X-User-Key"))).toEqual(Array(3).fill("acop_u_page"));
+    expect(client.currentKey()).toBe("acop_u_page");
+    expect(client.isKeyTemporary()).toBe(true);
+    expect(client.pendingKeyNotice()).toEqual({ notice: "보관해 주세요" });
+    client.dismissKeyNotice();
+    expect(client.pendingKeyNotice()).toBeNull();
+    expect(client.currentKey()).toBe("acop_u_page");
+  });
+
+  it("쓰기만 막혀 옛 키가 저장소에 남아도 가져온 키와 재발급한 키를 쓰며, 거절되면 메모리에서도 지운다", async () => {
+    vi.resetModules();
+    const client = await import("./client");
+    const storage = memory({ [KEY]: "acop_u_old" });
+    vi.stubGlobal("window", { localStorage: { ...storage, setItem: () => { throw new Error("quota"); }, removeItem: () => { throw new Error("denied"); } }, dispatchEvent: () => true });
+    replies.push(json({ trips: [] }), json({ user_key: "acop_u_rotated", notice: "새 키" }));
+    await client.adoptKey("acop_u_other", "ko");
+    expect(client.currentKey()).toBe("acop_u_other");
+    expect(client.pendingKeyNotice()).toEqual({ notice: null });
+    await client.rotateKey("ko");
+    expect(new Headers(calls[1].init.headers).get("X-User-Key")).toBe("acop_u_other");
+    expect(client.currentKey()).toBe("acop_u_rotated");
+    expect(storage.getItem(KEY)).toBe("acop_u_old");
+    replies.push(json({ error: { code: "unauthenticated" } }, 401));
+    await expect(client.api("/v1/web/trips", "ko")).rejects.toMatchObject({ code: "key_rejected" });
+    expect(client.currentKey()).toBeNull();
+    expect(client.pendingKeyNotice()).toBeNull();
+  });
+
+  it("키를 발급한 뒤 저장소 읽기가 막혀도 페이지의 키를 유지한다", async () => {
+    vi.resetModules();
+    const client = await import("./client");
+    stub();
+    replies.push(json({ user_key: "acop_u_page" }, 201));
+    await client.issueKey("ko");
+    window.localStorage.getItem = () => { throw new Error("denied"); };
+    expect(await client.userKey("ko")).toBe("acop_u_page");
+    expect(calls).toHaveLength(1);
+    expect(client.isKeyTemporary()).toBe(true);
+  });
+
+  it.each([200, 401])("이전 키의 늦은 %s 응답은 새 사용자 자료가 되거나 새 키를 지우지 않는다", async (status) => {
+    vi.resetModules();
+    const client = await import("./client");
+    stub({ [KEY]: "acop_u_old" });
+    let finish!: (response: Response) => void;
+    const oldResponse = new Promise<Response>((resolve) => { finish = resolve; });
+    let started!: () => void;
+    const called = new Promise<void>((resolve) => { started = resolve; });
+    vi.stubGlobal("fetch", (_url: string, init: RequestInit) => {
+      if (new Headers(init.headers).get("X-User-Key") === "acop_u_old") { started(); return oldResponse; }
+      return Promise.resolve(json({ trips: [] }));
+    });
+    const pending = client.api("/v1/web/trips", "ko");
+    await called;
+    await client.adoptKey("acop_u_new", "ko");
+    const rejected = expect(pending).rejects.toMatchObject({ code: status === 401 ? "key_rejected" : "key_changed" });
+    finish(json(status === 401 ? { error: { code: "unauthenticated" } } : { trips: ["old user's data"] }, status));
+    await rejected;
+    expect(client.currentKey()).toBe("acop_u_new");
+  });
 });
