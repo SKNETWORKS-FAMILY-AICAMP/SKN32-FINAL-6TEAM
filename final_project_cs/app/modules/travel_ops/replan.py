@@ -377,7 +377,9 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "option_label": (candidate.option or {}).get("label") if candidate.option else None,
             "starts_at": candidate.starts_at.isoformat() if candidate.starts_at else None,
             "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
-            "walk_min": candidate.walk_min}
+            "walk_min": candidate.walk_min,
+            # ★`[2026-09-30]` 원래 식당과의 가격 비교 결과만(구글 금액은 싣지 않는다 — 저장 금지). 식당 밖은 None
+            "price_compare": candidate.price_compare}
 
 
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:

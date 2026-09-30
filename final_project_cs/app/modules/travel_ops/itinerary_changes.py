@@ -361,6 +361,7 @@ def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
         ends_at=best.ends_at,
         detail={"other_options": notice["other_options"],
                 **({"customer_reported": True} if reason == "customer_report" else {}),
+                **({"price_compare": best.price_compare} if best.price_compare else {}),
                 "alternates": [alternate_record(c) for c in alternates]})
     # ★가격은 비교 결과만(`won` · `same_or_lower` · `higher` · `unknown`) — 구글 가격대 원값은 남기지 않는다
     summary = {"to": best.name, **({"price": best.price_compare} if best.price_compare else {}),

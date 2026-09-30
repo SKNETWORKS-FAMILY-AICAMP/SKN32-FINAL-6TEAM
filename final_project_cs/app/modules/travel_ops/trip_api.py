@@ -250,7 +250,11 @@ def _item_view(item: Item) -> dict[str, Any]:
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
-            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
+            # ★`[2026-09-30]` 식당 가격 비교(`same_or_lower` · `higher` · `unknown` · `won`) — 원래 식당 대비.
+            #   구글 금액은 내려 주지 않는다(저장 금지 — 비교 결과만 기록돼 있다). 비교하지 않았으면 None
+            "price_compare": item.detail.get("price_compare"),
+            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"],
+                               "price_compare": a.get("price_compare")}
                               for a in item.detail.get("alternates") or []],
             "customer_pinned": bool(item.detail.get("customer_pinned")),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
