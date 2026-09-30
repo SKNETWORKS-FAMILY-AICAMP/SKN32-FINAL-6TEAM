@@ -13,6 +13,8 @@
 | `eval_llm.py` | LLM 번호 짚기 1차 비교(gemma4:12b, 두 번·순서 바꿔·규칙 되확인) |
 | `eval_rerank.py` | 재평가 모델 1차(bge 계열 2종) 판정 — 옛 파일 이름을 읽는다 |
 | `eval_models.py` | **최종 판정 스크립트** — 서버 결과(`llm_out.json`, `emb_rr_out.json`)를 같은 기준으로 표로 낸다 |
+| `vote_offline.py` | 저장된 모델 번호로 다중 모델 합의를 오프라인 재계산(비용 0). 모델을 같은 90문항으로 골라 낙관적이다 |
+| `consensus/` | Codex 와 합의한 결정 기록(`q.md` 질문 · `claude_r1.md` Claude 1회차 입장 · `r1_main.json` Codex 답 · `decision.md` 결정) |
 | `server/` | 서버(GPU)에서 돌린 코드. `llm_point2.py`(LLM 번호 짚기), `emb_rr.py`(임베딩·재평가 점수), `pipeline*.sh`(모델을 줄 세워 받고·재고·지운 순서) |
 | `fixtures/` | 시험 문제. `team_typed_132.json`: DB 의 팀 입력·자동 시험 문장 132개(정답 라벨 전, 2026-09-29). `codex_qset.json`(Codex 작성 일정 1개 + 질문 100개), `codex_qset2.json`(새 질문 40개), `job.json`(서버에 올린 묶음), `codex_brief_*.md`(Codex 의뢰문) |
 | `results/` | 모델이 고른 번호(`llm_out.json`)와 서버 실행 기록(`server_pipeline*.log`) |
