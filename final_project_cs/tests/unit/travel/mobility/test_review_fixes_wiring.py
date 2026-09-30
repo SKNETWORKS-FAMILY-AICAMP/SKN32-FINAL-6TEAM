@@ -93,3 +93,20 @@ def test_out_of_calendar_date_is_a_no_data_result_not_a_crash(tmp_path, monkeypa
     b = {"key": "b", "name": "나", "lat": 37.5301, "lon": 127.0}          # D 역 옆
     got, why = leg(a, b, datetime(2030, 1, 1, 12, 0, tzinfo=kst), None)
     assert got is None and why["code"] == "no_data" and "2030" in why["reason"], (got, why)
+
+
+def test_startup_announces_engine_state_once(tmp_path, caplog, monkeypatch):
+    """운영 확인 — 켜졌는지·꺼졌는지가 서버 콘솔(uvicorn.error)에 한 줄로 남는다. 조립이 여러 번 불려도 같은 상태는 한 번만."""
+    import logging
+
+    monkeypatch.setattr(wiring, "_ANNOUNCED", set())
+    _write_mini_data(tmp_path)
+    with caplog.at_level(logging.INFO, logger="uvicorn.error"):
+        wiring.configure(data_dir=None)
+        wiring.configure(data_dir=None)
+        wiring.configure(data_dir=str(tmp_path), verify_hash=False)
+        wiring.configure(data_dir=str(tmp_path), verify_hash=False)
+    lines = [r.getMessage() for r in caplog.records if r.name == "uvicorn.error"]
+    assert sum("이동 계산기 꺼짐" in m for m in lines) == 1, lines
+    on = [m for m in lines if "이동 계산기 켜짐" in m]
+    assert len(on) == 1 and "시간표 판" in on[0] and "적재" in on[0], lines
