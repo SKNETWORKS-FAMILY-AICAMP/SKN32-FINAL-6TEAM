@@ -171,14 +171,18 @@ def place_id_for(cid: str, gname: str, row: dict[str, str], key: str) -> tuple[s
 # 분류
 # ──────────────────────────────────────────────────────────────
 
-def plan(sheet_rows: list[dict[str, str]], links: list[dict[str, str]]) -> dict[str, list]:
-    """시트 행을 할 일로 나눈다. 부르지 않는다."""
+def plan(sheet_rows: list[dict[str, str]], links: list[dict[str, str]],
+         decided: frozenset[str] = frozenset()) -> dict[str, list]:
+    """시트 행을 할 일로 나눈다. 부르지 않는다.
+
+    decided 는 폐업대조 시트에서 사람이 이미 판정한 가게(중복 · 폐업 · 상호 변경 …)다. 다시 묻지 않는다.
+    """
     linked = {r["place_uid"] for r in links}
     out: dict[str, list] = {"link": [], "closed": [], "review": [], "done": [], "empty": []}
     for row in sheet_rows:
         uid, memo = row["place_uid"].strip(), (row.get("메모") or "").strip()
         link = (row.get(LINK_COL) or "").strip()
-        if uid in linked:
+        if uid in linked or uid in decided:
             out["done"].append(row)
         elif link and "확인" in memo:
             out["review"].append((row, f"메모: {memo}"))
@@ -217,9 +221,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     _, rows = read_csv(sheet)
     link_head, links = read_csv(LINKS) if os.path.exists(LINKS) else (LINK_HEAD, [])
-    todo = plan(rows, links)
     closure = latest(CLOSURE)
     c_head, c_rows = read_csv(closure) if closure else ([], [])
+    decided = frozenset(c["place_uid"] for c in c_rows
+                        if (c.get("[확인] 영업 여부") or "").strip() not in ("", "영업")
+                        and (c.get("확인일") or "").strip())
+    todo = plan(rows, links, decided)
     open_closed = [r for r in todo["closed"]
                    if any(c["place_uid"] == r["place_uid"] and not (c.get("[확인] 영업 여부") or "").strip()
                           for c in c_rows)]

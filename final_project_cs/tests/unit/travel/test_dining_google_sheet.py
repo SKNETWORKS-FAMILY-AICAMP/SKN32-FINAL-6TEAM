@@ -74,3 +74,9 @@ def test_mark_closed_keeps_existing_verdict(gs):
     assert done == ["a"]
     assert rows[0]["[확인] 영업 여부"] == "폐업" and rows[0]["확인일"] == "2026-09-30"
     assert rows[1]["[확인] 영업 여부"] == "영업"
+
+
+def test_plan_skips_rows_decided_in_closure_sheet(gs):
+    rows = [{"place_uid": "a", "상호": "가", LINK: "https://maps.app.goo.gl/x", "메모": ""}]
+    todo = gs.plan(rows, [], frozenset({"a"}))
+    assert not todo["link"] and [r["place_uid"] for r in todo["done"]] == ["a"]
