@@ -2,7 +2,7 @@
 """버스 구간 통행시간 프로파일 — 41번 방(2026-09-25 · 규칙 v0.9).
 
 소스: processed/mobility/bus_seg_profile_v1.jsonl.gz
-      (mobility_scripts/collect/build_bus_seg_profile_v1.py · 서울시 OA-21217 · TOPIS BMS)
+      (datasets/mobility/scripts/build_bus_seg_profile_v1.py · 서울시 OA-21217 · TOPIS BMS)
       우리 717노선의 **연속 정류장 구간**마다 요일형(weekday/holiday) × 시간(0~23) 의 n(날 수)·p10·p50·p90(초).
 
 ★ 값의 뜻 — 「날짜별 시간대 평균 운행시간」의 분포다. **개별 운행의 분위가 아니다.**
