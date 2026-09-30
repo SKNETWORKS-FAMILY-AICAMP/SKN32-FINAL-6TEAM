@@ -23,6 +23,14 @@
     python scripts/dining/rebuild.py --db dining_dev --keep   있는 DB 위에
     python scripts/dining/rebuild.py --no-core       요식만 세운다
     python scripts/dining/rebuild.py --check         세우지 않고 준비물만 본다
+    python scripts/dining/rebuild.py --db acop --target core   코어 DB 의 요식 칸만 다시 채운다
+
+코어 DB 에 채울 때(--target core).
+    DB 를 지우지 않는다. 여행 · 고객 · 다른 팀 표가 같은 DB 에 있다.
+    코어 마이그레이션과 시드도 다시 돌리지 않는다. 코어는 코어가 세운다.
+    dining 스키마만 지우고(요식 표 · 함수 · 코어 장소 연결) 같은 순서로 다시 채운 뒤 코어 장소와 다시 잇는다.
+    코어 표는 dining 을 참조하지 않는다. 그래서 dining 만 지워도 코어 행은 남는다.
+    기본 방식(DB 를 지우고 새로)은 이름이 dining_ 으로 시작하는 DB 에만 쓴다. 코어 DB 를 실수로 지우지 않게.
 """
 from __future__ import annotations
 
@@ -83,6 +91,9 @@ LOADS = [
     ("make_vegan_sql.py",     "vegan.sql"),
     ("make_halal_sql.py",     "halal.sql"),
     ("make_michelin_sql.py",  "michelin.sql"),
+    ("make_closure_sql.py",   "closure.sql"),     # 가게가 다 들어온 뒤. 폐업 · 이전 확인분
+    ("make_gap_sql.py",       "gaps.sql"),        # 빈칸 검수 확인분(영업시간 · 전화 · 좌표)
+    ("google_link.py --to-sql", "google_links.sql"),  # 구글 place_id 연결(구글_연결.csv)
 ]
 
 #: 적재가 끝난 뒤 가게를 보고 계산하는 것. 영문 SQL 만 둔다 — -c 로 넘긴다.
@@ -132,7 +143,8 @@ def run_sql(db: str, path: str | None = None, sql: str | None = None,
 
 def run_py(script: str) -> tuple[bool, str]:
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
-    done = subprocess.run([sys.executable, os.path.join(HERE, script)],
+    name, *args = script.split()
+    done = subprocess.run([sys.executable, os.path.join(HERE, name), *args],
                           capture_output=True, text=True, encoding="utf-8",
                           errors="replace", cwd=ROOT, env=env,
                           stdin=subprocess.DEVNULL)
@@ -171,7 +183,7 @@ def check() -> bool:
     files = sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql")))
     say("OK" if files else "!!", f"마이그레이션 {len(files)}개")
     for script, _ in LOADS:
-        path = os.path.join(HERE, script)
+        path = os.path.join(HERE, script.split()[0])
         if not os.path.isfile(path):
             say("!!", f"없는 스크립트 {script}")
             ready = False
@@ -194,18 +206,34 @@ def main() -> int:
     ap.add_argument("--keep", action="store_true", help="있는 DB 를 지우지 않는다")
     ap.add_argument("--no-core", action="store_true", help="코어 없이 요식만 세운다")
     ap.add_argument("--check", action="store_true", help="세우지 않고 준비물만 본다")
+    ap.add_argument("--target", choices=("dining", "core"), default="dining",
+                    help="core: 코어 DB 를 지우지 않고 dining 스키마만 다시 채운다")
     args = ap.parse_args()
 
-    print("요식 원장 세우기")
+    print("요식 원장 세우기" + ("  (코어 DB 의 요식 칸만)" if args.target == "core" else ""))
     if not check():
         return 1
     if args.check:
         return 0
+    if args.target == "dining" and not args.keep and not args.db.startswith("dining_"):
+        say("!!", f"{args.db} 는 dining_ 으로 시작하지 않는다. 지우고 새로 만들지 않는다")
+        say("  ", "코어 DB 라면 --target core, 있는 DB 위에 얹으려면 --keep")
+        return 1
 
     started = time.time()
     os.makedirs(BUILD, exist_ok=True)     # 새로 받은 저장소에는 _build 가 없다
 
-    if not args.keep:
+    if args.target == "core":
+        if not has_core_places(args.db):
+            say("!!", f"{args.db} 에 코어 places 가 없다. 코어를 먼저 세운다(python -m app.infrastructure.db.migrate)")
+            return 1
+        ok, out = run_sql(args.db, sql="DROP SCHEMA IF EXISTS dining CASCADE")
+        if not ok:
+            say("!!", "dining 스키마를 지우지 못했다")
+            say("  ", out.strip().splitlines()[0] if out.strip() else "")
+            return 1
+        say("OK", f"{args.db} 의 dining 스키마만 비웠다. 코어 표는 그대로")
+    elif not args.keep:
         # 지우고 다시 만든다. 남은 것 위에 얹으면 「처음부터」가 아니다.
         ok, out = run_sql("postgres", sql=f'DROP DATABASE IF EXISTS "{args.db}"')
         if not ok:
@@ -218,7 +246,7 @@ def main() -> int:
         run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"', stop_on_error=False)
         say("OK", f"{args.db} 위에 얹는다")
 
-    if not args.no_core:
+    if not args.no_core and args.target == "dining":
         build_core(args.db)
     core = has_core_places(args.db)
     say("OK" if core else "..",
