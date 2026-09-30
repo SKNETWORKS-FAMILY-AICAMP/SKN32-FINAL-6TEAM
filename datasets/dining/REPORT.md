@@ -26,7 +26,9 @@
 | `truth/대조표100_검수_2026-09-21.csv` | 추출 정답셋 100 | 사람 | `make_truth_sql.py` · `check_dining.py` |
 | `closure/폐업대조_*.csv` | 인허가 자료와 폐업 대조 | 사람 | `make_closure_sql.py` |
 | `gaps/빈칸_검수_*.csv` 외 | 원장 빈칸(영업시간·전화·좌표) 검수 | 사람 | `make_gap_sql.py` |
-| `google/구글_연결.csv` 외 | 구글 장소 연결 결과·확인 목록 | 가+사람 (`google_link.py`) | `google_link.py --to-sql` |
+| `google/구글_연결.csv` | 구글 장소 연결(place_id·링크). 확인자·확인일이 있으면 valid | 가+사람 (`google_link.py` · `google_sheet.py`) | `google_link.py --to-sql` |
+| `google/구글_미연결_<날짜>.csv` | 자동으로 못 붙인 가게 — 사람이 구글 지도 링크·폐업을 적는 시트 | 사람 | `google_sheet.py` → 구글_연결.csv · 폐업대조 시트 (적재는 직접 읽지 않는다) |
+| `google/구글_미연결_좌표링크_*` · `구글_확인권장_*` | 작업용 목록 | 사람 | — |
 | `similarity/*` | 유사 식당 판정 시트·지표 | 사람 | `ml/dining_similarity.py` |
 | `export/요식_원장_*.csv` | DB 원장 내보내기(팀원 시험용) | 가 (`export_*.py`) | — |
 | `scenarios/alt_demo.sql` | 대안 데모 시나리오 | 사람 | — |

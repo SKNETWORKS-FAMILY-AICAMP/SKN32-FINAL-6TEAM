@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
 import subprocess
 import sys
 import time
@@ -197,6 +198,13 @@ def check() -> bool:
             ready = False
     if not ready:
         say("  ", f"데이터는 git 에 없다. 팀 드라이브에서 받아 {data} 에 둔다(datasets/dining/REPORT.md)")
+    # 사람이 채운 구글 미연결 시트는 적재가 읽지 않는다. google_sheet.py 로 옮겨야 들어간다.
+    got = subprocess.run([sys.executable, os.path.join(HERE, "google_sheet.py"), "--check"],
+                         capture_output=True, text=True, encoding="utf-8", errors="replace")
+    line = (got.stdout.strip().splitlines() or [""])[-1]
+    if re.search(r"링크 [1-9]|폐업 [1-9]", line):
+        say("..", f"옮기지 않은 구글 미연결 시트 — {line}")
+        say("  ", "python scripts/dining/google_sheet.py 로 옮긴 뒤 세운다(키 필요)")
     if os.path.isfile(os.path.join(data, "truth", "대조표100_검수_2026-09-21.csv")):
         say("OK", "검수 대조표 있음")
     else:
