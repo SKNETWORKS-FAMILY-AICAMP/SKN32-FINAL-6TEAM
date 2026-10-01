@@ -46,8 +46,32 @@ from app.core.idempotency import idempotency_key
 from app.infrastructure.db.session import get_connection
 from app.presentation.security import Principal, require_scope
 
+from .activity.csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .itinerary import Item, TripStore
 from .trip_desk import TripDesk
+
+# CSV 로드는 서버 기동 시 한 번만 — intake rate limit 폴백용
+_csv_places = _CsvPlaceLookup()
+
+
+class _CsvFallbackTour:
+    """CSV 전용 장소 조회 — CSV에 없으면 None(not_found).
+
+    activity_total_data.csv(1,586개 서울 액티비티)만 사용한다.
+    외부 API(tour_api · kakao)를 호출하지 않으므로 rate limit · 403 오류가 없다.
+    CSV에 없는 장소는 not_found로 처리한다.
+    """
+
+    def __init__(self, real: Any, csv_lookup: _CsvPlaceLookup) -> None:
+        self._real = real
+        self._csv = csv_lookup
+        self.misses: dict[str, int] = {}
+
+    def find(self, place_name: str, *, area_code: str | None = None, **kw: Any) -> dict[str, Any] | None:
+        result = self._csv.find(place_name)
+        if result is None:
+            self.misses["not_found"] = self.misses.get("not_found", 0) + 1
+        return result
 
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
 KST = ZoneInfo("Asia/Seoul")
@@ -250,7 +274,11 @@ def _item_view(item: Item) -> dict[str, Any]:
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
-            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
+            # ★`[2026-09-30]` 식당 가격 비교(`same_or_lower` · `higher` · `unknown` · `won`) — 원래 식당 대비.
+            #   구글 금액은 내려 주지 않는다(저장 금지 — 비교 결과만 기록돼 있다). 비교하지 않았으면 None
+            "price_compare": item.detail.get("price_compare"),
+            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"],
+                               "price_compare": a.get("price_compare")}
                               for a in item.detail.get("alternates") or []],
             "customer_pinned": bool(item.detail.get("customer_pinned")),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
@@ -774,7 +802,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
                             see=getattr(chat, "see", None),
                             chat=chat if hasattr(chat, "json") else None,
-                            tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory))
+                            tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
+                            kakao=_lazy("kakao", kakao_factory))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
@@ -798,7 +827,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         try:
             with get_connection() as conn:
                 edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
-                     edits=[e.model_dump() for e in request.edits], tour=_lazy("place", place_factory),
+                     edits=[e.model_dump() for e in request.edits],
+                     tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
                      kakao=_lazy("kakao", kakao_factory))
                 return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         except LookupError:

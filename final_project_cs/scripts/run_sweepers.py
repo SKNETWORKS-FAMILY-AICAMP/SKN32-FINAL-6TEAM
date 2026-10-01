@@ -140,8 +140,12 @@ def _run_trip_dawn(tenant_id: str) -> dict[str, object]:
 
     # ★무료 한도 보호 — DB 예산(027)을 **반드시** 건다. 프로세스 안 제한기는 매분 새로 차서 못 지킨다
     budget = CallBudget(connection_factory=get_connection, caps=google_caps())
+    # ★`[2026-09-30]` 대체 식당의 가격대 조회는 상한 없이 부른다 — 무료 한도를 넘는 첫 호출에 운영자에게 알린다
+    from app.infrastructure.notify.ops_alert import google_over_free_alert
+
     source = (GooglePlaces(api_key=key, budget=budget, limiter=build_travel_sources(settings).limiter,
-                           match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")))
+                           match_radius_m=float(get_guardrails().get("travel.dawn_check.match_radius_m")),
+                           on_over_free=google_over_free_alert)
               if key else None)
     outcome = DawnCheck(store=TripStore(tenant_id), connection_factory=get_connection,
                         clock=lambda: datetime.now(ZoneInfo("Asia/Seoul")), source=source).tick()

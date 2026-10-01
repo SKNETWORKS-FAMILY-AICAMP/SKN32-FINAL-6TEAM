@@ -2,7 +2,7 @@
 """버스 구간 통행시간 프로파일 — 41번 방(2026-09-25 · 규칙 v0.9).
 
 소스: processed/mobility/bus_seg_profile_v1.jsonl.gz
-      (mobility_scripts/collect/build_bus_seg_profile_v1.py · 서울시 OA-21217 · TOPIS BMS)
+      (datasets/mobility/scripts/build_bus_seg_profile_v1.py · 서울시 OA-21217 · TOPIS BMS)
       우리 717노선의 **연속 정류장 구간**마다 요일형(weekday/holiday) × 시간(0~23) 의 n(날 수)·p10·p50·p90(초).
 
 ★ 값의 뜻 — 「날짜별 시간대 평균 운행시간」의 분포다. **개별 운행의 분위가 아니다.**
@@ -221,3 +221,26 @@ def board_caps(prof, route_id, stops, a_seq, last_min, day_types, min_days):
     import math
     cb, cw = last_min + math.ceil(b), last_min + math.ceil(w)
     return cb, max(cb, cw)
+
+
+def last_pass_early(prof, route_id, stops, a_seq, last_min, day_types, min_days):
+    """막차가 정류장 a 를 **일찍** 지나는 쪽의 추정(분) — 「막차를 아직 탈 수 있나」 비교용(73 후속 · v0.9.2).
+
+    ☆ 팀장 #3 은 이 비교에 늦은 쪽(worst = p90 누적)을 썼다. 막차를 놓치는 위험은 버스가 **일찍 지나가는** 것이라
+      비교 시각은 빠른 쪽이어야 한다(최악값 원칙). 값 = 막차 + min(p10 누적, p50 누적)의 내림 — 시간 칸이 바뀌며
+      누적이 역전돼도 p50 보다 늦게 잡지 않는다. 요일형이 둘로 갈리면 빠른 쪽(pick=min).
+    기점이면 last_min(시간표 확정). 사슬이 온전하지 않으면 None — 부른 쪽이 기점 막차 그대로(보수적) + 경고.
+    """
+    if a_seq == stops[0]["seq"]:
+        return last_min
+    if prof is None:
+        return None
+    vals = []
+    for q in ("p10", "p50"):
+        w = prof.walk(route_id, stops, stops[0]["seq"], a_seq, last_min, day_types, q, min_days,
+                      lambda _d: None, pick=min)
+        if w.minutes is None or w.fb or w.half:
+            return None
+        vals.append(w.minutes)
+    import math
+    return last_min + math.floor(min(vals))

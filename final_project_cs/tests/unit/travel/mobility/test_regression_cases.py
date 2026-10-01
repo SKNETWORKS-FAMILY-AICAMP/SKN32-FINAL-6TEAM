@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""이동 모듈 회귀 171 을 pytest 로 — 71번 방(2026-09-29).
+"""이동 모듈 회귀(171 → 78 에서 177) 를 pytest 로 — 71번 방(2026-09-29).
 
-★무엇을 보나: 케이스 파일(`*_legs_v1.json` · 14묶음 · 171건)의 **입력 칸**을 판정기(`verify_time.Verifier`)에 넣고
+★무엇을 보나: 케이스 파일(`*_legs_v1.json` · 14묶음 · 177건(78))의 **입력 칸**을 판정기(`verify_time.Verifier`)에 넣고
   결과를 **기대 칸(`expect…`)** 과 대조한다. 대조 함수는 CLI `--check-expect` 와 같은 `verify_time.check_expect` 다 —
   비교 칸·문구가 두 군데 생기지 않는다. 케이스 본문도 여기 없다 — 파일을 그대로 읽는다.
-  칸 설명·묶음별 뜻·깨졌을 때 읽는 순서는 `docs/mobility/REGRESSION_EXPLAINED_v1.md`.
+  칸 설명·묶음별 뜻·깨졌을 때 읽는 순서는 이 폴더 `README.md`.
 
 ★두 층(conftest.py):
   · **게이트**(기본 실행) — `regression_gate_v1.json` 의 21건. 「주요 기능마다 하나 · 깨지면 그 기능이 죽은 것」.
@@ -73,7 +73,7 @@ GATE = json.loads((HERE / "regression_gate_v1.json").read_text(encoding="utf-8")
 GATE_KEYS = {(g["file"], g["id"]) for g in GATE}
 ALL = [(file, c["id"]) for file in (b["file"] for b in BUNDLES.values()) for c in _read_cases(file)]
 FULL = [k for k in ALL if k not in GATE_KEYS]
-N_ALL, N_GATE = 171, 21          # 정본 숫자(28 기준 회귀 171 · 게이트 21) — 케이스를 더하면 여기도 올린다. 검사는 test_gate_list_is_consistent 에서
+N_ALL, N_GATE = 177, 21          # 정본 숫자(78 기준 회귀 177 = 171 + BB-01~04 · NIGHT-10B · MIX-07 · 게이트 21) — 케이스를 더하면 여기도 올린다. 검사는 test_gate_list_is_consistent 에서
 
 
 # ── 판정기: 적재 조건(시간표·라우터·자전거 픽스처·버스 프로파일)이 같은 케이스는 한 판정기를 나눠 쓴다 ────────
@@ -94,7 +94,9 @@ def _processed():
 def _skip_if_missing(bundle):
     need = NEED_SYNTH if bundle == "synthetic" else NEED_REAL
     p = _processed()
-    missing = [n for n in need if not (p / n).exists()]
+    # 75(9/30): 저장소 데이터의 실 시간표는 `.gz` — 판정기와 같은 규칙(paths.timetable_file · .gz 우선)으로 있는지 본다
+    from app.modules.travel_ops.mobility.engine.paths import timetable_file
+    missing = [n for n in need if not ((timetable_file(p) if n == "timetable_v1.jsonl" else p / n).exists())]
     if missing:
         pytest.skip(f"data not present: {p} — {missing}")
 
