@@ -1176,7 +1176,7 @@ def _rate_limited(source: Any) -> int:
 
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None, search: Callable[..., Any] | None = None,
-              exclude_names: Iterable[str] = ()) -> PlanOutcome:
+              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = ()) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
     ★`[2026-09-28]` 이 요청 중에 관광공사 조회가 **속도 한도**에 걸렸고 그래서 못 짰으면, 조건 문제처럼 보이는
@@ -1188,7 +1188,7 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     limited = _rate_limited(tour_api)
     try:
         return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
-                          search=search, exclude_names=exclude_names)
+                          search=search, exclude_names=exclude_names, exclude_sites=exclude_sites)
     except PlanRefused as refused:
         if _rate_limited(tour_api) <= limited:
             raise
@@ -1201,10 +1201,14 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
 def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None,
               search: Callable[..., Any] | None = None,
-              exclude_names: Iterable[str] = ()) -> PlanOutcome:
+              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = ()) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
     `exclude_names` — 후보에서 뺄 장소 이름(고객이 이미 정한 일정의 장소 — 같은 곳을 두 번 넣지 않게, `plan_around`).
+    `exclude_sites` — 같은 용도의 **장소 자체**(`name` · `latitude` · `longitude` · `attributes.address`). 이름이 달라도 **같은 곳**
+      (`itinerary_changes.same_site` — 같은 주소 · 30m 안 · 이름 첫 낱말이 같고 1.5km 안)인 활동 후보를 뺀다.
+      ☆`[2026-10-01 사용자 지적]` 고객이 쓴 「경복궁 건청궁」을 고정하고 짰더니 생성기가 「경복궁」을 따로 넣어 같은 곳이 두 이름으로
+        두 번 나왔다 — 이름이 정확히 같은 것만 뺐기 때문이다(`exclude_names`).
     """
     request.validate()
     # ★`[2026-09-24]` 설문(`constraints.survey`)을 **등록과 같은 함수로** 먼저 적용한다 — 16번 여유가
@@ -1236,6 +1240,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     skip = {_bare_name(name) for name in exclude_names}
     if skip:
         pool = [cand for cand in pool if _bare_name(cand.name) not in skip]
+    pool = _without_same_sites(pool, exclude_sites)
 
     ranked = rank_candidates(pool, pref)
     activities = distinct_sites([cand for cand in ranked if cand.kind == "activity"])
@@ -1423,6 +1428,25 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
 FIXED_MARGIN_MIN = 30
 #: 고정 식사와 이만큼 가까운 짠 식사는 뺀다(점심을 두 번 먹지 않게). 우리가 고른 값
 FIXED_MEAL_GAP_MIN = 150
+
+
+def _without_same_sites(pool: list[Cand], sites: Iterable[Mapping[str, Any]]) -> list[Cand]:
+    """고객이 정한 장소와 **같은 곳**인 활동 후보를 뺀다. 식당은 보지 않는다(같은 건물에 다른 가게가 흔하다)."""
+    from .itinerary_changes import SiteIndex
+
+    index, any_site = SiteIndex(), False
+    for site in sites:
+        if site.get("latitude") is None or site.get("longitude") is None:
+            continue
+        index.add({"name": site.get("name"), "latitude": site["latitude"], "longitude": site["longitude"],
+                   "attributes": site.get("attributes") or {}})
+        any_site = True
+    if not any_site:
+        return pool
+    return [cand for cand in pool
+            if cand.kind != "activity" or cand.lat is None
+            or not index.seen({"name": cand.name, "latitude": cand.lat, "longitude": cand.lon,
+                               "attributes": cand.attributes})]
 
 
 def _bare_name(name: str) -> str:

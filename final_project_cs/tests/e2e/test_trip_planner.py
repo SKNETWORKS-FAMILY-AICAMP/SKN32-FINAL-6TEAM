@@ -776,6 +776,33 @@ def test_read_items_are_kept_and_the_planner_fills_only_the_rest(api):
     assert {i["starts_at"][:10] for i in stops} == {"2026-10-05", "2026-10-06"}
 
 
+def test_a_place_the_customer_fixed_keeps_its_other_name_out_of_the_generated_part(api):
+    """☆`[2026-10-01 사용자 지적]` 고객이 쓴 「경복궁 건청궁」을 고정하고 짰더니 생성기가 「경복궁」을 따로 넣어 같은 곳이 두 이름으로 두 번 나왔다.
+    고정한 장소를 이름이 정확히 같은 것만 뺐기 때문이다. 이름이 달라도 **같은 곳**(같은 좌표 · 이름 첫 낱말)이면 후보에서 뺀다."""
+    from datetime import date
+
+    from app.modules.travel_ops import planner
+    from app.infrastructure.db.session import get_connection
+
+    def activities(**extra):
+        ask = planner.PlanRequest(city="서울", start_date=date(2026, 10, 5), days=2, party_size=2, locale="ko")
+        with get_connection() as conn:
+            out = planner.plan_trip(conn=conn, tenant_id=api["tenant"], request=ask, chat=None, tour_api=None, **extra)
+        body = out.draft.as_create_body(request_id="same-site", customer_id=api["customer"])
+        places = {p["key"]: p["name"] for p in body["places"]}
+        return {places[i["place"]] for i in body["items"] if i["kind"] == "activity" and i.get("place")}
+
+    # 고객이 쓴 장소는 「고궁 뜰 별채」 — 시험용 「고궁 뜰」과 같은 자리(좌표 같음 · 이름 첫 낱말 같음), 이름은 다르다
+    fixed = {"name": "고궁 뜰 별채", "latitude": 37.5758, "longitude": 126.9768, "attributes": {}}
+    before = activities(exclude_names=["고궁 뜰 별채"])
+    assert "고궁 뜰" in before, before                         # 이름만 빼면 같은 곳이 그대로 들어온다(옛 동작 — 이 시험이 잡으려는 것)
+    after = activities(exclude_names=["고궁 뜰 별채"], exclude_sites=[fixed])
+    assert "고궁 뜰" not in after and len(after) >= 4, after
+    # 식당은 보지 않는다 — 같은 건물에 다른 가게가 흔하다
+    dining_site = {"name": "한식당", "latitude": 37.5760, "longitude": 126.9770, "attributes": {}}
+    assert activities(exclude_sites=[{**dining_site}]) != set() and len(activities()) >= 4
+
+
 def test_a_fresh_plan_ignores_the_read_items_when_asked(api):
     client = api["client"]
     key = {"X-User-Key": client.post("/v1/web/session").json()["user_key"]}

@@ -272,8 +272,24 @@ from .trip_facts import booking_fact  # noqa: E402
 
 
 # ── 보기 ────────────────────────────────────────────────────────
+# ★`[2026-10-01 사용자 지적]` 화면이 「개화」만 보고는 식당인지 활동인지 숙소인지 알 수 없었다 — 종류는 늘 있었지만
+#   (`kind`) 사람이 읽는 말이 없어 화면마다 따로 만들어야 했다. 서버가 한 번만 정해 준다.
+_KIND_LABEL = {"dining": "식사", "activity": "활동", "mobility": "이동", "lodging": "숙소", "flight": "항공"}
+
+
+def _meal_label(item: Item) -> str | None:
+    """식사 항목의 끼니 — 일정 생성기가 적은 아침 표시가 먼저, 없으면 시작 시각(KST)으로 센다. 식사가 아니면 None."""
+    if item.kind != "dining":
+        return None
+    if (item.detail.get("planner") or {}).get("meal") == "breakfast":
+        return "아침"
+    hour = (_seoul(item.starts_at) or item.starts_at).hour
+    return "아침" if hour < 10 else "점심" if hour < 16 else "저녁"
+
+
 def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]:
     return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind,
+            "kind_label": _KIND_LABEL.get(item.kind, item.kind), "meal": _meal_label(item),
             "title": item.title, "place": (item.place or {}).get("name"),
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
@@ -1059,7 +1075,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 outcome = planner_module.plan_trip(
                     conn=conn, tenant_id=tenant, request=ask, chat=_lazy("chat", chat_factory),
                     tour_api=_lazy("place", place_factory),
-                    exclude_names=[p["name"] for p in built.body["places"]] if keep else ())
+                    exclude_names=[p["name"] for p in built.body["places"]] if keep else (),
+                    # ★`[2026-10-01]` 이름이 달라도 같은 곳(경복궁 건청궁 ↔ 경복궁)은 빼는 데 쓴다 — 고객이 쓴 활동 장소의 좌표
+                    exclude_sites=[{"name": p["name"], "latitude": p["lat"], "longitude": p["lon"],
+                                    "attributes": p.get("attributes") or {}}
+                                   for p in built.body["places"] if p.get("kind") == "activity"] if keep else ())
         except planner_module.PlanRefused as refused:
             raise _plan_refused(refused) from None
         draft, merged = outcome.draft, []

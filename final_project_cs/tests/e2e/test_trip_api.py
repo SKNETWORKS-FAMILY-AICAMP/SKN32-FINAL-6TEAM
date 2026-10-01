@@ -300,6 +300,20 @@ def test_create_rejects_unknown_references_and_needs_the_write_scope(api):
 
 
 # ── 하루 전체 ──────────────────────────────────────────────────
+def test_every_item_says_what_kind_it_is_and_which_meal(api):
+    """☆`[2026-10-01 사용자 지적]` 화면이 「개화」만 보고는 식당인지 활동인지 알 수 없었다 — 종류의 사람 말과 끼니를 서버가 준다.
+    끼니는 시작 시각(KST)으로 센다 — 10시 전 아침 · 16시 전 점심 · 그 뒤 저녁. 식사가 아니면 None."""
+    view = _detail(api, _create(api)["trip_id"])
+    by_kind = {}
+    for item in view["items"]:
+        by_kind.setdefault(item["kind"], []).append(item)
+    assert {i["kind_label"] for i in by_kind["dining"]} == {"식사"}
+    assert {i["kind_label"] for i in by_kind["activity"]} == {"활동"}
+    assert {i["kind_label"] for i in by_kind["mobility"]} == {"이동"}
+    assert [i["meal"] for i in by_kind["dining"]] == ["아침", "점심", "저녁"]          # 09:00 · 13:00 · 18:00
+    assert all(i["meal"] is None for kind in ("activity", "mobility") for i in by_kind[kind])
+
+
 def test_the_whole_day_through_the_api(api):
     trip_id = _create(api)["trip_id"]
     assert len(api["tick"]("09:00").adjusted) == 1                               # 액-02
