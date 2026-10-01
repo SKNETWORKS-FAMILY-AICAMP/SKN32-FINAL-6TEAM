@@ -799,7 +799,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~`read.place_candidates` 실구현~~ | **닫힘 — `[구현 2026-09-28]`** `db_search/place_candidates.py`로 실구현됨 → [아래 절](#read_place_candidates-실구현--db_search-구현-2026-09-28) |
 | `sigungucode`·`closed_days`의 카탈로그 출처 | `place_catalog`에 구조화 컬럼이 없다(아래 「걸리는 것」). 실구현 때 `raw_json`을 풀어 행에 싣거나 컬럼으로 승격해야 한다 |
 | 재난문자 지역 관련성 | 역지오코딩으로 `rgnNm`을 거르게 되면, 「위급재난 → 후보 전부 `withheld`」 규칙을 다시 봐야 한다. 그때는 다른 지역 후보가 통과할 수 있다 |
-| `activity_preference`를 채우는 설문 경로 | 설문 자체가 아직 없다 |
+| 코어가 설문·선호도를 `current_state`로 넘기는 경로 | `[확인 2026-10-01]` 코어(`app/application/controller.py:87` `TEAM_STATE_KEYS`)는 `subject_ref`·`trigger_source`·`trigger`·`interpretation` 넷만 넘긴다 — origin/develop 도 같다. 설문은 여행의 `constraints.survey`(`TripSurvey.priority`)에 저장돼 있지만 활동 팀까지 오지 않아, **실제 흐름에서는 선호도가 항상 `None`**이다(시험은 `current_state`에 직접 넣어 검증). Activity 는 **받는 쪽만** 구현했다(`ActivityTeam._preference`: `activity_preference` → `survey` → `constraints.survey`). 코어가 키를 넘겨 주는 쪽은 코어 담당 몫이라 비워 뒀다 |
 
 #### `read.place_candidates` 실구현 — `db_search` `[구현 2026-09-28]`
 
