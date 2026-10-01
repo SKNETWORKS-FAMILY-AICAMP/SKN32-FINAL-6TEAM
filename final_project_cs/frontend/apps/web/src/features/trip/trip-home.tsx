@@ -9,6 +9,7 @@ import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/compone
 import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
 import { warmup } from "@/lib/live/extras";
+import { LiveError } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { TripAttention } from "./trip-attention";
@@ -28,10 +29,15 @@ function bookingLabel(stop: TripStop, t: Translate) {
   return t("예약 정보 없음", "Booking not specified");
 }
 
+function isConnectionFailure(error: unknown) {
+  return !(error instanceof LiveError) || error.code === "network"
+    || ((error.status ?? 0) >= 500 && error.code !== "service_daily_cap");
+}
+
 export function TripHome({ tripId }: { tripId: string }) {
   const t = useT();
   const query = useTrip(tripId);
-  if (query.isPending || query.error || !query.data) {
+  if (query.isPending || !query.data || (query.error && !isConnectionFailure(query.error))) {
     return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
   }
   const trip = query.data;
@@ -44,7 +50,13 @@ export function TripHome({ tripId }: { tripId: string }) {
       <ButtonLink href={processing ? routes.verification(tripId) : routes.results(tripId)}>{processing ? t("확인 진행 보기", "View the check") : t("검증 결과 보기", "View results")}<ArrowRight {...icon} /></ButtonLink>
     </Panel>;
   }
-  return <TripWorkspace key={trip.id} trip={trip} />;
+  return <>
+    {query.error && <div className={styles.error} role="alert">
+      <p>{t("최신 여행 정보를 불러오지 못했어요. 마지막으로 확인한 내용을 표시하고 있어요.", "Could not refresh your trip. Showing the last information we received.")}</p>
+      <Button disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 불러오기", "Reload")}</Button>
+    </div>}
+    <TripWorkspace key={trip.id} trip={trip} />
+  </>;
 }
 
 function TripWorkspace({ trip }: { trip: Trip }) {
@@ -234,7 +246,9 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <Button type="submit" variant="primary" disabled={message.isPending} aria-label={t("메시지 전송", "Send message")}><Send {...icon} /><span className={styles.sendText}>{t("전송", "Send")}</span></Button>
           {inputError && <p id="trip-chat-error" className={styles.error} role="alert">{inputError}</p>}
         </form>
-        {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
+        {message.isError && <div className={styles.error} role="alert"><p>{live && isConnectionFailure(message.error)
+          ? t("서버 연결이 불안정해요. 잠시 후 다시 시도해 주세요.", "The server connection is unstable. Please try again shortly.")
+          : `${t("메시지를 보내지 못했어요.", "The message could not be sent.")} ${message.error.message}`}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
         <p className={styles.chatnote}>{live
           ? t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")
           : t("등록된 일정에 대한 시연 응답입니다. 실제 일정·예약 변경은 실행되지 않습니다.", "Demo replies use your itinerary. No actual itinerary or booking changes are performed.")}</p>
