@@ -177,6 +177,17 @@ def similar(origin: dict[str, Any], pool: list[dict[str, Any]],
     return [c for c in pool if all(_norm(c.get(f)) == _norm(origin.get(f)) for f in keys)]
 
 
+def preference_from_survey(survey: dict[str, Any] | None) -> str | None:
+    """설문 `priority`(앞이 더 중요) 중 먼저 나오는 `activity`·`mobility` 를 선호도로. 없으면 `None`.
+
+    ★`food` 는 이 팀 몫이 아니라 건너뛴다. `None`(무응답)이면 `rank_alternatives` 가 폴백을 쓰지 않는다.
+    """
+    for area in (survey or {}).get("priority") or []:
+        if area in FALLBACK_DROPS:
+            return area
+    return None
+
+
 def same_brand_nearby(origin: dict[str, Any], candidate: dict[str, Any]) -> bool:
     """원래 장소가 브랜드 매장이고, 후보가 **같은 브랜드이면서 같은 시군구**인가.
 

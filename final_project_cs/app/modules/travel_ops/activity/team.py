@@ -24,6 +24,7 @@ from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 from .._base import TravelTeamBase
 from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from .alternatives import preference_from_survey, rank_alternatives
 from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .csv_places import weather_sensitive_from_lclssystm2 as _ws_from_lclssystm2
 
@@ -61,7 +62,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
                        "read.weather", "read.disaster", "read.place_search",
-                       "read.disruptions", *ITINERARY_TOOLS],
+                       "read.place_candidates", "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
         #   쇼핑몰 환불 문서를 근거로 집어 왔다. 이름이 겹치지 않게 `travel_` 을 붙이고
@@ -436,10 +437,90 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                         "분류 유형(lclsSystm2)으로 추정한 실내외 여부로 기상을 조회했다 — 확정 정보가 아닐 수 있다")
                 decisions["weather"] = w_dec
 
+        # ── ④ 대체 장소 — 이 장소가 **장소 때문에** 안 될 때만(휴무 요일 · 위급재난) ──
+        if decisions["feasible"] is False and self._blocked_by_place(decisions):
+            alt, evidence, alt_text, alt_warnings = self._recommend_alternatives(
+                task, place, booking.get("starts_at"), seen, evidence)
+            decisions["alternatives"] = alt
+            answer_parts.append(alt_text)
+            warnings.extend(alt_warnings)
+
         return self._result(
             task, outcome="completed", confidence=0.8, evidence=evidence,
             next_action=NextAction.RESPOND, answer=" ".join(answer_parts),
             decisions=[decisions], warnings=warnings)
+
+    # ── 대체 장소 ─────────────────────────────────────────────
+
+    @staticmethod
+    def _blocked_by_place(decisions: dict[str, Any]) -> bool:
+        """불가 사유가 **그 장소**에 있나 — 정기휴무 요일이거나 위급재난. 이미 시작됨·정원 초과는 장소를 바꿔도 안 풀린다."""
+        return bool((decisions.get("operating") or {}).get("weekday_match") is True
+                    or (decisions.get("disaster") or {}).get("blocks"))
+
+    #: 폴백에서 뺀 필드를 고객 말로.
+    _FIELD_LABEL = {"lclsSystm1": "대분류", "lclsSystm2": "중분류", "lclsSystm3": "소분류",
+                    "contenttypeid": "관광 타입", "sigungucode": "시군구"}
+    _AVAILABILITY_LABEL = {"open_weekday": "휴무 요일 아님", "open_at_time": "그 시각 운영 중",
+                           "unconfirmed": "운영 여부 미확인"}
+    _PREFERENCE_LABEL = {"activity": "활동 우선", "mobility": "이동 우선"}
+
+    @staticmethod
+    def _survey(task: TeamTask) -> dict[str, Any] | None:
+        """설문(`trips.constraints.survey`)이 Case 상태에 실려 오면 읽는다. 없으면 `None` — 선호도를 가정하지 않는다."""
+        state = task.context.current_state or {}
+        survey = state.get("survey") or (state.get("constraints") or {}).get("survey")
+        return survey if isinstance(survey, dict) else None
+
+    def _recommend_alternatives(self, task: TeamTask, place: Any, starts_at: Any, seen: set[str],
+                                evidence: list) -> tuple[dict[str, Any], list, str, list[str]]:
+        """원래 장소 기준 대체 후보를 `read.place_candidates` 로 읽어 `rank_alternatives` 로 줄 세운다.
+
+        ★**계산만 한다.** 후보를 못 읽으면 지어내지 않고 `status="unknown"` 과 이유 코드를 낸다.
+        ★결과는 `decisions[].alternatives` 로 나간다 — `status`: found · none · unknown.
+        """
+        content_id = place.get("source_content_id") if isinstance(place, dict) else None
+        if not content_id:
+            return ({"status": "unknown", "reason": "no_source_content_id"}, evidence,
+                    "대체 장소는 원래 장소를 카탈로그에서 특정하지 못해 찾지 못했습니다.",
+                    ["원래 장소의 식별자(source_content_id)를 몰라 대체 후보를 조회하지 않았다"])
+        pool = self._read(task, "read.place_candidates", {"content_id": str(content_id)}, seen)
+        if pool is None:
+            return ({"status": "unknown", "reason": "origin_not_in_catalog", "content_id": str(content_id)},
+                    evidence, "대체 장소 후보를 조회하지 못했습니다.",
+                    ["원래 장소가 카탈로그에 없어 대체 후보를 조회하지 못했다"])
+        candidates = pool.get("candidates") or []
+        # ★풀 전체(수천 건)를 근거에 싣지 않는다 — 어디서 몇 건을 언제 읽었는지만.
+        evidence = self._evidence(task, source_id="read.place_candidates", claim="대체 후보 풀",
+                                  value={"origin": {"contentid": (pool.get("origin") or {}).get("contentid"),
+                                                    "title": (pool.get("origin") or {}).get("title")},
+                                         "pool_size": len(candidates), "source": pool.get("source"),
+                                         "confirmed_at": pool.get("confirmed_at")},
+                                  base=evidence)
+        preference = preference_from_survey(self._survey(task))
+        ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference)
+        items = [{**a} for a in ranked["alternatives"]]
+        alt = {"status": "found" if items else "none",
+               "preference": ranked["preference"], "matched_fields": ranked["matched_fields"],
+               "dropped_fields": ranked["dropped_fields"], "total_matched": ranked["total_matched"],
+               "items": items, "source": pool.get("source"), "confirmed_at": pool.get("confirmed_at")}
+        warnings: list[str] = []
+        if not items:
+            return alt, evidence, "조건에 맞는 대체 장소를 찾지 못했습니다.", warnings
+        pref = self._PREFERENCE_LABEL.get(ranked["preference"] or "")
+        lines = []
+        for a in items:
+            where = f"{a['distance_km']}km" if a.get("distance_km") is not None else "거리 미확인"
+            lines.append(f"{a['rank']}) {a['title']} — {where}, "
+                         f"{self._AVAILABILITY_LABEL.get(a['availability'], a['availability'])}")
+        head = f"대체 장소({pref})" if pref else "대체 장소"
+        answer = f"{head}: " + "; ".join(lines) + "."
+        if ranked["dropped_fields"]:
+            dropped = ", ".join(self._FIELD_LABEL.get(f, f) for f in ranked["dropped_fields"])
+            warnings.append(f"같은 조건의 후보가 없어 유사 조건을 완화했다(제외: {dropped})")
+        if any(a["availability"] == "unconfirmed" for a in items):
+            warnings.append("대체 후보 중 운영 여부를 확인하지 못한 곳이 있다 — 방문 전 확인이 필요하다")
+        return alt, evidence, answer, warnings
 
     # ── 성립 점검 부품 ────────────────────────────────────────
 
