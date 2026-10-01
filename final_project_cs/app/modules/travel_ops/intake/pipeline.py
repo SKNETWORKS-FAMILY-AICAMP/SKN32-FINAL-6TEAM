@@ -113,7 +113,11 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
         _stage(connect, tenant_id, intake_id, "reading")
         with connect() as conn:
             our_places = _our_places(conn, tenant_id)
-            aliases = load_aliases(conn, tenant_id)
+            with conn.cursor() as cur:
+                cur.execute("SELECT customer_id FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s",
+                            (tenant_id, intake_id))
+                owner = cur.fetchone()[0]
+            aliases = load_aliases(conn, tenant_id, owner)
         rows_by_source = []
         for source in sources:
             rows_by_source.append((source, read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao,
@@ -246,7 +250,7 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                             (tenant_id, intake_id, current, source_id, field_name[:-len("place")] + "title"))
                 was = cur.fetchone()
                 if was and isinstance(was[0], str):
-                    remember_alias(cur, tenant_id, was[0], typed)
+                    remember_alias(cur, tenant_id, customer_id, was[0], typed)
             rows.append((source_id if field_name.startswith("items[") else None, field_name, value, evidence, note))
         new = current + 1
         # 앞 판을 그대로 옮기고(만든 순서 유지) 고친 값을 뒤에 얹는다 — 칸마다 마지막 값이 이긴다
@@ -517,28 +521,38 @@ SEED_ALIASES = {"남산타워": "N서울타워", "남산서울타워": "N서울�
                 "롯데타워": "롯데월드타워", "동대문디자인플라자": "DDP"}
 
 
-def load_aliases(conn, tenant_id: str) -> dict[str, str]:
-    """정규화한 원문 → 다시 찾을 이름. 고객이 고친 것이 기본값을 이긴다."""
+def load_aliases(conn, tenant_id: str, customer_id: Any) -> dict[str, str]:
+    """정규화한 원문 → 다시 찾을 이름. 고객이 고친 것이 기본값을 이긴다.
+
+    ★`[2026-09-30 사용자 확인 「명백한 버그」]` **누구의 별칭인지 가른다.** 기본값(`source='seed'`)만 모든 고객에게 쓰고, 고객이 고친 것은
+      **그 고객의 다음 접수에만** 쓴다(마이그레이션 038). ☆전에는 테넌트 전체가 공유해 한 고객의 「이촌동 점심 식당 → 엘 샌드위치」가
+      다른 고객의 같은 원문에 자동으로 적용됐다(고른 값은 그 여행에 대한 그 사람의 선택이지 이름 교정이 아니다 — 데이터 격리 문제).
+      누가 고쳤는지 모르는 옛 행(`customer_id` 없음)은 아무에게도 쓰지 않는다."""
     from .places import normalize
 
     out = {normalize(k): v for k, v in SEED_ALIASES.items()}
     with conn.cursor() as cur:
-        cur.execute("SELECT phrase_norm, replacement FROM place_aliases WHERE tenant_id=%s", (tenant_id,))
+        cur.execute("SELECT phrase_norm, replacement FROM place_aliases WHERE tenant_id=%s AND "
+                    "(source='seed' OR (source='customer' AND customer_id = %s)) "
+                    "ORDER BY (source='customer')", (tenant_id, customer_id))
         out.update(dict(cur.fetchall()))
     return out
 
 
-def remember_alias(cur, tenant_id: str, phrase: str, replacement: str) -> None:
-    """확인 화면에서 고객이 장소 이름을 고치면 (원래 글 → 고친 글)을 쌓는다. ★둘 다 고객 글이다(약관, 030 머리)."""
+def remember_alias(cur, tenant_id: str, customer_id: Any, phrase: str, replacement: str) -> None:
+    """확인 화면에서 고객이 장소 이름을 고치면 (원래 글 → 고친 글)을 **그 고객의 것으로** 쌓는다. ★둘 다 고객 글이다(약관, 030 머리).
+    다른 고객에게는 쓰이지 않는다(`load_aliases`)."""
     from .places import normalize
 
     key = normalize(phrase)
     if not key or key == normalize(replacement):
         return
-    cur.execute("INSERT INTO place_aliases (tenant_id, phrase_norm, phrase, replacement, source) "
-                "VALUES (%s,%s,%s,%s,'customer') ON CONFLICT (tenant_id, phrase_norm) DO UPDATE "
-                "SET replacement=EXCLUDED.replacement, source='customer', uses=place_aliases.uses + 1, updated_at=now()",
-                (tenant_id, key, phrase[:120], replacement[:120]))
+    cur.execute("INSERT INTO place_aliases (tenant_id, phrase_norm, phrase, replacement, source, customer_id) "
+                "VALUES (%s,%s,%s,%s,'customer',%s) "
+                "ON CONFLICT (tenant_id, phrase_norm, (COALESCE(customer_id, '00000000-0000-0000-0000-000000000000'::uuid))) "
+                "DO UPDATE SET replacement=EXCLUDED.replacement, source='customer', uses=place_aliases.uses + 1, "
+                "updated_at=now()",
+                (tenant_id, key, phrase[:120], replacement[:120], customer_id))
 
 
 def _our_places(conn, tenant_id: str) -> list[dict[str, Any]]:

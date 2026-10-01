@@ -228,4 +228,41 @@ describe("live trip gateway", () => {
     window.sessionStorage.removeItem(`tripilot.web.live.messages:${TRIP.trip_id}`);
     expect((await gateway.getTrip(TRIP.trip_id, "ko")).messages[1]).not.toHaveProperty("choices");
   });
+
+  // 2026-09-30 (teammate question Q-05): sending and re-reading are two steps.
+  it("keeps the server's reply when only the re-read after it fails — it is not reported as 'not sent'", async () => {
+    const gateway = createLiveGateway();
+    replies.push({ status: "answered", answer: "경복궁은 사직로 161에 있어요." }, new Response("{}", { status: 503 }));
+    const failure = await gateway.sendMessage(TRIP.trip_id, "경복궁 어디야", "ko").catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(LiveError);
+    expect((failure as LiveError).code).toBe("reply_kept");
+    const sent = ((failure as LiveError).detail as { sent: { role: string; text: string }[] }).sent;
+    expect(sent.map((message) => [message.role, message.text])).toEqual([["user", "경복궁 어디야"], ["assistant", "경복궁은 사직로 161에 있어요."]]);
+    // the next successful read still shows it (this tab's copy, until the server's record has it)
+    expect((await gateway.getTrip(TRIP.trip_id, "ko")).messages.map((message) => message.text)).toContain("경복궁은 사직로 161에 있어요.");
+  });
+
+  it("sends a failed message again with the same request id, so the server does not act on it twice", async () => {
+    const gateway = createLiveGateway();
+    const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
+    replies.push(new Response("{}", { status: 502 }));
+    await expect(gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b")).rejects.toBeInstanceOf(LiveError);
+    replies.push({ status: "adjusted", answer: "바꿨어요." });
+    await gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b");
+    expect(ids()[1]).toBe(ids()[0]);
+    // answered: the same words later are a new request
+    replies.push({ status: "answered", answer: "네." });
+    await gateway.sendMessage(TRIP.trip_id, "점심 바꿔 줘", "ko", "b");
+    expect(ids()[2]).not.toBe(ids()[0]);
+  });
+
+  it("does not reuse a failed message's request id for different words or a different stop", async () => {
+    const gateway = createLiveGateway();
+    const ids = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)).request_id as string);
+    replies.push(new Response("{}", { status: 502 }));
+    await expect(gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "a")).rejects.toBeInstanceOf(LiveError);
+    replies.push({ status: "answered", answer: "네." });
+    await gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "b");
+    expect(ids()[1]).not.toBe(ids()[0]);
+  });
 });

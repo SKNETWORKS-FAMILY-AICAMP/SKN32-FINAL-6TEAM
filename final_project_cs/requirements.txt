@@ -35,6 +35,7 @@ scikit-learn==1.5.2
 # ── 설정 · 유틸 ──────────────────────────────────────────────
 python-dotenv==1.1.1
 httpx==0.28.1
+cryptography==43.0.0   # 고객 디스코드 웹훅을 암호화해 저장 — customer_profile.py (설치만 돼 있고 목록에 없었다 — 도커 이미지에는 빠진다)
 socksio==1.0.0   # httpx SOCKS 프록시 — 고정 IP 서버 경유(ACOP_OUTBOUND_PROXY_URL)
 
 # ── 고객 계획 읽기 — 올린 파일을 글자로 (app/modules/travel_ops/intake/sources.py) ──

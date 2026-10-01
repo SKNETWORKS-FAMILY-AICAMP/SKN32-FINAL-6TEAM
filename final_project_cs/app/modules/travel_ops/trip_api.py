@@ -197,6 +197,18 @@ class AlternateIn(BaseModel):
     message: str | None = None
 
 
+class LocationIn(BaseModel):
+    """고객의 **현재 위치** — 브라우저 Geolocation 이 준 값. ★이 요청을 처리하는 데만 쓰고 어디에도 남기지 않는다(`trip_here`)."""
+    model_config = ConfigDict(extra="forbid")
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    accuracy_m: float | None = Field(default=None, ge=0)
+    at: datetime | None = None
+
+    def __repr__(self) -> str:                    # 검증 오류 · 로그에 좌표가 실리지 않게
+        return "LocationIn(<좌표 가림>)"
+
+
 class MessageIn(BaseModel):
     """고객 **자유 문장** — 에이전트가 옮기지 않고 그대로 보낸다."""
     model_config = ConfigDict(extra="forbid")
@@ -205,6 +217,8 @@ class MessageIn(BaseModel):
     at: datetime | None = None
     #: ★`[2026-09-29]` 화면에서 고른 일정 — 「다른 데로 바꿔 줘」가 가리키는 항목(없으면 문장 · 다음 일정으로 정한다)
     item_id: UUID | None = None
+    #: ★`[2026-09-30 사용자 지시]` 고객의 현재 위치(선택) — 「여기서 경복궁 어떻게 가」 같은 질문의 출발지. 없으면 지금과 같다
+    location: LocationIn | None = None
 
 
 class RollbackIn(BaseModel):
@@ -751,7 +765,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id,
                 policy_search=_lazy("policy", policy_search_factory),
-                place_source=_lazy("place", place_factory), selected_item_id=request.item_id)
+                place_source=_lazy("place", place_factory), selected_item_id=request.item_id,
+                location=request.location)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         _log_turn(principal.tenant_id, trip_id, request.message, result)
@@ -1175,7 +1190,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 policy_search=_lazy("policy", policy_search_factory),
                 place_source=_lazy("place", place_factory),
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
-                defer=background.add_task, selected_item_id=request.item_id)
+                defer=background.add_task, selected_item_id=request.item_id, location=request.location)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
@@ -1270,6 +1285,85 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return {"provider": "google", "allowed": allowed, "reason": None if allowed else "cap", "meter": MAP_METER,
                 "used": budget.used(MAP_METER), "cap": budget.caps.get(MAP_METER),
                 "fallback": None if allowed else "free_map"}
+
+    # ── 고객 연락처 (2026-10-01 사용자 지시 — ui 세션 전달) ─────────────────────────────────────────────
+    #   복구 이메일 · 디스코드 웹훅. ★웹훅은 비밀값이자 서버가 나중에 POST 하는 주소(SSRF)라 받을 때 엄격히 검사하고 암호화해서만 저장하며
+    #   응답에는 마스킹만 돌려준다(`customer_profile.py` 머리). 남의 키로는 남의 값이 안 보인다(키 → 고객).
+    @router.get("/v1/web/profile")
+    def web_profile(who: tuple[str, UUID] = Depends(_web_customer)):
+        from . import customer_profile
+
+        tenant, customer = who
+        with get_connection() as conn:
+            return customer_profile.read(conn, tenant, customer).as_dict()
+
+    @router.put("/v1/web/profile")
+    def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
+        """부분 갱신 — 칸이 없으면 안 건드리고 null(또는 공백만)이면 지운다. 모르는 칸 · 틀린 값은 422(받은 값을 되돌려 싣지 않는다)."""
+        from . import customer_profile
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                return customer_profile.update(conn, tenant, customer, body).as_dict()
+        except customer_profile.ProfileError as refused:
+            raise _error(refused.status, refused.code, refused.message) from None
+
+    @router.post("/v1/web/profile/discord/test")
+    def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
+        """저장된 웹훅으로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|invalid|rate_limited|failed, profile: {…}}`.
+        마지막 시도에서 `travel.profile.test_interval_seconds` 안이면 429 `too_soon`."""
+        from . import customer_profile
+
+        tenant, customer = who
+        interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
+        try:
+            with get_connection() as conn:
+                result, view = customer_profile.send_test(conn, tenant, customer, min_interval_seconds=interval)
+        except customer_profile.ProfileError as refused:
+            error = _error(refused.status, refused.code, refused.message)
+            if refused.retry_after:
+                error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        return {"result": result, "profile": view.as_dict()}
+
+    @router.get("/v1/web/trips/{trip_id}/events")
+    async def web_trip_events(trip_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-09-30 사용자 승인 — ui 세션 전달]` **변경 초인종** — 이 여행이 바뀌었다는 신호만 흘린다(`text/event-stream`).
+
+        `event: ready` `{trip_id, version}` 한 번 → 바뀔 때마다 `event: trip.changed` `{trip_id, kinds, version}`
+        (`kinds` = itinerary · notice · proposal 중 웹이 다시 읽을 것의 힌트) · 조용하면 20초마다 `: ping`. 내용 · 사용자 키는 싣지 않는다.
+        웹은 받으면 지금 있는 조회로 다시 읽는다. 놓친 신호를 되풀이하지 않는다 — 재연결하면 전부 다시 읽는다.
+        남의 여행 · 없는 여행은 다른 조회와 같은 404, 사용자당 열린 연결이 상한이면 429. 한 연결은 `max_seconds` 뒤에 닫힌다.
+        """
+        from starlette.concurrency import run_in_threadpool
+        from starlette.responses import StreamingResponse
+
+        from . import trip_events
+
+        tenant, customer = who
+
+        def check() -> None:
+            with get_connection() as conn:
+                _trip_or_404(conn, TripStore(tenant), trip_id, customer)
+
+        await run_in_threadpool(check)
+        cfg = trip_events.limits()
+        if not trip_events.acquire(tenant, customer, cap=int(cfg["max_per_user"])):
+            error = _error(429, "too_many_streams", "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다")
+            error.headers = {"Retry-After": "5"}
+            raise error
+
+        async def flow():
+            try:
+                async for chunk in trip_events.stream(tenant_id=tenant, trip_id=trip_id, connect=get_connection,
+                                                      is_disconnected=http.is_disconnected, cfg=cfg):
+                    yield chunk
+            finally:
+                trip_events.release(tenant, customer)      # ★끊겨도 상한이 새지 않게
+
+        return StreamingResponse(flow(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     @router.get("/v1/web/trips/{trip_id}/notices")
     def web_notices(trip_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):

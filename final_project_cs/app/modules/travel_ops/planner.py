@@ -628,8 +628,9 @@ def _transfer_minutes(here: Cand, there: Cand) -> tuple[int, str, str]:
     if walk > TRANSFER_MAX_MIN:
         return (TRANSFER_MAX_MIN,
                 f"직선 {round(meters)}m — 도보 {walk}분이라 대중교통 구간, {TRANSFER_MAX_MIN}분 상한 [추정]",
-                "대중교통 권장")
-    return walk, f"직선 {round(meters)}m ÷ 도보 80m/분 [추정]", "도보 기준"
+                "대중교통 권장 [추정]")
+    # ☆`[2026-09-30 C2]` 어림값 표기는 일정 생성·장소 교체가 같은 모양이다(「… [추정]」) — 출발 안내는 이 label 만 보여 준다
+    return walk, f"직선 {round(meters)}m ÷ 도보 80m/분 [추정]", "도보 기준 [추정]"
 
 
 def _place_slot(cand: Cand, start: datetime, minutes: int) -> tuple[datetime, datetime]:

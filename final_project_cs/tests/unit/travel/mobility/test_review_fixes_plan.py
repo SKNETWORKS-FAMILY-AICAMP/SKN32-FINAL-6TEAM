@@ -40,16 +40,19 @@ def test_45_no_move_across_service_days():
     assert out["not_linked"] and out["not_linked"][0]["code"] == "day_boundary"
 
 
-def test_45_a_move_that_ends_just_before_04_00_is_the_same_service_day():
-    """다음 항목이 04:00 정각에 시작해도(새벽 비행기 등) 이동은 그 전에 끝나 앞 항목과 같은 운행일이다 — 막지 않는다.
-    ☆실제 시간표 시험(test_0400_boundary)이 잡은 회귀: 시작 시각으로 재면 23:00 → 04:00 이동을 통째로 막았다."""
+def test_45_service_day_boundary_is_04_00_sharp():
+    """운행일 경계는 다음 항목의 **시작 시각**이 04:00:00 인지로 본다(이동 담당·팀장 결정 — 73 후속 · GPT Q5).
+    03:59:59 는 전날 운행일이라 잇고, 04:00:00 정각은 다음 운행일 아침이라 잇지 않는다(day_boundary).
+    ☆앞서 「도착 마감 1분 전」 기준으로 바꿨다가 이 결정과 반대라 물렸다 — 새벽 04:00 정각 시작 항목 앞 이동은 만들지 않는다."""
     items = [_item("저녁", "P1", "2026-10-05T22:00:00+09:00", "2026-10-05T23:00:00+09:00"),
-             _item("새벽", "P2", "2026-10-06T04:00:00+09:00", "2026-10-06T05:00:00+09:00")]
+             _item("새벽", "P2", "2026-10-06T03:59:59+09:00", "2026-10-06T05:00:00+09:00")]
     out = P.plan(PLACES, items, 2, {}, runtime=_rt())
-    assert not [n for n in out["not_linked"] if n["code"] == "day_boundary"], out["not_linked"]
-    assert [it for it in out["items"] if it["kind"] == "mobility"], "두 장소가 300 m 라 도보 이동이 만들어진다"
-    # 다음 날 아침 09:00 에 시작하면 이동이 04:00 을 넘겨 다음 운행일 — 여전히 안 잇는다
-    items[1] = _item("새벽", "P2", "2026-10-06T09:00:00+09:00", "2026-10-06T10:00:00+09:00")
+    assert not out["not_linked"], out["not_linked"]
+    assert [it for it in out["items"] if it["kind"] == "mobility"], "03:59:59 는 같은 운행일 — 두 장소가 300 m 라 도보 이동이 만들어진다"
+    items[1] = _item("새벽", "P2", "2026-10-06T04:00:00+09:00", "2026-10-06T05:00:00+09:00")
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    assert [n["code"] for n in out["not_linked"]] == ["day_boundary"], out["not_linked"]
+    items[1] = _item("아침", "P2", "2026-10-06T09:00:00+09:00", "2026-10-06T10:00:00+09:00")
     assert P.plan(PLACES, items, 2, {}, runtime=_rt())["not_linked"][0]["code"] == "day_boundary"
 
 
@@ -102,7 +105,7 @@ def test_38_unknown_disruption_kind_is_refused_upfront():
 # ── #29 버리는 후보는 이유를 남긴다 ────────────────────────────────────
 def test_29_dropped_transit_candidates_are_listed_with_reason():
     planner = P.Planner(_rt(), modes=["subway"])
-    planner._near_station = lambda place, limit: ("역A", 100.0, None) if place["key"] == "P1" else ("역C", 100.0, None)
+    planner._near_stations = lambda place, limit: [("역A", 100.0, None) if place["key"] == "P1" else ("역C", 100.0, None)]
     cand = {"n": 1, "legs": [{"line": "01호선", "from": "역A", "to": "역C"}], "walk_in_min": 1, "walk_out_min": 1,
             "out": {}, "reason": "막차 이후"}
     planner._vc = lambda case: SimpleNamespace(candidates=[cand], out={}, reason="후보 없음", verdict="infeasible")

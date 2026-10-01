@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # LLM
     llm_provider: str = "openai"
     openai_api_key: str
+    #: ★`[2026-10-01 사용자 지시]` **서버 배포용** OpenAI 키(서버를 도커 이미지로 만들어 아마존 등에 올릴 때 쓸 키). 이름만 선언했다 —
+    #:  **어느 코드도 이 값을 읽지 않는다.** 이 키를 쓰는 일은 사용자가 쓰라고 지시한 순간에만 한다(그 전에는 읽지도 부르지도 않는다).
+    #:  선언한 까닭: `extra="forbid"` 라 `.env` 에 이름이 먼저 적히면 앱이 기동조차 못 한다. 값은 `.env` 에만 둔다.
+    openai_api_key_server: str = ""
     llm_model: str
     embedding_model: str
     llm_temperature: float = 0.0
@@ -58,8 +62,8 @@ class Settings(BaseSettings):
     #:    자체 API(`/api/chat`, `think:false`)는 `gemma4:12b` 가 1.3초에 JSON 을 냈다.
     #:  실제 주소는 `.env` 에만 적는다(공용 파일에 호스트를 적지 않는다).
     ollama_base_url: str = ""
-    #: 시나리오 모드(운영콘솔 스위치로 확정 시나리오 하루를 실제 시스템으로 돌리는 시연 기능).
-    #:  ★기본은 꺼짐 — 릴리즈에 `/scenario/*`·`/tripilot` 이 열리지 않게. 로컬 `.env` 에서만 켠다.
+    #: ★`[2026-09-30]` 더는 쓰지 않는다 — 시나리오(시연) 모드를 운영 앱에서 뗐다(`legacy/scenario_mode/`). 이름만 남겼다:
+    #:  설정 검사가 모르는 이름을 거부(`extra="forbid"`)해서, 옛 `.env` 가 이 이름을 적고 있으면 앱이 못 뜬다.
     scenario_mode_enabled: bool = False
     ollama_model: str = "gemma4:12b"
     #: 정책 검색(RAG)의 임베딩을 어디서 만드나 — `openai` | `ollama`.
@@ -127,6 +131,9 @@ class Settings(BaseSettings):
     data_go_kr_key: str = ""                 # https://www.data.go.kr 공통 인증키
 
     #: 한국관광공사 국문 관광정보 — 장소·운영시간   data.go.kr/data/15101578
+    #: Jev(TypeSafe AI 의 판정용 모델) API 키 — `[2026-09-30]` `.env` 에 키가 먼저 적혀 앱이 기동 못 했다(`extra="forbid"`).
+    #:  ★자리만 선언했다 — 아직 어느 코드도 읽지 않는다(질의 해석 개선 후보로 조사 중). 값은 `.env` 에만 둔다.
+    jev_api_key: str = ""
     tour_api_key: str = ""
     #: 기상청 단기예보 — Open-Meteo 대안            data.go.kr/data/15084084
     kma_api_key: str = ""

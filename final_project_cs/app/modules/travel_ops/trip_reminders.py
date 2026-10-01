@@ -329,8 +329,11 @@ def build_departure(move: Item, items: list[Item], *, route_events: Any, routes:
         return "held", None
     unsupported_of = getattr(route_events, "unsupported", None)
     blind = unsupported_of(list(planned.get("uses", []))) if callable(unsupported_of) else []
+    # ☆`[2026-09-30 이동 계산기 실제 흐름 확인 C2]` 확인할 노선·도로(`uses`)가 하나도 없는 이동(어림값·도보)은 사건 소스가 볼 것이
+    #   없다 — 「확인 못 한 대상이 없다」를 「확인했다」로 읽어 「경로 확인 HH:MM」을 붙이면 어림값 이동이 확인된 경로처럼 보인다
+    no_targets = not planned.get("uses")
     how = {"label": planned.get("label") or planned.get("id"), "eta_min": planned.get("eta_min"),
-           "checked_at": None if blind else now}
+           "checked_at": None if (blind or no_targets) else now}
     return ("unchecked" if blind else "ok"), departure_phrase(move, following, how)
 
 

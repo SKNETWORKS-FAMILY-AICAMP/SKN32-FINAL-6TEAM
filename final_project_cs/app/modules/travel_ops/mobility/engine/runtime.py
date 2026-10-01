@@ -4,7 +4,7 @@
   from app.modules.travel_ops.mobility.engine.runtime import build_verifier
   v = build_verifier()          # 한 번. 약 33초 · 상주 약 91MB
 
-왜 전부 올리나 (2026-09-14 실측, `mobility_scripts/probe_timetable_load.py`)
+왜 전부 올리나 (2026-09-14 실측, 조사 스크립트 `probe_timetable_load.py` · 저장소 밖)
   Timetable.load(path, wanted) 의 wanted 는 **케이스 파일에서 뽑은 (노선,역) 집합**이다.
   배치에는 맞지만 서버는 요청마다 어느 역이 올지 미리 모른다. 셋을 재 봤다.
 
@@ -48,7 +48,9 @@ def default_paths():
     from .paths import PROCESSED                            # noqa: E402
     p = PROCESSED / "mobility"
     c = PKG / "rules"
-    return {"timetable": p / "timetable_v1.jsonl",
+    # ☆`[73 후속 · 3-4]` 실 시간표는 gz 가 있으면 그것(75 데이터 git · 75 MB → 1.8 MB) · 없으면 텍스트. 판정기는 확장자로 연다.
+    from .paths import timetable_file                        # noqa: E402
+    return {"timetable": timetable_file(p),
             "order": p / "line_station_order_v1.json",
             "transfer_walk": p / "transfer_walk_v1.json",
             "bus_route": p / "bus_route_v1.jsonl",

@@ -43,13 +43,24 @@ def test_asking_the_customer_app_for_an_ops_path_is_404(method, path):
     assert TestClient(_customer_app()).request(method, path).status_code == 404
 
 
-def test_the_ops_app_has_the_console_the_limits_api_and_the_scenario_mode():
+def test_the_ops_app_has_the_console_and_the_limits_api():
     from app.ops_entrypoint import create_ops_app
 
     paths = {getattr(r, "path", "") for r in create_ops_app().routes}
     for needed in ("/ui/login", "/ui/cases", "/ui/approvals", "/ui/delegations", "/ops/outbox", "/ui/admin",
-                   "/ui/scenario", "/admin/limits", "/admin/limits/events", "/scenario/status", "/tripilot"):
+                   "/admin/limits", "/admin/limits/events"):
         assert needed in paths, needed
+
+
+@pytest.mark.parametrize("path", ["/ui/scenario", "/scenario/status", "/scenario/start", "/tripilot"])
+def test_the_scenario_demo_mode_is_not_in_the_ops_app(path):
+    """`[2026-09-30 사용자 지시]` 실서비스 운영 화면과 데모가 같은 프로세스에 있으면 안 된다 — 시연 모드는 떼어
+    `legacy/scenario_mode/` 에 압축 보관했다. 운영 앱에 그 경로가 다시 생기면 이 시험이 잡는다."""
+    from app.ops_entrypoint import create_ops_app
+
+    app = create_ops_app()
+    assert path not in {getattr(r, "path", "") for r in app.routes}
+    assert TestClient(app).request("GET", path).status_code in (404, 405, 303, 307)   # 로그인 관문이 앞설 수 있다
 
 
 def _imports(path: Path) -> set[str]:

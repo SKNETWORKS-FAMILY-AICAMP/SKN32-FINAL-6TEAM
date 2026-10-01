@@ -77,6 +77,11 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-09-30 변경 초인종 — 「이 여행 바뀜」 신호만 흘린다(text/event-stream, 사용자 키). `wiki/external/rest-endpoints.md`
+    "/v1/web/trips/{trip_id}/events",
+    # ★2026-10-01 고객 연락처(복구 이메일 · 디스코드 웹훅) — 사용자 키. `wiki/external/rest-endpoints.md`
+    "/v1/web/profile",
+    "/v1/web/profile/discord/test",
     # ★2026-09-27 계획 읽기 — 글·사진·PDF·docx·xlsx 를 받아 확인 화면용 값으로(설계서 program/plan/…고객계획_읽기_설계…).
     #   고객 id 는 키에서, 남의 접수는 404. 읽기는 뒤에서 돈다.
     "/v1/web/trip-intakes",

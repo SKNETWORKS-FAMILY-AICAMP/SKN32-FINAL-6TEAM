@@ -10,10 +10,6 @@ from fastapi.responses import RedirectResponse
 from app.core.project_config import DEFAULT_PROJECT_CONFIG, ProjectConfig, load_project_config
 from app.presentation.ui.routes import configure_nav, login_router, ops_router, router, voc_router
 
-#: 로컬 이름 → 첫 화면. `http://<이름>.localhost:8042` 로 열면 그 화면으로 간다(개발 미리보기용).
-HOST_LANDINGS = {"tripilot": "/tripilot", "scenario": "/ui/scenario"}
-
-
 def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
     """Mount each declared UI module independently.
 
@@ -51,13 +47,8 @@ def mount_ui(app: FastAPI, config: ProjectConfig | None = None) -> FastAPI:
     if landing is not None:
         @app.get("/", include_in_schema=False)
         def _root(request: Request) -> RedirectResponse:
-            # ★앱 미리보기 목록에는 localhost 주소에 **경로를 못 붙인다**(포트까지만). 그래서
-            #   같은 서버를 이름으로 나눠 붙인다 — `tripilot.localhost` 는 사용자 화면으로,
-            #   `scenario.localhost` 는 시나리오 스위치로 보낸다. 같은 프로세스라 시나리오 한
-            #   판(메모리)을 운영콘솔과 사용자 화면이 같이 본다(2026-09-14).
-            host = (request.headers.get("host") or "").split(":")[0].lower()
-            target = HOST_LANDINGS.get(host.split(".")[0], landing) if host.endswith(".localhost") \
-                else landing
-            return RedirectResponse(target, status_code=307)
+            # ★`[2026-09-30]` 이름별 첫 화면(`tripilot.localhost` · `scenario.localhost`)은 시연 모드와 함께 뗐다 —
+            #   `legacy/scenario_mode/`. 이제 루트는 늘 운영 화면 첫 화면이다.
+            return RedirectResponse(landing, status_code=307)
 
     return app

@@ -111,15 +111,17 @@ def reuse_hours(conn, tenant_id: str, cands: list[Cand], now: datetime) -> dict[
 
 
 def widen_activity_pool(conn, *, tenant_id: str, trip_id: UUID, place: dict[str, Any], known_names: set[str],
-                        radius_m: float, now: datetime) -> dict[str, Any]:
+                        radius_m: float, now: datetime, memo: bool = True) -> dict[str, Any]:
     """원래 장소 둘레 목록 활동에 DB 의 운영시간을 붙여, 아는 곳만 그 여행 전용 장소 행으로 적는다. **바깥을 부르지 않는다.**
     ★같은 여행 · 같은 자리는 `WIDEN_MEMO_SECONDS` 동안 다시 넓히지 않는다(`_WIDENED`)."""
     if place.get("latitude") is None or place.get("longitude") is None:
         return {"added": 0, "reason": "원래 장소 좌표 없음"}
-    memo = (str(trip_id), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4))
-    if time.time() - _WIDENED.get(memo, 0.0) < WIDEN_MEMO_SECONDS:
-        return {"added": 0, "reason": "이미 넓혔다"}
-    _WIDENED[memo] = time.time()
+    if memo:
+        # ★`memo=False` — 고객의 **현재 위치**를 출발지로 넓힐 때(`trip_here`). 그 좌표를 프로세스 메모리에도 남기지 않는다
+        key = (str(trip_id), round(float(place["latitude"]), 4), round(float(place["longitude"]), 4))
+        if time.time() - _WIDENED.get(key, 0.0) < WIDEN_MEMO_SECONDS:
+            return {"added": 0, "reason": "이미 넓혔다"}
+        _WIDENED[key] = time.time()
     cands = nearby_activities(conn, tenant_id, latitude=float(place["latitude"]), longitude=float(place["longitude"]),
                               radius_m=radius_m, exclude_names=known_names)
     reused = reuse_hours(conn, tenant_id, cands, now)

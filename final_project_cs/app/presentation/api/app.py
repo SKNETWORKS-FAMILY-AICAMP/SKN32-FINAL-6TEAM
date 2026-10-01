@@ -42,8 +42,9 @@ def create_app(controller=None, classifier=None, *,
     #   사용자 식별 키(`X-User-Key`)와 Content-Type 뿐 — 서버용 `Authorization` 은 브라우저에서 받지 않는다.
     origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]
     # ★`[2026-09-28]` 사람 확인 토큰 헤더(`X-Turnstile-Token`, 키 발급)를 받고, 한도 응답의 `Retry-After` 를 화면이 읽게 연다
+    # ★`[2026-10-01]` `PUT` 도 연다 — 고객 연락처 저장(`PUT /v1/web/profile`)이 화면(다른 출처)에서 온다
     if origins:
-        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"],
+        app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "PUT"],
                            allow_headers=["X-User-Key", "Content-Type", "X-Turnstile-Token"],
                            expose_headers=["Retry-After"], allow_credentials=False)
     runtime = RuntimeComposition(controller, built_revision)

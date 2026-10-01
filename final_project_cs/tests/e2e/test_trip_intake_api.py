@@ -433,6 +433,46 @@ def test_a_place_name_the_customer_fixed_is_remembered_for_the_next_plan(api):
     assert place["evidence"]["tried"][0] == "alias:옛날시장→광장시장"
 
 
+def test_a_place_the_customer_fixed_is_never_used_for_another_customer(api):
+    """☆`[2026-09-30 사용자 확인 「명백한 버그」 — ui 세션 전달]` 한 고객이 확인 화면에서 고친 장소(「이촌동 점심 식당」→ 「엘 샌드위치」)가
+    테넌트 단위로 쌓여 **다른 고객의 같은 원문에 자동 적용**됐다. 고른 값은 그 여행에 대한 그 사람의 선택이지 이름 교정이 아니다.
+    이제 ①고친 본인의 다음 접수에만 쓰이고 ②다른 고객에게는 안 쓰이며 ③누가 고쳤는지 모르는 옛 행은 아무에게도 안 쓰인다
+    ④우리가 넣은 기본값(남산타워 등)은 모두에게 쓰인다."""
+    client, _, _ = _full_client()
+    mine, other = _key(client), _key(client)
+    first = _send(client, mine, text=ALIAS_FIRST)
+    source = first["sources"][0]["source_id"]
+    _edit(client, mine, first, {"source_id": source, "field": "items[1].place", "value": {"name": "광장시장"}})
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT phrase, replacement, source, customer_id IS NOT NULL FROM place_aliases WHERE tenant_id=%s",
+                    (api["tenant"],))
+        assert cur.fetchall() == [("옛날시장", "광장시장", "customer", True)]          # 고친 고객의 번호가 붙는다
+    # ① 본인의 다음 접수 — 쓰인다
+    own = _send(client, mine, text=ALIAS_NEXT)["sources"][0]["items"][0]["fields"]["place"]
+    assert own["value"]["name"] == "광장시장" and own["evidence"]["tried"][0] == "alias:옛날시장→광장시장"
+    # ② 다른 고객의 같은 원문 — 안 쓰인다(별칭으로 잡히지 않는다)
+    theirs = _send(client, other, text=ALIAS_NEXT)["sources"][0]["items"][0]["fields"]
+    place = theirs.get("place")
+    assert place is None or "alias:" not in " ".join(place["evidence"].get("tried") or []), place
+    assert not place or place["value"] is None or place["value"]["name"] != "광장시장", place
+    # ③ 누가 고쳤는지 모르는 옛 행(마이그레이션 038 앞에 쌓인 것 — 고객 번호가 없다)은 아무에게도 안 쓰인다: 조회는 고객 번호가 같은 행만 고른다.
+    #    그런 행을 새로 만들 수도 없다(고객이 고친 행은 번호가 있어야 한다).
+    import psycopg
+    from app.modules.travel_ops.intake.pipeline import SEED_ALIASES, load_aliases
+    from app.modules.travel_ops.intake.places import normalize
+
+    with get_connection() as conn:
+        with pytest.raises(psycopg.errors.CheckViolation), conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO place_aliases (tenant_id, phrase_norm, phrase, replacement, source, customer_id) "
+                        "VALUES (%s,'낡은표현','낡은표현','광장시장','customer',NULL)", (api["tenant"],))
+        assert normalize("옛날시장") not in load_aliases(conn, api["tenant"], None)          # 번호 없는 조회에는 고객 행이 안 나온다
+    # ④ 우리가 넣은 기본값 — 모두에게 쓰인다
+    with get_connection() as conn:
+        for who in (None, "00000000-0000-0000-0000-0000000000aa"):
+            got = load_aliases(conn, api["tenant"], who)
+            assert all(got[normalize(k)] == v for k, v in SEED_ALIASES.items())
+
+
 def test_the_survey_sent_with_confirm_is_checked_and_stays_on_the_trip(api):
     """★`[2026-09-28]` 「등록하고 관리 시작」에도 설문을 싣는다 — `/v1/web/trips` 와 같은 검사(`_create_trip`)."""
     from app.modules.travel_ops.survey import SURVEY_VERSION

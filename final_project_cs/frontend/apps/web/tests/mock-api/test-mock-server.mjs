@@ -9,6 +9,8 @@
 //   POST /__test/reset               back to the default scenario, clears the request log
 //   POST /__test/scenario {…}        change the scenario (see DEFAULTS)
 //   GET  /__test/log                 every request received since the last reset
+//   POST /__test/ring {kinds}        ring the "this trip changed" bell on every open stream (scenario bell: "on")
+//   POST /__test/hangup              close every open bell stream (the screen must reconnect and re-read)
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.STUB_PORT ?? 8043);
@@ -32,7 +34,7 @@ const DEFAULTS = {
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
-  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "" (none)
+  // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "messages" | "" (none)
   fail: "",
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
   edits: "ok",
@@ -44,7 +46,17 @@ const DEFAULTS = {
   trip: "ok",
   // how long planning takes to answer, in ms (the real server reads opening hours: up to about a minute)
   planDelay: 0,
+  // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
+  bell: "off",
+  // how many times the trip itself fails to load (500) right after the server answered a chat message
+  rereadFails: 0,
 };
+
+/** Trip loads still to fail after a chat answer (see `rereadFails`). */
+let tripFailures = 0;
+
+/** Open bell streams. The real server keeps no record of who received a bell — neither does this one. */
+const bells = new Set();
 
 let scenario;
 let log;
@@ -58,6 +70,7 @@ let turns = [];
 
 function reset() {
   scenario = { ...DEFAULTS };
+  tripFailures = 0;
   turns = [];
   log = [];
   sessions = 0;
@@ -172,6 +185,16 @@ createServer(async (request, response) => {
   if (path === "/__test/reset") { reset(); return json(response, 200, { ok: true }, origin); }
   if (path === "/__test/scenario") { scenario = { ...scenario, ...JSON.parse(raw || "{}") }; return json(response, 200, scenario, origin); }
   if (path === "/__test/log") return json(response, 200, log, origin);
+  if (path === "/__test/ring") {
+    const { kinds } = JSON.parse(raw || "{}");
+    const line = `event: trip.changed
+data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice", "proposal"], version: 1 })}
+
+`;
+    bells.forEach((stream) => stream.write(line));
+    return json(response, 200, { rang: bells.size }, origin);
+  }
+  if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
   if (path.startsWith("/plan/")) { response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end("<h1>여행계획서(스텁)</h1>"); return; }
 
   const key = request.headers["x-user-key"];
@@ -206,9 +229,22 @@ createServer(async (request, response) => {
   }
   if (path === `/v1/web/trips/${TRIP_ID}` && request.method === "GET") {
     if (scenario.trip === "missing") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+    if (tripFailures > 0) { tripFailures -= 1; return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin); }
     return json(response, 200, tripView(), origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
+  if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "on") {
+    response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+    response.write(`: connected
+
+event: ready
+data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
+
+`);
+    bells.add(response);
+    request.on("close", () => bells.delete(response));
+    return;
+  }
   if (path === `/v1/web/trips/${TRIP_ID}/notices` && request.method === "GET") return broken("notices") || json(response, 200, notices(), origin);
   if (path === `/v1/web/trips/${TRIP_ID}/rollback` && request.method === "POST") {
     if (scenario.undo === "stale") return json(response, 409, { error: { code: "stale_itinerary", message: "일정이 그 사이 바뀌었다" } }, origin);
@@ -228,9 +264,11 @@ createServer(async (request, response) => {
     return json(response, 200, body.key === null ? { status: "kept" } : { status: "adjusted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
+    if (broken("messages")) return;
     const body = JSON.parse(raw || "{}");
     if (scenario.chat === "escalated_bare") return json(response, 200, { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null }, origin);
     const answer = `서버 답: ${body.message}`;
+    tripFailures = scenario.rereadFails;
     // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
     turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
       { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });

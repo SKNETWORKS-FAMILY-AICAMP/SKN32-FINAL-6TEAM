@@ -230,6 +230,13 @@ async function read(tripId: string, language: Language): Promise<Trip> {
   };
 }
 
+/**
+ * A message whose send failed, by trip. Sending the same text again reuses its `request_id`, so a message the server
+ * did receive (the reply was lost on the way back) is not acted on twice — the server answers a known `request_id` with
+ * the first result (`open_case`). Cleared once the server answers.
+ */
+const unanswered = new Map<string, { message: string; itemId: string | null; requestId: string }>();
+
 /** Live adapter over `/v1/web/*`. Registration goes through the intake screen, not `createTrip`. */
 export function createLiveGateway(): TripGateway {
   return {
@@ -248,12 +255,16 @@ export function createLiveGateway(): TripGateway {
     async sendMessage(tripId, message, language, itemId) {
       const t = translator(language);
       const now = new Date().toISOString();
-      const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
+      const earlier = unanswered.get(tripId);
+      const requestId = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
+        ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
+      unanswered.set(tripId, { message, itemId: itemId ?? null, requestId });
       const result = await api<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
       });
-      const log = [...readMessages(tripId),
+      unanswered.delete(tripId);
+      const sent: TripMessage[] = [
         { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
         { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString(),
           ...(basisOf(result.basis_sources).length ? { basis: basisOf(result.basis_sources) } : {}),
@@ -263,8 +274,12 @@ export function createLiveGateway(): TripGateway {
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];
-      writeMessages(tripId, log);
-      return read(tripId, language);
+      writeMessages(tripId, [...readMessages(tripId), ...sent]);
+      // ★Sending and re-reading are two steps (2026-09-30, teammate question Q-05). The server has answered; a failed
+      //   re-read must not turn that into "not sent" — the customer would send again and the change would run twice.
+      //   The caller shows the reply it got (`detail.sent`) and re-reads later.
+      try { return await read(tripId, language); }
+      catch { throw new LiveError("reply_kept", t("답은 받았어요. 최신 일정을 다시 불러오지 못해 잠시 뒤 다시 읽고 있어요.", "The reply arrived. The latest plan did not load, so it is being read again shortly."), { sent }); }
     },
   };
 }

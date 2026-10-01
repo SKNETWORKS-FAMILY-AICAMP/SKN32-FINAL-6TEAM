@@ -239,15 +239,18 @@ test("서버에 연결이 안 되면 그 사실을 말하고, 화면은 비지 �
 
 test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 없다(없는 리소스·예외)", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ proposals: "open" });
+  // bell "on": the server this screen is built for has the change bell. An older server answers its address with a 404,
+  // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
+  await server.scenario({ proposals: "open", bell: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
   page.on("response", (response) => { if (response.status() >= 400 && !response.url().includes("/v1/web/")) problems.push(`${response.status()} ${response.url()}`); });
 
   for (const path of ["/", "/start", "/trips/new", `/trips/${TRIP_ID}`, `/trips/${TRIP_ID}/results`]) {
-    await page.goto(path, { waitUntil: "networkidle" });
-    await page.waitForTimeout(500);
+    // ★not "networkidle": the trip screen keeps the change bell open, so the network never goes idle there
+    await page.goto(path, { waitUntil: "load" });
+    await page.waitForTimeout(1_500);
   }
   expect(problems).toEqual([]);
 });
@@ -267,4 +270,70 @@ test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하�
   await other.waitForTimeout(1500);
   expect(await server.received("POST", "/v1/web/warmup")).toHaveLength(0);
   await fresh.close();
+});
+
+// 2026-09-30: the server's "this trip changed" bell. The screen re-reads what changed at once, instead of every 30 s.
+test("서버가 「이 여행 바뀜」 신호를 보내면 새로고침 없이 새 선택이 바로 뜬다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ bell: "on" });
+  await openTrip(page);
+  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toHaveCount(0);
+  await server.scenario({ proposals: "open" });
+  // the stream opens a moment after the screen: ring until it is there
+  await expect.poll(() => server.ring(["proposal"])).toBeGreaterThan(0);
+  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A");
+});
+
+test("신호 연결이 끊겼다 다시 붙으면 그 사이 바뀐 것을 전부 다시 읽는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ bell: "on" });
+  await openTrip(page);
+  await expect.poll(() => server.ring(["notice"])).toBeGreaterThan(0);
+  // changed while the line is down — no bell reaches the screen for this one
+  await server.scenario({ proposals: "open" });
+  expect(await server.hangup()).toBeGreaterThan(0);
+  await expect(page.getByRole("region", { name: /선택이 필요해요/ })).toContainText("대체 식당 A", { timeout: 10_000 });
+  expect((await server.received("GET", "/events")).length).toBeGreaterThan(1);
+});
+
+test("신호가 없는 옛 서버면 다시 붙으려고 조르지 않고 30초 다시 읽기로 돌아간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await openTrip(page);
+  await expect.poll(async () => (await server.received("GET", "/events")).length).toBe(1);
+  await page.waitForTimeout(3_000);
+  expect((await server.received("GET", "/events")).length).toBe(1);
+});
+
+// 2026-09-30 (teammate question Q-05): the server answered, only re-reading the plan failed.
+test("채팅: 서버가 답한 뒤 일정 다시 읽기만 실패하면 답은 보이고 「못 보냈다」고 하지 않으며, 잠시 뒤 다시 읽는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ rereadFails: 1 });
+  await openTrip(page);
+  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  const chat = page.locator("#trip-pane-chat");
+  await chat.getByRole("button", { name: "하루 요약" }).click();
+  await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");
+  await expect(chat.getByRole("status").filter({ hasText: "답은 받았어요" })).toBeVisible();
+  await expect(chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" })).toHaveCount(0);
+  // the plan loads again by itself, and the note goes away
+  await expect(chat.getByRole("status").filter({ hasText: "답은 받았어요" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+  expect((await server.received("POST", "/messages")).length).toBe(1);
+});
+
+test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 요청 번호로 가서 서버가 두 번 처리하지 않는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ fail: "messages" });
+  await openTrip(page);
+  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  const chat = page.locator("#trip-pane-chat");
+  await chat.getByRole("button", { name: "하루 요약" }).click();
+  const failed = chat.getByRole("alert").filter({ hasText: "메시지를 보내지 못했어요" });
+  await expect(failed).toBeVisible();
+  await server.scenario({ fail: "" });
+  await failed.getByRole("button", { name: "다시 보내기" }).click();
+  await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");
+  const ids = (await server.received("POST", "/messages")).map((entry) => entry.body?.request_id);
+  expect(ids).toHaveLength(2);
+  expect(ids[1]).toBe(ids[0]);
 });

@@ -253,7 +253,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
                         actor_id: str, policy_search: Any = None, place_source: Any = None,
                         defer: Callable[[Callable[[], None]], None] | None = None,
-                        selected_item_id: UUID | None = None) -> dict[str, Any]:
+                        selected_item_id: UUID | None = None, location: Any = None) -> dict[str, Any]:
     """★`[2026-09-28]` **어떤 결과로 끝나든 `answer`(고객에게 보일 문장)를 싣는다** — `trip_replies.py` 머리.
     질문은 규정 근거로 답하고(`policy_search`, 없으면 못 찾았다고 답한다), 잡담·모호한 말은 할 수 있는 일과
     이 여행의 사실로 답한다. 답은 서버가 가진 사실로만 만든다.
@@ -309,7 +309,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                                      request_id=request_id, at=at, desk=desk, store=store, items=items,
                                      decision=decision, failure=failure, actor_id=actor_id,
                                      policy_search=policy_search, place_source=place_source,
-                                     selected=selected_item_id)
+                                     selected=selected_item_id, here=_fix_of(location, at))
             marker = {**marker}                         # shadow — 결정만 기록하고 아래 경로로 답한다
             shadow = {"decision_shadow": record}
         else:
@@ -564,7 +564,8 @@ _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에�
 
 def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: str, request_id: str, at: datetime,
                   desk: TripDesk, store: TripStore, items: list[Any], decision: Any, failure: str | None,
-                  actor_id: str, policy_search: Any, place_source: Any, selected: UUID | None) -> dict[str, Any]:
+                  actor_id: str, policy_search: Any, place_source: Any, selected: UUID | None,
+                  here: Any = None) -> dict[str, Any]:
     """결정 단위가 고른 할 일을 **서버가 확인하고** 기존 실행 함수로 처리한다. 결과는 늘 「한 일」·「고를 안」·「되물음」이다."""
     import re
 
@@ -575,7 +576,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     from app.infrastructure.db import repository
 
     from . import trip_facts, trip_replies
-    from .decision_unit import fact_first, labels, maybe_meant
+    from .decision_unit import LOCATION_FACTS, fact_first, labels, maybe_meant
 
     def move(event_type, payload):
         case = repository.get_case(conn, tenant_id=tenant, case_id=case_id)
@@ -619,6 +620,10 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
         outcome = _clarify_with_choices(decision, items, at=at, selected=selected)
     elif action == "other":
         outcome = {"status": "answered", "text": trip_replies.other_reply(items, at)}
+    elif action == "answer_fact" and decision.fact in LOCATION_FACTS:
+        # ★`[2026-09-30 사용자 지시]` 현재 위치가 필요한 질문 — 위치가 없으면 **일정을 바꾸지 않고** 위치를 부탁한다(`needs_location`)
+        outcome = _answer_here(conn, kind=decision.fact, fix=here, trip=current, items=items, item=item, at=at,
+                               store=store, desk=desk, trip_id=trip_id)
     elif action == "answer_fact":
         kind = decision.fact if decision.fact != "none" else "detail"
         text, basis = trip_facts.fact_reply(kind, message=message, items=items, now=at, place_source=place_source,
@@ -729,6 +734,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
     return view({"status": status, "reason": f"decision_{action}", "decision": decision.record(),
                  "outcome": outcome, "answer": answer, **({"choices": outcome["choices"]} if outcome.get("choices") else {}),
                  **({"more": outcome["more"]} if outcome.get("more") else {}),
+                 **({"needs_location": True} if outcome.get("needs_location") else {}),
                  **({"choices_title": outcome["choices_title"]} if outcome.get("choices_title") else {}),
                  # ★`[2026-09-29 ui 세션 요청]` 웹은 목록을 버튼으로 또 그려 두 번 보였다 — 웹 입구는 이 판을 `answer` 로 쓴다
                  **({"answer_web": outcome["text_web"]} if outcome.get("text_web") else {}),
@@ -774,6 +780,57 @@ def _clarify_with_choices(decision: Any, items: list[Any], lead: str | None = No
     head = lead or "말씀을 정확히 알아듣지 못했어요."
     return {"status": "clarify", "choices": choices, "text_web": f"{head} 다음 중 하나인가요?",
             "text":f"{head} 다음 중 하나인가요?\n{listed}\n번호로 답하시거나 원하시는 것을 다시 말씀해 주세요."}
+
+
+def _fix_of(location: Any, at: datetime) -> Any:
+    """요청의 위치 → `trip_here.Fix`(좌표는 메모리에만). 없으면 None. 시각이 시간대 없이 오면 서울로 본다."""
+    if location is None:
+        return None
+    from .trip_here import Fix
+
+    seen = location.at
+    if seen is not None and seen.tzinfo is None:
+        seen = seen.replace(tzinfo=at.tzinfo)
+    return Fix(lat=location.lat, lon=location.lng, accuracy_m=location.accuracy_m, at=seen)
+
+
+def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list[Any], item: Any, at: datetime,
+                 store: TripStore, desk: TripDesk, trip_id: UUID) -> dict[str, Any]:
+    """현재 위치로 답한다 — 가는 길(`route_here`) · 근처 식당 · 근처 볼거리. ★일정은 바꾸지 않는다. 좌표는 어디에도 남기지 않는다."""
+    from . import trip_here
+
+    if fix is None:
+        return {"status": "answered", "text": trip_here.ask_for_location(kind), "needs_location": True}
+    usable, note, refusal = trip_here.assess(fix, now=at)
+    if not usable:
+        return {"status": "answered", "text": refusal}
+    if kind == "route_here":
+        stops = sorted((i for i in items if i.kind != "mobility" and i.place is not None), key=lambda i: (i.starts_at, i.seq))
+        dest = item if item is not None and item.place is not None and item.kind != "mobility" else next(
+            (i for i in stops if (i.ends_at or i.starts_at) >= at), None)
+        if dest is None:
+            text = "어느 곳까지 가는 길을 알려 드릴까요? 일정에 있는 곳 이름을 말씀해 주세요."
+        else:
+            from .mobility.wiring import leg_planner
+
+            text = trip_here.route_here(fix, dest, now=at, leg=leg_planner(trip.get("party_size"), trip.get("constraints")))
+    else:
+        from .itinerary_changes import plan_nearby
+
+        wanted = "dining" if kind == "nearby_dining" else "activity"
+        if wanted == "activity":
+            from .catalog_pool import widen_activity_pool
+            from .itinerary_changes import RELAX_WIDE_M
+
+            origin = fix.as_origin()
+            widen_activity_pool(conn, tenant_id=store.tenant_id, trip_id=trip_id, place=origin,
+                                known_names={str(p.get("name")) for p in store.places(conn, trip_id)},
+                                radius_m=RELAX_WIDE_M, now=at, memo=False)
+        places = store.places(conn, trip_id)
+        found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
+                                            ledger=desk._ledger())
+        text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)
+    return {"status": "answered", "text": (note + " " if note else "") + text}
 
 
 _TAG_KO = {"card_payment": "카드 결제", "parking": "주차", "takeout": "포장", "vegetarian_menu": "채식 메뉴",

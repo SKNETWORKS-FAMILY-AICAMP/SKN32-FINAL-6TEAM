@@ -132,6 +132,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 뿐이고 값은 매번 조회한다. 확인 화면에서 장소 이름을 고치면 쌓이고(`intake.pipeline.remember_alias`), 기본값은 코드의
 `SEED_ALIASES`(남산타워 → N서울타워 등)다 — 고객이 고친 것이 이긴다.
 
+### 장소 별칭을 고객 단위로 `[2026-09-30 · 038]`
+
+`[실측]` `038_place_aliases_per_customer.sql` — `place_aliases` 에 `customer_id` 칸을 더한다. ☆버그(사용자 확인 「명백한 버그」 — ui 세션 전달): 한 고객이 확인 화면에서 고친 장소(「이촌동 점심 식당」→ 「엘 샌드위치」)가 테넌트 단위로 쌓여 다른 고객의 같은 원문에 자동 적용됐다 — 고른 값은 그 여행에 대한 그 사람의 선택이지 이름 교정이 아니고, 데이터 격리 문제였다. 이제 `source='customer'` 행은 **그 고객의 다음 접수에만** 쓰고(`intake.pipeline.load_aliases`), `source='seed'`(기본값)만 모두에게 쓴다. 유일 키는 (테넌트, 원문, 고객). 새 고객 행은 고객 번호가 필수(`NOT VALID` 검사 — 옛 행은 통과). ★이미 있던 1행(고객 번호 없음)은 **지우지 않았다** — 누가 고쳤는지 몰라 조회에서 아무에게도 쓰이지 않는다(삭제 여부는 사용자 결정). 다른 고객 여럿이 같게 고친 것을 공용으로 올리는 규칙은 만들지 않았다(필요하면 「원문이 가게 이름처럼 보이고 서로 다른 고객 여러 명이 같게 고쳤을 때만」이 제안이다). ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
+
 ### 웹 남용 방어 `web_usage` · `runtime_limits` · `runtime_limit_events` `[2026-09-28 · 031]`
 
 `[실측]` `031_web_guard.sql` — 웹의 비싼 작업(계획 읽기 · 일정 짜기 · 확인 · 여행 만들기 · 채팅)과 키 발급을 **DB 에서 모든 프로세스가 같이** 센다
@@ -152,6 +156,14 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 ### 관광공사 목록 운영시간 `catalog_hours` `[2026-09-29 · 036]`
 
 `[실측]` `036_catalog_hours.sql` — 새벽 작업(`catalog_hours.prefill`, `run_sweepers --only catalog_hours`)이 관광공사 목록(`place_catalog`)의 활동 운영시간을 읽어 두는 표. 키 (tenant_id, source, content_id). 칸: 요일별 운영시간 `hours_week` · 읽은 방법 `hours_read` · 원문 `hours_origin`(이용시간 · 쉬는 날) · 문의 전화 · 읽을 때의 목록 수정 시각 `source_modified_at`(목록 값과 다르면 다시 읽는다) · `read_at`. 사실 정보만 적는다(사진 · 소개글 없음 — 2026-09-28 사용자 결정). 활동 「다른 데로 바꿔」는 요청 자리에서 관광공사를 부르지 않고 이 표를 읽는다(`catalog_pool`). ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
+
+### 바깥함 알림 앞부분 검색 인덱스 `[2026-09-30 · 037]`
+
+`[실측]` `037_outbox_notice_prefix_idx.sql` — 바깥함 `(tenant_id, topic, dedupe_key text_pattern_ops)` 인덱스 추가. 알림 조회(`dedupe_key LIKE '<여행 id>:%'`)가 기존 유일 인덱스로는 앞부분 검색을 못 써 바깥함 전체를 훑었다(543행에서 Seq Scan). 변경 초인종(`trip_events.py`)이 연결마다 2초 간격으로 읽어 바깥함이 커지면 부담이 된다. 인덱스를 강제로 켜 확인했다: `Index Scan using outbox_notice_prefix_idx`. 추가만 하고 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
+
+### 고객 연락처 `customer_profiles` `[2026-10-01 · 039]`
+
+`[실측]` `039_customer_profiles.sql` — 복구 이메일과 디스코드 웹훅의 저장 자리. 키 (tenant_id, customer_id). 칸: `recovery_email` · `discord_webhook_enc`(**암호화한** 웹훅 URL — 원문은 어디에도 없다) · `discord_hint`(마스킹한 모양) · `discord_status`(`untested`/`ok`/`invalid`) · `discord_checked_at`(상태를 정한 시각) · `discord_tested_at`(마지막 시험 시도 — 시험 발송 간격 제한을 DB 에서 센다). 고객이 지워지면 함께 지운다(`ON DELETE CASCADE`). 웹훅은 서버가 나중에 POST 하는 비밀값이라 암호화 키는 서버 설정에서 파생한다(`customer_profile.py`). ★적용: 이 파일만 적용했다(2026-10-01) — 031 과 같은 이유.
 
 ## 인덱스
 

@@ -9,7 +9,7 @@
       판정 회귀·자기점검·pytest 가 지금처럼 돈다. `runtime.build_verifier` 는 아무도 설정하지 않았을 때만 이것을 부른다.
   아무 것도 안 했으면 출처는 "unset" 이고 경로는 존재하지 않는 `/data` 다 — 적재가 「판정기 입력이 없다」로 멈춘다.
 
-수집 쪽 `mobility_scripts/collect/_paths.py` 와 같은 폴더 규칙(DATA_DIR/travel/raw·processed)을 쓴다.
+수집 쪽 `datasets/mobility/scripts/_paths.py` 와 같은 폴더 규칙(DATA_DIR/travel/raw·processed)을 쓴다.
 
 _paths.py 와 다른 점 둘
   · **폴더를 만들지 않는다.** 판정 엔진이 import 만으로 빈 폴더를 만드는 건 맞지 않는다
@@ -93,9 +93,16 @@ def load_cli_env():
     load_dotenv(REPO_ROOT / ".env")
     if os.environ.get("DATA_DIR"):
         _layout(os.environ["DATA_DIR"], "cli_env")
-    elif (REPO_DATASETS / "mobility" / "timetable_v1.jsonl").exists():
+    elif timetable_file(REPO_DATASETS / "mobility").exists():
         _layout(REPO_DATASETS, "repo_datasets")     # 75: DATA_DIR 없으면 저장소 안 자료(pull 만 하면 시험이 돈다)
     return SOURCE
+
+
+def timetable_file(mob_dir):
+    """실 시간표 파일 — `timetable_v1.jsonl.gz` 가 있으면 그것, 없으면 `timetable_v1.jsonl`(73 후속 · 3-4).
+    판정기(Timetable.load)는 확장자로 gzip 여부를 정한다. 둘 다 없으면 텍스트 경로(없는 파일)를 돌려 적재가 멈추게 한다."""
+    gz = Path(mob_dir) / "timetable_v1.jsonl.gz"
+    return gz if gz.exists() else Path(mob_dir) / "timetable_v1.jsonl"
 
 
 def cli_processed():

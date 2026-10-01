@@ -20,6 +20,14 @@ import sys
 from datetime import date
 from pathlib import Path
 
+# ★ 71번 방(2026-09-29) — 전체층 마커. 실데이터 축은 기본 `pytest` 에서 빠지고 `-m mobility_full` 로 돈다
+#   (conftest.py). 스크립트로 직접 돌릴 때는 pytest 가 없어도 되게 감싼다.
+try:
+    import pytest
+    _full = pytest.mark.mobility_full          # 실데이터(DATA_DIR)를 읽는 시험에만 붙인다 — 합성 단위는 게이트에 남는다
+except ImportError:     # pragma: no cover
+    _full = lambda f: f                        # noqa: E731
+
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[3]))
 
@@ -111,6 +119,7 @@ def test_slot_window():
 
 
 # ── D 데이터 ─────────────────────────────────────────────────────────────
+@_full
 def test_order_and_no_margin():
     _skip_if_no_data()
     for args in [(HOTEL, SEONGSU, WEEKDAY, "오후"), ("서울역", "이태원", WEEKDAY, "오후"), ("사당", "강남", WEEKDAY, "오전")]:
@@ -122,6 +131,7 @@ def test_order_and_no_margin():
         assert r["window"]["n"] == len(range(*slot_window(args[3])[1], 5))
 
 
+@_full
 def test_recheck_independent():
     """표본의 경로를 legs 케이스로 판정기에 따로 넣는다 — 같은 출발 시각에서 같은 예정 소요가 나와야 한다."""
     _skip_if_no_data()
@@ -142,6 +152,7 @@ def test_recheck_independent():
     assert r["eta"]["p50_min"] == pct([x["eta"] for x in sm if x["choice"]], 0.5)
 
 
+@_full
 def test_holiday_is_sunday_board():
     """추석(금)은 시간표·혼잡도 모두 일요일 판 — 같은 경로·같은 창이면 일요일과 값이 같다."""
     _skip_if_no_data()
@@ -151,6 +162,7 @@ def test_holiday_is_sunday_board():
     assert a["eta"] == b["eta"] and a["routes"] == b["routes"]
 
 
+@_full
 def test_commute_crowding_weekday_only():
     _skip_if_no_data()
     r, _ = _est("사당", "강남", WEEKDAY, "오전")
@@ -161,6 +173,7 @@ def test_commute_crowding_weekday_only():
     assert not [c for c in s["cautions"] if c["code"] == "commute_crowding"], "일요일엔 출퇴근 주의 없음"
 
 
+@_full
 def test_saturday_crowding_not_commute():
     """토요일 남태령 4호선 상행 10:30 재차율 104%(J-CONG-05 셀) — 표본엔 남지만 출퇴근 주의로는 안 올린다."""
     _skip_if_no_data()
@@ -171,6 +184,7 @@ def test_saturday_crowding_not_commute():
     assert not [c for c in r["cautions"] if c["code"] == "commute_crowding"], r["cautions"]
 
 
+@_full
 def test_bus_range_profile():
     _skip_if_no_data()
     r, sm = _est("서울역", "이태원", WEEKDAY, "오후", modes=["bus"])
@@ -182,18 +196,13 @@ def test_bus_range_profile():
     assert e["p10_min"] < e["p50_min"] < e["p90_min"], e
 
 
+@_full
 def test_night_last_service():
     _skip_if_no_data()
-    r, sm = _est(HOTEL, SEONGSU, WEEKDAY, "밤")
-    # ☆`[2026-09-29 이동 계산기 문제목록 #3]` 앞 판은 버스 중간 정류장에도 **출발지 막차**(N62 03:10)를 적용해 03:40 부터 심야버스를
-    #   「불가」로 봐, 창 안에서 지하철 막차 뒤 「끊김」(last_service · carried_by N버스)이 났다. 이제는 그 정류장을 막차가 실제로 지나는
-    #   시각을 추정해 비교한다(N62 는 정류장 45/167 번째 — 출발지 막차 뒤 약 45분 = 03:55). 그래서 지하철 막차 뒤 심야버스가
-    #   **창 끝(04:00)까지** 잇고, 창 안에서는 서비스가 끊기지 않는다(원본 엔진은 같은 자료로 위 옛 결과를 냈다)
-    ch = [(x["t"], x["choice"]) for x in sm]
-    first_bus = next(t for t, c in ch if c and c.startswith("버스 N"))
-    assert first_bus >= 24 * 60, f"지하철 막차 뒤에야 심야버스로 바뀐다: {first_bus}"
-    assert all(c and c.startswith("버스 N") for t, c in ch if t >= first_bus), "지하철 뒤를 심야버스가 창 끝까지 잇는다"
-    assert not [c for c in r["cautions"] if c["code"] == "last_service"], r["cautions"]
+    r, _ = _est(HOTEL, SEONGSU, WEEKDAY, "밤")
+    ls = [c for c in r["cautions"] if c["code"] == "last_service"]
+    assert ls and ls[0]["route"].startswith("02호선"), r["cautions"]
+    assert ls[0]["carried_by"] and all(k.startswith("버스 N") for k in ls[0]["carried_by"]), "지하철 뒤를 심야버스가 잇는다"
     b, _ = _est("서울역", "이태원", WEEKDAY, "밤", modes=["bus"])
     ls = [c for c in b["cautions"] if c["code"] == "last_service"]
     assert ls and ls[0]["route"].startswith("버스 ") and ls[0]["none_from"], \
@@ -203,6 +212,7 @@ def test_night_last_service():
     assert ls and not ls[0]["carried_by"] and ls[0]["none_from"], "지하철만이면 그 뒤는 없다"
 
 
+@_full
 def test_first_service_window():
     _skip_if_no_data()
     rt = _runtime()
@@ -213,12 +223,14 @@ def test_first_service_window():
     assert r["window"]["from"] == "04:00"
 
 
+@_full
 def test_no_station():
     _skip_if_no_data()
     r, _ = _est({"name": "먼 곳", "lat": 37.20, "lon": 127.60}, SEONGSU, WEEKDAY, "오후")
     assert r["verdict"] == "no_data" and "지하철역" in r["reason"]
 
 
+@_full
 def test_verifier_untouched():
     """추정이 판정기 상태를 바꾸지 않는다 — 역산 스위치 복구 · 같은 케이스의 밖 판이 앞뒤로 같다."""
     _skip_if_no_data()
@@ -336,6 +348,7 @@ def test_g4_dir_same_minute():
     assert e._dir_of("02호선", "a", "b", "weekday", 600, 605) is None, "도착까지 같으면 방향 미정 — 혼잡도 생략"
 
 
+@_full
 def test_g6_window_step_validated():
     _skip_if_no_data()
     for kw in ({"step": -5}, {"step": 0}):
@@ -352,6 +365,7 @@ def test_g6_window_step_validated():
         raise AssertionError(f"잘못된 창이 통과했다 {w}")
 
 
+@_full
 def test_g1_shared_verifier_never_touched():
     """GPT 1 — 추정 중에도 공유 판정기의 역산 스위치가 한 번도 바뀌지 않는다(다른 스레드에서 지켜본다)."""
     _skip_if_no_data()
@@ -376,6 +390,7 @@ def test_g1_shared_verifier_never_touched():
     assert seen == {True} and v.lfd_enabled is True, seen
 
 
+@_full
 def test_g7_basis_wording():
     _skip_if_no_data()
     r, _ = _est(HOTEL, SEONGSU, WEEKDAY, "오후")
@@ -383,6 +398,7 @@ def test_g7_basis_wording():
     assert "80% 예측구간" in b and "하한·상한 추정치의 분위" in b, b
 
 
+@_full
 def test_g8_no_bike_router_calls_by_default():
     """결정 8 — 기본 수단(지하철·버스·도보)에서는 자전거 후보를 안 만든다 → 라우터가 떠 있어도 경로 탐색 호출 0.
     (노트북 2026-09-25: GraphHopper 를 켜 둔 채 reg48 가 1시간 넘게 돌았다 — 표본마다 자전거 경로 탐색)"""

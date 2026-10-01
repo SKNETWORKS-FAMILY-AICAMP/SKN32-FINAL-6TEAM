@@ -71,7 +71,7 @@ def _approve_url(world) -> str:
 
 # ── 막히는가 ────────────────────────────────────────────────────
 @pytest.mark.parametrize("path", ["/ui/cases", "/ui/approvals", "/ui/delegations", "/ui/admin",
-                                  "/ui/scenario", "/ops/outbox", "/ui/ops/outbox"])
+                                  "/ops/outbox", "/ui/ops/outbox"])
 def test_every_screen_sends_a_stranger_to_the_login_page(world, path):
     response = world["client"].get(path, follow_redirects=False)
     assert response.status_code == 303, (path, response.status_code)
