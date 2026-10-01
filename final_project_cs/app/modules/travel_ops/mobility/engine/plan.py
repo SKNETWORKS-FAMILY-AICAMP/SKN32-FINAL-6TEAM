@@ -46,13 +46,16 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from . import options as O
+from .candidates import MIX_CUTS_PER_ROUTE_PROPOSED, MIX_MAX_PROPOSED, MixedGenerator, interleave, mix_rule, ride_estimator
 from .options import line_name, station_name  # noqa: F401 — 32 시험·호출 쪽이 plan 에서 가져간다
 from .geo import same_station
 from .timeutil import MIN_DAY, SERVICE_DAY_START_MIN
 from .verify_time import leg_mode
 
 KST = timezone(timedelta(hours=9))
-PLAN_VERSION = "plan-v2.2"   # 58 — modes 에 bike 를 주면 자전거 후보를 싣는다 · 기본(bike 없음)은 v2.1 과 같다 · 모양 무변경
+PLAN_VERSION = "plan-v2.4"   # 87 — 지하철+버스 혼합 후보(환승 1회 · A 버스→지하철 · B 지하철→버스) · 지하철만·버스만 후보는 v2.3 과 같다
+# (v2.3 · 86) 가장 이른 도착 모드(Planner.earliest · earliest_on_late) 추가 · 기본 호출 결과는 v2.2 와 같다
+# (v2.2 · 58) modes 에 bike 를 주면 자전거 후보를 싣는다 · 기본(bike 없음)은 v2.1 과 같다 · 모양 무변경
 # 56 (2026-09-27 · 본인) — modes 를 안 주면 지하철·버스·도보. 자전거는 modes 에 "bike" 를 줄 때만(48 결정 8 · ◆선호 「요청 시만」).
 #   뺄 때는 **후보 생성 전에** 끊는다(아래 Planner — 따릉이 실시간·GraphHopper 호출 0).
 DEFAULT_MODES = ("subway", "bus", "walk")
@@ -66,6 +69,42 @@ STATION_PAIR_MODE = "first_feasible"
 STATION_BLOCKED_CODE = "no_service"
 #: 역 짝 순번별 후보 번호(_n) 간격 — 동률 깨기 순서만(가까운 짝 우선). 식별은 _key 가 한다
 PAIR_N_STEP = 1000
+#: ☆`[2026-10-01 83 E2 · 86]` 가장 이른 도착(Planner.earliest) — 앞 일정 끝에 바로 떠났을 때 수단 후보마다 나온
+#:   「성립하는 가장 이른 도착 목표」를 이른 순으로 몇 개까지 leg() 로 다시 확인하나. 확인은 기존 leg() 그대로라
+#:   값·식(starts_at = 목표 − (eta + @) − slack)이 역산 모드와 같다. 규칙 값이 아니라 호출 횟수 상한(성능)이다.
+#:   (GPT 86 Q2) 목표 사이 틈도 본다 — 목표 t 마다 t, t+1, …, t+EARLIEST_FILL_MIN 을 이른 순으로 확인하고, 확인 호출은
+#:   EARLIEST_TRIES 번까지. 다 쓰고도 못 찾으면 「불성립」이 아니라 「탐색 한도로 미확인」(EARLIEST_UNCONFIRMED)으로 낸다.
+EARLIEST_TRIES = 6
+EARLIEST_FILL_MIN = 2
+#: (GPT 86 Q1) 앞 일정 끝에 바로 떠나면 불가지만 **기다리면** 되는 판정기 이유 — 첫차 전 · 다음 편까지 공백 상한 초과 ·
+#:   막차 뒤(다음 운행일 첫차). 이 소스는 출발을 뒤로 옮겨 본다(_after_wait).
+EARLIEST_WAIT_CODES = frozenset({"before_first", "service_gap", "after_last"})
+#: 출발을 뒤로 옮겨 보는 첫 칸(분)과 상한(분) — 두 배씩(15·30·…·480). 상한 8시간 = 막차 뒤(00:30 무렵) 끝나도 다음
+#:   첫차(05:30 무렵)까지 닿는다. 규칙 값이 아니라 탐색 범위(성능)다. 넘으면 「탐색 한도로 미확인」.
+EARLIEST_WAIT_STEP = 15
+EARLIEST_WAIT_MAX_MIN = 480
+#: 못 찾았지만 불성립을 확인한 것은 아닐 때의 이유 코드 — 탐색 한도·중단·생성 목표 밖(불성립과 구분 · GPT 86 Q2·R2)
+EARLIEST_UNCONFIRMED = "earliest_unconfirmed"
+#: leg(earliest_on_late=True) 가 earliest 를 붙이는 실패 이유 — **시각 때문에** 못 맞춘 것만(GPT 86 Q7 · 적용 범위).
+#:   역·후보·데이터가 없어서(no_data · no_service 등) 못 만든 구간은 기다려도 안 되므로 붙이지 않는다.
+EARLIEST_ON_CODES = frozenset({"arrive_late"}) | EARLIEST_WAIT_CODES
+#: ☆`[2026-10-01 87 · 12 전달]` 지하철+버스 혼합 후보(⑤ · _mixed). 판정은 판정기(verify_case)가 하고 여기 값은 **얼마나 판정에
+#:   넣나**(성능)만 정한다 — 규칙 값이 아니다. 상한(혼합_최대)·노선당 끊는 지점(혼합_끊는_지점_최대)은 규칙 변경안(candidates.py).
+#:   · 생성 추정(est)이 지하철만·버스만 후보의 가장 좋은 값보다 소요 MIX_EST_TOL_MIN 분 · 도보 MIX_WALK_TOL_MIN 분 넘게 뒤지고 환승도
+#:     적지 않으면 판정에 넣지 않는다(추정으로도 앞설 축이 없다). 판정에 넣는 혼합 후보는 구간마다 MIX_VERIFY_MAX 개까지(추정 소요 순).
+MIX_VERIFY_MAX = 3
+MIX_EST_TOL_MIN = 3
+MIX_WALK_TOL_MIN = 1
+#: 버스 운행 시간 거르기 여유(분) — 구간 [도착 목표 − 추정 소요, 도착 목표] 가 그 노선 첫차~막차 ±이 값과 안 겹치면 판정하지 않는다
+MIX_WINDOW_TOL_MIN = 60
+#: 혼합 후보 마지막 성립 출발 찾기(_mix_latest) 판정 호출 상한(성능)
+MIX_LFD_STEPS = 10
+#: 빠른 길 첫 출발이 이 이유로 불가면 판정기 역산(느린 길)으로 넘긴다 — 출발을 당기면 될 수 있는 이유(GPT 87 #1)
+MIX_SLOW_CODES = frozenset({"after_last", "service_gap"})
+#: 첫 성립 출발의 판정 소요로 「앞설 축 없음」을 미리 볼 때의 여유(분) — 마지막 성립 출발에서는 대기만큼 소요가 줄 수 있다
+MIX_PROBE_TOL_MIN = 10
+#: 혼합 후보 _n 시작(동률 깨기 순서 — 도보 0 · 지하철 짝 · 버스 100 · 자전거 200 다음)
+MIX_N_BASE = 300
 # 58 (2026-09-27 · ◆테마 ① 자전거 살림 · 본인) — 자전거 후보의 출발 시각 규칙(_bike_direct).
 #   판정기는 시간표 없는 수단의 마지막 성립 출발(lfd)을 None 으로 낸다(verify_time._last_feasible_depart — 무수정).
 #   따릉이는 24시간(rules bike.ddareungi.no_timetable · 확정)이라 「마지막 편」이 없고 소요가 출발 시각에 안 달린다 →
@@ -174,6 +213,12 @@ def _is_bus(o):
     return bool(o["_legs"]) and all(leg_mode(x) == "bus" for x in o["_legs"])
 
 
+def _is_mixed(o):
+    """지하철과 버스가 섞인 후보(87 혼합)."""
+    ms = {leg_mode(x) for x in o.get("_legs") or []}
+    return {"bus", "subway"} <= ms
+
+
 
 def _multi(oa, ob):
     """장소→역 결과 둘로 verify_multi 의 multi 칸. 동명이역이면 노선군을 같이 싣는다(55 ④)."""
@@ -221,6 +266,23 @@ class Planner:
         if self.disruptions:
             case = dict(case, disruptions=list(self.disruptions))
         return self.v.verify_case(case)
+
+    def _vcq(self, case):
+        """마지막 성립 출발 역산(lfd)을 끈 판정기 사본으로 판정 — 혼합 후보 전용(87). 판정·이유·소요·@·여유는 같고
+        last_feasible_depart_min 만 비운다. 버스가 첫 구간인 후보는 판정기 역산이 도착 목표부터 1분씩 내려가며 전 구간을
+        다시 판정해(구간당 수 초) 여기서 직접 찾는다(_mix_latest · plan_estimate 가 lfd 를 끄는 것과 같은 방식)."""
+        if getattr(self, "_vq", None) is None:
+            q = copy.copy(self.v)
+            if q is self.v:
+                self._vq = False          # 복사본을 못 만들면(시험의 복사 끔 등) 공유 판정기를 바꾸지 않는다 — lfd 켠 채로
+            else:
+                q.lfd_enabled = False
+                self._vq = q
+        if self._vq is False:
+            return self._vc(case)
+        if self.disruptions:
+            case = dict(case, disruptions=list(self.disruptions))
+        return self._vq.verify_case(case)
 
     def _walk_limit(self, party):
         return self.v._walk_limit(party)
@@ -412,6 +474,306 @@ class Planner:
                  "_check": {"date": sdate.isoformat(), "legs": legs, "off": 0, "walk_place_in": 0,
                             "walk_place_out": 0, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": arrive_by}}], None
 
+    # ── ⑤ 지하철+버스 혼합(87 · 12 전달 · 85 E1 2단) ─────────────────────────────
+    def _mix_gen(self, party, first_visit):
+        """혼합 후보 생성기 — 버스·역 좌표·지하철 그래프가 다 있고 modes 에 지하철·버스가 둘 다 있을 때만. 사고 조건 중 운행
+        중단 노선은 지하철 탐색에서 피하고(avoid_lines), 무정차 역은 그 노선으로 끊지 않는다(skip_at) — 판정은 판정기가 한다."""
+        v = self.v
+        if v.bus is None or v.sc is None or not {"subway", "bus"} <= self.modes:
+            return None
+        lim, _ = v._party_limit(party)
+        avoid = {d.get("line") for d in self.disruptions if d.get("kind") == "line_closed" and d.get("line")}
+        skip = {(d.get("line"), d.get("station")) for d in self.disruptions
+                if d.get("kind") == "station_skip" and d.get("line") and d.get("station")}
+
+        ride = ride_estimator(v)
+        self._ride_est = ride
+        radius = v.rv("alternatives", "정류장_반경_m")
+        return MixedGenerator(
+            v.candidate_graph(first_visit), v.bus, v.sc, v.ex, radius_m=radius, near_m=radius,
+            cuts=mix_rule(v.R, "혼합_끊는_지점_최대", MIX_CUTS_PER_ROUTE_PROPOSED), tlim=lim,
+            excluded=v.rv("bus", "route_type_제외") or [], ride_min=ride,
+            wayfinding=v.R["transfer"]["wayfinding_addition_min"]["value"] if first_visit else 0,
+            walk_speed=self.speed, detour=self.detour, avoid_lines=avoid, skip_at=skip)
+
+    def _mixed_one(self, mc, i, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, best=None):
+        ratio = self.v.R["candidates"]["허용_소요_배수"]["value"]
+        """혼합 후보 하나를 판정기로 — 마지막 성립 출발(lfd) 역산 → 그 출발로 다시 판정 → 식 확인(버스 직행 _bus_direct 와 같은 순서).
+        (후보 dict, None) 또는 (None, 뺀 이유 dict)."""
+        v = self.v
+        legs = mc.legs
+        wi, wo = self._walk(mc.walk_in_m), self._walk(mc.walk_out_m)
+        st_date, by_stop = service_day(arrive_dt - timedelta(minutes=wo))
+        off = (st_date - sdate).days * MIN_DAY
+        key = ("mix", 0 if mc.shape == "A" else 1, i)
+        ref = {"_legs": legs, "_walk_m": None, "_n": MIX_N_BASE + i, "_key": key, "_route": label_of(legs)}
+
+        def drop(code, reason):
+            return None, {"_o": ref, "label": ref["_route"], "code": code, "reason": f"혼합 {mc.shape} — {reason}"}
+        if by_stop < SERVICE_DAY_START_MIN:
+            return drop("no_last_departure", "도착 목표가 04:00 전(운행일 경계)이라 보지 않는다")
+        base = {"id": f"{case_id}/mix{i}", "date": st_date.isoformat(), "stage": self.stage, "legs": legs,
+                "arrive_by": by_stop, "party": party, "first_visit": first_visit, "no_alternatives": True}
+        link_min = math.ceil(mc.link_m * self.detour / self.speed / 60)
+        walk_min = wi + wo + link_min + (mc.sub_walk_min or 0)
+
+        def hopeless(o):
+            """첫 성립 출발의 판정 소요로 봐도 지하철만·버스만 후보보다 앞설 축이 없다(소요는 마지막 성립 출발에서 대기만큼 줄 수
+            있어 MIX_PROBE_TOL_MIN 을 둔다) — 마지막 성립 출발을 끝까지 찾지 않는다(성능)."""
+            if best is None or o.get("eta_min") is None:
+                return False
+            eta = wi + o["eta_min"] + wo - MIX_PROBE_TOL_MIN
+            return eta > best[0] * ratio or (eta >= best[0] and mc.transfers >= best[1] and walk_min >= best[2])
+        lfd, r2, why = self._mix_latest(base, by_stop, mc.est_min - wi - wo, hopeless)
+        if lfd is None and why == "hopeless":
+            o = r2.out or {}
+            return drop("mix_dominated", f"지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다(첫 성립 출발 판정: "
+                                         f"소요 {wi + o['eta_min'] + wo}분 vs {best[0]} · 환승 {mc.transfers} vs {best[1]} · "
+                                         f"도보 {walk_min}분 vs {best[2]})")
+        if lfd is None:
+            return drop("no_last_departure", "마지막 성립 출발을 찾지 못했다 — " + why)
+        o2 = r2.out or {}
+        if o2.get("verdict") != "feasible" or o2.get("eta_min") is None or (o2.get("slack_min") or 0) < 0:
+            return drop("not_confirmed", "역산 출발로 다시 판정하니 성립이 아니다 — " + (o2.get("reason") or r2.reason or ""))
+        eta = int(wi + o2["eta_min"] + wo)
+        start = lfd - wi + off
+        margin, slack = o2.get("margin_min") or 0, o2.get("slack_min") or 0
+        if start + eta + margin + slack != arrive_by:
+            return drop("formula_mismatch", f"출발 {start} + 소요 {eta} + 여유 {margin} + 남는 {slack} ≠ 도착 목표 {arrive_by}")
+        # 도보 — 장소↔정류장/역(직선×우회) + 정류장↔역 환승(판정기와 같은 식 · 같은 출구 기준 직선 · 위 walk_min) + 지하철 안 환승(거리표 m)
+        sub = [x for x in legs if leg_mode(x) == "subway"]
+        inner = O.transfer_walk_m(v, sub) if len(sub) > 1 else (0.0 if sub else None)
+        walk_m = None if inner is None else (mc.walk_in_m + mc.walk_out_m + mc.link_m) * self.detour + inner
+        return {"eta_min": eta, "uses": uses_of(legs), "_legs": legs, "_route": label_of(legs), "_start": start,
+                "_transfers": mc.transfers, "_n": MIX_N_BASE + i, "_key": key, "_margin": margin, "_slack": slack,
+                "_walk_min": walk_min, "_walk_m": walk_m,
+                "_fare": O.fare_of(v, legs, r2.legs), "_severe": O.severe_hits(r2.warnings),
+                "_covered": O.congestion_checked(v, legs, r2.legs, st_date, r2.day_type),
+                "_lr": r2.legs, "_day_type": r2.day_type, "_shape": mc.shape,
+                "_check": {"date": st_date.isoformat(), "legs": legs, "off": off, "walk_place_in": wi,
+                           "walk_place_out": wo, "walk_stop_in": 0, "walk_stop_out": 0, "by_station": by_stop,
+                           "fast": True}}, None
+
+    def _mix_latest(self, base, by, est, hopeless=None):
+        """혼합 후보의 **마지막 성립 출발**(판정기 lfd 와 같은 뜻 — 그 출발에서 최악 도착 + 버퍼 ≤ 도착 목표인 가장 늦은 분).
+        (lfd, 그 출발의 판정 답, 못 찾은 이유) · 이유 "hopeless" = 부르는 쪽 판단으로 끝까지 찾지 않음.
+
+        빠른 길(판정기 사본 _vcq · lfd 끔): 추정 소요로 첫 출발을 잡고 → 성립이면 여유(slack)만큼 늦춰 불성립 자리를 찾고 →
+        불성립이면 넘친 만큼 당긴다 → 성립·불성립 이웃(1분 차)이 될 때까지 이분. 이 길은 **성립이 출발 시각에 단조**(늦게 떠나면
+        늦게 닿는다)일 때만 판정기 역산과 같은 분을 낸다 — 판정기 역산은 위에서부터 1분씩(지하철 첫 구간은 편성마다) 내려와
+        **처음 성립하는 분**을 고르므로 비단조 구간에서도 「가장 늦은」 것이 맞고, 이분은 그 보장이 없다(GPT 87 #1).
+        ☆ 그래서 빠른 길이 결론을 못 내면 **판정기 역산(느린 길 · _vc)으로 넘긴다**: 첫 출발이 늦어서가 아닌 이유로 불가(막차 뒤 ·
+          첫차 전 · 공백 · 근거없음 — 당기면 될 수도 있다) · 호출 한도(MIX_LFD_STEPS) 안에 이웃을 못 만듦 · 04:00 경계.
+          빠른 길이 이웃을 찾았을 때만 그 값을 쓴다(비단조로 더 늦은 성립이 위에 있으면 놓칠 수 있다 — 낸 출발은 재판정으로
+          성립 확인된 값이라 늦게 떠나는 일은 없다 · 일찍 떠나는 쪽으로만 틀린다 · 시험: 실데이터 A·B 에서 판정기 lfd 와 같음)."""
+        n = [0]
+
+        def at(t):
+            n[0] += 1
+            r = self._vcq(dict(base, depart_at=t))
+            o = r.out or {}
+            ok = o.get("verdict") == "feasible" and o.get("eta_min") is not None and (o.get("slack_min") or 0) >= 0
+            return ok, r, o
+
+        def slow(why):
+            """판정기 역산 — 위에서부터 첫 성립(판정기 lfd 그대로). 그 출발을 사본으로 다시 판정해 같은 모양으로 돌려준다."""
+            r1 = self._vc(dict(base, depart_at=max(SERVICE_DAY_START_MIN, by - 180)))
+            lfd = (r1.out or {}).get("last_feasible_depart_min")
+            if lfd is None:
+                return None, None, (r1.out or {}).get("reason") or r1.reason or why
+            ok, r, o = at(lfd)
+            return (lfd, r, "") if ok else (None, None, o.get("reason") or r.reason or why)
+
+        t = max(SERVICE_DAY_START_MIN, int(by - math.ceil(max(est, 1))))
+        good, bad, why = None, None, ""
+        while n[0] < MIX_LFD_STEPS:                         # ① 성립하는 출발 하나 — 넘친 만큼 당긴다
+            ok, r, o = at(t)
+            if ok:
+                good = (t, r, o)
+                if hopeless is not None and hopeless(o):
+                    return None, r, "hopeless"              # 끝까지 찾아도 실리지 않는다(부르는 쪽 판단) — 여기서 멈춘다
+                break
+            bad, why = t, (o.get("reason") or r.reason or "")
+            w = o.get("arrive_worst_min")
+            over = None if w is None else int(w + (o.get("buffer_min") or 0) - by)
+            if over is None or over <= 0:
+                # 늦어서가 아니다. 당기면 될 수 있는 이유(막차 뒤 · 다음 편 공백)만 판정기 역산으로 넘긴다 — 환승 도보 상한 ·
+                #   근거없음 · 첫차 전(당기면 더 이르다) 등은 출발 시각을 바꿔도 같아서 느린 길을 타지 않는다
+                return slow(why) if o.get("code") in MIX_SLOW_CODES else (None, None, why)
+            t -= over
+            if t < SERVICE_DAY_START_MIN:
+                return slow(why)
+        if good is None:
+            return slow(why or "탐색 한도 안에서 성립 출발 없음")
+        while bad is None and n[0] < MIX_LFD_STEPS:         # ② 그 위 불성립 자리 — 여유만큼 늦춘다
+            t2 = good[0] + max(1, int(good[2].get("slack_min") or 0))
+            ok, r, o = at(t2)
+            if ok:
+                good = (t2, r, o)
+            else:
+                bad = t2
+        while bad is not None and bad - good[0] > 1 and n[0] < MIX_LFD_STEPS:   # ③ 이분
+            mid = (good[0] + bad) // 2
+            ok, r, o = at(mid)
+            if ok:
+                good = (mid, r, o)
+            else:
+                bad = mid
+        if bad is None or bad - good[0] > 1:
+            return slow("")                                 # 한도 안에 이웃을 못 만듦 — 「가장 늦은」 확인이 안 됐다
+        return good[0], good[1], ""
+
+    def _phys_set(self, stations):
+        """장소 쪽 역 목록 [(역명, m, 노선군)] → 물리적 역 키 — 혼합이 끊지 않을 역(지하철 후보가 이미 그 역에서 타고 내린다)."""
+        out = set()
+        for nm, _d, ls in stations or []:
+            rec = self.v.sc.resolve(nm, ls)
+            out.add(self.v.sc.phys_key(rec) if rec is not None else nm)
+        return out
+
+    def _in_service(self, mc, lo, hi):
+        """그 버스를 [lo, hi] 무렵 탈 수 있어 보이나(탐색 순서용 추정 — 판정 아님 · GPT 87 #4). 승차 정류장 통과 시각 =
+        기점 첫차·막차 + 기점→승차 정류장 승차 추정(ride_estimator) · ±MIX_WINDOW_TOL_MIN · 다음 운행일(+1440)도 본다."""
+        bus = self.v.bus
+        r = bus.by_id.get(getattr(mc, "route_id", None)) if bus is not None else None
+        if r is None or r.first_min is None or r.last_min is None:
+            return True
+        rows = bus.stops.get(r.route_id, [])
+        off = 0.0
+        ride = getattr(self, "_ride_est", None)
+        if ride is not None and rows and getattr(mc, "board", None) is not None:
+            off = ride(r, rows[0], mc.board) or 0.0
+        for day in (0, MIN_DAY):
+            first = r.first_min + off + day - MIX_WINDOW_TOL_MIN
+            last = r.last_min + off + day + MIX_WINDOW_TOL_MIN
+            if not (first > hi or last < lo):
+                return True
+        return False
+
+    def _mixed(self, a_place, b_place, sa, sb, arrive_dt, sdate, arrive_by, party, first_visit, case_id, wlim, opts, left):
+        """⑤ 혼합 후보(87). A = 장소 a 근처 정류장 → 버스 → 역 앞에서 내려 → 지하철 → 장소 b 도보 상한 안 역(sb) ·
+        B = 장소 a 도보 상한 안 역(sa) → 지하철 → 역 앞 정류장 → 버스 → 장소 b 근처 정류장. 끊는 역은 지하철 후보가 그 장소에서
+        이미 본 역(A = sa · B = sb)만 뺀다(GPT 87 #6). **지하철만·버스만 후보(opts)보다 소요·환승·도보 중 하나라도 앞설 때만 싣고**,
+        뒤지면 left(`mix_dominated`) · 상한(혼합_최대)을 넘으면 left(`mix_cap`). 사고로 장소 b 쪽 걸어갈 역이 모두 막히면(sb 빈 목록)
+        B 가 그 구간의 대안이 된다(85 E1 2단)."""
+        gen = self._mix_gen(party, first_visit)
+        if gen is None:
+            return []
+        ca = (gen.bus_to_subway(a_place["lat"], a_place["lon"], [(nm, ls, d) for nm, d, ls in sb], wlim,
+                                excl_st=self._phys_set(sa)) if sb else [])
+        cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
+                                excl_st=self._phys_set(sb)) if sa else [])
+        cands = interleave(ca, cb)          # 두 모양을 번갈아 — 판정 상한 안에서 한 모양만 보지 않게
+        # 운행 시간 추정 밖(심야버스 낮 구간 등)은 **뒤로 미룬다**(GPT 87 #4 — 판정 전 확정 탈락이 아니라 탐색 순서) — 안쪽 후보가
+        #   하나도 없을 때만 판정한다(밖 후보는 판정기가 대개 첫차 전·막차 뒤로 내고, 그 마지막 성립 출발 찾기는 느린 길이다)
+        win = [mc for mc in cands if self._in_service(mc, arrive_by - mc.est_min - MIX_WINDOW_TOL_MIN, arrive_by)]
+        out_win = [mc for mc in cands if mc not in win] if win else []
+        cands = win or cands
+        if gen.skipped_airport:
+            left.append({"_o": {"_legs": []}, "label": "공항버스(공항행) 혼합", "code": "no_data",
+                         "reason": f"공항으로 가는 공항버스({', '.join(sorted(set(gen.skipped_airport))[:5])}) — 공항행 시각 근거가 "
+                                   "판정기에 없어(37) 혼합 후보로 만들지 않는다"})
+        if not cands:
+            return []
+        base = [o for o in opts if o["_legs"] and not _is_mixed(o) and not any(leg_mode(x) == "bike" for x in o["_legs"])]
+        best = ((min(o["eta_min"] for o in base), min(o["_transfers"] for o in base), min(o["_walk_min"] for o in base))
+                if base else None)
+        mmax = mix_rule(self.v.R, "혼합_최대", MIX_MAX_PROPOSED)
+        ratio = self.v.R["candidates"]["허용_소요_배수"]["value"]
+        kept, n_ver, n_est, n_cap, n_none = [], 0, 0, 0, 0
+        n_win = len(out_win)
+        for i, mc in enumerate(cands):
+            if len(kept) >= mmax or n_ver >= MIX_VERIFY_MAX:
+                n_cap += 1
+                continue
+            if not gen.materialize(mc):
+                n_none += 1           # 환승 상한 안에서 지하철 구간열을 못 찾았다(생성기 추정 표와 실제 탐색이 다른 드문 경우)
+                continue
+            if best is not None:
+                est_walk = (mc.walk_in_m + mc.walk_out_m + mc.link_m) * self.detour / self.speed / 60 + (mc.sub_walk_min or 0)
+                if mc.est_min > best[0] * ratio + MIX_EST_TOL_MIN or not (
+                        mc.est_min < best[0] + MIX_EST_TOL_MIN or mc.transfers < best[1]
+                        or est_walk < best[2] + MIX_WALK_TOL_MIN):
+                    n_est += 1
+                    continue
+            n_ver += 1
+            o, why = self._mixed_one(mc, i, a_place, b_place, arrive_dt, sdate, arrive_by, party, first_visit, case_id, best)
+            if o is None:
+                left.append(why)
+                continue
+            if best is not None and o["eta_min"] > best[0] * ratio:
+                left.append({"_o": o, "label": o["_route"], "code": "mix_dominated",
+                             "reason": f"혼합 {mc.shape} — 소요 {o['eta_min']}분이 가장 짧은 지하철만·버스만 후보 {best[0]}분 × "
+                                       f"허용_소요_배수 {ratio:g} 를 넘는다(환승·도보가 적어도 대표안이 아니다)"})
+                continue
+            if best is not None and not (o["eta_min"] < best[0] or o["_transfers"] < best[1] or o["_walk_min"] < best[2]):
+                left.append({"_o": o, "label": o["_route"], "code": "mix_dominated",
+                             "reason": f"혼합 {mc.shape} — 지하철만·버스만 후보보다 소요·환승·도보 어느 축에서도 앞서지 않는다 "
+                                       f"(소요 {o['eta_min']}분 vs {best[0]} · 환승 {o['_transfers']} vs {best[1]} · "
+                                       f"도보 {o['_walk_min']}분 vs {best[2]})"})
+                continue
+            kept.append(o)
+        if n_none:
+            left.append({"_o": {"_legs": []}, "label": f"그 밖 혼합 후보 {n_none}개", "code": "mix_no_subway",
+                         "reason": "환승 상한 안에서 지하철 쪽 구간열을 찾지 못했다"})
+        # ☆(GPT 87 #5) 판정 전에 건너뛴 후보는 「뒤진다」로 확정하지 않는다 — 추정(est · 운행 시간)은 하한이 아니다. 코드도 따로.
+        if n_win:
+            left.append({"_o": {"_legs": []}, "label": f"그 밖 혼합 후보 {n_win}개", "code": "mix_skipped",
+                         "reason": f"추정 기반 탐색 생략 — 승차 정류장 운행 시간(추정 ±{MIX_WINDOW_TOL_MIN}분) 밖이라 안쪽 후보를 먼저 판정했다(불가 확정 아님)"})
+        if n_est:
+            left.append({"_o": {"_legs": []}, "label": f"그 밖 혼합 후보 {n_est}개", "code": "mix_skipped",
+                         "reason": "추정 기반 탐색 생략 — 생성 추정으로 지하철만·버스만 후보보다 앞설 축이 안 보여 판정하지 않았다(뒤진다고 확정한 것 아님)"})
+        if n_cap:
+            left.append({"_o": {"_legs": []}, "label": f"그 밖 혼합 후보 {n_cap}개", "code": "mix_cap",
+                         "reason": f"혼합 상한 {mmax}개(싣는 것) · 판정 {MIX_VERIFY_MAX}개(구간마다)를 넘어 판정하지 않았다 — A·B 번갈아 생성 추정 소요 순(불가 확정 아님)"})
+        return kept
+
+    def _mixed_sources(self, a_place, b_place, sa, sb, nb, party, first_visit, wlim):
+        """가장 이른 도착(86) 목표 생성용 혼합 후보 — 앞 일정 끝(nb) 무렵 운행하는 노선 · 구간열이 나오는 것 · 추정 소요 순
+        MIX_VERIFY_MAX 개. 생성기가 없으면 []."""
+        gen = self._mix_gen(party, first_visit)
+        if gen is None:
+            return []
+        ca = (gen.bus_to_subway(a_place["lat"], a_place["lon"], [(nm, ls, d) for nm, d, ls in sb], wlim,
+                                excl_st=self._phys_set(sa)) if sb else [])
+        cb = (gen.subway_to_bus([(nm, ls, d) for nm, d, ls in sa], b_place["lat"], b_place["lon"], wlim,
+                                excl_st=self._phys_set(sb)) if sa else [])
+        cands = interleave(ca, cb)
+        # (GPT 87 #4) 거르지 않고 순서만 — 앞 일정 끝(nb)부터 대기 상한까지(다음 운행일 첫차 포함) 탈 수 있어 보이는 노선을 먼저
+        hi = nb + EARLIEST_WAIT_MAX_MIN
+        cands = ([mc for mc in cands if self._in_service(mc, nb, hi + mc.est_min)]
+                 + [mc for mc in cands if not self._in_service(mc, nb, hi + mc.est_min)])
+        out = []
+        for mc in cands:
+            if len(out) >= MIX_VERIFY_MAX:
+                break
+            if gen.materialize(mc):
+                out.append(mc)
+        return out
+
+    @staticmethod
+    def _rank(o):
+        """계획 수단 순서 — **가장 늦게 떠나도 되는 후보**(동률은 환승 적은 · 소요 짧은 · 생성 순). 순위가 아니라 「일정대로
+        움직이게」 하나를 고르는 규칙이다. 나머지는 options 에 순위 없이 남는다."""
+        return (o["_start"], -o["_transfers"], -o["eta_min"], -o["_n"])
+
+    @classmethod
+    def _choose_planned(cls, opts, nb, recheck):
+        """(계획 수단, nb 재판정으로 살아난 후보들) 또는 (None, []). 한 무리 안에서는 앞 판 그대로 — 자격(_start ≥ nb) 후보가 있으면
+        그중 _rank 최대, 없으면 무리 전부를 nb 에서 재판정(recheck(o) → 갱신 후보 또는 None)해 살아난 것 중 최대.
+        무리 순서: ① 지하철만·버스만·도보·자전거(앞 판 후보) ② 혼합(87) — ① 에서 하나라도 나오면 ② 는 안 본다(추가만).
+        앞 일정 끝보다 이른 _start 후보도 **버리지 않고** 재판정까지 둔다(GPT 23 2차 #1 — 역산이 실제보다 이르게 나왔을 수 있다)."""
+        for group in ([o for o in opts if not _is_mixed(o)], [o for o in opts if _is_mixed(o)]):
+            if not group:
+                continue
+            eligible = [o for o in group if nb is None or o["_start"] >= nb]
+            if eligible:
+                return max(eligible, key=cls._rank), []
+            revived = [g for g in (recheck(o) for o in group) if g is not None]
+            if revived:
+                return max(revived, key=cls._rank), revived
+        return None, []
+
     def _fold_left(self, left):
         """뺀 후보 목록 정리 — 버스 직행은 도보 짧은 순으로 상한(버스_직행_최대)개만 한 줄씩 적고 나머지는 코드별 개수 한 줄로
         접는다(판정기 bus_rejected 와 같은 뜻 · 역 앞 노선이 많은 곳에서 목록이 덮이지 않게). 내부 참조(_o)는 뺀다."""
@@ -433,7 +795,8 @@ class Planner:
         if ck is None:
             return None, "infeasible"
         dep = start + ck["walk_place_in"] - ck["off"] + ck["walk_stop_in"]
-        r = self._vc({"id": f"{case_id}/at{start}", "date": ck["date"], "stage": self.stage,
+        vc = self._vcq if ck.get("fast") else self._vc          # 87 — 혼합 후보는 lfd 를 끈 사본(결과 칸은 같다)
+        r = vc({"id": f"{case_id}/at{start}", "date": ck["date"], "stage": self.stage,
                                 "legs": ck["legs"], "depart_at": dep,
                                 "arrive_by": ck["by_station"] - ck["walk_stop_out"],
                                 "party": party, "first_visit": first_visit, "no_alternatives": True})
@@ -534,7 +897,334 @@ class Planner:
                                     "walk_stop_out": c["walk_out_min"], "by_station": by_station}})
         return opts, r, n_mode
 
-    def leg(self, a_place, b_place, arrive_dt, party, first_visit, case_id, not_before_dt=None):
+    @staticmethod
+    def _floor_min(not_before_dt):
+        """앞 일정 끝 → (운행일, 운행일 분) · 분 **올림**(09:47:30 에 끝나면 09:48 부터 · leg() 와 같은 규칙)."""
+        up = not_before_dt.astimezone(KST)
+        if up.second or up.microsecond:
+            up = up.replace(second=0, microsecond=0) + timedelta(minutes=1)
+        return service_day(up)
+
+    def _station_pairs(self, a_place, b_place, wlim):
+        """(GPT 86 Q3) 역 목록·역 짝 — leg() 와 earliest 가 같이 쓴다. (sa, sb, pairs).
+        pairs = [(ia, ib, 역a, 역b)] 가까운 짝부터((0,0) 이 늘 먼저) · 역이 없거나 양쪽 첫 역이 같으면 [](이유는 leg() 가 만든다).
+        ★ 탐색 중단 정책은 쓰는 쪽이 정한다 — leg() 는 실을 수 있는 짝에서 멈추고(STATION_PAIR_MODE), 가장 이른 도착
+          목표 생성(_earliest_targets)은 짝 전부를 본다(목표 후보를 넓게 · 확인은 leg() 가 한다)."""
+        sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+        if not sa or not sb or same_station(sa[0][0], sa[0][2], sb[0][0], sb[0][2]):
+            return sa, sb, []
+        pairs = [(ia, ib, x, y) for ia, x in enumerate(sa) for ib, y in enumerate(sb)
+                 if not same_station(x[0], x[2], y[0], y[2])]
+        pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0) 이 늘 먼저 — 앞 판과 같은 첫 짝
+        return sa, sb, pairs
+
+    def _earliest_targets(self, a_place, b_place, not_before_dt, party, first_visit, case_id):
+        """앞 일정 끝(not_before_dt)에 **바로 떠났을 때** 수단 후보마다 성립하는 가장 이른 도착 목표(분 · 앞 일정 끝의
+        운행일 축). 도착 목표 = 예정 도착 + @(margin — 버퍼 + 최악 폭) — leg() 의 식에서 slack 0 인 자리다.
+        후보 공간은 leg() 와 같다(도보 직행 · 역 짝마다 다목적 후보(버스 섞인 것·자전거 뺌) · 장소 기준 버스 직행 ·
+        modes 에 bike 가 있으면 자전거). 판정은 판정기가 한다(depart_at 만 주고 arrive_by 없이). 이른 순 정렬 · 중복 뺌.
+        ☆(GPT 86 #1) 앞 일정 끝이 **첫차 전**이면 판정기는 후보를 `before_first`(불가)로 낸다 — 성립만 받으면 「첫차까지
+        기다렸다 떠나는」 경로를 놓친다. 그 소스는 출발을 뒤로 옮겨(_after_first) 첫 성립 출발을 찾아 그 도착을 쓴다
+        (첫차 전에 떠나도 첫차를 타므로 도착이 같다)."""
+        from .geo import meters
+        v = self.v
+        sdate, nb = self._floor_min(not_before_dt)
+        wlim = self._walk_limit(party)
+        buf = v.rv("buffer", "by_stage", self.stage)
+        base = datetime.combine(sdate, time(0, 0), tzinfo=KST)
+
+        def at(m, walk):
+            """앞 일정 끝 축의 출발 분 m(+접근 도보) → (판정 날짜, 그 운행일 분, 축 차이). 04:00 을 넘으면 다음 운행일."""
+            d2, m2 = service_day(base + timedelta(minutes=int(m + walk)))
+            return d2.isoformat(), m2, (d2 - sdate).days * MIN_DAY
+
+        rec = {"on": False, "fails": []}       # (R3) 불가 이유는 소스마다 앞 일정 끝 출발(f(nb)) 한 번만 모은다
+
+        def note(o):
+            if rec["on"] and o.get("code"):
+                rec["fails"].append((o["code"], o.get("reason") or ""))
+
+        def got(o, add):
+            """판정기 밖 판 → (도착 목표 분 또는 None, 기다리면 될 수 있는 불가인가)."""
+            if o.get("verdict") == "feasible" and o.get("arrive_min") is not None and o.get("margin_min") is not None:
+                return int(o["arrive_min"] + add + o["margin_min"]), False
+            note(o)
+            return None, o.get("code") in EARLIEST_WAIT_CODES
+
+        sources = []
+        direct = meters(a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"])
+        if direct <= wlim and "walk" in self.modes:
+            wm, no_path = self._walk_net(a_place, b_place, direct)
+            if not no_path:
+                walk_t = max(1, math.ceil(wm / self.speed / 60)) + buf
+                sources.append(lambda m: ([m + walk_t], False))
+        sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
+        for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
+            def rail(m, pi=pi, xa=xa, xb=xb):
+                wa, wb = self._walk(xa[1]), self._walk(xb[1])
+                day, dm, off = at(m, wa)
+                r = self._vc({"id": f"{case_id}~e{pi}@{m}", "date": day, "stage": self.stage, "depart_at": dm,
+                              "multi": _multi(xa, xb), "party": party, "first_visit": first_visit})
+                ts, wait = [], False
+                for c in r.candidates or []:
+                    if any(leg_mode(x) in ("bike", "bus") for x in c["legs"]):
+                        continue          # leg() ② 와 같다 — 버스는 장소 기준(아래) · 자전거는 장소 기준(아래)
+                    if any(leg_mode(x) not in self.modes for x in c["legs"]):
+                        continue
+                    t, w = got(c.get("out") or {}, wb)
+                    if t is not None:
+                        ts.append(t + off)
+                    wait = wait or w
+                return ts, wait
+            sources.append(rail)
+        if v.bus is not None and "bus" in self.modes:
+            radius = v.rv("alternatives", "정류장_반경_m")
+            excluded = v.rv("bus", "route_type_제외") or []
+            for i, (r_, x, y, _span, da, db) in enumerate(v.bus.routes_between(
+                    a_place["lat"], a_place["lon"], b_place["lat"], b_place["lon"], radius)):
+                if r_.route_type_nm in excluded or max(da, db) > wlim:
+                    continue
+                def bus(m, i=i, legs=[{"mode": "bus", "route": r_.route_nm, "from": x["station_nm"], "to": y["station_nm"]}],
+                        wi=self._walk(da), wo=self._walk(db)):
+                    day, dm, off = at(m, wi)
+                    rr = self._vc({"id": f"{case_id}~ebus{i}@{m}", "date": day, "stage": self.stage, "legs": legs,
+                                   "depart_at": dm, "party": party, "first_visit": first_visit, "no_alternatives": True})
+                    t, w = got(rr.out or {}, wo)
+                    return ([t + off] if t is not None else []), w
+                sources.append(bus)
+        # ☆`[87]` 혼합(⑤) — leg() 와 같은 생성기 · 같은 거르기(운행 시간 · 구간열) · 추정 소요 순 MIX_VERIFY_MAX 개만 소스로
+        #   (앞설 축 거르기는 하지 않는다 — 목표 후보를 넓게, 확인은 leg() 가 한다 · 86 의 짝 전부 보기와 같은 뜻)
+        for i, mc in enumerate(self._mixed_sources(a_place, b_place, sa, sb, nb, party, first_visit, wlim)):
+            def mix(m, i=i, mc=mc, wi=self._walk(mc.walk_in_m), wo=self._walk(mc.walk_out_m)):
+                day, dm, off = at(m, wi)
+                rr = self._vcq({"id": f"{case_id}~emix{i}@{m}", "date": day, "stage": self.stage, "legs": mc.legs,
+                                "depart_at": dm, "party": party, "first_visit": first_visit, "no_alternatives": True})
+                t, w = got(rr.out or {}, wo)
+                return ([t + off] if t is not None else []), w
+            sources.append(mix)
+        if "bike" in self.modes:
+            legs = [{"mode": "bike",
+                     "from": {"lat": a_place["lat"], "lng": a_place["lon"], "name": a_place["name"]},
+                     "to": {"lat": b_place["lat"], "lng": b_place["lon"], "name": b_place["name"]}}]
+
+            def bike(m):
+                day, dm, off = at(m, 0)
+                rb = self._vc({"id": f"{case_id}~ebike@{m}", "date": day, "stage": self.stage, "legs": legs,
+                               "depart_at": dm, "party": party, "first_visit": first_visit, "no_alternatives": True})
+                o = rb.out or {}
+                if o.get("verdict") == "feasible" and o.get("eta_min") is not None and o.get("margin_min") is not None:
+                    return [int(m + o["eta_min"] + o["margin_min"])], False
+                note(o)
+                return [], o.get("code") in EARLIEST_WAIT_CODES
+            sources.append(bike)
+        ts, info = self._run_sources(sources, nb, rec)
+        return sdate, ts, info
+
+    @classmethod
+    def _run_sources(cls, sources, nb, rec):
+        """소스마다 앞 일정 끝(nb) 출발로 목표를 내고, 기다리면 될 수 있는 소스는 대기 탐색(_after_wait).
+        (정렬된 목표, {causes, stops}). rec = {"on", "fails"} — 소스 f 가 불가 이유를 rec["on"] 동안 rec["fails"] 에 적는다."""
+        ts, causes, stops, ranges = [], [], collections.Counter(), []
+        for f in sources:
+            rec["on"], rec["fails"] = True, []
+            got_ts, wait = f(nb)
+            rec["on"] = False
+            if not got_ts and rec["fails"]:
+                # (R3 · 3차 #4) 소스 하나 = 원인 한 줄 — 코드마다 그 코드의 첫 이유를 짝으로(대표 코드와 이유가 어긋나지 않게)
+                per = {}
+                for c, r in rec["fails"]:
+                    per.setdefault(c, r)
+                causes.append(per)
+            if wait:
+                # (R5② · 3차 S1·S3) 지금 성립하는 후보가 있어도 대기 탐색을 한다. 지금 가장 이른 목표보다 늦게 떠나서는 더
+                #   일찍 못 닿으므로 상한을 (그 목표 − nb) 로 줄이되 **짧아도 건너뛰지 않는다**(_after_wait 가 상한 칸까지 본다).
+                had = bool(got_ts)
+                horizon = EARLIEST_WAIT_MAX_MIN if not had else min(EARLIEST_WAIT_MAX_MIN, min(got_ts) - nb)
+                if horizon >= 1:
+                    more, stop = cls._after_wait(f, nb, horizon, until_clear=had, known=min(got_ts) if had else None)
+                    got_ts = got_ts + more
+                    if stop != "done":
+                        stops[stop] += 1      # 섞인 소스도 지운다고 남긴다(3차 S3 — 상한 앞을 다 봤다는 뜻이 아니다)
+                        ranges.append(int(horizon))   # (4차 #3) 그 소스가 실제로 본 대기 범위(분)
+            ts += got_ts
+        return sorted(set(ts)), {"causes": causes, "stops": stops, "wait_ranges": ranges}
+
+    @staticmethod
+    def _after_wait(f, nb, horizon=None, until_clear=False, known=None):
+        """(GPT 86 Q1) 기다리면 될 수 있는 이유(EARLIEST_WAIT_CODES)로 불가인 소스 f — 출발을 nb 뒤로 EARLIEST_WAIT_STEP 분
+        부터 두 배씩(상한 horizon · 기본 EARLIEST_WAIT_MAX_MIN · **마지막 칸은 상한 그 자리** · 상한이 첫 칸보다 짧으면 상한
+        한 칸) 옮겨 「멈춤 조건」을 만족하는 첫 칸을 찾고, 그 앞 칸과 사이를 이분 탐색한다.
+        멈춤 조건: 목표가 나왔다(until_clear=False) / 목표가 있고 기다리는 후보가 없다(until_clear=True · 섞인 소스 · R5②).
+        ★ (3차 S1) **관측한 성립 목표는 전부 모아 낸다** — 멈춤 조건은 탐색을 계속할지만 정한다(목표를 버리는 조건이 아니다).
+          그리고 관측한 가장 이른 목표보다 늦게 떠날 칸은 보지 않는다(상한을 그 자리로 줄인다). 아직 기다리는 후보가
+          남은 칸에서 더 이른 목표가 새로 나오면 그 칸 사이를 이분 탐색해 새 후보의 첫 성립 출발 목표까지 본다(4차 T1).
+        돌려주는 것: (관측한 목표들, 멈춘 까닭)
+          "done"        멈춤 조건 칸을 찾고 이분 탐색을 끝까지 했다
+          "incomplete"  기다릴 이유가 아닌 불가를 만나 멈췄다(R1 — 관측한 목표는 유효하지만 탐색을 끝내지 못했다)
+          "wait_limit"  상한까지 멈춤 조건 칸을 못 찾았다
+        ★ 사각지대(R5①): 두 배 간격이라 칸 사이의 **짧은 성립 구간**은 건너뛸 수 있다 — 관측한 목표가 없으면 "wait_limit"
+          (미확인)으로 끝난다. 이분 탐색은 칸 사이에서 조건이 한 번만 바뀐다고 가정한다. 근본 개선은 시간표 출발·첫차 시각을
+          직접 쓰는 것(판정기 밖 판에 첫 성립 시각 칸이 없어 이번엔 안 함)."""
+        horizon = EARLIEST_WAIT_MAX_MIN if horizon is None else horizon
+        seen = []
+
+        def probe(m):
+            ts, wait = f(m)
+            seen.extend(ts)
+            return (bool(ts) and not (until_clear and wait)), bool(ts), wait
+
+        def cap():
+            return min(horizon, min(seen) - nb) if seen else horizon
+        lo, step = nb, EARLIEST_WAIT_STEP
+        before = known if known is not None else float("inf")   # 직전 칸까지 관측한 가장 이른 목표(섞인 소스는 nb 의 목표)
+        broke = False
+        while lo - nb < cap():
+            hi = min(nb + step, nb + cap())
+            ok, any_ts, wait = probe(hi)
+            if ok:
+                stop = "done"
+                while hi - lo > 1:
+                    mid = (lo + hi) // 2
+                    ok2, any2, w2 = probe(mid)
+                    if ok2:
+                        hi = mid
+                    elif w2 or any2:
+                        lo = mid
+                    else:
+                        stop = "incomplete"
+                        break
+                return sorted(set(seen)), stop
+            if not wait and not any_ts:
+                return sorted(set(seen)), "incomplete"
+            if until_clear and seen and min(seen) < before and lo < hi - 1:
+                # (4차 T1) 아직 기다리는 후보가 남았지만 이 칸에서 더 이른 목표가 새로 나왔다 — 그 후보가 처음 성립하는 칸을
+                #   이분 탐색해 그 첫 성립 출발의 목표까지 본다(앞 판은 이 칸의 늦은 목표를 그대로 썼다)
+                a, z = lo, hi
+                while z - a > 1:
+                    mid = (a + z) // 2
+                    t2, w2 = f(mid)
+                    seen.extend(t2)
+                    if not t2 and not w2:
+                        broke = True          # (4차 #2) 비대기 불가 — 탐색은 잇되 「끝내지 못함」으로 남긴다
+                    if t2 and min(t2) < before:
+                        z = mid
+                    else:
+                        a = mid
+            before = min(seen) if seen else before
+            lo, step = hi, step * 2
+        return sorted(set(seen)), ("incomplete" if broke else "wait_limit")
+
+    def earliest(self, a_place, b_place, not_before_dt, party, first_visit, case_id, tries=None):
+        """☆`[2026-10-01 83 E2 · #42 보조 · 86]` **가장 이른 도착 목표** — 앞 일정이 not_before_dt 에 끝날 때 그 뒤 떠나서
+        성립하는 가장 이른 도착 목표(= 다음 일정이 시작할 수 있는 가장 이른 시각)와 그 목표의 이동 값.
+        기존 leg()(도착 목표 역산 · 마지막 성립 출발)와 둘 다 쓴다.
+
+        ① 앞 일정 끝에 바로 떠났을 때 수단 후보마다 「예정 도착 + @」를 판정기로 낸다(_earliest_targets). 기다리면 되는
+           불가(첫차 전 · 공백 · 막차 뒤 — EARLIEST_WAIT_CODES)는 출발을 뒤로 옮겨 첫 성립 출발을 찾는다(GPT 86 Q1).
+           시간표가 띄엄띄엄이라 역산 출발과 앞 일정 끝의 차이만큼 밀어서는 다음 편을 타게 되어 또 늦는다
+           (83: N서울타워→남대문 13분 밀고도 실패) — 그래서 「몇 분 밀까」가 아니라 **닿는 시각**을 낸다.
+        ② 목표마다 t, t+1, …, t+EARLIEST_FILL_MIN 을 이른 순으로 leg(목표, not_before_dt) 로 확인한다(호출 tries 번까지 ·
+           GPT 86 Q2). 값·식·후보 규칙이 역산 모드와 같아진다. 성립한 첫 목표가 답이다.
+        ★ 보장 범위(GPT 86 Q1·Q2): 「위 탐색 범위에서 leg() 재판정으로 성립을 확인한 가장 이른 목표」다 — 생성하지 않은
+          시각까지 전부 검증한 전역 최소는 아니다(@ 가 출발 시각에 따라 바뀌는 버스 등). 출발(starts_at)은 그 목표에 맞는
+          **마지막 성립 출발**(leg() 규칙)이지 가장 이른 출발이 아니다 — 반환한 출발 시각에서 성립을 확인했을 뿐이다.
+        돌려주는 것: ((route, 시작 분, 끝 분, 운행일, 뺀 후보, 도착 목표 분), None) — 분은 그 운행일 축(leg() 와 같음) —
+          또는 (None, 이유 dict + searched). 실패 code 의 뜻(GPT 86 R2):
+            · 판정기 이유(no_service · no_data 등) — **생성·검사한 소스에서 목표를 얻지 못했다**(status not_found ·
+              3차 S2). 불가능의 증명이 아니다(no_data 는 자료가 없다는 뜻) — 원인은 searched.causes(소스마다 코드→이유).
+            · EARLIEST_UNCONFIRMED — 그 밖 전부: 목표를 만들었지만 확인한 시각(목표 + 0~2분)이 모두 불성립 ·
+              확인 호출 한도 · 대기 탐색 상한 · 대기 탐색 중단. 「그 뒤에도 경로가 없다」는 뜻이 아니다.
+          searched = {checked(확인한 도착 목표 HH:MM), calls, stop(멈춘 까닭: confirm_limit · targets_checked ·
+          wait_limit · wait_incomplete · no_targets), causes}.
+        ★ 다음 일정을 미는 것은 코어 몫이다(83 C3 · 66건 문서) — 여기서는 값만 낸다."""
+        tries = EARLIEST_TRIES if tries is None else tries
+        if isinstance(tries, bool) or not isinstance(tries, int) or tries < 1:
+            raise ValueError(f"tries 는 1 이상 정수 — 받은 값 {tries!r}")      # GPT 86 Q7(0 · 음수 슬라이스)
+        if not_before_dt is None:
+            raise ValueError("earliest() 는 not_before_dt(앞 일정 끝)가 필요하다")
+        sdate, ts, info = self._earliest_targets(a_place, b_place, not_before_dt, party, first_visit, case_id)
+        end_hm = f"{not_before_dt.astimezone(KST):%H:%M}"
+        causes = info["causes"]
+        searched = {"checked": [], "calls": 0, "causes": [{"codes": sorted(per), "reasons": dict(per)} for per in causes]}
+
+        def wait_note():
+            parts = []
+            if info["stops"].get("wait_limit"):
+                # (4차 #3) 실제로 본 범위로 적는다 — 섞인 소스는 지금 목표까지로 줄여 본다(최대 EARLIEST_WAIT_MAX_MIN)
+                rg = info.get("wait_ranges") or [EARLIEST_WAIT_MAX_MIN]
+                span = f"{min(rg)}분" if min(rg) == max(rg) else f"{min(rg)}~{max(rg)}분"
+                parts.append(f"대기 탐색 범위(앞 일정 끝 뒤 {span} · 두 배 간격 · 최대 {EARLIEST_WAIT_MAX_MIN}분) 안에서 "
+                             f"기다리던 후보의 성립 출발을 다 찾지 못한 후보 {info['stops']['wait_limit']}곳")
+            if info["stops"].get("incomplete"):
+                parts.append(f"대기 탐색을 끝내지 못한 후보 {info['stops']['incomplete']}곳(중간에 다른 불가)")
+            return " · ".join(parts)
+        if not ts:
+            stop = ("wait_limit" if info["stops"].get("wait_limit") else
+                    "wait_incomplete" if info["stops"].get("incomplete") else "no_targets")
+            searched["stop"] = stop
+            if stop != "no_targets":
+                return None, {"code": EARLIEST_UNCONFIRMED, "searched": searched,
+                              "reason": f"앞 항목이 끝난 뒤({end_hm}) 떠나서 성립하는 후보를 찾지 못했다 — {wait_note()} "
+                                        f"(탐색 한도 · 불성립 확인 아님)"}
+            if causes:
+                per = collections.Counter(c for src in causes for c in src)
+                code = per.most_common(1)[0][0]
+                lines = " · ".join(f"{c} {n}곳" for c, n in per.most_common())
+                return None, {"code": code, "searched": searched,
+                              "reason": f"앞 항목이 끝난 뒤({end_hm}) 검사한 후보에서 다음 사유로 찾지 못했다 — {lines} "
+                                        f"(첫 사유: {next(src[code] for src in causes if code in src)})"}
+            return None, {"code": "no_data", "searched": searched,
+                          "reason": f"앞 항목이 끝난 뒤({end_hm}) 떠날 후보(도보·역·버스)가 없다"}
+        order = sorted({t + k for t in ts for k in range(EARLIEST_FILL_MIN + 1)})
+        last = None
+        for t in order[:tries]:
+            target = datetime.fromisoformat(iso_of(sdate, t))
+            searched["calls"] += 1
+            got, why = self.leg(a_place, b_place, target, party, first_visit, f"{case_id}~at{t}", not_before_dt=not_before_dt)
+            if got is not None:
+                route, start, end, sd, left = got
+                return (route, start, end, sd, left, t - (sd - sdate).days * MIN_DAY), None
+            searched["checked"].append(iso_of(sdate, t)[11:16])
+            last = why or {}
+        searched["stop"] = "confirm_limit" if len(order) > tries else "targets_checked"
+        why_more = (f"확인 호출 한도 {tries}번이라 더 늦은 목표는 보지 않았다" if len(order) > tries
+                    else f"생성한 목표와 보충 {EARLIEST_FILL_MIN}분까지만 봤다")
+        extra = wait_note()
+        return None, {"code": EARLIEST_UNCONFIRMED, "searched": searched,
+                      "reason": f"도착 목표 {', '.join(searched['checked'])} 를 다시 판정해도 성립하지 않는다 — {why_more}"
+                                + (f" · {extra}" if extra else "") + " (불성립 확인 아님)"
+                                + f" · 마지막 {searched['checked'][-1]}: {last.get('code')} {last.get('reason')}"}
+
+    @staticmethod
+    def earliest_summary(got, arrive_dt=None):
+        """earliest() 결과 → 봉투용 dict(GPT 86 Q5 — 상태값으로 성공·실패를 가른다).
+          status "found" · starts_at(그 목표에 맞는 마지막 성립 출발) · ends_at(예정 도착) · **arrive_by(다음 일정이 시작할
+          수 있는 가장 이른 시각 — 여유 @ 포함 · 코어는 이 값으로 민다)** · eta_min · planned · label · uses · route(그대로
+          채택할 수 있는 경로 정의) · arrive_dt 를 주면 requested_arrive_by(원래 도착 목표 — **분 내림**, 입력 원문 시각이
+          아니다 · leg() 가 목표를 분 내림으로 판정하는 것과 같은 기준)와 slack_min = requested_arrive_by − arrive_by
+          (**이 제안의 여유가 아니라 원래 목표 대비** · 음수 = 그만큼 늦다).
+          ★ 코어는 원래 시작에 −slack_min 을 더하지 말고 **arrive_by 를 다음 일정의 새 시작 시각으로** 쓴다(R4 — 초가 있는
+          일정에서는 두 방식이 갈린다)."""
+        route, start, end, sd, _left, t = got
+        planned = next(o for o in route["options"] if o["id"] == route["planned"])
+        out = {"status": "found", "starts_at": iso_of(sd, start), "ends_at": iso_of(sd, end), "arrive_by": iso_of(sd, t),
+               "eta_min": int(planned["eta_min"]), "planned": route["planned"], "label": planned.get("label"),
+               "uses": list(planned.get("uses") or []), "route": route}
+        if arrive_dt is not None:
+            req = arrive_dt.astimezone(KST)
+            out["requested_arrive_by"] = req.strftime("%Y-%m-%dT%H:%M:00+09:00")
+            out["slack_min"] = int((req.replace(second=0, microsecond=0)
+                                    - datetime.fromisoformat(out["arrive_by"])).total_seconds() // 60)
+        return out
+
+    def _earliest_or_reason(self, a_place, b_place, not_before_dt, party, first_visit, case_id, arrive_dt):
+        e, e_why = self.earliest(a_place, b_place, not_before_dt, party, first_visit, case_id)
+        if e is not None:
+            return self.earliest_summary(e, arrive_dt)
+        return {"status": "unconfirmed" if e_why["code"] == EARLIEST_UNCONFIRMED else "not_found",
+                "code": e_why["code"], "reason": e_why["reason"], "searched": e_why.get("searched")}
+
+    def leg(self, a_place, b_place, arrive_dt, party, first_visit, case_id, not_before_dt=None, earliest_on_late=False):
         """장소 a → 장소 b, 도착 목표 arrive_dt. ((route_def, 시작 분, 끝 분, 운행일, 뺀 후보), None) 또는 (None, 이유 dict).
 
         분은 **도착 목표의 운행일 축**이다. 역 도착 목표가 04:00 을 넘어 앞 운행일로 넘어가면(04:00 목표 − 도보 2분)
@@ -542,16 +1232,17 @@ class Planner:
         240 미만을 +24h 로 읽어 그날 밤 막차로 간다(자체 대조 #1).
         not_before_dt: 앞 항목이 끝나는 시각. 이보다 먼저 떠나야 하는 후보는 싣지 않는다(겹치면 코어 등록이 거절한다).
         뺀 후보(left): 성립은 하지만 이동 항목 starts_at 보다 먼저 떠나야 하는 후보 · uses 표기 검사 불통과 후보 —
-        [{label, reason}]. 코어로는 안 나간다(봉투 `left_out` · 23 결정 1)."""
+        [{label, reason}]. 코어로는 안 나간다(봉투 `left_out` · 23 결정 1).
+        earliest_on_late: (86 · E2) True 면 **시각 때문에** 못 맞춘 구간(EARLIEST_ON_CODES — 앞 일정 끝 뒤 출발로는 늦음
+        arrive_late · 첫차 전 · 공백 · 막차 뒤)의 이유 dict 에 `earliest`(earliest_summary · status found / not_found /
+        unconfirmed)를 붙인다. 역·후보·데이터가 없어 못 만든 구간(no_data · no_service 등)에는 안 붙인다 — 기다려도
+        안 된다(GPT 86 Q7 · 적용 범위). 기본 False — 결과·호출 횟수가 앞 판과 같다."""
         from .geo import meters
         sdate, arrive_by = service_day(arrive_dt)
         nb = None
         if not_before_dt is not None:
             # 출발 하한은 분 **올림**(09:47:30 에 끝나면 09:48 부터) — 도착 목표는 내림이라 둘 다 안전 쪽(GPT #3)
-            up = not_before_dt.astimezone(KST)
-            if up.second or up.microsecond:
-                up = up.replace(second=0, microsecond=0) + timedelta(minutes=1)
-            nd, nm_ = service_day(up)
+            nd, nm_ = self._floor_min(not_before_dt)
             nb = nm_ + (nd - sdate).days * MIN_DAY
         wlim = self._walk_limit(party)
         buf = self.v.rv("buffer", "by_stage", self.stage)
@@ -579,24 +1270,21 @@ class Planner:
         #   앞 일정 끝 뒤에 떠날 수 있는 짝에서 멈춘다**(_pair_settles · STATION_PAIR_MODE) — 그런 짝이 첫 짝이면 앞 판과
         #   같다. ★같은 역 조기 종료(아래)는 앞 판 정책 그대로 — 막힌 역을 뺀 뒤 양쪽 첫 역이 같아도 도보만 본다(사각지대 ·
         #   85 닫힘 전달에 적음).
-        sa, sb = self._near_stations(a_place, wlim), self._near_stations(b_place, wlim)
+        sa, sb, pairs = self._station_pairs(a_place, b_place, wlim)
         oa, ob = (sa[0] if sa else None), (sb[0] if sb else None)
-        why, r, n_mode, pairs = None, None, 0, []
+        why, r, n_mode = None, None, 0
         if oa is None or ob is None:
             blocked = [p["name"] for p, s_ in ((a_place, sa), (b_place, sb))
                        if not s_ and self.disruptions and self._any_station_near(p, wlim)]
             if blocked:
+                # 87 — 이 이유는 아래 버스 직행(③)·혼합(⑤) 후보도 없을 때만 나간다 → 그 뜻으로 좁힌다
                 why = {"code": STATION_BLOCKED_CODE,
-                       "reason": f"도보 상한 안 역이 모두 사고로 막혔다({', '.join(blocked)})"}
+                       "reason": f"걸어갈 역이 모두 사고로 막혔고({', '.join(blocked)}) 버스 직행·혼합 후보도 없다"}
             else:
                 why = {"code": "no_data", "reason": "도보 상한 안에 지하철역이 없다"
                        + (f"({a_place['name']})" if oa is None else f"({b_place['name']})")}
         elif same_station(oa[0], oa[2], ob[0], ob[2]):          # 55 GPT #2 — 동명이역은 역명이 같아도 다른 역
             why = {"code": "no_data", "reason": f"두 장소의 가장 가까운 역이 같다({oa[0]}) — 도보만 본다"}
-        else:
-            pairs = [(ia, ib, x, y) for ia, x in enumerate(sa) for ib, y in enumerate(sb)
-                     if not same_station(x[0], x[2], y[0], y[2])]
-            pairs.sort(key=lambda t: (t[0] + t[1], t[2][1] + t[3][1], t[0]))   # (0,0) 이 늘 먼저 — 앞 판과 같은 첫 짝
         visited = []
         for pi, (_ia, _ib, xa, xb) in enumerate(pairs):
             got, r_, nm_ = self._transit_pair(xa, xb, pi, arrive_dt, sdate, arrive_by, party, first_visit, case_id, left)
@@ -615,6 +1303,10 @@ class Planner:
         # ④ 자전거 — modes 에 bike 를 줄 때만 · 장소 좌표 기준 · lfd = 목표 − (eta+@)(58 · _bike_direct)
         bike_opts, bike_why = self._bike_direct(a_place, b_place, sdate, arrive_by, party, first_visit, case_id)
         opts.extend(bike_opts)
+        # ⑤ 지하철+버스 혼합(87) — 지하철만·버스만 후보(① ② ③)보다 한 축이라도 앞설 때만 · 사고로 걸어갈 역이 막히면 대안 2단
+        mix_opts = self._mixed(a_place, b_place, sa, sb, arrive_dt, sdate, arrive_by, party, first_visit, case_id,
+                               wlim, opts, left)
+        opts.extend(mix_opts)
         if pairs:
             if not any(o["_legs"] for o in opts):
                 if r.candidates and n_mode == 0 and not bus_opts:
@@ -645,33 +1337,39 @@ class Planner:
             uf = [e for e in left if e["code"] == "uses_format"]
             base = ({"code": "no_data", "reason": uf[0]["reason"]} if uf
                     else why or {"code": "no_data", "reason": "성립하는 후보가 없다"})
-            return None, dict(base, left_out=self._fold_left(left)) if left else base
+            out = dict(base, left_out=self._fold_left(left)) if left else dict(base)
+            if earliest_on_late and not_before_dt is not None and out.get("code") in EARLIEST_ON_CODES:
+                # (GPT 86 Q1·Q7) 시각 때문에 못 맞춘 구간(첫차 전 · 공백 · 막차 뒤) — 기다려 닿는 가장 이른 도착을 붙인다
+                out["earliest"] = self._earliest_or_reason(a_place, b_place, not_before_dt, party, first_visit, case_id, arrive_dt)
+            return None, out
         if bike_why is not None:      # 58 — 자전거를 요청했는데 못 실은 이유를 봉투 left_out 에(코어로는 안 나감)
             left.append({"_o": {"_legs": []}, "label": "자전거(따릉이)", "code": bike_why["code"], "reason": bike_why["reason"]})
         # 계획 수단 — **가장 늦게 떠나도 되는 후보**(동률은 환승 적은 · 소요 짧은 · 생성 순). 순위가 아니라
         #   「일정대로 움직이게」 하나를 고르는 규칙이다. 나머지는 options 에 순위 없이 남는다.
         #   앞 일정 끝(nb)보다 이른 _start 후보도 **버리지 않고** 공통 출발 재판정까지 둔다(GPT 23 2차 #1) —
         #   역산이 실제보다 이르게 나왔을 수 있다. 자격(_start ≥ nb)이 되는 후보가 하나도 없으면 nb 에서 다시 본다.
-        def rank(o):
-            return (o["_start"], -o["_transfers"], -o["eta_min"], -o["_n"])
-        eligible = [o for o in opts if nb is None or o["_start"] >= nb]
-        if eligible:
-            planned = max(eligible, key=rank)
-        else:
-            revived = [g for g, _v in (self._recheck_at(o, nb, arrive_by, party, first_visit, case_id) for o in opts)
-                       if g is not None]
-            if not revived:
-                for o in opts:
-                    left.append({"_o": o, "label": o["_route"], "code": "before_prev_end",
-                                 "reason": f"앞 일정이 {iso_of(sdate, nb)[11:16]}에 끝나는데 그 시각 출발은 재판정에서 불성립 · "
-                                           f"{iso_of(sdate, o['_start'])[11:16]} 출발은 성립 확인(역산) · "
-                                           f"환승 {o['_transfers']}회 · 소요 {o['eta_min']}분"})
-                return None, {"code": "arrive_late",
-                              "reason": f"앞 항목이 끝난 뒤({not_before_dt.astimezone(KST):%H:%M}) 떠나서는 "
-                                        f"{arrive_dt.astimezone(KST):%H:%M} 도착에 맞는 후보가 없다"}
+        # ☆`[87 · GPT 87 #2]` 혼합 후보는 **추가만** — 계획 수단은 먼저 지하철만·버스만·도보 후보에서 **앞 판과 같은 순서**(자격 →
+        #   nb 재판정)로 고르고, 거기서 하나도 안 나올 때만 혼합으로 같은 순서를 밟는다(사고로 걸어갈 역이 모두 막힌 구간 등 —
+        #   85 E1 2단). 앞 판은 「자격 있는 후보가 하나라도 있으면 재판정 안 함」이라, 혼합이 자격을 가지면 기존 후보의 재판정을
+        #   건너뛰어 계획이 바뀔 수 있었다(GPT 87 #2).
+        planned, revived = self._choose_planned(opts, nb, lambda o: self._recheck_at(o, nb, arrive_by, party, first_visit, case_id)[0])
+        if planned is None:
+            for o in opts:
+                left.append({"_o": o, "label": o["_route"], "code": "before_prev_end",
+                             "reason": f"앞 일정이 {iso_of(sdate, nb)[11:16]}에 끝나는데 그 시각 출발은 재판정에서 불성립 · "
+                                       f"{iso_of(sdate, o['_start'])[11:16]} 출발은 성립 확인(역산) · "
+                                       f"환승 {o['_transfers']}회 · 소요 {o['eta_min']}분"})
+            late = {"code": "arrive_late",
+                    "reason": f"앞 항목이 끝난 뒤({not_before_dt.astimezone(KST):%H:%M}) 떠나서는 "
+                              f"{arrive_dt.astimezone(KST):%H:%M} 도착에 맞는 후보가 없다"}
+            if earliest_on_late:
+                # 86 · E2 — 몇 분 밀면 되는지가 아니라 **가장 이른 도착**을 붙인다(코어가 한 번에 정확히 민다)
+                late["earliest"] = self._earliest_or_reason(a_place, b_place, not_before_dt, party, first_visit,
+                                                            case_id, arrive_dt)
+            return None, late
+        if revived:
             back = {g["_key"]: g for g in revived}          # 식별은 _key(종류·짝·번호) — _n 은 동률 깨기용(GPT 85 #4)
             opts = [back.get(o["_key"], o) for o in opts]
-            planned = max(revived, key=rank)
         start = planned["_start"]
         end = start + planned["eta_min"]
         # ★ options 는 **이동 항목 starts_at 에 떠나도 성립하는 후보만** 싣는다(32 GPT #1 · 23 결정 1).
@@ -773,7 +1471,7 @@ def _key_time(it):
 
 
 def plan(places, items, party_size=None, constraints=None, *, runtime=None, stage="planning",
-         modes=None, trace=None, routes=None, display=False, disruptions=None):
+         modes=None, trace=None, routes=None, display=False, disruptions=None, earliest_on_late=False):
     """places·items(·party_size·constraints) → {"items", "routes", "skipped", "basis"}.
 
     items : 입력 항목 중 이동이 아닌 것을 시각 순으로 두고, **장소가 다른 이웃 둘 사이마다** 이동 항목을 끼운다.
@@ -796,6 +1494,12 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             · `uses_format` = 팀 route_uses 표기 검사 불통과(코어 등록이 거절한다).
             · (58) label 「자전거(따릉이)」 = bike 를 요청했지만 못 실은 이유(판정기 code 그대로 · 다른 후보는 실렸을 때).
     display: 표시 전용 필드(◆칸 — transfer_car)를 싣는다. 기본 off(답 전엔 만들어만 둔다 · 스펙 v1.4 밖 새 키).
+    earliest_on_late: (86 · 83 E2) True 면 **시각 때문에** 못 맞춘 구간(skipped code `arrive_late` · 첫차 전 · 공백 ·
+            막차 뒤 — EARLIEST_ON_CODES)에 `earliest` 를 붙인다(Planner.earliest · earliest_summary):
+            status "found" → {starts_at, ends_at, arrive_by, eta_min, planned, label, uses, route, requested_arrive_by,
+            slack_min} — arrive_by = 다음 항목이 시작할 수 있는 가장 이른 시각(여유 포함 · 이 값으로 민다) · slack_min =
+            원래 목표 − arrive_by(음수 = 그만큼 민다) / status "not_found"·"unconfirmed"(탐색 한도) → {code, reason}.
+            봉투(skipped)에만 실린다 — 일정을 미는 것은 코어 몫. 기본 False(결과 v2.2 와 같다).
     """
     if runtime is None:
         from .runtime import get_verifier
@@ -885,7 +1589,8 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
             continue
         got, why = P.leg(pa, pb, _parse_dt(b["starts_at"]), party, first_visit,
                          case_id=f"{a.get('place')}_to_{b.get('place')}",
-                         not_before_dt=_parse_dt(a.get("ends_at") or a["starts_at"]))
+                         not_before_dt=_parse_dt(a.get("ends_at") or a["starts_at"]),
+                         earliest_on_late=earliest_on_late)
         if got is None:
             skip(a, b, {"from": pa["name"], "to": pb["name"], **why})
             continue
@@ -916,11 +1621,11 @@ def plan(places, items, party_size=None, constraints=None, *, runtime=None, stag
                       "decided_at": datetime.now(KST).strftime("%Y-%m-%dT%H:%M:00+09:00")}}
 
 
-def plan_doc(doc, *, runtime, stage="planning", modes=None, trace=None, display=False):
+def plan_doc(doc, *, runtime, stage="planning", modes=None, trace=None, display=False, earliest_on_late=False):
     """CLI 가 읽는 입력 JSON 한 벌 → plan(). 기존 `routes` 도 넘긴다(그 키를 새 키로 안 쓰게 · GPT 2차 #1)."""
     return plan(doc.get("places") or [], doc.get("items") or [], doc.get("party_size"), doc.get("constraints"),
                 runtime=runtime, stage=stage, modes=modes, trace=trace, routes=doc.get("routes"),
-                display=display)
+                display=display, earliest_on_late=earliest_on_late)
 
 
 def main(argv=None):
@@ -934,6 +1639,8 @@ def main(argv=None):
     ap.add_argument("--modes", nargs="*", help="후보 수단 거르기(subway bus walk bike · 콤마도 됨) — 없으면 subway bus walk(자전거 뺌 · 56)")
     ap.add_argument("--display", action="store_true",
                     help="표시 전용 필드(transfer_car · ◆칸)를 싣는다 — 기본 off, 코어 계약(v1.4) 밖")
+    ap.add_argument("--earliest-on-late", action="store_true",
+                    help="앞 항목이 끝난 뒤 떠나서는 못 맞추는 구간에 가장 이른 출발·도착(skipped[].earliest)을 붙인다(86)")
     ap.add_argument("--trace", help="구간마다 내부 값(시작 분·@·slack)을 이 JSON 에 적는다 — 대조용")
     a = ap.parse_args(argv)
     if a.modes is not None:           # 58 — `--modes subway,bus,walk,bike` 도 받는다(띄어쓰기와 같다)
@@ -942,7 +1649,8 @@ def main(argv=None):
     from .runtime import build_verifier
     rt = build_verifier(quiet=True)
     tr = [] if a.trace else None
-    res = plan_doc(doc, runtime=rt, stage=a.stage, modes=a.modes, trace=tr, display=a.display)
+    res = plan_doc(doc, runtime=rt, stage=a.stage, modes=a.modes, trace=tr, display=a.display,
+                   earliest_on_late=a.earliest_on_late)
     if a.trace:
         Path(a.trace).write_text(json.dumps(tr, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if a.no_basis:

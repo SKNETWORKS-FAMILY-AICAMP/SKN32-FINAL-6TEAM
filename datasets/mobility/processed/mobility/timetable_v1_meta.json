@@ -1,143 +1,275 @@
 {
- "built_at": "2026-09-12T20:38:16+09:00",
- "tago_fetched_at": "2026-09-09",
- "seoul_fetched_at": "2026-09-11",
- "rows": 463326,
- "duplicates_removed": 2392,
- "cross_source_duplicates_removed": 2646,
- "tago_rows_dropped_for_richer_seoul": 84,
+ "built_at": "2026-10-01T10:38:34+09:00",
+ "tago_fetched_at": "2026-10-01",
+ "seoul_fetched_at": "2026-10-01",
+ "rows": 472541,
+ "duplicates_removed": 4887,
+ "cross_source_duplicates_removed": 13266,
+ "tago_rows_dropped_for_richer_seoul": 249,
  "cross_source_conflicts_kept": [
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "06:23:00",
+   "dep_time": "05:30:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "07:02:30",
+   "dep_time": "07:10:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "08:35:00",
+   "dep_time": "07:49:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "09:16:00",
+   "dep_time": "08:05:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "11:42:00",
+   "dep_time": "10:18:00",
    "tago_dest": [
-    "제물포"
+    "신도림"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "12:49:30",
+   "dep_time": "10:59:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "13:59:00",
+   "dep_time": "12:12:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "14:33:00",
+   "dep_time": "13:02:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "18:16:30",
+   "dep_time": "14:04:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "19:50:00",
+   "dep_time": "14:15:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
    "day_type": "weekday",
-   "dep_time": "23:00:00",
+   "dep_time": "15:57:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
   },
   {
-   "line": "01호선",
-   "station_nm": "병점",
-   "dir": "U",
-   "day_type": "holiday",
-   "dep_time": "06:23:00",
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:07:00",
    "tago_dest": [
-    "제물포"
+    "성수"
    ],
-   "seoul_dest": "청량리"
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:18:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:27:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:38:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "17:12:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "17:24:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "18:08:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "18:16:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "19:03:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "20:35:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "20:57:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "23:16:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "23:38:00",
+   "tago_dest": [
+    "신도림"
+   ],
+   "seoul_dest": "신설동"
   },
   {
    "line": "02호선",
@@ -207,19 +339,18 @@
   }
  ],
  "sources": {
-  "tago_subway": 423896,
-  "seoul_opendata_OA-101": 39430
+  "tago_subway": 434493,
+  "seoul_opendata_OA-101": 38048
  },
  "excluded_rows": {
   "4호선": 824,
-  "stale:MTRBS": 1867,
-  "stale:MTRDG": 1648,
-  "stale:MTRKR": 190,
   "2호선": 2765,
   "3호선": 1792,
   "동해": 190,
   "1호선": 4679,
-  "자기부상": 24
+  "자기부상": 24,
+  "stale:MTRDG": 824,
+  "stale:MTRBS": 859
  },
  "unmatched_names": [
   "신길온천"
@@ -238,12 +369,8 @@
    "holiday": []
   },
   "04호선": {
-   "weekday": [
-    "신길온천"
-   ],
-   "holiday": [
-    "신길온천"
-   ]
+   "weekday": [],
+   "holiday": []
   },
   "05호선": {
    "weekday": [],
@@ -274,71 +401,13 @@
    "holiday": []
   },
   "경의선": {
-   "weekday": [
-    "금릉",
-    "금촌",
-    "일산",
-    "파주"
-   ],
-   "holiday": [
-    "금릉",
-    "금촌",
-    "일산",
-    "파주"
-   ]
+   "weekday": [],
+   "holiday": []
   },
   "경춘선": {
-   "weekday": [
-    "가평",
-    "갈매",
-    "강촌",
-    "광운대",
-    "굴봉산",
-    "금곡",
-    "김유정",
-    "남춘천",
-    "대성리",
-    "마석",
-    "망우",
-    "백양리",
-    "별내",
-    "사릉",
-    "상봉",
-    "상천",
-    "신내",
-    "중랑",
-    "천마산",
-    "청량리",
-    "청평",
-    "춘천",
-    "퇴계원",
-    "평내호평"
-   ],
+   "weekday": [],
    "holiday": [
-    "가평",
-    "갈매",
-    "강촌",
-    "광운대",
-    "굴봉산",
-    "금곡",
-    "김유정",
-    "남춘천",
-    "대성리",
-    "마석",
-    "망우",
-    "백양리",
-    "별내",
-    "사릉",
-    "상봉",
-    "상천",
-    "신내",
-    "중랑",
-    "천마산",
-    "청량리",
-    "청평",
-    "춘천",
-    "퇴계원",
-    "평내호평"
+    "광운대"
    ]
   },
   "공항철도": {
@@ -355,18 +424,10 @@
   },
   "수인분당선": {
    "weekday": [
-    "미금",
-    "보정",
-    "신길온천",
-    "야탑",
-    "죽전"
+    "신길온천"
    ],
    "holiday": [
-    "미금",
-    "보정",
-    "신길온천",
-    "야탑",
-    "죽전"
+    "신길온천"
    ]
   },
   "신림선": {
@@ -398,18 +459,18 @@
    "holiday": []
   }
  },
- "seoul_dest_recovered_rows": 40056,
- "seoul_dest_unrecovered_rows": 3158,
- "tago_combos_done": 4902,
- "output": "C:\\final_project\\data\\travel\\processed\\mobility\\timetable_v1.jsonl",
+ "seoul_dest_recovered_rows": 38355,
+ "seoul_dest_unrecovered_rows": 13377,
+ "tago_combos_done": 4884,
+ "output": "C:\\final_project\\scratch\\_89\\new\\travel\\processed\\mobility\\timetable_v1.jsonl",
  "dest_fill": {
-  "script": "scripts/collect/fill_timetable_dest_v1.py",
+  "script": "datasets/mobility/scripts/fill_timetable_dest_v1.py",
   "method": "chain_v1",
-  "at": "2026-09-28T09:26:41",
-  "rows_filled": 20548,
-  "blank_before": 26333,
-  "left_blank": 5785,
-  "backup": "timetable_v1_before_destfill_20260928_0926.jsonl",
+  "at": "2026-10-01T10:39:31",
+  "rows_filled": 20624,
+  "blank_before": 26806,
+  "left_blank": 6182,
+  "backup": "timetable_v1_before_destfill_20261001_1039.jsonl",
   "report": "timetable_v1_destfill_report.md"
  }
 }
