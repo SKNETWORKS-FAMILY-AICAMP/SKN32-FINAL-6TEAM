@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+import json
+import logging
 import re
 from datetime import UTC, datetime
 from typing import Any
@@ -24,11 +26,13 @@ from app.core.contracts import NextAction, TeamManifest, TeamResult, TeamTask
 from .._base import TravelTeamBase
 from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from . import failure_codes as fc
 from .alternatives import FALLBACK_DROPS, preference_from_survey, rank_alternatives
 from .csv_places import CsvPlaceLookup as _CsvPlaceLookup
 from .csv_places import weather_sensitive_from_lclssystm2 as _ws_from_lclssystm2
 
 _csv_lookup = _CsvPlaceLookup()
+_failure_log = logging.getLogger(fc.LOGGER_NAME)
 
 
 class ActivityTeam(ItineraryWork, TravelTeamBase):
@@ -87,6 +91,26 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return None
         reference = when if when.tzinfo else when.replace(tzinfo=UTC)
         return (reference - datetime.now(UTC)).total_seconds() / 3600
+
+    def _record_failure(self, task: TeamTask, code: str, **meta: Any) -> str:
+        """실패·예외 코드를 한 줄 JSON 으로 남기고 코드를 돌려준다(`failure_codes.py`).
+
+        ★좌표·장소명·고객 문장은 싣지 않는다 — Case id·capability·코드와 짧은 메타(도구 이름·사유 코드·예외 종류)만.
+        ★기록은 **알리는 것**일 뿐 흐름을 바꾸지 않는다. 어디에 쓸지는 운영의 logging 설정이 정한다.
+        """
+        _failure_log.warning(json.dumps(
+            {"event": "activity_failure", "code": code, "team": self.manifest.team_id,
+             "case_id": str(task.case_id), "capability": task.capability, **meta},
+            ensure_ascii=False, default=str))
+        return code
+
+    def _read(self, task: TeamTask, name: str, arguments: dict[str, Any], seen: set[str]) -> Any:
+        """도구 예외(API·DB 실패)를 코드로 남기고 **그대로 다시 던진다** — 삼켜서 「모름」으로 바꾸지 않는다(RULE §3.2)."""
+        try:
+            return super()._read(task, name, arguments, seen)
+        except Exception as exc:
+            self._record_failure(task, fc.TOOL_ERROR, tool=name, error=type(exc).__name__)
+            raise
 
     @staticmethod
     def select_capability(intent: str | None, input_text: str, state: dict | None = None) -> str | None:
@@ -212,6 +236,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._result(
                 task, outcome="completed", confidence=0.5, evidence=evidence,
                 next_action=NextAction.WAIT_FOR_INPUT,
+                decisions=[{"failure_code": self._record_failure(task, fc.PLACE_NOT_FOUND)}],
                 answer=f"'{place_name}'을(를) 찾지 못했습니다. 좀 더 정확한 장소 이름을 알려주시겠어요?",
                 required_input_schema={"type": "object",
                                        "properties": {"place_hint": {"type": "string"}},
@@ -284,6 +309,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 next_action=NextAction.RESPOND,
                 answer=f"이미 시작됐거나 종료된 활동입니다 — {-remaining:.1f}시간 전에 시작됐습니다.",
                 decisions=[{"feasible": False, "status": "problem", "reason": "already_started",
+                            "failure_code": self._record_failure(task, fc.ALREADY_STARTED),
                             "hours_elapsed": round(-remaining, 1)}])
 
         party = booking.get("party_size")
@@ -293,7 +319,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
                 answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
-                decisions=[{"feasible": False, "status": "problem", "reason": "party_over_capacity"}])
+                decisions=[{"feasible": False, "status": "problem", "reason": "party_over_capacity",
+                            "failure_code": self._record_failure(task, fc.PARTY_OVER_CAPACITY)}])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
@@ -305,7 +332,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 task, outcome="completed", confidence=0.5, evidence=evidence,
                 next_action=NextAction.RESPOND,
                 answer="장소·운영 정보가 확인되지 않아 판정하지 않았습니다.",
-                decisions=[{"feasible": False, "status": "insufficient_info", "place_confirmed": False}],
+                decisions=[{"feasible": False, "status": "insufficient_info", "place_confirmed": False,
+                            "failure_code": self._record_failure(task, fc.PLACE_UNKNOWN)}],
                 warnings=["장소·운영 정보를 확인하지 못했다"])
 
         decisions: dict[str, Any] = {"feasible": True, "place_confirmed": True}
@@ -439,6 +467,11 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
 
         # ── ④ 대체 장소 — 이 장소가 **장소 때문에** 안 될 때만(휴무 요일 · 위급재난) ──
         decisions["status"] = "ok" if decisions["feasible"] else "problem"
+        # ★장소 때문에 불가일 때만 코드를 단다. 둘이 겹치면 위급재난이 앞선다(대체 장소 `withheld` 와 같은 우선순위).
+        if (decisions.get("disaster") or {}).get("blocks"):
+            decisions["failure_code"] = self._record_failure(task, fc.DISASTER_BLOCKS)
+        elif (decisions.get("operating") or {}).get("weekday_match") is True:
+            decisions["failure_code"] = self._record_failure(task, fc.CLOSED_WEEKDAY)
         if decisions["feasible"] is False and self._blocked_by_place(decisions):
             alt, evidence, alt_text, alt_warnings = self._recommend_alternatives(
                 task, place, booking.get("starts_at"), seen, evidence, decisions)
@@ -494,16 +527,19 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         """
         if (decisions.get("disaster") or {}).get("blocks"):
             # ★전국 목록이라 어느 후보로 옮겨도 같은 위급재난 판정을 받는다.
+            self._record_failure(task, fc.ALTERNATIVES_WITHHELD)
             return ({"status": "withheld", "reason": "disaster_blocks"}, evidence,
                     "위급재난 문자는 지역 구분 없이 확인되어 대체 장소도 같은 판정을 "
                     "받으므로 대체 장소를 안내하지 않았습니다.", [])
         content_id = place.get("source_content_id") if isinstance(place, dict) else None
         if not content_id:
+            self._record_failure(task, fc.ALTERNATIVES_NO_CONTENT_ID)
             return ({"status": "unknown", "reason": "no_content_id"}, evidence,
                     "원래 장소의 식별 정보가 없어 대체 장소를 찾지 못했습니다.",
                     ["대체 장소를 찾을 원래 장소 식별자(source_content_id)가 없다"])
         pool = self._read(task, "read.place_candidates", {"content_id": str(content_id)}, seen)
         if pool is None:
+            self._record_failure(task, fc.ALTERNATIVES_POOL_UNAVAILABLE)
             return ({"status": "unknown", "reason": "pool_unavailable"}, evidence,
                     "대체 장소 후보를 조회하지 못했습니다.", ["대체 장소 후보 풀을 받지 못했다"])
         candidates = pool.get("candidates") or []
@@ -528,6 +564,8 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                "source": pool.get("source"), "confirmed_at": pool.get("confirmed_at")}
         passed = [a for a in ranked["alternatives"] if a["revalidated"]]
         if not passed:
+            self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
+                                 else fc.ALTERNATIVES_UNCONFIRMED)
             note = ("조건에 맞는 대체 장소를 찾지 못했습니다." if not ranked["alternatives"]
                     else "대체 장소 후보는 있으나 운영 여부를 확인하지 못해 안내하지 않았습니다.")
             return alt, evidence, note, warnings
