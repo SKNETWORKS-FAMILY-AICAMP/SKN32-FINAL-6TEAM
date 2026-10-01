@@ -1,6 +1,6 @@
 # 같은 문제에서 두 「모델」의 직접 짚기끼리(또는 종단끼리) 다르게 맞힌 수와 정확 이항 검정 p — eval_mcnemar.py 가 「종단 대 직접」만 비교하는 한계를 메운다.
 # 사용: python eval_mcnemar_pair.py <모델A> <모델B>   (이름은 eval_night.py 의 G 키: gemma4:e4b, gemma4:e4b-it-qat, var_gemma4:e2b|sfx …)
-import contextlib, importlib.util, io, math, sys
+import contextlib, importlib.util, io, math, random, sys
 A, B = sys.argv[1], sys.argv[2]
 sys.argv = ['x']
 with contextlib.redirect_stdout(io.StringIO()):
@@ -35,4 +35,9 @@ for kind in ('직접', '종단'):
         neither = len(idx) - both - a_only - b_only
         tot = [t + v for t, v in zip(tot, (both, a_only, b_only, neither))]
         print(f'  {j:6} 둘 다 맞음 {both} · A만 {a_only} · B만 {b_only} · 둘 다 틀림 {neither} → p={p_exact(a_only, b_only):.2f}')
-    print(f'  합계   둘 다 맞음 {tot[0]} · A만 {tot[1]} · B만 {tot[2]} · 둘 다 틀림 {tot[3]} → p={p_exact(tot[1], tot[2]):.3f}')
+    # 짝지은 정확도 차이(A−B, 264문제)의 95% 구간 — 문제를 복원추출 2000번(고정 시드). yok3x 세션 43절의 보고 방식을 따랐다
+    n = sum(tot)
+    diffs = [1] * tot[1] + [-1] * tot[2] + [0] * (tot[0] + tot[3])
+    rnd = random.Random(20261001)
+    bs = sorted(sum(rnd.choice(diffs) for _ in range(n)) / n * 100 for _ in range(2000))
+    print(f'  합계   둘 다 맞음 {tot[0]} · A만 {tot[1]} · B만 {tot[2]} · 둘 다 틀림 {tot[3]} → p={p_exact(tot[1], tot[2]):.3f} · A−B = {(tot[1] - tot[2]) / n * 100:+.1f}%p [{bs[49]:+.1f}, {bs[1949]:+.1f}]')
