@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>triPilot · 일정 카드 장소·시간 수정 목업</title>
+<style>
+:root{color-scheme:light;--color-text:#24392f;--color-muted:#6d7c73;--color-border:#dce3dd;--color-surface:#fff;--color-background:#f3f5f3;--color-primary:#2e6047;--color-primary-hover:#254f3a;--color-on-primary:#fff;--color-soft:#e9f2eb;--color-subtle:#f6f7f5;--color-warning:#82693e;--color-warning-soft:#faf6ec;--color-warning-border:#e5d9c1;--color-error:#965640;--color-error-soft:#fdf3ed;--color-error-border:#ecd2c7;--font-sans:"Segoe UI","Malgun Gothic",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-background);color:var(--color-text);font-family:var(--font-sans);font-size:13px;line-height:1.65;font-synthesis:none}
+button,input,select{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+button:disabled{cursor:not-allowed}
+h1,h2,h3,p{margin:0}
+ul,ol{list-style:none;margin:0;padding:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+svg.i{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* 검토용 막대 — 제품 화면 밖 */
+.reviewbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 18px;padding:10px 24px;background:var(--color-subtle);border-bottom:1px solid var(--color-border);font-size:12px}
+.reviewbar strong{font-weight:650}
+.reviewbar small{color:var(--color-muted);font-size:11px;margin-left:8px}
+.review-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.review-tools label{display:inline-flex;align-items:center;gap:6px;color:var(--color-muted);font-size:11px}
+.review-tools select,.review-tools button{min-height:32px;border:1px solid var(--color-border);border-radius:8px;background:#fff;padding:3px 10px;font-size:12px}
+
+/* 계획 확인 화면 */
+main{max-width:680px;margin:0 auto;padding:36px 16px 56px}
+.eyebrow{display:block;color:var(--color-primary);font-size:10px;font-weight:700;letter-spacing:1.25px;margin:0 0 9px}
+.page-head h1{font-size:24px;line-height:1.4;letter-spacing:-.8px}
+.page-head p{margin-top:8px;color:var(--color-muted)}
+.list{display:grid;gap:12px;margin-top:24px}
+.empty{padding:23px;border:1px dashed var(--color-border);border-radius:20px;color:var(--color-muted);text-align:center}
+.credit{margin-top:14px;font-size:11px;color:var(--color-muted)}
+.credit a{text-decoration:underline}
+
+/* 카드 */
+.card{min-width:0;border:1px solid var(--color-border);border-radius:20px;background:#fffffff5;padding:23px;transition:border-color .18s,box-shadow .18s}
+.card[data-problem=true]{border-color:var(--color-warning-border)}
+.card[data-mode=edit]:not([data-problem=true]),.card[data-mode=results]:not([data-problem=true]){border-color:#b9cdbd;box-shadow:0 8px 26px #25392f0f}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.visit{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;font-weight:600;color:var(--color-primary);font-variant-numeric:tabular-nums}
+.visit .dur{font-weight:400;color:var(--color-muted)}
+.card[data-problem=true] .visit{color:var(--color-muted);font-weight:400}
+.head h2{margin-top:4px;font-size:17px;letter-spacing:-.4px}
+.head h2:focus{outline:none}
+.category{margin-top:1px;font-size:12px;color:var(--color-muted)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{display:inline-flex;align-items:center;border-radius:7px;padding:4px 8px;font-size:10px;line-height:1.6;font-weight:600;white-space:nowrap}
+.badge.success{background:var(--color-soft);color:var(--color-primary)}
+.badge.warning{background:#faf0db;color:var(--color-warning)}
+.badge.neutral{background:var(--color-subtle);color:var(--color-muted);box-shadow:inset 0 0 0 1px var(--color-border)}
+.problem{margin-top:10px;font-size:12px;color:var(--color-warning)}
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin-top:14px;font-size:12px;line-height:1.8}
+.facts dt{display:inline-flex;align-items:center;gap:5px;color:var(--color-muted)}
+.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.quote{justify-self:start;padding:4px 8px;border-radius:8px;background:var(--color-subtle);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+.flash{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--color-primary)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--color-border)}
+.actions .spacer{flex:1}
+
+/* 버튼 — 앱 Button과 같은 값 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 16px;border:1px solid transparent;border-radius:12px;font-size:12px;font-weight:650;line-height:1.5;text-align:center;transition:background .18s,border-color .18s,color .18s}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.48}
+.btn.primary{background:var(--color-primary);color:var(--color-on-primary)}
+.btn.primary:hover:not(:disabled){background:var(--color-primary-hover)}
+.btn.secondary{background:var(--color-surface);color:var(--color-primary);border-color:var(--color-border)}
+.btn.secondary:hover:not(:disabled){border-color:var(--color-primary);background:#f8fbf8}
+.btn.quiet{color:var(--color-muted)}
+.btn.quiet:hover:not(:disabled){color:var(--color-primary);background:var(--color-soft)}
+
+/* 수정 화면 */
+.edit,.results{display:grid;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border)}
+.block-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:650}
+.block-label+*{margin-top:-2px}
+.gap{height:6px}
+.chosen{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-subtle)}
+.chosen:focus{outline:none}
+.chosen:focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}
+.chosen>.i{margin-top:3px;color:var(--color-primary)}
+.chosen .body{flex:1;min-width:0}
+.chosen strong{display:block;font-size:13px;font-weight:650}
+.chosen .body span{display:block;font-size:12px;color:var(--color-muted)}
+.chosen[data-new=true]{border-color:#9fbea8;background:var(--color-soft)}
+.chosen[data-empty=true]{border-style:dashed;background:#fff}
+.chosen[data-empty=true]>.i{color:var(--color-muted)}
+.search{display:flex;gap:6px}
+.search .field{position:relative;flex:1;min-width:0}
+.search .field .i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-muted);pointer-events:none}
+input{min-width:0;min-height:42px;border:1px solid var(--color-border);border-radius:10px;padding:6px 10px;background:#fff;color:var(--color-text);font-size:13px}
+.search input{width:100%;padding-left:36px}
+input[aria-invalid=true]{border-color:var(--color-error)}
+.recs,.result-list{border:1px solid var(--color-border);border-radius:12px;overflow:hidden;background:#fff}
+.recs-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;padding:9px 14px;border-bottom:1px solid var(--color-border);background:var(--color-subtle);font-size:11px;color:var(--color-muted)}
+.recs-head strong{color:var(--color-text);font-size:12px;font-weight:650}
+.rec,.result{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-bottom:1px solid var(--color-border);background:#fff;text-align:left}
+.recs li:last-child .rec,.result-list li:last-child .result{border-bottom:0}
+.rec:hover,.result:hover{background:#f8fbf8}
+.rec .body,.result .body{flex:1;min-width:0}
+.rec strong,.result strong{display:block;font-size:13px;font-weight:650}
+.rec .body span,.result .body span{display:block;font-size:12px;color:var(--color-muted)}
+.radio{display:grid;place-items:center;flex-shrink:0;width:18px;height:18px;border:1.5px solid #b9c6bd;border-radius:50%}
+.rec[aria-pressed=true]{background:var(--color-soft)}
+.rec[aria-pressed=true] .radio{border-color:var(--color-primary);background:var(--color-primary)}
+.rec[aria-pressed=true] .radio::after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.dist{flex-shrink:0;padding:2px 8px;border-radius:999px;background:var(--color-soft);color:var(--color-primary);font-size:11px;font-variant-numeric:tabular-nums}
+.result .chev{color:var(--color-muted)}
+.when-fields{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+.when-fields label{display:grid;gap:4px;font-size:11px;color:var(--color-muted)}
+.when-fields input{width:100%}
+.field-error{font-size:12px;color:var(--color-error)}
+.overlap{padding:12px 14px;border:1px solid var(--color-warning-border);border-radius:12px;background:var(--color-warning-soft);color:var(--color-warning);font-size:12px}
+.overlap-title{display:flex;align-items:center;gap:6px;font-weight:650}
+.overlap ul{display:grid;gap:3px;margin-top:7px}
+.overlap li{display:flex;gap:12px;color:var(--color-text)}
+.overlap time{min-width:96px;color:var(--color-warning);font-variant-numeric:tabular-nums}
+.overlap .hint{margin-top:7px;font-size:11px}
+.back{justify-self:start;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 6px 0 2px;border-radius:8px;color:var(--color-primary);font-size:12px;font-weight:650}
+.back:hover{background:var(--color-soft)}
+.results-head{font-size:12px;color:var(--color-muted)}
+.results-head:focus{outline:none}
+.here{flex-shrink:0;padding:2px 8px;border-radius:7px;background:var(--color-subtle);color:var(--color-muted);font-size:10px;font-weight:600}
+.state-box{padding:14px;border:1px dashed var(--color-border);border-radius:12px;color:var(--color-muted);font-size:12px}
+.state-box.blocked{border-style:solid;border-color:var(--color-warning-border);background:var(--color-warning-soft);color:var(--color-warning)}
+.state-box .btn{margin-top:10px}
+
+/* 지도 대화상자 */
+dialog{width:min(640px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--color-border);border-radius:20px;background:#fff;color:var(--color-text);overflow:auto}
+dialog::backdrop{background:#13241e8c}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:20px 22px 14px}
+.dlg-head h2{font-size:18px;letter-spacing:-.4px}
+.dlg-head p{font-size:12px;color:var(--color-muted)}
+.icon-btn{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:10px;color:var(--color-muted)}
+.icon-btn:hover{background:var(--color-subtle);color:var(--color-text)}
+.map{margin:0 22px;overflow:hidden;border:1px solid var(--color-border);border-radius:14px}
+.map svg{display:block;width:100%;height:auto}
+.stops{display:grid;gap:4px;padding:14px 22px 0;font-size:12px}
+.stops li{display:flex;align-items:center;gap:10px}
+.stops .n{display:grid;place-items:center;flex-shrink:0;width:22px;height:22px;border:1px solid #b9c6bd;border-radius:50%;background:#fff;font-size:11px}
+.stops time{min-width:96px;color:var(--color-muted);font-variant-numeric:tabular-nums}
+.stops li[aria-current=true]{color:var(--color-primary);font-weight:650}
+.stops li[aria-current=true] .n{border-color:var(--color-primary);background:var(--color-primary);color:#fff}
+.dlg-foot{display:flex;justify-content:flex-end;padding:16px 22px 20px}
+.rec .body .dist-inline{display:none;font-size:11px;color:var(--color-primary)}
+
+@media(max-width:560px){
+  .reviewbar{padding:10px 16px}
+  .reviewbar small{display:block;margin:2px 0 0}
+  main{padding:24px 16px 48px}
+  .page-head h1{font-size:21px}
+  .card{padding:18px}
+  .when-fields{grid-template-columns:1fr 1fr}
+  .when-fields label:first-child{grid-column:1/-1}
+  input{font-size:16px}
+  .actions .spacer{display:none}
+  .actions .btn{flex:1 1 40%}
+  .rec .dist{display:none}
+  .rec .body .dist-inline{display:block}
+  .dlg-head,.stops{padding-inline:16px}
+  .map{margin:0 16px}
+  .dlg-foot{padding:14px 16px 16px}
+  .dlg-foot .btn{flex:1}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+</svg>
+
+<div class="reviewbar">
+  <p><strong>목업 · 일정 카드 — 장소·방문 시간 수정</strong><small>2026-09-30 · 1차본 · 실제 API와 연결되지 않음</small></p>
+  <div class="review-tools">
+    <label for="searchMode">검색 결과</label>
+    <select id="searchMode">
+      <option value="ok">정상</option>
+      <option value="empty">결과 없음</option>
+      <option value="blocked">조회 막힘</option>
+    </select>
+    <button type="button" id="resetAll">처음 상태로</button>
+  </div>
+</div>
+
+<main>
+  <header class="page-head">
+    <span class="eyebrow">LET’S CHECK IT TOGETHER</span>
+    <h1>10월 서울 여행</h1>
+    <p>읽은 그대로 보여 드려요. 고칠 곳만 고치고 등록하면, 여행이 끝날 때까지 지켜볼게요.</p>
+  </header>
+  <div class="list" id="list"></div>
+  <p class="credit">장소 정보 출처 : ⓒ한국관광공사 · <a href="https://api.visitkorea.or.kr/#/useServiceGuide/2" target="_blank" rel="noreferrer">저작권 정책</a></p>
+</main>
+
+<p class="sr-only" role="status" aria-live="polite" id="announce"></p>
+
+<dialog id="mapDialog" aria-labelledby="mapTitle">
+  <div class="dlg-head">
+    <div>
+      <span class="eyebrow">위치</span>
+      <h2 id="mapTitle"></h2>
+      <p id="mapAddress"></p>
+    </div>
+    <button type="button" class="icon-btn" data-close aria-label="지도 닫기"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="map" id="mapCanvas"></div>
+  <ol class="stops" id="mapStops"></ol>
+  <div class="dlg-foot"><button type="button" class="btn secondary" data-close>닫기</button></div>
+</dialog>
+
+<script>
+"use strict";
+
+const PLACES = {
+  gyeongbokgung: { group: "palace", name: "경복궁", category: "관광지 · 고궁", address: "서울 종로구 사직로 161", phone: "02-3700-3900", hours: "09:00 – 18:00 · 화요일 휴무", lat: 37.5796, lon: 126.9770 },
+  changdeokgung: { group: "palace", name: "창덕궁", category: "관광지 · 고궁", address: "서울 종로구 율곡로 99", phone: "02-3668-2300", hours: "09:00 – 18:00 · 월요일 휴무", lat: 37.5794, lon: 126.9910 },
+  changgyeonggung: { group: "palace", name: "창경궁", category: "관광지 · 고궁", address: "서울 종로구 창경궁로 185", phone: "02-762-4868", hours: "09:00 – 21:00 · 월요일 휴무", lat: 37.5788, lon: 126.9950 },
+  deoksugung: { group: "palace", name: "덕수궁", category: "관광지 · 고궁", address: "서울 중구 세종대로 99", phone: "02-771-9951", hours: "09:00 – 21:00 · 월요일 휴무", lat: 37.5658, lon: 126.9751 },
+  gyeonghuigung: { group: "palace", name: "경희궁", category: "관광지 · 고궁", address: "서울 종로구 새문안로 45", phone: "02-724-0274", hours: "09:00 – 18:00 · 월요일 휴무", lat: 37.5714, lon: 126.9681 },
+  gwangjang: { group: "market", name: "광장시장", category: "전통시장 · 먹거리", address: "서울 종로구 창경궁로 88", phone: "02-2267-0291", hours: "09:00 – 23:00 · 점포마다 다름", lat: 37.5700, lon: 126.9996 },
+  tongin: { group: "market", name: "통인시장", category: "전통시장 · 먹거리", address: "서울 종로구 자하문로15길 18", phone: "02-722-0911", hours: "07:00 – 21:00 · 점포마다 다름", lat: 37.5809, lon: 126.9696 },
+  namdaemun: { group: "market", name: "남대문시장", category: "전통시장 · 먹거리", address: "서울 중구 남대문시장4길 21", phone: "02-753-2805", hours: "00:00 – 23:00 · 점포마다 다름", lat: 37.5591, lon: 126.9776 },
+  mangwon: { group: "market", name: "망원시장", category: "전통시장 · 먹거리", address: "서울 마포구 포은로8길 14", phone: "02-335-3591", hours: "10:00 – 21:00 · 점포마다 다름", lat: 37.5560, lon: 126.9060 },
+  oyMyeongdong: { group: "beauty", name: "올리브영 명동 플래그십", category: "화장품 · 뷰티 편집숍", address: "서울 중구 명동길 53", phone: "02-736-5290", hours: "10:00 – 22:30 · 연중무휴", lat: 37.5637, lon: 126.9851 },
+  oyJonggak: { group: "beauty", name: "올리브영 종각역점", category: "화장품 · 뷰티 편집숍", address: "서울 종로구 종로 51", phone: "02-733-5290", hours: "08:00 – 23:00 · 연중무휴", lat: 37.5702, lon: 126.9838 },
+  oyInsadong: { group: "beauty", name: "올리브영 인사동점", category: "화장품 · 뷰티 편집숍", address: "서울 종로구 인사동길 49", phone: "02-735-5290", hours: "10:00 – 22:00 · 연중무휴", lat: 37.5741, lon: 126.9857 },
+  oyGwanghwamun: { group: "beauty", name: "올리브영 광화문점", category: "화장품 · 뷰티 편집숍", address: "서울 종로구 종로1길 50", phone: "02-737-5290", hours: "08:00 – 22:00 · 주말 10:00부터", lat: 37.5717, lon: 126.9791 },
+  oyGangnam: { group: "beauty", name: "올리브영 강남타운", category: "화장품 · 뷰티 편집숍", address: "서울 강남구 강남대로 429", phone: "02-538-5290", hours: "10:00 – 22:30 · 연중무휴", lat: 37.5010, lon: 127.0265 },
+  nSeoulTower: { group: "view", name: "N서울타워", category: "관광지 · 전망대", address: "서울 용산구 남산공원길 105", phone: "02-3455-9277", hours: "10:00 – 23:00 · 연중무휴", lat: 37.5512, lon: 126.9882 },
+  naksan: { group: "view", name: "낙산공원", category: "관광지 · 공원", address: "서울 종로구 낙산길 41", phone: "02-743-7985", hours: "24시간", lat: 37.5806, lon: 127.0075 },
+  palgakjeong: { group: "view", name: "북악스카이웨이 팔각정", category: "관광지 · 전망대", address: "서울 종로구 북악산로 267", phone: "02-2143-5271", hours: "10:00 – 22:00 · 연중무휴", lat: 37.6016, lon: 126.9812 },
+  seoulSky: { group: "view", name: "롯데월드타워 서울스카이", category: "관광지 · 전망대", address: "서울 송파구 올림픽로 300", phone: "1661-2000", hours: "10:30 – 22:00 · 연중무휴", lat: 37.5126, lon: 127.1025 },
+};
+
+const NONE = "none";
+const START = [
+  { key: "s1:0", line: 2, raw: "10:00 경복궁 관람", title: "경복궁 관람", group: "palace", date: "2026-10-01", start: "10:00", end: "11:30", place: "gyeongbokgung", method: "lookup" },
+  { key: "s1:1", line: 3, raw: "11:00 올리브영", title: "올리브영", group: "beauty", date: "2026-10-01", start: "11:00", end: "12:00", place: null, method: null },
+  { key: "s1:2", line: 4, raw: "12:30 광장시장 빈대떡", title: "광장시장 빈대떡", group: "market", date: "2026-10-01", start: "12:30", end: "13:30", place: "gwangjang", method: "lookup" },
+  { key: "s1:3", line: 6, raw: "15:00 남산타워", title: "남산타워", group: "view", date: "2026-10-02", start: "15:00", end: "16:30", place: "nSeoulTower", method: "lookup" },
+];
+
+let items = [];
+let ui = {};
+let searchMode = "ok";
+let mapOpener = null;
+const list = document.getElementById("list");
+
+const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const icon = (name) => `<svg class="i"><use href="#i-${name}"/></svg>`;
+const placeOf = (id) => (id && id !== NONE ? PLACES[id] : null);
+const nameOf = (item) => placeOf(item.place)?.name ?? item.title;
+const minutes = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
+const byTime = (a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start);
+
+function dayLabel(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  return `${date} (${"일월화수목금토"[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})`;
+}
+function duration(start, end) {
+  const total = minutes(end) - minutes(start);
+  if (total <= 0) return "";
+  const h = Math.floor(total / 60), m = total % 60;
+  return [h && `${h}시간`, m && `${m}분`].filter(Boolean).join(" ");
+}
+function metres(a, b) {
+  const rad = Math.PI / 180, R = 6371000;
+  const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const distLabel = (m) => (m < 1000 ? `${Math.round(m / 10) * 10}m` : `${(m / 1000).toFixed(1)}km`);
+
+function sorted() {
+  return [...items].sort((a, b) => (b.place === null) - (a.place === null) || byTime(a, b));
+}
+function state(item) {
+  return (ui[item.key] ??= { mode: item.place === null ? "edit" : "view", draft: draftOf(item), query: "", search: null, run: 0, flash: false });
+}
+const draftOf = (item) => ({ place: item.place, date: item.date, start: item.start, end: item.end });
+const changed = (item, draft) => JSON.stringify(draft) !== JSON.stringify(draftOf(item));
+
+/** 같은 날의 앞뒤 일정(장소 좌표가 있는 것만) — 추천 후보의 거리 기준 */
+function neighbours(item) {
+  const day = items.filter((o) => o.key !== item.key && o.date === item.date && placeOf(o.place)).sort(byTime);
+  const prev = day.filter((o) => o.start <= item.start).pop();
+  const next = day.find((o) => o.start > item.start);
+  return [prev, next].filter(Boolean);
+}
+function recommendations(item) {
+  const near = neighbours(item);
+  let basis = near.map((o) => placeOf(o.place));
+  let label = near.length === 2 ? "앞뒤 일정에서 가까운 순" : near.length === 1 ? `${nameOf(near[0])}에서 가까운 순` : "";
+  if (!basis.length && placeOf(item.place)) { basis = [placeOf(item.place)]; label = "지금 장소에서 가까운 순"; }
+  const pool = Object.entries(PLACES).filter(([id, p]) => p.group === item.group && id !== item.place)
+    .map(([id, p]) => ({ id, p, d: basis.length ? basis.reduce((sum, b) => sum + metres(p, b), 0) / basis.length : null }));
+  if (basis.length) pool.sort((a, b) => a.d - b.d);
+  return { label, average: basis.length === 2, list: pool.slice(0, 3) };
+}
+function overlapping(key, draft) {
+  if (!draft.date || !draft.start || !draft.end || draft.end <= draft.start) return [];
+  return items.filter((o) => o.key !== key && o.date === draft.date && o.start < draft.end && draft.start < o.end).sort(byTime);
+}
+function search(query) {
+  const norm = (s) => s.replace(/\s+/g, "").toLowerCase();
+  const q = norm(query);
+  return Object.entries(PLACES).filter(([, p]) => norm(p.name).includes(q)).slice(0, 8);
+}
+
+/* ── 카드 그리기 ───────────────────────── */
+function badgesHTML(item, s) {
+  const out = [];
+  if (item.place === null) out.push(["원문 그대로", "success"], ["확인 필요", "warning"]);
+  else if (s.mode !== "view") out.push(["수정 중", "neutral"]);
+  else if (item.method === "customer") out.push(["직접 고침", "success"]);
+  else if (item.method === "lookup") out.push(["조회로 확인", "success"]);
+  return out.map(([label, tone]) => `<span class="badge ${tone}">${label}</span>`).join("");
+}
+
+function headHTML(item, s) {
+  const place = placeOf(item.place);
+  const dur = duration(item.start, item.end);
+  return `<header class="head">
+    <div>
+      <p class="visit">${icon("calendar")}<span>${dayLabel(item.date)} · ${item.start} – ${item.end}</span>${dur ? `<span class="dur">${dur}</span>` : ""}</p>
+      <h2 tabindex="-1">${esc(nameOf(item))}</h2>
+      ${place ? `<p class="category">${esc(place.category)}</p>` : ""}
+    </div>
+    <div class="badges">${badgesHTML(item, s)}</div>
+  </header>`;
+}
+
+function viewHTML(item) {
+  const place = placeOf(item.place);
+  const facts = place
+    ? `<dt>${icon("pin")}주소</dt><dd>${esc(place.address)}</dd>
+       <dt>${icon("phone")}전화</dt><dd>${esc(place.phone)}</dd>
+       <dt>${icon("clock")}영업</dt><dd>${esc(place.hours)}</dd>`
+    : `<dt>${icon("pin")}장소</dt><dd>장소 없음</dd>`;
+  return `<dl class="facts">${facts}<dt>원문</dt><dd class="quote">${item.line}: ${esc(item.raw)}</dd></dl>
+    <div class="actions">
+      ${place ? `<button type="button" class="btn secondary" data-act="map">${icon("map")}지도 보기</button>` : ""}
+      <span class="spacer"></span>
+      <button type="button" class="btn secondary" data-act="edit">${icon("pencil")}수정</button>
+    </div>`;
+}
+
+function chosenHTML(item, draft) {
+  const place = placeOf(draft.place);
+  const fresh = draft.place !== item.place;
+  if (place) {
+    return `<div class="chosen" data-new="${fresh}" tabindex="-1">${icon("pin")}
+      <div class="body"><strong>${esc(place.name)}</strong><span>${esc(place.address)}</span></div>
+      <span class="badge ${fresh ? "success" : "neutral"}">${fresh ? "새로 고름" : "지금 장소"}</span></div>`;
+  }
+  if (draft.place === NONE) {
+    return `<div class="chosen" data-new="${fresh}" tabindex="-1">${icon("slash")}
+      <div class="body"><strong>장소 없음</strong><span>이 일정은 장소 없이 둡니다</span></div>
+      ${fresh ? `<span class="badge success">새로 고름</span>` : ""}</div>`;
+  }
+  return `<div class="chosen" data-empty="true" tabindex="-1">${icon("pin")}
+    <div class="body"><strong>아직 정하지 못했어요</strong><span>추천 후보에서 고르거나 업체 이름으로 찾아 주세요</span></div></div>`;
+}
+
+function searchFormHTML(item, s) {
+  return `<form class="search" data-act="search" role="search">
+    <label class="sr-only" for="q-${item.key}">업체 이름으로 찾기</label>
+    <div class="field">${icon("search")}<input id="q-${item.key}" data-role="q" value="${esc(s.query)}" placeholder="업체 이름으로 찾기" maxlength="80" autocomplete="off"></div>
+    <button type="submit" class="btn secondary" ${s.query.trim() ? "" : "disabled"}>찾기</button>
+  </form>`;
+}
+
+function recsHTML(item, draft) {
+  const recs = recommendations(item);
+  if (!recs.list.length) return "";
+  const rows = recs.list.map(({ id, p, d }) => {
+    const dist = d === null ? "" : `${recs.average ? "평균 " : ""}${distLabel(d)}`;
+    return `<li><button type="button" class="rec" data-act="pick" data-place="${id}" aria-pressed="${draft.place === id}">
+      <span class="radio" aria-hidden="true"></span>
+      <span class="body"><strong>${esc(p.name)}</strong><span>${esc(p.address)}</span>${dist ? `<span class="dist-inline">${dist}</span>` : ""}</span>
+      ${dist ? `<span class="dist">${dist}</span>` : ""}
+    </button></li>`;
+  }).join("");
+  return `<div class="recs">
+    <p class="recs-head"><strong>추천 후보 ${recs.list.length}곳</strong>${recs.label ? `<span>${esc(recs.label)}</span>` : ""}</p>
+    <ul>${rows}</ul>
+  </div>`;
+}
+
+function editHTML(item, s) {
+  const d = s.draft;
+  const unresolved = item.place === null;
+  const top = unresolved
+    ? `<p class="problem">「${esc(item.title)}」의 장소를 정하지 못했어요 — 추천 후보에서 고르거나 업체 이름으로 찾아 주세요</p>
+       <dl class="facts"><dt>원문</dt><dd class="quote">${item.line}: ${esc(item.raw)}</dd></dl>`
+    : "";
+  return `${top}<section class="edit" aria-label="${esc(nameOf(item))} 수정">
+    <p class="block-label">${icon("pin")}장소</p>
+    ${chosenHTML(item, d)}
+    ${searchFormHTML(item, s)}
+    ${recsHTML(item, d)}
+    <div class="gap"></div>
+    <p class="block-label">${icon("calendar")}방문 날짜·시간</p>
+    <div class="when-fields">
+      <label for="date-${item.key}">방문 날짜<input id="date-${item.key}" type="date" data-field="date" value="${d.date}"></label>
+      <label for="start-${item.key}">시작<input id="start-${item.key}" type="time" data-field="start" value="${d.start}"></label>
+      <label for="end-${item.key}">끝<input id="end-${item.key}" type="time" data-field="end" value="${d.end}"></label>
+    </div>
+    <p class="field-error" data-slot="error" hidden>끝 시각은 시작 시각보다 늦어야 해요</p>
+    <div data-slot="overlap" aria-live="polite"></div>
+  </section>
+  <div class="actions">
+    <button type="button" class="btn quiet" data-act="remove">${icon("trash")}빼기</button>
+    <button type="button" class="btn quiet" data-act="none" ${d.place === NONE ? "disabled" : ""}>${icon("slash")}장소 없음</button>
+    <span class="spacer"></span>
+    ${unresolved ? "" : `<button type="button" class="btn secondary" data-act="cancel">취소</button>`}
+    <button type="button" class="btn primary" data-act="save">${icon("check")}저장</button>
+  </div>`;
+}
+
+function resultsHTML(item, s) {
+  const r = s.search;
+  let body;
+  if (r.state === "loading") body = `<p class="results-head" tabindex="-1">찾는 중…</p>`;
+  else if (r.state === "blocked") body = `<div class="state-box blocked" tabindex="-1">장소 조회가 잠시 막혔어요. 없는 곳이라는 뜻은 아니에요 — 잠시 뒤 다시 찾아 주세요.
+      <div><button type="button" class="btn secondary" data-act="retry">다시 찾기</button></div></div>`;
+  else if (!r.hits.length) body = `<div class="state-box" tabindex="-1">「${esc(s.query)}」에 맞는 곳을 찾지 못했어요. 이름을 바꿔 다시 찾거나, 수정 화면의 추천 후보에서 골라 주세요.</div>`;
+  else body = `<p class="results-head" tabindex="-1">「${esc(s.query)}」 검색 결과 ${r.hits.length}곳</p>
+      <ul class="result-list">${r.hits.map(([id, p]) => `<li><button type="button" class="result" data-act="pick" data-place="${id}">
+        <span class="body"><strong>${esc(p.name)}</strong><span>${esc(p.address)}</span></span>
+        ${s.draft.place === id ? `<span class="here">지금 선택</span>` : ""}<span class="chev">${icon("chev")}</span>
+      </button></li>`).join("")}</ul>`;
+  return `<section class="results" aria-label="장소 검색 결과">
+    <button type="button" class="back" data-act="back">${icon("back")}수정 화면으로</button>
+    ${searchFormHTML(item, s)}
+    <div aria-live="polite">${body}</div>
+  </section>`;
+}
+
+function cardHTML(item) {
+  const s = state(item);
+  const body = s.mode === "view" ? viewHTML(item) : s.mode === "results" ? resultsHTML(item, s) : editHTML(item, s);
+  return `<article class="card" data-key="${item.key}" data-mode="${s.mode}" data-problem="${item.place === null}">
+    ${headHTML(item, s)}
+    ${s.flash ? `<p class="flash">${icon("check")}저장했어요</p>` : ""}
+    ${body}
+  </article>`;
+}
+
+/* ── 갱신 ───────────────────────── */
+const cardEl = (key) => list.querySelector(`[data-key="${CSS.escape(key)}"]`);
+const itemOf = (key) => items.find((i) => i.key === key);
+
+function renderList() {
+  list.innerHTML = items.length ? sorted().map(cardHTML).join("") : `<div class="empty">남은 일정이 없어요. 위의 「처음 상태로」로 되돌릴 수 있어요.</div>`;
+  items.forEach((i) => refreshLive(i.key));
+}
+function renderCard(key, focus) {
+  const el = cardEl(key);
+  el.outerHTML = cardHTML(itemOf(key));
+  refreshLive(key);
+  if (focus) cardEl(key).querySelector(focus)?.focus();
+}
+function announce(text) {
+  const box = document.getElementById("announce");
+  box.textContent = "";
+  requestAnimationFrame(() => { box.textContent = text; });
+}
+
+/** 입력 중에는 카드를 다시 그리지 않고 겹침 안내·오류·저장 버튼만 고친다 */
+function refreshLive(key) {
+  const s = ui[key], el = cardEl(key), item = itemOf(key);
+  if (!s || s.mode !== "edit" || !el) return;
+  const d = s.draft;
+  const bad = Boolean(d.start && d.end && d.end <= d.start);
+  el.querySelector('[data-slot="error"]').hidden = !bad;
+  el.querySelector('[data-field="end"]').setAttribute("aria-invalid", String(bad));
+  const hits = overlapping(key, d);
+  el.querySelector('[data-slot="overlap"]').innerHTML = hits.length ? `<div class="overlap">
+      <p class="overlap-title">${icon("alert")}겹치는 일정이 있습니다</p>
+      <ul>${hits.map((o) => `<li><time>${o.start} – ${o.end}</time><span>${esc(nameOf(o))}</span></li>`).join("")}</ul>
+      <p class="hint">시간을 옮기거나, 이대로 저장할 수 있어요.</p>
+    </div>` : "";
+  el.querySelector('[data-act="save"]').disabled = bad || !d.date || !d.start || !d.end || !changed(item, d);
+}
+
+function runSearch(key) {
+  const s = ui[key];
+  const query = s.query.trim();
+  if (!query) return;
+  const run = ++s.run;
+  s.mode = "results";
+  s.search = { state: "loading" };
+  renderCard(key, ".results-head");
+  setTimeout(() => {
+    if (s.run !== run || s.mode !== "results") return;
+    if (searchMode === "blocked") s.search = { state: "blocked" };
+    else s.search = { state: "done", hits: searchMode === "empty" ? [] : search(query) };
+    renderCard(key, ".results-head, .state-box");
+  }, 450);
+}
+
+function save(key) {
+  const item = itemOf(key), s = ui[key], d = s.draft;
+  if (d.place !== item.place) { item.place = d.place; item.method = "customer"; }
+  Object.assign(item, { date: d.date, start: d.start, end: d.end });
+  s.mode = item.place === null ? "edit" : "view";
+  s.draft = draftOf(item);
+  s.search = null;
+  s.flash = true;
+  renderList();
+  cardEl(key).querySelector("h2").focus();
+  announce(`「${nameOf(item)}」을 저장했어요`);
+  setTimeout(() => {
+    if (!ui[key]?.flash) return;
+    ui[key].flash = false;
+    cardEl(key)?.querySelector(".flash")?.remove();
+  }, 3500);
+}
+
+/* ── 지도 ───────────────────────── */
+function openMap(key, opener) {
+  const item = itemOf(key);
+  const place = placeOf(item.place);
+  const stops = items.filter((o) => o.date === item.date && placeOf(o.place)).sort(byTime);
+  document.getElementById("mapTitle").textContent = place.name;
+  document.getElementById("mapAddress").textContent = place.address;
+  document.getElementById("mapCanvas").innerHTML = mapSVG(stops, key);
+  document.getElementById("mapStops").innerHTML = stops.map((o, n) => `<li aria-current="${o.key === key}">
+    <span class="n">${n + 1}</span><time>${o.start} – ${o.end}</time><span>${esc(nameOf(o))}</span></li>`).join("");
+  mapOpener = opener;
+  document.getElementById("mapDialog").showModal();
+}
+
+function mapSVG(stops, currentKey) {
+  const W = 600, H = 340, pad = 70, k0 = Math.cos(37.57 * Math.PI / 180);
+  const pts = stops.map((o, n) => ({ o, n: n + 1, p: placeOf(o.place), X: placeOf(o.place).lon * k0, Y: placeOf(o.place).lat }));
+  const xs = pts.map((q) => q.X), ys = pts.map((q) => q.Y);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const spanX = Math.max(Math.max(...xs) - Math.min(...xs), .012), spanY = Math.max(Math.max(...ys) - Math.min(...ys), .012);
+  const k = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanY);
+  pts.forEach((q) => { q.x = W / 2 + (q.X - cx) * k; q.y = H / 2 - (q.Y - cy) * k + 12; });
+  const current = pts.find((q) => q.o.key === currentKey);
+  const route = pts.length > 1 ? `<polyline points="${pts.map((q) => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(" ")}" fill="none" stroke="#8fae98" stroke-width="2" stroke-dasharray="5 6"/>` : "";
+  const others = pts.filter((q) => q !== current).map((q) => `<g><circle cx="${q.x}" cy="${q.y}" r="15" fill="#fff" stroke="#8fa396" stroke-width="2"/>
+    <text x="${q.x}" y="${q.y + 5}" text-anchor="middle" font-size="14" fill="#24392f">${q.n}</text></g>`).join("");
+  const labelW = current.p.name.length * 18 + 28;
+  const labelX = current.x + 26 + labelW > W - 8 ? current.x - 26 - labelW : current.x + 26;
+  const pin = `<g transform="translate(${current.x},${current.y})">
+    <ellipse cx="0" cy="1" rx="10" ry="4" fill="#24392f" opacity=".18"/>
+    <path d="M0 0C-5-13-20-21-20-36A20 20 0 1 1 20-36C20-21 5-13 0 0Z" fill="#2e6047"/>
+    <text x="0" y="-30" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">${current.n}</text></g>
+    <g><rect x="${labelX}" y="${current.y - 56}" width="${labelW}" height="34" rx="10" fill="#fff" stroke="#b9cdbd"/>
+    <text x="${labelX + 14}" y="${current.y - 33}" font-size="18" font-weight="650" fill="#2e6047">${esc(current.p.name)}</text></g>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(current.p.name)} 위치와 같은 날 일정 ${pts.length}곳">
+    <rect width="${W}" height="${H}" fill="#eef1ea"/>
+    <path d="M-20 250C120 230 210 280 330 250S520 190 640 215" fill="none" stroke="#d4e3ea" stroke-width="16" stroke-linecap="round"/>
+    <ellipse cx="470" cy="330" rx="120" ry="55" fill="#dde9d8"/>
+    <ellipse cx="90" cy="20" rx="110" ry="50" fill="#dde9d8"/>
+    <g fill="none" stroke="#fff" stroke-linecap="round">
+      <path d="M0 120H600" stroke-width="10"/><path d="M0 205L600 180" stroke-width="7"/>
+      <path d="M160 0V340" stroke-width="9"/><path d="M420 0L380 340" stroke-width="7"/>
+      <path d="M0 60L260 340" stroke-width="5"/><path d="M290 0L300 340" stroke-width="5"/>
+    </g>
+    ${route}${others}${pin}
+  </svg>`;
+}
+
+/* ── 이벤트 ───────────────────────── */
+list.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const key = button.closest("[data-key]").dataset.key;
+  const item = itemOf(key), s = state(item);
+  switch (button.dataset.act) {
+    case "map": openMap(key, button); break;
+    case "edit": s.mode = "edit"; s.draft = draftOf(item); s.query = ""; s.flash = false; renderCard(key, "[data-role=q]"); break;
+    case "cancel": s.mode = "view"; s.draft = draftOf(item); s.query = ""; renderCard(key, '[data-act="edit"]'); break;
+    case "back": s.mode = "edit"; s.run++; renderCard(key, "[data-role=q]"); break;
+    case "retry": runSearch(key); break;
+    case "pick":
+      s.draft.place = button.dataset.place;
+      if (s.mode === "results") { s.mode = "edit"; renderCard(key, ".chosen"); }
+      else renderCard(key, `.rec[data-place="${button.dataset.place}"]`);
+      announce(`「${PLACES[button.dataset.place].name}」을 골랐어요. 저장하면 바뀌어요`);
+      break;
+    case "none": s.draft.place = NONE; renderCard(key, ".chosen"); break;
+    case "save": save(key); break;
+    case "remove":
+      items = items.filter((i) => i.key !== key);
+      delete ui[key];
+      renderList();
+      announce(`「${nameOf(item)}」을 일정에서 뺐어요`);
+      break;
+  }
+});
+list.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const key = event.target.closest("[data-key]").dataset.key;
+  runSearch(key);
+});
+list.addEventListener("input", (event) => {
+  const card = event.target.closest("[data-key]");
+  if (!card) return;
+  const s = ui[card.dataset.key];
+  if (event.target.dataset.role === "q") {
+    s.query = event.target.value;
+    event.target.form.querySelector("button[type=submit]").disabled = !s.query.trim();
+  } else if (event.target.dataset.field) {
+    s.draft[event.target.dataset.field] = event.target.value;
+    refreshLive(card.dataset.key);
+  }
+});
+
+const dialog = document.getElementById("mapDialog");
+dialog.addEventListener("click", (event) => {
+  if (event.target === dialog || event.target.closest("[data-close]")) dialog.close();
+});
+dialog.addEventListener("close", () => mapOpener?.focus());
+
+document.getElementById("searchMode").addEventListener("change", (event) => { searchMode = event.target.value; });
+document.getElementById("resetAll").addEventListener("click", reset);
+
+function reset() {
+  items = START.map((item) => ({ ...item }));
+  ui = {};
+  renderList();
+}
+reset();
+</script>
+</body>
+</html>
