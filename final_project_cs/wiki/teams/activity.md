@@ -792,6 +792,41 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 
 `[2026-10-01]` 위 연결을 이 절의 규칙(`withheld`·재검증·선호도)에 맞춰 코드를 고쳤다 — [리포트](../records/reports/2026-10-01_1345_Activity_대체장소_문서규칙_정렬_리포트.md).
 
+#### 인원·예약 확인용 컬럼 — TourAPI 상세 수집 `[구현 2026-10-01]`
+
+결론: `activity_total_data.csv` 에 컬럼 6개를 맨 뒤에 더해 받는다 — **`detailIntro2` 응답에서 꺼낼 수 있는 것만**(`homepage` 는 `detailCommon2` 라 호출이 늘어 제외). 타입마다 `detailIntro2` 필드 이름이 달라서 **컬럼 이름은 하나로 통일**했다. 원문 그대로 옮기고 파싱하지 않는다.
+
+| 컬럼 | 뜻 | 12 관광지 | 14 문화시설 | 15 행사 | 28 레포츠 | 38 쇼핑 |
+|---|---|---|---|---|---|---|
+| `info_center` | 문의처 | `infocenter` | `infocenterculture` | `sponsor1tel` / `sponsor2tel`(주최자 연락처, ` / ` 로 이음) | `infocenterleports` | `infocentershopping` |
+| `reservation` | 예약처·예약 안내·예약 링크 | — | — | `bookingplace` / `eventhomepage`(행사 홈페이지) | `reservation` | — |
+| `capacity` | 수용 인원 | `accomcount` | `accomcountculture` | — | `accomcountleports` | — |
+| `spend_time` | 소요 시간 | — | `spendtime` | `spendtimefestival` | — | — |
+| `age_limit` | 연령 제한(체험 가능 연령 포함) | `expagerange` | — | `agelimit` | `expagerangeleports` | — |
+| `experience_guide` | 체험 안내(자유 문장 — 예약·인원이 섞일 수 있다) | `expguide` | — | — | — | — |
+
+필드 이름은 실제 응답으로 확인했다(12·14 는 캐시, 15·28·38 은 1건씩 호출). 요청 목록의 `spendtumefestival` 은 오타이고 실제 이름은 `spendtimefestival` 이다. 숙박(32)의 `reservationlodging`·`accomcountlodging` 은 이 CSV 에 숙박 행이 없고(AC 는 Activity 범위 밖) `commocountlodging` 은 확인하지 못해 넣지 않았다. 요청 목록에 없었지만 같은 개념이라 더한 것: `infocenterleports`(레포츠 문의처), `expagerange`·`expagerangeleports`(체험 가능 연령 → `age_limit`), `spendtime`(문화시설 소요 시간 → `spend_time`), `sponsor1tel`·`sponsor2tel`(행사 주최자 연락처 → `info_center`). 모두 이미 받는 `detailIntro2` 응답에 있어 호출이 늘지 않는다. 같은 뜻으로 볼 수 있지만 **넣지 않은 것**(호출이 늘거나 뜻이 달라 결정이 필요하다)은 리포트에 적었다.
+
+실행은 `fill_tourapi_details.py` 다(`--types 12 14 28 15` 로 쇼핑을 빼고 받을 수 있다). 상세가 이미 채워진 행은 `detailIntro2` 한 번만 더 부른다. 남은 호출 9,522건 중 쇼핑(38)이 7,770건이다 — 새 5칸 때문이 아니라 **쇼핑 3,778곳의 기존 상세(개요·영업시간·휴무)가 비어 있어서**다(쇼핑 응답에는 예약·인원 필드가 없고 새 칸은 `info_center` 하나뿐). 그래서 나머지 네 타입(1,752건)을 먼저 받고 쇼핑은 뒤로 미룬다 — 안 받는 것이 아니다(쇼핑 영업시간·휴무는 대체 장소의 운영 판정에 쓰인다). 아직 수집은 돌리지 않았다 — 지금 CSV 에는 새 칸이 없다.
+
+#### 실패·예외 코드와 로그 `[구현 2026-10-01]`
+
+결론: 사람에게 넘기지 않고 정상 응답으로 끝나는 실패와 도구(API·DB) 예외에 코드를 붙이고 한 줄 JSON 로그로 남긴다. 사람에게 넘기는(escalate) 실패와 분류 실패는 코어가 이미 `failure_code` 와 함께 이벤트로 남기므로 다시 만들지 않았다(`app/application/controller.py` `GUARDRAIL_ESCALATED`, `classification.py`).
+
+코드 목록과 뜻은 `activity/failure_codes.py` 한 곳이다(시험이 목록과 설명이 맞는지 본다). 결과에는 `decisions[].failure_code` 로, 로그에는 `acop.activity.failure` 에 한 줄 JSON(`event`·`code`·`team`·`case_id`·`capability` + 짧은 메타)으로 나간다. 어디에 쓸지(파일·수집기)는 운영 logging 설정이 정한다 — 경로를 코드에 박지 않는다.
+
+| 상황 | 코드 | 결과에 싣는 곳 |
+|---|---|---|
+| 정기휴무 요일 | `closed_weekday` | `decisions[].failure_code` |
+| 위급재난(휴무와 겹치면 이쪽이 앞선다) | `disaster_blocks` | 같음 |
+| 이미 시작됨 · 정원 초과 | `already_started` · `party_over_capacity` | 같음 |
+| 예약의 장소·운영 정보를 못 읽음 | `place_unknown` | 같음 |
+| 일정 제출에서 장소를 하나로 못 찾음 | `place_not_found` | 같음(고객에게 되묻는다) |
+| 대체 후보: 위급재난 · 식별자 없음 · 풀 조회 실패 · 후보 없음 · 모두 운영 미확인 | `alternatives_withheld` · `alternatives_no_content_id` · `alternatives_pool_unavailable` · `alternatives_none` · `alternatives_unconfirmed` | **로그에만**(결과의 `alternatives` 모양은 `status`·`reason` 그대로) |
+| 읽기 도구가 예외를 냄 | `tool_error` | 로그에만 — **다시 던진다**(삼켜서 「모름」으로 바꾸지 않는다, RULE §3.2) |
+
+★로그에는 좌표·장소명·고객 문장·예외 문구를 싣지 않는다 — Case id·capability·코드와 도구 이름·예외 종류만. 시험: `tests/unit/travel/test_activity_failure_codes.py`(12건, 기록을 끈 변형에서 2건이 실패하는 것을 확인).
+
 #### 아직 안 한 것
 
 | 항목 | 이유 |
