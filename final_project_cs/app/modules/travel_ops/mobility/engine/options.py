@@ -494,7 +494,7 @@ def add_reasons(opts):
 
 # ── 환승 칸(표시 전용 · ◆칸 · 기본 off) ─────────────────────────────────────
 class TransferCar:
-    """46 `transfer_car_v1.json` 조회 — `mobility_scripts/collect/check_transfer_car_v1.lookup()` 과 같은 규칙.
+    """46 `transfer_car_v1.json` 조회 — `check_transfer_car_v1.lookup()`(저장소 밖 백업 · 표시 영구 off 라 갱신 스크립트에서 뺌 · 82) 과 같은 규칙.
     키 = (환승역, 타고 온 노선, 그 역열의 환승역 직전 역, 환승 노선, 환승 역열의 둘째 역) · prev 가 None 인 항목은 색인 안 함."""
 
     def __init__(self, doc):

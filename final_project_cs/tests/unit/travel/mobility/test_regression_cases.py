@@ -4,7 +4,7 @@
 ★무엇을 보나: 케이스 파일(`*_legs_v1.json` · 14묶음 · 177건(78))의 **입력 칸**을 판정기(`verify_time.Verifier`)에 넣고
   결과를 **기대 칸(`expect…`)** 과 대조한다. 대조 함수는 CLI `--check-expect` 와 같은 `verify_time.check_expect` 다 —
   비교 칸·문구가 두 군데 생기지 않는다. 케이스 본문도 여기 없다 — 파일을 그대로 읽는다.
-  칸 설명·묶음별 뜻·깨졌을 때 읽는 순서는 `docs/mobility/REGRESSION_EXPLAINED_v1.md`.
+  칸 설명·묶음별 뜻·깨졌을 때 읽는 순서는 이 폴더 `README.md`.
 
 ★두 층(conftest.py):
   · **게이트**(기본 실행) — `regression_gate_v1.json` 의 21건. 「주요 기능마다 하나 · 깨지면 그 기능이 죽은 것」.
@@ -94,7 +94,9 @@ def _processed():
 def _skip_if_missing(bundle):
     need = NEED_SYNTH if bundle == "synthetic" else NEED_REAL
     p = _processed()
-    missing = [n for n in need if not (p / n).exists()]
+    # 75(9/30): 저장소 데이터의 실 시간표는 `.gz` — 판정기와 같은 규칙(paths.timetable_file · .gz 우선)으로 있는지 본다
+    from app.modules.travel_ops.mobility.engine.paths import timetable_file
+    missing = [n for n in need if not ((timetable_file(p) if n == "timetable_v1.jsonl" else p / n).exists())]
     if missing:
         pytest.skip(f"data not present: {p} — {missing}")
 
