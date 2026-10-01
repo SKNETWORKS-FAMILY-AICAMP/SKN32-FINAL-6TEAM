@@ -25,7 +25,10 @@ KST = ZoneInfo("Asia/Seoul")
 
 ACTIONS = ("apply_change", "propose_alternatives", "rollback", "redo", "answer_fact", "ask_policy",
            "report_delay", "report_closed", "clarify", "other")
-FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move", "none")
+FACTS = ("detail", "address", "phone", "hours", "time", "next", "booking", "day", "move",
+         "route_here", "nearby_dining", "nearby_activity", "none")
+#: 고객의 **현재 위치**가 있어야 답할 수 있는 사실 — 요청에 위치가 없으면 서버가 「현재 위치를 알려 주세요」로 답한다(`trip_here`)
+LOCATION_FACTS = ("route_here", "nearby_dining", "nearby_activity")
 KIND_KO = {"dining": "식당", "activity": "활동", "lodging": "숙소"}
 #: 변경 이력에 싣는 최근 변경 수 — ★우리가 고른 값. 고객이 가리키는 변경은 대개 최근이다
 RECENT_CHANGES = 8
@@ -41,6 +44,9 @@ SYSTEM = """너는 여행 일정 서비스의 요청 해석기다. 고객 문장
   hours(운영시간 — 「몇 시까지 해」「언제 열어·닫아」「쉬는 날」) · time(그 일정에 몇 시에 가나) · next(다음 일정) ·
   booking(예약) · day(하루 일정·요약) · move(이동 — 「어떻게 가」「얼마나 걸려」「가는 길」) ·
   detail(무엇을 묻는지 **특정하지 않을 때만** — 「알려줘」「자세히」「세부정보」「어떤 곳이야」).
+  ★현재 위치 — 출발지가 **「여기」「지금 위치」「내 위치」「지금 있는 곳」**이면: route_here(거기서 목적지까지 가는 길 · 걸리는 시간, target_item = 도착지 ·
+  말하지 않으면 none) · nearby_dining(근처 식당) · nearby_activity(근처 볼거리 · 갈 곳). 예: 「지금 있는 곳에서 금용문 가는 길」「지금 위치에서 다음 일정까지 얼마나 걸려」는 route_here.
+  출발지도 일정의 곳 이름(「경복궁에서 금용문까지」)이면 move 다.
   애매하면 detail 이 아니라 가장 좁은 칸을 고른다 — 「그건 어딧는거야」는 앞 대화의 장소를 가리키는 address 다.
   이름만 대고 「알려줘」면(「경복궁 알려줘」) 앞 대화와 상관없이 detail 이다.
 - ask_policy: 규정·조건을 묻는다(취소·위약금·환불·동반·날씨 기준).
@@ -251,7 +257,8 @@ def decide(chat: Any, *, stops: list[Stop], changes: list[Change], history: list
 
 
 _FACT_KO = {"detail": "자세히", "address": "주소", "phone": "전화번호", "hours": "운영시간", "time": "몇 시에 가는지",
-            "next": "다음 일정", "booking": "예약", "day": "하루 일정", "move": "가는 길"}
+            "next": "다음 일정", "booking": "예약", "day": "하루 일정", "move": "가는 길",
+            "route_here": "지금 위치에서 가는 길", "nearby_dining": "가까운 식당", "nearby_activity": "가까운 볼거리"}
 
 
 #: 사실 답 뒤에 「혹시 이런 뜻이었나요?」로 붙이는 가까운 질문 종류 — ★우리가 고른 짝(2026-09-29 사용자 제안). 앞의 것부터
@@ -335,5 +342,5 @@ def labels(decision: Decision) -> dict[str, str]:
     return {"intent": intent, "issue_code": code, "sentiment": sentiment}
 
 
-__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "NEAR_FACTS", "fact_first", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
+__all__ = ["ACTIONS", "Change", "Decision", "DecisionFailed", "FACTS", "LOCATION_FACTS", "NEAR_FACTS", "fact_first", "maybe_meant", "Stop", "SYSTEM", "changes_of", "choice_message",
            "decide", "item_lines", "labels", "stops_of"]

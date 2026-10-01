@@ -197,6 +197,18 @@ class AlternateIn(BaseModel):
     message: str | None = None
 
 
+class LocationIn(BaseModel):
+    """고객의 **현재 위치** — 브라우저 Geolocation 이 준 값. ★이 요청을 처리하는 데만 쓰고 어디에도 남기지 않는다(`trip_here`)."""
+    model_config = ConfigDict(extra="forbid")
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    accuracy_m: float | None = Field(default=None, ge=0)
+    at: datetime | None = None
+
+    def __repr__(self) -> str:                    # 검증 오류 · 로그에 좌표가 실리지 않게
+        return "LocationIn(<좌표 가림>)"
+
+
 class MessageIn(BaseModel):
     """고객 **자유 문장** — 에이전트가 옮기지 않고 그대로 보낸다."""
     model_config = ConfigDict(extra="forbid")
@@ -205,6 +217,8 @@ class MessageIn(BaseModel):
     at: datetime | None = None
     #: ★`[2026-09-29]` 화면에서 고른 일정 — 「다른 데로 바꿔 줘」가 가리키는 항목(없으면 문장 · 다음 일정으로 정한다)
     item_id: UUID | None = None
+    #: ★`[2026-09-30 사용자 지시]` 고객의 현재 위치(선택) — 「여기서 경복궁 어떻게 가」 같은 질문의 출발지. 없으면 지금과 같다
+    location: LocationIn | None = None
 
 
 class RollbackIn(BaseModel):
@@ -751,7 +765,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 classifier=_lazy("classifier", classifier_factory),
                 chat=_lazy("chat", chat_factory), desk=_desk(store), actor_id=principal.key_id,
                 policy_search=_lazy("policy", policy_search_factory),
-                place_source=_lazy("place", place_factory), selected_item_id=request.item_id)
+                place_source=_lazy("place", place_factory), selected_item_id=request.item_id,
+                location=request.location)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         _log_turn(principal.tenant_id, trip_id, request.message, result)
@@ -1175,7 +1190,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 policy_search=_lazy("policy", policy_search_factory),
                 place_source=_lazy("place", place_factory),
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
-                defer=background.add_task, selected_item_id=request.item_id)
+                defer=background.add_task, selected_item_id=request.item_id, location=request.location)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**

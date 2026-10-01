@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import re
+from datetime import timedelta
 
 import pytest
 
@@ -37,6 +38,12 @@ class _Decider:
             raise RuntimeError("model is down")
         if "알려줘" in message and "성수 점심" in message:
             return {**none, "action": "answer_fact", "target_item": self._alias(user, "성수 점심"), "fact": "detail"}
+        if "위치에서 성수 점심" in message:
+            return {**none, "action": "answer_fact", "target_item": self._alias(user, "성수 점심"), "fact": "route_here"}
+        if "근처 식당" in message:
+            return {**none, "action": "answer_fact", "target_item": "none", "fact": "nearby_dining"}
+        if "근처 볼거리" in message:
+            return {**none, "action": "answer_fact", "target_item": "none", "fact": "nearby_activity"}
         if "예약 표시" in message:
             lunch, dinner = self._alias(user, "성수 점심"), self._alias(user, "· 저녁")
             return {**none, "action": "clarify", "target_item": "none",
@@ -274,3 +281,137 @@ def test_a_general_question_answers_the_core_first_and_keeps_the_rest_for_more(d
     assert "· 어디:" in body["answer"] and "· 다음 일정:" in body["answer"], body["answer"]
     assert "· 예약:" not in body["answer"] and "더 보기" not in body["answer"]
     assert "· 예약:" in body["more"], body
+
+
+# ── 현재 위치 (2026-09-30 사용자 지시 — ui 세션 전달: 브라우저 Geolocation → 채팅 요청의 `location`) ──────────────────────
+#: 시험용 좌표 — 자릿수를 겹치지 않게 골라, 어디에든 남았다면 문자열 검색으로 잡힌다(성수동 부근)
+HERE = {"lat": 37.544719, "lng": 127.055731, "accuracy_m": 20.0}
+HERE_TEXTS = ("37.544719", "127.055731", "37.5447", "127.0557")
+NOON = "2030-01-01T12:00:00+09:00"
+
+
+def _version(decided) -> int:
+    return decided["client"].get(f"/v1/web/trips/{decided['trip']['trip_id']}",
+                                 headers=_h(decided["key"])).json()["version"]
+
+
+def test_a_location_question_without_a_location_asks_for_it_and_changes_nothing(decided):
+    """①: 위치가 필요한 질문인데 `location` 이 없으면 일정은 그대로, 한 문장과 `needs_location: true`."""
+    before = _version(decided)
+    for n, text in enumerate(("지금 위치에서 성수 점심 어떻게 가", "여기서 가까운 근처 식당 알려줘", "근처 볼거리 뭐 있어")):
+        body = _say(decided, text, f"loc-no-{n}", at=NOON)
+        assert body["status"] == "answered" and body["needs_location"] is True, body
+        assert "현재 위치를 알려 주시면" in body["answer"], body["answer"]
+    assert _version(decided) == before
+
+
+def test_the_location_is_the_origin_of_the_route(decided, monkeypatch):
+    """②: 위치를 실으면 그 좌표가 이동 계산기의 출발지로 쓰인다."""
+    from app.modules.travel_ops.mobility import wiring
+
+    seen = []
+
+    def fake_planner(party, constraints, **_):
+        def leg(a_place, b_place, arrive_dt, not_before_dt=None):
+            seen.append((a_place["lat"], a_place["lon"], b_place["name"]))
+            return {"route": {"planned": "w", "options": [{"id": "w", "label": "지하철 2호선", "eta_min": 17}]},
+                    "starts_at": arrive_dt - timedelta(minutes=27), "ends_at": arrive_dt - timedelta(minutes=10),
+                    "eta_min": 17, "left_out": []}, None
+        return leg
+
+    monkeypatch.setattr(wiring, "leg_planner", fake_planner)
+    body = _say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-route", at=NOON, location=HERE)
+    assert body["status"] == "answered" and "needs_location" not in body, body
+    assert seen and seen[0][0] == HERE["lat"] and seen[0][1] == HERE["lng"] and "성수 점심" in seen[0][2], seen
+    assert "지하철 2호선" in body["answer"] and "17분" in body["answer"] and "시간표 기준" in body["answer"], body["answer"]
+
+
+def test_without_the_timetable_calculator_the_route_is_an_estimate_and_says_so(decided):
+    body = _say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-estimate", at=NOON, location=HERE)
+    assert "지금 위치에서 성수 점심" in body["answer"] and "[추정" in body["answer"], body["answer"]
+
+
+def test_nearby_places_are_listed_from_the_location_without_changing_the_trip(decided):
+    before = _version(decided)
+    dining = _say(decided, "여기서 가까운 근처 식당", "loc-near-d", at=NOON, location=HERE)
+    assert dining["status"] == "answered" and "needs_location" not in dining
+    assert dining["answer"].startswith("지금 위치") and "식당" in dining["answer"], dining["answer"]
+    sights = _say(decided, "근처 볼거리 알려줘", "loc-near-a", at=NOON, location=HERE)
+    assert sights["status"] == "answered" and "볼거리" in sights["answer"], sights["answer"]
+    assert _version(decided) == before                                   # 알아보기만 한다 — 일정은 그대로
+
+
+def test_the_raw_coordinates_are_stored_and_logged_nowhere(decided, caplog):
+    """③: 원 좌표(와 동네 수준으로 줄인 값도)는 응답 문장 · Case · 대화 기록 · 바깥함 · 로그 어디에도 없다."""
+    import logging
+
+    caplog.set_level(logging.DEBUG)
+    bodies = [_say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-priv-1", at=NOON, location=HERE),
+              _say(decided, "여기서 가까운 근처 식당", "loc-priv-2", at=NOON, location=HERE),
+              _say(decided, "근처 볼거리 알려줘", "loc-priv-3", at=NOON, location=HERE)]
+    with get_connection() as conn, conn.cursor() as cur:
+        dumps = []
+        for sql in ("SELECT payload_json::text FROM case_events", "SELECT state_json::text FROM customer_cases",
+                    "SELECT text FROM trip_chat_turns", "SELECT payload_json::text FROM outbox",
+                    "SELECT attributes::text FROM places WHERE trip_scope IS NOT NULL",
+                    "SELECT subject FROM customer_cases"):
+            cur.execute(sql)
+            dumps += [str(row[0]) for row in cur.fetchall()]
+    haystack = "\n".join(dumps + [str(b) for b in bodies] + [r.getMessage() for r in caplog.records])
+    for needle in HERE_TEXTS:
+        assert needle not in haystack, needle
+
+
+def test_a_location_outside_seoul_or_too_vague_is_not_used_and_says_why(decided):
+    far = _say(decided, "여기서 가까운 근처 식당", "loc-far", at=NOON, location={"lat": 35.1796, "lng": 129.0756})
+    assert "서울 밖" in far["answer"] and "needs_location" not in far, far["answer"]
+    vague = _say(decided, "여기서 가까운 근처 식당", "loc-vague", at=NOON, location={**HERE, "accuracy_m": 5000})
+    assert "정확도" in vague["answer"] and "너무 낮아" in vague["answer"], vague["answer"]
+    rough = _say(decided, "지금 위치에서 성수 점심 어떻게 가", "loc-rough", at=NOON, location={**HERE, "accuracy_m": 800})
+    assert "±800m" in rough["answer"] and "조금 다를 수" in rough["answer"], rough["answer"]
+
+
+def test_a_bad_location_value_is_refused_without_echoing_it(decided):
+    body = {"request_id": "loc-bad", "message": "근처 식당", "location": {"lat": 999, "lng": 127.05}}
+    response = decided["client"].post(f"/v1/web/trips/{decided['trip']['trip_id']}/messages", headers=_h(decided["key"]),
+                                      json=body)
+    assert response.status_code == 422
+    assert "127.05" not in response.text                                 # 검증 오류가 실은 좌표 값을 되돌려 주지 않는다
+
+
+def test_a_request_without_a_location_is_unchanged(decided):
+    body = _say(decided, "성수 점심 식당 알려줘", "loc-none", at=NOON)
+    assert body["status"] == "answered" and "needs_location" not in body
+
+
+def test_the_location_module_neither_stores_nor_logs():
+    """구조 보장 — 위치를 다루는 모듈은 DB · 로그를 가져다 쓰지 않는다(좌표를 남길 길이 없다)."""
+    import ast
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    tree = ast.parse((root / "app/modules/travel_ops/trip_here.py").read_text(encoding="utf-8"))
+    imported = {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
+    imported |= {n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
+    assert not {"logging", "psycopg", "sqlite3", "json", "pickle"} & imported
+    assert not any(m.startswith(("app.infrastructure", "app.core.settings")) for m in imported)
+    from app.modules.travel_ops.trip_here import Fix
+
+    assert "37.5" not in repr(Fix(lat=37.544719, lon=127.055731))
+
+
+def test_the_nearby_sentence_reads_naturally_and_leaves_out_price_warnings():
+    from types import SimpleNamespace as S
+
+    from app.modules.travel_ops.trip_here import Fix, nearby
+
+    fix = Fix(lat=37.5, lon=127.0)
+    sights = [S(place={"name": "덕수궁"}, name="덕수궁", walk_min=None, distance_m=640.0,
+                warnings=["가격을 몰라 추가 비용을 계산할 수 없다"])]
+    text = nearby("nearby_activity", fix, found=sights, radius_m=1500, sought=3)
+    assert text == "지금 위치에서 가까운 볼거리예요 — 1) 덕수궁 (도보 약 8분)", text        # 조사 · 도보 분 · 가격 경고 없음
+    meals = [S(place={"name": "이북만두"}, name="이북만두", walk_min=2, distance_m=150.0,
+               warnings=["14:30 브레이크타임 1시간 안에 식사가 끝나요"])]
+    assert nearby("nearby_dining", fix, found=meals, radius_m=700, sought=1) == \
+        "지금 위치에서 가까운 식당이에요 — 1) 이북만두 (도보 약 2분) — 14:30 브레이크타임 1시간 안에 식사가 끝나요"
+    assert "찾지 못했어요" in nearby("nearby_dining", fix, found=[], radius_m=3000, sought=4)

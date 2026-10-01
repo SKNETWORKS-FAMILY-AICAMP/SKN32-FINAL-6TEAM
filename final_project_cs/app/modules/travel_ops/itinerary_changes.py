@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from .itinerary import Item
 from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record,
@@ -958,6 +958,43 @@ RELAX_RADIUS_M = 1500
 #: 반경을 넓힌 안의 반경 · 고르게 할 안 수 — ★우리가 고른 값(2026-09-29 사용자 요구 「3개를 뽑아 추천」). 5km 는 지하철 네댓 정거장
 RELAX_WIDE_M = 5000
 RELAX_WANT = 3
+
+
+def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]], origin: dict[str, Any],
+                at: datetime, ledger: Any | None = None) -> tuple[list[Any], int | None, int]:
+    """고객의 **현재 위치**(`origin` — `latitude` · `longitude` 를 가진 가짜 장소) 둘레에서 **지금 갈 수 있는** 곳. `[2026-09-30]`
+    돌려주는 것: (후보들 좋은 순 — 최선 + 다른 안, 찾은 반경 m 또는 None, 살펴본 곳 수). `kind` = `dining` | `activity`.
+
+    ★「다른 데로 바꿔」와 같은 후보 계산이다(식당은 요식 원장 먼저, 활동은 그 시각 영업) — 다른 것은 **기준점이 좌표**라는 것뿐이다.
+      일정을 바꾸지 않는다(부르는 쪽이 목록만 답한다). 반경은 식당 700m → 1.5km → 3km, 활동 1.5km → 3km.
+    ★좌표는 여기서 거리 계산에만 쓰고 어디에도 담지 않는다(`trip_here` 머리 — 개인정보)."""
+    if kind == "dining":
+        minutes = 60
+        meal = Item(item_id=uuid4(), seq=0, kind="dining", title="현재 위치", place_id=None, starts_at=at,
+                    ends_at=at + timedelta(minutes=minutes), place=origin)
+        pool = ledger_pool(ledger, meal=meal, starts_at=at, ends_at=meal.ends_at, following=None, trip=trip)
+        seen = 0
+        for step, radius in enumerate(ALTERNATE_RADII_M["dining"]):
+            best, alternates, rejected, _ = _choose_dining(
+                lambda only, r=radius: dining_candidates(
+                    original=origin, places=places, arrival=at, minutes=minutes,
+                    constraints=trip.get("constraints") or {}, radius_m=r, next_start=None, exclude=set(),
+                    ledger=ledger, pool=only), (pool or None) if step == 0 else None)
+            seen = len(rejected) + (1 if best is not None else 0) + len(alternates)
+            if best is not None:
+                return [best] + list(alternates), radius, seen
+        return [], ALTERNATE_RADII_M["dining"][-1], seen
+    end = at + timedelta(minutes=90)
+    seen = 0
+    for radius in ALTERNATE_RADII_M["activity"]:
+        candidates = activity_candidates(original=origin, places=places, start=at, end=end, causes=[], radius_m=radius)
+        for candidate in candidates:
+            candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
+        best, alternates, rejected = choose(candidates, distinct=_same_activity_site)
+        seen = len(rejected) + (1 if best is not None else 0) + len(alternates)
+        if best is not None:
+            return [best] + list(alternates), radius, seen
+    return [], ALTERNATE_RADII_M["activity"][-1], seen
 
 
 def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
