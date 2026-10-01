@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { adoptKey, currentKey, KEY_CHANGED_EVENT, LiveError, rotateKey } from "@/lib/live/client";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./account.module.css";
@@ -15,6 +16,7 @@ export function KeySettings() {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
+  const [, setOnboarding] = useOnboarding();
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -35,10 +37,18 @@ export function KeySettings() {
     setBusy(true);
     setMessage(null);
     try {
+      const previousKey = currentKey();
       await adoptKey(input, language);
+      if (previousKey !== currentKey()) {
+        // 무효화만 하면 이전 사용자의 데이터가 남으므로 진행 중 조회와 캐시를 함께 정리한다.
+        await queryClient.cancelQueries();
+        queryClient.clear();
+        setOnboarding((state) => ({ ...state, activeTripId: null }));
+      } else {
+        void queryClient.invalidateQueries();
+      }
       setInput("");
       setMessage({ ok: true, text: t("이 토큰으로 바꿨어요. 이 토큰의 여행을 다시 불러와요.", "Switched to this token. Reloading its trips.") });
-      void queryClient.invalidateQueries();
     } catch (error) {
       setMessage({ ok: false, text: reason(error) });
     } finally { setBusy(false); }

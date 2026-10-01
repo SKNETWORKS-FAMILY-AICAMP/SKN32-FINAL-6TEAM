@@ -1,20 +1,20 @@
 # 이동 모듈 — git 에 올리는 데이터 (DATA_IN_GIT)
 
-작성 서유현 · 2026-09-29 첫 판 · **2026-09-30 갱신**(차도 그래프 추가 · 시간표 `.gz` · 필요 없는 행 제외 · 스크립트 자리) · 확인 기기 노트북 playdata
+작성 서유현 · 2026-09-29 첫 판 · 2026-09-30 갱신(차도 그래프 추가 · 시간표 `.gz` · 필요 없는 행 제외 · 스크립트 자리) · **2026-10-01 시간표 재수집**(89 · 수집일 10/1 · 노선 역 순서 재생성) · 확인 기기 노트북 playdata
 정본(드라이브) `DATA_DIR\travel\processed\mobility\` → 줄인 판 **저장소 `datasets/mobility/processed/mobility/`**(팀장 배정 9/29 · 「서버가 뜰 때까지 임시 · develop 까지」)
 안 올린 것은 옆 `DATA_NOT_IN_GIT.md` · 갱신 스크립트는 `scripts/README.md`.
 
 > 팀 `.gitignore` 는 `datasets/**/processed/**` 를 막지만 손대지 않고 **`git add -f`** 로 추적한다(전부 공공데이터 · 개인정보 0 · 이 폴더 README 「이동 팀」 절).
-> 파일당 50 MB 미만(GitHub 경고선) · 합계 88.9 MB.
+> 파일당 50 MB 미만(GitHub 경고선) · 합계 89.0 MB.
 
 ## 0. 요약
 
 | | 값 |
 |---|---|
 | 판정기·라우터가 읽는 파일 | **21파일** = 지하철·버스·혼잡도 등 13 + `graph/` 5 + `road_graph_v1/` 3 (+ 엔진 안 규칙 2: `rules_v0.3.json` · `holidays_2026_2027.json`) |
-| 그 21파일 정본 크기 | **276.2 MB** |
-| 줄인 판(git) | **88.9 MB** |
-| 줄인 것 | 시간표 — 판정기가 읽는 **8열만** · 출발 시각 없는 **18,411행 제외** · **`.gz`**(텍스트 72.2 MB → 1.8 MB) / 9호선 혼잡도 — **급행 2,432행 제외**(8,208 → 5,776) / 나머지 19파일은 정본 그대로 |
+| 그 21파일 정본 크기 | **279.9 MB** |
+| 줄인 판(git) | **89.0 MB** |
+| 줄인 것 | 시간표 — 판정기가 읽는 **8열만** · 출발 시각 없는 **18,873행 제외**(10/1 판) · **`.gz`**(텍스트 73.6 MB → 1.8 MB) / 9호선 혼잡도 — **급행 2,432행 제외**(8,208 → 5,776) / 나머지 19파일은 정본 그대로 |
 | 50 MB 넘는 파일 | 없음(최대 `congestion_v1.jsonl` 32.2 MB) |
 | 중복 확인(sha256 동일) | `bus_route_v2 = v1` · `bus_stops_v2 = v1` · `bus_stop_coords_v2 = bus_stop_coords` → v1 만 올림(v2 는 정본에서도 백업으로 옮김 · 9/30) |
 | 검증 | 줄인 판으로 이동 회귀 전체 · pytest 게이트 — 정본과 같은 값(§7) |
@@ -26,7 +26,7 @@
 | 파일 | 읽는 코드 | 없으면 |
 |---|---|---|
 | `timetable_v1.jsonl.gz` | `verify_time.Timetable.load`(`paths.timetable_file`) | RuntimeError(필수) |
-| `timetable_v1_meta.json` | `runtime.py`(built_at) | 행의 `fetched_at` 로 대신 |
+| `timetable_v1_meta.json` | `runtime.py`(built_at = 판 표시 · `tago_fetched_at`·`seoul_fetched_at` = 오래됨 기준 · 89) | 행의 `fetched_at` 로 대신 |
 | `line_station_order_v1.json` | `line_order.LineOrder` · `candidates` | 필수 |
 | `transfer_walk_v1.json` | `transfer_walk.TransferWalk` | 필수 |
 | `bus_route_v1.jsonl` · `bus_stops_v1.jsonl` | `bus.BusRoutes` · `geo` | 필수 |
@@ -49,21 +49,21 @@
 
 | | |
 |---|---|
-| 행수 | 정본 463,326 → **444,915**(출발 시각 없는 18,411행 제외) |
-| 크기 | 정본 188.1 MB → 텍스트 72.2 MB → **`.gz` 1.8 MB** |
-| 남긴 열 8 | `line`(노선 24종 `01호선`…) · `station_nm`(역명) · `day_type`(`weekday`/`saturday`/`holiday`) · `dep_time`(`HH:MM:SS` · 24시 넘김 유지) · `dir`(`U`/`D` 참고용) · `dest_nm`(행선지 — 방향의 정본) · `dest_inferred`(`chain_v1` = 행선지를 앞뒤 열차로 채운 값 · 등급 추정) · `fetched_at`(`2026-09-09` TAGO / `2026-09-11` 서울) |
+| 행수 | 정본 472,541 → **453,668**(출발 시각 없는 18,873행 제외 · 10/1 판) |
+| 크기 | 정본 191.8 MB → 텍스트 73.6 MB → **`.gz` 1.8 MB** |
+| 남긴 열 8 | `line`(노선 24종 `01호선`…) · `station_nm`(역명) · `day_type`(`weekday`/`saturday`/`holiday`) · `dep_time`(`HH:MM:SS` · 24시 넘김 유지) · `dir`(`U`/`D` 참고용) · `dest_nm`(행선지 — 방향의 정본) · `dest_inferred`(`chain_v1` = 행선지를 앞뒤 열차로 채운 값 · 등급 추정) · `fetched_at`(`2026-10-01` TAGO·서울 — 89 재수집) |
 | 뺀 열 12 | `station_key` `station_cd` `station_nm_en` `arr_time` `orig_nm` `train_no` `express` `source` `source_station_id` `fetched_at_precision` `dest_basis` `dest_hops` — 판정기가 읽지 않음(`Timetable.load` 가 위 8열만 읽는다) |
-| 뺀 행 | `dep_time` 이 null 인 18,411행(종착역 도착만 있는 행) — 판정에 오르지 않는다. 역 이름 집합은 같은 역의 다른 행으로 그대로 채워진다(회귀로 확인 · §7) |
+| 뺀 행 | `dep_time` 이 null 인 18,873행(종착역 도착만 있는 행) — 판정에 오르지 않는다. 역 이름 집합은 같은 역의 다른 행으로 그대로 채워진다(회귀로 확인 · §7) |
 | 한 행 | `{"line":"01호선","station_nm":"가능","day_type":"weekday","dep_time":"06:58:00","dir":"U","dest_nm":"동두천","dest_inferred":null,"fetched_at":"2026-09-09"}` |
 | 원자료 | 서울 열린데이터광장 OA-101 + 국토교통부 TAGO 지하철 API |
 | 생성 | `build_timetable_v1.py` → `fill_timetable_dest_v1.py`(행선지 빈칸 채움 · **정본 비압축 파일에서만** 돈다 — 옆에 `.gz` 가 있으면 멈춤) |
 | 등급 | 시각 확정 · 행선지 확정(원천) / 추정(`dest_inferred=chain_v1`) / 근거없음(`dest_nm` null) |
 | 줄인 방법 | `reduce_75.py` — 행 순서 그대로 · 8열 · `separators=(",",":")` · `ensure_ascii=False` · gzip |
 
-### A `timetable_v1_meta.json` · 7.4 KB
-시간표 판 메타(`built_at 2026-09-12T20:38:16+09:00` · 원 행수 · 중복 제거 수 · 소스별 행수 · `cross_source_conflicts_kept` 18 · `gaps` 24노선). `runtime.py` 가 `built_at` 만 읽어 판정 이력 `timetable_built_at` 에 남긴다. 생성 `build_timetable_v1.py`. 등급 —.
+### A `timetable_v1_meta.json` · 8.7 KB
+시간표 판 메타(`built_at 2026-10-01T10:38:34+09:00` · `tago_fetched_at`·`seoul_fetched_at` 2026-10-01 · 원 행수 · 중복 제거 수 · 소스별 행수 · `cross_source_conflicts_kept` 30 · `gaps` 24노선 중 빈 곳 남은 2 · `dest_fill`). `runtime.py` 가 `built_at` 을 판정 이력 `timetable_built_at` 에 남기고, **오래됨은 수집일(두 원천 중 오래된 것)로 잰다**(89 · 앞 판은 `built_at` — 옛 원자료를 다시 빌드만 해도 신선해 보였다). 생성 `build_timetable_v1.py`. 등급 —.
 
-### A `line_station_order_v1.json` · 761.6 KB
+### A `line_station_order_v1.json` · 781.9 KB(10/1 새 시간표로 재생성 · 경춘선·경의선 북쪽·수인분당 소요 간선 채움)
 `lines`(24노선) → `stations[]`(`station_nm` `station_key` `station_cd` `fr_code` `fr_order` `is_spur` `has_timetable`) · `edges[]`(`a` `b` `travel_min` `travel_min_source` `travel_min_grade` `distance_m` `grade`) · `dir_label.reliable` · `is_loop` · `direction` · `dest_alias`. 777간선 · 793역 · 간선 등급 확정 636 / 추정 97 / 근거없음 44. 원자료 국가철도공단 FR_CODE + 시간표 관측 + 서울교통공사 역간거리 CSV(270간선 `distance_m`). 생성 `build_line_station_order_v1.py`. 한 항목: `{"a":"소요산","b":"청산","travel_min":3,"grade":"확정",…}`.
 
 ### A `transfer_walk_v1.json` · 58.0 KB
@@ -130,7 +130,7 @@
 
 | 파일 | 분류 | 정본 | git | 행(git) |
 |---|---|---:|---:|---:|
-| `timetable_v1.jsonl.gz` | B(열·행 제외 · gz) | 188.1 MB | **1.8 MB**(텍스트 72.2 MB) | 444,915 |
+| `timetable_v1.jsonl.gz` | B(열·행 제외 · gz) | 191.8 MB | **1.8 MB**(텍스트 73.6 MB) | 453,668 |
 | `congestion_v1.jsonl` | A | 32.2 MB | 32.2 MB | 65,169 |
 | `bus_stops_v1.jsonl` | A | 15.6 MB | 15.6 MB | 41,820 |
 | `road_graph_v1/edges.jsonl.gz` | A | 12.0 MB | 12.0 MB | 375,651 |
@@ -150,15 +150,15 @@
 | `transfer_walk_v1.json` | A | 58.0 KB | 〃 | |
 | `graph/daytype_calendar_v1.csv` | A | 8.0 KB | 〃 | 365 |
 | `graph/topis_class_factor_v1.json` | A | 7.9 KB | 〃 | |
-| `timetable_v1_meta.json` | A | 7.4 KB | 〃 | |
-| **합계 21** | | **276.2 MB** | **88.9 MB** | |
+| `timetable_v1_meta.json` | A | 8.7 KB | 〃 | |
+| **합계 21** | | **279.9 MB** | **89.0 MB** | |
 
 (첫 커밋 9/29 는 시간표 텍스트 75.1 MB · 행 제외 없이 148 MB 였다 — 히스토리에 남아 있다.)
 
 ## 4. 줄인 방법 · 하지 않은 것
 
 - 열 제거는 **시간표만** — 다른 파일은 loader 가 행 dict 를 통째로 들고 있어 열을 빼면 동작이 바뀔 수 있다.
-- 행 제외는 **판정기가 읽고 버리는 행만**: 시간표 출발 없음 18,411 · 9호선 급행 2,432. 뺀 판으로 이동 회귀 전체와 pytest 전체층을 돌려 정본과 같은 값을 확인하고 채택(9/29~30).
+- 행 제외는 **판정기가 읽고 버리는 행만**: 시간표 출발 없음 18,411(9/30 판 · 10/1 판 18,873) · 9호선 급행 2,432. 뺀 판으로 이동 회귀 전체와 pytest 전체층을 돌려 정본과 같은 값을 확인하고 채택(9/29~30).
 - `.gz` 는 시간표만 새로 만들었다(`bus_seg_profile` · `topis_link_profile` · `road_graph_v1` 은 정본이 원래 gz).
 - 「판정에 쓰는 시간대만」 같은 행 필터는 하지 않았다 — 기준이 바뀌면 판정이 달라진다.
 - 안 올린 것(원자료 · 개인 실측 · 라우터 캐시 · 로그 · 중복 사본) → `DATA_NOT_IN_GIT.md`.

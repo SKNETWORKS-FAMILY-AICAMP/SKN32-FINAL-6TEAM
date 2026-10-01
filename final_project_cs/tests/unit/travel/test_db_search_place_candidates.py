@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.tools.read_tools import ReadToolbox, ToolContext
-from app.modules.travel_ops.activity.db_search.place_candidates import ORIGIN_SQL, POOL_SQL, find_place_candidates
+from app.modules.travel_ops.activity.db_search.place_candidates import (
+    DEFAULT_SOURCES, ORIGIN_SQL, POOL_SQL, find_place_candidates)
 
 UTC = timezone.utc
 OLD = datetime(2026, 9, 20, tzinfo=UTC)
@@ -77,9 +78,17 @@ def test_returns_origin_and_candidates_in_the_csv_shape():
     first = pool["candidates"][0]
     assert first == {"contentid": "c1", "title": "성균관 명륜당", "contenttypeid": "12",
                      "lclsSystm1": "HS", "lclsSystm2": "HS01", "lclsSystm3": "HS010100",
-                     "sigungucode": "23", "mapx": "126.98", "mapy": "37.58",
+                     "sigungucode": "23", "brand": None, "mapx": "126.98", "mapy": "37.58",
                      "closed_days": "연중무휴", "business_hours": "09:00~18:00"}
-    assert pool["source"] == "place_catalog:tour_api"
+    assert pool["source"] == "place_catalog:" + "+".join(DEFAULT_SOURCES)
+
+
+def test_brand_comes_from_raw_json():
+    rec = _record("OY1", title="올영")
+    rec[6]["brand"] = "올리브영"
+    conn = FakeConnection([rec], [rec])
+    pool = find_place_candidates(lambda: conn, "t1", "OY1")
+    assert pool["origin"]["brand"] == "올리브영" and pool["candidates"][0]["brand"] == "올리브영"
 
 
 def test_nulled_coordinates_stay_unknown():
@@ -98,9 +107,22 @@ def test_pool_is_narrowed_by_large_class_or_sigungu_of_the_origin():
     conn = FakeConnection([ORIGIN], [])
     find_place_candidates(lambda: conn, "t1", "126511")
     (sql1, p1), (sql2, p2) = conn.executed
-    assert (sql1, p1) == (ORIGIN_SQL, ("t1", "tour_api", "126511"))
+    assert (sql1, p1) == (ORIGIN_SQL, ("t1", list(DEFAULT_SOURCES), "126511"))
     assert sql2 == POOL_SQL
-    assert p2 == ("t1", "tour_api", "126511", "HS", "23")
+    assert p2 == ("t1", list(DEFAULT_SOURCES), "126511", "HS", "23")
+
+
+def test_pool_reads_brand_sources_too():
+    """★TourAPI 만 보면 브랜드 매장(OY/DS/AB/MS)이 후보에도, 원래 장소에도 못 든다."""
+    assert {"tour_api", "oliveyoung", "daiso", "artbox", "musinsa"} <= set(DEFAULT_SOURCES)
+    assert "source = ANY(%s)" in ORIGIN_SQL and "source = ANY(%s)" in POOL_SQL
+
+
+def test_sources_can_be_narrowed():
+    conn = FakeConnection([ORIGIN], [])
+    pool = find_place_candidates(lambda: conn, "t1", "126511", sources=("tour_api",))
+    assert conn.executed[0][1] == ("t1", ["tour_api"], "126511")
+    assert pool["source"] == "place_catalog:tour_api"
 
 
 def test_unknown_origin_is_unknown():

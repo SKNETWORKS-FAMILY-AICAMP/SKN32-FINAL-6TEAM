@@ -125,7 +125,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
     .find((field) => field?.method !== "customer" && field?.evidence.how === "year_filled");
   const busy = edit.isPending || confirm.isPending || plan.isPending;
-  const send = (edits: IntakeEdit[]) => edit.mutate({ revision: view.revision, edits });
+  const send = (edits: IntakeEdit[]) => edit.mutateAsync({ revision: view.revision, edits }).then(() => true, () => false);
   const confirmed = view.status === "confirmed";
   const error = edit.error ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
@@ -225,7 +225,7 @@ function Party({ disabled, onSave }: { disabled: boolean; onSave: (value: number
   </form>;
 }
 
-function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => void }) {
+function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => Promise<boolean> }) {
   const t = useT();
   const { item, source } = row;
   const where = `items[${item.index}]`;
@@ -237,18 +237,20 @@ function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boo
   const place = item.fields.place;
   const placeName = place?.value && typeof place.value === "object" ? String((place.value as { name?: string }).name ?? "") : "";
   const [placeDraft, setPlaceDraft] = useState("");
-  const [times, setTimes] = useState({ start, end, date });
+  // 편집한 칸만 초안으로 보관해, 나머지 칸은 최신 서버 값을 따라가게 한다.
+  const [timeDraft, setTimeDraft] = useState<Partial<{ start: string; end: string; date: string }>>({});
+  const times = { start, end, date, ...timeDraft };
   const booking = item.fields.booking_no?.value;
   const line = item.line ? source.lines[item.line - 1]?.text : undefined;
   const t2 = (edits: IntakeEdit[]) => onEdit(edits.map((edit) => ({ source_id: source.source_id, ...edit })));
 
-  function saveTimes(event: FormEvent<HTMLFormElement>) {
+  async function saveTimes(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const edits: IntakeEdit[] = [];
     if (times.start && times.start !== start) edits.push({ field: field("starts_at"), value: times.start });
     if (times.end && times.end !== end) edits.push({ field: field("ends_at"), value: times.end });
     if (times.date && times.date !== date) edits.push({ field: field("date"), value: times.date });
-    if (edits.length) t2(edits);
+    if (edits.length && await t2(edits)) setTimeDraft({});
   }
 
   return <Panel className={styles.item} data-problem={row.problems.length > 0}>
@@ -276,11 +278,11 @@ function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boo
       </form>
       <form className={styles.inline} onSubmit={saveTimes}>
         <label className="sr-only" htmlFor={`date-${row.key}`}>{t("날짜", "Date")}</label>
-        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimes({ ...times, date: event.target.value })} disabled={disabled} />
+        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimeDraft({ ...timeDraft, date: event.target.value })} disabled={disabled} />
         <label className="sr-only" htmlFor={`start-${row.key}`}>{t("시작", "Start")}</label>
-        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimes({ ...times, start: event.target.value })} disabled={disabled} />
+        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimeDraft({ ...timeDraft, start: event.target.value })} disabled={disabled} />
         <label className="sr-only" htmlFor={`end-${row.key}`}>{t("끝", "End")}</label>
-        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimes({ ...times, end: event.target.value })} disabled={disabled} />
+        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimeDraft({ ...timeDraft, end: event.target.value })} disabled={disabled} />
         <Button type="submit" disabled={disabled}>{t("날짜·시각 저장", "Save date & time")}</Button>
       </form>
       <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("removed"), value: true }])}><Trash2 {...icon} />{t("빼기", "Remove")}</Button>

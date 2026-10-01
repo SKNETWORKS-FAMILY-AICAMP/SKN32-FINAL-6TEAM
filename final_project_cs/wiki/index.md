@@ -168,6 +168,7 @@ applied_at         2026-08-18T13:13:26Z
 ## 최근 변경
 
 [log.md](log.md)
+- 2026-10-01: [role-eval-ui → develop 통합 사전 검증](records/reports/2026-10-01_0957_role_eval_ui_develop_merge.md) — 웹 검증 결과·8042 설정 정합성·기존 실패와 로컬 환경 문제를 구분했다. 최종 병합 결과는 PR #29에 기록한다.
 - [domain-swap.md](domain-swap.md) — **도메인을 갈아 끼울 때 무엇을 바꾸고 무엇을 두나.** 11행이 Core 의 정본
 
 ## 기록 구역 `records/` (2026-09-08)
@@ -180,3 +181,5 @@ applied_at         2026-08-18T13:13:26Z
 | `handoff/` · `history/` · `plans/` · `vision/` 등 | 동결된 기록. 현재 계약·계획·결정은 wiki 본문 |
 
 규칙은 허브 [governance/work-loop.md](../../wiki/governance/work-loop.md) 2026-09-08 절. 검사기는 `records/`를 면제한다.
+
+- 2026-09-30 사용자 웹: [1분 폴링·채팅 오류 안내 합의 반영](records/reports/2026-09-30_1231_알림폴링_채팅안내_합의반영.md) · [검증 근거](records/evidence/2026-09-30_1231_알림폴링_채팅안내_검증.md). 현재 연결 상태는 [화면별 API 문서](external/web-screen-api.md)를 따른다.

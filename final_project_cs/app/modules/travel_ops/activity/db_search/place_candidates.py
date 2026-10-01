@@ -9,10 +9,10 @@
 
     {"origin":     {"contentid", "title", "contenttypeid",
                     "lclsSystm1", "lclsSystm2", "lclsSystm3",
-                    "sigungucode", "mapx", "mapy",
+                    "sigungucode", "brand", "mapx", "mapy",
                     "closed_days", "business_hours"},
      "candidates": [<origin 과 같은 모양의 행>, ...],
-     "source": "place_catalog:tour_api", "confirmed_at": "..."}
+     "source": "place_catalog:tour_api+oliveyoung+...", "confirmed_at": "..."}
 
 ★후보 풀은 `lclsSystm1` **또는** `sigungucode` 가 원래 장소와 같은 행까지만
   좁힌다. 두 선호도(활동 중요·위치 중요)의 고정값이라 폴백이 필드를 하나씩
@@ -28,16 +28,19 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Callable
 
-#: 기본 출처. `--source` 로 적재한 값과 같아야 한다.
-DEFAULT_SOURCE = "tour_api"
+#: 후보 풀에 넣는 출처 전부. `scripts/load_place_catalog_csv.py --source` 로 적재한 값과 같아야 한다.
+#: ★브랜드 매장(올리브영·다이소·아트박스·무신사)도 같은 카탈로그의 한 출처다 —
+#:  `contentid` 가 TourAPI 는 숫자, 브랜드는 OY/DS/AB/MS 접두어라 출처가 달라도 겹치지 않는다.
+#:  아직 적재하지 않은 출처는 행이 없을 뿐이라 넣어 둬도 해가 없다.
+DEFAULT_SOURCES = ("tour_api", "oliveyoung", "daiso", "artbox", "musinsa")
 
 _COLUMNS = ("content_id", "content_type_id", "title", "latitude", "longitude",
             "large_class_code", "raw_json", "fetched_at")
 _SELECT = ("SELECT content_id, content_type_id, title, latitude, longitude, "
            "large_class_code, raw_json, fetched_at FROM place_catalog "
-           "WHERE tenant_id=%s AND source=%s ")
+           "WHERE tenant_id=%s AND source = ANY(%s) ")
 
-ORIGIN_SQL = _SELECT + "AND content_id=%s"
+ORIGIN_SQL = _SELECT + "AND content_id=%s ORDER BY source LIMIT 1"
 POOL_SQL = (_SELECT + "AND content_id <> %s "
             "AND (large_class_code = %s OR raw_json->>'sigungucode' = %s) "
             "ORDER BY content_id")
@@ -62,6 +65,7 @@ def to_candidate(record: dict[str, Any]) -> dict[str, Any]:
         "lclsSystm2": _text(raw.get("lclsSystm2")),
         "lclsSystm3": _text(raw.get("lclsSystm3")),
         "sigungucode": _text(raw.get("sigungucode")),
+        "brand": _text(raw.get("brand")),
         "mapx": None if lon is None else str(lon),
         "mapy": None if lat is None else str(lat),
         "closed_days": _text(raw.get("closed_days")),
@@ -76,23 +80,23 @@ def _oldest(records: list[dict[str, Any]]) -> str | None:
 
 def find_place_candidates(connection_factory: Callable[[], Any], tenant_id: str,
                           content_id: str | None, *,
-                          source: str = DEFAULT_SOURCE) -> dict[str, Any] | None:
+                          sources: tuple[str, ...] = DEFAULT_SOURCES) -> dict[str, Any] | None:
     """원래 장소 `content_id` 로 후보 풀을 읽는다. 원래 장소를 모르면 `None`."""
     content_id = _text(content_id)
     if content_id is None:
         return None
     with connection_factory() as conn:
         with conn.cursor() as cur:
-            cur.execute(ORIGIN_SQL, (tenant_id, source, content_id))
+            cur.execute(ORIGIN_SQL, (tenant_id, list(sources), content_id))
             row = cur.fetchone()
             if row is None:
                 return None
             origin_record = dict(zip(_COLUMNS, row))
             origin = to_candidate(origin_record)
-            cur.execute(POOL_SQL, (tenant_id, source, content_id,
+            cur.execute(POOL_SQL, (tenant_id, list(sources), content_id,
                                    origin["lclsSystm1"], origin["sigungucode"]))
             records = [dict(zip(_COLUMNS, r)) for r in cur.fetchall()]
     return {"origin": origin,
             "candidates": [to_candidate(r) for r in records],
-            "source": f"place_catalog:{source}",
+            "source": "place_catalog:" + "+".join(sources),
             "confirmed_at": _oldest([origin_record, *records])}

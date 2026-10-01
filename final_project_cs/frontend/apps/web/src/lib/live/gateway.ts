@@ -141,14 +141,26 @@ export function createLiveGateway(): TripGateway {
       const t = translator(language);
       const now = new Date().toISOString();
       const requestId = `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
-      const result = await api<{ status?: string; case_status?: string; answer?: string }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message }),
-      });
-      const log = [...readMessages(tripId),
-        { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
-        { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString() }];
-      writeMessages(tripId, log);
-      return read(tripId, language);
+      let stage = "send_message";
+      try {
+        const result = await api<{ status?: string; case_status?: string; answer?: string }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message }),
+        });
+        const log = [...readMessages(tripId),
+          { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },
+          { id: `${requestId}-a`, role: "assistant" as const, text: replyFor(result, t), createdAt: new Date().toISOString() }];
+        writeMessages(tripId, log);
+        stage = "refresh_trip";
+        return await read(tripId, language);
+      } catch (error) {
+        // 서버 수집 API 연결 전의 브라우저 진단 기록. 키·채팅 본문·서버 오류 원문은 남기지 않는다.
+        console.error("[tripilot.chat]", {
+          requestId, stage, at: new Date().toISOString(),
+          code: error instanceof LiveError ? error.code : "unexpected_error",
+          status: error instanceof LiveError ? error.status : undefined,
+        });
+        throw error;
+      }
     },
   };
 }

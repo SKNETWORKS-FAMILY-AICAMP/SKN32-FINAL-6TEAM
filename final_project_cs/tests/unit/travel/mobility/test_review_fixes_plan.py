@@ -89,7 +89,7 @@ def test_38_unknown_disruption_kind_is_refused_upfront():
 # ── #29 버리는 후보는 이유를 남긴다 ────────────────────────────────────
 def test_29_dropped_transit_candidates_are_listed_with_reason():
     planner = P.Planner(_rt(), modes=["subway"])
-    planner._near_station = lambda place, limit: ("역A", 100.0, None) if place["key"] == "P1" else ("역C", 100.0, None)
+    planner._near_stations = lambda place, limit: [("역A", 100.0, None) if place["key"] == "P1" else ("역C", 100.0, None)]
     cand = {"n": 1, "legs": [{"line": "01호선", "from": "역A", "to": "역C"}], "walk_in_min": 1, "walk_out_min": 1,
             "out": {}, "reason": "막차 이후"}
     planner._vc = lambda case: SimpleNamespace(candidates=[cand], out={}, reason="후보 없음", verdict="infeasible")

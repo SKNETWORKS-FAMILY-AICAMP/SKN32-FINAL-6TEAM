@@ -398,7 +398,7 @@ class ReadToolbox:
 
             {"origin":     {"contentid", "title", "contenttypeid",
                             "lclsSystm1", "lclsSystm2", "lclsSystm3",
-                            "sigungucode", "mapx", "mapy",
+                            "sigungucode", "brand", "mapx", "mapy",
                             "closed_days", "business_hours"},
              "candidates": [<origin 과 같은 모양의 행>, ...],
              "source": "...", "confirmed_at": "..."}

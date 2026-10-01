@@ -14,8 +14,11 @@ from .ledger import find_place_by_name
 class LedgerPlaceLookup:
     name = "dining_ledger"
 
-    def __init__(self, connection_factory: Callable[[], Any]) -> None:
+    def __init__(self, connection_factory: Callable[[], Any],
+                 on_found: Callable[[dict[str, Any]], None] | None = None) -> None:
         self._connect = connection_factory
+        #: 찾은 가게를 알린다 — 일정 접수가 그 좌표를 다음 항목의 근처 힌트로 쓴다(`trip_api._PlaceCtx`)
+        self._on_found = on_found
         self.misses: dict[str, int] = {}
 
     def find(self, place_name: str, *, area_code: str | None = None, **_: Any) -> dict[str, Any] | None:
@@ -27,4 +30,6 @@ class LedgerPlaceLookup:
             return None
         if found is None:
             self.misses["not_found"] = self.misses.get("not_found", 0) + 1
+        elif self._on_found is not None:
+            self._on_found(found)
         return found

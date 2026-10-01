@@ -44,28 +44,29 @@ API 열의 ID는 아래 연결 상태 표로 이어진다. `live`는 실제 서�
 
 | ID·기능 | API 명세·호출 | 백엔드 구현 | 프론트 연결 | 통합 검증 | 코드 근거 |
 |---|---|---|---|---|---|
-| W-01 키 발급 | [웹 API](rest-endpoints.md#web-api) · `POST /v1/web/session` | 구현 확인 | 연결 확인 | 미검증 | [client.ts](../../frontend/apps/web/src/lib/live/client.ts), [키 안내](../../frontend/apps/web/src/features/account/key-notice.tsx) |
+| W-01 키 발급 | [웹 API](rest-endpoints.md#web-api) · `POST /v1/web/session` | 구현 확인 | 키 보관 수정·가짜 서버 검증 | 미검증 | [client.ts](../../frontend/apps/web/src/lib/live/client.ts), [키 안내](../../frontend/apps/web/src/features/account/key-notice.tsx) |
 | W-02 내 여행·최근 여행 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips` | 구현 확인 | 연결 확인 | 미검증 | [gateway.ts](../../frontend/apps/web/src/lib/live/gateway.ts), [여행 목록](../../frontend/apps/web/src/features/trip/trip-list.tsx) |
 | W-03 계획 접수 | [계획 접수](rest-endpoints.md#intake-api) · `POST /v1/web/trip-intakes` | 구현 확인 | 연결 확인 | 미검증 | [intake.ts](../../frontend/apps/web/src/lib/live/intake.ts) |
-| W-04 접수 조회·수정 | [계획 접수](rest-endpoints.md#intake-api) · `GET /v1/web/trip-intakes/{intake_id}`, `POST /v1/web/trip-intakes/{intake_id}/edits` | 구현 확인 | 연결 확인 | 미검증 | [확인 화면](../../frontend/apps/web/src/features/intake-review/intake-review.tsx) |
+| W-04 접수 조회·수정 | [계획 접수](rest-endpoints.md#intake-api) · `GET /v1/web/trip-intakes/{intake_id}`, `POST /v1/web/trip-intakes/{intake_id}/edits` | 구현 확인 | 입력 초안 수정·가짜 서버 검증 | 미검증 | [확인 화면](../../frontend/apps/web/src/features/intake-review/intake-review.tsx) |
 | W-05 확인 등록·설문 | [계획 접수](rest-endpoints.md#intake-api) · `POST /v1/web/trip-intakes/{intake_id}/confirm`, [설문 계약](rest-endpoints.md#trip-survey) | 구현 확인 | 연결 확인 | 미검증 | [intake.ts](../../frontend/apps/web/src/lib/live/intake.ts), [설문 변환](../../frontend/apps/web/src/features/onboarding/payload.ts) |
 | W-06 일정 생성·설문 | [계획 접수](rest-endpoints.md#intake-api) · `POST /v1/web/trip-intakes/{intake_id}/plan` | 구현 확인 | 연결 확인 | 미검증 | [확인 화면](../../frontend/apps/web/src/features/intake-review/intake-review.tsx) |
-| W-07 일정·지도·경고·이력 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}` | 구현 확인 | 연결 확인 | 미검증 | [gateway.ts](../../frontend/apps/web/src/lib/live/gateway.ts), [지도 표시 계약](../../frontend/apps/web/MAP_INTEGRATION.md) |
-| W-08 대화 | [웹 API](rest-endpoints.md#web-api) · `POST /v1/web/trips/{trip_id}/messages` | 구현 확인 | 연결 확인 | 미검증 | [gateway.ts](../../frontend/apps/web/src/lib/live/gateway.ts), [여행 화면](../../frontend/apps/web/src/features/trip/trip-home.tsx) |
-| W-09 제안 조회·선택 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}/proposals`, `POST /v1/web/trips/{trip_id}/proposals/{proposal_id}/choose` | 구현 확인 | 연결 확인 | 미검증 | [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts), [선택 화면](../../frontend/apps/web/src/features/trip/trip-attention.tsx) |
-| W-10 알림 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}/notices` | 구현 확인 | 연결 확인 | 미검증 | [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts), [선택·알림 화면](../../frontend/apps/web/src/features/trip/trip-attention.tsx) |
+| W-07 일정·지도·경고·이력 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}` | 구현 확인 | 알림 변경 시 갱신 연결 | 미검증 | [gateway.ts](../../frontend/apps/web/src/lib/live/gateway.ts), [지도 표시 계약](../../frontend/apps/web/MAP_INTEGRATION.md) |
+| W-08 대화 | [웹 API](rest-endpoints.md#web-api) · `POST /v1/web/trips/{trip_id}/messages` | 구현 확인 | 공통 오류 안내·새 요청 재전송 | 미검증 | [gateway.ts](../../frontend/apps/web/src/lib/live/gateway.ts), [여행 화면](../../frontend/apps/web/src/features/trip/trip-home.tsx) |
+| W-09 제안 조회·선택 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}/proposals`, `POST /v1/web/trips/{trip_id}/proposals/{proposal_id}/choose` | 구현 확인 | 1분 조회·선택 연결 | 미검증 | [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts), [선택 화면](../../frontend/apps/web/src/features/trip/trip-attention.tsx) |
+| W-10 알림 | [웹 API](rest-endpoints.md#web-api) · `GET /v1/web/trips/{trip_id}/notices` | 구현 확인 | 1분 조회·변경 감지 연결 | 미검증 | [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts), [선택·알림 화면](../../frontend/apps/web/src/features/trip/trip-attention.tsx) |
 | W-11 대화 모델 예열 | [예열 계약](rest-endpoints.md#web-warmup) · `POST /v1/web/warmup` | 구현 확인 | 연결 확인 | 미검증 | [extras.ts](../../frontend/apps/web/src/lib/live/extras.ts), [여행 화면](../../frontend/apps/web/src/features/trip/trip-home.tsx) |
-| W-12 키 가져오기·재발급 | [웹 API](rest-endpoints.md#web-api) · 가져오기 검증은 `GET /v1/web/trips`, 재발급은 `POST /v1/web/session/rotate` | 구현 확인 | 연결 확인 | 미검증 | [client.ts](../../frontend/apps/web/src/lib/live/client.ts), [키 설정](../../frontend/apps/web/src/features/account/key-settings.tsx) |
+| W-12 키 가져오기·재발급 | [웹 API](rest-endpoints.md#web-api) · 가져오기 검증은 `GET /v1/web/trips`, 재발급은 `POST /v1/web/session/rotate` | 구현 확인 | 키 보관·사용자 전환 수정·가짜 서버 검증 | 미검증 | [client.ts](../../frontend/apps/web/src/lib/live/client.ts), [키 설정](../../frontend/apps/web/src/features/account/key-settings.tsx) |
 
 서버 측 공통 근거는 [trip_api.py](../../app/modules/travel_ops/trip_api.py)다. `POST /v1/web/trips`도 서버에는 있지만 현재 화면은 접수→확인/생성 흐름으로 등록한다. 해당 직접 등록 API를 화면에 새로 연결해야 한다는 뜻은 아니다.
 
 ## 화면에서 주의할 현재 동작
 
-- **키와 소유권:** 내 여행 목록은 저장된 키가 없으면 서버를 부르지 않는다. 기존 키가 거절되면 오류를 보이고 키를 지우며, 다음 요청은 새 키 발급으로 이어질 수 있다. 이전 여행을 복구한 것으로 표시하지 않는다. 다른 키 가져오기는 검증 실패 시 기존 키를 유지한다.
-- **계획 확인:** 읽는 중·확인 가능·등록 완료·치명적 실패를 구분한다. 수정 판이 낡으면 서버가 거절하므로 최신 접수 상태를 확인한다. 설문은 온보딩을 마친 경우에만 확인/생성 요청에 포함한다.
+- **키와 소유권:** 내 여행 목록은 현재 키가 없으면 서버를 부르지 않는다. 브라우저 저장소를 사용할 수 없으면 같은 페이지의 메모리에 키·발급 안내를 유지하고, 새로고침 시 키를 잃을 수 있음을 알린다. 기존 키가 거절되면 저장소·메모리에서 제거하며 이전 여행을 복구한 것으로 표시하지 않는다. 다른 키 가져오기는 검증 실패 시 기존 상태를 유지하고, 성공한 사용자 전환은 이전 조회·캐시·이어보기 참조를 정리한다. 이전 키의 늦은 응답은 새 사용자의 결과에 반영하지 않는다.
+- **계획 확인:** 읽는 중·확인 가능·등록 완료·치명적 실패를 구분한다. 날짜·시각의 편집하지 않은 칸은 최신 서버 값을 따르고 편집한 칸은 초안으로 유지한다. 저장 성공 뒤 초안을 정리하며, 낡은 수정 판(409)이면 최신 접수를 다시 읽고 편집 중인 값은 유지한다. 설문은 온보딩을 마친 경우에만 확인/생성 요청에 포함한다.
 - **여행·지도:** 서버 시각은 서울 날짜·시각으로 바꾸고, 이동 항목은 다음 일정의 출발 메모로 표시한다. 서버 좌표가 없으면 임의의 핀을 만들지 않는다. 지도 제공자 인증 검증은 API 연결 검증과 별도다.
-- **대화:** 서버 답변을 표시하고 여행을 다시 조회한다. 현재 화면의 대화 기록은 브라우저 탭의 저장소에 남으며 서버 대화 목록을 조회하는 화면 API는 없다. [대화 처리](../../app/modules/travel_ops/trip_messages.py)는 Case를 생성·전이한다.
+- **대화:** 서버 답변을 표시하고 여행을 다시 조회한다. 연결·서버 오류는 “서버 연결이 불안정해요. 잠시 후 다시 시도해 주세요.”로 안내하고, 「다시 보내기」는 같은 문장을 새 `request_id`로 전송한다. 인증·사용량 제한은 기존의 구체적인 안내를 유지한다. 현재 화면의 대화 기록은 브라우저 탭의 저장소에 남으며 서버 대화 목록을 조회하는 화면 API는 없다. [대화 처리](../../app/modules/travel_ops/trip_messages.py)는 Case를 생성·전이한다.
 - **제안 선택:** 선택 성공 후 여행·제안·알림을 다시 조회한다. 이미 결정됐거나 여행 판이 달라진 오류를 성공으로 표시하지 않는다.
+- **주기적 조회:** 여행 화면에서 알림·제안을 각각 1분 간격으로 읽는다. 알림 내용이 달라지면 여행을 다시 조회해 일정·지도·경고·이력을 함께 갱신한다. 첫 알림 조회도 여행과 동기화하며, 이후 같은 알림이면 여행 조회를 추가하지 않는다. 갱신 중 연결·서버 오류는 이전 여행과 입력을 유지하고 최신 조회 실패를 알리며, 다음 주기에 다시 시도한다. 비활성 탭은 기본 Query 정책에 따라 주기 조회가 중단될 수 있으므로 백그라운드 1분 갱신을 보장하지 않는다.
 - **예열:** 저장된 키가 있을 때 여행 화면 진입 시 요청한다. 응답의 예열 결과를 화면에 표시하지 않으며 예열 오류도 별도 안내하지 않는다. API 호출 연결과 실패 안내 UI 구현을 구분한다.
 
 ## 협의가 필요한 항목
@@ -78,8 +79,18 @@ API 열의 ID는 아래 연결 상태 표로 이어진다. `live`는 실제 서�
 | Q-02 프로필·이메일 복구 | [프로필 계약](../../frontend/apps/web/PROFILE_CONTRACT.md). 키 가져오기/재발급과는 별개 | 저장할 항목·조회/수정 계약·이메일 소유 확인·복구 절차. [D-021](../../../wiki/decisions/D-021-email-verified-key-recovery.md)의 결정과 실제 구현을 구분 | 미구현 | 미연결 | 미검증 |
 | Q-03 선택 언어 전달 | 브라우저 문구 설정만 있고 서버 접수/생성은 `ko` 사용 | 언어를 보낼 요청·저장 위치·답변/알림 적용 범위·허용 값·기존 여행 처리 | 미구현 | 미연결 | 미검증 |
 | Q-04 예열 결과 안내 | W-11 호출은 있으나 결과·실패 안내 UI 없음 | 별도 안내가 필요한지, 재시도·오류 표시를 어디에 둘지 | 예열 응답 구현 확인 | 호출 연결 확인·안내 미구현 | 미검증 |
+| Q-05 채팅 오류·로그 | 사용자 전달 합의 적용 · [후속 협의](#코드-리뷰-후속-협의) | 오류 로그의 서버 저장·개발자/운영 콘솔 연결 계약 | 채팅 구현 확인·프론트 오류 수집 경로 미확인 | 오류 안내·새 요청 재전송·브라우저 진단 기록 구현 / 서버 전송 미연결 | 미검증 |
+| Q-06 일정 자동 갱신 | 사용자 전달 합의 적용 | 당분간 1분 폴링 유지 | 최신 여행·알림 조회 구현 확인 | 알림 변화에 여행 본문 갱신 연결 | 미검증 |
 
-각 항목의 **합의 상태는 모두 `협의 필요`**, 확인자·합의일·확정 계약은 `[미확보]`다. Q-01~Q-04를 채택·보류·기각할 때 이유와 양측 확인 근거를 남긴다. 구현을 요청한 것으로 간주해 에이전트가 임의로 API를 추가하지 않는다.
+Q-01~Q-04는 협의 필요 상태다. Q-05·Q-06의 처리 방향은 **2026-09-30 사용자가 전달한 팀 합의**를 근거로 반영했다. 백엔드 담당자의 직접 확인이나 새 API 명세 확정, 실서버 검증 완료를 뜻하지 않는다.
+
+## 코드 리뷰 후속 협의
+
+기준: `role-eval-ui` `5202ef5` 위 로컬 변경 / **ST4F-179**. 앞서 완료한 키 보관·입력 초안·사용자 전환 수정은 [기존 리포트](../records/reports/2026-09-30_1032_웹리뷰_프론트독립수정.md), 이번 합의 반영 내용과 검증은 [후속 리포트](../records/reports/2026-09-30_1231_알림폴링_채팅안내_합의반영.md)에 보존한다. 현재 동작은 위 연결 상태와 화면 동작을 따른다.
+
+- **Q-05 남은 연결:** 오류 로그를 서버에 저장하고 개발자·운영 콘솔에서 확인하는 방향으로 합의했다. 현재 프론트는 브라우저 콘솔에 요청 ID·발생 시각·실패 단계(`send_message`/`refresh_trip`)·오류 코드·HTTP 상태를 남긴다. 사용자 키·채팅 본문·서버 오류 원문은 포함하지 않는다. 서버 수집 API·인증·보존 범위가 확인되면 전송과 콘솔 표시를 연결하고 함께 검증한다. 브라우저 콘솔 출력은 서버 저장 완료가 아니다.
+- **Q-05 서버 검증:** 프론트의 다시 보내기는 새 요청이며, 이전 요청이 처리됐을 가능성이 있다. 중복 여부와 최종 일정·Case 처리는 서버 담당 범위로 두고 실제 서버에서 확인한다. 프론트가 중복 실행 방지를 보장하지 않는다.
+- **Q-06 추후 논의:** 개인 에이전트 알림 계획과 별도로 웹 알림 제공 방식은 팀원들과 추후 논의한다.
 
 ## 검증과 갱신 근거
 
@@ -94,9 +105,13 @@ API 열의 ID는 아래 연결 상태 표로 이어진다. `live`는 실제 서�
 
 검증 명령과 운영 조건은 [웹 개발 기준](../../frontend/apps/web/DEVELOPMENT.md)과 [실행 안내](../../frontend/apps/web/README.md)를 따른다.
 
+2026-09-30 리뷰의 키 보관·입력 초안·사용자 전환 수정 **3/3 = 100% 구현·회귀 검증 완료**. 린트·타입·빌드와 단위 **109/109 = 100%**, live 모드 가짜 서버 Chrome 시험 **36/36 = 100%**를 통과했다. 상세 내용은 [작업 리포트](../records/reports/2026-09-30_1032_웹리뷰_프론트독립수정.md)와 [실행 근거](../records/evidence/2026-09-30_1032_웹리뷰_검증.md)에 보존한다. **실제 서버·브라우저 통합 검증은 미실행**이다. Q-05·Q-06은 이후 사용자 전달 합의를 반영했으며, 현재 남은 작업은 위 후속 협의와 최신 리포트를 따른다.
+
 | 날짜·수행자 | 대상·기준 | 결과·근거 | 남은 것 |
 |---|---|---|---|
 | 2026-09-29 · Codex(최상욱 작업) | 최초 화면/호출/서버 대조 · `fc1ac0a` | [작업 리포트](../records/reports/2026-09-29_1436_웹API_협업문서_정리.md) | 실제 서버·브라우저 검증, 협의 항목의 양측 확인 |
+| 2026-09-30 · Codex(최상욱 작업) | W-01·W-04·W-12 / ST4F-179 · `5202ef5` 위 로컬 수정 | [프론트 독립 수정·회귀 검증](../records/reports/2026-09-30_1032_웹리뷰_프론트독립수정.md) | Q-05·Q-06 협의·수정, 실제 서버 통합 검증, 커밋·푸시 |
+| 2026-09-30 · Codex(최상욱 작업) | W-07~W-10 / Q-05·Q-06 / ST4F-179 · `5202ef5` 위 로컬 수정 | [1분 폴링·채팅 안내 합의 반영](../records/reports/2026-09-30_1231_알림폴링_채팅안내_합의반영.md) | 서버 로그 수집·콘솔 연결, 실서버 공동 검증, 커밋·푸시 |
 
 후속 행에는 `수행자 / 날짜 / 화면·기능 ID / 커밋 / 환경·명령 / 결과·근거 / 남은 문제`를 기록한다. 양측 합의나 사람 리뷰가 없으면 있다고 적지 않는다.
 

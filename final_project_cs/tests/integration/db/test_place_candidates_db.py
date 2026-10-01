@@ -39,7 +39,7 @@ pytestmark = pytest.mark.skipif(_SKIP is not None, reason=_SKIP or "")
 
 INSERT = ("INSERT INTO place_catalog (tenant_id, source, content_id, content_type_id, "
           "area_code, title, latitude, longitude, large_class_code, raw_json) "
-          "VALUES (%s,'tour_api',%s,'12','1',%s,%s,%s,%s,%s)")
+          "VALUES (%s,%s,%s,'12','1',%s,%s,%s,%s,%s)")
 
 
 def _raw(cid, title, l1, sgg, closed):
@@ -59,10 +59,14 @@ def tenant():
         ("same_gu", "같은 자치구", 37.58,   126.98,   "VE", "23", "연중무휴"),
         ("neither", "둘 다 다름",  37.50,   127.10,   "SH", "1",  "연중무휴"),
         ("no_xy",   "좌표 없음",   None,    None,     "HS", "5",  None),
+        # 브랜드 출처 — 같은 카탈로그의 다른 source. 후보에도 원래 장소에도 들어야 한다.
+        ("OYtest1", "올영 테스트점", 37.56,  126.98,   "SH", "23", "연중무휴"),
+        ("OYtest2", "올영 다른점",   37.57,  126.99,   "SH", "23", "연중무휴"),
     ]
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
         for cid, title, lat, lon, l1, sgg, closed in rows:
-            cur.execute(INSERT, (tenant, cid, title, lat, lon, l1, _raw(cid, title, l1, sgg, closed)))
+            source = "oliveyoung" if cid.startswith("OY") else "tour_api"
+            cur.execute(INSERT, (tenant, source, cid, title, lat, lon, l1, _raw(cid, title, l1, sgg, closed)))
     try:
         yield tenant
     finally:
@@ -75,9 +79,15 @@ def test_pool_is_same_large_class_or_same_sigungu(tenant):
 
     assert pool["origin"]["title"] == "원래 장소"
     assert pool["origin"]["closed_days"] == "매주 화요일"
-    assert sorted(c["contentid"] for c in pool["candidates"]) == ["no_xy", "same_gu", "same_l1"]
-    assert pool["source"] == "place_catalog:tour_api"
+    assert sorted(c["contentid"] for c in pool["candidates"]) == ["OYtest1", "OYtest2", "no_xy", "same_gu", "same_l1"]
+    assert pool["source"].startswith("place_catalog:tour_api")
     assert pool["confirmed_at"]
+
+
+def test_brand_store_as_origin_finds_brand_candidates(tenant):
+    pool = find_place_candidates(get_connection, tenant, "OYtest1")
+    assert pool["origin"]["title"] == "올영 테스트점"
+    assert "OYtest2" in [c["contentid"] for c in pool["candidates"]]
 
 
 def test_null_coordinates_come_back_as_unknown(tenant):

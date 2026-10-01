@@ -446,9 +446,35 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     resolved: dict[int, Any] = {}
     for index, item in enumerate(items):
         if item["title"]:
+            # 일정 시각(날짜+시간)을 near 힌트 기준으로 넘긴다
+            if hasattr(tour, "set_current_date"):
+                date_val = dated[index].value if index < len(dated) else None
+                starts_at = next((r["value"] for r in rows if r["field"] == f"items[{index}].starts_at"), None)
+                dt_str = f"{date_val}T{starts_at}" if date_val and starts_at else date_val
+                tour.set_current_date(dt_str)
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint="dining" if item["meal"] else None, aliases=aliases,
                                       dining=dining)
+    # 두 번째 패스 — near 없이 미뤄진 항목을 다른 장소가 확정된 뒤 재시도한다(한 번만)
+    # kakao 로 resolved 된 항목도 재시도 대상에 포함한다:
+    # places.py normalize()가 점포 접미사를 제거하므로 "올리브영 홍대사거리점" → "올리브영" exact match →
+    # Kakao 첫 번째 결과가 무조건 선택된다. near 반영을 위해 2차 패스에서 재시도한다.
+    _ctx = getattr(tour, "_ctx", None)
+    if getattr(tour, "had_deferred", False) and _ctx is not None and _ctx.get_near() is not None:
+        tour.had_deferred = False
+        for index, item in enumerate(items):
+            if item["title"] and resolved.get(index) is not None and (
+                resolved[index].status == "unresolved"
+                or getattr(resolved[index], "method", None) == "kakao"
+            ):
+                if hasattr(tour, "set_current_date"):
+                    date_val = dated[index].value if index < len(dated) else None
+                    starts_at = next((r["value"] for r in rows if r["field"] == f"items[{index}].starts_at"), None)
+                    dt_str = f"{date_val}T{starts_at}" if date_val and starts_at else date_val
+                    tour.set_current_date(dt_str)
+                resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
+                                          kind_hint="dining" if item["meal"] else None, aliases=aliases,
+                                          dining=dining)
     for index, found in resolved.items():
         evidence = found.evidence()
         value = None

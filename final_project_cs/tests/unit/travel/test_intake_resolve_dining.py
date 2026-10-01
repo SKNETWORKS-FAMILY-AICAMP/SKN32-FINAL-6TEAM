@@ -139,3 +139,27 @@ def test_a_meal_word_in_front_makes_it_a_meal_even_without_a_hint():
 
     assert (found.method, found.name, found.kind) == ("dining_ledger", "마지", "dining")
     assert tour.asked == []
+
+
+def test_a_ledger_hit_feeds_the_near_hint_for_the_next_items():
+    # 액티비티 CSV · 카카오가 쓰는 근처 힌트(`_PlaceCtx`)에 원장에서 찾은 식당 좌표도 넣는다.
+    import contextlib
+
+    from app.modules.travel_ops import trip_api
+    from app.modules.travel_ops.dining import place_lookup
+
+    shop = {"matched_title": "토속촌삼계탕", "content_id": "1", "content_type_id": "39",
+            "latitude": 37.5777, "longitude": 126.9715, "address": "서울특별시 종로구"}
+    ctx = trip_api._PlaceCtx()
+    original = place_lookup.find_place_by_name
+    place_lookup.find_place_by_name = lambda conn, name: shop if name == "토속촌삼계탕" else None
+    try:
+        lookup = trip_api._dining_lookup(ctx)
+        lookup._connect = lambda: contextlib.nullcontext()
+        lookup.find("없는집")
+        assert ctx.get_near() is None
+        lookup.find("토속촌삼계탕")
+    finally:
+        place_lookup.find_place_by_name = original
+
+    assert ctx.get_near() == (37.5777, 126.9715)
