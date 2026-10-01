@@ -297,7 +297,7 @@ def test_walk_only_earliest_real_planner():
 
 
 def test_plan_version_bumped():
-    assert P.PLAN_VERSION == "plan-v2.3"
+    assert P.PLAN_VERSION == "plan-v2.4"      # 87 — 혼합 후보 추가로 올림(86 판 = plan-v2.3)
 
 
 # ── E3 — 답 문장에 등급 없음 ───────────────────────────────────────────
