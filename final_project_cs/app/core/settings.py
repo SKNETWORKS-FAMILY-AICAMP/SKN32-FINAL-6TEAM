@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # LLM
     llm_provider: str = "openai"
     openai_api_key: str
+    #: ★`[2026-10-01 사용자 지시]` **서버 배포용** OpenAI 키(서버를 도커 이미지로 만들어 아마존 등에 올릴 때 쓸 키). 이름만 선언했다 —
+    #:  **어느 코드도 이 값을 읽지 않는다.** 이 키를 쓰는 일은 사용자가 쓰라고 지시한 순간에만 한다(그 전에는 읽지도 부르지도 않는다).
+    #:  선언한 까닭: `extra="forbid"` 라 `.env` 에 이름이 먼저 적히면 앱이 기동조차 못 한다. 값은 `.env` 에만 둔다.
+    openai_api_key_server: str = ""
     llm_model: str
     embedding_model: str
     llm_temperature: float = 0.0
