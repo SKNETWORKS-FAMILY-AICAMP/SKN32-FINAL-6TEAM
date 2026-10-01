@@ -36,7 +36,11 @@ def cos(a, b):
     return sum(x * y for x, y in zip(a, b)) / (na * nb)
 
 
-if os.path.exists('rag_sims.json'):
+VARIANT = os.environ.get('VARIANT')          # 예: VARIANT=E_문서제목+절제목+고객용문장 — rag_embed_variants.json 의 점수표로 후보를 뽑는다
+if VARIANT:
+    vj = json.load(open('rag_embed_variants.json'))
+    sims = {'sources': vj['sources'], 'sims': vj['variants'][VARIANT]}
+elif os.path.exists('rag_sims.json'):
     sims = json.load(open('rag_sims.json'))
 else:
     cv = embed([c['content'] for c in CH])
@@ -92,6 +96,6 @@ for model in sys.argv[1:]:
             res['judge'][str(qi)].append([s, v, p])
         res['gate'][str(qi)] = ask(model, gate_prompt(q['q']), SCH_G, 'needs_policy')
     res['_sec'] = time.time() - t0
-    name = model.replace(':', '_').replace('/', '_')
+    name = model.replace(':', '_').replace('/', '_') + (('__' + VARIANT[:1]) if VARIANT else '')
     json.dump(res, open(f'rag_judge_{name}.json', 'w'), ensure_ascii=False)
     print(model, f"{res['_sec']:.0f}s", flush=True)
