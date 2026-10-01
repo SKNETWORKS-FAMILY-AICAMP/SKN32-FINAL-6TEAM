@@ -15,7 +15,11 @@
 | ① 가용성 | `closed_on` | `closed_days` 원문에서 "매주 <요일>" 만 좁게 본다 |
 | ② 유사도 | `similar` | 원래 장소와 같은 갈래(분류·시군구)만 남긴다 |
 | ③ 선호도 | `FIELD_PRIORITY` | 0건이면 우선순위 낮은 필드부터 빼고 다시 거른다 |
-| ④ 순위 | `rank_alternatives` | 좌표 직선거리 오름차순 1·2·3위 |
+| ④ 순위 | `rank_alternatives` | 같은 브랜드·같은 시군구 먼저, 그다음 좌표 직선거리 오름차순 1·2·3위 |
+
+★브랜드 매장(올리브영·다이소·아트박스·무신사)은 같은 브랜드가 가장 비슷한 대체다.
+  다만 **같은 시군구 안의 같은 브랜드만** 앞세운다 — 시군구 밖의 같은 브랜드보다
+  더 가까운 다른 매장이 있으면 그쪽이 낫다(거리도 무시 못 한다).
 """
 from __future__ import annotations
 
@@ -84,6 +88,17 @@ def similar(origin: dict[str, Any], pool: list[dict[str, Any]],
     return [c for c in pool if all(_norm(c.get(f)) == _norm(origin.get(f)) for f in keys)]
 
 
+def same_brand_nearby(origin: dict[str, Any], candidate: dict[str, Any]) -> bool:
+    """원래 장소가 브랜드 매장이고, 후보가 **같은 브랜드이면서 같은 시군구**인가.
+
+    ★브랜드나 시군구를 모르면 `False` — 모르는 값끼리 「같다」고 읽지 않는다(`similar` 와 같은 원칙).
+    """
+    brand, gu = _norm(origin.get("brand")), _norm(origin.get("sigungucode"))
+    return bool(brand and gu
+                and _norm(candidate.get("brand")) == brand
+                and _norm(candidate.get("sigungucode")) == gu)
+
+
 def distance_km(a: dict[str, Any], b: dict[str, Any]) -> float | None:
     """`mapx`(경도)·`mapy`(위도) 직선거리(haversine). 좌표가 없으면 `None`."""
     try:
@@ -135,10 +150,12 @@ def rank_alternatives(origin: dict[str, Any], pool: list[dict[str, Any]], at: da
             fields = fields[:-1]
             matched = similar(origin, candidates, fields)
 
-    # ④ 순위 — 거리 오름차순. 좌표가 없는 후보는 뒤로, 가용성 모름은 확인된 것 뒤로.
+    # ④ 순위 — 같은 브랜드·같은 시군구 먼저, 그다음 거리 오름차순.
+    #    좌표가 없는 후보는 뒤로, 가용성 모름은 확인된 것 뒤로.
     def sort_key(c: dict[str, Any]) -> tuple:
         d = distance_km(origin, c)
-        return (closed_state[id(c)] is None, d is None, d if d is not None else 0.0)
+        return (closed_state[id(c)] is None, not same_brand_nearby(origin, c),
+                d is None, d if d is not None else 0.0)
 
     ranked = sorted(matched, key=sort_key)[:limit]
     return {

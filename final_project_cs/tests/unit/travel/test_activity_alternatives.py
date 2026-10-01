@@ -28,8 +28,8 @@ CSV_PATH = (Path(__file__).resolve().parents[3]
 
 
 def _place(cid, *, l1="HS", l2="HS01", l3="HS010100", ctype="12", sgg="23",
-           x=126.9770, y=37.5796, closed="연중무휴", title=None):
-    return {"contentid": cid, "title": title or f"장소{cid}", "contenttypeid": ctype,
+           x=126.9770, y=37.5796, closed="연중무휴", title=None, brand=None):
+    return {"brand": brand, "contentid": cid, "title": title or f"장소{cid}", "contenttypeid": ctype,
             "lclsSystm1": l1, "lclsSystm2": l2, "lclsSystm3": l3, "sigungucode": sgg,
             "mapx": str(x), "mapy": str(y), "closed_days": closed,
             "business_hours": "09:00~18:00"}
@@ -123,6 +123,45 @@ def test_ranks_by_distance_top_three():
     assert [a["contentid"] for a in result["alternatives"]] == ["1", "2", "3"]
     assert [a["rank"] for a in result["alternatives"]] == [1, 2, 3]
     assert result["total_matched"] == 4
+
+
+# ── 브랜드: 같은 브랜드·같은 시군구가 먼저, 시군구 밖 같은 브랜드는 거리로만 겨룬다 ──
+
+SHOP = dict(l1="SH", l2="SH04", l3="SH040300", ctype="38")
+BRAND_ORIGIN = _place("o", brand="올리브영", sgg="24", **SHOP)
+
+
+def _shop(cid, brand, *, sgg="24", x=126.9770, **kw):
+    return _place(cid, brand=brand, sgg=sgg, x=x, **SHOP, **kw)
+
+
+def test_same_brand_in_same_gu_beats_a_closer_other_brand():
+    pool = [_shop("daiso_near", "다이소", x=126.9771),          # 가장 가깝지만 다른 브랜드
+            _shop("oy_far", "올리브영", x=126.9900)]             # 같은 브랜드·같은 구
+    result = rank_alternatives(BRAND_ORIGIN, pool, SATURDAY)
+    assert [a["contentid"] for a in result["alternatives"]] == ["oy_far", "daiso_near"]
+
+
+def test_same_brand_outside_the_gu_does_not_beat_a_closer_other_brand():
+    """★같은 구에 후보가 없어 시군구가 폴백으로 풀리면, 같은 브랜드라도 거리로만 겨룬다."""
+    pool = [_shop("oy_other_gu", "올리브영", sgg="1", x=127.1),
+            _shop("daiso_near", "다이소", sgg="2", x=126.9775)]
+    result = rank_alternatives(BRAND_ORIGIN, pool, SATURDAY, preference="activity")
+    assert "sigungucode" in result["dropped_fields"]
+    assert [a["contentid"] for a in result["alternatives"]] == ["daiso_near", "oy_other_gu"]
+
+
+def test_same_brand_in_gu_are_ordered_by_distance_among_themselves():
+    pool = [_shop("oy_b", "올리브영", x=126.99), _shop("oy_a", "올리브영", x=126.98)]
+    result = rank_alternatives(BRAND_ORIGIN, pool, SATURDAY)
+    assert [a["contentid"] for a in result["alternatives"]] == ["oy_a", "oy_b"]
+
+
+def test_origin_without_brand_ranks_by_distance_only():
+    origin = _place("o", sgg="24", **SHOP)                      # 브랜드 모름
+    pool = [_shop("far_oy", "올리브영", x=126.99), _shop("near_daiso", "다이소", x=126.9772)]
+    result = rank_alternatives(origin, pool, SATURDAY)
+    assert [a["contentid"] for a in result["alternatives"]] == ["near_daiso", "far_oy"]
 
 
 def test_missing_coordinates_go_last():

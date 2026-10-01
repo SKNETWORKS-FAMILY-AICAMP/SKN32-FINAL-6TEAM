@@ -54,6 +54,10 @@ Thumbs.db
 *.dump
 *.sqlite3
 
+# 로컬 PostgreSQL 데이터 폴더(`initdb -D pgdata`). 서버가 쓰는 바이너리라 커밋하지 않는다 —
+# DB 는 마이그레이션과 적재 스크립트로 다시 만든다.
+pgdata/
+
 # 빌드·휠 검사 찌꺼기
 .wheelhouse*/
 build/
