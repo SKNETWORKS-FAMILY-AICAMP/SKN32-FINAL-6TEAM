@@ -68,6 +68,11 @@ def resolve_place(conn, tenant_id: str, core_place_id: str) -> str | None:
 
     억지로 이름으로 찾지 않는다. 잘못 이으면 다른 식당의 영업시간으로
     판정하게 되고, 그것은 틀린 답을 자신 있게 말하는 것이다.
+
+    ★아직 이어지지 않았으면 `dining.link_core_place`(220)로 이어 본다(2026-10-01).
+      연결은 rebuild 때만 만들어져서, 그 뒤 여행에 들어온 장소는 늘 「모름」이었다.
+      관광공사 콘텐츠 ID 가 같은 가게, 아니면 매칭기와 같은 규칙으로 하나만 정해질 때만 잇는다.
+      함수나 코어 표가 없는 DB(요식만 세운 DB · 220 이전)에서는 예전처럼 None 이다.
     """
     with conn.cursor() as cur:
         cur.execute(
@@ -75,7 +80,15 @@ def resolve_place(conn, tenant_id: str, core_place_id: str) -> str | None:
             "WHERE tenant_id = %s AND core_place_id = %s",
             (tenant_id, core_place_id))
         row = cur.fetchone()
-    return str(row[0]) if row else None
+    if row:
+        return str(row[0])
+    try:
+        with conn.transaction(), conn.cursor() as cur:   # 실패해도 바깥 트랜잭션을 깨지 않는다
+            cur.execute("SELECT dining.link_core_place(%s, %s)", (tenant_id, core_place_id))
+            row = cur.fetchone()
+    except Exception:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 이으면 모름
+        return None
+    return str(row[0]) if row and row[0] else None
 
 
 def dining_state(conn, tenant_id: str, place_id: str | None,
@@ -157,6 +170,13 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
         # 우리 값과 코어 값이 한 dict 에 섞이면 틀렸을 때 어디를 고칠지 모른다.
         "source": "dining_ledger",
     }
+
+
+def dining_states(conn, tenant_id: str, slots: list[dict[str, Any]]) -> dict[str, dict[str, Any] | None]:
+    """후보별 방문 구간을 한 연결에서 읽는다. 장소마다 하나의 구간을 받는다."""
+    return {str(slot["place_id"]): dining_state(conn, tenant_id, slot["place_id"],
+                                               slot.get("at"), slot.get("until"))
+            for slot in slots}
 
 
 def merge_state(place: dict[str, Any] | None,

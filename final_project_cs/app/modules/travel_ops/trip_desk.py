@@ -55,13 +55,19 @@ class TripDesk:
             places = self.store.places(conn, trip_id)
         return trip, items, places
 
+    def _dining_states(self, slots):
+        from .dining.ledger import dining_states
+
+        with self._connect() as conn:
+            return dining_states(conn, self.store.tenant_id, slots)
+
     # ── 요식-P3 — 늦는다 ────────────────────────────────────────
     def report_delay(self, *, trip_id: UUID, at: datetime, minutes: int,
                      message: str, request_id: str | None = None) -> dict[str, Any]:
         """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
         trip, items, places = self._read(trip_id)
         plan = plan_delay(trip=trip, items=items, places=places, at=at, minutes=minutes,
-                          message=message, request_id=request_id)
+                          message=message, request_id=request_id, state_lookup=self._dining_states)
         return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 요식-P7 — 도착했더니 휴무 ──────────────────────────────
@@ -70,7 +76,7 @@ class TripDesk:
         """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
         trip, items, places = self._read(trip_id)
         plan = plan_closed(trip=trip, items=items, places=places, at=at, message=message,
-                           request_id=request_id)
+                           request_id=request_id, state_lookup=self._dining_states)
         return self._outcome(trip_id, trip["version"], items, plan, gate=True)
 
     # ── 액-08 — 품절, 근처 다른 곳? ────────────────────────────

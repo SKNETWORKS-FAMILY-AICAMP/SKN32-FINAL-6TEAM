@@ -145,6 +145,7 @@ class ReadToolbox:
             # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
             #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
             "read.dining_state": self.dining_state,
+            "read.dining_states": self.dining_states,
             # ★`[2026-09-30]` 식당 가격(구글 1인당 범위 · 가격대) — 대안을 세울 때만. 값은 비교에만 쓰고 버린다(구글 약관)
             "read.place_price": self.place_price,
             "read.weather":  self.weather,
@@ -302,6 +303,14 @@ class ReadToolbox:
         from app.modules.travel_ops.dining.ledger import dining_state
         with self.connection_factory() as conn:
             return dining_state(conn, scope.tenant_id, place_id, at, until)
+
+    def dining_states(self, scope: ToolContext, *, slots: list[dict[str, Any]],
+                      **_: Any) -> dict[str, dict[str, Any] | None]:
+        """대체 식당들의 방문 시간대를 한 번에 읽는다. 테넌트는 검증된 scope에서만 받는다."""
+        from app.modules.travel_ops.dining.ledger import dining_states
+
+        with self.connection_factory() as conn:
+            return dining_states(conn, scope.tenant_id, slots)
 
     def place_price(self, scope: ToolContext, *, place_ids: list[str] | None = None,
                     **_: Any) -> dict[str, dict[str, int | None] | None] | None:

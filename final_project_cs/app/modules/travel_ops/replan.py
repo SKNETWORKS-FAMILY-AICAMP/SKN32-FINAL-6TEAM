@@ -32,6 +32,9 @@ SEATING_BUFFER_MIN = 10
 PRICE_LOOKUP_LIMIT = 8
 _PRICE_RANK = {"higher": 1, "unknown": 2}
 
+# 방문 시간대별 원장 조회. 계산층은 DB를 직접 부르지 않고 호출자가 읽는 함수를 받는다.
+DiningStateLookup = Callable[[list[dict[str, Any]]], dict[str, dict[str, Any] | None] | None]
+
 
 @dataclass
 class Candidate:
@@ -53,6 +56,7 @@ class Candidate:
     price_compare: str | None = None
     #: 구글로 잰 근거 — `range`(1인당 가격 범위, 원) · `level`(가격대 0~4). 모르면 None
     price_basis: str | None = None
+    warnings: list[str] = field(default_factory=list)
 
     def rank(self) -> tuple:
         # ☆`[2026-09-29 이동 계산기 문제목록 #22]` 경로 후보의 요금 모름은 0원(가장 쌈)이 아니라 **아는 후보 뒤** —
@@ -101,8 +105,17 @@ def open_during(place: dict[str, Any], start: datetime, end: datetime | None) ->
     return fits(place.get("attributes") or {}, start, end or start)
 
 
-def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple[bool | None, str]:
+def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int, *,
+                state: dict[str, Any] | None = None) -> tuple[bool | None, str]:
     """그 시각에 들어가 `minutes` 동안 먹을 수 있나. (판정, 이유)."""
+    if state and state.get("linked"):
+        # 원장은 방문 구간 전체의 휴무·브레이크·라스트오더까지 판정한다.
+        # 연결된 곳의 모름을 오래된 코어 영업시간으로 덮지 않는다.
+        opened = state.get("open_at_slot")
+        if opened is True:
+            return True, ""
+        return opened, ("원장에서 방문 시간대의 영업을 확인할 수 없다" if opened is None
+                        else "원장 기준 그 시각 영업하지 않는다")
     end = arrival + timedelta(minutes=minutes)
     opened = open_during(place, arrival, end)
     if opened is None:
@@ -122,6 +135,17 @@ def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple
         if arrival < rest_start < end:
             return False, f"{rest[0]} 브레이크타임에 걸린다"
     return True, ""
+
+
+def dining_warnings(state: dict[str, Any] | None) -> list[str]:
+    """영업 판정과 별개로 고객에게 전달할 확인 필요 사항."""
+    warnings = []
+    if state and state.get("linked"):
+        if state.get("needs_holiday_check"):
+            warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있다")
+        if state.get("needs_check"):
+            warnings.append("영업 종료가 임박해 마지막 주문을 확인해야 한다")
+    return warnings
 
 
 #: 이 사건 종류는 **실내로 옮기면 원인이 사라진다** — 대안을 실내에서 찾는다.
@@ -163,7 +187,8 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
 def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                       arrival: datetime, minutes: int, constraints: dict[str, Any],
                       radius_m: int, next_start: datetime | None,
-                      exclude: set[str] = frozenset()) -> list[Candidate]:
+                      exclude: set[str] = frozenset(), state_lookup: DiningStateLookup | None = None,
+                      arrival_for: Callable[[int], datetime] | None = None) -> list[Candidate]:
     """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2).
 
     ★`[2026-09-30]` 가격을 모른다고 떨어뜨리지 않는다 — 실제 식당 자료에는 원 단위 가격이 없어 후보가 전부
@@ -192,14 +217,24 @@ def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
             candidate.price_compare = "won"
         if need_payment and need_payment not in (attributes.get("payment") or []):
             candidate.rejected.append(f"결제 조건({need_payment}) 불충족")
-        fits, why = dining_fits(place, arrival, minutes)
-        if fits is not True:
-            candidate.rejected.append(why)
-        candidate.starts_at = arrival
-        candidate.ends_at = arrival + timedelta(minutes=minutes)
+        candidate.starts_at = arrival_for(walk) if arrival_for else arrival
+        candidate.ends_at = candidate.starts_at + timedelta(minutes=minutes)
         if next_start is not None and candidate.ends_at > next_start:
             candidate.rejected.append(f"다음 일정({_hm(next_start)})과 겹친다")
         out.append(candidate)
+    # 가까운 식당 중 다른 조건을 통과한 곳만 한 번에 읽는다.
+    # 장소마다 도구를 부르면 밀집 지역에서 Team의 호출 예산을 소진한다.
+    eligible = [c for c in out if not c.rejected]
+    states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
+                            for c in eligible]) if state_lookup and eligible else None) or {}
+    for candidate in eligible:
+        state = states.get(candidate.key)
+        fits, why = dining_fits(candidate.place, candidate.starts_at, minutes,
+                               state=state)
+        if fits is not True:
+            candidate.rejected.append(why)
+        else:
+            candidate.warnings = dining_warnings(state)
     return out
 
 
@@ -379,7 +414,8 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "ends_at": candidate.ends_at.isoformat() if candidate.ends_at else None,
             "walk_min": candidate.walk_min,
             # ★`[2026-09-30]` 원래 식당과의 가격 비교 결과만(구글 금액은 싣지 않는다 — 저장 금지). 식당 밖은 None
-            "price_compare": candidate.price_compare}
+            "price_compare": candidate.price_compare,
+            **({"warnings": list(candidate.warnings)} if candidate.warnings else {})}
 
 
 def _notice(text: str, *, causes, changed, alternates, replay, **extra) -> dict[str, Any]:
@@ -453,7 +489,10 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
         parts.append("가격은 구글 지도에 올라온 1인당 가격 범위로 비교한 추정이에요.")
     elif best.price_basis == "level":
         parts.append("가격대는 구글 기준 추정이에요.")
+    warnings = [f"{c.name}: {warning}" for c in [best, *alternates] for warning in c.warnings]
+    parts.extend(warnings)
     return _notice(" ".join(parts), causes=[cause], alternates=alternates, replay=False,
+                   **({"warnings": warnings} if warnings else {}),
                    changed={"from": original["name"], "to": best.name,
                             "at": best.starts_at.isoformat()})
 

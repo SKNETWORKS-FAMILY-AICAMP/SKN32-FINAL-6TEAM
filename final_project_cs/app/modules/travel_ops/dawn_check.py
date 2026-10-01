@@ -32,6 +32,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from .itinerary import Item, TripStore, visible_to
+from .dining.ledger import dining_states
 from .itinerary_changes import NoChange, plan_activity_closed_on_day, plan_closed_on_day
 from .pending import apply_or_ask
 
@@ -153,7 +154,8 @@ class DawnCheck:
                 plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
                                           detail=detail, checked_at=checked_at,
                                           exclude=self._closed_places(conn, day),
-                                          price_lookup=self._price_lookup())
+                                          price_lookup=self._price_lookup(),
+                                          state_lookup=lambda slots: dining_states(conn, self.store.tenant_id, slots))
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})

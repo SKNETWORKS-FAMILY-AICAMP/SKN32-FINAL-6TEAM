@@ -10,6 +10,7 @@ ledger.py 자체는 psycopg 도 import 하지 않으므로 경로로 읽는 편�
 """
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import os
 from datetime import datetime, timedelta, timezone
@@ -42,6 +43,8 @@ class FakeCursor:
         self.asked.append(sql)
         if "dn_core_place_link" in sql:
             self._row = self.plan.get("link")
+        elif "link_core_place" in sql:                   # 판정 때 잇기(220) — 정해둔 답이 없으면 못 이음
+            self._row = self.plan.get("auto_link", (None,))
         elif "core_place_state" in sql:
             self._row = self.plan.get("state")
         elif "meets_condition" in sql:
@@ -66,6 +69,9 @@ class FakeConn:
 
     def cursor(self):
         return self.cursor_obj
+
+    def transaction(self):
+        return contextlib.nullcontext()
 
 
 def linked(state=None, conditions=None) -> FakeConn:
