@@ -31,6 +31,7 @@
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -177,6 +178,44 @@ def dining_states(conn, tenant_id: str, slots: list[dict[str, Any]]) -> dict[str
     return {str(slot["place_id"]): dining_state(conn, tenant_id, slot["place_id"],
                                                slot.get("at"), slot.get("until"))
             for slot in slots}
+
+
+def find_place_by_name(conn, name: str | None) -> dict[str, Any] | None:
+    """일정 접수의 장소 찾기용 — 이름이 같은 관광공사 출처 가게가 **하나뿐**이면 관광공사 결과 모양으로.
+
+    ★`[2026-10-01]` 일정 접수가 액티비티 CSV 만 봐서 식당을 하나도 못 찾았다(「토속촌삼계탕」).
+      CSV 에 없을 때 여기를 본다. 외부 API 가 아니라 원장 DB 다.
+    ★관광공사 콘텐츠 ID 가 있는 가게만 — 결과가 `tour_api` 출처로 저장되므로 그 ID 가 있어야 한다.
+      그 ID 로 판정 때 원장과 다시 이어진다(220 `link_core_place`).
+    ★같은 이름이 둘 이상이면 고르지 않는다. 폐업 · 서울 밖 · 좌표 없음 · 합성 가게도 내보내지 않는다.
+    ★요식 표가 없는 DB(요식만 빠진 DB)에서는 None — 예전처럼 「못 찾음」이다.
+    """
+    key = re.sub(r"[^가-힣a-z0-9]", "", (name or "").lower())     # 아래 SQL 과 같은 규칙
+    if not key:
+        return None
+    try:
+        with conn.transaction(), conn.cursor() as cur:   # 실패해도 바깥 트랜잭션을 깨지 않는다
+            cur.execute(
+                "SELECT p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), "
+                "       min(r.external_id), count(DISTINCT r.external_id) "
+                "FROM dining.dn_place p "
+                "JOIN dining.dn_source_record r ON r.place_uid = p.place_uid "
+                "     AND r.source_code = 'tourapi_kor_food' AND r.external_id IS NOT NULL "
+                "WHERE regexp_replace(lower(p.name_ko), '[^가-힣a-z0-9]', '', 'g') = %s "
+                "  AND p.record_status <> 'closed' AND NOT p.is_synthetic "
+                "  AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
+                "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng, p.road_address, p.jibun_address "
+                "LIMIT 2", (key,))
+            rows = cur.fetchall()
+    except Exception:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 못 읽으면 못 찾음
+        return None
+    if len(rows) != 1:
+        return None
+    title, lat, lng, address, content_id, ids = rows[0]
+    if ids != 1 or not str(address or "").startswith("서울"):
+        return None
+    return {"content_id": str(content_id), "content_type_id": "39", "matched_title": title,
+            "latitude": float(lat), "longitude": float(lng), "address": address}
 
 
 def merge_state(place: dict[str, Any] | None,

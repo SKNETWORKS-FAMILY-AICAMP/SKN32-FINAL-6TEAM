@@ -73,6 +73,13 @@ class _CsvFallbackTour:
             self.misses["not_found"] = self.misses.get("not_found", 0) + 1
         return result
 
+
+def _dining_lookup() -> Any:
+    """일정 접수의 요식 원장 자리(`intake/places.py` — 식사는 원장이 먼저). 액티비티 CSV 자리와 따로 둔다."""
+    from .dining.place_lookup import LedgerPlaceLookup
+
+    return LedgerPlaceLookup(get_connection)
+
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
 KST = ZoneInfo("Asia/Seoul")
 
@@ -92,7 +99,9 @@ class PlaceIn(BaseModel):
 
 #: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
 #:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
-EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places"})
+#: ★`[2026-10-01]` 요식 원장(`dining_ledger`)에서 찾은 가게도 여행 전용 행이다 — 공용 표에 쌓으면 일정 접수의
+#:  이름 찾기 · 오타 교정이 그 이름들을 먼저 보게 된다(액티비티 항목까지 영향)
+EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places", "dining_ledger"})
 
 
 class ItemIn(BaseModel):
@@ -803,7 +812,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                             see=getattr(chat, "see", None),
                             chat=chat if hasattr(chat, "json") else None,
                             tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
-                            kakao=_lazy("kakao", kakao_factory))
+                            kakao=_lazy("kakao", kakao_factory), dining=_dining_lookup())
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received"}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
@@ -829,7 +838,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
                      edits=[e.model_dump() for e in request.edits],
                      tour=_CsvFallbackTour(_lazy("place", place_factory), _csv_places),
-                     kakao=_lazy("kakao", kakao_factory))
+                     kakao=_lazy("kakao", kakao_factory), dining=_dining_lookup())
                 return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
