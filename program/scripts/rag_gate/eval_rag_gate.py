@@ -9,7 +9,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 J = lambda *a: json.load(open(os.path.join(HERE, *a), encoding='utf-8'))
 Q = J('fixtures', 'rag_questions.json')['questions']
 CH = J('fixtures', 'policy_chunks.json')
-SIM = J('results', 'rag_sims.json')
+VAR = os.environ.get('VARIANT')          # 예: VARIANT=E_문서제목+절제목+고객용문장 — 임베딩 대상을 바꾼 점수표(rag_embed_variants.json)로 후보를 뽑는다
+if VAR:
+    _v = J('results', 'rag_embed_variants.json')
+    SIM = {'sources': _v['sources'], 'sims': _v['variants'][VAR]}
+else:
+    SIM = J('results', 'rag_sims.json')
 SRC = SIM['sources']
 IDX = {s: i for i, s in enumerate(SRC)}
 LINE = {c['source']: c['line'] for c in CH if c['line']}
@@ -17,7 +22,8 @@ N = len(Q)
 DEV = [i for i in range(N) if i % 2 == 0]
 TEST = [i for i in range(N) if i % 2 == 1]
 models = sys.argv[1:] or ['gemma4_e4b-it-qat', 'gemma4_12b', 'gemma4_26b-a4b-it-q4_K_M']
-JD = {m: J('results', f'rag_judge_{m}.json') for m in models if os.path.exists(os.path.join(HERE, 'results', f'rag_judge_{m}.json'))}
+SUF = ('__' + VAR[:1]) if VAR else ''
+JD = {m: J('results', f'rag_judge_{m}{SUF}.json') for m in models if os.path.exists(os.path.join(HERE, 'results', f'rag_judge_{m}{SUF}.json'))}
 
 
 def cosv(qi, s):
