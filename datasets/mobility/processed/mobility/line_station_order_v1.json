@@ -1,6 +1,6 @@
 {
  "schema": "line_station_order_v1",
- "built_at": "2026-09-11T10:16:28+09:00",
+ "built_at": "2026-10-01T10:49:35+09:00",
  "source": {
   "official": {
    "file": "서울교통공사 역간거리 및 소요시간_240810.csv",
@@ -16,11 +16,11 @@
   },
   "validation": {
    "file": "timetable_v1.jsonl",
-   "rows": 463326,
-   "built_at": "2026-09-11T10:16:12+09:00",
-   "tago_fetched_at": "2026-09-09",
-   "seoul_fetched_at": "2026-09-11",
-   "excluded_phantom_2400": 2
+   "rows": 472541,
+   "built_at": "2026-10-01T10:38:34+09:00",
+   "tago_fetched_at": "2026-10-01",
+   "seoul_fetched_at": "2026-10-01",
+   "excluded_phantom_2400": 4
   }
  },
  "method": "FR_CODE 정렬로 인접쌍을 만들고(구조), 두 역 출발시각 차의 히스토그램 봉우리로 확인한다(관측). 탐색폭 ±15분·칸 60초·최소편수 20·일치비율 0.85. 양방향이 반대 부호로 잡히면 확정, 한쪽만이면 추정, 표본이 없으면 근거없음.",
@@ -92,8 +92,12 @@
   "경의선: FR 번호가 벌어져 지평(K138)–공덕(K312) 는 잇지 않았다",
   "경의선: FR 번호가 벌어져 임진강(K337)–효창공원앞(K826) 는 잇지 않았다",
   "경의선: 운천–임진강 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
+  "경춘선: 광운대–청량리 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
+  "경춘선: 청량리–회기 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
+  "경춘선: 회기–중랑 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
+  "경춘선: 중랑–상봉 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
   "수인분당선: 청량리–왕십리 인접 확인 실패 (양쪽 다 시간표 있음, fr_seq)",
-  "신림선: dir(U/D) 라벨이 방향을 못 가른다 — 같은 dir 에 양 끝 행선지가 섞여 있다. 이 노선은 방향을 dest_nm 으로 정해야 한다 (충돌 간선 7/10)",
+  "신림선: dir(U/D) 라벨이 방향을 못 가른다 — 같은 dir 에 양 끝 행선지가 섞여 있다. 이 노선은 방향을 dest_nm 으로 정해야 한다 (충돌 간선 10/10)",
   "인천2호선: dir(U/D) 라벨이 방향을 못 가른다 — 같은 dir 에 양 끝 행선지가 섞여 있다. 이 노선은 방향을 dest_nm 으로 정해야 한다 (충돌 간선 19/26)"
  ],
  "lines": {
@@ -6470,12 +6474,12 @@
       "U": {
        "delta_min": -5,
        "delta_sec": -300,
-       "frac": 0.339,
+       "frac": 0.346,
        "sep": 1.14,
-       "trains": 239,
-       "basis": "dir",
+       "trains": 217,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "성수"
       },
       "D": {
        "delta_min": 3,
@@ -6508,9 +6512,9 @@
        "frac": 1.0,
        "sep": 4.52,
        "trains": 113,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "성수"
       },
       "D": {
        "delta_min": 2,
@@ -6543,9 +6547,9 @@
        "frac": 1.0,
        "sep": 4.52,
        "trains": 113,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "성수"
       },
       "D": {
        "delta_min": 2,
@@ -6578,9 +6582,9 @@
        "frac": 1.0,
        "sep": 4.52,
        "trains": 113,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "성수"
       }
      }
     },
@@ -7232,11 +7236,11 @@
        "delta_min": 2,
        "delta_sec": 150,
        "frac": 1.0,
-       "sep": 3.11,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.09,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7265,11 +7269,11 @@
        "delta_min": 2,
        "delta_sec": 150,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.09,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7298,11 +7302,11 @@
        "delta_min": 2,
        "delta_sec": 120,
        "frac": 1.0,
-       "sep": 3.3,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 4.68,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7331,11 +7335,11 @@
        "delta_min": 2,
        "delta_sec": 150,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.09,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7364,11 +7368,11 @@
        "delta_min": 3,
        "delta_sec": 210,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.56,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7397,11 +7401,11 @@
        "delta_min": 3,
        "delta_sec": 180,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.24,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7430,11 +7434,11 @@
        "delta_min": 3,
        "delta_sec": 210,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.56,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7463,11 +7467,11 @@
        "delta_min": 3,
        "delta_sec": 180,
        "frac": 1.0,
-       "sep": 3.22,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.24,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7495,12 +7499,12 @@
       "D": {
        "delta_min": 2,
        "delta_sec": 150,
-       "frac": 0.939,
-       "sep": 3.06,
-       "trains": 132,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "frac": 1.0,
+       "sep": 5.09,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -7529,11 +7533,11 @@
        "delta_min": 3,
        "delta_sec": 180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 124,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 5.24,
+       "trains": 89,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "오금"
       }
      }
     },
@@ -8698,12 +8702,12 @@
      "fr_order": "desc",
      "grade": "확정",
      "edges_forward": 0,
-     "edges_backward": 46
+     "edges_backward": 48
     },
     "D": {
      "fr_order": "asc",
      "grade": "확정",
-     "edges_forward": 46,
+     "edges_forward": 49,
      "edges_backward": 0
     }
    },
@@ -9196,7 +9200,7 @@
      "fr_code": "454",
      "fr_order": 48,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "정왕",
@@ -9235,11 +9239,11 @@
        "delta_min": 3,
        "delta_sec": 180,
        "frac": 1.0,
-       "sep": 5.24,
-       "trains": 76,
-       "basis": "dir",
+       "sep": 5.03,
+       "trains": 73,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "사당"
       }
      }
     },
@@ -9268,11 +9272,11 @@
        "delta_min": 7,
        "delta_sec": 420,
        "frac": 1.0,
-       "sep": 4.75,
-       "trains": 76,
-       "basis": "dir",
+       "sep": 4.87,
+       "trains": 73,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "사당"
       }
      }
     },
@@ -9293,19 +9297,19 @@
        "frac": 1.0,
        "sep": 6.17,
        "trains": 74,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "진접"
       },
       "D": {
        "delta_min": 5,
        "delta_sec": 330,
-       "frac": 0.987,
-       "sep": 1.47,
-       "trains": 76,
-       "basis": "dir",
+       "frac": 1.0,
+       "sep": 3.24,
+       "trains": 73,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "사당"
       }
      }
     },
@@ -9325,12 +9329,12 @@
       "U": {
        "delta_min": -3,
        "delta_sec": -180,
-       "frac": 0.986,
-       "sep": 1.54,
-       "trains": 74,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "frac": 0.983,
+       "sep": 6.56,
+       "trains": 60,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "진접"
       },
       "D": {
        "delta_min": 3,
@@ -9441,11 +9445,11 @@
        "delta_min": 2,
        "delta_sec": 150,
        "frac": 1.0,
-       "sep": 4.24,
-       "trains": 87,
+       "sep": 3.76,
+       "trains": 94,
        "basis": "dest",
-       "day_type": "holiday",
-       "dest_nm": "사당"
+       "day_type": "weekday",
+       "dest_nm": "오이도"
       }
      }
     },
@@ -10118,12 +10122,12 @@
      "a": "총신대입구",
      "b": "사당",
      "source": "fr_seq",
-     "grade": "추정:단방향관측",
-     "dir_a_to_b": null,
+     "grade": "확정",
+     "dir_a_to_b": "D",
      "dir_b_to_a": "U",
      "travel_min": 2.0,
      "travel_min_source": "observed",
-     "travel_min_grade": "추정",
+     "travel_min_grade": "확정",
      "distance_m": 1100,
      "official_travel_min": 1.5,
      "observed": {
@@ -10140,12 +10144,12 @@
       "D": {
        "delta_min": 2,
        "delta_sec": 120,
-       "frac": 0.552,
-       "sep": 1.98,
-       "trains": 194,
-       "basis": "dir",
-       "day_type": "holiday",
-       "dest_nm": null
+       "frac": 1.0,
+       "sep": 3.28,
+       "trains": 95,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "오이도"
       }
      }
     },
@@ -10176,11 +10180,11 @@
        "delta_min": 2,
        "delta_sec": 150,
        "frac": 1.0,
-       "sep": 2.76,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.42,
+       "trains": 106,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "오이도"
       }
      }
     },
@@ -10198,22 +10202,22 @@
       "U": {
        "delta_min": -3,
        "delta_sec": -180,
-       "frac": 0.992,
-       "sep": 3.06,
-       "trains": 125,
-       "basis": "dir",
+       "frac": 1.0,
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
        "delta_sec": 180,
        "frac": 1.0,
-       "sep": 2.76,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.42,
+       "trains": 106,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "오이도"
       }
      }
     },
@@ -10232,11 +10236,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10265,11 +10269,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10298,11 +10302,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10331,11 +10335,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10364,11 +10368,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 2.99,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.96,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
@@ -10397,11 +10401,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 2.99,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.96,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10430,11 +10434,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10463,11 +10467,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 2.99,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.96,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
@@ -10496,11 +10500,11 @@
        "delta_min": -5,
        "delta_sec": -270,
        "frac": 1.0,
-       "sep": 3.06,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.04,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 4,
@@ -10529,11 +10533,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 0.992,
-       "sep": 3.02,
-       "trains": 125,
-       "basis": "dir",
+       "sep": 2.98,
+       "trains": 120,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10562,11 +10566,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 2.88,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.83,
+       "trains": 119,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
@@ -10595,11 +10599,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 2.88,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.83,
+       "trains": 119,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10628,11 +10632,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 2.88,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.83,
+       "trains": 119,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
@@ -10662,10 +10666,10 @@
        "delta_sec": -120,
        "frac": 1.0,
        "sep": 3.27,
-       "trains": 108,
-       "basis": "dir",
+       "trains": 103,
+       "basis": "dest",
        "day_type": "holiday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10694,11 +10698,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 2.88,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.9,
+       "trains": 119,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10727,11 +10731,11 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 2.95,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 2.9,
+       "trains": 119,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10760,11 +10764,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 2.95,
-       "trains": 124,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
+       "sep": 3.68,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 2,
@@ -10793,11 +10797,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 2.95,
-       "trains": 124,
-       "basis": "dir",
+       "sep": 3.14,
+       "trains": 116,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "불암산"
       },
       "D": {
        "delta_min": 3,
@@ -10815,17 +10819,67 @@
      "a": "안산",
      "b": "신길온천",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.2,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 0.87,
+       "sep": 4.48,
+       "trains": 108,
+       "basis": "dir",
+       "day_type": "holiday",
+       "dest_nm": null
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 3.79,
+       "trains": 91,
+       "basis": "dir",
+       "day_type": "holiday",
+       "dest_nm": null
+      }
+     }
     },
     {
      "a": "신길온천",
      "b": "정왕",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -180,
+       "frac": 1.0,
+       "sep": 3.55,
+       "trains": 103,
+       "basis": "dir",
+       "day_type": "weekday",
+       "dest_nm": null
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 3.66,
+       "trains": 106,
+       "basis": "dir",
+       "day_type": "weekday",
+       "dest_nm": null
+      }
+     }
     },
     {
      "a": "정왕",
@@ -13065,7 +13119,7 @@
        "delta_min": 2,
        "delta_sec": 140,
        "frac": 1.0,
-       "sep": 6.06,
+       "sep": 5.88,
        "trains": 97,
        "basis": "dest",
        "day_type": "weekday",
@@ -13099,9 +13153,9 @@
       "D": {
        "delta_min": 2,
        "delta_sec": 150,
-       "frac": 0.897,
-       "sep": 7.25,
-       "trains": 97,
+       "frac": 0.888,
+       "sep": 6.69,
+       "trains": 98,
        "basis": "dest",
        "day_type": "weekday",
        "dest_nm": "하남검단산"
@@ -13135,7 +13189,7 @@
        "delta_min": 2,
        "delta_sec": 130,
        "frac": 1.0,
-       "sep": 4.65,
+       "sep": 4.38,
        "trains": 114,
        "basis": "dest",
        "day_type": "weekday",
@@ -13170,8 +13224,8 @@
        "delta_min": 1,
        "delta_sec": 110,
        "frac": 1.0,
-       "sep": 4.07,
-       "trains": 114,
+       "sep": 4.11,
+       "trains": 115,
        "basis": "dest",
        "day_type": "weekday",
        "dest_nm": "마천"
@@ -13363,7 +13417,7 @@
      "fr_order": "asc",
      "grade": "확정",
      "edges_forward": 35,
-     "edges_backward": 1
+     "edges_backward": 0
     }
    },
    "stations": [
@@ -13763,9 +13817,9 @@
      "a": "응암",
      "b": "역촌",
      "source": "fr_seq",
-     "grade": "추정:단방향관측",
+     "grade": "추정:구조만",
      "dir_a_to_b": null,
-     "dir_b_to_a": "D",
+     "dir_b_to_a": null,
      "travel_min": 1.7,
      "travel_min_source": "official",
      "travel_min_grade": "확정",
@@ -13775,14 +13829,15 @@
       "D": {
        "delta_min": -11,
        "delta_sec": -660,
-       "frac": 0.994,
-       "sep": 2.67,
-       "trains": 164,
+       "frac": 0.708,
+       "sep": 1.53,
+       "trains": 329,
        "basis": "dir",
        "day_type": "weekday",
        "dest_nm": null
       }
-     }
+     },
+     "note": "양쪽 다 시간표가 있는데 두 역을 잇는 열차를 못 찾았다 — 직결 운행이 없을 수 있다"
     },
     {
      "a": "역촌",
@@ -14999,34 +15054,24 @@
      "a": "새절",
      "b": "응암",
      "source": "manual:응암순환 — 새절↔응암 본선",
-     "grade": "확정",
-     "dir_a_to_b": "U",
+     "grade": "추정:단방향관측",
+     "dir_a_to_b": null,
      "dir_b_to_a": "D",
      "travel_min": 1.8,
      "travel_min_source": "observed",
-     "travel_min_grade": "확정",
+     "travel_min_grade": "추정",
      "distance_m": 900,
      "official_travel_min": 1.3,
      "observed": {
-      "U": {
-       "delta_min": 2,
-       "delta_sec": 110,
-       "frac": 1.0,
-       "sep": 2.69,
-       "trains": 164,
-       "basis": "dir",
-       "day_type": "weekday",
-       "dest_nm": null
-      },
       "D": {
        "delta_min": -2,
        "delta_sec": -110,
-       "frac": 0.988,
-       "sep": 2.65,
-       "trains": 166,
-       "basis": "dir",
+       "frac": 1.0,
+       "sep": 1.91,
+       "trains": 107,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "봉화산"
       }
      }
     },
@@ -15046,12 +15091,12 @@
       "D": {
        "delta_min": 2,
        "delta_sec": 150,
-       "frac": 0.994,
-       "sep": 2.67,
-       "trains": 164,
-       "basis": "dir",
+       "frac": 1.0,
+       "sep": 1.91,
+       "trains": 105,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "봉화산"
       }
      }
     }
@@ -17086,10 +17131,10 @@
        "delta_min": -2,
        "delta_sec": -120,
        "frac": 1.0,
-       "sep": 1.37,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17119,10 +17164,10 @@
        "delta_min": -2,
        "delta_sec": -110,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17152,10 +17197,10 @@
        "delta_min": -2,
        "delta_sec": -110,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17185,10 +17230,10 @@
        "delta_min": -2,
        "delta_sec": -110,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17218,10 +17263,10 @@
        "delta_min": -2,
        "delta_sec": -100,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17251,10 +17296,10 @@
        "delta_min": -2,
        "delta_sec": -110,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17284,10 +17329,10 @@
        "delta_min": -2,
        "delta_sec": -100,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17317,10 +17362,10 @@
        "delta_min": -2,
        "delta_sec": -110,
        "frac": 1.0,
-       "sep": 2.58,
-       "trains": 71,
+       "sep": 5.47,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17350,10 +17395,10 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 35.5,
-       "trains": 71,
+       "sep": 5.81,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       },
       "D": {
@@ -17383,10 +17428,10 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 35.5,
-       "trains": 71,
+       "sep": 6.2,
+       "trains": 93,
        "basis": "dest",
-       "day_type": "holiday",
+       "day_type": "weekday",
        "dest_nm": "도봉산"
       }
      }
@@ -17674,11 +17719,11 @@
        "delta_min": 3,
        "delta_sec": 220,
        "frac": 1.0,
-       "sep": 2.15,
-       "trains": 159,
-       "basis": "dir",
+       "sep": 2.12,
+       "trains": 157,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "모란"
       }
      }
     },
@@ -17707,11 +17752,11 @@
        "delta_min": 2,
        "delta_sec": 170,
        "frac": 1.0,
-       "sep": 2.18,
-       "trains": 159,
-       "basis": "dir",
+       "sep": 2.15,
+       "trains": 157,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "모란"
       }
      }
     },
@@ -17740,11 +17785,11 @@
        "delta_min": 2,
        "delta_sec": 120,
        "frac": 1.0,
-       "sep": 2.22,
-       "trains": 159,
-       "basis": "dir",
+       "sep": 2.2,
+       "trains": 157,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "모란"
       }
      }
     },
@@ -17773,11 +17818,11 @@
        "delta_min": 2,
        "delta_sec": 160,
        "frac": 1.0,
-       "sep": 2.19,
-       "trains": 160,
-       "basis": "dir",
+       "sep": 2.16,
+       "trains": 158,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "모란"
       }
      }
     },
@@ -17806,11 +17851,11 @@
        "delta_min": 4,
        "delta_sec": 250,
        "frac": 1.0,
-       "sep": 2.18,
-       "trains": 160,
-       "basis": "dir",
+       "sep": 2.15,
+       "trains": 158,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "모란"
       }
      }
     },
@@ -20002,8 +20047,8 @@
        "delta_min": 2,
        "delta_sec": 125,
        "frac": 1.0,
-       "sep": 1.56,
-       "trains": 241,
+       "sep": 1.57,
+       "trains": 244,
        "basis": "dest",
        "day_type": "weekday",
        "dest_nm": "중앙보훈병원"
@@ -20879,14 +20924,14 @@
     "U": {
      "fr_order": "desc",
      "grade": "추정",
-     "edges_forward": 15,
+     "edges_forward": 21,
      "edges_backward": 26
     },
     "D": {
      "fr_order": "asc",
      "grade": "추정",
      "edges_forward": 25,
-     "edges_backward": 15
+     "edges_backward": 22
     }
    },
    "stations": [
@@ -21328,7 +21373,7 @@
      "fr_code": "K326",
      "fr_order": 43,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "탄현",
@@ -21368,7 +21413,7 @@
      "fr_code": "K330",
      "fr_order": 47,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "금촌",
@@ -21378,7 +21423,7 @@
      "fr_code": "K331",
      "fr_order": 48,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "월롱",
@@ -21398,7 +21443,7 @@
      "fr_code": "K334",
      "fr_order": 50,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "문산",
@@ -22810,17 +22855,67 @@
      "a": "풍산",
      "b": "일산",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 3.81,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 12.0,
+       "trains": 36,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "일산",
      "b": "탄현",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 3.81,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 1.88,
+       "trains": 31,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "덕소"
+      }
+     }
     },
     {
      "a": "탄현",
@@ -22892,41 +22987,166 @@
      "a": "운정",
      "b": "금릉",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 1.0,
+       "sep": 3.68,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 10.67,
+       "trains": 32,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "금릉",
      "b": "금촌",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 3.81,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 10.67,
+       "trains": 32,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "금촌",
      "b": "월롱",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 4.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 4,
+       "delta_sec": 240,
+       "frac": 1.0,
+       "sep": 3.68,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -4,
+       "delta_sec": -240,
+       "frac": 1.0,
+       "sep": 10.67,
+       "trains": 32,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "월롱",
      "b": "파주",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "U",
+     "dir_b_to_a": "D",
+     "travel_min": 3.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 3.68,
+       "trains": 103,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "문산"
+      },
+      "D": {
+       "delta_min": -3,
+       "delta_sec": -180,
+       "frac": 1.0,
+       "sep": 10.67,
+       "trains": 32,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "파주",
      "b": "문산",
      "source": "fr_seq",
-     "grade": "근거없음",
+     "grade": "추정:단방향관측",
      "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "dir_b_to_a": "D",
+     "travel_min": 4.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "추정",
+     "observed": {
+      "U": {
+       "delta_min": -11,
+       "delta_sec": -660,
+       "frac": 0.026,
+       "sep": 2.0,
+       "trains": 76,
+       "basis": "dir",
+       "day_type": "holiday",
+       "dest_nm": null
+      },
+      "D": {
+       "delta_min": -4,
+       "delta_sec": -240,
+       "frac": 1.0,
+       "sep": 10.67,
+       "trains": 32,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "용문"
+      }
+     }
     },
     {
      "a": "문산",
@@ -23092,12 +23312,16 @@
    "is_loop": false,
    "direction": {
     "U": {
-     "fr_order": null,
-     "grade": "근거없음"
+     "fr_order": "desc",
+     "grade": "확정",
+     "edges_forward": 0,
+     "edges_backward": 19
     },
     "D": {
-     "fr_order": null,
-     "grade": "근거없음"
+     "fr_order": "asc",
+     "grade": "확정",
+     "edges_forward": 19,
+     "edges_backward": 0
     }
    },
    "stations": [
@@ -23109,7 +23333,7 @@
      "fr_code": "P116",
      "fr_order": 0,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "청량리",
@@ -23119,7 +23343,7 @@
      "fr_code": "P117",
      "fr_order": 1,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "회기",
@@ -23139,7 +23363,7 @@
      "fr_code": "P119",
      "fr_order": 3,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "상봉",
@@ -23149,7 +23373,7 @@
      "fr_code": "P120",
      "fr_order": 4,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "망우",
@@ -23159,7 +23383,7 @@
      "fr_code": "P121",
      "fr_order": 5,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "신내",
@@ -23169,7 +23393,7 @@
      "fr_code": "P122",
      "fr_order": 6,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "갈매",
@@ -23179,7 +23403,7 @@
      "fr_code": "P123",
      "fr_order": 7,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "별내",
@@ -23189,7 +23413,7 @@
      "fr_code": "P124",
      "fr_order": 8,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "퇴계원",
@@ -23199,7 +23423,7 @@
      "fr_code": "P125",
      "fr_order": 9,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "사릉",
@@ -23209,7 +23433,7 @@
      "fr_code": "P126",
      "fr_order": 10,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "금곡",
@@ -23219,7 +23443,7 @@
      "fr_code": "P127",
      "fr_order": 11,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "평내호평",
@@ -23229,7 +23453,7 @@
      "fr_code": "P128",
      "fr_order": 12,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "천마산",
@@ -23239,7 +23463,7 @@
      "fr_code": "P129",
      "fr_order": 13,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "마석",
@@ -23249,7 +23473,7 @@
      "fr_code": "P130",
      "fr_order": 14,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "대성리",
@@ -23259,7 +23483,7 @@
      "fr_code": "P131",
      "fr_order": 15,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "청평",
@@ -23269,7 +23493,7 @@
      "fr_code": "P132",
      "fr_order": 16,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "상천",
@@ -23279,7 +23503,7 @@
      "fr_code": "P133",
      "fr_order": 17,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "가평",
@@ -23289,7 +23513,7 @@
      "fr_code": "P134",
      "fr_order": 18,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "굴봉산",
@@ -23299,7 +23523,7 @@
      "fr_code": "P135",
      "fr_order": 19,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "백양리",
@@ -23309,7 +23533,7 @@
      "fr_code": "P136",
      "fr_order": 20,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "강촌",
@@ -23319,7 +23543,7 @@
      "fr_code": "P137",
      "fr_order": 21,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "김유정",
@@ -23329,7 +23553,7 @@
      "fr_code": "P138",
      "fr_order": 22,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "남춘천",
@@ -23339,7 +23563,7 @@
      "fr_code": "P139",
      "fr_order": 23,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "춘천",
@@ -23349,7 +23573,7 @@
      "fr_code": "P140",
      "fr_order": 24,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     }
    ],
    "edges": [
@@ -23389,161 +23613,641 @@
      "a": "상봉",
      "b": "망우",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "추정:단방향관측",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": null,
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "추정",
+     "observed": {
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 16.67,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "망우",
      "b": "신내",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.2,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 6.86,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 16.67,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "신내",
      "b": "갈매",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 6.86,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 1.0,
+       "sep": 16.67,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "갈매",
      "b": "별내",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -2,
+       "delta_sec": -120,
+       "frac": 1.0,
+       "sep": 9.6,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 120,
+       "frac": 1.0,
+       "sep": 16.67,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "별내",
      "b": "퇴계원",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 6.86,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 0.92,
+       "sep": 15.33,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "퇴계원",
      "b": "사릉",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 0.909,
+       "sep": 1.82,
+       "trains": 33,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 0.98,
+       "sep": 14.0,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "사릉",
      "b": "금곡",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 0.917,
+       "sep": 9.78,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 1.0,
+       "sep": 16.67,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "금곡",
      "b": "평내호평",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 4.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -240,
+       "frac": 1.0,
+       "sep": 12.0,
+       "trains": 48,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 4,
+       "delta_sec": 240,
+       "frac": 1.0,
+       "sep": 12.5,
+       "trains": 50,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "평내호평",
      "b": "천마산",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 4.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -240,
+       "frac": 0.879,
+       "sep": 14.5,
+       "trains": 33,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 4,
+       "delta_sec": 240,
+       "frac": 1.0,
+       "sep": 13.0,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "천마산",
      "b": "마석",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 8.4,
+       "trains": 42,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 0.962,
+       "sep": 12.5,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "마석",
      "b": "대성리",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 6.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -6,
+       "delta_sec": -360,
+       "frac": 0.857,
+       "sep": 6.0,
+       "trains": 42,
+       "basis": "dir",
+       "day_type": "holiday",
+       "dest_nm": null
+      },
+      "D": {
+       "delta_min": 6,
+       "delta_sec": 360,
+       "frac": 0.904,
+       "sep": 7.83,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "대성리",
      "b": "청평",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 6.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -7,
+       "delta_sec": -390,
+       "frac": 0.971,
+       "sep": 5.67,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 6,
+       "delta_sec": 390,
+       "frac": 0.929,
+       "sep": 9.75,
+       "trains": 42,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "청평",
      "b": "상천",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 4.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -5,
+       "delta_sec": -270,
+       "frac": 0.903,
+       "sep": 14.0,
+       "trains": 31,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 4,
+       "delta_sec": 270,
+       "frac": 1.0,
+       "sep": 8.67,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "상천",
      "b": "가평",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 6.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -6,
+       "delta_sec": -360,
+       "frac": 1.0,
+       "sep": 8.75,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 6,
+       "delta_sec": 360,
+       "frac": 1.0,
+       "sep": 10.25,
+       "trains": 41,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "가평",
      "b": "굴봉산",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 4.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -5,
+       "delta_sec": -270,
+       "frac": 1.0,
+       "sep": 8.75,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 4,
+       "delta_sec": 270,
+       "frac": 1.0,
+       "sep": 6.5,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "굴봉산",
      "b": "백양리",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 11.67,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 1.0,
+       "sep": 6.5,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "백양리",
      "b": "강촌",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 5.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -5,
+       "delta_sec": -300,
+       "frac": 1.0,
+       "sep": 8.75,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 5,
+       "delta_sec": 300,
+       "frac": 0.929,
+       "sep": 13.0,
+       "trains": 42,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "강촌",
      "b": "김유정",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 6.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -6,
+       "delta_sec": -360,
+       "frac": 0.971,
+       "sep": 9.71,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 6,
+       "delta_sec": 360,
+       "frac": 1.0,
+       "sep": 8.67,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "김유정",
      "b": "남춘천",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 5.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -6,
+       "delta_sec": -330,
+       "frac": 0.968,
+       "sep": 15.0,
+       "trains": 31,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "상봉"
+      },
+      "D": {
+       "delta_min": 5,
+       "delta_sec": 330,
+       "frac": 1.0,
+       "sep": 9.45,
+       "trains": 52,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "춘천"
+      }
+     }
     },
     {
      "a": "남춘천",
      "b": "춘천",
      "source": "fr_seq",
-     "grade": "근거없음",
+     "grade": "추정:단방향관측",
      "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "추정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 11.67,
+       "trains": 35,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "상봉"
+      }
+     }
     }
    ]
   },
@@ -24782,9 +25486,9 @@
        "frac": 1.0,
        "sep": 15.5,
        "trains": 31,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24815,9 +25519,9 @@
        "frac": 1.0,
        "sep": 15.5,
        "trains": 31,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24848,9 +25552,9 @@
        "frac": 1.0,
        "sep": 15.5,
        "trains": 31,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24881,9 +25585,9 @@
        "frac": 1.0,
        "sep": 4.43,
        "trains": 31,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24914,9 +25618,9 @@
        "frac": 1.0,
        "sep": 3.58,
        "trains": 86,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24947,9 +25651,9 @@
        "frac": 1.0,
        "sep": 4.1,
        "trains": 86,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -24980,9 +25684,9 @@
        "frac": 1.0,
        "sep": 4.1,
        "trains": 86,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -25013,9 +25717,9 @@
        "frac": 1.0,
        "sep": 3.58,
        "trains": 86,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -25034,11 +25738,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 3.51,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.5,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25046,9 +25750,9 @@
        "frac": 1.0,
        "sep": 3.58,
        "trains": 86,
-       "basis": "dir",
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "원시"
       }
      }
     },
@@ -25067,11 +25771,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 3.51,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.5,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25100,11 +25804,11 @@
        "delta_min": -3,
        "delta_sec": -180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.79,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25133,11 +25837,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 3.37,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.5,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 2,
@@ -25166,11 +25870,11 @@
        "delta_min": -5,
        "delta_sec": -270,
        "frac": 1.0,
-       "sep": 3.58,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 6.11,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 4,
@@ -25199,11 +25903,11 @@
        "delta_min": -5,
        "delta_sec": -270,
        "frac": 1.0,
-       "sep": 3.58,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 6.11,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 4,
@@ -25232,11 +25936,11 @@
        "delta_min": -3,
        "delta_sec": -150,
        "frac": 1.0,
-       "sep": 3.37,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.5,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 2,
@@ -25265,11 +25969,11 @@
        "delta_min": -4,
        "delta_sec": -210,
        "frac": 1.0,
-       "sep": 3.51,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.5,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25298,11 +26002,11 @@
        "delta_min": -3,
        "delta_sec": -180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.79,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25331,11 +26035,11 @@
        "delta_min": -3,
        "delta_sec": -180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.79,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 3,
@@ -25364,11 +26068,11 @@
        "delta_min": -3,
        "delta_sec": -180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.79,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       },
       "D": {
        "delta_min": 2,
@@ -25397,11 +26101,11 @@
        "delta_min": -3,
        "delta_sec": -180,
        "frac": 1.0,
-       "sep": 3.44,
-       "trains": 86,
-       "basis": "dir",
+       "sep": 5.79,
+       "trains": 55,
+       "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": null
+       "dest_nm": "대곡"
       }
      }
     }
@@ -25421,12 +26125,12 @@
      "fr_order": "desc",
      "grade": "확정",
      "edges_forward": 0,
-     "edges_backward": 50
+     "edges_backward": 56
     },
     "D": {
      "fr_order": "asc",
      "grade": "확정",
-     "edges_forward": 51,
+     "edges_forward": 58,
      "edges_backward": 0
     }
    },
@@ -25609,7 +26313,7 @@
      "fr_code": "K226",
      "fr_order": 17,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "이매",
@@ -25659,7 +26363,7 @@
      "fr_code": "K231",
      "fr_order": 22,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "오리",
@@ -25679,7 +26383,7 @@
      "fr_code": "K233",
      "fr_order": 24,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "보정",
@@ -25689,7 +26393,7 @@
      "fr_code": "K234",
      "fr_order": 25,
      "is_spur": false,
-     "has_timetable": false
+     "has_timetable": true
     },
     {
      "station_nm": "구성",
@@ -26560,17 +27264,67 @@
      "a": "모란",
      "b": "야탑",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -180,
+       "frac": 1.0,
+       "sep": 2.24,
+       "trains": 159,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 6.0,
+       "trains": 72,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "죽전"
+      }
+     }
     },
     {
      "a": "야탑",
      "b": "이매",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 2.24,
+       "trains": 159,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 6.0,
+       "trains": 72,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "죽전"
+      }
+     }
     },
     {
      "a": "이매",
@@ -26675,41 +27429,166 @@
      "a": "정자",
      "b": "미금",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 1.0,
+       "sep": 2.24,
+       "trains": 159,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 6.0,
+       "trains": 72,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "죽전"
+      }
+     }
     },
     {
      "a": "미금",
      "b": "오리",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -2,
+       "delta_sec": -120,
+       "frac": 1.0,
+       "sep": 2.21,
+       "trains": 159,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 120,
+       "frac": 1.0,
+       "sep": 6.0,
+       "trains": 72,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "죽전"
+      }
+     }
     },
     {
      "a": "오리",
      "b": "죽전",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 3.5,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -4,
+       "delta_sec": -210,
+       "frac": 1.0,
+       "sep": 2.24,
+       "trains": 159,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 210,
+       "frac": 1.0,
+       "sep": 5.76,
+       "trains": 49,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "고색"
+      }
+     }
     },
     {
      "a": "죽전",
      "b": "보정",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "추정:단방향관측",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": null,
+     "travel_min": 3.0,
+     "travel_min_source": "observed",
+     "travel_min_grade": "추정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -150,
+       "frac": 0.631,
+       "sep": 1.96,
+       "trains": 168,
+       "basis": "dir",
+       "day_type": "weekday",
+       "dest_nm": null
+      },
+      "D": {
+       "delta_min": 3,
+       "delta_sec": 180,
+       "frac": 1.0,
+       "sep": 7.85,
+       "trains": 51,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "인천"
+      }
+     }
     },
     {
      "a": "보정",
      "b": "구성",
      "source": "fr_seq",
-     "grade": "근거없음",
-     "dir_a_to_b": null,
-     "dir_b_to_a": null
+     "grade": "확정",
+     "dir_a_to_b": "D",
+     "dir_b_to_a": "U",
+     "travel_min": 2.8,
+     "travel_min_source": "observed",
+     "travel_min_grade": "확정",
+     "observed": {
+      "U": {
+       "delta_min": -3,
+       "delta_sec": -180,
+       "frac": 1.0,
+       "sep": 7.33,
+       "trains": 66,
+       "basis": "dest",
+       "day_type": "holiday",
+       "dest_nm": "왕십리"
+      },
+      "D": {
+       "delta_min": 2,
+       "delta_sec": 150,
+       "frac": 1.0,
+       "sep": 5.64,
+       "trains": 62,
+       "basis": "dest",
+       "day_type": "weekday",
+       "dest_nm": "고색"
+      }
+     }
     },
     {
      "a": "구성",
@@ -27845,7 +28724,7 @@
    "n_stations": 11,
    "dir_label": {
     "reliable": false,
-    "conflict_edges": 7,
+    "conflict_edges": 10,
     "mixed_dir_observations": 16,
     "note": "reliable=false 면 U/D 로 방향을 가르면 안 된다. dest_nm 으로 정한다."
    },
@@ -27860,8 +28739,8 @@
     "D": {
      "fr_order": "desc",
      "grade": "추정",
-     "edges_forward": 4,
-     "edges_backward": 6
+     "edges_forward": 1,
+     "edges_backward": 9
     }
    },
    "stations": [
@@ -28179,12 +29058,12 @@
      "a": "당곡",
      "b": "신림",
      "source": "fr_seq",
-     "grade": "확정",
-     "dir_a_to_b": "D",
-     "dir_b_to_a": "U",
-     "travel_min": 1.5,
+     "grade": "추정:방향라벨충돌",
+     "dir_a_to_b": null,
+     "dir_b_to_a": null,
+     "travel_min": 1.0,
      "travel_min_source": "observed",
-     "travel_min_grade": "확정",
+     "travel_min_grade": "추정",
      "observed": {
       "U": {
        "delta_min": -1,
@@ -28197,14 +29076,14 @@
        "dest_nm": "샛강"
       },
       "D": {
-       "delta_min": 2,
-       "delta_sec": 120,
+       "delta_min": -1,
+       "delta_sec": -60,
        "frac": 1.0,
-       "sep": 5.82,
+       "sep": 2.23,
        "trains": 96,
        "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": "관악산"
+       "dest_nm": "샛강"
       }
      }
     },
@@ -28212,12 +29091,12 @@
      "a": "신림",
      "b": "서원",
      "source": "fr_seq",
-     "grade": "확정",
-     "dir_a_to_b": "D",
-     "dir_b_to_a": "U",
+     "grade": "추정:방향라벨충돌",
+     "dir_a_to_b": null,
+     "dir_b_to_a": null,
      "travel_min": 2.0,
      "travel_min_source": "observed",
-     "travel_min_grade": "확정",
+     "travel_min_grade": "추정",
      "observed": {
       "U": {
        "delta_min": -2,
@@ -28230,14 +29109,14 @@
        "dest_nm": "샛강"
       },
       "D": {
-       "delta_min": 2,
-       "delta_sec": 120,
+       "delta_min": -2,
+       "delta_sec": -120,
        "frac": 1.0,
-       "sep": 2.29,
+       "sep": 2.23,
        "trains": 96,
        "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": "관악산"
+       "dest_nm": "샛강"
       }
      }
     },
@@ -28245,12 +29124,12 @@
      "a": "서원",
      "b": "서울대벤처타운",
      "source": "fr_seq",
-     "grade": "확정",
-     "dir_a_to_b": "D",
-     "dir_b_to_a": "U",
+     "grade": "추정:방향라벨충돌",
+     "dir_a_to_b": null,
+     "dir_b_to_a": null,
      "travel_min": 2.0,
      "travel_min_source": "observed",
-     "travel_min_grade": "확정",
+     "travel_min_grade": "추정",
      "observed": {
       "U": {
        "delta_min": -2,
@@ -28263,14 +29142,14 @@
        "dest_nm": "샛강"
       },
       "D": {
-       "delta_min": 2,
-       "delta_sec": 120,
+       "delta_min": -2,
+       "delta_sec": -120,
        "frac": 1.0,
-       "sep": 2.18,
+       "sep": 2.23,
        "trains": 96,
        "basis": "dest",
        "day_type": "weekday",
-       "dest_nm": "관악산"
+       "dest_nm": "샛강"
       }
      }
     },
