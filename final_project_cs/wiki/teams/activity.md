@@ -221,6 +221,13 @@ flowchart LR
 
 **폴백**: ②(또는 ③ 반영 후)의 유형 필터링 결과가 **0건**이면, 우선순위가 **가장 낮은 필드부터 하나씩 제거**하며 다시 필터링한다. `[정정 2026-09-24]` 위 우선순위표 기준으로는 `contenttypeid`가 최하위이므로 **가장 먼저** 빠진다 — 예: 활동 중요 타입에서 0건이면 `contenttypeid`를 먼저 빼고 재시도, 그래도 0건이면 `lclsSystm3`을, 그래도 0건이면 `lclsSystm2`까지 뺀다.
 
+★`[정정 2026-10-01, 팀 합의]` **위 폴백 순서(타입이 가장 먼저 빠진다)는 낡았다.** 지금 코드(`alternatives.py`의 `FALLBACK_DROPS`)는 `contenttypeid`를 **대분류와 한 묶음**으로 본다(관광타입 38=쇼핑, 15=행사, 14=문화시설처럼 대분류와 거의 1:1이라 따로 풀 이유가 없다). 풀어야 한다면 대분류와 함께 맨 마지막에 푼다.
+
+| 선호도 | 고정 | 0건이면 앞에서부터 한 단계씩 뺀다 |
+|---|---|---|
+| 이동 중요 | 시군구 | ① 소분류 → ② 중분류 → ③ 대분류+타입 |
+| 활동 중요 | 대분류+타입 | ① 소분류 → ② 중분류 → ③ 시군구 |
+
 ### 대안 순위 산출 — `[제안 2026-09-24, 미확보]`
 
 ★`[정정 2026-09-24]` **이 절은 "## 셋을 갖는다"의 넷째 항목이 아니다.** 위 [대안 생성 규칙](#대안-생성-규칙--사용자-제공-2026-09-24) 표의 ④단계를 풀어 쓴 것뿐이고, "대안 생성 규칙" 전체가 [③ 재계획 후보](#-재계획-후보)의 하위 절차다. v11 §5가 모든 여행 Team에 못박은 "셋"(검증 규칙·감시 소스·재계획 후보)은 그대로다.
@@ -749,7 +756,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 
 ★**모르는 것을 숨기지 않는다.** 휴무가 확인된(`True`) 후보만 빼고, 모름(`None`)은 남기되 `availability: "unconfirmed"`로 표시해 확인된 후보 **뒤로** 보낸다. 좌표가 없는 후보도 뒤로 간다. 결과에 `matched_fields`·`dropped_fields`(폴백으로 푼 조건)를 함께 낸다.
 
-★**`business_hours`(운영시간)는 파싱하지 않았다** — 판정 경로에서 `usetime_text`를 안 보는 원칙을 그대로 따랐고, 원문만 결과에 실어 보낸다. 순위 확장안의 「영업시간 여유도」는 이 파싱이 생긴 뒤의 일이다.
+★`[정정 2026-10-01]` **`business_hours`(운영시간)를 이제 읽는다** — `alternatives.py`의 `open_at(business_hours, at)`(시각은 KST). 「상시·24시간」, 「HH:MM~HH:MM」(여러 구간·자정 넘김), 구간 앞 요일 라벨(평일·주말·월~일)만 읽고 그 밖(점포별 상이·브레이크·계절·층별·빈 값)은 `None`(모름)이다. **명백히 닫힌 곳(`False`)만** 후보에서 빼고 휴무일(`closed_on`)과 함께 유사도보다 **먼저** 적용한다. 판정 경로(`check_feasible`)의 `usetime_text` 원칙은 그대로다 — 이 파싱은 후보 거르기에만 쓴다. 순위는 **같은 브랜드·같은 시군구 → 거리** 순이다(브랜드 매장이 같은 브랜드를 가장 비슷한 대체로 본다). 순위 확장안의 「영업시간 여유도」 점수는 아직 없다.
 
 `[실측 2026-09-26]` 실 CSV(`scripts/activities_candidates_seoul_enriched.csv`)로 확인 — 창경궁(126511, 매주 월요일 휴무)을 월요일·활동 중요로 넣으면 `contenttypeid`·`lclsSystm3`을 빼고 15건이 매칭되고, 1~3위는 율곡로(0.28km)·성균관 명륜당(0.81km)·북촌한옥마을(0.86km)이다. 선호도 `None`이면 0건(폴백 없음 — 규칙대로). ※경복궁(126508)은 이 CSV에 없다.
 
@@ -777,11 +784,13 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ① 항목 | 후보에 대해 |
 |---|---|
 | 시각 | 원래 예약과 같은 시각이고, 여기까지 왔다면 아직 안 지났다 → 통과 |
-| 휴무 요일 | `closed_on`이 `False`를 준 후보만 `revalidated: True`다. 모름(`None`)인 후보는 `decisions`에만 남고 **안내문에는 안 싣는다** |
+| 휴무 요일·운영시간 | `closed_on`이 `False`이거나 `open_at`이 `True`인 후보만 `revalidated: True`다(`availability`가 `open_weekday`·`open_at_time`). 둘 다 모름인 후보(`unconfirmed`)는 `decisions`에만 남고 **안내문에는 안 싣는다** — 빠진 곳 수는 경고로 남긴다 `[구현 2026-10-01]` |
 | 재난문자 | `disaster_msg.near()`는 좌표를 쓰지 않고 **전국 목록**을 준다. 그래서 원래 장소의 판정이 곧 후보의 판정이다. 위급재난이면 후보 전부 같은 판정이라 `withheld`다 |
-| 정원·운영시간 | 후보 쪽 값이 없다 → **확인하지 않았다**. 안내문과 `revalidation.not_checked`에 이 사실을 밝힌다 |
+| 정원 | 후보 쪽 값이 없다 → **확인하지 않았다**. 안내문(「정원은 확인하지 않았습니다」)과 `revalidation.not_checked: ["capacity"]`에 이 사실을 밝힌다 `[정정 2026-10-01]` 운영시간은 위 줄처럼 읽게 돼 여기서 빠졌다 |
 
-**선호도**는 `current_state["activity_preference"]`(`"mobility"`·`"activity"`)에서 읽는다. 값이 없으면 `None`이다. 모르는 값이면 경고를 남기고 `None`으로 처리한다. 추측하지 않는다. 설문이 실제로 이 키를 채우는 경로는 아직 없다.
+**선호도**는 `current_state["activity_preference"]`(`"mobility"`·`"activity"`)에서 읽는다. 값이 없으면 설문(`current_state["survey"]` 또는 `["constraints"]["survey"]`)의 `priority`에서 먼저 나오는 `activity`·`mobility`를 읽는다(`food`는 이 팀 몫이 아니라 건너뜀). 둘 다 없으면 `None`이다. `activity_preference`에 모르는 값이 있으면 경고를 남기고 `None`으로 처리한다. 추측하지 않는다. `[구현 2026-10-01]` `ActivityTeam._preference`.
+
+`[2026-10-01]` 위 연결을 이 절의 규칙(`withheld`·재검증·선호도)에 맞춰 코드를 고쳤다 — [리포트](../records/reports/2026-10-01_1345_Activity_대체장소_문서규칙_정렬_리포트.md).
 
 #### 아직 안 한 것
 
