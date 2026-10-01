@@ -12,3 +12,31 @@
 import os
 
 os.environ.setdefault("ACOP_MOBILITY_DATA_DIR", "")
+
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _isolate_mobility_engine_state():
+    """시험마다 이동 계산기 상태(자료 폴더 출처·켜짐/꺼짐)를 **처음 상태로** 초기화한다.
+
+    ☆`[2026-10-01 이동 담당 보고서 #54]` 서버를 조립하는 것(`build_registry`)은 설정이 비어 있으면 계산기를 「꺼짐」으로 두는데
+      (`paths.disable()`), 이 저장소는 시험을 **모으는 단계에서** 이미 앱을 만든다(`app = create_app()` 이 import 때 돈다). 그래서
+      꺼짐 상태가 첫 시험이 돌기 전부터 깔려 있었고, 같은 실행 안에서 뒤에 도는 이동 시험이 「꺼져 있다」 오류 → 자료 없음 건너뜀이 됐다
+      (CI 는 계약 시험이 단위 시험보다 먼저 돌아 저장소에 자료가 있어도 이동 시험이 건너뛰어졌다).
+      「시험 전 상태로 되돌리기」로는 그 깔린 꺼짐을 못 치우므로 **시험 전후에 처음 상태로 초기화**한다. 계산기를 부르는 앱 코드는
+      켜짐이 아니면 어림값으로 가므로(`leg_planner`·`team_result` 가 None) 처음 상태와 꺼짐은 같게 동작한다. 이동 시험은 명령줄
+      관례(저장소 안 자료 폴더)로 자기 계산기를 올리고, 켜야 하는 시험은 스스로 켠다. 설정 기본값·CI 환경변수는 건드리지 않는다.
+    """
+    from app.modules.travel_ops.mobility import wiring
+    from app.modules.travel_ops.mobility.engine import paths
+
+    def reset():
+        paths._layout(paths.UNSET_DIR, "unset")
+        wiring._STATE.clear()
+        wiring._STATE.update(mode="unconfigured", kw=None, datacheck=None)
+
+    reset()
+    yield
+    reset()
