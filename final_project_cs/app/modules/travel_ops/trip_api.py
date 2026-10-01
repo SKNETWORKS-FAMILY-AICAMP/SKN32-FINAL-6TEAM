@@ -1286,6 +1286,47 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 "used": budget.used(MAP_METER), "cap": budget.caps.get(MAP_METER),
                 "fallback": None if allowed else "free_map"}
 
+    # ── 고객 연락처 (2026-10-01 사용자 지시 — ui 세션 전달) ─────────────────────────────────────────────
+    #   복구 이메일 · 디스코드 웹훅. ★웹훅은 비밀값이자 서버가 나중에 POST 하는 주소(SSRF)라 받을 때 엄격히 검사하고 암호화해서만 저장하며
+    #   응답에는 마스킹만 돌려준다(`customer_profile.py` 머리). 남의 키로는 남의 값이 안 보인다(키 → 고객).
+    @router.get("/v1/web/profile")
+    def web_profile(who: tuple[str, UUID] = Depends(_web_customer)):
+        from . import customer_profile
+
+        tenant, customer = who
+        with get_connection() as conn:
+            return customer_profile.read(conn, tenant, customer).as_dict()
+
+    @router.put("/v1/web/profile")
+    def web_profile_update(body: dict[str, Any] = Body(...), who: tuple[str, UUID] = Depends(_web_customer)):
+        """부분 갱신 — 칸이 없으면 안 건드리고 null(또는 공백만)이면 지운다. 모르는 칸 · 틀린 값은 422(받은 값을 되돌려 싣지 않는다)."""
+        from . import customer_profile
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                return customer_profile.update(conn, tenant, customer, body).as_dict()
+        except customer_profile.ProfileError as refused:
+            raise _error(refused.status, refused.code, refused.message) from None
+
+    @router.post("/v1/web/profile/discord/test")
+    def web_profile_discord_test(who: tuple[str, UUID] = Depends(_web_customer)):
+        """저장된 웹훅으로 시험 메시지 한 줄 — 고객이 누를 때만. `{result: ok|invalid|rate_limited|failed, profile: {…}}`.
+        마지막 시도에서 `travel.profile.test_interval_seconds` 안이면 429 `too_soon`."""
+        from . import customer_profile
+
+        tenant, customer = who
+        interval = float(settings_module.get_guardrails().get("travel.profile.test_interval_seconds"))
+        try:
+            with get_connection() as conn:
+                result, view = customer_profile.send_test(conn, tenant, customer, min_interval_seconds=interval)
+        except customer_profile.ProfileError as refused:
+            error = _error(refused.status, refused.code, refused.message)
+            if refused.retry_after:
+                error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        return {"result": result, "profile": view.as_dict()}
+
     @router.get("/v1/web/trips/{trip_id}/events")
     async def web_trip_events(trip_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
         """★`[2026-09-30 사용자 승인 — ui 세션 전달]` **변경 초인종** — 이 여행이 바뀌었다는 신호만 흘린다(`text/event-stream`).

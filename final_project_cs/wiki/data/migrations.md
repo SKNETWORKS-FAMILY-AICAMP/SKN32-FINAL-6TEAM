@@ -161,6 +161,10 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 
 `[실측]` `037_outbox_notice_prefix_idx.sql` — 바깥함 `(tenant_id, topic, dedupe_key text_pattern_ops)` 인덱스 추가. 알림 조회(`dedupe_key LIKE '<여행 id>:%'`)가 기존 유일 인덱스로는 앞부분 검색을 못 써 바깥함 전체를 훑었다(543행에서 Seq Scan). 변경 초인종(`trip_events.py`)이 연결마다 2초 간격으로 읽어 바깥함이 커지면 부담이 된다. 인덱스를 강제로 켜 확인했다: `Index Scan using outbox_notice_prefix_idx`. 추가만 하고 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-30) — 031 과 같은 이유.
 
+### 고객 연락처 `customer_profiles` `[2026-10-01 · 039]`
+
+`[실측]` `039_customer_profiles.sql` — 복구 이메일과 디스코드 웹훅의 저장 자리. 키 (tenant_id, customer_id). 칸: `recovery_email` · `discord_webhook_enc`(**암호화한** 웹훅 URL — 원문은 어디에도 없다) · `discord_hint`(마스킹한 모양) · `discord_status`(`untested`/`ok`/`invalid`) · `discord_checked_at`(상태를 정한 시각) · `discord_tested_at`(마지막 시험 시도 — 시험 발송 간격 제한을 DB 에서 센다). 고객이 지워지면 함께 지운다(`ON DELETE CASCADE`). 웹훅은 서버가 나중에 POST 하는 비밀값이라 암호화 키는 서버 설정에서 파생한다(`customer_profile.py`). ★적용: 이 파일만 적용했다(2026-10-01) — 031 과 같은 이유.
+
 ## 인덱스
 
 `[실측]` 조회 격리를 받치는 인덱스.
