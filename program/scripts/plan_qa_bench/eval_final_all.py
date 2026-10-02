@@ -408,6 +408,19 @@ for tag, lab_ in (('gemma4_e4b-it-qat', 'V16 적대적 검토(E4B QAT 반론)'),
     else:
         NOTES.append(f'{lab_}: 반론 결과가 모든 세트에 없다')
 
+# ---------- V9 Jev 없는 작은 LLM 전문가 구조(§19: 관문·기준 E4B / 짚기·검증 12B — 배치는 §19 에서 heavy 개발용으로 고른 값 고정) ----------
+if all(os.path.exists(R(f'llm_tasks_out_{w}.json')) for w in EV):
+    import eval_pipeline as _EP
+    _TO = {w: J(R(f'llm_tasks_out_{w}.json')) for w in EV}
+    _CFG = ('gemma4:e4b', 'gemma4:e4b', 'gemma4:12b')
+
+    def p_v9(w, i):
+        p, calls, how = _EP.run_one(i, _CFG, SETS[w]['qs'], SETS[w]['items'], _TO[w])
+        return (p if not isinstance(p, tuple) else None), len(calls)
+    P['V9 전문가 구조(Jev 없음, E4B/E4B/12B)'] = p_v9
+else:
+    NOTES.append('V9: 전문가 구조 결과(llm_tasks_out)가 시험 세트에 모두 있지는 않다')
+
 # ---------- §50 Y2 분류 게이트 ----------
 GATE = {}
 for tag_ in ('base', 'e16d'):
@@ -496,6 +509,16 @@ for w in EV:
             k = max(pr, key=pr.get) if pr else 'none'
             jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
         ref.setdefault('Jev 직접(유료)', {})[w] = jp
+    for dtag, dlab in (('winnow12b', 'Winnow-12B Q8 직접'), ('nimble9b', 'Nimble-9B-v3 Q8 직접'), ('kev9b', 'Kev-9B Q8 직접'), ('kev4b', 'Kev-4B Q8 직접'),
+                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접')):
+        fd = load_opt(R(f'dec_{dtag}_{w}.json'))
+        if fd and w in fd and fd.get('_errors', 1) < len(fd[w]['rows']):
+            jp = []
+            for r in fd[w]['rows']:
+                pr = r['probs']
+                k = max(pr, key=pr.get) if pr else 'none'
+                jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
+            ref.setdefault(dlab, {})[w] = jp
     for lab, proto in (('Codex luna 직접', False), ('Codex luna+정의 직접', True)):
         if LUNA[w][proto] is not None:
             ref.setdefault(lab, {})[w] = LUNA[w][proto]
