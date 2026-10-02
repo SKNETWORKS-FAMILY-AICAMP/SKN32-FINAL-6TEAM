@@ -1,6 +1,6 @@
 # §42 V6 — 시험 세트의 쌍 파일(pairs_*.json)의 문서에 그래프 이웃(앞·뒤 일정, 같은 장소 몇 번째 방문)을 덧붙인 사본(*_g.json)을 만든다.
 #  접미 형식은 학습 자료(gen_train.py GRAPH=1)와 같아야 한다. 질문·항목 번호·순서는 그대로, 문서 글자만 다르다.
-# 사용: python build_graph_pairs.py → fixtures/pairs_experts_g.json · pairs_mix5_g.json · pairs_mix6_g.json · pairs_mix7_g.json · pairs_mix8_g.json
+# 사용: python build_graph_pairs.py → fixtures/pairs_experts_g.json · pairs_mix5_g.json · pairs_mix6_g.json · pairs_mix7_g.json · pairs_mix8_g.json · pairs_mix9_g.json
 import json, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 F = lambda n: os.path.join(HERE, 'fixtures', n)
@@ -24,7 +24,7 @@ def graph_map(job):
 
 
 for src, dst in (('pairs_experts.json', 'pairs_experts_g.json'), ('pairs_mix5.json', 'pairs_mix5_g.json'), ('pairs_mix6.json', 'pairs_mix6_g.json'),
-                 ('pairs_mix7.json', 'pairs_mix7_g.json'), ('pairs_mix8.json', 'pairs_mix8_g.json')):
+                 ('pairs_mix7.json', 'pairs_mix7_g.json'), ('pairs_mix8.json', 'pairs_mix8_g.json'), ('pairs_mix9.json', 'pairs_mix9_g.json')):
     pairs = J(src)
     maps = {}
     out = []
