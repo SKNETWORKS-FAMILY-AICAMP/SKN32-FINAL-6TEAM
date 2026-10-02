@@ -40,5 +40,5 @@ for name, f in V.items():
             hit[k] += bool(set(order[:k]) & set(QS[qi]['gold']))
     none = [max(sims[i][j] for j in range(len(CH)) if CH[j]['line']) for i, q in enumerate(QS) if q['type'] in ('uncovered', 'offtopic')]
     pos = [max(sims[i][j] for j in range(len(CH)) if CH[j]['line']) for i in ans]
-    print(f"{name}: @1 {hit[1]}/100 @3 {hit[3]}/100 @5 {hit[5]}/100 · 1위 점수 평균 답 있음 {sum(pos) / len(pos):.3f} 답 없음(코퍼스에 없음·주제 밖) {sum(none) / len(none):.3f}", flush=True)
+    print(f"{name}: @1 {hit[1]}/{len(ans)} @3 {hit[3]}/{len(ans)} @5 {hit[5]}/{len(ans)} · 1위 점수 평균 답 있음 {sum(pos) / len(pos):.3f} 답 없음(코퍼스에 없음·주제 밖) {sum(none) / len(none):.3f}", flush=True)
 json.dump({'sources': [c['source'] for c in CH], 'variants': res}, open('rag_embed_variants.json', 'w'))
