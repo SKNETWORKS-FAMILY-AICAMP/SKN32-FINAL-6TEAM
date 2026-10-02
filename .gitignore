@@ -209,3 +209,8 @@ _40/
 
 docs/mobility/*.docx
 docs/mobility/*.png
+
+# 실험 사본 — 비교 측정용으로 저장소를 통째로 복사한 자리.
+# ★git 에 올리지 않는다. 릴리스 대상(final_project_cs)과 섞이면 되돌리기 어렵다.
+#   결과·결론은 wiki 문서로만 남긴다(사본 자체는 버려도 되는 것).
+/_experiments/
