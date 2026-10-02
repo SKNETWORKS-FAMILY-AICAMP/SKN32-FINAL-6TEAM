@@ -352,13 +352,18 @@ for w in EV:
     for lab, proto in (('Codex luna 직접', False), ('Codex luna+정의 직접', True)):
         if LUNA[w][proto] is not None:
             ref.setdefault(lab, {})[w] = LUNA[w][proto]
-out += ['', '### 참고(직접 짚기 — 규칙·앞단 없음, 호출은 문제 수만큼)', '| 방식 | ' + ' | '.join(f'{w} 정답' for w in EV) + ' | 합 | 엉뚱한 답 |', '|---|' + '---:|' * (len(EV) + 2)]
+out += ['', '### 참고(직접 짚기 — 규칙·앞단 없음, 호출은 문제 수만큼)', '| 방식 | ' + ' | '.join(f'{w} 정답' for w in EV) + ' | 합 | 엉뚱한 답 | V1 과 짝지은 차이 %p [구간] (그 방식만 : V1 만, p) |', '|---|' + '---:|' * (len(EV) + 2) + '---|']
+_v1 = vec('V1 앞단 e16d', EV)
 for lab, d in ref.items():
     if not all(w in d for w in EV):
         continue
     oks = [sum(d[w][i] == gold[w][i] for i in range(len(gold[w]))) for w in EV]
     bad = sum(d[w][i] is not None and d[w][i] != gold[w][i] for w in EV for i in range(len(gold[w])))
-    out.append(f'| {lab} | ' + ' | '.join(map(str, oks)) + f' | **{sum(oks)}** ({sum(oks) / tot_n:.1%}) | {bad} |')
+    _v = [int(d[w][i] == gold[w][i]) for w in EV for i in range(len(gold[w]))]
+    _a = sum(x == 1 and y == 0 for x, y in zip(_v, _v1))
+    _b = sum(x == 0 and y == 1 for x, y in zip(_v, _v1))
+    _d, _l, _h = ci(_a, _b, tot_n)
+    out.append(f'| {lab} | ' + ' | '.join(map(str, oks)) + f' | **{sum(oks)}** ({sum(oks) / tot_n:.1%}) | {bad} | {_d:+.1f} [{_l:+.1f}, {_h:+.1f}] ({_a} : {_b}, p={pexact(_a, _b):.3f}) |')
 out += ['', '### V1 과 짝지은 비교(합친 시험 세트 · 정확검정 · 짝지은 부트스트랩 95% 구간)', '| 방식 | 그 방식만 맞음 | V1 만 맞음 | 차이 %p [구간] | p |', '|---|---:|---:|---|---:|']
 v1 = vec('V1 앞단 e16d', EV)
 for n in names:
