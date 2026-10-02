@@ -1,5 +1,8 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.routing import Route
 
 from app import composition
 from app.application.runtime import ControllerProxy, RuntimeComposition
@@ -10,6 +13,17 @@ from app.presentation.api.outbox import build_router as build_outbox_router
 from app.presentation.api.introspection import router as introspection_router
 from app.presentation.errors import install_error_handlers
 from app.presentation.security import require_scope
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """앱 생명주기 — MCP 표면이 붙어 있으면 그 세션 관리자를 앱과 함께 연다(없으면 아무것도 안 한다). ★서버(uvicorn)가 돌릴 때만 의미가 있다."""
+    surface = getattr(app.state, "mcp_surface", None)
+    if surface is None:
+        yield
+        return
+    async with surface.lifespan():
+        yield
 
 
 def create_app(controller=None, classifier=None, *,
@@ -37,7 +51,7 @@ def create_app(controller=None, classifier=None, *,
         active_config = composition.load_project_config()
         built_revision = config_revision(active_config)
         controller = composition.build_controller(config=active_config)
-    app = FastAPI(title="triPilot S-API")
+    app = FastAPI(title="triPilot S-API", lifespan=_lifespan)
     # ★`[2026-09-24]` 웹(`frontend/apps/web`)이 다른 출처(포트 3100)에서 부른다(D-020). 허용하는 헤더는
     #   사용자 식별 키(`X-User-Key`)와 Content-Type 뿐 — 서버용 `Authorization` 은 브라우저에서 받지 않는다.
     origins = [o.strip() for o in get_settings().web_allowed_origins.split(",") if o.strip()]
@@ -72,6 +86,11 @@ def create_app(controller=None, classifier=None, *,
     if composer_write_router is not None:
         app.include_router(composer_write_router)
     app.include_router(introspection_router)
+    # ★`[2026-10-02 사용자 지시]` 개인 AI(MCP) 입구 — `/mcp/`(Streamable HTTP, 사용자 키). 도메인은 조립이 만든다(INV-CS-ARCH-001).
+    #   `mcp` 모듈 토글 · 쓰기 도구 스위치(`travel.mcp.write_enabled`)는 `composition.build_mcp_surface` 가 본다. 모듈이 꺼져 있으면 요청이 404 다.
+    app.state.mcp_surface = composition.build_mcp_surface(lambda: app)
+    app.mount("/mcp", app.state.mcp_surface.asgi)
+    app.router.routes.append(Route("/mcp", endpoint=app.state.mcp_surface.root, methods=["GET", "POST", "DELETE"]))   # 슬래시 없이 불러도 열린다
 
     # ★재기동 없이 반영시키는 유일한 길 (2026-09-06, sample 에서 이식).
     #   `ops:reload` 는 `composer:write` 와 **분리**한다 — 저장은 되돌릴 수 있지만

@@ -77,6 +77,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-02 웹(사용자 키)용 신고 · 다른 안으로 — 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 같은 처리, 본인 여행만. 개인 AI(MCP)가 쓴다
+    "/v1/web/trips/{trip_id}/reports",
+    "/v1/web/trips/{trip_id}/items/{item_id}/alternate",
     # ★2026-09-30 변경 초인종 — 「이 여행 바뀜」 신호만 흘린다(text/event-stream, 사용자 키). `wiki/external/rest-endpoints.md`
     "/v1/web/trips/{trip_id}/events",
     # ★2026-10-01 고객 연락처(복구 이메일 · 디스코드 웹훅) — 사용자 키. `wiki/external/rest-endpoints.md`

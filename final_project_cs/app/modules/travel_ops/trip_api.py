@@ -742,7 +742,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/trips/{trip_id}/reports")
     def report(trip_id: UUID, request: ReportIn,
                principal: Principal = Depends(require_scope("trip:write"))):
-        store = TripStore(principal.tenant_id)
+        return _report_result(TripStore(principal.tenant_id), trip_id, request)
+
+    def _report_result(store: TripStore, trip_id: UUID, request: ReportIn) -> dict[str, Any]:
+        """신고 한 건의 처리 — 에이전트 입구와 웹 입구(`/v1/web/trips/{id}/reports`)가 **같은 것**을 쓴다."""
         duplicate = _already(store, trip_id, request.request_id)
         if duplicate:
             return duplicate
@@ -792,7 +795,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/trips/{trip_id}/items/{item_id}/alternate")
     def alternate(trip_id: UUID, item_id: UUID, request: AlternateIn,
                   principal: Principal = Depends(require_scope("trip:write"))):
-        store = TripStore(principal.tenant_id)
+        return _alternate_result(TripStore(principal.tenant_id), trip_id, item_id, request)
+
+    def _alternate_result(store: TripStore, trip_id: UUID, item_id: UUID, request: AlternateIn) -> dict[str, Any]:
+        """다른 안으로 바꾸기 한 건 — 에이전트 입구와 웹 입구(`/v1/web/trips/{id}/items/{item}/alternate`)가 같은 것을 쓴다."""
         duplicate = _already(store, trip_id, request.request_id)
         if duplicate:
             return duplicate
@@ -1243,6 +1249,28 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                    who: tuple[str, UUID] = Depends(_web_customer)):
         tenant, customer = who
         return _choose(tenant, trip_id, proposal_id, request.key, by=f"web:{customer}", customer_id=customer)
+
+    @router.post("/v1/web/trips/{trip_id}/reports")
+    def web_report(trip_id: UUID, request: ReportIn, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-02]` 웹(사용자 키)용 신고 — 지연 · 휴무 · 품절. 에이전트 입구(`/v1/trips/{id}/reports`)와 **같은 처리**이고
+        그 사용자 본인의 여행만 연다. 개인 AI(MCP)가 구조화된 신고를 보내는 길이다(모델을 안 거친다). 남용 방어는 채팅과 같은 `message` 로 센다."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+        _count("message", tenant, customer, http)
+        return _report_result(store, trip_id, request)
+
+    @router.post("/v1/web/trips/{trip_id}/items/{item_id}/alternate")
+    def web_alternate(trip_id: UUID, item_id: UUID, request: AlternateIn, http: Request,
+                      who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-02]` 웹(사용자 키)용 「다른 안으로」 — 에이전트 입구와 **같은 처리**, 그 사용자 본인의 여행만."""
+        tenant, customer = who
+        store = TripStore(tenant)
+        with get_connection() as conn:
+            _trip_or_404(conn, store, trip_id, customer)
+        _count("message", tenant, customer, http)
+        return _alternate_result(store, trip_id, item_id, request)
 
     @router.post("/v1/web/trips/{trip_id}/rollback")
     def web_rollback(trip_id: UUID, request: RollbackIn, who: tuple[str, UUID] = Depends(_web_customer)):

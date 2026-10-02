@@ -1,7 +1,7 @@
 ---
 type: contract
 title: MCP 도구
-description: 개인 AI가 쓰는 도구 3종. 전부 mcp:read이고 개수가 테스트로 고정돼 있다
+description: 개인 AI(MCP)가 사용자 키로 본인 여행을 다루는 도구 — 읽기 5 · 쓰기 7(쓰기는 스위치, 기본 꺼짐). 아래 옛 쇼핑몰 도구 3종은 연결된 적이 없다
 status: draft
 tags: [api, security, contract]
 owners: [human:미배정]
@@ -15,9 +15,42 @@ domain_note: 코드가 아직 커머스다 — 여행 전환 층 7(입구 — �
 
 개인 AI(ChatGPT·Claude 등)가 triPilot에 연결하는 경로다.
 
-★`[실측 2026-09-10 · 작업 트리 기준]` **이 경로는 지금 열려 있지 않다.** 도구 셋의 선언·함수·시험은 있으나 **MCP 전송으로 띄우는 곳이 없다** — 앱이 mount 하지 않고(`sse_app`·`streamable_http_app`·`mount` 0곳) `mcp run`·실행 스크립트·launch 설정도 없다. 시험은 Python 함수를 직접 부른다. 그리고 호출 주체는 외부 호출자가 아니라 **설정의 tenant + 고정 `mcp:read`** 로 만든다(아래 「scope 확인」의 코드). `open_support_case` 는 생성·분류까지만 하고 **Controller 를 부르지 않는다**(`app/presentation/api/cases.py:329~366`). 이 방법이 놓칠 수 있는 것: 누군가 `mcp run` 을 손으로 띄우고 적지 않은 경우. 코드 담당에게 넘겼다 → [인계](../../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
+## ★★ 지금의 MCP — 여행 도구 `[2026-10-02 사용자 지시]`
 
-## 도구 3종
+`app/modules/travel_ops/mcp_server.py` · 고객 API 앱에 `/mcp/` 로 붙는다(Streamable HTTP, 무상태). 아래 「옛 도구 3종」(쇼핑몰 시절 Case 도구)은 **연결된 적이 없고 지금도 안 붙는다** — 이 절이 현재의 MCP 다.
+
+**왜 새로 만들었나.** 옛 도구는 git 이력 전체(모든 브랜치) · sample 저장소를 봐도 **띄우는 곳이 한 번도 없었고**, 여행(trips) 도구가 없었으며, 그대로 띄우면 호출 주체가 고정(`mcp:read`)이고 `customer_id` 를 호출자가 정해 **남의 문의를 읽는 구멍**이었다. 경쟁 서비스(Wanderlog · Tripsy · Trvlrr · Trip Planner MCP)는 전부 「AI 가 일정 내용을 편집」하는 CRUD 도구다. 우리는 일정을 **검증하고 지켜보고 틀어지면 고치는** 서비스라 도구도 그 동사다.
+
+**원칙.** ①**MCP 는 새 규칙을 만들지 않는다** — 모든 도구가 웹 API(`/v1/web/*`)를 그대로 부른다(인증 · 소유 확인 · 멱등 · 남용 방어 · 판정이 한 곳). ②**호출자는 사용자 키가 정한다** — `Authorization: Bearer <사용자 키>` 또는 `X-User-Key`(웹이 쓰는 그 키). 도구 인자에 `customer_id` 가 없고 그 키 사용자의 **본인 여행만** 열린다. 키 없음·틀림은 연결 단계에서 401(`WWW-Authenticate: Bearer`). ③`mcp` 모듈 토글을 **요청마다** 본다(끄면 404). ④쓰기 도구는 `travel.mcp.write_enabled`(기본 **꺼짐**)가 켜졌을 때만 **등록**된다 — 프로젝트의 「MCP 는 read-only」 원칙을 기본으로 지킨다. 켜도 바뀌는 것은 **일정뿐**(판마다 기록 · 되돌리기 가능)이고 결제 · 업체 예약은 안 건드린다(위 「쓰기 3단계」의 가운데 단계). ⑤키 원문은 오류 · 결과 어디에도 없다.
+
+| 도구 | 종류 | 하는 일 (웹 API) |
+|---|---|---|
+| `tripilot_list_trips` | 읽기 | 내 여행 목록 (`GET /v1/web/trips`) |
+| `tripilot_get_trip` | 읽기 | 일정 — 항목마다 종류(`kind_label` 식사·활동·이동) · 끼니 · 시각 · 장소 정보 · 다른 안. `outline` 한 줄 요약, `day` 로 그날만, 지도 핀은 뺀다 |
+| `tripilot_get_notices` | 읽기 | 서버가 보낸 알림 전부 |
+| `tripilot_get_proposals` | 읽기 | 「바꿀까요?」 하고 물어 둔 대기 제안 |
+| `tripilot_get_itinerary_schema` | 읽기 | 일정 등록 JSON 스키마(`customer_id` 는 뺀다) |
+| `tripilot_ask` | 쓰기 | 자유 문장을 여행 창구에 그대로 전한다 — 질문은 사실로, 요청은 조건 확인 뒤 변경 (`POST …/messages`) |
+| `tripilot_report_issue` | 쓰기 | 지연(`minutes`) · 휴무 · 품절(`products`) 구조화 신고 (`POST …/reports`, 웹 쌍둥이 신설) |
+| `tripilot_swap_item` | 쓰기 | 항목을 다른 안으로 (`POST …/items/{item}/alternate`, 웹 쌍둥이 신설) — **현재 판 번호를 서버에서 읽어** 보낸다 |
+| `tripilot_choose_proposal` | 쓰기 | 대기 제안에 답(안을 고르거나 원래대로) |
+| `tripilot_rollback` | 쓰기 | 옛 판으로 되돌리기(자동·수동 변경 모두) |
+| `tripilot_submit_itinerary` | 쓰기 | AI 가 만든 일정을 **판정**(영업시간 · 이동 · 동선 · 밀도)받고 통과하면 내 여행으로 등록. 못 통과하면 `problems` 를 돌려준다 |
+| `tripilot_plan_trip` | 쓰기 | 서버의 일정 생성기가 짜서 판정을 통과한 것만 등록(첫날 · 일수 · 인원 · 취향 글) |
+
+**접속.**
+```
+원격(Claude Code)   claude mcp add --transport http tripilot https://<주소>/mcp/ --header "Authorization: Bearer <사용자 키>"
+로컬(stdio 프록시)  TRIPILOT_USER_KEY=<사용자 키> python -m app.modules.travel_ops.mcp_server --base-url http://127.0.0.1:8042 [--write]
+```
+사용자 키는 웹에 처음 접속할 때 한 번 보여 준다(`POST /v1/web/session`). 시험 `tests/e2e/test_mcp_server.py` 는 **MCP 프로토콜로 실제 접속**한다(initialize → 도구 호출) — 도구 이름 개수만 세던 옛 검사가 못 보던 것이다. 실제 서버(uvicorn)에 SDK 클라이언트로 HTTP 접속해 `/mcp/` · `/mcp` 둘 다 열리고 키 없이는 401 임을 확인했다(2026-10-02).
+`[미확보]` 외부 개인 AI(Claude · ChatGPT)의 **종단 접속 기록**은 아직 없다 · 이 서버는 OAuth 를 구현하지 않았다(헤더 키 방식 — OAuth 만 받는 클라이언트는 못 붙는다) · 쓰기 도구의 별도 호출 한도는 웹 남용 방어(`message` 횟수)를 그대로 쓴다.
+
+## 옛 도구 3종 (쇼핑몰 시절 · 연결 안 됨)
+
+★`[실측 2026-09-10 · 작업 트리 기준 — 옛 도구 3종에 대한 기록]` **옛 도구는 열려 있지 않았다.** 도구 셋의 선언·함수·시험은 있으나 **MCP 전송으로 띄우는 곳이 없다** — 앱이 mount 하지 않고(`sse_app`·`streamable_http_app`·`mount` 0곳) `mcp run`·실행 스크립트·launch 설정도 없다. 시험은 Python 함수를 직접 부른다. 그리고 호출 주체는 외부 호출자가 아니라 **설정의 tenant + 고정 `mcp:read`** 로 만든다(아래 「scope 확인」의 코드). `open_support_case` 는 생성·분류까지만 하고 **Controller 를 부르지 않는다**(`app/presentation/api/cases.py:329~366`). 이 방법이 놓칠 수 있는 것: 누군가 `mcp run` 을 손으로 띄우고 적지 않은 경우. 코드 담당에게 넘겼다 → [인계](../../../program/산출물양식/w2/아키텍처/인계_코드와_계획서.md)
+
+## 도구 3종 (옛 — 쇼핑몰 Case 도구)
 
 `[실측]` 전문이 짧아 그대로 싣는다.
 
