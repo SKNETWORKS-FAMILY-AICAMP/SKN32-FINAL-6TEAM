@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { LanguagePicker } from "@/components/ui/language-picker";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
 import type { Language } from "@/lib/i18n";
 import { routes } from "@/lib/routes";
@@ -28,6 +29,7 @@ const copy: Record<Language, Record<string, string>> = {
     startDescription: "The places you dream of. The moments you love.\nTell us what your next trip looks like.",
     taste: "Your style", trip: "Your trip", cta: "Start my itinerary",
     actionNote: "Review the terms, then tell us your travel preferences.",
+    actionNoteDone: "You have already set up. Change your preferences any time on My page.",
     scrollHint: "Scroll down to explore", skip: "Skip intro", next: "Next screen",
     pages: "triPilot introduction. Scroll down to move to the next screen.", navigation: "Introduction screens",
     label0: "Introduction", label1: "How it works", label2: "Start your itinerary",
@@ -47,6 +49,7 @@ const copy: Record<Language, Record<string, string>> = {
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
     taste: "나의 취향", trip: "나의 여행", cta: "내 일정 시작하기",
     actionNote: "약관 확인과 여행 취향 설정부터 함께할게요.",
+    actionNoteDone: "이미 설정을 마치셨어요. 취향과 이메일은 마이페이지에서 바꿀 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
     pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
@@ -80,6 +83,9 @@ export function Intro() {
   const { language } = useSettings();
   const text = copy[language];
   const router = useRouter();
+  // ★`[2026-10-01 user decision]` The start screen (terms, preferences, email) is asked once. Once the terms are agreed,
+  //   the button goes straight to registering a plan; the answers can be changed later on My page.
+  const [{ agreed }] = useOnboarding();
   const pages = useRef<HTMLElement>(null);
   const [shown, setShown] = useState<boolean[]>([true, false, false]);
   const [current, setCurrent] = useState(0);
@@ -243,8 +249,8 @@ export function Intro() {
           <div className={styles.ticketBottom}><span>TRAVEL PARTNER</span><span>triPilot</span></div>
         </div>
         <div className={styles.actionArea} data-fx="up" style={delay(.95)}>
-          <button type="button" className={styles.primary} onClick={() => router.push(routes.start)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
-          <p className={styles.actionNote}>{text.actionNote}</p>
+          <button type="button" className={styles.primary} onClick={() => router.push(agreed ? routes.newTrip : routes.start)}><span>{text.cta}</span><span aria-hidden="true">↗</span></button>
+          <p className={styles.actionNote}>{agreed ? text.actionNoteDone : text.actionNote}</p>
         </div>
       </section>
     </main>

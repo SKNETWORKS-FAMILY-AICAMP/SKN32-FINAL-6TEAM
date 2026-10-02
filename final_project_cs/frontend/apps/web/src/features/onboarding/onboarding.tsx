@@ -5,8 +5,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
 import { recoveryEmailProblem } from "@/features/profile/model";
+import { readRecoveryEmail, saveRecoveryEmail } from "@/lib/contact";
 import { routes } from "@/lib/routes";
-import { useT } from "@/lib/settings";
+import { useSettings, useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { OnboardingIcon } from "./icons";
 import { INTRO_STEP, questions } from "./model";
@@ -19,6 +20,7 @@ import styles from "./onboarding.module.css";
 /** Terms and travel preferences before the first plan. Everything stays in page state. */
 export function Onboarding() {
   const t = useT();
+  const { language } = useSettings();
   const router = useRouter();
   const [state, setState] = useOnboarding();
   const [termsOpen, setTermsOpen] = useState(false);
@@ -52,7 +54,11 @@ export function Onboarding() {
       return false;
     }
     setEmailError(false);
-    if (state.email !== state.email.trim()) setState((current) => ({ ...current, email: current.email.trim() }));
+    const email = state.email.trim();
+    if (state.email !== email) setState((current) => ({ ...current, email: current.email.trim() }));
+    // ★`[2026-10-01]` Saved (on the server once there is a user key, else in this browser), so My page shows it and can
+    //   change it later; blank removes it. It is optional, so a refusal never stops the customer here.
+    if ((readRecoveryEmail() ?? "") !== email) saveRecoveryEmail(email || null, language).catch(() => {});
     return true;
   }
 
@@ -139,7 +145,7 @@ export function Onboarding() {
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("복구용 이메일", "Recovery email"), state.email.trim() ? t("입력했어요 · 서버에는 아직 저장하지 않아요", "Entered · not saved to the server yet") : t("입력하지 않아도 시작할 수 있어요.", "You can start without it."), false, false,
+              cardHead(0, t("복구용 이메일", "Recovery email"), state.email.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("입력하지 않아도 시작할 수 있어요.", "You can start without it."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <RecoveryEmailBody t={t} value={state.email} error={emailError} input={emailInput} onChange={editEmail} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,

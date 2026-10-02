@@ -59,3 +59,24 @@ export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", lang
 export async function noHorizontalScroll(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
+
+/**
+ * `[2026-10-01]` The start screen is asked once and kept in this browser. For a test that needs the first-time screen
+ * again: forget what it kept, then reload.
+ */
+export async function forgetStartScreen(page: Page) {
+  await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v1"));
+  await page.reload();
+}
+
+/**
+ * Open the start screen's preferences from My page (menu → My page → the preferences card's 수정). Done inside the app,
+ * so the page-only state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
+ */
+export async function openPreferencesFromMyPage(page: Page) {
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "수정", exact: true }).click();
+  await expect(page).toHaveURL(/\/start$/);
+}
