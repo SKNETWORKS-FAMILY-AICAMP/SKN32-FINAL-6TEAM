@@ -421,6 +421,47 @@ if all(os.path.exists(R(f'llm_tasks_out_{w}.json')) for w in EV):
 else:
     NOTES.append('V9: 전문가 구조 결과(llm_tasks_out)가 시험 세트에 모두 있지는 않다')
 
+# ---------- §52-3 C1: V1 구조에서 넘김 모델(E4B QAT)을 Jev 대체 후보 결정 모델의 선택으로 교체(저장된 확률로 오프라인 계산, τ 없음) ----------
+def _dec_pick(tag, w):
+    fd = load_opt(R(f'dec_{tag}_{w}.json'))
+    if not fd or w not in fd:
+        return None
+    out_ = []
+    for r in fd[w]['rows']:
+        pr = r['probs']
+        k = max(pr, key=pr.get) if pr else 'none'
+        out_.append(int(k.split('_')[1]) if k.startswith('item_') else None)
+    return out_
+
+
+for _t, _lab in (('openjev26b', 'OpenJev 26B'), ('winnow12b', 'Winnow-12B'), ('nimble9b', 'Nimble-9B')):
+    _picks = {w: _dec_pick(_t, w) for w in EV}
+    if all(v is not None for v in _picks.values()):
+        def _mk(picks):
+            def f(w, i):
+                st = stage(w, i)
+                if st[0] == 'done':
+                    return (picks[w][i], 1) if st[2] else (st[1], 0)    # 앞 대화 문제의 LLM 호출도 후보 모델로 바꾼다
+                d = S[(f'{w}_tt', i)]
+                k = max(d, key=d.get)
+                s1 = d[k]
+                if s1 >= hi:
+                    return k, 0
+                if s1 < lo:
+                    return None, 0
+                return picks[w][i], 1
+            return f
+        P[f'C1 V1 구조(넘김 = {_lab})'] = _mk(_picks)
+
+        def _mk2(picks):
+            def f(w, i):
+                st = stage(w, i)
+                if st[0] == 'done' and not st[2]:
+                    return st[1], 0                                # 규칙·조회가 정한 것은 그대로
+                return picks[w][i], 1                              # 나머지는 앞단 없이 후보 모델이 푼다
+            return f
+        P[f'L5 규칙 → {_lab}(앞단 없음)'] = _mk2(_picks)
+
 # ---------- §50 Y2 분류 게이트 ----------
 GATE = {}
 for tag_ in ('base', 'e16d'):
@@ -510,7 +551,7 @@ for w in EV:
             jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
         ref.setdefault('Jev 직접(유료)', {})[w] = jp
     for dtag, dlab in (('winnow12b', 'Winnow-12B Q8 직접'), ('nimble9b', 'Nimble-9B-v3 Q8 직접'), ('kev9b', 'Kev-9B Q8 직접'), ('kev4b', 'Kev-4B Q8 직접'),
-                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접')):
+                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접')):
         fd = load_opt(R(f'dec_{dtag}_{w}.json'))
         if fd and w in fd and fd.get('_errors', 1) < len(fd[w]['rows']):
             jp = []
@@ -522,8 +563,11 @@ for w in EV:
     for lab, proto in (('Codex luna 직접', False), ('Codex luna+정의 직접', True)):
         if LUNA[w][proto] is not None:
             ref.setdefault(lab, {})[w] = LUNA[w][proto]
-out += ['', '### 참고(직접 짚기 — 규칙·앞단 없음, 호출은 문제 수만큼)', '| 방식 | ' + ' | '.join(f'{w} 정답' for w in EV) + ' | 합 | 엉뚱한 답 | V1 과 짝지은 차이 %p [구간] (그 방식만 : V1 만, p) |', '|---|' + '---:|' * (len(EV) + 2) + '---|']
+out += ['', '### 참고(직접 짚기 — 규칙·앞단 없음, 호출은 문제 수만큼)', '| 방식 | ' + ' | '.join(f'{w} 정답' for w in EV) + ' | 합 | 엉뚱한 답 | V1 과 짝지은 차이 %p [구간] (그 방식만 : V1 만, p) | Jev 직접과 짝지은 차이 %p [구간] (그 방식만 : Jev 만, p) |', '|---|' + '---:|' * (len(EV) + 2) + '---|---|']
 _v1 = vec('V1 앞단 e16d', EV)
+_jv = None
+if 'Jev 직접(유료)' in ref and all(w in ref['Jev 직접(유료)'] for w in EV):
+    _jv = [int(ref['Jev 직접(유료)'][w][i] == gold[w][i]) for w in EV for i in range(len(gold[w]))]
 for lab, d in ref.items():
     if not all(w in d for w in EV):
         continue
@@ -533,7 +577,13 @@ for lab, d in ref.items():
     _a = sum(x == 1 and y == 0 for x, y in zip(_v, _v1))
     _b = sum(x == 0 and y == 1 for x, y in zip(_v, _v1))
     _d, _l, _h = ci(_a, _b, tot_n)
-    out.append(f'| {lab} | ' + ' | '.join(map(str, oks)) + f' | **{sum(oks)}** ({sum(oks) / tot_n:.1%}) | {bad} | {_d:+.1f} [{_l:+.1f}, {_h:+.1f}] ({_a} : {_b}, p={pexact(_a, _b):.3f}) |')
+    _jc = '—'
+    if _jv is not None and lab != 'Jev 직접(유료)':
+        _ja = sum(x == 1 and y == 0 for x, y in zip(_v, _jv))
+        _jb = sum(x == 0 and y == 1 for x, y in zip(_v, _jv))
+        _jd, _jl, _jh = ci(_ja, _jb, tot_n)
+        _jc = f'{_jd:+.1f} [{_jl:+.1f}, {_jh:+.1f}] ({_ja} : {_jb}, p={pexact(_ja, _jb):.3f})'
+    out.append(f'| {lab} | ' + ' | '.join(map(str, oks)) + f' | **{sum(oks)}** ({sum(oks) / tot_n:.1%}) | {bad} | {_d:+.1f} [{_l:+.1f}, {_h:+.1f}] ({_a} : {_b}, p={pexact(_a, _b):.3f}) | {_jc} |')
 out += ['', '### V1 과 짝지은 비교(합친 시험 세트 · 정확검정 · 짝지은 부트스트랩 95% 구간)', '| 방식 | 그 방식만 맞음 | V1 만 맞음 | 차이 %p [구간] | p |', '|---|---:|---:|---|---:|']
 v1 = vec('V1 앞단 e16d', EV)
 for n in names:
