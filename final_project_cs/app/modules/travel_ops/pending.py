@@ -22,6 +22,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -35,6 +36,12 @@ from .survey import on_disruption
 
 #: 안전 사건 — 몸이 다칠 수 있는 것만. 기상특보는 「경보」만(주의보 제외). 사용자와 합의(2026-09-24).
 SAFETY_CATEGORIES = frozenset({"earthquake", "disaster_msg"})
+
+
+def cause_fingerprint(causes: list[dict[str, Any]]) -> str:
+    """원인의 **종류**만으로 지문을 만든다 — 조회 시각 같은 값이 바뀌어도 같은 사건이다. 감시의 항목 정체(`watch:{여행}:{항목}:{지문}`)와 「그대로 두었어요」 알림 키가 쓴다."""
+    keys = sorted({f"{c.get('category')}:{c.get('kind') or c.get('target') or ''}" for c in causes})
+    return hashlib.sha1(json.dumps(keys, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
 
 
 def is_safety(report: dict[str, Any] | None) -> bool:

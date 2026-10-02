@@ -23,6 +23,7 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 import re
 from typing import Any
@@ -53,6 +54,14 @@ ANSWERS = {
     "clear": "지금 확인해 보니 일정에 영향이 없어요 — 바꾸지 않았어요.",
     "gone": "그 일정은 이미 바뀌었어요 — 다시 바꾸지 않았어요.",
 }
+
+
+@dataclass(frozen=True)
+class Consent:
+    """`[2026-10-03]` 감시 계산(`plan_*_trigger`)의 결과 중 하나 — 바꿀지 **먼저 묻는다**(활동에 날씨 사건만 걸렸을 때, `pending.needs_consent`).
+    Case 하나짜리 흐름은 이것을 「바꿀까요?」 제안으로, 같은 여행 묶음(`trip_watch_batch`)은 묶음 안의 한 항목으로 다룬다."""
+
+    report: dict[str, Any]
 
 
 class ItineraryWork:
@@ -104,6 +113,11 @@ class ItineraryWork:
                "request": request, "at": at}
 
         if state.get("trigger_source") == "schedule":
+            if (state.get("trigger") or {}).get("batch"):
+                # ★`[2026-10-03]` 같은 여행의 문제가 한 회차에 둘 이상 — 한 초안 위에서 차례로 고쳐 판 하나 · 알림 하나(`trip_watch_batch`)
+                from .trip_watch_batch import WatchBatch
+
+                return WatchBatch(self, task, ctx).run()
             return await self.handle_trigger(task, ctx)
 
         kind = request.get("type")
@@ -417,4 +431,4 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
     return "\n".join(lines), sources
 
 
-__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]
+__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]

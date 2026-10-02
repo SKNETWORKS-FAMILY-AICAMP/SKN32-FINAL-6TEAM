@@ -146,6 +146,8 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 
 `[실측 2026-09-10 작업 트리]` **LLM 후보 생성은 아직 없다.** `_propose_change()`(`activity.py:232`)는 대안을 만들지 않는다 — 받은 예약에 `activity.change` 제안 하나(`booking_id`·`reason`)를 만들어 승인 대기에 올린다. 그래서 무예약 활동은 이 경로로도 제안을 못 만든다(아래 대조 표 절과 같은 문제).
 
+`[2026-10-01]` **대체 후보 고르는 법을 팀 작업과 맞췄다** — 비슷한 곳(관광공사 분류·구) → 같은 브랜드·같은 구 앞세우기 → 가까운 곳 순, 영업시간·휴무 글은 규칙만으로 요일별 칸으로 읽고(모델 호출 없음), 실내·야외 모르는 일정은 먼저 묻는다. 무엇을 가져오고 무엇을 안 가져왔는지·실측은 [develop 반영 리포트](../records/reports/2026-10-01_Activity_develop_반영_리포트.md) · [PR #6 전수검수 리포트](../records/reports/2026-09-28_1826_Activity_PR6_전수검수_리포트.md).
+
 ## 재계획이 다른 Team의 일정을 건드린다
 
 날짜를 옮기면 그날의 식사·이동이 전부 흔들린다. 그런데 **Team은 다른 Team을 직접 호출하지 않는다**(승계 경계). 그래서 이렇게 된다.
@@ -208,6 +210,8 @@ default_capability    = "activity.check_feasible"
 
 여행을 가리키는 Case(`current_state.subject_ref.kind == "trip"`)면 `select_capability(intent, input_text, state)` 가 고른다. **감시 Case**(`trigger_source=schedule`)는 그 항목을 `read.disruptions` 로 다시 점검해 `disrupted` 면 대안 하나를 제안하고(액-02), **품절 문의**는 동선 위 매장을 답하며 일정은 안 바꾼다 — 재고는 `[미확인]`(액-08). **재요청**(다른 안 · 되돌리기)도 받는다.
 계산은 시나리오용 버전과 같은 `itinerary_changes.py`, 쓰기는 `itinerary.apply` 제안 → 코어가 Case 완료와 한 트랜잭션으로 적용·통지([../actions/approval.md](../actions/approval.md)). `policy` 를 `required_context` 에서 뺐고(정책 0건이 degraded 를 만든다) `max_steps` 는 후보 재점검 때문에 12. 대조 시험 `tests/scenario/test_case_version_day.py`.
+
+★`[2026-10-03]` **같은 여행의 문제 묶음의 조정자다.** 한 회차에 한 여행의 새 문제가 둘 이상이면 감시가 묶음 Case 하나를 열고(`trigger.batch`), 이 Team 이 `trip_watch_batch.WatchBatch` 로 활동 → 식당 → 이동 항목을 **한 초안 위에서** 차례로 계산해 제안 하나를 낸다(D-017 「여행별 묶음」). 그래서 도구 선언에 `read.route_events` · `read.dining_state` · `read.dining_alternatives` 가 더해졌다 — 단일 항목 Case 는 이 셋을 안 쓴다. 계산 함수는 세 Team 이 하던 것(`plan_activity_trigger` 등)을 그대로 부른다.
 
 ★`[2026-09-22]` **`policy` 를 되돌렸다.** 2026-09-17 에 뺀 까닭은 정책 검색이 0건이었기 때문인데, 그 0건은 **여행 문서가 하나도 없어서**였다 — 이제 `knowledge/travel/` 12문서·130청크가 들어갔다([../context/travel-corpus.md](../context/travel-corpus.md)). 대신 **일정 관리 capability 만 면제**한다(`policy_optional_capabilities`) — 그건 예보·운행·영업 같은 실시간 사실로 판단하므로 정책 검색에 막히면 감시 Case 가 전부 사람에게 간다. 면제를 지우고 시험을 돌려 실제로 그렇게 되는 것을 확인했다(`tests/scenario` 8건 빨강, 원복 뒤 29 passed) — [../records/evidence/DoD-06T_여행_정책코퍼스_적재.md](../records/evidence/DoD-06T_여행_정책코퍼스_적재.md) §7.
 

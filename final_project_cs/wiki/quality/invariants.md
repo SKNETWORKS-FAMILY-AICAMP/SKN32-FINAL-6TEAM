@@ -102,6 +102,7 @@ DOMAIN_WORDS = (
 | `INV-CS-ACT-003` | timeout은 unknown이며 자동 재시도하지 않는다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried` |
 | `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`). ★최고 안이 걸리면 담당이 뽑아 둔 **다음 순위 안**을 차례로 시험한다 | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` · `tests/unit/travel/activity/test_activity_fit.py` |
 | `INV-CS-ACT-005` | **자동 변경이 하루 밀도를 나쁘게 만들면(목표 밖으로 새로 밀기 · 이미 밖인 날을 허용 오차보다 더 밀기 · 잴 수 있던 날을 못 재게 하기) 순위에서 뒤로 밀리고, 더 나은 안이 없을 때만 감수하며 알림에 적는다.** 구조 위반은 밀도와 상관없이 늘 막는다(D-019 개정) | automated | `tests/unit/travel/test_density_gate.py` |
+| `INV-CS-ACT-006` | **같은 여행의 새 문제가 한 회차에 둘 이상이면 Case 1 · 새 판 1 · 알림 1** — 뒤 항목은 앞에서 고친 초안 기준이고, 하나를 못 풀어도 나머지는 진행하며, 묻는 것은 새 판 기준 · 못 푼 것은 같은 알림에 한 줄 · 같은 사건은 다시 열지도 알리지도 않는다(D-017 여행별 묶음) | automated | `tests/scenario/test_watch_batch.py` · `tests/unit/travel/activity/test_watch_batch_unit.py` · `tests/e2e/test_watch_failures.py`(묶음 구간) |
 
 **`INV-CS-ACT-003`이 중요하다.** timeout을 실패로 간주해 자동 재시도하면 이중 실행이 된다. **모르는 건 모르는 채로 둔다.**
 

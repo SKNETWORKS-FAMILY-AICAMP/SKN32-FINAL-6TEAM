@@ -79,6 +79,9 @@ TRAVEL_OPS_POLICY = VerificationPolicy(
         # ★`[2026-09-29]` 「바꿀까요?」만 묻는 제안(`itinerary_actions.consent_arguments`) — 항목 id 하나.
         #   적용기가 그 항목이 지금 일정에 있는지 보고, 없으면 거절한다. 일정은 바꾸지 않는다
         "consent",
+        # ★`[2026-10-03]` 같은 여행의 문제 묶음(`trip_watch_batch`) 제안이 더하는 값 — `batch`(항목별 원인 · 「바꿀까요?」 항목) · `guidance`(판이 안 바뀔 때의 알림 문구).
+        #   둘 다 **설명**이다 — 어느 항목을 어떻게 바꾸는지의 대조(기준 버전 · 항목 실재 · 장소 실재 · 판정)는 적용기가 적용 순간에 한다
+        "batch", "guidance",
     }),
 )
 

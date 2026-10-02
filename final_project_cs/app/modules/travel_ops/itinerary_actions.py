@@ -28,6 +28,10 @@
   통과한 대체가 앞뒤 항목과 시간이 겹치거나 이동이 안 닿거나 예산 · 결제 조건을 깨는 것은 항목 점검이 못 본다. 바꾼 뒤 **새로 생긴** 위반(`(code, 항목)` 이 바꾸기 전에 없던 것)이 하나라도 있으면
   **적용하지 않고** `ActionRejected("itinerary re-check failed: …")` — 코어가 Case 를 `escalated`(`action_rejected`)로 닫고, 감시(`trip_watch_cases`)가 고객에게 「일정은 그대로 두었어요」를 알린다.
   ★바꾸기 전에 이미 있던 위반은 이 일의 탓이 아니라 막지 않는다. 고객이 고른 변경 · 되돌리기(`full_items`)는 이 문을 지나지 않는다 — 그 자체가 답이다.
+
+★`[2026-10-03 사용자 지시]` **같은 여행의 문제 묶음**(`trip_watch_batch`) — 제안에 `batch` 가 있으면 한 번에 푼다: 바꿀 항목은 **판 하나 · 알림 하나**로 쓰고, 「묻는」 항목(변경 안 할 일정 · 먼저 물어봐 · 날씨만이라 바꿀까요)은
+  **새 판을 기준으로** 보류 제안을 연다(같은 판을 기준으로 열면 이 판이 곧 낡아 `choose` 가 못 고르게 닫는다). 항목마다 판정(`decide`)은 **적용기가 한다** — Team 의 분류와 같은 함수 · 같은 입력이지만 권한은 이쪽에 있다.
+  묻는 것은 묶지 않고 항목마다 알림이 따로 나간다(D-020). 바꿀 것이 없고 못 푼 것만 있으면 판 없이 「그대로 두었어요」 알림 하나(`guidance`)를 싣는다.
 """
 from __future__ import annotations
 
@@ -39,7 +43,7 @@ from app.core.actions import ActionConflict, ActionRejected, AppliedAction
 from app.core.transition import OutboxMessage
 
 from .itinerary import Item, StaleItinerary, TripStore, item_from_dict, item_to_dict
-from .itinerary_changes import ItineraryChange
+from .itinerary_changes import ItineraryChange, refresh_moves_around
 from .itinerary_checks import Violation, check_itinerary, parts_from_items
 from .pending import PendingStore, decide, options_for, proposal_notice
 
@@ -133,6 +137,9 @@ class ItineraryApply:
         if arguments.get("consent"):
             return _ask_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base,
                                 current=current, arguments=arguments)
+        if arguments.get("batch") is not None:
+            return _apply_batch(conn, store=store, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base,
+                                current=current, case_id=case_id, arguments=arguments)
 
         try:
             if arguments.get("full_items") is not None:
@@ -177,24 +184,12 @@ class ItineraryApply:
                                            causes=list(arguments.get("causes") or []), case_id=case_id)
         except StaleItinerary as exc:
             raise ActionConflict(str(exc)) from exc
-        # ★`[2026-09-22]` **링크를 싣는다.** 상태의 정본은 링크다(v11 §6-A). 시나리오용 여행 버전은
-        #   `TripStore.enqueue_notice` 가 붙여 주지만 Case 버전은 코어가 바깥함에 **직접** 쓰기 때문에
-        #   그 자리를 지나지 않아 링크 없이 나갔다 — 화면에서 통지를 열어 보고 찾았다.
-        from .plan_link import plan_url
-
-        # ★`[2026-09-29]` 우리가 **자동으로** 바꾼 것(고객이 고른 것이 아닌)에는 되돌리기를 싣는다 — 화면이 버튼을 띄운다
-        from .pending import rollback_offer
-
-        offer = ({} if str(arguments["reason"]) in CHOSEN_BY_CUSTOMER
-                 else {"rollback": rollback_offer(version=version, previous=base)})
-        payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
-                          **dict(arguments.get("notice") or {}), "version": version, **offer})
         return AppliedAction(
             result_ref=f"trip:{trip_id}:v{version}",
             summary=_plain({"trip_id": str(trip_id), "version": version,
                             "reason": arguments["reason"], **dict(arguments.get("summary") or {})}),
-            outbox=[OutboxMessage(topic=NOTICE_TOPIC, payload=payload,
-                                  dedupe_key=f"{trip_id}:v{version}")])
+            outbox=[_version_notice(tenant_id=tenant_id, trip=trip, trip_id=trip_id, version=version, base=base,
+                                    arguments=arguments)])
 
 
 def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
@@ -211,25 +206,140 @@ def _ask_instead(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
         decision = decide(constraints=trip.get("constraints"), item=item, report=report)
         if decision.action == "apply":
             continue
-        options = options_for(best)
-        proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base,
-                                   decision=decision, causes=causes, options=options)
-        already = proposal_id is None
-        if already:                               # 이미 물었다 — 다시 알리지 않는다
-            proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
-                               if row["item_id"] == item.item_id and row["base_version"] == base)
-        summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id),
-                          "version": base, "proposal_id": str(proposal_id), "item": item.title,
-                          "reason": decision.reason, "protected_by": decision.protected_by,
-                          "safety": decision.safety})
-        outbox = [] if already else [OutboxMessage(
-            topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
-            payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
-                            **proposal_notice(item=item, decision=decision, causes=causes,
-                                              options=options, proposal_id=proposal_id)}))]
-        return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{proposal_id}", summary=summary,
+        summary, outbox = _open_ask(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
+                                    best=best, decision=decision, causes=causes)
+        return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary,
                              outbox=outbox)
     return None
+
+
+def _open_ask(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int, item: Item, best: Item,
+              decision: Any, causes: list[dict[str, Any]]) -> tuple[dict[str, Any], list[OutboxMessage]]:
+    """「바꾸지 말라」는 판정 — 보류 제안을 열고 묻는 알림을 싣는다. `base` 는 **그 제안이 기준으로 삼는 판**. 이미 물었으면 알림은 안 싣는다."""
+    from .plan_link import plan_url
+
+    options = options_for(best)
+    pending = PendingStore(tenant_id)
+    proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base,
+                               decision=decision, causes=causes, options=options)
+    already = proposal_id is None
+    if already:                               # 이미 물었다 — 다시 알리지 않는다
+        proposal_id = next(row["proposal_id"] for row in pending.list(conn, trip_id)
+                           if row["item_id"] == item.item_id and row["base_version"] == base)
+    summary = _plain({"status": "asked", "already": already, "trip_id": str(trip_id),
+                      "version": base, "proposal_id": str(proposal_id), "item": item.title,
+                      "reason": decision.reason, "protected_by": decision.protected_by,
+                      "safety": decision.safety})
+    outbox = [] if already else [OutboxMessage(
+        topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
+        payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+                        **proposal_notice(item=item, decision=decision, causes=causes,
+                                          options=options, proposal_id=proposal_id)}))]
+    return summary, outbox
+
+
+def _version_notice(*, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, version: int, base: int,
+                    arguments: Mapping[str, Any]) -> OutboxMessage:
+    """새 판의 알림 하나. ★`[2026-09-22]` **링크를 싣는다** — 상태의 정본은 링크다(v11 §6-A). 시나리오용 여행 버전은 `TripStore.enqueue_notice` 가 붙여 주지만
+    Case 버전은 코어가 바깥함에 **직접** 쓰기 때문에 그 자리를 지나지 않아 링크 없이 나갔다 — 화면에서 통지를 열어 보고 찾았다."""
+    from .pending import rollback_offer
+    from .plan_link import plan_url
+
+    # ★`[2026-09-29]` 우리가 **자동으로** 바꾼 것(고객이 고른 것이 아닌)에는 되돌리기를 싣는다 — 화면이 버튼을 띄운다
+    offer = ({} if str(arguments["reason"]) in CHOSEN_BY_CUSTOMER
+             else {"rollback": rollback_offer(version=version, previous=base)})
+    payload = _plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
+                      **dict(arguments.get("notice") or {}), "version": version, **offer})
+    return OutboxMessage(topic=NOTICE_TOPIC, payload=payload, dedupe_key=f"{trip_id}:v{version}")
+
+
+def _apply_batch(conn: Any, *, store: TripStore, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
+                 current: list[Item], case_id: UUID, arguments: Mapping[str, Any]) -> AppliedAction:
+    """같은 여행의 문제 묶음 — 바꿀 것은 판 하나 · 알림 하나, 묻는 것은 새 판 기준으로 항목마다 따로(머리말). 한 트랜잭션이다 — 중간에 터지면 아무것도 안 남는다."""
+    from .plan_link import plan_url
+    from .trip_watch_batch import guidance_key
+
+    batch = dict(arguments["batch"])
+    causes_of = {str(k): list(v) for k, v in (batch.get("causes") or {}).items()}
+    consents = list(batch.get("consents") or [])
+    try:
+        replacements = {UUID(str(entry["item_id"])): item_from_dict(entry["item"])
+                        for entry in arguments.get("replacements") or []}
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ActionRejected(f"itinerary.apply arguments are malformed: {exc}") from exc
+    if not replacements and not consents:
+        raise ActionRejected("itinerary.apply changes nothing")
+    by_id = {item.item_id: item for item in current}
+    missing = sorted(str(old) for old in replacements if old not in by_id)
+    if missing:
+        raise ActionRejected(f"items not in the current itinerary: {missing}")
+
+    # 판정은 적용기가 한다 — 「바꾸지 말라」면 묻는 쪽으로
+    to_apply: dict[UUID, Item] = {}
+    to_ask: list[tuple[Item, Item, Any, list[dict[str, Any]]]] = []
+    for item_id, best in replacements.items():
+        item = by_id[item_id]
+        causes = causes_of.get(str(item_id)) or list(arguments.get("causes") or [])
+        decision = decide(constraints=trip.get("constraints"), item=item, report={"disruptions": causes})
+        if decision.action == "apply":
+            to_apply[item_id] = best
+        else:
+            to_ask.append((item, best, decision, causes))
+
+    version: int | None = None
+    if to_apply:
+        new_items = refresh_moves_around(current, [to_apply.get(i.item_id, i) for i in current], to_apply)
+        known_places = {str(place["place_id"]) for place in store.places(conn, trip_id)}
+        unknown = sorted({str(i.place_id) for i in new_items if i.place_id is not None and str(i.place_id) not in known_places})
+        if unknown:
+            raise ActionRejected(f"places not in this tenant: {unknown}")
+        introduced = introduced_violations(trip, current, new_items)       # 마지막 안전망 — Team 이 이미 한 번 봤다
+        if introduced:
+            raise ActionRejected(f"{RECHECK_FAILED}: " + " / ".join(v.reason for v in introduced))
+        try:
+            version = store.append_version(conn, trip_id=trip_id, base_version=base, items=new_items,
+                                           reason=str(arguments["reason"]), causes=list(arguments.get("causes") or []),
+                                           case_id=case_id)
+        except StaleItinerary as exc:
+            raise ActionConflict(str(exc)) from exc
+
+    outbox: list[OutboxMessage] = []
+    if version is not None:
+        outbox.append(_version_notice(tenant_id=tenant_id, trip=trip, trip_id=trip_id, version=version, base=base,
+                                      arguments=arguments))
+    ask_base = version if version is not None else base                     # ★묻는 제안은 **새 판**이 기준이다
+    asked: list[dict[str, Any]] = []
+    for item, best, decision, causes in to_ask:
+        summary, messages = _open_ask(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=ask_base, item=item,
+                                      best=best, decision=decision, causes=causes)
+        asked.append(summary)
+        outbox += messages
+    for entry in consents:
+        item = by_id.get(UUID(str(entry["item_id"])))
+        if item is None:
+            raise ActionRejected(f"consent item not in the current itinerary: {entry['item_id']}")
+        summary, messages = _open_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=ask_base, item=item,
+                                          causes=list(entry.get("causes") or []),
+                                          indoor_unknown=bool(entry.get("indoor_unknown", True)))
+        asked.append(summary)
+        outbox += messages
+    guidance = arguments.get("guidance")
+    if version is None and guidance:
+        outbox.append(OutboxMessage(
+            topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:guidance:{guidance_key(guidance)}",
+            payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id), **dict(guidance)})))
+    if not outbox and not asked:
+        raise ActionRejected("itinerary.apply changes nothing")
+    result_ref = (f"trip:{trip_id}:v{version}" if version is not None
+                  else f"trip:{trip_id}:proposal:{asked[0]['proposal_id']}" if asked else f"trip:{trip_id}:guidance")
+    return AppliedAction(
+        result_ref=result_ref,
+        summary=_plain({"trip_id": str(trip_id), "version": version if version is not None else base,
+                        "reason": arguments["reason"], **dict(arguments.get("summary") or {}),
+                        # ★`retry` — 다시 열 항목의 id. 감시가 이 Case 의 `applied_actions[].summary.batch.retry` 를 읽어 그 항목의 덮음을 푼다(`trip_watch_cases._attempt`)
+                        "batch": {"applied": [i.title for i in (by_id[k] for k in to_apply)], "asked": asked,
+                                  "retry": [str(x) for x in (batch.get("retry") or [])]}}),
+        outbox=outbox)
 
 
 def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int,
@@ -243,6 +353,18 @@ def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
     item = next((i for i in current if str(i.item_id) == wanted), None)
     if item is None:
         raise ActionRejected(f"consent item not in the current itinerary: {wanted}")
+    summary, outbox = _open_consent(conn, tenant_id=tenant_id, trip=trip, trip_id=trip_id, base=base, item=item,
+                                    causes=causes,
+                                    indoor_unknown=bool((arguments.get("consent") or {}).get("indoor_unknown", True)))
+    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{summary['proposal_id']}", summary=summary, outbox=outbox)
+
+
+def _open_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id: UUID, base: int, item: Item,
+                  causes: list[dict[str, Any]], indoor_unknown: bool) -> tuple[dict[str, Any], list[OutboxMessage]]:
+    """「바꿀까요?」 보류 제안 하나를 열고 묻는 알림을 싣는다(안 없이). 이미 물었으면 알림은 안 싣는다."""
+    from .pending import CONSENT_REASON, Decision, consent_notice
+    from .plan_link import plan_url
+
     pending = PendingStore(tenant_id)
     proposal_id = pending.open(conn, trip_id=trip_id, item=item, base_version=base,
                                decision=Decision("ask", CONSENT_REASON, None, False), causes=causes, options=[])
@@ -257,9 +379,8 @@ def _ask_consent(conn: Any, *, tenant_id: str, trip: Mapping[str, Any], trip_id:
         topic=NOTICE_TOPIC, dedupe_key=f"{trip_id}:proposal:{proposal_id}",
         payload=_plain({"locale": trip.get("locale"), "plan_url": plan_url(tenant_id, trip_id),
                         **consent_notice(item=item, causes=causes, proposal_id=proposal_id,
-                                         indoor_unknown=bool((arguments.get("consent") or {}).get(
-                                             "indoor_unknown", True)))}))]
-    return AppliedAction(result_ref=f"trip:{trip_id}:proposal:{proposal_id}", summary=summary, outbox=outbox)
+                                         indoor_unknown=indoor_unknown)}))]
+    return summary, outbox
 
 
 ACTION_HANDLERS = (ItineraryApply(),)

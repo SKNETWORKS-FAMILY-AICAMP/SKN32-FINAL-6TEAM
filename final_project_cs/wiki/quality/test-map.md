@@ -59,6 +59,7 @@ tests/
 | **여행 감시 3분 주기 문**(일꾼은 1분) `[2026-10-03]` | `integration/` | `test_watch_cadence.py` (8건) |
 | **고정한 일정도 감시 — 바꾸지 않고 알림** `[2026-10-03]` | `scenario/` | `test_pinned_items_are_watched.py` (3건) |
 | **자동 변경 전 일정 전체 재판정** `[2026-10-03]` | `scenario/` | `test_apply_recheck.py` (3건) · 감시 알림 `test_watch_failures.py` |
+| **같은 여행 문제 묶음** `[2026-10-03]` | `scenario/` · `unit/travel/activity/` · `e2e/` | `test_watch_batch.py` (8건 — Case 1·판 1·알림 1 · 못 푼 것 · 전부 보호 · 중복 알림 방지 · 안전 줄 먼저) · `test_watch_batch_unit.py` (9건 — 초안 기준 · 항목별 예산 · 마지막 재판정 · 표지) · `test_watch_failures.py` 묶음 구간 (3건 — 재시도 · 한 통 알림) |
 | **다음 순위 안 시험 · 밀도 판단** `[2026-10-03]` | `unit/travel/` | `activity/test_activity_fit.py` (6건) · `test_density_gate.py` (12건) · 감시 알림 `test_watch_failures.py::test_every_ranked_option_blocked_by_the_recheck_is_announced_the_same_way` |
 | outbox 해소 | `integration/api/` | `test_outbox_resolution.py` |
 | outbox tenant 격리 | `integration/messaging/` | `test_outbox_tenant_guard.py` |

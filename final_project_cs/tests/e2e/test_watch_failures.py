@@ -25,7 +25,7 @@ from app.domain.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops import pending as pending_module
-from app.modules.travel_ops.pending import CONSENT_KEY
+from app.modules.travel_ops.pending import CONSENT_KEY, PendingStore
 from app.modules.travel_ops.trip_watch_cases import TripWatchCaseOpener
 
 from .test_ask_first import _ask_first, _choose, _proposals
@@ -79,11 +79,14 @@ def _guardrail(case_id):
     return [e["payload_json"]["guardrail"] for e in events if e["event_type"] == "guardrail_escalated"][-1]
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def guardrails(monkeypatch):
-    """감시 재시도 설정만 시험이 정한다 — 나머지 값은 그대로."""
+    """감시 설정만 시험이 정한다 — 나머지 값은 그대로.
+
+    ★`[2026-10-03]` 이 파일의 시험은 **항목마다 Case 가 열리는 길**을 본다(Case 하나의 예외 · 항목별 재시도 · 항목별 알림). 한 여행에서 둘 이상 깨지면 묶음 Case 로 묶이므로(`trip_watch_batch`)
+    기본으로 묶음을 꺼 둔다 — 묶음 길은 `tests/e2e/test_watch_batch.py` 가 본다."""
     real = settings_module.get_guardrails()
-    override: dict[str, object] = {}
+    override: dict[str, object] = {"travel.watch.batch_enabled": False}
 
     class Guard:
         def get(self, key, *args):
@@ -258,6 +261,70 @@ def test_unresolved_is_never_reopened_because_the_same_event_gives_the_same_answ
     first = _tick(opener)
     again = _tick(opener)
     assert first.opened and again.opened == [] and again.retried == []
+
+
+# ── 같은 여행의 문제 묶음(`trip_watch_batch`)도 같은 규칙으로 닫히고 다시 열린다 `[2026-10-03]` ───────────
+
+def test_a_batch_case_covers_its_members_and_a_transient_failure_reopens_the_whole_batch_once(api, guardrails):
+    """묶음 Case 하나가 구성원 항목의 정체를 **덮는다**(다음 회차가 단일 Case 로 또 열지 않는다). 일시 실패(`action_target_changed` — 계산하는 사이 판이 움직였다)로 닫히면 같은 규칙으로 다시 열린다."""
+    _create(api)
+    guardrails.update({"travel.watch.batch_enabled": True, "travel.watch.retry_cooldown_seconds": 0, "travel.watch.retry_max": 1})
+    calls: list = []
+    opener = _opener(api, _check_activities(DISRUPTED), _escalating("action_target_changed", calls))
+    first = _tick(opener)
+    [opened] = first.opened                                              # ★묶음 Case 하나(전에는 활동 수만큼)
+    assert opened["issue_code"] == "batch" and len(opened["items"]) >= 2 and len(calls) == 1 and first.retried == []
+    second = _tick(opener)                                               # 일시 실패로 닫혔고 식힘이 지났다 — 같은 구성원으로 다시
+    [reopened] = second.opened
+    assert reopened["issue_code"] == "batch" and reopened["items"] == opened["items"]
+    assert [r["attempt"] for r in second.retried] == [1]
+    third = _tick(opener)                                                # 한도(retry_max=1)를 넘으면 더 안 연다 — 단일 Case 로 쪼개 다시 열지도 않는다
+    assert third.opened == [] and third.retried == [] and len(third.existing) == len(opened["items"])
+
+
+def test_a_batch_that_could_not_change_anything_notifies_once_for_the_set_and_never_again(api, guardrails):
+    _create(api)
+    guardrails.update({"travel.watch.batch_enabled": True})
+    before = len(_notices(api))
+
+    def run_case(*, tenant_id, case_id, actor_id):
+        _start(case_id)
+        items = _case(case_id)["state_json"]["trigger"]["batch"]
+        _escalate(case_id, "itinerary_unresolved", " ".join(f"outcome:{entry['item_id']}:no_alternate" for entry in items))
+        return {"status": "escalated"}
+
+    opener = _opener(api, _check_activities(DISRUPTED), run_case)
+    first = _tick(opener)
+    [opened] = first.opened
+    [note] = [n for n in _notices(api)[before:] if n.get("batch") and n.get("kind") == "no_alternate"]
+    assert note["type"] == "guidance" and note["text"].count("일정은 그대로 두었어요") == len(opened["items"])
+    assert "사람" not in note["text"] and "담당자" not in note["text"]
+    second = _tick(opener)                                                # 같은 사건 — 다시 열지도 알리지도 않는다
+    assert second.opened == [] and len([n for n in _notices(api)[before:] if n.get("batch")]) == 1
+
+
+def test_a_batch_the_applier_refused_for_the_whole_itinerary_recheck_is_announced_to_every_member(api, guardrails):
+    """★적대 검토(2026-10-03) — Team 은 묶음을 냈는데 적용기가 일정 전체 재판정으로 **거절**하면, 전에는 알림 표지가 없어 구성원 전원이 말없이 막혔다. 단일 Case 처럼 알린다."""
+    from app.modules.travel_ops.itinerary_actions import RECHECK_FAILED
+
+    _create(api)
+    guardrails.update({"travel.watch.batch_enabled": True})
+    before = len(_notices(api))
+    opener = _opener(api, _check_activities(DISRUPTED),
+                     _escalating("action_rejected", observed=f"{RECHECK_FAILED}: 두 변경을 합치면 시간이 겹친다"))
+    first = _tick(opener)
+    [opened] = first.opened
+    [note] = [n for n in _notices(api)[before:] if n.get("batch") and n.get("kind") == "recheck_failed"]
+    assert note["text"].count("일정 전체와 맞지 않아") == len(opened["items"]) and "일정은 그대로 두었어요" in note["text"]
+
+
+def test_a_batch_whose_close_has_no_item_tokens_is_not_announced(api, guardrails):
+    """점검 소스 실패처럼 항목별 결과 표지가 없는 닫힘은 고객에게 알리지 않는다 — 바뀐 것이 있는지 모른다(운영자 몫)."""
+    _create(api)
+    guardrails.update({"travel.watch.batch_enabled": True})
+    before = len(_notices(api))
+    first = _tick(_opener(api, _check_activities(DISRUPTED), _escalating("fatal_source_failure")))
+    assert first.opened and first.notified == [] and not [n for n in _notices(api)[before:] if n.get("batch")]
 
 
 # ── 일정 전체 재판정이 막은 변경도 고객에게 알린다(결정 9 — 전체 일정 재검증) ───────────
