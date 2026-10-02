@@ -32,8 +32,9 @@ export async function start(page: Page, key: string | null = "acop_u_known") {
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
-export async function finishOnboarding(page: Page) {
+export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>) {
   await page.goto("/start");
+  await beforeTerms?.();
   await page.getByRole("button", { name: /약관 동의/ }).click();
   await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
   const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });

@@ -34,6 +34,7 @@ domain: neutral
 | [mcp-tools.md](mcp-tools.md) | 개인 AI가 쓰는 도구 3종 | `app/presentation/mcp/` |
 | [a2a-protocol.md](a2a-protocol.md) | 기업 Agent에 업무 위임 | `app/presentation/a2a/` |
 | [auth-boundary.md](auth-boundary.md) | 인증·스코프·PII | `app/infrastructure/auth/` |
+| [web-screen-api.md](web-screen-api.md) | 사용자 웹 접수 화면·온보딩 알림·복구 카드의 연결 상태와 API 협의 항목 | `frontend/apps/web/src/features/intake-review/` · `onboarding/` |
 
 ## 코드 구조
 

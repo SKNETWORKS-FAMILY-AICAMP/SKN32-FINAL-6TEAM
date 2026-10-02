@@ -9,13 +9,18 @@ export interface OnboardingState {
   /** The full terms were scrolled to the end at least once. */
   read: boolean;
   agreed: boolean;
-  /** Expanded card: 0 recovery email (optional, unnumbered), 1 terms, 2 preferences. The language card lives in the settings menu. */
+  /** Expanded card: 0 alerts & recovery (optional, unnumbered), 1 terms, 2 preferences. The language card lives in the settings menu. */
   open: 0 | 1 | 2 | null;
   /**
    * Recovery email draft, as typed. Optional: blank means "not entered". It follows the email kept in this browser
    * (`lib/contact.ts`, the one My page edits) and is written there when the customer leaves the email card.
    */
   email: string;
+  /**
+   * Discord webhook URL for trip alerts, as typed. Optional like the email, but page state only: it is never written to
+   * this browser's storage (it is a secret) and not sent — saving it is the backend's part (`PUT /v1/web/profile`).
+   */
+  webhook: string;
   step: number;
   complete: boolean;
   answers: Answers;
@@ -23,7 +28,7 @@ export interface OnboardingState {
   activeTripId: string | null;
 }
 
-const initial: OnboardingState = { read: false, agreed: false, open: null, email: "", step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
+const initial: OnboardingState = { read: false, agreed: false, open: null, email: "", webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 const ReadyContext = createContext(false);
 

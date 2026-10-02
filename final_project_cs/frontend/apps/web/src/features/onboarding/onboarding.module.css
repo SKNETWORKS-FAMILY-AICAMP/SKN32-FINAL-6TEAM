@@ -72,10 +72,11 @@
 .termsContinue { width: 100%; margin-top: 16px; }
 .card[data-card="1"].active .termsContinue { flex: none; margin-top: auto; min-height: 48px; }
 
-/* Optional recovery email (card 0): not a numbered step. */
+/* Optional alerts & recovery card (card 0): not a numbered step. */
 .optional { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; background: var(--color-subtle); color: var(--color-muted); font-size: 10px; font-weight: 650; letter-spacing: 0; vertical-align: 2px; }
 .emailForm { display: flex; flex: 1; flex-direction: column; }
 .emailLabel { font-size: 12px; font-weight: 650; color: var(--color-muted); margin: 6px 0 7px; }
+.emailLabel.webhookLabel { margin-top: 20px; }
 .emailInput, .otherInput { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
 .emailInput[aria-invalid="true"] { border-color: var(--color-error); }
 .emailHint { font-size: 11px; line-height: 1.7; color: var(--color-muted); margin: 8px 0 0; }

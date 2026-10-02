@@ -1,74 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
-import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { ArrowLeft, ArrowRight, CalendarDays, RefreshCw } from "lucide-react";
+import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import type { Translate } from "@/lib/i18n";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
-import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
+import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakePlanBasis, type IntakePlanInput, type IntakeView } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { rows, draftOf, statusOf } from "./model";
+import { ItemCard } from "./item-card";
 import styles from "./intake-review.module.css";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(설계서 §4-6). */
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
 const icon = { size: 16, strokeWidth: 1.6, "aria-hidden": true } as const;
 
-interface Row {
-  source: IntakeSource;
-  item: IntakeItem;
-  key: string;
-  problems: IntakeProblem[];
-  filledStart?: string;
-  filledEnd?: string;
-}
-
-function rows(view: IntakeView): Row[] {
-  const problems = view.check?.problems ?? [];
-  const filled = view.check?.filled ?? [];
-  const out: Row[] = [];
-  for (const source of view.sources) {
-    for (const item of source.items) {
-      if (item.fields.removed?.value === true) continue;
-      const where = `items[${item.index}]`;
-      const mine = (field: string) => filled.find((entry) => entry.source_id === source.source_id && entry.field === `${where}.${field}`)?.value;
-      out.push({
-        source, item, key: `${source.source_id}:${item.index}`,
-        problems: problems.filter((problem) => problem.source_id === source.source_id && problem.field.startsWith(`${where}.`)),
-        filledStart: mine("starts_at"), filledEnd: mine("ends_at"),
-      });
-    }
-  }
-  const dateOf = (row: Row) => String(row.item.fields.date?.value ?? row.item.date ?? "9999");
-  const timeOf = (row: Row) => String(row.item.fields.starts_at?.value ?? row.filledStart ?? "99:99");
-  return out.sort((a, b) => (b.problems.length ? 1 : 0) - (a.problems.length ? 1 : 0) || dateOf(a).localeCompare(dateOf(b)) || timeOf(a).localeCompare(timeOf(b)));
-}
-
-function badges(row: Row, t: Translate, yearNote: boolean) {
-  const out: { label: string; warn?: boolean }[] = [];
-  const title = row.item.fields.title;
-  if (title?.method === "rule" || title?.method === "llm_span") out.push({ label: t("원문 그대로", "As written") });
-  if (row.filledStart) out.push({ label: t("규칙으로 배치", "Placed by rule") });
-  const place = row.item.fields.place;
-  if (place?.method === "lookup" && place.value) out.push({ label: t("조회로 확인", "Checked by lookup") });
-  if (place?.method === "customer") out.push({ label: t("직접 고침", "Fixed by you") });
-  // ★해를 채운 날짜(「10월 15일」 → 올해·내년)는 항목마다 달지 않고 화면 위에서 한 번 알린다 — 전부에 붙으면
-  //   정작 확인할 곳이 묻힌다(2026-09-27 실제 화면)
-  const review = Object.entries(row.item.fields).some(([name, field]) => field?.needs_review && field.method !== "customer"
-    && !(name === "date" && yearNote && ["year_filled", "day_offset"].includes(String(field.evidence.how))));
-  if (row.problems.length || review) out.push({ label: t("확인 필요", "Needs review"), warn: true });
-  return out;
-}
-
 export function IntakeReview({ intakeId }: { intakeId: string }) {
   const t = useT();
   const { language } = useSettings();
   const router = useRouter();
+  const [day, setDay] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [notice, setNotice] = useState("");
   const queryClient = useQueryClient();
   // The onboarding answers go to the server with the registration — only when the customer finished them.
   const [onboarding] = useOnboarding();
@@ -83,7 +42,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   });
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
-    onSuccess: (view) => queryClient.setQueryData(key, view),
+    onSuccess: (view) => {
+      queryClient.setQueryData(key, view);
+      setOpen(null); setDirty(false);
+      setNotice(t("수정 내용을 저장하고 등록 조건을 다시 확인했어요.", "Saved your changes and checked the registration requirements."));
+    },
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
@@ -99,7 +62,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
-  if (query.isPending || query.error || !query.data) return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
+  if (query.isPending || !query.data) return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
   const view = query.data;
 
   if (view.status === "reading") {
@@ -120,6 +83,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
 
   const list = rows(view);
   const problems = view.check?.problems ?? [];
+  const tripProblems = problems.filter((problem) => !list.some((row) => row.problems.includes(problem)));
+  const dates = [...new Set(list.map((row) => draftOf(row).date))].sort((a, b) => (a || "9999").localeCompare(b || "9999"));
+  const selectedDay = day !== null && dates.includes(day) ? day : dates[0];
+  const visible = list.filter((row) => draftOf(row).date === selectedDay);
+  const count = (status: "ready" | "edited" | "review") => list.filter((row) => statusOf(row) === status).length;
+  const closeEditor = () => { setOpen(null); setDirty(false); edit.reset(); };
+  const changeSelection = (action: () => void) => {
+    if (dirty) { setNotice(t("고치는 일정의 저장 또는 취소를 먼저 눌러 주세요.", "Save or cancel your current edit first.")); return; }
+    action(); setNotice("");
+  };
   const needsFirstDay = problems.some((problem) => problem.code === "no_date");
   const needsParty = problems.some((problem) => problem.code === "party_size_out_of_range");
   const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
@@ -127,23 +100,44 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const busy = edit.isPending || confirm.isPending || plan.isPending;
   const send = (edits: IntakeEdit[]) => edit.mutate({ revision: view.revision, edits });
   const confirmed = view.status === "confirmed";
-  const error = edit.error ?? confirm.error ?? plan.error;
+  const error = (open ? null : edit.error) ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
 
-  return <>
+  return <div className={styles.review}>
     <PageHeading eyebrow="LET’S CHECK IT TOGETHER" title={view.check?.title ?? t("읽은 계획", "Your plan")}
       description={t("읽은 그대로 보여 드려요. 고칠 곳만 고치고 등록하면, 여행이 끝날 때까지 지켜볼게요.", "Here is what we read. Fix only what needs fixing, then we’ll watch over your trip until it ends.")} />
-    {problems.length > 0 && <Panel className={styles.problems} aria-labelledby="intake-problems">
-      <h2 id="intake-problems">{t(`등록 전에 확인할 것 ${problems.length}개`, `${problems.length} things to check before registering`)}</h2>
-      <ul>{problems.map((problem) => <li key={`${problem.source_id}:${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>
-      {needsFirstDay && <FirstDay disabled={busy} onSave={(value) => send([{ field: "trip.first_day", value }])} />}
-      {needsParty && <Party disabled={busy} onSave={(value) => send([{ field: "trip.party_size", value }])} />}
+    {query.error && <div className={styles.error} role="alert">
+      <p>{t("최신 결과를 불러오지 못했어요. 마지막으로 읽은 내용과 고치던 입력을 보관하고 있어요.", "Could not refresh the plan. Your last loaded plan and unsaved edits are kept here.")}</p>
+      <p>{query.error.message}</p><Button disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 불러오기", "Try again")}</Button>
+    </div>}
+    {list.length > 0 && <section className={styles.stats} aria-label={t("일정 확인 요약", "Review summary")}>
+      <div><strong>{count("edited")}<small>{t("개", "")}</small></strong><p>{t("수정한 일정", "Edited stops")}</p></div>
+      <div><strong>{count("ready")}<small>{t("개", "")}</small></strong><p>{t("입력 확인", "Read back")}</p></div>
+      <div><strong>{count("review")}<small>{t("개", "")}</small></strong><p>{t("확인이 필요한 일정", "Needs review")}</p></div>
+    </section>}
+    {list.length > 0 && <p className={styles.summaryNote}>{t("읽은 입력과 수정 상태를 보여 드려요. 최종 등록 가능 여부는 등록할 때 다시 확인해요.", "These counts describe the input and edits. Final eligibility is checked when registering.")}</p>}
+    {notice && <p className={styles.notice} role="status">{notice}</p>}
+    {(tripProblems.length > 0 || needsFirstDay || needsParty) && <Panel className={styles.problems} aria-labelledby="intake-problems">
+      <h2 id="intake-problems">{tripProblems.length > 0 ? t(`여행 전체에서 확인할 것 ${tripProblems.length}개`, `${tripProblems.length} trip details to check`) : t("여행 기본정보 확인", "Check your trip details")}</h2>
+      <ul>{tripProblems.map((problem) => <li key={`${problem.source_id}:${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>
+      {needsFirstDay && <FirstDay disabled={busy || dirty} onSave={(value) => send([{ field: "trip.first_day", value }])} />}
+      {needsParty && <Party disabled={busy || dirty} onSave={(value) => send([{ field: "trip.party_size", value }])} />}
     </Panel>}
     {yearFilled && <p className={styles.notice} role="note">{t(`해가 적혀 있지 않아 ${String(yearFilled.value).slice(0, 4)}년으로 두었어요. 다르면 항목의 날짜를 고쳐 주세요.`, `No year was written, so we assumed ${String(yearFilled.value).slice(0, 4)}. Fix a stop’s date if that is wrong.`)}</p>}
     {view.check && !confirmed && (view.check.plan.requested || list.length === 0) &&
-      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy} pending={plan.isPending}
+      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy || dirty} pending={plan.isPending}
         onPlan={(input) => plan.mutate({ revision: view.revision, input })} />}
-    <div className={styles.list}>{list.map((row) => <ItemCard key={row.key} row={row} yearNote={Boolean(yearFilled)} disabled={busy || confirmed} onEdit={send} />)}</div>
+    {list.length > 0 && <section className={styles.planList} aria-labelledby="plan-title">
+      <div className={styles.planHead}><h2 id="plan-title">{t("여행 계획 살펴보기", "Review your itinerary")}</h2><span>{t(`${list.length}개 일정`, `${list.length} stops`)}</span></div>
+      <div className={styles.days} role="group" aria-label={t("일차", "Travel days")}>
+        {dates.map((date, index) => <button key={date} type="button" aria-pressed={selectedDay === date} disabled={busy}
+          onClick={() => changeSelection(() => { setDay(date); closeEditor(); })}>{date ? <>{t(`${index + 1}일차`, `Day ${index + 1}`)}<small>{date.slice(5).replace("-", ".")}</small></> : t("날짜 확인 필요", "Date needed")}</button>)}
+      </div>
+      <div className={styles.list}>{visible.map((row) => <ItemCard key={row.key} row={row} all={list} open={open === row.key}
+        revision={view.revision} disabled={busy || confirmed} onDirty={setDirty} onCancel={closeEditor}
+        onToggle={() => changeSelection(() => setOpen(open === row.key ? null : row.key))}
+        onEdit={async (edits, revision) => { await edit.mutateAsync({ revision, edits }); }} />)}</div>
+    </section>}
     {list.length === 0 && !view.check?.plan.requested && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올리거나, 위에서 일정을 짜 달라고 해 주세요.", "No stops were read. Check the original and upload again, or ask us above to plan it.")}</p></Panel>}
     <Evidence view={view} />
     {error && <ErrorNotice error={error}>
@@ -152,14 +146,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       {refusal?.violations && <ul>{refusal.violations.map((violation) => <li key={violation.reason}>{violation.reason}</li>)}</ul>}
     </ErrorNotice>}
     <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
+    <div className={styles.refresh}><Button variant="quiet" disabled={busy || dirty || query.isFetching} onClick={() => { setNotice(""); void query.refetch(); }}><RefreshCw {...icon} />{query.isFetching ? t("확인하는 중…", "Refreshing…") : t("확인 결과 새로고침", "Refresh check")}</Button></div>
     <div className={styles.actions}>
       <ButtonLink href={routes.newTrip}><ArrowLeft {...icon} />{t("다시 올리기", "Upload again")}</ButtonLink>
       <span className={styles.actionNote}>{confirmed ? t("이미 등록했어요.", "Already registered.") : view.check?.ready ? t("등록하면 바로 지켜보기 시작해요.", "We start watching as soon as you register.") : list.length === 0 ? t("위에서 조건을 고르고 「짜서 등록」을 눌러 주세요.", "Choose the conditions above and press “Plan and register”.") : t("위의 확인할 것을 먼저 채워 주세요.", "Fill in the items above first.")}</span>
       {confirmed && view.trip_id
         ? <ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink>
-        : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
+        : <Button variant="primary" disabled={busy || dirty || Boolean(query.error) || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")}<ArrowRight {...icon} /></Button>}
     </div>
-  </>;
+  </div>;
 }
 
 /**
@@ -223,69 +218,6 @@ function Party({ disabled, onSave }: { disabled: boolean; onSave: (value: number
     </select>
     <Button type="submit" disabled={disabled}>{t("저장", "Save")}</Button>
   </form>;
-}
-
-function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => void }) {
-  const t = useT();
-  const { item, source } = row;
-  const where = `items[${item.index}]`;
-  const field = (name: string) => `${where}.${name}`;
-  const title = String(item.fields.title?.value ?? "");
-  const start = String(item.fields.starts_at?.value ?? row.filledStart ?? "");
-  const end = String(item.fields.ends_at?.value ?? row.filledEnd ?? "");
-  const date = String(item.fields.date?.value ?? item.date ?? "");
-  const place = item.fields.place;
-  const placeName = place?.value && typeof place.value === "object" ? String((place.value as { name?: string }).name ?? "") : "";
-  const [placeDraft, setPlaceDraft] = useState("");
-  const [times, setTimes] = useState({ start, end, date });
-  const booking = item.fields.booking_no?.value;
-  const line = item.line ? source.lines[item.line - 1]?.text : undefined;
-  const t2 = (edits: IntakeEdit[]) => onEdit(edits.map((edit) => ({ source_id: source.source_id, ...edit })));
-
-  function saveTimes(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const edits: IntakeEdit[] = [];
-    if (times.start && times.start !== start) edits.push({ field: field("starts_at"), value: times.start });
-    if (times.end && times.end !== end) edits.push({ field: field("ends_at"), value: times.end });
-    if (times.date && times.date !== date) edits.push({ field: field("date"), value: times.date });
-    if (edits.length) t2(edits);
-  }
-
-  return <Panel className={styles.item} data-problem={row.problems.length > 0}>
-    <header className={styles.itemHead}>
-      <div>
-        <p className={styles.when}>{date || t("날짜 모름", "Date unknown")} · {start || "--:--"}{end ? ` – ${end}` : ""}</p>
-        <h2>{title || t("(이름 없음)", "(no name)")}</h2>
-      </div>
-      <div className={styles.badges}>{badges(row, t, yearNote).map((badge) => <Badge key={badge.label} tone={badge.warn ? "warning" : "success"}>{badge.label}</Badge>)}</div>
-    </header>
-    {row.problems.map((problem) => <p key={problem.code} className={styles.problem}>{problem.message}</p>)}
-    <dl className={styles.facts}>
-      <dt><MapPin {...icon} />{t("장소", "Place")}</dt>
-      <dd>{placeName || (place?.method === "customer" ? t("장소 없음", "No place") : t("정하지 못했어요", "Not decided"))}
-        {place?.note && <span className={styles.note}>{place.note}</span>}</dd>
-      {booking != null && <><dt>{t("예약번호", "Booking")}</dt><dd>{String(booking)} <span className={styles.note}>{t("바꾸기 전에 꼭 물어볼게요", "We will always ask before changing it")}</span></dd></>}
-      {line && <><dt>{t("원문", "Original")}</dt><dd className={styles.quote}>{item.line}: {line}</dd></>}
-    </dl>
-    <div className={styles.editRow}>
-      <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (placeDraft.trim()) { t2([{ field: field("place"), value: { name: placeDraft.trim() } }]); setPlaceDraft(""); } }}>
-        <label className="sr-only" htmlFor={`place-${row.key}`}>{t("다른 장소로 고치기", "Change place")}</label>
-        <input id={`place-${row.key}`} value={placeDraft} onChange={(event) => setPlaceDraft(event.target.value)} placeholder={t("다른 장소로 고치기", "Change place")} disabled={disabled} maxLength={80} />
-        <Button type="submit" disabled={disabled || !placeDraft.trim()}>{t("찾기", "Find")}</Button>
-        <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("place"), value: { none: true } }])}>{t("장소 없음", "No place")}</Button>
-      </form>
-      <form className={styles.inline} onSubmit={saveTimes}>
-        <label className="sr-only" htmlFor={`date-${row.key}`}>{t("날짜", "Date")}</label>
-        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimes({ ...times, date: event.target.value })} disabled={disabled} />
-        <label className="sr-only" htmlFor={`start-${row.key}`}>{t("시작", "Start")}</label>
-        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimes({ ...times, start: event.target.value })} disabled={disabled} />
-        <label className="sr-only" htmlFor={`end-${row.key}`}>{t("끝", "End")}</label>
-        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimes({ ...times, end: event.target.value })} disabled={disabled} />
-        <Button type="submit" disabled={disabled}>{t("날짜·시각 저장", "Save date & time")}</Button>
-      </form>
-      <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("removed"), value: true }])}><Trash2 {...icon} />{t("빼기", "Remove")}</Button>
-    </div>
-  </Panel>;
 }
 
 function Evidence({ view }: { view: IntakeView }) {

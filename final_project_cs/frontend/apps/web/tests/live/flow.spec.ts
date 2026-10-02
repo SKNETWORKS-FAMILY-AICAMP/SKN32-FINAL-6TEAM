@@ -17,6 +17,7 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
 
   // 읽는 중 → 확인 화면. 서버가 읽은 항목이 그대로 보인다.
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await page.getByText("읽은 원문 전체 보기", { exact: true }).click();
   await expect(page.getByText("10/1 09:00 경복궁 관람").first()).toBeVisible();
 
   // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
@@ -30,7 +31,7 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
 
@@ -60,10 +61,37 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
   const [intake] = await server.received("POST", "/v1/web/trip-intakes");
   expect(String(intake.body?.multipart)).not.toContain("survey");
 
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
+});
+
+const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";
+
+test("알림·복구 카드의 디스코드 웹훅은 등록까지 가도 서버로 보내지 않고 이 브라우저 저장소에도 남기지 않는다 — 저장 연결은 백엔드 몫", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ trips: "none" });
+  await start(page, "acop_u_known");
+  await finishOnboarding(page, async () => {
+    const head = page.getByRole("button", { name: /알림·복구/ });
+    await head.click();
+    await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
+    await head.click();                                              // fold it; the terms step checks the field and passes
+    await expect(head).toContainText("입력했어요 · 웹훅은 아직 저장하지 않아요");
+  });
+  await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await page.getByRole("button", { name: "여행 등록" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+
+  // The webhook carries a token: it is in no request the server received, and not in this browser's storage.
+  const token = WEBHOOK.split("/").pop() ?? "";
+  expect(JSON.stringify(await server.log())).not.toContain(token);
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).not.toContain(token);
 });
 
 test("설문을 마친 뒤 새로고침해도 답이 남아, 등록 화면이 그 답을 이어받고 설문이 서버로 간다", async ({ page, request }) => {
@@ -75,7 +103,7 @@ test("설문을 마친 뒤 새로고침해도 답이 남아, 등록 화면이 �
   await expect(page.getByText("취향 설문을 마치지 않아서", { exact: false })).toHaveCount(0);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
@@ -89,7 +117,7 @@ test("설문을 마치지 않았으면 등록 화면이 그 사실을 알리고,
   await expect(page.getByRole("link", { name: "취향 설정하기" })).toHaveAttribute("href", "/start");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1 });
@@ -158,8 +186,9 @@ test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", a
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 
+  await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
   await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
-  await page.getByRole("button", { name: "찾기" }).click();
+  await page.getByRole("button", { name: "저장하고 확인" }).click();
   await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].place", value: { name: "창덕궁" } }] });
@@ -185,8 +214,9 @@ test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revi
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
   await server.scenario({ edits: "stale" });
   const before = (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length;
+  await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
   await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
-  await page.getByRole("button", { name: "찾기" }).click();
+  await page.getByRole("button", { name: "저장하고 확인" }).click();
   await expect.poll(async () => (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length).toBeGreaterThan(before);
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 });
@@ -223,7 +253,7 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   const alert = page.getByRole("alert").filter({ hasText: "서버 오류" });
   await expect(alert).toBeInViewport();
   await expect(page).toHaveURL(/\/intakes\//);

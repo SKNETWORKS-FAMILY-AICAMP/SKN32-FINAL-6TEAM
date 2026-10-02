@@ -30,9 +30,9 @@ async function uploadAndOpenReview(page: Page, text: string) {
   await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
-  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「등록하고 관리 시작」 또는 일정 짜기 칸이 나온다.
+  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「여행 등록」 또는 일정 짜기 칸이 나온다.
   // 읽기가 끝날 때까지(등록 단추나 일정 짜기 단추가 나올 때까지) 기다린다 — 서버가 글·사진을 읽는 시간이다
-  await expect(page.getByRole("button", { name: /등록하고 관리 시작|이 조건으로 짜서 등록/ })).toBeVisible({ timeout: READING });
+  await expect(page.getByRole("button", { name: /여행 등록|이 조건으로 짜서 등록/ })).toBeVisible({ timeout: READING });
 }
 
 test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것을 확인해 등록하면 여행이 만들어지고, 채팅·지도까지 실서버로 동작한다", async ({ page }) => {
@@ -49,7 +49,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(third).toBeVisible();
 
   // 서버가 장소를 못 찾은 항목이 있다(실측: 「북촌한옥마을 산책」) — 사용자가 「장소 없음」으로 고치면 서버가 반영하고 등록할 수 있게 된다
-  const register = page.getByRole("button", { name: "등록하고 관리 시작" });
+  const register = page.getByRole("button", { name: "여행 등록" });
   if (await page.getByText("장소를 정하지 못했습니다").count()) {
     await third.getByRole("button", { name: "장소 없음" }).click();
     await expect(page.getByText("장소를 정하지 못했습니다")).toHaveCount(0);
@@ -66,7 +66,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
 
   // 설문을 마쳤으니 등록 확인 요청에 설문이 실려 가야 한다(서버가 저장하는지는 DB 로 따로 본다)
   const confirmSent = page.waitForRequest((request) => request.url().endsWith("/confirm") && request.method() === "POST");
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   const confirmBody = (await confirmSent).postDataJSON() as { survey?: { version?: string } };
   console.log("REAL_CONFIRM_SURVEY", JSON.stringify(confirmBody.survey ?? null));
   expect(confirmBody.survey?.version).toBe("2026-09-24.v1");
