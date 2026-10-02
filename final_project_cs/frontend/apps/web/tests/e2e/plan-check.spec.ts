@@ -68,6 +68,7 @@ test("PC 기기 틀·375px·320px에서 읽기 화면과 결과 목록이 가로
     await page.getByRole("button", { name: "결과 바로 보기" }).click();
     await expect(page.getByRole("heading", { name: "10월 서울 여행", level: 1 })).toBeVisible();
     await noHorizontalScroll(page);
+    await card(page, "올리브영").scrollIntoViewIfNeeded();                // the list scrolls under the bottom buttons on a small phone
     await expect(card(page, "올리브영")).toBeInViewport({ ratio: 0.5 });
   }
 });
@@ -75,7 +76,7 @@ test("PC 기기 틀·375px·320px에서 읽기 화면과 결과 목록이 가로
 test("결과: 카드는 하나씩 펼쳐지고, 카드를 고르면 지도의 그 핀이 선택되며, 핀을 누르면 그 카드가 펼쳐진다", async ({ page }) => {
   await page.goto("/preview/plan-check");
   await page.getByRole("button", { name: "결과 바로 보기" }).click();
-  const head = (name: string) => card(page, name).getByRole("button", { name: new RegExp(name) });
+  const head = (name: string) => card(page, name).getByRole("heading").getByRole("button");
   await expect(head("경복궁")).toHaveAttribute("aria-expanded", "false");
   await head("경복궁").click();
   await expect(head("경복궁")).toHaveAttribute("aria-expanded", "true");
@@ -117,4 +118,67 @@ test("결과: 이동 줄을 누르면 경로·수단·도착 검사가 펼쳐진
   await move.click();
   await expect(move).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByText("올리브영 지점이 미정이라 가장 가까운 광화문점 기준이에요")).toBeVisible();
+});
+
+test("수정 화면: 끝이 시작보다 빠르거나 장소가 비면 보내지 않고 이유를 말하며, 취소하면 수정 단추로 돌아간다", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  await page.getByRole("button", { name: "광장시장 수정" }).click();
+  const editor = page.getByRole("form", { name: "「광장시장」 고치기" });
+  await editor.getByLabel("끝").fill("12:00");
+  await editor.getByRole("button", { name: "저장" }).click();
+  await expect(editor.getByRole("alert")).toHaveText("끝 시각이 시작보다 빨라요.");
+  await editor.getByLabel("끝").fill("13:30");
+  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("");
+  await editor.getByRole("button", { name: "저장" }).click();
+  await expect(editor.getByRole("alert")).toHaveText("장소 이름을 적거나 「장소 없음」을 골라 주세요.");
+  await page.keyboard.press("Escape");
+  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "광장시장 수정" })).toBeFocused();
+});
+
+test("수정 화면: 「장소 없음」으로 저장하면 카드가 「조정」이 되고 위치 미정으로 보인다(미리보기는 장소를 찾지 않음)", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  await page.getByRole("button", { name: "경복궁 수정" }).click();
+  const editor = page.getByRole("form", { name: "「경복궁」 고치기" });
+  await editor.getByLabel("장소 없음(자유 시간 등)").check();
+  await editor.getByRole("button", { name: "저장" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "저장했어요." })).toBeVisible();
+  await expect(card(page, "경복궁").getByText("조정")).toBeVisible();
+  await expect(page.getByText(/위치 미정 · .*경복궁/)).toBeVisible();
+});
+
+test("삭제 확인창: Tab은 두 단추 안에서만 돌고, 바깥을 누르면 닫히며, 320px에서도 화면 안에 들어온다", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  await page.getByRole("button", { name: "올리브영 삭제" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toBeInViewport();
+  await noHorizontalScroll(page);
+  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "삭제" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
+  await page.mouse.click(5, 300);
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole("button", { name: "올리브영 삭제" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "삭제" }).click();
+  await expect(card(page, "올리브영")).toHaveCount(0);
+  await expect(page.getByText("장소 1곳 · 이동 1구간 확인 필요")).toHaveCount(0);   // its moves left with it
+});
+
+test("하단 버튼 줄: 확인 필요가 남으면 「여행 등록」이 꺼지고, 그 일정을 지우면 켜져 등록하면 「여행 보기」가 된다", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  const register = page.getByRole("button", { name: "여행 등록" });
+  await expect(register).toBeDisabled();
+  await expect(page.getByText("확인 필요한 것을 고치면 등록할 수 있어요", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "올리브영 삭제" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "삭제" }).click();
+  await expect(register).toBeEnabled();
+  await register.click();
+  await expect(page.getByRole("link", { name: "여행 보기" })).toBeVisible();
 });

@@ -42,17 +42,20 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(page).toHaveURL(/\/trips\/new$/);
   await uploadAndOpenReview(page, PLAN);
 
-  // 서버가 읽은 항목이 확인 화면에 나온다
-  await expect(page.getByRole("heading", { name: "경복궁 관람", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "광장시장", exact: true })).toBeVisible();
-  const third = page.locator("section").filter({ has: page.getByRole("heading", { name: "북촌한옥마을 산책", exact: true }) });
-  await expect(third).toBeVisible();
+  // 서버가 읽은 항목이 새 계획 확인 결과 화면에 나온다(2026-10-03 — 수정·등록도 이 화면에서 한다)
+  await expect(page.getByRole("article", { name: "경복궁 관람", exact: true })).toBeVisible();
+  await expect(page.getByRole("article", { name: "광장시장", exact: true })).toBeVisible();
+  await expect(page.getByRole("article", { name: "북촌한옥마을 산책", exact: true })).toBeVisible();
 
-  // 서버가 장소를 못 찾은 항목이 있다(실측: 「북촌한옥마을 산책」) — 사용자가 「장소 없음」으로 고치면 서버가 반영하고 등록할 수 있게 된다
+  // 서버가 장소를 못 찾아 「확인 필요」인 항목이 있으면(실측: 「북촌한옥마을 산책」) 「수정」에서 「장소 없음」으로 저장한다 —
+  // 서버가 다시 확인해 반영하고 등록할 수 있게 된다
   const register = page.getByRole("button", { name: "여행 등록" });
-  if (await page.getByText("장소를 정하지 못했습니다").count()) {
-    await third.getByRole("button", { name: "장소 없음" }).click();
-    await expect(page.getByText("장소를 정하지 못했습니다")).toHaveCount(0);
+  const needing = page.getByRole("article").filter({ has: page.getByText("확인 필요", { exact: true }) });
+  for (let count = await needing.count(); count > 0; count -= 1) {
+    await needing.first().getByRole("button", { name: /수정$/ }).click();
+    await page.getByLabel("장소 없음(자유 시간 등)").check();
+    await page.getByRole("button", { name: "저장", exact: true }).click();
+    await expect(needing).toHaveCount(count - 1, { timeout: 60_000 });
   }
   await expect(register).toBeEnabled();
 

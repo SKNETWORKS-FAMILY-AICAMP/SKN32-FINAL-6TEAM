@@ -38,6 +38,7 @@ const DEFAULTS = {
   // make one call fail with a 500: "trips" | "proposals" | "notices" | "confirm" | "messages" | "" (none)
   fail: "",
   // "stale": the server refuses an edit because the plan moved on (409 stale_revision)
+  //   | "not_found": the server finds no place by the typed name (422 place_not_found)
   edits: "ok",
   // "limited": too many new keys from this address (429 too_many_sessions)
   session: "ok",
@@ -311,6 +312,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(1), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
+    if (scenario.edits === "not_found") return json(response, 422, { error: { code: "place_not_found", message: "「없는 곳」: 이 이름으로 장소를 찾지 못했어요" } }, origin);
     return json(response, 200, intakeView(2), origin);
   }
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {

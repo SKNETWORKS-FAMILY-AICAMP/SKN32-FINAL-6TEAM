@@ -18,7 +18,7 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   // 읽는 중 → 결과 화면. 서버가 읽은 항목과 서버가 찾은 장소가 그대로 보인다.
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card).toBeVisible();
-  await card.getByRole("button", { name: /경복궁 관람/ }).click();
+  await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();
 
   // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
@@ -283,7 +283,7 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   await expect(page).toHaveURL(/\/intakes\//);
 });
 
-test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 「일정 고치기」로 기존 수정 화면이 열린다", async ({ page, request }) => {
+test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 「이전 확인 화면 열기」로 기존 화면이 열린다", async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 0 });
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -291,7 +291,7 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await expect(page.getByText("모두 확인했어요", { exact: true })).toBeVisible();
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card.getByText("유지")).toBeVisible();
-  const head = card.getByRole("button", { name: /경복궁 관람/ });
+  const head = card.getByRole("heading").getByRole("button");
   await expect(head).toHaveAttribute("aria-expanded", "false");
   await head.click();
   await expect(head).toHaveAttribute("aria-expanded", "true");
@@ -310,9 +310,96 @@ test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」�
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card.getByText("확인 필요")).toBeVisible();
   await expect(page.getByText("장소 1곳 확인 필요", { exact: true })).toBeVisible();
-  await card.getByRole("button", { name: /경복궁 관람/ }).click();
+  await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
   await expect(page.getByRole("button", { name: "여행 등록" })).toBeDisabled();
-  await expect(page.getByText("확인이 필요한 것을 고쳐야 등록할 수 있어요", { exact: false })).toBeVisible();
+  await expect(page.getByText("확인 필요한 것을 고치면 등록할 수 있어요", { exact: false })).toBeVisible();
   expect(await server.received("POST", "/confirm")).toHaveLength(0);
+});
+
+const INTAKE = "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
+test("결과 화면의 수정: 카드의 「수정」으로 고친 장소가 서버 수정 계약으로 가고, 저장되면 알린다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 0 });
+  await start(page);
+  await page.goto(INTAKE);
+  await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
+  const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
+  await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toBeFocused();
+  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("창덕궁");
+  await editor.getByRole("button", { name: "저장" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "저장했어요. 서버가 일정을 다시 확인했어요." })).toBeVisible();
+  await expect(editor).toHaveCount(0);
+  const [edit] = await server.received("POST", "/edits");
+  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].place", value: { name: "창덕궁" } }] });
+});
+
+test("결과 화면의 수정: 서버가 장소를 못 찾으면(422) 서버 문장을 보이고 수정 화면과 입력을 그대로 둔다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 0, edits: "not_found" });
+  await start(page);
+  await page.goto(INTAKE);
+  await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
+  const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
+  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("없는 곳");
+  await editor.getByRole("button", { name: "저장" }).click();
+  await expect(editor.getByRole("alert")).toHaveText("「없는 곳」: 이 이름으로 장소를 찾지 못했어요");
+  await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toHaveValue("없는 곳");
+  // Cancel leaves without sending anything more, back on the card's edit button.
+  await editor.getByRole("button", { name: "취소" }).click();
+  await expect(page.getByRole("button", { name: "경복궁 관람 수정" })).toBeFocused();
+  expect(await server.received("POST", "/edits")).toHaveLength(1);
+});
+
+test("결과 화면의 삭제: 가운데 확인창이 먼저 묻고, Esc는 닫기만 하며, 「삭제」를 누르면 빼기가 서버로 간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 0 });
+  await start(page);
+  await page.goto(INTAKE);
+  const trigger = page.getByRole("button", { name: "경복궁 관람 삭제" });
+  await trigger.click();
+  const dialog = page.getByRole("alertdialog", { name: "「경복궁 관람」 일정을 삭제하시겠습니까?" });
+  await expect(dialog).toContainText("삭제한 일정은 되돌릴 수 없어요.");
+  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  expect(await server.received("POST", "/edits")).toHaveLength(0);
+  await trigger.click();
+  await dialog.getByRole("button", { name: "삭제" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "「경복궁 관람」 일정을 삭제했어요." })).toBeVisible();
+  const [edit] = await server.received("POST", "/edits");
+  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].removed", value: true }] });
+});
+
+test("결과 화면: 서버에 없는 고정·자동 추천·전체 자동 추천은 「준비 중」으로 꺼져 있다", async ({ page, request }) => {
+  await mockServer(request).scenario({ readingPolls: 0 });
+  await start(page);
+  await page.goto(INTAKE);
+  await expect(page.getByRole("button", { name: "경복궁 관람 고정 — 준비 중" })).toBeDisabled();
+  await page.getByRole("button", { name: /^경복궁 관람/ }).first().click();
+  await expect(page.getByRole("button", { name: /자동 추천.*준비 중/ }).first()).toBeDisabled();
+  await expect(page.getByRole("button", { name: /전체 자동 추천.*준비 중/ })).toBeDisabled();
+});
+
+test("결과 화면: 서버가 여행 첫날을 물으면 입력칸이 나오고, 저장하면 여행 칸 수정이 서버로 간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 0 });
+  await page.route("**/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", async (route) => {
+    const response = await route.fetch();
+    const view = await response.json();
+    view.check.ready = false;
+    view.check.problems = [{ source_id: null, field: "trip.first_day", code: "no_date", message: "여행 첫날을 알려 주세요" }];
+    await route.fulfill({ response, json: view });
+  });
+  await start(page);
+  await page.goto(INTAKE);
+  const panel = page.getByRole("region", { name: "여행 전체에서 확인할 것" });
+  await expect(panel).toContainText("여행 첫날을 알려 주세요");
+  await expect(page.getByRole("button", { name: "여행 등록" })).toBeDisabled();
+  await panel.getByLabel("여행 첫날").fill("2026-10-12");
+  await panel.getByRole("button", { name: "저장" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
+  expect((await server.received("POST", "/edits"))[0].body).toEqual({ revision: 1, edits: [{ field: "trip.first_day", value: "2026-10-12" }] });
 });

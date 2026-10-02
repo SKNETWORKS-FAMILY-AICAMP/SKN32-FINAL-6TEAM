@@ -39,9 +39,9 @@ tags: [ui, api]
 
 [미연결] 웹훅 저장·조회(`GET /v1/web/profile`의 가린 모양)·시험 발송(`POST …/discord/test`)·마이페이지 표시, 이메일 인증·토큰 복구. 서버가 고객 웹훅으로 일정 변경을 보내는 2단계는 서버에 아직 없다.
 
-## 계획 확인 화면(새 화면) — 읽기·결과 연결
+## 계획 확인 화면(새 화면) — 읽기·결과·수정·등록 연결
 
-[실측] 2026-10-03 · Claude. 「계획 확인하기」 뒤의 흐름을 [계획 확인 시나리오 목업](../../frontend/apps/web/mockups/tripilot-plan-check-streaming.html) 기준으로 새로 만들고 있다. **서버가 주는 만큼 실제 경로에 연결했다**(2026-10-03 사용자 결정: 지금 서버로 되는 부분은 연결). `/intakes/[intakeId]`는 서버가 읽는 동안 새 화면이 읽기 진행(`stage`·`sources[].lines[]`·찾은 항목)을, 읽은 뒤 결과(항목·좌표·`check.title`, 장소·시간에 대한 `check.problems`·`needs_review`·`check.filled`, 판정)를 보이고, 등록은 `/confirm`이다. 수정·일정 짜기는 「일정 고치기」 뒤의 기존 접수 확인 화면이 맡는다. 확인 단계, 장소별 운영시간·휴무일 검사, 이동은 서버에 해당 단계·칸이 없어 예시 데이터 미리보기(`/preview/plan-check`)에서만 보인다.
+[실측] 2026-10-03 · Claude. 「계획 확인하기」 뒤의 흐름을 [계획 확인 시나리오 목업](../../frontend/apps/web/mockups/tripilot-plan-check-streaming.html) 기준으로 새로 만들고, **서버가 주는 만큼 실제 경로에 연결했다**(2026-10-03 사용자 결정: 지금 서버로 되는 부분은 연결). `/intakes/[intakeId]`는 서버가 읽는 동안 새 화면이 읽기 진행(`stage`·`sources[].lines[]`·찾은 항목)을, 읽은 뒤 결과(항목·좌표·`check.title`, 장소·시간에 대한 `check.problems`·`needs_review`·`check.filled`, 판정)를 보인다. 수정(장소 이름·장소 없음·이름·날짜·시각)·삭제(`removed: true`)·여행 첫날·인원은 `/edits`, 등록은 `/confirm`이다. 확인 단계, 운영시간·휴무일 검사, 이동, 자동 추천, 잠금, 후보·사진, 삭제 되돌리기는 서버에 경로·칸이 없어 「준비 중」으로 두거나 예시 데이터 미리보기(`/preview/plan-check`)에서만 보인다. 「일정 짜 줘」 접수와 예비 경로(「이전 확인 화면 열기」)는 기존 접수 확인 화면이 맡는다.
 
 화면이 받는 데이터(`PlanCheckView`)와 지금 서버 응답의 대응, 협의가 필요한 칸(확인 단계 · 장소별 검사 · 이동 · 진행 이벤트)은 [화면 인계 §4](../../frontend/apps/web/PLAN_CHECK_SCREEN.md#4-백엔드-연결-안내)에 있다.
 

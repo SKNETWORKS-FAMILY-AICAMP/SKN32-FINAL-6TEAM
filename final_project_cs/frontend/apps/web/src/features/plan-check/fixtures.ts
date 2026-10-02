@@ -7,15 +7,15 @@ import type { CheckRow, PlanCheckView, PlanItem, PlanLine, PlanMove } from "./mo
 const row = (kind: CheckRow["kind"], result: CheckRow["result"], text: string): CheckRow => ({ kind, result, text });
 
 const items: PlanItem[] = [
-  { id: "a", day: 1, startsAt: "10:00", title: "경복궁", coordinates: { lat: 37.5796, lng: 126.977 }, verdict: "keep",
+  { id: "a", day: 1, date: "2026-10-01", startsAt: "10:00", endsAt: "11:30", title: "경복궁", place: "경복궁", noPlace: false, coordinates: { lat: 37.5796, lng: 126.977 }, verdict: "keep",
     checks: [row("place", "ok", "관광공사 정보로 찾았어요"), row("hours", "ok", "09:00–18:00 안에 머물러요"), row("closed", "ok", "화요일 휴무 · 방문은 목요일")] },
-  { id: "b", day: 1, startsAt: "11:00", title: "올리브영", coordinates: null, verdict: "review",
+  { id: "b", day: 1, date: "2026-10-01", startsAt: "11:00", endsAt: "", title: "올리브영", place: "", noPlace: false, coordinates: null, verdict: "review",
     checks: [row("place", "bad", "지점이 여러 곳이라 정하지 못했어요"), row("time", "warn", "경복궁 관람과 30분 겹쳐요 · 등록 때 막힐 수 있어요"),
       row("hours", "unknown", "지점을 고르면 확인해요"), row("closed", "unknown", "지점을 고르면 확인해요")] },
-  { id: "c", day: 1, startsAt: "12:30", title: "광장시장", coordinates: { lat: 37.57, lng: 126.9996 }, verdict: "adjusted",
+  { id: "c", day: 1, date: "2026-10-01", startsAt: "12:30", endsAt: "13:30", title: "광장시장", place: "광장시장", noPlace: false, coordinates: { lat: 37.57, lng: 126.9996 }, verdict: "adjusted",
     checks: [row("place", "ok", "가게 이름이 없어 광장시장으로 잡았어요"), row("time", "filled", "끝 시각이 없어 식사 1시간으로 채웠어요"),
       row("hours", "ok", "09:00–23:00 안에 머물러요"), row("closed", "unknown", "점포마다 달라요")] },
-  { id: "d", day: 2, startsAt: "15:00", title: "N서울타워", coordinates: { lat: 37.5512, lng: 126.9882 }, verdict: "keep",
+  { id: "d", day: 2, date: "2026-10-02", startsAt: "15:00", endsAt: "", title: "N서울타워", place: "N서울타워", noPlace: false, coordinates: { lat: 37.5512, lng: 126.9882 }, verdict: "keep",
     checks: [row("place", "ok", "「남산타워」를 N서울타워로 찾았어요"), row("hours", "ok", "10:00–23:00 안에 머물러요"), row("closed", "ok", "연중무휴")] },
 ];
 

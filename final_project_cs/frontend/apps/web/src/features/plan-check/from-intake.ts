@@ -1,6 +1,6 @@
 import { draftOf, placeOf, rows, statusOf, type ReviewRow } from "@/features/intake-review/model";
 import type { IntakeItem, IntakeView } from "@/lib/live/intake";
-import type { CheckRow, PlanCheckView, PlanItem, PlanLine, Verdict } from "./model";
+import type { CheckRow, PlanCheckView, PlanItem, PlanLine, TripIssue, Verdict } from "./model";
 
 /**
  * The reading part of the plan check, from the intake the server returns (`GET /v1/web/trip-intakes/{id}`).
@@ -60,8 +60,9 @@ const TIME_FIELDS = ["date", "starts_at", "ends_at"] as const;
  *
  * ★Only what the server says. A card shows the place the server found (or why it could not), and what it flagged about
  *   the place or the time — `check.problems`, a field's `needs_review` note, a time it filled in (`check.filled`). Its
- *   verdict: something flagged → 확인 필요, a time filled in → 조정, otherwise 유지. Opening hours, closed days and the
- *   moves between places are not in the response, so none are shown (PLAN_CHECK_SCREEN.md §4).
+ *   verdict: something flagged → 확인 필요, a time filled in or a change of the customer's → 조정, otherwise 유지.
+ *   Opening hours, closed days and the moves between places are not in the response, so none are shown
+ *   (PLAN_CHECK_SCREEN.md §4).
  */
 export function resultOf(intake: IntakeView): PlanCheckView {
   const list = rows(intake);
@@ -74,8 +75,19 @@ export function resultOf(intake: IntakeView): PlanCheckView {
     const draft = draftOf(row);
     const place = placeOf(row);
     const checks = checksOf(row, intake);
-    const verdict: Verdict = statusOf(row) === "review" ? "review" : checks.some((check) => check.result === "filled") ? "adjusted" : "keep";
-    return { id: row.key, day: dayOf(row), startsAt: draft.start, title: draft.title || place?.name || "", coordinates: place?.coordinates ?? null, checks, verdict };
+    // A stop the customer changed counts as adjusted, like one the server filled in; the server has checked it again.
+    const status = statusOf(row);
+    const verdict: Verdict = status === "review" ? "review" : status === "edited" || checks.some((check) => check.result === "filled") ? "adjusted" : "keep";
+    return { id: row.key, day: dayOf(row), date: draft.date, startsAt: draft.start, endsAt: draft.end, title: draft.title || place?.name || "",
+      place: draft.place, noPlace: draft.noPlace, coordinates: place?.coordinates ?? null, checks, verdict };
   });
   return { stage: "done", title: intake.check?.title ?? null, days, lines: readingOf(intake).lines.map((line) => ({ ...line })), items, moves: [] };
+}
+
+/** The trip-wide problems (not one stop's): the first day and the party size can be answered on the screen. */
+export function tripIssuesOf(intake: IntakeView): TripIssue[] {
+  return (intake.check?.problems ?? []).filter((problem) => !problem.field.startsWith("items[")).map((problem) => ({
+    field: problem.code === "no_date" ? "first_day" : problem.code === "party_size_out_of_range" ? "party_size" : null,
+    message: problem.message,
+  }));
 }

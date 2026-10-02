@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock, Pencil, Trash2 } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { TripMap } from "@/features/map";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { useSettings, useT } from "@/lib/settings";
-import { foundCount, progress, STAGES, tally, timeline, type CheckKind, type CheckResult, type CheckRow, type LineFinding, type PlanCheckView, type PlanItem, type PlanMove, type Verdict } from "./model";
+import { foundCount, progress, STAGES, tally, timeline, type CheckKind, type CheckResult, type CheckRow, type ItemDraft, type LineFinding, type PlanCheckView, type PlanItem, type PlanMove, type TripIssue, type Verdict } from "./model";
+import { DeleteDialog, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
 import { useReveal } from "./use-reveal";
 import styles from "./plan-check.module.css";
 
@@ -20,8 +21,29 @@ export interface PlanCheckProps {
   onCaughtUp?: () => void;
   /** Shown above the screen's content — e.g. the new-key notice of a first visit. */
   notice?: ReactNode;
-  /** The result's actions, at the bottom of the list once the check is done (e.g. register). */
-  footer?: ReactNode;
+  /** What the result can change, each wired by the page. One left out is shown as 「준비 중」 (or not at all). */
+  actions?: PlanCheckActions;
+  /** Registering the result, at the bottom of the list once the check is done. */
+  registration?: Registration;
+  /** Trip-wide details the server asks for before it can register. */
+  tripIssues?: TripIssue[];
+  /** Opens the previous review screen — kept for what this screen does not do yet. */
+  onOpenPrevious?: () => void;
+}
+
+/** The result's changes. Each resolves once the server has the new plan, or rejects with the server's sentence. */
+export interface PlanCheckActions {
+  /** Save one stop as drafted (the server looks a typed place up again and checks the plan again). */
+  edit?: (id: string, draft: ItemDraft) => Promise<void>;
+  /** Take one stop out. */
+  remove?: (id: string) => Promise<void>;
+  /** Answer a trip-wide detail. */
+  editTrip?: (field: "first_day" | "party_size", value: string | number) => Promise<void>;
+  /** A better place for one stop, or for every stop that needs a look — no server call yet: left out, they say 「준비 중」. */
+  autoRecommend?: (id: string) => Promise<void>;
+  autoRecommendAll?: () => Promise<void>;
+  /** Fix a stop so nothing changes it — no server call yet: left out, the lock says 「준비 중」. */
+  lock?: (id: string, locked: boolean) => Promise<void>;
 }
 
 /** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
@@ -33,7 +55,7 @@ const HOLD_MS = 800;
  * that slides up or down. A phone-sized page of its own, like the start screen. Mockup:
  * `mockups/tripilot-plan-check-streaming.html`, scenarios 1–2.
  */
-export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, footer }: PlanCheckProps) {
+export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, ...result }: PlanCheckProps) {
   const { view, settled } = useReveal(latest);
   const t = useT();
   useEffect(() => {
@@ -44,7 +66,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, footer }: 
   return <DeviceFrame>
     <div className={styles.screen} data-stage={view.stage}>
       {notice}
-      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} footer={footer} />}
+      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} {...result} />}
       <p className="sr-only" role="status">{announce(view, t)}</p>
     </div>
   </DeviceFrame>;
@@ -104,8 +126,10 @@ function Reading({ view, onBack }: { view: PlanCheckView; onBack: () => void }) 
 const SHEETS = ["half", "full", "peek"] as const;
 type Sheet = (typeof SHEETS)[number];
 
+type ResultProps = Pick<PlanCheckProps, "actions" | "registration" | "tripIssues" | "onOpenPrevious">;
+
 /** ③④ The map above, the list of places and moves below. Once done, the list and the map are worked together. */
-function Checking({ view, onBack, footer }: { view: PlanCheckView; onBack: () => void; footer?: ReactNode }) {
+function Checking({ view, onBack, actions = {}, registration, tripIssues = [], onOpenPrevious }: { view: PlanCheckView; onBack: () => void } & ResultProps) {
   const t = useT();
   const { language } = useSettings();
   const done = view.stage === "done";
@@ -114,6 +138,19 @@ function Checking({ view, onBack, footer }: { view: PlanCheckView; onBack: () =>
   const [selected, setSelected] = useState<string | null>(null);
   const [chosenDay, setChosenDay] = useState<number | null>(null);
   const [sheet, setSheet] = useState<Sheet>("half");
+  // ⑤⑥ The stop being edited (the editor takes the list's place), the stop asked about deleting, the last thing done.
+  const [editing, setEditing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [toast, setToast] = useState("");
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  const editingItem = view.items.find((item) => item.id === editing) ?? null;
+  const deletingItem = view.items.find((item) => item.id === deleting) ?? null;
+  /** Back to the card's own button after the editor or the dialog closes. */
+  const refocus = (id: string, which: "edit" | "delete") => requestAnimationFrame(() => document.getElementById(`plan-${which}-${id}`)?.focus());
   const firstDay = view.days[0]?.day ?? 1;
   // While checking, the map follows the day being checked; once done it shows the day picked (the first by default).
   const mapDay = done ? chosenDay ?? firstDay : view.items.at(-1)?.day ?? firstDay;
@@ -157,17 +194,40 @@ function Checking({ view, onBack, footer }: { view: PlanCheckView; onBack: () =>
         <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{done ? t("계획 확인", "Plan check") : t("장소·운영시간 확인", "Places & hours")}</h2>
         <p className={styles.count}>{countText(view, t)}</p>
       </header>
-      <div className={styles.sheetBody}>{days.map((day) =>
+      {editingItem && actions.edit
+        ? <div className={styles.sheetBody}><StopEditor key={editingItem.id} item={editingItem}
+            onCancel={() => { setEditing(null); refocus(editingItem.id, "edit"); }}
+            onSave={async (draft) => {
+              await actions.edit!(editingItem.id, draft);
+              setEditing(null); setOpen(editingItem.id); refocus(editingItem.id, "edit");
+              setToast(t("저장했어요. 서버가 일정을 다시 확인했어요.", "Saved. The server checked the plan again."));
+            }} /></div>
+        : <div className={styles.sheetBody}>
+      {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+      {days.map((day) =>
         <section key={day.day} aria-labelledby={`plan-day-${day.day}`}>
           <h3 id={`plan-day-${day.day}`} className={styles.day}>{done
             ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => showDay(day.day)}>{dayHeading(day, language, t)}</button>
             : dayHeading(day, language, t)}</h3>
           <ol className={styles.timeline}>{timeline(view, day.day).map((entry) => entry.type === "item"
-            ? <ItemRow key={entry.item.id} item={entry.item} done={done} open={!done || open === entry.item.id} selected={done && selected === entry.item.id} onToggle={() => pick(entry.item.id, "list")} />
+            ? <ItemRow key={entry.item.id} item={entry.item} done={done} open={!done || open === entry.item.id} selected={done && selected === entry.item.id}
+                onToggle={() => pick(entry.item.id, "list")} actions={actions} onEdit={() => setEditing(entry.item.id)} onDelete={() => setDeleting(entry.item.id)} />
             : <MoveRow key={entry.move.id} move={entry.move} done={done} open={done && open === entry.move.id} onToggle={() => setOpen((current) => current === entry.move.id ? null : entry.move.id)} />)}</ol>
-        </section>)}</div>
-      {done && footer && <footer className={styles.footer}>{footer}</footer>}
+        </section>)}
+      {done && onOpenPrevious && <p className={styles.previous}><button type="button" onClick={onOpenPrevious}>{t("이전 확인 화면 열기", "Open the previous review screen")}</button></p>}
+      </div>}
+      {done && !editingItem && <ResultFooter registration={registration} review={tally(view).placesReview} autoAll={actions.autoRecommendAll} />}
     </section>
+    {deletingItem && actions.remove && <DeleteDialog item={deletingItem}
+      dayLabel={t(`${deletingItem.day}일차`, `Day ${deletingItem.day}`)}
+      onCancel={() => { setDeleting(null); refocus(deletingItem.id, "delete"); }}
+      onDelete={async () => {
+        await actions.remove!(deletingItem.id);
+        setDeleting(null);
+        if (selected === deletingItem.id) setSelected(null);
+        setToast(t(`「${deletingItem.title}」 일정을 삭제했어요.`, `Deleted “${deletingItem.title}”.`));
+      }} />}
+    <p className={styles.toast} role="status" data-shown={toast ? true : undefined}>{toast}</p>
   </div>;
 }
 
@@ -175,7 +235,10 @@ function dayHeading(day: { day: number; date: string }, language: Language, t: T
   return <>{t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : t("날짜 미정", "date to be set")}</small></>;
 }
 
-function ItemRow({ item, done, open, selected, onToggle }: { item: PlanItem; done: boolean; open: boolean; selected: boolean; onToggle: () => void }) {
+function ItemRow({ item, done, open, selected, onToggle, actions = {}, onEdit, onDelete }: {
+  item: PlanItem; done: boolean; open: boolean; selected: boolean; onToggle: () => void;
+  actions?: PlanCheckActions; onEdit?: () => void; onDelete?: () => void;
+}) {
   const t = useT();
   const checking = item.verdict === null;
   const status = checking ? <span className={styles.spinner} role="img" aria-label={t("확인하는 중", "Checking")} /> : <VerdictPill verdict={item.verdict!} />;
@@ -185,13 +248,26 @@ function ItemRow({ item, done, open, selected, onToggle }: { item: PlanItem; don
     <article id={`plan-card-${item.id}`} className={styles.card} aria-labelledby={`plan-item-${item.id}`} aria-busy={checking}>
       {done
         // Once done a card opens and closes (accordion: the heading holds the button).
-        ? <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} aria-expanded={open} aria-controls={`plan-item-${item.id}-checks`} onClick={onToggle}>
-            <span id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{status}
-          </button></h4>
+        ? <div className={styles.cardTop}>
+            <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} aria-expanded={open} aria-controls={`plan-item-${item.id}-checks`} onClick={onToggle}>
+              <span id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{status}
+            </button></h4>
+            <button type="button" className={styles.icon} disabled={!actions.lock} aria-label={actions.lock ? t(`${item.title} 고정`, `Lock ${item.title}`) : t(`${item.title} 고정 — 준비 중`, `Lock ${item.title} — coming soon`)}
+              title={actions.lock ? undefined : t("고정은 준비 중이에요", "Locking is coming soon")}><Lock size={16} strokeWidth={1.8} aria-hidden="true" /></button>
+            {actions.edit && <button type="button" id={`plan-edit-${item.id}`} className={styles.icon} aria-label={t(`${item.title} 수정`, `Edit ${item.title}`)} onClick={onEdit}><Pencil size={16} strokeWidth={1.8} aria-hidden="true" /></button>}
+            {actions.remove && <button type="button" id={`plan-delete-${item.id}`} className={styles.icon} aria-label={t(`${item.title} 삭제`, `Delete ${item.title}`)} onClick={onDelete}><Trash2 size={16} strokeWidth={1.8} aria-hidden="true" /></button>}
+          </div>
         : <header className={styles.cardHead}><h4 id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{status}</header>}
-      {open && (item.checks.length
-        ? <Checks id={`plan-item-${item.id}-checks`} rows={item.checks} />
-        : <p id={`plan-item-${item.id}-checks`} className={styles.noChecks}>{t("서버가 이 일정에 따로 알린 것이 없어요.", "The server has nothing more on this stop.")}</p>)}
+      {open && <div id={`plan-item-${item.id}-checks`}>
+        {item.checks.length
+          ? <Checks rows={item.checks} />
+          : <p className={styles.noChecks}>{t("서버가 이 일정에 따로 알린 것이 없어요.", "The server has nothing more on this stop.")}</p>}
+        {done && <div className={styles.cardActions}>
+          <button type="button" className={styles.action} disabled={!actions.autoRecommend} onClick={() => void actions.autoRecommend?.(item.id)}>
+            {t("자동 추천", "Recommend")}{!actions.autoRecommend && <small className={styles.soon}>{t("준비 중", "soon")}</small>}</button>
+          {actions.edit && <button type="button" className={styles.action} data-primary onClick={onEdit}>{t("수정", "Edit")}</button>}
+        </div>}
+      </div>}
     </article>
   </li>;
 }

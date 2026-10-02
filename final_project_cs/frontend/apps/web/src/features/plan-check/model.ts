@@ -21,9 +21,16 @@ export type Verdict = "keep" | "adjusted" | "review";
 export interface PlanItem {
   id: string;
   day: number;
+  /** "YYYY-MM-DD", or "" when the server has no date for it. */
+  date: string;
   /** "HH:MM" */
   startsAt: string;
+  /** "HH:MM", or "" when there is none. */
+  endsAt: string;
   title: string;
+  /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
+  place: string;
+  noPlace: boolean;
   /** Null when the place is not settled — it shows as 「위치 미정」 instead of a pin. */
   coordinates: Coordinates | null;
   checks: CheckRow[];
@@ -198,3 +205,23 @@ export function tally(view: Pick<PlanCheckView, "lines" | "items" | "moves">): T
 
 /** Lines that turned into a stop, among those read so far. */
 export const foundCount = (view: Pick<PlanCheckView, "lines">) => view.lines.filter((line) => line.read && line.found?.kind === "item").length;
+
+/** What the stop editor sends: the stop as the customer wants it. Same fields as the intake review's draft. */
+export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
+
+export const draftOfItem = (item: PlanItem): ItemDraft =>
+  ({ title: item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
+
+/**
+ * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,
+ * no place name (unless 「장소 없음」). Everything else — whether the place exists, the date's range — is the server's to say.
+ */
+export function draftProblem(draft: ItemDraft): "title" | "time" | "place" | null {
+  if (!draft.title.trim()) return "title";
+  if (draft.start && draft.end && draft.end <= draft.start) return "time";
+  if (!draft.noPlace && !draft.place.trim()) return "place";
+  return null;
+}
+
+/** A trip-wide detail the server asks for before it can register (its problem codes `no_date` · `party_size_out_of_range`). */
+export interface TripIssue { field: "first_day" | "party_size" | null; message: string }

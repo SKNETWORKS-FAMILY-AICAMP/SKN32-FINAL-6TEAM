@@ -9,14 +9,15 @@ import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/c
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { KeyNotice } from "@/features/account/key-notice";
-import { readingOf, resultOf } from "@/features/plan-check/from-intake";
+import { readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
+import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakePlanBasis, type IntakePlanInput, type IntakeView } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
-import { rows, draftOf, statusOf } from "./model";
+import { rows, draftOf, editsFor, statusOf } from "./model";
 import { ItemCard } from "./item-card";
 import styles from "./intake-review.module.css";
 
@@ -68,8 +69,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
 
   // ★`[2026-10-03]` The new plan-check screen (mockup `tripilot-plan-check-streaming.html`) shows the server's intake:
   //   while it reads (`readingOf` — it first draws the lines it has not drawn yet when reading ends), then the result
-  //   (`resultOf` — map and list, register). Editing still happens on this review, behind 「일정 고치기」, and so does
-  //   planning a trip the server could not read stops from. An intake opened after reading goes straight to the result.
+  //   (`resultOf` — map and list; edit, delete, trip details and register through the same server calls as this review).
+  //   This review stays for planning a trip the server could not read stops from, and behind 「이전 확인 화면 열기」.
+  //   An intake opened after reading goes straight to the result.
   const reading = useMemo(() => query.data ? readingOf(query.data) : null, [query.data]);
   const result = useMemo(() => query.data && query.data.status !== "reading" && query.data.status !== "fatal" ? resultOf(query.data) : null, [query.data]);
   const [readingSeen, setReadingSeen] = useState(false);
@@ -94,8 +96,22 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     </Panel>);
   }
   if (result && !editing && result.items.length > 0 && !view.check?.plan.requested) {
+    // Every change goes through this review's edit call, so the server checks the plan again and answers with the new one.
+    const send = async (edits: IntakeEdit[]) => { if (edits.length) await edit.mutateAsync({ revision: view.revision, edits }); };
+    const rowOf = (id: string) => rows(view).find((row) => row.key === id);
+    const refusal = confirm.error instanceof LiveError ? (confirm.error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
     return <PlanCheck key="result" view={result} notice={<KeyNotice />} onBack={() => router.push(routes.newTrip)}
-      footer={<ResultActions view={view} busy={confirm.isPending} error={confirm.error} onEdit={() => setEditing(true)} onRegister={() => confirm.mutate(view.revision)} />} />;
+      tripIssues={tripIssuesOf(view)} onOpenPrevious={() => setEditing(true)}
+      actions={{
+        edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
+        remove: async (id: string) => { const row = rowOf(id); if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].removed`, value: true }]); },
+        editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
+      }}
+      registration={{
+        ready: Boolean(view.check?.ready), busy: confirm.isPending, onRegister: () => confirm.mutate(view.revision),
+        error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
+        registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
+      }} />;
   }
 
   const list = rows(view);
@@ -250,24 +266,3 @@ function Evidence({ view }: { view: IntakeView }) {
   </details>;
 }
 
-/**
- * The result's actions until the new screen has its own (mockup scenario 7): register the trip as it is, or edit it on
- * the review. What blocks registering is said here — the server's own messages (`check.problems`, a refusal).
- */
-function ResultActions({ view, busy, error, onEdit, onRegister }: { view: IntakeView; busy: boolean; error: Error | null; onEdit: () => void; onRegister: () => void }) {
-  const t = useT();
-  if (view.status === "confirmed" && view.trip_id) {
-    return <><p>{t("이미 등록했어요.", "Already registered.")}</p><ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink></>;
-  }
-  const ready = Boolean(view.check?.ready);
-  const tripProblems = view.check?.problems.filter((problem) => !problem.field.startsWith("items[")) ?? [];
-  const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
-  return <>
-    {error
-      ? <div role="alert"><p>{error.message}</p>{refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}</div>
-      : !ready && <div role="status"><p>{t("확인이 필요한 것을 고쳐야 등록할 수 있어요 — 「일정 고치기」에서 고쳐 주세요.", "Fix what needs a look before registering — use “Edit the plan”.")}</p>
-        {tripProblems.length > 0 && <ul>{tripProblems.map((problem) => <li key={`${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>}</div>}
-    <Button onClick={onEdit} disabled={busy}>{t("일정 고치기", "Edit the plan")}</Button>
-    <Button variant="primary" disabled={busy || !ready} onClick={onRegister}>{busy ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")}<ArrowRight {...icon} /></Button>
-  </>;
-}

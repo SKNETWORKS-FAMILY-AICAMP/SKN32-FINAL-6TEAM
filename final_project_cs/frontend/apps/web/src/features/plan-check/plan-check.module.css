@@ -140,5 +140,56 @@ button.moveHead { cursor: pointer; }
 .footer > [role="alert"] { color: var(--color-error); }
 .footer > button, .footer > a { flex: 1 1 0; justify-content: center; }
 
+/* ⑥⑦ Card tools: the lock (「준비 중」 until the server has it), edit and delete on the card; recommend and edit inside */
+.cardTop { display: flex; align-items: center; gap: 2px; padding-right: 6px; }
+.cardTop .cardHeading { flex: 1; min-width: 0; }
+.icon { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
+.icon:hover:not(:disabled) { background: var(--color-subtle-strong); color: var(--color-text); }
+.icon:disabled { opacity: .35; cursor: not-allowed; }
+.icon:focus-visible, .action:focus-visible, .previous button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.cardActions { display: flex; gap: 8px; padding: 0 12px 12px; }
+.action { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.action[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.action:disabled { opacity: .5; cursor: not-allowed; }
+.soon { margin-left: 4px; font-size: 10.5px; font-weight: 650; color: var(--color-muted); }
+.badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 6px; padding: 0 5px; border-radius: 10px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 800; }
+.previous { margin: 14px 0 0; text-align: center; }
+.previous button { min-height: 36px; padding: 0 10px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
+
+/* ⑤ The stop editor, in the list's place */
+.editor { display: grid; gap: 10px; padding: 12px 2px 16px; }
+.editorTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.field input, .field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 500; }
+.field input[aria-invalid="true"] { border-color: var(--color-error); }
+.field input:disabled { background: var(--color-subtle); color: var(--color-faint); }
+.fieldRow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.toggle { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; color: var(--color-text-secondary); }
+.editorNote { margin: 0; font-size: 12px; color: var(--color-muted); }
+.editorError { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-error); }
+.editorButtons { display: flex; gap: 8px; }
+.editorButtons > * { flex: 1; justify-content: center; }
+@media (max-width: 360px) { .fieldRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .fieldRow > :first-child { grid-column: 1 / -1; } }
+
+/* ⑥ Asking before a delete, in the middle of the phone screen */
+.scrim { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: var(--color-scrim); }
+.dialog { width: 100%; max-width: 300px; padding: 20px 18px 16px; border-radius: 16px; background: var(--color-surface); text-align: center; }
+.dialogTitle { margin: 0; font-size: 16px; font-weight: 750; line-height: 1.4; word-break: keep-all; }
+.dialogDetail { margin: 8px 0 0; font-size: 13px; color: var(--color-muted); line-height: 1.5; }
+.dialogButtons { display: flex; gap: 8px; margin-top: 16px; }
+.dialogButtons > * { flex: 1; justify-content: center; }
+
+/* The trip-wide details the server asks for */
+.tripIssues { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-surface); }
+.tripIssuesTitle { margin: 0 0 6px; font-size: 13px; font-weight: 750; color: var(--color-warning); }
+.tripIssues ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tripIssues p { margin: 0; font-size: 13px; color: var(--color-text-secondary); }
+.tripAnswer { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 6px; }
+.tripAnswer .field { flex: 1 1 140px; }
+
+/* What was just done, at the bottom of the screen for a few seconds */
+.toast { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 15; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.toast[data-shown] { opacity: 1; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

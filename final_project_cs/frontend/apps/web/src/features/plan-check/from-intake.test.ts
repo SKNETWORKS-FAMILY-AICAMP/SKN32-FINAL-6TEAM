@@ -76,12 +76,12 @@ describe("plan check result, from an intake the server has read", () => {
     expect(view.items.flatMap((entry) => entry.checks.map((check) => check.kind))).not.toContain("hours");
   });
 
-  it("does not flag what the server only assumed (a year or a day it filled), nor what the customer set", () => {
+  it("does not flag what the server only assumed (a year or a day it filled); a stop the customer changed counts as adjusted", () => {
     const view = resultOf(read([
       item(0, 1, 1, { title: field("경복궁"), place: found, date: { value: "2026-10-01", method: "rule", evidence: { how: "year_filled" }, needs_review: true, note: "해를 2026년으로 두었어요" } }),
       item(1, 2, 1, { title: field("올리브영"), starts_at: { ...flaggedStart, method: "customer" as const } }),
     ]));
-    expect(view.items.map((entry) => entry.verdict)).toEqual(["keep", "keep"]);
+    expect(view.items.map((entry) => entry.verdict)).toEqual(["keep", "adjusted"]);
     expect(view.items[1].checks).toEqual([]);
   });
 });
