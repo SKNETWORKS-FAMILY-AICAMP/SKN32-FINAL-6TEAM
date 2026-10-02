@@ -10,6 +10,7 @@ from datetime import date, timedelta
 
 SRC = sys.argv[1]                       # 자료 폴더(쉼표로 여러 개 가능 — 첫 폴더의 oos.json 을 쓴다)
 OUTNAME = os.environ.get('OUT', 'train_pairs.json')
+GRAPH = os.environ.get('GRAPH') == '1'       # 1 이면 문서에 그래프 이웃(앞·뒤 일정, 같은 장소 몇 번째 방문)을 덧붙인다(§42 V6). 난수는 쓰지 않아 문제·정답은 그대로다
 HERE = os.path.dirname(os.path.abspath(__file__))
 rnd = random.Random(20260930)
 places = []
@@ -69,12 +70,28 @@ def make_itinerary(pool):
         title = p['name'] + rnd.choice(VERB[kind])
         items.append({'place': p['name'], 'kind': kind, 'date': d, 'start': rnd.choice(HRS[kind]), 'title': title, 'p': p})
     items.sort(key=lambda i: (i['date'], i['start']))
+    tot = {}
+    for i in items:
+        tot[i['place']] = tot.get(i['place'], 0) + 1
+    seen_n = {}
+    for k, i in enumerate(items):
+        seen_n[i['place']] = seen_n.get(i['place'], 0) + 1
+        i['prev'] = items[k - 1]['title'] if k > 0 else None
+        i['next'] = items[k + 1]['title'] if k + 1 < len(items) else None
+        i['nth'], i['total'] = seen_n[i['place']], tot[i['place']]
     return items
+
+
+def graph_suffix(prev, nxt, nth, total):
+    return (f' — 앞 일정 {prev}' if prev else '') + (f' — 뒤 일정 {nxt}' if nxt else '') + (f' — 같은 장소 {nth}/{total}번째 방문' if total > 1 else '')
 
 
 def doc(i):
     d = i['date']
-    return f"{d.month}월 {d.day}일({W[d.weekday()]}) {i['start']} {i['title']} — 장소 {i['place']} — 종류 {i['kind']}"
+    base = f"{d.month}월 {d.day}일({W[d.weekday()]}) {i['start']} {i['title']} — 장소 {i['place']} — 종류 {i['kind']}"
+    if not GRAPH:
+        return base
+    return base + graph_suffix(i['prev'], i['next'], i['nth'], i['total'])
 
 
 def grams(s):

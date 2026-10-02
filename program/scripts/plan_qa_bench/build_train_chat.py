@@ -6,7 +6,7 @@ import collections, json, os, random, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, '..', '..', '..', 'datasets', 'travel', '020.주제별 텍스트 일상 대화 데이터', 'processed')
-d = json.load(open(os.path.join(HERE, 'fixtures', 'train_pairs.json'), encoding='utf-8'))
+d = json.load(open(os.path.join(HERE, 'fixtures', os.environ.get('IN', 'train_pairs.json')), encoding='utf-8'))
 rnd = random.Random(20261002)
 g = collections.defaultdict(list)
 for x in d['train']:
@@ -66,7 +66,7 @@ for k, t in enumerate(pool[:2200]):
     for x in src:
         chat_rows.append({'g': 20_000_000 + k, 'q': t, 'doc': x['doc'], 'label': 0, 'chat': True})
 out = {'train': d['train'] + aug + chat_rows, 'val': d['val']}
-json.dump(out, open(os.path.join(HERE, 'fixtures', 'train_pairs_chat.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump(out, open(os.path.join(HERE, 'fixtures', os.environ.get('OUT', 'train_pairs_chat.json')), 'w', encoding='utf-8'), ensure_ascii=False)
 print('그룹: 원본', len(g), '+ 변형', 1800, '+ 잡담', 2200, '= ', len(g) + 4000)
 for gid in rnd.sample(pos_groups, 0):
     pass

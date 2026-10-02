@@ -18,7 +18,7 @@ model = PeftModel.from_pretrained(model, adapter).eval()
 
 
 def enc(texts):
-    b = tok(texts, padding=True, truncation=True, max_length=128, return_tensors='pt').to('cuda')
+    b = tok(texts, padding=True, truncation=True, max_length=int(os.environ.get('MAXLEN', '128')), return_tensors='pt').to('cuda')
     with torch.autocast('cuda', dtype=torch.bfloat16):
         h = model(**b).last_hidden_state[:, -1, :]
     return F.normalize(h.float(), dim=-1)
