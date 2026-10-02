@@ -28,6 +28,7 @@ const DEFAULTS = {
   // chat: "answered" (server gives an answer) | "escalated_bare" (an old server: escalated with no answer)
   chat: "answered",
   // intake once read: "items" (has stops, ready) | "empty_plan" (nothing read, the customer asks us to plan)
+  //   | "blocked" (has a stop whose place the server could not settle: not ready, one problem)
   intake: "items",
   // how many polls answer "reading" before the review is ready
   readingPolls: 1,
@@ -156,11 +157,12 @@ function intakeView(revision) {
       place: { value: { name: "경복궁" }, method: "lookup", evidence: { line: 1 }, needs_review: false, note: null },
     },
   };
-  const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ ...line, read: true }], items: scenario.intake === "items" ? [item] : [], trip: {}, reading: null };
+  const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ ...line, read: true }], items: scenario.intake === "empty_plan" ? [] : [item], trip: {}, reading: null };
   return {
     ...base, status: confirmed ? "confirmed" : "review", stage: "review", stage_label: "확인해 주세요", sources: [source],
-    check: { ready: scenario.intake === "items", problems: [], filled: [], items: scenario.intake === "items" ? 1 : 0, title: "내 여행",
-      plan: scenario.intake === "items" ? { requested: false, start_date: null, days: null, party_size: null, preferences: "" }
+    check: { ready: scenario.intake === "items", items: scenario.intake === "empty_plan" ? 0 : 1, title: "내 여행", filled: [],
+      problems: scenario.intake === "blocked" ? [{ code: "no_place", field: "items[0].place", message: "장소를 정하지 못했습니다", source_id: "s1" }] : [],
+      plan: scenario.intake !== "empty_plan" ? { requested: false, start_date: null, days: null, party_size: null, preferences: "" }
         : { requested: true, start_date: "2026-10-01", days: 2, party_size: 2, preferences: "조용한 곳" } },
   };
 }

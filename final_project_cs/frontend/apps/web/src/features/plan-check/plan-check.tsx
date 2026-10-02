@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { TripMap } from "@/features/map";
@@ -18,17 +18,22 @@ export interface PlanCheckProps {
   onBack: () => void;
   /** Called once the screen has drawn everything in `view` and held it a moment — e.g. to move on after the last line. */
   onCaughtUp?: () => void;
+  /** Shown above the screen's content — e.g. the new-key notice of a first visit. */
+  notice?: ReactNode;
+  /** The result's actions, at the bottom of the list once the check is done (e.g. register). */
+  footer?: ReactNode;
 }
 
-/**
- * The plan check after 「계획 확인하기」: the uploaded lines being read, then the places, hours and moves being checked on
- * a map with a list below, then the result. A phone-sized page of its own, like the start screen. Mockup:
- * `mockups/tripilot-plan-check-streaming.html`, scenario 1.
- */
 /** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
 const HOLD_MS = 800;
 
-export function PlanCheck({ view: latest, onBack, onCaughtUp }: PlanCheckProps) {
+/**
+ * The plan check after 「계획 확인하기」: the uploaded lines being read, then the places, hours and moves being checked on
+ * a map with a list below, then the result — cards to open, pins and cards selected together, a day per map, a list
+ * that slides up or down. A phone-sized page of its own, like the start screen. Mockup:
+ * `mockups/tripilot-plan-check-streaming.html`, scenarios 1–2.
+ */
+export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, footer }: PlanCheckProps) {
   const { view, settled } = useReveal(latest);
   const t = useT();
   useEffect(() => {
@@ -38,7 +43,8 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp }: PlanCheckProps) 
   }, [settled, onCaughtUp]);
   return <DeviceFrame>
     <div className={styles.screen} data-stage={view.stage}>
-      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} />}
+      {notice}
+      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} footer={footer} />}
       <p className="sr-only" role="status">{announce(view, t)}</p>
     </div>
   </DeviceFrame>;
@@ -94,17 +100,46 @@ function Reading({ view, onBack }: { view: PlanCheckView; onBack: () => void }) 
   </div>;
 }
 
-/** ③④ The map above, the list of places and moves below. */
-function Checking({ view, onBack }: { view: PlanCheckView; onBack: () => void }) {
+/** How high the list stands over the map: a strip, half the screen, or (nearly) all of it. */
+const SHEETS = ["half", "full", "peek"] as const;
+type Sheet = (typeof SHEETS)[number];
+
+/** ③④ The map above, the list of places and moves below. Once done, the list and the map are worked together. */
+function Checking({ view, onBack, footer }: { view: PlanCheckView; onBack: () => void; footer?: ReactNode }) {
   const t = useT();
   const { language } = useSettings();
   const done = view.stage === "done";
-  // While checking, the map follows the day being checked; once done it goes back to the first day.
-  const mapDay = done ? view.days[0]?.day ?? 1 : view.items.at(-1)?.day ?? view.days[0]?.day ?? 1;
+  // What the customer picked once the check is done: one card or move open, one place selected, one day on the map.
+  const [open, setOpen] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [chosenDay, setChosenDay] = useState<number | null>(null);
+  const [sheet, setSheet] = useState<Sheet>("half");
+  const firstDay = view.days[0]?.day ?? 1;
+  // While checking, the map follows the day being checked; once done it shows the day picked (the first by default).
+  const mapDay = done ? chosenDay ?? firstDay : view.items.at(-1)?.day ?? firstDay;
   const days = view.days.filter((day) => view.items.some((item) => item.day === day.day));
   // Places the server could not settle have no pin; say so on the map, as the mockup's 「위치 미정」 tag does.
   const unlocated = view.items.filter((item) => item.day === mapDay && item.verdict !== null && !item.coordinates);
-  return <div className={styles.checking}>
+
+  /** A place picked on the map or in the list: selected, its day on the map; from the list it opens or closes, from the map it opens and comes into view. */
+  function pick(id: string, from: "map" | "list") {
+    const item = view.items.find((entry) => entry.id === id);
+    if (!item) return;
+    setSelected(id);
+    setChosenDay(item.day);
+    if (from === "list") setOpen((current) => current === id ? null : id);
+    else {
+      setOpen(id);
+      if (sheet === "peek") setSheet("half");
+      requestAnimationFrame(() => document.getElementById(`plan-card-${id}`)?.scrollIntoView({ block: "nearest" }));
+    }
+  }
+  function showDay(day: number) {
+    setChosenDay(day);
+    if (view.items.find((item) => item.id === selected)?.day !== day) setSelected(null);
+  }
+
+  return <div className={styles.checking} data-sheet={sheet}>
     <div className={styles.bar}>
       <BackButton onBack={onBack} />
       {done && view.title
@@ -112,56 +147,74 @@ function Checking({ view, onBack }: { view: PlanCheckView; onBack: () => void })
         : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><ProgressBar view={view} small /></>}
     </div>
     <div className={styles.map}>
-      <TripMap stops={stopsOf(view, mapDay)} dayNumber={mapDay} onSelect={() => {}} />
+      <TripMap stops={stopsOf(view, mapDay)} dayNumber={mapDay} selectedId={selected ?? undefined} onSelect={(id) => { if (done) pick(id, "map"); }} />
       {unlocated.length > 0 && <p className={styles.unlocated}>{t("위치 미정", "No location")} · {unlocated.map((item) => item.title).join(", ")}</p>}
     </div>
     <section className={styles.sheet} aria-labelledby="plan-check-sheet-title">
+      {done && <button type="button" className={styles.handle} aria-label={t("목록 높이 바꾸기", "Change the list height")}
+        onClick={() => setSheet((current) => SHEETS[(SHEETS.indexOf(current) + 1) % SHEETS.length])}><span aria-hidden="true" /></button>}
       <header className={styles.sheetHead}>
         <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{done ? t("계획 확인", "Plan check") : t("장소·운영시간 확인", "Places & hours")}</h2>
         <p className={styles.count}>{countText(view, t)}</p>
       </header>
       <div className={styles.sheetBody}>{days.map((day) =>
         <section key={day.day} aria-labelledby={`plan-day-${day.day}`}>
-          <h3 id={`plan-day-${day.day}`} className={styles.day}>{t(`${day.day}일차`, `Day ${day.day}`)}<small>{dayLabel(day.date, language)}</small></h3>
+          <h3 id={`plan-day-${day.day}`} className={styles.day}>{done
+            ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => showDay(day.day)}>{dayHeading(day, language, t)}</button>
+            : dayHeading(day, language, t)}</h3>
           <ol className={styles.timeline}>{timeline(view, day.day).map((entry) => entry.type === "item"
-            ? <ItemRow key={entry.item.id} item={entry.item} open={!done} />
-            : <MoveRow key={entry.move.id} move={entry.move} />)}</ol>
+            ? <ItemRow key={entry.item.id} item={entry.item} done={done} open={!done || open === entry.item.id} selected={done && selected === entry.item.id} onToggle={() => pick(entry.item.id, "list")} />
+            : <MoveRow key={entry.move.id} move={entry.move} done={done} open={done && open === entry.move.id} onToggle={() => setOpen((current) => current === entry.move.id ? null : entry.move.id)} />)}</ol>
         </section>)}</div>
+      {done && footer && <footer className={styles.footer}>{footer}</footer>}
     </section>
   </div>;
 }
 
-function ItemRow({ item, open }: { item: PlanItem; open: boolean }) {
+function dayHeading(day: { day: number; date: string }, language: Language, t: Translate) {
+  return <>{t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : t("날짜 미정", "date to be set")}</small></>;
+}
+
+function ItemRow({ item, done, open, selected, onToggle }: { item: PlanItem; done: boolean; open: boolean; selected: boolean; onToggle: () => void }) {
   const t = useT();
   const checking = item.verdict === null;
-  return <li className={styles.entry} data-type="item" data-verdict={item.verdict ?? "checking"}>
-    <span className={styles.time}>{item.startsAt}</span>
+  const status = checking ? <span className={styles.spinner} role="img" aria-label={t("확인하는 중", "Checking")} /> : <VerdictPill verdict={item.verdict!} />;
+  return <li className={styles.entry} data-type="item" data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined}>
+    <span className={styles.time}>{item.startsAt || "–"}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
-    <article className={styles.card} aria-labelledby={`plan-item-${item.id}`} aria-busy={checking}>
-      <header className={styles.cardHead}>
-        <h4 id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>
-        {checking ? <span className={styles.spinner} role="img" aria-label={t("확인하는 중", "Checking")} /> : <VerdictPill verdict={item.verdict!} />}
-      </header>
-      {open && <Checks rows={item.checks} />}
+    <article id={`plan-card-${item.id}`} className={styles.card} aria-labelledby={`plan-item-${item.id}`} aria-busy={checking}>
+      {done
+        // Once done a card opens and closes (accordion: the heading holds the button).
+        ? <h4 className={styles.cardHeading}><button type="button" className={styles.cardHead} aria-expanded={open} aria-controls={`plan-item-${item.id}-checks`} onClick={onToggle}>
+            <span id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</span>{status}
+          </button></h4>
+        : <header className={styles.cardHead}><h4 id={`plan-item-${item.id}`} className={styles.cardTitle}>{item.title}</h4>{status}</header>}
+      {open && (item.checks.length
+        ? <Checks id={`plan-item-${item.id}-checks`} rows={item.checks} />
+        : <p id={`plan-item-${item.id}-checks`} className={styles.noChecks}>{t("서버가 이 일정에 따로 알린 것이 없어요.", "The server has nothing more on this stop.")}</p>)}
     </article>
   </li>;
 }
 
-function MoveRow({ move }: { move: PlanMove }) {
+function MoveRow({ move, done, open, onToggle }: { move: PlanMove; done: boolean; open: boolean; onToggle: () => void }) {
   const t = useT();
   const checking = move.verdict === null;
+  const line = checking ? null : <><span className={styles.mode}>{move.mode}</span><span className={styles.moveText}>{move.summary}</span><VerdictMark verdict={move.verdict!} /></>;
   return <li className={styles.entry} data-type="move" data-verdict={move.verdict ?? "checking"}>
     <span className={styles.time}>{!checking && <><b>{move.departAt}</b><small>{t("출발", "leave")}</small></>}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
-    <div className={styles.move}>{checking
+    <div className={styles.move} data-open={open || undefined}>{checking
       ? <span className={styles.waiting}>{t("이동 경로를 찾는 중…", "Finding the way…")}</span>
-      : <><span className={styles.mode}>{move.mode}</span><span className={styles.moveText}>{move.summary}</span><VerdictMark verdict={move.verdict!} /></>}</div>
+      : done
+        ? <><button type="button" className={styles.moveHead} aria-expanded={open} aria-controls={`plan-move-${move.id}-checks`} onClick={onToggle}>{line}</button>
+          {open && <Checks id={`plan-move-${move.id}-checks`} rows={move.checks} />}</>
+        : <div className={styles.moveHead}>{line}</div>}</div>
   </li>;
 }
 
-function Checks({ rows }: { rows: CheckRow[] }) {
+function Checks({ id, rows }: { id?: string; rows: CheckRow[] }) {
   const t = useT();
-  return <ul className={styles.checks}>{rows.map((row) =>
+  return <ul id={id} className={styles.checks}>{rows.map((row) =>
     <li key={row.kind} className={styles.check} data-result={row.result}>
       <span className={styles.mark} aria-hidden="true">{GLYPH[row.result]}</span>
       <b className={styles.checkKind}>{kindLabel(row.kind, t)}</b>

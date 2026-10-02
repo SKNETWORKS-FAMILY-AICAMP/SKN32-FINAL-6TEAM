@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { finishOnboarding, start, mockServer, TRIP_ID } from "./helpers";
+import { finishOnboarding, openEditor, start, mockServer, TRIP_ID } from "./helpers";
 
 const PLAN = "10/1 09:00 경복궁 관람";
 
@@ -15,10 +15,11 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
 
-  // 읽는 중 → 확인 화면. 서버가 읽은 항목이 그대로 보인다.
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await page.getByText("읽은 원문 전체 보기", { exact: true }).click();
-  await expect(page.getByText("10/1 09:00 경복궁 관람").first()).toBeVisible();
+  // 읽는 중 → 결과 화면. 서버가 읽은 항목과 서버가 찾은 장소가 그대로 보인다.
+  const card = page.getByRole("article", { name: "경복궁 관람" });
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: /경복궁 관람/ }).click();
+  await expect(card.getByText("경복궁", { exact: true })).toBeVisible();
 
   // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
   const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
@@ -206,6 +207,7 @@ test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", a
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await openEditor(page);
 
   await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
   await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
@@ -233,6 +235,7 @@ test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revi
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await openEditor(page);
   await server.scenario({ edits: "stale" });
   const before = (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length;
   await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
@@ -278,4 +281,38 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   const alert = page.getByRole("alert").filter({ hasText: "서버 오류" });
   await expect(alert).toBeInViewport();
   await expect(page).toHaveURL(/\/intakes\//);
+});
+
+test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 「일정 고치기」로 기존 수정 화면이 열린다", async ({ page, request }) => {
+  await mockServer(request).scenario({ readingPolls: 0 });
+  await start(page);
+  await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();            // the server's trip title
+  await expect(page.getByText("모두 확인했어요", { exact: true })).toBeVisible();
+  const card = page.getByRole("article", { name: "경복궁 관람" });
+  await expect(card.getByText("유지")).toBeVisible();
+  const head = card.getByRole("button", { name: /경복궁 관람/ });
+  await expect(head).toHaveAttribute("aria-expanded", "false");
+  await head.click();
+  await expect(head).toHaveAttribute("aria-expanded", "true");
+  await expect(card.getByText("경복궁", { exact: true })).toBeVisible();                       // the place the server found
+  await expect(card.getByText(/운영시간|휴무일/)).toHaveCount(0);                                 // not in the response: not shown
+  await expect(page.getByRole("button", { name: "여행 등록" })).toBeEnabled();
+  await openEditor(page);
+  await expect(page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ })).toBeVisible();
+});
+
+test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 「여행 등록」이 꺼진 채 고칠 길을 알린다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 0, intake: "blocked" });
+  await start(page);
+  await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+  const card = page.getByRole("article", { name: "경복궁 관람" });
+  await expect(card.getByText("확인 필요")).toBeVisible();
+  await expect(page.getByText("장소 1곳 확인 필요", { exact: true })).toBeVisible();
+  await card.getByRole("button", { name: /경복궁 관람/ }).click();
+  await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
+  await expect(page.getByRole("button", { name: "여행 등록" })).toBeDisabled();
+  await expect(page.getByText("확인이 필요한 것을 고쳐야 등록할 수 있어요", { exact: false })).toBeVisible();
+  expect(await server.received("POST", "/confirm")).toHaveLength(0);
 });

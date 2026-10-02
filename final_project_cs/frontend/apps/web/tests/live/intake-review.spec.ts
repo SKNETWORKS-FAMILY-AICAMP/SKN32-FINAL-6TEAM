@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockServer, start } from "./helpers";
+import { mockServer, openEditor, start } from "./helpers";
 
 const ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const path = `/v1/web/trip-intakes/${ID}`;
@@ -10,6 +10,7 @@ test.beforeEach(async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 0 });
   await start(page);
   await page.goto(`/intakes/${ID}`);
+  await openEditor(page);
   await card(page).click();
 });
 
@@ -126,6 +127,7 @@ test("날짜 없는 항목은 카드 안내와 여행 첫날 일괄 입력을 �
     await route.fulfill({ response, json: view });
   });
   await page.reload();
+  await openEditor(page);                                         // a reload opens on the plan-check result again
   await expect(page.getByRole("button", { name: "날짜 확인 필요", exact: true })).toBeVisible();
   await page.getByLabel("여행 첫날", { exact: true }).fill("2026-10-12");
   await page.getByRole("button", { name: "저장", exact: true }).click();

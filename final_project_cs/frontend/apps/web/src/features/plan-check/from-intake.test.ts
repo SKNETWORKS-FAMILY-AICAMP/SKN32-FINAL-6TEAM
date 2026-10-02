@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IntakeItem, IntakeView } from "@/lib/live/intake";
-import { readingOf } from "./from-intake";
+import { readingOf, resultOf } from "./from-intake";
 
 const field = (value: unknown) => ({ value, method: "rule" as const, evidence: {}, needs_review: false, note: null });
 const item = (index: number, line: number, day: number | null, fields: IntakeItem["fields"]): IntakeItem => ({ index, line, day, date: null, fields });
@@ -39,5 +39,49 @@ describe("plan check reading, from the server's intake", () => {
     const photo = { ...text([["11:00 올리브영", true]], [item(0, 1, 1, { title: field("올리브영"), removed: field(true) })]), source_id: "s2", kind: "image" };
     const view = readingOf(intake("reading", "reading", [text([["10/1 09:00 경복궁", true]]), photo]));
     expect(view.lines.map((line) => [line.no, line.text, line.found])).toEqual([[1, "10/1 09:00 경복궁", null], [2, "11:00 올리브영", null]]);
+  });
+});
+
+describe("plan check result, from an intake the server has read", () => {
+  const found = { value: { name: "경복궁", latitude: 37.5796, longitude: 126.977 }, method: "lookup" as const, evidence: {}, needs_review: false, note: null };
+  const flaggedStart = { value: "11:00", method: "rule" as const, evidence: { line: 2 }, needs_review: true, note: "시각이 두 가지로 읽혔어요" };
+  function read(items: IntakeItem[], check: Partial<NonNullable<IntakeView["check"]>> = {}): IntakeView {
+    return { ...intake("review", "review", [text([["10/1 09:00 경복궁", true], ["11시 올리브영", true], ["12시 광장시장", true], ["13시 뺀 곳", true]], items)]),
+      check: { ready: true, problems: [], filled: [], items: items.length, title: "10월 서울 여행", plan: { requested: false, start_date: null, days: null, party_size: null, preferences: "" }, ...check } };
+  }
+
+  it("shows each stop with only what the server said: the place it found, a problem, a flag, a time it filled in", () => {
+    const view = resultOf(read([
+      item(0, 1, 1, { title: field("경복궁"), starts_at: field("09:00"), date: field("2026-10-01"), place: found }),
+      item(1, 2, 1, { title: field("올리브영"), starts_at: flaggedStart, date: field("2026-10-01") }),
+      item(2, 3, 2, { title: field("광장시장"), starts_at: field("12:00"), date: field("2026-10-02") }),
+      item(3, 4, 2, { title: field("뺀 곳"), removed: { ...field(true), method: "customer" as const } }),
+    ], {
+      problems: [{ code: "no_place", field: "items[1].place", message: "장소를 정하지 못했습니다", source_id: "s1" }],
+      filled: [{ source_id: "s1", field: "items[2].ends_at", value: "13:00", method: "rule", note: "끝 시각이 없어 식사 1시간으로 채웠어요" }],
+    }));
+    expect(view).toMatchObject({ stage: "done", title: "10월 서울 여행", moves: [], days: [{ day: 1, date: "2026-10-01" }, { day: 2, date: "2026-10-02" }] });
+    expect(view.items.map((entry) => [entry.id, entry.day, entry.startsAt, entry.title, entry.verdict])).toEqual([
+      ["s1:0", 1, "09:00", "경복궁", "keep"], ["s1:1", 1, "11:00", "올리브영", "review"], ["s1:2", 2, "12:00", "광장시장", "adjusted"],
+    ]);
+    expect(view.items[0].coordinates).toEqual({ lat: 37.5796, lng: 126.977 });
+    expect(view.items[0].checks).toEqual([{ kind: "place", result: "ok", text: "경복궁" }]);
+    expect(view.items[1].checks).toEqual([
+      { kind: "place", result: "bad", text: "장소를 정하지 못했습니다" },
+      { kind: "time", result: "warn", text: "시각이 두 가지로 읽혔어요" },
+    ]);
+    expect(view.items[1].coordinates).toBeNull();
+    expect(view.items[2].checks).toEqual([{ kind: "time", result: "filled", text: "끝 시각이 없어 식사 1시간으로 채웠어요" }]);
+    // Opening hours and closed days are not in the response: no such rows.
+    expect(view.items.flatMap((entry) => entry.checks.map((check) => check.kind))).not.toContain("hours");
+  });
+
+  it("does not flag what the server only assumed (a year or a day it filled), nor what the customer set", () => {
+    const view = resultOf(read([
+      item(0, 1, 1, { title: field("경복궁"), place: found, date: { value: "2026-10-01", method: "rule", evidence: { how: "year_filled" }, needs_review: true, note: "해를 2026년으로 두었어요" } }),
+      item(1, 2, 1, { title: field("올리브영"), starts_at: { ...flaggedStart, method: "customer" as const } }),
+    ]));
+    expect(view.items.map((entry) => entry.verdict)).toEqual(["keep", "keep"]);
+    expect(view.items[1].checks).toEqual([]);
   });
 });

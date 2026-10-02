@@ -58,7 +58,7 @@
    taller than this space, so its caption is cut — the screen says 「위치 미정」 itself; sizing the map is CSS finishing. */
 .map { position: relative; flex: 1; min-height: 120px; overflow: hidden; }
 .unlocated { position: absolute; left: 10px; bottom: 10px; z-index: 2; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
-.sheet { flex: 0 0 auto; height: min(440px, 62%); display: flex; flex-direction: column; border-top: 1px solid var(--color-border); border-radius: 20px 20px 0 0; background: var(--color-surface); }
+.sheet { flex: 0 0 auto; height: min(440px, 62%); display: flex; flex-direction: column; transition: height .3s ease; border-top: 1px solid var(--color-border); border-radius: 20px 20px 0 0; background: var(--color-surface); }
 .sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px 8px; border-bottom: 1px solid var(--color-divider); }
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
 .count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
@@ -115,6 +115,30 @@
 .moveText { flex: 1; min-width: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .entry[data-type="move"][data-verdict="review"] .moveText { color: var(--color-warning); }
 .waiting { color: var(--color-faint); }
+
+/* ⑤ The result: the list's height (handle), days to put on the map, cards and moves that open, the selected place */
+.checking[data-sheet="peek"] .sheet { height: 150px; }
+.checking[data-sheet="full"] .sheet { height: calc(100% - 52px); }
+.handle { display: grid; place-items: center; flex: none; width: 100%; height: 24px; border: 0; background: none; cursor: pointer; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.dayButton { display: inline-flex; align-items: baseline; min-height: 32px; padding: 0 6px; margin-left: -6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
+.dayButton[aria-pressed="true"] { color: var(--color-text); }
+.cardHeading { margin: 0; font-size: inherit; font-weight: inherit; }
+button.cardHead { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.entry[data-selected] .card { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft); }
+.noChecks { margin: 0; padding: 8px 12px 12px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.moveHead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.moveHead { cursor: pointer; }
+.move:has(.moveHead) { display: block; padding: 4px 10px; border: 1.5px solid transparent; border-radius: 10px; }
+.move[data-open] { border-color: var(--color-border); background: var(--color-subtle); }
+.move .checks { padding: 0 0 6px; }
+.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: none; padding: 10px 14px 14px; border-top: 1px solid var(--color-divider); background: var(--color-surface); }
+.footer > div, .footer > p { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
+.footer p, .footer ul { margin: 0; }
+.footer ul { padding-left: 18px; }
+.footer > [role="alert"] { color: var(--color-error); }
+.footer > button, .footer > a { flex: 1 1 0; justify-content: center; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

@@ -4,7 +4,7 @@
 |---|---|
 | 작성·갱신 | 2026-10-03 · Claude(최상욱 작업) |
 | 기준 | `role-manager` `1c48943` 위 `feat/web-manager-integration` |
-| 상태 | **1단계(진행 화면) 구현 + 읽기 부분은 실서버 연결.** 결과(확인·이동·판정)는 서버 협의 전이라 미연결 |
+| 상태 | **1단계(진행 화면)·2단계(결과 보기) 구현, 실서버 연결.** 서버에 없는 확인 단계·장소별 운영시간 검사·이동은 미리보기에서만 |
 | 미리보기 | `npm run dev` 뒤 `http://127.0.0.1:3100/preview/plan-check` |
 
 **기준 목업:** [계획 확인 시나리오](mockups/tripilot-plan-check-streaming.html) · [목업 안내](mockups/README.md#계획-확인-시나리오-목업)
@@ -16,16 +16,20 @@
 - 테마·CSS 마감은 Codex가 맡는다.
 
 계획 등록(`/trips/new`)에서 「계획 확인하기」를 누른 뒤의 흐름을 이 목업으로 바꾼다. **실제 경로 `/intakes/[intakeId]`의 상태는 이렇다.**
-- 서버가 읽는 동안: 새 화면을 보인다.
-- 읽기가 끝난 뒤: 새 화면이 마지막 줄까지 그리고 잠깐 머문 다음, **기존 접수 확인 화면**(`features/intake-review/`)이 이어받는다. 수정·일정 짜기·등록은 그 화면에서 한다.
-- 새 화면이 결과·수정·등록까지 갖추면 기존 화면을 걷어낸다.
+- 서버가 읽는 동안: 새 화면이 읽기 진행을 보인다.
+- 읽기가 끝나면: 새 화면이 마지막 줄까지 그리고 잠깐 머문 다음, **새 결과 화면**(지도 + 목록)으로 바뀐다. 이미 읽은 접수를 열면 바로 결과 화면이다.
+- 결과 화면 맨 아래의 버튼
+  - 「여행 등록」: 실서버 등록(`/confirm`). 서버가 막으면 꺼지고 이유를 보인다.
+  - 「일정 고치기」: **기존 접수 확인 화면**(`features/intake-review/`)을 연다. 수정은 그 화면에서 한다.
+- 읽은 일정이 없어 「일정 짜 줘」가 필요한 접수는 기존 화면으로 바로 간다.
+- 새 화면이 수정(3·5단계)과 하단 버튼 줄(4단계)을 갖추면 기존 화면을 걷어낸다.
 
 ## 1. 단계별 범위
 
 | 단계 | 목업 | 상태 |
 |---|---|---|
 | **1 진행 화면** | 시나리오 1 — ① 받았어요 → ② 원문을 한 줄씩 읽음 → ③ 지도 + 목록에서 장소·운영시간·이동 확인 → ④ 카드가 접히고 여행 제목 | **화면 구현 완료. ①②는 실서버 연결**, ③④는 미리보기만(서버에 확인 단계·장소별 검사·이동이 없음) |
-| 2 결과 보기 | 시나리오 2 — 카드 펼침, 카드↔지도 핀 선택, 일차 전환, 목록 높이(손잡이) | 다음 |
+| **2 결과 보기** | 시나리오 2 — 카드 펼침, 카드↔지도 핀 선택, 일차 전환, 목록 높이(손잡이), 이동 줄 펼침 | **구현 완료 · 실서버 연결**(이동은 서버에 없어 미리보기만). 하단에 임시 버튼 「일정 고치기」·「여행 등록」 |
 | 3 카드 동작 | 시나리오 3·5·6 — 자동 추천, 잠금, 삭제 확인창·되돌리기 | 예정 |
 | 4 하단 버튼 줄 | 시나리오 7 — 전체 자동 추천 → 재검증 → 여행 등록 | 예정 |
 | 5 수정 화면 | 시나리오 4 — 장소 검색, 후보 카드, 사진 | 예정 |
@@ -53,7 +57,19 @@
 - 전체 이동 수는 날마다 일정 수에서 1을 뺀 값을 더한 것이다.
 - 그래서 「장소 1/4 · 이동 0/2」처럼 전체를 미리 보인다.
 
-**완료 뒤(미리보기)**
+**결과 화면(2단계)**
+- 카드는 머리를 누르면 펼쳐지고, 한 번에 하나만 펼쳐진다(이동 줄도 같다). 머리는 제목 안의 버튼이며 펼침 상태(`aria-expanded`)를 읽는다.
+- 카드를 고르면 지도에 그 날과 그 핀이 선택된다. 지도에서 핀을 누르면 그 카드가 펼쳐지고 목록에서 보이는 자리로 온다.
+- 일차 머리를 누르면 지도가 그 날로 바뀐다.
+- 손잡이로 목록 높이를 중간 → 높게 → 낮게 순서로 바꾼다.
+- 실서버 결과(`from-intake.ts`의 `resultOf`)는 서버가 말한 것만 보인다.
+  - 장소: 서버가 찾은 장소(✓), 못 찾은 이유(✕ — `check.problems`의 문장), 확인하라는 표시(! — 필드의 `needs_review` 메모)
+  - 시간: 서버가 채운 시각(✎ — `check.filled`의 메모), 문제·확인 표시
+  - 판정: 문제나 확인 표시가 있으면 「확인 필요」, 서버가 시각을 채웠으면 「조정」, 아니면 「유지」
+  - 운영시간·휴무일·이동은 응답에 없어 보이지 않는다. 서버가 해·날짜를 짐작만 한 것(`year_filled`·`day_offset`)과 고객이 고친 값은 확인 필요로 세지 않는다(기존 화면과 같은 기준).
+- 처음 방문해 키가 막 발급됐으면 「내 여행 열쇠를 따로 보관해 주세요」 안내를 새 화면 맨 위에 보인다(읽는 중·결과 모두).
+
+**완료 뒤 공통**
 - 목록 머리에 확인할 것을 센다(「장소 1곳 · 이동 1구간 확인 필요」).
 - 카드마다 판정을 붙인다(유지 · 조정 · 확인 필요).
 - 좌표가 없는 장소는 지도 위에 「위치 미정 · ○○」으로 보인다.
@@ -74,14 +90,14 @@
 | 파일 | 내용 |
 |---|---|
 | `src/features/plan-check/model.ts` | **데이터 계약**(`PlanCheckView` 등)과 순서 규칙(`nextStep`), 진행률·개수(`progress` · `expected` · `tally`) |
-| `src/features/plan-check/from-intake.ts` | 서버 접수 응답 → 화면 데이터(읽기 부분) |
+| `src/features/plan-check/from-intake.ts` | 서버 접수 응답 → 화면 데이터 — 읽기(`readingOf`), 결과(`resultOf`, 기존 확인 화면의 `rows`·`placeOf`·`draftOf`·`statusOf`를 같이 써서 같은 기준으로 읽음) |
 | `src/features/plan-check/use-reveal.ts` | 스냅숏을 한 단계씩 그리는 훅. 다 그렸는지(`settled`)도 알린다 |
-| `src/features/plan-check/plan-check.tsx` | 화면 `<PlanCheck view onBack onCaughtUp? />` — 휴대폰 틀 포함 |
+| `src/features/plan-check/plan-check.tsx` | 화면 `<PlanCheck view onBack onCaughtUp? notice? footer? />` — 휴대폰 틀 포함. `notice`는 화면 맨 위(키 안내), `footer`는 결과 목록 맨 아래(버튼) 자리 |
 | `src/features/plan-check/plan-check.module.css` | 배치 CSS. 색은 공통 변수만 쓴다 |
 | `src/features/plan-check/fixtures.ts` · `preview.tsx` · `preview.module.css` · `src/app/preview/plan-check/page.tsx` | 미리보기 전용 — 목업 예시 데이터. live 빌드에서는 404 |
-| `src/features/intake-review/intake-review.tsx` · `src/app/intakes/[intakeId]/page.tsx` | 실제 경로. 읽는 동안 새 화면을 보이고, 그 밖에는 기존 화면을 여정 틀(`JourneyShell`)에 넣는다. 틀 선택이 페이지에서 화면 안으로 옮겨졌다 |
+| `src/features/intake-review/intake-review.tsx` · `src/app/intakes/[intakeId]/page.tsx` | 실제 경로. 읽는 동안·결과는 새 화면, 「일정 고치기」·일정 짜기·읽지 못함은 기존 화면(여정 틀 `JourneyShell`). 결과 하단 버튼(`ResultActions`)도 여기 있다 |
 | `src/styles/tokens.css` | 색 역할 변수 16개 추가(그린 값만) |
-| `tests/live/stub-server.mjs` | 테스트용 모방 서버도 실서버처럼 읽는 중에 원문 줄을 준다 |
+| `tests/live/stub-server.mjs` · `tests/live/helpers.ts` | 모방 서버: 읽는 중에도 원문 줄을 준다, 등록을 막는 문제가 있는 접수(`intake: "blocked"`). 도우미 `openEditor`: 결과 화면에서 「일정 고치기」로 기존 화면을 연다 |
 | 시험 | `model.test.ts` · `from-intake.test.ts` · `tests/e2e/plan-check.spec.ts` · `tests/live/preview.spec.ts` · `tests/live/flow.spec.ts`(읽는 중 → 확인 화면) |
 
 ## 4. 서버 연결 상태와 남은 연결
@@ -93,11 +109,13 @@
 | `lines[].found` | 같은 소스에서 줄 번호가 같은 항목(`items[].line`)의 `title` · `day` · `starts_at`(뺀 항목 제외) | **연결함**. 날짜 줄(`kind: date`)은 서버가 주는 칸이 없어 미연결 |
 | 진행 알림(SSE) | `GET …/events`(`role-manager` `c361394`) | 미연결 — 지금은 1.5초 조회. 다음에 붙인다 |
 | `stage` checking | 장소·운영시간 확인 단계가 서버에 없다(`review`로 바로 감) | **협의 필요** |
-| `items[]` id · day · startsAt · title · coordinates | `sources[].items[]`(id는 `source_id:index`) · `fields.place.value`의 `latitude`·`longitude` | 결과 화면(2단계)에서 연결 예정 — 지금 계약으로 가능 |
-| `items[].checks` (장소·시간·운영시간·휴무일 + 한 줄 문구) | 지금은 등록을 막는 문제(`check.problems`)와 `needs_review`만 있다 | **협의 필요** |
-| `items[].verdict` | `needs_review`·`problems`가 있으면 review, 서버가 채운 값(`check.filled`)이 있으면 adjusted, 아니면 keep으로 대응할 수 있다 | 2단계에서 연결 예정 |
+| `items[]` id · day · startsAt · title · coordinates | `sources[].items[]`(id는 `source_id:index`, 뺀 항목 제외) · `fields.place.value`의 `latitude`·`longitude` | **연결함** |
+| `items[].checks` 장소·시간 | 찾은 장소 이름, `check.problems`의 문장, 필드 `needs_review` 메모, `check.filled` 메모 | **연결함**(서버가 말한 것만) |
+| `items[].checks` 운영시간·휴무일 | 응답에 없다 | **협의 필요** |
+| `items[].verdict` | 문제·확인 표시 → review, 서버가 시각을 채움 → adjusted, 아니면 keep | **연결함** |
 | `moves[]` (수단 · 요약 · 출발 · 검사) | 응답에 없다 | **협의 필요** |
-| `days[]` · `title` | 항목 `date` / `trip.first_day` · `check.title` | 2단계에서 연결 예정 |
+| `days[]` · `title` | 항목의 `day`(없으면 날짜 순서)·`date` · `check.title` | **연결함** |
+| 등록 | `POST …/confirm`(설문 포함) — `check.ready`가 아니면 꺼짐, 거절은 서버 문장 | **연결함**(임시 하단 버튼) |
 
 목업의 「진행 이벤트 예시」(`stage` · `line` · `item` · `check` · `move` · `done`)를 쓰면 협의 필요 칸이 그대로 채워진다. 이벤트 이름은 작성자 제안이다.
 
@@ -133,9 +151,9 @@
 | 시험 | 내용 |
 |---|---|
 | 단위 `model.test.ts` | 6개 — 하루 순서, 받음→완료의 전체 순서·단계 수, 한꺼번에/나눠 받아도 같은 순서, 되돌림·삭제는 바로 바꿈, 진행률이 뒤로 가지 않음, 개수 |
-| 단위 `from-intake.test.ts` | 3개 — 단계 대응, 줄·읽음·찾은 일정(모르는 일차·시각은 비움), 소스를 잇는 번호·뺀 항목 제외 |
-| demo 브라우저 `tests/e2e/plan-check.spec.ts` | 5개 — 미리보기 전체 흐름, 움직임 줄이기, 결과 바로 보기·처음부터, 뒤로, PC·375·320px 가로 넘침 없음 |
-| live 빌드 `tests/live/` | 미리보기 주소 404, 읽는 동안 새 화면이 서버의 줄을 「읽는 중」으로 보이고 읽기가 끝나면 확인 화면으로 넘어감 |
-| 실서버(로컬) | 계획을 올려 새 화면에 서버의 줄 4개가 보이고, 읽기가 끝나 확인 화면으로 넘어감을 앱 내장 브라우저로 확인 |
+| 단위 `from-intake.test.ts` | 5개 — 읽기: 단계 대응, 줄·읽음·찾은 일정(모르는 일차·시각은 비움), 소스를 잇는 번호·뺀 항목 제외 / 결과: 장소·문제·확인·채운 시각과 판정, 짐작한 해·날짜와 고객 값은 확인 필요로 세지 않음 |
+| demo 브라우저 `tests/e2e/plan-check.spec.ts` | 8개 — 미리보기 전체 흐름, 움직임 줄이기, 결과 바로 보기·처음부터, 뒤로, PC·375·320px 가로 넘침 없음, 카드 하나씩 펼침·카드↔핀 선택, 일차 전환·손잡이, 이동 줄 펼침 |
+| live 빌드 `tests/live/` | 미리보기 주소 404, 읽는 중 → 결과 화면, 결과 화면의 장소·판정과 「일정 고치기」, 등록을 막는 문제가 있으면 「확인 필요」·「여행 등록」 꺼짐. 기존 확인 화면 시험은 「일정 고치기」를 거쳐 그대로 돈다 |
+| 실서버(로컬) | 계획을 올려 새 화면에 서버의 줄 4개가 보이고 읽기가 끝나 넘어감(1단계 연결). 같은 접수를 다시 열어 결과 화면: OSM 지도 핀 3개, 「모두 확인했어요」, 카드 「조정」과 서버 문장(장소 ✓ 경복궁, 시간 ✎ 「끝 시각이 없어 90분으로 두었다」), 「일정 고치기」·「여행 등록」 |
 
-실행 결과와 수치는 작업 리포트([1단계](../../../wiki/records/reports/2026-10-03_0140_계획확인화면_1단계_진행화면.md), [읽기 연결](../../../wiki/records/reports/2026-10-03_0200_계획확인화면_읽기_실서버연결.md))에 있다.
+실행 결과와 수치는 작업 리포트([1단계](../../../wiki/records/reports/2026-10-03_0140_계획확인화면_1단계_진행화면.md), [읽기 연결](../../../wiki/records/reports/2026-10-03_0200_계획확인화면_읽기_실서버연결.md), [2단계](../../../wiki/records/reports/2026-10-03_0229_계획확인화면_2단계_결과보기.md))에 있다.

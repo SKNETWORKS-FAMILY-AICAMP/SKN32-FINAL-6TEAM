@@ -8,7 +8,8 @@ import { JourneyShell } from "@/components/layout/journey-shell";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import { readingOf } from "@/features/plan-check/from-intake";
+import { KeyNotice } from "@/features/account/key-notice";
+import { readingOf, resultOf } from "@/features/plan-check/from-intake";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
@@ -65,12 +66,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
-  // ★`[2026-10-03]` While the server reads, the new plan-check screen shows it (mockup `tripilot-plan-check-streaming.html`,
-  //   from the server's lines — `readingOf`). When reading ends it first draws the lines it has not drawn yet, then this
-  //   review takes over. An intake opened after reading goes straight to the review.
+  // ★`[2026-10-03]` The new plan-check screen (mockup `tripilot-plan-check-streaming.html`) shows the server's intake:
+  //   while it reads (`readingOf` — it first draws the lines it has not drawn yet when reading ends), then the result
+  //   (`resultOf` — map and list, register). Editing still happens on this review, behind 「일정 고치기」, and so does
+  //   planning a trip the server could not read stops from. An intake opened after reading goes straight to the result.
   const reading = useMemo(() => query.data ? readingOf(query.data) : null, [query.data]);
+  const result = useMemo(() => query.data && query.data.status !== "reading" && query.data.status !== "fatal" ? resultOf(query.data) : null, [query.data]);
   const [readingSeen, setReadingSeen] = useState(false);
   const [readingDrawn, setReadingDrawn] = useState(false);
+  const [editing, setEditing] = useState(false);
   if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
   const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
   const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
@@ -79,7 +83,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const view = query.data;
 
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
-    return <PlanCheck view={reading} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    return <PlanCheck key="reading" view={reading} notice={<KeyNotice />} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>
@@ -88,6 +92,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       <p role="alert">{view.fatal?.detail ?? view.fatal?.code}</p>
       <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Try again")}</ButtonLink>
     </Panel>);
+  }
+  if (result && !editing && result.items.length > 0 && !view.check?.plan.requested) {
+    return <PlanCheck key="result" view={result} notice={<KeyNotice />} onBack={() => router.push(routes.newTrip)}
+      footer={<ResultActions view={view} busy={confirm.isPending} error={confirm.error} onEdit={() => setEditing(true)} onRegister={() => confirm.mutate(view.revision)} />} />;
   }
 
   const list = rows(view);
@@ -240,4 +248,26 @@ function Evidence({ view }: { view: IntakeView }) {
       <ol className={styles.lines}>{source.lines.map((line) => <li key={line.no} data-read={line.read}><span>{line.no}</span>{line.text}</li>)}</ol>
     </div>)}
   </details>;
+}
+
+/**
+ * The result's actions until the new screen has its own (mockup scenario 7): register the trip as it is, or edit it on
+ * the review. What blocks registering is said here — the server's own messages (`check.problems`, a refusal).
+ */
+function ResultActions({ view, busy, error, onEdit, onRegister }: { view: IntakeView; busy: boolean; error: Error | null; onEdit: () => void; onRegister: () => void }) {
+  const t = useT();
+  if (view.status === "confirmed" && view.trip_id) {
+    return <><p>{t("이미 등록했어요.", "Already registered.")}</p><ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink></>;
+  }
+  const ready = Boolean(view.check?.ready);
+  const tripProblems = view.check?.problems.filter((problem) => !problem.field.startsWith("items[")) ?? [];
+  const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
+  return <>
+    {error
+      ? <div role="alert"><p>{error.message}</p>{refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}</div>
+      : !ready && <div role="status"><p>{t("확인이 필요한 것을 고쳐야 등록할 수 있어요 — 「일정 고치기」에서 고쳐 주세요.", "Fix what needs a look before registering — use “Edit the plan”.")}</p>
+        {tripProblems.length > 0 && <ul>{tripProblems.map((problem) => <li key={`${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>}</div>}
+    <Button onClick={onEdit} disabled={busy}>{t("일정 고치기", "Edit the plan")}</Button>
+    <Button variant="primary" disabled={busy || !ready} onClick={onRegister}>{busy ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")}<ArrowRight {...icon} /></Button>
+  </>;
 }

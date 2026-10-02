@@ -53,3 +53,9 @@ export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<v
   await page.getByRole("button", { name: "설정 완료" }).click();
   await expect(page.getByRole("heading", { name: "여행 취향 설정 완료" })).toBeVisible();
 }
+
+/** The intake review's editor sits behind the plan-check result's 「일정 고치기」 (2026-10-03). */
+export async function openEditor(page: Page) {
+  await page.getByRole("button", { name: "일정 고치기" }).click();
+  await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toBeVisible();
+}

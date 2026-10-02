@@ -71,3 +71,50 @@ test("PC 기기 틀·375px·320px에서 읽기 화면과 결과 목록이 가로
     await expect(card(page, "올리브영")).toBeInViewport({ ratio: 0.5 });
   }
 });
+
+test("결과: 카드는 하나씩 펼쳐지고, 카드를 고르면 지도의 그 핀이 선택되며, 핀을 누르면 그 카드가 펼쳐진다", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  const head = (name: string) => card(page, name).getByRole("button", { name: new RegExp(name) });
+  await expect(head("경복궁")).toHaveAttribute("aria-expanded", "false");
+  await head("경복궁").click();
+  await expect(head("경복궁")).toHaveAttribute("aria-expanded", "true");
+  await expect(card(page, "경복궁").getByText("관광공사 정보로 찾았어요")).toBeVisible();
+  await head("광장시장").click();
+  await expect(head("광장시장")).toHaveAttribute("aria-expanded", "true");
+  await expect(head("경복궁")).toHaveAttribute("aria-expanded", "false");                 // one card open at a time
+  await expect(page.getByRole("button", { name: "3. 광장시장" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "1. 경복궁" }).click();                          // the pin opens its card
+  await expect(head("경복궁")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: "1. 경복궁" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("결과: 일차 머리를 누르면 지도가 그 날로 바뀌고, 손잡이는 목록을 높게·낮게·중간으로 돌린다", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  const day2 = page.getByRole("button", { name: /^2일차/ });
+  await expect(page.getByRole("button", { name: "1. 경복궁" })).toBeVisible();
+  await day2.click();
+  await expect(day2).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "1. N서울타워" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "1. 경복궁" })).toHaveCount(0);
+  const list = page.locator("[data-sheet]");
+  await expect(list).toHaveAttribute("data-sheet", "half");
+  const handle = page.getByRole("button", { name: "목록 높이 바꾸기" });
+  await handle.click();
+  await expect(list).toHaveAttribute("data-sheet", "full");
+  await handle.click();
+  await expect(list).toHaveAttribute("data-sheet", "peek");
+  await handle.click();
+  await expect(list).toHaveAttribute("data-sheet", "half");
+});
+
+test("결과: 이동 줄을 누르면 경로·수단·도착 검사가 펼쳐진다", async ({ page }) => {
+  await page.goto("/preview/plan-check");
+  await page.getByRole("button", { name: "결과 바로 보기" }).click();
+  const move = page.getByRole("button", { name: /도보.*12분 · 0\.8km/ });
+  await expect(move).toHaveAttribute("aria-expanded", "false");
+  await move.click();
+  await expect(move).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByText("올리브영 지점이 미정이라 가장 가까운 광화문점 기준이에요")).toBeVisible();
+});
