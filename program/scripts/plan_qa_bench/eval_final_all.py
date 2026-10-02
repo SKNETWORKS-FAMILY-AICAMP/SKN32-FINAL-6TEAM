@@ -408,6 +408,38 @@ for tag, lab_ in (('gemma4_e4b-it-qat', 'V16 적대적 검토(E4B QAT 반론)'),
     else:
         NOTES.append(f'{lab_}: 반론 결과가 모든 세트에 없다')
 
+# ---------- §50 Y2 분류 게이트 ----------
+GATE = {}
+for tag_ in ('base', 'e16d'):
+    f = load_opt(R(f'gate_p_{tag_}.json'))
+    if f:
+        GATE[tag_] = {w: {int(k): v for k, v in d.items()} for w, d in f['p'].items()}
+        GATE[tag_ + '_chat'] = f['chat_test']
+
+
+def make_y2(tag_, tau):
+    def f(w, i):
+        st = stage(w, i)
+        if st[0] == 'done':
+            return st[1], int(bool(st[2]))
+        d = S[(f'{w}_tt', i)]
+        k = max(d, key=d.get)
+        s1 = d[k]
+        if s1 >= hi:
+            return k, 0
+        if s1 < lo:
+            return (G[w][M][i], 1) if GATE[tag_][w][i] >= tau else (None, 0)
+        return G[w][M][i], 1
+    return f
+
+
+for tag_, lab_ in (('base', 'Y2 게이트(고정 임베딩)'), ('e16d', 'Y2 게이트(e16d 임베딩)')):
+    if tag_ in GATE and all(w in GATE[tag_] and GATE[tag_][w] for w in LABELED + EV):
+        TAU['Y2' + tag_] = pick_tau(lambda t, tg=tag_: make_y2(tg, t))
+        P[lab_] = make_y2(tag_, TAU['Y2' + tag_])
+    else:
+        NOTES.append(f'{lab_}: 게이트 확률 파일이 없다')
+
 # ---------- 채점 ----------
 names = list(P)
 res = {}
@@ -505,6 +537,36 @@ out += ['', '### 유형별 정답(합친 시험 세트)', '| 유형 | 문제 | '
 for t in types:
     ids = [(w, i) for w in EV for i, x in enumerate(SETS[w]['qs']) if x['type'] == t]
     out.append(f'| {t} | {len(ids)} | ' + ' | '.join(str(sum(res[w][n][i][0] == gold[w][i] for w, i in ids)) for n in show) + ' |')
+# 잡담 부작용(앞 1,500개, mix7 일정, 앞단만 + 넘김 E4B QAT): V1 대 Y2 — 항목으로 답한 비율
+if any(k.startswith('Y2') for k in names):
+    try:
+        E4c = J(R('chat_llm_mix7_gemma4_e4b-it-qat.json'))['picks']
+        sims = J(R('chat_front_mix7_e16d.json'))['sims']
+        NC = 1500
+        mx = [max(r) for r in sims[:NC]]
+
+        def answered(tag_, tau):
+            routed = ans = 0
+            for k in range(NC):
+                if mx[k] >= hi:
+                    ans += 1
+                elif mx[k] >= lo:
+                    routed += 1
+                    ans += E4c[str(k)] is not None
+                elif tag_ is not None and GATE[tag_ + '_chat'][k] >= tau:
+                    routed += 1
+                    ans += E4c[str(k)] is not None
+            return routed, ans
+        r0 = answered(None, 0)
+        out.append('')
+        out.append(f'### 잡담 부작용(AI Hub 잡담 앞 {NC}개 — 항목으로 답한 비율, 정답은 항상 「없음」)')
+        out.append(f'| 방식 | LLM 으로 넘김 | 항목으로 답함 |\n|---|---:|---:|\n| V1 앞단 e16d | {r0[0] / NC:.1%} | {r0[1]}/{NC} = {r0[1] / NC:.2%} |')
+        for tag_, lab_ in (('base', 'Y2 게이트(고정 임베딩)'), ('e16d', 'Y2 게이트(e16d 임베딩)')):
+            if 'Y2' + tag_ in TAU:
+                r = answered(tag_, TAU['Y2' + tag_])
+                out.append(f'| {lab_} τ_g={TAU["Y2" + tag_]} | {r[0] / NC:.1%} | {r[1]}/{NC} = {r[1] / NC:.2%} |')
+    except Exception as e_:  # noqa: BLE001
+        out.append(f'(잡담 부작용 계산 실패: {e_})')
 if 'JEV_CALLS' in globals():
     out.append('')
     out.append('J1 의 Jev(유료) 호출 수: ' + ' · '.join(f'{w} {JEV_CALLS[w]}건' for w in EV) + ' — 규칙 단계가 못 정한 문제 전부를 한 번씩(이미 보낸 결과를 재사용했고 새로 부르지 않았다)')
