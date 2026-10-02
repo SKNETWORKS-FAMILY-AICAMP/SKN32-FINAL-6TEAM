@@ -278,6 +278,18 @@ def test_a_change_blocked_by_the_whole_itinerary_recheck_is_announced_with_its_o
     assert "사람" not in sent[0]["text"] and "담당자" not in sent[0]["text"]
 
 
+def test_every_ranked_option_blocked_by_the_recheck_is_announced_the_same_way(api):
+    """★`[2026-10-03]` 담당(Team)이 다음 순위 안까지 다 시험해 걸렸으면 적용기에 닿기 전에 `itinerary_recheck_failed` 로 끝난다 — 같은 문장으로 고객에게 알린다(전엔 이 경우가 알림 없이 조용했다)."""
+    _create(api)
+    before = len(_notices(api))
+    opener = _opener(api, _check_activities(DISRUPTED),
+                     _escalating("itinerary_recheck_failed", observed="일정 전체 재판정에 걸려 바꾸지 못했다: 1순위 가 — x / 2순위 나 — y"))
+    first = _tick(opener)
+    assert first.notified and len(first.notified) == len(first.opened)
+    sent = [n for n in _notices(api)[before:] if n.get("kind") == "recheck_failed"]
+    assert len(sent) == len(first.notified) and "일정은 그대로 두었어요" in sent[0]["text"]
+
+
 def test_an_action_rejected_for_another_reason_is_not_announced_to_the_customer(api):
     """인자 오류 · 지어낸 장소 같은 다른 `action_rejected` 는 고객 알림이 아니라 **운영자의 오류**다."""
     _create(api)

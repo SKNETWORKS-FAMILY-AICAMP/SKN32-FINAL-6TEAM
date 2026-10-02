@@ -47,12 +47,22 @@ class ItineraryChange:
     replacements: dict[UUID, Item] = field(default_factory=dict)
     full_items: list[Item] | None = None
     summary: dict[str, Any] = field(default_factory=dict)
+    #: ★`[2026-10-03]` 같은 문제를 푸는 **다음 순위 안**들(최대 2) — 최고 안이 일정 **전체** 재판정에 걸리면 앞에서부터 같은 판정에 넣어 통과하는 첫 안을 쓴다(`itinerary_fit.fit_change`).
+    #:  각 안은 알림 · 「다른 안」 목록까지 완성된 변경이다(그 안보다 **낮은** 순위만 다른 안으로 보인다 — 이미 안 맞는다고 본 안을 고객에게 다른 안으로 보이지 않는다).
+    fallbacks: list["ItineraryChange"] = field(default_factory=list)
 
     def new_items(self, current: list[Item]) -> list[Item]:
         if self.full_items is not None:
             return list(self.full_items)
         out = [self.replacements.get(item.item_id, item) for item in current]
         return refresh_moves_around(current, out, self.replacements)
+
+
+def _with_fallbacks(build: Callable[[Any, list[Any]], "ItineraryChange"], ranked: list[Any]) -> "ItineraryChange":
+    """순위순 후보 목록 → 최고 안의 변경 + 다음 순위 안들의 변경. 각 안의 「다른 안」은 **그보다 낮은 순위**만이다(이미 안 맞는다고 본 위 순위 안은 안 보인다)."""
+    change = build(ranked[0], ranked[1:])
+    change.fallbacks = [build(ranked[i], ranked[i + 1:]) for i in range(1, len(ranked))]
+    return change
 
 
 def _leg_place(item: Item) -> dict[str, Any] | None:
@@ -411,17 +421,21 @@ def plan_activity_adjustment(*, item: Item, report: dict[str, Any], places: list
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)
-    notice = change_notice(original=item.place, replacement=best.place,
-                           start=item.starts_at, causes=causes,
-                           alternates=alternates, replay=replay)
-    replacement = item.replaced_by(
-        place=best.place, title=title_for(item, best.place["name"]),
-        detail={"auto_adjusted_at": now.isoformat(),
-                "other_options": notice["other_options"],
-                "alternates": [alternate_record(c) for c in alternates]})
-    return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
-                           replacements={item.item_id: replacement},
-                           summary={"from": item.place["name"], "to": best.place["name"]})
+
+    def build(chosen: "Candidate", others: list["Candidate"]) -> ItineraryChange:
+        notice = change_notice(original=item.place, replacement=chosen.place,
+                               start=item.starts_at, causes=causes,
+                               alternates=others, replay=replay)
+        replacement = item.replaced_by(
+            place=chosen.place, title=title_for(item, chosen.place["name"]),
+            detail={"auto_adjusted_at": now.isoformat(),
+                    "other_options": notice["other_options"],
+                    "alternates": [alternate_record(c) for c in others]})
+        return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
+                               replacements={item.item_id: replacement},
+                               summary={"from": item.place["name"], "to": chosen.place["name"]})
+
+    return _with_fallbacks(build, [best, *alternates])
 
 
 # ── 감시 — 이동 ────────────────────────────────────────────────
@@ -466,21 +480,25 @@ def plan_route_adjustment(*, item: Item, following: Item | None, route: dict[str
         return NoChange("unresolved", {"causes": causes,
                                        "rejected": {c.name: c.rejected for c in rejected}})
     replay = any(cause.get("mode") == "replay" for cause in causes)
-    notice = route_notice(route={**route, "planned": chosen}, planned=planned, best=best,
-                          alternates=alternates, rejected=rejected, causes=causes,
-                          planned_arrival=item.ends_at or item.starts_at,
-                          next_title=following.title if following else None, replay=replay)
-    replacement = item.replaced_by(
-        place=None, title=f"{route['from']} → {route['to']} · {(best.option or {}).get('label')}",
-        starts_at=best.starts_at, ends_at=best.ends_at,
-        detail={**item.detail, "option": best.key,
-                "auto_adjusted_at": now.isoformat(),
-                "other_options": notice["other_options"],
-                "alternates": [alternate_record(c) for c in alternates]})
-    return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
+
+    def build(picked: "Candidate", others: list["Candidate"]) -> ItineraryChange:
+        notice = route_notice(route={**route, "planned": chosen}, planned=planned, best=picked,
+                              alternates=others, rejected=rejected, causes=causes,
+                              planned_arrival=item.ends_at or item.starts_at,
+                              next_title=following.title if following else None, replay=replay)
+        replacement = item.replaced_by(
+            place=None, title=f"{route['from']} → {route['to']} · {(picked.option or {}).get('label')}",
+            starts_at=picked.starts_at, ends_at=picked.ends_at,
+            detail={**item.detail, "option": picked.key,
+                    "auto_adjusted_at": now.isoformat(),
+                    "other_options": notice["other_options"],
+                    "alternates": [alternate_record(c) for c in others]})
+        return ItineraryChange(reason="auto_adjusted", causes=causes, notice=notice,
                            replacements={item.item_id: replacement},
                            summary={"from": planned.get("label"),
-                                    "to": (best.option or {}).get("label")})
+                                    "to": (picked.option or {}).get("label")})
+
+    return _with_fallbacks(build, [best, *alternates])
 
 
 def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None, events: dict[str, Any],
@@ -775,13 +793,17 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
         return NoChange("unresolved", {"causes": causes, "rejected": {c.name: c.rejected for c in rejected}})
     kinds = ", ".join(sorted({str(c.get("kind") or c.get("category")) for c in causes})) or "운영 상황 변화"
     payment = (trip.get("constraints") or {}).get("payment")
-    notice = dining_notice(
-        original=meal.place, best=best, alternates=alternates,
-        reason=f"{meal.place['name']} 주변에 {kinds} 소식이 있어 {meal.starts_at:%H:%M} 식사 장소를 바꿨습니다",
-        cause=causes[0] if causes else {"category": "disruption"}, after=None,
-        constraint_note="카드 결제가 가능한" if payment == "card" else None)
-    notice["causes"] = causes or notice["causes"]
-    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted", source=found_in)
+
+    def build(chosen: "Candidate", others: list["Candidate"]) -> ItineraryChange:
+        notice = dining_notice(
+            original=meal.place, best=chosen, alternates=others,
+            reason=f"{meal.place['name']} 주변에 {kinds} 소식이 있어 {meal.starts_at:%H:%M} 식사 장소를 바꿨습니다",
+            cause=causes[0] if causes else {"category": "disruption"}, after=None,
+            constraint_note="카드 결제가 가능한" if payment == "card" else None)
+        notice["causes"] = causes or notice["causes"]
+        return _dining_change(meal, chosen, others, notice, reason="auto_adjusted", source=found_in)
+
+    return _with_fallbacks(build, [best, *alternates])
 
 
 def plan_activity_closed_on_day(*, items: list[Item], places: list[dict[str, Any]], item: Item, source: str,

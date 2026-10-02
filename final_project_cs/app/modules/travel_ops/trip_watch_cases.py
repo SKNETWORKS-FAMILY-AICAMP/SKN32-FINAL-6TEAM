@@ -190,7 +190,9 @@ class TripWatchCaseOpener:
         guardrail, observed = self._escalation(case_id)
         # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`). 다른 `action_rejected`(인자 오류 등)는
         #   운영자 몫이라 고객에게 알리지 않는다
-        recheck_failed = guardrail == "action_rejected" and observed.startswith(RECHECK_FAILED)
+        # ★`[2026-10-03]` Team 이 다음 순위 안까지 다 시험해 걸렸으면(`itinerary_recheck_failed`) 적용기에 닿기 전에 끝난다 — 같은 문장으로 알린다
+        recheck_failed = (guardrail == "itinerary_recheck_failed"
+                          or (guardrail == "action_rejected" and observed.startswith(RECHECK_FAILED)))
         if guardrail != "itinerary_unresolved" and not recheck_failed:
             return
         item, causes = context["item"], context["causes"]

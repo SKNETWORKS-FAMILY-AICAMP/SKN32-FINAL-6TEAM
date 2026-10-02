@@ -33,7 +33,8 @@ from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask,
 from app.core.idempotency import idempotency_key
 
 from .itinerary import Item, item_from_dict
-from .itinerary_actions import ACTION_TYPE, change_arguments
+from .itinerary_actions import ACTION_TYPE, CHOSEN_BY_CUSTOMER, change_arguments
+from .itinerary_fit import fit_change
 from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
 
 from .itinerary_changes import ItineraryChange, NoChange, plan_rollback, plan_swap
@@ -283,6 +284,15 @@ class ItineraryWork:
             return self._escalate(task, f"itinerary_{plan.status}", evidence,
                                   warnings=[f"일정을 바꾸지 못했다: {plan.status}"])
         trip = ctx["trip"]
+        if plan.reason not in CHOSEN_BY_CUSTOMER:
+            # ★`[2026-10-03]` 자동 변경은 **쓰기 전에 일정 전체를 다시 판정**하고, 최고 안이 걸리면 담당이 뽑아 둔 다음 순위 안을 차례로 같은 판정에 넣는다(`itinerary_fit`).
+            #   다 걸리면 쓰지 않고 `itinerary_recheck_failed` — 감시가 고객에게 「일정은 그대로 두었어요」를 알린다. 적용기의 같은 재판정은 마지막 안전망이다.
+            fitted, rank, blocked = fit_change(plan, trip=trip, items=ctx["items"])
+            if fitted is None:
+                return self._escalate(task, "itinerary_recheck_failed", evidence,
+                                      warnings=["일정 전체 재판정에 걸려 바꾸지 못했다: " + " / ".join(
+                                          f"{r}순위 {name} — {chr(59).join(reasons)}" for r, name, reasons in blocked)])
+            plan = fitted
         base = int(ctx["ref"].get("base_version") or trip["version"]) \
             if plan.reason in ("customer_request", "rollback") else trip["version"]
         arguments = change_arguments(trip_id=trip["trip_id"], base_version=base, change=plan)
