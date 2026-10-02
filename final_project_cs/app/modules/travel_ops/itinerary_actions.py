@@ -51,12 +51,28 @@ CHOSEN_BY_CUSTOMER = frozenset({"customer_request", "rollback", "customer_choice
 RECHECK_FAILED = "itinerary re-check failed"
 
 
+#: 일정 **전체**에 걸리는 위반 — 항목 하나가 아니라 합계로 정해져(예산) 항목 id 로 비교할 수 없다. 종류만으로 비교한다(바꾸기 전에도 있었으면 이 변경의 탓이 아니다)
+_TRIP_LEVEL = frozenset({"over_budget"})
+
+
+def _signature(violation: Violation, ids_by_seq: Mapping[int, Any]) -> tuple:
+    if violation.code in _TRIP_LEVEL:
+        return (violation.code,)
+    return (violation.code, tuple(ids_by_seq.get(seq) for seq in violation.seq))
+
+
 def introduced_violations(trip: Mapping[str, Any], current: list[Item], new_items: list[Item]) -> list[Violation]:
-    """바꾼 일정에 **새로** 생긴 위반 — 바꾸기 전(`current`)에 같은 `(code, 항목)` 위반이 있었으면 그건 이 변경의 탓이 아니라 뺀다."""
+    """바꾼 일정에 **새로** 생긴 위반 — 바꾸기 전(`current`)에 **같은 항목(id)** 에 걸린 같은 종류의 위반이 있었으면 이 변경의 탓이 아니라 뺀다.
+
+    ☆`[2026-10-03 적대 검토]` 전에는 `(종류, 항목 순번)` 으로 비교했다 — 대체 항목은 **순번을 물려받아**, 원래 곳이 그날 휴무였고 대체할 곳도 그날 쉬면 「원래 있던 위반」으로 보고 통과했다.
+    이제 위반이 가리키는 항목의 **id** 로 비교한다 — 바뀐 항목은 새 id 라 그 항목에 걸린 위반은 전부 새 위반이고, 손대지 않은 항목끼리의 위반(같은 id)은 원래 있던 것이다."""
     constraints, party = dict(trip.get("constraints") or {}), trip.get("party_size")
-    before = {(v.code, v.seq) for v in check_itinerary(parts_from_items(current), constraints=constraints, party_size=party)}
+    before_ids = {item.seq: item.item_id for item in current}
+    after_ids = {item.seq: item.item_id for item in new_items}
+    before = {_signature(v, before_ids)
+              for v in check_itinerary(parts_from_items(current), constraints=constraints, party_size=party)}
     after = check_itinerary(parts_from_items(new_items), constraints=constraints, party_size=party)
-    return [v for v in after if (v.code, v.seq) not in before]
+    return [v for v in after if _signature(v, after_ids) not in before]
 
 
 def _plain(value: Any) -> Any:

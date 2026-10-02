@@ -67,9 +67,11 @@ def _minutes(start: datetime, end: datetime) -> int:
     return int((end - start).total_seconds() // 60)
 
 
-def _planned_eta(route: Mapping[str, Any]) -> tuple[str, int] | None:
+def _planned_eta(route: Mapping[str, Any], chosen: Any = None) -> tuple[str, int] | None:
+    """계획한 수단의 소요. ★`[2026-10-03 적대 검토]` 감시가 경로를 **다른 수단으로 바꾸면** 고른 수단은 `detail.option` 에 있고 `route.planned` 는 옛 계획 그대로다 —
+    옛 계획의 소요(지하철 25분)와 새 이동(택시 15분)을 비교하면 더 빠른 수단이 「이동 시간이 너무 짧다」로 잡혔다. 그래서 고른 수단(`chosen`)이 있으면 그것을 먼저 본다(등록 때는 없다)."""
     options = {str(option.get("id")): option for option in route.get("options") or []}
-    option = options.get(str(route.get("planned")))
+    option = options.get(str(chosen if chosen not in (None, "") else route.get("planned")))
     if option is None or option.get("eta_min") is None:
         return None
     return str(option.get("label") or option.get("id")), int(option["eta_min"])
@@ -143,7 +145,7 @@ def _pair_violations(earlier: Part, later: Part) -> list[Violation]:
                           f"{earlier.title}({_hm(end)} 종료)와 {later.title}({_hm(later.starts_at)} 시작)이 겹친다",
                           f"{later.title} 를 {_hm(end)} 뒤로 옮기거나 앞 항목을 줄인다")]
     if later.kind == "mobility" and later.route:
-        planned = _planned_eta(later.route)
+        planned = _planned_eta(later.route, (later.detail or {}).get("option"))
         length = _minutes(later.starts_at, later.ends_at) if later.ends_at else None
         if planned and length is not None and length < planned[1]:
             label, eta = planned

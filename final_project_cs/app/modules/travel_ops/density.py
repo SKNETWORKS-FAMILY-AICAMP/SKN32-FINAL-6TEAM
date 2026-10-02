@@ -153,7 +153,9 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
                 travel += minutes
                 route = part.route or {}
                 options = route.get("options")
-                option = next((o for o in options if isinstance(o, dict) and o.get("id") == route.get("planned")), None) if isinstance(options, list) else None
+                # ★`[2026-10-03]` 고른 수단(`detail.option`)이 먼저 — 경로를 바꾼 항목의 소요를 옛 계획 수단과 비교하지 않는다(`itinerary_checks._planned_eta` 와 같다)
+                chosen_option = (detail.get("option") or route.get("planned"))
+                option = next((o for o in options if isinstance(o, dict) and o.get("id") == chosen_option), None) if isinstance(options, list) else None
                 eta = _number(option.get("eta_min")) if option else None
                 if eta is None or minutes < eta:
                     reasons.append(f"항목 {part.seq}: 경로 소요 누락 또는 이동시간 부족")
