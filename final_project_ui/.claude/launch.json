@@ -4,16 +4,45 @@
     {
       "name": "ui-console",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "console.web"],
+      "runtimeArgs": [
+        "-m",
+        "console.web"
+      ],
       "autoPort": true,
       "port": 8060
     },
     {
+      "name": "tripilot-api",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.presentation.api.app:app",
+        "--app-dir",
+        "../final_project_cs",
+        "--port",
+        "8042"
+      ],
+      "port": 8042,
+      "url": "http://127.0.0.1:8042"
+    },
+    {
       "name": "tripilot-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "../final_project_cs/frontend/apps/web", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "../final_project_cs/frontend/apps/web",
+        "run",
+        "dev"
+      ],
       "port": 3100,
-      "url": "http://127.0.0.1:3100"
+      "url": "http://127.0.0.1:3100",
+      "autoPort": false
+    },
+    {
+      "name": "tripilot-web-attach",
+      "url": "http://127.0.0.1:3100",
+      "port": 3100
     }
   ]
 }
