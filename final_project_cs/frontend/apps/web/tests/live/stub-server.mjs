@@ -48,6 +48,8 @@ const DEFAULTS = {
   planDelay: 0,
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
+  // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
+  profile: "on",
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
 };
@@ -64,6 +66,8 @@ let sessions;
 let polls;
 let confirmed;
 let keys;
+/** The recovery email the server holds (`PUT /v1/web/profile`). */
+let recoveryEmail = null;
 
 /** The conversation record the server keeps (`GET /v1/web/trips/{id}/chat`), oldest first. */
 let turns = [];
@@ -77,6 +81,7 @@ function reset() {
   polls = 0;
   confirmed = false;
   keys = new Set(["acop_u_known"]);
+  recoveryEmail = null;
 }
 reset();
 
@@ -172,14 +177,14 @@ createServer(async (request, response) => {
 
   if (request.method === "OPTIONS") {
     response.writeHead(200, {
-      "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Methods": "GET, POST", Vary: "Origin",
+      "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Methods": "GET, POST, PUT", Vary: "Origin",
       "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, X-User-Key", "Access-Control-Max-Age": "600",
     });
     response.end();
     return;
   }
 
-  const raw = request.method === "POST" ? await readBody(request) : "";
+  const raw = request.method === "POST" || request.method === "PUT" ? await readBody(request) : "";
 
   // ── test control ─────────────────────────────────────────────────
   if (path === "/__test/reset") { reset(); return json(response, 200, { ok: true }, origin); }
@@ -210,6 +215,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 201, { customer_id: "cust-1", user_key: issued, notice: "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다." }, origin);
   }
   if (!key || !keys.has(key)) return json(response, 401, { error: { code: "unauthenticated", message: "사용자 키가 없거나 맞지 않는다" } }, origin);
+
+  // ── the customer's contact details ───────────────────────────────
+  if (path === "/v1/web/profile" && scenario.profile !== "off") {
+    const view = () => ({ recovery_email: recoveryEmail, discord_webhook: { set: false, masked: null, status: null, checked_at: null }, updated_at: null });
+    if (request.method === "GET") return json(response, 200, view(), origin);
+    if (request.method === "PUT") {
+      if (scenario.profile === "reject") return json(response, 422, { error: { code: "invalid_email", message: "이메일 형식이 맞지 않아요." } }, origin);
+      const body = JSON.parse(raw || "{}");
+      const unknown = Object.keys(body).find((name) => !["recovery_email", "discord_webhook_url"].includes(name));
+      if (unknown) return json(response, 422, { error: { code: "unknown_field", message: unknown } }, origin);
+      if ("recovery_email" in body) recoveryEmail = String(body.recovery_email ?? "").trim() || null;
+      return json(response, 200, view(), origin);
+    }
+  }
 
   if (request.method === "POST" && path === "/v1/web/session/rotate") {
     keys.delete(key);
@@ -267,12 +286,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     if (broken("messages")) return;
     const body = JSON.parse(raw || "{}");
     if (scenario.chat === "escalated_bare") return json(response, 200, { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null }, origin);
-    const answer = `서버 답: ${body.message}`;
+    // a question about where the customer is now: the real server's decision unit says so with `needs_location`
+    //   (this test mock server only looks for 「여기서」). With a position it answers from there.
+    const here = String(body.message).includes("여기서");
+    const answer = here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
+      : here ? "현재 위치를 알려 주시면 지금 계신 곳에서 가는 길을 알려 드릴게요." : `서버 답: ${body.message}`;
     tripFailures = scenario.rereadFails;
     // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
     turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
       { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });
-    return json(response, 200, { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer }, origin);
+    return json(response, 200, { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer, ...(here && !body.location ? { needs_location: true } : {}) }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/chat` && request.method === "GET") return json(response, 200, { trip_id: TRIP_ID, turns: turns.slice(-40) }, origin);
 

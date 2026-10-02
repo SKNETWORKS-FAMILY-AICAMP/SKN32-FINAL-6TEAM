@@ -337,3 +337,25 @@ test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 
   expect(ids).toHaveLength(2);
   expect(ids[1]).toBe(ids[0]);
 });
+
+// 2026-09-30 user decision: where the customer is comes from the browser's Geolocation API, asked only on a press.
+test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를 때만 브라우저 위치를 얻어 같은 질문을 다시 보낸다", async ({ page, request, context }) => {
+  const server = mockServer(request);
+  await context.grantPermissions(["geolocation"], { origin: "http://127.0.0.1:3102" });
+  await context.setGeolocation({ latitude: 37.5704, longitude: 126.9921, accuracy: 25 });
+  await openTrip(page);
+  await page.getByRole("button", { name: "채팅", exact: true }).click();
+  const chat = page.locator("#trip-pane-chat");
+  await chat.locator("#trip-chat-message").fill("여기서 경복궁 어떻게 가?");
+  await chat.locator("#trip-chat-message").press("Enter");
+  await expect(chat.locator("article[data-role=assistant]").last()).toContainText("현재 위치를 알려 주시면");
+  // nothing about the position has left the browser yet
+  expect((await server.received("POST", "/messages"))[0].body).not.toHaveProperty("location");
+
+  await chat.getByRole("button", { name: "내 위치 알려 주고 다시 묻기" }).click();
+  await expect(chat.locator("article[data-role=assistant]").last()).toContainText("지금 계신 곳(37.5704, 126.9921)에서 도보 12분이에요.");
+  const [first, second] = await server.received("POST", "/messages");
+  expect(second.body).toMatchObject({ message: "여기서 경복궁 어떻게 가?", location: { lat: 37.5704, lng: 126.9921, accuracy_m: 25 } });
+  expect(second.body?.request_id).not.toBe(first.body?.request_id);
+  await expect(chat.getByRole("button", { name: "내 위치 알려 주고 다시 묻기" })).toHaveCount(0);
+});

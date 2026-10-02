@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, CalendarDays, Check, ExternalLink, Leaf, MapPin, MessageCircle, Navigation, SquarePen, Send, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ExternalLink, Leaf, LocateFixed, MapPin, MessageCircle, Navigation, SquarePen, Send, ShieldCheck } from "lucide-react";
 import { TripMap } from "@/features/map";
 import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
@@ -10,6 +10,7 @@ import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
 import { undoChange, warmup } from "@/lib/live/extras";
 import { LiveError } from "@/lib/live/client";
+import { currentLocation, locationFailureText, type LocationFix } from "@/lib/location";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
@@ -96,10 +97,12 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const diagram = mapConfiguration.provider === "demo";
   // The server answered but the plan did not re-read (Q-05): the reply is shown, and the plan is read again until it loads.
   const [rereading, setRereading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
   const message = useMutation({
     // ★Only a stop the customer actually picked goes to the server (`item_id`) — the first stop shown by default is not a choice.
-    mutationFn: async ({ text, itemId }: { text: string; clearDraft: boolean; itemId?: string | null }) => {
-      try { return await tripGateway.sendMessage(trip.id, text, language, itemId); }
+    mutationFn: async ({ text, itemId, location }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null }) => {
+      try { return await tripGateway.sendMessage(trip.id, text, language, itemId, location); }
       catch (error) {
         if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
         setRereading(true);
@@ -178,7 +181,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     focus(navigation === "floating" ? "trip-nav-toggle" : `trip-pane-button-${next}`);
   }
 
-  function ask(text: string, clearDraft = false, pickedId: string | null = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null) {
+  function ask(text: string, clearDraft = false, pickedId: string | null = trip.stops.some((stop) => stop.id === selectedId) ? selectedId : null, location: LocationFix | null = null) {
     if (message.isPending) return;
     const trimmed = text.trim();
     if (!trimmed) {
@@ -188,7 +191,19 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     }
     setInputError("");
     setPane("chat");
-    message.mutate({ text: trimmed, clearDraft, itemId: pickedId });
+    setLocationError("");
+    message.mutate({ text: trimmed, clearDraft, itemId: pickedId, location });
+  }
+
+  // ★The server said the answer needs where the customer is. The browser is asked only now, on this press
+  //   (user decision 2026-09-30: location comes from the Geolocation API) — never as the page opens.
+  async function askWithLocation(question: string) {
+    setLocationError("");
+    setLocating(true);
+    const result = await currentLocation();
+    setLocating(false);
+    if (!result.ok) { setLocationError(locationFailureText(result.reason, t)); return; }
+    ask(question, false, undefined, result.fix);
   }
 
   const askAbout = (stop: TripStop) => { choose(stop); ask(t(`${stop.date} ${stop.time} ${stop.title} 일정의 상세를 알려 주세요.`, `Tell me about the ${stop.title} stop on ${stop.date} at ${stop.time}.`), false, stop.id); };
@@ -298,7 +313,11 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           {/* ★Only the latest answer's choices can be picked — an older question is no longer open. */}
           {item.choices && item.choices.length > 0 && index === trip.messages.length - 1 && <div className={styles.choices}>
             {item.choicesTitle && <span className={styles.choicesTitle}>{item.choicesTitle}</span>}{item.choices.map((choice) =>
-            <Button key={choice.message} variant="quiet" disabled={message.isPending} onClick={() => ask(choice.message)}>{choice.label}</Button>)}</div>}</article>)}
+            <Button key={choice.message} variant="quiet" disabled={message.isPending} onClick={() => ask(choice.message)}>{choice.label}</Button>)}</div>}
+          {item.needsLocation && index === trip.messages.length - 1 && trip.messages[index - 1]?.role === "user" && <div className={styles.choices}>
+            <Button variant="quiet" disabled={message.isPending || locating} onClick={() => void askWithLocation(trip.messages[index - 1].text)}><LocateFixed {...icon} />{locating ? t("위치 찾는 중…", "Finding your location…") : t("내 위치 알려 주고 다시 묻기", "Share my location and ask again")}</Button>
+            <span className={styles.undoHint}>{t("누르면 브라우저가 위치 권한을 물어요. 위치는 이 질문에 답하는 데 써요.", "Your browser will ask first. The location is used to answer this question.")}</span></div>}</article>)}
+        {locationError && <p className={styles.error} role="alert">{locationError}</p>}
         {undo.error && <p className={styles.error} role="alert">{undo.error instanceof LiveError && ["stale_itinerary", "stale", "invalid_version"].includes(undo.error.code)
           ? t("그 사이 일정이 다시 바뀌어 되돌리지 않았어요.", "The plan changed again meanwhile, so nothing was undone.") : undo.error.message}</p>}
         {undo.data && !undo.error && <p className={styles.chatnote} role="status">{undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
@@ -321,7 +340,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <Button type="submit" variant="primary" disabled={message.isPending} aria-label={t("메시지 전송", "Send message")}><Send {...icon} /><span className={styles.sendText}>{t("전송", "Send")}</span></Button>
           {inputError && <p id="trip-chat-error" className={styles.error} role="alert">{inputError}</p>}
         </form>
-        {rereading && !message.isPending && <p className={styles.chatNote} role="status">{t("답은 받았어요. 최신 일정을 다시 불러오지 못해 잠시 뒤 다시 읽고 있어요.", "The reply arrived. The latest plan did not load, so it is being read again shortly.")}</p>}
+        {rereading && !message.isPending && <p className={styles.rereadNote} role="status">{t("답은 받았어요. 최신 일정을 다시 불러오지 못해 잠시 뒤 다시 읽고 있어요.", "The reply arrived. The latest plan did not load, so it is being read again shortly.")}</p>}
         {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
         <p className={styles.chatnote}>{live
           ? t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")

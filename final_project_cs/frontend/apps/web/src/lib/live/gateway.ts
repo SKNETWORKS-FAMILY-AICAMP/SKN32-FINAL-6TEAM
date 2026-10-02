@@ -133,7 +133,8 @@ async function conversation(tripId: string, language: Language): Promise<TripMes
     return { id: `chat-${turn.case_id ?? "x"}-${index}`, role, text: turn.text as string, createdAt: turn.at ?? "",
       ...(kept?.choices ? { choices: kept.choices } : {}), ...(kept?.basis ? { basis: kept.basis } : {}),
       ...(kept?.changedTo ? { changedTo: kept.changedTo } : {}),
-      ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}) };
+      ...(kept?.choicesTitle ? { choicesTitle: kept.choicesTitle } : {}), ...(kept?.more ? { more: kept.more } : {}),
+      ...(kept?.needsLocation ? { needsLocation: true } : {}) };
   });
   // ★The record can lag the reply this tab just got (the server may finish writing it after answering). What this tab
   //   sent or received after the record's last turn is kept at the end — never dropped, never shown twice.
@@ -252,7 +253,7 @@ export function createLiveGateway(): TripGateway {
     getTrip: read,
     retryVerification: read,
     startTrip: read,
-    async sendMessage(tripId, message, language, itemId) {
+    async sendMessage(tripId, message, language, itemId, location) {
       const t = translator(language);
       const now = new Date().toISOString();
       const earlier = unanswered.get(tripId);
@@ -260,8 +261,10 @@ export function createLiveGateway(): TripGateway {
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       unanswered.set(tripId, { message, itemId: itemId ?? null, requestId });
       const result = await api<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
-        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}) }),
+        outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}),
+          // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
+          ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
       });
       unanswered.delete(tripId);
       const sent: TripMessage[] = [
@@ -271,6 +274,7 @@ export function createLiveGateway(): TripGateway {
           ...(choicesOf(result.choices).length ? { choices: choicesOf(result.choices) } : {}),
           ...(typeof result.choices_title === "string" && result.choices_title.trim() ? { choicesTitle: result.choices_title.trim() } : {}),
           ...(typeof result.more === "string" && result.more.trim() ? { more: result.more.trim() } : {}),
+          ...(result.needs_location === true && !location ? { needsLocation: true } : {}),
           // ★A change the customer asked for in chat can be undone from the answer (user decision 2026-09-29).
           ...(result.status === "adjusted" && typeof result.outcome?.version === "number" && result.outcome.version > 1
             ? { changedTo: result.outcome.version } : {}) }];
