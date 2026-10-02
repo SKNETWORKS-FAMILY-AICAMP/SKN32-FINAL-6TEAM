@@ -77,6 +77,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trips/{trip_id}/chat",
     "/v1/web/map-load",
     "/v1/web/trips/{trip_id}/rollback",
+    # ★2026-10-02 웹(사용자 키)용 신고 · 다른 안으로 — 에이전트 입구(`/v1/trips/{id}/reports` · `…/alternate`)와 같은 처리, 본인 여행만. 개인 AI(MCP)가 쓴다
+    "/v1/web/trips/{trip_id}/reports",
+    "/v1/web/trips/{trip_id}/items/{item_id}/alternate",
     # ★2026-09-30 변경 초인종 — 「이 여행 바뀜」 신호만 흘린다(text/event-stream, 사용자 키). `wiki/external/rest-endpoints.md`
     "/v1/web/trips/{trip_id}/events",
     # ★2026-10-01 고객 연락처(복구 이메일 · 디스코드 웹훅) — 사용자 키. `wiki/external/rest-endpoints.md`
@@ -91,6 +94,9 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/confirm",
     # 「일정 짜 줘」 — 조건을 확인해 누르면 일정 생성기 초안을 판정 뒤 등록(request_id = 접수 + plan + 판)
     "/v1/web/trip-intakes/{intake_id}/plan",
+    # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가
+    #   `Accept: text/event-stream` 이면 SSE 로 답한다(새 경로 없음). `wiki/external/rest-endpoints.md` 「웹 실시간 진행」
+    "/v1/web/trip-intakes/{intake_id}/events",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.

@@ -50,7 +50,9 @@ tests/
 | 인증·스코프 | `security/` | `test_auth_and_scope_guards.py` |
 | PII 마스킹 | `security/` | `test_pii_redaction_runtime.py` |
 | tenant·customer 격리 | `security/` | `test_query_scope.py` |
-| MCP 도구 수 고정 | `security/` | `test_scope_contract.py` |
+| 옛 MCP 도구 수 고정(쇼핑몰 Case 도구 3개 — 연결 안 됨) | `security/` | `test_scope_contract.py` |
+| **MCP 실제 접속**(initialize → 도구 호출) · 키 401 · 남의 여행 404 · 쓰기 스위치 `[2026-10-02]` | `e2e/` | `test_mcp_server.py` (15건) |
+| **웹 실시간 진행(SSE)** — 단계 · 생존 신호 · 시간 초과 · 끊김 · 접수 읽기 멈춤 `[2026-10-02]` | `e2e/` | `test_op_stream.py` (21건) |
 | outbox 해소 | `integration/api/` | `test_outbox_resolution.py` |
 | outbox tenant 격리 | `integration/messaging/` | `test_outbox_tenant_guard.py` |
 | 제공자 timeout | `integration/controller/` | `test_provider_timeout_unknown.py` |
@@ -64,7 +66,7 @@ tests/
 
 ## 불변식과의 연결
 
-`[실측 2026-09-10]` 불변식 **52개 중 49개**가 위 테스트에 연결돼 있다.
+`[실측 2026-10-02]` 불변식 **56개 중 53개**가 위 테스트에 연결돼 있다(2026-09-10 에는 52개 중 49개).
 
 연결 상태는 [invariants.md](invariants.md)에 있고, **검사기가 실제로 파일과 함수 존재를 확인한다.**
 

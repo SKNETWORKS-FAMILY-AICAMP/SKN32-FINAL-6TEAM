@@ -31,6 +31,16 @@ logger = logging.getLogger(__name__)
 REGISTERED_TEAMS = frozenset({"activity", "dining", "mobility", "booking", "lodging", "flight"})
 
 
+def _stage(progress: Callable[[str], None] | None, name: str) -> None:
+    """진행 알림 — 없으면 아무것도 안 한다. ★알림이 실패해도 처리는 계속된다."""
+    if progress is None:
+        return
+    try:
+        progress(name)
+    except Exception:                                   # noqa: BLE001
+        pass
+
+
 class TripNotFound(LookupError):
     pass
 
@@ -253,7 +263,8 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                         at: datetime, classifier: Any, chat: Any, desk: TripDesk,
                         actor_id: str, policy_search: Any = None, place_source: Any = None,
                         defer: Callable[[Callable[[], None]], None] | None = None,
-                        selected_item_id: UUID | None = None, location: Any = None) -> dict[str, Any]:
+                        selected_item_id: UUID | None = None, location: Any = None,
+                        progress: Callable[[str], None] | None = None) -> dict[str, Any]:
     """★`[2026-09-28]` **어떤 결과로 끝나든 `answer`(고객에게 보일 문장)를 싣는다** — `trip_replies.py` 머리.
     질문은 규정 근거로 답하고(`policy_search`, 없으면 못 찾았다고 답한다), 잡담·모호한 말은 할 수 있는 일과
     이 여행의 사실로 답한다. 답은 서버가 가진 사실로만 만든다.
@@ -261,7 +272,11 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
     `defer` — ★`[2026-09-29]` 사실 질문의 **분류를 응답 뒤로** 미루는 자리(웹 입구가 넣는다). 모델이 식어 있으면
     분류가 30초 넘게 걸려 답이 기록으로 이미 만들어져 있는데도 「하루 일정 요약」이 34.8·33.5초 걸렸다(ui 세션 실측,
     깨어 있으면 2.0·2.1초). 넣으면 사실 질문은 곧바로 답하고 분류·완료 기록은 뒤에서 한다 — 분류는 **그대로 한다**
-    (모든 Case 가 분류를 거치고 실패는 기록한다, CLAUDE.md §1). 에이전트 입구는 넣지 않아 지금처럼 끝까지 기다린다."""
+    (모든 Case 가 분류를 거치고 실패는 기록한다, CLAUDE.md §1). 에이전트 입구는 넣지 않아 지금처럼 끝까지 기다린다.
+
+    `progress` — ★`[2026-10-02]` 웹이 **실시간 진행(SSE)** 으로 받을 때 넣는다(`op_stream.py`). 서버가 **실제로 그 단계에 들어갈 때**
+    `progress("reading" | "understanding" | "looking_up" | "classifying" | "extracting" | "applying")` 를 부른다. 처리 결과는 안 바뀐다 —
+    부르는 쪽 실패는 삼킨다(진행 알림이 일 자체를 깨면 안 된다)."""
     from app.application.classification import classify_case
     from app.application.routing import case_type_of
     from app.core.transition import transition_case
@@ -275,6 +290,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
 
     from . import trip_facts, trip_replies
 
+    _stage(progress, "reading")
     with get_connection() as conn:
         try:
             trip, items = store.latest(conn, trip_id)
@@ -297,10 +313,12 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         #   분류기 · 추출기 · 대상 규칙)를 타지 않는다 — 모델 실패에도 규칙 경로로 넘기지 않는다(옛 오처리를 되살린다).
         mode = _decision_mode(chat, tenant)
         if mode != "off":
+            _stage(progress, "understanding")
             decision, failure = _try_decide(conn, store=store, tenant=tenant, trip_id=trip_id, items=items,
                                             message=message, selected=selected_item_id, chat=chat)
             record = decision.record() if decision is not None else {"failed": failure}
             if mode == "on":
+                _stage(progress, "applying")
                 with conn.transaction():
                     case_id = _open_message_case(conn, tenant=tenant, trip=trip, message=message, marker=marker,
                                                  selected=selected_item_id, actor_id=actor_id,
@@ -315,6 +333,8 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         else:
             shadow = {}
         fact = trip_facts.fact_question(message)
+        if fact is not None:
+            _stage(progress, "looking_up")
         fact_answer = (trip_facts.fact_reply(fact, message=message, items=items, now=at, place_source=place_source)
                        if fact is not None else None)
         with conn.transaction():
@@ -351,6 +371,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                        {} if classified else {"classification_failed": True}),
                     "report": {"type": "question", "fact": fact}, "answer": fact_answer[0], "basis": fact_answer[1]}
         # ★분류는 생성 트랜잭션 **밖**에서(v8 §3-A) — REST 접수와 같은 이유다.
+        _stage(progress, "classifying")
         event = classify_case(conn, tenant_id=tenant, case_id=case_id, text=message,
                               classifier=classifier, actor_id=actor_id)
 
@@ -376,6 +397,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         team, routed_basis = owner_team(team, items=items, message=message, selected=selected_item_id, at=at)
         if team not in REGISTERED_TEAMS:
             team = "trip_desk"
+        _stage(progress, "extracting")
         try:
             report = extract(message, chat) if chat is not None else None
             why = "no_extractor" if chat is None else "not_understood"
@@ -411,6 +433,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
                          "basis": basis})
 
         # ★분류가 `other` 여도(실측: 품절 문장) 처리는 추출값으로 간다 — 담당은 여행 창구로 적는다.
+        _stage(progress, "applying")
         move(EventType.ROUTED, {"owner_team_id": team, "capability": f"trip_desk.{report['type']}", **routed_basis})
 
     if report["type"] == "delay":

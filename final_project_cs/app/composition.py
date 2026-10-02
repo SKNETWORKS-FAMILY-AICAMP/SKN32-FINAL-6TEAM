@@ -284,6 +284,23 @@ def build_controller(*, registry: TeamRegistry | None = None,
     )
 
 
+def build_mcp_surface(app_getter):
+    """개인 AI(Claude · ChatGPT · Cursor …)가 **사용자 본인의 여행**을 다루는 MCP 표면 — 고객 API 앱에 `/mcp/` 로 붙는다. `[2026-10-02]`
+
+    ★도구는 웹 API(`/v1/web/*`)를 그대로 부르는 얇은 어댑터다(`mcp_server.py`) — 규칙을 새로 만들지 않는다. `mcp` 모듈 토글은 **요청마다** 읽는다
+      (끄면 404). 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록한다(기본 꺼짐 — 「MCP 는 read-only」). presentation 은 도메인을
+      import 하지 못해(INV-CS-ARCH-001) 조립이 만들어 `create_app()` 에 준다. `app_getter` 는 이 표면이 붙을 앱을 돌려준다(네트워크 없이 부르려고).
+    """
+    from app.core.settings import get_guardrails
+    from app.modules.travel_ops.mcp_server import build_surface
+
+    def enabled() -> bool:
+        return load_project_config().module_enabled("mcp")
+
+    write = bool(get_guardrails().get("travel.mcp.write_enabled"))
+    return build_surface(app_getter, enabled=enabled, write_enabled=write)
+
+
 def build_domain_routers() -> list:
     """**고객 API 앱**이 여는 도메인 HTTP 표면 — 여행 API · 위임. ★`[2026-09-29]` 시나리오 모드 · 웹 제한값 운영 API 는
     운영 앱으로 옮겼다(`build_ops_routers`).
