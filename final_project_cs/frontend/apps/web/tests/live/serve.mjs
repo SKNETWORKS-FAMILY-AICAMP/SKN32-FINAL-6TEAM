@@ -11,7 +11,7 @@ const env = {
   NEXT_PUBLIC_GOOGLE_MAP_ID: "",
   // The human check calls Cloudflare; these tests stay on the test mock server, so it is off here (a dev .env.local may set it).
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
-  NEXT_DIST_DIR: ".next-mock",
+  NEXT_DIST_DIR: ".next-live",
 };
 const shell = process.platform === "win32";
 

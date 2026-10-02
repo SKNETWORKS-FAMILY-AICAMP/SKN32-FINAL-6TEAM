@@ -58,7 +58,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 ## 완료 기준
 
-기본 품질 확인은 `npm run check`(lint·typecheck·단위 검사·빌드), demo 브라우저 흐름은 `npm run test:e2e`, live 화면의 요청/실패 처리는 `npm run test:mock`(테스트용 모방 서버, 실제 서버 아님)으로 구분한다. `tests/contract/test_web_client_contract.py`는 실제 서버 라우트와 설문 계약을 정적으로 대조한다. `test:real`은 실제 데이터 생성·외부 호출·팀 알림 부작용이 있는 별도 검증이므로 원본 문서 정리에서 실행하지 않는다.
+기본 품질 확인은 `npm run check`(lint·typecheck·단위 검사·빌드), demo 브라우저 흐름은 `npm run test:e2e`, live 화면의 요청/실패 처리는 `npm run test:live`(테스트용 모방 서버, 실제 서버 아님)으로 구분한다. `tests/contract/test_web_client_contract.py`는 실제 서버 라우트와 설문 계약을 정적으로 대조한다. `test:real`은 실제 데이터 생성·외부 호출·팀 알림 부작용이 있는 별도 검증이므로 원본 문서 정리에서 실행하지 않는다.
 
 주요 확인 대상은 [현재 화면 목록](README.md)의 소개·온보딩 6문항 및 완료 카드·접수 확인·여행·목록·프로필과 모드별 제한이다. API 연결 코드 존재와 운영 종단 검증 성공은 별도로 기록한다.
 
@@ -119,7 +119,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 2026-09-28. live 의 데모 잔재를 걷고 사용자 키 화면을 만들었다. 검증 진행·결과 화면은 live 에서 안내로 대체(지어낸 0 제거), 「일정 수정」→「새 계획 올리기」, 「검증 결과 다시 보기」 숨김. 키: 발급 직후 한 번 보여 주는 안내(`KeyNotice`), 설정 메뉴의 키 넣기·재발급(`KeySettings`, `adoptKey`·`rotateKey`). 내장 미리보기는 `final_project_ui/.claude/launch.json` 의 `tripilot-web` 으로 띄운다 — ★주소는 `http://127.0.0.1:3100` 이어야 한다(`localhost` 는 브라우저가 저장소를 따로 잡아 사용자 키가 없는 새 사용자가 된다). 검증: Vitest 75/75, Playwright(데모) 12 통과·3 건너뜀, 실화면에서 틀린 키 거절·재발급 확인·발급 직후 안내를 확인. 이메일 재발급(D-021 나머지)은 서버 엔드포인트가 없어 못 이었다.
 
-2026-09-28. live 전체 시험을 만들었다(`npm run test:mock`, 28건). 서버 계약을 흉내 낸 가짜 서버로 첫 방문부터 등록·여행 화면·선택·채팅·키 화면과 서버 실패 경로를 브라우저로 끝까지 검사한다. 이 시험이 잡은 실제 결함: **`/favicon.ico` 404** — 앱에 아이콘이 없어 모든 화면에서 브라우저 콘솔 오류가 났다(아이콘 연결로 고침, 「콘솔 오류 0건」 시험이 고치기 전엔 실패하고 뒤엔 통과함을 확인). 시험 도구 쪽에서는 가짜 서버가 오류 응답 뒤에 한 번 더 응답하려다 죽는 버그를 고쳤다. 내장 미리보기의 HMR(자동 새로고침) 웹소켓 오류와 구글 지도가 안 그려지는 현상은 **내장 브라우저만의 현상**이다 — 일반 Edge 에서는 HMR 오류가 없고 구글 지도가 정상으로 그려졌다(타일 51·핀 3). 린트는 `.next-mock` 를 제외해야 한다(`eslint.config.mjs`). 검증: 타입체크·린트, Vitest 75/75, live 28/28, 데모 e2e 12 통과·3 건너뜀, 개발 콘솔(final_project_ui) pytest 147.
+2026-09-28. live 전체 시험을 만들었다(`npm run test:live`, 28건). 서버 계약을 흉내 낸 가짜 서버로 첫 방문부터 등록·여행 화면·선택·채팅·키 화면과 서버 실패 경로를 브라우저로 끝까지 검사한다. 이 시험이 잡은 실제 결함: **`/favicon.ico` 404** — 앱에 아이콘이 없어 모든 화면에서 브라우저 콘솔 오류가 났다(아이콘 연결로 고침, 「콘솔 오류 0건」 시험이 고치기 전엔 실패하고 뒤엔 통과함을 확인). 시험 도구 쪽에서는 가짜 서버가 오류 응답 뒤에 한 번 더 응답하려다 죽는 버그를 고쳤다. 내장 미리보기의 HMR(자동 새로고침) 웹소켓 오류와 구글 지도가 안 그려지는 현상은 **내장 브라우저만의 현상**이다 — 일반 Edge 에서는 HMR 오류가 없고 구글 지도가 정상으로 그려졌다(타일 51·핀 3). 린트는 `.next-live` 를 제외해야 한다(`eslint.config.mjs`). 검증: 타입체크·린트, Vitest 75/75, live 28/28, 데모 e2e 12 통과·3 건너뜀, 개발 콘솔(final_project_ui) pytest 147.
 
 2026-09-28. 실서버 종단 시험을 만들었다(`REAL_SERVER_E2E=1 npm run test:real`, 2건). 가짜 서버가 아니라 실서버·실제 구글 지도로 첫 방문부터 등록·채팅·지도와 일정 짜기를 돌린다. 실측 결과: 계획 3항목(09:00 경복궁 · 12:00 광장시장 · 15:00 북촌한옥마을) 등록 통과, 채팅 4문답이 이 여행의 사실로 답함, 일정 짜기 첫날 시각 `08:00 10:10 12:31 13:55 18:31`(첫 항목 08:00). ★실서버에서 드러난 것(화면이 아닌 서버 쪽): ① 줄마다 「날짜 시각 제목」으로 쓰면 날짜를 못 읽는다 — 「1일차 · 날짜」 머리줄 뒤 「시각 제목」 줄이어야 한다 ② 여행 제목이 첫 줄로 잡힌다(형식에 따라 「내 여행」이 아님) ③ 「북촌한옥마을 산책」 장소를 못 찾는다 ④ 「경복궁」도 관광공사 식별자가 없어 주소·운영시간이 「모름」이다 ⑤ 새 키는 주소당 시간당 20개라 개발 중 429 에 걸린다 ⑥ 관광공사 조회가 한도에 걸리면 일정 짜기가 422 로 거절된다.
 
@@ -201,7 +201,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 2026-09-28(ST4F-161). 웹 시험이 CI에서 돌지 않았고, 가짜 서버 시험은 서버가 `/v1/web/*`·설문을 바꿔도 통과하므로 두 가지를 더했다. 무엇이 어디서 도는지는 [README](README.md) 「CI」.
 
-- `.github/workflows/ci-web.yml`: 이 폴더가 바뀐 develop·main PR·push에서 `npm ci` → `npm run check` → `test:e2e` → `test:mock`. 기존 `ci-develop.yml`·`ci-main.yml`은 건드리지 않았다.
+- `.github/workflows/ci-web.yml`: 이 폴더가 바뀐 develop·main PR·push에서 `npm ci` → `npm run check` → `test:e2e` → `test:live`. 기존 `ci-develop.yml`·`ci-main.yml`은 건드리지 않았다.
 - `final_project_cs/tests/contract/test_web_client_contract.py`(4건): 웹이 부르는 메서드·경로(13개) ⊆ 서버 도메인 라우트, 설문 판 일치, 설문 칸 ⊆ `TripSurvey` 칸, 설문 값 ⊆ 서버 값.
 
 검증: 계약 시험 4/4 통과. 일부러 어긋나게 한 7가지(서버 경로 이름 바꿈, 웹 메서드 바꿈, 읽지 못하는 호출 모양, 설문 판, 서버가 모르는 칸, 서버가 거절하는 `pace`·분야 값)를 7/7(100%) 실패로 잡았고 각 오류 문구가 어긋난 항목을 가리켰다. ruff 0.16.8(CI와 같은 판) 통과. 백엔드 게이트 1616 통과·64 건너뜀(새 시험 4건 포함). 워크플로 명령을 CI 환경 값(`CI=true`, 데모 값, `TZ=Asia/Seoul`)으로 로컬에서 그대로 돌려 `npm ci` 성공, `check` Vitest 89/89, e2e 43/43(3 건너뜀: 지도 SDK 전용), live 28/28 — 이 PC에는 Playwright용 Chromium이 없어 설치된 Chrome으로 돌렸다(CI는 Chromium을 설치한다). GitHub Actions에서의 실제 실행은 PR에서 확인한다.
@@ -254,6 +254,6 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 ## 2026-09-29 — 실제 앱에서 테스트용 모방 코드를 떼고, 모방 서버 이름을 바로잡는다
 
 사용자 지시: 「실제 서버가 아니고 테스트 용도면 테스트용 모방 서버처럼 정확한 이름을 붙이고, 실제 구조는 그것을 쓰지 않고 돌아가게.」
-- 테스트용 모방 서버: `tests/live/stub-server.mjs` → `tests/mock-api/test-mock-server.mjs`, 설정 `playwright.live.config.ts` → `playwright.mock.config.ts`, 명령 `npm run test:live` → `npm run test:mock`, 빌드 폴더 `.next-live` → `.next-mock`, 시험의 `stub()` → `mockServer()`. 「live」라는 이름이 실제 서버로 오해됐다.
+- 테스트용 모방 서버 이름을 한때 `tests/mock-api/test-mock-server.mjs` · `playwright.mock.config.ts` · `npm run test:mock` · `.next-mock` 으로 바꿨다(시험의 `stub()` 도 `mockServer()` 로). 「live」라는 이름이 실제 서버로 오해됐기 때문이다. `[2026-10-02 사용자 지시]` 화면은 다른 팀(UI) 담당이라 develop 체계를 따라 폴더·이름을 `tests/live/stub-server.mjs` · `playwright.live.config.ts` · `npm run test:live` · `.next-live` 로 되돌렸다. 시험 안의 `mockServer()` 이름과 「테스트용 모방 서버(실제 서버 아님)」 설명은 그대로 둔다.
 - 실제 앱이 데모 코드(브라우저 안 모방 데이터 `lib/demo`)를 가져오지 않는다: 오류 모양은 `lib/gateway-errors.ts` 로 옮기고, 데모 게이트웨이와 예시 일정은 `NEXT_PUBLIC_DATA_MODE=demo` 로 빌드할 때만 따로 불러온다(동적 import). 설정이 없으면 개발 중에도 데모로 떨어지지 않고 「실제 서버 연결이 설정되지 않았어요」라고 말한다(전에는 개발 모드 기본값이 데모였다).
 - 그대로 둔 것: 데모 모드 자체(디자인 팀의 화면 시험 `test:e2e` 가 쓴다)와 지도 「방문 순서 도식」(`MAP_PROVIDER=demo`, 모방 데이터가 아니라 지도 없이 그리는 방식).
