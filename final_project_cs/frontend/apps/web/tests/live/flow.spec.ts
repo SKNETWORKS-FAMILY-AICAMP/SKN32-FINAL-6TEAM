@@ -43,6 +43,27 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   expect(confirm.key).toBe("acop_u_stub_1");
 });
 
+test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄을 읽는 중으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 3 });
+  await start(page);
+  await page.goto("/trips/new");
+  await page.getByLabel("나의 여행 계획").fill(PLAN);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
+
+  // Reading: the server's own line, not yet read; the bar and the back arrow of the new screen.
+  await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toBeVisible();
+  const line = page.getByRole("listitem").filter({ hasText: "10/1 09:00 경복궁 관람" });
+  await expect(line).toContainText("읽는 중");
+
+  // Reading ends: the screen draws the line as read, holds a moment, then the review takes over. (What a read line
+  // shows is held by the unit test of `readingOf`; the moment itself is too short to assert here.)
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요" })).toHaveCount(0);
+});
+
 test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실려 가고, 계획 글은 그보다 먼저 별도로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });

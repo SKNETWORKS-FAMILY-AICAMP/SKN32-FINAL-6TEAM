@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { DeviceFrame } from "@/components/layout/device-frame";
 import { TripMap } from "@/features/map";
 import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
@@ -14,19 +16,32 @@ export interface PlanCheckProps {
   view: PlanCheckView;
   /** The back arrow — e.g. back to the plan entry. */
   onBack: () => void;
+  /** Called once the screen has drawn everything in `view` and held it a moment — e.g. to move on after the last line. */
+  onCaughtUp?: () => void;
 }
 
 /**
  * The plan check after 「계획 확인하기」: the uploaded lines being read, then the places, hours and moves being checked on
- * a map with a list below, then the result. Mockup: `mockups/tripilot-plan-check-streaming.html`, scenario 1.
+ * a map with a list below, then the result. A phone-sized page of its own, like the start screen. Mockup:
+ * `mockups/tripilot-plan-check-streaming.html`, scenario 1.
  */
-export function PlanCheck({ view: latest, onBack }: PlanCheckProps) {
-  const view = useReveal(latest);
+/** How long the screen stays on what it has drawn before `onCaughtUp` — so the last line read is seen, not skipped. */
+const HOLD_MS = 800;
+
+export function PlanCheck({ view: latest, onBack, onCaughtUp }: PlanCheckProps) {
+  const { view, settled } = useReveal(latest);
   const t = useT();
-  return <div className={styles.screen} data-stage={view.stage}>
-    {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} />}
-    <p className="sr-only" role="status">{announce(view, t)}</p>
-  </div>;
+  useEffect(() => {
+    if (!settled || !onCaughtUp) return;
+    const timer = setTimeout(onCaughtUp, HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [settled, onCaughtUp]);
+  return <DeviceFrame>
+    <div className={styles.screen} data-stage={view.stage}>
+      {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} />}
+      <p className="sr-only" role="status">{announce(view, t)}</p>
+    </div>
+  </DeviceFrame>;
 }
 
 function BackButton({ onBack }: { onBack: () => void }) {
@@ -212,7 +227,8 @@ function dayLabel(date: string, language: Language): string {
 
 function findingLabel(found: LineFinding, language: Language, t: Translate): string {
   if (found.kind === "date") return t(`날짜 · ${monthDay(found.date)}(${weekday(found.date, language)})`, `Date · ${monthDay(found.date)} (${weekday(found.date, language)})`);
-  return t(`${found.day}일차 ${found.startsAt} · ${found.title}`, `Day ${found.day} ${found.startsAt} · ${found.title}`);
+  const when = [found.day !== null && t(`${found.day}일차`, `Day ${found.day}`), found.startsAt].filter(Boolean).join(" ");
+  return when ? `${when} · ${found.title}` : found.title;
 }
 
 /** The map's stops for one day. Places without coordinates are passed too: the map says they have no pin. */

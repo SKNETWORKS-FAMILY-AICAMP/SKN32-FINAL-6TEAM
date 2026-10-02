@@ -142,7 +142,10 @@ function notices() {
 
 function intakeView(revision) {
   const base = { intake_id: INTAKE_ID, revision, fatal: null, trip_id: confirmed ? TRIP_ID : null, needs_review: [] };
-  if (polls <= scenario.readingPolls) return { ...base, status: "reading", stage: "reading", stage_label: "계획을 읽는 중이에요", sources: [], check: null };
+  const line = { no: 1, text: "10/1 09:00 경복궁 관람" };
+  // Like the server: while reading, the source and its lines are there already, not yet read and without stops.
+  if (polls <= scenario.readingPolls) return { ...base, status: "reading", stage: "reading", stage_label: "계획을 읽는 중이에요", check: null,
+    sources: [{ source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ ...line, read: false }], items: [], trip: {}, reading: null }] };
   if (scenario.intake === "fatal") return { ...base, status: "fatal", stage: "fatal", stage_label: "읽지 못했어요", fatal: { code: "unreadable", detail: "사진에서 글자를 찾지 못했어요" }, sources: [], check: null };
   const item = {
     index: 0, line: 1, day: 1, date: "2026-10-01",
@@ -153,7 +156,7 @@ function intakeView(revision) {
       place: { value: { name: "경복궁" }, method: "lookup", evidence: { line: 1 }, needs_review: false, note: null },
     },
   };
-  const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ no: 1, text: "10/1 09:00 경복궁 관람", read: true }], items: scenario.intake === "items" ? [item] : [], trip: {}, reading: null };
+  const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ ...line, read: true }], items: scenario.intake === "items" ? [item] : [], trip: {}, reading: null };
   return {
     ...base, status: confirmed ? "confirmed" : "review", stage: "review", stage_label: "확인해 주세요", sources: [source],
     check: { ready: scenario.intake === "items", problems: [], filled: [], items: scenario.intake === "items" ? 1 : 0, title: "내 여행",

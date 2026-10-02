@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CalendarDays, RefreshCw } from "lucide-react";
+import { JourneyShell } from "@/components/layout/journey-shell";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
+import { readingOf } from "@/features/plan-check/from-intake";
+import { PlanCheck } from "@/features/plan-check/plan-check";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakePlanBasis, type IntakePlanInput, type IntakeView } from "@/lib/live/intake";
@@ -62,23 +65,29 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
-  if (query.isPending || !query.data) return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
+  // ★`[2026-10-03]` While the server reads, the new plan-check screen shows it (mockup `tripilot-plan-check-streaming.html`,
+  //   from the server's lines — `readingOf`). When reading ends it first draws the lines it has not drawn yet, then this
+  //   review takes over. An intake opened after reading goes straight to the review.
+  const reading = useMemo(() => query.data ? readingOf(query.data) : null, [query.data]);
+  const [readingSeen, setReadingSeen] = useState(false);
+  const [readingDrawn, setReadingDrawn] = useState(false);
+  if (query.data?.status === "reading" && !readingSeen) setReadingSeen(true);
+  const readingCaughtUp = useCallback(() => setReadingDrawn(true), []);
+  const shell = (children: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{children}</JourneyShell>;
+
+  if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
 
-  if (view.status === "reading") {
-    return <Panel className={styles.waiting} role="status">
-      <Eyebrow>{t("계획을 읽고 있어요", "READING YOUR PLAN")}</Eyebrow>
-      <h1>{view.stage_label}</h1>
-      <p>{t("사진은 한 장에 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
-    </Panel>;
+  if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
+    return <PlanCheck view={reading} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
-    return <Panel className={styles.waiting}>
+    return shell(<Panel className={styles.waiting}>
       <Eyebrow>{t("읽지 못했어요", "COULD NOT READ")}</Eyebrow>
       <h1>{t("이 계획을 읽지 못했어요", "We could not read this plan")}</h1>
       <p role="alert">{view.fatal?.detail ?? view.fatal?.code}</p>
       <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Try again")}</ButtonLink>
-    </Panel>;
+    </Panel>);
   }
 
   const list = rows(view);
@@ -103,7 +112,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const error = (open ? null : edit.error) ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
 
-  return <div className={styles.review}>
+  return shell(<div className={styles.review}>
     <PageHeading eyebrow="LET’S CHECK IT TOGETHER" title={view.check?.title ?? t("읽은 계획", "Your plan")}
       description={t("읽은 그대로 보여 드려요. 고칠 곳만 고치고 등록하면, 여행이 끝날 때까지 지켜볼게요.", "Here is what we read. Fix only what needs fixing, then we’ll watch over your trip until it ends.")} />
     {query.error && <div className={styles.error} role="alert">
@@ -154,7 +163,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         ? <ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink>
         : <Button variant="primary" disabled={busy || dirty || Boolean(query.error) || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")}<ArrowRight {...icon} /></Button>}
     </div>
-  </div>;
+  </div>);
 }
 
 /**

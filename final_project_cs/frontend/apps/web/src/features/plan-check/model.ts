@@ -4,8 +4,9 @@ import type { Coordinates } from "@/features/map/model";
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
  *
  * ★This file is the screen's data contract. The screen draws a `PlanCheckView` snapshot and nothing else; it never calls
- *   the server. Wiring it to the server (`GET /v1/web/trip-intakes/{id}`, its `…/events` stream, or what the backend
- *   agrees) is the backend's part (2026-10-03 user decision). The mockup's 「진행 이벤트 예시」 maps onto these fields.
+ *   the server. The real route maps the server's intake onto it — for now the reading part (`from-intake.ts`); the
+ *   checks, moves and result wait for the server (PLAN_CHECK_SCREEN.md §4). The mockup's 「진행 이벤트 예시」 maps onto
+ *   these fields.
  */
 
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
@@ -45,8 +46,9 @@ export interface PlanMove {
   verdict: Verdict | null;
 }
 
-/** What a line of the uploaded plan turned into: the trip's date, a stop, or nothing. */
-export type LineFinding = { kind: "date"; date: string } | { kind: "item"; day: number; startsAt: string; title: string };
+/** What a line of the uploaded plan turned into: the trip's date, a stop, or nothing. A stop's day or time is null when
+ *  the server has not settled it — never filled in here. */
+export type LineFinding = { kind: "date"; date: string } | { kind: "item"; day: number | null; startsAt: string | null; title: string };
 export interface PlanLine { no: number; text: string; read: boolean; found: LineFinding | null }
 
 export interface PlanDay { day: number; /** "YYYY-MM-DD" */ date: string }
@@ -163,7 +165,7 @@ function insertInOrder(items: PlanItem[], item: PlanItem, order: PlanItem[]): Pl
  * What the screen already shows counts when it is more.
  */
 export function expected(view: Pick<PlanCheckView, "lines" | "items" | "moves">): { places: number; moves: number } {
-  const stops = view.lines.flatMap((line) => line.read && line.found?.kind === "item" ? [line.found.day] : []);
+  const stops = view.lines.flatMap((line) => line.read && line.found?.kind === "item" ? [line.found.day ?? 0] : []);
   const perDay = [...new Set(stops)].map((day) => stops.filter((value) => value === day).length);
   return { places: Math.max(view.items.length, stops.length), moves: Math.max(view.moves.length, perDay.reduce((sum, count) => sum + Math.max(0, count - 1), 0)) };
 }

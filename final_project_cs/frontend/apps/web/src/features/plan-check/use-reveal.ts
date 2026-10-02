@@ -14,10 +14,11 @@ function subscribe(onChange: () => void) {
 }
 
 /**
- * The snapshot to draw. The first snapshot is drawn as it is (a reload or a late open shows where things stand, without
- * replaying); every later one is reached one change at a time (`nextStep`). With reduced motion it is drawn at once.
+ * The snapshot to draw, and whether it has caught up with `target`. The first snapshot is drawn as it is (a reload or a
+ * late open shows where things stand, without replaying); every later one is reached one change at a time (`nextStep`).
+ * With reduced motion it is drawn at once.
  */
-export function useReveal(target: PlanCheckView, pause = REVEAL_MS): PlanCheckView {
+export function useReveal(target: PlanCheckView, pause = REVEAL_MS): { view: PlanCheckView; settled: boolean } {
   const reduced = useSyncExternalStore(subscribe, () => matchMedia(QUERY).matches, () => false);
   const [shown, setShown] = useState(target);
   useEffect(() => {
@@ -27,5 +28,5 @@ export function useReveal(target: PlanCheckView, pause = REVEAL_MS): PlanCheckVi
     const timer = setTimeout(() => setShown(next), pause);
     return () => clearTimeout(timer);
   }, [shown, target, reduced, pause]);
-  return reduced ? target : shown;
+  return reduced ? { view: target, settled: true } : { view: shown, settled: nextStep(shown, target) === null };
 }
