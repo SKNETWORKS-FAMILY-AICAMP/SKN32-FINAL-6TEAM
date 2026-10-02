@@ -206,6 +206,36 @@ def test_preference_none_widens_radius_but_never_drops_class_fields():
     assert result["dropped_fields"] == []
 
 
+def test_preference_none_fills_only_more_with_a_dropped_small_class():
+    """★선호도 없음 — 화면은 정확한 분류만, 10곳이 안 차면 「더보기」에만 소분류를 푼 곳을 채운다."""
+    exact = [_at_km(f"exact{i}", 3 + 0.1 * i) for i in range(2)]
+    loose = [_at_km(f"loose{i}", 0.05 * (i + 1), l3="HS019999") for i in range(12)]
+    other_mid = [_at_km("other_mid", 0.01, l2="HS02", l3="HS020100")]          # 중분류가 다르면 안 든다
+    result = rank_alternatives(ORIGIN, exact + loose + other_mid, SATURDAY, preference=None)
+    assert [a["contentid"] for a in result["alternatives"]] == ["exact0", "exact1"]   # 느슨한 곳으로 안 채운다
+    more = [a["contentid"] for a in result["more_alternatives"]]
+    assert more == [f"loose{i}" for i in range(8)]                                  # 10곳까지, 가까운 순
+    assert [a["rank"] for a in result["more_alternatives"]] == list(range(3, 11))
+    assert result["dropped_fields"] == [] and result["more_dropped_fields"] == ["lclsSystm3"]
+    assert result["total_matched"] == 2
+
+
+def test_more_only_fill_is_not_used_with_a_preference_or_when_full():
+    pool = [_at_km(f"p{i}", 0.05 * (i + 1)) for i in range(10)] + [_at_km("loose", 0.01, l3="X")]
+    assert rank_alternatives(ORIGIN, pool, SATURDAY)["more_dropped_fields"] == []          # 이미 10곳
+    assert rank_alternatives(ORIGIN, pool[:1], SATURDAY, preference="activity")["more_dropped_fields"] == []
+
+
+def test_more_only_fill_skips_brands_already_found_strictly():
+    oy = _shop("oy_strict", "올리브영", x=126.9850)
+    loose = {**SHOP, "l3": "SH049999"}
+    oy_loose = _place("oy_loose", brand="올리브영", sgg="24", x=126.9775, **loose)   # 더 가깝지만 같은 체인
+    ds_loose = _place("ds_loose", brand="다이소", sgg="24", x=126.9780, **loose)
+    result = rank_alternatives(BRAND_ORIGIN, [oy, oy_loose, ds_loose], SATURDAY)
+    assert [a["contentid"] for a in result["alternatives"]] == ["oy_strict"]
+    assert [a["contentid"] for a in result["more_alternatives"]] == ["ds_loose"]
+
+
 @pytest.mark.parametrize("preference, diff, dropped", [
     ("mobility", dict(l3="X"), ["lclsSystm3"]),
     ("mobility", dict(l3="X", l2="HS02"), ["lclsSystm3", "lclsSystm2"]),

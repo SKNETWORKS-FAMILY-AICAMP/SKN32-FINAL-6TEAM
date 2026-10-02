@@ -95,20 +95,26 @@ class ReplacementMixin:
             warnings.append(f"유사 조건 일부({', '.join(ranked['dropped_fields'])})를 풀어서 찾은 후보다")
         if ranked["alternatives"] and ranked["radius_km"] > RADIUS_START_KM:
             warnings.append(f"반경을 {ranked['radius_km']:g}km까지 넓혀서 찾은 후보다")
+        if ranked["more_dropped_fields"] and ranked["more_alternatives"]:
+            warnings.append(f"더보기 후보 일부는 유사 조건({', '.join(ranked['more_dropped_fields'])})을 "
+                            "풀어서 찾았다")
         alt = {"status": "ranked", **ranked,
                "revalidation": {"checked": ["time", "weekday_closure", "business_hours", "disaster"],
                                 "not_checked": ["capacity"]},
                "source": pool.get("source"), "confirmed_at": pool.get("confirmed_at")}
         passed = [a for a in ranked["alternatives"] if a["revalidated"]]
+        more = sum(1 for a in ranked["more_alternatives"] if a["revalidated"])
         if not passed:
             self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
                                  else fc.ALTERNATIVES_UNCONFIRMED)
             note = (f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
                     if not ranked["alternatives"]
                     else "대체 장소 후보는 있으나 운영 여부를 확인하지 못해 안내하지 않았습니다.")
+            if more:
+                # ★선호도 없음 — 화면 칸은 정확한 분류만 쓰므로 비지만, 비슷한 곳은 더보기에 있다.
+                note += f" 비슷한 분류의 장소 {more}곳은 더보기에 있습니다."
             return alt, evidence, note, warnings
 
-        more = sum(1 for a in ranked["more_alternatives"] if a["revalidated"])
         # ★장소마다 추천 이유 한 줄(`reason_line` — 잰 값만 쓴다). 「더보기」 후보는 수만 말한다.
         lines = "\n".join(f"- {a['title']}: {a['reason']}" for a in passed)
         return (alt, evidence,

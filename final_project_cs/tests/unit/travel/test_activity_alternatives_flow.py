@@ -249,6 +249,17 @@ async def test_more_alternatives_are_counted_in_the_answer():
 
 
 @pytest.mark.asyncio
+async def test_no_preference_with_no_exact_match_points_to_more():
+    """선호도 없음 — 정확한 분류가 없으면 화면은 비지만, 소분류만 다른 곳은 더보기에 있다고 말한다."""
+    rows = [_row("loose", "비슷한 궁궐", l3="HS019999", x="126.9780")]
+    result, _ = await _run(_values(pool={**POOL, "candidates": rows}))
+    alt = _alt(result)
+    assert alt["alternatives"] == [] and [a["contentid"] for a in alt["more_alternatives"]] == ["loose"]
+    assert "조건에 맞는 장소가 없습니다" in result.answer and "1곳은 더보기에 있습니다" in result.answer
+    assert any("더보기 후보 일부" in w for w in result.warnings)
+
+
+@pytest.mark.asyncio
 async def test_status_has_three_branches():
     ok, _ = await _run(_values(restdate="매주 화요일 휴무"))
     problem, _ = await _run(_values())

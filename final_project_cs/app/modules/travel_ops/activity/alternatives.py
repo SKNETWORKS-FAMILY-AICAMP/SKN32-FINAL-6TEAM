@@ -64,6 +64,9 @@ FALLBACK_DROPS: dict[str, tuple[tuple[str, ...], ...]] = {
     "activity": (("lclsSystm3",), ("lclsSystm2",)),
 }
 
+#: 선호도 `None` 일 때 **「더보기」에만** 푸는 조건(2026-10-03). 화면 3곳은 정확한 분류만 쓴다.
+MORE_ONLY_DROPS = ("lclsSystm3",)
+
 _WEEKDAYS = ("월", "화", "수", "목", "금", "토", "일")
 _WEEKLY = re.compile(r"매주\s*([^/<(※]*)")
 _RANGE = re.compile(r"([월화수목금토일])요일\s*~\s*([월화수목금토일])요일")
@@ -239,14 +242,18 @@ def search_steps(preference: str | None) -> list[tuple[float, tuple[str, ...]]]:
     (같은 분류에서 반경을 먼저 넓힌다). 선호도 `None` 이면 분류는 풀지 않고 반경만 넓힌다.
     ★마지막 단계가 가장 느슨하다(앞 단계 결과를 모두 포함한다).
     """
-    count = int(round((RADIUS_MAX_KM - RADIUS_START_KM) / RADIUS_STEP_KM)) + 1
-    radii = [RADIUS_START_KM + i * RADIUS_STEP_KM for i in range(count)]
     levels: list[tuple[str, ...]] = [()]
     for group in FALLBACK_DROPS[preference] if preference else ():
         levels.append(levels[-1] + group)
     if preference == "mobility":
-        return [(r, dropped) for r in radii for dropped in levels]
-    return [(r, dropped) for dropped in levels for r in radii]
+        return [(r, dropped) for r in radii() for dropped in levels]
+    return [(r, dropped) for dropped in levels for r in radii()]
+
+
+def radii() -> list[float]:
+    """반경 단계 — 1km 부터 1km 씩 10km 까지."""
+    count = int(round((RADIUS_MAX_KM - RADIUS_START_KM) / RADIUS_STEP_KM)) + 1
+    return [RADIUS_START_KM + i * RADIUS_STEP_KM for i in range(count)]
 
 
 def distance_km(a: dict[str, Any], b: dict[str, Any]) -> float | None:
@@ -312,6 +319,7 @@ def rank_alternatives(origin: dict[str, Any], pool: list[dict[str, Any]], at: da
     `preference`: `"mobility"`(이동 중요) · `"activity"`(활동 중요) · `None`(설문 무응답).
     ★`None`이면 ③을 **아예 안 쓴다** — 우선순위를 임의로 가정하지 않고
       분류 4개 필드 전부로만 거른다. 반경 넓히기(②')는 선호도와 무관하게 한다.
+      다만 10곳이 안 차면 **「더보기」에만** 소분류를 푼 후보를 채운다(`MORE_ONLY_DROPS`, ⑤).
     `exclude_ids`: 이미 일정에 있는 곳의 `contentid` — 하드 필터로 뺀다.
 
     거르는 순서(결과가 많을 때): 하드 필터(휴무일·영업시간 외·이미 일정에 있는 곳) → 점수 정렬
@@ -327,7 +335,7 @@ def rank_alternatives(origin: dict[str, Any], pool: list[dict[str, Any]], at: da
     if distance_km(origin, origin) is None:
         return {"preference": preference, "reason": "origin_no_coordinates",
                 "matched_fields": list(SIMILARITY_FIELDS), "dropped_fields": [],
-                "radius_km": None, "max_radius_km": RADIUS_MAX_KM,
+                "more_dropped_fields": [], "radius_km": None, "max_radius_km": RADIUS_MAX_KM,
                 "total_matched": 0, "alternatives": [], "more_alternatives": []}
 
     origin_id = _norm(origin.get("contentid"))
@@ -396,15 +404,41 @@ def rank_alternatives(origin: dict[str, Any], pool: list[dict[str, Any]], at: da
                 "closed_days": c.get("closed_days") or None,
                 "business_hours": c.get("business_hours") or None}
 
-    kept = [item(i + 1, c) for i, c in enumerate(sorted(matched, key=sort_key)[:max(keep, limit)])]
+    strict = sorted(matched, key=sort_key)
+    shown, more = strict[:limit], strict[limit:max(keep, limit)]
+
+    # ⑤ 선호도 `None` 의 「더보기」 채우기 — 화면은 정확한 분류(4개 필드 모두 같음)만 쓰고,
+    #    10곳이 안 찼으면 **더보기에 한해서만** 소분류를 풀어 반경 1→10km 로 더 찾는다(2026-10-03).
+    #    ★화면 칸은 비어도 느슨한 후보로 채우지 않는다 — 선호를 짐작하지 않는다는 규칙은 화면에서 지킨다.
+    more_dropped: list[str] = []
+    if preference is None and len(strict) < max(keep, limit):
+        more_dropped = list(MORE_ONLY_DROPS)
+        fields = tuple(f for f in SIMILARITY_FIELDS if f not in MORE_ONLY_DROPS)
+        strict_ids = {id(c) for c in strict}
+        strict_brands = {_norm(c.get("brand")) for c in strict} - {""}
+        room = max(keep, limit) - len(strict)
+        extra_found: dict[int, dict[str, Any]] = {}
+        extra: list[dict[str, Any]] = []
+        for r in radii():
+            for c in similar(origin, candidates, fields):
+                if distance[id(c)] <= r and id(c) not in strict_ids \
+                        and _norm(c.get("brand")) not in strict_brands:
+                    extra_found.setdefault(id(c), c)
+            extra = one_per_brand(list(extra_found.values()), distance)
+            if len(extra) >= room:
+                break
+        more = more + sorted(extra, key=sort_key)[:room]
+
+    ranked = [item(i + 1, c) for i, c in enumerate(shown + more)]
     return {
         "preference": preference,
         "reason": None if matched else "none_within_max_radius",
         "matched_fields": [f for f in SIMILARITY_FIELDS if f not in dropped],
         "dropped_fields": list(dropped),
+        "more_dropped_fields": more_dropped,      # 「더보기」에만 푼 조건
         "radius_km": radius,
         "max_radius_km": RADIUS_MAX_KM,
         "total_matched": len(matched),
-        "alternatives": kept[:limit],             # 화면 노출
-        "more_alternatives": kept[limit:],        # 「더보기」
+        "alternatives": ranked[:len(shown)],      # 화면 노출
+        "more_alternatives": ranked[len(shown):],  # 「더보기」
     }
