@@ -28,6 +28,16 @@ def load_key():
 
 
 key = load_key()
+# ---- 예산 가드(2026-10-03 사용자 지시: Jev 예산은 총 5달러 — 결과 지표로 쓸 만큼만) ----
+#  누적 추정 비용(results/jev_usage_log.json 의 est_usd_upper 합)에 이번 실행의 입력 글자 수(토큰 상한 = 글자 수)를 더해 상한(JEV_BUDGET_USD, 기본 0.50달러)을 넘기려 하면 호출 전에 멈춘다.
+#  입력 100만 토큰당 0.042달러, 출력 무료(§17). 실제 사용량은 Jev 콘솔 Usage 에서 확인해야 한다(여기 값은 상한 추정).
+USAGE_F = os.path.join(HERE, 'results', 'jev_usage_log.json')
+CAP = float(os.environ.get('JEV_BUDGET_USD', '0.50'))
+PRICE = 0.042 / 1e6
+usage = json.load(open(USAGE_F, encoding='utf-8')) if os.path.exists(USAGE_F) else {'runs': []}
+PRIOR = sum(r['est_usd_upper'] for r in usage['runs'])
+run_chars, run_calls = 0, 0
+print(f'Jev 누적 추정 {PRIOR:.3f}달러 · 이번 실행 상한 {CAP:.2f}달러(JEV_BUDGET_USD) · 총 예산 5달러', flush=True)
 if not key:
     sys.exit('키가 없습니다: 환경변수 ACOP_JEV_API_KEY 또는 final_project_cs/.env 에 넣어 주세요.')
 PROTO = os.environ.get('PROTO') == '1'
@@ -89,6 +99,12 @@ for sname, st in job.items():
                 'questions': {'target': {'type': 'choice',
                                          'instructions': '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.' + (' ' + RULE if PROTO else ''),
                                          'criteria': crit}}}
+        _c = len(json.dumps(body, ensure_ascii=False))
+        if PRIOR + (run_chars + _c) * PRICE > CAP:
+            print(f'예산 가드: 누적 추정 {PRIOR + run_chars * PRICE:.3f}달러 + 다음 요청이 상한 {CAP:.2f}달러를 넘겨 멈춘다(이번 {run_calls}건 호출).', flush=True)
+            break
+        run_chars += _c
+        run_calls += 1
         r = call(body)
         a = (r.get('answers') or r).get('target', r)
         if first is None:
@@ -107,4 +123,9 @@ res['_n'] = n
 res['_model'] = model
 out = os.path.join(HERE, 'results', f'jev_out_{jobname}' + ('_rules' if rules else '') + ('_proto' if PROTO else '') + ('_probe' if probe else '') + '.json')
 json.dump(res, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+import datetime as _dt
+usage['runs'].append({'when': _dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'job': jobname + ('_rules' if rules else '') + ('_probe' if probe else ''), 'calls': run_calls,
+                      'input_chars': run_chars, 'est_usd_upper': round(run_chars * PRICE, 4), 'note': '입력 글자 수를 토큰 상한으로 본 추정'})
+json.dump(usage, open(USAGE_F, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+print(f'누적 추정 {sum(r["est_usd_upper"] for r in usage["runs"]):.3f}달러(상한 추정, 총 예산 5달러)', flush=True)
 print(f"저장 {out} · {res['_sec_per_q']:.2f}초/질문 · n={n}")
