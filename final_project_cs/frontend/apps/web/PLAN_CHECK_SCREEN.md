@@ -12,7 +12,7 @@
 - **분담**(2026-10-03 사용자 결정)
   - 화면 구조와 최소 배치 CSS, 지금 서버로 되는 부분의 연결은 Claude가 맡는다.
   - 서버에 없는 기능은 백엔드와 협의한다.
-  - 테마·CSS 마감은 Codex가 맡는다.
+  - 테마·CSS 마감은 Codex가 맡는다. 다만 그린·화이트 테마와 메뉴 전환은 같은 날 사용자 지시로 Claude가 했다([개발 기준](DEVELOPMENT.md#2026-10-03--그린화이트-테마)).
   - 같은 날 「연결은 백엔드」에서 「연결할 수 있는 것은 지금 연결」로 바뀌었다.
 
 계획 등록(`/trips/new`)에서 「계획 확인하기」를 누른 뒤의 흐름이 이 화면이다. 실제 경로 `/intakes/[intakeId]`는 다음과 같이 움직인다.
@@ -98,7 +98,7 @@
 | `src/features/plan-check/plan-check.module.css` | 배치 CSS. 색은 공통 변수만 쓴다(직접 적은 색 0건) |
 | `src/features/plan-check/fixtures.ts` · `preview.tsx` · `preview.module.css` · `src/app/preview/plan-check/page.tsx` | 미리보기 전용. 목업 예시 데이터를 쓰고, 수정·삭제·등록은 그 페이지 안에서만 바뀐다(장소는 찾지 않음). live 빌드에서는 404 |
 | `src/features/intake-review/intake-review.tsx` · `src/app/intakes/[intakeId]/page.tsx` | 실제 경로. 새 화면에 서버 호출을 잇는다 — 수정 `editsFor` → `/edits`, 삭제 `removed: true`, 여행 첫날·인원 `trip.*`, 등록 `/confirm`. 「일정 짜 줘」·이전 화면은 기존 확인 화면 |
-| `src/styles/tokens.css` | 색 역할 변수 16개(그린 값만) |
+| `src/styles/tokens.css` | 색 역할 변수 — 그린(기본)·화이트 두 테마에 같은 이름. 이 화면이 더한 역할은 16개 |
 | 시험 | `model.test.ts` · `from-intake.test.ts` · `tests/e2e/plan-check.spec.ts` · `tests/live/flow.spec.ts` · `tests/live/intake-review.spec.ts` · `tests/live/preview.spec.ts` · `tests/live/stub-server.mjs`(읽는 중 원문 줄, `intake: "blocked"`, `edits: "not_found"`) · `tests/live/helpers.ts`(`openEditor`) · `tests/real/real-server.spec.ts`(새 화면 흐름) |
 
 ## 4. 서버 연결 상태
@@ -146,7 +146,7 @@
 - 공통 지도의 최소 높이(휴대폰 390px)가 지도 칸보다 커서 지도 아래 안내줄이 잘린다. 화면은 「위치 미정」을 따로 보인다.
 - 목업처럼 지도 위에 올리는 시트, 그림자, 떠 있는 위 막대, 핀 상태색·이동 경로 선은 넣지 않았다. 핀 색과 경로 선은 지도 어댑터에 없어 구조 변경이 필요하다.
 - 320px에서는 하단 버튼 줄 때문에 목록이 짧아 스크롤이 필요하다.
-- 뉴트럴 테마 값과 메뉴 전환, 미리보기 조작 막대의 모양.
+- 미리보기 조작 막대의 모양. (뉴트럴(화이트) 테마 값과 메뉴 전환은 2026-10-03에 끝났다.)
 
 ## 6. 시험 (2026-10-03)
 

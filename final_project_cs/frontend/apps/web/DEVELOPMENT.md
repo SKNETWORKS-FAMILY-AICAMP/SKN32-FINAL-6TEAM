@@ -25,14 +25,15 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 7. `/trips/[tripId]`: 일정·방문 순서(지도)·채팅을 한 번에 한 칸씩 보여 주고 하단 고정 탭 또는 플로팅 버튼으로 바꾼다.
 8. `/trips`: 여행 목록과 demo 개별·선택 삭제(live 삭제 비활성). `/mypage`·`/mypage/edit`: 사용자 키 표시, live 키 가져오기·재발급, 닉네임·이메일 입력 검증. 프로필 저장·이미지 변경은 비활성이다.
 
-디자인 출처는 [2026-09-23 목업](mockups/tripilot-intro-animated-nav-switch.html)이다. 목업의 내비게이션 비교 스위치 대신 오른쪽 위 메뉴(프로필·여행 목록 보기·언어·플로팅 버튼 사용) 사이드바에서 언어와 여행 화면 내비게이션(기본 고정 하단 탭)을 고른다. 목업은 실제 지도 대신 방문 순서 개념도를 보이지만, 앱은 지도 제공자 설정을 유지하고 `demo`일 때 개념도를 보인다. 이전 디자인 출처(A-COP `8ed3548`의 `tripilot-intake-wireframe.html`)와 기존 HTML 시연 파일은 보존한다. 상태 오류·실패·없는 여행 안내는 각 화면 내부 상태로 처리한다.
+디자인 출처는 [2026-09-23 목업](mockups/tripilot-intro-animated-nav-switch.html)이다. 목업의 내비게이션 비교 스위치 대신 오른쪽 위 메뉴(프로필·여행 목록 보기·언어·테마·플로팅 버튼 사용) 사이드바에서 언어, 테마(2026-10-03부터)와 여행 화면 내비게이션(기본 고정 하단 탭)을 고른다. 목업은 실제 지도 대신 방문 순서 개념도를 보이지만, 앱은 지도 제공자 설정을 유지하고 `demo`일 때 개념도를 보인다. 이전 디자인 출처(A-COP `8ed3548`의 `tripilot-intake-wireframe.html`)와 기존 HTML 시연 파일은 보존한다. 상태 오류·실패·없는 여행 안내는 각 화면 내부 상태로 처리한다.
 
 ## 코드 경계
 
 - `src/app`: URL·공통 레이아웃·페이지 조합.
-- `src/components/ui`, `src/components/layout`: 실제로 재사용되는 UI. `ui`에는 공통 프로필 이미지(`Avatar`)와 홈·메뉴가 함께 쓰는 언어 카드(`language-picker`)가, `layout`에는 기기 틀·여정 틀·풍경 배경·메뉴 사이드바가 있다.
+- `src/components/ui`, `src/components/layout`: 실제로 재사용되는 UI. `ui`에는 공통 프로필 이미지(`Avatar`), 홈·메뉴가 함께 쓰는 언어 카드(`language-picker`), 메뉴의 테마 카드(`theme-picker`)가, `layout`에는 기기 틀·여정 틀·풍경 배경·메뉴 사이드바가 있다.
 - `src/features/intro`, `src/features/onboarding`: 소개 화면과 약관·취향 온보딩.
-- `src/lib/i18n.ts`, `src/lib/settings.ts`: 한/영 문구 함수와 언어·내비게이션 설정.
+- `src/lib/i18n.ts`, `src/lib/settings.ts`: 한/영 문구 함수와 언어·내비게이션·테마 설정.
+- `src/lib/theme.ts`, `src/styles/tokens.css`: 테마 이름과 첫 화면을 그리기 전에 저장된 테마를 거는 스크립트, 두 테마의 색 역할 변수. 화면 CSS에는 색을 직접 적지 않는다(`src/styles/tokens.test.ts`가 검사).
 - `src/lib/profile.ts`, `src/features/profile`: 메뉴·마이페이지가 읽는 사용자 정보와 마이페이지 조회·수정 화면. 연동 상태는 [사용자 정보 연동 대기 항목](PROFILE_CONTRACT.md).
 - `src/features/trip-registration`, `src/features/intake-review`: 등록 입력·초안과 live 접수 확인/편집/등록.
 - `src/features/account`, `src/features/human-check`: 사용자 키 안내·관리와 선택적 Turnstile 확인.
@@ -257,3 +258,14 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 테스트용 모방 서버 이름을 한때 `tests/mock-api/test-mock-server.mjs` · `playwright.mock.config.ts` · `npm run test:mock` · `.next-mock` 으로 바꿨다(시험의 `stub()` 도 `mockServer()` 로). 「live」라는 이름이 실제 서버로 오해됐기 때문이다. `[2026-10-02 사용자 지시]` 화면은 다른 팀(UI) 담당이라 develop 체계를 따라 폴더·이름을 `tests/live/stub-server.mjs` · `playwright.live.config.ts` · `npm run test:live` · `.next-live` 로 되돌렸다. 시험 안의 `mockServer()` 이름과 「테스트용 모방 서버(실제 서버 아님)」 설명은 그대로 둔다.
 - 실제 앱이 데모 코드(브라우저 안 모방 데이터 `lib/demo`)를 가져오지 않는다: 오류 모양은 `lib/gateway-errors.ts` 로 옮기고, 데모 게이트웨이와 예시 일정은 `NEXT_PUBLIC_DATA_MODE=demo` 로 빌드할 때만 따로 불러온다(동적 import). 설정이 없으면 개발 중에도 데모로 떨어지지 않고 「실제 서버 연결이 설정되지 않았어요」라고 말한다(전에는 개발 모드 기본값이 데모였다).
 - 그대로 둔 것: 데모 모드 자체(디자인 팀의 화면 시험 `test:e2e` 가 쓴다)와 지도 「방문 순서 도식」(`MAP_PROVIDER=demo`, 모방 데이터가 아니라 지도 없이 그리는 방식).
+
+## 2026-10-03 — 그린·화이트 테마
+
+사용자 지시: 「메뉴 사이드바에 테마 선택 카드가 생기고, 그 메뉴에서 지금의 녹색 계열이냐 흰색 계열이냐를 고른다.」 처음에는 Codex가 맡기로 했으나 같은 날 사용자가 Claude에게 넘겼다.
+- **두 테마**: 그린(기본, 지금까지의 색)과 화이트(`data-theme="neutral"`, [계획 확인 시나리오 목업](mockups/tripilot-plan-check-streaming.html)의 색). 값은 사용자가 확인한 표를 따른다. 글꼴·크기·굵기는 같다.
+- **역할 분리**: 버튼(`primary`), 선택(`selected`), 성공(`success`), 조정(`adjusted`), 확인 필요(`warning`), 오류(`error`)를 따로 둔다. 그린에서는 선택색이 기본 버튼색과 같고, 화이트에서는 파랑이다.
+- **적용**: 메뉴의 테마 카드 → `lib/settings.ts`의 `theme` → `<html data-theme>`. 새로고침 때는 `<head>`의 짧은 스크립트(`lib/theme.ts`)가 본문보다 먼저 저장된 테마를 걸어 그린이 잠깐 보이지 않는다.
+- **색 바꾸기**: 화면 CSS 18개 파일과 지도 핀(`features/map/providers/pin.ts`), 취향 카드 누름 효과의 직접 적은 색을 역할 변수로 바꿨다. 반투명 색은 `color-mix(in srgb, var(--color-…) N%, transparent)`로 같은 투명도를 지킨다. 기본 프로필 이미지는 같은 모양을 역할 색으로 그린다(`Avatar`).
+- **장식 배경**: 풍경 그림(`Scene`)과 소개 배경 그림은 그린에만 있다. 화이트에서는 바탕색만 남긴다. 풍경 위의 막·빛 색은 그림에 딸린 것이라 그대로 두었다.
+- **앞으로**: 새 화면도 색을 직접 적지 말고 역할 변수만 쓴다. 역할이 모자라면 두 테마에 같은 이름으로 함께 더한다(`tokens.test.ts`가 두 테마의 역할 목록이 같은지 본다).
+- 검증·남은 일: [작업 리포트](../../../wiki/records/reports/2026-10-03_0315_웹테마_그린화이트_전환.md).

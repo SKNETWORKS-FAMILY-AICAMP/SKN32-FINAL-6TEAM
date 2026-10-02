@@ -2,16 +2,17 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { languages, translator, type Language, type Translate } from "./i18n";
+import { settingsStorageKey as storageKey, themes, type Theme } from "./theme";
 
 export type TripNavigation = "fixed" | "floating";
 
 export interface Settings {
   language: Language;
   navigation: TripNavigation;
+  theme: Theme;
 }
 
-const storageKey = "tripilot.web.settings.v1";
-const defaults: Settings = { language: "en", navigation: "fixed" };
+const defaults: Settings = { language: "en", navigation: "fixed", theme: "green" };
 const listeners = new Set<() => void>();
 let current: Settings | null = null;
 
@@ -23,6 +24,7 @@ function read(): Settings {
     current = {
       language: languages.find(([value]) => value === stored?.language)?.[0] ?? defaults.language,
       navigation: stored?.navigation === "floating" || stored?.navigation === "fixed" ? stored.navigation : defaults.navigation,
+      theme: themes.find((value) => value === stored?.theme) ?? defaults.theme,
     };
   } catch {
     // Settings are a per-browser convenience; unreadable storage keeps the defaults.

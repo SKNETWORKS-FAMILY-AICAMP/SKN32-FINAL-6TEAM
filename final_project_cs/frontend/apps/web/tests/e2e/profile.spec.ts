@@ -46,7 +46,7 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(nickname).toHaveValue("");
   // The name line itself is the field: under the image, above the token, showing what My page shows.
   await expect(nickname).toHaveAttribute("placeholder", "닉네임 미발급");
-  const [imageTop, fieldTop, tokenTop] = await Promise.all([page.locator("#main-content img").first(), nickname, page.getByText("발급된 토큰", { exact: true })]
+  const [imageTop, fieldTop, tokenTop] = await Promise.all([page.locator('#main-content svg[class*="avatar"]'), nickname, page.getByText("발급된 토큰", { exact: true })]
     .map(async (item) => (await item.boundingBox())!.y));
   expect(imageTop < fieldTop && fieldTop < tokenTop).toBe(true);
   await nickname.fill("여행자");

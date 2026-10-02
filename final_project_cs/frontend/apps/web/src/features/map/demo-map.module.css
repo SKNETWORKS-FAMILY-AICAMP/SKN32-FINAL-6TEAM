@@ -1,10 +1,10 @@
-.diagram { position: relative; width: 100%; background-color: #f4f8ef; background-image: linear-gradient(30deg, transparent 45%, #e6eee080 46%, #e6eee080 48%, transparent 49%), linear-gradient(120deg, transparent 40%, #e6eee080 41%, #e6eee080 43%, transparent 44%); background-size: 130px 150px, 170px 130px; }
+.diagram { position: relative; width: 100%; background-color: var(--color-subtle); background-image: linear-gradient(30deg, transparent 45%, color-mix(in srgb, var(--color-subtle-strong) 50%, transparent) 46%, color-mix(in srgb, var(--color-subtle-strong) 50%, transparent) 48%, transparent 49%), linear-gradient(120deg, transparent 40%, color-mix(in srgb, var(--color-subtle-strong) 50%, transparent) 41%, color-mix(in srgb, var(--color-subtle-strong) 50%, transparent) 43%, transparent 44%); background-size: 130px 150px, 170px 130px; }
 .diagram > svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
-.path { fill: none; stroke: #a6bfa4; stroke-width: 2; stroke-dasharray: 5 5; stroke-linecap: round; stroke-linejoin: round; }
+.path { fill: none; stroke: var(--color-border-strong); stroke-width: 2; stroke-dasharray: 5 5; stroke-linecap: round; stroke-linejoin: round; }
 .points { position: absolute; inset: 0; }
 .point { position: absolute; display: grid; place-items: center; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; color: var(--color-text); border-radius: 50%; }
-.number { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid white; border-radius: 50%; background: #6c8d6a; color: white; box-shadow: 0 2px 7px #24392f1a; font-size: 11px; font-weight: 650; }
-.point[aria-pressed="true"] .number { background: var(--color-primary); outline: 4px solid #2e604722; }
-.label { position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%); width: 78px; padding: 2px 4px; border-radius: 4px; background: #ffffffd9; font-size: 9px; line-height: 1.55; overflow-wrap: anywhere; }
+.number { display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid var(--color-surface); border-radius: 50%; background: color-mix(in srgb, var(--color-primary) 70%, var(--color-surface)); color: var(--color-on-primary); box-shadow: 0 2px 7px color-mix(in srgb, var(--color-text) 10%, transparent); font-size: 11px; font-weight: 650; }
+.point[aria-pressed="true"] .number { background: var(--color-selected); outline: 4px solid color-mix(in srgb, var(--color-selected) 13%, transparent); }
+.label { position: absolute; top: calc(100% - 1px); left: 50%; transform: translateX(-50%); width: 78px; padding: 2px 4px; border-radius: 4px; background: color-mix(in srgb, var(--color-surface) 85%, transparent); font-size: 9px; line-height: 1.55; overflow-wrap: anywhere; }
 .empty { padding: 36px 20px; text-align: center; color: var(--color-muted); font-size: 12px; }
 @media (max-width: 768px) { .label { font-size: 10px; } }

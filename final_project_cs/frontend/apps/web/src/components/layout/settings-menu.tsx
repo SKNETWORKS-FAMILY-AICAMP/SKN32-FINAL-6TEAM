@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { Avatar } from "@/components/ui";
 import { LanguagePicker } from "@/components/ui/language-picker";
+import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
 import { updateSettings, useSettings, useT } from "@/lib/settings";
 import { routes } from "@/lib/routes";
@@ -61,6 +62,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
+        <ThemePicker />
         {/* One switch over the saved `navigation`: off = fixed tabs (the default), on = floating button. */}
         <label className={styles.switchRow}>
           <span className={styles.switchText}><strong id={`${id}-floating`}>{t("플로팅 버튼 사용", "Use floating button")}</strong><small id={`${id}-floating-note`}>{t("끄면 고정 하단 탭으로 표시됩니다.", "When off, the tabs stay fixed at the bottom.")}</small></span>
