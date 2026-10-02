@@ -1,0 +1,34 @@
+/* Straight-line progress — ported from the 2026-10-02 mockup (`.pb`). The palette comes from the screen frame. */
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(134, 134, 140, .45); } 100% { box-shadow: 0 0 0 9px rgba(134, 134, 140, 0); } }
+@keyframes pop { 0% { transform: scale(.5); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+.bar { position: relative; height: 40px; margin: 14px 8px 0; }
+.track { position: absolute; left: 10px; right: 10px; top: 10px; height: 0; margin: 0; padding: 0; list-style: none; }
+.rail { position: absolute; inset: 0; }
+.line, .fill { position: absolute; left: 0; top: -1.5px; height: 3px; border-radius: 2px; }
+.line { right: 0; background: var(--line); }
+.fill { width: 0; background: var(--ok); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.head { position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(79, 122, 99, .22); opacity: 0; transition: left .6s cubic-bezier(.3, .7, .4, 1), opacity .3s; z-index: 2; }
+.headOn { opacity: 1; }
+
+.step { position: absolute; top: 0; width: 0; height: 0; }
+.node { position: absolute; left: 0; top: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--paper); border: 2px solid var(--ink4); display: grid; place-items: center; z-index: 1; transition: width .25s, height .25s, margin .25s, background .25s, border-color .25s; }
+.cur { width: 20px; height: 20px; margin: -10px 0 0 -10px; border: 2.5px solid var(--ink3); animation: pulse 1.4s ease-out infinite; }
+.done { width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 0; background: var(--ok); animation: pop .35s ease-out; }
+.done::after { content: "✓"; color: #fff; font-size: 10.5px; font-weight: 800; line-height: 1; }
+
+.lab { position: absolute; left: 0; top: 15px; font-size: 11.5px; font-weight: 700; color: var(--ink3); white-space: nowrap; transform: translateX(-50%); transition: color .3s; }
+.labFirst { transform: translateX(-10px); }
+.labLast { transform: translateX(calc(-100% + 10px)); }
+.lab_cur { color: var(--ink); }
+.lab_done { color: var(--ok); }
+
+/* The thin bar over the map. */
+.compact { height: 32px; margin: 0; }
+.compact .track { top: 9px; }
+.compact .head { width: 8px; height: 8px; margin: -4px 0 0 -4px; box-shadow: 0 0 0 3px rgba(79, 122, 99, .22); }
+.compact .node { width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+.compact .cur { width: 16px; height: 16px; margin: -8px 0 0 -8px; border-width: 2px; }
+.compact .done { width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+.compact .done::after { font-size: 8.5px; }
+.compact .lab { top: 12px; font-size: 10.5px; }

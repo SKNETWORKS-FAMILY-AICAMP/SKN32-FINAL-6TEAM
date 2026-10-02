@@ -15,9 +15,10 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
 
-  // 읽는 중 → 확인 화면. 서버가 읽은 항목이 그대로 보인다.
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await expect(page.getByText("10/1 09:00 경복궁 관람").first()).toBeVisible();
+  // 읽는 중 → 확인 화면. 서버가 읽은 항목이 카드로 보이고, 눌러 펼치면 서버의 검사 줄이 그대로 보인다.
+  await expect(page.getByRole("button", { name: "경복궁", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "경복궁", exact: true }).click();
+  await expect(page.getByText("09:00–17:00 안에 머물러요")).toBeVisible();
 
   // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
   const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
@@ -27,10 +28,10 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await notice.getByRole("button", { name: "따로 보관했어요" }).click();
   await expect(notice).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "경복궁", exact: true })).toBeVisible();
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
 
@@ -52,7 +53,7 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
   await expect(page).toHaveURL(/\/trips\/new$/);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "경복궁", exact: true })).toBeVisible();
 
   // 접수까지는 설문이 안 간다 — 서버가 받는 것은 계획 글뿐이다.
   const beforeConfirm = await server.log();
@@ -60,7 +61,7 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
   const [intake] = await server.received("POST", "/v1/web/trip-intakes");
   expect(String(intake.body?.multipart)).not.toContain("survey");
 
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
@@ -75,7 +76,7 @@ test("설문을 마친 뒤 새로고침해도 답이 남아, 등록 화면이 �
   await expect(page.getByText("취향 설문을 마치지 않아서", { exact: false })).toHaveCount(0);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
@@ -89,7 +90,7 @@ test("설문을 마치지 않았으면 등록 화면이 그 사실을 알리고,
   await expect(page.getByRole("link", { name: "취향 설정하기" })).toHaveAttribute("href", "/start");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1 });
@@ -150,8 +151,9 @@ test("파일 칸: 고른 파일이 이름·크기 칩으로 보이고, 빼기로
   expect(String(sent.body?.multipart)).not.toContain("지운다.xlsx");
 });
 
-test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
+test("검사를 못 만든 접수는 이전 목록 화면으로 보이고(값을 숨기지 않는다), 거기서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
   const server = mockServer(request);
+  await server.scenario({ review: "off" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -178,6 +180,7 @@ test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 
 
 test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revision) 화면은 최신 상태를 다시 읽고 깨지지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
+  await server.scenario({ review: "off" });
   await start(page);
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
@@ -222,8 +225,8 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   await page.goto("/trips/new");
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await expect(page.getByRole("button", { name: "경복궁", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   const alert = page.getByRole("alert").filter({ hasText: "서버 오류" });
   await expect(alert).toBeInViewport();
   await expect(page).toHaveURL(/\/intakes\//);

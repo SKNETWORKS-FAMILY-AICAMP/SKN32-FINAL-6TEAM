@@ -1,0 +1,26 @@
+.stage { min-height: 100dvh; background: #e9eee7; padding: 24px 0; }
+/* `contain: layout` keeps fixed-position children (the settings drawer, a dialog) inside the frame. */
+.screen {
+  /* The mockup's palette, by its own names — the pieces of this screen use them as they are. */
+  --paper: #fff; --ink: #1c1c1e; --ink2: #48484d; --ink3: #86868c; --ink4: #b9b9bd;
+  --line: #dadad6; --line2: #ebebe7; --fill: #f6f6f4; --fill2: #ececea;
+  --ok: #4f7a63; --okbg: #e8f1ec; --adj: #3f6a8a; --adjbg: #e6eff6;
+  --warn: #a35a00; --warnbg: #fff0d4; --warnln: #e9c27a; --bad: #c03a1a; --badbg: #fde5de;
+  --sel: #2457d6; --selbg: #e1e9ff;
+  --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  position: relative; contain: layout; width: min(100%, 402px); height: min(874px, calc(100dvh - 48px)); margin: 0 auto;
+  /* `clip` (not only `hidden`): the frame never scrolls — not by a focus, not by a script — so nothing slides sideways inside it. */
+  border-radius: 30px; overflow: hidden; overflow: clip; background: var(--paper); border: 1px solid #fff; box-shadow: 0 25px 90px #24392f20;
+  font: 15px/1.45 var(--font); color: var(--ink);
+}
+.main { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; outline-offset: -3px; }
+.main:focus-visible { outline: 3px solid var(--sel); }
+/* The one-time notice of a new user key floats over the top of the screen until the customer says they saved it. */
+.keyNotice { position: absolute; left: 10px; right: 10px; top: 10px; z-index: 30; max-height: calc(100% - 20px); overflow-y: auto; border-radius: 18px; box-shadow: 0 12px 40px rgba(0, 0, 0, .22); }
+.keyNotice:empty { display: none; }
+.overlay { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+.overlay:empty { display: none; }
+@media (max-width: 720px) {
+  .stage { padding: 0; }
+  .screen { height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+}

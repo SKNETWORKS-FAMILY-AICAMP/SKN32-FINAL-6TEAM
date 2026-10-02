@@ -31,6 +31,15 @@ const DEFAULTS = {
   intake: "items",
   // how many polls answer "reading" before the review is ready
   readingPolls: 1,
+  // the check of the read plan (`review` in the intake view): "on" | "off" = a server that could not build it (review: null + review_error)
+  review: "on",
+  // the reading progress stream (`GET …/trip-intakes/{id}/events`): "off" = an older server without it (404) | "on" (sends what was read, then ends)
+  //   | "silent" (opens, says "accepted" and then nothing at all — a dead line)
+  intakeEvents: "off",
+  // an edit the server refuses: "" | "locked" (409 item_locked)
+  editRefusal: "",
+  // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
+  board: "simple",
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
@@ -61,6 +70,8 @@ let tripFailures = 0;
 const bells = new Set();
 
 let scenario;
+/** The check of the plan the customer is working on (items, legs), changed by edits. */
+let board;
 let log;
 let sessions;
 let polls;
@@ -80,10 +91,10 @@ function reset() {
   sessions = 0;
   polls = 0;
   confirmed = false;
+  board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
   recoveryEmail = null;
 }
-reset();
 
 const at = (hour, minute = 0, day = 1) => `2026-10-0${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+09:00`;
 
@@ -140,6 +151,85 @@ function notices() {
   return { notices: out };
 }
 
+
+const row = (name, result, text) => ({ row: name, result, text });
+const place = (name, latitude, longitude, extra = {}) => ({ name, latitude, longitude, source: "tour_api", kind: null, content_id: null, content_type_id: null, ...extra });
+
+/** The check of a plan — the shape of `review` in the real server's answer. "rich": three stops (one needs review) and two legs. */
+function freshBoard(kind = "simple") {
+  const rich = freshRichBoard();
+  if (kind === "rich") return rich;
+  return { revision: 1, items: [rich.items[0]], moves: [] };
+}
+
+function freshRichBoard() {
+  return {
+    revision: 1,
+    items: [
+      { id: "0-0", source_id: "s1", index: 0, title: "경복궁 관람", kind: "activity", day: 1, date: "2026-10-01", starts_at: "09:00", ends_at: "10:30", locked: false, status: "keep", can_lock: true, place_state: "found",
+        place: place("경복궁", 37.5796, 126.977, { content_id: "126508" }), candidates_hint: null,
+        rows: [row("place", "ok", "관광공사 정보로 찾았어요"), row("hours", "ok", "09:00–17:00 안에 머물러요"), row("closed", "ok", "화요일 휴무 · 방문은 목요일")] },
+      { id: "0-1", source_id: "s1", index: 1, title: "올리브영", kind: "shopping", day: 1, date: "2026-10-01", starts_at: "11:00", ends_at: "12:00", locked: false, status: "review", can_lock: false, place_state: "picked_nearest",
+        place: place("올리브영 인사동점", 37.5741, 126.9857, { source: "kakao" }), candidates_hint: 3,
+        rows: [row("place", "warn", "이름이 여러 곳이라 가까운 「올리브영 인사동점」으로 임시로 골랐어요"), row("time", "warn", "경복궁 관람과 30분 겹쳐요")] },
+      { id: "0-2", source_id: "s1", index: 2, title: "광장시장", kind: "dining", day: 1, date: "2026-10-01", starts_at: "12:30", ends_at: "13:30", locked: false, status: "adjusted", can_lock: true, place_state: "found",
+        place: place("광장시장", 37.57, 126.9996, { content_id: "132183" }), candidates_hint: null,
+        rows: [row("place", "ok", "가게 이름이 없어 광장시장으로 잡았어요"), row("time", "filled", "끝 시각이 없어 60분으로 두었어요")] },
+    ],
+    moves: [
+      { from: "0-0", to: "0-1", day: 1, date: "2026-10-01", status: "review", mode: "subway", mode_label: "지하철 3호선", minutes: 9, km: 0.6, depart: "10:30", arrive: "10:39", slack_min: -39, basis: "timetable",
+        summary: "지하철 3호선 9분 · 0.6km", rows: [row("route", "warn", "올리브영 인사동점을 임시로 골라서 계산했어요"), row("mode", "ok", "지하철 3호선 9분 · 0.6km"), row("arrival", "warn", "일정보다 39분 늦어요")] },
+      { from: "0-1", to: "0-2", day: 1, date: "2026-10-01", status: "keep", mode: "subway", mode_label: "지하철 1호선", minutes: 16, km: 1.5, depart: "12:00", arrive: "12:16", slack_min: 14, basis: "timetable",
+        summary: "지하철 1호선 16분 · 1.5km", rows: [row("route", "ok", "종로3가 → 종로5가"), row("mode", "ok", "지하철 1호선 16분 · 1.5km"), row("arrival", "ok", "14분 여유")] },
+    ],
+  };
+}
+
+/** Every stop and leg re-measured: stops that were `review` and legs that were late become fine (what 「전체 자동 추천」 and 「재검증」 end with). */
+function settle(items) {
+  return items.map((item) => item.status === "review"
+    ? { ...item, status: "adjusted", place_state: "customer", rows: [row("place", "ok", "서버가 검증한 대체 후보"), row("hours", "ok", "10:00–22:00 안에 머물러요")] } : item);
+}
+
+function reviewOf(b) {
+  const needsItems = b.items.filter((item) => item.status === "review").length;
+  const needsMoves = b.moves.filter((move) => move.status === "review").length;
+  const needs = { items: needsItems, moves: needsMoves, total: needsItems + needsMoves };
+  const ids = new Set(b.items.map((item) => item.id));
+  return { revision: b.revision, built_at: "2026-10-03T09:00:00+09:00", engine: "timetable", items: b.items, moves: b.moves.filter((move) => ids.has(move.from) && ids.has(move.to)), needs, ready: needs.total === 0 };
+}
+
+const CANDIDATES = [
+  { rank: 1, place: { ...place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), address: "서울 종로구 종로1길 50", category: "화장품", ref: null }, distance_m: 450, reference: "경복궁",
+    rows: [row("place", "ok", "카카오 지도 정보로 찾았어요"), row("hours", "unknown", "카카오 지도 정보에는 운영시간이 없어요")], fits: true, status: "ok", slack: { before: 5, after: 8 }, estimated: false },
+  { rank: 2, place: { ...place("올리브영 종각점", 37.5702, 126.9838, { source: "kakao" }), address: "서울 종로구 종로 51", category: "화장품", ref: null }, distance_m: 910, reference: "경복궁",
+    rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: false, status: "warn", slack: { before: -4, after: 8 }, estimated: false },
+];
+
+const SEARCH_RESULTS = [
+  { rank: 1, place: { ...place("올리브영 명동 플래그십", 37.5637, 126.9851, { source: "kakao" }), address: "서울 중구 명동길 53", category: "화장품", ref: null }, distance_m: 2300, reference: "경복궁",
+    rows: [row("place", "ok", "카카오 지도 정보로 찾았어요")], fits: false, status: "warn", slack: { before: null, after: null }, estimated: false },
+];
+
+/** What the screen sees while the plan is being read — one line, one stop, its check lines. Ends with `done` and `result`. */
+function intakeStream() {
+  const state = (status, stage = status === "reading" ? "checking" : "review") => ({ status, stage, stage_label: stage === "reading" ? "일정 읽기" : status === "reading" ? "장소·운영시간 확인" : "확인해 주세요", revision: 1, fatal_code: null, quiet_seconds: 0 });
+  const rev = reviewOf(board);
+  const events = [["accepted", { op: "intake", state: state("reading", "reading"), at: "2026-10-03T09:00:00+09:00" }]];
+  [["10월 1일 서울 여행", null], ["09:00 경복궁 관람", board.items[0]], ["11:00 올리브영", board.items[1]], ["12:30 광장시장", board.items[2]]].forEach(([text, found], i) => {
+    events.push(["line", { source_id: "s1", no: i + 1, text, read: true, found: found && { id: found.id, index: found.index, day: 1, date: "2026-10-01", starts_at: found.starts_at, title: found.title } }]);
+  });
+  events.push(["stage", { stage: "checking", label: "장소·운영시간 확인", elapsed: 1, state: state("reading") }]);
+  for (const item of rev.items) events.push(["item", item]);
+  for (const item of rev.items) for (const line of item.rows) events.push(["check", { item: item.id, ...line }]);
+  for (const move of rev.moves) events.push(["move", move]);
+  events.push(["done", { stage: "review", revision: 1, needs: rev.needs, ready: rev.ready }]);
+  events.push(["result", { state: state("review") }]);
+  return events.map(([name, body]) => `event: ${name}\ndata: ${JSON.stringify(body)}\n\n`);
+}
+
+reset();                                   // after the board's helpers above are declared
+
 function intakeView(revision) {
   const base = { intake_id: INTAKE_ID, revision, fatal: null, trip_id: confirmed ? TRIP_ID : null, needs_review: [] };
   if (polls <= scenario.readingPolls) return { ...base, status: "reading", stage: "reading", stage_label: "계획을 읽는 중이에요", sources: [], check: null };
@@ -154,8 +244,10 @@ function intakeView(revision) {
     },
   };
   const source = { source_id: "s1", kind: "text", filename: null, transcribed: false, lines: [{ no: 1, text: "10/1 09:00 경복궁 관람", read: true }], items: scenario.intake === "items" ? [item] : [], trip: {}, reading: null };
+  const withReview = scenario.review === "on" && scenario.intake === "items"
+    ? { review: reviewOf(board) } : scenario.review === "off" ? { review: null, review_error: "review_failed" } : {};
   return {
-    ...base, status: confirmed ? "confirmed" : "review", stage: "review", stage_label: "확인해 주세요", sources: [source],
+    ...base, ...withReview, status: confirmed ? "confirmed" : "review", stage: "review", stage_label: "확인해 주세요", sources: [source],
     check: { ready: scenario.intake === "items", problems: [], filled: [], items: scenario.intake === "items" ? 1 : 0, title: "내 여행",
       plan: scenario.intake === "items" ? { requested: false, start_date: null, days: null, party_size: null, preferences: "" }
         : { requested: true, start_date: "2026-10-01", days: 2, party_size: 2, preferences: "조용한 곳" } },
@@ -188,7 +280,12 @@ createServer(async (request, response) => {
 
   // ── test control ─────────────────────────────────────────────────
   if (path === "/__test/reset") { reset(); return json(response, 200, { ok: true }, origin); }
-  if (path === "/__test/scenario") { scenario = { ...scenario, ...JSON.parse(raw || "{}") }; return json(response, 200, scenario, origin); }
+  if (path === "/__test/scenario") {
+    const change = JSON.parse(raw || "{}");
+    scenario = { ...scenario, ...change };
+    if ("board" in change) board = freshBoard(scenario.board);
+    return json(response, 200, scenario, origin);
+  }
   if (path === "/__test/log") return json(response, 200, log, origin);
   if (path === "/__test/ring") {
     const { kinds } = JSON.parse(raw || "{}");
@@ -302,12 +399,70 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   // ── plan intake ──────────────────────────────────────────────────
   // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
   if (request.method === "POST" && path === "/v1/web/warmup") return json(response, 200, { status: "warm", model: "stub-model", last_attempt: null }, origin);
-  if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
-  if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(1), origin); }
+  if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; board = freshBoard(scenario.board); return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/events` && request.method === "GET") {
+    if (scenario.intakeEvents === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+    response.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+    const chunks = scenario.intakeEvents === "silent" ? intakeStream().slice(0, 1) : intakeStream();
+    chunks.forEach((chunk) => response.write(chunk));
+    if (scenario.intakeEvents !== "silent") response.end();                  // "silent" leaves the line open and says nothing more
+    return;
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
-    return json(response, 200, intakeView(2), origin);
+    const { edits = [] } = JSON.parse(raw || "{}");
+    if (scenario.editRefusal === "locked" && edits.some((edit) => !edit.field.endsWith(".locked"))) return json(response, 409, { error: { code: "item_locked", message: "고정한 일정이라 바꿀 수 없어요" } }, origin);
+    for (const edit of edits) {
+      const m = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
+      if (!m) continue;
+      const item = board.items.find((entry) => entry.index === Number(m[1]));
+      if (!item) continue;
+      if (m[2] === "locked") item.locked = edit.value === true;
+      else if (m[2] === "removed") { if (edit.value === true) board.removed = [...(board.removed ?? []), item]; board.items = edit.value === true ? board.items.filter((entry) => entry !== item) : board.items; }
+      else if (m[2] === "place" && edit.value?.name) { item.place = place(edit.value.name, edit.value.latitude ?? 37.57, edit.value.longitude ?? 126.98, { source: edit.value.source ?? "kakao" }); item.status = "adjusted"; item.place_state = "customer"; item.rows = [row("place", "ok", "직접 고른 곳이에요")]; }
+      else if (m[2] === "starts_at") item.starts_at = edit.value;
+      else if (m[2] === "ends_at") item.ends_at = edit.value;
+    }
+    // a removed stop comes back when the edit says `removed: false`
+    for (const edit of edits) {
+      const m = /^items\[(\d+)\]\.removed$/.exec(edit.field);
+      if (m && edit.value === false) {
+        const back = (board.removed ?? []).find((entry) => entry.index === Number(m[1]));
+        if (back) { board.items = [...board.items, back].sort((a, b) => a.index - b.index); board.removed = board.removed.filter((entry) => entry !== back); }
+      }
+    }
+    board.revision += 1;
+    return json(response, 200, intakeView(board.revision), origin);
   }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/candidates` && request.method === "GET") {
+    const index = Number(url.searchParams.get("index"));
+    const item = board.items.find((entry) => entry.index === index) ?? board.items[0];
+    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: CANDIDATES, notes: [] }, origin);
+  }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/place-search` && request.method === "GET") {
+    const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");
+    if (q.length < 2) return json(response, 422, { error: { code: "query_too_short", message: "두 글자 이상 적어 주세요" } }, origin);
+    return json(response, 200, { revision: board.revision, item: "0-1", query: url.searchParams.get("q"), results: SEARCH_RESULTS.filter((entry) => entry.place.name.includes(url.searchParams.get("q") ?? "") || q.length >= 2), notes: [] }, origin);
+  }
+  if (path === "/v1/web/places/photos" && request.method === "GET") {
+    const ref = url.searchParams.get("ref") ?? "";
+    if (!ref.startsWith("tour:")) return json(response, 200, { ref, photos: [], source_note: null, reason: "no_photo_source" }, origin);
+    return json(response, 200, { ref, photos: [{ url: `http://127.0.0.1:${PORT}/__test/photo.svg`, thumb: `http://127.0.0.1:${PORT}/__test/photo.svg`, name: "경복궁_1" }], source_note: "ⓒ한국관광공사", reason: null }, origin);
+  }
+  if (path === "/__test/photo.svg") { response.writeHead(200, { "Content-Type": "image/svg+xml", "Access-Control-Allow-Origin": "*" }); response.end('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120"><rect width="160" height="120" fill="#cfd8dc"/></svg>'); return; }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/autofix` && request.method === "POST") {
+    const before = reviewOf(board).needs.total;
+    if (!before) return json(response, 200, { applied: false, revision: board.revision, changed: [], kept: [{ id: "0-0", title: "경복궁 관람", reason: "nothing_to_change" }], view: intakeView(board.revision) }, origin);
+    const old = board.items.find((item) => item.status === "review");
+    board.items = settle(board.items);
+    board.moves = board.moves.map((move) => ({ ...move, status: "keep", slack_min: 5, rows: move.rows.map((r) => r.row === "arrival" ? row("arrival", "ok", "5분 여유") : r) }));
+    board.revision += 1;
+    return json(response, 200, { applied: true, revision: board.revision, changed: [{ id: old.id, source_id: "s1", index: old.index, title: old.title,
+      from: { place: place("올리브영 인사동점", 37.5741, 126.9857, { source: "kakao" }), starts_at: "11:00", ends_at: "12:00" }, to: { place: place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), starts_at: "11:45", ends_at: "12:15" }, reason: "place_and_time" }],
+      kept: [], view: intakeView(board.revision) }, origin);
+  }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/revalidate` && request.method === "POST") return json(response, 200, intakeView(board.revision), origin);
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     if (path.endsWith("/plan") && scenario.planDelay) await new Promise((resolve) => setTimeout(resolve, scenario.planDelay));
     if (path.endsWith("/confirm") && broken("confirm")) return;

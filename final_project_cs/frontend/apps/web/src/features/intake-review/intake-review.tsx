@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Sparkles, Trash2 } from "lucide-react";
+import { JourneyShell } from "@/components/layout/journey-shell";
 import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
@@ -11,12 +12,27 @@ import type { Translate } from "@/lib/i18n";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
+import { autofixIntake, revalidateIntake, type AutofixResult, type ReviewedIntakeView } from "@/lib/live/intake-review";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./intake-review.module.css";
+import { ActionButton, ActionLink, ButtonCount, ButtonSpinner } from "./action-button";
+import { EditScreen } from "./edit-screen";
+import { IntakeScreen } from "./intake-screen";
+import { currentStep, foundCount, progressPercent, readingLines, STEPS, stepStates } from "./reading-model";
+import { ProgressBar } from "./progress-bar";
+import { ReadingView } from "./reading-view";
+import reviewStyles from "./review-screen.module.css";
+import { ReviewScreen } from "./review-screen";
+import { useReviewActions } from "./use-review-actions";
+import { needsPolling } from "./stream-connection";
+import { streamedReview } from "./stream-model";
+import { intakeKey, useIntakeStream } from "./use-intake-stream";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(설계서 §4-6). */
 const TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2";
+/** How long the finished progress line stays on screen before the sheet folds into the result (the mockup holds it about a second). */
+const SETTLE_AFTER_DONE_MS = 900;
 const icon = { size: 16, strokeWidth: 1.6, "aria-hidden": true } as const;
 
 interface Row {
@@ -73,13 +89,27 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   // The onboarding answers go to the server with the registration — only when the customer finished them.
   const [onboarding] = useOnboarding();
   const survey = onboarding.complete ? toSurvey(onboarding.answers) : undefined;
-  const key = ["intake", intakeId, language] as const;
+  const key = intakeKey(intakeId, language);
+  // ★The server tells us how the reading goes (a stream), so the screen does not ask every 1.5 s. If the stream cannot be
+  //   opened or goes quiet for 6 s, it asks again by polling — "서버가 멈추면 사용자가 상태를 모른다" must not happen.
+  //   The stream is opened only for a plan that is still being read: a finished plan opened again is shown as it is, not replayed.
+  //   The cached plan says whether a reading is going on; the next render sees the fresh one.
+  const cached = queryClient.getQueryData<ReviewedIntakeView>(key);
+  const { connection, slow, stream, playing } = useIntakeStream(intakeId, cached?.status === "reading");
+  // After the last line is shown the screen waits a moment on the finished progress line before it folds into the result.
+  const [settled, setSettled] = useState(false);
+  const checkDone = stream.done !== null;
+  useEffect(() => {
+    if (!checkDone) return;
+    const timer = setTimeout(() => setSettled(true), SETTLE_AFTER_DONE_MS);
+    return () => clearTimeout(timer);
+  }, [checkDone]);
   const query = useQuery({
     queryKey: key,
     queryFn: () => getIntake(intakeId, language),
     retry: false,
     refetchOnWindowFocus: false,
-    refetchInterval: (state) => !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    refetchInterval: (state) => !state.state.error && state.state.data?.status === "reading" && needsPolling(connection) ? 1500 : false,
   });
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
@@ -99,23 +129,53 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
-  if (query.isPending || query.error || !query.data) return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
+  // The phone-sized reading screen of the 2026-10-02 mockup while the server reads; the rest of the screens keep the journey frame.
+  const framed = (body: ReactNode) => <JourneyShell view="checking" title={["계획 확인", "Check your plan"]}>{body}</JourneyShell>;
+  if (query.isPending || query.error || !query.data) return framed(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
 
-  if (view.status === "reading") {
-    return <Panel className={styles.waiting} role="status">
-      <Eyebrow>{t("계획을 읽고 있어요", "READING YOUR PLAN")}</Eyebrow>
-      <h1>{view.stage_label}</h1>
-      <p>{t("사진은 한 장에 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}</p>
-    </Panel>;
+  // While the server reads, and while what it sent is still being shown one after another (it may be done already).
+  if (view.status !== "fatal" && (view.status === "reading" || playing || (checkDone && !settled))) {
+    const lines = readingLines(view.sources, stream, view.status === "reading", t);
+    const mapPhase = stream.stage === "checking" || checkDone || Object.keys(stream.moves).length > 0 || (view.status !== "reading" && Object.keys(stream.items).length > 0);
+    const notice = connection === "lost" ? { tone: "warn" as const, text: t("연결이 끊겼어요 — 다시 연결하는 중이에요. 그동안 직접 확인하고 있어요.", "The connection dropped — reconnecting. We keep checking meanwhile.") }
+      : slow && connection === "live" ? { tone: "info" as const, text: t("읽는 모델의 응답이 느려요. 서버는 살아 있어요.", "The reading model is slow to answer. The server is alive.") } : null;
+    if (!mapPhase) {
+      const step = currentStep(stream.stage ?? view.stage, "reading");
+      const percent = progressPercent({ step, readLines: lines.filter((line) => line.state === "read").length, totalLines: lines.length });
+      return <IntakeScreen>
+        <ReadingView title={t("계획을 확인하고 있어요", "Checking your plan")} notice={notice}
+          description={t("사진 한 장은 1분쯤 걸려요. 이 화면을 열어 두면 끝나는 대로 보여 드려요.", "A photo takes about a minute. Keep this page open and the result will appear.")}
+          backHref={routes.newTrip} backLabel={t("다시 올리기", "Upload again")}
+          steps={STEPS.map((entry, index) => ({ label: t(...entry.labels), state: stepStates(step)[index] }))} percent={percent}
+          lines={lines} found={foundCount(lines, stream)} />
+      </IntakeScreen>;
+    }
+    // Screen ③: the places and legs come in with their check lines (the server's own words), the line fills as they do.
+    const streamed = streamedReview(stream);
+    const step = checkDone ? STEPS.length : 2;
+    const percent = checkDone ? 100 : progressPercent({ step, readLines: lines.length, totalLines: lines.length, checked: streamed.progress.checked, totalChecks: streamed.progress.total });
+    const expectedMoves = streamed.progress.total - streamed.items.length;
+    const unit = (n: number, m: number, ko: string, en: string) => t(`${ko} ${n}/${m}`, `${en} ${n}/${m}`);
+    return <IntakeScreen>
+      <ReviewScreen title={view.check?.title ?? t("읽은 계획", "Your plan")} review={{ items: streamed.items, moves: streamed.moves, needs: { items: 0, moves: 0, total: 0 }, ready: false }}
+        backHref={routes.newTrip} backLabel={t("다시 올리기", "Upload again")}
+        streaming={{
+          bar: <ProgressBar compact label={t("확인 진행", "Check progress")} percent={percent} steps={STEPS.map((entry, index) => ({ label: t(...entry.labels), state: stepStates(step)[index] }))} />,
+          title: t("장소·운영시간 확인", "Checking places and hours"),
+          count: { tone: "none", spinning: !checkDone, text: [unit(streamed.items.length - streamed.checking.size, streamed.items.length, "장소", "Places"), unit(streamed.moves.length, Math.max(expectedMoves, streamed.moves.length), "이동", "Legs")].join(" · ") },
+          checking: streamed.checking,
+          notice,
+        }} />
+    </IntakeScreen>;
   }
   if (view.status === "fatal") {
-    return <Panel className={styles.waiting}>
+    return framed(<Panel className={styles.waiting}>
       <Eyebrow>{t("읽지 못했어요", "COULD NOT READ")}</Eyebrow>
       <h1>{t("이 계획을 읽지 못했어요", "We could not read this plan")}</h1>
       <p role="alert">{view.fatal?.detail ?? view.fatal?.code}</p>
       <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Try again")}</ButtonLink>
-    </Panel>;
+    </Panel>);
   }
 
   const list = rows(view);
@@ -130,7 +190,23 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const error = edit.error ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
 
-  return <>
+  // The plan moved on since this screen last read it (another tab, another device): read it again, and still tell the customer it was refused.
+  const staleThenRethrow = (error: unknown): never => {
+    if (error instanceof LiveError && error.code === "stale_revision") void query.refetch();
+    throw error;
+  };
+
+  // The finished check screen of the mockup: the map, the sheet, the server's check of every stop and leg. A plan whose
+  // check could not be built (`review_error`) keeps the earlier list screen below — values are never hidden for want of a check.
+  if (view.review && (view.status === "review" || view.status === "confirmed")) {
+    return <FinishedReview intakeId={intakeId} view={{ ...view, review: view.review }} busy={busy} confirming={confirm.isPending} planning={plan.isPending} error={error}
+      sendEdits={(edits) => edit.mutateAsync({ revision: view.revision, edits })} onConfirm={() => confirm.mutate(view.revision)}
+      autofix={async () => { const result = await autofixIntake(intakeId, view.revision, language).catch(staleThenRethrow); queryClient.setQueryData(key, result.view); return result; }}
+      revalidate={async () => { const next = await revalidateIntake(intakeId, view.revision, language).catch(staleThenRethrow); queryClient.setQueryData(key, next); return next; }}
+      onPlan={(input) => plan.mutate({ revision: view.revision, input })} />;
+  }
+
+  return framed(<>
     <PageHeading eyebrow="LET’S CHECK IT TOGETHER" title={view.check?.title ?? t("읽은 계획", "Your plan")}
       description={t("읽은 그대로 보여 드려요. 고칠 곳만 고치고 등록하면, 여행이 끝날 때까지 지켜볼게요.", "Here is what we read. Fix only what needs fixing, then we’ll watch over your trip until it ends.")} />
     {problems.length > 0 && <Panel className={styles.problems} aria-labelledby="intake-problems">
@@ -159,7 +235,88 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         ? <ButtonLink href={routes.trip(view.trip_id)} variant="primary">{t("여행 보기", "Open trip")}<ArrowRight {...icon} /></ButtonLink>
         : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
     </div>
-  </>;
+  </>);
+}
+
+/**
+ * The finished check screen (mockup screens ③④ after the fold): the map, the sheet of stops and legs with the server's check,
+ * the buttons on each card, and — below the list — what the mockup has no place for but a real plan needs: the date and the
+ * party size to fill in, a plan to be made, the original text, the data credit.
+ */
+function FinishedReview({ intakeId, view, busy, confirming, planning, error, sendEdits, autofix, revalidate, onConfirm, onPlan }: {
+  intakeId: string;
+  view: ReviewedIntakeView & { review: NonNullable<ReviewedIntakeView["review"]> };
+  busy: boolean; confirming: boolean; planning: boolean; error: Error | null;
+  sendEdits: (edits: IntakeEdit[]) => Promise<ReviewedIntakeView>;
+  autofix: () => Promise<AutofixResult>;
+  revalidate: () => Promise<ReviewedIntakeView>;
+  onConfirm: () => void;
+  onPlan: (input: IntakePlanInput) => void;
+}) {
+  const t = useT();
+  const confirmed = view.status === "confirmed";
+  const list = rows(view);
+  const problems = view.check?.problems ?? [];
+  const needsFirstDay = problems.some((problem) => problem.code === "no_date");
+  const needsParty = problems.some((problem) => problem.code === "party_size_out_of_range");
+  const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
+    .find((field) => field?.method !== "customer" && field?.evidence.how === "year_filled");
+  const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
+  const saveFields = (edits: IntakeEdit[]) => { void sendEdits(edits).catch(() => undefined); };   // a refusal shows in the notice below
+  const [editing, setEditing] = useState<string | null>(null);
+  const actions = useReviewActions({ intakeId, view, send: sendEdits, autofix, revalidate, outsideBusy: confirming || planning, onEdit: (item) => setEditing(item.id) });
+  const needs = view.review.needs.total;
+  const frozen = busy || actions.busy;
+  // The stop being edited, and the day's other stops for the map. A stop that is gone (deleted meanwhile) ends the editing.
+  const editingItem = editing ? view.review.items.find((entry) => entry.id === editing) ?? null : null;
+  const sameDay = editingItem ? view.review.items.filter((entry) => entry.day === editingItem.day && entry.date === editingItem.date) : [];
+  const editOrder = editingItem ? sameDay.findIndex((entry) => entry.id === editingItem.id) + 1 : 0;
+
+  return <IntakeScreen>
+    {editingItem && <EditScreen intakeId={intakeId} revision={view.revision} item={editingItem} order={editOrder} actions={actions} onClose={() => setEditing(null)}
+      others={sameDay.map((entry, i) => ({ item: entry, order: i + 1 })).filter(({ item: entry }) => entry.id !== editingItem.id)} />}
+    <div style={{ display: editingItem ? "none" : "contents" }}>
+    <ReviewScreen title={view.check?.title ?? t("읽은 계획", "Your plan")} review={view.review} backHref={routes.newTrip} backLabel={t("다시 올리기", "Upload again")}
+      headline={confirmed ? { title: t("등록 완료", "Registered"), tone: "ok", text: t("여행을 등록했어요", "Your trip is registered") } : undefined}
+      rowProps={actions.rowProps} moveProps={actions.moveProps} overlay={actions.overlay} modal={actions.modal}
+      notices={<>
+        {problems.length > 0 && <section className={reviewStyles.notice} aria-labelledby="intake-problems">
+          <h2 id="intake-problems">{t(`등록 전에 확인할 것 ${problems.length}개`, `${problems.length} things to check before registering`)}</h2>
+          <ul>{problems.map((problem) => <li key={`${problem.source_id}:${problem.field}:${problem.code}`}>{problem.message}</li>)}</ul>
+          {needsFirstDay && <FirstDay disabled={busy || actions.busy} onSave={(value) => saveFields([{ field: "trip.first_day", value }])} />}
+          {needsParty && <Party disabled={busy || actions.busy} onSave={(value) => saveFields([{ field: "trip.party_size", value }])} />}
+        </section>}
+        {yearFilled && <p className={`${reviewStyles.notice} ${reviewStyles.notice_info}`} role="note">{t(`해가 적혀 있지 않아 ${String(yearFilled.value).slice(0, 4)}년으로 두었어요. 다르면 항목의 날짜를 고쳐 주세요.`, `No year was written, so we assumed ${String(yearFilled.value).slice(0, 4)}. Fix a stop’s date if that is wrong.`)}</p>}
+        {!confirmed && (view.check?.plan.requested || list.length === 0) && view.check &&
+          <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy || actions.busy} pending={planning} onPlan={onPlan} />}
+        {error && <ErrorNotice error={error}>
+          <p>{error.message}</p>
+          {refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}
+          {refusal?.violations && <ul>{refusal.violations.map((violation) => <li key={violation.reason}>{violation.reason}</li>)}</ul>}
+        </ErrorNotice>}
+      </>}
+      below={<>
+        <Evidence view={view} />
+        <p className={reviewStyles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
+      </>}
+      foot={confirmed && view.trip_id
+        ? <ActionLink href={routes.trip(view.trip_id)} variant="primary" big>{t("여행 보기", "Open trip")}</ActionLink>
+        : <>
+          <ActionButton big unavailable={frozen || needs === 0} onBlocked={actions.autoAll} onClick={actions.autoAll}>
+            <Sparkles aria-hidden="true" />{t("전체 자동 추천", "Auto-fix all")}{needs > 0 && !frozen && <ButtonCount>{needs}</ButtonCount>}
+          </ActionButton>
+          {actions.rechecking
+            ? <ActionButton variant="primary" big unavailable onBlocked={() => undefined}><ButtonSpinner />{t("재검증 중…", "Rechecking…")}</ActionButton>
+            : needs > 0 || actions.dirty
+              ? <ActionButton variant="primary" big unavailable={needs > 0 || frozen} onBlocked={actions.recheck} onClick={actions.recheck}>{t("재검증", "Recheck")}</ActionButton>
+              : <ActionButton variant="primary" big unavailable={frozen || !view.review.ready}
+                onBlocked={() => actions.show({ message: frozen ? t("바뀐 일정을 다시 확인하는 중이에요 · 잠시만요", "A change is being checked again · one moment") : t("위의 확인할 것을 먼저 채워 주세요", "Fill in the items above first") })}
+                onClick={onConfirm}>
+                {confirming ? <><ButtonSpinner />{t("등록하는 중…", "Registering…")}</> : t("여행 등록", "Register trip")}
+              </ActionButton>}
+        </>} />
+    </div>
+  </IntakeScreen>;
 }
 
 /**
