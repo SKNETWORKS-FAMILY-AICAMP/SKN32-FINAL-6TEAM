@@ -10,7 +10,7 @@ from typing import Any
 from app.core.contracts import TeamTask
 
 from . import failure_codes as fc
-from .alternatives import FALLBACK_DROPS, preference_from_survey, rank_alternatives
+from .alternatives import FALLBACK_DROPS, RADIUS_START_KM, preference_from_survey, rank_alternatives
 
 
 class ReplacementMixin:
@@ -81,12 +81,20 @@ class ReplacementMixin:
                                   base=evidence)
         preference, warnings = self._preference(task)
         ranked = rank_alternatives(pool["origin"], candidates, starts_at, preference=preference)
+        if ranked["reason"] == "origin_no_coordinates":
+            # ★근처를 잴 기준이 없다 — 「근처에 없음」으로 읽지 않는다.
+            self._record_failure(task, fc.ALTERNATIVES_NO_COORDINATES)
+            return ({"status": "unknown", "reason": "origin_no_coordinates"}, evidence,
+                    "원래 장소의 좌표가 없어 근처 대체 장소를 찾지 못했습니다.",
+                    [*warnings, "대체 장소를 찾을 원래 장소 좌표가 없다"])
         # ★재검증(v11 §5) — 도구를 더 부르지 않고 이미 읽은 값으로만. 휴무 요일·운영시간이 **확인된** 후보만
         #   `revalidated: True` 다. 모름인 후보는 `decisions` 에만 남기고 안내문에는 싣지 않는다.
-        for alternative in ranked["alternatives"]:
+        for alternative in [*ranked["alternatives"], *ranked["more_alternatives"]]:
             alternative["revalidated"] = alternative["availability"] != "unconfirmed"
         if ranked["dropped_fields"]:
             warnings.append(f"유사 조건 일부({', '.join(ranked['dropped_fields'])})를 풀어서 찾은 후보다")
+        if ranked["alternatives"] and ranked["radius_km"] > RADIUS_START_KM:
+            warnings.append(f"반경을 {ranked['radius_km']:g}km까지 넓혀서 찾은 후보다")
         alt = {"status": "ranked", **ranked,
                "revalidation": {"checked": ["time", "weekday_closure", "business_hours", "disaster"],
                                 "not_checked": ["capacity"]},
@@ -95,14 +103,15 @@ class ReplacementMixin:
         if not passed:
             self._record_failure(task, fc.ALTERNATIVES_NONE if not ranked["alternatives"]
                                  else fc.ALTERNATIVES_UNCONFIRMED)
-            note = ("조건에 맞는 대체 장소를 찾지 못했습니다." if not ranked["alternatives"]
+            note = (f"근처(반경 {ranked['max_radius_km']:g}km)에 조건에 맞는 장소가 없습니다."
+                    if not ranked["alternatives"]
                     else "대체 장소 후보는 있으나 운영 여부를 확인하지 못해 안내하지 않았습니다.")
             return alt, evidence, note, warnings
 
-        def label(a: dict[str, Any]) -> str:
-            km = a["distance_km"]
-            return f"{a['title']}({'거리 모름' if km is None else f'{km}km'})"
-
+        more = sum(1 for a in ranked["more_alternatives"] if a["revalidated"])
+        # ★장소마다 추천 이유 한 줄(`reason_line` — 잰 값만 쓴다). 「더보기」 후보는 수만 말한다.
+        lines = "\n".join(f"- {a['title']}: {a['reason']}" for a in passed)
         return (alt, evidence,
-                f"대체 장소 후보: {', '.join(label(a) for a in passed)}. 후보는 휴무 요일·운영시간·재난문자만 "
-                f"다시 확인했고 정원은 확인하지 않았습니다.", warnings)
+                f"대체 장소 후보:\n{lines}\n"
+                + (f"더보기에 후보 {more}곳이 더 있습니다.\n" if more else "")
+                + "후보는 휴무 요일·운영시간·재난문자만 다시 확인했고 정원은 확인하지 않았습니다.", warnings)

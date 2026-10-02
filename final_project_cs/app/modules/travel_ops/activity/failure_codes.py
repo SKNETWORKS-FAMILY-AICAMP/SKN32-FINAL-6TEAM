@@ -29,6 +29,7 @@ PLACE_EXISTS_UNREGISTERED: Final = "place_exists_unregistered"
 PLACE_LOOKUP_BLOCKED: Final = "place_lookup_blocked"
 ALTERNATIVES_WITHHELD: Final = "alternatives_withheld"
 ALTERNATIVES_NO_CONTENT_ID: Final = "alternatives_no_content_id"
+ALTERNATIVES_NO_COORDINATES: Final = "alternatives_no_coordinates"
 ALTERNATIVES_POOL_UNAVAILABLE: Final = "alternatives_pool_unavailable"
 ALTERNATIVES_NONE: Final = "alternatives_none"
 ALTERNATIVES_UNCONFIRMED: Final = "alternatives_unconfirmed"
@@ -47,8 +48,9 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     PLACE_LOOKUP_BLOCKED: "장소 조회가 막혀 있는지 없는지 확인하지 못했다(없음이 아니다 — 사람에게 넘긴다)",
     ALTERNATIVES_WITHHELD: "위급재난이라 대체 장소를 안내하지 않았다",
     ALTERNATIVES_NO_CONTENT_ID: "원래 장소의 식별자가 없어 대체 후보를 찾지 못했다",
+    ALTERNATIVES_NO_COORDINATES: "원래 장소의 좌표가 없어 근처 대체 후보를 잴 수 없었다",
     ALTERNATIVES_POOL_UNAVAILABLE: "대체 후보 풀을 읽지 못했다(원래 장소가 카탈로그에 없거나 조회 실패)",
-    ALTERNATIVES_NONE: "조건에 맞는 대체 후보가 없다",
+    ALTERNATIVES_NONE: "최대 반경(10km) 안에 조건에 맞는 대체 후보가 없다",
     ALTERNATIVES_UNCONFIRMED: "대체 후보는 있으나 운영 여부를 확인한 곳이 없어 안내하지 않았다",
     TOOL_ERROR: "읽기 도구(API·DB)가 예외를 냈다 — 삼키지 않고 다시 던졌다",
 }

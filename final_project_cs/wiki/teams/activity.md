@@ -237,6 +237,8 @@ flowchart LR
 | 이동 중요 | 시군구 | ① 소분류 → ② 중분류 → ③ 대분류+타입 |
 | 활동 중요 | 대분류+타입 | ① 소분류 → ② 중분류 → ③ 시군구 |
 
+★`[정정 2026-10-02]` **시군구를 빼고 반경(km)으로 바꿨다** → [반경·노출 규칙](#대체-장소-반경노출-규칙-구현-2026-10-02). 시군구로 재면 같은 구의 먼 곳이 옆 구의 가까운 곳보다 앞서고(경계 문제), 구마다 넓이가 달라 넓히는 기준이 일정하지 않다.
+
 ### 대안 순위 산출 — `[제안 2026-09-24, 미확보]`
 
 ★`[정정 2026-09-24]` **이 절은 "## 셋을 갖는다"의 넷째 항목이 아니다.** 위 [대안 생성 규칙](#대안-생성-규칙--사용자-제공-2026-09-24) 표의 ④단계를 풀어 쓴 것뿐이고, "대안 생성 규칙" 전체가 [③ 재계획 후보](#-재계획-후보)의 하위 절차다. v11 §5가 모든 여행 Team에 못박은 "셋"(검증 규칙·감시 소스·재계획 후보)은 그대로다.
@@ -816,6 +818,42 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 
 `[실측 2026-09-26]` 실 CSV(`scripts/activities_candidates_seoul_enriched.csv`)로 확인 — 창경궁(126511, 매주 월요일 휴무)을 월요일·활동 중요로 넣으면 `contenttypeid`·`lclsSystm3`을 빼고 15건이 매칭되고, 1~3위는 율곡로(0.28km)·성균관 명륜당(0.81km)·북촌한옥마을(0.86km)이다. 선호도 `None`이면 0건(폴백 없음 — 규칙대로). ※경복궁(126508)은 이 CSV에 없다.
 
+#### 대체 장소 반경·노출 규칙 `[구현 2026-10-02]`
+
+결론: **근처는 시군구가 아니라 원래 장소에서의 반경(km)으로 잰다.** `sigungucode`는 유사도 필드(`SIMILARITY_FIELDS`)와 폴백에서 빠졌다(행에는 그대로 실린다). 본체는 `alternatives.py`, 숫자는 같은 파일의 상수다.
+
+**거리 계산 2단계**
+
+| 단계 | 어디서 | 하는 일 |
+|---|---|---|
+| ① 바운딩 박스 | `db_search/place_candidates.py`의 `POOL_SQL` | 원래 장소 좌표 기준 **최대 반경(10km) 사각형** 안의 행만 읽는다. 서울 기준 1km ≈ 위도 0.009°·경도 0.0113°(`bounding_box()`). 분류로는 좁히지 않는다. 좌표 없는 행은 빠진다 |
+| ② 하버사인 | `alternatives.distance_km()` | 남은 후보만 정확한 직선거리를 잰다 |
+
+**반경 확장** — 1km에서 시작해 1km씩(1→2→…→10km). 하드 필터를 통과한 후보가 **10곳 이상**(같은 브랜드는 1곳으로 센다) 남으면 멈추고, 모자라면 넓힌다. `[정정 2026-10-03]` 처음엔 3곳에서 멈췄는데, 그러면 화면 3곳만 차고 「더보기」가 비어서 「더보기」까지 채울 10곳(`KEEP`)으로 올렸다. **최대 10km**에서 멈추고, 그래도 0곳이면 「근처(반경 10km)에 조건에 맞는 장소가 없습니다」라고 안내한다(`reason: "none_within_max_radius"`, 실패 코드 `alternatives_none`). 1~9곳이면 가장 느슨한 단계에서 찾은 만큼 낸다.
+
+선호도와 합치는 순서(`search_steps()`):
+
+| 선호도 | 바깥 고리 | 안쪽 고리 | 뜻 |
+|---|---|---|---|
+| 이동 중요 | 반경 1→10km | 소분류 → 중분류 → 대분류+타입 순으로 뺀다 | 가까운 곳을 지키고 분류를 먼저 푼다 |
+| 활동 중요 | 분류(전부 → 소분류 뺌 → 중분류 뺌) | 반경 1→10km | 대분류+타입은 끝까지 고정, 같은 분류에서 반경을 먼저 넓힌다 |
+| 없음(`None`) | — | 반경 1→10km | 분류는 풀지 않는다(선호를 짐작하지 않는다). 반경은 넓힌다 |
+
+**결과가 많을 때 거르는 순서**
+
+1. **하드 필터** — 휴무일·영업시간 외(`closed_on`·`open_at`), 이미 일정에 있는 곳(`exclude_ids`), 좌표 없음·10km 밖
+2. **점수 정렬** — 영업 확인된 곳 → 반경 1km 안의 같은 브랜드(`same_brand_nearby`) → 이동 중요는 `거리 → 분류 가까움`, 그 밖은 `분류 가까움 → 거리`. 분류 가까움(`category_level`)은 같은 소분류 0 · 중분류 1 · 대분류 2 · 다름 3
+3. **다양성** — 같은 브랜드 체인은 가장 가까운 1곳만(`one_per_brand`)
+4. **상위 N 자르기** — 화면에 **3곳**(`alternatives`), 「더보기」용으로 **10곳까지** 보관(`more_alternatives`, 4~10위)
+
+**추천 이유 한 줄**(`reason_line`) — 장소마다 잰 값만으로 만든다. 예: `0.3km · 같은 소분류 · 같은 브랜드(올리브영) · 휴무일 아님`. 안내문은 화면 3곳을 `- 이름: 이유`로 한 줄씩 싣고, 「더보기」는 재검증된 곳의 수만 말한다.
+
+원래 장소 좌표가 없으면 근처를 잴 수 없다 — 「근처에 없음」이 아니라 `status: "unknown"` · `reason: "origin_no_coordinates"`(실패 코드 `alternatives_no_coordinates`)다.
+
+★`[미연결]` **「이미 일정에 있는 곳」은 함수만 받는다**(`rank_alternatives(exclude_ids=...)`). `check_feasible` 경로에는 `trip_id`가 없고, 일정 항목(`read.itinerary`)은 TourAPI `contentid`가 아니라 내부 `place_id`만 들고 있어 지금 Team이 넘길 값이 없다. 선호도(`current_state`)와 같은 처지다 — 코어가 일정의 장소 식별자를 넘겨 주면 그때 잇는다.
+
+시험: `test_activity_alternatives.py`(반경 단계·10km 상한·10곳에서 멈춤·앞 단계 결과 유지·다양성·제외·노출 개수·점수·이유 한 줄), `test_activity_alternatives_flow.py`·`test_activity_status_alternatives_wiring.py`(안내문·더보기·좌표 없음), `test_db_search_place_candidates.py`·`tests/integration/db/test_place_candidates_db.py`(바운딩 박스 SQL).
+
 #### Team 연결 — `read.place_candidates` 계약 `[구현 2026-09-27]`
 
 `check_feasible`이 `status == "problem"`(휴무 요일 일치·위급재난)일 때 4단계를 부른다. 결과는 `decisions[0]["alternatives"]`에 싣는다. 이미 시작됨·정원 초과는 앞에서 먼저 끝나서 여기까지 오지 않는다. 시각이 지났거나 인원이 문제라면 다른 장소로 옮겨도 풀리지 않기 때문이다.
@@ -833,6 +871,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | `ranked` | 풀을 받아 ①~④를 돌렸을 때 | 재검증을 통과한 후보만 나열한다. 0건이면 「찾지 못했습니다」 |
 | `unknown` · `pool_unavailable` | 도구가 `None`을 줄 때. **지금 실제 경로가 이 갈래다** | 「조회하지 못했습니다」. 「대안 없음」으로 읽지 않는다 |
 | `unknown` · `no_content_id` | 원래 장소에 `source_content_id`가 없을 때. 도구를 부르지 않는다 | 「식별 정보가 없어 찾지 못했습니다」 |
+| `unknown` · `origin_no_coordinates` `[2026-10-02]` | 원래 장소 좌표가 없어 반경을 잴 수 없을 때 | 「좌표가 없어 근처 대체 장소를 찾지 못했습니다」. 「근처에 없음」으로 읽지 않는다 |
 | `withheld` · `disaster_blocks` | 위급재난으로 막혔을 때. 도구를 부르지 않는다 | 대체 장소를 안내하지 않는다 |
 
 **① 재검증(v11 §5) — 도구를 더 부르지 않는다.** 가장 긴 경로가 예약·규정·장소·기상·재난·후보로 6회이고, 이게 `max_steps`와 딱 맞는다. 그래서 재검증은 이미 읽은 값으로만 한다.
@@ -882,7 +921,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | 일정 제출: 이름이 카탈로그의 여러 곳을 가리킴 `[2026-10-02]` | `place_ambiguous` | 같음(고객에게 고르게 한다) |
 | 일정 제출: 실재하지만 카탈로그에 없음 `[2026-10-02]` | `place_exists_unregistered` | 같음(저장하지 않고 되묻는다) |
 | 일정 제출: 장소 조회 자체를 못 함(카카오 키 없음·막힘) `[2026-10-02]` | `place_lookup_blocked` | 로그에만 — escalate로 사람에게 넘긴다(「없음」이 아니다) |
-| 대체 후보: 위급재난 · 식별자 없음 · 풀 조회 실패 · 후보 없음 · 모두 운영 미확인 | `alternatives_withheld` · `alternatives_no_content_id` · `alternatives_pool_unavailable` · `alternatives_none` · `alternatives_unconfirmed` | **로그에만**(결과의 `alternatives` 모양은 `status`·`reason` 그대로) |
+| 대체 후보: 위급재난 · 식별자 없음 · 원래 장소 좌표 없음(`[2026-10-02]`) · 풀 조회 실패 · 반경 10km 안에 없음 · 모두 운영 미확인 | `alternatives_withheld` · `alternatives_no_content_id` · `alternatives_no_coordinates` · `alternatives_pool_unavailable` · `alternatives_none` · `alternatives_unconfirmed` | **로그에만**(결과의 `alternatives` 모양은 `status`·`reason` 그대로) |
 | 읽기 도구가 예외를 냄 | `tool_error` | 로그에만 — **다시 던진다**(삼켜서 「모름」으로 바꾸지 않는다, RULE §3.2) |
 
 ★로그에는 좌표·장소명·고객 문장·예외 문구를 싣지 않는다 — Case id·capability·코드와 도구 이름·예외 종류만. 시험: `tests/unit/travel/test_activity_failure_codes.py`(12건, 기록을 끈 변형에서 2건이 실패하는 것을 확인).

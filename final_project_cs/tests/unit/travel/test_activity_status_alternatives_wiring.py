@@ -105,7 +105,7 @@ async def test_closure_problem_ranks_alternatives_and_lists_them():
     assert found["status"] == "ranked"
     assert [a["contentid"] for a in found["alternatives"]] == ["c1", "c2"]
     assert all(a["revalidated"] for a in found["alternatives"])
-    assert "대체 장소 후보: 가까운 곳(" in result.answer
+    assert "대체 장소 후보:\n- 가까운 곳: 0.3km · " in result.answer   # 장소마다 추천 이유 한 줄
     assert "정원은 확인하지 않았습니다" in result.answer
     assert "tool:activity:read.place_candidates" in [e.evidence_id for e in result.evidence]
 
@@ -162,7 +162,7 @@ async def test_empty_match_is_not_confused_with_unknown():
     result, _ = await _run(_values(pool=_pool(other)))
     found = result.decisions[0]["alternatives"]
     assert found["status"] == "ranked" and found["alternatives"] == []
-    assert "조건에 맞는 대체 장소를 찾지 못했습니다" in result.answer
+    assert "근처(반경 10km)에 조건에 맞는 장소가 없습니다" in result.answer
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -206,9 +206,10 @@ async def test_disaster_block_withholds_alternatives_without_a_lookup():
 
 @pytest.mark.asyncio
 async def test_preference_is_read_from_current_state():
-    # ★폴백 순서는 2026-10-01 팀 합의(활동 우선: 소분류 → 중분류 → 시군구, 타입은 대분류와 한 묶음)를 따른다.
-    other_l3 = {**NEAR, "lclsSystm3": "HS019900"}
-    result, _ = await _run(_values(pool=_pool(other_l3)),
+    # ★폴백 순서는 2026-10-01 팀 합의(활동 우선: 소분류 → 중분류, 타입은 대분류와 한 묶음)를 따른다.
+    #   2026-10-03 부터 10곳이 찰 때까지 넓히므로 열을 둔다(모자라면 가장 느슨한 단계까지 간다).
+    others = [{**NEAR, "contentid": f"o{i}", "lclsSystm3": "HS019900"} for i in range(10)]
+    result, _ = await _run(_values(pool=_pool(*others)),
                            state={"activity_preference": "activity"})
     found = result.decisions[0]["alternatives"]
     assert found["preference"] == "activity"

@@ -159,19 +159,20 @@ async def test_no_candidate_left_is_ranked_with_no_items():
     result, _ = await _run(_values(pool=pool))
     alt = _alt(result)
     assert alt["status"] == "ranked" and alt["alternatives"] == []
-    assert "찾지 못했습니다" in result.answer
+    assert "근처(반경 10km)에 조건에 맞는 장소가 없습니다" in result.answer
 
 
 @pytest.mark.asyncio
 async def test_survey_priority_sets_the_preference():
-    """같은 풀이어도 이동 우선(시군구 고정)이면 다른 구 후보가 안 나오고, 활동 우선이면 나온다."""
-    pool = {**POOL, "candidates": [_row("other_gu", "다른 구 궁궐", sgg="1", x="126.99")]}
+    """같은 풀이어도 이동 우선이면 대분류까지 풀어 가까운 다른 갈래가 나오고, 활동 우선·무응답이면 안 나온다."""
+    pool = {**POOL, "candidates": [_row("other_class", "가까운 미술관", l1="VE", l2="VE07", l3="VE070100",
+                                        x="126.9780")]}
     mobility, _ = await _run(_values(pool=pool), state={"survey": {"priority": ["mobility", "activity"]}})
     activity, _ = await _run(_values(pool=pool), state={"survey": {"priority": ["food", "activity"]}})
     no_survey, _ = await _run(_values(pool=pool))
-    assert _alt(mobility)["preference"] == "mobility" and _alt(mobility)["alternatives"] == []
-    assert _alt(activity)["preference"] == "activity" and _alt(activity)["alternatives"]
-    assert "sigungucode" in " ".join(activity.warnings)             # 완화한 조건을 밝힌다
+    assert _alt(mobility)["preference"] == "mobility" and _alt(mobility)["alternatives"]
+    assert "lclsSystm1" in " ".join(mobility.warnings)               # 완화한 조건을 밝힌다
+    assert _alt(activity)["preference"] == "activity" and _alt(activity)["alternatives"] == []
     assert _alt(no_survey)["preference"] is None and _alt(no_survey)["alternatives"] == []
 
 
@@ -207,25 +208,44 @@ async def test_only_unconfirmed_candidates_say_so_instead_of_listing_them():
 async def test_answer_says_capacity_was_not_checked():
     result, _ = await _run(_values())
     assert _alt(result)["revalidation"]["not_checked"] == ["capacity"]
+    assert "- 가까운 궁궐: 0.1km · 같은 소분류 · 휴무일 아님" in result.answer   # 장소마다 추천 이유 한 줄
     assert "정원은 확인하지 않았습니다" in result.answer
     assert "business_hours" in _alt(result)["revalidation"]["checked"]
 
 
 @pytest.mark.asyncio
 async def test_activity_preference_key_is_read_and_wins_over_survey():
-    pool = {**POOL, "candidates": [_row("other_gu", "다른 구 궁궐", sgg="1", x="126.99")]}
-    state = {"activity_preference": "activity", "survey": {"priority": ["mobility"]}}
+    pool = {**POOL, "candidates": [_row("other_class", "가까운 미술관", l1="VE", x="126.9780")]}
+    state = {"activity_preference": "mobility", "survey": {"priority": ["activity"]}}
     result, _ = await _run(_values(pool=pool), state=state)
-    assert _alt(result)["preference"] == "activity" and _alt(result)["alternatives"]
+    assert _alt(result)["preference"] == "mobility" and _alt(result)["alternatives"]
 
 
 @pytest.mark.asyncio
 async def test_unknown_activity_preference_is_warned_and_ignored():
     """★모르는 값은 짐작하지 않는다 — 경고를 남기고 선호도 없음(폴백 없음)으로 처리한다."""
-    pool = {**POOL, "candidates": [_row("other_gu", "다른 구 궁궐", sgg="1", x="126.99")]}
+    pool = {**POOL, "candidates": [_row("other_class", "가까운 미술관", l1="VE", x="126.9780")]}
     result, _ = await _run(_values(pool=pool), state={"activity_preference": "food"})
     assert _alt(result)["preference"] is None and _alt(result)["alternatives"] == []
     assert any("알 수 없는 선호도" in w for w in result.warnings)
+
+
+@pytest.mark.asyncio
+async def test_origin_without_coordinates_is_unknown_not_none_nearby():
+    pool = {**POOL, "origin": _row("126511", "창경궁", x="", closed="매주 월요일")}
+    result, _ = await _run(_values(pool=pool))
+    assert _alt(result) == {"status": "unknown", "reason": "origin_no_coordinates"}
+    assert "좌표가 없어" in result.answer
+
+
+@pytest.mark.asyncio
+async def test_more_alternatives_are_counted_in_the_answer():
+    rows = [_row(f"p{i}", f"궁궐{i}", x=str(126.9770 + 0.0005 * (i + 1))) for i in range(6)]
+    result, _ = await _run(_values(pool={**POOL, "candidates": rows}))
+    alt = _alt(result)
+    assert len(alt["alternatives"]) == 3 and len(alt["more_alternatives"]) == 3
+    assert all(a["revalidated"] for a in alt["more_alternatives"])
+    assert "더보기에 후보 3곳이 더 있습니다" in result.answer
 
 
 @pytest.mark.asyncio
