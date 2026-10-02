@@ -17,14 +17,18 @@ VP = {w: {int(k): v for k, v in J(R(f'verify_{w}_gemma4_e4b-it-qat.json'))['p'].
 idx = {w: [i for i in range(len(SETS[w]['qs'])) if not (w == 'heavy' and SETS[w]['qs'][i].get('split') != 'held')] for w in LABELED}
 
 
-def ev(w, tau):
+def ev(w, tau, esc=None):
     ok = bad = calls = ver = 0
     for i in idx[w]:
         p, u = run(w, i, lo, hi, M)
         if u and p is not None:
             ver += 1
             if VP[w].get(i, 1.0) < tau:
-                p = None
+                if esc:
+                    p = G[w][esc][i]
+                    ver += 1
+                else:
+                    p = None
         g = SETS[w]['qs'][i]['gold']
         ok += p == g
         bad += p is not None and p != g
@@ -63,6 +67,20 @@ for w in LABELED:
             (pos if p == SETS[w]['qs'][i]['gold'] else neg).append(VP[w].get(i, 1.0))
 auc = sum((a > b) + 0.5 * (a == b) for a in pos for b in neg) / max(1, len(pos) * len(neg))
 out.append(f'\n넘김이 항목을 짚은 {len(pos) + len(neg)}개 중 맞은 짚기 {len(pos)} · 틀린 짚기 {len(neg)} — 비평 확률의 AUROC = {auc:.3f}(0.5 = 가르지 못함, 1 = 완벽)')
+# V12 비평 승격(§45): 비평이 거부한 짚기를 「없음」 대신 12B 의 짚기로 바꾼다 — 같은 방식으로 세트 하나 빼고 τ 선택
+out += ['', '### V12 비평 승격(거부된 짚기 → 12B 짚기) — 세트 하나를 빼고 τ 선택', '| 시험 세트 | 고른 τ | V12 정답/엉뚱/호출+비평(+12B) |', '|---|---:|---|']
+t12 = [0, 0, 0]
+for w in LABELED:
+    tr = [x for x in LABELED if x != w]
+    sc = []
+    for t in taus:
+        a = [sum(v) for v in zip(*[ev(x, t, 'gemma4:12b') for x in tr])]
+        sc.append((a[0] - 2 * a[1] - 0.05 * (a[2] + a[3]), -t, t))
+    tau = max(sc)[2]
+    b = ev(w, tau, 'gemma4:12b')
+    t12 = [a + c for a, c in zip(t12, (b[0], b[1], b[2] + b[3]))]
+    out.append(f'| {w} | {tau} | {b[0]}/{b[1]}/{b[2]}+{b[3]} |')
+out.append(f'| **합** | | **{t12[0]}**/{t12[1]}/{t12[2]} |')
 print('\n'.join(out))
 if '--md' in argv0:
     open(argv0[argv0.index('--md') + 1], 'w', encoding='utf-8').write('\n'.join(out) + '\n')
