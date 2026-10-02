@@ -79,6 +79,7 @@ def test_the_first_signal_comes_at_once_then_stages_then_the_result():
     assert events[-1][1] == {"status": "answered", "answer": "안녕"}
 
 
+# invariant: INV-CS-RT-021
 def test_beats_keep_coming_while_the_worker_is_blocked_and_flag_a_slow_model():
     """② 일꾼이 모델 호출에 막혀 있어도 **이벤트 루프가** beat 를 낸다 — 이게 끊기면 서버·연결이 죽은 것이다.
     모델을 기다리는 단계가 `slow_seconds` 를 넘으면 `slow=true` 로 「서버는 살아 있고 모델이 느리다」를 알린다."""
@@ -175,6 +176,7 @@ def test_deferred_work_runs_exactly_once_after_the_result():
     assert ran == ["a"]
 
 
+# invariant: INV-CS-RT-022
 def test_if_the_client_leaves_midway_the_work_and_its_deferred_part_still_finish_once():
     """④ 연결이 끊겨도 일은 끝나고(처리 중인 요청을 버리지 않는다) 응답 뒤 일은 일꾼이 끝나면서 **정확히 한 번** 돈다."""
     ran: list[str] = []

@@ -19,7 +19,7 @@ domain: neutral
 ## 진입 경로 3종
 
 ```text
-개인 AI ──── MCP ─────┐
+개인 AI ──── MCP ─────┐   ★`[2026-10-02]` 지금의 MCP 는 여행 도구(`/mcp/`, 사용자 키) — [mcp-tools.md](mcp-tools.md)
                       │
 기업 Agent ── A2A ────┼──→ Agent Gateway ──→ Core
                       │    (Trust Boundary)
@@ -66,9 +66,11 @@ app/presentation/
 | `INV-CS-SEC-001` | 유효하지 않은 토큰은 인증되지 않는다 | automated |
 | `INV-CS-SEC-002` | scope 없는 principal은 거부된다 | automated |
 | `INV-CS-SEC-007` | scope **12개**는 guardrail이 소유한다 `[정정 2026-09-10]` | automated |
-| `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated |
+| `INV-CS-SEC-008` | **옛** MCP 도구 셋(쇼핑몰 Case 도구 3개 — 연결된 적 없음)은 정확히 3개의 read scope 도구를 갖는다 | automated |
+| `INV-CS-SEC-009` | MCP 호출자는 사용자 키가 정한다 — 키 없음·틀림 401 · 모듈 토글 끄면 404 · 도구 인자에 `customer_id` 없음 `[2026-10-02]` | automated |
+| `INV-CS-SEC-010` | MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다(기본 꺼짐) `[2026-10-02]` | automated |
 
-**`INV-CS-SEC-008`이 MCP 범위를 고정한다.** 도구를 늘리려면 이 테스트를 같이 고쳐야 하고, 그게 의도적 결정임을 강제한다.
+**`INV-CS-SEC-008`이 옛 도구 셋의 범위를 고정한다.** `[2026-10-02]` 지금의 MCP 는 새 모듈(`mcp_server.py`)이고, 범위는 **009(누가 부르나)·010(쓰기는 스위치)** 이 잡는다 — 도구를 늘리면 `tests/e2e/test_mcp_server.py` 의 도구 목록 시험이 깨져 의도적 결정임을 강제한다.
 
 ## 나가는 방향
 

@@ -116,7 +116,9 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-005` | 같은 tenant 안에서도 customer 간 누출이 없다 | automated | `tests/security/test_query_scope.py::test_case_list_does_not_leak_across_customers_in_one_tenant` |
 | `INV-CS-SEC-006` | customer 미지정 조회도 tenant를 벗어나지 않는다 | automated | `tests/security/test_query_scope.py::test_case_list_without_customer_stays_inside_the_tenant` |
 | `INV-CS-SEC-007` | scope 12개는 guardrail이 소유한다(09-06 `composer:admin`·`ops:reload` 추가 전 10개) | automated | `tests/security/test_scope_contract.py::test_scopes_are_guardrail_owned` |
-| `INV-CS-SEC-008` | MCP는 정확히 3개의 read scope 도구를 갖는다 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
+| `INV-CS-SEC-008` | **옛** MCP 도구 셋(`app/presentation/api/mcp.py`, 쇼핑몰 Case 도구)은 정확히 3개의 read scope 도구를 갖는다 — ★`[2026-10-02]` 이 셋은 **연결된 적이 없고 지금도 앱에 안 붙는다.** 지금의 MCP 는 아래 009·010 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
+| `INV-CS-SEC-009` | **MCP 호출자는 사용자 키가 정한다** — 키가 없거나 틀리면 연결 단계에서 401, `mcp` 모듈 토글을 끄면 404. 도구 인자에 `customer_id` 가 없어 본인 여행만 열린다(남의 여행은 404) | automated | `tests/e2e/test_mcp_server.py::test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404` |
+| `INV-CS-SEC-010` | **MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다**(기본 꺼짐 — 「MCP 는 read-only」). 읽기 도구만 있을 땐 전부 `readOnlyHint` | automated | `tests/e2e/test_mcp_server.py::test_by_default_only_read_tools_exist_and_all_say_they_are_read_only` |
 
 **`INV-CS-SEC-004`가 셋을 한 번에 본다.** DB에만 마스킹하고 audit에 원본이 남는 실수를 막는다.
 
@@ -237,6 +239,15 @@ Action을 실행하기 전 근거를 대조한다.
 
 **`INV-CS-RT-018`이 특히 값지다.** 대기가 만료됐을 때 "그냥 완료 처리"하면 고객은 답을 못 받았는데 시스템은 해결됐다고 본다. 이걸 테스트가 막는다.
 
+### 웹 실시간 진행(SSE) `[2026-10-02]`
+
+서버·모델이 멈춰도 사용자가 자기 요청의 상태를 알게 하는 장치(`op_stream.py`)의 약속 둘.
+
+| ID | 불변식 | 판정 | 실행 위치 |
+|---|---|---|---|
+| `INV-CS-RT-021` | **일꾼이 막혀 있어도 생존 신호(`beat`)가 계속 나간다** — 이벤트 루프가 낸다. 모델·장소 조회를 기다리는 단계가 `slow_seconds` 를 넘으면 `slow=true` | automated | `tests/e2e/test_op_stream.py::test_beats_keep_coming_while_the_worker_is_blocked_and_flag_a_slow_model` |
+| `INV-CS-RT-022` | **연결이 끊겨도 일은 끝까지 돌고 응답 뒤로 미룬 일은 정확히 한 번 돈다** — 처리 중인 요청을 버리지 않는다 | automated | `tests/e2e/test_op_stream.py::test_if_the_client_leaves_midway_the_work_and_its_deferred_part_still_finish_once` |
+
 ---
 
 ## Context 예산 — `INV-CS-CTX-*`
@@ -329,11 +340,13 @@ python program/scripts/check_wiki.py
 | ARCH | 6 | 6 | 0 |
 | TEAM | 5 | 2 | **3** |
 | ACT | 3 | 3 | 0 |
-| SEC | 8 | 8 | 0 |
+| SEC | 10 | 10 | 0 |
 | VER | 7 | 7 | 0 |
-| RT | 20 | 20 | 0 |
+| RT | 22 | 22 | 0 |
 | CTX | 2 | 2 | 0 |
-| **합계** | **52** | **49** | **3** |
+| **합계** | **56** | **53** | **3** |
+
+★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
 
 ★`[정정 2026-09-10]` **51/48 로 적혀 있었다.** 고유 ID 를 세면 **52개**이고 코드 역방향 표식은 **49개**다(`check_wiki.py` 실행값). 2026-09-01 실측 뒤 불변식이 늘었는데 요약만 안 고쳤다.
 

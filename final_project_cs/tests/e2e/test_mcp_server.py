@@ -109,6 +109,7 @@ def test_a_missing_key_is_a_clear_tool_error_that_never_prints_a_key(monkeypatch
 
 # ── 연결 단계(문지기) ─────────────────────────────────────────────
 
+# invariant: INV-CS-SEC-009
 def test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404(api):
     me = _session(api)
     gate = _surface(api, write=False).asgi
@@ -141,6 +142,7 @@ def test_the_mcp_surface_is_mounted_on_the_customer_app(api):
 
 # ── 읽기 도구 ─────────────────────────────────────────────────────
 
+# invariant: INV-CS-SEC-010
 def test_by_default_only_read_tools_exist_and_all_say_they_are_read_only(api):
     me = _session(api)
 

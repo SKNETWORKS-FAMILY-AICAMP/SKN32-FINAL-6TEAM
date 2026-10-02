@@ -82,6 +82,7 @@ v10·v9 는 `../program/plan/` 에 옛 판으로 남아 있고, v5~v8 은 `../pr
 ### 0.2 side effect 는 제안(proposal)까지만이다
 - **Team 은 side effect 를 실행하지 않는다.** `ActionProposal` 만 반환한다.
 - 환불·구독 변경·권한 부여는 **Human Approval** 을 거친다. 승인자는 `action:approve` scope 가 있어야 한다.
+- ★`[2026-10-02]` **지금의 MCP 는 여행 도구다**(`app/modules/travel_ops/mcp_server.py`, `/mcp/`, 사용자 키로 본인 여행만). **읽기 도구만 기본이고 쓰기 도구는 `travel.mcp.write_enabled` 를 켰을 때만 등록된다**(기본 꺼짐) — 켜도 바뀌는 것은 일정뿐(판마다 기록 · 되돌리기 가능)이고 결제·업체 예약은 안 건드린다. 아래 서술(`open_support_case` 등)은 **옛 쇼핑몰 도구**로, 연결된 적이 없다. 사실은 `wiki/external/mcp-tools.md`.
 - **MCP 는 read-only 다.** `open_support_case` 는 Case 생성·분류 시작까지이고,
   결제·환불·구독 변경을 하지 않는다. 쓰기는 REST + 승인 경로로만 간다.
 - provider timeout 을 **성공으로 추정하지 않는다.** `unknown` 으로 남기고 자동 재실행하지 않는다.
