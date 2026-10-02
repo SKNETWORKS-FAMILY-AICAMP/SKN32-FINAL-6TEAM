@@ -8,6 +8,8 @@ from transformers import AutoModel, AutoTokenizer
 
 which = sys.argv[1]
 adapter = sys.argv[2] if len(sys.argv) > 2 else '/workspace/experts/ft_e16c_adapter'
+import os
+TAG = os.environ.get('TAG', 'e16c')          # 어댑터 이름표 — 출력 파일과 점수 키에 쓴다
 name = 'Qwen/Qwen3-Embedding-0.6B'
 TASK = '고객이 여행 일정에 대해 묻는 질문이 주어지면, 그 질문이 가리키는 일정 항목을 찾는다'
 tok = AutoTokenizer.from_pretrained(name, padding_side='left')
@@ -31,5 +33,5 @@ pairs = json.load(open(f'pairs_{which}.json', encoding='utf-8'))
 qs, ds = sorted({p['q'] for p in pairs}), sorted({p['doc'] for p in pairs})
 qv, dv = batched([f'Instruct: {TASK}\nQuery: {q}' for q in qs]), batched(ds)
 qi, di = {q: i for i, q in enumerate(qs)}, {d: i for i, d in enumerate(ds)}
-json.dump({'ft/emb_e16c': [float((qv[qi[p['q']]] * dv[di[p['doc']]]).sum()) for p in pairs]}, open(f'ft_e16c_{which}_scores.json', 'w'))
+json.dump({f'ft/emb_{TAG}': [float((qv[qi[p['q']]] * dv[di[p['doc']]]).sum()) for p in pairs]}, open(f'ft_{TAG}_{which}_scores.json', 'w'))
 print('쌍 점수 저장', len(pairs))
