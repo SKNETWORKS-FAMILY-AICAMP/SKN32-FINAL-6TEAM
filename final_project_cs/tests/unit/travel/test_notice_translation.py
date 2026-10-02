@@ -31,6 +31,23 @@ def test_a_translation_that_loses_a_time_is_rejected():
         make_translator(_Chat("午餐延後，改換餐廳。（行程版本 4）"))(TEXT, "zh-TW")
 
 
+# 결함 인계 #4(2026-10-02): 집합 포함만 봐서 「5 5」→「5 999」가 통과했다
+@pytest.mark.parametrize("original,translated", [
+    ("5 5", "5 999"),                                            # 출현 횟수가 빠지고(5 하나) 새 숫자(999)가 생겼다
+    ("5 5", "5"),                                                # 횟수만 빠졌다
+    ("출발 14:10 도착 15:30", "14:10 出發 14:10 抵達"),             # 한 숫자를 되풀이해 다른 숫자(15:30)를 지웠다
+    ("버전 4", "版本 4 · 7"),                                      # 새 숫자 7 이 더해졌다
+])
+def test_a_translation_with_a_wrong_number_count_or_a_new_number_is_rejected(original, translated):
+    with pytest.raises(TranslationRejected):
+        make_translator(_Chat(translated))(original, "zh-TW")
+
+
+def test_repeating_a_number_that_is_already_in_the_notice_is_allowed():
+    """이미 있는 값을 괄호로 되풀이하는 것(원문 병기)은 새 사실이 아니다."""
+    assert make_translator(_Chat("版本 4 (버전 4)"))("버전 4", "zh-TW").startswith("版本")
+
+
 @pytest.mark.parametrize("locale,expected", [("ko", True), ("ko-KR", True), (None, True),
                                              ("zh-TW", False), ("en", False)])
 def test_korean_is_not_translated(locale, expected):

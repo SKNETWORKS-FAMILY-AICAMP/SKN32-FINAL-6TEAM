@@ -726,6 +726,9 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
 #:  안에서 일정 · 점검 · 장소 목록 · 원장 후보 · 원장 판정(후보마다)을 쓰고 남는 몫이다. 넘으면 「안 봤다」로 떨어뜨린다
 #:  (점검 안 한 곳을 「괜찮다」로 고르지 않는다).
 DINING_RECHECK_LIMIT = 3
+#: ★`[2026-10-02 결함 인계 #1]` 활동 대체의 후보 재점검은 **앞 순위 이 만큼만** — 후보마다 바깥 점검(도구 호출 한 번)을 불러, 후보가 많으면 팀의 도구 예산(`max_steps`)이
+#:  바닥나 예외로 터졌다(`ToolBudgetExceeded`). 채팅 「다른 곳」 제안 경로(`pending._consented`)가 이미 쓰던 6 과 같다 — 예산 12 에서 읽기 셋(일정 · 점검 · 목록)을 빼도 6 이 남는다.
+ACTIVITY_RECHECK_LIMIT = 6
 
 
 def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], meal: Item,

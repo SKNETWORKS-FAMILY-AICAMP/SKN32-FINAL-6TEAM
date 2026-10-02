@@ -29,11 +29,13 @@ from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask
+from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask, ToolNotAllowed
 from app.core.idempotency import idempotency_key
 
 from .itinerary import Item, item_from_dict
 from .itinerary_actions import ACTION_TYPE, change_arguments
+from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
+
 from .itinerary_changes import ItineraryChange, NoChange, plan_rollback, plan_swap
 
 KST = ZoneInfo("Asia/Seoul")
@@ -236,6 +238,25 @@ class ItineraryWork:
             report = self._read(task, "read.disruptions", self.check_arguments(place, starts_at), ctx["seen"])
             return report if isinstance(report, dict) else {"verdict": "fatal", "unknown": True}
         return check
+
+    #: 재점검 도구가 **못 불리는** 이유 — 권한 · 예산 · 같은 질문 반복. 이것은 후보를 「못 봤다」는 뜻이지 실행 실패가 아니다
+    TOOL_LIMITS = (ToolNotAllowed, ToolBudgetExceeded, ToolLoopExceeded)
+
+    def safe_recheck(self, task: TeamTask, ctx: dict[str, Any]):
+        """`recheck` 인데 **도구 한도에 걸려도 예외로 터지지 않는다** — 그 후보는 `not_checked`(못 봤다)로 돌려 고르지 않는다.
+
+        ☆`[2026-10-02 결함 인계 #1]` 후보가 많으면 예산이 바닥나 `ToolBudgetExceeded` 가 Controller 까지 올라가 실행이 실패했다 —
+          앞 후보가 이미 통과했어도 변경안을 못 내고, 감시 반복이 끊겼다. 요식 팀의 `safe_check` 와 같은 생각이다:
+          **점검하지 않은 곳을 괜찮다고 하지 않는다**(`choose` 가 `clear` 가 아닌 판정은 탈락시킨다).
+        """
+        check = self.recheck(task, ctx)
+
+        def safe(*, place: dict[str, Any], starts_at: datetime | None) -> dict[str, Any]:
+            try:
+                return check(place=place, starts_at=starts_at)
+            except self.TOOL_LIMITS:
+                return {"verdict": "not_checked"}
+        return safe
 
     @staticmethod
     def check_arguments(place: dict[str, Any], starts_at: datetime | None) -> dict[str, Any]:

@@ -25,7 +25,7 @@ from app.core.idempotency import idempotency_key
 from .._base import TravelTeamBase
 from ..itinerary_actions import ACTION_TYPE as ITINERARY_APPLY
 from ..itinerary_actions import consent_arguments
-from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
+from ..itinerary_changes import ACTIVITY_RECHECK_LIMIT, NoChange, plan_activity_adjustment, plan_nearby_store
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
 from ..pending import needs_consent, weather_only
 from .similarity import preference_of, score
@@ -115,9 +115,11 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._unknown(task, "장소 목록", ctx["evidence"])
         # ★`[2026-09-29]` 대체 활동은 「비슷한 곳(관광공사 분류·구) → 가까운 곳」 순 — 설문 우선순위가 선호를 정한다
         preference = preference_of((ctx.get("trip") or {}).get("constraints"))
+        # ★`[2026-10-02 결함 인계 #1]` 재점검은 앞 순위 몇 곳만 · 도구 한도에 걸려도 예외로 터지지 않는다(못 본 곳은 고르지 않는다)
         plan = plan_activity_adjustment(item=item, report=report, places=places,
-                                        check=self.recheck(task, ctx), now=ctx["at"], items=ctx["items"],
-                                        similarity=partial(score, preference=preference))
+                                        check=self.safe_recheck(task, ctx), now=ctx["at"], items=ctx["items"],
+                                        similarity=partial(score, preference=preference),
+                                        limit=ACTIVITY_RECHECK_LIMIT)
         if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
             # ★`[2026-09-29]` 자동으로 못 찾았으면 사람에게 넘기지 않고 「바꿀까요?」로 — 「바꿔 줘」면 관광공사 목록까지 뒤진다
             return self._ask_consent(task, ctx, item, report)
