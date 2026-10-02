@@ -23,6 +23,11 @@
   설문 15번 「먼저 물어봐줘」거나 「변경 안 할 일정」이 걸리면 **새 버전을 쓰지 않고** 제안을 열고
   묻는 알림을 돌려준다(`summary.status = "asked"`). 안전 사건은 원인(`causes`)의 종류로 가른다.
   ★고객이 **직접 고른 것**(다른 안으로 · 되돌리기 · 제안 고르기)은 지나지 않는다 — 그 자체가 답이다.
+
+★`[2026-10-03 사용자 결정 — D-017 「전체 일정 재검증」]` **자동으로 바꾸기 전에 일정 전체를 다시 판정한다**(`check_itinerary` — 등록 때와 같은 판정기). 후보는 **항목 하나**만 점검해 고르므로,
+  통과한 대체가 앞뒤 항목과 시간이 겹치거나 이동이 안 닿거나 예산 · 결제 조건을 깨는 것은 항목 점검이 못 본다. 바꾼 뒤 **새로 생긴** 위반(`(code, 항목)` 이 바꾸기 전에 없던 것)이 하나라도 있으면
+  **적용하지 않고** `ActionRejected("itinerary re-check failed: …")` — 코어가 Case 를 `escalated`(`action_rejected`)로 닫고, 감시(`trip_watch_cases`)가 고객에게 「일정은 그대로 두었어요」를 알린다.
+  ★바꾸기 전에 이미 있던 위반은 이 일의 탓이 아니라 막지 않는다. 고객이 고른 변경 · 되돌리기(`full_items`)는 이 문을 지나지 않는다 — 그 자체가 답이다.
 """
 from __future__ import annotations
 
@@ -35,12 +40,23 @@ from app.core.transition import OutboxMessage
 
 from .itinerary import Item, StaleItinerary, TripStore, item_from_dict, item_to_dict
 from .itinerary_changes import ItineraryChange
+from .itinerary_checks import Violation, check_itinerary, parts_from_items
 from .pending import PendingStore, decide, options_for, proposal_notice
 
 ACTION_TYPE = "itinerary.apply"
 NOTICE_TOPIC = "trip.notice"
 #: 고객이 직접 고른 변경 — 판정 문을 지나지 않는다(그 자체가 답이다)
 CHOSEN_BY_CUSTOMER = frozenset({"customer_request", "rollback", "customer_choice"})
+#: 전체 재판정이 막았을 때 `ActionRejected` 문구의 머리 — 감시가 이것으로 「일정 전체와 안 맞아서」를 가려 고객에게 알린다(`trip_watch_cases._after_run`)
+RECHECK_FAILED = "itinerary re-check failed"
+
+
+def introduced_violations(trip: Mapping[str, Any], current: list[Item], new_items: list[Item]) -> list[Violation]:
+    """바꾼 일정에 **새로** 생긴 위반 — 바꾸기 전(`current`)에 같은 `(code, 항목)` 위반이 있었으면 그건 이 변경의 탓이 아니라 뺀다."""
+    constraints, party = dict(trip.get("constraints") or {}), trip.get("party_size")
+    before = {(v.code, v.seq) for v in check_itinerary(parts_from_items(current), constraints=constraints, party_size=party)}
+    after = check_itinerary(parts_from_items(new_items), constraints=constraints, party_size=party)
+    return [v for v in after if (v.code, v.seq) not in before]
 
 
 def _plain(value: Any) -> Any:
@@ -134,6 +150,11 @@ class ItineraryApply:
             if asked is not None:
                 return asked
 
+        if arguments.get("full_items") is None and str(arguments["reason"]) not in CHOSEN_BY_CUSTOMER:
+            # ★자동 변경은 쓰기 전에 **일정 전체**를 다시 판정한다 — 항목 하나를 점검해 고른 대체가 앞뒤와 안 맞는 것은 항목 점검이 못 본다(머리말)
+            introduced = introduced_violations(trip, current, new_items)
+            if introduced:
+                raise ActionRejected(f"{RECHECK_FAILED}: " + " / ".join(v.reason for v in introduced))
         try:
             version = store.append_version(conn, trip_id=trip_id, base_version=base, items=new_items,
                                            reason=str(arguments["reason"]),

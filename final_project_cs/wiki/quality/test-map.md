@@ -58,6 +58,7 @@ tests/
 | 활동 대체 후보가 예산보다 많아도 예외 없이 `[2026-10-03]` | `unit/travel/activity/` | `test_activity_trigger_budget.py` (3건) |
 | **여행 감시 3분 주기 문**(일꾼은 1분) `[2026-10-03]` | `integration/` | `test_watch_cadence.py` (8건) |
 | **고정한 일정도 감시 — 바꾸지 않고 알림** `[2026-10-03]` | `scenario/` | `test_pinned_items_are_watched.py` (3건) |
+| **자동 변경 전 일정 전체 재판정** `[2026-10-03]` | `scenario/` | `test_apply_recheck.py` (3건) · 감시 알림 `test_watch_failures.py` |
 | outbox 해소 | `integration/api/` | `test_outbox_resolution.py` |
 | outbox tenant 격리 | `integration/messaging/` | `test_outbox_tenant_guard.py` |
 | 제공자 timeout | `integration/controller/` | `test_provider_timeout_unknown.py` |
@@ -71,7 +72,7 @@ tests/
 
 ## 불변식과의 연결
 
-`[실측 2026-10-03]` 불변식 **60개 중 57개**가 위 테스트에 연결돼 있다(2026-10-02 에는 56개 중 53개, 2026-09-10 에는 52개 중 49개).
+`[실측 2026-10-03]` 불변식 **61개 중 58개**가 위 테스트에 연결돼 있다(2026-10-02 에는 56개 중 53개, 2026-09-10 에는 52개 중 49개).
 
 연결 상태는 [invariants.md](invariants.md)에 있고, **검사기가 실제로 파일과 함수 존재를 확인한다.**
 

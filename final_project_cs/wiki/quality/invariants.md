@@ -100,6 +100,7 @@ DOMAIN_WORDS = (
 | `INV-CS-ACT-001` | 동일 dedupe key는 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_duplicate_dedupe_key_has_one_side_effect` |
 | `INV-CS-ACT-002` | 동시 claim도 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_concurrent_claims_have_one_side_effect` |
 | `INV-CS-ACT-003` | timeout은 unknown이며 자동 재시도하지 않는다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried` |
+| `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`) | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` |
 
 **`INV-CS-ACT-003`이 중요하다.** timeout을 실패로 간주해 자동 재시도하면 이중 실행이 된다. **모르는 건 모르는 채로 둔다.**
 
@@ -348,12 +349,12 @@ python program/scripts/check_wiki.py
 |---|---|---|---|
 | ARCH | 6 | 6 | 0 |
 | TEAM | 5 | 2 | **3** |
-| ACT | 3 | 3 | 0 |
+| ACT | 4 | 4 | 0 |
 | SEC | 10 | 10 | 0 |
 | VER | 7 | 7 | 0 |
 | RT | 26 | 26 | 0 |
 | CTX | 2 | 2 | 0 |
-| **합계** | **60** | **57** | **3** |
+| **합계** | **61** | **58** | **3** |
 
 ★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
 

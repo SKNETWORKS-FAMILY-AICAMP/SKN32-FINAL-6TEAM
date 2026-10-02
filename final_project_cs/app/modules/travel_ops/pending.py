@@ -163,7 +163,7 @@ def options_for(best: Item) -> list[dict[str, Any]]:
     return [{**record, "rank": rank} for rank, record in enumerate(ranked, start=1)]
 
 
-def unresolved_notice(*, item: Item, causes: list[dict[str, Any]]) -> dict[str, Any]:
+def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_failed: bool = False) -> dict[str, Any]:
     """`[2026-10-02 결함 인계 #3]` 감시가 사건을 찾았는데 **바꿀 곳이 없다** — 고객에게 **알린다**(전에는 아무 말도 안 나갔다).
 
     ★일정은 바꾸지 않았다는 것과 무엇이 문제인지만 말한다 — 원인에 있는 말만(`_cause_text`), 지어낸 대안·약속 없음. 「사람이 확인합니다」 같은 대기 약속도 안 한다
@@ -171,10 +171,17 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]]) -> dict[str, 
     """
     safety = is_safety({"disruptions": causes})
     head = "⚠️ 안전 알림 — " if safety else ""
-    text = (f"{head}{item.title} — {_cause_text(causes)}. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.** "
-            "가시기 전에 한 번 확인해 주세요.")
-    return {"type": "safety_alert" if safety else "guidance", "kind": "no_alternate", "text": text, "language": "ko",
-            "causes": causes, "item_id": str(item.item_id), "reason": "no_alternate", "replay": False}
+    if recheck_failed:
+        # ★`[2026-10-03]` 바꿀 곳은 찾았는데 **일정 전체를 다시 판정하니** 앞뒤 일정과 안 맞았다(시간 · 이동 · 예산) — 바꾸지 않았다. 원인에 없는 말은 안 붙인다
+        text = (f"{head}{item.title} — {_cause_text(causes)}. 바꿀 곳을 찾았지만 일정 전체와 맞지 않아 **일정은 그대로 두었어요.** "
+                "가시기 전에 한 번 확인해 주세요.")
+        kind = "recheck_failed"
+    else:
+        text = (f"{head}{item.title} — {_cause_text(causes)}. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.** "
+                "가시기 전에 한 번 확인해 주세요.")
+        kind = "no_alternate"
+    return {"type": "safety_alert" if safety else "guidance", "kind": kind, "text": text, "language": "ko",
+            "causes": causes, "item_id": str(item.item_id), "reason": kind, "replay": False}
 
 
 def _cause_text(causes: list[dict[str, Any]]) -> str:

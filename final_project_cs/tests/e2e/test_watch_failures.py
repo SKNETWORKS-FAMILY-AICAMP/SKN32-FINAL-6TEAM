@@ -68,8 +68,8 @@ def _start(case_id):
     _move(case_id, EventType.ROUTED, {"owner_team_id": "activity", "capability": "activity.itinerary"})   # routing → running
 
 
-def _escalate(case_id, guardrail):
-    _move(case_id, EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": [guardrail]})
+def _escalate(case_id, guardrail, observed=None):
+    _move(case_id, EventType.GUARDRAIL_ESCALATED, {"guardrail": guardrail, "observed": [observed or guardrail]})
 
 
 def _guardrail(case_id):
@@ -186,12 +186,12 @@ def test_a_refused_option_leaves_the_proposal_open_so_another_option_can_be_chos
 
 # ── ③ 바꿀 곳이 없으면 고객에게 알린다 · 일시 실패는 다시 연다 ───────────────
 
-def _escalating(guardrail, calls=None):
+def _escalating(guardrail, calls=None, observed=None):
     def run_case(*, tenant_id, case_id, actor_id):
         if calls is not None:
             calls.append(case_id)
         _start(case_id)
-        _escalate(case_id, guardrail)
+        _escalate(case_id, guardrail, observed)
         return {"status": "escalated"}
     return run_case
 
@@ -258,3 +258,31 @@ def test_unresolved_is_never_reopened_because_the_same_event_gives_the_same_answ
     first = _tick(opener)
     again = _tick(opener)
     assert first.opened and again.opened == [] and again.retried == []
+
+
+# ── 일정 전체 재판정이 막은 변경도 고객에게 알린다(결정 9 — 전체 일정 재검증) ───────────
+
+def test_a_change_blocked_by_the_whole_itinerary_recheck_is_announced_with_its_own_wording(api):
+    """바꿀 곳은 찾았는데 일정 전체를 다시 판정하니 앞뒤와 안 맞아 적용기가 거절했다 — 고객은 「일정은 그대로 두었어요」를 듣는다(그 이유로)."""
+    from app.modules.travel_ops.itinerary_actions import RECHECK_FAILED
+
+    _create(api)
+    before = len(_notices(api))
+    opener = _opener(api, _check_activities(DISRUPTED),
+                     _escalating("action_rejected", observed=f"{RECHECK_FAILED}: 아쿠아리움(11:30 종료)과 점심(11:00 시작)이 겹친다"))
+    first = _tick(opener)
+    assert first.notified and len(first.notified) == len(first.opened)
+    sent = [n for n in _notices(api)[before:] if n.get("kind") == "recheck_failed"]
+    assert len(sent) == len(first.notified)
+    assert "일정 전체와 맞지 않아" in sent[0]["text"] and "일정은 그대로 두었어요" in sent[0]["text"]
+    assert "사람" not in sent[0]["text"] and "담당자" not in sent[0]["text"]
+
+
+def test_an_action_rejected_for_another_reason_is_not_announced_to_the_customer(api):
+    """인자 오류 · 지어낸 장소 같은 다른 `action_rejected` 는 고객 알림이 아니라 **운영자의 오류**다."""
+    _create(api)
+    before = len(_notices(api))
+    first = _tick(_opener(api, _check_activities(DISRUPTED),
+                          _escalating("action_rejected", observed="itinerary.apply arguments are malformed: x")))
+    assert first.opened and first.notified == []
+    assert [n for n in _notices(api)[before:] if n.get("kind") in ("recheck_failed", "no_alternate")] == []

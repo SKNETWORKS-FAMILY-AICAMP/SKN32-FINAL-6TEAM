@@ -42,6 +42,7 @@ from uuid import UUID
 from app.application.case_intake import open_case
 
 from .itinerary import Item, TripStore
+from .itinerary_actions import RECHECK_FAILED
 from .itinerary_changes import planned_option, route_of, route_targets
 from .pending import PendingStore, unresolved_notice
 from .replan import WEATHER_LIKE
@@ -169,26 +170,34 @@ class TripWatchCaseOpener:
         except Exception:                                # noqa: BLE001 — 닫지 못해도 반복은 계속된다. 이유는 남긴다
             logger.exception("watch: could not close the failed case=%s", case_id)
 
-    def _escalation_reason(self, case_id: UUID) -> str | None:
+    def _escalation(self, case_id: UUID) -> tuple[str | None, str]:
+        """(닫힌 사유 `guardrail`, 관찰 문구 `observed`). 닫힌 적이 없으면 (None, "")."""
         with self._connect() as conn:
             events = self.repository.get_case_events(conn, tenant_id=self.store.tenant_id, case_id=case_id)
         for event in reversed(events):
             if event["event_type"] == "guardrail_escalated":
-                return str((event["payload_json"] or {}).get("guardrail") or "") or None
-        return None
+                payload = event["payload_json"] or {}
+                observed = payload.get("observed")
+                text = " ".join(str(o) for o in observed) if isinstance(observed, list) else str(observed or "")
+                return (str(payload.get("guardrail") or "") or None), text
+        return None, ""
 
     def _after_run(self, case_id: UUID, outcome: dict[str, Any] | None, result: CaseTickResult) -> None:
         """Team 이 `itinerary_unresolved`(바꿀 곳 없음)로 끝났으면 **고객에게 알린다** — 일정은 그대로라는 것과 원인."""
         context = self._contexts.get(case_id)
         if context is None or (outcome or {}).get("status") != "escalated":
             return
-        if self._escalation_reason(case_id) != "itinerary_unresolved":
+        guardrail, observed = self._escalation(case_id)
+        # ★바꿀 곳이 없어서(`itinerary_unresolved`) 또는 **바꿀 곳은 찾았는데 일정 전체 재판정이 막아서**(`action_rejected` + 머리가 `RECHECK_FAILED`). 다른 `action_rejected`(인자 오류 등)는
+        #   운영자 몫이라 고객에게 알리지 않는다
+        recheck_failed = guardrail == "action_rejected" and observed.startswith(RECHECK_FAILED)
+        if guardrail != "itinerary_unresolved" and not recheck_failed:
             return
         item, causes = context["item"], context["causes"]
         with self._connect() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=context["trip_id"],
                                        key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
-                                       payload=unresolved_notice(item=item, causes=causes))
+                                       payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed))
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
 
     def _route(self, trip_id: UUID, item: Item, now: datetime, result: CaseTickResult,
