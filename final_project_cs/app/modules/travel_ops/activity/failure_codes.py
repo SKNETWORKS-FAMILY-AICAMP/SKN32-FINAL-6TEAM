@@ -22,7 +22,11 @@ DISASTER_BLOCKS: Final = "disaster_blocks"
 ALREADY_STARTED: Final = "already_started"
 PARTY_OVER_CAPACITY: Final = "party_over_capacity"
 PLACE_UNKNOWN: Final = "place_unknown"
+TIME_UNKNOWN: Final = "time_unknown"
 PLACE_NOT_FOUND: Final = "place_not_found"
+PLACE_AMBIGUOUS: Final = "place_ambiguous"
+PLACE_EXISTS_UNREGISTERED: Final = "place_exists_unregistered"
+PLACE_LOOKUP_BLOCKED: Final = "place_lookup_blocked"
 ALTERNATIVES_WITHHELD: Final = "alternatives_withheld"
 ALTERNATIVES_NO_CONTENT_ID: Final = "alternatives_no_content_id"
 ALTERNATIVES_POOL_UNAVAILABLE: Final = "alternatives_pool_unavailable"
@@ -36,7 +40,11 @@ DESCRIPTIONS: Final[dict[str, str]] = {
     ALREADY_STARTED: "이미 시작됐거나 끝난 활동이다",
     PARTY_OVER_CAPACITY: "신청 인원이 정원을 넘는다",
     PLACE_UNKNOWN: "예약의 장소·운영 정보를 읽지 못했다(판정: 정보 부족)",
+    TIME_UNKNOWN: "예약 시각을 읽지 못해 성립 여부를 판정하지 않았다(판정: 정보 부족)",
     PLACE_NOT_FOUND: "고객이 말한 장소 이름을 카탈로그·TourAPI 에서 하나로 특정하지 못했다(고객에게 되묻는다)",
+    PLACE_AMBIGUOUS: "고객이 말한 장소 이름이 카탈로그의 둘 이상을 가리킨다(고객에게 고르게 한다)",
+    PLACE_EXISTS_UNREGISTERED: "장소는 실재하지만 우리 카탈로그에 없다(저장하지 않고 고객에게 되묻는다)",
+    PLACE_LOOKUP_BLOCKED: "장소 조회가 막혀 있는지 없는지 확인하지 못했다(없음이 아니다 — 사람에게 넘긴다)",
     ALTERNATIVES_WITHHELD: "위급재난이라 대체 장소를 안내하지 않았다",
     ALTERNATIVES_NO_CONTENT_ID: "원래 장소의 식별자가 없어 대체 후보를 찾지 못했다",
     ALTERNATIVES_POOL_UNAVAILABLE: "대체 후보 풀을 읽지 못했다(원래 장소가 카탈로그에 없거나 조회 실패)",

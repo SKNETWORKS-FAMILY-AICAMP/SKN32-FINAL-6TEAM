@@ -81,6 +81,9 @@ class ReadToolbox:
     route_events: Any | None = None
     #: 고객 문장에서 신고 내용(늦음·휴무·품절·재요청)을 뽑는 함수. 없으면 「모름」.
     report_extractor: Callable[[str], dict[str, Any] | None] | None = None
+    #: 카카오 로컬(키워드 검색). ★`read.place_lookup` 의 **존재 확인**에만 쓰고 응답은 저장하지 않는다.
+    #:  없으면(`None`) 존재를 못 물은 것이라 「없음」이 아니라 「모름」으로 답한다.
+    kakao: Any | None = None
 
     def _one(self, sql: str, params: tuple[Any, ...], columns: tuple[str, ...]) -> dict[str, Any] | None:
         with self.connection_factory() as conn:
@@ -140,6 +143,7 @@ class ReadToolbox:
             "read.place":    self.place,
             "read.place_search": self.place_search,
             "read.place_candidates": self.place_candidates,
+            "read.place_lookup": self.place_lookup,
             # ★요식 원장. `read.place` 와 달리 **시각을 받는다** —
             #   「그 시각에 여는가」는 시각이 있어야 답할 수 있다.
             "read.dining_state": self.dining_state,
@@ -356,6 +360,21 @@ class ReadToolbox:
         narrow = next(iter(allowed)) if allowed and len(allowed) == 1 else None
         return self.travel.place.find(
             name.strip(), content_type_id=narrow, allowed_types=allowed or None)
+
+    def place_lookup(self, scope: ToolContext, *, name: str | None = None,
+                     **_: Any) -> dict[str, Any] | None:
+        """고객이 말한 장소 이름 → 우리 카탈로그, 없으면 카카오로 **존재만** 확인한다.
+
+        반환 `status`: `found` · `ambiguous` · `exists_unregistered` · `not_found` · `unknown`.
+        ★`read.place_search` 와 달리 「없음」과 「못 물어봄」을 가른다(`not_found` ≠ `unknown`).
+        ★카카오 응답(이름·좌표·주소)은 결과에 싣지 않는다 — 결과는 Case 근거로 저장되기 때문이다.
+        이름이 비면 `None`(모름). 본체는 `activity/place_lookup.py`.
+        """
+        if not name or not name.strip():
+            return None
+        from app.modules.travel_ops.activity.place_lookup import lookup_place
+
+        return lookup_place(self.connection_factory, scope.tenant_id, name, self.kakao)
 
     def place_candidates(self, scope: ToolContext, *, content_id: str | None = None,
                          **_: Any) -> dict[str, Any] | None:

@@ -151,7 +151,7 @@ async def test_place_not_found_asks_the_customer_again_with_a_code(caplog):
     caplog.set_level(logging.WARNING, logger=fc.LOGGER_NAME)
     ctx = pack("activity", scope=["activity"],
                state={"requested_place_name": "없는곳", "requested_activity_time": datetime.now(KST) + timedelta(days=3)})
-    result = await ActivityTeam(FakeTools({"read.place_search": None})).execute(
+    result = await ActivityTeam(FakeTools({"read.place_lookup": {"status": "not_found", "via": "place_catalog"}})).execute(
         task("activity", "activity.submit_itinerary", ctx, ALLOWED))
     assert result.next_action.value == "wait_for_input"
     assert result.decisions[0]["failure_code"] == fc.PLACE_NOT_FOUND

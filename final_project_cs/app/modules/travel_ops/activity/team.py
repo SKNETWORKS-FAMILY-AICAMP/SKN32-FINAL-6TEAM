@@ -65,7 +65,7 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
-                       "read.weather", "read.disaster", "read.place_search",
+                       "read.weather", "read.disaster", "read.place_lookup",
                        "read.place_candidates", "read.disruptions", *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
@@ -191,11 +191,15 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         #   그대로 고객 답변까지 간다.
         if booking is None:
             return self._unknown(task, "예약 내역", evidence)
-        if not policy:
+        feasible_only = task.capability == "activity.check_feasible"
+        # ★성립 판정(`check_feasible`)은 취소·환급 규정을 쓰지 않는다 — 규정이 없다고 사람에게 넘기지 않는다.
+        #   규정이 필요한 `check_cancelable`·`propose_change` 는 그대로 모르면 멈춘다.
+        if not policy and not feasible_only:
             return self._unknown(task, "취소·환급 규정", evidence)
 
         remaining = self._hours_until(booking.get("starts_at"))
-        if remaining is None:
+        # ★시각을 모르면 성립 판정은 「정보 부족」으로 답한다(escalate 가 아니다). 나머지는 시각이 꼭 필요하다.
+        if remaining is None and not feasible_only:
             return self._unknown(task, "예약 시각", evidence)
 
         if task.capability == "activity.check_cancelable":
@@ -227,20 +231,33 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             return self._unknown(task, "요청 시각", evidence)
 
         seen: set[str] = set()
-        found = self._read(task, "read.place_search", {"name": place_name}, seen)
+        found = self._read(task, "read.place_lookup", {"name": place_name}, seen)
+        # ★결과에는 카카오가 준 값이 없다(판정만) — 근거로 저장해도 약관에 걸리지 않는다(`place_lookup.py`).
         if found is not None:
-            evidence = self._evidence(task, source_id="read.place_search",
-                                      claim="장소 검색 결과", value=found, base=evidence)
+            evidence = self._evidence(task, source_id="read.place_lookup",
+                                      claim="장소 조회 결과", value=found, base=evidence)
+        status = (found or {}).get("status")
 
-        if found is None:
-            return self._result(
-                task, outcome="completed", confidence=0.5, evidence=evidence,
-                next_action=NextAction.WAIT_FOR_INPUT,
-                decisions=[{"failure_code": self._record_failure(task, fc.PLACE_NOT_FOUND)}],
-                answer=f"'{place_name}'을(를) 찾지 못했습니다. 좀 더 정확한 장소 이름을 알려주시겠어요?",
-                required_input_schema={"type": "object",
-                                       "properties": {"place_hint": {"type": "string"}},
-                                       "required": ["place_hint"]})
+        if status == "unknown":
+            # ★못 물어본 것이다 — 「없음」이 아니다. 고객에게 이름을 다시 쓰라고 하지 않고 사람에게 넘긴다.
+            self._record_failure(task, fc.PLACE_LOOKUP_BLOCKED, reason=found.get("reason"))
+            return self._unknown(task, "장소 조회", evidence)
+        if status == "ambiguous":
+            return self._ask_place(
+                task, evidence, fc.PLACE_AMBIGUOUS,
+                f"'{place_name}'은(는) 여러 곳을 가리킵니다"
+                f"({', '.join(c['title'] for c in found.get('candidates', []))} 등 {found.get('match_count')}곳). "
+                "어느 곳인지 정확한 이름이나 주소를 알려주시겠어요?")
+        if status == "exists_unregistered":
+            # ★실재는 하지만 우리 목록에 없다. 카카오 값을 저장하지 않으므로 일정 제안을 만들지 않고 되묻는다.
+            return self._ask_place(
+                task, evidence, fc.PLACE_EXISTS_UNREGISTERED,
+                f"'{place_name}'은(는) 실제로 있는 장소로 확인되지만 지원하는 장소 목록에 없어 "
+                "일정을 만들 수 없습니다. 정확한 이름이나 주소를 알려주시겠어요?")
+        if status != "found":
+            return self._ask_place(
+                task, evidence, fc.PLACE_NOT_FOUND,
+                f"'{place_name}'을(를) 찾지 못했습니다. 좀 더 정확한 장소 이름을 알려주시겠어요?")
 
         proposal = self._proposal(task, "activity.submit",
                                   arguments={"content_id": found["content_id"],
@@ -251,6 +268,17 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             next_action=NextAction.WAIT_FOR_APPROVAL,
             action_proposals=[proposal],
             answer=f"{found.get('matched_title', place_name)} 일정 제출 제안을 만들었습니다. 확인 후 승인해 주세요.")
+
+    def _ask_place(self, task: TeamTask, evidence: list, code: str, answer: str) -> TeamResult:
+        """장소를 하나로 못 정했을 때 — 사람에게 넘기지 않고 고객에게 되묻는다."""
+        return self._result(
+            task, outcome="completed", confidence=0.5, evidence=evidence,
+            next_action=NextAction.WAIT_FOR_INPUT,
+            decisions=[{"failure_code": self._record_failure(task, code)}],
+            answer=answer,
+            required_input_schema={"type": "object",
+                                   "properties": {"place_hint": {"type": "string"}},
+                                   "required": ["place_hint"]})
 
     # ── ① 검증 — 계산으로만 ────────────────────────────────────
     def _check_cancelable(self, task: TeamTask, booking: dict, terms: Any,
@@ -301,9 +329,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                         "penalty_rate": penalty}])
 
     def _check_feasible(self, task: TeamTask, booking: dict, policy: Any,  # noqa: ARG002
-                        remaining: float, evidence: list, seen: set[str]) -> TeamResult:
+                        remaining: float | None, evidence: list, seen: set[str]) -> TeamResult:
         # ★결함 2 수정(2026-09-21): 이미 시작된 예약은 성립 판정 없이 즉시 반환.
-        if remaining < 0:
+        #   `remaining is None` = 시각을 모른다(아래 「정보 부족」에서 다룬다).
+        if remaining is not None and remaining < 0:
             return self._result(
                 task, outcome="completed", confidence=1.0, evidence=evidence,
                 next_action=NextAction.RESPOND,
@@ -321,6 +350,17 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
                 answer=f"인원이 정원을 넘습니다 — 신청 {party}명, 정원 {capacity}명.",
                 decisions=[{"feasible": False, "status": "problem", "reason": "party_over_capacity",
                             "failure_code": self._record_failure(task, fc.PARTY_OVER_CAPACITY)}])
+
+        # ★시각을 모르면 휴무 요일·운영시간·재난·기상 어느 것도 잴 수 없다 — 「모름」을 「성립」으로 읽지 않는다.
+        #   정원 초과처럼 시각 없이 확인된 불가(위)는 이미 `problem` 으로 나갔다. 대체 장소는 찾지 않는다.
+        if remaining is None:
+            return self._result(
+                task, outcome="completed", confidence=0.5, evidence=evidence,
+                next_action=NextAction.RESPOND,
+                answer="예약 시각을 확인하지 못해 성립 여부를 판정하지 않았습니다.",
+                decisions=[{"feasible": False, "status": "insufficient_info", "reason": "time_unknown",
+                            "failure_code": self._record_failure(task, fc.TIME_UNKNOWN)}],
+                warnings=["예약 시각을 확인하지 못했다"])
 
         place = self._read(task, "read.place", {"place_id": booking.get("place_id")}, seen)
         evidence = self._evidence(task, source_id="read.place",
