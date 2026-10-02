@@ -6,6 +6,7 @@ status: draft
 tags: [testing]
 owners: [human:미배정]
 domain: neutral
+domain_note: 시험 지도라 여행 도메인 시험(감시 · 제안 · MCP · 실시간 진행)의 이름과 설명이 표에 나온다 — 시험 이름은 도메인을 말할 수밖에 없다
 ---
 
 # 테스트 지도
@@ -53,6 +54,8 @@ tests/
 | 옛 MCP 도구 수 고정(쇼핑몰 Case 도구 3개 — 연결 안 됨) | `security/` | `test_scope_contract.py` |
 | **MCP 실제 접속**(initialize → 도구 호출) · 키 401 · 남의 여행 404 · 쓰기 스위치 `[2026-10-02]` | `e2e/` | `test_mcp_server.py` (15건) |
 | **웹 실시간 진행(SSE)** — 단계 · 생존 신호 · 시간 초과 · 끊김 · 접수 읽기 멈춤 `[2026-10-02]` | `e2e/` | `test_op_stream.py` (21건) |
+| **감시 반복의 끝맺음** — Case 예외 격리 · 끝난/낡은 제안 닫기 · 바꿀 곳 없음 알림 · 일시 실패 재시도 `[2026-10-03]` | `e2e/` | `test_watch_failures.py` (10건) |
+| 활동 대체 후보가 예산보다 많아도 예외 없이 `[2026-10-03]` | `unit/travel/activity/` | `test_activity_trigger_budget.py` (3건) |
 | outbox 해소 | `integration/api/` | `test_outbox_resolution.py` |
 | outbox tenant 격리 | `integration/messaging/` | `test_outbox_tenant_guard.py` |
 | 제공자 timeout | `integration/controller/` | `test_provider_timeout_unknown.py` |
@@ -66,7 +69,7 @@ tests/
 
 ## 불변식과의 연결
 
-`[실측 2026-10-02]` 불변식 **56개 중 53개**가 위 테스트에 연결돼 있다(2026-09-10 에는 52개 중 49개).
+`[실측 2026-10-03]` 불변식 **58개 중 55개**가 위 테스트에 연결돼 있다(2026-10-02 에는 56개 중 53개, 2026-09-10 에는 52개 중 49개).
 
 연결 상태는 [invariants.md](invariants.md)에 있고, **검사기가 실제로 파일과 함수 존재를 확인한다.**
 

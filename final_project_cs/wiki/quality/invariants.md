@@ -248,6 +248,13 @@ Action을 실행하기 전 근거를 대조한다.
 | `INV-CS-RT-021` | **일꾼이 막혀 있어도 생존 신호(`beat`)가 계속 나간다** — 이벤트 루프가 낸다. 모델·장소 조회를 기다리는 단계가 `slow_seconds` 를 넘으면 `slow=true` | automated | `tests/e2e/test_op_stream.py::test_beats_keep_coming_while_the_worker_is_blocked_and_flag_a_slow_model` |
 | `INV-CS-RT-022` | **연결이 끊겨도 일은 끝까지 돌고 응답 뒤로 미룬 일은 정확히 한 번 돈다** — 처리 중인 요청을 버리지 않는다 | automated | `tests/e2e/test_op_stream.py::test_if_the_client_leaves_midway_the_work_and_its_deferred_part_still_finish_once` |
 
+### 감시 반복의 끝맺음 `[2026-10-03 결함 인계]`
+
+| ID | 불변식 | 판정 | 실행 위치 |
+|---|---|---|---|
+| `INV-CS-RT-023` | **감시 반복은 Case 하나의 실행 실패로 끊기지 않는다** — 터진 Case 는 `escalated`(`team_error`)로 닫혀 운영자가 오류로 보고, 그 회차의 나머지 Case 는 계속 돈다 | automated | `tests/e2e/test_watch_failures.py::test_one_case_blowing_up_does_not_stop_the_rest_of_the_tick_and_is_closed_as_team_error` |
+| `INV-CS-RT-024` | **못 고르게 된 제안(끝난 일정 · 낡은 기준 버전)은 열린 채 두지 않고 그 자리에서 닫는다** — 닫은 기록은 커밋되고 부르는 쪽은 409 를 받는다 | automated | `tests/e2e/test_watch_failures.py::test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_kept` |
+
 ---
 
 ## Context 예산 — `INV-CS-CTX-*`
@@ -342,9 +349,9 @@ python program/scripts/check_wiki.py
 | ACT | 3 | 3 | 0 |
 | SEC | 10 | 10 | 0 |
 | VER | 7 | 7 | 0 |
-| RT | 22 | 22 | 0 |
+| RT | 24 | 24 | 0 |
 | CTX | 2 | 2 | 0 |
-| **합계** | **56** | **53** | **3** |
+| **합계** | **58** | **55** | **3** |
 
 ★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
 

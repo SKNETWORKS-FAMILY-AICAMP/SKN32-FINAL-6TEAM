@@ -95,6 +95,7 @@ def guardrails(monkeypatch):
 
 # ── ① 한 Case 의 예외가 나머지를 끊지 않는다 ──────────────────────────
 
+# invariant: INV-CS-RT-023
 def test_one_case_blowing_up_does_not_stop_the_rest_of_the_tick_and_is_closed_as_team_error(api):
     _create(api)
     ran = []
@@ -132,6 +133,7 @@ def test_the_case_watch_closes_proposals_of_finished_items_without_changing_the_
         assert api["store"].latest(conn, UUID(str(trip_id)))[0]["version"] == 1         # 바꾸지 않았다
 
 
+# invariant: INV-CS-RT-024
 def test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_kept(api, monkeypatch):
     """감시가 아직 못 닫았어도 끝난 제안은 고를 수 없다 — 그리고 닫은 기록이 **남는다**(전에는 예외로 트랜잭션이 되돌아가 계속 열려 있었다)."""
     trip_id = _ask_first(api)
