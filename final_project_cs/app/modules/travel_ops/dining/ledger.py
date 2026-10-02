@@ -184,6 +184,97 @@ def dining_states(conn, tenant_id: str, slots: list[dict[str, Any]]) -> dict[str
             for slot in slots}
 
 
+def slot_verdicts(conn, slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    """등록 · 생성기 판정용 — 원장 가게의 그 방문 시각에 여는가. 돌려주는 값 = {seq: 판정}. `[2026-10-02]`
+
+    ★등록할 때는 코어 장소가 아직 없어 `dining_state`(코어 place_id 로 찾는다)를 못 쓴다. 칸마다 원장 가게를 바로 찾는다 —
+      `place_uid`(원장 가게 ID, 생성기 후보)가 먼저, 없으면 `content_id`(일정 접수가 싣는 관광공사 ID).
+    ★판정은 `dining.open_at_slot` 그대로 — 휴무 · 브레이크 · 자정 넘김 · 폐업을 이미 본다. None 은 모름이다.
+    ★원장에 없거나 한 관광공사 ID 가 두 가게로 이어졌으면 결과에 넣지 않는다 — 고르지 않는다(모름).
+    """
+    out: dict[int, dict[str, Any]] = {}
+    with conn.cursor() as cur:
+        for slot in slots:
+            if slot.get("place_uid"):
+                where, key = "p.place_uid::text = %s", str(slot["place_uid"])
+            else:
+                where, key = ("p.place_uid IN (SELECT r.place_uid FROM dining.dn_source_record r "
+                              "WHERE r.source_code = 'tourapi_kor_food' AND r.external_id = %s "
+                              "AND r.match_status <> 'rejected')"), str(slot["content_id"])
+            cur.execute(
+                "SELECT p.record_status = 'closed', dining.open_at_slot(p.place_uid, %s, %s) "
+                f"FROM dining.dn_place p WHERE {where} LIMIT 2",
+                (slot["at"], slot.get("until"), key))
+            rows = cur.fetchall()
+            if len(rows) == 1:
+                closed, open_at = rows[0]
+                out[int(slot["seq"])] = {"open_at_slot": open_at, "closed": bool(closed)}
+    return out
+
+
+def planner_shops(conn) -> list[dict[str, Any]]:
+    """일정 생성기의 식당 후보 — 원장의 실제 가게 전부(폐업 · 합성 · 좌표 없음 제외). 읽기만 한다. `[2026-10-02]`
+
+    ★사용자 결정 — 식당은 관광공사 API 를 실시간으로 부르지 않는다. 생성기도 원장에서 고른다.
+    ★관광공사 ID 가 없는 가게(미쉐린 · 비건 · 할랄 큐레이션 · 인허가)도 후보다. ID 는 있으면 같이 싣는다.
+    ★영업 판정은 여기서 하지 않는다 — 방문 시각이 정해진 뒤 `slot_verdicts` · `open_among` 이 한다.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT p.place_uid, p.name_ko, p.lat, p.lng, coalesce(p.road_address, p.jibun_address), "
+            "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
+            "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
+            "           AND r.external_id IS NOT NULL) "
+            "FROM dining.dn_place p "
+            "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
+            "ORDER BY p.name_ko, p.place_uid")
+        rows = cur.fetchall()
+    return [{"place_uid": str(uid), "name": name, "lat": float(lat), "lng": float(lng),
+             "address": address, "content_id": content_id}
+            for uid, name, lat, lng, address, content_id in rows]
+
+
+def open_among(conn, place_uids: list[str], at: Any, until: Any = None) -> dict[str, bool | None]:
+    """여러 원장 가게가 같은 방문 시각에 여는가 — 한 번에 묻는다(생성기가 닫힌 식사를 바꿀 때). `[2026-10-02]`"""
+    if not place_uids:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT p.place_uid::text, dining.open_at_slot(p.place_uid, %s, %s) "
+            "FROM dining.dn_place p WHERE p.place_uid::text = ANY(%s)",
+            (at, until, [str(uid) for uid in place_uids]))
+        return dict(cur.fetchall())
+
+
+class PlannerLedger:
+    """일정 생성기가 원장을 읽는 자리 — 생성기는 이 셋만 부른다(`planner.plan_trip(ledger=…)`). `[2026-10-02]`
+
+    ★생성기와 같은 연결을 쓴다. 요식 표가 없는 DB 에서 SQL 이 실패해도 바깥 트랜잭션을 깨지 않게 저장점 안에서 묻는다.
+    ★후보를 못 읽으면 빈 목록(원장 식당 없이 짠다), 판정을 못 읽으면 예외 — 받는 쪽(`with_ledger`)이 「모름」으로 둔다.
+    """
+
+    def __init__(self, conn) -> None:
+        self._conn = conn
+
+    def shops(self) -> list[dict[str, Any]]:
+        try:
+            with self._conn.transaction():
+                return planner_shops(self._conn)
+        except Exception:   # noqa: BLE001 — 드라이버를 import 하지 않는다(Team 경계). 요식 표가 없는 DB
+            return []
+
+    def verdicts(self, slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+        with self._conn.transaction():
+            return slot_verdicts(self._conn, slots)
+
+    def open_among(self, place_uids: list[str], at: Any, until: Any = None) -> dict[str, bool | None]:
+        try:
+            with self._conn.transaction():
+                return open_among(self._conn, place_uids, at, until)
+        except Exception:   # noqa: BLE001 — 못 읽으면 모두 모름
+            return {}
+
+
 def find_place_by_name(conn, name: str | None) -> dict[str, Any] | None:
     """일정 접수의 장소 찾기용 — 이름이 같은 관광공사 출처 가게가 **하나뿐**이면 관광공사 결과 모양으로.
 
