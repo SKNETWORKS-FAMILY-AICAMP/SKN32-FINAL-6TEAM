@@ -31,7 +31,6 @@ import hashlib
 import hmac
 import html
 import json
-import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo

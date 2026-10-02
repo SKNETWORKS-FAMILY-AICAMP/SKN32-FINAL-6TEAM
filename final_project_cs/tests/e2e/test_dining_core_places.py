@@ -19,6 +19,9 @@ def tx():
     with get_connection() as conn:
         if not ledger_ready(conn):
             pytest.skip("요식 표가 없는 DB")
+        # ★표만 있고 자료가 비어 있는 DB(마이그레이션만 돌린 새 DB · CI)도 건너뛴다 — 요식 자료는 git 밖이라 CI 에 없다
+        if conn.execute("SELECT count(*) FROM dining.dn_place WHERE NOT is_synthetic AND lat IS NOT NULL").fetchone()[0] == 0:
+            pytest.skip("요식 원장 자료가 적재되지 않은 DB")
         # 연결은 autocommit 이 아니다 — 끝에 rollback 하면 이 시험의 행이 모두 사라진다
         tenant = "dining_core_" + uuid4().hex[:10]
         conn.execute("INSERT INTO tenants (tenant_id, name) VALUES (%s, %s)", (tenant, "dining core"))

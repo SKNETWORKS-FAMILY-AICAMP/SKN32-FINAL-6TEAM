@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import date, datetime, time as dtime, timedelta
+from datetime import date, datetime, time as dtime
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
 

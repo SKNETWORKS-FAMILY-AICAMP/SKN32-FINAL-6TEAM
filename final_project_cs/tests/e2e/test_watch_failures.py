@@ -25,7 +25,7 @@ from app.domain.events import EventType
 from app.infrastructure.db import repository
 from app.infrastructure.db.session import get_connection
 from app.modules.travel_ops import pending as pending_module
-from app.modules.travel_ops.pending import CONSENT_KEY, PendingStore
+from app.modules.travel_ops.pending import CONSENT_KEY
 from app.modules.travel_ops.trip_watch_cases import TripWatchCaseOpener
 
 from .test_ask_first import _ask_first, _choose, _proposals
