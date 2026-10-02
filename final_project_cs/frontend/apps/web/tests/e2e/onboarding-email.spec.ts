@@ -148,10 +148,10 @@ test("잘못된 값을 둔 채 카드를 접거나 약관·취향으로 가려 �
   await expect(page.getByRole("heading", { name: "여행 취향 설문을 시작할게요", exact: true })).toBeVisible();
 });
 
-test("카드를 오가도 초안이 남고, 저장되지 않는다고 안내하며 마이페이지에도 등록된 것처럼 보이지 않는다", async ({ page }) => {
+test("카드를 오가도 초안이 남고, 첫 여행을 등록할 때 서버에 저장된다고 안내하며 마이페이지에서 보이고 바꿀 수 있다", async ({ page }) => {
   await page.goto("/start");
   await emailHead(page).click();
-  await expect(page.getByText("지금은 이 화면에서만 기억하고 서버에 저장하지 않아요. 인증 메일도 보내지 않아요.")).toBeVisible();
+  await expect(page.getByText("마이페이지에서 언제든 추가하거나 바꿀 수 있어요. 첫 여행을 등록하면 서버에 저장돼요. 인증 메일은 보내지 않고, 복구 메일도 아직 준비 중이에요.")).toBeVisible();
   await field(page).fill("draft@example.com");
   await page.getByRole("button", { name: "계속" }).click();
   await agreeTerms(page);
@@ -161,13 +161,14 @@ test("카드를 오가도 초안이 남고, 저장되지 않는다고 안내하�
   await page.keyboard.press("Escape");
   await emailHead(page).click();
   await expect(field(page)).toHaveValue("draft@example.com");
-  await expect(emailHead(page)).toContainText("서버에는 아직 저장하지 않아요");
+  await expect(emailHead(page)).toContainText("마이페이지에서 바꿀 수 있어요");
   await expect(page.getByText(/인증 완료|복구 설정 완료/)).toHaveCount(0);
 
-  // My page reads the saved profile, which has no email: the draft is not shown as registered.
+  // ★`[2026-10-01]` Leaving the card kept it in this browser, so My page shows it (no verification is claimed).
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
-  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
+  await expect(page.locator("#main-content").getByText("draft@example.com", { exact: true })).toBeVisible();
+  await expect(page.getByText("등록된 이메일이 없습니다.")).toHaveCount(0);
   await page.goBack();
   // The onboarding state lives across the app, so the card is still as it was left: open.
   await expect(emailHead(page)).toHaveAttribute("aria-expanded", "true");
@@ -223,5 +224,5 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 이메일
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByText("Please check the email format, e.g. name@example.com")).toBeVisible();
   await expect(page.getByText("To leave it out, clear the field and continue.")).toBeVisible();
-  await expect(page.getByText("For now it is kept on this screen only and not saved to the server. No verification email is sent.")).toBeVisible();
+  await expect(page.getByText("You can add or change it on My page any time. It is saved to the server when you register your first trip. No verification email is sent, and recovery by email is still being prepared.")).toBeVisible();
 });

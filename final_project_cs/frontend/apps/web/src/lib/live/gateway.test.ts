@@ -265,4 +265,21 @@ describe("live trip gateway", () => {
     await gateway.sendMessage(TRIP.trip_id, "저녁 바꿔 줘", "ko", "b");
     expect(ids()[1]).not.toBe(ids()[0]);
   });
+
+  // 2026-09-30: the customer's position from the browser, sent only after the server asked for it.
+  it("marks an answer that needs the customer's position, and sends the position only when given", async () => {
+    const gateway = createLiveGateway();
+    const bodies = () => calls.filter((call) => call.url.endsWith("/messages")).map((call) => JSON.parse(String(call.init.body)) as Record<string, unknown>);
+    replies.push({ status: "answered", answer: "현재 위치를 알려 주시면 길을 찾아 드릴게요.", needs_location: true });
+    const asked = await gateway.sendMessage(TRIP.trip_id, "여기서 경복궁 어떻게 가?", "ko");
+    expect(asked.messages.at(-1)).toMatchObject({ role: "assistant", needsLocation: true });
+    expect(bodies()[0]).not.toHaveProperty("location");
+
+    replies.push({ status: "answered", answer: "지금 계신 곳에서 도보 12분이에요.", needs_location: true });
+    const answered = await gateway.sendMessage(TRIP.trip_id, "여기서 경복궁 어떻게 가?", "ko", null, { lat: 37.57, lng: 126.98, accuracyM: 20, at: "2026-09-30T06:00:00.000Z" });
+    expect(bodies()[1].location).toEqual({ lat: 37.57, lng: 126.98, accuracy_m: 20, at: "2026-09-30T06:00:00.000Z" });
+    expect(bodies()[1].request_id).not.toBe(bodies()[0].request_id);
+    // ★a position was sent: no second offer to send it again
+    expect(answered.messages.at(-1)).not.toHaveProperty("needsLocation");
+  });
 });

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { noHorizontalScroll, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, openPreferencesFromMyPage, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
 
 test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
@@ -105,7 +105,9 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   await expect(page.getByText("가족", { exact: true })).toBeVisible();
 
   await page.locator("form").getByRole("link", { name: "이전", exact: true }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  // ★`[2026-10-01]` The terms are agreed, so Back goes home instead of asking again; the preferences are on My page.
+  await expect(page).toHaveURL(/\/$/);
+  await openPreferencesFromMyPage(page);
   await expect(heading("여행 취향 설정 완료")).toBeVisible();
 
   // The finished survey rides with the trip registration; the demo refuses a survey the backend would reject.
@@ -198,4 +200,56 @@ test("소개 첫 화면의 언어 카드로 언어를 고르면 카드가 접히
   }
   await expect(next).toHaveAttribute("aria-disabled", "true");
   await noHorizontalScroll(page);
+});
+
+test("시작 화면은 한 번만: 마친 뒤 새로고침해도 약관·취향이 남고, 소개 버튼은 바로 등록 화면으로 가며, 마이페이지에서 고칠 수 있다", async ({ page }) => {
+  await useKorean(page);
+  await page.goto("/start");
+  await page.getByRole("button", { name: /약관 동의/ }).click();
+  await agreeTerms(page);
+  await page.getByRole("button", { name: "시작하기" }).click();
+  for (let at = 0; at < 6; at += 1) {
+    await expect(page.locator(`#question-title-${at}`)).toBeFocused();
+    await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();
+  }
+  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
+
+  // A reload (or a later visit) does not start over.
+  await page.reload();
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toContainText("필수 내용을 확인했어요.");
+  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toContainText("6가지 질문을 모두 마쳤어요.");
+  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeEnabled();
+
+  // The intro button no longer sends the customer through it again.
+  await page.goto("/");
+  await page.getByRole("button", { name: "3. 일정 시작" }).click();
+  await expect(page.getByText("이미 설정을 마치셨어요. 취향과 이메일은 마이페이지에서 바꿀 수 있어요.")).toBeVisible();
+  await page.getByRole("button", { name: "내 일정 시작하기" }).click();
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();
+
+  // My page shows the answers and opens the preferences for changes.
+  await openPreferencesFromMyPage(page);
+  await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
+});
+
+test("약관에 동의하지 않았으면 소개 버튼은 지금처럼 시작 화면으로 가고, 마이페이지의 여행 취향은 설정 전이라고 알린다", async ({ page }) => {
+  await useKorean(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "3. 일정 시작" }).click();
+  await expect(page.getByText("약관 확인과 여행 취향 설정부터 함께할게요.")).toBeVisible();
+  await page.getByRole("button", { name: "내 일정 시작하기" }).click();
+  await expect(page).toHaveURL(/\/start$/);
+  await page.goto("/mypage");
+  await expect(page.getByText("아직 설정하지 않았어요. 설정하면 일정을 확인할 때 반영돼요.")).toBeVisible();
+  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "설정하기", exact: true }).click();
+  await expect(page).toHaveURL(/\/start$/);
+});
+
+test("저장된 값이 깨져 있어도 시작 화면은 처음 상태로 열린다", async ({ page }) => {
+  await useKorean(page);
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.onboarding.v1", '{"agreed":"yes","answers":42}'));
+  await page.goto("/start");
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toContainText("시작하기 전에 확인해 주세요.");
+  await expect(page.getByRole("button", { name: /여행 취향 알아보기/ })).toBeDisabled();
 });

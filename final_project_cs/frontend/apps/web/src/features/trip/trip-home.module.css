@@ -74,7 +74,7 @@
 .error { flex-basis: 100%; margin: 6px 0 0; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
 div.error { display: grid; gap: 8px; justify-items: start; }
 /* The server answered; only the re-read is pending — not an error, so no error colours. */
-.chatNote { flex-basis: 100%; margin: 6px 0 0; padding: 10px 15px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); color: var(--color-muted); font-size: 11px; line-height: 1.8; }
+.rereadNote { flex-basis: 100%; margin: 6px 0 0; padding: 10px 15px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-subtle); color: var(--color-muted); font-size: 11px; line-height: 1.8; }
 .footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 19px; }
 .footer > span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-muted); }
 .gate { max-width: 620px; margin: 30px auto; display: grid; gap: 14px; justify-items: start; color: var(--color-primary); }

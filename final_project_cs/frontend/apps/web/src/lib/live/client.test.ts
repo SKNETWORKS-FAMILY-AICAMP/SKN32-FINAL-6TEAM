@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { adoptKey, api, currentKey, dismissKeyNotice, issueKey, LiveError, pendingKeyNotice, rotateKey, userKey, waitText } from "./client";
+import { adoptKey, answerWithin, api, currentKey, dismissKeyNotice, issueKey, LiveError, pendingKeyNotice, rotateKey, userKey, waitText } from "./client";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -102,5 +102,44 @@ describe("the user key the browser keeps", () => {
     expect(calls[0].url.endsWith("/v1/web/session/rotate")).toBe(true);
     expect(currentKey()).toBe("acop_u_rotated");
     expect(pendingKeyNotice()).toEqual({ notice: "새 키예요. 옛 키는 더 이상 쓸 수 없어요." });
+  });
+});
+
+// 2026-10-01: a server that never answers (its database stopped) must not leave a screen waiting for good.
+describe("a call that gets no answer", () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+  it("ends with 'the server is not answering' instead of waiting forever, and says so apart from 'cannot connect'", async () => {
+    vi.stubGlobal("window", { localStorage: memory({ [KEY]: "acop_u_mine" }), sessionStorage: memory(), dispatchEvent: () => true });
+    // The limit is the platform's own timer, which fake timers do not move: hand the call a signal this test fires.
+    const limit = new AbortController();
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(limit.signal);
+    // A server that accepts the call and never replies: the promise ends only when the call is aborted.
+    vi.stubGlobal("fetch", (_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "TimeoutError")));
+    }));
+    const failure = api("/v1/web/trips", "ko").catch((error: unknown) => error);
+    await new Promise((resolve) => setTimeout(resolve, 0));   // the call is out and waiting
+    limit.abort();
+    const error = await failure;
+    expect(error).toBeInstanceOf(LiveError);
+    expect((error as LiveError).code).toBe("timeout");
+    expect((error as LiveError).message).toContain("응답하지 않아요");
+  });
+
+  it("is still 'cannot connect' when the connection itself fails", async () => {
+    vi.stubGlobal("window", { localStorage: memory({ [KEY]: "acop_u_mine" }), sessionStorage: memory(), dispatchEvent: () => true });
+    vi.stubGlobal("fetch", async () => { throw new TypeError("network down"); });
+    const error = await api("/v1/web/trips", "ko").catch((e: unknown) => e);
+    expect((error as LiveError).code).toBe("network");
+  });
+
+  it("gives the calls that read many places, wake the chat model or carry files a longer limit", () => {
+    const base = "http://127.0.0.1:8042/v1/web";
+    expect(answerWithin(`${base}/trips`)).toBe(60_000);
+    expect(answerWithin(`${base}/trips/t1/proposals`)).toBe(60_000);
+    for (const slow of ["/trips/t1/messages", "/trip-intakes", "/trip-intakes/i1/plan", "/trip-intakes/i1/confirm"]) {
+      expect(answerWithin(`${base}${slow}`), slow).toBe(180_000);
+    }
   });
 });

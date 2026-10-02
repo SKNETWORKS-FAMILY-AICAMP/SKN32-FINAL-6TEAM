@@ -35,7 +35,7 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("heading", { name: "프로필 수정", exact: true })).toBeVisible();
   const save = page.getByRole("button", { name: "저장", exact: true });
   await expect(save).toBeDisabled();
-  await expect(page.getByText("프로필 저장 기능은 준비 중이에요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("이메일은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "이미지 변경" })).toBeDisabled();
   await expect(page.getByText("이미지 변경은 준비 중이에요.", { exact: true })).toBeVisible();
   // Only the nickname and the email are fields; the token is shown, never edited.
@@ -59,17 +59,23 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   const email = page.getByLabel(/토큰 복구용 이메일/);
   await email.fill("not-an-email");
   await expect(page.getByText("이메일 형식이 올바르지 않아요.", { exact: true })).toBeVisible();
+  await expect(save).toBeDisabled();
   await email.fill("traveler@example.com");
   await expect(page.getByText("이메일 형식이 올바르지 않아요.")).toHaveCount(0);
+  // ★`[2026-10-01]` A changed, well-formed email can be saved (in this browser). Cancel below drops this draft.
+  await expect(save).toBeEnabled();
   await email.fill("");
   await expect(page.getByText("이메일 형식이 올바르지 않아요.")).toHaveCount(0);
   await expect(page.getByText("토큰을 잃어버렸을 때 찾는 데 사용할 이메일이에요.", { exact: true })).toBeVisible();
-  // A valid draft still cannot be saved: there is no server call for it.
+  // Back to what is saved (nothing): nothing changed, so there is nothing to save.
   await expect(save).toBeDisabled();
 
+  await email.fill("traveler@example.com");
   await page.getByRole("link", { name: "취소", exact: true }).click();
   await expect(page).toHaveURL(/\/mypage$/);
   await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
+  // Cancel dropped the draft: no email was registered.
+  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ })).toContainText("닉네임 미발급");
   await page.keyboard.press("Escape");
@@ -166,10 +172,40 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
   await expect(english.getByRole("switch", { name: "Use floating button" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Edit profile", exact: true })).toBeVisible();
-  await expect(page.getByText("Saving your profile is not available yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText("You can save the email. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change image" })).toBeDisabled();
   await expect(page.getByText("The token cannot be changed.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("heading", { name: "My page", exact: true })).toBeVisible();
   await expect(page.getByText("No email registered.", { exact: true })).toBeVisible();
+});
+
+test("이메일 등록 → 마이페이지에 보임 → 새로고침 뒤에도 남음 → 바꾸기 → 비우고 저장하면 지워진다", async ({ page }) => {
+  await withTestToken(page);
+  await page.goto("/mypage");
+  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "이메일 등록하기" }).click();
+  await expect(page).toHaveURL(/\/mypage\/edit$/);
+  const save = page.getByRole("button", { name: "저장", exact: true });
+  const email = page.getByLabel(/토큰 복구용 이메일/);
+  await email.fill("a@b");
+  await expect(save).toBeDisabled();
+  await email.fill("  traveler@example.com  ");
+  await save.click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page.locator("#main-content").getByText("traveler@example.com", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "이메일 등록하기" })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("tripilot.web.contact.v1"))).toBe(JSON.stringify({ recoveryEmail: "traveler@example.com", pending: true }));   // demo build: no server, so it stays in this browser
+
+  await page.reload();
+  await expect(page.locator("#main-content").getByText("traveler@example.com", { exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "수정", exact: true }).click();
+  await expect(page.getByLabel(/토큰 복구용 이메일/)).toHaveValue("traveler@example.com");
+  await expect(page.getByRole("button", { name: "저장", exact: true })).toBeDisabled();
+  await page.getByLabel(/토큰 복구용 이메일/).fill("");
+  await page.getByRole("button", { name: "저장", exact: true }).click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("tripilot.web.contact.v1"))).toBeNull();
 });

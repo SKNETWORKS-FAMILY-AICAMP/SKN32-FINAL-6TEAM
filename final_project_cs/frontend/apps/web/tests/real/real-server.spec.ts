@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { finishOnboarding, start } from "../mock-api/helpers";
+import { finishOnboarding, start } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.

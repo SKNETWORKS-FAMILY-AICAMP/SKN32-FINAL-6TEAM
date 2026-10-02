@@ -1,4 +1,5 @@
 import type { Language } from "@/lib/i18n";
+import type { LocationFix } from "@/lib/location";
 import type { Coordinates } from "../map/model";
 import type { TripSurvey } from "../onboarding/payload";
 
@@ -95,6 +96,8 @@ export interface TripMessage {
   more?: string;
   /** This answer changed the plan to `version`: an 「되돌리기」 button can take it back to `version - 1` while it is still the latest. */
   changedTo?: number;
+  /** The answer needs where the customer is now (「여기서 어떻게 가?」): the screen offers to ask the browser and send again. */
+  needsLocation?: boolean;
 }
 
 /** Web view model; not a claim that the existing Case API returns this contract. */
@@ -152,7 +155,8 @@ export interface TripGateway {
   retryVerification(tripId: string, language: Language): Promise<Trip>;
   startTrip(tripId: string, language: Language): Promise<Trip>;
   /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
-  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null): Promise<Trip>;
+  /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
+  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null): Promise<Trip>;
   /**
    * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
    * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.

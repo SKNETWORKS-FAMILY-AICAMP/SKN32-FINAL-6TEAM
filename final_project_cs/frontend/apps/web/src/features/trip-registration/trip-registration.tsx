@@ -24,11 +24,12 @@ const draftKey = "tripilot.web.registration-draft.v1";
 function Preferences() {
   const t = useT();
   const [{ complete, answers }] = useOnboarding();
-  // ★Answers live in page memory only (nothing is stored), so a reload or a direct visit has none. Say so instead of
-  //   registering without them in silence (found 2026-09-28: registered trips had no survey after a reload).
+  // ★Without finished answers the registration goes without a survey — say so instead of registering without them in
+  //   silence (found 2026-09-28: registered trips had no survey after a reload). `[2026-10-01]` Answers are now kept in
+  //   this browser, so this shows only when the questions were never finished.
   if (!complete) return <><div className={styles.preferences}>
     <Eyebrow>{t("여행 취향", "YOUR TRAVEL PREFERENCES")}</Eyebrow>
-    <p>{t("취향 설문 답이 없어서 이번 등록에는 취향이 반영되지 않아요. 설문 답은 이 화면에서만 기억해서 새로고침하면 사라져요.", "No preference answers here, so this registration goes without them. Answers are kept on this screen only and are lost on reload.")}</p>
+    <p>{t("취향 설문을 마치지 않아서 이번 등록에는 취향이 반영되지 않아요. 마이페이지에서도 설정할 수 있어요.", "The preference questions are not finished, so this registration goes without them. You can also set them on My page.")}</p>
     <p><ButtonLink href={routes.start}>{t("취향 설정하기", "Set my preferences")}</ButtonLink></p>
   </div><hr /></>;
   const labels: Record<string, string> = { food: t("맛집 탐방", "Food"), nature: t("자연과 힐링", "Nature"), culture: t("문화와 역사", "Culture"), activity: t("액티비티", "Activities"), shopping: t("쇼핑", "Shopping"), local: t("로컬 일상", "Local life") };
@@ -280,7 +281,7 @@ export function TripRegistration() {
         </aside>
       </div>
       <div className={styles.actions}>
-        <ButtonLink href={routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
+        <ButtonLink href={onboarding.agreed ? routes.home : routes.start}><ArrowLeft size={18} strokeWidth={1.6} aria-hidden="true" />{t("이전", "Back")}</ButtonLink>
         <span className={styles.actionNote}>{t("입력한 계획은 화면을 오가도 유지돼요.", "Your draft stays while you explore.")}</span>
         <Button variant="primary" type="submit" disabled={pending}>{pending ? t("확인을 시작하는 중…", "Starting the check…") : t("계획 확인하기", "Check my plan")}<ArrowRight size={18} strokeWidth={1.6} aria-hidden="true" /></Button>
       </div>

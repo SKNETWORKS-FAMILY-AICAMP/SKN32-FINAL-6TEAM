@@ -29,3 +29,10 @@
 .muted { color: var(--color-muted); }
 /* The token management card sits under the profile card on My page. */
 .card + .card { margin-top: 16px; }
+
+/* My page: a card with a title row (title left, action right) and answer lines under each question. */
+.sectionHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sectionTitle { min-width: 0; font-size: 16px; font-weight: 700; letter-spacing: -.3px; line-height: 1.5; overflow-wrap: anywhere; }
+.line { display: block; }
+.fields dd .note { display: block; margin-top: 6px; }
+.fields dd > a, .fields dd > button { margin-top: 6px; }

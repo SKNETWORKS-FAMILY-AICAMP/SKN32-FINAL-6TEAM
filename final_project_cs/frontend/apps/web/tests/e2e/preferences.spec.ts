@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { agreeTerms, noHorizontalScroll, openCompletedResults, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, forgetStartScreen, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -31,6 +31,8 @@ const settled = (page: Page, index: number) => expect(page.locator(`#question-ti
 
 async function openSurvey(page: Page) {
   await page.goto("/start");
+  // ★`[2026-10-01]` The start screen keeps its answers in this browser; every run here starts from the first-time screen.
+  await forgetStartScreen(page);
   await page.getByRole("button", { name: /약관 동의/ }).click();
   await agreeTerms(page);
   await page.getByRole("button", { name: "시작하기" }).click();
@@ -446,11 +448,10 @@ test("여행을 등록해 관리를 시작한 뒤 다시 요약을 열면 주 �
   await startTrip(page);
   const tripId = new URL(page.url()).pathname.split("/")[2];
 
-  // Back to onboarding inside the app, so the page-memory answers and the active trip stay.
+  // Back to the start screen inside the app, so the page-only active trip stays. ★The intro button now goes straight to
+  // registering once the terms are agreed, so the preferences are reached from My page.
   await page.getByRole("banner").getByRole("link", { name: "triPilot 홈으로" }).click();
-  await page.getByRole("button", { name: "3. 일정 시작" }).click();
-  await page.getByRole("button", { name: "내 일정 시작하기" }).click();
-  await expect(page).toHaveURL(/\/start$/);
+  await openPreferencesFromMyPage(page);
   const preferences = page.getByRole("button", { name: /여행 취향 알아보기/ }).first();
   if (await preferences.getAttribute("aria-expanded") !== "true") await preferences.click();
   await expect(heading(page, "여행 취향 설정 완료")).toBeVisible();

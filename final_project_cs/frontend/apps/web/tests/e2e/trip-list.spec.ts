@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agreeTerms, noHorizontalScroll, openCompletedResults, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
 
 /** Demo trips live in this tab's sessionStorage under this prefix (`DEMO_STORAGE_PREFIX`). */
 const PREFIX = "tripilot.web-mvp.trip:";
@@ -397,8 +397,7 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
   // Home and onboarding follow: no recent trip, and the summary no longer continues the deleted trip.
   await page.getByRole("banner").getByRole("link", { name: "triPilot 홈으로" }).click();
   await expect(card(page).getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "3. 일정 시작" }).click();
-  await page.getByRole("button", { name: "내 일정 시작하기" }).click();
+  await openPreferencesFromMyPage(page);
   const preferences = page.getByRole("button", { name: /여행 취향 알아보기/ }).first();
   if (await preferences.getAttribute("aria-expanded") !== "true") await preferences.click();
   await expect(page.getByRole("button", { name: "여행 계획 등록하기" })).toBeVisible();
