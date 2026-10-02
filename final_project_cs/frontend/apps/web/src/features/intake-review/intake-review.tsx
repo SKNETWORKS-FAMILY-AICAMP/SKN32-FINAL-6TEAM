@@ -9,16 +9,18 @@ import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/c
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
 import { KeyNotice } from "@/features/account/key-notice";
-import { readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
+import { candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakePlanBasis, type IntakePlanInput, type IntakeView } from "@/lib/live/intake";
+import { progressText, type OpProgress } from "@/lib/live/stream";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { rows, draftOf, editsFor, statusOf } from "./model";
 import { ItemCard } from "./item-card";
+import { useIntakeEvents } from "./use-intake-events";
 import styles from "./intake-review.module.css";
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(설계서 §4-6). */
@@ -38,13 +40,19 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const [onboarding] = useOnboarding();
   const survey = onboarding.complete ? toSurvey(onboarding.answers) : undefined;
   const key = ["intake", intakeId, language] as const;
+  // ★`[2026-10-02]` While the server reads, its progress stream says when to read the intake again (`useIntakeEvents`).
+  //   Only where there is no stream (an older server, or the stream limit) is the intake asked for every 1.5 s, as before.
+  const [polling, setPolling] = useState(false);
   const query = useQuery({
     queryKey: key,
     queryFn: () => getIntake(intakeId, language),
     retry: false,
     refetchOnWindowFocus: false,
-    refetchInterval: (state) => !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
+    refetchInterval: (state) => polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
   });
+  const reread = useCallback(() => void queryClient.invalidateQueries({ queryKey: ["intake", intakeId, language] }), [queryClient, intakeId, language]);
+  const follow = useIntakeEvents(intakeId, query.data?.status === "reading", language, reread);
+  if (follow.follow === "polling" && !polling) setPolling(true);
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
     onSuccess: (view) => {
@@ -56,8 +64,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   });
   // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
   const registered = (tripId: string) => { queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
+  // What the server says it is doing with 「plan it for me」 (planning → checking → registering); null until it says.
+  const [planProgress, setPlanProgress] = useState<OpProgress | null>(null);
   const plan = useMutation({
-    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, { ...input, ...(survey && { survey }) }, language),
+    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => { setPlanProgress(null); return planIntake(intakeId, revision, { ...input, ...(survey && { survey }) }, language, setPlanProgress); },
     onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
@@ -84,8 +94,20 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (query.isPending || !query.data) return shell(<QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />);
   const view = query.data;
 
+  if (view.status === "reading" && follow.follow === "stalled") {
+    return shell(<Panel className={styles.waiting}>
+      <Eyebrow>{t("읽기가 멈췄어요", "READING STOPPED")}</Eyebrow>
+      <h1>{t("서버가 이 계획을 끝까지 읽지 못했어요", "The server stopped reading this plan")}</h1>
+      <p role="alert">{t("읽던 서버가 다시 시작됐을 수 있어요. 계획을 다시 올려 주세요.", "The server may have restarted while reading. Please upload the plan again.")}</p>
+      <ButtonLink href={routes.newTrip} variant="primary">{t("다시 올리기", "Upload again")}</ButtonLink>
+    </Panel>);
+  }
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
-    return <PlanCheck key="reading" view={reading} notice={<KeyNotice />} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    const streamNote = view.status !== "reading" ? null
+      : follow.follow === "lost" ? <p className={styles.streamNote} role="status" data-lost>{t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…")}</p>
+      : follow.slow ? <p className={styles.streamNote} role="status">{t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
+      : null;
+    return <PlanCheck key="reading" view={reading} notice={<><KeyNotice />{streamNote}</>} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>
@@ -105,6 +127,12 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       actions={{
         edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },
         remove: async (id: string) => { const row = rowOf(id); if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].removed`, value: true }]); },
+        // A place by name: the server looks it up again and checks the plan (an alternative it weighed, or a typed name).
+        replace: async (id, choice) => {
+          const row = rowOf(id);
+          if (row) await send([{ source_id: row.source.source_id, field: `items[${row.item.index}].place`, value: { name: "candidate" in choice ? choice.candidate.name : choice.name } }]);
+        },
+        candidates: async (id) => candidatesOf(view, id),
         editTrip: (field, value) => send([{ field: `trip.${field}`, value }]),
       }}
       registration={{
@@ -158,7 +186,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     </Panel>}
     {yearFilled && <p className={styles.notice} role="note">{t(`해가 적혀 있지 않아 ${String(yearFilled.value).slice(0, 4)}년으로 두었어요. 다르면 항목의 날짜를 고쳐 주세요.`, `No year was written, so we assumed ${String(yearFilled.value).slice(0, 4)}. Fix a stop’s date if that is wrong.`)}</p>}
     {view.check && !confirmed && (view.check.plan.requested || list.length === 0) &&
-      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy || dirty} pending={plan.isPending}
+      <PlanPanel basis={view.check.plan} readItems={list.length} disabled={busy || dirty} pending={plan.isPending} progress={planProgress}
         onPlan={(input) => plan.mutate({ revision: view.revision, input })} />}
     {list.length > 0 && <section className={styles.planList} aria-labelledby="plan-title">
       <div className={styles.planHead}><h2 id="plan-title">{t("여행 계획 살펴보기", "Review your itinerary")}</h2><span>{t(`${list.length}개 일정`, `${list.length} stops`)}</span></div>
@@ -212,7 +240,7 @@ function FirstDay({ disabled, onSave }: { disabled: boolean; onSave: (value: str
 }
 
 /** 「일정 짜 줘」 — 조건을 확인하고 누르면 일정 생성기가 짠 초안을 판정 뒤 등록한다. 누르는 것이 곧 등록이다. */
-function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: IntakePlanBasis; readItems: number; disabled: boolean; pending: boolean; onPlan: (input: IntakePlanInput) => void }) {
+function PlanPanel({ basis, readItems, disabled, pending, progress, onPlan }: { basis: IntakePlanBasis; readItems: number; disabled: boolean; pending: boolean; progress: OpProgress | null; onPlan: (input: IntakePlanInput) => void }) {
   const t = useT();
   const [start, setStart] = useState(basis.start_date ?? "");
   const [days, setDays] = useState(basis.days ?? 0);
@@ -238,6 +266,7 @@ function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: Int
       </select>
       <Button type="submit" variant="primary" disabled={disabled || !ready}>{pending ? t("짜는 중… (1분쯤)", "Planning… (about a minute)") : t("이 조건으로 짜서 등록", "Plan and register")}</Button>
     </form>
+    {pending && <p className={styles.streamNote} role="status" data-lost={progress?.lost || undefined}>{progressText(progress, t, ["일정을 짜 달라고 보냈어요…", "Sent your planning request…"])}</p>}
   </Panel>;
 }
 

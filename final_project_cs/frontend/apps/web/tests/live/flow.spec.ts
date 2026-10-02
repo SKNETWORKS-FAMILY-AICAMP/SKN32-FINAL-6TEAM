@@ -91,29 +91,52 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 
 const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";
 
-test("알림·복구 카드의 디스코드 웹훅은 등록까지 가도 서버로 보내지 않고 이 브라우저 저장소에도 남기지 않는다 — 저장 연결은 백엔드 몫", async ({ page, request }) => {
+test("알림·복구 카드의 디스코드 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
-  await start(page, "acop_u_known");
+  await start(page, null);
   await finishOnboarding(page, async () => {
     const head = page.getByRole("button", { name: /알림·복구/ });
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();                                              // fold it; the terms step checks the field and passes
-    await expect(head).toContainText("입력했어요 · 웹훅은 아직 저장하지 않아요");
+    await expect(head).toContainText("입력했어요 · 마이페이지에서 바꿀 수 있어요");
   });
+  // No key yet: nothing went up (saving would create a server user just for the webhook).
+  expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(0);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await page.getByRole("button", { name: "여행 등록" }).click();
-  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
 
-  // The webhook carries a token: it is in no request the server received, and not in this browser's storage.
+  // The first call issued the key; the webhook went up with it, once.
+  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => [entry.key, entry.body])).toEqual([["acop_u_stub_1", { discord_webhook_url: WEBHOOK }]]);
   const token = WEBHOOK.split("/").pop() ?? "";
-  expect(JSON.stringify(await server.log())).not.toContain(token);
-  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).not.toContain(token);
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
+});
+
+test("키가 이미 있으면 웹훅은 알림·복구 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await start(page, "acop_u_known");
+  await finishOnboarding(page, async () => {
+    const head = page.getByRole("button", { name: /알림·복구/ });
+    await head.click();
+    await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
+    await head.click();
+  });
+  await expect.poll(async () => (await server.received("PUT", "/v1/web/profile")).map((entry) => entry.body)).toEqual([{ discord_webhook_url: WEBHOOK }]);
+
+  // Back on the card with the field cleared: leaving it again sends nothing (blank is "not entered", not "remove").
+  await page.goto("/start");
+  const head = page.getByRole("button", { name: /알림·복구/ });
+  await head.click();
+  await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL" })).toHaveValue("");
+  await head.click();
+  await page.getByRole("button", { name: /약관 동의/ }).click();
+  expect(await server.received("PUT", "/v1/web/profile")).toHaveLength(1);
+  const token = WEBHOOK.split("/").pop() ?? "";
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
 });
 
 test("설문을 마친 뒤 새로고침해도 답이 남아, 등록 화면이 그 답을 이어받고 설문이 서버로 간다", async ({ page, request }) => {
@@ -288,7 +311,7 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();            // the server's trip title
-  await expect(page.getByText("모두 확인했어요", { exact: true })).toBeVisible();
+  await expect(page.getByText("고칠 곳이 없어요", { exact: true })).toBeVisible();
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card.getByText("유지")).toBeVisible();
   const head = card.getByRole("heading").getByRole("button");
@@ -297,12 +320,12 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await expect(head).toHaveAttribute("aria-expanded", "true");
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();                       // the place the server found
   await expect(card.getByText(/운영시간|휴무일/)).toHaveCount(0);                                 // not in the response: not shown
-  await expect(page.getByRole("button", { name: "여행 등록" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "여행 등록" })).not.toHaveAttribute("aria-disabled", "true");
   await openEditor(page);
   await expect(page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ })).toBeVisible();
 });
 
-test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 「여행 등록」이 꺼진 채 고칠 길을 알린다", async ({ page, request }) => {
+test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 꺼진 「재검증」이 고칠 길을 알린다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0, intake: "blocked" });
   await start(page);
@@ -312,54 +335,61 @@ test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」�
   await expect(page.getByText("장소 1곳 확인 필요", { exact: true })).toBeVisible();
   await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
-  await expect(page.getByRole("button", { name: "여행 등록" })).toBeDisabled();
-  await expect(page.getByText("확인 필요한 것을 고치면 등록할 수 있어요", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
+  const recheck = page.getByRole("button", { name: "재검증" });
+  await expect(recheck).toHaveAttribute("aria-disabled", "true");
+  await recheck.click({ force: true });
+  await expect(page.getByRole("status").filter({ hasText: "확인이 필요한 항목 1건이 남아 있어요" })).toBeVisible();
   expect(await server.received("POST", "/confirm")).toHaveLength(0);
 });
 
 const INTAKE = "/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
-test("결과 화면의 수정: 카드의 「수정」으로 고친 장소가 서버 수정 계약으로 가고, 저장되면 알린다", async ({ page, request }) => {
+test("결과 화면의 수정 화면: 검색이 없는 서버에서는 쓴 이름으로 바꾸고, 그 이름이 서버 수정 계약으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0 });
   await start(page);
   await page.goto(INTAKE);
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
-  const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
-  await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toBeFocused();
-  await editor.getByRole("searchbox", { name: "장소 이름" }).fill("창덕궁");
-  await editor.getByRole("button", { name: "저장" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "저장했어요. 서버가 일정을 다시 확인했어요." })).toBeVisible();
-  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "경복궁 관람 바꾸기" })).toBeVisible();
+  await expect(page.getByText("다른 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요")).toBeVisible();
+  await expect(page.getByText("등록된 사진이 없어요 · 장소 사진은 준비 중이에요")).toBeVisible();
+  await page.getByRole("searchbox", { name: "장소 검색" }).fill("창덕궁");
+  await expect(page.getByText("장소 검색은 준비 중이에요.")).toBeVisible();
+  await page.getByRole("button", { name: "「창덕궁」으로 바꾸기" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "경복궁 관람을 창덕궁으로 바꿨어요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "경복궁 관람 바꾸기" })).toHaveCount(0);
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].place", value: { name: "창덕궁" } }] });
 });
 
-test("결과 화면의 수정: 서버가 장소를 못 찾으면(422) 서버 문장을 보이고 수정 화면과 입력을 그대로 둔다", async ({ page, request }) => {
+test("결과 화면의 「직접 고치기」: 서버가 장소를 못 찾으면(422) 서버 문장을 보이고 입력을 그대로 두며, 그만두면 수정 단추로 돌아간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0, edits: "not_found" });
   await start(page);
   await page.goto(INTAKE);
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
+  await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
   const editor = page.getByRole("form", { name: "「경복궁 관람」 고치기" });
   await editor.getByRole("searchbox", { name: "장소 이름" }).fill("없는 곳");
   await editor.getByRole("button", { name: "저장" }).click();
   await expect(editor.getByRole("alert")).toHaveText("「없는 곳」: 이 이름으로 장소를 찾지 못했어요");
   await expect(editor.getByRole("searchbox", { name: "장소 이름" })).toHaveValue("없는 곳");
-  // Cancel leaves without sending anything more, back on the card's edit button.
+  // Leaving sends nothing more and comes back to the card's edit button.
   await editor.getByRole("button", { name: "취소" }).click();
+  await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
   await expect(page.getByRole("button", { name: "경복궁 관람 수정" })).toBeFocused();
   expect(await server.received("POST", "/edits")).toHaveLength(1);
 });
 
-test("결과 화면의 삭제: 가운데 확인창이 먼저 묻고, Esc는 닫기만 하며, 「삭제」를 누르면 빼기가 서버로 간다", async ({ page, request }) => {
+test("결과 화면의 삭제: 가운데 확인창이 먼저 묻고(되돌릴 수 없다고), Esc는 닫기만 하며, 「삭제」를 누르면 빼기가 서버로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0 });
   await start(page);
   await page.goto(INTAKE);
   const trigger = page.getByRole("button", { name: "경복궁 관람 삭제" });
   await trigger.click();
-  const dialog = page.getByRole("alertdialog", { name: "「경복궁 관람」 일정을 삭제하시겠습니까?" });
+  const dialog = page.getByRole("alertdialog", { name: "경복궁 관람 일정을 삭제하시겠습니까?" });
   await expect(dialog).toContainText("삭제한 일정은 되돌릴 수 없어요.");
   await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
   await page.keyboard.press("Escape");
@@ -368,19 +398,29 @@ test("결과 화면의 삭제: 가운데 확인창이 먼저 묻고, Esc는 닫�
   expect(await server.received("POST", "/edits")).toHaveLength(0);
   await trigger.click();
   await dialog.getByRole("button", { name: "삭제" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "「경복궁 관람」 일정을 삭제했어요." })).toBeVisible();
+  const done = page.getByRole("status").filter({ hasText: "경복궁 관람 일정을 삭제했어요" });
+  await expect(done).toBeVisible();
+  await expect(done.getByRole("button", { name: "되돌리기" })).toHaveCount(0);           // the server cannot put it back
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].removed", value: true }] });
 });
 
-test("결과 화면: 서버에 없는 고정·자동 추천·전체 자동 추천은 「준비 중」으로 꺼져 있다", async ({ page, request }) => {
+test("결과 화면: 서버에 아직 없는 잠금·자동 추천·전체 자동 추천은 화면에 남아 누르면 「준비 중」이라고 말한다", async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 0 });
   await start(page);
   await page.goto(INTAKE);
-  await expect(page.getByRole("button", { name: "경복궁 관람 고정 — 준비 중" })).toBeDisabled();
-  await page.getByRole("button", { name: /^경복궁 관람/ }).first().click();
-  await expect(page.getByRole("button", { name: /자동 추천.*준비 중/ }).first()).toBeDisabled();
-  await expect(page.getByRole("button", { name: /전체 자동 추천.*준비 중/ })).toBeDisabled();
+  const say = (text: string) => page.getByRole("status").filter({ hasText: text });
+  const lock = page.getByRole("button", { name: "경복궁 관람 꼭 넣을 일정으로 고정" });
+  await expect(lock).toHaveAttribute("aria-disabled", "true");
+  await lock.click({ force: true });
+  await expect(say("잠금은 준비 중이에요")).toBeVisible();
+  await page.getByRole("article", { name: "경복궁 관람" }).getByRole("heading").getByRole("button").click();
+  await page.getByRole("button", { name: "자동 추천", exact: true }).click({ force: true });
+  await expect(say("자동 추천은 준비 중이에요")).toBeVisible();
+  const all = page.getByRole("button", { name: /전체 자동 추천/ });
+  await expect(all).toContainText("준비 중");
+  await all.click({ force: true });
+  await expect(say("전체 자동 추천은 준비 중이에요")).toBeVisible();
 });
 
 test("결과 화면: 서버가 여행 첫날을 물으면 입력칸이 나오고, 저장하면 여행 칸 수정이 서버로 간다", async ({ page, request }) => {

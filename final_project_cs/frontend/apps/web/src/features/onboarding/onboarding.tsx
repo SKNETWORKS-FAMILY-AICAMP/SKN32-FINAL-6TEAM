@@ -6,6 +6,8 @@ import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
 import { recoveryEmailProblem } from "@/features/profile/model";
 import { readRecoveryEmail, saveRecoveryEmail } from "@/lib/contact";
+import { saveDiscordWebhook, webhookWaiting } from "@/lib/webhook";
+import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -35,6 +37,8 @@ export function Onboarding() {
   const webhookInput = useRef<HTMLInputElement>(null);
   /** The field to focus once card 0 has opened because its check failed. */
   const focusField = useRef<"email" | "webhook" | null>(null);
+  // The webhook this screen last sent: the server never answers it back, so this is how a second pass does not resend it.
+  const sentWebhook = useRef<string | null>(null);
   const cards = useRef<Record<0 | 1 | 2, HTMLElement | null>>({ 0: null, 1: null, 2: null });
   useDocumentTitle(t("triPilot · 여행 시작 설정", "triPilot · Travel setup"));
 
@@ -65,9 +69,15 @@ export function Onboarding() {
     if (state.email !== email || state.webhook !== state.webhook.trim()) setState((current) => ({ ...current, email: current.email.trim(), webhook: current.webhook.trim() }));
     // ★`[2026-10-01]` Saved (on the server once there is a user key, else in this browser), so My page shows it and can
     //   change it later; blank removes it. It is optional, so a refusal never stops the customer here.
-    // ★`[2026-10-03]` The webhook is not saved: the server takes it (`PUT /v1/web/profile`) but connecting it is the
-    //   backend's part, and a webhook is a secret that must never be written to this browser's storage.
+    // ★`[2026-10-03]` The webhook goes to the server (`lib/webhook.ts`) — at once with a user key, else when the first
+    //   trip gives one (it waits in page memory, never in storage: it is a secret). Blank leaves a saved one alone; it is
+    //   removed on My page. A refusal never stops the customer here (the format was checked above).
     if ((readRecoveryEmail() ?? "") !== email) saveRecoveryEmail(email || null, language).catch(() => {});
+    const webhook = state.webhook.trim();
+    if ((webhook || webhookWaiting()) && webhook !== sentWebhook.current) {
+      sentWebhook.current = webhook;
+      saveDiscordWebhook(webhook || null, language).catch(() => { sentWebhook.current = null; });
+    }
     return true;
   }
 
@@ -160,7 +170,7 @@ export function Onboarding() {
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("알림·복구", "Alerts & recovery"), state.email.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : state.webhook.trim() ? t("입력했어요 · 웹훅은 아직 저장하지 않아요", "Entered · the webhook is not saved yet") : t("토큰 복구 이메일과 디스코드 알림.", "Token recovery email and Discord alerts."), false, false,
+              cardHead(0, t("알림·복구", "Alerts & recovery"), state.email.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : state.webhook.trim() ? (DATA_MODE === "live" ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("입력했어요 · 웹훅은 실제 서버에서만 저장돼요", "Entered · the webhook is saved only on the real server")) : t("토큰 복구 이메일과 디스코드 알림.", "Token recovery email and Discord alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <ContactBody t={t} email={state.email} webhook={state.webhook} emailError={emailError} webhookError={webhookError} emailInput={emailInput} webhookInput={webhookInput}
                 onEmail={editEmail} onWebhook={editWebhook} onContinue={() => openCard(1)} />)}

@@ -4,9 +4,9 @@ import type { Coordinates } from "@/features/map/model";
  * The plan-check screen (after 「계획 확인하기」), built from the mockup `mockups/tripilot-plan-check-streaming.html`.
  *
  * ★This file is the screen's data contract. The screen draws a `PlanCheckView` snapshot and nothing else; it never calls
- *   the server. The real route maps the server's intake onto it — for now the reading part (`from-intake.ts`); the
- *   checks, moves and result wait for the server (PLAN_CHECK_SCREEN.md §4). The mockup's 「진행 이벤트 예시」 maps onto
- *   these fields.
+ *   the server — the page passes what can change through `PlanCheckActions` (plan-check.tsx). The real route maps the
+ *   server's intake onto it (`from-intake.ts`); the preview fills every field from example data. A field or action the
+ *   server does not give yet is where the backend connects (PLAN_CHECK_SCREEN.md §4).
  */
 
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
@@ -17,6 +17,17 @@ export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
 
 /** A card's verdict once its checks are in. Null while it is still being checked. */
 export type Verdict = "keep" | "adjusted" | "review";
+
+/** A place photo: the server's place data (`url`), or — preview only — an example drawing (`url` null). */
+export interface PlacePhoto { caption: string; url: string | null }
+
+/** What a place is and where, for the change screen's cards. Null when the server has not given it. */
+export interface PlaceInfo {
+  /** e.g. 「관광지 · 고궁」 */
+  category: string | null;
+  address: string | null;
+  photos: PlacePhoto[];
+}
 
 export interface PlanItem {
   id: string;
@@ -35,6 +46,27 @@ export interface PlanItem {
   coordinates: Coordinates | null;
   checks: CheckRow[];
   verdict: Verdict | null;
+  /** Fixed by the customer: kept through re-planning and recommendations (mockup 「잠금」 — 「반드시 포함」). */
+  locked: boolean;
+  info: PlaceInfo | null;
+  /** The first alternative's name, said under the card's 「자동 추천」 — null when none is known. */
+  suggestion: string | null;
+}
+
+/**
+ * A place one stop could change to (mockup scenario 4): one of the alternatives (`rank` 1, 2, 3 …) or a place picked from
+ * a search. `checks` are this place checked at the stop's time (empty when they have not been).
+ */
+export interface PlanCandidate {
+  id: string;
+  name: string;
+  source: "candidate" | "search";
+  rank: number | null;
+  /** How far it is from the stops around it, e.g. 0.6 km from 「경복궁」. */
+  distance: { km: number; from: string } | null;
+  coordinates: Coordinates | null;
+  info: PlaceInfo | null;
+  checks: CheckRow[];
 }
 
 /** The way from one place to the next on the same day. */
@@ -73,6 +105,13 @@ export interface PlanCheckView {
   /** In itinerary order within each day. */
   items: PlanItem[];
   moves: PlanMove[];
+  /**
+   * Changed since the whole plan was last checked: 「재검증」 comes before 「여행 등록」 (mockup scenario 7). A server that
+   * checks the plan on every save leaves it false.
+   */
+  dirty: boolean;
+  /** The whole plan is being checked again: the stop at it now, in order (mockup 「재검증 중 · 2/4」). Null otherwise. */
+  rechecking: string | null;
 }
 
 const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
@@ -201,6 +240,13 @@ export function tally(view: Pick<PlanCheckView, "lines" | "items" | "moves">): T
     placesReview: view.items.filter((item) => item.verdict === "review").length,
     movesReview: view.moves.filter((move) => move.verdict === "review").length,
   };
+}
+
+/** What the customer still has to look at before 「재검증」 or 「여행 등록」: places and moves that need a check. */
+export function needs(view: Pick<PlanCheckView, "items" | "moves">): { places: number; moves: number; total: number } {
+  const places = view.items.filter((item) => item.verdict === "review").length;
+  const moves = view.moves.filter((move) => move.verdict === "review").length;
+  return { places, moves, total: places + moves };
 }
 
 /** Lines that turned into a stop, among those read so far. */

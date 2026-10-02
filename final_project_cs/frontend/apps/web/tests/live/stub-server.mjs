@@ -11,6 +11,9 @@
 //   GET  /__test/log                 every request received since the last reset
 //   POST /__test/ring {kinds}        ring the "this trip changed" bell on every open stream (scenario bell: "on")
 //   POST /__test/hangup              close every open bell stream (the screen must reconnect and re-read)
+//
+// Live progress (SSE, server `op_stream.py`): `POST …/messages` and `POST …/plan` asked with `Accept: text/event-stream`
+// answer `accepted` → `stage` … `beat` → `result` | `error`; `GET /v1/web/trip-intakes/{id}/events` follows the reading.
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.STUB_PORT ?? 8043);
@@ -54,6 +57,14 @@ const DEFAULTS = {
   profile: "on",
   // how many times the trip itself fails to load (500) right after the server answered a chat message
   rereadFails: 0,
+  // chat and planning asked as a stream: "on" | "off" (an older server: JSON once) | "slow" (a `slow` beat first)
+  //   | "drop" (the first try goes silent after its first stage — the screen must reconnect with the same request)
+  //   | "error" (an `error` event: timeout, retryable) | "busy" (429 too_many_streams before the stream opens)
+  stream: "on",
+  // the intake reading stream: "on" | "off" (an older server: 404 — the screen re-reads every 1.5 s) | "stalled" (the server's reader died)
+  intakeEvents: "on",
+  // the Discord test message: "ok" | "invalid" (Discord refused the webhook) | "too_soon" (429: pressed again within 20 s)
+  webhookTest: "ok",
 };
 
 /** Trip loads still to fail after a chat answer (see `rereadFails`). */
@@ -70,6 +81,11 @@ let confirmed;
 let keys;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
 let recoveryEmail = null;
+/** The Discord webhook the server holds (never answered back — only a masked form) and what its last test said. */
+let webhook = null;
+let webhookStatus = null;
+/** How many times each `request_id` came as a stream (the "drop" scenario answers only the second). */
+let attempts = new Map();
 
 /** The conversation record the server keeps (`GET /v1/web/trips/{id}/chat`), oldest first. */
 let turns = [];
@@ -84,6 +100,9 @@ function reset() {
   confirmed = false;
   keys = new Set(["acop_u_known"]);
   recoveryEmail = null;
+  webhook = null;
+  webhookStatus = null;
+  attempts = new Map();
 }
 reset();
 
@@ -173,6 +192,54 @@ function json(response, status, body, origin) {
   response.end(JSON.stringify(body));
 }
 
+/** The server's stage words (`op_stream.STAGES`) and what each waits on. */
+const STAGES = {
+  reading: ["여행 일정을 읽는 중이에요", null], understanding: ["요청을 이해하는 중이에요", "model"],
+  planning: ["일정을 짜는 중이에요", "model"], checking: ["조건을 확인하는 중이에요", null], registering: ["여행으로 등록하는 중이에요", null],
+};
+
+function openStream(response, origin) {
+  response.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "Access-Control-Allow-Origin": origin ?? "*", Vary: "Origin" });
+  return (event, data) => { if (!response.writableEnded) response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
+}
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** A long task answered as a stream, like `op_stream.run`: `finish()` makes the result (the same body as the JSON answer). */
+async function streamTask(request, response, origin, op, stages, requestId, finish, extraMs = 0) {
+  const write = openStream(response, origin);
+  let gone = false;
+  request.on("close", () => { gone = true; });
+  write("accepted", { op, at: new Date().toISOString() });
+  const tries = (attempts.get(requestId) ?? 0) + 1;
+  attempts.set(requestId, tries);
+  const stageEvent = (stage, elapsed) => ({ stage, label: STAGES[stage]?.[0] ?? stage, waiting_on: STAGES[stage]?.[1] ?? null, elapsed });
+  if (scenario.stream === "drop" && tries === 1) { write("stage", stageEvent(stages[0], 0.1)); return; }   // then silence: no beat
+  if (scenario.stream === "error") {
+    await wait(200);
+    write("error", { code: "timeout", retryable: true, message: "시간이 오래 걸려 기다리기를 멈췄어요 — 같은 요청으로 다시 시도하면 이어서 확인해요", elapsed: 90 });
+    return response.end();
+  }
+  let elapsed = 0;
+  for (const stage of stages) {
+    await wait(250);
+    elapsed += 0.4;
+    if (gone) return;
+    write("stage", stageEvent(stage, Number(elapsed.toFixed(1))));
+  }
+  const last = stages.at(-1);
+  const slow = scenario.stream === "slow";
+  await wait(250);
+  write("beat", { elapsed: slow ? 12.3 : elapsed + 0.4, stage: last, label: STAGES[last]?.[0] ?? last, waiting_on: STAGES[last]?.[1] ?? null,
+    stage_elapsed: slow ? 9.1 : 0.6, slow, server_time: new Date().toISOString() });
+  await wait((slow ? 1500 : 300) + extraMs);
+  if (gone) return;
+  write("result", finish());
+  response.end();
+}
+
+const DISCORD = /^https:\/\/(?:(?:canary|ptb)\.)?discord(?:app)?\.com\/api\/webhooks\/(\d{15,25})\/[A-Za-z0-9_-]{20,120}$/;
+
 const readBody = (request) => new Promise((resolve) => { const chunks = []; request.on("data", (chunk) => chunks.push(chunk)); request.on("end", () => resolve(Buffer.concat(chunks).toString("utf8"))); });
 
 createServer(async (request, response) => {
@@ -210,7 +277,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
 
   const key = request.headers["x-user-key"];
   const isJson = (request.headers["content-type"] ?? "").includes("json");
-  log.push({ method: request.method, path, key: key ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
+  log.push({ method: request.method, path, key: key ?? null, accept: request.headers.accept ?? null, body: isJson && raw ? JSON.parse(raw) : raw ? { multipart: raw } : null });
 
   // ── session (the only route that needs no key) ───────────────────
   if (request.method === "POST" && path === "/v1/web/session") {
@@ -224,16 +291,25 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
 
   // ── the customer's contact details ───────────────────────────────
   if (path === "/v1/web/profile" && scenario.profile !== "off") {
-    const view = () => ({ recovery_email: recoveryEmail, discord_webhook: { set: false, masked: null, status: null, checked_at: null }, updated_at: null });
-    if (request.method === "GET") return json(response, 200, view(), origin);
+    if (request.method === "GET") return json(response, 200, profileView(), origin);
     if (request.method === "PUT") {
       if (scenario.profile === "reject") return json(response, 422, { error: { code: "invalid_email", message: "이메일 형식이 맞지 않아요." } }, origin);
       const body = JSON.parse(raw || "{}");
       const unknown = Object.keys(body).find((name) => !["recovery_email", "discord_webhook_url"].includes(name));
       if (unknown) return json(response, 422, { error: { code: "unknown_field", message: unknown } }, origin);
+      const hook = "discord_webhook_url" in body ? String(body.discord_webhook_url ?? "").trim() : undefined;
+      // like the server: one wrong value refuses the whole update, and the refused value is not sent back
+      if (hook && !DISCORD.test(hook)) return json(response, 422, { error: { code: "invalid_webhook", message: "디스코드 웹훅 주소 모양이 아니에요" } }, origin);
       if ("recovery_email" in body) recoveryEmail = String(body.recovery_email ?? "").trim() || null;
-      return json(response, 200, view(), origin);
+      if (hook !== undefined) { webhook = hook || null; webhookStatus = hook ? "untested" : null; }
+      return json(response, 200, profileView(), origin);
     }
+  }
+  if (path === "/v1/web/profile/discord/test" && request.method === "POST" && scenario.profile !== "off") {
+    if (!webhook) return json(response, 409, { error: { code: "no_webhook", message: "저장된 디스코드 웹훅이 없어요" } }, origin);
+    if (scenario.webhookTest === "too_soon") return json(response, 429, { error: { code: "too_soon", message: "방금 보냈어요 — 20초 뒤에 다시 해 주세요" } }, origin);
+    webhookStatus = scenario.webhookTest === "invalid" ? "invalid" : "ok";
+    return json(response, 200, { result: webhookStatus, profile: profileView() }, origin);
   }
 
   if (request.method === "POST" && path === "/v1/web/session/rotate") {
@@ -291,17 +367,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trips/${TRIP_ID}/messages` && request.method === "POST") {
     if (broken("messages")) return;
     const body = JSON.parse(raw || "{}");
-    if (scenario.chat === "escalated_bare") return json(response, 200, { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null }, origin);
-    // a question about where the customer is now: the real server's decision unit says so with `needs_location`
-    //   (this test mock server only looks for 「여기서」). With a position it answers from there.
-    const here = String(body.message).includes("여기서");
-    const answer = here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
-      : here ? "현재 위치를 알려 주시면 지금 계신 곳에서 가는 길을 알려 드릴게요." : `서버 답: ${body.message}`;
-    tripFailures = scenario.rereadFails;
-    // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
-    turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
-      { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });
-    return json(response, 200, { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer, ...(here && !body.location ? { needs_location: true } : {}) }, origin);
+    if (wantsStream(request) && scenario.stream === "busy") return tooManyStreams(response, origin);
+    return wantsStream(request) ? streamTask(request, response, origin, "message", ["reading", "understanding"], body.request_id, () => chatReply(body))
+      : json(response, 200, chatReply(body), origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/chat` && request.method === "GET") return json(response, 200, { trip_id: TRIP_ID, turns: turns.slice(-40) }, origin);
 
@@ -309,6 +377,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
   if (request.method === "POST" && path === "/v1/web/warmup") return json(response, 200, { status: "warm", model: "stub-model", last_attempt: null }, origin);
   if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/events` && request.method === "GET" && scenario.intakeEvents !== "off") return intakeEvents(request, response, origin);
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(1), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/edits` && request.method === "POST") {
     if (scenario.edits === "stale") return json(response, 409, { error: { code: "stale_revision", message: "그 사이 바뀌었어요", current_revision: 2 } }, origin);
@@ -316,11 +385,16 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return json(response, 200, intakeView(2), origin);
   }
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
-    if (path.endsWith("/plan") && scenario.planDelay) await new Promise((resolve) => setTimeout(resolve, scenario.planDelay));
-    if (path.endsWith("/confirm") && broken("confirm")) return;
-    confirmed = true;
-    scenario = { ...scenario, trips: "one" };
-    return json(response, 200, { status: "confirmed", trip: { trip_id: TRIP_ID } }, origin);
+    const planning = path.endsWith("/plan");
+    if (!planning && broken("confirm")) return;
+    const register = () => { confirmed = true; scenario = { ...scenario, trips: "one" }; return { status: "confirmed", trip: { trip_id: TRIP_ID } }; };
+    if (planning && wantsStream(request)) {
+      if (scenario.stream === "busy") return tooManyStreams(response, origin);
+      // the server derives the request from the revision (`intake:{id}:plan:r{revision}`)
+      return streamTask(request, response, origin, "plan", ["planning", "checking", "registering"], `plan:r${JSON.parse(raw || "{}").revision}`, register, scenario.planDelay);
+    }
+    if (planning && scenario.planDelay) await new Promise((resolve) => setTimeout(resolve, scenario.planDelay));
+    return json(response, 200, register(), origin);
   }
 
   return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
@@ -330,3 +404,56 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   console.error(error);
  }
 }).listen(PORT, "127.0.0.1", () => console.log(`stub server on http://127.0.0.1:${PORT}`));
+
+/** The chat answer — the same body for the JSON answer and for the stream's `result`. */
+function chatReply(body) {
+  if (scenario.chat === "escalated_bare") return { case_id: "c-1", case_status: "escalated", status: "escalated", reason: "not_understood", report: null };
+  // a question about where the customer is now: the real server's decision unit says so with `needs_location`
+  //   (this test mock server only looks for 「여기서」). With a position it answers from there.
+  const here = String(body.message).includes("여기서");
+  const answer = here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
+    : here ? "현재 위치를 알려 주시면 지금 계신 곳에서 가는 길을 알려 드릴게요." : `서버 답: ${body.message}`;
+  tripFailures = scenario.rereadFails;
+  // the server records both sides; the answer's time can be a moment before the screen receives it (real server)
+  turns.push({ role: "customer", text: body.message, case_id: "c-1", at: new Date(Date.now() - 50).toISOString() },
+    { role: "assistant", text: answer, case_id: "c-1", at: new Date(Date.now() - 40).toISOString() });
+  return { case_id: "c-1", case_status: "resolved", status: "answered", reason: "trip_fact_answered", report: { type: "question", fact: "detail" }, answer, ...(here && !body.location ? { needs_location: true } : {}) };
+}
+
+/** Asked with `Accept: text/event-stream` (and this scenario has streams). */
+function wantsStream(request) {
+  return (request.headers.accept ?? "").includes("text/event-stream") && scenario.stream !== "off";
+}
+
+function tooManyStreams(response, origin) {
+  return json(response, 429, { error: { code: "too_many_streams", message: "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다" } }, origin);
+}
+
+function profileView() {
+  const id = webhook ? DISCORD.exec(webhook)?.[1] ?? "" : "";
+  return { recovery_email: recoveryEmail,
+    discord_webhook: webhook ? { set: true, masked: `https://discord.com/api/webhooks/${id.slice(0, 4)}…/••••`, status: webhookStatus, checked_at: webhookStatus === "untested" ? null : new Date().toISOString() }
+      : { set: false, masked: null, status: null, checked_at: null }, updated_at: null };
+}
+
+/** The intake reading stream, like `op_stream.watch`: the state, never what was read. The screen re-reads the intake on each event. */
+function intakeEvents(request, response, origin) {
+  const write = openStream(response, origin);
+  const state = () => {
+    const reading = polls <= scenario.readingPolls;
+    return { status: reading ? "reading" : "review", stage: reading ? "reading" : "review", stage_label: reading ? "계획을 읽는 중이에요" : "확인을 기다려요", revision: 1, fatal_code: null, quiet_seconds: 0.4 };
+  };
+  write("accepted", { op: "intake", state: state(), at: new Date().toISOString() });
+  if (scenario.intakeEvents === "stalled") {
+    setTimeout(() => { write("error", { code: "stalled", retryable: true, stage: "reading", message: "읽는 일이 멈춘 것 같아요 — 다시 올려 주세요", quiet_seconds: 181 }); response.end(); }, 300);
+    return;
+  }
+  let ticks = 0;
+  const timer = setInterval(() => {
+    ticks += 1;
+    const now = state();
+    if (now.status !== "reading") { write("result", { state: now }); clearInterval(timer); response.end(); return; }
+    write(ticks === 1 ? "stage" : "beat", { elapsed: ticks * 0.3, stage: "reading", label: now.stage_label, stage_elapsed: ticks * 0.3, slow: false, state: now });
+  }, 300);
+  request.on("close", () => clearInterval(timer));
+}

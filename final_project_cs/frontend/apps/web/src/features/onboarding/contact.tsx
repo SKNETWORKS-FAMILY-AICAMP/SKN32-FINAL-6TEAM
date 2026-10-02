@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
+import { DATA_MODE } from "@/lib/data-mode";
 import type { Translate } from "@/lib/i18n";
 import { OnboardingIcon } from "./icons";
 import styles from "./onboarding.module.css";
@@ -9,7 +10,7 @@ import styles from "./onboarding.module.css";
  * Optional alerts & recovery card: a recovery email, a Discord webhook for trip alerts, and a `Continue` that works with
  * both fields empty. The values are checked only when leaving (see `Onboarding`), never while typing. The email is saved
  * through `lib/contact.ts` (on the server once this browser has a user key, in the meantime in this browser); the webhook
- * is not saved — that is the backend's part.
+ * through `lib/webhook.ts` (on the server once there is a key, in the meantime in this page's memory only).
  */
 export function ContactBody({ t, email, webhook, emailError, webhookError, emailInput, webhookInput, onEmail, onWebhook, onContinue }: {
   t: Translate; email: string; webhook: string; emailError: boolean; webhookError: boolean;
@@ -30,7 +31,9 @@ export function ContactBody({ t, email, webhook, emailError, webhookError, email
       placeholder="https://discord.com/api/webhooks/…" value={webhook} onChange={(event) => onWebhook(event.target.value)} aria-invalid={webhookError} aria-describedby={webhookDescribedBy} />
     <p id="discord-webhook-hint" className={styles.emailHint}>{t("알림을 받을 디스코드 채널에서 만든 웹훅 주소를 붙여 넣어 주세요.", "Paste the webhook URL made in the Discord channel that should get the alerts.")}</p>
     {webhookError && <p id="discord-webhook-error" className={styles.emailError}>{t("디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…", "Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")}<br />{t("입력하지 않으려면 내용을 지우고 계속할 수 있어요.", "To leave it out, clear the field and continue.")}</p>}
-    <p className={styles.draftNote}>{t("마이페이지에서 언제든 추가하거나 바꿀 수 있어요. 첫 여행을 등록하면 서버에 저장돼요. 인증 메일은 보내지 않고, 복구 메일도 아직 준비 중이에요.", "You can add or change it on My page any time. It is saved to the server when you register your first trip. No verification email is sent, and recovery by email is still being prepared.")}<br />{t("디스코드 웹훅은 아직 저장하지 않고, 알림도 보내지 않아요.", "The Discord webhook is not saved yet, and no alert is sent.")}</p>
+    <p className={styles.draftNote}>{t("마이페이지에서 언제든 추가하거나 바꿀 수 있어요. 첫 여행을 등록하면 서버에 저장돼요. 인증 메일은 보내지 않고, 복구 메일도 아직 준비 중이에요.", "You can add or change it on My page any time. It is saved to the server when you register your first trip. No verification email is sent, and recovery by email is still being prepared.")}<br />{DATA_MODE === "live"
+      ? t("디스코드 웹훅도 첫 여행을 등록하면 서버에 저장돼요. 주소는 이 브라우저에 남기지 않아서, 그 전에 새로고침하면 다시 넣어 주세요. 일정 알림 발송은 준비 중이고, 시험 메시지는 마이페이지에서 보낼 수 있어요.", "The Discord webhook is also saved to the server when you register your first trip. The address is not kept in this browser, so enter it again if you reload before then. Trip alerts are still being prepared; you can send a test message from My page.")
+      : t("디스코드 웹훅은 실제 서버에 연결됐을 때만 저장돼요. 이 시연에서는 저장하지 않아요.", "The Discord webhook is saved only when connected to the real server. This demo does not save it.")}</p>
     <button type="submit" className={`${styles.next} ${styles.emailContinue}`}>{t("계속", "Continue")}<OnboardingIcon name="arrow" size={15} /></button>
   </form>;
 }

@@ -18,7 +18,7 @@ export interface OnboardingState {
   email: string;
   /**
    * Discord webhook URL for trip alerts, as typed. Optional like the email, but page state only: it is never written to
-   * this browser's storage (it is a secret) and not sent — saving it is the backend's part (`PUT /v1/web/profile`).
+   * this browser's storage (it is a secret). Leaving the card sends it to the server (`lib/webhook.ts`).
    */
   webhook: string;
   step: number;

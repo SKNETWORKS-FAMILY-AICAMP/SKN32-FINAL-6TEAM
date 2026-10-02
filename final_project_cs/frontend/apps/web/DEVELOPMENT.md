@@ -269,3 +269,13 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **장식 배경**: 풍경 그림(`Scene`)과 소개 배경 그림은 그린에만 있다. 화이트에서는 바탕색만 남긴다. 풍경 위의 막·빛 색은 그림에 딸린 것이라 그대로 두었다.
 - **앞으로**: 새 화면도 색을 직접 적지 말고 역할 변수만 쓴다. 역할이 모자라면 두 테마에 같은 이름으로 함께 더한다(`tokens.test.ts`가 두 테마의 역할 목록이 같은지 본다).
 - 검증·남은 일: [작업 리포트](../../../wiki/records/reports/2026-10-03_0315_웹테마_그린화이트_전환.md).
+
+## 2026-10-03 — 실시간 진행(SSE)과 디스코드 웹훅 연결
+
+사용자 지시: 「SSE 들어가야 되는 부분 다 작업해서 넣어 줘. role-manager로 PR 하기 전에 서버에서 작업한 것에 대해 프론트 작업이 다 들어가 있어야 돼」, 「웹훅도 연결하자」.
+- **SSE** — 서버 `op_stream.py`(REST 명세 「웹 실시간 진행 (SSE)」)를 `src/lib/live/stream.ts`가 받는다. `streamApi`는 채팅(`POST …/messages`)·「일정 짜 줘」(`POST …/plan`)를 `Accept: text/event-stream`으로 묻고, `watchIntake`는 접수 읽기(`GET …/events`)를 따른다. `EventSource`는 `X-User-Key`를 실을 수 없어 기존 초인종(`events.ts`)처럼 `fetch`로 읽고 그 파서를 함께 쓴다.
+- **연결 감시** — 이벤트가 7초 없으면 끊김(명세 「beat 2번」 + 여유). POST는 같은 본문으로 1·2·4초 뒤 다시 보내고(서버가 같은 요청을 두 번 처리하지 않음), 다 실패하면 `connection_lost`. 접수 읽기는 초인종과 같은 간격(1초~30초)으로 다시 붙는다. 스트림이 없는 서버(JSON 응답·404/405·연결 수 상한)는 전처럼 동작한다.
+- **화면** — 채팅의 기다림 줄, 「짜는 중」 아래 줄에 `progressText`(서버 단계·경과·느림·다시 연결). 접수 읽기는 이벤트마다 다시 읽고, `stalled`면 다시 올리기 화면.
+- **웹훅** — `src/lib/webhook.ts`가 `PUT /v1/web/profile` `discord_webhook_url`로 보낸다. 키가 없으면 페이지 메모리에만 두고 `ContactSync`가 키가 생길 때 올린다(키 발급 신호가 두 번 와도 요청은 하나). 브라우저 저장소에는 쓰지 않는다. 마이페이지 `features/profile/webhook.tsx`가 가린 주소·상태·시험 메시지·바꾸기·지우기를 맡는다.
+- 연결 상태와 협의 항목은 [화면별 연동 문서](../../../wiki/external/web-screen-api.md)에 둔다. develop 병합 때 계약 시험의 호출 읽기 규칙을 넓혀야 한다(같은 문서의 「협의 필요」).
+- 검증·남은 일: [작업 리포트](../../../wiki/records/reports/2026-10-03_0405_웹_SSE진행_웹훅_연결.md).

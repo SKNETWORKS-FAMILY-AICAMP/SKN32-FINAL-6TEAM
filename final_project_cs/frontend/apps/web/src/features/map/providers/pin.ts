@@ -2,7 +2,8 @@ import type { MapPoint } from "../model";
 
 export function pointLabel(point: MapPoint) {
   const time = point.endTime ? `${point.time}–${point.endTime}` : point.time;
-  return `${point.order}. ${point.title} · ${point.date} ${time}`;
+  const when = [point.date, time].filter(Boolean).join(" ");
+  return `${point.label ?? point.order}. ${point.title}${when ? ` · ${when}` : ""}`;
 }
 
 /** Pins live in the page, so they take the theme's roles (`styles/tokens.css`) like any other element. */
@@ -10,8 +11,9 @@ const shadow = "color-mix(in srgb, var(--color-text) 25%, transparent)";
 
 export function createPin(point: MapPoint): HTMLDivElement {
   const pin = document.createElement("div");
-  pin.textContent = String(point.order);
+  pin.textContent = point.label ?? String(point.order);
   pin.title = pointLabel(point);
+  if (point.tone) pin.dataset.tone = point.tone;
   Object.assign(pin.style, {
     display: "grid", placeItems: "center", width: "44px", height: "44px",
     borderRadius: "50% 50% 50% 6px", border: "3px solid var(--color-surface)",
@@ -22,8 +24,15 @@ export function createPin(point: MapPoint): HTMLDivElement {
 }
 
 export function setPinSelected(pin: HTMLElement, selected: boolean) {
-  pin.style.background = selected ? "var(--color-selected)" : "var(--color-soft)";
-  pin.style.color = selected ? "var(--color-on-primary)" : "var(--color-text)";
+  const tone = pin.dataset.tone;
+  // A muted pin is context only: it never takes the selection and is not pressed.
+  if (tone === "muted") {
+    Object.assign(pin.style, { background: "var(--color-subtle)", color: "var(--color-faint)", borderColor: "var(--color-border-strong)", boxShadow: "none", pointerEvents: "none" });
+    return;
+  }
+  pin.style.background = selected ? "var(--color-selected)" : tone === "current" ? "var(--color-text)" : tone === "candidate" ? "var(--color-surface)" : "var(--color-soft)";
+  pin.style.color = selected || tone === "current" ? "var(--color-on-primary)" : tone === "candidate" ? "var(--color-success)" : "var(--color-text)";
+  pin.style.borderColor = selected ? "var(--color-surface)" : tone === "candidate" ? "var(--color-success)" : "var(--color-surface)";
   pin.style.boxShadow = selected ? `0 0 0 3px color-mix(in srgb, var(--color-selected) 45%, var(--color-surface)), 0 3px 12px ${shadow}` : `0 2px 10px ${shadow}`;
 }
 

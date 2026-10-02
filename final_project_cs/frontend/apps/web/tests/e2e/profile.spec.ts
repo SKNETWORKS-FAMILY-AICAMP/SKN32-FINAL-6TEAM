@@ -24,7 +24,9 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
   await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
   // The name line under the image is the only nickname: no second 「닉네임」 row.
-  await expect(page.locator("#main-content dt")).toHaveText(["발급된 토큰", "토큰 복구용 이메일"]);
+  await expect(page.locator("#main-content dt")).toHaveText(["발급된 토큰", "토큰 복구용 이메일", "디스코드 웹훅"]);
+  // A demo build saves no webhook — the row says so instead of offering it.
+  await expect(page.getByText("실제 서버에 연결됐을 때만 등록할 수 있어요.", { exact: true })).toBeVisible();
   await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
   await expect(page.getByText(MASK)).toBeVisible();
   await expect(page.getByText(TOKEN)).toHaveCount(0);
@@ -35,11 +37,12 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("heading", { name: "프로필 수정", exact: true })).toBeVisible();
   const save = page.getByRole("button", { name: "저장", exact: true });
   await expect(save).toBeDisabled();
-  await expect(page.getByText("이메일은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("이메일과 디스코드 웹훅은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "이미지 변경" })).toBeDisabled();
   await expect(page.getByText("이미지 변경은 준비 중이에요.", { exact: true })).toBeVisible();
-  // Only the nickname and the email are fields; the token is shown, never edited.
-  await expect(page.locator("#main-content input")).toHaveCount(2);
+  // The nickname, the email and the webhook are fields (the webhook is off in a demo build); the token is shown, never edited.
+  await expect(page.locator("#main-content input")).toHaveCount(3);
+  await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" })).toBeDisabled();
   await expect(page.getByText("토큰은 수정할 수 없어요.", { exact: true })).toBeVisible();
 
   const nickname = page.getByLabel("닉네임");
@@ -172,7 +175,7 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
   await expect(english.getByRole("switch", { name: "Use floating button" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Edit profile", exact: true })).toBeVisible();
-  await expect(page.getByText("You can save the email. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText("You can save the email and the Discord webhook. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change image" })).toBeDisabled();
   await expect(page.getByText("The token cannot be changed.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Cancel", exact: true }).click();

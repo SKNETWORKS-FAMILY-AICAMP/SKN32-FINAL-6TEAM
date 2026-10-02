@@ -4,7 +4,7 @@ export const STUB = "http://127.0.0.1:8043";
 export const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 export const KEY_STORAGE = "tripilot.web.user-key.v1";
 
-export interface LoggedRequest { method: string; path: string; key: string | null; body: Record<string, unknown> | null }
+export interface LoggedRequest { method: string; path: string; key: string | null; accept: string | null; body: Record<string, unknown> | null }
 
 /** Talks to the test mock server's test control (never part of the real API). */
 export function mockServer(request: APIRequestContext) {

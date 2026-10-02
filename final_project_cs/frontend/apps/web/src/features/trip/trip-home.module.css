@@ -65,6 +65,7 @@
 .bubble { max-width: 95%; padding: 12px 13px; border-radius: 0 13px 13px; background: var(--color-subtle); color: var(--color-text); font-size: 11px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
 .message[data-role="user"] .bubble { border-radius: 13px 0 13px 13px; background: var(--color-soft); color: var(--color-primary); }
 .pending { font-size: 10px; color: var(--color-muted); }
+.pending[data-lost] { color: var(--color-warning); }
 .composer { padding: 13px; border-top: 1px solid var(--color-border); }
 .prompts { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
 .prompts > button { min-height: 44px; border: 1px solid var(--color-border); border-radius: 8px; padding: 7px 9px; background: var(--color-surface); color: var(--color-muted); font-size: 9px; line-height: 1.5; }

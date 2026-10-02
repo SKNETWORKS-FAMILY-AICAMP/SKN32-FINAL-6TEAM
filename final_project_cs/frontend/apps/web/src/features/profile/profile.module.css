@@ -36,3 +36,6 @@
 .line { display: block; }
 .fields dd .note { display: block; margin-top: 6px; }
 .fields dd > a, .fields dd > button { margin-top: 6px; }
+/* The edit screen's 「remove the saved webhook」 box. */
+.field .check { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; font-weight: 500; color: var(--color-text); }
+.field .check input { width: auto; min-height: 0; padding: 0; flex: none; }

@@ -118,3 +118,6 @@
   .actions > a, .actions > button { padding-left: 10px; padding-right: 10px; }
   .mapSearch { left: 10px; right: 10px; bottom: 10px; padding: 16px; }
 }
+/* The server's live progress (reading, 「plan it for me」): a quiet line, warning-coloured while reconnecting. */
+.streamNote { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
+.streamNote[data-lost] { color: var(--color-warning); }

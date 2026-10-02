@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IntakeItem, IntakeView } from "@/lib/live/intake";
-import { readingOf, resultOf } from "./from-intake";
+import { candidatesOf, readingOf, resultOf } from "./from-intake";
 
 const field = (value: unknown) => ({ value, method: "rule" as const, evidence: {}, needs_review: false, note: null });
 const item = (index: number, line: number, day: number | null, fields: IntakeItem["fields"]): IntakeItem => ({ index, line, day, date: null, fields });
@@ -83,5 +83,30 @@ describe("plan check result, from an intake the server has read", () => {
     ]));
     expect(view.items.map((entry) => entry.verdict)).toEqual(["keep", "adjusted"]);
     expect(view.items[1].checks).toEqual([]);
+  });
+});
+
+describe("the places the server weighed for one stop (its alternatives on the live route)", () => {
+  const picked = { value: { name: "올리브영 광화문점", latitude: 37.5717, longitude: 126.9791 }, method: "lookup" as const, needs_review: true, note: "이름이 특정하지 않아…",
+    evidence: { source: "kakao", chosen_from: ["올리브영 광화문점", "올리브영 종각역점", "올리브영 인사동점", 7] } };
+  const view = { ...intake("review", "review", [text([["11시 올리브영", true]], [item(0, 1, 1, { title: field("올리브영"), place: picked })])]), check: null };
+
+  it("lists the names it chose among, without the one it picked, by the order it gave — names only, nothing made up", () => {
+    expect(candidatesOf(view, "s1:0")).toEqual([
+      { id: "s1:0:올리브영 종각역점", name: "올리브영 종각역점", source: "candidate", rank: 1, distance: null, coordinates: null, info: null, checks: [] },
+      { id: "s1:0:올리브영 인사동점", name: "올리브영 인사동점", source: "candidate", rank: 2, distance: null, coordinates: null, info: null, checks: [] },
+    ]);
+  });
+
+  it("has none when the server weighed nothing, or for a stop it does not know", () => {
+    const plain = { ...view, sources: [text([["11시 경복궁", true]], [item(0, 1, 1, { title: field("경복궁") })])] };
+    expect(candidatesOf(plain, "s1:0")).toEqual([]);
+    expect(candidatesOf(view, "s9:0")).toEqual([]);
+  });
+
+  it("maps the result with nothing locked, no details, no first alternative, and never 「changed since the last check」", () => {
+    const result = resultOf({ ...view, check: { ready: false, problems: [], filled: [], items: 1, title: "10월 서울 여행", plan: { requested: false, start_date: null, days: null, party_size: null, preferences: "" } } });
+    expect(result.items[0]).toMatchObject({ locked: false, info: null, suggestion: null });
+    expect(result).toMatchObject({ dirty: false, rechecking: null });
   });
 });

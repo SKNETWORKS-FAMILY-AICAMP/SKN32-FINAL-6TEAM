@@ -1,12 +1,12 @@
 import type { TripStop } from "../trip/model";
-import type { Coordinates, MapPoint } from "./model";
+import type { Coordinates, MapPoint, PinLook } from "./model";
 
 export function hasValidCoordinates(value: Coordinates | null | undefined): value is Coordinates {
   return Boolean(value && Number.isFinite(value.lat) && Number.isFinite(value.lng)
     && value.lat >= -90 && value.lat <= 90 && value.lng >= -180 && value.lng <= 180);
 }
 
-export function toMapPoints(stops: TripStop[]): MapPoint[] {
+export function toMapPoints(stops: TripStop[], looks: Record<string, PinLook> = {}): MapPoint[] {
   return stops.flatMap((stop, index) => hasValidCoordinates(stop.coordinates) ? [{
     id: stop.id,
     title: stop.title,
@@ -15,5 +15,6 @@ export function toMapPoints(stops: TripStop[]): MapPoint[] {
     endTime: stop.endTime,
     order: index + 1,
     coordinates: stop.coordinates,
+    ...looks[stop.id],
   }] : []);
 }

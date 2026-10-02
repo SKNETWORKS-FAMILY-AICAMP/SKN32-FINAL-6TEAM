@@ -1,7 +1,6 @@
 /*
- * Plan check — mockup `mockups/tripilot-plan-check-streaming.html`, scenario 1. Structure and layout only: colours are the
- * shared roles of `styles/tokens.css` (never a colour here), and the finishing — shadows, motion, the neutral theme — is
- * Codex's. Sits below the device header, as the start screen does.
+ * Plan check — mockup `mockups/tripilot-plan-check-streaming.html` (scenarios 1–7). Colours are the shared roles of
+ * `styles/tokens.css` (never a colour here), so both themes follow. Sits below the device header, as the start screen does.
  */
 .screen { position: absolute; inset: 76px 0 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); color: var(--color-text); }
 
@@ -49,16 +48,17 @@
 .lineFound { margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--color-success); animation: rise .3s ease-out; }
 .found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
 
-/* ③④ Map above, list below */
-.checking { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.bar { display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 4px 12px 6px 6px; border-bottom: 1px solid var(--color-divider); }
+/* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
+.checking { --sheet-h: min(440px, 60%); position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.checking[data-sheet="peek"] { --sheet-h: 150px; }
+.checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
+/* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
+.map { position: absolute; top: 60px; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom .3s ease; }
+.bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The mockup's split: the list 440px high, the map the rest. ★The shared map's own minimum height (390px on phones) is
-   taller than this space, so its caption is cut — the screen says 「위치 미정」 itself; sizing the map is CSS finishing. */
-.map { position: relative; flex: 1; min-height: 120px; overflow: hidden; }
-.unlocated { position: absolute; left: 10px; bottom: 10px; z-index: 2; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
-.sheet { flex: 0 0 auto; height: min(440px, 62%); display: flex; flex-direction: column; transition: height .3s ease; border-top: 1px solid var(--color-border); border-radius: 20px 20px 0 0; background: var(--color-surface); }
+.unlocated { position: absolute; left: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; width: fit-content; max-width: calc(100% - 20px); margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; transition: bottom .3s ease; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); transition: height .3s ease; animation: rise .45s ease-out; }
 .sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px 8px; border-bottom: 1px solid var(--color-divider); }
 .sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
 .count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
@@ -117,8 +117,6 @@
 .waiting { color: var(--color-faint); }
 
 /* ⑤ The result: the list's height (handle), days to put on the map, cards and moves that open, the selected place */
-.checking[data-sheet="peek"] .sheet { height: 150px; }
-.checking[data-sheet="full"] .sheet { height: calc(100% - 52px); }
 .handle { display: grid; place-items: center; flex: none; width: 100%; height: 24px; border: 0; background: none; cursor: pointer; }
 .handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
 .handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
@@ -138,25 +136,98 @@ button.moveHead { cursor: pointer; }
 .footer p, .footer ul { margin: 0; }
 .footer ul { padding-left: 18px; }
 .footer > [role="alert"] { color: var(--color-error); }
-.footer > button, .footer > a { flex: 1 1 0; justify-content: center; }
+/* The two bottom buttons (mockup .sh-foot): 「전체 자동 추천」 and the next step. */
+.footButton { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 750; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.footButton[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.footButton[data-done] { border-color: var(--color-success); background: var(--color-success); color: var(--color-on-primary); }
+.footButton[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
+.footButton[data-primary] .spinner { border-color: color-mix(in srgb, var(--color-on-primary) 35%, transparent); border-top-color: var(--color-on-primary); }
+.footButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 
-/* ⑥⑦ Card tools: the lock (「준비 중」 until the server has it), edit and delete on the card; recommend and edit inside */
-.cardTop { display: flex; align-items: center; gap: 2px; padding-right: 6px; }
+/* ⑥⑦ Card tools: the lock, edit and delete on the card; recommend and edit inside. One that cannot act is faint and says why. */
+.cardTop { display: flex; align-items: center; gap: 2px; padding: 0 4px; }
 .cardTop .cardHeading { flex: 1; min-width: 0; }
+.cardTop .cardHead { padding: 12px 4px; }
+.cardTop .cardTitle { font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
 .icon { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
-.icon:hover:not(:disabled) { background: var(--color-subtle-strong); color: var(--color-text); }
-.icon:disabled { opacity: .35; cursor: not-allowed; }
+.icon:hover:not([aria-disabled="true"]) { background: var(--color-subtle-strong); color: var(--color-text); }
+.icon[aria-disabled="true"] { opacity: .28; cursor: not-allowed; }
+.icon[aria-pressed="true"] { background: var(--color-text); color: var(--color-surface); opacity: 1; }
+.card[data-locked] { border-color: var(--color-border-strong); background: var(--color-subtle); }
+.pillWait { display: inline-flex; flex: none; align-items: center; gap: 5px; margin: 0 4px; font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.cardNote { margin: 0; padding: 0 12px 12px; font-size: 12px; color: var(--color-muted); }
+.status { display: inline-flex; align-items: center; gap: 6px; }
+.empty { margin: 16px 0; padding: 14px; border-radius: 10px; background: var(--color-subtle); font-size: 13px; color: var(--color-muted); text-align: center; }
 .icon:focus-visible, .action:focus-visible, .previous button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .cardActions { display: flex; gap: 8px; padding: 0 12px 12px; }
 .action { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .action[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
-.action:disabled { opacity: .5; cursor: not-allowed; }
+.action[aria-disabled="true"] { opacity: .32; cursor: not-allowed; }
 .soon { margin-left: 4px; font-size: 10.5px; font-weight: 650; color: var(--color-muted); }
 .badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 6px; padding: 0 5px; border-radius: 10px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 800; }
 .previous { margin: 14px 0 0; text-align: center; }
 .previous button { min-height: 36px; padding: 0 10px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 
-/* ⑤ The stop editor, in the list's place */
+/* ⑤ The change screen (mockup 개정 4): the bar becomes a search, the sheet shows cards to swipe, photos, results. */
+.searchField { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 9px; border: 1px solid var(--color-divider); border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); }
+.searchField input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 14px; outline: none; }
+.searchField:focus-within { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.clear { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--color-subtle-strong); color: var(--color-muted); cursor: pointer; }
+.change { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.changeHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.changeTitle { min-width: 0; margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.changeTitle:focus { outline: none; }
+.changePos { flex: none; font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.changeBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 0 24px; }
+.carousel { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 24px 8px; scrollbar-width: none; }
+.carousel::-webkit-scrollbar { display: none; }
+.changeCard { flex: 0 0 min(288px, calc(100% - 24px)); scroll-snap-align: center; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
+.changeCard[data-current] { background: var(--color-subtle); }
+.changeCard[data-active] { border-color: var(--color-muted); box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 8%, transparent); }
+.changeCard .checks { margin-top: 8px; padding: 4px 0 0; }
+.changeCard .action { width: 100%; margin-top: 10px; }
+.changeTop { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.chip { padding: 2px 7px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-text-secondary); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.chip[data-source="candidate"] { background: var(--color-success-soft); color: var(--color-success); }
+.chip[data-source="search"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.distance { font-size: 12px; font-weight: 700; color: var(--color-muted); white-space: nowrap; }
+.changeName { margin: 8px 0 2px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
+.changeSub { margin: 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.4; }
+.changeNext { margin: 8px 0 0; font-size: 12px; color: var(--color-muted); text-align: right; }
+.dots { display: flex; justify-content: center; gap: 2px; margin: 4px 0 0; }
+.dots button { display: grid; place-items: center; width: 28px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+.dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--color-border); transition: width .2s, background .2s; }
+.dots button[aria-pressed="true"] span { width: 16px; background: var(--color-text); }
+.dots button:focus-visible, .hint:focus-visible, .result:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.hint { display: block; width: calc(100% - 32px); margin: 10px 16px 12px; padding: 8px; border: 0; border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; }
+.photos { padding: 0 16px; }
+.photos h4 { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px; font-size: 13.5px; font-weight: 800; }
+.photos h4 small { font-size: 12px; font-weight: 600; color: var(--color-muted); }
+.photos .empty { margin: 0; }
+.photoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 10px; background: var(--color-subtle-strong); }
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo[data-example] { background: linear-gradient(160deg, var(--color-subtle) 0 45%, var(--color-subtle-strong) 45% 70%, var(--color-border) 70%); }
+.photoExample { position: absolute; top: 4px; right: 6px; font-size: 9px; color: var(--color-faint); }
+.photo figcaption { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--color-inverse) 60%, transparent); color: var(--color-on-inverse); font-size: 11px; font-weight: 700; }
+.photoNote { margin: 8px 0 0; font-size: 11.5px; color: var(--color-muted); }
+.results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px 20px; }
+.results > .action { width: 100%; }
+.resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+.resultsHead small { font-weight: 600; color: var(--color-muted); }
+.resultList { list-style: none; margin: 0; padding: 0; }
+.result { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 10px 6px; border: 0; border-bottom: 1px solid var(--color-divider); border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.result:hover { background: var(--color-subtle); }
+.resultNo { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-subtle-strong); font-size: 11.5px; font-weight: 800; color: var(--color-text-secondary); }
+.resultBody { display: flex; flex-direction: column; min-width: 0; }
+.resultBody b { font-size: 14.5px; font-weight: 750; }
+.resultBody small { font-size: 12px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultKm { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.details { margin: 16px 16px 0; border-top: 1px solid var(--color-divider); }
+.details summary { padding: 12px 2px; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; }
+.details summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* ⑤ The stop's own details, under the change screen */
 .editor { display: grid; gap: 10px; padding: 12px 2px 16px; }
 .editorTitle { margin: 0; font-size: 15px; font-weight: 750; }
 .field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
@@ -175,7 +246,8 @@ button.moveHead { cursor: pointer; }
 .scrim { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: var(--color-scrim); }
 .dialog { width: 100%; max-width: 300px; padding: 20px 18px 16px; border-radius: 16px; background: var(--color-surface); text-align: center; }
 .dialogTitle { margin: 0; font-size: 16px; font-weight: 750; line-height: 1.4; word-break: keep-all; }
-.dialogDetail { margin: 8px 0 0; font-size: 13px; color: var(--color-muted); line-height: 1.5; }
+.dialogDetail { margin: 8px 0 0; font-size: 13px; color: var(--color-muted); line-height: 1.5; word-break: keep-all; }
+.dialogDetail b { display: block; color: var(--color-text-secondary); font-weight: 700; }
 .dialogButtons { display: flex; gap: 8px; margin-top: 16px; }
 .dialogButtons > * { flex: 1; justify-content: center; }
 
@@ -187,9 +259,13 @@ button.moveHead { cursor: pointer; }
 .tripAnswer { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 6px; }
 .tripAnswer .field { flex: 1 1 140px; }
 
-/* What was just done, at the bottom of the screen for a few seconds */
-.toast { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 15; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s; }
-.toast[data-shown] { opacity: 1; }
+/* What was just done, just above the sheet for a few seconds, with 「되돌리기」 when it can be undone (mockup .toast) */
+.toast { position: absolute; left: 12px; right: 12px; bottom: min(calc(var(--sheet-h, 0px) + 10px), calc(100% - 120px)); z-index: 15; display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; line-height: 1.35; box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 25%, transparent); opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .25s, transform .25s, bottom .3s; }
+.toast[data-shown] { opacity: 1; transform: none; pointer-events: auto; }
+.toastText { flex: 1; min-width: 0; }
+.toastText small { display: block; margin-top: 1px; font-size: 11.5px; color: color-mix(in srgb, var(--color-on-inverse) 70%, transparent); }
+.undo { flex: none; min-height: 32px; padding: 0 4px; border: 0; background: none; color: var(--color-success-soft); font: inherit; font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.undo:focus-visible { outline: 2px solid var(--color-on-inverse); outline-offset: 2px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

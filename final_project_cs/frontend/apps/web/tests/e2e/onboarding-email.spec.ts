@@ -188,7 +188,7 @@ test("디스코드 웹훅만 넣어도 받고 앞뒤 공백을 지우며, 카드
   await page.getByRole("button", { name: "계속" }).click();
   await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
   await termsHead(page).click();
-  await expect(emailHead(page)).toContainText("입력했어요 · 웹훅은 아직 저장하지 않아요");
+  await expect(emailHead(page)).toContainText("입력했어요 · 웹훅은 실제 서버에서만 저장돼요");   // a demo build saves no webhook
   await expect(emailHead(page)).not.toContainText("discord.com");      // the URL carries a token: the head never shows it
   await emailHead(page).click();
   await expect(webhook(page)).toHaveValue(WEBHOOK);
@@ -296,5 +296,5 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 이메일
   await expect(page.getByText("To leave it out, clear the field and continue.")).toHaveCount(2);   // under each wrong field
   await expect(page.getByText("Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")).toBeVisible();
   await expect(page.getByText("You can add or change it on My page any time. It is saved to the server when you register your first trip. No verification email is sent, and recovery by email is still being prepared.")).toBeVisible();
-  await expect(page.getByText("The Discord webhook is not saved yet, and no alert is sent.")).toBeVisible();
+  await expect(page.getByText("The Discord webhook is saved only when connected to the real server. This demo does not save it.")).toBeVisible();   // a demo build
 });
