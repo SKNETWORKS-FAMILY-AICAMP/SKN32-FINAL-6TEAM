@@ -71,6 +71,13 @@ class Resolved:
                 "blocked": self.blocked}
 
 
+def normalize_full(name: str) -> str:
+    """`normalize` 에서 지점 접미어 떼기만 뺀 것 — 「올리브영 광화문점」과 「올리브영 종각역점」을 구별할 때 쓴다."""
+    text = unicodedata.normalize("NFKC", name or "").strip()
+    text = re.sub(r"[\(\[（【].*?[\)\]）】]", "", text)
+    return re.sub(r"[\s·\-_/]+", "", text).lower()
+
+
 def normalize(name: str) -> str:
     text = unicodedata.normalize("NFKC", name or "").strip()
     text = re.sub(r"[\(\[（【].*?[\)\]）】]", "", text)
@@ -267,13 +274,27 @@ def _plain(query: str, title: str) -> bool:
 
 
 def _kakao_match(query: str, hits: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """★원문 조각과 **같은 이름**이 먼저, 없으면 원문 조각으로 **시작하는** 이름이 **하나뿐일 때**.
-    원문에 없는 가게는 고르지 않는다. 시작하는 이름이 여럿이면(둘레길 구간들) 고르지 않고 후보로 넘긴다."""
+    """★원문 조각과 **같은 이름**이 먼저(하나뿐일 때), 없으면 원문 조각으로 **시작하는** 이름이 **하나뿐일 때**.
+    원문에 없는 가게는 고르지 않는다. 같거나 시작하는 이름이 여럿이면(둘레길 구간들 · **체인 지점들**) 고르지 않고 후보로 넘긴다.
+
+    ☆`[2026-10-02]` 지점 접미어를 뗀 이름이 같은 곳이 여럿이면(「올리브영 광화문점」 · 「올리브영 종각역점」 … 모두 「올리브영」) 전에는 카카오의
+      **첫 결과**(관련도 순 — 가까운 곳이 아니다)를 골라 확인 표시도 없이 썼다. 「11시 올리브영」이 아무 지점이 되던 사고다(2026-10-01 「강남 올리브영 →
+      명동 다이소」). 이제 하나로 정해질 때만 고르고, 여럿이면 후보로 넘겨 처리 흐름이 **앞뒤 일정에 가장 가까운 곳**을 고르고 확인을 받는다.
+      고객이 지점 이름까지 적었으면(「올리브영 광화문점」) 지점까지 같은 하나가 먼저다."""
+    full_key = normalize_full(query)
+    same_full = [h for h in hits if normalize_full(h["name"]) == full_key]
+    if len(same_full) == 1:
+        return same_full[0]
+    if len(same_full) > 1:
+        return None
     key = normalize(query)
     exact = [h for h in hits if normalize(h["name"]) == key]
-    if exact:
-        return exact[0]
     prefix = [h for h in hits if normalize(h["name"]).startswith(key)]
+    # 지점 접미어 덕에 「같은 이름」이 된 곳은(「올리브영 광화문점」 = 「올리브영」) 형제 지점이 하나라도 더 보이면 어느 지점인지 모른다
+    if len(exact) == 1 and len(prefix) == 1:
+        return exact[0]
+    if exact:
+        return None
     return prefix[0] if len(prefix) == 1 else None
 
 
@@ -320,4 +341,5 @@ def nearest(candidates: list[dict[str, Any]], neighbours: list[tuple[float, floa
     return best[1], best[0] / len(neighbours)
 
 
-__all__ = ["Resolved", "_kind_hits", "distance_m", "edit_distance", "jamo", "narrowings", "nearest", "normalize", "resolve"]
+__all__ = ["Resolved", "_kind_hits", "distance_m", "edit_distance", "jamo", "narrowings", "nearest", "normalize",
+           "normalize_full", "resolve"]

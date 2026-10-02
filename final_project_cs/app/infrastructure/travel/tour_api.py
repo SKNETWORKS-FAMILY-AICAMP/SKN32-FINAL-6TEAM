@@ -203,6 +203,33 @@ class TourApiPlace(TravelSource):
                                       "infocenterculture") or None,
         }, source=self.name)
 
+    def images(self, content_id: str, *, limit: int = 8) -> list[dict[str, Any]] | None:
+        """그 장소에 **등록된 사진**의 주소(`detailImage2`). 못 가져오면 `None`, 사진이 없으면 `[]`.
+
+        ★`[2026-10-02 사용자 지시 — 계획 확인 시나리오 목업]` 수정 화면이 후보 장소의 사진을 보인다. 사진은 창작물이라 **저장하지 않는다**
+          (루트 사실표 「외부 공공데이터 저장」 — 사진·소개글은 저장하지 않고 출처 표시를 유지한다). 부를 때마다 주소만 받아 그대로 넘기고
+          서버는 사진 파일도 주소도 담아 두지 않는다. 출처 표시(ⓒ한국관광공사)는 부르는 쪽이 붙인다.
+        """
+        if not self._key:
+            self._miss("no_service_key")
+            return None
+        if not content_id or not str(content_id).isdigit():
+            self._miss("no_content_id")
+            return None
+        rows = self._items(self._fetch_json(f"{BASE_URL}/detailImage2", {
+            **self._common(), "contentId": content_id, "imageYN": "Y", "numOfRows": str(limit), "pageNo": "1"}))
+        if rows is None:
+            return None
+        out = []
+        for row in rows:
+            url = str(row.get("originimgurl") or "").strip()
+            thumb = str(row.get("smallimageurl") or "").strip()
+            if url.startswith(("http://", "https://")):
+                # 썸네일 주소도 같은 검사를 한다 — 원본만 거르면 `javascript:` 같은 주소가 썸네일 칸으로 새어 나간다
+                out.append({"url": url, "thumb": thumb if thumb.startswith(("http://", "https://")) else None,
+                            "name": str(row.get("imgname") or "").strip() or None})
+        return out
+
     def by_content_id(self, content_id: str, content_type_id: str
                       ) -> dict[str, Any] | None:
         """이미 아는 신원으로 집는다. ★이름으로 헤매지 않는다 — 애매함이 없다."""

@@ -97,6 +97,13 @@ CONTRACT_V1_PATHS = {
     # ★2026-10-02 접수 읽기 진행(SSE) — 뒤에서 도는 읽기가 어디까지 왔는지. 채팅(`/messages`)·일정 짜기(`/plan`)는 같은 경로가
     #   `Accept: text/event-stream` 이면 SSE 로 답한다(새 경로 없음). `wiki/external/rest-endpoints.md` 「웹 실시간 진행」
     "/v1/web/trip-intakes/{intake_id}/events",
+    # ★2026-10-02 확인 화면 수정 화면 — 대체 후보 · 장소 검색 · 사진(읽기 전용) · 전체 자동 추천 · 재검증(계획 확인 시나리오 목업).
+    #   `wiki/external/rest-endpoints.md` 「확인 화면 검사 · 후보 · 자동 추천」
+    "/v1/web/trip-intakes/{intake_id}/candidates",
+    "/v1/web/trip-intakes/{intake_id}/place-search",
+    "/v1/web/trip-intakes/{intake_id}/autofix",
+    "/v1/web/trip-intakes/{intake_id}/revalidate",
+    "/v1/web/places/photos",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.

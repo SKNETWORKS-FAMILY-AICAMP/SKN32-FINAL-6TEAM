@@ -33,7 +33,7 @@ import json
 import logging
 import threading
 import time
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -244,8 +244,12 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
                 quiet_for: Callable[[dict[str, Any]], float | None] | None = None,
                 is_disconnected: Callable[[], Any], cfg: dict[str, float] | None = None,
                 poll_seconds: float = 1.0, stalled_after: float | None = None,
+                extra: Callable[[dict[str, Any]], Awaitable[list[str]]] | None = None,
                 clock: Callable[[], float] = time.monotonic) -> AsyncIterator[str]:
     """**DB 에 적히는 진행**(접수 읽기 — 뒤에서 도는 일꾼이 `stage` 를 갱신한다)을 흘린다.
+
+    `extra(state)` — **내용 이벤트**(읽은 줄 · 찾은 일정 · 검사 · 이동, `intake/stream.py`)를 만드는 훅. 연결 직후 · 단계 이벤트 뒤 · 끝내기 전에 불러
+    돌려준 SSE 조각을 그대로 흘린다. 훅이 실패해도 흐름은 끊기지 않는다(단계 이벤트는 계속 나가고 실패는 로그에 남는다).
 
     `accepted` `{op, state}` → 단계가 바뀔 때마다 `stage` → 조용하면 `beat`(`state` 포함) → `done(state)` 가 참이면 `result{state}` 후 끝.
     `read()` 가 None 이면(없어졌다) `error{not_found}`. 읽기가 연속으로 실패하면 `error{code: unavailable, retryable}` 로 끝낸다.
@@ -268,7 +272,19 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
         return
     started = last_beat = stage_started = clock()
     stage = stage_of(state)
+
+    async def content() -> list[str]:
+        if extra is None:
+            return []
+        try:
+            return await extra(state)
+        except Exception:                          # noqa: BLE001 — 내용 이벤트의 실패가 단계 이벤트를 막지 않는다
+            log.warning("op_stream.watch: extra failed op=%s", op, exc_info=True)
+            return []
+
     yield sse("accepted", {"op": op, "state": state, "at": datetime.now(KST).isoformat(timespec="seconds")})
+    for chunk in await content():
+        yield chunk
     if done(state):
         yield sse("result", {"state": state})
         return
@@ -303,6 +319,8 @@ async def watch(read: Callable[[], dict[str, Any] | None], *, op: str, done: Cal
                 stage, stage_started, last_beat = new_stage, now, now
                 yield sse("stage", {"stage": stage, "label": (label_of_state(state) if label_of_state else stage),
                                     "elapsed": round(now - started, 1), "state": state})
+            for chunk in await content():
+                yield chunk
             if done(state):
                 yield sse("result", {"state": state})
                 return

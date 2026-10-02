@@ -38,8 +38,12 @@ SLASH_DATE = re.compile(r"(?<![\d:])(?P<m>\d{1,2})/(?P<d>\d{1,2})(?![\d:/])")
 
 # 시각: 「09:00」 또는 「(오전|오후|아침|점심|저녁|밤|새벽) 9시 (30분|반)」
 _TIME = (r"(?:(?P<ampm>오전|오후|아침|점심|저녁|밤|새벽)\s*)?"
-         r"(?:(?P<h>\d{1,2}):(?P<min>\d{2})|(?P<kh>\d{1,2})\s*시(?:\s*(?P<km>\d{1,2})\s*분|\s*(?P<half>반))?)")
+         r"(?:(?P<h>\d{1,2}):(?P<min>\d{2})|(?P<kh>\d{1,2})\s*시(?!간)(?:\s*(?P<km>\d{1,2})\s*분|\s*(?P<half>반))?)")
 TIME = re.compile(_TIME)
+#: 소요 시간 — 「1시간 반」 · 「2시간」 · 「1시간 30분」 · 「40분」. ★`[2026-10-02]` 「10시 경복궁 관람 1시간 반」의 「1시간」을 시각 「1시」로 읽어
+#:  가짜 항목(「간 반」 01:00)이 생겼다(계획 확인 시나리오 목업의 예시 글). 이제 시각 정규식이 「시간」을 건너뛰고, 이 소요 시간이 끝 시각이 된다.
+DURATION = re.compile(r"(?:약\s*)?(?:(?P<h>\d{1,2})\s*시간(?:\s*(?P<half>반)|\s*(?P<m>\d{1,2})\s*분)?|(?P<only>\d{1,3})\s*분)"
+                      r"(?!\s*(?:전|후|뒤|쯤|거리|걸|이내|만에))")
 RANGE_SEP = re.compile(r"^\s*(?:~|-|–|—|부터|에서)\s*")
 END_MARK = re.compile(r"^\s*(?:까지|종료|끝)")
 BOOKING_NO = re.compile(r"(?:예약\s*번호|예약\s*No\.?|booking\s*(?:no|number|#)|confirmation\s*(?:no|number|#))"
@@ -383,6 +387,19 @@ def _time_items(result: ReadResult, number: int, line: str, times: list[re.Match
         segment = line[body_start:body_end]
         booking = BOOKING_NO.search(segment) or BARE_BOOKING_NO.search(segment)
         title_end = body_start + (booking.start() if booking else len(segment))
+        # 끝 시각이 없고 소요 시간이 적혀 있으면 시작 + 소요 시간이 끝이다(원문 조각을 근거로 단다). 이름에서는 뗀다
+        spent = DURATION.search(segment) if item.end is None else None
+        if spent is not None:
+            minutes = (int(spent.group("h")) * 60 + (30 if spent.group("half") else int(spent.group("m") or 0))
+                       if spent.group("h") else int(spent.group("only")))
+            hh, mm = (int(x) for x in start_value.split(":"))
+            end_minutes = hh * 60 + mm + minutes
+            if 0 < minutes and end_minutes < 24 * 60:
+                item.end = f"{end_minutes // 60:02d}:{end_minutes % 60:02d}"
+                result.claims.append(Claim(f"items[{position}].ends_at", item.end,
+                                           Span(number, body_start + spent.start(), body_start + spent.end(), spent.group(0)),
+                                           note=f"소요 시간 「{spent.group(0).strip()}」으로 끝 시각을 계산했다"))
+                title_end = min(title_end, body_start + spent.start())
         # 끝 표시(「까지」「종료」)와 이름 사이의 괄호 설명은 이름에서 뺀다
         # ★표 행(「09:00 | 경복궁」)처럼 **앞머리의** 구분자는 건너뛰고 찾는다 — 전에는 그것을 설명의 시작으로 보고
         #   이름을 통째로 잘랐다(docx·xlsx 시험에서 찾았다)

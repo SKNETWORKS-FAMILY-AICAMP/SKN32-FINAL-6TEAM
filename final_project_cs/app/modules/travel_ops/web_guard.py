@@ -33,9 +33,9 @@ from app.infrastructure.db.session import get_connection
 KST = ZoneInfo("Asia/Seoul")
 
 #: 세는 작업 — 계약의 이름 그대로
-ACTIONS = ("intake", "plan", "confirm", "trip_create", "message", "warmup")
+ACTIONS = ("intake", "plan", "confirm", "trip_create", "message", "warmup", "place_search")
 ACTION_LABELS = {"intake": "계획 읽기", "plan": "일정 짜기", "confirm": "확인(등록)", "trip_create": "여행 만들기",
-                 "message": "채팅 메시지", "warmup": "모델 예열"}
+                 "message": "채팅 메시지", "warmup": "모델 예열", "place_search": "장소 검색 · 대체 후보 · 사진"}
 SCOPE_LABELS = {"per_key_day": "키당 하루", "per_ip_day": "주소당 하루", "service_day": "서비스 전체 하루"}
 
 
