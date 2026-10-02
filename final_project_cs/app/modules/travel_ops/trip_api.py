@@ -1140,10 +1140,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return _review_call(intake_id, customer, tenant, revision, use)
 
     @router.get("/v1/web/places/photos")
-    def web_place_photos(http: Request, ref: str = Query(min_length=3, max_length=40),
+    def web_place_photos(http: Request, ref: str = Query(min_length=3, max_length=80),
                          who: tuple[str, UUID] = Depends(_web_customer)):
         """장소에 **등록된 사진** 주소(관광공사 `tour:<번호>`만). ★저장하지 않는다 — 부를 때마다 받아 그대로 넘기고 출처 표시(`source_note`)를 붙인다.
-        사진이 없거나 못 받으면 `photos: []` 와 이유(`reason`)다 — 지어내지 않는다."""
+        사진이 없거나 못 받으면 `photos: []` 와 이유(`reason`)다 — 지어내지 않는다. ★`ref` 는 후보가 주는 값 그대로다(`place:<uuid>` 도 온다 — 42자) — 길이가 모자라 422 가
+        나던 것을 80자로 늘렸다(2026-10-03 실제 화면). 관광공사가 아닌 `ref` 는 `no_photo_source` 로 답한다."""
         from .intake import candidates
 
         tenant, customer = who

@@ -669,6 +669,9 @@ def test_photos_come_from_the_tour_service_and_are_not_stored(rv):
     assert empty["photos"] == [] and empty["reason"] == "no_photos"
     other = client.get("/v1/web/places/photos?ref=kakao:12", headers=headers).json()
     assert other["photos"] == [] and other["reason"] == "no_photo_source"              # 지어내지 않는다
+    # 후보가 주는 `place:<uuid>`(42자)도 길이 때문에 거절되지 않고 같은 답이다(2026-10-03 실제 화면에서 422 였다)
+    own = client.get("/v1/web/places/photos?ref=place:43fd13ce-5030-463d-ab8d-8bdf1a5ffdec", headers=headers)
+    assert own.status_code == 200 and own.json()["reason"] == "no_photo_source"
     assert tour.image_calls == ["126508", "999"]
     assert client.get("/v1/web/places/photos?ref=tour:126508").status_code == 401
 
