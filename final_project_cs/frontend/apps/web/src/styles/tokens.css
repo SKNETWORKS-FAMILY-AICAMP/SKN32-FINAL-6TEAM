@@ -18,5 +18,25 @@
   --color-error: #965640;
   --color-error-soft: #fdf3ed;
   --color-error-border: #ecd2c7;
+  /*
+   * Roles added 2026-10-03 for the plan-check screen (user-approved list). Green values only: the neutral theme and
+   * its switch come later (Codex) and redefine these same names. Use a role, never a colour, in a screen's CSS.
+   */
+  --color-text-secondary: #4a5d52;
+  --color-faint: #a5b1a9;
+  --color-divider: #e8ede9;
+  --color-subtle-strong: #e4e9e5;
+  --color-border-strong: #c3cdc6;
+  --color-success: #3d7a56;
+  --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047;
+  --color-selected-soft: #dcebe1;
+  --color-warning-surface: #fdfaf3;
+  --color-inverse: #24392f;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(36, 57, 47, 0.45);
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
 }

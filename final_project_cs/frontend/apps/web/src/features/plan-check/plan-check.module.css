@@ -1,0 +1,120 @@
+/*
+ * Plan check — mockup `mockups/tripilot-plan-check-streaming.html`, scenario 1. Structure and layout only: colours are the
+ * shared roles of `styles/tokens.css` (never a colour here), and the finishing — shadows, motion, the neutral theme — is
+ * Codex's. Sits below the device header, as the start screen does.
+ */
+.screen { position: absolute; inset: 76px 0 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); color: var(--color-text); }
+
+.back { display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.back:hover { background: var(--color-subtle); }
+.back:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* One straight line with four points: done points are filled, the current one is outlined. */
+.progress { margin: 14px 4px 0; }
+.track { position: relative; height: 3px; margin: 8px 9px 0; border-radius: 2px; background: var(--color-border); }
+.fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.steps { list-style: none; margin: -11px 0 0; padding: 0; display: flex; justify-content: space-between; }
+.steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.steps li:first-child { align-items: flex-start; }
+.steps li:last-child { align-items: flex-end; }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.steps li[data-state="current"] { color: var(--color-text); }
+.steps li[data-state="current"] .node { border-color: var(--color-muted); }
+.steps li[data-state="done"] { color: var(--color-success); }
+.steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
+.steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
+.stepLabel { white-space: nowrap; }
+.progress[data-size="small"] { margin: 6px 0 0; }
+.progress[data-size="small"] .node { width: 14px; height: 14px; }
+.progress[data-size="small"] .steps { margin-top: -9px; }
+.progress[data-size="small"] .stepLabel { font-size: 10.5px; }
+
+/* ①② The uploaded plan, read line by line */
+.reading { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 20px; }
+.head { padding-bottom: 12px; }
+.headRow { display: flex; align-items: center; gap: 6px; min-height: 40px; }
+.title { margin: 0; font-size: 20px; font-weight: 750; }
+.desc { margin: 4px 0 0; font-size: 13.5px; color: var(--color-muted); }
+.docLabel { margin: 10px 2px 8px; font-size: 12.5px; font-weight: 750; color: var(--color-muted); }
+.doc { list-style: none; margin: 0; padding: 2px 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.line { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--color-border); }
+.line:last-child { border-bottom: 0; }
+.lineMark { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--color-border); font-size: 10px; font-weight: 800; color: var(--color-on-primary); }
+.line[data-state="current"] .lineMark { border-color: var(--color-muted); border-top-color: transparent; animation: spin .8s linear infinite; }
+.line[data-state="read"] .lineMark { border: 0; background: var(--color-success); }
+.lineBody { display: flex; flex-direction: column; min-width: 0; }
+.lineText { font-size: 14.5px; color: var(--color-faint); }
+.line[data-state="current"] .lineText { color: var(--color-text-secondary); }
+.line[data-state="read"] .lineText { color: var(--color-text); }
+.lineFound { margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--color-success); animation: rise .3s ease-out; }
+.found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
+
+/* ③④ Map above, list below */
+.checking { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.bar { display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 4px 12px 6px 6px; border-bottom: 1px solid var(--color-divider); }
+.bar .progress { flex: 1; min-width: 0; }
+.barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The mockup's split: the list 440px high, the map the rest. ★The shared map's own minimum height (390px on phones) is
+   taller than this space, so its caption is cut — the screen says 「위치 미정」 itself; sizing the map is CSS finishing. */
+.map { position: relative; flex: 1; min-height: 120px; overflow: hidden; }
+.unlocated { position: absolute; left: 10px; bottom: 10px; z-index: 2; margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; }
+.sheet { flex: 0 0 auto; height: min(440px, 62%); display: flex; flex-direction: column; border-top: 1px solid var(--color-border); border-radius: 20px 20px 0 0; background: var(--color-surface); }
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
+.sheetBody { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 14px 18px; }
+.day { margin: 12px 0 2px; font-size: 13px; font-weight: 750; color: var(--color-muted); }
+.day small { margin-left: 4px; font-size: inherit; font-weight: 500; }
+
+/* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.entry { display: grid; grid-template-columns: 40px 18px minmax(0, 1fr); column-gap: 6px; animation: rise .35s ease-out; }
+.time { padding-top: 15px; text-align: right; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.entry[data-type="move"] .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: 7px; line-height: 1.15; }
+.entry[data-type="move"] .time b { font-size: 12px; color: var(--color-muted); }
+.entry[data-type="move"] .time small { font-size: 10px; font-weight: 650; color: var(--color-faint); }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+.entry[data-type="move"] .rail::before { background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
+.dot { position: absolute; left: 3px; top: 17px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-type="move"] .dot { left: 5px; top: 12px; width: 8px; height: 8px; }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.screen[data-stage="done"] .entry[data-verdict="keep"] .card, .screen[data-stage="done"] .entry[data-verdict="adjusted"] .card { border-color: var(--color-border); }
+.cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
+.cardTitle { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
+.spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.pill { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill[data-verdict="adjusted"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.pill[data-verdict="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+
+.checks { list-style: none; margin: 0; padding: 4px 12px 10px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; animation: rise .3s ease-out; }
+.checkKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+
+.mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 18px; height: 18px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.check[data-result="ok"] .mark, .mark[data-result="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+.check[data-result="filled"] .mark, .mark[data-result="filled"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.check[data-result="warn"] .mark, .mark[data-result="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.check[data-result="bad"] .mark { background: var(--color-error); color: var(--color-on-primary); }
+.check[data-result="unknown"] .mark { background: var(--color-subtle-strong); color: var(--color-muted); }
+
+.move { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 4px 10px; font-size: 13px; color: var(--color-text-secondary); }
+.mode { flex: none; padding: 1px 6px; border-radius: 6px; background: var(--color-subtle-strong); font-size: 11px; font-weight: 750; }
+.moveText { flex: 1; min-width: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry[data-type="move"][data-verdict="review"] .moveText { color: var(--color-warning); }
+.waiting { color: var(--color-faint); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
