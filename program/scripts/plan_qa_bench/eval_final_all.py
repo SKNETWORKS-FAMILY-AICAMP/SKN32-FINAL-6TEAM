@@ -134,8 +134,7 @@ def util(fn, ws, per=None):
 
 def pick_tau(maker, grid_=None):
     best = None
-    for k in range(1, 20):
-        tau = round(0.05 * k, 2)
+    for tau in (grid_ or [round(0.05 * k, 2) for k in range(1, 20)]):
         u = util(maker(tau), LABELED)[0]
         if best is None or u > best[0] + 1e-9:
             best = (u, tau)
@@ -293,6 +292,122 @@ if all(LUNA[w][True] is not None for w in LABELED + EV):
 else:
     NOTES.append('C1·C2: luna 결과가 모든 세트에 없다')
 
+# ---------- §48·§49 방식: J1 Jev 앞단 · J2 로컬 확신도 앞단 · V15 힌트(QAT) · V16 적대적 검토 ----------
+GRID_HI = [round(0.5 + 0.05 * k, 2) for k in range(0, 10)] + [0.99]
+JEV = {}
+for w in LABELED + EV:
+    f = load_opt(R(f'jev_out_{w}.json'))
+    if f and w in f:
+        JEV[w] = f[w]
+
+
+def jev_choice(w, i):
+    r = JEV[w]['rows'][i]
+    pr = r['probs']
+    if not pr:
+        return None, 0.0
+    k = max(pr, key=pr.get)
+    return (int(k.split('_')[1]) if k.startswith('item_') else None), pr[k]
+
+
+def make_j1(tau):
+    def f(w, i):
+        st = stage(w, i)
+        if st[0] == 'done':
+            return st[1], int(bool(st[2]))
+        it, p1 = jev_choice(w, i)
+        if p1 >= tau:
+            return it, 0
+        return G[w][M][i], 1
+    return f
+
+
+if have(JEV):
+    TAU['J1'] = pick_tau(make_j1, GRID_HI)
+    P['J1 Jev 앞단(확신 ≥ τ 이면 Jev, 아니면 E4B QAT)'] = make_j1(TAU['J1'])
+    JEV_CALLS = {w: sum(1 for i in range(len(SETS[w]['qs'])) if stage(w, i)[0] == 'front') for w in EV}
+else:
+    NOTES.append('J1: Jev 결과가 모든 세트에 없다')
+LP = {}
+for w in LABELED + EV:
+    f = load_opt(R(f'llm_{w}_lp_out.json'))
+    if f and M in f and f[M].get('conf'):
+        LP[w] = f[M]
+
+
+def make_j2(tau):
+    def f(w, i):
+        st = stage(w, i)
+        if st[0] == 'done':
+            return st[1], int(bool(st[2]))
+        c = LP[w]['conf'][i]
+        if c is not None and c >= tau:
+            return LP[w]['picks'][i], 1
+        return G[w][M12][i], 2
+    return f
+
+
+if have(LP):
+    TAU['J2'] = pick_tau(make_j2, GRID_HI)
+    P['J2 로컬 확신도 앞단(E4B QAT 확신 ≥ τ 이면 그대로, 아니면 12B)'] = make_j2(TAU['J2'])
+else:
+    NOTES.append('J2: E4B QAT 확신도(logprob) 결과가 모든 세트에 없다')
+HINT = {}
+for w in LABELED + EV:
+    f = load_opt(R(f'llm_{w}_hint_out.json'))
+    if f and M in f:
+        HINT[w] = f[M]['picks']
+if have(HINT):
+    def p_v15(w, i):
+        st = stage(w, i)
+        if st[0] == 'done':
+            return st[1], int(bool(st[2]))
+        d = S[(f'{w}_tt', i)]
+        k = max(d, key=d.get)
+        s1 = d[k]
+        if s1 >= hi:
+            return k, 0
+        if s1 < lo:
+            return None, 0
+        return HINT[w][i], 1
+    P['V15 힌트(QAT)'] = p_v15
+else:
+    NOTES.append('V15: 힌트(QAT) 짚기 결과가 모든 세트에 없다')
+
+
+def load_adv(tag):
+    d = {}
+    for w in LABELED + EV:
+        f = load_opt(R(f'adv_{w}_{tag}.json'))
+        if f:
+            d[w] = {int(k): v for k, v in f['rows'].items()}
+    return d
+
+
+def make_v16(adv):
+    def f(w, i):
+        p, u = run(w, i, lo, hi, M)
+        c = int(u)
+        if u and p is not None:
+            row = adv[w].get(i)
+            c += 1
+            if row and row['duel']:
+                c += 2
+                if row['duel'] == ['alt', 'alt']:
+                    p = row['alt']
+                elif row['duel'] == ['neither', 'neither']:
+                    p = None
+        return p, c
+    return f
+
+
+for tag, lab_ in (('gemma4_e4b-it-qat', 'V16 적대적 검토(E4B QAT 반론)'), ('gemma4_12b', 'V16b 적대적 검토(12B 반론)')):
+    A = load_adv(tag)
+    if have(A):
+        P[lab_] = make_v16(A)
+    else:
+        NOTES.append(f'{lab_}: 반론 결과가 모든 세트에 없다')
+
 # ---------- 채점 ----------
 names = list(P)
 res = {}
@@ -390,6 +505,9 @@ out += ['', '### 유형별 정답(합친 시험 세트)', '| 유형 | 문제 | '
 for t in types:
     ids = [(w, i) for w in EV for i, x in enumerate(SETS[w]['qs']) if x['type'] == t]
     out.append(f'| {t} | {len(ids)} | ' + ' | '.join(str(sum(res[w][n][i][0] == gold[w][i] for w, i in ids)) for n in show) + ' |')
+if 'JEV_CALLS' in globals():
+    out.append('')
+    out.append('J1 의 Jev(유료) 호출 수: ' + ' · '.join(f'{w} {JEV_CALLS[w]}건' for w in EV) + ' — 규칙 단계가 못 정한 문제 전부를 한 번씩(이미 보낸 결과를 재사용했고 새로 부르지 않았다)')
 print('\n'.join(out))
 if '--md' in argv0:
     open(argv0[argv0.index('--md') + 1], 'w', encoding='utf-8').write('\n'.join(out) + '\n')
