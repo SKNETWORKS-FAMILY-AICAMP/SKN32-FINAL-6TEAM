@@ -234,6 +234,31 @@ def check_heartbeats() -> None:
             record(f"{job.name}_실행", OK, f"마지막 회차 {ago(stamp)} · exit={code}")
 
 
+# ── 감시가 주기대로 도는가 ───────────────────────────────────────────
+
+def check_watch_cadence() -> None:
+    """`[2026-10-03]` 여행 감시는 3분 주기(D-017)를 작업 **안의 문**(`job_gates`)으로 지킨다. 되잡기 작업이 살아 있어도(`sweepers_실행`) 감시가 안 도는 길이 생겼다 —
+    문이 안 열리거나 감시가 터지는 경우. 그래서 감시의 **마지막 시도**를 따로 잰다. 기준은 주기의 3배(9분) — 한두 회차 늦은 것과 안 도는 것을 가른다."""
+    try:
+        from app.application.job_gate import WATCH_GATE, interval_seconds, last_run_age_seconds
+        from app.core.settings import get_guardrails, get_settings
+        from app.infrastructure.db.session import get_connection
+
+        interval, _ = interval_seconds(get_guardrails())
+        with get_connection() as conn:
+            age = last_run_age_seconds(conn, tenant_id=get_settings().tenant_id, gate=WATCH_GATE)
+    except Exception as exc:  # noqa: BLE001
+        record("watch_cadence", UNKNOWN, f"감시 마지막 실행을 못 읽었다 — {type(exc).__name__}: {exc}")
+        return
+    if age is None:
+        record("watch_cadence", UNKNOWN, "감시가 한 번도 문을 지난 적이 없다 — 되잡기 작업이 안 돌았거나 마이그레이션 041 이 안 적용됐다",
+               cannot="손으로 `--only trip_cases` 를 돌린 것은 문을 안 지나 여기 안 남는다")
+    elif age > interval * 3:
+        record("watch_cadence", FAIL, f"감시 마지막 시도가 {int(age // 60)}분 전 — 주기 {int(interval // 60)}분의 3배를 넘겼다. 감시가 안 돌고 있다")
+    else:
+        record("watch_cadence", OK, f"감시 마지막 시도 {int(age)}초 전 (주기 {int(interval)}초)")
+
+
 # ── DB 가 서비스인가 · 앱이 응답하나 ────────────────────────────────
 
 def check_db_is_service() -> None:
@@ -311,6 +336,7 @@ def main() -> int:
     check_database(args.pending_minutes)
     check_db_is_service()
     check_heartbeats()
+    check_watch_cadence()
     check_app()
 
     counts = {v: sum(1 for r in RESULTS if r["판정"] == v) for v in (OK, WARN, FAIL, UNKNOWN)}
