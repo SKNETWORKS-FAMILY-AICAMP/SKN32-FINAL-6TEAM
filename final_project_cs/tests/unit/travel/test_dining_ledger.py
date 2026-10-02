@@ -150,6 +150,13 @@ def test_규칙이_없으면_모름():
 
 # ── 조건 ────────────────────────────────────────────────────
 
+@pytest.mark.parametrize("accepted", [True, False, None])
+def test_card_payment_keeps_the_ledgers_three_valued_verdict(accepted):
+    got = ledger.dining_state(linked(OPEN_STATE, {"card_payment": accepted}), "demo", CORE_ID,
+                              "2026-09-22 12:00+09:00")
+    assert got["card_payment"] is accepted
+
+
 def test_모르는_조건은_어느_목록에도_넣지_않는다():
     conn = linked(OPEN_STATE, {"halal": None, "vegetarian_menu": True,
                                "kids_allowed": False})

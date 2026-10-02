@@ -104,6 +104,7 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
         hours                 코어 attributes 형식의 영업시간
         dietary               맞는 것으로 확인된 조건
         dietary_absent        아닌 것으로 확인된 조건
+        card_payment          카드 결제 가능 여부. None 은 모름이다
         confirmed_at          영업 정보를 확인한 시각. 현장 확인이 아니다
         source                어디서 온 값인지
     """
@@ -121,7 +122,7 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
                 "open_at_slot": None, "needs_check": None,
                 "needs_holiday_check": None, "holiday_context": None,
                 "attributes": {}, "hours": None, "break": None,
-                "dietary": [], "dietary_absent": [],
+                "dietary": [], "dietary_absent": [], "card_payment": None,
                 "confirmed_at": None, "source": "dining_ledger"}
 
     with conn.cursor() as cur:
@@ -141,13 +142,15 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
             elif meets is False:
                 absent.append(core_name)
             # None 은 어느 쪽에도 넣지 않는다. 모르는 것은 모르는 것이다.
+        cur.execute("SELECT dining.meets_condition(%s, %s)", (place_uid, "card_payment"))
+        card_payment = cur.fetchone()[0]
 
     if got is None:
         return {"place_id": str(place_id), "linked": True,
                 "open_at_slot": None, "needs_check": None,
                 "needs_holiday_check": None, "holiday_context": None,
                 "attributes": {}, "hours": None, "break": None,
-                "dietary": dietary, "dietary_absent": absent,
+                "dietary": dietary, "dietary_absent": absent, "card_payment": card_payment,
                 "confirmed_at": None, "source": "dining_ledger"}
 
     open_at, needs_check, needs_holiday, holiday_ctx, attributes, confirmed = got
@@ -166,6 +169,7 @@ def dining_state(conn, tenant_id: str, place_id: str | None,
         "break": (attributes or {}).get("break"),
         "dietary": dietary,
         "dietary_absent": absent,
+        "card_payment": card_payment,
         "confirmed_at": confirmed,
         # 좌표를 바깥에서 채울 때 출처를 남기는 것과 같은 이유다.
         # 우리 값과 코어 값이 한 dict 에 섞이면 틀렸을 때 어디를 고칠지 모른다.
@@ -216,6 +220,51 @@ def find_place_by_name(conn, name: str | None) -> dict[str, Any] | None:
         return None
     return {"content_id": str(content_id), "content_type_id": "39", "matched_title": title,
             "latitude": float(lat), "longitude": float(lng), "address": address}
+
+
+def nearby_shops(conn, tenant_id: str, around: list[tuple[float, float]], *, radius_m: int, limit: int | None = None,
+                 visible_core_ids: list[str] | None = None) -> list[dict[str, Any]]:
+    """대체 식당 후보 — 기준 좌표들 중 하나에서 `radius_m` 안의 원장 가게, 가까운 순. 읽기만 한다.
+
+    ★`[2026-10-01]` 대체 계산은 코어 `places` 에서만 후보를 찾아, 공용 식당이 1곳뿐인 DB 에서는 후보가 0개였다.
+    ★폐업 · 합성 · 좌표 없는 가게는 내보내지 않는다. 그 여행이 이미 보는 코어 장소와 이어진 가게도 뺀다(중복 후보).
+    ★영업 판정은 여기서 하지 않는다 — 들여놓은 뒤 `dining_states` 가 방문 시각으로 한다.
+    ★기본은 반경 안의 전체 후보 — 영업 판정 전에 개수를 자르면 뒤에 있는 유효 후보를 놓친다.
+    """
+    if not around:
+        return []
+    with conn.cursor() as cur:
+        cur.execute(
+            "WITH pts AS (SELECT * FROM unnest(%s::float8[], %s::float8[]) AS t(lat, lng)) "
+            "SELECT p.place_uid, p.name_ko, p.lat, p.lng, "
+            "       (SELECT min(r.external_id) FROM dining.dn_source_record r "
+            "         WHERE r.place_uid = p.place_uid AND r.source_code = 'tourapi_kor_food' "
+            "           AND r.external_id IS NOT NULL), "
+            "       min(dining.distance_m(p.lat, p.lng, pts.lat, pts.lng)) AS d "
+            "FROM dining.dn_place p CROSS JOIN pts "
+            "WHERE p.record_status <> 'closed' AND NOT p.is_synthetic "
+            "  AND p.lat IS NOT NULL AND p.lng IS NOT NULL "
+            "  AND dining.distance_m(p.lat, p.lng, pts.lat, pts.lng) <= %s "
+            "  AND NOT EXISTS (SELECT 1 FROM dining.dn_core_place_link l "
+            "                   WHERE l.tenant_id = %s AND l.place_uid = p.place_uid "
+            "                     AND l.core_place_id::text = ANY(%s::text[])) "
+            "GROUP BY p.place_uid, p.name_ko, p.lat, p.lng "
+            "ORDER BY d, p.place_uid LIMIT %s",
+            ([float(a) for a, _ in around], [float(b) for _, b in around], radius_m,
+             tenant_id, [str(i) for i in (visible_core_ids or [])], limit))
+        rows = cur.fetchall()
+    return [{"place_uid": str(uid), "name": name, "latitude": float(lat), "longitude": float(lng),
+             "content_id": content_id, "distance_m": float(d)}
+            for uid, name, lat, lng, content_id, d in rows]
+
+
+def link_core_place_to(conn, tenant_id: str, core_place_id: str, place_uid: str) -> None:
+    """들여놓은 코어 장소를 그 원장 가게와 잇는다(이미 이어져 있으면 그대로). 요식 표에만 쓴다."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO dining.dn_core_place_link (tenant_id, core_place_id, place_uid, linked_by) "
+            "VALUES (%s, %s, %s, 'nearby') ON CONFLICT ON CONSTRAINT dn_core_place_link_pkey DO NOTHING",
+            (tenant_id, str(core_place_id), str(place_uid)))
 
 
 def merge_state(place: dict[str, Any] | None,

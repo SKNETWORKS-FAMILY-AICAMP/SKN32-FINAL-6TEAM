@@ -97,12 +97,13 @@ def test_recommendation_and_pending_options_keep_each_restaurants_warnings():
 
 def test_an_already_rejected_candidate_is_not_queried_for_hours():
     origin, candidate = place(), place()
-    candidate["attributes"]["payment"] = []
+    following = meal(origin)
+    following.seq, following.kind, following.starts_at = 2, "activity", at("13:00")
 
     def lookup(_):
-        pytest.fail("이미 결제 조건에서 탈락한 후보는 조회하지 않는다")
+        pytest.fail("다음 일정과 겹쳐 이미 탈락한 후보는 조회하지 않는다")
 
-    plan = plan_closed(trip={"constraints": {"payment": "card"}}, items=[meal(origin)],
+    plan = plan_closed(trip={}, items=[meal(origin), following],
                        places=[origin, candidate], at=at("12:00"), message="휴무", request_id=None,
                        state_lookup=lookup)
     assert isinstance(plan, NoChange) and plan.status == "unresolved"

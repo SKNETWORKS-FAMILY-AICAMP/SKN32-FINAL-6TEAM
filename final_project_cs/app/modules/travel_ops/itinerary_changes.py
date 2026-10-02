@@ -205,6 +205,7 @@ def applied_record(item: Item) -> dict[str, Any]:
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
             "walk_min": None,
+            **({"card_payment": item.detail["card_payment"]} if item.detail.get("card_payment") is not None else {}),
             **({"warnings": list(item.detail["warnings"])} if item.detail.get("warnings") else {})}
 
 
@@ -364,6 +365,7 @@ def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
                 **({"customer_reported": True} if reason == "customer_report" else {}),
                 **({"price_compare": best.price_compare} if best.price_compare else {}),
                 **({"warnings": list(best.warnings)} if best.warnings else {}),
+                **({"card_payment": best.card_payment} if best.card_payment is not None else {}),
                 "alternates": [alternate_record(c) for c in alternates]})
     # ★가격은 비교 결과만(`won` · `same_or_lower` · `higher` · `unknown`) — 구글 가격대 원값은 남기지 않는다
     summary = {"to": best.name, **({"price": best.price_compare} if best.price_compare else {}),
