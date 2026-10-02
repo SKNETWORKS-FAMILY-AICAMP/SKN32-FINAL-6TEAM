@@ -91,11 +91,29 @@ export function currentKey(): string | null {
   return typeof window === "undefined" ? null : storedKey();
 }
 
+/**
+ * ★`[2026-10-01]` A call that gets no answer must end. With no limit, a server stuck behind a stopped database left
+ * the 「Open」 button locked for good (its request never returned, so the screen kept waiting). Most calls answer in
+ * seconds; the few that read many places or wake the chat model, or carry files, get longer.
+ */
+const ANSWER_WITHIN_MS = 60_000;
+const SLOW_ANSWER_WITHIN_MS = 180_000;
+const SLOW_CALL = /\/(plan|confirm|messages|trip-intakes)$/;
+
+export function answerWithin(url: string): number {
+  try { return SLOW_CALL.test(new URL(url).pathname) ? SLOW_ANSWER_WITHIN_MS : ANSWER_WITHIN_MS; }
+  catch { return ANSWER_WITHIN_MS; }
+}
+
 async function send(url: string, init: RequestInit, language: Language): Promise<Response> {
   const t = translator(language);
   let response: Response;
-  try { response = await fetch(url, init); }
-  catch { throw new LiveError("network", t("서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not reach the server. Please try again shortly.")); }
+  const limit = AbortSignal.timeout(answerWithin(url));
+  try { response = await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, limit]) : limit }); }
+  catch {
+    if (limit.aborted && !init.signal?.aborted) throw new LiveError("timeout", t("서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.", "The server is not answering. Please try again shortly."));
+    throw new LiveError("network", t("서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not reach the server. Please try again shortly."));
+  }
   if (response.ok) return response;
   let code = `HTTP_${response.status}`;
   let message = t(`요청을 처리하지 못했어요 (${response.status}).`, `The request failed (${response.status}).`);
