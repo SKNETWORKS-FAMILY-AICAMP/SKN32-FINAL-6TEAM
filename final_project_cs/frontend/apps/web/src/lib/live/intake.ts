@@ -1,6 +1,7 @@
 import type { TripSurvey } from "@/features/onboarding/payload";
 import type { Language } from "../i18n";
 import { api } from "./client";
+import { streamApi, type OpProgress } from "./stream";
 
 /** One value the server read, with how it was read and the evidence behind it (server `intake_claims`). */
 export interface IntakeField {
@@ -73,10 +74,16 @@ export function editIntake(intakeId: string, revision: number, edits: IntakeEdit
   });
 }
 
-export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
-  return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
+/**
+ * 「Plan it for me」 — streamed (`stream.ts`): the server says when it plans, checks and registers. A lost line sends the
+ * same revision again; the server derives the request from it (`intake:{id}:plan:r{revision}`) and returns the trip it
+ * already registered instead of planning twice.
+ */
+export function planIntake(intakeId: string, revision: number, input: IntakePlanInput, language: Language,
+  onProgress?: (progress: OpProgress) => void): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {
+  return streamApi(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/plan`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, ...input }),
-  });
+  }, onProgress);
 }
 
 export function confirmIntake(intakeId: string, revision: number, language: Language, survey?: TripSurvey): Promise<{ status: "confirmed"; trip: { trip_id: string } }> {

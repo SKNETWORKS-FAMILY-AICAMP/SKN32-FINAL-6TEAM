@@ -3,11 +3,14 @@ import { agreeTerms, noHorizontalScroll, submitPlan, useKorean } from "./helpers
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
-const emailHead = (page: Page) => page.getByRole("button", { name: /복구용 이메일/ });
+const emailHead = (page: Page) => page.getByRole("button", { name: /알림·복구/ });
 const termsHead = (page: Page) => page.getByRole("button", { name: /약관 동의/ });
 const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행 취향 알아보기/ });
-const field = (page: Page) => page.getByRole("textbox", { name: "이메일" });
+const field = (page: Page) => page.getByRole("textbox", { name: "복구용 이메일" });
+const webhook = (page: Page) => page.getByRole("textbox", { name: "디스코드 웹훅 URL" });
 const ERROR = "이메일 형식을 확인해 주세요. 예: name@example.com";
+const WEBHOOK_ERROR = "디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…";
+const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";   // the server's rule: a 20–120 char token
 
 /**
  * 이메일 카드가 다 펼쳐질 때까지(펼침 애니메이션 끝) 기다린다. ★펼친 카드는 **다음 프레임에** 카드 머리로 초점을 주고
@@ -38,11 +41,11 @@ async function skipPreferencesAndRegister(page: Page) {
   await submitPlan(page);
 }
 
-test("이메일 카드를 한 번도 열지 않고 약관 → 취향 → 여행 등록까지 가고, 번호는 약관 01·취향 02 그대로이며 이메일 카드는 선택 표시만 있다", async ({ page }) => {
+test("알림·복구 카드를 한 번도 열지 않고 약관 → 취향 → 여행 등록까지 가고, 번호는 약관 01·취향 02 그대로이며 알림·복구 카드는 선택 표시만 있다", async ({ page }) => {
   await page.goto("/start");
   await expect(emailHead(page)).toHaveAttribute("aria-expanded", "false");
   await expect(emailHead(page)).toContainText("선택");
-  await expect(emailHead(page)).toContainText("입력하지 않아도 시작할 수 있어요.");
+  await expect(emailHead(page)).toContainText("토큰 복구 이메일과 디스코드 알림.");
   await expect(termsHead(page)).toContainText("01");
   await expect(preferencesHead(page)).toContainText("02");
   // Collapsed and never asking: no focus is taken.
@@ -175,6 +178,72 @@ test("카드를 오가도 초안이 남고, 첫 여행을 등록할 때 서버�
   await expect(field(page)).toHaveValue("draft@example.com");
 });
 
+test("디스코드 웹훅만 넣어도 받고 앞뒤 공백을 지우며, 카드 머리는 입력했다고만 보인다", async ({ page }) => {
+  await page.goto("/start");
+  await emailHead(page).click();
+  await expect(webhook(page)).toHaveAttribute("type", "url");
+  await expect(webhook(page)).toHaveAttribute("inputmode", "url");
+  await expect(webhook(page)).toHaveAttribute("autocomplete", "off");
+  await webhook(page).fill(`  ${WEBHOOK}  `);
+  await page.getByRole("button", { name: "계속" }).click();
+  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
+  await termsHead(page).click();
+  await expect(emailHead(page)).toContainText("입력했어요 · 웹훅은 실제 서버에서만 저장돼요");   // a demo build saves no webhook
+  await expect(emailHead(page)).not.toContainText("discord.com");      // the URL carries a token: the head never shows it
+  await emailHead(page).click();
+  await expect(webhook(page)).toHaveValue(WEBHOOK);
+  await expect(field(page)).toHaveValue("");
+});
+
+test("디스코드가 아닌 주소는 계속을 눌렀을 때만 오류를 보이고 막으며, 고치거나 지우면 진행된다", async ({ page }) => {
+  await page.goto("/start");
+  await emailHead(page).click();
+  for (const wrong of ["discord.com/api/webhooks/1/x", "http://discord.com/api/webhooks/1/x", "https://example.com/api/webhooks/1/x", "https://discord.com/channels/1/2"]) {
+    await webhook(page).fill("");                                  // an error shown once stays until the value is fixed or cleared
+    await webhook(page).fill(wrong);
+    await expect(page.getByText(WEBHOOK_ERROR)).toHaveCount(0);   // never while typing
+    await page.getByRole("button", { name: "계속" }).click();
+    await expect(page.getByText(WEBHOOK_ERROR)).toBeVisible();
+    await expect(webhook(page)).toBeFocused();
+    await expect(webhook(page)).toHaveValue(wrong);
+    await expect(webhook(page)).toHaveAttribute("aria-invalid", "true");
+    await expect(webhook(page)).toHaveAttribute("aria-describedby", /discord-webhook-error/);
+    await expect(page.getByText(ERROR)).toHaveCount(0);           // the blank email is not blamed
+    await expect(termsHead(page)).toHaveAttribute("aria-expanded", "false");
+  }
+  await webhook(page).fill(WEBHOOK);
+  await expect(page.getByText(WEBHOOK_ERROR)).toHaveCount(0);
+  await webhook(page).fill("");
+  await expect(webhook(page)).toHaveAttribute("aria-invalid", "false");
+  await page.getByRole("button", { name: "계속" }).click();
+  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "true");
+});
+
+test("두 칸이 모두 틀리면 두 오류를 함께 보이고 이메일부터, 이메일을 고치면 웹훅으로 포커스가 간다", async ({ page }) => {
+  await page.goto("/start");
+  await emailHead(page).click();
+  await field(page).fill("wrong@");
+  await webhook(page).fill("https://example.com/hook");
+  await page.getByRole("button", { name: "계속" }).click();
+  await expect(page.getByText(ERROR)).toBeVisible();
+  await expect(page.getByText(WEBHOOK_ERROR)).toBeVisible();
+  await expect(field(page)).toBeFocused();
+  await field(page).fill("name@example.com");
+  await expect(page.getByText(ERROR)).toHaveCount(0);
+  await expect(page.getByText(WEBHOOK_ERROR)).toBeVisible();      // each error follows its own field
+  await page.getByRole("button", { name: "계속" }).click();
+  await expect(webhook(page)).toBeFocused();
+  await expect(termsHead(page)).toHaveAttribute("aria-expanded", "false");
+
+  // Folded with a wrong webhook, moving on reopens the card on the webhook field.
+  await page.keyboard.press("Escape");
+  await expect(emailHead(page)).toHaveAttribute("aria-expanded", "false");
+  await termsHead(page).click();
+  await expect(emailHead(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(webhook(page)).toBeFocused();
+  await expect(webhook(page)).toHaveValue("https://example.com/hook");
+});
+
 test("키보드로 열고 입력해 Enter로 계속하며 Esc로 접으면 카드 머리로 포커스가 돌아온다", async ({ page }) => {
   await page.goto("/start");
   await emailHead(page).focus();
@@ -217,12 +286,15 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 이메일
   await page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: "English", exact: true }).click();
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
-  const english = page.getByRole("button", { name: /Recovery email/ });
+  const english = page.getByRole("button", { name: /Alerts & recovery/ });
   await expect(english).toContainText("Optional");
   await english.click();
-  await page.getByRole("textbox", { name: "Email" }).fill("wrong@");
+  await page.getByRole("textbox", { name: "Recovery email" }).fill("wrong@");
+  await page.getByRole("textbox", { name: "Discord webhook URL" }).fill("https://example.com/hook");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page.getByText("Please check the email format, e.g. name@example.com")).toBeVisible();
-  await expect(page.getByText("To leave it out, clear the field and continue.")).toBeVisible();
+  await expect(page.getByText("To leave it out, clear the field and continue.")).toHaveCount(2);   // under each wrong field
+  await expect(page.getByText("Please check the Discord webhook URL, e.g. https://discord.com/api/webhooks/…")).toBeVisible();
   await expect(page.getByText("You can add or change it on My page any time. It is saved to the server when you register your first trip. No verification email is sent, and recovery by email is still being prepared.")).toBeVisible();
+  await expect(page.getByText("The Discord webhook is saved only when connected to the real server. This demo does not save it.")).toBeVisible();   // a demo build
 });

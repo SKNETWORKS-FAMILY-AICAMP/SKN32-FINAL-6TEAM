@@ -16,13 +16,13 @@
 .stage[data-status="completed"] .stageState { color: var(--color-primary); }
 .stage[data-status="running"] .stageNumber { color: var(--color-on-primary); background: var(--color-primary); }
 .stage[data-status="running"] .stageState { color: var(--color-primary); font-weight: 700; }
-.stage[data-status="failed"] .stageNumber, .stage[data-status="failed"] .stageState { color: #9a5542; background: #faf0ea; }
+.stage[data-status="failed"] .stageNumber, .stage[data-status="failed"] .stageState { color: var(--color-error); background: var(--color-error-soft); }
 .warning, .error { padding: 13px 15px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11px; line-height: 1.8; }
 .error { color: var(--color-error); border-color: var(--color-error-border); background: var(--color-error-soft); }
 .warning p { margin: 5px 0 0; }
-.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: #fffffff5; }
+.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-surface) 96%, transparent); }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 21px; }
-.stat { padding: 19px 20px; border: 1px solid var(--color-border); border-radius: 16px; background: #fff; }
+.stat { padding: 19px 20px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
 .stat strong { display: block; font-size: 25px; letter-spacing: -.9px; font-weight: 650; color: var(--color-primary); }
 .stat small { font-size: 12px; margin-left: 4px; font-weight: 500; }
 .stat span { font-size: 11px; color: var(--color-muted); }
@@ -31,8 +31,8 @@
 .cardHeader h2, .scopeCard h2 { font-size: 18px; line-height: 1.5; letter-spacing: -.65px; }
 .resultList { display: grid; gap: 12px; }
 .warning + .resultList { margin: 12px 0; }
-.result { border: 1px solid var(--color-border); border-radius: 16px; background: #fff; overflow: clip; }
-.result.adjusted { background: #f7faf6; border-color: var(--color-primary); }
+.result { border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); overflow: clip; }
+.result.adjusted { background: color-mix(in srgb, var(--color-soft) 35%, var(--color-surface)); border-color: var(--color-primary); }
 .result > summary { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px; min-height: 76px; list-style: none; }
 .result > summary::-webkit-details-marker { display: none; }
 .result > summary > div { min-width: 0; flex: 1; }
@@ -45,7 +45,7 @@
 .change { display: flex; align-items: center; gap: 22px; padding: 12px 14px; border-radius: 10px; background: var(--color-soft); color: var(--color-primary); margin-bottom: 12px; font-size: 10px; }
 .change strong { display: block; font-size: 14px; }
 .dayTabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
-.dayTabs button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; color: var(--color-muted); min-height: 44px; padding: 9px 14px; font-size: 11px; }
+.dayTabs button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-muted); min-height: 44px; padding: 9px 14px; font-size: 11px; }
 .dayTabs small { font-size: 9px; opacity: .8; }
 .dayTabs button[aria-pressed="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
 .scopeCard { display: grid; gap: 13px; }

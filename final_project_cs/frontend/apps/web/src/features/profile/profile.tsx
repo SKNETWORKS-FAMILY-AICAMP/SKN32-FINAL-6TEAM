@@ -2,10 +2,12 @@
 
 import { useState, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
 import { KeySettings } from "@/features/account/key-settings";
 import { answerLines, questions } from "@/features/onboarding/model";
+import { discordWebhookProblem } from "@/features/onboarding/model";
 import { useOnboarding, useOnboardingReady } from "@/features/onboarding/onboarding-state";
 import { saveRecoveryEmail, useRecoveryEmailOnServer } from "@/lib/contact";
 import { LiveError } from "@/lib/live/client";
@@ -13,7 +15,9 @@ import { DATA_MODE } from "@/lib/data-mode";
 import { nicknameLabel, useProfile, type Profile } from "@/lib/profile";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { saveDiscordWebhook } from "@/lib/webhook";
 import { checkDraft, type ProfileDraft } from "./model";
+import { serverProfileKey, WebhookField, WebhookView } from "./webhook";
 import styles from "./profile.module.css";
 
 const MASK = "••••••••••••••••";
@@ -112,6 +116,7 @@ export function MyPage() {
                 ? t("서버에 저장돼 있어요. 복구 메일은 아직 보내지 않아요(준비 중).", "Saved on the server. Recovery by email is still being prepared, so no email is sent yet.")
                 : t("이 브라우저에만 있어요. 첫 여행을 등록하면 서버에 저장돼요. 복구 메일은 아직 보내지 않아요.", "Only in this browser for now; it is saved to the server when you register your first trip. No recovery email is sent yet.")}</span>
           </dd></div>
+          <div><dt>{t("디스코드 웹훅", "Discord webhook")}</dt><dd><WebhookView hasKey={Boolean(profile.token)} /></dd></div>
         </dl>}
     </Panel>
     <PreferencesCard />
@@ -133,8 +138,9 @@ export function ProfileEdit() {
 }
 
 /**
- * The top bar of the edit screen. ★`[2026-10-01]` The recovery email can be saved (in this browser, `lib/contact.ts`);
- * the nickname and the image have no server call yet, so saving them stays off rather than pretending.
+ * The top bar of the edit screen. ★`[2026-10-01]` The recovery email can be saved (`lib/contact.ts`), and since
+ * `[2026-10-03]` the Discord webhook (`lib/webhook.ts`); the nickname and the image have no server call yet, so saving
+ * them stays off rather than pretending.
  */
 function EditBar({ canSave, saving = false, onSave }: { canSave: boolean; saving?: boolean; onSave: () => void }) {
   const t = useT();
@@ -144,7 +150,7 @@ function EditBar({ canSave, saving = false, onSave }: { canSave: boolean; saving
       <h1>{t("프로필 수정", "Edit profile")}</h1>
       <Button variant="primary" disabled={!canSave} onClick={onSave} aria-describedby="profile-save-note">{saving ? t("저장 중…", "Saving…") : t("저장", "Save")}</Button>
     </div>
-    <p id="profile-save-note" className={styles.notice}>{t("이메일은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", "You can save the email. Saving the nickname and image is not available yet.")}</p>
+    <p id="profile-save-note" className={styles.notice}>{t("이메일과 디스코드 웹훅은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", "You can save the email and the Discord webhook. Saving the nickname and image is not available yet.")}</p>
   </>;
 }
 
@@ -155,7 +161,11 @@ function ProfileForm({ profile }: { profile: Profile }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [draft, setDraft] = useState<ProfileDraft>({ nickname: profile.nickname ?? "", email: profile.email ?? "" });
-  const [touched, setTouched] = useState({ nickname: false, email: false });
+  const [touched, setTouched] = useState({ nickname: false, email: false, webhook: false });
+  // The webhook is typed fresh: the saved address is never shown again. Blank keeps it; `removeWebhook` deletes it.
+  const [webhook, setWebhook] = useState("");
+  const [removeWebhook, setRemoveWebhook] = useState(false);
+  const queryClient = useQueryClient();
   // The email can change under an open form (the app brings it in step with the server when it opens): a field the
   // customer has not touched follows it, so the form never shows a value that is no longer the saved one.
   const [shownEmail, setShownEmail] = useState(profile.email ?? "");
@@ -171,14 +181,22 @@ function ProfileForm({ profile }: { profile: Profile }) {
     setTouched({ ...touched, [field]: true });
     if (field === "email") setSaveError("");
   };
-  // Only the email is saved. It can be saved when it is a well-formed address (or blank, which removes it) and has changed.
-  const canSave = !saving && !problems.email && draft.email.trim() !== (profile.email ?? "");
+  // The email and the webhook are saved. The email when it is well formed (or blank, which removes it) and has changed;
+  // the webhook when a well-formed address is typed or removing it is ticked.
+  const emailChanged = draft.email.trim() !== (profile.email ?? "");
+  const webhookChanged = removeWebhook || Boolean(webhook.trim());
+  const webhookBad = !removeWebhook && Boolean(discordWebhookProblem(webhook));
+  const canSave = !saving && !problems.email && !webhookBad && (emailChanged || webhookChanged);
   async function save() {
     if (!canSave) return;
     setSaving(true);
     setSaveError("");
     try {
-      await saveRecoveryEmail(draft.email.trim() || null, language);
+      if (emailChanged) await saveRecoveryEmail(draft.email.trim() || null, language);
+      if (webhookChanged) {
+        const saved = await saveDiscordWebhook(removeWebhook ? null : webhook, language);
+        if (saved.where === "server") queryClient.setQueryData(serverProfileKey(language), saved.profile);
+      }
       router.push(routes.myPage);
     } catch (error) {
       setSaveError(error instanceof LiveError ? error.message : t("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not save. Please try again shortly."));
@@ -213,5 +231,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
       {emailError && <p id="profile-email-error" className={styles.failed}>{t("이메일 형식이 올바르지 않아요.", "Enter a valid email address.")}</p>}
       <p className={styles.note}>{t("비우고 저장하면 등록한 이메일이 지워져요.", "Save it blank to remove the email.")}</p>
     </div>
+    <WebhookField hasKey={Boolean(profile.token)} value={webhook} remove={removeWebhook} touched={touched.webhook}
+      onValue={(value) => { setWebhook(value); setSaveError(""); }} onRemove={(value) => { setRemoveWebhook(value); setSaveError(""); }}
+      onBlur={() => setTouched({ ...touched, webhook: true })} />
   </Panel></>;
 }

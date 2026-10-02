@@ -6,14 +6,16 @@ import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
 import { recoveryEmailProblem } from "@/features/profile/model";
 import { readRecoveryEmail, saveRecoveryEmail } from "@/lib/contact";
+import { saveDiscordWebhook, webhookWaiting } from "@/lib/webhook";
+import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { ContactBody } from "./contact";
 import { OnboardingIcon } from "./icons";
-import { INTRO_STEP, questions } from "./model";
+import { discordWebhookProblem, INTRO_STEP, questions } from "./model";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
-import { RecoveryEmailBody } from "./recovery-email";
 import { TermsCardBody, TermsReader } from "./terms";
 import styles from "./onboarding.module.css";
 
@@ -30,41 +32,58 @@ export function Onboarding() {
   const [consentMotion, setConsentMotion] = useState(false);
   const [message, setMessage] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [webhookError, setWebhookError] = useState(false);
   const emailInput = useRef<HTMLInputElement>(null);
-  const focusEmail = useRef(false);
+  const webhookInput = useRef<HTMLInputElement>(null);
+  /** The field to focus once card 0 has opened because its check failed. */
+  const focusField = useRef<"email" | "webhook" | null>(null);
+  // The webhook this screen last sent: the server never answers it back, so this is how a second pass does not resend it.
+  const sentWebhook = useRef<string | null>(null);
   const cards = useRef<Record<0 | 1 | 2, HTMLElement | null>>({ 0: null, 1: null, 2: null });
   useDocumentTitle(t("triPilot · 여행 시작 설정", "triPilot · Travel setup"));
 
   const feedback = useCallback((kind: ScenePulse["kind"] = "soft") => setPulse((current) => ({ kind, id: (current?.id ?? 0) + 1 })), []);
 
   /**
-   * The only check on the optional email, run when moving on to terms or preferences. A blank (or spaces-only) field
-   * never stops anything and needs no visit to its card; a written address must be well formed, or its card opens with
-   * the error and the field focused, keeping what was typed. Passing trims the ends.
+   * The only check on the optional alerts & recovery card, run when moving on to terms or preferences. Blank (or
+   * spaces-only) fields never stop anything and need no visit to the card; a written email or webhook must be well
+   * formed, or the card opens with each wrong field's error and the first one focused, keeping what was typed.
+   * Passing trims the ends.
    */
-  function emailPasses(): boolean {
-    if (recoveryEmailProblem(state.email)) {
-      setEmailError(true);
-      if (state.open === 0) emailInput.current?.focus();
+  function contactPasses(): boolean {
+    const emailWrong = Boolean(recoveryEmailProblem(state.email));
+    const webhookWrong = Boolean(discordWebhookProblem(state.webhook));
+    setEmailError(emailWrong);
+    setWebhookError(webhookWrong);
+    if (emailWrong || webhookWrong) {
+      const field = emailWrong ? "email" : "webhook";
+      if (state.open === 0) (field === "email" ? emailInput : webhookInput).current?.focus();
       else {
-        focusEmail.current = true;
+        focusField.current = field;
         setState((current) => ({ ...current, open: 0 }));
         setSceneStage(0);
       }
       return false;
     }
-    setEmailError(false);
     const email = state.email.trim();
-    if (state.email !== email) setState((current) => ({ ...current, email: current.email.trim() }));
+    if (state.email !== email || state.webhook !== state.webhook.trim()) setState((current) => ({ ...current, email: current.email.trim(), webhook: current.webhook.trim() }));
     // ★`[2026-10-01]` Saved (on the server once there is a user key, else in this browser), so My page shows it and can
     //   change it later; blank removes it. It is optional, so a refusal never stops the customer here.
+    // ★`[2026-10-03]` The webhook goes to the server (`lib/webhook.ts`) — at once with a user key, else when the first
+    //   trip gives one (it waits in page memory, never in storage: it is a secret). Blank leaves a saved one alone; it is
+    //   removed on My page. A refusal never stops the customer here (the format was checked above).
     if ((readRecoveryEmail() ?? "") !== email) saveRecoveryEmail(email || null, language).catch(() => {});
+    const webhook = state.webhook.trim();
+    if ((webhook || webhookWaiting()) && webhook !== sentWebhook.current) {
+      sentWebhook.current = webhook;
+      saveDiscordWebhook(webhook || null, language).catch(() => { sentWebhook.current = null; });
+    }
     return true;
   }
 
   function openCard(card: 0 | 1 | 2 | null) {
     if (card === 2 && !state.agreed) return;
-    if ((card === 1 || card === 2) && !emailPasses()) return;
+    if ((card === 1 || card === 2) && !contactPasses()) return;
     setState((current) => ({ ...current, open: card }));
     if (card !== null) setSceneStage(card);
     feedback();
@@ -76,13 +95,19 @@ export function Onboarding() {
     if (emailError && !recoveryEmailProblem(email)) setEmailError(false);
   }
 
-  // The expanded card takes focus, as the mockup's fixed card does — the email field when the email check sent us here.
+  function editWebhook(webhook: string) {
+    setState((current) => ({ ...current, webhook }));
+    if (webhookError && !discordWebhookProblem(webhook)) setWebhookError(false);
+  }
+
+  // The expanded card takes focus, as the mockup's fixed card does — the wrong field when the card 0 check sent us here.
   const opened = state.open;
   useEffect(() => {
     if (opened === null) return;
     const frame = requestAnimationFrame(() => {
-      const target = opened === 0 && focusEmail.current ? emailInput.current : cards.current[opened]?.querySelector<HTMLElement>("button:not(:disabled)");
-      focusEmail.current = false;
+      const field = opened === 0 ? focusField.current : null;
+      const target = field ? (field === "email" ? emailInput : webhookInput).current : cards.current[opened]?.querySelector<HTMLElement>("button:not(:disabled)");
+      focusField.current = null;
       target?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
@@ -120,10 +145,10 @@ export function Onboarding() {
   }
 
   const expanded = state.open !== null;
-  // Card 0 is optional: a mail mark and an `optional` badge instead of a step number.
+  // Card 0 is optional: a bell mark and an `optional` badge instead of a step number.
   const cardHead = (card: 0 | 1 | 2, title: string, sub: string, disabled: boolean, done: boolean, badge?: ReactNode) => <button type="button" className={styles.cardHead} aria-expanded={state.open === card} aria-controls={`content-${card}`} disabled={disabled}
     onClick={() => { const closing = state.open === card; openCard(closing ? null : card); }}>
-    <span className={styles.stepNumber}>{card === 0 ? <OnboardingIcon name="mail" /> : done ? "✓" : `0${card}`}</span>
+    <span className={styles.stepNumber}>{card === 0 ? <OnboardingIcon name="bell" /> : done ? "✓" : `0${card}`}</span>
     <span className={styles.stepCopy}><span className={styles.stepTitle}>{title}{badge}</span><span className={styles.stepSub}>{sub}</span></span>
     <span className={styles.chevron}><OnboardingIcon name="down" /></span>
   </button>;
@@ -145,9 +170,10 @@ export function Onboarding() {
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("복구용 이메일", "Recovery email"), state.email.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("입력하지 않아도 시작할 수 있어요.", "You can start without it."), false, false,
+              cardHead(0, t("알림·복구", "Alerts & recovery"), state.email.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : state.webhook.trim() ? (DATA_MODE === "live" ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("입력했어요 · 웹훅은 실제 서버에서만 저장돼요", "Entered · the webhook is saved only on the real server")) : t("토큰 복구 이메일과 디스코드 알림.", "Token recovery email and Discord alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
-              <RecoveryEmailBody t={t} value={state.email} error={emailError} input={emailInput} onChange={editEmail} onContinue={() => openCard(1)} />)}
+              <ContactBody t={t} email={state.email} webhook={state.webhook} emailError={emailError} webhookError={webhookError} emailInput={emailInput} webhookInput={webhookInput}
+                onEmail={editEmail} onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
               <TermsCardBody t={t} read={state.read} agreed={state.agreed} consentMotion={consentMotion} onReadTerms={() => setTermsOpen(true)} onAgree={agree} onContinue={() => { if (state.agreed) openCard(2); }} />)}
