@@ -12,7 +12,7 @@ domain: neutral
 
 ## 읽기 순서
 
-1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 **58개**
+1. [invariants.md](invariants.md) — 깨면 안 되는 규칙 **60개**
 2. [test-map.md](test-map.md) — 무엇을 어디서 검사하는가
 3. [blind-spots.md](blind-spots.md) — 검사가 없는 지점
    · [test-reliability.md](test-reliability.md) — 검사가 **있는데 못 믿는** 지점
@@ -56,9 +56,9 @@ domain: neutral
 | Action | 3 | 3 | 0 |
 | 보안 | 10 | 10 | 0 |
 | 도메인 검증 | 7 | 7 | 0 |
-| Runtime | 24 | 24 | 0 |
+| Runtime | 26 | 26 | 0 |
 | Context | 2 | 2 | 0 |
-| **합계** | **58** | **55** | **3** |
+| **합계** | **60** | **57** | **3** |
 
 ★`[정정 2026-09-10]` **51/48 로 적혀 있었다.** 고유 ID 를 세면 **52개**이고 코드 역방향 표식은 **49개**다(`check_wiki.py` 실행값). 2026-09-01 실측 뒤 불변식이 늘었는데 요약만 안 고쳤다.
 

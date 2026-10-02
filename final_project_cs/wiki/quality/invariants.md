@@ -254,6 +254,8 @@ Action을 실행하기 전 근거를 대조한다.
 |---|---|---|---|
 | `INV-CS-RT-023` | **감시 반복은 Case 하나의 실행 실패로 끊기지 않는다** — 터진 Case 는 `escalated`(`team_error`)로 닫혀 운영자가 오류로 보고, 그 회차의 나머지 Case 는 계속 돈다 | automated | `tests/e2e/test_watch_failures.py::test_one_case_blowing_up_does_not_stop_the_rest_of_the_tick_and_is_closed_as_team_error` |
 | `INV-CS-RT-024` | **못 고르게 된 제안(끝난 일정 · 낡은 기준 버전)은 열린 채 두지 않고 그 자리에서 닫는다** — 닫은 기록은 커밋되고 부르는 쪽은 409 를 받는다 | automated | `tests/e2e/test_watch_failures.py::test_choosing_a_proposal_whose_item_has_ended_is_refused_and_the_closing_is_kept` |
+| `INV-CS-RT-025` | **여행 감시는 주기 문(3분)을 지난 회차에서만 돌고 일꾼이 몇이 떠도 한 번 돈다** — 일꾼은 1분마다 돌아도 외부 소스를 3배로 부르지 않는다(D-017) | automated | `tests/integration/test_watch_cadence.py::test_two_workers_at_the_same_moment_only_one_wins` |
+| `INV-CS-RT-026` | **고객이 「바꾸지 말 것」으로 고정한 일정도 감시한다 — 일정은 바꾸지 않고 알린다**(바꾸지 않는 것과 알림을 끄는 것은 별개, D-020) | automated | `tests/scenario/test_pinned_items_are_watched.py::test_a_pinned_activity_is_checked_and_the_customer_is_told_but_the_itinerary_is_not_changed` |
 
 ---
 
@@ -349,9 +351,9 @@ python program/scripts/check_wiki.py
 | ACT | 3 | 3 | 0 |
 | SEC | 10 | 10 | 0 |
 | VER | 7 | 7 | 0 |
-| RT | 24 | 24 | 0 |
+| RT | 26 | 26 | 0 |
 | CTX | 2 | 2 | 0 |
-| **합계** | **58** | **55** | **3** |
+| **합계** | **60** | **57** | **3** |
 
 ★`[2026-10-02]` 불변식 4개(SEC-009·010, RT-021·022)를 더해 **56개 · 코드 표식 53개**다(`check_wiki.py` 실행값으로 확인).
 

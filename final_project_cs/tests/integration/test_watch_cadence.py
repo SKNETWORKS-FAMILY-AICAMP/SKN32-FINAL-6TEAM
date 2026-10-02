@@ -67,6 +67,7 @@ def test_after_the_interval_minus_tolerance_it_opens_again_and_restarts_the_cloc
         assert 0 <= job_gate.last_run_age_seconds(conn, tenant_id=tenant, gate=GATE) < 5
 
 
+# invariant: INV-CS-RT-025
 def test_two_workers_at_the_same_moment_only_one_wins(tenant):
     assert _claim(tenant) is True
     _backdate(tenant, 200)

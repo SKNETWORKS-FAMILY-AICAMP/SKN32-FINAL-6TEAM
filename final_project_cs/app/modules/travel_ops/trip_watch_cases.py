@@ -101,8 +101,12 @@ class TripWatchCaseOpener:
         self._contexts: dict[UUID, dict[str, Any]] = {}
         for trip_id, item in due:
             if item.detail.get("customer_pinned"):
+                # ★`[2026-10-03 사용자 결정 — D-020]` 고정(「변경 안 할 일정」)은 **자동으로 바꾸지 않는다**는 뜻이지 점검에서 빼라는 뜻이 아니다 — 사용자 말:
+                #   「안 바꿔도 알림은 받게 해야 함. 바꾸지 않는 것과 알림을 끄는 것은 별개.」 전에는 여기서 `continue` 해 고정한 일정에는 재난문자 · 휴무 같은 위험 알림이
+                #   안 나갔다(시나리오 버전 `trip_watch` 는 이미 점검하고 물었다 — 두 감시가 갈려 있었다). 이제 **점검하고 Case 를 연다** — 일정은 적용기가 「변경 안 할 일정이면
+                #   먼저 묻는다」(`itinerary_actions._ask_instead`)로 막고(대안이 있으면 안 1·2·3 과 함께, 없으면 `itinerary_unresolved` 알림), 안전 사건이면 안전 알림이다.
+                #   `result.pinned` 는 이제 「고정이라 **바꾸지 않고 알린** 항목」을 센다(건너뛴 것이 아니다).
                 result.pinned.append({"trip_id": str(trip_id), "item": item.title})
-                continue
             if item.kind == "mobility":
                 result.checked += 1
                 self._route(trip_id, item, now, result, opened)
