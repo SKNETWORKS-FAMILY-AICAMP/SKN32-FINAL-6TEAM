@@ -970,6 +970,59 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(404, "not_found", "resource not found")
         return found
 
+    @router.get("/v1/web/trip-intakes/{intake_id}/events")
+    async def web_intake_events(intake_id: UUID, http: Request, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-02 사용자 지시]` 접수 **읽기 진행**을 SSE 로 — 뒤에서 도는 읽기(사진 글자 읽기 · 모델 읽기)가 어디까지 왔는지.
+
+        `accepted{state}` → 단계가 바뀔 때마다 `stage{state}` · 조용하면 `beat` → 끝나면(`review` · `confirmed` · `fatal`) `result{state}`.
+        `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}` — 내용(읽은 값)은 싣지 않는다. 웹은 끝나면 `GET /v1/web/trip-intakes/{id}` 로 읽는다.
+        뒤에서 읽던 일꾼이 죽어(서버 재시작) 갱신이 `intake_stalled_seconds` 넘게 멈추면 `error{code: stalled, retryable}` 로 끝낸다 —
+        영원히 「읽는 중」으로 두지 않는다. 남의 접수 · 없는 접수는 다른 조회와 같은 404. 사용자당 열린 연결이 상한이면 429."""
+        from starlette.concurrency import run_in_threadpool
+        from starlette.responses import StreamingResponse
+
+        from . import op_stream
+        from .intake.pipeline import STAGES as INTAKE_STAGES
+
+        tenant, customer = who
+
+        def read() -> dict[str, Any] | None:
+            with get_connection() as conn, conn.cursor() as cur:
+                cur.execute("SELECT status, stage, revision, fatal_code, extract(epoch FROM (now() - updated_at)) "
+                            "FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
+                            (tenant, intake_id, customer))
+                row = cur.fetchone()
+            if row is None:
+                return None
+            status, stage, revision, fatal_code, quiet = row
+            return {"status": status, "stage": stage, "stage_label": INTAKE_STAGES.get(stage, stage),
+                    "revision": revision, "fatal_code": fatal_code, "quiet_seconds": round(float(quiet), 1)}
+
+        if await run_in_threadpool(read) is None:
+            raise _error(404, "not_found", "resource not found")
+        cfg = op_stream.limits("intake")
+        if not op_stream.acquire(tenant, customer, cap=int(cfg["max_per_user"])):
+            error = _error(429, "too_many_streams", "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다")
+            error.headers = {"Retry-After": "5"}
+            raise error
+        guard = settings_module.get_guardrails()
+
+        async def flow():
+            try:
+                async for chunk in op_stream.watch(
+                        read, op="intake", cfg=cfg, is_disconnected=http.is_disconnected,
+                        done=lambda s: s["status"] in ("review", "confirmed", "fatal"),
+                        stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
+                        quiet_for=lambda s: s["quiet_seconds"],
+                        stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
+                        poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds"))):
+                    yield chunk
+            finally:
+                op_stream.release(tenant, customer)
+
+        return StreamingResponse(flow(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     @router.post("/v1/web/trip-intakes/{intake_id}/edits")
     def web_intake_edit(intake_id: UUID, request: IntakeEditIn, who: tuple[str, UUID] = Depends(_web_customer)):
         """확인 화면에서 고친 값 → 새 판. ★낡은 판(다른 탭에서 먼저 고침)은 409 — 조용히 덮지 않는다."""
@@ -1034,6 +1087,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         - 선호 문장은 고객이 올린 **원문 그대로**다. 읽은 항목(고정 일정)은 일정 생성기가 받지 않는다 — 화면이 그렇게 말한다.
         - `request_id` = `intake:{접수}:plan:r{판}` — 두 번 눌러도 모델을 다시 부르지 않고 같은 여행을 돌려준다.
         - 생성기가 못 짜면 422(그 이유와 완화 조건) — 지어낸 일정을 등록하지 않는다.
+        - ★`[2026-10-02 사용자 지시]` `Accept: text/event-stream` 이면 **실시간 진행(SSE)** — `accepted` → `stage`(planning · checking ·
+          registering) · `beat` … → `result`(아래 JSON 과 같은 본문) | `error`(못 짠 이유·완화 조건은 `error` 몸통에 그대로). 이미 등록된 판은 곧바로
+          `accepted` → `result`. 스트림이 열리기 **전**의 거절(404 · 409 · 422 날짜 밖 · 429)은 보통의 HTTP 오류다.
         """
         from . import planner as planner_module
         from .intake.pipeline import IntakeConflict, draft, mark_confirmed
@@ -1054,8 +1110,11 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         with get_connection() as conn:
             existing = store.by_request_key(conn, key)
             if existing is not None:
-                return {"intake_id": str(intake_id), "status": "confirmed", "trip": {
+                done = {"intake_id": str(intake_id), "status": "confirmed", "trip": {
                     **_trip_view(conn, store, existing[0]), "created": False}}
+                if _wants_stream(http):
+                    return _sse_response(tenant, customer, op="plan", http=http, work=None, instant=done)
+                return done
         _count("plan", tenant, customer, http)      # ★같은 판 되풀이는 위에서 끝나 세지 않는다
         ask = planner_module.PlanRequest(
             city="서울", start_date=request.start_date, days=request.days, party_size=request.party_size,
@@ -1070,31 +1129,42 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 raise _error(422, "read_items_outside_days",
                              "읽은 일정 중 고른 날짜 밖의 것이 있다 — 첫날·일수를 맞추거나 「새로 짜기」로 하세요",
                              items=outside)
-        try:
+        def plan_and_register(progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+            """생성 → (읽은 일정과 합치기) → 등록. JSON 입구와 SSE 입구가 **같은 것**을 쓴다. `progress` 는 단계 알림(없으면 안 한다)."""
+            say = progress or (lambda name: None)
+            say("planning")
+            try:
+                with get_connection() as conn:
+                    outcome = planner_module.plan_trip(
+                        conn=conn, tenant_id=tenant, request=ask, chat=_lazy("chat", chat_factory),
+                        tour_api=_lazy("place", place_factory),
+                        exclude_names=[p["name"] for p in built.body["places"]] if keep else (),
+                        # ★`[2026-10-01]` 이름이 달라도 같은 곳(경복궁 건청궁 ↔ 경복궁)은 빼는 데 쓴다 — 고객이 쓴 활동 장소의 좌표
+                        exclude_sites=[{"name": p["name"], "latitude": p["lat"], "longitude": p["lon"],
+                                        "attributes": p.get("attributes") or {}}
+                                       for p in built.body["places"] if p.get("kind") == "activity"] if keep else ())
+            except planner_module.PlanRefused as refused:
+                raise _plan_refused(refused) from None
+            draft, merged = outcome.draft, []
+            if keep:
+                say("checking")
+                fixed_places = [{**p, "key": f"fixed-{p['key']}"} for p in built.body["places"]]
+                fixed_items = [{**it, "place": f"fixed-{it['place']}" if it.get("place") else None}
+                               for it in built.body["items"]]
+                draft, merged = planner_module.plan_around(outcome, fixed_items=fixed_items, fixed_places=fixed_places)
+            say("registering")
+            body = draft.as_create_body(request_id=request_id, customer_id=customer)
+            trip = _create_trip(tenant, CreateTrip.model_validate(body))
             with get_connection() as conn:
-                outcome = planner_module.plan_trip(
-                    conn=conn, tenant_id=tenant, request=ask, chat=_lazy("chat", chat_factory),
-                    tour_api=_lazy("place", place_factory),
-                    exclude_names=[p["name"] for p in built.body["places"]] if keep else (),
-                    # ★`[2026-10-01]` 이름이 달라도 같은 곳(경복궁 건청궁 ↔ 경복궁)은 빼는 데 쓴다 — 고객이 쓴 활동 장소의 좌표
-                    exclude_sites=[{"name": p["name"], "latitude": p["lat"], "longitude": p["lon"],
-                                    "attributes": p.get("attributes") or {}}
-                                   for p in built.body["places"] if p.get("kind") == "activity"] if keep else ())
-        except planner_module.PlanRefused as refused:
-            raise _plan_refused(refused) from None
-        draft, merged = outcome.draft, []
-        if keep:
-            fixed_places = [{**p, "key": f"fixed-{p['key']}"} for p in built.body["places"]]
-            fixed_items = [{**it, "place": f"fixed-{it['place']}" if it.get("place") else None}
-                           for it in built.body["items"]]
-            draft, merged = planner_module.plan_around(outcome, fixed_items=fixed_items, fixed_places=fixed_places)
-        body = draft.as_create_body(request_id=request_id, customer_id=customer)
-        trip = _create_trip(tenant, CreateTrip.model_validate(body))
-        with get_connection() as conn:
-            mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
-        return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip,
-                "planner": {"coverage": outcome.coverage, "checks": outcome.checks,
-                            "kept_read_items": keep, "merge": merged}}
+                mark_confirmed(conn, tenant_id=tenant, intake_id=intake_id, trip_id=UUID(str(trip["trip_id"])))
+            return {"intake_id": str(intake_id), "status": "confirmed", "trip": trip,
+                    "planner": {"coverage": outcome.coverage, "checks": outcome.checks,
+                                "kept_read_items": keep, "merge": merged}}
+
+        if _wants_stream(http):
+            return _sse_response(tenant, customer, op="plan", http=http,
+                                 work=lambda progress, defer: plan_and_register(progress.stage))
+        return plan_and_register()
 
     @router.post("/v1/web/session", status_code=201)
     def web_session(http: Request, x_turnstile_token: str | None = Header(default=None),
@@ -1192,14 +1262,28 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
     @router.post("/v1/web/trips/{trip_id}/messages")
     def web_message(trip_id: UUID, request: MessageIn, http: Request, background: BackgroundTasks,
                     who: tuple[str, UUID] = Depends(_web_customer)):
-        """「에이전트에게 변경 요청」 — 자유 문장. 에이전트 API 와 **같은 처리**를 탄다."""
-        from .trip_messages import TripNotFound, handle_trip_message
+        """「에이전트에게 변경 요청」 — 자유 문장. 에이전트 API 와 **같은 처리**를 탄다.
 
+        ★`[2026-10-02 사용자 지시]` `Accept: text/event-stream` 으로 부르면 **실시간 진행(SSE)** 으로 답한다 — `accepted` → `stage` ·
+        `beat` … → `result`(아래 JSON 과 같은 본문) | `error`. 서버·모델이 멈춰도 사용자가 상태를 알게 한다(`op_stream.py`).
+        그렇지 않으면 전처럼 JSON 한 번이다. 스트림이 열리기 **전**의 거절(404 · 429 …)은 두 경우 모두 보통의 HTTP 오류다."""
         tenant, customer = who
         store = TripStore(tenant)
         with get_connection() as conn:
             _trip_or_404(conn, store, trip_id, customer)
         _count("message", tenant, customer, http)
+        if _wants_stream(http):
+            return _sse_response(
+                tenant, customer, op="message", http=http,
+                work=lambda progress, defer: _web_message_result(
+                    tenant, customer, store, trip_id, request, defer=defer, progress=progress.stage))
+        return _web_message_result(tenant, customer, store, trip_id, request, defer=background.add_task)
+
+    def _web_message_result(tenant: str, customer: UUID, store: TripStore, trip_id: UUID, request: MessageIn, *,
+                            defer: Callable[..., None], progress: Callable[[str], None] | None = None) -> dict[str, Any]:
+        """채팅 한 번의 처리 — JSON 입구와 SSE 입구가 **같은 것**을 쓴다(한 규칙이 두 벌로 갈라지지 않게)."""
+        from .trip_messages import TripNotFound, handle_trip_message
+
         from .itinerary_team import ANSWERS
 
         try:
@@ -1210,7 +1294,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                 policy_search=_lazy("policy", policy_search_factory),
                 place_source=_lazy("place", place_factory),
                 # ★`[2026-09-29]` 사실 질문은 분류(모델)를 기다리지 않고 답한다 — 분류·완료 기록은 응답 뒤에서
-                defer=background.add_task, selected_item_id=request.item_id, location=request.location)
+                defer=defer, selected_item_id=request.item_id, location=request.location, progress=progress)
         except TripNotFound:
             raise _error(404, "not_found", "resource not found") from None
         # ★`[2026-09-27]` 「바꾸지 않아도 되는 결과」는 사람에게 넘길 일이 아니라 답이다 — 대화 경로와 **같은 문장표**
@@ -1222,6 +1306,36 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             result["answer"] = result["answer_web"]
         result.pop("answer_web", None)
         return _web_view(tenant, result)
+
+    def _wants_stream(http: Request) -> bool:
+        """`Accept: text/event-stream` — 웹이 실시간 진행(SSE)을 원한다."""
+        return "text/event-stream" in (http.headers.get("accept") or "").lower()
+
+    def _sse_response(tenant: str, customer: UUID, *, op: str, http: Request, work: Callable[..., dict[str, Any]],
+                      instant: dict[str, Any] | None = None):
+        """오래 걸리는 웹 일을 SSE 로 — `work(progress, defer)` 는 **스레드에서** 돌고 본문을 돌려준다(`op_stream.run`).
+        `instant` 가 있으면 일 없이 곧바로 `accepted` → `result` 만 흘린다(이미 끝난 요청 — 클라이언트가 한 길로 읽게).
+        사용자당 열린 실시간 작업이 상한이면 429. ★열린 연결을 세는 것이지 일꾼 수가 아니다 — 끊긴 일꾼은 끝까지 돌고 사라진다."""
+        from starlette.responses import StreamingResponse
+
+        from . import op_stream
+
+        cfg = op_stream.limits(op)
+        if not op_stream.acquire(tenant, customer, cap=int(cfg["max_per_user"])):
+            error = _error(429, "too_many_streams", "열어 둔 실시간 연결이 너무 많다 — 다른 화면을 닫고 다시 시도한다")
+            error.headers = {"Retry-After": "5"}
+            raise error
+        job = (lambda progress, defer: instant) if instant is not None else work
+
+        async def flow():
+            try:
+                async for chunk in op_stream.run(job, op=op, is_disconnected=http.is_disconnected, cfg=cfg):
+                    yield chunk
+            finally:
+                op_stream.release(tenant, customer)       # ★끊겨도 상한이 새지 않게
+
+        return StreamingResponse(flow(), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     def _web_view(tenant: str, result: dict[str, Any]) -> dict[str, Any]:
         """★`[2026-09-29 사용자 지시]` 근거(`basis` — 원래 모양 그대로)와 해석 결과(`decision`)는 **개발 모드**
