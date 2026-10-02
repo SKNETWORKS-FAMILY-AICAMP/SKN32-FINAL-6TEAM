@@ -100,7 +100,8 @@ DOMAIN_WORDS = (
 | `INV-CS-ACT-001` | 동일 dedupe key는 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_duplicate_dedupe_key_has_one_side_effect` |
 | `INV-CS-ACT-002` | 동시 claim도 side effect가 1회다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_concurrent_claims_have_one_side_effect` |
 | `INV-CS-ACT-003` | timeout은 unknown이며 자동 재시도하지 않는다 | automated | `tests/contract/test_consumer_idempotency_contract.py::test_timeout_is_unknown_and_not_automatically_retried` |
-| `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`) | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` |
+| `INV-CS-ACT-004` | **자동 변경은 쓰기 전에 일정 전체를 다시 판정하고, 바꾼 뒤 새로 생긴 위반이 있으면 적용하지 않는다**(D-017 전체 일정 재검증 — 등록 때와 같은 판정기 `check_itinerary`). ★최고 안이 걸리면 담당이 뽑아 둔 **다음 순위 안**을 차례로 시험한다 | automated | `tests/scenario/test_apply_recheck.py::test_an_automatic_change_that_breaks_the_whole_itinerary_is_not_applied` · `tests/unit/travel/activity/test_activity_fit.py` |
+| `INV-CS-ACT-005` | **자동 변경이 하루 밀도를 나쁘게 만들면(목표 밖으로 새로 밀기 · 이미 밖인 날을 허용 오차보다 더 밀기 · 잴 수 있던 날을 못 재게 하기) 순위에서 뒤로 밀리고, 더 나은 안이 없을 때만 감수하며 알림에 적는다.** 구조 위반은 밀도와 상관없이 늘 막는다(D-019 개정) | automated | `tests/unit/travel/test_density_gate.py` |
 
 **`INV-CS-ACT-003`이 중요하다.** timeout을 실패로 간주해 자동 재시도하면 이중 실행이 된다. **모르는 건 모르는 채로 둔다.**
 
