@@ -12,7 +12,7 @@
   장소마다 detailCommon2(개요)·detailIntro2(영업시간·휴무·요금) 두 번씩 부른다.
 ★순서는 사람이 볼 가치가 큰 타입부터다 — 관광지(12)·문화시설(14)·레포츠(28)·행사(15) 다음에
   쇼핑(38, 대부분 체인 매장). 한도가 모자라면 뒤쪽이 남는다.
-★키·호출·캐시·멈춤 규칙은 `fetch_tourapi_details.py` 와 같다(그 함수를 가져다 쓴다) — 오류·한도 초과는
+★키·호출·캐시·멈춤 규칙은 `tourapi_client.py` 와 같다(그 함수를 가져다 쓴다) — 오류·한도 초과는
   「없음」으로 굳히지 않고 그 자리에서 멈추며, 받은 것까지는 CSV 에 반영한다.
 ★타입별 필드(원문 그대로, 파싱하지 않는다):
     12 관광지    business_hours ← usetime          closed_days ← restdate           fee ← (없음)
@@ -43,7 +43,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .fetch_tourapi_details import (CALL_INTERVAL_SECONDS, StopFetching, append_cache, call_tourapi,
+from .tourapi_client import (CALL_INTERVAL_SECONDS, StopFetching, append_cache, call_tourapi,
                                     load_cache, load_service_key)
 
 CSV_PATH = Path(__file__).resolve().parent / "activity_total_data.csv"
