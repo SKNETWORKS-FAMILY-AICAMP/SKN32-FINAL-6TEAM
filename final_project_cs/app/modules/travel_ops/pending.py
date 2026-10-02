@@ -24,9 +24,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Callable
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from .itinerary import Item, StaleItinerary, TripStore
 from .itinerary_changes import ItineraryChange, NoChange, applied_record, plan_swap
@@ -162,6 +163,20 @@ def options_for(best: Item) -> list[dict[str, Any]]:
     return [{**record, "rank": rank} for rank, record in enumerate(ranked, start=1)]
 
 
+def unresolved_notice(*, item: Item, causes: list[dict[str, Any]]) -> dict[str, Any]:
+    """`[2026-10-02 결함 인계 #3]` 감시가 사건을 찾았는데 **바꿀 곳이 없다** — 고객에게 **알린다**(전에는 아무 말도 안 나갔다).
+
+    ★일정은 바꾸지 않았다는 것과 무엇이 문제인지만 말한다 — 원인에 있는 말만(`_cause_text`), 지어낸 대안·약속 없음. 「사람이 확인합니다」 같은 대기 약속도 안 한다
+      (사람 대기 없음 — 운영자는 오류만 본다). 안전 사건(지진·재난문자·경보)이면 머리가 「안전 알림」이고 알림 종류도 `safety_alert` 다.
+    """
+    safety = is_safety({"disruptions": causes})
+    head = "⚠️ 안전 알림 — " if safety else ""
+    text = (f"{head}{item.title} — {_cause_text(causes)}. 대신 갈 수 있는 곳을 찾지 못해 **일정은 그대로 두었어요.** "
+            "가시기 전에 한 번 확인해 주세요.")
+    return {"type": "safety_alert" if safety else "guidance", "kind": "no_alternate", "text": text, "language": "ko",
+            "causes": causes, "item_id": str(item.item_id), "reason": "no_alternate", "replay": False}
+
+
 def _cause_text(causes: list[dict[str, Any]]) -> str:
     for cause in causes:
         for field in ("summary", "kind", "reason", "type", "category"):
@@ -271,6 +286,11 @@ class PendingStore:
             return [dict(zip(("proposal_id", "trip_id", "item_id"), row)) for row in cur.fetchall()]
 
 
+def wall_clock() -> datetime:
+    """지금 — 제안 고르기의 만료 검사(`choose`)가 쓴다. ★시험이 대본의 시계(재생 날짜)로 갈아 끼운다 — 실시간으로 보면 지난 대본 날짜의 제안이 전부 끝난 것이 된다."""
+    return datetime.now(UTC)
+
+
 class ProposalRefused(Exception):
     def __init__(self, code: str, detail: dict[str, Any] | None = None) -> None:
         super().__init__(code)
@@ -279,11 +299,18 @@ class ProposalRefused(Exception):
 
 def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, proposal_id: UUID,
            key: str | None, by: str, places_by_id: dict[str, dict[str, Any]],
-           check: Callable[..., dict[str, Any]] | None) -> dict[str, Any]:
+           check: Callable[..., dict[str, Any]] | None, now: datetime | None = None) -> dict[str, Any]:
     """고객이 안을 고른다. `key=None` 이면 **원래 일정을 그대로 둔다**(kept).
 
     ★한 트랜잭션 안에서 제안을 잠그고(`FOR UPDATE`) → 기존 「다른 안」 경로(`plan_swap`)로 다시 점검 →
       새 버전을 쓰고 → 제안을 닫는다. 어느 단계든 실패하면 **아무것도 안 바뀐다.**
+
+    ★`[2026-10-02 결함 인계 #2·#5]` **제안은 절대로 못 고르는 상태가 되면 그 자리에서 닫는다** — 안 닫으면 `open` 으로 남아 같은 제안이 계속 보였다.
+      ①그 일정이 이미 끝났다(`expires_at` 이 지났다 — 감시가 아직 못 닫았어도) → `expired` ②그 사이 일정이 바뀌어 기준 버전이 낡았다 → `superseded`.
+      둘 다 **예외가 아니라 결과**(`{"status": "expired" | "superseded"}`)로 돌려준다 — 예외로 올리면 부르는 쪽의 트랜잭션이 되돌아가 닫은 기록이 사라진다.
+      부르는 쪽(`trip_api._choose`)이 커밋 **뒤에** 409 로 바꾼다.
+    ★반대로 **의도된 것**: 고른 안이 지금 안 맞아(재점검 불통과 · 모르는 안 키) 거절되면 제안은 **열린 채** 남는다 — 같은 제안에서 다른 안을 고를 수 있어야 한다.
+      그 사유는 거절 응답(`code` · `detail`)이 말하고, 제안에는 남기지 않는다(고객이 다시 고를 수 있는 상태가 바뀌지 않았다).
     """
     proposal = pending.get(conn, trip_id, proposal_id, lock=True)
     if proposal is None:
@@ -291,6 +318,12 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     if proposal["status"] != "open":
         raise ProposalRefused("already_decided", {"status": proposal["status"],
                                                   "chosen_key": proposal["chosen_key"]})
+    ends = proposal.get("expires_at")
+    if ends is not None:
+        ends = ends if ends.tzinfo else ends.replace(tzinfo=ZoneInfo("Asia/Seoul"))
+        if ends <= (now or wall_clock()):
+            pending.close(conn, proposal_id, status="expired", by="system:ended_before_choice")
+            return {"status": "expired", "expires_at": ends.isoformat()}
     if key is None:
         pending.close(conn, proposal_id, status="kept", by=by)
         return {"status": "kept"}
@@ -298,8 +331,9 @@ def choose(*, conn, store: TripStore, pending: PendingStore, trip_id: UUID, prop
     options = list(proposal["options_json"] or [])
     current = next((i for i in items if i.item_id == proposal["item_id"]), None)
     if current is None or trip["version"] != proposal["base_version"]:
-        raise ProposalRefused("stale", {"version": trip["version"],
-                                        "base_version": proposal["base_version"]})
+        # 기준 버전이 낡으면 이 제안은 **다시는** 못 고른다 — 닫는다(감시가 새 버전 기준의 새 제안을 연다)
+        pending.close(conn, proposal_id, status="superseded", by="system:stale_version")
+        return {"status": "superseded", "version": trip["version"], "base_version": proposal["base_version"]}
     if proposal["reason"] == CONSENT_REASON:
         if key != CONSENT_KEY:
             raise ProposalRefused("unknown_option", {"expected": CONSENT_KEY})

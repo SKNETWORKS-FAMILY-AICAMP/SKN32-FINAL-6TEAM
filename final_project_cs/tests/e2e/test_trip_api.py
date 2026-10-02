@@ -94,6 +94,10 @@ def api(monkeypatch):
     store = TripStore(tenant)
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection,
                           clock=clock, routes=None, route_events=ReplayRouteEvents(timeline))
+    # ★`[2026-10-02 결함 인계 #2]` 제안 고르기는 그 일정이 **끝났으면** 못 고른다(`pending.choose`) — 대본 날짜는 지난 날이라 실시간으로 보면 전부 끝난 것이 된다. 시계를 대본의 것으로
+    from app.modules.travel_ops import pending as pending_module
+
+    monkeypatch.setattr(pending_module, "wall_clock", lambda: clock.now)
 
     def classifier(_message):
         return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}

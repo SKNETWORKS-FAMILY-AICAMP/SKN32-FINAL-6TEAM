@@ -901,11 +901,17 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
                 places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
-                return choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
-                              proposal_id=proposal_id, key=key, by=by, places_by_id=places,
-                              check=_check())
+                result = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                                proposal_id=proposal_id, key=key, by=by, places_by_id=places,
+                                check=_check())
+            # ★`[2026-10-02 결함 인계 #2·#5]` 못 고르는 상태라 **닫은** 제안(`expired` 끝난 일정 · `superseded` 낡은 기준 버전)은 위 트랜잭션이 커밋된 **뒤에**
+            #   409 로 알린다 — 예외로 올리면 닫은 기록이 되돌아가 같은 제안이 계속 열려 있었다
+            if result.get("status") in ("expired", "superseded"):
+                raise ProposalRefused("expired" if result["status"] == "expired" else "stale",
+                                      {k: v for k, v in result.items() if k != "status"})
+            return result
         except ProposalRefused as refused:
-            status = {"not_found": 404, "already_decided": 409, "stale": 409}.get(refused.code, 422)
+            status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
             raise _error(status, refused.code, "안을 고르지 못했다 — 아무것도 바뀌지 않았다",
                          detail={k: (v if isinstance(v, (int, float, str, bool, type(None), list, dict))

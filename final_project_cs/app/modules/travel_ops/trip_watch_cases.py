@@ -19,11 +19,21 @@
 
 ★`fatal`(결정 15 — 대체 소스까지 실패)·`unhandled`(식사·활동·이동 밖의 항목)·
   `unchecked`(경로 소스가 답할 수 없는 대상)는 시나리오 버전과 같게 **센다.**
+
+★`[2026-10-02 결함 인계 #1·#2·#3]` 이 반복이 **멈추지 않고 끝을 맺게** 한다.
+  ① Case 하나의 실행이 예외로 터져도 **그 회차의 나머지 Case 는 계속 돈다** — 터진 Case 는 `escalated`(`team_error`)로 닫아 운영자가 오류로 본다(죽은 채
+     `running` 으로 남지 않는다)
+  ② 무응답 제안 만료(`PendingStore.expire`)를 이 반복도 한다 — 전에는 시나리오 버전(`trip_watch`)만 불러서, 기본 일꾼(Case 버전)이 도는 동안 끝난 일정의
+     제안이 `open` 으로 남았다
+  ③ 바꿀 곳을 못 찾아 Team 이 `itinerary_unresolved` 로 끝나면 **고객에게 알린다**(`pending.unresolved_notice` — 일정은 그대로 두었다는 것과 원인). 사람 대기 약속은 없다
+  ④ 일시 실패(`fatal_source_failure` 점검 소스 · `team_error` 실행 예외)로 닫힌 Case 는 **다음 회차가 다시 연다** — 같은 지문의 닫힌 Case 가 영원히 막지 않게
+     (`retry_max` 번까지 · 사이를 `retry_cooldown_seconds` 이상 두고). 이 실패는 고객에게 알리지 않는다(바뀐 것이 있는지 모른다 — 운영자 몫)
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
@@ -33,11 +43,16 @@ from app.application.case_intake import open_case
 
 from .itinerary import Item, TripStore
 from .itinerary_changes import planned_option, route_of, route_targets
+from .pending import PendingStore, unresolved_notice
 from .replan import WEATHER_LIKE
 from .subjects import KIND, resolve_subject
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_LOOKAHEAD = timedelta(minutes=90)
 ACTOR = "trip_watch"
+#: 다음 회차가 **다시 열어도 되는** 닫힘 사유 — 일시적이다(점검 소스 실패 · 실행 예외). 바꿀 곳이 없음(`itinerary_unresolved`)은 아니다 — 같은 사건이 그대로면 같은 답이다
+RETRYABLE_GUARDRAILS = frozenset({"fatal_source_failure", "team_error"})
 
 
 @dataclass
@@ -50,6 +65,11 @@ class CaseTickResult:
     unhandled: list[dict[str, Any]] = field(default_factory=list)
     pinned: list[dict[str, Any]] = field(default_factory=list)
     unchecked: list[dict[str, Any]] = field(default_factory=list)
+    #: 무응답으로 닫은 제안(끝난 일정) · 실행이 예외로 터진 Case · 다시 연 Case · 바꿀 곳이 없다고 고객에게 알린 건
+    expired: list[dict[str, Any]] = field(default_factory=list)
+    failed: list[dict[str, Any]] = field(default_factory=list)
+    retried: list[dict[str, Any]] = field(default_factory=list)
+    notified: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _fingerprint(causes: list[dict[str, Any]]) -> str:
@@ -71,9 +91,14 @@ class TripWatchCaseOpener:
     def tick(self, lookahead: timedelta = DEFAULT_LOOKAHEAD) -> CaseTickResult:
         result = CaseTickResult()
         now = self.clock()
+        # ★무응답 — 그 일정이 끝난 제안은 닫는다. **바꾸지 않는다**(D-020). 기본 일꾼이 Case 버전이라 여기서도 해야 한다
+        with self._connect() as conn, conn.transaction():
+            result.expired = [{k: str(v) for k, v in row.items()}
+                              for row in PendingStore(self.store.tenant_id).expire(conn, now=now)]
         with self._connect() as conn:
             due = self.store.due(conn, start=now, end=now + lookahead)
         opened: list[UUID] = []
+        self._contexts: dict[UUID, dict[str, Any]] = {}
         for trip_id, item in due:
             if item.detail.get("customer_pinned"):
                 result.pinned.append({"trip_id": str(trip_id), "item": item.title})
@@ -110,9 +135,57 @@ class TripWatchCaseOpener:
         # ★Case 를 다 연 **뒤에** 돌린다 — 커넥션을 잡은 채 Team 을 기다리지 않는다.
         if self.run_case is not None:
             for case_id in opened:
-                outcome = self.run_case(tenant_id=self.store.tenant_id, case_id=case_id, actor_id=ACTOR)
+                try:
+                    outcome = self.run_case(tenant_id=self.store.tenant_id, case_id=case_id, actor_id=ACTOR)
+                except Exception as exc:                  # noqa: BLE001 — 한 Case 의 실패가 이 회차의 나머지를 끊지 않는다
+                    logger.exception("watch: run_case failed case=%s", case_id)
+                    result.failed.append({"case_id": str(case_id), "error": type(exc).__name__})
+                    self._close_failed(case_id, exc)
+                    continue
                 result.ran.append({"case_id": str(case_id), "status": (outcome or {}).get("status")})
+                self._after_run(case_id, outcome, result)
         return result
+
+    # ── 실행 뒤 ───────────────────────────────────────────────
+    def _close_failed(self, case_id: UUID, exc: BaseException) -> None:
+        """예외로 터진 Case — **죽은 채 `running` 으로 남기지 않고** `escalated`(`team_error`)로 닫는다. 운영자가 오류로 본다.
+        (Controller 는 예외가 나면 그 실행 기록만 실패로 닫고 Case 는 그대로 둔다 — 다시 실행되지도, 사람 눈에 띄지도 않았다.)"""
+        from app.core.transition import transition_case
+        from app.domain.events import CaseStatus, EventType
+
+        try:
+            with self._connect() as conn, conn.transaction():
+                case = self.repository.get_case(conn, tenant_id=self.store.tenant_id, case_id=case_id)
+                if case is None or str(case["status"]) != CaseStatus.RUNNING.value:
+                    return                               # 이미 다른 상태로 갔다 — 건드리지 않는다
+                transition_case(conn, tenant_id=self.store.tenant_id, case_id=case_id, expected_version=case["version"],
+                                event_type=EventType.GUARDRAIL_ESCALATED,
+                                payload={"guardrail": "team_error", "observed": [type(exc).__name__]},
+                                actor_type="system", actor_id=ACTOR)
+        except Exception:                                # noqa: BLE001 — 닫지 못해도 반복은 계속된다. 이유는 남긴다
+            logger.exception("watch: could not close the failed case=%s", case_id)
+
+    def _escalation_reason(self, case_id: UUID) -> str | None:
+        with self._connect() as conn:
+            events = self.repository.get_case_events(conn, tenant_id=self.store.tenant_id, case_id=case_id)
+        for event in reversed(events):
+            if event["event_type"] == "guardrail_escalated":
+                return str((event["payload_json"] or {}).get("guardrail") or "") or None
+        return None
+
+    def _after_run(self, case_id: UUID, outcome: dict[str, Any] | None, result: CaseTickResult) -> None:
+        """Team 이 `itinerary_unresolved`(바꿀 곳 없음)로 끝났으면 **고객에게 알린다** — 일정은 그대로라는 것과 원인."""
+        context = self._contexts.get(case_id)
+        if context is None or (outcome or {}).get("status") != "escalated":
+            return
+        if self._escalation_reason(case_id) != "itinerary_unresolved":
+            return
+        item, causes = context["item"], context["causes"]
+        with self._connect() as conn, conn.transaction():
+            self.store.enqueue_message(conn, trip_id=context["trip_id"],
+                                       key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
+                                       payload=unresolved_notice(item=item, causes=causes))
+        result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
 
     def _route(self, trip_id: UUID, item: Item, now: datetime, result: CaseTickResult,
                opened: list[UUID]) -> None:
@@ -139,8 +212,9 @@ class TripWatchCaseOpener:
     def _open(self, trip_id: UUID, item: Item, now: datetime, result: CaseTickResult,
               opened: list[UUID], *, causes: list[dict[str, Any]], issue_code: str, detected: str) -> None:
         summary = ", ".join(sorted({str(c.get("kind") or c.get("category")) for c in causes})) or detected
-        request_id = f"watch:{trip_id}:{item.item_id}:{_fingerprint(causes)}"
+        base_id = f"watch:{trip_id}:{item.item_id}:{_fingerprint(causes)}"
         with self._connect() as conn:
+            request_id, retry = self._request_id(conn, base_id)
             trip, _ = self.store.latest(conn, trip_id)
             case = open_case(
                 conn, repository=self.repository, tenant_id=self.store.tenant_id,
@@ -157,8 +231,38 @@ class TripWatchCaseOpener:
         if case.created:
             opened.append(case.case_id)
             result.opened.append(record)
+            if retry:
+                result.retried.append({**record, "attempt": retry})
+            self._contexts[case.case_id] = {"trip_id": trip_id, "item": item, "causes": causes}
         else:
             result.existing.append(record)
 
 
-__all__ = ["CaseTickResult", "DEFAULT_LOOKAHEAD", "TripWatchCaseOpener"]
+    def _request_id(self, conn: Any, base_id: str) -> tuple[str, int]:
+        """(요청 id, 몇 번째 재시도인가). 같은 사건(지문)의 앞 Case 가 **일시 실패로 닫혔고** 한도 안이며 식힘 시간이 지났으면 새 Case 를 연다 —
+        요청 id 끝에 `:r{n}` 을 붙여 멱등 키가 달라지게. 아니면 앞 Case 의 id 를 그대로 줘서 같은 Case 로 모인다(두 번 열지 않는다)."""
+        from app.core.settings import get_guardrails
+
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT c.status, extract(epoch FROM (now() - c.updated_at)), "
+                "       (SELECT e.payload_json->>'guardrail' FROM case_events e "
+                "         WHERE e.tenant_id=c.tenant_id AND e.case_id=c.case_id AND e.event_type='guardrail_escalated' "
+                "         ORDER BY e.aggregate_version DESC LIMIT 1), "
+                "       count(*) OVER () "
+                "FROM customer_cases c WHERE c.tenant_id=%s "
+                "AND (c.state_json->>'request_id' = %s OR c.state_json->>'request_id' LIKE %s) "
+                "ORDER BY c.created_at DESC LIMIT 1", (self.store.tenant_id, base_id, f"{base_id}:r%"))
+            row = cur.fetchone()
+        if row is None:
+            return base_id, 0
+        status, quiet, guardrail, total = row[0], float(row[1]), row[2], int(row[3])
+        latest = base_id if total == 1 else f"{base_id}:r{total - 1}"
+        guard = get_guardrails()
+        eligible = (str(status) == "escalated" and guardrail in RETRYABLE_GUARDRAILS
+                    and total <= int(guard.get("travel.watch.retry_max"))
+                    and quiet >= float(guard.get("travel.watch.retry_cooldown_seconds")))
+        return (f"{base_id}:r{total}", total) if eligible else (latest, 0)
+
+
+__all__ = ["CaseTickResult", "DEFAULT_LOOKAHEAD", "RETRYABLE_GUARDRAILS", "TripWatchCaseOpener"]
