@@ -10,7 +10,7 @@ domain: travel
 
 # Activity Team
 
-`[2026-09-28]` **코드 위치가 다시 폴더 안으로 바뀌었다** — 본체는 `app/modules/travel_ops/activity/team.py`, `__init__.py`는 재수출만 한다. 두는 규칙은 [code-layout.md](code-layout.md). 아래에 날짜와 함께 적힌 `activity.py`·`activity/__init__.py` 경로·줄 번호는 각각 그때 기록이다.
+`[2026-09-28]` **코드 위치가 다시 폴더 안으로 바뀌었다** — 본체는 `app/modules/travel_ops/activity/team.py`, `__init__.py`는 재수출만 한다. 두는 규칙은 [code-layout.md](code-layout.md). `[정정 2026-10-02]` commit `80522d3`으로 `team.py`(778줄 → 278줄)를 책임별 믹스인으로 나눴다 — 성립 판정 `feasibility.py`·취소/변경 `cancellation.py`·날씨 `weather.py`·대체 장소 `replacement.py`. `ActivityTeam`이 상속하므로 import 경로·메서드 이름은 그대로이고 동작도 같다(메서드 22개를 AST로 비교). 아래에 날짜와 함께 적힌 `activity.py`·`activity/__init__.py` 경로·줄 번호는 각각 그때 기록이다.
 
 `[실측 2026-09-10]` **코드가 붙었다** — `app/modules/travel_ops/activity.py` **274줄**, capability 셋(`activity.check_cancelable`·`check_feasible`·`propose_change`), `knowledge_scope` 넷(`activity`·`cancellation`·`refund`·`weather`). 이 문서의 명세와 코드가 어긋나면 **코드를 고친다**(명세가 정본이다). `[정정 2026-09-10]` **「지금 어떻게 돼 있나」의 정본은 코드다** — 명세는 「무엇을 만들려 하나」의 정본이다. 어긋나면 어느 쪽이 틀렸는지부터 가린다. 이 문서도 manifest 절(`accepted_case_types`·`allowed_tools`)을 코드에 맞춰 고쳤다. `[정정 2026-09-24]` **이 경로는 낡았다.** commit `1bc9d51`(`refactor(activity): travel_ops/activity/ 패키지로 분리`)로 `app/modules/travel_ops/activity.py`는 `app/modules/travel_ops/activity/__init__.py`(패키지, 621줄)로 쪼개졌다. 이 문서 안의 `activity.py:NN` 인용을 전부 이 경로·라인 번호로 갱신했다.
 
@@ -122,6 +122,15 @@ Team 이 셋을 다 알고 있고 **항목이 어느 것에 걸리는지를 판�
 | `policy`(규정) | escalate, `unknown_취소·환급 규정` |
 | `place`(장소) — `None` | **escalate 안 함.** `feasible: True` 유지, `place_confirmed: False`로만 표시하고 계속 진행 |
 | `party_size`·`capacity` | 정원 초과 검사만 건너뛰고 계속 진행 |
+
+★`[정정 2026-10-02]` commit `048f3cc` — **`check_feasible`에 한해** 위 표의 두 줄이 바뀌었다. 취소·변경(`check_cancelable`·`propose_change`)은 그대로 escalate로 멈춘다. 테스트 기대값도 맞춰 고쳤다(`test_activity_input_validation.py`, 지금 20건).
+
+| 없는 값 | `check_feasible`의 지금 결과 |
+|---|---|
+| `policy`(규정) | **막지 않는다** — 성립 판정은 취소·환급 규정을 쓰지 않는다 |
+| `starts_at`(시각) | escalate 대신 `feasible: False` · `status: "insufficient_info"` · `reason: "time_unknown"`(RESPOND). 휴무·운영시간·재난·기상을 잴 수 없으니 「모름」을 「성립」으로 읽지 않고, 대체 장소도 찾지 않는다 |
+
+정원 초과는 시각을 몰라도 확인되므로 `insufficient_info`보다 **먼저** `problem`으로 나간다.
 
 ★**경계 케이스 하나를 있는 그대로 고정해 뒀다** — `place`가 `None`이 아니라 **빈 dict `{}`**면 `place_confirmed: True`로 찍힌다(`place is not None`만 보는 코드라서). 필드가 하나도 없어도 "확인됨"으로 잡히는 셈이다. 옳고 그름을 판정하지 않고 **지금 이렇게 동작한다**는 사실만 테스트로 남겼다 — 스키마를 더 엄격히 검사할지는 별도 결정이다.
 
@@ -295,6 +304,36 @@ flowchart LR
 
 `[실측 2026-09-20]` **정식 테스트** — `tests/unit/travel/test_activity_submit_itinerary.py`(11건): 라우팅 훅 3건, `read.booking` 미호출 회귀 가드 1건, 필수값 누락 3건, 정상 제안 2건, 장소 미매칭 2건(위 근거 회귀 가드 포함).
 
+### 장소 이름 조회 — `read.place_lookup` `[구현 2026-10-02]`
+
+★`[정정 2026-10-02]` commit `048f3cc` — **위 `read.place_search`는 일정 제출에서 더 쓰지 않는다.** `allowed_tools`와 `_submit_itinerary()`가 `read.place_lookup`으로 바뀌었다(`read.place_search` 도구 자체는 `ReadToolbox`에 남아 있다). `place_search`는 못 찾으면 `None` 하나라서 「없음」과 「못 물어봄」을 가르지 못했다.
+
+본체는 `activity/place_lookup.py`의 `lookup_place()`, 도구는 `read_tools.py`의 `place_lookup()`이다.
+
+```
+① place_catalog 이름 조회 (db_search/place_by_name.py)
+     found · ambiguous → 그대로
+     not_found         → ②
+② 카카오 키워드 검색 — 실재하는지만 본다
+     이름이 맞는 곳 있음        → exists_unregistered
+     맞는 이름 없음             → not_found
+     못 물음(키 없음·예산·시간 초과) → unknown   ← 「없음」이 아니다
+```
+
+| `status` | `_submit_itinerary()`의 처리 | 실패 코드 |
+|---|---|---|
+| `found` | `activity.submit` 제안 → `WAIT_FOR_APPROVAL` | — |
+| `ambiguous` | 후보 이름(최대 몇 곳)과 개수를 보여 주고 고객에게 고르게 한다(`WAIT_FOR_INPUT`) | `place_ambiguous` |
+| `exists_unregistered` | 실재하지만 지원 목록에 없어 일정을 만들지 않고 되묻는다(`WAIT_FOR_INPUT`) | `place_exists_unregistered` |
+| `not_found` | 더 정확한 이름을 되묻는다(`WAIT_FOR_INPUT`) | `place_not_found` |
+| `unknown` | **고객에게 되묻지 않고 사람에게 넘긴다**(`_unknown()` escalate) | `place_lookup_blocked` |
+
+★★**카카오 응답은 어디에도 저장하지 않는다**(카카오 운영정책 제5조). 결과는 Case 근거로 저장되므로 카카오가 준 이름·좌표·주소·id를 싣지 않고 「있다/없다/못 물었다」 판정만 싣는다. 그래서 실재해도 카탈로그에 없는 곳은 일정 제안을 만들 수 없다. 없는 곳을 DB에 올리는 방법은 아직 정하지 않았다.
+
+★이름 일치는 `intake.places._kakao_match`와 같은 규칙이다 — 같은 이름이거나 질의로 시작하는 이름이 **하나뿐**일 때만 「있다」. 카카오 1위가 아무 가게여도 「있다」고 하지 않는다. 카탈로그 조회는 공백·기호를 뺀 이름으로 비교하고, 2글자 미만이면 카카오까지 가지 않고 `not_found`(`name_too_short`)다.
+
+공용 파일 변경: `read_tools.py`에 `kakao` 필드와 도구 추가, `composition.py`에서 카카오 클라이언트 생성을 분리해 `ReadToolbox`에 주입. 시험 `tests/unit/travel/test_activity_place_lookup.py`(16건) + `tests/integration/db/test_place_by_name_db.py`(8건, 실 PostgreSQL).
+
 ## TourAPI · 재난문자API 연동 (확정)
 
 `[확정 2026-09-20]` `Activity_모듈_스펙.md` — `check_feasible` 판정 순서에 신규 조회 둘이 들어간다. 날씨 조회는 여기 없다(위 ②감시 소스 표 참고 — 현재 구현 범위 아님, 9절로 이동).
@@ -430,6 +469,8 @@ EMRG_STEP_NM in {"위급재난"}  →  True (막는다)
 - **재난상황 감지는 활동 시작 3시간 전부터 5분 간격으로 좁혀서 재검토한다.** 3시간보다 먼 활동은 이 주기의 대상이 아니다.
 
 ★위 둘은 층이 다르다 — "하루 기준 감지 시점"의 재난문자API 5분 간격은 **기본 폴링 주기**이고, "검토 주기 원칙"의 3시간은 **그 폴링을 언제부터 활동에 적용하는지**를 좁힌다. `due_activities()`(`watch.py`)가 이 3시간 필터를 쿼리에 직접 반영해 구현했다.
+
+★`[구현 2026-10-02]` commit `8f6ac65` — **5분 간격도 쿼리가 지킨다.** 두 값이 `watch.py`의 상수 `ACTIVITY_WINDOW_HOURS = 3.0`·`ACTIVITY_GAP_MINUTES = 5.0`과 `due_activities()`/`tick_activities()`의 인자(`within_hours`·`min_gap_minutes`)로 빠졌다. 마지막 관측이 5분 안인 활동은 SQL(`HAVING max(observed_at) <= now() - 5분`)에서 건너뛰므로, 스케줄러가 몇 분마다 부르든 활동마다 간격이 지켜진다. 실행 배선은 아래 [재난문자 감시 러너](#재난문자-감시-러너--run_sweepers-구현-2026-10-02) 참고.
 
 **확정**: 재난문자 API는 이벤트 푸시(웹훅)를 지원하지 않는다. 5분 폴링이 유일한 방식이고, 웹훅 대체는 더 이상 검토 대상이 아니다.
 
@@ -567,6 +608,21 @@ default_capability    = "activity.check_feasible"
 FK는 걸지 않는다 — `payload`(jsonb)에 원본을 담고, 필요하면 그 안의 `SN`으로 `disaster` 테이블을 대조한다(TourAPI 관측이 `place_catalog`에 FK 안 거는 것과 같은 패턴).
 
 ★`[실측 2026-09-20]` **`due_activities()`·`tick_activities()`가 생겼다** — `app/modules/travel_ops/watch.py`. `due_places()`와 같은 구조(가장 오래전에 본 것부터, NULLS FIRST)이되, 재검토 주기 결정(3시간 이내)과 `place_id` 해소 여부를 쿼리에 직접 반영했다. `tick_activities()`는 `self.sources.disaster`에 duck-typed로 의존한다 — `source.name`·`source.near(lat, lng, *, within=activity_time)` 인터페이스만 정했고, **실제 재난문자API 클라이언트는 여전히 없다**(코드 0줄, 위 「알려진 결함」 참고). 라이브 DB에 대고 SQL 실행을 확인했다(빈 테이블에서 정상적으로 빈 결과).
+
+#### 재난문자 감시 러너 — `run_sweepers` `[구현 2026-10-02]`
+
+★`[정정 2026-10-02]` **위 「배선」은 함수까지였다 — `tick_activities()`를 부르는 곳이 없어 재난문자 감시는 실제로 돌지 않았다.** commit `8f6ac65`가 `scripts/run_sweepers.py`에 `activity_disaster` 회차를 붙였다(`--only activity_disaster`로 단독 실행 가능).
+
+| | |
+|---|---|
+| 껍질 | `activity/watch_runner.py`의 `run_activity_disaster()` — `TravelWatcher.tick_activities()`를 한 번 부른다 |
+| 세는 칸 | `checked` · `changes` · `unknown` · `no_source`(재난문자 소스 없음 — 조용히 넘기지 않는다) · `fatal`(예외. 삼키지 않고 로그를 남기고 센다 → `run_sweepers`가 stderr·exit 1로 알린다. 다른 되잡기 작업은 막지 않는다) |
+| 간격 | 스케줄러 호출 주기와 무관하다 — 3시간·5분은 `watch.py` 상수와 쿼리가 지킨다(위 「검토 주기 원칙」) |
+| 입력 | `activities` 테이블. 여기에 쓰는 경로(승인된 `activity.submit` 반영)가 아직 없어 운영에서는 비어 있을 수 있다 — 그때는 `checked=0` |
+
+★`[임시]` 감시 구조(몇 시간 전부터·몇 분 간격·무엇을 기준으로)는 멘토 검토 중이라 바뀔 수 있다. 바꿀 때는 `watch_runner.py`와 `watch.py` 상수 두 개만 고치면 되도록 모아 뒀다.
+
+시험 `tests/unit/travel/test_activity_watch_runner.py`(7건) + `tests/integration/db/test_activity_watch_db.py`(4건, 실 PostgreSQL).
 
 `[미확보]` `affected_bookings`를 채우는 일은 안 했다 — 무예약 활동은 예약이 없고, 예약이 있는 경우 장소·시각으로 역추적하는 방법이 정해지지 않았다.
 
@@ -723,7 +779,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 |---|---|
 | 기타지도API | 어떤 서비스인지(Google Places/네이버/카카오) 확정 필요 |
 | DB적재 트리거 | 기타지도API로 새로 찾은 장소 정보가 `tour` 테이블에 영구 반영되는지, 임시 캐시인지 |
-| "정보 부족" 판정 기준 | `[부분 닫힘 2026-09-26]` 1차 기준을 코드에 넣었다 — **장소 정보(`read.place`)를 못 받았을 때**만 `insufficient_info`다(알려진 결함 1의 수정과 같은 조건). 예약·규정·시각·기상을 모를 때는 지금처럼 `_unknown()` escalate로 끝나 3분기까지 오지 않는다. 둘을 하나로 합칠지(escalate도 `insufficient_info`로 볼지)는 아직 미정 → [구현 현황](#구현-현황--작업자-b-구현-2026-09-26) |
+| "정보 부족" 판정 기준 | `[부분 닫힘 2026-09-26]` 1차 기준을 코드에 넣었다 — **장소 정보(`read.place`)를 못 받았을 때**만 `insufficient_info`다(알려진 결함 1의 수정과 같은 조건). 예약·규정·시각·기상을 모를 때는 지금처럼 `_unknown()` escalate로 끝나 3분기까지 오지 않는다. 둘을 하나로 합칠지(escalate도 `insufficient_info`로 볼지)는 아직 미정. `[확장 2026-10-02]` **시각을 모를 때도 `insufficient_info`(`time_unknown`)로 넓혔고, 규정은 `check_feasible`이 아예 요구하지 않게 됐다.** 예약 자체가 없을 때만 여전히 escalate → [구현 현황](#구현-현황--작업자-b-구현-2026-09-26) |
 | 확인 필요로 표시 → 사용자에게 알림 | 다이어그램상 두 노드 사이가 점선(미확정) — 순서가 "알림 먼저"인지 "확인필요 표시가 곧 알림"인지 |
 | 회의 결정 항목 | 영업시간·휴무·예약·매진·날씨 중 "적용 항목"을 어디에 저장할지(설정 테이블 필요 여부) |
 
@@ -738,10 +794,10 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | `status` | 조건 |
 |---|---|
 | `problem` | 이미 시작됨 · 정원 초과 · 휴무 요일 일치 · 위급재난 |
-| `insufficient_info` | 장소 정보(`read.place`)를 못 받음 |
+| `insufficient_info` | 장소 정보(`read.place`)를 못 받음 · `[2026-10-02]` 예약 시각을 모름(`reason: "time_unknown"`) |
 | `ok` | 그 외 |
 
-★**막힘이 확인되면 장소를 몰라도 `problem`이 먼저다** — 이미 아는 불가 사유를 「모름」으로 덮지 않는다(`ActivityTeam._feasibility_status`). 예약·규정·시각·기상을 모르는 갈래는 `_unknown()` escalate로 끝나 여기까지 오지 않는다.
+★**막힘이 확인되면 장소를 몰라도 `problem`이 먼저다** — 이미 아는 불가 사유를 「모름」으로 덮지 않는다(`ActivityTeam._feasibility_status`). 예약·규정·시각·기상을 모르는 갈래는 `_unknown()` escalate로 끝나 여기까지 오지 않는다. `[정정 2026-10-02]` 지금은 **예약을 모를 때만** escalate다 — 규정은 성립 판정에 안 쓰고, 시각을 모르면 정원 확인 뒤 `insufficient_info`로 답한다([입력 검증 절](#-검증-규칙--코드가-판정한다)).
 
 #### 4단계 — 대체 장소 후보 (`activity/alternatives.py`)
 
@@ -821,7 +877,11 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | 위급재난(휴무와 겹치면 이쪽이 앞선다) | `disaster_blocks` | 같음 |
 | 이미 시작됨 · 정원 초과 | `already_started` · `party_over_capacity` | 같음 |
 | 예약의 장소·운영 정보를 못 읽음 | `place_unknown` | 같음 |
+| 예약 시각을 못 읽음(`check_feasible`) `[2026-10-02]` | `time_unknown` | 같음 |
 | 일정 제출에서 장소를 하나로 못 찾음 | `place_not_found` | 같음(고객에게 되묻는다) |
+| 일정 제출: 이름이 카탈로그의 여러 곳을 가리킴 `[2026-10-02]` | `place_ambiguous` | 같음(고객에게 고르게 한다) |
+| 일정 제출: 실재하지만 카탈로그에 없음 `[2026-10-02]` | `place_exists_unregistered` | 같음(저장하지 않고 되묻는다) |
+| 일정 제출: 장소 조회 자체를 못 함(카카오 키 없음·막힘) `[2026-10-02]` | `place_lookup_blocked` | 로그에만 — escalate로 사람에게 넘긴다(「없음」이 아니다) |
 | 대체 후보: 위급재난 · 식별자 없음 · 풀 조회 실패 · 후보 없음 · 모두 운영 미확인 | `alternatives_withheld` · `alternatives_no_content_id` · `alternatives_pool_unavailable` · `alternatives_none` · `alternatives_unconfirmed` | **로그에만**(결과의 `alternatives` 모양은 `status`·`reason` 그대로) |
 | 읽기 도구가 예외를 냄 | `tool_error` | 로그에만 — **다시 던진다**(삼켜서 「모름」으로 바꾸지 않는다, RULE §3.2) |
 
@@ -894,7 +954,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~제안 DB 스키마 vs 실제 마이그레이션~~ | **닫힘 — `[실측 2026-09-20]`** `014_activity_tour_disaster.sql`로 반영, 재실행 안전 확인 → [데이터 저장 — Activity 전용 스키마](#데이터-저장--activity-전용-스키마) |
 | ~~`activities`↔`places` 관계~~ | **닫힘 — `[결정 2026-09-20]`** `activities.place_id`(nullable FK)가 canonical 링크. `015_activities_place_link.sql` → [관계 절](#activities--places-관계--결정) |
 | ~~`activities.disaster_api_content_id`를 정적 FK로 둘지 관측으로 다룰지~~ | **닫힘 — `[결정 2026-09-20]`** `watch_observations`(`target_kind='activity'`)로. `016_activities_disaster_to_watch.sql` → [재난문자 관련성 절](#재난문자-관련성--watch_observations로-결정) |
-| ~~`due_activities()`(watch.py 감시 루프 배선)~~ | **닫힘 — `[실측 2026-09-20]`** `due_activities()`·`tick_activities()` 구현됨 → [재난문자 관련성 절](#재난문자-관련성--watch_observations로-결정) |
+| ~~`due_activities()`(watch.py 감시 루프 배선)~~ | **닫힘 — `[실측 2026-09-20]`** `due_activities()`·`tick_activities()` 구현됨 → [재난문자 관련성 절](#재난문자-관련성--watch_observations로-결정). `[정정 2026-10-02]` 부르는 곳이 없어 실제로는 안 돌았다 — `run_sweepers`의 `activity_disaster` 회차로 붙였다 → [감시 러너 절](#재난문자-감시-러너--run_sweepers-구현-2026-10-02) |
 | ~~재난문자API 실제 클라이언트~~ | **부분 닫힘 — `[구현 2026-09-20]`** `app/infrastructure/travel/disaster_msg.py` 작성·조립 완료. **단 실 키로 검증 안 됨**(키 발급 못 받음) → [재난문자 등급 대조 절](#재난문자-등급-대조--check_feasible-배선) |
 | ~~재난문자 키가 공통 키(`data_go_kr_key`)로 되는지~~ | **닫힘 — `[확인 2026-09-21]`** data.go.kr 공통 키와 **별개다.** safetydata.go.kr 에 별도 가입·신청해서 발급받아야 한다. `ACOP_DISASTER_API_KEY` 설정 완료 |
 | 재난문자 날짜·오류 봉투 파라미터/모양 추정치 | `[부분 닫힘 2026-09-21]` 실 키로 live 테스트 5/5 통과, 응답 구조·필드명·CRT_DT 포맷 확인 완료. **오류 봉투 모양**과 **서버 날짜 필터 파라미터**는 아직 미검증 — 정상 응답만 봤고 오류 케이스는 못 봤다 |
@@ -910,7 +970,7 @@ subject = str(arguments.get("booking_id") or arguments.get("trip_id") or task.ca
 | ~~`read.place_candidates` 실구현~~ | **닫힘 — `[구현 2026-09-28]`** `db_search/place_candidates.py`로 실구현, `app/modules/travel_ops/activity/db_search/`에 있다 → [실구현 절](#read_place_candidates-실구현--db_search-구현-2026-09-28) |
 | ~~다이소를 최종 후보 CSV에 병합~~ | **닫힘 — `[실측 2026-09-28]`** 수기 큐레이션(`tourapi_daiso_seoul_enriched.csv` 폐점 1건 확인, `03_daiso_seoul_all_branches.csv`와 이름·주소 대조)으로 `activity_total_data.csv`에 반영 완료 — tour_api 53건(폐점 제외) + daiso 신규 151건 |
 | 무신사·아트박스를 최종 후보 CSV에 병합 | `[미확보 2026-09-28]` `02_musinsa_seoul_all_branches.csv`(원본 매장 리스트)가 있지만 TourAPI 매칭·enrich를 거치지 않았고, 최종 병합본(`activity_total_data.csv`)에도 아직 없다. 아트박스는 TourAPI enrich(`tourapi_artbox_seoul_enriched.csv`)까지는 끝났지만 병합 코드가 아직 없다 — 다이소를 병합한 것과 같은 방식(이름·주소 대조 후 중복 제외)을 쓰면 된다 |
-| `data_processing/` 옛 작업 파일 12개 | **삭제됨 — `[결정 2026-09-29]`** 최종 데이터가 `activity_total_data.csv`(6,345행)로 확정돼 더 쓰지 않는다. 브랜드 원본 목록(`01_올리브영`·`02_무신사`·`03_다이소`·`04_아트박스`), 올리브영·다이소·아트박스 매칭·큐레이션 중간 산출물, `filter_tourapi_seoul.py`, `merge_oliveyoung_activities.py`(다시 돌리면 수기 큐레이션한 최종 CSV를 덮어써서 위험). 필요하면 git 이력에서 되살린다. **새 수집은 `scripts/fetch_tourapi_list.py`(서울 주소 기준 전체 목록) → `scripts/merge_tourapi_new.py`(이름·주소 비교 후 추가) → 상세는 `fetch_tourapi_details.py`.** TourAPI는 서울 주소여도 `areaCode`가 빈 행이 87%라 `areaCode=1`로 받으면 800건 안팎만 나온다 |
+| `data_processing/` 옛 작업 파일 12개 | **삭제됨 — `[결정 2026-09-29]`** 최종 데이터가 `activity_total_data.csv`(6,345행)로 확정돼 더 쓰지 않는다. 브랜드 원본 목록(`01_올리브영`·`02_무신사`·`03_다이소`·`04_아트박스`), 올리브영·다이소·아트박스 매칭·큐레이션 중간 산출물, `filter_tourapi_seoul.py`, `merge_oliveyoung_activities.py`(다시 돌리면 수기 큐레이션한 최종 CSV를 덮어써서 위험). 필요하면 git 이력에서 되살린다. **새 수집은 `scripts/fetch_tourapi_list.py`(서울 주소 기준 전체 목록) → `scripts/merge_tourapi_new.py`(이름·주소 비교 후 추가) → 상세는 `fill_tourapi_details.py`.** `[정정 2026-10-02]` 여기 있던 `fetch_tourapi_details.py`(올리브영·다이소·아트박스 검색 결과에 상세를 붙이던 도구)는 결과가 `activity_total_data.csv`에 반영이 끝나 commit `80522d3`에서 삭제했다. `fill_tourapi_details.py`가 쓰던 키 읽기·캐시·호출은 `data_processing/tourapi_client.py`로 옮겼다. TourAPI는 서울 주소여도 `areaCode`가 빈 행이 87%라 `areaCode=1`로 받으면 800건 안팎만 나온다 |
 | `build_final_dataset.py` | **삭제됨 — `[결정 2026-09-28]`** 필요 입력(`scripts/activities_candidates_seoul_enriched.csv` 805건 베이스, `tourapi_oliveyoung_seoul_enriched.csv`)이 리팩터로 없어지거나 애초에 만들어진 적이 없어 실행 불가 상태였다. 올리브영 368건 전량을 태그만 붙여 병합하는 `merge_oliveyoung_activities.py` 방식을 그대로 쓰기로 하고 삭제했다. **추가 DB 적재 코드가 필요해지면 그때 새로 만든다** |
 | `scripts/load_place_catalog_csv.py` | **복원됨 — `[실측 2026-09-28]`** 리팩터 커밋(`58a03c8`, "낡은 파일 — 새 적재 코드로 대체 예정")에서 삭제됐다가, 대체 코드가 실제로는 아직 없어서(`db_search`는 조회 전용이지 적재가 아니다) 로컬에 복원했다. `data_source` 필터(`--source tour_api`/`oliveyoung`으로 병합 CSV의 출처만 골라 넣는 기능) 포함. **팀 공유 전 확인 필요** — 담당자가 별도로 대체 코드를 작업 중인지 확인 안 됨 |
 | ~~`DisasterMsgApi`/`Csv`에 `near()` 없어 `read.disaster` · `tick_activities()` AttributeError~~ | **닫힘 — `[수정 2026-09-28]`** `develop` 병합으로 `DisasterMsgSource`가 `DisasterMsgApi`/`DisasterMsgCsv`로 교체됐는데 두 클래스에 `.near()` 가 없었다. `read_tools.disaster()`(`read_tools.py:438`)와 `watch.tick_activities()`(`watch.py:285`) 둘 다 `.near()`를 호출해 실행 시 `AttributeError`. `disaster_msg.py` 두 클래스에 `near(lat, lng, *, at=, within=)` 래퍼 추가 — 좌표를 무시하고 `active(region="서울", at=...)` 에 위임한다(`base.py:291` 미확보 닫힘) |
