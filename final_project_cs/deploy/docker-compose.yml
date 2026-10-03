@@ -40,9 +40,9 @@ services:
     env_file: [.env]
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
-      ACOP_MOBILITY_DATA_DIR: /data/mobility
+      ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
     volumes:
-      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility:ro
+      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
       - tripilot_ops:/srv/var/ops
     networks:
       internal: {}
@@ -64,9 +64,9 @@ services:
     env_file: [.env]
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
-      ACOP_MOBILITY_DATA_DIR: /data/mobility
+      ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
     volumes:
-      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility:ro
+      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
       - tripilot_ops:/srv/var/ops
     healthcheck:
       disable: true
