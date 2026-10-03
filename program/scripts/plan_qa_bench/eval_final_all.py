@@ -434,7 +434,7 @@ def _dec_pick(tag, w):
     return out_
 
 
-for _t, _lab in (('openjev26b', 'OpenJev 26B'), ('pplx27b', 'pplx-decider 27B'), ('decider12bl', 'Decider-12B'), ('decider35bl', 'Decider-35B-A3B'), ('decider31bl', 'decider-chat 31B'), ('winnow12b', 'Winnow-12B'), ('nimble9b', 'Nimble-9B')):
+for _t, _lab in (('openjev26b', 'OpenJev 26B'), ('pplx27b', 'pplx-decider 27B'), ('decider27ql', 'decider-chat Qwen3.6-27B'), ('jevk59b', 'JevK5-9B'), ('decider12bl', 'Decider-12B'), ('decider35bl', 'Decider-35B-A3B'), ('decider31bl', 'decider-chat 31B'), ('winnow12b', 'Winnow-12B'), ('nimble9b', 'Nimble-9B')):
     _picks = {w: _dec_pick(_t, w) for w in EV}
     if all(v is not None for v in _picks.values()):
         def _mk(picks):
@@ -640,7 +640,7 @@ for w in EV:
             jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
         ref.setdefault('Jev 직접(유료)', {})[w] = jp
     for dtag, dlab in (('winnow12b', 'Winnow-12B Q8 직접'), ('nimble9b', 'Nimble-9B-v3 Q8 직접'), ('kev9b', 'Kev-9B Q8 직접'), ('kev4b', 'Kev-4B Q8 직접'),
-                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접'), ('pplx27b', 'pplx-decider 27B NF4 직접'), ('decider4bl', 'Decider-4B(자체 라이브러리) 직접'), ('decider2bl', 'Decider-2B 직접'), ('decider08bl', 'Decider-0.8B 직접'), ('decider12bl', 'Decider-12B 직접'), ('decider12bq4', 'Decider-12B NF4(4비트) 직접'), ('decider12bq8', 'Decider-12B 8비트 직접'), ('decider35bl', 'Decider-35B-A3B bf16 직접'), ('decider31bl', 'decider-chat-gemma4-31B bf16 직접')):
+                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접'), ('pplx27b', 'pplx-decider 27B NF4 직접'), ('decider4bl', 'Decider-4B(자체 라이브러리) 직접'), ('decider2bl', 'Decider-2B 직접'), ('decider08bl', 'Decider-0.8B 직접'), ('decider12bl', 'Decider-12B 직접'), ('decider12bq4', 'Decider-12B NF4(4비트) 직접'), ('jevk54b', 'JevK5 4B v0.3 Q8 직접'), ('jevk59b', 'JevK5-9B v0.3.3 Q8 직접'), ('plumb4b', 'Plumb-4B Q8 직접'), ('winnowe4b', 'Winnow-E4B Q8 직접'), ('decider27ql', 'decider-chat Qwen3.6-27B bf16 직접'), ('decider12bq8', 'Decider-12B 8비트 직접'), ('decider35bl', 'Decider-35B-A3B bf16 직접'), ('decider31bl', 'decider-chat-gemma4-31B bf16 직접')):
         fd = load_opt(R(f'dec_{dtag}_{w}.json'))
         if fd and w in fd and fd.get('_errors', 1) < len(fd[w]['rows']):
             jp = []
@@ -803,6 +803,8 @@ if all(n in names for n in _ENS):
 if 'JEV_CALLS' in globals():
     out.append('')
     out.append('J1 의 Jev(유료) 호출 수: ' + ' · '.join(f'{w} {JEV_CALLS[w]}건' for w in EV) + ' — 규칙 단계가 못 정한 문제 전부를 한 번씩(이미 보낸 결과를 재사용했고 새로 부르지 않았다)')
+if '--matrix' in argv0:
+    exec(compile(open(os.path.join(HERE, 'matrix_block.py'), encoding='utf-8').read(), 'matrix_block', 'exec'))
 print('\n'.join(out))
 if '--md' in argv0:
     open(argv0[argv0.index('--md') + 1], 'w', encoding='utf-8').write('\n'.join(out) + '\n')
