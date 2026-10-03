@@ -60,10 +60,10 @@ test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 �
   await expect(page).toHaveURL(/\/trips$/);
 });
 
-test("메뉴의 언어 카드는 홈 카드처럼 펼쳐 고르면 바로 적용·접히고, 홈 카드와 같은 설정을 쓴다", async ({ page }) => {
+test("메뉴의 언어 카드를 펼쳐 고르면 바로 적용·접히고, 첫 화면에는 언어 카드가 없다(2026-10-03 사용자 결정 — 언어는 메뉴에만)", async ({ page }) => {
   await page.goto("/");
   const home = page.locator("main").getByRole("button", { name: /LANGUAGE/ });
-  await expect(home).toContainText("한국어");
+  await expect(home).toHaveCount(0);
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   const menu = page.getByRole("dialog", { name: "메뉴" });
   const toggle = menu.getByRole("button", { name: /LANGUAGE/ });
@@ -81,12 +81,15 @@ test("메뉴의 언어 카드는 홈 카드처럼 펼쳐 고르면 바로 적용
   await expect(english).toBeFocused();
   await expect(english).toContainText("English");
   await page.keyboard.press("Escape");
-  await expect(home).toContainText("English");
+  await expect(home).toHaveCount(0);
   await expect(page.locator("#intro-title")).toContainText("From plans to memories");
 
-  await home.click();
-  await page.getByRole("button", { name: "한국어", exact: true }).click();
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  // Back to Korean through the menu — the only place the card lives.
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  const englishMenu = page.getByRole("dialog", { name: "Menu" });
+  await englishMenu.getByRole("button", { name: /LANGUAGE/ }).click();
+  await englishMenu.getByRole("button", { name: "한국어", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /LANGUAGE/ })).toContainText("한국어");
 });
 

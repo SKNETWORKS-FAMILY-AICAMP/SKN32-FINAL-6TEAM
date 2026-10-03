@@ -66,8 +66,15 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       throw error;
     };
     const take = (next: ReviewedIntakeView) => { latest.current = next; apply(next); };
-    async function save(edits: IntakeEdit[]) {
-      take(await editIntake(intakeId, plan().revision, edits, language).catch(staleThenRethrow));
+    /**
+     * Send edits. ★`changed` says "the plan is no longer the one that was last checked" and is set BEFORE the new plan is
+     * drawn: the other way round, the footer is drawn once with neither "nothing to fix" nor "check again" pending and offers
+     * 「여행 등록」 for an instant (a click in that instant registered an unchecked plan — found by the browser test).
+     */
+    async function save(edits: IntakeEdit[], changed = false) {
+      const next = await editIntake(intakeId, plan().revision, edits, language).catch(staleThenRethrow);
+      if (changed) setDirty(true);
+      take(next);
     }
     /** The photos of one place the tourism service has (never stored here), as the change screen's `PlaceInfo`. */
     async function infoOf(place: { name: string; category?: string | null; address?: string | null; content_id?: string | null; ref?: string | null }, withPhotos: boolean): Promise<PlaceInfo> {
@@ -86,9 +93,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     const replaceWith = async (id: string, edit: IntakeEdit) => {
       const item = itemOf(id);
       const back = restorePlace(targetOf(item), item.place);
-      await save([edit]);
+      await save([edit], true);
       undoEdits.current = back ? [back] : null;
-      setDirty(true);
     };
 
     return {
@@ -98,15 +104,13 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (!row) throw gone();
         const edits = editsFor(row, draft);
         if (!edits.length) return;
-        await save(edits);
+        await save(edits, true);
         undoEdits.current = null;
-        setDirty(true);
       },
       remove: async (id) => {
         const item = itemOf(id);
-        await save([itemEdit.remove(targetOf(item), true)]);
+        await save([itemEdit.remove(targetOf(item), true)], true);
         undoEdits.current = [itemEdit.remove(targetOf(item), false)];
-        setDirty(true);
       },
       editTrip: (field, value) => save([{ field: `trip.${field}`, value }]),
 
@@ -151,11 +155,11 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       },
       autoRecommendAll: async (): Promise<AutoResult> => {
         const result = await autofixIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
-        take(result.view);
         if (result.changed.length) {
           undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
-          setDirty(true);
+          setDirty(true);                                           // before the new plan is drawn (see `save`)
         }
+        take(result.view);
         const changes = result.changed.map((change) => {
           const place = change.to.place?.name ?? change.title;
           const time = change.to.starts_at ? ` ${change.to.starts_at}${change.to.ends_at ? `–${change.to.ends_at}` : ""}` : "";
@@ -171,8 +175,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const edits = undoEdits.current;
         if (!edits) throw new LiveError("cannot_undo", t("이번 변경은 되돌릴 수 없어요 · 이전 장소를 알 수 없어서요", "This change cannot be undone — the earlier place is not known"));
         undoEdits.current = null;
-        await save(edits);
-        setDirty(true);
+        await save(edits, true);
       },
       recheck: async () => {
         const ids = plan().review?.items.map((entry) => entry.id) ?? [];
@@ -180,8 +183,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         setRechecking(ids[0] ?? null);
         const ticker = ids.length > 1 ? setInterval(() => { at = (at + 1) % ids.length; setRechecking(ids[at]); }, RECHECK_STEP_MS) : undefined;
         try {
-          take(await revalidateIntake(intakeId, plan().revision, language).catch(staleThenRethrow));
-          setDirty(false);
+          const next = await revalidateIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
+          setDirty(false);                                          // before the checked plan is drawn (see `save`)
+          take(next);
         } finally {
           clearInterval(ticker);
           setRechecking(null);

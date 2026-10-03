@@ -63,7 +63,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     if (event) setStream((current) => reduceStream(current, event));
   }, []);
   const follow = useIntakeEvents(intakeId, query.data?.status === "reading", language, reread, onContent);
-  if (follow.follow === "polling" && !polling) setPolling(true);
+  // ★`[2026-10-03]` A stream that goes silent (`lost`) is not waited for alone: the intake is asked for every 1.5 s as well, until the read ends —
+  //   the server keeps no pace for a dead line, and the customer must not sit on a screen that never moves. (The stream still reconnects.)
+  if ((follow.follow === "polling" || follow.follow === "lost") && !polling) setPolling(true);
   const edit = useMutation({
     mutationFn: ({ revision, edits }: { revision: number; edits: IntakeEdit[] }) => editIntake(intakeId, revision, edits, language),
     onSuccess: (view) => {
@@ -142,7 +144,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     const send = async (edits: IntakeEdit[]) => { if (edits.length) await edit.mutateAsync({ revision: view.revision, edits }); };
     const rowOf = (id: string) => rows(view).find((row) => row.key === id);
     const refusal = confirm.error instanceof LiveError ? (confirm.error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
-    return <PlanCheck key="result" view={result} notice={<KeyNotice />} onBack={() => router.push(routes.newTrip)}
+    // The server tried to check places, hours and legs and could not (`review: null` + `review_error`): say so — nothing it did not check is shown as fine.
+    const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
+    return <PlanCheck key="result" view={result} notice={<><KeyNotice />{unchecked}</>} onBack={() => router.push(routes.newTrip)}
       tripIssues={tripIssuesOf(view)} onOpenPrevious={() => setEditing(true)}
       actions={view.review ? server.actions : {
         edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

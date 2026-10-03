@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { start, mockServer, TRIP_ID } from "./helpers";
+import { APP, start, mockServer, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ page, request }) => {
   await mockServer(request).reset();
@@ -266,7 +266,7 @@ test("여행 화면을 열면 채팅 모델 예열을 서버에 한 번 청하�
   await server.reset();
   const fresh = await page.context().browser()!.newContext();
   const other = await fresh.newPage();
-  await other.goto("http://127.0.0.1:3102/");
+  await other.goto(`${APP}/`);
   await other.waitForTimeout(1500);
   expect(await server.received("POST", "/v1/web/warmup")).toHaveLength(0);
   await fresh.close();
@@ -341,7 +341,7 @@ test("채팅: 보내기가 실패해 「다시 보내기」를 누르면 같은 
 // 2026-09-30 user decision: where the customer is comes from the browser's Geolocation API, asked only on a press.
 test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를 때만 브라우저 위치를 얻어 같은 질문을 다시 보낸다", async ({ page, request, context }) => {
   const server = mockServer(request);
-  await context.grantPermissions(["geolocation"], { origin: "http://127.0.0.1:3102" });
+  await context.grantPermissions(["geolocation"], { origin: APP });
   await context.setGeolocation({ latitude: 37.5704, longitude: 126.9921, accuracy: 25 });
   await openTrip(page);
   await page.getByRole("button", { name: "채팅", exact: true }).click();

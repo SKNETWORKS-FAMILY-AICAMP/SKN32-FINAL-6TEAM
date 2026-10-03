@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { KEY_STORAGE, start, mockServer, TRIP_ID } from "./helpers";
+import { APP, KEY_STORAGE, start, mockServer, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -37,7 +37,7 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
   await server.reset();
   const fresh = await page.context().browser()!.newContext();
   const first = await fresh.newPage();
-  await first.goto("http://127.0.0.1:3102/");
+  await first.goto(`${APP}/`);
   await expect(first.getByRole("region", { name: /내 여행|My trips/, exact: false }).first()).toBeVisible();
   const issued = (await server.log()).filter((entry) => entry.path.endsWith("/v1/web/session"));
   expect(issued).toHaveLength(0);

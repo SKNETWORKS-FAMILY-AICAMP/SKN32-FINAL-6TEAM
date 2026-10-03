@@ -158,7 +158,6 @@ test("목록을 읽지 못하면 첫 화면 카드 안에만 오류와 다시 �
   await expect(card(page).getByRole("alert")).toContainText("저장된 여행 데이터를 읽을 수 없어요");
   await expect(card(page).getByText("아직 등록한 여행이 없어요.")).toHaveCount(0);
   await expect(page.locator("#intro-title")).toBeVisible();
-  await expect(page.getByRole("button", { name: /LANGUAGE/ })).toBeVisible();
 
   await page.evaluate((prefix) => Object.keys(sessionStorage).filter((key) => key.startsWith(prefix)).forEach((key) => sessionStorage.removeItem(key)), PREFIX);
   await card(page).getByRole("button", { name: "다시 불러오기" }).click();

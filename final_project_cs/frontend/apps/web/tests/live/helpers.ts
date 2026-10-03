@@ -1,6 +1,8 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
-export const STUB = "http://127.0.0.1:8043";
+export const STUB = `http://127.0.0.1:${process.env.STUB_PORT ?? 8043}`;
+/** The web app under test (`tests/live/serve.mjs`). */
+export const APP = `http://127.0.0.1:${process.env.LIVE_PORT ?? 3102}`;
 export const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 export const KEY_STORAGE = "tripilot.web.user-key.v1";
 

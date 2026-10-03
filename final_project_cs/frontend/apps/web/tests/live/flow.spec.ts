@@ -91,12 +91,12 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
 
 const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";
 
-test("알림·복구 카드의 디스코드 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+test("디스코드 알림 카드의 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
   await finishOnboarding(page, async () => {
-    const head = page.getByRole("button", { name: /알림·복구/ });
+    const head = page.getByRole("button", { name: /디스코드 알림/ });
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();                                              // fold it; the terms step checks the field and passes
@@ -116,11 +116,11 @@ test("알림·복구 카드의 디스코드 웹훅은 키가 없는 첫 방문�
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
 });
 
-test("키가 이미 있으면 웹훅은 알림·복구 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
+test("키가 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page, "acop_u_known");
   await finishOnboarding(page, async () => {
-    const head = page.getByRole("button", { name: /알림·복구/ });
+    const head = page.getByRole("button", { name: /디스코드 알림/ });
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();
@@ -129,7 +129,7 @@ test("키가 이미 있으면 웹훅은 알림·복구 카드를 떠날 때 바�
 
   // Back on the card with the field cleared: leaving it again sends nothing (blank is "not entered", not "remove").
   await page.goto("/start");
-  const head = page.getByRole("button", { name: /알림·복구/ });
+  const head = page.getByRole("button", { name: /디스코드 알림/ });
   await head.click();
   await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL" })).toHaveValue("");
   await head.click();

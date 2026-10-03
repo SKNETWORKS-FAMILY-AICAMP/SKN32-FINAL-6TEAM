@@ -149,20 +149,27 @@ test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로�
   await noHorizontalScroll(page);
 });
 
-test("소개 첫 화면의 언어 카드로 언어를 고르면 카드가 접히고, 이용 방법 캡처를 마우스로 끌거나 버튼으로 넘겨 볼 수 있다", async ({ page }) => {
+test("메뉴에서 언어를 고르면 카드가 접히고 첫 화면 문구가 바뀌며(첫 화면에는 언어 카드가 없다), 이용 방법 캡처를 마우스로 끌거나 버튼으로 넘겨 볼 수 있다", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
-  const card = page.getByRole("button", { name: /LANGUAGE/ });
+  await expect(page.getByRole("button", { name: /LANGUAGE/ })).toHaveCount(0);   // `[2026-10-03 사용자 결정]` 언어 선택은 메뉴에만 있다
+  // The page starts in English: the menu button is still called "Menu" here, and the dialog changes its name when the language does.
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  const menu = page.getByRole("dialog");
+  const card = menu.getByRole("button", { name: /LANGUAGE/ });
   await expect(card).toHaveAttribute("aria-expanded", "false");
   await card.click();
   await expect(card).toHaveAttribute("aria-expanded", "true");
-  await page.getByRole("button", { name: "한국어", exact: true }).click();
+  await menu.getByRole("button", { name: "한국어", exact: true }).click();
   await expect(card).toHaveAttribute("aria-expanded", "false");
   await expect(card).toBeFocused();
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await page.keyboard.press("Escape");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await page.reload();
-  await expect(page.getByRole("button", { name: /LANGUAGE/ })).toContainText("한국어");
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /LANGUAGE/ })).toContainText("한국어");
+  await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "다음 화면" }).first().click();
   const guide = page.getByRole("region", { name: "triPilot 이용 방법" });
