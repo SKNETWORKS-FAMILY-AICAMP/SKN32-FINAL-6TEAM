@@ -274,6 +274,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
 from .itinerary_checks import Part, check_itinerary, parts_from_items
 from .density import measure_density
+from .itinerary_quality import quality_warnings
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 from .route_uses import route_problems  # noqa: E402
 from .survey import apply_survey  # noqa: E402
@@ -330,12 +331,15 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
                for row in store.versions(conn, trip_id)]
     views = [_item_view(item, place_info(conn, store.tenant_id, item.place) if item.kind != "mobility" else None)
              for item in items]
+    parts = parts_from_items(items)
+    measured = measure_density(parts, trip.get("constraints") or {})
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"],
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
-            **measure_density(parts_from_items(items), trip.get("constraints") or {})}
+            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
+            **measured, "warnings": [*measured["warnings"], *quality_warnings(parts)]}
 
 
 def _maps_query(view: dict[str, Any]) -> str:

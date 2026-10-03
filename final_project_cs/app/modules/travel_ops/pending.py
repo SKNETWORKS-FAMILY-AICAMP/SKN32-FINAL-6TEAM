@@ -439,7 +439,12 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
         asked     바꾸지 않고 보류 제안 + 묻는 알림(이미 물은 것이면 `already: True`, 알림은 다시 안 낸다)
         gone      그 사이 다른 쪽이 이 항목을 바꿨다 — 옛 계산을 밀어 넣지 않는다
         stale     기준 버전이 움직였다
+        rechecked 일정 **전체**를 다시 판정하니 안(다음 순위 안까지)이 앞뒤와 안 맞아 **바꾸지 않았다** — 「일정은 그대로 두었어요」 알림만 싣는다
     부르는 쪽이 트랜잭션을 연다.
+
+    ★`[2026-10-03]` 쓰기 전에 **일정 전체를 다시 판정한다**(D-017 — Case 버전의 적용기와 같은 문, `itinerary_fit.fit_change`). 전에는 시나리오 감시 · 새벽 확인이 이 자리에서 판정 없이
+    바로 새 버전을 써, 항목 하나를 점검해 고른 대체가 앞뒤와 겹치거나 이동이 안 닿아도 그대로 들어갔다(체크리스트 v2 T5 — 감시 두 벌 중 한 벌에만 재판정이 있었다).
+    ★묻는 쪽(위 `decide` 가 「바꾸지 말라」)은 지나지 않는다 — 고객이 고르면 그 자체가 답이다(`choose`).
     """
     trip, items = store.latest(conn, trip_id)
     current = next((i for i in items if i.item_id == item_id), None)
@@ -458,6 +463,18 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
                                                       options=options, proposal_id=proposal_id))
         return {"status": "asked", "already": False, "proposal_id": str(proposal_id),
                 "reason": decision.reason, "safety": decision.safety, "item": current.title}
+    # 순환 import 를 피해 여기서 부른다(`itinerary_fit` → `itinerary_actions` → 이 파일)
+    from .itinerary_fit import fit_change
+
+    fit = fit_change(plan, trip=trip, items=items)
+    if fit.change is None:
+        # ★다 걸렸다 — 쓰지 않는다. 고객이 모르면 닫힌 곳이 그대로 일정에 남으니 Case 버전과 같은 알림을 싣는다(같은 사건 · 같은 판은 한 번만 — 감시가 몇 분마다 다시 와도)
+        store.enqueue_message(
+            conn, trip_id=trip_id, key=f"recheck:{item_id}:v{trip['version']}:{cause_fingerprint(plan.causes)}",
+            payload=unresolved_notice(item=current, causes=plan.causes, recheck_failed=True))
+        return {"status": "rechecked", "item": current.title,
+                "skipped": [{"rank": s.rank, "name": s.name, "reasons": s.reasons, "why": s.why} for s in fit.skipped]}
+    plan = fit.change                      # 몇 순위 안인지 · 왜 앞 순위를 건너뛰었는지가 알림 문구에 이미 붙어 있다
     try:
         version = store.append_version(conn, trip_id=trip_id, base_version=trip["version"],
                                        items=plan.new_items(items), reason=plan.reason, causes=plan.causes)
@@ -469,7 +486,9 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
                          payload={**plan.notice, "version": version,
                                   "type": "change_notice", "safety": decision.safety,
                                   "rollback": rollback_offer(version=version, previous=trip["version"])})
-    return {"status": "adjusted", "version": version, "safety": decision.safety}
+    # ★쓴 안의 요약 · 알림을 같이 돌려준다 — 다음 순위 안을 썼으면 부르는 쪽이 들고 있는 옛 `plan` 과 다르다
+    return {"status": "adjusted", "version": version, "safety": decision.safety,
+            "summary": plan.summary, "notice": plan.notice}
 
 
 def rollback_offer(*, version: int, previous: int) -> dict[str, Any]:

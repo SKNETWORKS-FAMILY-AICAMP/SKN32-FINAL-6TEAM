@@ -50,6 +50,8 @@ class TripTickResult:
     asked: list[dict[str, Any]] = field(default_factory=list)
     #: 무응답으로 닫은 제안 — ★바꾸지 않았다. 일정은 원래대로 다음으로 진행한다
     expired: list[dict[str, Any]] = field(default_factory=list)
+    #: `[2026-10-03]` 바꿀 곳은 찾았는데 **일정 전체를 다시 판정하니** 앞뒤와 안 맞아 바꾸지 않았다(D-017) — 고객에게는 「일정은 그대로 두었어요」가 나갔다
+    rechecked: list[dict[str, Any]] = field(default_factory=list)
 
 
 class TripWatcher:
@@ -182,7 +184,10 @@ class TripWatcher:
                                  "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
                                  "safety": outcome["safety"]})
         elif outcome["status"] == "adjusted":
-            result.adjusted.append({"trip_id": str(trip_id), "version": outcome["version"], **plan.summary,
-                                    "notice": plan.notice})
+            # ★쓴 안의 요약·알림 — 다음 순위 안을 썼으면 부른 `plan` 과 다르다(`pending.apply_or_ask`)
+            result.adjusted.append({"trip_id": str(trip_id), "version": outcome["version"], **outcome["summary"],
+                                    "notice": outcome["notice"]})
+        elif outcome["status"] == "rechecked":
+            result.rechecked.append({"trip_id": str(trip_id), "item": outcome["item"], "skipped": outcome["skipped"]})
 
 __all__ = ["DEFAULT_LOOKAHEAD", "TripTickResult", "TripWatcher"]
