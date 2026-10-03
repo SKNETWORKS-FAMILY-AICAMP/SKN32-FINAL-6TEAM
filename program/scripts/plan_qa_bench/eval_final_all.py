@@ -543,8 +543,10 @@ if have(D12) and _L6N in P and have(LP):
             st = stage(w, i)
             if st[0] == 'done':
                 return st[1], int(bool(st[2]))
-            if GATE['e16d'][w][i] < TAU['L6e16d'] or G[w][M][i] is None:
-                return D12[w][0][i], 1
+            if GATE['e16d'][w][i] < TAU['L6e16d']:
+                return D12[w][0][i], 1          # 게이트가 막은 문제는 E4B 를 거치지 않고 Decider-12B 한 번
+            if G[w][M][i] is None:
+                return D12[w][0][i], 2          # E4B 가 「없음」이라 한 문제는 E4B + Decider-12B
             return G[w][M][i], 1
         return f
     P['H1 L6 → (게이트 음성·E4B 없음)이면 Decider-12B'] = make_h1()
@@ -638,7 +640,7 @@ for w in EV:
             jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
         ref.setdefault('Jev 직접(유료)', {})[w] = jp
     for dtag, dlab in (('winnow12b', 'Winnow-12B Q8 직접'), ('nimble9b', 'Nimble-9B-v3 Q8 직접'), ('kev9b', 'Kev-9B Q8 직접'), ('kev4b', 'Kev-4B Q8 직접'),
-                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접'), ('pplx27b', 'pplx-decider 27B NF4 직접'), ('decider4bl', 'Decider-4B(자체 라이브러리) 직접'), ('decider2bl', 'Decider-2B 직접'), ('decider08bl', 'Decider-0.8B 직접'), ('decider12bl', 'Decider-12B 직접'), ('decider35bl', 'Decider-35B-A3B bf16 직접'), ('decider31bl', 'decider-chat-gemma4-31B bf16 직접')):
+                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접'), ('pplx27b', 'pplx-decider 27B NF4 직접'), ('decider4bl', 'Decider-4B(자체 라이브러리) 직접'), ('decider2bl', 'Decider-2B 직접'), ('decider08bl', 'Decider-0.8B 직접'), ('decider12bl', 'Decider-12B 직접'), ('decider12bq4', 'Decider-12B NF4(4비트) 직접'), ('decider12bq8', 'Decider-12B 8비트 직접'), ('decider35bl', 'Decider-35B-A3B bf16 직접'), ('decider31bl', 'decider-chat-gemma4-31B bf16 직접')):
         fd = load_opt(R(f'dec_{dtag}_{w}.json'))
         if fd and w in fd and fd.get('_errors', 1) < len(fd[w]['rows']):
             jp = []
@@ -688,6 +690,19 @@ if _jv is not None:
         b = sum(x == 0 and y == 1 for x, y in zip(_vn, _jv))
         d, l, h = ci(a, b, tot_n)
         out.append(f'| {n} | {sum(_vn)} | {a} | {b} | {d:+.1f} [{l:+.1f}, {h:+.1f}] | {pexact(a, b):.3f} |')
+if _L6N in names and any(n.startswith('H') and n[1:2].isdigit() for n in names):
+    out += ['', '### L6(316)과 짝지은 비교 — 넘김 구조(54-5 사전 등록 판정용)', '| 방식 | 합 | 세트별(mix8 : mix9) L6 대비 | 호출 | 그 방식만 맞음 | L6 만 맞음 | 차이 %p [구간] | p |', '|---|---:|---|---:|---:|---:|---|---:|']
+    _v6 = vec(_L6N, EV)
+    for n in names:
+        if not (n.startswith('H') and n[1:2].isdigit()):
+            continue
+        _vn = vec(n, EV)
+        a = sum(x == 1 and y == 0 for x, y in zip(_vn, _v6))
+        b = sum(x == 0 and y == 1 for x, y in zip(_vn, _v6))
+        d, l, h = ci(a, b, tot_n)
+        _ps = ' : '.join(f'{sum(vec(n, [w])) - sum(vec(_L6N, [w])):+d}' for w in EV)
+        _calls = sum(res[w][n][i][1] for w in EV for i in range(len(gold[w])))
+        out.append(f'| {n} | {sum(_vn)} | {_ps} | {_calls} | {a} | {b} | {d:+.1f} [{l:+.1f}, {h:+.1f}] | {pexact(a, b):.3f} |')
 if len(EV) > 1:
     out += ['', '### 세트별 V1 대비 차이(그 방식만 맞음 : V1 만 맞음)', '| 방식 | ' + ' | '.join(EV) + ' |', '|---|' + '---:|' * len(EV)]
     for n in names:
