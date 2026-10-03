@@ -180,7 +180,7 @@
 .summaryNav p { font-size: 11px; color: var(--color-muted); text-align: center; font-variant-numeric: tabular-nums; }
 .homeContinue { width: 100%; min-height: 48px; margin: 0 0 12px; }
 .editPreferences { background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-border); }
-.prototypeNote { font-size: 10px; color: var(--color-muted); line-height: 1.7; margin: 15px 0 0; }
+.savedNote { font-size: 10px; color: var(--color-muted); line-height: 1.7; margin: 15px 0 0; }
 
 .bottomNote { margin: 25px 28px 29px; color: var(--color-text-secondary); font-size: 10px; line-height: 1.9; text-align: center; text-shadow: 0 1px 8px var(--color-surface); }
 .leaf { display: block; margin-bottom: 5px; color: var(--color-primary); }

@@ -7,7 +7,7 @@
 //
 // Test control (never part of the real API):
 //   POST /__test/reset               back to the default scenario, clears the request log
-//   POST /__test/scenario {…}        change the scenario (see DEFAULTS)
+//   POST /__test/scenario {…}        change the scenario (see DEFAULTS; `trips: 5` = five trips in the list)
 //   GET  /__test/log                 every request received since the last reset
 //   POST /__test/ring {kinds}        ring the "this trip changed" bell on every open stream (scenario bell: "on")
 //   POST /__test/hangup              close every open bell stream (the screen must reconnect and re-read)
@@ -17,12 +17,18 @@
 import { createServer } from "node:http";
 
 const PORT = Number(process.env.STUB_PORT ?? 8043);
+const TILE_PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
 const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 const INTAKE_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
 const DEFAULTS = {
-  // "one" = the customer already has a trip, "none" = first visit
+  // the customer's trips (`GET /v1/web/trips`): "one" = already has a trip, "none" = first visit, or a number = that many (newest first; the first is TRIP_ID)
   trips: "one",
+  // deleting a trip (`POST /v1/web/trips/{id}/delete` — the contract asked of the backend 2026-10-03, not on the real server yet):
+  //   "ok" (deletes) | "unsupported" (the route is not there: 404 {"detail":"Not Found"}, as the real server answers today) | "fail" (500 for every trip)
+  tripDelete: "ok",
+  // trips whose delete fails with a 500 whatever `tripDelete` says (by trip id)
+  deleteFails: [],
   // proposals the server is waiting on: "open" | "consent" (indoor unknown — asks "change it?" with no options yet)
   //   | "consent_options" (after "change": the same proposal now holds options) | "none"
   proposals: "none",
@@ -45,6 +51,8 @@ const DEFAULTS = {
   editRefusal: "",
   // the plan on the check screen: "simple" (one stop that is fine — nothing to fix, 「여행 등록」 is open) | "rich" (three stops, one needs review, two legs)
   board: "simple",
+  // the trip screen's stops: "default" | "map" (three days for the map tests — see `mapItems`)
+  tripItems: "default",
   // trip warnings / notices to show
   warnings: "some",
   notices: "some",
@@ -77,8 +85,16 @@ const DEFAULTS = {
   //   | "stalled" (the server's reader died) | "silent" (opens, says "accepted" and then nothing at all — a dead line; with the check "on")
   //   With the check "on" the stream also carries what was checked (line · item · check · move · done); without it, only the stage.
   intakeEvents: "on",
+  //   `[2026-10-03]` the "how far" packets (`progress {phase, done, total, current}`): "on" | "off" (a server without them — the bar is worked out from the rows)
+  intakeProgress: "on",
   // the Discord test message: "ok" | "invalid" (Discord refused the webhook) | "too_soon" (429: pressed again within 20 s)
   webhookTest: "ok",
+  // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
+  social: "on",
+  //   what the provider's page does when the customer is sent to it: "ok" | "cancelled" | "elsewhere" (the account belongs to another user)
+  socialResult: "ok",
+  //   "required" = a sign-in with no key is first refused with `human_check_required`
+  socialHumanCheck: "off",
 };
 
 /** Trip loads still to fail after a chat answer (see `rereadFails`). */
@@ -97,6 +113,9 @@ let confirmed;
 let keys;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
 let recoveryEmail = null;
+/** Social sign-in: the providers linked to the browser's key, and the flows started (id → what the browser said at the start). */
+let socialLinks = [];
+let socialFlows = new Map();
 /** The Discord webhook the server holds (never answered back — only a masked form) and what its last test said. */
 let webhook = null;
 let webhookStatus = null;
@@ -106,8 +125,19 @@ let attempts = new Map();
 /** The conversation record the server keeps (`GET /v1/web/trips/{id}/chat`), oldest first. */
 let turns = [];
 
+/** The trips the list answers, newest first, and the ids deleted since the last reset (a deleted trip is gone for good). */
+let rows = [];
+let deleted = new Set();
+const rowId = (index) => index === 0 ? TRIP_ID : `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+function freshRows(kind) {
+  const count = kind === "one" ? 1 : kind === "none" ? 0 : Number(kind);
+  return Array.from({ length: count }, (_, index) => ({ trip_id: rowId(index), title: "내 여행", version: 1, created_at: at(7, 59 - index) }));
+}
+
 function reset() {
   scenario = { ...DEFAULTS };
+  rows = freshRows(scenario.trips);
+  deleted = new Set();
   tripFailures = 0;
   turns = [];
   log = [];
@@ -117,6 +147,8 @@ function reset() {
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
   recoveryEmail = null;
+  socialLinks = [];
+  socialFlows = new Map();
   webhook = null;
   webhookStatus = null;
   attempts = new Map();
@@ -124,9 +156,23 @@ function reset() {
 
 const at = (hour, minute = 0, day = 1) => `2026-10-0${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+09:00`;
 
-function tripView() {
-  return {
-    trip_id: TRIP_ID, customer_id: "cust-1", title: "내 여행", locale: "ko", party_size: 2, version: scenario.proposals === "open" ? 2 : 1,
+/** `tripItems: "map"` — a three-day trip for the map tests: stops with and without coordinates, one title that is HTML (it must show as text). */
+function mapItems() {
+  const stop = (n, title, hour, day, lat, lon) => ({ item_id: `m${n}`, seq: n, kind: "activity", title, place: title, starts_at: at(hour, 0, day), ends_at: at(hour + 1, 0, day), changed: false,
+    other_options: [], customer_pinned: false, lat, lon, booked: false });
+  return [
+    stop(1, "첫 지도 장소", 9, 1, 37.58, 126.98),
+    stop(2, "좌표가 없는 중간 일정", 10, 1, null, null),
+    stop(3, '<img src=x onerror="window.__mapXss=1">', 12, 1, 37.57, 127.01),
+    stop(4, "다음 날 첫 장소", 9, 2, 37.52, 126.97),
+    stop(5, "다음 날 둘째 장소", 10, 2, 37.51, 127.02),
+    stop(6, "좌표를 확인해야 하는 장소", 9, 3, null, null),
+  ];
+}
+
+function tripView(id = TRIP_ID) {
+  const view = {
+    trip_id: id, customer_id: "cust-1", title: "내 여행", locale: "ko", party_size: 2, version: scenario.proposals === "open" ? 2 : 1,
     items: [
       { item_id: "i-a", seq: 1, kind: "dining", title: "아침 식당", place: "아침 식당", starts_at: at(8), ends_at: at(9), changed: false, other_options: [], customer_pinned: false, lat: 37.575, lon: 126.98, booked: false,
         map_url: "https://www.google.com/maps/search/?api=1&query=%EC%95%84%EC%B9%A8",
@@ -145,6 +191,7 @@ function tripView() {
     density: [],
     warnings: scenario.warnings === "some" ? [{ code: "density_exceeded", date: "2026-10-01", reason: "하루가 빡빡해요", remedy: "일정을 줄이세요" }] : [],
   };
+  return scenario.tripItems === "map" ? { ...view, items: mapItems(), warnings: [], history: view.history.slice(0, 1) } : view;
 }
 
 function proposals() {
@@ -245,10 +292,20 @@ function intakeStream() {
   [["10월 1일 서울 여행", null], ["09:00 경복궁 관람", board.items[0]], ["11:00 올리브영", board.items[1]], ["12:30 광장시장", board.items[2]]].forEach(([text, found], i) => {
     events.push(["line", { source_id: "s1", no: i + 1, text, read: true, found: found && { id: found.id, index: found.index, day: 1, date: "2026-10-01", starts_at: found.starts_at, title: found.title } }]);
   });
+  // Like the server (`progress` — one value per phase): the places are counted while it reads, the hours and the legs while it checks.
+  const packets = scenario.intakeProgress !== "off";
+  const packet = (phase, done, total, current) => { if (packets) events.push(["progress", { phase, done, total, current: current && { id: current.id, title: current.title } }]); };
+  rev.items.forEach((item, at) => packet("places", at + 1, rev.items.length, item));
   events.push(["stage", { stage: "checking", label: "장소·운영시간 확인", elapsed: 1, state: state("reading") }]);
-  for (const item of rev.items) events.push(["item", item]);
-  for (const item of rev.items) for (const line of item.rows) events.push(["check", { item: item.id, ...line }]);
-  for (const move of rev.moves) events.push(["move", move]);
+  rev.items.forEach((item, at) => {
+    events.push(["item", item]);
+    for (const line of item.rows) events.push(["check", { item: item.id, ...line }]);
+    packet("hours", at + 1, rev.items.length, item);
+  });
+  rev.moves.forEach((move, at) => {
+    events.push(["move", move]);
+    packet("moves", at + 1, rev.moves.length, { id: `${move.from}>${move.to}`, title: `${rev.items.find((entry) => entry.id === move.from)?.title ?? move.from} → ${rev.items.find((entry) => entry.id === move.to)?.title ?? move.to}` });
+  });
   events.push(["done", { stage: "review", revision: 1, needs: rev.needs, ready: rev.ready }]);
   events.push(["result", { state: state("review") }]);
   return events.map(([name, body]) => `event: ${name}\ndata: ${JSON.stringify(body)}\n\n`);
@@ -347,7 +404,7 @@ createServer(async (request, response) => {
 
   if (request.method === "OPTIONS") {
     response.writeHead(200, {
-      "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Methods": "GET, POST, PUT", Vary: "Origin",
+      "Access-Control-Allow-Origin": origin ?? "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE", Vary: "Origin",
       "Access-Control-Allow-Headers": "Accept, Accept-Language, Content-Language, Content-Type, X-User-Key", "Access-Control-Max-Age": "600",
     });
     response.end();
@@ -362,6 +419,7 @@ createServer(async (request, response) => {
     const change = JSON.parse(raw || "{}");
     scenario = { ...scenario, ...change };
     if ("board" in change) board = freshBoard(scenario.board);
+    if ("trips" in change) rows = freshRows(scenario.trips);
     return json(response, 200, scenario, origin);
   }
   if (path === "/__test/log") return json(response, 200, log, origin);
@@ -376,6 +434,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
   if (path.startsWith("/plan/")) { response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end("<h1>여행계획서(스텁)</h1>"); return; }
+  // The free map's tiles in the test build (`serve.mjs` points `NEXT_PUBLIC_OSM_TILE_URL` here): a one-pixel image, so the real map code runs
+  // without any test reaching OpenStreetMap. Not logged — a map draws dozens of them.
+  if (path.startsWith("/__test/tile/")) { response.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=3600" }); response.end(TILE_PNG); return; }
 
   const key = request.headers["x-user-key"];
   const isJson = (request.headers["content-type"] ?? "").includes("json");
@@ -389,7 +450,50 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     keys.add(issued);
     return json(response, 201, { customer_id: "cust-1", user_key: issued, notice: "이 키를 따로 잘 보관해 주세요. 다시 보여 드리지 않아요 — 다른 기기에서 이어 쓸 때 필요합니다." }, origin);
   }
+  // ── social sign-in: the provider's page (a browser move, no CORS) and the calls that need no key ─────────
+  const oauthPage = /^\/__test\/oauth\/(\w+)$/.exec(path);
+  if (oauthPage && request.method === "GET") {
+    const flow = socialFlows.get(url.searchParams.get("flow") ?? "");
+    if (!flow) { response.writeHead(404); response.end(); return; }
+    const goBack = (query) => { response.writeHead(302, { Location: `${flow.origin}/auth/done?${query}` }); response.end(); };
+    if (scenario.socialResult === "cancelled") return goBack("error=cancelled");
+    if (scenario.socialResult === "elsewhere" && flow.mode === "link") return goBack("error=already_linked_elsewhere");
+    flow.ticket = `ticket-${flow.id}`;
+    return goBack(`ticket=${flow.ticket}`);
+  }
+  if (path.startsWith("/v1/web/auth/") && scenario.social === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+  if (path === "/v1/web/auth/providers" && request.method === "GET") return json(response, 200, { providers: scenario.social === "none" ? [] : [{ id: "google" }, { id: "kakao" }] }, origin);
+  const startMatch = /^\/v1\/web\/auth\/(\w+)\/start$/.exec(path);
+  if (startMatch && request.method === "POST") {
+    const { mode, client_nonce: nonce, turnstile_token: token } = JSON.parse(raw || "{}");
+    if (mode === "link" && (!key || !keys.has(key))) return json(response, 401, { error: { code: "unauthenticated", message: "사용자 키가 없거나 맞지 않는다" } }, origin);
+    if (mode === "login" && scenario.socialHumanCheck === "required" && !token) return json(response, 422, { error: { code: "human_check_required", message: "사람인지 확인해 주세요" } }, origin);
+    if (!["google", "kakao"].includes(startMatch[1])) return json(response, 404, { error: { code: "provider_not_enabled", message: "이 로그인 방법은 아직 쓸 수 없어요" } }, origin);
+    const id = String(socialFlows.size + 1);
+    socialFlows.set(id, { id, mode, nonce, provider: startMatch[1], origin: origin ?? "", used: false, ticket: null });
+    return json(response, 200, { authorize_url: `http://127.0.0.1:${PORT}/__test/oauth/${startMatch[1]}?flow=${id}` }, origin);
+  }
+  if (path === "/v1/web/auth/exchange" && request.method === "POST") {
+    const { ticket, client_nonce: nonce } = JSON.parse(raw || "{}");
+    const flow = [...socialFlows.values()].find((entry) => entry.ticket && entry.ticket === ticket);
+    // one use only, and only with the nonce the starting browser made
+    if (!flow || flow.used || flow.nonce !== nonce) return json(response, 410, { error: { code: "ticket_invalid", message: "로그인 확인이 만료됐거나 맞지 않아요" } }, origin);
+    flow.used = true;
+    if (flow.mode === "link") {
+      if (!socialLinks.includes(flow.provider)) socialLinks.push(flow.provider);
+      return json(response, 200, { outcome: "linked", provider: flow.provider, trips: 1 }, origin);
+    }
+    keys.add("acop_u_social_account");
+    return json(response, 200, { outcome: "signed_in", provider: flow.provider, user_key: "acop_u_social_account", notice: "이 계정의 키예요. 따로 보관해 주세요.", trips: 2 }, origin);
+  }
   if (!key || !keys.has(key)) return json(response, 401, { error: { code: "unauthenticated", message: "사용자 키가 없거나 맞지 않는다" } }, origin);
+  if (path === "/v1/web/auth/links" && request.method === "GET") return json(response, 200, { links: socialLinks.map((provider) => ({ provider, linked_at: "2026-10-03T10:00:00+09:00" })) }, origin);
+  const unlinkMatch = /^\/v1\/web\/auth\/(\w+)$/.exec(path);
+  if (unlinkMatch && request.method === "DELETE") {
+    if (!socialLinks.includes(unlinkMatch[1])) return json(response, 404, { error: { code: "not_linked", message: "연결돼 있지 않아요" } }, origin);
+    socialLinks = socialLinks.filter((provider) => provider !== unlinkMatch[1]);
+    return json(response, 200, { links: socialLinks.map((provider) => ({ provider, linked_at: "2026-10-03T10:00:00+09:00" })) }, origin);
+  }
 
   // ── the customer's contact details ───────────────────────────────
   if (path === "/v1/web/profile" && scenario.profile !== "off") {
@@ -414,6 +518,8 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { result: webhookStatus, profile: profileView() }, origin);
   }
 
+  // Google Maps only after the server allows this load (`POST /v1/web/map-load`); this mock always allows it (the `google` build of `maps.spec.ts`).
+  if (request.method === "POST" && path === "/v1/web/map-load") return json(response, 200, { allowed: true, provider: "google", reason: null, used: { day: 1, month: 1 }, cap: { day: 312, month: 9688 } }, origin);
   if (request.method === "POST" && path === "/v1/web/session/rotate") {
     keys.delete(key);
     const rotated = `acop_u_rotated_${Date.now()}`;
@@ -428,12 +534,28 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   };
   if (request.method === "GET" && path === "/v1/web/trips") {
     if (broken("trips")) return;
-    return json(response, 200, { trips: scenario.trips === "one" ? [{ trip_id: TRIP_ID, title: "내 여행", version: 1, created_at: at(7) }] : [] }, origin);
+    return json(response, 200, { trips: rows }, origin);
   }
-  if (path === `/v1/web/trips/${TRIP_ID}` && request.method === "GET") {
-    if (scenario.trip === "missing") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+  // A trip of this customer's list (and TRIP_ID, until it is deleted) opens; any other id is "not yours / not there" (404 not_found).
+  const tripPath = /^\/v1\/web\/trips\/([^/]+)$/.exec(path);
+  if (tripPath && request.method === "GET") {
+    const id = tripPath[1];
+    const known = (id === TRIP_ID || rows.some((entry) => entry.trip_id === id)) && !deleted.has(id);
+    if (!known || scenario.trip === "missing") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
     if (tripFailures > 0) { tripFailures -= 1; return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin); }
-    return json(response, 200, tripView(), origin);
+    return json(response, 200, tripView(id), origin);
+  }
+  // ★Delete a trip — the contract asked for in `wiki/records/plans/2026-10-03_*_웹_실서버_전환_백엔드_요청.md`. With `tripDelete: "unsupported"` this
+  //   route does not exist, which falls through to the 404 below exactly as the real server answers a route it does not have.
+  const deletePath = /^\/v1\/web\/trips\/([^/]+)\/delete$/.exec(path);
+  if (deletePath && request.method === "POST" && scenario.tripDelete !== "unsupported") {
+    const id = deletePath[1];
+    if (scenario.tripDelete === "fail" || scenario.deleteFails.includes(id)) return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    const known = (id === TRIP_ID || rows.some((entry) => entry.trip_id === id)) && !deleted.has(id);
+    if (!known) return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+    deleted.add(id);
+    rows = rows.filter((entry) => entry.trip_id !== id);
+    return json(response, 200, { trip_id: id, status: "deleted" }, origin);
   }
   if (path === `/v1/web/trips/${TRIP_ID}/proposals` && request.method === "GET") return broken("proposals") || json(response, 200, proposals(), origin);
   if (path === `/v1/web/trips/${TRIP_ID}/events` && request.method === "GET" && scenario.bell === "on") {
@@ -508,6 +630,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
       if (m[2] === "locked") item.locked = edit.value === true;
       else if (m[2] === "removed") { if (edit.value === true) board.removed = [...(board.removed ?? []), item]; board.items = edit.value === true ? board.items.filter((entry) => entry !== item) : board.items; }
       else if (m[2] === "place" && edit.value?.name) { item.place = place(edit.value.name, edit.value.latitude ?? 37.57, edit.value.longitude ?? 126.98, { source: edit.value.source ?? "kakao" }); item.status = "adjusted"; item.place_state = "customer"; item.rows = [row("place", "ok", "직접 고른 곳이에요")]; }
+      else if (m[2] === "place" && edit.value?.none === true) { item.place = null; item.place_state = "none"; item.status = "adjusted"; item.rows = [row("place", "ok", "장소 없이 자유 시간으로 두었어요")]; }
       else if (m[2] === "starts_at") item.starts_at = edit.value;
       else if (m[2] === "ends_at") item.ends_at = edit.value;
     }
@@ -554,7 +677,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const planning = path.endsWith("/plan");
     if (!planning && broken("confirm")) return;
     if (planning && scenario.planRefusal) return json(response, 422, { error: { code: "plan_refused", message: scenario.planRefusal } }, origin);
-    const register = () => { confirmed = true; scenario = { ...scenario, trips: "one" }; return { status: "confirmed", trip: { trip_id: TRIP_ID } }; };
+    const register = () => {
+      confirmed = true;
+      deleted.delete(TRIP_ID);
+      if (!rows.some((entry) => entry.trip_id === TRIP_ID)) rows = [{ trip_id: TRIP_ID, title: "내 여행", version: 1, created_at: at(7) }, ...rows];
+      return { status: "confirmed", trip: { trip_id: TRIP_ID } };
+    };
     if (planning && wantsStream(request)) {
       if (scenario.stream === "busy") return tooManyStreams(response, origin);
       // the server derives the request from the revision (`intake:{id}:plan:r{revision}`)
@@ -564,7 +692,9 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return json(response, 200, register(), origin);
   }
 
-  return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+  // ★A route this server does not have: FastAPI's own 404 body, as the real server gives (checked on the local server) — not the
+  //   `{"error": …}` shape of its own refusals. The web tells "no such route" from "no such trip" by it.
+  return json(response, 404, { detail: "Not Found" }, origin);
  } catch (error) {
   // a bug in this test mock server must show up as a failing request, not as a dead server that fails every later test
   if (!response.headersSent) json(response, 500, { error: { code: "stub_error", message: String(error) } }, "*");

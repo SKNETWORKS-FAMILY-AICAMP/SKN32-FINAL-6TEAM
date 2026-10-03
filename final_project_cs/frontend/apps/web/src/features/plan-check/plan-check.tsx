@@ -10,7 +10,7 @@ import type { TripStop } from "@/features/trip/model";
 import type { Language, Translate } from "@/lib/i18n";
 import { eul, ro } from "@/lib/josa";
 import { useSettings, useT } from "@/lib/settings";
-import { foundCount, needs, progress, STAGES, tally, timeline, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanItem, type PlanMove, type TripIssue } from "./model";
+import { foundCount, needs, progress, STAGES, tally, timeline, type ItemDraft, type LineFinding, type PlanCandidate, type PlanCheckView, type PlanItem, type PlanMove, type ServerProgress, type TripIssue } from "./model";
 import { Act, Checks, letter, reason, Status, VerdictMark, VerdictPill } from "./parts";
 import { PlaceChange, type ChangeSession, type SearchState } from "./place-change";
 import { DeleteDialog, ResultFooter, StopEditor, TripIssues, type Registration } from "./result-parts";
@@ -118,9 +118,12 @@ function ProgressBar({ view }: { view: PlanCheckView }) {
   const labels = stepLabels(t);
   const current = STAGES.indexOf(view.stage);
   const value = Math.round(progress(view));
+  // ★`[2026-10-03]` The server's "장소 3/14 · 광장시장" count comes while it reads, so the big bar says it too.
+  const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%`}>
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <div className={styles.track}><span className={styles.fill} style={{ width: `${value}%` }} /></div>
+    {at && <p className={styles.progressAt}>{at}</p>}
     <ol className={styles.steps}>{labels.map((label, index) =>
       <li key={label} data-state={view.stage === "done" || index < current ? "done" : index === current ? "current" : "waiting"}>
         <span className={styles.node} aria-hidden="true" /><span className={styles.stepLabel}>{label}</span>
@@ -137,11 +140,20 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
   const labels = stepLabels(t);
   const current = STAGES.indexOf(view.stage);
   const value = Math.round(progress(view));
+  // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
+  const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
-    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%`}>
+    aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>
     <span className={styles.headTrack}><span style={{ width: `${value}%` }} /></span>
+    {at && <span className={styles.headAt}>{at}</span>}
   </div>;
+}
+
+/** "3/14 · 광장시장 운영시간 확인 중" — the count and the step the server is at, in its words (no title when the packet names none). */
+export function serverProgressText(at: ServerProgress, t: Translate): string {
+  const what = at.phase === "places" ? t("장소 확인", "place check") : at.phase === "hours" ? t("운영시간 확인", "hours check") : t("이동 확인", "route check");
+  return `${at.done}/${at.total} · ${at.title ? `${at.title} ` : ""}${what}${t(" 중", " in progress")}`;
 }
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(루트 사실표 「출처 표시 유지」). 옛 목록 화면에 있던 줄을 새 화면으로 옮겼다. */

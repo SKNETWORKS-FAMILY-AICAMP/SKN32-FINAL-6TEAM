@@ -2,38 +2,14 @@ import type { Language } from "@/lib/i18n";
 import type { LocationFix } from "@/lib/location";
 import type { OpProgress } from "@/lib/live/stream";
 import type { Coordinates } from "../map/model";
-import type { TripSurvey } from "../onboarding/payload";
-
-export type DemoScenario = "success" | "needs-review" | "failed";
-export type StageStatus = "pending" | "running" | "completed" | "failed";
-
-export interface VerificationStage {
-  id: string;
-  label: string;
-  description: string;
-  status: StageStatus;
-}
-
-export interface VerificationResult {
-  id: string;
-  stopId: string;
-  date: string;
-  status: "adjusted" | "unchanged" | "needs_review";
-  title: string;
-  originalValue: string;
-  proposedValue?: string;
-  reason: string;
-  impact: string;
-}
 
 export interface TripStop {
   id: string;
   date: string;
   time: string;
   endTime?: string;
-  originalTime?: string;
   title: string;
-  booking: "booked" | "none" | "unknown";
+  booking: "booked" | "unknown";
   notes: string;
   /** WGS84 coordinates supplied by the backend; missing means no map pin. */
   coordinates?: Coordinates | null;
@@ -101,32 +77,21 @@ export interface TripMessage {
   needsLocation?: boolean;
 }
 
-/** Web view model; not a claim that the existing Case API returns this contract. */
+/** Web view model of one trip, read from `GET /v1/web/trips/{id}` (not a claim that the Case API returns this shape). */
 export interface Trip {
   id: string;
-  source: string;
-  startDate: string;
-  endDate: string;
-  status: "processing" | "ready" | "active" | "failed";
   stops: TripStop[];
-  verification: {
-    status: "running" | "completed" | "failed";
-    progress: number;
-    stages: VerificationStage[];
-    results: VerificationResult[];
-    error?: string;
-  };
   messages: TripMessage[];
-  /** Live only: what the server did to the trip and what it found. Absent in demo. */
+  /** What the server did to the trip and what it found. */
   history?: TripChange[];
   warnings?: TripWarning[];
   /** The server's per-trip plan page (a link that needs no login). */
   planUrl?: string;
-  /** Live only: the itinerary version on the server now (an undo is offered only for the change that made it). */
+  /** The itinerary version on the server now (an undo is offered only for the change that made it). */
   version?: number;
-  /** Live only: the day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
+  /** The day's route to open in the customer's map app, by date. Several links when a day has more stops than one link holds. */
   dayRoutes?: Record<string, string[]>;
-  /** Live only: directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
+  /** Directions between two consecutive stops in the customer's map app, keyed `${fromStopId}>${toStopId}`. */
   legs?: Record<string, string>;
 }
 
@@ -134,35 +99,25 @@ export interface Trip {
 export interface TripSummary {
   id: string;
   title: string;
-  /** When the trip was registered (ISO instant). Null for a demo trip saved before registration time was kept. */
+  /** When the trip was registered (ISO instant). */
   createdAt: string | null;
-  /** Itinerary version; above 1 means the itinerary changed after registration. Null where there are no versions (demo). */
+  /** Itinerary version; above 1 means the itinerary changed after registration. */
   version: number | null;
-}
-
-export interface CreateTripInput {
-  source: string;
-  scenario?: DemoScenario;
-  /** Onboarding answers, sent as the backend's `constraints.survey`. Absent when onboarding was not finished. */
-  survey?: TripSurvey;
 }
 
 /** Every call names the reader's language; generated text comes back in that language. */
 export interface TripGateway {
-  createTrip(input: CreateTripInput, language: Language): Promise<Trip>;
-  /** This browser's trips, newest first. */
+  /** This customer's trips (the server's list for the stored user key), newest first. */
   listTrips(language: Language): Promise<TripSummary[]>;
   getTrip(tripId: string, language: Language): Promise<Trip>;
-  retryVerification(tripId: string, language: Language): Promise<Trip>;
-  startTrip(tripId: string, language: Language): Promise<Trip>;
   /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
   /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
-  /** `onProgress`: what the server is doing while it works on the message (live only — the demo answers at once). */
+  /** `onProgress`: what the server is doing while it works on the message. */
   sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
     onProgress?: (progress: OpProgress) => void): Promise<Trip>;
   /**
-   * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
-   * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.
+   * Delete one trip on the server, or reject with why it was not deleted. A server that has no delete call yet
+   * rejects with a `LiveError` whose code is `delete_unsupported` (backend request 2026-10-03).
    */
-  deleteTrip?(tripId: string, language: Language): Promise<void>;
+  deleteTrip(tripId: string, language: Language): Promise<void>;
 }

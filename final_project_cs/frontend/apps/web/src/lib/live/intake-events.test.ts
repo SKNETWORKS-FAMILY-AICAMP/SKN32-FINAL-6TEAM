@@ -44,6 +44,11 @@ describe("reading the server's progress events", () => {
     expect(event).toMatchObject({ item: { status: "review", place_state: "picked_nearest", candidates_hint: 5, place: { name: "올리브영 인사동점", latitude: 37.5741, source: "kakao" } } });
   });
 
+  it("reads the booking row the server added (2026-10-03) like any other check line", () => {
+    expect(toIntakeEvent("check", JSON.stringify({ item: "0-1", row: "booking", result: "warn", text: "예약했다고 했는데 장소를 모르겠어요" })))
+      .toEqual({ type: "check", item: "0-1", line: { row: "booking", result: "warn", text: "예약했다고 했는데 장소를 모르겠어요" } });
+  });
+
   it("reads a check line, and reads a result word it does not know as 'unknown' — never as fine", () => {
     expect(toIntakeEvent("check", JSON.stringify({ item: "0-1", row: "hours", result: "warn", text: "영업 시간 밖이에요" })))
       .toEqual({ type: "check", item: "0-1", line: { row: "hours", result: "warn", text: "영업 시간 밖이에요" } });
@@ -68,6 +73,19 @@ describe("reading the server's progress events", () => {
       .toEqual({ type: "done", revision: 1, needs: { items: 1, moves: 1, total: 2 }, ready: false });
     expect(toIntakeEvent("result", JSON.stringify({ state: { ...STATE, status: "review", stage: "review" } }))).toMatchObject({ type: "result", state: { status: "review" } });
     expect(toIntakeEvent("error", JSON.stringify({ code: "stalled", retryable: true, message: "멈춘 것 같아요" }))).toEqual({ type: "error", code: "stalled", message: "멈춘 것 같아요", retryable: true });
+  });
+
+  it("reads the server's progress packet — which step, how many done of how many, and what it is at", () => {
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "hours", done: 3, total: 14, current: { id: "0-3", title: "광장시장" } })))
+      .toEqual({ type: "progress", progress: { phase: "hours", done: 3, total: 14, current: { id: "0-3", title: "광장시장" } } });
+    expect(toIntakeEvent("progress", JSON.stringify({ phase: "moves", done: 0, total: 12 }))).toMatchObject({ progress: { phase: "moves", current: null } });
+  });
+
+  it("drops a progress packet that does not make sense instead of guessing", () => {
+    for (const body of [{ phase: "weird", done: 1, total: 2 }, { phase: "places", done: 3, total: 2 }, { phase: "places", done: -1, total: 2 },
+      { phase: "places", done: 1, total: 0 }, { phase: "places", done: "1", total: 2 }, { phase: "places" }]) {
+      expect(toIntakeEvent("progress", JSON.stringify(body)), JSON.stringify(body)).toBeNull();
+    }
   });
 
   it("ignores what it does not use, and a body it cannot read", () => {
@@ -113,6 +131,31 @@ describe("building the screen from events", () => {
     const snapshot = JSON.stringify(before);
     reduceStream(before, check("place", "ok"));
     expect(JSON.stringify(before)).toBe(snapshot);
+  });
+
+  it("shows the furthest phase's latest packet, whatever order a reconnect replays them in", () => {
+    const packet = (phase: string, done: number, total = 14) => toIntakeEvent("progress", JSON.stringify({ phase, done, total })) as IntakeStreamEvent;
+    let state = emptyStream();
+    expect(state.progress).toBeNull();
+    state = reduceStream(state, packet("places", 5));
+    state = reduceStream(state, packet("hours", 2));
+    expect(state.progress).toMatchObject({ phase: "hours", done: 2 });
+    state = reduceStream(state, packet("places", 14));            // the places count finishing late: hours is still the furthest
+    expect(state.progress).toMatchObject({ phase: "hours", done: 2 });
+    state = reduceStream(state, packet("hours", 2));              // the same packet twice changes nothing
+    expect(state.progress).toMatchObject({ phase: "hours", done: 2 });
+    state = reduceStream(state, packet("moves", 0, 12));
+    expect(state.progress).toMatchObject({ phase: "moves", done: 0, total: 12 });
+    const replay = [packet("moves", 4, 12), packet("places", 14), packet("hours", 14)].reduce(reduceStream, emptyStream());
+    expect(replay.progress).toMatchObject({ phase: "moves", done: 4 });          // the replay brings them in any order
+  });
+
+  it("never counts back inside a phase, but takes a new count (another source's places) as it comes", () => {
+    const packet = (done: number, total: number) => toIntakeEvent("progress", JSON.stringify({ phase: "places", done, total })) as IntakeStreamEvent;
+    let state = [packet(5, 14), packet(3, 14)].reduce(reduceStream, emptyStream());
+    expect(state.progress).toMatchObject({ done: 5, total: 14 });                // an older packet of the same count
+    state = reduceStream(state, packet(1, 6));                                   // the second source starts its own count
+    expect(state.progress).toMatchObject({ done: 1, total: 6 });
   });
 
   it("notes the end of the check with how many things need the customer", () => {

@@ -1,23 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { createDemoGateway, DEMO_STORAGE_PREFIX, DEMO_VERIFICATION_DURATION } from "@/lib/demo";
-import { parseDemoPlan } from "@/lib/demo/parse-plan";
-import { SAMPLE_PLANS } from "@/lib/demo/sample";
-import { translator } from "@/lib/i18n";
+import type { TripStop } from "../trip/model";
 import { resolveMapConfiguration } from "./config";
 import { hasValidCoordinates, toMapPoints } from "./map-points";
 
-const t = translator("ko");
-
 describe("map provider selection", () => {
-  it("keeps diagram mode explicit and needs only the selected provider's settings", () => {
-    expect(resolveMapConfiguration({})).toEqual({ provider: "demo" });
-    expect(resolveMapConfiguration({ provider: "demo", googleApiKey: "unused" })).toEqual({ provider: "demo" });
+  it("needs only the selected provider's settings; an unset provider is the free map", () => {
+    expect(resolveMapConfiguration({})).toEqual({ provider: "osm", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" });
     expect(resolveMapConfiguration({ provider: "naver", naverClientId: " web-id " })).toEqual({ provider: "naver", clientId: "web-id" });
     expect(resolveMapConfiguration({ provider: "google", googleApiKey: "web-key", googleMapId: "map-id" }))
       .toEqual({ provider: "google", apiKey: "web-key", mapId: "map-id", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" });
     expect(resolveMapConfiguration({ provider: "osm" })).toEqual({ provider: "osm", tileUrl: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" });
     expect(resolveMapConfiguration({ provider: "osm", osmTileUrl: " https://tiles.example.org/{z}/{x}/{y}.png " }))
       .toEqual({ provider: "osm", tileUrl: "https://tiles.example.org/{z}/{x}/{y}.png" });
+  });
+
+  it("accepts a tile server on this machine over http — a developer's or a test run's own tiles, never OpenStreetMap's", () => {
+    expect(resolveMapConfiguration({ provider: "osm", osmTileUrl: "http://127.0.0.1:8043/__test/tile/{z}/{x}/{y}.png" }))
+      .toEqual({ provider: "osm", tileUrl: "http://127.0.0.1:8043/__test/tile/{z}/{x}/{y}.png" });
+    expect(resolveMapConfiguration({ provider: "osm", osmTileUrl: "http://localhost:9000/{z}/{x}/{y}.png" }).provider).toBe("osm");
+    expect(resolveMapConfiguration({ provider: "osm", osmTileUrl: "http://127.0.0.1.example.org/{z}/{x}/{y}.png" }).provider).toBe("unavailable");
   });
 
   it.each([
@@ -33,18 +34,26 @@ describe("map provider selection", () => {
     { provider: "google", googleApiKey: "key-with-no-map-id" },
     { provider: "google", googleMapId: "id-with-no-key" },
     { provider: "misspelled-provider" },
-  ])("does not silently replace invalid live configuration with diagram: %o", (config) => {
+    { provider: "demo" },                              // ★the diagram stand-in is gone: the old value is a setting error, not a made-up map
+  ])("does not silently replace invalid configuration with another map: %o", (config) => {
     expect(resolveMapConfiguration(config).provider).toBe("unavailable");
   });
 });
 
+const stop = (id: string, time: string, title: string, coordinates?: TripStop["coordinates"]): TripStop =>
+  ({ id, date: "2026-10-10", time, title, booking: "unknown", notes: "", coordinates });
+
 describe("backend-neutral coordinates", () => {
   it("skips missing/invalid coordinates without changing stop IDs, visit times or itinerary numbers", () => {
-    const stops = parseDemoPlan("1일차 · 2026-10-10\n09:00 장소 A · [좌표: 37.5, 127]\n10:00 좌표 없는 장소\n12:00 장소 C · [좌표: 37.6, 127.1]", t);
+    const stops = [
+      stop("a", "09:00", "장소 A", { lat: 37.5, lng: 127 }),
+      stop("b", "10:00", "좌표 없는 장소"),
+      stop("c", "12:00", "장소 C", { lat: 37.6, lng: 127.1 }),
+    ];
     const points = toMapPoints(stops);
     expect(points.map(({ id, order, time }) => ({ id, order, time }))).toEqual([
-      { id: stops[0].id, order: 1, time: "09:00" },
-      { id: stops[2].id, order: 3, time: "12:00" },
+      { id: "a", order: 1, time: "09:00" },
+      { id: "c", order: 3, time: "12:00" },
     ]);
     expect(points[0].coordinates).toEqual({ lat: 37.5, lng: 127 });
     expect(points[0].title).toBe("장소 A");
@@ -52,34 +61,12 @@ describe("backend-neutral coordinates", () => {
     expect(toMapPoints(stops).map((point) => point.order)).toEqual([3]);
   });
 
-  it("accepts explicit zero and negative coordinates but never invents coordinates for sample place names", () => {
+  it("accepts explicit zero and negative coordinates but never invents coordinates for a stop that has none", () => {
     expect(hasValidCoordinates({ lat: 0, lng: 0 })).toBe(true);
     expect(hasValidCoordinates({ lat: -33.8, lng: 151.2 })).toBe(true);
     for (const value of [undefined, null, { lat: NaN, lng: 0 }, { lat: 0, lng: Infinity }, { lat: 91, lng: 0 }, { lat: 0, lng: -181 }]) {
       expect(hasValidCoordinates(value)).toBe(false);
     }
-    expect(toMapPoints(parseDemoPlan(SAMPLE_PLANS.ko, t))).toEqual([]);
-  });
-
-  it.each(["[좌표: 91, 0]", "[좌표: 0, 181]", "[좌표: abc, 127]", "[좌표: , ]"])("rejects malformed manual demo coordinate %s", (tag) => {
-    expect(() => parseDemoPlan(`1일차 · 2026-10-10\n09:00 장소 ${tag}`, t)).toThrow();
-  });
-
-  it("preserves received coordinates through verification, storage reload and management start", async () => {
-    const data = new Map<string, string>();
-    const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); }, removeItem: (key: string) => { data.delete(key); }, length: 0, key: () => null };
-    let now = 0;
-    const gateway = createDemoGateway({ storage, now: () => now });
-    const trip = await gateway.createTrip({ source: "1일차 · 2026-10-10\n09:00 장소 · [좌표: 37.5, 127]" }, "ko");
-    now = DEMO_VERIFICATION_DURATION;
-    const active = await gateway.startTrip(trip.id, "ko");
-    expect(active.stops[0].coordinates).toEqual({ lat: 37.5, lng: 127 });
-    const reloaded = createDemoGateway({ storage, now: () => now });
-    expect((await reloaded.getTrip(trip.id, "ko")).stops[0].coordinates).toEqual(active.stops[0].coordinates);
-    const key = DEMO_STORAGE_PREFIX + trip.id;
-    const stored = JSON.parse(data.get(key)!);
-    stored.trip.stops[0].coordinates = { lat: 200, lng: 127 };
-    data.set(key, JSON.stringify(stored));
-    await expect(reloaded.getTrip(trip.id, "ko")).rejects.toMatchObject({ code: "CORRUPT_STORAGE" });
+    expect(toMapPoints([stop("a", "09:00", "경복궁"), stop("b", "10:00", "광장시장", null)])).toEqual([]);
   });
 });

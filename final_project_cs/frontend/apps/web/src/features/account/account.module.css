@@ -10,3 +10,12 @@
 .warn { margin: 0; font-size: 11px; line-height: 1.8; color: var(--color-warning); }
 .ok { margin: 0; font-size: 11px; line-height: 1.8; color: var(--color-primary); }
 .error { margin: 8px 0 0; padding: 9px 12px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
+.mutedNote { margin: 0; font-size: 12px; line-height: 1.8; color: var(--color-muted); }
+.explain { margin: 0; font-size: 12px; line-height: 1.8; color: var(--color-muted); }
+.providers { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.providers li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-soft); }
+.providerName { font-size: 13px; font-weight: 650; }
+.linkedTag { font-size: 11px; font-weight: 650; color: var(--color-primary); }
+.done { display: grid; gap: 12px; }
+.done h1 { margin: 0; font-size: 20px; letter-spacing: -.4px; }
+.done p { margin: 0; font-size: 13px; line-height: 1.8; color: var(--color-muted); }

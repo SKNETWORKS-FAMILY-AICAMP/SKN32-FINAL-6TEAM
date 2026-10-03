@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleDone, exampleSnapshots } from "./fixtures";
+import { exampleDone, exampleSnapshots } from "./test-views";
 import { nextStep, type PlanCheckView } from "./model";
 import { backlog, REVEAL_BUDGET_MS, REVEAL_MIN_MS, REVEAL_MS, revealPause } from "./use-reveal";
 

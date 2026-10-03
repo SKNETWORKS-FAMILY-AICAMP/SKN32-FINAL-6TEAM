@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
 import { KeyNotice } from "@/features/account/key-notice";
 import { KeySettings } from "@/features/account/key-settings";
+import { SocialAccounts } from "@/features/account/social-accounts";
 import { answerLines, questions } from "@/features/onboarding/model";
 import { discordWebhookProblem } from "@/features/onboarding/model";
 import { useOnboarding, useOnboardingReady } from "@/features/onboarding/onboarding-state";
@@ -114,6 +115,8 @@ export function MyPage() {
     <PreferencesCard />
     {/* ★Everything about the token lives on this page (2026-09-28 user): see it here, open another device's token, or replace a leaked one. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><KeySettings /></Panel>}
+    {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}
+    {DATA_MODE === "live" && <Panel className={styles.card}><SocialAccounts /></Panel>}
   </>;
 }
 

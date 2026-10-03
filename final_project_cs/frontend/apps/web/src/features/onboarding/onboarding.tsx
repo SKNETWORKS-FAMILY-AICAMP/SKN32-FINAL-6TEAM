@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
+import { useTrips } from "@/features/trip/use-trip";
 import { saveDiscordWebhook, webhookWaiting } from "@/lib/webhook";
-import { DATA_MODE } from "@/lib/data-mode";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -23,6 +23,8 @@ export function Onboarding() {
   const { language } = useSettings();
   const router = useRouter();
   const [state, setState] = useOnboarding();
+  // ★「Continue my trip」 follows the server's list (newest first), not a value this page happened to see: another tab or device counts too.
+  const latestTrip = useTrips().data?.[0];
   const [termsOpen, setTermsOpen] = useState(false);
   const [firstRender] = useState(() => !state.agreed && state.open === null);
   const [sceneStage, setSceneStage] = useState<SceneStage>(state.open ?? 0);
@@ -151,7 +153,7 @@ export function Onboarding() {
           </section>
           <div className={styles.stack}>
             {card(0, false,
-              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? (DATA_MODE === "live" ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("입력했어요 · 웹훅은 실제 서버에서만 저장돼요", "Entered · the webhook is saved only on the real server")) : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
+              cardHead(0, t("디스코드 알림", "Discord alerts"), state.webhook.trim() ? t("입력했어요 · 마이페이지에서 바꿀 수 있어요", "Entered · you can change it on My page") : t("여행 알림을 받을 디스코드 채널.", "The Discord channel for your trip alerts."), false, false,
                 <span className={styles.optional}>{t("선택", "Optional")}</span>),
               <ContactBody t={t} webhook={state.webhook} webhookError={webhookError} webhookInput={webhookInput}
                 onWebhook={editWebhook} onContinue={() => openCard(1)} />)}
@@ -161,8 +163,8 @@ export function Onboarding() {
             {card(2, state.complete,
               cardHead(2, t("여행 취향 알아보기", "Your travel preferences"), state.complete ? t(`${questions.length}가지 질문을 모두 마쳤어요.`, `All ${questions.length} questions completed.`) : t(`${questions.length}가지 질문으로 더 나다운 여행.`, `${questions.length} questions for a trip that fits you.`), !state.agreed, state.complete),
               state.complete
-                ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(state.activeTripId)}
-                  onJourney={() => router.push(state.activeTripId ? routes.trip(state.activeTripId) : routes.newTrip)}
+                ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(latestTrip)}
+                  onJourney={() => router.push(latestTrip ? routes.trip(latestTrip.id) : routes.newTrip)}
                   onEdit={() => setState((current) => ({ ...current, complete: false, step: INTRO_STEP, open: 2 }))} />
                 : state.open === 2 && <QuestionCarousel t={t} answers={state.answers} step={state.step}
                   setAnswers={(answers) => setState((current) => ({ ...current, answers }))}

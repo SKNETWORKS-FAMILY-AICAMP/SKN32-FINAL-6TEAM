@@ -19,11 +19,11 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 1. 공통 레이아웃·버튼·입력·상태 표시와 여행 데이터 계약을 먼저 정의한다.
 2. `/`: 소개 3장(스크롤 스냅·등장 모션). 넓은 화면에서는 402px 기기 틀, 720px 이하에서는 전체 화면. 첫 장에는 언어 선택 카드(누르면 아래로 펼쳐지고, 고르면 접힌다)와 최근 여행 3개까지의 내 여행 카드가 있고 하단에는 아래로 가는 안내만 둔다. 둘째 장은 이용 방법 4단계를 앱 화면 캡처와 함께 옆으로 넘기는 카드다.
 3. `/start`: 온보딩. 맨 위 선택 입력 `디스코드 알림` 카드(웹훅만 — 복구용 이메일은 2026-10-03 에 뺐다. 번호 없음, 다른 단계의 조건이 아니다) 아래로 약관·취향 카드. 약관은 끝까지 읽어야 동의할 수 있고, 여행 취향은 설문 안내 카드 뒤에 백엔드 설문(D-020)을 따른 6문항(우선순위는 분야·세부를 누른 순서로 매기는 한 카드)을 좌우로 넘기는 카드다. 답은 여행을 등록할 때 함께 보낸다.
-4. `/trips/new`: 텍스트 입력·초안 보존·예시 계획·취향 표시. demo는 시나리오를 선택하고, live는 글·파일 최대 5개를 접수한다. `/intakes/[intakeId]`에서 읽는 과정과 장소·운영시간·이동 검사를 보고, 항목 잠금·삭제·장소 바꾸기·시각 고치기, 전체 자동 추천·재검증, 여행 등록을 수행한다(`README.md` 의 확인 화면 절). 일정 짜기는 `/trips/new` 의 세 번째 칸 「계획 짜 주기 (테스트)」가 한다(아래 2026-10-03 마지막 절).
-5. `/trips/[tripId]/verification`: demo의 4단계·퍼센트·재시도·결과 이동. live는 별도 검증 단계가 없다는 안내를 표시한다.
-6. `/trips/[tripId]/results`: demo의 요약·확인 필요 항목·일차 탭·상세 펼침과 관리 시작 차단. live는 별도 결과 통계를 만들지 않고 여행 화면으로 안내한다.
+4. `/trips/new`: 텍스트 입력·초안 보존·예시 계획·취향 표시. 글·파일 최대 5개를 접수한다. `/intakes/[intakeId]`에서 읽는 과정과 장소·운영시간·이동 검사를 보고, 항목 잠금·삭제·장소 바꾸기·시각 고치기, 전체 자동 추천·재검증, 여행 등록을 수행한다(`README.md` 의 확인 화면 절). 일정 짜기는 `/trips/new` 의 세 번째 칸 「계획 짜 주기 (테스트)」가 한다(아래 2026-10-03 마지막 절).
+5. `/trips/[tripId]/verification`: `[2026-10-03]` 따로 보는 검증 단계는 없다 — 서버가 등록할 때 판정하고, 그 확인은 `/intakes/[intakeId]`가 맡는다. 옛 주소는 그 여행 화면으로 보낸다.
+6. `/trips/[tripId]/results`: 위와 같이 그 여행 화면으로 보낸다(별도 결과 통계를 만들지 않는다).
 7. `/trips/[tripId]`: 일정·방문 순서(지도)·채팅을 한 번에 한 칸씩 보여 주고 하단 고정 탭 또는 플로팅 버튼으로 바꾼다.
-8. `/trips`: 여행 목록과 demo 개별·선택 삭제(live 삭제 비활성). `/mypage`·`/mypage/edit`: 사용자 키 표시, live 키 가져오기·재발급, 닉네임·이메일 입력 검증. 프로필 저장·이미지 변경은 비활성이다.
+8. `/trips`: 여행 목록과 개별·선택 삭제(서버 `POST /v1/web/trips/{id}/delete` 에 연결 — 서버에 아직 없어 「지원하지 않아요」라고 말한다). `/mypage`·`/mypage/edit`: 사용자 키 표시, live 키 가져오기·재발급, 닉네임·이메일 입력 검증. 프로필 저장·이미지 변경은 비활성이다.
 
 디자인 출처는 [2026-09-23 목업](mockups/tripilot-intro-animated-nav-switch.html)이다. 목업의 내비게이션 비교 스위치 대신 오른쪽 위 메뉴(프로필·여행 목록 보기·언어·테마·플로팅 버튼 사용) 사이드바에서 언어, 테마(2026-10-03부터)와 여행 화면 내비게이션(기본 고정 하단 탭)을 고른다. 목업은 실제 지도 대신 방문 순서 개념도를 보이지만, 앱은 지도 제공자 설정을 유지하고 `demo`일 때 개념도를 보인다. 이전 디자인 출처(A-COP `8ed3548`의 `tripilot-intake-wireframe.html`)와 기존 HTML 시연 파일은 보존한다. 상태 오류·실패·없는 여행 안내는 각 화면 내부 상태로 처리한다.
 
@@ -37,15 +37,14 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - `src/lib/profile.ts`, `src/features/profile`: 메뉴·마이페이지가 읽는 사용자 정보와 마이페이지 조회·수정 화면. 연동 상태는 [사용자 정보 연동 대기 항목](PROFILE_CONTRACT.md).
 - `src/features/trip-registration`, `src/features/intake-review`: 등록 입력·초안과 live 접수 확인/편집/등록.
 - `src/features/account`, `src/features/human-check`: 사용자 키 안내·관리와 선택적 Turnstile 확인.
-- `src/features/verification`: 검증 진행과 결과 UI.
 - `src/features/trip`: 여행 홈·목록·삭제·화면용 타입·공통 조회·live 제안/알림/이력.
 - `src/features/map`: 공통 지도 표시 계약·지도 선택·네이버/Google 지도 컴포넌트.
-- `src/lib/gateway.ts`, `src/lib/demo`, `src/lib/live`: 모드 선택, 데모, 실제 사용자 키·접수·여행·상담·제안/알림 연결.
+- `src/lib/gateway.ts`, `src/lib/live`: 연결 선택(`NEXT_PUBLIC_DATA_MODE=live` 하나 — 아니면 `components/server-not-connected.tsx` 한 화면), 실제 사용자 키·접수·여행·상담·제안/알림·삭제 연결. `[2026-10-03]` 데모 어댑터(`lib/demo`)는 없앴다.
 - `src/styles`: 색상·서체와 공통 토큰.
 
-여행 목록·조회·대화는 `TripGateway`, live 접수·확인·계획 생성·제안/알림은 `lib/live`의 별도 함수로 요청한다. 여행 캐시는 ID·화면 언어별로 나눈다. demo 문구는 선택 언어로 생성하지만 live 서버 문장·오류를 자동 번역하지 않는다. 선택 언어는 현재 접수 요청에 전달하지 않으며 서버의 접수 조립·계획 생성은 `locale="ko"`다.
+여행 목록·조회·대화는 `TripGateway`, live 접수·확인·계획 생성·제안/알림은 `lib/live`의 별도 함수로 요청한다. 여행 캐시는 ID·화면 언어별로 나눈다. 서버 문장·오류를 자동 번역하지 않는다. 선택 언어는 현재 접수 요청에 전달하지 않으며 서버의 접수 조립·계획 생성은 `locale="ko"`다.
 
-언어(기본 한국어 — 2026-10-03 사용자 결정, 앞서는 English)·내비게이션(기본 fixed)은 `localStorage`의 `tripilot.web.settings.v1`에 보관한다. 사용자 키와 발급 안내도 `localStorage`, 등록 글 초안과 demo 여행·대화 및 live 대화 표시 이력은 `sessionStorage`를 사용한다. 온보딩 답·약관 동의·복구 이메일 초안은 페이지 메모리에만 있어 새로고침하면 사라진다. 완료한 설문은 demo `createTrip`에서 검사하고, live `/confirm`·`/plan`에서 서버로 보낸다([설문 대응](PREFERENCES_CONTRACT.md)). 이메일 초안은 보내지 않는다.
+언어(기본 한국어 — 2026-10-03 사용자 결정, 앞서는 English)·내비게이션(기본 fixed)은 `localStorage`의 `tripilot.web.settings.v1`에 보관한다. 사용자 키와 발급 안내도 `localStorage`, 등록 글 초안과 대화 표시 이력은 `sessionStorage`를 사용한다. 온보딩 답·약관 동의·복구 이메일 초안은 페이지 메모리에만 있어 새로고침하면 사라진다. 완료한 설문은 demo `createTrip`에서 검사하고, live `/confirm`·`/plan`에서 서버로 보낸다([설문 대응](PREFERENCES_CONTRACT.md)). 이메일 초안은 보내지 않는다.
 
 ## 실제 연동 경계
 
@@ -53,13 +52,13 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 `Trip`·`TripStop`은 프론트 표시 모델이다. live 어댑터가 서버 `trip_id/items`를 변환하고 서울 시각으로 표시한다. 별도 검증 퍼센트 API는 없다. 접수 읽기만 서버 실시간 진행(SSE, `GET /v1/web/trip-intakes/{id}/events`)을 구독하고(안 열리면 폴링으로 되돌아감), 여행 화면의 변경 알림은 `GET …/trips/{id}/events` 종을 따로 듣는다. live 등록 시 서버가 판정하며 이후 살펴볼 점·알림·이력은 여행 화면에서 확인한다. demo 진행 조회와 가짜 서버 시험을 실제 운영 검증으로 해석하지 않는다.
 
-미연결: live 여행 삭제, 닉네임 저장·이미지 변경, 선택 언어 전달. 토큰 가져오기·재발급은 연결돼 있다. `POST /v1/web/warmup`은 `fc1ac0a`에서 서버 경로가 추가됐다. 호출 연결과 실제 모델 예열·실패 안내 검증을 구분한다. 상세 실행 조건과 제한은 [README](README.md)를 따른다.
+미연결: 서버에 없는 여행 삭제(웹은 요청 모양대로 연결해 두었다 — [백엔드 요청](../../../wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md)), 닉네임 저장·이미지 변경, 선택 언어 전달. 토큰 가져오기·재발급은 연결돼 있다. `POST /v1/web/warmup`은 `fc1ac0a`에서 서버 경로가 추가됐다. 호출 연결과 실제 모델 예열·실패 안내 검증을 구분한다. 상세 실행 조건과 제한은 [README](README.md)를 따른다.
 
 지도 제공자 설정은 데이터 모드와 독립적이다. 유효 좌표와 웹용 키가 있을 때 실제 지도 바탕·핀을 표시하며 길찾기 선·현재 위치는 구현하지 않았다. 서버 좌표 변환과 기존 후속 제안은 [지도 문서](MAP_INTEGRATION.md)에 구분했다. 이번 문서 개정에서 외부 지도 인증이나 운영 API를 재검증하지 않았다.
 
 ## 완료 기준
 
-기본 품질 확인은 `npm run check`(lint·typecheck·단위 검사·빌드), demo 브라우저 흐름은 `npm run test:e2e`, live 화면의 요청/실패 처리는 `npm run test:live`(테스트용 모방 서버, 실제 서버 아님)으로 구분한다. `tests/contract/test_web_client_contract.py`는 실제 서버 라우트와 설문 계약을 정적으로 대조한다. `test:real`은 실제 데이터 생성·외부 호출·팀 알림 부작용이 있는 별도 검증이므로 원본 문서 정리에서 실행하지 않는다.
+기본 품질 확인은 `npm run check`(lint·typecheck·단위 검사·빌드), 브라우저 흐름과 요청/실패 처리는 `npm run test:live`(테스트용 모방 서버, 실제 서버 아님)로 확인한다. `[2026-10-03]` 데모 빌드 시험(`test:e2e`)은 없앴다. `tests/contract/test_web_client_contract.py`는 실제 서버 라우트와 설문 계약을 정적으로 대조한다. `test:real`은 실제 데이터 생성·외부 호출·팀 알림 부작용이 있는 별도 검증이므로 원본 문서 정리에서 실행하지 않는다.
 
 주요 확인 대상은 [현재 화면 목록](README.md)의 소개·온보딩 6문항 및 완료 카드·접수 확인·여행·목록·프로필과 모드별 제한이다. API 연결 코드 존재와 운영 종단 검증 성공은 별도로 기록한다.
 
@@ -325,3 +324,10 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - **「ⓒ한국관광공사 · 저작권 정책」 줄을 확인 목록 맨 아래로 되살렸다**(옛 화면과 함께 사라져 접수 흐름에서 출처 표시가 빠져 있었다).
 - ☆확인하다 알게 된 것: 개발 서버(`.env.local`)는 사람 확인(Turnstile)이 켜져 있어 화면이 열린 직후 3초쯤은 「계획 확인하기」를 눌러도 아무 일이 없다(토큰이 와야 한다). 브라우저 자동 확인은 `input[name="cf-turnstile-response"]` 값이 찰 때까지 기다린 뒤 누른다 — 실서버 시험(`tests/real/`)의 `waitForHumanCheck` 와 같다.
 
+2026-10-03 (저녁). 데모(모방) 화면·코드를 모두 없애고 실서버 연결만 남겼다 — 사용자 지시 「모크화면은 하나도 없게 … 전부 라이브로」(제거가 아니라 서버 연결·필요한 기능 구현).
+
+- **없앤 것**: `src/lib/demo/*`(브라우저 안 모방 게이트웨이·채팅·예시 계획·계획 해석), `features/verification/*`(데모 검증 진행·결과·관리 시작), `features/map/demo-map*`(번호만 그린 개념도), `app/preview/plan-check`와 `features/plan-check/{preview.tsx,preview-engine*.ts,fixtures.ts}`(예시 데이터 화면), `NEXT_PUBLIC_DATA_MODE=demo`·`NEXT_PUBLIC_MAP_PROVIDER=demo`, 등록 화면의 「데모 체험 옵션」, 여행 화면의 「데모」 표시·시연 문구, 온보딩·약관의 「목업·시연·예시」 문구, `npm run test:e2e`와 `tests/e2e`(백업: `frontend/_backup/2026-10-03_1857_web_데모제거전/`).
+- **데이터 모드**: `NEXT_PUBLIC_DATA_MODE` 의 값은 `live` 하나. 아니면 앱은 어느 화면도 열지 않고 「서버 연결이 설정되지 않았어요」 한 화면만 보인다(`app/providers.tsx` → `components/server-not-connected.tsx`).
+- **서버에 연결한 것**: 여행 삭제(`TripGateway.deleteTrip` → `POST /v1/web/trips/{id}/delete`, 서버에 없으면 「지원하지 않아요」라고 말하고 아무것도 지우지 않는다 · 요청서 `wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`), 「내 여행 이어보기」(전에는 데모 검증 화면만 켜던 값이라 실서버에서는 한 번도 나오지 않았다 → 서버 여행 목록의 최신 여행으로 이어간다), 지도(기본 `osm` — 좌표가 없으면 핀이 없다고 말하고, 개념도로 바꾸지 않는다), 검증 진행·결과 옛 주소(그 여행 화면으로 redirect).
+- **남긴 것**: 「예시 불러오기」는 글칸에 일주일 뒤부터의 서울 이틀 일정을 채우는 **입력 보조**다(`trip-registration/example-plan.ts`) — 서버 응답을 흉내 내지 않고, 고쳐서 보내면 서버가 쓴 글로만 읽는다. 단위 시험의 계획 자료는 `features/plan-check/test-views.ts`(화면이 읽지 않는다).
+- **시험**: 단위(vitest)는 데모 시험을 빼고 삭제 연결·예시 계획·지도 설정 시험을 더했다. 브라우저 시험은 `tests/live/` 하나로 합쳤다 — 옛 `tests/e2e` 중 서버와 상관없는 화면 시험(메뉴·온보딩·취향·알림 카드·마이페이지·등록 초안·여행 화면 배치·지도 대역)을 모방 서버에 붙여 옮기고, 여행 목록·삭제와 계획 확인 화면 시험은 모방 서버 계약으로 다시 썼다. 모방 서버는 여행 N개·삭제(`tripDelete`)·지도용 여행(`tripItems: "map"`)·실서버식 404(`{"detail":"Not Found"}`)·한 점짜리 지도 타일을 더했다. ★모방 서버 시험 통과를 「실서버 확인」으로 읽지 않는다 — 삭제는 서버에 없는 호출이라 모방 서버가 요청한 계약대로 흉내 낸 것이다.

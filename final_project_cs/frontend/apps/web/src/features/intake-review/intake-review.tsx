@@ -90,7 +90,15 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
   const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
   const reviewed = useMemo(() => query.data && query.data.status !== "reading" ? reviewResultOf(query.data, readingOf(query.data), server.infos) : null, [query.data, server.infos]);
-  const reading = useMemo(() => !query.data ? null : query.data.status === "reading" ? streamingViewOf(query.data, stream, server.infos) : reviewed ?? readingOf(query.data), [query.data, stream, reviewed, server.infos]);
+  // ★`[2026-10-03]` While the screen still draws what the server did (the intake is already `review` but the rows are being caught up), the last
+  //   count the server sent stays on the bar — it would otherwise vanish the moment the server finishes, however many rows are left to draw.
+  const reading = useMemo(() => {
+    if (!query.data) return null;
+    if (query.data.status === "reading") return streamingViewOf(query.data, stream, server.infos);
+    const base = reviewed ?? readingOf(query.data);
+    const last = stream.progress;
+    return last ? { ...base, serverProgress: { phase: last.phase, done: last.done, total: last.total, title: last.current?.title ?? null } } : base;
+  }, [query.data, stream, reviewed, server.infos]);
   const result = useMemo(() => {
     if (!query.data || query.data.status === "reading" || query.data.status === "fatal") return null;
     return reviewed ? { ...reviewed, dirty: server.dirty, rechecking: server.rechecking } : resultOf(query.data);
@@ -115,7 +123,10 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   if (reading && (view.status === "reading" || (view.status === "review" && readingSeen && !readingDrawn))) {
     const streamNote = view.status !== "reading" ? null
       : follow.follow === "lost" ? <p className={styles.streamNote} role="status" data-lost>{t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…")}</p>
-      : follow.slow ? <p className={styles.streamNote} role="status">{t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
+      : follow.slow ? <p className={styles.streamNote} role="status">{stream.progress?.current?.title
+        // ★`[2026-10-03]` The server's `progress` packet says what it is at: name it instead of a general "taking a while".
+        ? t(`「${stream.progress.current.title}」 확인이 오래 걸리고 있어요. 서버는 계속 확인하고 있어요.`, `Checking “${stream.progress.current.title}” is taking a while. The server is still at it.`)
+        : t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
       : null;
     return <PlanCheck key="plan" view={reading} notice={streamNote} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }

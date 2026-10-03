@@ -34,6 +34,15 @@ export interface StreamLine {
   found: { id: string; index: number; day: number | null; date: string | null; starts_at: string | null; title: string } | null;
 }
 
+/**
+ * `[2026-10-03 사용자 지시]` 「어디까지 됐는지」를 알리는 작은 알림(`progress`). The server sends one each time a stop's place or hours check
+ * finishes (`places` · `hours`) and for each leg (`moves`): `done` of `total` in that phase, and what it is at now. The screen shows exactly
+ * this — no percentage of its own is made up from the rows it has drawn.
+ */
+export const PROGRESS_PHASES = ["places", "hours", "moves"] as const;
+export type ProgressPhase = (typeof PROGRESS_PHASES)[number];
+export interface ProgressPacket { phase: ProgressPhase; done: number; total: number; current: { id: string; title: string } | null }
+
 export type IntakeStreamEvent =
   | { type: "accepted"; state: IntakeState | null }
   | { type: "stage"; stage: string; label: string; state: IntakeState | null }
@@ -43,12 +52,13 @@ export type IntakeStreamEvent =
   | { type: "item"; item: ReviewItem }
   | { type: "check"; item: string; line: CheckLine<ItemRow> }
   | { type: "move"; move: ReviewMove }
+  | { type: "progress"; progress: ProgressPacket }
   | { type: "done"; revision: number; needs: ReviewNeeds; ready: boolean }
   | { type: "result"; state: IntakeState | null }
   | { type: "error"; code: string; message: string; retryable: boolean };
 
 const RESULTS: readonly CheckResult[] = ["ok", "filled", "warn", "bad", "unknown"];
-const ITEM_ROWS: readonly string[] = ["place", "time", "hours", "closed"];
+const ITEM_ROWS: readonly string[] = ["place", "time", "hours", "closed", "booking"];
 const STATUSES = ["reading", "review", "confirmed", "fatal"];
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -138,6 +148,14 @@ export function toIntakeEvent(name: string, data: string): IntakeStreamEvent | n
       return line && text(body.item) ? { type: "check", item: text(body.item), line } : null;
     }
     case "move": { const move = toMove(body); return move && { type: "move", move }; }
+    case "progress": {
+      const phase = PROGRESS_PHASES.find((name) => name === body.phase);
+      const done = maybeNum(body.done), total = maybeNum(body.total);
+      // A packet that does not make sense (an unknown phase, no numbers, more done than total) says nothing — it is not guessed at.
+      if (!phase || done === null || total === null || done < 0 || total < 1 || done > total) return null;
+      const current = isObject(body.current) && text(body.current.id) ? { id: text(body.current.id), title: text(body.current.title) } : null;
+      return { type: "progress", progress: { phase, done: Math.floor(done), total: Math.floor(total), current } };
+    }
     case "done": {
       const needs = isObject(body.needs) ? body.needs : {};
       return { type: "done", revision: num(body.revision), ready: body.ready === true,
@@ -160,9 +178,19 @@ export interface StreamState {
   /** First-arrival order of the keys above (`line:` · `item:` · `check:` · `move:` prefixed) — what appeared first is shown first. */
   order: string[];
   done: { revision: number; needs: ReviewNeeds; ready: boolean } | null;
+  /** The latest `progress` packet of each phase (the server keeps one value per phase and overwrites it — places come while it reads, hours and moves while it checks). */
+  phases: Partial<Record<ProgressPhase, ProgressPacket>>;
+  /** What the screen shows: the packet of the furthest phase that has come. Null until one has. */
+  progress: ProgressPacket | null;
 }
 
-export const emptyStream = (): StreamState => ({ stage: null, stageLabel: null, lines: {}, items: {}, checks: {}, moves: {}, order: [], done: null });
+export const emptyStream = (): StreamState => ({ stage: null, stageLabel: null, lines: {}, items: {}, checks: {}, moves: {}, order: [], done: null, phases: {}, progress: null });
+
+/** The packet of the furthest phase present (places < hours < moves) — a replay after a reconnect brings every phase's last value in any order. */
+function furthest(phases: StreamState["phases"]): ProgressPacket | null {
+  for (let at = PROGRESS_PHASES.length - 1; at >= 0; at -= 1) { const packet = phases[PROGRESS_PHASES[at]]; if (packet) return packet; }
+  return null;
+}
 
 export const lineKey = (line: Pick<StreamLine, "source_id" | "no">) => `${line.source_id}:${line.no}`;
 export const checkKey = (item: string, row: string) => `${item}:${row}`;
@@ -183,6 +211,13 @@ export function reduceStream(previous: StreamState, event: IntakeStreamEvent): S
     case "item": return { ...state, items: put(state, "item", state.items, event.item.id, event.item) };
     case "check": return { ...state, checks: put(state, "check", state.checks, checkKey(event.item, event.line.row), event.line) };
     case "move": return { ...state, moves: put(state, "move", state.moves, moveKey(event.move), event.move) };
+    case "progress": {
+      const before = previous.phases[event.progress.phase];
+      // Same phase, same total, fewer done: an older packet arriving late — the count never steps back. A different total is a new count (the next source).
+      if (before && before.total === event.progress.total && before.done > event.progress.done) return previous;
+      const phases = { ...previous.phases, [event.progress.phase]: event.progress };
+      return { ...state, phases, progress: furthest(phases) };
+    }
     case "done": return { ...state, done: { revision: event.revision, needs: event.needs, ready: event.ready } };
     default: return previous;                      // beat · result · error change nothing the screen builds
   }

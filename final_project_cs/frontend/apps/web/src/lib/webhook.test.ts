@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./data-mode", () => ({ DATA_MODE: "live" }));
 
 const KEY = "tripilot.web.user-key.v1";
 const HOOK = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123";

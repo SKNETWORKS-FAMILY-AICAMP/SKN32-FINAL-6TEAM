@@ -149,6 +149,24 @@ export function waitText(seconds: number, t: Translate): string {
 }
 
 /**
+ * A call that needs no key (which sign-in methods the server has, the exchange of a sign-in ticket). ★It never issues a key:
+ * `api` would create a new user just to ask a question that has nothing to do with one.
+ */
+export async function openApi<T>(path: string, language: Language, init: RequestInit = {}): Promise<T> {
+  const response = await send(`${API_BASE}${path}`, init, language);
+  return await response.json() as T;
+}
+
+/**
+ * `[2026-10-03]` Take the key the server gave after a social sign-in as this browser's key. The key this browser had is dropped, so the
+ * screen asks first (see `features/account/social-accounts.tsx`) — a key swapped without a word would make the old trips vanish.
+ */
+export function takeKey(key: string, notice: string | null) {
+  storeKey(key);
+  setKeyNotice(notice);
+}
+
+/**
  * A request with the user key.
  *
  * A 401 means the stored key was rotated or removed. We do NOT quietly issue a new key and retry: a new

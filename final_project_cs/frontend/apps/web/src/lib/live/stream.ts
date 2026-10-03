@@ -172,10 +172,10 @@ export type IntakeWatchEvent = { type: "progress"; stage: string | null; elapsed
 export type IntakeWatchEnd = "done" | "stalled" | "gone" | "unsupported" | "lost" | "closed";
 
 /**
- * The events that carry what the server has checked so far (`line` · `item` · `check` · `move` · `done`, copies of state —
+ * The events that carry what the server has checked so far (`line` · `item` · `check` · `move` · `progress` · `done`, copies of state —
  * `intake-events.ts` reads them). They are handed on as they come; this function only follows the stage.
  */
-export const INTAKE_CONTENT_EVENTS: ReadonlySet<string> = new Set(["line", "item", "check", "move", "done"]);
+export const INTAKE_CONTENT_EVENTS: ReadonlySet<string> = new Set(["line", "item", "check", "move", "progress", "done"]);
 export type IntakeContentHandler = (name: string, data: string) => void;
 
 /**

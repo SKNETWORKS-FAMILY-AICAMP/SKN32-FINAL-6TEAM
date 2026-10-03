@@ -59,7 +59,7 @@ const copy: Record<Language, Record<string, string>> = {
 const { props: { srcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey.png", width: 1672, height: 941, quality: 75 });
 const background = `image-set(${(srcSet ?? "").split(", ").map((entry) => { const [url, density] = entry.split(" "); return `url("${url}") ${density}`; }).join(", ")})`;
 
-/** How-it-works slides; each has a demo-mode capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
+/** How-it-works slides; each has a screen capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
 const guide = ["1-preferences", "2-plan", "3-results", "4-chat"] as const;
 
 const delay = (seconds: number) => ({ "--d": `${seconds.toFixed(3)}s` }) as CSSProperties;

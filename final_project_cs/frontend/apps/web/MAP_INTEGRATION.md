@@ -33,13 +33,13 @@ Google Cloud 프로젝트에 결제 계정을 연결하고 Maps JavaScript API�
 
 웹 키에 Websites 제한과 Maps JavaScript API 제한을 설정한다. 개발 referrer의 예는 `http://127.0.0.1:3100/*`이며 배포 도메인을 별도로 허용한다. [Google 키 제한 안내](https://developers.google.com/maps/api-security-best-practices)
 
-### 기존 시연 지도
+### 무료 지도(기본)
 
 ```dotenv
-NEXT_PUBLIC_MAP_PROVIDER=demo
+NEXT_PUBLIC_MAP_PROVIDER=osm
 ```
 
-`NEXT_PUBLIC_DATA_MODE`와 `NEXT_PUBLIC_MAP_PROVIDER`는 별개다. 여행 데이터는 `demo`로 두고 지도만 `naver`/`google`로 확인할 수 있다. 선택한 제공자의 SDK만 필요할 때 불러오며, 실제 지도 로딩·인증 오류가 발생해도 시연 지도로 자동 전환하지 않는다. 키 누락·데이터 누락·로딩 실패를 화면에 안내한다.
+`[2026-10-03 사용자 지시]` 번호만 그린 개념도(`demo`)는 없앴다 — 설정이 없으면 무료 OpenStreetMap(`osm`)이고, 예전 값 `demo` 는 다른 틀린 이름처럼 「지도 제공자 설정이 올바르지 않아요」가 된다. 선택한 제공자의 SDK만 필요할 때 불러오며, 실제 지도 로딩·인증 오류가 발생해도 다른 지도로 자동 전환하지 않는다(구글은 서버가 허락하지 않을 때만 무료 지도로 보인다). 키 누락·데이터 누락·로딩 실패를 화면에 안내한다.
 
 `NEXT_PUBLIC_*`는 브라우저에 공개되는 값이다. 허용 사이트가 제한된 웹용 키/Client ID만 사용한다. Naver Client Secret, 서버용 지오코딩·경로 API 키, 여행 접근 비밀 토큰을 여기에 넣지 않는다. 실제 키를 문서나 소스에 커밋하지 않는다.
 
@@ -142,45 +142,23 @@ import { NaverMap, GoogleMap } from "@/features/map";
 
 ## 6. 키 연결 후 확인 방법
 
-기본 예시 계획은 좌표를 자동 생성하지 않는다. 따라서 실제 지도를 선택해도 좌표가 없는 기존 여행에는 핀이 생기지 않으며 누락 안내가 나타난다. 서버 없이 수동 확인이 필요하면 **데모 모드에서만** 일정 줄에 다음과 같이 좌표를 명시할 수 있다.
+좌표는 서버 `items[].lat/lon` 이 어댑터를 거쳐 `coordinates` 가 된다. 웹이 장소 이름에서 좌표를 짐작하거나 일정 줄에 적은 좌표를 읽는 길은 없다(`[2026-10-03]` 데모 시절의 `[좌표: 위도, 경도]` 입력은 데모와 함께 없앴다). 좌표가 없는 일정에는 핀을 만들지 않고 누락 안내가 나타난다.
 
-```text
-2026-10-10
-10:00 좌표 확인용 장소 A [좌표: 37.5665, 126.9780]
-12:00 좌표 확인용 장소 B [좌표: 37.5700, 126.9850]
-```
-
-이는 지도 UI 확인용 명시 입력이며 장소 검색·자연어 지오코딩 기능이 아니다. live에서는 서버 `items[].lat/lon`이 어댑터를 거쳐 `coordinates`가 된다.
-
-키를 설정한 뒤 위 계획을 등록하고 검증 완료 → 여행 관리 시작 → 지도에서 다음을 확인한다: 바탕 지도와 두 핀, 일차 전환, 일정↔핀 선택, 이름·시간 일치, 모바일 탭 전환 후 지도 크기. 키 누락·잘못된 키·허용 도메인 불일치·네트워크 실패에서는 오류가 보이고 데모 지도로 바뀌지 않아야 한다.
+키를 설정한 뒤 계획을 등록해(계획 확인 화면에서 「여행 등록」) 여행 화면의 지도에서 다음을 확인한다: 바탕 지도와 두 핀, 일차 전환, 일정↔핀 선택, 이름·시간 일치, 모바일 탭 전환 후 지도 크기. 키 누락·잘못된 키·허용 도메인 불일치·네트워크 실패에서는 오류가 보이고 다른 지도로 바뀌지 않아야 한다.
 
 코드·SDK 대역 테스트와 실제 제공자 인증 검증은 별개다. 이번 2026-09-29 문서 개정에서는 실제 제공자 인증·지도 타일·과금 프로젝트 설정을 재검증하지 않았다. 아래 09-21 결과는 당시 SDK 대역 검사 기록이며 운영 연결 증거가 아니다. 키 설정 후 네이버·Google 각각에서 위 확인을 수행한다.
 
 ## 7. 자동 검증 실행
 
-`npm test`는 좌표 입력·범위·저장 보존·누락 처리와 지도 설정·SDK 로더의 공유 로딩/실패/시간 초과/인증 오류를 검사한다. 브라우저 지도 검사는 실제 공급자 인증 대신 SDK 계약 대역을 사용한다. 기본 데모 빌드에서는 지도 대역 테스트 3개를 건너뛴다.
+`npm test`는 좌표 입력·범위·저장 보존·누락 처리와 지도 설정·SDK 로더의 공유 로딩/실패/시간 초과/인증 오류를 검사한다. 브라우저 지도 검사는 실제 공급자 인증 대신 SDK 계약 대역을 사용한다. 기본 모방 서버 빌드(`osm`)에서는 지도 대역 테스트 3개를 건너뛴다(`tests/live/maps.spec.ts`).
 
-PowerShell에서 다음 명령으로 공급자별 빌드와 브라우저 검사를 수행한다. 아래 값은 테스트 전용 가짜 키이며 실제 SDK 요청은 Playwright가 가로채어 대역으로 응답한다. 설치한 Chrome을 사용한다.
+공급자별 시험은 그 제공자로 모방 서버 시험 빌드를 만든다(`tests/live/serve.mjs` 가 `MAP_TEST_PROVIDER` 를 보고 시험 전용 가짜 키를 넣는다). 실제 SDK 요청은 Playwright가 가로채어 대역으로 응답한다. 설치한 Chrome을 사용한다.
 
 ```powershell
-$env:NEXT_PUBLIC_DATA_MODE="demo"
-$env:NEXT_PUBLIC_MAP_PROVIDER="naver"
-$env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID="test-naver-key"
-$env:MAP_TEST_PROVIDER="naver"
+$env:MAP_TEST_PROVIDER="naver"       # 또는 "google"
 $env:PLAYWRIGHT_CHANNEL="chrome"
-npm run build
-npx playwright test tests/e2e/maps.spec.ts
-
-$env:NEXT_PUBLIC_MAP_PROVIDER="google"
-$env:NEXT_PUBLIC_GOOGLE_MAP_API_KEY="test-google-key"
-$env:NEXT_PUBLIC_GOOGLE_MAP_ID="test-map-id"
-$env:MAP_TEST_PROVIDER="google"
-npm run build
-npx playwright test tests/e2e/maps.spec.ts
-
-# 테스트용 셸 환경을 지우고 .env.local 기준으로 다시 빌드한다.
-Remove-Item Env:NEXT_PUBLIC_DATA_MODE, Env:NEXT_PUBLIC_MAP_PROVIDER, Env:NEXT_PUBLIC_NAVER_MAP_CLIENT_ID, Env:NEXT_PUBLIC_GOOGLE_MAP_API_KEY, Env:NEXT_PUBLIC_GOOGLE_MAP_ID, Env:MAP_TEST_PROVIDER, Env:PLAYWRIGHT_CHANNEL -ErrorAction SilentlyContinue
-npm run build
+npx playwright test -c playwright.live.config.ts tests/live/maps.spec.ts
+Remove-Item Env:MAP_TEST_PROVIDER, Env:PLAYWRIGHT_CHANNEL -ErrorAction SilentlyContinue
 ```
 
-2026-09-21: 단위 검사 40/40(100%), 지도 브라우저 검사 네이버 3/3 및 Google 3/3(합계 6/6, 100%) 통과. 공급자별 프로덕션 빌드·린트·TypeScript 검사도 통과했다. 실제 공급자 계정 인증과 지도 타일 표시는 이 수치에 포함하지 않는다.
+시험용 여행은 모방 서버의 `tripItems: "map"`(3일, 좌표 있는 일정·없는 일정·제목이 HTML인 일정)이다.

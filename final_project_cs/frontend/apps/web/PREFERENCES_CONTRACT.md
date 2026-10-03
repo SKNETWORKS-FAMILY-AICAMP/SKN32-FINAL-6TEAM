@@ -10,11 +10,10 @@
 
 ## 1. 언제 보내나
 
-설문만 받는 API는 없다. 백엔드는 설문을 **여행 등록 요청의 `constraints.survey`**로 받고, 모든 등록 경로가 한 함수(`_create_trip`)에서 설문을 검사한다. 웹은 온보딩 답을 페이지 메모리에 들고 있다가 완료한 경우에만 보낸다. demo는 `TripGateway.createTrip({ source, scenario, survey })`를, live는 접수 확인·일정 짜기 함수를 사용한다. live의 `createTrip`은 사용하지 않도록 거절한다. 온보딩을 마치지 않았으면 설문 없이 등록한다(백엔드도 설문 없이 받는다).
+설문만 받는 API는 없다. 백엔드는 설문을 **여행 등록 요청의 `constraints.survey`**로 받고, 모든 등록 경로가 한 함수(`_create_trip`)에서 설문을 검사한다. 웹은 온보딩 답을 이 브라우저에 두었다가 완료한 경우에만 보낸다. 접수 확인·일정 짜기 함수가 싣는다(`[2026-10-03]` 데모의 `createTrip` 은 없앴다). 온보딩을 마치지 않았으면 설문 없이 등록한다(백엔드도 설문 없이 받는다).
 
-| 데이터 모드 | 동작 |
+| 경로 | 동작 |
 |---|---|
-| `demo` | `tripSurveySchema`로 검사하고, 틀리면 여행을 만들지 않고 `INVALID_INPUT`(서버의 `422 invalid_survey`에 해당). 설문은 저장하지 않는다 |
 | 실제 연결 | 계획 글 접수 흐름(`/v1/web/trip-intakes`)의 확인(`/confirm`)·일정 짜기(`/plan`) 요청 몸통에 `survey`(선택)로 싣는다(`2026-09-28` cs 세션이 `IntakeConfirmIn`·`IntakePlanIn`에 칸을 더했다). 온보딩을 마치지 않았으면 칸을 아예 보내지 않는다. 틀린 설문은 서버가 422 `invalid_survey`로 거절한다 |
 
 ## 2. 질문과 칸

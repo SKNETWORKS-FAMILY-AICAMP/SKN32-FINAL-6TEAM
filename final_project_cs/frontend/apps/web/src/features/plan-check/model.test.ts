@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleDone, exampleSnapshots } from "./fixtures";
+import { exampleDone, exampleSnapshots } from "./test-views";
 import { nextStep, progress, tally, timeline, type PlanCheckView } from "./model";
 
 /** Every snapshot `nextStep` draws on the way from `from` to `to`, `to` included. */

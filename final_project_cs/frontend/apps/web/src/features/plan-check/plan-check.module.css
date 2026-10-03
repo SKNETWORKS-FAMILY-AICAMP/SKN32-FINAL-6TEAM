@@ -218,10 +218,7 @@ button.moveHead { cursor: pointer; }
 .photoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 10px; background: var(--color-subtle-strong); }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
-.photo[data-example] { background: linear-gradient(160deg, var(--color-subtle) 0 45%, var(--color-subtle-strong) 45% 70%, var(--color-border) 70%); }
-.photoExample { position: absolute; top: 4px; right: 6px; font-size: 9px; color: var(--color-faint); }
 .photo figcaption { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--color-inverse) 60%, transparent); color: var(--color-on-inverse); font-size: 11px; font-weight: 700; }
-.photoNote { margin: 8px 0 0; font-size: 11.5px; color: var(--color-muted); }
 .results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px 20px; }
 .results > .action { width: 100%; }
 .resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
@@ -319,6 +316,10 @@ button.moveHead { cursor: pointer; }
 .headProgress { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
 .headStep { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--color-text); white-space: nowrap; }
 .headStep b { font-size: 12px; font-weight: 750; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.kindNote { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); }
+.kindNote[data-mismatch] { color: var(--color-warning); font-weight: 650; }
+.progressAt { margin: 8px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
+.headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
 .headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
 

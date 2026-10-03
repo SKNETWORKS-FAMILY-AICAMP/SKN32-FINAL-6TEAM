@@ -38,7 +38,7 @@ describe("live trip gateway", () => {
 
   it("maps server items to stops in Seoul time with pins and booking marks", async () => {
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
-    expect(trip.status).toBe("active");
+    expect(trip.id).toBe(TRIP.trip_id);
     expect(trip.stops.map((stop) => [stop.date, stop.time, stop.endTime, stop.booking])).toEqual([
       ["2026-10-15", "09:00", "10:30", "unknown"],
       ["2026-10-16", "19:00", undefined, "booked"],
@@ -65,8 +65,41 @@ describe("live trip gateway", () => {
     expect((calls.at(-1)!.init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
   });
 
-  it("offers no trip delete: the server has no delete call, so the list must not pretend one happened", () => {
-    expect(createLiveGateway().deleteTrip).toBeUndefined();
+  describe("deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete)", () => {
+    const remove = (gateway = createLiveGateway()) => gateway.deleteTrip(TRIP.trip_id, "ko");
+    const deleteCalls = () => calls.filter((call) => call.url.endsWith("/delete"));
+
+    it("asks the server with the stored user key and forgets this tab's copy of the conversation", async () => {
+      const gateway = createLiveGateway();
+      await gateway.getTrip(TRIP.trip_id, "ko");                                       // issues and stores the key
+      (globalThis as unknown as { window: { sessionStorage: ReturnType<typeof memory> } }).window.sessionStorage.setItem("tripilot.web.live.messages:" + TRIP.trip_id, "[{}]");
+      replies.push({ trip_id: TRIP.trip_id, status: "deleted" });
+      await remove(gateway);
+      expect(deleteCalls()).toHaveLength(1);
+      expect(deleteCalls()[0].url).toContain(`/v1/web/trips/${TRIP.trip_id}/delete`);
+      expect(deleteCalls()[0].init.method).toBe("POST");
+      expect((deleteCalls()[0].init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
+      expect((globalThis as unknown as { window: { sessionStorage: ReturnType<typeof memory> } }).window.sessionStorage.getItem("tripilot.web.live.messages:" + TRIP.trip_id)).toBeNull();
+    });
+
+    it("takes a successful answer without a JSON body as deleted", async () => {
+      replies.push(new Response(null, { status: 204 }));
+      await expect(remove()).resolves.toBeUndefined();
+    });
+
+    it("says the server cannot delete yet when the route is not there — the real server's answer today is 404 {detail: Not Found} — and nothing is pretended", async () => {
+      replies.push(new Response(JSON.stringify({ detail: "Not Found" }), { status: 404 }));
+      await expect(remove()).rejects.toMatchObject({ name: "LiveError", code: "delete_unsupported" });
+      replies.push(new Response(JSON.stringify({ detail: "Method Not Allowed" }), { status: 405 }));
+      await expect(remove()).rejects.toMatchObject({ code: "delete_unsupported" });
+    });
+
+    it("takes the server's own “no such trip of yours” (404 not_found) as already gone, but passes any other refusal on as it was", async () => {
+      replies.push(new Response(JSON.stringify({ error: { code: "not_found", message: "resource not found" } }), { status: 404 }));
+      await expect(remove()).resolves.toBeUndefined();
+      replies.push(new Response(JSON.stringify({ error: { code: "internal_error", message: "서버 오류" } }), { status: 500 }));
+      await expect(remove()).rejects.toMatchObject({ code: "internal_error", message: "서버 오류" });
+    });
   });
 
   it("folds move items into the next stop as a departure time instead of listing them as stops", async () => {

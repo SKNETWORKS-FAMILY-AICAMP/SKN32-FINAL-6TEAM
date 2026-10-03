@@ -110,7 +110,10 @@ export function streamingViewOf(intake: IntakeView, stream: StreamState, infos?:
   const streamed = streamedReview(stream);
   const checking = intake.stage === "checking" || streamed.items.length > 0 || streamed.moves.length > 0;
   const stage: PlanStage = intake.stage === "received" ? "received" : checking ? "checking" : "reading";
-  return viewOfReview({ ...base, lines }, { items: [...streamed.items].sort(compareItems), moves: streamed.moves }, stage, infos);
+  const view = viewOfReview({ ...base, lines }, { items: [...streamed.items].sort(compareItems), moves: streamed.moves }, stage, infos);
+  // ★`[2026-10-03]` The server's own count (`progress` packet) rides on the view as it is; with none (an older server) the bar is worked out from the rows as before.
+  const packet = stream.progress;
+  return packet ? { ...view, serverProgress: { phase: packet.phase, done: packet.done, total: packet.total, title: packet.current?.title ?? null } } : view;
 }
 
 /** Candidates → the change screen's cards. `distance.from` is the nearby stop the distance was measured from. */

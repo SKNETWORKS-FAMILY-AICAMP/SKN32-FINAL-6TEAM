@@ -18,18 +18,16 @@ export interface OnboardingState {
   step: number;
   complete: boolean;
   answers: Answers;
-  /** Trip that reached management in this page session, for “Continue my trip”. */
-  activeTripId: string | null;
 }
 
-const initial: OnboardingState = { read: false, agreed: false, open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
+const initial: OnboardingState = { read: false, agreed: false, open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 const ReadyContext = createContext(false);
 
 /**
  * `[2026-10-01 user decision]` The start screen is asked once. What it collected — the terms, the preference answers and
  * where the questions stand — is kept in this browser and read back on the next visit, so a reload or a later visit does
- * not start over. Nothing here is sent to the server. ★Which card is open and the last trip stay page-only.
+ * not start over. Nothing here is sent to the server. ★Which card is open stays page-only. 「Continue my trip」 is not kept here: it reads the server's trip list (`useTrips`).
  */
 const STORAGE_KEY = "tripilot.web.onboarding.v1";
 const area = z.enum(["food", "activity", "mobility"]);

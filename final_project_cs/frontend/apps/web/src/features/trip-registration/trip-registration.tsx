@@ -1,22 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, FileText, Paperclip, X } from "lucide-react";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-check";
-import { mapConfiguration } from "@/features/map/config";
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import type { DemoScenario } from "@/features/trip/model";
-import { tripKey, tripsKey } from "@/features/trip/use-trip";
-import { DATA_MODE, loadSamplePlans, tripGateway } from "@/lib/gateway";
 import { currentKey, issueKey, LiveError } from "@/lib/live/client";
 import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from "@/lib/live/intake-start";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { examplePlan } from "./example-plan";
 import { emptyAsk, paneOfSending, paneReason, seoulToday, type PlanAsk, type RegistrationPane } from "./model";
 import { PlanAskFields } from "./plan-ask-fields";
 import styles from "./trip-registration.module.css";
@@ -42,7 +39,7 @@ function Preferences() {
   </div><hr /></>;
 }
 
-/** One of the three ways to give a plan (live): a bordered panel that is marked while it is the one that will be sent. */
+/** One of the three ways to give a plan: a bordered panel that is marked while it is the one that will be sent. */
 function Pane({ id, title, active, onActivate, children }: { id: RegistrationPane; title: string; active: boolean; onActivate: () => void; children: ReactNode }) {
   const t = useT();
   // Pressing it, writing in it, choosing in it, or moving the keyboard focus into it makes it the chosen one.
@@ -63,11 +60,9 @@ export function TripRegistration() {
   const t = useT();
   const { language } = useSettings();
   const [onboarding] = useOnboarding();
-  const from = useSearchParams().get("from");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [source, setSource] = useState<{ origin: string | null; value: string }>();
-  const [scenario, setScenario] = useState<DemoScenario>("success");
+  const [source, setSource] = useState<string>();
   const [validation, setValidation] = useState("");
   const [draftWarning, setDraftWarning] = useState("");
   // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown, the attached files and the planning
@@ -76,13 +71,12 @@ export function TripRegistration() {
   const [files, setFiles] = useState<File[]>(() => returned?.files ?? []);
   const [restored, setRestored] = useState(() => returned?.message ?? "");
   const [ask, setAsk] = useState<PlanAsk>(() => returned?.plan ? { start: returned.plan.start_date, days: returned.plan.days, party: returned.plan.party_size, wish: returned.plan.wish } : emptyAsk);
-  // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one (live; the demo has the text box only).
+  // ★`[2026-10-03 사용자 결정]` The panel touched last is the one that is sent — and only that one .
   const [active, setActive] = useState<RegistrationPane>(() => returned ? paneOfSending(returned) : "text");
   const today = useSyncExternalStore(never, seoulToday, () => "");
   useEffect(() => { clearIntakeFailure(); }, []);
-  const live = DATA_MODE === "live";
-  // ★Human check (Turnstile) — only in live mode and only when a site key is set. A token is good for one send.
-  const checking = live && Boolean(TURNSTILE_SITE_KEY);
+  // ★Human check (Turnstile) — only when a site key is set. A token is good for one send.
+  const checking = Boolean(TURNSTILE_SITE_KEY);
   const [humanToken, setHumanToken] = useState<string | null>(null);
   const [humanReset, setHumanReset] = useState(0);
   // Waiting for the next token (a new customer needs two: one for the key, one for the plan).
@@ -100,28 +94,18 @@ export function TripRegistration() {
       setHumanReset((count) => count + 1);
     });
   }
+  // The text box keeps what was typed while the customer moves around the app (this tab's session storage).
   const draft = useQuery({
-    queryKey: ["registration-draft", from],
+    queryKey: ["registration-draft"],
     queryFn: async () => {
-      if (from) return (await tripGateway.getTrip(from, language)).source;
       try { return sessionStorage.getItem(draftKey) ?? ""; }
       catch { return ""; }
     },
     retry: false,
     staleTime: Infinity,
   });
-  const value = source?.origin === from ? source.value : draft.data ?? "";
-  const create = useMutation({
-    // The survey rides with the registration (backend `constraints.survey`), only once onboarding is finished.
-    mutationFn: () => tripGateway.createTrip({ source: value, scenario, ...(onboarding.complete && { survey: toSurvey(onboarding.answers) }) }, language),
-    onSuccess: (trip) => {
-      queryClient.setQueryData(tripKey(trip.id, language), trip);
-      // Drop the cached list: the home card and "My trips" read it again instead of showing it without this trip.
-      queryClient.removeQueries({ queryKey: tripsKey });
-      router.push(routes.verification(trip.id));
-    },
-  });
-  // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
+  const value = source ?? draft.data ?? "";
+  // ★글·파일·짜 달라는 조건을 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
   //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 키 발급에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
   //   ★`[2026-10-03 사용자 결정]` 마지막에 고른 칸만 보낸다: 직접 입력이면 글만, 파일이면 파일만, 계획 짜 주기면 그 조건만(고른 칸이 비어 있으면 단추가 꺼져 있다).
@@ -143,9 +127,9 @@ export function TripRegistration() {
     // The token was spent on this attempt; ask for a fresh one before the next.
     onError: () => setHumanReset((count) => count + 1),
   });
-  const pending = create.isPending || signUp.isPending || sent;
-  // Why 「계획 확인하기」 is off (live): the chosen panel has nothing to send yet.
-  const reason = live ? paneReason(active, { text: value, files: files.length, ask }, today) : null;
+  const pending = signUp.isPending || sent;
+  // Why 「계획 확인하기」 is off: the chosen panel has nothing to send yet.
+  const reason = paneReason(active, { text: value, files: files.length, ask }, today);
 
   /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
   function choose(pane: RegistrationPane) {
@@ -162,11 +146,9 @@ export function TripRegistration() {
 
   function updateSource(next: string) {
     setActive("text");
-    setSource({ origin: from, value: next });
-    queryClient.setQueryData(["registration-draft", from], next);
-    if (from) queryClient.setQueryData(["registration-draft", null], next);
+    setSource(next);
+    queryClient.setQueryData(["registration-draft"], next);
     setValidation("");
-    create.reset();
     signUp.reset();
     setRestored("");
     try { sessionStorage.setItem(draftKey, next); setDraftWarning(""); }
@@ -176,28 +158,25 @@ export function TripRegistration() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    // ★`[2026-10-03 사용자 결정]` Live: the chosen panel must have something in it — 「계획 확인하기」 is off until it has, and says why
+    // ★`[2026-10-03 사용자 결정]` The chosen panel must have something in it — 「계획 확인하기」 is off until it has, and says why
     //   (the earlier rule, `[2026-09-30]`, let an empty plan through to a screen that offered to plan; that screen is gone and its
-    //   planning is the third panel). Pressing Enter in a field cannot get around the off button. The demo still needs a plan to read.
-    if (live && reason) return;
-    if (!live && !value.trim()) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
+    //   planning is the third panel). Pressing Enter in a field cannot get around the off button.
+    if (reason) return;
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
-    if (!live) create.mutate();
-    else if (checking && !currentKey()) signUp.mutate();
+    if (checking && !currentKey()) signUp.mutate();
     else send(humanToken);
   }
 
   if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
-  const error = validation || create.error?.message || signUp.error?.message || restored;
-  const demo = DATA_MODE === "demo";
+  const error = validation || signUp.error?.message || restored;
 
-  // The text box and the file picker are the same in both modes; live puts each in its own panel (`Pane`).
+  // The text box, the file picker and the planning conditions each sit in their own panel (`Pane`).
   const textBox = <>
     <div className={styles.labelRow}>
       <label htmlFor="plan-source">{t("나의 여행 계획", "Your travel plan")}</label>
-      <Button variant="quiet" className={styles.sample} onClick={() => void loadSamplePlans().then((plans) => updateSource(plans[language]))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
+      <Button variant="quiet" className={styles.sample} onClick={() => updateSource(examplePlan(language))} disabled={pending}>{t("예시 불러오기", "Load example")}</Button>
     </div>
     <textarea id="plan-source" name="planSource" className={styles.input} value={value} onChange={(event) => updateSource(event.target.value)} disabled={pending} maxLength={12000} required aria-invalid={Boolean(error)} aria-describedby={`plan-format${error ? " plan-error" : ""}`}
       placeholder={t("1일차 · 2026-09-15\n09:00 호텔 조식\n13:00 점심 식당 · 예약 있음\n\n2일차 · 2026-09-16\n10:00 박물관 관람", "DAY 1 · 2026-09-15\n09:00 Hotel breakfast\n13:00 Lunch restaurant · reserved\n\nDAY 2 · 2026-09-16\n10:00 Museum visit")} />
@@ -318,7 +297,7 @@ export function TripRegistration() {
       description={t("준비한 계획을 그대로 붙여 넣어 주세요.\n하나씩 살펴보고, 편안한 여행으로 이어갈게요.", "Paste the plan you have prepared.\nWe’ll walk through it, one step at a time.")} />
     <form onSubmit={submit} noValidate>
       <div className={styles.layout}>
-        {live ? <div className={styles.editor}>
+        <div className={styles.editor}>
           <div className={styles.panes}>
             <Pane id="text" title={t("직접 입력", "Type it in")} active={active === "text"} onActivate={() => choose("text")}>{textBox}</Pane>
             <Pane id="files" title={t("파일 선택", "Choose files")} active={active === "files"} onActivate={() => choose("files")}>{filePicker}</Pane>
@@ -329,11 +308,7 @@ export function TripRegistration() {
           {checking && <HumanCheck onToken={takeToken} resetKey={humanReset} />}
           {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
           {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
-        </div> : <Panel className={styles.editor}>
-          {textBox}
-          {error && <p id="plan-error" className={styles.error} role="alert">{error}</p>}
-          {draftWarning && <p className={styles.warning} role="status">{draftWarning}</p>}
-        </Panel>}
+        </div>
         <aside className={styles.tips}>
           <Panel>
             <Preferences />
@@ -344,16 +319,6 @@ export function TripRegistration() {
               <li>{t("예약한 일정은 ‘예약 있음’으로 표시해요.", "Mark reserved plans with “reserved”.")}</li>
             </ol>
           </Panel>
-          {demo && <details className={styles.demoOptions}>
-            <summary>{t("데모 체험 옵션", "Preview options")}</summary>
-            <label htmlFor="demo-scenario">{t("검증 결과 시나리오", "Verification scenario")}</label>
-            <select id="demo-scenario" value={scenario} disabled={pending} onChange={(event) => setScenario(event.target.value as DemoScenario)}>
-              <option value="success">{t("검증 완료", "Completed")}</option>
-              <option value="needs-review">{t("확인이 필요한 항목", "Items needing review")}</option>
-              <option value="failed">{t("검증 중단 후 재시도", "Failure and retry")}</option>
-            </select>
-            <p>{t("준비된 응답으로 화면 흐름을 체험해요.", "Explore the flow with prepared responses.")}{mapConfiguration.provider !== "demo" && ` ${t("일정 끝에 [좌표: 위도, 경도]를 적으면 지도에 핀으로 표시해요.", "Add [좌표: latitude, longitude] to a stop to pin it on the map.")}`}</p>
-          </details>}
         </aside>
       </div>
       <div className={styles.actions}>

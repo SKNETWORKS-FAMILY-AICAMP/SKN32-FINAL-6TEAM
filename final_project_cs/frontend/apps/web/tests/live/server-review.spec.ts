@@ -96,6 +96,8 @@ test("수정 화면: 서버의 대체 후보가 순위·거리와 함께 나오�
   await expect(page.getByText("올리브영 바꾸기")).toBeVisible();
   await expect(page.getByText("대체 후보 A · 1순위")).toBeVisible();
   await expect(page.getByText("경복궁에서 0.5km")).toBeVisible();
+  // `[2026-10-03]` the card says what the server gave: here it named no kind for the candidate, and the card does not guess one
+  await expect(page.getByText("이 장소의 종류 정보가 없어요").first()).toBeVisible();
   expect((await server.received("GET", "/candidates")).length).toBe(1);
 
   await page.getByRole("button", { name: "이 장소로 바꾸기" }).first().click();

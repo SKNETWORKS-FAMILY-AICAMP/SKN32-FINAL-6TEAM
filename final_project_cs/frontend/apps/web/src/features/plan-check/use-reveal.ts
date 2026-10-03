@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { nextStep, STAGES, type CheckRow, type PlanCheckView, type Verdict } from "./model";
 
 /** The longest pause between two drawn changes — slow enough to follow a small plan. */
@@ -58,5 +58,7 @@ export function useReveal(target: PlanCheckView, pause = REVEAL_MS): { view: Pla
     const timer = setTimeout(() => setShown(next), revealPause(peak.current, pause));
     return () => clearTimeout(timer);
   }, [shown, target, reduced, pause]);
-  return reduced ? { view: target, settled: true } : { view: shown, settled: nextStep(shown, target) === null };
+  // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
+  const live = useMemo(() => (shown.serverProgress === target.serverProgress ? shown : { ...shown, serverProgress: target.serverProgress }), [shown, target.serverProgress]);
+  return reduced ? { view: target, settled: true } : { view: live, settled: nextStep(shown, target) === null };
 }

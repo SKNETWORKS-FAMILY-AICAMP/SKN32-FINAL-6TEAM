@@ -85,3 +85,72 @@ export async function fillPlanAsk(page: Page, ask: { start: string; days: number
 export function weekAhead(): string {
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 }
+
+// ── helpers that came from the old demo-build suite (`tests/e2e`, removed 2026-10-03) ─────────────────────────
+
+/** Korean UI and no stored key: a first visit, which asks the test mock server for nothing until the customer registers. */
+export const useKorean = (page: Page) => start(page, null);
+
+/**
+ * Next draws a page on the server first, and a click before React has taken it over does nothing. Wait until the element is React's
+ * (found 2026-10-03: a press did nothing when the machine was busy).
+ */
+export async function hydrated(page: Page, selector = "textarea") {
+  await page.waitForFunction((css) => {
+    const element = document.querySelector(css);
+    return Boolean(element) && Object.keys(element as object).some((key) => key.startsWith("__reactFiber"));
+  }, selector);
+}
+
+export async function noHorizontalScroll(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+}
+
+/** Terms card open on /start: read the full terms, agree, go on to the preferences. */
+export async function agreeTerms(page: Page) {
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
+  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
+  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await reader.getByText(/^\[필수\]/).click();
+  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
+}
+
+/** In the open menu, unfolds the language card and picks a language by its own name. */
+export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
+  const dialog = page.getByRole("dialog", { name: menu });
+  await dialog.getByRole("button", { name: /LANGUAGE/ }).click();
+  await dialog.getByRole("button", { name: language, exact: true }).click();
+}
+
+/** The start screen is asked once and kept in this browser. For a test that needs the first-time screen again: forget what it kept, then reload. */
+export async function forgetStartScreen(page: Page) {
+  await page.evaluate(() => localStorage.removeItem("tripilot.web.onboarding.v1"));
+  await page.reload();
+}
+
+/**
+ * Open the start screen's preferences from My page (menu → My page → the preferences card's 수정). Done inside the app, so the page-only
+ * state (the active trip) stays. ★The intro button no longer leads here once the terms are agreed.
+ */
+export async function openPreferencesFromMyPage(page: Page) {
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ }).click();
+  await expect(page).toHaveURL(/\/mypage$/);
+  await page.locator("section").filter({ has: page.getByRole("heading", { name: "여행 취향", exact: true }) }).getByRole("button", { name: "수정", exact: true }).click();
+  await expect(page).toHaveURL(/\/start$/);
+}
+
+/**
+ * Register a trip the way a customer does, against the test mock server: write a plan, 「계획 확인하기」, wait for the plan-check screen's result,
+ * 「여행 등록」, and land on the trip screen (the mock's one trip, `TRIP_ID`). Needs the mock's default scenario (a plan whose check passes).
+ */
+export async function registerStubTrip(page: Page, plan = "10/1 09:00 경복궁 관람") {
+  await openRegistration(page);
+  await page.getByLabel("나의 여행 계획").fill(plan);
+  await page.getByRole("button", { name: "계획 확인하기" }).click();
+  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
+  await page.getByRole("button", { name: "여행 등록" }).click();
+  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
+  await expect(page.getByRole("heading", { name: "나의 여행", exact: true })).toBeVisible();
+}

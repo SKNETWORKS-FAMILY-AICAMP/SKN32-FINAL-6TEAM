@@ -101,6 +101,25 @@ test("접수 읽기: 서버의 진행 스트림을 따라 다시 읽고(1.5초 �
   expect(streams[0].accept).toContain("text/event-stream");
 });
 
+test("접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「3/14 · 광장시장 이동 확인 중」처럼 서버가 말한 대로 보인다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 3, board: "rich", review: "on" });             // the server's own check on (it streams what it checked and how far); three stops and two legs: the check stays on screen long enough to read
+  await upload(page);
+  // the stub ends with the leg phase: "<done>/<total> · <name of the stop it leads to> 이동 확인 중"
+  await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toContainText(/\d+\/\d+ · .+ 이동 확인 중/);
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+});
+
+test("접수 읽기: 진행 알림을 안 보내는 서버면 막대는 지금처럼 움직이고 「x/y」 줄은 말하지 않는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 3, intakeProgress: "off" });
+  await upload(page);
+  const bar = page.getByRole("progressbar", { name: "계획 확인 진행" });
+  await expect(bar).toBeVisible();
+  await expect(bar).not.toContainText(/\d+\/\d+ · /);
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+});
+
 test("접수 읽기: 스트림이 없는 옛 서버(404)면 전처럼 1.5초마다 다시 읽어 확인 화면으로 넘어간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 3, intakeEvents: "off" });

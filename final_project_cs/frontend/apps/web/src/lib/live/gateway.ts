@@ -161,6 +161,12 @@ function readMessages(tripId: string): TripMessage[] {
   catch { return []; }
 }
 
+/** This tab's copy of a deleted trip's conversation goes with it. */
+function forgetMessages(tripId: string) {
+  try { window.sessionStorage.removeItem(MESSAGES_PREFIX + tripId); }
+  catch { /* nothing kept */ }
+}
+
 function writeMessages(tripId: string, messages: TripMessage[]) {
   try { window.sessionStorage.setItem(MESSAGES_PREFIX + tripId, JSON.stringify(messages.slice(-60))); }
   catch { /* the conversation is shown for this page only */ }
@@ -211,11 +217,9 @@ async function read(tripId: string, language: Language): Promise<Trip> {
     stops.push(next);
     leave = null;
   }
-  const dates = stops.map((item) => item.date).sort();
+  // ★The server judged the plan when it was registered (`_create_trip`) — what it found is `warnings`, not a separate check to run.
   return {
-    id: server.trip_id, source: "", startDate: dates[0] ?? "", endDate: dates.at(-1) ?? "", status: "active", stops,
-    // ★The server judged the plan when it was registered (`_create_trip`): there is no separate check to run here.
-    verification: { status: "completed", progress: 100, stages: [], results: [] },
+    id: server.trip_id, stops,
     messages: await conversation(tripId, language),
     planUrl: server.plan_url || undefined,
     version: typeof server.version === "number" ? server.version : undefined,
@@ -239,11 +243,31 @@ async function read(tripId: string, language: Language): Promise<Trip> {
  */
 const unanswered = new Map<string, { message: string; itemId: string | null; requestId: string }>();
 
-/** Live adapter over `/v1/web/*`. Registration goes through the intake screen, not `createTrip`. */
+/**
+ * ★`[2026-10-03]` 여행 삭제 — 서버에 아직 없다(`DELETE`도 `POST …/delete`도 `app/` 의 라우트에 없음, 백엔드 요청서
+ *   `wiki/records/plans/2026-10-03_1920_웹_실서버_전환_백엔드_요청.md`). 웹은 요청한 모양 그대로 연결해 둔다:
+ *   `POST /v1/web/trips/{id}/delete`(본인 여행만, 이미 없으면 404 `not_found`). 서버에 그 경로가 없으면 FastAPI 가 본문
+ *   `{"detail":"Not Found"}` 의 404(`HTTP_404`)를 주므로 — 여행이 없다는 서버 문장(`not_found`)과 갈라 — 「지원하지 않음」으로 말한다.
+ *   (실서버 8042 에서 확인: 없는 경로 POST → 404 `{"detail":"Not Found"}`.) `POST` 로 한 것은 서버 CORS 가 GET·POST·PUT 만 열어서다.
+ */
+async function removeTrip(tripId: string, language: Language): Promise<void> {
+  const t = translator(language);
+  try { await api<unknown>(`/v1/web/trips/${encodeURIComponent(tripId)}/delete`, language, { method: "POST" }); }
+  catch (error) {
+    // A 2xx answer with no JSON body is still a success (the server deleted it): only `api`'s body read fails.
+    if (error instanceof SyntaxError) { forgetMessages(tripId); return; }
+    if (error instanceof LiveError && (error.code === "HTTP_404" || error.code === "HTTP_405")) {
+      throw new LiveError("delete_unsupported", t("서버가 아직 여행 삭제를 지원하지 않아요. 지원되면 바로 쓸 수 있어요.", "The server does not support deleting trips yet. It will work as soon as the server does."));
+    }
+    if (error instanceof LiveError && error.code === "not_found") { forgetMessages(tripId); return; }   // already gone
+    throw error;
+  }
+  forgetMessages(tripId);
+}
+
+/** Live adapter over `/v1/web/*`. Registration goes through the plan-check screen (`lib/live/intake*.ts`), not through here. */
 export function createLiveGateway(): TripGateway {
   return {
-    createTrip: (_input, language) => Promise.reject(new LiveError("use_intake", translator(language)(
-      "실제 연결에서는 계획 읽기 화면으로 등록해요.", "In live mode, plans are registered through the reading screen."))),
     async listTrips(language) {
       // ★No stored key means this browser has registered nothing. Asking would issue a key — a new server user — only to
       //   list nothing, so we do not ask.
@@ -252,8 +276,7 @@ export function createLiveGateway(): TripGateway {
       return trips.map((row) => ({ id: row.trip_id, title: row.title, createdAt: row.created_at, version: row.version }));
     },
     getTrip: read,
-    retryVerification: read,
-    startTrip: read,
+    deleteTrip: removeTrip,
     async sendMessage(tripId, message, language, itemId, location, onProgress) {
       const t = translator(language);
       const now = new Date().toISOString();
