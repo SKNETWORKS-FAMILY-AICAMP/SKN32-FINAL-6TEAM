@@ -183,8 +183,10 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
     start, end = value("starts_at"), value("ends_at")
     lines = (source.get("transcript") or "").splitlines()
     text = lines[line - 1] if 0 < line <= len(lines) else ""
+    # 예약했나 — 「예약 있음 · 없음」을 읽은 칸이 먼저, 예약번호가 있으면 예약한 것이다. 아무 말도 없으면 모른다(None — 예약 안 했다고 적지 않는다)
+    booked = value("booked") if isinstance(value("booked"), bool) else (True if value("booking_no") else None)
     return {"order": (source["position"], line or 10_000, index), "source_id": sid, "index": index, "title": title,
-            "text": text,
+            "text": text, "booked": booked,
             "date": when, "start": start if start and _HHMM.match(str(start)) else None,
             "end": end if end and _HHMM.match(str(end)) else None, "kind": kind,
             "place": place if place and place.get("latitude") is not None else None,

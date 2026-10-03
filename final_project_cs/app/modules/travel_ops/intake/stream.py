@@ -114,7 +114,8 @@ class Feed:
             if item_id in by_item:
                 it = by_item[item_id]
                 body = {k: it[k] for k in ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at",
-                                            "locked", "status", "can_lock", "place_state", "place", "candidates_hint")}
+                                            "locked", "status", "can_lock", "place_state", "place", "candidates_hint", "booked",
+                                            "parts")}
             else:
                 claim = (row["claims"] or {}).get("place")
                 state_name, value = review_module.place_state(row)
@@ -127,7 +128,8 @@ class Feed:
                         "place": ({"name": value["name"], "latitude": value.get("latitude"),
                                    "longitude": value.get("longitude"), "source": value.get("source"),
                                    "kind": value.get("kind")} if value else None),
-                        "candidates_hint": None}
+                        "candidates_hint": None, "booked": review_module.booked_of(row, state_name),
+                        "parts": review_module.nameless_parts(row, state_name)}
             self._emit(out, f"item:{item_id}", "item", body)
 
         # 검사 줄 · 이동 · 끝 — 검사가 만들어진 뒤에만

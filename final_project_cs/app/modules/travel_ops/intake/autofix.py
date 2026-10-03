@@ -11,6 +11,8 @@
     ④ 그 곳에서 **시각**을 맞춘다: 시작 = 앞 일정이 끝난 뒤 이동해 닿는 시각(5분 올림), 끝 = 다음 일정에 닿도록 줄임(5분 내림), 30분 미만이면 못 맞춘 것
     ⑤ 맞으면 바꿀 값(장소 · 시각)을 모으고 다음 일정으로 — 맞는 곳이 없으면 그대로 두고 이유를 적는다
 바꿀 값은 `edits` 로 한 번에 새 판이 된다(`pipeline.autofix`) — 고객이 직접 고른 것과 같은 길이라 되돌리기(앞 값으로 다시 `edits`)도 같다.
+★`[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` **예약했다고 적힌 일정은 바꾸지 않는다**(`kept: booked`) — 장소도 시각도. 예약한 식당을 다른 곳으로 바꾸자고 하던 것(실서버 실측: 「성수 예약 식당 → 랩포터리」)을 막는다.
+  이름 없는 줄(`needs_choice`)은 후보 중 같은 종류 · 지역 안의 곳으로 채운다(`candidates.py`).
 """
 from __future__ import annotations
 
@@ -116,6 +118,9 @@ def plan(conn, *, tenant_id: str, review: dict[str, Any], kakao: Any = None, eng
         if item["locked"]:
             kept.append({"id": item["id"], "title": item["title"], "reason": "locked"})
             continue
+        if item.get("booked") is True:
+            kept.append({"id": item["id"], "title": item["title"], "reason": "booked"})
+            continue
         if not item["date"] or not item["starts_at"]:
             kept.append({"id": item["id"], "title": item["title"], "reason": "no_time"})
             continue
@@ -190,6 +195,8 @@ def _pick(place: dict[str, Any], item: dict[str, Any]) -> dict[str, Any]:
     kind = place.get("kind") or item.get("kind")
     if kind in ("activity", "dining"):
         out["kind"] = kind
+    if place.get("category"):
+        out["category"] = str(place["category"])[:60]
     if place.get("content_id"):
         out["content_id"] = str(place["content_id"])
     return out

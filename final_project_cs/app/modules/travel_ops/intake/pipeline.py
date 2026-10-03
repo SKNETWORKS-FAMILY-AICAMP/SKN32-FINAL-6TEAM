@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 from . import progress as progress_module
 from . import review as review_module
+from .areas import areas_for
 from .assemble import assemble, effective
 from .rules import read_plan
 from .sources import UnsupportedSource, sniff, to_text
@@ -169,6 +170,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                             (tenant_id, intake_id))
                 owner = cur.fetchone()[0]
             aliases = load_aliases(conn, tenant_id, owner)
+            areas = areas_for(conn, tenant_id)               # 지명 사전 — 이름 없는 줄(「성수 예약 식당」)을 알아보는 데 쓴다(`areas.py`, DB 만 읽는다 · 한 시간 기억)
             # ★다시 읽는 접수면 앞에 읽은 값부터 지운다(고객이 고친 값은 남긴다). 값은 이제 읽는 **동안** 바로바로 적힌다 —
             #   실시간 진행(`GET …/events`)이 읽은 줄 · 찾은 일정을 그때그때 보여 주려면 끝에 한꺼번에 적을 수 없다
             with conn.transaction(), conn.cursor() as cur:
@@ -181,7 +183,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
-                        aliases=aliases, today=today or datetime.now(KST).date(),
+                        aliases=aliases, areas=areas, today=today or datetime.now(KST).date(),
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
@@ -640,9 +642,10 @@ def _checked_pick(field_name: str, value: dict[str, Any]) -> dict[str, Any]:
     content_id = value.get("content_id")
     if content_id is not None and not _CONTENT_ID.match(str(content_id)):
         raise IntakeRejected("invalid_value", f"{field_name}: content_id 는 숫자입니다")
+    category = str(value.get("category") or "").strip()[:60] or None
     return {"name": name, "kind": kind if kind in ("activity", "dining") else None, "latitude": coords[0],
             "longitude": coords[1], "place_id": None, "content_id": str(content_id) if content_id else None,
-            "content_type_id": None, "source": "customer_pick",
+            "content_type_id": None, "category": category, "source": "customer_pick",
             "origin": source if source != "customer_pick" else str(value.get("origin") or "search")
             if str(value.get("origin") or "search") in _PICK_ORIGINS else "search"}
 
@@ -671,7 +674,7 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao):
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
                 our_places: list[dict[str, Any]] | None = None, today: date,
-                aliases: dict[str, str] | None = None,
+                aliases: dict[str, str] | None = None, areas: Any = None,
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다.
@@ -680,10 +683,14 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     실시간 진행이 읽은 줄 · 일정 · 장소를 그때그때 보이게 하려는 것이다. 돌려주는 목록은 전과 같다(알린 줄을 두 번 알리지 않는다).
 
     `on_progress(phase, done, total, index, title)` `[2026-10-03 ui 세션 요청서 2번]` — **장소 찾기가 한 일정씩 끝날 때마다** 「장소 n/m」을 알린다(`phase` 는 늘 `places`, `index` 는 항목 번호, `title` 은 원문 조각).
-    ★찾았든 못 찾았든 **그 일정의 장소 값이 정해지면** 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤 가까운 곳을 고른 때."""
+    ★찾았든 못 찾았든 **그 일정의 장소 값이 정해지면** 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤 가까운 곳을 고른 때.
+
+    `areas` `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 지명 사전(`areas.py`). 이름 없이 **종류 + 지역만** 적은 줄(「성수 예약 식당」)을 알아보는 데 쓴다(`line_parts.py`) —
+    그런 줄은 가게 이름으로 **찾지 않는다**(없는 가게를 찾아 글자를 줄여 가던 것이 틀린 장소와 엉뚱한 후보의 뿌리였다). 사전이 없으면(None) 지역 말은 이름 조각으로 남고 종류 · 끼니만 있는 줄만 알아본다."""
     from .dates import resolve_dates
+    from .line_parts import parse as parse_line
     from .llm_spans import label_lines
-    from .places import _kind_hits, nearest, resolve
+    from .places import _kind_hits, nearest, normalize, resolve
 
     read = read_plan(text)
     rows = [claim.as_dict() for claim in read.claims]
@@ -708,7 +715,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     for item in read.items:
         items.append({"line": (item.title or item.booking_no).line if (item.title or item.booking_no) else 0,
                       "day": item.day, "date": item.date, "title": item.title.text if item.title else None,
-                      "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows)})
+                      "meal": any(r["field"] == f"items[{len(items)}].kind" for r in rows), "booked": item.booked})
 
     # 남은 줄 — 모델은 가리키기만. 실패하면 이 단계만 건너뛴다(그 줄은 남은 줄로 보인다)
     if chat is not None and read.unread_lines:
@@ -734,7 +741,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                              "evidence": {"source": "text", "line": span_item.line}, "needs_review": False,
                              "note": f"끼니 말({span_item.meal})"})
             items.append({"line": span_item.line, "day": day, "date": span_item.date or date_mark,
-                          "title": span_item.title.text, "meal": bool(span_item.meal)})
+                          "title": span_item.title.text, "meal": bool(span_item.meal), "booked": None})
         if report.get("plan_request"):
             rows.append({"field": "trip.plan_request", "value": True, "method": "llm_span",
                          "evidence": {"source": "text"}, "needs_review": False,
@@ -767,9 +774,20 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}
     early: dict[int, list[dict[str, Any]]] = {}
+    nameless: set[int] = set()
     titled, placed = sum(1 for item in items if item["title"]), 0
     for index, item in enumerate(items):
         if item["title"]:
+            # ★이름 없는 줄(종류 + 지역만) — 가게 이름으로 찾지 않는다. 고객이 앞서 이 글을 다른 이름으로 고친 적이 있으면(별칭) 그 이름으로 다시 찾는 옛 길이 먼저다
+            parts = parse_line(item["title"], areas=areas, kind_hint="dining" if item["meal"] else None)
+            if parts.nameless and normalize(item["title"]) not in (aliases or {}):
+                nameless.add(index)
+                early[index] = _nameless_rows(index, parts, item, rows)
+                send(early[index])
+                placed += 1
+                if on_progress is not None:
+                    on_progress("places", placed, titled, index, item["title"])
+                continue
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
                                       kind_hint="dining" if item["meal"] else None, aliases=aliases)
             if resolved[index].status == "resolved":
@@ -780,10 +798,11 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 placed += 1
                 if on_progress is not None:
                     on_progress("places", placed, titled, index, item["title"])
-    for index, found in resolved.items():
+    for index in sorted(set(resolved) | nameless):
         if index in early:
             rows.extend(early[index])
             continue
+        found = resolved[index]
         new = _place_rows(index, found, items=items, resolved=resolved, dated=dated, rows=rows, kakao=kakao,
                           nearest=nearest, kind_hits=_kind_hits)
         rows.extend(new)
@@ -837,6 +856,26 @@ def _place_rows(index: int, found: Any, *, items: list[dict[str, Any]], resolved
         out.append({"field": f"items[{index}].kind", "value": found.item_kind, "method": "lookup",
                     "evidence": {"source": "kakao", "rule": "food_hint", "line": items[index]["line"]},
                     "needs_review": False, "note": "뗀 말로 찾은 곳이 대부분 음식점이라 식사 일정으로 본다"})
+    return out
+
+
+def _nameless_rows(index: int, parts: Any, item: dict[str, Any], rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """이름 없는 줄(종류 + 지역만)의 값 줄 — **장소 값은 비워 두고**(없는 가게를 지어내지 않는다) 뜻의 조각을 근거에 남긴다. 고르는 것은 고객(또는 전체 자동 추천)이다.
+
+    ★예약: 줄이 「예약 있음」이면(칸 또는 줄 글자의 「예약한」) 후보를 권하지 않고 이름만 묻는 길이다(`needs_name`). 예약을 모르면 후보를 보이며 「이미 예약하셨나요?」를 묻는다.
+    ★일정 종류(`kind`)도 여기서 정한다 — 식당 · 끼니 말이면 식사다(「성수 예약 식당」이 활동으로 읽혀 활동 후보가 권해졌다). 규칙이 이미 정한 종류는 덮지 않는다."""
+    booked = item.get("booked") if item.get("booked") is not None else parts.booked
+    public = parts.public()
+    where = f"{public['area']['name']} 지역의 " if public["area"] else ""
+    evidence = {"source": "line_parts", "method": "nameless", "line": item["line"], "query": item["title"], "parts": public,
+                "booked": booked}
+    out = [{"field": f"items[{index}].place", "value": None, "method": "lookup", "evidence": evidence, "needs_review": True,
+            "note": f"이름이 아닌 말(「{item['title']}」)이라 가게를 찾지 않았다 — {where}{public['label']}을 고르게 한다"
+                    + (" · 예약이 있다고 적혀 있어 이름을 묻는다" if booked is True else "")}]
+    if public["kind"] and not any(r["field"] == f"items[{index}].kind" for r in rows):
+        out.append({"field": f"items[{index}].kind", "value": public["kind"], "method": "lookup",
+                    "evidence": {"source": "rule", "rule": "line_parts", "line": item["line"]}, "needs_review": False,
+                    "note": f"「{public['label']}」을 뜻하는 말이라 {'식사' if public['kind'] == 'dining' else '활동'} 일정으로 본다"})
     return out
 
 

@@ -30,6 +30,7 @@ from ..place_hours import DayHours, hours_on
 from .assemble import collect
 from .hours import HoursFacts, closed_weekdays, facts_for, week_known_all, weekday_ko
 from .moves import Leg, late_text, leg_between
+from .terms import category_label
 
 KST = ZoneInfo("Asia/Seoul")
 #: 한 번 계산하는 동안 이동 계산기에 쓰는 시간 상한(초). 넘으면 남은 구간은 어림값으로 낸다(이유가 줄에 적힌다) — 화면이 끝없이 기다리지 않게. ★우리가 고른 값
@@ -82,14 +83,21 @@ def _hm(moment: datetime) -> str:
 
 
 # ── 한 항목의 장소 ───────────────────────────────────────────────
+#: 이름 없이 종류 + 지역만 적은 줄의 상태 — 장소 값이 비어 있고 고르는 것은 고객이다(`line_parts.py`)
+NAMELESS_STATES = ("needs_choice", "needs_name")
+
+
 def place_state(row: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
     """(상태, 장소 값). 상태: found 찾음 · picked_nearest 이름이 여럿이라 가까운 곳을 임시로 고름 · customer 고객이 고름 ·
-    none 고객이 「장소 없음」 · unresolved 못 찾음."""
+    none 고객이 「장소 없음」 · unresolved 못 찾음 ·
+    ★`[2026-10-03]` needs_choice 이름 없이 종류 + 지역만 적은 줄(「성수 식당」) — 후보에서 고른다 · needs_name 같은 줄인데 **예약이 있다고** 적혀 있다 — 후보 대신 예약한 곳의 이름을 묻는다."""
     claim = (row["claims"] or {}).get("place")
     value = claim["value"] if claim else None
     evidence = (claim or {}).get("evidence") or {}
     if claim and claim["method"] == "customer":
         return ("none", None) if (value is None or evidence.get("none")) else ("customer", value)
+    if evidence.get("method") == "nameless":
+        return ("needs_name" if evidence.get("booked") is True else "needs_choice"), None
     if not value or row["place"] is None:
         return "unresolved", None
     if evidence.get("method") == "kakao_nearest":
@@ -103,6 +111,13 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     title = row["title"] or ""
     if state == "none":
         return _line("place", "unknown", "장소 없이 두었어요 · 운영시간과 이동은 확인하지 않아요")
+    if state in NAMELESS_STATES:
+        parts = evidence.get("parts") or {}
+        what = parts.get("label") or "장소"
+        area = (parts.get("area") or {}).get("name")
+        if state == "needs_name":
+            return _line("place", "bad", f"예약하신 {what}의 이름이 적혀 있지 않아요 — 이름을 알려 주세요")
+        return _line("place", "bad", f"{area + ' 지역 ' if area else ''}{what}의 이름이 적혀 있지 않아요 — 후보에서 골라 주세요")
     if state == "unresolved":
         blocked = evidence.get("blocked") or []
         why = " · 장소 조회가 막혀 있어서 못 찾은 것일 수 있어요" if blocked else ""
@@ -113,7 +128,10 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     source = str(value.get("source") or evidence.get("source") or "")
     label = SOURCE_LABEL.get(source, "장소 정보")
     if state == "customer":
-        return _line("place", "ok", f"직접 고른 곳이에요 · {label}")
+        # ★`[2026-10-03]` 「직접 고른 곳이에요 · 직접 고른 곳」으로 겹쳐 나왔다 — 뒤에는 **어디서 찾았는지**(고른 값의 출처)가 온다
+        origin = str(value.get("origin") or (source if source not in ("customer_pick", "customer") else ""))
+        found = SOURCE_LABEL.get(origin) if origin not in ("customer_pick", "customer") else None
+        return _line("place", "ok", "직접 고른 곳이에요" + (f" · {found}에서 찾았어요" if found else ""))
     tried = [str(t) for t in evidence.get("tried") or []]
     alias = next((t for t in tried if t.startswith("alias:")), None)
     query = evidence.get("query")
@@ -134,6 +152,33 @@ def _place_line(row: dict[str, Any], state: str, value: dict[str, Any] | None) -
     if claim.get("needs_review"):
         return _line("place", "warn", base + " · 맞는지 확인해 주세요")
     return _line("place", "ok", base)
+
+
+def booked_of(row: dict[str, Any], state: str) -> bool | None:
+    """이 일정을 예약했다고 적혀 있나(True) · 안 했다고(False) · 말이 없다(None). 이름 없는 줄은 줄 글자의 「예약한」도 읽은 값(`line_parts`)을 쓴다."""
+    if state in NAMELESS_STATES:
+        return (((row["claims"] or {}).get("place") or {}).get("evidence") or {}).get("booked")
+    return row.get("booked")
+
+
+def nameless_parts(row: dict[str, Any], state: str) -> dict[str, Any] | None:
+    """이름 없는 줄이 읽힌 조각 — `{label, kind, content_type, meal, near, area:{name, kind, latitude, longitude, radius_m}|None}`. 그 밖의 줄은 None."""
+    if state not in NAMELESS_STATES:
+        return None
+    return (((row["claims"] or {}).get("place") or {}).get("evidence") or {}).get("parts")
+
+
+def _booking_line(booked: bool | None, state: str, kind: str) -> dict[str, str] | None:
+    """예약 줄 — ok 예약이 있다(자동으로 안 바꾼다) · warn 예약이 있다는데 장소를 못 정했다 · unknown 식사인데 예약을 모른다. 말이 없는 일반 일정에는 줄이 없다."""
+    if booked is True:
+        if state in ("found", "customer"):
+            return _line("booking", "ok", "예약이 있다고 적혀 있어요 · 예약한 일정은 자동으로 바꾸지 않아요")
+        return _line("booking", "warn", "예약이 있다고 적혀 있는데 장소를 정하지 못했어요 · 예약하신 곳의 이름을 알려 주세요")
+    if booked is False:
+        return _line("booking", "ok", "예약 없이 가는 곳이라고 적혀 있어요")
+    if state == "needs_choice" and kind == "dining":
+        return _line("booking", "unknown", "예약 여부가 적혀 있지 않아요 · 이미 예약하셨다면 알려 주세요")
+    return None
 
 
 # ── 시간 · 운영시간 · 휴무일 ──────────────────────────────────────
@@ -268,7 +313,7 @@ def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
 
 #: 진행 이벤트로 내보내는 일정 칸 — 실시간 진행(`stream.Feed`)이 DB 에서 읽어 내는 `item` 이벤트와 **같은 칸**이다(같은 키가 나중 값으로 덮인다)
 _ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "locked", "status",
-                      "can_lock", "place_state", "place", "candidates_hint")
+                      "can_lock", "place_state", "place", "candidates_hint", "booked", "parts")
 
 
 def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
@@ -346,6 +391,10 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
                 order_bad = True
         hours_line, closed_line = _hours_lines(r, facts[i], [v for v in mine if v.code in _HOURS_CODES | {"closed_day"}])
         lines = [_place_line(r, state, value)]
+        booked = booked_of(r, state)
+        booking = _booking_line(booked, state, r["kind"])
+        if booking:
+            lines.append(booking)
         t = _time_line(r, notes, overlap, order_bad)
         if t:
             lines.append(t)
@@ -366,9 +415,13 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             #   (읽을 때 `_our_places` 가 공용만 읽고, 고객이 고른 값은 `place_id` 를 받지 않는다) — 남의 여행 전용 행을 가리키지 않는다
             "place": ({"name": value["name"], "latitude": value.get("latitude"), "longitude": value.get("longitude"),
                        "source": value.get("source"), "kind": value.get("kind"), "content_id": value.get("content_id"),
-                       "content_type_id": value.get("content_type_id"), "place_id": value.get("place_id")} if value else None),
+                       "content_type_id": value.get("content_type_id"), "place_id": value.get("place_id"),
+                       # 종류 이름(관광지 · 음식점 …) — 고객이 고른 값은 보낸 이름이 먼저, 없으면 관광공사 분류 번호를 표에서 읽는다
+                       "category": value.get("category") or category_label(value.get("content_type_id"))} if value else None),
             "candidates_hint": len(((r["claims"].get("place") or {}).get("evidence") or {}).get("chosen_from") or [])
             if state == "picked_nearest" else None,
+            # 예약했다고 적혀 있나(True · False · 말 없음 None) · 이름 없는 줄이 읽힌 조각(그 밖은 None) — 후보 중심 · 문장의 재료
+            "booked": booked, "parts": nameless_parts(r, state),
             "rows": lines})
         # 이 일정의 검사 줄이 정해졌다 — 이동 계산(오래 걸린다) 전에 알린다. 겹침으로 확인 필요가 되는 일정은 아래 끝에서 status 가 바뀔 수 있어 최종 값이 같은 키로 덮는다
         note("item", {**{k: items[-1][k] for k in _ITEM_EVENT_FIELDS}, "place": public_place(items[-1]["place"])})
