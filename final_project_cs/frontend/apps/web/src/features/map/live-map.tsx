@@ -14,6 +14,11 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
   const controller = useRef<MapController | null>(null);
   const latest = useRef({ points, selectedId, onSelect });
   const [attempt, setAttempt] = useState(0);
+  // `[2026-10-03 사용자 지시]` The zoom buttons show while the pointer is over the map, or for a few seconds after it is touched (a phone has no hover).
+  const [awake, setAwake] = useState(false);
+  const asleep = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const wake = () => { setAwake(true); clearTimeout(asleep.current); asleep.current = setTimeout(() => setAwake(false), 3_500); };
+  useEffect(() => () => clearTimeout(asleep.current), []);
   const [state, setState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({ status: "loading" });
 
   useEffect(() => {
@@ -61,7 +66,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
     };
   }, [adapter, attempt]);
 
-  return <div className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"}>
+  return <div className={styles.live} role="region" aria-label="여행 지도" aria-busy={state.status === "loading"} data-awake={awake || undefined} onPointerDown={wake}>
     <div className={styles.canvas} ref={container} aria-label={`${name} 지도`} />
     {state.status === "loading" && <div className={styles.overlay} role="status">지도를 불러오고 있어요…</div>}
     {state.status === "error" && <div className={styles.overlay} role="alert"><strong>지도를 불러오지 못했어요</strong><p>{state.message}</p><Button variant="secondary" onClick={() => { setState({ status: "loading" }); setAttempt((value) => value + 1); }}>지도 다시 불러오기</Button></div>}

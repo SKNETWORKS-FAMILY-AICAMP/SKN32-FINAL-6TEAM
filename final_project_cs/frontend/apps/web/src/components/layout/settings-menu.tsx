@@ -18,7 +18,7 @@ export const OverlayRoot = createContext<HTMLElement | null>(null);
 
 export function SettingsMenu({ className = "" }: { className?: string }) {
   const t = useT();
-  const { navigation } = useSettings();
+  const { navigation, skipAnimation } = useSettings();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
   // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
@@ -72,6 +72,12 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <span className={styles.switchText}><strong id={`${id}-floating`}>{t("플로팅 버튼 사용", "Use floating button")}</strong><small id={`${id}-floating-note`}>{t("끄면 고정 하단 탭으로 표시됩니다.", "When off, the tabs stay fixed at the bottom.")}</small></span>
           <input type="checkbox" role="switch" className={styles.switch} checked={navigation === "floating"} aria-labelledby={`${id}-floating`} aria-describedby={`${id}-floating-note`}
             onChange={(event) => updateSettings({ navigation: event.target.checked ? "floating" : "fixed" })} />
+        </label>
+        {/* `[2026-10-03 사용자 결정]` 계획 확인 화면의 단계별 재생을 건너뛰고 서버 결과를 바로 본다. 시스템의 「동작 줄이기」가 아니라 이 스위치가 정한다. */}
+        <label className={styles.switchRow}>
+          <span className={styles.switchText}><strong id={`${id}-skip`}>{t("애니메이션 건너뛰기", "Skip animations")}</strong><small id={`${id}-skip-note`}>{t("켜면 계획 확인 화면이 단계별 재생 없이 바로 떠요.", "When on, the plan check appears at once, without the step-by-step replay.")}</small></span>
+          <input type="checkbox" role="switch" className={styles.switch} checked={skipAnimation} aria-labelledby={`${id}-skip`} aria-describedby={`${id}-skip-note`}
+            onChange={(event) => updateSettings({ skipAnimation: event.target.checked })} />
         </label>
       </div>
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>

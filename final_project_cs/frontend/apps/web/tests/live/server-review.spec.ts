@@ -233,3 +233,82 @@ test("고른 장소가 카드 이름이 된다 — 직접 고른 곳은 장소 �
   await expect(card(page, "올리브영 광화문점")).toBeVisible();
   await expect(card(page, "올리브영 광화문점")).toContainText("원문 「올리브영」");
 });
+
+// ── 2026-10-03 사용자 요청 모음(확인 화면) ─────────────────────────────────────────────────────────────────────
+
+test("머리의 「확인 필요」 글자를 누르면 확인이 필요한 곳만 모아 보이고, 「전체 보기」로 돌아온다", async ({ page, request }) => {
+  await openFinished(page, request);
+  const count = page.getByRole("button", { name: /장소 1곳 · 이동 1구간 확인 필요/ });
+  await expect(count).toHaveAttribute("aria-pressed", "false");
+  await expect(card(page, "경복궁 관람")).toBeVisible();
+  await count.click();
+  await expect(count).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("확인이 필요한 곳만 보는 중이에요")).toBeVisible();
+  await expect(card(page, "올리브영")).toBeVisible();                                    // 확인이 필요한 곳
+  await expect(card(page, "경복궁 관람")).toHaveCount(0);                                 // 괜찮은 곳은 빠진다
+  await expect(card(page, "광장시장")).toHaveCount(0);
+  await page.getByRole("button", { name: "전체 보기" }).click();
+  await expect(card(page, "경복궁 관람")).toBeVisible();
+  await expect(card(page, "광장시장")).toBeVisible();
+  await expect(count).toHaveAttribute("aria-pressed", "false");
+});
+
+test("머리의 「내 여행」을 눌러 계획 이름을 바꾸면 서버의 trip.title 로 가고 머리글이 새 이름이 된다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  await page.getByRole("button", { name: /계획 이름 바꾸기/ }).click();
+  const field = page.getByRole("textbox", { name: "계획 이름" });
+  await field.fill("제주 3박 4일");
+  await field.press("Enter");
+  await expect(page.getByRole("heading", { name: "제주 3박 4일", level: 1 })).toBeVisible();
+  const [saved] = await server.received("POST", "/edits");
+  expect(saved.body).toEqual({ revision: 1, edits: [{ field: "trip.title", value: "제주 3박 4일" }] });
+  // Esc 는 이름을 그대로 둔다
+  await page.getByRole("button", { name: /계획 이름 바꾸기/ }).click();
+  await page.getByRole("textbox", { name: "계획 이름" }).fill("버릴 이름");
+  await page.getByRole("textbox", { name: "계획 이름" }).press("Escape");
+  await expect(page.getByRole("heading", { name: "제주 3박 4일", level: 1 })).toBeVisible();
+  expect((await server.received("POST", "/edits")).length).toBe(1);
+});
+
+test("출처 줄(ⓒ한국관광공사)은 「계속 내리면 …」 안내 위에 있어서, 목록 맨 끝이 「내리면 다음이 나온다」로 읽힌다", async ({ page, request }) => {
+  await openFinished(page, request);
+  const credit = page.getByText("장소 정보 출처", { exact: false });
+  const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
+  await expect(credit).toBeVisible();
+  await hint.scrollIntoViewIfNeeded();
+  const [creditBox, hintBox] = [await credit.boundingBox(), await hint.boundingBox()];
+  expect(creditBox!.y).toBeLessThan(hintBox!.y);
+});
+
+test("전체 자동 추천이 바꿀 곳을 못 찾으면 이유만 말하지 않고, 사용자가 직접 고쳐야 하는 첫 곳을 열어 그 자리로 옮긴다", async ({ page, request }) => {
+  const server = await openFinished(page, request, { autofix: "none" });
+  const olive = card(page, "올리브영");
+  await expect(olive.getByRole("button", { name: "올리브영", exact: true })).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: /전체 자동 추천/ }).click();
+  await expect(page.getByText("바꿀 수 있는 대체 일정이 없어요")).toBeVisible();
+  await expect(page.getByText("직접 고쳐야 하는 곳으로 옮겼어요")).toBeVisible();
+  await expect(olive.getByRole("button", { name: "올리브영", exact: true })).toHaveAttribute("aria-expanded", "true");
+  await expect(olive).toBeInViewport({ ratio: 0.5 });
+  expect((await server.received("POST", "/edits")).length).toBe(0);                          // 아무것도 바뀌지 않았다
+});
+
+test("적용하려는 변경의 이전 장소를 모르면 「되돌리기」 단추를 달지 않고 그 사실을 미리 말한다", async ({ page, request }) => {
+  await openFinished(page, request, { autofix: "unknown_from" });
+  await page.getByRole("button", { name: /전체 자동 추천/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
+  await page.getByRole("button", { name: "적용하기" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영해 저장했어요" })).toContainText("되돌릴 수는 없어요");
+  await expect(page.getByRole("button", { name: "원래대로" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "되돌리기" })).toHaveCount(0);
+});
+
+test("「전체 자동 추천」 미리 보기는 화면이 열릴 때 서버에서 이미 받아 두어, 누르거나 밀 때 서버를 다시 기다리지 않는다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  await expect.poll(async () => (await server.received("POST", "/autofix")).length).toBe(1);   // 아무것도 누르기 전에 이미 한 번 불렀다
+  const [early] = await server.received("POST", "/autofix");
+  expect(early.body).toEqual({ revision: 1, dry_run: true });
+  await page.getByRole("button", { name: /전체 자동 추천/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
+  expect((await server.received("POST", "/autofix")).length).toBe(1);                         // 눌러도 다시 부르지 않는다
+});
+

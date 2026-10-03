@@ -13,7 +13,7 @@ import { planFromIntake } from "@/lib/live/intake-plan";
 import { endIntakeStart, intakeStart, rememberIntakeFailure } from "@/lib/live/intake-start";
 import type { OpProgress } from "@/lib/live/stream";
 import { routes } from "@/lib/routes";
-import { useT } from "@/lib/settings";
+import { useSettings, useT } from "@/lib/settings";
 import styles from "./intake-review.module.css";
 
 /** The server has not answered the plan yet: say it is slow after this long, and that it is very slow after this long. */
@@ -42,6 +42,10 @@ export function IntakeStarting() {
   const view = useMemo(() => sendingOf(start?.text ?? ""), [start]);
   // Set when the customer leaves with the back arrow: the abort that follows is not a failure to report.
   const left = useRef(false);
+  // The customer's menu choice 「애니메이션 건너뛰기」, read where the effect needs it without restarting the effect when it changes.
+  const { skipAnimation: skipSetting } = useSettings();
+  const skipAnimation = useRef(skipSetting);
+  useEffect(() => { skipAnimation.current = skipSetting; });
   // `[2026-10-03 사용자]` How long the server has been silent: after a few seconds the screen says so (and that going back is possible).
   const [slow, setSlow] = useState<0 | 1 | 2>(0);
   useEffect(() => {
@@ -87,7 +91,7 @@ export function IntakeStarting() {
       // ★`[2026-10-03 사용자 지적]` 「받았어요」 is the first stage of the bar at the top: it stays as long as every stage does (a fast server used to
       //   answer in a few hundred ms and the bar moved on before it could be seen).
       const seenFor = Date.now() - shownAt;
-      if (seenFor < STAGE_MIN_MS) await new Promise((resolve) => setTimeout(resolve, STAGE_MIN_MS - seenFor));
+      if (!skipAnimation.current && seenFor < STAGE_MIN_MS) await new Promise((resolve) => setTimeout(resolve, STAGE_MIN_MS - seenFor));
       if (!live || left.current) return;
       endIntakeStart(start);
       router.replace(routes.intake(intake_id));
