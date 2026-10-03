@@ -1,5 +1,6 @@
 import type { Language } from "@/lib/i18n";
 import type { LocationFix } from "@/lib/location";
+import type { OpProgress } from "@/lib/live/stream";
 import type { Coordinates } from "../map/model";
 import type { TripSurvey } from "../onboarding/payload";
 
@@ -156,7 +157,9 @@ export interface TripGateway {
   startTrip(tripId: string, language: Language): Promise<Trip>;
   /** `itemId` — the stop the customer picked on screen; the server uses it when the sentence does not name one. */
   /** `location`: where the customer is, from the browser, sent only after the server said the answer needs it. */
-  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null): Promise<Trip>;
+  /** `onProgress`: what the server is doing while it works on the message (live only — the demo answers at once). */
+  sendMessage(tripId: string, message: string, language: Language, itemId?: string | null, location?: LocationFix | null,
+    onProgress?: (progress: OpProgress) => void): Promise<Trip>;
   /**
    * Delete one trip, or reject with why it was not deleted. Absent where a trip cannot be deleted: the server has no
    * delete call yet (`/v1/web/trips` is GET and POST only), so only the demo offers it.

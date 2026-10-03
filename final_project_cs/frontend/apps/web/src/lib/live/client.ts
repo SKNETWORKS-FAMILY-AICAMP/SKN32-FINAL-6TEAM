@@ -115,6 +115,12 @@ async function send(url: string, init: RequestInit, language: Language): Promise
     throw new LiveError("network", t("서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.", "Could not reach the server. Please try again shortly."));
   }
   if (response.ok) return response;
+  throw await refusal(response, language);
+}
+
+/** A non-2xx answer → the server's own code and sentence (`{"error": {...}}`), with when a limit opens again. */
+export async function refusal(response: Response, language: Language): Promise<LiveError> {
+  const t = translator(language);
   let code = `HTTP_${response.status}`;
   let message = t(`요청을 처리하지 못했어요 (${response.status}).`, `The request failed (${response.status}).`);
   let detail: unknown;
@@ -130,7 +136,7 @@ async function send(url: string, init: RequestInit, language: Language): Promise
     const seconds = Number((detail as { retry_after_seconds?: unknown } | undefined)?.retry_after_seconds ?? response.headers.get("Retry-After"));
     if (Number.isFinite(seconds) && seconds > 0) message = `${message} ${waitText(seconds, t)}`;
   }
-  throw new LiveError(code, message, detail);
+  return new LiveError(code, message, detail);
 }
 
 /** 「3시간 20분 뒤에 다시 할 수 있어요」 — whole minutes, rounded up. */
@@ -150,16 +156,20 @@ export function waitText(seconds: number, t: Translate): string {
  * the user is told; the next action starts with a fresh key.
  */
 export async function api<T>(path: string, language: Language, init: RequestInit = {}): Promise<T> {
-  const t = translator(language);
   const key = await userKey(language);
   try {
     const response = await send(`${API_BASE}${path}`, { ...init, headers: { ...(init.headers ?? {}), "X-User-Key": key } }, language);
     return await response.json() as T;
   } catch (error) {
-    if (!(error instanceof LiveError) || error.code !== "unauthenticated") throw error;
-    try { window.localStorage.removeItem(KEY_STORAGE); } catch { /* ignore */ }
-    throw new LiveError("key_rejected", t("저장된 사용자 키가 더 이상 맞지 않아요. 다음 요청부터 새 키로 시작해요 — 이전 여행은 따로 보관한 키로만 열 수 있어요.", "Your saved user key is no longer valid. The next request starts with a new key — earlier trips open only with the key you kept."));
+    throw keyChecked(error, language);
   }
+}
+
+/** A refused key (401) is dropped here and said plainly (see `api`); any other error passes through as it was. */
+export function keyChecked(error: unknown, language: Language): unknown {
+  if (!(error instanceof LiveError) || error.code !== "unauthenticated") return error;
+  try { window.localStorage.removeItem(KEY_STORAGE); } catch { /* ignore */ }
+  return new LiveError("key_rejected", translator(language)("저장된 사용자 키가 더 이상 맞지 않아요. 다음 요청부터 새 키로 시작해요 — 이전 여행은 따로 보관한 키로만 열 수 있어요.", "Your saved user key is no longer valid. The next request starts with a new key — earlier trips open only with the key you kept."));
 }
 
 /**

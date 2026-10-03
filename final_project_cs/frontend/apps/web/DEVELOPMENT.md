@@ -18,21 +18,22 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 1. 공통 레이아웃·버튼·입력·상태 표시와 여행 데이터 계약을 먼저 정의한다.
 2. `/`: 소개 3장(스크롤 스냅·등장 모션). 넓은 화면에서는 402px 기기 틀, 720px 이하에서는 전체 화면. 첫 장에는 언어 선택 카드(누르면 아래로 펼쳐지고, 고르면 접힌다)와 최근 여행 3개까지의 내 여행 카드가 있고 하단에는 아래로 가는 안내만 둔다. 둘째 장은 이용 방법 4단계를 앱 화면 캡처와 함께 옆으로 넘기는 카드다.
-3. `/start`: 온보딩. 맨 위 선택 입력 `복구용 이메일` 카드(번호 없음, 다른 단계의 조건이 아니다) 아래로 약관·취향 카드. 약관은 끝까지 읽어야 동의할 수 있고, 여행 취향은 설문 안내 카드 뒤에 백엔드 설문(D-020)을 따른 6문항(우선순위는 분야·세부를 누른 순서로 매기는 한 카드)을 좌우로 넘기는 카드다. 답은 여행을 등록할 때 함께 보낸다.
+3. `/start`: 온보딩. 맨 위 선택 입력 `디스코드 알림` 카드(웹훅만 — 복구용 이메일은 2026-10-03 에 뺐다. 번호 없음, 다른 단계의 조건이 아니다) 아래로 약관·취향 카드. 약관은 끝까지 읽어야 동의할 수 있고, 여행 취향은 설문 안내 카드 뒤에 백엔드 설문(D-020)을 따른 6문항(우선순위는 분야·세부를 누른 순서로 매기는 한 카드)을 좌우로 넘기는 카드다. 답은 여행을 등록할 때 함께 보낸다.
 4. `/trips/new`: 텍스트 입력·초안 보존·예시 계획·취향 표시. demo는 시나리오를 선택하고, live는 글·파일 최대 5개를 접수한다. `/intakes/[intakeId]`에서 읽는 과정과 장소·운영시간·이동 검사를 보고, 항목 잠금·삭제·장소 바꾸기·시각 고치기, 전체 자동 추천·재검증, 여행 등록 또는 일정 짜기를 수행한다(`README.md` 의 확인 화면 절).
 5. `/trips/[tripId]/verification`: demo의 4단계·퍼센트·재시도·결과 이동. live는 별도 검증 단계가 없다는 안내를 표시한다.
 6. `/trips/[tripId]/results`: demo의 요약·확인 필요 항목·일차 탭·상세 펼침과 관리 시작 차단. live는 별도 결과 통계를 만들지 않고 여행 화면으로 안내한다.
 7. `/trips/[tripId]`: 일정·방문 순서(지도)·채팅을 한 번에 한 칸씩 보여 주고 하단 고정 탭 또는 플로팅 버튼으로 바꾼다.
 8. `/trips`: 여행 목록과 demo 개별·선택 삭제(live 삭제 비활성). `/mypage`·`/mypage/edit`: 사용자 키 표시, live 키 가져오기·재발급, 닉네임·이메일 입력 검증. 프로필 저장·이미지 변경은 비활성이다.
 
-디자인 출처는 [2026-09-23 목업](mockups/tripilot-intro-animated-nav-switch.html)이다. 목업의 내비게이션 비교 스위치 대신 오른쪽 위 메뉴(프로필·여행 목록 보기·언어·플로팅 버튼 사용) 사이드바에서 언어와 여행 화면 내비게이션(기본 고정 하단 탭)을 고른다. 목업은 실제 지도 대신 방문 순서 개념도를 보이지만, 앱은 지도 제공자 설정을 유지하고 `demo`일 때 개념도를 보인다. 이전 디자인 출처(A-COP `8ed3548`의 `tripilot-intake-wireframe.html`)와 기존 HTML 시연 파일은 보존한다. 상태 오류·실패·없는 여행 안내는 각 화면 내부 상태로 처리한다.
+디자인 출처는 [2026-09-23 목업](mockups/tripilot-intro-animated-nav-switch.html)이다. 목업의 내비게이션 비교 스위치 대신 오른쪽 위 메뉴(프로필·여행 목록 보기·언어·테마·플로팅 버튼 사용) 사이드바에서 언어, 테마(2026-10-03부터)와 여행 화면 내비게이션(기본 고정 하단 탭)을 고른다. 목업은 실제 지도 대신 방문 순서 개념도를 보이지만, 앱은 지도 제공자 설정을 유지하고 `demo`일 때 개념도를 보인다. 이전 디자인 출처(A-COP `8ed3548`의 `tripilot-intake-wireframe.html`)와 기존 HTML 시연 파일은 보존한다. 상태 오류·실패·없는 여행 안내는 각 화면 내부 상태로 처리한다.
 
 ## 코드 경계
 
 - `src/app`: URL·공통 레이아웃·페이지 조합.
-- `src/components/ui`, `src/components/layout`: 실제로 재사용되는 UI. `ui`에는 공통 프로필 이미지(`Avatar`)와 홈·메뉴가 함께 쓰는 언어 카드(`language-picker`)가, `layout`에는 기기 틀·여정 틀·풍경 배경·메뉴 사이드바가 있다.
+- `src/components/ui`, `src/components/layout`: 실제로 재사용되는 UI. `ui`에는 공통 프로필 이미지(`Avatar`), 홈·메뉴가 함께 쓰는 언어 카드(`language-picker`), 메뉴의 테마 카드(`theme-picker`)가, `layout`에는 기기 틀·여정 틀·풍경 배경·메뉴 사이드바가 있다.
 - `src/features/intro`, `src/features/onboarding`: 소개 화면과 약관·취향 온보딩.
-- `src/lib/i18n.ts`, `src/lib/settings.ts`: 한/영 문구 함수와 언어·내비게이션 설정.
+- `src/lib/i18n.ts`, `src/lib/settings.ts`: 한/영 문구 함수와 언어·내비게이션·테마 설정.
+- `src/lib/theme.ts`, `src/styles/tokens.css`: 테마 이름과 첫 화면을 그리기 전에 저장된 테마를 거는 스크립트, 두 테마의 색 역할 변수. 화면 CSS에는 색을 직접 적지 않는다(`src/styles/tokens.test.ts`가 검사).
 - `src/lib/profile.ts`, `src/features/profile`: 메뉴·마이페이지가 읽는 사용자 정보와 마이페이지 조회·수정 화면. 연동 상태는 [사용자 정보 연동 대기 항목](PROFILE_CONTRACT.md).
 - `src/features/trip-registration`, `src/features/intake-review`: 등록 입력·초안과 live 접수 확인/편집/등록.
 - `src/features/account`, `src/features/human-check`: 사용자 키 안내·관리와 선택적 Turnstile 확인.
@@ -52,7 +53,7 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 
 `Trip`·`TripStop`은 프론트 표시 모델이다. live 어댑터가 서버 `trip_id/items`를 변환하고 서울 시각으로 표시한다. 별도 검증 퍼센트 API는 없다. 접수 읽기만 서버 실시간 진행(SSE, `GET /v1/web/trip-intakes/{id}/events`)을 구독하고(안 열리면 폴링으로 되돌아감), 여행 화면의 변경 알림은 `GET …/trips/{id}/events` 종을 따로 듣는다. live 등록 시 서버가 판정하며 이후 살펴볼 점·알림·이력은 여행 화면에서 확인한다. demo 진행 조회와 가짜 서버 시험을 실제 운영 검증으로 해석하지 않는다.
 
-미연결: live 여행 삭제, 프로필 저장·이미지 변경·이메일 복구, 선택 언어 전달. 토큰 가져오기·재발급은 연결돼 있다. `POST /v1/web/warmup`은 `fc1ac0a`에서 서버 경로가 추가됐다. 호출 연결과 실제 모델 예열·실패 안내 검증을 구분한다. 상세 실행 조건과 제한은 [README](README.md)를 따른다.
+미연결: live 여행 삭제, 닉네임 저장·이미지 변경, 선택 언어 전달. 토큰 가져오기·재발급은 연결돼 있다. `POST /v1/web/warmup`은 `fc1ac0a`에서 서버 경로가 추가됐다. 호출 연결과 실제 모델 예열·실패 안내 검증을 구분한다. 상세 실행 조건과 제한은 [README](README.md)를 따른다.
 
 지도 제공자 설정은 데이터 모드와 독립적이다. 유효 좌표와 웹용 키가 있을 때 실제 지도 바탕·핀을 표시하며 길찾기 선·현재 위치는 구현하지 않았다. 서버 좌표 변환과 기존 후속 제안은 [지도 문서](MAP_INTEGRATION.md)에 구분했다. 이번 문서 개정에서 외부 지도 인증이나 운영 API를 재검증하지 않았다.
 
@@ -257,3 +258,36 @@ Next.js 16 App Router + React 19 + TypeScript strict. Node.js 22와 npm을 사�
 - 테스트용 모방 서버 이름을 한때 `tests/mock-api/test-mock-server.mjs` · `playwright.mock.config.ts` · `npm run test:mock` · `.next-mock` 으로 바꿨다(시험의 `stub()` 도 `mockServer()` 로). 「live」라는 이름이 실제 서버로 오해됐기 때문이다. `[2026-10-02 사용자 지시]` 화면은 다른 팀(UI) 담당이라 develop 체계를 따라 폴더·이름을 `tests/live/stub-server.mjs` · `playwright.live.config.ts` · `npm run test:live` · `.next-live` 로 되돌렸다. 시험 안의 `mockServer()` 이름과 「테스트용 모방 서버(실제 서버 아님)」 설명은 그대로 둔다.
 - 실제 앱이 데모 코드(브라우저 안 모방 데이터 `lib/demo`)를 가져오지 않는다: 오류 모양은 `lib/gateway-errors.ts` 로 옮기고, 데모 게이트웨이와 예시 일정은 `NEXT_PUBLIC_DATA_MODE=demo` 로 빌드할 때만 따로 불러온다(동적 import). 설정이 없으면 개발 중에도 데모로 떨어지지 않고 「실제 서버 연결이 설정되지 않았어요」라고 말한다(전에는 개발 모드 기본값이 데모였다).
 - 그대로 둔 것: 데모 모드 자체(디자인 팀의 화면 시험 `test:e2e` 가 쓴다)와 지도 「방문 순서 도식」(`MAP_PROVIDER=demo`, 모방 데이터가 아니라 지도 없이 그리는 방식).
+
+## 2026-10-03 — 그린·화이트 테마
+
+사용자 지시: 「메뉴 사이드바에 테마 선택 카드가 생기고, 그 메뉴에서 지금의 녹색 계열이냐 흰색 계열이냐를 고른다.」 처음에는 Codex가 맡기로 했으나 같은 날 사용자가 Claude에게 넘겼다.
+- **두 테마**: 그린(기본, 지금까지의 색)과 화이트(`data-theme="neutral"`, [계획 확인 시나리오 목업](mockups/tripilot-plan-check-streaming.html)의 색). 값은 사용자가 확인한 표를 따른다. 글꼴·크기·굵기는 같다.
+- **역할 분리**: 버튼(`primary`), 선택(`selected`), 성공(`success`), 조정(`adjusted`), 확인 필요(`warning`), 오류(`error`)를 따로 둔다. 그린에서는 선택색이 기본 버튼색과 같고, 화이트에서는 파랑이다.
+- **적용**: 메뉴의 테마 카드 → `lib/settings.ts`의 `theme` → `<html data-theme>`. 새로고침 때는 `<head>`의 짧은 스크립트(`lib/theme.ts`)가 본문보다 먼저 저장된 테마를 걸어 그린이 잠깐 보이지 않는다.
+- **색 바꾸기**: 화면 CSS 18개 파일과 지도 핀(`features/map/providers/pin.ts`), 취향 카드 누름 효과의 직접 적은 색을 역할 변수로 바꿨다. 반투명 색은 `color-mix(in srgb, var(--color-…) N%, transparent)`로 같은 투명도를 지킨다. 기본 프로필 이미지는 같은 모양을 역할 색으로 그린다(`Avatar`).
+- **장식 배경**: 풍경 그림(`Scene`)과 소개 배경 그림은 그린에만 있다. 화이트에서는 바탕색만 남긴다. 풍경 위의 막·빛 색은 그림에 딸린 것이라 그대로 두었다.
+- **앞으로**: 새 화면도 색을 직접 적지 말고 역할 변수만 쓴다. 역할이 모자라면 두 테마에 같은 이름으로 함께 더한다(`tokens.test.ts`가 두 테마의 역할 목록이 같은지 본다).
+- 검증·남은 일: [작업 리포트](../../../wiki/records/reports/2026-10-03_0315_웹테마_그린화이트_전환.md).
+
+## 2026-10-03 — 실시간 진행(SSE)과 디스코드 웹훅 연결
+
+사용자 지시: 「SSE 들어가야 되는 부분 다 작업해서 넣어 줘. role-manager로 PR 하기 전에 서버에서 작업한 것에 대해 프론트 작업이 다 들어가 있어야 돼」, 「웹훅도 연결하자」.
+- **SSE** — 서버 `op_stream.py`(REST 명세 「웹 실시간 진행 (SSE)」)를 `src/lib/live/stream.ts`가 받는다. `streamApi`는 채팅(`POST …/messages`)·「일정 짜 줘」(`POST …/plan`)를 `Accept: text/event-stream`으로 묻고, `watchIntake`는 접수 읽기(`GET …/events`)를 따른다. `EventSource`는 `X-User-Key`를 실을 수 없어 기존 초인종(`events.ts`)처럼 `fetch`로 읽고 그 파서를 함께 쓴다.
+- **연결 감시** — 이벤트가 7초 없으면 끊김(명세 「beat 2번」 + 여유). POST는 같은 본문으로 1·2·4초 뒤 다시 보내고(서버가 같은 요청을 두 번 처리하지 않음), 다 실패하면 `connection_lost`. 접수 읽기는 초인종과 같은 간격(1초~30초)으로 다시 붙는다. 스트림이 없는 서버(JSON 응답·404/405·연결 수 상한)는 전처럼 동작한다.
+- **화면** — 채팅의 기다림 줄, 「짜는 중」 아래 줄에 `progressText`(서버 단계·경과·느림·다시 연결). 접수 읽기는 이벤트마다 다시 읽고, `stalled`면 다시 올리기 화면.
+- **웹훅** — `src/lib/webhook.ts`가 `PUT /v1/web/profile` `discord_webhook_url`로 보낸다. 키가 없으면 페이지 메모리에만 두고 `ContactSync`가 키가 생길 때 올린다(키 발급 신호가 두 번 와도 요청은 하나). 브라우저 저장소에는 쓰지 않는다. 마이페이지 `features/profile/webhook.tsx`가 가린 주소·상태·시험 메시지·바꾸기·지우기를 맡는다.
+- 연결 상태와 협의 항목은 [화면별 연동 문서](../../../wiki/external/web-screen-api.md)에 둔다. develop 병합 때 계약 시험의 호출 읽기 규칙을 넓혀야 한다(같은 문서의 「협의 필요」).
+- 검증·남은 일: [작업 리포트](../../../wiki/records/reports/2026-10-03_0405_웹_SSE진행_웹훅_연결.md).
+
+## 조직 `role-manager` 의 웹 변경과 우리 서버 연결 합치기 기록
+
+2026-10-03. 최상욱님이 조직 `role-manager`(PR #32)에 올린 웹 변경(시작 화면 알림 카드 · 웹훅 저장 · 그린·화이트 테마 · 진행 SSE · 새 계획 확인 화면 `features/plan-check/` · 실제 지도 핀)을 이 작업 폴더로 가져왔다.
+두 쪽 이력이 이어져 있지 않아(스냅숏 커밋) git 병합이 안 되므로, 같은 기준(`1c48943`)에서 바뀐 파일을 갈라 조직 쪽에서만 바뀐 89개를 그대로 들이고, 양쪽이 바꾼 7개는 손으로 합쳤다. 작업 전 백업: `frontend/_backup/…_web_조직판_합치기_전/`.
+
+- **계획 확인 화면은 조직 판 하나**로 쓴다(같은 화면의 두 구현은 하나로). 우리 쪽 옛 확인 화면(개념도 지도 · 자체 시트 · 자체 수정 화면 등 39개 파일)은 지웠다 — 이력은 커밋 `612c4ca5`.
+- **서버 연결은 우리 것을 끼웠다**: `plan-check/from-review.ts`(서버 `review` · 내용 이벤트 → 화면 데이터), `plan-check/use-server-review.ts`(잠금 · 후보 · 검색 · 사진 · 자동 추천 · 전체 자동 추천 · 되돌리기 · 재검증), `lib/live/stream.ts` 의 `watchIntake` 에 내용 이벤트 통로. 자세한 연결표는 [PLAN_CHECK_SCREEN.md](PLAN_CHECK_SCREEN.md) §4.
+- **사용자 결정(2026-10-03)**: 복구용 이메일을 뺐다(`lib/contact.ts` 삭제 · 시작 화면 · 마이페이지 · 소개 화면 문구) · 언어 선택은 메뉴에만 두고 소개 화면에서 뺐다 · 「예시 불러오기」는 실서버 모드에서도 보인다.
+- **무료 지도 고침**: 칸 크기가 바뀌면(시트가 오르내림) 사용자가 지도를 직접 움직이기 전까지 핀에 다시 맞춘다 — 실서버에서 핀 네 개가 한 점에 몰려 보이던 것을 고쳤다.
+- **모방 서버**(`tests/live/stub-server.mjs`): 양쪽 시나리오를 합쳤다. `review` 의 기본값은 `absent`(조직 쪽 시험은 읽은 값만 말하는 서버를 본다), 우리 서버 연결 시험은 `review: "on"`.
+- **시험**: 단위 238/238 · 타입 오류 0 · 린트 0. 옛 확인 화면의 브라우저 시험(`review.spec.ts`)과 이메일 시험(`contact.spec.ts`, `onboarding-email.spec.ts` → `onboarding-alerts.spec.ts`)을 정리했다. 브라우저 자동 시험 전체(demo · live)는 이 PC 의 가상 메모리가 모자라 이번에는 돌리지 못했다.

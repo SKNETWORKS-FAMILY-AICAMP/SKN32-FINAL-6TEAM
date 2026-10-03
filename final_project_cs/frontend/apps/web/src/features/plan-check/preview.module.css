@@ -1,0 +1,6 @@
+/* The preview's own controls — outside the product screen, so they never pass for part of it. */
+.preview { position: fixed; z-index: 60; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; max-width: calc(100vw - 24px); padding: 6px 8px 6px 12px; border-radius: 10px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 12px; font-weight: 650; }
+.preview button { min-height: 32px; padding: 0 10px; border: 1px solid currentColor; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
+.preview button:focus-visible { outline: 2px solid var(--color-on-inverse); outline-offset: 2px; }
+/* On a phone the screen fills the window: the controls follow it below instead of covering its bottom buttons. */
+@media (max-width: 720px) { .preview { position: static; margin: 8px 12px 16px; } }

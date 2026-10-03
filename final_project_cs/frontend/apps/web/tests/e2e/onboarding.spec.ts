@@ -48,7 +48,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
   const progress = page.getByRole("progressbar", { name: "답변한 질문" });
   const skip = page.getByRole("button", { name: "응답하지 않고 넘어가기" });
   await expect(next).toBeDisabled();
-  // No `optional` mark on the preference cards (the recovery email card above carries its own).
+  // No `optional` mark on the preference cards (the Discord alerts card above carries its own).
   await expect(page.locator("#card-2").getByText("선택", { exact: true })).toHaveCount(0);
   // One theme only (backend `theme` is a single value): a second choice replaces the first.
   await page.getByRole("button", { name: "자연과 힐링" }).click();
@@ -223,7 +223,7 @@ test("시작 화면은 한 번만: 마친 뒤 새로고침해도 약관·취향�
   // The intro button no longer sends the customer through it again.
   await page.goto("/");
   await page.getByRole("button", { name: "3. 일정 시작" }).click();
-  await expect(page.getByText("이미 설정을 마치셨어요. 취향과 이메일은 마이페이지에서 바꿀 수 있어요.")).toBeVisible();
+  await expect(page.getByText("이미 설정을 마치셨어요. 취향과 디스코드 알림은 마이페이지에서 바꿀 수 있어요.")).toBeVisible();
   await page.getByRole("button", { name: "내 일정 시작하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
   await expect(page.getByText("함께 고른 여행 취향")).toBeVisible();

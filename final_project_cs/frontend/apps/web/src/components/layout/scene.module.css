@@ -1,5 +1,5 @@
 /* Sized by its own width, so the phone crop also applies inside the intro's device frame. */
-.scene { --scene-x: 0px; --scene-y: 0px; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #f4f6f0; contain: strict; container-type: inline-size; }
+.scene { --scene-x: 0px; --scene-y: 0px; position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--color-background); contain: strict; container-type: inline-size; }
 .camera { position: absolute; inset: -20px; transform: translate3d(calc(var(--scene-x) + var(--scene-progress)), var(--scene-y), 0) scale(1.025); transition: transform .65s cubic-bezier(.22, .8, .25, 1); }
 .layer { position: absolute; inset: 0; opacity: 0; transform: scale(1.025); transition: opacity 1s ease, transform 1.4s ease; }
 .layer[data-active="true"][data-loaded="true"] { opacity: 1; transform: scale(1); }
@@ -17,3 +17,5 @@
   .camera, .layer { transform: none; transition: none; }
   .light { display: none; }
 }
+/* The white theme has no landscape: only the page colour stays. The veil and light colours belong to the green pictures. */
+:global(:root[data-theme="neutral"]) .camera { display: none; }

@@ -11,7 +11,7 @@ async function withTestToken(page: Page) {
   await page.addInitScript((token) => localStorage.setItem("tripilot.web.user-key.v1", token), TOKEN);
 }
 
-test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미지 변경·저장은 비활성, 토큰은 입력칸이 없고, 이메일은 선택이며 초안은 어디에도 반영되지 않는다", async ({ page }) => {
+test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미지 변경·저장은 비활성, 토큰은 입력칸이 없고, 닉네임 초안은 어디에도 반영되지 않는다", async ({ page }) => {
   await withTestToken(page);
   await page.goto("/trips/new");
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
@@ -24,8 +24,9 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("heading", { name: "마이페이지", exact: true })).toBeVisible();
   await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
   // The name line under the image is the only nickname: no second 「닉네임」 row.
-  await expect(page.locator("#main-content dt")).toHaveText(["발급된 토큰", "토큰 복구용 이메일"]);
-  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
+  await expect(page.locator("#main-content dt")).toHaveText(["발급된 토큰", "디스코드 웹훅"]);
+  // A demo build saves no webhook — the row says so instead of offering it.
+  await expect(page.getByText("실제 서버에 연결됐을 때만 등록할 수 있어요.", { exact: true })).toBeVisible();
   await expect(page.getByText(MASK)).toBeVisible();
   await expect(page.getByText(TOKEN)).toHaveCount(0);
   await expect(page.locator("#main-content input")).toHaveCount(0);
@@ -35,18 +36,19 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await expect(page.getByRole("heading", { name: "프로필 수정", exact: true })).toBeVisible();
   const save = page.getByRole("button", { name: "저장", exact: true });
   await expect(save).toBeDisabled();
-  await expect(page.getByText("이메일은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("디스코드 웹훅은 저장할 수 있어요. 닉네임·이미지 저장은 준비 중이에요.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "이미지 변경" })).toBeDisabled();
   await expect(page.getByText("이미지 변경은 준비 중이에요.", { exact: true })).toBeVisible();
-  // Only the nickname and the email are fields; the token is shown, never edited.
+  // The nickname and the webhook are fields (the webhook is off in a demo build); the token is shown, never edited.
   await expect(page.locator("#main-content input")).toHaveCount(2);
+  await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" })).toBeDisabled();
   await expect(page.getByText("토큰은 수정할 수 없어요.", { exact: true })).toBeVisible();
 
   const nickname = page.getByLabel("닉네임");
   await expect(nickname).toHaveValue("");
   // The name line itself is the field: under the image, above the token, showing what My page shows.
   await expect(nickname).toHaveAttribute("placeholder", "닉네임 미발급");
-  const [imageTop, fieldTop, tokenTop] = await Promise.all([page.locator("#main-content img").first(), nickname, page.getByText("발급된 토큰", { exact: true })]
+  const [imageTop, fieldTop, tokenTop] = await Promise.all([page.locator('#main-content svg[class*="avatar"]'), nickname, page.getByText("발급된 토큰", { exact: true })]
     .map(async (item) => (await item.boundingBox())!.y));
   expect(imageTop < fieldTop && fieldTop < tokenTop).toBe(true);
   await nickname.fill("여행자");
@@ -56,26 +58,11 @@ test("메뉴 프로필 → 마이페이지 조회 → 수정 → 취소: 이미�
   await nickname.fill("새 여행자");
   await expect(page.getByText("닉네임을 입력해 주세요.")).toHaveCount(0);
 
-  const email = page.getByLabel(/토큰 복구용 이메일/);
-  await email.fill("not-an-email");
-  await expect(page.getByText("이메일 형식이 올바르지 않아요.", { exact: true })).toBeVisible();
+  // Nothing here can be saved in a demo build: the nickname has no server call yet, and the webhook is off.
   await expect(save).toBeDisabled();
-  await email.fill("traveler@example.com");
-  await expect(page.getByText("이메일 형식이 올바르지 않아요.")).toHaveCount(0);
-  // ★`[2026-10-01]` A changed, well-formed email can be saved (in this browser). Cancel below drops this draft.
-  await expect(save).toBeEnabled();
-  await email.fill("");
-  await expect(page.getByText("이메일 형식이 올바르지 않아요.")).toHaveCount(0);
-  await expect(page.getByText("토큰을 잃어버렸을 때 찾는 데 사용할 이메일이에요.", { exact: true })).toBeVisible();
-  // Back to what is saved (nothing): nothing changed, so there is nothing to save.
-  await expect(save).toBeDisabled();
-
-  await email.fill("traveler@example.com");
   await page.getByRole("link", { name: "취소", exact: true }).click();
   await expect(page).toHaveURL(/\/mypage$/);
   await expect(page.locator("#main-content").getByText("닉네임 미발급", { exact: true })).toBeVisible();
-  // Cancel dropped the draft: no email was registered.
-  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "메뉴", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: /마이페이지/ })).toContainText("닉네임 미발급");
   await page.keyboard.press("Escape");
@@ -125,10 +112,9 @@ test("토큰이 없으면 미발급으로 보이고 보기·복사를 막으며,
   expect(await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"))).toBeNull();
 });
 
-test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 닿고, 긴 토큰·닉네임·이메일이 잘리거나 가로로 넘치지 않는다", async ({ page }) => {
+test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 닿고, 긴 토큰·닉네임이 잘리거나 가로로 넘치지 않는다", async ({ page }) => {
   await withTestToken(page);
   const long = "아주긴닉네임".repeat(10);
-  const longEmail = `${"traveler.with.a.very.long.name".repeat(3)}@example-travel-domain.com`;
   for (const [width, height] of [[1280, 900], [375, 812], [320, 640]]) {
     await page.setViewportSize({ width, height });
     await page.goto("/mypage");
@@ -154,10 +140,9 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
 
     await page.getByRole("link", { name: "수정", exact: true }).click();
     await page.getByLabel("닉네임").fill(long);
-    await page.getByLabel(/토큰 복구용 이메일/).fill(longEmail);
     await noHorizontalScroll(page);
     // Phones keep 16px text in fields (no zoom on focus); wider screens keep the design's size.
-    for (const input of [page.getByLabel("닉네임"), page.getByLabel(/토큰 복구용 이메일/)]) {
+    for (const input of [page.getByLabel("닉네임")]) {
       const size = await input.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
       expect(size, `${width}x${height}`).toBeGreaterThanOrEqual(width <= 550 ? 16 : 14);
     }
@@ -172,40 +157,10 @@ test("영어 화면과 PC·375px·320px에서 메뉴는 스크롤로 끝까지 �
   await expect(english.getByRole("switch", { name: "Use floating button" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Edit profile", exact: true })).toBeVisible();
-  await expect(page.getByText("You can save the email. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText("You can save the Discord webhook. Saving the nickname and image is not available yet.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change image" })).toBeDisabled();
   await expect(page.getByText("The token cannot be changed.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("heading", { name: "My page", exact: true })).toBeVisible();
-  await expect(page.getByText("No email registered.", { exact: true })).toBeVisible();
 });
 
-test("이메일 등록 → 마이페이지에 보임 → 새로고침 뒤에도 남음 → 바꾸기 → 비우고 저장하면 지워진다", async ({ page }) => {
-  await withTestToken(page);
-  await page.goto("/mypage");
-  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "이메일 등록하기" }).click();
-  await expect(page).toHaveURL(/\/mypage\/edit$/);
-  const save = page.getByRole("button", { name: "저장", exact: true });
-  const email = page.getByLabel(/토큰 복구용 이메일/);
-  await email.fill("a@b");
-  await expect(save).toBeDisabled();
-  await email.fill("  traveler@example.com  ");
-  await save.click();
-  await expect(page).toHaveURL(/\/mypage$/);
-  await expect(page.locator("#main-content").getByText("traveler@example.com", { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "이메일 등록하기" })).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem("tripilot.web.contact.v1"))).toBe(JSON.stringify({ recoveryEmail: "traveler@example.com", pending: true }));   // demo build: no server, so it stays in this browser
-
-  await page.reload();
-  await expect(page.locator("#main-content").getByText("traveler@example.com", { exact: true })).toBeVisible();
-
-  await page.getByRole("link", { name: "수정", exact: true }).click();
-  await expect(page.getByLabel(/토큰 복구용 이메일/)).toHaveValue("traveler@example.com");
-  await expect(page.getByRole("button", { name: "저장", exact: true })).toBeDisabled();
-  await page.getByLabel(/토큰 복구용 이메일/).fill("");
-  await page.getByRole("button", { name: "저장", exact: true }).click();
-  await expect(page).toHaveURL(/\/mypage$/);
-  await expect(page.getByText("등록된 이메일이 없습니다.", { exact: true })).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem("tripilot.web.contact.v1"))).toBeNull();
-});

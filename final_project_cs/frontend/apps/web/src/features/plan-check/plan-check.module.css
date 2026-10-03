@@ -1,0 +1,271 @@
+/*
+ * Plan check — mockup `mockups/tripilot-plan-check-streaming.html` (scenarios 1–7). Colours are the shared roles of
+ * `styles/tokens.css` (never a colour here), so both themes follow. Sits below the device header, as the start screen does.
+ */
+.screen { position: absolute; inset: 76px 0 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-surface); color: var(--color-text); }
+
+.back { display: inline-grid; place-items: center; width: 36px; height: 36px; flex: none; border: 0; border-radius: 10px; background: none; color: var(--color-text-secondary); cursor: pointer; }
+.back:hover { background: var(--color-subtle); }
+.back:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* One straight line with four points: done points are filled, the current one is outlined. */
+.progress { margin: 14px 4px 0; }
+.track { position: relative; height: 3px; margin: 8px 9px 0; border-radius: 2px; background: var(--color-border); }
+.fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+.steps { list-style: none; margin: -11px 0 0; padding: 0; display: flex; justify-content: space-between; }
+.steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
+.steps li:first-child { align-items: flex-start; }
+.steps li:last-child { align-items: flex-end; }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.steps li[data-state="current"] { color: var(--color-text); }
+.steps li[data-state="current"] .node { border-color: var(--color-muted); }
+.steps li[data-state="done"] { color: var(--color-success); }
+.steps li[data-state="done"] .node { border-color: var(--color-success); background: var(--color-success); }
+.steps li[data-state="done"] .node::after { content: "✓"; color: var(--color-on-primary); font-size: 10px; font-weight: 800; line-height: 1; }
+.stepLabel { white-space: nowrap; }
+.progress[data-size="small"] { margin: 6px 0 0; }
+.progress[data-size="small"] .node { width: 14px; height: 14px; }
+.progress[data-size="small"] .steps { margin-top: -9px; }
+.progress[data-size="small"] .stepLabel { font-size: 10.5px; }
+
+/* ①② The uploaded plan, read line by line */
+.reading { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 20px; }
+.head { padding-bottom: 12px; }
+.headRow { display: flex; align-items: center; gap: 6px; min-height: 40px; }
+.title { margin: 0; font-size: 20px; font-weight: 750; }
+.desc { margin: 4px 0 0; font-size: 13.5px; color: var(--color-muted); }
+.docLabel { margin: 10px 2px 8px; font-size: 12.5px; font-weight: 750; color: var(--color-muted); }
+.doc { list-style: none; margin: 0; padding: 2px 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.line { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--color-border); }
+.line:last-child { border-bottom: 0; }
+.lineMark { display: grid; place-items: center; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--color-border); font-size: 10px; font-weight: 800; color: var(--color-on-primary); }
+.line[data-state="current"] .lineMark { border-color: var(--color-muted); border-top-color: transparent; animation: spin .8s linear infinite; }
+.line[data-state="read"] .lineMark { border: 0; background: var(--color-success); }
+.lineBody { display: flex; flex-direction: column; min-width: 0; }
+.lineText { font-size: 14.5px; color: var(--color-faint); }
+.line[data-state="current"] .lineText { color: var(--color-text-secondary); }
+.line[data-state="read"] .lineText { color: var(--color-text); }
+.lineFound { margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--color-success); animation: rise .3s ease-out; }
+.found { margin: 12px 2px 0; font-size: 13.5px; color: var(--color-text-secondary); }
+
+/* ③④ The map fills the screen under a floating bar; the sheet slides over it (mockup .map · .fbar · .sheet). */
+.checking { --sheet-h: min(440px, 60%); position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.checking[data-sheet="peek"] { --sheet-h: 150px; }
+.checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
+/* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
+.map { position: absolute; top: 60px; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom .3s ease; }
+.bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
+.bar .progress { flex: 1; min-width: 0; }
+.barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unlocated { position: absolute; left: 10px; bottom: calc(var(--sheet-h) + 8px); z-index: 3; width: fit-content; max-width: calc(100% - 20px); margin: 0; padding: 3px 10px; border: 1.5px dashed var(--color-warning-border); border-radius: 999px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 750; transition: bottom .3s ease; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; height: var(--sheet-h); display: flex; flex-direction: column; border-radius: 20px 20px 0 0; background: var(--color-surface); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 14%, transparent); transition: height .3s ease; animation: rise .45s ease-out; }
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.sheetTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.count { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-text-secondary); text-align: right; }
+.sheetBody { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 14px 18px; }
+.day { margin: 12px 0 2px; font-size: 13px; font-weight: 750; color: var(--color-muted); }
+.day small { margin-left: 4px; font-size: inherit; font-weight: 500; }
+
+/* The day's timeline: time · rail · card (a place) or a thin line (the move to the next place) */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.entry { display: grid; grid-template-columns: 40px 18px minmax(0, 1fr); column-gap: 6px; animation: rise .35s ease-out; }
+.time { padding-top: 15px; text-align: right; font-size: 13px; font-weight: 750; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.entry[data-type="move"] .time { display: flex; flex-direction: column; align-items: flex-end; padding-top: 7px; line-height: 1.15; }
+.entry[data-type="move"] .time b { font-size: 12px; color: var(--color-muted); }
+.entry[data-type="move"] .time small { font-size: 10px; font-weight: 650; color: var(--color-faint); }
+.rail { position: relative; }
+.rail::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+.entry[data-type="move"] .rail::before { background: repeating-linear-gradient(to bottom, var(--color-faint) 0 3px, transparent 3px 7px); }
+.dot { position: absolute; left: 3px; top: 17px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.entry[data-type="move"] .dot { left: 5px; top: 12px; width: 8px; height: 8px; }
+.entry[data-verdict="keep"] .dot, .entry[data-verdict="adjusted"] .dot { border-color: var(--color-success); background: var(--color-success-soft); }
+.entry[data-verdict="review"] .dot { border-color: var(--color-warning); background: var(--color-warning-soft); }
+
+.card { margin: 4px 0; border: 1.5px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.entry[data-verdict="checking"] .card { border-color: var(--color-faint); }
+.entry[data-verdict="keep"] .card, .entry[data-verdict="adjusted"] .card { border-color: var(--color-success); }
+.entry[data-verdict="review"] .card { border-color: var(--color-warning-border); background: var(--color-warning-surface); }
+.screen[data-stage="done"] .entry[data-verdict="keep"] .card, .screen[data-stage="done"] .entry[data-verdict="adjusted"] .card { border-color: var(--color-border); }
+.cardHead { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px; }
+.cardTitle { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
+.spinner { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.pill { flex: none; padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 11.5px; font-weight: 750; color: var(--color-text-secondary); white-space: nowrap; }
+.pill[data-verdict="adjusted"] { border-color: var(--color-adjusted-border); background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.pill[data-verdict="review"] { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning); }
+
+.checks { list-style: none; margin: 0; padding: 4px 12px 10px; border-top: 1px solid var(--color-divider); }
+.check { display: grid; grid-template-columns: 20px 56px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; font-size: 13px; animation: rise .3s ease-out; }
+.checkKind { font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.checkText { color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.check[data-result="pending"] .checkText { color: var(--color-faint); }
+.check[data-result="bad"] .checkText { color: var(--color-error); font-weight: 650; }
+.check[data-result="warn"] .checkText { color: var(--color-warning); }
+.check[data-result="unknown"] .checkText { color: var(--color-muted); }
+
+.mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-weight: 800; font-style: normal; line-height: 1; }
+.check[data-result="pending"] .mark { width: 18px; height: 18px; border: 2px solid var(--color-border); border-top-color: var(--color-muted); animation: spin .8s linear infinite; }
+.check[data-result="ok"] .mark, .mark[data-result="ok"] { background: var(--color-success-soft); color: var(--color-success); }
+.check[data-result="filled"] .mark, .mark[data-result="filled"] { background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.check[data-result="warn"] .mark, .mark[data-result="warn"] { background: var(--color-warning-soft); color: var(--color-warning); }
+.check[data-result="bad"] .mark { background: var(--color-error); color: var(--color-on-primary); }
+.check[data-result="unknown"] .mark { background: var(--color-subtle-strong); color: var(--color-muted); }
+
+.move { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 4px 10px; font-size: 13px; color: var(--color-text-secondary); }
+.mode { flex: none; padding: 1px 6px; border-radius: 6px; background: var(--color-subtle-strong); font-size: 11px; font-weight: 750; }
+.moveText { flex: 1; min-width: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry[data-type="move"][data-verdict="review"] .moveText { color: var(--color-warning); }
+.waiting { color: var(--color-faint); }
+
+/* ⑤ The result: the list's height (handle), days to put on the map, cards and moves that open, the selected place */
+.handle { display: grid; place-items: center; flex: none; width: 100%; height: 24px; border: 0; background: none; cursor: pointer; }
+.handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
+.handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.dayButton { display: inline-flex; align-items: baseline; min-height: 32px; padding: 0 6px; margin-left: -6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
+.dayButton[aria-pressed="true"] { color: var(--color-text); }
+.cardHeading { margin: 0; font-size: inherit; font-weight: inherit; }
+button.cardHead { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.entry[data-selected] .card { border-color: var(--color-selected); box-shadow: 0 0 0 3px var(--color-selected-soft); }
+.noChecks { margin: 0; padding: 8px 12px 12px; border-top: 1px solid var(--color-divider); font-size: 12.5px; color: var(--color-muted); }
+.moveHead { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.moveHead { cursor: pointer; }
+.move:has(.moveHead) { display: block; padding: 4px 10px; border: 1.5px solid transparent; border-radius: 10px; }
+.move[data-open] { border-color: var(--color-border); background: var(--color-subtle); }
+.move .checks { padding: 0 0 6px; }
+.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: none; padding: 10px 14px 14px; border-top: 1px solid var(--color-divider); background: var(--color-surface); }
+.footer > div, .footer > p { flex: 1 1 100%; margin: 0; font-size: 12.5px; color: var(--color-text-secondary); }
+.footer p, .footer ul { margin: 0; }
+.footer ul { padding-left: 18px; }
+.footer > [role="alert"] { color: var(--color-error); }
+/* The two bottom buttons (mockup .sh-foot): 「전체 자동 추천」 and the next step. */
+.footButton { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 750; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.footButton[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.footButton[data-done] { border-color: var(--color-success); background: var(--color-success); color: var(--color-on-primary); }
+.footButton[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
+.footButton[data-primary] .spinner { border-color: color-mix(in srgb, var(--color-on-primary) 35%, transparent); border-top-color: var(--color-on-primary); }
+.footButton:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* ⑥⑦ Card tools: the lock, edit and delete on the card; recommend and edit inside. One that cannot act is faint and says why. */
+.cardTop { display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+.cardTop .cardHeading { flex: 1; min-width: 0; }
+.cardTop .cardHead { padding: 12px 4px; }
+.cardTop .cardTitle { font-size: 15.5px; line-height: 1.3; word-break: keep-all; }
+.icon { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--color-muted); cursor: pointer; }
+.icon:hover:not([aria-disabled="true"]) { background: var(--color-subtle-strong); color: var(--color-text); }
+.icon[aria-disabled="true"] { opacity: .28; cursor: not-allowed; }
+.icon[aria-pressed="true"] { background: var(--color-text); color: var(--color-surface); opacity: 1; }
+.card[data-locked] { border-color: var(--color-border-strong); background: var(--color-subtle); }
+.pillWait { display: inline-flex; flex: none; align-items: center; gap: 5px; margin: 0 4px; font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.cardNote { margin: 0; padding: 0 12px 12px; font-size: 12px; color: var(--color-muted); }
+.status { display: inline-flex; align-items: center; gap: 6px; }
+.empty { margin: 16px 0; padding: 14px; border-radius: 10px; background: var(--color-subtle); font-size: 13px; color: var(--color-muted); text-align: center; }
+.icon:focus-visible, .action:focus-visible, .previous button:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.cardActions { display: flex; gap: 8px; padding: 0 12px 12px; }
+.action { display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.action[data-primary] { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.action[aria-disabled="true"] { opacity: .32; cursor: not-allowed; }
+.soon { margin-left: 4px; font-size: 10.5px; font-weight: 650; color: var(--color-muted); }
+.badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 6px; padding: 0 5px; border-radius: 10px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 800; }
+.previous { margin: 14px 0 0; text-align: center; }
+.previous button { min-height: 36px; padding: 0 10px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
+
+/* ⑤ The change screen (mockup 개정 4): the bar becomes a search, the sheet shows cards to swipe, photos, results. */
+.searchField { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 9px; border: 1px solid var(--color-divider); border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); }
+.searchField input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 14px; outline: none; }
+.searchField:focus-within { outline: 2px solid var(--color-selected); outline-offset: 1px; }
+.clear { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--color-subtle-strong); color: var(--color-muted); cursor: pointer; }
+.change { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.changeHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px 8px; border-bottom: 1px solid var(--color-divider); }
+.changeTitle { min-width: 0; margin: 0; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.changeTitle:focus { outline: none; }
+.changePos { flex: none; font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.changeBody { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 0 24px; }
+.carousel { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 24px 8px; scrollbar-width: none; }
+.carousel::-webkit-scrollbar { display: none; }
+.changeCard { flex: 0 0 min(288px, calc(100% - 24px)); scroll-snap-align: center; padding: 12px 14px; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-surface); transition: border-color .2s, box-shadow .2s; }
+.changeCard[data-current] { background: var(--color-subtle); }
+.changeCard[data-active] { border-color: var(--color-muted); box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 8%, transparent); }
+.changeCard .checks { margin-top: 8px; padding: 4px 0 0; }
+.changeCard .action { width: 100%; margin-top: 10px; }
+.changeTop { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.chip { padding: 2px 7px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-text-secondary); font-size: 11.5px; font-weight: 800; white-space: nowrap; }
+.chip[data-source="candidate"] { background: var(--color-success-soft); color: var(--color-success); }
+.chip[data-source="search"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.distance { font-size: 12px; font-weight: 700; color: var(--color-muted); white-space: nowrap; }
+.changeName { margin: 8px 0 2px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
+.changeSub { margin: 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.4; }
+.changeNext { margin: 8px 0 0; font-size: 12px; color: var(--color-muted); text-align: right; }
+.dots { display: flex; justify-content: center; gap: 2px; margin: 4px 0 0; }
+.dots button { display: grid; place-items: center; width: 28px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+.dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--color-border); transition: width .2s, background .2s; }
+.dots button[aria-pressed="true"] span { width: 16px; background: var(--color-text); }
+.dots button:focus-visible, .hint:focus-visible, .result:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.hint { display: block; width: calc(100% - 32px); margin: 10px 16px 12px; padding: 8px; border: 0; border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; }
+.photos { padding: 0 16px; }
+.photos h4 { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 8px; font-size: 13.5px; font-weight: 800; }
+.photos h4 small { font-size: 12px; font-weight: 600; color: var(--color-muted); }
+.photos .empty { margin: 0; }
+.photoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 10px; background: var(--color-subtle-strong); }
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo[data-example] { background: linear-gradient(160deg, var(--color-subtle) 0 45%, var(--color-subtle-strong) 45% 70%, var(--color-border) 70%); }
+.photoExample { position: absolute; top: 4px; right: 6px; font-size: 9px; color: var(--color-faint); }
+.photo figcaption { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--color-inverse) 60%, transparent); color: var(--color-on-inverse); font-size: 11px; font-weight: 700; }
+.photoNote { margin: 8px 0 0; font-size: 11.5px; color: var(--color-muted); }
+.results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px 20px; }
+.results > .action { width: 100%; }
+.resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
+.resultsHead small { font-weight: 600; color: var(--color-muted); }
+.resultList { list-style: none; margin: 0; padding: 0; }
+.result { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 10px 6px; border: 0; border-bottom: 1px solid var(--color-divider); border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.result:hover { background: var(--color-subtle); }
+.resultNo { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-subtle-strong); font-size: 11.5px; font-weight: 800; color: var(--color-text-secondary); }
+.resultBody { display: flex; flex-direction: column; min-width: 0; }
+.resultBody b { font-size: 14.5px; font-weight: 750; }
+.resultBody small { font-size: 12px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.resultKm { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+.details { margin: 16px 16px 0; border-top: 1px solid var(--color-divider); }
+.details summary { padding: 12px 2px; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); cursor: pointer; }
+.details summary:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* ⑤ The stop's own details, under the change screen */
+.editor { display: grid; gap: 10px; padding: 12px 2px 16px; }
+.editorTitle { margin: 0; font-size: 15px; font-weight: 750; }
+.field { display: grid; gap: 4px; min-width: 0; font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.field input, .field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 500; }
+.field input[aria-invalid="true"] { border-color: var(--color-error); }
+.field input:disabled { background: var(--color-subtle); color: var(--color-faint); }
+.fieldRow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.toggle { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; color: var(--color-text-secondary); }
+.editorNote { margin: 0; font-size: 12px; color: var(--color-muted); }
+.editorError { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--color-error); }
+.editorButtons { display: flex; gap: 8px; }
+.editorButtons > * { flex: 1; justify-content: center; }
+@media (max-width: 360px) { .fieldRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .fieldRow > :first-child { grid-column: 1 / -1; } }
+
+/* ⑥ Asking before a delete, in the middle of the phone screen */
+.scrim { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: var(--color-scrim); }
+.dialog { width: 100%; max-width: 300px; padding: 20px 18px 16px; border-radius: 16px; background: var(--color-surface); text-align: center; }
+.dialogTitle { margin: 0; font-size: 16px; font-weight: 750; line-height: 1.4; word-break: keep-all; }
+.dialogDetail { margin: 8px 0 0; font-size: 13px; color: var(--color-muted); line-height: 1.5; word-break: keep-all; }
+.dialogDetail b { display: block; color: var(--color-text-secondary); font-weight: 700; }
+.dialogButtons { display: flex; gap: 8px; margin-top: 16px; }
+.dialogButtons > * { flex: 1; justify-content: center; }
+
+/* The trip-wide details the server asks for */
+.tripIssues { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--color-warning-border); border-radius: 12px; background: var(--color-warning-surface); }
+.tripIssuesTitle { margin: 0 0 6px; font-size: 13px; font-weight: 750; color: var(--color-warning); }
+.tripIssues ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tripIssues p { margin: 0; font-size: 13px; color: var(--color-text-secondary); }
+.tripAnswer { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-top: 6px; }
+.tripAnswer .field { flex: 1 1 140px; }
+
+/* What was just done, just above the sheet for a few seconds, with 「되돌리기」 when it can be undone (mockup .toast) */
+.toast { position: absolute; left: 12px; right: 12px; bottom: min(calc(var(--sheet-h, 0px) + 10px), calc(100% - 120px)); z-index: 15; display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--color-inverse); color: var(--color-on-inverse); font-size: 13px; line-height: 1.35; box-shadow: 0 8px 24px color-mix(in srgb, var(--color-text) 25%, transparent); opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .25s, transform .25s, bottom .3s; }
+.toast[data-shown] { opacity: 1; transform: none; pointer-events: auto; }
+.toastText { flex: 1; min-width: 0; }
+.toastText small { display: block; margin-top: 1px; font-size: 11.5px; color: color-mix(in srgb, var(--color-on-inverse) 70%, transparent); }
+.undo { flex: none; min-height: 32px; padding: 0 4px; border: 0; background: none; color: var(--color-success-soft); font: inherit; font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.undo:focus-visible { outline: 2px solid var(--color-on-inverse); outline-offset: 2px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

@@ -10,6 +10,7 @@ import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
 import { undoChange, warmup } from "@/lib/live/extras";
 import { LiveError } from "@/lib/live/client";
+import { progressText, type OpProgress } from "@/lib/live/stream";
 import { currentLocation, locationFailureText, type LocationFix } from "@/lib/location";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -99,10 +100,13 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const [rereading, setRereading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
+  // What the server says it is doing with the message now (live progress stream); null until it says.
+  const [progress, setProgress] = useState<OpProgress | null>(null);
   const message = useMutation({
     // ★Only a stop the customer actually picked goes to the server (`item_id`) — the first stop shown by default is not a choice.
     mutationFn: async ({ text, itemId, location }: { text: string; clearDraft: boolean; itemId?: string | null; location?: LocationFix | null }) => {
-      try { return await tripGateway.sendMessage(trip.id, text, language, itemId, location); }
+      setProgress(null);
+      try { return await tripGateway.sendMessage(trip.id, text, language, itemId, location, setProgress); }
       catch (error) {
         if (!(error instanceof LiveError) || error.code !== "reply_kept") throw error;
         setRereading(true);
@@ -323,7 +327,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
         {undo.data && !undo.error && <p className={styles.chatnote} role="status">{undo.data.answer ?? t("바꾸기 전 일정으로 되돌렸어요.", "Your plan is back to how it was.")}</p>}
         {message.isPending && <>
           <article className={styles.message} data-role="user"><p className={styles.messageMeta}>{t("나", "You")}</p><p className={styles.bubble}>{message.variables.text}</p></article>
-          <p className={styles.pending} role="status">{t("답변을 준비하고 있어요…", "Preparing a reply…")}</p>
+          <p className={styles.pending} role="status" data-lost={progress?.lost || undefined}>{progressText(progress, t, ["답변을 준비하고 있어요…", "Preparing a reply…"])}</p>
         </>}
       </div>
       <div className={styles.composer}>

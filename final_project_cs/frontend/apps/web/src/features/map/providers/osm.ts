@@ -38,6 +38,12 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       let previousGeometry = "";
       let selectedId: string | undefined;
       let needsFit = false;
+      // ★The box can change size after the first fit (the sheet over the map goes up and down, a tab opens). Until the customer
+      //   moves or zooms the map themselves, a new size fits the pins again; after that the map stays where they put it.
+      let userMoved = false;
+      let programmatic = false;
+      map.on("dragstart", () => { userMoved = true; });
+      map.on("zoomstart", () => { if (!programmatic) userMoved = true; });
       let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement }[] = [];
 
       function clearMarkers() {
@@ -48,8 +54,11 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       function fit() {
         if (!needsFit || !container.clientWidth || !container.clientHeight || !points.length) return;
         needsFit = false;
-        if (points.length === 1) map.setView(points[0].coordinates, 15);
-        else map.fitBounds(L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number])), { padding: [50, 50] });
+        programmatic = true;
+        try {
+          if (points.length === 1) map.setView(points[0].coordinates, 15);
+          else map.fitBounds(L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number])), { padding: [50, 50] });
+        } finally { programmatic = false; }
       }
 
       function update(nextPoints: MapPoint[], nextSelectedId?: string) {
@@ -79,6 +88,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         if (changed) {
           previousGeometry = geometry;
           needsFit = true;
+          userMoved = false;            // different pins: the old view means nothing
           fit();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
@@ -95,6 +105,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         resize() {
           if (destroyed || !container.clientWidth || !container.clientHeight) return;
           map.invalidateSize();
+          if (!userMoved) needsFit = true;
           fit();
         },
         destroy() {

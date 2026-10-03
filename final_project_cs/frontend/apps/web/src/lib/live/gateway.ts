@@ -1,6 +1,7 @@
 import type { Trip, TripChange, TripGateway, TripMessage, TripStop, TripWarning } from "../../features/trip/model";
 import { translator, type Language, type Translate } from "../i18n";
 import { api, currentKey, LiveError } from "./client";
+import { streamApi } from "./stream";
 
 /** Server trip view (`GET /v1/web/trips/{id}`) — only the fields the web reads. */
 interface ServerItem {
@@ -253,19 +254,21 @@ export function createLiveGateway(): TripGateway {
     getTrip: read,
     retryVerification: read,
     startTrip: read,
-    async sendMessage(tripId, message, language, itemId, location) {
+    async sendMessage(tripId, message, language, itemId, location, onProgress) {
       const t = translator(language);
       const now = new Date().toISOString();
       const earlier = unanswered.get(tripId);
       const requestId = earlier && earlier.message === message && earlier.itemId === (itemId ?? null)
         ? earlier.requestId : `web-${now}-${Math.random().toString(36).slice(2, 8)}`;
       unanswered.set(tripId, { message, itemId: itemId ?? null, requestId });
-      const result = await api<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
+      // ★`[2026-10-02]` Asked as a stream, the server says what it is doing while the model works (`stream.ts`); a lost line
+      //   sends the same `request_id` again, which the server answers without acting twice.
+      const result = await streamApi<{ status?: string; case_status?: string; answer?: string; basis_sources?: unknown[] | null; choices?: { label?: unknown; message?: unknown }[] | null;
         outcome?: { status?: string; version?: unknown } | null; more?: unknown; choices_title?: unknown; needs_location?: unknown }>(`/v1/web/trips/${encodeURIComponent(tripId)}/messages`, language, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: requestId, message, ...(itemId ? { item_id: itemId } : {}),
           // ★Only when the customer pressed 「내 위치 알려 주고 다시 묻기」 — never attached on its own.
           ...(location ? { location: { lat: location.lat, lng: location.lng, accuracy_m: location.accuracyM, at: location.at } } : {}) }),
-      });
+      }, onProgress);
       unanswered.delete(tripId);
       const sent: TripMessage[] = [
         { id: `${requestId}-q`, role: "user" as const, text: message, createdAt: now },

@@ -118,9 +118,9 @@ export function QuestionCarousel({ t, answers, step, setAnswers, setStep, onFirs
     if (reducedMotion()) return;
     setTouched((current) => new Set(current).add(key));
     control.animate([
-      { transform: "scale(.97)", boxShadow: "0 0 0 0 #2E604700" },
-      { transform: "scale(1.015)", boxShadow: "0 0 0 3px #2E604714", offset: .6 },
-      { transform: "scale(1)", boxShadow: "0 0 0 0 #2E604700" },
+      { transform: "scale(.97)", boxShadow: "0 0 0 0 transparent" },
+      { transform: "scale(1.015)", boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-selected) 8%, transparent)", offset: .6 },
+      { transform: "scale(1)", boxShadow: "0 0 0 0 transparent" },
     ], { duration: 220, easing: "cubic-bezier(.2,.8,.2,1)" });
   }
 

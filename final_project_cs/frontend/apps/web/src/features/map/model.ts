@@ -4,6 +4,15 @@ export interface Coordinates {
   lng: number;
 }
 
+/**
+ * How a pin looks besides selected: `muted` — shown for context, not pressable (the other stops while one is being
+ * changed); `current` — the stop being changed; `candidate` — a place it could change to.
+ */
+export type PinTone = "muted" | "current" | "candidate";
+
+/** A pin's own label and look, by stop id (plan check's change screen: 「A · B · C」 candidates, the rest greyed). */
+export interface PinLook { label?: string; tone?: PinTone }
+
 export interface MapPoint {
   id: string;
   title: string;
@@ -13,6 +22,9 @@ export interface MapPoint {
   /** One-based itinerary order for the selected date, including unlocated stops. */
   order: number;
   coordinates: Coordinates;
+  /** Shown on the pin instead of `order`. */
+  label?: string;
+  tone?: PinTone;
 }
 
 export interface MapViewProps {

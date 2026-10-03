@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
@@ -26,9 +25,16 @@ export function Badge({ children, tone = "success", className = "" }: { children
   return <span className={`${styles.badge} ${styles[tone]} ${className}`}>{children}</span>;
 }
 
-/** The one default profile image, shared by the menu and My page. Changing it is not offered yet. */
+/**
+ * The one default profile image, shared by the menu and My page. Changing it is not offered yet.
+ * Drawn inline (the shape of `public/images/tripilot-avatar-default.svg`) so it takes the chosen theme's soft and primary roles.
+ */
 export function Avatar({ size, className = "" }: { size: number; className?: string }) {
-  return <Image src="/images/tripilot-avatar-default.svg" alt="" width={size} height={size} unoptimized className={`${styles.avatar} ${className}`} />;
+  return <svg viewBox="0 0 96 96" width={size} height={size} aria-hidden="true" className={`${styles.avatar} ${className}`}>
+    <rect width="96" height="96" style={{ fill: "var(--color-soft)" }} />
+    <circle cx="48" cy="38" r="17" style={{ fill: "var(--color-primary)" }} />
+    <path d="M14 96c2-20 16-32 34-32s32 12 34 32z" style={{ fill: "var(--color-primary)" }} />
+  </svg>;
 }
 
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {

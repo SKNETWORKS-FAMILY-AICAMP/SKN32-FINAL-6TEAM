@@ -4,7 +4,7 @@
 .labelRow label { font-size: 14px; font-weight: 700; }
 .sample { padding: 8px 10px; }
 .input { display: block; width: 100%; min-height: 300px; padding: 19px; resize: vertical; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); color: var(--color-text); font-size: 13px; line-height: 2; }
-.input::placeholder { color: #859087; opacity: 1; }
+.input::placeholder { color: color-mix(in srgb, var(--color-muted) 85%, var(--color-surface)); opacity: 1; }
 .inputMeta { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--color-muted); margin-top: 11px; }
 .error, .warning { margin-top: 12px; padding: 13px 15px; border: 1px solid var(--color-error-border); border-radius: 12px; background: var(--color-error-soft); color: var(--color-error); font-size: 11px; line-height: 1.8; }
 .warning { color: var(--color-warning); border-color: var(--color-warning-border); background: var(--color-warning-soft); }
@@ -21,9 +21,9 @@
 .tipList li::before { content: ""; position: absolute; left: 0; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: var(--color-primary); }
 .demoOptions { border-top: 1px solid var(--color-border); padding-top: 14px; margin-top: 20px; color: var(--color-muted); font-size: 11px; }
 .demoOptions summary { min-height: 44px; display: list-item; align-content: center; }
-.demoOptions select { display: block; width: 100%; min-height: 44px; background: #fff; color: var(--color-text); border: 1px solid var(--color-border); border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
+.demoOptions select { display: block; width: 100%; min-height: 44px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
 .demoOptions p { margin-top: 12px; }
-.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: #f7f9f3f5; backdrop-filter: blur(12px); }
+.actions { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; padding: 18px 0; border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-paper) 96%, transparent); backdrop-filter: blur(12px); }
 .actionNote { font-size: 11px; line-height: 1.7; color: var(--color-muted); max-width: 410px; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1.5fr) minmax(235px, 1fr); } }
 @media (max-width: 768px) {

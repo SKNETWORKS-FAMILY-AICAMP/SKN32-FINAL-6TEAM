@@ -1,7 +1,6 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useRecoveryEmail } from "./contact";
 import type { Translate } from "./i18n";
 import { currentKey, KEY_CHANGED_EVENT } from "./live/client";
 
@@ -10,12 +9,10 @@ import { currentKey, KEY_CHANGED_EVENT } from "./live/client";
  * profile API. `POST /v1/web/session` returns `customer_id` and `user_key` only — no nickname — and no call
  * reads or saves a nickname or a recovery email. So both are null ("not issued" / "none registered") and are
  * never made up here. The token is this browser's user key, where the live connection keeps it.
- * ★`[2026-10-01]` The recovery email is the one exception: the customer can add it on My page, and it is kept in
- * this browser (`lib/contact.ts`) until the server has a call for it.
+ * ★`[2026-10-03 user decision]` There is no recovery email any more; the Discord webhook (My page) is how alerts reach the customer.
  */
 export interface Profile {
   nickname: string | null;
-  email: string | null;
   token: string | null;
 }
 
@@ -29,8 +26,7 @@ function subscribe(onChange: () => void) {
 /** Undefined until the page has read this browser (server render and hydration), then the profile. */
 export function useProfile(): Profile | undefined {
   const token = useSyncExternalStore(subscribe, currentKey, () => undefined);
-  const email = useRecoveryEmail();
-  return token === undefined || email === undefined ? undefined : { nickname: null, email, token };
+  return token === undefined ? undefined : { nickname: null, token };
 }
 
 /** The name line of the menu and My page: the server's nickname, or which state it is in. */

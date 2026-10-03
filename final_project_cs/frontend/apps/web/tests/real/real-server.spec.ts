@@ -30,9 +30,9 @@ async function uploadAndOpenReview(page: Page, text: string) {
   await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
-  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「등록하고 관리 시작」 또는 일정 짜기 칸이 나온다.
+  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「여행 등록」 또는 일정 짜기 칸이 나온다.
   // 읽기가 끝날 때까지(등록 단추나 일정 짜기 단추가 나올 때까지) 기다린다 — 서버가 글·사진을 읽는 시간이다
-  await expect(page.getByRole("button", { name: /등록하고 관리 시작|이 조건으로 짜서 등록/ })).toBeVisible({ timeout: READING });
+  await expect(page.getByRole("button", { name: /여행 등록|이 조건으로 짜서 등록/ })).toBeVisible({ timeout: READING });
 }
 
 test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것을 확인해 등록하면 여행이 만들어지고, 채팅·지도까지 실서버로 동작한다", async ({ page }) => {
@@ -42,17 +42,20 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   await expect(page).toHaveURL(/\/trips\/new$/);
   await uploadAndOpenReview(page, PLAN);
 
-  // 서버가 읽은 항목이 확인 화면에 나온다
-  await expect(page.getByRole("heading", { name: "경복궁 관람", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "광장시장", exact: true })).toBeVisible();
-  const third = page.locator("section").filter({ has: page.getByRole("heading", { name: "북촌한옥마을 산책", exact: true }) });
-  await expect(third).toBeVisible();
+  // 서버가 읽은 항목이 새 계획 확인 결과 화면에 나온다(2026-10-03 — 수정·등록도 이 화면에서 한다)
+  await expect(page.getByRole("article", { name: "경복궁 관람", exact: true })).toBeVisible();
+  await expect(page.getByRole("article", { name: "광장시장", exact: true })).toBeVisible();
+  await expect(page.getByRole("article", { name: "북촌한옥마을 산책", exact: true })).toBeVisible();
 
-  // 서버가 장소를 못 찾은 항목이 있다(실측: 「북촌한옥마을 산책」) — 사용자가 「장소 없음」으로 고치면 서버가 반영하고 등록할 수 있게 된다
-  const register = page.getByRole("button", { name: "등록하고 관리 시작" });
-  if (await page.getByText("장소를 정하지 못했습니다").count()) {
-    await third.getByRole("button", { name: "장소 없음" }).click();
-    await expect(page.getByText("장소를 정하지 못했습니다")).toHaveCount(0);
+  // 서버가 장소를 못 찾아 「확인 필요」인 항목이 있으면(실측: 「북촌한옥마을 산책」) 「수정」에서 「장소 없음」으로 저장한다 —
+  // 서버가 다시 확인해 반영하고 등록할 수 있게 된다
+  const register = page.getByRole("button", { name: "여행 등록" });
+  const needing = page.getByRole("article").filter({ has: page.getByText("확인 필요", { exact: true }) });
+  for (let count = await needing.count(); count > 0; count -= 1) {
+    await needing.first().getByRole("button", { name: /수정$/ }).click();
+    await page.getByLabel("장소 없음(자유 시간 등)").check();
+    await page.getByRole("button", { name: "저장", exact: true }).click();
+    await expect(needing).toHaveCount(count - 1, { timeout: 60_000 });
   }
   await expect(register).toBeEnabled();
 
@@ -66,7 +69,7 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
 
   // 설문을 마쳤으니 등록 확인 요청에 설문이 실려 가야 한다(서버가 저장하는지는 DB 로 따로 본다)
   const confirmSent = page.waitForRequest((request) => request.url().endsWith("/confirm") && request.method() === "POST");
-  await page.getByRole("button", { name: "등록하고 관리 시작" }).click();
+  await page.getByRole("button", { name: "여행 등록" }).click();
   const confirmBody = (await confirmSent).postDataJSON() as { survey?: { version?: string } };
   console.log("REAL_CONFIRM_SURVEY", JSON.stringify(confirmBody.survey ?? null));
   expect(confirmBody.survey?.version).toBe("2026-09-24.v1");

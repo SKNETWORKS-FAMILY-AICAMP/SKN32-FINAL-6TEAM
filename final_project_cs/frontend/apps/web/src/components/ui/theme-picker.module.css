@@ -1,0 +1,12 @@
+.card { padding-bottom: 12px; }
+.head { display: flex; align-items: center; gap: 12px; min-height: 54px; margin: 0; padding: 9px 15px 6px; color: var(--color-primary); }
+.head > span { flex: 1; display: grid; gap: 2px; }
+.head small { font-size: 9px; letter-spacing: 1.5px; }
+.head strong { font-size: 14px; font-weight: 650; color: var(--color-text); }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 12px; }
+.option { min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); font-size: 14px; }
+.option > svg { margin-left: auto; flex: none; }
+.option[aria-pressed="true"] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 60%, var(--color-surface)); color: var(--color-selected); font-weight: 650; }
+/* A small sample in the theme's own colours: its tint and its main colour. */
+.sample { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-soft); }
+.sample > span { width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); }

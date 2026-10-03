@@ -7,30 +7,30 @@
 .watchbar strong { display: flex; align-items: center; gap: 6px; font-weight: 650; }
 .daybar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .dayTabs { display: flex; flex-wrap: wrap; gap: 6px; }
-.dayTabs button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; color: var(--color-muted); min-height: 44px; padding: 9px 14px; font-size: 11px; }
+.dayTabs button { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-muted); min-height: 44px; padding: 9px 14px; font-size: 11px; }
 .dayTabs span { font-size: 9px; opacity: .8; }
 .dayTabs button[aria-pressed="true"] { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
 
 /* Travel views: fixed bottom tabs or a floating button, chosen in settings. */
 .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
 .tabs button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 8px 5px; border-radius: 14px; font-size: 11px; color: var(--color-muted); }
-.tabs button[aria-pressed="true"] { background: #fff; color: var(--color-primary); box-shadow: 0 2px 8px #24392f0c; }
-.fixed { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; padding: 10px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: #f4f7f1f5; box-shadow: 0 -6px 24px #24392f09; backdrop-filter: blur(16px); }
-.floating { position: fixed; left: 18px; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; width: 58px; height: 58px; padding: 4px; border: 1px solid #d2dfd2; border-radius: 999px; background: #e9eee6f5; box-shadow: 0 8px 28px #24392f24; backdrop-filter: blur(16px); transition: width .3s cubic-bezier(.22, .8, .2, 1); overflow: hidden; }
+.tabs button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-primary); box-shadow: 0 2px 8px color-mix(in srgb, var(--color-text) 5%, transparent); }
+.fixed { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; padding: 10px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-background) 96%, transparent); box-shadow: 0 -6px 24px color-mix(in srgb, var(--color-text) 4%, transparent); backdrop-filter: blur(16px); }
+.floating { position: fixed; left: 18px; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: center; width: 58px; height: 58px; padding: 4px; border: 1px solid var(--color-border); border-radius: 999px; background: color-mix(in srgb, var(--color-subtle-strong) 96%, transparent); box-shadow: 0 8px 28px color-mix(in srgb, var(--color-text) 14%, transparent); backdrop-filter: blur(16px); transition: width .3s cubic-bezier(.22, .8, .2, 1); overflow: hidden; }
 .floating.open { width: calc(100% - 36px); max-width: 380px; }
-.toggle { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); box-shadow: 0 3px 9px #24392f14; }
+.toggle { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border-radius: 50%; background: var(--color-primary); color: var(--color-on-primary); box-shadow: 0 3px 9px color-mix(in srgb, var(--color-text) 8%, transparent); }
 .floating.open .toggle { display: none; }
 .menu { flex: 1; min-width: 0; visibility: hidden; opacity: 0; transition: opacity .18s; }
 .floating.open .menu { visibility: visible; opacity: 1; }
 .floating .tabs button { flex-direction: column; gap: 2px; border-radius: 999px; min-height: 46px; font-size: 9px; white-space: nowrap; }
 .floating .tabs svg { width: 16px; height: 16px; }
 
-.pane { min-width: 0; border: 1px solid var(--color-border); border-radius: 18px; background: #fff; overflow: clip; }
+.pane { min-width: 0; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); overflow: clip; }
 .panehead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 17px; border-bottom: 1px solid var(--color-border); }
 .panehead h2 { margin: 0; font-size: 14px; line-height: 1.6; letter-spacing: -.3px; }
 .timeline { padding: 16px 13px; }
-.stop { border: 1px solid var(--color-border); border-radius: 13px; overflow: clip; background: #fff; transition: border-color .18s, background .18s; }
-.stop[data-selected="true"] { border-color: var(--color-primary); background: #f7faf6; }
+.stop { border: 1px solid var(--color-border); border-radius: 13px; overflow: clip; background: var(--color-surface); transition: border-color .18s, background .18s; }
+.stop[data-selected="true"] { border-color: var(--color-selected); background: color-mix(in srgb, var(--color-selected-soft) 30%, var(--color-surface)); }
 .stophead { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 64px; padding: 13px; text-align: left; }
 .stophead time { font-size: 10px; line-height: 1.8; color: var(--color-muted); font-weight: 650; flex-shrink: 0; }
 .stopCopy { display: block; flex: 1; min-width: 0; }
@@ -43,14 +43,14 @@
 .details dt { color: var(--color-muted); }
 .details dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
 .movement { display: flex; align-items: center; gap: 4px; position: relative; color: var(--color-muted); font-size: 10px; padding: 14px 13px 14px 22px; margin: 0 0 0 10px; }
-.movement::before { content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; border-left: 1px dashed #cbd8cb; }
+.movement::before { content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; border-left: 1px dashed var(--color-border-strong); }
 .detailActions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
 .detailActions > * { min-height: 44px; padding: 9px; font-size: 10px; flex: 1; }
 .empty { padding: 36px 20px; text-align: center; color: var(--color-muted); font-size: 12px; }
-.mapPane { background: #f7faf4; }
+.mapPane { background: var(--color-subtle); }
 .chatnote { color: var(--color-muted); font-size: 9px; line-height: 1.8; margin: 9px 0 0; }
 .mapPane > .chatnote { padding: 10px 16px; margin: 0; }
-.mapSelection { padding: 16px; border-top: 1px solid var(--color-border); background: #fff; }
+.mapSelection { padding: 16px; border-top: 1px solid var(--color-border); background: var(--color-surface); }
 .mapSelection h3 { font-size: 12px; margin-bottom: 5px; }
 .mapSelection p:not(:first-child) { margin: 0 0 9px; font-size: 11px; }
 .chatPane { display: flex; flex-direction: column; }
@@ -65,9 +65,10 @@
 .bubble { max-width: 95%; padding: 12px 13px; border-radius: 0 13px 13px; background: var(--color-subtle); color: var(--color-text); font-size: 11px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; }
 .message[data-role="user"] .bubble { border-radius: 13px 0 13px 13px; background: var(--color-soft); color: var(--color-primary); }
 .pending { font-size: 10px; color: var(--color-muted); }
+.pending[data-lost] { color: var(--color-warning); }
 .composer { padding: 13px; border-top: 1px solid var(--color-border); }
 .prompts { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-.prompts > button { min-height: 44px; border: 1px solid var(--color-border); border-radius: 8px; padding: 7px 9px; background: #fff; color: var(--color-muted); font-size: 9px; line-height: 1.5; }
+.prompts > button { min-height: 44px; border: 1px solid var(--color-border); border-radius: 8px; padding: 7px 9px; background: var(--color-surface); color: var(--color-muted); font-size: 9px; line-height: 1.5; }
 .chatForm { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; }
 .chatInput { flex: 1; min-width: 0; min-height: 49px; border: 1px solid var(--color-border); border-radius: 11px; padding: 12px 10px; background: var(--color-subtle); color: var(--color-text); font-size: 11px; line-height: 1.7; }
 .chatForm > button { min-width: 44px; padding: 10px; }

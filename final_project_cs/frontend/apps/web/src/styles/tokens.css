@@ -1,5 +1,10 @@
-/* Palette of the 2026-09-23 journey mockup. The mockup defines a light scheme only. */
-:root {
+/*
+ * Two themes on the same roles (2026-10-03, user-confirmed values): green — the 2026-09-23 journey mockup, the default — and
+ * white (`data-theme="neutral"` on <html>) — the plan-check streaming mockup. Chosen in the menu's theme card
+ * (`lib/settings.ts`). Fonts, sizes and weights are the same in both. A screen's CSS uses roles, never a colour.
+ * An element with its own `data-theme` (the menu's theme samples) shows that theme inside it.
+ */
+:root, [data-theme="green"] {
   color-scheme: light;
   --color-text: #24392f;
   --color-muted: #6d7c73;
@@ -18,5 +23,59 @@
   --color-error: #965640;
   --color-error-soft: #fdf3ed;
   --color-error-border: #ecd2c7;
+  /* Roles added 2026-10-03 for the plan-check screen (user-approved list); the white theme below redefines them too. */
+  --color-text-secondary: #4a5d52;
+  --color-faint: #a5b1a9;
+  --color-divider: #e8ede9;
+  --color-subtle-strong: #e4e9e5;
+  --color-border-strong: #c3cdc6;
+  --color-success: #3d7a56;
+  --color-success-soft: #e3f0e7;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2e6047;
+  --color-selected-soft: #dcebe1;
+  --color-warning-surface: #fdfaf3;
+  --color-inverse: #24392f;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(36, 57, 47, 0.45);
   --font-sans: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+
+/* White theme — the plan-check streaming mockup (`mockups/tripilot-plan-check-streaming.html`). */
+[data-theme="neutral"] {
+  --color-text: #1c1c1e;
+  --color-muted: #86868c;
+  --color-border: #dadad6;
+  --color-surface: #ffffff;
+  --color-background: #f2f2ef;
+  --color-paper: #ffffff;
+  --color-primary: #1c1c1e;
+  --color-primary-hover: #2c2c2e;
+  --color-on-primary: #ffffff;
+  --color-soft: #ececea;
+  --color-subtle: #f6f6f4;
+  --color-warning: #a35a00;
+  --color-warning-soft: #fff0d4;
+  --color-warning-border: #e9c27a;
+  --color-error: #c03a1a;
+  --color-error-soft: #fde5de;
+  --color-error-border: #f2b8a8;
+  --color-text-secondary: #48484d;
+  --color-faint: #b9b9bd;
+  --color-divider: #ebebe7;
+  --color-subtle-strong: #ececea;
+  --color-border-strong: #c2c2c6;
+  --color-success: #4f7a63;
+  --color-success-soft: #e8f1ec;
+  --color-adjusted: #3f6a8a;
+  --color-adjusted-soft: #e6eff6;
+  --color-adjusted-border: #bcd0df;
+  --color-selected: #2457d6;
+  --color-selected-soft: #e1e9ff;
+  --color-warning-surface: #fffaf0;
+  --color-inverse: #26262a;
+  --color-on-inverse: #ffffff;
+  --color-scrim: rgba(28, 28, 30, 0.45);
 }

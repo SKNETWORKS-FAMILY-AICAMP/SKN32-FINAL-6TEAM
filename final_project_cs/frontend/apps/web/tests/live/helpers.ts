@@ -4,7 +4,7 @@ export const STUB = "http://127.0.0.1:8043";
 export const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 export const KEY_STORAGE = "tripilot.web.user-key.v1";
 
-export interface LoggedRequest { method: string; path: string; key: string | null; body: Record<string, unknown> | null }
+export interface LoggedRequest { method: string; path: string; key: string | null; accept: string | null; body: Record<string, unknown> | null }
 
 /** Talks to the test mock server's test control (never part of the real API). */
 export function mockServer(request: APIRequestContext) {
@@ -32,8 +32,9 @@ export async function start(page: Page, key: string | null = "acop_u_known") {
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */
-export async function finishOnboarding(page: Page) {
+export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<void>) {
   await page.goto("/start");
+  await beforeTerms?.();
   await page.getByRole("button", { name: /약관 동의/ }).click();
   await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
   const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
@@ -51,4 +52,10 @@ export async function finishOnboarding(page: Page) {
   await page.getByRole("button", { name: "여유롭게" }).click();
   await page.getByRole("button", { name: "설정 완료" }).click();
   await expect(page.getByRole("heading", { name: "여행 취향 설정 완료" })).toBeVisible();
+}
+
+/** The previous intake review sits behind the plan-check result's 「이전 확인 화면 열기」 (2026-10-03). */
+export async function openEditor(page: Page) {
+  await page.getByRole("button", { name: "이전 확인 화면 열기" }).click();
+  await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toBeVisible();
 }
