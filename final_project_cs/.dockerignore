@@ -1,0 +1,19 @@
+# 이미지에 비밀 · 시험 · 평가 · 기록을 넣지 않는다 (배포 파일은 `deploy/Dockerfile.*` 가 필요한 것만 COPY 한다 — 이 파일은 안전망)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+var/*
+!var/notice_phrasebook.json
+tests/
+eval/
+legacy/
+wiki/
+ml/
+node_modules/
+**/node_modules/
+**/.next/
+**/__pycache__/
+*.pyc
+.git
