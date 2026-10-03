@@ -79,6 +79,8 @@ class CaseTickResult:
     failed: list[dict[str, Any]] = field(default_factory=list)
     retried: list[dict[str, Any]] = field(default_factory=list)
     notified: list[dict[str, Any]] = field(default_factory=list)
+    #: ★`[2026-10-03]` 대안을 못 찾아 **조건을 푼 안을 물어본** 건(`watch_relaxed`) — 「그대로 두었어요」 알림 대신 제안이 나갔다
+    relaxed: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -220,11 +222,28 @@ class TripWatchCaseOpener:
         if guardrail != "itinerary_unresolved" and not recheck_failed:
             return
         item, causes = context["item"], context["causes"]
+        # ★`[2026-10-03 사용자 지적]` 못 찾았다고 곧바로 끝내지 않는다 — 조건을 풀어 **비슷한 안**이 있으면 그것을 묻는다(자동 적용 없음). 한 곳도 없을 때만 아래 옛 알림
+        if self._offer_relaxed(context["trip_id"], item, causes, recheck_failed, result, case_id):
+            return
         with self._connect() as conn, conn.transaction():
             self.store.enqueue_message(conn, trip_id=context["trip_id"],
                                        key=f"watch-unresolved:{item.item_id}:{_fingerprint(causes)}",
                                        payload=unresolved_notice(item=item, causes=causes, recheck_failed=recheck_failed))
         result.notified.append({"case_id": str(case_id), "trip_id": str(context["trip_id"]), "item": item.title})
+
+    def _offer_relaxed(self, trip_id: UUID, item: Item, causes: list[dict[str, Any]], recheck_failed: bool,
+                       result: CaseTickResult, case_id: UUID) -> bool:
+        """조건을 푼 안을 물었으면 True(옛 알림은 안 낸다). 못 찾았거나 실패했으면 False — 부르는 쪽이 지금처럼 알린다(`watch_relaxed.try_offer` 는 예외를 삼킨다)."""
+        from .watch_relaxed import try_offer
+
+        offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id, causes=causes,
+                            check=self.check, recheck_failed=recheck_failed)
+        if offered is None:
+            return False
+        result.relaxed.append({"case_id": str(case_id), "trip_id": str(trip_id), "item": item.title,
+                               "proposal_id": offered.get("proposal_id"), "already": bool(offered.get("already")),
+                               "options": [o["name"] for o in offered["options"]]})
+        return True
 
     def _route(self, trip_id: UUID, item: Item, now: datetime, result: CaseTickResult,
                issues: list[Issue]) -> None:
@@ -397,6 +416,9 @@ class TripWatchCaseOpener:
             found = [(match.group(1), match.group(2))
                      for match in re.finditer(r"outcome:([0-9a-fA-F-]{36}):(no_alternate|recheck_failed)", observed)]
         outcomes = [Outcome(issues[item_id].item, kind, causes=issues[item_id].causes) for item_id, kind in found if item_id in issues]
+        # ★`[2026-10-03 사용자 지적]` 못 푼 항목마다 조건을 푼 안을 먼저 묻는다 — 묻는 항목은 이 「그대로 두었어요」 알림에서 빠진다(제안 알림이 따로 나간다). 하나도 없는 항목만 남는다
+        outcomes = [o for o in outcomes
+                    if not self._offer_relaxed(context["trip_id"], o.item, o.causes, o.kind == "recheck_failed", result, case_id)]
         if not outcomes:
             return
         payload = digest(outcomes, kind="guidance")

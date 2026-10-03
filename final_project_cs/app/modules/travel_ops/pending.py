@@ -447,7 +447,8 @@ def _consented(conn, *, store: TripStore, pending: "PendingStore", trip_id: UUID
 
 
 def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: ItineraryChange,
-                 report: dict[str, Any] | None = None) -> dict[str, Any]:
+                 report: dict[str, Any] | None = None,
+                 check: Callable[..., dict[str, Any]] | None = None) -> dict[str, Any]:
     """★바꾸는 **한 문**(감시 · 새벽 확인) — 판정(`decide`)을 거쳐 새 버전을 쓰거나, 묻는다.
 
     돌려주는 `status`:
@@ -484,6 +485,21 @@ def apply_or_ask(conn, *, store: TripStore, trip_id: UUID, item_id: UUID, plan: 
 
     fit = fit_change(plan, trip=trip, items=items)
     if fit.change is None:
+        # ★`[2026-10-03 사용자 지적]` 다 걸렸어도 곧바로 「그대로 두었어요」로 끝내지 않는다 — 조건을 푼 비슷한 안이 있으면 그것을 묻는다(`watch_relaxed`, 자동 적용 없음).
+        #   ★같은 원인 점검기(`check`)를 받은 자리(시나리오 감시)에서만 — 점검 없이 비슷한 안을 내밀면 재난 · 통제가 걸린 곳을 권할 수 있다. 후보는 장소 표 기준이다. 실패해도 옛 알림으로 간다
+        offered = None
+        if check is not None:
+            from .watch_relaxed import offer_relaxed
+
+            try:
+                with conn.transaction():
+                    offered = offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=plan.causes,
+                                            check=check, recheck_failed=True)
+            except Exception:                                # noqa: BLE001
+                offered = None
+        if offered is not None:
+            return {"status": "asked", "already": bool(offered.get("already")), "proposal_id": offered.get("proposal_id"),
+                    "reason": "relaxed", "safety": bool(offered.get("safety")), "item": current.title}
         # ★다 걸렸다 — 쓰지 않는다. 고객이 모르면 닫힌 곳이 그대로 일정에 남으니 Case 버전과 같은 알림을 싣는다(같은 사건 · 같은 판은 한 번만 — 감시가 몇 분마다 다시 와도)
         store.enqueue_message(
             conn, trip_id=trip_id, key=f"recheck:{item_id}:v{trip['version']}:{cause_fingerprint(plan.causes)}",

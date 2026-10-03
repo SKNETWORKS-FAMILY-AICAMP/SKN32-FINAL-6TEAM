@@ -166,6 +166,16 @@ class TripWatcher:
                 report: dict[str, Any] | None = None) -> None:
         if isinstance(plan, NoChange):
             if plan.status == "unresolved":
+                # ★`[2026-10-03 사용자 지적]` 못 찾았다고 기록만 하고 끝내지 않는다 — 조건을 푼 비슷한 안이 있으면 고객에게 묻는다(`watch_relaxed`, 자동 적용 없음)
+                from .watch_relaxed import try_offer
+
+                offered = try_offer(self._connect, store=self.store, trip_id=trip_id, item_id=item.item_id,
+                                    causes=list((plan.detail or {}).get("causes") or []), check=self.check)
+                if offered is not None:
+                    if not offered.get("already"):
+                        result.asked.append({"trip_id": str(trip_id), "item": item.title, "proposal_id": offered["proposal_id"],
+                                             "reason": "relaxed", "safety": bool(offered.get("safety"))})
+                    return
                 result.unresolved.append({"trip_id": str(trip_id), "item": item.title,
                                           **plan.detail})
             return
@@ -178,7 +188,7 @@ class TripWatcher:
         #   한 곳에 있다 — 새벽 확인(`dawn_check`)도 같은 문을 쓴다(2026-09-25).
         with self._connect() as conn, conn.transaction():
             outcome = apply_or_ask(conn, store=self.store, trip_id=trip_id, item_id=item.item_id,
-                                   plan=plan, report=report)
+                                   plan=plan, report=report, check=self.check)
         if outcome["status"] == "asked" and not outcome.get("already"):
             result.asked.append({"trip_id": str(trip_id), "item": outcome["item"],
                                  "proposal_id": outcome["proposal_id"], "reason": outcome["reason"],
