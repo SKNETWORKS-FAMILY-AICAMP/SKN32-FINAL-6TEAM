@@ -310,8 +310,7 @@ test("수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 
   await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
 });
 
-// 2026-10-03 19:50 FIXME: 이 시험은 방금 옮겨 쓴 것이고 실행하면 「장소 1곳 · 이동 1구간 확인 필요」 문구를 못 찾는다 — 모방 서버의 `place {none:true}` 응답(검사 줄·상태)이 서버와 같은지부터 확인해야 한다. 확인 전에는 통과한 척하지 않고 fixme 로 둔다.
-test.fixme("「직접 고치기」에서 「장소 없음」으로 저장하면 서버에 `place {none: true}` 가 가고, 카드가 「조정」이 되고 위치 미정으로 보인다", async ({ page, request }) => {
+test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버에 `place {none: true}` 가 가고, 카드가 「조정」이 되고 위치 미정으로 보인다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();

@@ -147,16 +147,15 @@ test("이미 정해진 선택(409)은 「아무것도 바뀌지 않았다」고 
   await expect.poll(async () => (await server.received("GET", "/proposals")).length).toBeGreaterThan(1);
 });
 
-// 2026-10-03 19:56 FIXME: 실행하면 실패한다 — 위와 같은 핀 이름 문제로 보인다(확인 전). 통과한 척하지 않는다.
-test.fixme("지도 탭은 서버 좌표가 있는 그날의 일정만 실제 지도(OpenStreetMap)에 핀으로 그린다", async ({ page }) => {
+test("지도 탭은 서버 좌표가 있는 그날의 일정만 실제 지도(OpenStreetMap)에 핀으로 그린다", async ({ page }) => {
   await openTrip(page);
   await page.getByRole("button", { name: "지도", exact: true }).click();
   const map = page.locator("#trip-pane-map");
-  // 번호는 그날 일정의 순서이고, 핀 이름에는 날짜와 시각이 붙는다. 이동 항목(i-m)은 일정이 아니라 번호를 차지하지 않는다.
-  await expect(map.getByRole("button", { name: "1. 아침 식당" })).toBeVisible();
-  await expect(map.getByRole("button", { name: "2. 경복궁 관람" })).toBeVisible();
-  await expect(map.getByRole("button", { name: "3. 점심 식당" })).toBeVisible();
-  await expect(map.getByRole("button", { name: "둘째 날 박물관" })).toHaveCount(0);       // 다음 날 일정은 그날 지도에 없다
+  // 번호는 그날 일정의 순서이고, 핀의 title 에는 날짜와 시각이 붙는다(접근성 이름은 핀 안의 번호라 title 의 앞부분으로 찾는다). 이동 항목(i-m)은 일정이 아니라 번호를 차지하지 않는다.
+  await expect(map.locator('.leaflet-marker-icon[title^="1. 아침 식당"]')).toBeVisible();
+  await expect(map.locator('.leaflet-marker-icon[title^="2. 경복궁 관람"]')).toBeVisible();
+  await expect(map.locator('.leaflet-marker-icon[title^="3. 점심 식당"]')).toBeVisible();
+  await expect(map.locator('.leaflet-marker-icon[title*="둘째 날 박물관"]')).toHaveCount(0);       // 다음 날 일정은 그날 지도에 없다
   await expect(map.getByRole("link", { name: "OpenStreetMap" })).toBeVisible();            // 출처 표시는 늘 보인다
   await expect(map.getByText(/개념도|실제 위치·거리·이동 경로를 표시하지 않습니다/)).toHaveCount(0);
 });
