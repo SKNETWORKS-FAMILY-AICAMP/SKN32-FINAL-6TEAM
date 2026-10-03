@@ -206,6 +206,8 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--rounds", type=int, default=30)
+    ap.add_argument("--throughput", type=int, default=0,
+                    help="건수를 이만큼 연달아 밀어 넣어 처리량을 잰다")
     args = ap.parse_args()
 
     os.chdir(BASE)
@@ -259,6 +261,25 @@ def main() -> int:
                         run_theirs_wait(graph_wait)
                         theirs_w.append((time.perf_counter() - t0) * 1000)
 
+            # ── 처리량 — 건수를 연달아 밀어 넣는다 ──────────────────
+            #   ★한 건씩 재는 것과 다른 질문이다. 「많이 들어오면 어떻게 되나」를 본다.
+            tp = {}
+            if args.throughput:
+                n = args.throughput
+                t0 = time.perf_counter()
+                for _ in range(n):
+                    run_ours(conn, customer_id)
+                conn.commit()
+                ours_s = time.perf_counter() - t0
+                t0 = time.perf_counter()
+                for _ in range(n):
+                    run_theirs(graph)
+                theirs_s = time.perf_counter() - t0
+                tp = {"건수": n,
+                      "ours": {"초": round(ours_s, 2), "초당 건": round(n / ours_s, 1)},
+                      "langgraph": {"초": round(theirs_s, 2), "초당 건": round(n / theirs_s, 1)},
+                      "비고": "우리 쪽은 한 트랜잭션으로 묶어 커밋했다 — 그만큼 유리하다"}
+
         after = sizes(conn)
 
     def stat(xs):
@@ -279,6 +300,7 @@ def main() -> int:
             "note": "LangGraph 는 interrupt 로 멈추고 Command 로 이어간다 — 그쪽 강점 자리다",
             "ours": stat(ours_w), "langgraph": stat(theirs_w),
         },
+        "throughput": tp,
         "bytes_written": {
             "ours": after["ours_bytes"] - before["ours_bytes"],
             "langgraph": after["lg_bytes"] - before["lg_bytes"],

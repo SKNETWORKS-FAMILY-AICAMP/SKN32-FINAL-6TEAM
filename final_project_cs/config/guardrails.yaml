@@ -64,6 +64,13 @@ reliability:
   #   숫자를 바꿔도 동작은 안 바뀐다 — 바꾸려면 코드를 고쳐야 한다.
   repeated_tool_signature_limit: 2
   daily_cost_limit_usd_per_tenant: 50
+  # ★`[2026-10-03]` 바깥함 재시도 간격(초). 전에는 SQL 에 `interval '1 minute'` 로
+  #   박혀 있어 설정으로 못 바꿨다. 값은 그대로 60 이다 — 옮기기만 했다.
+  #   ★이 값은 **공급자가 말해 주지 않을 때만** 쓴다. 디스코드가 429 와 함께
+  #     `Retry-After` 를 주면 그 값을 따른다(어기면 IP 단위로 막힌다).
+  #   ★간격을 점점 늘리지 않는다 — 내보내는 곳이 하나고 양이 적다. 지수 백오프는
+  #     여럿이 한 상대를 두드려 서로 밀어낼 때 쓰는 방법이다.
+  outbox_retry_seconds: 60
   outbox_stale_processing_seconds: 300
   # ★분류가 멈춘 Case 를 되잡는 기준 (2026-09-03). Case 생성 커밋과 분류
   #   사이에 프로세스가 죽으면 `classifying` 에 남는다 — outbox 의 stale
