@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { ro } from "@/lib/josa";
 import { useT } from "@/lib/settings";
 import type { PlacePhoto, PlanCandidate, PlanItem } from "./model";
-import { Act, Checks, letter, VerdictPill } from "./parts";
+import { Act, Checks, letter, placeMeta, SourceTag, VerdictPill } from "./parts";
 import styles from "./plan-check.module.css";
 
 /** One stop being changed: the alternatives found for it (card 0 is the stop as it is) and the card in view. */
@@ -103,9 +103,9 @@ function CurrentCard({ item, session, candidatesSupported }: { item: PlanItem; s
           : t("대체 후보는 준비 중이에요 · 위 검색창에 장소 이름을 쓰면 바꿀 수 있어요", "Alternatives are coming · type a place name above to change it");
   return <article className={styles.changeCard} data-current aria-labelledby={`plan-change-card-${item.id}`}>
     <div className={styles.changeTop}><span className={styles.chip}>{t("지금 일정", "Now")}</span>{item.verdict && <VerdictPill verdict={item.verdict} />}</div>
-    <h4 id={`plan-change-card-${item.id}`} className={styles.changeName}>{item.title}</h4>
-    <p className={styles.changeSub}>{t(`${item.day}일차`, `Day ${item.day}`)} {time}{` · ${item.info?.category ?? (item.coordinates ? t("장소 정보 없음", "no place details") : t("지점 미정", "branch not set"))}`}</p>
-    {item.info?.address && <p className={styles.changeSub}>{item.info.address}</p>}
+    <div className={styles.nameRow}><h4 id={`plan-change-card-${item.id}`} className={styles.changeName}>{item.title}</h4><SourceTag origin={item.info?.origin} /></div>
+    {item.written && <p className={styles.changeSub}>{t(`원문 「${item.written}」`, `As written: “${item.written}”`)}</p>}
+    <p className={styles.changeSub}>{t(`${item.day}일차`, `Day ${item.day}`)} {time}{` · ${placeMeta(item.info, t) || (item.coordinates ? t("장소 정보 없음", "no place details") : t("지점 미정", "branch not set"))}`}</p>
     {item.checks.length > 0 && <Checks rows={item.checks} />}
     <p className={styles.changeNext} role={session.state === "failed" ? "alert" : undefined}>{next}</p>
   </article>;
@@ -122,8 +122,8 @@ function CandidateCard({ candidate, index, active, applyWhy, explain, onApply }:
       <span className={styles.chip} data-source={candidate.source}>{chip}</span>
       {candidate.distance && <span className={styles.distance}>{t(`${candidate.distance.from}에서 ${candidate.distance.km.toFixed(1)}km`, `${candidate.distance.km.toFixed(1)} km from ${candidate.distance.from}`)}</span>}
     </div>
-    <h4 id={`plan-change-card-${candidate.id}`} className={styles.changeName}>{candidate.name}</h4>
-    {(candidate.info?.category || candidate.info?.address) && <p className={styles.changeSub}>{[candidate.info.category, candidate.info.address].filter(Boolean).join(" · ")}</p>}
+    <div className={styles.nameRow}><h4 id={`plan-change-card-${candidate.id}`} className={styles.changeName}>{candidate.name}</h4><SourceTag origin={candidate.info?.origin} /></div>
+    {placeMeta(candidate.info, t) && <p className={styles.changeSub}>{placeMeta(candidate.info, t)}</p>}
     {candidate.checks.length
       ? <Checks rows={candidate.checks} />
       : <p className={styles.changeSub}>{t("바꾸면 서버가 이 장소로 일정을 다시 확인해요.", "Once changed, the server checks the plan with this place.")}</p>}
@@ -177,7 +177,7 @@ function SearchResults({ search, onPick, onApplyName, applyWhy, explain }: {
         : search.list.length
           ? <ol className={styles.resultList}>{search.list.map((entry, index) => <li key={entry.id}><button type="button" className={styles.result} onClick={() => onPick(entry)}>
               <span className={styles.resultNo}>{index + 1}</span>
-              <span className={styles.resultBody}><b>{entry.name}</b>{entry.info && <small>{[entry.info.category, entry.info.address].filter(Boolean).join(" · ")}</small>}</span>
+              <span className={styles.resultBody}><span className={styles.nameRow}><b>{entry.name}</b><SourceTag origin={entry.info?.origin} /></span>{placeMeta(entry.info, t) && <small>{placeMeta(entry.info, t)}</small>}</span>
               {entry.distance && <span className={styles.resultKm}>{entry.distance.km.toFixed(1)}km</span>}
             </button></li>)}</ol>
           : <p className={styles.empty}>{t(`‘${query}’에 맞는 장소가 없어요 · 이름을 다시 확인해 주세요`, `No place matches ‘${query}’ · check the name`)}</p>}

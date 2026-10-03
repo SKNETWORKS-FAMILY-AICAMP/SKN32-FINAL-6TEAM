@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { agreeTerms, noHorizontalScroll, openPreferencesFromMyPage, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, openPreferencesFromMyPage, pickMenuLanguage, registerExampleTrip, submitPlan, useKorean, loadExample } from "./helpers/app";
 
 test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 마치면 등록 화면에 취향이 이어진다", async ({ page }) => {
   await useKorean(page);
@@ -112,7 +112,7 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
 
   // The finished survey rides with the trip registration; the demo refuses a survey the backend would reject.
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
 });
 

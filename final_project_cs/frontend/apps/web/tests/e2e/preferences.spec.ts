@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { agreeTerms, forgetStartScreen, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, forgetStartScreen, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean, loadExample } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -442,7 +442,7 @@ test("여행을 등록해 관리를 시작한 뒤 다시 요약을 열면 주 �
   await expect(page.getByRole("button", { name: "내 여행 이어보기" })).toHaveCount(0);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
   await openCompletedResults(page);
   await startTrip(page);

@@ -7,7 +7,30 @@ export async function useKorean(page: Page) {
   });
 }
 
+/**
+ * Next draws the form on the server first, and a click before React has taken the page over does nothing (found 2026-10-03:
+ * the example was not loaded, or 「계획 확인하기」 did not move on, when the machine was busy). Wait until the textarea is React's.
+ */
+export async function hydrated(page: Page, selector = "textarea") {
+  await page.waitForFunction((css) => {
+    const element = document.querySelector(css);
+    return Boolean(element) && Object.keys(element as object).some((key) => key.startsWith("__reactFiber"));
+  }, selector);
+}
+
+/**
+ * Press 「예시 불러오기」 once the page is React's, and wait until the example text is in. ★The example is fetched, so the box fills a
+ * moment AFTER the press: pressing 「계획 확인하기」 in that moment sends an empty plan (the page refuses, then clears its message when
+ * the text lands — it looked like a press that did nothing; found 2026-10-03 as a different test failing in each full run).
+ */
+export async function loadExample(page: Page) {
+  await hydrated(page);
+  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await expect(page.locator("#plan-source")).not.toHaveValue("");
+}
+
 export async function submitPlan(page: Page) {
+  await hydrated(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/trips\/[^/]+\/verification$/);
 }
@@ -31,7 +54,7 @@ export async function startTrip(page: Page) {
 
 export async function registerExampleTrip(page: Page) {
   await page.goto("/trips/new");
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   const source = await page.getByLabel("나의 여행 계획").inputValue();
   await submitPlan(page);
   await openCompletedResults(page);

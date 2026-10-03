@@ -3,6 +3,7 @@ import type { IntakeView } from "@/lib/live/intake";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import type { Candidate, ReviewItem, ReviewMove, ReviewedIntakeView } from "@/lib/live/intake-review";
 import { readingOf } from "./from-intake";
+import { draftOfItem } from "./model";
 import { planCandidate, reviewResultOf, safePhotoUrl, streamingViewOf } from "./from-review";
 
 const place = (name: string, latitude: number | null = 37.57, longitude: number | null = 126.98) =>
@@ -60,6 +61,19 @@ describe("the finished check, from the server's review", () => {
     const none = reviewResultOf(intake("review", "review", { review: { ...review, items: [item({ place: null, place_state: "none" }), item({ id: "0-1", index: 1, place: place("어딘가", null, null) })], moves: [] } }), readingOf(intake("review", "review")))!;
     expect(none.items[0]).toMatchObject({ place: "", noPlace: true, coordinates: null });
     expect(none.items[1]).toMatchObject({ place: "어딘가", noPlace: false, coordinates: null });
+  });
+
+  it("names a card after the place the customer picked, and keeps the written words for the editor (2026-10-03: the name did not follow the change)", () => {
+    const picked = reviewResultOf(intake("review", "review", { review: { ...review, moves: [], items: [
+      item({ id: "0-3", index: 3, title: "성수 예약 식당", place_state: "customer", place: place("평양면옥") }),
+      item({ id: "0-4", index: 4, title: "경복궁 관람", place_state: "found", place: place("경복궁") }),
+      item({ id: "0-5", index: 5, title: "광장시장", place_state: "customer", place: place("광장시장") }),
+    ] } }), readingOf(intake("review", "review")))!;
+    expect(picked.items[0]).toMatchObject({ title: "평양면옥", written: "성수 예약 식당", place: "평양면옥" });
+    expect(draftOfItem(picked.items[0]).title).toBe("성수 예약 식당");                // editing the words edits what was written, not the place
+    expect(picked.items[1]).toMatchObject({ title: "경복궁 관람", place: "경복궁" });  // a place the server found keeps the written words as the name
+    expect(picked.items[1].written).toBeUndefined();
+    expect(picked.items[2].written).toBeUndefined();                                   // same name: nothing to say twice
   });
 
   it("settles a leg that waits (an end has no place) instead of leaving it spinning", () => {

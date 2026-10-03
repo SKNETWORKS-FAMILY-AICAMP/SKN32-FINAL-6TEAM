@@ -1,6 +1,6 @@
 import type { IntakeEdit, IntakeItem, IntakeProblem, IntakeSource, IntakeView } from "@/lib/live/intake";
 import { hasValidCoordinates } from "@/features/map/map-points";
-import type { Coordinates, MapPoint } from "@/features/map/model";
+import type { Coordinates } from "@/features/map/model";
 
 export interface ReviewRow {
   source: IntakeSource;
@@ -56,31 +56,4 @@ export function editsFor(row: ReviewRow, draft: Draft): IntakeEdit[] {
   }
   if (draft.noPlace !== base.noPlace || (!draft.noPlace && draft.place.trim() !== base.place)) add("place", draft.noPlace ? { none: true } : { name: draft.place.trim() });
   return edits;
-}
-
-export function invalidDraft(draft: Draft): "title" | "date" | "time" | "order" | "place" | null {
-  if (!draft.title.trim() || draft.title.trim().length > 80) return "title";
-  // Leave existing missing values to the server's check, but reject invalid entered values.
-  if (draft.date && (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date) || !Number.isFinite(Date.parse(draft.date)))) return "date";
-  if ([draft.start, draft.end].some((time) => time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))) return "time";
-  if (draft.start && draft.end && draft.end <= draft.start) return "order";
-  if (!draft.noPlace && draft.place.trim().length > 80) return "place";
-  return null;
-}
-
-export function overlaps(row: ReviewRow, draft: Draft, all: ReviewRow[]): ReviewRow[] {
-  if (!draft.date || !draft.start || !draft.end || draft.end <= draft.start) return [];
-  return all.filter((other) => {
-    const value = draftOf(other);
-    return other.key !== row.key && value.date === draft.date && value.start && value.end
-      && value.start < draft.end && value.end > draft.start;
-  });
-}
-
-export function mapPoints(all: ReviewRow[]): MapPoint[] {
-  return all.flatMap((row, index) => {
-    const place = placeOf(row), draft = draftOf(row);
-    return place?.coordinates ? [{ id: row.key, title: place.name || draft.title, date: draft.date, time: draft.start,
-      endTime: draft.end, order: index + 1, coordinates: place.coordinates }] : [];
-  });
 }

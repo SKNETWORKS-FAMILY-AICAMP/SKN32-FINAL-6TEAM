@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agreeTerms, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, openCompletedResults, openPreferencesFromMyPage, pickMenuLanguage, startTrip, submitPlan, useKorean, loadExample } from "./helpers/app";
 
 /** Demo trips live in this tab's sessionStorage under this prefix (`DEMO_STORAGE_PREFIX`). */
 const PREFIX = "tripilot.web-mvp.trip:";
@@ -11,7 +11,7 @@ const card = (page: Page) => page.getByRole("region", { name: "내 여행", exac
 /** Registers the example plan; the trip is saved once its check starts. Returns the trip id. */
 async function addTrip(page: Page) {
   await page.goto("/trips/new");
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
   return new URL(page.url()).pathname.split("/")[2];
 }
@@ -141,7 +141,7 @@ test("등록하고 로고로 돌아오면 첫 화면 카드와 전체 목록이 
   await page.getByRole("dialog", { name: "메뉴" }).getByRole("link", { name: "여행 목록 보기" }).click();
   await expect(page.getByText("아직 등록한 여행이 없어요.", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "새 여행 등록", exact: true }).click();
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
   await page.getByRole("banner").getByRole("link", { name: "triPilot 홈으로" }).click();
   await expect(card(page).getByRole("listitem")).toHaveCount(1);
@@ -366,7 +366,7 @@ test("마지막 여행을 지우면 빈 목록과 새 여행 등록만 남고, �
     await page.getByRole("button", { name: "응답하지 않고 넘어가기" }).click();
   }
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
   await openCompletedResults(page);
   await startTrip(page);

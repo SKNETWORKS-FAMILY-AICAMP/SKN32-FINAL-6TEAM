@@ -77,9 +77,9 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       take(next);
     }
     /** The photos of one place the tourism service has (never stored here), as the change screen's `PlaceInfo`. */
-    async function infoOf(place: { name: string; category?: string | null; address?: string | null; content_id?: string | null; ref?: string | null }, withPhotos: boolean): Promise<PlaceInfo> {
+    async function infoOf(place: { name: string; category?: string | null; address?: string | null; content_id?: string | null; ref?: string | null; kind?: string | null; source?: string | null }, withPhotos: boolean): Promise<PlaceInfo> {
       const ref = place.ref ?? (place.content_id ? `tour:${place.content_id}` : null);
-      const info: PlaceInfo = { category: place.category ?? null, address: place.address ?? null, photos: [] };
+      const info: PlaceInfo = { category: place.category ?? null, address: place.address ?? null, photos: [], kind: place.kind ?? null, origin: place.source ?? null };
       if (!withPhotos || !ref?.startsWith("tour:")) return info;
       try {
         const found = await getPlacePhotos(ref, language);
@@ -131,7 +131,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
         return found.results.map((result) => {
-          const card = planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [] });
+          const card = planCandidate(result, id, "search", { category: result.place.category, address: result.place.address, photos: [], kind: result.place.kind, origin: result.place.source });
           pickable.current.set(card.id, result.place);
           return card;
         });
@@ -165,7 +165,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           const time = change.to.starts_at ? ` ${change.to.starts_at}${change.to.ends_at ? `–${change.to.ends_at}` : ""}` : "";
           return `${change.title} → ${place}${time}`;
         });
-        return { changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason.startsWith("no_")).length };
+        return {
+          changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason.startsWith("no_")).length,
+          changed: result.changed.map((change) => ({ id: change.id, from: change.from.place?.name ?? t("장소 미정", "no place yet") })),
+        };
       },
       lock: async (id, locked) => {
         const item = itemOf(id);
@@ -174,8 +177,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       undo: async () => {
         const edits = undoEdits.current;
         if (!edits) throw new LiveError("cannot_undo", t("이번 변경은 되돌릴 수 없어요 · 이전 장소를 알 수 없어서요", "This change cannot be undone — the earlier place is not known"));
-        undoEdits.current = null;
         await save(edits, true);
+        undoEdits.current = null;                     // only once it went through: a refused undo can be tried again
       },
       recheck: async () => {
         const ids = plan().review?.items.map((entry) => entry.id) ?? [];

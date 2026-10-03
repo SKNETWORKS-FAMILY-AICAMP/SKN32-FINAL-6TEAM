@@ -119,3 +119,15 @@ test("키가 없는 첫 방문도 누르는 순간 진행 화면으로 넘어가
   // 새 키 안내는 계획 화면 위에 뜨지 않는다
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
+
+test("서버가 몇 초 넘게 답이 없으면 진행 화면이 「서버가 답하는 데 시간이 걸리고 있어요」라고 알리고, 답이 오면 그대로 이어진다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ intakeDelay: 6500, review: "on", board: "rich", readingPolls: 1 });
+  await start(page);
+  await fillAndSend(page);
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page.getByText("계획을 서버로 보내는 중이에요…")).toBeVisible();
+  await expect(page.getByText("서버가 답하는 데 시간이 걸리고 있어요")).toBeVisible({ timeout: 8_000 });     // 4초쯤 뒤
+  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]{36}$/, { timeout: 15_000 });
+  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+});

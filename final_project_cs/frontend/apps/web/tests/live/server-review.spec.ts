@@ -120,7 +120,10 @@ test("장소 검색과 사진: 검색 결과가 나오고, 관광공사 번호�
   const box = page.getByLabel("장소 검색");
   await box.fill("올리브영");
   await expect(page.getByText("‘올리브영’ 검색 결과 1곳")).toBeVisible();
-  await expect(page.getByRole("button", { name: /올리브영 명동 플래그십/ })).toBeVisible();
+  const found = page.getByRole("button", { name: /올리브영 명동 플래그십/ });
+  await expect(found).toBeVisible();
+  await expect(found).toContainText("카카오 지도");                       // 어디서 찾았는지가 이름 옆에 작게
+  await expect(found).toContainText("화장품 · 서울 중구 명동길 53");           // 서버가 준 분류 · 주소 그대로
 });
 
 test("맨 아래: 전체 자동 추천 → 재검증 → 여행 등록 순서로 이어지고, 확인할 것이 남으면 재검증은 이유를 말한다", async ({ page, request }) => {
@@ -166,4 +169,27 @@ test("서버의 확인 결과를 못 만들었으면(review: null) 못 만들었
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(page.getByText("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요", { exact: false })).toBeVisible();   // 못 만들었다고 말한다
   await expect(page.getByRole("button", { name: /전체 자동 추천/ })).toContainText("준비 중");
+});
+
+test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 번 불러 권장 수정안이 반영된 모습으로 넘어가고, 바뀐 일정에 「바뀜」이 붙는다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  const body = page.locator("div[class*=sheetBody]");
+  await page.getByRole("button", { name: "목록 높이 바꾸기" }).click();
+  await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await page.waitForTimeout(500);
+  const box = (await body.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let push = 0; push < 4; push += 1) { await page.mouse.wheel(0, 40); await page.waitForTimeout(50); }
+  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
+  await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
+  expect((await server.received("POST", "/autofix")).length).toBe(1);             // 밀기 한 번에 한 번만 부른다
+});
+
+test("고른 장소가 카드 이름이 된다 — 직접 고른 곳은 장소 이름으로 보이고, 쓴 글은 작게 남는다", async ({ page, request }) => {
+  await openFinished(page, request, { board: "rich" });
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await expect(page.getByText("대체 후보 A · 1순위")).toBeVisible();
+  await page.getByRole("button", { name: "이 장소로 바꾸기" }).first().click();
+  await expect(card(page, "올리브영 광화문점")).toBeVisible();
+  await expect(card(page, "올리브영 광화문점")).toContainText("원문 「올리브영」");
 });

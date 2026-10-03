@@ -39,9 +39,11 @@ export const located = (place: { latitude: number | null; longitude: number | nu
   typeof place?.latitude === "number" && typeof place?.longitude === "number";
 
 function planItem(item: ReviewItem, day: number, info: PlaceInfo | null): PlanItem {
+  // The place the customer picked names the card; the words they wrote stay for the editor and as a small line under it.
+  const picked = item.place_state === "customer" && item.place?.name && item.place.name !== item.title ? item.place.name : null;
   return {
     id: item.id, day, date: item.date ?? "", startsAt: item.starts_at ?? "", endsAt: item.ends_at ?? "",
-    title: item.title, place: item.place?.name ?? "", noPlace: item.place_state === "none",
+    title: picked ?? item.title, ...(picked && { written: item.title }), place: item.place?.name ?? "", noPlace: item.place_state === "none",
     coordinates: located(item.place) ? { lat: item.place.latitude, lng: item.place.longitude } : null,
     checks: (item.rows ?? []).map(row), verdict: verdictOf(item.status), locked: item.locked, info, suggestion: null,
   };

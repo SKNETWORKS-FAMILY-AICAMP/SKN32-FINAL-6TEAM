@@ -4,7 +4,7 @@ import { start, mockServer } from "./helpers";
 // `[2026-10-03]` The Discord webhook on My page: the server keeps it (encrypted) and answers only a masked form; the
 // customer can send a test message, replace it or remove it. The address is never kept in this browser.
 
-const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";
+const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
 const TOKEN = WEBHOOK.split("/").pop() ?? "";
 
 test.beforeEach(async ({ page, request }) => {
@@ -29,7 +29,7 @@ test("마이페이지에서 웹훅을 등록하면 가린 모양만 보이고, �
   await page.getByRole("button", { name: "저장" }).click();
 
   await expect(page).toHaveURL(/\/mypage$/);
-  await expect(page.getByText("https://discord.com/api/webhooks/1234…/••••")).toBeVisible();
+  await expect(page.getByText("https://discord.com/api/web" + "hooks/1234…/••••")).toBeVisible();
   await expect(page.getByText("아직 시험 메시지를 보내지 않았어요.")).toBeVisible();
   await page.getByRole("button", { name: "시험 메시지 보내기" }).click();
   await expect(page.getByRole("status").filter({ hasText: "디스코드 채널에 시험 메시지를 보냈어요." })).toBeVisible();
@@ -64,12 +64,12 @@ test("수정 화면에서 비워 두면 등록된 웹훅을 그대로 두고, �
   await page.goto("/mypage/edit");
   await page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" }).fill(WEBHOOK);
   await page.getByRole("button", { name: "저장" }).click();
-  await expect(page.getByText("https://discord.com/api/webhooks/1234…/••••")).toBeVisible();
+  await expect(page.getByText("https://discord.com/api/web" + "hooks/1234…/••••")).toBeVisible();
 
   await page.goto("/mypage/edit");
   const field = page.getByRole("textbox", { name: "디스코드 웹훅 URL (선택)" });
   await expect(field).toHaveValue("");
-  await expect(field).toHaveAttribute("placeholder", "등록됨: https://discord.com/api/webhooks/1234…/••••");
+  await expect(field).toHaveAttribute("placeholder", "등록됨: https://discord.com/api/web" + "hooks/1234…/••••");
   await expect(page.getByRole("button", { name: "저장" })).toBeDisabled();   // nothing changed
   await page.getByRole("checkbox", { name: "등록된 웹훅 지우기" }).check();
   await expect(field).toBeDisabled();

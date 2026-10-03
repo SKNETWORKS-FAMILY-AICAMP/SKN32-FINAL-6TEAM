@@ -56,8 +56,32 @@ export async function finishOnboarding(page: Page, beforeTerms?: () => Promise<v
   await expect(page.getByRole("heading", { name: "여행 취향 설정 완료" })).toBeVisible();
 }
 
-/** The previous intake review sits behind the plan-check result's 「이전 확인 화면 열기」 (2026-10-03). */
-export async function openEditor(page: Page) {
-  await page.getByRole("button", { name: "이전 확인 화면 열기" }).click();
-  await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toBeVisible();
+/** Open the registration page once React has taken it over (a field filled before that is lost). */
+export async function openRegistration(page: Page) {
+  await page.goto("/trips/new");
+  await expect(page.locator("#plan-source")).toBeVisible();
+  await page.waitForFunction(() => {
+    const element = document.querySelector("textarea");
+    return Boolean(element) && Object.keys(element as object).some((key) => key.startsWith("__reactFiber"));
+  });
+}
+
+/** The registration page's three panels (live): by the heading each shows. */
+export const PANES = {
+  text: (page: Page) => page.getByRole("region", { name: "직접 입력" }),
+  files: (page: Page) => page.getByRole("region", { name: "파일 선택", exact: true }),
+  plan: (page: Page) => page.getByRole("region", { name: "계획 짜 주기 (테스트)" }),
+};
+
+/** Fill the third panel, 「계획 짜 주기 (테스트)」: first day, days, travelers and (optionally) the wish. */
+export async function fillPlanAsk(page: Page, ask: { start: string; days: number; party: number; wish?: string }) {
+  await page.getByLabel("첫날", { exact: true }).fill(ask.start);
+  await page.getByLabel("일수", { exact: true }).selectOption(String(ask.days));
+  await page.getByLabel("인원", { exact: true }).selectOption(String(ask.party));
+  if (ask.wish !== undefined) await page.getByLabel("원하는 여행", { exact: false }).fill(ask.wish);
+}
+
+/** A first day that is surely not past: a week from today in Seoul. */
+export function weekAhead(): string {
+  return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
 }

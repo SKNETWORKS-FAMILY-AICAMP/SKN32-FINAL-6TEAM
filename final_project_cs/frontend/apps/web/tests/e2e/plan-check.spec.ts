@@ -269,3 +269,61 @@ test("7 · 꺼진 「재검증」은 이유를 말하고, 「전체 자동 추�
   await pressOff(page, /.* 수정$/);
   await expect(toast(page, "이미 등록한 여행이에요")).toBeVisible();
 });
+
+test("2 · 목록 높이: 손잡이(와 머리)를 잡고 끌면 원하는 높이로 맞춰지고, 키보드 위·아래 화살표로도 바뀌며, 누르면 다시 눈금으로 돌아간다", async ({ page }) => {
+  await result(page);
+  const screen = page.locator("[data-sheet]");
+  const handle = page.getByRole("button", { name: "목록 높이 바꾸기" });
+  const height = () => sheet(page).evaluate((element) => Math.round(element.getBoundingClientRect().height));
+  await expect(screen).toHaveAttribute("data-sheet", "half");
+  await expect.poll(height).toBeGreaterThan(300);
+  const start = await height();
+  const box = (await handle.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y - 80, { steps: 6 });
+  await page.mouse.up();
+  await expect(screen).toHaveAttribute("data-sheet", "custom");
+  await expect.poll(height).toBeGreaterThanOrEqual(start + 70);
+  const dragged = await height();
+  await handle.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(height).toBeLessThan(dragged - 30);
+  await handle.click();                                                     // 끌고 난 뒤의 누름은 눈금(중간)으로 돌아간다
+  await expect(screen).toHaveAttribute("data-sheet", "half");
+});
+
+test("4 · 수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 있고, 눌러서 쓰는 동안 넓어진다 — 따로 막대를 차지하지 않는다", async ({ page }) => {
+  await result(page);
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  const search = page.getByRole("searchbox", { name: "장소 검색" });
+  const field = page.locator("[class*=headSearch]");
+  await expect(page.locator("header").filter({ has: search })).toHaveCount(1);
+  await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeHidden();         // 검색이 로고 자리를 쓴다
+  await expect(page.getByRole("button", { name: "메뉴" })).toBeVisible();
+  const compact = (await field.boundingBox())!;
+  await search.click();
+  await expect.poll(async () => (await field.boundingBox())!.width).toBeGreaterThan(compact.width + 40);
+  await search.fill("명동");
+  await expect(page.getByText("‘명동’ 검색 결과 1곳")).toBeVisible();
+  await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
+  await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
+});
+
+test("7 · 목록 끝에서 한 번 더 밀면 권장 수정안이 반영된 모습으로 넘어가고(바뀐 곳에 「바뀜」), 「원래대로」로 돌아온다", async ({ page }) => {
+  await result(page);
+  const body = page.locator("div[class*=sheetBody]");
+  await page.getByRole("button", { name: "목록 높이 바꾸기" }).click();
+  await body.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await page.waitForTimeout(500);                                          // 끝에 닿은 직후의 관성은 밀기로 세지 않는다
+  await expect(page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요")).toBeVisible();
+  const box = (await body.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let push = 0; push < 4; push += 1) { await page.mouse.wheel(0, 40); await page.waitForTimeout(50); }
+  const banner = page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" });
+  await expect(banner).toBeVisible();
+  await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
+  await banner.getByRole("button", { name: "원래대로" }).click();
+  await expect(banner).toHaveCount(0);
+  await expect(page.getByText(/바뀜 · 이전/)).toHaveCount(0);
+});

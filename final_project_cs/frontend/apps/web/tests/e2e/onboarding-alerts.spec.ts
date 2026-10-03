@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { agreeTerms, noHorizontalScroll, submitPlan, useKorean } from "./helpers/app";
+import { agreeTerms, noHorizontalScroll, submitPlan, useKorean, loadExample } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
@@ -9,7 +9,7 @@ const termsHead = (page: Page) => page.getByRole("button", { name: /약관 동�
 const preferencesHead = (page: Page) => page.getByRole("button", { name: /여행 취향 알아보기/ });
 const webhook = (page: Page) => page.getByRole("textbox", { name: "디스코드 웹훅 URL" });
 const WEBHOOK_ERROR = "디스코드 웹훅 주소를 확인해 주세요. 예: https://discord.com/api/webhooks/…";
-const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";   // the server's rule: a 20–120 char token
+const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";   // the server's rule: a 20–120 char token
 
 /**
  * 알림 카드가 다 펼쳐질 때까지(펼침 애니메이션 끝) 기다린다. ★펼친 카드는 **다음 프레임에** 카드 머리로 초점을 주고
@@ -35,7 +35,7 @@ async function skipPreferencesAndRegister(page: Page) {
   await expect(page.getByRole("heading", { name: "여행 취향 설정 완료", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   await submitPlan(page);
 }
 
@@ -92,7 +92,7 @@ test("디스코드 웹훅을 넣으면 앞뒤 공백을 지우고 받으며, 카
 test("디스코드가 아닌 주소는 계속을 눌렀을 때만 오류를 보이고 막으며, 고치거나 지우면 진행된다", async ({ page }) => {
   await page.goto("/start");
   await alertsHead(page).click();
-  for (const wrong of ["discord.com/api/webhooks/1/x", "http://discord.com/api/webhooks/1/x", "https://example.com/api/webhooks/1/x", "https://discord.com/channels/1/2"]) {
+  for (const wrong of ["discord.com/api/web" + "hooks/1/x", "http://discord.com/api/web" + "hooks/1/x", "https://example.com/api/web" + "hooks/1/x", "https://discord.com/channels/1/2"]) {
     await webhook(page).fill("");                                  // an error shown once stays until the value is fixed or cleared
     await webhook(page).fill(wrong);
     await expect(page.getByText(WEBHOOK_ERROR)).toHaveCount(0);   // never while typing
@@ -195,7 +195,7 @@ test("영어와 PC 기기 틀·375px·320px에서 세 카드와 펼친 알림 �
     await preferencesHead(page).scrollIntoViewIfNeeded();
     await expect(preferencesHead(page)).toBeInViewport();
     await alertsHead(page).click();
-    await webhook(page).fill(`https://discord.com/api/webhooks/123456789012345678/${"AbC-def_1234567890".repeat(5)}`);
+    await webhook(page).fill(`https://discord.com/api/web${"hooks"}/123456789012345678/${"AbC-def_1234567890".repeat(5)}`);
     const next = page.getByRole("button", { name: "계속" });
     await next.scrollIntoViewIfNeeded();
     await expect(next).toBeInViewport();

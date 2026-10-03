@@ -84,7 +84,7 @@ function Player({ start }: { start: "play" | "done" }) {
       autoRecommendAll: async () => {
         const outcome = recommendAll(current.current);
         if (outcome.changes.length) await commit(outcome.state);
-        return { changes: outcome.changes, kept: outcome.kept };
+        return { changes: outcome.changes, kept: outcome.kept, changed: outcome.changed };
       },
       lock: async (id, locked) => { await pause(150); setState(setLocked(current.current, id, locked)); },
       undo: async () => {

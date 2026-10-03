@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IntakeField, IntakeView } from "@/lib/live/intake";
-import { draftOf, editsFor, invalidDraft, mapPoints, overlaps, rows, statusOf, type ReviewRow } from "./model";
+import { draftOf, editsFor, placeOf, rows, statusOf, type ReviewRow } from "./model";
 
 const field = (value: unknown, extra: Partial<IntakeField> = {}): IntakeField => ({ value, method: "rule", needs_review: false, evidence: {}, note: null, ...extra });
 function row(key = "s1:0"): ReviewRow {
@@ -27,21 +27,6 @@ describe("intake review data and edit boundaries", () => {
     expect(draftOf(r).noPlace).toBe(true);
     expect(editsFor(r, { ...draftOf(r), noPlace: false, place: "경복궁" })[0].value).toEqual({ name: "경복궁" });
   });
-  it("rejects reversed/equal times and invalid input without inventing missing times", () => {
-    const value = draftOf(row());
-    expect(invalidDraft({ ...value, end: "08:59" })).toBe("order");
-    expect(invalidDraft({ ...value, end: "09:00" })).toBe("order");
-    expect(invalidDraft({ ...value, start: "25:00" })).toBe("time");
-    expect(invalidDraft({ ...value, end: "" })).toBeNull();
-    expect(invalidDraft({ ...value, title: " " })).toBe("title");
-  });
-  it("finds only same-day overlaps and permits adjacent time boundaries", () => {
-    const first = row(), second = row("s1:1"), tomorrow = row("s2:0");
-    second.item.fields.starts_at = field("09:30"); tomorrow.item.date = "2026-10-13";
-    expect(overlaps(first, draftOf(first), [first, second, tomorrow]).map((r) => r.key)).toEqual(["s1:1"]);
-    second.item.fields.starts_at = field("10:00");
-    expect(overlaps(first, draftOf(first), [first, second])).toEqual([]);
-  });
   it("does not treat customer edits as a passed server check", () => {
     const r = row(); r.item.fields.starts_at!.method = "customer";
     expect(statusOf(r)).toBe("edited");
@@ -57,11 +42,11 @@ describe("intake review data and edit boundaries", () => {
   });
   it("never invents or coerces coordinates", () => {
     const r = row(), missing = row("s1:1");
-    missing.item.fields.place = field({ name: "호텔", latitude: null, longitude: "127" });
-    expect(mapPoints([r, missing])).toHaveLength(1);
-    expect(mapPoints([r])[0].coordinates).toEqual({ lat: 37.5796, lng: 126.977 });
-    missing.item.fields.place = field({ name: "호텔", latitude: 100, longitude: 127 });
-    expect(mapPoints([missing])).toEqual([]);
+    expect(placeOf(r)?.coordinates).toEqual({ lat: 37.5796, lng: 126.977 });
+    missing.item.fields.place = field({ name: "영업점", latitude: null, longitude: "127" });
+    expect(placeOf(missing)).toEqual({ name: "영업점" });
+    missing.item.fields.place = field({ name: "영업점", latitude: 100, longitude: 127 });
+    expect(placeOf(missing)?.coordinates).toBeUndefined();
   });
   it("groups in chronological order, excludes removals, and scopes problems by source/index", () => {
     const a = row(), b = row("s2:10"), removed = row("s1:1");

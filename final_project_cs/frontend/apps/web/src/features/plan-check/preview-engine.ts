@@ -206,9 +206,10 @@ function fitWindow(state: PreviewState, id: string, key: string): { start: strin
  * alternative (or keeps its place) that fits the hours, the closing day and the moves either side — its time shortened to
  * fit when needed (at least 30 minutes). Locked stops stay as they are.
  */
-export function recommendAll(state: PreviewState): { state: PreviewState; changes: string[]; kept: number } {
+export function recommendAll(state: PreviewState): { state: PreviewState; changes: string[]; kept: number; changed: { id: string; from: string }[] } {
   let current = state;
   const changes: string[] = [];
+  const changed: { id: string; from: string }[] = [];
   let kept = 0;
   for (const day of state.view.days) {
     for (const stop of dayItems(current.view, day.day)) {
@@ -229,10 +230,11 @@ export function recommendAll(state: PreviewState): { state: PreviewState; change
         hoursRow(place, after), closedRow(place, after)];
       current = { ...applied, view: rebuildMoves({ ...applied.view, dirty: true, items: applied.view.items.map((entry) => entry.id === item.id ? { ...entry, checks, verdict: verdictOf(checks) } : entry) }, new Set([item.id])) };
       changes.push(`${old} → ${place.name} ${fit.window.start}–${fit.window.end}`);
+      changed.push({ id: item.id, from: item.place || old });
     }
     current = { ...current, view: refreshTimeRows(current.view, day.day) };
   }
-  return { state: withSuggestions(current), changes, kept };
+  return { state: withSuggestions(current), changes, kept, changed };
 }
 
 /** While one or more stops are checked again: their checks and verdicts wait, and so do the moves either side (and `moveIds`). */

@@ -61,6 +61,8 @@ const DEFAULTS = {
   trip: "ok",
   // how long planning takes to answer, in ms (the real server reads opening hours: up to about a minute)
   planDelay: 0,
+  // a sentence when the server refuses to plan (422 `plan_refused`, before any stream opens); "" = it plans
+  planRefusal: "",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
@@ -551,6 +553,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {
     const planning = path.endsWith("/plan");
     if (!planning && broken("confirm")) return;
+    if (planning && scenario.planRefusal) return json(response, 422, { error: { code: "plan_refused", message: scenario.planRefusal } }, origin);
     const register = () => { confirmed = true; scenario = { ...scenario, trips: "one" }; return { status: "confirmed", trip: { trip_id: TRIP_ID } }; };
     if (planning && wantsStream(request)) {
       if (scenario.stream === "busy") return tooManyStreams(response, origin);

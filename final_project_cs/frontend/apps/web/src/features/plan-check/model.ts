@@ -27,6 +27,10 @@ export interface PlaceInfo {
   category: string | null;
   address: string | null;
   photos: PlacePhoto[];
+  /** What kind of stop the place is, as the server classes it (a meal place or an activity) — null when it does not say. */
+  kind?: "dining" | "activity" | string | null;
+  /** Where the server found it: `places` (our list) · `tour_api` (tourism service) · `kakao` (map search) · `customer_pick` … */
+  origin?: string | null;
 }
 
 export interface PlanItem {
@@ -38,7 +42,13 @@ export interface PlanItem {
   startsAt: string;
   /** "HH:MM", or "" when there is none. */
   endsAt: string;
+  /**
+   * What the card is called. ★`[2026-10-03 사용자]` Once the customer picked a place for the stop, this is that place's name —
+   * the card used to keep the words they had written ("성수 예약 식당") after the place had changed.
+   */
   title: string;
+  /** The words as written in the plan, when `title` is the picked place's name instead (the stop editor edits these, not the place). */
+  written?: string;
   /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
   place: string;
   noPlace: boolean;
@@ -256,7 +266,7 @@ export const foundCount = (view: Pick<PlanCheckView, "lines">) => view.lines.fil
 export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
 
 export const draftOfItem = (item: PlanItem): ItemDraft =>
-  ({ title: item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
+  ({ title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
 
 /**
  * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,

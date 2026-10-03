@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openCompletedResults, pickMenuLanguage, startTrip, submitPlan, useKorean } from "./helpers/app";
+import { openCompletedResults, pickMenuLanguage, startTrip, submitPlan, useKorean, loadExample } from "./helpers/app";
 
 test.beforeEach(async ({ page }) => { await useKorean(page); });
 
 async function loadSamplePlan(page: Page, scenario?: "needs-review" | "failed") {
   await page.goto("/trips/new");
-  await page.getByRole("button", { name: "예시 불러오기" }).click();
+  await loadExample(page);
   const source = await page.locator("#plan-source").inputValue();
   expect(source).toContain("1일차 · 2026-09-15");
   expect(source).toContain("2일차 · 2026-09-16");
