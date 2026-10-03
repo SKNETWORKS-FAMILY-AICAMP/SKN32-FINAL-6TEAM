@@ -174,11 +174,11 @@ for n in names:
 for _, line in sorted(_rows2, key=lambda x: -x[0]):
     M_OUT.append(line)
 
-# ---- 26B(Gemma 4) 를 이긴 경우
-M_OUT += ['', '## 표 3. 목표 점검 — Gemma 4 26B 직접(311/336)을 점추정으로 넘은 것과, 통계로 구분된 것', '',
+# ---- 26B(Gemma 4) 를 이긴 경우 — 기준 정답 수는 이번 합계에서 센다
+_t26 = sum(_v26) if _v26 is not None else None
+M_OUT += ['', f'## 표 3. 목표 점검 — Gemma 4 26B 직접({_t26}/{tot_n})을 점추정으로 넘은 구성과, 26B 와 통계로 구분된 구성', '',
           '「구분됨」 = 짝지은 차이의 95% 구간이 0 을 포함하지 않고 정확검정 p<0.05(비교가 많아 보정 기준은 p<0.001 안팎). 활성·저장은 표 1 의 부품 기준.', '',
-          '| 구성 | 시험 합 336 | 26B 대비 %p [구간] (그 줄만 : 26B 만, p) | 판정 |', '|---|---:|---|---|']
-_all = [(nm, [fn(w) for w in EV], None) for nm, _s, _v, _t, fn in _DIRECT]
+          f'| 구성 | 합 {tot_n} | 26B 대비 %p [구간] (그 줄만 : 26B 만, p) | 판정 |', '|---|---:|---|---|']
 _cand = []
 for nm, _s, _v, _t, fn in _DIRECT:
     pk = [fn(w) for w in EV]
@@ -189,15 +189,21 @@ for nm, _s, _v, _t, fn in _DIRECT:
 for n in names:
     vec = [int(res[w][n][i][0] == gold[w][i]) for w in EV for i in range(len(gold[w]))]
     _cand.append(('조합 · ' + n, vec))
+_lower_sig = []
 if _v26 is not None:
     for nm, vec in sorted(_cand, key=lambda x: -sum(x[1])):
-        s = sum(vec)
-        if s <= 311:
-            continue
+        s_ = sum(vec)
         d, lo_, hi_, a, b, p = _pair(vec, _v26)
-        verdict = '구분됨(p<0.05, 보정 기준 0.001 은 ' + ('통과' if p < 0.001 else '미달') + ')' if (lo_ > 0 and p < 0.05) else '점추정만 높음 — 26B 와 구분되지 않음'
-        M_OUT.append(f'| {nm} | {s} | {d:+.1f} [{lo_:+.1f}, {hi_:+.1f}] ({a} : {b}, p={p:.3f}) | {verdict} |')
-    below = [(nm, sum(vec)) for nm, vec in _cand if sum(vec) <= 311]
-    M_OUT += ['', f'26B 이하(≤311)였던 구성 {len(below)}개는 생략했다(표 1·2 에 있다).']
+        if d < 0 and hi_ < 0 and p < 0.05:
+            _lower_sig.append((nm, s_, d, lo_, hi_, a, b, p))
+        if s_ <= _t26:
+            continue
+        verdict = ('구분됨(p<0.05, 보정 기준 0.001 은 ' + ('통과' if p < 0.001 else '미달') + ')') if (lo_ > 0 and p < 0.05) else '점추정만 높음 — 26B 와 구분되지 않음'
+        M_OUT.append(f'| {nm} | {s_} | {d:+.1f} [{lo_:+.1f}, {hi_:+.1f}] ({a} : {b}, p={p:.3f}) | {verdict} |')
+    _same = [(nm, sum(vec)) for nm, vec in _cand if sum(vec) <= _t26 and not any(nm == x[0] for x in _lower_sig)]
+    M_OUT += ['', f'26B 와 같거나 낮지만 **구분되지는 않는** 구성 {len(_same)}개(예: ' + ', '.join(f'{n}({v})' for n, v in sorted(_same, key=lambda x: -x[1])[:6]) + ')는 표 1·2 에 있다.', '',
+              f'**26B 보다 통계로 구분되게 낮은 구성**(p<0.05) {len(_lower_sig)}개:', '', '| 구성 | 합 | 26B 대비 %p [구간] (그 줄만 : 26B 만, p) |', '|---|---:|---|']
+    for nm, s_, d, lo_, hi_, a, b, p in _lower_sig:
+        M_OUT.append(f'| {nm} | {s_} | {d:+.1f} [{lo_:+.1f}, {hi_:+.1f}] ({a} : {b}, p={p:.3f}) |')
 open(argv0[argv0.index('--matrix') + 1], 'w', encoding='utf-8').write('\n'.join(M_OUT) + '\n')
 print('행렬 표 저장:', argv0[argv0.index('--matrix') + 1])
