@@ -1,5 +1,5 @@
 # decider-ai 라이브러리(Mapika/decider-*)로 mix9·mix8 을 Jev 와 같은 요청(state + choice criteria)으로 푼다 — 모델 가중치·프롬프트·읽기 방식은 라이브러리 그대로.
-# 사용: MODEL=Mapika/decider-4b TAG=decider4bl SETS=mix9,mix8 python dec_lib_run.py   (LIMIT=3 이면 스모크)
+# 사용: MODEL=Mapika/decider-4b TAG=decider4bl SETS=mix9,mix8 python dec_lib_run.py   (LIMIT=3 이면 스모크; Q4=1 / Q8=1 이면 4·8비트 적재)
 import json, os, sys, time
 from datetime import date
 import torch
@@ -13,15 +13,18 @@ if os.environ.get('NO_GRAPHS'):
     kw['use_graphs'] = False
 if os.environ.get('DTYPE'):
     kw['dtype'] = getattr(torch, os.environ['DTYPE'])
-if os.environ.get('Q4'):
-    # 12B 는 bf16(약 24GB)이 16GB GPU 에 안 들어가 가중치만 bitsandbytes 4비트(NF4)로 올린다 — 프롬프트·읽는 방식은 라이브러리 그대로.
+if os.environ.get('Q4') or os.environ.get('Q8'):
+    # 12B 는 bf16(약 24GB)이 16GB GPU 에 안 들어가 가중치만 bitsandbytes 4비트(NF4, Q4=1) 또는 8비트(Q8=1)로 올린다 — 프롬프트·읽는 방식은 라이브러리 그대로.
     import transformers
     import decider.model as _dm
     _orig = _dm.AutoModelForCausalLM.from_pretrained
+    _qc = (transformers.BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4', bnb_4bit_compute_dtype=torch.bfloat16)
+           if os.environ.get('Q4') else transformers.BitsAndBytesConfig(load_in_8bit=True))
 
     def _q4(name, dtype=None, **k):
-        return _orig(name, dtype=dtype, quantization_config=transformers.BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type='nf4', bnb_4bit_compute_dtype=torch.bfloat16), device_map={'': 0}, **k)
+        return _orig(name, dtype=dtype, quantization_config=_qc, device_map={'': 0}, **k)
     _dm.AutoModelForCausalLM = type('AMQ', (), {'from_pretrained': staticmethod(_q4)})
+    _dm.DecisionModel.to = lambda self, *a, **k: self      # 양자화 모델은 .to() 로 옮기지 않는다(이미 GPU)
     kw['use_graphs'] = False
 d = Decider(MODEL, **kw)
 print('모델 적재', f'{time.time() - t0:.0f}초', 'GPU 사용 GiB', round(torch.cuda.memory_allocated() / 2 ** 30, 1), flush=True)

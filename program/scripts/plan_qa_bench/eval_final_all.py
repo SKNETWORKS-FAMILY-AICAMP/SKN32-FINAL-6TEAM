@@ -524,6 +524,63 @@ if all(n in P for n in _ENS):
         return (win[0] if len(win) == 1 else outs[0][0]), sum(c for _a, c in outs)
     P['Ens3 다수결(L6 · V9 · L5-Decider-12B)'] = _ens3
 
+# ---------- 54-5 넘김 구조(L6 끝에 Decider-12B) — 사전 등록한 H1·H2·H4. τ 는 라벨 있는 다섯 세트(heavy 판정·mix4~mix7)에서만 고른다 ----------
+D12 = {}
+for _w in LABELED + EV:
+    _fd = load_opt(R(f'dec_decider12bl_{_w}.json'))
+    if _fd and _w in _fd:
+        _pk, _pp = [], []
+        for _r in _fd[_w]['rows']:
+            _pr = _r['probs']
+            _k = max(_pr, key=_pr.get) if _pr else 'none'
+            _pk.append(int(_k.split('_')[1]) if _k.startswith('item_') else None)
+            _pp.append(_pr[_k] if _pr else 0.0)
+        D12[_w] = (_pk, _pp)
+_L6N = 'L6 규칙→게이트(e16d 임베딩)→E4B QAT'
+if have(D12) and _L6N in P and have(LP):
+    def make_h1():
+        def f(w, i):
+            st = stage(w, i)
+            if st[0] == 'done':
+                return st[1], int(bool(st[2]))
+            if GATE['e16d'][w][i] < TAU['L6e16d'] or G[w][M][i] is None:
+                return D12[w][0][i], 1
+            return G[w][M][i], 1
+        return f
+    P['H1 L6 → (게이트 음성·E4B 없음)이면 Decider-12B'] = make_h1()
+
+    def make_h2(tau):
+        def f(w, i):
+            st = stage(w, i)
+            if st[0] == 'done':
+                return st[1], int(bool(st[2]))
+            if GATE['e16d'][w][i] < TAU['L6e16d']:
+                return None, 0
+            c = LP[w]['conf'][i]
+            if c is not None and c >= tau:
+                return LP[w]['picks'][i], 1
+            return D12[w][0][i], 2
+        return f
+    TAU['H2'] = pick_tau(make_h2, GRID_HI)
+    P['H2 L6 → E4B 확신 < τ 이면 Decider-12B'] = make_h2(TAU['H2'])
+
+    def make_h4(tau):
+        _l6 = P[_L6N]
+
+        def f(w, i):
+            st = stage(w, i)
+            if st[0] == 'done':
+                return st[1], int(bool(st[2]))
+            if D12[w][1][i] >= tau:
+                return D12[w][0][i], 1
+            a, c = _l6(w, i)
+            return a, c + 1
+        return f
+    TAU['H4'] = pick_tau(make_h4)
+    P['H4 규칙 → Decider-12B 확신 ≥ τ 이면 그대로, 아니면 L6'] = make_h4(TAU['H4'])
+else:
+    NOTES.append('H1·H2·H4: Decider-12B 가 라벨 있는 다섯 세트에 아직 없다')
+
 # ---------- 채점 ----------
 names = list(P)
 res = {}
@@ -685,6 +742,43 @@ if any(k.startswith('Y2') for k in names):
                 out.append(f'| {lab_} τ_g={TAU["L6" + tag_]} | {_n6 / NC:.1%} | {_a6}/{NC} = {_a6 / NC:.2%} |')
     except Exception as e_:  # noqa: BLE001
         out.append(f'(잡담 부작용 계산 실패: {e_})')
+if os.environ.get('DIAG'):    # L6 가 어디서 틀리고, Decider-12B 직접이 그 문제를 맞히는가(진단 — 무엇도 고르지 않는다)
+    _L6 = 'L6 규칙→게이트(e16d 임베딩)→E4B QAT'
+    _d12 = {w: _dec_pick('decider12bl', w) for w in EV}
+    _cat = {}
+    _typ = {}
+    for w in EV:
+        for i in range(len(gold[w])):
+            st = stage(w, i)
+            l6, g, d = res[w][_L6][i][0], gold[w][i], _d12[w][i]
+            if st[0] == 'done':
+                c = '규칙이 정함' + (' (앞 대화→LLM)' if st[2] else '')
+            elif GATE['e16d'][w][i] < TAU['L6e16d']:
+                c = '게이트 음성 → 없음'
+            elif G[w][M][i] is None:
+                c = 'E4B 가 없음이라 답함'
+            else:
+                c = 'E4B 가 항목을 고름'
+            r = _cat.setdefault(c, [0, 0, 0, 0, 0])
+            r[0] += 1
+            if l6 == g:
+                r[1] += 1
+                r[4] += d != g
+            else:
+                r[2] += 1
+                r[3] += d == g
+            t = SETS[w]['qs'][i]['type']
+            q = _typ.setdefault(t, [0, 0, 0, 0])
+            q[0] += 1
+            q[1] += l6 == g
+            q[2] += d == g
+            q[3] += (l6 == g) or (d == g)
+    out += ['', '### L6 진단(336문제) — 어디서 틀리고 Decider-12B 직접이 그 문제를 맞히는가', '| L6 가 처리한 길 | 문제 | L6 맞음 | L6 틀림 | 틀린 것 중 D12 맞음 | 맞은 것 중 D12 틀림 |', '|---|---:|---:|---:|---:|---:|']
+    for c, r in sorted(_cat.items()):
+        out.append(f'| {c} | {r[0]} | {r[1]} | {r[2]} | {r[3]} | {r[4]} |')
+    out += ['', '### 유형별 — L6 · Decider-12B 직접 · 둘 중 하나라도 맞음', '| 유형 | 문제 | L6 | D12 | 둘 중 하나 |', '|---|---:|---:|---:|---:|']
+    for t, q in sorted(_typ.items()):
+        out.append(f'| {t} | {q[0]} | {q[1]} | {q[2]} | {q[3]} |')
 if all(n in names for n in _ENS):
     _dist = [0, 0, 0, 0]
     for w in EV:

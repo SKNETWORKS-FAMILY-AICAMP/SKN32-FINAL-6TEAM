@@ -1,7 +1,8 @@
 # decider-ai 라이브러리(Mapika/decider-*)로 mix9·mix8 을 Jev 와 같은 요청으로 푼다 — 16GB GPU 에 안 들어가는 모델용.
 # 양자화하지 않고(bf16 그대로) 앞쪽 층만 GPU 에 두고 나머지 층은 램에 두었다가 층마다 GPU 로 가져와 계산한다(accelerate 오프로드).
 # 질문을 BATCH 개씩 묶어 한 번에 넣어 가중치 이동 비용을 나눠 낸다. 프롬프트·읽는 방식·온도는 라이브러리 그대로.
-# 사용: MODEL=Mapika/decider-35b-a3b TAG=decider35bl SETS=mix9,mix8 GPU_GIB=7 BATCH=8 python dec_lib_run_off.py   (LIMIT=3 이면 스모크)
+# 사용: MODEL=Mapika/decider-35b-a3b TAG=decider35bl SETS=mix9,mix8 GPU_GIB=12 CPU_GIB=42 BATCH=8 python dec_lib_run_off.py   (LIMIT=3 이면 스모크)
+# 컨테이너 램 한도(약 58GiB)보다 큰 모델(35B 69GB 등)은 CPU_GIB 를 낮춰 나머지를 디스크로 보낸다.
 import json, os, sys, time
 from datetime import date
 import torch
@@ -22,8 +23,12 @@ LIMIT = int(os.environ.get('LIMIT', '0'))
 _orig = dm.AutoModelForCausalLM.from_pretrained
 
 
+CPU_GIB = os.environ.get('CPU_GIB', '40')      # 컨테이너 메모리 한도(약 58GiB) 안에서 램에 둘 양 — 넘치는 층은 디스크에 두고 필요할 때 읽는다
+OFFLOAD_DIR = os.environ.get('OFFLOAD_DIR', '/root/offload')
+
+
 def _off(name, dtype=None, **k):
-    return _orig(name, dtype=dtype, device_map='auto', max_memory={0: f'{GPU_GIB}GiB', 'cpu': '450GiB'}, **k)
+    return _orig(name, dtype=dtype, device_map='auto', max_memory={0: f'{GPU_GIB}GiB', 'cpu': f'{CPU_GIB}GiB'}, offload_folder=OFFLOAD_DIR, **k)
 
 
 dm.AutoModelForCausalLM = type('AMO', (), {'from_pretrained': staticmethod(_off)})
@@ -62,6 +67,14 @@ for name in os.environ['SETS'].split(','):
     ids = [i['id'] for i in items]
     keys = [f'item_{i}' for i in ids] + ['none']
     qs = job['qs'][:LIMIT] if LIMIT else job['qs']
+    ONLY = os.environ.get('ONLY')          # 'heavy:32,33;mix4:0,1' 처럼 일부 문제만 다시 풀 때(앞 실행에서 GPU 메모리 부족으로 비어 온 문제)
+    sub = None
+    if ONLY:
+        om = {k: [int(x) for x in v.split(',')] for k, v in (e.split(':') for e in ONLY.split(';'))}
+        if name not in om:
+            continue
+        sub = om[name]
+        qs = [job['qs'][i] for i in sub]
     rows, errs, t1 = [], 0, time.time()
     for s in range(0, len(qs), BATCH):
         chunk = qs[s:s + BATCH]
@@ -89,6 +102,6 @@ for name in os.environ['SETS'].split(','):
             if errs <= 3 * BATCH:
                 import traceback; traceback.print_exc(); print('오류', s, str(e)[:300], flush=True)
         print(name, len(rows), f'{(time.time() - t1) / max(1, len(rows)):.2f}초/문제', flush=True)
-    res = {name: {'ids': ids, 'rows': rows, 'keys': keys[:-1]}, '_sec_per_q': (time.time() - t1) / max(1, len(rows)), '_n': len(rows), '_errors': errs, '_tag': TAG}
-    json.dump(res, open(f'/root/work/dec_{TAG}_{name}.json' if not LIMIT else f'/root/work/dec_{TAG}_{name}_smoke.json', 'w', encoding='utf-8'), ensure_ascii=False)
+    res = {name: {'ids': ids, 'rows': rows, 'keys': keys[:-1], 'sub': sub}, '_sec_per_q': (time.time() - t1) / max(1, len(rows)), '_n': len(rows), '_errors': errs, '_tag': TAG}
+    json.dump(res, open(f'/root/work/dec_{TAG}_{name}.json' if not (LIMIT or sub) else (f'/root/work/dec_{TAG}_{name}_sub.json' if sub else f'/root/work/dec_{TAG}_{name}_smoke.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     print(f"{TAG} {name} {len(rows)}문제 {res['_sec_per_q']:.2f}초/문제 오류 {errs}", flush=True)
