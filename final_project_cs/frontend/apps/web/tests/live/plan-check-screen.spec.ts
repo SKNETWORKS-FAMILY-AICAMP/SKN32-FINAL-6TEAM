@@ -159,18 +159,76 @@ test("결과: 카드는 하나씩 펼쳐지고, 카드를 고르면 지도의 �
   await expect(pin(page, "1. 경복궁 관람")).toHaveAttribute("aria-pressed", "true");
 });
 
-test("결과: 일차 머리를 누르면 지도가 그 날로 바뀐다", async ({ page, request }) => {
+test("결과: 일차 칩을 누르면 목록과 지도가 그 날로 바뀐다", async ({ page, request }) => {
   await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
-  const day2 = page.getByRole("button", { name: /^2일차/ });
+  const day2 = page.getByRole("tab", { name: /^2일차/ });
   await expect(pin(page, "1. 경복궁 관람")).toBeVisible();
-  await expect(day2).toHaveAttribute("aria-pressed", "false");
+  await expect(day2).toHaveAttribute("aria-selected", "false");
   await day2.click();
-  await expect(day2).toHaveAttribute("aria-pressed", "true");
+  await expect(day2).toHaveAttribute("aria-selected", "true");
   await expect(pin(page, "1. N서울타워")).toBeVisible();
   await expect(pin(page, "1. 경복궁 관람")).toHaveCount(0);
-  await page.getByRole("button", { name: /^1일차/ }).click();                                      // 첫날로 돌아오면 첫날 핀이 다시 그려진다
+  await page.getByRole("tab", { name: /^1일차/ }).click();                                         // 첫날로 돌아오면 첫날 핀이 다시 그려진다
   await expect(pin(page, "1. 경복궁 관람")).toBeVisible();
   await expect(pin(page, "1. N서울타워")).toHaveCount(0);
+});
+
+// ── 2026-10-04 사용자 결정: 날짜 칩 줄 + 좌우로 넘기기 ──────────────────────────────────────────────────────────
+
+test("이틀 이상이면 날짜 칩 줄이 목록 위에 있고, 하루씩 보이며, 확인 필요가 있는 날 칩에 표시가 붙는다", async ({ page, request }) => {
+  await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
+  const strip = page.getByRole("tablist", { name: "일차 고르기" });
+  await expect(strip.getByRole("tab")).toHaveText([/^전체$/, /^1일차/, /^2일차/]);
+  await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");   // 처음에는 첫날
+  await expect(card(page, "경복궁 관람")).toBeVisible();
+  await expect(card(page, "N서울타워")).toHaveCount(0);                                                // 둘째 날은 보이지 않는다
+  await expect(page.getByRole("tab", { name: /^1일차/ }).getByRole("img")).toHaveAccessibleName(/확인 필요 \d+곳/);   // 첫날에 고칠 곳이 있다
+  await expect(page.getByRole("tab", { name: /^2일차/ }).getByRole("img")).toHaveCount(0);
+  await page.getByRole("tab", { name: "전체" }).click();                                               // 「전체」는 이어진 목록
+  await expect(card(page, "경복궁 관람")).toBeVisible();
+  await expect(card(page, "N서울타워")).toBeVisible();
+});
+
+test("하루씩 볼 때 마지막이 아닌 날의 끝에는 「다음 · 2일차」가 있고, 권장 수정안 안내(끝에서 밀기)는 마지막 날 끝에만 나온다", async ({ page, request }) => {
+  await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
+  const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
+  await expect(hint).toHaveCount(0);                                                                    // 첫날 끝: 아직 아니다
+  await page.getByRole("button", { name: /^다음 · 2일차/ }).click();
+  await expect(page.getByRole("tab", { name: /^2일차/ })).toHaveAttribute("aria-selected", "true");
+  await expect(card(page, "N서울타워")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^다음 · / })).toHaveCount(0);                          // 마지막 날에는 다음이 없다
+  await expect(hint).toBeVisible();                                                                     // 마지막 날 끝: 권장 수정안 안내
+});
+
+test.describe("좌우로 쓸어 날짜 넘기기", () => {
+  test.use({ hasTouch: true });
+  test("왼쪽으로 쓸면 다음 날, 오른쪽으로 쓸면 이전 날이 되고, 거의 세로인 움직임은 목록 스크롤이라 넘기지 않는다", async ({ page, request }) => {
+    await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
+    const swipe = (from: [number, number], to: [number, number]) => page.evaluate(([a, b]) => {
+      const target = document.querySelector("div[class*=sheetBody]")!;
+      const touch = (x: number, y: number) => new Touch({ identifier: 1, target, clientX: x, clientY: y });
+      const fire = (type: string, x: number, y: number) => target.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === "touchend" ? [] : [touch(x, y)], changedTouches: [touch(x, y)] }));
+      fire("touchstart", a[0], a[1]);
+      fire("touchend", b[0], b[1]);
+    }, [from, to] as const);
+    await expect(card(page, "경복궁 관람")).toBeVisible();
+    await swipe([300, 400], [250, 520]);                                                                // 거의 세로: 넘기지 않는다
+    await expect(card(page, "경복궁 관람")).toBeVisible();
+    await swipe([300, 400], [180, 410]);                                                                // 왼쪽으로: 다음 날
+    await expect(page.getByRole("tab", { name: /^2일차/ })).toHaveAttribute("aria-selected", "true");
+    await expect(card(page, "N서울타워")).toBeVisible();
+    await swipe([180, 400], [300, 405]);                                                                // 오른쪽으로: 이전 날
+    await expect(page.getByRole("tab", { name: /^1일차/ })).toHaveAttribute("aria-selected", "true");
+    await expect(card(page, "경복궁 관람")).toBeVisible();
+    await swipe([180, 400], [60, 405]);
+    await swipe([180, 400], [60, 405]);                                                                 // 마지막 날에서 더 왼쪽으로: 그대로
+    await expect(page.getByRole("tab", { name: /^2일차/ })).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+test("하루 계획은 날짜 칩 줄이 없다(넘길 날이 없다)", async ({ page, request }) => {
+  await openFinished(page, request);
+  await expect(page.getByRole("tablist", { name: "일차 고르기" })).toHaveCount(0);
 });
 
 test("결과: 손잡이는 시트를 높게·낮게·중간으로 돌린다", async ({ page, request }) => {

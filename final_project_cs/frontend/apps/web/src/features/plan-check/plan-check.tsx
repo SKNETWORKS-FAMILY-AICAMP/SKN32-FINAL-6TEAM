@@ -1,8 +1,8 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ChevronsDown, Lock, LockOpen, Pencil, Search, Sparkles, Trash2, Undo2, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronsDown, Lock, LockOpen, Pencil, Search, Sparkles, Trash2, Undo2, X } from "lucide-react";
 import { DeviceFrame, HeaderSlot } from "@/components/layout/device-frame";
 import { TripMap } from "@/features/map";
 import type { PinLook } from "@/features/map/model";
@@ -283,6 +283,11 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   const [recommended, setRecommended] = useState<{ count: number; was: Record<string, string>; preview: boolean } | null>(null);
   // `[2026-10-03 사용자]` 머리의 「장소 1곳 · 이동 1구간 확인 필요」를 누르면 확인이 필요한 곳만 모아 보인다(다시 누르거나 「전체 보기」로 돌아온다).
   const [onlyNeeds, setOnlyNeeds] = useState(false);
+  // `[2026-10-04 사용자 결정]` 날짜 칩 줄: 하루씩 보이고(칩·좌우로 넘기기), 「전체」는 이어진 목록. `"all"` = 사용자가 「전체」를 골랐다, null = 목록이 지도의 날짜를 따라간다.
+  const [dayChoice, setDayChoice] = useState<"all" | null>(null);
+  // Which way the last move between days went (for the slide in); null when the list was not moved from one day to another.
+  const [slide, setSlide] = useState<"next" | "prev" | null>(null);
+  const swipe = useRef<{ x: number; y: number } | null>(null);
   const [turn, setTurn] = useState(0);
   useEffect(() => {
     if (!toast) return;
@@ -419,6 +424,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     if (!first) return false;
     const id = first.type === "item" ? first.item.id : first.move.id;
     if (first.type === "item") { setSelected(first.item.id); setChosenDay(first.item.day); }
+    else setChosenDay(first.move.day);
+    setDayChoice((current) => current === "all" ? current : null);                       // 하루씩 볼 때는 그 곳이 있는 날로 넘어간다
     setOnlyNeeds(false);
     setOpen(id);
     if (sheet === "peek") setSheet("half");
@@ -448,6 +455,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
       const outcome = await actions.previewRecommendAll!();
       if (!outcome.changes.length) return noAlternative(outcome);
       setRecommended({ count: outcome.changes.length, was: wasOf(outcome), preview: true });
+      setDayChoice("all");                                                              // 바뀐 곳이 어느 날이든 한 번에 보인다
       setTurn((count) => count + 1);
       bodyBox.current?.scrollTo({ top: 0 });
       return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 바꾼 모습을 보여 드려요`, `Showing ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""} changed`),
@@ -526,16 +534,48 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     setCustom(Math.round(Math.min(max, Math.max(min, (custom ?? sheetHeight()) + (event.key === "ArrowUp" ? 40 : -40)))));
   }
 
+  // The filter ends by itself when nothing needs a look any more.
+  const filtering = onlyNeeds && done && needs(view).total > 0;
+  // ★`[2026-10-04 사용자 결정]` With more than one day the list shows one day at a time, with a strip of day chips above it (and a swipe sideways to the next or
+  //   the previous day); 「전체」 and the needs-only filter show every day as before. The map follows the day.
+  const dayStrip = done && !changing && days.length > 1;
+  const listDay: number | "all" = !dayStrip || dayChoice === "all" || filtering ? "all" : mapDay;
+  const dayAt = days.findIndex((day) => day.day === listDay);
+  const needsOfDay = (day: number) => timeline(view, day).filter((entry) => (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review").length;
+  function goDay(day: number) {
+    const to = days.findIndex((entry) => entry.day === day);
+    setSlide(dayAt >= 0 && to >= 0 && to !== dayAt ? (to > dayAt ? "next" : "prev") : null);
+    setOnlyNeeds(false);
+    setDayChoice(null);
+    showDay(day);
+    bodyBox.current?.scrollTo({ top: 0 });
+  }
+  function stepDay(delta: 1 | -1) {
+    if (dayAt < 0) return;
+    const next = days[dayAt + delta];
+    if (next) goDay(next.day);
+  }
+  function chooseAllDays() { setSlide(null); setOnlyNeeds(false); setDayChoice("all"); bodyBox.current?.scrollTo({ top: 0 }); }
+  /** Sideways swipes on the list move to the next day (left) or the previous (right); mostly-vertical moves are the list's own scrolling. */
+  const swipeStart = (event: TouchEvent<HTMLElement>) => { swipe.current = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null; };
+  const swipeEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = swipe.current;
+    swipe.current = null;
+    if (!start || listDay === "all") return;
+    const dx = event.changedTouches[0].clientX - start.x, dy = event.changedTouches[0].clientY - start.y;
+    if (Math.abs(dx) >= 60 && Math.abs(dx) >= Math.abs(dy) * 1.6) stepDay(dx < 0 ? 1 : -1);
+  };
+  const lastDay = days.at(-1)?.day;
+
   // Pushing on past the end of the list opens the page with the recommended fixes applied; pushing back at the top returns.
-  const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needs(view).total > 0;
+  // With one day at a time that is the end of the LAST day (or of the whole list); earlier days end with a way to the next day.
+  const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needs(view).total > 0 && (listDay === "all" || listDay === lastDay);
   const pull = usePullPastEnd(bodyBox, {
     onEnd: canRecommend && !frozen ? recommendAll : undefined,
     onStart: done && !changing && recommended && !frozen ? (recommended.preview ? discardPreview : undoNow() ? undo : undefined) : undefined,
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
-  // The filter ends by itself when nothing needs a look any more.
-  const filtering = onlyNeeds && done && needs(view).total > 0;
   const visible = (entry: ReturnType<typeof timeline>[number]) => !filtering || (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review";
 
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
@@ -606,7 +646,24 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{registered ? t("등록 완료", "Registered") : done ? t("계획 확인", "Plan check") : t("장소·운영시간 확인", "Places & hours")}</h2>
             <p className={styles.count}>{done ? headStatus(view, registered, t, { on: filtering, toggle: () => setOnlyNeeds((current) => !current) }) : countText(view, t)}</p>
           </header>
-          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers}>
+          {dayStrip && <div className={styles.dayStrip} role="tablist" aria-label={t("일차 고르기", "Choose a day")}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+              const tabs = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'));
+              const at = tabs.indexOf(document.activeElement as HTMLElement);
+              const next = tabs[at + (event.key === "ArrowRight" ? 1 : -1)];
+              if (next) { event.preventDefault(); next.focus(); next.click(); }
+            }}>
+            <button type="button" role="tab" className={styles.dayChip} aria-selected={listDay === "all"} tabIndex={listDay === "all" ? 0 : -1} onClick={chooseAllDays}>{t("전체", "All")}</button>
+            {days.map((day) => {
+              const wait = needsOfDay(day.day);
+              return <button key={day.day} type="button" role="tab" className={styles.dayChip} aria-selected={listDay === day.day} tabIndex={listDay === day.day ? 0 : -1} onClick={() => goDay(day.day)}>
+                {t(`${day.day}일차`, `Day ${day.day}`)}<small>{day.date ? dayLabel(day.date, language) : ""}</small>
+                {wait > 0 && <span className={styles.dayBadge} role="img" aria-label={t(`확인 필요 ${wait}곳`, `${wait} to check`)}>{wait}</span>}
+              </button>;
+            })}
+          </div>}
+          <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers} onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
             {done && recommended?.preview && <div className={styles.recommended} role="status" data-preview>
               <span className={styles.recommendedText}><b>{t("권장 수정안을 반영한 모습이에요", "The plan with the recommended fixes")}</b>
                 <small>{t(`${recommended.count}곳이 바뀐 모습이에요 · 아직 저장하지 않았어요. 위로 한 번 더 올리면 그대로 돌아가요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed in this picture · not saved yet. Push up once more to leave it as it was`)}</small></span>
@@ -624,8 +681,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             </div>}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
             {filtering && <p className={styles.filterNote} role="status">{t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}<button type="button" onClick={() => setOnlyNeeds(false)}>{t("전체 보기", "Show all")}</button></p>}
-            <div key={turn} className={styles.page} data-turned={turn > 0 || undefined}>
-            {days.filter((day) => !filtering || timeline(view, day.day).some(visible)).map((day) =>
+            <div key={`${turn}:${listDay}`} className={styles.page} data-turned={turn > 0 || undefined} data-slide={slide ?? undefined}>
+            {days.filter((day) => (listDay === "all" || day.day === listDay) && (!filtering || timeline(view, day.day).some(visible))).map((day) =>
               <section key={day.day} aria-labelledby={`plan-day-${day.day}`}>
                 <h3 id={`plan-day-${day.day}`} className={styles.day}>{done
                   ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => showDay(day.day)}>{dayHeading(day, language, t)}</button>
@@ -640,6 +697,9 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             </div>
             {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
             {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>}
+            {typeof listDay === "number" && dayAt >= 0 && dayAt < days.length - 1 && !changing && <button type="button" className={styles.nextDay} onClick={() => stepDay(1)}>
+              {t(`다음 · ${days[dayAt + 1].day}일차`, `Next · Day ${days[dayAt + 1].day}`)}{days[dayAt + 1].date ? ` ${dayLabel(days[dayAt + 1].date, language)}` : ""}<ChevronRight size={15} strokeWidth={1.8} aria-hidden="true" />
+            </button>}
             {canRecommend && <Act className={styles.pullHint} why={frozen} explain={explain} onPress={recommendAll} data-edge={pull.edge ?? undefined}
               style={{ "--pull": pull.progress } as CSSProperties}>
               <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
