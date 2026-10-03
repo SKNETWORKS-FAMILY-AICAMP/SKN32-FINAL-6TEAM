@@ -25,6 +25,7 @@ from typing import Any, Callable
 from uuid import UUID, uuid4
 
 from .itinerary import Item
+from .itinerary_checks import seoul
 from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record,
                      change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      route_candidates, route_notice, store_candidates)
@@ -741,7 +742,7 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
     payment = (trip.get("constraints") or {}).get("payment")
     notice = dining_notice(
         original=meal.place, best=best, alternates=alternates,
-        reason=(f"{meal.place['name']}이(가) {meal.starts_at:%m월 %d일 %H:%M}에 영업하지 않는 것으로 "
+        reason=(f"{meal.place['name']}이(가) {seoul(meal.starts_at):%m월 %d일 %H:%M}에 영업하지 않는 것으로 "
                 f"새벽에 확인했습니다({detail})"),
         cause=cause, after=None,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
@@ -805,7 +806,7 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
     def build(chosen: "Candidate", others: list["Candidate"]) -> ItineraryChange:
         notice = dining_notice(
             original=meal.place, best=chosen, alternates=others,
-            reason=f"{meal.place['name']} 주변에 {kinds} 소식이 있어 {meal.starts_at:%H:%M} 식사 장소를 바꿨습니다",
+            reason=f"{meal.place['name']} 주변에 {kinds} 소식이 있어 {seoul(meal.starts_at):%H:%M} 식사 장소를 바꿨습니다",
             cause=causes[0] if causes else {"category": "disruption"}, after=None,
             constraint_note="카드 결제가 가능한" if payment == "card" else None)
         notice["causes"] = causes or notice["causes"]
@@ -843,7 +844,7 @@ def plan_activity_closed_on_day(*, items: list[Item], places: list[dict[str, Any
                                        "rejected": {c.name: c.rejected for c in rejected}})
     notice = change_notice(original=item.place, replacement=best.place, start=item.starts_at,
                            causes=[cause], alternates=alternates, replay=False)
-    notice["text"] = (f"{item.place['name']}이(가) {item.starts_at:%m월 %d일 %H:%M}에 운영하지 않는 것으로 새벽에 "
+    notice["text"] = (f"{item.place['name']}이(가) {seoul(item.starts_at):%m월 %d일 %H:%M}에 운영하지 않는 것으로 새벽에 "
                       f"확인했습니다({detail}). 같은 시각 {best.place['name']}(으)로 바꿨습니다.")
     replacement = item.replaced_by(
         place=best.place, title=title_for(item, best.place["name"]),
@@ -1173,7 +1174,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                   if 0 < len(rejected) <= 3 else
                   f"(살펴본 {len(rejected)}곳 중 {why})" if why else
                   f"(살펴본 {len(rejected)}곳이 모두 조건에 맞지 않아요)" if rejected else "(그 안에 후보 장소가 하나도 없어요)")
-        text = (f"바꿀 수 있는 다른 곳을 찾지 못했어요 — {current.starts_at:%H:%M}에 갈 수 있는 {kind}이 "
+        text = (f"바꿀 수 있는 다른 곳을 찾지 못했어요 — {seoul(current.starts_at):%H:%M}에 갈 수 있는 {kind}이 "
                 f"{radius / 1000:g}km 안에 없어요{detail}.")
         facts = {"radius_m": radius, "seen": len(rejected), "rejected": {c.name: c.rejected for c in rejected[:20]}}
         # ★`[2026-09-29 사용자 지적]` 막다른 답 대신 **조건을 풀어 되는 안**을 계산한다 — 있으면 묻는다(`relaxed`)
@@ -1181,7 +1182,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
         if options:
             listed = " · ".join(f"{n}) {o['note']} {o['name']}" + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "")
                                 for n, o in enumerate(options, start=1))
-            ask = (f"{radius / 1000:g}km 안에서 {current.starts_at:%H:%M}에 갈 수 있는 {kind}이 없어요{detail}. "
+            ask = (f"{radius / 1000:g}km 안에서 {seoul(current.starts_at):%H:%M}에 갈 수 있는 {kind}이 없어요{detail}. "
                    f"대신 이런 곳이 있어요 — {listed}. 고르시면 바꿀게요. 답이 없으면 원래 일정을 그대로 둡니다.")
             return NoChange("relaxed", {"text": ask, "reason": text, "options": options, "causes": [cause], **facts})
         return NoChange("no_alternate", {"reason": text, "text": text, **facts})
@@ -1233,12 +1234,13 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
 # ── 재요청 ② — 되돌려 줘 ───────────────────────────────────────
 def _slot(item: Item, first_day: Any) -> str:
     """고객 말로 그 항목의 자리 — 「1일차 저녁」 · 「2일차 10:00 경복궁 자리」."""
-    day = (item.starts_at.date() - first_day).days + 1
-    hour = item.starts_at.hour
+    start = seoul(item.starts_at)                          # ★서울 시각 — 날짜 · 시계 숫자 모두(DB 세션이 UTC 여도 같은 자리 이름이 나온다)
+    day = (start.date() - first_day).days + 1
+    hour = start.hour
     if item.kind == "dining":
         meal = "아침" if hour < 11 else "점심" if hour < 16 else "저녁"
         return f"{day}일차 {meal}"
-    return f"{day}일차 {item.starts_at:%H:%M} 일정"
+    return f"{day}일차 {start:%H:%M} 일정"
 
 
 def plan_rollback(*, trip_version: int, base_version: int, current_items: list[Item],
@@ -1265,7 +1267,7 @@ def plan_rollback(*, trip_version: int, base_version: int, current_items: list[I
     #   장소가 바뀐 항목만 「자리: 전 → 후」로. 앞서 되돌린 것을 다시 적용하는 경우(`redo`)는 「다시 적용했어요」
     old_ids = {i.item_id for i in old_items}
     leaving = {i.seq: i for i in current_items if i.item_id not in old_ids and i.kind != "mobility" and i.place}
-    first_day = min((i.starts_at for i in [*current_items, *old_items]), default=None)
+    first_day = min((seoul(i.starts_at) for i in [*current_items, *old_items]), default=None)
     pairs = []
     for item in old_items:
         if item.item_id in current_ids or item.kind == "mobility" or not item.place:

@@ -364,7 +364,9 @@ def mentioned_item(items: list[Item], text: str) -> Item | None:
     if any(word in text for word in ("식당", "밥", "음식", "먹")):
         for word, (start, end) in _MEAL_WORDS.items():
             if word in text:
-                meals = [i for i in items if i.kind == "dining" and start <= i.starts_at.hour < end]
+                from .itinerary_checks import seoul
+
+                meals = [i for i in items if i.kind == "dining" and start <= seoul(i.starts_at).hour < end]      # ★서울 시각의 시
                 if len(meals) == 1:
                     return meals[0]
     return None

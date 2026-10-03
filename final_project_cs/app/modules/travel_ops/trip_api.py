@@ -265,7 +265,9 @@ def _plan_refused(refused: Any) -> HTTPException:
 def _seoul(moment: datetime | None) -> datetime | None:
     if moment is None:
         return None
-    return moment.replace(tzinfo=KST) if moment.tzinfo is None else moment
+    # ★`[2026-10-03 ui 검증 세션 지적]` 시간대 있는 값도 **서울 시각으로 바꾼다** — 전에는 시간대 없는 값에만 서울을 붙이고 있는 값은 그대로 돌려줘, 끼니 이름표(`_meal_label`) 등이
+    #   DB 세션이 서울이 아니면(UTC 서버) 어긋났다(서울 12:00 점심 = UTC 03:00 → 「아침」)
+    return moment.replace(tzinfo=KST) if moment.tzinfo is None else moment.astimezone(KST)
 
 
 # ── 계획서 링크 ──────────────────────────────────────────────────

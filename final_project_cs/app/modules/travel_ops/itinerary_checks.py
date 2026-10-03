@@ -63,6 +63,10 @@ def _seoul(moment: datetime) -> datetime:
     return moment.astimezone(KST) if moment.tzinfo is not None else moment.replace(tzinfo=KST)
 
 
+#: 공개 이름 — 시각의 시(hour) · 날짜를 읽는 다른 곳(`trip_api` · `itinerary_changes` · `trip_messages` · `itinerary_team`)도 같은 변환을 쓴다
+seoul = _seoul
+
+
 def seoul_part(part: Part) -> Part:
     """판정에 넣기 전에 **시각을 모두 서울 시각(시간대 있는 값)으로** 맞춘다. `[2026-10-03 적대 검토]`
 
@@ -226,4 +230,4 @@ def parts_from_items(items: Iterable[Any], routes: Mapping[str, Any] | None = No
     return parts
 
 
-__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items", "seoul_part"]
+__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items", "seoul", "seoul_part"]

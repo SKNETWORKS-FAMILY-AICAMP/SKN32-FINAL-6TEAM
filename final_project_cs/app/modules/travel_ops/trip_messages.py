@@ -131,8 +131,8 @@ def _change_target(items: list[Any], message: str, selected: UUID | None, at: da
         return named
     for word, (start, end) in _MEALS.items():
         if word in text:
-            meals = [i for i in on_day if i.kind == "dining" and start <= i.starts_at.hour < end]
-            today = [i for i in meals if i.starts_at.date() == at.date()]
+            meals = [i for i in on_day if i.kind == "dining" and start <= i.starts_at.astimezone(KST).hour < end]      # ★서울 시각의 시
+            today = [i for i in meals if i.starts_at.astimezone(KST).date() == at.astimezone(KST).date()]
             upcoming = [i for i in meals if i.starts_at >= at]
             found = (today or upcoming or meals or [None])[0]
             if found is not None:
