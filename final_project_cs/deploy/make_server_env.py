@@ -74,6 +74,8 @@ def main() -> None:
         "ACOP_LLM_PROVIDER=openai",
         f"ACOP_OLLAMA_BASE_URL={args.ollama_url}",
         "ACOP_OLLAMA_MODEL=gemma4:12b",
+        # 식은 모델 로딩이 30~64초 걸렸다(2026-10-03 실측) — 기본 60초면 첫 호출이 로딩 중에 끊기고, 끊으면 모델 서버가 로딩을 버린다
+        "ACOP_OLLAMA_TIMEOUT_SECONDS=150",
         "ACOP_EMBEDDING_PROVIDER=ollama",
         "ACOP_OLLAMA_EMBEDDING_MODEL=bge-m3:latest",
         "",
