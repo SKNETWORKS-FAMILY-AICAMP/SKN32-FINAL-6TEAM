@@ -130,11 +130,12 @@ function ProgressBar({ view }: { view: PlanCheckView }) {
   return <div className={styles.progress} data-size="large" role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <div className={styles.track}><span className={styles.fill} style={{ width: `${value}%` }} /></div>
-    {at && <p className={styles.progressAt}>{at}</p>}
     <ol className={styles.steps}>{labels.map((label, index) =>
       <li key={label} data-state={view.stage === "done" || index < current ? "done" : index === current ? "current" : "waiting"}>
         <span className={styles.node} aria-hidden="true" /><span className={styles.stepLabel}>{label}</span>
       </li>)}</ol>
+    {/* ★Under the steps, not between them and the track: `.steps` is pulled up over the track (negative margin), so a line there was drawn over the nodes (user's screenshot 2026-10-03). */}
+    {at && <p className={styles.progressAt}>{at}</p>}
   </div>;
 }
 
