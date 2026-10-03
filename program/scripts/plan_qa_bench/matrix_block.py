@@ -47,6 +47,8 @@ _DIRECT = [
     ('Decider-12B 8비트', '12B/약 13GB · Apache', 'bitsandbytes 8bit', '1.3초', lambda w: _pk_from_dec('decider12bq8', w)),
     ('Decider-12B NF4 4비트', '12B/약 8GB · Apache', 'bitsandbytes 4bit', '1.2초', lambda w: _pk_from_dec('decider12bq4', w)),
     ('Winnow-12B Q8', '12B/12.7GB · Apache', '자체 llama.cpp 서버', '1.6초', lambda w: _pk_from_dec('winnow12b', w)),
+    ('Cygnet(얼린 Gemma-4-12B-it 글자 읽기, 8비트)', '12B/약 13GB(8비트) · Apache+Gemma 정책', '레시피 읽기 + bitsandbytes 8bit', '2.0초', lambda w: _pk_from_dec('cygnet', w)),
+    ('Jev-Omni(Gemma-4-12B 합병 + 결정 머리)', '12B/24GB(8비트로 적재) · Apache', 'bitsandbytes 8bit', '—', lambda w: _pk_from_dec('jevomni', w)),
     ('Winnow-E4B Q8', 'E4B 유효 4B/8GB · Apache', '자체 llama.cpp 서버', '—', lambda w: _pk_from_dec('winnowe4b', w)),
     ('JevK5 4B v0.3 Q8', '4B/4.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('jevk54b', w)),
     ('JevK5-9B v0.3.3 Q8', '9B/9.5GB · Apache', 'llama.cpp + JevK5 런타임', '—', lambda w: _pk_from_dec('jevk59b', w)),
