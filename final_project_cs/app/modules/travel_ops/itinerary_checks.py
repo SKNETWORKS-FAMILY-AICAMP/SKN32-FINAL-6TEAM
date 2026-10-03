@@ -24,6 +24,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, time
 from typing import Any, Iterable, Mapping
+from zoneinfo import ZoneInfo
+
+KST = ZoneInfo("Asia/Seoul")
 
 
 @dataclass(frozen=True)
@@ -51,8 +54,17 @@ class Part:
     detail: Mapping[str, Any] | None = None
 
 
+def _seoul(moment: datetime) -> datetime:
+    """판정에 쓰는 시각은 **서울 시각**이다. `[2026-10-03 체크리스트 H3]` 영업시간 · 휴무 · 브레이크는 서울 시계로 적힌 값이다.
+
+    ☆전에는 `.date()` · `.time()` 을 받은 그대로 읽었다 — 세계 표준시(UTC)로 온 시각(서울 10:00 = UTC 01:00)은 「아직 열기 전」으로, DB 세션이 UTC 면 DB 에서 다시 읽은 일정(자동 변경 전
+    전체 재판정이 이 길이다)도 9시간 어긋났다. 장소 영업 판정(`place_hours.fits`)은 2026-09-29 에 고쳤는데 이 판정기는 같은 고침을 못 받았다.
+    시간대가 없는 시각은 서울 시각으로 본다(등록 입구가 그렇게 붙인다) — `astimezone` 은 시간대 없는 값을 **이 PC 의 시간대**로 읽으니 쓰지 않는다."""
+    return moment.astimezone(KST) if moment.tzinfo is not None else moment.replace(tzinfo=KST)
+
+
 def _hm(moment: datetime) -> str:
-    return moment.strftime("%H:%M")
+    return _seoul(moment).strftime("%H:%M")
 
 
 def _clock(value: Any) -> time | None:
@@ -64,7 +76,7 @@ def _clock(value: Any) -> time | None:
 
 
 def _minutes(start: datetime, end: datetime) -> int:
-    return int((end - start).total_seconds() // 60)
+    return int((_seoul(end) - _seoul(start)).total_seconds() // 60)
 
 
 def _planned_eta(route: Mapping[str, Any], chosen: Any = None) -> tuple[str, int] | None:
@@ -106,15 +118,16 @@ def _place_violations(part: Part) -> list[Violation]:
     found: list[Violation] = []
     # ★`[2026-09-28]` 그날의 영업시간 — 요일별 칸(`hours_week`, 관광공사 원문을 옮긴 것)이 먼저, 없으면 하루 한 칸
     #   (`hours`). 전에는 하루 한 칸만 봐서 **쉬는 요일**을 몰랐다(월요일 휴무인 곳이 월요일에 들어갔다)
-    today = hours_on(attributes, part.starts_at.date())
-    end = part.ends_at or part.starts_at
+    start = _seoul(part.starts_at)                 # ★서울 시각 — 날짜 · 시계 숫자 모두(`_seoul`)
+    end = _seoul(part.ends_at or part.starts_at)
+    today = hours_on(attributes, start.date())
     if today == "closed":
         found.append(Violation("closed_day", (part.seq,),
-                               f"{part.title}: {part.starts_at:%m월 %d일}은 쉬는 날이다",
+                               f"{part.title}: {start:%m월 %d일}은 쉬는 날이다",
                                "그날 여는 다른 곳으로 바꾼다"))
     elif today is not None:
         opens, closes = today.opens.strftime("%H:%M"), today.closes.strftime("%H:%M")
-        if part.starts_at.time() < today.opens:
+        if start.time() < today.opens:
             found.append(Violation("before_opening", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 {opens} 에 연다",
                                    f"{opens} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다"))
@@ -122,15 +135,14 @@ def _place_violations(part: Part) -> list[Violation]:
             found.append(Violation("after_closing", (part.seq,),
                                    f"{part.title}: {_hm(end)} 까지인데 {closes} 에 닫는다",
                                    f"{closes} 이전에 끝나게 줄이거나 앞당긴다"))
-        if today.last_entry and part.starts_at.time() > today.last_entry:
+        if today.last_entry and start.time() > today.last_entry:
             last = today.last_entry.strftime("%H:%M")
             found.append(Violation("after_last_entry", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
                                    f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
     if isinstance(brk, (list, tuple)) and len(brk) == 2:
         starts, ends = _clock(brk[0]), _clock(brk[1])
-        end = part.ends_at or part.starts_at
-        if starts and ends and part.starts_at.time() < ends and end.time() > starts:
+        if starts and ends and start.time() < ends and end.time() > starts:
             found.append(Violation("break_time", (part.seq,),
                                    f"{part.title}: {brk[0]}~{brk[1]} 은 브레이크 타임인데 그 시간에 걸친다",
                                    f"{brk[1]} 이후로 옮기거나 {brk[0]} 전에 끝낸다"))
