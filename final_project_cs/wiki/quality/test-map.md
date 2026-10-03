@@ -61,6 +61,7 @@ tests/
 | **자동 변경 전 일정 전체 재판정** `[2026-10-03]` | `scenario/` | `test_apply_recheck.py` (3건) · 감시 알림 `test_watch_failures.py` |
 | **시나리오 감시 · 새벽 확인의 일정 전체 재판정** `[2026-10-03]` | `scenario/` | `test_apply_or_ask_recheck.py` (5건 — 안 맞으면 쓰지 않고 알림 · 같은 사건 한 번만 · 맞는 변경은 그대로 · 1순위가 걸리면 2순위 · 감시기가 `rechecked` 로 셈) |
 | **일정 품질 경고 — 같은 곳 두 번 · 끼니 · 왔다 갔다** `[2026-10-03]` | `unit/travel/` · `e2e/` | `test_itinerary_quality.py` (17건 — 잡는 것 · 잡음 방지 · 거절 아님) · `e2e/test_trip_api.py::test_quality_warnings_ride_along_with_an_accepted_registration` |
+| **바깥 소스 호출 줄이기 — ITS 서울 한 번 조회 · 프로세스를 건너 나누는 응답 캐시** `[2026-10-03]` | `unit/travel/` | `test_shared_source_cache.py` (8건 — 장소 20곳이 ITS 요청 1건 · 서울 밖은 전처럼 · 다른 프로세스가 바깥에 안 나감 · 만료 · 허용 소스만 · 서비스 키 미저장 · DB 가 안 되면 메모리) |
 | **여행 분류 평가 자료 · 재생 도구** `[2026-10-03]` | `unit/eval/` | `test_travel_classification_eval.py` (7건 — 자료가 서버 어휘 · 여행 문장인지 · 검사기가 쇼핑몰 낱말·모르는 라벨·`other` 어긋남·겹침을 잡는지 · 실패를 분모에 넣는지 · 엉뚱한 팀과 escalate 를 가르는지) |
 | **같은 여행 문제 묶음** `[2026-10-03]` | `scenario/` · `unit/travel/activity/` · `e2e/` | `test_watch_batch.py` (8건 — Case 1·판 1·알림 1 · 못 푼 것 · 전부 보호 · 중복 알림 방지 · 안전 줄 먼저) · `test_watch_batch_unit.py` (9건 — 초안 기준 · 항목별 예산 · 마지막 재판정 · 표지) · `test_watch_failures.py` 묶음 구간 (3건 — 재시도 · 한 통 알림) |
 | **다음 순위 안 시험 · 밀도 판단** `[2026-10-03]` | `unit/travel/` | `activity/test_activity_fit.py` (6건) · `test_density_gate.py` (12건) · 감시 알림 `test_watch_failures.py::test_every_ranked_option_blocked_by_the_recheck_is_announced_the_same_way` |

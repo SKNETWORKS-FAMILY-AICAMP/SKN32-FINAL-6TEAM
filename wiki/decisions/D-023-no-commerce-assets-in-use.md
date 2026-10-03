@@ -34,7 +34,7 @@ domain: travel
 
 1. **쇼핑몰 지식 문서 25개**(`knowledge/documents/`) + DB 적재분 + 그것을 쓰는 RAG 시험(쇼핑몰 질의 시험 · 영역 격리 시험).
 2. **쇼핑몰 시절 팀 데모**(`app/modules/customer_ops/team_modules/` — `local_team_a` · `local_team_b` · `remote_team_demo`) — `app/composition.py` · `app/core/project_config.py` · 모듈 토글 시험이 부른다. Composer 카탈로그에도 남아 있다.
-3. **DB의 쇼핑몰 표**(주문 · 배송 · 결제 …)와 마이그레이션.
+3. **DB의 쇼핑몰 표**(주문 · 배송 · 결제 …). 제거 마이그레이션이 **이미 준비돼 있다** — `app/infrastructure/db/migrations/pending/015_drop_commerce_domain.sql`. 적용하지 않은 이유가 「평가 하네스가 `orders` · `shipments` 에 쓰고 읽는다」였는데, **그 하네스를 이번에 `legacy/` 로 옮겨 전제가 풀렸다.** 적용 전에 다른 사용처가 없는지 한 번 더 확인해야 한다(DROP 은 되돌릴 수 없다).
 4. **루트 `datasets/commerce/`**(쿠팡 · 네이버 주문 기록 · 택배 조회) — 루트 `CLAUDE.md` 데이터 표.
 5. **v8 29항목 DoD 관문**(`scripts/verify_dod.py` · 증거 `DoD-15`~`29`)은 쇼핑몰 기준이다. 여행 기준은 v11 §12 26항목(`scripts/verify_dod_v11.py`).
 

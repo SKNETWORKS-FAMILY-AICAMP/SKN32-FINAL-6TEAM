@@ -122,6 +122,7 @@ DOMAIN_WORDS = (
 | `INV-CS-SEC-008` | **옛** MCP 도구 셋(`app/presentation/api/mcp.py`, 쇼핑몰 Case 도구)은 정확히 3개의 read scope 도구를 갖는다 — ★`[2026-10-02]` 이 셋은 **연결된 적이 없고 지금도 앱에 안 붙는다.** 지금의 MCP 는 아래 009·010 | automated | `tests/security/test_scope_contract.py::test_mcp_has_exactly_three_read_scoped_tools` |
 | `INV-CS-SEC-009` | **MCP 호출자는 사용자 키가 정한다** — 키가 없거나 틀리면 연결 단계에서 401, `mcp` 모듈 토글을 끄면 404. 도구 인자에 `customer_id` 가 없어 본인 여행만 열린다(남의 여행은 404) | automated | `tests/e2e/test_mcp_server.py::test_without_a_key_or_with_a_wrong_key_the_connection_is_401_and_a_disabled_module_is_404` |
 | `INV-CS-SEC-010` | **MCP 쓰기 도구는 `travel.mcp.write_enabled` 가 켜졌을 때만 등록된다**(기본 꺼짐 — 「MCP 는 read-only」). 읽기 도구만 있을 땐 전부 `readOnlyHint` | automated | `tests/e2e/test_mcp_server.py::test_by_default_only_read_tools_exist_and_all_say_they_are_read_only` |
+| `INV-CS-SEC-011` | **바깥 소스 응답 공유 캐시는 허용된 공개 소스만 DB 에 두고, 요청 인자의 서비스 키 원문을 두지 않는다**(열쇠는 해시). 고객 검색어가 담기는 소스(카카오 · 구글 장소)는 메모리에만 — DB 가 안 되면 메모리로 계속한다 | automated | `tests/unit/travel/test_shared_source_cache.py::test_only_allowed_sources_reach_the_db_and_the_service_key_is_not_stored` |
 
 **`INV-CS-SEC-004`가 셋을 한 번에 본다.** DB에만 마스킹하고 audit에 원본이 남는 실수를 막는다.
 
@@ -279,7 +280,8 @@ Action을 실행하기 전 근거를 대조한다.
 
 | ID | 불변식 | 판정 | 실행 위치 |
 |---|---|---|---|
-| `INV-CS-EVAL-001` | **Proposed 페널티가 rubric 재계산 뒤에 걸린다** | automated | `tests/unit/eval/test_team_failed_penalty.py::test_penalty_reaches_success_in_the_runner` |
+| `INV-CS-EVAL-001` | **Proposed 페널티가 rubric 재계산 뒤에 걸린다** — ★`[2026-10-03]` 쇼핑몰 시절 평가 러너의 불변식이다. 러너와 시험을 `legacy/commerce_eval/` 로 옮겨 **지금은 실행하지 않는다**(D-023). 번호는 재사용하지 않는다 | automated | `legacy/commerce_eval/tests/unit/eval/test_team_failed_penalty.py::test_penalty_reaches_success_in_the_runner` (실행 안 됨) |
+| `INV-CS-EVAL-002` | **여행 분류 평가 자료는 서버 어휘(`feedback.INTENTS` · `ISSUE_CODES`)로 쓰이고 쇼핑몰 낱말이 섞이지 않으며, 재생 시험은 실패를 분모에 넣는다**(쇼핑몰 시절 자료를 쓰지 않는다 — D-023) | automated | `tests/unit/eval/test_travel_classification_eval.py` |
 
 ### 왜 이게 불변식인가
 
