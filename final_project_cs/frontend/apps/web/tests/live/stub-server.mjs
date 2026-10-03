@@ -35,6 +35,9 @@ const DEFAULTS = {
   intake: "items",
   // how many polls answer "reading" before the review is ready
   readingPolls: 1,
+  // the plan's upload (`POST /v1/web/trip-intakes`): how long the server takes to answer (ms), and a sentence when it refuses (422)
+  intakeDelay: 0,
+  intakeRefusal: "",
   // the check of the read plan (`review` in the intake view): "absent" = a server without it (the screen says only what was read) | "on"
   //   | "off" = a server that could not build it (review: null + review_error)
   review: "absent",
@@ -473,7 +476,12 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   // ── plan intake ──────────────────────────────────────────────────
   // 모델 예열 — 여행 화면이 열릴 때 부른다. 늘 「이미 올라가 있다」로 답한다
   if (request.method === "POST" && path === "/v1/web/warmup") return json(response, 200, { status: "warm", model: "stub-model", last_attempt: null }, origin);
-  if (request.method === "POST" && path === "/v1/web/trip-intakes") { polls = 0; confirmed = false; board = freshBoard(scenario.board); return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin); }
+  if (request.method === "POST" && path === "/v1/web/trip-intakes") {
+    if (scenario.intakeDelay) await new Promise((resolve) => setTimeout(resolve, scenario.intakeDelay));
+    if (scenario.intakeRefusal) return json(response, 422, { error: { code: "intake_refused", message: scenario.intakeRefusal } }, origin);
+    polls = 0; confirmed = false; board = freshBoard(scenario.board);
+    return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/events` && request.method === "GET") {
     if (scenario.intakeEvents === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);

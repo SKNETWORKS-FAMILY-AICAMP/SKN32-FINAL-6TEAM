@@ -59,11 +59,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   }
   await expect(register).toBeEnabled();
 
-  // 새 사용자라서 키가 방금 발급됐다: 안내가 한 번 보이고 닫힌다
-  const keyNotice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(keyNotice).toBeVisible();
-  await keyNotice.getByRole("button", { name: "따로 보관했어요" }).click();
-  await expect(keyNotice).toHaveCount(0);
+  // 새 사용자라서 키가 방금 발급됐다. 안내는 계획 화면 위가 아니라 마이페이지에서 한 번 보인다(2026-10-03 사용자 지시)
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   sharedKey = await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"));
   expect(sharedKey).toMatch(/^acop_u_/);
 

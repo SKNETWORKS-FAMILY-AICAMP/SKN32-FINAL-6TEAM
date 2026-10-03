@@ -58,12 +58,12 @@ export interface IntakePlanInput { start_date: string; days: number; party_size:
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
 /** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
-export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null): Promise<{ intake_id: string }> {
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<{ intake_id: string }> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);
   if (humanToken) form.append("turnstile_token", humanToken);
-  return api("/v1/web/trip-intakes", language, { method: "POST", body: form });
+  return api("/v1/web/trip-intakes", language, { method: "POST", body: form, ...(signal && { signal }) });
 }
 
 /** The read values plus — once the plan is on the check screen — the server's check of every place and leg (`review`). */

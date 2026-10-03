@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
+import { KeyNotice } from "@/features/account/key-notice";
 import { KeySettings } from "@/features/account/key-settings";
 import { answerLines, questions } from "@/features/onboarding/model";
 import { discordWebhookProblem } from "@/features/onboarding/model";
@@ -98,6 +99,8 @@ export function MyPage() {
       <h1>{t("마이페이지", "My page")}</h1>
       <ButtonLink href={routes.myPageEdit} variant="quiet">{t("수정", "Edit")}</ButtonLink>
     </div>
+    {/* ★`[2026-10-03 사용자]` 새 키 안내(한 번만)는 여행 화면 위가 아니라 여기서 보인다 — 계획을 올리는 흐름을 가리지 않는다. */}
+    {DATA_MODE === "live" && <KeyNotice />}
     <Panel className={styles.card}>
       {/* The name line under the image is the nickname; there is no second nickname row. */}
       <Identity><p className={styles.name}>{nicknameLabel(profile, t)}</p></Identity>

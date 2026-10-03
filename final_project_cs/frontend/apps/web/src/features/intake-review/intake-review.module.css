@@ -121,3 +121,5 @@
 /* The server's live progress (reading, 「plan it for me」): a quiet line, warning-coloured while reconnecting. */
 .streamNote { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
 .streamNote[data-lost] { color: var(--color-warning); }
+/* The plan is still on its way to the server (intake-starting.tsx): a slim line above the progress screen. */
+.sendingNote { margin: 0; padding: 8px 20px; font-size: 12px; line-height: 1.6; text-align: center; color: var(--color-muted); background: var(--color-soft); }

@@ -23,8 +23,10 @@ export interface PlanCheckProps {
   onBack: () => void;
   /** Called once the screen has drawn everything in `view` and held it a moment — e.g. to move on after the last line. */
   onCaughtUp?: () => void;
-  /** Shown above the screen's content — e.g. the new-key notice of a first visit. */
+  /** Shown above the screen's content — e.g. a line about the connection. */
   notice?: ReactNode;
+  /** The plan is still on its way to the server (`sendingOf`): the stage `received` is then not the server's word, so it is not read out as one. */
+  sending?: boolean;
   /** What the result can change, each wired by the page. One left out stays on the screen and says it is coming. */
   actions?: PlanCheckActions;
   /** Registering the result, at the bottom of the list once the check is done. */
@@ -80,7 +82,7 @@ const HOLD_MS = 800;
  * cards and pins worked together, each stop locked, recommended, changed or deleted, 「전체 자동 추천 → 재검증 → 여행 등록」.
  * A phone-sized page of its own, like the start screen.
  */
-export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, ...result }: PlanCheckProps) {
+export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, sending = false, ...result }: PlanCheckProps) {
   const { view, settled } = useReveal(latest);
   const t = useT();
   useEffect(() => {
@@ -92,7 +94,7 @@ export function PlanCheck({ view: latest, onBack, onCaughtUp, notice, ...result 
     <div className={styles.screen} data-stage={view.stage}>
       {notice}
       {view.stage === "received" || view.stage === "reading" ? <Reading view={view} onBack={onBack} /> : <Checking view={view} onBack={onBack} {...result} />}
-      <p className="sr-only" role="status">{announce(view, t)}</p>
+      <p className="sr-only" role="status">{sending ? t("계획을 서버로 보내고 있어요.", "Sending your plan to the server.") : announce(view, t)}</p>
     </div>
   </DeviceFrame>;
 }

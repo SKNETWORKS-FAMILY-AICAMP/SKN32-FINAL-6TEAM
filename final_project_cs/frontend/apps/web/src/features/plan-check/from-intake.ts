@@ -28,6 +28,18 @@ export function readingOf(intake: IntakeView): PlanCheckView {
   return { stage: intake.stage === "received" ? "received" : "reading", title: null, days: [], lines, items: [], moves: [], dirty: false, rechecking: null };
 }
 
+/**
+ * The screen while the plan is still on its way to the server (it has no id yet — `lib/live/intake-start.ts`): the lines of
+ * the text being sent, none read. They are the customer's own words and numbered the way the server numbers them
+ * (Python's `splitlines`), so nothing is made up and the server's lines take their place without a jump. A photo or a file
+ * has no lines until the server has read it.
+ */
+export function sendingOf(text: string): PlanCheckView {
+  const parts = text.split(/\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/);
+  if (parts.at(-1) === "") parts.pop();
+  return { stage: "received", title: null, days: [], lines: parts.map((line, index) => ({ no: index + 1, text: line, read: false, found: null })), items: [], moves: [], dirty: false, rechecking: null };
+}
+
 /** A field the server flagged for a look — not one the customer set, nor a year or day it only assumed. */
 const flagged = (row: ReviewRow, names: readonly string[]) => names.map((name) => row.item.fields[name as keyof IntakeItem["fields"]])
   .filter((field) => field?.needs_review && field.method !== "customer" && !["year_filled", "day_offset"].includes(String(field.evidence.how)));

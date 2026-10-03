@@ -8,7 +8,6 @@ import { JourneyShell } from "@/components/layout/journey-shell";
 import { Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import { KeyNotice } from "@/features/account/key-notice";
 import { candidatesOf, readingOf, resultOf, tripIssuesOf } from "@/features/plan-check/from-intake";
 import { reviewResultOf, streamingViewOf } from "@/features/plan-check/from-review";
 import { useServerReview } from "@/features/plan-check/use-server-review";
@@ -52,6 +51,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     queryFn: () => getIntake(intakeId, language),
     retry: false,
     refetchOnWindowFocus: false,
+    // ★`[2026-10-03]` The page opens on the intake the progress screen just read (`intake-starting.tsx`): do not read it again at once.
+    //   (`invalidateQueries` / `refetch` below still read it whenever the stream or an edit asks.)
+    staleTime: 2_000,
     refetchInterval: (state) => polling && !state.state.error && state.state.data?.status === "reading" ? 1500 : false,
   });
   const reread = useCallback(() => void queryClient.invalidateQueries({ queryKey: ["intake", intakeId, language] }), [queryClient, intakeId, language]);
@@ -129,7 +131,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
       : follow.follow === "lost" ? <p className={styles.streamNote} role="status" data-lost>{t("서버와 연결이 끊겼어요 — 다시 연결하는 중이에요…", "Lost the connection to the server — reconnecting…")}</p>
       : follow.slow ? <p className={styles.streamNote} role="status">{t("읽는 데 시간이 걸리고 있어요. 서버는 계속 읽고 있어요.", "Reading is taking a while. The server is still at it.")}</p>
       : null;
-    return <PlanCheck key="reading" view={reading} notice={<><KeyNotice />{streamNote}</>} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
+    return <PlanCheck key="reading" view={reading} notice={streamNote} onBack={() => router.push(routes.newTrip)} onCaughtUp={view.status === "review" ? readingCaughtUp : undefined} />;
   }
   if (view.status === "fatal") {
     return shell(<Panel className={styles.waiting}>
@@ -146,7 +148,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     const refusal = confirm.error instanceof LiveError ? (confirm.error.detail as { problems?: { field: string; message?: string; reason?: string }[] } | undefined) : undefined;
     // The server tried to check places, hours and legs and could not (`review: null` + `review_error`): say so — nothing it did not check is shown as fine.
     const unchecked = view.review_error ? <p className={styles.streamNote} role="status">{t("서버가 장소·운영시간·이동 확인 결과를 만들지 못했어요. 읽은 값만 보여 드려요 — 등록할 때 서버가 다시 확인해요.", "The server could not build the place, hours and route check. Only what it read is shown — it checks again when you register.")}</p> : null;
-    return <PlanCheck key="result" view={result} notice={<><KeyNotice />{unchecked}</>} onBack={() => router.push(routes.newTrip)}
+    return <PlanCheck key="result" view={result} notice={unchecked} onBack={() => router.push(routes.newTrip)}
       tripIssues={tripIssuesOf(view)} onOpenPrevious={() => setEditing(true)}
       actions={view.review ? server.actions : {
         edit: async (id: string, draft: ItemDraft) => { const row = rowOf(id); if (row) await send(editsFor(row, draft)); },

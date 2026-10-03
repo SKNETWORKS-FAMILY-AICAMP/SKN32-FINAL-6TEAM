@@ -119,12 +119,21 @@ test("소개에서 약관을 끝까지 읽고 동의한 뒤 취향 6문항을 �
 test("메뉴에서 언어와 여행 화면 내비게이션을 바꾸면 새로고침 후에도 유지된다", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
-  await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  // `[2026-10-03 사용자 결정]` 기본은 한국어다. 영어로 바꾸면 새로고침 뒤에도 영어로 남고, 다시 한국어로 돌릴 수 있다.
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
+  await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
   await noHorizontalScroll(page);
 
-  const menu = page.getByRole("button", { name: "Menu", exact: true });
-  await menu.click();
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await pickMenuLanguage(page, "메뉴", "English");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
   await pickMenuLanguage(page, "Menu", "한국어");
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
@@ -153,23 +162,28 @@ test("메뉴에서 언어를 고르면 카드가 접히고 첫 화면 문구가 
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await expect(page.getByRole("button", { name: /LANGUAGE/ })).toHaveCount(0);   // `[2026-10-03 사용자 결정]` 언어 선택은 메뉴에만 있다
-  // The page starts in English: the menu button is still called "Menu" here, and the dialog changes its name when the language does.
-  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  // The page starts in Korean (`[2026-10-03 사용자 결정]`): the menu button is called "메뉴", and the dialog changes its name when the language does.
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
   const menu = page.getByRole("dialog");
   const card = menu.getByRole("button", { name: /LANGUAGE/ });
   await expect(card).toHaveAttribute("aria-expanded", "false");
+  await expect(card).toContainText("한국어");
   await card.click();
   await expect(card).toHaveAttribute("aria-expanded", "true");
-  await menu.getByRole("button", { name: "한국어", exact: true }).click();
+  await menu.getByRole("button", { name: "English", exact: true }).click();
   await expect(card).toHaveAttribute("aria-expanded", "false");
   await expect(card).toBeFocused();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#intro-title")).toContainText("From plans to memories");
+  await page.reload();
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Menu" }).getByRole("button", { name: /LANGUAGE/ })).toContainText("English");
+  // Back to Korean — the guide below is read in Korean.
+  await pickMenuLanguage(page, "Menu", "한국어");
   await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await page.keyboard.press("Escape");
   await expect(page.locator("#intro-title")).toContainText("계획부터 여행까지");
-  await page.reload();
-  await page.getByRole("button", { name: "메뉴", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("button", { name: /LANGUAGE/ })).toContainText("한국어");
-  await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "다음 화면" }).first().click();
   const guide = page.getByRole("region", { name: "triPilot 이용 방법" });

@@ -50,7 +50,7 @@ export function KeySettings() {
     try {
       await rotateKey(language);
       setConfirming(false);
-      setMessage({ ok: true, text: t("새 토큰을 받았어요. 화면 맨 위 안내에서 복사해 따로 보관해 주세요.", "You have a new token. Copy it from the notice at the top and keep it safe.") });
+      setMessage({ ok: true, text: t("새 토큰을 받았어요. 이 화면 맨 위 안내에서 복사해 따로 보관해 주세요.", "You have a new token. Copy it from the notice at the top of this page and keep it safe.") });
       void queryClient.invalidateQueries();
     } catch (error) {
       setMessage({ ok: false, text: reason(error) });

@@ -5,7 +5,7 @@ const PLAN = "10/1 09:00 경복궁 관람";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 보이며, 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
+test("첫 방문: 계획을 올리면 키가 발급되고(안내는 계획 화면 위가 아니라 마이페이지에서 한 번만 보임), 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
@@ -21,13 +21,8 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();
 
-  // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
-  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText("다시 보여 드리지 않아요");
-  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
-  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
-  await expect(notice).toHaveCount(0);
+  // 키가 방금 발급됐다. `[2026-10-03 사용자 지시]` 계획 화면 위에는 안내를 띄우지 않는다(마이페이지에서 한다).
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
@@ -42,6 +37,18 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1 });
   expect(confirm.key).toBe("acop_u_stub_1");
+
+  // 마이페이지: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
+  await page.goto("/mypage");
+  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("다시 보여 드리지 않아요");
+  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
+  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
+  await expect(notice).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "마이페이지" })).toBeVisible();
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
 
 test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄을 읽는 중으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {

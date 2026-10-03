@@ -81,7 +81,7 @@ test("메뉴에는 토큰 화면이 없고 마이페이지로 가는 길만 있�
   await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);
 });
 
-test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 화면 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
+test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 마이페이지 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await page.goto("/mypage");
@@ -100,7 +100,7 @@ test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 �
   expect(rotated).toMatch(/^acop_u_rotated_/);
   expect((await server.received("POST", "/rotate"))[0].key).toBe("acop_u_known");   // 옛 키로 요청했다
 
-  // 같은 화면 맨 위에 새 토큰 안내가 한 번 뜬다(안내는 화면에 하나만)
+  // 마이페이지 맨 위에 새 토큰 안내가 한 번 뜬다(안내는 화면에 하나만 — 계획 화면에는 뜨지 않는다)
   const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
   await expect(notice).toHaveCount(1);
   await expect(notice).toContainText("새 키예요. 옛 키는 더 이상 쓸 수 없어요");

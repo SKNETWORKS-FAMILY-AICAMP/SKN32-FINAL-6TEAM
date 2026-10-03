@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, FileText, Paperclip, X } from "lucide-react";
@@ -14,7 +14,7 @@ import type { DemoScenario } from "@/features/trip/model";
 import { tripKey, tripsKey } from "@/features/trip/use-trip";
 import { DATA_MODE, loadSamplePlans, tripGateway } from "@/lib/gateway";
 import { currentKey, issueKey, LiveError } from "@/lib/live/client";
-import { submitIntake } from "@/lib/live/intake";
+import { beginIntake, clearIntakeFailure, intakeFailure } from "@/lib/live/intake-start";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import styles from "./trip-registration.module.css";
@@ -51,7 +51,10 @@ export function TripRegistration() {
   const [scenario, setScenario] = useState<DemoScenario>("success");
   const [validation, setValidation] = useState("");
   const [draftWarning, setDraftWarning] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+  // ★A sending the server refused comes back here (`intake-starting.tsx`): its sentence is shown and the attached files are given back.
+  const [files, setFiles] = useState<File[]>(() => intakeFailure()?.files ?? []);
+  const [restored, setRestored] = useState(() => intakeFailure()?.message ?? "");
+  useEffect(() => { clearIntakeFailure(); }, []);
   const live = DATA_MODE === "live";
   // ★Human check (Turnstile) — only in live mode and only when a site key is set. A token is good for one send.
   const checking = live && Boolean(TURNSTILE_SITE_KEY);
@@ -94,20 +97,21 @@ export function TripRegistration() {
     },
   });
   // ★실제 연결 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
-  const intake = useMutation({
-    mutationFn: async () => {
-      // ★A new customer's key is issued here, with its own human check (the sign-up door), then the plan goes with a fresh token.
-      if (checking && !currentKey()) {
-        await issueKey(language, humanToken);
-        return submitIntake(value, files, language, await freshToken());
-      }
-      return submitIntake(value, files, language, humanToken);
-    },
-    onSuccess: (result) => router.push(routes.intake(result.intake_id)),
+  //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
+  //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 키 발급에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
+  const [sent, setSent] = useState(false);
+  function send(token: string | null) {
+    setSent(true);
+    beginIntake({ text: value, files, language, humanToken: token });
+    router.push(routes.intakeStarting);
+  }
+  const signUp = useMutation({
+    mutationFn: async () => { await issueKey(language, humanToken); return freshToken(); },
+    onSuccess: send,
     // The token was spent on this attempt; ask for a fresh one before the next.
-    onError: () => { if (checking) setHumanReset((count) => count + 1); },
+    onError: () => setHumanReset((count) => count + 1),
   });
-  const pending = create.isPending || intake.isPending;
+  const pending = create.isPending || signUp.isPending || sent;
 
   function updateSource(next: string) {
     setSource({ origin: from, value: next });
@@ -115,7 +119,8 @@ export function TripRegistration() {
     if (from) queryClient.setQueryData(["registration-draft", null], next);
     setValidation("");
     create.reset();
-    intake.reset();
+    signUp.reset();
+    setRestored("");
     try { sessionStorage.setItem(draftKey, next); setDraftWarning(""); }
     catch { setDraftWarning(t("임시 저장을 사용할 수 없어요. 이 화면을 닫으면 입력 내용이 사라질 수 있어요.", "Drafts cannot be saved here. Closing this page may lose your input.")); }
   }
@@ -128,11 +133,14 @@ export function TripRegistration() {
     if (!live && !value.trim()) { setValidation(t("시간과 장소가 있는 여행 계획을 입력해 주세요.", "Enter a travel plan with times and places.")); return; }
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
-    if (live) intake.mutate(); else create.mutate();
+    setRestored("");
+    if (!live) create.mutate();
+    else if (checking && !currentKey()) signUp.mutate();
+    else send(humanToken);
   }
 
   if (draft.isPending || draft.error) return <QueryState loading={draft.isPending} error={draft.error} retry={() => void draft.refetch()} />;
-  const error = validation || create.error?.message || intake.error?.message;
+  const error = validation || create.error?.message || signUp.error?.message || restored;
   const demo = DATA_MODE === "demo";
 
   return <>
@@ -172,7 +180,8 @@ export function TripRegistration() {
 
                     setFiles(selected.slice(0, 5));
                     setValidation("");
-                    intake.reset();
+                    signUp.reset();
+                    setRestored("");
 
                     // 같은 파일도 다시 선택할 수 있도록 초기화합니다.
                     // 제출할 파일은 기존 files state에 보관됩니다.
@@ -243,7 +252,8 @@ export function TripRegistration() {
                             current.filter((_, fileIndex) => fileIndex !== index),
                           );
                           setValidation("");
-                          intake.reset();
+                          signUp.reset();
+                          setRestored("");
                         }}
                       >
                         <X size={16} aria-hidden="true" />
