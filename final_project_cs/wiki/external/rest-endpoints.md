@@ -322,6 +322,23 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 길게 보면 이 칸은 외부가 쓰지 않는 것이 맞다 — 경로 조회(`read.route`)가 생기면 `uses` 는 **우리가 조회해서
   만든다.** 지금은 D-CS-005(ODsay 미사용)에 따라 경로 정의를 외부가 들고 오므로 표기를 공개한다.
 
+### 일정 응답의 `warnings[]` — 「살펴볼 점」 `[2026-10-03]`
+
+`[반영 2026-10-03]` 일정 응답(`POST /v1/trips` · `GET /v1/trips/{trip_id}` · 웹의 같은 응답)의 `warnings[]` 는 **거절이 아니라 알림**이다. 두 가지가 한 목록에 든다 —
+밀도 경고(`density_exceeded` · `density_unmeasurable`, D-019)와 **일정 품질 경고**(아래). 같은 모양이다: `code` · `date`(서울 날짜) · `reason` · `remedy` (+ 품질 경고는 가리키는 항목 순번 `items[]`).
+거절은 따로 있다 — 위반(겹침 · 닫힌 곳 · 이동 시간 부족 …)이 하나라도 있으면 `422 itinerary_infeasible`. **위반이 없는 일정은 경고가 몇 개든 등록된다**(`INV-CS-ACT-008`).
+
+| `code` | 뜻 | 기준(`config/guardrails.yaml` `travel.quality`) |
+|---|---|---|
+| `same_place_twice` | 그날 같은 곳이 두 번 들어 있다 | 활동은 생성기와 같은 규칙(같은 주소 · 30m · 이름 첫 낱말), 식당은 같은 가게(장소 id · 원장 id · 이름)만 |
+| `meal_missing` | 하루가 점심(11:30~14:00) 또는 저녁(17:30~20:30) 창을 통째로 덮는데 식사가 없다 | `meal_windows` · `meal_min_items`(하루 항목이 2개 미만이면 부분 일정으로 보고 안 봄) |
+| `route_zigzag` | 그날 활동 장소를 도는 길이가 가장 짧은 순서의 1.5배 이상이고 3km 이상 더 멀다. `better_order[]` 가 더 짧은 순서 | `zigzag.min_stops` 3 · `max_stops` 8 · `min_extra_m` · `ratio` |
+| `past_day_end` | 그날 마지막 일정이 하루 마감 뒤에 끝난다(늦게 끝나는 항목을 모두 `items` 로) `[체크리스트 T13]` | `travel.day_window.default_end`(22:00 — 일정 짜기와 같은 값) |
+| `last_order_tight` | 식당에 도착해 마지막 주문까지 20분이 안 된다 — 라스트오더를 **알 때**(영업 종료 앞 · 브레이크 앞) `[체크리스트 O4]` | `replan.ORDER_MARGIN_MIN` 20 — 대체 식당을 고를 때와 같은 규칙 |
+| `last_order_unknown` | 라스트오더를 **모르는데** 식사가 영업 종료 · 브레이크 시작 1시간 안에 끝난다 — 「마지막 주문을 확인해 주세요」 `[체크리스트 O4]` | `replan.LAST_ORDER_WARN_MIN` 60 |
+
+★**일정에 있는 값만으로 센다**(바깥 조회 없음, 구현 `itinerary_quality.py`). 한계: ①식사는 `kind == "dining"` 만 센다 — 외부가 다른 이름을 쓰면 끼니가 없다고 잘못 알릴 수 있다 ②좌표 없는 활동은 `route_zigzag` 에서 뺀다 ③시간이 정해진 일정(예약 · 고객 고정)이 둘 이상인 날은 `route_zigzag` 를 안 본다 ④값은 **우리가 고른 것**이다(측정 안 함 — 체크리스트 v2 §7 의 결함일 비율로 조정).
+
 ## 보류 제안 — `/v1/trips/{trip_id}/proposals*` `[2026-09-24]`
 
 `[실측]` `app/modules/travel_ops/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
