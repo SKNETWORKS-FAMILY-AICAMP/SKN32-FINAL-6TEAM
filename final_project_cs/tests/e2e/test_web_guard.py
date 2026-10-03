@@ -54,6 +54,19 @@ def _key(client) -> dict:
     return {"X-User-Key": response.json()["user_key"]}
 
 
+def _member(api, headers: dict) -> dict:
+    """소셜 계정이 붙은 사용자(회원) — 게스트는 여행 1개뿐이라(D-CS-011) 한도보다 많이 만드는 시험은 회원으로 한다."""
+    from uuid import uuid4
+
+    from app.modules.travel_ops.web_session import resolve
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        customer = resolve(conn, tenant_id=api["tenant"], raw=headers["X-User-Key"])
+        cur.execute("INSERT INTO web_social_links (tenant_id, provider, subject_hash, customer_id) VALUES (%s,'google',%s,%s)",
+                    (api["tenant"], "h-" + uuid4().hex, customer))
+    return headers
+
+
 def _web_trip(api, request_id):
     body = _body(api["customer"], request_id=request_id)
     body.pop("customer_id")
@@ -72,7 +85,7 @@ def test_limits_are_off_by_default_but_every_expensive_call_is_counted(api):
     """★사용자 결정(개발 단계) — 기본은 꺼짐. 꺼져 있어도 세어 둔다(오늘 사용량 · 비용 산정 재료)."""
     assert web_guard.specs()["web.limits_enabled"].default is False
     client = _client()
-    headers = _key(client)
+    headers = _member(api, _key(client))
     cap = web_guard.values(api["tenant"])["web.trip_create.per_key_day"]
     for n in range(cap + 1):                                   # 한도보다 한 번 더 — 막지 않는다
         assert client.post("/v1/web/trips", json=_web_trip(api, f"off-{n}"), headers=headers).status_code == 201
@@ -319,59 +332,7 @@ def test_production_without_a_secret_does_not_start(monkeypatch, update):
         _client()
 
 
-# ── 빈 키 정리 · 사용량 정리 ──────────────────────────────────────
-def _web_user(api, *, days_ago: float, trip=False, intake=False):
-    from app.modules.travel_ops.web_session import issue
-
-    with get_connection() as conn, conn.transaction():
-        customer, _ = issue(conn, tenant_id=api["tenant"])
-        with conn.cursor() as cur:
-            cur.execute("UPDATE web_user_keys SET created_at = now() - make_interval(hours => %s) "
-                        "WHERE tenant_id=%s AND customer_id=%s", (int(days_ago * 24), api["tenant"], customer))
-            if intake:
-                cur.execute("INSERT INTO trip_intakes (tenant_id, customer_id, status, updated_at) "
-                            "VALUES (%s,%s,'fatal', now() - interval '30 days')", (api["tenant"], customer))
-    if trip:
-        client = _client()
-        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-            cur.execute("UPDATE web_user_keys SET key_hash = key_hash WHERE customer_id=%s", (customer,))
-        body = _body(customer, request_id=f"idle-{customer}")
-        assert client.post("/v1/trips", json=body, headers=api["auth"]("trip:write")).status_code == 201
-    return customer
-
-
-def _alive(api, customer) -> tuple[int, int]:
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT count(*) FROM web_user_keys WHERE tenant_id=%s AND customer_id=%s", (api["tenant"], customer))
-        keys = cur.fetchone()[0]
-        cur.execute("SELECT count(*) FROM customers WHERE tenant_id=%s AND customer_id=%s", (api["tenant"], customer))
-        return keys, cur.fetchone()[0]
-
-
-def test_keys_that_never_made_a_trip_are_removed_after_the_idle_days_only_when_switched_on(api):
-    _set(api, "web.idle_key_cleanup_enabled", True)       # ★기본은 꺼짐(사용자 결정 2026-09-29) — 켰을 때의 동작
-    idle = _web_user(api, days_ago=8)
-    fresh = _web_user(api, days_ago=2)
-    traveller = _web_user(api, days_ago=30, trip=True)
-    left_intake = _web_user(api, days_ago=9, intake=True)
-    with get_connection() as conn:
-        result = web_guard.cleanup_idle_keys(conn, api["tenant"])
-    assert _alive(api, idle) == (0, 0)                 # 키도 사용자 행도
-    assert _alive(api, fresh) == (1, 1)                # 아직 7일이 안 됐다
-    assert _alive(api, traveller)[0] == 1              # 여행이 있다
-    assert _alive(api, left_intake) == (0, 1)          # 계획 읽기가 가리켜 사용자 행은 둔다
-    assert result == {"customers": 2, "keys_deleted": 2, "customers_deleted": 1, "customers_kept": 1}
-
-
-def test_cleanup_is_off_by_default_and_deletes_nothing(api):
-    """★`[사용자 결정 2026-09-29]` 키는 그 사용자를 알아보는 유일한 수단이다 — 기본은 꺼짐, 아무 키도 지우지 않는다."""
-    assert web_guard.specs()["web.idle_key_cleanup_enabled"].default is False
-    idle = _web_user(api, days_ago=30)
-    with get_connection() as conn:
-        assert web_guard.cleanup_idle_keys(conn, api["tenant"]) == {"skipped": "disabled"}
-    assert _alive(api, idle) == (1, 1)
-
-
+# ── 사용량 정리(옛 빈 키 정리는 게스트 정리 `tests/e2e/test_guest_cleanup.py` 가 대신한다 — D-CS-011) ───────────────
 def test_address_rows_go_after_48_hours(api):
     web_guard.count(api["tenant"], "message", customer_id=uuid4(), ip="10.1.2.3")
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:

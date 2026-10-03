@@ -104,14 +104,29 @@ CONTRACT_V1_PATHS = {
     "/v1/web/trip-intakes/{intake_id}/autofix",
     "/v1/web/trip-intakes/{intake_id}/revalidate",
     "/v1/web/places/photos",
+    # ★2026-10-03 소셜 로그인(구글 먼저) · ★2026-10-04 브라우저 세션 쿠키 · 여행 삭제(D-CS-011) — `wiki/external/rest-endpoints.md`
+    "/v1/web/auth/providers",
+    "/v1/web/auth/{provider}/start",
+    "/v1/web/auth/{provider}/callback",
+    "/v1/web/auth/exchange",
+    "/v1/web/auth/links",
+    "/v1/web/auth/{provider}",
+    "/v1/web/auth/session",
+    "/v1/web/auth/adopt",
+    "/v1/web/auth/me",
+    "/v1/web/auth/logout",
+    "/v1/web/trips/{trip_id}/delete",
 }
 
 # ★키 없이 열어 둔 쓰기 경로 — **이름으로** 적는다. 여기 없는 쓰기 경로가 인증 없이 열리면 실패한다.
-#   `/v1/web/session`: 첫 방문에 사용자 식별 키를 발급하는 자리라 키를 받을 수 없다(D-020 · 025).
-OPEN_WRITE_PATHS = {"/v1/web/session"}
+#   `/v1/web/session` · `/v1/web/auth/session`: 첫 방문에 키/쿠키 세션을 발급하는 자리라 인증을 받을 수 없다(D-020 · 025 · D-CS-011 — 사람 확인과 주소당 한도가 막는다).
+#   `/v1/web/auth/{provider}/start`: 로그인 시작은 인증 없이 열린다(`link` 모드는 함수 안에서 인증을 확인한다 — 사람 확인 · 주소당 한도).
+#   `/v1/web/auth/exchange`: 일회용 표 + 시작한 브라우저의 `client_nonce` 가 인증이다(로그인 CSRF 막기).
+#   `/v1/web/auth/adopt`: 옛 키를 쿠키로 옮기는 자리 — 함수 안에서 키를 확인한다(쿠키와 같이 오면 400, 주소당 한도).
+OPEN_WRITE_PATHS = {"/v1/web/session", "/v1/web/auth/session", "/v1/web/auth/{provider}/start", "/v1/web/auth/exchange", "/v1/web/auth/adopt"}
 
 # 인증으로 치는 의존성 — scope 키(`require_scope`) 또는 웹 사용자 키(`_web_customer`)
-AUTH_DEPENDENCIES = ("require_scope.", "._web_customer")
+AUTH_DEPENDENCIES = ("require_scope.", "._web_customer", "require_identity")
 
 WRITE_METHODS = {"post", "put", "patch", "delete"}
 

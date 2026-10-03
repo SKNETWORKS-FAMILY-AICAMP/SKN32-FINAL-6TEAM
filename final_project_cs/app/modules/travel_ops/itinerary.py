@@ -19,6 +19,8 @@ import json
 from typing import Any
 from uuid import UUID, uuid4
 
+from .guest_policy import not_guest_sql
+
 
 class StaleItinerary(RuntimeError):
     """기준 버전이 낡았다 — 다른 쪽이 먼저 일정을 바꿨다."""
@@ -289,8 +291,9 @@ class TripStore:
     def active_trip_ids(self, conn) -> list[UUID]:
         """진행 중인 여행. 안내 되잡기 작업이 읽는다."""
         with conn.cursor() as cur:
-            cur.execute("SELECT trip_id FROM trips WHERE tenant_id=%s AND status='active' ORDER BY trip_id",
-                        (self.tenant_id,))
+            # ★`[2026-10-04 D-CS-011]` 게스트(로그인 안 한 웹 사용자)의 여행은 안내 · 감시 대상이 아니다 — 외부 호출 비용을 안 쓴다
+            cur.execute("SELECT t.trip_id FROM trips t WHERE t.tenant_id=%s AND t.status='active' AND " + not_guest_sql("t")
+                        + " ORDER BY t.trip_id", (self.tenant_id,))
             return [row[0] for row in cur.fetchall()]
 
     def due(self, conn, *, start: datetime, end: datetime) -> list[tuple[UUID, Item]]:
@@ -298,7 +301,7 @@ class TripStore:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT t.trip_id, t.latest_version FROM trips t "
-                "WHERE t.tenant_id=%s AND t.status='active'", (self.tenant_id,))
+                "WHERE t.tenant_id=%s AND t.status='active' AND " + not_guest_sql("t"), (self.tenant_id,))
             trips = cur.fetchall()
         found = []
         for trip_id, version in trips:

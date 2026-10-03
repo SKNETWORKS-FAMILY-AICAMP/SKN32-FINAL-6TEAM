@@ -18,7 +18,7 @@ from typing import Any, Callable, Literal
 from urllib.parse import quote
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
@@ -27,8 +27,8 @@ from app.core.settings import get_guardrails
 from app.infrastructure import oauth_providers as oauth
 from app.infrastructure.db.session import get_connection
 
-from . import web_auth, web_guard
-from .web_session import add_key, new_customer, resolve
+from . import web_auth, web_cookie, web_guard
+from .web_session import add_key, new_customer
 
 #: 콜백이 웹으로 돌려보낼 때 쓰는 오류 코드(요청서) — 이 밖의 이유는 전부 `failed`
 CALLBACK_ERRORS = ("cancelled", "denied", "already_linked_elsewhere", "failed")
@@ -47,6 +47,12 @@ class AuthStartIn(BaseModel):
 class AuthExchangeIn(BaseModel):
     ticket: str
     client_nonce: str
+    #: `cookie` 면 `signed_in` · `created` 일 때 키 대신 **쿠키 세션**을 준다(D-CS-011). 기본 `key` = 지금까지처럼 `user_key`
+    session: Literal["cookie", "key"] = "key"
+
+
+class SessionIn(BaseModel):
+    turnstile_token: str | None = None
 
 
 def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: Callable[..., dict[str, Any]] | None = None) -> APIRouter:
@@ -83,12 +89,9 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             error.headers = {"Retry-After": str(refused.retry_after)}
             raise error from None
 
-    def _customer(x_user_key: str | None) -> UUID:
-        with get_connection() as conn, conn.transaction():
-            customer = resolve(conn, tenant_id=_tenant(), raw=x_user_key)
-        if customer is None:
-            raise _error(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
-        return customer
+    def _customer(http: Request) -> UUID:
+        """쿠키 세션 또는 키로 확인한 사용자 — 없으면 401. ★쿠키로 인증된 쓰기(`link` 시작 · 연결 해제)는 Origin + CSRF 를 거친다."""
+        return web_cookie.authenticate(http).customer_id
 
     def _human(token: str | None, http: Request) -> None:
         """키 없이 시작하는 로그인은 새 사용자를 만들 수 있다 — 사람 확인을 요구한다. 토큰이 없으면 422 `human_check_required`(화면이 확인을 띄우고 다시 부른다)."""
@@ -128,6 +131,14 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
                 raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
             out: dict[str, Any] = {"outcome": got["outcome"], "provider": got["provider"],
                                    "trips": web_auth.trip_count(conn, tenant_id=tenant, customer_id=got["customer_id"])}
+            if got["outcome"] in ("signed_in", "created") and body.session == "cookie":
+                # ★로그인하는 순간 **세션을 새로 만든다**(세션 고정 공격 방지) — 요청에 딸려 온 옛 쿠키(게스트 세션)는 거둔다. 키는 안 준다
+                old = http.cookies.get(web_cookie.cookie_name())
+                if old:
+                    web_cookie.revoke(conn, tenant_id=tenant, raw=old)
+                raw, session = web_cookie.start(conn, tenant_id=tenant, customer_id=got["customer_id"])
+                out.update(web_cookie.session_body(session, tenant_id=tenant))
+                return web_cookie.json_with_cookie(out, raw=raw, tenant_id=tenant)
             if got["outcome"] in ("signed_in", "created"):
                 out["user_key"] = add_key(conn, tenant_id=tenant, customer_id=got["customer_id"],
                                           keep=int(get_guardrails().get("security.web_auth_keys_per_user")))
@@ -136,14 +147,64 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
                                  else "새 사용자를 만들었어요. 이 기기에서 쓸 키예요 — 따로 잘 보관해 주세요.")
         return JSONResponse(out, headers={"Cache-Control": "no-store"})
 
+    # ── 브라우저 세션(쿠키) — D-CS-011 ───────────────────────────────────────────────
+    @router.post("/v1/web/auth/session")
+    def auth_session(http: Request, x_turnstile_token: str | None = Header(default=None),
+                     body: SessionIn | None = Body(default=None)):
+        """게스트 세션 — 쿠키를 내려준다. ★이미 유효한 쿠키가 있으면 새로 안 만들고 현재 세션을 돌려준다. 사람 확인 · 주소당 한 시간 발급 한도는 `POST /v1/web/session` 과 같다."""
+        tenant = _tenant()
+        current = web_cookie.authenticate(http, required=False, csrf=False)
+        if current is not None and current.session is not None:
+            return JSONResponse(web_cookie.session_body(current.session, tenant_id=tenant), headers={"Cache-Control": "no-store"})
+        if current is not None:                                  # 키만 온 호출 — 쿠키로 옮기려면 `adopt` 다
+            raise _error(409, "use_adopt", "이미 사용자 키가 있다 — `/v1/web/auth/adopt` 로 쿠키로 옮긴다")
+        _human((body.turnstile_token if body else None) or x_turnstile_token, http)
+        try:
+            web_guard.count_session(tenant, ip=_ip(http))
+        except web_guard.UsageRefused as refused:
+            error = _error(429, "too_many_sessions", "새 세션을 너무 많이 받았다 — 잠시 뒤에 다시 한다",
+                           retry_after_seconds=refused.retry_after)
+            error.headers = {"Retry-After": str(refused.retry_after)}
+            raise error from None
+        with get_connection() as conn, conn.transaction():
+            raw, session = web_cookie.start(conn, tenant_id=tenant, customer_id=new_customer(conn, tenant_id=tenant))
+        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201)
+
+    @router.post("/v1/web/auth/adopt")
+    def auth_adopt(http: Request):
+        """옛 키 사용자를 **쿠키 세션으로 옮긴다**(키는 거두지 않는다 — 에이전트가 쓸 수 있다). 웹은 성공하면 저장소의 키를 지운다."""
+        tenant = _tenant()
+        _count("auth_adopt", http)
+        who = web_cookie.authenticate(http, csrf=False)           # 둘 다 오면 400, 키가 틀리면 401
+        if who.session is not None:                               # 이미 쿠키 세션이다 — 옮길 것이 없다
+            return JSONResponse(web_cookie.session_body(who.session, tenant_id=tenant), headers={"Cache-Control": "no-store"})
+        with get_connection() as conn, conn.transaction():
+            raw, session = web_cookie.start(conn, tenant_id=tenant, customer_id=who.customer_id)
+        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201)
+
+    @router.get("/v1/web/auth/me")
+    def auth_me(who: web_cookie.Identity = Depends(web_cookie.require_identity)):
+        if who.session is None:                                   # 키로 부른 호출 — 세션이 아니다
+            return JSONResponse({"kind": "key"}, headers={"Cache-Control": "no-store"})
+        return JSONResponse(web_cookie.session_body(who.session, tenant_id=who.tenant_id), headers={"Cache-Control": "no-store"})
+
+    @router.post("/v1/web/auth/logout")
+    def auth_logout(http: Request, who: web_cookie.Identity = Depends(web_cookie.require_identity)):
+        """서버의 세션 행을 거두고 쿠키를 지운다. ★게스트가 로그아웃하면 그 여행은 다시 열 수 없다(보존 시간이 지나면 지워진다). 쿠키로는 CSRF 까지 본다(의존성)."""
+        if who.session is None:
+            raise _error(400, "no_cookie_session", "쿠키 세션으로 부른 호출만 로그아웃한다")
+        raw = http.cookies.get(web_cookie.cookie_name())
+        with get_connection() as conn, conn.transaction():
+            web_cookie.revoke(conn, tenant_id=who.tenant_id, raw=raw or "")
+        return JSONResponse({"status": "signed_out"}, headers={"Set-Cookie": web_cookie.clear_header(), "Cache-Control": "no-store"})
+
     @router.get("/v1/web/auth/links")
-    def auth_links(x_user_key: str | None = Header(default=None)):
-        customer = _customer(x_user_key)
+    def auth_links(who: web_cookie.Identity = Depends(web_cookie.require_identity)):
         with get_connection() as conn:
-            return {"links": web_auth.links(conn, tenant_id=_tenant(), customer_id=customer)}
+            return {"links": web_auth.links(conn, tenant_id=_tenant(), customer_id=who.customer_id)}
 
     @router.post("/v1/web/auth/{provider}/start")
-    def auth_start(provider: str, http: Request, body: AuthStartIn = Body(...), x_user_key: str | None = Header(default=None),
+    def auth_start(provider: str, http: Request, body: AuthStartIn = Body(...),
                    x_turnstile_token: str | None = Header(default=None)):
         spec = _providers().get(provider)
         if spec is None:
@@ -153,11 +214,10 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
         _count("auth_start", http)
         customer: UUID | None = None
         if body.mode == "link":
-            customer = _customer(x_user_key)                    # 연결은 키가 있어야 한다(없으면 401 `unauthenticated`)
+            customer = _customer(http)                          # 연결은 로그인 상태(쿠키 세션 또는 키)가 있어야 한다(없으면 401 `unauthenticated`)
         else:
-            with get_connection() as conn, conn.transaction():
-                has_key = resolve(conn, tenant_id=_tenant(), raw=x_user_key) is not None
-            if not has_key:
+            # 로그인 시작은 인증 없이도 열린다 — 이미 로그인 상태가 있으면 사람 확인을 건너뛴다(CSRF 는 이 자리에서 안 본다: 상태를 안 바꾼다)
+            if web_cookie.authenticate(http, required=False, csrf=False) is None:
                 _human(body.turnstile_token or x_turnstile_token, http)
         verifier = oauth.new_verifier()
         with get_connection() as conn, conn.transaction():
@@ -207,9 +267,9 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
         return _done(origin, ticket=ticket or "")
 
     @router.delete("/v1/web/auth/{provider}")
-    def auth_unlink(provider: str, x_user_key: str | None = Header(default=None)):
+    def auth_unlink(provider: str, who: web_cookie.Identity = Depends(web_cookie.require_identity)):
         """연결 해제 — 키와 여행은 그대로. 남은 연결을 돌려준다(웹의 호출 도우미가 본문 없는 204 를 못 읽는다)."""
-        customer = _customer(x_user_key)
+        customer = who.customer_id
         tenant = _tenant()
         with get_connection() as conn, conn.transaction():
             if not web_auth.unlink(conn, tenant_id=tenant, customer_id=customer, provider=provider):

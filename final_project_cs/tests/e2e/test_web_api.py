@@ -55,6 +55,18 @@ def _h(key: str) -> dict:
     return {"X-User-Key": key}
 
 
+def _member(api, user_key: str) -> None:
+    """이 키의 사용자에게 소셜 계정을 붙인다 — **회원**이다. 게스트(로그인 안 한 웹 사용자)는 여행 1개 · 감시 불가라서(D-CS-011), 여러 여행을 만들거나 감시를 받는 시험은 회원으로 한다."""
+    from uuid import uuid4
+
+    from app.modules.travel_ops.web_session import resolve
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        customer = resolve(conn, tenant_id=api["tenant"], raw=user_key)
+        cur.execute("INSERT INTO web_social_links (tenant_id, provider, subject_hash, customer_id) VALUES (%s,'google',%s,%s)",
+                    (api["tenant"], "h-" + uuid4().hex, customer))
+
+
 def _web_body(api, request_id="web-1", **constraints):
     body = _body(api["customer"], request_id=request_id)
     body.pop("customer_id")
@@ -153,6 +165,7 @@ def dev_mode(monkeypatch):
 # ── 「먼저 물어봐줘」를 웹에서 고른다 ──────────────────────────────
 def test_the_web_sees_the_question_chooses_and_a_late_click_gets_409(api):
     me = _session(api)
+    _member(api, me["user_key"])                                  # 감시를 받는 사용자 — 게스트의 여행은 감시 대상이 아니다
     body = _web_body(api, survey={"version": SURVEY_VERSION, "on_disruption": "ask_first"})
     trip_id = api["client"].post("/v1/web/trips", json=body, headers=_h(me["user_key"])).json()["trip_id"]
     api["tick"]("09:00")                                          # 바꾸지 않고 묻는다
