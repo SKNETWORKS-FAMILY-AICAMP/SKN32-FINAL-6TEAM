@@ -67,6 +67,10 @@ def main() -> None:
         f"ACOP_WEB_ALLOWED_ORIGINS={public}",
         f"ACOP_TRUSTED_PROXIES={args.proxy_cidr}",
         "",
+        # ★설정 검사가 이 셋을 **필수**로 요구한다(모델 서버만 써도) — 키는 비워 둔다(요금이 안 나간다). 모델 이름은 Ollama 경로에서 안 쓰인다
+        "ACOP_OPENAI_API_KEY=",
+        "ACOP_LLM_MODEL=gpt-4o-mini",
+        "ACOP_EMBEDDING_MODEL=text-embedding-3-small",
         "ACOP_LLM_PROVIDER=openai",
         f"ACOP_OLLAMA_BASE_URL={args.ollama_url}",
         "ACOP_OLLAMA_MODEL=gemma4:12b",

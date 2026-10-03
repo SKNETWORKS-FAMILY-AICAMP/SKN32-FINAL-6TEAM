@@ -34,7 +34,7 @@ PUBLIC_TABLES: list[tuple[str, str | None]] = [
     ("place_catalog", "tenant_id = '{tenant}'"),
     ("catalog_hours", "tenant_id = '{tenant}'"),
     ("source_sync_state", "tenant_id = '{tenant}'"),
-    ("place_aliases", "tenant_id = '{tenant}' AND customer_id IS NULL"),
+    # ★`place_aliases` 는 뺀다 — 고객이 쓴 말을 배운 별칭(`source=customer`)이라 사용자 데이터다(서버에 가면 제약 위반으로 적재도 막혔다)
     ("cancellation_terms", "tenant_id = '{tenant}'"),
     ("places", "tenant_id = '{tenant}' AND trip_scope IS NULL"),
 ]
@@ -46,6 +46,8 @@ def copy_out(cur, table: str, where: str | None, out) -> int:
     columns = [row[0] for row in cur.fetchall()]
     query = f"SELECT {', '.join(columns)} FROM {table}" + (f" WHERE {where}" if where else "")
     quoted = ", ".join(f'"{c}"' for c in columns)
+    # ★마이그레이션이 기본 행(요식 출처 코드 · 기본 테넌트 등)을 이미 넣는다 — 같은 키가 겹치므로 **넣기 전에 그 표를 비운다**(빈 DB 에 처음 넣을 때만 쓰는 파일이다. 외래키 검사는 위에서 껐다)
+    out.write(f"DELETE FROM {table};\n".encode("utf-8"))
     out.write(f"COPY {table} ({quoted}) FROM STDIN;\n".encode("utf-8"))
     rows = 0
     with cur.copy(f"COPY ({query}) TO STDOUT") as copy:

@@ -48,7 +48,8 @@ services:
       internal: {}
       proxy:
         aliases: [tripilot-api]
-    mem_limit: 1g
+    # 시작 직후 이미 약 850MB(이동 엔진 자료 적재) — 1g 는 빠듯해 2g. 서버 여유 메모리가 약 10GB 이다
+    mem_limit: 2g
     cpus: 2
 
   # 상시 작업(되잡기 · 바깥함 일꾼 · 일일 집계) — ★하나만 띄운다. 둘이면 통지가 두 번 나간다.
@@ -71,7 +72,7 @@ services:
     healthcheck:
       disable: true
     networks: [internal]
-    mem_limit: 768m
+    mem_limit: 1g
     cpus: 1
 
   tripilot-web:
