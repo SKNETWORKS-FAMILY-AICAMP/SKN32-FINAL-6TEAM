@@ -148,7 +148,8 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
   const current = STAGES.indexOf(view.stage);
   const value = Math.round(progress(view));
   // ★`[2026-10-03 사용자 지시]` What the server says it is at ("3/14 · 광장시장 운영시간 확인 중"): only when it sent a `progress` packet.
-  const at = view.serverProgress ? serverProgressText(view.serverProgress, t) : null;
+  // ★A "places" count belongs to the reading: once the check has begun, a left-over "13/14 · … 장소 확인 중" would keep saying that while the hours and legs are drawn.
+  const at = view.serverProgress && view.serverProgress.phase !== "places" ? serverProgressText(view.serverProgress, t) : null;
   return <div className={styles.headProgress} role="progressbar" aria-label={t("계획 확인 진행", "Plan check progress")}
     aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-valuetext={`${labels[current]} · ${value}%${at ? ` · ${at}` : ""}`}>
     <span className={styles.headStep}>{labels[current]}<b>{value}%</b></span>

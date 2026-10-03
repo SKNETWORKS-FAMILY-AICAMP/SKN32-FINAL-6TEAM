@@ -11,8 +11,32 @@ export const REVEAL_MS = 280;
  * in about this long — measured against the most that has been waiting (the pause stays the same as the backlog falls, so
  * the whole takes the budget, not the budget times a harmonic sum) — but never below `REVEAL_MIN_MS` (each change must still be seen).
  */
-export const REVEAL_BUDGET_MS = 8_000;
+export const REVEAL_BUDGET_MS = 4_000;
 export const REVEAL_MIN_MS = 35;
+/**
+ * ★`[2026-10-03]` Measured on the real server (local, 26 rows): the server had sent everything 5.3 s after the press and the screen
+ * finished drawing at 17.6 s — 12.2 s to replay, though the budget said 8 s. The floor above held each change to 35 ms, and every
+ * drawn change also costs a render (~45 ms): 150-odd changes × ~80 ms. So a big backlog is drawn several changes at a time
+ * (`revealBatch`) and the budget is 4 s.
+ */
+export const REVEAL_TICK_COST_MS = 45;
+
+/** How many changes are drawn in one tick: 1 while the backlog fits the budget at one a tick, more when it does not. */
+export function revealBatch(waiting: number): number {
+  const ticks = Math.max(1, Math.floor(REVEAL_BUDGET_MS / (REVEAL_MIN_MS + REVEAL_TICK_COST_MS)));
+  return Math.max(1, Math.ceil(waiting / ticks));
+}
+
+/** Up to `count` changes toward `target` (fewer when it is reached first); null when nothing is left to draw. */
+export function stepMany(shown: PlanCheckView, target: PlanCheckView, count: number): PlanCheckView | null {
+  let view: PlanCheckView | null = null;
+  for (let at = 0; at < count; at += 1) {
+    const next = nextStep(view ?? shown, target);
+    if (!next) break;
+    view = next;
+  }
+  return view;
+}
 
 /** About how many drawn changes lie between `shown` and `target`: a line read, a place or leg appearing, each of its checks, its verdict, a stage. */
 export function backlog(shown: PlanCheckView, target: PlanCheckView): number {
@@ -52,10 +76,10 @@ export function useReveal(target: PlanCheckView, pause = REVEAL_MS): { view: Pla
   const peak = useRef(0);
   useEffect(() => {
     if (reduced) return;
-    const next = nextStep(shown, target);
-    if (!next) { peak.current = 0; return; }
+    if (!nextStep(shown, target)) { peak.current = 0; return; }
     peak.current = Math.max(peak.current, backlog(shown, target));
-    const timer = setTimeout(() => setShown(next), revealPause(peak.current, pause));
+    const batch = revealBatch(peak.current);
+    const timer = setTimeout(() => { const next = stepMany(shown, target, batch); if (next) setShown(next); }, revealPause(peak.current, pause));
     return () => clearTimeout(timer);
   }, [shown, target, reduced, pause]);
   // ★The server's own count is not replayed: it is shown as it arrives, whatever row the drawing has got to (the rows follow at their pace).
