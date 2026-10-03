@@ -103,6 +103,8 @@ export interface ReviewedIntakeView extends IntakeView {
   review?: Review | null;
   /** `review_failed` — the check could not be built; the read values are still shown, never an empty "all fine". */
   review_error?: string | null;
+  /** `true` on the view `POST …/autofix {dry_run: true}` returns when something would change: the plan as it WOULD be (its `revision` is the one applying it makes) — nothing is saved. */
+  preview?: boolean;
 }
 
 /** One place, in the shape `POST …/edits` takes for `items[n].place` when the customer picked it from a list. */
@@ -203,8 +205,9 @@ export function getPlacePhotos(ref: string, language: Language): Promise<PlacePh
   return api(`/v1/web/places/photos?${new URLSearchParams({ ref })}`, language);
 }
 
-export function autofixIntake(intakeId: string, revision: number, language: Language): Promise<AutofixResult> {
-  return api(`${base(intakeId)}/autofix`, language, json({ revision }));
+/** `dryRun`: only show how the plan would look (server 224e7a1b, 2026-10-03) — the server saves nothing and the answer's `view.preview` is true. */
+export function autofixIntake(intakeId: string, revision: number, language: Language, dryRun = false): Promise<AutofixResult> {
+  return api(`${base(intakeId)}/autofix`, language, json({ revision, ...(dryRun ? { dry_run: true } : {}) }));
 }
 
 export function revalidateIntake(intakeId: string, revision: number, language: Language): Promise<ReviewedIntakeView> {

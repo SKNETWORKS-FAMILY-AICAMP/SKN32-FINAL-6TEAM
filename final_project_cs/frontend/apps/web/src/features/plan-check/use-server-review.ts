@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { autofixUndo, restorePlace } from "@/features/intake-review/autofix-undo";
 import { editsFor, rows } from "@/features/intake-review/model";
-import { translator, type Language } from "@/lib/i18n";
+import { translator, type Language, type Translate } from "@/lib/i18n";
 import { LiveError } from "@/lib/live/client";
 import { editIntake, type IntakeEdit } from "@/lib/live/intake";
 import { itemEdit } from "@/lib/live/intake-edits";
@@ -39,8 +39,10 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   apply: (next: ReviewedIntakeView) => void;
   /** Read the plan again (an edit was refused as stale). */
   reread: () => void;
-}): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>> } {
+}): { actions: PlanCheckActions; dirty: boolean; rechecking: string | null; infos: Readonly<Record<string, PlaceInfo>>; preview: ReviewedIntakeView | null } {
   const [dirty, setDirty] = useState(false);
+  // `[2026-10-03]` 「전체 자동 추천」 is first only SHOWN (the server's dry run saves nothing): the plan as it would be, kept with the revision it was asked on.
+  const [previewed, setPreviewed] = useState<{ view: ReviewedIntakeView; base: number } | null>(null);
   const [rechecking, setRechecking] = useState<string | null>(null);
   const [infos, setInfos] = useState<Record<string, PlaceInfo>>({});
   const latest = useRef<ReviewedIntakeView | undefined>(view);
@@ -67,7 +69,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       if (error instanceof LiveError && error.code === "stale_revision") reread();
       throw error;
     };
-    const take = (next: ReviewedIntakeView) => { latest.current = next; apply(next); };
+    // Any answer that is the plan itself (a change, an undo, a re-check) ends a preview: it was a picture of the plan before that.
+    const take = (next: ReviewedIntakeView) => { latest.current = next; setPreviewed(null); apply(next); };
     /**
      * Send edits. ★`changed` says "the plan is no longer the one that was last checked" and is set BEFORE the new plan is
      * drawn: the other way round, the footer is drawn once with neither "nothing to fix" nor "check again" pending and offers
@@ -157,23 +160,24 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         if (!picked) throw new LiveError("no_fitting_place", t("시간이 맞는 대체 후보가 없어요 · 수정에서 장소를 직접 골라 주세요", "No alternative fits the time — pick a place in Edit"));
         await replaceWith(id, itemEdit.placePicked(targetOf(item), picked));
       },
-      autoRecommendAll: async (): Promise<AutoResult> => {
+      // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
+      previewRecommendAll: async (): Promise<AutoResult> => {
+        const base = plan().revision;
+        const result = await autofixIntake(intakeId, base, language, true).catch(staleThenRethrow);
+        setPreviewed(result.view.preview && result.changed.length ? { view: result.view, base } : null);
+        return autoResultOf(result, t);
+      },
+      // Save what the preview showed: the same call without `dry_run` — the server makes the plan it showed.
+      applyRecommended: async (): Promise<AutoResult> => {
         const result = await autofixIntake(intakeId, plan().revision, language).catch(staleThenRethrow);
         if (result.changed.length) {
           undoEdits.current = autofixUndo(result.changed);          // null when it cannot put ALL of it back
           setDirty(true);                                           // before the new plan is drawn (see `save`)
         }
         take(result.view);
-        const changes = result.changed.map((change) => {
-          const place = change.to.place?.name ?? change.title;
-          const time = change.to.starts_at ? ` ${change.to.starts_at}${change.to.ends_at ? `–${change.to.ends_at}` : ""}` : "";
-          return `${change.title} → ${place}${time}`;
-        });
-        return {
-          changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason === "booked" || entry.reason.startsWith("no_")).length,
-          changed: result.changed.map((change) => ({ id: change.id, from: change.from.place?.name ?? t("장소 미정", "no place yet") })),
-        };
+        return autoResultOf(result, t);
       },
+      discardPreview: () => setPreviewed(null),
       lock: async (id, locked) => {
         const item = itemOf(id);
         await save([itemEdit.lock(targetOf(item), locked)]);        // a lock goes alone; it does not touch what 「되돌리기」 holds
@@ -201,5 +205,20 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
     };
   }, [intakeId, language, apply, reread]);
 
-  return { actions, dirty, rechecking, infos };
+  // The preview shows only while the plan it was asked on is still the plan (an answer from elsewhere — a re-read after a stale edit — ends it too).
+  const preview = previewed && view && previewed.base === view.revision ? previewed.view : null;
+  return { actions, dirty, rechecking, infos, preview };
+}
+
+/** What 「전체 자동 추천」 did or would do, as the screen says it: a line per changed stop, how many stayed, which stops the 「바뀜」 tag goes on. */
+function autoResultOf(result: Awaited<ReturnType<typeof autofixIntake>>, t: Translate): AutoResult {
+  const changes = result.changed.map((change) => {
+    const place = change.to.place?.name ?? change.title;
+    const time = change.to.starts_at ? ` ${change.to.starts_at}${change.to.ends_at ? `–${change.to.ends_at}` : ""}` : "";
+    return `${change.title} → ${place}${time}`;
+  });
+  return {
+    changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason === "booked" || entry.reason.startsWith("no_")).length,
+    changed: result.changed.map((change) => ({ id: change.id, from: change.from.place?.name ?? t("장소 미정", "no place yet") })),
+  };
 }

@@ -71,8 +71,13 @@ export interface PlanCheckActions {
   replace?: (id: string, choice: PlaceChoice) => Promise<void>;
   /** The first alternative, in one press (the card's 「자동 추천」). */
   autoRecommend?: (id: string) => Promise<void>;
-  /** Every stop that needs a look, changed to an alternative that fits (「전체 자동 추천」). */
-  autoRecommendAll?: () => Promise<AutoResult>;
+  /**
+   * 「전체 자동 추천」: first only SHOWN (`previewRecommendAll` — nothing is saved; the screen then draws the plan as it would be), then saved
+   * by `applyRecommended` or let go by `discardPreview`. `[2026-10-03]` Pushing past the end of the list or pressing the button never changes the plan.
+   */
+  previewRecommendAll?: () => Promise<AutoResult>;
+  applyRecommended?: () => Promise<AutoResult>;
+  discardPreview?: () => void;
   /** Fix a stop so re-planning and recommendations keep it (「잠금」 — 「반드시 포함」). */
   lock?: (id: string, locked: boolean) => Promise<void>;
   /** Put back what the last change, delete or recommendation changed (「되돌리기」). */
@@ -239,7 +244,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   const grab = useRef<{ y: number; height: number; moved: boolean } | null>(null);
   const justDragged = useRef(false);
   // The plan with 「전체 자동 추천」 applied, kept as the second page of the list until something else changes the plan.
-  const [recommended, setRecommended] = useState<{ count: number; was: Record<string, string> } | null>(null);
+  // `preview`: the plan as 「전체 자동 추천」 WOULD make it, nothing saved yet (「적용하기」 saves it, 「그대로 두기」 lets go); otherwise it was applied.
+  const [recommended, setRecommended] = useState<{ count: number; was: Record<string, string>; preview: boolean } | null>(null);
   const [turn, setTurn] = useState(0);
   useEffect(() => {
     if (!toast) return;
@@ -359,16 +365,40 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
         : { text: t(`${item.title} 고정을 풀었어요`, `Unlocked ${item.title}`), sub: t("이제 바꾸거나 삭제할 수 있어요", "It can be changed or deleted now") };
     }, true);
   }
+  /** What the recommendation did or would do, as the line under the toast title. */
+  const changesLine = (outcome: AutoResult) => outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "")
+    + (outcome.kept ? t(` · ${outcome.kept}곳은 그대로`, ` · ${outcome.kept} kept`) : "");
+  const wasOf = (outcome: AutoResult) => Object.fromEntries((outcome.changed ?? []).map((entry) => [entry.id, entry.from]));
+  const noAlternative = (outcome: AutoResult) => ({ text: t("바꿀 수 있는 대체 일정이 없어요", "No alternative fits"), sub: outcome.kept ? t("고정한 일정이거나 시간이 맞는 후보가 없어요", "Locked, or no alternative fits the time") : undefined });
+  /**
+   * ★`[2026-10-03]` 「전체 자동 추천」 (the button, and one more push past the end of the list) only SHOWS the plan as it would be: the dry run of the server saves nothing.
+   * It is saved by 「적용하기」 (`applyRecommended`); 「그대로 두기」 or a push back at the top lets it go.
+   */
   function recommendAll() {
     void run(async () => {
-      const outcome = await actions.autoRecommendAll!();
-      if (!outcome.changes.length) return { text: t("바꿀 수 있는 대체 일정이 없어요", "No alternative fits"), sub: outcome.kept ? t("고정한 일정이거나 시간이 맞는 후보가 없어요", "Locked, or no alternative fits the time") : undefined };
-      setRecommended({ count: outcome.changes.length, was: Object.fromEntries((outcome.changed ?? []).map((entry) => [entry.id, entry.from])) });
+      const outcome = await actions.previewRecommendAll!();
+      if (!outcome.changes.length) return noAlternative(outcome);
+      setRecommended({ count: outcome.changes.length, was: wasOf(outcome), preview: true });
       setTurn((count) => count + 1);
       bodyBox.current?.scrollTo({ top: 0 });
-      return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 검증된 대체 일정으로 바꿨어요`, `Changed ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""} to checked alternatives`),
-        sub: outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "") + (outcome.kept ? t(` · ${outcome.kept}곳은 그대로`, ` · ${outcome.kept} kept`) : ""), undo: undoable };
+      return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 바꾼 모습을 보여 드려요`, `Showing ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""} changed`),
+        sub: `${changesLine(outcome)} · ${t("아직 저장하지 않았어요", "not saved yet")}` };
     }, true);
+  }
+  function applyPreview() {
+    void run(async () => {
+      const outcome = await actions.applyRecommended!();
+      if (!outcome.changes.length) { setRecommended(null); setTurn((count) => count + 1); return noAlternative(outcome); }
+      setRecommended({ count: outcome.changes.length, was: wasOf(outcome), preview: false });
+      return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 검증된 대체 일정으로 바꿔 저장했어요`, `Changed and saved ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""} to checked alternatives`),
+        sub: changesLine(outcome), undo: undoable };
+    }, true);
+  }
+  function discardPreview() {
+    actions.discardPreview?.();
+    setRecommended(null);
+    setTurn((count) => count + 1);
+    setToast({ text: t("그대로 두었어요", "Left as it was"), sub: t("아직 아무것도 저장하지 않았어요", "Nothing was saved") });
   }
   function recheck() {
     void run(async () => {
@@ -418,10 +448,10 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   }
 
   // Pushing on past the end of the list opens the page with the recommended fixes applied; pushing back at the top returns.
-  const canRecommend = Boolean(actions.autoRecommendAll) && done && !changing && !registered && !recommended && needs(view).total > 0;
+  const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needs(view).total > 0;
   const pull = usePullPastEnd(bodyBox, {
     onEnd: canRecommend && !frozen ? recommendAll : undefined,
-    onStart: done && !changing && recommended && actions.undo && !frozen ? undo : undefined,
+    onStart: done && !changing && recommended && !frozen ? (recommended.preview ? discardPreview : actions.undo ? undo : undefined) : undefined,
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
@@ -495,8 +525,16 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             <p className={styles.count}>{done ? headStatus(view, registered, t) : countText(view, t)}</p>
           </header>
           <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers}>
-            {done && recommended && <div className={styles.recommended} role="status">
+            {done && recommended?.preview && <div className={styles.recommended} role="status" data-preview>
               <span className={styles.recommendedText}><b>{t("권장 수정안을 반영한 모습이에요", "The plan with the recommended fixes")}</b>
+                <small>{t(`${recommended.count}곳이 바뀐 모습이에요 · 아직 저장하지 않았어요. 위로 한 번 더 올리면 그대로 돌아가요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed in this picture · not saved yet. Push up once more to leave it as it was`)}</small></span>
+              <span className={styles.recommendedActions}>
+                <button type="button" className={styles.recommendedApply} aria-disabled={frozen ? true : undefined} onClick={() => frozen ? explain(frozen) : applyPreview()}>{t("적용하기", "Apply")}</button>
+                <button type="button" className={styles.recommendedUndo} onClick={discardPreview}><Undo2 size={14} strokeWidth={1.8} aria-hidden="true" />{t("그대로 두기", "Keep as it was")}</button>
+              </span>
+            </div>}
+            {done && recommended && !recommended.preview && <div className={styles.recommended} role="status">
+              <span className={styles.recommendedText}><b>{t("권장 수정안을 반영해 저장했어요", "The recommended fixes are saved")}</b>
                 <small>{t(`${recommended.count}곳이 바뀌었어요 · 위로 한 번 더 올리면 원래대로 돌아가요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed · push up once more to go back`)}</small></span>
               {actions.undo && <button type="button" className={styles.recommendedUndo} aria-disabled={frozen ? true : undefined} onClick={() => frozen ? explain(frozen) : undo()}><Undo2 size={14} strokeWidth={1.8} aria-hidden="true" />{t("원래대로", "Undo")}</button>}
             </div>}
@@ -526,7 +564,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
           {done && <ResultFooter view={view} registration={registration} frozen={frozen} explain={explain}
-            onAutoAll={actions.autoRecommendAll && recommendAll} onRecheck={actions.recheck && recheck} />}
+            previewing={Boolean(recommended?.preview)} onAutoAll={actions.previewRecommendAll && recommendAll} onRecheck={actions.recheck && recheck} />}
         </>}
     </section>
     {deletingItem && <DeleteDialog item={deletingItem} undoable={undoable}

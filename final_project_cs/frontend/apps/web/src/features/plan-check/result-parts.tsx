@@ -153,8 +153,10 @@ export interface Registration {
  * on the right the next step — 「재검증」 while something needs a look (off) or after a change (on), 「여행 등록」 when there
  * is nothing to fix, 「등록 완료」 after. A button that cannot act says why when pressed.
  */
-export function ResultFooter({ view, registration, frozen, explain, onAutoAll, onRecheck }: {
+export function ResultFooter({ view, registration, frozen, explain, previewing = false, onAutoAll, onRecheck }: {
   view: PlanCheckView; registration?: Registration;
+  /** The plan shown is a preview (nothing saved): registering would act on the plan as it was, so it waits for 「적용하기」 or 「그대로 두기」. */
+  previewing?: boolean;
   /** Why nothing can be pressed now (being checked again, registered), or null. */
   frozen: string | null;
   explain: (why: string) => void;
@@ -172,7 +174,10 @@ export function ResultFooter({ view, registration, frozen, explain, onAutoAll, o
   const autoWhy = !onAutoAll ? t("전체 자동 추천은 준비 중이에요", "Recommending all is coming")
     : frozen ?? (total === 0 ? t("고칠 곳이 없어요", "Nothing to fix") : null);
   let next: ReactNode;
-  if (registered) {
+  if (previewing) {
+    next = <Act className={styles.footButton} data-primary why={t("저장하지 않은 미리 보기예요 · 위의 「적용하기」나 「그대로 두기」를 먼저 골라 주세요", "This is a preview, nothing is saved · choose Apply or Keep as it was above first")} explain={explain} onPress={() => undefined}>
+      {t("여행 등록", "Register trip")}</Act>;
+  } else if (registered) {
     next = <Link href={registration!.registeredHref!} className={styles.footButton} data-done aria-label={t("등록 완료 — 여행 보기", "Registered — open the trip")}>✓ {t("등록 완료", "Registered")}</Link>;
   } else if (view.rechecking) {
     next = <button type="button" className={styles.footButton} data-primary aria-disabled="true" onClick={() => explain(t("재검증하는 중이에요 · 잠시만요", "Checking again · one moment"))}>
