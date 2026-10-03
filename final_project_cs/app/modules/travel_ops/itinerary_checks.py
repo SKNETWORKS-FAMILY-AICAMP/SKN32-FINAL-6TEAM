@@ -21,7 +21,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, time
 from typing import Any, Iterable, Mapping
 from zoneinfo import ZoneInfo
@@ -63,6 +63,14 @@ def _seoul(moment: datetime) -> datetime:
     return moment.astimezone(KST) if moment.tzinfo is not None else moment.replace(tzinfo=KST)
 
 
+def seoul_part(part: Part) -> Part:
+    """판정에 넣기 전에 **시각을 모두 서울 시각(시간대 있는 값)으로** 맞춘다. `[2026-10-03 적대 검토]`
+
+    ☆전에는 시간대 없는 시각과 있는 시각이 한 일정에 섞이면 정렬 · 비교(`<=`)에서 `TypeError` 로 죽었다 — 앞 커밋(H3) 메시지는 「시간대가 섞여도 깨지지 않는다」고 했지만
+    시험은 UTC·서울 섞임만 봤다. 시간대 없는 값을 서울로 읽는 약속(`_seoul`)을 입구에서 한 번 적용해 이후 비교가 다 같은 종류가 되게 한다."""
+    return replace(part, starts_at=_seoul(part.starts_at), ends_at=_seoul(part.ends_at) if part.ends_at is not None else None)
+
+
 def _hm(moment: datetime) -> str:
     return _seoul(moment).strftime("%H:%M")
 
@@ -92,7 +100,7 @@ def _planned_eta(route: Mapping[str, Any], chosen: Any = None) -> tuple[str, int
 def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | None = None,
                     party_size: int | None = None) -> list[Violation]:
     """받은 일정에서 **보낸 값만으로 판정되는** 위반을 전부 모은다. 빈 목록이면 받아도 된다."""
-    items = sorted(parts, key=lambda part: (part.starts_at, part.seq))
+    items = sorted((seoul_part(part) for part in parts), key=lambda part: (part.starts_at, part.seq))
     constraints = dict(constraints or {})
     found: list[Violation] = []
 
@@ -111,15 +119,17 @@ def check_itinerary(parts: Iterable[Part], *, constraints: Mapping[str, Any] | N
 
 
 def _place_violations(part: Part) -> list[Violation]:
-    from .place_hours import hours_on
+    from .place_hours import break_span, hours_on
 
     attributes = dict((part.place or {}).get("attributes") or {})
-    brk = attributes.get("break")
     found: list[Violation] = []
     # ★`[2026-09-28]` 그날의 영업시간 — 요일별 칸(`hours_week`, 관광공사 원문을 옮긴 것)이 먼저, 없으면 하루 한 칸
     #   (`hours`). 전에는 하루 한 칸만 봐서 **쉬는 요일**을 몰랐다(월요일 휴무인 곳이 월요일에 들어갔다)
     start = _seoul(part.starts_at)                 # ★서울 시각 — 날짜 · 시계 숫자 모두(`_seoul`)
     end = _seoul(part.ends_at or part.starts_at)
+    # ★`[2026-10-03 적대 검토]` **자정을 넘기는 항목**(21:00 → 다음 날 01:00)은 끝의 시계 숫자(01:00)만 보면 마감·브레이크 검사를 빠져나갔다.
+    #   마감은 그날 안에서만 안다 — 자정 마감(23:59 로 읽힌 곳)은 진짜 닫는 시각을 모르니 자정을 넘겨도 위반으로 세지 않고(`place_hours._clock`), 그 밖의 마감은 넘기면 위반이다
+    crosses_midnight = end.date() > start.date()
     today = hours_on(attributes, start.date())
     if today == "closed":
         found.append(Violation("closed_day", (part.seq,),
@@ -131,7 +141,7 @@ def _place_violations(part: Part) -> list[Violation]:
             found.append(Violation("before_opening", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 {opens} 에 연다",
                                    f"{opens} 이후로 옮기거나 그 시각에 여는 다른 곳으로 바꾼다"))
-        if end.time() > today.closes:
+        if end.time() > today.closes or (crosses_midnight and today.closes != time(23, 59)):
             found.append(Violation("after_closing", (part.seq,),
                                    f"{part.title}: {_hm(end)} 까지인데 {closes} 에 닫는다",
                                    f"{closes} 이전에 끝나게 줄이거나 앞당긴다"))
@@ -140,12 +150,13 @@ def _place_violations(part: Part) -> list[Violation]:
             found.append(Violation("after_last_entry", (part.seq,),
                                    f"{part.title}: {_hm(part.starts_at)} 시작인데 입장·주문 마감이 {last} 다",
                                    f"{last} 전에 들어가게 앞당기거나 다른 곳으로 바꾼다"))
-    if isinstance(brk, (list, tuple)) and len(brk) == 2:
-        starts, ends = _clock(brk[0]), _clock(brk[1])
-        if starts and ends and start.time() < ends and end.time() > starts:
+    span = break_span(attributes)
+    if span is not None:
+        starts, ends = span
+        if start.time() < ends and (crosses_midnight or end.time() > starts):
             found.append(Violation("break_time", (part.seq,),
-                                   f"{part.title}: {brk[0]}~{brk[1]} 은 브레이크 타임인데 그 시간에 걸친다",
-                                   f"{brk[1]} 이후로 옮기거나 {brk[0]} 전에 끝낸다"))
+                                   f"{part.title}: {starts:%H:%M}~{ends:%H:%M} 은 브레이크 타임인데 그 시간에 걸친다",
+                                   f"{ends:%H:%M} 이후로 옮기거나 {starts:%H:%M} 전에 끝낸다"))
     return found
 
 
@@ -215,4 +226,4 @@ def parts_from_items(items: Iterable[Any], routes: Mapping[str, Any] | None = No
     return parts
 
 
-__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items"]
+__all__ = ["Part", "Violation", "check_itinerary", "parts_from_items", "seoul_part"]

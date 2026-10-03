@@ -339,7 +339,7 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
             # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
-            **measured, "warnings": [*measured["warnings"], *quality_warnings(parts)]}
+            **measured, "warnings": [*measured["warnings"], *quality_warnings(parts, trip.get("constraints") or {})]}
 
 
 def _maps_query(view: dict[str, Any]) -> str:

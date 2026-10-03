@@ -74,7 +74,7 @@ class McpApiError(Exception):
         self.status, self.code, self.message, self.extra = status, code, message, extra or {}
 
     def text(self) -> str:
-        tail = {k: v for k, v in self.extra.items() if k in ("problems", "relax", "reasons", "items", "retry_after_seconds")}
+        tail = {k: v for k, v in self.extra.items() if k in ("problems", "relax", "reasons", "items", "fields", "retry_after_seconds")}
         return f"{self.message} ({self.code}, HTTP {self.status})" + (f" {json.dumps(tail, ensure_ascii=False)}" if tail else "")
 
 

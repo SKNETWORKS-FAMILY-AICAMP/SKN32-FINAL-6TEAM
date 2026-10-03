@@ -101,10 +101,11 @@ def _day(*spec, kind="activity"):
 
 
 def test_a_day_that_covers_lunch_with_no_meal_is_warned_once_for_lunch():
-    found = quality_warnings(_day(("궁", "10:00", "11:30"), ("박물관", "13:30", "16:30")))
+    # ★`[2026-10-03 적대 검토]` 틈이 1시간 이상 있으면(궁 11:30 끝 · 박물관 13:30 시작) 먹을 시간은 있어 내지 않는다 — 시간대를 **채운** 일정만 알린다(틈 30분)
+    found = quality_warnings(_day(("궁", "10:00", "12:00"), ("박물관", "12:30", "16:30")))
     missing = [w for w in found if w["code"] == "meal_missing"]
-    assert len(missing) == 1 and "점심" in missing[0]["reason"] and "11:30~14:00" in missing[0]["reason"]
-    assert missing[0]["items"] == [1, 2]            # 그 창과 겹치는 항목 — 11:30 에 끝나는 궁(경계 포함) · 13:30 에 시작하는 박물관
+    assert len(missing) == 1 and "점심" in missing[0]["reason"] and "11:30~14:00" in missing[0]["reason"] and "30분" in missing[0]["reason"]
+    assert missing[0]["items"] == [1, 2]            # 그 창과 겹치는 항목 — 창 안에서 끝나는 궁 · 창 안에서 시작하는 박물관
 
 
 def test_dinner_is_checked_only_when_the_day_runs_through_the_dinner_window():
@@ -113,7 +114,7 @@ def test_dinner_is_checked_only_when_the_day_runs_through_the_dinner_window():
     long_day = quality_warnings([
         _part(1, "궁", "09:00", "10:30", place=_place("궁", place_id="a")),
         _part(2, "점심", "12:00", "13:00", kind="dining", place=_place("식당", place_id="b")),
-        _part(3, "전망대", "19:00", "21:00", place=_place("전망대", place_id="c")),
+        _part(3, "전망대", "18:00", "21:00", place=_place("전망대", place_id="c")),          # 저녁 창(17:30~20:30)을 틈 30분만 두고 채운다
     ])
     assert [w["reason"].split(" ")[0] for w in long_day if w["code"] == "meal_missing"] == ["저녁"]
 
@@ -185,9 +186,9 @@ def test_a_day_with_every_warning_is_still_accepted_by_the_registration_judge():
     """같은 곳 두 번 · 점심 없음 · 왔다 갔다가 한꺼번에 있어도 **위반은 없다** — 등록은 받는다. 알리기만 한다."""
     parts = [_part(1, "A", "09:00", "09:40", place=_place("A", lat=37.50, lon=127.0, place_id="A")),
              _part(2, "D", "10:00", "10:40", place=_place("D", lat=37.56, lon=127.0, place_id="D")),
-             _part(3, "B", "11:00", "11:40", place=_place("B", lat=37.52, lon=127.0, place_id="B")),
-             _part(4, "C", "15:00", "15:40", place=_place("C", lat=37.54, lon=127.0, place_id="C")),
-             _part(5, "A 다시", "20:30", "21:00", place=_place("A", lat=37.50, lon=127.0, place_id="A"))]
+             _part(3, "B", "11:00", "13:30", place=_place("B", lat=37.52, lon=127.0, place_id="B")),          # 점심 창(11:30~14:00)을 틈 10분만 두고 채운다
+             _part(4, "C", "13:40", "14:10", place=_place("C", lat=37.54, lon=127.0, place_id="C")),
+             _part(5, "A 다시", "17:40", "20:40", place=_place("A", lat=37.50, lon=127.0, place_id="A"))]     # 저녁 창(17:30~20:30)도 틈 10분
     assert check_itinerary(parts) == []
     assert _codes(quality_warnings(parts)) == ["meal_missing", "meal_missing", "route_zigzag", "same_place_twice"]
 

@@ -327,3 +327,27 @@ def test_an_activity_with_nothing_open_nearby_is_left_for_a_person_not_swapped_b
     result = _dawn(world, FakeSource(closed={SKY})).tick()
     assert result.adjusted == [] and [u["place"] for u in result.unresolved] == [SKY], result.counts()
     assert _latest(world)[0]["version"] == 1
+
+
+def test_a_dawn_replacement_that_fails_the_whole_recheck_is_counted_and_not_written(world, monkeypatch):
+    """`[2026-10-03 적대 검토]` 닫힌 식당의 대체가 일정 전체 재판정(D-017, T5)에 걸리면 **쓰지 않고** `rechecked` 로 센다 — `adjusted` 가 아니다.
+    전에는 이 호출자(새벽 확인)가 막힌 결과를 시험으로 지키지 못했다(감시자만 있었다)."""
+    from datetime import timedelta
+
+    from app.modules.travel_ops import dawn_check
+    from app.modules.travel_ops.itinerary_changes import ItineraryChange
+
+    _, items = _latest(world)
+    lunch = next(i for i in items if i.starts_at.hour == 13 and i.kind == "dining")
+    later = next(i for i in sorted(items, key=lambda i: (i.starts_at, i.seq)) if i.starts_at >= lunch.ends_at and i.kind != "mobility")
+    overlapping = lunch.replaced_by(place=lunch.place, title=lunch.title + "(겹침)", ends_at=later.starts_at + timedelta(minutes=30))
+    change = ItineraryChange(reason="auto_adjusted", causes=[{"category": "place_closed", "type": "closed_on_day", "detail": "임시 휴업"}],
+                             notice={"text": "바꿨어요"}, replacements={lunch.item_id: overlapping},
+                             summary={"from": lunch.title, "to": overlapping.title})
+    monkeypatch.setattr(dawn_check, "plan_closed_on_day", lambda **_: change)
+
+    result = _dawn(world, FakeSource(closed={LUNCH})).tick()
+
+    assert result.adjusted == [] and len(result.rechecked) == 1 and result.rechecked[0]["skipped"]
+    assert result.counts()["rechecked"] == 1
+    assert _latest(world)[0]["version"] == 1                                         # ★아무것도 안 바뀌었다

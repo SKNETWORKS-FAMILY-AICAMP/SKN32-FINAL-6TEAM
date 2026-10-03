@@ -72,6 +72,21 @@ def hours_on(attributes: Mapping[str, Any] | None, day: date) -> DayHours | str 
     return None
 
 
+def break_span(attributes: Mapping[str, Any] | None) -> tuple[time, time] | None:
+    """브레이크 타임 `(시작, 끝)` — 읽을 수 없으면 `None`(모름). `[2026-10-03 적대 검토]`
+
+    ☆왜: 판정 세 곳(`itinerary_checks` · `replan.dining_fits` · `replan.dining_warnings`)이 `attributes.break` 를 **각자** 읽었고, 두 곳은 `["15:00","17:00"]` 모양이 아니면 예외를 냈다
+    (`"15:00~17:00"` · `["15:00:00","17:00:00"]` · `[null,null]`). 여행 화면이 이 계산을 매 조회마다 부르니 장소 값 하나가 그 여행을 영구히 500 으로 만들었다.
+    여기서 한 번에 읽는다 — 초(`HH:MM:SS`)는 떼고 읽고, 그 밖의 모양 · 끝이 시작보다 늦지 않은 값은 **모름**이다(없는 브레이크로 보고 지어내지 않는다)."""
+    rest = (attributes or {}).get("break")
+    if not isinstance(rest, (list, tuple)) or len(rest) != 2:
+        return None
+    start, end = (_clock(":".join(str(value).strip().split(":")[:2])) for value in rest)
+    if start is None or end is None or end <= start:
+        return None
+    return start, end
+
+
 def knows_hours(attributes: Mapping[str, Any] | None) -> bool:
     attributes = attributes or {}
     return "hours" in attributes or bool(attributes.get("hours_week"))
@@ -311,6 +326,6 @@ def find_tour_id(*, name: str, kind: str, latitude: float | None, longitude: flo
     return (str(found["content_id"]), str(found["content_type_id"])), None, meters
 
 
-__all__ = ["DAYS", "MATCH_RADIUS_M", "DayHours", "HoursRead", "clean", "days_in", "find_tour_id", "fits", "hours_on",
+__all__ = ["DAYS", "MATCH_RADIUS_M", "DayHours", "HoursRead", "break_span", "clean", "days_in", "find_tour_id", "fits", "hours_on",
            "knows_hours",
            "read_by_model", "read_by_rule", "read_hours"]

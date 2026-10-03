@@ -295,7 +295,7 @@ def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     return {"checked": outcome.checked, "adjusted": len(outcome.adjusted),
             "fatal": len(outcome.fatal), "unresolved": len(outcome.unresolved),
             "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
-            "unchecked": len(outcome.unchecked)}
+            "unchecked": len(outcome.unchecked), "rechecked": len(outcome.rechecked)}
 
 
 def _report_errors(result: dict[str, dict[str, int]]) -> int:

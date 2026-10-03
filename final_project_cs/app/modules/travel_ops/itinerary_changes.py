@@ -622,7 +622,7 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
     if meal is None or meal.place is None:
         return NoChange("no_meal", {"message": "늦어지는 시각 뒤에 식사 일정이 없다"})
     places = unused_places(places, items, meal)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
-    arrival = meal.starts_at + timedelta(minutes=minutes)
+    arrival = (meal.starts_at + timedelta(minutes=minutes)).astimezone(kst)       # ★서울 시각 — 알림 문장의 「점심 도착이 HH:MM」도 서울 시계다(DB 세션이 UTC 여도)
     duration = minutes_between(meal.starts_at, meal.ends_at)
     fits, why = dining_fits(meal.place, arrival, duration)
     cause = with_request({"category": "customer_report", "type": "delay", "minutes": minutes,

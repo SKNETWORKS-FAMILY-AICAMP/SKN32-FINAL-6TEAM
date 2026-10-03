@@ -212,7 +212,8 @@ def test_when_no_alternative_exists_the_customer_is_told_once_and_the_trip_is_le
     sent = [n for n in _notices(api)[before:] if n.get("kind") == "no_alternate"]
     assert len(sent) == len(first.notified)
     note = sent[0]
-    assert note["type"] == "guidance" and "일정은 그대로 두었어요" in note["text"] and "road_closed" in note["text"]
+    assert note["type"] == "guidance" and "일정은 그대로 두었어요" in note["text"]
+    assert "도로가 통제돼요" in note["text"] and "road_closed" not in note["text"]           # ★`[2026-10-03]` 원인 코드 이름(영문)이 고객 문장에 새지 않는다 — 전에는 이 시험이 새는 것을 못 박고 있었다
     assert "사람" not in note["text"] and "담당자" not in note["text"]                  # 사람 대기 약속은 하지 않는다
     # 같은 사건이 그대로면 다시 알리지 않는다(같은 Case 로 모인다)
     second = _tick(opener)

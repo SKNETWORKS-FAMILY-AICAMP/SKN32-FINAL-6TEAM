@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Callable
@@ -191,11 +192,26 @@ def unresolved_notice(*, item: Item, causes: list[dict[str, Any]], recheck_faile
             "causes": causes, "item_id": str(item.item_id), "reason": kind, "replay": False}
 
 
+#: 원인 `type`/`category` 의 코드 이름 → 고객에게 보일 말. ★`[2026-10-03 ui 검증 세션 지적]` 새벽 확인이 만든 원인에는 `type=closed_on_day` 뿐이라 알림 문장에 코드 이름이 그대로 들어갔다
+_CODE_TEXT = {"closed_on_day": "오늘은 쉬는 곳이에요", "closed_today": "오늘은 쉬는 곳이에요", "place_closed": "문을 닫는 곳이에요",
+              "road_closed": "도로가 통제돼요", "traffic_control": "교통이 통제돼요", "route_event": "이동 경로에 문제가 생겼어요",
+              "fire": "화재가 발생했어요", "disaster_msg": "재난 문자가 왔어요", "earthquake": "지진이 났어요",
+              "air_quality": "대기 질이 나빠요", "forecast": "날씨 예보에 문제가 있어요", "weather_warning": "기상특보가 났어요"}
+
+
 def _cause_text(causes: list[dict[str, Any]]) -> str:
+    """원인에 **있는 말**만 쓴다. 코드 이름(`closed_on_day` — 영문 소문자·밑줄)은 고객 문장에 싣지 않고 알려진 것만 말로 바꾼다 — 모르는 코드는 건너뛴다."""
     for cause in causes:
         for field in ("summary", "kind", "reason", "type", "category"):
-            if cause.get(field):
-                return str(cause[field])
+            value = cause.get(field)
+            if not value:
+                continue
+            text = str(value)
+            if re.fullmatch(r"[a-z][a-z0-9_]*", text):          # 코드 이름
+                if text in _CODE_TEXT:
+                    return _CODE_TEXT[text]
+                continue
+            return text
     return "일정에 문제가 생겼어요"
 
 

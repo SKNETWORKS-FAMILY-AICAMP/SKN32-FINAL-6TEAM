@@ -123,3 +123,67 @@ async def test_the_team_answers_with_the_computed_sentence_and_does_not_escalate
     result = team.settle(work, {"evidence": evidence, "trip": _trip(), "items": [meal, museum], "ref": {}}, plan)
     assert result.outcome == "completed" and result.answer == plan.detail["text"] and not result.action_proposals
     assert result.failure_code is None
+
+
+# ── 적대 검토 보완 `[2026-10-03]` ─────────────────────────────────────
+
+def test_an_item_without_an_end_is_not_reported_as_a_time_order_error():
+    """끝 시각이 없는 뒤 항목(전망대 방문 등)을 밀 때 끝=시작인 값을 만들어 `time_order`(끝이 시작보다 빠르다)로 오경고했다 — 모르는 끝은 그대로 모름으로 둔다."""
+    meal = lunch()
+    open_ended = item(2, "activity", "전망대", "13:00", "13:30", closes="22:00")
+    open_ended = Item(item_id=open_ended.item_id, seq=2, kind="activity", title="전망대", place_id=open_ended.place_id,
+                      starts_at=at("13:00"), ends_at=None, place=open_ended.place, detail={})
+    assert delay_knock_on([meal, open_ended], meal, 30) == []
+
+
+def test_an_item_without_an_end_still_reports_a_real_closing_problem():
+    meal = lunch()
+    closes_soon = Item(item_id=uuid4(), seq=2, kind="activity", title="전망대", place_id=uuid4(), starts_at=at("13:00"), ends_at=None,
+                       place=place("전망대", "13:10"), detail={})
+    [knock] = delay_knock_on([meal, closes_soon], meal, 30)                    # 13:30 시작인데 13:10 에 닫는다
+    assert knock.item is closes_soon and any("13:10" in reason for reason in knock.reasons)
+
+
+def test_a_booked_item_stays_where_it_is_so_the_push_does_not_continue_past_its_original_end():
+    """예약 · 고정 일정은 밀리지 않는다 — 늦는 것은 **우리**이고 그 일정은 제 시각에 시작해 제 시각에 끝난다. 뒤로는 그 **원래 끝**(14:00)에서 이어진다.
+    전에는 고정 일정도 밀린 것처럼 세어(13:30+60분 = 14:30) 뒤 항목을 14:30 에 닫는 것으로 오경고했다."""
+    meal = lunch()
+    booked = item(2, "activity", "예약한 체험", "13:00", "14:00", booking="BK-1")
+    after = item(3, "activity", "산책", "14:10", "15:00", closes="14:40")          # 원래 끝 14:00 에서 이어지면 14:10 시작 그대로 — 14:40 전에 끝나는 것은 아니지만 밀리지 않는다
+    knocks = delay_knock_on([meal, booked, after], meal, 30)
+    assert [k.item.title for k in knocks] == ["예약한 체험"]                          # 산책은 밀리지 않으니 걸리지 않는다
+
+
+def test_the_sentence_for_a_booked_item_does_not_claim_a_new_start_time():
+    meal = lunch()
+    booked = item(2, "activity", "예약한 체험", "13:00", "14:00", booking="BK-1")
+    text = knock_on_text(meal, 20, delay_knock_on([meal, booked], meal, 20))
+    assert "예약한 체험 — 예약·고정한 시각(13:00)에 늦는다" in text and "13:20 시작" not in text
+
+
+def test_the_sentence_offers_only_things_the_service_can_actually_do():
+    """채팅이 해 주는 일은 「다른 곳으로 바꿔줘」(대체 찾기)다 — 뒤 일정의 **시각을 밀어 달라**는 말은 처리하는 길이 없어 약속하지 않는다."""
+    meal, museum = lunch(), item(2, "activity", "박물관", "13:00", "15:00", closes="15:10")
+    text = knock_on_text(meal, 30, delay_knock_on([meal, museum], meal, 30))
+    assert "바꿔줘" in text and "박물관" in text
+    assert "조정하시거나" not in text and "맞출게요" not in text
+
+
+def test_the_minutes_prompt_does_not_promise_to_realign_the_later_schedule():
+    from app.modules.travel_ops import trip_messages
+
+    source = open(trip_messages.__file__, encoding="utf-8").read()
+    assert "뒤 일정을 맞출게요" not in source
+
+
+def test_plan_delay_reads_the_arrival_in_seoul_time():
+    """DB 세션이 UTC 면 일정 시각이 UTC 로 읽힌다 — 알림의 「점심 도착이 HH:MM」과 판정이 서울 시계여야 한다."""
+    from datetime import timezone
+
+    meal = item(1, "dining", "점심 식사", "12:00", "13:00")
+    meal = Item(item_id=meal.item_id, seq=1, kind="dining", title="점심 식사", place_id=meal.place_id, starts_at=meal.starts_at.astimezone(timezone.utc),
+                ends_at=meal.ends_at.astimezone(timezone.utc),
+                place={**meal.place, "attributes": {"hours": ["11:00", "22:00"], "break": ["13:00", "17:00"], "last_order_before_break_min": 30}}, detail={})
+    plan = plan_delay(trip=_trip(), items=[meal], places=[meal.place], at=at("11:30"), minutes=30, message="30분 늦어요", request_id=None)
+    # 12:30 도착 — 서울 시계로 브레이크(13:00~17:00)앞 라스트오더(12:30) 여유가 20분이 안 된다 → 이 식당은 안 된다(`still_fits` 가 아니다)
+    assert not (isinstance(plan, NoChange) and plan.status == "still_fits")

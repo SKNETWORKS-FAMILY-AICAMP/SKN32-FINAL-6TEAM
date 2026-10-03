@@ -238,7 +238,7 @@ def test_quality_warnings_ride_along_with_an_accepted_registration(api):
     body["items"] = [{"seq": 1, "kind": "activity", "title": "궁 구경", "place": "palace", "route": None,
                       "starts_at": _iso("10:00"), "ends_at": _iso("11:00"), "detail": {}},
                      {"seq": 2, "kind": "activity", "title": "박물관", "place": "museum", "route": None,
-                      "starts_at": _iso("12:00"), "ends_at": _iso("13:00"), "detail": {}},
+                      "starts_at": _iso("12:00"), "ends_at": _iso("13:30"), "detail": {}},      # 점심 창(11:30~14:00)을 틈 30분만 두고 채운다
                      {"seq": 3, "kind": "activity", "title": "궁 다시", "place": "palace", "route": None,
                       "starts_at": _iso("15:00"), "ends_at": _iso("16:00"), "detail": {}}]
     created = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
