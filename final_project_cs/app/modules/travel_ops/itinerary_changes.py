@@ -940,7 +940,7 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
                           "from": applied["name"], "to": name, "message": message},
                          request_id)
     text = (f"요청하신 대로 {applied['name']} 대신 {name}(으)로 바꿨습니다"
-            f"({starts:%H:%M} 시작).")
+            f"({seoul(starts):%H:%M} 시작).")
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"from": applied["name"], "to": name, "at": starts.isoformat()},
               "other_options": [a["name"] for a in remaining], "replay": False}
@@ -1086,7 +1086,7 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             break
         ranked, end = best_at(current.place, start, RELAX_RADIUS_M)
         if ranked:
-            add(ranked, start, end, "time", f"{start:%H:%M}으로 늦추면", take=1)
+            add(ranked, start, end, "time", f"{seoul(start):%H:%M}으로 늦추면", take=1)
             break
     if following is not None and following.place and following.place.get("latitude") is not None:
         ranked, end = best_at(following.place, current.starts_at, RELAX_RADIUS_M)
@@ -1209,7 +1209,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                 taken.append(spot)
     labels = [f"{m['note']} {m['name']}" if m.get("note") else m["name"] for m in more]
     others = [m["name"] for m in more]
-    text = (f"요청하신 대로 {current.place['name']} 대신 {name}(으)로 바꿨습니다({starts:%H:%M} 시작)."
+    text = (f"요청하신 대로 {current.place['name']} 대신 {name}(으)로 바꿨습니다({seoul(starts):%H:%M} 시작)."
             + (" 다른 안: " + " · ".join(f"{n}) {label}" for n, label in enumerate(labels, start=1))
                + " — 다른 곳이 좋으면 고르세요. 답이 없으면 지금대로 둡니다." if labels else ""))
     notice = {"text": text, "language": "ko", "causes": [cause],

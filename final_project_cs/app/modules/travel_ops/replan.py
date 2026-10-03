@@ -119,7 +119,7 @@ def walk_minutes(meters: float) -> int:
 
 
 def _hm(moment: datetime) -> str:
-    return moment.strftime("%H:%M")
+    return _seoul(moment).strftime("%H:%M")           # ★서울 시계 — 알림 문구의 시각(`_seoul` 아래)
 
 
 def _at_clock(moment: datetime, clock: time) -> datetime:
@@ -461,7 +461,7 @@ def choose(candidates: list[Candidate],
 
 # ── 알림 문구 ──────────────────────────────────────────────────
 def _part_of_day(moment: datetime) -> str:
-    return "오전" if moment.hour < 12 else "오후"
+    return "오전" if _seoul(moment).hour < 12 else "오후"
 
 
 def _reason_phrase(causes: list[dict[str, Any]], place: dict[str, Any]) -> str:

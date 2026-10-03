@@ -303,8 +303,9 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
     return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind,
             "kind_label": _KIND_LABEL.get(item.kind, item.kind), "meal": _meal_label(item),
             "title": item.title, "place": (item.place or {}).get("name"),
-            "starts_at": item.starts_at.isoformat(),
-            "ends_at": item.ends_at.isoformat() if item.ends_at else None,
+            # ★`[2026-10-03 ui 검증 세션 지적]` 서울 시각(+09:00)으로 내보낸다 — 지도의 날짜 묶음(`starts_at[:10]`)과 화면의 시계 표시가 DB 세션 시간대에 안 흔들린다
+            "starts_at": _seoul(item.starts_at).isoformat(),
+            "ends_at": _seoul(item.ends_at).isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
             "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
                               for a in item.detail.get("alternates") or []],

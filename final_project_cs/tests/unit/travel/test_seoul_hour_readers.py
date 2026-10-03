@@ -86,3 +86,62 @@ def test_customer_notice_texts_format_clock_times_in_seoul():
     source = Path(itinerary_changes.__file__).read_text(encoding="utf-8")
     bare = [line.strip() for line in source.splitlines() if re.search(r"\b\w+\.(starts_at|ends_at):%", line)]
     assert bare == [], f"서울 변환 없이 시각을 서식에 넣는 줄: {bare}"
+
+
+# ── 검증 세션의 두 번째 지적(알림 문구 · 지도 날짜 · 변경 링크 · 날씨) ──────────────────
+def test_the_replan_clock_helpers_read_seoul_time():
+    from app.modules.travel_ops.replan import _hm, _part_of_day
+
+    noon_in_utc = datetime(2026, 10, 6, 3, 0, tzinfo=UTC)                  # 서울 12:00
+    assert _hm(noon_in_utc) == "12:00" and _part_of_day(noon_in_utc) == "오후"
+    assert _part_of_day(datetime(2026, 10, 6, 0, 30, tzinfo=UTC)) == "오전"   # 서울 09:30
+
+
+def test_the_item_view_carries_seoul_times_so_the_map_groups_days_in_seoul():
+    """지도의 날짜 묶음은 `starts_at[:10]` 이다 — UTC 로 적힌 서울 아침 8시(전날 23:00Z)가 전날로 묶이던 것을 막는다."""
+    from app.modules.travel_ops.trip_api import _item_view
+
+    morning = _item(1, "activity", "경복궁", "08:00", day=6, tz=UTC)
+    view = _item_view(morning)
+    assert view["starts_at"].startswith("2026-10-06T08:00") and view["starts_at"].endswith("+09:00")
+
+
+def test_the_change_link_page_prints_seoul_clock_times():
+    from app.modules.travel_ops.change_link import _when
+
+    start = datetime(2026, 10, 6, 3, 0, tzinfo=UTC).isoformat()            # 서울 12:00
+    end = datetime(2026, 10, 6, 4, 0, tzinfo=UTC).isoformat()              # 서울 13:00
+    assert _when(start, end) == "2026-10-06 12:00–13:00"
+    assert _when(start, None) == "2026-10-06 12:00" and _when(None, None) is None
+    assert _when("not-a-time", None) == "not-a-time"                       # 읽을 수 없으면 있는 그대로(지어내지 않는다)
+
+
+def test_the_open_meteo_source_picks_the_forecast_slot_in_seoul_time(monkeypatch):
+    """`astimezone()`(인자 없음)은 **서버 PC 의 시간대**로 바꾼다 — 서울이 아닌 서버에서는 예보 칸이 어긋난다. 서울로 바꿔 고른다.
+    (이 PC 가 서울이라 옛 코드도 여기서는 통과한다 — 서울이 아닌 서버를 흉내 낼 수 없어, 고른 칸의 시각을 직접 본다.)"""
+    from app.infrastructure.travel.open_meteo import OpenMeteoWeather
+
+    seen = []
+    source = OpenMeteoWeather.__new__(OpenMeteoWeather)
+    monkeypatch.setattr(OpenMeteoWeather, "_days_needed", lambda self, target: seen.append(target))
+    monkeypatch.setattr(OpenMeteoWeather, "_miss", lambda self, *a, **k: None, raising=False)
+    source.forecast(latitude=37.5, longitude=127.0, at=datetime(2026, 10, 6, 3, 0, tzinfo=UTC))
+    assert seen == [datetime(2026, 10, 6, 12, 0)]
+
+
+def test_no_notice_text_formats_a_zoned_time_without_converting_it_to_seoul():
+    """정적 시험(위 시험의 확장) — 알림 문구에서 변수에 담은 시각(`{starts:%H:%M}`)도 서울 변환을 거쳐야 한다. 앞 판은 `객체.starts_at:%` 꼴만 잡아 변수 꼴이 빠져나갔다.
+    허용: 바로 앞에서 서울로 바꿔 둔 값(`first` · `arrival` · `start` — 각 줄 위에서 `seoul(...)`/`astimezone(kst)` 로 바꾼다)."""
+    import re
+    from pathlib import Path
+
+    from app.modules.travel_ops import itinerary_changes, replan
+
+    allowed = ("{first:%H:%M} {later[0].title}", "{arrival:%H:%M}(으)로 늦어져", "{start:%H:%M} 일정")
+    bare = []
+    for module in (itinerary_changes, replan):
+        for line in Path(module.__file__).read_text(encoding="utf-8").splitlines():
+            if re.search(r"\{(?:\w+\.)?(?:starts_at|ends_at|starts?|ends?|arrival|moment|first)(?:\[\d+\])?:%", line) and "seoul(" not in line \
+                    and not any(fragment in line for fragment in allowed):
+                bare.append(f"{Path(module.__file__).name}: {line.strip()[:100]}")
+    assert bare == [], f"서울 변환 없이 시각을 서식에 넣는 줄: {bare}"
