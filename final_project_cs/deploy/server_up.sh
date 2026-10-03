@@ -5,6 +5,7 @@
 set -eu
 cd "$(dirname "$0")"
 [ -f .env ] || { echo "★.env 가 없다 — deploy/README.md 의 「서버 .env」를 먼저 만든다"; exit 1; }
+[ -f .env.apikeys ] || { echo "★.env.apikeys 가 없다 — make_server_env.py 가 .env 와 함께 만든다(비어 있어도 파일은 있어야 한다)"; exit 1; }
 
 docker compose build
 docker compose up -d tripilot-db
