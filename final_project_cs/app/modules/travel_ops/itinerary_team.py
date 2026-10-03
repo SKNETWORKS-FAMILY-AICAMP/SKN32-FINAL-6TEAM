@@ -64,6 +64,10 @@ class Consent:
     report: dict[str, Any]
 
 
+#: 문장이 **계산 결과에 따라** 달라서 `NoChange.detail["text"]` 로 내려오는 답
+TEXT_ANSWERS = frozenset({"knock_on"})
+
+
 class ItineraryWork:
     """`TravelTeamBase` 를 상속한 Team 에 섞는다. `manifest.team_id` 로 자기 capability 를 안다."""
 
@@ -294,6 +298,11 @@ class ItineraryWork:
             if plan.status in ANSWERS:
                 return self._result(task, outcome="completed", confidence=0.9, evidence=evidence,
                                     answer=ANSWERS[plan.status], next_action=NextAction.RESPOND,
+                                    decisions=[{"itinerary": plan.status, **self._plain(plan.detail)}])
+            if plan.status in TEXT_ANSWERS and plan.detail.get("text"):
+                # ★`[2026-10-03 L2]` 문장이 계산 결과에 따라 달라지는 답(어느 뒤 일정이 왜 걸리는지) — 일정은 안 바꿨다
+                return self._result(task, outcome="completed", confidence=0.9, evidence=evidence,
+                                    answer=str(plan.detail["text"]), next_action=NextAction.RESPOND,
                                     decisions=[{"itinerary": plan.status, **self._plain(plan.detail)}])
             return self._escalate(task, f"itinerary_{plan.status}", evidence,
                                   warnings=[f"일정을 바꾸지 못했다: {plan.status}"])

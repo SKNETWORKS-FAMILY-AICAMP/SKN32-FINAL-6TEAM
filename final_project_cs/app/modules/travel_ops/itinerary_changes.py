@@ -628,6 +628,14 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
     cause = with_request({"category": "customer_report", "type": "delay", "minutes": minutes,
                           "message": message, "evidence": "고객 신고"}, request_id)
     if fits is True:
+        # ★`[2026-10-03 체크리스트 L2]` 이 식사가 괜찮아도 **뒤 일정**이 밀려 겹치거나 문 닫는 시각에 걸릴 수 있다 — 전에는 식사 하나만 보고 「그대로 괜찮아요」로 끝났다.
+        #   일정은 바꾸지 않고 무엇이 걸리는지만 알린다(`itinerary_delay`)
+        from .itinerary_delay import delay_knock_on, knock_on_text
+
+        knocks = delay_knock_on(items, meal, minutes)
+        if knocks:
+            return NoChange("knock_on", {"arrival": arrival.isoformat(), "text": knock_on_text(meal, minutes, knocks),
+                                         "knocked": [knock.sentence() for knock in knocks]})
         return NoChange("still_fits", {"arrival": arrival.isoformat()})
     following = next((i for i in items if i.seq > meal.seq), None)
     pool = ledger_pool(ledger, meal=meal, starts_at=arrival,
