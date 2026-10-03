@@ -91,6 +91,8 @@ const DEFAULTS = {
   webhookTest: "ok",
   // why the candidates list is short or empty (`notes` of `GET …/candidates`, server 8b0d4c88): [] | ["booked_needs_name"] (no candidates) | ["no_same_kind"] …
   candidateNotes: [],
+  // the whole-plan recommendation (`POST …/autofix`): "on" | "none" (it finds nothing to change although something needs a look) | "unknown_from" (what it changes had no known place before: it cannot be put back)
+  autofix: "on",
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
   social: "on",
   //   what the provider's page does when the customer is sent to it: "ok" | "cancelled" | "elsewhere" (the account belongs to another user)
@@ -115,6 +117,8 @@ let confirmed;
 let keys;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
 let recoveryEmail = null;
+/** The name the customer gave the plan (`trip.title` edit); the check says 「내 여행」 until then. */
+let tripTitle = "내 여행";
 /** Social sign-in: the providers linked to the browser's key, and the flows started (id → what the browser said at the start). */
 let socialLinks = [];
 let socialFlows = new Map();
@@ -149,6 +153,7 @@ function reset() {
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
   recoveryEmail = null;
+  tripTitle = "내 여행";
   socialLinks = [];
   socialFlows = new Map();
   webhook = null;
@@ -336,7 +341,7 @@ function intakeView(revision) {
     ? { review: reviewOf(board) } : scenario.review === "off" ? { review: null, review_error: "review_failed" } : {};
   return {
     ...base, ...withReview, status: confirmed ? "confirmed" : "review", stage: "review", stage_label: "확인해 주세요", sources: [source],
-    check: { ready: scenario.intake === "items", items: scenario.intake === "empty_plan" ? 0 : 1, title: "내 여행", filled: [],
+    check: { ready: scenario.intake === "items", items: scenario.intake === "empty_plan" ? 0 : 1, title: tripTitle, filled: [],
       problems: scenario.intake === "blocked" ? [{ code: "no_place", field: "items[0].place", message: "장소를 정하지 못했습니다", source_id: "s1" }] : [],
       plan: scenario.intake !== "empty_plan" ? { requested: false, start_date: null, days: null, party_size: null, preferences: "" }
         : { requested: true, start_date: "2026-10-01", days: 2, party_size: 2, preferences: "조용한 곳" } },
@@ -625,6 +630,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     const { edits = [] } = JSON.parse(raw || "{}");
     if (scenario.editRefusal === "locked" && edits.some((edit) => !edit.field.endsWith(".locked"))) return json(response, 409, { error: { code: "item_locked", message: "고정한 일정이라 바꿀 수 없어요" } }, origin);
     for (const edit of edits) {
+      if (edit.field === "trip.title" && typeof edit.value === "string") tripTitle = edit.value.trim().slice(0, 80) || tripTitle;
       const m = /^items\[(\d+)\]\.(\w+)$/.exec(edit.field);
       if (!m) continue;
       const item = board.items.find((entry) => entry.index === Number(m[1]));
@@ -666,16 +672,19 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/autofix` && request.method === "POST") {
     const before = reviewOf(board).needs.total;
     if (!before) return json(response, 200, { applied: false, revision: board.revision, changed: [], kept: [{ id: "0-0", title: "경복궁 관람", reason: "nothing_to_change" }], view: intakeView(board.revision) }, origin);
+    if (scenario.autofix === "none") return json(response, 200, { applied: false, dry_run: JSON.parse(raw || "{}").dry_run === true, revision: board.revision, changed: [], kept: [{ id: "0-1", title: "올리브영", reason: "no_candidates" }], view: intakeView(board.revision) }, origin);
     // `dry_run: true` (server 224e7a1b): the plan as it WOULD be, nothing saved — the board is put back afterwards, like the server rolls its save point back.
     const dry = JSON.parse(raw || "{}").dry_run === true;
     const saved = dry ? JSON.stringify(board) : null;
     const was = board.revision;
     const old = board.items.find((item) => item.status === "review");
+    // (a test that patches only the answer of the read can show a need the board does not have: nothing to change then)
+    if (!old) return json(response, 200, { applied: false, dry_run: dry, revision: board.revision, changed: [], kept: [{ id: "0-1", title: "올리브영", reason: "no_candidates" }], view: intakeView(board.revision) }, origin);
     board.items = settle(board.items);
     board.moves = board.moves.map((move) => ({ ...move, status: "keep", slack_min: 5, rows: move.rows.map((r) => r.row === "arrival" ? row("arrival", "ok", "5분 여유") : r) }));
     board.revision += 1;
     const answer = { applied: !dry, dry_run: dry, revision: dry ? was : board.revision, changed: [{ id: old.id, source_id: "s1", index: old.index, title: old.title,
-      from: { place: place("올리브영 인사동점", 37.5741, 126.9857, { source: "kakao" }), starts_at: "11:00", ends_at: "12:00" }, to: { place: place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), starts_at: "11:45", ends_at: "12:15" }, reason: "place_and_time" }],
+      from: { place: scenario.autofix === "unknown_from" ? null : place("올리브영 인사동점", 37.5741, 126.9857, { source: "kakao" }), starts_at: "11:00", ends_at: "12:00" }, to: { place: place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), starts_at: "11:45", ends_at: "12:15" }, reason: "place_and_time" }],
       kept: [], view: { ...intakeView(board.revision), ...(dry ? { preview: true } : {}) } };
     if (saved) board = JSON.parse(saved);
     return json(response, 200, answer, origin);

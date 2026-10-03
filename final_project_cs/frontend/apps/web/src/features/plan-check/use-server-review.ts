@@ -50,6 +50,20 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const pickable = useRef(new Map<string, CandidatePlace>());
   /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
   const candidateNotes = useRef(new Map<string, string[]>());
+  /**
+   * ★`[2026-10-03 사용자 지시]` 목록 끝에서 밀기 전에 「전체 자동 추천」 미리 보기는 이미 받아 둔다: the dry run is asked for as soon as the checked plan is
+   * on screen (while the check is still being drawn), so pushing past the end — or the button — shows it at once instead of waiting for the server.
+   * One per revision; a failed one is simply asked again when it is needed.
+   */
+  const warmed = useRef<{ base: number; ask: Promise<Awaited<ReturnType<typeof autofixIntake>>> } | null>(null);
+  const needsLook = (view?.review?.needs?.total ?? 0) > 0;
+  const warmRevision = view?.status === "review" ? view.revision : null;
+  useEffect(() => {
+    if (warmRevision === null || !needsLook || warmed.current?.base === warmRevision) return;
+    const ask = autofixIntake(intakeId, warmRevision, language, true);
+    warmed.current = { base: warmRevision, ask };
+    ask.catch(() => { if (warmed.current?.ask === ask) warmed.current = null; });
+  }, [intakeId, language, warmRevision, needsLook]);
   useEffect(() => { if (view) latest.current = view; });
 
   const actions = useMemo<PlanCheckActions>(() => {
@@ -163,7 +177,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       // Show how 「전체 자동 추천」 would change the plan — saves nothing (the server's dry run), so scrolling or pressing never changes the plan.
       previewRecommendAll: async (): Promise<AutoResult> => {
         const base = plan().revision;
-        const result = await autofixIntake(intakeId, base, language, true).catch(staleThenRethrow);
+        const early = warmed.current?.base === base ? warmed.current.ask : null;
+        const result = await (early ?? autofixIntake(intakeId, base, language, true)).catch(() => autofixIntake(intakeId, base, language, true)).catch(staleThenRethrow);
         setPreviewed(result.view.preview && result.changed.length ? { view: result.view, base } : null);
         return autoResultOf(result, t);
       },
@@ -182,6 +197,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         const item = itemOf(id);
         await save([itemEdit.lock(targetOf(item), locked)]);        // a lock goes alone; it does not touch what 「되돌리기」 holds
       },
+      canUndo: () => undoEdits.current !== null,
       undo: async () => {
         const edits = undoEdits.current;
         if (!edits) throw new LiveError("cannot_undo", t("이번 변경은 되돌릴 수 없어요 · 이전 장소를 알 수 없어서요", "This change cannot be undone — the earlier place is not known"));

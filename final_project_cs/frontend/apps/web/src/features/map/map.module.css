@@ -17,3 +17,24 @@
 /* Fills a box another screen sizes (plan check: under the floating bar, behind the sheet) — no caption, no minimum. */
 .frame.fill { height: 100%; min-height: 0; }
 .frame.fill .live { min-height: 0; }
+
+/*
+ * `[2026-10-03 사용자 지시]` 지도의 확대·축소(+/−) 버튼: 화면의 다른 둥근 단추와 같은 모양으로, 지도 위에 포인터가 있거나(`:hover`) 지도를 막 눌렀을 때(`data-awake`,
+ * 몇 초) 또는 키보드 초점이 그 안에 있을 때만 보인다. 평소에는 지도를 가리지 않는다.
+ */
+.live :global(.leaflet-control-zoom) {
+  display: grid; gap: 8px; margin: 12px 0 0 12px !important; border: 0 !important; background: none !important; box-shadow: none !important;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.live:hover :global(.leaflet-control-zoom), .live:focus-within :global(.leaflet-control-zoom), .live[data-awake] :global(.leaflet-control-zoom) { opacity: 1; pointer-events: auto; }
+.live :global(.leaflet-control-zoom a) {
+  display: grid; place-items: center; width: 40px !important; height: 40px !important; padding: 0; line-height: 1 !important;
+  border: 1px solid var(--color-border) !important; border-radius: 50% !important; background: var(--color-surface) !important; color: var(--color-text) !important;
+  font: 600 22px/1 system-ui, sans-serif !important; text-indent: 0 !important;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 20%, transparent);
+}
+.live :global(.leaflet-control-zoom a:hover) { background: var(--color-soft) !important; }
+.live :global(.leaflet-control-zoom a:focus-visible) { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+.live :global(.leaflet-control-zoom a.leaflet-disabled) { opacity: .4; }
+@media (prefers-reduced-motion: reduce) { .live :global(.leaflet-control-zoom) { transition: none; } }
+

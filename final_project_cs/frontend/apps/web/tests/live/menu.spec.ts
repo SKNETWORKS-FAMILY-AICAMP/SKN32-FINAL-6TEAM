@@ -4,7 +4,7 @@ import { mockServer, registerStubTrip, useKorean } from "./helpers";
 test.beforeEach(async ({ page, request }) => { await mockServer(request).reset(); await useKorean(page); });
 
 test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 순서이고, Tab 순환과 Esc(언어 목록 먼저, 메뉴 다음)·포커스 복귀를 지키며, 링크는 메뉴를 닫는다", async ({ page, request }) => {
-  // The five base rows: with a social sign-in provider set up the menu has a sixth (「계정 연결 · 로그인」, covered by social-login.spec).
+  // The six base rows (profile · trips · language · theme · floating switch · skip-animation switch): with a social sign-in provider set up the menu has a seventh (「계정 연결 · 로그인」, covered by social-login.spec).
   await mockServer(request).scenario({ social: "off" });
   await page.goto("/trips/new");
   const open = page.getByRole("button", { name: "메뉴", exact: true });
@@ -16,24 +16,25 @@ test("메뉴는 프로필·여행 목록·언어·테마·플로팅 스위치 �
   const green = menu.getByRole("button", { name: "그린", exact: true });
   const white = menu.getByRole("button", { name: "화이트", exact: true });
   const floating = menu.getByRole("switch", { name: "플로팅 버튼 사용" });
+  const skip = menu.getByRole("switch", { name: "애니메이션 건너뛰기" });
   const close = menu.getByRole("button", { name: "메뉴 닫기" });
-  const tops = await Promise.all([profile, trips, language, green, floating].map(async (item) => (await item.boundingBox())!.y));
+  const tops = await Promise.all([profile, trips, language, green, floating, skip].map(async (item) => (await item.boundingBox())!.y));
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
-  // One board holds exactly these five rows; the language row is the home card's picker with its caption.
+  // One board holds exactly these six rows; the language row is the home card's picker with its caption.
   expect(await profile.evaluate((link) => {
     const board = link.parentElement!;
-    return board.children.length === 5 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
+    return board.children.length === 6 && Boolean(board.querySelector('a[href="/trips"]')) && Boolean(board.querySelector('[role="switch"]')) && board.textContent!.includes("LANGUAGE · 언어") && board.textContent!.includes("THEME · 테마");
   })).toBe(true);
 
   await expect(profile).toBeFocused();
-  for (const next of [trips, language, green, white, floating, close, profile]) {
+  for (const next of [trips, language, green, white, floating, skip, close, profile]) {
     await page.keyboard.press("Tab");
     await expect(next).toBeFocused();
   }
   await page.keyboard.press("Shift+Tab");
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(floating).toBeFocused();
+  await expect(skip).toBeFocused();
 
   // The language card opens with Enter, its options join the cycle, and Escape closes the list before the menu.
   await language.focus();
@@ -166,3 +167,20 @@ test("테마 카드에서 화이트를 고르면 모든 화면에 바로 적용�
   await expect(html).toHaveAttribute("data-theme", "green");
   expect(await background()).toBe("rgb(243, 245, 243)");
 });
+
+test("「애니메이션 건너뛰기」 스위치는 기본 꺼짐이고, 켜면 이 브라우저가 기억해 새로고침 뒤에도 켜져 있다(시스템의 「동작 줄이기」와 별개)", async ({ page, request }) => {
+  await mockServer(request).scenario({ social: "off" });
+  await page.goto("/trips/new");
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  const skip = page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "애니메이션 건너뛰기" });
+  await expect(skip).not.toBeChecked();
+  await skip.click();
+  await expect(skip).toBeChecked();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("tripilot.web.settings.v1") ?? "{}").skipAnimation)).toBe(true);
+  await page.reload();
+  await page.getByRole("button", { name: "메뉴", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "애니메이션 건너뛰기" })).toBeChecked();
+  await page.getByRole("dialog", { name: "메뉴" }).getByRole("switch", { name: "애니메이션 건너뛰기" }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("tripilot.web.settings.v1") ?? "{}").skipAnimation)).toBe(false);
+});
+

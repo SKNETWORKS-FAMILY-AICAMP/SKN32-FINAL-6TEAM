@@ -74,14 +74,26 @@ async function openReading(page: Page, request: APIRequestContext) {
 
 // ── 읽는 중 ──────────────────────────────────────────────────────────────────
 
-test("「움직임 줄이기」 설정이면 읽는 중에서 결과로 넘어갈 때 다시 그리지 않고 서버 결과를 바로 보인다", async ({ page, request }) => {
+// `[2026-10-03 사용자 결정]` 단계별 재생을 건너뛸지는 시스템의 「동작 줄이기」가 아니라 메뉴의 「애니메이션 건너뛰기」가 정한다.
+test("메뉴의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 결과로 넘어갈 때 다시 그리지 않고 서버 결과를 바로 보인다", async ({ page, request }) => {
+  await mockServer(request).scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
+  await page.addInitScript(() => localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed", skipAnimation: true })));
+  await start(page);
+  await page.goto(`/intakes/${INTAKE}`);
+  // 단계별로 다시 그리면 이 판(장소 셋 · 이동 둘 · 검사 줄)을 다 그리는 데 읽기 5초 + 단계 머무름 + 검사 줄이 들어 7초 넘게 걸린다. 바로 그리면 한두 초 안에 끝난다.
+  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 5_000 });
+});
+
+test("시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다", async ({ page, request }) => {
   await mockServer(request).scenario({ review: "on", board: "rich", intakeEvents: "on", readingPolls: 1 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
-  // 천천히 다시 그리면 이 판(장소 셋 · 이동 둘 · 검사 줄)을 다 그리는 데 7~8초가 든다(`use-reveal.ts` 의 REVEAL_BUDGET_MS = 8초). 바로 그리면 한두 초 안에 끝난다.
-  await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible({ timeout: 5_000 });
+  await page.waitForTimeout(1_500);
+  await expect(page.getByText(SUMMARY, { exact: true })).toHaveCount(0);                  // 1.5초 뒤에도 아직 재생 중이다
+  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 30_000 });   // 재생이 끝나면 결과가 뜬다
 });
 
 test("읽는 중 화면의 뒤로 화살표는 계획 입력 화면으로 돌아간다", async ({ page, request }) => {
@@ -323,3 +335,16 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
   await expect(card(page, "경복궁 관람").getByText("조정")).toBeVisible();
   await expect(page.getByText(/위치 미정 · .*경복궁 관람/)).toBeVisible();
 });
+
+test("지도의 확대·축소(+/−) 버튼은 둥근 단추이고, 지도에 포인터를 올려 두는 동안에만 보인다", async ({ page, request }) => {
+  await openFinished(page, request);
+  const zoom = page.locator(".leaflet-control-zoom");
+  const plus = zoom.getByRole("button", { name: "Zoom in" });
+  await expect(zoom).toHaveCSS("opacity", "0");                                         // 평소에는 지도를 가리지 않는다
+  await page.getByRole("region", { name: "여행 지도" }).hover({ position: { x: 150, y: 150 } });
+  await expect(zoom).toHaveCSS("opacity", "1");
+  await expect(plus).toHaveCSS("border-radius", "50%");                                // 화면의 다른 둥근 단추와 같은 모양
+  await page.mouse.move(5, 5);                                                         // 지도 밖으로
+  await expect(zoom).toHaveCSS("opacity", "0");
+});
+

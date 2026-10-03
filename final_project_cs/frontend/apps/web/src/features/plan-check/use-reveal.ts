@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSettings } from "@/lib/settings";
 import { nextStep, STAGES, type CheckRow, type PlanCheckView, type Verdict } from "./model";
 
 /** The longest pause between two drawn changes — slow enough to follow a small plan. */
@@ -86,20 +87,15 @@ export function revealPause(waiting: number, max = REVEAL_MS): number {
   return Math.min(max, Math.max(REVEAL_MIN_MS, Math.round(REVEAL_BUDGET_MS / Math.max(1, waiting))));
 }
 
-const QUERY = "(prefers-reduced-motion: reduce)";
-function subscribe(onChange: () => void) {
-  const media = matchMedia(QUERY);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
-}
-
 /**
  * The snapshot to draw, and whether it has caught up with `target`. The first snapshot is drawn as it is (a reload or a
  * late open shows where things stand, without replaying); every later one is reached one change at a time (`nextStep`).
- * With reduced motion it is drawn at once.
+ * With the menu's 「애니메이션 건너뛰기」 on it is drawn at once.
  */
 export function useReveal(target: PlanCheckView, pause = REVEAL_MS): { view: PlanCheckView; settled: boolean } {
-  const reduced = useSyncExternalStore(subscribe, () => matchMedia(QUERY).matches, () => false);
+  // ★`[2026-10-03 사용자 결정]` Skipping is the customer's own choice in the menu (「애니메이션 건너뛰기」), not the system's 「동작 줄이기」: the steps are
+  //   information (how far the check is), and movement the system asked to reduce is already off (`globals.css` ends every transition and animation).
+  const { skipAnimation: reduced } = useSettings();
   const [shown, setShown] = useState(target);
   // The most that has been waiting since the screen last caught up: the pace is set by that, not by what is left.
   const peak = useRef(0);

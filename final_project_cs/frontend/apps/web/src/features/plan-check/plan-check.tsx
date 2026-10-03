@@ -60,7 +60,7 @@ export interface PlanCheckActions {
   /** Take one stop out. */
   remove?: (id: string) => Promise<void>;
   /** Answer a trip-wide detail. */
-  editTrip?: (field: "first_day" | "party_size", value: string | number) => Promise<void>;
+  editTrip?: (field: "first_day" | "party_size" | "title", value: string | number) => Promise<void>;
   /** The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). */
   candidates?: (id: string) => Promise<PlanCandidate[]>;
   /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
@@ -82,6 +82,8 @@ export interface PlanCheckActions {
   lock?: (id: string, locked: boolean) => Promise<void>;
   /** Put back what the last change, delete or recommendation changed (「되돌리기」). */
   undo?: () => Promise<void>;
+  /** Whether the last change can be put back (a change whose earlier place is not known cannot) — the screen offers 「되돌리기」 only when it can. */
+  canUndo?: () => boolean;
   /** Check the whole plan again without changing it (「재검증」); the view says which stop it is at (`rechecking`). */
   recheck?: () => Promise<void>;
 }
@@ -163,6 +165,37 @@ function HeaderProgress({ view }: { view: PlanCheckView }) {
 export function serverProgressText(at: ServerProgress, t: Translate): string {
   const what = at.phase === "places" ? t("장소 확인", "place check") : at.phase === "hours" ? t("운영시간 확인", "hours check") : t("이동 확인", "route check");
   return `${at.done}/${at.total} · ${at.title ? `${at.title} ` : ""}${what}${t(" 중", " in progress")}`;
+}
+
+/**
+ * The plan's name in the header: pressed, it becomes a field (Enter or leaving it saves, Esc keeps the name). Without a way to save it is plain text.
+ */
+function TripTitle({ title, onSave }: { title: string; onSave?: (value: string) => Promise<void> }) {
+  const t = useT();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const input = useRef<HTMLInputElement>(null);
+  const cancelled = useRef(false);
+  useEffect(() => { if (editing) { cancelled.current = false; input.current?.select(); } }, [editing]);
+  if (!onSave) return <h1 className={styles.headTitle}>{title}</h1>;
+  function commit() {
+    if (cancelled.current) return;
+    const next = draft.trim();
+    setEditing(false);
+    if (next && next !== title) void onSave?.(next);
+  }
+  if (editing) {
+    return <form className={styles.titleForm} onSubmit={(event) => { event.preventDefault(); commit(); }}>
+      <input ref={input} className={styles.titleInput} value={draft} maxLength={80} aria-label={t("계획 이름", "Plan name")} autoComplete="off" enterKeyHint="done"
+        onChange={(event) => setDraft(event.target.value)} onBlur={commit}
+        onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancelled.current = true; setEditing(false); } }} />
+    </form>;
+  }
+  return <h1 className={styles.headTitle}>
+    <button type="button" className={styles.titleButton} onClick={() => { setDraft(title); setEditing(true); }} aria-label={t(`계획 이름 바꾸기 · 지금 이름은 ${title}`, `Rename the plan · now ${title}`)}>
+      <span>{title}</span><Pencil size={13} strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  </h1>;
 }
 
 /** 한국관광공사 이용조건 — 관광정보를 화면에 올리면 출처와 저작권 정책 링크를 같이 준다(루트 사실표 「출처 표시 유지」). 옛 목록 화면에 있던 줄을 새 화면으로 옮겼다. */
@@ -248,6 +281,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   // The plan with 「전체 자동 추천」 applied, kept as the second page of the list until something else changes the plan.
   // `preview`: the plan as 「전체 자동 추천」 WOULD make it, nothing saved yet (「적용하기」 saves it, 「그대로 두기」 lets go); otherwise it was applied.
   const [recommended, setRecommended] = useState<{ count: number; was: Record<string, string>; preview: boolean } | null>(null);
+  // `[2026-10-03 사용자]` 머리의 「장소 1곳 · 이동 1구간 확인 필요」를 누르면 확인이 필요한 곳만 모아 보인다(다시 누르거나 「전체 보기」로 돌아온다).
+  const [onlyNeeds, setOnlyNeeds] = useState(false);
   const [turn, setTurn] = useState(0);
   useEffect(() => {
     if (!toast) return;
@@ -340,6 +375,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     finally { setWorking(false); }
   }
   const undoable = Boolean(actions.undo);
+  /** ★`[2026-10-03 사용자 지적]` 「되돌리기」는 되돌릴 수 있을 때만 단다 (이전 장소를 모르면 누른 뒤에야 「되돌릴 수 없어요」라고 하던 것). */
+  const undoNow = () => Boolean(actions.undo) && (actions.canUndo?.() ?? true);
 
   function replace(item: PlanItem, choice: PlaceChoice) {
     const name = "candidate" in choice ? choice.candidate.name : choice.name;
@@ -348,7 +385,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
       setChange(null); setQuery(""); setSearch(null); setDetails(false);
       setOpen(item.id); refocus(item.id, "edit");
       return { text: t(`${eul(item.title)} ${ro(name)} 바꿨어요`, `Changed ${item.title} to ${name}`),
-        sub: t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side"), undo: undoable };
+        sub: t("바뀐 장소와 앞뒤 이동을 다시 확인해요", "Checking the new place and the moves either side"), undo: undoNow() };
     });
   }
   function recommend(item: PlanItem) {
@@ -356,7 +393,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
       await actions.autoRecommend!(item.id);
       setOpen(item.id);
       return { text: item.suggestion ? t(`${eul(item.title)} ${ro(item.suggestion)} 바꿨어요`, `Changed ${item.title} to ${item.suggestion}`) : t("대체 후보 1순위로 바꿨어요", "Changed to the first alternative"),
-        sub: t("대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요", "First alternative · checking the new place and the moves either side"), undo: undoable };
+        sub: t("대체 후보 1순위 · 바뀐 장소와 앞뒤 이동을 다시 확인해요", "First alternative · checking the new place and the moves either side"), undo: undoNow() };
     });
   }
   function lock(item: PlanItem) {
@@ -371,7 +408,37 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   const changesLine = (outcome: AutoResult) => outcome.changes.slice(0, 2).join(" · ") + (outcome.changes.length > 2 ? t(` 외 ${outcome.changes.length - 2}곳`, ` and ${outcome.changes.length - 2} more`) : "")
     + (outcome.kept ? t(` · ${outcome.kept}곳은 그대로`, ` · ${outcome.kept} kept`) : "");
   const wasOf = (outcome: AutoResult) => Object.fromEntries((outcome.changed ?? []).map((entry) => [entry.id, entry.from]));
-  const noAlternative = (outcome: AutoResult) => ({ text: t("바꿀 수 있는 대체 일정이 없어요", "No alternative fits"), sub: outcome.kept ? t("고정한 일정이거나 시간이 맞는 후보가 없어요", "Locked, or no alternative fits the time") : undefined });
+  /**
+   * ★`[2026-10-03 사용자 지시]` 자동으로 바꿀 곳이 없으면 이유만 말하고 끝내지 않는다 — 사용자가 직접 고쳐야 하는 첫 곳(확인 필요)을 열고 그 자리로 옮겨 가
+   * 반짝여 보인다. 고칠 곳이 없는데 못 바꾼 것이면 이유만 말한다.
+   */
+  function showFirstNeed(): boolean {
+    // What the customer edits is a stop, so a stop that needs a look comes first; a leg only when no stop does.
+    const entries = view.days.flatMap((day) => timeline(view, day.day));
+    const first = entries.find((entry) => entry.type === "item" && entry.item.verdict === "review") ?? entries.find((entry) => entry.type === "move" && entry.move.verdict === "review");
+    if (!first) return false;
+    const id = first.type === "item" ? first.item.id : first.move.id;
+    if (first.type === "item") { setSelected(first.item.id); setChosenDay(first.item.day); }
+    setOnlyNeeds(false);
+    setOpen(id);
+    if (sheet === "peek") setSheet("half");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const row = bodyBox.current?.querySelector<HTMLElement>(`[data-entry-id="${id}"]`);
+      if (!row) return;
+      row.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      row.dataset.attention = "true";
+      setTimeout(() => { delete row.dataset.attention; }, 2600);
+    }));
+    return true;
+  }
+  const noAlternative = (outcome: AutoResult) => {
+    const moved = showFirstNeed();
+    return {
+      text: t("바꿀 수 있는 대체 일정이 없어요", "No alternative fits"),
+      sub: moved ? t("직접 고쳐야 하는 곳으로 옮겼어요 · 이유를 읽고 수정해 주세요", "Moved to what needs your fix · read why and edit it")
+        : outcome.kept ? t("고정한 일정이거나 시간이 맞는 후보가 없어요", "Locked, or no alternative fits the time") : undefined,
+    };
+  };
   /**
    * ★`[2026-10-03]` 「전체 자동 추천」 (the button, and one more push past the end of the list) only SHOWS the plan as it would be: the dry run of the server saves nothing.
    * It is saved by 「적용하기」 (`applyRecommended`); 「그대로 두기」 or a push back at the top lets it go.
@@ -393,7 +460,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
       if (!outcome.changes.length) { setRecommended(null); setTurn((count) => count + 1); return noAlternative(outcome); }
       setRecommended({ count: outcome.changes.length, was: wasOf(outcome), preview: false });
       return { text: t(`확인이 필요한 일정 ${outcome.changes.length}곳을 검증된 대체 일정으로 바꿔 저장했어요`, `Changed and saved ${outcome.changes.length} stop${outcome.changes.length > 1 ? "s" : ""} to checked alternatives`),
-        sub: changesLine(outcome), undo: undoable };
+        sub: changesLine(outcome), undo: undoNow() };
     }, true);
   }
   function discardPreview() {
@@ -401,6 +468,13 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     setRecommended(null);
     setTurn((count) => count + 1);
     setToast({ text: t("그대로 두었어요", "Left as it was"), sub: t("아직 아무것도 저장하지 않았어요", "Nothing was saved") });
+  }
+  /** `[2026-10-03 사용자 지시]` The plan's own name (the header says 「내 여행」 until the customer names it): saved as the server's `trip.title`. */
+  function renameTrip(value: string) {
+    return run(async () => {
+      await actions.editTrip!("title", value);
+      return { text: t("계획 이름을 바꿨어요", "Renamed the plan"), sub: value };
+    });
   }
   function recheck() {
     void run(async () => {
@@ -418,6 +492,9 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   const sheetHeight = () => sheetBox.current?.getBoundingClientRect().height ?? 0;
   function grabSheet(event: PointerEvent<HTMLElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    // ★A press on a button or field inside the head (the count 「확인 필요」, …) is that control's: capturing the pointer here sent its click to the head.
+    const control = (event.target as HTMLElement).closest("button, a, input, select, textarea");
+    if (control && control !== event.currentTarget) return;
     justDragged.current = false;
     grab.current = { y: event.clientY, height: sheetHeight(), moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -453,10 +530,13 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
   const canRecommend = Boolean(actions.previewRecommendAll) && done && !changing && !registered && !recommended && needs(view).total > 0;
   const pull = usePullPastEnd(bodyBox, {
     onEnd: canRecommend && !frozen ? recommendAll : undefined,
-    onStart: done && !changing && recommended && !frozen ? (recommended.preview ? discardPreview : actions.undo ? undo : undefined) : undefined,
+    onStart: done && !changing && recommended && !frozen ? (recommended.preview ? discardPreview : undoNow() ? undo : undefined) : undefined,
   });
   // `[2026-10-03 사용자]` While the check is drawn row by row the list follows the newest row (it stayed at the top while rows were added below).
   const follow = useFollowScroll(bodyBox, newestRow, !done && !changing, view);
+  // The filter ends by itself when nothing needs a look any more.
+  const filtering = onlyNeeds && done && needs(view).total > 0;
+  const visible = (entry: ReturnType<typeof timeline>[number]) => !filtering || (entry.type === "item" ? entry.item.verdict : entry.move.verdict) === "review";
 
   // The change screen's map: the day's other stops greyed, the stop being changed, and its alternatives A, B, C.
   const cards = change ? change.list : [];
@@ -496,7 +576,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     {!changing && headerSlot && createPortal(
       <div className={styles.headInfo}>
         {done && view.title
-          ? <h1 className={styles.headTitle}>{view.title}</h1>
+          ? <TripTitle title={view.title} onSave={actions.editTrip && !frozen && !registered ? renameTrip : undefined} />
           : <><h1 className="sr-only">{t("계획을 확인하고 있어요", "Checking your plan")}</h1><HeaderProgress view={view} /></>}
       </div>, headerSlot)}
     <section ref={sheetBox} className={styles.sheet} aria-labelledby={changing ? "plan-change-title" : "plan-check-sheet-title"}>
@@ -524,7 +604,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
         : <>
           <header className={styles.sheetHead} onPointerDown={grabSheet} onPointerMove={dragSheet} onPointerUp={dropSheet} onPointerCancel={dropSheet}>
             <h2 id="plan-check-sheet-title" className={styles.sheetTitle}>{registered ? t("등록 완료", "Registered") : done ? t("계획 확인", "Plan check") : t("장소·운영시간 확인", "Places & hours")}</h2>
-            <p className={styles.count}>{done ? headStatus(view, registered, t) : countText(view, t)}</p>
+            <p className={styles.count}>{done ? headStatus(view, registered, t, { on: filtering, toggle: () => setOnlyNeeds((current) => !current) }) : countText(view, t)}</p>
           </header>
           <div ref={bodyBox} className={styles.sheetBody} {...follow.handlers}>
             {done && recommended?.preview && <div className={styles.recommended} role="status" data-preview>
@@ -537,17 +617,20 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
             </div>}
             {done && recommended && !recommended.preview && <div className={styles.recommended} role="status">
               <span className={styles.recommendedText}><b>{t("권장 수정안을 반영해 저장했어요", "The recommended fixes are saved")}</b>
-                <small>{t(`${recommended.count}곳이 바뀌었어요 · 위로 한 번 더 올리면 원래대로 돌아가요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed · push up once more to go back`)}</small></span>
-              {actions.undo && <button type="button" className={styles.recommendedUndo} aria-disabled={frozen ? true : undefined} onClick={() => frozen ? explain(frozen) : undo()}><Undo2 size={14} strokeWidth={1.8} aria-hidden="true" />{t("원래대로", "Undo")}</button>}
+                <small>{undoNow()
+                  ? t(`${recommended.count}곳이 바뀌었어요 · 위로 한 번 더 올리면 원래대로 돌아가요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed · push up once more to go back`)
+                  : t(`${recommended.count}곳이 바뀌었어요 · 이전 장소를 알 수 없는 곳이 있어 되돌릴 수는 없어요. 고칠 곳은 카드의 수정으로 바꿀 수 있어요`, `${recommended.count} stop${recommended.count > 1 ? "s" : ""} changed · it cannot be undone because an earlier place is not known; change a stop with its Edit`)}</small></span>
+              {undoNow() && <button type="button" className={styles.recommendedUndo} aria-disabled={frozen ? true : undefined} onClick={() => frozen ? explain(frozen) : undo()}><Undo2 size={14} strokeWidth={1.8} aria-hidden="true" />{t("원래대로", "Undo")}</button>}
             </div>}
             {done && tripIssues.length > 0 && <TripIssues issues={tripIssues} onSave={actions.editTrip} />}
+            {filtering && <p className={styles.filterNote} role="status">{t("확인이 필요한 곳만 보는 중이에요", "Showing only what needs a look")}<button type="button" onClick={() => setOnlyNeeds(false)}>{t("전체 보기", "Show all")}</button></p>}
             <div key={turn} className={styles.page} data-turned={turn > 0 || undefined}>
-            {days.map((day) =>
+            {days.filter((day) => !filtering || timeline(view, day.day).some(visible)).map((day) =>
               <section key={day.day} aria-labelledby={`plan-day-${day.day}`}>
                 <h3 id={`plan-day-${day.day}`} className={styles.day}>{done
                   ? <button type="button" className={styles.dayButton} aria-pressed={mapDay === day.day} onClick={() => showDay(day.day)}>{dayHeading(day, language, t)}</button>
                   : dayHeading(day, language, t)}</h3>
-                <ol className={styles.timeline}>{timeline(view, day.day).map((entry) => entry.type === "item"
+                <ol className={styles.timeline}>{timeline(view, day.day).filter(visible).map((entry) => entry.type === "item"
                   ? <ItemRow key={entry.item.id} item={entry.item} done={done} open={!done || open === entry.item.id || entry.item.verdict === null}
                       selected={done && selected === entry.item.id} rechecking={view.rechecking === entry.item.id} frozen={frozen} actions={actions} explain={explain}
                       onToggle={() => pick(entry.item.id, "list")} onChange={() => void startChange(entry.item)} onDelete={() => setDeleting(entry.item.id)}
@@ -555,6 +638,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
                   : <MoveRow key={entry.move.id} move={entry.move} done={done} open={done && open === entry.move.id} onToggle={() => setOpen((current) => current === entry.move.id ? null : entry.move.id)} />)}</ol>
               </section>)}
             </div>
+            {/* ★`[2026-10-03 사용자]` 출처 줄이 「계속 내리면 …」 안내 위에 있어야, 목록 맨 끝에 그 안내가 보여 「내리면 다음이 나온다」가 읽힌다. */}
+            {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>}
             {canRecommend && <Act className={styles.pullHint} why={frozen} explain={explain} onPress={recommendAll} data-edge={pull.edge ?? undefined}
               style={{ "--pull": pull.progress } as CSSProperties}>
               <ChevronsDown size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -562,7 +647,6 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
               <span className={styles.pullBar} aria-hidden="true"><span /></span>
             </Act>}
             {done && !view.items.length && <p className={styles.empty}>{t("남은 일정이 없어요", "No stops left")}</p>}
-            {done && view.items.length > 0 && <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>}
             {!done && !follow.following && <button type="button" className={styles.followPill} onClick={follow.resume}><ChevronsDown size={14} strokeWidth={1.8} aria-hidden="true" />{t("확인 중인 곳으로", "Follow the check")}</button>}
           </div>
           {done && <ResultFooter view={view} registration={registration} frozen={frozen} explain={explain}
@@ -578,7 +662,7 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
         setDeleting(null);
         if (selected === deletingItem.id) setSelected(null);
         setToast({ text: t(`${deletingItem.title} 일정을 삭제했어요`, `Deleted ${deletingItem.title}`),
-          sub: view.moves.some((move) => move.fromId === deletingItem.id || move.toId === deletingItem.id) ? t("앞뒤 이동을 다시 계산했어요", "The moves either side were worked out again") : undefined, undo: undoable });
+          sub: view.moves.some((move) => move.fromId === deletingItem.id || move.toId === deletingItem.id) ? t("앞뒤 이동을 다시 계산했어요", "The moves either side were worked out again") : undefined, undo: undoNow() });
       }} />}
     <div className={styles.toast} role="status" data-shown={toast ? true : undefined}>
       {toast && <><span className={styles.toastText}>{toast.text}{toast.sub && <small>{toast.sub}</small>}</span>
@@ -618,7 +702,7 @@ function ItemRow({ item, done, open, selected, rechecking, frozen, actions, expl
   const note = item.locked ? lockedWhy
     : !actions.autoRecommend ? t("자동 추천은 준비 중이에요 · 수정에서 장소를 바꿀 수 있어요", "Recommending is coming · change the place in Edit")
       : item.suggestion ? t(`자동 추천은 1순위 ${ro(item.suggestion)} 바로 바꿔요`, `Recommend changes it to the first alternative, ${item.suggestion}`) : null;
-  return <li className={styles.entry} data-type="item" data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined}>
+  return <li className={styles.entry} data-type="item" data-entry-id={item.id} data-verdict={item.verdict ?? "checking"} data-selected={selected || undefined}>
     <span className={styles.time}>{item.startsAt || "–"}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
     <article id={`plan-card-${item.id}`} className={styles.card} data-locked={item.locked || undefined} aria-labelledby={`plan-item-${item.id}`} aria-busy={checking}>
@@ -659,7 +743,7 @@ function MoveRow({ move, done, open, onToggle }: { move: PlanMove; done: boolean
   const t = useT();
   const checking = move.verdict === null;
   const line = checking ? null : <><span className={styles.mode}>{move.mode}</span><span className={styles.moveText}>{move.summary}</span><VerdictMark verdict={move.verdict!} /></>;
-  return <li className={styles.entry} data-type="move" data-verdict={move.verdict ?? "checking"}>
+  return <li className={styles.entry} data-type="move" data-entry-id={move.id} data-verdict={move.verdict ?? "checking"}>
     <span className={styles.time}>{!checking && <><b>{move.departAt}</b><small>{t("출발", "leave")}</small></>}</span>
     <span className={styles.rail} aria-hidden="true"><span className={styles.dot} /></span>
     <div className={styles.move} data-open={open || undefined}>{checking
@@ -682,13 +766,19 @@ function countText(view: PlanCheckView, t: Translate): string {
 }
 
 /** The done sheet's head (mockup updateHead): being checked again, registered, what needs a look, changed, or nothing to fix. */
-function headStatus(view: PlanCheckView, registered: boolean, t: Translate): ReactNode {
+function headStatus(view: PlanCheckView, registered: boolean, t: Translate, filter?: { on: boolean; toggle: () => void }): ReactNode {
   if (registered) return <Status result="ok">{t("여행을 등록했어요", "The trip is registered")}</Status>;
   if (view.rechecking) {
     const order = view.days.flatMap((day) => view.items.filter((item) => item.day === day.day).map((item) => item.id));
     return <span className={styles.status}><span className={styles.spinner} aria-hidden="true" />{t(`재검증 중 · ${order.indexOf(view.rechecking) + 1}/${order.length}`, `Checking again · ${order.indexOf(view.rechecking) + 1}/${order.length}`)}</span>;
   }
-  if (needs(view).total) return <Status result="warn">{countText(view, t)}</Status>;
+  if (needs(view).total) {
+    const text = <Status result="warn">{countText(view, t)}</Status>;
+    return filter
+      ? <button type="button" className={styles.countButton} aria-pressed={filter.on} onClick={filter.toggle}
+        title={filter.on ? t("눌러서 전체 일정 보기", "Press to show every stop") : t("눌러서 확인이 필요한 곳만 모아 보기", "Press to show only what needs a look")}>{text}</button>
+      : text;
+  }
   if (view.dirty) return <Status result="filled">{t("고친 곳이 있어요 · 재검증해 주세요", "Changed · check again")}</Status>;
   return <Status result="ok">{t("고칠 곳이 없어요", "Nothing to fix")}</Status>;
 }
