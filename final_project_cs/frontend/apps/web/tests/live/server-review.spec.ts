@@ -90,6 +90,16 @@ test("삭제 → 되돌리기: 삭제는 서버에 알리고, 되돌리기는 �
   expect(edits[1].body).toEqual({ revision: 2, edits: [{ source_id: "s1", field: "items[2].removed", value: false }] });
 });
 
+test("수정 화면: 예약한 일정은 서버가 후보를 주지 않고(booked_needs_name) 화면은 그 이유와 이름을 쓰라는 안내를 말한다 — 일반 「다른 후보가 없어요」가 아니다", async ({ page, request }) => {
+  const server = await openFinished(page, request);
+  await server.scenario({ candidateNotes: ["booked_needs_name"] });
+  await page.getByRole("button", { name: "올리브영 수정" }).click();
+  await expect(page.getByText("올리브영 바꾸기")).toBeVisible();
+  await expect(page.getByText("예약하신 곳이라 다른 후보를 권하지 않아요")).toBeVisible();
+  await expect(page.getByText("다른 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "이 장소로 바꾸기" })).toHaveCount(0);         // nothing to change to until the name is typed above
+});
+
 test("수정 화면: 서버의 대체 후보가 순위·거리와 함께 나오고, 바꾸면 좌표까지 서버로 가며, 되돌리기는 이전 장소를 다시 보낸다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "올리브영 수정" }).click();

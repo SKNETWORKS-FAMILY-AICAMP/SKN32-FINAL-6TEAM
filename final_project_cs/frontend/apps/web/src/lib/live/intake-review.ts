@@ -19,7 +19,12 @@ export interface CheckLine<Row extends string = string> { row: Row; result: Chec
 /** keep · adjusted (a rule filled it, or the customer changed it) · review (needs the customer). */
 export type ItemStatus = "keep" | "adjusted" | "review";
 /** `picked_nearest` — several shops share the name, the closest one was picked for now (change it from the candidates). */
-export type PlaceState = "found" | "picked_nearest" | "customer" | "none" | "unresolved" | "searching";
+/**
+ * `needs_choice` · `needs_name` (server 8b0d4c88, 2026-10-03): a line with no shop name, only a kind and an area ("성수 식당"). The place is
+ * not looked up by name: `needs_choice` — pick one of the candidates around the area; `needs_name` — the same line with a booking, so
+ * no candidates are offered and the booked place's name is asked.
+ */
+export type PlaceState = "found" | "picked_nearest" | "customer" | "none" | "unresolved" | "searching" | "needs_choice" | "needs_name";
 
 export interface ReviewPlace {
   name: string;
@@ -50,6 +55,8 @@ export interface ReviewItem {
   can_lock: boolean;
   place_state: PlaceState;
   place: ReviewPlace | null;
+  /** The plan says it is booked (`true`), says it is not (`false`), or says nothing (`null`; also an older server). */
+  booked?: boolean | null;
   candidates_hint: number | null;
   rows?: CheckLine<ItemRow>[];
 }
@@ -168,7 +175,8 @@ export interface AutofixChange {
   reason: "place" | "time" | "place_and_time";
 }
 
-export type AutofixKeptReason = "locked" | "no_time" | "no_candidates" | "no_fitting_place" | "no_fitting_time" | "nothing_to_change";
+/** `booked` (server 8b0d4c88): a stop the plan says is booked is changed in neither place nor time. */
+export type AutofixKeptReason = "locked" | "booked" | "no_time" | "no_candidates" | "no_fitting_place" | "no_fitting_time" | "nothing_to_change";
 
 export interface AutofixResult {
   applied: boolean;

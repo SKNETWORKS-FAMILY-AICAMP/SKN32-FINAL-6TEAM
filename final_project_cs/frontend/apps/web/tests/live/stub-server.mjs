@@ -89,6 +89,8 @@ const DEFAULTS = {
   intakeProgress: "on",
   // the Discord test message: "ok" | "invalid" (Discord refused the webhook) | "too_soon" (429: pressed again within 20 s)
   webhookTest: "ok",
+  // why the candidates list is short or empty (`notes` of `GET …/candidates`, server 8b0d4c88): [] | ["booked_needs_name"] (no candidates) | ["no_same_kind"] …
+  candidateNotes: [],
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
   social: "on",
   //   what the provider's page does when the customer is sent to it: "ok" | "cancelled" | "elsewhere" (the account belongs to another user)
@@ -648,7 +650,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/candidates` && request.method === "GET") {
     const index = Number(url.searchParams.get("index"));
     const item = board.items.find((entry) => entry.index === index) ?? board.items[0];
-    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: CANDIDATES, notes: [] }, origin);
+    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : CANDIDATES, notes: scenario.candidateNotes }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/place-search` && request.method === "GET") {
     const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");

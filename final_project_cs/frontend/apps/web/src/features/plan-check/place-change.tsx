@@ -16,6 +16,22 @@ export interface ChangeSession {
   index: number;
   state: "loading" | "ready" | "failed";
   message?: string;
+  /** The server's reasons for a short or empty list (`candidates` call `notes`). */
+  notes?: string[];
+}
+
+/**
+ * `[2026-10-03]` Why there is nothing to swipe to, in the server's own terms (`notes`, server 8b0d4c88): a booked stop is not offered other places
+ * (the booked place's name is asked), a stop with no same-kind place gets none of another kind, and an area with nothing of that kind says so.
+ * Null for a note it does not know — the general line is then shown, never a made-up reason.
+ */
+export function candidateNoteText(notes: readonly string[] | undefined, t: Translate): string | null {
+  const has = (note: string) => notes?.includes(note);
+  if (has("booked_needs_name")) return t("예약하신 곳이라 다른 후보를 권하지 않아요 · 위 검색창에 예약한 곳의 이름을 쓰면 바꿔요", "This is booked, so no other places are offered · type the booked place's name above to set it");
+  if (has("no_candidates_in_area")) return t("글에 적힌 지역 둘레에 같은 종류의 장소가 없어요 · 위 검색창에서 찾아 보세요", "Nothing of the same kind around the area you wrote · search above");
+  if (has("no_same_kind")) return t("같은 종류의 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요", "No place of the same kind · search above to change it");
+  if (has("no_reference_point")) return t("기준이 될 위치를 정하지 못해 후보를 찾지 못했어요 · 위 검색창에서 찾아 보세요", "No point to measure from, so no candidates · search above");
+  return null;
 }
 
 /** What the top bar's search found. `unsupported` — no search on this server yet (the place can still be changed by name). */
@@ -100,7 +116,7 @@ function CurrentCard({ item, session, candidatesSupported }: { item: PlanItem; s
   const next = others ? t(`옆으로 넘기면 다른 후보 ${others}곳 →`, `Swipe for ${others} other place${others > 1 ? "s" : ""} →`)
     : session.state === "loading" ? t("다른 후보를 찾는 중…", "Finding other places…")
       : session.state === "failed" ? session.message ?? t("다른 후보를 불러오지 못했어요.", "Could not load other places.")
-        : candidatesSupported ? t("다른 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요", "No other places · search above to change it")
+        : candidatesSupported ? candidateNoteText(session.notes, t) ?? t("다른 후보가 없어요 · 위 검색창에서 찾아 바꿀 수 있어요", "No other places · search above to change it")
           : t("대체 후보는 준비 중이에요 · 위 검색창에 장소 이름을 쓰면 바꿀 수 있어요", "Alternatives are coming · type a place name above to change it");
   return <article className={styles.changeCard} data-current aria-labelledby={`plan-change-card-${item.id}`}>
     <div className={styles.changeTop}><span className={styles.chip}>{t("지금 일정", "Now")}</span>{item.verdict && <VerdictPill verdict={item.verdict} />}</div>

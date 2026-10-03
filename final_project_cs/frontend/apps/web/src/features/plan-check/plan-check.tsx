@@ -63,6 +63,8 @@ export interface PlanCheckActions {
   editTrip?: (field: "first_day" | "party_size", value: string | number) => Promise<void>;
   /** The alternatives for one stop, best first (mockup 「대체 후보 A · B · C」). */
   candidates?: (id: string) => Promise<PlanCandidate[]>;
+  /** Why the list for a stop is short or empty (the server's `notes`: `no_same_kind` · `booked_needs_name` · …) — read after `candidates` has answered. */
+  candidateNotes?: (id: string) => string[];
   /** Places matching words, nearest first (the change screen's search bar). */
   search?: (id: string, query: string) => Promise<PlanCandidate[]>;
   /** Put a place in one stop: a candidate or search result, or a name the server looks up. */
@@ -306,7 +308,8 @@ function Checking({ view, actions = {}, registration, tripIssues = [] }: { view:
     if (!actions.candidates) return;
     try {
       const list = await actions.candidates(item.id);
-      setChange((current) => current?.id === item.id ? { ...current, list, state: "ready" } : current);
+      const notes = actions.candidateNotes?.(item.id) ?? [];
+      setChange((current) => current?.id === item.id ? { ...current, list, notes, state: "ready" } : current);
     } catch (error) {
       setChange((current) => current?.id === item.id ? { ...current, state: "failed", message: reason(error) } : current);
     }

@@ -46,6 +46,8 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
   const latest = useRef<ReviewedIntakeView | undefined>(view);
   const undoEdits = useRef<IntakeEdit[] | null>(null);
   const pickable = useRef(new Map<string, CandidatePlace>());
+  /** Why the server's list for a stop is short or empty (`notes` of the candidates call), by stop id — said on the change screen. */
+  const candidateNotes = useRef(new Map<string, string[]>());
   useEffect(() => { if (view) latest.current = view; });
 
   const actions = useMemo<PlanCheckActions>(() => {
@@ -117,6 +119,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
       candidates: async (id) => {
         const item = itemOf(id);
         const found = await getCandidates(intakeId, item, plan().revision, language).catch(staleThenRethrow);
+        candidateNotes.current.set(id, found.notes ?? []);
         // The stop's own photos fill its 「지금 일정」 card.
         if (item.place) void infoOf({ ...item.place, category: null, address: null }, true).then((info) => setInfos((current) => ({ ...current, [id]: info })));
         const cards = await Promise.all(found.candidates.map(async (candidate, at) => {
@@ -127,6 +130,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
         }));
         return cards;
       },
+      candidateNotes: (id) => candidateNotes.current.get(id) ?? [],
       search: async (id, words) => {
         const item = itemOf(id);
         const found = await searchPlaces(intakeId, item, plan().revision, words, language).catch(staleThenRethrow);
@@ -166,7 +170,7 @@ export function useServerReview({ intakeId, view, language, apply, reread }: {
           return `${change.title} → ${place}${time}`;
         });
         return {
-          changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason.startsWith("no_")).length,
+          changes, kept: result.kept.filter((entry) => entry.reason === "locked" || entry.reason === "booked" || entry.reason.startsWith("no_")).length,
           changed: result.changed.map((change) => ({ id: change.id, from: change.from.place?.name ?? t("장소 미정", "no place yet") })),
         };
       },
