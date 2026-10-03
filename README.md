@@ -16,8 +16,8 @@ triPilot은 고객의 자연어 요청을 업무 **Case**로 접수하고, 현�
 | 서유현 | Mobility Team | 실시간 운행 중단·도로 통제 감지, 우회로 탐색, 출발 시각 역산 알고리즘 |
 | 정세환 | Dining Team | 영업시간·브레이크타임 대조, 해외카드 결제 검증, CatchTable·Tripadvisor 연동 |
 | 최상욱 | UI & 검증 (요식 지원) | 동적 여행계획서 웹(`/t/{token}`), 18개 MVP DoD 검증 하네스, 요식업 데이터 정제 |
-| 김지혜 | Activity Team | 관람·체험·쇼핑 성립 검증, 기상청 초단기예보 감시, 다국어 프롬프트 템플릿 |
-| 송채영 | Activity Team | 관람·체험·쇼핑 성립 검증, 기상청 초단기예보 감시, 다국어 프롬프트 템플릿 |
+| 김지혜 | Activity Team | 정리된 형태로 제공, 조건 검증, 확인 요청 + 피드백 수집 |
+| 송채영 | Activity Team | API 연동, 수기 큐레이션, 정보 재확인·업데이트 |
 
 > 공통 역할: 6인 전원 데이터 전처리 참여, 파이프라인 총괄 및 DB 무결성 관리
 
@@ -154,8 +154,8 @@ Team은 허용된 read tool만 사용하고, 외부 시스템에 직접 쓰지 �
 | 외부 연동 | `httpx` 0.28.1 기반 여행 데이터 어댑터, 소스별 rate limit |
 | Graph | PostgreSQL Recursive CTE 기반 `SqlGraphAdapter`(별도 Graph DB 없음) |
 | 운영 화면 | FastAPI server-rendered HTML/CSS/vanilla JavaScript, 별도 `final_project_ui` 개발 콘솔 |
-| 평가 | NumPy 2.2.1, SciPy 1.15.1, scikit-learn 1.6.1 |
-| 품질 | pytest 7.4.4, pytest-asyncio 0.25.2, 계약·단위·통합·아키텍처·e2e 테스트 |
+| 평가 | NumPy 1.26.4, SciPy 1.13.1, scikit-learn 1.5.2 |
+| 품질 | pytest 8.4.2, pytest-asyncio 0.25.2, ruff 0.16.8, 계약·단위·통합·아키텍처·e2e 테스트 |
 | 설정/폼 | PyYAML, python-dotenv, python-multipart |
 
 > `requirements.txt`에 선언된 SQLAlchemy·Alembic·LangGraph·LangChain Core는 현재 제품 소스에서 import·사용되지 않으므로 구현 완료 스택으로 표기하지 않습니다. 실제 도입 시 사용 범위와 문서를 함께 갱신합니다.
@@ -172,6 +172,8 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
+
+`requirements.txt`는 서버·시험/린트·선택 도구·로컬 분류 모델 구획으로 나뉘어 있고, 머리 주석에 설명이 있습니다. 이동 자료 기기 전용 `requirements-mobility.txt`는 numpy 등 판이 서버와 달라 **같은 환경에 깔지 않습니다**(새 가상환경에서 따로).
 
 ### 2. 환경변수
 
@@ -221,21 +223,46 @@ python -m knowledge.ingest
 
 임베딩 모델을 바꾸면 `config/guardrails.yaml`의 차원과 DB의 `vector(1536)` 스키마, 기존 적재 데이터를 함께 검토해야 합니다.
 
-### 4. API 서버
+### 4. API 서버 (포트 8042)
 
-고객/외부 Agent용 릴리스 빌드는 Composer 쓰기 라우터를 포함하지 않습니다.
+사용자 웹(화면)이 기본으로 붙는 주소가 `http://127.0.0.1:8042` 이므로 개발용 서버도 8042번으로 띄웁니다. 1번에서 들어간 `final_project_cs` 폴더에서 실행합니다.
 
 ```powershell
-python -m uvicorn app.presentation.api.app:app --host 127.0.0.1 --port 8041 --reload
+python -m uvicorn app.presentation.api.app:app --host 127.0.0.1 --port 8042 --reload
 ```
 
 확인:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8041/health
+Invoke-RestMethod http://127.0.0.1:8042/health
 ```
 
-관리용 Composer 빌드가 필요한 경우에만 `app.entrypoint:app`을 사용하며, `acop_composer` 패키지와 별도 인증 시크릿이 필요합니다.
+- 이 빌드(`app.presentation.api.app:app`)는 고객·외부 Agent용이며 Composer 쓰기 라우터를 포함하지 않습니다. 관리용 Composer 빌드가 필요한 경우에만 `app.entrypoint:app` 을 쓰며, `acop_composer` 패키지와 별도 인증 시크릿이 필요합니다.
+- 화면이 서버를 부르려면 서버의 `ACOP_WEB_ALLOWED_ORIGINS` 에 화면 주소가 들어 있어야 합니다. 기본값이 `http://127.0.0.1:3100,http://localhost:3100` 이라 아래 5번대로 띄우면 따로 설정할 것이 없습니다.
+- DB 마이그레이션을 새로 적용했으면 떠 있는 서버를 한 번 껐다 켭니다. 옛 코드로 계속 돌면 등록 등이 500으로 실패합니다.
+
+### 5. 사용자 웹(화면, 포트 3100)
+
+Node.js 22와 npm이 필요합니다. 서버(4번)를 먼저 띄운 뒤 **다른 터미널**에서 `final_project_cs` 폴더 기준으로 실행합니다.
+
+```powershell
+cd frontend/apps/web
+npm ci
+Copy-Item .env.example .env.local
+npm run dev
+```
+
+브라우저에서 **`http://127.0.0.1:3100`** 을 엽니다. ★`localhost:3100` 으로 열면 브라우저가 저장 공간을 따로 잡아, 발급받은 사용자 키가 없는 새 사용자로 보입니다.
+
+`.env.local` 에서 먼저 정할 값은 둘입니다.
+
+| 값 | 뜻 |
+|---|---|
+| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다 |
+| `NEXT_PUBLIC_DATA_MODE=demo` | 서버 없이 브라우저 안의 시연 데이터로만 돕니다 |
+| `NEXT_PUBLIC_API_BASE` | live 일 때 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
+
+지도(`NEXT_PUBLIC_MAP_PROVIDER` — `demo`·`naver`·`google`)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
 
 ## API 표면
 

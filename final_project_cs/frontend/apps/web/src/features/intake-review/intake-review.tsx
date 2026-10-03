@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Trash2 } from "lucide-react";
 import { Badge, Button, ButtonLink, Eyebrow, PageHeading, Panel, QueryState } from "@/components/ui";
+import { useOnboarding } from "@/features/onboarding/onboarding-state";
+import { toSurvey } from "@/features/onboarding/payload";
 import type { Translate } from "@/lib/i18n";
+import { tripsKey } from "@/lib/gateway";
 import { LiveError } from "@/lib/live/client";
 import { confirmIntake, editIntake, getIntake, planIntake, type IntakeEdit, type IntakeItem, type IntakePlanBasis, type IntakePlanInput, type IntakeProblem, type IntakeSource, type IntakeView } from "@/lib/live/intake";
 import { routes } from "@/lib/routes";
@@ -67,6 +70,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const { language } = useSettings();
   const router = useRouter();
   const queryClient = useQueryClient();
+  // The onboarding answers go to the server with the registration — only when the customer finished them.
+  const [onboarding] = useOnboarding();
+  const survey = onboarding.complete ? toSurvey(onboarding.answers) : undefined;
   const key = ["intake", intakeId, language] as const;
   const query = useQuery({
     queryKey: key,
@@ -80,14 +86,16 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     onSuccess: (view) => queryClient.setQueryData(key, view),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
+  // A registered trip makes the cached trip list stale; drop it so the home card and "My trips" read it again.
+  const registered = (tripId: string) => { queryClient.removeQueries({ queryKey: tripsKey }); router.push(routes.trip(tripId)); };
   const plan = useMutation({
-    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, input, language),
-    onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
+    mutationFn: ({ revision, input }: { revision: number; input: IntakePlanInput }) => planIntake(intakeId, revision, { ...input, ...(survey && { survey }) }, language),
+    onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
   const confirm = useMutation({
-    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language),
-    onSuccess: (result) => router.push(routes.trip(result.trip.trip_id)),
+    mutationFn: (revision: number) => confirmIntake(intakeId, revision, language, survey),
+    onSuccess: (result) => registered(result.trip.trip_id),
     onError: (error) => { if (error instanceof LiveError && error.code === "stale_revision") void query.refetch(); },
   });
 
@@ -117,7 +125,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   const yearFilled = view.sources.flatMap((source) => source.items).map((item) => item.fields.date)
     .find((field) => field?.method !== "customer" && field?.evidence.how === "year_filled");
   const busy = edit.isPending || confirm.isPending || plan.isPending;
-  const send = (edits: IntakeEdit[]) => edit.mutate({ revision: view.revision, edits });
+  const send = (edits: IntakeEdit[]) => edit.mutateAsync({ revision: view.revision, edits }).then(() => true, () => false);
   const confirmed = view.status === "confirmed";
   const error = edit.error ?? confirm.error ?? plan.error;
   const refusal = error instanceof LiveError ? (error.detail as { problems?: { field: string; message?: string; reason?: string }[]; violations?: { reason: string }[] } | undefined) : undefined;
@@ -138,11 +146,11 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     <div className={styles.list}>{list.map((row) => <ItemCard key={row.key} row={row} yearNote={Boolean(yearFilled)} disabled={busy || confirmed} onEdit={send} />)}</div>
     {list.length === 0 && !view.check?.plan.requested && <Panel><p>{t("읽은 일정이 없어요. 원문을 보고 다시 올리거나, 위에서 일정을 짜 달라고 해 주세요.", "No stops were read. Check the original and upload again, or ask us above to plan it.")}</p></Panel>}
     <Evidence view={view} />
-    {error && <div className={styles.error} role="alert">
+    {error && <ErrorNotice error={error}>
       <p>{error.message}</p>
       {refusal?.problems && <ul>{refusal.problems.map((problem, index) => <li key={`${problem.field}-${index}`}>{problem.message ?? `${problem.field}: ${problem.reason}`}</li>)}</ul>}
       {refusal?.violations && <ul>{refusal.violations.map((violation) => <li key={violation.reason}>{violation.reason}</li>)}</ul>}
-    </div>}
+    </ErrorNotice>}
     <p className={styles.credit}>{t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></p>
     <div className={styles.actions}>
       <ButtonLink href={routes.newTrip}><ArrowLeft {...icon} />{t("다시 올리기", "Upload again")}</ButtonLink>
@@ -152,6 +160,17 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
         : <Button variant="primary" disabled={busy || !view.check?.ready} onClick={() => confirm.mutate(view.revision)}>{confirm.isPending ? t("등록하는 중…", "Registering…") : t("등록하고 관리 시작", "Register and start")}<ArrowRight {...icon} /></Button>}
     </div>
   </>;
+}
+
+/**
+ * The failure of the last action. ★It sits under the item list while the buttons stay in the bar at the bottom, so a
+ * long plan hid it — pressing 「등록하고 관리 시작」 then looked like nothing happened (found 2026-09-28 on the real
+ * server). Each new failure is brought into view.
+ */
+function ErrorNotice({ error, children }: { error: Error; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { box.current?.scrollIntoView({ block: "center", behavior: "smooth" }); }, [error]);
+  return <div ref={box} className={styles.error} role="alert">{children}</div>;
 }
 
 function FirstDay({ disabled, onSave }: { disabled: boolean; onSave: (value: string) => void }) {
@@ -170,12 +189,15 @@ function PlanPanel({ basis, readItems, disabled, pending, onPlan }: { basis: Int
   const [start, setStart] = useState(basis.start_date ?? "");
   const [days, setDays] = useState(basis.days ?? 0);
   const [party, setParty] = useState(basis.party_size ?? 0);
+  const [keep, setKeep] = useState(readItems > 0);
   const ready = Boolean(start) && days >= 1 && party >= 1;
   return <Panel className={styles.plan} aria-labelledby="intake-plan">
     <h2 id="intake-plan">{basis.requested ? t("일정을 짜 달라고 하셨어요", "You asked us to plan the trip") : t("읽은 일정이 없어요 — 대신 짜 드릴까요?", "No stops were read — shall we plan one?")}</h2>
     <p>{t("서울 안에서, 올려 주신 글을 선호로 읽어 하루하루를 짜요. 짠 일정은 판정을 통과해야 등록돼요.", "We plan each day in Seoul, reading your text as preferences. The plan is registered only if it passes our checks.")}
-      {readItems > 0 && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
-    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party }); }}>
+      {readItems > 0 && !keep && <strong> {t(`새로 짜면 위에 읽은 일정 ${readItems}개는 쓰지 않아요.`, `A new plan does not use the ${readItems} stops read above.`)}</strong>}</p>
+    {readItems > 0 && <label className={styles.keep}><input type="checkbox" checked={keep} onChange={(event) => setKeep(event.target.checked)} disabled={disabled} />
+      {t(`읽은 일정 ${readItems}개는 그대로 두고 빈 시간만 채우기`, `Keep the ${readItems} stops read above and fill only the gaps`)}</label>}
+    <form className={styles.inline} onSubmit={(event) => { event.preventDefault(); if (ready) onPlan({ start_date: start, days, party_size: party, keep_read_items: keep }); }}>
       <label htmlFor="plan-start">{t("첫날", "First day")}</label>
       <input id="plan-start" type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={disabled} required />
       <label htmlFor="plan-days">{t("일수", "Days")}</label>
@@ -203,7 +225,7 @@ function Party({ disabled, onSave }: { disabled: boolean; onSave: (value: number
   </form>;
 }
 
-function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => void }) {
+function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boolean; disabled: boolean; onEdit: (edits: IntakeEdit[]) => Promise<boolean> }) {
   const t = useT();
   const { item, source } = row;
   const where = `items[${item.index}]`;
@@ -215,18 +237,20 @@ function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boo
   const place = item.fields.place;
   const placeName = place?.value && typeof place.value === "object" ? String((place.value as { name?: string }).name ?? "") : "";
   const [placeDraft, setPlaceDraft] = useState("");
-  const [times, setTimes] = useState({ start, end, date });
+  // 편집한 칸만 초안으로 보관해, 나머지 칸은 최신 서버 값을 따라가게 한다.
+  const [timeDraft, setTimeDraft] = useState<Partial<{ start: string; end: string; date: string }>>({});
+  const times = { start, end, date, ...timeDraft };
   const booking = item.fields.booking_no?.value;
   const line = item.line ? source.lines[item.line - 1]?.text : undefined;
   const t2 = (edits: IntakeEdit[]) => onEdit(edits.map((edit) => ({ source_id: source.source_id, ...edit })));
 
-  function saveTimes(event: FormEvent<HTMLFormElement>) {
+  async function saveTimes(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const edits: IntakeEdit[] = [];
     if (times.start && times.start !== start) edits.push({ field: field("starts_at"), value: times.start });
     if (times.end && times.end !== end) edits.push({ field: field("ends_at"), value: times.end });
     if (times.date && times.date !== date) edits.push({ field: field("date"), value: times.date });
-    if (edits.length) t2(edits);
+    if (edits.length && await t2(edits)) setTimeDraft({});
   }
 
   return <Panel className={styles.item} data-problem={row.problems.length > 0}>
@@ -254,11 +278,11 @@ function ItemCard({ row, yearNote, disabled, onEdit }: { row: Row; yearNote: boo
       </form>
       <form className={styles.inline} onSubmit={saveTimes}>
         <label className="sr-only" htmlFor={`date-${row.key}`}>{t("날짜", "Date")}</label>
-        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimes({ ...times, date: event.target.value })} disabled={disabled} />
+        <input id={`date-${row.key}`} type="date" value={times.date} onChange={(event) => setTimeDraft({ ...timeDraft, date: event.target.value })} disabled={disabled} />
         <label className="sr-only" htmlFor={`start-${row.key}`}>{t("시작", "Start")}</label>
-        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimes({ ...times, start: event.target.value })} disabled={disabled} />
+        <input id={`start-${row.key}`} type="time" value={times.start} onChange={(event) => setTimeDraft({ ...timeDraft, start: event.target.value })} disabled={disabled} />
         <label className="sr-only" htmlFor={`end-${row.key}`}>{t("끝", "End")}</label>
-        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimes({ ...times, end: event.target.value })} disabled={disabled} />
+        <input id={`end-${row.key}`} type="time" value={times.end} onChange={(event) => setTimeDraft({ ...timeDraft, end: event.target.value })} disabled={disabled} />
         <Button type="submit" disabled={disabled}>{t("날짜·시각 저장", "Save date & time")}</Button>
       </form>
       <Button variant="quiet" disabled={disabled} onClick={() => t2([{ field: field("removed"), value: true }])}><Trash2 {...icon} />{t("빼기", "Remove")}</Button>

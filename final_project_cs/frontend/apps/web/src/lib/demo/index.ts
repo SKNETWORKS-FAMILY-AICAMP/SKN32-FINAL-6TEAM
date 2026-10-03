@@ -1,3 +1,4 @@
+import { tripSurveySchema } from "../../features/onboarding/payload";
 import type { Trip, TripGateway, VerificationResult } from "../../features/trip/model";
 import { translator, type Translate } from "../i18n";
 import { demoReply } from "./chat";
@@ -12,7 +13,13 @@ export const DEMO_VERIFICATION_DURATION = 6000;
 export interface DemoStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  readonly length: number;
+  key(index: number): string | null;
 }
+
+/** A trip ID is a UUID; anything else never reaches the storage keys. */
+const tripIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface DemoGatewayOptions {
   storage?: DemoStorage | (() => DemoStorage);
@@ -98,7 +105,7 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
   }
 
   function read(tripId: string, t: Translate): StoredTrip {
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tripId)) throw notFound(t);
+    if (!tripIdPattern.test(tripId)) throw notFound(t);
     let raw: string | null;
     try { raw = storage(t).getItem(DEMO_STORAGE_PREFIX + tripId); }
     catch (error) { throw error instanceof GatewayError ? error : storageError(t); }
@@ -148,6 +155,8 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
       if (source.length > 12000) throw new GatewayError("INVALID_INPUT", t("여행 계획은 12,000자 이내로 입력해 주세요.", "Keep your travel plan within 12,000 characters."));
       const scenario = scenarioSchema.safeParse(input.scenario ?? "success");
       if (!scenario.success) throw new GatewayError("INVALID_INPUT", t("지원하지 않는 시연 검증 결과예요.", "Unsupported preview verification scenario."));
+      // Like the server's 422 invalid_survey: a malformed survey creates no trip. The demo does not store it.
+      if (input.survey !== undefined && !tripSurveySchema.safeParse(input.survey).success) throw new GatewayError("INVALID_INPUT", t("여행 취향 설문의 형식이 올바르지 않아 여행을 등록하지 못했어요.", "Your travel preferences are malformed, so the trip was not added."));
       const stops = parseDemoPlan(source, t);
       const trip: StoredTrip["trip"] = {
         id: crypto.randomUUID(),
@@ -159,7 +168,24 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
         verification: { status: "running", progress: 0, stages: stages(0), results: [] },
         messages: [],
       };
-      return save({ version: 2, scenario: scenario.data, startedAt: now(), trip }, t);
+      const at = now();
+      return save({ version: 2, scenario: scenario.data, startedAt: at, createdAt: at, trip }, t);
+    },
+    async listTrips(language) {
+      const t = translator(language);
+      const store = storage(t);
+      const ids: string[] = [];
+      try {
+        for (let index = 0; index < store.length; index += 1) {
+          const key = store.key(index);
+          if (key?.startsWith(DEMO_STORAGE_PREFIX)) ids.push(key.slice(DEMO_STORAGE_PREFIX.length));
+        }
+      } catch { throw storageError(t); }
+      // A demo trip has no title of its own, so its dates name it. Trips without a registration time sort last.
+      return ids.map((id) => read(id, t)).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0)).map(({ createdAt, trip }) => {
+        const dates = trip.startDate === trip.endDate ? trip.startDate : `${trip.startDate} – ${trip.endDate}`;
+        return { id: trip.id, title: t(`${dates} 여행`, `Trip · ${dates}`), createdAt: createdAt === undefined ? null : new Date(createdAt).toISOString(), version: null };
+      });
     },
     async getTrip(tripId, language) {
       const t = translator(language);
@@ -206,6 +232,16 @@ export function createDemoGateway(options: DemoGatewayOptions = {}): TripGateway
         { id: crypto.randomUUID(), role: "assistant", text: demoReply(stored.trip.stops, text, t), createdAt },
       );
       return save(stored, t);
+    },
+    /** Removes only this trip's record — its itinerary, check and chat. Settings, onboarding and other trips stay. */
+    async deleteTrip(tripId, language) {
+      const t = translator(language);
+      if (!tripIdPattern.test(tripId)) throw notFound(t);
+      const store = storage(t);
+      try {
+        if (store.getItem(DEMO_STORAGE_PREFIX + tripId) === null) throw notFound(t);
+        store.removeItem(DEMO_STORAGE_PREFIX + tripId);
+      } catch (error) { throw error instanceof GatewayError ? error : storageError(t); }
     },
   };
 }

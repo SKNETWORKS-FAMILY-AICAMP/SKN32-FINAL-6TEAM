@@ -8,8 +8,11 @@ import { mapConfiguration } from "@/features/map/config";
 import { Badge, Button, ButtonLink, Eyebrow, Panel, QueryState } from "@/components/ui";
 import { DATA_MODE, tripGateway } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
+import { warmup } from "@/lib/live/extras";
+import { LiveError } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
+import { TripAttention } from "./trip-attention";
 import { tripKey, useTrip } from "./use-trip";
 import type { Trip, TripStop } from "./model";
 import styles from "./trip-home.module.css";
@@ -26,10 +29,15 @@ function bookingLabel(stop: TripStop, t: Translate) {
   return t("예약 정보 없음", "Booking not specified");
 }
 
+function isConnectionFailure(error: unknown) {
+  return !(error instanceof LiveError) || error.code === "network"
+    || ((error.status ?? 0) >= 500 && error.code !== "service_daily_cap");
+}
+
 export function TripHome({ tripId }: { tripId: string }) {
   const t = useT();
   const query = useTrip(tripId);
-  if (query.isPending || query.error || !query.data) {
+  if (query.isPending || !query.data || (query.error && !isConnectionFailure(query.error))) {
     return <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()} />;
   }
   const trip = query.data;
@@ -42,7 +50,13 @@ export function TripHome({ tripId }: { tripId: string }) {
       <ButtonLink href={processing ? routes.verification(tripId) : routes.results(tripId)}>{processing ? t("확인 진행 보기", "View the check") : t("검증 결과 보기", "View results")}<ArrowRight {...icon} /></ButtonLink>
     </Panel>;
   }
-  return <TripWorkspace key={trip.id} trip={trip} />;
+  return <>
+    {query.error && <div className={styles.error} role="alert">
+      <p>{t("최신 여행 정보를 불러오지 못했어요. 마지막으로 확인한 내용을 표시하고 있어요.", "Could not refresh your trip. Showing the last information we received.")}</p>
+      <Button disabled={query.isFetching} onClick={() => void query.refetch()}>{t("다시 불러오기", "Reload")}</Button>
+    </div>}
+    <TripWorkspace key={trip.id} trip={trip} />
+  </>;
 }
 
 function TripWorkspace({ trip }: { trip: Trip }) {
@@ -72,6 +86,12 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       if (variables.clearDraft) setDraft("");
     },
   });
+
+  // ★Live: wake the chat model as the trip opens, so the first question does not wait for it to load (~35 s cold).
+  //   Best effort — the trip screen does not depend on it, and a failed chat reports itself.
+  useEffect(() => {
+    if (live) warmup(language).catch(() => { /* the chat reports its own failure */ });
+  }, [trip.id, language]);
 
   useEffect(() => {
     if (chatLog.current) chatLog.current.scrollTop = chatLog.current.scrollHeight;
@@ -139,11 +159,12 @@ function TripWorkspace({ trip }: { trip: Trip }) {
       <p className={styles.tripmeta}><CalendarDays {...icon} /><span>{days.length > 1 ? `${days[0]} – ${days.at(-1)}` : days[0]}<br />{t(`${days.length}일 · ${trip.stops.length}개 일정`, `${days.length} days · ${trip.stops.length} stops`)}</span></p>
     </section>
     <div className={styles.watchbar}><strong><Check {...icon} />{t("여행 관리 화면", "Your travel workspace")}</strong><span>{live ? t("등록한 일정을 여행이 끝날 때까지 지켜봐요", "We watch your registered itinerary until the trip ends") : t("입력한 일정으로 둘러보는 데모", "A demo using your itinerary")}</span></div>
+    {live && <TripAttention trip={trip} />}
     <div className={styles.daybar}>
       <div className={styles.dayTabs} role="group" aria-label={t("여행 일차", "Travel days")}>{days.map((date, index) => (
         <button key={date} type="button" aria-pressed={date === activeDay} onClick={() => { setDay(date); setSelectedId(null); setExpandedId(null); }}>{t(`${index + 1}일차`, `Day ${index + 1}`)}<span>{date.slice(5).replace("-", ".")}</span></button>
       ))}</div>
-      <ButtonLink href={`${routes.newTrip}?from=${encodeURIComponent(trip.id)}`}><SquarePen {...icon} />{t("일정 수정", "Edit itinerary")}</ButtonLink>
+      <ButtonLink href={live ? routes.newTrip : `${routes.newTrip}?from=${encodeURIComponent(trip.id)}`}><SquarePen {...icon} />{live ? t("새 계획 올리기", "Upload a new plan") : t("일정 수정", "Edit itinerary")}</ButtonLink>
     </div>
     {navigation === "floating"
       ? <nav ref={nav} className={`${styles.floating} ${navOpen ? styles.open : ""}`} aria-label={t("여행 화면", "Travel views")}>
@@ -161,7 +182,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <article className={styles.stop} data-selected={selected?.id === stop.id}>
             <button type="button" className={styles.stophead} id={`stop-button-${stop.id}`} aria-expanded={expanded} aria-controls={`stop-detail-${stop.id}`} onClick={() => { setSelectedId(stop.id); setExpandedId(expanded ? null : stop.id); }}>
               <time>{stop.time}</time>
-              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.originalTime && stop.originalTime !== stop.time && <Badge>{t("시간 조정", "Time adjusted")}</Badge>}</span></span>
+              <span className={styles.stopCopy}><strong>{stop.title}</strong><span className={styles.stopTags}><Badge>{bookingLabel(stop, t)}</Badge>{stop.originalTime && stop.originalTime !== stop.time && <Badge>{t("시간 조정", "Time adjusted")}</Badge>}{stop.pinned && <Badge>{t("고정한 일정", "Pinned")}</Badge>}</span></span>
               <span className={styles.toggleMark} aria-hidden="true">{expanded ? "−" : "+"}</span>
             </button>
             {expanded && <div className={styles.stopDetails} id={`stop-detail-${stop.id}`}>
@@ -171,6 +192,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                 <dt>{t("예약 표시", "Booking note")}</dt><dd>{bookingLabel(stop, t)}</dd>
                 {stop.originalTime && stop.originalTime !== stop.time && <><dt>{t("시간 조정", "Time adjustment")}</dt><dd>{stop.originalTime} → {stop.time}</dd></>}
                 <dt>{t("다음 일정", "Next stop")}</dt><dd>{next ? `${next.time} · ${next.title}` : t("이날 마지막 일정", "Last stop of the day")}</dd>
+                {stop.otherOptions && stop.otherOptions.length > 0 && <><dt>{t("다른 안", "Other options")}</dt><dd>{stop.otherOptions.map((option) => option.name).join(" · ")}</dd></>}
                 <dt>{t("입력한 메모", "Your notes")}</dt><dd>{stop.notes || t("등록된 메모가 없어요.", "No notes added.")}</dd>
               </dl>
               <div className={styles.detailActions}>
@@ -224,12 +246,14 @@ function TripWorkspace({ trip }: { trip: Trip }) {
           <Button type="submit" variant="primary" disabled={message.isPending} aria-label={t("메시지 전송", "Send message")}><Send {...icon} /><span className={styles.sendText}>{t("전송", "Send")}</span></Button>
           {inputError && <p id="trip-chat-error" className={styles.error} role="alert">{inputError}</p>}
         </form>
-        {message.isError && <div className={styles.error} role="alert"><p>{t("메시지를 보내지 못했어요.", "The message could not be sent.")} {message.error.message}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
+        {message.isError && <div className={styles.error} role="alert"><p>{live && isConnectionFailure(message.error)
+          ? t("서버 연결이 불안정해요. 잠시 후 다시 시도해 주세요.", "The server connection is unstable. Please try again shortly.")
+          : `${t("메시지를 보내지 못했어요.", "The message could not be sent.")} ${message.error.message}`}</p><Button onClick={() => message.variables && message.mutate(message.variables)}>{t("다시 보내기", "Send again")}</Button></div>}
         <p className={styles.chatnote}>{live
           ? t("보낸 문장은 여행 상담으로 접수돼요. 일정을 바꾸면 여행계획서에 새 버전이 생기고, 예약이 걸린 일정은 바꾸기 전에 물어봐요.", "Messages are filed as trip requests. Changes create a new version of your plan, and booked stops are never changed without asking.")
           : t("등록된 일정에 대한 시연 응답입니다. 실제 일정·예약 변경은 실행되지 않습니다.", "Demo replies use your itinerary. No actual itinerary or booking changes are performed.")}</p>
       </div>
     </section>
-    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}{live && <> · {t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></>}</span><ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink></footer>
+    <footer className={styles.footer}><span><Leaf {...icon} />{t("예약 표시는 입력한 정보 기준입니다.", "Booking notes reflect the information you entered.")}{live && <> · {t("장소 정보 출처 : ⓒ한국관광공사 · ", "Place data: ⓒKorea Tourism Organization · ")}<a href={TOUR_API_POLICY_URL} target="_blank" rel="noreferrer">{t("저작권 정책", "Copyright policy")}</a></>}</span>{!live && <ButtonLink href={routes.results(trip.id)} variant="quiet">{t("검증 결과 다시 보기", "Review verification results")}<ArrowRight {...icon} /></ButtonLink>}</footer>
   </div>;
 }

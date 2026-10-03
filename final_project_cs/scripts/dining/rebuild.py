@@ -1,0 +1,343 @@
+"""빈 DB 에서 요식 원장을 처음부터 세운다.
+
+왜 필요한가.
+    명령이 README 에 흩어져 있어서 순서가 맞는지 확인된 적이 없다.
+    새 사람이 저장소를 받아 돌렸을 때 되는지도 모른다.
+    한 번에 세워 보는 것이 「우리 것이 잘 돈다」의 진짜 시험이다.
+
+무엇을 하는가.
+    1  마이그레이션을 번호 순으로
+    2  원문을 구조로 (parse_hours)
+    3  적재 (load · holiday · attribute)
+    4  정답셋과 검수 반영 (truth · operator)
+    5  채점하고 결과를 보인다
+
+코어도 함께 세운다.
+    요식 표는 코어 `places` 와 이어져야 쓸모가 있다(dn_core_place_link).
+    그래서 먼저 코어 마이그레이션과 여행 시드를 올리고, 그 위에 요식을 얹은 뒤
+    매칭기(022)로 코어 장소와 잇는다. develop CI 가 세우는 순서와 같다.
+    코어 설정값은 CI 와 같은 가짜로 채운다. 이미 환경에 있으면 그 값을 쓴다.
+    코어를 못 세우면 요식만 세우고 연결은 건너뛴다. 원장 자체는 혼자 선다.
+
+    python scripts/dining/rebuild.py                 dining_rebuild 에 세운다
+    python scripts/dining/rebuild.py --db dining_dev --keep   있는 DB 위에
+    python scripts/dining/rebuild.py --no-core       요식만 세운다
+    python scripts/dining/rebuild.py --check         세우지 않고 준비물만 본다
+    python scripts/dining/rebuild.py --db acop --target core   코어 DB 의 요식 칸만 다시 채운다
+
+코어 DB 에 채울 때(--target core).
+    DB 를 지우지 않는다. 여행 · 고객 · 다른 팀 표가 같은 DB 에 있다.
+    코어 마이그레이션과 시드도 다시 돌리지 않는다. 코어는 코어가 세운다.
+    dining 스키마만 지우고(요식 표 · 함수 · 코어 장소 연결) 같은 순서로 다시 채운 뒤 코어 장소와 다시 잇는다.
+    코어 표는 dining 을 참조하지 않는다. 그래서 dining 만 지워도 코어 행은 남는다.
+    기본 방식(DB 를 지우고 새로)은 이름이 dining_ 으로 시작하는 DB 에만 쓴다. 코어 DB 를 실수로 지우지 않게.
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import os
+import re
+import subprocess
+import sys
+import time
+
+sys.stdout.reconfigure(encoding="utf-8")
+HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
+ROOT = os.path.dirname(os.path.dirname(HERE))          # final_project_cs
+MIGRATIONS = os.path.join(ROOT, "app", "infrastructure", "db", "migrations")
+BUILD = os.path.join(DINING_DATA, "_build")
+
+PG_PORT = int(os.environ.get("DINING_PG_PORT", "5433"))
+PG_USER = os.environ.get("DINING_DB_USER", "postgres")
+
+#: 번호로 고르지 않는다. 030 을 더했을 때 02* 패턴이 못 잡아 적재가 깨졌다.
+#: 요식 파일인지로 고르면 번호가 늘어도 따라온다.
+
+#: 코어 `places` 표가 있어야 올라가는 것. 없으면 건너뛴다.
+NEEDS_CORE = {"202_dining_matcher.sql"}
+
+#: 코어를 세울 때 설정이 요구하는 값. develop CI 와 같은 가짜다. 실제 키를 넣지 않는다.
+CORE_ENV = {
+    "ACOP_LLM_PROVIDER": "mock",
+    "ACOP_OPENAI_API_KEY": "sk-dummy-for-rebuild",
+    "ACOP_LLM_MODEL": "gpt-4o-mini",
+    "ACOP_EMBEDDING_MODEL": "text-embedding-3-small",
+    "ACOP_TENANT_ID": "demo",
+    "ACOP_SECRET_KEY": "dummy-secret-key-for-rebuild-0123456789abcdef",
+    "ACOP_COMPOSER_JWT_SECRET": "dummy-composer-jwt-secret-for-rebuild-0123456789",
+    "ACOP_COMPOSER_ISSUER_SECRET": "dummy-composer-issuer-secret-for-rebuild-0123456789",
+}
+
+#: 코어 세우기. 순서가 곧 의존 관계다.
+CORE_STEPS = [
+    ("코어 마이그레이션", "app.infrastructure.db.migrate"),
+    ("여행 시드",         "scripts.seed_travel"),
+]
+
+#: 코어 장소와 잇는다. 후보가 하나일 때만 잇고 여럿이면 ambiguous 로 남긴다(022).
+LINK_SQL = (
+    "SELECT r.result, count(*) FROM (SELECT DISTINCT tenant_id FROM public.places) t, "
+    "LATERAL dining.link_core_places(t.tenant_id, 0.75, 'rebuild', false) r GROUP BY 1"
+)
+
+#: 만드는 것과 넣는 것의 짝. 순서가 곧 의존 관계다.
+LOADS = [
+    ("parse_hours.py",        None),
+    ("make_load_sql.py",      "load_200.sql"),
+    ("make_holiday_sql.py",   "holidays.sql"),
+    ("make_attribute_sql.py", "attributes.sql"),
+    ("make_truth_sql.py",     "truth.sql"),
+    ("make_operator_sql.py",  "operator.sql"),
+    ("make_vegan_sql.py",     "vegan.sql"),
+    ("make_halal_sql.py",     "halal.sql"),
+    ("make_michelin_sql.py",  "michelin.sql"),
+    ("make_closure_sql.py",   "closure.sql"),     # 가게가 다 들어온 뒤. 폐업 · 이전 확인분
+    ("make_gap_sql.py",       "gaps.sql"),        # 빈칸 검수 확인분(영업시간 · 전화 · 좌표)
+    ("google_link.py --to-sql", "google_links.sql"),  # 구글 place_id 연결(구글_연결.csv)
+]
+
+#: 적재가 끝난 뒤 가게를 보고 계산하는 것. 영문 SQL 만 둔다 — -c 로 넘긴다.
+AFTER_LOADS = [
+    ("대표 분류", "SELECT dining.refresh_category()"),
+]
+
+
+def say(mark: str, text: str) -> None:
+    print(f"  {mark} {text}", flush=True)
+
+
+def find_exe(name: str) -> str | None:
+    from shutil import which
+    got = which(name)
+    if got:
+        return got
+    exe = name + (".exe" if os.name == "nt" else "")
+    for pattern in (os.path.join(os.path.expanduser("~"), "anaconda3", "envs", "*", "Library", "bin"),
+                    os.path.join(os.path.expanduser("~"), "miniconda3", "envs", "*", "Library", "bin"),
+                    r"C:\Program Files\PostgreSQL\*\bin"):
+        for folder in glob.glob(pattern):
+            candidate = os.path.join(folder, exe)
+            if os.path.isfile(candidate):
+                return candidate
+    return None
+
+
+PSQL = find_exe("psql")
+
+
+def run_sql(db: str, path: str | None = None, sql: str | None = None,
+            stop_on_error: bool = True) -> tuple[bool, str]:
+    """psql 로 돌린다. 한글은 파일로만 넘긴다 — -c 로 넘기면 인코딩이 깨진다."""
+    env = dict(os.environ, PGCLIENTENCODING="UTF8", PGUSER=PG_USER)
+    cmd = [PSQL, "-p", str(PG_PORT), "-d", db, "-q"]
+    if stop_on_error:
+        cmd += ["-v", "ON_ERROR_STOP=1"]
+    if path:
+        cmd += ["-f", path]
+    else:
+        cmd += ["-c", sql]
+    done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", env=env, stdin=subprocess.DEVNULL)
+    return done.returncode == 0, (done.stdout or "") + (done.stderr or "")
+
+
+def run_py(script: str) -> tuple[bool, str]:
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    name, *args = script.split()
+    done = subprocess.run([sys.executable, os.path.join(HERE, name), *args],
+                          capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", cwd=ROOT, env=env,
+                          stdin=subprocess.DEVNULL)
+    return done.returncode == 0, (done.stdout or "") + (done.stderr or "")
+
+
+def build_core(db: str) -> bool:
+    """코어 마이그레이션과 시드를 올린다. 하나라도 실패하면 False."""
+    env = {**CORE_ENV, **os.environ, "PYTHONIOENCODING": "utf-8",
+           "ACOP_DATABASE_URL": f"postgresql+psycopg://{PG_USER}@127.0.0.1:{PG_PORT}/{db}"}
+    for name, module in CORE_STEPS:
+        done = subprocess.run([sys.executable, "-m", module], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", cwd=ROOT, env=env,
+                              stdin=subprocess.DEVNULL)
+        if done.returncode != 0:
+            say("..", f"{name} 실패 — 코어 없이 요식만 세운다")
+            for line in ((done.stdout or "") + (done.stderr or "")).strip().splitlines()[-3:]:
+                say("  ", line)
+            return False
+        say("OK", name)
+    return True
+
+
+def has_core_places(db: str) -> bool:
+    ok, out = run_sql(db, sql="SELECT to_regclass('public.places')")
+    return ok and "places" in out
+
+
+def check() -> bool:
+    ready = True
+    if PSQL is None:
+        say("!!", "psql 을 찾지 못했다")
+        ready = False
+    else:
+        say("OK", f"psql {PSQL}")
+    files = sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql")))
+    say("OK" if files else "!!", f"마이그레이션 {len(files)}개")
+    for script, _ in LOADS:
+        path = os.path.join(HERE, script.split()[0])
+        if not os.path.isfile(path):
+            say("!!", f"없는 스크립트 {script}")
+            ready = False
+    data = DINING_DATA
+    for name in ("tourapi_음식점_소개정보.json", "tourapi_서울_음식점_목록.json",
+                 "holidays_2026_2027.json"):
+        if not os.path.isfile(os.path.join(data, name)):
+            say("!!", f"없는 원본 {name}")
+            ready = False
+    if not ready:
+        say("  ", f"데이터는 git 에 없다. 팀 드라이브에서 받아 {data} 에 둔다(datasets/dining/REPORT.md)")
+    # 사람이 채운 구글 미연결 시트는 적재가 읽지 않는다. google_sheet.py 로 옮겨야 들어간다.
+    got = subprocess.run([sys.executable, os.path.join(HERE, "google_sheet.py"), "--check"],
+                         capture_output=True, text=True, encoding="utf-8", errors="replace")
+    line = (got.stdout.strip().splitlines() or [""])[-1]
+    if re.search(r"링크 [1-9]|폐업 [1-9]", line):
+        say("..", f"옮기지 않은 구글 미연결 시트 — {line}")
+        say("  ", "python scripts/dining/google_sheet.py 로 옮긴 뒤 세운다(키 필요)")
+    if os.path.isfile(os.path.join(data, "truth", "대조표100_검수_2026-09-21.csv")):
+        say("OK", "검수 대조표 있음")
+    else:
+        say("!!", "검수 대조표가 없다. 정답셋 단계가 비게 된다")
+    return ready
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="빈 DB 에서 요식 원장을 세운다.")
+    ap.add_argument("--db", default="dining_rebuild")
+    ap.add_argument("--keep", action="store_true", help="있는 DB 를 지우지 않는다")
+    ap.add_argument("--no-core", action="store_true", help="코어 없이 요식만 세운다")
+    ap.add_argument("--check", action="store_true", help="세우지 않고 준비물만 본다")
+    ap.add_argument("--target", choices=("dining", "core"), default="dining",
+                    help="core: 코어 DB 를 지우지 않고 dining 스키마만 다시 채운다")
+    args = ap.parse_args()
+
+    print("요식 원장 세우기" + ("  (코어 DB 의 요식 칸만)" if args.target == "core" else ""))
+    if not check():
+        return 1
+    if args.check:
+        return 0
+    if args.target == "dining" and not args.keep and not args.db.startswith("dining_"):
+        say("!!", f"{args.db} 는 dining_ 으로 시작하지 않는다. 지우고 새로 만들지 않는다")
+        say("  ", "코어 DB 라면 --target core, 있는 DB 위에 얹으려면 --keep")
+        return 1
+
+    started = time.time()
+    os.makedirs(BUILD, exist_ok=True)     # 새로 받은 저장소에는 _build 가 없다
+
+    if args.target == "core":
+        if not has_core_places(args.db):
+            say("!!", f"{args.db} 에 코어 places 가 없다. 코어를 먼저 세운다(python -m app.infrastructure.db.migrate)")
+            return 1
+        ok, out = run_sql(args.db, sql="DROP SCHEMA IF EXISTS dining CASCADE")
+        if not ok:
+            say("!!", "dining 스키마를 지우지 못했다")
+            say("  ", out.strip().splitlines()[0] if out.strip() else "")
+            return 1
+        say("OK", f"{args.db} 의 dining 스키마만 비웠다. 코어 표는 그대로")
+    elif not args.keep:
+        # 지우고 다시 만든다. 남은 것 위에 얹으면 「처음부터」가 아니다.
+        ok, out = run_sql("postgres", sql=f'DROP DATABASE IF EXISTS "{args.db}"')
+        if not ok:
+            say("!!", f"{args.db} 를 지우지 못했다. 누가 쓰고 있을 수 있다")
+            say("  ", out.strip().splitlines()[0] if out.strip() else "")
+            return 1
+        run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"')
+        say("OK", f"{args.db} 새로 만들었다")
+    else:
+        run_sql("postgres", sql=f'CREATE DATABASE "{args.db}"', stop_on_error=False)
+        say("OK", f"{args.db} 위에 얹는다")
+
+    if not args.no_core and args.target == "dining":
+        build_core(args.db)
+    core = has_core_places(args.db)
+    say("OK" if core else "..",
+        "코어 places 있음 — 매칭기도 올린다" if core else
+        "코어 places 없음 — 022 매칭기는 건너뛴다")
+
+    for path in sorted(glob.glob(os.path.join(MIGRATIONS, "[0-9]*_dining_*.sql"))):
+        name = os.path.basename(path)
+        if name in NEEDS_CORE and not core:
+            say("..", f"{name} 건너뜀")
+            continue
+        ok, out = run_sql(args.db, path=path)
+        if not ok:
+            say("!!", f"{name} 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        say("OK", name)
+
+    for script, produced in LOADS:
+        ok, out = run_py(script)
+        if not ok:
+            say("!!", f"{script} 실패")
+            for line in out.strip().splitlines()[-6:]:
+                say("  ", line)
+            return 1
+        tail = [l for l in out.strip().splitlines() if l.strip()]
+        say("OK", f"{script}  {tail[-2] if len(tail) > 1 else ''}".rstrip())
+        if produced:
+            sql_path = os.path.join(BUILD, produced)
+            ok, out = run_sql(args.db, path=sql_path)
+            if not ok:
+                say("!!", f"{produced} 적재 실패")
+                for line in out.strip().splitlines()[:6]:
+                    say("  ", line)
+                return 1
+            say("OK", f"  {produced} 적재")
+
+    # 034 는 마이그레이션 끝에서 분류를 채우지만, 빈 DB 에서는 그때 가게가 없다.
+    # 적재가 끝난 뒤 한 번 더 불러야 category 가 찬다.
+    for name, sql in AFTER_LOADS:
+        ok, out = run_sql(args.db, sql=sql)
+        if not ok:
+            say("!!", f"{name} 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        say("OK", name)
+
+    if core:
+        ok, out = run_sql(args.db, sql=LINK_SQL)
+        if not ok:
+            say("!!", "코어 장소 연결 실패")
+            for line in out.strip().splitlines()[:6]:
+                say("  ", line)
+            return 1
+        counts = [" ".join(l.replace("|", " ").split()) for l in out.splitlines()
+                  if "|" in l and "result" not in l]
+        say("OK", "코어 장소 연결  " + (", ".join(counts) or "이을 후보 없음"))
+
+    env = dict(os.environ, PYTHONIOENCODING="utf-8",
+               DINING_DSN=f"postgresql://{PG_USER}@localhost:{PG_PORT}/{args.db}")
+    done = subprocess.run([sys.executable, os.path.join(HERE, "run_quality.py")],
+                          capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", cwd=ROOT, env=env,
+                          stdin=subprocess.DEVNULL)
+    print()
+    print(done.stdout.strip())
+    if done.returncode != 0:
+        say("!!", "채점 실패")
+        return 1
+
+    print()
+    say("OK", f"{time.time() - started:.0f}초 걸렸다")
+    print()
+    print("  확인기로 보려면:  python scripts/dining/dev_up.py")
+    print(f"  다른 DB 를 보려면 DINING_DB={args.db} 를 함께 준다")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

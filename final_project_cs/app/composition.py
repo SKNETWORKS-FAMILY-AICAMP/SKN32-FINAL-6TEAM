@@ -168,6 +168,22 @@ def build_report_extractor():
     return lambda text: extract(text, chat)
 
 
+def build_kakao_local() -> Any | None:
+    """카카오 로컬(키워드 검색). 키가 없으면 `None` — 그 단계만 건너뛴다(「없음」이 아니라 「모름」).
+
+    ★**장소 이름 찾기·존재 확인** 전용이다(`intake/places.py` · `read.place_lookup`). 응답은 저장하지 않는다.
+    호출 예산이 필수다(무료 한도 초과 사용은 약관 위반) — `travel.kakao_budget`.
+    """
+    from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
+    from app.infrastructure.travel.kakao_local import KakaoLocal
+
+    # ★설정 객체에 키 필드가 없으면(시험용 설정) 키가 없는 것과 같다 — 조립을 깨지 않는다
+    key = getattr(get_settings(), "kakao_rest_api_key", "")
+    if not key:
+        return None
+    return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
+
+
 def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
                    config_path: str | Path | None = None,
                    config: ProjectConfig | None = None) -> TeamRegistry:
@@ -180,9 +196,18 @@ def build_registry(*, tools: ReadToolbox | None = None, llm: Any | None = None,
         #   네트워크를 탄다. 만드는 것 자체는 I/O 가 없다 — 호출할 때만 나간다.
         from app.infrastructure.travel import build_travel_sources
 
+        sources = build_travel_sources(get_settings())
         tools = ReadToolbox(get_connection, policy_search=search_policy,
-                            travel=build_travel_sources(get_settings()),
-                            report_extractor=build_report_extractor())
+                            travel=sources,
+                            report_extractor=build_report_extractor(),
+                            kakao=build_kakao_local(),
+                            google_places=build_google_places(limiter=sources.limiter))
+        # ☆`[2026-09-29 이동 계산기 문제목록 #24·#31·#34]` 이동 계산기를 설정대로 켜거나 끈다 — 켜면 자료를 확인하고
+        #   (없거나 판 명세와 다르면 기동을 멈춘다, 결정 15) 적재까지 한다(첫 고객 요청이 약 33초를 기다리지 않게).
+        #   설정 mobility_data_dir 가 비면 꺼짐. 도구를 주입한 조립(시험)은 건너뛴다.
+        from app.modules.travel_ops.mobility import wiring as mobility_wiring
+
+        mobility_wiring.configure_from_settings(get_settings())
     teams = []
     capabilities: dict[str, str] = {}
     for declaration in config.teams:
@@ -214,6 +239,23 @@ def build_team_executor(registry: TeamRegistry, *, config: ProjectConfig | None 
     if transport is None or capability_resolver is None:
         raise CompositionError("port team_executor=a2a requires injected transport and capability_resolver")
     return A2ATeamExecutor(transport, capability_resolver)
+
+
+def build_google_places(*, limiter: Any = None) -> Any:
+    """구글 장소 어댑터 — 키가 없으면 `None`(부르는 쪽이 「모름」으로 넘어간다).
+
+    ★`[2026-09-30 사용자 결정]` 식당 가격 조회(`price`)는 하루 상한 없이 부르고, 월 무료 한도를 넘는
+      첫 호출에 운영자에게 알린다(`google_over_free_alert`). 영업시간 조회는 지금처럼 DB 예산 안에서만 부른다.
+    """
+    key = getattr(get_settings(), "google_maps_api_key", "")
+    if not key:
+        return None
+    from app.infrastructure.notify.ops_alert import google_over_free_alert
+    from app.infrastructure.travel.call_budget import CallBudget, google_caps
+    from app.infrastructure.travel.google_places import GooglePlaces
+
+    return GooglePlaces(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=google_caps()),
+                        limiter=limiter, on_over_free=google_over_free_alert)
 
 
 def build_graph_store(*, connection: Any, tenant_id: str,
@@ -315,21 +357,13 @@ def build_domain_routers() -> list:
 
         return build_travel_sources(get_settings()).place
 
-    def kakao_factory():
-        # ★계획 읽기의 **장소 이름 찾기** 전용(`intake/places.py`). 키가 없으면 None — 그 단계만 건너뛴다.
-        #   호출 예산이 필수다(무료 한도 초과 사용은 약관 위반) — `travel.kakao_budget`.
-        from app.core.settings import get_settings
-        from app.infrastructure.travel.call_budget import CallBudget, kakao_caps
-        from app.infrastructure.travel.kakao_local import KakaoLocal
-
-        key = get_settings().kakao_rest_api_key
-        if not key:
-            return None
-        return KakaoLocal(api_key=key, budget=CallBudget(connection_factory=get_connection, caps=kakao_caps()))
+    kakao_factory = build_kakao_local
 
     return [build_trip_router(check_factory=check_factory, classifier_factory=build_classifier,
                               chat_factory=chat_factory, place_factory=place_factory,
-                              kakao_factory=kakao_factory),
+                              kakao_factory=kakao_factory,
+                              # ★채팅의 질문 — 여행 규정 검색(RAG). 문턱은 `travel.question.min_policy_score`
+                              policy_search_factory=lambda: search_policy),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
             build_delegation_router(),
@@ -394,4 +428,4 @@ def build_verification(*, config=None):
 
 
 __all__ = ["CompositionError", "build_broker", "build_classifier", "build_controller", "build_report_extractor",
-           "build_graph_store", "build_registry", "build_team_executor"]
+           "build_google_places", "build_graph_store", "build_registry", "build_team_executor"]

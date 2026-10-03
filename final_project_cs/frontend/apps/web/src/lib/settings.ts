@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { translator, type Language, type Translate } from "./i18n";
+import { languages, translator, type Language, type Translate } from "./i18n";
 
 export type TripNavigation = "fixed" | "floating";
 
@@ -21,7 +21,7 @@ function read(): Settings {
   try {
     const stored = JSON.parse(localStorage.getItem(storageKey) ?? "null") as Partial<Settings> | null;
     current = {
-      language: stored?.language === "ko" || stored?.language === "en" ? stored.language : defaults.language,
+      language: languages.find(([value]) => value === stored?.language)?.[0] ?? defaults.language,
       navigation: stored?.navigation === "floating" || stored?.navigation === "fixed" ? stored.navigation : defaults.navigation,
     };
   } catch {

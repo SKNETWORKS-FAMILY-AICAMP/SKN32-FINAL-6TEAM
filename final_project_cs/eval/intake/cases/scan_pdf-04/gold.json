@@ -1,0 +1,103 @@
+{
+ "case_id": "scan_pdf-04",
+ "format": "scan_pdf",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "scan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 3일 여행 (3명)",
+  "1일차 · 11월 4일",
+  "09:30 국립민속박물관",
+  "12:30 망원시장 칼국수",
+  "15:00 북촌한옥마을 산책",
+  "",
+  "2일차 · 11월 5일",
+  "09:30 경복궁 관람",
+  "12:30 명동교자 점심",
+  "15:00 창경궁",
+  "",
+  "3일차 · 11월 6일",
+  "09:30 국립중앙박물관 관람",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 전쟁기념관"
+ ],
+ "items": [
+  {
+   "date": "2026-11-04",
+   "start": "09:30",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-04",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-04",
+   "start": "15:00",
+   "title": "북촌한옥마을 산책",
+   "place": "북촌한옥마을",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-05",
+   "start": "09:30",
+   "title": "경복궁 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-05",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-05",
+   "start": "15:00",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "09:30",
+   "title": "국립중앙박물관 관람",
+   "place": "국립중앙박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-06",
+   "start": "15:00",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

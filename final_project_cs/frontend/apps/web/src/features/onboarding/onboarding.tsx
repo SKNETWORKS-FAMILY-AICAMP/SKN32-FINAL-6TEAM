@@ -4,13 +4,15 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
 import { Scene, type ScenePulse, type SceneStage } from "@/components/layout/scene";
+import { recoveryEmailProblem } from "@/features/profile/model";
 import { routes } from "@/lib/routes";
 import { useT } from "@/lib/settings";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { OnboardingIcon } from "./icons";
-import { questions } from "./model";
+import { INTRO_STEP, questions } from "./model";
 import { useOnboarding } from "./onboarding-state";
 import { PreferencesSummary, QuestionCarousel } from "./preferences";
+import { RecoveryEmailBody } from "./recovery-email";
 import { TermsCardBody, TermsReader } from "./terms";
 import styles from "./onboarding.module.css";
 
@@ -25,23 +27,58 @@ export function Onboarding() {
   const [pulse, setPulse] = useState<ScenePulse>();
   const [consentMotion, setConsentMotion] = useState(false);
   const [message, setMessage] = useState("");
-  const cards = useRef<Record<1 | 2, HTMLElement | null>>({ 1: null, 2: null });
+  const [emailError, setEmailError] = useState(false);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const focusEmail = useRef(false);
+  const cards = useRef<Record<0 | 1 | 2, HTMLElement | null>>({ 0: null, 1: null, 2: null });
   useDocumentTitle(t("triPilot · 여행 시작 설정", "triPilot · Travel setup"));
 
   const feedback = useCallback((kind: ScenePulse["kind"] = "soft") => setPulse((current) => ({ kind, id: (current?.id ?? 0) + 1 })), []);
 
-  function openCard(card: 1 | 2 | null) {
+  /**
+   * The only check on the optional email, run when moving on to terms or preferences. A blank (or spaces-only) field
+   * never stops anything and needs no visit to its card; a written address must be well formed, or its card opens with
+   * the error and the field focused, keeping what was typed. Passing trims the ends.
+   */
+  function emailPasses(): boolean {
+    if (recoveryEmailProblem(state.email)) {
+      setEmailError(true);
+      if (state.open === 0) emailInput.current?.focus();
+      else {
+        focusEmail.current = true;
+        setState((current) => ({ ...current, open: 0 }));
+        setSceneStage(0);
+      }
+      return false;
+    }
+    setEmailError(false);
+    if (state.email !== state.email.trim()) setState((current) => ({ ...current, email: current.email.trim() }));
+    return true;
+  }
+
+  function openCard(card: 0 | 1 | 2 | null) {
     if (card === 2 && !state.agreed) return;
+    if ((card === 1 || card === 2) && !emailPasses()) return;
     setState((current) => ({ ...current, open: card }));
     if (card !== null) setSceneStage(card);
     feedback();
   }
 
-  // The expanded card takes focus, as the mockup's fixed card does.
+  function editEmail(email: string) {
+    setState((current) => ({ ...current, email }));
+    // An error shown once follows the edits: it goes as soon as the field is cleared or corrected.
+    if (emailError && !recoveryEmailProblem(email)) setEmailError(false);
+  }
+
+  // The expanded card takes focus, as the mockup's fixed card does — the email field when the email check sent us here.
   const opened = state.open;
   useEffect(() => {
     if (opened === null) return;
-    const frame = requestAnimationFrame(() => cards.current[opened]?.querySelector<HTMLElement>("button:not(:disabled)")?.focus({ preventScroll: true }));
+    const frame = requestAnimationFrame(() => {
+      const target = opened === 0 && focusEmail.current ? emailInput.current : cards.current[opened]?.querySelector<HTMLElement>("button:not(:disabled)");
+      focusEmail.current = false;
+      target?.focus({ preventScroll: true });
+    });
     return () => cancelAnimationFrame(frame);
   }, [opened]);
 
@@ -77,13 +114,14 @@ export function Onboarding() {
   }
 
   const expanded = state.open !== null;
-  const cardHead = (card: 1 | 2, title: string, sub: string, disabled: boolean, done: boolean) => <button type="button" className={styles.cardHead} aria-expanded={state.open === card} aria-controls={`content-${card}`} disabled={disabled}
+  // Card 0 is optional: a mail mark and an `optional` badge instead of a step number.
+  const cardHead = (card: 0 | 1 | 2, title: string, sub: string, disabled: boolean, done: boolean, badge?: ReactNode) => <button type="button" className={styles.cardHead} aria-expanded={state.open === card} aria-controls={`content-${card}`} disabled={disabled}
     onClick={() => { const closing = state.open === card; openCard(closing ? null : card); }}>
-    <span className={styles.stepNumber}>{done ? "✓" : `0${card}`}</span>
-    <span className={styles.stepCopy}><span className={styles.stepTitle}>{title}</span><span className={styles.stepSub}>{sub}</span></span>
+    <span className={styles.stepNumber}>{card === 0 ? <OnboardingIcon name="mail" /> : done ? "✓" : `0${card}`}</span>
+    <span className={styles.stepCopy}><span className={styles.stepTitle}>{title}{badge}</span><span className={styles.stepSub}>{sub}</span></span>
     <span className={styles.chevron}><OnboardingIcon name="down" /></span>
   </button>;
-  const card = (id: 1 | 2, done: boolean, head: ReactNode, content: ReactNode) => <section ref={(node) => { cards.current[id] = node; }} id={`card-${id}`} data-card={id}
+  const card = (id: 0 | 1 | 2, done: boolean, head: ReactNode, content: ReactNode) => <section ref={(node) => { cards.current[id] = node; }} id={`card-${id}`} data-card={id}
     className={`${styles.card} ${state.open === id ? styles.active : ""} ${done ? styles.done : ""}`} inert={expanded && state.open !== id}>
     {head}
     <div className={styles.cardContent} id={`content-${id}`} inert={state.open !== id} aria-hidden={state.open !== id}><div className={styles.contentInner}><div className={styles.cardPadding}><div className={styles.divider} />{content}</div></div></div>
@@ -91,7 +129,7 @@ export function Onboarding() {
 
   return <DeviceFrame headerInert={termsOpen}>
     <div className={styles.setup} data-terms={termsOpen}>
-      <Scene stage={sceneStage} step={state.step} totalSteps={questions.length} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
+      <Scene stage={sceneStage} step={state.step - INTRO_STEP} totalSteps={questions.length + 1} complete={state.complete} pulse={pulse} sizes="(max-width: 720px) 100vw, 402px" />
       <div className={styles.scroller} data-locked={expanded} inert={termsOpen}>
         <main id="main-content" className={`${styles.phone} ${firstRender ? styles.firstRender : ""}`}>
           <section className={styles.intro} inert={expanded}>
@@ -100,6 +138,10 @@ export function Onboarding() {
             <p>{t("약관을 확인하고,", "Review the terms,")}<br />{t("좋아하는 것부터 함께 알아볼게요.", "then tell us what you love.")}</p>
           </section>
           <div className={styles.stack}>
+            {card(0, false,
+              cardHead(0, t("복구용 이메일", "Recovery email"), state.email.trim() ? t("입력했어요 · 서버에는 아직 저장하지 않아요", "Entered · not saved to the server yet") : t("입력하지 않아도 시작할 수 있어요.", "You can start without it."), false, false,
+                <span className={styles.optional}>{t("선택", "Optional")}</span>),
+              <RecoveryEmailBody t={t} value={state.email} error={emailError} input={emailInput} onChange={editEmail} onContinue={() => openCard(1)} />)}
             {card(1, state.agreed,
               cardHead(1, t("약관 동의", "Terms & consent"), state.agreed ? t("필수 내용을 확인했어요.", "Required consent completed.") : t("시작하기 전에 확인해 주세요.", "A quick check before you begin."), false, state.agreed),
               <TermsCardBody t={t} read={state.read} agreed={state.agreed} consentMotion={consentMotion} onReadTerms={() => setTermsOpen(true)} onAgree={agree} onContinue={() => { if (state.agreed) openCard(2); }} />)}
@@ -108,7 +150,7 @@ export function Onboarding() {
               state.complete
                 ? <PreferencesSummary t={t} answers={state.answers} hasTrip={Boolean(state.activeTripId)}
                   onJourney={() => router.push(state.activeTripId ? routes.trip(state.activeTripId) : routes.newTrip)}
-                  onEdit={() => setState((current) => ({ ...current, complete: false, step: 0, open: 2 }))} />
+                  onEdit={() => setState((current) => ({ ...current, complete: false, step: INTRO_STEP, open: 2 }))} />
                 : state.open === 2 && <QuestionCarousel t={t} answers={state.answers} step={state.step}
                   setAnswers={(answers) => setState((current) => ({ ...current, answers }))}
                   setStep={(step) => setState((current) => ({ ...current, step }))}

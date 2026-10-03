@@ -1,14 +1,19 @@
 "use client";
 
 import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { initialAnswers, type Answers } from "./model";
+import { initialAnswers, INTRO_STEP, type Answers } from "./model";
 
 export interface OnboardingState {
   /** The full terms were scrolled to the end at least once. */
   read: boolean;
   agreed: boolean;
-  /** Expanded card: 1 terms, 2 preferences. The language card lives in the settings menu. */
-  open: 1 | 2 | null;
+  /** Expanded card: 0 recovery email (optional, unnumbered), 1 terms, 2 preferences. The language card lives in the settings menu. */
+  open: 0 | 1 | 2 | null;
+  /**
+   * Recovery email draft, as typed. Optional: blank means "not entered". It is the same item as My page's recovery
+   * email, but the server has no call to save it yet, so it stays in this page state and is never sent.
+   */
+  email: string;
   step: number;
   complete: boolean;
   answers: Answers;
@@ -16,7 +21,7 @@ export interface OnboardingState {
   activeTripId: string | null;
 }
 
-const initial: OnboardingState = { read: false, agreed: false, open: null, step: 0, complete: false, answers: initialAnswers, activeTripId: null };
+const initial: OnboardingState = { read: false, agreed: false, open: null, email: "", step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 
 /** Page-session state only: nothing is written to storage or sent anywhere. */

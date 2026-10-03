@@ -286,7 +286,11 @@ class TravelSources:
     #: 외교부 여행경보 — 해외 확장용(v11 MVP 는 서울뿐이라 지금 부르는 Team 없음).
     advisory: Any | None = None
     #: 행정안전부 긴급재난문자. 키(`ACOP_DISASTER_MSG_API_KEY`)가 있으면 API 판,
-    #:  없으면 **샘플 CSV 판**(2023-09 일부 기간만).
+    #:  없으면 **샘플 CSV 판**(2023-09 일부 기간만). `read.disruptions`(`active()`)가
+    #:  쓴다. ★★`[미확보 2026-09-28]` `read.disaster`(구 도구, `read_tools.py`)는
+    #:  `.near()`를 부르는데 `DisasterMsgApi`/`DisasterMsgCsv`엔 그 메서드가
+    #:  없다 — 이 소스가 조립된 채로 `read.disaster`가 불리면 AttributeError다.
+    #:  role-activity 쪽 재난·대체장소 기능을 다시 합칠 때 같이 정리해야 한다.
     disaster: Any | None = None
     #: 국토교통부 ITS 돌발상황 — 교통 사고·공사·통제(시내 도로 포함, 실측).
     traffic: Any | None = None
@@ -545,6 +549,11 @@ def build_travel_sources(settings: Any) -> TravelSources:
         from .tour_api import TourApiPlace
         sources.place = TourApiPlace(
             service_key=_public_data_key(settings, "tour_api_key"), limiter=limiter, cache=cache)
+
+    # ★`[정리 2026-09-28]` `disaster_api_key`(구, `ACOP_DISASTER_API_KEY`) 조립
+    #   블록을 지웠다 — `DisasterMsgSource` 클래스가 이번 병합으로 없어졌고
+    #   (위 `disaster_msg_api_key` 블록이 `sources.disaster`를 이미 채운다),
+    #   그대로 두면 키가 있을 때 `ImportError`가 난다.
 
     if not getattr(settings, "odsay_api_key", ""):
         sources.unavailable["transit"] = (

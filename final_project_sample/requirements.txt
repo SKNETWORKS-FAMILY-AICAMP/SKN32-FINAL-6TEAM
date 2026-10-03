@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # A-COP 의존성 — 로컬에서 확인한 버전으로 고정한다 (RULE.md §1.2)
 # 환경: Python 3.12.7 (anaconda) / PostgreSQL 16.14 @127.0.0.1:5433 / Docker 없음
 
@@ -35,5 +36,7 @@ python-dotenv==1.1.1
 httpx==0.28.1
 
 # ── 테스트 ───────────────────────────────────────────────────
-pytest==7.4.4
+# ★2026-09-28 7.4.4 → 8.4.2: pytest-asyncio 0.25.2 가 pytest>=8.2 를 요구해 깨끗한 환경에서
+#   설치가 안 됐다(조직 main CI 의 Docker 빌드가 이 파일로 ResolutionImpossible). cs 와 같은 판.
+pytest==8.4.2
 pytest-asyncio==0.25.2

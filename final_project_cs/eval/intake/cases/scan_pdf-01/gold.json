@@ -1,0 +1,103 @@
+{
+ "case_id": "scan_pdf-01",
+ "format": "scan_pdf",
+ "defect": "relative_date",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "scan.pdf"
+  }
+ ],
+ "lines": [
+  "서울 3일 여행 (1명)",
+  "1일차 · 내일",
+  "09:30 익선동 한옥거리",
+  "12:30 망원시장 칼국수",
+  "15:00 여의도한강공원",
+  "",
+  "2일차 · 10월 3일",
+  "09:30 전쟁기념관",
+  "12:30 명동교자 점심",
+  "15:00 국립민속박물관",
+  "",
+  "3일차 · 10월 4일",
+  "09:30 롯데월드",
+  "12:30 광장시장 빈대떡",
+  "15:00 N서울타워"
+ ],
+ "items": [
+  {
+   "date": "2026-10-02",
+   "start": "09:30",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-02",
+   "start": "15:00",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "09:30",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-03",
+   "start": "15:00",
+   "title": "국립민속박물관",
+   "place": "국립민속박물관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-04",
+   "start": "09:30",
+   "title": "롯데월드",
+   "place": "롯데월드",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-04",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-04",
+   "start": "15:00",
+   "title": "N서울타워",
+   "place": "N서울타워",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

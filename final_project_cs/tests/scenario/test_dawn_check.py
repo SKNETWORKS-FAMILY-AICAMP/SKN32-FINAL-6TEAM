@@ -152,6 +152,92 @@ def test_the_month_cap_holds_across_budget_objects_like_separate_processes(budge
     assert used == [True, True, True, False, False]
 
 
+@pytest.fixture()
+def uncapped_meter(budget_meter):
+    yield budget_meter
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM external_call_budget WHERE meter LIKE %s", (budget_meter + ":%",))
+
+
+def test_counting_without_a_cap_passes_the_free_tier_and_marks_the_crossing_once(uncapped_meter):
+    """★`[2026-09-30]` 가격대 조회 — 막지 않고 센다. 전체 = 상한 있는 월 줄 + 상한 없는 줄. 넘는 순간 한 번만 표시."""
+    meter = uncapped_meter
+    capped = CallBudget(connection_factory=get_connection, caps={meter: {"month": 100, "day": 2}})
+    assert capped.try_reserve(meter) and capped.try_reserve(meter)          # 새벽 확인이 2건 썼다
+    counts = [CallBudget(connection_factory=get_connection, caps={}).count(meter, free=4) for _ in range(4)]
+    assert counts == [(3, False), (4, False), (5, True), (6, False)]
+    assert capped.used(meter) == {"month": 2, "day": 2}, "새벽 확인의 월·하루 몫을 먹지 않는다"
+
+
+def test_prices_use_the_matched_google_id_and_leave_unmatched_places_unknown():
+    """★`[2026-09-30]` 가격대는 새벽 확인이 맞춘 짝 표로만 — 짝이 없는 곳은 구글에서 찾지 않고 「모름」."""
+    from app.infrastructure.travel.google_places import prices_for
+
+    tenant, matched, unmatched = "t_price_" + uuid4().hex[:8], str(uuid4()), str(uuid4())
+    asked = []
+
+    class Source:
+        def price(self, google_id):
+            asked.append(google_id)
+            return {"level": 3, "low": None, "high": None}
+
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO place_provider_ids (tenant_id, place_id, provider, provider_place_id, "
+                    "match_distance_m) VALUES (%s,%s,'google_places','g-1',2.0)", (tenant, matched))
+    try:
+        assert prices_for(get_connection, tenant, Source(), [matched, unmatched]) == {
+            matched: {"level": 3, "low": None, "high": None}, unmatched: None}
+        assert asked == ["g-1"]
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM place_provider_ids WHERE tenant_id=%s", (tenant,))
+
+
+def test_prices_fall_back_to_the_ledger_google_id_a_person_verified():
+    """★`[2026-09-30]` 짝 표에 없으면 요식 원장의 구글 id(`dn_external_ref`, 사람이 확인한 `valid` 만)로 묻는다.
+    짝 표가 먼저다 — 새벽 확인이 좌표로 맞춘 id 를 원장 id 가 덮지 않는다."""
+    from app.infrastructure.travel.google_places import prices_for
+
+    tenant = "t_price_" + uuid4().hex[:8]
+    both, ledger_only, candidate_only = str(uuid4()), str(uuid4()), str(uuid4())
+    tag = uuid4().hex[:8]
+    asked = []
+
+    class Source:
+        def price(self, google_id):
+            asked.append(google_id)
+            return {"level": 2, "low": None, "high": None}
+
+    uids = []
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO place_provider_ids (tenant_id, place_id, provider, provider_place_id, "
+                    "match_distance_m) VALUES (%s,%s,'google_places',%s,2.0)", (tenant, both, f"core-{tag}"))
+        for core_id, status in ((both, "valid"), (ledger_only, "valid"), (candidate_only, "candidate")):
+            cur.execute("INSERT INTO dining.dn_place (name_ko, area, record_status) VALUES (%s,'시험','active') "
+                        "RETURNING place_uid", (f"시험 식당 {tag}",))
+            uid = cur.fetchone()[0]
+            uids.append(uid)
+            cur.execute("INSERT INTO dining.dn_core_place_link (tenant_id, core_place_id, place_uid, linked_by) "
+                        "VALUES (%s,%s,%s,'test')", (tenant, core_id, uid))
+            verified = ("test", "now()") if status == "valid" else (None, None)
+            cur.execute("INSERT INTO dining.dn_external_ref (place_uid, kind, url, status, entered_by, provider_id, "
+                        "verified_by, verified_at) VALUES (%s,'google_place',%s,%s,'test',%s,%s,"
+                        + ("now()" if status == "valid" else "NULL") + ")",
+                        (uid, f"https://www.google.com/maps?cid={uuid4().int % 10**18}", status, f"ledger-{tag}-{core_id}",
+                         verified[0]))
+    try:
+        two = {"level": 2, "low": None, "high": None}
+        assert prices_for(get_connection, tenant, Source(), [both, ledger_only, candidate_only]) == {
+            both: two, ledger_only: two, candidate_only: None}
+        assert asked == [f"core-{tag}", f"ledger-{tag}-{ledger_only}"], "짝 표 먼저, 확인 안 된 원장 링크는 안 쓴다"
+    finally:
+        with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("DELETE FROM place_provider_ids WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM dining.dn_external_ref WHERE place_uid = ANY(%s)", (uids,))
+            cur.execute("DELETE FROM dining.dn_core_place_link WHERE tenant_id=%s", (tenant,))
+            cur.execute("DELETE FROM dining.dn_place WHERE place_uid = ANY(%s)", (uids,))
+
+
 def test_an_unknown_meter_is_refused():
     budget = CallBudget(connection_factory=get_connection, caps={})
     assert budget.try_reserve("anything") is False
@@ -302,3 +388,28 @@ def test_unmatched_and_failed_calls_are_counted_not_called_open(world):
     with get_connection() as conn, conn.cursor() as cur:        # ★못 부른 것은 기록하지 않는다 → 다시 부른다
         cur.execute("SELECT count(*) FROM place_open_checks WHERE tenant_id=%s", (world["tenant"],))
         assert cur.fetchone()[0] == 0
+
+
+SKY = next(p["name"] for p in SCENARIO["places"] if p["key"] == "seoul_sky")
+
+
+def test_an_activity_closed_today_is_replaced_with_one_open_at_that_time(world):
+    """★`[2026-09-28]` 활동도 새벽에 본다(사용자 결정 — 계획은 관광공사 원문을 옮긴 영업시간으로, 최종 판정은 구글).
+    ☆전에는 식당만 봐서 쉬는 날에 들어간 활동을 당일까지 몰랐다. 닫혔으면 **같은 시각에 연다고 아는** 근처 활동으로 바꾼다."""
+    result = _dawn(world, FakeSource(closed={SKY})).tick()
+    assert [c["place"] for c in result.closed] == [SKY], result.counts()
+    assert len(result.adjusted) == 1 and result.fatal == [] and result.unresolved == []
+    _, items = _latest(world)
+    morning = next(i for i in items if i.kind == "activity" and i.starts_at == _at("10:00"))
+    assert morning.place["name"] != SKY and morning.starts_at == _at("10:00")      # ★계획한 시각 그대로
+    hours = morning.place["attributes"]["hours"]
+    assert hours[0] <= "10:00" and "10:45" <= hours[1]                              # 그 시각에 연다고 아는 곳
+
+
+def test_an_activity_with_nothing_open_nearby_is_left_for_a_person_not_swapped_blindly(world):
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE places SET attributes = attributes - 'hours' "
+                    "WHERE tenant_id=%s AND kind='activity' AND name <> %s", (world["tenant"], SKY))
+    result = _dawn(world, FakeSource(closed={SKY})).tick()
+    assert result.adjusted == [] and [u["place"] for u in result.unresolved] == [SKY], result.counts()
+    assert _latest(world)[0]["version"] == 1

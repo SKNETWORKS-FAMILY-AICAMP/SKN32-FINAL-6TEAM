@@ -511,11 +511,14 @@ def test_a_plan_link_opens_for_a_trip_in_another_tenant(api):
 
 def test_a_question_shaped_closed_report_does_not_change_the_plan(api):
     """★`[2026-09-25]` 묻는 꼴이면 「닫혔다」로 받지 않는다 — 모델이 closed 로 뽑아도 질문이고,
-    이 경로(규정 도구 없음)에서는 바꾸지 않고 사람에게 넘긴다. 전에는 대체안 계산으로 갈 수 있었다."""
+    일정은 바꾸지 않는다. 전에는 대체안 계산으로 갈 수 있었다.
+    ★`[2026-09-28]` 전에는 답 없이 escalated 로 끝났다 — 이제 **짚은 일정의 사실로 답하고**, 규정을 찾아볼 수
+    없으면(이 앱은 규정 검색을 안 물렸다) 그렇다고 같이 말한다(`trip_replies.question_reply`)."""
     trip_id = _create(api)["trip_id"]
     said = _say(api, trip_id, "closed", request_id="say-q", text="오늘 저녁 식당 휴무 아니에요?").json()
-    assert said["status"] == "escalated" and said["reason"] == "question_needs_policy_answer", said
+    assert said["status"] == "answered" and said["reason"] == "question_answered", said
     assert said["report"] == {"type": "question"}
+    assert "저녁" in said["answer"] and "규정을 찾아볼 수 없어서" in said["answer"], said["answer"]
     assert _detail(api, trip_id)["version"] == 1
 
 
@@ -534,3 +537,36 @@ def test_a_rollback_sentence_rolls_back_instead_of_swapping(api):
         v1 = api["store"].items(conn, trip_id, 1)
     assert [(s["seq"], s["place"]) for s in view["items"]] == [(i.seq, (i.place or {}).get("name")) for i in v1]
     assert [(s["seq"], s["place"]) for s in view["items"]] != before
+
+
+def test_places_of_an_ended_trip_lose_outside_values_but_keep_their_name(api):
+    """★`[2026-09-28]` 끝난 여행의 전용 장소 행(029)은 좌표·외부 식별자를 비운다(`trip_places.scrub_ended`).
+    끝나기 전 · 공용 행은 그대로다. 다시 돌려도 같은 행을 두 번 비우지 않는다."""
+    from datetime import timedelta
+
+    from app.modules.travel_ops.trip_places import scrub_ended
+
+    body = _body(api["customer"], request_id="scrub-1")
+    body["places"].append({"key": "market", "name": "광장시장", "kind": "activity", "lat": 37.57, "lon": 126.9996,
+                           "weather_sensitive": False,
+                           "attributes": {"source": "tour_api", "source_content_id": "264570"}})
+    last = max(it["seq"] for it in body["items"])
+    body["items"].append({"seq": last + 1, "kind": "activity", "title": "광장시장", "place": "market",
+                          "starts_at": _iso("21:00"), "ends_at": _iso("21:40"), "detail": {}})
+    trip = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write")).json()
+    ended = _at("21:40")
+    with get_connection() as conn:
+        early = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=1), retention_hours=24)
+        late = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=25), retention_hours=24)
+        again = scrub_ended(conn, tenant_id=api["tenant"], now=ended + timedelta(hours=26), retention_hours=24)
+        with conn.cursor() as cur:
+            cur.execute("SELECT name, latitude, longitude, attributes FROM places WHERE tenant_id=%s AND trip_scope=%s",
+                        (api["tenant"], trip["trip_id"]))
+            name, lat, lon, attributes = cur.fetchone()
+            cur.execute("SELECT count(*) FROM places WHERE tenant_id=%s AND trip_scope IS NULL AND latitude IS NULL",
+                        (api["tenant"],))
+            shared_blanked = cur.fetchone()[0]
+    assert (early["scrubbed"], late["scrubbed"], again["scrubbed"]) == (0, 1, 0)
+    assert name == "광장시장" and lat is None and lon is None
+    assert set(attributes) == {"source", "scrubbed_at"} and "source_content_id" not in attributes
+    assert shared_blanked == 0                                             # ★공용 행은 그대로

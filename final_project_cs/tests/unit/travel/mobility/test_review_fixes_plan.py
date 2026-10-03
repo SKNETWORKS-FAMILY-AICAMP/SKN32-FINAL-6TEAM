@@ -1,0 +1,171 @@
+# -*- coding: utf-8 -*-
+"""이동 계산기 점검(2026-09-29) — 일정 계산(plan) 수정 회귀. 시간표 데이터 없이 작은 판정기로 돈다.
+
+장소 두 곳(P1·P2)은 약 300 m — 도보 직행 후보만 나온다(역 좌표표가 없어 대중교통 후보는 없다).
+"""
+from __future__ import annotations
+
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from app.modules.travel_ops.mobility.engine import plan as P
+from app.modules.travel_ops.mobility.engine.errors import CaseInputError
+from app.modules.travel_ops.mobility.engine.paths import RULES_DIR
+from app.modules.travel_ops.mobility.engine.runtime import Runtime
+from app.modules.travel_ops.mobility.engine.verify_time import Timetable, Verifier
+
+RULES = json.loads((RULES_DIR / "rules_v0.3.json").read_text(encoding="utf-8"))
+PLACES = [{"key": "P1", "name": "첫 장소", "lat": 37.5700, "lon": 126.9800},
+          {"key": "P2", "name": "둘째 장소", "lat": 37.5727, "lon": 126.9800},
+          {"key": "P0", "name": "좌표 없는 곳", "lat": None, "lon": None}]
+
+
+def _rt():
+    return Runtime(Verifier(Timetable(), None, RULES, set()), timetable_built_at="built:t", rules_version="v", stats={})
+
+
+def _item(key, place, start, end, kind="activity", **kw):
+    return dict({"key": key, "kind": kind, "title": key, "place": place,
+                 "starts_at": start, "ends_at": end}, **kw)
+
+
+# ── #45 날짜 경계 ─────────────────────────────────────────────────────
+def test_45_no_move_across_service_days():
+    items = [_item("저녁", "P1", "2026-10-05T18:00:00+09:00", "2026-10-05T19:00:00+09:00"),
+             _item("아침", "P2", "2026-10-06T09:00:00+09:00", "2026-10-06T10:00:00+09:00")]
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    assert not [it for it in out["items"] if it["kind"] == "mobility"], "전날 저녁 → 다음 날 아침 이동을 만들지 않는다"
+    assert out["not_linked"] and out["not_linked"][0]["code"] == "day_boundary"
+
+
+def test_45_same_day_move_is_made_and_keeps_input_detail():
+    items = [_item("A", "P1", "2026-10-05T10:00:00+09:00", "2026-10-05T11:00:00+09:00"),
+             _item("이동", None, "2026-10-05T11:05:00+09:00", "2026-10-05T11:20:00+09:00", kind="mobility",
+                   item_id="it-7", detail={"note": "원래 이동"}),
+             _item("B", "P2", "2026-10-05T12:00:00+09:00", "2026-10-05T13:00:00+09:00")]
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt())
+    moves = [it for it in out["items"] if it["kind"] == "mobility"]
+    assert len(moves) == 1 and moves[0]["route"] in out["routes"], out
+    assert moves[0].get("item_id") == "it-7" and moves[0].get("detail") == {"note": "원래 이동"}, \
+        "우리 값으로 바꿔도 입력 이동의 다른 칸을 잃지 않는다"
+    assert moves[0]["title"] == "첫 장소 → 둘째 장소", "시각·경로·제목은 우리 값"
+
+
+# ── #26 못 채운 구간의 옛 이동은 검증 안 됐다고 드러낸다 ────────────────
+def test_26_kept_input_move_is_flagged_unverified():
+    items = [_item("A", "P1", "2026-10-05T10:00:00+09:00", "2026-10-05T11:00:00+09:00"),
+             _item("이동", None, "2026-10-05T11:05:00+09:00", "2026-10-05T11:20:00+09:00", kind="mobility",
+                   route="old"),
+             _item("C", "P0", "2026-10-05T12:00:00+09:00", "2026-10-05T13:00:00+09:00")]
+    out = P.plan(PLACES, items, 2, {}, runtime=_rt(), routes={"old": {"planned": "x", "options": []}})
+    assert out["skipped"][0]["code"] == "no_data" and out["skipped"][0]["kept_input_moves"] == 1
+    assert out["kept_unverified"] == [{"title": "이동", "route": "old", "starts_at": "2026-10-05T11:05:00+09:00",
+                                       "why": "no_data"}]
+
+
+# ── #38 사고 입력 ────────────────────────────────────────────────────
+def test_38_disruptions_reach_every_verify_call():
+    rt = _rt()
+    seen = []
+    real = rt._v.verify_case
+
+    def spy(case):
+        seen.append(case.get("disruptions"))
+        return real(case)
+    planner = P.Planner(rt)
+    planner.disruptions = ({"kind": "line_closed", "line": "01호선"},)
+    planner.v.verify_case = spy
+    planner._vc({"id": "x", "date": "2026-10-05", "depart_at": "10:00", "legs": []})
+    assert seen == [[{"kind": "line_closed", "line": "01호선"}]]
+
+
+def test_38_unknown_disruption_kind_is_refused_upfront():
+    with pytest.raises(CaseInputError, match="모르는 사고 kind"):
+        P.plan(PLACES, [], 2, {}, runtime=_rt(), disruptions=[{"kind": "bogus"}])
+
+
+# ── #29 버리는 후보는 이유를 남긴다 ────────────────────────────────────
+def test_29_dropped_transit_candidates_are_listed_with_reason():
+    planner = P.Planner(_rt(), modes=["subway"])
+    planner._near_stations = lambda place, limit: [("역A", 100.0, None) if place["key"] == "P1" else ("역C", 100.0, None)]
+    cand = {"n": 1, "legs": [{"line": "01호선", "from": "역A", "to": "역C"}], "walk_in_min": 1, "walk_out_min": 1,
+            "out": {}, "reason": "막차 이후"}
+    planner._vc = lambda case: SimpleNamespace(candidates=[cand], out={}, reason="후보 없음", verdict="infeasible")
+    from datetime import datetime, timedelta, timezone
+    kst = timezone(timedelta(hours=9))
+    got, why = planner.leg(PLACES[0], dict(PLACES[1], lat=37.60, lon=127.05),
+                           datetime(2026, 10, 5, 12, 0, tzinfo=kst), {}, True, "P1_to_P2")
+    assert got is None
+    codes = [e["code"] for e in why.get("left_out", [])]
+    assert "no_last_departure" in codes, "앞 판은 역산 못 한 후보를 이유 없이 버렸다"
+
+
+# ── #20 버스가 섞인 환승 — 확정 규칙(탈것별 요금 합)으로 상한 ─────────────
+def test_20_mixed_bus_transfer_gets_sum_of_single_upper_bound():
+    from app.modules.travel_ops.mobility.engine import options as O
+    from app.modules.travel_ops.mobility.engine.bus import BusRoutes
+    from app.modules.travel_ops.mobility.engine.verify_time import LegResult
+    routes = [{"route_id": "R1", "route_nm": "101", "route_type_nm": "간선", "term_min": 10,
+               "first_time": "05:00", "last_time": "23:00"},
+              {"route_id": "R2", "route_nm": "2", "route_type_nm": "마을", "term_min": 10,
+               "first_time": "05:00", "last_time": "23:00"}]
+    v = Verifier(Timetable(), None, RULES, set(), bus=BusRoutes(routes, []))
+    legs = [{"mode": "bus", "route": "101", "from": "갑", "to": "을"}, {"mode": "bus", "route": "2", "from": "을", "to": "병"}]
+    lr = [LegResult(1, "버스 101 갑→을", "feasible", "", depart_min=600, arrive_min=610, wait_min=5),
+          LegResult(2, "환승 을", "feasible", ""),
+          LegResult(3, "버스 2 을→병", "feasible", "", depart_min=615, arrive_min=620, wait_min=3)]
+    assert O.fare_of(v, legs, lr) is None, "합성 요금은 여전히 근거가 없다(버스 운임거리)"
+    assert O.fare_upper_of(v, legs, lr) == 1500 + 1200, "간선 1,500 + 마을 1,200 = 상한 2,700"
+    assert O.fare_upper_of(v, legs[:1], lr[:1]) is None, "버스가 안 섞인(한 번) 경로는 fare_of 의 몫"
+
+
+# ── #13 장소 사이 도보 — 보행망 라우터가 있으면 실제 길, 「길 없음」이면 후보에서 뺀다 ─────────
+class _FootRouter:
+    def __init__(self, result=None, error=None):
+        self.result, self.error, self.calls = result, error, []
+        self.last_error = None
+
+    def available(self):
+        return True
+
+    def route(self, profile, lat1, lng1, lat2, lng2):
+        self.calls.append(profile)
+        self.last_error = self.error
+        return self.result
+
+
+def _walk_leg(router):
+    from datetime import datetime, timedelta, timezone
+    rt = _rt()
+    rt._v.bike_router = router
+    planner = P.Planner(rt, modes=["walk"])
+    kst = timezone(timedelta(hours=9))
+    return planner.leg(PLACES[0], PLACES[1], datetime(2026, 10, 5, 12, 0, tzinfo=kst), {}, True, "P1_to_P2")
+
+
+def test_13_walk_uses_network_distance_when_router_answers():
+    r = _FootRouter({"distance_m": 900.0, "time_s": 700, "basis": "graphhopper", "source_id": "x"})
+    got, why = _walk_leg(r)
+    assert r.calls == ["foot"]
+    route = got[0]
+    walk = next(o for o in route["options"] if o["id"] == "walk")
+    speed = RULES["measured_baseline"]["kakao_walk_speed_mps"]["value"]
+    import math
+    assert walk["walk_m"] == 900 and walk["eta_min"] == math.ceil(900 / speed / 60), walk
+
+
+def test_13_no_walk_path_drops_walk_with_reason():
+    got, why = _walk_leg(_FootRouter(None, {"kind": "no_path"}))
+    assert got is None
+    assert "no_walk_path" in [e["code"] for e in why.get("left_out", [])], why
+
+
+def test_13_router_down_falls_back_to_straight_line_estimate():
+    from app.modules.travel_ops.mobility.engine.geo import meters
+    got, why = _walk_leg(_FootRouter(None, {"kind": "router_down", "error": "x"}))
+    walk = next(o for o in got[0]["options"] if o["id"] == "walk")
+    straight = meters(PLACES[0]["lat"], PLACES[0]["lon"], PLACES[1]["lat"], PLACES[1]["lon"])
+    detour = RULES["transfer"]["stop_station_walk"]["detour_factor"]["value"]
+    assert walk["walk_m"] == int(round(straight * detour)), "라우터가 못 닿은 것은 길이 없다는 근거가 아니다"

@@ -1,0 +1,74 @@
+{
+ "case_id": "photo-05",
+ "format": "photo",
+ "defect": null,
+ "party": 3,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.jpg"
+  }
+ ],
+ "lines": [
+  "서울 2일 여행 (3명)",
+  "DAY 1 2026-11-07",
+  "09:30 명동난타극장",
+  "12:30 진옥화할매원조닭한마리 점심",
+  "15:00 창경궁",
+  "",
+  "DAY 2 2026-11-08",
+  "09:30 청계천 산책",
+  "12:30 토속촌삼계탕 점심",
+  "15:00 여의도한강공원"
+ ],
+ "items": [
+  {
+   "date": "2026-11-07",
+   "start": "09:30",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-07",
+   "start": "12:30",
+   "title": "진옥화할매원조닭한마리",
+   "place": "진옥화할매원조닭한마리",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-07",
+   "start": "15:00",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-08",
+   "start": "09:30",
+   "title": "청계천 산책",
+   "place": "청계천",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-08",
+   "start": "12:30",
+   "title": "토속촌삼계탕",
+   "place": "토속촌삼계탕",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-11-08",
+   "start": "15:00",
+   "title": "여의도한강공원",
+   "place": "여의도한강공원",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}

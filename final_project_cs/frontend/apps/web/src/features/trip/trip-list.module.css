@@ -1,0 +1,51 @@
+.empty p { font-size: 13px; color: var(--color-muted); }
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 14px 18px; border: 1px solid var(--color-border); border-radius: 16px; background: #fffffff5; color: var(--color-text); text-decoration: none; }
+.row:hover, .row:focus-visible { border-color: var(--color-primary); }
+.row > svg { flex: none; color: var(--color-muted); }
+.text { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.text strong { font-size: 15px; letter-spacing: -.3px; overflow-wrap: anywhere; }
+.text small { font-size: 12px; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.actions { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+/* Full list: one box holds the trip link and, past a line, its delete button; select mode puts a checkbox in front. */
+.item { display: flex; align-items: stretch; border: 1px solid var(--color-border); border-radius: 16px; background: #fffffff5; overflow: hidden; }
+.item .row { flex: 1; min-width: 0; border: 0; border-radius: 0; background: none; }
+.item:has(.row:hover), .item:has(.row:focus-visible), .item:has(.check:focus-visible) { border-color: var(--color-primary); }
+label.row { cursor: pointer; }
+.delete { flex: none; width: 52px; display: grid; place-items: center; border-left: 1px solid var(--color-border); color: var(--color-muted); }
+.delete:hover:not(:disabled), .delete:focus-visible { color: var(--color-error); background: var(--color-error-soft); }
+.delete:disabled { opacity: .45; }
+.check { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--color-primary); }
+.checked { border-color: var(--color-primary); background: var(--color-soft); }
+.selectActions { display: flex; flex: none; gap: 6px; }
+.selectActions > button { padding-inline: 12px; }
+.unsupported { margin: -14px 0 16px; font-size: 12px; line-height: 1.7; color: var(--color-muted); }
+.notice { margin: 0 0 12px; font-size: 13px; line-height: 1.7; color: var(--color-primary); overflow-wrap: anywhere; }
+.notice:empty { margin: 0; }
+.noticeFailed { color: var(--color-error); }
+
+/* Delete confirmation: over the whole page, like the menu. */
+.overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: #24392f4d; }
+.dialog { width: min(360px, 100%); max-height: 100%; overflow-y: auto; padding: 22px 20px 18px; border-radius: 18px; background: var(--color-surface); box-shadow: 0 16px 48px #24392f29; }
+.dialog h2 { font-size: 17px; line-height: 1.5; letter-spacing: -.4px; overflow-wrap: anywhere; }
+.dialogBody { display: grid; gap: 8px; margin: 10px 0 18px; font-size: 13px; line-height: 1.7; color: var(--color-muted); }
+.target { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--color-subtle); color: var(--color-text); overflow-wrap: anywhere; }
+.target small { font-size: 12px; color: var(--color-muted); }
+.dialogActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dialogActions > [aria-disabled="true"] { opacity: .6; cursor: progress; }
+
+/* Home card: denser rows separated by lines inside one card. */
+.recent { background: #fffffff0; border: 1px solid #fff; border-radius: 15px; box-shadow: 0 8px 30px #24392f0b; padding: 10px 14px 4px; }
+.recentHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.recentHead h2 { font-size: 13px; font-weight: 700; letter-spacing: -.2px; }
+.all { display: inline-flex; align-items: center; gap: 3px; min-height: 28px; font-size: 11px; font-weight: 650; color: var(--color-primary); text-decoration: none; }
+.state { padding: 10px 0 12px; font-size: 12px; color: var(--color-muted); }
+.failed { display: grid; gap: 8px; justify-items: start; padding: 6px 0 12px; font-size: 12px; color: var(--color-warning); overflow-wrap: anywhere; }
+.compact { gap: 0; }
+.compact li + li { border-top: 1px solid var(--color-border); }
+.compact .row { min-height: 46px; padding: 5px 2px; gap: 8px; border: 0; border-radius: 8px; background: none; }
+.compact .text { gap: 1px; }
+.compact .text strong { font-size: 13px; }
+.compact .text small { font-size: 11px; }
+.compact .row:focus-visible { outline-offset: 0; }

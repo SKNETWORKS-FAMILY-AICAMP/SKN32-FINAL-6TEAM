@@ -22,6 +22,7 @@
 .firstRender .card { animation: arrive .6s both; }
 .firstRender .card:nth-child(1) { animation-delay: .11s; }
 .firstRender .card:nth-child(2) { animation-delay: .22s; }
+.firstRender .card:nth-child(3) { animation-delay: .33s; }
 .cardHead { width: 100%; min-height: 91px; padding: 19px 18px; display: flex; align-items: center; gap: 12px; text-align: left; }
 .cardHead:disabled { opacity: .67; }
 .stepNumber { flex: 0 0 31px; width: 31px; height: 31px; border-radius: 11px; display: grid; place-items: center; background: var(--color-subtle); color: var(--color-muted); font-size: 12px; font-weight: 700; }
@@ -45,8 +46,8 @@
 .card.active > .cardContent { display: flex; flex: 1 0 auto; flex-direction: column; opacity: 1; }
 .card.active .contentInner { flex: 1; display: flex; flex-direction: column; overflow: visible; }
 .card.active .cardPadding { flex: 1; display: flex; flex-direction: column; }
-.card[data-card="1"].active .cardPadding { padding-top: 22px; }
-.card[data-card="1"].active .divider { display: none; }
+.card:is([data-card="0"], [data-card="1"]).active .cardPadding { padding-top: 22px; }
+.card:is([data-card="0"], [data-card="1"]).active .divider { display: none; }
 .card[data-card="2"]:not(.done) .cardPadding { padding: 0; }
 .card[data-card="2"]:not(.done) .divider { display: none; }
 .card[data-card="2"].active:not(.done) > .cardHead { display: none; }
@@ -70,6 +71,20 @@
 .card[data-card="1"].active .draftNote { margin-bottom: 24px; }
 .termsContinue { width: 100%; margin-top: 16px; }
 .card[data-card="1"].active .termsContinue { flex: none; margin-top: auto; min-height: 48px; }
+
+/* Optional recovery email (card 0): not a numbered step. */
+.optional { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; background: var(--color-subtle); color: var(--color-muted); font-size: 10px; font-weight: 650; letter-spacing: 0; vertical-align: 2px; }
+.emailForm { display: flex; flex: 1; flex-direction: column; }
+.emailLabel { font-size: 12px; font-weight: 650; color: var(--color-muted); margin: 6px 0 7px; }
+.emailInput, .otherInput { width: 100%; min-width: 0; min-height: 48px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; color: var(--color-text); font-size: 14px; }
+.emailInput[aria-invalid="true"] { border-color: var(--color-error); }
+.emailHint { font-size: 11px; line-height: 1.7; color: var(--color-muted); margin: 8px 0 0; }
+.emailError { font-size: 12px; line-height: 1.7; color: var(--color-error); margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--color-error-soft); overflow-wrap: anywhere; }
+.emailContinue { width: 100%; min-height: 48px; margin-top: 18px; }
+.card[data-card="0"].active .draftNote { margin-bottom: 24px; }
+/* Like the terms button: `.next` grows (flex: 1), so the expanded card pins it at its own height. */
+.card[data-card="0"].active .emailContinue { flex: none; margin-top: auto; }
+@media (max-width: 550px) { .emailInput, .otherInput { font-size: 16px; } }
 
 .next { flex: 1; min-height: 47px; border-radius: 11px; background: var(--color-primary); color: var(--color-on-primary); font-size: 12px; font-weight: 650; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .next:disabled { background: var(--color-border); color: var(--color-muted); }
@@ -97,19 +112,37 @@
 .question h2 { font-size: 21px; font-weight: 700; line-height: 1.45; letter-spacing: -.9px; margin: 0 0 7px; }
 .question h2:focus { outline: none; }
 .helper { font-size: 12px; line-height: 1.7; color: var(--color-muted); margin: 0 0 14px; }
-.optional { display: inline-block; background: var(--color-soft); color: var(--color-primary); padding: 1px 6px; border-radius: 4px; margin-left: 4px; font-size: 10px; }
+.introList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.introList li { background: var(--color-subtle); border-radius: 11px; padding: 12px 14px; font-size: 12px; line-height: 1.7; }
 .question .questionNav { margin-top: auto; padding-top: 12px; }
 .groupLabel { font-size: 11px; line-height: 1.6; font-weight: 650; color: var(--color-muted); margin: 13px 0 7px; }
 .groupLabel:first-child { margin-top: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips.grid { display: grid; grid-template-columns: 1fr 1fr; }
-.noneRow { margin-top: 17px; }
 .chip { position: relative; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 11px; min-height: 46px; padding: 11px 30px 11px 13px; font-size: 12px; font-weight: 500; line-height: 1.4; text-align: center; transition: transform .14s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .chip:hover { border-color: var(--color-primary); }
 .chip.selected { background: var(--color-soft); border-color: var(--color-primary); color: var(--color-primary); font-weight: 650; }
 .chips.grid .chip { min-height: 55px; }
 .chip:active:not(:disabled), .next:active:not(:disabled), .previous:active:not(:disabled) { transform: scale(.97); }
 .optionIcon { display: block; height: 23px; margin-bottom: 5px; color: var(--color-primary); }
+/* Companions: the field under the chips when `other` is picked. */
+.otherField { margin-top: 14px; }
+.otherField .groupLabel { display: block; margin: 0 0 7px; }
+/* Priorities: three area cards in a fixed order; the picking order shows as numbers on the right. */
+.areas { display: grid; gap: 10px; }
+.area { border: 1px solid var(--color-border); border-radius: 13px; background: var(--color-surface); overflow: hidden; transition: border-color .2s; }
+.areaOn { border-color: var(--color-primary); }
+.areaHead { width: 100%; min-height: 50px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; text-align: left; font-size: 13px; font-weight: 650; transition: background .2s; }
+.areaOn .areaHead { background: var(--color-soft); color: var(--color-primary); }
+.areaIcon { display: grid; flex: none; color: var(--color-primary); }
+.areaName { flex: 1; min-width: 0; }
+.rank, .chipRank { display: grid; place-items: center; flex: none; border-radius: 99px; background: var(--color-primary); color: var(--color-on-primary); font-weight: 700; font-variant-numeric: tabular-nums; }
+.rank { min-width: 24px; height: 24px; padding: 0 6px; font-size: 12px; }
+.areaDetails { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px; }
+.areaDetails[hidden] { display: none; }
+/* The number sits in the chip's right padding, so it never covers the words. */
+.rankedChip { min-height: 42px; padding-right: 32px; }
+.chipRank { position: absolute; top: 50%; right: 8px; min-width: 19px; height: 19px; padding: 0 5px; transform: translateY(-50%); font-size: 11px; }
 .optionCheck { position: absolute; right: 9px; top: 50%; width: 13px; height: 13px; transform: translateY(-50%); opacity: 0; pointer-events: none; }
 .chip.selected .optionCheck { opacity: 1; }
 .drawnCheck { display: block; width: 100%; height: 100%; }
@@ -117,18 +150,6 @@
 .selectionFeedback.selected { animation: selectionTint .22s ease-out both; }
 .selectionFeedback:not(.selected) { animation: deselectionTint .22s ease-out both; }
 .selectionFeedback .drawnCheck path { animation: drawCheck .2s ease-out both; }
-.field { display: block; font-size: 11px; font-weight: 600; margin: 11px 0 0; color: var(--color-muted); }
-.field input { display: block; width: 100%; min-width: 0; min-height: 46px; color: var(--color-text); border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); padding: 11px 10px; margin-top: 7px; font-size: 12px; }
-.budgetRow { display: flex; align-items: center; justify-content: space-between; font-size: 10px; letter-spacing: .3px; font-weight: 650; margin: 0 0 11px; color: var(--color-primary); }
-.counterList { border: 1px solid var(--color-border); border-radius: 12px; padding: 0 12px; margin-top: 12px; }
-.counterRow { display: flex; align-items: center; justify-content: space-between; min-height: 55px; border-bottom: 1px solid var(--color-border); }
-.counterRow:last-child { border-bottom: 0; }
-.counterLabel { font-size: 12px; font-weight: 600; }
-.counterCaption { display: block; color: var(--color-muted); font-size: 10px; font-weight: 400; margin-top: 3px; }
-.counter { display: flex; align-items: center; gap: 4px; }
-.counter button { height: 44px; width: 44px; color: var(--color-primary); font-size: 21px; border-radius: 9px; }
-.counter button:disabled { color: var(--color-border); }
-.counter output { min-width: 19px; text-align: center; font-size: 13px; font-weight: 650; }
 .carouselFooter { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 12px; background: #fff; }
 .dots { display: flex; align-items: center; justify-content: center; gap: 6px; height: 18px; }
 .dot { width: 4px; height: 4px; background: var(--color-border); border-radius: 99px; transition: width .36s cubic-bezier(.22, .8, .25, 1.06), background .24s; }
@@ -140,10 +161,22 @@
 .successSymbol .drawnCheck { width: 30px; height: 30px; }
 .success h2 { font-size: 21px; line-height: 1.5; margin: 0 0 10px; letter-spacing: -.7px; }
 .success > p { font-size: 12px; color: var(--color-muted); line-height: 1.9; margin: 0 0 22px; }
-.summary { background: var(--color-subtle); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 19px; }
-.summary > div { display: flex; justify-content: space-between; gap: 15px; font-size: 11px; line-height: 1.7; margin: 5px 0; }
-.summary span { color: var(--color-muted); }
-.summary strong { font-weight: 600; text-align: right; }
+/* Finished-survey cards bleed to the card edges so the next one peeks in, like the intro's how-it-works cards. Both stretch to the taller one, so the buttons below stay put. */
+.summaryCarousel { text-align: left; margin-bottom: 19px; }
+.summarySlides { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 18px; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
+.summarySlides::-webkit-scrollbar { display: none; }
+.summaryDragging { scroll-snap-type: none; cursor: grabbing; }
+.summaryCard { flex: 0 0 82%; scroll-snap-align: start; padding: 14px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-subtle); }
+.summaryCard h3 { font-size: 13px; margin: 0 0 4px; letter-spacing: -.3px; color: var(--color-primary); }
+.summary > div { padding: 9px 0; border-top: 1px solid var(--color-border); font-size: 12px; line-height: 1.6; }
+.summary > div:first-child { border-top: 0; }
+.summary > div > span { display: block; font-size: 10px; color: var(--color-muted); margin-bottom: 2px; }
+.summary strong { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.summaryLine { display: block; }
+.summaryNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.summaryNav button { width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; background: #fff; color: var(--color-primary); font-size: 16px; }
+.summaryNav button[aria-disabled="true"] { opacity: .35; cursor: default; }
+.summaryNav p { font-size: 11px; color: var(--color-muted); text-align: center; font-variant-numeric: tabular-nums; }
 .homeContinue { width: 100%; min-height: 48px; margin: 0 0 12px; }
 .editPreferences { background: #fff; color: var(--color-primary); border: 1px solid var(--color-border); }
 .prototypeNote { font-size: 10px; color: var(--color-muted); line-height: 1.7; margin: 15px 0 0; }

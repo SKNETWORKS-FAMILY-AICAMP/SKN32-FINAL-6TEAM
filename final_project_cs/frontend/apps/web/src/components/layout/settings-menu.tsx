@@ -2,9 +2,13 @@
 
 import { createContext, useContext, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X } from "lucide-react";
-import { updateSettings, useSettings, useT, type TripNavigation } from "@/lib/settings";
-import type { Language } from "@/lib/i18n";
+import Link from "next/link";
+import { ChevronRight, Menu, X } from "lucide-react";
+import { Avatar } from "@/components/ui";
+import { LanguagePicker } from "@/components/ui/language-picker";
+import { nicknameLabel, useProfile } from "@/lib/profile";
+import { updateSettings, useSettings, useT } from "@/lib/settings";
+import { routes } from "@/lib/routes";
 import styles from "./settings-menu.module.css";
 
 /** Where the drawer renders: the device frame on intro screens, the page otherwise. */
@@ -12,15 +16,17 @@ export const OverlayRoot = createContext<HTMLElement | null>(null);
 
 export function SettingsMenu({ className = "" }: { className?: string }) {
   const t = useT();
-  const { language, navigation } = useSettings();
+  const { navigation } = useSettings();
+  const profile = useProfile();
   const [open, setOpen] = useState(false);
   const root = useContext(OverlayRoot);
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const first = useRef<HTMLAnchorElement>(null);
   const id = useId();
 
   useEffect(() => {
-    if (open) panel.current?.querySelector<HTMLElement>("input:checked")?.focus();
+    if (open) first.current?.focus();
   }, [open]);
 
   function close() {
@@ -31,42 +37,43 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") { event.stopPropagation(); close(); return; }
     if (event.key !== "Tab" || !panel.current) return;
-    const focusable = [...panel.current.querySelectorAll<HTMLElement>("button, input:checked")];
-    const first = focusable[0], last = focusable.at(-1);
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    // A closed language list is inert, so its options are not part of the cycle.
+    const focusable = [...panel.current.querySelectorAll<HTMLElement>("a[href], button, input")].filter((element) => !element.closest("[inert]"));
+    const head = focusable[0], last = focusable.at(-1);
+    if (event.shiftKey && document.activeElement === head) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); head?.focus(); }
   }
-
-  const languages: [Language, string][] = [["en", "English"], ["ko", "한국어"]];
-  const navigations: [TripNavigation, string, string][] = [
-    ["fixed", t("고정 하단 탭", "Fixed tabs"), t("화면 아래에 탭이 항상 보여요.", "Tabs stay at the bottom of the screen.")],
-    ["floating", t("플로팅 버튼", "Floating button"), t("왼쪽 아래 버튼을 누르면 탭이 펼쳐져요.", "Tap the button at the bottom left to open the tabs.")],
-  ];
 
   const drawer = open && <div className={styles.overlay} onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
     <div ref={panel} className={styles.panel} id={`${id}-panel`} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onKeyDown={trapFocus}>
       <header className={styles.head}>
-        <div><p className={styles.eyebrow}>SETTINGS</p><h2 id={`${id}-title`}>{t("설정", "Settings")}</h2></div>
-        <button type="button" className={styles.close} onClick={close} aria-label={t("설정 닫기", "Close settings")}><X size={20} aria-hidden="true" /></button>
+        <div><p className={styles.eyebrow}>MENU</p><h2 id={`${id}-title`}>{t("메뉴", "Menu")}</h2></div>
+        <button type="button" className={styles.close} onClick={close} aria-label={t("메뉴 닫기", "Close menu")}><X size={20} aria-hidden="true" /></button>
       </header>
-      <fieldset className={styles.group}>
-        <legend>{t("언어", "Language")}</legend>
-        <div className={styles.segment}>{languages.map(([value, label]) => (
-          <label key={value} lang={value}><input type="radio" name={`${id}-language`} value={value} checked={language === value} onChange={() => updateSettings({ language: value })} /><span>{label}</span></label>
-        ))}</div>
-      </fieldset>
-      <fieldset className={styles.group}>
-        <legend>{t("여행 화면 내비게이션", "Trip navigation")}</legend>
-        {navigations.map(([value, label, description]) => (
-          <label key={value} className={styles.option}><input type="radio" name={`${id}-navigation`} value={value} checked={navigation === value} onChange={() => updateSettings({ navigation: value })} /><span><strong>{label}</strong><small>{description}</small></span></label>
-        ))}
-      </fieldset>
+      {/* One board; its rows are divided by lines only. */}
+      <div className={styles.board}>
+        {/* Links close the menu on the way, also when their page is already open. */}
+        <Link ref={first} href={routes.myPage} className={styles.profile} onClick={close}>
+          <Avatar size={48} />
+          <span className={styles.profileText}><strong>{nicknameLabel(profile, t)}</strong><small>{t("마이페이지", "My page")}</small></span>
+          <ChevronRight size={18} aria-hidden="true" />
+        </Link>
+        <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
+        {/* The same card as the home intro, caption included. */}
+        <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
+        {/* One switch over the saved `navigation`: off = fixed tabs (the default), on = floating button. */}
+        <label className={styles.switchRow}>
+          <span className={styles.switchText}><strong id={`${id}-floating`}>{t("플로팅 버튼 사용", "Use floating button")}</strong><small id={`${id}-floating-note`}>{t("끄면 고정 하단 탭으로 표시됩니다.", "When off, the tabs stay fixed at the bottom.")}</small></span>
+          <input type="checkbox" role="switch" className={styles.switch} checked={navigation === "floating"} aria-labelledby={`${id}-floating`} aria-describedby={`${id}-floating-note`}
+            onChange={(event) => updateSettings({ navigation: event.target.checked ? "floating" : "fixed" })} />
+        </label>
+      </div>
       <p className={styles.note}>{t("설정은 이 브라우저에 저장돼요.", "Settings are saved in this browser.")}</p>
     </div>
   </div>;
 
   return <>
-    <button ref={button} type="button" className={`${styles.menuButton} ${className}`} aria-label={t("설정 메뉴", "Settings menu")} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-panel` : undefined} onClick={() => setOpen(true)}>
+    <button ref={button} type="button" className={`${styles.menuButton} ${className}`} aria-label={t("메뉴", "Menu")} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? `${id}-panel` : undefined} onClick={() => setOpen(true)}>
       <Menu size={20} aria-hidden="true" />
     </button>
     {drawer && createPortal(drawer, root ?? document.body)}

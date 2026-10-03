@@ -39,6 +39,23 @@ export async function registerExampleTrip(page: Page) {
   return { source, tripId: new URL(page.url()).pathname.split("/")[2] };
 }
 
+/** Terms card open on /start: read the full terms, agree, go on to the preferences. */
+export async function agreeTerms(page: Page) {
+  await expect(page.getByRole("button", { name: /약관 동의/ })).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: /전체 약관 읽기/ }).click();
+  const reader = page.getByRole("dialog", { name: "서비스 이용 및 개인정보 안내" });
+  await reader.getByRole("article").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await reader.getByText(/^\[필수\]/).click();
+  await page.getByRole("button", { name: "동의하고 다음으로" }).click();
+}
+
+/** In the open menu, unfolds the language card and picks a language by its own name. */
+export async function pickMenuLanguage(page: Page, menu: "메뉴" | "Menu", language: "한국어" | "English") {
+  const dialog = page.getByRole("dialog", { name: menu });
+  await dialog.getByRole("button", { name: /LANGUAGE/ }).click();
+  await dialog.getByRole("button", { name: language, exact: true }).click();
+}
+
 export async function noHorizontalScroll(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }

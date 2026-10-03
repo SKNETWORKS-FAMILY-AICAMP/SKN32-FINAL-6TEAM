@@ -1,0 +1,98 @@
+{
+ "case_id": "xlsx-03",
+ "format": "xlsx",
+ "defect": "typo",
+ "party": 1,
+ "inputs": [
+  {
+   "kind": "file",
+   "name": "plan.xlsx"
+  }
+ ],
+ "lines": [
+  "일차 | 날짜 | 시각 | 일정 | 메모",
+  "1일차 | 2026-10-22 | 09:30 | 익선동 한옥거리 | ",
+  "1일차 | 2026-10-22 | 12:30 | 명동교자 | 예약번호 KY-75931",
+  "1일차 | 2026-10-22 | 15:00 | 전쟁기념관 | ",
+  "2일차 | 2026-10-23 | 09:30 | 경복굼 관람 | ",
+  "2일차 | 2026-10-23 | 12:30 | 망원시장 칼국수 | ",
+  "2일차 | 2026-10-23 | 15:00 | 덕수궁 돌담길 산책 | ",
+  "3일차 | 2026-10-24 | 09:30 | 창경궁 | ",
+  "3일차 | 2026-10-24 | 12:30 | 광장시장 빈대떡 | ",
+  "3일차 | 2026-10-24 | 15:00 | 명동난타극장 | "
+ ],
+ "items": [
+  {
+   "date": "2026-10-22",
+   "start": "09:30",
+   "title": "익선동 한옥거리",
+   "place": "익선동",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-22",
+   "start": "12:30",
+   "title": "명동교자",
+   "place": "명동교자",
+   "kind": "dining",
+   "booking_no": "KY-75931"
+  },
+  {
+   "date": "2026-10-22",
+   "start": "15:00",
+   "title": "전쟁기념관",
+   "place": "전쟁기념관",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-23",
+   "start": "09:30",
+   "title": "경복굼 관람",
+   "place": "경복궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-23",
+   "start": "12:30",
+   "title": "망원시장 칼국수",
+   "place": "망원시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-23",
+   "start": "15:00",
+   "title": "덕수궁 돌담길 산책",
+   "place": "덕수궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-24",
+   "start": "09:30",
+   "title": "창경궁",
+   "place": "창경궁",
+   "kind": "activity",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-24",
+   "start": "12:30",
+   "title": "광장시장 빈대떡",
+   "place": "광장시장",
+   "kind": "dining",
+   "booking_no": null
+  },
+  {
+   "date": "2026-10-24",
+   "start": "15:00",
+   "title": "명동난타극장",
+   "place": "명동난타극장",
+   "kind": "activity",
+   "booking_no": null
+  }
+ ]
+}
