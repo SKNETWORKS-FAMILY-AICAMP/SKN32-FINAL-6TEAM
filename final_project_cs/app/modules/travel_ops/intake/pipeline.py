@@ -437,10 +437,18 @@ def revalidate(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revi
     return view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
 
 
+class _DryRunRollback(Exception):
+    """미리 보기를 읽은 뒤 저장 구간을 되돌리려고 던지는 것 — 오류가 아니다."""
+
+
 def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None,
-            kakao: Any = None) -> dict[str, Any]:
+            kakao: Any = None, dry_run: bool = False) -> dict[str, Any]:
     """**전체 자동 추천** — 확인이 필요한 일정을 검증한 대체 일정(장소 · 시각)으로 한 번에 바꾼다(`autofix.py`).
-    바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다."""
+    바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
+
+    ★`dry_run` `[2026-10-03 ui 세션 요청서 3번]` — **저장하지 않고** 바뀔 모습만 돌려준다. 실제 적용과 **같은 길**(`edit`)로 새 판을 만들어 `view` 를 읽은 뒤 그 저장 구간을
+      되돌린다(세이브포인트 롤백) — 그래서 미리 보기의 검사가 적용한 결과와 같다(따로 흉내 내는 계산이 아니다). 응답의 `view.preview` 가 참이고 `view.revision` 은 적용하면 생길 판 번호다.
+      바꿀 것이 없으면 현재 모습 그대로(`preview` 없음)."""
     from . import autofix as autofix_module
 
     _, found = current_review(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision)
@@ -448,11 +456,25 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
     edits = [{"source_id": c["source_id"], "field": f"items[{c['index']}].{e['field']}", "value": e["value"]}
              for c in got["changes"] for e in c["edits"]]
     new = revision
+    changed = [{k: v for k, v in c.items() if k != "edits"} for c in got["changes"]]
+    if edits and dry_run:
+        preview: dict[str, Any] | None = None
+        try:
+            with conn.transaction():                       # 세이브포인트 — 안에서 만든 새 판 · 저장된 검사가 나갈 때 사라진다
+                edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, edits=edits,
+                     tour=tour, kakao=kakao, via="autofix")
+                preview = view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
+                raise _DryRunRollback()
+        except _DryRunRollback:
+            pass
+        if preview is not None:
+            preview["preview"] = True
+        return {"applied": False, "dry_run": True, "revision": revision, "changed": changed, "kept": got["kept"], "view": preview}
     if edits:
         new = edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, edits=edits,
                    tour=tour, kakao=kakao, via="autofix")
-    return {"applied": bool(edits), "revision": new,
-            "changed": [{k: v for k, v in c.items() if k != "edits"} for c in got["changes"]], "kept": got["kept"]}
+    return {"applied": bool(edits), "dry_run": dry_run, "revision": new, "changed": changed, "kept": got["kept"],
+            **({"view": view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)} if dry_run else {})}
 
 
 #: 고객이 보낸 관광공사 번호가 그 좌표의 장소 것으로 인정되는 거리(m) — `place_info.CATALOG_MATCH_M` 와 같은 값

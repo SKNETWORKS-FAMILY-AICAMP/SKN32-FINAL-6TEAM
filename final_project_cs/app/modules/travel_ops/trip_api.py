@@ -127,6 +127,11 @@ class IntakeRevisionIn(BaseModel):
     revision: int = Field(ge=1)
 
 
+class IntakeAutofixIn(IntakeRevisionIn):
+    """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
+    dry_run: bool = False
+
+
 class IntakePlanIn(BaseModel):
     """「일정 짜 줘」 — 확인 화면에서 고객이 조건을 확인하고 누른다. ★누르는 것이 곧 등록 요청이다(통지가 나간다)."""
     model_config = ConfigDict(extra="forbid")
@@ -1159,11 +1164,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         return candidates.photos(_lazy("place", place_factory), ref)
 
     @router.post("/v1/web/trip-intakes/{intake_id}/autofix")
-    def web_intake_autofix(intake_id: UUID, request: IntakeRevisionIn, http: Request,
+    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request,
                            who: tuple[str, UUID] = Depends(_web_customer)):
         """**전체 자동 추천** — 확인이 필요한 일정을 운영시간·휴무·앞뒤 이동까지 검증한 대체 일정(장소+시각)으로 한 번에 바꾼다(`intake/autofix.py`).
         고정한 일정은 건드리지 않는다. 바꿀 것이 있으면 `edits` 와 같은 길로 새 판이 되고(`applied: true`), 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
-        응답 = `{applied, revision, changed:[{from, to, reason}], kept:[{id, reason}], view}` — `view` 는 `GET …/{id}` 와 같은 모양(새 검사 포함)."""
+        응답 = `{applied, revision, changed:[{from, to, reason}], kept:[{id, reason}], view}` — `view` 는 `GET …/{id}` 와 같은 모양(새 검사 포함).
+        ★`dry_run: true` — **저장하지 않고** 바뀔 모습만: `applied: false` · `dry_run: true` · `view.preview: true` · `view.revision` 은 적용하면 생길 판 번호(실제 적용과 같은 길로 만들어 읽고 되돌린다)."""
         from .intake import pipeline
 
         tenant, customer = who
@@ -1172,8 +1178,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                         revision=request.revision, tour=_lazy("place", place_factory),
-                                        kakao=_lazy("kakao", kakao_factory))
-                return {**done, "view": pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run)
+                # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
+                return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
         except pipeline.IntakeConflict as exc:
