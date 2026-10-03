@@ -12,7 +12,8 @@ export interface Settings {
   theme: Theme;
 }
 
-const defaults: Settings = { language: "en", navigation: "fixed", theme: "green" };
+// `[2026-10-03 사용자 결정]` 기본 언어는 한국어다 — 처음 여는 사람에게 한국어로 보인다(바꾸면 이 브라우저가 기억한다).
+const defaults: Settings = { language: "ko", navigation: "fixed", theme: "green" };
 const listeners = new Set<() => void>();
 let current: Settings | null = null;
 

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 // `suppressHydrationWarning`: the theme script may change `data-theme` on <html> before React hydrates it.
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en" data-theme="green" suppressHydrationWarning>
+  return <html lang="ko" data-theme="green" suppressHydrationWarning>
     <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
     <body><Providers>{children}</Providers></body>
   </html>;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { reconnectDelay } from "@/features/trip/use-trip-events";
-import { watchIntake } from "@/lib/live/stream";
+import { watchIntake, type IntakeContentHandler } from "@/lib/live/stream";
 import type { Language } from "@/lib/i18n";
 
 /**
@@ -22,10 +22,10 @@ export interface IntakeProgress {
 
 /**
  * `[2026-10-02]` The server streams an intake's reading (`GET /v1/web/trip-intakes/{id}/events`) instead of being asked
- * every 1.5 s. The stream carries only the stage — `onChange` re-reads the intake (its lines and items) on every event.
- * Runs only while `reading` is true.
+ * every 1.5 s. The stage events make `onChange` re-read the intake (its lines and items); the content events (`onContent`,
+ * the checks of each place and leg) are not in that GET until the check is done. Runs only while `reading` is true.
  */
-export function useIntakeEvents(intakeId: string, reading: boolean, language: Language, onChange: () => void): IntakeProgress {
+export function useIntakeEvents(intakeId: string, reading: boolean, language: Language, onChange: () => void, onContent?: IntakeContentHandler): IntakeProgress {
   const [progress, setProgress] = useState<IntakeProgress>({ follow: "live", slow: false });
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function useIntakeEvents(intakeId: string, reading: boolean, language: La
           failures = 0;
           setProgress({ follow: "live", slow: event.type === "progress" && event.slow });
           onChange();
-        }, stop.signal);
+        }, stop.signal, undefined, onContent);
         if (stop.signal.aborted || end === "closed") return;
         if (end === "done" || end === "gone") { onChange(); return; }
         if (end === "stalled") { setProgress({ follow: "stalled", slow: false }); onChange(); return; }
@@ -49,7 +49,7 @@ export function useIntakeEvents(intakeId: string, reading: boolean, language: La
       }
     })();
     return () => stop.abort();
-  }, [intakeId, reading, language, onChange]);
+  }, [intakeId, reading, language, onChange, onContent]);
 
   return progress;
 }

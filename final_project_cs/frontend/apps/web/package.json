@@ -13,7 +13,6 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:e2e": "playwright test",
     "test:live": "playwright test -c playwright.live.config.ts",
     "test:real": "playwright test -c playwright.real.config.ts",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"

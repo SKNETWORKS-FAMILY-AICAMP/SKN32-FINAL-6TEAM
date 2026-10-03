@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { DATA_MODE } from "@/lib/gateway";
 import { useSettings } from "@/lib/settings";
 import { mapLoad } from "@/lib/live/extras";
 import { LiveMap, MapUnavailable } from "./live-map";
@@ -38,9 +37,7 @@ export function GoogleMap({ apiKey, mapId, tileUrl, onDecided, ...props }: MapVi
 
   useEffect(() => {
     let cancelled = false;
-    // Demo data has no server to ask, so Google is never loaded there.
-    const ask = DATA_MODE === "live" ? askOnce(language) : Promise.resolve({ allowed: false, reason: "setting" });
-    void ask.then((answer) => {
+    void askOnce(language).then((answer) => {
       if (cancelled) return;
       const next: GoogleDecision = answer.allowed ? "google" : answer.reason === "setting" ? "free-setting" : "free";
       setDecision(next);

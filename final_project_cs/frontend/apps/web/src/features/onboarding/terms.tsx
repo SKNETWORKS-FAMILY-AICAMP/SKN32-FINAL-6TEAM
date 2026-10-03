@@ -5,15 +5,19 @@ import type { Translate } from "@/lib/i18n";
 import { DrawnCheck, OnboardingIcon } from "./icons";
 import styles from "./onboarding.module.css";
 
-/** Interaction-only draft terms; replace the copy with reviewed terms before release. */
+/**
+ * ★`[2026-10-03 사용자 지시]` 이 안내는 **서비스가 실제로 하는 일만** 적는다(서버 문서로 확인한 것: 사용자 키는 해시로만, 디스코드 웹훅은 암호화해 보관,
+ *   여행·대화 기록은 서버에 저장). 운영 주체 · 보관 기간 · 삭제·열람 요청 방법 · 문의처는 **아직 정해진 것이 없어** 지어내지 않고 「정해지는 대로
+ *   적는다」고 말한다. 법무 검토를 거친 약관 전문은 팀이 확정해 이 목록을 바꾼다.
+ */
 const sections = [
-  ["이 문서에 대하여", "About this document", "이 문서는 약관 열람과 동의 동작을 확인하기 위한 목업용 예시입니다. 실제 서비스의 확정된 이용약관이나 개인정보 처리방침이 아닙니다. 정식 서비스에 적용하기 전에 운영 주체, 실제 처리 방식과 이용자 권리를 반영한 문서로 교체해야 합니다.", "This is sample content for previewing the reading and consent flow. It is not the final terms of service or privacy policy. Before release, replace it with reviewed documents that describe the operator, actual data practices, and user rights."],
-  ["서비스 이용 안내", "Using the service", "triPilot 목업에서는 여행 취향을 선택하고 준비한 여행 계획을 등록하는 흐름을 체험할 수 있습니다. 일정과 장소, 이동 시간 등을 살펴보고 여행 계획을 조정하는 화면을 제공합니다. 화면에 표시되는 결과는 기능 설명을 위한 예시입니다.", "The triPilot prototype lets you explore selecting travel preferences and adding a travel plan. Screens demonstrate reviewing places, travel times, and itinerary changes. Results shown in the prototype illustrate the intended experience."],
-  ["여행 정보 확인", "Checking travel information", "여행지의 운영시간, 예약 조건, 교통편과 방문 가능 여부는 달라질 수 있습니다. 실제 예약이나 방문 전에는 해당 시설 또는 제공 업체의 최신 안내를 직접 확인하는 흐름을 전제로 합니다. 목업의 예시 일정은 실제 예약이나 예약 확정을 의미하지 않습니다.", "Opening hours, reservation requirements, transport, and availability can change. Travelers should check current information with the relevant venue or provider before booking or visiting. Sample itineraries do not represent bookings or confirmations."],
-  ["입력 항목과 활용", "Information you enter", "이 화면에서는 언어, 여행 테마, 동행 인원, 교통수단, 예산과 여행 일정 등 입력 항목을 보여줍니다. 해당 정보는 사용자가 원하는 여행 조건을 이해하고 일정을 구성하는 화면에 활용하는 것으로 표현되어 있습니다. 실제 수집 항목과 처리 목적은 정식 안내에서 명확히 정해야 합니다.", "This preview includes language, travel themes, group size, transport, budget, and itinerary fields. These inputs are presented as context for understanding travel preferences and organizing an itinerary. The actual collection fields and purposes must be specified in the final notice."],
-  ["선택 정보", "Optional information", "식사 제한이나 종교 관련 항목은 원하는 경우에만 입력하는 선택 정보로 구성되어 있습니다. 입력하지 않고 건너뛰는 흐름을 제공합니다. 실제 서비스에서 이러한 정보를 처리한다면 그 필요성과 별도 동의 여부를 검토하고 명확하게 안내해야 합니다.", "Food restrictions and religion-related fields are optional in this preview, with a skip option. If the released service processes this information, its necessity and any separate consent requirements must be reviewed and explained clearly."],
-  ["보관과 이용자 권리", "Retention and user rights", "이 목업의 온보딩 답변은 현재 페이지의 상태로 유지됩니다. 서비스의 실제 보관 기간, 파기 방법, 열람·수정·삭제 요청 절차와 문의처는 아직 이 예시 문서에 정해져 있지 않습니다. 출시 전 확정된 정책을 구체적으로 안내해야 합니다.", "Onboarding answers in this prototype are held in the current page state. Actual retention periods, deletion practices, access and correction procedures, and contact details are not defined by this sample. The released service must provide its finalized policies."],
-  ["동의 전 확인", "Before agreeing", "이 문서의 끝까지 내려오면 아래 동의 체크박스가 활성화됩니다. 체크하면 전체 화면이 닫히고 기존 카드에도 동일한 동의 상태가 표시됩니다. 체크하지 않고 닫을 수도 있으며, 카드에서 동의를 해제하면 다음 단계로 진행할 수 없습니다. 이 동작은 목업에서만 확인하는 예시 동의 절차입니다.", "Reaching the end enables the agreement checkbox below. Checking it closes this view and updates the checkbox on the card. You may close without agreeing. Clearing consent on the card prevents continuing to the next step. This is a demonstration consent flow only."],
+  ["이 안내에 대하여", "About this notice", "이 안내는 triPilot이 입력하신 여행 계획과 취향을 어떻게 다루는지 알려 드려요. 운영 주체, 보관 기간, 이용자 권리와 문의처처럼 아직 정해지지 않은 내용은 정해지는 대로 이 안내에 적어요.", "This notice explains how triPilot handles the travel plans and preferences you enter. Items that are not decided yet — the operator, retention periods, your rights and contact details — will be added here as soon as they are."],
+  ["서비스 이용 안내", "Using the service", "triPilot은 올려 주신 여행 계획을 읽어 일정과 장소, 이동 시간을 확인하고, 등록한 뒤에는 여행이 끝날 때까지 일정을 지켜보며 바뀐 점을 알려 드려요. 일정을 대신 예약하거나 예약을 바꾸거나 취소하지 않고, 결제도 하지 않아요.", "triPilot reads the travel plan you upload, checks its places, times and travel times, and after you register it, watches the plan until the trip ends and tells you what changed. It does not book, change or cancel reservations for you, and it does not take payments."],
+  ["여행 정보 확인", "Checking travel information", "운영시간, 휴무일, 이동 시간은 한국관광공사 정보 등 공개된 자료와 지도 서비스에서 가져와 확인해요. 이런 정보는 달라질 수 있으니, 예약이나 방문 전에는 해당 시설이나 업체의 최신 안내를 직접 확인해 주세요. 화면의 예약 표시는 입력하신 내용을 기준으로 해요.", "Opening hours, closing days and travel times are taken from public sources such as Korea Tourism Organization data and from map services. They can change, so please check the venue or provider's latest information before booking or visiting. Booking notes on screen reflect what you entered."],
+  ["입력 항목과 활용", "Information you enter", "여행 계획(글이나 파일), 여행 취향 설문, 여행에 대해 묻는 채팅 내용, 그리고 원하시면 디스코드 웹훅 주소를 서버로 보내 일정을 읽고 확인하고 답하는 데 써요. 위치는 「내 위치 알려 주고 다시 묻기」를 누를 때만 브라우저에 물어 그 질문에 답하는 데 써요.", "Your travel plan (text or files), the preference questions, the chat messages you send about your trip and, if you wish, a Discord webhook address are sent to the server to read and check your plan and to answer you. Your location is asked from the browser only when you press “Share my location and ask again”, and is used to answer that question."],
+  ["선택 정보", "Optional information", "식사 제한이나 종교 관련 항목, 디스코드 웹훅 주소는 원하시는 경우에만 입력하는 선택 정보예요. 입력하지 않고 건너뛸 수 있고, 건너뛰어도 서비스는 쓸 수 있어요. 다만 그 내용은 일정을 살필 때 반영되지 않아요.", "Food restrictions, religion-related answers and the Discord webhook address are optional; enter them only if you wish. You can skip them and still use the service, but they will not be taken into account when your plan is checked."],
+  ["보관과 이용자 권리", "Retention and your rights", "이 브라우저에는 사용자 키와 설문 답변, 화면 설정이 저장돼요. 서버에는 등록한 여행과 대화 기록이 저장되고, 사용자 키는 원문이 아니라 해시로만, 디스코드 웹훅 주소는 암호화해서 보관해요. 보관 기간, 삭제·열람·수정을 요청하는 방법과 문의처는 운영 주체가 정해 이 안내에 적어요.", "This browser keeps your user key, your preference answers and your display settings. The server keeps the trips you register and your chat history; your user key is kept only as a hash and a Discord webhook address is kept encrypted. Retention periods, how to ask for deletion, access or correction, and the contact details will be set by the operator and added here."],
+  ["동의 전 확인", "Before agreeing", "이 안내의 끝까지 내려오면 아래 동의 체크박스가 켜져요. 체크하면 전체 화면이 닫히고 카드에도 같은 동의가 표시돼요. 체크하지 않고 닫을 수도 있지만, 동의하지 않으면 다음 단계로 진행할 수 없어요.", "Reaching the end enables the agreement checkbox below. Checking it closes this view and shows the same consent on the card. You may close without agreeing, but you cannot continue to the next step without it."],
 ] as const;
 
 const requiredConsent = (t: Translate) => t("[필수] 서비스 이용약관 및 개인정보 수집·이용 내용을 확인하고 동의합니다.", "[Required] I have reviewed and agree to the terms of service and the collection and use of personal data.");
@@ -34,7 +38,6 @@ export function TermsCardBody({ t, read, agreed, consentMotion, onReadTerms, onA
       <span className={`${styles.consentMark} ${consentMotion ? styles.completionMotion : ""}`} aria-hidden="true"><DrawnCheck className={styles.drawnCheck} /></span>
       <span>{requiredConsent(t)}</span>
     </label>
-    <p className={styles.draftNote}>{t("목업용 약관 요약 · 실제 약관 검토 전", "Draft terms summary for the mockup · not final terms")}</p>
     <button type="button" className={`${styles.next} ${styles.termsContinue}`} disabled={!agreed} onClick={onContinue}>{t("동의하고 다음으로", "Agree and continue")}<OnboardingIcon name="arrow" size={15} /></button>
   </>;
 }
@@ -62,7 +65,7 @@ export function TermsReader({ t, read, agreed, onRead, onAgree, onClose }: {
 
   return <div className={styles.termsDialog} role="dialog" aria-modal="true" aria-labelledby="terms-full-title" onKeyDown={escape}>
     <header className={styles.termsHeader}>
-      <div><small>{t("목업용 예시 · 확정 전", "PROTOTYPE · DRAFT")}</small><h2 id="terms-full-title">{t("서비스 이용 및 개인정보 안내", "Service & personal data")}</h2></div>
+      <div><small>{t("이용 안내", "NOTICE")}</small><h2 id="terms-full-title">{t("서비스 이용 및 개인정보 안내", "Service & personal data")}</h2></div>
       <button type="button" className={styles.termsClose} aria-label={t("약관 닫기", "Close terms")} onClick={onClose}>×</button>
     </header>
     <article ref={scroller} className={styles.termsScroll} tabIndex={0} aria-label={t("약관 전체 내용", "Full terms")}>

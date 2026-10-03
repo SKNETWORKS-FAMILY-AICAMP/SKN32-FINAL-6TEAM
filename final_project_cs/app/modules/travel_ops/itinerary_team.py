@@ -23,17 +23,21 @@
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 import re
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask
+from app.core.contracts import ActionProposal, NextAction, TeamResult, TeamTask, ToolNotAllowed
 from app.core.idempotency import idempotency_key
 
 from .itinerary import Item, item_from_dict
-from .itinerary_actions import ACTION_TYPE, change_arguments
+from .itinerary_actions import ACTION_TYPE, CHOSEN_BY_CUSTOMER, change_arguments
+from .itinerary_fit import fit_change
+from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
+
 from .itinerary_changes import ItineraryChange, NoChange, plan_rollback, plan_swap
 
 KST = ZoneInfo("Asia/Seoul")
@@ -50,6 +54,18 @@ ANSWERS = {
     "clear": "지금 확인해 보니 일정에 영향이 없어요 — 바꾸지 않았어요.",
     "gone": "그 일정은 이미 바뀌었어요 — 다시 바꾸지 않았어요.",
 }
+
+
+@dataclass(frozen=True)
+class Consent:
+    """`[2026-10-03]` 감시 계산(`plan_*_trigger`)의 결과 중 하나 — 바꿀지 **먼저 묻는다**(활동에 날씨 사건만 걸렸을 때, `pending.needs_consent`).
+    Case 하나짜리 흐름은 이것을 「바꿀까요?」 제안으로, 같은 여행 묶음(`trip_watch_batch`)은 묶음 안의 한 항목으로 다룬다."""
+
+    report: dict[str, Any]
+
+
+#: 문장이 **계산 결과에 따라** 달라서 `NoChange.detail["text"]` 로 내려오는 답
+TEXT_ANSWERS = frozenset({"knock_on"})
 
 
 class ItineraryWork:
@@ -101,6 +117,11 @@ class ItineraryWork:
                "request": request, "at": at}
 
         if state.get("trigger_source") == "schedule":
+            if (state.get("trigger") or {}).get("batch"):
+                # ★`[2026-10-03]` 같은 여행의 문제가 한 회차에 둘 이상 — 한 초안 위에서 차례로 고쳐 판 하나 · 알림 하나(`trip_watch_batch`)
+                from .trip_watch_batch import WatchBatch
+
+                return WatchBatch(self, task, ctx).run()
             return await self.handle_trigger(task, ctx)
 
         kind = request.get("type")
@@ -237,6 +258,25 @@ class ItineraryWork:
             return report if isinstance(report, dict) else {"verdict": "fatal", "unknown": True}
         return check
 
+    #: 재점검 도구가 **못 불리는** 이유 — 권한 · 예산 · 같은 질문 반복. 이것은 후보를 「못 봤다」는 뜻이지 실행 실패가 아니다
+    TOOL_LIMITS = (ToolNotAllowed, ToolBudgetExceeded, ToolLoopExceeded)
+
+    def safe_recheck(self, task: TeamTask, ctx: dict[str, Any]):
+        """`recheck` 인데 **도구 한도에 걸려도 예외로 터지지 않는다** — 그 후보는 `not_checked`(못 봤다)로 돌려 고르지 않는다.
+
+        ☆`[2026-10-02 결함 인계 #1]` 후보가 많으면 예산이 바닥나 `ToolBudgetExceeded` 가 Controller 까지 올라가 실행이 실패했다 —
+          앞 후보가 이미 통과했어도 변경안을 못 내고, 감시 반복이 끊겼다. 요식 팀의 `safe_check` 와 같은 생각이다:
+          **점검하지 않은 곳을 괜찮다고 하지 않는다**(`choose` 가 `clear` 가 아닌 판정은 탈락시킨다).
+        """
+        check = self.recheck(task, ctx)
+
+        def safe(*, place: dict[str, Any], starts_at: datetime | None) -> dict[str, Any]:
+            try:
+                return check(place=place, starts_at=starts_at)
+            except self.TOOL_LIMITS:
+                return {"verdict": "not_checked"}
+        return safe
+
     @staticmethod
     def check_arguments(place: dict[str, Any], starts_at: datetime | None) -> dict[str, Any]:
         return {"place_id": place.get("place_id"), "latitude": place.get("latitude"),
@@ -259,9 +299,23 @@ class ItineraryWork:
                 return self._result(task, outcome="completed", confidence=0.9, evidence=evidence,
                                     answer=ANSWERS[plan.status], next_action=NextAction.RESPOND,
                                     decisions=[{"itinerary": plan.status, **self._plain(plan.detail)}])
+            if plan.status in TEXT_ANSWERS and plan.detail.get("text"):
+                # ★`[2026-10-03 L2]` 문장이 계산 결과에 따라 달라지는 답(어느 뒤 일정이 왜 걸리는지) — 일정은 안 바꿨다
+                return self._result(task, outcome="completed", confidence=0.9, evidence=evidence,
+                                    answer=str(plan.detail["text"]), next_action=NextAction.RESPOND,
+                                    decisions=[{"itinerary": plan.status, **self._plain(plan.detail)}])
             return self._escalate(task, f"itinerary_{plan.status}", evidence,
                                   warnings=[f"일정을 바꾸지 못했다: {plan.status}"])
         trip = ctx["trip"]
+        if plan.reason not in CHOSEN_BY_CUSTOMER:
+            # ★`[2026-10-03]` 자동 변경은 **쓰기 전에 일정 전체를 다시 판정**하고, 최고 안이 걸리면 담당이 뽑아 둔 다음 순위 안을 차례로 같은 판정에 넣는다(`itinerary_fit`).
+            #   다 걸리면 쓰지 않고 `itinerary_recheck_failed` — 감시가 고객에게 「일정은 그대로 두었어요」를 알린다. 적용기의 같은 재판정은 마지막 안전망이다.
+            fit = fit_change(plan, trip=trip, items=ctx["items"])
+            if fit.change is None:
+                return self._escalate(task, "itinerary_recheck_failed", evidence,
+                                      warnings=["일정 전체 재판정에 걸려 바꾸지 못했다: " + " / ".join(
+                                          f"{s.rank}순위 {s.name} — {chr(59).join(s.reasons)}" for s in fit.skipped)])
+            plan = fit.change
         base = int(ctx["ref"].get("base_version") or trip["version"]) \
             if plan.reason in ("customer_request", "rollback") else trip["version"]
         arguments = change_arguments(trip_id=trip["trip_id"], base_version=base, change=plan)
@@ -310,7 +364,9 @@ def mentioned_item(items: list[Item], text: str) -> Item | None:
     if any(word in text for word in ("식당", "밥", "음식", "먹")):
         for word, (start, end) in _MEAL_WORDS.items():
             if word in text:
-                meals = [i for i in items if i.kind == "dining" and start <= i.starts_at.hour < end]
+                from .itinerary_checks import seoul
+
+                meals = [i for i in items if i.kind == "dining" and start <= seoul(i.starts_at).hour < end]      # ★서울 시각의 시
                 if len(meals) == 1:
                     return meals[0]
     return None
@@ -386,4 +442,4 @@ def question_answer(item: Item | None, chunks: list[Any], terms: dict[str, Any] 
     return "\n".join(lines), sources
 
 
-__all__ = ["ANSWERS", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]
+__all__ = ["ANSWERS", "Consent", "ITINERARY_TOOLS", "ItineraryWork", "customer_lines", "mentioned_item", "question_answer"]

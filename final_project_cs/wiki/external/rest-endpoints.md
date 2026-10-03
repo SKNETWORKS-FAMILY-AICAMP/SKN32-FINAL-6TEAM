@@ -322,6 +322,24 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 길게 보면 이 칸은 외부가 쓰지 않는 것이 맞다 — 경로 조회(`read.route`)가 생기면 `uses` 는 **우리가 조회해서
   만든다.** 지금은 D-CS-005(ODsay 미사용)에 따라 경로 정의를 외부가 들고 오므로 표기를 공개한다.
 
+### 일정 응답의 `warnings[]` — 「살펴볼 점」 `[2026-10-03]`
+
+`[반영 2026-10-03]` 일정 응답(`POST /v1/trips` · `GET /v1/trips/{trip_id}` · 웹의 같은 응답)의 `warnings[]` 는 **거절이 아니라 알림**이다. 두 가지가 한 목록에 든다 —
+밀도 경고(`density_exceeded` · `density_unmeasurable`, D-019)와 **일정 품질 경고**(아래). 같은 모양이다: `code` · `date`(서울 날짜) · `reason` · `remedy` (+ 품질 경고는 가리키는 항목 순번 `items[]`).
+거절은 따로 있다 — 위반(겹침 · 닫힌 곳 · 이동 시간 부족 …)이 하나라도 있으면 `422 itinerary_infeasible`. **위반이 없는 일정은 경고가 몇 개든 등록된다**(`INV-CS-ACT-008`).
+
+| `code` | 뜻 | 기준(`config/guardrails.yaml` `travel.quality`) |
+|---|---|---|
+| `same_place_twice` | 그날 같은 곳이 두 번 들어 있다 | 활동은 생성기와 같은 규칙(같은 주소 · 30m · 이름 첫 낱말), 식당은 같은 가게(장소 id · 원장 id · 이름)만 |
+| `meal_missing` | 하루가 점심(11:30~14:00) 또는 저녁(17:30~20:30) 창을 통째로 덮는데 식사 항목이 없고 **식사할 틈(창 안의 가장 긴 빈 시간)도 60분이 안 된다** `[2026-10-03 적대 검토 — 틈이 크면 점심을 자유 시간으로 둔 일정이라 안 알린다]` | `meal_windows` · `meal_min_items`(하루 항목이 2개 미만이면 부분 일정으로 보고 안 봄) · `meal_min_gap_minutes` 60 |
+| `route_zigzag` | 그날 활동 장소를 도는 길이가 가장 짧은 순서의 1.5배 이상이고 3km 이상 더 멀다. `better_order[]` 가 더 짧은 순서 | `zigzag.min_stops` 3 · `max_stops` 8 · `min_extra_m` · `ratio` |
+| `past_day_end` | 그날 마지막 일정이 하루 마감 뒤에 끝난다(늦게 끝나는 항목을 모두 `items` 로) `[체크리스트 T13]`. **활동 · 식사만 센다**(숙소 · 항공 · 이동 제외). 사용자가 하루 시간을 직접 준 여행(`constraints.density`)은 밀도 계산이 창 밖을 이미 말하므로 건너뛴다 | `travel.day_window.default_end`(22:00 — 일정 짜기와 같은 값) |
+| `last_order_tight` | 식당에 도착해 마지막 주문까지 20분이 안 된다 — 라스트오더를 **알 때**(영업 종료 앞 · 브레이크 앞은 `last_order_before_break_min` 값이 있을 때만) `[체크리스트 O4]`. 영업 안 함 · 브레이크에 걸침 같은 **위반이 이미 있는 식사는 말하지 않는다** | `replan.ORDER_MARGIN_MIN` 20 — 대체 식당을 고를 때와 같은 규칙(`replan.last_order_shortfall`) |
+| `last_order_unknown` | 라스트오더를 **모르는데** 식사가 영업 종료 · 브레이크 시작 1시간 안에 끝난다 — 「마지막 주문을 확인해 주세요」 `[체크리스트 O4]`. 마감이 23:59 로 읽힌 곳(자정 · 새벽 마감)은 진짜 닫는 시각을 모르니 안 센다 | `replan.LAST_ORDER_WARN_MIN` 60 |
+| `quality_check_skipped` | **점검 하나가 죽어서 못 했다** — 장소 값(영업시간 · 브레이크)이 읽을 수 없는 모양일 때. 나머지 경고는 그대로 나가고 이 경고가 `rules[]` 에 못 한 점검 이름을 싣는다(「경고 없음」이 「점검 안 함」으로 보이지 않게). 서버 로그에도 남는다 `[2026-10-03 적대 검토]` | — |
+
+★**일정에 있는 값만으로 센다**(바깥 조회 없음, 구현 `itinerary_quality.py`). 한계: ①식사는 `kind == "dining"` 만 센다 — 외부가 다른 이름을 쓰면 끼니가 없다고 잘못 알릴 수 있다 ②좌표 없는 활동은 `route_zigzag` 에서 뺀다 ③시간이 정해진 일정(예약 · 고객 고정)이 둘 이상인 날은 `route_zigzag` 를 안 본다 ④**같은 날 안에서만** 센다 — 첫날 궁궐을 셋째 날에 또 넣는 일정은 `same_place_twice` 가 못 잡는다 ⑤장소 값만 본다 — 요식 원장이 라스트오더를 아는 식당도 일정에 그 값이 없으면 `last_order_unknown` 이 나올 수 있다 ⑥값은 **우리가 고른 것**이다(측정 안 함 — 체크리스트 v2 §7 의 결함일 비율로 조정).
+
 ## 보류 제안 — `/v1/trips/{trip_id}/proposals*` `[2026-09-24]`
 
 `[실측]` `app/modules/travel_ops/trip_api.py` · 저장 `pending_changes`(마이그레이션 024) · 결정 [D-020](../../../wiki/decisions/D-020-trip-survey-and-ask-first.md).
@@ -338,8 +356,9 @@ UTIC 의 도로명(`roadName`)이나 사건 제목(`incidentTitle`)에 그 이�
 - 제안 한 건: `proposal_id` · `item_id` · `base_version` · `reason`(`ask_first` · `protected`) · `protected_by` · `safety` ·
   `expires_at`(= 그 일정 끝) · `causes` · `options[]`(`key` · `rank` · `name` · `starts_at`, 1순위가 우리 최적안).
 - **먼저 고른 쪽이 이긴다** — 이미 정해졌으면 `409 already_decided`, 제안 뒤 판이 바뀌었으면 `409 stale`, 없는 제안은 `404`.
-  거절 상세는 `error.detail` 아래에 있다. ★거절되면 **아무것도 바뀌지 않는다**(한 트랜잭션).
-- 답이 없으면 그 일정이 끝날 때 `expired` — **원래 일정대로 간다.**
+  거절 상세는 `error.detail` 아래에 있다. ★거절되면 **일정은 아무것도 바뀌지 않는다**(한 트랜잭션).
+- ★`[2026-10-03 결함 인계]` **못 고르는 상태가 된 제안은 그 자리에서 닫는다.** 그 일정이 이미 끝났으면(`expires_at` 이 지났다 — 감시가 아직 못 닫았어도) `409 expired` + 제안 `expired`, 기준 버전이 낡았으면 `409 stale` + 제안 `superseded`. 닫은 기록은 남는다(전에는 열린 채 계속 보였다). 반대로 **고른 안이 지금 안 맞아**(재점검 불통과 · 모르는 안 키) 거절되면 제안은 **열린 채** 남는다 — 같은 제안에서 다른 안을 고를 수 있어야 하는 **의도**다.
+- 답이 없으면 그 일정이 끝날 때 `expired` — **원래 일정대로 간다.** 닫는 일은 감시 반복이 한다(시나리오 감시와 Case 감시 둘 다).
 
 ## 웹(고객 브라우저) — `/v1/web/*` `[2026-09-24]`
 
@@ -424,6 +443,29 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - 바꾼 값은 각 프로세스가 최대 30초 캐시해 늦게 반영된다(`applies_within_seconds`). 감사 줄(`runtime_limit_events`)은 고치지도 지우지도 못한다(트리거).
 - 시험 `tests/e2e/test_web_api.py` 10건.
 
+### 소셜 로그인 — `/v1/web/auth/*` `[2026-10-03]` (구글 먼저)
+
+`[실측]` 구현 `app/modules/travel_ops/web_auth_api.py`(HTTP) · `web_auth.py`(저장 · 규칙) · `app/infrastructure/oauth_providers.py`(업체와 말하기) · 저장 마이그레이션 043 · 시험 `tests/e2e/test_web_social_login.py`(17) ·
+`tests/unit/travel/test_oauth_providers.py`(15). 계약의 출처는 ui 세션의 [백엔드 요청서](../records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md)이고 웹 화면은 이 모양 그대로 연결돼 있다. 설정 · 콘솔 절차는 [google-login-setup.md](../operations/google-login-setup.md).
+★**소셜 로그인은 「키를 받아 오는 또 하나의 길」이다** — 키와 모든 `/v1/web/*` 인증(`X-User-Key`)은 바뀌지 않는다. 계정을 사용자에 **붙여** 두면 키를 잃어도 · 새 기기에서도 그 계정으로 같은 사용자의 여행을 연다.
+
+| 경로 | 키 | 뜻 |
+|---|---|---|
+| `GET /v1/web/auth/providers` | 없음 | `{providers: [{id}]}` — **설정이 끝난 업체만**(클라이언트 ID · 비밀값이 둘 다 있어야 한다). 하나도 없으면 **빈 목록**(404 가 아니다) |
+| `POST /v1/web/auth/{provider}/start` | `link` 만 필수 | `{mode: login\|link, client_nonce(무작위 32~256자), turnstile_token?}` → `{authorize_url}`. 업체 없음 404 `provider_not_enabled` · nonce 짧음 422 `invalid_client_nonce` · `link` 에 키 없음 401 · **키 없는 `login` 은 사람 확인**(Turnstile — 토큰 없으면 422 `human_check_required`, 틀리면 403, 머리말 `X-Turnstile-Token` 도 받는다 · 비밀키가 없는 개발 환경은 건너뛴다) |
+| `GET /v1/web/auth/{provider}/callback?code&state` | — | **브라우저 이동 전용** — 업체가 돌려보내는 곳. 어떤 결과든 **웹으로 302**: `{웹 주소}/auth/done?ticket=…` 또는 `?error=` (`cancelled` 고객이 취소 · `denied` 업체가 거절 · `already_linked_elsewhere` · `failed` 그 밖 전부). 머리말 `Cache-Control: no-store` · `Referrer-Policy: no-referrer` |
+| `POST /v1/web/auth/exchange` | 없음 | `{ticket, client_nonce}` → `{outcome: signed_in\|created\|linked, provider, trips, user_key?, notice?}`. `signed_in` · `created` 일 때만 `user_key`(**이 기기용 새 키**). 만료 · 재사용 · nonce 불일치 · 모르는 표는 모두 410 `ticket_invalid`(어느 쪽인지 가르지 않는다) |
+| `GET /v1/web/auth/links` | 키 | `{links: [{provider, linked_at}]}` — 계정 이름 · 이메일은 없다 |
+| `DELETE /v1/web/auth/{provider}` | 키 | 연결 해제(키와 여행은 그대로) → 200 `{links}`(남은 연결). 안 붙어 있으면 404 `not_linked` |
+
+- **한 바퀴**: `start`(시작 기록 저장) → 업체 로그인 화면 → `callback`(`state` 를 한 번만 꺼내 코드를 고유 번호로 바꾸고 연결 · 일회용 표) → `exchange`(표를 한 번만 받고 키 발급).
+- ★**`user_key` 는 「현재 유효한 키」가 아니라 이 기기용 새 키다** `[계약 보정]` — 키 원문은 해시로만 저장돼 다시 돌려줄 수 없다. 옛 키를 거두면(`rotate`) 다른 기기가 끊기므로 키를 **하나 더한다**(`web_session.add_key`). 한 사용자의 유효한 키는 `security.web_auth_keys_per_user`(10)개까지 — 넘으면 가장 오래된 키부터 거둔다.
+- **보안**: ①로그인 CSRF 막기 — 표는 시작한 브라우저가 만든 `client_nonce` 의 해시와 같이 저장되고 교환할 때 같은 값이 와야 한다(틀린 시도는 표를 태우지 않는다) ②`state` · PKCE(`S256`) · OIDC `nonce` — `state` 는 서버가 만들고 해시만 저장, 한 번만 · 10분(`security.web_auth_state_seconds`), 표는 60초(`web_auth_ticket_seconds`)
+  ③**ID 토큰은 업체 공개키(JWKS)로 서명 · 발급자 · 대상 · 만료 · nonce 를 모두 확인**한다(RS256 만 — 다른 알고리즘 · 서명 없는 토큰 거절) ④돌려보낼 웹 주소는 **서버 설정**(`ACOP_WEB_ORIGIN`, 비면 `ACOP_WEB_ALLOWED_ORIGINS` 의 첫 값 — 없으면 콜백이 503 `web_origin_not_configured`)이고 요청 값(`return_to` 등)으로 바꿀 수 없다
+  ⑤저장은 업체 이름과 `sub` 의 **HMAC 해시**(`secret_key` 로)뿐 — 이메일 · 이름 · 사진은 요청도 저장도 안 한다(스코프 `openid`) ⑥한 업체 계정은 **한 사용자에게만** — 다른 사용자에게 있으면 `link` 는 `already_linked_elsewhere`, **합치지 않는다** ⑦`start` · `exchange` 는 주소당 한 시간 `security.web_auth_per_ip_hour`(30)번씩(**늘 켜져 있다**, 429 `too_many_auth` + `Retry-After`) ⑧키 없는 `login` 이 새 사용자를 만들 때는 키 발급과 같은 한도(`too_many_sessions`)를 거친다 — 걸리면 `?error=failed`.
+- 계정이 붙은 사용자는 **빈 키 정리가 지우지 않는다**(사용자 행을 가리키는 외래키 — 시험으로 확인). CORS 는 `DELETE` 를 연다(웹이 다른 출처일 때 연결 해제).
+- `[미확보]` ①실제 구글과 이어 본 기록 — 클라이언트 ID · 비밀값이 있어야 한다(없으면 `providers` 가 빈 목록) ②카카오 · 네이버 · 디스코드는 구현하지 않았다(`oauth_providers.configured()` 에 업체 한 줄 + 설정 칸이다 — 카카오 · 네이버가 OIDC `sub` 를 주는 설정이 우리 앱 종류에서 되는지는 확인 전) ③운영 배포 주소 — 콜백 주소 등록에 필요하다.
+
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
 `[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·
@@ -504,6 +546,71 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 ★**웹이 할 일(서버는 재료만 준다).** ①`beat` 가 오는데 `slow=true` → 「모델 응답이 느려요 (12초째)」 — 서버는 살아 있다. ②`beat` 를 **2번(약 6초) 못 받으면** 서버·연결이 죽은 것 → 「연결이 끊겼어요 — 다시 연결 중」(워치독은 웹 몫). ③`error{retryable:true}` → 다시 시도는 **같은 request_id** 로 하면 두 번 처리되지 않는다(채팅은 `status: duplicate` 로 돌아오고, 앞 요청의 답은 `GET /chat` 대화 기록에 있다. 일정 짜기는 이미 등록된 여행을 곧바로 `accepted` → `result` 로 돌려준다).
 ★**규칙.** 스트림이 열리기 **전**의 거절(남의 것 404 · 판이 낡음 409 · 날짜 밖 422 · 남용 방어 429 · 열린 연결 상한 429 `too_many_streams`)은 SSE 여도 **보통의 HTTP 오류(JSON `{error:{…}}`)** 다 — 응답 `Content-Type` 으로 가르면 된다. 연결이 끊겨도 서버의 일은 끝까지 돈다(처리 중인 요청을 버리지 않는다) · 응답 뒤로 미룬 일(분류 기록)은 정확히 한 번. 사용자당 열린 실시간 작업 3개(`travel.op_stream.max_per_user`). 값은 `config/guardrails.yaml` `travel.op_stream.*`, 코드 `app/modules/travel_ops/op_stream.py`, 시험 `tests/e2e/test_op_stream.py`.
 **접수 읽기 진행** `GET /v1/web/trip-intakes/{intake_id}/events` — `accepted{state}` → 단계가 바뀔 때마다 `stage{state}` · 조용하면 `beat` → `review`·`confirmed`·`fatal` 이면 `result{state}`. `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}` — 읽은 값은 싣지 않는다(웹이 `GET /v1/web/trip-intakes/{id}` 로 읽는다). 갱신이 180초 넘게 멈추면(뒤에서 읽던 일꾼이 서버 재시작으로 죽음) `error{code: stalled, retryable}` — 영원히 「읽는 중」으로 두지 않는다. 남의 접수 · 없는 접수는 404.
+
+**확인 화면 검사 · 대체 후보 · 장소 검색 · 사진 · 잠금 · 전체 자동 추천 · 재검증 · 내용 이벤트** `[2026-10-02 사용자 지시 — 계획 확인 시나리오 목업 `team_branch/sw/2026-10-02_계획확인_스트리밍_대표목업.html` + 멘토링 1001]` — 목업이 「협의 필요」로 적은 것을 서버가 채웠다. 읽기 파이프라인은 그대로이고(`intake/pipeline.py`), 읽은 값에서 **검사를 계산해 한 판(revision)마다 한 번 저장**한다(`intake_reviews`, 마이그레이션 040 — 정본은 `intake_claims`, 지워도 다시 계산한다). 새 코드: `intake/review.py`(검사) · `hours.py`(운영시간 사실) · `moves.py`(이동) · `candidates.py`(후보 · 검색 · 사진) · `autofix.py`(전체 자동 추천) · `stream.py`(내용 이벤트). 시험 `tests/e2e/test_intake_review.py` · `tests/unit/travel/test_intake_review_units.py`.
+
+| 목업이 필요로 한 것 | 서버 |
+|---|---|
+| 「장소·운영시간 확인」 단계 | 접수 `stage` 에 `checking`(「장소·운영시간 확인」) 추가 — `received → transcribing → reading → checking → review` |
+| 장소별 검사 줄 · 장소 사이 이동 · 확인 필요 개수 | `GET /v1/web/trip-intakes/{id}` 응답의 **`review`** (아래) |
+| 이름이 모호한 장소(올리브영) | 읽을 때 앞뒤 일정에 가까운 한 곳을 **먼저 채우고**(`place_state: picked_nearest`, 확인 필요) 다른 지점은 후보로 — 빈칸을 던지지 않는다 |
+| 대체 후보 1~3순위 · 후보별 판정 | `GET …/candidates` |
+| 장소 검색 · 사진 | `GET …/place-search` · `GET /v1/web/places/photos` |
+| 장소 · 시각 바꾸기 · 삭제 · 삭제 되돌리기 · 잠금 | `POST …/edits` 의 칸 확장 (아래) |
+| 전체 자동 추천 · 재검증 | `POST …/autofix` · `POST …/revalidate` |
+| 진행 이벤트 | `GET …/events` 에 내용 이벤트 `line` · `item` · `check` · `move` · `progress` · `done` |
+
+**`review`**(접수 상태가 `review` · `confirmed` 일 때) = `{revision, built_at, engine: timetable|estimate|mixed|null, items[], moves[], needs: {items, moves, total}, ready}`. 계산이 실패해도 읽은 값은 그대로 가고 `review: null` + `review_error: "review_failed"` 다(조용히 비우지 않는다).
+- `items[]` = `{id: "<원본 위치>-<번호>", source_id, index, title, kind, day, date, starts_at, ends_at (HH:MM), locked, edited, status, can_lock, place_state, place: {name, latitude, longitude, source, kind, category}|null, candidates_hint, booked, parts, rows[]}`. **`id` 는 이벤트 · 이동 · 후보가 서로를 가리키는 키**이고, 고칠 때는 `source_id` + `items[index].칸` 을 쓴다. 날짜 · 시각 순.
+  - `status` — `keep` 유지 · `adjusted` 조정(규칙이 시각을 채웠거나 고객이 고침) · `review` 확인 필요(고쳐야 하는 줄이 있거나 · 장소가 임시 선택이거나 · 운영시간 밖). `can_lock` — 장소가 정해지고 확인 필요가 아닐 때만 참.
+  - `place: {name, latitude, longitude, source, kind, content_id, content_type_id}` — `content_id` · `content_type_id` 는 관광공사 번호(있을 때만, 후보 · 자동 추천이 운영시간 표를 찾는 열쇠). 서버 안의 장소 행 번호(`place_id`)와 이동 재사용 키(`sig`)는 응답에 싣지 않는다.
+  - `place_state` — `found` 찾음 · `picked_nearest` 이름이 여러 곳이라 가까운 곳을 임시로 고름(`candidates_hint` = 그때 본 후보 수) · `customer` 고객이 고름 · `none` 고객이 「장소 없음」 · `unresolved` 못 찾음(`place: null`) · **`needs_choice`** `[2026-10-03]` 이름 없이 **종류 + 지역만** 적은 줄(「성수 식당」) — `place: null`, 후보에서 고른다 · **`needs_name`** 같은 줄인데 **예약이 있다고** 적혀 있다 — 후보를 권하지 않고 예약한 곳의 이름을 묻는다(아래 「이름 없는 줄」).
+  - `rows[]` = `{row, result, text}` — `row`: `place` 장소 · `time` 시간(채웠거나 겹칠 때만 나온다) · `hours` 운영시간 · `closed` 휴무일 · **`booking` 예약**(예약 말이 있거나 이름 없는 식사 줄일 때만 — `ok` 예약 있음(자동으로 안 바꾼다) · `ok` 예약 없이 간다 · `warn` 예약 있다는데 장소 모름 · `unknown` 식사인데 예약 여부 모름). `result`: `ok` 통과 · `filled` 규칙이 채움 · `warn` 주의 · `bad` 고쳐야 함 · `unknown` 아직 모름. **모르는 것은 `unknown` 이다 — 「열려 있다」를 지어내지 않는다.** `text` 는 화면에 그대로 보일 한 줄.
+- `moves[]` = 같은 날 앞뒤 장소 사이 `{from, to (items[].id), day, date, status: keep|review|waiting, mode: walk|subway|bus|transit|estimate|null, mode_label, minutes, km, depart, arrive, slack_min, basis: timetable|estimate|null, summary, fare_krw?, rows[{row: route|mode|arrival, result, text}]}`. `slack_min` < 0 이면 다음 일정에 **늦게 닿는다**(`status: review`). `waiting` = 한쪽 장소가 정해지지 않아 아직 못 쟀다(확인 필요 개수에 안 센다 — 장소를 못 찾은 일정은 그 줄 자체가 `bad` 로 세고, 고객이 「장소 없음」으로 둔 일정의 구간은 계속 `waiting` 이며 **등록을 막지 않는다**(자유 시간)). **`basis: estimate` 는 이동 계산기가 꺼졌거나 그 구간을 못 채워 직선거리로 어림한 값**이다 — `summary` 에 `[추정]`, 이유는 `rows[0].text`. `timetable` 은 이동 계산기(시간표 판정) 값이고 출발 · 도착은 계산기가 낸 시각이다.
+- `needs.items` = `status: review` 항목 수, `needs.moves` = `status: review` 이동 수. **`ready` = 읽은 값 문제가 없고 `needs.total == 0`** — 화면의 「여행 등록」이 켜진다. 등록 판정(`confirm`)은 그대로이고 막지 않는다(고객이 확인 필요를 남기고 등록할 수 있다).
+- ★판정은 새로 만들지 않았다 — 운영시간 · 휴무 · 겹침은 **등록 판정기**(`itinerary_checks.check_itinerary`)의 위반(`closed_day` · `before_opening` · `after_closing` · `after_last_entry` · `break_time` · `overlap`)을 줄로 옮긴 것이다. 운영시간 사실은 **DB 에 이미 읽어 둔 값**만 쓴다(바깥 호출 없음): 장소 행 속성 → 관광공사 운영시간 표(`catalog_hours`, 새벽 작업) → 다른 여행에서 읽은 같은 관광공사 id(14일) → 요식 원장(`dining_state`, 식당만). 카카오로만 찾은 곳은 운영시간이 없다(`unknown`).
+
+**편집 칸 확장** `POST …/edits` (`{revision, edits:[{source_id, field, value}]}`, 새 판 · 낡은 판 409):
+- `items[n].locked`: `true` 고정 · `false` 풀기. 고정은 **장소가 정해지고 확인 필요가 아닌 일정만**(아니면 422 `lock_needs_confirmed_item`). 고정한 일정에 다른 칸(`place` · 시각 · `removed` …)을 고치면 **409 `item_locked`** — 같은 요청에 잠금 풀기가 있으면 함께 된다. 반대로 **고정하는 요청에 같은 일정의 다른 고치기를 섞으면 422 `lock_with_changes`**(고정은 따로 보낸다). 이 접수에 없는 일정 번호를 고치면 **422 `unknown_item`**(일정은 새로 만들어지지 않는다). 고정한 일정은 등록되면 `detail.customer_pinned` 가 되어 **감시 루프가 다시 자동으로 바꾸지 않는다**(`pending.protected_reason`).
+- `items[n].removed`: `true` 빼기 · **`false` 되돌리기**(전에는 true 만 받았다).
+- `items[n].place` 는 세 모양: `{"name": …}`(서버가 다시 찾는다 — 못 찾으면 422 `place_not_found`) · `{"none": true}`(장소 없음) · **`{name, latitude, longitude, source, kind?, content_id?}`**(후보 · 검색 결과에서 **고객이 고른 것**을 그대로 받는다. 서버는 다시 찾지 않고 모양만 본다: 이름 1~80자 · 좌표는 숫자이고 **서울 범위 안**(위도 37.4~37.72 · 경도 126.7~127.3, 아니면 422 `place_out_of_seoul`) · `source` ∈ `customer_pick|kakao|tour_api|places|search|map`(저장은 늘 `customer_pick`, 보낸 값은 `origin`) · `content_id` 는 숫자이고 서버의 관광공사 목록과 대조한다 — 그 번호의 장소가 보낸 좌표 500m 안이 아니면 번호만 뗀다 · `place_id` 는 받지 않는다(남의 장소 행을 가리킬 수 있다)). 이 값은 등록되면 **그 여행 전용 장소 행**(`attributes.source = customer_pick`)이고 공용 장소 표에 섞이지 않는다. 별칭(`place_aliases`)에는 쌓지 않는다.
+
+**`GET …/candidates?source_id=&index=[&revision=]`** — 이 일정의 **다른 안 셋**(후보 A·B·C). 같은 날 앞뒤 일정에 가까운 순, 맞는 곳(`fits`)이 먼저. 이름이 모호한 일정은 같은 이름의 다른 지점(카카오 키워드 검색, 앞뒤 일정 가운데에서 거리순), 아니면 같은 종류(활동 = 관광공사 목록 DB · 같은 분류 우선 · 3km, 식사 = 요식 원장 DB · 2km). 응답 `{revision, item, current, reference: {before, after}, candidates: [{rank, place: {name, latitude, longitude, source, kind, address, category, content_id, content_type_id, ref}, distance_m, reference, rows[], fits, status: ok|warn|bad, slack: {before, after}, estimated}], notes}`. `estimated: true` = 앞뒤 이동 중 하나가 계산기 대신 직선 어림값(계산기가 꺼졌거나 그 구간을 못 채웠거나 시간 상한이 닿음). 같은 적합성 안에서는 시간표로 잰 곳이 어림으로 잰 곳보다 앞이다. 어림이 섞였는지(`engine_budget_exhausted`) · 같은 분류의 대체가 없는지(`no_same_kind`) · 같은 이름의 다른 지점이 없는지(`no_other_branches`) · 카카오를 못 불렀는지(`kakao:<이유>`)는 `notes` 로 말한다. 최종 셋은 상위 5곳을 이동 계산기로 잰 뒤 전체 판정 순서로 고른다. 후보마다 **그 일정의 날짜 · 시각**으로 운영시간 · 휴무 · 앞뒤에 닿는 시간을 검사한 줄이 붙는다. `place` 객체를 그대로 `edits` 의 `items[n].place` 에 보내면 된다. 읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다). `notes` 에 `kakao:budget_exhausted` 같은 이유가 있으면 카카오를 못 불렀다는 뜻이다(후보가 비어도 「없다」가 아니다).
+**`GET …/place-search?q=(2자 이상)&source_id=&index=[&revision=]`** — 수정 화면의 장소 검색. 관광공사 목록 · 요식 원장(DB)과 카카오를 함께 찾아 이름이 검색어로 시작하는 곳 먼저, 앞뒤 일정에서 가까운 순으로 최대 8곳, 각각 같은 검사 줄을 붙인다. 응답 `{revision, item, query, results[], notes}`(`results[]` 는 `candidates[]` 와 같은 모양).
+**이름 없는 줄(종류 + 지역만)** `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 「성수 예약 식당 · 예약 있음」 · 「서울역 인근 저녁 식당」 · 「이태원 소품숍」 · 「호텔 조식」처럼 **가게 이름이 없는 줄**.
+  ☆전에는 이런 줄도 가게 이름으로 찾았고(없는 가게를 글자를 줄여 가며) 종류를 활동으로 읽었고 후보를 앞뒤 일정의 한가운데에서 찾았다 — 성수 식당 자리에 동대문 활동이 권해졌고 예약한 식당을 바꾸자고 했다(실서버 실측).
+  - **읽는 법**(`intake/line_parts.py`): 줄을 띄어쓰기로 나눠 조각마다 **말 표**(`config/place_terms.yaml` — 종류 · 끼니 · 근처 · 예약 말 · 군더더기)와 **지명 사전**(`intake/areas.py` — 요식 원장의 허브 · 관광공사 목록 주소의 동 · 구에서 DB 로 만든 지역별 중앙값 좌표 + 반경, 한 시간 기억)의 말로 **전부 설명되면** 일반 말이다. 남는 조각(= 고유 이름)이 있으면 이름 있는 줄(지금처럼 이름으로 찾는다). 종류 말이나 끼니 말이 있고 남는 조각이 없으면 이름 없는 줄 — **가게 이름으로 찾지 않는다**. 끼니 말이 종류 말을 이긴다(호텔 조식 = 식사). 새 말은 **표에 한 줄을 더하는 것만으로** 같은 길을 탄다(코드 수정 없음).
+  - **항목 새 칸**: `booked` = `true`(예약 있음 · 예약번호) · `false`(예약 없음) · `null`(말 없음) · `parts` = 이름 없는 줄일 때만 `{label: "식당"|"쇼핑"|…, kind, content_type, meal, near, area: {name, kind: hub|dong|district, latitude, longitude, radius_m}|null}`(그 밖은 `null`). 일정 `kind` 는 식당 · 끼니 말이면 `dining`.
+  - **후보 · 검색의 약속**(시험으로 막는다): ①결과의 `kind` 는 일정의 `kind` 와 **같다** — 맞는 것이 없으면 다른 종류로 채우지 않고 빈 목록 + `notes: ["no_same_kind"]` ②`needs_choice` 후보의 중심은 **줄의 지역**(`reference.area` · 각 후보의 `reference` 도 그 지역 이름 · 반경은 `area.radius_m`) — 지역이 없으면 앞뒤 일정의 한가운데 ③`needs_name` 은 `candidates: []` + `notes: ["booked_needs_name"]`(검색 · 직접 입력은 열려 있다) ④앞뒤도 지역도 없어 중심이 없으면 `no_reference_point` · 지역 둘레에 같은 종류가 하나도 없으면 `no_candidates_in_area`. 카카오가 음식점 · 카페가 아닌 곳을 식사로 태그하던 것을 고쳤다(식당 자리 검색에 약국 · 공원이 섞이던 원인).
+  - **전체 자동 추천**: 예약했다고 적힌 일정은 **장소도 시각도 바꾸지 않고** `kept: [{id, title, reason: "booked"}]`. `needs_choice` 는 같은 종류 · 지역 안의 후보로 채운다.
+  - **`category`** `[2026-10-03]` — 후보 · 검색 결과 · 현재 장소에 종류 이름을 채운다: 관광공사 목록은 `content_type_id` → 표의 `content_types`(관광지 · 문화시설 · 쇼핑 · 음식점 …), 요식 원장은 「음식점 > 한식」(요리 갈래를 모르면 「음식점」) + `address`(원장 도로명 주소), 카카오는 원래 값. 고객이 고른 값(`edits` 의 `place`)은 보낸 `category`(60자까지)를 그대로 들고 있다.
+  - **고른 곳 문장**: `직접 고른 곳이에요 · 관광공사에서 찾았어요`(출처는 `origin` — 관광공사 · 카카오 지도 · 우리 장소 목록, 모르면 뒷말 없음). 전에는 「직접 고른 곳이에요 · 직접 고른 곳」으로 겹쳤다.
+  - 알려진 한계: 이름이 통째로 일반 말로만 된 가게(「성수커피」 = 성수 + 커피)는 이름 없는 줄로 읽힌다 — 고객이 후보 · 검색에서 직접 고른다(고른 값은 언제나 이긴다). 사전에 없는 지역 말은 이름 조각으로 남아 지금처럼 이름으로 찾는다.
+
+**`GET /v1/web/places/photos?ref=tour:<관광공사 번호>`** — 그 장소에 **등록된 사진** 주소 `{ref, photos: [{url, thumb, name}], source_note: "ⓒ한국관광공사"|null, reason}`. ★**사진은 저장하지 않는다**(사진 · 소개글은 저장 금지 — 루트 사실표): 부를 때마다 관광공사(`detailImage2`)에서 주소만 받아 그대로 넘기고 출처 표시를 붙인다. 관광공사가 아닌 `ref`(카카오 · 요식 원장)는 `photos: []` + `reason: no_photo_source` — 지어내지 않는다. 같은 장소를 되풀이해 불러도 관광공사 호출이 되풀이되지 않는다 — 어댑터가 응답을 **프로세스 메모리에만** `travel.tour_api_cache_seconds`(6시간) 동안 들고 있고(저장하지 않는다) 호출은 관광공사 몰림 제한(`rate_burst`)을 지난다.
+검색어는 공백을 뺀 두 글자 이상이어야 한다(아니면 422 `query_too_short`). 이 읽기들과 `autofix` 는 웹 남용 방어의 새 세는 작업 **`place_search`**(키당 하루 60 · 주소당 200 · 서비스 전체 500 — 기본은 세기만 하고 제한은 `web.limits_enabled` 가 켜져야 막는다)로 센다. 남의 접수 404 · 낡은 `revision` 409 `stale_revision` · 아직 확인 화면이 아니면 409 `intake_not_editable` · 없는 일정 404 `item_not_found`.
+
+**`POST …/autofix {revision}`** — **전체 자동 추천**. 확인 필요 장소 + 앞 일정에서 늦게 닿는 일정을, 고정한 일정은 두고, 일차별 시각 순으로 하나씩 맞춘다(앞 일정이 바뀌면 그 값이 다음 기준이다): 장소가 문제면 후보를 차례로(이름 모호함뿐이면 지금 곳이 먼저) **운영시간 · 휴무를 통과하는 첫 곳** → 그 곳에서 시작 = 앞 일정이 끝난 뒤 이동해 닿는 시각(5분 올림), 끝 = 다음 일정에 닿도록 줄임(5분 내림), 머무는 시간이 30분 미만이면 못 맞춘 것. 맞으면 `edits` 와 같은 길로 **새 판 하나**(`applied: true`, 자동 추천이 낸 값은 근거에 `via: autofix`), 맞는 안이 없으면 **판을 만들지 않고** 이유를 말한다. 응답 `{applied, revision, changed: [{id, source_id, index, title, from: {place, starts_at, ends_at}, to: {…}, reason: place|time|place_and_time}], kept: [{id, title, reason: locked|no_time|no_candidates|no_fitting_place|no_fitting_time|nothing_to_change}], view}` — `view` 는 `GET …/{id}` 와 같은 모양(새 검사 포함). 되돌리기는 `from` 값으로 다시 `edits`(고객이 고른 것과 같은 길).
+**`POST …/autofix {revision, dry_run: true}`** `[2026-10-03 ui 세션 요청서 3번]` — **미리 보기**: **저장하지 않고** 바뀔 모습만 돌려준다. 같은 길(`edit`)로 새 판을 만들어 `view` 를 읽은 뒤 저장 구간을 되돌리므로(세이브포인트 롤백) 미리 보기의 검사가 **실제로 적용한 결과와 같다**. 응답 = `{applied: false, dry_run: true, revision(현재 판), changed, kept, view}` — `view.preview: true` 이고 `view.revision` 은 **적용하면 생길 판 번호**다. 바꿀 것이 없으면 `view` 는 현재 모습(`preview` 없음). `dry_run` 을 안 보내면 전과 같이 적용한다(응답에 `dry_run: false`). `revalidate` 는 `dry_run` 을 받지 않는다(모르는 칸 422).
+
+**`POST …/revalidate {revision}`** — **재검증**. **새 판을 만들지 않고**(고객이 고친 값은 그대로) 같은 판의 검사(운영시간 · 휴무 · 이동)를 처음부터 다시 계산해 그 판의 저장된 검사를 **새 값으로 바꾼다**(운영시간 표가 새벽에 바뀌었거나 계산기 답이 달라졌을 수 있다 — 조회는 판마다 한 번 계산한 값을 주므로 재검증 뒤의 조회도 새 값이다). 이동은 앞 판의 값을 재사용하지 않고 다시 잰다. 응답 = `GET …/{id}` 와 같은 모양, `review.ready` 가 참이면 「여행 등록」.
+
+**내용 이벤트** `GET …/events` — 기존 `accepted` · `stage` · `beat` · `result` · `error` 사이에 흐른다. ★**이벤트는 상태의 복사본(덮어쓰는 값)이다**: 같은 키가 다시 와도 나중 것으로 덮으면 되고, 다시 연결하면 지금까지의 상태가 처음부터 다시 온다(서버는 누가 어디까지 받았는지 기억하지 않는다). 정본은 `GET …/{id}` 다. 서버는 **순서만** 맞춘다(줄 → 일정 → 검사 줄 → 이동 → done) — 보이는 속도는 웹이 정한다(받은 이벤트를 차례 줄에 쌓아 최소 표시 시간을 두고 그린다). 값은 읽는 **동안** 적히므로(전에는 끝에 한꺼번에) 이벤트도 그때그때 나간다: 규칙으로 읽은 줄 → 모델이 가리킨 줄 → 날짜 → 이름이 특정된 장소가 하나씩 → 모호한 장소(앞뒤가 다 찾아진 뒤) → `checking` 단계 → 검사.
+
+| 이벤트 | 몸통 | 키 |
+|---|---|---|
+| `line` | `{source_id, no, text, read: true, found: {id, index, day, date, starts_at, title}\|null}` — 읽힌 줄만(안 읽힌 줄은 `GET` 의 `lines[].read=false`) | `source_id` + `no` |
+| `item` | `{id, source_id, index, title, kind, day, date, starts_at, ends_at, locked, status, can_lock, place_state, place, candidates_hint}` — 시각 → 장소가 채워질 때마다 같은 `id` 로 다시(`place_state: searching` = 아직 찾는 중, `status` 는 검사 전엔 null) | `id` |
+| `check` | `{item, row, result, text}` | `item` + `row` |
+| `move` | `moves[]` 한 건 | `from` + `to` |
+| `progress` `[2026-10-03]` | `{phase: places\|hours\|moves, done, total, current: {id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」. `places` 는 **읽는 동안** 장소 찾기가 일정마다(찾든 못 찾든 그 일정의 장소 값이 정해지면 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤), `hours` 는 검사의 운영시간 확인이 일정마다, `moves` 는 이동이 구간마다(`current.title` = 「A → B」). `done` 은 1씩 늘어 `total` 에서 끝난다. 접수에 원본이 여럿이면 `places` 는 원본마다 센다 | `phase` |
+| `done` | `{stage: review, revision, needs, ready}` — 검사가 끝났다, 곧 `result`. 검사할 것이 없는 접수(빈 접수)는 `done` 없이 곧바로 `result` | — |
+
+**검사 진행을 끝에서 한꺼번에 내지 않는다** `[2026-10-03 ui 세션 요청서 2번]` — 검사(`review.build`)는 한 트랜잭션 안에서 돌고 끝나 커밋돼야 DB 에 보이므로, 전에는 검사 줄 56개 · 이동 12개가 끝난 4.9초에 한꺼번에 나갔다(이동 계산이 대부분의 시간인데 화면은 아무것도 몰랐다). 이제 계산이 **끝나는 대로**: ①일정마다 `item` · `check` 를 이동 계산 **전에**(`status` 는 이때 정해진 값이고, 겹침 확인 필요는 끝에서 바뀔 수 있어 최종 값이 같은 키로 덮는다) ②이동은 구간마다 `move` + `progress{moves}` ③운영시간은 일정마다 `progress{hours}`. ★이 중간 진행은 **프로세스 안 보관소**(`intake/progress.py`)를 거친다 — DB 에 쓰지 않고(접수 하나에 150개 안팎), 읽는 일꾼(스레드)과 SSE 연결이 **같은 프로세스**일 때만 보인다(배포는 한 프로세스). 여러 프로세스(`--workers N`)에서 다른 프로세스의 연결은 전처럼 끝에서 받는다 — 깨지지 않고 **중간 진행만 안 보인다**. 접수 하나당 600개 상한(앞에서부터 버림) · 15분 지나면 버림 · 읽기가 끝나면 비운다(최종 값은 DB 에서 읽힌다). 서버는 DB 의 덜 채운 값(`status: null`)으로 이미 검사 줄까지 낸 일정을 **되돌리지 않는다**.
+
+내용 이벤트를 만드는 데 실패해도 단계 이벤트(`accepted` · `stage` · `result`)는 끝까지 나간다(실패는 로그에 남는다).
+
+**함께 고친 것**: ①「10시 경복궁 관람 1시간 반」의 「1시간」을 시각 「1시」로 읽어 가짜 항목(「간 반」 01:00)이 생기던 결함 — 이제 「시간」은 시각이 아니고 **소요 시간(1시간 반 · 2시간 · 40분)이 끝 시각**이 된다(원문 조각이 근거) ②카카오 결과에서 지점 접미어를 뗀 이름이 같은 곳이 여럿이면(「올리브영 ○○점」들) **첫 결과를 고르지 않고** 후보로 넘겨 앞뒤 일정에 가까운 곳을 고른다(전에는 관련도 첫 결과를 확인 표시도 없이 썼다 — 2026-10-01 「강남 올리브영 → 명동 다이소」). 고객이 지점까지 적으면(「올리브영 광화문점」) 그 지점이 먼저다 ③`GET` 의 `review` · 접수 `stage: checking` · 값을 읽는 동안 바로 적기 · `fatal` 이면 읽다 만 값을 치움. ★목업과 다른 점: 목업은 올리브영을 「지점 미정 · 위치 미정」으로 두었지만 **서버는 가까운 한 곳을 임시로 채우고**(프로젝트 결정 15 · 사용자 요구 「빈칸 금지」) `place_state: picked_nearest` + 확인 필요로 알린다 — 화면은 임시 선택임을 보이고 후보로 바꾸게 하면 된다.
 
 **바꾼 뒤에도 다른 안 셋** `[2026-09-29 사용자 제안 — ui 세션 전달]` — 「다른 데로 바꿔 줘」로 바꾼 뒤(`status: adjusted`), 조건을 다 통과한 나머지 → 모자라면 조건을 푼 안(시각 늦추기 · 다음 일정 근처 · 5km — `note`)을 셋까지 모아 **바꾼 항목에 보류 제안**(`reason: other_options`)을 연다(응답 `proposal_id` · `options`). 고르면 그 안으로, 답이 없으면 지금 것. 원래 곳은 넣지 않는다(되돌리기 몫). 답 문장에 「다른 안: 1) … · 2) … — 다른 곳이 좋으면 고르세요」. 바꾼 뒤에도 `trip_outcome` 에 `seen`(떨어진 곳 + 통과한 곳 — 통과는 셋까지만 셈) · `rejected` · `radius_m` 를 남긴다. 식사 · 활동 같은 방식. 마이그레이션 035.
 

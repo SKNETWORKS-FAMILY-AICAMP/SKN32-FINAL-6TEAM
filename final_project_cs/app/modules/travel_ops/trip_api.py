@@ -31,7 +31,6 @@ import hashlib
 import hmac
 import html
 import json
-import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
@@ -70,7 +69,9 @@ class PlaceIn(BaseModel):
 
 #: ★외부 서비스에서 받은 장소 — 공용 장소 표에 쌓지 않고 **그 여행 전용 행**으로 넣는다(마이그레이션 029).
 #:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
-EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places"})
+EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places",
+                                    # ★`[2026-10-02]` 고객이 확인 화면에서 후보 · 검색 · 지도로 고른 장소(`intake/assemble._place_in`)
+                                    "customer_pick"})
 
 
 class ItemIn(BaseModel):
@@ -118,6 +119,17 @@ class IntakeConfirmIn(BaseModel):
     #: ★`[2026-09-28]` 여행 시작 설문(`TripSurvey`, 판 `2026-09-24.v1`) — 선택. 등록 몸통의 `constraints.survey` 로
     #:  실어 `_create_trip` 이 검사한다(틀리면 422 `invalid_survey`). 전에는 이 흐름에 설문을 실을 곳이 없었다
     survey: dict[str, Any] | None = None
+
+
+class IntakeRevisionIn(BaseModel):
+    """전체 자동 추천 · 재검증 — 화면이 보고 있던 판(낡으면 409)만 보낸다."""
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(ge=1)
+
+
+class IntakeAutofixIn(IntakeRevisionIn):
+    """전체 자동 추천 — `dry_run` 이면 **저장하지 않고** 바뀔 모습만(`view.preview`) 돌려준다. `[2026-10-03 ui 세션 요청서 3번]`"""
+    dry_run: bool = False
 
 
 class IntakePlanIn(BaseModel):
@@ -239,7 +251,9 @@ def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     return None
 
 
-def _error(status: int, code: str, message: str, **extra: Any) -> HTTPException:
+# ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
+#   `IntakeConflict(..., status=...)`) 같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다.
+def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
 
 
@@ -256,7 +270,9 @@ def _plan_refused(refused: Any) -> HTTPException:
 def _seoul(moment: datetime | None) -> datetime | None:
     if moment is None:
         return None
-    return moment.replace(tzinfo=KST) if moment.tzinfo is None else moment
+    # ★`[2026-10-03 ui 검증 세션 지적]` 시간대 있는 값도 **서울 시각으로 바꾼다** — 전에는 시간대 없는 값에만 서울을 붙이고 있는 값은 그대로 돌려줘, 끼니 이름표(`_meal_label`) 등이
+    #   DB 세션이 서울이 아니면(UTC 서버) 어긋났다(서울 12:00 점심 = UTC 03:00 → 「아침」)
+    return moment.replace(tzinfo=KST) if moment.tzinfo is None else moment.astimezone(KST)
 
 
 # ── 계획서 링크 ──────────────────────────────────────────────────
@@ -265,6 +281,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
 from .itinerary_checks import Part, check_itinerary, parts_from_items
 from .density import measure_density
+from .itinerary_quality import quality_warnings
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
 from .route_uses import route_problems  # noqa: E402
 from .survey import apply_survey  # noqa: E402
@@ -291,8 +308,9 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
     return {"item_id": str(item.item_id), "seq": item.seq, "kind": item.kind,
             "kind_label": _KIND_LABEL.get(item.kind, item.kind), "meal": _meal_label(item),
             "title": item.title, "place": (item.place or {}).get("name"),
-            "starts_at": item.starts_at.isoformat(),
-            "ends_at": item.ends_at.isoformat() if item.ends_at else None,
+            # ★`[2026-10-03 ui 검증 세션 지적]` 서울 시각(+09:00)으로 내보낸다 — 지도의 날짜 묶음(`starts_at[:10]`)과 화면의 시계 표시가 DB 세션 시간대에 안 흔들린다
+            "starts_at": _seoul(item.starts_at).isoformat(),
+            "ends_at": _seoul(item.ends_at).isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
             "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
                               for a in item.detail.get("alternates") or []],
@@ -321,12 +339,15 @@ def _trip_view(conn, store: TripStore, trip_id: UUID) -> dict[str, Any]:
                for row in store.versions(conn, trip_id)]
     views = [_item_view(item, place_info(conn, store.tenant_id, item.place) if item.kind != "mobility" else None)
              for item in items]
+    parts = parts_from_items(items)
+    measured = measure_density(parts, trip.get("constraints") or {})
     return {"trip_id": str(trip["trip_id"]), "customer_id": str(trip["customer_id"]),
             "title": trip["title"], "locale": trip["locale"], "party_size": trip["party_size"],
             "version": trip["version"],
             "items": views, "map": map_view(views),
             "history": history, "plan_url": plan_url(store.tenant_id, trip["trip_id"]),
-            **measure_density(parts_from_items(items), trip.get("constraints") or {})}
+            # ★`[2026-10-03]` 「살펴볼 점」 — 밀도 경고 + 일정 품질 경고(같은 곳 두 번 · 끼니 빠짐 · 왔다 갔다 · 하루 마감 · 식당 라스트오더). 둘 다 거절이 아니라 알림이다
+            **measured, "warnings": [*measured["warnings"], *quality_warnings(parts, trip.get("constraints") or {})]}
 
 
 def _maps_query(view: dict[str, Any]) -> str:
@@ -901,11 +922,17 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn, conn.transaction():
                 _trip_or_404(conn, store, trip_id, customer_id)
                 places = {str(p["place_id"]): p for p in store.places(conn, trip_id)}
-                return choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
-                              proposal_id=proposal_id, key=key, by=by, places_by_id=places,
-                              check=_check())
+                result = choose(conn=conn, store=store, pending=PendingStore(tenant), trip_id=trip_id,
+                                proposal_id=proposal_id, key=key, by=by, places_by_id=places,
+                                check=_check())
+            # ★`[2026-10-02 결함 인계 #2·#5]` 못 고르는 상태라 **닫은** 제안(`expired` 끝난 일정 · `superseded` 낡은 기준 버전)은 위 트랜잭션이 커밋된 **뒤에**
+            #   409 로 알린다 — 예외로 올리면 닫은 기록이 되돌아가 같은 제안이 계속 열려 있었다
+            if result.get("status") in ("expired", "superseded"):
+                raise ProposalRefused("expired" if result["status"] == "expired" else "stale",
+                                      {k: v for k, v in result.items() if k != "status"})
+            return result
         except ProposalRefused as refused:
-            status = {"not_found": 404, "already_decided": 409, "stale": 409}.get(refused.code, 422)
+            status = {"not_found": 404, "already_decided": 409, "stale": 409, "expired": 409}.get(refused.code, 422)
             # ★상세는 `detail` 아래에 둔다 — 거절 상세에 `status`·`message` 가 들어 있어 펼치면 인자와 부딪힌다
             raise _error(status, refused.code, "안을 고르지 못했다 — 아무것도 바뀌지 않았다",
                          detail={k: (v if isinstance(v, (int, float, str, bool, type(None), list, dict))
@@ -981,7 +1008,10 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         """★`[2026-10-02 사용자 지시]` 접수 **읽기 진행**을 SSE 로 — 뒤에서 도는 읽기(사진 글자 읽기 · 모델 읽기)가 어디까지 왔는지.
 
         `accepted{state}` → 단계가 바뀔 때마다 `stage{state}` · 조용하면 `beat` → 끝나면(`review` · `confirmed` · `fatal`) `result{state}`.
-        `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}` — 내용(읽은 값)은 싣지 않는다. 웹은 끝나면 `GET /v1/web/trip-intakes/{id}` 로 읽는다.
+        `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}`. ★`[2026-10-02]` 그 사이에 **내용 이벤트**가 흐른다(`intake/stream.py`):
+        `line`(읽힌 원문 줄) · `item`(찾은 일정 — 시각 → 장소가 채워질 때마다 같은 id 로 다시) · `check`(검사 줄) · `move`(장소 사이 이동) · `progress`(`{phase: places|hours|moves, done, total, current:{id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」) · `done`(검사 끝).
+        ★`[2026-10-03]` 검사 진행은 계산이 **끝나는 대로** 나간다(일정마다 `item` · `check` 를 이동 계산 전에, 이동은 구간마다 `move`) — 전에는 검사가 끝난 뒤 한꺼번에 나갔다. 중간 진행은 프로세스 안 보관소(`intake/progress.py`)를 거친다.
+        이벤트는 **상태의 복사본**이라 같은 키가 다시 와도 덮으면 되고, 다시 연결하면 지금까지의 상태가 처음부터 온다. 정본은 `GET /v1/web/trip-intakes/{id}` 다.
         뒤에서 읽던 일꾼이 죽어(서버 재시작) 갱신이 `intake_stalled_seconds` 넘게 멈추면 `error{code: stalled, retryable}` 로 끝낸다 —
         영원히 「읽는 중」으로 두지 않는다. 남의 접수 · 없는 접수는 다른 조회와 같은 404. 사용자당 열린 연결이 상한이면 429."""
         from starlette.concurrency import run_in_threadpool
@@ -1012,6 +1042,16 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             error.headers = {"Retry-After": "5"}
             raise error
         guard = settings_module.get_guardrails()
+        from .intake.stream import Feed, sse_chunks
+
+        feed = Feed(tenant, customer, intake_id)
+
+        def content(state: dict[str, Any]) -> list[str]:
+            with get_connection() as conn:
+                return sse_chunks(feed.poll(conn, state))
+
+        async def extra(state: dict[str, Any]) -> list[str]:
+            return await run_in_threadpool(content, state)
 
         async def flow():
             try:
@@ -1021,7 +1061,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         stage_of=lambda s: s["stage"], label_of_state=lambda s: s["stage_label"],
                         quiet_for=lambda s: s["quiet_seconds"],
                         stalled_after=float(guard.get("travel.op_stream.intake_stalled_seconds")),
-                        poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds"))):
+                        poll_seconds=float(guard.get("travel.op_stream.intake_poll_seconds")),
+                        extra=extra):
                     yield chunk
             finally:
                 op_stream.release(tenant, customer)
@@ -1047,6 +1088,123 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             raise _error(409, exc.code, exc.message, **exc.detail) from None
         except IntakeRejected as exc:
             raise _error(422, exc.code, exc.message) from None
+
+    # ── 확인 화면 수정 화면: 대체 후보 · 장소 검색 · 사진 · 전체 자동 추천 · 재검증 (2026-10-02, 계획 확인 시나리오 목업) ─────────
+    def _review_call(intake_id: UUID, customer: UUID, tenant: str, revision: int | None, use):
+        """현재 판의 검사를 읽어 `use(conn, found)` 를 부른다. ★남의 접수 404 · 낡은 판 409 · 아직 읽는 중이면 409 — 다른 입구와 같다."""
+        from .intake.pipeline import IntakeConflict, IntakeRejected, current_review
+
+        try:
+            with get_connection() as conn:
+                _, found = current_review(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                          revision=revision)
+                return use(conn, found)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        except IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+
+    def _review_item(found: dict[str, Any], source_id: UUID, index: int) -> dict[str, Any]:
+        item = next((i for i in found["items"] if i["source_id"] == str(source_id) and i["index"] == index), None)
+        if item is None:
+            raise _error(404, "item_not_found", "그 일정을 찾지 못했다")
+        return item
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/candidates")
+    def web_intake_candidates(intake_id: UUID, http: Request, source_id: UUID = Query(),
+                              index: int = Query(ge=0, le=500), revision: int | None = Query(default=None, ge=1),
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """이 일정의 **다른 안 셋**(목업의 후보 A·B·C) — 같은 날 앞뒤 일정에 가까운 순, 후보마다 그 일정의 날짜·시각에 맞는지 검사 줄을 붙인다.
+        이름이 모호한 곳은 같은 이름의 다른 지점, 아니면 같은 종류의 다른 곳. 고르면 `POST …/edits` 의 `items[n].place` 로 이 `place` 객체를 그대로 보낸다.
+        읽기 전용 — 아무것도 저장하지 않는다(카카오 값은 약관상 저장하지 않는다)."""
+        from .intake import candidates
+
+        tenant, customer = who
+
+        def use(conn, found):
+            item = _review_item(found, source_id, index)
+            _count("place_search", tenant, customer, http)
+            return {"revision": found["revision"], **candidates.alternatives(
+                conn, tenant_id=tenant, review=found, item=item, kakao=_lazy("kakao", kakao_factory))}
+
+        return _review_call(intake_id, customer, tenant, revision, use)
+
+    @router.get("/v1/web/trip-intakes/{intake_id}/place-search")
+    def web_intake_place_search(intake_id: UUID, http: Request, q: str = Query(min_length=2, max_length=60),
+                                source_id: UUID = Query(), index: int = Query(ge=0, le=500),
+                                revision: int | None = Query(default=None, ge=1),
+                                who: tuple[str, UUID] = Depends(_web_customer)):
+        """수정 화면의 **장소 검색** — 이름·분류로 관광공사 목록 · 요식 원장 · 카카오를 함께 찾고 앞뒤 일정에서 가까운 순으로 보인다.
+        결과마다 그 일정의 날짜·시각에 맞는지 검사 줄이 붙는다. 읽기 전용."""
+        from .intake import candidates
+
+        tenant, customer = who
+        if len(" ".join(q.split())) < 2:                      # 공백만 보내면 모든 장소가 맞는 검색이 된다
+            raise _error(422, "query_too_short", "검색어는 공백을 뺀 두 글자 이상이어야 한다")
+
+        def use(conn, found):
+            item = _review_item(found, source_id, index)
+            _count("place_search", tenant, customer, http)
+            return {"revision": found["revision"], **candidates.search(
+                conn, tenant_id=tenant, review=found, item=item, query=q, kakao=_lazy("kakao", kakao_factory))}
+
+        return _review_call(intake_id, customer, tenant, revision, use)
+
+    @router.get("/v1/web/places/photos")
+    def web_place_photos(http: Request, ref: str = Query(min_length=3, max_length=80),
+                         who: tuple[str, UUID] = Depends(_web_customer)):
+        """장소에 **등록된 사진** 주소(관광공사 `tour:<번호>`만). ★저장하지 않는다 — 부를 때마다 받아 그대로 넘기고 출처 표시(`source_note`)를 붙인다.
+        사진이 없거나 못 받으면 `photos: []` 와 이유(`reason`)다 — 지어내지 않는다. ★`ref` 는 후보가 주는 값 그대로다(`place:<uuid>` 도 온다 — 42자) — 길이가 모자라 422 가
+        나던 것을 80자로 늘렸다(2026-10-03 실제 화면). 관광공사가 아닌 `ref` 는 `no_photo_source` 로 답한다."""
+        from .intake import candidates
+
+        tenant, customer = who
+        _count("place_search", tenant, customer, http)
+        return candidates.photos(_lazy("place", place_factory), ref)
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/autofix")
+    def web_intake_autofix(intake_id: UUID, request: IntakeAutofixIn, http: Request,
+                           who: tuple[str, UUID] = Depends(_web_customer)):
+        """**전체 자동 추천** — 확인이 필요한 일정을 운영시간·휴무·앞뒤 이동까지 검증한 대체 일정(장소+시각)으로 한 번에 바꾼다(`intake/autofix.py`).
+        고정한 일정은 건드리지 않는다. 바꿀 것이 있으면 `edits` 와 같은 길로 새 판이 되고(`applied: true`), 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
+        응답 = `{applied, revision, changed:[{from, to, reason}], kept:[{id, reason}], view}` — `view` 는 `GET …/{id}` 와 같은 모양(새 검사 포함).
+        ★`dry_run: true` — **저장하지 않고** 바뀔 모습만: `applied: false` · `dry_run: true` · `view.preview: true` · `view.revision` 은 적용하면 생길 판 번호(실제 적용과 같은 길로 만들어 읽고 되돌린다)."""
+        from .intake import pipeline
+
+        tenant, customer = who
+        _count("place_search", tenant, customer, http)
+        try:
+            with get_connection() as conn:
+                done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                        revision=request.revision, tour=_lazy("place", place_factory),
+                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run)
+                # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
+                return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
+        except pipeline.IntakeRejected as exc:
+            raise _error(422, exc.code, exc.message) from None
+
+    @router.post("/v1/web/trip-intakes/{intake_id}/revalidate")
+    def web_intake_revalidate(intake_id: UUID, request: IntakeRevisionIn,
+                              who: tuple[str, UUID] = Depends(_web_customer)):
+        """**재검증** — 새 판 없이 같은 판의 검사(운영시간·휴무·이동)를 처음부터 다시 계산해 저장된 검사를 새 값으로 바꾼다. 응답은 `GET …/{id}` 와 같은 모양이고
+        `review.ready` 가 참이면 「여행 등록」을 켠다. 등록 판정(`confirm`)과 같은 판정기를 쓴다."""
+        from .intake import pipeline
+
+        tenant, customer = who
+        try:
+            with get_connection() as conn:
+                return pipeline.revalidate(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
+                                           revision=request.revision)
+        except LookupError:
+            raise _error(404, "not_found", "resource not found") from None
+        except pipeline.IntakeConflict as exc:
+            raise _error(409, exc.code, exc.message, **exc.detail) from None
 
     @router.post("/v1/web/trip-intakes/{intake_id}/confirm")
     def web_intake_confirm(intake_id: UUID, request: IntakeConfirmIn, http: Request,

@@ -103,32 +103,8 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
         if item is None:
             return self.settle(task, ctx, NoChange("gone"))
-        if item.kind != "dining" or item.place is None:
-            return self._escalate(task, "target_kind_mismatch", ctx["evidence"])
-        report = self._read(task, "read.disruptions", self.check_arguments(item.place, item.starts_at),
-                            ctx["seen"])
-        ctx["evidence"] = self._evidence(task, source_id="read.disruptions", claim="성립 점검",
-                                         value=report, base=ctx["evidence"])
-        if report is None or report.get("verdict") == "fatal":
-            # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
-            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
-        if report.get("verdict") != "disrupted":
-            return self.settle(task, ctx, NoChange("clear"))
-        places = self.catalog(task, ctx)
-        if places is None:
-            return self._unknown(task, "장소 목록", ctx["evidence"])
-        check = self.recheck(task, ctx)
-
-        def safe_check(**kwargs) -> dict[str, Any]:
-            # ★예산이 바닥나면 그 후보는 「안 봤다」 — 고르지 않는다(점검 안 한 곳을 괜찮다고 하지 않는다)
-            try:
-                return check(**kwargs)
-            except ToolLedgerView._SKIP:
-                return {"verdict": "not_checked"}
-
-        plan = plan_dining_disrupted(trip=ctx["trip"], items=ctx["items"], places=places, meal=item,
-                                     report=report, check=safe_check, ledger=ToolLedgerView(self, task, ctx))
-        return self.settle(task, ctx, plan)
+        plan = plan_dining_trigger(self, task, ctx, item)
+        return plan if isinstance(plan, TeamResult) else self.settle(task, ctx, plan)
 
     async def handle_report(self, task: TeamTask, kind: str, ctx: dict[str, Any]) -> TeamResult:
         if kind not in ("delay", "closed"):
@@ -261,3 +237,31 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
             answer=(f"요청한 조건을 모두 만족합니다 — {', '.join(met)}." if met else
                     "요청한 조건이 없어 별도 확인 없이 진행할 수 있습니다."),
             decisions=[{"conditions_met": met, "requested": list(wanted)}])
+
+
+def plan_dining_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):
+    """감시 — 식사 항목 하나를 **다시 점검**하고 근처 식당으로 바꿀 안을 계산한다(쓰지 않는다). 결과: 변경 · `NoChange` · `TeamResult`(여기서 멈춤).
+    ★`[2026-10-03]` `DiningTeam.handle_trigger` 에서 떼어 냈다 — 같은 여행의 문제 묶음(`trip_watch_batch`)이 한 초안 위에서 항목마다 부른다."""
+    if item.kind != "dining" or item.place is None:
+        return work._escalate(task, "target_kind_mismatch", ctx["evidence"])
+    report = work._read(task, "read.disruptions", work.check_arguments(item.place, item.starts_at), ctx["seen"])
+    ctx["evidence"] = work._evidence(task, source_id="read.disruptions", claim="성립 점검", value=report, base=ctx["evidence"])
+    if report is None or report.get("verdict") == "fatal":
+        # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
+        return work._escalate(task, "fatal_source_failure", ctx["evidence"])
+    if report.get("verdict") != "disrupted":
+        return NoChange("clear")
+    places = work.catalog(task, ctx)
+    if places is None:
+        return work._unknown(task, "장소 목록", ctx["evidence"])
+    check = work.recheck(task, ctx)
+
+    def safe_check(**kwargs) -> dict[str, Any]:
+        # ★예산이 바닥나면 그 후보는 「안 봤다」 — 고르지 않는다(점검 안 한 곳을 괜찮다고 하지 않는다)
+        try:
+            return check(**kwargs)
+        except ToolLedgerView._SKIP:
+            return {"verdict": "not_checked"}
+
+    return plan_dining_disrupted(trip=ctx["trip"], items=ctx["items"], places=places, meal=item,
+                                 report=report, check=safe_check, ledger=ToolLedgerView(work, task, ctx))

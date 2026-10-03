@@ -10,6 +10,7 @@ import styles from "./account.module.css";
 /**
  * Shown once, right after a key was issued or rotated (D-020, D-021 §4): the key is the only way back into the
  * customer's trips on another device, and the server cannot show it again. The sentence is the server's own.
+ * ★`[2026-10-03 사용자]` It shows on My page only (`profile.tsx`) — not over the screens of the plan flow, which it covered.
  */
 export function KeyNotice() {
   const t = useT();

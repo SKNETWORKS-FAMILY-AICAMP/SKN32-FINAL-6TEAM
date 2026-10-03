@@ -1,0 +1,29 @@
+# triPilot 사이트 한 블록 — 서버의 기존 Caddy 설정에 **붙인다**(그 파일 맨 끝). `__TRIPILOT_HOST__` 를 공개 도메인으로 바꿔서.
+#
+# ★붙이기 전: 그 Caddyfile 을 백업하고, 붙인 뒤 `caddy validate` 로 검사한 다음 `caddy reload`(무중단)로 반영한다. 순서는 `deploy/README.md`.
+# ★도메인의 DNS 가 **먼저** 서버로 와 있어야 한다 — Caddy 가 이 블록을 읽는 순간 인증서(ACME)를 받으러 간다. DNS 가 없으면 실패하고 재시도 간격이 길어진다.
+# ★Cloudflare 프록시(주황 구름) 뒤에 있으면 `tls-alpn-01` 이 안 된다 → `http-01` 만 쓴다(같은 서버의 다른 도메인 블록과 같은 방식).
+#
+# 공개하는 길 — 웹은 모두, API 는 아래 경로만. API 문서(`/docs`) · 점검(`/introspection`)은 닫는다.
+__TRIPILOT_HOST__ {
+	tls {
+		issuer acme {
+			disable_tlsalpn_challenge
+		}
+	}
+	encode zstd gzip
+
+	@closed path /docs /docs/* /redoc /openapi.json /introspection /introspection/*
+	respond @closed 404
+
+	# 고객 API · 여행계획서 링크 · 예약 변경 링크 · 개인 AI 입구(MCP) · 점검
+	# ★원 접속자 주소: Cloudflare 가 `CF-Connecting-IP` 로 준다 — 앱의 일일 한도(주소별)가 프록시 주소 하나로 뭉치지 않게 이것을 넘긴다.
+	@api path /v1/* /plan/* /booking-change/* /mcp /mcp/* /health
+	reverse_proxy @api tripilot-api:8043 {
+		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+		flush_interval -1
+	}
+
+	# 그 밖은 웹앱
+	reverse_proxy tripilot-web:3000
+}

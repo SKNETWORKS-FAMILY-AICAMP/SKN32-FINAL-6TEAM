@@ -30,9 +30,9 @@ async function uploadAndOpenReview(page: Page, text: string) {
   await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
-  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「여행 등록」 또는 일정 짜기 칸이 나온다.
-  // 읽기가 끝날 때까지(등록 단추나 일정 짜기 단추가 나올 때까지) 기다린다 — 서버가 글·사진을 읽는 시간이다
-  await expect(page.getByRole("button", { name: /여행 등록|이 조건으로 짜서 등록/ })).toBeVisible({ timeout: READING });
+  // 읽는 동안은 「계획을 읽고 있어요」, 끝나면 「여행 등록」이 나온다(2026-10-03: 옛 일정 짜기 칸은 없다 — 일정 짜기는 등록 화면의 「계획 짜 주기」).
+  // 읽기가 끝날 때까지(등록 단추가 나올 때까지) 기다린다 — 서버가 글·사진을 읽는 시간이다
+  await expect(page.getByRole("button", { name: "여행 등록" })).toBeVisible({ timeout: READING });
 }
 
 test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것을 확인해 등록하면 여행이 만들어지고, 채팅·지도까지 실서버로 동작한다", async ({ page }) => {
@@ -59,11 +59,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   }
   await expect(register).toBeEnabled();
 
-  // 새 사용자라서 키가 방금 발급됐다: 안내가 한 번 보이고 닫힌다
-  const keyNotice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(keyNotice).toBeVisible();
-  await keyNotice.getByRole("button", { name: "따로 보관했어요" }).click();
-  await expect(keyNotice).toHaveCount(0);
+  // 새 사용자라서 키가 방금 발급됐다. 안내는 계획 화면 위가 아니라 마이페이지에서 한 번 보인다(2026-10-03 사용자 지시)
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   sharedKey = await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"));
   expect(sharedKey).toMatch(/^acop_u_/);
 
@@ -138,21 +135,19 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   expect(await map.locator("img").count()).toBeGreaterThan(0);
 });
 
-test("같은 사용자의 두 번째 여행: 일정을 못 읽는 글이면 일정 짜기 칸으로 서버가 일정을 짜 등록하고, 하루는 08:00 아침 식사로 시작한다", async ({ page }) => {
+test("같은 사용자의 두 번째 여행: 등록 화면의 「계획 짜 주기 (테스트)」로 서버가 일정을 짜 등록하고, 하루는 08:00 아침 식사로 시작한다", async ({ page }) => {
   await start(page, sharedKey);                          // 앞 시험이 받은 키가 있으면 이어 쓰고, 이 시험만 따로 돌리면 새 키를 받는다
   await page.goto("/trips/new");
-  await page.getByLabel("나의 여행 계획").fill("서울에서 이틀, 조용하고 걷기 좋은 곳 위주로 일정을 짜 주세요");
+  // 첫날은 오늘(서울)부터다 — 한 주 뒤로 잡는다
+  const week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+  await page.getByLabel("첫날", { exact: true }).fill(week);
+  await page.getByLabel("일수", { exact: true }).selectOption("2");
+  await page.getByLabel("인원", { exact: true }).selectOption("2");
+  await page.getByLabel("원하는 여행", { exact: false }).fill("조용하고 걷기 좋은 곳 위주로");
   await waitForHumanCheck(page);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
-
-  // 「여행 첫날」(읽은 결과 쪽 칸)과 「첫날」(일정 짜기 칸)이 둘 다 있어 id 로 가린다
-  const first = page.locator("#plan-start");
-  await expect(first).toBeVisible({ timeout: READING });
-  if (!(await first.inputValue())) await first.fill("2026-10-12");
-  if ((await page.locator("#plan-days").inputValue()) === "0") await page.locator("#plan-days").selectOption("2");
-  if ((await page.locator("#plan-party").inputValue()) === "0") await page.locator("#plan-party").selectOption("2");
-  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page.getByRole("heading", { name: "일정을 짜는 중이에요", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/\/trips\/[0-9a-f-]{36}$/, { timeout: 240_000 });
   console.log("REAL_PLAN_TRIP_ID", page.url().split("/").pop());
 

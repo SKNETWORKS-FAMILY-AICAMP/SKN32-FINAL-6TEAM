@@ -33,9 +33,9 @@ from app.infrastructure.db.session import get_connection
 KST = ZoneInfo("Asia/Seoul")
 
 #: 세는 작업 — 계약의 이름 그대로
-ACTIONS = ("intake", "plan", "confirm", "trip_create", "message", "warmup")
+ACTIONS = ("intake", "plan", "confirm", "trip_create", "message", "warmup", "place_search")
 ACTION_LABELS = {"intake": "계획 읽기", "plan": "일정 짜기", "confirm": "확인(등록)", "trip_create": "여행 만들기",
-                 "message": "채팅 메시지", "warmup": "모델 예열"}
+                 "message": "채팅 메시지", "warmup": "모델 예열", "place_search": "장소 검색 · 대체 후보 · 사진"}
 SCOPE_LABELS = {"per_key_day": "키당 하루", "per_ip_day": "주소당 하루", "service_day": "서비스 전체 하루"}
 
 
@@ -251,6 +251,22 @@ def count_session(tenant_id: str, *, ip: str, now: datetime | None = None) -> No
                                used=int(cap or 0), cap=int(cap or 0), retry_after=_seconds_to(next_hour, now))
 
 
+def count_auth(tenant_id: str, action: str, *, ip: str, now: datetime | None = None) -> None:
+    """소셜 로그인 `auth_start` · `auth_exchange` — 주소당 한 시간에 **각각** `security.web_auth_per_ip_hour` 번(`[2026-10-03]`). ★늘 켜져 있다(키 발급 한도와 같다 —
+    로그인 시도는 계정 대입 · 가입 폭주의 입구라 개발 중에도 열어 두지 않는다). 막히면 `UsageRefused`(429 `too_many_auth`)."""
+    if action not in ("auth_start", "auth_exchange"):
+        raise ValueError(f"모르는 작업: {action}")
+    now = _now(now)
+    hour = f"hour:{now:%Y-%m-%dT%H}"
+    cap = int(get_guardrails().get("security.web_auth_per_ip_hour"))
+    who = ip_token(ip, f"day:{now:%Y-%m-%d}")
+    with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
+        if _bump(cur, tenant_id, "ip", who, action, hour, cap) is None:
+            next_hour = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+            raise UsageRefused(status=429, code="too_many_auth", limit="per_ip_hour", action=action, used=cap, cap=cap,
+                               retry_after=_seconds_to(next_hour, now))
+
+
 def usage_today(conn, tenant_id: str, now: datetime | None = None) -> dict[str, Any]:
     """서비스 전체 오늘 사용량만 — 키·주소별은 싣지 않는다(개인정보)."""
     day = f"day:{_now(now):%Y-%m-%d}"
@@ -369,5 +385,5 @@ def human_check(token: str | None, *, ip: str, verify: Verify | None = None) -> 
 
 __all__ = ["ACTIONS", "HumanCheckFailed", "HumanCheckUnavailable", "LimitSpec", "UsageRefused",
            "assert_human_check_configured", "cleanup_idle_keys", "clear_cache", "client_ip", "count",
-           "count_session", "human_check", "human_check_required", "ip_token", "overrides", "prune_usage", "specs",
+           "count_auth", "count_session", "human_check", "human_check_required", "ip_token", "overrides", "prune_usage", "specs",
            "usage_today", "values"]

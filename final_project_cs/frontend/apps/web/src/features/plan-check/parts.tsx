@@ -1,9 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Translate } from "@/lib/i18n";
 import { useT } from "@/lib/settings";
-import type { CheckKind, CheckResult, CheckRow, Verdict } from "./model";
+import type { CheckKind, CheckResult, CheckRow, PlaceInfo, Verdict } from "./model";
 import styles from "./plan-check.module.css";
 
 /** Shared by the result's cards and the change screen's cards. */
@@ -46,7 +46,7 @@ export function resultLabel(result: CheckResult, t: Translate): string {
 
 export function kindLabel(kind: CheckKind, t: Translate): string {
   return {
-    place: t("장소", "Place"), time: t("시간", "Time"), hours: t("운영시간", "Hours"), closed: t("휴무일", "Closed"),
+    place: t("장소", "Place"), time: t("시간", "Time"), hours: t("운영시간", "Hours"), closed: t("휴무일", "Closed"), booking: t("예약", "Booking"),
     route: t("경로", "Route"), mode: t("수단", "Mode"), arrival: t("도착", "Arrival"),
   }[kind];
 }
@@ -55,13 +55,45 @@ export function verdictLabel(verdict: Verdict, t: Translate): string {
   return { keep: t("유지", "Kept"), adjusted: t("조정", "Adjusted"), review: t("확인 필요", "Check") }[verdict];
 }
 
+/** 「식당」 · 「활동」 — what kind of stop a place is. It is the server's own class; the server says nothing finer than that yet. */
+export function placeKindLabel(kind: string | null | undefined, t: Translate): string | null {
+  if (kind === "dining") return t("식당", "Food");
+  if (kind === "activity") return t("활동", "Activity");
+  return null;
+}
+
+/** Where the server found a place (its `source`) — shown small beside the name, so a result says what it came from. */
+export function sourceLabel(origin: string | null | undefined, t: Translate): string | null {
+  switch (origin) {
+    case undefined: case null: case "": return null;
+    case "places": return t("우리 장소 목록", "Our places");
+    case "tour_api": return t("관광공사", "Tourism org.");
+    case "kakao": return t("카카오 지도", "Kakao Map");
+    case "customer_pick": case "customer": return t("직접 고른 곳", "Picked by you");
+    default: return t("장소 정보", "Place data");
+  }
+}
+
+/** One line under a place's name: its kind, what the server calls it, where it is — only what the server gave. */
+export function placeMeta(info: PlaceInfo | null | undefined, t: Translate): string {
+  if (!info) return "";
+  return [placeKindLabel(info.kind, t), info.category, info.address].filter(Boolean).join(" · ");
+}
+
+/** The small tag beside a place's name saying where it was found. */
+export function SourceTag({ origin }: { origin: string | null | undefined }) {
+  const t = useT();
+  const label = sourceLabel(origin, t);
+  return label ? <span className={styles.sourceTag} data-origin={origin ?? undefined}>{label}</span> : null;
+}
+
 /** Why a step did not happen, in the server's own words when it said no (`LiveError.message`). */
 export const reason = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 /** A button that stays reachable when it cannot act: pressing it says why (mockup: 「꺼진 버튼을 누르면 이유를 알려 준다」). */
 export function Act({ why, onPress, explain, className, children, title, ...rest }: {
   why: string | null; onPress: () => void; explain: (why: string) => void; className?: string; children: ReactNode;
-  id?: string; title?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean;
+  id?: string; title?: string; "aria-label"?: string; "aria-pressed"?: boolean; "data-primary"?: boolean; "data-edge"?: string; style?: CSSProperties;
 }) {
   return <button type="button" className={className} aria-disabled={why ? true : undefined} title={why ?? title} {...rest}
     onClick={() => why ? explain(why) : onPress()}>{children}</button>;

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { start, mockServer, TRIP_ID } from "./helpers";
+import { fillPlanAsk, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
 
 // `[2026-10-02]` The server answers long work as a progress stream (`op_stream.py`): chat and 「plan it for me」 when
 // asked with `Accept: text/event-stream`, and an intake's reading on `GET …/events`. The screen shows what the server
@@ -66,15 +66,18 @@ test("채팅: 열린 실시간 연결이 상한이면(429) 서버 문장을 보�
   await expect(chat.locator("article[data-role=assistant]").last()).toContainText("서버 답: 2026-10-01 하루 일정을 요약해 주세요.");
 });
 
-test("일정 짜기: 서버가 말하는 단계(짜기 → 조건 확인 → 등록)를 보이고, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
+test("계획 짜 주기: 진행 화면이 「일정을 짜는 중이에요」와 서버가 말하는 단계(짜기 → 조건 확인 → 등록)를 보이고, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ intake: "empty_plan", planDelay: 1500 });
+  await server.scenario({ readingPolls: 0, planDelay: 1500 });
   await start(page);
-  await page.goto("/trips/new");
-  await page.getByLabel("나의 여행 계획").fill("서울 이틀");
+  await openRegistration(page);
+  await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page.getByRole("heading", { name: "일정을 짜는 중이에요", level: 1 })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "여행으로 등록하는 중이에요" })).toBeVisible();
+  // 서버가 말한 단계가 막대에 그대로 서 있다: 앞의 두 점은 지났고 마지막(등록)이 지금이다
+  await expect(page.getByRole("progressbar", { name: "일정 짜기 진행" })).toHaveAttribute("aria-valuetext", /여행 등록/);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
   const [plan] = await server.received("POST", "/plan");
   expect(plan.accept).toContain("text/event-stream");
@@ -96,6 +99,25 @@ test("접수 읽기: 서버의 진행 스트림을 따라 다시 읽고(1.5초 �
   const streams = await server.received("GET", "/events");
   expect(streams.length).toBeGreaterThan(0);
   expect(streams[0].accept).toContain("text/event-stream");
+});
+
+test("접수 읽기: 서버의 진행 알림(progress)이 오면 머리글 막대에 「3/14 · 광장시장 이동 확인 중」처럼 서버가 말한 대로 보인다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 3, board: "rich", review: "on" });             // the server's own check on (it streams what it checked and how far); three stops and two legs: the check stays on screen long enough to read
+  await upload(page);
+  // the stub ends with the leg phase: "<done>/<total> · <name of the stop it leads to> 이동 확인 중"
+  await expect(page.getByRole("progressbar", { name: "계획 확인 진행" })).toContainText(/\d+\/\d+ · .+ 이동 확인 중/);
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
+});
+
+test("접수 읽기: 진행 알림을 안 보내는 서버면 막대는 지금처럼 움직이고 「x/y」 줄은 말하지 않는다", async ({ page, request }) => {
+  const server = mockServer(request);
+  await server.scenario({ readingPolls: 3, intakeProgress: "off" });
+  await upload(page);
+  const bar = page.getByRole("progressbar", { name: "계획 확인 진행" });
+  await expect(bar).toBeVisible();
+  await expect(bar).not.toContainText(/\d+\/\d+ · /);
+  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 });
 
 test("접수 읽기: 스트림이 없는 옛 서버(404)면 전처럼 1.5초마다 다시 읽어 확인 화면으로 넘어간다", async ({ page, request }) => {

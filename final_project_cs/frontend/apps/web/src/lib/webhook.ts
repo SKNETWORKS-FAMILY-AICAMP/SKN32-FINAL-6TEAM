@@ -1,5 +1,4 @@
-import { DATA_MODE } from "./data-mode";
-import { translator, type Language } from "./i18n";
+import type { Language } from "./i18n";
 import { currentKey, LiveError } from "./live/client";
 import { putProfile, type ServerProfile } from "./live/profile";
 
@@ -17,10 +16,9 @@ let waiting: string | null = null;
 
 export type WebhookSaved = { where: "server"; profile: ServerProfile } | { where: "waiting" };
 
-/** Save (or with null/blank remove) the webhook. Rejects with the server's refusal (`invalid_webhook` …) or `live_only`. */
+/** Save (or with null/blank remove) the webhook. Rejects with the server's refusal (`invalid_webhook` …). */
 export async function saveDiscordWebhook(url: string | null, language: Language): Promise<WebhookSaved> {
   const value = url?.trim() || null;
-  if (DATA_MODE !== "live") throw new LiveError("live_only", translator(language)("디스코드 웹훅은 실제 서버에 연결됐을 때만 저장할 수 있어요.", "A Discord webhook can be saved only when connected to the real server."));
   if (!currentKey()) {
     waiting = value;
     return { where: "waiting" };
@@ -42,7 +40,7 @@ let sending: Promise<void> | null = null;
  * next key change. ★A new key announces itself twice (the key, then its notice) — calls meanwhile share one request.
  */
 export function syncDiscordWebhook(language: Language): Promise<void> {
-  if (DATA_MODE !== "live" || !currentKey() || waiting === null) return Promise.resolve();
+  if (!currentKey() || waiting === null) return Promise.resolve();
   sending ??= (async () => {
     const value = waiting;
     try {

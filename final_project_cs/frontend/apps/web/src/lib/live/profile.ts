@@ -8,13 +8,11 @@ import { api, LiveError } from "./client";
  *   whether it works. The web sends it once (`lib/webhook.ts`) and keeps none of it.
  */
 export interface ServerProfile {
-  recoveryEmail: string | null;
   webhook: { set: boolean; masked: string | null; status: "untested" | "ok" | "invalid" | null; checkedAt: string | null };
   updatedAt: string | null;
 }
 
 interface Wire {
-  recovery_email?: string | null;
   discord_webhook?: { set?: boolean; masked?: string | null; status?: string | null; checked_at?: string | null } | null;
   updated_at?: string | null;
 }
@@ -25,7 +23,6 @@ function read(wire: Wire): ServerProfile {
   const hook = wire.discord_webhook ?? {};
   const status = STATUSES.find((value) => value === hook.status) ?? null;
   return {
-    recoveryEmail: typeof wire.recovery_email === "string" && wire.recovery_email.trim() ? wire.recovery_email.trim() : null,
     webhook: { set: hook.set === true, masked: typeof hook.masked === "string" ? hook.masked : null, status, checkedAt: hook.checked_at ?? null },
     updatedAt: wire.updated_at ?? null,
   };
@@ -41,9 +38,8 @@ export async function getProfile(language: Language): Promise<ServerProfile> {
 }
 
 /** Partial update: a field left out is not touched; `null` removes it. One wrong value refuses the whole update (422). */
-export async function putProfile(patch: { recoveryEmail?: string | null; discordWebhookUrl?: string | null }, language: Language): Promise<ServerProfile> {
+export async function putProfile(patch: { discordWebhookUrl?: string | null }, language: Language): Promise<ServerProfile> {
   const body: Record<string, unknown> = {};
-  if ("recoveryEmail" in patch) body.recovery_email = patch.recoveryEmail;
   if ("discordWebhookUrl" in patch) body.discord_webhook_url = patch.discordWebhookUrl;
   return read(await api<Wire>("/v1/web/profile", language, {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),

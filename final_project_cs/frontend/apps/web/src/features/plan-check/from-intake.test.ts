@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { IntakeItem, IntakeView } from "@/lib/live/intake";
-import { candidatesOf, readingOf, resultOf } from "./from-intake";
+import { candidatesOf, readingOf, resultOf, sendingOf } from "./from-intake";
 
 const field = (value: unknown) => ({ value, method: "rule" as const, evidence: {}, needs_review: false, note: null });
 const item = (index: number, line: number, day: number | null, fields: IntakeItem["fields"]): IntakeItem => ({ index, line, day, date: null, fields });
@@ -39,6 +39,19 @@ describe("plan check reading, from the server's intake", () => {
     const photo = { ...text([["11:00 올리브영", true]], [item(0, 1, 1, { title: field("올리브영"), removed: field(true) })]), source_id: "s2", kind: "image" };
     const view = readingOf(intake("reading", "reading", [text([["10/1 09:00 경복궁", true]]), photo]));
     expect(view.lines.map((line) => [line.no, line.text, line.found])).toEqual([[1, "10/1 09:00 경복궁", null], [2, "11:00 올리브영", null]]);
+  });
+});
+
+describe("plan check while the plan is still being sent", () => {
+  it("shows the customer's own lines, none read, numbered like the server's splitlines (blank lines count, a trailing newline does not)", () => {
+    const view = sendingOf("1일차\r\n09:00 경복궁\n\n12:00 광장시장\n");
+    expect(view.stage).toBe("received");
+    expect(view.lines.map((line) => [line.no, line.text, line.read, line.found])).toEqual([[1, "1일차", false, null], [2, "09:00 경복궁", false, null], [3, "", false, null], [4, "12:00 광장시장", false, null]]);
+    expect(view.items).toEqual([]);
+  });
+
+  it("has no lines for an empty text (a file or photo is read by the server first)", () => {
+    expect(sendingOf("").lines).toEqual([]);
   });
 });
 

@@ -2,40 +2,32 @@
 
 import { createContext, useContext, useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { z } from "zod";
-import { CONTACT_CHANGED_EVENT, readRecoveryEmail } from "@/lib/contact";
 import { initialAnswers, INTRO_STEP, questions, type Answers } from "./model";
 
 export interface OnboardingState {
   /** The full terms were scrolled to the end at least once. */
   read: boolean;
   agreed: boolean;
-  /** Expanded card: 0 alerts & recovery (optional, unnumbered), 1 terms, 2 preferences. The language card lives in the settings menu. */
+  /** Expanded card: 0 Discord alerts (optional, unnumbered), 1 terms, 2 preferences. The language card lives in the settings menu. */
   open: 0 | 1 | 2 | null;
   /**
-   * Recovery email draft, as typed. Optional: blank means "not entered". It follows the email kept in this browser
-   * (`lib/contact.ts`, the one My page edits) and is written there when the customer leaves the email card.
-   */
-  email: string;
-  /**
-   * Discord webhook URL for trip alerts, as typed. Optional like the email, but page state only: it is never written to
+   * Discord webhook URL for trip alerts, as typed. Optional, and page state only: it is never written to
    * this browser's storage (it is a secret). Leaving the card sends it to the server (`lib/webhook.ts`).
    */
   webhook: string;
   step: number;
   complete: boolean;
   answers: Answers;
-  /** Trip that reached management in this page session, for “Continue my trip”. */
-  activeTripId: string | null;
 }
 
-const initial: OnboardingState = { read: false, agreed: false, open: null, email: "", webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers, activeTripId: null };
+const initial: OnboardingState = { read: false, agreed: false, open: null, webhook: "", step: INTRO_STEP, complete: false, answers: initialAnswers };
 const Context = createContext<[OnboardingState, Dispatch<SetStateAction<OnboardingState>>] | null>(null);
 const ReadyContext = createContext(false);
 
 /**
  * `[2026-10-01 user decision]` The start screen is asked once. What it collected — the terms, the preference answers and
  * where the questions stand — is kept in this browser and read back on the next visit, so a reload or a later visit does
- * not start over. Nothing here is sent to the server. ★Which card is open and the last trip stay page-only.
+ * not start over. Nothing here is sent to the server. ★Which card is open stays page-only. 「Continue my trip」 is not kept here: it reads the server's trip list (`useTrips`).
  */
 const STORAGE_KEY = "tripilot.web.onboarding.v1";
 const area = z.enum(["food", "activity", "mobility"]);
@@ -82,13 +74,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     const restored = load();
     // Browser storage can only be read after hydration, or the server render and the first client render disagree.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reading an external store once, on purpose
-    setState((current) => ({ ...current, ...(restored ?? {}), email: readRecoveryEmail() ?? "" }));
+    setState((current) => ({ ...current, ...(restored ?? {}) }));
     setReady(true);
-    // The email is edited on My page too: follow it, so the start screen never holds a stale copy.
-    const follow = () => setState((current) => ({ ...current, email: readRecoveryEmail() ?? "" }));
-    addEventListener(CONTACT_CHANGED_EVENT, follow);
-    addEventListener("storage", follow);
-    return () => { removeEventListener(CONTACT_CHANGED_EVENT, follow); removeEventListener("storage", follow); };
   }, [setState]);
 
   useEffect(() => {

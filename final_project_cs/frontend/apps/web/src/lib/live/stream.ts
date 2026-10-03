@@ -172,11 +172,19 @@ export type IntakeWatchEvent = { type: "progress"; stage: string | null; elapsed
 export type IntakeWatchEnd = "done" | "stalled" | "gone" | "unsupported" | "lost" | "closed";
 
 /**
- * Follow an intake while the server reads it (`GET /v1/web/trip-intakes/{id}/events`). The stream carries the stage, not
- * what was read — on each event the screen reads the intake again with the GET it already has. Never throws.
+ * The events that carry what the server has checked so far (`line` · `item` · `check` · `move` · `progress` · `done`, copies of state —
+ * `intake-events.ts` reads them). They are handed on as they come; this function only follows the stage.
+ */
+export const INTAKE_CONTENT_EVENTS: ReadonlySet<string> = new Set(["line", "item", "check", "move", "progress", "done"]);
+export type IntakeContentHandler = (name: string, data: string) => void;
+
+/**
+ * Follow an intake while the server reads it (`GET /v1/web/trip-intakes/{id}/events`). The stage events tell the screen to
+ * read the intake again with the GET it already has; the content events (`onContent`) carry the checks that are not in
+ * that GET until the check is done. Never throws.
  */
 export async function watchIntake(intakeId: string, language: Language, onEvent: (event: IntakeWatchEvent) => void, signal: AbortSignal,
-  timing: StreamTiming = STREAM_TIMING): Promise<IntakeWatchEnd> {
+  timing: StreamTiming = STREAM_TIMING, onContent?: IntakeContentHandler): Promise<IntakeWatchEnd> {
   const controller = new AbortController();
   const stop = () => controller.abort();
   signal.addEventListener("abort", stop, { once: true });
@@ -202,6 +210,7 @@ export async function watchIntake(intakeId: string, language: Language, onEvent:
       const stage = typeof body.stage === "string" ? body.stage : typeof state.stage === "string" ? state.stage : null;
       if (name === "accepted" || name === "stage" || name === "beat") onEvent({ type: "progress", stage, elapsed: seconds(body.elapsed) ?? 0, slow: body.slow === true });
       else if (name === "result") { onEvent({ type: "done" }); end.value = "done"; }
+      else if (INTAKE_CONTENT_EVENTS.has(name)) onContent?.(name, data);
       else if (name === "error") end.value = body.code === "stalled" ? "stalled" : body.code === "not_found" ? "gone" : "lost";
     });
     arm();

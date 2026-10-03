@@ -25,8 +25,8 @@ from app.core.idempotency import idempotency_key
 from .._base import TravelTeamBase
 from ..itinerary_actions import ACTION_TYPE as ITINERARY_APPLY
 from ..itinerary_actions import consent_arguments
-from ..itinerary_changes import NoChange, plan_activity_adjustment, plan_nearby_store
-from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
+from ..itinerary_changes import ACTIVITY_RECHECK_LIMIT, NoChange, plan_activity_adjustment, plan_nearby_store
+from ..itinerary_team import ITINERARY_TOOLS, Consent, ItineraryWork
 from ..pending import needs_consent, weather_only
 from .similarity import preference_of, score
 
@@ -59,8 +59,11 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         # ★`[2026-09-23]` `read.booking_terms` 를 더했다 — **수치는 이 도구가** 댄다.
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
+        # ★`[2026-10-03]` 뒤의 셋(`read.route_events` · `read.dining_state` · `read.dining_alternatives`)은 **같은 여행의 문제 묶음**(`trip_watch_batch`) 때문이다 — 활동 Team 이
+        #   조정자라 식당 · 이동 항목도 같은 초안 위에서 계산한다. 식당 원장 둘은 못 부르면 장소 목록으로 돌아간다(`ToolLedgerView`). 단일 항목 Case 는 이 셋을 안 쓴다.
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
-                       "read.disruptions", *ITINERARY_TOOLS],
+                       "read.disruptions", "read.route_events", "read.dining_state", "read.dining_alternatives",
+                       *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이
         #   쇼핑몰 환불 문서를 근거로 집어 왔다. 이름이 겹치지 않게 `travel_` 을 붙이고
@@ -97,30 +100,11 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         item = next((i for i in ctx["items"] if str(i.item_id) == str(trigger.get("item_id"))), None)
         if item is None:
             return self.settle(task, ctx, NoChange("gone"))
-        if item.kind != "activity" or item.place is None:
-            return self._escalate(task, "target_kind_mismatch", ctx["evidence"])
-        report = self._read(task, "read.disruptions", self.check_arguments(item.place, item.starts_at),
-                            ctx["seen"])
-        ctx["evidence"] = self._evidence(task, source_id="read.disruptions", claim="성립 점검",
-                                         value=report, base=ctx["evidence"])
-        if report is None or report.get("verdict") == "fatal":
-            # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
-            return self._escalate(task, "fatal_source_failure", ctx["evidence"])
-        if report.get("verdict") != "disrupted":
-            return self.settle(task, ctx, NoChange("clear"))
-        if needs_consent(report, (ctx.get("trip") or {}).get("constraints") or {}):
-            return self._ask_consent(task, ctx, item, report)
-        places = self.catalog(task, ctx)
-        if places is None:
-            return self._unknown(task, "장소 목록", ctx["evidence"])
-        # ★`[2026-09-29]` 대체 활동은 「비슷한 곳(관광공사 분류·구) → 가까운 곳」 순 — 설문 우선순위가 선호를 정한다
-        preference = preference_of((ctx.get("trip") or {}).get("constraints"))
-        plan = plan_activity_adjustment(item=item, report=report, places=places,
-                                        check=self.recheck(task, ctx), now=ctx["at"], items=ctx["items"],
-                                        similarity=partial(score, preference=preference))
-        if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
-            # ★`[2026-09-29]` 자동으로 못 찾았으면 사람에게 넘기지 않고 「바꿀까요?」로 — 「바꿔 줘」면 관광공사 목록까지 뒤진다
-            return self._ask_consent(task, ctx, item, report)
+        plan = plan_activity_trigger(self, task, ctx, item)
+        if isinstance(plan, Consent):
+            return self._ask_consent(task, ctx, item, plan.report)
+        if isinstance(plan, TeamResult):
+            return plan
         return self.settle(task, ctx, plan)
 
     def _ask_consent(self, task: TeamTask, ctx: dict[str, Any], item: Any, report: dict[str, Any]) -> TeamResult:
@@ -485,3 +469,35 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
             except (TypeError, ValueError):
                 continue
         return best
+
+
+def plan_activity_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):
+    """감시 — 활동 항목 하나를 **다시 점검**하고 대안을 계산한다(쓰지 않는다). 결과: 변경 · `NoChange` · `Consent`(먼저 묻기) · `TeamResult`(여기서 멈춤 — 점검 소스 실패 · 모름).
+
+    ★`[2026-10-03]` `ActivityTeam.handle_trigger` 에서 떼어 냈다 — 같은 여행의 문제 묶음(`trip_watch_batch`)이 한 초안 위에서 항목마다 부른다. `work` 는 도구를 읽는 Team(도구 선언은 그 Team 의 것).
+    """
+    if item.kind != "activity" or item.place is None:
+        return work._escalate(task, "target_kind_mismatch", ctx["evidence"])
+    report = work._read(task, "read.disruptions", work.check_arguments(item.place, item.starts_at), ctx["seen"])
+    ctx["evidence"] = work._evidence(task, source_id="read.disruptions", claim="성립 점검", value=report, base=ctx["evidence"])
+    if report is None or report.get("verdict") == "fatal":
+        # ★점검 소스가 대체까지 실패 — 「clear」로 읽지 않는다(결정 15).
+        return work._escalate(task, "fatal_source_failure", ctx["evidence"])
+    if report.get("verdict") != "disrupted":
+        return NoChange("clear")
+    if needs_consent(report, (ctx.get("trip") or {}).get("constraints") or {}):
+        return Consent(report)
+    places = work.catalog(task, ctx)
+    if places is None:
+        return work._unknown(task, "장소 목록", ctx["evidence"])
+    # ★`[2026-09-29]` 대체 활동은 「비슷한 곳(관광공사 분류·구) → 가까운 곳」 순 — 설문 우선순위가 선호를 정한다
+    preference = preference_of((ctx.get("trip") or {}).get("constraints"))
+    # ★`[2026-10-02 결함 인계 #1]` 재점검은 앞 순위 몇 곳만 · 도구 한도에 걸려도 예외로 터지지 않는다(못 본 곳은 고르지 않는다)
+    plan = plan_activity_adjustment(item=item, report=report, places=places,
+                                    check=work.safe_recheck(task, ctx), now=ctx["at"], items=ctx["items"],
+                                    similarity=partial(score, preference=preference),
+                                    limit=ACTIVITY_RECHECK_LIMIT)
+    if isinstance(plan, NoChange) and plan.status == "unresolved" and weather_only(report):
+        # ★`[2026-09-29]` 자동으로 못 찾았으면 사람에게 넘기지 않고 「바꿀까요?」로 — 「바꿔 줘」면 관광공사 목록까지 뒤진다
+        return Consent(report)
+    return plan

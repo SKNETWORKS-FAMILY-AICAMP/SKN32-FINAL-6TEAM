@@ -170,6 +170,17 @@ def test_unknown_files_are_refused_at_the_door_and_photos_need_a_reader(api):
     assert view["status"] == "fatal" and view["fatal"]["code"] == "unsupported_format", view
 
 
+def test_confirming_an_intake_that_could_not_be_read_is_a_409_not_a_server_error(api):
+    """★「읽지 못했어요」 접수에 「등록하고 관리 시작」을 눌러도 서버 오류(500)가 나지 않는다 — 409 와 현재 상태를 돌려준다.
+    오류 함수가 상세의 `status` 를 위치 인자 `status` 와 겹쳐 받아 `TypeError` 가 났다(그래서 위치 전용으로 바꿨다)."""
+    client = _client()                                        # 받아쓰기 모델이 없어 사진은 읽지 못함(fatal)
+    headers = _key(client)
+    view = _send(client, headers, files=[("plan.png", PHOTO.read_bytes())])
+    assert view["status"] == "fatal", view
+    body = _confirm(client, headers, view["intake_id"], view["revision"], status=409)
+    assert body["error"]["code"] == "intake_not_ready" and body["error"]["status"] == "fatal", body
+
+
 def test_an_intake_is_yours_only(api):
     client = _client()
     mine = _key(client)

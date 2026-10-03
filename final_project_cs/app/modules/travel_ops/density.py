@@ -1,6 +1,10 @@
-"""D-019: 입력으로 확인 가능한 시간만 측정하는 관측용 밀도. 거절/재조정 없음."""
+"""D-019: 입력으로 확인 가능한 시간만 측정하는 밀도.
+
+★`[2026-10-03 개정]` 등록·조회는 여전히 관측만 한다(거절 없음). 자동 변경(감시)은 **바꾼 뒤 하루 밀도가 나빠지는지**를 `density_regressions` 로 본다 — `itinerary_fit` 가 쓴다.
+"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from math import isfinite
 from typing import Any, Literal, Mapping
@@ -153,7 +157,9 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
                 travel += minutes
                 route = part.route or {}
                 options = route.get("options")
-                option = next((o for o in options if isinstance(o, dict) and o.get("id") == route.get("planned")), None) if isinstance(options, list) else None
+                # ★`[2026-10-03]` 고른 수단(`detail.option`)이 먼저 — 경로를 바꾼 항목의 소요를 옛 계획 수단과 비교하지 않는다(`itinerary_checks._planned_eta` 와 같다)
+                chosen_option = (detail.get("option") or route.get("planned"))
+                option = next((o for o in options if isinstance(o, dict) and o.get("id") == chosen_option), None) if isinstance(options, list) else None
                 eta = _number(option.get("eta_min")) if option else None
                 if eta is None or minutes < eta:
                     reasons.append(f"항목 {part.seq}: 경로 소요 누락 또는 이동시간 부족")
@@ -186,3 +192,59 @@ def measure_density(parts: list[Part], constraints: Mapping[str, Any]) -> dict[s
     for day, reasons in outside.items():
         add(day, target, None, None, reasons)
     return {"density": results, "warnings": warnings}
+
+
+# ── 자동 변경 판단에 쓰기 `[2026-10-03 사용자 지시 · D-019 개정]` ───────────────────────────
+@dataclass(frozen=True)
+class DayShift:
+    """한 날의 밀도가 변경 때문에 **나빠진** 것. `kind`: `new_exceed`(목표 안 → 밖) · `worse`(이미 밖인데 더 밖으로) · `unmeasurable`(잴 수 있던 날을 못 재게 됨)."""
+
+    date: str
+    kind: str
+    before: float | None
+    after: float | None
+    target: float | None
+
+    @property
+    def excess(self) -> float:
+        """목표를 넘은 정도(비율) — 못 잰 날은 0 이라 고를 때 가장 뒤로 밀린다(`itinerary_fit` 가 따로 센다)."""
+        return max(0.0, (self.after or 0.0) - (self.target or 0.0)) if self.kind != "unmeasurable" else 0.0
+
+    def sentence(self) -> str:
+        """고객에게 보이는 한 줄 — 「밀도」 같은 말 없이."""
+        month, day = int(self.date[5:7]), int(self.date[8:10])
+        when = f"{month}월 {day}일"
+        pct = lambda value: f"{round(value * 100)}%"            # noqa: E731
+        if self.kind == "unmeasurable":
+            return f"{when} 하루 일정이 얼마나 빡빡한지 확인하지 못했어요"
+        if self.kind == "worse":
+            return f"{when} 일정이 이미 원하신 여유보다 빡빡한데 더 빡빡해졌어요(하루의 {pct(self.before)} → {pct(self.after)}, 목표 {pct(self.target)})"
+        return f"{when} 일정이 원하신 여유보다 빡빡해졌어요(하루의 {pct(self.before)} → {pct(self.after)}, 목표 {pct(self.target)})"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"date": self.date, "kind": self.kind, "before": self.before, "after": self.after, "target": self.target}
+
+
+def density_regressions(constraints: Mapping[str, Any], before: list[Part], after: list[Part]) -> list[DayShift]:
+    """바꾸기 전(`before`)과 바꾼 뒤(`after`)의 하루 밀도를 같은 함수로 재서, 변경이 **나쁘게 만든 날**만 낸다.
+
+    ★규칙(D-019 개정): ①잴 수 있던 날이 목표 안 → 밖: `new_exceed` ②이미 밖이던 날이 허용 오차(`travel.density.gate.worsen_tolerance`)보다 더 밖으로: `worse`
+    ③잴 수 있던 날을 못 재게 됨: `unmeasurable`(결정 15 — 값을 모르는 상황을 변경이 만들지 않는다) ④바꾸기 전에 못 쟀던 날은 비교할 수 없어 탓하지 않는다.
+    ⑤밀도 목표가 없는 여행(`constraints.density` 없음)은 아무것도 안 낸다. 잘못된 입력은 `measure_density` 가 `unmeasurable` 로 내는데 바꾸기 전에도 같아 ④로 넘어간다.
+    """
+    if "density" not in constraints:
+        return []
+    tolerance = float(get_guardrails().get("travel.density.gate.worsen_tolerance"))
+    was = {row["date"]: row for row in measure_density(before, constraints)["density"] if row["date"]}
+    shifts: list[DayShift] = []
+    for row in measure_density(after, constraints)["density"]:
+        prior = was.get(row["date"])
+        if row["date"] is None or prior is None or prior["status"] == "unmeasurable":
+            continue
+        if row["status"] == "unmeasurable":
+            shifts.append(DayShift(row["date"], "unmeasurable", prior["actual_density"], None, row["target_density"]))
+        elif row["status"] == "exceeded" and prior["status"] == "ok":
+            shifts.append(DayShift(row["date"], "new_exceed", prior["actual_density"], row["actual_density"], row["target_density"]))
+        elif row["status"] == "exceeded" and row["actual_density"] - prior["actual_density"] > tolerance:
+            shifts.append(DayShift(row["date"], "worse", prior["actual_density"], row["actual_density"], row["target_density"]))
+    return shifts

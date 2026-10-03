@@ -12,14 +12,15 @@ import type { Coordinates } from "@/features/map/model";
 /** One check's result (mockup `result`): passed · filled in by the server · warning · must fix · not known yet · not checked yet. */
 export type CheckResult = "ok" | "filled" | "warn" | "bad" | "unknown" | "pending";
 /** Place checks: place · time · hours · closed. Move checks: route · mode · arrival. */
-export type CheckKind = "place" | "time" | "hours" | "closed" | "route" | "mode" | "arrival";
+export type CheckKind = "place" | "time" | "hours" | "closed" | "booking" | "route" | "mode" | "arrival";
 export interface CheckRow { kind: CheckKind; result: CheckResult; text: string }
 
 /** A card's verdict once its checks are in. Null while it is still being checked. */
 export type Verdict = "keep" | "adjusted" | "review";
 
 /** A place photo: the server's place data (`url`), or — preview only — an example drawing (`url` null). */
-export interface PlacePhoto { caption: string; url: string | null }
+/** A photo the server named (its address is checked before it is kept — `safePhotoUrl`); there are no stand-in pictures. */
+export interface PlacePhoto { caption: string; url: string }
 
 /** What a place is and where, for the change screen's cards. Null when the server has not given it. */
 export interface PlaceInfo {
@@ -27,6 +28,10 @@ export interface PlaceInfo {
   category: string | null;
   address: string | null;
   photos: PlacePhoto[];
+  /** What kind of stop the place is, as the server classes it (a meal place or an activity) — null when it does not say. */
+  kind?: "dining" | "activity" | string | null;
+  /** Where the server found it: `places` (our list) · `tour_api` (tourism service) · `kakao` (map search) · `customer_pick` … */
+  origin?: string | null;
 }
 
 export interface PlanItem {
@@ -38,7 +43,13 @@ export interface PlanItem {
   startsAt: string;
   /** "HH:MM", or "" when there is none. */
   endsAt: string;
+  /**
+   * What the card is called. ★`[2026-10-03 사용자]` Once the customer picked a place for the stop, this is that place's name —
+   * the card used to keep the words they had written ("성수 예약 식당") after the place had changed.
+   */
   title: string;
+  /** The words as written in the plan, when `title` is the picked place's name instead (the stop editor edits these, not the place). */
+  written?: string;
   /** The place's name as the server holds it ("" when none), and whether the customer chose 「장소 없음」. */
   place: string;
   noPlace: boolean;
@@ -112,7 +123,15 @@ export interface PlanCheckView {
   dirty: boolean;
   /** The whole plan is being checked again: the stop at it now, in order (mockup 「재검증 중 · 2/4」). Null otherwise. */
   rechecking: string | null;
+  /**
+   * `[2026-10-03 사용자 지시]` How far the server says it is (its `progress` packet: phase, done of total, what it is at). When it is
+   * there the bar and the words come from it alone; when the server sends none (an older server) they come from the rows drawn, as before.
+   */
+  serverProgress?: ServerProgress | null;
 }
+
+/** What the server's `progress` packet says, with the stop's title to show. */
+export interface ServerProgress { phase: "places" | "hours" | "moves"; done: number; total: number; title: string | null }
 
 const stageIndex = (stage: PlanStage) => STAGES.indexOf(stage);
 
@@ -221,11 +240,15 @@ export function progress(view: PlanCheckView): number {
   const third = 100 / 3;
   if (view.stage === "received") return 0;
   if (view.stage === "done") return 100;
-  if (view.stage === "reading") return view.lines.length ? third * view.lines.filter((line) => line.read).length / view.lines.length : 0;
+  // The server's own count, when it sends one: the whole line is split in three phases (places · hours · moves), each as far as `done / total`.
+  //   ★The bar never goes back: the rows drawn so far (lines read; places and legs checked) still count, and the larger of the two is shown.
+  const served = view.serverProgress ? (["places", "hours", "moves"].indexOf(view.serverProgress.phase) + Math.min(1, view.serverProgress.done / Math.max(1, view.serverProgress.total))) * third : 0;
+  if (view.stage === "reading") return Math.max(served, view.lines.length ? third * view.lines.filter((line) => line.read).length / view.lines.length : 0);
   const total = expected(view);
   const all = total.places + total.moves;
   const done = [...view.items, ...view.moves].filter((entity) => entity.verdict !== null).length;
-  return third + (all ? third * Math.min(done, all) / all : 0);
+  // 100 is for the finished check only: the last leg counted is "almost", not "done".
+  return Math.min(99, Math.max(served, third + (all ? third * Math.min(done, all) / all : 0)));
 }
 
 export interface Tally { places: number; placesDone: number; moves: number; movesDone: number; placesReview: number; movesReview: number }
@@ -256,7 +279,7 @@ export const foundCount = (view: Pick<PlanCheckView, "lines">) => view.lines.fil
 export interface ItemDraft { title: string; date: string; start: string; end: string; place: string; noPlace: boolean }
 
 export const draftOfItem = (item: PlanItem): ItemDraft =>
-  ({ title: item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
+  ({ title: item.written ?? item.title, date: item.date, start: item.startsAt, end: item.endsAt, place: item.place, noPlace: item.noPlace });
 
 /**
  * What stops the editor from saving, checked on the screen before anything is sent: no name, an end before the start,

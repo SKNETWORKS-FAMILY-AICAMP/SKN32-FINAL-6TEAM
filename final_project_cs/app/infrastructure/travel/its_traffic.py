@@ -39,6 +39,11 @@ KST = ZoneInfo("Asia/Seoul")
 
 #: 장소에서 이 거리 안의 돌발만 본다(미터). ★우리가 고른 값이다 — 측정 아님.
 DEFAULT_RADIUS_M = 1000
+#: ★`[2026-10-03 사용자 — 「소스마다 한 번 받아 두고 항목은 사본에서 비교」]` 서울 전체를 덮는 상자(경도 126.70~127.30 · 위도 37.35~37.80 — 서울 경계 경도 126.76~127.19 · 위도 37.41~37.72 에 여유).
+#:  전에는 **장소마다 반경 상자**로 요청해(요청 열쇠가 장소마다 달라 캐시도 못 나눴다) 항목 수만큼 요청이 늘었고, 하루 한도(1,000)가 9/30 · 10/2 에 실제로 찼다(4001).
+#:  서울 범위 한 번 조회는 122건이라(2026-09-14 실측 — 위 머리말) 부담이 작다. 거리로 거르는 것은 전과 같이 **받은 뒤 여기서** 한다.
+#:  서울 밖 장소(상자를 벗어나는 반경)는 전처럼 그 장소의 반경 상자로 묻는다.
+SEOUL_BOX = (126.70, 127.30, 37.35, 37.80)               # (minX, maxX, minY, maxY)
 #: 끝 시각이 없는 돌발(사고 등)을 「그 시각에도 이어진다」고 볼 한도(시간).
 #:  ★우리가 고른 값이다. 지금 난 사고가 내일 일정까지 이어진다고 보지 않는다.
 OPEN_ENDED_HOURS = 3
@@ -113,11 +118,13 @@ class ItsTrafficEvents(TravelSource):
         at = at if at.tzinfo else at.replace(tzinfo=KST)
         dlat = radius_m / 111_000
         dlon = radius_m / (111_000 * max(math.cos(math.radians(latitude)), 0.01))
+        place_box = (longitude - dlon, longitude + dlon, latitude - dlat, latitude + dlat)
+        in_seoul = (SEOUL_BOX[0] <= place_box[0] and place_box[1] <= SEOUL_BOX[1]
+                    and SEOUL_BOX[2] <= place_box[2] and place_box[3] <= SEOUL_BOX[3])
+        min_x, max_x, min_y, max_y = SEOUL_BOX if in_seoul else tuple(round(v, 6) for v in place_box)
         payload = self._fetch_json(ENDPOINT, {
             "apiKey": self._key, "type": "all", "eventType": "all",
-            "minX": round(longitude - dlon, 6), "maxX": round(longitude + dlon, 6),
-            "minY": round(latitude - dlat, 6), "maxY": round(latitude + dlat, 6),
-            "getType": "json"})
+            "minX": min_x, "maxX": max_x, "minY": min_y, "maxY": max_y, "getType": "json"})
         if payload is None:
             return None
         body = payload.get("body")
@@ -157,9 +164,9 @@ class ItsTrafficEvents(TravelSource):
                      "message": str(item.get("message") or "").strip()}
             (disruptions if level == "disruption" else advisories).append(entry)
         return self.stamp({"radius_m": radius_m, "at": at.isoformat(),
-                           "total_in_box": len(items), "for_place": disruptions,
+                           "total_in_box": len(items), "box": "seoul" if in_seoul else "place", "for_place": disruptions,
                            "advisories": advisories, "kind": "traffic_events"},
                           source=self.name)
 
 
-__all__ = ["DEFAULT_RADIUS_M", "ENDPOINT", "ItsTrafficEvents", "classify", "parse_message"]
+__all__ = ["DEFAULT_RADIUS_M", "ENDPOINT", "ItsTrafficEvents", "SEOUL_BOX", "classify", "parse_message"]

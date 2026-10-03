@@ -39,10 +39,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import math
 from typing import Any, Callable
+from zoneinfo import ZoneInfo
 
+from .place_hours import break_span
+
+KST = ZoneInfo("Asia/Seoul")
 WALK_M_PER_MIN = 80
 ORDER_MARGIN_MIN = 20
 LAST_ORDER_WARN_MIN = 60
@@ -115,14 +119,26 @@ def walk_minutes(meters: float) -> int:
 
 
 def _hm(moment: datetime) -> str:
-    return moment.strftime("%H:%M")
+    return _seoul(moment).strftime("%H:%M")           # ★서울 시계 — 알림 문구의 시각(`_seoul` 아래)
 
 
-def _on(moment: datetime, hhmm: str) -> datetime:
-    if hhmm in ("24:00",):
-        return moment.replace(hour=23, minute=59, second=59, microsecond=0)
-    hour, minute = map(int, hhmm.split(":"))
-    return moment.replace(hour=hour, minute=minute, second=0, microsecond=0)
+def _at_clock(moment: datetime, clock: time) -> datetime:
+    return moment.replace(hour=clock.hour, minute=clock.minute, second=0, microsecond=0)
+
+
+def _seoul(moment: datetime) -> datetime:
+    """식당 판정에 쓰는 시각은 **서울 시각**이다 — 영업시간 · 브레이크 · 라스트오더는 서울 시계로 적힌 값이다. 시간대 없는 시각은 서울로 본다(`itinerary_checks._seoul` 과 같은 약속).
+    ☆`[2026-10-03 적대 검토]` 전에는 받은 시각의 시계에 브레이크를 그대로 얹었다 — 세계 표준시로 온 도착 시각(서울 14:20 = UTC 05:20)은 브레이크 · 라스트오더가 9시간 어긋났다."""
+    return moment.astimezone(KST) if moment.tzinfo is not None else moment.replace(tzinfo=KST)
+
+
+def _margin(attributes: dict[str, Any]) -> int | None:
+    """브레이크 앞 라스트오더 여유(분) — 모르면 `None`. 숫자가 아닌 값은 모름이다."""
+    value = attributes.get("last_order_before_break_min")
+    try:
+        return None if value is None or isinstance(value, bool) else int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def open_during(place: dict[str, Any], start: datetime, end: datetime | None) -> bool | None:
@@ -133,8 +149,51 @@ def open_during(place: dict[str, Any], start: datetime, end: datetime | None) ->
     return fits(place.get("attributes") or {}, start, end or start)
 
 
+def _break_last_order(attributes: dict[str, Any], arrival: datetime, *, known_only: bool = False) -> str | None:
+    """브레이크 앞 라스트오더까지 주문 여유(20분)가 안 되면 그 이유 문장, 아니면 `None`. 라스트오더 값(`last_order_before_break_min`)을 모르면 브레이크 시작을 라스트오더로 보수적으로 본다.
+
+    `known_only` — **받은 일정의 경고**용: 값을 **아는** 것만 센다. 값이 없으면 지어낸 「라스트오더(15:00)」라고 말하지 않고(그때는 `dining_warnings` 가 「확인해 주세요」), 이미 브레이크 안에 도착한 것은
+    위반(`break_time`)이 말하니 다시 말하지 않는다."""
+    span = break_span(attributes)
+    if span is None:
+        return None
+    margin = _margin(attributes)
+    rest_start, rest_end = _at_clock(arrival, span[0]), _at_clock(arrival, span[1])
+    if known_only and (margin is None or arrival >= rest_start):
+        return None
+    last_order = rest_start - timedelta(minutes=margin or 0)
+    if arrival < rest_end and arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
+        left = max(0, int((last_order - arrival).total_seconds() // 60))
+        return f"{span[0]:%H:%M} 브레이크타임 전 라스트오더({_hm(last_order)})까지 {left}분 — 주문 가능한 시간이 촉박하다"
+    return None
+
+
+def _closing_last_order(attributes: dict[str, Any], arrival: datetime) -> str | None:
+    """★`[2026-09-28]` 영업 종료 앞 라스트오더도 **알면** 같은 20분을 건다(전에는 브레이크 앞에만 걸었다). 모르면 `None`."""
+    from .place_hours import hours_on
+
+    day = hours_on(attributes, arrival.date())
+    if isinstance(day, str) or day is None or day.last_entry is None:
+        return None
+    last_order = _at_clock(arrival, day.last_entry)
+    if arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
+        left = max(0, int((last_order - arrival).total_seconds() // 60))
+        return f"라스트오더({_hm(last_order)})까지 {left}분 — 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다"
+    return None
+
+
+def last_order_shortfall(place: dict[str, Any], arrival: datetime) -> str | None:
+    """도착해서 **라스트오더를 아는데** 주문 여유가 20분이 안 되는 이유(브레이크 앞 · 영업 종료 앞). 아니면 `None`. `[2026-10-03 체크리스트 O4 · 적대 검토]`
+
+    받은 일정의 경고(`itinerary_quality`)가 쓴다 — `dining_fits` 와 **같은 두 규칙**이되 위반(영업 안 함 · 브레이크에 걸침)은 거기서 이미 막으므로 말하지 않고, 모르는 값은 지어내지 않는다."""
+    attributes = place.get("attributes") or {}
+    arrival = _seoul(arrival)
+    return _break_last_order(attributes, arrival, known_only=True) or _closing_last_order(attributes, arrival)
+
+
 def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple[bool | None, str]:
-    """그 시각에 들어가 `minutes` 동안 먹을 수 있나. (판정, 이유)."""
+    """그 시각에 들어가 `minutes` 동안 먹을 수 있나. (판정, 이유). 시각은 서울 시각으로 읽는다(`_seoul`)."""
+    arrival = _seoul(arrival)
     end = arrival + timedelta(minutes=minutes)
     opened = open_during(place, arrival, end)
     if opened is None:
@@ -142,28 +201,16 @@ def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple
     if not opened:
         return False, "그 시각 영업하지 않는다"
     attributes = place.get("attributes") or {}
-    rest = attributes.get("break")
-    if rest:
-        rest_start, rest_end = _on(arrival, rest[0]), _on(arrival, rest[1])
-        margin = attributes.get("last_order_before_break_min")
-        last_order = rest_start - timedelta(minutes=margin or 0)
-        if arrival < rest_end and arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
-            left = max(0, int((last_order - arrival).total_seconds() // 60))
-            return False, (f"{rest[0]} 브레이크타임 전 라스트오더({_hm(last_order)})까지 "
-                           f"{left}분 — 주문 가능한 시간이 촉박하다")
-        if arrival < rest_start < end:
-            return False, f"{rest[0]} 브레이크타임에 걸린다"
-    # ★`[2026-09-28]` 영업 종료 앞 라스트오더도 **알면** 같은 20분을 건다(전에는 브레이크 앞에만 걸었다)
-    from .place_hours import hours_on
-
-    day = hours_on(attributes, arrival.date())
-    if not isinstance(day, str) and day is not None and day.last_entry is not None:
-        last_order = arrival.replace(hour=day.last_entry.hour, minute=day.last_entry.minute,
-                                     second=0, microsecond=0)
-        if arrival + timedelta(minutes=ORDER_MARGIN_MIN) > last_order:
-            left = max(0, int((last_order - arrival).total_seconds() // 60))
-            return False, (f"라스트오더({_hm(last_order)})까지 {left}분 — "
-                           f"주문 여유 {ORDER_MARGIN_MIN}분이 안 된다")
+    span = break_span(attributes)
+    if span is not None:
+        why = _break_last_order(attributes, arrival)
+        if why:
+            return False, why
+        if arrival < _at_clock(arrival, span[0]) < end:
+            return False, f"{span[0]:%H:%M} 브레이크타임에 걸린다"
+    why = _closing_last_order(attributes, arrival)
+    if why:
+        return False, why
     return True, ""
 
 
@@ -172,20 +219,23 @@ def dining_warnings(place: dict[str, Any], arrival: datetime, minutes: int) -> l
 
     요식 원장의 `needs_last_order_check`(P-02)와 같은 규칙이다. 원장에 짝이 없는 식당도 같은 경고를 받게
     코어 영업시간으로 한 번 더 둔다. 라스트오더를 알면 경고하지 않는다 — 그때는 `dining_fits` 가 20분으로 판정했다.
+    ★`[2026-10-03 적대 검토]` 마감이 23:59 로 읽힌 곳은 경고하지 않는다 — 자정 · 새벽 마감(「00:00」 · 「18:00~02:00」)이 23:59 로 읽히므로(`place_hours._same_day_close`) 진짜 닫는 시각을 모른다.
+    그 곳에 「23:59 마감 1시간 안에 끝나요」라고 하면 새벽 2시까지 여는 곳의 밤 11시 식사에 헛경고다. 시각은 서울 시각으로 읽는다.
     """
     from .place_hours import hours_on
 
+    arrival = _seoul(arrival)
     end = arrival + timedelta(minutes=minutes)
     attributes = place.get("attributes") or {}
     out: list[str] = []
-    rest = attributes.get("break")
-    if rest and attributes.get("last_order_before_break_min") is None:
-        rest_start = _on(arrival, rest[0])
+    span = break_span(attributes)
+    if span is not None and _margin(attributes) is None:
+        rest_start = _at_clock(arrival, span[0])
         if arrival < rest_start and end <= rest_start <= end + timedelta(minutes=LAST_ORDER_WARN_MIN):
-            out.append(f"{rest[0]} 브레이크타임 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
+            out.append(f"{span[0]:%H:%M} 브레이크타임 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
     day = hours_on(attributes, arrival.date())
-    if not isinstance(day, str) and day is not None and day.last_entry is None:
-        closes = arrival.replace(hour=day.closes.hour, minute=day.closes.minute, second=0, microsecond=0)
+    if not isinstance(day, str) and day is not None and day.last_entry is None and day.closes != time(23, 59):
+        closes = _at_clock(arrival, day.closes)
         if end <= closes <= end + timedelta(minutes=LAST_ORDER_WARN_MIN):
             out.append(f"{_hm(closes)} 마감 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
     return out
@@ -411,7 +461,7 @@ def choose(candidates: list[Candidate],
 
 # ── 알림 문구 ──────────────────────────────────────────────────
 def _part_of_day(moment: datetime) -> str:
-    return "오전" if moment.hour < 12 else "오후"
+    return "오전" if _seoul(moment).hour < 12 else "오후"
 
 
 def _reason_phrase(causes: list[dict[str, Any]], place: dict[str, Any]) -> str:
@@ -527,5 +577,5 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
 
 
 __all__ = ["Candidate", "activity_candidates", "alternate_record", "change_notice", "choose", "dining_candidates",
-           "dining_fits", "dining_notice", "dining_warnings", "distance_m", "open_during", "route_candidates",
+           "dining_fits", "dining_notice", "dining_warnings", "distance_m", "last_order_shortfall", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]

@@ -21,9 +21,13 @@ def install_error_handlers(app: FastAPI, *, origins: list[str] | tuple[str, ...]
                             headers=getattr(exc, "headers", None))
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error(_request: Request, _exc: RequestValidationError):
+    async def validation_error(_request: Request, exc: RequestValidationError):
+        # ★`[2026-10-03 체크리스트 I1]` **어느 칸이** 문제인지 같이 돌려준다 — 전에는 「request validation failed」 한 줄뿐이라 비어 있거나 틀린 칸을 에이전트·화면이 알 수 없었다.
+        #   칸 위치(`loc`)와 오류 종류(`type` — `missing` · `string_too_short` …)만 싣는다. **보낸 값은 싣지 않는다**(키 · 개인정보가 오류 응답에 되돌아 나가지 않게). 앞 20개까지
+        fields = [{"loc": ".".join(str(part) for part in error.get("loc", ())), "type": str(error.get("type", ""))}
+                  for error in exc.errors()[:20]]
         return JSONResponse(status_code=422, content={"error": {"code": "validation_error",
-                                                                "message": "request validation failed"}})
+                                                                "message": "request validation failed", "fields": fields}})
 
     @app.exception_handler(Exception)
     async def internal_error(request: Request, _exc: Exception):

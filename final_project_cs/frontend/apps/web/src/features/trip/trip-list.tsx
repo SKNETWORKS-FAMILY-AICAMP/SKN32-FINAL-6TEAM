@@ -5,8 +5,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { createPortal } from "react-dom";
 import { ArrowRight, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { Badge, Button, ButtonLink, PageHeading, Panel, QueryState } from "@/components/ui";
-import { DATA_MODE } from "@/lib/gateway";
 import type { Translate } from "@/lib/i18n";
+import { LiveError } from "@/lib/live/client";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
 import type { TripSummary } from "./model";
@@ -17,13 +17,13 @@ const icon = { size: 18, strokeWidth: 1.6, "aria-hidden": true } as const;
 /** How many recent trips the home card shows; more than this adds the link to the full list. */
 const RECENT = 3;
 /**
- * The delete dialog stays (showing `삭제 중…`) at least this long after Delete is pressed. A demo delete ends in a few
+ * The delete dialog stays (showing `삭제 중…`) at least this long after Delete is pressed. A quick delete can end in a few
  * milliseconds, and the second click of a double press would otherwise land on the list beneath and open a trip.
  * Windows' default double-click time.
  */
 const MIN_DELETING_MS = 500;
 
-/** Registration time in Seoul, like every time on the trip screens. Null for a demo trip saved before it was kept. */
+/** Registration time in Seoul, like every time on the trip screens. */
 function useAdded() {
   const { language } = useSettings();
   const format = new Intl.DateTimeFormat(language === "ko" ? "ko-KR" : "en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" });
@@ -36,7 +36,7 @@ interface RowControls {
   selection: ReadonlySet<string> | null;
   onToggle: (id: string) => void;
   onDelete: (trip: TripSummary, control: HTMLButtonElement) => void;
-  /** Deleting is not offered here (live); the page says why. */
+  /** The server said it cannot delete trips (yet); the page says so and the controls are off. */
   unsupported: boolean;
   /** A delete is running: nothing can be picked or asked again. */
   busy: boolean;
@@ -118,6 +118,8 @@ export function TripList() {
   const [selection, setSelection] = useState<ReadonlySet<string> | null>(null);
   const [asking, setAsking] = useState<{ ids: string[]; single: TripSummary | null; from: HTMLElement | null } | null>(null);
   const [pending, setPending] = useState(false);
+  /** Set once the server answers that it has no delete call: the sentence it was told, and the controls stay off. */
+  const [unsupported, setUnsupported] = useState(false);
   const running = useRef(false);
   const [notice, setNotice] = useState<{ text: string; failed: boolean } | null>(null);
   const selectButton = useRef<HTMLButtonElement>(null);
@@ -132,7 +134,7 @@ export function TripList() {
     const target = focusNext.current;
     if (!target) return;
     focusNext.current = null;
-    (target === "rest" ? selectButton.current ?? newTrip.current : target === "cancel" ? cancelSelect.current : target)?.focus();
+    (target === "rest" ? (selectButton.current && !selectButton.current.disabled ? selectButton.current : newTrip.current) : target === "cancel" ? cancelSelect.current : target)?.focus();
   });
 
   if (query.isPending || query.error || !query.data) {
@@ -173,11 +175,11 @@ export function TripList() {
   }
 
   async function confirmDelete() {
-    if (!asking || !deleteTrips || running.current) return;
+    if (!asking || running.current) return;
     running.current = true;
     setPending(true);
     const pressed = performance.now();
-    const { deleted, failed } = await deleteTrips(asking.ids);
+    const { deleted, failed, errors } = await deleteTrips(asking.ids);
     const rest = MIN_DELETING_MS - (performance.now() - pressed);
     if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
     running.current = false;
@@ -186,6 +188,15 @@ export function TripList() {
     if (failed.length === 0) {
       setNotice({ text: t(`여행 ${deleted.length}개를 삭제했어요.`, deleted.length === 1 ? "Deleted 1 trip." : `Deleted ${deleted.length} trips.`), failed: false });
       setSelection(null);
+      focusNext.current = "rest";
+      return;
+    }
+    // ★A server with no delete call (backend request 2026-10-03) says so once: nothing was deleted, and asking again changes nothing.
+    const refusal = [...errors.values()].find((error): error is LiveError => error instanceof LiveError && error.code === "delete_unsupported");
+    if (refusal && deleted.length === 0) {
+      setUnsupported(true);
+      setSelection(null);
+      setNotice({ text: refusal.message, failed: true });
       focusNext.current = "rest";
       return;
     }
@@ -200,8 +211,7 @@ export function TripList() {
     focusNext.current = asking.from;
   }
 
-  const unsupported = deleteTrips === null;
-  const scope = t("이 탭에 저장된 여행과 대화 기록이 삭제돼요. 삭제한 내용은 되돌릴 수 없어요.", "The trip and its chat saved in this tab will be deleted. This can’t be undone.");
+  const scope = t("서버에 저장된 이 여행과 대화 기록, 여행계획서 링크가 삭제되고 알림도 멈춰요. 삭제한 내용은 되돌릴 수 없어요.", "The trip, its chat and its plan link saved on the server will be deleted, and its alerts stop. This can’t be undone.");
   const action = trips.length === 0 ? undefined
     : selection ? <div className={styles.selectActions}>
       <Button ref={cancelSelect} variant="quiet" disabled={pending} onClick={stopSelecting}>{t("취소", "Cancel")}</Button>
@@ -212,8 +222,7 @@ export function TripList() {
 
   return <>
     <PageHeading eyebrow="MY TRIPS" title={t("내 여행", "My trips")} action={action}
-      description={DATA_MODE === "demo" ? t("이 탭에서 등록한 여행이에요. 최근에 등록한 여행이 위에 있어요.", "Trips added in this tab, newest first.") : t("이 브라우저에서 등록한 여행이에요. 최근에 등록한 여행이 위에 있어요.", "Trips added in this browser, newest first.")} />
-    {unsupported && trips.length > 0 && <p className={styles.unsupported}>{t("실제 연결에서 여행 삭제는 아직 지원하지 않아요.", "Deleting trips isn’t available with the live connection yet.")}</p>}
+      description={t("이 브라우저에서 등록한 여행이에요. 최근에 등록한 여행이 위에 있어요.", "Trips added in this browser, newest first.")} />
     <p className={styles.notice} role="status">{notice && !notice.failed ? notice.text : ""}</p>
     <p className={`${styles.notice} ${styles.noticeFailed}`} role="alert">{notice?.failed ? notice.text : ""}</p>
     {trips.length === 0

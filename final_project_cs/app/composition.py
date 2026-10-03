@@ -329,6 +329,7 @@ def build_domain_routers() -> list:
         return from_settings(get_settings())
 
     from app.modules.travel_ops.delegation_api import build_delegation_router
+    from app.modules.travel_ops.web_auth_api import build_auth_router
 
     def place_factory():
         # ★일정 생성기의 **마지막 후보 소스**(`planner.py`) — `place_catalog` 이 비었을 때만
@@ -357,7 +358,9 @@ def build_domain_routers() -> list:
                               policy_search_factory=lambda: search_policy),
             # ★위임 — 승인 뒤 자동 실행을 여는 둘째 문을 주고 거두는 자리(2026-09-22).
             #   운영 화면 `/ui/delegations` 가 이 경로를 부른다.
-            build_delegation_router()]
+            build_delegation_router(),
+            # ★소셜 로그인(구글 먼저) — 업체 설정이 없으면 `GET /v1/web/auth/providers` 가 빈 목록이고 나머지는 「쓸 수 없다」로 답한다(2026-10-03)
+            build_auth_router()]
 
 
 def build_ops_routers() -> list:

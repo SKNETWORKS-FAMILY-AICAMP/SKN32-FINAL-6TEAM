@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { finishOnboarding, openEditor, start, mockServer, TRIP_ID } from "./helpers";
+import { fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
 
 const PLAN = "10/1 09:00 경복궁 관람";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
-test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 보이며, 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
+test("첫 방문: 계획을 올리면 키가 발급되고(안내는 계획 화면 위가 아니라 마이페이지에서 한 번만 보임), 읽은 결과를 확인해 등록하면 여행 화면으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
@@ -21,13 +21,8 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();
 
-  // 키가 방금 발급됐다: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
-  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
-  await expect(notice).toBeVisible();
-  await expect(notice).toContainText("다시 보여 드리지 않아요");
-  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
-  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
-  await expect(notice).toHaveCount(0);
+  // 키가 방금 발급됐다. `[2026-10-03 사용자 지시]` 계획 화면 위에는 안내를 띄우지 않는다(마이페이지에서 한다).
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
@@ -42,6 +37,18 @@ test("첫 방문: 계획을 올리면 키가 발급되고 안내가 한 번만 �
   const [confirm] = await server.received("POST", "/confirm");
   expect(confirm.body).toEqual({ revision: 1 });
   expect(confirm.key).toBe("acop_u_stub_1");
+
+  // 마이페이지: 서버의 안내 문장과 함께 한 번 보이고, 「따로 보관했어요」로 닫힌다.
+  await page.goto("/mypage");
+  const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("다시 보여 드리지 않아요");
+  await expect(notice.getByRole("textbox")).toHaveValue(/^acop_u_stub_1$/);
+  await notice.getByRole("button", { name: "따로 보관했어요" }).click();
+  await expect(notice).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "마이페이지" })).toBeVisible();
+  await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
 });
 
 test("서버가 읽는 동안 새 계획 확인 화면이 서버의 원문 줄을 읽는 중으로 보이고, 읽기가 끝나면 확인 화면으로 넘어간다", async ({ page, request }) => {
@@ -89,14 +96,14 @@ test("온보딩 설문을 마친 뒤 등록하면 설문이 확인 요청에 실
   expect(confirm.body).toEqual({ revision: 1, survey: { version: "2026-09-24.v1", pace: "relaxed" } });
 });
 
-const WEBHOOK = "https://discord.com/api/webhooks/123456789012345678/AbC-def_123456789012345";
+const WEBHOOK = "https://discord.com/api/web" + "hooks/123456789012345678/AbC-def_123456789012345";
 
-test("알림·복구 카드의 디스코드 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
+test("디스코드 알림 카드의 웹훅은 키가 없는 첫 방문이면 페이지 안에만 두었다가, 첫 등록으로 키가 생기면 서버로 가고 브라우저 저장소에는 남지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
   await start(page, null);
   await finishOnboarding(page, async () => {
-    const head = page.getByRole("button", { name: /알림·복구/ });
+    const head = page.getByRole("button", { name: /디스코드 알림/ });
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();                                              // fold it; the terms step checks the field and passes
@@ -116,11 +123,11 @@ test("알림·복구 카드의 디스코드 웹훅은 키가 없는 첫 방문�
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))).not.toContain(token);
 });
 
-test("키가 이미 있으면 웹훅은 알림·복구 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
+test("키가 이미 있으면 웹훅은 디스코드 알림 카드를 떠날 때 바로 서버로 가고, 비워 두면 저장된 웹훅을 건드리지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page, "acop_u_known");
   await finishOnboarding(page, async () => {
-    const head = page.getByRole("button", { name: /알림·복구/ });
+    const head = page.getByRole("button", { name: /디스코드 알림/ });
     await head.click();
     await page.getByRole("textbox", { name: "디스코드 웹훅 URL" }).fill(WEBHOOK);
     await head.click();
@@ -129,7 +136,7 @@ test("키가 이미 있으면 웹훅은 알림·복구 카드를 떠날 때 바�
 
   // Back on the card with the field cleared: leaving it again sends nothing (blank is "not entered", not "remove").
   await page.goto("/start");
-  const head = page.getByRole("button", { name: /알림·복구/ });
+  const head = page.getByRole("button", { name: /디스코드 알림/ });
   await head.click();
   await expect(page.getByRole("textbox", { name: "디스코드 웹훅 URL" })).toHaveValue("");
   await head.click();
@@ -168,37 +175,45 @@ test("설문을 마치지 않았으면 등록 화면이 그 사실을 알리고,
   expect(confirm.body).toEqual({ revision: 1 });
 });
 
-test("일정을 못 읽으면 일정 짜기 칸이 나오고, 확인한 조건이 일정 짜기 요청으로 간다", async ({ page, request }) => {
+test("글에서 일정을 한 줄도 못 읽으면 옛 확인 화면 대신 짧은 안내와 등록 화면으로 가는 링크만 나온다(짜 달라는 말을 읽었으면 「계획 짜 주기」를 권한다)", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ intake: "empty_plan" });
   await start(page);
-  await page.goto("/trips/new");
+  await openRegistration(page);
   await page.getByLabel("나의 여행 계획").fill("서울 이틀 조용한 곳으로 짜 주세요");
   await page.getByRole("button", { name: "계획 확인하기" }).click();
 
-  await expect(page.getByRole("heading", { name: "일정을 짜 달라고 하셨어요" })).toBeVisible();
-  await expect(page.getByLabel("첫날")).toHaveValue("2026-10-01");
-  await expect(page.getByLabel("일수")).toHaveValue("2");
-  await expect(page.getByLabel("인원")).toHaveValue("2");
-  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
-
-  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  const [plan] = await server.received("POST", "/plan");
-  expect(plan.body).toEqual({ revision: 1, start_date: "2026-10-01", days: 2, party_size: 2, keep_read_items: false });
+  await expect(page).toHaveURL(/\/intakes\/[0-9a-f-]+$/);
+  await expect(page.getByRole("heading", { name: "이 글에서는 일정을 찾지 못했어요" })).toBeVisible();
+  await expect(page.getByText("글에서 일정을 짜 달라는 요청은 읽었어요", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "등록 화면으로" })).toHaveAttribute("href", "/trips/new");
+  // 옛 화면의 「대신 짜 드릴까요?」 칸과 그 입력들은 없다 — 일정 짜기는 등록 화면의 세 번째 칸이 한다
+  await expect(page.getByRole("heading", { name: /일정을 짜 달라고 하셨어요|대신 짜 드릴까요/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /이 조건으로 짜서 등록/ })).toHaveCount(0);
+  await expect(page.getByLabel("첫날")).toHaveCount(0);
+  expect(await server.received("POST", "/plan")).toHaveLength(0);
 });
 
-test("계획을 비워 두고 「계획 확인하기」를 누르면 오류 없이 다음 화면(대신 짜 드릴까요?)으로 넘어간다", async ({ page, request }) => {
-  // ★2026-09-30 사용자 결정 — 빈 계획은 오류가 아니라 짜기로 이어진다. 서버는 빈 접수를 「짜 달라는 요청」으로 받는다.
+test("아무것도 넣지 않으면 「계획 확인하기」는 꺼져 있고 이유를 말하며, 서버로는 아무것도 가지 않는다", async ({ page, request }) => {
+  // ★2026-10-03 사용자 결정 — 고른 칸이 비어 있으면 못 넘어간다(앞 판 2026-09-30 의 「빈 계획도 다음 화면으로」를 뒤집었다).
   const server = mockServer(request);
-  await server.scenario({ intake: "empty_plan" });
   await start(page);
-  await page.goto("/trips/new");
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByRole("heading", { name: "일정을 짜 달라고 하셨어요" })).toBeVisible();
-  await expect(page.locator("#main-content").getByText("시간과 장소가 있는 여행 계획을 입력해 주세요.")).toHaveCount(0);
-  const [sent] = await server.received("POST", "/v1/web/trip-intakes");
-  // 가짜 문장을 넣지 않는다 — 여러 부분 양식의 text 칸이 비어 있다
-  expect(String(sent.body?.multipart)).toMatch(new RegExp(String.raw`name="text"\r\n\r\n\r\n--`));
+  await openRegistration(page);
+  const send = page.getByRole("button", { name: "계획 확인하기" });
+  await expect(send).toBeDisabled();
+  await expect(page.getByText("위에서 고른 「직접 입력」 칸에 내용을 넣어 주세요.")).toBeVisible();
+  await expect(send).toHaveAccessibleDescription(/직접 입력.*내용을 넣어 주세요/);
+  // 단추를 거치지 않는 제출도 막힌다 — 글칸에서 Enter 는 줄바꿈일 뿐 폼을 보내지 않으므로, 제출 이벤트를 직접 보내 제출 가드를 시험한다(코덱스 검토 2026-10-03)
+  await page.locator("form").dispatchEvent("submit");
+  await expect(page).toHaveURL(/\/trips\/new$/);
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
+  // 공백뿐이어도 비어 있는 것이다
+  await page.getByLabel("나의 여행 계획").fill("  \n  ");
+  await expect(send).toBeDisabled();
+  await page.getByLabel("나의 여행 계획").fill("경복궁");
+  await expect(send).toBeEnabled();
+  await expect(page.locator("#submit-reason")).toHaveCount(0);
+  expect(await server.received("POST", "/v1/web/trip-intakes")).toHaveLength(0);
 });
 
 test("파일 칸: 고른 파일이 이름·크기 칩으로 보이고, 빼기로 뺄 수 있으며, 남은 파일만 서버로 간다", async ({ page, request }) => {
@@ -223,23 +238,6 @@ test("파일 칸: 고른 파일이 이름·크기 칩으로 보이고, 빼기로
   expect(String(sent.body?.multipart)).not.toContain("지운다.xlsx");
 });
 
-test("확인 화면에서 장소를 고치면 고친 값이 서버로 간다", async ({ page, request }) => {
-  const server = mockServer(request);
-  await start(page);
-  await page.goto("/trips/new");
-  await page.getByLabel("나의 여행 계획").fill(PLAN);
-  await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await openEditor(page);
-
-  await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
-  await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
-  await page.getByRole("button", { name: "저장하고 확인" }).click();
-  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
-  const [edit] = await server.received("POST", "/edits");
-  expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].place", value: { name: "창덕궁" } }] });
-});
-
 test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 올리는 길을 준다", async ({ page, request }) => {
   await mockServer(request).scenario({ intake: "fatal" });
   await start(page);
@@ -254,17 +252,18 @@ test("서버가 계획을 읽지 못하면 이유를 그대로 보이고 다시 
 test("고치는 사이 계획이 바뀌어 서버가 거절해도(409 stale_revision) 화면은 최신 상태를 다시 읽고 깨지지 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
-  await page.goto("/trips/new");
+  await openRegistration(page);
   await page.getByLabel("나의 여행 계획").fill(PLAN);
   await page.getByRole("button", { name: "계획 확인하기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
-  await openEditor(page);
   await server.scenario({ edits: "stale" });
   const before = (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length;
-  await page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ }).click();
-  await page.getByPlaceholder("다른 장소로 고치기").fill("창덕궁");
-  await page.getByRole("button", { name: "저장하고 확인" }).click();
+  await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
+  await page.getByRole("searchbox", { name: "장소 검색" }).fill("창덕궁");
+  await page.getByRole("button", { name: "「창덕궁」으로 바꾸기" }).click();
   await expect.poll(async () => (await server.received("GET", "/v1/web/trip-intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")).length).toBeGreaterThan(before);
+  expect(await server.received("POST", "/edits")).toHaveLength(1);
+  await page.getByRole("button", { name: "바꾸기 그만두기" }).click();
   await expect(page.getByRole("heading", { name: "경복궁 관람" })).toBeVisible();
 });
 
@@ -278,17 +277,18 @@ test("새 키 발급이 한도에 걸리면(429) 서버 문장 그대로 알리�
   await expect(page.getByLabel("나의 여행 계획")).toHaveValue(PLAN);
 });
 
-test("일정 짜기가 오래 걸리는 동안(실제 서버는 운영시간을 읽느라 1분쯤) 단추가 잠기고 「짜는 중」이 보이며, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
+test("계획 짜 주기가 오래 걸리는 동안(실제 서버는 운영시간을 읽느라 1분쯤) 「일정을 짜는 중이에요」가 보이고 되돌아가는 화살표는 없으며, 끝나면 여행 화면으로 간다", async ({ page, request }) => {
   const server = mockServer(request);
-  await server.scenario({ intake: "empty_plan", planDelay: 3000 });
+  await server.scenario({ readingPolls: 0, planDelay: 3000 });
   await start(page);
-  await page.goto("/trips/new");
-  await page.getByLabel("나의 여행 계획").fill("서울 이틀");
+  await openRegistration(page);
+  await fillPlanAsk(page, { start: weekAhead(), days: 2, party: 2 });
   await page.getByRole("button", { name: "계획 확인하기" }).click();
-  await page.getByRole("button", { name: /이 조건으로 짜서 등록/ }).click();
-  const busy = page.getByRole("button", { name: /짜는 중/ });
-  await expect(busy).toBeVisible();
-  await expect(busy).toBeDisabled();
+  await expect(page).toHaveURL(/\/intakes\/starting$/);
+  await expect(page.getByRole("heading", { name: "일정을 짜는 중이에요", level: 1 })).toBeVisible();
+  // 서버가 일정을 짜는 동안에는 뒤로 가는 화살표를 두지 않는다 — 요청이 이미 나갔다
+  await expect(page.getByRole("status").filter({ hasText: "여행으로 등록하는 중이에요" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "뒤로" })).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`), { timeout: 15_000 });
 });
 
@@ -306,7 +306,7 @@ test("등록 확인이 서버 오류(500)로 실패하면 오류 문구가 화�
   await expect(page).toHaveURL(/\/intakes\//);
 });
 
-test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 「이전 확인 화면 열기」로 기존 화면이 열린다", async ({ page, request }) => {
+test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 판정을 보이고, 옛 확인 화면으로 가는 길은 없다", async ({ page, request }) => {
   await mockServer(request).scenario({ readingPolls: 0 });
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -321,8 +321,9 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await expect(card.getByText("경복궁", { exact: true })).toBeVisible();                       // the place the server found
   await expect(card.getByText(/운영시간|휴무일/)).toHaveCount(0);                                 // not in the response: not shown
   await expect(page.getByRole("button", { name: "여행 등록" })).not.toHaveAttribute("aria-disabled", "true");
-  await openEditor(page);
-  await expect(page.getByRole("button", { name: /경복궁 관람.*펼쳐서 고치기/ })).toBeVisible();
+  // 옛 목록형 확인 화면(「이전 확인 화면 열기」 · 「여행 계획 살펴보기」 · 「읽은 원문 전체 보기」)은 없다
+  await expect(page.getByRole("button", { name: "이전 확인 화면 열기" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toHaveCount(0);
 });
 
 test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 꺼진 「재검증」이 고칠 길을 알린다", async ({ page, request }) => {

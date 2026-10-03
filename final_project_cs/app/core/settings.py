@@ -101,6 +101,14 @@ class Settings(BaseSettings):
     turnstile_hostnames: str = ""
     #: 역방향 프록시 주소(쉼표). 이 주소에서 온 요청만 `X-Forwarded-For` 의 원 주소를 믿는다. 비어 있으면 연결 주소
     trusted_proxies: str = ""
+    # ── 소셜 로그인 `[2026-10-03 ui 세션 요청서 · 사용자 결정 「가장 쉬운 걸로 하나 먼저」 → 구글]` ──
+    #:  업체 콘솔에서 사람이 만든 **클라이언트 ID · 비밀값**(`ACOP_GOOGLE_CLIENT_ID` · `ACOP_GOOGLE_CLIENT_SECRET`). git 밖 환경 파일에만 둔다.
+    #:  ★둘 다 있어야 그 업체가 켜진다(`GET /v1/web/auth/providers` 에 나온다). 하나라도 비면 목록에서 빠진다 — 반쯤 켜진 채 뜨지 않게.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    #:  로그인이 끝나면 브라우저를 돌려보낼 **웹 주소(출처만)**. ★서버 설정이고 요청 값으로 바꿀 수 없다(열린 리디렉션 금지).
+    #:  비어 있으면 `web_allowed_origins` 의 첫 값.
+    web_origin: str = ""
     # ── 운영 앱(운영자 콘솔) — 고객 API 앱과 다른 프로세스 · 다른 포트 `[2026-09-29]` 사용자 지시 ──
     #: 운영 앱 포트. 127.0.0.1 에만 묶는다(`app/ops_entrypoint.py`). 지금 쓰는 번호(3100·3102·3200·3300·8041·8042·8044·8060)와 겹치지 않게
     ops_port: int = 8070

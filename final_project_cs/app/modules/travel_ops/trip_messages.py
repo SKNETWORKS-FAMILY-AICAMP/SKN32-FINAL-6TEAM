@@ -131,8 +131,8 @@ def _change_target(items: list[Any], message: str, selected: UUID | None, at: da
         return named
     for word, (start, end) in _MEALS.items():
         if word in text:
-            meals = [i for i in on_day if i.kind == "dining" and start <= i.starts_at.hour < end]
-            today = [i for i in meals if i.starts_at.date() == at.date()]
+            meals = [i for i in on_day if i.kind == "dining" and start <= i.starts_at.astimezone(KST).hour < end]      # ★서울 시각의 시
+            today = [i for i in meals if i.starts_at.astimezone(KST).date() == at.astimezone(KST).date()]
             upcoming = [i for i in meals if i.starts_at >= at]
             found = (today or upcoming or meals or [None])[0]
             if found is not None:
@@ -503,7 +503,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
         if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked", "rolled_back",
                                      "not_today", "no_meal", "clear", "gone", "no_alternate", "ask_rollback",
-                                     "ask_target"):
+                                     "ask_target", "knock_on", "rechecked"):
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
                                          else str(outcome.get("status")))
             # ★컨트롤러와 같은 모양 — 답은 `state_patch.answer` 로 Case 에 들어간다.
@@ -579,7 +579,7 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
 
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
 _DONE = ("adjusted", "answered", "still_fits", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
-         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale")
+         "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
 _CLARIFY = "어느 일정을 말씀하시는지 알려 주세요 — 화면에서 일정을 고르시거나 「2일차 점심 식당 바꿔 줘」처럼 날과 끼니(또는 이름)를 적어 주세요."
@@ -722,7 +722,7 @@ def _run_decision(conn, *, tenant: str, trip_id: UUID, case_id: UUID, message: s
             outcome = desk.rollback(trip_id=trip_id, base_version=base, to_version=to_version, message=message,
                                     request_id=request_id)
     elif action == "report_delay":
-        outcome = ({"status": "clarify", "text": "몇 분쯤 늦으세요? 「30분 늦어요」처럼 알려 주시면 뒤 일정을 맞출게요."}
+        outcome = ({"status": "clarify", "text": "몇 분쯤 늦으세요? 「30분 늦어요」처럼 알려 주시면 식사가 아직 괜찮은지, 뒤 일정에 걸리는 곳이 없는지 확인해 드릴게요."}
                    if decision.minutes is None else
                    desk.report_delay(trip_id=trip_id, at=at, minutes=decision.minutes, message=message,
                                      request_id=request_id))

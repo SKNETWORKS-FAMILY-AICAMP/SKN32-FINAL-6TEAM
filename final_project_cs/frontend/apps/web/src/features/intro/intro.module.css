@@ -11,12 +11,11 @@
 .heroCopy { z-index: 1; }
 /* The first page never cuts its content: when the trip card makes it taller than the screen, the page scrolls. */
 .hero { overflow-y: auto; }
-.trips { z-index: 1; margin-bottom: 10px; }
+.trips { z-index: 1; margin: 16px 0 10px; }
 .badge { margin-top: auto; margin-bottom: 6px; align-self: flex-start; max-width: 100%; background: color-mix(in srgb, var(--color-surface) 94%, transparent); border: 1px solid var(--color-surface); padding: 15px 17px; border-radius: 15px; box-shadow: 0 8px 30px color-mix(in srgb, var(--color-text) 4%, transparent); }
 .badge small { font-size: 9px; color: var(--color-primary); letter-spacing: 1.5px; display: block; margin-bottom: 7px; }
 .badge strong { font-size: 13px; font-weight: 600; }
 /* The card around the shared language picker (`components/ui/language-picker`). */
-.language { z-index: 1; margin: 16px 0 10px; background: color-mix(in srgb, var(--color-surface) 94%, transparent); border: 1px solid var(--color-surface); border-radius: 15px; box-shadow: 0 8px 30px color-mix(in srgb, var(--color-text) 4%, transparent); }
 .guide { flex: 1; min-height: 250px; display: flex; flex-direction: column; margin-top: 20px; }
 /* Slides bleed to the frame edges so the next card peeks in from the right. */
 .slides { flex: 1; min-height: 0; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 27px; margin: 0 -27px; padding: 2px 27px 8px; scrollbar-width: none; overscroll-behavior-x: contain; cursor: grab; user-select: none; }
@@ -85,7 +84,6 @@
   .title { font-size: 29px; }
   .how .title { font-size: 27px; }
   :global(html[lang="en"]) .title { font-size: 27px; }
-  .language { margin-top: 16px; }
   .guide { margin-top: 14px; }
   .description { margin-top: 11px; }
   .ticket { margin: 20px 0; padding: 18px; }

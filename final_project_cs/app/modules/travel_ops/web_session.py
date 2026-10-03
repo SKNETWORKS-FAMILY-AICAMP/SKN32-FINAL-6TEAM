@@ -28,16 +28,36 @@ def _new_key() -> str:
     return PREFIX + secrets.token_urlsafe(32)
 
 
-def issue(conn, *, tenant_id: str) -> tuple[UUID, str]:
-    """새 사용자 + 키. ★원문 키는 여기서만 나온다 — 부르는 쪽이 사용자에게 한 번 보여 준다."""
-    raw = _new_key()
+def new_customer(conn, *, tenant_id: str) -> UUID:
+    """키 없는 새 사용자 — 소셜 로그인이 먼저 사용자를 만들고 키는 표를 교환할 때 발급한다(`web_auth.py`)."""
     with conn.cursor() as cur:
         cur.execute("INSERT INTO customers (tenant_id, external_id) VALUES (%s, %s) RETURNING customer_id",
                     (tenant_id, "web:" + secrets.token_hex(8)))
-        customer_id = cur.fetchone()[0]
-        cur.execute("INSERT INTO web_user_keys (tenant_id, customer_id, key_hash) VALUES (%s,%s,%s)",
+        return cur.fetchone()[0]
+
+
+def add_key(conn, *, tenant_id: str, customer_id: UUID, keep: int | None = None) -> str:
+    """이 사용자에게 **키를 하나 더한다**(옛 키는 그대로 — `rotate` 와 다르다). ★원문 키는 여기서만 나온다.
+
+    ☆왜: 키 원문은 해시로만 저장돼 「현재 유효한 키」를 다시 돌려줄 수 없다. 소셜 로그인으로 새 기기에 키를 줄 때 옛 키를 거두면(`rotate`) 다른 기기가 끊긴다 —
+      그래서 기기마다 키를 하나씩 더한다. `keep` 이 있으면 유효한 키가 그보다 많아질 때 **가장 오래된 키부터** 거둔다(무한히 쌓이지 않게)."""
+    raw = _new_key()
+    with conn.cursor() as cur:
+        # ★`clock_timestamp()` — 한 트랜잭션에서 키를 여럿 더해도 만든 순서가 갈린다(`now()` 는 트랜잭션 안에서 같은 값이다)
+        cur.execute("INSERT INTO web_user_keys (tenant_id, customer_id, key_hash, created_at) VALUES (%s,%s,%s, clock_timestamp())",
                     (tenant_id, customer_id, _hash(raw)))
-    return customer_id, raw
+        if keep:
+            cur.execute("UPDATE web_user_keys SET revoked_at=now() WHERE tenant_id=%s AND customer_id=%s AND revoked_at IS NULL "
+                        "AND key_id NOT IN (SELECT key_id FROM web_user_keys WHERE tenant_id=%s AND customer_id=%s "
+                        "AND revoked_at IS NULL ORDER BY created_at DESC LIMIT %s)",
+                        (tenant_id, customer_id, tenant_id, customer_id, keep))
+    return raw
+
+
+def issue(conn, *, tenant_id: str) -> tuple[UUID, str]:
+    """새 사용자 + 키. ★원문 키는 여기서만 나온다 — 부르는 쪽이 사용자에게 한 번 보여 준다."""
+    customer_id = new_customer(conn, tenant_id=tenant_id)
+    return customer_id, add_key(conn, tenant_id=tenant_id, customer_id=customer_id)
 
 
 def resolve(conn, *, tenant_id: str, raw: str | None) -> UUID | None:
@@ -66,4 +86,4 @@ def rotate(conn, *, tenant_id: str, customer_id: UUID) -> str:
 #   재시작하면 풀리고 프로세스마다 따로 셌다. 이제 DB(`web_usage`, 031)에서 모든 프로세스가 같이 센다.
 
 
-__all__ = ["PREFIX", "issue", "resolve", "rotate"]
+__all__ = ["PREFIX", "add_key", "issue", "new_customer", "resolve", "rotate"]

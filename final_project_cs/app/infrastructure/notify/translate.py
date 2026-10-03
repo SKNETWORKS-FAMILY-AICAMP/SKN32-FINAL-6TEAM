@@ -3,13 +3,14 @@
 
 ★언어 목록을 미리 정하지 않는다. 여행의 `locale`(예: `zh-TW`)을 그대로 모델에 준다.
 ★시각·금액·고유명사·예약번호·버전 번호는 **옮기지 않고 원값을 싣는다** — 모델에 그렇게
-  시키고, 결과에 원문의 숫자가 전부 남아 있는지 **검사한다.** 숫자가 빠지면 번역을 버린다
-  (시각이 틀린 알림이 번역 실패보다 나쁘다).
+  시키고, 결과의 숫자를 **출현 횟수까지** 원문과 대조한다(`[2026-10-02]`: 원문의 숫자가 횟수까지 남아 있어야 하고
+  원문에 없던 숫자 값이 새로 생기면 안 된다). 어긋나면 번역을 버린다(시각이 틀린 알림이 번역 실패보다 나쁘다).
 ★한국어면 옮기지 않는다.
 """
 from __future__ import annotations
 
 import re
+from collections import Counter
 from typing import Any, Callable
 
 _DIGITS = re.compile(r"\d+")
@@ -39,9 +40,14 @@ def make_translator(chat: Any) -> Callable[[str, str], str]:
 
     def translate(text: str, locale: str) -> str:
         translated = chat.text(SYSTEM, f"Target language: {locale}\n\n{text}")
-        missing = sorted(set(_DIGITS.findall(text)) - set(_DIGITS.findall(translated)))
-        if missing:
-            raise TranslationRejected(f"번역에서 숫자가 빠졌다: {missing[:5]}")
+        # ★`[2026-10-02 결함 인계 #4]` 전에는 **집합 포함**만 봤다 — 원문 「5 5」 → 번역 「5 999」가 통과했다(5 가 하나 있으니 됐다고 봤고,
+        #   새 숫자 999 는 아무도 안 봤다). 이제 ①원문의 숫자가 **출현 횟수까지** 남아 있어야 하고(`lost`) ②원문에 **없던 숫자 값**이
+        #   새로 생기면 안 된다(`invented`). 이미 있는 값을 괄호로 되풀이하는 것(「(일정 버전 4)」)은 허용한다 — 새 사실이 아니다.
+        original, got = Counter(_DIGITS.findall(text)), Counter(_DIGITS.findall(translated))
+        lost = sorted((original - got).elements())
+        invented = sorted(set(got) - set(original))
+        if lost or invented:
+            raise TranslationRejected(f"번역의 숫자가 원문과 다르다 — 빠짐 {lost[:5]} · 새로 생김 {invented[:5]}")
         return translated
 
     return translate

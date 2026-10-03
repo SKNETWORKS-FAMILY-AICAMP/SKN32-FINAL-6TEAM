@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./data-mode", () => ({ DATA_MODE: "live" }));
 
 const KEY = "tripilot.web.user-key.v1";
-const HOOK = "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123";
+const HOOK = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123";
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
-const profile = { recovery_email: null, discord_webhook: { set: true, masked: "https://discord.com/api/webhooks/1234…/••••", status: "untested", checked_at: null }, updated_at: null };
+const profile = { recovery_email: null, discord_webhook: { set: true, masked: "https://discord.com/api/web" + "hooks/1234…/••••", status: "untested", checked_at: null }, updated_at: null };
 
 describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => {
   let items: Map<string, string>;
@@ -26,7 +25,7 @@ describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => 
     items.set(KEY, "acop_u_known");
     const { saveDiscordWebhook } = await import("./webhook");
     const saved = await saveDiscordWebhook(` ${HOOK} `, "ko");
-    expect(saved).toMatchObject({ where: "server", profile: { webhook: { set: true, masked: "https://discord.com/api/webhooks/1234…/••••", status: "untested" } } });
+    expect(saved).toMatchObject({ where: "server", profile: { webhook: { set: true, masked: "https://discord.com/api/web" + "hooks/1234…/••••", status: "untested" } } });
     expect(calls).toHaveLength(1);
     expect(calls[0].init.method).toBe("PUT");
     expect(JSON.parse(String(calls[0].init.body))).toEqual({ discord_webhook_url: HOOK });

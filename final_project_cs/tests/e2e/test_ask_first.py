@@ -136,9 +136,12 @@ def test_a_stale_choice_is_refused(api):
         trip, items = store.latest(conn, trip_id)
         store.append_version(conn, trip_id=trip_id, base_version=trip["version"], items=items,
                              reason="test_other_change", causes=[])
-    with pytest.raises(ProposalRefused) as refused:
-        _choose(api, trip_id, proposal["proposal_id"], proposal["options_json"][0]["key"])
-    assert refused.value.code == "stale"
+    # ★`[2026-10-02 결함 인계 #5]` 기준 버전이 낡은 제안은 **다시는 못 고른다** — 예외가 아니라 결과로 돌려주며 그 자리에서 닫는다(`superseded`).
+    #   전에는 예외로 올라 호출 쪽 트랜잭션이 되돌아가 같은 제안이 `open` 으로 계속 보였다
+    outcome = _choose(api, trip_id, proposal["proposal_id"], proposal["options_json"][0]["key"])
+    assert outcome["status"] == "superseded" and outcome["base_version"] == 1 and outcome["version"] == 2
+    [closed] = _proposals(api, trip_id)
+    assert closed["status"] == "superseded"
 
 
 # ── 「변경 안 할 일정」 ─────────────────────────────────────────────

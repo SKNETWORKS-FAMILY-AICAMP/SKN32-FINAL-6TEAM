@@ -9,7 +9,13 @@
                                          성공으로 추정하지 않고 자동 재전송도 안 한다
                                          (CLAUDE.md §0.2). 같은 알림이 두 번 가는 것도
                                          사고다.
-    그 밖의 실패(429·5xx·4xx)         → RuntimeError → 일꾼이 재시도, 한도 넘으면
+    너무 자주 보냄(429)               → RetryAfter → 일꾼이 **디스코드가 말한 시각**에
+                                         다시 집는다. ★`[2026-10-03]` 전에는 이것도
+                                         RuntimeError 로 올려 고정 1분 뒤에 다시 걸었다.
+                                         디스코드 문서는 `Retry-After` 를 따르라고
+                                         요구하고, 어기면 **IP 단위로 막는다**
+                                         (유효하지 않은 요청 10분에 10,000건).
+    그 밖의 실패(5xx·4xx)             → RuntimeError → 일꾼이 재시도, 한도 넘으면
                                          `dead_letter`
 
 ★★**웹훅이 설정돼 있지 않으면 실패로 올린다**(`NoticeNotConfigured`). 조용히 반환하면
@@ -39,10 +45,48 @@ from .suppressed import NoticeSuppressed
 logger = logging.getLogger(__name__)
 
 MAX_CONTENT = 2000
+#: 공급자가 말한 대기 시간을 받아들일 상한(초). ★그쪽이 이상한 값을 줘도 알림이
+#:  하루 넘게 멈추면 안 된다. 15분을 넘기면 안 믿고 우리 기본 간격을 쓴다.
+MAX_RETRY_AFTER_SECONDS = 900.0
 
 #: 본문 밖에서 붙이는 줄(다른 안·버전·링크)의 값 자리 이름. ★본문 틀은 `_` 로 시작하는
 #:  이름을 쓰지 않는다 — 겹치면 값이 엉킨다(`_compose` 가 막는다).
 _OPTIONS, _VERSION, _URL = "_options", "_version", "_url"
+
+
+class RetryAfter(RuntimeError):
+    """디스코드가 「이때 다시 와라」고 한 경우(429).
+
+    ★우리가 간격을 지어내지 않는다. 공급자가 정확한 값을 주는데 추측으로 덮으면
+      더 자주 두드리거나(차단) 쓸데없이 늦어진다. 둘 다 손해다.
+    ★`seconds` 는 **그쪽이 말한 값**이다. 못 읽으면 None 이고, 그때만 우리 기본값을 쓴다.
+    """
+
+    def __init__(self, message: str, seconds: float | None) -> None:
+        super().__init__(message)
+        self.seconds = seconds
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """`Retry-After` 헤더 또는 본문 `retry_after` 를 초로 읽는다.
+
+    ★둘 다 본다 — 디스코드는 헤더와 본문 양쪽에 같은 값을 싣는다고 적어 두었고,
+      어느 한쪽이 없을 때를 대비한다. 음수·말도 안 되게 큰 값은 믿지 않는다.
+    """
+    raw: Any = response.headers.get("Retry-After")
+    if raw is None:
+        try:
+            raw = (response.json() or {}).get("retry_after")
+        except Exception:
+            raw = None
+    try:
+        seconds = float(raw)
+    except (TypeError, ValueError):
+        return None
+    # ★상한을 둔다. 공급자가 잘못된 값을 줘도 알림이 하루 넘게 멈추면 안 된다.
+    if seconds < 0 or seconds > MAX_RETRY_AFTER_SECONDS:
+        return None
+    return seconds
 
 
 class NoticeNotConfigured(RuntimeError):
@@ -184,10 +228,16 @@ class DiscordWebhook:
             raise TimeoutError(f"discord webhook timeout: {exc}") from exc
         except httpx.TransportError as exc:
             raise ConnectionError(f"discord webhook transport: {exc}") from exc
+        if response.status_code == 429:
+            seconds = _retry_after(response)
+            raise RetryAfter(
+                "discord webhook 429 — %s 뒤에 다시 보낸다"
+                % ("%.3f초" % seconds if seconds is not None else "기본 간격"), seconds)
         if not 200 <= response.status_code < 300:
             raise RuntimeError(f"discord webhook HTTP {response.status_code}: "
                                f"{response.text[:200]}")
         return None
 
 
-__all__ = ["DiscordWebhook", "MAX_CONTENT", "NoticeNotConfigured", "phrase_of", "render"]
+__all__ = ["DiscordWebhook", "MAX_CONTENT", "MAX_RETRY_AFTER_SECONDS",
+           "NoticeNotConfigured", "RetryAfter", "phrase_of", "render"]

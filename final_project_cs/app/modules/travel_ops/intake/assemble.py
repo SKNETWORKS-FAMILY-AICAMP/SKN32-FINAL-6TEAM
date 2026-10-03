@@ -68,9 +68,22 @@ def effective(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return list(last.values())
 
 
-def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
-             claims: list[dict[str, Any]]) -> Assembled:
-    """`sources` = 원본 행(`position` 순), `claims` = 그 판의 값 줄(만든 순서)."""
+@dataclass
+class Collected:
+    """한 판의 값 줄 → 항목 줄들(빈칸을 규칙으로 채운 뒤, 날짜·시각 순). ★확인 화면의 검사(`review.py`)와 등록 몸통(`assemble`)이 **같은 줄**을 본다."""
+
+    rows: list[dict[str, Any]]
+    filled: list[dict[str, Any]]
+    problems: list[Problem]
+    trip: dict[str, dict[str, Any]]
+    first_day: date | None
+
+
+def collect(*, sources: list[dict[str, Any]], claims: list[dict[str, Any]]) -> Collected:
+    """`sources` = 원본 행(`position` 순), `claims` = 그 판의 값 줄(만든 순서). 고객이 뺀 항목(`removed`)은 들어오지 않는다.
+
+    각 줄(`rows[]`)은 `index`(원본 안 항목 번호 — 고치는 칸 이름 `items[n]` 의 n) · `source_id` · `title` · `date` · `start` · `end` · `kind` ·
+    `place`(좌표를 아는 장소 값 또는 None) · `claims`(그 항목의 칸별 값 줄 — 근거·확인 필요·메모) · `locked`(고객이 「꼭 넣을 일정」으로 고정) 을 든다."""
     claims = effective(claims)
     trip = {c["field"][5:]: c for c in claims if c["field"].startswith("trip.")}
     problems: list[Problem] = []
@@ -95,6 +108,14 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
     filled: list[dict[str, Any]] = []
     _fill_times(rows, filled, problems)
     rows.sort(key=lambda r: (r["date"] or "9999", r["start"] or "99:99", r["order"]))
+    return Collected(rows=rows, filled=filled, problems=problems, trip=trip, first_day=first_day)
+
+
+def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
+             claims: list[dict[str, Any]]) -> Assembled:
+    """`sources` = 원본 행(`position` 순), `claims` = 그 판의 값 줄(만든 순서)."""
+    got = collect(sources=sources, claims=claims)
+    rows, filled, problems, trip, first_day = got.rows, got.filled, got.problems, got.trip, got.first_day
     places: list[dict[str, Any]] = []
     items: list[dict[str, Any]] = []
     for seq, row in enumerate(rows, start=1):
@@ -106,6 +127,10 @@ def assemble(*, intake_id: str, revision: int, sources: list[dict[str, Any]],
                                   "intake": {"intake_id": intake_id, "revision": revision}}
         if row["booking_no"]:
             detail["booking"] = {"booking_no": row["booking_no"], "declared_by": "customer_plan"}
+        if row["locked"]:
+            # ★`[2026-10-02 사용자 지시]` 고객이 「꼭 넣을 일정」으로 고정했다 — 등록되면 **감시 루프가 다시 자동으로 바꾸지 않고**
+            #   바꾸기 전에 묻는다(`pending.protected_reason` 「customer_pinned」 · `trip_watch`). 되살린 항목과 같은 표시다.
+            detail["customer_pinned"] = True
         if row["date"] and row["start"]:
             items.append({"seq": seq, "kind": row["kind"], "title": row["title"] or "(제목 없음)", "place": key,
                           "starts_at": _at(row["date"], row["start"]).isoformat(),
@@ -158,12 +183,15 @@ def _row(source, index, fields, marks, first_day, problems) -> dict[str, Any]:
     start, end = value("starts_at"), value("ends_at")
     lines = (source.get("transcript") or "").splitlines()
     text = lines[line - 1] if 0 < line <= len(lines) else ""
+    # 예약했나 — 「예약 있음 · 없음」을 읽은 칸이 먼저, 예약번호가 있으면 예약한 것이다. 아무 말도 없으면 모른다(None — 예약 안 했다고 적지 않는다)
+    booked = value("booked") if isinstance(value("booked"), bool) else (True if value("booking_no") else None)
     return {"order": (source["position"], line or 10_000, index), "source_id": sid, "index": index, "title": title,
-            "text": text,
+            "text": text, "booked": booked,
             "date": when, "start": start if start and _HHMM.match(str(start)) else None,
             "end": end if end and _HHMM.match(str(end)) else None, "kind": kind,
             "place": place if place and place.get("latitude") is not None else None,
-            "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where}
+            "booking_no": value("booking_no"), "provenance": _provenance(fields), "where": where,
+            "claims": fields, "locked": value("locked") is True, "day": day, "no_place": no_place}
 
 
 def _fill_times(rows, filled, problems) -> None:
@@ -237,6 +265,14 @@ def _place_in(key: str, place: dict[str, Any], kind: str) -> dict[str, Any]:
             attributes[_SOURCE_ATTRS[source]] = str(place["content_id"])
             if place.get("content_type_id"):
                 attributes["source_content_type_id"] = str(place["content_type_id"])
+    elif source == "customer_pick":
+        # ★`[2026-10-02]` 고객이 후보 · 검색 · 지도에서 고른 장소 — 관광공사 · 카카오 값으로 위장하지 않는다. 공용 장소 표에 섞이지 않게
+        #   그 여행 전용 행으로만 들어간다(`trip_api.EXTERNAL_PLACE_SOURCES`). 관광공사 번호는 운영시간 표를 찾는 데만 쓴다.
+        attributes["source"] = "customer_pick"
+        if place.get("origin"):
+            attributes["pick_origin"] = str(place["origin"])
+        if place.get("content_id"):
+            attributes["source_content_id"] = str(place["content_id"])
     return {"key": key, "name": place["name"], "kind": place.get("kind") or kind,
             "lat": float(place["latitude"]), "lon": float(place["longitude"]),
             "weather_sensitive": None, "attributes": attributes}   # ★`[2026-09-29]` 모름 — 확실한 분류로 채운다(`fill_weather_sensitive`)
@@ -323,4 +359,4 @@ def _at(day: str, hhmm: str) -> datetime:
     return datetime.combine(date.fromisoformat(day), time.fromisoformat(hhmm), tzinfo=KST)
 
 
-__all__ = ["Assembled", "Problem", "assemble", "effective"]
+__all__ = ["Assembled", "Collected", "Problem", "assemble", "collect", "effective"]

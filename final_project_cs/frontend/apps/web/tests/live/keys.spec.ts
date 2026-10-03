@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { KEY_STORAGE, start, mockServer, TRIP_ID } from "./helpers";
+import { APP, KEY_STORAGE, start, mockServer, TRIP_ID } from "./helpers";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -13,20 +13,6 @@ test("내 여행이 있으면 첫 화면의 「내 여행」 카드에 뜨고 �
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
 });
 
-test("실제 연결의 내 여행 목록은 삭제를 흉내 내지 않는다: 선택 삭제·휴지통이 꺼져 있고 이유를 알리며, 서버에 삭제를 요청하지 않는다", async ({ page, request }) => {
-  const server = mockServer(request);
-  await start(page);
-  await page.goto("/trips");
-  const row = page.locator("#main-content li");
-  await expect(row).toHaveCount(1);
-  await expect(page.getByText("실제 연결에서 여행 삭제는 아직 지원하지 않아요.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "선택 삭제" })).toBeDisabled();
-  await expect(row.getByRole("button", { name: /삭제$/ })).toBeDisabled();
-  await row.getByRole("link").click();
-  await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
-  expect((await server.log()).filter((entry) => entry.method === "DELETE")).toHaveLength(0);
-});
-
 test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 키가 없으면 목록을 묻느라 새 사용자를 만들지도 않는다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ trips: "none" });
@@ -37,7 +23,7 @@ test("여행이 없으면 「아직 등록한 여행이 없어요」가 뜨고, 
   await server.reset();
   const fresh = await page.context().browser()!.newContext();
   const first = await fresh.newPage();
-  await first.goto("http://127.0.0.1:3102/");
+  await first.goto(`${APP}/`);
   await expect(first.getByRole("region", { name: /내 여행|My trips/, exact: false }).first()).toBeVisible();
   const issued = (await server.log()).filter((entry) => entry.path.endsWith("/v1/web/session"));
   expect(issued).toHaveLength(0);
@@ -81,7 +67,7 @@ test("메뉴에는 토큰 화면이 없고 마이페이지로 가는 길만 있�
   await expect(dialog.getByRole("button", { name: /다시 발급받기/ })).toHaveCount(0);
 });
 
-test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 화면 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
+test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 안 바뀌며, 하면 새 토큰이 저장되고 마이페이지 맨 위 안내에 한 번 보인다", async ({ page, request }) => {
   const server = mockServer(request);
   await start(page);
   await page.goto("/mypage");
@@ -100,7 +86,7 @@ test("토큰 재발급: 확인 단계를 거치고, 취소하면 아무것도 �
   expect(rotated).toMatch(/^acop_u_rotated_/);
   expect((await server.received("POST", "/rotate"))[0].key).toBe("acop_u_known");   // 옛 키로 요청했다
 
-  // 같은 화면 맨 위에 새 토큰 안내가 한 번 뜬다(안내는 화면에 하나만)
+  // 마이페이지 맨 위에 새 토큰 안내가 한 번 뜬다(안내는 화면에 하나만 — 계획 화면에는 뜨지 않는다)
   const notice = page.getByRole("status").filter({ hasText: "내 여행 열쇠를 따로 보관해 주세요" });
   await expect(notice).toHaveCount(1);
   await expect(notice).toContainText("새 키예요. 옛 키는 더 이상 쓸 수 없어요");

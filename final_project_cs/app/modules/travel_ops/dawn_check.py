@@ -54,12 +54,14 @@ class DawnResult:
     asked: list[dict[str, Any]] = field(default_factory=list)
     unresolved: list[dict[str, Any]] = field(default_factory=list)
     fatal: list[dict[str, Any]] = field(default_factory=list)
+    #: `[2026-10-03]` 닫힌 곳의 대체를 찾았는데 일정 **전체** 재판정에 걸려 바꾸지 않았다(D-017) — 고객에게는 「일정은 그대로 두었어요」가 나갔다
+    rechecked: list[dict[str, Any]] = field(default_factory=list)
 
     def counts(self) -> dict[str, Any]:
         return {"disabled": self.disabled, "outside_window": self.outside_window, "checked": self.checked,
                 "open": self.open, "closed": len(self.closed), "unknown": len(self.unknown),
                 "unmatched": len(self.unmatched), "adjusted": len(self.adjusted), "asked": len(self.asked),
-                "unresolved": len(self.unresolved), "fatal": len(self.fatal)}
+                "unresolved": len(self.unresolved), "rechecked": len(self.rechecked), "fatal": len(self.fatal)}
 
 
 def _clock(text: str) -> time:
@@ -170,9 +172,11 @@ class DawnCheck:
                 # ★그 사이 일정이 움직였다 — 판정도 기록하지 않고 되돌린다. 창 안에서 다시 본다
                 raise _Retry()
         if outcome["status"] == "adjusted":
-            result.adjusted.append({**entry, "version": outcome["version"], **plan.summary})
+            result.adjusted.append({**entry, "version": outcome["version"], **outcome["summary"]})
         elif outcome["status"] == "asked":
             result.asked.append({**entry, "already": outcome.get("already", False)})
+        elif outcome["status"] == "rechecked":
+            result.rechecked.append({**entry, "skipped": outcome["skipped"]})
 
     # ── 저장 ────────────────────────────────────────────────────
     def _record(self, trip_id, meal: Item, day, verdict: str, detail: str) -> None:

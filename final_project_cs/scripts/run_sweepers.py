@@ -17,6 +17,9 @@
   Case 를 만들지 않고 LLM 을 부르지 않는다. 최신 일정 버전을 읽어 때가 된 안내를 바깥함에
   넣는다 — 같은 안내는 `outbox` UNIQUE 가 한 번만 받는다. 감시 뒤에 돈다.
 
+★`[2026-10-03 사용자 결정]` **감시는 3분 주기**다 — 이 일꾼은 1분마다 돌지만 `--only` 없이 돌 때 감시(`trip_cases`)는 주기 문(`job_gate`)을 지난 회차에만 돈다.
+  멈춘 Case 되잡기 · 일정 안내는 그대로 1분이다.
+
 ★`trip_cases` 는 **Case 버전의 감시 루프**다(`[2026-09-17]`). 점검은 `trip` 과 같고, 깨진
   항목을 직접 고치지 않고 **시스템 Case 를 열어** Controller → Team → 코어 적용으로 보낸다
   (v11 §6-A ① 「되잡기 작업은 Case 를 만들기만 한다」). `trip` 과 **함께 돌리지 않는다** —
@@ -100,7 +103,8 @@ def _run_once(tenant_id: str, only: str | None) -> dict[str, dict[str, int]]:
     if only == "trip":
         result["trip"] = _run_trip_watch(tenant_id)
     if only in (None, "trip_cases"):
-        result["trip_cases"] = _run_trip_watch_cases(tenant_id)
+        # ★`[2026-10-03 사용자 결정]` 감시는 **3분 주기**(D-017) — 일꾼은 1분마다 돌지만 감시는 주기 문을 지난 회차에만 돈다. `--only trip_cases` 는 문을 안 본다(손으로 부르는 것)
+        result["trip_cases"] = _watch_if_due(tenant_id, forced=only == "trip_cases")
     # ★새벽 식당 확인 — 창(03:00~08:00) 밖이면 아무것도 안 부른다. 하루 시작 알림보다 **먼저** 돈다
     if only in (None, "trip_dawn"):
         result["trip_dawn"] = _run_trip_dawn(tenant_id)
@@ -222,6 +226,23 @@ def _run_trip_reminders(tenant_id: str) -> dict[str, int]:
             "held": len(outcome.held), "fatal": len(outcome.fatal), "no_route": outcome.no_route}
 
 
+def _watch_if_due(tenant_id: str, *, forced: bool) -> dict[str, int]:
+    """감시(`trip_cases`)를 주기 문 뒤에서 돌린다. 문이 닫혀 있으면 `{"skipped_until_due": 1}` — 아무것도 안 부른다(외부 소스 포함).
+
+    ☆왜: 이 일꾼은 1분마다 도는데 감시는 3분 주기다(`reliability.watch_interval_seconds`). 일꾼 전체를 3분으로 바꾸면 일정 출발 안내와 멈춘 Case 되잡기가
+      늦어져서 감시만 막는다. 일꾼은 회차마다 새 프로세스라 마지막 실행 시각은 DB 에 둔다(`job_gates`, 마이그레이션 041).
+    """
+    if not forced:
+        from app.application.job_gate import WATCH_GATE, claim, interval_seconds
+        from app.core.settings import get_guardrails
+
+        _, min_seconds = interval_seconds(get_guardrails())
+        with get_connection() as conn, conn.transaction():
+            if not claim(conn, tenant_id=tenant_id, gate=WATCH_GATE, min_seconds=min_seconds):
+                return {"skipped_until_due": 1}
+    return _run_trip_watch_cases(tenant_id)
+
+
 def _run_trip_watch_cases(tenant_id: str) -> dict[str, int]:
     import asyncio
     from datetime import datetime
@@ -274,7 +295,7 @@ def _run_trip_watch(tenant_id: str) -> dict[str, int]:
     return {"checked": outcome.checked, "adjusted": len(outcome.adjusted),
             "fatal": len(outcome.fatal), "unresolved": len(outcome.unresolved),
             "unhandled": len(outcome.unhandled), "pinned": len(outcome.pinned),
-            "unchecked": len(outcome.unchecked)}
+            "unchecked": len(outcome.unchecked), "rechecked": len(outcome.rechecked)}
 
 
 def _report_errors(result: dict[str, dict[str, int]]) -> int:

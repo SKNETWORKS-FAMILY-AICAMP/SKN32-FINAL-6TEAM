@@ -1,0 +1,108 @@
+# triPilot 공개 배포 — 서버(WSL2 Docker)에서 `docker compose up -d`.
+#
+# 구성: DB(pgvector) · API · 상시 작업 일꾼 · 웹. 역방향 프록시(Caddy)는 **이 파일에 없다** — 같은 서버의 기존 Caddy 가 맡고, 이 파일의 API · 웹만
+# 그 Caddy 가 속한 네트워크(`proxy`)에 별칭으로 붙는다(`deploy/Caddyfile.tripilot` 한 블록).
+#
+# ★DB 는 밖으로 포트를 열지 않는다 — `internal` 네트워크 안에서만 닿는다.
+# ★서비스 이름에 `tripilot-` 을 붙인 이유: `proxy` 네트워크는 다른 프로젝트와 같이 쓴다. `api` · `web` · `db` 같은 흔한 이름이 겹치면 DNS 가 엉뚱한 쪽으로 간다.
+# ★비밀값은 모두 `.env`(서버에만 있고 git 에 없다)에서 읽는다 — 이 파일에 값이 없다. 만드는 법은 `deploy/README.md`.
+name: tripilot
+
+services:
+  tripilot-db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    # 서울 시각 — 개발 PC 의 DB 와 같게(판정기는 시간대를 가리지 않게 고쳤지만 조회 · 로그가 같은 시계로 읽히게 한다)
+    command: ["postgres", "-c", "timezone=Asia/Seoul", "-c", "max_connections=80", "-c", "shared_buffers=256MB"]
+    environment:
+      POSTGRES_USER: acop
+      POSTGRES_PASSWORD: ${TRIPILOT_DB_PASSWORD:?TRIPILOT_DB_PASSWORD 가 .env 에 없다}
+      POSTGRES_DB: acop_cs
+    volumes:
+      - tripilot_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acop -d acop_cs"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [internal]
+    mem_limit: 1g
+
+  tripilot-api:
+    build:
+      context: ${TRIPILOT_SRC:-./src}      # 자동 반영(`auto_deploy.sh`)이 받아 둔 저장소 폴더로 바꿔 부른다
+      dockerfile: deploy/Dockerfile.api
+    image: tripilot-api:${TRIPILOT_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      tripilot-db:
+        condition: service_healthy
+    env_file: [.env]
+    environment:
+      ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
+      ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
+    volumes:
+      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
+      - tripilot_ops:/srv/var/ops
+    networks:
+      internal: {}
+      proxy:
+        aliases: [tripilot-api]
+    # 시작 직후 이미 약 850MB(이동 엔진 자료 적재) — 1g 는 빠듯해 2g. 서버 여유 메모리가 약 10GB 이다
+    mem_limit: 2g
+    cpus: 2
+
+  # 상시 작업(되잡기 · 바깥함 일꾼 · 일일 집계) — ★하나만 띄운다. 둘이면 통지가 두 번 나간다.
+  tripilot-worker:
+    image: tripilot-api:${TRIPILOT_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      tripilot-db:
+        condition: service_healthy
+      tripilot-api:
+        condition: service_healthy
+    command: ["/srv/deploy/worker.sh"]
+    env_file: [.env]
+    environment:
+      ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
+      ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
+    volumes:
+      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
+      - tripilot_ops:/srv/var/ops
+    healthcheck:
+      disable: true
+    networks: [internal]
+    mem_limit: 1g
+    cpus: 1
+
+  tripilot-web:
+    build:
+      context: ${TRIPILOT_SRC:-./src}      # 자동 반영(`auto_deploy.sh`)이 받아 둔 저장소 폴더로 바꿔 부른다
+      dockerfile: deploy/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_BASE: ${TRIPILOT_PUBLIC_URL:?TRIPILOT_PUBLIC_URL 이 .env 에 없다}
+        NEXT_PUBLIC_DATA_MODE: live
+        NEXT_PUBLIC_MAP_PROVIDER: ${NEXT_PUBLIC_MAP_PROVIDER:-}
+        NEXT_PUBLIC_OSM_TILE_URL: ${NEXT_PUBLIC_OSM_TILE_URL:-}
+        NEXT_PUBLIC_GOOGLE_MAP_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAP_API_KEY:-}
+        NEXT_PUBLIC_GOOGLE_MAP_ID: ${NEXT_PUBLIC_GOOGLE_MAP_ID:-}
+        NEXT_PUBLIC_NAVER_MAP_CLIENT_ID: ${NEXT_PUBLIC_NAVER_MAP_CLIENT_ID:-}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    image: tripilot-web:${TRIPILOT_TAG:-local}
+    restart: unless-stopped
+    networks:
+      proxy:
+        aliases: [tripilot-web]
+    mem_limit: 768m
+    cpus: 1
+
+networks:
+  internal: {}
+  # 같은 서버의 기존 역방향 프록시가 속한 네트워크 — 이름은 서버에서 `docker network ls` 로 확인해 `.env` 의 TRIPILOT_PROXY_NETWORK 로 준다
+  proxy:
+    external: true
+    name: ${TRIPILOT_PROXY_NETWORK:?TRIPILOT_PROXY_NETWORK 가 .env 에 없다}
+
+volumes:
+  tripilot_pg: {}
+  tripilot_ops: {}

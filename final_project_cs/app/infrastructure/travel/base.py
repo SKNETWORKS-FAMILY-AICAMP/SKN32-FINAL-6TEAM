@@ -390,7 +390,16 @@ def build_travel_sources(settings: Any) -> TravelSources:
         intervals={name: interval_for(per_day, burst=bursts[name]) for name, per_day in limits.items()},
         bursts=bursts,
         max_wait_seconds=float(getattr(settings, "rate_max_wait_seconds", 5.0)))
-    cache = ResponseCache(ttl_seconds=float(guardrails.get("travel.source_cache_seconds") or 0))
+    ttl = float(guardrails.get("travel.source_cache_seconds") or 0)
+    if ttl > 0 and guardrails.get("travel.source_cache_shared"):
+        # ★`[2026-10-03]` 프로세스를 건너 공유한다 — 일꾼은 회차마다 새 프로세스라 메모리 캐시는 틱 사이에 비었다. DB 가 안 되면 메모리로 돌아간다(`DbResponseCache`).
+        from app.infrastructure.db.session import get_connection
+
+        from .cache import DbResponseCache
+
+        cache = DbResponseCache(ttl, get_connection)
+    else:
+        cache = ResponseCache(ttl_seconds=ttl)
 
     sources = TravelSources(limiter=limiter, cache=cache)
     # ★키를 안 보고 붙인다 — 이 소스는 인증 파라미터 자체가 없다.

@@ -241,7 +241,7 @@ tests/integration/api/test_case_create_audit_row_excluded_from_queue.py
 |---|---|
 | MVP 인증 | hashed API key + scope |
 | Header | `Authorization: Bearer <api_key>` |
-| OAuth2/OIDC | Phase 2; MVP에서 구현하지 않음 |
+| OAuth2/OIDC | Phase 2; MVP에서 구현하지 않음 — 단 **웹 사용자 소셜 로그인(구글)** 은 `[2026-10-03]` 구현했다(서버용 Bearer 키와 별개 — [REST 명세](rest-endpoints.md) 「소셜 로그인」) |
 | scope 검증 | scope × endpoint 전체 unauthorized matrix 테스트 |
 
 근거: `wiki/records/handoff/03_REST_MCP_인터페이스.md:116-121`

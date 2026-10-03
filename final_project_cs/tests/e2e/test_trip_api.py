@@ -94,6 +94,10 @@ def api(monkeypatch):
     store = TripStore(tenant)
     watcher = TripWatcher(store=store, check=check, connection_factory=get_connection,
                           clock=clock, routes=None, route_events=ReplayRouteEvents(timeline))
+    # ★`[2026-10-02 결함 인계 #2]` 제안 고르기는 그 일정이 **끝났으면** 못 고른다(`pending.choose`) — 대본 날짜는 지난 날이라 실시간으로 보면 전부 끝난 것이 된다. 시계를 대본의 것으로
+    from app.modules.travel_ops import pending as pending_module
+
+    monkeypatch.setattr(pending_module, "wall_clock", lambda: clock.now)
 
     def classifier(_message):
         return {"intent": "other", "issue_code": "other", "sentiment": "neutral"}
@@ -219,6 +223,32 @@ def test_density_warning_survives_registration_duplicate_and_read(api, preferenc
     again = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write")).json()
     assert again["created"] is False and again["density"] == view["density"]
     assert _detail(api, view["trip_id"])["density"] == view["density"]
+
+
+# invariant: INV-CS-ACT-008
+def test_quality_warnings_ride_along_with_an_accepted_registration(api):
+    """`[2026-10-03]` 같은 곳 두 번 · 점심 빠짐 · 왔다 갔다는 **거절이 아니라 경고**다 — 등록은 받고(201), 응답과 조회의 「살펴볼 점」(`warnings`)에 실린다.
+    체크리스트 v2 T7·T8·T9 — 외부 에이전트가 만든 일정(등록 길)은 이것들을 아무도 말해 주지 않았다."""
+    body = _body(api["customer"])
+    spot = lambda key, name, lat, lon: {"key": key, "name": name, "kind": "activity", "lat": lat, "lon": lon,  # noqa: E731
+                                        "weather_sensitive": False, "attributes": {}}
+    body["places"] = [spot("palace", "테스트궁", 37.5796, 126.9770), spot("museum", "테스트박물관", 37.5300, 127.0000)]
+    body["constraints"] = {}
+    body["routes"] = {}
+    body["items"] = [{"seq": 1, "kind": "activity", "title": "궁 구경", "place": "palace", "route": None,
+                      "starts_at": _iso("10:00"), "ends_at": _iso("11:00"), "detail": {}},
+                     {"seq": 2, "kind": "activity", "title": "박물관", "place": "museum", "route": None,
+                      "starts_at": _iso("12:00"), "ends_at": _iso("13:30"), "detail": {}},      # 점심 창(11:30~14:00)을 틈 30분만 두고 채운다
+                     {"seq": 3, "kind": "activity", "title": "궁 다시", "place": "palace", "route": None,
+                      "starts_at": _iso("15:00"), "ends_at": _iso("16:00"), "detail": {}}]
+    created = api["client"].post("/v1/trips", json=body, headers=api["auth"]("trip:write"))
+    assert created.status_code == 201, created.text
+    view = created.json()
+    found = {w["code"]: w for w in view["warnings"]}
+    assert {"same_place_twice", "meal_missing", "route_zigzag"} <= set(found)
+    assert found["same_place_twice"]["items"] == [1, 3] and found["meal_missing"]["date"] == DAY
+    assert all(w["reason"] and w["remedy"] for w in view["warnings"])
+    assert {w["code"] for w in _detail(api, view["trip_id"])["warnings"]} == set(found)       # 조회도 같은 목록
 
 
 def test_a_second_trip_reuses_known_places_without_overwriting_them(api):

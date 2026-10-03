@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from .base import TravelSource
 
@@ -45,7 +46,8 @@ class OpenMeteoWeather(TravelSource):
         """`at` 시각의 예보 한 칸. 못 가져오거나 범위 밖이면 `None`(모름)."""
         target = at
         if target is not None and target.tzinfo is not None:
-            target = target.astimezone().replace(tzinfo=None)
+            # ★`[2026-10-03 ui 검증 세션 지적]` 서울 시각으로 바꾼다 — 인자 없는 `astimezone()` 은 **서버 PC 의 시간대**로 바꿔, 서울이 아닌 서버에서는 예보 칸이 어긋났다(예보는 현지 시각표라 서울 시계로 고른다)
+            target = target.astimezone(ZoneInfo("Asia/Seoul")).replace(tzinfo=None)
 
         days = self._days_needed(target)
         if days is None:
@@ -91,7 +93,8 @@ class OpenMeteoWeather(TravelSource):
     def _days_needed(target: datetime | None) -> int | None:
         if target is None:
             return 1
-        ahead = (target.date() - datetime.now().date()).days
+        # ★`[2026-10-03 ui 검증 세션 지적]` 오늘은 **서울의 오늘**이다 — 대상 시각이 서울 시계(`forecast`)라 서버 PC 의 `datetime.now()` 로 세면 서버가 UTC 일 때 하루 어긋난다
+        ahead = (target.date() - datetime.now(ZoneInfo("Asia/Seoul")).date()).days
         if ahead < 0 or ahead >= MAX_FORECAST_DAYS:
             return None
         return ahead + 1

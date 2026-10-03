@@ -4,7 +4,6 @@ import Image, { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { DeviceFrame } from "@/components/layout/device-frame";
-import { LanguagePicker } from "@/components/ui/language-picker";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { RecentTrips } from "@/features/trip/trip-list";
 import type { Language } from "@/lib/i18n";
@@ -49,7 +48,7 @@ const copy: Record<Language, Record<string, string>> = {
     startDescription: "가고 싶은 곳, 좋아하는 순간.\n당신의 여행 이야기를 들려주세요.",
     taste: "나의 취향", trip: "나의 여행", cta: "내 일정 시작하기",
     actionNote: "약관 확인과 여행 취향 설정부터 함께할게요.",
-    actionNoteDone: "이미 설정을 마치셨어요. 취향과 이메일은 마이페이지에서 바꿀 수 있어요.",
+    actionNoteDone: "이미 설정을 마치셨어요. 취향과 디스코드 알림은 마이페이지에서 바꿀 수 있어요.",
     scrollHint: "아래로 스크롤하며 만나보세요", skip: "소개 건너뛰기", next: "다음 화면",
     pages: "triPilot 서비스 소개. 아래로 스크롤하면 다음 화면으로 이동합니다.", navigation: "소개 화면 이동",
     label0: "서비스 소개", label1: "이용 방법", label2: "일정 시작",
@@ -60,7 +59,7 @@ const copy: Record<Language, Record<string, string>> = {
 const { props: { srcSet } } = getImageProps({ alt: "", src: "/images/tripilot-home-03-journey.png", width: 1672, height: 941, quality: 75 });
 const background = `image-set(${(srcSet ?? "").split(", ").map((entry) => { const [url, density] = entry.split(" "); return `url("${url}") ${density}`; }).join(", ")})`;
 
-/** How-it-works slides; each has a demo-mode capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
+/** How-it-works slides; each has a screen capture per language in `public/images/tripilot-guide-<language>-<slide>.jpg`. */
 const guide = ["1-preferences", "2-plan", "3-results", "4-chat"] as const;
 
 const delay = (seconds: number) => ({ "--d": `${seconds.toFixed(3)}s` }) as CSSProperties;
@@ -83,7 +82,7 @@ export function Intro() {
   const { language } = useSettings();
   const text = copy[language];
   const router = useRouter();
-  // ★`[2026-10-01 user decision]` The start screen (terms, preferences, email) is asked once. Once the terms are agreed,
+  // ★`[2026-10-01 user decision]` The start screen (Discord alerts, terms, preferences) is asked once. Once the terms are agreed,
   //   the button goes straight to registering a plan; the answers can be changed later on My page.
   const [{ agreed }] = useOnboarding();
   const pages = useRef<HTMLElement>(null);
@@ -213,7 +212,6 @@ export function Intro() {
           <h1 id="intro-title" className={styles.title}><Reveal key={language} text={text.intro} mode="char" /></h1>
           <p className={styles.description} data-fx="up" style={delay(.5)}><Lines text={text.introDescription} /></p>
         </div>
-        <LanguagePicker className={styles.language} caption={<>LANGUAGE · <span lang="ko">언어</span></>} data-fx="up" style={delay(.65)} />
         <div className={styles.trips} data-fx="up" style={delay(.75)}><RecentTrips /></div>
         <div className={styles.badge} data-fx="scale" style={delay(.8)}><small>A LITTLE MORE YOU</small><strong>{text.badge}</strong></div>
         {controls(1)}

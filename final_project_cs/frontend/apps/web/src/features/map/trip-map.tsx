@@ -4,7 +4,6 @@ import type { TripStop } from "../trip/model";
 import type { PinLook } from "./model";
 import { mapConfiguration } from "./config";
 import { useState } from "react";
-import { DemoMap } from "./demo-map";
 import { GoogleMap, type GoogleDecision } from "./google-map";
 import { MapUnavailable } from "./live-map";
 import { toMapPoints } from "./map-points";
@@ -25,7 +24,6 @@ export interface TripMapProps {
 
 export function TripMap(props: TripMapProps) {
   const [google, setGoogle] = useState<GoogleDecision>("checking");
-  if (mapConfiguration.provider === "demo") return <DemoMap {...props} />;
   if (mapConfiguration.provider === "unavailable") return <MapUnavailable message={mapConfiguration.message} />;
   const points = toMapPoints(props.stops, props.looks);
   const missing = props.stops.length - points.length;

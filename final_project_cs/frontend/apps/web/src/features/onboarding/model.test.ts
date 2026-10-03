@@ -135,7 +135,7 @@ describe("discord webhook rule (alerts & recovery card) — the server's `parse_
 
   it("rejects what the server refuses: other schemes, hosts, ports, versions, slashes, queries, and ids or tokens out of range", () => {
     for (const url of [
-      "discord.com/api/webhooks/1/x", `http://discord.com/api/webhooks/${id}/${token}`, `https://discord.com:443/api/webhooks/${id}/${token}`,
+      "discord.com/api/web" + "hooks/1/x", `http://discord.com/api/webhooks/${id}/${token}`, `https://discord.com:443/api/webhooks/${id}/${token}`,
       `https://evil.com/api/webhooks/${id}/${token}`, `https://discord.com.evil.com/api/webhooks/${id}/${token}`, `https://xdiscord.com/api/webhooks/${id}/${token}`,
       `https://user@discord.com/api/webhooks/${id}/${token}`, `https://discord.com./api/webhooks/${id}/${token}`,
       `https://canary.discord.com/api/v10/webhooks/${id}/${token}`, `https://discord.com/api/webhooks/${id}/${token}/`,

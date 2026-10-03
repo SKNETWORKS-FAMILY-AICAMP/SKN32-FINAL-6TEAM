@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { Avatar } from "@/components/ui";
+import { useAuthProviders } from "@/features/account/use-auth-providers";
 import { LanguagePicker } from "@/components/ui/language-picker";
 import { ThemePicker } from "@/components/ui/theme-picker";
 import { nicknameLabel, useProfile } from "@/lib/profile";
@@ -20,6 +21,8 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
   const { navigation } = useSettings();
   const profile = useProfile();
   const [open, setOpen] = useState(false);
+  // `[2026-10-03 사용자 지시]` 「계정 연결 · 로그인」 줄은 서버가 로그인 방법을 하나라도 설정했을 때만 있다(메뉴를 열 때 한 번 물어본다).
+  const providers = useAuthProviders(open);
   const root = useContext(OverlayRoot);
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -60,6 +63,7 @@ export function SettingsMenu({ className = "" }: { className?: string }) {
           <ChevronRight size={18} aria-hidden="true" />
         </Link>
         <Link href={routes.trips} className={styles.link} onClick={close}>{t("여행 목록 보기", "View trip list")}<ChevronRight size={18} aria-hidden="true" /></Link>
+        {(providers.data?.length ?? 0) > 0 && <Link href={`${routes.myPage}#accounts`} className={styles.link} onClick={close}>{t("계정 연결 · 로그인", "Link account · Sign in")}<ChevronRight size={18} aria-hidden="true" /></Link>}
         {/* The same card as the home intro, caption included. */}
         <LanguagePicker caption={<>LANGUAGE · <span lang="ko">언어</span></>} />
         <ThemePicker />

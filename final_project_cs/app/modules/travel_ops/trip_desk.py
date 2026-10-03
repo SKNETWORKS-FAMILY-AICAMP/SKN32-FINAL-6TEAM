@@ -248,10 +248,34 @@ class TripDesk:
             asked = self._ask_instead(trip_id, base_version, plan)
             if asked is not None:
                 return asked
+            fitted = self._fit(trip_id, base_version, plan)
+            if isinstance(fitted, dict):
+                return fitted
+            plan = fitted
         outcome = self._write(trip_id, base_version, items, plan)
         if outcome["status"] == "adjusted":
             outcome.update(plan.summary)
         return outcome
+
+    def _fit(self, trip_id: UUID, base_version: int, plan: ItineraryChange) -> ItineraryChange | dict[str, Any]:
+        """★`[2026-10-03 적대 검토]` 신고(「늦어요」 · 「문 닫았대요」)로 **자동 고른 대체**도 쓰기 전에 일정 전체를 다시 판정한다(D-017 — 감시 · Case 버전과 같은 문, `itinerary_fit.fit_change`).
+        전에는 이 길만 판정 없이 새 버전을 썼다(체크리스트 T5 — 같은 결함이 세 번째 자리에 남아 있었다). 통과하면 쓸 안(다음 순위 안일 수 있다)을, 다 걸리면 **바꾸지 않고** 답 문장을 돌려준다.
+        고객이 직접 고른 길(`swap_alternate` · `fresh_alternate`)은 지나지 않는다 — 고르는 것 자체가 답이다."""
+        from .itinerary_fit import fit_change
+        from .pending import unresolved_notice
+
+        with self._connect() as conn:
+            trip, items = self.store.latest(conn, trip_id)
+        if trip["version"] != base_version:
+            return plan                       # 그 사이 바뀌었다 — `_write` 가 `stale` 로 답한다
+        fit = fit_change(plan, trip=trip, items=items)
+        if fit.change is not None:
+            return fit.change
+        current = next((i for i in items if i.item_id in plan.replacements), None)
+        text = (unresolved_notice(item=current, causes=plan.causes, recheck_failed=True)["text"] if current is not None
+                else "바꿀 곳을 찾았지만 일정 전체와 맞지 않아 일정은 그대로 두었어요. 가시기 전에 한 번 확인해 주세요.")
+        return {"status": "rechecked", "text": text, "item": current.title if current is not None else None,
+                "skipped": [{"rank": s.rank, "name": s.name, "reasons": s.reasons, "why": s.why} for s in fit.skipped]}
 
     def _ask_instead(self, trip_id: UUID, base_version: int,
                      plan: ItineraryChange) -> dict[str, Any] | None:

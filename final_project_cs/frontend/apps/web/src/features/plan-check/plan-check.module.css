@@ -53,7 +53,7 @@
 .checking[data-sheet="peek"] { --sheet-h: 150px; }
 .checking[data-sheet="full"] { --sheet-h: calc(100% - 64px); }
 /* The map starts below the floating bar, so no pin hides (or can be pressed) under it. */
-.map { position: absolute; top: 60px; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom .3s ease; }
+.map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--sheet-h) - 20px); display: flex; flex-direction: column; transition: bottom .3s ease; }
 .bar { position: absolute; top: 8px; left: 10px; right: 10px; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 48px; padding: 4px 10px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
 .bar .progress { flex: 1; min-width: 0; }
 .barTitle { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -117,7 +117,12 @@
 .waiting { color: var(--color-faint); }
 
 /* ⑤ The result: the list's height (handle), days to put on the map, cards and moves that open, the selected place */
-.handle { display: grid; place-items: center; flex: none; width: 100%; height: 24px; border: 0; background: none; cursor: pointer; }
+.handle { display: grid; place-items: center; flex: none; width: 100%; height: 24px; border: 0; background: none; cursor: grab; touch-action: none; }
+.handle:active { cursor: grabbing; }
+.sheetHead { touch-action: none; }
+/* While the list is being dragged it follows the finger at once (no easing). */
+.checking[data-dragging] .sheet, .checking[data-dragging] .map, .checking[data-dragging] .unlocated, .checking[data-dragging] .toast { transition: none; }
+.checking[data-dragging] { user-select: none; }
 .handle span { width: 42px; height: 5px; border-radius: 3px; background: var(--color-border-strong); }
 .handle:focus-visible, .dayButton:focus-visible, .cardHead:focus-visible, .moveHead:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .dayButton { display: inline-flex; align-items: baseline; min-height: 32px; padding: 0 6px; margin-left: -6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
@@ -165,12 +170,11 @@ button.moveHead { cursor: pointer; }
 .action[aria-disabled="true"] { opacity: .32; cursor: not-allowed; }
 .soon { margin-left: 4px; font-size: 10.5px; font-weight: 650; color: var(--color-muted); }
 .badge { display: inline-grid; place-items: center; min-width: 19px; height: 19px; margin-left: 6px; padding: 0 5px; border-radius: 10px; background: var(--color-warning-soft); color: var(--color-warning); font-size: 11.5px; font-weight: 800; }
-.previous { margin: 14px 0 0; text-align: center; }
-.previous button { min-height: 36px; padding: 0 10px; border: 0; background: none; color: var(--color-muted); font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
 
 /* ⑤ The change screen (mockup 개정 4): the bar becomes a search, the sheet shows cards to swipe, photos, results. */
 .searchField { display: flex; flex: 1; min-width: 0; align-items: center; gap: 6px; height: 36px; padding: 0 6px 0 9px; border: 1px solid var(--color-divider); border-radius: 10px; background: var(--color-subtle); color: var(--color-muted); }
 .searchField input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 14px; outline: none; }
+.searchField input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .searchField:focus-within { outline: 2px solid var(--color-selected); outline-offset: 1px; }
 .clear { display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--color-subtle-strong); color: var(--color-muted); cursor: pointer; }
 .change { display: flex; flex: 1; min-height: 0; flex-direction: column; }
@@ -191,6 +195,13 @@ button.moveHead { cursor: pointer; }
 .chip[data-source="candidate"] { background: var(--color-success-soft); color: var(--color-success); }
 .chip[data-source="search"] { background: var(--color-selected-soft); color: var(--color-selected); }
 .distance { font-size: 12px; font-weight: 700; color: var(--color-muted); white-space: nowrap; }
+.nameRow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; margin: 8px 0 2px; }
+.nameRow .changeName { margin: 0; }
+.resultBody .nameRow { margin: 0; }
+/* Where the place was found, small beside its name (our list · tourism service · map search). */
+.sourceTag { flex: none; padding: 1px 6px; border-radius: 6px; background: var(--color-subtle-strong); color: var(--color-muted); font-size: 10.5px; font-weight: 750; white-space: nowrap; }
+.sourceTag[data-origin="kakao"] { background: var(--color-selected-soft); color: var(--color-selected); }
+.sourceTag[data-origin="tour_api"] { background: var(--color-success-soft); color: var(--color-success); }
 .changeName { margin: 8px 0 2px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
 .changeSub { margin: 0; font-size: 12.5px; color: var(--color-muted); line-height: 1.4; }
 .changeNext { margin: 8px 0 0; font-size: 12px; color: var(--color-muted); text-align: right; }
@@ -207,10 +218,7 @@ button.moveHead { cursor: pointer; }
 .photoGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .photo { position: relative; margin: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 10px; background: var(--color-subtle-strong); }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
-.photo[data-example] { background: linear-gradient(160deg, var(--color-subtle) 0 45%, var(--color-subtle-strong) 45% 70%, var(--color-border) 70%); }
-.photoExample { position: absolute; top: 4px; right: 6px; font-size: 9px; color: var(--color-faint); }
 .photo figcaption { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: color-mix(in srgb, var(--color-inverse) 60%, transparent); color: var(--color-on-inverse); font-size: 11px; font-weight: 700; }
-.photoNote { margin: 8px 0 0; font-size: 11.5px; color: var(--color-muted); }
 .results { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px 20px; }
 .results > .action { width: 100%; }
 .resultsHead { display: flex; align-items: baseline; gap: 6px; margin: 4px 4px 6px; font-size: 13px; font-weight: 800; color: var(--color-text-secondary); }
@@ -269,3 +277,52 @@ button.moveHead { cursor: pointer; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* `[2026-10-03 사용자]` The place search in the header, where the brand stands: small beside the menu, wide while it has focus. */
+.headSearch { display: flex; flex: 1; min-width: 0; align-items: center; gap: 2px; height: 44px; }
+.headSearch .searchField { height: 38px; }
+.headSearch[data-open] { position: absolute; z-index: 6; top: 14px; left: 12px; right: 12px; height: 48px; padding: 4px 8px 4px 4px; border-radius: 14px; background: var(--color-surface); box-shadow: 0 4px 16px color-mix(in srgb, var(--color-text) 14%, transparent); }
+
+/* A card whose place was picked keeps the words written in the plan as a small line; a stop 「전체 자동 추천」 changed says what it had been. */
+.cardName { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.cardName .cardTitle { flex: none; }
+.cardWritten { margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--color-muted); line-height: 1.35; }
+.cardWritten[data-changed] { color: var(--color-adjusted); font-weight: 750; }
+
+/* The second page of the list: the plan with the recommended fixes applied (opened by pushing past the end of the list). */
+.page { animation: pageIn .45s cubic-bezier(.3, .7, .4, 1); }
+.page:not([data-turned]) { animation: none; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+.recommended { display: flex; align-items: center; gap: 10px; margin: 10px 0 2px; padding: 10px 12px; border: 1px solid var(--color-adjusted-border); border-radius: 12px; background: var(--color-adjusted-soft); color: var(--color-adjusted); }
+.recommendedText { display: flex; flex: 1; flex-direction: column; min-width: 0; font-size: 13px; }
+.recommendedText small { margin-top: 1px; font-size: 11.5px; font-weight: 600; opacity: .85; }
+.recommendedUndo { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 34px; padding: 0 10px; border: 1px solid var(--color-adjusted-border); border-radius: 9px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.recommendedUndo[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.recommendedUndo:focus-visible, .pullHint:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+/* At the end of the list: a hint that fills as the customer keeps pushing, and opens the next page when it is full. */
+.pullHint { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 4px; padding: 12px 10px 14px; border: 1px dashed var(--color-border-strong); border-radius: 12px; background: var(--color-subtle); color: var(--color-muted); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; overflow: hidden; }
+.pullHint[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.pullHint[data-edge] { border-color: var(--color-adjusted); color: var(--color-adjusted); }
+.pullBar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--color-border); }
+.pullBar > span { display: block; height: 100%; width: calc(var(--pull, 0) * 100%); background: var(--color-adjusted); transition: width .12s linear; }
+
+/* While the check is drawn the list follows its newest row; scrolled away by hand, this brings the customer back to it. */
+.followPill { position: sticky; bottom: 8px; z-index: 2; display: flex; align-items: center; gap: 4px; margin: 8px auto 0; padding: 7px 14px; border: 1px solid var(--color-border-strong); border-radius: 999px; background: var(--color-surface); color: var(--color-text); font: inherit; font-size: 12.5px; font-weight: 750; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-text) 16%, transparent); cursor: pointer; }
+.followPill:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
+
+/* `[2026-10-03 사용자]` Beside the brand in the header: the trip's title, or how far the check has got. */
+.headInfo { display: flex; flex: 1; min-width: 0; align-items: center; }
+.headTitle { margin: 0; min-width: 0; font-size: 16px; font-weight: 750; letter-spacing: -.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.headProgress { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.headStep { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 750; color: var(--color-text); white-space: nowrap; }
+.headStep b { font-size: 12px; font-weight: 750; color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.kindNote { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); }
+.kindNote[data-mismatch] { color: var(--color-warning); font-weight: 650; }
+.progressAt { margin: 8px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
+.headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
+.headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }
+
+/* 한국관광공사 출처 표시 — 확인 목록의 맨 아래 */
+.credit { margin: 14px 0 4px; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); text-align: center; }
+.credit a { color: inherit; text-decoration: underline; }

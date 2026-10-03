@@ -1,6 +1,7 @@
 import type { TripSurvey } from "@/features/onboarding/payload";
 import type { Language } from "../i18n";
 import { api } from "./client";
+import type { ReviewedIntakeView } from "./intake-review";
 import { streamApi, type OpProgress } from "./stream";
 
 /** One value the server read, with how it was read and the evidence behind it (server `intake_claims`). */
@@ -38,6 +39,7 @@ export interface IntakeSource {
 export interface IntakeView {
   intake_id: string;
   status: "reading" | "review" | "confirmed" | "fatal";
+  /** received · transcribing · reading · checking (places and hours) · review · … — shown through `stage_label`. */
   stage: string;
   stage_label: string;
   revision: number;
@@ -56,19 +58,20 @@ export interface IntakePlanInput { start_date: string; days: number; party_size:
 export interface IntakeEdit { source_id?: string | null; field: string; value: unknown }
 
 /** `humanToken` — the Turnstile token when the human check is on; the server checks it with Cloudflare. */
-export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null): Promise<{ intake_id: string }> {
+export async function submitIntake(text: string, files: File[], language: Language, humanToken?: string | null, signal?: AbortSignal): Promise<{ intake_id: string }> {
   const form = new FormData();
   form.append("text", text);
   for (const file of files) form.append("files", file, file.name);
   if (humanToken) form.append("turnstile_token", humanToken);
-  return api("/v1/web/trip-intakes", language, { method: "POST", body: form });
+  return api("/v1/web/trip-intakes", language, { method: "POST", body: form, ...(signal && { signal }) });
 }
 
-export function getIntake(intakeId: string, language: Language): Promise<IntakeView> {
+/** The read values plus — once the plan is on the check screen — the server's check of every place and leg (`review`). */
+export function getIntake(intakeId: string, language: Language): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}`, language);
 }
 
-export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<IntakeView> {
+export function editIntake(intakeId: string, revision: number, edits: IntakeEdit[], language: Language): Promise<ReviewedIntakeView> {
   return api(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/edits`, language, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ revision, edits }),
   });

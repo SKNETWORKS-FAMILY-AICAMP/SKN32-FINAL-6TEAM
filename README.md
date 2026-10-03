@@ -252,15 +252,14 @@ npm run dev
 
 브라우저에서 **`http://127.0.0.1:3100`** 을 엽니다. ★`localhost:3100` 으로 열면 브라우저가 저장 공간을 따로 잡아, 발급받은 사용자 키가 없는 새 사용자로 보입니다.
 
-`.env.local` 에서 먼저 정할 값은 둘입니다.
+`.env.local` 에서 먼저 정할 값은 둘입니다. `[2026-10-03 사용자 지시]` 화면에 시연(데모) 데이터는 없습니다 — 웹은 실제 서버에만 붙습니다.
 
 | 값 | 뜻 |
 |---|---|
-| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다 |
-| `NEXT_PUBLIC_DATA_MODE=demo` | 서버 없이 브라우저 안의 시연 데이터로만 돕니다 |
-| `NEXT_PUBLIC_API_BASE` | live 일 때 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
+| `NEXT_PUBLIC_DATA_MODE=live` | 실제 서버(4번)에 붙습니다. 계획 읽기·확인·여행·채팅이 서버 데이터로 돕니다. 이 값이 없거나 `live` 가 아니면 화면은 「서버 연결이 설정되지 않았어요」 한 장만 보입니다 |
+| `NEXT_PUBLIC_API_BASE` | 붙을 서버 주소. 기본 `http://127.0.0.1:8042` |
 
-지도(`NEXT_PUBLIC_MAP_PROVIDER` — `demo`·`naver`·`google`)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
+지도(`NEXT_PUBLIC_MAP_PROVIDER` — `osm`(기본)·`naver`·`google`. 예전 `demo` 값은 설정 오류)와 사람 확인(`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, 비우면 꺼짐)은 필요할 때만 채웁니다. 값을 바꾸면 `npm run dev` 를 다시 띄웁니다. 화면 쪽 시험·빌드 명령은 [`final_project_cs/frontend/apps/web/README.md`](final_project_cs/frontend/apps/web/README.md)에 있습니다.
 
 ## API 표면
 

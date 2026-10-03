@@ -219,15 +219,31 @@ def _signed(amount: int) -> str:
     return ("+" if amount > 0 else "−") + _won(abs(amount))
 
 
+def _when(starts: str | None, ends: str | None) -> str | None:
+    """「2026-10-06 12:00–13:00」 — **서울 시계**로 찍는다. `[2026-10-03 ui 검증 세션 지적]` 전에는 ISO 문자열의 앞 16자를 그대로 잘라 써서, 시간대가 UTC 로 적힌 값은 9시간 어긋난 시각이 화면에 갔다.
+    값이 없으면 `None`, 읽을 수 없는 문자열은 있는 그대로(지어내지 않는다)."""
+    from datetime import datetime
+
+    from .itinerary_checks import seoul
+
+    if not starts:
+        return None
+    try:
+        begin = seoul(datetime.fromisoformat(starts))
+        finish = seoul(datetime.fromisoformat(ends)) if ends else None
+    except ValueError:
+        return starts[:16].replace("T", " ") + (f"–{ends[11:16]}" if ends else "")
+    return f"{begin:%Y-%m-%d %H:%M}" + (f"–{finish:%H:%M}" if finish else "")
+
+
 def render_change(view: dict[str, Any]) -> str:
     """변경 링크 화면. ★값이 없는 자리는 **비우지 않고** 「확인되지 않았습니다」라고 적는다."""
     esc = lambda value: html.escape(str(value or ""))       # noqa: E731
     unknown = '<span class="unknown">확인되지 않았습니다</span>'
 
     def when(starts: str | None, ends: str | None) -> str:
-        if not starts:
-            return unknown
-        return esc(starts[:16].replace("T", " ")) + (f"–{esc(ends[11:16])}" if ends else "")
+        text = _when(starts, ends)
+        return unknown if text is None else esc(text)
 
     facts = [("예약 번호", esc(view["booking_no"])),
              ("종류", esc(view["kind_label"])),
