@@ -317,3 +317,20 @@ def test_the_unchanged_notice_key_is_per_item_and_cause_so_a_later_safety_event_
     fire = digest([Outcome(item, "no_alternate", causes=[{"category": "disaster_msg", "kind": "fire"}])], kind="guidance")
     assert trip_watch_batch.guidance_key(road) == trip_watch_batch.guidance_key(road_again)
     assert trip_watch_batch.guidance_key(road) != trip_watch_batch.guidance_key(fire)
+
+
+@pytest.mark.asyncio
+async def test_the_decision_record_keeps_the_time_and_tool_calls_of_every_item():
+    """★`[2026-10-03]` 병목을 **재서** 찾으려고 항목마다 쓴 시간(초)과 도구 호출 수를 Case 결정 기록에 남긴다 — 호출 수 측정을 먼저 했더니 어디서 새는지 보였던 것과 같은 생각이다."""
+    a1, a2 = _place("가나다 전망대", 0), _place("마바사 정원", 1)
+    first, second = _item(1, "activity", "전망대 관람", 10, a1), _item(2, "activity", "정원 산책", 13, a2)
+    result, tools = await _run([first, second], [_place("아자 박물관", 2), _place("차카 갤러리", 3)], {a1["place_id"]: ROAD, a2["place_id"]: ROAD})
+
+    [decision] = result.decisions
+    timing = decision["timing"]
+    assert [row["item"] for row in timing["items"]] == ["전망대 관람", "정원 산책"]
+    assert all(row["calls"] >= 1 and row["seconds"] >= 0 for row in timing["items"])
+    # 항목별 호출 수의 합 = 도구가 실제로 받은 호출 수 − 항목 계산 전에 한 번 읽은 일정 조회(`read.itinerary`) — 센 값이 실제와 같다
+    assert timing["total_calls"] == sum(row["calls"] for row in timing["items"]) == len(tools.calls) - 1
+    assert timing["total_seconds"] == pytest.approx(sum(row["seconds"] for row in timing["items"]), abs=0.01)
+

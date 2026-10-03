@@ -35,6 +35,7 @@ import hashlib
 import json
 import logging
 import time
+from time import perf_counter       # 항목별 소요 시간 — 위 `time`(마감 시계)과 따로 둔다(시험이 마감 시계만 바꿔 끼울 수 있게)
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -65,6 +66,9 @@ class Outcome:
     reasons: list[str] = field(default_factory=list)
     decision: Decision | None = None
     indoor_unknown: bool = True
+    #: ★`[2026-10-03]` 이 항목 계산에 쓴 시간(초)과 도구 호출 수 — 병목을 **재서** 찾으려고 Case 결정 기록(`decisions[].timing`)에 남긴다
+    seconds: float = 0.0
+    calls: int = 0
 
     @property
     def safety(self) -> bool:
@@ -187,7 +191,9 @@ class WatchBatch:
                 outcomes.append(Outcome(original, "retry", reasons=["deadline"]))
                 continue
             ctx["items"], ctx["seen"] = draft, set()           # 초안 기준 · 항목마다 도구 예산을 따로
+            started = perf_counter()
             outcome = self._one(item, trip, constraints)
+            outcome.seconds, outcome.calls = round(perf_counter() - started, 3), len(ctx["seen"])
             outcomes.append(outcome)
             if outcome.kind == "applied":
                 draft = outcome.change.new_items(draft)
@@ -292,7 +298,11 @@ class WatchBatch:
             approval_required=False, risk_level="low", rationale_evidence_ids=[])
         return work._result(task, outcome="completed", confidence=0.9, evidence=evidence, answer=answer,
                             next_action=NextAction.RESPOND, action_proposals=[proposal], warnings=warnings,
-                            decisions=[{"itinerary": "batch", "items": len(outcomes), **summary}])
+                            decisions=[{"itinerary": "batch", "items": len(outcomes), **summary,
+                                        "timing": {"total_seconds": round(sum(o.seconds for o in outcomes), 3),
+                                                   "total_calls": sum(o.calls for o in outcomes),
+                                                   "items": [{"item": o.item.title, "kind": o.kind, "seconds": o.seconds, "calls": o.calls}
+                                                             for o in outcomes if o.calls or o.seconds]}}])
 
     def _arguments(self, trip: dict[str, Any], base: int, outcomes: list[Outcome], applied: list[Outcome],
                    asked: list[Outcome], consent: list[Outcome], stuck: list[Outcome],
