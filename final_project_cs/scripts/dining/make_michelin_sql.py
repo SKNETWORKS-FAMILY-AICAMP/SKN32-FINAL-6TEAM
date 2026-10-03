@@ -1,7 +1,7 @@
 """미쉐린 가이드 서울 목록을 원장의 michelin 속성으로 넣는 SQL 을 만든다.
 
 무엇을 읽는가.
-    data/dining/michelin/미쉐린_서울_2026.csv  (상호, 등급) 180곳
+    datasets/dining/processed/michelin/미쉐린_서울_2026.csv  (상호, 등급) 180곳
     guide.michelin.com 의 서울 목록(별 · 빕 구르망 · 셀렉티드)에서 이름과 등급만 옮겼다.
 
 어떻게 잇는가.
@@ -16,7 +16,7 @@
     상세는 「1스타 (2026)」처럼 등급과 에디션. 가이드에 없는 곳은 행을 만들지 않는다.
 
 원장에 없는 가게(145곳)는 새로 만든다.
-    data/dining/michelin/미쉐린_서울_2026_가게.jsonl — 가이드 가게 페이지에서 옮긴 사실만
+    datasets/dining/processed/michelin/미쉐린_서울_2026_가게.jsonl — 가이드 가게 페이지에서 옮긴 사실만
     (주소 · 우편번호 · 좌표 · 전화 · 요리 종류 · 가격대 · 편의시설 · 가족 동반). 소개 글은 없다.
     - 가게: 이름 · 도로명주소 · 좌표(coord_source=michelin_guide) · 자치구 · 전화. 권역(hub)은 비운다.
     - 대표 분류: 가이드의 요리 종류로 정한다(category_method=manual — 규칙이 덮지 않게).
@@ -27,7 +27,7 @@
       사람이 적은 행만 넣는다(make_vegan_sql.hours_sql). 채우기 전까지 이 가게들의 영업 판정은 「모름」이다.
 
 사용법:  python scripts/dining/make_michelin_sql.py [--dry]
-출력:    data/dining/_build/michelin.sql
+출력:    datasets/dining/processed/_build/michelin.sql
 """
 from __future__ import annotations
 
@@ -41,8 +41,10 @@ import uuid
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-DATA = os.path.join(ROOT, "data", "dining")
+DATA = DINING_DATA
 OUT = os.path.join(DATA, "_build")
 LIST = os.path.join(DATA, "michelin", "미쉐린_서울_2026.csv")
 FACTS = os.path.join(DATA, "michelin", "미쉐린_서울_2026_가게.jsonl")
@@ -136,7 +138,7 @@ def main() -> None:
              "INSERT INTO dining.dn_load_meta (load_id, source_code, fetched_at, schema_version, scope, "
              f"row_count, raw_uri, status) VALUES ('{load_id}', '{SOURCE}', '{LOADED} 12:00+09', "
              f"'michelin-{EDITION}', '미쉐린 가이드 서울 {EDITION}', {len(rows)}, "
-             f"'data/dining/michelin/{os.path.basename(LIST)}', 'loaded');", ""]
+             f"'datasets/dining/processed/michelin/{os.path.basename(LIST)}', 'loaded');", ""]
     for row in rows:
         name, grade = row["상호"].strip(), row["등급"].strip()
         target = ALIAS.get(name)

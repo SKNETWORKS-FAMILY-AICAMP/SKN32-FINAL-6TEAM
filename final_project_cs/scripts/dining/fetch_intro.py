@@ -2,7 +2,7 @@
 
 왜 원본에 더하는가.
     parse_hours.py, make_load_sql.py, make_attribute_sql.py 가 모두
-    data/dining/tourapi_음식점_소개정보.json 하나를 읽는다. 파일을 따로 두면 셋을 다 고쳐야 한다.
+    datasets/dining/processed/tourapi_음식점_소개정보.json 하나를 읽는다. 파일을 따로 두면 셋을 다 고쳐야 한다.
     행은 받은 그대로 두고, 우리가 붙이는 칸은 앞에 _ 를 붙인다(기존 200건과 같은 규칙).
         _title, _addr   목록에서 가져온 상호와 주소
         _region         기존 200건의 권역. 새로 받는 행은 권역이 없으므로 null 이다(033: hub 는 비어도 된다)
@@ -37,8 +37,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-DATA = os.path.join(ROOT, "data", "dining")
+DATA = DINING_DATA
 LIST = os.path.join(DATA, "tourapi_서울_음식점_목록.json")
 INTRO = os.path.join(DATA, "tourapi_음식점_소개정보.json")
 

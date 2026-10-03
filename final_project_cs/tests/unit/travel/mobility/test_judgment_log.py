@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """판정 로그·지표 시험 (40번 방). 저장소 루트에서:  python final_project_cs/tests/unit/travel/mobility/test_judgment_log.py
 
-판정기·자료 없이 돈다(가짜 결과 객체). 실제 회귀 연결은 mobility_scripts/judgment_log_run.py 로 확인한다.
+판정기·자료 없이 돈다(가짜 결과 객체). 실제 회귀 연결은 같은 폴더 judgment_log_run.py 로 확인한다.
 """
 import io
 import json
@@ -12,17 +12,17 @@ from pathlib import Path
 from types import SimpleNamespace as NS
 
 # ☆`[2026-09-29 문제목록 #56]` 저장소 맨 위를 parents[5] 로 세면 시험 폴더·스크립트 폴더를 옮길 때 엉뚱한 곳을 본다 —
-#   mobility_scripts/ 가 있는 조상을 위로 찾는다. 없으면 건너뛰지 않고 이유를 말하며 멈춘다(조용한 스킵 금지)
-REPO = next((p for p in Path(__file__).resolve().parents if (p / "mobility_scripts").is_dir()), None)
+#   final_project_cs/ 가 있는 조상을 위로 찾는다(81: 스크립트는 이 폴더 안). 없으면 건너뛰지 않고 이유를 말하며 멈춘다(조용한 스킵 금지)
+REPO = next((p for p in Path(__file__).resolve().parents if (p / "final_project_cs" / "app").is_dir()), None)
 if REPO is None:
-    raise RuntimeError(f"mobility_scripts/ 를 못 찾았다(시작: {Path(__file__).resolve()}) — 저장소 맨 위에 있어야 한다")
-for _p in (REPO / "final_project_cs", REPO):
+    raise RuntimeError(f"final_project_cs/ 를 못 찾았다(시작: {Path(__file__).resolve()}) — 저장소 맨 위에 있어야 한다")
+for _p in (REPO / "final_project_cs", Path(__file__).resolve().parent):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from app.modules.travel_ops.mobility.engine import judgment_log as jl                 # noqa: E402
-from mobility_scripts.classification_metrics import classify_report, binary_report, misclassified_catalog   # noqa: E402
-from mobility_scripts import judgment_metrics_report as rep                                     # noqa: E402
+from classification_metrics import classify_report, binary_report, misclassified_catalog   # noqa: E402
+import judgment_metrics_report as rep                                     # noqa: E402
 
 FIELDS = {"case_id", "ts", "run_id", "source", "bundle", "synthetic", "input", "verdict", "reason", "eta",
           "slack_min", "margin_min", "depart_min", "arrive_min", "verdict_internal", "grade", "grade_counts",
@@ -339,3 +339,32 @@ def test_every_check_passes():
     자세한 줄별 결과는 `python final_project_cs/tests/unit/travel/mobility/test_judgment_log.py` 로 본다.
     """
     assert not bad, f"실패 {bad}"
+
+
+def test_default_log_dir_needs_data_dir(monkeypatch, tmp_path):
+    """73 후속 3-5 — 자료 폴더가 정해지지 않았거나(unset · 자리표시 /data) 계산기가 꺼졌으면(disabled) 기본 로그 자리를
+    만들지 않는다. 앞 판은 #48 뒤 `/data`(Windows 에선 C:\\data)에 로그를 썼다. 명시한 log_dir 은 그대로 쓴다."""
+    from app.modules.travel_ops.mobility.engine import paths as P
+    import pytest
+    for src in ("unset", "disabled"):
+        monkeypatch.setattr(P, "SOURCE", src)
+        with pytest.raises(RuntimeError):
+            jl.default_log_dir()
+        with pytest.raises(RuntimeError):
+            jl.JudgmentLogger(None, device="x", stream=io.StringIO())
+        assert jl.JudgmentLogger(tmp_path, device="x", stream=io.StringIO()).dir == tmp_path
+    monkeypatch.setattr(P, "SOURCE", "cli_env")
+    monkeypatch.setattr(P, "PROCESSED", tmp_path / "processed")
+    assert jl.default_log_dir() == tmp_path / "processed" / "mobility" / "logs"
+
+
+def test_log_run_entry_sets_data_dir_first(monkeypatch, capsys):
+    """73 후속 3-5 — judgment_log_run 진입점은 로그 자리를 정하기 **전에** 자료 폴더를 정한다(load_cli_env).
+    못 정하면(unset) 로그도 판정도 안 돌리고 2 로 끝난다 — `C:\\data\\…\\logs` 가 생기지 않는다."""
+    import judgment_log_run as R
+    from app.modules.travel_ops.mobility.engine import paths as P
+    monkeypatch.setattr(P, "SOURCE", "unset")
+    monkeypatch.setattr(P, "load_cli_env", lambda: "unset")     # .env·저장소 자료 모두 없는 기기
+    code = R.main(["--", "verify_time", "--cases", "x.json"])
+    assert code == 2
+    assert "자료 폴더를 정하지 못했다" in capsys.readouterr().err

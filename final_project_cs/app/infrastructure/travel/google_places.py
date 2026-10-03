@@ -17,6 +17,15 @@
   장소 찾기(id·좌표) = Text Search **Pro**(월 5,000건 무료). 상세는 **한 번에 한 곳**이다(`places/{id}`).
 `[실측 2026-09-25]` 실제 키로 4건 — 찾기·상세 응답 모양이 이 코드의 가정과 같았다(영업시간 구간에 날짜 포함).
 
+★`[2026-09-30 사용자 결정]` 셋째 일 `price(place_id)` — 식당 대안의 **가격**: 가격 범위(`priceRange`, 지도에 보이는
+  「1인당 ₩20,000~30,000」 — 원)와 가격대(`priceLevel`, 0~4 — 구글이 원 기준을 밝히지 않는다)를 **한 번에** 받는다.
+  대안을 세우는 순간에만
+  부르고 **값을 저장하지 않는다**(부르는 쪽은 비교 결과만 남긴다). 이 호출은 **하루 상한을 걸지 않는다** —
+  프로세스 안 제한기도, DB 예산의 하루 칸도 보지 않고 **월 줄에 세기만** 한다(`CallBudget.count`).
+  **월 무료 한도를 넘어도 부른다.** 대신 넘는 첫 호출에 `on_over_free` 로 운영자에게 알린다.
+  두 칸 모두 Place Details **Enterprise** 등급이라 영업시간과 같은 요금 단위(`METER_DETAILS`)를 한 번 센다
+  (`[확인 2026-09-30, 공식 필드표]`).
+
 출처: Places API (New) — `POST https://places.googleapis.com/v1/places:searchText`,
 `GET https://places.googleapis.com/v1/places/{id}`, 인증은 `X-Goog-Api-Key`, 받을 칸은 `X-Goog-FieldMask`.
 `[미확인]` 실제 키로 부른 적이 아직 없다 — 응답 모양은 공식 문서 기준이다. 키가 들어오면 라이브로 확인한다.
@@ -24,6 +33,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+import logging
 import math
 from typing import Any, Callable
 from zoneinfo import ZoneInfo
@@ -31,6 +41,8 @@ from zoneinfo import ZoneInfo
 import httpx
 
 from .base import TravelSource
+
+logger = logging.getLogger(__name__)
 
 KST = ZoneInfo("Asia/Seoul")
 SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
@@ -40,6 +52,10 @@ SEARCH_FIELDS = "places.id,places.displayName,places.location"
 METER_SEARCH = "google_places_text_search_pro"
 METER_DETAILS = "google_places_details_enterprise"
 DETAIL_FIELDS = "id,businessStatus,currentOpeningHours,regularOpeningHours"
+PRICE_FIELDS = "priceLevel,priceRange"
+#: 구글 가격대 → 0~4. ★`UNSPECIFIED`·칸 없음은 모름(None) — 싸다고 읽지 않는다
+PRICE_LEVELS = {"PRICE_LEVEL_FREE": 0, "PRICE_LEVEL_INEXPENSIVE": 1, "PRICE_LEVEL_MODERATE": 2,
+                "PRICE_LEVEL_EXPENSIVE": 3, "PRICE_LEVEL_VERY_EXPENSIVE": 4}
 #: 구글 요일(0=일요일) ↔ 파이썬 요일(0=월요일)
 _GOOGLE_DAY = {6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
 
@@ -49,7 +65,9 @@ class GooglePlaces(TravelSource):
     cache_ttl_seconds = 0          # ★약관 — 영업시간을 담아 두지 않는다
 
     def __init__(self, *, api_key: str, budget: Any, match_radius_m: float = 300.0,
-                 request: Callable[..., httpx.Response] | None = None, **kwargs: Any) -> None:
+                 request: Callable[..., httpx.Response] | None = None,
+                 free_monthly: dict[str, int | None] | None = None,
+                 on_over_free: Callable[[str, int, int], Any] | None = None, **kwargs: Any) -> None:
         kwargs.pop("cache", None)   # ★응답 캐시를 받지 않는다(위 약관)
         super().__init__(**kwargs)
         if not api_key:
@@ -59,6 +77,9 @@ class GooglePlaces(TravelSource):
         self._key, self.match_radius_m, self._budget = api_key, float(match_radius_m), budget
         # ★시험이 네트워크 없이 돌 수 있게 — (method, url, headers, json) → Response
         self._request = request or self._http_request
+        # ★세기만 하는 호출(`price`)이 월 무료 한도를 넘는지 잴 표. 없으면 가드레일 표를 쓴다
+        self._free_monthly = free_monthly
+        self._on_over_free = on_over_free
 
     def _http_request(self, method: str, url: str, headers: dict[str, str],
                       json: dict[str, Any] | None) -> httpx.Response:
@@ -69,13 +90,17 @@ class GooglePlaces(TravelSource):
         return httpx.request(method, url, json=json, **kwargs)
 
     def _call(self, method: str, url: str, fields: str, meter: str,
-              body: dict[str, Any] | None = None) -> dict[str, Any] | None:
-        if not self._allow():
-            return None
-        if not self._budget.try_reserve(meter):
-            # ★무료 한도 보호 — 부르지 않는다. 세고 「모름」으로 넘긴다(부르는 쪽이 fatal 로 센다)
-            self._miss("budget_exhausted", meter)
-            return None
+              body: dict[str, Any] | None = None, *, uncapped: bool = False) -> dict[str, Any] | None:
+        if uncapped:
+            # ★`[2026-09-30 사용자 결정]` 상한 없이 **세기만** 한다 — 무료 한도를 넘으면 알린다
+            self._count_uncapped(meter)
+        else:
+            if not self._allow():
+                return None
+            if not self._budget.try_reserve(meter):
+                # ★무료 한도 보호 — 부르지 않는다. 세고 「모름」으로 넘긴다(부르는 쪽이 fatal 로 센다)
+                self._miss("budget_exhausted", meter)
+                return None
         headers = {"X-Goog-Api-Key": self._key, "X-Goog-FieldMask": fields,
                    "Content-Type": "application/json"}
         try:
@@ -101,6 +126,22 @@ class GooglePlaces(TravelSource):
             self._miss("body_error", str(payload["error"])[:200])
             return None
         return payload
+
+    def _count_uncapped(self, meter: str) -> None:
+        """한 칸 센다(`CallBudget.count`). ★무료 한도를 **넘는 첫 호출**에 한 번 알린다 — 달마다 한 번.
+
+        알림이 실패해도 조회는 막지 않는다 — 알리는 일 때문에 고객 요청이 멈추면 안 된다.
+        """
+        free = (self._free_monthly if self._free_monthly is not None else _free_monthly()).get(meter)
+        used, crossed = self._budget.count(meter, free=free)
+        if free is None or used <= free:
+            return
+        logger.warning("google places over the free tier: %s used %s / free %s", meter, used, free)
+        if crossed and self._on_over_free is not None:
+            try:
+                self._on_over_free(meter, used, free)
+            except Exception:                         # noqa: BLE001 — 알림 실패가 조회를 막지 않는다
+                logger.exception("free-tier alert failed: %s", meter)
 
     # ── 우리 장소 → 구글 place_id ────────────────────────────────
     def find_place_id(self, *, name: str, latitude: float, longitude: float
@@ -133,6 +174,79 @@ class GooglePlaces(TravelSource):
         if payload is None:
             return None
         return verdict_from_details(payload, start=start, end=end)
+
+    # ── 가격 ──────────────────────────────────────────────────────
+    def price(self, place_id: str) -> dict[str, int | None] | None:
+        """`{"level": 0~4, "low": 원, "high": 원}` — 모르는 칸은 None. 못 불렀으면 `None`.
+
+        ★값을 담아 두지 않는다(약관 — 부르는 쪽도).
+        """
+        payload = self._call("GET", DETAIL_URL.format(place_id=place_id), PRICE_FIELDS, METER_DETAILS,
+                             uncapped=True)
+        if payload is None:
+            return None
+        return price_from_details(payload)
+
+
+def prices_for(connection_factory: Callable[[], Any], tenant_id: str, source: Any,
+               place_ids: list[str]) -> dict[str, dict[str, int | None] | None]:
+    """우리 장소들 → {place_id: 가격(`GooglePlaces.price`) 또는 None}. 구글 id 는 두 곳에서 — 앞의 것이 이긴다.
+
+        1  새벽 확인이 좌표로 맞춘 짝 표(`place_provider_ids`)
+        2  요식 원장의 구글 링크(`dining.dn_external_ref`, `kind='google_place'`) — **사람이 확인한 `valid`**
+           이고 물러나지 않은 것만. 코어 장소 → 원장 장소는 `dining.dn_core_place_link`
+
+    ★둘 다 없으면 구글에서 이름으로 찾지 않는다 — 찾기까지 하면 한 곳에 두 번 부른다. 「모름」으로 둔다.
+    ★돌려준 값은 부르는 쪽이 비교에만 쓰고 버린다(약관).
+    """
+    ids = [str(p) for p in dict.fromkeys(place_ids)]
+    if not ids:
+        return {}
+    with connection_factory() as conn, conn.cursor() as cur:
+        cur.execute("SELECT place_id::text, provider_place_id FROM place_provider_ids "
+                    "WHERE tenant_id=%s AND provider=%s AND place_id::text = ANY(%s)",
+                    (tenant_id, GooglePlaces.name, ids))
+        google_ids = dict(cur.fetchall())
+        missing = [pid for pid in ids if pid not in google_ids]
+        cur.execute("SELECT to_regclass('dining.dn_external_ref') IS NOT NULL")
+        if missing and cur.fetchone()[0]:
+            # ★원장이 없는 DB(요식 스키마를 안 올린 곳)도 있다 — 없으면 짝 표만 쓴다
+            cur.execute("SELECT DISTINCT ON (l.core_place_id) l.core_place_id::text, r.provider_id "
+                        "FROM dining.dn_core_place_link l "
+                        "JOIN dining.dn_external_ref r ON r.place_uid = l.place_uid "
+                        "WHERE l.tenant_id=%s AND l.core_place_id::text = ANY(%s) AND r.kind='google_place' "
+                        "AND r.status='valid' AND r.retired_at IS NULL AND r.provider_id IS NOT NULL "
+                        "ORDER BY l.core_place_id, r.verified_at DESC", (tenant_id, missing))
+            google_ids.update(dict(cur.fetchall()))
+    return {pid: (source.price(google_ids[pid]) if pid in google_ids else None) for pid in ids}
+
+
+def price_from_details(payload: dict[str, Any]) -> dict[str, int | None]:
+    """상세 응답 → `{"level", "low", "high"}`. ★순수 함수.
+
+    - level: 0~4, `UNSPECIFIED`·칸 없음은 None
+    - low·high: 가격 범위(원). 상한이 없으면 high=None(「low 원 이상」). **원(KRW)이 아니면 쓰지 않는다**
+    """
+    price_range = payload.get("priceRange") or {}
+    low, high = _won(price_range.get("startPrice")), _won(price_range.get("endPrice"))
+    if low is None:
+        high = None
+    return {"level": PRICE_LEVELS.get(str(payload.get("priceLevel") or "")), "low": low, "high": high}
+
+
+def _won(money: Any) -> int | None:
+    if not isinstance(money, dict) or money.get("currencyCode") != "KRW":
+        return None
+    try:
+        return int(money.get("units") or 0)
+    except (TypeError, ValueError):
+        return None
+
+
+def _free_monthly() -> dict[str, int | None]:
+    from app.core.settings import get_guardrails
+
+    return get_guardrails().get("travel.google_budget.free_monthly")
 
 
 def verdict_from_details(payload: dict[str, Any], *, start: datetime, end: datetime) -> tuple[str, str]:
@@ -197,4 +311,4 @@ def _moment(point: dict[str, Any] | None, anchor: date) -> datetime | None:
     return datetime(day.year, day.month, day.day, hour, minute, tzinfo=KST)
 
 
-__all__ = ["GooglePlaces", "verdict_from_details"]
+__all__ = ["GooglePlaces", "PRICE_LEVELS", "price_from_details", "prices_for", "verdict_from_details"]

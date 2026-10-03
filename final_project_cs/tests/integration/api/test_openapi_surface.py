@@ -63,6 +63,8 @@ CONTRACT_V1_PATHS = {
     #   그 사용자 본인의 여행만 연다. `/v1/web/session` 만 키 없이 열린다(첫 방문 발급).
     "/v1/web/session",
     "/v1/web/session/rotate",
+    # 대화 모델 예열 — wiki/external/rest-endpoints.md의 web-warmup 계약, 사용자 키 필요.
+    "/v1/web/warmup",
     "/v1/web/trips",
     "/v1/web/trips/{trip_id}",
     "/v1/web/trips/{trip_id}/proposals",

@@ -4,7 +4,7 @@
   from app.modules.travel_ops.mobility.engine.runtime import build_verifier
   v = build_verifier()          # 한 번. 약 33초 · 상주 약 91MB
 
-왜 전부 올리나 (2026-09-14 실측, `mobility_scripts/probe_timetable_load.py`)
+왜 전부 올리나 (2026-09-14 실측, 조사 스크립트 `probe_timetable_load.py` · 저장소 밖)
   Timetable.load(path, wanted) 의 wanted 는 **케이스 파일에서 뽑은 (노선,역) 집합**이다.
   배치에는 맞지만 서버는 요청마다 어느 역이 올지 미리 모른다. 셋을 재 봤다.
 
@@ -48,7 +48,9 @@ def default_paths():
     from .paths import PROCESSED                            # noqa: E402
     p = PROCESSED / "mobility"
     c = PKG / "rules"
-    return {"timetable": p / "timetable_v1.jsonl",
+    # ☆`[73 후속 · 3-4]` 실 시간표는 gz 가 있으면 그것(75 데이터 git · 75 MB → 1.8 MB) · 없으면 텍스트. 판정기는 확장자로 연다.
+    from .paths import timetable_file                        # noqa: E402
+    return {"timetable": timetable_file(p),
             "order": p / "line_station_order_v1.json",
             "transfer_walk": p / "transfer_walk_v1.json",
             "bus_route": p / "bus_route_v1.jsonl",
@@ -166,19 +168,29 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
 
     # ── 시간표 '판'. meta 의 built_at 이 있으면 그것, 없으면 행의 수집일.
     #    둘은 다른 값이다 — 어느 쪽인지 접두어로 남긴다. 판정 이력이 "어느 판으로 냈는지"를 잃으면 안 된다.
-    built = None
+    built, meta_d = None, {}
     meta = Path(P["meta"])
     if meta.exists():
         try:
-            built = json.loads(meta.read_text(encoding="utf-8")).get("built_at")
+            meta_d = json.loads(meta.read_text(encoding="utf-8")) or {}
+            built = meta_d.get("built_at")
         except (ValueError, OSError):
-            built = None
+            built, meta_d = None, {}
     built_at = f"built:{built}" if built else f"fetched:{tt.fetched_at}"
 
     # ☆`[2026-09-29 문제목록 #32]` 시간표가 오래됐는지 — 기준(일)은 guardrails mobility.staleness.timetable_warn_days.
     #   앞 판은 규칙에 기준만 있고 코드가 보지 않았다. 판정 불가가 아니라 재수집 신호다 — 경고로 싣는다.
+    # ☆`[89 · 2026-10-01]` 나이는 **수집일**로 잰다(앞 판은 built_at = 만든 시각). 만든 시각을 보면 옛 원자료를
+    #   다시 빌드만 해도 신선해 보인다. meta 의 원천별 수집일(tago·seoul) 중 **가장 오래된 것** → 없으면 행 fetched_at
+    #   → 그것도 없으면 built_at(종전). 어느 값으로 쟀는지 stats["timetable_age_basis"] 에 남긴다.
+    collected = sorted(str(v) for v in (meta_d.get("tago_fetched_at"), meta_d.get("seoul_fetched_at")) if v)
+    if collected:
+        stamp, age_basis = collected[0], "meta_fetched"
+    elif tt.fetched_at:
+        stamp, age_basis = tt.fetched_at, "row_fetched"
+    else:
+        stamp, age_basis = built, ("built" if built else None)
     age_days, stale = None, False
-    stamp = built or tt.fetched_at
     if stamp:
         from datetime import datetime, timezone
         try:
@@ -198,7 +210,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
              "station_exits": sum(len(x) for x in ex.exits.values()) if ex else 0,
              "bike_stations": len(bk.rows) if bk else 0,
              "bike_live": bool(bike_live), "bike_router": bool(bike_router),
-             "timetable_age_days": age_days, "timetable_stale": stale, "data_dir_source": _paths.SOURCE}
+             "timetable_age_days": age_days, "timetable_age_basis": age_basis, "timetable_stale": stale, "data_dir_source": _paths.SOURCE}
     if not quiet:
         # ★ 출발없음을 같이 찍는다(2026-09-14). 수집 행 수(463,326)와 올라간 행 수가 달라서,
         #   이 줄만 보면 "46만이라더니 44만이네"가 된다. 차이는 출발 시각이 '000000'(출발 없음)인 행이다.
@@ -216,7 +228,7 @@ def build_verifier(*, paths=None, wanted=None, quiet=False, data_dir=None, gh_ur
               f"라우터 {'on' if bike_router else 'off(소요 근거없음)'}")
 
     if stale and not quiet:
-        print(f"[mobility] ! 시간표가 {age_days}일 전 판이다(기준 {rules['staleness']['timetable_warn_days']['value']}일) — 재수집이 필요하다")
+        print(f"[mobility] ! 시간표 수집이 {age_days}일 전이다(기준 {rules['staleness']['timetable_warn_days']['value']}일) — 재수집이 필요하다")
     mtimes = {k: (str(v), Path(v).stat().st_mtime) for k, v in P.items() if Path(v).exists()}
     return Runtime(verifier, timetable_built_at=built_at,
                    rules_version=rules["rules_version"], stats=stats, source_mtimes=mtimes,

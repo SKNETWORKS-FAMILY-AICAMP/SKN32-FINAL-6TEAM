@@ -3,7 +3,7 @@
 
   python final_project_cs/tests/unit/travel/mobility/test_car_fare.py
 
-① 규칙 파일 taxi.fare.검산_예시 8건을 car.taxi_fare 로 다시 낸다 — mobility_scripts/rules_check.py 의 사본과 같은 답이어야 한다
+① 규칙 파일 taxi.fare.검산_예시 8건을 car.taxi_fare 로 다시 낸다 — rules_check.py(저장소 밖 점검 · 82)의 사본과 같은 답이어야 한다
    (두 구현이 갈리면 여기서 난다).
 ② 심야 구간 경계 — 21:59 / 22:00 / 23:00 / 01:59 / 02:00 / 03:59 / 04:00.  ③ 병산 — 저속 m 를 거리요금에서 뺀다.
 ④ 요일형 — config holidays(A10) 가 달력을 이긴다(2026-09-26 토요일이지만 추석 → 휴일), 일요일 = 휴일, 제헌절은 A10 대로(18번 달력과 어긋남 — 기록).

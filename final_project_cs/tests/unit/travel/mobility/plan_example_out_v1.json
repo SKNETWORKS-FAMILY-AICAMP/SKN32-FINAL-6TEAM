@@ -166,5 +166,7 @@
     }
   },
   "skipped": [],
-  "left_out": {}
+  "left_out": {},
+  "not_linked": [],
+  "kept_unverified": []
 }

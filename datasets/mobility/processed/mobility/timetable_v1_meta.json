@@ -1,0 +1,490 @@
+{
+ "built_at": "2026-10-01T10:38:34+09:00",
+ "tago_fetched_at": "2026-10-01",
+ "seoul_fetched_at": "2026-10-01",
+ "rows": 472541,
+ "duplicates_removed": 4887,
+ "cross_source_duplicates_removed": 13266,
+ "tago_rows_dropped_for_richer_seoul": 249,
+ "cross_source_conflicts_kept": [
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "05:30:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "07:10:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "07:49:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "08:05:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "10:18:00",
+   "tago_dest": [
+    "신도림"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "10:59:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "12:12:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "13:02:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "14:04:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "14:15:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "15:57:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:07:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:18:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:27:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "16:38:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "17:12:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "17:24:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "18:08:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "18:16:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "19:03:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "20:35:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "20:57:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "23:16:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "성수",
+   "dir": "D",
+   "day_type": "weekday",
+   "dep_time": "23:38:00",
+   "tago_dest": [
+    "신도림"
+   ],
+   "seoul_dest": "신설동"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "05:30:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "07:04:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "08:31:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "09:49:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "11:20:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  },
+  {
+   "line": "02호선",
+   "station_nm": "신도림",
+   "dir": "U",
+   "day_type": "weekday",
+   "dep_time": "17:59:00",
+   "tago_dest": [
+    "성수"
+   ],
+   "seoul_dest": "까치산"
+  }
+ ],
+ "sources": {
+  "tago_subway": 434493,
+  "seoul_opendata_OA-101": 38048
+ },
+ "excluded_rows": {
+  "4호선": 824,
+  "2호선": 2765,
+  "3호선": 1792,
+  "동해": 190,
+  "1호선": 4679,
+  "자기부상": 24,
+  "stale:MTRDG": 824,
+  "stale:MTRBS": 859
+ },
+ "unmatched_names": [
+  "신길온천"
+ ],
+ "gaps": {
+  "01호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "02호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "03호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "04호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "05호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "06호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "07호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "08호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "09호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "GTX-A": {
+   "weekday": [],
+   "holiday": []
+  },
+  "경강선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "경의선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "경춘선": {
+   "weekday": [],
+   "holiday": [
+    "광운대"
+   ]
+  },
+  "공항철도": {
+   "weekday": [],
+   "holiday": []
+  },
+  "김포도시철도": {
+   "weekday": [],
+   "holiday": []
+  },
+  "서해선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "수인분당선": {
+   "weekday": [
+    "신길온천"
+   ],
+   "holiday": [
+    "신길온천"
+   ]
+  },
+  "신림선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "신분당선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "용인경전철": {
+   "weekday": [],
+   "holiday": []
+  },
+  "우이신설경전철": {
+   "weekday": [],
+   "holiday": []
+  },
+  "의정부경전철": {
+   "weekday": [],
+   "holiday": []
+  },
+  "인천2호선": {
+   "weekday": [],
+   "holiday": []
+  },
+  "인천선": {
+   "weekday": [],
+   "holiday": []
+  }
+ },
+ "seoul_dest_recovered_rows": 38355,
+ "seoul_dest_unrecovered_rows": 13377,
+ "tago_combos_done": 4884,
+ "output": "C:\\final_project\\scratch\\_89\\new\\travel\\processed\\mobility\\timetable_v1.jsonl",
+ "dest_fill": {
+  "script": "datasets/mobility/scripts/fill_timetable_dest_v1.py",
+  "method": "chain_v1",
+  "at": "2026-10-01T12:34:43",
+  "rows_filled": 21307,
+  "blank_before": 26806,
+  "left_blank": 5499,
+  "backup": "timetable_v1_before_destfill_20261001_1234.jsonl",
+  "report": "timetable_v1_destfill_report.md"
+ },
+ "dest_fill_src": {
+  "script": "scratch/_79/p79_srcfill.py",
+  "room": "79",
+  "line": "04호선",
+  "day_type": "holiday",
+  "source": "data.go.kr 15098251 서울교통공사_서울 도시철도 열차운행시각표_20260901",
+  "source_url": "https://www.data.go.kr/data/15098251/fileData.do",
+  "source_checked_at": "2026-10-01T10:41+09:00",
+  "source_sha256": "fd7e7b6edc18a5ac4f40f53b594d460d5cbd96d90919aaeb54b957890080d606",
+  "match": "station_nm + dir + dep_time exact · single 도착역",
+  "basis": "src:seoulmetro_15098251_20260901",
+  "rows_filled": 3016,
+  "at": "2026-10-01T12:34:55"
+ }
+}

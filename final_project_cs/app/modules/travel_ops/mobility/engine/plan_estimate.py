@@ -66,6 +66,7 @@
 """
 from __future__ import annotations
 
+import statistics
 import argparse
 import collections
 import copy
@@ -80,6 +81,7 @@ from .timeutil import fmt_min, day_type_of, MIN_DAY
 from .verify_time import leg_mode
 
 ESTIMATE_VERSION = "estimate-v1.1"
+PRIM_TIE_BAND = 0.05     # 73 후속 3-9 — 대표 경로 동급 띠(성립 표본 대비 · 내림). 판정이 아니라 추정 표시의 안정화 값
 SLOTS = {"오전": (6 * 60, 12 * 60), "오후": (12 * 60, 18 * 60), "저녁": (18 * 60, 22 * 60), "밤": (22 * 60, 28 * 60)}
 SLOT_ALIASES = {"morning": "오전", "afternoon": "오후", "evening": "저녁", "night": "밤"}
 DEFAULT_STEP_MIN = 5
@@ -435,7 +437,19 @@ def _cautions(rows, ok, buf, est, d, tt_day, probe):
     prim = None
     if ok:
         cnt = collections.Counter(x["choice"] for x in ok)
+        # ☆`[73 후속 · 3-9]` 대표 경로를 표본 수 하나 차이로 뒤집지 않는다 — 팀장 #2(소수 첫째 자리 올림) 뒤 밤 창에서
+        #   2호선 32 · N62 33 으로 뒤집혀 「막차 주의」가 지하철에서 버스로 옮겨 갔다. 최다 표본과 띠(성립 표본의 5% ·
+        #   최소 1) 안이면 동급으로 보고 **예정 소요 중앙값이 짧은 쪽**을 대표로(같으면 이름 순). 띠 밖이면 종전대로 최다.
+        #   예정 소요가 없는 표본(단위 시험의 합성 행)이 섞이면 종전 규칙(최다 · 같으면 이름 큰 쪽) 그대로.
         prim = max(cnt, key=lambda k: (cnt[k], k))
+        top = cnt[prim]
+        #   GPT 대조(78 Q5): 띠는 내림(표본 20 미만이면 0 — 소표본에서 2 대 1 을 동급으로 보지 않는다) · 중앙값은 통상 중앙값.
+        band = int(len(ok) * PRIM_TIE_BAND)
+        near = [k for k in cnt if cnt[k] >= top - band]
+        med = {k: statistics.median(x.get("eta") for x in ok if x["choice"] == k) for k in near
+               if all(x.get("eta") is not None for x in ok if x["choice"] == k)}
+        if len(near) > 1 and len(med) == len(near):
+            prim = min(near, key=lambda k: (med[k], k))
     if prim is not None and prim != "도보" and probe is not None:
         pok = [x["t"] for x in rows if x["by"].get(prim) == "ok"]
         first_s, last_s = pok[0], pok[-1]

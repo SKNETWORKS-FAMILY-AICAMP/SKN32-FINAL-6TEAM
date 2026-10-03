@@ -18,9 +18,11 @@ from datetime import date
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))   # final_project_cs
-DATA = os.path.join(ROOT, "data", "dining")     # 원본 데이터
-OUT = os.path.join(ROOT, "data", "dining", "_build")  # 생성물
+DATA = DINING_DATA     # 원본 데이터
+OUT = os.path.join(DINING_DATA, "_build")  # 생성물
 
 NS = uuid.UUID("6f1c0d2e-0000-4000-8000-000000000001")
 LOAD_ID = str(uuid.uuid5(NS, "load:tourapi:2026-09-21"))

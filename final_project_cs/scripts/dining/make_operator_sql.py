@@ -22,7 +22,7 @@
     [월~금] - 13:20, 20:00        구간이 둘일 때의 마지막 주문
 
 사용법:  python scripts/dining/make_operator_sql.py [--dry]
-출력:    data/dining/_build/operator.sql
+출력:    datasets/dining/processed/_build/operator.sql
 """
 from __future__ import annotations
 
@@ -35,8 +35,10 @@ import uuid
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
+DINING_DATA = os.environ.get("DINING_DATA") or os.path.join(  # 데이터는 git 밖(datasets/dining/processed)
+    os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "datasets", "dining", "processed")
 ROOT = os.path.dirname(os.path.dirname(HERE))
-DATA = os.path.join(ROOT, "data", "dining")
+DATA = DINING_DATA
 OUT = os.path.join(DATA, "_build")
 SHEET = os.path.join(DATA, "truth", "대조표100_검수_2026-09-21.csv")
 
