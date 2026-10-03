@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-"""서버에 둘 `.env` 를 **이 PC 의 값으로** 만든다 — 비밀은 화면에도 로그에도 찍지 않는다. `[2026-10-03]`
+"""서버에 둘 환경 파일 **둘**(`.env` · `.env.apikeys`)을 이 PC 의 값으로 만든다 — 비밀은 화면에도 로그에도 찍지 않는다. `[2026-10-03]`
 
     python deploy/make_server_env.py --host <공개 도메인> --proxy-network <프록시 네트워크 이름> --proxy-cidr <프록시 대역> --out <파일>
+
+★`[2026-10-04 사용자 지시]` **이 PC 와 같은 구조로 둘로 나눈다** — `.env`(앱 설정 · 서버에서 새로 만든 비밀) · `.env.apikeys`(바깥 데이터 소스 키만, 이 PC 의 `.env.apikeys` 에서 옮김).
+  이 PC 의 설정 코드가 두 파일을 읽는 이유(키만 따로 갈아 끼우게)가 서버에도 그대로 맞는다. `--out` 이 `.env`, `--out-apikeys`(기본: `--out` 옆의 `.env.apikeys`)가 키 파일이다.
+★테넌트 이름은 `live` 다(`ACOP_TENANT_ID`) — 서버 DB 의 데이터가 이 이름으로 쌓인다. 앞 판은 이 PC 의 개발 이름 `demo` 를 그대로 썼다.
 
 ★만드는 규칙:
   - **새로 만든다**(서버 전용): DB 비밀번호 · `ACOP_SECRET_KEY` · Composer 비밀 둘. 개발 PC 의 것을 옮기지 않는다 — 개발 DB 의 암호화된 값(디스코드 웹훅 등)은 이 서버로 안 가므로 옮길 이유도 없다.
@@ -24,7 +28,7 @@ SKIP = {
     "ACOP_DISCORD_WEBHOOK_URL", "ACOP_OUTBOUND_PROXY_URL", "ACOP_OUTBOUND_PROXY_SOURCES",
     "ACOP_UTIC_API_KEY_1", "ACOP_UTIC_API_KEY_2", "ACOP_RATE_UTIC_PER_DAY",
     "ACOP_OPENAI_API_KEY", "ACOP_OPENAI_API_KEY_SERVER",
-    # 소셜 로그인 클라이언트 — 개발용(로컬 콜백)과 운영용은 **따로 만든다**. 이 PC 의 개발용 값을 서버로 옮기지 않는다(서버 값은 서버 환경 파일에 직접 — wiki/operations/google-login-setup.md)
+    # 소셜 로그인 클라이언트 — 이 PC 의 값을 자동으로 옮기지 않는다(비밀이 실수로 옮겨지지 않게). 서버 값은 서버 `.env` 에 직접 넣는다(wiki/operations/google-login-setup.md)
     "ACOP_GOOGLE_CLIENT_ID", "ACOP_GOOGLE_CLIENT_SECRET", "ACOP_WEB_ORIGIN",
 }
 
@@ -48,7 +52,8 @@ def main() -> None:
     parser.add_argument("--proxy-network", required=True)
     parser.add_argument("--proxy-cidr", required=True, help="역방향 프록시가 속한 네트워크 대역 — 이 대역에서 온 요청만 X-Forwarded-For 를 믿는다")
     parser.add_argument("--ollama-url", default="", help="모델 서버 주소(Ollama). 비우면 모델 기능이 꺼진다")
-    parser.add_argument("--out", required=True)
+    parser.add_argument("--out", required=True, help="`.env` 를 쓸 파일")
+    parser.add_argument("--out-apikeys", default="", help="`.env.apikeys` 를 쓸 파일(기본: --out 옆의 .env.apikeys)")
     args = parser.parse_args()
 
     keys = read_env(CS_ROOT / ".env.apikeys")
@@ -61,7 +66,7 @@ def main() -> None:
         f"TRIPILOT_DB_PASSWORD={secrets.token_urlsafe(32)}",
         "",
         "ACOP_ENV=public",
-        "ACOP_TENANT_ID=demo",
+        "ACOP_TENANT_ID=live",
         f"ACOP_SECRET_KEY={secrets.token_hex(32)}",
         f"ACOP_COMPOSER_JWT_SECRET={secrets.token_hex(32)}",
         f"ACOP_COMPOSER_ISSUER_SECRET={secrets.token_hex(32)}",
@@ -80,13 +85,13 @@ def main() -> None:
         "ACOP_OLLAMA_TIMEOUT_SECONDS=150",
         "ACOP_EMBEDDING_PROVIDER=ollama",
         "ACOP_OLLAMA_EMBEDDING_MODEL=bge-m3:latest",
-        "",
-        "# --- 공공 데이터 · 지도 키(이 PC 의 .env.apikeys 에서 옮김) ---",
-        *(f"{k}={v}" for k, v in moved.items()),
     ]
     out = Path(args.out)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")      # BOM 없이 · LF
-    print(f"쓴 파일: {out.name} · 새로 만든 비밀 5 · 옮긴 키/설정 {len(moved)}개 · 안 옮긴 이름 {len(SKIP & set(keys))}개")
+    apikeys = Path(args.out_apikeys) if args.out_apikeys else out.with_name(".env.apikeys")
+    apikeys.write_text("\n".join(["# 서버 전용 — git 에 올리지 않는다. 비밀이다. 바깥 데이터 소스 키만(공공 데이터 · 지도 — 이 PC 의 .env.apikeys 에서 옮김).",
+                                   *(f"{k}={v}" for k, v in moved.items())]) + "\n", encoding="utf-8", newline="\n")
+    print(f"쓴 파일: {out.name} · {apikeys.name} · 새로 만든 비밀 5 · 옮긴 키/설정 {len(moved)}개 · 안 옮긴 이름 {len(SKIP & set(keys))}개")
 
 
 if __name__ == "__main__":

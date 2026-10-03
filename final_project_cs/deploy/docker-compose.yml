@@ -37,12 +37,12 @@ services:
     depends_on:
       tripilot-db:
         condition: service_healthy
-    env_file: [.env]
+    env_file: [.env, .env.apikeys]       # 이 PC 와 같은 두 파일 — 뒤가 이긴다
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
       ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
     volumes:
-      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
+      - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro      # 저장소 `datasets/mobility/processed` 와 같은 자리
       - tripilot_ops:/srv/var/ops
     networks:
       internal: {}
@@ -62,12 +62,12 @@ services:
       tripilot-api:
         condition: service_healthy
     command: ["/srv/deploy/worker.sh"]
-    env_file: [.env]
+    env_file: [.env, .env.apikeys]       # 이 PC 와 같은 두 파일 — 뒤가 이긴다
     environment:
       ACOP_DATABASE_URL: postgresql+psycopg://acop:${TRIPILOT_DB_PASSWORD}@tripilot-db:5432/acop_cs
       ACOP_MOBILITY_DATA_DIR: /data/mobility/processed       # 끝 폴더 이름이 `processed` 면 그 자리를 자료 폴더로 본다(engine/paths.py)
     volumes:
-      - ${TRIPILOT_MOBILITY_DIR:-./mobility}:/data/mobility/processed:ro
+      - ${TRIPILOT_MOBILITY_DIR:-./datasets/mobility/processed}:/data/mobility/processed:ro      # 저장소 `datasets/mobility/processed` 와 같은 자리
       - tripilot_ops:/srv/var/ops
     healthcheck:
       disable: true
