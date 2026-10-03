@@ -510,6 +510,20 @@ for tag_, lab_ in (('base', 'L6 규칙→게이트(고정 임베딩)→E4B QAT')
         TAU['L6' + tag_] = pick_tau(lambda t, tg=tag_: make_l6(tg, t))
         P[lab_] = make_l6(tag_, TAU['L6' + tag_])
 
+# Ens3 — 서로 다른 구성 셋의 다수결(결과 표를 본 뒤 `[사전 등록 2026-10-03 11:29 KST]` 로 문서에 적고 계산한 한 가지 조합, 다른 조합은 만들지 않았다).
+# 셋이 모두 다르면 첫째(L6)의 답. 호출 수는 셋의 합.
+_ENS = ('L6 규칙→게이트(e16d 임베딩)→E4B QAT', 'V9 전문가 구조(Jev 없음, E4B/E4B/12B)', 'L5 규칙 → Decider-12B(앞단 없음)')
+if all(n in P for n in _ENS):
+    def _ens3(w, i):
+        outs = [P[n](w, i) for n in _ENS]
+        cnt = {}
+        for a, _c in outs:
+            cnt[a] = cnt.get(a, 0) + 1
+        top = max(cnt.values())
+        win = [a for a, c in cnt.items() if c == top]
+        return (win[0] if len(win) == 1 else outs[0][0]), sum(c for _a, c in outs)
+    P['Ens3 다수결(L6 · V9 · L5-Decider-12B)'] = _ens3
+
 # ---------- 채점 ----------
 names = list(P)
 res = {}
@@ -671,6 +685,12 @@ if any(k.startswith('Y2') for k in names):
                 out.append(f'| {lab_} τ_g={TAU["L6" + tag_]} | {_n6 / NC:.1%} | {_a6}/{NC} = {_a6 / NC:.2%} |')
     except Exception as e_:  # noqa: BLE001
         out.append(f'(잡담 부작용 계산 실패: {e_})')
+if all(n in names for n in _ENS):
+    _dist = [0, 0, 0, 0]
+    for w in EV:
+        for i in range(len(gold[w])):
+            _dist[sum(res[w][n][i][0] == gold[w][i] for n in _ENS)] += 1
+    out += ['', '### Ens3 구성원 일치도(셋 중 몇 개가 맞혔나 — 336문제)', '| 맞힌 구성원 수 | 0 | 1 | 2 | 3 |', '|---|---:|---:|---:|---:|', '| 문제 수 | ' + ' | '.join(map(str, _dist)) + ' |']
 if 'JEV_CALLS' in globals():
     out.append('')
     out.append('J1 의 Jev(유료) 호출 수: ' + ' · '.join(f'{w} {JEV_CALLS[w]}건' for w in EV) + ' — 규칙 단계가 못 정한 문제 전부를 한 번씩(이미 보낸 결과를 재사용했고 새로 부르지 않았다)')
