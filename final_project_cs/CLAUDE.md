@@ -9,6 +9,11 @@ AI 연동형 고객운영 플랫폼이다. 개인 AI(ChatGPT·Claude·Gemini)가
 
 ---
 
+## ★ [2026-10-03 사용자] 쇼핑몰 시절의 자료·코드·데이터는 지금 프로젝트에서 **쓰지 않는다**
+
+판단·시험·평가·시연·화면·관문의 재료로 가져다 쓰지 않는다 — **기록**(`wiki/records/` · 옛 판 문서 · `legacy/`)으로만 남긴다. 새 시험·평가 자료·예시는 **여행 도메인으로** 만든다.
+(바로 아래 「지우지 않았다」는 **기록으로 남긴다**는 뜻이다. 재료로 쓰라는 뜻이 아니다.) 이번에 옮긴 것과 아직 남은 것: 루트 `wiki/decisions/D-023-no-commerce-assets-in-use.md`.
+
 ## ★ [2026-09-08] 도메인이 여행으로 바뀌었다 — 아래 대부분은 쇼핑몰 시절 기록이다
 
 기준선이 **v10** 이고 도메인은 **여행 CS** 다. 코어 계약·생명주기·동시성·감사·평가 도구는
@@ -248,9 +253,11 @@ python -m pytest tests/contract -q            # 계약 테스트
 python -m pytest tests/security -q            # scope / PII / tenant 격리
 python -m pytest -q                           # 전체
 
-# 평가 (v6 §15-7)
-python -m eval.runners.proposed --dataset eval/datasets/golden.jsonl --repeats 3 --seed 7
-python -m eval.stats.bootstrap --input eval/reports/raw.jsonl --n 10000
+# 평가 — ★`[2026-10-03]` 쇼핑몰 시절 평가(golden/holdout 문장 · A/B/Proposed 러너)는 `legacy/commerce_eval/` 로 옮겼고 지금은 돌지 않는다(D-023)
+python -m scripts.verify_travel_eval_datasets                                      # 여행 분류 평가 자료(golden 72 · holdout 24) 검사
+python -m eval.travel_classification.replay eval/datasets/travel_golden.jsonl --repeats 3   # 실제 모델로 여행 분류 정확도(holdout 은 마지막에 한 번만)
+python -m eval.runners.travel_scenarios                                            # 여행 일정 시나리오 평가
+python -m eval.stats.bootstrap --input eval/reports/raw.jsonl --n 10000            # 도메인 무관 통계
 python -m eval.stats.mcnemar --input eval/reports/pairs.jsonl
 ```
 

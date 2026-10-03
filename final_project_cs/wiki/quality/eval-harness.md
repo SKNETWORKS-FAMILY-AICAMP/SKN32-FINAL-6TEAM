@@ -11,6 +11,10 @@ domain_note: 하네스 구조는 도메인 무관이다. 「여행 시나리오 
 
 # 평가 하네스
 
+> ★`[2026-10-03]` **이 문서 아래의 A/B/Proposed · golden/holdout(쇼핑몰 문장) 서술은 쇼핑몰 시절 기록이다.** 그 자료와 도구는 `legacy/commerce_eval/` 로 옮겼고 지금은 돌지 않는다(D-023 — 쇼핑몰 시절 자산은 쓰지 않는다).
+> 지금 도는 평가: **여행 분류** `eval/datasets/travel_golden.jsonl`(72) · `travel_holdout.jsonl`(24) — 검사 `python -m scripts.verify_travel_eval_datasets`, 재생 `python -m eval.travel_classification.replay <자료>`
+> (실제 모델로 intent · issue_code · **엉뚱한 팀으로 가는 것** · 지연을 잰다. 라벨은 **사람 검수 전 초안**이고 holdout 은 프롬프트를 고치는 데 쓰지 않는다). 그 밖에 `eval/decision_unit/`(고객 말 → 할 일 + 대상) · `eval/runners/travel_scenarios.py`(일정 시나리오).
+
 `eval/`
 
 ## 구조
