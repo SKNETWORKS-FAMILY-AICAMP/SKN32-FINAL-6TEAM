@@ -93,7 +93,8 @@ class OpenMeteoWeather(TravelSource):
     def _days_needed(target: datetime | None) -> int | None:
         if target is None:
             return 1
-        ahead = (target.date() - datetime.now().date()).days
+        # ★`[2026-10-03 ui 검증 세션 지적]` 오늘은 **서울의 오늘**이다 — 대상 시각이 서울 시계(`forecast`)라 서버 PC 의 `datetime.now()` 로 세면 서버가 UTC 일 때 하루 어긋난다
+        ahead = (target.date() - datetime.now(ZoneInfo("Asia/Seoul")).date()).days
         if ahead < 0 or ahead >= MAX_FORECAST_DAYS:
             return None
         return ahead + 1

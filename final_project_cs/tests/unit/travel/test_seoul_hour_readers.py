@@ -145,3 +145,20 @@ def test_no_notice_text_formats_a_zoned_time_without_converting_it_to_seoul():
                     and not any(fragment in line for fragment in allowed):
                 bare.append(f"{Path(module.__file__).name}: {line.strip()[:100]}")
     assert bare == [], f"서울 변환 없이 시각을 서식에 넣는 줄: {bare}"
+
+
+def test_the_open_meteo_forecast_range_counts_days_from_seoul_today(monkeypatch):
+    """예보 범위(`_days_needed`)가 **서버 PC 의 오늘**(`datetime.now()`)로 센다 — 서버가 UTC 면 서울이 이미 다음 날인 시각(서울 07:00 = UTC 전날 22:00)에 하루 늦게 센다.
+    서버 시계를 UTC 로 흉내 내 재현한다(이 PC 가 서울이라 진짜 시간대로는 안 된다)."""
+    from app.infrastructure.travel import open_meteo
+
+    class UtcServerClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            base = datetime(2026, 10, 6, 22, 0, tzinfo=UTC)               # 서울 2026-10-07 07:00
+            return base.astimezone(tz) if tz else base.replace(tzinfo=None)
+
+    monkeypatch.setattr(open_meteo, "datetime", UtcServerClock)
+    assert open_meteo.OpenMeteoWeather._days_needed(datetime(2026, 10, 7, 9, 0)) == 1      # 서울 오늘 → 예보 하루
+    assert open_meteo.OpenMeteoWeather._days_needed(datetime(2026, 10, 8, 9, 0)) == 2
+    assert open_meteo.OpenMeteoWeather._days_needed(datetime(2026, 10, 6, 23, 0)) is None  # 서울 어제 — 범위 밖
