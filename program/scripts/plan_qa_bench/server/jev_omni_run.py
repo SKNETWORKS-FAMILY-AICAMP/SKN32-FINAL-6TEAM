@@ -13,6 +13,7 @@ from transformers import AutoConfig, AutoProcessor, BitsAndBytesConfig
 MODE = os.environ.get('MODE', 'q8')
 TAG = os.environ['TAG']
 LIMIT = int(os.environ.get('LIMIT', '0'))
+GROUP = int(os.environ.get('GROUP', '20'))
 path = snapshot_download('akhilaaa3/Jev-Omni', allow_patterns=['config.json', 'generation_config.json', 'model*.safetensors*', 'processor_config.json', 'tokenizer.json', 'tokenizer_config.json', 'chat_template.jinja', 'decision_config.json', 'head.pt', 'jev_omni.py'])
 sys.path.insert(0, path)
 import jev_omni as jo
@@ -51,9 +52,27 @@ for name in os.environ['SETS'].split(','):
         if x.get('history'):
             state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
         try:
-            r = clf.predict(state=json.dumps(state, ensure_ascii=False, indent=1), question='고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 마지막 선택지.', options=options)
-            pr = [r['probabilities'][o] for o in options]
-            rows.append({'probs': dict(zip(keys, map(float, pr))), 'confidence': r['confidence']})
+            st_txt = json.dumps(state, ensure_ascii=False, indent=1)
+            qtxt = '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 마지막 선택지.'
+
+            def read(opts):
+                r_ = clf.predict(state=st_txt, question=qtxt, options=opts)
+                return [float(r_['probabilities'][o]) for o in opts], r_['confidence']
+            if os.environ.get('GROUPED') and len(options) > GROUP:
+                # 저자가 보증하는 20개 이하로 묶어 읽는다 — Cygnet 레시피와 같은 방식: 묶음별 읽기 → 묶음 우승자끼리 결승 → P(항목)=P(우승자 묶음)×P(항목|묶음)
+                m = -(-len(options) // GROUP)
+                bnd = [round(i * len(options) / m) for i in range(m + 1)]
+                groups = [options[bnd[i]:bnd[i + 1]] for i in range(m)]
+                within = [read(g)[0] for g in groups]
+                winners = [g[max(range(len(g)), key=lambda i: p_[i])] for g, p_ in zip(groups, within)]
+                between = read(winners)[0]
+                composed = [between[gi] * p_ for gi, pg in enumerate(within) for p_ in pg]
+                tot = sum(composed)
+                pr = [c / tot for c in composed]
+                conf = max(pr)
+            else:
+                pr, conf = read(options)
+            rows.append({'probs': dict(zip(keys, map(float, pr))), 'confidence': conf})
         except Exception as e:  # noqa: BLE001
             errs += 1
             rows.append({'probs': {}, 'confidence': None})
