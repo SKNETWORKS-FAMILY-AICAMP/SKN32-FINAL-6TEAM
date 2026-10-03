@@ -54,6 +54,8 @@ tests/
 | 옛 MCP 도구 수 고정(쇼핑몰 Case 도구 3개 — 연결 안 됨) | `security/` | `test_scope_contract.py` |
 | **MCP 실제 접속**(initialize → 도구 호출) · 키 401 · 남의 여행 404 · 쓰기 스위치 `[2026-10-02]` | `e2e/` | `test_mcp_server.py` (15건) |
 | **웹 실시간 진행(SSE)** — 단계 · 생존 신호 · 시간 초과 · 끊김 · 접수 읽기 멈춤 `[2026-10-02]` | `e2e/` | `test_op_stream.py` (21건) |
+| **검사 진행 알림** — 일정마다 item·check(이동 전에) · 이동 구간마다 move · 「n/m」 progress · 보관소 · Feed 비우기·퇴보 방지 `[2026-10-03 ui 요청서 2번]` | `unit/travel/` · `e2e/` | `test_intake_progress.py` (7건) · `test_intake_progress_events.py` (5건) |
+| **전체 자동 추천 미리 보기(`dry_run`)** — 저장 안 함 · 실제 적용과 같은 검사 `[2026-10-03 ui 요청서 3번]` | `e2e/` | `test_intake_autofix_dry_run.py` (5건) |
 | **감시 반복의 끝맺음** — Case 예외 격리 · 끝난/낡은 제안 닫기 · 바꿀 곳 없음 알림 · 일시 실패 재시도 `[2026-10-03]` | `e2e/` | `test_watch_failures.py` (10건) |
 | 활동 대체 후보가 예산보다 많아도 예외 없이 `[2026-10-03]` | `unit/travel/activity/` | `test_activity_trigger_budget.py` (3건) |
 | **여행 감시 3분 주기 문**(일꾼은 1분) `[2026-10-03]` | `integration/` | `test_watch_cadence.py` (8건) |

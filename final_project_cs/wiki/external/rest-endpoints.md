@@ -535,7 +535,7 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | 장소 검색 · 사진 | `GET …/place-search` · `GET /v1/web/places/photos` |
 | 장소 · 시각 바꾸기 · 삭제 · 삭제 되돌리기 · 잠금 | `POST …/edits` 의 칸 확장 (아래) |
 | 전체 자동 추천 · 재검증 | `POST …/autofix` · `POST …/revalidate` |
-| 진행 이벤트 | `GET …/events` 에 내용 이벤트 `line` · `item` · `check` · `move` · `done` |
+| 진행 이벤트 | `GET …/events` 에 내용 이벤트 `line` · `item` · `check` · `move` · `progress` · `done` |
 
 **`review`**(접수 상태가 `review` · `confirmed` 일 때) = `{revision, built_at, engine: timetable|estimate|mixed|null, items[], moves[], needs: {items, moves, total}, ready}`. 계산이 실패해도 읽은 값은 그대로 가고 `review: null` + `review_error: "review_failed"` 다(조용히 비우지 않는다).
 - `items[]` = `{id: "<원본 위치>-<번호>", source_id, index, title, kind, day, date, starts_at, ends_at (HH:MM), locked, edited, status, can_lock, place_state, place: {name, latitude, longitude, source, kind}|null, candidates_hint, rows[]}`. **`id` 는 이벤트 · 이동 · 후보가 서로를 가리키는 키**이고, 고칠 때는 `source_id` + `items[index].칸` 을 쓴다. 날짜 · 시각 순.
@@ -570,7 +570,10 @@ hours_text: [운영시간·휴무 원문] | null, hours_conditions: [요일표�
 | `item` | `{id, source_id, index, title, kind, day, date, starts_at, ends_at, locked, status, can_lock, place_state, place, candidates_hint}` — 시각 → 장소가 채워질 때마다 같은 `id` 로 다시(`place_state: searching` = 아직 찾는 중, `status` 는 검사 전엔 null) | `id` |
 | `check` | `{item, row, result, text}` | `item` + `row` |
 | `move` | `moves[]` 한 건 | `from` + `to` |
+| `progress` `[2026-10-03]` | `{phase: places\|hours\|moves, done, total, current: {id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」. `places` 는 **읽는 동안** 장소 찾기가 일정마다(찾든 못 찾든 그 일정의 장소 값이 정해지면 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤), `hours` 는 검사의 운영시간 확인이 일정마다, `moves` 는 이동이 구간마다(`current.title` = 「A → B」). `done` 은 1씩 늘어 `total` 에서 끝난다. 접수에 원본이 여럿이면 `places` 는 원본마다 센다 | `phase` |
 | `done` | `{stage: review, revision, needs, ready}` — 검사가 끝났다, 곧 `result`. 검사할 것이 없는 접수(빈 접수)는 `done` 없이 곧바로 `result` | — |
+
+**검사 진행을 끝에서 한꺼번에 내지 않는다** `[2026-10-03 ui 세션 요청서 2번]` — 검사(`review.build`)는 한 트랜잭션 안에서 돌고 끝나 커밋돼야 DB 에 보이므로, 전에는 검사 줄 56개 · 이동 12개가 끝난 4.9초에 한꺼번에 나갔다(이동 계산이 대부분의 시간인데 화면은 아무것도 몰랐다). 이제 계산이 **끝나는 대로**: ①일정마다 `item` · `check` 를 이동 계산 **전에**(`status` 는 이때 정해진 값이고, 겹침 확인 필요는 끝에서 바뀔 수 있어 최종 값이 같은 키로 덮는다) ②이동은 구간마다 `move` + `progress{moves}` ③운영시간은 일정마다 `progress{hours}`. ★이 중간 진행은 **프로세스 안 보관소**(`intake/progress.py`)를 거친다 — DB 에 쓰지 않고(접수 하나에 150개 안팎), 읽는 일꾼(스레드)과 SSE 연결이 **같은 프로세스**일 때만 보인다(배포는 한 프로세스). 여러 프로세스(`--workers N`)에서 다른 프로세스의 연결은 전처럼 끝에서 받는다 — 깨지지 않고 **중간 진행만 안 보인다**. 접수 하나당 600개 상한(앞에서부터 버림) · 15분 지나면 버림 · 읽기가 끝나면 비운다(최종 값은 DB 에서 읽힌다). 서버는 DB 의 덜 채운 값(`status: null`)으로 이미 검사 줄까지 낸 일정을 **되돌리지 않는다**.
 
 내용 이벤트를 만드는 데 실패해도 단계 이벤트(`accepted` · `stage` · `result`)는 끝까지 나간다(실패는 로그에 남는다).
 

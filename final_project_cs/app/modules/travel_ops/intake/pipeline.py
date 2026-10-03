@@ -20,6 +20,7 @@ from typing import Any, Callable
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+from . import progress as progress_module
 from . import review as review_module
 from .assemble import assemble, effective
 from .rules import read_plan
@@ -174,17 +175,21 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 _hold_reading(cur, tenant_id, intake_id)              # 같은 트랜잭션에서 접수 행을 잠그고 확인한 뒤 지운다(실패 확정과 겹치지 않게)
                 cur.execute("DELETE FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=1 "
                             "AND method <> 'customer'", (tenant_id, intake_id))
+        push = progress_module.sink(intake_id)             # ★검사가 끝나기 전에 장소 n/m · 일정 · 검사 줄 · 이동을 실시간 진행에 알린다(`progress.py`)
         for source in sources:
+            def places_progress(phase, done, total, index, title, _position=source["position"]):
+                push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
+
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
                         aliases=aliases, today=today or datetime.now(KST).date(),
-                        on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]))
+                        on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
         try:
             with connect() as conn, conn.transaction():
                 review_module.ensure(conn, tenant_id=tenant_id, intake_id=intake_id, revision=1,
                                      sources=_sources(conn, tenant_id, intake_id),
-                                     claims=_claims(conn, tenant_id, intake_id, 1), force=True)
+                                     claims=_claims(conn, tenant_id, intake_id, 1), force=True, on_event=push)
         except Exception:                                  # noqa: BLE001 — 검사 장애가 읽기를 지우지 않는다
             log.warning("intake review failed intake=%s", intake_id, exc_info=True)
         with connect() as conn, conn.transaction(), conn.cursor() as cur:
@@ -203,6 +208,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
     finally:
         if "beat" in locals():
             beat.__exit__()
+        progress_module.clear(str(intake_id))                # 끝났다 — 최종 값은 DB 에서 읽히므로 보관소는 비운다(`progress.py`)
 
 
 def reap_stalled(conn, *, tenant_id: str, intake_id: UUID) -> None:
@@ -666,11 +672,15 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao):
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
                 our_places: list[dict[str, Any]] | None = None, today: date,
                 aliases: dict[str, str] | None = None,
-                on_rows: Callable[[list[dict[str, Any]]], None] | None = None) -> list[dict[str, Any]]:
+                on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
+                on_progress: Callable[[str, int, int, int, str | None], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다.
 
     `on_rows` — 값 줄이 **생길 때마다 묶음으로** 알려 준다(규칙으로 읽은 줄 → 모델이 가리킨 줄 → 날짜 → 장소가 하나씩 찾아질 때마다).
-    실시간 진행이 읽은 줄 · 일정 · 장소를 그때그때 보이게 하려는 것이다. 돌려주는 목록은 전과 같다(알린 줄을 두 번 알리지 않는다)."""
+    실시간 진행이 읽은 줄 · 일정 · 장소를 그때그때 보이게 하려는 것이다. 돌려주는 목록은 전과 같다(알린 줄을 두 번 알리지 않는다).
+
+    `on_progress(phase, done, total, index, title)` `[2026-10-03 ui 세션 요청서 2번]` — **장소 찾기가 한 일정씩 끝날 때마다** 「장소 n/m」을 알린다(`phase` 는 늘 `places`, `index` 는 항목 번호, `title` 은 원문 조각).
+    ★찾았든 못 찾았든 **그 일정의 장소 값이 정해지면** 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤 가까운 곳을 고른 때."""
     from .dates import resolve_dates
     from .llm_spans import label_lines
     from .places import _kind_hits, nearest, resolve
@@ -757,6 +767,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     # 장소 — 항목마다 하나(원문이 가리킨 만큼만)
     resolved: dict[int, Any] = {}
     early: dict[int, list[dict[str, Any]]] = {}
+    titled, placed = sum(1 for item in items if item["title"]), 0
     for index, item in enumerate(items):
         if item["title"]:
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
@@ -766,6 +777,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,
                                            kakao=kakao, nearest=nearest, kind_hits=_kind_hits)
                 send(early[index])
+                placed += 1
+                if on_progress is not None:
+                    on_progress("places", placed, titled, index, item["title"])
     for index, found in resolved.items():
         if index in early:
             rows.extend(early[index])
@@ -774,6 +788,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                           nearest=nearest, kind_hits=_kind_hits)
         rows.extend(new)
         send(new)
+        placed += 1
+        if on_progress is not None:
+            on_progress("places", placed, titled, index, items[index]["title"])
     flush()
     return rows
 

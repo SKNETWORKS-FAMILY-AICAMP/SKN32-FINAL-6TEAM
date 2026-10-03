@@ -266,10 +266,29 @@ def _item_id(row: dict[str, Any], positions: dict[str, int]) -> str:
     return f"{positions.get(row['source_id'], 0)}-{row['index']}"
 
 
+#: 진행 이벤트로 내보내는 일정 칸 — 실시간 진행(`stream.Feed`)이 DB 에서 읽어 내는 `item` 이벤트와 **같은 칸**이다(같은 키가 나중 값으로 덮인다)
+_ITEM_EVENT_FIELDS = ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at", "locked", "status",
+                      "can_lock", "place_state", "place", "candidates_hint")
+
+
 def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[dict[str, Any]],
           claims: list[dict[str, Any]], engine: Callable[..., Any] | None = None, use_engine: bool = True,
-          previous: dict[str, Any] | None = None, now: datetime | None = None) -> dict[str, Any]:
-    """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`)."""
+          previous: dict[str, Any] | None = None, now: datetime | None = None,
+          on_event: Callable[[str, dict[str, Any]], None] | None = None) -> dict[str, Any]:
+    """한 판의 검사를 계산한다. `previous` = 앞 판의 검사 — 같은 구간(좌표 · 시각이 같음)은 그 값을 재사용한다(`sig`).
+
+    `on_event(이름, 몸통)` `[2026-10-03 ui 세션 요청서 2번]` — **계산이 끝나는 대로** 알린다(검사는 끝나 커밋돼야 DB 에 보여서, 이게 없으면 실시간 진행이 끝에서 한꺼번에 낸다):
+      `progress{phase: hours, done, total, current}` 운영시간 확인이 한 일정씩 · `item` 과 `check` 일정마다 검사 줄이 정해지는 대로(이동 계산 **전에**) ·
+      `move` 와 `progress{phase: moves}` 이동이 한 구간씩. 이 값들은 **상태의 복사본**이라 끝에 DB 에서 읽은 최종 값이 같은 키로 와서 덮는다.
+    알림이 던져도 계산은 계속된다(진행 알림은 부가 기능)."""
+    def note(name: str, body: dict[str, Any]) -> None:
+        if on_event is None:
+            return
+        try:
+            on_event(name, body)
+        except Exception:                                     # noqa: BLE001 — 알림 실패가 검사를 막지 않는다
+            pass
+
     got = collect(sources=sources, claims=claims)
     rows = got.rows
     positions = {str(s["source_id"]): int(s["position"]) for s in sources}
@@ -295,6 +314,8 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
     for i, r in enumerate(rows):
         start, end = _dt(r["date"], r["start"]), _dt(r["date"], r["end"])
         facts[i] = facts_for(conn, tenant_id, r["place"], r["kind"], start, end)
+        note("progress", {"phase": "hours", "done": i + 1, "total": len(rows),
+                          "current": {"id": _item_id(r, positions), "title": r["title"]}})
         if start is None:
             continue
         seq_of[i] = len(parts) + 1
@@ -349,9 +370,22 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
             "candidates_hint": len(((r["claims"].get("place") or {}).get("evidence") or {}).get("chosen_from") or [])
             if state == "picked_nearest" else None,
             "rows": lines})
+        # 이 일정의 검사 줄이 정해졌다 — 이동 계산(오래 걸린다) 전에 알린다. 겹침으로 확인 필요가 되는 일정은 아래 끝에서 status 가 바뀔 수 있어 최종 값이 같은 키로 덮는다
+        note("item", {**{k: items[-1][k] for k in _ITEM_EVENT_FIELDS}, "place": public_place(items[-1]["place"])})
+        for line in lines:
+            note("check", {"item": items[-1]["id"], **line})
 
     old_moves = {m.get("sig"): m for m in (previous or {}).get("moves", []) if m.get("sig") and m.get("basis") == "timetable"}
     moves: list[dict[str, Any]] = []
+    move_total = sum(1 for i in range(len(rows) - 1) if rows[i]["date"] and rows[i]["date"] == rows[i + 1]["date"])
+
+    def add_move(move: dict[str, Any], ia: dict[str, Any], ib: dict[str, Any]) -> None:
+        """구간 하나가 정해졌다 — 모으고 곧바로 알린다(이동 계산이 시간의 대부분이라 화면이 이 알림으로 진행을 안다)."""
+        moves.append(move)
+        note("move", {k: v for k, v in move.items() if k != "sig"})
+        note("progress", {"phase": "moves", "done": len(moves), "total": move_total,
+                          "current": {"id": f"{ia['id']}>{ib['id']}", "title": f"{ia['title']} → {ib['title']}"}})
+
     for i in range(len(rows) - 1):
         a, b = rows[i], rows[i + 1]
         if not a["date"] or a["date"] != b["date"]:
@@ -359,7 +393,7 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
         ia, ib = items[i], items[i + 1]
         a_end, b_start = _dt(a["date"], a["end"] or a["start"]), _dt(b["date"], b["start"])
         if a["place"] is None or b["place"] is None or a_end is None or b_start is None:
-            moves.append(_waiting_move(ia, ib))
+            add_move(_waiting_move(ia, ib), ia, ib)
             continue
         pa = {"key": ia["id"], "name": a["place"]["name"], "lat": float(a["place"]["latitude"]), "lon": float(a["place"]["longitude"])}
         pb = {"key": ib["id"], "name": b["place"]["name"], "lat": float(b["place"]["latitude"]), "lon": float(b["place"]["longitude"])}
@@ -368,11 +402,11 @@ def build(conn, *, tenant_id: str, intake_id: Any, revision: int, sources: list[
                f"#{ia['place_state']}{ib['place_state']}")
         if sig in old_moves:
             # 재사용하는 것은 경로 계산뿐이다 — 어느 일정 · 몇째 날인지는 지금 판의 것으로 채운다(앞에 날짜가 하나 늘어 일차만 바뀐 경우)
-            moves.append({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]})
+            add_move({**old_moves[sig], "from": ia["id"], "to": ib["id"], "day": ia["day"], "date": ia["date"]}, ia, ib)
             continue
         leg = leg_between(budgeted, pa, pb, a_end, b_start)
         provisional = [x["place"]["name"] for x in (ia, ib) if x["place_state"] == "picked_nearest"]
-        moves.append(_move(ia, ib, leg, provisional, sig))
+        add_move(_move(ia, ib, leg, provisional, sig), ia, ib)
 
     # 겹침은 보통 앞 구간이 「늦게 닿는다」로 잡혀 이동이 확인 필요를 센다. 이동으로 안 잡히는 겹침(한쪽 장소를 모르거나 같은 곳이라 이동이 없는 것)은
     # 등록 판정이 거절할 일이므로 그 일정을 확인 필요로 센다 — 안 그러면 겹친 일정이 「등록 가능」으로 보인다

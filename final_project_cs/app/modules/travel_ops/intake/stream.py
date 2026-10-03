@@ -24,6 +24,7 @@ from typing import Any
 from uuid import UUID
 
 from .assemble import collect, effective
+from . import progress as progress_module
 from . import review as review_module
 
 
@@ -39,6 +40,10 @@ class Feed:
         self.tenant_id, self.customer_id, self.intake_id = tenant_id, customer_id, intake_id
         self.sent: dict[str, Any] = {}
         self.done_sent = False
+        #: 진행 보관소(`progress.py`)에서 어디까지 가져왔나 — 연결마다 따로(서버는 누가 어디까지 받았는지 모른다)
+        self.cursor = 0
+        #: 보관소가 검사 줄까지 정해 준 일정 — DB 의 검사가 저장되기 전에 DB 값(status 없음)이 이것을 **덮어 퇴보시키지 않게** 건너뛴다
+        self.rich: set[str] = set()
 
     def _emit(self, out: list[tuple[str, dict[str, Any]]], key: str, name: str, body: dict[str, Any]) -> None:
         if key in self.sent and _same(self.sent[key], body):
@@ -50,6 +55,13 @@ class Feed:
         from .pipeline import _claims, _sources
 
         out: list[tuple[str, dict[str, Any]]] = []
+        # 검사가 계산되는 **동안** 쌓인 진행(장소 n/m · 일정 · 검사 줄 · 이동) — 검사는 끝나 커밋돼야 DB 에 보이므로 여기서 먼저 내보낸다(`progress.py`).
+        # 같은 키로 끝에 DB 의 최종 값이 와서 덮는다
+        fresh, self.cursor = progress_module.drain(str(self.intake_id), self.cursor)
+        for name, body in fresh:
+            if name == "item":
+                self.rich.add(body["id"])
+            self._emit(out, progress_module.key_of(name, body), name, body)
         sources = _sources(conn, self.tenant_id, self.intake_id)
         raw_claims = _claims(conn, self.tenant_id, self.intake_id, int(state["revision"]))
         claims = effective(raw_claims)
@@ -97,6 +109,8 @@ class Feed:
             review = review_module.public(review)
         by_item = {it["id"]: it for it in (review or {}).get("items", [])}
         for item_id, row in rows_by_id.items():
+            if item_id in self.rich and item_id not in by_item:
+                continue                                                  # 보관소가 이미 검사 줄까지 낸 일정 — DB 의 덜 채운 값으로 되돌리지 않는다
             if item_id in by_item:
                 it = by_item[item_id]
                 body = {k: it[k] for k in ("id", "source_id", "index", "title", "kind", "day", "date", "starts_at", "ends_at",

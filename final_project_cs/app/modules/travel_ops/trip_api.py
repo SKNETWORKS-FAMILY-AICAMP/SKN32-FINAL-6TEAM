@@ -1009,7 +1009,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         `accepted{state}` → 단계가 바뀔 때마다 `stage{state}` · 조용하면 `beat` → 끝나면(`review` · `confirmed` · `fatal`) `result{state}`.
         `state` = `{status, stage, stage_label, revision, fatal_code, quiet_seconds}`. ★`[2026-10-02]` 그 사이에 **내용 이벤트**가 흐른다(`intake/stream.py`):
-        `line`(읽힌 원문 줄) · `item`(찾은 일정 — 시각 → 장소가 채워질 때마다 같은 id 로 다시) · `check`(검사 줄) · `move`(장소 사이 이동) · `done`(검사 끝).
+        `line`(읽힌 원문 줄) · `item`(찾은 일정 — 시각 → 장소가 채워질 때마다 같은 id 로 다시) · `check`(검사 줄) · `move`(장소 사이 이동) · `progress`(`{phase: places|hours|moves, done, total, current:{id, title}}` — 「3/14 · 광장시장 운영시간 확인 중」) · `done`(검사 끝).
+        ★`[2026-10-03]` 검사 진행은 계산이 **끝나는 대로** 나간다(일정마다 `item` · `check` 를 이동 계산 전에, 이동은 구간마다 `move`) — 전에는 검사가 끝난 뒤 한꺼번에 나갔다. 중간 진행은 프로세스 안 보관소(`intake/progress.py`)를 거친다.
         이벤트는 **상태의 복사본**이라 같은 키가 다시 와도 덮으면 되고, 다시 연결하면 지금까지의 상태가 처음부터 온다. 정본은 `GET /v1/web/trip-intakes/{id}` 다.
         뒤에서 읽던 일꾼이 죽어(서버 재시작) 갱신이 `intake_stalled_seconds` 넘게 멈추면 `error{code: stalled, retryable}` 로 끝낸다 —
         영원히 「읽는 중」으로 두지 않는다. 남의 접수 · 없는 접수는 다른 조회와 같은 404. 사용자당 열린 연결이 상한이면 429."""
