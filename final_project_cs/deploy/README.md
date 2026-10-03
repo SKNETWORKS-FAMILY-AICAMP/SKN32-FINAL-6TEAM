@@ -39,6 +39,26 @@
 - 서비스 이름에 `tripilot-` 을 붙여 공유 네트워크(`proxy`)에서 이름이 겹치지 않게 했고, DB 는 `internal` 네트워크에만 둔다.
 - 모델 서버(Ollama)는 호스트의 중계 주소로 부른다. 그 중계가 끊기면(WSL 어댑터가 다시 만들어진 뒤 리스너를 잃는다) 호스트에서 `Restart-Service iphlpsvc`.
 
+## 자동 반영 (팀 저장소의 브랜치를 따라간다)
+서버가 **5분마다** 정해 둔 저장소·브랜치에 새 커밋이 있는지 보고, 있으면 이미지를 다시 만들어 반영한다(`auto_deploy.sh` + systemd 타이머).
+
+| 단계 | 하는 일 | 실패하면 |
+|---|---|---|
+| 확인 | 새 커밋이 있나. 그 커밋에 `final_project_cs/deploy/` 가 **없으면 아무것도 안 한다**(배포 구성이 아직 안 합쳐진 브랜치) | 기다린다 |
+| 건너뜀 | 배포에 쓰이는 폴더(app · config · prompts · scripts · deploy · frontend/apps/web · requirements)가 **같으면** 다시 빌드하지 않는다(문서만 바뀐 커밋) | — |
+| 빌드 | 새 이미지를 **커밋 해시 이름으로** 만든다 | 실행 중인 것은 그대로. 그 커밋은 다시 시도하지 않는다 |
+| 마이그레이션 | 앞으로 가기뿐 | 실행 중인 것은 그대로 |
+| 반영 | 새 이미지로 교체하고 건강해질 때까지 기다린 뒤 **30초 더 지켜본다**(재시작 0회 · 컨테이너 4개) | **이전 이미지로 되돌린다** |
+| 정리 | 이전 이미지는 최근 3개만 | — |
+
+- **무엇을 따라가나**: 서버의 `autodeploy.conf`(`DEPLOY_REPO` · `DEPLOY_BRANCH`)에 있다 — 서버에만 둔다. 바꾸려면 그 파일만 고친다.
+- **기록**: 서버의 `deploy.log`. 상태: `state/`(`current_tag` · `deployed_sha` · `bad_sha`).
+- **멈추기**: `systemctl disable --now tripilot-autodeploy.timer`. 한 번만 돌리기: `systemctl start tripilot-autodeploy.service`.
+- **설치**(서버, 한 번): `auto_deploy.sh` 를 배포 폴더에 두고(`chmod +x`), `tripilot-autodeploy.service` · `.timer` 를 `/etc/systemd/system/` 에 복사 → `systemctl daemon-reload` → `systemctl enable --now tripilot-autodeploy.timer`.
+- ★**마이그레이션은 되돌리지 않는다.** 되돌린 이전 이미지가 새 표 구조를 견딘다는 가정이다 — 표를 지우거나 칸 이름을 바꾸는 파괴적 마이그레이션은 이 방식에 맞지 않는다.
+- ★**브랜치의 코드가 곧 공개 서비스다.** 건강 검사로 못 걸러내는 기능 결함은 그대로 올라간다 — 확인이 필요한 브랜치는 따라가는 브랜치를 따로 둔다.
+- ★서버는 저장소를 **읽기만** 한다(공개 저장소라 인증이 없다). 비공개가 되면 읽기 전용 배포 키를 서버에 둬야 한다.
+
 ## 알아둘 것
 - **DB 는 서버에 하나가 정본이다.** 개발 PC 의 DB 와 합치지 않는다 — 서버에는 사용자 데이터를 안 가져갔고, 거기 쌓이는 것은 서버 것이다.
 - **모델은 서버의 Ollama**(`gemma4:12b` · `bge-m3`)를 쓴다 — 요금이 안 나간다. 컨테이너가 그 Ollama 에 닿는 길은 서버 쪽 설정이다.

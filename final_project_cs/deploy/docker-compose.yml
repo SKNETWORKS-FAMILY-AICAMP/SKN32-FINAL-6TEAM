@@ -30,7 +30,7 @@ services:
 
   tripilot-api:
     build:
-      context: ./src
+      context: ${TRIPILOT_SRC:-./src}      # 자동 반영(`auto_deploy.sh`)이 받아 둔 저장소 폴더로 바꿔 부른다
       dockerfile: deploy/Dockerfile.api
     image: tripilot-api:${TRIPILOT_TAG:-local}
     restart: unless-stopped
@@ -77,7 +77,7 @@ services:
 
   tripilot-web:
     build:
-      context: ./src
+      context: ${TRIPILOT_SRC:-./src}      # 자동 반영(`auto_deploy.sh`)이 받아 둔 저장소 폴더로 바꿔 부른다
       dockerfile: deploy/Dockerfile.web
       args:
         NEXT_PUBLIC_API_BASE: ${TRIPILOT_PUBLIC_URL:?TRIPILOT_PUBLIC_URL 이 .env 에 없다}

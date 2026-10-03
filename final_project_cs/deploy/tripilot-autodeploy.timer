@@ -1,0 +1,11 @@
+# systemd 타이머 — 5분마다 새 커밋이 있는지 본다(없으면 몇 초 안에 끝난다).
+[Unit]
+Description=triPilot 자동 반영 — 5분마다 확인
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
