@@ -443,6 +443,29 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - 바꾼 값은 각 프로세스가 최대 30초 캐시해 늦게 반영된다(`applies_within_seconds`). 감사 줄(`runtime_limit_events`)은 고치지도 지우지도 못한다(트리거).
 - 시험 `tests/e2e/test_web_api.py` 10건.
 
+### 소셜 로그인 — `/v1/web/auth/*` `[2026-10-03]` (구글 먼저)
+
+`[실측]` 구현 `app/modules/travel_ops/web_auth_api.py`(HTTP) · `web_auth.py`(저장 · 규칙) · `app/infrastructure/oauth_providers.py`(업체와 말하기) · 저장 마이그레이션 043 · 시험 `tests/e2e/test_web_social_login.py`(17) ·
+`tests/unit/travel/test_oauth_providers.py`(15). 계약의 출처는 ui 세션의 [백엔드 요청서](../records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md)이고 웹 화면은 이 모양 그대로 연결돼 있다. 설정 · 콘솔 절차는 [google-login-setup.md](../operations/google-login-setup.md).
+★**소셜 로그인은 「키를 받아 오는 또 하나의 길」이다** — 키와 모든 `/v1/web/*` 인증(`X-User-Key`)은 바뀌지 않는다. 계정을 사용자에 **붙여** 두면 키를 잃어도 · 새 기기에서도 그 계정으로 같은 사용자의 여행을 연다.
+
+| 경로 | 키 | 뜻 |
+|---|---|---|
+| `GET /v1/web/auth/providers` | 없음 | `{providers: [{id}]}` — **설정이 끝난 업체만**(클라이언트 ID · 비밀값이 둘 다 있어야 한다). 하나도 없으면 **빈 목록**(404 가 아니다) |
+| `POST /v1/web/auth/{provider}/start` | `link` 만 필수 | `{mode: login\|link, client_nonce(무작위 32~256자), turnstile_token?}` → `{authorize_url}`. 업체 없음 404 `provider_not_enabled` · nonce 짧음 422 `invalid_client_nonce` · `link` 에 키 없음 401 · **키 없는 `login` 은 사람 확인**(Turnstile — 토큰 없으면 422 `human_check_required`, 틀리면 403, 머리말 `X-Turnstile-Token` 도 받는다 · 비밀키가 없는 개발 환경은 건너뛴다) |
+| `GET /v1/web/auth/{provider}/callback?code&state` | — | **브라우저 이동 전용** — 업체가 돌려보내는 곳. 어떤 결과든 **웹으로 302**: `{웹 주소}/auth/done?ticket=…` 또는 `?error=` (`cancelled` 고객이 취소 · `denied` 업체가 거절 · `already_linked_elsewhere` · `failed` 그 밖 전부). 머리말 `Cache-Control: no-store` · `Referrer-Policy: no-referrer` |
+| `POST /v1/web/auth/exchange` | 없음 | `{ticket, client_nonce}` → `{outcome: signed_in\|created\|linked, provider, trips, user_key?, notice?}`. `signed_in` · `created` 일 때만 `user_key`(**이 기기용 새 키**). 만료 · 재사용 · nonce 불일치 · 모르는 표는 모두 410 `ticket_invalid`(어느 쪽인지 가르지 않는다) |
+| `GET /v1/web/auth/links` | 키 | `{links: [{provider, linked_at}]}` — 계정 이름 · 이메일은 없다 |
+| `DELETE /v1/web/auth/{provider}` | 키 | 연결 해제(키와 여행은 그대로) → 200 `{links}`(남은 연결). 안 붙어 있으면 404 `not_linked` |
+
+- **한 바퀴**: `start`(시작 기록 저장) → 업체 로그인 화면 → `callback`(`state` 를 한 번만 꺼내 코드를 고유 번호로 바꾸고 연결 · 일회용 표) → `exchange`(표를 한 번만 받고 키 발급).
+- ★**`user_key` 는 「현재 유효한 키」가 아니라 이 기기용 새 키다** `[계약 보정]` — 키 원문은 해시로만 저장돼 다시 돌려줄 수 없다. 옛 키를 거두면(`rotate`) 다른 기기가 끊기므로 키를 **하나 더한다**(`web_session.add_key`). 한 사용자의 유효한 키는 `security.web_auth_keys_per_user`(10)개까지 — 넘으면 가장 오래된 키부터 거둔다.
+- **보안**: ①로그인 CSRF 막기 — 표는 시작한 브라우저가 만든 `client_nonce` 의 해시와 같이 저장되고 교환할 때 같은 값이 와야 한다(틀린 시도는 표를 태우지 않는다) ②`state` · PKCE(`S256`) · OIDC `nonce` — `state` 는 서버가 만들고 해시만 저장, 한 번만 · 10분(`security.web_auth_state_seconds`), 표는 60초(`web_auth_ticket_seconds`)
+  ③**ID 토큰은 업체 공개키(JWKS)로 서명 · 발급자 · 대상 · 만료 · nonce 를 모두 확인**한다(RS256 만 — 다른 알고리즘 · 서명 없는 토큰 거절) ④돌려보낼 웹 주소는 **서버 설정**(`ACOP_WEB_ORIGIN`, 비면 `ACOP_WEB_ALLOWED_ORIGINS` 의 첫 값 — 없으면 콜백이 503 `web_origin_not_configured`)이고 요청 값(`return_to` 등)으로 바꿀 수 없다
+  ⑤저장은 업체 이름과 `sub` 의 **HMAC 해시**(`secret_key` 로)뿐 — 이메일 · 이름 · 사진은 요청도 저장도 안 한다(스코프 `openid`) ⑥한 업체 계정은 **한 사용자에게만** — 다른 사용자에게 있으면 `link` 는 `already_linked_elsewhere`, **합치지 않는다** ⑦`start` · `exchange` 는 주소당 한 시간 `security.web_auth_per_ip_hour`(30)번씩(**늘 켜져 있다**, 429 `too_many_auth` + `Retry-After`) ⑧키 없는 `login` 이 새 사용자를 만들 때는 키 발급과 같은 한도(`too_many_sessions`)를 거친다 — 걸리면 `?error=failed`.
+- 계정이 붙은 사용자는 **빈 키 정리가 지우지 않는다**(사용자 행을 가리키는 외래키 — 시험으로 확인). CORS 는 `DELETE` 를 연다(웹이 다른 출처일 때 연결 해제).
+- `[미확보]` ①실제 구글과 이어 본 기록 — 클라이언트 ID · 비밀값이 있어야 한다(없으면 `providers` 가 빈 목록) ②카카오 · 네이버 · 디스코드는 구현하지 않았다(`oauth_providers.configured()` 에 업체 한 줄 + 설정 칸이다 — 카카오 · 네이버가 OIDC `sub` 를 주는 설정이 우리 앱 종류에서 되는지는 확인 전) ③운영 배포 주소 — 콜백 주소 등록에 필요하다.
+
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 
 `[실측]` `app/modules/travel_ops/intake/`(`pipeline.py` · `sources.py` · `rules.py` · `llm_spans.py` · `dates.py` · `places.py`) ·

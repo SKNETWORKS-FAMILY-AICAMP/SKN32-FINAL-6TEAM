@@ -24,6 +24,8 @@ SKIP = {
     "ACOP_DISCORD_WEBHOOK_URL", "ACOP_OUTBOUND_PROXY_URL", "ACOP_OUTBOUND_PROXY_SOURCES",
     "ACOP_UTIC_API_KEY_1", "ACOP_UTIC_API_KEY_2", "ACOP_RATE_UTIC_PER_DAY",
     "ACOP_OPENAI_API_KEY", "ACOP_OPENAI_API_KEY_SERVER",
+    # 소셜 로그인 클라이언트 — 개발용(로컬 콜백)과 운영용은 **따로 만든다**. 이 PC 의 개발용 값을 서버로 옮기지 않는다(서버 값은 서버 환경 파일에 직접 — wiki/operations/google-login-setup.md)
+    "ACOP_GOOGLE_CLIENT_ID", "ACOP_GOOGLE_CLIENT_SECRET", "ACOP_WEB_ORIGIN",
 }
 
 

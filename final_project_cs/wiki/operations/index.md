@@ -18,6 +18,7 @@ domain: neutral
 | [unknown-state.md](unknown-state.md) | **돈이 나갔는지 모를 때** |
 | [always-on.md](always-on.md) | **무엇이 늘 돌아야 하고, 죽으면 무엇으로 아는가** |
 | [move-to-server.md](move-to-server.md) | 이 PC 에서 서비스로 · 항상 켜진 서버로 — 절차와 되돌리기 |
+| [google-login-setup.md](google-login-setup.md) | 구글 로그인 켜기 — 콘솔에서 사람이 할 일 · 서버 설정 · 확인 · 되돌리기 |
 
 ## 자주 쓰는 명령
 
