@@ -434,7 +434,7 @@ def _dec_pick(tag, w):
     return out_
 
 
-for _t, _lab in (('openjev26b', 'OpenJev 26B'), ('winnow12b', 'Winnow-12B'), ('nimble9b', 'Nimble-9B')):
+for _t, _lab in (('openjev26b', 'OpenJev 26B'), ('pplx27b', 'pplx-decider 27B'), ('decider12bl', 'Decider-12B'), ('decider35bl', 'Decider-35B-A3B'), ('decider31bl', 'decider-chat 31B'), ('winnow12b', 'Winnow-12B'), ('nimble9b', 'Nimble-9B')):
     _picks = {w: _dec_pick(_t, w) for w in EV}
     if all(v is not None for v in _picks.values()):
         def _mk(picks):
@@ -494,6 +494,22 @@ for tag_, lab_ in (('base', 'Y2 게이트(고정 임베딩)'), ('e16d', 'Y2 게�
     else:
         NOTES.append(f'{lab_}: 게이트 확률 파일이 없다')
 
+
+# L6 — 규칙 → (분류 게이트가 일정 질문으로 본 것만) E4B QAT. 앞단 임베딩은 쓰지 않는다. 결과(L1 이 Jev 와 구분되지 않고 잡담에 3.7% 답함)를 본 뒤 덧붙인 조합이다.
+def make_l6(tag_, tau):
+    def f(w, i):
+        st = stage(w, i)
+        if st[0] == 'done':
+            return st[1], int(bool(st[2]))
+        return (G[w][M][i], 1) if GATE[tag_][w][i] >= tau else (None, 0)
+    return f
+
+
+for tag_, lab_ in (('base', 'L6 규칙→게이트(고정 임베딩)→E4B QAT'), ('e16d', 'L6 규칙→게이트(e16d 임베딩)→E4B QAT')):
+    if tag_ in GATE and all(w in GATE[tag_] and GATE[tag_][w] for w in LABELED + EV):
+        TAU['L6' + tag_] = pick_tau(lambda t, tg=tag_: make_l6(tg, t))
+        P[lab_] = make_l6(tag_, TAU['L6' + tag_])
+
 # ---------- 채점 ----------
 names = list(P)
 res = {}
@@ -551,7 +567,7 @@ for w in EV:
             jp.append(int(k.split('_')[1]) if k.startswith('item_') else None)
         ref.setdefault('Jev 직접(유료)', {})[w] = jp
     for dtag, dlab in (('winnow12b', 'Winnow-12B Q8 직접'), ('nimble9b', 'Nimble-9B-v3 Q8 직접'), ('kev9b', 'Kev-9B Q8 직접'), ('kev4b', 'Kev-4B Q8 직접'),
-                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접')):
+                       ('decider4b', 'Decider-4B v2.1 Q8 직접'), ('laya', 'Laya Q8 직접'), ('malkuth4b', 'Malkuth-4B 직접'), ('imajev4b', 'Imajev-4B 직접'), ('openjev26b', 'OpenJev 26B Q4 직접'), ('pplx27b', 'pplx-decider 27B NF4 직접'), ('decider4bl', 'Decider-4B(자체 라이브러리) 직접'), ('decider2bl', 'Decider-2B 직접'), ('decider08bl', 'Decider-0.8B 직접'), ('decider12bl', 'Decider-12B 직접'), ('decider35bl', 'Decider-35B-A3B bf16 직접'), ('decider31bl', 'decider-chat-gemma4-31B bf16 직접')):
         fd = load_opt(R(f'dec_{dtag}_{w}.json'))
         if fd and w in fd and fd.get('_errors', 1) < len(fd[w]['rows']):
             jp = []
@@ -593,6 +609,14 @@ for n in names:
     b = sum(x == 0 and y == 1 for x, y in zip(vec(n, EV), v1))
     d, l, h = ci(a, b, tot_n)
     out.append(f'| {n} | {a} | {b} | {d:+.1f} [{l:+.1f}, {h:+.1f}] | {pexact(a, b):.3f} |')
+if _jv is not None:
+    out += ['', '### Jev 직접(유료, 319)과 짝지은 비교(합친 시험 세트 · 정확검정 · 짝지은 부트스트랩 95% 구간 — 결과를 본 뒤 덧붙인 표)', '| 방식 | 합 | 그 방식만 맞음 | Jev 만 맞음 | 차이 %p [구간] | p |', '|---|---:|---:|---:|---|---:|']
+    for n in names:
+        _vn = vec(n, EV)
+        a = sum(x == 1 and y == 0 for x, y in zip(_vn, _jv))
+        b = sum(x == 0 and y == 1 for x, y in zip(_vn, _jv))
+        d, l, h = ci(a, b, tot_n)
+        out.append(f'| {n} | {sum(_vn)} | {a} | {b} | {d:+.1f} [{l:+.1f}, {h:+.1f}] | {pexact(a, b):.3f} |')
 if len(EV) > 1:
     out += ['', '### 세트별 V1 대비 차이(그 방식만 맞음 : V1 만 맞음)', '| 방식 | ' + ' | '.join(EV) + ' |', '|---|' + '---:|' * len(EV)]
     for n in names:
@@ -605,7 +629,7 @@ if len(EV) > 1:
             cells.append(f'{a} : {b}')
         out.append(f'| {n} | ' + ' | '.join(cells) + ' |')
 types = sorted({x['type'] for w in EV for x in SETS[w]['qs']})
-show = [n for n in names if n.split(' ')[0] in ('V1', 'B0', 'L3', 'C2', 'V4', 'V10', 'V11')]
+show = [n for n in names if n.split(' ')[0] in ('V1', 'B0', 'L1', 'L3', 'C2', 'J1', 'V4', 'V10', 'V11') or n.startswith('L6 규칙→게이트(e16d') or n.startswith('L5 규칙 → OpenJev')]
 out += ['', '### 유형별 정답(합친 시험 세트)', '| 유형 | 문제 | ' + ' | '.join(n.split(' ')[0] for n in show) + ' |', '|---|---:|' + '---:|' * len(show)]
 for t in types:
     ids = [(w, i) for w in EV for i, x in enumerate(SETS[w]['qs']) if x['type'] == t]
@@ -638,6 +662,13 @@ if any(k.startswith('Y2') for k in names):
             if 'Y2' + tag_ in TAU:
                 r = answered(tag_, TAU['Y2' + tag_])
                 out.append(f'| {lab_} τ_g={TAU["Y2" + tag_]} | {r[0] / NC:.1%} | {r[1]}/{NC} = {r[1] / NC:.2%} |')
+        _l1 = sum(E4c[str(k)] is not None for k in range(NC))
+        out.append(f'| L1 규칙→E4B QAT(앞단·게이트 없음) | 100.0% | {_l1}/{NC} = {_l1 / NC:.2%} |')
+        for tag_, lab_ in (('base', 'L6 게이트(고정 임베딩)'), ('e16d', 'L6 게이트(e16d 임베딩)')):
+            if 'L6' + tag_ in TAU:
+                _n6 = sum(GATE[tag_ + '_chat'][k] >= TAU['L6' + tag_] for k in range(NC))
+                _a6 = sum(GATE[tag_ + '_chat'][k] >= TAU['L6' + tag_] and E4c[str(k)] is not None for k in range(NC))
+                out.append(f'| {lab_} τ_g={TAU["L6" + tag_]} | {_n6 / NC:.1%} | {_a6}/{NC} = {_a6 / NC:.2%} |')
     except Exception as e_:  # noqa: BLE001
         out.append(f'(잡담 부작용 계산 실패: {e_})')
 if 'JEV_CALLS' in globals():
