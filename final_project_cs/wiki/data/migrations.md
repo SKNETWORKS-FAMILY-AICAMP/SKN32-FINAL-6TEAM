@@ -145,7 +145,7 @@ places_trip_name_kind_uq    UNIQUE (tenant_id, trip_scope, name, kind) WHERE tri
 ★적용: 전체 실행기(`app/infrastructure/db/migrate.py`)가 아니라 이 파일만 적용했다(2026-09-28) — 폴더에 다른 세션의 작업 중
 마이그레이션(200번대 요식)이 함께 있어 전체를 돌리면 그것까지 적용된다.
 
-### 보류 제안 이유 `relaxed` `[2026-09-29 · 033]`
+### 보류 제안 이유 `relaxed` `[2026-09-29 · 033]` — `[2026-10-03]` 감시도 이 이유로 묻는다(`watch_relaxed.py` · 스키마 변경 없음)
 
 `[실측]` `033_pending_relaxed.sql` — `pending_changes.reason` 제약에 `relaxed`(조건을 풀어 찾은 안 — 시각 늦추기 · 다음 일정 근처)를 더한다. 「다른 데로 바꿔 줘」가 같은 조건으로 0곳일 때 되는 안을 **묻는** 제안이다(`itinerary_changes.relaxed_options` · `trip_desk._ask_relaxed`). 옛 제약을 지우고 넓혀 다시 거는 방식이라 다시 돌려도 안전하다. ★적용: 이 파일만 적용했다(2026-09-29) — 031 과 같은 이유.
 

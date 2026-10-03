@@ -140,7 +140,7 @@
 | 장소 검색 | `search(id, 검색어)` ← `GET …/place-search` | 있음 | **연결함**(확인 결과가 있어야) |
 | 장소 정보·사진 | `PlanCandidate.info`(분류 · 주소 · 사진). 관광공사 번호(`tour:<번호>`)가 있는 곳만 `GET /v1/web/places/photos`, 출처 「ⓒ한국관광공사」를 사진 설명에 붙이고 http·https 주소만 쓴다. 사진은 저장하지 않는다 | 있음 | **연결함**(번호가 있는 곳만) |
 | 자동 추천(한 곳) | `autoRecommend(id)` — 후보 중 시간이 맞는 첫 곳을 좌표째 보낸다 | `candidates` + `/edits` | **연결함**(확인 결과가 있어야) |
-| 전체 자동 추천 | `autoRecommendAll()` ← `POST …/autofix` → `{changes, kept}` | 있음 | **연결함**(확인 결과가 있어야) |
+| 전체 자동 추천 | `previewRecommendAll()` ← `POST …/autofix {revision, dry_run: true}`(저장 없이 바뀔 모습) → `applyRecommended()` ← `POST …/autofix {revision}`(저장) · `discardPreview()`(버리기, 서버 호출 없음) | 있음 | **연결함**(확인 결과가 있어야) `[2026-10-03]` 누르거나 목록 끝에서 한 번 더 밀면 **미리 보기만** 그리고, 「적용하기」를 눌러야 저장한다 |
 | 잠금 | `lock(id, locked)` — 혼자 보낸다(다른 수정과 함께 보내면 422) | `/edits` `items[n].locked` | **연결함**(확인 결과가 있어야) |
 | 되돌리기 | `undo()` — 직전 변경(삭제 · 장소 바꾸기 · 자동 추천)의 반대 수정. **전체 자동 추천은 모두 되돌릴 수 있을 때만** 되돌린다(이전 장소가 없던 곳이 있으면 되돌릴 수 없다고 말한다 — 일부만 되돌리고 「되돌렸다」 하지 않는다) | `/edits` `removed: false` · 이전 장소 | **연결함**(확인 결과가 있어야) |
 | 재검증 | `recheck()` ← `POST …/revalidate`(저장 없이 판정만), 기다리는 동안 일정을 차례로 보인다. 고친 뒤에는 `dirty` | 있음 | **연결함**(확인 결과가 있어야) |

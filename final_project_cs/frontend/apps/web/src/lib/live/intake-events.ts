@@ -104,7 +104,7 @@ function toItem(body: Record<string, unknown>): ReviewItem | null {
     day: maybeNum(body.day), date: maybeText(body.date), starts_at: maybeText(body.starts_at), ends_at: maybeText(body.ends_at),
     locked: body.locked === true, status: status === "keep" || status === "adjusted" || status === "review" ? status : null,
     can_lock: body.can_lock === true, place_state: (text(body.place_state, "unresolved")) as ReviewItem["place_state"],
-    place, candidates_hint: maybeNum(body.candidates_hint),
+    place, booked: body.booked === true ? true : body.booked === false ? false : null, candidates_hint: maybeNum(body.candidates_hint),
   };
 }
 

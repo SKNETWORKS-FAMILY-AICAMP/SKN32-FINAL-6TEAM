@@ -49,6 +49,13 @@ describe("reading the server's progress events", () => {
       .toEqual({ type: "check", item: "0-1", line: { row: "booking", result: "warn", text: "예약했다고 했는데 장소를 모르겠어요" } });
   });
 
+  it("reads the booked flag of a stop and the two new place states as they come (server 8b0d4c88)", () => {
+    const withBooked = (booked: unknown, state: string) => toIntakeEvent("item", JSON.stringify({ ...ITEM, booked, place_state: state }));
+    expect(withBooked(true, "needs_name")).toMatchObject({ item: { booked: true, place_state: "needs_name" } });
+    expect(withBooked(false, "needs_choice")).toMatchObject({ item: { booked: false, place_state: "needs_choice" } });
+    expect(withBooked(undefined, "found")).toMatchObject({ item: { booked: null } });          // an older server says nothing: not "not booked"
+  });
+
   it("reads a check line, and reads a result word it does not know as 'unknown' — never as fine", () => {
     expect(toIntakeEvent("check", JSON.stringify({ item: "0-1", row: "hours", result: "warn", text: "영업 시간 밖이에요" })))
       .toEqual({ type: "check", item: "0-1", line: { row: "hours", result: "warn", text: "영업 시간 밖이에요" } });

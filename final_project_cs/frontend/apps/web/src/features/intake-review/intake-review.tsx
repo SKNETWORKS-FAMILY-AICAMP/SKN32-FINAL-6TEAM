@@ -89,7 +89,9 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
   //   Without one (`review: null` — the check failed — or an older server), it says only what the read values say.
   const apply = useCallback((next: ReviewedIntakeView) => { queryClient.setQueryData(["intake", intakeId, language], next); }, [queryClient, intakeId, language]);
   const server = useServerReview({ intakeId, view: query.data, language, apply, reread });
-  const reviewed = useMemo(() => query.data && query.data.status !== "reading" ? reviewResultOf(query.data, readingOf(query.data), server.infos) : null, [query.data, server.infos]);
+  // ★`[2026-10-03]` While 「전체 자동 추천」 is only previewed (`server.preview`, nothing saved) the screen draws that plan; every call still goes with the real one.
+  const shown = server.preview ?? query.data;
+  const reviewed = useMemo(() => shown && shown.status !== "reading" ? reviewResultOf(shown, readingOf(shown), server.infos) : null, [shown, server.infos]);
   // ★`[2026-10-03]` While the screen still draws what the server did (the intake is already `review` but the rows are being caught up), the last
   //   count the server sent stays on the bar — it would otherwise vanish the moment the server finishes, however many rows are left to draw.
   const reading = useMemo(() => {

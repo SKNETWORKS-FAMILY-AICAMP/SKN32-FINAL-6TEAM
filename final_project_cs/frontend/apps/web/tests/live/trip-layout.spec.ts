@@ -22,8 +22,7 @@ test("375px와 320px에서 하단 탭으로 일정·지도·채팅을 바꾸고 
   await expect(page.locator("#main-content").getByRole("alert")).toContainText("메시지를 입력해 주세요.");
 });
 
-// 2026-10-03 19:56 FIXME: 실행하면 실패한다 — 지도 핀을 접근성 이름으로 찾는 부분이 plan-check-screen.spec.ts 의 pin()(Leaflet 핀은 안의 번호가 이름이라 title 로 찾는다)과 같은 문제로 보인다. 확인 전에는 통과한 척하지 않는다.
-test.fixme("일차·일정·지도 선택이 이어진다: 일정을 펼쳐 「지도에서 보기」를 누르면 그 핀이 선택되고, 핀의 「일정 상세 보기」가 그 일정을 펼친다", async ({ page }) => {
+test("일차·일정·지도 선택이 이어진다: 일정을 펼쳐 「지도에서 보기」를 누르면 그 핀이 선택되고, 핀의 「일정 상세 보기」가 그 일정을 펼친다", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await registerStubTrip(page);
   const timeline = page.locator("#trip-pane-schedule");
@@ -35,10 +34,10 @@ test.fixme("일차·일정·지도 선택이 이어진다: 일정을 펼쳐 「�
   await timeline.getByRole("button", { name: "지도에서 보기" }).click();
   await expect(map).toBeVisible();
   await expect(timeline).toBeHidden();
-  const pin = map.getByRole("button", { name: /2\. 경복궁 관람/ });
+  const pin = map.locator('.leaflet-marker-icon[title^="2. 경복궁 관람"]');
   await expect(pin).toHaveAttribute("aria-pressed", "true");
 
-  await map.getByRole("button", { name: /3\. 점심 식당/ }).click();
+  await map.locator('.leaflet-marker-icon[title^="3. 점심 식당"]').dispatchEvent("click");     // 지도가 움직이는 동안은 .click() 의 「안정됨」 확인이 밀려서 click 이벤트를 직접 보낸다
   await expect(map.getByRole("heading", { name: "점심 식당" })).toBeVisible();
   await map.getByRole("button", { name: "일정 상세 보기" }).click();
   const lunch = timeline.getByRole("button", { name: /점심 식당/ });

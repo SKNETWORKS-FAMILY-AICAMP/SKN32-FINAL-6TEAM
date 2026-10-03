@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { sendingOf } from "@/features/plan-check/from-intake";
 import { PlanCheck } from "@/features/plan-check/plan-check";
+import { STAGE_MIN_MS } from "@/features/plan-check/use-reveal";
 import { PlanningProgress, type PlanningPhase } from "@/features/plan-check/planning-progress";
 import { tripsKey } from "@/lib/gateway";
 import { getIntake } from "@/lib/live/intake";
@@ -63,6 +64,7 @@ export function IntakeStarting() {
       endIntakeStart(start);
       router.replace(routes.newTrip);
     };
+    const shownAt = Date.now();
     start.result.then(async ({ intake_id }) => {
       if (!live || left.current) return;
       if (start.plan) {
@@ -82,6 +84,10 @@ export function IntakeStarting() {
       }
       try { await queryClient.fetchQuery({ queryKey: ["intake", intake_id, start.language], queryFn: () => getIntake(intake_id, start.language) }); }
       catch { /* the intake's own page reads it again and says what went wrong */ }
+      // ★`[2026-10-03 사용자 지적]` 「받았어요」 is the first stage of the bar at the top: it stays as long as every stage does (a fast server used to
+      //   answer in a few hundred ms and the bar moved on before it could be seen).
+      const seenFor = Date.now() - shownAt;
+      if (seenFor < STAGE_MIN_MS) await new Promise((resolve) => setTimeout(resolve, STAGE_MIN_MS - seenFor));
       if (!live || left.current) return;
       endIntakeStart(start);
       router.replace(routes.intake(intake_id));

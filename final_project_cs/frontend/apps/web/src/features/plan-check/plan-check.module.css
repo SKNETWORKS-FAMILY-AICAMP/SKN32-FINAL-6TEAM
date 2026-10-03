@@ -16,7 +16,8 @@
 .steps li { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; font-size: 11.5px; font-weight: 650; color: var(--color-faint); }
 .steps li:first-child { align-items: flex-start; }
 .steps li:last-child { align-items: flex-end; }
-.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); }
+.node { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--color-faint); background: var(--color-surface); transition: background-color .4s ease, border-color .4s ease; }
+@media (prefers-reduced-motion: reduce) { .node { transition: none; } }
 .steps li[data-state="current"] { color: var(--color-text); }
 .steps li[data-state="current"] .node { border-color: var(--color-muted); }
 .steps li[data-state="done"] { color: var(--color-success); }
@@ -297,6 +298,11 @@ button.moveHead { cursor: pointer; }
 .recommendedText { display: flex; flex: 1; flex-direction: column; min-width: 0; font-size: 13px; }
 .recommendedText small { margin-top: 1px; font-size: 11.5px; font-weight: 600; opacity: .85; }
 .recommendedUndo { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 34px; padding: 0 10px; border: 1px solid var(--color-adjusted-border); border-radius: 9px; background: var(--color-surface); color: var(--color-adjusted); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.recommended[data-preview] { flex-wrap: wrap; border-style: dashed; }
+.recommendedActions { display: flex; flex: none; gap: 6px; margin-left: auto; }
+.recommendedApply { display: inline-flex; flex: none; align-items: center; min-height: 34px; padding: 0 14px; border: 1px solid var(--color-adjusted); border-radius: 9px; background: var(--color-adjusted); color: var(--color-on-primary); font: inherit; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.recommendedApply[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.recommendedApply:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 .recommendedUndo[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
 .recommendedUndo:focus-visible, .pullHint:focus-visible { outline: 2px solid var(--color-selected); outline-offset: 2px; }
 /* At the end of the list: a hint that fills as the customer keeps pushing, and opens the next page when it is full. */
@@ -318,7 +324,7 @@ button.moveHead { cursor: pointer; }
 .headStep b { font-size: 12px; font-weight: 750; color: var(--color-muted); font-variant-numeric: tabular-nums; }
 .kindNote { margin: 0; font-size: 11.5px; line-height: 1.6; color: var(--color-muted); }
 .kindNote[data-mismatch] { color: var(--color-warning); font-weight: 650; }
-.progressAt { margin: 8px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
+.progressAt { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--color-muted); text-align: center; }
 .headAt { font-size: 11.5px; font-weight: 600; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .headTrack { display: block; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; }
 .headTrack > span { display: block; height: 100%; border-radius: inherit; background: var(--color-success); transition: width .6s cubic-bezier(.3, .7, .4, 1); }

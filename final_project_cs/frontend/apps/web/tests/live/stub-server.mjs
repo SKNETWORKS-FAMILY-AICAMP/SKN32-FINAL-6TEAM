@@ -89,6 +89,8 @@ const DEFAULTS = {
   intakeProgress: "on",
   // the Discord test message: "ok" | "invalid" (Discord refused the webhook) | "too_soon" (429: pressed again within 20 s)
   webhookTest: "ok",
+  // why the candidates list is short or empty (`notes` of `GET …/candidates`, server 8b0d4c88): [] | ["booked_needs_name"] (no candidates) | ["no_same_kind"] …
+  candidateNotes: [],
   // social sign-in (`/v1/web/auth/*`, `wiki/records/plans/2026-10-03_1930_소셜_로그인_백엔드_요청.md`): "on" | "off" (an older server: 404) | "none" (no provider set up)
   social: "on",
   //   what the provider's page does when the customer is sent to it: "ok" | "cancelled" | "elsewhere" (the account belongs to another user)
@@ -648,7 +650,7 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/candidates` && request.method === "GET") {
     const index = Number(url.searchParams.get("index"));
     const item = board.items.find((entry) => entry.index === index) ?? board.items[0];
-    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: CANDIDATES, notes: [] }, origin);
+    return json(response, 200, { revision: board.revision, item: item.id, current: item.place, reference: { before: "경복궁", after: "광장시장" }, candidates: scenario.candidateNotes.length ? [] : CANDIDATES, notes: scenario.candidateNotes }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/place-search` && request.method === "GET") {
     const q = (url.searchParams.get("q") ?? "").replace(/\s/g, "");
@@ -664,13 +666,19 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/autofix` && request.method === "POST") {
     const before = reviewOf(board).needs.total;
     if (!before) return json(response, 200, { applied: false, revision: board.revision, changed: [], kept: [{ id: "0-0", title: "경복궁 관람", reason: "nothing_to_change" }], view: intakeView(board.revision) }, origin);
+    // `dry_run: true` (server 224e7a1b): the plan as it WOULD be, nothing saved — the board is put back afterwards, like the server rolls its save point back.
+    const dry = JSON.parse(raw || "{}").dry_run === true;
+    const saved = dry ? JSON.stringify(board) : null;
+    const was = board.revision;
     const old = board.items.find((item) => item.status === "review");
     board.items = settle(board.items);
     board.moves = board.moves.map((move) => ({ ...move, status: "keep", slack_min: 5, rows: move.rows.map((r) => r.row === "arrival" ? row("arrival", "ok", "5분 여유") : r) }));
     board.revision += 1;
-    return json(response, 200, { applied: true, revision: board.revision, changed: [{ id: old.id, source_id: "s1", index: old.index, title: old.title,
+    const answer = { applied: !dry, dry_run: dry, revision: dry ? was : board.revision, changed: [{ id: old.id, source_id: "s1", index: old.index, title: old.title,
       from: { place: place("올리브영 인사동점", 37.5741, 126.9857, { source: "kakao" }), starts_at: "11:00", ends_at: "12:00" }, to: { place: place("올리브영 광화문점", 37.5717, 126.9791, { source: "kakao" }), starts_at: "11:45", ends_at: "12:15" }, reason: "place_and_time" }],
-      kept: [], view: intakeView(board.revision) }, origin);
+      kept: [], view: { ...intakeView(board.revision), ...(dry ? { preview: true } : {}) } };
+    if (saved) board = JSON.parse(saved);
+    return json(response, 200, answer, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/revalidate` && request.method === "POST") return json(response, 200, intakeView(board.revision), origin);
   if ((path === `/v1/web/trip-intakes/${INTAKE_ID}/confirm` || path === `/v1/web/trip-intakes/${INTAKE_ID}/plan`) && request.method === "POST") {

@@ -58,6 +58,7 @@ tests/
 | **전체 자동 추천 미리 보기(`dry_run`)** — 저장 안 함 · 실제 적용과 같은 검사 `[2026-10-03 ui 요청서 3번]` | `e2e/` | `test_intake_autofix_dry_run.py` (5건) |
 | **이름 없는 줄(종류 + 지역만)** — 줄을 조각으로 읽기(평가 줄 40개 · 새 말은 표에 한 줄 · 지명 사전 우선순위) · `needs_choice`/`needs_name` · 같은 종류만 후보 · 지역 중심 · 예약한 일정 보호(`kept: booked`) · `booking` 줄 · `category` · 고른 곳 문장 `[2026-10-03 ui 요청서 1번]` | `unit/travel/` · `e2e/` | `test_line_parts.py` (53건) · `test_intake_nameless_read.py` (7건) · `test_intake_nameless_lines.py` (7건) |
 | **웹 소셜 로그인(구글)** — 시작 → 콜백 → 표 교환 한 바퀴 · 연결 · 해제 · 로그인 CSRF 막기 · 일회용 표 · state 한 번 · 이름 · 이메일 저장 없음 · 사람 확인 · 한도 · ID 토큰 서명 · nonce · 대상 확인 `[2026-10-03 ui 요청서]` | `e2e/` · `unit/travel/` | `test_web_social_login.py` (17건) · `test_oauth_providers.py` (15건) |
+| **감시의 비슷한 안 묻기** — 대안 0곳 · 재판정 전부 걸림에도 조건을 풀어 묻기 · 자동 적용 안 함 · 같은 원인 재점검 · 일정 전체 재판정 · 밀도 · 날씨는 실내만 · 제안 하나 · 스위치 · 묶음 `[2026-10-03 사용자 지적]` | `e2e/` | `test_watch_relaxed.py` (11건) |
 | **감시 반복의 끝맺음** — Case 예외 격리 · 끝난/낡은 제안 닫기 · 바꿀 곳 없음 알림 · 일시 실패 재시도 `[2026-10-03]` | `e2e/` | `test_watch_failures.py` (10건) |
 | 활동 대체 후보가 예산보다 많아도 예외 없이 `[2026-10-03]` | `unit/travel/activity/` | `test_activity_trigger_budget.py` (3건) |
 | **여행 감시 3분 주기 문**(일꾼은 1분) `[2026-10-03]` | `integration/` | `test_watch_cadence.py` (8건) |

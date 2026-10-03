@@ -1032,7 +1032,8 @@ def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]]
 
 
 def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
-                    ledger: Any | None = None, exclude: set[str] = frozenset()) -> list[dict[str, Any]]:
+                    ledger: Any | None = None, exclude: set[str] = frozenset(),
+                    causes: list[dict[str, Any]] = ()) -> list[dict[str, Any]]:
     """같은 조건으로 0곳일 때 **조건을 하나씩 풀어** 실제로 되는 안. `[2026-09-29 사용자 지적 — ui 세션 전달]`
 
     ☆왜 — 「08:00에 갈 수 있는 식당이 3km 안에 없어요」로 끝나면 고객이 할 수 있는 것이 없다. 되는 안을 계산해 준다.
@@ -1041,6 +1042,8 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
       ③ **반경 넓히기** — 같은 시각에 5km 안에서(모자라면 여기서 더 채운다). 셋까지 모아 고르게 한다
     ★고객이 원한 조건을 바꾸는 안이라 **바로 적용하지 않는다** — 부르는 쪽이 묻는다(`pending`, 이유 `relaxed`).
     ★종류를 넓히는 안(아침엔 카페 · 베이커리)은 아직 없다 — 장소 분류로 가를 자료가 정리되면 더한다.
+    ★`causes` `[2026-10-03]` — 감시가 부를 때 **깨진 원인**을 넘긴다. 날씨 원인이면 활동 후보는 실내만 본다(`activity_candidates` 와 같은 규칙) — 시각 · 거리를 푸는 것이지 **안전 조건을 푸는 것이 아니다**.
+      고객 요청 길은 원인이 없어 전과 같다(빈 목록).
     돌려주는 것: 적용에 필요한 값을 그대로 적은 안(`alternate_record` 모양 + `relaxed` · `note`), 되는 것만.
     """
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
@@ -1056,7 +1059,7 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
                                       next_start=following.starts_at if following else None,
                                       exclude={original, str(center["place_id"])}, ledger=ledger, pool=None)
         else:
-            found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=[],
+            found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
                                                     radius_m=radius)
                      if str(c.place["place_id"]) not in (original, str(center["place_id"]))]
             for candidate in found:
