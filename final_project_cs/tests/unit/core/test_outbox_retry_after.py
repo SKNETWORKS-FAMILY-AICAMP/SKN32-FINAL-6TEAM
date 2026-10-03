@@ -17,7 +17,7 @@ import pytest
 from app.infrastructure.notify.discord import (MAX_RETRY_AFTER_SECONDS, DiscordWebhook,
                                                RetryAfter)
 
-WEBHOOK = "https://discord.test/api/webhooks/1/token"
+WEBHOOK = "https://example.invalid/hook"
 MESSAGE = {"topic": "trip.notice", "tenant_id": "t1",
            "payload": {"text": "알림", "locale": "ko"}}
 
