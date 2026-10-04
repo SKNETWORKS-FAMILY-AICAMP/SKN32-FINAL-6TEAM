@@ -225,6 +225,9 @@ class Settings(BaseSettings):
     mobility_local_router: bool = True
     #: 서울 열린데이터광장 키(따릉이 실시간 거치 대수). 비우면 거치 대수는 근거없음. ★제공처가 http 만 받는다(평문 전송)
     seoul_openapi_key: str = ""
+    #: 서울 열린데이터광장 「실시간 지하철 인증키」(하루 1,000건 · 활용사례 등록 심사 뒤 해제) — ★**지금 읽는 코드가 없다**(자리만).
+    #:  환경 파일(`.env.apikeys`)에 이 이름으로 넣어 두면 설정이 모르는 이름이라 **기동이 거부된다**(`extra="forbid"`)(2026-10-05 실제로 났다).
+    seoul_metro_api_key: str = ""
     #: 디스코드 웹훅 — 고객 알림 채널(v11 §6-A). ★비어 있으면 알림을 **보내지 않았다고**
     #:  기록한다(dead_letter). 보낸 것처럼 `delivered` 로 찍지 않는다.
     discord_webhook_url: str = ""
