@@ -9,10 +9,10 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
-  const latest = useRef({ points, selectedId, onSelect });
+  const latest = useRef({ points, selectedId, onSelect, lines });
   const [attempt, setAttempt] = useState(0);
   // `[2026-10-03 사용자 지시]` The zoom buttons show while the pointer is over the map, or for a few seconds after it is touched (a phone has no hover).
   const [awake, setAwake] = useState(false);
@@ -22,9 +22,9 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
   const [state, setState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({ status: "loading" });
 
   useEffect(() => {
-    latest.current = { points, selectedId, onSelect };
-    controller.current?.update(points, selectedId);
-  }, [points, selectedId, onSelect]);
+    latest.current = { points, selectedId, onSelect, lines };
+    controller.current?.update(points, selectedId, lines);
+  }, [points, selectedId, onSelect, lines]);
 
   useEffect(() => {
     const element = container.current;
@@ -50,7 +50,7 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect }: MapView
       if (cancelled) { created.destroy(); return; }
       instance = created;
       controller.current = created;
-      created.update(latest.current.points, latest.current.selectedId);
+      created.update(latest.current.points, latest.current.selectedId, latest.current.lines);
       observer = new ResizeObserver(([entry]) => {
         if (entry && entry.contentRect.width > 0 && entry.contentRect.height > 0) created.resize();
       });

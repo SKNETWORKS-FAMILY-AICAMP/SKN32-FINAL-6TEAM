@@ -78,6 +78,9 @@ const DEFAULTS = {
   planDelay: 0,
   // a sentence when the server refuses to plan (422 `plan_refused`, before any stream opens); "" = it plans
   planRefusal: "",
+  // `[2026-10-04]` the lines between stops (`GET /v1/web/trips/{id}/route-shapes`, mobility session): "off" = an older server (FastAPI 404 `{detail}`)
+  //   | "on" (two shapes on day 1: a walk on a road graph, drawn solid; a bus joined by a straight line with no ground, drawn dashed) | "fail" (500) | "slow" ("on" after 3 s).
+  routeShapes: "off",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
@@ -624,6 +627,17 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   // ★Delete a trip — the contract asked for in `wiki/records/plans/2026-10-03_*_웹_실서버_전환_백엔드_요청.md`. With `tripDelete: "unsupported"` this
   //   route does not exist, which falls through to the 404 below exactly as the real server answers a route it does not have.
+  const shapesPath = /^\/v1\/web\/trips\/([^/]+)\/route-shapes$/.exec(path);
+  if (shapesPath && request.method === "GET" && scenario.routeShapes !== "off") {
+    if (scenario.routeShapes === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    if (scenario.routeShapes === "slow") await wait(3000);
+    return json(response, 200, { trip_id: shapesPath[1], attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes: [
+      { item_id: "i-m", from_item_id: "i-b", to_item_id: "i-c", from: "경복궁", to: "점심 식당", mode: "walk",
+        line: { type: "LineString", coordinates: [[126.977, 37.5796], [126.983, 37.575], [126.99, 37.57]] }, source: "local_road_graph", grade: "추정", distance_m: 1250, note: null },
+      { item_id: "i-m0", from_item_id: "i-a", to_item_id: "i-b", from: "아침 식당", to: "경복궁", mode: "bus",
+        line: { type: "LineString", coordinates: [[126.98, 37.575], [126.977, 37.5796]] }, source: "straight_line", grade: "근거없음", distance_m: 640, note: "정류장 정보가 없어 직선으로 이었어요" },
+    ] }, origin);
+  }
   const deletePath = /^\/v1\/web\/trips\/([^/]+)\/delete$/.exec(path);
   if (deletePath && request.method === "POST" && scenario.tripDelete !== "unsupported") {
     const id = deletePath[1];

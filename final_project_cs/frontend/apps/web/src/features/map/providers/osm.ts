@@ -1,4 +1,5 @@
-import type { MapAdapter, MapPoint } from "../model";
+import type { MapAdapter, MapLine, MapPoint } from "../model";
+import { lineStyle, linesKey } from "./lines";
 import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
 
 /**
@@ -45,6 +46,10 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
       map.on("dragstart", () => { userMoved = true; });
       map.on("zoomstart", () => { if (!programmatic) userMoved = true; });
       let markers: { id: string; marker: ReturnType<typeof L.marker>; pin: HTMLElement }[] = [];
+      // Route lines sit in their own pane under the pins, so a pin is always pressable and a line never covers one.
+      map.createPane("routes").style.zIndex = "350";
+      const routes = L.layerGroup().addTo(map);
+      let previousLines = "";
 
       function clearMarkers() {
         markers.forEach(({ marker }) => marker.remove());
@@ -61,8 +66,24 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         } finally { programmatic = false; }
       }
 
-      function update(nextPoints: MapPoint[], nextSelectedId?: string) {
+      function drawLines(nextLines: MapLine[]) {
+        const key = linesKey(nextLines);
+        if (key === previousLines) return;
+        previousLines = key;
+        routes.clearLayers();
+        nextLines.forEach((line) => {
+          const style = lineStyle(container, line);
+          // `className` hooks the screen own CSS and the tests; the options are what Leaflet draws.
+          L.polyline(line.points.map(({ lat, lng }) => [lat, lng] as [number, number]), {
+            pane: "routes", color: style.color, weight: style.weight, opacity: style.opacity, lineCap: "round", lineJoin: "round",
+            ...(style.dash ? { dashArray: style.dash.join(" ") } : {}), interactive: false, className: `trip-route-line${line.dashed ? " trip-route-line--dashed" : ""}`,
+          }).bindTooltip(line.title, { sticky: true }).addTo(routes);
+        });
+      }
+
+      function update(nextPoints: MapPoint[], nextSelectedId?: string, nextLines: MapLine[] = []) {
         if (destroyed) return;
+        drawLines(nextLines);
         const data = JSON.stringify(nextPoints);
         const geometry = geometryKey(nextPoints);
         const changed = geometry !== previousGeometry;
@@ -97,7 +118,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         selectedId = nextSelectedId;
       }
 
-      try { update(options.points, options.selectedId); }
+      try { update(options.points, options.selectedId, options.lines); }
       catch (error) { clearMarkers(); map.remove(); throw error; }
 
       return {

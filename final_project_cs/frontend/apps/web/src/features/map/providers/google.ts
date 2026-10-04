@@ -1,4 +1,5 @@
-import type { Coordinates, MapAdapter, MapPoint } from "../model";
+import type { Coordinates, MapAdapter, MapLine, MapPoint } from "../model";
+import { lineStyle, linesKey } from "./lines";
 import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
@@ -13,12 +14,19 @@ interface GoogleMap {
   unbindAll(): void;
 }
 interface GoogleMarker extends HTMLElement { map: GoogleMap | null; zIndex: number }
+interface GooglePolyline { setMap(map: GoogleMap | null): void }
+interface GooglePolylineOptions {
+  map: GoogleMap; path: Coordinates[]; strokeColor: string; strokeOpacity: number; strokeWeight: number; clickable: boolean;
+  icons?: { icon: { path: string; strokeOpacity: number; scale: number }; offset: string; repeat: string }[];
+}
 interface GoogleSdk {
   Map: new (container: HTMLElement, options: {
     center: Coordinates; zoom: number; minZoom: number; maxZoom: number; mapId: string;
     mapTypeControl: boolean; streetViewControl: boolean; fullscreenControl: boolean; gestureHandling: string;
   }) => GoogleMap;
   LatLngBounds: new () => GoogleBounds;
+  /** Optional: a build of the SDK without lines still shows the pins. */
+  Polyline?: new (options: GooglePolylineOptions) => GooglePolyline;
   marker: {
     AdvancedMarkerElement: new (options: { map: GoogleMap; position: Coordinates; title: string; gmpClickable: boolean }) => GoogleMarker;
   };
@@ -53,6 +61,8 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
       let selectedId: string | undefined;
       let needsFit = false;
       let markers: { id: string; marker: GoogleMarker; pin: HTMLElement; onClick: () => void }[] = [];
+      let routes: GooglePolyline[] = [];
+      let previousLines = "";
       const unwatch = loader.watchAuthFailure(options.onError);
 
       function clearMarkers() {
@@ -77,8 +87,32 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
         }
       }
 
-      function update(nextPoints: MapPoint[], nextSelectedId?: string) {
+      function clearLines() {
+        routes.forEach((route) => route.setMap(null));
+        routes = [];
+      }
+
+      function drawLines(nextLines: MapLine[]) {
+        const key = linesKey(nextLines);
+        if (key === previousLines) return;
+        previousLines = key;
+        clearLines();
+        const Polyline = sdk.Polyline;
+        if (!Polyline) return;
+        routes = nextLines.map((line) => {
+          const style = lineStyle(container, line);
+          // A dashed line is drawn as repeated dots of an icon (the way the SDK does it): the line itself is invisible.
+          return new Polyline({
+            map, path: line.points, strokeColor: style.color, strokeWeight: style.weight, clickable: false,
+            strokeOpacity: style.dash ? 0 : style.opacity,
+            ...(style.dash ? { icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: style.opacity, scale: 3 }, offset: "0", repeat: `${style.dash[0] + style.dash[1]}px` }] } : {}),
+          });
+        });
+      }
+
+      function update(nextPoints: MapPoint[], nextSelectedId?: string, nextLines: MapLine[] = []) {
         if (destroyed) return;
+        drawLines(nextLines);
         const data = JSON.stringify(nextPoints);
         const geometry = geometryKey(nextPoints);
         const changed = geometry !== previousGeometry;
@@ -117,13 +151,14 @@ export function createGoogleAdapter(apiKey: string, mapId: string): MapAdapter {
 
       function cleanMap() {
         clearMarkers();
+        clearLines();
         unwatch();
         sdk.event.clearInstanceListeners(map);
         map.unbindAll();
         container.replaceChildren();
       }
 
-      try { update(options.points, options.selectedId); }
+      try { update(options.points, options.selectedId, options.lines); }
       catch (error) { cleanMap(); throw error; }
 
       return {

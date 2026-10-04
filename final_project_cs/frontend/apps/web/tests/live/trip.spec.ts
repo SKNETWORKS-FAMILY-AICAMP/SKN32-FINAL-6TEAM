@@ -246,7 +246,8 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   const server = mockServer(request);
   // bell "on": the server this screen is built for has the change bell. An older server answers its address with a 404,
   // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
-  await server.scenario({ proposals: "open", bell: "on" });
+  // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));

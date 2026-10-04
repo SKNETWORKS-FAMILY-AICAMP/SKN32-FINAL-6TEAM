@@ -1,0 +1,80 @@
+import type { Language } from "../i18n";
+import { api, LiveError } from "./client";
+
+/**
+ * `[2026-10-04]` The lines to draw on the trip's map (`GET /v1/web/trips/{id}/route-shapes`, mobility session — report 「이동 파이썬 길찾기 서버없이」 §10).
+ *   One shape for each move that has a placed stop before and after it. ★The server says how sure it is, and the screen must show that:
+ *   - `source: "straight_line"` or `grade: "근거없음"` = the road was not known, the two places were joined by a straight line → dashed and pale;
+ *   - `source: "stations"` = the station coordinates joined in order, not the real track; a bus is always straight (no stop list in the plan) — said in one line;
+ *   - the line's own `attribution` (ODbL) is shown whenever a line is drawn.
+ */
+export type RouteMode = "walk" | "bike" | "taxi" | "subway" | "bus" | "mixed" | "unknown";
+export type RouteSource = "local_road_graph" | "stations" | "straight_line";
+
+export interface RouteShape {
+  /** The move item itself; the two ends are the stops around it. */
+  itemId: string;
+  fromItemId: string;
+  toItemId: string;
+  from: string | null;
+  to: string | null;
+  mode: RouteMode;
+  source: RouteSource | "unknown";
+  grade: "추정" | "근거없음" | "unknown";
+  distanceM: number | null;
+  note: string | null;
+  /** WGS84, in the order of the line (the server sends GeoJSON `[lng, lat]`). */
+  points: { lat: number; lng: number }[];
+}
+
+export interface RouteShapes { attribution: string; shapes: RouteShape[] }
+
+const text = (value: unknown): string | null => (typeof value === "string" && value.trim() ? value : null);
+const MODES: readonly RouteMode[] = ["walk", "bike", "taxi", "subway", "bus", "mixed", "unknown"];
+const SOURCES: readonly RouteShape["source"][] = ["local_road_graph", "stations", "straight_line"];
+
+/** `[[lng, lat], …]` → points. A point that is not a pair of finite, in-range numbers is dropped; fewer than two left means no line. */
+export function pointsOf(coordinates: unknown): RouteShape["points"] {
+  if (!Array.isArray(coordinates)) return [];
+  const points = coordinates.flatMap((pair): RouteShape["points"] => {
+    if (!Array.isArray(pair) || pair.length < 2) return [];
+    const [lng, lat] = [Number(pair[0]), Number(pair[1])];
+    return Number.isFinite(lng) && Number.isFinite(lat) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 ? [{ lat, lng }] : [];
+  });
+  return points.length >= 2 ? points : [];
+}
+
+function shapeOf(entry: unknown): RouteShape | null {
+  const row = (entry ?? {}) as Record<string, unknown>;
+  const line = (row.line ?? {}) as { type?: unknown; coordinates?: unknown };
+  const points = line.type === "LineString" ? pointsOf(line.coordinates) : [];
+  const fromItemId = text(row.from_item_id), toItemId = text(row.to_item_id), itemId = text(row.item_id);
+  if (!itemId || !fromItemId || !toItemId || points.length < 2) return null;
+  const mode = MODES.find((value) => value === row.mode) ?? "unknown";
+  const source = SOURCES.find((value) => value === row.source) ?? "unknown";
+  const distance = Number(row.distance_m);
+  return {
+    itemId, fromItemId, toItemId, from: text(row.from), to: text(row.to), mode, source,
+    grade: row.grade === "추정" || row.grade === "근거없음" ? row.grade : "unknown",
+    distanceM: Number.isFinite(distance) && distance >= 0 ? distance : null, note: text(row.note), points,
+  };
+}
+
+/** The server says nothing about this route yet (an older server: 404/405) — that is not an error, there are simply no lines. */
+const unsupported = (error: unknown) => error instanceof LiveError && ["not_found", "method_not_allowed", "HTTP_404", "HTTP_405"].includes(error.code);
+
+export function readRouteShapes(body: unknown): RouteShapes {
+  const data = (body ?? {}) as { attribution?: unknown; shapes?: unknown };
+  const shapes = (Array.isArray(data.shapes) ? data.shapes : []).map(shapeOf).filter((shape): shape is RouteShape => shape !== null);
+  return { attribution: text(data.attribution) ?? "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes };
+}
+
+/** `null` = the server has no such route. The first call after a server restart can wait several seconds while it loads its road data. */
+export async function getRouteShapes(tripId: string, language: Language): Promise<RouteShapes | null> {
+  try {
+    return readRouteShapes(await api<unknown>(`/v1/web/trips/${encodeURIComponent(tripId)}/route-shapes`, language));
+  } catch (error) {
+    if (unsupported(error)) return null;
+    throw error;
+  }
+}

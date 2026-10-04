@@ -27,14 +27,28 @@ export interface MapPoint {
   tone?: PinTone;
 }
 
+/**
+ * A route line between two stops (`GET /v1/web/trips/{id}/route-shapes`). `dashed` = the road was not known and the places were joined
+ * by a straight line — drawn dashed and pale so it never reads as a real road.
+ */
+export interface MapLine {
+  id: string;
+  points: Coordinates[];
+  dashed: boolean;
+  /** Said to a screen reader and as the line's tooltip: 「A → B · 지하철」. */
+  title: string;
+}
+
 export interface MapViewProps {
   points: MapPoint[];
   selectedId?: string;
   onSelect: (stopId: string) => void;
+  /** Route lines under the pins; they never move the camera (the camera fits the pins). */
+  lines?: MapLine[];
 }
 
 export interface MapController {
-  update(points: MapPoint[], selectedId?: string): void;
+  update(points: MapPoint[], selectedId?: string, lines?: MapLine[]): void;
   resize(): void;
   destroy(): void;
 }
