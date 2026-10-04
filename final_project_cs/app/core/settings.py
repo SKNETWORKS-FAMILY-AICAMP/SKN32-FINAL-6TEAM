@@ -153,6 +153,9 @@ class Settings(BaseSettings):
     #: 행정안전부 긴급재난문자 — 호우·통제·화재 등 지역 재난문자       data.go.kr/data/15134001
     #:  ★2026-09-14 키 발급. 그전까지는 샘플 CSV 판(`disaster_msg.py`)으로 돌았다.
     disaster_msg_api_key: str = ""
+    #: 서울교통공사 지하철알림정보 — 무정차 통과 감시(문제목록 #36)  data.go.kr/data/15144070
+    #:  ★공통 키로 충분하다. 이 칸은 다른 계정을 쓸 때만 채운다.
+    subway_notice_api_key: str = ""
     #: 한국천문연구원 특일 정보 — ★공휴일 휴무 판정 data.go.kr/data/15012690
     holiday_api_key: str = ""
     #: 국토교통부 TAGO — 버스·지하철·열차 운행      data.go.kr/data/15098530
@@ -258,8 +261,12 @@ class Settings(BaseSettings):
     rate_disaster_msg_per_day: int = 1000    # 확인: 사용자 제공(2026-09-15) 재난문자 하루 1,000
     #                                          ☆그전 값 100 은 같은 플랫폼 다른 API 사용기에서 옮긴 추정이었다
     rate_utic_per_day: int = 1000            # 미확인 - 보수적(UTIC 한도 문서 못 봄)
-    rate_odsay_per_day: int = 1000           # 미확인 - 무료 구간 한도 못 찾음
+    #: ★확인(2026-10-04): ODsay LAB 운영정책 「Basic 서비스 30 / 일 · 기간 제한 없음」 — 이 계정으로 30회 안팎에서 `Daily quota exceeded` 를 실측했다.
+    #:  ☆앞 값 1000 은 근거 없는 추정이었다(「미확인」). 어댑터가 없어 지금은 호출 코드가 없다 — 붙일 때 이 한도를 그대로 쓴다.
+    rate_odsay_per_day: int = 30
     rate_kakao_per_day: int = 1000           # 미확인 - 보수적
+    #: 확인(2026-10-04): 서울교통공사 지하철알림정보 개발계정 하루 10,000건(공식 페이지) → 절반만 쓴다(여유 2배). 매 1분 갱신 · 한 번에 최신 100건
+    rate_subway_notice_per_day: int = 5000
     #: 국가유산청은 키가 없고 공개된 한도도 못 찾았다. 그래도 스스로 조인다 -
     #: 한도를 모른다는 것이 마음껏 두들겨도 된다는 뜻은 아니다.
     rate_heritage_khs_per_day: int = 1000
@@ -304,6 +311,7 @@ class Settings(BaseSettings):
             "disaster_msg": self.rate_disaster_msg_per_day,
             "utic": self.rate_utic_per_day,
             "odsay": self.rate_odsay_per_day,
+            "subway_notice": self.rate_subway_notice_per_day,
             "kakao": self.rate_kakao_per_day,
             "google_places": self.rate_google_places_per_day,
             "google_routes": self.rate_google_routes_per_day,
