@@ -49,6 +49,7 @@ _DIRECT = [
     ('Winnow-12B Q8', '12B/12.7GB · Apache', '자체 llama.cpp 서버', '1.6초', lambda w: _pk_from_dec('winnow12b', w)),
     ('Cygnet(얼린 Gemma-4-12B-it 글자 읽기, 8비트)', '12B/약 13GB(8비트) · Apache+Gemma 정책', '레시피 읽기 + bitsandbytes 8bit', '2.0초', lambda w: _pk_from_dec('cygnet', w)),
     ('Cygnet bf16 오프로드(램+GPU, 8비트 아님)', '12B/24GB · Apache+Gemma 정책', '레시피 읽기 + accelerate 오프로드', '9.8초', lambda w: _pk_from_dec('cygnetbf16', w)),
+    ('Hopper 12B(얼린 Gemma-4-12B-it + LoRA r32, 8비트 적재)', '12B/약 13GB · Apache', 'bitsandbytes 8bit + 어댑터', '2.8초', lambda w: _pk_from_dec('hopper12b', w)),
     ('Jev-Omni 묶음 읽기(20개 이하씩)', '12B/24GB(8비트로 적재) · Apache', 'bitsandbytes 8bit', '1.8초', lambda w: _pk_from_dec('jevomnig', w)),
     ('Jev-Omni(Gemma-4-12B 합병 + 결정 머리)', '12B/24GB(8비트로 적재) · Apache', 'bitsandbytes 8bit', '—', lambda w: _pk_from_dec('jevomni', w)),
     ('Winnow-E4B Q8', 'E4B 유효 4B/8GB · Apache', '자체 llama.cpp 서버', '—', lambda w: _pk_from_dec('winnowe4b', w)),
