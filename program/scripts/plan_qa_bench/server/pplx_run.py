@@ -23,6 +23,9 @@ t0 = time.time()
 model = DecisionModel(checkpoint='/root/pplx27b', device='cuda')
 # 임베딩(2.4GiB)을 GPU 로 올리면 4비트 층(약 13GiB)과 합쳐 16GB 를 넘어 메모리가 부족하다 — 임베딩만 CPU 에서 조회하고 결과를 GPU 로 보낸다(가중치는 체크포인트 그대로).
 from safetensors import safe_open
+INSTR = '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.'
+if os.environ.get('RULE'):          # 정의 명시: 올라마 직접 짚기 --proto·Claude --proto 와 같은 문장을 지시문 끝에 덧붙인다
+    INSTR += ' 한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
 with safe_open('/root/pplx27b/model-00001-of-00011.safetensors', framework='pt') as _f:
     _EW = _f.get_tensor('language_model.embed_tokens.weight')
 
@@ -60,7 +63,7 @@ for name in os.environ['SETS'].split(','):
         state = {'today': job['today'], 'customer_message': x['q']}
         if x.get('history'):
             state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
-        question = {'type': 'choice', 'instructions': '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.', 'criteria': crit}
+        question = {'type': 'choice', 'instructions': INSTR, 'criteria': crit}
         try:
             probs = model.predict([{'state': state, 'question': question}], batch_size=1)[0]
             rows.append({'probs': dict(zip(keys, map(float, probs))), 'confidence': None})

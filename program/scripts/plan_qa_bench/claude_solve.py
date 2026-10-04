@@ -13,6 +13,10 @@ args = sys.argv[1:]
 MODEL, SETS = args[0], args[1].split(',')
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 LIMIT, WORKERS, EFFORT = int(opt('--limit', '0')), int(opt('--workers', '4')), opt('--effort', 'low')
+PROTO = '--proto' in args          # 정의 명시: 올라마 직접 짚기의 --proto 와 같은 문장을 질의문 끝에 덧붙인다
+TYPES = [t for t in opt('--types', '').split(',') if t]     # 이 유형의 문제만 푼다(예: compound_intent)
+RULE = '한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
+SUFFIX = ('_proto' if PROTO else '') + ('_' + '+'.join(TYPES) if TYPES else '')
 TAG = re.sub(r'[^A-Za-z0-9.]+', '_', MODEL)
 W = '월화수목금토일'
 SYS = '너는 여행 일정 질문 분류기다. 다른 말 없이 JSON 한 줄만 출력한다.'
@@ -34,7 +38,7 @@ def build(job, x):
     return (f"오늘은 {job['today']} 이다. 고객의 여행 일정(번호. 일차 날짜 시각 [종류] 제목 @ 장소):\n{plan}\n\n{hist}"
             f"고객 질문: {x['q']}\n\n이 질문이 가리키는 일정 항목 번호 하나를 item 에 넣어라. "
             "질문이 이 일정에 없는 장소·일반 정보·다른 식당·다른 명소를 묻는다면 null. 확실하지 않으면 null."
-            ' 출력 형식: {"item": 번호 또는 null} 한 줄만.')
+            + (' ' + RULE if PROTO else '') + ' 출력 형식: {"item": 번호 또는 null} 한 줄만.')
 
 
 def call(text):
@@ -72,10 +76,10 @@ for name in SETS:
     job = json.load(open(os.path.join(HERE, 'fixtures', f'{name}.json'), encoding='utf-8'))['sets'][name]
     qs = job['qs'][:LIMIT] if LIMIT else job['qs']
     ids = {i['id'] for i in job['items']}
-    outf = os.path.join(HERE, 'results', f'claude_{TAG}_{name}{"_smoke" if LIMIT else ""}.json')
+    outf = os.path.join(HERE, 'results', f'claude_{TAG}_{name}{SUFFIX}{"_smoke" if LIMIT else ""}.json')
     done = json.load(open(outf, encoding='utf-8')) if os.path.exists(outf) else {'rows': {}}
     rows = done['rows']
-    todo = [k for k in range(len(qs)) if str(k) not in rows or rows[str(k)].get('error')]
+    todo = [k for k in range(len(qs)) if (not TYPES or qs[k]['type'] in TYPES) and (str(k) not in rows or rows[str(k)].get('error'))]
     t0 = time.time()
 
     def one(k):
@@ -94,6 +98,7 @@ for name in SETS:
                 print(name, f'{len(rows)}/{len(qs)}', f'{time.time() - t0:.0f}초', flush=True)
     json.dump({'model': MODEL, 'effort': EFFORT, 'set': name, 'rows': rows}, open(outf, 'w', encoding='utf-8'), ensure_ascii=False)
     ok = sum(1 for r in rows.values() if r['parsed'])
-    hit = sum(1 for k in range(len(qs)) if rows[str(k)]['pick'] == qs[k]['gold'])
+    inc = [k for k in range(len(qs)) if not TYPES or qs[k]['type'] in TYPES]
+    hit = sum(1 for k in inc if rows[str(k)]['pick'] == qs[k]['gold'])
     cost = sum(r['cost'] or 0 for r in rows.values())
-    print(f'{MODEL} {name}: 맞음 {hit}/{len(qs)} · 파싱 {ok} · 비용 합 {cost:.3f}달러(CLI 보고값) · 입력 토큰 평균 {sum(r["in"] for r in rows.values()) / max(1, len(rows)):.0f}', flush=True)
+    print(f'{MODEL} {name}{SUFFIX}: 맞음 {hit}/{len(inc)} · 파싱 {ok} · 비용 합 {cost:.3f}달러(CLI 보고값) · 입력 토큰 평균 {sum(r["in"] for r in rows.values()) / max(1, len(rows)):.0f}', flush=True)

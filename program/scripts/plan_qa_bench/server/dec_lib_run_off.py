@@ -13,6 +13,9 @@ from decider import temperature as TT
 from decider.systemone import assemble
 from decider.model import cap_logits
 from decider.prompt import MAX_OPTIONS
+INSTR = '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.'
+if os.environ.get('RULE'):          # 정의 명시: 올라마 직접 짚기 --proto·Claude --proto 와 같은 문장을 지시문 끝에 덧붙인다
+    INSTR += ' 한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
 
 W = '월화수목금토일'
 MODEL, TAG = os.environ['MODEL'], os.environ['TAG']
@@ -85,7 +88,7 @@ for name in os.environ['SETS'].split(','):
             state = {'today': job['today'], 'customer_message': x['q']}
             if x.get('history'):
                 state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
-            question = {'type': 'choice', 'instructions': '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.', 'criteria': crit}
+            question = {'type': 'choice', 'instructions': INSTR, 'criteria': crit}
             built.append(d._system_one_items(state, {'q': question}, True, 32768, None, None))
         flat_items = [it for _, _, its in built for it in its]
         try:

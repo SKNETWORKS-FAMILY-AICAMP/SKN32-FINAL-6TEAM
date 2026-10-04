@@ -4,6 +4,9 @@
 # 사용: DEC_URL=http://127.0.0.1:8099/v1/systemone DEC_TAG=winnow12b SETS=mix8,mix9 python3 dec_run.py
 import json, os, sys, time, urllib.request, urllib.error
 from datetime import date
+INSTR = '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.'
+if os.environ.get('RULE'):          # 정의 명시: 올라마 직접 짚기 --proto·Claude --proto 와 같은 문장을 지시문 끝에 덧붙인다
+    INSTR += ' 한 문장에 항목이 여럿 나오면 가장 먼저 언급된 항목 하나만 고른다. 「그거·거기·방금 바꾼 것」 같은 말은 앞 대화에서 가리키는 항목으로 푼다. 앞 대화가 없어 대상을 알 수 없으면 null 이다.'
 
 URL = os.environ['DEC_URL']
 TAG = os.environ['DEC_TAG']
@@ -42,7 +45,7 @@ for name in os.environ['SETS'].split(','):
         state = {'today': job['today'], 'customer_message': x['q']}
         if x.get('history'):
             state['previous_conversation'] = [f"{'고객' if h['role'] == 'customer' else '서비스'}: {h['text']}" for h in x['history']]
-        body = {'state': state, 'questions': {'target': {'type': 'choice', 'instructions': '고객 메시지가 가리키는 여행 일정 항목은 어느 것인가? 없으면 none.', 'criteria': crit}}}
+        body = {'state': state, 'questions': {'target': {'type': 'choice', 'instructions': INSTR, 'criteria': crit}}}
         r, err = call(body)
         if r is None:
             errs += 1
