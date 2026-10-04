@@ -1016,6 +1016,26 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             found = view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         if found is None:
             raise _error(404, "not_found", "resource not found")
+    @router.get("/v1/web/trip-intakes/{intake_id}/route-shapes")
+    def web_intake_route_shapes(intake_id: UUID, who: tuple[str, UUID] = Depends(_web_customer)):
+        """★`[2026-10-04]` 접수 **확인 화면**의 지도에 그릴 경로선 — 이동마다 GeoJSON LineString(등록 여행용 `/trips/{id}/route-shapes` 와 같은 모양,
+        `item_id` 만 없다). `from_item_id`·`to_item_id` 는 확인 화면 `review.items[].id`. **저장된 검사만 읽는다**(없으면 이동을 다시 계산하지 않고
+        빈 목록) — 우리 도로 그래프로 계산하고 외부 길찾기는 부르지 않는다. ★남의 접수는 404."""
+        from .intake import review as review_module
+
+        tenant, customer = who
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT status, revision FROM trip_intakes WHERE tenant_id=%s AND intake_id=%s AND customer_id=%s",
+                        (tenant, intake_id, customer))
+            row = cur.fetchone()
+            if row is None:
+                raise _error(404, "not_found", "resource not found")
+            status, revision = row
+            stored = review_module.load(conn, tenant, intake_id, revision) if status in ("review", "confirmed") else None
+        from .mobility.route_shape import shapes_for_review
+        return {"intake_id": str(intake_id), "revision": revision, "shapes": shapes_for_review(stored),
+                "attribution": "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)"}
+
         return found
 
     @router.get("/v1/web/trip-intakes/{intake_id}/events")

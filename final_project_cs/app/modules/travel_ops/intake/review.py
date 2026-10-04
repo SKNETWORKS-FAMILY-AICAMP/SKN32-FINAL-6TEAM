@@ -492,7 +492,9 @@ def public(payload: dict[str, Any] | None) -> dict[str, Any] | None:
     for it in payload.get("items", []):
         place = it.get("place")
         items.append({**it, "place": public_place(place)})
-    return {**payload, "items": items, "moves": [{k: v for k, v in m.items() if k != "sig"} for m in payload.get("moves", [])]}
+    # `uses` 는 경로선을 그리는 쪽(`/route-shapes`)이 저장본에서 읽는다 — 확인 화면 응답 모양은 그대로 둔다
+    return {**payload, "items": items,
+            "moves": [{k: v for k, v in m.items() if k not in ("sig", "uses")} for m in payload.get("moves", [])]}
 
 
 def _waiting_move(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
@@ -522,7 +524,7 @@ def _move(a: dict[str, Any], b: dict[str, Any], leg: Leg, provisional: list[str]
             "mode": leg.mode, "mode_label": leg.mode_label, "minutes": leg.minutes, "km": leg.km,
             "depart": _hm(leg.depart), "arrive": _hm(leg.arrive), "slack_min": leg.slack_min, "basis": leg.basis,
             "summary": f"{leg.mode_label} {leg.minutes}분 · {leg.km}km" + (" [추정]" if estimate else ""),
-            "fare_krw": leg.fare_krw, "sig": sig, "rows": [route, mode, arrival]}
+            "fare_krw": leg.fare_krw, "sig": sig, "uses": list(leg.uses), "rows": [route, mode, arrival]}
 
 
 # ── 저장 · 읽기 ──────────────────────────────────────────────────

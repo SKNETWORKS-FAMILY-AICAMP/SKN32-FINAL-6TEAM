@@ -125,3 +125,35 @@ def test_a_place_without_coordinates_is_skipped_not_used_as_an_endpoint(monkeypa
     a, no_xy, mv, b = _item(1, "activity", 37.5796, 126.9770), _item(2, "activity"), _item(3, "mobility"), _item(4, "dining", 37.5433, 127.0557)
     out = RS.shapes_for_items([a, no_xy, mv, b])
     assert len(out) == 1 and out[0]["from_item_id"] == str(a.item_id), "좌표 없는 장소는 건너뛰고 그 앞 장소에서 그린다"
+
+
+# ── 접수 확인 화면(등록 전) 경로선 — 저장된 검사(items · moves)에서 ──────────────────────────────────
+def _review(moves, **places):
+    items = [{"id": k, "title": k, "place": ({"name": k, "latitude": v[1], "longitude": v[0]} if v else None)} for k, v in places.items()]
+    return {"items": items, "moves": moves}
+
+
+def test_review_shapes_follow_the_stored_mode_and_use_the_item_ids(monkeypatch):
+    router = FakeRouter()
+    monkeypatch.setattr(RS, "_engine", lambda: (router, SC))
+    review = _review([{"from": "0-0", "to": "0-1", "mode": "walk", "uses": []},
+                      {"from": "0-1", "to": "0-2", "mode": "subway", "uses": ["2호선:을지로입구", "2호선:성수"]}],
+                     **{"0-0": A, "0-1": B, "0-2": (127.0600, 37.5400)})
+    out = RS.shapes_for_review(review)
+    assert [(s["from_item_id"], s["to_item_id"], s["mode"]) for s in out] == [("0-0", "0-1", "walk"), ("0-1", "0-2", "subway")]
+    assert out[0]["source"] == "local_road_graph" and out[1]["source"] == "stations"
+    assert all("item_id" not in s and s["from"] and s["to"] for s in out)
+    assert ("foot", A, B) in router.calls
+
+
+def test_review_shapes_skip_moves_without_coordinates_and_say_why_for_old_reviews(monkeypatch):
+    monkeypatch.setattr(RS, "_engine", lambda: (FakeRouter(), SC))
+    review = _review([{"from": "0-0", "to": "0-1", "mode": "walk"},
+                      {"from": "0-1", "to": "0-2", "mode": "subway"},          # 옛 검사 — 탄 역 정보(uses) 없음
+                      {"from": "0-2", "to": "0-3", "mode": "estimate"}],
+                     **{"0-0": None, "0-1": A, "0-2": B, "0-3": (127.0600, 37.5400)})
+    out = RS.shapes_for_review(review)
+    assert [(s["from_item_id"], s["to_item_id"]) for s in out] == [("0-1", "0-2"), ("0-2", "0-3")], "좌표 없는 장소가 낀 이동은 건너뛴다"
+    assert out[0]["source"] == "straight_line" and "탄 역 정보가 없어" in out[0]["note"]
+    assert out[1]["mode"] == "unknown" and out[1]["grade"] == "근거없음"
+    assert RS.shapes_for_review(None) == [] and RS.shapes_for_review({"items": [], "moves": []}) == []
