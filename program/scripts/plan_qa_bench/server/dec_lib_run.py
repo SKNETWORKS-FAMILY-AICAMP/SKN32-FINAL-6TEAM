@@ -39,6 +39,12 @@ def lab(i):
 for name in os.environ['SETS'].split(','):
     job = json.load(open(f'/root/work/{name}.json', encoding='utf-8'))['sets'][name]
     items = sorted(job['items'], key=lambda i: (i['date'], i['start']))
+    if os.environ.get('ROT'):                       # 선택지(일정 항목) 순서를 k칸 돌린다(순환 회전) — 확률 평균용. 「없음」은 계속 맨 끝
+        _k = int(os.environ['ROT']) % len(items)
+        items = items[_k:] + items[:_k]
+    if os.environ.get('SHUF'):                      # 선택지(일정 항목) 순서를 시드로 섞는다 — 「없음」은 계속 맨 끝. 키 이름은 그대로라 채점은 같다
+        import random
+        random.Random(int(os.environ['SHUF'])).shuffle(items)
     ids = [i['id'] for i in items]
     keys = [f'item_{i}' for i in ids] + ['none']
     rows, t1, errs = [], time.time(), 0
