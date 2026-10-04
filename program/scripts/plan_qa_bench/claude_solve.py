@@ -40,7 +40,7 @@ def build(job, x):
 def call(text):
     cmd = ['claude', '-p', '--model', MODEL, '--effort', EFFORT, '--tools', '', '--disable-slash-commands', '--no-session-persistence',
            '--setting-sources', 'project', '--system-prompt', SYS, '--output-format', 'json']
-    env = dict(os.environ, MAX_THINKING_TOKENS='0')     # 확장 생각을 끈다(로컬 모델의 think False 에 해당)
+    env = dict(os.environ, MAX_THINKING_TOKENS='0', CLAUDE_CODE_DISABLE_CLAUDE_MDS='1', CLAUDE_CODE_DISABLE_AUTO_MEMORY='1')     # 확장 생각을 끄고(로컬의 think False 에 해당) 지침 파일·자동 메모리를 읽지 않게 한다(호출당 비용 1/5)
     for n in range(4):
         try:
             r = subprocess.run(cmd, input=text, capture_output=True, text=True, encoding='utf-8', timeout=600, cwd=CWD, env=env, shell=(os.name == 'nt'))
