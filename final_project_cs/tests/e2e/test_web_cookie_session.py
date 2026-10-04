@@ -58,7 +58,7 @@ def cookies(api, monkeypatch):  # noqa: F811
     yield {**api, "client": client, "ip": "10.8." + str(uuid4().int % 250) + "." + str(uuid4().int % 250)}
     web_guard.clear_cache()
     with get_connection() as conn, conn.transaction(), conn.cursor() as cur:
-        for table in ("web_oauth_tickets", "web_oauth_states", "web_social_links", "web_sessions"):
+        for table in ("web_oauth_tickets", "web_oauth_states", "web_agent_keys", "web_social_links", "web_sessions"):
             cur.execute(f"DELETE FROM {table} WHERE tenant_id=%s", (api["tenant"],))
         cur.execute("DELETE FROM runtime_limits WHERE tenant_id=%s AND name LIKE 'web.%%_hours'", (api["tenant"],))
 
@@ -91,6 +91,7 @@ def test_guest_session_sets_http_only_cookie_and_no_key(cookies):
     assert header.startswith("tripilot_sid_dev=")            # 개발(http) — 접두 없이
     assert "HttpOnly" in header and "SameSite=Lax" in header and "Path=/" in header
     assert "Domain" not in header and "Secure" not in header
+    assert "Max-Age" not in header                        # ★게스트 쿠키는 브라우저 세션 쿠키 — 브라우저를 닫으면 사라진다(D-CS-011 정정)
     assert response.headers["cache-control"] == "no-store"
 
 
@@ -99,7 +100,7 @@ def test_https_public_address_uses_host_prefix_and_secure(cookies, monkeypatch):
     response = cookies["client"].post("/v1/web/auth/session")
     header = response.headers["set-cookie"]
     assert header.startswith("__Host-tripilot_sid=")
-    assert "Secure" in header and "HttpOnly" in header and "Path=/" in header and "Domain" not in header
+    assert "Secure" in header and "HttpOnly" in header and "Path=/" in header and "Domain" not in header and "Max-Age" not in header
 
 
 def test_cookie_value_is_stored_only_as_a_hash(cookies):
@@ -267,6 +268,7 @@ def test_adopt_turns_an_old_key_into_a_cookie_session_and_keeps_the_key(cookies)
     browser = TestClient(cookies["client"].app, follow_redirects=False)
     response = browser.post("/v1/web/auth/adopt", headers={"X-User-Key": key, "X-Forwarded-For": cookies["ip"]})
     assert response.status_code == 201 and response.json()["kind"] == "guest"
+    assert "Max-Age" not in response.headers["set-cookie"]                           # 옛 키 사용자도 게스트면 브라우저 세션 쿠키
     assert browser.get("/v1/web/trips").status_code == 200                           # 쿠키만으로 같은 사용자
     assert TestClient(cookies["client"].app).get("/v1/web/trips", headers={"X-User-Key": key}).status_code == 200   # 키도 그대로
     with get_connection() as conn, conn.cursor() as cur:
@@ -310,7 +312,7 @@ def test_social_exchange_in_cookie_mode_gives_a_cookie_and_no_key(cookies):
     body = response.json()
     assert body["outcome"] == "created" and body["kind"] == "member" and body["csrf_token"] and "user_key" not in body
     assert "guest_idle_hours" not in body
-    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "HttpOnly" in response.headers["set-cookie"] and "Max-Age=2592000" in response.headers["set-cookie"]     # 회원 쿠키는 오래간다(절대 수명 720시간)
     assert browser.get("/v1/web/trips").status_code == 200
 
 
@@ -326,6 +328,28 @@ def test_social_exchange_revokes_the_guest_cookie_it_arrived_with(cookies):
         live, revoked = cur.fetchone()
     assert (live, revoked) == (1, 1)                                                  # 게스트 세션은 거뒀고 새 회원 세션 하나만 산다
     assert browser.cookies.get(web_cookie.cookie_name()) != guest_cookie
+
+
+def test_linking_a_social_account_turns_the_guest_cookie_into_a_long_lived_one(cookies):
+    """게스트 쿠키(브라우저 세션 쿠키)가 구글 계정을 연결하면 **같은 값**이 오래가는 쿠키로 다시 내려온다 — 안 그러면 창을 닫을 때 회원 세션도 사라진다."""
+    from urllib.parse import parse_qs, urlparse
+
+    browser = TestClient(cookies["client"].app, follow_redirects=False)
+    guest = browser.post("/v1/web/auth/session", headers={"X-Forwarded-For": cookies["ip"]})
+    assert "Max-Age" not in guest.headers["set-cookie"]
+    raw = browser.cookies.get(web_cookie.cookie_name())
+    csrf = {"Origin": WEB, "X-CSRF-Token": guest.json()["csrf_token"], "X-Forwarded-For": cookies["ip"]}
+    start = browser.post("/v1/web/auth/google/start", json={"mode": "link", "client_nonce": NONCE}, headers=csrf)
+    assert start.status_code == 200, start.text
+    state = parse_qs(urlparse(start.json()["authorize_url"]).query)["state"][0]
+    called = browser.get("/v1/web/auth/google/callback", params={"state": state, "code": "sub-link-" + cookies["ip"]})
+    ticket = parse_qs(urlparse(called.headers["location"]).query)["ticket"][0]
+    done = browser.post("/v1/web/auth/exchange", json={"ticket": ticket, "client_nonce": NONCE, "session": "cookie"},
+                        headers={"X-Forwarded-For": cookies["ip"]})
+    assert done.status_code == 200 and done.json()["outcome"] == "linked" and done.json()["kind"] == "member"
+    header = done.headers["set-cookie"]
+    assert header.startswith(f"{web_cookie.cookie_name()}={raw};") and "Max-Age=2592000" in header     # 같은 값 · 오래가는 쿠키
+    assert browser.get("/v1/web/auth/me").json()["kind"] == "member"
 
 
 def test_default_exchange_mode_still_returns_a_key(cookies):

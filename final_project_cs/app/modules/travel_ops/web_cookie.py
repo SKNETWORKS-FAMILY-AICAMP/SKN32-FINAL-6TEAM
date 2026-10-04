@@ -27,7 +27,7 @@ import app.core.settings as settings_module
 from app.core.settings import get_guardrails
 from app.infrastructure.db.session import get_connection
 
-from . import web_guard
+from . import web_agent_keys, web_guard
 from .web_session import resolve as resolve_key
 
 #: 운영(공개 주소가 https)이면 `__Host-` 접두 — `Secure` · `Path=/` · `Domain` 없음이어야 브라우저가 받는다. 개발(http)은 접두 없이.
@@ -35,6 +35,8 @@ SECURE_COOKIE = "__Host-tripilot_sid"
 PLAIN_COOKIE = "tripilot_sid_dev"
 CSRF_HEADER = "x-csrf-token"
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+#: ★`[2026-10-04 D-CS-012]` 에이전트 키로는 **계정 관리 경로를 못 연다** — 로그인 · 연동 · 키 만들기 · 연락처는 브라우저 로그인에서만
+AGENT_FORBIDDEN_PREFIXES = ("/v1/web/auth", "/v1/web/session", "/v1/web/profile", "/v1/web/agent-keys")
 #: 쿠키 원문 길이 상한(`token_urlsafe(32)` = 43자) — 터무니없이 긴 값은 해시하지 않고 버린다
 MAX_COOKIE_CHARS = 200
 
@@ -52,13 +54,17 @@ def cookie_name() -> str:
     return SECURE_COOKIE if cookie_secure() else PLAIN_COOKIE
 
 
-def _attrs(*, max_age: int) -> str:
-    return f"Max-Age={max_age}; Path=/; HttpOnly; SameSite=Lax" + ("; Secure" if cookie_secure() else "")
+def _attrs(*, max_age: int | None) -> str:
+    """`max_age` 가 None 이면 `Max-Age` 를 안 붙인다 — **브라우저 세션 쿠키**(브라우저를 닫으면 브라우저가 지운다)."""
+    age = "" if max_age is None else f"Max-Age={max_age}; "
+    return f"{age}Path=/; HttpOnly; SameSite=Lax" + ("; Secure" if cookie_secure() else "")
 
 
-def cookie_header(raw: str, *, tenant_id: str) -> str:
-    """`Set-Cookie` 한 줄 — 절대 수명이 쿠키 수명이다(유휴 수명은 서버가 쓸 때 본다). `Domain` 은 붙이지 않는다."""
-    max_age = int(web_guard.values(tenant_id)["web.session_max_hours"]) * 3600
+def cookie_header(raw: str, *, tenant_id: str, persistent: bool = True) -> str:
+    """`Set-Cookie` 한 줄. `persistent` 면 절대 수명이 쿠키 수명이다(유휴 수명은 서버가 쓸 때 본다). `Domain` 은 붙이지 않는다.
+    ★`[2026-10-04 사용자 결정]` **게스트(로그인 안 한 사용자)의 쿠키는 `persistent=False`** — 브라우저를 닫으면 사라진다(ChatGPT 로그아웃 상태와 같은 모양).
+      게스트가 구글 계정을 `link` 하는 순간 같은 값을 `persistent=True` 로 다시 내려 오래가게 한다."""
+    max_age = int(web_guard.values(tenant_id)["web.session_max_hours"]) * 3600 if persistent else None
     return f"{cookie_name()}={raw}; {_attrs(max_age=max_age)}"
 
 
@@ -146,8 +152,10 @@ def lookup(conn, *, tenant_id: str, raw: str | None) -> Session | None:
 class Identity:
     tenant_id: str
     customer_id: UUID
-    via: Literal["cookie", "key"]
+    via: Literal["cookie", "key", "agent"]
     session: Session | None = None
+    scope: str | None = None                 # 에이전트 키의 권한 범위(read · write)
+    key_id: UUID | None = None
 
 
 def _allowed_origins() -> set[str]:
@@ -171,12 +179,34 @@ def _check_csrf(request: Request, session: Session) -> None:
         raise refuse(403, "csrf_failed", "요청을 확인하지 못했다 — 화면을 새로 고친 뒤 다시 한다")
 
 
+def _presented_key(request: Request) -> str | None:
+    """`X-User-Key`, 없으면 `Authorization: Bearer <우리 키>`. ★우리 키 접두어(`acop_a_` · `acop_u_`)가 아니면 무시한다 — 서버용 scope 키를 Bearer 로 보내도 웹 경로는 안 열린다."""
+    raw = (request.headers.get("x-user-key") or "").strip()
+    if raw:
+        return raw
+    auth = (request.headers.get("authorization") or "").strip()
+    if auth[:7].lower() == "bearer ":
+        token = auth[7:].strip()
+        if token.startswith((web_agent_keys.PREFIX, "acop_u_")):
+            return token
+    return None
+
+
+def _check_agent(request: Request, agent: web_agent_keys.AgentKey) -> None:
+    """에이전트 키의 권한 — 계정 관리 경로는 막고, `read` 키는 쓰기를 막는다."""
+    path = request.url.path
+    if any(path == prefix or path.startswith(prefix + "/") for prefix in AGENT_FORBIDDEN_PREFIXES):
+        raise refuse(403, "agent_forbidden", "에이전트 키로는 계정 관리를 할 수 없다 — 브라우저에서 로그인해서 한다")
+    if request.method.upper() in UNSAFE_METHODS and agent.scope != "write":
+        raise refuse(403, "agent_scope", "이 키는 읽기 전용이다 — 쓰기 권한으로 만든 키가 필요하다")
+
+
 def authenticate(request: Request, *, required: bool = True, csrf: bool = True) -> Identity | None:
     """① 쿠키와 키가 같이 오면 400 `ambiguous_credentials` ② 쿠키만 → 세션(만료·거둠·모름 = 401 + 쿠키 지우기, 쓰기는 CSRF) ③ 키만 → 지금까지처럼(CSRF 면제)
     ④ 둘 다 없음 → 401. `required=False`(로그인 시작처럼 인증 없이도 되는 자리)이면 ④와 무효 자격은 None — **단 ①은 그래도 거부**한다."""
     tenant = settings_module.get_settings().tenant_id
     raw_cookie = request.cookies.get(cookie_name())
-    raw_key = request.headers.get("x-user-key")
+    raw_key = _presented_key(request)
     if raw_cookie and raw_key:
         raise refuse(400, "ambiguous_credentials", "쿠키와 사용자 키가 함께 왔다 — 하나만 보낸다")
     if raw_cookie:
@@ -189,6 +219,15 @@ def authenticate(request: Request, *, required: bool = True, csrf: bool = True) 
         if csrf and request.method.upper() in UNSAFE_METHODS:
             _check_csrf(request, session)
         return Identity(tenant, session.customer_id, "cookie", session)
+    if raw_key and raw_key.startswith(web_agent_keys.PREFIX):                         # 에이전트 키 — 만료 · 폐기 · 권한 범위
+        with get_connection() as conn, conn.transaction():
+            agent = web_agent_keys.resolve(conn, tenant_id=tenant, raw=raw_key)
+        if agent is None:
+            if not required:
+                return None
+            raise refuse(401, "unauthenticated", "사용자 키가 없거나 맞지 않는다")
+        _check_agent(request, agent)
+        return Identity(tenant, agent.customer_id, "agent", None, agent.scope, agent.key_id)
     with get_connection() as conn, conn.transaction():
         customer = resolve_key(conn, tenant_id=tenant, raw=raw_key)
     if customer is None:
@@ -223,8 +262,8 @@ def start(conn, *, tenant_id: str, customer_id: UUID) -> tuple[str, Session]:
     return raw, session
 
 
-def json_with_cookie(body: dict[str, Any], *, raw: str, tenant_id: str, status: int = 200) -> JSONResponse:
-    return JSONResponse(body, status_code=status, headers={"Set-Cookie": cookie_header(raw, tenant_id=tenant_id),
+def json_with_cookie(body: dict[str, Any], *, raw: str, tenant_id: str, status: int = 200, persistent: bool = True) -> JSONResponse:
+    return JSONResponse(body, status_code=status, headers={"Set-Cookie": cookie_header(raw, tenant_id=tenant_id, persistent=persistent),
                                                            "Cache-Control": "no-store"})
 
 

@@ -172,6 +172,27 @@ def test_every_table_that_carries_a_trip_number_is_accounted_for():
     assert not unknown, f"여행 번호를 들고 있는데 삭제 목록에 없는 표: {sorted(unknown)}"
 
 
+# ── 계획서 내려받기 ───────────────────────────────────────────────
+def test_the_plan_link_can_be_downloaded_as_a_file_without_logging_in(cookies):
+    """게스트 데이터는 보존 시간 뒤 지워진다 — 계획서 링크에 `download=1` 을 붙이면 같은 페이지를 **파일로** 받는다(로그인 없음 · 링크가 곧 자격)."""
+    from app.modules.travel_ops.plan_link import plan_token
+
+    _guest(cookies)
+    status, trip = _make_trip(cookies)
+    assert status == 201
+    trip_id, token = trip["trip_id"], plan_token(cookies["tenant"], UUID(trip["trip_id"]))
+    anon = TestClient(cookies["client"].app)
+    shown = anon.get(f"/plan/{trip_id}", params={"t": token})
+    assert shown.status_code == 200 and "content-disposition" not in shown.headers          # 그냥 열면 보기만
+    got = anon.get(f"/plan/{trip_id}", params={"t": token, "download": "1"})
+    assert got.status_code == 200 and got.text == shown.text                                # 같은 내용
+    disposition = got.headers["content-disposition"]
+    assert disposition.startswith("attachment;") and "filename*=UTF-8''triPilot-" in disposition and disposition.endswith(".html")
+    assert "/" not in disposition.split("filename*=UTF-8''")[1]                              # 제목의 경로 글자는 이름에 안 들어간다
+    assert "<script src" not in got.text and "<link " not in got.text                      # 외부 파일 없이 혼자 열린다
+    assert anon.get(f"/plan/{trip_id}", params={"t": "wrong", "download": "1"}).status_code == 404   # 틀린 토큰은 있는지도 말하지 않는다
+
+
 # ── ④ 게스트 제한 ─────────────────────────────────────────────────
 def test_a_guest_gets_one_trip_and_is_asked_to_log_in_for_a_second(cookies):
     _guest(cookies)

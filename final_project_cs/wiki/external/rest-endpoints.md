@@ -467,7 +467,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 브라우저 세션 쿠키 — `/v1/web/auth/session*` `[결정 2026-10-04 사용자]`
 
-`[실측]` 시험 `tests/e2e/test_web_cookie_session.py`(26) · 결정 기록 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 구현 `app/modules/travel_ops/web_cookie.py`(저장 · 규칙) · `web_auth_api.py`(HTTP) · 저장 마이그레이션 044 `web_sessions`.
+`[실측]` 시험 `tests/e2e/test_web_cookie_session.py`(27) · 결정 기록 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md). 구현 `app/modules/travel_ops/web_cookie.py`(저장 · 규칙) · `web_auth_api.py`(HTTP) · 저장 마이그레이션 044 `web_sessions`.
 ★**브라우저는 키를 저장소에 두지 않는다.** 로그인 상태는 서버가 내려주는 **HttpOnly 쿠키 하나**다 — 페이지의 스크립트(지도 SDK · 확장 · XSS)가 읽지 못한다. 키(`X-User-Key`)는 **에이전트(MCP)와 옛 호출자용**으로 남는다(웹이 옮겨 가는 동안 둘 다 받는다).
 ★「로그인하면 다시 인증하면 되니 토큰을 오래 들고 있을 이유가 없다 · 로그인 안 한 게스트는 세션을 잃어도 받아들인다」가 사용자 결정이다 — 복구 수단은 없다.
 
@@ -479,7 +479,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 | `POST /v1/web/auth/logout` | 쿠키 + CSRF | 서버의 세션 행을 거두고 쿠키를 지운다 → `200 {status: "signed_out"}`. 게스트가 로그아웃하면 그 여행은 다시 열 수 없다(보존 시간이 지나면 지워진다) |
 | `POST /v1/web/auth/exchange` **(확장)** | 없음 | 몸통에 `session: "cookie"` 를 더하면 `signed_in` · `created` 일 때 **키 대신 쿠키 세션**을 준다(`Set-Cookie`, 응답에 `user_key` 없음, `kind: "member"` · `csrf_token` 가 실린다). 요청에 게스트 쿠키가 함께 오면 그 세션은 **거두고** 새로 발급한다(세션 고정 공격 방지). 몸통에 없거나 `"key"` 면 지금까지처럼 `user_key` 를 준다 |
 
-**쿠키.** 값은 무작위 256비트(서버에는 SHA-256 해시만). 운영(공개 주소가 `https`) = 이름 `__Host-tripilot_sid` · `Secure` · `HttpOnly` · `SameSite=Lax` · `Path=/` · **`Domain` 없음**. 개발(`http`) = 이름 `tripilot_sid_dev` · `Secure` 없음 — 나머지 같다(`__Host-` 는 `Secure` 가 있어야 한다). `Max-Age` = 절대 수명. 이름·`Secure` 여부는 `ACOP_PUBLIC_BASE_URL` 이 정한다.
+**쿠키.** 값은 무작위 256비트(서버에는 SHA-256 해시만). 운영(공개 주소가 `https`) = 이름 `__Host-tripilot_sid` · `Secure` · `HttpOnly` · `SameSite=Lax` · `Path=/` · **`Domain` 없음**. 개발(`http`) = 이름 `tripilot_sid_dev` · `Secure` 없음 — 나머지 같다(`__Host-` 는 `Secure` 가 있어야 한다). `Max-Age` = 절대 수명 — ★`[2026-10-04 사용자 결정]` **게스트 쿠키에는 `Max-Age` 가 없다**(브라우저 세션 쿠키 — 브라우저를 닫으면 브라우저가 지운다. ChatGPT 로그아웃 상태와 같은 모양). 회원 쿠키만 `Max-Age`(절대 수명)가 있다. 게스트가 구글 계정을 `link` 하면 `exchange`(`session:"cookie"`) 응답이 **같은 쿠키 값을 `Max-Age` 와 함께 다시** 내리고 몸통은 `kind: member`. 이름·`Secure` 여부는 `ACOP_PUBLIC_BASE_URL` 이 정한다.
 `SameSite=Lax` 인 까닭: 구글 로그인에서 돌아오는 첫 이동에 `Strict` 쿠키가 안 붙는다(제안 — 조사 합의).
 
 **누구인지 가르는 순서**(`/v1/web/*` 전부 — 한 곳에서). ① 쿠키와 `X-User-Key` 가 **같이 오면 `400 ambiguous_credentials`**(조용히 고르지 않는다) ② 쿠키만 → 세션 행을 찾아 **유휴·절대 수명**을 확인(만료·거둠·없음은 모두 `401 unauthenticated` + 쿠키 삭제 `Set-Cookie`) ③ 키만 → 지금까지처럼(CSRF 면제 — 브라우저가 자동으로 붙이지 않는다) ④ 둘 다 없으면 `401`.
@@ -494,7 +494,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 
 ### 게스트(로그인 안 한 사용자) · 여행 삭제 · 게스트 정리 `[결정 2026-10-04 사용자]`
 
-`[실측]` 구현 `app/modules/travel_ops/guest_policy.py`(제한) · `trip_delete.py`(삭제) · `guest_cleanup.py`(정리) · `itinerary.py`(감시 · 안내 대상에서 게스트 제외) · 시험 `tests/e2e/test_guest_and_trip_delete.py`(15). 결정 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md) — **보존 시간 초기값의 공식과 근거도 거기 있다.**
+`[실측]` 구현 `app/modules/travel_ops/guest_policy.py`(제한) · `trip_delete.py`(삭제) · `guest_cleanup.py`(정리) · `itinerary.py`(감시 · 안내 대상에서 게스트 제외) · 시험 `tests/e2e/test_guest_and_trip_delete.py`(16). 결정 [D-CS-011](../decisions/D-CS-011-browser-session-cookie.md) — **보존 시간 초기값의 공식과 근거도 거기 있다.**
 ★**게스트 = 웹으로 만든 사용자(`customers.external_id` 가 `web:` 로 시작) 중 소셜 계정이 하나도 안 붙은 사용자.** 소셜 계정을 `link` 하면 그 순간부터 회원이다(여행도 그대로). 에이전트 API 로 만든 고객과 시드는 게스트가 아니다.
 
 | | 게스트 | 회원 |
@@ -517,6 +517,7 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - **즉시 완전 삭제**(숨김 · 유예 없음). **한 트랜잭션**이고 `trips` 행을 잠근다. `trips` 를 지우면 `itinerary_versions` · `itinerary_items` · `pending_changes` 가 CASCADE 로 사라진다.
 - **외래키가 없어 이름을 대어 지우는 표**: `trip_chat_turns` · `place_open_checks` · `dining.dn_notice` · `trip_intakes`(그 여행 것만, 자식 `intake_*` 는 CASCADE) · `places.trip_scope`(이 여행 전용 장소 행 — 외부 값이라 다른 고객에게 재사용하면 안 된다) · 바깥함 `trip.notice`(`dedupe_key` 가 `{trip_id}:` 로 시작 — 알림 문장에 일정이 실려 있어 **대기분만이 아니라 전부**). `trip_id` 가 NULL 인 옛 행은 고객 번호만으로 지우지 않는다. 새 표가 여행 번호 칸을 들고 생기면 걸리는 목록 시험이 있다.
 - **운영 쪽은 지우지도 가리지도 않는다**: `case_events` 는 append-only. 그 여행을 가리키는 **열린 Case**(`state_json.subject_ref.id`)는 전이표가 허용하는 **정상 전이만으로 `cancelled` 까지 닫는다**(가장 짧은 길 · 이유 `trip_deleted` · 행위자 `trip_delete`) — ★`resolved`/`completed` 를 거치지 않는다(안 한 일을 끝냈다고 기록하게 된다): `running` → `guardrail_escalated` → `escalated` → `cancelled_by_user`. 해결된 Case 는 기록이라 그대로다.
+- ★`[2026-10-04 사용자 결정]` **계획서 내려받기** — `GET /plan/{trip_id}?t=…&download=1` 은 같은 페이지를 `Content-Disposition: attachment`(파일 이름 `triPilot-<제목>.html`, 경로 글자 제외)로 준다. 로그인 없음 · 링크가 곧 자격 · 틀린 토큰은 404. 이 HTML 은 외부 파일 없이 혼자 열린다(밖으로 나가는 것은 지도 링크뿐). 게스트 데이터는 보존 시간 뒤 지워지니 **파일로 가져가게 하는 것**이 게스트의 보관 수단이다.
 - 계획서 링크는 토큰 행이 없어(HMAC) 여행이 사라지면 조회에서 404 다. ★`[미구현]` **「만료됨」 안내 화면**(삭제된 여행의 유효한 옛 링크에만, 틀린 링크는 404)은 만들지 않았다 — 지금은 404 다. 흔적 한 줄을 남겨야 해서 따로 정한다([open-items](../delivery/open-items.md)).
 - ★`[미구현]` ①MCP 삭제 도구(`travel.mcp.write_enabled` 뒤) ②바깥함이 **보내기 직전**에 여행이 아직 있는지 다시 보는 것(삭제와 겹친 알림이 이미 밖으로 나가는 경우는 회수되지 않는다) — 요청서 구현 지침 4 · 7. ③`case_events.payload_json` 에 마스킹 안 된 고객 문장이 없는지 DB 에서 세어 보는 것(지침 8).
 
@@ -526,6 +527,22 @@ GET   /admin/limits/events?limit=50      scope limits:read
 - 사용자마다 따로 한 트랜잭션: 여행(위 삭제와 **같은 함수**) · 접수 · 세션 · 키 · 사용자 행(프로필은 CASCADE). 사용자 행을 가리키는 외래키 14개 중 13개가 「가리키면 거부」(서버 DB 조회 2026-10-04) — **Case 같은 기록이 가리키면 사용자 행 한 줄만 남긴다**(이메일 · 이름 없는 무작위 `web:` 번호). 결과 `{candidates, held_for_trips, customers_deleted, customers_kept, trips_deleted}`.
 - 꺼져 있으면(`web.guest_cleanup_enabled`) `{"skipped": "disabled"}` — 아무것도 안 지운다. **복구 수단이 없어 삭제 전 유예(소프트 삭제)도 없다.**
 - **관리 콘솔에서 조절**(운영 API `/admin/limits` — 위): `web.guest_idle_hours` · `web.member_idle_hours` · `web.session_max_hours`(시간, 1~8760) · `web.guest_cleanup_enabled`. 바꾼 값은 30초 안에 적용된다(세션 수명은 쓸 때 계산해 이미 만든 세션에도 곧 적용).
+
+### 에이전트 키 — `/v1/web/agent-keys*` `[결정 2026-10-04 사용자 — D-CS-012]`
+
+`[실측]` 시험 `tests/e2e/test_web_agent_keys.py`(12) · 결정 기록 [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md) · 구현 `app/modules/travel_ops/web_agent_keys.py`(저장 · 규칙) · `web_agent_keys_api.py`(HTTP) · 저장 마이그레이션 045 `web_agent_keys`. 개인 AI(MCP · 사용자 API)가 **본인 여행의 작업만** 하는 문이다. 쿠키는 브라우저 전용이라 에이전트는 키를 헤더로 보낸다.
+★**만드는 것은 로그인한 사용자(회원)가 브라우저(쿠키 세션)에서만** 한다 — 에이전트 키 · 옛 사용자 키로는 못 만들고(`403 cookie_required`), 게스트는 못 만든다(`403 member_only` + `login_required: true`).
+
+| 경로 | 인증 | 뜻 |
+|---|---|---|
+| `GET /v1/web/agent-keys` | 쿠키(회원) | `{keys: [{key_id, name, scope, created_at, expires_at, last_used_at, status}]}` — `status` = `active` · `expired` · `revoked`. 키 원문은 없다 |
+| `POST /v1/web/agent-keys` | 쿠키(회원) + CSRF | 몸통 `{name(1~60자), scope: "read"\|"write", expires_days?(1~90, 기본 90)}` → `201 {key_id, name, scope, created_at, expires_at, key, notice}`. ★`key`(`acop_a_…`)는 **이 응답에만** 나온다(서버엔 SHA-256 해시만). 활성 키가 `security.web_agent_keys_per_user`(10)개면 `409 agent_key_limit` |
+| `DELETE /v1/web/agent-keys/{key_id}` | 쿠키(회원) + CSRF | 폐기 → `200 {key_id, status: "revoked"}`. 남의 키 · 없는 키는 같은 `404 not_found` |
+
+**키를 쓰는 법**: 머리말 `Authorization: Bearer acop_a_…` 또는 `X-User-Key: acop_a_…`(MCP `/mcp/` 도 같다 — URL 에 키를 넣지 않는다). 없는 키 · **만료** · 폐기는 모두 같은 `401 unauthenticated`. 쿠키와 같이 오면 `400 ambiguous_credentials`. 서버용 scope 키(`require_scope`)를 `Bearer` 로 보내도 웹 경로는 안 열린다(`401`).
+**권한**: ①`read` 키는 읽기(`GET`)만 — 쓰기 요청은 `403 agent_scope` ②어느 키든 **계정 관리 경로는 못 연다** — `/v1/web/auth/*` · `/v1/web/session*` · `/v1/web/profile*` · `/v1/web/agent-keys*` → `403 agent_forbidden` ③`write` 키의 쓰기 도구(MCP)는 `travel.mcp.write_enabled` 스위치가 켜져 있을 때만 등록된다(기본 꺼짐) ④마지막 소셜 연결을 해제하면 그 사용자의 에이전트 키를 **모두 거둔다**.
+- 옛 사용자 키(`acop_u_…`, 만료 없음)는 그대로 둔다(웹이 쿠키로 옮겨 가는 동안) — 에이전트용으로는 새 키를 쓰게 안내한다.
+- 2단계 OAuth(`/.well-known/*` · `/oauth/*`)는 [D-CS-012](../decisions/D-CS-012-agent-auth-claude-style.md) 에 설계만 있다 — 에이전트 키와 같은 검증 · 권한 판정으로 합칠 예정.
 
 ### 계획 읽기 — `/v1/web/trip-intakes` `[2026-09-27]`
 

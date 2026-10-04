@@ -174,7 +174,7 @@ def caller_of(ctx: Context | None, *, env_key: str | None = None) -> Caller:
     key = env_key or os.environ.get("TRIPILOT_USER_KEY")
     if not key:
         raise ToolError("사용자 키가 없어요 — 연결할 때 `Authorization: Bearer <사용자 키>` 를 붙이거나 로컬이면 환경변수 TRIPILOT_USER_KEY 를 넣어 주세요. "
-                        "키는 triPilot 웹에서 처음 접속할 때 한 번 보여 드립니다.")
+                        "키는 triPilot 웹의 마이페이지 「에이전트 연결」에서 로그인한 뒤 만들 수 있고, 만들 때 한 번만 보여 드립니다.")
     return Caller(key)
 
 
