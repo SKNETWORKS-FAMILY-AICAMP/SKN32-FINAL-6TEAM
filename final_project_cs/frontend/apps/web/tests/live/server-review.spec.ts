@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockServer, start, TRIP_ID } from "./helpers";
+import { needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(조직 판 `features/plan-check`)에 서버의 확인 결과(`review`)를 이은 부분 — 테스트용 모방 서버로 도는 자동 시험(실제 서버 아님).
@@ -8,7 +9,6 @@ import { mockServer, start, TRIP_ID } from "./helpers";
  */
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const card = (page: Page, title: string) => page.getByRole("article", { name: title });
-const SUMMARY = "장소 1곳 · 이동 1구간 확인 필요";
 
 test.beforeEach(async ({ request }) => { await mockServer(request).reset(); });
 
@@ -18,7 +18,7 @@ async function openFinished(page: Page, request: Parameters<typeof mockServer>[0
   await server.scenario({ review: "on", board: "rich", readingPolls: 0, ...change });
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible();
+  await expect(needsBadge(page)).toBeVisible();
   return server;
 }
 
@@ -34,10 +34,10 @@ test("읽는 동안 서버의 내용 이벤트로 장소 카드와 검사 줄이
   await start(page);
   await uploadPlan(page);
 
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await expect(card(page, "올리브영")).toContainText("확인 필요");
-  await expect(card(page, "광장시장")).toContainText("조정");
+  await expect(card(page, "광장시장")).not.toContainText("조정");                                    // 「조정」은 더 말하지 않는다
   expect((await server.received("GET", `${INTAKE}/events`)).length).toBeGreaterThan(0);
   // 스트림이 일을 했으니 1.5초 폴링은 필요 없었다: 접수 조회는 처음 한 번과 끝난 뒤 몇 번뿐이다
   expect((await server.received("GET", INTAKE)).length).toBeLessThanOrEqual(5);
@@ -49,18 +49,18 @@ test("실시간 진행이 열렸다가 아무 소식도 없으면 「연결이 �
   await start(page);
   await uploadPlan(page);
   await expect(page.getByText("연결이 끊겼어요", { exact: false })).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 40_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 40_000 });
 });
 
-test("결과: 카드는 서버의 판정(유지·조정·확인 필요)과 검사 줄을 그대로 보이고, 이동 줄은 경로·수단·도착을 보인다", async ({ page, request }) => {
+test("결과: 카드는 서버의 판정(확인 필요만 말한다)과 검사 줄을 그대로 보이고, 이동 줄은 경로·수단·도착을 보인다", async ({ page, request }) => {
   await openFinished(page, request);
-  await expect(card(page, "경복궁 관람")).toContainText("유지");
+  await expect(card(page, "경복궁 관람")).not.toContainText("확인 필요");
   await card(page, "경복궁 관람").getByRole("heading").getByRole("button").click();
   await expect(page.getByText("09:00–17:00 안에 머물러요")).toBeVisible();
   await expect(page.getByText("화요일 휴무 · 방문은 목요일")).toBeVisible();
   await card(page, "올리브영").getByRole("heading").getByRole("button").click();
   await expect(page.getByText("경복궁 관람과 30분 겹쳐요")).toBeVisible();     // 서버가 쓴 문장 그대로
-  await expect(page.getByText("지하철 3호선 9분 · 0.6km").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /지하철 3호선.*9분 · 0\.6km/ })).toBeVisible();      // 수단은 아이콘, 눈에 보이는 말은 시간과 거리
 });
 
 test("잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확인이 필요한 일정은 이유를 말하고 보내지 않는다", async ({ page, request }) => {
@@ -76,18 +76,20 @@ test("잠금: 확인이 끝난 일정은 서버에 알리고 고정되며, 확�
   expect((await server.received("POST", "/edits")).length).toBe(1);               // 보내지 않았다
 });
 
-test("삭제 → 되돌리기: 삭제는 서버에 알리고, 되돌리기는 같은 일정을 다시 살리는 수정을 보낸다", async ({ page, request }) => {
+test("삭제 → 되돌리기: 삭제는 표시만 하고 되돌리기는 서버로 가지 않으며, 다시 제출할 때 빼기가 서버로 간다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "광장시장 삭제" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: /^삭제/ }).click();
+  await expect(card(page, "광장시장")).toContainText("삭제 예정");
+  expect(await server.received("POST", "/edits")).toHaveLength(0);
+  await page.getByRole("button", { name: "광장시장 삭제 되돌리기" }).click();
+  await expect(card(page, "광장시장")).not.toContainText("삭제 예정");
+  expect(await server.received("POST", "/edits")).toHaveLength(0);                                 // 되돌리기도 서버와 상관없다
+  await page.getByRole("button", { name: "광장시장 삭제" }).click();
+  await page.getByRole("button", { name: "다시 제출" }).click();
   await expect(card(page, "광장시장")).toHaveCount(0);
   const [removed] = await server.received("POST", "/edits");
   expect(removed.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[2].removed", value: true }] });
-
-  await page.getByRole("button", { name: "되돌리기" }).click();
-  await expect(card(page, "광장시장")).toBeVisible();
-  const edits = await server.received("POST", "/edits");
-  expect(edits[1].body).toEqual({ revision: 2, edits: [{ source_id: "s1", field: "items[2].removed", value: false }] });
+  expect((await server.received("POST", "/revalidate")).length).toBe(1);                           // 이어서 전체를 다시 확인한다
 });
 
 test("수정 화면: 예약한 일정은 서버가 후보를 주지 않고(booked_needs_name) 화면은 그 이유와 이름을 쓰라는 안내를 말한다 — 일반 「다른 후보가 없어요」가 아니다", async ({ page, request }) => {
@@ -138,45 +140,34 @@ test("장소 검색과 사진: 검색 결과가 나오고, 관광공사 번호�
   await expect(found).toContainText("화장품 · 서울 중구 명동길 53");           // 서버가 준 분류 · 주소 그대로
 });
 
-test("맨 아래: 전체 자동 추천 → 재검증 → 여행 등록 순서로 이어지고, 확인할 것이 남으면 재검증은 이유를 말한다", async ({ page, request }) => {
+test("맨 아래: 확인할 것이 남으면 「다시 제출」은 이유를 말하고, 전체 자동 추천의 수정안은 「여행 등록」으로 바로 저장·등록된다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const auto = page.getByRole("button", { name: /전체 자동 추천/ });
   await expect(auto).toContainText("2");                                            // 고칠 항목 수: 장소 1 + 이동 1
-  await page.getByRole("button", { name: "재검증" }).click({ force: true });                   // 꺼진 단추도 눌러 볼 수 있다(이유를 말하려고)
+  await page.getByRole("button", { name: "다시 제출" }).click({ force: true });               // 꺼진 단추도 눌러 볼 수 있다(이유를 말하려고)
   await expect(page.getByText(/확인이 필요한 항목 2건이 남아 있어요/)).toBeVisible();
   expect((await server.received("POST", "/revalidate")).length).toBe(0);
 
   await auto.click();
   await expect(page.getByText("올리브영 → 올리브영 광화문점 11:45–12:15")).toBeVisible();
-  // `[2026-10-03]` first only SHOWN: the dry run saves nothing, and registering waits for 「적용하기」 / 「그대로 두기」
+  // `[2026-10-03]` first only SHOWN: the dry run saves nothing. `[2026-10-04]` The proposed plan is the server's own, already checked: 「여행 등록」 is not held back for an 「적용하기」.
   const [shown] = await server.received("POST", "/autofix");
   expect(shown.body).toEqual({ revision: 1, dry_run: true });
-  await page.getByRole("button", { name: "여행 등록" }).click({ force: true });
-  await expect(page.getByText(/저장하지 않은 미리 보기예요/)).toBeVisible();
   expect((await server.received("POST", "/confirm")).length).toBe(0);
-  await page.getByRole("button", { name: "적용하기" }).click();
-  await expect.poll(async () => (await server.received("POST", "/autofix")).length).toBe(2);
+  await page.getByRole("button", { name: "여행 등록" }).click();
+  await expect.poll(async () => (await server.received("POST", "/autofix")).length).toBe(2);   // 저장은 미리 보기와 같은 호출에서 dry_run 만 뺀 것
   const [, fixed] = await server.received("POST", "/autofix");
   expect(fixed.body).toEqual({ revision: 1 });
-
-  // 화면은 고친 일정을 하나씩 다시 확인하는 모습으로 따라간다 — 끝나면 「고칠 곳이 없어요」
-  await expect(page.getByText("고칠 곳이 없어요")).toBeVisible({ timeout: 20_000 });
-  // 고친 것이 있으니 바로 등록하지 않고 다시 확인한다
-  await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
-  await page.getByRole("button", { name: "재검증" }).click();
-  await expect(page.getByText("재검증을 통과했어요")).toBeVisible();
-  const [again] = await server.received("POST", "/revalidate");
-  expect(again.body).toEqual({ revision: 2 });
-  await page.getByRole("button", { name: "여행 등록" }).click();
   await expect(page).toHaveURL(new RegExp(`/trips/${TRIP_ID}$`));
   const [confirm] = await server.received("POST", "/confirm");
-  expect(confirm.body).toEqual({ revision: 2 });
+  expect(confirm.body).toEqual({ revision: 2 });                                               // 방금 저장한 판으로 등록했다
+  expect((await server.received("POST", "/revalidate")).length).toBe(0);                       // 서버가 이미 확인한 수정안이라 다시 확인하지 않는다
 });
 
 test("서버가 고친 것을 거절하면(409 item_locked) 서버의 문장이 그대로 알림으로 뜨고 화면은 그대로다", async ({ page, request }) => {
   await openFinished(page, request, { editRefusal: "locked" });
   await page.getByRole("button", { name: "광장시장 삭제" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: /^삭제/ }).click();
+  await page.getByRole("button", { name: "다시 제출" }).click();                                      // 빼기는 다시 제출할 때 서버로 간다 — 거절당한다
   await expect(page.getByText("고정한 일정이라 바꿀 수 없어요").first()).toBeVisible();
   await expect(card(page, "광장시장")).toBeVisible();
 });
@@ -191,7 +182,7 @@ test("서버의 확인 결과를 못 만들었으면(review: null) 못 만들었
   await expect(page.getByRole("button", { name: /전체 자동 추천/ })).toContainText("준비 중");
 });
 
-test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 번 불러 권장 수정안이 반영된 모습으로 넘어가고, 바뀐 일정에 「바뀜」이 붙는다", async ({ page, request }) => {
+test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 번 불러 수정안이 이어지고, 바뀐 일정에 「바뀜」이 붙는다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const body = page.locator("div[class*=sheetBody]");
   await page.getByRole("button", { name: "목록 높이 바꾸기" }).click();
@@ -200,7 +191,7 @@ test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 
   const box = (await body.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let push = 0; push < 4; push += 1) { await page.mouse.wheel(0, 40); await page.waitForTimeout(50); }
-  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
   await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
   const asked = await server.received("POST", "/autofix");
   expect(asked.length).toBe(1);                                                    // 밀기 한 번에 한 번만 부른다
@@ -208,17 +199,15 @@ test("목록 끝에서 한 번 더 밀면 서버의 전체 자동 추천을 한 
   expect((await server.received("POST", "/edits")).length).toBe(0);
 });
 
-test("전체 자동 추천은 먼저 저장 없이 미리 보기만 보여 주고, 「그대로 두기」는 아무것도 저장하지 않으며 원래 모습으로 돌아간다", async ({ page, request }) => {
+test("전체 자동 추천은 저장 없이 수정안만 보여 주고, 위로 올리면 변경 전 모습이 그대로 있다 — 서버에는 아무것도 저장되지 않았다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   const auto = page.getByRole("button", { name: /전체 자동 추천/ });
   await auto.click();
-  const bar = page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" });
-  await expect(bar).toContainText("아직 저장하지 않았어요");
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
   await expect(page.getByText(/바뀜 · 이전/).first()).toBeVisible();
-  await page.getByRole("button", { name: "그대로 두기" }).click();
-  await expect(bar).toHaveCount(0);
-  await expect(page.getByText(/바뀜 · 이전/)).toHaveCount(0);
-  await expect(auto).toContainText("2");                                           // 고칠 항목 2건이 그대로 남아 있다 — 아무것도 저장되지 않았다
+  await page.locator("div[class*=sheetBody]").evaluate((element) => element.scrollTo({ top: 0 }));       // 변경 전으로 올라간다
+  await expect(page.getByRole("heading", { name: "계획 확인" })).toBeVisible();
+  await expect(auto).toContainText("2");                                           // 고칠 항목 2건이 그대로 — 아무것도 저장되지 않았다
   const calls = await server.received("POST", "/autofix");
   expect(calls).toHaveLength(1);
   expect(calls[0].body).toEqual({ revision: 1, dry_run: true });
@@ -238,7 +227,7 @@ test("고른 장소가 카드 이름이 된다 — 직접 고른 곳은 장소 �
 
 test("머리의 「확인 필요」 글자를 누르면 확인이 필요한 곳만 모아 보이고, 「전체 보기」로 돌아온다", async ({ page, request }) => {
   await openFinished(page, request);
-  const count = page.getByRole("button", { name: /장소 1곳 · 이동 1구간 확인 필요/ });
+  const count = needsBadge(page);
   await expect(count).toHaveAttribute("aria-pressed", "false");
   await expect(card(page, "경복궁 관람")).toBeVisible();
   await count.click();
@@ -255,6 +244,7 @@ test("머리의 「확인 필요」 글자를 누르면 확인이 필요한 곳�
 
 test("머리의 「내 여행」을 눌러 계획 이름을 바꾸면 서버의 trip.title 로 가고 머리글이 새 이름이 된다", async ({ page, request }) => {
   const server = await openFinished(page, request);
+  await page.getByRole("button", { name: /^계획 이름 · / }).click();                                // 이름을 누르면 연필이 나온다
   await page.getByRole("button", { name: /계획 이름 바꾸기/ }).click();
   const field = page.getByRole("textbox", { name: "계획 이름" });
   await field.fill("제주 3박 4일");
@@ -263,6 +253,7 @@ test("머리의 「내 여행」을 눌러 계획 이름을 바꾸면 서버의 
   const [saved] = await server.received("POST", "/edits");
   expect(saved.body).toEqual({ revision: 1, edits: [{ field: "trip.title", value: "제주 3박 4일" }] });
   // Esc 는 이름을 그대로 둔다
+  await page.getByRole("button", { name: /^계획 이름 · / }).click();
   await page.getByRole("button", { name: /계획 이름 바꾸기/ }).click();
   await page.getByRole("textbox", { name: "계획 이름" }).fill("버릴 이름");
   await page.getByRole("textbox", { name: "계획 이름" }).press("Escape");
@@ -292,23 +283,13 @@ test("전체 자동 추천이 바꿀 곳을 못 찾으면 이유만 말하지 �
   expect((await server.received("POST", "/edits")).length).toBe(0);                          // 아무것도 바뀌지 않았다
 });
 
-test("적용하려는 변경의 이전 장소를 모르면 「되돌리기」 단추를 달지 않고 그 사실을 미리 말한다", async ({ page, request }) => {
-  await openFinished(page, request, { autofix: "unknown_from" });
-  await page.getByRole("button", { name: /전체 자동 추천/ }).click();
-  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
-  await page.getByRole("button", { name: "적용하기" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영해 저장했어요" })).toContainText("되돌릴 수는 없어요");
-  await expect(page.getByRole("button", { name: "원래대로" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "되돌리기" })).toHaveCount(0);
-});
-
 test("「전체 자동 추천」 미리 보기는 화면이 열릴 때 서버에서 이미 받아 두어, 누르거나 밀 때 서버를 다시 기다리지 않는다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await expect.poll(async () => (await server.received("POST", "/autofix")).length).toBe(1);   // 아무것도 누르기 전에 이미 한 번 불렀다
   const [early] = await server.received("POST", "/autofix");
   expect(early.body).toEqual({ revision: 1, dry_run: true });
   await page.getByRole("button", { name: /전체 자동 추천/ }).click();
-  await expect(page.getByRole("status").filter({ hasText: "권장 수정안을 반영한 모습이에요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "수정안" })).toBeVisible();
   expect((await server.received("POST", "/autofix")).length).toBe(1);                         // 눌러도 다시 부르지 않는다
 });
 

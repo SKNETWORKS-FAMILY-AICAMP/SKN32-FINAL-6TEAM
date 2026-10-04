@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { mockServer, noHorizontalScroll, start } from "./helpers";
+import { needsBadge } from "./plan-check-kit";
 
 /**
  * 계획 확인 화면(`/intakes/[id]`)의 「화면 자체」 동작 — 서버가 무엇을 답하느냐보다 화면이 어떻게 움직이느냐를 지키는 시험.
@@ -15,7 +16,6 @@ import { mockServer, noHorizontalScroll, start } from "./helpers";
  */
 const INTAKE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 const INTAKE_READ = `**/v1/web/trip-intakes/${INTAKE}`;
-const SUMMARY = "장소 1곳 · 이동 1구간 확인 필요";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 서버 응답을 시험에서 고쳐 쓰는 자리라 모양을 고정하지 않는다
 type Json = Record<string, any>;
@@ -60,7 +60,7 @@ async function openFinished(page: Page, request: APIRequestContext, patch?: (vie
   if (patch) await patchIntake(page, patch);
   await start(page);
   await page.goto(`/intakes/${INTAKE}`);
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible();
+  await expect(needsBadge(page)).toBeVisible();
   return server;
 }
 
@@ -82,7 +82,7 @@ test("메뉴의 「애니메이션 건너뛰기」를 켜면 읽는 중에서 �
   await page.goto(`/intakes/${INTAKE}`);
   // 단계별로 다시 그리면 이 판(장소 셋 · 이동 둘 · 검사 줄)을 다 그리는 데 읽기 5초 + 단계 머무름 + 검사 줄이 들어 7초 넘게 걸린다. 바로 그리면 한두 초 안에 끝난다.
   await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 5_000 });
+  await expect(needsBadge(page)).toBeVisible({ timeout: 5_000 });
 });
 
 test("시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생은 그대로 보인다 — 읽는 화면이 먼저 나오고 결과는 한참 뒤에야 뜬다", async ({ page, request }) => {
@@ -92,8 +92,8 @@ test("시스템의 「동작 줄이기」가 켜져 있어도 단계별 재생�
   await page.goto(`/intakes/${INTAKE}`);
   await expect(page.getByRole("heading", { name: "계획을 확인하고 있어요", level: 1 })).toBeVisible({ timeout: 5_000 });
   await page.waitForTimeout(1_500);
-  await expect(page.getByText(SUMMARY, { exact: true })).toHaveCount(0);                  // 1.5초 뒤에도 아직 재생 중이다
-  await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible({ timeout: 30_000 });   // 재생이 끝나면 결과가 뜬다
+  await expect(needsBadge(page)).toHaveCount(0);                  // 1.5초 뒤에도 아직 재생 중이다
+  await expect(needsBadge(page)).toBeVisible({ timeout: 30_000 });   // 재생이 끝나면 결과가 뜬다
 });
 
 test("읽는 중 화면의 뒤로 화살표는 계획 입력 화면으로 돌아간다", async ({ page, request }) => {
@@ -132,7 +132,7 @@ test("PC 기기 틀·375px·320px에서 결과 화면과 바꾸기 화면이 가
   for (const [width, height] of WIDTHS) {
     await page.setViewportSize({ width, height });
     await page.goto(`/intakes/${INTAKE}`);
-    await expect(page.getByText(SUMMARY, { exact: true })).toBeVisible();
+    await expect(needsBadge(page)).toBeVisible();
     await noHorizontalScroll(page);
     await card(page, "올리브영").scrollIntoViewIfNeeded();
     await expect(card(page, "올리브영")).toBeInViewport({ ratio: 0.5 });
@@ -189,15 +189,17 @@ test("이틀 이상이면 날짜 칩 줄이 목록 위에 있고, 하루씩 보�
   await expect(card(page, "N서울타워")).toBeVisible();
 });
 
-test("하루씩 볼 때 마지막이 아닌 날의 끝에는 「다음 · 2일차」가 있고, 권장 수정안 안내(끝에서 밀기)는 마지막 날 끝에만 나온다", async ({ page, request }) => {
+test("하루씩 볼 때 날의 끝에는 「다음」 단추 없이 옆으로 밀면 다음 날이라는 안내만 있고, 맨 아래는 권장 수정안 안내다", async ({ page, request }) => {
   await openFinished(page, request, (view) => { view.review.items.push(DAY_TWO_STOP); });
   const hint = page.getByText("계속 내리면 권장 수정안이 반영된 모습을 보여 드려요");
-  await expect(hint).toHaveCount(0);                                                                    // 첫날 끝: 아직 아니다
-  await page.getByRole("button", { name: /^다음 · 2일차/ }).click();
-  await expect(page.getByRole("tab", { name: /^2일차/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("button", { name: /^다음 · / })).toHaveCount(0);                          // 단추는 없다
+  await expect(page.getByText(/옆으로 밀면 2일차/)).toBeVisible();                                      // 안내만 있다
+  await expect(hint).toBeVisible();                                                                     // 어느 날의 끝에서든 맨 아래는 이 안내다(고칠 곳이 있으면)
+  const [swipeAt, hintAt] = [await page.getByText(/옆으로 밀면 2일차/).boundingBox(), await hint.boundingBox()];
+  expect(swipeAt!.y).toBeLessThan(hintAt!.y);
+  await page.getByRole("tab", { name: /^2일차/ }).click();
   await expect(card(page, "N서울타워")).toBeVisible();
-  await expect(page.getByRole("button", { name: /^다음 · / })).toHaveCount(0);                          // 마지막 날에는 다음이 없다
-  await expect(hint).toBeVisible();                                                                     // 마지막 날 끝: 권장 수정안 안내
+  await expect(page.getByText(/옆으로 밀면 /)).toHaveCount(0);                                          // 마지막 날에는 넘길 다음 날이 없다
 });
 
 test.describe("좌우로 쓸어 날짜 넘기기", () => {
@@ -301,22 +303,14 @@ test("카드의 「자동 추천」은 시간이 맞는 첫 후보로 바꾸고,
   await expect(card(page, "올리브영 광화문점")).toBeVisible();
 });
 
-test("삭제 확인창: Tab은 두 단추 안에서만 돌고, 바깥을 누르면 닫히며, 320px에서도 화면 안에 있다", async ({ page, request }) => {
+test("삭제 예정 카드(회색 + 되돌리기)도 320px에서 화면 안에 있고 가로로 넘치지 않는다", async ({ page, request }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "올리브영 삭제" }).click();
-  const dialog = page.getByRole("alertdialog", { name: "올리브영 일정을 삭제하시겠습니까?" });
-  await expect(dialog).toBeInViewport();
-  await expect(dialog).toContainText("삭제한 뒤 잠시 「되돌리기」로 되돌릴 수 있습니다.");
+  await expect(card(page, "올리브영")).toContainText("삭제 예정");
+  await expect(page.getByRole("button", { name: "올리브영 삭제 되돌리기" })).toBeInViewport();
   await noHorizontalScroll(page);
-  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(dialog.getByRole("button", { name: "삭제" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
-  await page.mouse.click(5, 300);
-  await expect(dialog).toHaveCount(0);
-  expect(await server.received("POST", "/edits")).toHaveLength(0);                 // 묻기만 했다: 서버로는 아무것도 가지 않았다
+  expect(await server.received("POST", "/edits")).toHaveLength(0);                 // 표시만 했다: 서버로는 아무것도 가지 않았다
 });
 
 // ── 수정(바꾸기) 화면 ────────────────────────────────────────────────────────
@@ -380,7 +374,7 @@ test("수정 화면: 장소 검색은 로고 자리(머리줄)에 작게 들어 
   await expect(page.getByRole("link", { name: /triPilot — 소개 화면/ })).toBeVisible();          // 수정이 끝나면 로고가 돌아온다
 });
 
-test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버에 `place {none: true}` 가 가고, 카드가 「조정」이 되고 위치 미정으로 보인다", async ({ page, request }) => {
+test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버에 `place {none: true}` 가 가고, 카드가 「변경 완료」가 되고 위치 미정으로 보인다", async ({ page, request }) => {
   const server = await openFinished(page, request);
   await page.getByRole("button", { name: "경복궁 관람 수정" }).click();
   await page.getByText("직접 고치기 · 이름·날짜·시각·장소 없음").click();
@@ -390,7 +384,7 @@ test("「직접 고치기」에서 「장소 없음」으로 저장하면 서버
   await expect(toast(page, "저장했어요.")).toBeVisible();
   const [edit] = await server.received("POST", "/edits");
   expect(JSON.stringify(edit.body)).toContain('"none":true');
-  await expect(card(page, "경복궁 관람").getByText("조정")).toBeVisible();
+  await expect(card(page, "경복궁 관람").getByText("변경 완료")).toBeVisible();
   await expect(page.getByText(/위치 미정 · .*경복궁 관람/)).toBeVisible();
 });
 

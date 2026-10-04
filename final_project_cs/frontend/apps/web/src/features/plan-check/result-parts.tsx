@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
@@ -64,46 +64,6 @@ export function StopEditor({ item, onCancel, onSave, autoFocus = true }: { item:
   </form>;
 }
 
-/**
- * ⑥ 「삭제」 asks first, in the middle of the phone screen (mockup 개정 6): cancel has the focus, Esc and a press outside
- * close it, Tab stays between its two buttons. It says whether 「되돌리기」 can bring the stop back.
- */
-export function DeleteDialog({ item, dayLabel, undoable, onCancel, onDelete }: { item: PlanItem; dayLabel: string; undoable: boolean; onCancel: () => void; onDelete: () => Promise<void> }) {
-  const t = useT();
-  const [busy, setBusy] = useState(false);
-  const [refusal, setRefusal] = useState("");
-  const cancel = useRef<HTMLButtonElement>(null);
-  const confirm = useRef<HTMLButtonElement>(null);
-  useEffect(() => { cancel.current?.focus(); }, []);
-  function keys(event: KeyboardEvent) {
-    if (event.key === "Escape" && !busy) { event.preventDefault(); event.stopPropagation(); onCancel(); }
-    if (event.key !== "Tab") return;
-    const order = [cancel.current, confirm.current];
-    const at = order.indexOf(document.activeElement as HTMLButtonElement);
-    event.preventDefault();
-    order[(at + (event.shiftKey ? order.length - 1 : 1)) % order.length]?.focus();
-  }
-  async function remove() {
-    setBusy(true);
-    try { await onDelete(); }
-    catch (error) { setRefusal(reason(error)); setBusy(false); }
-  }
-  const time = [item.startsAt, item.endsAt].filter(Boolean).join("–");
-  return <div className={styles.scrim} onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
-    <div className={styles.dialog} role="alertdialog" aria-modal="true" aria-labelledby="plan-delete-title" aria-describedby="plan-delete-detail" onKeyDown={keys}>
-      <p id="plan-delete-title" className={styles.dialogTitle}>{t(`${item.title} 일정을 삭제하시겠습니까?`, `Delete “${item.title}”?`)}</p>
-      <p id="plan-delete-detail" className={styles.dialogDetail}><b>{dayLabel}{time && ` ${time}`}</b>{undoable
-        ? t("삭제한 뒤 잠시 「되돌리기」로 되돌릴 수 있습니다.", "Right after deleting, 「Undo」 can bring it back.")
-        : t("삭제한 일정은 되돌릴 수 없어요.", "A deleted stop cannot be brought back.")}</p>
-      {refusal && <p className={styles.editorError} role="alert">{refusal}</p>}
-      <div className={styles.dialogButtons}>
-        <Button ref={cancel} onClick={onCancel} disabled={busy}>{t("취소", "Cancel")}</Button>
-        <Button ref={confirm} variant="danger" onClick={() => void remove()} disabled={busy}>{busy ? t("삭제하는 중…", "Deleting…") : t("삭제", "Delete")}</Button>
-      </div>
-    </div>
-  </div>;
-}
-
 /** What the trip as a whole still needs before it can be registered — answered here, sent to the server at once. */
 export function TripIssues({ issues, onSave }: { issues: TripIssue[]; onSave?: (field: "first_day" | "party_size", value: string | number) => Promise<void> }) {
   const t = useT();
@@ -140,7 +100,10 @@ function TripAnswer({ field, onSave }: { field: "first_day" | "party_size"; onSa
 export interface Registration {
   /** The server says the plan can be registered as it stands (`check.ready`). */
   ready: boolean;
+  /** The same for the plan 「전체 자동 추천」 would make (its dry run was checked by the server too); undefined when there is no preview. */
+  previewReady?: boolean;
   busy: boolean;
+  /** Registers the plan the server holds NOW (it reads the revision when called, so a plan saved a moment ago is the one registered). */
   onRegister: () => void;
   /** A refusal, in the server's words, with its listed problems. */
   error: string | null;
@@ -153,56 +116,66 @@ export interface Registration {
 
 /**
  * ⑦ The bottom of the result (mockup scenario 7, 개정 5): 「전체 자동 추천」 on the left with how many things need a look;
- * on the right the next step — 「재검증」 while something needs a look (off) or after a change (on), 「여행 등록」 when there
+ * on the right the next step — 「다시 제출」 while something needs a look (off) or after the customer changed something (on), 「여행 등록」 when there
  * is nothing to fix, 「등록 완료」 after. A button that cannot act says why when pressed.
+ *
+ * ★`[2026-10-04 사용자 지시]` The plan the customer is looking at as the 수정안 (`previewing`) is the one the server itself proposed and checked: 「여행 등록」 is not held back for
+ *   a 「적용하기」 first — pressing it saves that plan and registers it (`onRegisterPreview`). A plan the customer changed by hand is a different matter: that one is sent again (「다시 제출」).
  */
-export function ResultFooter({ view, registration, frozen, explain, previewing = false, onAutoAll, onRecheck }: {
+export function ResultFooter({ view, registration, frozen, explain, previewing = false, needsTotal, pendingRemovals = 0, onAutoAll, onRecheck, onRegisterPreview }: {
   view: PlanCheckView; registration?: Registration;
-  /** The plan shown is a preview (nothing saved): registering would act on the plan as it was, so it waits for 「적용하기」 or 「그대로 두기」. */
+  /** The plan shown is the proposed one (nothing saved yet). */
   previewing?: boolean;
+  /** What still needs a look in the plan shown, not counting stops marked for deletion (they are leaving). */
+  needsTotal?: number;
+  /** Stops marked for deletion: they go when the plan is sent again. */
+  pendingRemovals?: number;
   /** Why nothing can be pressed now (being checked again, registered), or null. */
   frozen: string | null;
   explain: (why: string) => void;
   /** Left out where the page has no way to do it yet: the button says it is coming. */
   onAutoAll?: () => void;
   onRecheck?: () => void;
+  onRegisterPreview?: () => void;
 }) {
   const t = useT();
-  const { total } = needs(view);
+  const total = needsTotal ?? needs(view).total;
   const registered = Boolean(registration?.registeredHref);
   let status: ReactNode = null;
   if (registration?.error) {
     status = <div role="alert"><p>{registration.error}</p>{registration.problems.length > 0 && <ul>{registration.problems.map((problem, index) => <li key={index}>{problem}</li>)}</ul>}
       {registration.loginRequired && <p className={styles.loginHint}>
         <Link href={`${routes.myPage}#accounts`}>{t("마이페이지에서 계정을 연결하기", "Link an account on My page")}</Link>
-        {t(" — 연결한 뒤 이 화면으로 돌아와 다시 눌러 주세요. 읽은 계획은 그대로 있어요.", " — then come back here and press again. The plan that was read stays.")}</p>}</div>;
+        {t(" — 연결한 뒤 이 화면으로 돌아와 다시 눌러 주세요. 읽은 계획은 그대로 있어요.", " — then come back here and press again. The plan that was read stays.")}</p>}
+      </div>;
   }
   const autoWhy = !onAutoAll ? t("전체 자동 추천은 준비 중이에요", "Recommending all is coming")
-    : frozen ?? (total === 0 ? t("고칠 곳이 없어요", "Nothing to fix") : null);
+    : frozen ?? (previewing ? t("지금 보고 있는 것이 수정안이에요", "You are looking at the proposed plan") : total === 0 ? t("고칠 곳이 없어요", "Nothing to fix") : null);
   let next: ReactNode;
-  if (previewing) {
-    next = <Act className={styles.footButton} data-primary why={t("저장하지 않은 미리 보기예요 · 위의 「적용하기」나 「그대로 두기」를 먼저 골라 주세요", "This is a preview, nothing is saved · choose Apply or Keep as it was above first")} explain={explain} onPress={() => undefined}>
-      {t("여행 등록", "Register trip")}</Act>;
-  } else if (registered) {
+  if (registered) {
     next = <Link href={registration!.registeredHref!} className={styles.footButton} data-done aria-label={t("등록 완료 — 여행 보기", "Registered — open the trip")}>✓ {t("등록 완료", "Registered")}</Link>;
   } else if (view.rechecking) {
-    next = <button type="button" className={styles.footButton} data-primary aria-disabled="true" onClick={() => explain(t("재검증하는 중이에요 · 잠시만요", "Checking again · one moment"))}>
-      <span className={styles.spinner} aria-hidden="true" />{t("재검증 중…", "Checking again…")}</button>;
-  } else if (total > 0 || view.dirty) {
-    const why = total > 0 ? t(`확인이 필요한 항목 ${total}건이 남아 있어요 · 전체 자동 추천이나 수정으로 먼저 고쳐 주세요`, `${total} item${total > 1 ? "s" : ""} still need a look · fix them with Recommend all or Edit first`)
-      : frozen ?? (!onRecheck ? t("재검증은 준비 중이에요", "Checking again is coming") : null);
-    next = <Act className={styles.footButton} data-primary why={why} explain={explain} onPress={() => onRecheck?.()}>{t("재검증", "Check again")}</Act>;
+    next = <button type="button" className={styles.footButton} data-primary aria-disabled="true" onClick={() => explain(t("다시 확인하는 중이에요 · 잠시만요", "Checking again · one moment"))}>
+      <span className={styles.spinner} aria-hidden="true" />{t("다시 확인하는 중…", "Checking again…")}</button>;
+  } else if (total > 0 || (!previewing && (view.dirty || pendingRemovals > 0))) {
+    // ★`[2026-10-04]` What the customer changed (or marked for deletion) can always be sent again — a stop to take out must not wait for every other stop to be fixed.
+    //   Only a plan with nothing to send and something still to look at has to be fixed first.
+    const pending = !previewing && (view.dirty || pendingRemovals > 0);
+    const why = pending ? frozen ?? (!onRecheck ? t("다시 제출은 준비 중이에요", "Sending again is coming") : null)
+      : t(`확인이 필요한 항목 ${total}건이 남아 있어요 · 전체 자동 추천이나 수정으로 먼저 고쳐 주세요`, `${total} item${total > 1 ? "s" : ""} still need a look · fix them with Recommend all or Edit first`);
+    next = <Act className={styles.footButton} data-primary why={why} explain={explain} onPress={() => onRecheck?.()}>{t("다시 제출", "Send again")}</Act>;
   } else {
+    const ready = previewing ? registration?.previewReady ?? registration?.ready : registration?.ready;
     const why = !registration ? t("여행 등록은 준비 중이에요", "Registering is coming")
-      : frozen ?? (registration.busy ? t("등록하는 중이에요", "Registering") : !registration.ready
+      : frozen ?? (registration.busy ? t("등록하는 중이에요", "Registering") : !ready
         ? (registration.problems.join(" · ") || t("서버가 아직 등록할 수 없다고 해요 · 위의 확인할 것을 먼저 고쳐 주세요", "The server cannot register it yet · fix what is listed above first")) : null);
-    next = <Act className={styles.footButton} data-primary why={why} explain={explain} onPress={() => registration?.onRegister()}>
+    next = <Act className={styles.footButton} data-primary why={why} explain={explain} onPress={() => (previewing && onRegisterPreview ? onRegisterPreview() : registration?.onRegister())}>
       {registration?.busy ? t("등록하는 중…", "Registering…") : t("여행 등록", "Register trip")}</Act>;
   }
   return <footer className={styles.footer}>
     {status}
     <Act className={styles.footButton} why={autoWhy} explain={explain} onPress={() => onAutoAll?.()}>
-      <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />{t("전체 자동 추천", "Recommend all")}{total > 0 && !frozen && <span className={styles.badge}>{total}</span>}
+      <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />{t("전체 자동 추천", "Recommend all")}{total > 0 && !frozen && !previewing && <span className={styles.badge}>{total}</span>}
       {!onAutoAll && <small className={styles.soon}>{t("준비 중", "soon")}</small>}
     </Act>
     {next}

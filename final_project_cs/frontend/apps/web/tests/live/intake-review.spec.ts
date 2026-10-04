@@ -84,7 +84,7 @@ test("고객이 일정을 모두 지워도 「읽은 일정이 없어요」 안�
   await start(page);
   await page.goto(`/intakes/${ID}`);
   await page.getByRole("button", { name: "경복궁 관람 삭제" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "삭제" }).click();
+  await page.getByRole("button", { name: "다시 제출" }).click();                                     // 삭제는 다시 제출할 때 서버로 간다
   await expect(page.getByText("남은 일정이 없어요")).toBeVisible();
   await expect(page.getByRole("heading", { name: "이 글에서는 일정을 찾지 못했어요" })).toHaveCount(0);
 });

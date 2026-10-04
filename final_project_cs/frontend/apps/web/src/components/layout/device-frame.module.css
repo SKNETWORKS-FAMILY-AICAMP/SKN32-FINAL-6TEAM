@@ -8,6 +8,11 @@
 .slot { display: none; }
 .slot:not(:empty) { display: flex; flex: 1; min-width: 0; align-items: center; }
 .header:has(.slot [data-hide-brand]) .brand { display: none; }
+/* `[2026-10-04 사용자 · 코덱스 의견]` Floating header: no bar over the map — three chips (white 92 %, 16 px corners) so the map shows through everywhere else; the chips take the presses, the gaps between them leave the map draggable. */
+.device[data-floating] .header { padding: 0 12px; gap: 8px; background: none; pointer-events: none; }
+.device[data-floating] .header > * { pointer-events: auto; }
+.device[data-floating] .brand { justify-content: center; width: 44px; min-height: 44px; font-size: 0; gap: 0; border-radius: 16px; background: color-mix(in srgb, var(--color-surface) 92%, transparent); box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 16%, transparent); }
+.device[data-floating] .slot:not(:empty) { flex: 1; min-width: 0; }
 .overlay { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
 .overlay:empty { display: none; }
 @media (max-width: 720px) {

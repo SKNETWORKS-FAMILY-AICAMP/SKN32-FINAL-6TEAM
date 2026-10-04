@@ -81,6 +81,8 @@ const DEFAULTS = {
   // `[2026-10-04]` the lines between stops (`GET /v1/web/trips/{id}/route-shapes`, mobility session): "off" = an older server (FastAPI 404 `{detail}`)
   //   | "on" (two shapes on day 1: a walk on a road graph, drawn solid; a bus joined by a straight line with no ground, drawn dashed) | "fail" (500) | "slow" ("on" after 3 s).
   routeShapes: "off",
+  // `[2026-10-04]` the same for a plan not registered yet (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): "off" (404) | "on" (the board's first leg joined by a straight line with no ground, the second on a road) | "fail" (500)
+  intakeRoutes: "off",
   // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
   agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
@@ -734,6 +736,20 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, version: 1 })}
     return json(response, 202, { intake_id: INTAKE_ID, status: "reading", stage: "received" }, origin);
   }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}` && request.method === "GET") { polls += 1; return json(response, 200, intakeView(board.revision), origin); }
+  if (path === `/v1/web/trip-intakes/${INTAKE_ID}/route-shapes` && request.method === "GET" && scenario.intakeRoutes !== "off") {
+    if (scenario.intakeRoutes === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    const byId = new Map(board.items.map((item) => [item.id, item]));
+    const shapes = board.moves.flatMap((move, at) => {
+      const a = byId.get(move.from), b = byId.get(move.to);
+      if (typeof a?.place?.latitude !== "number" || typeof b?.place?.latitude !== "number") return [];
+      const from = [a.place.longitude, a.place.latitude], to = [b.place.longitude, b.place.latitude];
+      const straight = at === 0;
+      return [{ from_item_id: move.from, to_item_id: move.to, from: a.title, to: b.title, mode: straight ? "subway" : "walk",
+        line: { type: "LineString", coordinates: straight ? [from, to] : [from, [(from[0] + to[0]) / 2 + 0.002, (from[1] + to[1]) / 2 - 0.001], to] },
+        source: straight ? "straight_line" : "local_road_graph", grade: straight ? "근거없음" : "추정", distance_m: 900 + at * 300, note: straight ? "탄 역 정보가 없어 직선으로 이었어요" : null }];
+    });
+    return json(response, 200, { intake_id: INTAKE_ID, revision: board.revision, shapes, attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)" }, origin);
+  }
   if (path === `/v1/web/trip-intakes/${INTAKE_ID}/events` && request.method === "GET") {
     if (scenario.intakeEvents === "off") return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
     // Without the server's own check there is no content to stream: only the stage (and "stalled"), as an older server did.

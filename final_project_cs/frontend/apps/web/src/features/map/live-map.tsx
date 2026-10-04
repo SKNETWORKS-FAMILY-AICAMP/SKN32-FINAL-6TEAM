@@ -9,10 +9,10 @@ export function MapUnavailable({ message }: { message: string }) {
   return <div className={styles.unavailable} role="alert"><strong>지도를 표시할 수 없어요</strong><p>{message}</p></div>;
 }
 
-export function LiveMap({ adapter, name, points, selectedId, onSelect, lines }: MapViewProps & { adapter: MapAdapter; name: string }) {
+export function LiveMap({ adapter, name, points, selectedId, onSelect, lines, topInset }: MapViewProps & { adapter: MapAdapter; name: string }) {
   const container = useRef<HTMLDivElement>(null);
   const controller = useRef<MapController | null>(null);
-  const latest = useRef({ points, selectedId, onSelect, lines });
+  const latest = useRef({ points, selectedId, onSelect, lines, topInset });
   const [attempt, setAttempt] = useState(0);
   // `[2026-10-03 사용자 지시]` The zoom buttons show while the pointer is over the map, or for a few seconds after it is touched (a phone has no hover).
   const [awake, setAwake] = useState(false);
@@ -22,9 +22,9 @@ export function LiveMap({ adapter, name, points, selectedId, onSelect, lines }: 
   const [state, setState] = useState<{ status: "loading" | "ready" | "error"; message?: string }>({ status: "loading" });
 
   useEffect(() => {
-    latest.current = { points, selectedId, onSelect, lines };
+    latest.current = { points, selectedId, onSelect, lines, topInset };
     controller.current?.update(points, selectedId, lines);
-  }, [points, selectedId, onSelect, lines]);
+  }, [points, selectedId, onSelect, lines, topInset]);
 
   useEffect(() => {
     const element = container.current;

@@ -1,6 +1,6 @@
 import type { MapAdapter, MapLine, MapPoint } from "../model";
 import { lineStyle, linesKey } from "./lines";
-import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
+import { createPin, geometryKey, layoutPins, PIN_BOX, placePin, pointLabel, setPinSelected, type PinSlot } from "./pin";
 
 /**
  * Free map: OpenStreetMap standard tiles drawn with Leaflet.
@@ -20,7 +20,11 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
   return {
     async create(container, options) {
       const L = (await import("leaflet")).default;
-      const map = L.map(container, { center: options.points[0]?.coordinates ?? SEOUL, zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: true });
+      // ★`[2026-10-04]` The zoom buttons stand at the right, under the bar that floats over the map (they were at the top-left, under the home mark).
+      const map = L.map(container, { center: options.points[0]?.coordinates ?? SEOUL, zoom: 14, minZoom: 3, maxZoom: 18, zoomControl: false });
+      L.control.zoom({ position: "topright" }).addTo(map);
+      const topRight = container.querySelector<HTMLElement>(".leaflet-top.leaflet-right");
+      if (topRight && options.topInset) topRight.style.top = `${options.topInset}px`;
       const layer = L.tileLayer(tileUrl, { maxZoom: 19, attribution: OSM_ATTRIBUTION, crossOrigin: false });
       // ★One missing tile is not a broken map (the pins still show). Only when nothing has loaded after a few failures
       //   does the screen say the map could not be shown — never a blank grey box that looks like a map.
@@ -56,13 +60,26 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
         markers = [];
       }
 
+      // ★`[2026-10-04]` Each pin stands on the side of its coordinate where it overlaps the fewest others (`layoutPins`); worked out again when the map moves or zooms.
+      let slots: Record<string, PinSlot> = {};
+      function relayout() {
+        if (destroyed || !markers.length || !container.clientWidth || !container.clientHeight) return;
+        const size = map.getSize();
+        slots = layoutPins(points.map((point) => {
+          const at = map.latLngToContainerPoint([point.coordinates.lat, point.coordinates.lng]);
+          return { id: point.id, x: at.x, y: at.y };
+        }), { width: size.x, height: size.y, top: options.topInset ?? 0 }, slots);
+        markers.forEach(({ id, pin }) => { if (slots[id]) placePin(pin, slots[id]); });
+      }
+      map.on("moveend zoomend resize", relayout);
+
       function fit() {
         if (!needsFit || !container.clientWidth || !container.clientHeight || !points.length) return;
         needsFit = false;
         programmatic = true;
         try {
           if (points.length === 1) map.setView(points[0].coordinates, 15);
-          else map.fitBounds(L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number])), { padding: [50, 50] });
+          else map.fitBounds(L.latLngBounds(points.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as [number, number])), { paddingTopLeft: [50, 50 + (options.topInset ?? 0)], paddingBottomRight: [50, 50] });
         } finally { programmatic = false; }
       }
 
@@ -92,13 +109,17 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           clearMarkers();
           points.forEach((point) => {
             const pin = createPin(point);
-            const icon = L.divIcon({ html: pin, className: "", iconSize: [44, 44], iconAnchor: [6, 44] });
+            const icon = L.divIcon({ html: pin, className: "", iconSize: [PIN_BOX, PIN_BOX], iconAnchor: [PIN_BOX / 2, PIN_BOX / 2] });
             const marker = L.marker(point.coordinates, { icon, title: pointLabel(point), alt: pointLabel(point), keyboard: true, riseOnHover: true });
             marker.on("click", () => options.onSelect(point.id));
             marker.addTo(map);
+            // The marker's box is wider than the pin: only the pin takes presses (the rest of the box leaves the map draggable).
+            const element = marker.getElement();
+            if (element) element.style.pointerEvents = "none";
             markers.push({ id: point.id, marker, pin });
           });
           previousData = data;
+          relayout();
         }
         markers.forEach(({ id, pin, marker }) => {
           const selected = id === nextSelectedId;
@@ -111,6 +132,7 @@ export function createOsmAdapter(tileUrl: string): MapAdapter {
           needsFit = true;
           userMoved = false;            // different pins: the old view means nothing
           fit();
+          relayout();
         } else if (nextSelectedId !== selectedId) {
           const selected = points.find(({ id }) => id === nextSelectedId);
           if (selected) map.panTo(selected.coordinates);

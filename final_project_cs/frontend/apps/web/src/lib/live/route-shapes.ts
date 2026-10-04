@@ -48,7 +48,9 @@ function shapeOf(entry: unknown): RouteShape | null {
   const row = (entry ?? {}) as Record<string, unknown>;
   const line = (row.line ?? {}) as { type?: unknown; coordinates?: unknown };
   const points = line.type === "LineString" ? pointsOf(line.coordinates) : [];
-  const fromItemId = text(row.from_item_id), toItemId = text(row.to_item_id), itemId = text(row.item_id);
+  const fromItemId = text(row.from_item_id), toItemId = text(row.to_item_id);
+  // A registered trip's shape names its move item; one for a plan not registered yet (`trip-intakes/{id}/route-shapes`) has none — the pair of stops is its name.
+  const itemId = text(row.item_id) ?? (fromItemId && toItemId ? `${fromItemId}:${toItemId}` : null);
   if (!itemId || !fromItemId || !toItemId || points.length < 2) return null;
   const mode = MODES.find((value) => value === row.mode) ?? "unknown";
   const source = SOURCES.find((value) => value === row.source) ?? "unknown";
@@ -67,6 +69,20 @@ export function readRouteShapes(body: unknown): RouteShapes {
   const data = (body ?? {}) as { attribution?: unknown; shapes?: unknown };
   const shapes = (Array.isArray(data.shapes) ? data.shapes : []).map(shapeOf).filter((shape): shape is RouteShape => shape !== null);
   return { attribution: text(data.attribution) ?? "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes };
+}
+
+/**
+ * `[2026-10-04]` The same lines for a plan the server has taken but not registered (`GET /v1/web/trip-intakes/{id}/route-shapes`, mobility session): drawn on the plan check's map.
+ * ★The stops are the check screen's (`review.items[].id`); it reads only the check the server stored, so a plan it has not checked has none (`shapes: []`).
+ * `null` = the server has no such route (an older one).
+ */
+export async function getIntakeRouteShapes(intakeId: string, language: Language): Promise<RouteShapes | null> {
+  try {
+    return readRouteShapes(await api<unknown>(`/v1/web/trip-intakes/${encodeURIComponent(intakeId)}/route-shapes`, language));
+  } catch (error) {
+    if (unsupported(error)) return null;
+    throw error;
+  }
 }
 
 /** `null` = the server has no such route. The first call after a server restart can wait several seconds while it loads its road data. */

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { fillPlanAsk, finishOnboarding, openRegistration, start, mockServer, TRIP_ID, weekAhead } from "./helpers";
+import { needsBadge } from "./plan-check-kit";
 
 const PLAN = "10/1 09:00 경복궁 관람";
 
@@ -309,9 +310,9 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   await expect(page.getByRole("heading", { name: "내 여행", level: 1 })).toBeVisible();            // the server's trip title
-  await expect(page.getByText("고칠 곳이 없어요", { exact: true })).toBeVisible();
+  await expect(page.locator("span[class*=headBadge][data-kind=ok]")).toBeVisible();              // 머리에는 ✓ 하나(고칠 곳이 없다)
   const card = page.getByRole("article", { name: "경복궁 관람" });
-  await expect(card.getByText("유지")).toBeVisible();
+  await expect(card).not.toContainText("확인 필요");                                                // 괜찮은 일정에는 아무 말도 붙지 않는다
   const head = card.getByRole("heading").getByRole("button");
   await expect(head).toHaveAttribute("aria-expanded", "false");
   await head.click();
@@ -324,18 +325,18 @@ test("읽은 접수를 열면 새 결과 화면이 서버가 찾은 장소와 �
   await expect(page.getByRole("heading", { name: "여행 계획 살펴보기" })).toHaveCount(0);
 });
 
-test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 꺼진 「재검증」이 고칠 길을 알린다", async ({ page, request }) => {
+test("서버가 등록을 막는 문제를 주면 카드가 「확인 필요」로 이유를 보이고, 꺼진 「다시 제출」이 고칠 길을 알린다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0, intake: "blocked" });
   await start(page);
   await page.goto("/intakes/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
   const card = page.getByRole("article", { name: "경복궁 관람" });
   await expect(card.getByText("확인 필요")).toBeVisible();
-  await expect(page.getByText("장소 1곳 확인 필요", { exact: true })).toBeVisible();
+  await expect(needsBadge(page)).toHaveText("!1");
   await card.getByRole("heading").getByRole("button").click();
   await expect(card.getByText("장소를 정하지 못했습니다")).toBeVisible();                      // the server's own message
   await expect(page.getByRole("button", { name: "여행 등록" })).toHaveCount(0);
-  const recheck = page.getByRole("button", { name: "재검증" });
+  const recheck = page.getByRole("button", { name: "다시 제출" });
   await expect(recheck).toHaveAttribute("aria-disabled", "true");
   await recheck.click({ force: true });
   await expect(page.getByRole("status").filter({ hasText: "확인이 필요한 항목 1건이 남아 있어요" })).toBeVisible();
@@ -381,25 +382,18 @@ test("결과 화면의 「직접 고치기」: 서버가 장소를 못 찾으면
   expect(await server.received("POST", "/edits")).toHaveLength(1);
 });
 
-test("결과 화면의 삭제: 가운데 확인창이 먼저 묻고(되돌릴 수 없다고), Esc는 닫기만 하며, 「삭제」를 누르면 빼기가 서버로 간다", async ({ page, request }) => {
+test("결과 화면의 삭제: 바로 지우지 않고 회색으로 표시한 뒤 되돌리기 자리가 서며, 「다시 제출」을 누르면 빼기가 서버로 간다", async ({ page, request }) => {
   const server = mockServer(request);
   await server.scenario({ readingPolls: 0 });
   await start(page);
   await page.goto(INTAKE);
-  const trigger = page.getByRole("button", { name: "경복궁 관람 삭제" });
-  await trigger.click();
-  const dialog = page.getByRole("alertdialog", { name: "경복궁 관람 일정을 삭제하시겠습니까?" });
-  await expect(dialog).toContainText("삭제한 일정은 되돌릴 수 없어요.");
-  await expect(dialog.getByRole("button", { name: "취소" })).toBeFocused();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toHaveCount(0);
-  await expect(trigger).toBeFocused();
-  expect(await server.received("POST", "/edits")).toHaveLength(0);
-  await trigger.click();
-  await dialog.getByRole("button", { name: "삭제" }).click();
-  const done = page.getByRole("status").filter({ hasText: "경복궁 관람 일정을 삭제했어요" });
-  await expect(done).toBeVisible();
-  await expect(done.getByRole("button", { name: "되돌리기" })).toHaveCount(0);           // the server cannot put it back
+  await page.getByRole("button", { name: "경복궁 관람 삭제" }).click();
+  const card = page.getByRole("article", { name: "경복궁 관람" });
+  await expect(card).toContainText("삭제 예정");
+  await expect(page.getByRole("button", { name: "경복궁 관람 삭제 되돌리기" })).toBeVisible();        // 휴지통이 있던 자리
+  expect(await server.received("POST", "/edits")).toHaveLength(0);                                     // 묻지도 보내지도 않았다
+  await page.getByRole("button", { name: "다시 제출" }).click();
+  await expect.poll(async () => (await server.received("POST", "/edits")).length).toBe(1);
   const [edit] = await server.received("POST", "/edits");
   expect(edit.body).toEqual({ revision: 1, edits: [{ source_id: "s1", field: "items[0].removed", value: true }] });
 });

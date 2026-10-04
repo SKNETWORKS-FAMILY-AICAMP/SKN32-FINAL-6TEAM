@@ -45,6 +45,8 @@ export interface MapViewProps {
   onSelect: (stopId: string) => void;
   /** Route lines under the pins; they never move the camera (the camera fits the pins). */
   lines?: MapLine[];
+  /** `[2026-10-04]` Px at the top of the map that a bar floats over: the camera fits the pins below it and no pin is put under it. */
+  topInset?: number;
 }
 
 export interface MapController {
