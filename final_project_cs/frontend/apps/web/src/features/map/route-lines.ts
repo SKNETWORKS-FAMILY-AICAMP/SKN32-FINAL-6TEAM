@@ -33,5 +33,7 @@ export function routeNotes(shapes: RouteShape[]): string[] {
   if (shapes.some(isGuess)) notes.push("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
   if (shapes.some((shape) => shape.source === "stations")) notes.push("지하철 구간은 역 위치를 순서대로 이은 선이라 실제 선로 모양이 아니에요.");
   if (shapes.some((shape) => shape.mode === "bus" || shape.mode === "mixed")) notes.push("버스는 정류장 정보가 없어 직선으로 이어요.");
-  return notes;
+  // The server says why for each guess (`note`): the road finder was off, no stop list … — shown as it wrote it, once for each distinct sentence.
+  const reasons = new Set(shapes.filter(isGuess).flatMap((shape) => shape.note ? [`${shape.from ?? "출발"} → ${shape.to ?? "도착"}: ${shape.note}`] : []));
+  return [...notes, ...reasons];
 }

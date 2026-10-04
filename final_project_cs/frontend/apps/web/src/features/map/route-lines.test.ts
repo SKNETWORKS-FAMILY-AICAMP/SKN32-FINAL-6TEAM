@@ -40,4 +40,14 @@ describe("which route lines go on the map", () => {
     expect(routeNotes([shape({ source: "stations", mode: "subway" })])).toEqual(["지하철 구간은 역 위치를 순서대로 이은 선이라 실제 선로 모양이 아니에요."]);
     expect(routeNotes([shape({ source: "straight_line", mode: "bus" })])).toEqual(["점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.", "버스는 정류장 정보가 없어 직선으로 이어요."]);
   });
+
+  it("adds the server's own reason for each guess, once for each distinct sentence — and none for a line that is not a guess", () => {
+    const reasons = routeNotes([
+      shape({ source: "straight_line", mode: "taxi", note: "길찾기가 꺼져 있어 직선으로 이었어요" }),
+      shape({ itemId: "m2", source: "straight_line", mode: "taxi", note: "길찾기가 꺼져 있어 직선으로 이었어요" }),     // the same sentence for the same places: once
+      shape({ itemId: "m3", from: "광장시장", to: "N서울타워", grade: "근거없음", note: "좌표가 근사값이에요" }),
+      shape({ itemId: "m4", source: "stations", mode: "subway", note: "역 사이는 역 좌표를 순서대로 잇는다" }),            // not a guess: the subway sentence above says it
+    ]);
+    expect(reasons.filter((line) => line.includes(": "))).toEqual(["경복궁 → 광장시장: 길찾기가 꺼져 있어 직선으로 이었어요", "광장시장 → N서울타워: 좌표가 근사값이에요"]);
+  });
 });

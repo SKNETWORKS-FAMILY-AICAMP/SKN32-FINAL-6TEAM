@@ -39,6 +39,7 @@ test("선이 있는 여행: 길을 아는 구간은 실선, 직선으로 이은 
   expect(text).toContain("경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)");   // the data source, as the server wrote it
   expect(text).toContain("점선은 길을 몰라 두 곳을 직선으로 이은 구간이에요.");
   expect(text).toContain("버스는 정류장 정보가 없어 직선으로 이어요.");
+  expect(text).toContain("아침 식당 → 경복궁: 정류장 정보가 없어 직선으로 이었어요");   // the server own reason for that guess (its `note`), as it wrote it
   expect(text).not.toContain("실제 선로 모양이 아니에요");                                // no subway line is on this map
 
   // the pins stay pressable and the lines do not cover them
