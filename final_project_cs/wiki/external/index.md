@@ -91,4 +91,4 @@ app/presentation/
 - [introspection.md](introspection.md) — 조립 상태를 보여주는 read-only API
 
 - [rest-endpoints.md](rest-endpoints.md) — 엔드포인트별 요청·응답 필드 계약
-
+- [api-key-issue-guide.md](api-key-issue-guide.md) — 이동 계산기 키 발급 따라 하기(공공데이터포털 활용신청 3 + 서울 열린데이터광장·ODsay 키)

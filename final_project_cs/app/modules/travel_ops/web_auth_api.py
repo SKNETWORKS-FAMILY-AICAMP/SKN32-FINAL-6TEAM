@@ -27,7 +27,8 @@ from app.core.settings import get_guardrails
 from app.infrastructure import oauth_providers as oauth
 from app.infrastructure.db.session import get_connection
 
-from . import web_auth, web_cookie, web_guard
+from . import web_agent_keys, web_auth, web_cookie, web_guard
+from .web_agent_keys_api import build_agent_keys_router
 from .web_session import add_key, new_customer
 
 #: 콜백이 웹으로 돌려보낼 때 쓰는 오류 코드(요청서) — 이 밖의 이유는 전부 `failed`
@@ -59,6 +60,7 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
     """`exchange` — 코드를 사용자 고유 번호로 바꾸는 것(시험이 가짜 업체를 꽂는다). 없으면 업체에 실제로 묻는다.
     `human_verify` — 사람 확인(Turnstile)을 갈아 끼우는 자리(시험)."""
     router = APIRouter()
+    router.include_router(build_agent_keys_router())        # `[2026-10-04 D-CS-012]` 에이전트 키(쿠키 로그인한 회원만)
 
     def _tenant() -> str:
         return settings_module.get_settings().tenant_id
@@ -131,6 +133,13 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
                 raise _error(410, "ticket_invalid", "이 로그인 표를 쓸 수 없다 — 처음부터 다시 한다")
             out: dict[str, Any] = {"outcome": got["outcome"], "provider": got["provider"],
                                    "trips": web_auth.trip_count(conn, tenant_id=tenant, customer_id=got["customer_id"])}
+            if got["outcome"] == "linked" and body.session == "cookie":
+                # ★게스트가 구글 계정을 연결했다 — 같은 세션이 이제 회원이다. 브라우저 세션 쿠키였던 같은 값을 **오래가는 쿠키로 다시** 내린다(안 그러면 창을 닫을 때 회원 세션도 사라진다)
+                existing = http.cookies.get(web_cookie.cookie_name())
+                session = web_cookie.lookup(conn, tenant_id=tenant, raw=existing)
+                if session is not None and session.customer_id == got["customer_id"]:
+                    out.update(web_cookie.session_body(session, tenant_id=tenant))
+                    return web_cookie.json_with_cookie(out, raw=existing, tenant_id=tenant, persistent=True)
             if got["outcome"] in ("signed_in", "created") and body.session == "cookie":
                 # ★로그인하는 순간 **세션을 새로 만든다**(세션 고정 공격 방지) — 요청에 딸려 온 옛 쿠키(게스트 세션)는 거둔다. 키는 안 준다
                 old = http.cookies.get(web_cookie.cookie_name())
@@ -168,7 +177,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             raise error from None
         with get_connection() as conn, conn.transaction():
             raw, session = web_cookie.start(conn, tenant_id=tenant, customer_id=new_customer(conn, tenant_id=tenant))
-        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201)
+        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201,
+                                           persistent=False)       # ★게스트 쿠키는 브라우저를 닫으면 사라진다(D-CS-011 정정 2026-10-04)
 
     @router.post("/v1/web/auth/adopt")
     def auth_adopt(http: Request):
@@ -180,7 +190,8 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
             return JSONResponse(web_cookie.session_body(who.session, tenant_id=tenant), headers={"Cache-Control": "no-store"})
         with get_connection() as conn, conn.transaction():
             raw, session = web_cookie.start(conn, tenant_id=tenant, customer_id=who.customer_id)
-        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201)
+        return web_cookie.json_with_cookie(web_cookie.session_body(session, tenant_id=tenant), raw=raw, tenant_id=tenant, status=201,
+                                           persistent=session.kind == "member")
 
     @router.get("/v1/web/auth/me")
     def auth_me(who: web_cookie.Identity = Depends(web_cookie.require_identity)):
@@ -274,7 +285,10 @@ def build_auth_router(*, exchange: oauth.Exchanger | None = None, human_verify: 
         with get_connection() as conn, conn.transaction():
             if not web_auth.unlink(conn, tenant_id=tenant, customer_id=customer, provider=provider):
                 raise _error(404, "not_linked", "이 로그인 방법은 연결돼 있지 않다")
-            return {"links": web_auth.links(conn, tenant_id=tenant, customer_id=customer)}
+            remaining = web_auth.links(conn, tenant_id=tenant, customer_id=customer)
+            if not remaining:        # ★마지막 연결을 풀면 게스트가 된다 — 복구 불가능한 계정에 강한 에이전트 키만 남지 않게 거둔다(D-CS-012)
+                web_agent_keys.revoke_all(conn, tenant_id=tenant, customer_id=customer)
+            return {"links": remaining}
 
     return router
 

@@ -59,6 +59,7 @@ def _delete_one(conn, tenant_id: str, customer_id: UUID) -> dict[str, int]:
         cur.execute("DELETE FROM trip_intakes WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))      # 여행이 안 된 접수(자식은 CASCADE)
         cur.execute("DELETE FROM web_sessions WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
         cur.execute("DELETE FROM web_user_keys WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))
+        cur.execute("DELETE FROM web_agent_keys WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))   # 연결을 푼 옛 회원이 가졌던(거둔) 에이전트 키
         try:
             with conn.transaction():                       # 저장점 — 가리키는 기록이 있으면 이 삭제만 되돌린다
                 cur.execute("DELETE FROM customers WHERE tenant_id=%s AND customer_id=%s", (tenant_id, customer_id))

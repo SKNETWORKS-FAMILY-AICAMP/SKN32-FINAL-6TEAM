@@ -31,8 +31,10 @@ import hashlib
 import hmac
 import html
 import json
+import logging
 from typing import Any, Callable, Literal
 from uuid import UUID, uuid4
+from urllib.parse import quote       # 계획서 내려받기 파일 이름(`/plan/{id}?download=1` — D-CS-011)
 from zoneinfo import ZoneInfo
 
 from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form, Header, HTTPException, Query,
@@ -427,6 +429,10 @@ def _cause_label(cause: dict[str, Any]) -> str:
 #: ★`[2026-09-27]` 한국관광콘텐츠랩 이용약관 제11조 — 관광공사 값이 나가는 고객 화면에 출처를 적는다.
 #:  이 화면의 장소가 관광공사 자료에서 왔는지 항목마다 가리지 않고 **늘** 붙인다(보수적으로).
 TOUR_API_POLICY_URL = "https://api.visitkorea.or.kr/#/useServiceGuide/2"
+
+
+#: 내려받는 파일 이름에 못 쓰는 글자(경로 구분자 · 윈도 금지 글자 · 줄바꿈) — 계획서 제목이 이름이 된다
+_FILENAME_BAD = frozenset(chr(c) for c in (47, 92, 58, 42, 63, 34, 60, 62, 124, 10, 13))
 
 
 def _render_plan(view: dict[str, Any]) -> str:
@@ -844,7 +850,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             message=request.message, request_id=request.request_id))
 
     @router.get("/plan/{trip_id}")
-    def plan(trip_id: UUID, t: str = Query(...), format: str | None = Query(None)):
+    def plan(trip_id: UUID, t: str = Query(...), format: str | None = Query(None), download: bool = Query(False)):
         """★로그인 없는 링크. 토큰이 틀리면 **있는지도 말하지 않는다**(404).
 
         ★`[2026-09-22]` 여행이 **어느 테넌트 것인지 먼저 찾아** 그 테넌트로 토큰을 맞춘다. 전에는
@@ -867,6 +873,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
         view.pop("customer_id", None)          # ★링크를 받은 사람에게 내부 id 를 보이지 않는다
         if format == "json":
             return JSONResponse(view)
+        if download:
+            # ★`[2026-10-04 사용자 결정]` 계획서 **내려받기** — 게스트 데이터는 보존 시간 뒤 지워지니 파일로 가져갈 수 있게 한다. 이 HTML 은 외부 파일 없이 혼자 열린다(밖으로 나가는 것은 지도 링크뿐)
+            name = "".join(ch for ch in str(view.get("title") or "plan") if ch not in _FILENAME_BAD).strip()[:60] or "plan"
+            return HTMLResponse(_render_plan(view), headers={
+                "Content-Disposition": f"attachment; filename=\"triPilot-plan.html\"; filename*=UTF-8''{quote('triPilot-' + name + '.html')}",
+                "Cache-Control": "no-store"})
         return HTMLResponse(_render_plan(view))
 
     @router.get("/booking-change/{booking_id}")

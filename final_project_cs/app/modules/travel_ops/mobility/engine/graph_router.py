@@ -113,6 +113,7 @@ class _Snap:
 class GraphRouter:
     """`GraphHopperClient` 와 같은 모양의 파이썬 라우터. 자료는 처음 길을 물을 때 한 번 올린다."""
 
+    is_local = True                                  # 호출 비용이 없다 — 플래너가 역·정류장 접근 걷기를 길로 잰다(#13)
     url = None                                       # 서버가 아니다 — BikeRouter.url 이 None 으로 읽힌다
     force_dijkstra = False
     basis = "로컬 도로그래프"                          # BikeRouter 응답의 basis · 근거 문구(「보행망 …」)에 그대로 들어간다

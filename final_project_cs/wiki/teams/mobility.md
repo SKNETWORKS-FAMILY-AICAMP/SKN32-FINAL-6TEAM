@@ -14,6 +14,8 @@ domain: travel
 
 `[2026-10-04]` **이동 계산기에 서버 없는 길찾기가 붙었다** — 택시·자전거·장소 사이 도보는 GraphHopper 서버를 따로 띄우지 않고 저장소 안 도로 그래프(`datasets/mobility/processed/mobility/road_graph_v1`)를 파이썬이 직접 읽어 최단경로를 구한다(`app/modules/travel_ops/mobility/engine/graph_router.py`). 서비스 런타임은 전엔 택시 서비스를 한 번도 끼우지 않아 택시 대안이 늘 「소요 근거없음」이었는데, 이제 막차 뒤 구간의 택시 대안이 시간·요금 하한을 싣는다. 끄는 법은 설정 `mobility_local_router=false`(`ACOP_MOBILITY_LOCAL_ROUTER`). 정확도·비용·한계·검증은 [리포트](../records/reports/2026-10-04_0400_이동_파이썬_길찾기_서버없이_리포트.md).
 
+`[2026-10-04 추가]` 같은 날 이어서 — ① **역·정류장까지 걷기를 도로 그래프로 잰다**(`Planner._eff`, 로컬 길찾기가 있을 때만 · 못 찾으면 직선 그대로). ② **공표 역간거리가 없는 구간의 지하철 요금**을 OSM 선로 길이로 추정해 대체 소스로 더했다(규칙 `fare.subway.distance_estimate` · 응답 label 에 「요금은 선로 길이 추정」 · 별도운임 노선은 안 낸다 · 자료 `rail_edge_track_v1.jsonl.gz`). ③ 구조 정리 — 판정 파일의 명령줄·출력은 `verify_time_cli.py`, 시험용 자동차 라우터는 `car_fixtures.py`, 규칙 파일의 변경 이력은 `rules_v0.3.history.json`(새 이력은 거기에 쌓는다). ④ 관광 구간을 구글 Routes(TRANSIT)와 32쌍 대조(`scripts/mobility/validate_tourist_vs_google.py`): 우리가 중앙 +8분 느림. 수치·한계는 리포트 12절.
+
 ★**코드가 생겼다.** `[실측 2026-09-10 작업 트리]` `app/modules/travel_ops/mobility.py` 가 있고 `config/project.yaml` 에 등록돼 있다. **`[실측 2026-09-10 git]` 둘 다 아직 커밋 전이다** — 되돌려지면 이 문장이 거짓이 된다. 이 문서는 한때 "아직 코드가 없다"고 적었다.
 
 근거는 계획서 v11 §5. `[결정 2026-09-10]` **MVP Team 셋(Activity·Dining·Mobility) 중 하나다** — 5주차에 선제 조정 루프와 함께 붙는다(v11 §9-B).
