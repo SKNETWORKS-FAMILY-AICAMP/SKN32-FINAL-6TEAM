@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { translator } from "../i18n";
-import { LiveError } from "./client";
+import { LiveError, resetSessionState } from "./client";
+import { answeringSession, CSRF } from "./session-kit";
 import { progressText, streamApi, watchIntake, type IntakeWatchEvent, type OpProgress } from "./stream";
 
-const KEY = "tripilot.web.user-key.v1";
 const fast = { watchdogMs: 60, reconnectMs: [5, 5] };
 
 /** A server-sent event block, as `op_stream.sse` writes it. */
@@ -30,20 +30,19 @@ describe("a long request with live progress (POST …/messages · …/plan with 
   beforeEach(() => {
     calls = [];
     replies = [];
-    const items = new Map([[KEY, "acop_u_known"]]);
-    vi.stubGlobal("window", { localStorage: { getItem: (key: string) => items.get(key) ?? null, setItem: () => {}, removeItem: (key: string) => items.delete(key) }, dispatchEvent: () => true });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+    vi.stubGlobal("window", { localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} }, dispatchEvent: () => true });
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => {
       calls.push({ url, init });
       const next = replies.shift();
       if (!next) throw new TypeError("no answer");
       return next();
-    });
+    }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ request_id: "web-1", message: "안녕" }) };
 
-  it("asks for the stream with the user key, reports each stage and beat, and resolves with the result body", async () => {
+  it("asks for the stream with the session cookie and the CSRF token (it is a write), reports each stage and beat, and resolves with the result body", async () => {
     replies.push(() => stream([
       event("accepted", { op: "message", at: "2026-10-03T10:00:00+09:00" }),
       event("stage", { stage: "understanding", label: "요청을 이해하는 중이에요", waiting_on: "model", elapsed: 0.4 }),
@@ -55,7 +54,9 @@ describe("a long request with live progress (POST …/messages · …/plan with 
     expect(result).toEqual({ status: "answered", answer: "서버 답" });
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toMatch(/\/v1\/web\/trips\/t1\/messages$/);
-    expect(calls[0].init.headers).toMatchObject({ "X-User-Key": "acop_u_known", Accept: "text/event-stream", "Content-Type": "application/json" });
+    expect(calls[0].init.headers).toMatchObject({ "X-CSRF-Token": CSRF, Accept: "text/event-stream", "Content-Type": "application/json" });
+    expect(calls[0].init.headers).not.toHaveProperty("X-User-Key");
+    expect(calls[0].init.credentials).toBe("include");
     expect(seen).toEqual([
       { stage: null, elapsed: 0, slow: false, lost: false },
       { stage: "understanding", elapsed: 0.4, slow: false, lost: false },
@@ -104,10 +105,10 @@ describe("following an intake while the server reads it (GET …/trip-intakes/{i
   let replies: (() => Response)[];
   beforeEach(() => {
     replies = [];
-    vi.stubGlobal("window", { localStorage: { getItem: () => "acop_u_known", setItem: () => {}, removeItem: () => {} }, dispatchEvent: () => true });
-    vi.stubGlobal("fetch", async () => { const next = replies.shift(); if (!next) throw new TypeError("no answer"); return next(); });
+    vi.stubGlobal("window", { localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} }, dispatchEvent: () => true });
+    vi.stubGlobal("fetch", answeringSession(async () => { const next = replies.shift(); if (!next) throw new TypeError("no answer"); return next(); }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   const follow = async () => {
     const events: IntakeWatchEvent[] = [];

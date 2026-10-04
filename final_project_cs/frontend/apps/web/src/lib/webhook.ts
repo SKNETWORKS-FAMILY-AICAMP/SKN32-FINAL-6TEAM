@@ -1,5 +1,5 @@
 import type { Language } from "./i18n";
-import { currentKey, LiveError } from "./live/client";
+import { hasSession, LiveError } from "./live/client";
 import { putProfile, type ServerProfile } from "./live/profile";
 
 /**
@@ -7,8 +7,8 @@ import { putProfile, type ServerProfile } from "./live/profile";
  *
  * ★A webhook address is a secret: whoever has it can post to that channel, and the server will later post to it. So it
  *   is never written to this browser's storage — the server keeps it encrypted and shows only a masked form.
- * ★Saving it before this browser has a user key (the first trip is not registered yet) would create a server user just
- *   for it. Typed on the start screen, it waits in this page's memory (`waiting`) and goes up as soon as the key exists
+ * ★Saving it before this browser has a session (the first trip is not registered yet) would create a server user just
+ *   for it. Typed on the start screen, it waits in this page's memory (`waiting`) and goes up as soon as the session exists
  *   (`syncDiscordWebhook`, run by `ContactSync`). A reload before that loses it — the start screen says so.
  * The server's second step — alerts about plan changes through the webhook — is not built yet; a test message is.
  */
@@ -19,7 +19,7 @@ export type WebhookSaved = { where: "server"; profile: ServerProfile } | { where
 /** Save (or with null/blank remove) the webhook. Rejects with the server's refusal (`invalid_webhook` …). */
 export async function saveDiscordWebhook(url: string | null, language: Language): Promise<WebhookSaved> {
   const value = url?.trim() || null;
-  if (!currentKey()) {
+  if (!await hasSession(language)) {
     waiting = value;
     return { where: "waiting" };
   }
@@ -28,7 +28,7 @@ export async function saveDiscordWebhook(url: string | null, language: Language)
   return { where: "server", profile };
 }
 
-/** A webhook typed on the start screen is waiting for this browser's first user key. */
+/** A webhook typed on the start screen is waiting for this browser's first session. */
 export function webhookWaiting(): boolean {
   return waiting !== null;
 }
@@ -36,14 +36,15 @@ export function webhookWaiting(): boolean {
 let sending: Promise<void> | null = null;
 
 /**
- * Send a waiting webhook once there is a user key. Silent: a refused one is dropped, any other failure tries again at the
- * next key change. ★A new key announces itself twice (the key, then its notice) — calls meanwhile share one request.
+ * Send a waiting webhook once there is a session. Silent: a refused one is dropped, any other failure tries again at the
+ * next session change. ★Calls meanwhile share one request.
  */
 export function syncDiscordWebhook(language: Language): Promise<void> {
-  if (!currentKey() || waiting === null) return Promise.resolve();
+  if (waiting === null) return Promise.resolve();
   sending ??= (async () => {
     const value = waiting;
     try {
+      if (!await hasSession(language)) return;                    // nobody yet: it keeps waiting
       await putProfile({ discordWebhookUrl: value }, language);
       if (waiting === value) waiting = null;
     } catch (error) {

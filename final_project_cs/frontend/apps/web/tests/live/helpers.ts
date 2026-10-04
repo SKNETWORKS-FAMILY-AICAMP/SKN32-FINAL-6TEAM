@@ -6,7 +6,8 @@ export const APP = `http://127.0.0.1:${process.env.LIVE_PORT ?? 3102}`;
 export const TRIP_ID = "11111111-2222-3333-4444-555555555555";
 export const KEY_STORAGE = "tripilot.web.user-key.v1";
 
-export interface LoggedRequest { method: string; path: string; key: string | null; accept: string | null; body: Record<string, unknown> | null }
+/** `key`: the legacy `X-User-Key` header (agents, an older page); `session`: the session cookie's value; `csrf`: the `X-CSRF-Token` header. */
+export interface LoggedRequest { method: string; path: string; key: string | null; session: string | null; csrf: string | null; accept: string | null; body: Record<string, unknown> | null }
 
 /** Talks to the test mock server's test control (never part of the real API). */
 export function mockServer(request: APIRequestContext) {
@@ -25,12 +26,26 @@ export function mockServer(request: APIRequestContext) {
   };
 }
 
-/** Korean UI, and a stored user key the test mock server knows (unless `key` is null: a first visit). */
-export async function start(page: Page, key: string | null = "acop_u_known") {
-  await page.addInitScript(([storageKey, value]) => {
+/** The session cookie the test mock server knows (a returning visitor's browser). */
+export const KNOWN_SESSION = "known-session";
+export const SESSION_COOKIE = "tripilot_sid_dev";
+
+/**
+ * Korean UI, and — unless `session` is null (a first visit) — a session cookie in this browser. ★`[2026-10-04]` The page keeps no key any more:
+ * the server's cookie is what makes a browser a returning one. `"acop_u_known"` (the old name of the known key) means the known session; any other string
+ * is a cookie value the mock server does not know (an ended session).
+ */
+export async function start(page: Page, session: string | null = "acop_u_known") {
+  await page.addInitScript(() => {
     if (!localStorage.getItem("tripilot.web.settings.v1")) localStorage.setItem("tripilot.web.settings.v1", JSON.stringify({ language: "ko", navigation: "fixed" }));
-    if (value && !localStorage.getItem(storageKey)) localStorage.setItem(storageKey, value);
-  }, [KEY_STORAGE, key] as const);
+  });
+  if (session) await page.context().addCookies([{ name: SESSION_COOKIE, value: session === "acop_u_known" ? KNOWN_SESSION : session, url: STUB }]);
+}
+
+/** Korean UI, no cookie, and a user key an older version of the page kept in this browser (the mock server knows `acop_u_known`). */
+export async function startWithOldKey(page: Page, key = "acop_u_known") {
+  await start(page, null);
+  await page.addInitScript(([storageKey, value]) => { if (!localStorage.getItem(storageKey)) localStorage.setItem(storageKey, value); }, [KEY_STORAGE, key] as const);
 }
 
 /** Finish the onboarding: agree to the terms, skip every question but the last, answer that one. Leaves the summary open. */

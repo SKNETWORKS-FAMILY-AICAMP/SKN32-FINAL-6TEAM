@@ -3,17 +3,19 @@ import { finishOnboarding, start } from "../live/helpers";
 
 /**
  * A brand-new customer on the REAL server: first visit → survey → plan → read → confirm → trip screen → chat → map.
- * Nothing is faked. Each test opens a fresh browser context, so each one is a new user with a new key.
+ * Nothing is faked. Each test opens a fresh browser context, so each one is a new user with a new session cookie (`[2026-10-04]` the page keeps no key any more).
  */
 
 // ★화면 안내와 같은 형식(「1일차 · 날짜」 머리줄 + 「시각 제목」 줄). 줄마다 「날짜 시각 제목」으로 쓰면 서버가 날짜를 못 읽는다(2026-09-28 실측).
 const PLAN = "1일차 · 2026-10-05\n09:00 경복궁 관람\n12:00 광장시장 점심\n15:00 북촌한옥마을 산책";
 const READING = 240_000;
 
-// ★서버는 한 주소에서 한 시간에 새 키 20개까지만 발급한다(429 too_many_sessions). 시험마다 새 사용자를 만들면 금방 막히므로,
-//   이 묶음은 순서대로 돌면서 첫 시험이 받은 키를 다음 시험이 이어 쓴다(같은 사용자의 두 번째 여행).
+// ★서버는 한 주소에서 한 시간에 새 세션을 정해진 만큼만 준다(429 too_many_sessions). 시험마다 새 사용자를 만들면 금방 막히므로,
+//   이 묶음은 순서대로 돌면서 첫 시험이 받은 세션 쿠키를 다음 시험이 이어 쓴다(같은 사용자의 두 번째 여행).
+//   ★`[2026-10-04]` 게스트는 여행을 1개까지 — 두 번째 여행은 게스트면 403 guest_trip_limit 이다. 이 묶음의 두 번째 시험은 서버가 게스트 제한을 끈 환경이거나
+//   로그인한(소셜) 세션에서만 통과한다. 거절되면 그 문장(login_required)이 나오는 것이 정상이다.
 test.describe.configure({ mode: "serial" });
-let sharedKey: string | null = null;
+let sharedCookie: { name: string; value: string; domain: string; path: string } | null = null;
 
 /** 사람 확인(Turnstile)이 켜져 있으면 확인 표가 올 때까지 기다린다 — 표 없이 누르면 화면이 보내지 않는다. 꺼져 있으면 바로 끝난다. */
 async function waitForHumanCheck(page: Page) {
@@ -36,7 +38,7 @@ async function uploadAndOpenReview(page: Page, text: string) {
 }
 
 test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것을 확인해 등록하면 여행이 만들어지고, 채팅·지도까지 실서버로 동작한다", async ({ page }) => {
-  await start(page, null);                               // 이 브라우저에는 키가 없다 = 첫 방문
+  await start(page, null);                               // 이 브라우저에는 세션이 없다 = 첫 방문
   await finishOnboarding(page);
   await page.getByRole("button", { name: "여행 계획 등록하기" }).click();
   await expect(page).toHaveURL(/\/trips\/new$/);
@@ -59,10 +61,13 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
   }
   await expect(register).toBeEnabled();
 
-  // 새 사용자라서 키가 방금 발급됐다. 안내는 계획 화면 위가 아니라 마이페이지에서 한 번 보인다(2026-10-03 사용자 지시)
+  // 새 사용자라서 게스트 세션이 방금 만들어졌다. 키 안내는 어디에도 없고, 브라우저 저장소에는 키가 없다(세션은 HttpOnly 쿠키다).
   await expect(page.getByText("내 여행 열쇠를 따로 보관해 주세요")).toHaveCount(0);
-  sharedKey = await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"));
-  expect(sharedKey).toMatch(/^acop_u_/);
+  expect(await page.evaluate(() => localStorage.getItem("tripilot.web.user-key.v1"))).toBeNull();
+  const cookie = (await page.context().cookies()).find((entry) => /tripilot_sid/.test(entry.name));
+  expect(cookie, "서버가 준 세션 쿠키").toBeTruthy();
+  expect(cookie!.httpOnly).toBe(true);
+  sharedCookie = cookie ? { name: cookie.name, value: cookie.value, domain: cookie.domain, path: cookie.path } : null;
 
   // 설문을 마쳤으니 등록 확인 요청에 설문이 실려 가야 한다(서버가 저장하는지는 DB 로 따로 본다)
   const confirmSent = page.waitForRequest((request) => request.url().endsWith("/confirm") && request.method() === "POST");
@@ -136,7 +141,8 @@ test("새 사용자: 설문을 마치고 계획을 올려 서버가 읽은 것�
 });
 
 test("같은 사용자의 두 번째 여행: 등록 화면의 「계획 짜 주기 (테스트)」로 서버가 일정을 짜 등록하고, 하루는 08:00 아침 식사로 시작한다", async ({ page }) => {
-  await start(page, sharedKey);                          // 앞 시험이 받은 키가 있으면 이어 쓰고, 이 시험만 따로 돌리면 새 키를 받는다
+  await start(page, null);
+  if (sharedCookie) await page.context().addCookies([sharedCookie]);   // 앞 시험이 받은 세션이 있으면 이어 쓰고, 이 시험만 따로 돌리면 새 게스트 세션을 받는다
   await page.goto("/trips/new");
   // 첫날은 오늘(서울)부터다 — 한 주 뒤로 잡는다
   const week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });

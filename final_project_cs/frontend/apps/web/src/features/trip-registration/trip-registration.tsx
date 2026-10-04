@@ -9,7 +9,7 @@ import { HumanCheck, TURNSTILE_SITE_KEY } from "@/features/human-check/human-che
 import { partyLabel } from "@/features/onboarding/model";
 import { useOnboarding } from "@/features/onboarding/onboarding-state";
 import { toSurvey } from "@/features/onboarding/payload";
-import { currentKey, issueKey, LiveError } from "@/lib/live/client";
+import { LiveError, probeSession, startSession } from "@/lib/live/client";
 import { beginIntake, clearIntakeFailure, intakeFailure, type PlanRequest } from "@/lib/live/intake-start";
 import { routes } from "@/lib/routes";
 import { useSettings, useT } from "@/lib/settings";
@@ -79,7 +79,7 @@ export function TripRegistration() {
   const checking = Boolean(TURNSTILE_SITE_KEY);
   const [humanToken, setHumanToken] = useState<string | null>(null);
   const [humanReset, setHumanReset] = useState(0);
-  // Waiting for the next token (a new customer needs two: one for the key, one for the plan).
+  // Waiting for the next token (a new customer needs two: one to start the session, one for the plan).
   const nextToken = useRef<((token: string) => void) | null>(null);
   function takeToken(token: string | null) {
     setHumanToken(token);
@@ -107,7 +107,8 @@ export function TripRegistration() {
   const value = source ?? draft.data ?? "";
   // ★글·파일·짜 달라는 조건을 — 글·파일을 계획 읽기로 보내고 확인 화면으로 간다. 등록은 확인 화면의 「등록하고 관리 시작」이 한다.
   //   `[2026-10-03 사용자 지시]` 누르면 곧바로 진행 화면으로 넘어간다: 보내기는 여기서 시작하고(`beginIntake`) 서버의 답은 그 화면이
-  //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 키 발급에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
+  //   기다린다. 사람 확인 뒤의 새 고객만 여기서 기다린다 — 세션 시작에 쓴 확인이 한 번 소비되고, 계획은 새 확인으로 간다(두 확인 모두 이 화면에 있다).
+  //   `[2026-10-04]` 이미 세션이 있으면(쿠키 · 옛 키 이전) 확인을 쓰지 않고 그대로 보낸다.
   //   ★`[2026-10-03 사용자 결정]` 마지막에 고른 칸만 보낸다: 직접 입력이면 글만, 파일이면 파일만, 계획 짜 주기면 그 조건만(고른 칸이 비어 있으면 단추가 꺼져 있다).
   const [sent, setSent] = useState(false);
   function send(token: string | null) {
@@ -122,7 +123,11 @@ export function TripRegistration() {
     router.push(routes.intakeStarting);
   }
   const signUp = useMutation({
-    mutationFn: async () => { await issueKey(language, humanToken); return freshToken(); },
+    mutationFn: async () => {
+      if (await probeSession(language)) return humanToken;       // someone is already here: the check is still unspent, send with it
+      await startSession(language, humanToken);                  // the server checks (and spends) the token when it starts the guest session
+      return freshToken();
+    },
     onSuccess: send,
     // The token was spent on this attempt; ask for a fresh one before the next.
     onError: () => setHumanReset((count) => count + 1),
@@ -133,7 +138,7 @@ export function TripRegistration() {
 
   /** The panel the customer touched becomes the chosen one; anything said about the last sending goes with it. */
   function choose(pane: RegistrationPane) {
-    if (pending) return;                                         // the sending has begun with this panel (review 2026-10-03: a click while the key was issued changed what was sent)
+    if (pending) return;                                         // the sending has begun with this panel (review 2026-10-03: a click while the session was starting changed what was sent)
     if (pane !== active) setActive(pane);
   }
   function changeAsk(next: PlanAsk) {
@@ -165,7 +170,7 @@ export function TripRegistration() {
     if (checking && !humanToken) { setValidation(t("사람 확인이 끝나면 보낼 수 있어요. 잠시만 기다려 주세요.", "You can send once the human check finishes. One moment, please.")); return; }
     setValidation("");
     setRestored("");
-    if (checking && !currentKey()) signUp.mutate();
+    if (checking) signUp.mutate();
     else send(humanToken);
   }
 

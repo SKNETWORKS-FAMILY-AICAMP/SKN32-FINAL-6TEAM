@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetSessionState } from "./client";
 import { emptyStream, reduceStream, toIntakeEvent, watchIntake, type IntakeStreamEvent } from "./intake-events";
+import { answeringSession } from "./session-kit";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -177,17 +179,18 @@ describe("watching a plan being read", () => {
 
   beforeEach(() => {
     calls = [];
-    vi.stubGlobal("window", { localStorage: memory({ "tripilot.web.user-key.v1": "acop_u_mine" }), sessionStorage: memory() });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => { calls.push({ url, init }); return reply(); });
+    vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return reply(); }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
-  it("asks for an event stream with the user key in the header — the key never goes in the address", async () => {
+  it("asks for an event stream with the session cookie — no key header, nothing secret in the address", async () => {
     reply = () => new Response(streamOf([": ping\n\n"]), { status: 200, headers: { "Content-Type": "text/event-stream" } });
     await watchIntake("i 1", "ko", () => undefined, new AbortController().signal);
     expect(calls[0].url).toMatch(/\/v1\/web\/trip-intakes\/i%201\/events$/);
-    expect(calls[0].url).not.toContain("acop_u_mine");
-    expect(calls[0].init.headers).toMatchObject({ "X-User-Key": "acop_u_mine", Accept: "text/event-stream" });
+    expect(calls[0].init.credentials).toBe("include");
+    expect(calls[0].init.headers).toMatchObject({ Accept: "text/event-stream" });
+    expect(calls[0].init.headers).not.toHaveProperty("X-User-Key");
   });
 
   it("hands over the events as they come, across chunk boundaries, and ends when the stream ends", async () => {

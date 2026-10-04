@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { answeringSession, sessionCalls } from "./live/session-kit";
 
-
-const KEY = "tripilot.web.user-key.v1";
 const HOOK = "https://discord.com/api/web" + "hooks/123456789012345678/abcdefghijklmnopqrstuvwxyz0123";
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 const profile = { recovery_email: null, discord_webhook: { set: true, masked: "https://discord.com/api/web" + "hooks/1234…/••••", status: "untested", checked_at: null }, updated_at: null };
@@ -11,18 +10,22 @@ describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => 
   let calls: { url: string; init: RequestInit }[];
   let replies: Response[];
 
-  beforeEach(() => {
+  /** `has`: this browser already has a session cookie. The page's modules are loaded again for each test (the webhook waits in module memory). */
+  function browser(has: boolean) {
     vi.resetModules();
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return replies.shift() ?? json(profile); }, { has }));
+  }
+
+  beforeEach(() => {
     items = new Map();
     calls = [];
     replies = [];
     vi.stubGlobal("window", { localStorage: { getItem: (key: string) => items.get(key) ?? null, setItem: (key: string, value: string) => { items.set(key, value); }, removeItem: (key: string) => { items.delete(key); } }, dispatchEvent: () => true });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => { calls.push({ url, init }); return replies.shift() ?? json(profile); });
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it("goes to the server at once when this browser has a user key, and the masked answer comes back", async () => {
-    items.set(KEY, "acop_u_known");
+  it("goes to the server at once when this browser has a session, and the masked answer comes back", async () => {
+    browser(true);
     const { saveDiscordWebhook } = await import("./webhook");
     const saved = await saveDiscordWebhook(` ${HOOK} `, "ko");
     expect(saved).toMatchObject({ where: "server", profile: { webhook: { set: true, masked: "https://discord.com/api/web" + "hooks/1234…/••••", status: "untested" } } });
@@ -31,16 +34,19 @@ describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => 
     expect(JSON.parse(String(calls[0].init.body))).toEqual({ discord_webhook_url: HOOK });
   });
 
-  it("before the first key it waits in page memory only — no request, nothing in storage — and goes up once the key exists", async () => {
+  it("before the first session it waits in page memory only — no request, nothing in storage — and goes up once the session exists", async () => {
+    browser(false);
     const { saveDiscordWebhook, syncDiscordWebhook, webhookWaiting } = await import("./webhook");
+    const { ensureSession } = await import("./live/client");
     expect(await saveDiscordWebhook(HOOK, "ko")).toEqual({ where: "waiting" });
     expect(webhookWaiting()).toBe(true);
     expect(calls).toHaveLength(0);
     expect([...items.values()].some((value) => value.includes("webhooks"))).toBe(false);
     await syncDiscordWebhook("ko");
     expect(calls).toHaveLength(0);
+    expect(sessionCalls.some((call) => new URL(call.url).pathname === "/v1/web/auth/session")).toBe(false);   // waiting never makes a user
 
-    items.set(KEY, "acop_u_new");
+    await ensureSession("ko");                                                  // the first trip starts the session
     await syncDiscordWebhook("ko");
     expect(calls.map((call) => JSON.parse(String(call.init.body)))).toEqual([{ discord_webhook_url: HOOK }]);
     expect(webhookWaiting()).toBe(false);
@@ -48,18 +54,22 @@ describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => 
     expect(calls).toHaveLength(1);
   });
 
-  it("a new key announces itself twice (the key, then its notice): both syncs share one request", async () => {
+  it("the session may announce itself more than once: the syncs share one request", async () => {
+    browser(false);
     const { saveDiscordWebhook, syncDiscordWebhook } = await import("./webhook");
+    const { ensureSession } = await import("./live/client");
     await saveDiscordWebhook(HOOK, "ko");
-    items.set(KEY, "acop_u_new");
+    await ensureSession("ko");
     await Promise.all([syncDiscordWebhook("ko"), syncDiscordWebhook("ko")]);
     expect(calls).toHaveLength(1);
   });
 
-  it("a waiting webhook the server refuses is dropped; any other failure waits for the next key change", async () => {
+  it("a waiting webhook the server refuses is dropped; any other failure waits for the next session change", async () => {
+    browser(false);
     const { saveDiscordWebhook, syncDiscordWebhook, webhookWaiting } = await import("./webhook");
+    const { ensureSession } = await import("./live/client");
     await saveDiscordWebhook(HOOK, "ko");
-    items.set(KEY, "acop_u_new");
+    await ensureSession("ko");
     replies.push(json({ error: { code: "internal_error", message: "서버 오류" } }, 500));
     await syncDiscordWebhook("ko");
     expect(webhookWaiting()).toBe(true);
@@ -69,7 +79,7 @@ describe("the Discord webhook (PUT /v1/web/profile discord_webhook_url)", () => 
   });
 
   it("removing it sends null; the server's refusal reaches the screen", async () => {
-    items.set(KEY, "acop_u_known");
+    browser(true);
     const { saveDiscordWebhook } = await import("./webhook");
     await saveDiscordWebhook(null, "ko");
     expect(JSON.parse(String(calls[0].init.body))).toEqual({ discord_webhook_url: null });

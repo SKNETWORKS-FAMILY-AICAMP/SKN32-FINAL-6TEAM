@@ -1,5 +1,5 @@
 import type { Language } from "../i18n";
-import { api, currentKey } from "./client";
+import { api, hasSession } from "./client";
 
 /**
  * The rest of the server's web API: the choices the server is waiting for, the notices it sent,
@@ -103,10 +103,10 @@ export interface Warmup {
 /**
  * Wake the chat model before the customer asks — a cold model took about 35 s to answer the first message
  * (2026-09-29, measured). The server does nothing if it is already up and calls it at most once a minute.
- * ★Never issues a key: without a stored key there is no trip to chat about, and asking would create a user.
+ * ★Never makes a session: without one there is no trip to chat about, and asking would create a user.
  */
 export async function warmup(language: Language): Promise<Warmup | null> {
-  if (!currentKey()) return null;
+  if (!await hasSession(language)) return null;
   const body = await api<{ status?: string; model?: string | null; deduped?: boolean;
     last_attempt?: { ok?: boolean; seconds?: number | null; at?: string | null; reason?: string | null } | null }>("/v1/web/warmup", language, { method: "POST" });
   const last = body.last_attempt;
@@ -134,8 +134,8 @@ export interface MapLoad {
  */
 export async function mapLoad(language: Language): Promise<MapLoad> {
   const denied: MapLoad = { allowed: false, provider: null, reason: "error", used: { day: null, month: null }, cap: { day: null, month: null } };
-  if (!currentKey()) return denied;
   try {
+    if (!await hasSession(language)) return denied;
     const body = await api<{ allowed?: unknown; provider?: unknown; reason?: unknown; used?: { day?: number; month?: number }; cap?: { day?: number; month?: number } }>(
       "/v1/web/map-load", language, { method: "POST" });
     const provider = body.provider === "osm" || body.provider === "google" ? body.provider : null;

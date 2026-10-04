@@ -226,7 +226,12 @@ export function TripList() {
     <p className={styles.notice} role="status">{notice && !notice.failed ? notice.text : ""}</p>
     <p className={`${styles.notice} ${styles.noticeFailed}`} role="alert">{notice?.failed ? notice.text : ""}</p>
     {trips.length === 0
-      ? <Panel className={styles.empty}><p>{t("아직 등록한 여행이 없어요.", "No trips yet.")}</p></Panel>
+      ? <Panel className={styles.empty}>
+        <p>{t("아직 등록한 여행이 없어요.", "No trips yet.")}</p>
+        {/* `[2026-10-04]` 게스트 여행은 한동안 쓰지 않으면 사라지고, 계정에 보관한 여행은 로그인하면 다시 열린다 — 빈 목록이 그 까닭일 수 있다. */}
+        <p className={styles.emptyHint}>{t("전에 만든 여행이 안 보이나요? 게스트로 만든 여행은 이 기기에서 한동안 쓰지 않으면 사라져요. 계정에 보관한 여행이라면 ", "Cannot see a trip you made before? A guest trip goes away when this device is not used for a while. If it is kept with an account, ")}
+          <Link href={`${routes.myPage}#accounts`}>{t("마이페이지에서 로그인", "sign in on My page")}</Link>{t("하면 다시 열려요.", " to open it again.")}</p>
+      </Panel>
       : <TripRows trips={trips} controls={{ selection, onToggle: toggle, onDelete: (trip, control) => ask([trip.id], trip, control), unsupported, busy: pending }} />}
     {/* Hidden while picking, so select mode is only about picking and deleting. */}
     {!selection && <div className={styles.actions}><ButtonLink ref={newTrip} href={routes.newTrip} variant="primary"><Plus {...icon} />{t("새 여행 등록", "Add a trip")}</ButtonLink></div>}

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LiveError } from "./client";
+import { CSRF, answeringSession, sessionCalls } from "./session-kit";
+import { LiveError, resetSessionState } from "./client";
 import { createLiveGateway } from "./gateway";
 
 function memory() {
@@ -26,17 +27,22 @@ describe("live trip gateway", () => {
     replies = [];
     chat = null;
     vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
+    useBrowser(true);                                                 // the usual visitor: a returning one (a first visit is `useBrowser(false)`)
+  });
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
+
+  /** `has`: this browser already has a session cookie; false = a first visit (asking who this is finds no one). */
+  function useBrowser(has: boolean) {
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => {
       calls.push({ url, init });
-      if (url.endsWith("/v1/web/session")) return new Response(JSON.stringify({ user_key: "acop_u_test" }), { status: 201 });
       if (url.includes("/chat?")) return chat === null ? new Response("{}", { status: 404 }) : new Response(JSON.stringify({ turns: chat }), { status: 200 });
       const next = replies.shift();
       return next instanceof Response ? next : new Response(JSON.stringify(next ?? TRIP), { status: 200 });
-    });
-  });
-  afterEach(() => vi.unstubAllGlobals());
+    }, { has }));
+  }
 
   it("maps server items to stops in Seoul time with pins and booking marks", async () => {
+    useBrowser(true);
     const trip = await createLiveGateway().getTrip(TRIP.trip_id, "ko");
     expect(trip.id).toBe(TRIP.trip_id);
     expect(trip.stops.map((stop) => [stop.date, stop.time, stop.endTime, stop.booking])).toEqual([
@@ -46,39 +52,55 @@ describe("live trip gateway", () => {
     expect(trip.stops[0].coordinates).toEqual({ lat: 37.5796, lng: 126.977 });
     expect(trip.stops[1].coordinates).toBeNull();                 // ★no coordinates → no pin, never guessed
     expect(trip.stops[1].notes).toContain("바뀐");
-    // ★the key is issued once and sent as X-User-Key — never a server scope key
-    expect(calls[0].url).toMatch(/\/v1\/web\/session$/);
-    expect((calls[1].init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
+    // ★the cookie goes with every call — never a key kept in the browser, never a server scope key
+    expect(sessionCalls.map((call) => new URL(call.url).pathname)).toEqual(["/v1/web/auth/me"]);
+    expect(calls[0].init.credentials).toBe("include");
+    expect((calls[0].init.headers as Record<string, string>)["X-User-Key"]).toBeUndefined();
   });
 
-  it("lists nothing without asking the server when this browser has no user key", async () => {
+  it("does not make a guest just to open a trip: a browser with no session is told at once, with the way back", async () => {
+    useBrowser(false);
+    const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(LiveError);
+    expect((failure as LiveError).code).toBe("not_found");
+    expect((failure as LiveError).message).toContain("로그인");
+    expect(calls).toHaveLength(0);
+    expect(sessionCalls.some((call) => new URL(call.url).pathname === "/v1/web/auth/session")).toBe(false);
+  });
+
+  it("lists nothing without asking for trips when this browser has no session", async () => {
+    useBrowser(false);
     expect(await createLiveGateway().listTrips("ko")).toEqual([]);
-    expect(calls).toHaveLength(0);                                 // ★no key issued — viewing the list creates no user
+    expect(calls).toHaveLength(0);                                 // ★no session made — viewing the list creates no user
+    expect(sessionCalls.map((call) => new URL(call.url).pathname)).toEqual(["/v1/web/auth/me"]);   // it only asked who this is
   });
 
-  it("lists the server's trips with the stored user key", async () => {
+  it("lists the server's trips with the session cookie", async () => {
+    useBrowser(true);
     const gateway = createLiveGateway();
-    await gateway.getTrip(TRIP.trip_id, "ko");                     // issues and stores the key
+    await gateway.getTrip(TRIP.trip_id, "ko");
     replies.push({ trips: [{ trip_id: TRIP.trip_id, title: "서울 가족여행", version: 3, created_at: "2026-09-28T03:12:00+00:00" }] });
     expect(await gateway.listTrips("ko")).toEqual([{ id: TRIP.trip_id, title: "서울 가족여행", createdAt: "2026-09-28T03:12:00+00:00", version: 3 }]);
     expect(calls.at(-1)!.url).toMatch(/\/v1\/web\/trips$/);
-    expect((calls.at(-1)!.init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
+    expect(calls.at(-1)!.init.credentials).toBe("include");
   });
 
   describe("deleting a trip (backend request 2026-10-03: POST /v1/web/trips/{id}/delete)", () => {
     const remove = (gateway = createLiveGateway()) => gateway.deleteTrip(TRIP.trip_id, "ko");
     const deleteCalls = () => calls.filter((call) => call.url.endsWith("/delete"));
 
-    it("asks the server with the stored user key and forgets this tab's copy of the conversation", async () => {
+    it("asks the server with the session (cookie and CSRF token) and forgets this tab's copy of the conversation", async () => {
+      useBrowser(true);
       const gateway = createLiveGateway();
-      await gateway.getTrip(TRIP.trip_id, "ko");                                       // issues and stores the key
+      await gateway.getTrip(TRIP.trip_id, "ko");
       (globalThis as unknown as { window: { sessionStorage: ReturnType<typeof memory> } }).window.sessionStorage.setItem("tripilot.web.live.messages:" + TRIP.trip_id, "[{}]");
       replies.push({ trip_id: TRIP.trip_id, status: "deleted" });
       await remove(gateway);
       expect(deleteCalls()).toHaveLength(1);
       expect(deleteCalls()[0].url).toContain(`/v1/web/trips/${TRIP.trip_id}/delete`);
       expect(deleteCalls()[0].init.method).toBe("POST");
-      expect((deleteCalls()[0].init.headers as Record<string, string>)["X-User-Key"]).toBe("acop_u_test");
+      expect((deleteCalls()[0].init.headers as Record<string, string>)["X-CSRF-Token"]).toBe(CSRF);
+      expect(deleteCalls()[0].init.credentials).toBe("include");
       expect((globalThis as unknown as { window: { sessionStorage: ReturnType<typeof memory> } }).window.sessionStorage.getItem("tripilot.web.live.messages:" + TRIP.trip_id)).toBeNull();
     });
 
@@ -219,12 +241,13 @@ describe("live trip gateway", () => {
     expect(bodies[1]).not.toHaveProperty("item_id");
   });
 
-  it("does not quietly become a new user when the saved key is rejected", async () => {
+  it("does not quietly become a new user when the session has ended", async () => {
+    useBrowser(true);
     replies.push(new Response(JSON.stringify({ error: { code: "unauthenticated", message: "no" } }), { status: 401 }));
     const failure = await createLiveGateway().getTrip(TRIP.trip_id, "ko").catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(LiveError);
-    expect((failure as LiveError).code).toBe("key_rejected");
-    expect(calls.filter((call) => call.url.endsWith("/v1/web/session"))).toHaveLength(1);   // ★no second key issued behind the user's back
+    expect((failure as LiveError).code).toBe("session_expired");
+    expect(sessionCalls.some((call) => new URL(call.url).pathname === "/v1/web/auth/session")).toBe(false);   // ★no second session made behind the user's back
   });
 
   it("keeps the folded rest of an answer and the 「혹시 이런 뜻이었나요?」 readings the server offers with it", async () => {

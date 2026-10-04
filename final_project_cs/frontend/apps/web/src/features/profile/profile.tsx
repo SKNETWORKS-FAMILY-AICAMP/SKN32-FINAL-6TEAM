@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, Button, ButtonLink, Panel } from "@/components/ui";
-import { KeyNotice } from "@/features/account/key-notice";
-import { KeySettings } from "@/features/account/key-settings";
+import { SessionCard } from "@/features/account/session-card";
 import { SocialAccounts } from "@/features/account/social-accounts";
 import { answerLines, questions } from "@/features/onboarding/model";
 import { discordWebhookProblem } from "@/features/onboarding/model";
@@ -20,38 +19,6 @@ import { saveDiscordWebhook } from "@/lib/webhook";
 import { checkDraft, type ProfileDraft } from "./model";
 import { serverProfileKey, WebhookField, WebhookView } from "./webhook";
 import styles from "./profile.module.css";
-
-const MASK = "••••••••••••••••";
-
-/** The issued token: hidden until asked, never editable. Copy always copies the whole token and says what really happened. */
-function TokenField({ token }: { token: string | null }) {
-  const t = useT();
-  const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState<"done" | "failed" | null>(null);
-
-  async function copy() {
-    if (!token) return;
-    try {
-      await navigator.clipboard.writeText(token);
-      setCopied("done");
-    } catch {
-      setCopied("failed");
-    }
-  }
-
-  return <div className={styles.token}>
-    <p className={styles.tokenValue}>{!token
-      ? <span className={styles.muted}>{t("발급된 토큰이 없어요.", "No token has been issued.")}</span>
-      : shown ? <code>{token}</code> : <><span aria-hidden="true">{MASK}</span><span className="sr-only">{t("가려진 토큰", "Hidden token")}</span></>}</p>
-    <div className={styles.tokenActions}>
-      <Button variant="quiet" disabled={!token} onClick={() => setShown((value) => !value)}>{shown ? t("숨기기", "Hide") : t("보기", "Show")}</Button>
-      <Button variant="quiet" disabled={!token} onClick={() => void copy()}>{t("복사", "Copy")}</Button>
-    </div>
-    <p className={copied === "failed" ? styles.failed : styles.note} role="status">{copied === "done"
-      ? t("토큰을 복사했어요.", "Token copied.")
-      : copied === "failed" ? t("복사하지 못했어요. 보기로 토큰을 연 뒤 직접 복사해 주세요.", "Could not copy. Show the token and copy it yourself.") : ""}</p>
-  </div>;
-}
 
 /** The default image with the name line under it: text on My page, the nickname field on the edit screen. */
 function Identity({ children }: { children: ReactNode }) {
@@ -100,21 +67,18 @@ export function MyPage() {
       <h1>{t("마이페이지", "My page")}</h1>
       <ButtonLink href={routes.myPageEdit} variant="quiet">{t("수정", "Edit")}</ButtonLink>
     </div>
-    {/* ★`[2026-10-03 사용자]` 새 키 안내(한 번만)는 여행 화면 위가 아니라 여기서 보인다 — 계획을 올리는 흐름을 가리지 않는다. */}
-    {DATA_MODE === "live" && <KeyNotice />}
     <Panel className={styles.card}>
       {/* The name line under the image is the nickname; there is no second nickname row. */}
       <Identity><p className={styles.name}>{nicknameLabel(profile, t)}</p></Identity>
       {profile === undefined
         ? <p className={styles.muted} role="status">{t("사용자 정보를 불러오고 있어요.", "Loading your details.")}</p>
         : <dl className={styles.fields}>
-          <div><dt>{t("발급된 토큰", "Issued token")}</dt><dd><TokenField token={profile.token} /></dd></div>
-          <div><dt>{t("디스코드 웹훅", "Discord webhook")}</dt><dd><WebhookView hasKey={Boolean(profile.token)} /></dd></div>
+          <div><dt>{t("디스코드 웹훅", "Discord webhook")}</dt><dd><WebhookView hasSession={Boolean(profile.session)} guest={profile.session?.kind === "guest"} /></dd></div>
         </dl>}
     </Panel>
     <PreferencesCard />
-    {/* ★Everything about the token lives on this page (2026-09-28 user): see it here, open another device's token, or replace a leaked one. */}
-    {DATA_MODE === "live" && <Panel className={styles.card}><KeySettings /></Panel>}
+    {/* ★`[2026-10-04 사용자 결정]` 토큰은 없다 — 서버가 쿠키 세션을 준다. 여기서는 게스트인지·로그인했는지와 게스트의 제한을 말한다. */}
+    {DATA_MODE === "live" && profile !== undefined && <Panel className={styles.card}><SessionCard profile={profile} /></Panel>}
     {/* ★`[2026-10-03 사용자 지시]` 소셜 계정으로 로그인·연결. 서버가 준비한 업체만 단추가 생기고, 아니면 「서버 준비 중」이라고만 말한다. */}
     {DATA_MODE === "live" && <Panel className={styles.card}><SocialAccounts /></Panel>}
   </>;
@@ -199,12 +163,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
       <Button disabled aria-describedby="profile-image-note">{t("이미지 변경", "Change image")}</Button>
       <p id="profile-image-note" className={styles.note}>{t("이미지 변경은 준비 중이에요.", "Changing the image is not available yet.")}</p>
     </Identity>
-    <div className={styles.field}>
-      <p className={styles.label}>{t("발급된 토큰", "Issued token")}</p>
-      <TokenField token={profile.token} />
-      <p className={styles.note}>{t("토큰은 수정할 수 없어요.", "The token cannot be changed.")}</p>
-    </div>
-    <WebhookField hasKey={Boolean(profile.token)} value={webhook} remove={removeWebhook} touched={touched.webhook}
+    <WebhookField hasSession={Boolean(profile.session)} value={webhook} remove={removeWebhook} touched={touched.webhook}
       onValue={(value) => { setWebhook(value); setSaveError(""); }} onRemove={(value) => { setRemoveWebhook(value); setSaveError(""); }}
       onBlur={() => setTouched({ ...touched, webhook: true })} />
   </Panel></>;

@@ -14,10 +14,10 @@ import styles from "./profile.module.css";
 
 export const serverProfileKey = (language: Language) => ["server-profile", language] as const;
 
-/** The server's contact details (`GET /v1/web/profile`) — asked only in a live build with a user key: asking without one would create a user. */
-export function useServerProfile(hasKey: boolean) {
+/** The server's contact details (`GET /v1/web/profile`) — asked only in a live build with a session: asking without one would create a user. */
+export function useServerProfile(hasSession: boolean) {
   const { language } = useSettings();
-  return useQuery({ queryKey: serverProfileKey(language), queryFn: () => getProfile(language), enabled: DATA_MODE === "live" && hasKey, retry: false });
+  return useQuery({ queryKey: serverProfileKey(language), queryFn: () => getProfile(language), enabled: DATA_MODE === "live" && hasSession, retry: false });
 }
 
 const STATUS: Record<NonNullable<ServerProfile["webhook"]["status"]>, [string, string]> = {
@@ -39,20 +39,23 @@ function testText(result: WebhookTestResult, t: Translate): string {
  * My page's Discord webhook row: whether one is saved (masked — the server never returns the address), whether Discord
  * took the last test, and a test message on request. Alerts about plan changes are the server's next step, not built yet.
  */
-export function WebhookView({ hasKey }: { hasKey: boolean }) {
+export function WebhookView({ hasSession, guest = false }: { hasSession: boolean; guest?: boolean }) {
   const t = useT();
   const { language } = useSettings();
   const queryClient = useQueryClient();
-  const profile = useServerProfile(hasKey);
+  const profile = useServerProfile(hasSession);
   const test = useMutation({
     mutationFn: () => testDiscordWebhook(language),
     onSuccess: (answer) => queryClient.setQueryData(serverProfileKey(language), answer.profile),
   });
-  const later = <span className={styles.note}>{t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
+  // ★`[2026-10-04]` 서버는 게스트의 여행을 감시·안내하지 않는다(외부 호출 비용) — 웹훅을 넣어도 알림은 로그인한 사용자만 받는다.
+  const later = <span className={styles.note}>{guest
+    ? t("게스트는 일정 알림을 받지 않아요. 아래 소셜 계정을 연결하면 알림을 받을 수 있어요.", "Guests get no schedule alerts. Link a social account below to get them.")
+    : t("일정이 바뀔 때 디스코드로 알림을 보내는 기능은 준비 중이에요.", "Alerts about plan changes through Discord are still being prepared.")}</span>;
   const add = <ButtonLink href={routes.myPageEdit} variant="quiet">{t("웹훅 등록하기", "Add a webhook")}</ButtonLink>;
 
   if (DATA_MODE !== "live") return <span className={styles.muted}>{t("실제 서버에 연결됐을 때만 등록할 수 있어요.", "Can be added only when connected to the real server.")}</span>;
-  if (!hasKey) return <>
+  if (!hasSession) return <>
     <span className={styles.muted}>{webhookWaiting()
       ? t("입력한 웹훅은 첫 여행을 등록하면 서버에 저장돼요. 그 전에 새로고침하면 다시 넣어 주세요.", "The webhook you entered is saved when you register your first trip. Enter it again if you reload before then.")
       : t("등록된 웹훅이 없어요.", "No webhook registered.")}</span>
@@ -77,12 +80,12 @@ export function WebhookView({ hasKey }: { hasKey: boolean }) {
 }
 
 /** The edit screen's webhook field. Blank keeps the saved one (its address is never shown again); the box removes it. */
-export function WebhookField({ hasKey, value, remove, touched, onValue, onRemove, onBlur }: {
-  hasKey: boolean; value: string; remove: boolean; touched: boolean;
+export function WebhookField({ hasSession, value, remove, touched, onValue, onRemove, onBlur }: {
+  hasSession: boolean; value: string; remove: boolean; touched: boolean;
   onValue: (value: string) => void; onRemove: (remove: boolean) => void; onBlur: () => void;
 }) {
   const t = useT();
-  const profile = useServerProfile(hasKey);
+  const profile = useServerProfile(hasSession);
   const live = DATA_MODE === "live";
   const saved = profile.data?.webhook.set ? profile.data.webhook.masked : null;
   const error = touched && !remove && Boolean(discordWebhookProblem(value));

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetSessionState } from "./client";
 import { itemEdit } from "./intake-edits";
 import { autofixIntake, getCandidates, getPlacePhotos, pickedPlace, revalidateIntake, searchPlaces, type CandidatePlace } from "./intake-review";
+import { answeringSession } from "./session-kit";
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map<string, string>(Object.entries(initial));
@@ -57,10 +59,10 @@ describe("the calls of the check screen", () => {
 
   beforeEach(() => {
     calls = [];
-    vi.stubGlobal("window", { localStorage: memory({ "tripilot.web.user-key.v1": "acop_u_mine" }), sessionStorage: memory() });
-    vi.stubGlobal("fetch", async (url: string, init: RequestInit) => { calls.push({ url, init }); return new Response("{}", { status: 200 }); });
+    vi.stubGlobal("window", { localStorage: memory(), sessionStorage: memory() });
+    vi.stubGlobal("fetch", answeringSession(async (url, init) => { calls.push({ url, init }); return new Response("{}", { status: 200 }); }));
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => { vi.unstubAllGlobals(); resetSessionState(); });
 
   const path = () => new URL(calls[0].url);
 
@@ -68,7 +70,8 @@ describe("the calls of the check screen", () => {
     await getCandidates("i1", ITEM, 3, "ko");
     expect(path().pathname).toBe("/v1/web/trip-intakes/i1/candidates");
     expect(Object.fromEntries(path().searchParams)).toEqual({ source_id: "s1", index: "2", revision: "3" });
-    expect(calls[0].init.headers).toMatchObject({ "X-User-Key": "acop_u_mine" });
+    expect(calls[0].init.credentials).toBe("include");
+    expect(calls[0].init.headers).not.toHaveProperty("X-User-Key");
   });
 
   it("searches places by name for one stop, encoding what was typed", async () => {
@@ -81,7 +84,7 @@ describe("the calls of the check screen", () => {
   it("can drop a search that the customer typed past", async () => {
     const stop = new AbortController();
     stop.abort();
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => { if (init.signal?.aborted) throw new DOMException("aborted", "AbortError"); return new Response("{}"); });
+    vi.stubGlobal("fetch", answeringSession(async (_url, init) => { if (init.signal?.aborted) throw new DOMException("aborted", "AbortError"); return new Response("{}"); }));
     await expect(searchPlaces("i1", ITEM, 3, "올", "ko", stop.signal)).rejects.toMatchObject({ code: "network" });
   });
 

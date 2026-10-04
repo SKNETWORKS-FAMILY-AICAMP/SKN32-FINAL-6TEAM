@@ -13,7 +13,7 @@ import { useServerReview } from "@/features/plan-check/use-server-review";
 import type { ItemDraft } from "@/features/plan-check/model";
 import { PlanCheck } from "@/features/plan-check/plan-check";
 import { tripsKey } from "@/lib/gateway";
-import { LiveError } from "@/lib/live/client";
+import { LiveError, loginRequired } from "@/lib/live/client";
 import { emptyStream, reduceStream, toIntakeEvent, type StreamState } from "@/lib/live/intake-events";
 import { confirmIntake, editIntake, getIntake, type IntakeEdit } from "@/lib/live/intake";
 import type { ReviewedIntakeView } from "@/lib/live/intake-review";
@@ -183,6 +183,7 @@ export function IntakeReview({ intakeId }: { intakeId: string }) {
     registration={{
       ready: view.review ? view.review.ready : Boolean(view.check?.ready), busy: confirm.isPending, onRegister: () => confirm.mutate(view.revision),
       error: confirm.error?.message ?? null, problems: refusal?.problems?.map((problem) => problem.message ?? `${problem.field}: ${problem.reason}`) ?? [],
+      loginRequired: loginRequired(confirm.error),
       registeredHref: view.status === "confirmed" && view.trip_id ? routes.trip(view.trip_id) : null,
     }} />;
 }
