@@ -32,9 +32,11 @@
   어렵다). 전에는 가격을 모르면 「추가 비용을 계산할 수 없다」로 **탈락**이라 가격 칸이 빈 식당이 전부 빠졌다.
   식당끼리는 도보 거리(③ 원래 시각과의 차이)로 가른다.
 
-★`[2026-09-28]` **요식 원장은 후보를 내고, 고르는 것은 여기다**(사용자 결정). 원장(`dining/ledger.py`)이
-  축마다 하나씩(덜 밀리는 곳 · 비슷한 곳 · 가까운 곳) 준 곳을 후보로 삼아 위 규칙으로 **하나**를 고르고,
-  나머지는 「다른 안」이 된다. 원장이 말할 수 없으면(표 없음 · 짝 없음 · 후보 없음) 예전처럼 장소 목록에서 찾는다.
+★`[2026-10-05]` **대체 식당 후보는 코어 장소 표(공용 + 그 여행 전용)에서 찾고, 영업 판정만 요식 원장에 묻는다**(팀 방식 —
+  `dining/nearby.py` 가 식사 근처의 원장 가게를 그 여행 전용 장소로 들여놓는다). 계산은 DB 를 부르지 않고 호출하는 쪽이
+  한 번에 읽어 온 판정(`state_lookup`)을 받는다. 우리 규칙(라스트오더 20분 탈락 · 60분 경고 · 서울 시각)은 원장 판정에도 건다.
+★`[2026-10-05]` **구글 가격 비교는 선택 기능이다**(`price_lookup` 을 넘길 때만 — 설정 스위치 기본 꺼짐). 우리 9/28 규칙 「식당은
+  가격으로 줄 세우지 않는다」와 팀 9/30 결정(같거나 싼 가격대 먼저)이 다르고 호출 비용이 들어 사용자 결정 전에는 끈다.
 """
 from __future__ import annotations
 
@@ -56,6 +58,13 @@ SEATING_BUFFER_MIN = 10
 #: 같은 브랜드를 앞세우는 거리 — 이보다 먼 같은 브랜드는 거리로만 겨룬다. ★활동 팀 값(1km)을 그대로 쓴다
 BRAND_NEARBY_M = 1_000
 
+#: 가격대를 물어볼 후보 수(원래 식당 제외). ★가격대 조회는 한 곳에 한 번 — 가까운 곳부터 이만큼만 묻는다
+PRICE_LOOKUP_LIMIT = 8
+_PRICE_RANK = {"higher": 1, "unknown": 2}
+
+# 방문 시간대별 원장 조회. 계산층은 DB를 직접 부르지 않고 호출자가 읽는 함수를 받는다.
+DiningStateLookup = Callable[[list[dict[str, Any]]], dict[str, dict[str, Any] | None] | None]
+
 
 @dataclass
 class Candidate:
@@ -73,10 +82,14 @@ class Candidate:
     ends_at: datetime | None = None
     #: ★탈락은 아니지만 고객이 확인해야 할 것(라스트오더를 모르는데 마감이 가깝다 등). 통지에 싣는다
     warnings: list[str] = field(default_factory=list)
-    #: 요식 원장이 낸 후보면 그 축(`axis` · `axis_label`). 원장 밖 후보는 None
-    axis: dict[str, Any] | None = None
-    #: 영업 판정을 어디서 가져왔나 — `dining_ledger` · `core_place`. 틀렸을 때 어디를 고칠지 알게 남긴다
-    judged_by: str | None = None
+    #: ★`[2026-09-30 팀]` 식당 후보의 가격 비교 — `won`(우리 원 단위 가격으로 잼) · `same_or_lower` · `higher` ·
+    #:  `unknown`. 구글 가격은 **비교 결과만** 여기 남긴다. 원값은 들고 있지 않는다(약관 — 저장 금지).
+    #:  식당 밖 후보는 `None` — 순위에 영향이 없다.
+    price_compare: str | None = None
+    #: 구글로 잰 근거 — `range`(1인당 가격 범위, 원) · `level`(가격대 0~4). 모르면 None
+    price_basis: str | None = None
+    #: 카드 결제 가능 여부 — **참고로 보여 주기만** 한다(순위 · 탈락에 쓰지 않는다). 참 · 거짓 · 모름(None)
+    card_payment: bool | None = None
     #: ★`[2026-09-29]` 활동 후보만 채운다 — 원래 장소와 비슷한 정도(클수록 비슷)와 직선거리(m).
     #:  식당·경로 후보는 둘 다 0 이라 순서가 예전 그대로다(`rank` 맨 뒤, `key` 바로 앞)
     similarity: int = 0
@@ -104,8 +117,11 @@ class Candidate:
         # ★`[2026-09-29]` 활동 후보는 전에 추가 비용이 같으면 **장소 id 순**이었다(거리도 종류도 안 봤다).
         #   이제 비용·변동 다음에 「비슷한 곳(관광공사 분류·구) → 가까운 곳」이다. 비슷한 정도가 거리보다 앞이라
         #   600m 안에서 더 먼 곳이 골라질 수 있다 — 대체 활동은 먼저 같은 종류여야 한다(코덱스 합의, 활동 PR #6 규칙)
+        # ☆`[2026-09-30 팀]` 식당 — 같거나 싼 가격대 → 비싼 가격대 → 모름. 모름은 탈락이 아니라 맨 뒤다
+        #   (`price_compare` 는 식당 후보에만 채워진다 — 활동·경로는 0 이라 순서가 그대로다)
+        price_rank = _PRICE_RANK.get(self.price_compare or "", 0)
         return (priority if isinstance(priority, int) else SCENARIO_PRIORITY_NONE,
-                self.changed_items, fare_unknown, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
+                self.changed_items, fare_unknown, price_rank, self.extra_cost_krw or 0, self.shift_minutes, self.walk_min or 0,
                 0 if self.reversible_internally else 1, 1 if self.warnings else 0,
                 0 if self.brand_nearby else 1,
                 *((round(self.distance_m), -self.similarity) if self.distance_first
@@ -230,8 +246,23 @@ def last_order_shortfall(place: dict[str, Any], arrival: datetime) -> str | None
     return _break_last_order(attributes, arrival, known_only=True) or _closing_last_order(attributes, arrival)
 
 
-def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int) -> tuple[bool | None, str]:
-    """그 시각에 들어가 `minutes` 동안 먹을 수 있나. (판정, 이유). 시각은 서울 시각으로 읽는다(`_seoul`)."""
+def dining_fits(place: dict[str, Any], arrival: datetime, minutes: int, *,
+                state: dict[str, Any] | None = None) -> tuple[bool | None, str]:
+    """그 시각에 들어가 `minutes` 동안 먹을 수 있나. (판정, 이유). 시각은 서울 시각으로 읽는다(`_seoul`).
+
+    `state` — 요식 원장이 **그 방문 구간**에 대해 낸 판정(`read.dining_states`). 이어진 곳(`linked`)이면 원장이 휴무 ·
+    명절 · 브레이크 · 라스트오더 · 폐업까지 본 값이라 먼저 쓰고, 「모름」을 오래된 코어 영업시간으로 덮지 않는다(팀 방식).
+    ★`[2026-10-05]` 원장이 「연다」고 해도 **라스트오더를 알면 도착 + 20분 여유**(`order_ok`)는 따로 건다 — 원장의 판정은
+      「도착이 라스트오더 전인가」만 본다. 우리 9/28 규칙이 원장 판정에도 걸리게 한다.
+    """
+    if state and state.get("linked"):
+        opened = state.get("open_at_slot")
+        if opened is True:
+            if state.get("order_ok") is False:
+                return False, f"라스트오더까지 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다(요식 원장)"
+            return True, ""
+        return opened, ("원장에서 방문 시간대의 영업을 확인할 수 없다" if opened is None
+                        else "원장 기준 그 시각 영업하지 않는다")
     arrival = _seoul(arrival)
     end = arrival + timedelta(minutes=minutes)
     opened = open_during(place, arrival, end)
@@ -278,6 +309,28 @@ def dining_warnings(place: dict[str, Any], arrival: datetime, minutes: int) -> l
         if end <= closes <= end + timedelta(minutes=LAST_ORDER_WARN_MIN):
             out.append(f"{_hm(closes)} 마감 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
     return out
+
+
+def ledger_warnings(state: dict[str, Any] | None) -> list[str]:
+    """영업 판정과 별개로 고객에게 전달할 확인 필요 사항 — **원장 판정**에서 나온 것(명절 · 마지막 주문). `[2026-10-05]`
+
+    팀의 `dining_warnings(state)` 이름을 바꿨다 — 우리 `dining_warnings(place, arrival, minutes)`(코어 영업시간으로 말하는
+    60분 경고)와 이름이 같았다. 이어진 곳은 이쪽, 안 이어진 곳은 그쪽이 말한다(둘이 같은 말을 두 번 하지 않는다)."""
+    warnings = []
+    if state and state.get("linked"):
+        if state.get("needs_holiday_check"):
+            warnings.append("명절이나 공휴일이라 영업시간이 다를 수 있다")
+        if state.get("needs_check"):
+            warnings.append("영업 종료가 임박해 마지막 주문을 확인해야 한다")
+    return warnings
+
+
+def card_payment(place: dict[str, Any], state: dict[str, Any] | None) -> bool | None:
+    """카드 결제 가능 여부(참고용). 이어진 원장 판정이 먼저, 없으면 코어 결제 칸. 모르면 None."""
+    if state and state.get("linked") and "card_payment" in state:
+        return state["card_payment"]
+    payments = (place.get("attributes") or {}).get("payment")
+    return ("card" in payments) if payments else None
 
 
 #: 이 사건 종류는 **실내로 옮기면 원인이 사라진다** — 대안을 실내에서 찾는다.
@@ -337,61 +390,68 @@ def activity_candidates(*, original: dict[str, Any], places: list[dict[str, Any]
 def dining_candidates(*, original: dict[str, Any], places: list[dict[str, Any]],
                       arrival: datetime, minutes: int, constraints: dict[str, Any],
                       radius_m: int, next_start: datetime | None,
-                      exclude: set[str] = frozenset(), ledger: Any | None = None,
-                      pool: dict[str, dict[str, Any]] | None = None) -> list[Candidate]:
+                      exclude: set[str] = frozenset(), state_lookup: DiningStateLookup | None = None,
+                      arrival_for: Callable[[int], datetime] | None = None) -> list[Candidate]:
     """주변 식당 후보. ★조건(결제수단)은 **탈락**이지 감점이 아니다(§6-C-2).
 
-    ★`[2026-09-28]` 가격은 보지 않는다 — 탈락에도 순위에도(맨 위 머리말).
-    ★`pool` 이 있으면 **요식 원장이 낸 후보만** 본다(`{place_id: 축}`). 원장은 반경 사다리(500→1000→2000m)를
-      스스로 정하므로 여기 `radius_m` 을 다시 걸지 않는다. 영업 판정도 원장(`ledger.state`)에 먼저 묻고,
-      원장이 모른다고 하면 코어 영업시간으로 본다. `judged_by` 에 어디서 판정했는지 남긴다.
+    ★`[2026-10-02 팀]` 카드 결제 가능 여부는 **참고로만** 싣는다(`Candidate.card_payment`) — 고르는 데 쓰지 않는다.
+      명시된 결제 조건은 위 규칙 그대로(탈락)다.
+    ★`[2026-09-30 팀]` 가격을 모른다고 떨어뜨리지 않는다 — 실제 식당 자료에는 원 단위 가격이 없어 후보가 전부
+      빠졌다(우리 9/28 규칙과 같다). 모르면 `price_compare="unknown"` 으로 두고, 구글 가격은 `apply_google_prices` 가
+      채운다(선택).
+    ★`[2026-10-05]` 영업 판정은 **한 번에** 읽는다(`state_lookup`) — 다른 조건에서 안 떨어진 후보만, 장소마다 도구를
+      부르면 밀집 지역에서 Team 의 호출 예산을 소진한다. 원장 판정이 없는 곳(안 이어짐 · 못 읽음)은 코어 영업시간으로
+      판정하고 **우리 라스트오더 규칙**(알면 20분 탈락 · 모르면 60분 경고)을 건다.
+    `arrival_for(도보 분)` — 후보마다 도보 시간이 달라 입장 시각이 다를 때(고객이 지금 가게 앞에 있는 신고).
     """
+    base_price = (original.get("attributes") or {}).get("price_krw")
     need_payment = constraints.get("payment")
-    end_of = lambda start: start + timedelta(minutes=minutes)  # noqa: E731
+    original_attributes = original.get("attributes") or {}
+    original_uid = original_attributes.get("dining_place_uid")
+    original_content_id = original.get("source_content_id") or original_attributes.get("source_content_id")
     out = []
     for place in places:
         if place["place_id"] == original["place_id"] or place["place_id"] in exclude:
             continue
         if place.get("kind") != "dining" or place.get("latitude") is None:
             continue
-        if pool is not None and str(place["place_id"]) not in pool:
-            continue
         meters = distance_m(original, place)
-        if pool is None and meters > radius_m:
+        if meters > radius_m:
             continue
         walk = walk_minutes(meters)
         attributes = place.get("attributes") or {}
+        # 이전에 들여놓은 별칭 행도 UUID가 아니라 원장/관광공사 식별자로 같은 식당인지 확인한다.
+        if ((original_uid and str(original_uid) == str(attributes.get("dining_place_uid")))
+                or (original_content_id and str(original_content_id)
+                    == str(place.get("source_content_id") or attributes.get("source_content_id")))):
+            continue
         candidate = Candidate(key=str(place["place_id"]), place=place, changed_items=1,
-                              extra_cost_krw=None, shift_minutes=0, walk_min=walk,
-                              axis=(pool or {}).get(str(place["place_id"])))
+                              extra_cost_krw=None, shift_minutes=0, walk_min=walk)
+        price = attributes.get("price_krw")
+        if price is None or base_price is None:
+            candidate.price_compare = "unknown"
+        else:
+            candidate.extra_cost_krw = max(0, int(price) - int(base_price))
+            candidate.price_compare = "won"
         if need_payment and need_payment not in (attributes.get("payment") or []):
             candidate.rejected.append(f"결제 조건({need_payment}) 불충족")
-        state = ledger.state(str(place["place_id"]), arrival, end_of(arrival)) \
-            if ledger is not None and pool is not None else None
-        if state and state.get("available") and state.get("linked") \
-                and state.get("open_at_slot") is not None:
-            candidate.judged_by = "dining_ledger"
-            if state["open_at_slot"] is False:
-                candidate.rejected.append("그 시각 영업하지 않는다(요식 원장)")
-            elif state.get("order_ok") is False:
-                candidate.rejected.append(f"라스트오더까지 주문 여유 {ORDER_MARGIN_MIN}분이 안 된다(요식 원장)")
-            else:
-                if state.get("needs_check"):
-                    candidate.warnings.append("마감 1시간 안에 식사가 끝나요 — 마지막 주문 시각을 확인해 주세요")
-                if state.get("needs_holiday_check"):
-                    candidate.warnings.append("명절·공휴일이라 영업시간이 다를 수 있어요")
-        else:
-            candidate.judged_by = "core_place"
-            fits, why = dining_fits(place, arrival, minutes)
-            if fits is not True:
-                candidate.rejected.append(why)
-            else:
-                candidate.warnings += dining_warnings(place, arrival, minutes)
-        candidate.starts_at = arrival
-        candidate.ends_at = arrival + timedelta(minutes=minutes)
+        candidate.starts_at = arrival_for(walk) if arrival_for else arrival
+        candidate.ends_at = candidate.starts_at + timedelta(minutes=minutes)
         if next_start is not None and candidate.ends_at > next_start:
             candidate.rejected.append(f"다음 일정({_hm(next_start)})과 겹친다")
         out.append(candidate)
+    eligible = [c for c in out if not c.rejected]
+    states = (state_lookup([{"place_id": c.key, "at": c.starts_at, "until": c.ends_at}
+                            for c in eligible]) if state_lookup and eligible else None) or {}
+    for candidate in eligible:
+        state = states.get(candidate.key)
+        fits, why = dining_fits(candidate.place, candidate.starts_at, minutes, state=state)
+        if fits is not True:
+            candidate.rejected.append(why)
+        else:
+            candidate.warnings += (ledger_warnings(state) if state and state.get("linked")
+                                   else dining_warnings(candidate.place, candidate.starts_at, minutes))
+            candidate.card_payment = card_payment(candidate.place, state)
     return out
 
 
@@ -473,6 +533,54 @@ def store_candidates(*, here: dict[str, Any], home: dict[str, Any], places: list
     return out
 
 
+GooglePrice = dict[str, int | None]      # {"level": 0~4, "low": 원, "high": 원} — 모르는 칸은 None
+
+
+def apply_google_prices(candidates: list[Candidate], *, original: dict[str, Any],
+                        lookup: Callable[[list[dict[str, Any]]], dict[str, GooglePrice | None] | None],
+                        limit: int = PRICE_LOOKUP_LIMIT) -> None:
+    """식당 후보에 구글 가격 비교를 붙인다 — 원래 식당보다 **같거나 싼가 · 비싼가 · 모름**.
+
+    ★`[2026-09-30 사용자 결정]` 우리 원 단위 가격이 없는 후보만, 탈락하지 않은 것 중 **가까운 `limit` 곳**과
+      원래 식당을 한 번에 묻는다(`lookup` — 장소 목록 → {place_id: 구글 가격 또는 None}).
+    ★잴 수 있는 것부터: 양쪽에 **가격 범위**(1인당, 원)가 있으면 범위 가운데 값의 차로 잰다 — 차액을
+      `extra_cost_krw` 에 두어 같은 쪽 안에서 덜 비싼 곳이 먼저 온다. 없으면 **가격대**(0~4, 원 기준 비공개)로.
+    ★받은 값은 **비교에만 쓰고 버린다**(구글 약관 — 저장 금지). 후보에는 비교 결과와 근거 종류만 남는다.
+    ★조회가 실패하거나 원래 식당의 가격을 모르면 전부 「모름」 — 순서는 그대로다.
+    """
+    targets = [c for c in candidates if not c.rejected and c.place and c.price_compare != "won"]
+    if not targets:
+        return
+    targets.sort(key=lambda c: (c.walk_min if c.walk_min is not None else math.inf, c.key))
+    targets = targets[:limit]
+    for candidate in targets:
+        candidate.price_compare = "unknown"
+    prices = lookup([original] + [c.place for c in targets]) or {}
+    base = prices.get(str(original.get("place_id")))
+    if not base:
+        return
+    for candidate in targets:
+        mine = prices.get(str(candidate.place["place_id"]))
+        if not mine:
+            continue
+        base_mid, mine_mid = _range_middle(base), _range_middle(mine)
+        if base_mid is not None and mine_mid is not None:
+            difference = mine_mid - base_mid
+            candidate.price_compare = "same_or_lower" if difference <= 0 else "higher"
+            candidate.price_basis, candidate.extra_cost_krw = "range", max(0, round(difference))
+        elif base.get("level") is not None and mine.get("level") is not None:
+            candidate.price_compare = "same_or_lower" if mine["level"] <= base["level"] else "higher"
+            candidate.price_basis = "level"
+
+
+def _range_middle(price: GooglePrice) -> float | None:
+    """범위 가운데 값. ★상한이 없으면(「10만 원 이상」) 하한을 쓴다 — 더 비쌀 수 있지만 더 싸지는 않다."""
+    low, high = price.get("low"), price.get("high")
+    if low is None:
+        return None
+    return float(low) if high is None else (low + high) / 2
+
+
 def choose(candidates: list[Candidate],
            recheck: Callable[[Candidate], dict[str, Any]] | None = None,
            distinct: Callable[[Candidate, Candidate], bool] | None = None) -> tuple[
@@ -535,10 +643,11 @@ def alternate_record(candidate: Candidate) -> dict[str, Any]:
             "walk_min": candidate.walk_min,
             # ★`[2026-10-05]` 추천 이유 한 줄(잰 값만) — 화면 표시는 ui 몫이라 먼저 기록에만 싣는다
             **({"reason": candidate.reason} if candidate.reason else {}),
+            # ★`[2026-09-30 팀]` 원래 식당과의 가격 비교 결과만(구글 금액은 싣지 않는다 — 저장 금지). 식당 밖은 None
+            "price_compare": candidate.price_compare,
+            **({"card_payment": candidate.card_payment} if candidate.card_payment is not None else {}),
             # ★`[2026-09-28]` 화면은 key·name 만 읽고 나머지는 무시한다(UI 조사) — 더해도 깨지지 않는다
             **({"warnings": list(candidate.warnings)} if candidate.warnings else {}),
-            **({"axis": candidate.axis} if candidate.axis else {}),
-            **({"judged_by": candidate.judged_by} if candidate.judged_by else {}),
             # ★`[2026-09-29]` 관광공사 목록에서 온 후보 — 아직 우리 장소가 아니다. 고객이 고르면 그때 이 값으로 그 여행
             #   전용 장소를 등록한다(`TripStore.add_catalog_place` · pending.choose). 미리 등록하지 않는다(코덱스 합의)
             **({"catalog_place": candidate.place} if candidate.place
@@ -606,21 +715,30 @@ def dining_notice(*, original: dict[str, Any], best: Candidate, alternates: list
     parts = [f"{reason}.",
              f"도보 {best.walk_min}분 거리{', ' + constraint_note if constraint_note else ''}"
              f" {best.name}(으)로 안내합니다({_hm(best.starts_at)} 입장)."]
-    if best.warnings:
-        # ★`[2026-09-28]` 라스트오더를 모르는데 마감이 가깝다 등 — 바꾸기는 하되 확인할 것을 알린다
-        parts.append(" ".join(f"{w}." for w in best.warnings))
     if alternates:
         parts.append("다른 안: " + ", ".join(f"{c.name}(도보 {c.walk_min}분)"
                                             for c in alternates) + ".")
     if after:
         parts.append(f"이후 {after} 일정에는 영향이 없습니다.")
+    if best.price_basis == "range":
+        # ★구글 가격으로 골랐으면 추정이라고 밝힌다. 금액은 적지 않는다 — 통지는 저장되고 구글 값은 저장 금지다
+        parts.append("가격은 구글 지도에 올라온 1인당 가격 범위로 비교한 추정이에요.")
+    elif best.price_basis == "level":
+        parts.append("가격대는 구글 기준 추정이에요.")
+    known = [f"{c.name} 카드 {'가능' if c.card_payment else '불가'}"
+             for c in [best, *alternates] if c.card_payment is not None]
+    if known:
+        # ★참고일 뿐이다 — 모르는 곳은 적지 않는다(「카드 된다」고 지어내지 않는다). 경고 목록에는 넣지 않는다
+        parts.append(f"결제 참고(확인된 곳만): {' · '.join(known)}.")
+    warnings = [f"{c.name}: {warning}" for c in [best, *alternates] for warning in c.warnings]
+    parts.extend(warnings)
     return _notice(" ".join(parts), causes=[cause], alternates=alternates, replay=False,
+                   **({"warnings": warnings} if warnings else {}),
                    changed={"from": original["name"], "to": best.name,
-                            "at": best.starts_at.isoformat()},
-                   **({"warnings": list(best.warnings)} if best.warnings else {}),
-                   **({"judged_by": best.judged_by} if best.judged_by else {}))
+                            "at": best.starts_at.isoformat()})
 
 
-__all__ = ["Candidate", "activity_candidates", "alternate_record", "change_notice", "choose", "dining_candidates",
-           "dining_fits", "dining_notice", "dining_warnings", "distance_m", "last_order_shortfall", "open_during", "route_candidates",
+__all__ = ["Candidate", "PRICE_LOOKUP_LIMIT", "activity_candidates", "alternate_record", "apply_google_prices",
+           "card_payment", "change_notice", "choose", "dining_candidates", "dining_fits", "dining_notice",
+           "dining_warnings", "distance_m", "last_order_shortfall", "ledger_warnings", "open_during", "route_candidates",
            "route_notice", "store_candidates", "walk_minutes"]

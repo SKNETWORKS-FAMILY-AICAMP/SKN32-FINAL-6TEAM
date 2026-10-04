@@ -34,7 +34,8 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from .itinerary import Item, TripStore, visible_to
-from .itinerary_changes import NoChange, plan_activity_closed_on_day, plan_closed_on_day
+from .dining.ledger import dining_states
+from .itinerary_changes import ItineraryChange, NoChange, plan_activity_closed_on_day, plan_closed_on_day
 from .pending import apply_or_ask
 
 KST = ZoneInfo("Asia/Seoul")
@@ -154,15 +155,22 @@ class DawnCheck:
                                                    detail=detail, checked_at=checked_at,
                                                    exclude=self._closed_places(conn, day))
             else:
-                from .dining.ledger import DbLedgerView
-                from .replan import ORDER_MARGIN_MIN
+                def replan(candidates):
+                    return plan_closed_on_day(trip=trip, items=items, places=candidates, meal=meal, source=PROVIDER,
+                                              detail=detail, checked_at=checked_at,
+                                              exclude=self._closed_places(conn, day),
+                                              price_lookup=self._price_lookup(),
+                                              state_lookup=lambda slots: dining_states(conn, self.store.tenant_id,
+                                                                                       slots))
+                plan = replan(places)
+                # ★`[2026-10-01]` 대체 후보가 코어 장소에서만 나와 비던 것 — 근처 원장 가게를 그 여행 전용으로 들여놓고 다시
+                # ★`[2026-10-05]` 대체 후보 = 근처 원장 가게(`add_nearby`) + 원장 판정(`state_lookup`) — 요식 원장이 정본이다(A 방식 `ledger=` 는 걷었다)
+                if isinstance(plan, ItineraryChange) or (isinstance(plan, NoChange) and plan.status == "unresolved"):
+                    from .dining import nearby
 
-                # ★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다(없으면 장소 목록 — 예전 그대로)
-                plan = plan_closed_on_day(trip=trip, items=items, places=places, meal=meal, source=PROVIDER,
-                                          detail=detail, checked_at=checked_at,
-                                          exclude=self._closed_places(conn, day),
-                                          ledger=DbLedgerView(self._connect, self.store.tenant_id,
-                                                              ORDER_MARGIN_MIN))
+                    more = nearby.add_nearby(conn, self.store, trip_id, [meal], places)
+                    if more != places:
+                        plan = replan(more)
             self._insert_check(conn, trip_id, meal, day, "closed", detail)
             if isinstance(plan, NoChange):
                 result.unresolved.append({**entry, "status": plan.status})
@@ -172,7 +180,7 @@ class DawnCheck:
                 # ★그 사이 일정이 움직였다 — 판정도 기록하지 않고 되돌린다. 창 안에서 다시 본다
                 raise _Retry()
         if outcome["status"] == "adjusted":
-            result.adjusted.append({**entry, "version": outcome["version"], **outcome["summary"]})
+            result.adjusted.append({**entry, "version": outcome["version"], **(outcome.get("summary") or plan.summary)})
         elif outcome["status"] == "asked":
             result.asked.append({**entry, "already": outcome.get("already", False)})
         elif outcome["status"] == "rechecked":
@@ -203,6 +211,16 @@ class DawnCheck:
             cur.execute("SELECT DISTINCT place_id FROM place_open_checks WHERE tenant_id=%s AND day=%s "
                         "AND verdict='closed'", (self.store.tenant_id, day))
             return {row[0] for row in cur.fetchall()}
+
+    def _price_lookup(self):
+        """대체 식당의 구글 가격(`[2026-09-30]`). 소스가 가격을 못 주면 `None` — 구글 가격 없이 세운다.
+        ★값은 비교에만 쓰고 버린다(구글 약관). 짝 표에 없는 식당은 「모름」이다."""
+        if not hasattr(self.source, "price"):
+            return None
+        from app.infrastructure.travel.google_places import prices_for
+
+        return lambda places: prices_for(self._connect, self.store.tenant_id, self.source,
+                                         [str(p["place_id"]) for p in places])
 
     def _provider_id(self, conn, place_id) -> str | None:
         with conn.cursor() as cur:

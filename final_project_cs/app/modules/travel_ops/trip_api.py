@@ -52,8 +52,62 @@ from . import guest_policy, trip_delete
 from .itinerary import Item, TripStore
 from .trip_desk import TripDesk
 
+# ★`[2026-10-05 병합]` 팀 판의 `_CsvFallbackTour`(활동팀 CSV 로 관광공사를 대신 조회) 는 싣지 않았다 — 관광공사 호출 제한 · 카카오 403 을
+#   피하려는 활동팀의 임시 우회이고 자료 파일(`activity_total_data.csv`)이 우리 쪽에 없다. 접수의 관광공사 조회는 전처럼 `place_factory` 가 한다.
+class _PlaceCtx:
+    """요청 단위 장소 좌표 힌트 — 확정된 장소들의 일정 시각·좌표를 저장하고,
+    현재 항목 일정 시각에 가장 가까운 장소 좌표를 반환한다."""
+
+    def __init__(self) -> None:
+        self._entries: list[tuple[str | None, float, float]] = []  # (ISO datetime, lat, lon)
+        self.current_datetime: str | None = None  # "YYYY-MM-DDTHH:MM" 또는 "YYYY-MM-DD"
+
+    def add(self, lat: float, lon: float) -> None:
+        self._entries.append((self.current_datetime, lat, lon))
+
+    def get_near(self) -> tuple[float, float] | None:
+        if not self._entries:
+            return None
+        if self.current_datetime is None or len(self._entries) == 1:
+            return (self._entries[-1][1], self._entries[-1][2])
+        try:
+            cur = datetime.fromisoformat(self.current_datetime)
+        except ValueError:
+            return (self._entries[-1][1], self._entries[-1][2])
+
+        def _diff(dt_str: str | None) -> timedelta:
+            if not dt_str:
+                return timedelta(days=999999)
+            try:
+                return abs(datetime.fromisoformat(dt_str) - cur)
+            except ValueError:
+                return timedelta(days=999999)
+
+        # 일정 시각 차이 최소, 동점이면 나중에 추가된 것(직전 항목 우선)
+        best = min(range(len(self._entries)), key=lambda i: (_diff(self._entries[i][0]), -i))
+        return (self._entries[best][1], self._entries[best][2])
+
+
+def _dining_lookup(ctx: _PlaceCtx | None = None) -> Any:
+    """일정 접수의 요식 원장 자리(`intake/places.py` — 식사는 원장이 먼저). 액티비티 CSV 자리와 따로 둔다.
+
+    ctx 가 있으면 원장에서 찾은 식당 좌표도 다음 조회의 near 힌트로 넘긴다(액티비티 CSV · 카카오와 같은 힌트).
+    """
+    from .dining.place_lookup import LedgerPlaceLookup
+
+    def found(place: dict[str, Any]) -> None:
+        if ctx is not None:
+            try:
+                ctx.add(float(place["latitude"]), float(place["longitude"]))
+            except (KeyError, TypeError, ValueError):
+                pass
+
+    return LedgerPlaceLookup(get_connection, on_found=found)
+
+
 #: ★대상 도시는 서울 하나다(v11 §1). 시간대 없이 온 시각은 서울 시각으로 읽는다.
 KST = ZoneInfo("Asia/Seoul")
+logger = logging.getLogger(__name__)
 
 CheckFactory = Callable[[], Callable[..., dict[str, Any]]]
 
@@ -74,7 +128,10 @@ class PlaceIn(BaseModel):
 #:  `places[].attributes.source` 로 가린다. 일정 생성기의 관광공사 후보도 이 값을 단다(`planner.py`).
 EXTERNAL_PLACE_SOURCES = frozenset({"tour_api", "kakao", "google_places",
                                     # ★`[2026-10-02]` 고객이 확인 화면에서 후보 · 검색 · 지도로 고른 장소(`intake/assemble._place_in`)
-                                    "customer_pick"})
+                                    "customer_pick",
+                                    # ★`[2026-10-01 · 10-05 병합]` 요식 원장(`dining_ledger`)에서 찾은 가게도 여행 전용 행이다 — 공용 표에 쌓으면
+                                    #   일정 접수의 이름 찾기 · 오타 교정이 그 이름들을 먼저 보게 된다(액티비티 항목까지 영향)
+                                    "dining_ledger"})
 
 
 class ItemIn(BaseModel):
@@ -254,10 +311,34 @@ def _place_view(key: str | None, places: list[Any]) -> dict[str, Any] | None:
     return None
 
 
-# ★`[2026-10-05]` `status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태 `IntakeConflict(..., status=...)`)
-#   같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다. 출처: 팀 저장소 develop 의 2449fa96(활동 담당 수정)을 읽고 우리 쪽에서 재현해 가져왔다.
+def _ledger_verdicts(slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    """등록 판정용 요식 원장 조회 — 원장 가게(또는 관광공사 ID) · 방문 시각 → 그 시각에 여는가(`dining.ledger.slot_verdicts`).
+
+    ★못 읽으면 남기고 다시 던진다 — 받는 쪽(`with_ledger`)이 판정 없이(모름) 등록을 잇는다. 조용히 넘기면 원장이 죽어도
+      아무도 모른 채 식당 판정이 꺼진다.
+    """
+    from .dining.ledger import slot_verdicts
+
+    try:
+        with get_connection() as conn:
+            return slot_verdicts(conn, slots)
+    except Exception:
+        logger.warning("요식 원장 판정을 읽지 못해 식당 영업 판정 없이 등록을 판정한다", exc_info=True)
+        raise
+
+
+def _planner_ledger(conn) -> Any:
+    """일정 생성기의 식사 후보 · 판정은 요식 원장으로(`[2026-10-02]` 사용자 결정 — 식당은 관광공사를 실시간으로 부르지 않는다)."""
+    from .dining.ledger import PlannerLedger
+
+    return PlannerLedger(conn)
+
+
+# ★`status` 를 **위치 전용**(`/`)으로 받는다 — `**extra` 에 상세로 `status` 가 들어오면(예: 아직 등록할 수 없는 접수의 현재 상태
+#   `IntakeConflict(..., status=...)`) 같은 이름이 둘이라 `TypeError: got multiple values for argument 'status'` 로 409 가 서버 오류(500)가 됐다.
 def _error(status: int, code: str, message: str, /, **extra: Any) -> HTTPException:
     return HTTPException(status, {"error": {"code": code, "message": message, **extra}})
+
 
 
 def _plan_refused(refused: Any) -> HTTPException:
@@ -282,7 +363,7 @@ def _seoul(moment: datetime | None) -> datetime | None:
 # ★`[2026-09-20]` 구현은 `plan_link.py` 로 옮겼다 — 통지·안내를 만드는 쪽이 FastAPI 를 끌고 오지
 #   않고 링크를 붙일 수 있게. 여기서 다시 내보내므로 부르는 쪽은 안 바뀐다.
 from .change_link import change_token, change_url, change_view, render_change  # noqa: E402
-from .itinerary_checks import Part, check_itinerary, parts_from_items
+from .itinerary_checks import Part, check_itinerary, parts_from_items, with_ledger
 from .density import measure_density
 from .itinerary_quality import quality_warnings
 from .plan_link import plan_token, plan_url        # noqa: E402  (자리를 지켜 읽기 쉽게 둔다)
@@ -315,7 +396,11 @@ def _item_view(item: Item, info: dict[str, Any] | None = None) -> dict[str, Any]
             "starts_at": _seoul(item.starts_at).isoformat(),
             "ends_at": _seoul(item.ends_at).isoformat() if item.ends_at else None,
             "changed": item.replaces_item_id is not None,
-            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"]}
+            # ★`[2026-09-30 · 10-05 병합]` 식당 가격 비교(`same_or_lower` · `higher` · `unknown` · `won`) — 원래 식당 대비.
+            #   구글 금액은 내려 주지 않는다(저장 금지 — 비교 결과만 기록돼 있다). 비교하지 않았으면 None
+            "price_compare": item.detail.get("price_compare"),
+            "other_options": [{"key": a["key"], "name": a.get("option_label") or a["name"],
+                               "price_compare": a.get("price_compare")}
                               for a in item.detail.get("alternates") or []],
             "customer_pinned": bool(item.detail.get("customer_pinned")),
             # ★`[2026-09-27]` 웹 지도 핀 · 예약 표시. 좌표는 그 고객 자신의 여행 장소다(다른 고객에게 가지 않는다)
@@ -615,12 +700,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                          "그 구간의 운행·통제 사건을 대조하지 못한다", problems=bad_uses)
         # ★`[2026-09-21]` 받을 때 **코드로 판정**한다(v11 §12 DoD-2). 불가능하면 이유와 완화 조건을
         #   붙여 거절한다(DoD-3) — 전에는 참조·순서만 보고 그대로 받아 감시가 뒤에서 고쳤다.
+        # ★`[2026-10-02]` 식당은 요식 원장의 그 시각 판정을 붙여 본다(`with_ledger`) — 전에는 원장에서 찾기만 하고
+        #   영업 정보를 안 넘겨, 휴무 · 브레이크 · 영업 종료 뒤 식당이 등록을 통과했다. 원장을 못 읽으면 예전 그대로
         violations = check_itinerary(
-            [Part(seq=it.seq, kind=it.kind, title=it.title, starts_at=_seoul(it.starts_at),
-                  ends_at=_seoul(it.ends_at),
-                  place=_place_view(it.place, request.places), route=request.routes.get(str(it.route)),
-                  detail=it.detail)
-             for it in request.items],
+            with_ledger([Part(seq=it.seq, kind=it.kind, title=it.title, starts_at=_seoul(it.starts_at),
+                              ends_at=_seoul(it.ends_at),
+                              place=_place_view(it.place, request.places), route=request.routes.get(str(it.route)),
+                              detail=it.detail)
+                         for it in request.items], _ledger_verdicts),
             constraints=request.constraints, party_size=request.party_size)
         if violations:
             raise _error(422, "itinerary_infeasible",
@@ -663,15 +750,7 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         (tenant, request.customer_id))
             if cur.fetchone() is None:
                 raise _error(404, "not_found", "customer not found")
-            from .dining.ledger import ledger_place_for
-
             for place in request.places:
-                # ★`[2026-09-28]` 식당은 요식 목록이 기준이다 — 코어로 올린 요식 식당과 이름·150m 로 같으면 **그 행을 쓴다**
-                #   (관광공사·카카오에서 찾은 식당이어도). 전에는 여행마다 전용 사본을 만들어 같은 식당이 여러 행이 됐다
-                ledger_place = ledger_place_for(conn, tenant, place.name, place.kind, place.lat, place.lon)
-                if ledger_place is not None:
-                    ids[place.key] = ledger_place
-                    continue
                 # ★장소는 테넌트 안에서 (이름, 종류)로 하나다(UNIQUE). 이미 있으면 **그것을 쓴다.**
                 #   ☆2026-09-14 — 처음엔 무조건 INSERT 해서, 두 번째 여행이 경복궁을 적자
                 #     500 이 났다(개발 서버에서 발견. 시험은 여행마다 테넌트를 새로 만들어
@@ -699,6 +778,12 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         (tenant, place.name, place.kind, place.lat, place.lon, place.weather_sensitive,
                          json.dumps(place.attributes, ensure_ascii=False)))
                 ids[place.key] = cur.fetchone()[0]
+                # ★`[2026-10-02]` 원장에서 고른 식당은 원장 가게와 바로 잇는다 — 새벽 확인 · 하루 점검이 코어 장소로
+                #   원장을 찾는다(`dining.ledger.resolve_place`). 관광공사 ID 가 없는 원장 가게는 이렇게만 이어진다
+                if place.attributes.get("dining_place_uid"):
+                    from .dining.ledger import link_core_place_to
+
+                    link_core_place_to(conn, tenant, str(ids[place.key]), str(place.attributes["dining_place_uid"]))
         items = [Item(item_id=uuid4(), seq=it.seq, kind=it.kind, title=it.title,
                       place_id=ids.get(it.place) if it.place else None,
                       starts_at=_seoul(it.starts_at), ends_at=_seoul(it.ends_at),
@@ -710,11 +795,6 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             conn, customer_id=request.customer_id, title=request.title, locale=request.locale,
             party_size=request.party_size, items=items, constraints=request.constraints,
             request_key=key, request_sha256=body_sha, trip_id=trip_id)
-        # ★`[2026-09-28]` 이 여행 전용 식당을 요식 원장과 잇는다 — 안 이으면 영업·라스트오더 판정과 대체 추천을 못 받는다.
-        #   잇기가 실패해도 등록은 막지 않는다(`link_trip` 이 세이브포인트로 되돌린다)
-        from .dining.ledger import link_trip
-
-        link_trip(conn, tenant, trip_id)
         # ★알림 ① 은 **생성도 포함**한다 — 링크가 처음 나가는 자리다(v11 §6-B).
         url = plan_url(tenant, trip_id)
         store.enqueue_notice(conn, trip_id=trip_id, version=version, payload={
@@ -752,7 +832,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 outcome = planner_module.plan_trip(conn=conn, tenant_id=tenant, request=ask,
                                                    chat=_lazy("chat", chat_factory),
-                                                   tour_api=_lazy("place", place_factory))
+                                                   tour_api=_lazy("place", place_factory),
+                                                   ledger=_planner_ledger(conn))
         except planner_module.PlanRefused as refused:
             raise _plan_refused(refused) from None
         result: dict[str, Any] = {"status": "drafted", **outcome.as_dict()}
@@ -999,11 +1080,15 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             return {"intake_id": str(intake_id), "status": "review", "stage": "review", "human_check": human}
         offset = 1 if text.strip() else 0
         chat = _lazy("chat", chat_factory)
+        _ctx = _PlaceCtx()
+        _kakao_raw = _lazy("kakao", kakao_factory)
         background.add_task(process, get_connection, tenant_id=tenant, intake_id=intake_id,
                             blobs={offset + i: data for i, (_, data) in enumerate(blobs)},
                             see=getattr(chat, "see", None),
                             chat=chat if hasattr(chat, "json") else None,
-                            tour=_lazy("place", place_factory), kakao=_lazy("kakao", kakao_factory))
+                            tour=_lazy("place", place_factory),
+                            kakao=_kakao_raw,
+                            dining=_dining_lookup(_ctx))
         return {"intake_id": str(intake_id), "status": "reading", "stage": "received", "human_check": human}
 
     @router.get("/v1/web/trip-intakes/{intake_id}")
@@ -1113,10 +1198,14 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
 
         tenant, customer = who
         try:
+            _ctx = _PlaceCtx()
+            _kakao_raw = _lazy("kakao", kakao_factory)
             with get_connection() as conn:
                 edit(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id, revision=request.revision,
-                     edits=[e.model_dump() for e in request.edits], tour=_lazy("place", place_factory),
-                     kakao=_lazy("kakao", kakao_factory))
+                     edits=[e.model_dump() for e in request.edits],
+                     tour=_lazy("place", place_factory),
+                     kakao=_kakao_raw,
+                     dining=_dining_lookup(_ctx))
                 return view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)
         except LookupError:
             raise _error(404, "not_found", "resource not found") from None
@@ -1215,7 +1304,8 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
             with get_connection() as conn:
                 done = pipeline.autofix(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id,
                                         revision=request.revision, tour=_lazy("place", place_factory),
-                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run)
+                                        kakao=_lazy("kakao", kakao_factory), dry_run=request.dry_run,
+                                        dining=_dining_lookup())
                 # 미리 보기는 바뀔 모습(`preview`)을 이미 들고 있다 — 지금 판을 다시 읽어 덮지 않는다
                 return {**done, "view": done.get("view") or pipeline.view(conn, tenant_id=tenant, customer_id=customer, intake_id=intake_id)}
         except LookupError:
@@ -1342,7 +1432,9 @@ def build_trip_router(*, check_factory: CheckFactory | None = None,
                         # ★`[2026-10-01]` 이름이 달라도 같은 곳(경복궁 건청궁 ↔ 경복궁)은 빼는 데 쓴다 — 고객이 쓴 활동 장소의 좌표
                         exclude_sites=[{"name": p["name"], "latitude": p["lat"], "longitude": p["lon"],
                                         "attributes": p.get("attributes") or {}}
-                                       for p in built.body["places"] if p.get("kind") == "activity"] if keep else ())
+                                       for p in built.body["places"] if p.get("kind") == "activity"] if keep else (),
+                        # ★`[2026-10-05 병합]` 식사 후보 · 판정은 요식 원장으로(팀 방식 — 관광공사를 실시간으로 부르지 않는다)
+                        ledger=_planner_ledger(conn))
             except planner_module.PlanRefused as refused:
                 raise _plan_refused(refused) from None
             draft, merged = outcome.draft, []

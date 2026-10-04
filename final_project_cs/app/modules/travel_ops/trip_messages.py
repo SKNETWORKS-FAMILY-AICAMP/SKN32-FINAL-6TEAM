@@ -501,7 +501,7 @@ def handle_trip_message(*, tenant: str, trip_id: UUID, request_id: str, message:
         # ★`[2026-09-28]` 「바꿀 것 없음」(오늘 일정 없음 · 그 뒤 식사 없음 · 영향 없음 · 이미 바뀜)도 **답**이다 —
         #   `ANSWERS` 머리 주석이 그렇게 말하는데 여기 목록에 없어 사람 대기로 떨어졌다(ui 세션 실서버 시험).
         #   「바꿀 다른 안이 없음」(`no_alternate`)도 오류가 아니라 답이다 — 사람 대기는 버그·오류 리포트에만(사용자 결정)
-        if outcome.get("status") in ("adjusted", "answered", "still_fits", "asked", "rolled_back",
+        if outcome.get("status") in ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back",
                                      "not_today", "no_meal", "clear", "gone", "no_alternate", "ask_rollback",
                                      "ask_target", "knock_on", "rechecked"):
             ref = f"trip:{trip_id}:" + (f"v{outcome['version']}" if outcome.get("version")
@@ -578,7 +578,8 @@ def _open_message_case(conn, *, tenant: str, trip: dict[str, Any], message: str,
 
 
 #: 처리한 것(답이 나간 것) — 사람 대기가 아니다. 바꾸지 않고 물은 것 · 되물은 것도 여기다
-_DONE = ("adjusted", "answered", "still_fits", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
+#: ★`[2026-10-05]` `needs_check`(영업 여부를 못 알아 바꾸지 않고 알린 것)도 답이다 — 사람 대기로 떨어지지 않게
+_DONE = ("adjusted", "answered", "still_fits", "needs_check", "asked", "rolled_back", "not_today", "no_meal", "clear", "gone",
          "no_alternate", "ask_rollback", "ask_target", "clarify", "already_applied", "stale", "knock_on", "rechecked")
 #: 바꾼 뒤 이 시간 안에 되돌리면 오변경 의심으로 표시한다 — ★우리가 고른 값(2026-09-29, Codex 합의의 「오변경 감지」)
 SUSPECT_UNDO_SECONDS = 15 * 60
@@ -850,11 +851,33 @@ def _answer_here(conn, *, kind: str, fix: Any, trip: dict[str, Any], items: list
                                 known_names={str(p.get("name")) for p in store.places(conn, trip_id)},
                                 radius_m=RELAX_WIDE_M, now=at, memo=False)
         places = store.places(conn, trip_id)
+        state_lookup = None
+        if wanted == "dining" and getattr(desk, "_use_ledger", True):
+            # ★`[2026-10-05]` 요식 원장이 식당의 정본이다(팀 방식). 현재 위치 둘레의 원장 가게를 **이 여행 전용 장소**로 들여놓고
+            #   (`dining.nearby.add_nearby`) 영업 판정은 원장(`dining_states`)에게 묻는다. 전에는 후보를 원장에서 직접 받았다(A 방식 · 걷어냄).
+            #   ★판정은 **이 연결**로 묻는다 — 방금 들여놓은 장소 · 연결이 아직 커밋 전이라 다른 연결에는 안 보인다.
+            #   ★반경은 1.5km 까지만 들여놓는다(3km 는 한 번에 수백~수천 곳이라 여행 전용 장소 표를 부풀린다 · 우리가 고른 값).
+            from types import SimpleNamespace
+
+            from .dining import nearby
+            from .dining.ledger import dining_states
+
+            places = nearby.add_nearby(conn, store, trip_id,
+                                       [SimpleNamespace(kind="dining", place=fix.as_origin())], places,
+                                       radius_m=NEARBY_HERE_RADIUS_M)
+
+            def here_states(slots: list[dict[str, Any]]) -> Any:
+                return dining_states(conn, store.tenant_id, slots)
+
+            state_lookup = here_states
         found, radius, sought = plan_nearby(wanted, trip=trip, places=places, origin=fix.as_origin(), at=at,
-                                            ledger=desk._ledger())
+                                            state_lookup=state_lookup)
         text = trip_here.nearby(kind, fix, found=found, radius_m=radius, sought=sought)
     return {"status": "answered", "text": (note + " " if note else "") + text}
 
+
+#: 「근처 식당」 — 현재 위치 둘레에서 원장 가게를 이 여행 전용 장소로 들여놓는 반경(m). ★우리가 고른 값(2026-10-05)
+NEARBY_HERE_RADIUS_M = 1500
 
 _TAG_KO = {"card_payment": "카드 결제", "parking": "주차", "takeout": "포장", "vegetarian_menu": "채식 메뉴",
            "kids_allowed": "아이 동반", "halal": "할랄", "reservation": "예약 가능", "wifi": "와이파이",

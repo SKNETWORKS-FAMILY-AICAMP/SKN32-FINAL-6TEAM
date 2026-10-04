@@ -11,7 +11,7 @@ from uuid import uuid4
 import pytest
 
 from app.infrastructure.db.session import get_connection
-from app.modules.travel_ops.dining.ledger import ledger_place_for, ledger_ready
+from app.modules.travel_ops.dining.ledger import ledger_ready
 
 
 @pytest.fixture()
@@ -60,16 +60,8 @@ def test_동기화가_요일별_영업시간과_식사_조건을_채운다(tx):
     assert hours > 0 and dietary > 0
 
 
-def test_여행_등록은_같은_식당이면_요식_행을_쓴다(tx):
-    conn, tenant = tx
-    _promote(conn, tenant)
-    place_id, name, lat, lon = conn.execute(
-        "SELECT place_id, name, latitude, longitude FROM places WHERE tenant_id=%s AND source_name='dining_ledger' "
-        "AND name IN (SELECT name FROM places WHERE tenant_id=%s AND source_name='dining_ledger' "
-        "             GROUP BY name HAVING count(*) = 1) LIMIT 1", (tenant, tenant)).fetchone()
-    assert ledger_place_for(conn, tenant, name, "dining", lat + 0.0003, lon) == place_id     # 약 33m
-    assert ledger_place_for(conn, tenant, name, "dining", lat + 0.01, lon) is None           # 약 1.1km
-    assert ledger_place_for(conn, tenant, name, "activity", lat, lon) is None
+# `test_여행_등록은_같은_식당이면_요식_행을_쓴다` 는 지웠다 `[2026-10-05]` — 등록할 때 공용 요식 행으로 잇던 `ledger_place_for` 를 걷고, 그 여행 전용 행에
+#  판정할 때 원장 가게를 잇는 팀 방식(`resolve_place`)을 쓴다(그 시험은 `tests/integration/dining/test_dining_runtime_link.py`)
 
 
 def test_요식_식당과_이름이_같은_장소도_등록_문장이_실패하지_않는다(tx):

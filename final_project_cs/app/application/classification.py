@@ -77,10 +77,11 @@ def classify_case(conn: Any, *, tenant_id: str, case_id: UUID, text: str,
         event: EventType = EventType.CLASSIFIED
         payload: dict[str, Any] = dict(result)
     except Exception as exc:
-        # ★`[2026-09-29]` **왜** 실패했는지 한 줄 남긴다 — 전에는 처리된 실패라 서버 로그에 아무것도 없어, 실서버에서
-        #   「하루 요약」이 분류 실패로 끝났을 때 모델 시간 초과인지 메모리 압박·DB 끊김인지 가릴 수 없었다(ui 세션 로그 확인).
-        #   고객 원문은 싣지 않는다(예외 종류와 짧은 설명만)
-        logger.warning("classification failed case=%s reason=%s: %s", case_id, type(exc).__name__, str(exc)[:200])
+        # ★`[2026-09-29]` **왜** 실패했는지 한 줄 남긴다 — 전에는 처리된 실패라 로그에 아무것도 없어, 「하루 요약」이 분류 실패로
+        #   끝났을 때 모델 시간 초과인지 메모리 압박·DB 끊김인지 가릴 수 없었다. 키 오류(401)도 「분류하지 못했다」 한 줄로만
+        #   보이면 원인을 못 찾는다(팀 판과 합침 `[2026-10-05]`). 고객 원문은 싣지 않는다 — 예외 종류와 짧은 설명만.
+        logger.warning("classification failed tenant=%s case=%s reason=%s: %s",
+                       tenant_id, case_id, type(exc).__name__, str(exc)[:200])
         event, payload = EventType.CLASSIFICATION_FAILED, {"failure_code": FAILURE_CODE}
     if state_patch:
         # ★`[2026-09-17]` 분류와 **같은 이벤트**로 기록한다 — Case 상태는 한 문으로만 바뀐다.

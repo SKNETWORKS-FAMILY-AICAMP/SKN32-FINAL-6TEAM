@@ -31,7 +31,7 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Callable
 from uuid import UUID
 
@@ -83,33 +83,67 @@ class TripDesk:
                                        known_names=known, radius_m=RELAX_WIDE_M,
                                        now=datetime.now(ZoneInfo("Asia/Seoul")))
 
-    def _ledger(self):
-        """★`[2026-09-28]` 대체 식당 후보는 요식 원장이 낸다 — 표가 없는 DB 면 원장이 「물을 수 없음」으로 답하고
-        계산은 장소 목록으로 돌아간다(`dining.ledger.alternatives_for`)."""
-        if not self._use_ledger:
-            return None
-        from .dining.ledger import DbLedgerView
-        from .replan import ORDER_MARGIN_MIN
+    def _with_nearby(self, trip_id: UUID, meal: Item | None, places: list[dict[str, Any]],
+                     plan: Callable[[list[dict[str, Any]]], Plan], *, always: bool = False) -> Plan:
+        """먼저 지금 장소로 계산하고, **바꿔야 할 때만** 그 식사 근처의 원장 가게를 들여놓고 다시 계산한다.
 
-        return DbLedgerView(self._connect, self.store.tenant_id, ORDER_MARGIN_MIN)
+        ★`[2026-10-01]` 대체 후보는 코어 `places` 에서만 나와, 공용 식당이 없는 DB 에서 「문 닫았어요」의 후보가 0개였다.
+          일정이 그대로 괜찮으면(`still_fits` 등) 원장을 읽지도, 장소를 들여놓지도 않는다.
+        ★`[2026-10-05]` `always=True` — 「다른 곳으로 바꿔 줘」 · 「후보 알아봐 줘」처럼 **늘 후보가 필요한** 요청은 먼저 들여놓은 뒤 한 번만 계산한다.
+        ★시나리오 모드(`dining_ledger=False`)는 대본대로만 도는 데모라 원장을 읽지도 장소를 들여놓지도 않는다.
+        """
+        if not self._use_ledger or meal is None:
+            return plan(places)
+        if always:
+            return plan(self._add_nearby(trip_id, meal, places))
+        first = plan(places)
+        if not (isinstance(first, ItineraryChange) or (isinstance(first, NoChange) and first.status == "unresolved")):
+            return first
+        more = self._add_nearby(trip_id, meal, places)
+        return plan(more) if more != places else first
+
+    def _add_nearby(self, trip_id: UUID, meal: Item, places: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        from .dining import nearby
+
+        with self._connect() as conn:
+            return nearby.add_nearby(conn, self.store, trip_id, [meal], places)
+
+    def _state_lookup(self):
+        """대체 식당 후보의 방문 시간대 원장 판정 — 시나리오 모드(`dining_ledger=False`)는 원장을 섞지 않으므로 None."""
+        return self._dining_states if self._use_ledger else None
+
+    def _dining_states(self, slots):
+        from .dining.ledger import dining_states
+
+        with self._connect() as conn:
+            return dining_states(conn, self.store.tenant_id, slots)
 
     # ── 요식-P3 — 늦는다 ────────────────────────────────────────
     def report_delay(self, *, trip_id: UUID, at: datetime, minutes: int,
                      message: str, request_id: str | None = None) -> dict[str, Any]:
         """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
         trip, items, places = self._read(trip_id)
-        plan = plan_delay(trip=trip, items=items, places=places, at=at, minutes=minutes,
-                          message=message, request_id=request_id, ledger=self._ledger())
-        return self._outcome(trip_id, trip["version"], items, plan, gate=True)
+
+        def plan(candidates):
+            return plan_delay(trip=trip, items=items, places=candidates, at=at, minutes=minutes,
+                              message=message, request_id=request_id, state_lookup=self._state_lookup())
+        meal = next((i for i in items if i.kind == "dining" and i.starts_at >= at), None)   # plan_delay 와 같은 식사
+        return self._outcome(trip_id, trip["version"], items,
+                             self._with_nearby(trip_id, meal, places, plan), gate=True)
 
     # ── 요식-P7 — 도착했더니 휴무 ──────────────────────────────
     def report_closed(self, *, trip_id: UUID, at: datetime, message: str,
                       request_id: str | None = None) -> dict[str, Any]:
         """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
         trip, items, places = self._read(trip_id)
-        plan = plan_closed(trip=trip, items=items, places=places, at=at, message=message,
-                           request_id=request_id, ledger=self._ledger())
-        return self._outcome(trip_id, trip["version"], items, plan, gate=True)
+
+        def plan(candidates):
+            return plan_closed(trip=trip, items=items, places=candidates, at=at, message=message,
+                               request_id=request_id, state_lookup=self._state_lookup())
+        meal = next((i for i in items if i.kind == "dining"                                # plan_closed 와 같은 식사
+                     and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
+        return self._outcome(trip_id, trip["version"], items,
+                             self._with_nearby(trip_id, meal, places, plan), gate=True)
 
     # ── 액-08 — 품절, 근처 다른 곳? ────────────────────────────
     def ask_nearby_store(self, *, trip_id: UUID, at: datetime, products: list[str],
@@ -137,9 +171,8 @@ class TripDesk:
         고객이 직접 달라고 한 것이라 판정 문(`gate`)을 지나지 않는다 — `swap_alternate` 와 같다."""
         self._widen_activities(trip_id, item_id)
         trip, items, places = self._read(trip_id)
-        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
-                                    places=places, item_id=item_id, message=message, request_id=request_id,
-                                    ledger=self._ledger())
+        plan = self._fresh_plan(trip_id, trip, items, places, item_id=item_id, base_version=base_version,
+                                message=message, request_id=request_id)
         if isinstance(plan, NoChange) and plan.status == "relaxed":
             return self._ask_relaxed(trip_id, item_id, plan)
         outcome = self._outcome(trip_id, base_version, items, plan)
@@ -155,15 +188,27 @@ class TripDesk:
             outcome.update({"proposal_id": asked.get("proposal_id"), "options": asked.get("options")})
         return outcome
 
+    def _fresh_plan(self, trip_id: UUID, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], *,
+                    item_id: UUID, base_version: int, message: str | None, request_id: str | None) -> Plan:
+        """「다른 데로 바꿔 줘」 · 「후보 알아봐 줘」의 계산 — 식당이면 **먼저** 근처 원장 가게를 들여놓은 뒤 계산한다(`[2026-10-05]`).
+        식당 후보는 요식 원장이 정본이다 — 코어 `places` 에는 이 여행이 쓸 사본(`trip_scope`)만 둔다."""
+        current = next((i for i in items if i.item_id == item_id), None)
+        meal = current if current is not None and current.kind == "dining" else None
+
+        def plan(candidates):
+            return plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
+                                        places=candidates, item_id=item_id, message=message, request_id=request_id,
+                                        state_lookup=self._state_lookup())
+        return self._with_nearby(trip_id, meal, places, plan, always=True)
+
     def propose_alternatives(self, *, trip_id: UUID, item_id: UUID, base_version: int,
                              message: str | None = None, request_id: str | None = None) -> dict[str, Any]:
         """★`[2026-09-29]` 결정 단위의 「후보만 알아봐 줘 · 추천해 줘」 — **바꾸지 않고** 후보를 계산해 고르게 한다.
         계산은 「다른 데로 바꿔 줘」와 같다(`plan_fresh_alternate` — 반경 넓힘 · 같은 곳 제외 · 조건 풀기). 고르면 기존 고르기 경로."""
         self._widen_activities(trip_id, item_id)
         trip, items, places = self._read(trip_id)
-        plan = plan_fresh_alternate(trip=trip, trip_version=trip["version"], base_version=base_version, items=items,
-                                    places=places, item_id=item_id, message=message, request_id=request_id,
-                                    ledger=self._ledger())
+        plan = self._fresh_plan(trip_id, trip, items, places, item_id=item_id, base_version=base_version,
+                                message=message, request_id=request_id)
         if isinstance(plan, NoChange):
             if plan.status == "relaxed":
                 return self._ask_relaxed(trip_id, item_id, plan)

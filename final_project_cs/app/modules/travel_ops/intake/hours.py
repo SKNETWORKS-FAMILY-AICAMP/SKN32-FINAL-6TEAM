@@ -13,9 +13,12 @@
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 #: 다른 여행 장소 행에서 읽은 운영시간을 다시 쓰는 기간 — `catalog_pool.REUSE_DAYS` 와 같은 값
 REUSE_DAYS = 14
@@ -73,11 +76,13 @@ def facts_for(conn, tenant_id: str, place: dict[str, Any] | None, kind: str, sta
         if week:
             attributes, source = {**attributes, "hours_week": week}, "tour_api"
     out = HoursFacts(bool(attributes.get("hours_week") or "hours" in attributes), attributes, source)
-    # ④ 요식 원장 — 식당만. 코어 장소(요식 원장에서 올린 곳)거나, 읽은 이름·좌표가 원장 식당과 같은 곳이면 그 판정을 쓴다
+    # ④ 요식 원장 — 식당만. ★`[2026-10-05]` 요식 원장이 식당의 정본이다. 그 여행의 장소 행(코어 장소)이 있으면 그 행으로(`dining_state`),
+    #   아직 없으면(확인 화면 단계) 관광공사 번호 — 없으면 이름이 하나로 정해질 때 — 로 원장 가게를 바로 찾는다. 공용 장소 표에 올리지 않는다
     if kind == "dining":
-        ledger_id = core_id or _ledger_core_id(conn, tenant_id, place)
-        if ledger_id:
-            _apply_ledger(conn, tenant_id, ledger_id, start, end, out)
+        if core_id:
+            _apply_ledger(conn, tenant_id, core_id, start, end, out)
+        else:
+            _apply_ledger_by_uid(conn, content_id, place, start, end, out)
     if not out.known:
         out.why_unknown = _why_unknown(place, kind, content_id)
     return out
@@ -121,14 +126,6 @@ def _catalog_week(conn, tenant_id: str, content_id: str) -> dict[str, Any] | Non
     return dict(row[0]) if row and row[0] else None
 
 
-def _ledger_core_id(conn, tenant_id: str, place: dict[str, Any]) -> str | None:
-    from ..dining.ledger import ledger_place_for
-
-    found = ledger_place_for(conn, tenant_id, str(place.get("name") or ""), "dining",
-                             place.get("latitude"), place.get("longitude"))
-    return str(found) if found else None
-
-
 def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: datetime | None,
                   out: HoursFacts) -> None:
     from ..dining.ledger import dining_state
@@ -143,6 +140,62 @@ def _apply_ledger(conn, tenant_id: str, core_id: str, start: datetime, end: date
         return
     if not state or not state.get("linked") or not state.get("available"):
         return
+    _merge_state(state, start, out)
+
+
+def _ledger_uid(conn, content_id: str | None, place: dict[str, Any]) -> str | None:
+    """읽은 장소 → 원장 가게 번호. 관광공사 번호(`tourapi_kor_food`)가 하나의 가게로 이어질 때만, 번호가 없으면 이름이 원장에서 하나로 정해질 때만.
+    둘 이상이면 고르지 않는다(모름) — 다른 가게의 영업시간으로 판정하는 것이 가장 나쁘다(`ledger.slot_verdicts` · `find_place_by_name` 과 같은 규칙)."""
+    from ..dining.ledger import find_place_by_name
+
+    if not content_id:
+        found = find_place_by_name(conn, str(place.get("name") or ""))
+        content_id = str(found["content_id"]) if found else None
+    if not content_id:
+        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT p.place_uid::text FROM dining.dn_place p WHERE p.record_status <> 'closed' AND p.place_uid IN "
+                    "(SELECT r.place_uid FROM dining.dn_source_record r WHERE r.source_code = 'tourapi_kor_food' "
+                    "AND r.external_id = %s AND r.match_status <> 'rejected') LIMIT 2", (content_id,))
+        rows = cur.fetchall()
+    return str(rows[0][0]) if len(rows) == 1 else None
+
+
+def _apply_ledger_by_uid(conn, content_id: str | None, place: dict[str, Any], start: datetime, end: datetime | None,
+                         out: HoursFacts) -> None:
+    """장소 행이 아직 없는 식당의 원장 판정 — `dining.core_place_state` 와 같은 SQL 을 가게 번호로 바로 부른다. `[2026-10-05]`"""
+    try:
+        # ★세이브포인트 안에서 — DB 오류가 바깥 트랜잭션을 망가뜨리지 않는다
+        with conn.transaction():
+            uid = _ledger_uid(conn, content_id, place)
+            if uid is None:
+                return
+            at = start if start.tzinfo else start.replace(tzinfo=_seoul())
+            until = end or at
+            if until.tzinfo is None:
+                until = until.replace(tzinfo=_seoul())
+            with conn.cursor() as cur:
+                cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s), dining.needs_last_order_check(%s::uuid, %s, %s), "
+                            "dining.holiday_context(%s::uuid, %s), "
+                            "dining.core_attributes(%s::uuid, (%s::timestamptz AT TIME ZONE 'Asia/Seoul')::date)",
+                            (uid, at, until, uid, at, until, uid, at, uid, at))
+                open_at, needs_check, holiday, attributes = cur.fetchone()
+                order_ok = None
+                if open_at is True:
+                    cur.execute("SELECT dining.open_at_slot(%s::uuid, %s, %s)",
+                                (uid, at + timedelta(minutes=ORDER_MARGIN_MIN), until))
+                    order_ok = cur.fetchone()[0]
+    except Exception as exc:                    # noqa: BLE001 — 원장 표가 없는 DB(시험 · 다른 조립)면 원장 없이 간다
+        if type(exc).__name__ not in ("UndefinedTable", "UndefinedFunction", "InvalidSchemaName"):
+            raise
+        logger.warning("intake hours: dining ledger not readable reason=%s", type(exc).__name__)   # 원문 · 키 없이 종류만
+        return
+    _merge_state({"open_at_slot": open_at, "order_ok": order_ok, "needs_check": needs_check,
+                  "attributes": attributes, "holiday_context": holiday}, start, out)
+
+
+def _merge_state(state: dict[str, Any], start: datetime, out: HoursFacts) -> None:
+    """원장 판정(`dining_state` 모양) → 사실. 두 길(장소 행 · 가게 번호)이 같은 규칙으로 합친다."""
     attrs = dict(state.get("attributes") or {})
     out.open_at_slot, out.order_ok, out.needs_check = state.get("open_at_slot"), state.get("order_ok"), bool(state.get("needs_check"))
     week: dict[str, Any] = dict(out.attributes.get("hours_week") or {})

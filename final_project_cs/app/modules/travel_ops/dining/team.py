@@ -9,53 +9,48 @@
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from app.core.contracts import (NextAction, TeamManifest, TeamResult, TeamTask,
                                 ToolNotAllowed)
-
 from app.tools.read_tools import ToolBudgetExceeded, ToolLoopExceeded
 
 from .._base import TravelTeamBase
 from ..itinerary_changes import NoChange, plan_closed, plan_delay, plan_dining_disrupted
 from ..itinerary_team import ITINERARY_TOOLS, ItineraryWork
-from ..replan import ORDER_MARGIN_MIN
 from .ledger import merge_state
 
+logger = logging.getLogger(__name__)
 
-class ToolLedgerView:
-    """요식 원장을 **읽기 도구로** 묻는 쪽 — `itinerary_changes.ledger_pool` 이 부르는 모양. `[2026-09-28 cs]`
+#: 원장 · 가격에 못 물었을 때 계산이 「모름」으로 이어 가는 경우 — 도구 미등록 · 예산 소진 · 같은 질문 반복.
+#: 원장은 더해 주는 것이지 없으면 못 도는 것이 아니다. 예산(`max_steps`)이 원장 때문에 일정 판단을 막지 않게 한다.
+_SKIP = (ToolNotAllowed, ToolBudgetExceeded, ToolLoopExceeded)
 
-    ★Team 은 DB 연결이 없다. 시나리오 버전(`ledger.DbLedgerView`)과 같은 두 질문을 도구로 한다.
-    ★원장에 못 물으면(도구 미등록 · 예산 소진 · 같은 질문 반복) **None** — 그때 계산은 장소 목록으로 돌아간다.
-      원장은 더해 주는 것이지 없으면 못 도는 것이 아니다. 예산(`max_steps`)이 원장 때문에 일정 판단을 막지 않게 한다.
+
+def state_lookup_for(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any]):
+    """코어 도구로 대체 후보의 시간대별 원장 판정(`read.dining_states`)을 읽는 함수. `[2026-10-05]`
+
+    ★`DiningTeam._state_lookup` 과 낮 감시(`plan_dining_trigger`)가 같이 쓴다 — 같은 여행의 문제 묶음은 활동 Team 이 조정자라
+      식당 계산도 그 Team 의 도구로 부른다.
+    ★못 물으면 `None` — 계산은 「영업 여부 모름」으로 이어 가고 바꾸지 않은 채 확인이 필요하다고 알린다(`needs_check`).
+      흔적은 남긴다(예외 종류만 — 원문 · 키 없이).
     """
-
-    _SKIP = (ToolNotAllowed, ToolBudgetExceeded, ToolLoopExceeded)
-
-    def __init__(self, team: "DiningTeam", task: TeamTask, ctx: dict[str, Any]) -> None:
-        self.team, self.task, self.ctx = team, task, ctx
-
-    def _ask(self, name: str, arguments: dict[str, Any]) -> Any:
+    def lookup(slots):
         try:
-            got = self.team._read(self.task, name, arguments, self.ctx["seen"])
-        except self._SKIP:
+            states = work._read(task, "read.dining_states",
+                                {"slots": [{**s, "at": s["at"].isoformat(),
+                                            "until": s["until"].isoformat()} for s in slots]}, ctx["seen"])
+        except _SKIP as exc:
+            logger.warning("dining states not read case=%s reason=%s", task.case_id, type(exc).__name__)
             return None
-        self.ctx["evidence"] = self.team._evidence(self.task, source_id=name, claim="요식 원장",
-                                                   value=got, base=self.ctx["evidence"])
-        return got
-
-    def alternatives(self, meal_place, starts_at, ends_at, next_place, conds):
-        got = self._ask("read.dining_alternatives", {
-            "place_id": str(meal_place.get("place_id")), "at": str(starts_at),
-            "until": str(ends_at) if ends_at else None, "conds": list(conds),
-            "next_lat": (next_place or {}).get("latitude"), "next_lng": (next_place or {}).get("longitude")})
-        return (got or {}).get("candidates") or []
-
-    def state(self, place_id, starts_at, ends_at):
-        return self._ask("read.dining_state", {"place_id": str(place_id), "at": str(starts_at),
-                                                "until": str(ends_at) if ends_at else None,
-                                                "order_margin_min": ORDER_MARGIN_MIN})
+        if states is None:      # 원장을 쓰지 않는 조립(시나리오 모드)이거나 못 읽었다 — 근거를 만들지 않는다
+            return None
+        ctx["evidence"] = work._evidence(task, source_id="read.dining_states",
+                                         claim="대체 식당의 방문 시간대 원장 판정",
+                                         value=states, base=ctx["evidence"])
+        return states
+    return lookup
 
 
 class DiningTeam(ItineraryWork, TravelTeamBase):
@@ -80,8 +75,11 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         #   `ToolNotAllowed` 가 나고, 그때는 원장 없이 예전처럼 답한다 — 등록 전에 이 Team 이 죽으면 안 된다.
         # ★`[2026-09-29]` `read.disruptions` — 낮 감시 Case(재난문자 · 통제 · 지진)를 받아 **다시 점검**하고,
         #   대체 후보도 같은 점검으로 거른다(`handle_trigger`)
+        # ★`[2026-09-30]` `read.place_price` — 대체 식당을 세울 때 구글 가격(1인당 범위 · 가격대)을 묻는다. 없으면 없이 세운다
+        #   (가격은 비교에만 쓰고 순위 · 탈락에 쓰지 않으며, 가드레일 스위치가 꺼져 있으면 도구가 「없음」을 낸다)
         allowed_tools=["read.place", "read.policy", "read.booking", "read.booking_terms",
-                       "read.dining_state", "read.dining_alternatives", "read.disruptions", *ITINERARY_TOOLS],
+                       "read.dining_state", "read.dining_states", "read.place_price", "read.disruptions",
+                       *ITINERARY_TOOLS],
         # ★`[2026-09-22]` `opening_hours`·`dietary` 는 **실물이 없던 scope** 였다(문서 0건). 지운다 —
         #   안 쓰는 선언은 나중에 누가 잘못 채운다(재점검 문서 §1 이 지적한 그대로).
         knowledge_scope=["travel_dining", "travel_cancellation", "travel_access"],
@@ -113,19 +111,40 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
         if places is None:
             return self._unknown(task, "장소 목록", ctx["evidence"])
         request_id = task.context.current_state.get("request_id")
-        # ★`[2026-09-28 cs]` 대체 식당 후보는 요식 원장이 내고 고르기는 계산이 한다(사용자 결정)
-        ledger = ToolLedgerView(self, task, ctx)
+        prices = self._price_lookup(task, ctx)
+        states = self._state_lookup(task, ctx)
         if kind == "delay":
             minutes = ctx["report"].get("minutes")
             if not minutes:
                 return self._unknown(task, "늦는 시간", ctx["evidence"])
             plan = plan_delay(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
                               minutes=int(minutes), message=task.input_text, request_id=request_id,
-                              ledger=ledger)
+                              price_lookup=prices, state_lookup=states)
         else:
             plan = plan_closed(trip=ctx["trip"], items=ctx["items"], places=places, at=ctx["at"],
-                               message=task.input_text, request_id=request_id, ledger=ledger)
+                               message=task.input_text, request_id=request_id, price_lookup=prices,
+                               state_lookup=states)
         return self.settle(task, ctx, plan)
+
+    def _state_lookup(self, task: TeamTask, ctx: dict[str, Any]):
+        """코어 도구로 대체 후보의 시간대별 원장 판정을 읽는다."""
+        return state_lookup_for(self, task, ctx)
+
+    def _price_lookup(self, task: TeamTask, ctx: dict[str, Any]):
+        """대체 식당의 구글 가격을 묻는 함수(`read.place_price`). ★한 번에 한 번만 부른다(도구 호출 하나).
+
+        ★도구가 없거나(`ToolNotAllowed`) 못 불렀으면 `None` — 구글 가격 없이 예전처럼 세운다.
+          가격대는 더해 주는 것이지 없으면 못 도는 것이 아니다(`_dining_state` 와 같다).
+        ★받은 값을 근거(`evidence`)에 싣지 않는다 — 구글 약관상 저장 금지라 결정 기록엔 비교 결과만 남는다.
+        """
+        def lookup(places: list[dict[str, Any]]) -> dict[str, Any] | None:
+            try:
+                return self._read(task, "read.place_price",
+                                  {"place_ids": [str(p["place_id"]) for p in places]}, ctx["seen"])
+            except _SKIP as exc:
+                logger.warning("dining price not read case=%s reason=%s", task.case_id, type(exc).__name__)
+                return None
+        return lookup
 
     async def execute(self, task: TeamTask) -> TeamResult:
         blocked = self._guard(task)
@@ -241,7 +260,9 @@ class DiningTeam(ItineraryWork, TravelTeamBase):
 
 def plan_dining_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any], item: Any):
     """감시 — 식사 항목 하나를 **다시 점검**하고 근처 식당으로 바꿀 안을 계산한다(쓰지 않는다). 결과: 변경 · `NoChange` · `TeamResult`(여기서 멈춤).
-    ★`[2026-10-03]` `DiningTeam.handle_trigger` 에서 떼어 냈다 — 같은 여행의 문제 묶음(`trip_watch_batch`)이 한 초안 위에서 항목마다 부른다."""
+    ★`[2026-10-03]` `DiningTeam.handle_trigger` 에서 떼어 냈다 — 같은 여행의 문제 묶음(`trip_watch_batch`)이 한 초안 위에서 항목마다 부른다.
+    ★`[2026-10-05]` 대체 후보의 영업 판정은 팀 방식(`state_lookup` — `read.dining_states`)으로 읽는다. 후보 가게는 부르는 쪽이
+      미리 들여놓는다(`dining.nearby.add_nearby`) — 이 함수는 DB 를 모른다."""
     if item.kind != "dining" or item.place is None:
         return work._escalate(task, "target_kind_mismatch", ctx["evidence"])
     report = work._read(task, "read.disruptions", work.check_arguments(item.place, item.starts_at), ctx["seen"])
@@ -260,8 +281,8 @@ def plan_dining_trigger(work: ItineraryWork, task: TeamTask, ctx: dict[str, Any]
         # ★예산이 바닥나면 그 후보는 「안 봤다」 — 고르지 않는다(점검 안 한 곳을 괜찮다고 하지 않는다)
         try:
             return check(**kwargs)
-        except ToolLedgerView._SKIP:
+        except _SKIP:
             return {"verdict": "not_checked"}
 
     return plan_dining_disrupted(trip=ctx["trip"], items=ctx["items"], places=places, meal=item,
-                                 report=report, check=safe_check, ledger=ToolLedgerView(work, task, ctx))
+                                 report=report, check=safe_check, state_lookup=state_lookup_for(work, task, ctx))

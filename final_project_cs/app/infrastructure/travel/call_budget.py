@@ -121,6 +121,34 @@ class CallBudget:
         except Exception as exc:                          # noqa: BLE001 — 세는 일이 호출을 막으면 안 된다
             logger.warning("call budget %s count failed (%s): %s: %s", column, meter, type(exc).__name__, exc)
 
+    def count(self, meter: str, *, free: int | None) -> tuple[int, bool]:
+        """상한 없이 한 칸 센다. (이번 달 이 요금 단위의 **전체** 사용량, 이번 호출로 무료 한도를 처음 넘었나).
+
+        ★`[2026-09-30 사용자 결정]` 식당 가격대 조회는 하루 상한을 걸지 않고 무료 한도를 넘어도 부른다.
+          그래도 **세기는 한다** — 무료 한도는 요금 단위 하나를 새벽 확인과 나눠 쓴다.
+        ★따로 센다(`<meter>:uncapped` 월 줄). 표가 `used <= cap` 을 강제하므로 상한 있는 줄을 넘겨 셀 수 없고,
+          같은 줄에 세면 새벽 확인의 월·하루 몫을 먹는다. 전체 = 상한 있는 월 줄 + 이 줄.
+        ★「처음 넘었나」는 표시 줄(`<meter>:over_free`)을 **한 번만** 넣어 가린다 — 여러 프로세스가 동시에
+          넘어도 알림은 하나다. 월이 바뀌면 줄도 새로 생겨 다시 알린다.
+        """
+        now = self.clock().astimezone(UTC)
+        period = f"month:{now:%Y-%m}"
+        with self._connect() as conn, conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO external_call_budget (meter, period, used, cap) VALUES (%s,%s,1,%s) "
+                        "ON CONFLICT (meter, period) DO UPDATE SET used = external_call_budget.used + 1, "
+                        "updated_at = now() RETURNING used", (f"{meter}:uncapped", period, UNLIMITED))
+            uncapped = int(cur.fetchone()[0])
+            cur.execute("SELECT used FROM external_call_budget WHERE meter=%s AND period=%s", (meter, period))
+            row = cur.fetchone()
+            total = uncapped + (int(row[0]) if row else 0)
+            crossed = False
+            if free is not None and total > free:
+                cur.execute("INSERT INTO external_call_budget (meter, period, used, cap) VALUES (%s,%s,0,0) "
+                            "ON CONFLICT (meter, period) DO NOTHING RETURNING meter",
+                            (f"{meter}:over_free", period))
+                crossed = cur.fetchone() is not None
+        return total, crossed
+
     def used(self, meter: str) -> dict[str, int]:
         now = self.clock().astimezone(self._tz)
         with self._connect() as conn, conn.cursor() as cur:
@@ -169,7 +197,8 @@ def usage_report(connection_factory: Callable[[], Any], *, now: datetime, meters
     with connection_factory() as conn, conn.cursor() as cur:
         cur.execute(sql, params)
         found = {(row[0], row[1]): row[2:] for row in cur.fetchall()}
-    names = list(meters) if meters else sorted({meter for meter, _ in found})
+    # ★`[2026-10-05]` `<meter>:over_free` 는 「무료 한도를 넘었다고 알린 표시」 줄이다(상한 0) — 사용 줄이 아니라 단계 계산에 넣지 않는다
+    names = list(meters) if meters else sorted({meter for meter, _ in found if not meter.endswith(":over_free")})
     out: list[dict[str, Any]] = []
     for meter in names:
         item: dict[str, Any] = {"meter": meter}

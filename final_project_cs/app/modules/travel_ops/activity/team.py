@@ -64,10 +64,10 @@ class ActivityTeam(ItineraryWork, TravelTeamBase):
         # ★`[2026-09-23]` `read.booking_terms` 를 더했다 — **수치는 이 도구가** 댄다.
         #   `read.policy` 는 그대로 **문장 근거**를 댄다. 둘의 몫이 갈린다
         #   (`wiki/records/reports/debugs/2026-09-22_정책청크에서_수치를_못_꺼낸다.md`).
-        # ★`[2026-10-03]` 뒤의 셋(`read.route_events` · `read.dining_state` · `read.dining_alternatives`)은 **같은 여행의 문제 묶음**(`trip_watch_batch`) 때문이다 — 활동 Team 이
-        #   조정자라 식당 · 이동 항목도 같은 초안 위에서 계산한다. 식당 원장 둘은 못 부르면 장소 목록으로 돌아간다(`ToolLedgerView`). 단일 항목 Case 는 이 셋을 안 쓴다.
+        # ★`[2026-10-03]` 뒤의 셋(`read.route_events` · `read.dining_state` · `read.dining_states`)은 **같은 여행의 문제 묶음**(`trip_watch_batch`) 때문이다 — 활동 Team 이
+        #   조정자라 식당 · 이동 항목도 같은 초안 위에서 계산한다. 식당 원장 둘은 못 부르면 장소 목록으로 돌아간다(`dining.team.state_lookup_for` — `[2026-10-05]` 옛 `read.dining_alternatives` · `ToolLedgerView` 는 걷었다). 단일 항목 Case 는 이 셋을 안 쓴다.
         allowed_tools=["read.booking", "read.booking_terms", "read.policy", "read.place",
-                       "read.disruptions", "read.route_events", "read.dining_state", "read.dining_alternatives",
+                       "read.disruptions", "read.route_events", "read.dining_state", "read.dining_states",
                        *ITINERARY_TOOLS],
         # ★`[2026-09-22]` 여행 scope 로 바꿨다. 앞 값(`activity`·`cancellation`·`refund`·`weather`)
         #   가운데 **`refund` 는 쇼핑몰 코퍼스에 실재하는 scope** 라, 정책을 켜는 순간 활동 판정이

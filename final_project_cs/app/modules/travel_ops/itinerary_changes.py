@@ -22,13 +22,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Callable
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from .itinerary import Item
 from .itinerary_checks import seoul
-from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, activity_candidates, alternate_record, brand_of,
-                     change_notice, choose, dining_candidates, dining_fits, dining_notice,
+from .replan import (SEATING_BUFFER_MIN, WALK_M_PER_MIN, DiningStateLookup, activity_candidates, alternate_record,
+                     apply_google_prices, brand_of, change_notice, choose, dining_candidates, dining_fits, dining_notice,
                      route_candidates, route_notice, store_candidates)
+
+#: 구글 가격 조회 — 장소 목록 → {place_id: {level, low, high}}. ★선택 기능(스위치 기본 꺼짐 — `replan` 머리말)
+PriceLookup = Callable[[list[dict[str, Any]]], "dict[str, dict[str, int | None] | None] | None"]
 
 #: 대안 식당을 찾는 반경(미터). ★우리가 고른 값이다 — 도보 약 9분.
 DINING_RADIUS_M = 700
@@ -227,6 +230,8 @@ def applied_record(item: Item) -> dict[str, Any]:
             "starts_at": item.starts_at.isoformat(),
             "ends_at": item.ends_at.isoformat() if item.ends_at else None,
             "walk_min": None,
+            **({"card_payment": item.detail["card_payment"]} if item.detail.get("card_payment") is not None else {}),
+            **({"warnings": list(item.detail["warnings"])} if item.detail.get("warnings") else {}),
             # ★`[2026-10-05]` 이 항목을 고른 이유 한 줄(활동 대체 때만 있다)
             **({"reason": item.detail["pick_reason"]} if item.detail.get("pick_reason") else {})}
 
@@ -550,68 +555,28 @@ def _engine_reroute(*, item: Item, previous: Item | None, following: Item | None
                                     "rerouted_by": "mobility_engine"})
 
 
-# ── 식당 후보 — 요식 원장이 내고 여기서 고른다 (2026-09-28) ─────────
-def ledger_pool(ledger: Any | None, *, meal: Item, starts_at: datetime, ends_at: datetime | None,
-                following: Item | None, trip: dict[str, Any]) -> dict[str, dict[str, Any]] | None:
-    """요식 원장이 낸 대체 후보 `{place_id: 축}`. 원장이 말할 수 없으면 None — 그때는 장소 목록에서 찾는다.
-
-    ★원장은 **후보만** 낸다(덜 밀리는 곳 · 비슷한 곳 · 가까운 곳, 축마다 하나). 고르는 것은 `choose` 다
-      (사용자 결정 2026-09-28 — 하나를 적용하고 나머지는 「다른 안」).
-    ★`ledger` 는 두 가지다 — 시나리오 버전은 DB 를 직접(`dining.ledger.DbLedgerView`), Team 은 읽기 도구로.
-      여기는 DB 도 도구도 모른다(머리말 「계산만 한다」).
-    """
-    if ledger is None or meal.place is None:
-        return None
-    conds = list((trip.get("constraints") or {}).get("dietary") or [])
-    got = ledger.alternatives(meal.place, starts_at, ends_at,
-                              following.place if following is not None else None, conds)
-    if not got:
-        return None
-    return {str(s["place_id"]): {"axis": s.get("axis"), "axis_label": s.get("axis_label")}
-            for s in got if s.get("place_id")}
-
-
-def _choose_dining(make: Callable[[dict[str, dict[str, Any]] | None], list],
-                   pool: dict[str, dict[str, Any]] | None, recheck: Callable[[Any], dict[str, Any]] | None = None):
-    """원장 후보에서 먼저 고르고, 다 떨어지면 장소 목록에서 다시 고른다. (최선, 다른 안, 탈락, 어디서).
-
-    ★원장이 **판정해서 떨어뜨린** 곳은 목록에서 다시 찾을 때도 뺀다 — 목록 쪽은 코어 영업시간만 봐서
-      원장이 「그 시각 닫힘」이라고 한 곳을 「연다」로 다시 고를 수 있었다(시험이 잡았다, 2026-09-28).
-    """
-    known_bad: dict[str, list[str]] = {}
-    if pool:
-        best, alternates, rejected = choose(make(pool), recheck)
-        if best is not None:
-            return best, alternates, rejected, "dining_ledger"
-        known_bad = {c.key: list(c.rejected) for c in rejected if c.judged_by == "dining_ledger"}
-    candidates = make(None)
-    for candidate in candidates:
-        if candidate.key in known_bad and not candidate.rejected:
-            candidate.rejected += known_bad[candidate.key]
-    best, alternates, rejected = choose(candidates, recheck)
-    return best, alternates, rejected, "places"
-
-
 # ── 고객 신고 — 식당 ───────────────────────────────────────────
 def _dining_change(meal: Item, best, alternates, notice: dict[str, Any], *,
-                   reason: str = "customer_report", source: str = "places") -> ItineraryChange:
+                   reason: str = "customer_report") -> ItineraryChange:
     replacement = meal.replaced_by(
-        place=best.place, title=title_for(meal, best.name), starts_at=best.starts_at,
+        place=best.place, title=f"{best.name} 식사", starts_at=best.starts_at,
         ends_at=best.ends_at,
         detail={"other_options": notice["other_options"],
                 **({"customer_reported": True} if reason == "customer_report" else {}),
-                # ★`[2026-09-28]` 확인할 것(라스트오더 등)과 후보를 어디서 찾았는지 — 틀렸을 때 고칠 곳을 알게
+                **({"price_compare": best.price_compare} if best.price_compare else {}),
                 **({"warnings": list(best.warnings)} if best.warnings else {}),
-                "candidates_from": source,
+                **({"card_payment": best.card_payment} if best.card_payment is not None else {}),
                 "alternates": [alternate_record(c) for c in alternates]})
+    # ★가격은 비교 결과만(`won` · `same_or_lower` · `higher` · `unknown`) — 구글 가격대 원값은 남기지 않는다
+    summary = {"to": best.name, **({"price": best.price_compare} if best.price_compare else {}),
+               **({"price_basis": best.price_basis} if best.price_basis else {})}
     return ItineraryChange(reason=reason, causes=notice["causes"], notice=notice,
-                           replacements={meal.item_id: replacement},
-                           summary={"to": best.name, "candidates_from": source})
+                           replacements={meal.item_id: replacement}, summary=summary)
 
 
 def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                at: datetime, minutes: int, message: str, request_id: str | None,
-               ledger: Any | None = None) -> Plan:
+               price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None) -> Plan:
     """「N분 늦는다」. 다음 식사 항목이 그 도착 시각에 성립하는지 보고, 안 되면 바꾼다."""
     from zoneinfo import ZoneInfo
 
@@ -633,7 +598,10 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
     places = unused_places(places, items, meal)  # 같은 여행에 이미 있는 곳은 대체 후보가 아니다
     arrival = (meal.starts_at + timedelta(minutes=minutes)).astimezone(kst)       # ★서울 시각 — 알림 문장의 「점심 도착이 HH:MM」도 서울 시계다(DB 세션이 UTC 여도)
     duration = minutes_between(meal.starts_at, meal.ends_at)
-    fits, why = dining_fits(meal.place, arrival, duration)
+    place_id = str(meal.place["place_id"])
+    states = (state_lookup([{"place_id": place_id, "at": arrival,
+                             "until": arrival + timedelta(minutes=duration)}]) if state_lookup else None) or {}
+    fits, why = dining_fits(meal.place, arrival, duration, state=states.get(place_id))
     cause = with_request({"category": "customer_report", "type": "delay", "minutes": minutes,
                           "message": message, "evidence": "고객 신고"}, request_id)
     if fits is True:
@@ -646,13 +614,22 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
             return NoChange("knock_on", {"arrival": arrival.isoformat(), "text": knock_on_text(meal, minutes, knocks),
                                          "knocked": [knock.sentence() for knock in knocks]})
         return NoChange("still_fits", {"arrival": arrival.isoformat()})
+    if fits is None:
+        # ★`[2026-10-01 팀]` 확인하지 못했다는 이유만으로 이미 정한 식당을 바꾸지 않는다 — 전에는 영업시간을 몰라 바꾸려다
+        #   후보를 못 찾고 끝났다. 바꾸지 않고 확인이 필요하다고 알린다(「사람 대기」가 아니라 고객이 아는 상태로 남긴다)
+        return NoChange("needs_check", {
+            "arrival": arrival.isoformat(),
+            "message": f"{meal.place['name']}의 {seoul(arrival):%H:%M} 도착 시 영업 여부는 확인이 필요해요. "
+                       "기존 일정은 바꾸지 않았어요.",
+            "warnings": [why]})
     following = next((i for i in items if i.seq > meal.seq), None)
-    pool = ledger_pool(ledger, meal=meal, starts_at=arrival,
-                       ends_at=arrival + timedelta(minutes=duration), following=following, trip=trip)
-    best, alternates, rejected, source = _choose_dining(lambda only: dining_candidates(
+    candidates = dining_candidates(
         original=meal.place, places=places, arrival=arrival, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-        next_start=following.starts_at if following else None, ledger=ledger, pool=only), pool)
+        next_start=following.starts_at if following else None, state_lookup=state_lookup)
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
+    best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"reason": why,
                                        "rejected": {c.name: c.rejected for c in rejected}})
@@ -660,12 +637,12 @@ def plan_delay(*, trip: dict[str, Any], items: list[Item], places: list[dict[str
         original=meal.place, best=best, alternates=alternates,
         reason=f"점심 도착이 {arrival:%H:%M}(으)로 늦어져 {meal.place['name']}은 {why}",
         cause=cause, after=None, constraint_note="브레이크타임 없는")
-    return _dining_change(meal, best, alternates, notice, source=source)
+    return _dining_change(meal, best, alternates, notice)
 
 
 def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                 at: datetime, message: str, request_id: str | None,
-                ledger: Any | None = None) -> Plan:
+                price_lookup: PriceLookup | None = None, state_lookup: DiningStateLookup | None = None) -> Plan:
     """「오늘 임시휴무」. 지금 식사 항목을 걸어갈 수 있는 대체 식당으로 바꾼다."""
     meal = next((i for i in items if i.kind == "dining"
                  and i.starts_at <= at < (i.ends_at or i.starts_at + timedelta(hours=1))), None)
@@ -677,33 +654,15 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
     cause = with_request({"category": "customer_report", "type": "closed_today",
                           "message": message, "evidence": "고객 신고 — 현장 안내문"},
                          request_id)
-    # 후보마다 도보 시간이 달라 입장 시각도 다르다 — 먼저 거리로 입장 시각을 잡는다.
-    def make(only: dict[str, dict[str, Any]] | None) -> list:
-        candidates = []
-        for place in places:
-            if place.get("kind") != "dining" or place["place_id"] == meal.place["place_id"]:
-                continue
-            if only is not None and str(place["place_id"]) not in only:
-                continue
-            # ★거리만 재는 탐침이다 — 원장에 묻지 않는다(`ledger=None`). 묻는 것은 입장 시각이 정해진 뒤 한 번
-            probe = dining_candidates(
-                original=meal.place, places=[place], arrival=at, minutes=duration,
-                constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-                next_start=None, pool=only)
-            if not probe:
-                continue
-            walk = probe[0].walk_min or 0
-            arrival = round_up_5(at + timedelta(minutes=walk + SEATING_BUFFER_MIN))
-            candidates += dining_candidates(
-                original=meal.place, places=[place], arrival=arrival, minutes=duration,
-                constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-                next_start=following.starts_at if following else None, ledger=ledger, pool=only)
-        return candidates
-
-    start = round_up_5(at + timedelta(minutes=SEATING_BUFFER_MIN))
-    pool = ledger_pool(ledger, meal=meal, starts_at=start, ends_at=start + timedelta(minutes=duration),
-                       following=following, trip=trip)
-    best, alternates, rejected, source = _choose_dining(make, pool)
+    # 후보마다 도보 시간이 달라 입장 시각도 다르다 — 후보별 입장 시각(`arrival_for`)을 계산 안에서 잡는다.
+    candidates = dining_candidates(
+        original=meal.place, places=places, arrival=at, minutes=duration,
+        constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
+        next_start=following.starts_at if following else None, state_lookup=state_lookup,
+        arrival_for=lambda walk: round_up_5(at + timedelta(minutes=walk + SEATING_BUFFER_MIN)))
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
+    best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"rejected": {c.name: c.rejected for c in rejected}})
     after = None
@@ -716,13 +675,14 @@ def plan_closed(*, trip: dict[str, Any], items: list[Item], places: list[dict[st
         reason=f"{meal.place['name']}이(가) 오늘 임시휴무라고 알려 주셨습니다",
         cause=cause, after=after,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
-    return _dining_change(meal, best, alternates, notice, source=source)
+    return _dining_change(meal, best, alternates, notice)
 
 
 # ── 새벽 확인 — 그날 그 시각에 안 연다 (D-020, 2026-09-25) ──────────
 def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]],
                        meal: Item, source: str, detail: str, checked_at: datetime,
-                       exclude: set[str] = frozenset(), ledger: Any | None = None) -> Plan:
+                       exclude: set[str] = frozenset(), price_lookup: PriceLookup | None = None,
+                       state_lookup: DiningStateLookup | None = None) -> Plan:
     """새벽 확인에서 **계획한 시각에 안 여는** 식당 — 같은 시각에 근처 대체 식당으로 바꾼다.
 
     ★고객 신고(`plan_closed`)와 다르다 — 그쪽은 고객이 **지금 가게 앞에** 있어 걸어갈 시간만큼 입장을
@@ -737,13 +697,13 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
     cause = {"category": "place_closed", "type": "closed_on_day", "source": source,
              "checked_at": checked_at.isoformat(), "detail": detail,
              "evidence": f"{source} 새벽 확인 — {detail}"}
-    pool = ledger_pool(ledger, meal=meal, starts_at=meal.starts_at,
-                       ends_at=meal.starts_at + timedelta(minutes=duration), following=following, trip=trip)
-    best, alternates, rejected, found_in = _choose_dining(lambda only: dining_candidates(
+    candidates = dining_candidates(
         original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
         constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-        next_start=following.starts_at if following else None, exclude=set(exclude),
-        ledger=ledger, pool=only), pool)
+        next_start=following.starts_at if following else None, exclude=set(exclude), state_lookup=state_lookup)
+    if price_lookup is not None:
+        apply_google_prices(candidates, original=meal.place, lookup=price_lookup)
+    best, alternates, rejected = choose(candidates)
     if best is None:
         return NoChange("unresolved", {"causes": [cause],
                                        "rejected": {c.name: c.rejected for c in rejected}})
@@ -754,7 +714,7 @@ def plan_closed_on_day(*, trip: dict[str, Any], items: list[Item], places: list[
                 f"새벽에 확인했습니다({detail})"),
         cause=cause, after=None,
         constraint_note="카드 결제가 가능한" if payment == "card" else None)
-    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted", source=found_in)
+    return _dining_change(meal, best, alternates, notice, reason="auto_adjusted")
 
 
 #: 낮 감시가 식사 대체 후보를 다시 점검하는 곳 수 — ★우리가 고른 값(2026-09-29). 식당 Team 의 도구 예산(12)
@@ -768,7 +728,7 @@ ACTIVITY_RECHECK_LIMIT = 6
 
 def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], meal: Item,
                           report: dict[str, Any], check: Callable[..., dict[str, Any]],
-                          ledger: Any | None = None) -> Plan:
+                          state_lookup: DiningStateLookup | None = None) -> Plan:
     """★`[2026-09-29 사용자 지적 · ui 세션 전달]` 낮 감시(1분마다, 90분 앞)의 성립 점검이 **식사 항목**을
     `disrupted` 로 본 경우 — 재난문자(화재 · 통제 등 모든 장소에 걸리는 것) · 지진 · 도로 통제.
 
@@ -785,10 +745,6 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
     causes = list(report.get("disruptions") or [])
     duration = minutes_between(meal.starts_at, meal.ends_at)
     following = next((i for i in items if i.seq > meal.seq and i.kind != "mobility"), None)
-    pool = ledger_pool(ledger, meal=meal, starts_at=meal.starts_at,
-                       ends_at=meal.starts_at + timedelta(minutes=duration), following=following, trip=trip)
-    if pool:
-        pool.pop(str(meal.place["place_id"]), None)
     used = {"n": 0}
 
     def recheck(candidate) -> dict[str, Any]:
@@ -797,15 +753,13 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
         used["n"] += 1
         return check(place=candidate.place, starts_at=candidate.starts_at or meal.starts_at)
 
-    def make(only):
-        # ★순위 순으로 넘긴다 — `choose` 는 받은 순서대로 재점검하므로, 앞 순위부터 봐야 한도 안에서 최선을 고른다
-        return sorted(dining_candidates(
-            original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
-            constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
-            next_start=following.starts_at if following else None, exclude={str(meal.place["place_id"])},
-            ledger=ledger, pool=only), key=lambda c: c.rank())
-
-    best, alternates, rejected, found_in = _choose_dining(make, pool or None, recheck)
+    # ★순위 순으로 넘긴다 — `choose` 는 받은 순서대로 재점검하므로, 앞 순위부터 봐야 한도 안에서 최선을 고른다
+    candidates = sorted(dining_candidates(
+        original=meal.place, places=places, arrival=meal.starts_at, minutes=duration,
+        constraints=trip.get("constraints") or {}, radius_m=DINING_RADIUS_M,
+        next_start=following.starts_at if following else None, exclude={str(meal.place["place_id"])},
+        state_lookup=state_lookup), key=lambda c: c.rank())
+    best, alternates, rejected = choose(candidates, recheck)
     if best is None:
         return NoChange("unresolved", {"causes": causes, "rejected": {c.name: c.rejected for c in rejected}})
     kinds = ", ".join(sorted({str(c.get("kind") or c.get("category")) for c in causes})) or "운영 상황 변화"
@@ -818,7 +772,7 @@ def plan_dining_disrupted(*, trip: dict[str, Any], items: list[Item], places: li
             cause=causes[0] if causes else {"category": "disruption"}, after=None,
             constraint_note="카드 결제가 가능한" if payment == "card" else None)
         notice["causes"] = causes or notice["causes"]
-        return _dining_change(meal, chosen, others, notice, reason="auto_adjusted", source=found_in)
+        return _dining_change(meal, chosen, others, notice, reason="auto_adjusted")
 
     return _with_fallbacks(build, [best, *alternates])
 
@@ -942,6 +896,9 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
     name = pick.get("option_label") or pick["name"]
     detail = {**current.detail, "alternates": remaining,
               "other_options": [a["name"] for a in remaining], "customer_requested": True}
+    detail.pop("warnings", None)
+    if pick.get("warnings"):
+        detail["warnings"] = list(pick["warnings"])
     if current.kind == "mobility":
         detail["option"] = pick.get("option") or pick["key"]
     cause = with_request({"category": "customer_request", "type": "alternate",
@@ -949,9 +906,13 @@ def plan_swap(*, trip_version: int, base_version: int, items: list[Item],
                          request_id)
     text = (f"요청하신 대로 {applied['name']} 대신 {name}(으)로 바꿨습니다"
             f"({seoul(starts):%H:%M} 시작).")
+    warnings = [f"{name}: {warning}" for warning in pick.get("warnings") or []]
+    if warnings:
+        text += " " + " ".join(warnings)
     notice = {"text": text, "language": "ko", "causes": [cause],
               "changed": {"from": applied["name"], "to": name, "at": starts.isoformat()},
-              "other_options": [a["name"] for a in remaining], "replay": False}
+              "other_options": [a["name"] for a in remaining], "replay": False,
+              **({"warnings": warnings} if warnings else {})}
     replacement = current.replaced_by(place=place, title=title_for(current, name),
                                       detail=detail, starts_at=starts, ends_at=ends)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
@@ -1003,25 +964,22 @@ RELAX_WANT = 3
 
 
 def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]], origin: dict[str, Any],
-                at: datetime, ledger: Any | None = None) -> tuple[list[Any], int | None, int]:
+                at: datetime, state_lookup: DiningStateLookup | None = None) -> tuple[list[Any], int | None, int]:
     """고객의 **현재 위치**(`origin` — `latitude` · `longitude` 를 가진 가짜 장소) 둘레에서 **지금 갈 수 있는** 곳. `[2026-09-30]`
     돌려주는 것: (후보들 좋은 순 — 최선 + 다른 안, 찾은 반경 m 또는 None, 살펴본 곳 수). `kind` = `dining` | `activity`.
 
-    ★「다른 데로 바꿔」와 같은 후보 계산이다(식당은 요식 원장 먼저, 활동은 그 시각 영업) — 다른 것은 **기준점이 좌표**라는 것뿐이다.
+    ★「다른 데로 바꿔」와 같은 후보 계산이다(식당은 요식 원장 판정, 활동은 그 시각 영업) — 다른 것은 **기준점이 좌표**라는 것뿐이다.
       일정을 바꾸지 않는다(부르는 쪽이 목록만 답한다). 반경은 식당 700m → 1.5km → 3km, 활동 1.5km → 3km.
     ★좌표는 여기서 거리 계산에만 쓰고 어디에도 담지 않는다(`trip_here` 머리 — 개인정보)."""
     if kind == "dining":
         minutes = 60
-        meal = Item(item_id=uuid4(), seq=0, kind="dining", title="현재 위치", place_id=None, starts_at=at,
-                    ends_at=at + timedelta(minutes=minutes), place=origin)
-        pool = ledger_pool(ledger, meal=meal, starts_at=at, ends_at=meal.ends_at, following=None, trip=trip)
         seen = 0
-        for step, radius in enumerate(ALTERNATE_RADII_M["dining"]):
-            best, alternates, rejected, _ = _choose_dining(
-                lambda only, r=radius: dining_candidates(
-                    original=origin, places=places, arrival=at, minutes=minutes,
-                    constraints=trip.get("constraints") or {}, radius_m=r, next_start=None, exclude=set(),
-                    ledger=ledger, pool=only), (pool or None) if step == 0 else None)
+        for radius in ALTERNATE_RADII_M["dining"]:
+            candidates = dining_candidates(
+                original=origin, places=places, arrival=at, minutes=minutes,
+                constraints=trip.get("constraints") or {}, radius_m=radius, next_start=None, exclude=set(),
+                state_lookup=state_lookup)
+            best, alternates, rejected = choose(candidates)
             seen = len(rejected) + (1 if best is not None else 0) + len(alternates)
             if best is not None:
                 return [best] + list(alternates), radius, seen
@@ -1040,7 +998,7 @@ def plan_nearby(kind: str, *, trip: dict[str, Any], places: list[dict[str, Any]]
 
 
 def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
-                    ledger: Any | None = None, exclude: set[str] = frozenset(),
+                    state_lookup: DiningStateLookup | None = None, exclude: set[str] = frozenset(),
                     causes: list[dict[str, Any]] = ()) -> list[dict[str, Any]]:
     """같은 조건으로 0곳일 때 **조건을 하나씩 풀어** 실제로 되는 안. `[2026-09-29 사용자 지적 — ui 세션 전달]`
 
@@ -1065,7 +1023,7 @@ def relaxed_options(*, trip: dict[str, Any], items: list[Item], places: list[dic
             found = dining_candidates(original=center, places=places, arrival=start, minutes=duration,
                                       constraints=constraints, radius_m=radius,
                                       next_start=following.starts_at if following else None,
-                                      exclude={original, str(center["place_id"])}, ledger=ledger, pool=None)
+                                      exclude={original, str(center["place_id"])}, state_lookup=state_lookup)
         else:
             found = [c for c in activity_candidates(original=center, places=places, start=start, end=end, causes=list(causes),
                                                     radius_m=radius)
@@ -1122,12 +1080,13 @@ def _top_reason(rejected: list) -> str | None:
 # ── 재요청 ①-2 — 들고 있던 안이 없으면 그 자리에서 찾는다 (2026-09-29) ─────────────
 def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_version: int, items: list[Item],
                          places: list[dict[str, Any]], item_id: UUID, message: str | None,
-                         request_id: str | None, ledger: Any | None = None) -> Plan:
+                         request_id: str | None, state_lookup: DiningStateLookup | None = None,
+                         price_lookup: PriceLookup | None = None) -> Plan:
     """「다른 데로 바꿔 줘」 — 그 항목에 들고 있던 「다른 안」이 없으면 **지금 후보를 계산해** 하나로 바꾼다.
 
     ★`[2026-09-29 사용자 지적 · ui 세션 전달]` 전에는 들고 있던 안(`detail.alternates`)만 봐서, 감시가 한 번도 안 고친
       항목(일정 짜기·등록으로 막 만든 것)은 늘 「바꿀 수 있는 다른 안이 없어요」였다. 고객이 달라고 하면 **그때 찾는다.**
-    ★계산은 이미 있는 것을 쓴다 — 식사는 요식 원장 후보 먼저(`ledger_pool` · `_choose_dining`, 같은 시각 · 동선 ·
+    ★계산은 이미 있는 것을 쓴다 — 식사는 `dining_candidates`(요식 원장 판정 `state_lookup` — 같은 시각 · 동선 ·
       동행 조건), 활동은 `activity_candidates` + `choose`(새벽 확인 대체와 같은 방식, 가격 모름은 탈락시키지 않는다 ·
       **그 시각 영업**은 요구한다). 원래 곳은 후보에서 뺀다.
     ★`no_alternate` 는 후보를 **실제로 다 뒤져도** 없을 때만 — 무엇이 왜 떨어졌는지(`rejected`)를 같이 싣는다.
@@ -1148,20 +1107,19 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     following = next((i for i in items if i.seq > current.seq and i.kind != "mobility"), None)
     # ★`[2026-09-29 ui 세션 지적]` 0곳이면 **반경을 넓혀 다시** 찾는다 — 700m 는 설계 근거 없는 구현 선택이었고, 08:00 아침처럼
     #   그 시각에 여는 곳이 드문 때 「없어요」가 쉽게 나왔다(실서버 「첫날 아침 일정 바꿔」). 식사 700m → 1.5km → 3km,
-    #   활동 1.5km → 3km. 요식 원장은 자기 반경 사다리가 있어 첫 판에만 묻는다.
+    #   활동 1.5km → 3km.
     best, rejected, radius = None, [], 0
     if current.kind == "dining":
         duration = minutes_between(current.starts_at, current.ends_at)
-        pool = ledger_pool(ledger, meal=current, starts_at=current.starts_at,
-                           ends_at=current.starts_at + timedelta(minutes=duration), following=following, trip=trip)
-        if pool:
-            pool.pop(original, None)
-        for step, radius in enumerate(ALTERNATE_RADII_M["dining"]):
-            best, alternates, rejected, found_in = _choose_dining(lambda only, r=radius: dining_candidates(
+        for radius in ALTERNATE_RADII_M["dining"]:
+            candidates = dining_candidates(
                 original=current.place, places=places, arrival=current.starts_at, minutes=duration,
-                constraints=trip.get("constraints") or {}, radius_m=r,
+                constraints=trip.get("constraints") or {}, radius_m=radius,
                 next_start=following.starts_at if following else None, exclude={original},
-                ledger=ledger, pool=only), (pool or None) if step == 0 else None)
+                state_lookup=state_lookup)
+            if price_lookup is not None:
+                apply_google_prices(candidates, original=current.place, lookup=price_lookup)
+            best, alternates, rejected = choose(candidates)
             if best is not None:
                 break
     else:
@@ -1172,7 +1130,6 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
             for candidate in candidates:
                 candidate.rejected = [r for r in candidate.rejected if not r.startswith("가격을 몰라")]
             best, alternates, rejected = choose(candidates, distinct=_same_activity_site)
-            found_in = "places"
             if best is not None:
                 break
     if best is None:
@@ -1189,7 +1146,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
                 f"{radius / 1000:g}km 안에 없어요{detail}.")
         facts = {"radius_m": radius, "seen": len(rejected), "rejected": {c.name: c.rejected for c in rejected[:20]}}
         # ★`[2026-09-29 사용자 지적]` 막다른 답 대신 **조건을 풀어 되는 안**을 계산한다 — 있으면 묻는다(`relaxed`)
-        options = relaxed_options(trip=trip, items=items, places=places, current=current, ledger=ledger)
+        options = relaxed_options(trip=trip, items=items, places=places, current=current, state_lookup=state_lookup)
         if options:
             listed = " · ".join(f"{n}) {o['note']} {o['name']}" + (f"(도보 {o['walk_min']}분)" if o.get("walk_min") else "")
                                 for n, o in enumerate(options, start=1))
@@ -1206,7 +1163,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     if len(more) < RELAX_WANT:
         by_id = {str(p["place_id"]): p for p in places}
         taken = [best.place] + [c.place for c in alternates if c.place]
-        for option in relaxed_options(trip=trip, items=items, places=places, current=current, ledger=ledger,
+        for option in relaxed_options(trip=trip, items=items, places=places, current=current, state_lookup=state_lookup,
                                       exclude={best.key} | {m["key"] for m in more}):
             if len(more) >= RELAX_WANT:
                 break
@@ -1228,7 +1185,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
               "other_options": others, "replay": False}
     replacement = current.replaced_by(
         place=best.place, title=title_for(current, name),
-        detail={"customer_requested": True, "other_options": others, "candidates_from": found_in,
+        detail={"customer_requested": True, "other_options": others,
                 **({"warnings": list(best.warnings)} if getattr(best, "warnings", None) else {}),
                 "alternates": more + [applied_record(current)]},
         starts_at=starts, ends_at=best.ends_at or current.ends_at)
@@ -1236,7 +1193,7 @@ def plan_fresh_alternate(*, trip: dict[str, Any], trip_version: int, base_versio
     #   `seen` = 떨어진 곳 + 통과한 곳(통과한 곳은 셋까지만 센다 — `choose` 가 셋만 돌려준다)
     return ItineraryChange(reason="customer_request", causes=[cause], notice=notice,
                            replacements={current.item_id: replacement},
-                           summary={"from": current.place["name"], "to": name, "candidates_from": found_in,
+                           summary={"from": current.place["name"], "to": name,
                                     "more_options": more, "radius_m": radius,
                                     "seen": len(rejected) + 1 + len(alternates),
                                     "rejected": {c.name: c.rejected for c in rejected[:20]}})

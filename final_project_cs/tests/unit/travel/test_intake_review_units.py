@@ -256,8 +256,8 @@ def test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day(monkeypa
     state = {"linked": True, "available": True, "open_at_slot": True, "order_ok": False, "needs_check": True,
              "attributes": {"hours": ["11:30", "22:30"], "break": ["14:00", "17:30"]}, "holiday_context": "추석 연휴"}
     monkeypatch.setattr(ledger, "dining_state", lambda *a, **k: state)
-    monkeypatch.setattr(ledger, "ledger_place_for", lambda *a, **k: "core-1")
-    place = {"name": "온더무브", "latitude": 37.56, "longitude": 126.99, "source": "kakao"}
+    # ★`[2026-10-05]` 장소 행(코어 장소)이 있으면 그 행으로 `dining_state` 를 묻는다 — 전에는 원장 가게를 공용 장소로 올려 두고 이름으로 이었다(`ledger_place_for`, 걷어냄)
+    place = {"name": "온더무브", "place_id": "core-1", "latitude": 37.56, "longitude": 126.99, "source": "kakao"}
     facts = hours.facts_for(_Conn(), "t", place, "dining", at("12:00"), at("13:00"))
     assert facts.known and facts.source == "dining_ledger" and facts.attributes["hours"] == ["11:30", "22:30"]
     assert facts.attributes["break"] == ["14:00", "17:30"] and facts.order_ok is False and facts.needs_check
@@ -265,8 +265,12 @@ def test_the_dining_ledger_supplies_the_days_hours_break_and_closed_day(monkeypa
     state["attributes"] = {"closed": True}
     closed = hours.facts_for(_Conn(), "t", place, "dining", at("12:00"), at("13:00"))
     assert closed.known and closed.attributes["hours_week"]["thu"] == "closed"      # 2026-10-15 는 목요일
-    monkeypatch.setattr(ledger, "ledger_place_for", lambda *a, **k: None)
+    state["linked"] = False
     assert hours.facts_for(_Conn(), "t", place, "dining", at("12:00"), at("13:00")).known is False   # 원장에 못 이은 식당은 모른다
+    # 장소 행이 아직 없고(확인 화면 단계) 이름으로도 원장에서 하나로 정해지지 않으면 모른다 — 고르지 않는다
+    monkeypatch.setattr(ledger, "find_place_by_name", lambda *a, **k: None)
+    unplaced = {"name": "온더무브", "latitude": 37.56, "longitude": 126.99, "source": "kakao"}
+    assert hours.facts_for(_Conn(), "t", unplaced, "dining", at("12:00"), at("13:00")).known is False
     # 활동은 원장을 묻지 않는다
     monkeypatch.setattr(ledger, "dining_state", lambda *a, **k: pytest.fail("활동인데 원장을 물었다"))
     hours.facts_for(_Conn(), "t", place, "activity", at("12:00"), at("13:00"))

@@ -194,7 +194,7 @@ BEGIN
 END;
 $fn$;
 
--- [2026-09-28 cs] 인자 목록을 적는다 — 220 이 같은 이름의 여행별 함수를 더해, 이름만 적으면 다시 돌릴 때
+-- [2026-09-28 cs] 인자 목록을 적는다 — 224 가 같은 이름의 여행별 함수를 더해, 이름만 적으면 다시 돌릴 때
 -- AmbiguousFunction 으로 마이그레이션 전체가 멈췄다(복사본 DB 에서 두 번째 실행이 잡았다).
 COMMENT ON FUNCTION dining.notice_decision(uuid, timestamptz, boolean) IS
     '말할 것인가. 안 보낼 때도 이유를 담는다. 모름과 좋은 소식으로는 보내지 않는다.';
@@ -219,7 +219,7 @@ LANGUAGE sql
 AS $fn$
     INSERT INTO dining.dn_notice (place_uid, target_at, kind, body, based_on)
     VALUES (p_place_uid, p_target_at, p_kind, p_body, p_based_on)
-    -- [2026-09-28 cs] 충돌 대상을 적지 않는다. 220 이 dn_notice_once 를 여행별 유일 색인으로 바꾼다 —
+    -- [2026-09-28 cs] 충돌 대상을 적지 않는다. 224 가 dn_notice_once 를 여행별 유일 색인으로 바꾼다 —
     -- 대상을 (place_uid, target_at, kind) 로 박아 두면 마이그레이션을 다시 돌릴 때 이 함수가 만들어지지 않는다.
     ON CONFLICT DO NOTHING
     RETURNING notice_id

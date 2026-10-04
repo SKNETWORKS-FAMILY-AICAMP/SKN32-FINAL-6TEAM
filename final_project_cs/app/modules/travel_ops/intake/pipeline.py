@@ -127,7 +127,7 @@ def open_intake(conn, *, tenant_id: str, customer_id: UUID, text: str | None,
 
 def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blobs: dict[int, bytes],
             see: Callable[[str, bytes], str] | None, chat: Any = None, tour: Any = None, kakao: Any = None,
-            today: date | None = None) -> str:
+            today: date | None = None, dining: Any = None) -> str:
     """뒤에서 한 건을 읽는다. 돌려주는 값은 마지막 상태(review · fatal). `blobs` = {position: 바이트}.
 
     ★2주차(2026-09-27): 규칙 → 남은 줄은 모델이 **가리키기만**(`chat`) → 날짜 해석 → 장소 찾기(`tour` 관광공사 ·
@@ -183,7 +183,7 @@ def process(connect: Callable[[], Any], *, tenant_id: str, intake_id: UUID, blob
                 push("progress", {"phase": phase, "done": done, "total": total, "current": {"id": f"{_position}-{index}", "title": title}})
 
             read_source(source["transcript"] or "", chat=chat, tour=tour, kakao=kakao, our_places=our_places,
-                        aliases=aliases, areas=areas, today=today or datetime.now(KST).date(),
+                        aliases=aliases, areas=areas, dining=dining, today=today or datetime.now(KST).date(),
                         on_rows=_claim_sink(connect, tenant_id, intake_id, source["source_id"]), on_progress=places_progress)
         # 검사 — 읽은 장소의 운영시간 · 휴무 · 이동(`review.py`). 실패해도 읽은 값은 그대로 확인 화면으로 간다(검사만 비고 이유가 남는다)
         _stage(connect, tenant_id, intake_id, "checking")
@@ -322,7 +322,8 @@ class IntakeConflict(ValueError):
 
 
 def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int,
-         edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None) -> int:
+         edits: list[dict[str, Any]], tour: Any = None, kakao: Any = None, via: str | None = None,
+         dining: Any = None) -> int:
     """고객이 고친 값 → **새 판**(revision + 1). 앞 판의 값은 그대로 남는다(근거를 지우지 않는다, 설계서 §5).
 
     `edits` = [{"source_id", "field", "value"}]. 장소는 `{"name": "…"}` 로 받아 **다시 찾고**, 찾은 곳 하나를
@@ -381,7 +382,10 @@ def edit(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: 
                 if our_places is None:
                     our_places = _our_places(conn, tenant_id)
                 typed = str(value["name"]).strip()
-                value, evidence, note = _typed_place(value, our_places, tour, kakao)
+                # ★`[2026-10-05]` 식사 항목이면 요식 원장부터 찾는다(팀 판 — 같은 요청에서 함께 고친 종류가 먼저, 없으면 지금 판의 종류)
+                kind = _item_kind(cur, tenant_id, intake_id, current, source_id, field_name, edits)
+                value, evidence, note = _typed_place(value, our_places, tour, kakao, dining,
+                                                     kind_hint="dining" if kind == "dining" else None)
                 # 원래 읽은 이름 → 고객이 고친 이름을 별칭으로 쌓는다(다음 고객은 안 고쳐도 되게)
                 cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
                             "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
@@ -450,7 +454,7 @@ class _DryRunRollback(Exception):
 
 
 def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revision: int, tour: Any = None,
-            kakao: Any = None, dry_run: bool = False) -> dict[str, Any]:
+            kakao: Any = None, dry_run: bool = False, dining: Any = None) -> dict[str, Any]:
     """**전체 자동 추천** — 확인이 필요한 일정을 검증한 대체 일정(장소 · 시각)으로 한 번에 바꾼다(`autofix.py`).
     바꿀 것이 있으면 `edits` 와 같은 길로 **새 판** 하나가 된다. 없으면 판을 만들지 않고 이유(`kept`)만 돌려준다.
 
@@ -470,7 +474,7 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
         try:
             with conn.transaction():                       # 세이브포인트 — 안에서 만든 새 판 · 저장된 검사가 나갈 때 사라진다
                 edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, edits=edits,
-                     tour=tour, kakao=kakao, via="autofix")
+                     tour=tour, kakao=kakao, via="autofix", dining=dining)
                 preview = view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)
                 raise _DryRunRollback()
         except _DryRunRollback:
@@ -480,7 +484,7 @@ def autofix(conn, *, tenant_id: str, customer_id: UUID, intake_id: UUID, revisio
         return {"applied": False, "dry_run": True, "revision": revision, "changed": changed, "kept": got["kept"], "view": preview}
     if edits:
         new = edit(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id, revision=revision, edits=edits,
-                   tour=tour, kakao=kakao, via="autofix")
+                   tour=tour, kakao=kakao, via="autofix", dining=dining)
     return {"applied": bool(edits), "dry_run": dry_run, "revision": new, "changed": changed, "kept": got["kept"],
             **({"view": view(conn, tenant_id=tenant_id, customer_id=customer_id, intake_id=intake_id)} if dry_run else {})}
 
@@ -657,12 +661,26 @@ def _iso_date(field_name: str, value: Any) -> None:
         raise IntakeRejected("invalid_value", f"{field_name}: 날짜는 YYYY-MM-DD 입니다") from None
 
 
-def _typed_place(value: dict[str, Any], our_places, tour, kakao):
+def _item_kind(cur, tenant_id: str, intake_id: UUID, revision: int, source_id: str, place_field: str,
+               edits: list[dict[str, Any]]) -> str | None:
+    """장소를 고치는 항목의 종류 — 같은 요청에서 함께 고친 값이 먼저, 없으면 지금 판의 값. 식사면 요식 원장부터 찾는다."""
+    kind_field = place_field[:-len("place")] + "kind"
+    for entry in edits:
+        if str(entry.get("source_id") or "") == source_id and entry.get("field") == kind_field:
+            return entry.get("value")
+    cur.execute("SELECT value_json FROM intake_claims WHERE tenant_id=%s AND intake_id=%s AND revision=%s "
+                "AND source_id=%s AND field=%s ORDER BY created_at DESC LIMIT 1",
+                (tenant_id, intake_id, revision, source_id, kind_field))
+    row = cur.fetchone()
+    return row[0] if row and isinstance(row[0], str) else None
+
+
+def _typed_place(value: dict[str, Any], our_places, tour, kakao, dining=None, kind_hint: str | None = None):
     """고객이 적은 장소 이름 → 다시 찾아 **하나**. 못 찾으면 받지 않는다(지어내지 않는다)."""
     from .places import resolve
 
     name = str(value["name"]).strip()[:80]
-    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao)
+    found = resolve(name, our_places=our_places, tour=tour, kakao=kakao, dining=dining, kind_hint=kind_hint)
     if found.status != "resolved":
         raise IntakeRejected("place_not_found", f"「{name}」: {found.note}")
     resolved = {"name": found.name, "kind": found.kind, "latitude": found.latitude, "longitude": found.longitude,
@@ -674,7 +692,7 @@ def _typed_place(value: dict[str, Any], our_places, tour, kakao):
 # ── 한 원본 읽기: 규칙 → 남은 줄 → 날짜 → 장소 ─────────────────────
 def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = None,
                 our_places: list[dict[str, Any]] | None = None, today: date,
-                aliases: dict[str, str] | None = None, areas: Any = None,
+                aliases: dict[str, str] | None = None, areas: Any = None, dining: Any = None,
                 on_rows: Callable[[list[dict[str, Any]]], None] | None = None,
                 on_progress: Callable[[str, int, int, int, str | None], None] | None = None) -> list[dict[str, Any]]:
     """읽은 값 줄들(`intake_claims` 한 행 = 한 dict). ★값마다 방법(rule·llm_span·lookup)과 근거가 붙는다.
@@ -686,7 +704,9 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
     ★찾았든 못 찾았든 **그 일정의 장소 값이 정해지면** 센다 — 이름이 특정된 것은 찾는 즉시, 모호한 것은 앞뒤가 다 찾아진 뒤 가까운 곳을 고른 때.
 
     `areas` `[2026-10-03 ui 세션 요청서 「장소 해석 개선」]` — 지명 사전(`areas.py`). 이름 없이 **종류 + 지역만** 적은 줄(「성수 예약 식당」)을 알아보는 데 쓴다(`line_parts.py`) —
-    그런 줄은 가게 이름으로 **찾지 않는다**(없는 가게를 찾아 글자를 줄여 가던 것이 틀린 장소와 엉뚱한 후보의 뿌리였다). 사전이 없으면(None) 지역 말은 이름 조각으로 남고 종류 · 끼니만 있는 줄만 알아본다."""
+    그런 줄은 가게 이름으로 **찾지 않는다**(없는 가게를 찾아 글자를 줄여 가던 것이 틀린 장소와 엉뚱한 후보의 뿌리였다). 사전이 없으면(None) 지역 말은 이름 조각으로 남고 종류 · 끼니만 있는 줄만 알아본다.
+
+    `dining` `[2026-10-05]` — 요식 원장 이름 조회(`dining/place_lookup.py`, 관광공사 자리와 같은 계약 `find` + `misses`). 식사 항목은 이것이 먼저, 그 밖의 항목은 관광공사 자리 뒤다(`places.resolve`). 없으면(None) 건너뛴다."""
     from .dates import resolve_dates
     from .line_parts import parse as parse_line
     from .llm_spans import label_lines
@@ -789,7 +809,7 @@ def read_source(text: str, *, chat: Any = None, tour: Any = None, kakao: Any = N
                     on_progress("places", placed, titled, index, item["title"])
                 continue
             resolved[index] = resolve(item["title"], our_places=our_places or [], tour=tour, kakao=kakao,
-                                      kind_hint="dining" if item["meal"] else None, aliases=aliases)
+                                      kind_hint="dining" if item["meal"] else None, aliases=aliases, dining=dining)
             if resolved[index].status == "resolved":
                 # 이름이 특정된 곳은 앞뒤 일정을 볼 필요가 없다 — 찾은 즉시 알린다(실시간 진행에서 한 곳씩 나타난다)
                 early[index] = _place_rows(index, resolved[index], items=items, resolved=resolved, dated=dated, rows=rows,

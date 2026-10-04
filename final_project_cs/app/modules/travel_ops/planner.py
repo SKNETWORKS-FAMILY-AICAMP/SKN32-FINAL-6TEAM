@@ -37,6 +37,7 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, time, timedelta
+import logging
 import re
 from typing import Any, Callable, Iterable, Mapping, Sequence
 from zoneinfo import ZoneInfo
@@ -47,10 +48,11 @@ from .density import measure_density
 from .place_hours import DayHours, find_tour_id, hours_on, knows_hours
 from .place_hours import fits as hours_fit
 from .itinerary import hides_scenario_places
-from .itinerary_checks import Part, Violation, check_itinerary
+from .itinerary_checks import Part, Violation, check_itinerary, with_ledger
 from .replan import distance_m, walk_minutes
 
 KST = ZoneInfo("Asia/Seoul")
+logger = logging.getLogger(__name__)
 
 # ── 우리가 고른 값 (측정 아님) ────────────────────────────────────
 def _day_window() -> tuple[time, time]:
@@ -120,6 +122,9 @@ CONTENT_TYPE_RANK = {"12": 0, "14": 1, "28": 2, "38": 3, "39": 0}
 #: 그래서 `attributes.indoor` (확인된 값)가 아니라 `indoor_assumed` 로 따로 싣는다 —
 #: 판정기(`itinerary_checks`·`replan`)는 `indoor` 만 읽으므로 이 가정이 판정에 새지 않는다.
 INDOOR_ASSUMED_BY_CONTENT_TYPE = {"14": True, "38": True}
+#: ★`[2026-10-02]` 관광공사에서 받는 종류 — **식당은 받지 않는다**(사용자 결정). 식당은 요식 원장(`ledger_candidates`)에서
+#:   고르고 원장으로 판정한다. 관광공사 음식점은 원장이 긴 주기로 갱신할 때만 본다
+TOUR_KINDS = ("activity",)
 
 _DISTRICT = re.compile(r"([가-힣]{1,6}구)")
 
@@ -283,12 +288,10 @@ def load_candidates(conn, *, tenant_id: str, kinds: Sequence[str] = ("activity",
                                        lat=lat, lon=lon, attributes=attributes,
                                        origin="places", weather_sensitive=sensitive,
                                        rank_hint=0)
-        wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds]
-        if any(cand.attributes.get("source") == "dining_ledger" for cand in found.values()):
-            # ★`[2026-09-28]` 식당은 요식 목록이 기준이다(요식 데이터 코어 통합 — 마이그레이션 221·222). 관광공사 목록의
-            #   음식점 1,591곳 중 980곳이 요식과 같은 식당이라, 같이 넣으면 한 식당이 후보에 두 번 나온다.
-            #   요식에서 올린 식당이 있을 때만 뺀다 — 시험 테넌트처럼 요식 식당이 없으면 예전 그대로다
-            wanted_types = [code for code in wanted_types if KIND_BY_CONTENT_TYPE[code] != "dining"]
+        # ★`[2026-10-05]` 식당은 관광공사 목록에서 받지 않는다 — 요식 원장이 식당의 정본이다(`ledger_candidates`, 사용자 결정).
+        #   전에는 요식 원장 식당을 공용 장소로 올려 두고 있을 때만 음식점을 뺐다(같은 식당이 두 번 나오는 것을 막으려고).
+        #   이제 원장 식당은 공용 장소에 안 들어오므로 **종류로** 뺀다.
+        wanted_types = [code for code, kind in KIND_BY_CONTENT_TYPE.items() if kind in kinds and kind in TOUR_KINDS]
         from app.infrastructure.travel.catalog_sync import PlaceCatalogSync
 
         if not PlaceCatalogSync.enabled():
@@ -337,7 +340,7 @@ def fill_from_tour_api(candidates: list[Cand], *, source: Any, area_code: str = 
         for row in body.get("items") or []:
             kind = KIND_BY_CONTENT_TYPE.get(str(row.get("content_type_id") or ""))
             title = str(row.get("title") or "").strip()
-            if kind is None or not title or (title, kind) in known:
+            if kind not in TOUR_KINDS or not title or (title, kind) in known:
                 continue
             if row.get("latitude") is None or row.get("longitude") is None:
                 continue
@@ -358,6 +361,31 @@ def fill_from_tour_api(candidates: list[Cand], *, source: Any, area_code: str = 
 
 
 # ── 선호 반영 · 순위 (규칙) ───────────────────────────────────────
+def ledger_candidates(shops: Iterable[Mapping[str, Any]]) -> list[Cand]:
+    """요식 원장 가게(`dining.ledger.planner_shops`) → 식사 후보. `[2026-10-02]`
+
+    ★열쇠는 원장 가게 ID(`dining_place_uid`)다 — 판정(`with_ledger`)과 등록 뒤 원장 연결이 그 ID 로 간다.
+      관광공사 ID 는 있을 때만 싣는다(없는 가게도 후보다). 좌표가 없으면 뺀다(`load_candidates` 와 같다).
+    ★영업시간은 싣지 않는다 — 원장이 방문 시각으로 판정한다. 구는 주소에서 읽는다(원장에 구 칸이 없다).
+    """
+    out: list[Cand] = []
+    for shop in shops:
+        if shop.get("lat") is None or shop.get("lng") is None:
+            continue
+        attributes: dict[str, Any] = {"source": "dining_ledger", "dining_place_uid": str(shop["place_uid"])}
+        if shop.get("content_id"):
+            attributes["source_content_id"] = str(shop["content_id"])
+        district = _district_of(shop.get("address"))
+        if district:
+            attributes["district"] = district
+        if shop.get("address"):
+            attributes["address"] = shop["address"]
+        out.append(Cand(key=f"dn_{shop['place_uid']}", name=str(shop["name"]), kind="dining",
+                        lat=float(shop["lat"]), lon=float(shop["lng"]), attributes=attributes,
+                        origin="dining_ledger", rank_hint=CONTENT_TYPE_RANK["39"]))
+    return out
+
+
 def _avoided(cand: Cand, pref: Preference) -> bool:
     name = cand.name.lower()
     return any(term.lower() in name for term in pref.avoid)
@@ -933,9 +961,26 @@ def _swap_place(item: dict[str, Any], spares: list[Cand], used: set[str],
     return None
 
 
+def _swap_closed_meal(item: dict[str, Any], spares: list[Cand], used: set[str], places: dict[str, Cand],
+                      ledger: Any) -> Cand | None:
+    """원장이 그 시각에 닫혔다고 한 식사 — 원장이 **연다고 한** 곳이 먼저, 없으면 원장도 모르는 곳. `[2026-10-02]`"""
+    free = [cand for cand in spares if cand.kind == item["kind"] and cand.key not in used]
+    uids = [str(cand.attributes["dining_place_uid"]) for cand in free if cand.attributes.get("dining_place_uid")]
+    states = ledger.open_among(uids, item["starts_at"], item["ends_at"])
+
+    def state(cand: Cand) -> bool | None:
+        uid = cand.attributes.get("dining_place_uid")
+        if uid:
+            return states.get(str(uid))
+        return None if _covers(cand, item) else False   # 원장 밖 식당(공용 장소) — 아는 영업시간으로만 본다
+
+    return (_swap_place(item, free, used, lambda cand: state(cand) is True, places)
+            or _swap_place(item, free, used, lambda cand: state(cand) is None, places))
+
+
 def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: list[Violation],
            *, spares: list[Cand], used: set[str], constraints: Mapping[str, Any],
-           party_size: int) -> list[str]:
+           party_size: int, ledger: Any = None) -> list[str]:
     """위반 하나하나에 **정해진 고침**을 건다. 고친 내역을 돌려준다(빈 목록 = 못 고쳤다)."""
     done: list[str] = []
     by_seq = {item["seq"]: item for item in items}
@@ -988,6 +1033,14 @@ def repair(items: list[dict[str, Any]], places: dict[str, Cand], violations: lis
             if swapped is None:
                 return done
             done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(닫는 시각을 넘었다)")
+        elif code == "dining_closed_at_slot" and ledger is not None and seqs[0] in by_seq:
+            # ★`[2026-10-02]` 원장이 그 시각에 닫혔다고 했다 — 시각을 밀면 다른 칸이 깨진다. 그 시각에 여는 곳으로 바꾼다.
+            #   원장이 닫혔다고 한 곳으로는 바꾸지 않는다. 원장도 모르는 곳은 그날 새벽 확인(dawn_check)이 본다
+            item = by_seq[seqs[0]]
+            swapped = _swap_closed_meal(item, spares, used, places, ledger)
+            if swapped is None:
+                return done
+            done.append(f"{code}({seqs[0]}): {swapped.name} 로 바꿨다(그 시각에 연다 — 요식 원장)")
         elif code == "payment_not_accepted" and seqs[0] in by_seq:
             wanted = str(constraints.get("payment"))
             item = by_seq[seqs[0]]
@@ -1080,8 +1133,10 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
     from .place_hours import read_hours
 
     can_find = hasattr(source, "find")
+    # ★`[2026-10-02]` 식당은 묻지 않는다 — 원장이 판정한다(`_check(ledger=…)`). 관광공사 실시간 조회는 활동만
     todo = [cand for cand in cands
-            if not knows_hours(cand.attributes) and "hours_read" not in cand.attributes
+            if cand.kind in TOUR_KINDS
+            and not knows_hours(cand.attributes) and "hours_read" not in cand.attributes
             and (cand.attributes.get("source_content_id") or (can_find and cand.lat is not None))]
     stats: dict[str, Any] = {"asked": len(todo), "read": 0, "by_rule": 0, "by_model": 0, "unknown": 0,
                              "failed": []}
@@ -1101,7 +1156,7 @@ def enrich_hours(cands: Iterable[Cand], *, source: Any, chat: Any, now: datetime
         matched = None
         if not content_id:
             # ★관광공사 식별자가 없는 장소(공용 장소 행) — **같은 이름 · 같은 종류**로 찾고, 좌표가
-            #   `HOURS_MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
+            #   `place_hours.MATCH_RADIUS_M` 안일 때만 그 식별자로 읽는다(동명이인 — 「경복궁」 울산 음식점, tour_api.py 머리)
             ids, why, meters = find_tour_id(name=cand.name, kind=cand.kind, latitude=cand.lat,
                                             longitude=cand.lon, source=source)
             if ids is None:
@@ -1176,7 +1231,8 @@ def _rate_limited(source: Any) -> int:
 
 def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None, search: Callable[..., Any] | None = None,
-              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = ()) -> PlanOutcome:
+              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = (),
+              ledger: Any | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
     ★`[2026-09-28]` 이 요청 중에 관광공사 조회가 **속도 한도**에 걸렸고 그래서 못 짰으면, 조건 문제처럼 보이는
@@ -1188,7 +1244,7 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
     limited = _rate_limited(tour_api)
     try:
         return _plan_trip(conn=conn, tenant_id=tenant_id, request=request, chat=chat, tour_api=tour_api,
-                          search=search, exclude_names=exclude_names, exclude_sites=exclude_sites)
+                          search=search, exclude_names=exclude_names, exclude_sites=exclude_sites, ledger=ledger)
     except PlanRefused as refused:
         if _rate_limited(tour_api) <= limited:
             raise
@@ -1201,7 +1257,8 @@ def plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = 
 def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None = None,
               tour_api: Any | None = None,
               search: Callable[..., Any] | None = None,
-              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = ()) -> PlanOutcome:
+              exclude_names: Iterable[str] = (), exclude_sites: Iterable[Mapping[str, Any]] = (),
+              ledger: Any | None = None) -> PlanOutcome:
     """요청 → 판정을 통과한 초안. 못 내면 `PlanRefused`.
 
     `exclude_names` — 후보에서 뺄 장소 이름(고객이 이미 정한 일정의 장소 — 같은 곳을 두 번 넣지 않게, `plan_around`).
@@ -1209,6 +1266,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
       (`itinerary_changes.same_site` — 같은 주소 · 30m 안 · 이름 첫 낱말이 같고 1.5km 안)인 활동 후보를 뺀다.
       ☆`[2026-10-01 사용자 지적]` 고객이 쓴 「경복궁 건청궁」을 고정하고 짰더니 생성기가 「경복궁」을 따로 넣어 같은 곳이 두 이름으로
         두 번 나왔다 — 이름이 정확히 같은 것만 뺐기 때문이다(`exclude_names`).
+    `ledger` — 요식 원장(`dining.ledger.PlannerLedger`). 식사 후보를 원장에서 받고 원장으로 판정 · 고친다. `[2026-10-02]`
+      없으면 원장 식당 없이 짠다(공용 장소의 식당만 — 시나리오 모드가 그렇다). ★식당은 어느 쪽이든 관광공사에서 받지 않는다(`TOUR_KINDS`).
     """
     request.validate()
     # ★`[2026-09-24]` 설문(`constraints.survey`)을 **등록과 같은 함수로** 먼저 적용한다 — 16번 여유가
@@ -1235,8 +1294,20 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
 
     pool = load_candidates(conn, tenant_id=tenant_id)
     if tour_api is not None and not any(cand.origin != "places" for cand in pool):
-        # ★카탈로그가 비었을 때만 바깥에 나간다. 하루 한도가 있다.
+        # ★카탈로그가 비었을 때만 바깥에 나간다. 하루 한도가 있다. ★식당은 받지 않는다(`TOUR_KINDS`)
         pool, calls["tour_api"] = fill_from_tour_api(pool, source=tour_api)
+    ledger_note: dict[str, Any] | None = None
+    if ledger is not None:
+        # ★`[2026-10-02]` 식사 후보는 요식 원장에서 — 공용 장소에 같은 이름의 식당이 있으면 그것이 이긴다(아는 값이 많다)
+        shops = list(ledger.shops())
+        if not shops:
+            # ★`[2026-10-05]` 원장을 못 읽었거나 비었다 — 식사 후보가 공용 장소뿐이 된다. 조용히 넘기지 않고 흔적을 남긴다
+            #   (`PlannerLedger.shops` 는 읽기에 실패해도 빈 목록을 돌려준다 — 이유는 거기서 구분되지 않는다)
+            logger.warning("planner dining ledger returned no shops tenant=%s", tenant_id)
+        taken = {(cand.name, cand.kind) for cand in pool}
+        pool += [cand for cand in ledger_candidates(shops) if (cand.name, cand.kind) not in taken]
+        ledger_note = {"shops": len(shops),
+                       **({} if shops else {"note": "요식 원장 식당을 못 읽었거나 비어 있어 공용 장소의 식당만으로 짰다"})}
     skip = {_bare_name(name) for name in exclude_names}
     if skip:
         pool = [cand for cand in pool if _bare_name(cand.name) not in skip]
@@ -1339,11 +1410,11 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     # ★`[2026-09-28]` 판정 전에 고른 장소의 영업시간을 관광공사 원문에서 채운다 — 판정기가 실제로 그 칸을 보게
     now = datetime.now(KST)
     hours_stats = enrich_hours(chosen.values(), source=tour_api, chat=chat, now=now)
-    violations = _check(items, chosen, request)
+    violations = _check(items, chosen, request, ledger=ledger)
     while violations and rounds < MAX_REPAIR_ROUNDS:
         rounds += 1
         applied = repair(items, chosen, violations, spares=spares, used=used,
-                         constraints=request.constraints, party_size=request.party_size)
+                         constraints=request.constraints, party_size=request.party_size, ledger=ledger)
         for cand in spares:
             if cand.key in used:
                 chosen.setdefault(cand.key, cand)
@@ -1356,7 +1427,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
         for key in ("asked", "read", "by_rule", "by_model", "unknown"):
             hours_stats[key] += more[key]
         hours_stats["failed"] += more["failed"]
-        violations = _check(items, chosen, request)
+        violations = _check(items, chosen, request, ledger=ledger)
     if violations:
         raise PlanRefused(
             "plan_infeasible",
@@ -1373,7 +1444,7 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
     items, routes, moved = add_moves(items, chosen,
                                      engine=leg_planner(request.party_size, dict(request.constraints)))
     fixed += moved
-    violations = _check(items, chosen, request, routes)
+    violations = _check(items, chosen, request, routes, ledger=ledger)
     if violations:
         raise PlanRefused(
             "plan_infeasible",
@@ -1409,6 +1480,8 @@ def _plan_trip(*, conn, tenant_id: str, request: PlanRequest, chat: Any | None =
                  "preference": pref.as_dict(),
                  # ★영업시간 — 관광공사 원문에서 몇 곳을 읽었나(규칙 · 모델), 못 읽은 곳은 모름 그대로(새벽 확인이 본다)
                  "hours": hours_stats,
+                 # ★`[2026-10-05]` 요식 원장에서 받은 식당 수(원장을 쓰지 않은 요청에는 이 칸이 없다) — 0 이면 못 읽은 것이다
+                 **({"dining_ledger": ledger_note} if ledger_note is not None else {}),
                  # ★아침 식사 — 날마다 무엇을 넣었고 영업시간을 아는지(모르면 그날 새벽 확인이 본다)
                  "breakfast": {"wanted": want_breakfast, "days": breakfasts},
                  # ★설문 16번 → 밀도 목표 → 하루 활동 수. 목표가 없으면 기본 수로 짰다고 적는다
@@ -1577,18 +1650,23 @@ def _count_by(candidates: Iterable[Cand], attribute: str) -> dict[str, int]:
 
 
 def _check(items: list[dict[str, Any]], places: dict[str, Cand],
-           request: PlanRequest, routes: Mapping[str, Any] | None = None) -> list[Violation]:
-    """★**등록이 쓰는 것과 같은 판정기다.** 여기에 따로 만든 판정은 없다."""
-    return check_itinerary(
-        [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
-              starts_at=item["starts_at"], ends_at=item["ends_at"],
-              place=places[item["place"]].for_check() if item.get("place") else None,
-              route=(routes or {}).get(str(item.get("route"))) if item.get("route") else None,
-              detail=item["detail"])
-         for item in items],
-        constraints=request.constraints, party_size=request.party_size)
+           request: PlanRequest, routes: Mapping[str, Any] | None = None, *, ledger: Any = None) -> list[Violation]:
+    """★**등록이 쓰는 것과 같은 판정기다.** 여기에 따로 만든 판정은 없다.
+
+    ★`[2026-10-02]` 원장이 있으면 식사에 원장의 그 시각 판정을 붙인다(`with_ledger`) — 등록(`_create_trip`)도 같다.
+    """
+    parts = [Part(seq=item["seq"], kind=item["kind"], title=item["title"],
+                  starts_at=item["starts_at"], ends_at=item["ends_at"],
+                  place=places[item["place"]].for_check() if item.get("place") else None,
+                  route=(routes or {}).get(str(item.get("route"))) if item.get("route") else None,
+                  detail=item["detail"])
+             for item in items]
+    if ledger is not None:
+        parts = with_ledger(parts, ledger.verdicts)
+    return check_itinerary(parts, constraints=request.constraints, party_size=request.party_size)
 
 
 __all__ = ["Cand", "PlanDraft", "PlanOutcome", "PlanRefused", "PlanRequest", "Preference",
-           "add_moves", "build_day", "density_target", "fit_day", "ground_request", "grounding_text", "load_candidates",
+           "add_moves", "build_day", "density_target", "fit_day", "ground_request", "grounding_text",
+           "ledger_candidates", "load_candidates",
            "order_with_model", "plan_trip", "preference_profile", "rank_candidates", "repair"]

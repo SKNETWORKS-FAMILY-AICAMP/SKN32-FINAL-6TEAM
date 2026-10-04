@@ -274,26 +274,4 @@ class _TxConn(FakeConn):
         return self._tx
 
 
-def test_새_여행_식당을_잇는다():
-    conn = _TxConn({"ready": True})
-    conn.cursor_obj.fetchall = lambda: [("linked", 3), ("ambiguous", 0)]
-    orig = conn.cursor_obj.execute
-    conn.cursor_obj.execute = lambda sql, params=None: None if "link_trip_places" in sql else orig(sql, params)
-    assert ledger.link_trip(conn, "demo", "t1") == {"linked": 3, "ambiguous": 0}
-
-
-def test_잇기가_터져도_여행_등록을_막지_않는다():
-    conn = _TxConn({"ready": True})
-    orig = conn.cursor_obj.execute
-
-    def execute(sql, params=None):
-        if "link_trip_places" in sql:
-            raise RuntimeError("잠금 충돌")
-        return orig(sql, params)
-    conn.cursor_obj.execute = execute
-    assert ledger.link_trip(conn, "demo", "t1") is None
-    assert conn.rolled_back is True                      # 세이브포인트만 되돌렸다
-
-
-def test_요식_표가_없으면_잇지_않는다():
-    assert ledger.link_trip(_TxConn({"ready": False}), "demo", "t1") is None
+# `link_trip`(여행 등록 직후 원장과 잇기) 시험 셋은 지웠다 `[2026-10-05]` — 그 함수와 공용 장소 승격 경로를 걷고 판정 시점에 잇는 팀 방식(`resolve_place`)을 쓴다

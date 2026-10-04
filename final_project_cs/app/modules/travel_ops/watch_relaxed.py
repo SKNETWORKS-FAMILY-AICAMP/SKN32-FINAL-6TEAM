@@ -42,12 +42,12 @@ def enabled() -> bool:
     return bool(settings_module.get_guardrails().get("travel.watch.relaxed_enabled"))   # ★호출 때 읽는다 — 시험이 바꿔 끼운 값을 따른다
 
 
-def default_ledger(connect: Callable[[], Any], tenant_id: str) -> Any:
-    """식사 후보를 요식 원장에서 — 감시 · 신고 창구가 쓰는 것과 같다(`trip_desk.TripDesk._ledger`)."""
-    from .dining.ledger import DbLedgerView
-    from .replan import ORDER_MARGIN_MIN
+def ledger_states(conn, tenant_id: str) -> Callable[[list[dict[str, Any]]], Any]:
+    """식사 후보의 시간대별 원장 판정 — 감시 · 신고 창구가 쓰는 것과 같다(`trip_desk.TripDesk._dining_states`).
+    ★`[2026-10-05]` 전에는 원장 가게를 공용 장소로 올려 두고 `DbLedgerView` 로 물었다 — 요식 정본을 하나로 하려고 팀 방식(`dining_states`)을 쓴다."""
+    from .dining.ledger import dining_states
 
-    return DbLedgerView(connect, tenant_id, ORDER_MARGIN_MIN)
+    return lambda slots: dining_states(conn, tenant_id, slots)
 
 
 def verified_options(*, trip: dict[str, Any], items: list[Item], places: list[dict[str, Any]], current: Item,
@@ -92,7 +92,7 @@ def relaxed_text(*, item: Item, causes: list[dict[str, Any]], options: list[dict
 
 
 def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: list[dict[str, Any]],
-                  check: Callable[..., dict[str, Any]] | None = None, ledger: Any | None = None,
+                  check: Callable[..., dict[str, Any]] | None = None, use_ledger: bool = True,
                   recheck_failed: bool = False, now: datetime | None = None) -> dict[str, Any] | None:
     """조건을 푼 안을 **보류 제안**으로 묻는다(부르는 쪽이 `conn` 의 트랜잭션을 연다).
 
@@ -117,7 +117,19 @@ def offer_relaxed(conn, *, store: Any, trip_id: UUID, item_id: UUID, causes: lis
     candidates = unused_places(all_places, items, current)             # 같은 여행에 이미 있는 곳은 후보가 아니다
     if current.kind == "activity":
         candidates = other_sites(candidates, current.place, items)     # 같은 곳(경복궁 ↔ 건청궁)도 아니다
-    options = relaxed_options(trip=trip, items=items, places=candidates, current=current, ledger=ledger, causes=causes)
+    state_lookup = None
+    if current.kind == "dining" and use_ledger:
+        # ★`[2026-10-05]` 식사는 근처 원장 가게를 그 여행 전용으로 들여놓고(`dining.nearby`) 원장 판정으로 후보를 계산한다 —
+        #   고객 요청 길(`TripDesk`)과 같다. 들이지 못하면 예전 목록 그대로(`add_nearby` 가 경고 로그를 남긴다)
+        from .dining import nearby
+
+        more = nearby.add_nearby(conn, store, trip_id, [current], all_places)
+        if more is not all_places:
+            all_places = more
+            candidates = unused_places(all_places, items, current)
+        state_lookup = ledger_states(conn, store.tenant_id)
+    options = relaxed_options(trip=trip, items=items, places=candidates, current=current, state_lookup=state_lookup,
+                              causes=causes)
     options = verified_options(trip=trip, items=items, places=all_places, current=current, options=options, check=check)
     if not options:
         return None
@@ -142,10 +154,10 @@ def try_offer(connect: Callable[[], Any], *, store: Any, trip_id: UUID, item_id:
     try:
         with connect() as conn, conn.transaction():
             return offer_relaxed(conn, store=store, trip_id=trip_id, item_id=item_id, causes=causes, check=check,
-                                 ledger=default_ledger(connect, store.tenant_id), recheck_failed=recheck_failed)
+                                 recheck_failed=recheck_failed)
     except Exception:                                  # noqa: BLE001
         logger.exception("watch relaxed offer failed trip=%s item=%s", trip_id, item_id)
         return None
 
 
-__all__ = ["REASON", "default_ledger", "enabled", "offer_relaxed", "relaxed_text", "try_offer", "verified_options"]
+__all__ = ["REASON", "ledger_states", "enabled", "offer_relaxed", "relaxed_text", "try_offer", "verified_options"]
