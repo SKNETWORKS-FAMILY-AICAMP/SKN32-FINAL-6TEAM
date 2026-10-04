@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge, Button } from "@/components/ui";
 import { seoul } from "@/lib/live/gateway";
 import { LiveError } from "@/lib/live/client";
+import { planDownloadUrl } from "@/lib/live/plan-download";
 import { chooseProposal, undoChange, type Notice } from "@/lib/live/extras";
 import { useSettings, useT } from "@/lib/settings";
 import { openChoices, recentNotices, undoableChange } from "./attention";
@@ -64,7 +65,9 @@ export function TripAttention({ trip }: { trip: Trip }) {
   const history = trip.history ?? [];
 
   return <div className={styles.wrap}>
-    {trip.planUrl && <p className={styles.plan}><a href={trip.planUrl} target="_blank" rel="noopener noreferrer">{t("여행계획서 열기", "Open your trip plan")}</a><span>{t("로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.", "This link opens without logging in. Anyone who has it can view your plan.")}</span></p>}
+    {trip.planUrl && <p className={styles.plan}><a href={trip.planUrl} target="_blank" rel="noopener noreferrer">{t("여행계획서 열기", "Open your trip plan")}</a>
+      {/* `[2026-10-04 사용자 지시]` 같은 주소에 download=1 — 서버가 파일(triPilot-<제목>.html, 혼자 열리는 HTML)로 내려준다. 게스트는 창을 닫으면 이어 볼 수 없으니 이것이 보관 수단이다. */}
+      {planDownloadUrl(trip.planUrl) && <> · <a href={planDownloadUrl(trip.planUrl) ?? undefined} data-plan-download>{t("계획서 내려받기", "Download the plan")}</a></>}<span>{t("로그인 없이 열리는 내 여행 링크예요. 링크를 아는 사람은 누구나 볼 수 있어요.", "This link opens without logging in. Anyone who has it can view your plan.")}</span></p>}
     {readError && <div className={styles.error} role="alert">{t("선택과 알림을 읽지 못했어요 — ", "Could not read your choices and notices — ")}{readError instanceof Error ? readError.message : String(readError)}</div>}
 
     {undoable && <section className={`${styles.card} ${styles.ask}`} aria-labelledby="trip-undo">

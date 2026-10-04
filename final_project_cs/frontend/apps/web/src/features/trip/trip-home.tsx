@@ -16,6 +16,7 @@ import { useSettings, useT } from "@/lib/settings";
 import { LinkedText } from "./linked-text";
 import { TripAttention } from "./trip-attention";
 import { tripKey, useTrip } from "./use-trip";
+import { useRouteShapes } from "./use-route-shapes";
 import { noticesKey, proposalsKey } from "./use-trip-extras";
 import type { Trip, TripMessage, TripStop } from "./model";
 import styles from "./trip-home.module.css";
@@ -66,6 +67,9 @@ function TripWorkspace({ trip }: { trip: Trip }) {
   const t = useT();
   const { language, navigation } = useSettings();
   const queryClient = useQueryClient();
+  // `[2026-10-04]` The lines between the stops, asked once the trip is open (and again when the plan changes). They never hold the page up: the first
+  //   call after the server restarted can wait several seconds while it loads its road data, and the pins are already there.
+  const routeShapes = useRouteShapes(trip.id, trip.version);
   const days = [...new Set(trip.stops.map((stop) => stop.date))].sort();
   const [day, setDay] = useState(days[0]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -269,7 +273,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     </section>
     <section className={`${styles.pane} ${styles.mapPane}`} id="trip-pane-map" hidden={pane !== "map"} aria-labelledby="trip-map-heading">
       <header className={styles.panehead}><h2 id="trip-map-heading">{t("지도", "Map")}</h2><span className={styles.muted}>{dayText}</span></header>
-      <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} />
+      <TripMap stops={stops} selectedId={selected?.id} dayNumber={dayIndex + 1} onSelect={(stopId) => setSelectedId(stopId)} routes={routeShapes.data}
+        routesError={routeShapes.isError ? t("경로선을 불러오지 못했어요. 장소 핀은 그대로 보여 드려요.", "Could not load the route lines. The pins are still shown.") : undefined} />
       {(trip.dayRoutes?.[activeDay] ?? []).length > 0 && <div className={styles.detailActions}>{(trip.dayRoutes?.[activeDay] ?? []).map((url, index, all) =>
         <ButtonLink key={url} href={url} target="_blank" rel="noopener noreferrer"><Navigation {...icon} />{all.length > 1
           ? t(`하루 경로 지도 앱으로 열기 ${index + 1}/${all.length}`, `Open day route in maps app ${index + 1}/${all.length}`)

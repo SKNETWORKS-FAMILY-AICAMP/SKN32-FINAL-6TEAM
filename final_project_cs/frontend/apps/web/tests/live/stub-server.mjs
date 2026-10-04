@@ -1,4 +1,4 @@
-// 테스트용 목 서버(mock server) — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
+// 테스트용 mock 서버 — ★실제 서버가 아니다. triPilot 서버의 웹 API(`/v1/web/*`) 모양만 흉내 내어 화면 자동 시험에만 쓴다.
 // 실제 앱(개발 서버 3100 · 배포)은 이 파일을 쓰지 않는다. 실제 서버 확인은 `tests/real/` 이 한다.
 //
 // ★Why a test mock server: registering on the real server sends a notice to the team's chat channel and leaves data behind.
@@ -35,6 +35,7 @@ const DEFAULTS = {
   // answer to choosing a proposal: "ok" | "conflict"
   choose: "ok",
   // chat: "answered" (server gives an answer) | "escalated_bare" (an old server: escalated with no answer)
+  //   | "summary" (a 「요약」 question gets the day's stops as the real server writes them — for the pictures of `scripts/guide-shots.mjs`)
   chat: "answered",
   // intake once read: "items" (has stops, ready) | "empty_plan" (nothing read, the customer asks us to plan)
   //   | "blocked" (has a stop whose place the server could not settle: not ready, one problem)
@@ -77,6 +78,11 @@ const DEFAULTS = {
   planDelay: 0,
   // a sentence when the server refuses to plan (422 `plan_refused`, before any stream opens); "" = it plans
   planRefusal: "",
+  // `[2026-10-04]` the lines between stops (`GET /v1/web/trips/{id}/route-shapes`, mobility session): "off" = an older server (FastAPI 404 `{detail}`)
+  //   | "on" (two shapes on day 1: a walk on a road graph, drawn solid; a bus joined by a straight line with no ground, drawn dashed) | "fail" (500) | "slow" ("on" after 3 s).
+  routeShapes: "off",
+  // `[2026-10-04]` agent keys (`/v1/web/agent-keys*`, server D-CS-012): "on" | "off" (an older server: FastAPI 404 `{detail}`) | "limit" (making one answers 409 agent_key_limit)
+  agentKeys: "on",
   // the "this trip changed" bell (`GET /v1/web/trips/{id}/events`): "off" = an older server without it (404) | "on"
   bell: "off",
   // the customer's contact details (`GET/PUT /v1/web/profile`): "on" | "off" = an older server without it (404) | "reject" = refuses a save (422)
@@ -122,6 +128,8 @@ let confirmed;
 let keys;
 /** Session cookies this server made (`sid` → {sid, csrf, member}); `known-session` always exists (the browser of a returning visitor). */
 let webSessions;
+/** The agent keys this server made (`GET /v1/web/agent-keys` lists them without the key itself). */
+let agentKeyRows;
 /** Sessions that were signed out or ended by a sign-in. */
 let ended;
 /** The recovery email the server holds (`PUT /v1/web/profile`). */
@@ -161,6 +169,7 @@ function reset() {
   board = freshBoard(scenario.board);
   keys = new Set(["acop_u_known"]);
   webSessions = new Map();
+  agentKeyRows = [];
   ended = new Set();
   recoveryEmail = null;
   tripTitle = "내 여행";
@@ -474,7 +483,13 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     return json(response, 200, { rang: bells.size }, origin);
   }
   if (path === "/__test/hangup") { const closed = bells.size; bells.forEach((stream) => stream.end()); bells.clear(); return json(response, 200, { closed }, origin); }
-  if (path.startsWith("/plan/")) { response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }); response.end("<h1>여행계획서(스텁)</h1>"); return; }
+  if (path.startsWith("/plan/")) {
+    // `download=1` → the same page sent as a file (the server writes `Content-Disposition: attachment; filename*=UTF-8''triPilot-<제목>.html`)
+    const file = url.searchParams.get("download") === "1" ? { "Content-Disposition": "attachment; filename*=UTF-8''triPilot-" + encodeURIComponent("내 여행") + ".html" } : {};
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", ...file });
+    response.end("<h1>여행계획서(스텁)</h1>");
+    return;
+  }
   // The free map's tiles in the test build (`serve.mjs` points `NEXT_PUBLIC_OSM_TILE_URL` here): a one-pixel image, so the real map code runs
   // without any test reaching OpenStreetMap. Not logged — a map draws dozens of them.
   if (path.startsWith("/__test/tile/")) { response.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "max-age=3600" }); response.end(TILE_PNG); return; }
@@ -569,6 +584,31 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
     if (auth.session) ended.add(auth.session.sid);
     return json(response, 200, { status: "signed_out" }, origin, { "Set-Cookie": `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0` });
   }
+  if (path === "/v1/web/agent-keys" || path.startsWith("/v1/web/agent-keys/")) {
+    if (scenario.agentKeys === "off") return json(response, 404, { detail: "Not Found" }, origin);
+    if (!auth.session) return refuse(403, "cookie_required", "에이전트 키는 브라우저(쿠키)로만 만들어요");
+    if (kindOf(auth.session) !== "member") return json(response, 403, { error: { code: "member_only", message: "로그인한 사용자만 쓸 수 있어요", login_required: true } }, origin);
+    const rowOf = (row) => ({ key_id: row.key_id, name: row.name, scope: row.scope, created_at: row.created_at, expires_at: row.expires_at, last_used_at: row.last_used_at, status: row.status });
+    if (path === "/v1/web/agent-keys" && request.method === "GET") return json(response, 200, { keys: agentKeyRows.map(rowOf) }, origin);
+    if (path === "/v1/web/agent-keys" && request.method === "POST") {
+      const body = JSON.parse(raw || "{}");
+      const days = body.expires_days ?? 90;
+      if (scenario.agentKeys === "limit") return json(response, 409, { error: { code: "agent_key_limit", message: "사용 중인 에이전트 키가 10개예요 — 쓰지 않는 키를 폐기해 주세요" } }, origin);
+      if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 60 || !["read", "write"].includes(body.scope) || !Number.isInteger(days) || days < 1 || days > 90) {
+        return json(response, 422, { error: { code: "invalid_agent_key", message: "이름은 1~60자, 권한은 read|write, 유효 기간은 1~90일이에요" } }, origin);
+      }
+      const made = { key_id: `k-${agentKeyRows.length + 1}`, name: body.name.trim(), scope: body.scope, created_at: at(10), expires_at: at(10, 0, 2), last_used_at: null, status: "active" };
+      agentKeyRows.push(made);
+      return json(response, 201, { ...rowOf(made), key: `acop_a_stub_${agentKeyRows.length}_0123456789abcdef`, notice: "이 키는 지금 한 번만 보여요. 안전한 곳에 따로 보관해 주세요." }, origin);
+    }
+    const revokePath = /^\/v1\/web\/agent-keys\/([^/]+)$/.exec(path);
+    if (revokePath && request.method === "DELETE") {
+      const row = agentKeyRows.find((entry) => entry.key_id === revokePath[1]);
+      if (!row) return json(response, 404, { error: { code: "not_found", message: "resource not found" } }, origin);
+      row.status = "revoked";
+      return json(response, 200, { key_id: row.key_id, status: "revoked" }, origin);
+    }
+  }
   if (path === "/v1/web/auth/links" && request.method === "GET") return json(response, 200, { links: socialLinks.map((provider) => ({ provider, linked_at: "2026-10-03T10:00:00+09:00" })) }, origin);
   const unlinkMatch = /^\/v1\/web\/auth\/(\w+)$/.exec(path);
   if (unlinkMatch && request.method === "DELETE") {
@@ -623,6 +663,17 @@ data: ${JSON.stringify({ trip_id: TRIP_ID, kinds: kinds ?? ["itinerary", "notice
   }
   // ★Delete a trip — the contract asked for in `wiki/records/plans/2026-10-03_*_웹_실서버_전환_백엔드_요청.md`. With `tripDelete: "unsupported"` this
   //   route does not exist, which falls through to the 404 below exactly as the real server answers a route it does not have.
+  const shapesPath = /^\/v1\/web\/trips\/([^/]+)\/route-shapes$/.exec(path);
+  if (shapesPath && request.method === "GET" && scenario.routeShapes !== "off") {
+    if (scenario.routeShapes === "fail") return json(response, 500, { error: { code: "internal_error", message: "서버 오류" } }, origin);
+    if (scenario.routeShapes === "slow") await wait(3000);
+    return json(response, 200, { trip_id: shapesPath[1], attribution: "경로선: 지도 데이터 © OpenStreetMap contributors (ODbL)", shapes: [
+      { item_id: "i-m", from_item_id: "i-b", to_item_id: "i-c", from: "경복궁", to: "점심 식당", mode: "walk",
+        line: { type: "LineString", coordinates: [[126.977, 37.5796], [126.983, 37.575], [126.99, 37.57]] }, source: "local_road_graph", grade: "추정", distance_m: 1250, note: null },
+      { item_id: "i-m0", from_item_id: "i-a", to_item_id: "i-b", from: "아침 식당", to: "경복궁", mode: "bus",
+        line: { type: "LineString", coordinates: [[126.98, 37.575], [126.977, 37.5796]] }, source: "straight_line", grade: "근거없음", distance_m: 640, note: "정류장 정보가 없어 직선으로 이었어요" },
+    ] }, origin);
+  }
   const deletePath = /^\/v1\/web\/trips\/([^/]+)\/delete$/.exec(path);
   if (deletePath && request.method === "POST" && scenario.tripDelete !== "unsupported") {
     const id = deletePath[1];
@@ -798,7 +849,9 @@ function chatReply(body) {
   // a question about where the customer is now: the real server's decision unit says so with `needs_location`
   //   (this test mock server only looks for 「여기서」). With a position it answers from there.
   const here = String(body.message).includes("여기서");
-  const answer = here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
+  const summary = scenario.chat === "summary" && /요약|Summarize/i.test(String(body.message));
+  const answer = summary ? ["2026-10-01", "1. 08:00 · 아침 식당", "2. 09:30 · 경복궁 관람", "3. 12:00 · 점심 식당"].join("\n")
+    : here && body.location ? `지금 계신 곳(${body.location.lat}, ${body.location.lng})에서 도보 12분이에요.`
     : here ? "현재 위치를 알려 주시면 지금 계신 곳에서 가는 길을 알려 드릴게요." : `서버 답: ${body.message}`;
   tripFailures = scenario.rereadFails;
   // the server records both sides; the answer's time can be a moment before the screen receives it (real server)

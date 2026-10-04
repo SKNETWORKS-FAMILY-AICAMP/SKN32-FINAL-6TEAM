@@ -1,4 +1,5 @@
-import type { MapAdapter, MapPoint } from "../model";
+import type { MapAdapter, MapLine, MapPoint } from "../model";
+import { lineStyle, linesKey } from "./lines";
 import { createPin, geometryKey, pointLabel, setPinSelected } from "./pin";
 import { createSdkLoader } from "./sdk-loader";
 
@@ -14,10 +15,17 @@ interface NaverMap {
   destroy(): void;
 }
 interface NaverMarker { setMap(map: NaverMap | null): void; setZIndex(zIndex: number): void }
+interface NaverPolyline { setMap(map: NaverMap | null): void }
+interface NaverPolylineOptions {
+  map: NaverMap; path: NaverLatLng[]; strokeColor: string; strokeOpacity: number; strokeWeight: number;
+  strokeStyle: "solid" | "shortdash"; strokeLineCap: "round"; strokeLineJoin: "round"; clickable: boolean;
+}
 interface NaverListener { eventName: string }
 interface NaverSdk {
   Map: new (container: HTMLElement, options: { center: NaverLatLng; zoom: number; minZoom: number; maxZoom: number; zoomControl: boolean }) => NaverMap;
   LatLng: new (lat: number, lng: number) => NaverLatLng;
+  /** Optional: a build of the SDK without lines still shows the pins. */
+  Polyline?: new (options: NaverPolylineOptions) => NaverPolyline;
   Size: new (width: number, height: number) => NaverSize;
   Marker: new (options: {
     map: NaverMap; position: NaverLatLng; title: string;
@@ -53,6 +61,8 @@ export function createNaverAdapter(clientId: string): MapAdapter {
       let selectedId: string | undefined;
       let needsFit = false;
       let markers: { id: string; marker: NaverMarker; pin: HTMLElement; listener: NaverListener; onKey: (event: KeyboardEvent) => void }[] = [];
+      let routes: NaverPolyline[] = [];
+      let previousLines = "";
       const unwatch = loader.watchAuthFailure(options.onError);
 
       function clearMarkers() {
@@ -76,8 +86,30 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         }
       }
 
-      function update(nextPoints: MapPoint[], nextSelectedId?: string) {
+      function clearLines() {
+        routes.forEach((route) => route.setMap(null));
+        routes = [];
+      }
+
+      function drawLines(nextLines: MapLine[]) {
+        const key = linesKey(nextLines);
+        if (key === previousLines) return;
+        previousLines = key;
+        clearLines();
+        const Polyline = sdk.Polyline;
+        if (!Polyline) return;
+        routes = nextLines.map((line) => {
+          const style = lineStyle(container, line);
+          return new Polyline({
+            map, path: line.points.map(({ lat, lng }) => new sdk.LatLng(lat, lng)), strokeColor: style.color, strokeOpacity: style.opacity, strokeWeight: style.weight,
+            strokeStyle: style.dash ? "shortdash" : "solid", strokeLineCap: "round", strokeLineJoin: "round", clickable: false,
+          });
+        });
+      }
+
+      function update(nextPoints: MapPoint[], nextSelectedId?: string, nextLines: MapLine[] = []) {
         if (destroyed) return;
+        drawLines(nextLines);
         const data = JSON.stringify(nextPoints);
         const geometry = geometryKey(nextPoints);
         const changed = geometry !== previousGeometry;
@@ -123,8 +155,8 @@ export function createNaverAdapter(clientId: string): MapAdapter {
         selectedId = nextSelectedId;
       }
 
-      try { update(options.points, options.selectedId); }
-      catch (error) { clearMarkers(); unwatch(); map.destroy(); throw error; }
+      try { update(options.points, options.selectedId, options.lines); }
+      catch (error) { clearMarkers(); clearLines(); unwatch(); map.destroy(); throw error; }
 
       return {
         update,
@@ -139,6 +171,7 @@ export function createNaverAdapter(clientId: string): MapAdapter {
           if (destroyed) return;
           destroyed = true;
           clearMarkers();
+          clearLines();
           unwatch();
           map.destroy();
         },

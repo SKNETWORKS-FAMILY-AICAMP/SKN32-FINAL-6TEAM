@@ -50,9 +50,10 @@ export function SessionCard({ profile }: { profile: Profile }) {
       <div className={styles.actions}><Button disabled={busy} onClick={() => void signOut()}>{t("로그아웃", "Sign out")}</Button></div>
     </>;
     return <>
+      {/* `[2026-10-04 사용자 지시 · 서버]` 게스트 쿠키는 브라우저 세션 쿠키다(Max-Age 없음) — 창을 닫으면 이어 쓸 수 없고, 서버의 자료는 N시간 뒤 지워진다. */}
       <p className={styles.explain}>{session.guestIdleHours
-        ? t(`게스트로 쓰고 있어요. 이 기기에서 ${idleText(session.guestIdleHours, t)} 동안 쓰지 않으면 여행과 함께 사라져요.`, `You are using triPilot as a guest. If this device is not used for ${idleText(session.guestIdleHours, t)}, your trips go away with it.`)
-        : t("게스트로 쓰고 있어요. 한동안 쓰지 않으면 여행과 함께 사라져요.", "You are using triPilot as a guest. After a while without use, your trips go away with it.")}</p>
+        ? t(`게스트로 쓰고 있어요. 창을 닫으면 이어 쓸 수 없고, 서버에 있는 자료는 ${idleText(session.guestIdleHours, t)} 뒤에 지워져요. 여행계획서를 내려받아 두세요.`, `You are using triPilot as a guest. If you close this window you cannot continue it, and the data on the server is deleted after ${idleText(session.guestIdleHours, t)}. Download your trip plan to keep it.`)
+        : t("게스트로 쓰고 있어요. 창을 닫으면 이어 쓸 수 없고, 서버에 있는 자료도 얼마 뒤 지워져요. 여행계획서를 내려받아 두세요.", "You are using triPilot as a guest. If you close this window you cannot continue it, and the data on the server is deleted after a while. Download your trip plan to keep it.")}</p>
       <p className={styles.explain}>{t("게스트는 여행을 1개까지, 오늘부터 1년 안에 시작해 7일 이내로 만들 수 있어요. 일정 알림도 받지 않아요. 아래에서 계정을 연결하면 이 제한이 없어지고 여행이 보관돼요.", "A guest can make one trip, starting within a year and lasting up to seven days, and gets no schedule alerts. Link an account below to lift these limits and keep your trips.")}</p>
     </>;
   };

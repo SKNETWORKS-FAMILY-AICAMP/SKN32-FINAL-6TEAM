@@ -10,6 +10,8 @@ export interface MapSdkSnapshot {
   pans: Position[];
   resizes: number;
   markers: { title: string; position: Position; attached: boolean }[];
+  /** Route lines the page drew: the path in order, whether it is dashed, and whether it is still on the map. */
+  lines: { path: Position[]; dashed: boolean; attached: boolean }[];
 }
 
 declare global {
@@ -21,7 +23,7 @@ declare global {
 
 /** SDK contract doubles only: these tests do not claim real provider authentication or tiles. */
 function installSdkDouble(provider: TestMapProvider) {
-  const state: MapSdkSnapshot = { provider, maps: 0, fits: [], pans: [], resizes: 0, markers: [] };
+  const state: MapSdkSnapshot = { provider, maps: 0, fits: [], pans: [], resizes: 0, markers: [], lines: [] };
   window.__mapSdkDouble = state;
   type LatLngLike = Position | LatLng;
 
@@ -158,9 +160,19 @@ function installSdkDouble(provider: TestMapProvider) {
     }
   }
 
+  /** Both providers draw a line the same way for this test: a path, a map to be on, and a dash (naver `strokeStyle`, google an icon repeated along it). */
+  class Polyline {
+    private record: MapSdkSnapshot["lines"][number];
+    constructor(options: { map?: SdkMap; path: LatLngLike[]; strokeStyle?: string; icons?: unknown[]; strokeOpacity?: number }) {
+      this.record = { path: options.path.map(position), dashed: options.strokeStyle === "shortdash" || Boolean(options.icons?.length), attached: Boolean(options.map) };
+      state.lines.push(this.record);
+    }
+    setMap(map: SdkMap | null) { this.record.attached = Boolean(map); }
+  }
+
   class Point { constructor(public x: number, public y: number) {} }
   class Size { constructor(public width: number, public height: number) {} }
-  const common = { Map: SdkMap, LatLng, LatLngBounds };
+  const common = { Map: SdkMap, LatLng, LatLngBounds, Polyline };
   const globals = window as unknown as Record<string, unknown>;
   if (provider === "naver") globals.naver = { maps: { ...common, Marker, Point, Size, Event: events } };
   else {

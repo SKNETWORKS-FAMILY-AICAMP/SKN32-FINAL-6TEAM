@@ -246,7 +246,8 @@ test("주요 화면을 여는 동안 브라우저 콘솔에 오류가 하나도 
   const server = mockServer(request);
   // bell "on": the server this screen is built for has the change bell. An older server answers its address with a 404,
   // which the browser logs by itself — that one is expected there (the screen falls back to re-reading every 30 s).
-  await server.scenario({ proposals: "open", bell: "on" });
+  // The same for the route lines (`routeShapes: "on"`): a server without `route-shapes` answers 404 and the browser logs it — the screen then draws pins only.
+  await server.scenario({ proposals: "open", bell: "on", routeShapes: "on" });
   const problems: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") problems.push(`console: ${message.text()}`); });
   page.on("pageerror", (error) => problems.push(`exception: ${error.message}`));
@@ -364,3 +365,21 @@ test("채팅: 서버가 현재 위치가 필요하다고 하면 버튼을 누를
   expect(second.body?.request_id).not.toBe(first.body?.request_id);
   await expect(chat.getByRole("button", { name: "내 위치 알려 주고 다시 묻기" })).toHaveCount(0);
 });
+
+test("계획서 링크 옆에 「계획서 내려받기」가 있고, 같은 주소에 download=1 이 붙으며, 서버는 그것을 파일(attachment)로 내려 준다", async ({ page, request }) => {
+  await start(page);
+  await page.goto(`/trips/${TRIP_ID}`);
+  const open = page.getByRole("link", { name: "여행계획서 열기" });
+  const download = page.getByRole("link", { name: "계획서 내려받기" });
+  await expect(open).toBeVisible();
+  const openHref = new URL((await open.getAttribute("href"))!);
+  const downloadHref = new URL((await download.getAttribute("href"))!);
+  expect(downloadHref.origin + downloadHref.pathname).toBe(openHref.origin + openHref.pathname);   // 같은 계획서
+  expect(downloadHref.searchParams.get("t")).toBe(openHref.searchParams.get("t"));                  // 같은 토큰(로그인 없이 열린다)
+  expect(downloadHref.searchParams.get("download")).toBe("1");
+  expect(openHref.searchParams.get("download")).toBeNull();                                         // 여는 링크는 그대로 — 파일로 받지 않는다
+  const answer = await request.get(downloadHref.toString());
+  expect(answer.headers()["content-disposition"]).toMatch(/^attachment; filename\*=UTF-8''triPilot-/);
+  expect((await request.get(openHref.toString())).headers()["content-disposition"]).toBeUndefined();
+});
+
